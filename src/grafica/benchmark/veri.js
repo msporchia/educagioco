@@ -105,8 +105,8 @@ export const TAPPE_VERIFICA = [
   { gruppo: 'ingresso', carica: INGRESSO.carica, opz: { giri: 1 }, tempi: 'verifica', scene: INGRESSO.scene.filter(s => s.id === 'ing-sot' || s.id === 'ing-sot-x').map(s => ({ ...s, stima: 18 })) },
   // la scala (veri/scala.js): lo scontro dal fondo piatto alla scena intera, un gradino alla volta, nello stesso Sotterraneo
   { gruppo: 'scala', carica: () => import('./veri/elementi-sot.js'), opz: { mostri: MOSTRI_SCALA }, tempi: 'verifica', scene: sceneDellaScala() },
-  // lo scontro com'è, contro l'ultima misura vera (veri/riferimento.js)
-  { gruppo: 'discese', carica: discese, tempi: 'verifica', scene: [{ id: 'sot-1', nome: '1 mostro con gli effetti', mostri: 1, colpi: true, stima: 13 }] },
+  // lo scontro com'è da 1 a 6 mostri, quanto degrada (la serie dà il LIMITE); `sot-1` contro l'ultima misura vera (veri/riferimento.js)
+  { gruppo: 'discese', carica: discese, tempi: 'verifica', scene: [1, 2, 3, 4, 6].map(n => ({ id: `sot-${n}`, nome: `${n} mostr${n > 1 ? 'i' : 'o'} con gli effetti`, mostri: n, colpi: true, serie: 'discese', quanti: n, cresce: true, stima: 12 })) },
   { gruppo: 'sopra', carica: () => import('./veri/sopra.js'), tempi: 'verifica', scene: [
     { id: 'per-8', nome: '8 persone', persone: 8, stima: 10 }, { id: 'mos-8', nome: '8 mostri sul prato', mostri: 8, stima: 10 },
   ] },

@@ -23,12 +23,15 @@ const _v = new Vector3()
  * Veste un eroe 3D (`creaEroe`) con la roba: `roba` = { mano, mancina, corpo, collo, testa } (chiavi degli oggetti). La stessa per l'eroe in scena
  * e per le anteprime (anteprime3d.js). → `togli()`.
  */
-export const vestiEroe = (g, roba = {}) => vestiDotazione(g, dotazioneDi(roba))
+export const vestiEroe = (g, roba = {}, opz = {}) => vestiDotazione(g, dotazioneDi(roba), opz)
 
-/** Lo stesso con la dotazione già decisa (`dotazioneDi`: i pezzi 3D, l'armatura col pregio, la collana). → `togli()`. */
-export function vestiDotazione(g, d) {
+/**
+ * Lo stesso con la dotazione già decisa (`dotazioneDi`: i pezzi 3D, l'armatura col pregio, la collana). `semplici`: le armi semplici
+ * (roba3d.js, `appiattisci`), solo in scena: le anteprime le vogliono intere. → `togli()`.
+ */
+export function vestiDotazione(g, d, { semplici = false } = {}) {
   // in mano l'alone è più piccolo che da solo nella casella: addosso all'eroe copriva la faccia
-  const destra = creaPezzo(d.destra, { scalaAlone: 0.8 }), sinistra = creaPezzo(d.sinistra, { scalaAlone: 0.8 })
+  const destra = creaPezzo(d.destra, { scalaAlone: 0.8, semplice: semplici }), sinistra = creaPezzo(d.sinistra, { scalaAlone: 0.8, semplice: semplici })
   const togliArma = equipaggia(g, { destra, sinistra })
   // la veste della figura (il modulo vesti) o l'armatura di sempre col pregio della rarità
   const togliCorpo = !d.corpo ? null
@@ -104,7 +107,7 @@ export function creaEroe3d(scena) {
   }
 
   function equipa(corsa) {
-    const f = `${corsa.mano || ''}|${corsa.mancina || ''}|${corsa.corpo || ''}|${corsa.collo || ''}|${corsa.testa || ''}`
+    const f = `${corsa.mano || ''}|${corsa.mancina || ''}|${corsa.corpo || ''}|${corsa.collo || ''}|${corsa.testa || ''}|${ACCESI.armiSemplici ? 's' : ''}`
     if (f === firma) return false
     firma = f
     // saldato, l'eroe non si sveste più pezzo per pezzo: si rifà da capo (le geometrie e i materiali di serie stanno in cache)
@@ -115,7 +118,7 @@ export function creaEroe3d(scena) {
       for (const t of tinte) t.m.dispose()
     }
     g = creaEroe(chiave); radice.add(g)
-    vestiEroe(g, corsa)
+    vestiEroe(g, corsa, { semplici: ACCESI.armiSemplici })
     try { if (ACCESI.saldatura) saldaEroe(g, `${chiave}|${f}`, { pelle: ACCESI.pelle }) } catch (e) { console.warn('eroe 3D: non si salda', e) }   // resta com'è, solo più caro
     tinte = clonaMateriali(g)
     ultimaTinta = ''

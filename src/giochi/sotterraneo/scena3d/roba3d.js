@@ -2,6 +2,8 @@
 // (roba3d/: lame, bastoni, scudi, vesti, gioielli, quelli che `npm run promuovi3d` ha trovato pronti), con l'alone della rarità e
 // dell'elemento. Dove il modulo manca, la figura non è coperta o il modello si rompe, il ripiego è il modello della base nella
 // collezione (MODELLO_DI); senza nemmeno quello null, e la vista tiene lo sprite.
+import { Matrix4, Color, Mesh, Group, MeshStandardMaterial, Float32BufferAttribute, AdditiveBlending } from 'three'
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { creaDaId, perId } from './eroi3d/collezione.js'
 import { MODULI } from './roba3d/moduli.js'
 import { aggiungiAlone } from './roba3d/aloni.js'
@@ -48,14 +50,59 @@ export function creaConsumabile(chiave, moduli = MODULI) {
   return null
 }
 
+// l'arma semplice (`ACCESI.armiSemplici`, la fascia bassa: docs/sotterraneo/prestazioni-3d.md): il modello nuovo della figura con tutti i
+// pezzi fermi fusi in una geometria, il colore di ogni materiale nei vertici e un materiale solo per tutte (saldato all'eroe, una chiamata);
+// via aloni, fiamme, punti e trasparenze. Non il ripiego della collezione: quello viene dal disegno 2D e non somiglia al modello nuovo
+let materialeSemplice = null
+export function appiattisci(g) {
+  if (g.userData.anima) g.userData.anima(0.5)   // fiamme e bagliori nascono enormi: li mette a misura l'animazione
+  g.updateMatrixWorld(true)
+  const inv = new Matrix4().copy(g.matrixWorld).invert(), parti = [], m4 = new Matrix4()
+  const tinta = m => {
+    const c = (m && m.color ? m.color.clone() : new Color(1, 1, 1)).multiplyScalar(1 - 0.45 * ((m && m.metalness) || 0))   // il metallo senza riflessi è più scuro
+    if (m && m.emissive && m.emissiveIntensity) c.add(m.emissive.clone().multiplyScalar(Math.min(1, m.emissiveIntensity) * 0.25))
+    return c
+  }
+  const fuori = m => !m || m.blending === AdditiveBlending || (m.transparent && m.opacity < 0.6)
+  g.traverse(o => {
+    if (!o.isMesh || o.isSkinnedMesh || o.isInstancedMesh || !o.visible) return
+    const mats = Array.isArray(o.material) ? o.material : [o.material]
+    if (mats.every(fuori)) return
+    const geo = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone()
+    for (const k of Object.keys(geo.attributes)) if (k !== 'position' && k !== 'normal') geo.deleteAttribute(k)
+    if (!geo.attributes.normal) geo.computeVertexNormals()
+    geo.applyMatrix4(m4.multiplyMatrices(inv, o.matrixWorld))
+    const n = geo.attributes.position.count, col = new Float32Array(n * 3)
+    const tratti = Array.isArray(o.material) && geo.groups.length ? geo.groups : [{ start: 0, count: n, materialIndex: 0 }]
+    for (const t of tratti) {
+      const c = tinta(mats[t.materialIndex || 0])
+      for (let i = t.start; i < Math.min(n, t.start + t.count); i++) { col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b }
+    }
+    geo.clearGroups()
+    geo.setAttribute('color', new Float32BufferAttribute(col, 3))
+    parti.push(geo)
+  })
+  if (!parti.length) return g
+  const unita = mergeGeometries(parti)
+  parti.forEach(p => p.dispose())
+  if (!unita) return g
+  materialeSemplice = materialeSemplice || new MeshStandardMaterial({ vertexColors: true, roughness: 0.6, metalness: 0 })
+  const r = new Group()
+  r.add(new Mesh(unita, materialeSemplice))
+  r.position.copy(g.position); r.quaternion.copy(g.quaternion); r.scale.copy(g.scale)
+  r.userData = { ...g.userData, anima: undefined, animaAlone: undefined, semplice: true }
+  return r
+}
+
 /**
  * Il modello di un pezzo 3D (`pezzo3dDi`: { figura, id, rarita, elemento }): la figura, se no il ripiego della collezione, se no null.
  * `alone` (sì di difetto) mette l'alone della rarità e dell'elemento ai pezzi non comuni, coi punti grandi `scalaAlone`; l'eroe lo
  * muove con `userData.animaAlone`.
  */
-export function creaPezzo(p, { moduli = MODULI, alone = true, scalaAlone = 1 } = {}) {
+export function creaPezzo(p, { moduli = MODULI, alone = true, scalaAlone = 1, semplice = false } = {}) {
   if (!p) return null
   let g = p.figura ? creaFigura(p.figura, moduli) : p.consumabile ? creaConsumabile(p.consumabile, moduli) : null
+  if (g && semplice) { try { g = appiattisci(g) } catch (e) { avvisa(`la versione semplice di ${p.figura}`, e) } return g }
   if (g) g.userData.daFigura = true
   else if (p.id && perId(p.id)) {
     try { g = creaDaId(p.id) } catch (e) { avvisa(p.id, e); g = null }

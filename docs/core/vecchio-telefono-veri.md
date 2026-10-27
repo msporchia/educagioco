@@ -8,7 +8,7 @@ giocare il bambino: quanti mostri nello scontro, quante persone sopra, quanti ed
 ## Sul telefono
 
 Zona dei grandi (codice) → **Impostazioni** → tendina **Avanzate** → **Misura questo telefono** → **Avvia coi modelli veri** (la
-**verifica**, 19 scene e ~4 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
+**verifica**, 23 scene e ~5 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
 Le complete durano un quarto d'ora circa (57 scene, e fra un gruppo e l'altro 8 s di schermo nero perché il telefono si raffreddi): la barra in fondo dice a
 che scena si è, **Interrompi** la ferma e tiene il resoconto di quello che c'è. Le scene si vedono mentre girano: se una luce, un
 colore o la nebbia sembrano sbagliati, alla fine c'è un campo **Note** che finisce nel resoconto. Lo schermo non deve spegnersi
@@ -21,14 +21,14 @@ invio), **Copia**, **Rifai**. L'ultimo resoconto di ognuna delle due prove resta
 
 Il tasto «Avvia coi modelli veri» serve a **decidere**: se una modifica ha migliorato qualcosa e quale leva conviene. Non ripete quello che i due
 log del Note 7 già dicono (il pavimento, triangoli, chiamate, luci, pixel, la roba, la fattoria, 24 persone, 16 mostri): quello sta nelle
-**Misure complete**. `TAPPE_VERIFICA` in `veri.js`, **19 scene, circa 4 minuti** (`stimaVerifica()`: i secondi attesi per scena più, a ogni
+**Misure complete**. `TAPPE_VERIFICA` in `veri.js`, **23 scene, circa 5 minuti** (`stimaVerifica()`: i secondi attesi per scena più, a ogni
 gruppo, la pausa di 4,5 s, il riferimento del calore e il caricamento; la scrive il foglio iniziale; sopra gli 8 minuti si tagliano scene):
 
 | gruppo | scene |
 |---|---|
 | `ingresso` | `ing-sot`, `ing-sot-x`: il primo attacco col riscaldamento acceso e spento, **un giro solo** (`opz.giri`; le tre ripetizioni e il mondo di sopra sono nelle complete) |
 | `scala` | `scala-0`…`scala-11` e `scala-ancora`: lo scontro con 3 mostri un gradino alla volta, vedi sotto |
-| `discese` | `sot-1`: lo scontro com'è (1 mostro con gli effetti), contro l'ultima misura vera |
+| `discese` | `sot-1`…`sot-6`: lo scontro com'è con 1, 2, 3, 4 e 6 mostri (il LIMITE della serie: quanto degrada); `sot-1` contro l'ultima misura vera |
 | `sopra` | `per-8` (8 persone), `mos-8` (8 mostri sul prato), `zaino-15` (15 anteprime) |
 
 Ogni scena dura al massimo ~4,5 s dopo un rodaggio di ~2 s (`TEMPI.verifica`); fra i gruppi 4,5 s di schermo nero (`RAFFREDDA_BREVE`, 8 s

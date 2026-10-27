@@ -4,6 +4,7 @@
 import { DataTexture, RGBAFormat, LinearFilter, Vector2 } from 'three'
 import { ACCESI } from './costanti.js'
 import { preparaLuceVertice } from './luce-vertice.js'
+import { colorMedio } from './trame.js'
 
 // Una per tutta la discesa: gli uniform restano gli stessi oggetti (i materiali li hanno già), e a ogni piano nuovo `metti`
 // cambia la texture e la misura della mappa
@@ -37,7 +38,12 @@ export const GLSL_MASCHERA = 'uniform sampler2D uMaschera; uniform vec2 uDimMapp
 // niente, per chi nel ricordo non c'è). `spinta`: di quanto si legge la cella davanti alla faccia (un muro si accende con
 // la cella che guarda). `prima`: GLSL da mettere prima (le figure). `poi(sh)`: chi deve aggiungere altro allo shader (e allora `chiave` dice il suo codice).
 // Nella fascia bassa (`ACCESI.lucePerVertice`) la luce è per vertice (scena3d/luce-vertice.js), tranne chi dice `vertice: false` (le figure)
-export function conMaschera(mat, maschera, { ricordo = true, spinta = 0.45, prima = '', buco = false, poi = null, chiave = '', vertice = true } = {}) {
+// `arredo`: colonne, arredo, botti, fontana, portale; con `ACCESI.arredoSemplice` (la bassa) la trama diventa il suo colore medio, senza
+// rilievo (pavimento e pareti lo fanno da sé in terreno.js, e dicono `arredo: false`)
+export function conMaschera(mat, maschera, { ricordo = true, spinta = 0.45, prima = '', buco = false, poi = null, chiave = '', vertice = true, arredo = true } = {}) {
+  if (ACCESI.arredoSemplice && arredo && vertice && mat.map && mat.map.image && mat.map.image.data) {
+    mat.color.multiply(colorMedio(mat.map)); mat.map = null; mat.normalMap = null; mat.roughnessMap = null
+  }
   const pv = ACCESI.lucePerVertice && vertice ? preparaLuceVertice(mat, { rilievo: ACCESI.rilievo }) : null
   mat.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, maschera.uniforms)

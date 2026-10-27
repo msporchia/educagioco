@@ -95,6 +95,9 @@ export const ACCESI = {
   // come sopra, acceso è il semplice (la bassa: `terrenoSemplice:1`): pavimento e pareti senza trame, rilievo né rumore per pixel; il colore
   // medio della trama, la tinta per cella e le macchie messi una volta nei vertici (terreno.js). La scala del 27/10 dava al fondo +20 ms
   terrenoSemplice: false,
+  // allo stesso modo (la bassa): colonne e arredo col colore medio delle trame (maschera.js), le armi in mano fuse in un pezzo (roba3d.js, `appiattisci`)
+  arredoSemplice: false,
+  armiSemplici: false,
   // gli elementi della scena (grafica/elementi3d.js): spento non si disegna, senza buttarlo né cambiare il gioco. Solo per misurare chi
   // pesa (`&spegni=pavimento`); anche arredo, fiamme, fuochi, palco, nebbia, effetti3d e chiarori qui sopra fanno da elemento. `resto`: quello
   // senza nome (l'emisferica, una cosa dimenticata), così la scena «tutto spento» è vuota davvero

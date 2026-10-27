@@ -6,7 +6,7 @@
 // quello dell'ombra), così la geometria resta una.
 import { BufferGeometry, Float32BufferAttribute, BoxGeometry, CylinderGeometry, LatheGeometry, TorusGeometry, Mesh, InstancedMesh,
          MeshStandardMaterial, MeshDepthMaterial, RGBADepthPacking, DataTexture, RGBAFormat, NearestFilter, Matrix4, Vector2, Vector3,
-         Color, SRGBColorSpace } from 'three'
+         Color } from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { conMaschera } from './maschera.js'
 import { GLSL_RUMORE } from './luci.js'
@@ -15,20 +15,13 @@ import { fbm3d, rumore3d } from './rumore.js'
 import { ALTO_MURO, PARAPETTO, ACCESI, SUDDIVIDI } from './costanti.js'
 import { dividi } from './luce-vertice.js'
 import { creaRitaglio } from './ritaglio.js'
+import { colorMedio } from './trame.js'
 import { verso } from './tempo.js'
 
 // le altezze dei muri nello shader: la cella di ogni vertice, e quanto è alta adesso (0..1 nella trama)
 const GLSL_ALTO_V = 'attribute float aCella; uniform sampler2D uAltoMuri; uniform vec2 uDimAlto;\n'
 const ABBASSA = `#include <begin_vertex>
   transformed.y *= texture2D(uAltoMuri, (vec2(mod(aCella, uDimAlto.x), floor(aCella / uDimAlto.x)) + 0.5) / uDimAlto).r;`
-
-// il colore medio di una trama generata (lineare): il terreno semplice lo usa al posto della trama
-function colorMedio(tex) {
-  const d = tex.image.data, s = [0, 0, 0]
-  let n = 0
-  for (let i = 0; i < d.length; i += 4 * 13) { s[0] += d[i]; s[1] += d[i + 1]; s[2] += d[i + 2]; n++ }
-  return new Color().setRGB(s[0] / n / 255, s[1] / n / 255, s[2] / n / 255, SRGBColorSpace)
-}
 
 // una geometria ammaccata dal rumore (le colonne di roccia, ghiaccio, radici): niente è a filo
 function ammacca(g, a, fr, seme, soloLati = true) {
@@ -120,7 +113,7 @@ export function* creaTerrenoAPassi(scena, { pianta, aspetto, trame, maschera, se
     map: t.map, normalMap: ACCESI.rilievo ? t.normalMap : null, roughnessMap: ACCESI.rilievo ? t.roughnessMap : null, roughness: aspetto.lucido || 1, metalness: aspetto.metallo || 0,
     normalScale: new Vector2(1.2, 1.2),
     ...(t.emissiveMap ? { emissiveMap: t.emissiveMap, emissive: new Color(1, 1, 1), emissiveIntensity: 1 } : {}),
-  }), maschera, semplice ? { spinta: 0 } : {
+  }), maschera, semplice ? { spinta: 0, arredo: false } : { arredo: false,
     spinta: 0, chiave: 'pav' + (t.emissiveMap ? '-braci' : '') + (pozze ? '-pozze' + pozze.quanto : ''),   // `quanto` sta nel codice
     // le braci si accendono a chiazze larghe nel mondo, non a ogni ripetizione della trama (si vedeva il disegno ripetuto)
     prima: t.emissiveMap ? 'outgoingLight -= totalEmissiveRadiance * 0.75 * (1.0 - smoothstep(0.42, 0.62, rumore3(vec3(vMondoM.xz * 0.3, 0.0))));' : '',
@@ -173,7 +166,7 @@ export function* creaTerrenoAPassi(scena, { pianta, aspetto, trame, maschera, se
       ...(cima ? { map: null, roughnessMap: null, color: new Color(basso ? aspetto.parapetto : aspetto.cima) } : {}),
     })
     return conMaschera(mat, maschera, {
-      spinta: cima ? 0 : 0.45, buco: !basso, chiave: 'parete-' + chiave + (sc.faccette ? 'f' : '') + (semplice ? 's' : ''),
+      spinta: cima ? 0 : 0.45, buco: !basso, arredo: false, chiave: 'parete-' + chiave + (sc.faccette ? 'f' : '') + (semplice ? 's' : ''),
       poi(sh) {
         Object.assign(sh.uniforms, uAlto, { uCoperta: { value: coperta }, uBagliore: { value: bagliore } })
         sh.vertexShader = GLSL_ALTO_V + 'attribute float aCoperta; varying float vCoperta;\n' +

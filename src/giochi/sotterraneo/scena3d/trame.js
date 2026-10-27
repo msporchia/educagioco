@@ -1,6 +1,6 @@
 // Le trame generate a codice, nel colore dell'ambientazione (scena3d/aspetti.js): il pavimento e le pareti dello stile,
 // il legno delle botti, e la normal map finta dell'atlante (ogni figura un cuscino smussato ai bordi). Una volta per scenario.
-import { CanvasTexture, LinearFilter } from 'three'
+import { CanvasTexture, LinearFilter, Color, SRGBColorSpace } from 'three'
 import { frattale, normaliDa, trama } from './rumore.js'
 import { PAVIMENTI, MURI } from './pitture.js'
 
@@ -23,6 +23,17 @@ export function* muroAPassi(asp) {
   const t = (MURI[asp.trama] || MURI.mattoni)(asp)
   yield 'disegno'
   return yield* fatte(t)
+}
+// il colore medio di una trama generata (lineare), una volta per trama: il terreno e l'arredo semplici lo usano al posto della trama
+const medi = new WeakMap()
+export function colorMedio(tex) {
+  if (medi.has(tex)) return medi.get(tex)
+  const d = tex.image.data, s = [0, 0, 0]
+  let n = 0
+  for (let i = 0; i < d.length; i += 4 * 13) { s[0] += d[i]; s[1] += d[i + 1]; s[2] += d[i + 2]; n++ }
+  const c = new Color().setRGB(s[0] / n / 255, s[1] / n / 255, s[2] / n / 255, SRGBColorSpace)
+  medi.set(tex, c)
+  return c
 }
 const tutto = g => { for (;;) { const r = g.next(); if (r.done) return r.value } }
 export const pavimento = asp => tutto(pavimentoAPassi(asp))
