@@ -45,6 +45,10 @@ import Macchina from './viste/Macchina.vue'
 import Livelli from './viste/Livelli.vue'
 import Inventario from './viste/Inventario.vue'
 import Guardaroba from './viste/Guardaroba.vue'
+import Bestia from './viste/Bestia.vue'
+import Battesimo from './viste/Battesimo.vue'
+import { dettoCura, dettoEsito, dettoCompera } from './viste/bestia-pura.js'
+import { BESTIE, CIBI as CIBI_BESTIE, COCCOLE_3D } from './dati/bestie.js'
 import { personaDi, normalizzaAbito, capiDi, chiaveAbito, vesti as vestiAbito, nomeDelContadino } from './dati/abiti.js'
 import { schedeDellInventario, robaNuova, contoDi } from './viste/inventario-puro.js'
 import Bacheca from './viste/Bacheca.vue'
@@ -154,6 +158,9 @@ const macchinaMsg = ref('')
 const livelliAperto = ref(false)
 const inventarioAperto = ref(false)
 const guardarobaAperto = ref(false)       // il foglio dell'abito (docs/fattoria3d/guardaroba.md)
+const bestiaAperta = ref(null)             // l'id della bestia di casa di cui si vede il foglio (docs/fattoria3d/bestie-di-casa.md)
+const bestiaMsg = ref('')
+const battesimoDi = ref(null)              // l'id della bestia a cui si sta dando il nome
 const livelloNuovo = ref(false)
 const bancoAperto = ref(false)             // il foglio del banco
 const bancoMsg = ref('')
@@ -201,13 +208,14 @@ const ui = {
   apriMongolfiera() { naveMsg.value = ''; naveCons.value = null; nave.value = true },
   apriBottega(tipo) { bottegaMsg.value = ''; bottegaCons.value = null; bottegaAperta.value = tipo },
   apriMappa() { visite.apriMappa() },
+  apriBestia(id) { bestiaMsg.value = ''; bestiaAperta.value = id },             // un tocco su una bestia di casa
   apriGuardaroba() { guardarobaAperto.value = true },             // un tocco sul contadino fermo                 // il trattore: la mappa dei villaggi (docs/fattoria3d/vicini.md)
   avviso(testo) {
     avvisoTesto.value = testo || ''
     avvisoFine = testo ? performance.now() + DURATA_AVVISO : 0
   },
   apriCostruisci(i, j) { apriCostruisci(i, j) },                           // tenere premuto su un posto libero del terreno tuo
-  fogliAperti: () => !!alberoK.value || !!dialogo.value || !!consiglio.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || bancoAperto.value || nave.value || !!bottegaAperta.value || mappaAperta.value || (opzioniAperte.value && !opzioniRidotte.value),
+  fogliAperti: () => !!alberoK.value || !!dialogo.value || !!consiglio.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!battesimoDi.value || bancoAperto.value || nave.value || !!bottegaAperta.value || mappaAperta.value || (opzioniAperte.value && !opzioniRidotte.value),
   zonaDrop: () => (zonaVia.value || null)?.getBoundingClientRect() || null,
   trascinando(info) { trascinando.value = info },
 }
@@ -233,7 +241,7 @@ function scegliSeme(k) {
 // ── costruire: tenere premuto su un posto libero (o il tasto 🏗️) apre il menu «Costruisci qui» ──
 const schede = computed(() => {
   void versione.value
-  return schedeDi({ stagione: stagione.value, livello: motore.livello(), prezzoPezzo: t => motore.prezzoPezzo(t), nelMagazzino: t => motore.nelMagazzino(t), posseduti: motore.s.posseduti })
+  return schedeDi({ stagione: stagione.value, livello: motore.livello(), prezzoPezzo: t => motore.prezzoPezzo(t), nelMagazzino: t => motore.nelMagazzino(t), posseduti: motore.s.posseduti, bestieTue: motore.cura.tue() })
 })
 function apriCostruisci(i, j) {
   if (mondo.eroe.az || strumento.value) return
@@ -243,10 +251,46 @@ function apriCostruisci(i, j) {
   costruisciQui.value = { i, j, msg: '' }
 }
 function chiudiCostruisci() { costruisciQui.value = null }
+
+// ── le bestie di casa (G6): si prendono dal menu «Animali», si curano dal loro foglio (motore/cura.js) ──
+const bestiaVista = computed(() => {
+  void versione.value
+  const id = bestiaAperta.value; if (!id || !motore) return null
+  const st = motore.cura.stato(id); if (!st) return null
+  const scorte = {}
+  for (const g of [...CIBI_BESTIE, ...COCCOLE_3D]) if (g.da) scorte[g.da] = motore.scortaDi(g.da)
+  return { id, nome: motore.cura.nomeDi(id), stato: { pancia: st.pancia, pelo: st.pelo, gioco: st.gioco }, monete: motore.monete(), scorte }
+})
+function esitoBestia(r, id) {
+  const nome = motore.cura.nomeDi(id)
+  bestiaMsg.value = r.ok ? dettoEsito(r, nome) : dettoCura(r, { monete: motore.monete() })
+  if (r.ok) mondo.compagni.festa(id)
+  ui.cambio()
+}
+function nutriBestia(cibo) { const id = bestiaAperta.value; if (id) esitoBestia(motore.cura.nutri(id, cibo.id), id) }
+function coccolaBestia(gesto) { const id = bestiaAperta.value; if (id) esitoBestia(motore.cura.coccola(id, gesto.id), id) }
+function carezzaBestia() { const id = bestiaAperta.value; if (id) esitoBestia(motore.cura.carezza(id), id) }
+function spostaBestia() { const id = bestiaAperta.value; if (id && mondo.iniziaSposta(id)) bestiaAperta.value = null }
+function daiIlNome(nome) {
+  const id = battesimoDi.value; battesimoDi.value = null
+  if (id) { motore.cura.battezza(id, nome); mondo.compagni.sync(); ui.cambio() }
+}
+/** Una carta «bestia» del menu: la tua apre il foglio, quella da prendere si compra (esperienza come ogni spesa) e comincia il battesimo. */
+function sceglieBestia(carta, c) {
+  const id = carta.bestia
+  if (motore.cura.ho(id)) { costruisciQui.value = null; bestiaMsg.value = ''; bestiaAperta.value = id; return }
+  const r = motore.cura.compra(id)
+  if (!r.ok) { c.msg = dettoCompera(r, BESTIE[id].nome); return }
+  costruisciQui.value = null
+  mondo.compagni.sync()
+  ui.cambio()
+  battesimoDi.value = id
+}
 /** Una carta scelta: va sulla cella premuta. Se non ci sta, il menu si chiude e il fantasma aspetta; se mancano le monete il menu resta e lo dice. */
 function sceglieCarta(carta) {
   const c = costruisciQui.value; if (!c) return
   if (carta.genere === 'strumento') { costruisciQui.value = null; return scegliStrumento(carta.id) }
+  if (carta.genere === 'bestia') return sceglieBestia(carta, c)
   const r = mondo.costruisciQui(carta.id, c.i, c.j)
   if (r.esito === 'rifiuto') c.msg = dettoDi(r.motivo, { costo: r.costo, liv: r.liv })
   else costruisciQui.value = null                    // 'messo', o 'fantasma' (il fantasma resta sulla mappa)
@@ -439,7 +483,7 @@ const quadroGuida = () => {
   return {
     campi: cs.length, vuoti: cs.filter(c => m.campoVuoto(c)).length, maturi: cs.filter(c => m.campoMaturo(c)).length, crescono: crescono.length,
     secondi: restanti.length ? Math.min(...restanti) : 0, modo: modo.value, semi: semiAperto.value, costruisci: !!costruisciQui.value,
-    foglio: !!(alberoK.value || dialogo.value || macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || bancoAperto.value || nave.value || bottegaAperta.value || mappaAperta.value || opzioniAperte.value || consiglio.value || strumento.value || trascinando.value),
+    foglio: !!(alberoK.value || dialogo.value || macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!battesimoDi.value || bancoAperto.value || nave.value || bottegaAperta.value || mappaAperta.value || opzioniAperte.value || consiglio.value || strumento.value || trascinando.value),
     raccolto: Object.values(m.s.merci).some(n => n > 0), visto: guidaVisto.value,
   }
 }
@@ -620,6 +664,9 @@ onBeforeUnmount(() => {
  <Albero v-if="albero" :albero="albero" @fai="facciConsiglio" @chiudi="chiudiAlbero" />
  <Consiglio v-if="consiglio" :consiglio="consiglio" @fai="facciConsiglio" @chiudi="consiglio = null" />
         <Livelli v-if="livelliAperto" v-bind="livelli" @chiudi="livelliAperto = false" />
+        <Bestia v-if="bestiaVista" :key="bestiaVista.id" v-bind="bestiaVista" :messaggio="bestiaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
+                @nutri="nutriBestia" @coccola="coccolaBestia" @carezza="carezzaBestia" @sposta="spostaBestia" @nome="battesimoDi = bestiaAperta; bestiaAperta = null" @chiudi="bestiaAperta = null" />
+        <Battesimo v-if="battesimoDi" :id="battesimoDi" :scelto="motore.cura.nomeScelto(battesimoDi)" @scegli="daiIlNome" @chiudi="battesimoDi = null" />
         <Opzioni v-if="opzioniAperte" :q="q" :stat="stat" :conta="conta" :rapporto="rapporto" @cambia="cambiaOpzioni"
                  @stress="(t, n) => { mondo.stress(t, n); ui.cambio() }" @rapporto="creaRapporto" @ridotto="v => opzioniRidotte = v"
                  @chiudi="opzioniAperte = false; opzioniRidotte = false" />

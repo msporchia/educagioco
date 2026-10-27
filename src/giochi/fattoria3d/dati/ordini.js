@@ -73,10 +73,17 @@ export const tipoDelOrdine = chiede => {
 /** Da che livello si può chiedere: il più alto fra le cose chieste (e almeno il banco). */
 export const livelloDelOrdine = chiede => Math.max(LIVELLO_BANCO, ...Object.keys(chiede).map(livelloDi))
 
+/** La veterinaria (C32): è l'unica che chiede il mangime, come in 2D (`vuole` di src/giochi/fattoria/dati/mercato.js: mangime, pastone, becchime,
+    foraggio, beverone, pastura). In 3D i nomi sono quelli del cortile: il mangime del mulino, la pappa di mais, becchime e foraggio del fienile,
+    verdure lesse, pastone e verdura fresca del pentolone. Gli altri clienti non li chiedono mai (`chiedibili`). */
+export const VETERINARIA_VUOLE = ['mangime', 'pastone', 'becchime', 'foraggio', 'beverone', 'zuppa', 'pastura']
+/** I mangimi che la veterinaria può chiedere a questo livello (solo ciò che si fa davvero). */
+export const mangimiPerLaVeterinaria = livello => VETERINARIA_VUOLE.filter(k => RICETTE[k] && Number.isFinite(livelloDi(k)) && livelloDi(k) <= livello && Number.isFinite(msDi(k)))
+
 /** Cosa si può chiedere a questo livello: { raccolti: [chiavi], prodotti: [chiavi] } (solo ciò che si fa davvero). */
 export function chiedibili(livello) {
   const ok = k => Number.isFinite(livelloDi(k)) && livelloDi(k) <= livello
-  /* il mangime (erba medica, becchime, foraggio: `mangime: true`) lo mangiano le bestie e non lo chiede nessuno: né il banco né la mongolfiera */
+  /* il mangime (erba medica, becchime, foraggio: `mangime: true`) lo mangiano le bestie: lo chiede solo la veterinaria (`mangimiPerLaVeterinaria`), mai gli altri clienti né la mongolfiera */
   return { raccolti: Object.keys(COLTURE).filter(k => ok(k) && !COLTURE[k].mangime), prodotti: Object.keys(RICETTE).filter(k => ok(k) && !RICETTE[k].mangime) }
 }
 

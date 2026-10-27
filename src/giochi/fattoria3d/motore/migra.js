@@ -18,6 +18,7 @@ import { sogliaDi as soglia3D, livelloDelPezzo, livelloDellaColtura } from '../d
 import { lottiPerPiazzole } from '../dati/regole.js'
 import { LOTTI_INIZIALI, lottoPerId, VICINI_4, vicinoDi } from '../dati/mondo.js'
 import { biomaDi } from '../dati/biomi.js'
+import { BESTIE, idDa2D, COMPAGNO_DI, bestiaInForma } from '../dati/bestie.js'
 import { statoIniziale, normalizza } from './stato.js'
 
 /** Il tetto di una scorta portata: nessuno ne ha tante, ma un dato guasto non deve gonfiare lo stato. */
@@ -167,8 +168,14 @@ export function statoDa2D(dato, { ora = Date.now() } = {}) {
 
     // 3. gli addobbi e le bestie di casa: la 3D non li ha ancora (i compagni arrivano col livello, senza nomi)
     for (const [id, n] of Object.entries(f.guardaroba)) aggiungi(daRegalare, 'addobbo:' + id, intero(n))
+    // Le bestie di casa (G6, docs/fattoria3d/bestie-di-casa.md): chi aveva preso beagle, coniglio, pappagallo o gatto rosso li ritrova, col nome e con i bisogni a metà
+    // (niente monete, niente premio già preso); il bobtail, il gatto bianco e nero e il gatto nero sono già in casa come compagni gratis (Watson, Sherlock, Pepe).
+    // Gli addobbi restano «da regalare»: i costumi si fanno più avanti.
+    const bestieDa2D = []
     for (const b of f.bestie) {
-      aggiungi(daRegalare, 'bestia:' + b.chi, 1)
+      const bid = idDa2D(b.chi)
+      if (bid) { s.casa[bid] = bestiaInForma({ nome: b.nome, pancia: 0.5, pelo: 0.5, gioco: 0.5, premiato: false }, ora); bestieDa2D.push(bid) }
+      else if (!COMPAGNO_DI[b.chi]) aggiungi(daRegalare, 'bestia:' + b.chi, 1)
       for (const id of Object.values(b.addobbi || {})) aggiungi(daRegalare, 'addobbo:' + id, 1)
     }
 
@@ -187,6 +194,7 @@ export function statoDa2D(dato, { ora = Date.now() } = {}) {
     const base = l3D
     for (const t of Object.keys(magazzino)) if ((PEZZI[t] && PEZZI[t].produttivo) || EDIFICI[t]) l3D = Math.max(l3D, livelloDelPezzo(t))
     if (campi > 0) l3D = Math.max(l3D, livelloDelPezzo('campo'))
+    for (const bid of bestieDa2D) l3D = Math.max(l3D, BESTIE[bid].liv)
     for (const chiave of Object.keys(f.reclamati || {})) {
       const m = /^coltura:(.+)$/.exec(chiave), mm = m && merceDel(m[1])
       if (mm && mm.dove === 'merci') l3D = Math.max(l3D, livelloDellaColtura(mm.id))

@@ -8,13 +8,16 @@ import { compagniAl, scegliMeta, scegliMetaAttorno, cellaLiberaVicina, cellaDi, 
   scegliInterazioneCane, sequenzaCane, sequenzaRichiamo, sequenzaSonno, sequenzaSveglia, carezzaCane, scegliRispostaGatto, sequenzaGatto,
   chiamaIlGatto, sequenzaGattoChiamato,
   sequenzaGattoSopra, incontroGattoCane, sequenzaIncontro } from '../dati/compagni.js'
-import { creaCompagno, posaCane, posaGatto, impostaDettaglio } from './modelli-compagni.js'
+import { posaCane, posaGatto, impostaDettaglio } from './modelli-compagni.js'
+import { creaBestia, posaPiccolo, posaBeagle } from './modelli-bestie.js'
+import { decidiPiccolo, ePiccolo } from '../dati/bestie.js'
 import { PEZZI } from '../dati/catalogo.js'
 import { alleggeriOmbre } from './ottimizza.js'
 
 const LOD_METRI = 12                              // oltre questa distanza dalla camera un compagno si disegna con le geometrie povere (modelli-compagni.js)
 const CASA = [0.5, -6.5]                       // davanti alla porta della casa
-const VEL = { cane: { vaga: 2.4, segue: 3.6, corsa: 5.6 }, gatto: { vaga: 1.5, fugge: 3.8 } }
+const VEL = { cane: { vaga: 2.4, segue: 3.6, corsa: 5.6 }, gatto: { vaga: 1.5, fugge: 3.8 }, coniglio: { vaga: 1.8 }, pappagallo: { vaga: 1.2 } }
+const FASE_PER_METRO = { cane: 2.6, gatto: 5, coniglio: 3.2, pappagallo: 3.2 }   // quanto avanza il passo per metro percorso
 const ALTEZZA_SEDILE = 0.45                     // la seduta della panchina (vedi modelli.js)
 const ang = (a, b, k) => { let d = b - a; d = Math.atan2(Math.sin(d), Math.cos(d)); return a + d * k }
 
@@ -27,24 +30,51 @@ export class Compagni {
     this.sync(true)
   }
 
-  /** Chi c'è a questo livello e non è ancora in scena arriva; `senzaAvviso` al caricamento (non è una novità). */
+  /** Chi c'è a questo livello (i compagni gratis) o è una bestia di casa che hai preso (docs/fattoria3d/bestie-di-casa.md) e non è ancora in scena arriva;
+      `senzaAvviso` al caricamento (non è una novità). Il nome di una bestia di casa cambia da sé quando glielo dai. */
   sync(senzaAvviso = false) {
-    for (const d of compagniAl(this.m.livello())) {
-      if (this.lista.some(c => c.def.id === d.id)) continue
-      const grp = creaCompagno(d); alleggeriOmbre(grp); this.scena.add(segna(grp, 'animali'))
+    const cura = this.m.cura
+    for (const d of [...compagniAl(this.m.livello()), ...(cura ? cura.compagniPresi() : [])]) {
+      const dentro = this.lista.find(c => c.def.id === d.id)
+      if (dentro) { if (d.daCurare) dentro.def.nome = d.nome; continue }
+      const grp = creaBestia(d); alleggeriOmbre(grp); this.scena.add(segna(grp, 'animali'))
       const c = { def: d, grp, tipo: d.tipo, x: CASA[0], z: CASA[1], dir: 0, stato: 'sta', tStato: 0, dur: 2, percorso: [], poi: null,
                   velo: 0, fase: Math.random() * 6, corsa: false, sopra: null, salto: null, guarda: null, controllo: 0,
                   seq: null, iSeq: 0, sub: '', evFatti: new Set(), carezze: null, prossimoIncontro: 0, altro: null, bastoneFino: 0 }
       this.lista.push(c)
       const altri = this.lista.filter(o => o !== c).map(o => [o.x, o.z, 1.2])
-      const cella = scegliMeta({ libera: (i, j) => this.m.libera(i, j), centro: CASA, rMin: 0.5, rMax: 3, rnd: this.rnd, evita: altri })
-        || cellaLiberaVicina((i, j) => this.m.libera(i, j), CASA[0], CASA[1])
+      const casa = this._casa(c)
+      const cella = scegliMeta({ libera: (i, j) => this.m.libera(i, j), centro: casa, rMin: 0.5, rMax: 3, rnd: this.rnd, evita: altri })
+        || cellaLiberaVicina((i, j) => this.m.libera(i, j), casa[0], casa[1])
       if (cella) { c.x = cella[0] + 0.5; c.z = cella[1] + 0.5 }
       c.dir = this.rnd() * Math.PI * 2
       grp.position.set(c.x, 0, c.z); grp.rotation.y = c.dir
       if (!senzaAvviso) { this.fx.scoppietta(grp.position, 0xffe27a, 10, 1.4, 2.2); this.ui.avviso(d.arrivo) }
     }
   }
+
+  /** Dove sta di casa: la cella dove il bambino ha messo la bestia, o davanti alla porta. */
+  _casa(c) { const k = c.def.daCurare && this.m.cura.casaDi(c.def.id); return k ? [k[0] + 0.5, k[1] + 0.5] : CASA }
+  /** La bestia di casa spostata dal foglio (gratis): scompare e riappare, in una nuvola, nella nuova cella, che da ora è casa sua. */
+  portaA(id, i, j) {
+    const c = this.lista.find(o => o.def.id === id)
+    if (!c) return false
+    this.fx.scoppietta(new THREE.Vector3(c.x, 0.3, c.z), 0xffffff, 6, 0.9, 1.6)
+    c.x = i + 0.5; c.z = j + 0.5; c.percorso = []; c.poi = null; c.seq = null; c.salto = null; c.sopra = null
+    this._stato(c, 'sta')
+    this.fx.scoppietta(new THREE.Vector3(c.x, 0.3, c.z), 0xffe27a, 8, 1, 1.8)
+    return true
+  }
+  /** Una coccola o un pasto dal foglio: cuoricini e il suo verso (se non è già in sequenza). */
+  festa(id) {
+    const c = this.lista.find(o => o.def.id === id)
+    if (!c) return false
+    if (c.seq || c.salto) { this.fx.scoppietta(new THREE.Vector3(c.x, c.grp.position.y + (c.tipo === 'cane' ? 0.9 : 0.4), c.z), 0xff7a9a, 6, 0.9, 1.8); return true }
+    this._toccaSemplice(c)
+    return true
+  }
+  /** Il nome di chi si chiama: quello dato dal bambino alle bestie di casa, quello vero ai compagni gratis. */
+  _nome(c) { return c.def.nome }
 
   // ── il tocco ──
   /** Il compagno colpito da un raggio, se c'è. */
@@ -57,16 +87,21 @@ export class Compagni {
   /** Si fa toccare. Watson: lontano lo chiama il contadino e arriva di corsa, poi fa una festa (sempre diversa); i gatti, se lontani, li chiama per nome e rispondono a modo
       loro (si avvicinano, restano lì, si voltano, fanno una cosa buffa). Se l'eroe non sta fermo, il vecchio «Bau!» o «Prrr…» sul posto. */
   tocca(c) {
+    if (c.def.daCurare) {                                                    // una bestia di casa: il suo verso e i cuoricini, e si apre il suo foglio (viste/Bestia.vue)
+      this._toccaSemplice(c)
+      if (this.ui.apriBestia) this.ui.apriBestia(c.def.id)
+      return
+    }
     if (c.salto || (c.seq && !(c.tipo === 'cane' && c.stato === 'dorme' && !c.seq.incontro))) return        // già occupato: un tocco non lo riavvia
     const e = this.eroe, dist = Math.hypot(e.x - c.x, e.z - c.z)
     if (c.tipo === 'cane') {
       if (c.stato === 'dorme') return this._avviaSeq(c, sequenzaSveglia())
       if (!e.fermo) {
-        if (dist > SOGLIA_RICHIAMO) { this.fx.parla('Watson!'); return this._decidi(c) }
+        if (dist > SOGLIA_RICHIAMO) { this.fx.parla(this._nome(c) + '!'); return this._decidi(c) }
         return this._toccaSemplice(c)
       }
       if (dist > SOGLIA_RICHIAMO) {
-        e.faccia({ x: c.x, z: c.z }); this.fx.parla('Watson!'); e.avvia('chiama', 0.9)
+        e.faccia({ x: c.x, z: c.z }); this.fx.parla(this._nome(c) + '!'); e.avvia('chiama', 0.9)
         const id = this.ultimaCane = scegliInterazioneCane(this.ultimaCane, this.rnd)
         return this._avviaSeq(c, [...sequenzaRichiamo(), ...sequenzaCane(id)])
       }
@@ -78,7 +113,7 @@ export class Compagni {
     if (!e.fermo) return this._toccaSemplice(c)
     const r = scegliRispostaGatto(dist, this.rnd, c.def.variante)
     if (chiamaIlGatto(dist, e.fermo)) {                                      // lontano: il contadino lo chiama per nome, poi il gatto risponde a modo suo
-      e.faccia({ x: c.x, z: c.z }); this.fx.parla(c.def.nome + '!'); e.avvia('chiama', 0.9)
+      e.faccia({ x: c.x, z: c.z }); this.fx.parla(this._nome(c) + '!'); e.avvia('chiama', 0.9)
       return this._avviaSeq(c, sequenzaGattoChiamato(r, c.def.variante, this.rnd))
     }
     this._avviaSeq(c, sequenzaGatto(r, c.def.variante, dist <= 1.3, this.rnd))
@@ -88,7 +123,7 @@ export class Compagni {
     this.fx.volo(c.def.verso, p, c.tipo === 'cane' ? 1.4 : 0.8)
     this.fx.scoppietta(new THREE.Vector3(p.x, p.y + (c.tipo === 'cane' ? 0.9 : 0.4), p.z), 0xff7a9a, 5, 0.8, 1.8)
     c.percorso = []; c.poi = null; c.guarda = [this.eroe.x, this.eroe.z]
-    this._stato(c, c.tipo === 'cane' ? 'festa' : 'fusa')
+    this._stato(c, c.tipo === 'gatto' ? 'fusa' : 'festa')
   }
 
   // ── le sequenze: una fila di passi a tempo (dati/compagni.js), con eventi (versi, cuori) e, se serve, una camminata ──
@@ -135,7 +170,7 @@ export class Compagni {
   }
   /** Un passo che cammina: verso l'eroe (a r celle), verso il cane o lontano da lui; arrivato, la sequenza riprende. */
   _vaSeq(c, va) {
-    const libera = (i, j) => this.m.libera(i, j), e = this.eroe, cane = this.lista.find(o => o.tipo === 'cane')
+    const libera = (i, j) => this.m.libera(i, j), e = this.eroe, cane = this.lista.find(o => o.tipo === 'cane' && !o.def.daCurare)
     let centro = [e.x, e.z], evita = this._altri(c)
     if (va.verso === 'cane' && cane) { centro = [cane.x, cane.z]; evita = evita.filter(([x, z]) => x !== cane.x || z !== cane.z) }
     else if (va.verso === 'lontano') { centro = [c.x, c.z]; if (cane) evita = [[cane.x, cane.z, 2], ...evita] }
@@ -231,26 +266,29 @@ export class Compagni {
     g.position.x = c.x; g.position.z = c.z; g.rotation.y = c.dir
     c.rialzo = (c.rialzo || 0) + (this.m.quotaPasso(c.x, c.z) - (c.rialzo || 0)) * Math.min(1, dt * 14)     // su un ponte si sale
     if (!c.salto) g.position.y = c.sopra ? c.sopra.y : c.rialzo
-    const vmax = c.tipo === 'cane' ? VEL.cane.corsa : VEL.gatto.fugge
+    const vmax = c.tipo === 'cane' ? VEL.cane.corsa : c.tipo === 'gatto' ? VEL.gatto.fugge : VEL[c.tipo].vaga
     const pose = { stato: c.stato, vel: c.velo / vmax, fase: c.fase, t: this.t, p: Math.min(1, c.tStato / (c.dur || 1)), sub: c.sub }
     if (c.velo > 0) pose.stato = 'vaga'
     if (this.camera) {                                           // il dettaglio dalla distanza (con isteresi: niente andirivieni sulla soglia)
       const d = this.camera.position.distanceTo(g.position)
       impostaDettaglio(g, d > (g.userData.dettaglioBasso ? LOD_METRI - 1.5 : LOD_METRI))
     }
-    if (c.tipo === 'cane') posaCane(g, { ...pose, vel: c.velo > 0 ? Math.max(0.3, pose.vel) : 0 })
-    else posaGatto(g, { ...pose, vel: c.velo > 0 ? Math.max(0.3, pose.vel) : 0 })
+    const posa = { ...pose, vel: c.velo > 0 ? Math.max(0.3, pose.vel) : 0 }
+    if (c.tipo === 'cane') (c.def.variante === 'beagle' ? posaBeagle : posaCane)(g, posa)
+    else if (c.tipo === 'gatto') posaGatto(g, posa)
+    else posaPiccolo(g, posa)
   }
 
   _stato(c, stato) { c.stato = stato; c.tStato = 0; c.dur = durataDi(stato, this.rnd) }
 
   _interrotto(c) {
+    if (c.def.daCurare) return false
     const e = this.eroe, d = Math.hypot(e.x - c.x, e.z - c.z)
     if (c.tipo === 'cane') {
       if (c.stato === 'festa' || c.tStato < 0.6) return false
       return (d > 7 || ((!e.fermo || e.az) && d > 3.2)) && c.stato !== 'segue'
     }
-    const cane = this.lista.find(o => o.tipo === 'cane')
+    const cane = this.lista.find(o => o.tipo === 'cane' && !o.def.daCurare)
     return !!cane && !c.sopra && c.stato !== 'fugge' && !cane.seq && cane.stato !== 'dorme' && this.t >= c.prossimoIncontro && Math.hypot(cane.x - c.x, cane.z - c.z) < DIST_INCONTRO
   }
 
@@ -263,7 +301,7 @@ export class Compagni {
       c.x += dx / d * passo; c.z += dz / d * passo
       c.dir = ang(c.dir, Math.atan2(dx, dz), Math.min(1, dt * 10))
     }
-    c.velo = passo / dt; c.fase += dt * c.velo * (c.tipo === 'cane' ? 2.6 : 5)
+    c.velo = passo / dt; c.fase += dt * c.velo * FASE_PER_METRO[c.tipo]
     if (d - passo < 0.01) c.percorso.shift()
   }
 
@@ -323,6 +361,11 @@ export class Compagni {
     const m = this.m, e = this.eroe, libera = (i, j) => m.libera(i, j)
     c.guarda = null; c.seq = null; c.sub = ''
     if (c.sopra) return this._scendi(c)                          // se stava su una panchina, dopo il sonno scende
+    if (c.def.daCurare) {                                        // una bestia di casa sta vicino a casa sua: due passi, poi si siede, annusa, dorme (il gatto si lava)
+      const d = decidiPiccolo({}, this.rnd), casa = this._casa(c)
+      if (d.vai === 'attorno') return this._vai(c, scegliMeta({ libera, centro: casa, rMin: 1, rMax: 3.5, rnd: this.rnd, evita: this._altri(c) }), 'vaga', { poi: { stato: 'sta' } })
+      return this._stato(c, c.tipo === 'gatto' && d.stato === 'annusa' ? 'lava' : d.stato)
+    }
     if (c.tipo === 'cane') {
       const dist = Math.hypot(e.x - c.x, e.z - c.z)
       const d = decidiCane({ dist, eroeFermo: e.fermo, eroeLavora: !!e.az, eroeInattivo: this.inattivo }, this.rnd)
@@ -345,7 +388,7 @@ export class Compagni {
       return this._stato(c, d.stato)
     }
     // il gatto
-    const cane = this.lista.find(o => o.tipo === 'cane')
+    const cane = this.lista.find(o => o.tipo === 'cane' && !o.def.daCurare)
     if (cane && !cane.seq && cane.stato !== 'dorme' && !cane.salto) {              // vicino a Watson: di solito lo saluta, ogni tanto (poco) scappa
       const r = incontroGattoCane({ dist: Math.hypot(cane.x - c.x, cane.z - c.z), ora: this.t, prossimo: c.prossimoIncontro }, this.rnd)
       c.prossimoIncontro = r.prossimo

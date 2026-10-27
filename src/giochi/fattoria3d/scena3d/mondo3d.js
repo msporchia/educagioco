@@ -12,8 +12,10 @@ import { Pezzi } from './pezzi.js'
 import { creaAnteprime } from './anteprime.js'
 import { creaScaldo } from './scaldo-puro.js'
 import { Eroe } from './eroe.js'
-import { creaContadino } from './modelli-compagni.js'
+import { creaContadino, posaGatto } from './modelli-compagni.js'
 import { Compagni } from './compagni.js'
+import { creaBestia, posaPiccolo, posaBeagle } from './modelli-bestie.js'
+import { BESTIE, comeCompagno } from '../dati/bestie.js'
 import { Effetti } from './effetti.js'
 import { Camera } from './camera.js'
 import { Azioni } from './azioni.js'
@@ -90,6 +92,7 @@ export class Mondo3d {
     this.costruzione = new Costruzione(this.ctx)
     this.pezzi.sulCompraBestia = id => this.azioni.compraBestia(id)
     this.dito = new Dito(this)
+    this.inSposta = null           // l'id della bestia di casa che si sta spostando (il prossimo tocco su una cella libera la porta lì)
     this.coda = []                 // gli id dei campi che l'eroe farà uno dopo l'altro (semina o raccogli armati)
     this.badgeLotti = {}
 
@@ -103,11 +106,27 @@ export class Mondo3d {
 
   /** L'anteprima 3D (dataURL PNG) di un pezzo o di un edificio, in cache per tipo; le fa col renderer di questa scena, un tipo per fotogramma. */
   anteprima(tipo) {
-    if (!this._anteprime) this._anteprime = creaAnteprime(this.renderer, t => t.startsWith('contadino:') ? this.modelloContadino(t.slice(10)) : this.pezzi.modelloAnteprima(t))
+    if (!this._anteprime) this._anteprime = creaAnteprime(this.renderer, t => t.startsWith('contadino:') ? this.modelloContadino(t.slice(10)) : t.startsWith('bestia:') ? this.modelloBestia(t.slice(7)) : this.pezzi.modelloAnteprima(t))
     return this._anteprime.chiedi(tipo)
   }
   /** Il ritratto del guardaroba: `contadino:<chiave dell'abito>` (dati/abiti.js, `chiaveAbito`), fotografato come un pezzo. */
   modelloContadino(chiave) { return creaContadino(abitoDaChiave(chiave)) }
+  /** Il ritratto di una bestia di casa (`bestia:<id>`, dati/bestie.js): il suo corpo com'è in scena, in posa da fermo. */
+  modelloBestia(id) {
+    const b = BESTIE[id]; if (!b) return null
+    const g = creaBestia(comeCompagno(id)); (b.tipo === 'cane' ? posaBeagle : b.tipo === 'gatto' ? posaGatto : posaPiccolo)(g, { stato: 'sta', t: 0.4 })
+    return g
+  }
+  /** Il modo «sposta»: il prossimo tocco su una cella tua e libera porta lì la bestia di casa (gratis). Torna false se non è tua. */
+  iniziaSposta(id) { if (!this.m.cura.ho(id)) return false; this.inSposta = id; this.fx.parla('Tocca dove vuoi metterla'); return true }
+  annullaSposta() { this.inSposta = null }
+  _sposta(x, y) {
+    const id = this.inSposta, p = this.puntaSuolo(x, y)
+    if (!p) return
+    const r = this.m.cura.sposta(id, Math.floor(p.x), Math.floor(p.z))
+    if (!r.ok) return this.fx.parla('Qui non ci sta')
+    this.inSposta = null; this.compagni.portaA(id, Math.floor(p.x), Math.floor(p.z)); this.ui.cambio()
+  }
   /** Il contadino cambia abito, senza ricrearlo: stesso posto, stessa direzione, stesso gesto. */
   vestiContadino(abito) { this.abito = abito; this.eroe.vesti(abito) }
   anteprimaPronta(tipo) { return this._anteprime ? this._anteprime.leggi(tipo) : null }
@@ -214,6 +233,7 @@ export class Mondo3d {
   tocca(x, y) {
     const { cmd, ui, m, eroe } = this
     if (ui.fogliAperti()) return
+    if (this.inSposta) return this._sposta(x, y)
     const rg = this._raggio(x, y)
     const amico = this.compagni.bersaglio(rg)                           // Watson e i gatti si accarezzano prima di tutto
     if (amico) return this.compagni.tocca(amico)
