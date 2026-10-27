@@ -15,6 +15,7 @@ import { aggiungiAlone } from './roba3d/aloni.js'
 import { idDi, costruisci } from './mostri3d/registro.js'
 import { creaPersona } from './persone3d/persone.js'
 import { elencaProgrammi } from './programmi.js'
+import { passiDi, turnoLibero, segnaTurno } from './coda-shader.js'
 import { segui, rilascia } from '../../../grafica/rilascio3d.js'
 
 const FOV = 24
@@ -150,6 +151,7 @@ function inPosa(c) {
  */
 export function creaAnteprime3d({ ozio = 30000, budget = 16, perdite = 3 } = {}) {
   let renderer = null, scena = null, camera = null, rotto = false, timer = 0
+  let visti = new Set()   // i materiali già compilati da questo renderer (coda-shader.js, passiDi): si riparte a ogni apertura
   const misure = { prima: 0, codaVuota: 0, ultima: 0, disegnate: 0, ms: 0, renderer: 0, perdite: 0, msModelli: 0, msDisegno: 0, msCopia: 0, programmi: 0, msCompila: 0, fettaMax: 0 }
 
   function apri() {
@@ -171,6 +173,7 @@ export function creaAnteprime3d({ ozio = 30000, budget = 16, perdite = 3 } = {})
       renderer.toneMapping = THREE.ACESFilmicToneMapping
       renderer.toneMappingExposure = 1.15
       renderer.setClearColor(0x000000, 0)
+      visti = new Set()
       misure.renderer++
     } catch (e) { rotto = true; renderer = null; return null }
     if (!scena) {
@@ -216,14 +219,22 @@ export function creaAnteprime3d({ ozio = 30000, budget = 16, perdite = 3 } = {})
       camera.aspect = w / h
       camera.position.set(...q.posizione); camera.near = Math.max(0.005, q.distanza / 50); camera.far = q.distanza * 4
       camera.lookAt(...q.bersaglio); camera.updateProjectionMatrix()
-      // gli shader nuovi si chiedono adesso e si usano al compito dopo: il primo uso aspetterebbe la compilazione sul filo
-      const prima = renderer.info.programs.length
-      renderer.compile(scena, camera)
-      const nuovi = renderer.info.programs.length - prima
-      misure.programmi += nuovi
+      // gli shader nuovi si chiedono adesso e si usano al compito dopo: il primo uso aspetterebbe la compilazione sul filo. Uno per
+      // fotogramma, e mai nello stesso fotogramma di un altro della pagina (la scena di sotto che entra in un piano: coda-shader.js,
+      // turno): un modello nuovo ne chiedeva tre o quattro insieme, e la GPU del telefono li compilava di fila fermando tutto
+      fetta(performance.now() - t0)
       const tc = performance.now()
-      fetta(tc - t0)
-      if (nuovi) await pronti(nuovi)
+      for (const f of passiDi(p.obj, o => renderer.compile(o, camera, scena), visti)) {
+        await turnoMio()
+        if (!renderer) return RIPROVA
+        const prima = renderer.info.programs.length
+        f()
+        const nuovi = renderer.info.programs.length - prima
+        if (!nuovi) continue
+        segnaTurno()
+        misure.programmi += nuovi
+        await pronti(nuovi)
+      }
       misure.msCompila += performance.now() - tc
       if (!renderer || renderer.getContext().isContextLost()) return RIPROVA
       const t2 = performance.now()
@@ -255,6 +266,11 @@ export function creaAnteprime3d({ ozio = 30000, budget = 16, perdite = 3 } = {})
     } finally {
       scena.remove(p.obj)
     }
+  }
+  // il turno degli shader (coda-shader.js): si aspetta il fotogramma dopo quello in cui qualcuno ha chiesto un programma (al più un secondo)
+  async function turnoMio() {
+    const fino = performance.now() + 1000
+    while (!turnoLibero() && performance.now() < fino) await new Promise(r => { requestAnimationFrame(() => r()); setTimeout(r, 50) })   // a pagina nascosta il fotogramma non viene
   }
   // finché gli shader appena chiesti non sono pronti: con KHR_parallel_shader_compile lo si chiede senza aspettare; senza, si lascia
   // al telefono un tempo per programma (il primo uso aspetterebbe il resto sul filo, ma il fotogramma intanto è passato)

@@ -16,6 +16,10 @@ const risultati = [
   ing('ing-zaino', { max: [2600, 2500, 2700], lenti: [12, 11, 12] }),
 ]
 const righe = letturaVeri({ risultati }).join('\n')
+// il picco dei programmi in un fotogramma (l'entrata a passi), quando c'è
+const conPicco = [{ ...risultati[0], picco: [1, 2, 1] }, { ...risultati[1], picco: [26, 26, 26] }]
+controlla('la riga col picco', rigaIngresso(conPicco[0]).includes('prog 38/38/38→52/52/52, al più 1/2/1 in un fotogramma'), rigaIngresso(conPicco[0]))
+controlla('la LETTURA col picco', /al più 1 programmi in un fotogramma \(senza 26\)\./.test(letturaVeri({ risultati: conPicco }).join('\n')), letturaVeri({ risultati: conPicco }).join('\n'))
 const testo = componiVeri({ risultati, info: {}, gruppi: { ingresso: { carica: [100], dpr: [], programmi: 0 } } })
 
 controlla('la riga ha i tre giri e i tre attacchi', /XX ing-sot: max 2300\/1900\/2100 ms, >100ms 6\/5\/5, prog 38\/38\/38→52\/52\/52 da scaldare 9\/9\/9 scaldato 2\.4\/2\.6\/2\.3s; attacchi 1° 60\/70\/65 \+0\/0\/1sh 2° 55\/50\/52 \+1\/0\/0sh 3° 50\/48\/49 \+0\/0\/0sh/.test(testo),

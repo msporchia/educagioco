@@ -89,15 +89,22 @@ export function creaMostri3d(scena, { quanti = () => 12, ozio = 0 } = {}) {
     let lista = riserve.get(chiave)
     if (!lista) riserve.set(chiave, lista = [])
     let ist = lista.find(i => !i.chi && !i.presa)
-    if (!ist) { ist = nuovaIstanza(scena, id); if (!ist) return null; ist.chiave = chiave; ist.mosse = chiave === id ? null : mosse; lista.push(ist) }
+    if (!ist && nuove >= api.nuovePerFotogramma) return null   // oltre il tetto resta lo sprite per un fotogramma (vedi sotto)
+    if (!ist) { nuove++; ist = nuovaIstanza(scena, id); if (!ist) return null; ist.chiave = chiave; ist.mosse = chiave === id ? null : mosse; lista.push(ist) }
     ist.chi = s; ist.presa = true; s.m3d = ist
     return ist
   }
 
-  return {
+  let nuove = 0
+  const api = {
+    /**
+     * Quanti modelli nuovi al più in un fotogramma (costruirli e saldarli è il JS più caro dell'entrata in un piano: tre scheletri
+     * leggendari insieme erano un fotogramma lungo). L'entrata a passi (indice.js) lo mette a uno, finché non si disegna.
+     */
+    nuovePerFotogramma: Infinity,
     /** Il modello che questa cosa avrebbe (null: resta lo sprite). */
     idDi,
-    inizia() { usate = 0; modellati.length = 0; for (const l of riserve.values()) for (const i of l) i.presa = false },
+    inizia() { usate = 0; nuove = 0; modellati.length = 0; for (const l of riserve.values()) for (const i of l) i.presa = false },
     /** C'è posto per un altro modello in questo fotogramma? */
     get pieno() { return usate >= quanti() },
     /**
@@ -165,9 +172,10 @@ export function creaMostri3d(scena, { quanti = () => 12, ozio = 0 } = {}) {
     /**
      * Un'istanza in serbo del modello `id`, nascosta, e i suoi shader chiesti in anticipo con `compila(oggetto)`: quelli suoi e quelli
      * delle copie trasparenti di chi svanisce (docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»). Il primo `metti`
-     * la prende. Falso se il modello ne aveva già una, o non c'è.
+     * la prende. Falso se il modello ne aveva già una, o non c'è. Con `passi(oggetto)` (coda-shader.js, passiDi) non compila: torna i
+     * passi, uno per programma, da fare un fotogramma alla volta.
      */
-    prepara(id, compila) {
+    prepara(id, compila, passi = null) {
       let lista = riserve.get(id)
       if (lista && lista.length) return false
       const ist = nuovaIstanza(scena, id)
@@ -175,6 +183,11 @@ export function creaMostri3d(scena, { quanti = () => 12, ozio = 0 } = {}) {
       ist.chiave = id; ist.mosse = null
       if (!lista) riserve.set(id, lista = [])
       lista.push(ist)
+      if (passi) {
+        // le copie trasparenti si accendono passo per passo (l'istanza è in serbo, nascosta) e si spengono alla fine, se nessuno l'ha presa
+        const trasparenti = () => { if (ist.chi) return []; tingi(ist, 0, null, 0, 0.5); return [...passi(ist.radice), () => { if (!ist.chi) tingi(ist, 0, null, 0, 1) }] }
+        return [...passi(ist.radice), trasparenti]
+      }
       compila(ist.radice)
       tingi(ist, 0, null, 0, 0.5); compila(ist.radice); tingi(ist, 0, null, 0, 1)
       return true
@@ -242,4 +255,5 @@ export function creaMostri3d(scena, { quanti = () => 12, ozio = 0 } = {}) {
       riserve.clear()
     },
   }
+  return api
 }

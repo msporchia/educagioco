@@ -6,7 +6,7 @@ import { aspettoDi, paesaggioDi } from './aspetti.js'
 import { piantaDi } from './pianta.js'
 import { nuovaVisibilita } from './visibilita.js'
 import { conMaschera } from './maschera.js'
-import { creaTerreno } from './terreno.js'
+import { creaTerrenoAPassi } from './terreno.js'
 import { creaRelitti } from './relitti.js'
 import { creaPozze } from './acqua.js'
 import { creaFiamme } from './segni.js'
@@ -22,7 +22,13 @@ import { profilo } from '../../../store/qualita.js'
 import { segnaNuovi } from '../../../grafica/elementi3d.js'
 
 // `trameDi(aspetto)`: le trame dello scenario (si fanno una volta e si tengono), `legno`: quella delle botti
-export function costruisciPiano(scena, corsa, { maschera, luci, trameDi, legno, polvere = null }) {
+export function costruisciPiano(scena, corsa, opz) {
+  const g = costruisciPianoAPassi(scena, corsa, opz)
+  for (;;) { const r = g.next(); if (r.done) return r.value }
+}
+// lo stesso a pezzi (un `yield` fra un pezzo e l'altro, col suo nome): l'entrata a passi ne fa uno per fotogramma (indice.js), perché
+// tutto insieme era il fotogramma più lungo dopo gli shader (docs/sotterraneo/prestazioni-3d-shader.md)
+export function* costruisciPianoAPassi(scena, corsa, { maschera, luci, trameDi, legno, polvere = null }) {
   const liv = corsa.livello
   const paesaggio = paesaggioDi(corsa)
   const aspetto = aspettoDi(paesaggio)
@@ -34,7 +40,9 @@ export function costruisciPiano(scena, corsa, { maschera, luci, trameDi, legno, 
   luci.aspetto(aspetto)
   if (polvere) polvere.aspetto(aspetto)
   const via = []
-  const terreno = creaTerreno(scena, { pianta, aspetto, trame, maschera, seme }); via.push(terreno.via)
+  yield 'trame'
+  const terreno = yield* creaTerrenoAPassi(scena, { pianta, aspetto, trame, maschera, seme }); via.push(terreno.via)
+  yield 'colonne'
   // gli elementi (grafica/elementi3d.js): chi pesa si misura spegnendone uno alla volta; i relitti e l'acqua stanno col pavimento
   const el = (nome, fai) => segnaNuovi(scena, nome, fai)
   via.push(el('arredo', () => creaRelitti(scena, liv.relitti || [], corsa.scenario, maschera)).via)
@@ -42,6 +50,7 @@ export function costruisciPiano(scena, corsa, { maschera, luci, trameDi, legno, 
   // il tempio sommerso: l'acqua bassa su tutto il pavimento
   const velo = aspetto.velo ? el('pavimento', () => creaPozze(scena, pianta.pavimento.filter(c => pianta.calpestabile(c.x, c.y)), luci.condivise, maschera, aspetto, aspetto.velo)) : null
   if (velo) via.push(velo.via)
+  yield 'relitti e acqua'
 
   // i fuochi: le torce a muro e l'arredo che arde (bracieri, candelabri, lanterne). Una fiamma ciascuno e una luce che trema
   const colore = new Color(aspetto.torcia)
@@ -52,6 +61,7 @@ export function costruisciPiano(scena, corsa, { maschera, luci, trameDi, legno, 
   const fiamme = ACCESI.fiamme ? el('fiamme', () => creaFiamme(scena, maschera, fuochi, aspetto.fiamma)) : { aggiorna() {}, accesa() {}, via() {} }
   via.push(fiamme.via)
   const sorgenti = fuochi.map(f => ({ pos: f.luce, colore, forza: f.forza, vis: 0, seme: Math.random() * 100, trema: true, raggio: 7, cella: f.cz * pianta.W + f.cx }))
+  yield 'fiamme'
 
   // la fonte e il portale, modellati; il loro stato è del motore (la fonte bevuta resta secca)
   const fonte = liv.robe.find(r => r.che === 'fonte')
@@ -68,12 +78,14 @@ export function costruisciPiano(scena, corsa, { maschera, luci, trameDi, legno, 
   }
   for (const r of liv.robe) if (r.che === 'portale') nuovoPortale(r)
   via.push(() => { for (const p of portali) p.via() })
+  yield 'fonte e portali'
 
   // l'arredo del paesaggio (scena3d/arredo3d.js): chi fa luce entra nella riserva dei fuochi
   let arredo = null
   if (ACCESI.arredo) {
     arredo = el('arredo', () => creaArredo3d(scena, { pianta, liv, aspetto, seme, trame, legno: legno(), conMaschera, maschera, sposta: terreno.sposta }))
     via.push(arredo.via); sorgenti.push(...arredo.luci)
+    yield 'arredo'
   }
   const raggi = aspetto.raggi ? el('arredo', () => creaRaggi(scena, { posti: postiDeiRaggi(pianta, liv.stanze, seme), maschera, colore: aspetto.raggi.colore, forza: aspetto.raggi.forza })) : null
   if (raggi) via.push(raggi.via)
@@ -81,6 +93,7 @@ export function costruisciPiano(scena, corsa, { maschera, luci, trameDi, legno, 
   const posti = ACCESI.botti && corsa.bottiQui ? corsa.bottiQui() : []
   const botti = el('arredo', () => creaBotti(scena, { posti, legno: posti.length ? legno() : null, conMaschera, maschera, regola: BOTTI_PER_PAESAGGIO[paesaggio] || null }))
   via.push(botti.via)
+  yield 'botti'
   // senza `nebbiaFitta` (la fascia bassa) una fetta sola
   // con la luce per vertice nessuna: la nebbia è un termine dei vertici del piano, densa quanto le fette che sostituisce
   const fitte = ACCESI.nebbia ? Math.min(FETTE, profilo('sotterraneo').fetteNebbia) : 0

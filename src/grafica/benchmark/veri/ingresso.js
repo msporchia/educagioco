@@ -38,6 +38,8 @@ function registra(gl, conto) {
   return { f, t: () => performance.now() - t0, parti: () => requestAnimationFrame(fine), ferma: () => { vivo = false } }
 }
 const piuLungo = l => Math.round(Math.max(0, ...l.map(x => x.l)))
+// il più dei programmi nati in un fotogramma (fra uno e il precedente): l'entrata a passi lo tiene a 1-2, il primo disegno intero ne chiedeva 26
+const picco = (f, da, a) => { let m = 0; for (let i = 1; i < f.length; i++) if (f[i].t >= da && f[i].t < a) m = Math.max(m, f[i].p - f[i - 1].p); return m }
 const fra = (f, da, a) => f.filter(x => x.t >= da && x.t < a)
 const finche = async (cond, ms) => { const t0 = performance.now(); while (performance.now() - t0 < ms && !cond()) await pausa(50) }
 
@@ -47,15 +49,17 @@ async function giroDiscesa(contenitore, s, T) {
   const pittore = creaSotterraneo3d(tela.canvas, { strato: tela.strato, dpr: dprDelGioco(), spegni: s.riscaldamento === false ? ['riscaldamento'] : [], cieca: 320 })
   if (!pittore) { tela.via(); throw new Error('il Sotterraneo 3D non parte') }
   const gl = tela.canvas.getContext('webgl2')
-  const conto = () => { const g = pittore.grafica(); return { p: g.programmi, d: g.daScaldare || 0 } }
+  // `e`: il piano c'è (grafica().ingresso): da lì conta, anche il fotogramma che lo costruisce (l'entrata a passi compila dopo)
+  const conto = () => { const g = pittore.grafica(); return { p: g.programmi, d: g.daScaldare || 0, e: g.ingresso ? 1 : 0 } }
   const r = registra(gl, conto)
   let anteprime = null
   try {
     const corsa = corsaDelloScontro(3), ATTACCHI = attacchiDi(corsa)
     pittore.misura(); pittore.mostra({ corsa, orologio: 0, fx: null }); pittore.avvia(); r.parti()
-    // il tempo conta dal primo disegno del piano (prima la scena aspetta l'atlante e non disegna): il fotogramma che compila è quello
-    await finche(() => r.f.some(x => x.p > 0), 10000)
-    const d0 = r.f.find(x => x.p > 0), t0 = d0 ? d0.t - 1 : 0   // la fine del primo disegno (lui compreso: è il fotogramma che compila)
+    // il tempo conta dal fotogramma che costruisce il piano (prima la scena aspetta l'atlante): col riscaldamento spento è anche quello
+    // che compila tutto e disegna; acceso, i programmi vengono dopo, uno per fotogramma
+    await finche(() => r.f.some(x => x.e || x.p > 0), 10000)
+    const d0 = r.f.find(x => x.e || x.p > 0), t0 = d0 ? d0.t - 1 : 0   // la fine di quel fotogramma (lui compreso)
     const esito = {}
     if (s.presto) {
       // il colpo a mezzo secondo, prima del riscaldamento (comincia a un secondo): si riprova finché lo scontro non è in scena
@@ -74,7 +78,7 @@ async function giroDiscesa(contenitore, s, T) {
     }
     await finche(() => r.t() >= t0 + T.finestra, T.finestra + 200)
     const primi = fra(r.f, t0, t0 + T.finestra)
-    Object.assign(esito, { max: piuLungo(primi), lenti: primi.filter(x => x.l > LENTO).length, p1: d0 ? d0.p : 0, p3: conto().p,
+    Object.assign(esito, { max: piuLungo(primi), lenti: primi.filter(x => x.l > LENTO).length, p1: d0 ? d0.p : 0, p3: conto().p, picco: picco(r.f, t0, t0 + T.finestra),
                            daScaldare: Math.max(0, ...r.f.map(x => x.d)) })
     if (!s.presto && !s.zaino) {
       // il riscaldamento finito (o il tetto), poi tre colpi uno dopo l'altro: il fotogramma più lungo dopo ognuno e gli shader nuovi
@@ -119,7 +123,8 @@ async function giroMondo(contenitore, s, T) {
     const disegnato = r.f.find(x => x.p > 0), t0 = disegnato ? disegnato.t - 1 : 0
     await finche(() => r.t() >= t0 + T.finestra + 1000, T.finestra + 1200)
     const primi = fra(r.f, t0, t0 + T.finestra + 1000)
-    return { max: piuLungo(primi), lenti: primi.filter(x => x.l > LENTO).length, p1: disegnato ? disegnato.p : 0, p3: conto().p, scaldato: scena.grafica().scaldato ? 1 : 0 }
+    return { max: piuLungo(primi), lenti: primi.filter(x => x.l > LENTO).length, p1: disegnato ? disegnato.p : 0, p3: conto().p, picco: picco(r.f, t0, t0 + T.finestra + 1000),
+             scaldato: scena.grafica().scaldato ? 1 : 0 }
   } finally {
     r.ferma()
     try { scena.distruggi ? scena.distruggi() : scena.via && scena.via() } finally { tela.via() }
@@ -137,7 +142,7 @@ export async function prepara({ contenitore, corto, opz = {} }) {
         await pausa(corto ? 50 : 600)
       }
       const di = k => giri.map(g => g[k] ?? null)
-      return { tipo: 'ingresso', giri: giri.length, max: di('max'), lenti: di('lenti'), p1: di('p1'), p3: di('p3'), daScaldare: di('daScaldare'),
+      return { tipo: 'ingresso', giri: giri.length, max: di('max'), lenti: di('lenti'), p1: di('p1'), p3: di('p3'), picco: di('picco'), daScaldare: di('daScaldare'),
                scaldato: di('scaldato'), att: giri.every(g => g.att) ? giri.map(g => g.att) : null, sh: giri.every(g => g.sh) ? giri.map(g => g.sh) : null }
     },
     via() {},

@@ -66,9 +66,23 @@ await scegliAvventura(page, 'cavaliere')
 controlla('sopra c\'è il mondo in 3D, non la terra dipinta', await page.locator('[data-mondo3d]').count() === 1 && await page.locator('[data-terra]').count() === 0)
 // un seme con una porta chiusa a pochi passi dall'arrivo (lo legge chi scende, come `#seme=` dei cheat)
 await page.evaluate(() => { location.hash = 'sotterraneo3d&seme=11' })
-await scendiNelSotterraneo(page, 0, { tocca })
+await scendiNelSotterraneo(page, 0, { tocca, scendi: false })
+// col fumetto dell'ingresso aperto la discesa si scalda (docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»): una tela
+// fuori dalla pagina compila il primo piano un programma per fotogramma; scendendo è lei che entra, e l'entrata non ne chiede quasi
+await page.waitForFunction(() => window.__sotterraneo3dCaldo && window.__sotterraneo3dCaldo.anticipato.daScaldare === 0, null, { timeout: 60000 }).catch(() => {})
+const caldo = await page.evaluate(() => window.__sotterraneo3dCaldo ? window.__sotterraneo3dCaldo.anticipato : null)
+controlla('col fumetto aperto la discesa si scalda prima di scendere', !!caldo && caldo.programmi >= 15 && caldo.daScaldare === 0, JSON.stringify(caldo))
+await page.click(`[data-fumetto-di="${CAMPAGNA[0].chiave}"] [data-azione="scendi"]`)
 await page.waitForSelector('[data-tela="3d"]', { timeout: 10000 })
 await page.waitForFunction(() => window.__sotterraneo3d && !window.__sotterraneo3d.grafica().mondo && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 15000 })
+{
+  const g = await g3d(), ing = await page.evaluate(() => window.__sotterraneo3d.ingresso())
+  controlla('scendendo, la tela scaldata è quella della discesa', await page.evaluate(() => window.__sotterraneo3dCaldo === undefined && window.__sotterraneo3d.canvas.isConnected &&
+    window.__sotterraneo3d.canvas.nextElementSibling === document.querySelector('[data-tela="3d"]')))
+  // restano quelli dell'ombra (quattro, al primo disegno: `compile` non li fa; la fascia bassa non ha ombre) e qualcosa nato disegnando
+  controlla('e il primo piano non chiede quasi programmi nuovi', !!caldo && g.programmi - caldo.programmi <= 6, `${caldo && caldo.programmi} → ${g.programmi}`)
+  nota(`discesa scaldata: ${caldo && caldo.programmi} programmi prima di scendere, ${g.programmi} giù; fotogrammi prima del disegno ${ing && ing.attesa}, ms ${ing && ing.ms.slice(0, 8).join(',')}, js ${ing && ing.js.slice(0, 8).join(',')}`)
+}
 {
   const g = await g3d()
   uguale('giù la discesa si disegna in 3D', g.tre, true)
@@ -162,6 +176,8 @@ async function entra(hash, avventura = {}) {
 await entra('sotterraneo3d=1&seme=11&sotterraneo=branco&mostri=2&tipo=ratto,goblin&stanza=sala')
 await page.waitForSelector('[data-scontro-3d]', { timeout: 15000 })
 await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 20000 })
+// entrando gli shader nascono uno per fotogramma e non si disegna (docs/sotterraneo/prestazioni-3d.md): si aspetta il primo disegno
+await page.waitForFunction(() => { const g = window.__sotterraneo3d && window.__sotterraneo3d.grafica(); return g && !g.entrando && g.chiamate > 0 }, null, { timeout: 20000 })
 await attendi(page, 600)
 {
   const g = await g3d()
@@ -239,10 +255,18 @@ await attendi(page, 600)
 
 /* ---------- 4c. tre attacchi contro gli scheletri armati: dopo il primo giro nessuno shader si ricompila (gli effetti tengono i programmi,
    docs/sotterraneo/limiti-3d.md: buttarli faceva ricompilare a ogni colpo, sul telefono 50-300 ms l'uno) ---------- */
-await entra('sotterraneo3d=1&seme=11&sotterraneo=branco&mostri=3&tipo=scheletro&variante=guerriero,arciere,mago&grado=leggendario&stanza=sala&qualita=bassa')
+// `spegni=parallelo`: come il Redmi Note 7, senza KHR_parallel_shader_compile (l'entrata a passi)
+await entra('sotterraneo3d=1&seme=11&sotterraneo=branco&mostri=3&tipo=scheletro&variante=guerriero,arciere,mago&grado=leggendario&stanza=sala&qualita=bassa&spegni=parallelo')
 await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 20000 })
 // il riscaldamento (docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»): finito, il primo attacco trova gli shader pronti
 await page.waitForFunction(() => window.__sotterraneo3d.grafica().daScaldare === 0, null, { timeout: 30000 })
+{
+  // l'entrata e il riscaldamento un programma per fotogramma: prima il primo disegno ne chiedeva 26 insieme (secondi fermi sul telefono)
+  const ing = await page.evaluate(() => window.__sotterraneo3d.ingresso())
+  controlla('entrando, al più due programmi nuovi per fotogramma', ing.picco <= 2, `picco ${ing.picco}, ${ing.fotogrammi.join('')} (${ing.troppi.join('; ')})`)
+  controlla('il primo disegno arriva coi programmi già chiesti', ing.primoDisegno <= 2 && ing.attesa >= 10, `primo disegno +${ing.primoDisegno}, dopo ${ing.attesa} fotogrammi`)
+  nota(`entrata a passi: ${ing.attesa} fotogrammi prima del disegno, picco ${ing.picco} programmi per fotogramma, ${(await g3d()).programmi} in tutto`)
+}
 await page.evaluate(() => { const P = WebGL2RenderingContext.prototype, o = P.linkProgram; window.__compilati = 0; P.linkProgram = function (x) { window.__compilati++; return o.call(this, x) } })
 {
   const compilati = []

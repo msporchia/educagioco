@@ -59,7 +59,7 @@ const props = defineProps({
 // `pensa`, `pensiero`, `pensiero-fine`, `trovati`: lo stesso contratto dei pensieri di viste/Terra.vue
 // `scontro` ({ inc, stato, terra, verso }): un mostro di sopra apre uno scontro (Gioco.vue lo gioca, `apriPalco` lo disegna qui);
 // `raccogli` (i): la cosa per terra `i` è sotto i piedi dell'eroe. Le forze di sopra vanno in `mondo.sopra` col resto (salva)
-const emit = defineEmits(['scendi', 'mondo', 'bottega', 'riprendi', 'sentito', 'cura', 'risposta', 'veduta', 'pensa', 'pensiero', 'pensiero-fine', 'trovati',
+const emit = defineEmits(['scendi', 'davanti', 'mondo', 'bottega', 'riprendi', 'sentito', 'cura', 'risposta', 'veduta', 'pensa', 'pensiero', 'pensiero-fine', 'trovati',
                           'scontro', 'raccogli', 'terre'])
 const minuscolo = s => { const t = String(s ?? ''); return t.charAt(0).toLowerCase() + t.slice(1) }   // un nome che manca non rompe la pagina
 // la terra dove si cammina (docs/sotterraneo/terre-successive.md): la stessa mappa, i mostri più su; la prima se Gioco.vue non lo dice
@@ -565,6 +565,14 @@ function apri(b) {
   aggiornaScena()
 }
 function chiudi() { aperto.value = null; if (scena) scena.S.aperti = new Set() }
+// il fumetto di un ingresso che si può scendere (`davanti`, la sua tappa; null chiuso): Gioco.vue comincia a scaldarne gli shader mentre si
+// legge (docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»)
+watch(() => {
+  const b = aperto.value
+  if (!b || b.ruolo !== 'ingresso') return null
+  const d = datoDelPosto(b)
+  return d.aperto && !(d.t && d.t.colore === 'rosso') ? (d.abisso ? props.abisso : d.t) || null : null
+}, t => emit('davanti', t))
 
 /* ═══════════ la bacheca: si prende un foglio, si consegna (motore/taglie-bacheca.js) ═══════════ */
 function allaBacheca({ id, azione }) {

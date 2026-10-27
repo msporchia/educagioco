@@ -4,18 +4,29 @@ import { CanvasTexture, LinearFilter } from 'three'
 import { frattale, normaliDa, trama } from './rumore.js'
 import { PAVIMENTI, MURI } from './pitture.js'
 
-// ── il pavimento e le pareti: il disegno dello stile del paesaggio (scena3d/pitture.js), fatto trama ──
-const fatte = t => ({
-  map: trama(t.col, t.w, t.h, { srgb: true }), normalMap: trama(normaliDa(t.alt, t.w, t.h, 3.2), t.w, t.h),
-  roughnessMap: trama(t.rug, t.w, t.h), emissiveMap: t.em ? trama(t.em, t.w, t.h, { srgb: true }) : null,
-})
-export function pavimento(asp) {
+// ── il pavimento e le pareti: il disegno dello stile del paesaggio (scena3d/pitture.js), fatto trama. A pezzi (il disegno, il rilievo,
+// le trame: un `yield` fra l'uno e l'altro) per l'entrata a passi (indice.js, cantiereDi); `pavimento` e `muro` tutto insieme ──
+function* fatte(t) {
+  const n = normaliDa(t.alt, t.w, t.h, 3.2)
+  yield 'rilievo'
+  return {
+    map: trama(t.col, t.w, t.h, { srgb: true }), normalMap: trama(n, t.w, t.h),
+    roughnessMap: trama(t.rug, t.w, t.h), emissiveMap: t.em ? trama(t.em, t.w, t.h, { srgb: true }) : null,
+  }
+}
+export function* pavimentoAPassi(asp) {
   const t = (PAVIMENTI[asp.pav] || PAVIMENTI.cesto)(asp)
-  return { ...fatte(t), celle: t.celle }
+  yield 'disegno'
+  return { ...(yield* fatte(t)), celle: t.celle }
 }
-export function muro(asp) {
-  return fatte((MURI[asp.trama] || MURI.mattoni)(asp))
+export function* muroAPassi(asp) {
+  const t = (MURI[asp.trama] || MURI.mattoni)(asp)
+  yield 'disegno'
+  return yield* fatte(t)
 }
+const tutto = g => { for (;;) { const r = g.next(); if (r.done) return r.value } }
+export const pavimento = asp => tutto(pavimentoAPassi(asp))
+export const muro = asp => tutto(muroAPassi(asp))
 
 // ── il legno delle botti: venature, nodi, le fughe fra le doghe ──
 export function legno() {

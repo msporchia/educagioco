@@ -11,7 +11,7 @@ import { creaLuci } from './luci.js'
 import { creaMaschera } from './maschera.js'
 import { aspettoDi, paesaggioDi } from './aspetti.js'
 import { aggiornaVisibilita, scriviTexel, vistaOra } from './visibilita.js'
-import { pavimento, muro, legno as tramaLegno, normaliAtlante } from './trame.js'
+import { pavimento, muro, pavimentoAPassi, muroAPassi, legno as tramaLegno, normaliAtlante } from './trame.js'
 import { creaFigure } from './figure.js'
 import { creaAloni, creaColonne, creaAnelli, creaFiamme } from './segni.js'
 import { creaPolvere, creaScintille } from './particelle.js'
@@ -25,13 +25,15 @@ import { creaGestore, statoDi, effettiPrevisti } from './effetti3d/gestore.js'
 import { statiDel } from '../viste/campo.js'
 import { creaRacconto, assalto } from './racconto.js'
 import { creaAzione } from './azione.js'
-import { costruisciPiano } from './piano.js'
+import { costruisciPianoAPassi } from './piano.js'
 import { creaScontro } from './scontro.js'
 import { creaContorno } from './contorno.js'
 import { ACCESI, POLVERE, SCINTILLE, FIGURE_MAX, ALONI_MAX, MARGINE_DITO, ELEMENTI_DISCESE, elementoAcceso } from './costanti.js'
 import { segna, segnaNuovi, creaElementi } from '../../../grafica/elementi3d.js'
 import { verso } from './tempo.js'
 import { elencaProgrammi } from './programmi.js'
+import { creaCoda, passiDi, passiTrame, tieniProgrammi } from './coda-shader.js'
+import { creaDisegnoDiProva } from './disegno-prova.js'
 import { COSE } from '../dati/cose.js'
 import { mosseDi } from '../dati/mosse.js'
 
@@ -81,14 +83,15 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
               mostri3d, effetti3d, eroe3d }
   const racconto = creaRacconto(S)
   const azione = creaAzione()
-  const trame = new Map()
+  const trame = new Map(), inArrivo = new Map()   // `inArrivo`: le trame fatte a passi dal cantiere, non ancora del piano (cantiereDi)
   let legno = null
   const liberaTrame = t => { for (const k of ['pav', 'muro']) for (const m of Object.values(t[k])) if (m && m.dispose) m.dispose() }
   // le trame dei paesaggi: si tengono le ultime tre usate (risalendo di un piano non si rifanno), le altre si buttano: l'abisso cambia
   // paesaggio di piano in piano, e tenerle tutte cresceva a ogni piano (docs/sotterraneo/prestazioni-3d-perdite.md)
   const trameDi = a => {
     let t = trame.get(a.chiave)
-    if (t) trame.delete(a.chiave); else t = { pav: pavimento(a), muro: muro(a) }
+    if (t) trame.delete(a.chiave)
+    else { const p = inArrivo.get(a.chiave); inArrivo.delete(a.chiave); t = { pav: (p && p.pav) || pavimento(a), muro: (p && p.muro) || muro(a) } }
     trame.set(a.chiave, t)
     for (const [k, v] of trame) if (trame.size > 3 && k !== a.chiave) { liberaTrame(v); trame.delete(k) }
     return t
@@ -141,10 +144,49 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     })
   }
 
-  function nuovoPiano(corsa) {
-    if (piano) piano.via()
-    scontro.chiudi(true)
-    piano = costruisciPiano(scena, corsa, { maschera, luci, trameDi, polvere, legno: () => (legno || (legno = tramaLegno())) })
+  // Il piano nuovo. `aPassi` (l'entrata a passi): un pezzo per fotogramma (le trame, il pavimento e i muri, l'arredo… piano.js,
+  // costruisciPianoAPassi), e vero finché non è finito; senza, tutto adesso. Intanto `piano` è null: niente disegno, resta il quadro di prima
+  let cantiere = null   // { liv, gen }
+  // le misure dell'entrata in un piano (grafica().ingresso, `ingresso()`): per fotogramma i programmi nati, il JS e la durata; il piano a pezzi
+  const nuovoIngresso = () => ({ fotogrammi: [], js: [], ms: [], picco: 0, disegnato: false, msPiano: 0, pezzi: [] })
+  function* cantiereDi(corsa) {
+    const a = aspettoDi(paesaggioDi(corsa))
+    if (!trame.has(a.chiave) && !inArrivo.has(a.chiave)) {
+      const p = {}
+      inArrivo.set(a.chiave, p)
+      p.pav = yield* pavimentoAPassi(a)
+      yield 'trama del pavimento'
+      p.muro = yield* muroAPassi(a)
+      yield 'trama dei muri'
+    }
+    if (!legno) { legno = tramaLegno(); yield 'legno' }
+    return yield* costruisciPianoAPassi(scena, corsa, { maschera, luci, trameDi, polvere, legno: () => (legno || (legno = tramaLegno())) })
+  }
+  // un cantiere lasciato a metà (il piano è cambiato ancora, o si chiude): finito e buttato, i suoi pezzi sono già nella scena
+  function lasciaCantiere() {
+    if (!cantiere) return
+    let r
+    do { r = cantiere.gen.next() } while (!r.done)
+    cantiere = null
+    tieniProgrammi(scena); r.value.via()
+  }
+  function nuovoPiano(corsa, aPassi = false) {
+    if (cantiere && cantiere.liv !== corsa.livello) lasciaCantiere()
+    if (!cantiere) {
+      if (piano) { tieniProgrammi(scena); piano.via() }   // il piano nuovo ha gli stessi programmi: non si ricompilano (coda-shader.js)
+      piano = null
+      scontro.chiudi(true)
+      S.ingresso = nuovoIngresso()
+      cantiere = { liv: corsa.livello, gen: cantiereDi(corsa) }
+    }
+    for (;;) {
+      const t0 = performance.now(), r = cantiere.gen.next(), dt = Math.round(performance.now() - t0)
+      S.ingresso.msPiano += dt
+      if (r.done) { piano = r.value; break }
+      S.ingresso.pezzi.push(`${r.value} ${dt}`)
+      if (aPassi) return true
+    }
+    cantiere = null
     // i modelli dei mostri che in questo piano non ci sono più si buttano (la riserva cresceva a ogni piano nuovo)
     if (mostri3d) mostri3d.sfoltisci(new Set(corsa.livello.robe.filter(r => r.che === 'mostro' && !r.morto).map(r => mostri3d.idDi(r)).filter(Boolean)))
     eroe.px = null; eroe.ritorno = false
@@ -152,34 +194,81 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     azione.annulla()
     scaldaPiano(corsa)
     // dove il telefono compila in parallelo (KHR_parallel_shader_compile) gli shader del piano si chiedono subito e si disegna quando
-    // sono pronti (al più un secondo): intanto resta il quadro di prima, e la pagina non si ferma. Senza, il primo disegno li aspetta
-    if (ACCESI.riscaldamento && renderer.extensions.has('KHR_parallel_shader_compile')) { compila(scena); attesaShader = performance.now() + 1000 }
+    // sono pronti (al più un secondo): intanto resta il quadro di prima, e la pagina non si ferma. Senza, l'entrata a passi (sotto)
+    if (ACCESI.riscaldamento && parallelo) { compila(scena); attesaShader = performance.now() + 1000 }
+    return false
   }
   let attesaShader = 0
   const shaderPronti = () => renderer.info.programs.every(p => p.isReady())
+  const parallelo = ACCESI.parallelo && renderer.extensions.has('KHR_parallel_shader_compile')
 
-  // Il riscaldamento degli shader (docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»): un secondo dopo il primo disegno
-  // di un piano, un pezzo per fotogramma (mai mentre si racconta un colpo), quello che il primo disegno non ha compilato: la scena intera (le cose ancora spente: gli anelli e le
-  // colonne dello scontro, i portali), un'istanza in serbo di ogni modello di mostro del piano, una volta per discesa gli effetti.
-  // `compile` chiede e non aspetta: il telefono li compila mentre si esplora, e il primo scontro e il primo colpo li trovano pronti
-  const daScaldare = []
-  let scaldaDa = 0
+  // Gli shader (docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»): senza KHR_parallel_shader_compile ogni programma
+  // ferma il telefono al disegno dopo, e il primo disegno di un piano ne chiedeva una trentina insieme (secondi fermi). Quindi una
+  // coda (coda-shader.js) che ne fa nascere al più uno per fotogramma: all'ENTRATA quello che il primo disegno vedrebbe, oggetto per
+  // oggetto, e le trame, senza disegnare (resta il quadro di prima); poi il disegno, e il RESTO (mai mentre si racconta un colpo, un
+  // fotogramma sì e uno no): gli effetti previsti, le cose ancora spente (anelli, colonne, portali), un'istanza in serbo di ogni
+  // modello di mostro del piano. `compile` chiede e non aspetta: il programma si compila al disegno dopo.
+  const coda = creaCoda({ programmi: () => (renderer.info.programs || []).length })
+  const resto = []
+  const daFare = () => coda.quanti + resto.length + (cantiere ? 1 : 0)   // i passi che restano (il piano a pezzi conta uno)
+  let visti = new Set(), viste = new Set(), entrando = 0, scaldaDa = 0
+  const ENTRATA_MAX = 12000   // ms: oltre, si disegna lo stesso (un telefono che compila più piano del previsto)
   const compila = o => (post && ACCESI.post ? post.compila(o, cam.camera, scena) : renderer.compile(o, cam.camera, scena))
-  function scaldaPiano(corsa) {
-    daScaldare.length = 0
-    scaldaDa = S.tempo + 1
-    if (!ACCESI.riscaldamento) return   // `&spegni=riscaldamento`: per misurare quanto toglie (docs/core/vecchio-telefono-veri.md, «L'ingresso»)
-    daScaldare.push(() => compila(scena))
+  const passiPrevisti = corsa => {
     const vivi = corsa.livello.robe.filter(r => r.che === 'mostro' && !r.morto)
-    if (mostri3d) for (const id of new Set(vivi.map(r => mostri3d.idDi(r)).filter(Boolean))) daScaldare.push(() => mostri3d.prepara(id, compila))
-    // gli effetti dopo i mostri: si sa che colpo hanno i loro modelli (effettiPrevisti); quelli già scaldati non tornano
-    if (effetti3d) daScaldare.push(() => daScaldare.push(...effetti3d.riscaldamento(effettiPrevisti({
+    return () => (effetti3d ? effetti3d.riscaldamento(effettiPrevisti({
       albero: corsa.crescita && corsa.crescita.albero, famiglia: corsa.mano && COSE[corsa.mano] ? COSE[corsa.mano].famiglia : null,
-      attacchi: mostri3d ? mostri3d.attacchi() : [], mosse: vivi.flatMap(r => mosseDi(r)) }), compila)))
+      attacchi: mostri3d ? mostri3d.attacchi() : [], mosse: vivi.flatMap(r => mosseDi(r)) }), compila, o => passiDi(o, compila, visti)) : [])
   }
-  function scaldaUno() {
-    const f = daScaldare.shift()
-    try { f() } catch (e) { /* solo un anticipo: il primo uso compila come sempre */ }
+  function scaldaPiano(corsa) {
+    coda.svuota(); resto.length = 0
+    visti = new Set(); viste = new Set()
+    entrando = 0; scaldaDa = Infinity
+    if (!ACCESI.riscaldamento) { scaldaDa = 0; return }   // `&spegni=riscaldamento`: per misurare quanto toglie (docs/core/vecchio-telefono-veri.md, «L'ingresso»)
+    if (!parallelo) entrando = performance.now() + ENTRATA_MAX
+    else scaldaDa = S.tempo + 1
+    const vivi = corsa.livello.robe.filter(r => r.che === 'mostro' && !r.morto)
+    // gli effetti per primi (il colpo dell'arma in mano è il primo attacco), le cose spente, i modelli in serbo, poi gli effetti dei
+    // colpi che quei modelli dichiarano (effettiPrevisti; quelli già scaldati non tornano)
+    resto.push(passiPrevisti(corsa), () => passiDi(scena, compila, visti))
+    if (mostri3d) for (const id of new Set(vivi.map(r => mostri3d.idDi(r)).filter(Boolean))) resto.push(() => mostri3d.prepara(id, compila, o => passiDi(o, compila, visti)))
+    resto.push(passiPrevisti(corsa))
+  }
+  // il disegno di prova (disegno-prova.js): entrando ogni materiale si disegna da solo in un pixel, per i driver che compilano lì
+  const diProva = creaDisegnoDiProva({ renderer, scena, camera: () => cam.camera, compila, dentro: f => (post && ACCESI.post ? post.nelQuadro(f) : f()) })
+  const disegnaUno = finto => diProva.disegna(finto)
+  // l'entrata: quello che questo fotogramma disegnerebbe e non è ancora compilato (le trame prima, sono ferme). Vero finché resta da fare
+  function entra() {
+    if (!coda.quanti) {
+      diProva.luci()
+      coda.metti(...passiTrame(scena, t => renderer.initTexture(t), viste, maschera.uniforms, { visibili: true }),
+                 ...passiDi(scena, disegnaUno, visti, { visibili: true }))
+      if (post && ACCESI.post && !visti.has('post')) { visti.add('post'); coda.metti(() => post.compilaQuadro()) }
+    }
+    if (!coda.quanti || performance.now() > entrando) return false
+    coda.passo()
+    return true
+  }
+  // La discesa scaldata prima di scendere (Gioco.vue, scaldaDiscesa): la tela non è ancora nella pagina e non si disegna. Il primo piano
+  // si costruisce e TUTTO quello che potrà chiedere si compila, un programma per fotogramma: trame, scena, modelli dei mostri, effetti.
+  // Scendendo il piano vero (un'altra corsa, lo stesso dungeon) trova i programmi pronti: l'entrata dura un fotogramma o due
+  let rafAnticipo = 0, daAnticipo = false
+  function anticipo() {
+    rafAnticipo = requestAnimationFrame(anticipo)
+    if (!vivo || !quadro || !cose) return
+    if (!piano) {
+      if (nuovoPiano(quadro.corsa, true)) return
+      entrando = 0
+      // l'eroe montato e vestito (un fotogramma suo), poi le trame e la scena
+      const c = quadro.corsa
+      coda.metti(() => { if (eroe3d) eroe3d.prepara(c) },
+                 () => { diProva.luci(); return [...passiTrame(scena, t => renderer.initTexture(t), viste, maschera.uniforms), ...passiDi(scena, disegnaUno, visti)] })
+      if (post && ACCESI.post) { visti.add('post'); coda.metti(() => post.compilaQuadro()) }
+      return
+    }
+    if (!coda.quanti && resto.length) coda.metti(resto.shift())
+    if (coda.quanti) coda.passo()
+    else { cancelAnimationFrame(rafAnticipo); rafAnticipo = 0 }
   }
 
   // l'eroe dà un colpo; se il motore la rompe (motore/botti.js: lascia il segno e, una volta su cinque, qualcosa per terra) la botte si
@@ -237,7 +326,14 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     const t0 = performance.now()
     renderer.info.reset()
     const corsa = quadro.corsa
-    if (!piano || piano.liv !== corsa.livello || piano.paesaggio !== paesaggioDi(corsa)) nuovoPiano(corsa)
+    if (cantiere || !piano || piano.liv !== corsa.livello || piano.paesaggio !== paesaggioDi(corsa)) {
+      // a passi col riscaldamento (`&spegni=riscaldamento`: tutto in un fotogramma, com'era); il fotogramma che lo finisce non fa altro
+      // entrando: i modelli dei mostri e dell'eroe, la roba, al prossimo
+      if (nuovoPiano(corsa, ACCESI.riscaldamento) || entrando) { contaIngresso((renderer.info.programs || []).length, t0, ms); return }
+    }
+    if (mostri3d) mostri3d.nuovePerFotogramma = entrando ? 1 : Infinity   // entrando, un modello nuovo per fotogramma (mostro3d.js)
+    // entrando, l'eroe 3D montato e vestito in un fotogramma suo (dopo, i vestiti nuovi li rifà `aggiorna`, come sempre)
+    if (entrando && eroe3d && eroe3d.prepara(corsa)) { contaIngresso((renderer.info.programs || []).length, t0, ms); return }
     S.tempo += dtVero
     let dt = dtVero
     if (S.fermo > 0) { S.fermo -= dtVero; dt = 0 }
@@ -303,12 +399,32 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     if (ACCESI.ombre && ACCESI.ombraOgni > 1) renderer.shadowMap.needsUpdate = (giri++ % ACCESI.ombraOgni) === 0
     if (attesaShader) { if (performance.now() < attesaShader && !shaderPronti()) return; attesaShader = 0 }
     elementi(scena)
+    const p0 = (renderer.info.programs || []).length
+    if (entrando) {
+      if (entra()) { contaIngresso(p0, t0, ms); return }   // ancora shader da chiedere: niente disegno, resta il quadro di prima
+      entrando = 0; coda.svuota(); scaldaDa = S.tempo + 0.3
+    }
     const t1 = performance.now()
     if (post && ACCESI.post) post.disegna(scena, cam.camera); else renderer.render(scena, cam.camera)
     ctx.misure.msDisegno = performance.now() - t1
     ctx.conta(ms)
-    if (daScaldare.length && S.tempo >= scaldaDa && !(fx && fx.attivo)) scaldaUno()   // dopo il disegno: la GPU fa prima quello che serve adesso
+    if (S.tempo >= scaldaDa && !(fx && fx.attivo)) {   // dopo il disegno: la GPU fa prima quello che serve adesso
+      if (!coda.quanti && resto.length) coda.metti(resto.shift())
+      // esplorando un fotogramma sì e uno no; nello scontro, mentre si legge la domanda, uno per fotogramma (il primo colpo li vuole pronti)
+      if (coda.quanti) coda.passo({ riposo: scontro.palco ? 0 : 1 })
+    }
+    contaIngresso(p0, t0, ms, true)
     if (aFotogrammaFinito) { const f = aFotogrammaFinito; aFotogrammaFinito = null; f() }
+  }
+  // dall'entrata nel piano, per ogni fotogramma: i programmi nati (le misure: il picco deve stare a 1-2), i ms del giro di qui (`js`,
+  // compreso il disegno) e quelli dal fotogramma prima (`ms`: il fermo che si vede, dove la GPU fa aspettare)
+  function contaIngresso(p0, t0, ms, disegnato = false) {
+    const g = S.ingresso
+    if (!g) return
+    const n = (renderer.info.programs || []).length - p0
+    if (n > g.picco) g.picco = n
+    if (disegnato && !g.disegnato) { g.disegnato = true; g.primoDisegno = n; g.attesa = g.fotogrammi.length }   // `attesa`: i fotogrammi senza disegno
+    if (g.fotogrammi.length < 200) { g.fotogrammi.push(n); g.js.push(Math.round(performance.now() - t0)); g.ms.push(Math.round(ms)) }
   }
 
   const this_ = {
@@ -324,11 +440,29 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       return true
     },
     attacca(c) { return c === canvas ? false : null },
+    /**
+     * La discesa scaldata prima (Gioco.vue, scaldaDiscesa) entra nella pagina: la sua tela sta sotto `tela` (quella della pagina, vuota:
+     * prende il dito e dà le misure), le scritte vanno in `stratoPagina` e i segni per le prove (`data-eroe`…) su `tela`.
+     */
+    sposta(tela, stratoPagina) { etichette.sposta(stratoPagina); contorno.sposta(stratoPagina, tela) },
     misura,
     segui(_liv, _x, _y, copertoPx = 0) { coperto = copertoPx },
     mostra(q) { quadro = q },
-    avvia() { if (!raf && vivo) { prima = 0; raf = requestAnimationFrame(passo) } },
-    ferma() { cancelAnimationFrame(raf); raf = 0 },
+    avvia() {
+      // dopo la discesa scaldata: quello che non ha fatto in tempo si finisce entrando a passi, senza disegnare (vedi `entra`)
+      if (daAnticipo) {
+        daAnticipo = false
+        S.ingresso = { ...nuovoIngresso(), anticipato: true }
+        if (coda.quanti && ACCESI.riscaldamento && !parallelo) entrando = performance.now() + ENTRATA_MAX
+      }
+      this_.smettiAnticipo()
+      if (!raf && vivo) { prima = 0; raf = requestAnimationFrame(passo) }
+    },
+    ferma() { cancelAnimationFrame(raf); raf = 0; this_.smettiAnticipo() },
+    /** La discesa scaldata prima (vedi `anticipo`): `corsa` è quella che si scenderà, o una uguale. `avvia` la smette. */
+    anticipa(corsa) { quadro = { corsa, orologio: 0, fx: null }; daAnticipo = true; if (!rafAnticipo && vivo) rafAnticipo = requestAnimationFrame(anticipo) },
+    smettiAnticipo() { if (rafAnticipo) { cancelAnimationFrame(rafAnticipo); rafAnticipo = 0 } },
+    get anticipato() { return { daScaldare: daFare(), programmi: (renderer.info.programs || []).length, inCorso: !!rafAnticipo } },
     schermoDi(x, y) { const p = cam.schermo(x, 0, y); return { x: p.x, y: p.y } },
     // sopra la testa dell'eroe com'è disegnato (la sua altezza, sopra la barretta): il fumetto dei pensieri (Gioco.vue)
     testaDi(corsa) {
@@ -372,9 +506,11 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       const m = ctx.misure
       return { tre: true, chiamate: m.chiamate, triangoli: m.triangoli, dpr: ctx.dpr, ms: Math.round(m.msFotogramma * 10) / 10,
                msJs: Math.round(m.msJs * 100) / 100, msDisegno: Math.round(m.msDisegno * 100) / 100,
-               figure: figure ? figure.quante : 0, pixelSprite: Math.round(cam.pixelSprite * 100) / 100, scenario: piano ? piano.aspetto.chiave : null, palco: !!scontro.palco,
+               // entrando in un piano non si disegna ancora: chi aspetta le figure (o i mostri 3D) aspetta il disegno
+               figure: figure && !entrando ? figure.quante : 0, pixelSprite: Math.round(cam.pixelSprite * 100) / 100, scenario: piano ? piano.aspetto.chiave : null, palco: !!scontro.palco,
                programmi: (renderer.info.programs || []).length, memoria: { ...renderer.info.memory },
-               daScaldare: daScaldare.length, mostri3d: mostri3d ? mostri3d.visibili : 0, modelli3d: mostri3d ? mostri3d.quante : 0, effetti3d: effetti3d ? effetti3d.quanti : 0 }   // gli shader compilati: se crescono a ogni colpo, il telefono si ferma a compilare
+               daScaldare: daFare(), entrando: !!entrando, ingresso: S.ingresso ? { picco: S.ingresso.picco, primoDisegno: S.ingresso.primoDisegno ?? null, fotogrammi: S.ingresso.fotogrammi.length } : null,
+               mostri3d: mostri3d && !entrando ? mostri3d.visibili : 0, modelli3d: mostri3d ? mostri3d.quante : 0, effetti3d: effetti3d ? effetti3d.quanti : 0 }   // gli shader compilati: se crescono a ogni colpo, il telefono si ferma a compilare
     },
     // il banco: `n` disegni della scena così com'è, ognuno aspettato (la lettura di un pixel): i ms della tela da sola, senza
     // la pagina attorno né i 60 Hz (docs/core/vecchio-telefono.md, «Lo scontro»); la mediana e il p90
@@ -399,6 +535,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     get eroe() { return eroe },
     get scena() { return scena },   // per le misure (docs/sotterraneo/prestazioni-3d.md): chi fa le chiamate
     programmi() { return elencaProgrammi(renderer, [scena]) },   // da dove vengono gli shader compilati (le misure)
+    ingresso() { return S.ingresso && { ...S.ingresso, troppi: coda.troppi } },   // i programmi nati in ogni fotogramma dall'entrata nel piano (le misure)
     get corsa() { return quadro ? quadro.corsa : null },
     get palco() { return scontro.palco },
     distruggi() {
@@ -409,8 +546,10 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       if (effetti3d) effetti3d.svuota()
       if (mostri3d) mostri3d.via()
       cam.ripristina()
+      lasciaCantiere()
       if (piano) piano.via()
       piano = null
+      for (const p of inArrivo.values()) liberaTrame({ pav: p.pav || {}, muro: p.muro || {} })
       for (const x of [aloni, colonne, anelli, scintille, polvere, etichette, contorno, figure, figureEroe, fiammaEroe]) if (x) x.via()
       for (const t of trame.values()) liberaTrame(t)
       if (legno) { legno.map.dispose(); legno.normalMap.dispose() }

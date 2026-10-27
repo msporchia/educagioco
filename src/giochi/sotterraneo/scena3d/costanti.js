@@ -82,6 +82,8 @@ export const ACCESI = {
   ombreMorbide: true,   // le macchie d'ombra sotto le figure del mondo di sopra (mondo/persone.js)
   chiarori: true,    // i chiarori per terra delle discese (rarità, missione, chiave, capi: segni.js, creaAloni)
   riscaldamento: true,   // gli shader del piano e del mondo chiesti prima che servano (indice.js scaldaPiano, mondo/indice.js); spento: al primo uso
+  // spento: si fa come se KHR_parallel_shader_compile non ci fosse (il Redmi Note 7), per provare sul computer l'entrata a passi (indice.js)
+  parallelo: true,
   // le semplificazioni della fascia bassa (docs/core/vecchio-telefono-elementi.md, «Le leve»): spente, la versione semplice
   rilievo: true,     // le normal map e le trame di ruvidezza di pavimento, pareti, colonne e terreno di sopra; spento: trame piatte
   nebbiaFitta: true, // le fette di nebbia della fascia; spenta: una fetta sola

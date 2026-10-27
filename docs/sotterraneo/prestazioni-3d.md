@@ -128,6 +128,8 @@ Senza `--funzioni 0` e col file costruito in chiaro (`npx vite build --minify fa
 - **Le trame generate del sotterraneo** (pavimento, pareti, legno, normali dell'atlante): ~0,8 s a ×6 a ogni scenario nuovo.
 - **Il mondo con due branchi**: 17,6 ms di JS a fotogramma a ×6, il più alto; ci pesano l'aggiornamento delle matrici e la melma che
   ricalcola le normali a ogni fotogramma (~15% del JS quando c'è), oltre ai 415k triangoli.
+- **La memoria**: le perdite (renderer chiusi che restavano vivi, riserve della discesa) e il banco che le conta stanno in
+  [prestazioni-3d-perdite.md](prestazioni-3d-perdite.md), con cosa guardare nella scheda Memory di `chrome://inspect`.
 - **La copia delle anteprime** (~16 ms l'una qui, ferma qualunque sia la CPU): sul telefono è un'attesa della GPU, da vedere nella
   scheda Performance di `chrome://inspect` aprendo lo zaino.
 
@@ -144,20 +146,26 @@ vertici, trame, trasparenza, facce, istanze e codice aggiunto (`customProgramCac
    `poi` (codice che da fuori non si legge). Il mondo di sopra (`mondo/vesti.js`) metteva il nome del materiale e quanto si piega: ora
    un `codice` solo per chi riscrive lo shader (il terreno, la stoffa), e vento e rigido sono uniform. Le luci erano già a numero
    fisso (`luci.js`), la nebbia e l'ombra uguali per tutta la discesa.
-2. **Il riscaldamento** (`indice.js`, `scaldaPiano`): `renderer.compile` chiede i programmi e non aspetta (si aspetta al primo
-   disegno, quando three legge l'esito), quindi il telefono li compila mentre si esplora. Un secondo dopo il primo disegno di un piano,
-   un pezzo per fotogramma e mai mentre si racconta un colpo: la scena intera (le cose ancora spente: anelli, colonne, portali),
-   un'istanza in serbo di ogni modello di mostro del piano con le copie trasparenti di chi svanisce (`mostro3d.js`, `prepara`), e
-   gli effetti che la discesa può chiedere (`effetti3d/gestore.js`, `effettiPrevisti`: le abilità imparate, l'arma in mano, le mosse e
-   i colpi dei modelli; tutti e sessanta sarebbero ~30 programmi in più, quasi tutti inutili). Col passaggio finale si compila nella
-   sua texture (`post.compila`): fuori sarebbero altri programmi. Nel mondo di sopra, un secondo dopo i primi pezzi, la scena intera
-   (lo scontro sul prato, spento finché non si combatte). Dove c'è `KHR_parallel_shader_compile` il piano nuovo si disegna quando i
-   suoi programmi sono pronti (al più un secondo; intanto resta il quadro di prima).
+2. **La coda degli shader** (`coda-shader.js`, usata da `indice.js`): al più **un programma nuovo per fotogramma** e un tetto di
+   ~12 ms di JS, con un turno comune fra discese, mondo di sopra e anteprime (la GPU del telefono compila in fila per tutti). Il primo
+   riscaldamento (un secondo dopo il primo disegno, «la scena intera» come primo pezzo) faceva nascere decine di programmi in un
+   fotogramma: sul Note 7 (verifica del 23/10) l'entrata in un piano aveva un fotogramma di **5644 ms** contro 3230 senza
+   riscaldamento. Ora:
+   - **l'entrata a passi**: il piano si costruisce un pezzo per fotogramma (`piano.js`, `costruisciPianoAPassi`; le trame
+     `pavimentoAPassi`/`muroAPassi` in `trame.js`) e poi ogni oggetto che il primo disegno vedrebbe si compila da solo, con il suo
+     disegno di prova in un pixel (`disegno-prova.js`) per i driver che compilano al disegno; intanto non si disegna e resta il quadro di
+     prima (al più `ENTRATA_MAX`, 12 s);
+   - **il resto dopo il primo disegno**: gli effetti previsti (`effettiPrevisti`: le abilità imparate, l'arma in mano, le mosse e i
+     colpi dei modelli), le cose ancora spente (anelli, colonne, portali), un'istanza in serbo di ogni modello di mostro del piano
+     (`mostro3d.js`, `prepara`, un modello nuovo per fotogramma); esplorando un fotogramma sì e uno no, mai mentre si racconta un colpo;
+   - **la discesa scaldata prima di scendere** (`Gioco.vue`, `scaldaDiscesa`, `anticipo()` in `indice.js`): aperto il fumetto di un
+     ingresso, una tela non ancora nella pagina costruisce il primo piano e compila tutto quello che potrà chiedere; scendendo, il piano
+     vero (stesso dungeon, stesso seme) trova i programmi pronti e l'entrata dura uno o due fotogrammi. Cambiando piano i programmi
+     del vecchio restano (`tieniProgrammi`): il piano nuovo li riusa;
+   - col passaggio finale si compila nella sua texture (`post.compila`, `post.compilaQuadro`): fuori sarebbero altri programmi.
+   Dove c'è `KHR_parallel_shader_compile` (non sul Note 7) il piano si chiede tutto subito e si disegna quando è pronto (al più 1 s).
 3. **Le anteprime a fette** ([anteprime-3d.md](anteprime-3d.md)): il renderer, il modello con `compile`, il disegno, la copia con
-   `createImageBitmap`, ognuno in un compito suo.
-
-Non c'è una schermata di caricamento da usare: il piano si costruisce nel fotogramma in cui si arriva, e i suoi programmi servono
-subito. Quello che si sposta è tutto il resto, che prima cadeva nello scontro.
+   `createImageBitmap`, ognuno in un compito suo, e i programmi nuovi nel turno comune.
 
 | programmi (`renderer.info.programs`, fascia bassa) | prima | dopo |
 |---|---|---|
@@ -177,7 +185,7 @@ non-indexed` (49 nel log del telefono) veniva dal campo sfumato degli scudi (`po
 - il riscaldamento parte dopo il primo disegno, non prima: la GPU fa le cose in fila, e il primo disegno aspetterebbe anche gli
   shader dei mostri e degli effetti.
 
-**Da confermare sul Note 7** (Misura questo telefono, la prova coi modelli veri): nelle `discese` il «+Nsh» del primo fotogramma
+**Da confermare sul Note 7** (la verifica corta, riga `INGRESSO`: il fotogramma più lungo deve scendere da 5644 ms a qualche centinaio): nelle `discese` il «+Nsh» del primo fotogramma
 dovrebbe scendere (le varianti) e i colpi seguenti non aggiungere shader; il «primo» della prima scena resta alto (i programmi del
 piano servono subito), quello delle scene dopo deve calare; lo `zaino` deve stare sotto i 400 ms di fotogramma fermo (atteso
 ~150-250); `luci` e `calore` cambiano poco (ogni scena di `luci` cambia il numero di luci, e quindi ricompila tutto: è la prova, non il
@@ -196,7 +204,7 @@ node strumenti/profila-app.mjs "$S" --secondi 3 --funzioni 0 --pronto 'window.__
   --stampa 'window.__sotterraneo3d.programmi()'
 ```
 
-Nei test: `integrazione/sotterraneo-3d` conta i `linkProgram` degli attacchi dopo il riscaldamento; `unita/sotterraneo-anteprime-3d`
+Nei test: `integrazione/sotterraneo-3d` conta i `linkProgram` degli attacchi dopo il riscaldamento e aspetta il primo disegno (`grafica().entrando` falso) prima di contare le chiamate; `unita/sotterraneo-coda-shader` la coda; `unita/sotterraneo-anteprime-3d`
 la coda a fette.
 
 Torna a [grafica-3d-costi.md](grafica-3d-costi.md).

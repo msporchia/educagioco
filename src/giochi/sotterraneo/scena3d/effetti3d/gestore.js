@@ -2,7 +2,7 @@
 // dei prototipi (lancio.js, mischia.js, aure.js) hanno le stesse chiavi degli effetti del gioco (dati/effetti.js): la famiglia (`via`)
 // dice in quale gruppo cercarla. Qui si creano, si aggiornano col tempo della scena e si liberano; gli stati che restano addosso
 // (stordito, avvelenato…) si tengono accesi per chi li porta finché ci sono. Se un effetto non c'è o si rompe, il racconto fa da sé.
-import { Color, Vector3 } from 'three'
+import { Color, Vector3, DoubleSide, AdditiveBlending } from 'three'
 import { EFFETTI as LANCIO } from './lancio.js'
 import { EFFETTI as MISCHIA } from './mischia.js'
 import { EFFETTI as AURE } from './aure.js'
@@ -97,6 +97,21 @@ const BIANCO = new Color(1, 1, 1)
 const TIENI = () => {}
 let seme = 1
 
+// Un materiale trasparente a due facce three lo disegna due volte, dietro e poi davanti, con due programmi (docs/sotterraneo/prestazioni-3d.md,
+// «Shader e prima apparizione»). In somma di luce e senza scrivere la profondità l'ordine non cambia niente: una passata sola, un
+// programma e una chiamata in meno. Anche per chi nasce strada facendo (si guarda a ogni passo).
+const fatti = new WeakSet()
+export function unaPassata(g) {
+  g.traverse(o => {
+    if (!o.material) return
+    for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
+      if (fatti.has(m)) continue
+      fatti.add(m)
+      if (m.transparent && m.side === DoubleSide && m.blending === AdditiveBlending && m.depthWrite === false) m.forceSinglePass = true
+    }
+  })
+}
+
 /** `scena`: dove si aggiungono; `renderer`, `camera`: per chiedere gli shader in anticipo (`riscaldamento`). */
 export function creaGestore(scena, { renderer = null, camera = null } = {}) {
   const attivi = []                 // { def, fx, t, attesa, portatore, chiave }
@@ -113,6 +128,7 @@ export function creaGestore(scena, { renderer = null, camera = null } = {}) {
       scena.add(fx.gruppo)
       fx.gruppo.visible = !(o.attesa > 0)
       fx.aggiorna(0, 0)
+      unaPassata(fx.gruppo)
       const v = { def, fx, t: 0, attesa: o.attesa || 0, portatore: o.portatore || null, chiave: o.chiave || null }
       attivi.push(v)
       return v
@@ -171,7 +187,7 @@ export function creaGestore(scena, { renderer = null, camera = null } = {}) {
         if (v.attesa > 0) { v.attesa -= dt; if (v.attesa > 0) continue; v.fx.gruppo.visible = true }
         v.t += dt
         let vivo = true
-        try { vivo = v.fx.aggiorna(v.t, dt) !== false } catch (e) { console.warn('effetti 3D: si rompe', e); vivo = false }
+        try { vivo = v.fx.aggiorna(v.t, dt) !== false; unaPassata(v.fx.gruppo) } catch (e) { console.warn('effetti 3D: si rompe', e); vivo = false }
         if (v.fx.finito || (v.def.durata !== Infinity && v.t > v.def.durata + 0.15)) vivo = false
         if (!vivo) libera(v)
       }
@@ -182,8 +198,9 @@ export function creaGestore(scena, { renderer = null, camera = null } = {}) {
      * dalla scena, ne chiede gli shader con le luci della scena (`compile` non aspetta: il telefono li compila mentre si esplora, e il
      * primo colpo li trova pronti) e lo libera tenendo i programmi. Prima le aure si compilavano in una scena senza luci, e si buttavano.
      * `compila(oggetto)`: come lo vuole chi disegna (il passaggio finale disegna in una texture); di difetto `compile` con le luci della scena.
+     * Con `passi(oggetto)` (coda-shader.js, passiDi) ogni funzione torna i passi dell'effetto, uno per programma, e la liberazione in coda.
      */
-    riscaldamento(defs, compila = o => renderer.compile(o, camera, scena)) {
+    riscaldamento(defs, compila = o => renderer.compile(o, camera, scena), passi = null) {
       if (!renderer || !camera) return []
       return defs.filter(d => !scaldati.has(d)).map(def => () => {
         scaldati.add(def)
@@ -191,11 +208,15 @@ export function creaGestore(scena, { renderer = null, camera = null } = {}) {
         const fx = def.crea({ da: new Vector3(0, 0, 0), a: new Vector3(1.5, 0, 0), tinta, tinta2: tinta.clone().lerp(BIANCO, 0.45), seme: 1,
                               altri: [new Vector3(2, 0, 1), new Vector3(1, 0, -1)], scala: 1 })
         if (!fx || !fx.gruppo) return
+        const via = () => { try { tieni(fx.gruppo) } finally { fx.libera() } }
         try {
           const fino = Number.isFinite(def.durata) ? def.durata : 1
           for (const t of [0, 0.15, Math.min(0.3, fino * 0.5), fino * 0.5]) fx.aggiorna(t, 0.016)   // quello che nasce strada facendo
+          unaPassata(fx.gruppo)
+          if (passi) return [...passi(fx.gruppo), via]
           compila(fx.gruppo)
-        } finally { tieni(fx.gruppo); fx.libera() }
+        } catch (e) { via(); if (passi) return; throw e }
+        via()
       })
     },
     get quanti() { return attivi.length },

@@ -69,7 +69,12 @@ const COLONNE = {
 // uv e normali uguali per tutti, o mergeGeometries non le unisce
 const pulisci = g => { const n = g.index ? g.toNonIndexed() : g; for (const k of Object.keys(n.attributes)) if (!['position', 'normal', 'uv'].includes(k)) n.deleteAttribute(k); if (!n.attributes.uv) n.setAttribute('uv', new Float32BufferAttribute(new Float32Array(n.attributes.position.count * 2), 2)); return n }
 
-export function creaTerreno(scena, { pianta, aspetto, trame, maschera, seme = 1 }) {
+export function creaTerreno(scena, opz) {
+  const g = creaTerrenoAPassi(scena, opz)
+  for (;;) { const r = g.next(); if (r.done) return r.value }
+}
+// lo stesso a pezzi (il pavimento, le pareti, le colonne): l'entrata a passi, piano.js
+export function* creaTerrenoAPassi(scena, { pianta, aspetto, trame, maschera, seme = 1 }) {
   const p = pianta
   const via = []
   const aggiungi = o => { scena.add(o); via.push(() => { scena.remove(o) }) }
@@ -114,6 +119,7 @@ export function creaTerreno(scena, { pianta, aspetto, trame, maschera, seme = 1 
   const pav = new Mesh(gPav, matPav)
   pav.receiveShadow = true; pav.userData.elemento3d = 'pavimento'
   aggiungi(pav)
+  yield 'pavimento'
 
   // ── le pareti scolpite ──
   const par = aspetto.parete || { stile: 'blocchi' }
@@ -168,6 +174,7 @@ export function creaTerreno(scena, { pianta, aspetto, trame, maschera, seme = 1 
   const alti = p.muri.filter(c => !c.basso)
   const indice = new Map(alti.map((c, i) => [p.id(c.x, c.y), i]))
   const alto = new Float32Array(alti.length).fill(1), meta = new Float32Array(alti.length).fill(1)
+  yield 'pareti'
 
   // ── le colonne, nella forma del paesaggio ──
   const [g0, g1] = (COLONNE[aspetto.fusto] || COLONNE.tonda)()

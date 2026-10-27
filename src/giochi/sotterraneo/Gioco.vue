@@ -1350,16 +1350,8 @@ function avvia(i, { prova = false } = {}) {
   fine.value = null
   domanda.value = null
   chiudiLaBarra()
-  // la discesa com'è adesso: finita la storia la zona con la sua fascia, prima quella della storia
-  // nel 3D il dungeon del mondo, col suo seme fisso finché non lo si ripulisce (motore/rigenera.js)
-  let t = i === INDICE_ABISSO ? L_ABISSO : in3d ? nelMondo(i).tappa : zonaDi(i, potenzaDi(qui.value, i, livelloOra.value, forzaOra.value))
-  // `#scenario=ghiaccio` (solo nel 3D, solo col cheat che scende): la discesa vestita da quel paesaggio (dati/paesaggi.js), per guardarlo
-  if (prova && in3d) t = inPaesaggio(t, new URLSearchParams(location.hash.slice(1)).get('scenario'))
-  corsa.value = new Corsa(t, { seme: semeDallIndirizzo() ?? t.seme ?? null, eroe: eroeQui(), roba: roba.value,
-                               crescita: crescita.value, missioni: presePer(missioni.value, t.chiave), conti: qui.value.conti })
-  corsa.value.botti = in3d   // le botti da rompere sono solo del 3D (motore/botti.js)
-  corsa.value.copricapi = in3d   // e i copricapi nel bottino (docs/sotterraneo/elmo.md)
-  corsa.value.pergameneTrovabili = dopoLaMissione(COSE['pergamena-portale'].dopo, missioni.value)   // si trova solo dopo la missione dell'incantatrice
+  // la corsa della discesa scaldata col fumetto (scaldaDiscesa), se niente è cambiato intanto: il suo primo piano è già costruito
+  corsa.value = (!prova && caldo && caldo.i === i && caldo.firma === firmaCorsa(i) && caldo.corsa) || nuovaCorsa(i, prova)
   borsellino = borsa(CHIAVE)
   corredoDaProva(corsa.value)
   corredoLeggendarioDaProva(corsa.value)
@@ -1373,6 +1365,22 @@ function avvia(i, { prova = false } = {}) {
   nuovoGiro({ nuovo: true })
   suono.nota(180, 90, 0.4, 'sawtooth', 0.12)
   nextTick(() => accendi())
+}
+
+// la discesa `i` com'è adesso: finita la storia la zona con la sua fascia, prima quella della storia; nel 3D il dungeon del mondo, col
+// suo seme fisso finché non lo si ripulisce (motore/rigenera.js). Anche per scaldarla prima di scendere (scaldaDiscesa)
+// quello da cui nuovaCorsa dipende: uguale, la corsa fatta prima è la stessa
+const firmaCorsa = i => { try { return JSON.stringify([i, eroeQui(), roba.value, crescita.value, missioni.value, qui.value.conti, semeDallIndirizzo()]) } catch (e) { return String(Math.random()) } }
+function nuovaCorsa(i, prova = false) {
+  let t = i === INDICE_ABISSO ? L_ABISSO : in3d ? nelMondo(i).tappa : zonaDi(i, potenzaDi(qui.value, i, livelloOra.value, forzaOra.value))
+  // `#scenario=ghiaccio` (solo nel 3D, solo col cheat che scende): la discesa vestita da quel paesaggio (dati/paesaggi.js), per guardarlo
+  if (prova && in3d) t = inPaesaggio(t, new URLSearchParams(location.hash.slice(1)).get('scenario'))
+  const c = new Corsa(t, { seme: semeDallIndirizzo() ?? t.seme ?? null, eroe: eroeQui(), roba: roba.value,
+                           crescita: crescita.value, missioni: presePer(missioni.value, t.chiave), conti: qui.value.conti })
+  c.botti = in3d   // le botti da rompere sono solo del 3D (motore/botti.js)
+  c.copricapi = in3d   // e i copricapi nel bottino (docs/sotterraneo/elmo.md)
+  c.pergameneTrovabili = dopoLaMissione(COSE['pergamena-portale'].dopo, missioni.value)   // si trova solo dopo la missione dell'incantatrice
+  return c
 }
 
 function accendi() {
@@ -1399,19 +1407,25 @@ function aggancia(chi, el) {
   if (el) agganci.set(chi, el); else agganci.delete(chi)
   if (pittore && pittore.aggancia) pittore.aggancia(chi, el)
 }
+// le scelte del pittore 3D: quelle dell'indirizzo (`&dpr=2` per le foto, `&spegni=nebbia`, `&riaccendi=ombre` per misurare) e chi ascolta
+function opzioni3d(perso) {
+  const h = new URLSearchParams(location.hash.slice(1)), lista = k => (h.get(k) || '').split(',').filter(Boolean)
+  return { perso, dpr: Number(h.get('dpr')) || undefined, spegni: lista('spegni'), riaccendi: lista('riaccendi'), cieca: CIECA,
+           bersaglio: scegliIlBersaglio, accorcia: () => racconto.accorcia(),
+           // una botte rotta (solo il 3D, un passatempo): un tonfo di legno e basta
+           botteRotta: () => { suono.nota(170, 70, 0.18, 'square', 0.09); suono.rumore(0.16, 0.1, 1600, 400) } }
+}
+// il pittore è di questa tela: la sua, o quella scaldata prima che ci sta sotto (scaldaDiscesa)
+const diQuestaTela = p => !!tela.value && (p.canvas === tela.value || p.canvas.nextElementSibling === tela.value)
 async function accendi3d() {
-  if (pittore && pittore.canvas !== tela.value) butta3d()
+  if (pittore && !diQuestaTela(pittore)) butta3d()
+  if (!pittore && caldo && caldo.i === tappaIdx.value && tela.value && strato.value) adotta()
+  else buttaCaldo()
   if (!pittore) {
     let m = null
     try { m = await import('./scena3d/indice.js') } catch (e) { perso3d.value = true; return }
     if (!tela.value || !corsa.value || pittore) return
-    const dpr = Number(new URLSearchParams(location.hash.slice(1)).get('dpr')) || undefined   // `&dpr=2`: per le foto
-    const h = new URLSearchParams(location.hash.slice(1)), lista = k => (h.get(k) || '').split(',').filter(Boolean)
-    const spegni = lista('spegni'), riaccendi = lista('riaccendi')   // `&spegni=nebbia`, `&riaccendi=ombre`: per misurare e confrontare
-    pittore = m.creaSotterraneo3d(tela.value, { strato: strato.value, perso: siPerdeIl3d, dpr, spegni, riaccendi, cieca: CIECA,
-                                               bersaglio: scegliIlBersaglio, accorcia: () => racconto.accorcia(),
-                                               // una botte rotta (solo il 3D, un passatempo): un tonfo di legno e basta
-                                               botteRotta: () => { suono.nota(170, 70, 0.18, 'square', 0.09); suono.rumore(0.16, 0.1, 1600, 400) } })
+    pittore = m.creaSotterraneo3d(tela.value, { strato: strato.value, ...opzioni3d(siPerdeIl3d) })
     if (!pittore) { siPerdeIl3d(); return }
     for (const [chi, el] of agganci) pittore.aggancia(chi, el)
     if (typeof window !== 'undefined') window.__sotterraneo3d = pittore   // per le prove: grafica(), aSchermo(), statoDi()
@@ -1421,6 +1435,54 @@ async function accendi3d() {
   pittore.mostra({ corsa: corsa.value, orologio, fx: racconto.fx })
   pittore.avvia()
   giro()
+}
+/* La discesa scaldata prima (docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»): col fumetto di un ingresso aperto nel
+   mondo di sopra (Mondo3d.vue, `davanti`) il pittore nasce su una tela sua, fuori dalla pagina, e compila il primo piano un programma
+   per fotogramma mentre si legge (`anticipa`): i programmi non passano da un contesto WebGL all'altro, quindi scendendo è la sua tela
+   che entra nel campo, sotto quella della pagina (vuota e trasparente: prende il dito e dà le misure), e le scritte vanno nello strato della pagina.
+   Chiuso il fumetto senza scendere, si butta dopo un poco */
+let caldo = null   // { i, pittore, canvas, corsa, firma, via }
+async function scaldaDiscesa(k) {
+  if (!in3d) return
+  let i = k
+  if (typeof i === 'string') { const j = CAMPAGNA.findIndex(t => t.chiave === i); if (j >= 0) i = j }
+  if (i == null) { if (caldo && !caldo.via) caldo.via = setTimeout(buttaCaldo, 4000); return }
+  if (caldo && caldo.i === i) { clearTimeout(caldo.via); caldo.via = 0; return }
+  buttaCaldo()
+  if (corsa.value) return
+  let c = null, m = null
+  const firma = firmaCorsa(i)
+  try { c = nuovaCorsa(i); m = await import('./scena3d/indice.js') } catch (e) { return }   // solo un anticipo: scendendo si fa come sempre
+  if (corsa.value || caldo) return
+  // la tela sotto quella della pagina (che prende il dito): stessa misura, senza la classe (le prove cercano `.sot-tela`); lo strato
+  // delle scritte per ora fuori dalla pagina (scendendo passano in quello della pagina)
+  const canvas = document.createElement('canvas'), stratoEl = document.createElement('div')
+  canvas.style.cssText = 'position: absolute; inset: 0; display: block; pointer-events: none'
+  let p = null
+  p = m.creaSotterraneo3d(canvas, { strato: stratoEl, ...opzioni3d(() => (pittore && pittore === p ? siPerdeIl3d() : buttaCaldo())) })
+  if (!p) return
+  p.anticipa(c)
+  caldo = { i, pittore: p, canvas, corsa: c, firma, via: 0 }
+  if (typeof window !== 'undefined') window.__sotterraneo3dCaldo = p   // per le prove: `anticipato`
+}
+function buttaCaldo() {
+  if (!caldo) return
+  clearTimeout(caldo.via)
+  try { caldo.pittore.distruggi() } catch (e) { /* il contesto è già andato */ }
+  caldo = null
+  if (typeof window !== 'undefined') delete window.__sotterraneo3dCaldo
+}
+// la tela scaldata entra nel campo sotto quella della pagina; le scritte e i segni per le prove vanno su quelle della pagina
+function adotta() {
+  tela.value.before(caldo.canvas)
+  tela.value.style.width = tela.value.style.height = '100%'   // una tela senza contesto resta 300×150: la misura del campo la dà lei
+  caldo.pittore.sposta(tela.value, strato.value)
+  pittore = caldo.pittore
+  clearTimeout(caldo.via)
+  caldo = null
+  if (typeof window !== 'undefined') delete window.__sotterraneo3dCaldo
+  for (const [chi, el] of agganci) pittore.aggancia(chi, el)
+  if (typeof window !== 'undefined') window.__sotterraneo3d = pittore
 }
 // il pittore 3D buttato: anche il suo nome sulla finestra per le prove, che se no tiene viva la scena chiusa
 function butta3d() {
@@ -2117,6 +2179,7 @@ onUnmounted(() => {
   racconto.ferma()
   if (pittore) pittore.ferma()
   if (in3d && pittore) butta3d()
+  buttaCaldo()
 })
 function ridimensiona() { if (pittore) pittore.misura() }
 </script>
@@ -2141,7 +2204,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
                   :punti="barra.punti" :punti-abilita="barra.puntiAbilita" @scheda="apriScheda"
                   :annuncio="annuncio" @sentito="annuncioSentito" :forze="forze" @cura="curaDa"
                   :missioni="missioni" :conti="conti" :azione-missione="azioneMissione" :segui="segui" @segui="seguiMissione"
-                  @gioca="i => avvia(i)" @riprendi="riprendiDiscesa" @scorda="scorda" @bottega="apriBottega"
+                  @gioca="i => avvia(i)" @davanti="scaldaDiscesa" @riprendi="riprendiDiscesa" @scorda="scorda" @bottega="apriBottega"
                   :pensiero="pensiero" @pensa="pensaSopra" @pensiero="toccaPensiero" @pensiero-fine="pensiero = null"
                   @trovati="v => (mercantiTrovati = v)"
                   :forza="forzaOra" :fermo="!!banco || zainoSopra || paginaEroe || preparatiAperti || scegliEroe || !!state.festa.length"
