@@ -8,7 +8,7 @@ giocare il bambino: quanti mostri nello scontro, quante persone sopra, quanti ed
 ## Sul telefono
 
 Zona dei grandi (codice) → **Impostazioni** → tendina **Avanzate** → **Misura questo telefono** → **Avvia coi modelli veri** (la
-**verifica**, 25 scene e ~6 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
+**verifica**, 13 scene e ~3 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
 Le complete durano un quarto d'ora circa (57 scene, e fra un gruppo e l'altro 8 s di schermo nero perché il telefono si raffreddi): la barra in fondo dice a
 che scena si è, **Interrompi** la ferma e tiene il resoconto di quello che c'è. Le scene si vedono mentre girano: se una luce, un
 colore o la nebbia sembrano sbagliati, alla fine c'è un campo **Note** che finisce nel resoconto. Lo schermo non deve spegnersi
@@ -19,39 +19,42 @@ invio), **Copia**, **Rifai**. L'ultimo resoconto di ognuna delle due prove resta
 
 ## La verifica
 
-Il tasto «Avvia coi modelli veri» serve a **decidere**: se una modifica ha migliorato qualcosa e quale leva conviene. Non ripete quello che i due
-log del Note 7 già dicono (il pavimento, triangoli, chiamate, luci, pixel, la roba, la fattoria, 24 persone, 16 mostri): quello sta nelle
-**Misure complete**. `TAPPE_VERIFICA` in `veri.js`, **25 scene, circa 6 minuti** (`stimaVerifica()`: i secondi attesi per scena più, a ogni
-gruppo, la pausa di 4,5 s, il riferimento del calore e il caricamento; la scrive il foglio iniziale; sopra gli 8 minuti si tagliano scene):
+Il tasto «Avvia coi modelli veri» serve a **decidere**: se una modifica ha migliorato qualcosa e quale leva conviene. Tiene **solo
+le scene che servono alla leva di adesso**: quelle che hanno già risposto escono e restano nelle **Misure complete**. `TAPPE_VERIFICA`
+in `veri.js`, **13 scene, circa 3 minuti** (`stimaVerifica()`: i secondi attesi per scena più, a ogni gruppo, la pausa di 4,5 s, il
+riferimento del calore e il caricamento; la scrive il foglio iniziale):
 
 | gruppo | scene |
 |---|---|
-| `ingresso` | `ing-sot`, `ing-sot-x`: il primo attacco col riscaldamento acceso e spento, **un giro solo** (`opz.giri`; le tre ripetizioni e il mondo di sopra sono nelle complete) |
-| `scala` | `scala-0`…`scala-11` e `scala-ancora`: lo scontro con 3 mostri un gradino alla volta, vedi sotto |
-| `discese` | `sot-1`…`sot-6`: lo scontro com'è con 1, 2, 3, 4 e 6 mostri (il LIMITE della serie: quanto degrada); `sot-1` contro l'ultima misura vera |
-| `risoluzione` | `res-0.75`, `res-0.6`: lo scontro con 3 mostri a risoluzione 0,75 e 0,6, un Sotterraneo ciascuno; la riga RISOLUZIONE li mette contro `sot-3` (a 1). Il gioco vero scende da sé fino a 0,6 quando va sopra i 26 ms (`contesto.js`): la verifica misura a risoluzione fissa |
-| `sopra` | `per-8` (8 persone), `mos-8` (8 mostri sul prato), `zaino-15` (15 anteprime) |
+| `scala` | `scala-0`…`scala-8` e `scala-ancora`: lo scontro con 3 mostri un gradino alla volta, vedi sotto |
+| `discese` | `sot-1`, `sot-3`, `sot-6`: lo scontro com'è (il LIMITE della serie: quanto degrada), tutti e tre contro l'ultima misura vera |
+
+Uscite il 28/10, perché avevano risposto: l'ingresso (il riscaldamento serve; il blocco al primo attacco è un lavoro a parte), la
+risoluzione (a 0,6 il 7% in meno: non è la leva, e la bassa non scende più), il mondo di sopra con 8 persone e 8 mostri, lo zaino (le foto
+fatte sul computer: resta il ritratto dell'eroe), lo scontro con 2 e 4 mostri (il rumore li confondeva).
 
 Ogni scena dura al massimo ~4,5 s dopo un rodaggio di ~2 s (`TEMPI.verifica`); fra i gruppi 4,5 s di schermo nero (`RAFFREDDA_BREVE`, 8 s
-nelle complete). Nessuna scena è un'altra volta uguale: lo scontro con 8 mostri, con 4 e l'eroe da solo non servono ai confronti e sono tolti.
+nelle complete). La riga «Dove va il JS» divide il JS dello scontro con 3 mostri in giro del gioco, disegno di three e resto, misurati
+sugli stessi fotogrammi (uno ogni cinque): le mediane prese a parte non si sottraggono (davano un resto negativo).
 
 ### La scala
 
 Lo scontro con 3 mostri (`veri/scala.js`, la scena di `veri/elementi-sot.js` con `opz.mostri`) costruito **in salita**, in un Sotterraneo
-solo: il gradino 0 non disegna niente (il giro del gioco), l'1 pavimento e pareti con la luce fissa (l'emisferica), poi colonne e arredo,
-rilievo, torcia, fuochi e fiamme, lampi e palco, nebbia, eroe e mostri, particelle, effetti delle abilità, ombra e passaggio finale.
+solo: il gradino 0 non disegna niente (il giro del gioco), l'1 la luce fissa e il resto senza pavimento né pareti, poi il pavimento, le
+pareti, colonne e arredo, rilievo-torcia-fuochi-lampi-nebbia insieme, l'eroe, i mostri, e in cima particelle, effetti, ombra e passaggio
+finale. I gradini che il log del 28/10 diceva gratis stanno insieme; il fondo (+13 ms) e le figure (+12,6) sono divisi.
 Ogni gradino accende i suoi pezzi sopra quelli di prima, nella fascia del telefono (un pezzo che la fascia spegne resta spento). Il
-**salto** da un gradino all'altro è il costo di quel pezzo dentro la scena vera, JS e GPU a parte; in fondo il gradino 1 si rifà
-(`scala-ancora`) e la differenza è il **rumore**. La LETTURA ha una riga per gradino e i tre gradini più cari sopra il rumore.
+**salto** da un gradino all'altro è il costo di quel pezzo dentro la scena vera, JS e GPU a parte; in fondo il gradino delle pareti si
+rifà (`scala-ancora`, `RUMORE`) e la differenza è il **rumore**. La LETTURA ha una riga per gradino e i tre gradini più cari sopra il rumore.
 
-- **In salita, dal semplice**: se il telefono si pianta al gradino 8, i primi sette sono già salvati e dicono qualcosa.
+- **In salita, dal semplice**: se il telefono si pianta al gradino 6, i primi cinque sono già salvati e dicono qualcosa.
 - Provato: un elemento da solo su scena vuota (Chi pesa, `+k`) non dice il costo vero (una luce senza niente da illuminare è gratis),
   tolto dalla scena intera (`-k`) si confonde con gli altri; l'A/B in giri alternati provava solo le leve scelte in anticipo.
 - Un gradino caro vuole la sua versione semplice (`SEMPLICE` in `elementi-dati.js`): si fa solo dove il salto è grosso.
 
 ### Il confronto con la misura vera
 
-Sotto ogni scena col riferimento (`sot-1`, `per-8`, `mos-8`, `zaino-15`) la riga **«rispetto all'ultima misura vera (22/10): −12 ms (−11%),
+Sotto ogni scena col riferimento (nella verifica `sot-1`, `sot-3`, `sot-6`; nelle complete anche `per-8`, `mos-8`, `zaino-15`) la riga **«rispetto all'ultima misura vera (22/10): −12 ms (−11%),
 meglio; p95 −20, js −3 gpu −9»** (lo zaino: «−375 ms in tutto, fotogramma più lungo −233 ms»; sotto 3 ms o il 5% è «come prima»), e in testa
 alla LETTURA **MIGLIORATO** / **NON MIGLIORATO** con JS e GPU separati e la somma delle differenze. Attenzione: il log del 22/10 è «senza
 semplificazioni, senza pelle»: da oggi lo scontro le ha, quindi il merito di un pezzo lo dice la scala, non quel confronto. Il riferimento è

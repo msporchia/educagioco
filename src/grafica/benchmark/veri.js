@@ -96,24 +96,15 @@ export const TAPPE = [
 ]
 export const QUANTE = TAPPE.reduce((n, t) => n + t.scene.length, 0)
 /**
- * La VERIFICA (il tasto «Avvia coi modelli veri», ~4 minuti, `stimaVerifica`): solo quello che serve a decidere, con i ms messi contro l'ultima
- * misura vera (`veri/riferimento.js`). Le serie lunghe (triangoli, chiamate, luci, pixel, roba, fattoria, 24 persone, 16 mostri) sono già
- * misurate: stanno in `TAPPE`, le «Misure complete». Il riferimento del calore è quello fisso che ogni gruppo ha già; la scala rifà il suo gradino 1.
+ * La VERIFICA (il tasto «Avvia coi modelli veri», ~3 minuti, `stimaVerifica`): solo quello che serve alla leva di adesso, con i ms messi
+ * contro l'ultima misura vera (`veri/riferimento.js`). Quello che ha già risposto (l'ingresso, la risoluzione, il mondo di sopra, lo zaino,
+ * le serie lunghe) sta in `TAPPE`, le «Misure complete». Il riferimento del calore è quello fisso che ogni gruppo ha già; la scala rifà un gradino.
  */
-export const RISOLUZIONI = [0.75, 0.6]
 export const TAPPE_VERIFICA = [
-  // l'ingresso: il primo attacco col riscaldamento acceso e spento, un giro solo (le tre ripetizioni stanno nelle misure complete)
-  { gruppo: 'ingresso', carica: INGRESSO.carica, opz: { giri: 1 }, tempi: 'verifica', scene: INGRESSO.scene.filter(s => s.id === 'ing-sot' || s.id === 'ing-sot-x').map(s => ({ ...s, stima: 18 })) },
   // la scala (veri/scala.js): lo scontro dal fondo piatto alla scena intera, un gradino alla volta, nello stesso Sotterraneo
   { gruppo: 'scala', carica: () => import('./veri/elementi-sot.js'), opz: { mostri: MOSTRI_SCALA }, tempi: 'verifica', scene: sceneDellaScala() },
-  // lo scontro com'è da 1 a 6 mostri, quanto degrada (la serie dà il LIMITE); `sot-1` contro l'ultima misura vera (veri/riferimento.js)
-  { gruppo: 'discese', carica: discese, tempi: 'verifica', scene: [1, 2, 3, 4, 6].map(n => ({ id: `sot-${n}`, nome: `${n} mostr${n > 1 ? 'i' : 'o'} con gli effetti`, mostri: n, colpi: true, serie: 'discese', quanti: n, cresce: true, stima: 12 })) },
-  // la risoluzione: lo stesso scontro con 3 mostri a 0,75 e a 0,6 (il gioco vero scende da sé fino a 0,6 sopra i 26 ms, contesto.js)
-  ...RISOLUZIONI.map(d => ({ gruppo: 'risoluzione', carica: discese, opz: { dpr: d }, tempi: 'verifica', scene: [{ id: `res-${d}`, nome: `3 mostri, risoluzione ${String(d).replace('.', ',')}`, mostri: 3, colpi: true, stima: 12 }] })),
-  { gruppo: 'sopra', carica: () => import('./veri/sopra.js'), tempi: 'verifica', scene: [
-    { id: 'per-8', nome: '8 persone', persone: 8, stima: 10 }, { id: 'mos-8', nome: '8 mostri sul prato', mostri: 8, stima: 10 },
-  ] },
-  { gruppo: 'sopra', carica: () => import('./veri/zaino.js'), tempi: 'verifica', scene: [{ id: 'zaino-15', nome: '15 anteprime', anteprime: 15, stima: 6 }] },
+  // lo scontro com'è con 1, 3 e 6 mostri (la serie dà il LIMITE), tutti e tre contro l'ultima misura vera (veri/riferimento.js)
+  { gruppo: 'discese', carica: discese, tempi: 'verifica', scene: [1, 3, 6].map(n => ({ id: `sot-${n}`, nome: `${n} mostr${n > 1 ? 'i' : 'o'} con gli effetti`, mostri: n, colpi: true, serie: 'discese', quanti: n, cresce: true, stima: 12 })) },
 ]
 /**
  * Quanto dura la verifica sul Note 7: la somma dei secondi attesi per scena (`stima`, dai log: una scena del Sotterraneo è un Sotterraneo
@@ -180,7 +171,9 @@ function creaGiro(f) {
           const piu = k => (conti.length ? Math.max(...conti.map(c => c[k] || 0)) : undefined)
           // il JS del pittore diviso: `agg` il giro del gioco (logica, scena, segni), `dis` il disegno di three (i comandi alla GPU)
           const med = k => { const v = conti.map(c => c[k]).filter(x => x != null); return v.length ? tondo(mediana(v)) : undefined }
-          fatto({ chMax: piu('ch'), triMax: piu('tri'), agg: med('agg'), dis: med('dis'), ms: tondo(mediana(lavoro)), p95: tondo(perc(lavoro, 0.95)), js: tondo(mediana(cpu)), gpu: tondo(mediana(gpu)), fps: somma ? Math.round(1000 * dt.length / somma) : 0, n: lavoro.length,
+          // il resto del JS (fra un fotogramma e l'altro) sugli stessi fotogrammi: le mediane prese a parte non si sottraggono
+          const resto = conti.filter(c => c.agg != null && c.js != null).map(c => c.js - c.agg - (c.dis || 0))
+          fatto({ chMax: piu('ch'), triMax: piu('tri'), agg: med('agg'), dis: med('dis'), ...(resto.length ? { resto: tondo(mediana(resto)) } : {}), ms: tondo(mediana(lavoro)), p95: tondo(perc(lavoro, 0.95)), js: tondo(mediana(cpu)), gpu: tondo(mediana(gpu)), fps: somma ? Math.round(1000 * dt.length / somma) : 0, n: lavoro.length,
                   primo: tondo(Math.max(0, ...comparsa, ...primi.slice(0, 10))), pronto, lenti: lavoro.filter(x => x > LENTO).length, stabile,
                   ...(nascosta ? { nascosta: true } : {}) })
         }
@@ -196,7 +189,7 @@ function creaGiro(f) {
             return
           }
           lavoro.push(l); finestra.push(l); cpu.push(lc); gpu.push(lg)
-          if (f.conti && lavoro.length % 15 === 1) { try { conti.push(f.conti()) } catch (e) { /* niente conti */ } }
+          if (f.conti && lavoro.length % 5 === 1) { try { conti.push({ ...f.conti(), js: lc }) } catch (e) { /* niente conti */ } }
           if (prec) dt.push(t - prec)
           prec = t
           const e = ora - tm, q = tempi.quadri

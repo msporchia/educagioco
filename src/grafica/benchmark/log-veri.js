@@ -68,20 +68,12 @@ export function rigaRispetto(r) {
   return `${testa}${dif(c.ms)}, ${parola[c.ms.g]}; p95 ${c.p95.d < 0 ? '−' : '+'}${Math.abs(c.p95.d)}, ${[parte('js', c.js), parte('gpu', c.gpu)].filter(Boolean).join(' ')}`
 }
 
-// la risoluzione: lo scontro con 3 mostri a 1 (sot-3), 0,75 e 0,6, e dove va il JS (il giro del gioco, il disegno di three, il resto)
-const percento = (a, b) => `${a.ms - b.ms <= 0 ? '−' : '+'}${Math.abs(Math.round(100 * (a.ms - b.ms) / Math.max(0.1, b.ms)))}%`
-function letturaRisoluzione(ris) {
-  const uno = ris.find(r => r.id === 'sot-3' && misurata(r))
-  const altre = ris.filter(r => /^res-/.test(r.id) && misurata(r))
-  const righe = []
-  if (uno && altre.length) {
-    righe.push(`RISOLUZIONE (3 mostri con gli effetti): a 1 ${uno.ms} ms (p95 ${uno.p95}, js ${uno.js} gpu ${uno.gpu}), ` +
-      altre.map(r => `a ${r.id.slice(4).replace('.', ',')} ${r.ms} ms (p95 ${r.p95}, js ${r.js} gpu ${r.gpu}) ${percento(r, uno)}`).join(', ') +
-      '. Il gioco vero scende da sé fino a 0,6 quando va sopra i 26 ms.')
-  }
-  const j = uno && uno.agg != null ? uno : ris.find(r => r.id === 'scala-11' && misurata(r) && r.agg != null)
-  if (j && j.js != null) righe.push(`Dove va il JS (${j.nome}): ${j.js} ms, di cui il giro del gioco ${j.agg}, il disegno di three ${j.dis ?? '?'}, il resto ${t1d(j.js - j.agg - (j.dis || 0))} (fra un fotogramma e l'altro).`)
-  return righe
+// dove va il JS dello scontro con 3 mostri: il giro del gioco, il disegno di three e il resto, misurato sugli stessi fotogrammi (veri.js)
+function letturaJs(ris) {
+  const j = [ris.find(r => r.id === 'sot-3'), ...ris.filter(r => /^scala-\d+$/.test(r.id)).reverse()].find(r => misurata(r) && r.agg != null && r.js != null)
+  if (!j) return []
+  return [`Dove va il JS (${j.nome}): ${j.js} ms, di cui il giro del gioco ${j.agg}, il disegno di three ${j.dis ?? '?'}` +
+    (j.resto != null ? `, il resto ${j.resto} (fra un fotogramma e l'altro)` : '') + '.']
 }
 
 // la LETTURA della verifica: cosa è migliorato e cosa no (JS e GPU a parte), e lo scontro contro i 33 ms
@@ -100,7 +92,7 @@ function letturaRispetto(ris) {
   if (zz) righe.push(`Zaino (${zz.r.n} anteprime): ${dif(zz.c.tot)} in tutto, fotogramma più lungo ${dif(zz.c.max)}.`)
   const A = ris.find(r => r.id === 'sot-1' && misurata(r))
   if (A) righe.push(`Scontro nelle discese (1 mostro, effetti): p95 ${A.p95} ms: ${A.p95 > SOGLIE_VERI.scatti ? `ancora oltre i ${SOGLIE_VERI.scatti} ms` : `sotto i ${SOGLIE_VERI.scatti} ms`}.`)
-  righe.push(...letturaRisoluzione(ris))
+  righe.push(...letturaJs(ris))
   return righe
 }
 

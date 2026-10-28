@@ -5,7 +5,7 @@ import { BoxGeometry, Mesh, MeshStandardMaterial, Scene, Box3, SkinnedMesh, Skel
 import { componiVeri, letturaVeri, limite, spezza, conNote, LIMITE_CAMPO } from '../../src/grafica/benchmark/log-veri.js'
 import { dividi, leve } from '../../src/grafica/benchmark/veri/moltiplica.js'
 import { TAPPE, QUANTE, TAPPE_VERIFICA, stimaVerifica } from '../../src/grafica/benchmark/veri.js'
-import { GRADINI } from '../../src/grafica/benchmark/veri/scala.js'
+import { GRADINI, RUMORE } from '../../src/grafica/benchmark/veri/scala.js'
 import { SCENE_ELEMENTI } from '../../src/grafica/benchmark/veri/elementi-dati.js'
 import { RIFERIMENTO, confronta, dellaScena } from '../../src/grafica/benchmark/veri/riferimento.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
@@ -146,19 +146,18 @@ lp.triangoli(2); uguale('leve: la SkinnedMesh ha i triangoli x2', sk.geometry.in
 lp.chiamate(4); controlla('leve: e le chiamate x4', Array.isArray(sk.material) && sk.material.length === 4)
 lp.ripristina()
 
-// la verifica compatta: l'ingresso, la scala, lo scontro com'è, il mondo di sopra e lo zaino; ogni scena col confronto contro l'ultima misura vera
+// la verifica compatta: la scala e lo scontro com'è con 1, 3 e 6 mostri, tutti e tre col confronto contro l'ultima misura vera
 const idV = TAPPE_VERIFICA.flatMap(t => t.scene.map(x => x.id))
 const stima = stimaVerifica()
-controlla('la verifica ha 25 scene tutte diverse, senza le serie lunghe', idV.length === 25 && new Set(idV).size === 25 && !idV.some(i => /^(tri|ch|luci|px|roba|fat|cal|v-|ver-)/.test(i)), idV.join(','))
-controlla('la verifica: l\'ingresso (un giro, col riscaldamento e senza), la scala, lo scontro, 8 persone e 8 mostri, lo zaino', idV.slice(0, 2).join() === 'ing-sot,ing-sot-x' && TAPPE_VERIFICA[0].opz.giri === 1 && ['scala-0', 'sot-1', 'sot-6', 'per-8', 'mos-8', 'zaino-15'].every(i => idV.includes(i)))
+controlla('la verifica ha 13 scene tutte diverse, senza le serie lunghe', idV.length === 13 && new Set(idV).size === 13 && !idV.some(i => /^(tri|ch|luci|px|roba|fat|cal|v-|ver-)/.test(i)), idV.join(','))
+controlla('la verifica: la scala, poi lo scontro con 1, 3 e 6 mostri', idV[0] === 'scala-0' && idV.slice(-3).join() === 'sot-1,sot-3,sot-6')
 const sc = TAPPE_VERIFICA.find(t => t.gruppo === 'scala'), gr = sc.scene.slice(0, GRADINI.length)
 controlla('la scala: un Sotterraneo solo con 3 mostri, da niente acceso, ogni gradino sopra quello di prima', sc.opz.mostri === 3 && gr[0].accesi.length === 0 && gr.every((x, k) => !k || (gr[k - 1].accesi.every(a => x.accesi.includes(a)) && x.accesi.length > gr[k - 1].accesi.length)))
-controlla('in fondo il gradino 1 rifatto (il rumore)', sc.scene.length === GRADINI.length + 1 && sc.scene[GRADINI.length].id === 'scala-ancora' && sc.scene[GRADINI.length].accesi.join() === gr[1].accesi.join())
+controlla('in fondo il gradino delle pareti rifatto (il rumore)', sc.scene.length === GRADINI.length + 1 && sc.scene[GRADINI.length].id === 'scala-ancora' && sc.scene[GRADINI.length].accesi.join() === gr[RUMORE].accesi.join() && gr[RUMORE].accesi.includes('pareteVicina'))
 const cima = gr[gr.length - 1].accesi
 controlla('l\'ultimo gradino accende tutti gli elementi dello scontro, e solo quelli', cima.length === SCENE_ELEMENTI.sot.elementi.length && SCENE_ELEMENTI.sot.elementi.every(a => cima.includes(a)), cima.join())
-controlla('la stima: 25 scene, sui 6 minuti (il testo del foglio)', stima.scene === 25 && stima.secondi >= 260 && stima.secondi <= 360, JSON.stringify(stima))
-controlla('la risoluzione: lo scontro con 3 mostri a 0,75 e a 0,6, ognuno col suo Sotterraneo', ['res-0.75', 'res-0.6'].every(i => idV.includes(i)) && TAPPE_VERIFICA.filter(t => t.gruppo === 'risoluzione').map(t => t.opz.dpr).join() === '0.75,0.6')
-controlla('gli id della verifica che sono anche delle complete hanno il riferimento', ['sot-1', 'per-8', 'mos-8', 'zaino-15'].every(i => dellaScena(i)))
+controlla('la stima: 13 scene, sui 3 minuti (il testo del foglio)', stima.scene === 13 && stima.minuti === 3, JSON.stringify(stima))
+controlla('lo scontro della verifica ha il riferimento', ['sot-1', 'sot-3', 'sot-6'].every(i => dellaScena(i)))
 const rif = dellaScena('sot-1')
 uguale('il riferimento è tolto il calore (83.1 / 1.13)', rif.ms, 73.5)
 controlla('il riferimento dice data e versione', RIFERIMENTO.quando === '22/10' && /^2026\.10\.22/.test(RIFERIMENTO.versione))
@@ -168,12 +167,12 @@ uguale('confronto: la GPU separata dal JS', `${cf.js.g} ${cf.gpu.g}`, 'meglio me
 uguale('confronto: nel rumore è uguale', confronta({ id: 'sot-1', ms: 74.5, p95: 90, js: 28.5, gpu: 45.7 }).ms.g, 'uguale')
 uguale('una scena senza riferimento non si confronta', confronta({ id: 'ing-sot', ms: 5 }), null)
 
-// la scala: il fondo 8 ms; la nebbia +14 (GPU), gli effetti +9, eroe e mostri +6; il gradino 1 rifatto +1 (il rumore)
+// la scala: il fondo 8 ms; le pareti +9, i mostri +7, l'eroe +5; le pareti rifatte +1 (il rumore)
 let quota = 8
-const scalaRis = [0, 4, 2, 3, 1, 2, 1, 14, 6, 2, 9, 0.5].map((d, k) => { quota += d; return s(`scala-${k}`, 'scala', quota, quota + 5) })
+const scalaRis = [0, 1, 3, 9, 3, 1, 5, 7, 2].map((d, k) => { quota += d; return s(`scala-${k}`, 'scala', quota, quota + 5) })
 const dv = {
   ...dati, verifica: true, gruppi: {},
-  risultati: [...scalaRis, s('scala-ancora', 'scala', 13, 18), s('sot-1', 'discese', 60, 66, { js: 26, gpu: 36 }), s('sot-3', 'discese', 70, 80, { js: 30, gpu: 40, agg: 9, dis: 15 }), s('res-0.75', 'risoluzione', 56, 64, { js: 27, gpu: 29 }), s('res-0.6', 'risoluzione', 49, 57, { js: 26, gpu: 23 }), s('per-8', 'sopra', 52, 60, { js: 22, gpu: 30 }), { id: 'zaino-15', gruppo: 'sopra', nome: '15 anteprime', tot: 1500, attesa: 800, lavoro: 1400, max: 200, fatte: 15, n: 15 },
+  risultati: [...scalaRis, s('scala-ancora', 'scala', 22, 27), s('sot-1', 'discese', 60, 66, { js: 26, gpu: 36 }), s('sot-3', 'discese', 70, 80, { js: 30, gpu: 40, agg: 9, dis: 15, resto: 6 }), s('per-8', 'sopra', 52, 60, { js: 22, gpu: 30 }), { id: 'zaino-15', gruppo: 'sopra', nome: '15 anteprime', tot: 1500, attesa: 800, lavoro: 1400, max: 200, fatte: 15, n: 15 },
     { id: 'mos-8', gruppo: 'sopra', nome: 'mos-8', errore: 'x' }],
 }
 const tv = componiVeri(dv, { versione: 'x', ua: 'Redmi Note 7', quando: new Date(2026, 9, 23, 10, 0) })
@@ -182,13 +181,12 @@ controlla('verifica: sotto la scena con riferimento la riga «rispetto all\'ulti
 controlla('verifica: lo zaino a parte', /rispetto all'ultima misura vera \(22\/10\): −375 ms \(−20%\) in tutto, fotogramma più lungo −233 ms/.test(tv), tv)
 controlla('verifica: la scena guasta non ha il confronto', !/mos-8[^\n]*\n +rispetto/.test(tv))
 const lv2 = letturaVeri(dv).join('\n')
-controlla('LETTURA: la scala gradino per gradino, col salto', /SCALA \(lo scontro con 3 mostri/.test(lv2) && /  0 niente disegnato \(il giro del gioco\): 8 ms/.test(lv2) && /  7 \+ nebbia: 35 ms \(p95 40, js 11, gpu 25, 250 ch\) → \+14 ms \(js \+5, gpu \+10\)/.test(lv2), lv2)
-controlla('LETTURA: il rumore e i gradini più cari', /Rumore: il gradino 1 rifatto in fondo 13 ms contro 12 \(\+1\)/.test(lv2) && /I gradini più cari: nebbia \+14 ms \(GPU\), effetti delle abilità \+9 ms \(GPU\), eroe e mostri \+6 ms \(GPU\)/.test(lv2), lv2)
+controlla('LETTURA: la scala gradino per gradino, col salto', /SCALA \(lo scontro con 3 mostri/.test(lv2) && /  0 niente disegnato \(il giro del gioco\): 8 ms/.test(lv2) && /  3 \+ pareti: 21 ms \(p95 26, js 6, gpu 15, 250 ch\) → \+9 ms \(js \+2, gpu \+7\)/.test(lv2), lv2)
+controlla('LETTURA: il rumore e i gradini più cari', /Rumore: il gradino 3 rifatto in fondo 22 ms contro 21 \(\+1\)/.test(lv2) && /I gradini più cari: pareti \+9 ms \(GPU\), mostri \+7 ms \(GPU\), eroe \+5 ms \(GPU\)/.test(lv2), lv2)
 const fermo6 = { ...dv, fermata: true, aMeta: [9, 19], risultati: [...scalaRis.slice(0, 6), { id: 'scala-6', gruppo: 'scala', nome: 'scala-6', errore: 'tempo scaduto (la scena oltre 15 s)' }] }
 const lf = letturaVeri(fermo6).join('\n')
-controlla('una scala a metà: i gradini fatti restano, quello che non regge la chiude', /  5 \+ fuochi e fiamme: 20 ms/.test(lf) && /  6 \+ lampi e palco: non regge \(tempo scaduto[^\n]*la scala si ferma qui/.test(lf) && !/  7 /.test(lf), lf)
+controlla('una scala a metà: i gradini fatti restano, quello che non regge la chiude', /  5 \+ rilievo, torcia, fuochi, lampi, nebbia: 25 ms/.test(lf) && /  6 \+ eroe: non regge \(tempo scaduto[^\n]*la scala si ferma qui/.test(lf) && !/  7 /.test(lf), lf)
 controlla('una prova a metà lo dice in testa', /\(A METÀ: 9 scene di 19, la prova non è finita\)/.test(componiVeri(fermo6, {}).split('\n')[0]))
-controlla('LETTURA: la risoluzione, a 1 contro 0,75 e 0,6', /RISOLUZIONE \(3 mostri con gli effetti\): a 1 70 ms \(p95 80, js 30 gpu 40\), a 0,75 56 ms \(p95 64, js 27 gpu 29\) −20%, a 0,6 49 ms \(p95 57, js 26 gpu 23\) −30%/.test(lv2), lv2)
 controlla('LETTURA: dove va il JS (il giro del gioco, il disegno, il resto)', /Dove va il JS \(sot-3\): 30 ms, di cui il giro del gioco 9, il disegno di three 15, il resto 6/.test(lv2), lv2)
 controlla('la riga della scena dice il JS diviso', /sot-3: 70\/80 ms \(js 30: gioco 9 disegno 15 gpu 40\)/.test(tv), tv)
 controlla('LETTURA: lo scontro contro i 33 ms', /Scontro nelle discese \(1 mostro, effetti\): p95 66 ms: ancora oltre i 33 ms/.test(lv2), lv2)
