@@ -1,6 +1,6 @@
 // La scala della verifica (docs/core/vecchio-telefono-veri.md, «La scala»): lo scontro del Sotterraneo con 3 mostri costruito un gradino alla
 // volta, dal fondo piatto con la luce fissa fino alla scena intera; ogni gradino accende i suoi pezzi sopra quelli di prima. Il salto da un
-// gradino all'altro è il costo di quel pezzo dentro la scena vera; un gradino si rifà in fondo e la differenza è il rumore (il calore).
+// gradino all'altro è il costo di quel pezzo dentro la scena vera; un gradino si rifà in fondo e la differenza è il rumore.
 // Dato puro: le scene per veri.js e la LETTURA per log-veri.js. I nomi sono gli elementi di veri/elementi-sot.js.
 export const MOSTRI_SCALA = 3
 
@@ -17,7 +17,7 @@ export const GRADINI = [
   { nome: '+ mostri', accendi: ['mostri', 'figure', 'chiarori'] },
   { nome: '+ particelle, effetti, ombra e passaggio finale', accendi: ['particelle', 'effetti3d', 'ombra', 'post'] },
 ]
-export const RUMORE = 3   // il gradino rifatto in fondo: le pareti, che costano abbastanza da far vedere il calore
+export const RUMORE = 3   // il gradino rifatto in fondo: le pareti, che costano abbastanza da far vedere quanto si sposta una misura
 
 /** Le scene: `scala-0`… coi pezzi accesi fin lì, e `scala-ancora` (il gradino RUMORE di nuovo). */
 export function sceneDellaScala() {
@@ -57,7 +57,7 @@ export function letturaScala(ris) {
   }
   const uno = g[RUMORE], ancora = ris.find(r => r.id === 'scala-ancora')
   const rumore = buona(uno) && buona(ancora) ? Math.abs(ancora.ms - uno.ms) : null
-  if (rumore != null) righe.push(`  Rumore: il gradino ${RUMORE} rifatto in fondo ${ancora.ms} ms contro ${uno.ms} (${piu(ancora.ms - uno.ms)})${ancora.ms > 1.15 * uno.ms ? ': il telefono si è scaldato, i gradini alti pesano un po\' meno di quel che dicono' : ''}.`)
+  if (rumore != null) righe.push(`  Rumore: il gradino ${RUMORE} rifatto in fondo ${ancora.ms} ms contro ${uno.ms} (${piu(ancora.ms - uno.ms)}): un gradino che si sposta meno di così è rumore.`)
   const soglia = Math.max(1, rumore ?? 1)
   const cari = salti.filter(s => s.ms > soglia).sort((a, b) => b.ms - a.ms).slice(0, 3)
   if (cari.length) righe.push(`  I gradini più cari: ${cari.map(s => `${GRADINI[s.k].nome.replace(/^\+ /, '')} ${piu(s.ms)} ms (${s.gpu >= s.js ? 'GPU' : 'JS'})`).join(', ')}.`)
