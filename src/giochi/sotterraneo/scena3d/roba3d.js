@@ -50,7 +50,7 @@ export function creaConsumabile(chiave, moduli = MODULI) {
   return null
 }
 
-// l'arma semplice (`ACCESI.armiSemplici`, la fascia bassa: docs/sotterraneo/prestazioni-3d-bassa.md): il modello nuovo della figura con tutti i
+// l'arma semplice (`ACCESI.armiSemplici`, la fascia bassa: docs/sotterraneo/prestazioni-3d.md): il modello nuovo della figura con tutti i
 // pezzi fermi fusi in una geometria, il colore di ogni materiale nei vertici e un materiale solo per tutte (saldato all'eroe, una chiamata);
 // via aloni, fiamme, punti e trasparenze. Non il ripiego della collezione: quello viene dal disegno 2D e non somiglia al modello nuovo
 let materialeSemplice = null
