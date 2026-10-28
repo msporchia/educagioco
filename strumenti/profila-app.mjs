@@ -16,7 +16,8 @@
 // ms finché l'espressione è vera (il caricamento sul telefono lento), poi misura; `--prima '<espressione>'` la fa (e la aspetta)
 // prima di misurare (portare l'eroe in un posto), `--stabile '<espressione>'` aspetta che resti uguale per tre secondi (le zone
 // del mondo caricate); `--stampa '<espressione>'` scrive quanto vale alla fine (`grafica()` di un
-// gioco 3D: chiamate, triangoli, memoria); `--funzioni 0` non elenca le funzioni. Ogni misura dice anche gli fps e i ms di JS e
+// gioco 3D: chiamate, triangoli, memoria); `--funzioni 0` non elenca le funzioni. `--memoria` campiona anche quello che il JS crea
+// (la spazzatura compresa: KB a fotogramma e chi li crea); il tempo del raccoglitore lo dice sempre. Ogni misura dice anche gli fps e i ms di JS e
 // di compiti del filo principale a fotogramma. Un telefono non si imita davvero (la GPU, la memoria, il calore restano del computer):
 // per quello c'è chrome://inspect col telefono collegato (docs/core/comandi.md). Trovato così, il 14 ottobre 2026, lo
 // stile da due megabyte che la terra di sopra rimetteva a ogni elemento rifatto.
@@ -33,6 +34,7 @@ const tocca = opz('tocca') ? opz('tocca').split(',').map(Number) : null
 const secondi = Number(opz('secondi', 12)), lenti = String(opz('lento', 1)).split(',').map(Number)
 const esegui = opz('esegui'), pronto = opz('pronto'), prima = opz('prima'), stampa = opz('stampa'), stabile = opz('stabile')
 const funzioni = Number(opz('funzioni', 12))
+const memoria = argv.includes('--memoria')
 const apertura = argv.includes('--apertura') || !!pronto   // registra l'APERTURA: parte dalla home e cambia l'indirizzo dopo
 
 async function profila(dist, lento) {
@@ -63,6 +65,8 @@ async function profila(dist, lento) {
   await s.send('Performance.enable')
   const metriche = async () => Object.fromEntries((await s.send('Performance.getMetrics')).metrics.map(m => [m.name, m.value]))
   await s.send('Profiler.enable'); await s.send('Profiler.start')
+  // la spazzatura: gli oggetti che il raccoglitore porta via restano nel campione (se no si vedrebbe solo quello che resta)
+  if (memoria) { await s.send('HeapProfiler.enable'); await s.send('HeapProfiler.startSampling', { samplingInterval: 8192, includeObjectsCollectedByMajorGC: true, includeObjectsCollectedByMinorGC: true }) }
   if (apertura && !pronto) await page.evaluate(h => { location.hash = h }, schermata)
   if (esegui) await page.evaluate(esegui)
   if (tocca) await page.mouse.click(tocca[0], tocca[1])
@@ -73,17 +77,19 @@ async function profila(dist, lento) {
   }
   const m1 = await metriche(), fot = (await page.evaluate(() => window.__fot)) - f0, durata = Date.now() - t0
   const { profile } = await s.send('Profiler.stop')
+  const mucchio = memoria ? (await s.send('HeapProfiler.stopSampling')).profile : null
   let detto = null
   if (stampa) detto = await page.evaluate(e => { try { return JSON.stringify((0, eval)(e)) } catch (x) { return 'errore: ' + x.message } }, stampa)
   await b.close()
   const per = new Map()
   profile.samples.forEach((id, i) => per.set(id, (per.get(id) || 0) + (profile.timeDeltas[i] || 0) / 1000))
-  let tot = 0, fermo = 0
+  let tot = 0, fermo = 0, raccolta = 0
   const pesi = new Map()
   for (const n of profile.nodes) {
     const t = per.get(n.id) || 0, f = n.callFrame
     tot += t
     if (f.functionName === '(idle)') { fermo += t; continue }
+    if (f.functionName === '(garbage collector)') raccolta += t
     if (f.functionName === '(program)' || f.functionName === '(root)') continue
     const k = `${f.functionName || '(anonima)'} ${f.url.split('/').pop()}:${f.lineNumber}`
     pesi.set(k, (pesi.get(k) || 0) + t)
@@ -91,7 +97,15 @@ async function profila(dist, lento) {
   const aFot = k => ((m1[k] - m0[k]) * 1000 / Math.max(1, fot)).toFixed(1)
   console.log(`\n${dist}${lento > 1 ? `  (CPU ×${lento})` : ''}\n  ${Math.round(tot)} ms registrati, CPU ferma il ${Math.round(100 * fermo / tot)}%`)
   if (msPronto != null) console.log(`  pronto in ${msPronto} ms dal cambio d'indirizzo`)
-  console.log(`  ${(1000 * fot / durata).toFixed(1)} fps; a fotogramma: JS ${aFot('ScriptDuration')} ms, compiti ${aFot('TaskDuration')} ms`)
+  console.log(`  ${(1000 * fot / durata).toFixed(1)} fps; a fotogramma: JS ${aFot('ScriptDuration')} ms, compiti ${aFot('TaskDuration')} ms, raccoglitore ${(raccolta / Math.max(1, fot)).toFixed(2)} ms`)
+  if (mucchio) {
+    const crea = new Map()
+    const giu = n => { const f = n.callFrame, k = `${f.functionName || '(anonima)'} ${f.url.split('/').pop()}:${f.lineNumber}`; crea.set(k, (crea.get(k) || 0) + n.selfSize); n.children.forEach(giu) }
+    giu(mucchio.head)
+    const kb = [...crea.values()].reduce((a, b) => a + b, 0) / 1024
+    console.log(`  memoria creata: ${(kb / Math.max(1, fot)).toFixed(1)} KB a fotogramma (${Math.round(kb)} KB in ${fot} fotogrammi), il mucchio da ${Math.round(m0.JSHeapUsedSize / 1048576)} a ${Math.round(m1.JSHeapUsedSize / 1048576)} MB`)
+    for (const [k, v] of [...crea].sort((a, b) => b[1] - a[1]).slice(0, funzioni)) console.log(`  ${(v / 1024 / Math.max(1, fot)).toFixed(2).padStart(8)} KB/fot  ${k.slice(0, 100)}`)
+  }
   if (detto != null) console.log('  ' + detto)
   for (const [k, v] of [...pesi].sort((a, b) => b[1] - a[1]).slice(0, funzioni)) console.log(`  ${v.toFixed(1).padStart(8)} ms  ${k.slice(0, 100)}`)
   if (errori.length) console.log('  errori: ' + errori.slice(0, 3).join(' | '))
