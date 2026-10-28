@@ -43,10 +43,23 @@ export function limite(ris, serie) {
   return { regge: i === -1 ? l[l.length - 1] : i > 0 ? l[i - 1] : null, oltre: i === -1 ? null : l[i], molto, tutte: i === -1, pendenza, pavimento }
 }
 
+// gli fps veri (veri.js, TAPPE_FPS): quanti fotogrammi al secondo arrivano davvero, quanti sotto i 30, i fermi; il JS è solo la CPU
+const segnoFps = f => (f >= 50 ? 'ok ' : f >= 30 ? '~  ' : 'XX ')
+function rigaFps(r) {
+  return `${segnoFps(r.fps)}${r.nome}: ${r.fps} fps (sotto i 30 il ${r.sotto30}% dei fotogrammi, p95 ${r.dt95} ms${r.fermi ? `, ${r.fermi} fermi oltre 100 ms` : ''}) js ${r.js ?? '?'} ${r.ch ?? '?'}ch ${kt(r.tri)}kt`
+}
+const letturaFps = (ris, fascia) => {
+  const l = ris.filter(r => r.vero && misurata(r))
+  if (!l.length) return []
+  const piano = x => (x >= 50 ? 'liscio' : x >= 30 ? 'si gioca, a tratti scatta' : 'a scatti')
+  return [`FPS VERI (fascia ${fascia || '?'}, il gioco com'è): ${l.map(r => `${r.nome} ${r.fps} fps (${piano(r.fps)}${r.sotto30 ? `, sotto i 30 il ${r.sotto30}%` : ''})`).join('; ')}.`]
+}
+
 function rigaVera(r) {
   if (r.errore) return `XX ${r.nome}: non regge (${r.errore})`
   if (r.tipo === 'ingresso') return rigaIngresso(r)
   if (r.salta) return `-- ${r.nome}: saltata (la prima di questa serie era oltre 400 ms)`
+  if (r.vero) return rigaFps(r)
   if (r.tot != null) return `${segnoVero(r.max)}${r.nome}: ${r.tot} ms in tutto, attesa ${r.attesa}, lavoro ${r.lavoro}, fotogramma max ${r.max}${r.fatte < r.n ? `, ${r.n - r.fatte} vuote` : ''}`
   const c = corretta(r)
   const piu = [c !== r ? `≈${c.ms}` : '', r.primo > Math.max(50, 2 * r.ms) ? `primo ${Math.round(r.primo)}` : '', r.nuovi ? `+${r.nuovi}sh` : '',
@@ -102,6 +115,7 @@ export function letturaVeri(dati) {
   const m = id => { const r = ris.find(x => x.id === id); return misurata(r) ? r : null }
   const d = (a, b) => t1d(a.ms - b.ms)
   const derive = crudi.some(r => r.deriva) ? crudi.filter(misurata).map(r => r.deriva ?? 1) : []
+  righe.push(...letturaFps(crudi, dati.fascia))
   if (dati.verifica) righe.push(...letturaRispetto(ris))
   righe.push(...letturaScala(ris))
   if (derive.length) righe.push(`Calore: il riferimento di ogni gruppo da x${Math.min(...derive)} a x${Math.max(...derive)} del più fresco` +
@@ -174,7 +188,7 @@ export function letturaVeri(dati) {
       : `COLLO DI BOTTIGLIA: nessuno fra quelli provati (a raddoppiarli: ${chi} ${segnato(quanto)}, ${altri} ms): il tempo sta altrove.`)
   }
   // la CPU o la GPU: di tutte le scene misurate, quanto del lavoro è attesa della scheda
-  const conGpu = ris.filter(r => misurata(r) && !r.el && r.gpu != null && r.js != null)
+  const conGpu = ris.filter(r => misurata(r) && !r.el && !r.vero && r.gpu != null && r.js != null)
   if (conGpu.length) {
     const g = conGpu.reduce((n, r) => n + r.gpu, 0), j = conGpu.reduce((n, r) => n + r.js, 0)
     const quota = Math.round(100 * g / Math.max(0.1, g + j))
@@ -202,7 +216,7 @@ export function letturaVeri(dati) {
   const parallelo = !((dati.info || {}).mancanti || []).includes('KHR_parallel_shader_compile')
   if (primi.length || sh) righe.push(`Prima apparizione: ${primi.map(r => `${r.nome} ${Math.round(r.primo)} ms`).join(', ') || 'nessuna sopra 100 ms'}; ${sh} shader nuovi, ` +
     `fino a ${prog} programmi in un gruppo` + (parallelo ? '.' : '; senza KHR_parallel_shader_compile si compilano bloccando: vanno precompilati (renderer.compileAsync) a una schermata di caricamento.'))
-  const pesante = ris.filter(r => misurata(r) && !r.el && r.p95 != null).sort((x, y) => y.p95 - x.p95)[0]
+  const pesante = ris.filter(r => misurata(r) && !r.el && !r.vero && r.p95 != null).sort((x, y) => y.p95 - x.p95)[0]
   if (pesante) righe.push(`Chi pesa di più: ${pesante.nome} (p95 ${pesante.p95} ms, ${pesante.ch} chiamate, ${kt(pesante.tri)}k triangoli).`)
   const i = dati.info || {}, p = i.precisione
   if (p) righe.push(`GPU: highp nei frammenti ${p.fsAlta ? 'si' : 'NO'}, mediump a ${p.fsMedia} bit` +

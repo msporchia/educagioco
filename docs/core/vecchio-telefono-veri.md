@@ -8,7 +8,7 @@ giocare il bambino: quanti mostri nello scontro, quante persone sopra, quanti ed
 ## Sul telefono
 
 Zona dei grandi (codice) → **Impostazioni** → tendina **Avanzate** → **Misura questo telefono** → **Avvia coi modelli veri** (la
-**verifica**, 13 scene e ~3 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
+**verifica**, 20 scene e ~5 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
 Le complete durano un quarto d'ora circa (57 scene, e fra un gruppo e l'altro 8 s di schermo nero perché il telefono si raffreddi): la barra in fondo dice a
 che scena si è, **Interrompi** la ferma e tiene il resoconto di quello che c'è. Le scene si vedono mentre girano: se una luce, un
 colore o la nebbia sembrano sbagliati, alla fine c'è un campo **Note** che finisce nel resoconto. Lo schermo non deve spegnersi
@@ -21,13 +21,14 @@ invio), **Copia**, **Rifai**. L'ultimo resoconto di ognuna delle due prove resta
 
 Il tasto «Avvia coi modelli veri» serve a **decidere**: se una modifica ha migliorato qualcosa e quale leva conviene. Tiene **solo
 le scene che servono alla leva di adesso**: quelle che hanno già risposto escono e restano nelle **Misure complete**. `TAPPE_VERIFICA`
-in `veri.js`, **13 scene, circa 3 minuti** (`stimaVerifica()`: i secondi attesi per scena più, a ogni gruppo, la pausa di 4,5 s, il
+in `veri.js`, **20 scene, circa 5 minuti** (`stimaVerifica()`: i secondi attesi per scena più, a ogni gruppo, la pausa di 4,5 s, il
 riferimento del calore e il caricamento; la scrive il foglio iniziale):
 
 | gruppo | scene |
 |---|---|
 | `scala` | `scala-0`…`scala-8` e `scala-ancora`: lo scontro con 3 mostri un gradino alla volta, vedi sotto |
 | `discese` | `sot-1`, `sot-3`, `sot-6`: lo scontro com'è (il LIMITE della serie: quanto degrada), tutti e tre contro l'ultima misura vera |
+| `fps` | gli fps veri, in fondo: il gioco com'è (discese, mondo di sopra, fattoria) senza aspettare la GPU, [vecchio-telefono-fps.md](vecchio-telefono-fps.md) |
 
 Uscite il 28/10, perché avevano risposto: l'ingresso (il riscaldamento serve; il blocco al primo attacco è un lavoro a parte), la
 risoluzione (a 0,6 il 7% in meno: non è la leva, e la bassa non scende più), il mondo di sopra con 8 persone e 8 mostri, lo zaino (le foto
@@ -45,7 +46,7 @@ pareti, colonne e arredo, rilievo-torcia-fuochi-lampi-nebbia insieme, l'eroe, i 
 finale. I gradini che il log del 28/10 diceva gratis stanno insieme; il fondo (+13 ms) e le figure (+12,6) sono divisi.
 Ogni gradino accende i suoi pezzi sopra quelli di prima, nella fascia del telefono (un pezzo che la fascia spegne resta spento). Il
 **salto** da un gradino all'altro è il costo di quel pezzo dentro la scena vera, JS e GPU a parte; in fondo il gradino delle pareti si
-rifà (`scala-ancora`, `RUMORE`) e la differenza è il **rumore**. La LETTURA ha una riga per gradino e i tre gradini più cari sopra il rumore.
+rifà (`scala-ancora`, `RUMORE`) e la differenza è il **rumore** (un salto più piccolo non dice niente; il calore non lo spiega: il riferimento resta a x1,02). La LETTURA ha una riga per gradino e i tre gradini più cari sopra il rumore.
 
 - **In salita, dal semplice**: se il telefono si pianta al gradino 6, i primi cinque sono già salvati e dicono qualcosa.
 - Provato: un elemento da solo su scena vuota (Chi pesa, `+k`) non dice il costo vero (una luce senza niente da illuminare è gratis),

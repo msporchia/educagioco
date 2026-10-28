@@ -101,6 +101,7 @@ export function creaPalcoSopra(scena, { tex, norm, larga, alta, pezzi, quota, ca
     cellaDa() { return { x: -1, y: -1 } },
     premi(p) { if (quadro && scontro.palco) scontro.tocca(p, quadro.fx, { bersaglio: opz.bersaglio, accorcia: opz.accorcia }) },
     colpo(a, modo) { racconto.colpo(a, modo) },
+    prova(chiave, i, luce) { return racconto.prova(chiave, i, luce) },   // come giù (scena3d/indice.js): per le misure
     aggancia(chi, el) { scontro.aggancia(chi, el) },
     attraversa(fatto) { if (fatto) fatto() },
     get palco() { return scontro.palco },

@@ -21,6 +21,8 @@ const TEMPI = {
   verifica: { rodaggio: [1500, 3000], misura: [3000, 4500], finestra: 1000, quadri: 12, fine: 10000 },
   // chi pesa, un elemento alla volta (docs/core/vecchio-telefono-elementi.md): tante scene corte
   elementi: { rodaggio: [1500, 3500], misura: [3000, 4500], finestra: 1000, quadri: 12, fine: 12000 },
+  // gli fps veri: il gioco com'è, senza la lettura di un pixel che aspetta la GPU (`vero`: CPU e GPU lavorano insieme), 8 s fermi
+  fps: { rodaggio: [2000, 4000], misura: [8000, 8000], finestra: 2000, quadri: 12, fine: 12000, vero: true },
 }
 const RAFFREDDA = 8000   // ms a schermo nero fra un gruppo e l'altro (le misure complete)
 // I tetti di tempo (docs/core/vecchio-telefono-elementi.md, «Il tetto di tempo e il lettore»): una scena che non finisce (un fotogramma che non torna, una
@@ -51,6 +53,20 @@ const INGRESSO = { gruppo: 'ingresso', carica: () => import('./veri/ingresso.js'
   { id: 'ing-presto-x', nome: 'attacco a 0,5 s, senza riscaldamento', ingresso: 'discesa', presto: true, riscaldamento: false },
   { id: 'ing-mondo-x', nome: 'il mondo di sopra, senza riscaldamento', ingresso: 'mondo', riscaldamento: false },
 ] }
+// gli fps veri, in fondo alla verifica: le discese (camminare in un piano, lo scontro), il mondo di sopra (il villaggio, lo scontro sul prato)
+// e la fattoria 3D col suo degrado acceso; un gruppo solo, quindi un riferimento del calore solo
+const fattoria = () => import('./veri/fattoria.js')
+export const TAPPE_FPS = [
+  { gruppo: 'fps', carica: discese, tempi: 'fps', scene: [
+    { id: 'fps-piano', nome: 'camminare in un piano del sotterraneo', passeggia: true, stima: 16 },
+    ...[3, 6].map(n => ({ id: `fps-sot-${n}`, nome: `scontro nel sotterraneo, ${n} mostri`, mostri: n, colpi: true, stima: 14 })),
+  ] },
+  { gruppo: 'fps', carica: () => import('./veri/sopra-vero.js'), tempi: 'fps', scene: [
+    { id: 'fps-villaggio', nome: 'camminare nel villaggio di sopra', dove: 'villaggio', stima: 18 },
+    { id: 'fps-prato', nome: `scontro sul prato, 3 mostri`, dove: 'prato', stima: 16 },
+  ] },
+  ...[10, 30].map(l => ({ gruppo: 'fps', carica: fattoria, opz: { livello: l, degrado: true }, tempi: 'fps', scene: [{ id: `fps-fat-${l}`, nome: `fattoria 3D del livello ${l}`, stima: 16 }] })),
+]
 /** Le scene delle MISURE COMPLETE, in ordine. `serie` e `quanti` dicono dove cercare il limite; `gruppo` è la sezione del log. */
 export const TAPPE = [
   // l'ingresso da freddo, per primo (il browser tiene da parte gli shader già visti: dopo sarebbe più caldo del vero), ogni scena tre
@@ -105,6 +121,8 @@ export const TAPPE_VERIFICA = [
   { gruppo: 'scala', carica: () => import('./veri/elementi-sot.js'), opz: { mostri: MOSTRI_SCALA }, tempi: 'verifica', scene: sceneDellaScala() },
   // lo scontro com'è con 1, 3 e 6 mostri (la serie dà il LIMITE), tutti e tre contro l'ultima misura vera (veri/riferimento.js)
   { gruppo: 'discese', carica: discese, tempi: 'verifica', scene: [1, 3, 6].map(n => ({ id: `sot-${n}`, nome: `${n} mostr${n > 1 ? 'i' : 'o'} con gli effetti`, mostri: n, colpi: true, serie: 'discese', quanti: n, cresce: true, stima: 12 })) },
+  // gli fps veri (docs/core/vecchio-telefono-veri.md, «Gli fps veri»): quello che vede chi gioca, con la fascia del telefono e senza aspettare la GPU
+  ...TAPPE_FPS,
 ]
 /**
  * Quanto dura la verifica sul Note 7: la somma dei secondi attesi per scena (`stima`, dai log: una scena del Sotterraneo è un Sotterraneo
@@ -130,7 +148,7 @@ const tondo = x => Math.round(x * 10) / 10
 // terzo, disegno del gioco compreso, più l'attesa della GPU (la lettura di un pixel). Le scene che non hanno un loro giro
 // disegnano in `passo`, dentro `fine`.
 function creaGiro(f) {
-  let vivo = true, a = 0, ultimo = 0, rec = null, guasto = null
+  let vivo = true, a = 0, ultimo = 0, rec = null, guasto = null, attendi = true
   const px = new Uint8Array(4)
   const inizio = () => { if (!vivo) return; requestAnimationFrame(inizio); a = performance.now() }
   const fine = t => {
@@ -141,7 +159,7 @@ function creaGiro(f) {
     try { if (f.passo) f.passo(t / 1000, dt) } catch (e) { guasto = guasto || e }
     // fin qui la CPU (il JS e l'invio dei comandi); la lettura di un pixel aspetta che la GPU finisca
     const c = performance.now(), gl = f.gl()
-    if (gl && !gl.isContextLost()) gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px)
+    if (attendi && gl && !gl.isContextLost()) gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px)
     const e = performance.now()
     if (rec) rec(e - a, t, c - a, e - c)
   }
@@ -155,7 +173,7 @@ function creaGiro(f) {
     // quelli della preparazione e i primi dieci del rodaggio.
     // `prima`: la prima scena di un gruppo, appena costruito: il rodaggio minimo è doppio (trame e shader arrivano ancora)
     async misura(tempi, fermo, prepara, prima = false) {
-      guasto = null
+      guasto = null; attendi = !tempi.vero
       const comparsa = []
       rec = l => { comparsa.push(l) }
       const tp = performance.now()
@@ -175,7 +193,9 @@ function creaGiro(f) {
           const resto = conti.filter(c => c.agg != null && c.js != null).map(c => c.js - c.agg - (c.dis || 0))
           fatto({ chMax: piu('ch'), triMax: piu('tri'), agg: med('agg'), dis: med('dis'), ...(resto.length ? { resto: tondo(mediana(resto)) } : {}), ms: tondo(mediana(lavoro)), p95: tondo(perc(lavoro, 0.95)), js: tondo(mediana(cpu)), gpu: tondo(mediana(gpu)), fps: somma ? Math.round(1000 * dt.length / somma) : 0, n: lavoro.length,
                   primo: tondo(Math.max(0, ...comparsa, ...primi.slice(0, 10))), pronto, lenti: lavoro.filter(x => x > LENTO).length, stabile,
-                  ...(nascosta ? { nascosta: true } : {}) })
+                  ...(nascosta ? { nascosta: true } : {}),
+                  // gli fps veri: quanti fotogrammi arrivano dopo più di 34 ms (sotto i 30 fps) e dopo più di 100 (un fermo che si vede)
+                  ...(tempi.vero ? { vero: true, dt95: tondo(perc(dt, 0.95)), sotto30: Math.round(100 * dt.filter(x => x > 34).length / Math.max(1, dt.length)), fermi: dt.filter(x => x > 100).length } : {}) })
         }
         rec = (l, t, lc, lg) => {
           if (document.hidden) nascosta = true
@@ -357,7 +377,8 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
             if (f.misura) r = await conTetto(f.misura(s), tetti.misura, 'la scena')
             else {
               const prima = f.conti ? f.conti().programmi : 0
-              const tm = corto ? tempi : TEMPI[tappa.tempi] || tempi
+              // nelle prove corte i tempi corti, ma gli fps veri restano senza la lettura che aspetta la GPU
+              const tm = corto ? { ...tempi, vero: !!(TEMPI[tappa.tempi] || {}).vero } : TEMPI[tappa.tempi] || tempi
               // le due fasi stanno sotto `fine` l'una (se arrivano fotogrammi), più la preparazione della scena
               r = await conTetto(giro.misura(tm, fermo, () => f.scena(s), s === tappa.scene[0]), 2 * tm.fine + tetti.scena, 'la scena')
               if (giro.guasto) throw giro.guasto

@@ -138,9 +138,10 @@ async function copia() {
       <p>Tieni lo schermo acceso e non toccare niente.</p>
       <button type="button" class="bottone" data-azione="benchmark-avvia" @click="avvia('sintetico')">Avvia la misura</button>
       <h3>Con i modelli veri del gioco</h3>
-      <p>13 scene, circa 3 minuti: la scala, cioè lo scontro con 3 mostri costruito un pezzo alla volta (prima niente, poi la luce fissa,
-        il pavimento, le pareti, colonne e arredo, le luci e la nebbia, l'eroe, i mostri, gli effetti); poi lo scontro com'è con 1, 3 e 6 mostri. Il resoconto dice quanto
-        aggiunge ogni gradino della scala e quali sono i più cari. Ogni scena si salva appena misurata: se il telefono si pianta, riapri questa
+      <p>20 scene, circa 5 minuti: la scala, cioè lo scontro con 3 mostri costruito un pezzo alla volta (prima niente, poi la luce fissa,
+        il pavimento, le pareti, colonne e arredo, le luci e la nebbia, l'eroe, i mostri, gli effetti); poi lo scontro com'è con 1, 3 e 6 mostri;
+        in fondo gli fps veri, il gioco com'è: camminare in un piano, lo scontro con 3 e 6 mostri, il villaggio, lo scontro sul prato, due fattorie.
+        Il resoconto dice quanto aggiunge ogni gradino della scala, quali sono i più cari, e a quanti fps gira davvero ogni scena. Ogni scena si salva appena misurata: se il telefono si pianta, riapri questa
         pagina e «L'ultima coi modelli veri» ha le scene fatte fin lì.</p>
       <p><b>Guarda lo schermo</b>: se un colore, una luce o la nebbia ti sembrano strani, alla fine scrivilo nelle note.
         Tieni il telefono acceso e in carica se puoi: lo schermo non deve spegnersi.</p>

@@ -49,6 +49,25 @@ export function corsaDelloScontro(n) {
   return c
 }
 
+// la passeggiata in un piano (gli fps veri): la stessa discesa senza mostri, l'eroe dal centro di una stanza a quello della prossima
+export function corsaDellaPasseggiata() {
+  const c = new Corsa(CAMPAGNA[1], { seme: SEME, eroe: 'cavaliere', botti: true, copricapi: true })
+  vestiLeggendario(c)
+  const liv = c.livello
+  liv.robe = liv.robe.filter(r => r.che !== 'mostro')
+  return c
+}
+// la prossima stanza: vaiVerso trova la strada, e se non c'è si prova quella dopo
+function avanti(corsa, k) {
+  const st = corsa.livello.stanze
+  for (let i = 1; i <= st.length; i++) {
+    const s = st[(k + i) % st.length]
+    corsa.vaiVerso({ x: s.cx, y: s.cy }, false)
+    if (corsa.strada && corsa.strada.length) return (k + i) % st.length
+  }
+  return k
+}
+
 /**
  * `opz`: { dpr (null: quello del gioco), spegni (pezzi di ACCESI, come `&spegni=`), riaccendi (come `&riaccendi=`: i pezzi che la fascia spegne e qui tornano) }. Le scene: { mostri, colpi, tri, ch, fuochi, ombra,
  * via: 'ombra' | 'luci1' (solo il cono) | 'luci0' | 'punti' | 'normali' | 'lambert' | 'basic' }.
@@ -61,7 +80,7 @@ export async function prepara({ contenitore, opz = {} }) {
   if (!pittore) { tela.via(); throw new Error('il Sotterraneo 3D non parte (WebGL 2?)') }
   const gl = tela.canvas.getContext('webgl2')
   const lv = leve(pittore.scena)
-  let corsa = null, quanti = -1, colpi = null, rifai = null, k = 0, extra = [], spente = []
+  let corsa = null, quanti = -1, colpi = null, rifai = null, k = 0, extra = [], spente = [], passeggia = false, stanza = 0
   const togliColpi = () => { clearInterval(colpi); colpi = null; clearInterval(rifai); rifai = null }
   const riaccendi = () => { for (const l of spente) l.visible = true; spente = [] }
   const togliFuochi = () => { for (const l of extra) pittore.scena.remove(l); extra = [] }
@@ -88,9 +107,22 @@ export async function prepara({ contenitore, opz = {} }) {
       return { ch: g.chiamate, tri: g.triangoli, programmi: g.programmi, geo: g.memoria.geometries, tex: g.memoria.textures, mostri3d: g.mostri3d, agg: g.msJs, dis: g.msDisegno }
     },
     scena3d: () => pittore.scena,
+    // la passeggiata: il motore muove l'eroe (come il giro di Gioco.vue) e arrivato riparte verso la stanza dopo
+    passo(t, dt) {
+      if (!passeggia || !corsa) return
+      corsa.passo(dt)
+      if (!corsa.strada || !corsa.strada.length) stanza = avanti(corsa, stanza)
+      pittore.mostra({ corsa, orologio: t, fx: null })
+    },
     async scena(s) {
       togliColpi(); lv.ripristina(); riaccendi()
-      if (s.mostri !== quanti || !corsa) {
+      passeggia = !!s.passeggia
+      if (passeggia) {
+        corsa = corsaDellaPasseggiata(); quanti = -1; stanza = avanti(corsa, 0)
+        pittore.misura()
+        pittore.mostra({ corsa, orologio: 0, fx: null })
+        await finche(() => pittore.grafica().ingresso && !pittore.grafica().entrando, 8000)
+      } else if (s.mostri !== quanti || !corsa) {
         corsa = corsaDelloScontro(s.mostri); quanti = s.mostri
         pittore.misura()
         pittore.mostra({ corsa, orologio: 0, fx: null })

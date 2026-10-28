@@ -12,7 +12,7 @@ export const LIVELLO = 10
 // le porte verso la vista: nessun foglio aperto, nessuna zona dove lasciare, il resto non fa niente
 const UI = new Proxy({}, { get: () => () => null })
 
-/** `opz.stagione`: 'natale' | 'halloween' | null. Le scene: { edifici, pollai, stalle }. */
+/** `opz.stagione`: 'natale' | 'halloween' | null; `opz.livello` (di difetto LIVELLO); `opz.degrado`: il degrado del gioco acceso (gli fps veri). Le scene: { edifici, pollai, stalle }. */
 export async function prepara({ contenitore, opz = {} }) {
   const tela = nuovaTela(contenitore)
   const sopra = document.createElement('div')
@@ -20,11 +20,11 @@ export async function prepara({ contenitore, opz = {} }) {
   tela.casa.appendChild(sopra)
   let mondo = null
   try {
-    const motore = fattoriaTipo(LIVELLO)
+    const motore = fattoriaTipo(opz.livello || LIVELLO)
     motore.borsa = borsaInfinita()   // la fattoria tipo esce senza borsa: la mette chi gioca (Gioco.vue)
     mondo = new Mondo3d({ canvas: tela.canvas, sopra, motore, ui: UI, qualita: qualitaIniziale(fasciaAttiva()), stagione: opz.stagione || null })
   } catch (e) { tela.via(); throw e }
-  mondo.degradoFermo = true
+  mondo.degradoFermo = !opz.degrado
   return {
     dpr: mondo.renderer.getPixelRatio(),
     gl: () => mondo.renderer.getContext(),
