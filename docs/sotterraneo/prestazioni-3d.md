@@ -144,7 +144,21 @@ alle trame. Sul Note 7 (27/10 18:19) il gradino 1 è sceso da +20 a +10 ms.
 della trama al posto della trama e del rilievo (`conMaschera`, maschera.js; pavimento e pareti dicono `arredo: false`); le armi in mano
 all'eroe fuse in un pezzo dal modello nuovo della figura (`appiattisci`, roba3d.js: colore dei materiali nei vertici, un materiale per
 tutte, niente aloni né fiamme; l'animazione gira una volta prima, se no le fiamme restano enormi). Non il ripiego della collezione, che
-viene dal disegno 2D. Le anteprime le tengono intere. Da confermare: i gradini 2 e 8 della scala.
+viene dal disegno 2D. Le anteprime le tengono intere. Il 27/10 sera il gradino 2 è sceso da +12 ms a niente; il gradino 8 no (le armi non si notano).
+
+**La torcia semplice** (la bassa, `torciaSemplice:1`, 28/10): la torcia è due luci, l'alone attorno all'eroe e il cono davanti, e i
+personaggi pagano ogni luce a ogni pixel (il gradino 4 della scala: +7 ms). Ai personaggi resta l'alone, 1,2 celle avanti e 2,5 volte più
+forte (`LUCE.torcia.semplice`); il cono è invisibile per three ma la luce per vertice del piano lo legge ancora (`soloVertice`), e l'alone
+del piano resta quello di sempre (`scriviVertice` lo rimette per il suo disegno). A vista lo scontro è quasi uguale. Senza luce per vertice
+(`&spegni=lucePerVertice` nella bassa) il pavimento perde il cono.
+
+## Le matrici (28/10)
+
+Col disegno tutto spento il profilatore dava `updateMatrixWorld` come la voce più grossa del giro del gioco: three ripassa a ogni disegno
+tutte le matrici della scena, 632 oggetti nello scontro con 3 mostri, e 523 sono mostri, di cui cinque **di scorta e nascosti** (la
+riserva di mostro3d.js), ripassati per niente. In più eroe, mostri e persone si rifacevano le matrici dopo averle animate, e la scena le
+rifaceva una seconda volta. Ora le loro radici sono `daSola` (matrici.js): la scena le salta, e la figura le rifà una volta (`rifai`) solo
+quando si vede. Provato `matrixWorldAutoUpdate = false`: in three r186 ferma anche la matrice dell'oggetto stesso, e le figure finiscono nell'origine.
 
 ## Cosa resta da guardare sul telefono vero
 

@@ -49,6 +49,11 @@ export function creaLuci(scena, aspetto) {
   // gli elementi, per misurare chi pesa (grafica/elementi3d.js); l'emisferica no: non costa
   for (const [l, nome] of [[alone, 'torcia'], [cono, 'torcia'], [rimbalzo, 'torcia'], [lampo, 'lampo'], [magia, 'lampo'], [palco, 'palco'], ...fuochi.map(f => [f, 'fuochi'])]) l.userData.elemento3d = nome
   scena.add(cielo, alone, cono, cono.target, lampo, ...fuochi)
+  // la torcia semplice (fascia bassa): per i personaggi, che pagano ogni luce a ogni pixel, una luce sola (l'alone più avanti e più forte);
+  // il cono resta per la luce per vertice del piano, che lo legge da sé (luce-vertice.js, `soloVertice`). docs/sotterraneo/prestazioni-3d.md
+  const torciaSemplice = !!ACCESI.torciaSemplice
+  if (torciaSemplice) { cono.visible = false; cono.userData.soloVertice = true }
+  const aloneV = { pos: new Vector3(), intensita: 0 }   // l'alone com'è per il piano
   if (ACCESI.lampi) scena.add(magia, rimbalzo)
   if (ACCESI.palco) scena.add(palco)
   const tinta = new Color(), base = new Color(0xffc488), calda = new Color(0xffa650), tmp = new Vector3()
@@ -96,7 +101,11 @@ export function creaLuci(scena, aspetto) {
     // la luce per vertice: prima di ogni disegno (scena.onBeforeRender), quando le luci sono già al loro posto. `ACCESI.fuochi` a 0
     // (`&spegni=fuochi`) spegne anche i fuochi per vertice; `nebbia` l'elemento della nebbia
     scriviVertice(camera, t) {
+      // con la torcia semplice il piano vede l'alone di sempre, non quello dei personaggi
+      const pos = torciaSemplice && tmp.copy(alone.position), intensita = alone.intensity
+      if (torciaSemplice) { alone.position.copy(aloneV.pos); alone.intensity = aloneV.intensita }
       vertice.scrivi({ cielo, punti: puntiV, fuochi: fuochiV, nFuochi: ACCESI.fuochi ? nFuochiV : 0, cono, nebbia: ACCESI.nebbia !== false, t }, camera)
+      if (torciaSemplice) { alone.position.copy(pos); alone.intensity = intensita }
     },
     // una luce in più per nebbia, polvere e acqua (che non passano da three)
     aggiungi(p, c, i) {
@@ -118,6 +127,10 @@ export function creaLuci(scena, aspetto) {
       cono.shadow.radius = 3 - 1.2 * q   // ombre più nette: la fiamma è più forte
       rimbalzo.position.set(x + vx * 1.1, 0.3, z + vz * 1.1); rimbalzo.intensity = T.rimbalzo * q * tremo
       this.aggiungi(alone.position, alone.color, 0.3 * (1 + 0.6 * q) * tremo)
+      if (torciaSemplice) {
+        aloneV.pos.copy(alone.position); aloneV.intensita = alone.intensity
+        alone.position.set(x + vx * T.semplice.avanti, 1.6, z + vz * T.semplice.avanti); alone.intensity *= T.semplice.forza
+      }
       condivise.uConoP.value.copy(cono.position)
       condivise.uConoD.value.copy(tmp.copy(cono.target.position).sub(cono.position).normalize())
       condivise.uConoC.value.set(1.0, 0.72 - 0.08 * q, 0.42 - 0.1 * q).multiplyScalar(0.5 * (1 + 0.5 * q) * tremo)

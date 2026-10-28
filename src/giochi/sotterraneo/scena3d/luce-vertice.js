@@ -160,7 +160,7 @@ export function creaLuceVertice() {
      * `fuochi`: [{ pos, colore, forza, raggio }] già col tremolio; `cono`: la spot; `nebbia`: se la nebbia è accesa; `t`: il tempo.
      */
     scrivi({ cielo, punti, fuochi, nFuochi, cono, nebbia, t }, camera) {
-      const vede = l => l && l.parent && l.visible && l.layers.test(camera.layers)
+      const vede = l => l && l.parent && (l.visible || l.userData.soloVertice) && l.layers.test(camera.layers)   // `soloVertice`: il cono della torcia semplice (luci.js)
       if (vede(cielo)) {
         const k = cielo.intensity, a = cielo.color, b = cielo.groundColor
         scriviT(0, a.r * k, a.g * k, a.b * k, 0); scriviT(1, b.r * k, b.g * k, b.b * k, 0)

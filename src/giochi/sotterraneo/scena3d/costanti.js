@@ -27,7 +27,8 @@ export const LUCE = {
   alone: 9, cono: 40,    // la luce dell'eroe: l'alone corto senza ombre e il cono che le fa
   // con la torcia accesa (in proporzione agli sgoccioli): quanto crescono alone e cono, quanto si allungano (celle) e si aprono
   // (radianti), la luce che rimbalza dal pavimento e il chiarore caldo per terra (docs/sotterraneo/grafica-3d.md)
-  torcia: { alone: 0.35, cono: 0.5, lungoAlone: 5, lungoCono: 9, apre: 0.3, rimbalzo: 2.5, chiarore: 0.07 },
+  torcia: { alone: 0.35, cono: 0.5, lungoAlone: 5, lungoCono: 9, apre: 0.3, rimbalzo: 2.5, chiarore: 0.07,
+    semplice: { avanti: 1.2, forza: 2.5 } },   // la torcia semplice (fascia bassa): l'alone dei personaggi, quante celle avanti e quante volte più forte
   ombra: 0.75,           // le ombre non sono mai nere
   palco: 5,              // la luce calda dello scontro; senza (fascia bassa) l'emisferica cresce di tanto
   palcoAmbiente: 0.35,
@@ -98,6 +99,8 @@ export const ACCESI = {
   // allo stesso modo (la bassa): colonne e arredo col colore medio delle trame (maschera.js), le armi in mano fuse in un pezzo (roba3d.js, `appiattisci`)
   arredoSemplice: false,
   armiSemplici: false,
+  // e la torcia (la bassa: `torciaSemplice:1`): ai personaggi solo l'alone, spostato avanti e più forte; il cono resta al piano (luci.js)
+  torciaSemplice: false,
   // gli elementi della scena (grafica/elementi3d.js): spento non si disegna, senza buttarlo né cambiare il gioco. Solo per misurare chi
   // pesa (`&spegni=pavimento`); anche arredo, fiamme, fuochi, palco, nebbia, effetti3d e chiarori qui sopra fanno da elemento. `resto`: quello
   // senza nome (l'emisferica, una cosa dimenticata), così la scena «tutto spento» è vuota davvero
