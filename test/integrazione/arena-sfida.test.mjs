@@ -1,25 +1,34 @@
 /* ═══════════════════════════════════════════════════════════════════
-   CASTLE BATTLE — LA SFIDA IN DUE, DUE PAGINE E IL SERVIZIO VERO
+   CASTLE BATTLE — LA SFIDA IN DUE, DUE PAGINE, IL SERVIZIO VERO E UNA RETE CATTIVA
 
    Due pagine (due telefoni) aprono il gioco dal file locale (origine `null`, come un doppio click), una crea la sfida e
-   riceve il codice, l'altra lo scrive; il servizio di inoltro su Cloudflare (`servizio/inoltro`, docs/arena/multigiocatore.md)
-   le mette in contatto. Si controlla che la battaglia parta su tutte e due, che le mosse dell'uno e dell'altro passino
-   (ognuno costruisce, rispondendo al suo calcolo) e che le due copie restino uguali: ogni cinque secondi di gioco si
-   confrontano le impronte, e se si separano compare il cartello «la sfida è finita qui». Poi uno esce e l'altro lo sa.
-   **Serve internet** (il servizio sta su `sfida.educagioco.workers.dev`).
-   `node test/esegui.mjs arena-sfida --niente-build`
-   tempo: 90
+   riceve il codice, l'altra lo scrive; il servizio di inoltro (`servizio/inoltro`, docs/core/insieme.md) le mette in
+   contatto. Ognuna ci parla attraverso un proxy suo (test/aiuto/proxy-cattivo.mjs) che guasta la rete a comando: il filo
+   che cade, il filo che muore in silenzio, la rete spenta per venti secondi, la rete piantata. La sfida non deve mai
+   rompersi: chi ha perso la linea lo vede scritto, l'altro aspetta, e quando torna la battaglia riparte uguale su tutti
+   e due. Poi uno esce e l'altro lo sa subito.
+   **Serve il servizio in locale**: `cd servizio/inoltro && npx wrangler dev`, poi
+   `node test/esegui.mjs arena-sfida` (`SERVIZIO=` per un altro indirizzo http); senza servizio **salta**.
+   tempo: 420
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scegli, scatto } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
+import { proxyCattivo } from '../aiuto/proxy-cattivo.mjs'
+
+const SERVIZIO = (process.env.SERVIZIO || 'http://localhost:8787').replace(/\/$/, '')
+const vivo = await fetch(`${SERVIZIO}/`).then(r => r.ok, () => false)
+if (!vivo) { console.log(`⚠️  salto: il servizio non risponde su ${SERVIZIO} (in servizio/inoltro: \`npx wrangler dev\`)`); process.exit(0) }
+const porta = Number(new URL(SERVIZIO).port || 80)
+const [reteA, reteB] = await Promise.all([proxyCattivo(porta), proxyCattivo(porta)])
 
 const browser = await apriBrowser()
 const A = await apriGioco(browser)
 const B = await apriGioco(browser)
 const a = A.page, b = B.page
-for (const p of [a, b]) {
+for (const [p, rete] of [[a, reteA], [b, reteB]]) {
   await azzera(p)
   await semina(p, { settings: { eta: 8, sperimentali: true } })
+  await p.evaluate(s => { globalThis.__SERVIZIO_SFIDE__ = s }, `http://localhost:${rete.porta}`)
   await scegli(p, 'arena')
   await p.waitForSelector('.ar-mappa', { timeout: 8000 })
 }
@@ -78,16 +87,48 @@ controlla('e anche chi entra (con gli arcieri), sul suo schermo e sulla sua piaz
 await scatto(a, 'arena-sfida-chi-crea')
 await scatto(b, 'arena-sfida-chi-entra')
 /* ── si gioca qualche secondo: le impronte (ogni 5 s di gioco) dicono se le copie sono uguali ── */
-const t0 = Math.min(await secondi(a), await secondi(b))
-for (let t = 0; t < 60 && Math.min(await secondi(a), await secondi(b)) < t0 + 12; t++) await attendi(a, 500)
-controlla('la battaglia è andata avanti su tutti e due', Math.abs(await secondi(a) - await secondi(b)) <= 3, `${await secondi(a)} / ${await secondi(b)}`)
-controlla('e nessuno dei due ha visto le copie separarsi', await a.locator('[data-sfida-rotta]').count() === 0 && await b.locator('[data-sfida-rotta]').count() === 0)
+const rotte = async () => (await a.locator('[data-sfida-rotta]').count()) + (await b.locator('[data-sfida-rotta]').count())
+async function giocaUnPo(quanto, cosa) {
+  const t0 = Math.min(await secondi(a), await secondi(b))
+  for (let t = 0; t < 80 && Math.min(await secondi(a), await secondi(b)) < t0 + quanto; t++) await attendi(a, 500)
+  controlla(`${cosa}: la battaglia va avanti su tutti e due, alla pari`, Math.min(await secondi(a), await secondi(b)) >= t0 + quanto && Math.abs(await secondi(a) - await secondi(b)) <= 2,
+            `${t0} → ${await secondi(a)} / ${await secondi(b)}`)
+  controlla(`${cosa}: e nessuno ha visto la sfida finire`, await rotte() === 0, (await a.locator('.ar-velo').allInnerTexts()).join() + (await b.locator('.ar-velo').allInnerTexts()).join())
+}
+await giocaUnPo(8, 'senza guasti')
 
-/* ── uno esce: l'altro lo sa ── */
+/* ── la rete cattiva ── */
+reteB.taglia()
+await attendi(a, 1500)
+await giocaUnPo(6, 'il filo di chi entra cade')
+
+reteA.buco()                                      // il filo di chi crea muore senza dirlo a nessuno
+await attendi(a, 1500)
+const fermoDa = await secondi(b)
+await attendi(a, 3000)
+// chi ha il filo morto se ne accorge in sei secondi e si ricollega prima che all'altro esca il cartello (dopo sei e mezzo)
+controlla('filo morto in silenzio: intanto il campo aspetta, non va avanti da solo', await secondi(b) - fermoDa <= 1, `${fermoDa} → ${await secondi(b)}`)
+await a.waitForSelector('[data-sfida-linea]', { state: 'detached', timeout: 15000 }).catch(() => {})
+await b.waitForSelector('[data-sfida-linea]', { state: 'detached', timeout: 15000 }).catch(() => {})
+await giocaUnPo(6, 'chi aveva il filo morto se ne accorge da solo e si ricollega')
+
+reteB.spegni(20000)                               // venti secondi senza rete
+await b.waitForSelector('[data-sfida-linea="io"]', { timeout: 12000 }).catch(() => {})
+controlla('senza rete: chi l\'ha persa lo vede («mi ricollego»)', /Hai perso la linea/.test(await b.locator('[data-sfida-linea]').innerText().catch(() => '')))
+controlla('e l\'altro vede che lo si aspetta', /L'altro ha perso la linea/.test(await a.locator('[data-sfida-linea]').innerText().catch(() => '')))
+await scatto(a, 'arena-sfida-aspetta')
+await a.waitForSelector('[data-sfida-linea]', { state: 'detached', timeout: 40000 }).catch(() => {})
+await giocaUnPo(6, 'torna la rete dopo venti secondi')
+
+reteA.ferma(6000)                                 // la rete si pianta e poi consegna tutto in blocco
+await attendi(a, 7000)
+await giocaUnPo(6, 'la rete piantata per sei secondi')
+
+/* ── uno esce: l'altro lo sa subito ── */
 await a.click('button[aria-label="indietro"]')
 await a.waitForSelector('.ar-mappa', { timeout: 6000 })
-await b.waitForSelector('[data-sfida-rotta]', { timeout: 25000 })
-controlla('chi resta lo sa, con una frase', /se n'è andato/.test(await b.locator('[data-sfida-rotta]').innerText()))
+await b.waitForSelector('[data-sfida-rotta]', { timeout: 6000 })
+controlla('chi resta lo sa subito, con una frase', /se n'è andato/.test(await b.locator('[data-sfida-rotta]').innerText()))
 controlla('e può tornare alla mappa', await b.locator('[data-sfida-esci]').count() === 1)
 await b.locator('[data-sfida-esci]').click()
 await b.waitForSelector('.ar-mappa', { timeout: 6000 })
@@ -100,7 +141,9 @@ await b.locator('[data-sfida-vai]').click()
 await b.waitForSelector('[data-sfida-messaggio]', { timeout: 15000 })
 controlla('un codice che non esiste si dice', /nessuna sfida/.test(await b.locator('[data-sfida-messaggio]').innerText()))
 
-const errori = [...A.errori, ...B.errori].filter(e => !/favicon|manifest|ZZZZZ/.test(e))   // il codice sbagliato lo scrive il browser in console
+// la rete guastata apposta: Chrome scrive in console i fili che non si aprono, e la sfida scrive com'è finita
+const errori = [...A.errori, ...B.errori].filter(e => !/favicon|manifest|ZZZZZ|WebSocket|ERR_|Failed to load|\[insieme\]/.test(e))
 controlla('nessun errore nel browser', errori.length === 0, errori.join(' | '))
 await browser.close()
+reteA.chiudi(); reteB.chiudi()
 riassunto('arena in due: la sfida col servizio vero')

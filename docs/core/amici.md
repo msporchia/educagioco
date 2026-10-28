@@ -41,7 +41,8 @@ Perché regge (non è un buco di sicurezza):
 - **Ricevere**: **un cartello su qualunque schermata** («Leonardo ti invita a Castle Battle · Gioca / No grazie», montato una volta
   in `App.vue`, come `Avviso.vue`). «Gioca» apre il gioco già dentro la partita; sparisce da solo dopo 30 secondi.
 - **Si è raggiungibili mentre l'app è aperta** (se i grandi l'hanno acceso): il telefono tiene aperto **un collegamento solo**
-  (non uno per amico), con rientro a ritardo crescente se cade. Se internet manca o il servizio è giù: nessun errore, nessun
+  (non uno per amico), con rientro a ritardo crescente se cade, e un ping ogni 15 s: senza risposta per 40 s il filo è morto in
+  silenzio e se ne apre un altro (`BATTITO` in `amici/rete.js`; il ping lo risponde Cloudflare da solo). Se internet manca o il servizio è giù: nessun errore, nessun
   cartello, la lista in grigio.
 
 ## Chi lo accende: i grandi, e di base è spento
@@ -102,7 +103,7 @@ Ogni telefono ha **un collegamento** e dichiara chi è e le chiavi delle sue ami
 quale chiave»; la logica pura è in `presenza.js`) e fa tre cose, senza leggere i messaggi: **avvisa** chi tiene una chiave quando l'altro
 c'è o se ne va, **inoltra** i messaggi di una chiave all'altro, e **controlla** forma, misura (≤ 512 byte) e ritmo (20 al secondo).
 Una chiave è di due persone: un terzo che la dichiara è rifiutato (`rifiutate` nel `ciao`). Chi rientra con lo stesso id prende il
-posto del suo vecchio collegamento, senza avvisi. Il traffico delle battaglie non passa di qui (stanze a parte): qui solo presenze e inviti.
+posto del suo vecchio collegamento, senza avvisi. Il traffico delle battaglie non passa di qui (tavoli a parte, [insieme.md](insieme.md)): qui solo presenze e inviti.
 
 | Dal telefono | |
 |---|---|
@@ -124,9 +125,9 @@ non li legge):
 | `{ k: 'invito', gioco, dati }` | `dati` per Castle Battle: `{ terreno, secondi }` |
 | `{ k: 'risposta', ok }` | accetto / no grazie |
 
-Per Castle Battle non c'è un messaggio a parte per la stanza: chi invita crea la stanza di sempre (`creaStanza`), **si siede** (il
+Per Castle Battle non c'è un messaggio a parte per la stanza: chi invita crea il tavolo di sempre (`creaTavolo`), **si siede** (il
 suo collegamento deve essere `host`) e solo allora manda l'invito con il `codice` dentro (`dati: { terreno, secondi, codice }`);
-chi accetta fa `collega(codice)`. Se l'amico dice no, o non risponde in 45 secondi, la stanza si chiude. Il lockstep non cambia.
+chi accetta entra nel tavolo con quel codice. Se l'amico dice no, o non risponde in 45 secondi, il tavolo si chiude.
 
 Un gioco nuovo (la fattoria, i record) si aggiunge in `src/amici/giochi.js`: nome, come si costruisce l'invito, cosa fare quando
 arriva. Il servizio non cambia.
@@ -138,7 +139,7 @@ online) e per ogni amico la chiave dell'amicizia, l'id e il **nome** (quello che
 Non c'è altro: né account, né posta, né posizione. Eliminare un bambino non cancella ancora la sua chiave `amici:` (resta orfana).
 
 **Sul servizio**: niente di personale e niente di permanente. Un `Codice` tiene una chiave al massimo 2 ore (cancellata al riscatto o
-dall'allarme); `Errori` e `Limite` tengono un contatore per indirizzo IP (scade in 1-2 ore); la `Presenza` e le `Stanza` tengono in memoria
+dall'allarme); `Errori` e `Limite` tengono un contatore per indirizzo IP (scade in 1-2 ore); la `Presenza` e i `Tavolo` tengono in memoria
 chi c'è collegato e niente altro. Il servizio **inoltra senza leggere**: controlla solo misura (≤ 512 byte), forma JSON e ritmo (20 al secondo).
 
 **Cosa viaggia** (sempre in TLS): al codice, la chiave (la vede il servizio, due ore); nelle amicizie, `dichiaro` (id e chiavi) e `presento` (id, nome, a cosa

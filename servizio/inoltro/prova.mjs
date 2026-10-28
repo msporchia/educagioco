@@ -1,7 +1,8 @@
 // Prova il servizio di inoltro, in locale (`npx wrangler dev`, poi `node prova.mjs`) o sul tuo indirizzo:
 //   node prova.mjs https://sfida.<tuo-sottodominio>.workers.dev
-// Crea una stanza, collega due client finti e controlla: i ruoli, l'inoltro, il terzo che non entra,
-// il messaggio troppo grande, il codice sbagliato e l'«via» quando uno se ne va.
+// Il tavolo (docs/core/insieme.md): i posti, l'inoltro, il ping, chi cade e rientra col suo posto, chi se ne va, i no.
+// La stanza di prima (per i telefoni col gioco vecchio): i ruoli, l'inoltro, il terzo che non entra, il messaggio troppo
+// grande, il codice sbagliato e l'«via» quando uno se ne va. Poi gli amici.
 const BASE = (process.argv[2] || 'http://localhost:8787').replace(/\/$/, '')
 const WS = BASE.replace(/^http/, 'ws')
 let guasti = 0
@@ -18,6 +19,57 @@ function apri(codice) {
   })
 }
 
+/* ── il tavolo ── */
+function siedi(codice, posto) {
+  return new Promise(ok => {
+    const ws = new WebSocket(`${WS}/tavolo/${codice}?posto=${posto}`)
+    const arrivati = []
+    let chiuso = null
+    ws.addEventListener('message', e => arrivati.push(JSON.parse(e.data)))
+    ws.addEventListener('close', e => { chiuso = e.code })
+    ws.addEventListener('open', () => ok({ ws, arrivati, chiuso: () => chiuso }))
+    ws.addEventListener('error', () => ok({ ws, arrivati, chiuso: () => chiuso ?? 'errore' }))
+  })
+}
+const posto = c => c.repeat(20)
+controlla('un tavolo senza il posto di chi lo crea non si fa', (await fetch(`${BASE}/tavolo/nuovo`)).status === 400)
+const tav = await (await fetch(`${BASE}/tavolo/nuovo?posto=${posto('h')}`)).json()
+controlla('un tavolo nuovo ha un codice di 5 lettere', /^[A-Z]{5}$/.test(tav.codice || ''), JSON.stringify(tav))
+const o = await siedi(tav.codice, posto('o'))
+await pausa(250)
+controlla('chi entra prima di chi ha creato è l\'ospite (il posto dell\'host è prenotato), da solo', o.arrivati[0]?.t === 'ciao' && o.arrivati[0].ruolo === 'ospite' && o.arrivati[0].altro === false, JSON.stringify(o.arrivati))
+const h = await siedi(tav.codice, posto('h'))
+await pausa(300)
+controlla('chi ha creato è l\'host e sa che l\'altro c\'è', h.arrivati[0]?.ruolo === 'host' && h.arrivati[0].altro === true, JSON.stringify(h.arrivati))
+controlla('e l\'ospite sa che è arrivato', o.arrivati.some(m => m.t === 'su'))
+h.ws.send('{"t":"ping"}'); await pausa(250)
+controlla('al ping risponde il servizio, e il ping non arriva all\'altro', h.arrivati.some(m => m.t === 'pong') && !o.arrivati.some(m => m.t === 'ping'))
+const grosso = JSON.stringify({ t: 'm', n: 1, a: 0, f: 'x'.repeat(1900) })
+h.ws.send(grosso); await pausa(300)
+controlla('un messaggio da quasi 2 KB passa, tale e quale', o.arrivati.some(m => m.t === 'm' && m.f?.length === 1900))
+o.ws.close(); await pausa(400)
+controlla('l\'ospite chiude il filo senza addio: l\'host sente «giù», non «via»', h.arrivati.some(m => m.t === 'giu') && !h.arrivati.some(m => m.t === 'via'), JSON.stringify(h.arrivati.slice(-3)))
+const o2 = await siedi(tav.codice, posto('o'))
+await pausa(300)
+controlla('rientra col suo posto: è ancora l\'ospite, e l\'host lo sa', o2.arrivati[0]?.ruolo === 'ospite' && h.arrivati.some(m => m.t === 'su'), JSON.stringify(h.arrivati))
+const o3 = await siedi(tav.codice, posto('o'))
+await pausa(400)
+controlla('rientra due volte (il primo filo forse morto): il vecchio si chiude, il nuovo resta', (o2.chiuso() === 4000 || o2.ws.readyState >= 2) && o3.arrivati[0]?.ruolo === 'ospite', `${o2.chiuso()} ${o2.ws.readyState} ${JSON.stringify(o3.arrivati)}`)
+controlla('e per l\'host non è mai stato «giù»', h.arrivati.filter(m => m.t === 'giu').length === 1)
+const terzoT = await siedi(tav.codice, posto('z'))
+await pausa(300)
+controlla('un terzo: il servizio dice «piena» e chiude', terzoT.arrivati[0]?.t === 'no' && terzoT.arrivati[0].perche === 'piena' && terzoT.chiuso() === 4001, `${JSON.stringify(terzoT.arrivati)} ${terzoT.chiuso()}`)
+const nessuno = await siedi('ZZZZZ', posto('n'))
+await pausa(300)
+controlla('un codice che non c\'è: «nessuno»', nessuno.arrivati[0]?.perche === 'nessuno', JSON.stringify(nessuno.arrivati))
+o3.ws.send('{"t":"addio"}'); await pausa(400)
+controlla('chi dice addio: l\'altro sente «via»', h.arrivati.some(m => m.t === 'via'))
+const torna = await siedi(tav.codice, posto('o'))
+await pausa(300)
+controlla('e chi ha detto addio non si risiede', torna.arrivati[0]?.perche === 'andato', JSON.stringify(torna.arrivati))
+h.ws.close()
+
+/* ── la stanza di prima ── */
 const { codice } = await (await fetch(`${BASE}/crea`)).json()
 controlla('una stanza nuova ha un codice di 5 lettere', /^[A-Z]{5}$/.test(codice), codice)
 

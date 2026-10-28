@@ -2,13 +2,13 @@
    ciascuno i messaggi dell'altro. Non capisce il gioco e non ricorda niente di personale: solo un segno «la stanza esiste»
    che scade da solo. Vedi docs/arena/multigiocatore.md.
 
-   GET  /crea            → { codice }          una stanza nuova (con un limite di creazioni per indirizzo)
-   GET  /entra/<codice>  → WebSocket           si entra nella stanza: il primo è `host`, il secondo `ospite`
-   I messaggi sono testo JSON `{ t: '…', … }`, al massimo MAX_BYTE, e arrivano all'altro così come sono. Il servizio ne
-   manda di suoi: `{ t: 'ciao', ruolo }` a chi entra, `{ t: 'pronti' }` a tutti e due quando ci sono, `{ t: 'via' }`
-   quando l'altro se ne va. */
+   GET  /tavolo/nuovo?posto=<p>      → { codice }   un tavolo nuovo, col posto dell'host prenotato (limite di creazioni per indirizzo)
+   GET  /tavolo/<codice>?posto=<p>   → WebSocket    ci si siede; chi rientra con lo stesso posto riprende il suo
+   Il tavolo sopporta le cadute: docs/core/insieme.md (la logica in tavolo.js). `/crea` ed `/entra/<codice>` sono la stanza di
+   prima, che a una caduta finiva: resta per i telefoni col gioco vecchio, finché non si aggiornano (docs/arena/multigiocatore.md). */
 
 import { CHIAVE, ID, MAX_CHIAVI, MAX_COLLEGAMENTI, dichiara, chiudi, inoltra, controllaMessaggio } from './presenza.js'
+import * as tavolo from './tavolo.js'
 import { CODICE, DURATA as DURATA_CODICE, CODICI_ORA, nuovoCodice as codiceBreve, contaErrore, bloccato } from './codici.js'
 
 const ALFABETO = 'ABCDEFGHJKLMNPQRSTUVWXYZ'      // senza la I e la O: si confondono con 1 e 0 a voce
@@ -46,6 +46,25 @@ export default {
     }
 
     if (url.pathname.startsWith('/amici/')) return amici(richiesta, url, env)
+
+    if (url.pathname === '/tavolo/nuovo') {
+      const posto = url.searchParams.get('posto') || ''
+      if (!tavolo.POSTO.test(posto)) return json({ errore: 'posto storto' }, 400)
+      const ip = richiesta.headers.get('cf-connecting-ip') || 'sconosciuto'
+      const limite = env.LIMITE.get(env.LIMITE.idFromName(ip))
+      if (!(await (await limite.fetch('https://limite/conta')).json()).ok) return json({ errore: 'troppi tavoli, riprova fra un po\'' }, 429)
+      for (let tentativo = 0; tentativo < 5; tentativo++) {           // un codice già in uso si cambia
+        const codice = nuovoCodice()
+        const r = await env.TAVOLI.get(env.TAVOLI.idFromName(codice)).fetch(`https://tavolo/apri?posto=${posto}`)
+        if (r.ok) return json({ codice })
+      }
+      return json({ errore: 'riprova' }, 503)
+    }
+    const t = url.pathname.match(/^\/tavolo\/([A-Z]{5})$/)
+    if (t) {
+      if (richiesta.headers.get('upgrade') !== 'websocket') return json({ errore: 'serve un WebSocket' }, 426)
+      return env.TAVOLI.get(env.TAVOLI.idFromName(t[1])).fetch(`https://tavolo/siedi?posto=${encodeURIComponent(url.searchParams.get('posto') || '')}`, richiesta)
+    }
 
     const m = url.pathname.match(/^\/entra\/([A-Z]{5})$/)
     if (m) {
@@ -152,6 +171,111 @@ export class Stanza {
   }
 }
 
+/* Un tavolo da due (docs/core/insieme.md): la logica sta in tavolo.js, qui solo Cloudflare. Il suo stato (chi siede, chi manca da
+   quando) sta nella memoria del Durable Object perché sopravviva al sonno; il «ping» lo risponde Cloudflare senza svegliarlo. */
+export class Tavolo {
+  constructor(stato) {
+    this.stato = stato
+    this.secchi = new Map()           // il ritmo di ogni collegamento (si azzera col sonno: va bene)
+    // il battito dei telefoni: risponde Cloudflare da solo, senza svegliare l'oggetto e senza contarlo
+    stato.setWebSocketAutoResponse(new WebSocketRequestResponsePair('{"t":"ping"}', '{"t":"pong"}'))
+  }
+
+  /* i collegamenti seduti, senza quelli sostituiti da un rientro e senza `tranne` (quello che si sta chiudendo) */
+  collegati(tranne = null) {
+    const r = []
+    for (const ws of this.stato.getWebSockets()) {
+      if (ws === tranne) continue
+      const a = ws.deserializeAttachment()
+      if (a?.posto && !a.sostituito) r.push({ ws, posto: a.posto })
+    }
+    return r
+  }
+
+  manda(invii) { for (const { a, msg } of invii) { try { a.send(JSON.stringify(msg)) } catch { /* se n'è andato */ } } }
+
+  async salva(dato) {
+    await this.stato.storage.put('tavolo', dato)
+    await this.stato.storage.setAlarm(tavolo.prossimo(dato))
+  }
+
+  /* un no detto per bene: si apre, si dice perché, si chiude (il telefono non deve indovinarlo da una caduta) */
+  rifiuta(perche) {
+    const { 0: cliente, 1: server } = new WebSocketPair()
+    server.accept()
+    server.send(JSON.stringify({ t: 'no', perche }))
+    server.close(4001, perche)
+    return new Response(null, { status: 101, webSocket: cliente })
+  }
+
+  async fetch(richiesta) {
+    const url = new URL(richiesta.url)
+    const dato = await this.stato.storage.get('tavolo')
+    if (url.pathname === '/apri') {
+      if (dato) return new Response('occupato', { status: 409 })
+      await this.salva(tavolo.nuovoTavolo(Date.now(), url.searchParams.get('posto')))
+      return new Response('ok')
+    }
+    if (url.pathname !== '/siedi') return new Response('?', { status: 404 })
+    if (!dato) return this.rifiuta('nessuno')
+    const posto = url.searchParams.get('posto') || ''
+    if (!tavolo.POSTO.test(posto)) return this.rifiuta('nessuno')
+    const r = tavolo.entra(dato, this.collegati(), posto, Date.now())
+    if (r.esito !== 'ok') return this.rifiuta(r.esito)
+    for (const vecchio of r.sostituiti) {                           // un rientro: il filo vecchio (forse morto) non conta più
+      try { vecchio.serializeAttachment({ posto, sostituito: true }); vecchio.close(4000, 'sostituito') } catch { /* già chiuso */ }
+    }
+    const { 0: cliente, 1: server } = new WebSocketPair()
+    this.stato.acceptWebSocket(server)
+    server.serializeAttachment({ posto })
+    server.send(JSON.stringify(r.ciao))
+    this.manda(r.invii)
+    await this.salva(dato)
+    return new Response(null, { status: 101, webSocket: cliente })
+  }
+
+  async webSocketMessage(ws, testo) {
+    const a = ws.deserializeAttachment()
+    if (!a?.posto || a.sostituito) return
+    const ora = Date.now()
+    const s = tavolo.secchio(this.secchi.get(ws), ora)
+    this.secchi.set(ws, s.s)
+    if (!s.ok) return ws.close(1008, 'troppi messaggi')
+    const l = tavolo.leggiMessaggio(testo)
+    if (!l.ok) return ws.close(l.codice, l.ragione)
+    if (l.dato.t === 'ping') return ws.send('{"t":"pong"}')         // se la risposta da sola non c'è (in locale)
+    if (l.dato.t === 'addio') return this.chiuso(ws, { addio: true })
+    for (const c of this.collegati(ws)) if (c.posto !== a.posto) { try { c.ws.send(testo) } catch { /* se n'è andato */ } }
+  }
+
+  async webSocketClose(ws) { await this.chiuso(ws) }
+  async webSocketError(ws) { await this.chiuso(ws) }
+
+  async chiuso(ws, { addio = false } = {}) {
+    this.secchi.delete(ws)
+    const a = ws.deserializeAttachment()
+    if (!a?.posto || a.sostituito) return
+    ws.serializeAttachment({ posto: a.posto, sostituito: true })     // non conta più, anche se l'evento arriva due volte
+    const dato = await this.stato.storage.get('tavolo')
+    if (!dato) return
+    const r = tavolo.esce(dato, this.collegati(ws), a.posto, Date.now(), { addio })
+    this.manda(r.invii)
+    if (addio) { try { ws.close(1000, 'addio') } catch { /* già chiuso */ } }
+    if (r.fine) { await this.stato.storage.deleteAlarm(); await this.stato.storage.deleteAll() }
+    else await this.salva(dato)
+  }
+
+  async alarm() {
+    const dato = await this.stato.storage.get('tavolo')
+    if (!dato) return
+    const r = tavolo.allarme(dato, this.collegati(), Date.now())
+    this.manda(r.invii)
+    for (const ws of r.chiudi) { try { ws.serializeAttachment({ sostituito: true }); ws.close(4001, 'chiuso') } catch { /* già chiuso */ } }
+    if (r.fine) { await this.stato.storage.deleteAlarm(); await this.stato.storage.deleteAll() }
+    else await this.salva(dato)
+  }
+}
+
 /* Quante stanze crea un indirizzo all'ora: un contatore per indirizzo, che si azzera da solo. */
 export class Limite {
   constructor(stato) { this.stato = stato }
@@ -219,6 +343,8 @@ export class Presenza {
   constructor(stato) {
     this.stato = stato
     this.recenti = new Map()
+    // il battito dei telefoni (src/amici/rete.js): risponde Cloudflare da solo, come al tavolo
+    stato.setWebSocketAutoResponse(new WebSocketRequestResponsePair('{"t":"ping"}', '{"t":"pong"}'))
   }
 
   /* i collegamenti presentati; quelli ancora anonimi non contano */
@@ -242,6 +368,7 @@ export class Presenza {
   manda(invii) { for (const { a, msg } of invii) { try { a.send(JSON.stringify(msg)) } catch { /* se n'è andato */ } } }
 
   webSocketMessage(ws, messaggio) {
+    if (messaggio === '{"t":"ping"}') return ws.send('{"t":"pong"}')       // se la risposta da sola non c'è (in locale)
     const c = controllaMessaggio(messaggio, this.recenti.get(ws) || [], Date.now())
     if (!c.ok) return ws.close(c.codice, c.ragione)
     this.recenti.set(ws, c.recenti)

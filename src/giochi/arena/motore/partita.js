@@ -15,7 +15,9 @@ const MAX_EVENTI = 400
 const DIFESA = 190                       // chi è nella sua metà accorre ai nemici entro questa distanza dal suo castello
 
 export const altro = lato => (lato === 'io' ? 'nem' : 'io')
-const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
+// Math.hypot no: non è arrotondato uguale da tutti i browser, e due telefoni in sfida si separano (docs/arena/multigiocatore.md)
+const ipot = (dx, dy) => Math.sqrt(dx * dx + dy * dy)
+const dist = (a, b) => ipot(a.x - b.x, a.y - b.y)
 const viva = e => e.hp > 0
 const sponda = y => (y < CAMPO.fiume.alto ? -1 : y > CAMPO.fiume.basso ? 1 : 0)   // -1 sopra, 1 sotto, 0 nell'acqua
 
@@ -210,7 +212,7 @@ export class Partita {
     for (const e of this.unita) {
       if (e === bersaglio || e.lato === att.lato || !viva(e)) continue
       if (k.bers === 'terra' && e.vola) continue
-      if (Math.hypot(e.x - bersaglio.x, e.y - bersaglio.y) <= k.splash) this.ferisci(e, k.dmg * 0.8 * (att.forza || 1))
+      if (ipot(e.x - bersaglio.x, e.y - bersaglio.y) <= k.splash) this.ferisci(e, k.dmg * 0.8 * (att.forza || 1))
     }
   }
 
@@ -224,7 +226,7 @@ export class Partita {
     u.dirY = sua
     const ay = u.dirY < 0 ? basso + 12 : alto - 12            // l'imbocco, fuori dall'acqua
     const prima = u.dirY < 0 ? u.y > ay - 1 : u.y < ay + 1
-    if (prima && Math.hypot(u.x - px, u.y - ay) > 5) return { x: px, y: ay }
+    if (prima && ipot(u.x - px, u.y - ay) > 5) return { x: px, y: ay }
     return { x: px, y: u.dirY < 0 ? alto - 8 : basso + 8 }
   }
 
@@ -267,7 +269,7 @@ export class Partita {
     // appena usciti dalla caserma si va sulla strada, poi si marcia in fila (niente tagli in diagonale)
     if (u.raduno && Math.abs(u.x - CAMPO.corsia) < 10) u.raduno = false
     const m = u.raduno && bers.tipo ? { x: CAMPO.corsia, y: u.lato === 'io' ? Math.min(u.y - 4, CAMPO.base - 75) : Math.max(u.y + 4, CAMPO.H - CAMPO.base + 75) } : this.verso(u, bers)
-    const dx = m.x - u.x, dy = m.y - u.y, n = Math.hypot(dx, dy) || 1
+    const dx = m.x - u.x, dy = m.y - u.y, n = ipot(dx, dy) || 1
     const v = Math.min(k.vel * dt, n)
     u.x += (dx / n) * v
     u.y += (dy / n) * v
@@ -279,7 +281,7 @@ export class Partita {
     for (let i = 0; i < u.length; i++) for (let j = i + 1; j < u.length; j++) {
       const a = u[i], b = u[j]
       if (a.vola !== b.vola) continue
-      const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy)
+      const dx = b.x - a.x, dy = b.y - a.y, d = ipot(dx, dy)
       if (d > 0 && d < 8) {
         const s = (8 - d) / 2 / d
         a.x -= dx * s; a.y -= dy * s; b.x += dx * s; b.y += dy * s
@@ -308,7 +310,7 @@ export class Partita {
       // gli arcieri non arrivavano mai sotto le mura (l'utente)
       for (const e of this.unita) {
         if (e === bers || e.lato === t.lato || !viva(e)) continue
-        if (Math.hypot(e.x - bers.x, e.y - bers.y) <= CASTELLO.splash) this.ferisci(e, dmg * 0.6)
+        if (ipot(e.x - bers.x, e.y - bers.y) <= CASTELLO.splash) this.ferisci(e, dmg * 0.6)
       }
       this.evento({ tipo: 'colpo', da: 'castello', lato: t.lato, x1: t.x, y1: t.y - 12, x2: bers.x, y2: bers.y, scoppio: CASTELLO.splash })
       t.cool = rate
@@ -487,7 +489,7 @@ export class Partita {
     const nemici = this.unita.filter(u => u.lato === altro(lato) && viva(u) && nelMioCampo(u))
     let meglio = null, peso = 0
     for (const c of nemici) {
-      const p = nemici.reduce((s, u) => s + (Math.hypot(u.x - c.x, u.y - c.y) <= BOMBA.raggio ? Math.min(u.hp, BOMBA.dmg) : 0), 0)
+      const p = nemici.reduce((s, u) => s + (ipot(u.x - c.x, u.y - c.y) <= BOMBA.raggio ? Math.min(u.hp, BOMBA.dmg) : 0), 0)
       if (p > peso) { peso = p; meglio = c }
     }
     return meglio ? { x: meglio.x, y: meglio.y, peso } : null
@@ -501,7 +503,7 @@ export class Partita {
     this.lati[lato].mosse++
     for (const u of this.unita) {
       if (u.lato !== altro(lato) || !viva(u)) continue
-      if (Math.hypot(u.x - p.x, u.y - p.y) <= BOMBA.raggio) this.ferisci(u, BOMBA.dmg)
+      if (ipot(u.x - p.x, u.y - p.y) <= BOMBA.raggio) this.ferisci(u, BOMBA.dmg)
     }
     this.evento({ tipo: 'bomba', lato, x: p.x, y: p.y, raggio: BOMBA.raggio })
     return true
