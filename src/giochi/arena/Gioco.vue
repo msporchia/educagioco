@@ -18,11 +18,13 @@ import VeloPausa from '../VeloPausa.vue'
 import Domanda from '../../quiz/Domanda.vue'
 import { Giostra } from './scena/giostra.js'
 import { vistaDa, eventiDa } from './scena/prospettiva.js'
-import { Regia, SILENZIO } from './sfida/regia.js'
+import { Incontro } from '../../insieme/incontro.js'
+import { creaTavolo, nuovoPosto } from '../../insieme/rete.js'
+import { regolaArena, latoDi } from './sfida/regia.js'
+import { registra } from '../../incidenti.js'
 import { dati as datiAmici } from '../../store/amici.js'
 import { stato as amiciStato, invita, diciGioco } from '../../amici/servizio.js'
 import { ingresso, prendiIngresso } from '../../amici/ingresso.js'
-import { creaStanza, collega } from './sfida/rete.js'
 
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, INFINITA, tappeDelloScalino, scalinoDi, scalinoDelTerreno, terrenoDiverso, operazioniDi, operazionePer, senzaSaperi, PESO_DEL_RIPIEGO, stellePer, sfidaDi, sfidaInfinita, LIVELLI, livelloValido } from './dati/campagna.js'
 import { TRUPPE, EDIFICI, EDIFICIO_DI, AZIONI, BOMBA, POSTI, CAMPO, CRESCITA, truppeDelTerreno } from './dati/regole.js'
@@ -50,18 +52,20 @@ let borsellino = borsa(CHIAVE)   // le monete vere di questa partita, un calcolo
 
 const vista = ref('mappa')            // mappa | campo | sfida
 const tappaIdx = ref(0)
-/* la sfida in due (docs/arena/multigiocatore.md): `regia` fa parlare i due telefoni, e `mio` è il lato di chi gioca qui
-   (chi ospita è `io`, l'ospite `nem`: il mondo è uno solo e l'ospite lo vede specchiato, scena/prospettiva.js) */
+/* la sfida in due (docs/arena/multigiocatore.md): `regia` è l'incontro dei due telefoni (src/insieme/), e `mio` è il lato di chi
+   gioca qui (chi ospita è `io`, l'ospite `nem`: il mondo è uno solo e l'ospite lo vede specchiato, scena/prospettiva.js) */
 const regia = shallowRef(null)
-const statoSfida = ref('')            // lo stato della regia, per la schermata (la regia non è reattiva)
+const statoSfida = ref('')            // lo stato dell'incontro, per la schermata (l'incontro non è reattivo)
 const motivoSfida = ref('')
 const faseSfida = ref('scelta')       // scelta | creo | attesa | entro
 const invitato = ref('')              // il nome dell'amico invitato, mentre lo si aspetta
 let scadenzaInvito = 0
 const codiceSfida = ref('')
 const errore = ref('')
-const altroMuto = ref(false)          // l'altro non manda niente da troppo
-const mio = computed(() => (regia.value ? regia.value.mio : 'io'))
+const lineaGuasta = ref('')           // '' | 'io' (ho perso la linea) | 'altro' (non si sente): si dice dopo un attimo, non a ogni singhiozzo
+let guastaDa = 0
+const ASPETTA_A_DIRLO = 1.5           // secondi
+const mio = computed(() => (regia.value && statoSfida.value ? latoDi(regia.value.ruolo) : 'io'))
 const inDue = () => !!regia.value && regia.value.stato === 'gioco'
 const livello = ref(livelloValido(progresso(CHIAVE).livello))   // facile | medio | difficile: lo sceglie la mappa
 const infinita = ref(null)            // il terreno, se si gioca la battaglia infinita (niente tappa)
@@ -212,10 +216,12 @@ function passo(dt) {
   // mentre si calcola il campo è fermo del tutto (vedi docs/arena/calcoli.md); in due corre sempre: non si ferma per uno solo
   const scala = !duello && (fermo.value || p.fine || domanda.value) ? 0 : 1
   if (duello) {
-    regia.value.sessione.avanza(dt)
-    regia.value.controlla()
-    const muto = regia.value.silenzio > SILENZIO
-    if (muto !== altroMuto.value) altroMuto.value = muto
+    regia.value.avanza(dt)
+    const l = regia.value.linea
+    const guasta = l.io !== 'su' ? 'io' : l.altro !== 'su' ? 'altro' : ''
+    guastaDa = guasta ? guastaDa + dt : 0
+    const detta = guastaDa > ASPETTA_A_DIRLO ? guasta : ''
+    if (detta !== lineaGuasta.value) lineaGuasta.value = detta
   } else if (scala) {
     p.avanza(dt * scala)
     daSalvare += dt
@@ -379,15 +385,16 @@ function apriSfida() {
 
 async function creaSfida({ terreno, secondi }) {
   faseSfida.value = 'creo'
+  const posto = nuovoPosto()
   try {
-    codiceSfida.value = await creaStanza()
+    codiceSfida.value = await creaTavolo({ posto })
   } catch (e) {
     errore.value = e.message
     faseSfida.value = 'errore'
     return
   }
   faseSfida.value = 'attesa'
-  collegati(codiceSfida.value, { terreno, secondiARisposta: secondi })
+  collegati(codiceSfida.value, { terreno, secondiARisposta: secondi }, posto)
 }
 
 /* Un amico invitato (docs/core/amici.md): si prepara la stanza, ci si siede, e solo allora parte l'invito con il codice dentro. */
@@ -395,8 +402,9 @@ async function invitaAmico({ chiave, terreno, secondi }) {
   chiudiSfida()
   const a = amiciStato.amici.find(x => x.chiave === chiave)
   faseSfida.value = 'creo'
-  try { codiceSfida.value = await creaStanza() } catch (e) { errore.value = e.message; faseSfida.value = 'errore'; return }
-  collegati(codiceSfida.value, { terreno, secondiARisposta: secondi })
+  const posto = nuovoPosto()
+  try { codiceSfida.value = await creaTavolo({ posto }) } catch (e) { errore.value = e.message; faseSfida.value = 'errore'; return }
+  collegati(codiceSfida.value, { terreno, secondiARisposta: secondi }, posto)
   const r = regia.value
   for (let t = 0; regia.value === r && r.ruolo !== 'host' && t < 120; t++) await new Promise(res => setTimeout(res, 100))
   if (regia.value !== r) return                                    // annullato nel frattempo
@@ -430,27 +438,23 @@ function entraSfida(codice) {
   collegati(codice, null)
 }
 
-function collegati(codice, host) {
-  const r = new Regia({ canale: null, host, alCambio: () => cambioSfida(r) })
-  r.canale = collega(codice, {
-    alMessaggio: m => { if (regia.value === r) r.ricevi(m) },
-    allaChiusura: (motivo, dettaglio) => {
-      if (regia.value !== r) return
-      r.chiusura = dettaglio                    // com'è stato chiuso il MIO collegamento: lo dice il cartello
-      if (r.stato === 'finita' || r.stato === 'rotta') return
-      r.cambia('rotta', motivo === 'non entra' ? 'non trovo nessuna sfida con questo codice (o è già piena)' : 'il collegamento è caduto')
-    },
-  })
+/* `scelte`: { terreno, secondiARisposta } per chi crea (col `posto` prenotato creando il tavolo), null per chi entra */
+function collegati(codice, scelte, posto = nuovoPosto()) {
+  const r = new Incontro({ codice, regola: regolaArena(), scelte, alCambio: () => cambioSfida(r), opzioni: { posto } })
   regia.value = r
   statoSfida.value = r.stato
 }
 
 /* la regia cambia stato: in due si parte, o si dice perché non si può */
 function cambioSfida(r) {
-  if (regia.value !== r) return
+  if (!r || regia.value !== r) return
+  const prima = statoSfida.value
   statoSfida.value = r.stato
   motivoSfida.value = r.motivo
-  if (r.stato === 'gioco') {
+  // nel libretto dei guasti dei grandi (docs/core/insieme.md): com'è andata la linea, da leggere senza cavo
+  if (r.stato === 'rotta' && prima !== 'rotta') registra('sfida', r.motivo, false)
+  if (r.stato === 'finita' && prima !== 'finita' && r.canale.diario.cadute) registra('sfida', `finita bene, ${r.diagnosi()}`, false)
+  if (r.stato === 'gioco' && prima !== 'gioco') {
     clearTimeout(attesa); attesa = 0
     togli()
     scorda()                      // una partita nuova butta quella lasciata a metà (già chiesto dalla mappa)
@@ -459,7 +463,8 @@ function cambioSfida(r) {
     partita.value = r.partita
     azzera()
     toccato.value = false
-    altroMuto.value = false
+    lineaGuasta.value = ''; guastaDa = 0
+    giostra.tetto = 0.25          // in due un telefono lento deve recuperare, se no rallenta anche l'altro (il lockstep ha il suo tetto)
     chiaveCampo.value++
     vista.value = 'campo'
   }
@@ -473,7 +478,7 @@ function chiudiSfida() {
   regia.value = null
   statoSfida.value = ''
   motivoSfida.value = ''
-  altroMuto.value = false
+  lineaGuasta.value = ''; guastaDa = 0
   codiceSfida.value = ''
   if (r) r.chiudi()
 }
@@ -498,6 +503,7 @@ function comincia(nuova, indice) {
   scorda()  // una partita nuova butta quella lasciata a metà (già chiesto dalla mappa)
   tappaIdx.value = indice
   partita.value = nuova
+  giostra.tetto = 0.05
   ritocca(CHIAVE, c => { c.ultimaIA = nuova.ia.nome })   // la prossima partita avrà un altro carattere
   azzera()
   toccato.value = false
@@ -643,16 +649,16 @@ function risposto({ giusto, saltata, tempo }) {
       dici(frase(v))
     } else dici('le monete non bastavano più')
   } else {
-    if (v.azione === 'potenzia') { if (inDue()) regia.value.sessione.scegli('sbagliata', v.posto); else p.sbagliata(mio.value, v.posto) }
+    if (v.azione === 'potenzia') { if (inDue()) regia.value.scegli(['sbagliata', v.posto]); else p.sbagliata(mio.value, v.posto) }
     dici(v.azione === 'potenzia' ? 'conto sbagliato: la caserma riposa un po\'' : 'conto sbagliato: ci riprovi quando vuoi')
   }
   aggiornaCruscotto()
   salva()
 }
 
-/* la mossa giusta: da soli si fa subito, in due si dà alla sessione, che la fa valere (con l'altro) fra qualche decimo di secondo */
+/* la mossa giusta: da soli si fa subito, in due si dà all'incontro, che la fa valere (con l'altro) fra qualche decimo di secondo */
 function eseguiMossa(azione, chi, dove) {
-  if (inDue()) return regia.value.sessione.scegli(azione, chi, dove)
+  if (inDue()) return regia.value.scegli([azione, chi ?? null, dove ?? null])
   return partita.value.fai(mio.value, azione, chi, dove)
 }
 
@@ -697,7 +703,7 @@ function chiudiPartita() {
     ultima: vinto && !infinita.value && tappaIdx.value === QUANTE_TAPPE - 1,
     infinita: !!infinita.value && !regia.value, sfida: !!regia.value,
   }
-  if (regia.value) { statoSfida.value = 'finita'; regia.value.stato = 'finita'; regia.value.chiudi() }
+  if (regia.value) regia.value.finisci()
 }
 
 function ancora() {
@@ -803,11 +809,12 @@ onUnmounted(() => {
 
       <Finale v-if="finale" v-bind="finale" @ancora="ancora" @esci="allaMappa" />
 
-      <!-- la sfida si è rotta (l'altro se n'è andato, versioni diverse, copie separate) o l'altro non risponde -->
-      <div v-if="vista === 'campo' && !finale && (statoSfida === 'rotta' || altroMuto)" class="ar-velo" data-sfida-rotta>
+      <!-- la sfida si è rotta (l'altro se n'è andato, versioni diverse, la linea non è tornata), o la linea va e viene: si aspetta -->
+      <div v-if="vista === 'campo' && !finale && (statoSfida === 'rotta' || lineaGuasta)" class="ar-velo"
+           :data-sfida-rotta="statoSfida === 'rotta' ? '' : null" :data-sfida-linea="statoSfida === 'rotta' ? null : lineaGuasta">
         <div class="ar-cartello">
-          <h2>{{ statoSfida === 'rotta' ? 'La sfida è finita qui' : 'L\'altro non risponde…' }}</h2>
-          <p>{{ statoSfida === 'rotta' ? motivoSfida : 'Aspetto ancora un po\': se non torna, puoi uscire.' }}</p>
+          <h2>{{ statoSfida === 'rotta' ? 'La sfida è finita qui' : lineaGuasta === 'io' ? 'Hai perso la linea…' : 'L\'altro ha perso la linea…' }}</h2>
+          <p>{{ statoSfida === 'rotta' ? motivoSfida : lineaGuasta === 'io' ? 'Mi ricollego da solo: la battaglia riparte da dove era.' : 'Lo aspetto: quando torna, la battaglia riparte da dove era.' }}</p>
           <button class="ar-grosso ar-chiaro" data-sfida-esci @click="allaMappa"><span class="em">🗺️</span> alla mappa</button>
         </div>
       </div>
