@@ -5,6 +5,7 @@
 import { Group } from 'three'
 import { creaPersona, CHIAVI } from './persone3d/persone.js'
 import { verso } from './tempo.js'
+import { daSola, rifai } from './matrici.js'
 
 export const persone3dAccese = () => typeof location === 'undefined' || !/[#&?]persone2d\b/.test(location.hash + location.search)
 
@@ -22,7 +23,7 @@ export function creaPersone3d(scena, { quanti = () => 8, ozio = 0 } = {}) {
     try {
       const g = creaPersona(modello)
       g.traverse(o => { if (o.isMesh) o.castShadow = false })   // come l'eroe 3D: l'ombra morbida a terra la mette chi disegna
-      const radice = new Group(); radice.visible = false; radice.add(g); scena.add(radice)
+      const radice = daSola(new Group()); radice.visible = false; radice.add(g); scena.add(radice)
       return { modello, g, radice, presa: false, chi: null, alto: g.userData.altezza || 1 }
     } catch (e) { guasti.add(modello); console.warn(`persone 3D: ${modello} non si costruisce, resta lo sprite`, e); return null }
   }
@@ -67,7 +68,7 @@ export function creaPersone3d(scena, { quanti = () => 8, ozio = 0 } = {}) {
         u.anima(tt)
         radice.position.set(p.x, p.y || 0, p.z)
         radice.visible = true
-        radice.updateMatrixWorld(true)
+        rifai(radice)
       } catch (e) {
         guasti.add(modello); radice.visible = false; ist.chi = null; s.p3d = null; usate--
         console.warn(`persone 3D: ${modello} si rompe animando, resta lo sprite`, e)

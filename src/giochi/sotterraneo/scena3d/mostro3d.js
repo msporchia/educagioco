@@ -9,6 +9,7 @@ import { verso } from './tempo.js'
 import { studia, saldaTutto, osso, copiaMateriale, tipoFuso, tingiFusa, lampoFuso, copiaLampo } from './salda3d.js'
 import { conMosse } from './mostri3d/mosse-anim.js'
 import { ACCESI } from './costanti.js'
+import { daSola, rifai } from './matrici.js'
 
 export const mostri3dAccesi = () => typeof location === 'undefined' || !/[#&?]sprite\b/.test(location.hash + location.search)
 
@@ -38,7 +39,7 @@ function nuovaIstanza(scena, id) {
   } catch (e) { console.warn(`mostri 3D: ${id} non si salda`, e) }   // resta com'è, solo più caro
   const b = misura(g), s = b.getSize(new Vector3())
   // la radice porta dove sta, dove guarda e quanto è grande; `piega` la caduta (anima può muovere il Group del modello)
-  const radice = new Group(), piega = new Group(); radice.visible = false; piega.add(g); radice.add(piega); scena.add(radice)
+  const radice = daSola(new Group()), piega = new Group(); radice.visible = false; piega.add(g); radice.add(piega); scena.add(radice)
   const mesh = []
   g.traverse(o => { if (o.isMesh && !osso(o)) { o.castShadow = false; mesh.push({ o, orig: o.material, copia: null }) } })   // come l'eroe 3D: niente ombra del cono
   return { id, radice, piega, g, alto: Math.max(0.2, s.y), largo: Math.max(0.2, s.x, s.z), mesh, accese: false, presa: false, chi: null, guasto: false }
@@ -159,7 +160,7 @@ export function creaMostri3d(scena, { quanti = () => 12, ozio = 0 } = {}) {
         radice.position.set(p.x, (p.y || 0) - 0.12 * ist.alto * k * c, p.z)
         tingi(ist, p.bianco, p.tinta, p.forzaTinta, p.trasparenza)
         radice.visible = p.trasparenza > 0.02
-        radice.updateMatrixWorld(true)
+        rifai(radice)
       } catch (e) {
         // un modello che si rompe animando: via per sempre, torna lo sprite
         ist.guasto = true; radice.visible = false; ist.chi = null; s.m3d = null; usate--

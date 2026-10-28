@@ -10,6 +10,7 @@ import { dotazioneDi } from './anteprime3d-pura.js'
 import { creaPezzo, vestiFigura, indossaGioiello } from './roba3d.js'
 import { studia, saldaTutto, osso, copiaMateriale, lampoFuso } from './salda3d.js'
 import { ACCESI } from './costanti.js'
+import { daSola, rifai } from './matrici.js'
 
 export const eroe3dAcceso = () => typeof location === 'undefined' || !/[#&?]eroe2d\b/.test(location.hash + location.search)
 
@@ -96,7 +97,7 @@ export function saldaEroe(g, chiave, { pelle = true } = {}) {
 
 /** `scena`: dove si aggiunge. Torna `{ aggiorna(...), toglie() }`. */
 export function creaEroe3d(scena) {
-  const radice = new Group(); radice.visible = false; scena.add(radice)
+  const radice = daSola(new Group()); radice.visible = false; scena.add(radice)
   let chiave = null, g = null, tinte = [], altezza = 1, firma = '', ultimaTinta = ''
 
   function monta(corsa) {
@@ -162,7 +163,7 @@ export function creaEroe3d(scena) {
         // gli aloni della rarità svaniscono con lui (il portale)
         if (g.userData.armiAnima) for (const w of g.userData.armiAnima) if (w.userData.aloneUniformi) w.userData.aloneUniformi.uIntensita.value = trasparenza
       }
-      radice.updateMatrixWorld(true)
+      rifai(radice)
     },
     /** Non si disegna (la veduta dall'alto, uno scontro che lo disegna altrove). */
     nascondi() { radice.visible = false },
