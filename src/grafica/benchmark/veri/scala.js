@@ -18,14 +18,15 @@ const GRADINI_SOT = [
   { nome: '+ particelle, effetti, ombra e passaggio finale', accendi: ['particelle', 'effetti3d', 'ombra', 'post'] },
 ]
 // il mondo di sopra (28/10: 15-17 fps veri nel villaggio e sul prato, e nella bassa nessuna semplificazione); l'ombra del sole la bassa
-// non la disegna (`ombre` spento), sta col fondo
+// non la disegna (`ombre` spento), sta col cielo
 const GRADINI_SOPRA = [
   { nome: 'niente disegnato (il giro del gioco)', accendi: [] },
-  { nome: 'il cielo, il mare e le luci', accendi: ['cielo', 'mare', 'sole', 'resto', 'ombra'] },
+  { nome: 'il cielo e le luci', accendi: ['cielo', 'sole', 'resto', 'ombra'] },
+  { nome: '+ mare', accendi: ['mare'] },
   { nome: '+ terreno', accendi: ['terreno'] },
   { nome: '+ rilievo del terreno', accendi: ['normali'] },
   { nome: '+ case e piazza', accendi: ['case'] },
-  { nome: '+ alberi e natura', accendi: ['natura'] },
+  { nome: '+ alberi, erba e natura', accendi: ['natura'] },
   { nome: '+ nebbia della mappa, foschia, vita e scia', accendi: ['velo', 'foschia', 'vita', 'scia'] },
   { nome: '+ persone ed eroe', accendi: ['persone', 'eroe'] },
   { nome: '+ mostri', accendi: ['mostri'] },
@@ -33,7 +34,7 @@ const GRADINI_SOPRA = [
 // `rumore`: il gradino rifatto in fondo, uno che costa abbastanza da far vedere quanto si sposta una misura
 export const SCALE = {
   sot: { id: 'scala', titolo: `lo scontro con ${MOSTRI_SCALA} mostri`, gradini: GRADINI_SOT, rumore: 3 },
-  sopra: { id: 'scala-sopra', titolo: 'il villaggio di sopra con 4 persone e 3 mostri', gradini: GRADINI_SOPRA, rumore: 2 },
+  sopra: { id: 'scala-sopra', titolo: 'il villaggio di sopra con 4 persone e 3 mostri', gradini: GRADINI_SOPRA, rumore: 3 },
 }
 
 /** Le scene della scala `chiave`: `<id>-0`… coi pezzi accesi fin lì, e `<id>-ancora` (il gradino `rumore` di nuovo). */

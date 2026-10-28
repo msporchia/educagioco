@@ -221,7 +221,7 @@ export function letturaVeri(dati) {
   const parallelo = !((dati.info || {}).mancanti || []).includes('KHR_parallel_shader_compile')
   if (primi.length || sh) righe.push(`Prima apparizione: ${primi.map(r => `${r.nome} ${Math.round(r.primo)} ms`).join(', ') || 'nessuna sopra 100 ms'}; ${sh} shader nuovi, ` +
     `fino a ${prog} programmi in un gruppo` + (parallelo ? '.' : '; senza KHR_parallel_shader_compile si compilano bloccando: vanno precompilati (renderer.compileAsync) a una schermata di caricamento.'))
-  const pesante = ris.filter(r => misurata(r) && !r.el && !r.vero && r.p95 != null).sort((x, y) => y.p95 - x.p95)[0]
+  const pesante = ris.filter(r => misurata(r) && !r.el && !r.vero && !/^scala-/.test(r.id) && r.p95 != null).sort((x, y) => y.p95 - x.p95)[0]
   if (pesante) righe.push(`Chi pesa di più: ${pesante.nome} (p95 ${pesante.p95} ms, ${pesante.ch} chiamate, ${kt(pesante.tri)}k triangoli).`)
   const i = dati.info || {}, p = i.precisione
   if (p) righe.push(`GPU: highp nei frammenti ${p.fsAlta ? 'si' : 'NO'}, mediump a ${p.fsMedia} bit` +
