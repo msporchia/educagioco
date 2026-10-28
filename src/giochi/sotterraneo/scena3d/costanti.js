@@ -113,6 +113,8 @@ export const ELEMENTI_DISCESE = ['pavimento', 'pareteLontana', 'pareteVicina', '
 export const ELEMENTI_SOPRA = ['terreno', 'mare', 'natura', 'case', 'cielo', 'sole', 'velo', 'vita', 'scia', 'persone', 'eroe', 'mostri', 'resto']
 /** Se l'elemento `k` si disegna (`fuochi` è un numero: 0 è spento). */
 export const elementoAcceso = k => ACCESI[k] !== false && ACCESI[k] !== 0
+// gli elementi che sono anche leve della fascia: spenti alla nascita, il piano non li crea (piano.js, luci.js, indice.js)
+export const LEVE_ELEMENTI = ['arredo', 'fiamme', 'fuochi', 'palco', 'nebbia', 'effetti3d', 'chiarori']
 
 // La fascia grafica del telefono (store/qualita.js) decide quali pezzi di ACCESI restano: si riparte dai valori scritti sopra
 // (il cheat `&spegni=` e una fascia precedente non si accumulano), poi si spegne quello della fascia e quello chiesto a mano.

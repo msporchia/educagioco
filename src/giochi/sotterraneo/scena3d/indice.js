@@ -28,7 +28,7 @@ import { creaAzione } from './azione.js'
 import { costruisciPianoAPassi } from './piano.js'
 import { creaScontro } from './scontro.js'
 import { creaContorno } from './contorno.js'
-import { ACCESI, POLVERE, SCINTILLE, FIGURE_MAX, ALONI_MAX, MARGINE_DITO, ELEMENTI_DISCESE, elementoAcceso } from './costanti.js'
+import { ACCESI, POLVERE, SCINTILLE, FIGURE_MAX, ALONI_MAX, MARGINE_DITO, ELEMENTI_DISCESE, LEVE_ELEMENTI, elementoAcceso } from './costanti.js'
 import { segna, segnaNuovi, creaElementi } from '../../../grafica/elementi3d.js'
 import { verso } from './tempo.js'
 import { elencaProgrammi } from './programmi.js'
@@ -65,7 +65,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   }
   const post = ACCESI.post ? creaPost(renderer) : null
   // gli elementi (grafica/elementi3d.js): chi pesa si misura spegnendone uno alla volta (docs/core/vecchio-telefono-elementi.md)
-  const elementi = creaElementi(ELEMENTI_DISCESE, elementoAcceso)
+  const elementi = creaElementi(ELEMENTI_DISCESE, elementoAcceso, 'resto', LEVE_ELEMENTI)
   const gruppo = nome => { const g = segna(new Group(), nome); scena.add(g); return g }
   const [aloni, colonne, anelli] = segnaNuovi(scena, 'chiarori', () => [creaAloni(scena, ALONI_MAX), creaColonne(scena), creaAnelli(scena)])
   const scintille = segnaNuovi(scena, 'particelle', () => (ACCESI.scintille ? creaScintille(scena, Math.round(SCINTILLE * Math.min(1, ACCESI.quanteScintille))) : NIENTE))

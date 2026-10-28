@@ -37,6 +37,14 @@ controlla('e riaccende una volta', !giu(pav))
 pav.layers.mask = 0; passo(scena)
 controlla('poi non tocca più niente', pav.layers.mask === 0)
 pav.layers.mask = 1
+// una leva spenta alla nascita (il palco della bassa) non fa ripassare la scena: quella spenta dopo (la misura) sì
+const leve = new Set(['palco'])
+const conLeva = creaElementi(['pavimento', 'palco'], k => !leve.has(k), 'resto', ['palco'])
+pav.layers.mask = 0; conLeva(scena)
+controlla('la leva spenta alla nascita non ripassa la scena', pav.layers.mask === 0)
+pav.layers.mask = 1; leve.add('pavimento'); conLeva(scena)
+controlla('un elemento spento dopo sì', giu(pav))
+leve.delete('pavimento'); conLeva(scena)
 
 // la fascia e il confronto
 applicaFascia(['ombre', 'fuochi:2'], [])

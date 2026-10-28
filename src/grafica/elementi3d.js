@@ -45,13 +45,16 @@ export function nascondiElementi(radice, spento, resto = null) {
 /**
  * Il passo di ogni fotogramma: `nomi` gli elementi di quella scena, `acceso(nome)` se si disegna. Se tutti sono accesi non fa niente
  * (un giro su `nomi`); se uno è spento ripassa la scena (le cose nate dopo, gli effetti, si spengono anche loro), e una volta ancora
- * quando si riaccendono tutti.
+ * quando si riaccendono tutti. `leve`: gli elementi che sono anche leve della fascia (vedi sopra).
  */
-export function creaElementi(nomi, acceso, resto = 'resto') {
+export function creaElementi(nomi, acceso, resto = 'resto', leve = []) {
+  // una leva spenta già alla nascita (il palco nella fascia bassa) il gioco non l'ha creata: contarla ripasserebbe la scena a ogni fotogramma
+  const nate = new Set(leve.filter(k => !acceso(k)))
+  const su = k => nate.has(k) || acceso(k)
   let prima = false
   return radice => {
-    const ora = nomi.some(k => !acceso(k))
-    if (ora || prima) nascondiElementi(radice, k => nomi.includes(k) && !acceso(k), nomi.includes(resto) ? resto : null)
+    const ora = nomi.some(k => !su(k))
+    if (ora || prima) nascondiElementi(radice, k => nomi.includes(k) && !su(k), nomi.includes(resto) ? resto : null)
     prima = ora
   }
 }
