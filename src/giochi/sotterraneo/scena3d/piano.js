@@ -20,6 +20,7 @@ import { creaRaggi, postiDeiRaggi } from './raggi.js'
 import { FETTE, ACCESI } from './costanti.js'
 import { profilo } from '../../../store/qualita.js'
 import { segnaNuovi } from '../../../grafica/elementi3d.js'
+import { fondiFermi } from './fondi.js'
 
 // `trameDi(aspetto)`: le trame dello scenario (si fanno una volta e si tengono), `legno`: quella delle botti
 export function costruisciPiano(scena, corsa, opz) {
@@ -45,7 +46,7 @@ export function* costruisciPianoAPassi(scena, corsa, { maschera, luci, trameDi, 
   yield 'colonne'
   // gli elementi (grafica/elementi3d.js): chi pesa si misura spegnendone uno alla volta; i relitti e l'acqua stanno col pavimento
   const el = (nome, fai) => segnaNuovi(scena, nome, fai)
-  via.push(el('arredo', () => creaRelitti(scena, liv.relitti || [], corsa.scenario, maschera)).via)
+  const relitti = el('arredo', () => creaRelitti(scena, liv.relitti || [], corsa.scenario, maschera)); via.push(relitti.via)
   const pozze = el('pavimento', () => creaPozze(scena, pianta.acqua, luci.condivise, maschera, aspetto)); via.push(pozze.via)
   // il tempio sommerso: l'acqua bassa su tutto il pavimento
   const velo = aspetto.velo ? el('pavimento', () => creaPozze(scena, pianta.pavimento.filter(c => pianta.calpestabile(c.x, c.y)), luci.condivise, maschera, aspetto, aspetto.velo)) : null
@@ -94,6 +95,9 @@ export function* costruisciPianoAPassi(scena, corsa, { maschera, luci, trameDi, 
   const botti = el('arredo', () => creaBotti(scena, { posti, legno: posti.length ? legno() : null, conMaschera, maschera, regola: BOTTI_PER_PAESAGGIO[paesaggio] || null }))
   via.push(botti.via)
   yield 'botti'
+  // la bassa: colonne, arredo e relitti in una chiamata per materiale (fondi.js), a piano finito e prima del primo disegno
+  const fusi = ACCESI.arredoFuso ? fondiFermi(scena, [terreno.colonne, ...relitti.mesh, ...(arredo ? arredo.mesh : [])], pianta.W, pianta.H) : null
+  if (fusi) via.push(fusi.via)
   // senza `nebbiaFitta` (la fascia bassa) una fetta sola
   // con la luce per vertice nessuna: la nebbia è un termine dei vertici del piano, densa quanto le fette che sostituisce
   const fitte = ACCESI.nebbia ? Math.min(FETTE, profilo('sotterraneo').fetteNebbia) : 0
@@ -107,7 +111,7 @@ export function* costruisciPianoAPassi(scena, corsa, { maschera, luci, trameDi, 
   for (const r of liv.robe) if (r.che === 'arredo' || r.che === 'fonte' || r.che === 'portale') ingombri.add(pianta.id(r.x, r.y))
   for (const b of botti.botti) if (!b.rotta) ingombri.add(pianta.id(b.cella.x, b.cella.y))
   return {
-    liv, scenario: corsa.scenario, paesaggio, aspetto, pianta, vis, terreno, pozze, velo, raggi, arredo, botti, fiamme, fuochi, sorgenti, fontana, portali, nebbia, ingombri,
+    liv, scenario: corsa.scenario, paesaggio, aspetto, pianta, vis, terreno, pozze, velo, raggi, arredo, botti, fiamme, fuochi, sorgenti, fontana, portali, nebbia, ingombri, fusi,
     get portale() { return portali[0] || null },
     portaleDi(r) { return portali.find(p => p.roba === r) || null },
     // a ogni fotogramma: un portale nuovo nel motore (la pergamena) nasce accendendosi, uno sparito (lasciato il piano) se ne va

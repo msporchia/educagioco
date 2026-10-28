@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════
-   IL RITAGLIO DI PAVIMENTO E PARETI — docs/sotterraneo/prestazioni-3d.md, «Il ritaglio»
+   IL RITAGLIO DI PAVIMENTO E PARETI — docs/sotterraneo/prestazioni-3d-bassa.md, «Il ritaglio»
 
    Un pavimento di 40×40 celle (un quadrato per cella) e una parete a due
    materiali: con la telecamera su un angolo l'indice tiene solo i blocchi

@@ -42,6 +42,7 @@ export function creaBotti(scena, { posti, legno, conMaschera, maschera, regola =
   function sfascia(bo, ferma) {
     bo.rotta = true
     metti(bo)
+    pd.visible = pc.visible = true
     for (let k = 0; k < DOGHE + 2; k++) {
       const cerchio = k >= DOGHE, ang = bo.giro + (k + 0.5) * Math.PI * 2 / DOGHE
       const c = cerchio ? cCerchio.clone().setY(k === DOGHE ? 0.08 : 0.54) : cDoga.clone().applyAxisAngle(new Vector3(0, 1, 0), bo.giro + k * Math.PI * 2 / DOGHE)
@@ -62,6 +63,8 @@ export function creaBotti(scena, { posti, legno, conMaschera, maschera, regola =
   }
   botti.forEach(bo => { if (bo.gia) sfascia(bo, true); else metti(bo) })
   for (const o of [a, b, pd, pc]) { o.castShadow = o === a || o === b; o.receiveShadow = true; o.frustumCulled = false; scena.add(o) }
+  // i pezzi delle botti rotte (tutti schiacciati a zero finché nessuna si rompe) erano due chiamate a ogni fotogramma per niente
+  pd.visible = pc.visible = botti.some(bo => bo.rotta)
   return {
     botti,
     // la botte si sfascia (una volta sola); torna false se era già rotta

@@ -6,6 +6,8 @@
 // `usa(chi)`, `svuota(subito)`, `aggiorna(dt, t, scala, vis)`. Fuori vista niente si muove e niente si emette.
 import { LatheGeometry, CircleGeometry, CylinderGeometry, Group, Mesh, MeshStandardMaterial, ShaderMaterial, Points, BufferGeometry,
          BufferAttribute, DynamicDrawUsage, AdditiveBlending, DoubleSide, Vector2, Vector3, Color } from 'three'
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
+import { ACCESI } from './costanti.js'
 import { GLSL_RUMORE, GLSL_LUCI } from './luci.js'
 import { GLSL_MASCHERA } from './maschera.js'
 
@@ -28,7 +30,9 @@ export function creaFontana(scena, { cella, condivise, trama, conMaschera, masch
     tornio([[0.05, 0.53], [0.12, 0.55], [0.2, 0.6], [0.215, ALTO_COPPA + 0.02], [0.2, ALTO_COPPA + 0.03], [0.17, ALTO_COPPA - 0.01], [0.05, 0.58]]),
     new CircleGeometry(0.405, 28).rotateX(-Math.PI / 2).translate(0, 0.07, 0),
   ]
-  geometrie.forEach((g, i) => { const me = new Mesh(g, i === 3 ? fondo : pietra); me.castShadow = true; me.receiveShadow = true; gruppo.add(me) })
+  // la bassa (`arredoFuso`): i tre torni della pietra in un pezzo, una chiamata invece di tre
+  if (ACCESI.arredoFuso) { const torni = geometrie.slice(0, 3); geometrie.splice(0, 3, mergeGeometries(torni)); torni.forEach(g => g.dispose()) }
+  geometrie.forEach((g, i) => { const me = new Mesh(g, i === geometrie.length - 1 ? fondo : pietra); me.castShadow = true; me.receiveShadow = true; gruppo.add(me) })
 
   // ── l'acqua: uno shader solo per la vasca, la coppa e il velo che cade ──
   const cerchi = Array.from({ length: CERCHI }, () => new Vector3(0, 0, -10))

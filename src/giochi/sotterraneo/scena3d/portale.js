@@ -7,6 +7,8 @@
 // di sopra (`colori`, `alto`, e `conMaschera` assente: pietra senza maschera). docs/sotterraneo/grafica-3d-portale.md
 import { Group, Mesh, BoxGeometry, PlaneGeometry, CircleGeometry, MeshStandardMaterial, ShaderMaterial, Points, BufferGeometry,
          BufferAttribute, DynamicDrawUsage, AdditiveBlending, DoubleSide, Color, Vector3 } from 'three'
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
+import { ACCESI } from './costanti.js'
 import { GLSL_RUMORE } from './luci.js'
 
 export const COLORI_PORTALE = {
@@ -36,6 +38,8 @@ export function creaPortale(scena, { cella, conMaschera = null, maschera = null,
     new BoxGeometry(P + 0.06, 0.1, D + 0.06).translate(-mx, 0.05, 0),                  // i piedi dei pilastri
     new BoxGeometry(P + 0.06, 0.1, D + 0.06).translate(mx, 0.05, 0),
   ]
+  // la bassa (`arredoFuso`): i sei blocchi della pietra in un pezzo, una chiamata invece di sei
+  if (ACCESI.arredoFuso) { const blocchi = geos.splice(0); geos.push(mergeGeometries(blocchi)); blocchi.forEach(g => g.dispose()) }
   for (const g of geos) { const o = new Mesh(g, pietra); o.castShadow = true; o.receiveShadow = true; gruppo.add(o) }
 
   const uni = { uT: { value: 0 }, uVis: { value: 1 }, uLampo: { value: 0 }, uApre: { value: 1 },

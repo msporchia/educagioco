@@ -1,4 +1,4 @@
-// Il ritaglio di pavimento e pareti (docs/sotterraneo/prestazioni-3d.md, «Il ritaglio»): sono una mesh ciascuno per tutto il piano, e la
+// Il ritaglio di pavimento e pareti (docs/sotterraneo/prestazioni-3d-bassa.md, «Il ritaglio»): sono una mesh ciascuno per tutto il piano, e la
 // telecamera ne vede un pezzo; i triangoli si mettono a blocchi di celle e a ogni fotogramma l'indice tiene solo i blocchi che l'inquadratura
 // tocca (riscritto quando cambiano). Le chiamate restano quelle: cambia quanti vertici fa la GPU, che sul Note 7 era il fondo che pesava.
 import { Frustum, Matrix4, Box3, Vector3, BufferAttribute, DynamicDrawUsage } from 'three'

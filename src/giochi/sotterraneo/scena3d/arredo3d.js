@@ -208,5 +208,5 @@ export function creaArredo3d(scena, { pianta, liv, aspetto, seme, trame, legno, 
     scena.add(im)
     mesh.push(im); geometrie.push(f.g); materiali.push(...mats)
   }
-  return { posti, luci, via() { for (const o of mesh) scena.remove(o); geometrie.forEach(g => g.dispose()); materiali.forEach(x => x.dispose()) } }
+  return { posti, luci, mesh, via() { for (const o of mesh) scena.remove(o); geometrie.forEach(g => g.dispose()); materiali.forEach(x => x.dispose()) } }
 }

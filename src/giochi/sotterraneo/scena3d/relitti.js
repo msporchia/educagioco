@@ -69,5 +69,5 @@ export function creaRelitti(scena, relitti, scenario, maschera) {
     scena.add(im)
     mesh.push(im); geometrie.push(g); materiali.push(mat)
   }
-  return { via() { for (const o of mesh) scena.remove(o); geometrie.forEach(g => g.dispose()); materiali.forEach(x => x.dispose()) } }
+  return { mesh, via() { for (const o of mesh) scena.remove(o); geometrie.forEach(g => g.dispose()); materiali.forEach(x => x.dispose()) } }
 }

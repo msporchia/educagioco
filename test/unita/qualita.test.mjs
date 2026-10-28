@@ -29,7 +29,7 @@ controlla('bassa: niente passaggio finale, lampi e palco', !ACCESI.post && !ACCE
 controlla('bassa: niente ombra del cono né del sole (misurato sul Note 7: ~8 ms), nebbia a una fetta, meno polvere', !ACCESI.ombre && !ACCESI.nebbiaFitta && ACCESI.quantaPolvere === 0.4)
 uguale('bassa: metà scintille', ACCESI.quanteScintille, 0.5)
 controlla('bassa: il piano con la luce per vertice (docs/sotterraneo/appiattimento-3d.md, «Nel gioco»)', !!ACCESI.lucePerVertice)
-controlla('bassa: il terreno semplice, senza trame (docs/sotterraneo/prestazioni-3d.md)', !!ACCESI.terrenoSemplice && !!ACCESI.arredoSemplice && !!ACCESI.armiSemplici)
+controlla('bassa: il terreno semplice, senza trame (docs/sotterraneo/prestazioni-3d-bassa.md)', !!ACCESI.terrenoSemplice && !!ACCESI.arredoSemplice && !!ACCESI.armiSemplici)
 applicaFascia([], ['lucePerVertice'])
 controlla('bassa con `&riaccendi=lucePerVertice`: la bassa di prima, per confronto', !ACCESI.lucePerVertice && !ACCESI.ombre)
 applicaFascia(['lucePerVertice'])

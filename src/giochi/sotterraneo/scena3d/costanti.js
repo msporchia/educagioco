@@ -98,6 +98,8 @@ export const ACCESI = {
   terrenoSemplice: false,
   // allo stesso modo (la bassa): colonne e arredo col colore medio delle trame (maschera.js), le armi in mano fuse in un pezzo (roba3d.js, `appiattisci`)
   arredoSemplice: false,
+  // e (la bassa: `arredoFuso:1`) colonne, arredo e relitti fusi in una chiamata per materiale, la pietra di fontana e portale in un pezzo (fondi.js)
+  arredoFuso: false,
   armiSemplici: false,
   // e la torcia (la bassa: `torciaSemplice:1`): ai personaggi solo l'alone, spostato avanti e più forte; il cono resta al piano (luci.js)
   torciaSemplice: false,

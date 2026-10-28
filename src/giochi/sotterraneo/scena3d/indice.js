@@ -385,6 +385,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     for (const p of piano.portali) p.aggiorna(dt, t, punti, vistaOra(piano.vis, p.cella.x + 0.5, p.cella.y + 0.5))
     piano.terreno.aggiorna(dtVero, torcia)
     piano.terreno.ritaglia(cam.camera)
+    if (piano.fusi) piano.fusi.ritaglia(cam.camera)
     piano.botti.aggiorna(dt)
 
     S.rosso *= Math.exp(-5 * dtVero)
