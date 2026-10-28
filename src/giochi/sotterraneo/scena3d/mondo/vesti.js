@@ -3,8 +3,10 @@
 // piazze, campi) dove la cella non vista è velo di nuvole chiare, sfumato ai bordi; un OGGETTO (case, alberi, monumenti) che si
 // vede tutto intero o niente, letto alla cella della sua base (l'istanza, o l'attributo `aBase` per il kit unito), e che entrando
 // in vista sale dal terreno. Le uniform sono una copia sola per tutti. docs/sotterraneo/grafica-3d.md, «La nebbia di sopra».
-import { Vector2, Vector3, MeshDepthMaterial, RGBADepthPacking, DataTexture, RedFormat, UnsignedByteType, NearestFilter } from 'three'
+import { Vector2, Vector3, MeshDepthMaterial, RGBADepthPacking, DataTexture, RedFormat, UnsignedByteType, NearestFilter, LinearFilter,
+         RepeatWrapping } from 'three'
 import { PEZZO } from './pezzi.js'
+import { ACCESI } from '../costanti.js'
 
 export const U = {
   uTempo: { value: 0 },
@@ -16,6 +18,7 @@ export const U = {
   uPezzi: { value: null },      // un texel per pezzo (pezzi.js): 1 dove il pezzo vicino è costruito, e lì il mondo lontano si toglie
   uTinta: { value: new Vector3(1, 1, 1) },   // la tinta della terra (TERRE della scheda): moltiplica il colore di tutto il mondo
   uCielo: { value: new Vector3(1, 1, 1) },   // e quella del cielo, rispetto al cielo della prima terra
+  uRumore: { value: tramaRumore() },          // il rumore già fatto, per la leva `rumoreTrama` (la bassa)
 }
 // La tinta di una terra (dati/mondo-aperto.js, TERRE; docs/sotterraneo/terre-successive.md): la prima è [1, 1, 1], le altre
 // colorano terreno, case e alberi, e il cielo (la sfera, lo sfondo e la foschia) in proporzione al cielo della prima. Torna il fattore
@@ -39,12 +42,33 @@ export function tramaDeiPezzi(nx, nz) {
 }
 export const SALITA = 0.7        // secondi: quanto ci mette un oggetto a salire dal terreno entrando in vista
 
+// la leva `rumoreTrama` (la fascia bassa): `vrumore` legge una trama coi valori di hash12 ai nodi invece di fare quattro hash a pixel
+// (docs/sotterraneo/prestazioni-3d-bassa.md, «Il mondo di sopra»). 256 di lato, ripetuta: un nodo di rumore per texel
+function tramaRumore() {
+  const L = 256, d = new Uint8Array(L * L), fr = x => x - Math.floor(x)
+  for (let y = 0; y < L; y++) for (let x = 0; x < L; x++) {
+    let a = fr(x * 0.1031), b = fr(y * 0.1031), c = a
+    const k = a * (b + 33.33) + b * (c + 33.33) + c * (a + 33.33); a += k; b += k; c += k
+    d[y * L + x] = Math.round(fr((a + b) * c) * 255)
+  }
+  const t = new DataTexture(d, L, L, RedFormat, UnsignedByteType)
+  t.wrapS = t.wrapT = RepeatWrapping; t.magFilter = t.minFilter = LinearFilter; t.needsUpdate = true
+  return t
+}
+/** Le define degli shader che usano GLSL_RUMORE, da chiedere quando si crea il materiale (dopo la fascia). */
+export const defineRumore = () => (ACCESI.rumoreTrama ? { RUMORE_TRAMA: '' } : {})
+
 export const GLSL_RUMORE = /* glsl */`
+#ifdef RUMORE_TRAMA
+  uniform sampler2D uRumore;
+  float vrumore (vec2 p) { vec2 i = floor(p), f = fract(p); return texture(uRumore, (i + f * f * (3.0 - 2.0 * f) + 0.5) / 256.0).r; }
+#else
   float hash12 (vec2 p) { vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
   float vrumore (vec2 p) {
     vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3.0 - 2.0 * f);
     return mix(mix(hash12(i), hash12(i + vec2(1, 0)), u.x), mix(hash12(i + vec2(0, 1)), hash12(i + vec2(1, 1)), u.x), u.y);
   }
+#endif
   float frumore (vec2 p) { return vrumore(p) * 0.55 + vrumore(p * 2.1 + 7.3) * 0.3 + vrumore(p * 4.3 + 1.7) * 0.15; }
 `
 export const GLSL_CIELO = /* glsl */`
@@ -100,7 +124,7 @@ export function vesti(mat, { vento = 0, rigido = 0, nuvole = true, nebbia = true
   mat.onBeforeCompile = (sh, r) => {
     if (vecchio) vecchio(sh, r)
     cuciVertice(sh, { vento, rigido, oggetto, lontano })
-    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>${ACCESI.rumoreTrama ? '\n      #define RUMORE_TRAMA' : ''}
       varying vec3 vMondo;
       ${GLSL_CIELO}`)
     if (nuvole && sh.fragmentShader.includes('#include <aomap_fragment>'))
@@ -114,7 +138,7 @@ export function vesti(mat, { vento = 0, rigido = 0, nuvole = true, nebbia = true
     if (prima) prima(sh)
   }
   const chiave = `mondo-${vento > 0}-${nuvole}-${nebbia}-${oggetto}-${lontano}-${codice}`
-  mat.customProgramCacheKey = () => chiave
+  mat.customProgramCacheKey = () => chiave + (ACCESI.rumoreTrama ? '-rt' : '')
   return mat
 }
 

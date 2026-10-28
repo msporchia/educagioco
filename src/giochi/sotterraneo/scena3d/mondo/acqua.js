@@ -4,7 +4,7 @@
 import { DataTexture, RedFormat, LinearFilter, ShaderMaterial, UniformsUtils, UniformsLib, Color, PlaneGeometry, Mesh,
          SphereGeometry, BackSide } from 'three'
 import { LIVELLO_ACQUA, quotaDellaCella } from './suolo.js'
-import { U, GLSL_CIELO } from './vesti.js'
+import { U, GLSL_CIELO, defineRumore } from './vesti.js'
 
 // la profondità di un rettangolo di celle nella trama: le celle scritte (le zone caricate una volta) esatte, le altre dalla base
 // a passi di due celle (la stessa che legge il lontano: il fiume dei confini c'è già)
@@ -24,7 +24,7 @@ export function creaAcqua(m, sole) {
   tProf.magFilter = tProf.minFilter = LinearFilter; tProf.needsUpdate = true
   const mat = new ShaderMaterial({
     uniforms: UniformsUtils.merge([UniformsLib.fog, { tProf: { value: null }, uSole: { value: sole.clone() }, uCielo: { value: new Color(0xa9cdea) } }]),
-    fog: true,
+    fog: true, defines: defineRumore(),
     vertexShader: /* glsl */`
       #include <common>
       #include <fog_pars_vertex>

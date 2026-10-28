@@ -103,6 +103,8 @@ export const ACCESI = {
   armiSemplici: false,
   // e la torcia (la bassa: `torciaSemplice:1`): ai personaggi solo l'alone, spostato avanti e più forte; il cono resta al piano (luci.js)
   torciaSemplice: false,
+  // e (la bassa: `rumoreTrama:1`) il rumore degli shader del mondo di sopra (acqua, terreno, nuvole, nebbia) letto da una trama (mondo/vesti.js)
+  rumoreTrama: false,
   // gli elementi della scena (grafica/elementi3d.js): spento non si disegna, senza buttarlo né cambiare il gioco. Solo per misurare chi
   // pesa (`&spegni=pavimento`); anche arredo, fiamme, fuochi, palco, nebbia, effetti3d e chiarori qui sopra fanno da elemento. `resto`: quello
   // senza nome (l'emisferica, una cosa dimenticata), così la scena «tutto spento» è vuota davvero

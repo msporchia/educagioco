@@ -6,7 +6,7 @@
 import { DataTexture, RedFormat, FloatType, UnsignedByteType, LinearFilter, NearestFilter, InstancedMesh, PlaneGeometry, ShaderMaterial,
          Matrix4, Quaternion, Euler, Vector3 } from 'three'
 import { scopri } from '../../motore/terra.js'
-import { U, GLSL_RUMORE } from './vesti.js'
+import { U, GLSL_RUMORE, defineRumore } from './vesti.js'
 import { caso } from './suolo.js'
 
 const MAI = 1e9          // il tempo di una cella mai vista: «molto avanti»
@@ -48,7 +48,8 @@ export function creaNebbia(m, scena, nebbia) {
     punti.push([x + (r() - 0.5) * 3, 2.2 + r() * 2.2, z + (r() - 0.5) * 3, 5.5 + r() * 3.5, r() * 6.28])
   const geo = new PlaneGeometry(1, 1).rotateX(-Math.PI / 2)
   const mat = new ShaderMaterial({
-    transparent: true, depthWrite: false, uniforms: { uTempo: U.uTempo, uVisto: U.uVisto, uMappa: U.uMappa, uNebbia: U.uNebbia },
+    transparent: true, depthWrite: false, defines: defineRumore(),
+    uniforms: { uTempo: U.uTempo, uVisto: U.uVisto, uMappa: U.uMappa, uNebbia: U.uNebbia, uRumore: U.uRumore },
     vertexShader: /* glsl */`
       uniform float uTempo; uniform sampler2D uVisto; uniform vec2 uMappa; uniform float uNebbia;
       varying vec2 vUv; varying float vAlfa; varying float vSeme;

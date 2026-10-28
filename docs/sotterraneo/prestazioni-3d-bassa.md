@@ -69,3 +69,11 @@ dava quasi tutto al primo gradino, cielo-mare-luci +48 ms di GPU (lavoro in fila
   tolte. Il selciato e l'erba si vedono un poco più piatti.
 - Il 28/10 la scala metteva la natura (alberi, erba, mobili: `natura.js`, istanze nate dopo `creaNatura`) nel gradino del cielo, perché
   non aveva il suo nome: ora l'ha.
+
+La scala delle 20:37, col cielo e la natura al loro posto: il **mare da solo +45 ms** di GPU (il piano d'acqua a tutto schermo), il
+terreno +7, la nebbia della mappa +7, case e natura un paio di ms; il villaggio 18 fps veri. Ogni pixel d'acqua faceva dieci volte
+`vrumore` (onde, bolle, ombra delle nuvole), quaranta hash; il terreno sei, e la nebbia della mappa altre sei.
+
+- **Il rumore in trama** (la bassa, `rumoreTrama`; `mondo/vesti.js`): con `RUMORE_TRAMA` `vrumore` legge una trama 256×256 coi valori di
+  hash12 ai nodi (filtro lineare, ripetuta, lo smoothstep sulla coordinata): una lettura invece di quattro hash. Vale per tutti gli shader
+  che usano `GLSL_RUMORE`: acqua, terreno, ombra delle nuvole, nebbia della mappa, velo. Nella foto del villaggio non si vede la differenza.
