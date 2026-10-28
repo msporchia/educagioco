@@ -37,7 +37,7 @@ export function proxyCattivo(versoPorta, { host = '127.0.0.1' } = {}) {
     coppie.add(c)
     dentro.on('data', d => scrivi(c, 'su', d))
     fuori.on('data', d => scrivi(c, 'giu', d))
-    const fine = () => { coppie.delete(c); if (!c.morta) { dentro.destroy(); fuori.destroy() } }
+    const fine = () => { coppie.delete(c); dentro.destroy(); fuori.destroy() }      // anche un filo morto: se no Node resta acceso
     dentro.on('close', fine); fuori.on('close', fine)
     dentro.on('error', () => {}); fuori.on('error', () => {})
   })
