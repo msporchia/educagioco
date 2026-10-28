@@ -9,6 +9,10 @@ name = "STANZE"
 class_name = "Stanza"
 
 [[durable_objects.bindings]]
+name = "TAVOLI"
+class_name = "Tavolo"
+
+[[durable_objects.bindings]]
 name = "LIMITE"
 class_name = "Limite"
 
@@ -39,3 +43,8 @@ new_sqlite_classes = ["Codice", "Errori", "Coppia"]
 tag = "v3"
 new_sqlite_classes = ["Presenza"]
 deleted_classes = ["Coppia"]
+
+# il tavolo che sopporta le cadute (docs/core/insieme.md): la stanza di prima resta per i telefoni col gioco vecchio
+[[migrations]]
+tag = "v4"
+new_sqlite_classes = ["Tavolo"]
