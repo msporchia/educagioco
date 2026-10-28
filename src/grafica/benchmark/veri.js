@@ -100,6 +100,7 @@ export const QUANTE = TAPPE.reduce((n, t) => n + t.scene.length, 0)
  * misura vera (`veri/riferimento.js`). Le serie lunghe (triangoli, chiamate, luci, pixel, roba, fattoria, 24 persone, 16 mostri) sono già
  * misurate: stanno in `TAPPE`, le «Misure complete». Il riferimento del calore è quello fisso che ogni gruppo ha già; la scala rifà il suo gradino 1.
  */
+export const RISOLUZIONI = [0.75, 0.6]
 export const TAPPE_VERIFICA = [
   // l'ingresso: il primo attacco col riscaldamento acceso e spento, un giro solo (le tre ripetizioni stanno nelle misure complete)
   { gruppo: 'ingresso', carica: INGRESSO.carica, opz: { giri: 1 }, tempi: 'verifica', scene: INGRESSO.scene.filter(s => s.id === 'ing-sot' || s.id === 'ing-sot-x').map(s => ({ ...s, stima: 18 })) },
@@ -107,6 +108,8 @@ export const TAPPE_VERIFICA = [
   { gruppo: 'scala', carica: () => import('./veri/elementi-sot.js'), opz: { mostri: MOSTRI_SCALA }, tempi: 'verifica', scene: sceneDellaScala() },
   // lo scontro com'è da 1 a 6 mostri, quanto degrada (la serie dà il LIMITE); `sot-1` contro l'ultima misura vera (veri/riferimento.js)
   { gruppo: 'discese', carica: discese, tempi: 'verifica', scene: [1, 2, 3, 4, 6].map(n => ({ id: `sot-${n}`, nome: `${n} mostr${n > 1 ? 'i' : 'o'} con gli effetti`, mostri: n, colpi: true, serie: 'discese', quanti: n, cresce: true, stima: 12 })) },
+  // la risoluzione: lo stesso scontro con 3 mostri a 0,75 e a 0,6 (il gioco vero scende da sé fino a 0,6 sopra i 26 ms, contesto.js)
+  ...RISOLUZIONI.map(d => ({ gruppo: 'risoluzione', carica: discese, opz: { dpr: d }, tempi: 'verifica', scene: [{ id: `res-${d}`, nome: `3 mostri, risoluzione ${String(d).replace('.', ',')}`, mostri: 3, colpi: true, stima: 12 }] })),
   { gruppo: 'sopra', carica: () => import('./veri/sopra.js'), tempi: 'verifica', scene: [
     { id: 'per-8', nome: '8 persone', persone: 8, stima: 10 }, { id: 'mos-8', nome: '8 mostri sul prato', mostri: 8, stima: 10 },
   ] },
@@ -175,7 +178,9 @@ function creaGiro(f) {
           const somma = dt.reduce((x, y) => x + y, 0)
           // chiamate e triangoli cambiano col fotogramma (chi entra ed esce dall'inquadratura): il più alto dei campioni
           const piu = k => (conti.length ? Math.max(...conti.map(c => c[k] || 0)) : undefined)
-          fatto({ chMax: piu('ch'), triMax: piu('tri'), ms: tondo(mediana(lavoro)), p95: tondo(perc(lavoro, 0.95)), js: tondo(mediana(cpu)), gpu: tondo(mediana(gpu)), fps: somma ? Math.round(1000 * dt.length / somma) : 0, n: lavoro.length,
+          // il JS del pittore diviso: `agg` il giro del gioco (logica, scena, segni), `dis` il disegno di three (i comandi alla GPU)
+          const med = k => { const v = conti.map(c => c[k]).filter(x => x != null); return v.length ? tondo(mediana(v)) : undefined }
+          fatto({ chMax: piu('ch'), triMax: piu('tri'), agg: med('agg'), dis: med('dis'), ms: tondo(mediana(lavoro)), p95: tondo(perc(lavoro, 0.95)), js: tondo(mediana(cpu)), gpu: tondo(mediana(gpu)), fps: somma ? Math.round(1000 * dt.length / somma) : 0, n: lavoro.length,
                   primo: tondo(Math.max(0, ...comparsa, ...primi.slice(0, 10))), pronto, lenti: lavoro.filter(x => x > LENTO).length, stabile,
                   ...(nascosta ? { nascosta: true } : {}) })
         }

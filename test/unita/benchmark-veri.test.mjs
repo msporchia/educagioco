@@ -149,14 +149,15 @@ lp.ripristina()
 // la verifica compatta: l'ingresso, la scala, lo scontro com'è, il mondo di sopra e lo zaino; ogni scena col confronto contro l'ultima misura vera
 const idV = TAPPE_VERIFICA.flatMap(t => t.scene.map(x => x.id))
 const stima = stimaVerifica()
-controlla('la verifica ha 23 scene tutte diverse, senza le serie lunghe', idV.length === 23 && new Set(idV).size === 23 && !idV.some(i => /^(tri|ch|luci|px|roba|fat|cal|v-|ver-)/.test(i)), idV.join(','))
+controlla('la verifica ha 25 scene tutte diverse, senza le serie lunghe', idV.length === 25 && new Set(idV).size === 25 && !idV.some(i => /^(tri|ch|luci|px|roba|fat|cal|v-|ver-)/.test(i)), idV.join(','))
 controlla('la verifica: l\'ingresso (un giro, col riscaldamento e senza), la scala, lo scontro, 8 persone e 8 mostri, lo zaino', idV.slice(0, 2).join() === 'ing-sot,ing-sot-x' && TAPPE_VERIFICA[0].opz.giri === 1 && ['scala-0', 'sot-1', 'sot-6', 'per-8', 'mos-8', 'zaino-15'].every(i => idV.includes(i)))
 const sc = TAPPE_VERIFICA.find(t => t.gruppo === 'scala'), gr = sc.scene.slice(0, GRADINI.length)
 controlla('la scala: un Sotterraneo solo con 3 mostri, da niente acceso, ogni gradino sopra quello di prima', sc.opz.mostri === 3 && gr[0].accesi.length === 0 && gr.every((x, k) => !k || (gr[k - 1].accesi.every(a => x.accesi.includes(a)) && x.accesi.length > gr[k - 1].accesi.length)))
 controlla('in fondo il gradino 1 rifatto (il rumore)', sc.scene.length === GRADINI.length + 1 && sc.scene[GRADINI.length].id === 'scala-ancora' && sc.scene[GRADINI.length].accesi.join() === gr[1].accesi.join())
 const cima = gr[gr.length - 1].accesi
 controlla('l\'ultimo gradino accende tutti gli elementi dello scontro, e solo quelli', cima.length === SCENE_ELEMENTI.sot.elementi.length && SCENE_ELEMENTI.sot.elementi.every(a => cima.includes(a)), cima.join())
-controlla('la stima: 23 scene, sui 5 minuti (il testo del foglio)', stima.scene === 23 && stima.secondi >= 230 && stima.secondi <= 320, JSON.stringify(stima))
+controlla('la stima: 25 scene, sui 6 minuti (il testo del foglio)', stima.scene === 25 && stima.secondi >= 260 && stima.secondi <= 360, JSON.stringify(stima))
+controlla('la risoluzione: lo scontro con 3 mostri a 0,75 e a 0,6, ognuno col suo Sotterraneo', ['res-0.75', 'res-0.6'].every(i => idV.includes(i)) && TAPPE_VERIFICA.filter(t => t.gruppo === 'risoluzione').map(t => t.opz.dpr).join() === '0.75,0.6')
 controlla('gli id della verifica che sono anche delle complete hanno il riferimento', ['sot-1', 'per-8', 'mos-8', 'zaino-15'].every(i => dellaScena(i)))
 const rif = dellaScena('sot-1')
 uguale('il riferimento è tolto il calore (83.1 / 1.13)', rif.ms, 73.5)
@@ -172,7 +173,7 @@ let quota = 8
 const scalaRis = [0, 4, 2, 3, 1, 2, 1, 14, 6, 2, 9, 0.5].map((d, k) => { quota += d; return s(`scala-${k}`, 'scala', quota, quota + 5) })
 const dv = {
   ...dati, verifica: true, gruppi: {},
-  risultati: [...scalaRis, s('scala-ancora', 'scala', 13, 18), s('sot-1', 'discese', 60, 66, { js: 26, gpu: 36 }), s('per-8', 'sopra', 52, 60, { js: 22, gpu: 30 }), { id: 'zaino-15', gruppo: 'sopra', nome: '15 anteprime', tot: 1500, attesa: 800, lavoro: 1400, max: 200, fatte: 15, n: 15 },
+  risultati: [...scalaRis, s('scala-ancora', 'scala', 13, 18), s('sot-1', 'discese', 60, 66, { js: 26, gpu: 36 }), s('sot-3', 'discese', 70, 80, { js: 30, gpu: 40, agg: 9, dis: 15 }), s('res-0.75', 'risoluzione', 56, 64, { js: 27, gpu: 29 }), s('res-0.6', 'risoluzione', 49, 57, { js: 26, gpu: 23 }), s('per-8', 'sopra', 52, 60, { js: 22, gpu: 30 }), { id: 'zaino-15', gruppo: 'sopra', nome: '15 anteprime', tot: 1500, attesa: 800, lavoro: 1400, max: 200, fatte: 15, n: 15 },
     { id: 'mos-8', gruppo: 'sopra', nome: 'mos-8', errore: 'x' }],
 }
 const tv = componiVeri(dv, { versione: 'x', ua: 'Redmi Note 7', quando: new Date(2026, 9, 23, 10, 0) })
@@ -187,6 +188,9 @@ const fermo6 = { ...dv, fermata: true, aMeta: [9, 19], risultati: [...scalaRis.s
 const lf = letturaVeri(fermo6).join('\n')
 controlla('una scala a metà: i gradini fatti restano, quello che non regge la chiude', /  5 \+ fuochi e fiamme: 20 ms/.test(lf) && /  6 \+ lampi e palco: non regge \(tempo scaduto[^\n]*la scala si ferma qui/.test(lf) && !/  7 /.test(lf), lf)
 controlla('una prova a metà lo dice in testa', /\(A METÀ: 9 scene di 19, la prova non è finita\)/.test(componiVeri(fermo6, {}).split('\n')[0]))
+controlla('LETTURA: la risoluzione, a 1 contro 0,75 e 0,6', /RISOLUZIONE \(3 mostri con gli effetti\): a 1 70 ms \(p95 80, js 30 gpu 40\), a 0,75 56 ms \(p95 64, js 27 gpu 29\) −20%, a 0,6 49 ms \(p95 57, js 26 gpu 23\) −30%/.test(lv2), lv2)
+controlla('LETTURA: dove va il JS (il giro del gioco, il disegno, il resto)', /Dove va il JS \(sot-3\): 30 ms, di cui il giro del gioco 9, il disegno di three 15, il resto 6/.test(lv2), lv2)
+controlla('la riga della scena dice il JS diviso', /sot-3: 70\/80 ms \(js 30: gioco 9 disegno 15 gpu 40\)/.test(tv), tv)
 controlla('LETTURA: lo scontro contro i 33 ms', /Scontro nelle discese \(1 mostro, effetti\): p95 66 ms: ancora oltre i 33 ms/.test(lv2), lv2)
 controlla('i DATI dicono la versione di riferimento', JSON.parse(tv.split('DATI ')[1]).vf === RIFERIMENTO.versione)
 controlla('una misura completa non ha il confronto', !/rispetto all'ultima misura vera/.test(componiVeri({ ...dv, verifica: false }, {})) && !/MIGLIORATO/.test(letturaVeri({ ...dv, verifica: false }).join('')))

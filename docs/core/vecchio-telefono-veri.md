@@ -8,7 +8,7 @@ giocare il bambino: quanti mostri nello scontro, quante persone sopra, quanti ed
 ## Sul telefono
 
 Zona dei grandi (codice) → **Impostazioni** → tendina **Avanzate** → **Misura questo telefono** → **Avvia coi modelli veri** (la
-**verifica**, 23 scene e ~5 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
+**verifica**, 25 scene e ~6 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
 Le complete durano un quarto d'ora circa (57 scene, e fra un gruppo e l'altro 8 s di schermo nero perché il telefono si raffreddi): la barra in fondo dice a
 che scena si è, **Interrompi** la ferma e tiene il resoconto di quello che c'è. Le scene si vedono mentre girano: se una luce, un
 colore o la nebbia sembrano sbagliati, alla fine c'è un campo **Note** che finisce nel resoconto. Lo schermo non deve spegnersi
@@ -21,7 +21,7 @@ invio), **Copia**, **Rifai**. L'ultimo resoconto di ognuna delle due prove resta
 
 Il tasto «Avvia coi modelli veri» serve a **decidere**: se una modifica ha migliorato qualcosa e quale leva conviene. Non ripete quello che i due
 log del Note 7 già dicono (il pavimento, triangoli, chiamate, luci, pixel, la roba, la fattoria, 24 persone, 16 mostri): quello sta nelle
-**Misure complete**. `TAPPE_VERIFICA` in `veri.js`, **23 scene, circa 5 minuti** (`stimaVerifica()`: i secondi attesi per scena più, a ogni
+**Misure complete**. `TAPPE_VERIFICA` in `veri.js`, **25 scene, circa 6 minuti** (`stimaVerifica()`: i secondi attesi per scena più, a ogni
 gruppo, la pausa di 4,5 s, il riferimento del calore e il caricamento; la scrive il foglio iniziale; sopra gli 8 minuti si tagliano scene):
 
 | gruppo | scene |
@@ -29,6 +29,7 @@ gruppo, la pausa di 4,5 s, il riferimento del calore e il caricamento; la scrive
 | `ingresso` | `ing-sot`, `ing-sot-x`: il primo attacco col riscaldamento acceso e spento, **un giro solo** (`opz.giri`; le tre ripetizioni e il mondo di sopra sono nelle complete) |
 | `scala` | `scala-0`…`scala-11` e `scala-ancora`: lo scontro con 3 mostri un gradino alla volta, vedi sotto |
 | `discese` | `sot-1`…`sot-6`: lo scontro com'è con 1, 2, 3, 4 e 6 mostri (il LIMITE della serie: quanto degrada); `sot-1` contro l'ultima misura vera |
+| `risoluzione` | `res-0.75`, `res-0.6`: lo scontro con 3 mostri a risoluzione 0,75 e 0,6, un Sotterraneo ciascuno; la riga RISOLUZIONE li mette contro `sot-3` (a 1). Il gioco vero scende da sé fino a 0,6 quando va sopra i 26 ms (`contesto.js`): la verifica misura a risoluzione fissa |
 | `sopra` | `per-8` (8 persone), `mos-8` (8 mostri sul prato), `zaino-15` (15 anteprime) |
 
 Ogni scena dura al massimo ~4,5 s dopo un rodaggio di ~2 s (`TEMPI.verifica`); fra i gruppi 4,5 s di schermo nero (`RAFFREDDA_BREVE`, 8 s
@@ -142,7 +143,7 @@ togliendo ogni cosa allo scontro, dalla più cara), i tre colli (triangoli: c'è
 più grande delle luci, l'ombra del cono, la nebbia) e il **COLLO DI BOTTIGLIA** (quello che a raddoppiarlo costa di più), la roba che
 pesa, lo zaino, la festa, il **calore** (il riferimento alla fine diviso quello all'inizio: sopra 1,15 il telefono si è scaldato),
 le prime apparizioni lente, chi pesa di più, la GPU, i contesti persi. In fondo le **NOTE** e la riga `DATI {"v":2,"k":"veri",…}`:
-`r` ha `[id, ms, p95, fps, chiamate, ktriangoli, primo, shader, js, gpu, deriva]` (le prime otto come nei log di prima), lo zaino `[id, totale, fotogramma max, lavoro, attesa]`.
+`r` ha `[id, ms, p95, fps, chiamate, ktriangoli, primo, shader, js, gpu, deriva]` (le prime otto come nei log di prima) e, dove c'è, `gioco, disegno` in coda: il JS del pittore diviso fra il giro del gioco (`grafica().msJs`: logica, scena, segni) e il disegno di three (`msDisegno`: i comandi alla GPU, che sul telefono aspettano anche la GPU); la riga della scena li scrive dopo il js («js 25: gioco 6 disegno 15»), la scala dà il salto di ognuno e la LETTURA «Dove va il JS»; lo zaino `[id, totale, fotogramma max, lavoro, attesa]`.
 
 Un invio del modulo dei giudizi regge ~3,5k caratteri: un resoconto più lungo (quasi sempre, con 40 scene) si **spezza in più
 invii** a 3400 caratteri, fra una riga e l'altra, ognuno con «(parte k/n)» in testa e la riga DATI intera nell'ultimo. Per lo

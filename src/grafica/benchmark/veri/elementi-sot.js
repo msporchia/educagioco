@@ -51,7 +51,7 @@ export async function prepara({ contenitore, opz = {} }) {
     gl: () => gl,
     tela: tela.canvas,
     scena3d: () => pittore.scena,
-    conti() { const g = pittore.grafica(); return { ch: g.chiamate, tri: g.triangoli, programmi: g.programmi, geo: g.memoria.geometries, tex: g.memoria.textures } },
+    conti() { const g = pittore.grafica(); return { ch: g.chiamate, tri: g.triangoli, programmi: g.programmi, geo: g.memoria.geometries, tex: g.memoria.textures, agg: g.msJs, dis: g.msDisegno } },
     avvia: () => pittore.avvia(),
     async scena(s) {
       if (!pronta) { pronta = true; await finche(() => pittore.grafica().mostri3d >= quanti && pittore.palco, 8000); colpi = parti() }

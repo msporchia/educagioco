@@ -51,7 +51,8 @@ function rigaVera(r) {
   const c = corretta(r)
   const piu = [c !== r ? `≈${c.ms}` : '', r.primo > Math.max(50, 2 * r.ms) ? `primo ${Math.round(r.primo)}` : '', r.nuovi ? `+${r.nuovi}sh` : '',
                r.pronto > 1500 ? `pronto ${(r.pronto / 1000).toFixed(1)}s` : '', r.stabile === false ? 'instabile' : '', r.nascosta ? 'NASCOSTA' : ''].filter(Boolean).join(' ')
-  return `${segnoVero(r.p95)}${r.nome}: ${r.ms}/${r.p95} ms (js ${r.js ?? '?'} gpu ${r.gpu ?? '?'}) ${r.fps}fps ${r.ch ?? '?'}ch ${kt(r.tri)}kt${piu ? ' ' + piu : ''}`
+  const parti = r.agg != null ? `: gioco ${r.agg} disegno ${r.dis ?? '?'}` : ''
+  return `${segnoVero(r.p95)}${r.nome}: ${r.ms}/${r.p95} ms (js ${r.js ?? '?'}${parti} gpu ${r.gpu ?? '?'}) ${r.fps}fps ${r.ch ?? '?'}ch ${kt(r.tri)}kt${piu ? ' ' + piu : ''}`
 }
 
 const confrontabile = r => (misurata(r) || (r.tot != null && !r.errore && !r.salta)) && r.tipo !== 'ingresso'
@@ -65,6 +66,22 @@ export function rigaRispetto(r) {
   const parola = { meglio: 'meglio', peggio: 'peggio', uguale: 'come prima' }
   const parte = (n, v) => (v ? `${n} ${v.d < 0 ? '−' : '+'}${Math.abs(v.d)}` : '')
   return `${testa}${dif(c.ms)}, ${parola[c.ms.g]}; p95 ${c.p95.d < 0 ? '−' : '+'}${Math.abs(c.p95.d)}, ${[parte('js', c.js), parte('gpu', c.gpu)].filter(Boolean).join(' ')}`
+}
+
+// la risoluzione: lo scontro con 3 mostri a 1 (sot-3), 0,75 e 0,6, e dove va il JS (il giro del gioco, il disegno di three, il resto)
+const percento = (a, b) => `${a.ms - b.ms <= 0 ? '−' : '+'}${Math.abs(Math.round(100 * (a.ms - b.ms) / Math.max(0.1, b.ms)))}%`
+function letturaRisoluzione(ris) {
+  const uno = ris.find(r => r.id === 'sot-3' && misurata(r))
+  const altre = ris.filter(r => /^res-/.test(r.id) && misurata(r))
+  const righe = []
+  if (uno && altre.length) {
+    righe.push(`RISOLUZIONE (3 mostri con gli effetti): a 1 ${uno.ms} ms (p95 ${uno.p95}, js ${uno.js} gpu ${uno.gpu}), ` +
+      altre.map(r => `a ${r.id.slice(4).replace('.', ',')} ${r.ms} ms (p95 ${r.p95}, js ${r.js} gpu ${r.gpu}) ${percento(r, uno)}`).join(', ') +
+      '. Il gioco vero scende da sé fino a 0,6 quando va sopra i 26 ms.')
+  }
+  const j = uno && uno.agg != null ? uno : ris.find(r => r.id === 'scala-11' && misurata(r) && r.agg != null)
+  if (j && j.js != null) righe.push(`Dove va il JS (${j.nome}): ${j.js} ms, di cui il giro del gioco ${j.agg}, il disegno di three ${j.dis ?? '?'}, il resto ${t1d(j.js - j.agg - (j.dis || 0))} (fra un fotogramma e l'altro).`)
+  return righe
 }
 
 // la LETTURA della verifica: cosa è migliorato e cosa no (JS e GPU a parte), e lo scontro contro i 33 ms
@@ -83,6 +100,7 @@ function letturaRispetto(ris) {
   if (zz) righe.push(`Zaino (${zz.r.n} anteprime): ${dif(zz.c.tot)} in tutto, fotogramma più lungo ${dif(zz.c.max)}.`)
   const A = ris.find(r => r.id === 'sot-1' && misurata(r))
   if (A) righe.push(`Scontro nelle discese (1 mostro, effetti): p95 ${A.p95} ms: ${A.p95 > SOGLIE_VERI.scatti ? `ancora oltre i ${SOGLIE_VERI.scatti} ms` : `sotto i ${SOGLIE_VERI.scatti} ms`}.`)
+  righe.push(...letturaRisoluzione(ris))
   return righe
 }
 
@@ -245,7 +263,7 @@ export function componiVeri(dati, { versione = '', ua = '', nome = '', cpu = nul
     // [id, ms, p95, fps, chiamate, ktriangoli, primo, shader nuovi, js, gpu, deriva]: le prime otto come prima (lo strumento legge la seconda)
     r: (dati.risultati || []).map(r => r.errore ? [r.id, 'err'] : r.salta ? [r.id, 'salta'] : r.tipo === 'ingresso' ? [r.id, 'ing', r.max, r.lenti, r.att, r.sh, r.p1, r.p3]
       : r.tot != null ? [r.id, r.tot, r.max, r.lavoro, r.attesa]
-      : [r.id, r.ms, r.p95, r.fps, r.ch, kt(r.tri), Math.round(r.primo || 0), r.nuovi || 0, r.js ?? null, r.gpu ?? null, r.deriva ?? 1]) }
+      : [r.id, r.ms, r.p95, r.fps, r.ch, kt(r.tri), Math.round(r.primo || 0), r.nuovi || 0, r.js ?? null, r.gpu ?? null, r.deriva ?? 1, ...(r.agg != null ? [r.agg, r.dis ?? null] : [])]) }
   return [...testa, '', ...corpo, ...(avvisi.length ? ['', 'AVVISI', ...avvisi] : []), '', `CPU prova JS: ${dati.js ?? '?'} ms`, '',
     'LETTURA', ...letturaVeri(dati).map(r => '- ' + r), '', `DATI ${JSON.stringify(dd)}`].join('\n')
 }

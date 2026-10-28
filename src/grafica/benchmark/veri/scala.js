@@ -49,7 +49,10 @@ export function letturaScala(ris) {
     if (!buona(r)) { righe.push(`  ${k} ${GRADINI[k].nome}: ${r ? (r.errore ? 'non regge (' + r.errore + ')' : 'saltato') : 'non misurato'}; la scala si ferma qui.`); break }
     const s = prima ? { ms: r.ms - prima.ms, js: (r.js ?? 0) - (prima.js ?? 0), gpu: (r.gpu ?? 0) - (prima.gpu ?? 0) } : null
     if (s && k > 1) salti.push({ k, ...s })
-    righe.push(`  ${k} ${GRADINI[k].nome}: ${r.ms} ms (p95 ${r.p95}, js ${r.js}, gpu ${r.gpu}, ${r.ch} ch)` + (s ? ` → ${piu(s.ms)} ms (js ${piu(s.js)}, gpu ${piu(s.gpu)})` : ''))
+    // il JS diviso (veri.js, `agg`/`dis`): il giro del gioco e il disegno di three
+    const diviso = r.agg != null ? `: gioco ${r.agg}, disegno ${r.dis}` : ''
+    const salto = s && r.agg != null && prima.agg != null ? `: gioco ${piu(r.agg - prima.agg)}, disegno ${piu((r.dis ?? 0) - (prima.dis ?? 0))}` : ''
+    righe.push(`  ${k} ${GRADINI[k].nome}: ${r.ms} ms (p95 ${r.p95}, js ${r.js}${diviso}, gpu ${r.gpu}, ${r.ch} ch)` + (s ? ` → ${piu(s.ms)} ms (js ${piu(s.js)}${salto}, gpu ${piu(s.gpu)})` : ''))
     prima = r
   }
   const uno = g[1], ancora = ris.find(r => r.id === 'scala-ancora')

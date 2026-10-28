@@ -85,7 +85,7 @@ export async function prepara({ contenitore, opz = {} }) {
     avvia: () => pittore.avvia(),
     conti() {
       const g = pittore.grafica()
-      return { ch: g.chiamate, tri: g.triangoli, programmi: g.programmi, geo: g.memoria.geometries, tex: g.memoria.textures, mostri3d: g.mostri3d }
+      return { ch: g.chiamate, tri: g.triangoli, programmi: g.programmi, geo: g.memoria.geometries, tex: g.memoria.textures, mostri3d: g.mostri3d, agg: g.msJs, dis: g.msDisegno }
     },
     scena3d: () => pittore.scena,
     async scena(s) {
