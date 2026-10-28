@@ -72,7 +72,7 @@ vincono).
 | `luci` | 1, 2, 4, 6, 12 fuochi con l'ombra del cono; 1, 6, 12 senza | lo scontro con 3 mostri, la riserva dei fuochi spenta (`fuochi:0`) e fuochi uguali a quelli di `luci.js` attorno al palco | |
 | `pixel` | pixel ratio 1, 1,41, 2; senza nebbia | lo scontro con 3 mostri, un Sotterraneo per scena | |
 | `sopra` | 4, 8, 16, 24 persone; 4, 8, 16 mostri | i modelli di `persona3d.js` e `mostro3d.js` e l'eroe 3D, con sole, ombra, foschia e telecamera del mondo (`mondo/indice.js`, `veduta.js`), senza tetti | il mondo (zone, case, alberi): un prato |
-| `zaino` | 15 e 40 anteprime di fila | il servizio vero (`anteprime3d.js`), cache vuota, chiavi diverse | |
+| `zaino` | 15 e 40 anteprime di fila | il fornitore vero (`viste/anteprima3d.js`: le foto fatte, il servizio per il ritratto dell'eroe; dal 28/10), cache vuota, chiavi diverse | |
 | `roba` | 24 lame, bastoni, scudi, vesti, gioielli, pozioni | `creaPezzo` con l'alone del leggendario (pozioni: del raro), animati; le vesti addosso a 24 eroi | |
 | `fattoria` | 10, 30, 60 edifici; 4 pollai e 4 stalle; Natale con 30 edifici | `Mondo3d` su `fattoriaTipo(10)`, le opzioni della fascia, il degrado fermo, `mondo.stress` | i fogli e il dito |
 

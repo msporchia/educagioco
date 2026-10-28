@@ -1,9 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE ANTEPRIME DELLA FATTORIA 3D, FOTOGRAFATE SUL COMPUTER
 
-     npm run anteprime                  ricompila e riscrive src/giochi/fattoria3d/dati/anteprime.js
-     npm run anteprime -- --niente-build   con il dist/ che c'è (solo se è di questo codice)
-     ANTEPRIME_DEBUG=1 npm run anteprime   e lascia i WebP in tmp/scatti/anteprime-fattoria3d/
+     npm run anteprime fattoria         riscrive src/giochi/fattoria3d/dati/anteprime.js (il comando: strumenti/anteprime.mjs)
+     ANTEPRIME_DEBUG=1 npm run anteprime fattoria   e lascia i WebP in tmp/scatti/anteprime-fattoria3d/
 
    Apre la Fattoria 3D nel file costruito e chiede a `Mondo3d.anteprima(tipo, { viva: true })` la foto di ogni pezzo, edificio e
    bestia di casa, col renderer vero (la stessa posa, la stessa luce del telefono); la riduce a 160 px in WebP. Il telefono le legge
@@ -15,7 +14,6 @@ import { createHash } from 'node:crypto'
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { spawnSync } from 'node:child_process'
 import { PEZZI, EDIFICI } from '../src/giochi/fattoria3d/dati/catalogo.js'
 import { BESTIE } from '../src/giochi/fattoria3d/dati/bestie.js'
 
@@ -57,9 +55,9 @@ ${righe.join('\n')}
 `)
 }
 
-async function fotografa() {
-  const { apriBrowser, apriGioco, azzera, semina, scegli } = await import('../test/aiuto/browser.mjs')
-  const browser = await apriBrowser()
+/** `browser` di Playwright col file costruito. → { foto, mancano } */
+export async function fotografaFattoria(browser) {
+  const { apriGioco, azzera, semina, scegli } = await import('../test/aiuto/browser.mjs')
   const { page, errori } = await apriGioco(browser)
   await azzera(page)
   await semina(page, { coins: 300, settings: { eta: 8, sperimentali: true } })
@@ -81,19 +79,7 @@ async function fotografa() {
     foto[t] = uri
     if (process.env.ANTEPRIME_DEBUG) writeFileSync(resolve(DEBUG, t.replace(':', '-') + '.webp'), Buffer.from(uri.split(',')[1], 'base64'))
   }
-  await browser.close()
+  await page.close()
   if (errori.length) console.warn('  errori della pagina:', errori.slice(0, 3).join(' | '))
   return { foto, mancano }
-}
-
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  if (!process.argv.includes('--niente-build')) {
-    const b = spawnSync('npm', ['run', 'build'], { cwd: RADICE, stdio: 'inherit' })
-    if (b.status) process.exit(b.status)
-  }
-  const { foto, mancano } = await fotografa()
-  if (mancano.length) { console.error(`senza foto (il modello non c'è o non si disegna): ${mancano.join(', ')}`); process.exit(1) }
-  scriviAnteprime(foto)
-  const kb = Object.values(foto).reduce((s, u) => s + u.length, 0) / 1024
-  console.log(`${Object.keys(foto).length} anteprime, ${Math.round(kb)} KB di testo → ${FILE_ANTEPRIME.slice(RADICE.length + 1)}`)
 }

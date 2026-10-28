@@ -1,28 +1,23 @@
-// Le anteprime 3D dello zaino nella misura del telefono (docs/core/vecchio-telefono-veri.md): il servizio vero
-// (scena3d/anteprime3d.js, la sua coda e il suo renderer) con N richieste di fila, come quando si apre lo zaino pieno. Ogni giro ha
-// un servizio nuovo (la cache vuota) e chiavi diverse dal giro prima. Si misura il tempo in tutto, l'attesa media di una casella,
-// il lavoro della coda (modelli, disegno, copia) e il fotogramma più lungo della pagina mentre la coda lavora.
-import { creaAnteprime3d } from '../../../giochi/sotterraneo/scena3d/anteprime3d.js'
+// Le anteprime 3D dello zaino nella misura del telefono (docs/core/vecchio-telefono-veri.md): il fornitore vero (viste/anteprima3d.js:
+// le foto fatte sul computer, e il servizio di scena3d/anteprime3d.js per il ritratto dell'eroe) con N richieste di fila, come quando si
+// apre lo zaino pieno. Ogni giro ha un fornitore nuovo (la cache vuota) e chiavi diverse dal giro prima. Si misura il tempo in tutto,
+// l'attesa media di una casella, il lavoro della coda del servizio (modelli, disegno, copia) e il fotogramma più lungo della pagina.
+import { creaFornitore } from '../../../giochi/sotterraneo/viste/anteprima3d.js'
 import { chiaveDellEroe } from '../../../giochi/sotterraneo/scena3d/anteprime3d-pura.js'
-import { gettone } from '../../../giochi/sotterraneo/scena3d/roba3d-pura.js'
-import { FIGURE3D } from '../../../giochi/sotterraneo/dati/figure3d.js'
-import { CHIAVI as PERSONE } from '../../../giochi/sotterraneo/scena3d/persone3d/persone.js'
+import { ANTEPRIME } from '../../../giochi/sotterraneo/dati/anteprime-fatte.js'
 import { Corredo } from '../../../giochi/sotterraneo/motore/corredo.js'
 import { vestiLeggendario } from './leggendario.js'
 
-const LETTERE = ['m', 'r', 'l']
 const SPECIE = ['scheletro', 'goblin', 'orco', 'lupo', 'ragno', 'zombie', 'troll', 'vespa', 'cinghiale', 'diavoletto']
 
 /** Le chiavi di uno zaino pieno, tutte diverse: armi e bastoni, scudi, gioielli, mostri, persone e l'eroe, mescolati come in una pagina. */
 export function chiaviDelloZaino(n, salta = 0) {
-  const di = fam => Object.keys(FIGURE3D).filter(f => FIGURE3D[f].famiglia === fam)
-  const pezzo = (tipo, f, k) => `${tipo}:${gettone({ figura: f, id: null, rarita: { m: 'magico', r: 'raro', l: 'leggendario' }[LETTERE[k % 3]], elemento: FIGURE3D[f].elemento || 'nessuno' })}`
+  // le chiavi vere del gioco (quelle fotografate), sparse: una ogni sette, perché due di fila non siano la stessa figura
+  const di = tipo => Object.keys(ANTEPRIME).filter(k => k.startsWith(tipo + ':')).filter((k, i) => i % 7 === 0)
   const liste = {
-    arma: [...di('lame'), ...di('bastoni')].map((f, k) => pezzo('arma', f, k)),
-    scudo: di('scudi').map((f, k) => pezzo('scudo', f, k)),
-    gioiello: di('gioielli').map((f, k) => pezzo('gioiello', f, k)),
+    arma: di('arma'), scudo: di('scudo'), gioiello: di('gioiello'),
     mostro: SPECIE.flatMap(t => ['raro', 'leggendario'].map(g => `mostro:${t}:${g}:-`)),
-    persona: PERSONE.map(p => `persona:${p}`),
+    persona: Object.keys(ANTEPRIME).filter(k => k.startsWith('persona:')),
   }
   const roba = vestiLeggendario(new Corredo({ eroe: 'cavaliere' }))
   liste.eroe = ['cavaliere', 'elfa', 'mago', 'nano'].flatMap(e => [chiaveDellEroe(e, roba), chiaveDellEroe(e, roba, 'busto')])
@@ -42,7 +37,7 @@ export async function prepara() {
   return {
     async misura(s) {
       const chiavi = chiaviDelloZaino(s.anteprime, s.salta || 0)
-      const servizio = creaAnteprime3d()
+      const servizio = creaFornitore(() => 'cavaliere')
       let max = 0, ultimo = 0, vivo = true
       const guarda = t => { if (ultimo) max = Math.max(max, t - ultimo); ultimo = t; if (vivo) requestAnimationFrame(guarda) }
       requestAnimationFrame(guarda)
@@ -52,7 +47,7 @@ export async function prepara() {
         await Promise.all(chiavi.map(k => servizio.chiedi(k).then(img => { attese.push(performance.now() - t0); if (img) fatte++ })))
       } finally { vivo = false }
       const tot = performance.now() - t0
-      const st = servizio.stato()
+      const st = servizio.stato() || { ms: 0, msModelli: 0, msCopia: 0, perdite: 0 }   // il servizio nasce solo se una chiave non è fra le foto
       servizio.via()
       return { tot: Math.round(tot), attesa: Math.round(attese.reduce((a, b) => a + b, 0) / Math.max(1, attese.length)), lavoro: Math.round(st.ms),
                modelli: Math.round(st.msModelli), copia: Math.round(st.msCopia), max: Math.round(max), fatte, n: chiavi.length, persi: st.perdite }

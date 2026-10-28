@@ -127,7 +127,7 @@ compra toccandolo; tenuto premuto su un pezzo lo riprende, come prima.
 
 ## Le anteprime (le carte e l'insegna delle macchine)
 
-Una carta mostra il modello vero che poi si vede in scena, non un'icona. **Le foto si fanno sul computer**: `npm run anteprime`
+Una carta mostra il modello vero che poi si vede in scena, non un'icona. **Le foto si fanno sul computer**: `npm run anteprime fattoria`
 (`strumenti/anteprime-fattoria3d.mjs`) apre il file costruito, fotografa ogni pezzo, edificio e bestia di casa con `anteprima(tipo, { viva: true })`
 e le scrive in `dati/anteprime.js` (generato, WebP 160×160, ~1,4 MB), che il gioco carica a parte appena parte. Fatte sul Note 7 erano
 ~250 render, letture dalla GPU e PNG di fila, una per fotogramma, appena si apriva «Costruisci»: gli fps crollavano e la coda andava avanti

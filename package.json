@@ -41,7 +41,7 @@
     "quiz:eta": "node strumenti/quiz/eta.mjs",
     "scatti": "node strumenti/scatti.mjs",
     "emoji": "node strumenti/emoji.mjs",
-    "anteprime": "node strumenti/anteprime-fattoria3d.mjs"
+    "anteprime": "node strumenti/anteprime.mjs"
   },
   "dependencies": {
     "three": "^0.186.1",

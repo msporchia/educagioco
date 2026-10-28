@@ -6,6 +6,21 @@ pannello del pezzo, il confronto affiancato), il ritratto dell'eroe (zaino, bott
 fila dei turni dello scontro. Sono fotografie dei modelli veri, fatte una volta e tenute. **Il Sotterraneo di sempre non cambia**:
 le anteprime le fornisce solo Gioco.vue col `disegno: '3d'`.
 
+## Fatte sul computer (28/10)
+
+**Il telefono disegna solo il ritratto dell'eroe vestito** (`eroe:`, `busto:`: dipende da cosa porta, le combinazioni non si contano).
+Il resto, cioè la roba con ogni figura, rarità ed elemento a cui può uscire, l'armatura sui quattro eroi, i copricapi, i consumabili, i mostri con gradi e
+varianti, i grossi e le persone, lo fotografa `npm run anteprime sotterraneo` (`strumenti/anteprime-sotterraneo3d.mjs`) col servizio
+vero nel file costruito: ~970 WebP alla misura di `MISURE`, ~2,9 MB, in `dati/anteprime-fatte.js` (generato). Il fornitore
+(`viste/anteprima3d.js`, `creaFornitore`) carica il file a parte quando il 3D parte, decodifica una foto alla prima richiesta della
+sua chiave e la dà alla vista come la tela di prima (`Quadro3d` copia un'immagine come una tela); per una chiave che non c'è chiama il servizio.
+- **Le chiavi le dà il codice del gioco**: `chiaveDellaCosa` su ogni pezzo possibile (ogni base, rarità, abilità a una e a due, livello
+  1–120: la figura la sceglie un hash della chiave, e oltre i 100 non ne escono di nuove), più mostri, grossi e persone. Una figura
+  nuova cambia l'elenco e `unita/sotterraneo-anteprime-fatte` è rosso finché non si rifanno.
+- **La firma dei sorgenti** (`SORGENTI`: il servizio, la roba, gli eroi, i mostri, le persone) dice se le foto sono dei modelli di adesso.
+- Sul Note 7 lo zaino da 15 anteprime faceva 2,7 s, con un fotogramma fermo di 250 ms; la misura (`zaino-15`) passa ora dal fornitore,
+  come il gioco.
+
 ## Dove sta cosa
 
 | file | cosa tiene |
@@ -14,7 +29,8 @@ le anteprime le fornisce solo Gioco.vue col `disegno: '3d'`.
 | `scena3d/roba3d.js` | la figura costruita dal modulo della sua famiglia, o il ripiego, con l'alone della rarità ([roba-3d.md](roba-3d.md)) |
 | `scena3d/anteprime3d.js` | il renderer, la scena di posa, le inquadrature, `creaAnteprime3d` |
 | `scena3d/eroe3d.js` | `vestiEroe(g, roba)` e `vestiDotazione(g, d)`: l'eroe in scena e quello delle anteprime si vestono con la stessa funzione |
-| `viste/anteprima3d.js` | `fornisciAnteprime3d` (Gioco.vue), `usaAnteprima(chiave)`: un ref null finché l'immagine non c'è |
+| `viste/anteprima3d.js` | `creaFornitore` (le foto fatte, il servizio per il resto), `fornisciAnteprime3d` (Gioco.vue), `usaAnteprima(chiave)`: un ref null finché l'immagine non c'è |
+| `dati/anteprime-fatte.js` | GENERATO da `npm run anteprime sotterraneo`: le foto, `SENZA` (le chiavi senza modello), le due firme |
 | `viste/Quadro3d.vue` | la tela che mostra un'anteprima |
 | `viste/Icona.vue` | `tre` (la chiave) o `cosa3d` (la cosa: la chiave si ricava), `lato`, `riduci` |
 | `viste/Armato.vue` | `in3d`, `corpo`: il ritratto 3D sopra lo sprite |
