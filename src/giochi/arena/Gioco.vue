@@ -244,6 +244,10 @@ function aggiornaCruscotto() {
     castello: p.castello(mio.value).liv, miniera: p.lati[mio.value].miniera,
   }
   pannello.value = costruisciPannello(p)
+  if (dettaglio.value) {
+    const { chiesti } = dettaglio.value, nuova = schedaDi(p, chiesti)
+    dettaglio.value = nuova && { ...nuova, chiesti }
+  }
 }
 
 /* Si gioca toccando il campo: un bersaglio trasparente su ogni piazzola e sul castello, grande
@@ -272,7 +276,7 @@ function costruisciPannello(p) {
     return { azione: a, prezzo, stato, puoi: prezzo !== null && p.lati[mio.value].monete >= prezzo,
              attesa: a === 'bomba' && p.lati[mio.value].bombe < BOMBA.max ? Math.ceil(p.lati[mio.value].bombaT) : 0 }
   })
-  return { bersagli, anello: anelloDi(p, bersagli), scelta: sceltaDi(bersagli), azioni }
+  return { bersagli, anello: anelloDi(p, bersagli), scelta: sceltaDi(p, bersagli), azioni }
 }
 
 /* l'anello dell'edificio toccato: potenziare (col prezzo, o quanto riposa), vendere, i numeri.
@@ -298,8 +302,9 @@ function anelloDi(p, bersagli) {
   return { chiave: a.chiave, x, y: b.y + campo.me(6), voci }
 }
 
-/* la nuvoletta della piazzola libera: sopra la piazzola, dentro il campo (la coda punta alla piazzola) */
-function sceltaDi(bersagli) {
+/* la nuvoletta della piazzola libera: sopra la piazzola, dentro il campo (la coda punta alla piazzola). Cosa si può
+   pagare si rifà a ogni giro: in due il campo corre anche con la nuvoletta aperta, e le monete arrivano */
+function sceltaDi(p, bersagli) {
   const s = scelta.value
   if (!s) return null
   const b = bersagli.find(x => x.chiave === 'p' + s.posto)
@@ -312,7 +317,8 @@ function sceltaDi(bersagli) {
   const largo = colonne * 76 + 20
   const cx = b.x + b.w / 2
   const x = Math.min(Math.max(cx, largo / 2 + 4), W - largo / 2 - 4)
-  return { ...s, x, y: b.y + campo.me(4), coda: cx - x, larga: largo }
+  const puoi = v => ({ ...v, puoi: p.puoFare(mio.value, 'costruisci', v.id, s.posto) })
+  return { ...s, varianti: s.varianti.map(puoi), miniera: puoi(s.miniera), x, y: b.y + campo.me(4), coda: cx - x, larga: largo }
 }
 
 function tocca(b) {
@@ -459,7 +465,7 @@ function cambioSfida(r) {
     togli()
     scorda()                      // una partita nuova butta quella lasciata a metà (già chiesto dalla mappa)
     tappaIdx.value = 0
-    infinita.value = r.terreno    // il terreno e le sue truppe, come nella battaglia infinita
+    infinita.value = r.proposta.terreno    // il terreno e tutte le sue truppe, come nella battaglia infinita
     partita.value = r.partita
     azzera()
     toccato.value = false
@@ -525,27 +531,34 @@ function ridimensiona() { campo?.adatta() }
 function apriDettagli({ posto, truppa, azione }) {
   const p = partita.value
   if (!p || domanda.value || finale.value) return
+  // la piazzola si fissa adesso: la scheda si rifà a ogni giro (in due le monete arrivano anche a dettagli aperti)
+  const chiesti = { posto: posto ?? (truppa ? scelta.value?.posto : undefined), truppa, azione }
+  dettaglio.value = { ...schedaDi(p, chiesti), chiesti }
+  toccato.value = true
+}
+
+/* la scheda dei dettagli; null se la caserma di cui parlava non c'è più (crollata mentre la si guardava) */
+function schedaDi(p, { posto, truppa, azione }) {
+  if (posto !== undefined && !truppa && !p.edificioIn(mio.value, posto)) return null
   let d, scheda
   const mina = posto !== undefined && p.edificioIn(mio.value, posto)?.tipo === 'miniera' ? p.edificioIn(mio.value, posto) : null
   if (mina || truppa === 'miniera') {
     // la miniera: costruita si potenzia o si vende, dalla scelta si costruisce
     const det = dettaglioAzione('miniera', { miniera: mina ? mina.liv : 0 })
-    d = mina ? { azione: 'potenzia', posto } : { azione: 'costruisci', id: 'miniera', posto: scelta.value?.posto }
+    d = mina ? { azione: 'potenzia', posto } : { azione: 'costruisci', id: 'miniera', posto }
     scheda = { titolo: AZIONI.miniera.nome, nota: AZIONI.miniera.nota, ruolo: [], icona: '⛏️', sottotitolo: 'monete', ...det,
                verbo: mina ? '⬆️ Potenzia' : 'Costruisci',
                puoi: mina ? p.puoFare(mio.value, 'potenzia', posto) && !p.inRiposo(mio.value, posto) : p.puoFare(mio.value, 'costruisci', 'miniera', d.posto),
                motivo: mina && p.inRiposo(mio.value, posto) ? 'la miniera riposa ancora un po\'' : 'servono più monete',
                fine: '', vendi: mina ? p.resa(mio.value, posto) : null }
-    dettaglio.value = { ...scheda, scelta: d }
-    toccato.value = true
-    return
+    return { ...scheda, scelta: d }
   }
   const c = posto !== undefined ? p.casermaIn(mio.value, posto) : null
   if (c || truppa) {
     const id = c ? c.id : truppa
     const k = TRUPPE[id]
     const det = dettaglioTruppa(id, c ? c.liv : 0, { costruire: !c })
-    d = c ? { azione: 'potenzia', posto } : { azione: 'costruisci', id: truppa, posto: scelta.value?.posto }
+    d = c ? { azione: 'potenzia', posto } : { azione: 'costruisci', id: truppa, posto }
     scheda = { truppa: id, titolo: k.nome, nota: k.nota, ruolo: ruoloDi(id), livello: c ? c.liv : 0, sottotitolo: EDIFICI[EDIFICIO_DI[id]].nome,
                ...det,
                verbo: c ? '⬆️ Potenzia' : 'Costruisci',
@@ -564,8 +577,7 @@ function apriDettagli({ posto, truppa, azione }) {
                      : azione === 'ripara' && !p.riparabili(mio.value).length ? 'non c\'è niente da riparare' : 'servono più monete',
                fine: 'È già al livello massimo.' }
   }
-  dettaglio.value = { ...scheda, scelta: d }
-  toccato.value = true
+  return { ...scheda, scelta: d }
 }
 
 function procediDaiDettagli() {
@@ -803,7 +815,7 @@ onUnmounted(() => {
       <!-- il calcolo prende tutto lo schermo; il campo intanto rallenta (non si ferma) -->
       <Domanda v-if="domanda" :domanda="domanda.domanda" :pittori="domanda.pittori"
                :titolo="`${domanda.icona} ${domanda.nome}`"
-               :origine="domanda" gioco="arena" @risposto="risposto" />
+               :origine="domanda" gioco="arena" :svelta="inDue()" @risposto="risposto" />
 
       <Dettagli v-if="dettaglio" :d="dettaglio" @chiudi="dettaglio = null" @procedi="procediDaiDettagli" @vendi="vendiDaiDettagli" />
 

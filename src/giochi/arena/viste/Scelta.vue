@@ -1,7 +1,7 @@
 <script setup>
 // La scelta per una piazzola libera, in una nuvoletta sopra la piazzola (come i campi della fattoria,
 // non un foglio): il disegno di ogni truppa della tappa e della miniera, col prezzo dentro lo stesso riquadro. Si preme il riquadro; il «?» piccolo apre «i numeri». Niente nomi né frasi: il bambino sa già cosa
-// vuole. Il campo sta fermo finché è aperta (lo decide Gioco.vue), che le dà il punto (x, y, coda).
+// vuole. Da soli il campo sta fermo finché è aperta, in due no (lo decide Gioco.vue, che le dà il punto x, y, coda e i prezzi).
 import Ritratto from './Ritratto.vue'
 
 defineProps({

@@ -9,11 +9,12 @@
    e due. Poi uno esce e l'altro lo sa subito.
    **Serve il servizio in locale**: `cd servizio/inoltro && npx wrangler dev`, poi
    `node test/esegui.mjs arena-sfida` (`SERVIZIO=` per un altro indirizzo http); senza servizio **salta**.
-   tempo: 420
+   tempo: 540
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scegli, scatto } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { proxyCattivo } from '../aiuto/proxy-cattivo.mjs'
+import { TRUPPE, truppeDelTerreno } from '../../src/giochi/arena/dati/regole.js'
 
 const SERVIZIO = (process.env.SERVIZIO || 'http://localhost:8787').replace(/\/$/, '')
 const vivo = await fetch(`${SERVIZIO}/`).then(r => r.ok, () => false)
@@ -59,6 +60,14 @@ for (const [nome, p] of [['chi crea', a], ['chi entra', b]]) {
   controlla(`${nome}: l'orologio conta quanto si resiste (♾️), e non c'è il tasto pausa`,
             /♾️/.test(await p.locator('.ar-hud').innerText()) && await p.locator('button[aria-label="pausa"]').count() === 0)
 }
+/* ── in due c'è tutto il terreno scelto, non la prima tappa della campagna ── */
+const offerte = async p => (await p.locator('.ar-nuvola [data-variante]').evaluateAll(x => x.map(e => e.dataset.variante))).sort()
+await a.locator('[data-piazzola="2"]').click()
+await a.waitForSelector('.ar-nuvola', { timeout: 4000 })
+uguale('la palude in due: tutte le sue truppe e la miniera', (await offerte(a)).join(), [...truppeDelTerreno('palude'), 'miniera'].sort().join())
+await a.locator('[data-piazzola="2"]').click()                 // si richiude
+await a.waitForSelector('.ar-nuvola', { state: 'detached', timeout: 4000 })
+
 const secondi = async p => { const [m, s] = (await p.locator('.ar-hud b').first().innerText()).split(':').map(Number); return m * 60 + s }
 
 /* ── tutti e due costruiscono, rispondendo giusto (si riprova finché la caserma nasce) ── */
@@ -83,6 +92,31 @@ async function costruisciDa(p, truppa, posto) {
 const [fa, fb] = await Promise.all([costruisciDa(a, 'guardiano', 0), costruisciDa(b, 'scheletri', 1)])
 controlla('chi crea costruisce la sua cripta (con gli opliti)', fa)
 controlla('e anche chi entra (con gli arcieri), sul suo schermo e sulla sua piazzola', fb)
+
+/* ── la nuvoletta aperta si accende quando arrivano le monete: in due il campo non si ferma per lei ── */
+await a.locator('[data-piazzola="2"]').click()
+await a.waitForSelector('.ar-nuvola', { timeout: 4000 })
+const spente = await a.locator('.ar-nuvola [data-costruisci]:disabled').evaluateAll(x => x.map(e => e.dataset.costruisci))
+const attesa = spente.filter(id => TRUPPE[id]).sort((x, y) => TRUPPE[x].costo - TRUPPE[y].costo)[0]
+controlla('con poche monete qualcosa nella nuvoletta è spento', !!attesa, spente.join())
+// quanto aspettare dipende da quanto manca: le monete corrono a un quinto (ritmo normale), ~0,11 al secondo
+const monete = Number((await a.locator('[data-monete] b').innerText()).trim())
+const mancano = TRUPPE[attesa].costo - monete
+const accesa = await a.waitForSelector(`.ar-nuvola [data-costruisci="${attesa}"]:enabled`, { timeout: (mancano / 0.1 + 15) * 1000 }).then(() => true, () => false)
+controlla(`e si accende da sola, a nuvoletta aperta, quando le monete bastano (${attesa})`, accesa)
+
+/* ── uno sbaglio in due: niente perché né attesa, si torna subito al campo che corre ── */
+await a.locator(`[data-costruisci="${attesa}"]`).click()
+await a.waitForSelector('.ar .qz-tasto', { timeout: 6000 })
+await attendi(a, 450)
+await a.locator('.ar .qz-tasto:not([data-giusta])').first().click()
+const sbagliatoA = Date.now()
+await a.waitForSelector('.ar .qz-esito .male', { timeout: 2000 }).catch(() => {})
+controlla('sbagliando in due: «Era questa.» e basta, senza il perché né «Si fa così»',
+          await a.locator('.ar .qz-esito .male').count() === 1 && await a.locator('.ar .qz-esito .qz-come, .ar .qz-fretta, .ar .qz-dritta').count() === 0,
+          await a.locator('.ar .qz-esito').innerText().catch(() => ''))
+await a.waitForSelector('.ar .qz-velo', { state: 'detached', timeout: 5000 }).catch(() => {})
+controlla('e la scheda sparisce in un attimo', Date.now() - sbagliatoA < 2000, `${Date.now() - sbagliatoA} ms`)
 
 await scatto(a, 'arena-sfida-chi-crea')
 await scatto(b, 'arena-sfida-chi-entra')
