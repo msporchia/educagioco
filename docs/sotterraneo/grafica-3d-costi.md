@@ -17,7 +17,8 @@ a WebGL sotto il millisecondo. Le figure sono una chiamata sola (prima una
 per figura), i muri due, le colonne due, le fiamme una, la nebbia una; una
 sola passata d'ombra (il cono); luci a numero fisso. Il pixel ratio parte da
 1,5 e scende fino a 0,6 se una quarantina di fotogrammi costano più di 26 ms
-in media, risale piano sotto i 15 (cambia prima del disegno, mai dopo: la
+in media (non nella fascia bassa, che sta a 1: sul Note 7 a 0,6 si guadagnava
+il 7% con l'immagine sfocata), risale piano sotto i 15 (cambia prima del disegno, mai dopo: la
 tela cambiata si svuota). **Il degrado a scalini non c'è** (l'utente vuole
 prima provare): se un telefono non regge, i pezzi si spengono in `ACCESI`.
 `window.__sotterraneo3d.grafica()` dice chiamate, triangoli, figure, pixel

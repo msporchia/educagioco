@@ -25,7 +25,7 @@ const SPEGNI_BASSA = ['post', 'fuochi:2', 'lampi', 'palco', 'ombre', 'ombraMappa
 export const PROFILI = {
   alta:  { asteroidi: { dprPartenza: 2,   scintille: 1400, fumo: 400, lenti: 90, passo: 0.85 }, sotterraneo: { dprMax: 1.5,  fetteNebbia: 5, mostriSopra: 8, spegni: [] } },
   media: { asteroidi: { dprPartenza: 1.5, scintille: 700,  fumo: 200, lenti: 45, passo: 0.8 },  sotterraneo: { dprMax: 1.25, fetteNebbia: 3, mostriSopra: 8, spegni: [] } },
-  bassa: { asteroidi: { dprPartenza: 1,   scintille: 350,  fumo: 100, lenti: 20, passo: 0.75 }, sotterraneo: { dprMax: 1,    fetteNebbia: 2, mostriSopra: 6, spegni: SPEGNI_BASSA } },
+  bassa: { asteroidi: { dprPartenza: 1,   scintille: 350,  fumo: 100, lenti: 20, passo: 0.75 }, sotterraneo: { dprMax: 1, dprMin: 1, fetteNebbia: 2, mostriSopra: 6, spegni: SPEGNI_BASSA } },
 }
 
 export const scelta = ref('auto')   // 'auto' o una fascia, deciso dai grandi

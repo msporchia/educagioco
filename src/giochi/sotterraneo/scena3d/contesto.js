@@ -25,6 +25,7 @@ export function creaContesto(canvas, { perso, fisso, antialias = false, spegni =
   canvas.addEventListener('webglcontextlost', perdi)
 
   const dprMax = Math.min(window.devicePixelRatio || 1, DPR.max, profilo('sotterraneo').dprMax)
+  const dprMin = Math.min(dprMax, profilo('sotterraneo').dprMin ?? DPR.min)   // la bassa non scende: a 0,6 il Note 7 guadagnava il 7%
   let dpr = fisso || dprMax, dprNuovo = dpr
   let L = 0, A = 0, somma = 0, quanti = 0
   const misure = { chiamate: 0, triangoli: 0, msFotogramma: 0, msJs: 0, msDisegno: 0 }
@@ -49,7 +50,7 @@ export function creaContesto(canvas, { perso, fisso, antialias = false, spegni =
       if (quanti < 40) return
       const media = somma / quanti
       somma = 0; quanti = 0
-      if (media > DPR.lento && dpr > DPR.min) dprNuovo = Math.round(Math.max(DPR.min, dpr - 0.1) * 100) / 100
+      if (media > DPR.lento && dpr > dprMin) dprNuovo = Math.round(Math.max(dprMin, dpr - 0.1) * 100) / 100
       else if (media < DPR.svelto && dpr < dprMax) dprNuovo = Math.round(Math.min(dprMax, dpr + 0.05) * 100) / 100
     },
     // chiuso davvero (grafica/rilascio3d.js): niente più ascoltatori sulle cose condivise, e il contesto perso subito
