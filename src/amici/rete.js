@@ -1,7 +1,7 @@
 // Il filo verso il servizio degli amici (servizio/inoltro, docs/core/amici.md): i codici brevi e il collegamento di una amicizia.
 // Regola: gli amici sono un di più e non danno mai errori. Il `Ponte` riprova da solo, in silenzio, con attese crescenti, e non
 // riprova a schermo spento. Il resto del gioco non sa che esiste.
-import { indirizzo } from '../giochi/arena/sfida/rete.js'
+import { indirizzo } from '../insieme/rete.js'
 
 const ATTESA = 4000                                   // ms per fare una richiesta prima di darla per persa
 const TENTATIVI = 3
@@ -39,14 +39,19 @@ export async function riscattaCodice(codice, opzioni) {
 }
 
 export const RITARDI = [2000, 4000, 8000, 16000, 32000, 60000]
+// il battito: un filo morto in silenzio (il telefono crede di essere collegato) non riceve inviti; se il servizio non risponde al
+// ping per tanto, il filo si lascia e se ne apre un altro (lo stesso guaio della sfida: docs/core/insieme.md)
+export const BATTITO = { ogni: 15000, sordo: 40000 }
 
 /* L'UNICO collegamento di questo telefono verso il servizio degli amici (docs/core/amici.md), che si rimette in piedi da solo.
    Dichiara chi è (`id`) e le chiavi delle sue amicizie (`chiavi()` le legge ogni volta: aggiungerne una è solo `imposta()`).
    `alMessaggio(chiave, oggetto)` per quello che manda un amico, `alCambio()` quando cambia aperto/chi c'è. */
 export class Ponte {
   constructor({ id, chiavi = () => [], servizio, WebSocketImpl = globalThis.WebSocket, alMessaggio = () => {}, alCambio = () => {}, ritardi = RITARDI,
-                attesaApertura = 5000, visibile = () => typeof document === 'undefined' || !document.hidden }) {
-    Object.assign(this, { id, chiavi, servizio, WebSocketImpl, alMessaggio, alCambio, ritardi, attesaApertura, visibile })
+                attesaApertura = 5000, visibile = () => typeof document === 'undefined' || !document.hidden, battito = BATTITO }) {
+    Object.assign(this, { id, chiavi, servizio, WebSocketImpl, alMessaggio, alCambio, ritardi, attesaApertura, visibile, battito })
+    this.cuore = 0
+    this.sentito = 0
     this.aperto = false
     this.presenti = new Set()          // le chiavi il cui amico è collegato adesso
     this.fermo = true
@@ -68,11 +73,19 @@ export class Ponte {
     w.addEventListener('open', () => {
       if (!mio()) return
       clearTimeout(lento); this.aperto = true; this.prova = 0
+      this.sentito = Date.now()
+      clearInterval(this.cuore)
+      this.cuore = setInterval(() => {
+        if (!mio()) return clearInterval(this.cuore)
+        if (Date.now() - this.sentito > this.battito.sordo) { try { w.close() } catch { /* già chiuso */ } return this.cadi() }
+        this.manda('{"t":"ping"}')
+      }, this.battito.ogni)
       this.dichiara()                                                    // chi sono e con chi sono in amicizia
       this.alCambio()
     })
     w.addEventListener('message', e => {
       if (!mio()) return
+      this.sentito = Date.now()
       let m
       try { m = JSON.parse(e.data) } catch { return }
       if (!m || typeof m !== 'object') return
@@ -93,6 +106,7 @@ export class Ponte {
 
   /* il collegamento è finito: si riprova più tardi, in silenzio */
   cadi() {
+    clearInterval(this.cuore)
     const c = this.aperto || this.presenti.size
     this.ws = null; this.aperto = false; this.presenti = new Set()
     if (c) this.alCambio()
@@ -111,7 +125,7 @@ export class Ponte {
 
   manda(oggetto) {
     if (!this.aperto || !this.ws) return false
-    try { this.ws.send(JSON.stringify(oggetto)); return true } catch { return false }
+    try { this.ws.send(typeof oggetto === 'string' ? oggetto : JSON.stringify(oggetto)); return true } catch { return false }
   }
 
   /* un messaggio per l'amico di quella amicizia */
@@ -119,7 +133,7 @@ export class Ponte {
 
   chiudi() {
     this.fermo = true
-    clearTimeout(this.timer)
+    clearTimeout(this.timer); clearInterval(this.cuore)
     const w = this.ws
     this.ws = null; this.aperto = false; this.presenti = new Set()
     try { w?.close() } catch { /* già chiuso */ }
