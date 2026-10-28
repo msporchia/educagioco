@@ -17,8 +17,9 @@ export const VERSIONE_MISURA = 1     // si alza se cambia la prova o le soglie: 
 // anche spenta), l'ombra a 512 ridisegnata a fotogrammi alterni, la nebbia con due strati di rumore, metà scintille
 // (docs/sotterraneo/grafica-3d-costi.md, «La fascia bassa»)
 // misurato sul Note 7 (log del 22/10): l'ombra del cono costa ~8 ms, la nebbia a più fette ~3-6, la polvere ~2; vedi docs/core/vecchio-telefono-elementi.md
-// e il piano con la luce per vertice e la nebbia nei vertici (docs/sotterraneo/appiattimento-3d.md, «Nel gioco»)
-const SPEGNI_BASSA = ['post', 'fuochi:2', 'lampi', 'palco', 'ombre', 'ombraMappa:512', 'ombraOgni:2', 'ottaveNebbia:2', 'quanteScintille:0.5', 'nebbiaFitta', 'quantaPolvere:0.4', 'lucePerVertice:1', 'terrenoSemplice:1', 'arredoSemplice:1', 'arredoFuso:1', 'armiSemplici:1', 'torciaSemplice:1']
+// e il piano con la luce per vertice e la nebbia nei vertici (docs/sotterraneo/appiattimento-3d.md, «Nel gioco»); `rilievo`: nelle discese la bassa
+// le normal map le ha già tolte (terreno e arredo semplici), resta il terreno di sopra (docs/sotterraneo/prestazioni-3d-bassa.md)
+const SPEGNI_BASSA = ['post', 'fuochi:2', 'lampi', 'palco', 'ombre', 'ombraMappa:512', 'ombraOgni:2', 'ottaveNebbia:2', 'quanteScintille:0.5', 'nebbiaFitta', 'quantaPolvere:0.4', 'lucePerVertice:1', 'terrenoSemplice:1', 'arredoSemplice:1', 'arredoFuso:1', 'armiSemplici:1', 'torciaSemplice:1', 'rilievo']
 // `mostriSopra`: quanti mostri al più col modello 3D nel mondo di sopra (gli altri sprite): ~35 chiamate l'uno, nella bassa 6 invece di 8
 // (con 8 il filo principale del telefono imitato sta a 29-35 ms: docs/sotterraneo/limiti-3d.md)
 

@@ -1,6 +1,6 @@
 # Le semplificazioni della fascia bassa nel Sotterraneo 3D
 
-Quello che la bassa (`SPEGNI_BASSA`, store/qualita.js) fa diverso nelle discese, leva per leva, con quanto ha tolto sul Note 7. Le misure
+Quello che la bassa (`SPEGNI_BASSA`, store/qualita.js) fa diverso nelle discese e nel mondo di sopra, leva per leva, con quanto ha tolto sul Note 7. Le misure
 di partenza e il comando per rifarle stanno in [prestazioni-3d.md](prestazioni-3d.md); la scala del telefono in
 [../core/vecchio-telefono-veri.md](../core/vecchio-telefono-veri.md#la-scala).
 
@@ -54,3 +54,18 @@ tutte le matrici della scena, 632 oggetti nello scontro con 3 mostri, e 523 sono
 riserva di mostro3d.js), ripassati per niente. In più eroe, mostri e persone si rifacevano le matrici dopo averle animate, e la scena le
 rifaceva una seconda volta. Ora le loro radici sono `daSola` (matrici.js): la scena le salta, e la figura le rifà una volta (`rifai`) solo
 quando si vede. Provato `matrixWorldAutoUpdate = false`: in three r186 ferma anche la matrice dell'oggetto stesso, e le figure finiscono nell'origine.
+
+## Il mondo di sopra (28/10)
+
+Gli fps veri del 28/10 (Note 7, bassa): discese e fattoria a 59, il villaggio 16 e lo scontro sul prato 15; nel mondo di sopra la bassa
+non toglieva niente (l'ombra del sole no: `ombre` spento spegne la mappa d'ombra di tutto il contesto, anche sopra). La scala del villaggio
+dava quasi tutto al primo gradino, cielo-mare-luci +48 ms di GPU (lavoro in fila), e il rilievo del terreno +7,7.
+
+- **Il cielo per ultimo** (`mondo/acqua.js`, tutte le fasce): stava a `renderOrder` −10, quindi si colorava tutto lo schermo (tre ottave di
+  rumore a pixel) e il terreno ci ridipingeva sopra; dall'alto del gioco non si vede quasi mai. Ora a 100: è in fondo (`xyww`) e colora
+  solo i pixel rimasti vuoti. **L'acqua dopo il terreno** (`renderOrder` 1): il piano copre tutta la mappa sotto la terra, e così la
+  profondità lo scarta prima di colorarlo. A schermo uguali (scatti del villaggio e della palafitta, prima e dopo).
+- **Il rilievo** (la bassa, `rilievo`): il terreno di sopra, la piazza e i campi senza normal map; nelle discese la bassa le aveva già
+  tolte. Il selciato e l'erba si vedono un poco più piatti.
+- Il 28/10 la scala metteva la natura (alberi, erba, mobili: `natura.js`, istanze nate dopo `creaNatura`) nel gradino del cielo, perché
+  non aveva il suo nome: ora l'ha.

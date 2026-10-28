@@ -67,6 +67,8 @@ export function creaAcqua(m, sole) {
   mat.uniforms.tProf.value = tProf
   const g = new PlaneGeometry(W + 60, H + 60, 1, 1); g.rotateX(-Math.PI / 2); g.translate(W / 2, LIVELLO_ACQUA, H / 2)
   const mesh = new Mesh(g, mat)
+  // dopo il terreno (che sta a 0): sotto la terra lo scarta la profondità prima di colorarlo (docs/sotterraneo/prestazioni-3d-bassa.md, «Il mondo di sopra»)
+  mesh.renderOrder = 1
   return {
     mesh,
     // una zona si è scritta: la sua profondità vera (il lago, le pozze)
@@ -75,7 +77,8 @@ export function creaAcqua(m, sole) {
   }
 }
 
-// il cielo: si muove con la telecamera e non scrive la profondità
+// il cielo: si muove con la telecamera e non scrive la profondità; sta in fondo (xyww) e si disegna dopo tutto il resto, così colora
+// solo i pixel che nessuno ha coperto (prima, a -10, colorava tutto lo schermo e il terreno ci ridipingeva sopra)
 export function creaCielo() {
   const mat = new ShaderMaterial({
     side: BackSide, depthWrite: false, fog: false,
@@ -97,6 +100,6 @@ export function creaCielo() {
   })
   const g = new SphereGeometry(900, 24, 12)
   const mesh = new Mesh(g, mat)
-  mesh.frustumCulled = false; mesh.renderOrder = -10
+  mesh.frustumCulled = false; mesh.renderOrder = 100
   return { mesh, via() { mat.dispose(); g.dispose() } }
 }

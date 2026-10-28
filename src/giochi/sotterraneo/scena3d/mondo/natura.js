@@ -10,6 +10,7 @@ import { caso, fbm, rumore, quotaTerreno, ERBA } from './suolo.js'
 import { rettangoloDi } from './pezzi.js'
 import { Cantiere, scatola, cilindro } from './kit.js'
 import { vesti, ombraDi } from './vesti.js'
+import { segna } from '../../../../grafica/elementi3d.js'
 
 // le chiome piccole e i cespugli a `det` 0 (20 facce): nel mondo a percorso i boschi sono fitti, e a 80 facce l'una il bosco vecchio
 // passava i 400k triangoli
@@ -175,7 +176,7 @@ export function creaNatura(m, kit, scena) {
     im.setColorAt(0, new Color(1, 1, 1))
     im.castShadow = !BASSI.has(tipo); im.receiveShadow = true
     im.customDepthMaterial = ombra
-    scena.add(im)
+    scena.add(segna(im, 'natura'))   // nasce dopo creaNatura: il segno di segnaNuovi non la prende
     return (pool[tipo] = im)
   }
   return {
