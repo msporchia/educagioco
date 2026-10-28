@@ -287,7 +287,7 @@ export class Mondo3d {
     if (!c || eroe.az || !this.applicabile(c)) return
     eroe.faccia(this.pezzi.centroDi({ kind: 'cosa', id }))
     if (this.cmd.modo === 'semina') this.azioni.semina(c, this.cmd.seme)
-    else this.azioni.falcia(c)
+    else this.azioni.raccogli(c)
   }
 
   /** Dopo che il motore ha cambiato qualcosa che si vede: i gruppi, il terreno, i cartelli. */

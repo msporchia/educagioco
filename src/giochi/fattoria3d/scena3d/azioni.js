@@ -44,12 +44,7 @@ export class Azioni {
   // ── i campi ──
   campo(c) {
     const m = this.m
-    if (m.campoMaturo(c)) {
-      // raccogliere un campo costa il gesto della 2D (🪙1–2) e lo scomparto del raccolto ha un tetto: si guarda prima, così il campo non resta a metà
-      const pr = m.provaRaccolta(c.id)
-      if (!pr.ok) return this.dici(dettoDiRifiuto(pr, { per: 'raccogliere' }))
-      return this.falcia(c)
-    }
+    if (m.campoMaturo(c)) return this.raccogli(c)
     if (m.campoVuoto(c)) return this.c.ui.scegliSeme(k => this.semina(c, k))
     this.c.fx.parla(`Sta crescendo… ${tempoBreve(m.restoSecondi(c) * 1000)}`)
   }
@@ -62,6 +57,13 @@ export class Azioni {
         fx.scoppietta(p.clone().setY(0.4), 0x8a6a3a, 14, 1.2, 1.4); ui.cambio()
       }
     })
+  }
+  // raccogliere un campo costa il gesto della 2D (🪙1–2) e lo scomparto del raccolto ha un tetto: si guarda prima, così il campo non resta a metà
+  // (anche dalla coda di ✂️ armato: falciare senza guardare staccava tre tessere e l'ultima, che consegna, era rifiutata)
+  raccogli(c) {
+    const pr = this.m.provaRaccolta(c.id)
+    if (!pr.ok) return this.dici(dettoDiRifiuto(pr, { per: 'raccogliere' }))
+    this.falcia(c)
   }
   falcia(c) {
     const { eroe, fx, ui } = this.c, p = this.centro(c)

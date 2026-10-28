@@ -84,6 +84,11 @@ await page.evaluate(() => { const m = window.__fattoria3d.motore, o = m.ora; m.o
 await attendi(page, 600)
 controlla('il numero sul tasto ✂️ dice un campo pronto', (await page.locator('[data-f3="az-raccogli"] .f3-n').innerText()).trim() === '1')
 await toccaEl('[data-f3="az-raccogli"]')
+await page.evaluate(() => { window.__fattoria3d.motore.s.merci.grano = 8 })          // lo scomparto pieno: la coda guarda prima, come il tocco
+await tocca(...await schermoDi(campo.i + 1, campo.j + 1))
+await fermo()
+uguale('con lo scomparto pieno il campo armato resta intero (non tre tessere su quattro)', (await stato()).cose[0].tile.filter(t => t !== null).length, 4)
+await page.evaluate(() => { window.__fattoria3d.motore.s.merci.grano = 0 })
 await tocca(...await schermoDi(campo.i + 1, campo.j + 1))
 await fermo()
 const raccolto = await stato()
