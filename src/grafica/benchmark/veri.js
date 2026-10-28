@@ -53,18 +53,19 @@ const INGRESSO = { gruppo: 'ingresso', carica: () => import('./veri/ingresso.js'
   { id: 'ing-presto-x', nome: 'attacco a 0,5 s, senza riscaldamento', ingresso: 'discesa', presto: true, riscaldamento: false },
   { id: 'ing-mondo-x', nome: 'il mondo di sopra, senza riscaldamento', ingresso: 'mondo', riscaldamento: false },
 ] }
-// gli fps veri, in fondo alla verifica: le discese (camminare in un piano, lo scontro), il mondo di sopra (il villaggio, lo scontro sul prato)
-// e la fattoria 3D col suo degrado acceso; un gruppo solo, quindi un riferimento del calore solo
-const fattoria = () => import('./veri/fattoria.js')
+// gli fps veri, in fondo alla verifica: le discese (camminare in un piano, lo scontro), il mondo di sopra (il villaggio, lo scontro sul prato,
+// e il villaggio senza antialias: quanto costa) e la fattoria 3D col suo degrado acceso; un gruppo solo, quindi un riferimento del calore solo
+const fattoria = () => import('./veri/fattoria.js'), sopraVero = () => import('./veri/sopra-vero.js')
 export const TAPPE_FPS = [
   { gruppo: 'fps', carica: discese, tempi: 'fps', scene: [
     { id: 'fps-piano', nome: 'camminare in un piano del sotterraneo', passeggia: true, stima: 16 },
     ...[3, 6].map(n => ({ id: `fps-sot-${n}`, nome: `scontro nel sotterraneo, ${n} mostri`, mostri: n, colpi: true, stima: 14 })),
   ] },
-  { gruppo: 'fps', carica: () => import('./veri/sopra-vero.js'), tempi: 'fps', scene: [
+  { gruppo: 'fps', carica: sopraVero, tempi: 'fps', scene: [
     { id: 'fps-villaggio', nome: 'camminare nel villaggio di sopra', dove: 'villaggio', stima: 18 },
     { id: 'fps-prato', nome: `scontro sul prato, 3 mostri`, dove: 'prato', stima: 16 },
   ] },
+  { gruppo: 'fps', carica: sopraVero, opz: { antialias: false }, tempi: 'fps', scene: [{ id: 'fps-villaggio-noaa', nome: 'il villaggio senza antialias', dove: 'villaggio', stima: 18 }] },
   ...[10, 30].map(l => ({ gruppo: 'fps', carica: fattoria, opz: { livello: l, degrado: true }, tempi: 'fps', scene: [{ id: `fps-fat-${l}`, nome: `fattoria 3D del livello ${l}`, stima: 16 }] })),
 ]
 /** Le scene delle MISURE COMPLETE, in ordine. `serie` e `quanti` dicono dove cercare il limite; `gruppo` è la sezione del log. */
@@ -111,16 +112,18 @@ export const TAPPE = [
   { gruppo: 'calore', carica: discese, scene: [{ id: 'cal-2', nome: 'riferimento, di nuovo alla fine', mostri: 8, colpi: true }] },
 ]
 export const QUANTE = TAPPE.reduce((n, t) => n + t.scene.length, 0)
+// le scale (veri/scala.js): una scena dal fondo alla scena intera, un gradino alla volta; quella delle discese non è più nella verifica
+// (il 28/10 lo scontro andava a 59 fps veri), si lancia per nome (`solo: ['scala']`)
+const SCALA_SOT = { gruppo: 'scala', carica: () => import('./veri/elementi-sot.js'), opz: { mostri: MOSTRI_SCALA }, tempi: 'verifica', scene: sceneDellaScala('sot') }
+const SCALA_SOPRA = { gruppo: 'scala-sopra', carica: () => import('./veri/elementi-sopra.js'), tempi: 'verifica', scene: sceneDellaScala('sopra') }
 /**
- * La VERIFICA (il tasto «Avvia coi modelli veri», ~3 minuti, `stimaVerifica`): solo quello che serve alla leva di adesso, con i ms messi
- * contro l'ultima misura vera (`veri/riferimento.js`). Quello che ha già risposto (l'ingresso, la risoluzione, il mondo di sopra, lo zaino,
- * le serie lunghe) sta in `TAPPE`, le «Misure complete». Il riferimento del calore è quello fisso che ogni gruppo ha già; la scala rifà un gradino.
+ * La VERIFICA (il tasto «Avvia coi modelli veri», ~5 minuti, `stimaVerifica`): solo quello che serve alla leva di adesso. Quello che ha già
+ * risposto (l'ingresso, la risoluzione, lo zaino, le serie lunghe, la scala delle discese) sta in `TAPPE` e `TAPPE_SCALE`. Il riferimento del
+ * calore è quello fisso che ogni gruppo ha già; la scala rifà un gradino.
  */
 export const TAPPE_VERIFICA = [
-  // la scala (veri/scala.js): lo scontro dal fondo piatto alla scena intera, un gradino alla volta, nello stesso Sotterraneo
-  { gruppo: 'scala', carica: () => import('./veri/elementi-sot.js'), opz: { mostri: MOSTRI_SCALA }, tempi: 'verifica', scene: sceneDellaScala() },
-  // lo scontro com'è con 1, 3 e 6 mostri (la serie dà il LIMITE), tutti e tre contro l'ultima misura vera (veri/riferimento.js)
-  { gruppo: 'discese', carica: discese, tempi: 'verifica', scene: [1, 3, 6].map(n => ({ id: `sot-${n}`, nome: `${n} mostr${n > 1 ? 'i' : 'o'} con gli effetti`, mostri: n, colpi: true, serie: 'discese', quanti: n, cresce: true, stima: 12 })) },
+  // la scala del mondo di sopra: il villaggio dal cielo e il mare fino a persone e mostri
+  SCALA_SOPRA,
   // gli fps veri (docs/core/vecchio-telefono-veri.md, «Gli fps veri»): quello che vede chi gioca, con la fascia del telefono e senza aspettare la GPU
   ...TAPPE_FPS,
 ]
@@ -298,7 +301,7 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
   // complete (gli elementi no: sono una prova a parte)
   const visti = new Set()
   const nuova = s => !visti.has(s.id) && !!visti.add(s.id)
-  const tappe = (proprie || (solo ? [...TAPPE, ...TAPPE_VERIFICA, ...TAPPE_ELEMENTI] : completa ? TAPPE : TAPPE_VERIFICA))
+  const tappe = (proprie || (solo ? [...TAPPE, ...TAPPE_VERIFICA, SCALA_SOT, ...TAPPE_ELEMENTI] : completa ? TAPPE : TAPPE_VERIFICA))
     .map(t => ({ ...t, scene: t.scene.filter(s => (!solo || solo.some(p => s.id.startsWith(p) || t.gruppo.startsWith(p))) && (!solo || nuova(s))) })).filter(t => t.scene.length)
   const tot = tappe.reduce((n, t) => n + t.scene.length, 0)
   const risultati = [], gruppi = {}, saltate = new Set(), avvisi = new Map()

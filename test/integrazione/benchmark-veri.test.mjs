@@ -83,7 +83,7 @@ await page.click('[data-azione="benchmark-ultima"][data-tipo="veri"]')
 controlla('l\'ultima si riapre', /MISURA COI MODELLI VERI/.test(await page.inputValue('[data-benchmark-log]')))
 controlla('una scena con riferimento dice com\'è contro l\'ultima misura vera', /rispetto all'ultima misura vera \(\d+\/\d+\): [−+]\d/.test(log) && /MIGLIORATO rispetto all'ultima misura vera/.test(log))
 
-// la verifica compatta, senza `solo`: poche scene, il confronto con l'ultima misura vera per ognuna, e la LETTURA migliorato / non migliorato
+// la verifica compatta, senza `solo`: la scala del mondo di sopra e gli fps veri
 await page.click('[data-azione="benchmark-chiudi"]')
 await page.evaluate(() => sessionStorage.setItem('senzaSolo', '1'))
 await page.reload()
@@ -94,16 +94,17 @@ await page.click('[data-azione="benchmark-veri"]')
 await page.waitForSelector('[data-benchmark-log]', { timeout: 280000 })
 const breve = await page.inputValue('[data-benchmark-log]')
 const vd = await page.evaluate(() => window.__benchmarkVeri)
-controlla('la verifica è compatta: 20 scene, senza le serie lunghe né le scene già note', vd.risultati.length === 20 && !vd.risultati.some(r => /^(tri|ch|luci|px|roba|fat|cal)-/.test(r.id)), vd.risultati.map(r => r.id).join(','))
+controlla('la verifica è compatta: 18 scene, senza le serie lunghe né le scene già note', vd.risultati.length === 18 && !vd.risultati.some(r => /^(tri|ch|luci|px|roba|fat|cal|sot)-/.test(r.id)), vd.risultati.map(r => r.id).join(','))
 const fpsV = vd.risultati.filter(r => r.gruppo === 'fps')
-controlla('gli fps veri: tutte e sette, senza aspettare la GPU, con gli fps e i fotogrammi sotto i 30', fpsV.length === 7 && fpsV.every(r => !r.errore && r.vero && r.fps > 0 && r.sotto30 != null && r.gpu === 0),
+controlla('gli fps veri: tutte e otto, senza aspettare la GPU, con gli fps e i fotogrammi sotto i 30', fpsV.length === 8 && fpsV.every(r => !r.errore && r.vero && r.fps > 0 && r.sotto30 != null && r.gpu === 0),
   JSON.stringify(fpsV.map(r => [r.id, r.errore || r.fps])))
 controlla('il resoconto: una riga per scena e la lettura degli fps veri', /scontro sul prato, 3 mostri: \d+ fps \(sotto i 30 il \d+%/.test(breve) && /FPS VERI \(fascia [a-z?]+, il gioco com'è\): camminare in un piano del sotterraneo \d+ fps/.test(breve), breve.slice(-1500))
-controlla('ci sono la scala e lo scontro', ['scala-0', 'scala-8', 'scala-ancora', 'sot-1', 'sot-3', 'sot-6'].every(id => vd.risultati.some(r => r.id === id && !r.errore)))
-controlla('il resoconto dice la verifica e il confronto', /\(verifica compatta\)/.test(breve) && /MIGLIORATO rispetto/.test(breve) && /NON MIGLIORATO/.test(breve) && /Scontro nelle discese \(1 mostro/.test(breve) && /SCALA \(lo scontro con 3 mostri/.test(breve) && /Rumore: il gradino 3 rifatto/.test(breve) && /Dove va il JS \(3 mostri con gli effetti\): [\d.]+ ms, di cui il giro del gioco [\d.]+, il disegno di three [\d.]+, il resto -?[\d.]+/.test(breve), breve.slice(0, 400))
+controlla('c\'è la scala del mondo di sopra', ['scala-sopra-0', 'scala-sopra-8', 'scala-sopra-ancora'].every(id => vd.risultati.some(r => r.id === id && !r.errore)))
+controlla('il resoconto dice la verifica, la scala e l\'antialias', /\(verifica compatta\)/.test(breve) && /SCALA \(il villaggio di sopra/.test(breve) && /Rumore: il gradino 2 rifatto/.test(breve) &&
+  /Antialias nel villaggio: \d+ fps con, \d+ senza/.test(breve) && /Dove va il JS \(gradino 8: \+ mostri\): [\d.]+ ms, di cui il giro del gioco [\d.]+, il disegno di three [\d.]+/.test(breve), breve.slice(breve.indexOf('LETTURA'), breve.indexOf('LETTURA') + 2500))
 uguale('nessuna scena «non regge» nella verifica', (breve.match(/non regge/g) || []).length, 0)
 const ch = id => vd.risultati.find(r => r.id === id).ch
-controlla('la scala: il gradino 0 non disegna, la cima disegna più del fondo', ch('scala-0') === 0 && ch('scala-8') > ch('scala-1'), JSON.stringify(['scala-0', 'scala-1', 'scala-8'].map(ch)))
+controlla('la scala: il gradino 0 non disegna, la cima disegna più del fondo', ch('scala-sopra-0') === 0 && ch('scala-sopra-8') > ch('scala-sopra-1'), JSON.stringify(['scala-sopra-0', 'scala-sopra-1', 'scala-sopra-8'].map(ch)))
 
 controlla('niente errori', errori.length === 0, errori.join(' | '))
 await browser.close()

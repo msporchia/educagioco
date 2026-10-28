@@ -43,7 +43,7 @@ export async function prepara({ contenitore, opz = {} }) {
     gl: () => tela.canvas.getContext('webgl2'),
     tela: tela.canvas,
     scena3d: () => scena,
-    conti() { const g = api.grafica(); return { ch: g.chiamate, tri: g.triangoli, programmi: g.programmi, geo: g.memoria.geometries, tex: g.memoria.textures } },
+    conti() { const g = api.grafica(); return { ch: g.chiamate, tri: g.triangoli, programmi: g.programmi, geo: g.memoria.geometries, tex: g.memoria.textures, agg: g.msJs, dis: g.msDisegno } },
     avvia: () => api.avvia(),
     async scena(s) {
       // la prima volta: i pezzi attorno all'eroe si costruiscono uno per fotogramma

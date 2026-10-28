@@ -52,7 +52,11 @@ const letturaFps = (ris, fascia) => {
   const l = ris.filter(r => r.vero && misurata(r))
   if (!l.length) return []
   const piano = x => (x >= 50 ? 'liscio' : x >= 30 ? 'si gioca, a tratti scatta' : 'a scatti')
-  return [`FPS VERI (fascia ${fascia || '?'}, il gioco com'è): ${l.map(r => `${r.nome} ${r.fps} fps (${piano(r.fps)}${r.sotto30 ? `, sotto i 30 il ${r.sotto30}%` : ''})`).join('; ')}.`]
+  const righe = [`FPS VERI (fascia ${fascia || '?'}, il gioco com'è): ${l.map(r => `${r.nome} ${r.fps} fps (${piano(r.fps)}${r.sotto30 ? `, sotto i 30 il ${r.sotto30}%` : ''})`).join('; ')}.`]
+  // l'antialias del mondo di sopra: lo stesso giro del villaggio con e senza
+  const con = l.find(r => r.id === 'fps-villaggio'), senza = l.find(r => r.id === 'fps-villaggio-noaa')
+  if (con && senza) righe.push(`Antialias nel villaggio: ${con.fps} fps con, ${senza.fps} senza (${segnato(t1d(senza.fps - con.fps))} fps).`)
+  return righe
 }
 
 function rigaVera(r) {
@@ -65,7 +69,7 @@ function rigaVera(r) {
   const piu = [c !== r ? `≈${c.ms}` : '', r.primo > Math.max(50, 2 * r.ms) ? `primo ${Math.round(r.primo)}` : '', r.nuovi ? `+${r.nuovi}sh` : '',
                r.pronto > 1500 ? `pronto ${(r.pronto / 1000).toFixed(1)}s` : '', r.stabile === false ? 'instabile' : '', r.nascosta ? 'NASCOSTA' : ''].filter(Boolean).join(' ')
   const parti = r.agg != null ? `: gioco ${r.agg} disegno ${r.dis ?? '?'}` : ''
-  return `${segnoVero(r.p95)}${r.nome}: ${r.ms}/${r.p95} ms (js ${r.js ?? '?'}${parti} gpu ${r.gpu ?? '?'}) ${r.fps}fps ${r.ch ?? '?'}ch ${kt(r.tri)}kt${piu ? ' ' + piu : ''}`
+  return `${/^scala-/.test(r.id) ? '·  ' : segnoVero(r.p95)}${r.nome}: ${r.ms}/${r.p95} ms (js ${r.js ?? '?'}${parti} gpu ${r.gpu ?? '?'}) ${r.fps}fps ${r.ch ?? '?'}ch ${kt(r.tri)}kt${piu ? ' ' + piu : ''}`
 }
 
 const confrontabile = r => (misurata(r) || (r.tot != null && !r.errore && !r.salta)) && r.tipo !== 'ingresso'
@@ -81,9 +85,9 @@ export function rigaRispetto(r) {
   return `${testa}${dif(c.ms)}, ${parola[c.ms.g]}; p95 ${c.p95.d < 0 ? '−' : '+'}${Math.abs(c.p95.d)}, ${[parte('js', c.js), parte('gpu', c.gpu)].filter(Boolean).join(' ')}`
 }
 
-// dove va il JS dello scontro con 3 mostri: il giro del gioco, il disegno di three e il resto, misurato sugli stessi fotogrammi (veri.js)
+// dove va il JS dello scontro con 3 mostri (o della cima di una scala): il giro del gioco, il disegno di three e il resto, misurato sugli stessi fotogrammi (veri.js)
 function letturaJs(ris) {
-  const j = [ris.find(r => r.id === 'sot-3'), ...ris.filter(r => /^scala-\d+$/.test(r.id)).reverse()].find(r => misurata(r) && r.agg != null && r.js != null)
+  const j = [ris.find(r => r.id === 'sot-3'), ...ris.filter(r => /^scala-(sopra-)?\d+$/.test(r.id)).reverse()].find(r => misurata(r) && r.agg != null && r.js != null)
   if (!j) return []
   return [`Dove va il JS (${j.nome}): ${j.js} ms, di cui il giro del gioco ${j.agg}, il disegno di three ${j.dis ?? '?'}` +
     (j.resto != null ? `, il resto ${j.resto} (fra un fotogramma e l'altro)` : '') + '.']
@@ -104,8 +108,8 @@ function letturaRispetto(ris) {
   const zz = ris.filter(confrontabile).map(r => ({ r, c: confronta(r) })).find(x => x.c && x.c.tot)
   if (zz) righe.push(`Zaino (${zz.r.n} anteprime): ${dif(zz.c.tot)} in tutto, fotogramma più lungo ${dif(zz.c.max)}.`)
   const A = ris.find(r => r.id === 'sot-1' && misurata(r))
-  if (A) righe.push(`Scontro nelle discese (1 mostro, effetti): p95 ${A.p95} ms: ${A.p95 > SOGLIE_VERI.scatti ? `ancora oltre i ${SOGLIE_VERI.scatti} ms` : `sotto i ${SOGLIE_VERI.scatti} ms`}.`)
-  righe.push(...letturaJs(ris))
+  // lavoro in fila (si aspetta la GPU a ogni fotogramma): non è il fotogramma, che lo dicono gli fps veri
+  if (A) righe.push(`Scontro nelle discese (1 mostro, effetti), lavoro in fila: p95 ${A.p95} ms (telefono poi scheda; quanti fotogrammi arrivano lo dicono gli FPS VERI).`)
   return righe
 }
 
@@ -117,6 +121,7 @@ export function letturaVeri(dati) {
   const derive = crudi.some(r => r.deriva) ? crudi.filter(misurata).map(r => r.deriva ?? 1) : []
   righe.push(...letturaFps(crudi, dati.fascia))
   if (dati.verifica) righe.push(...letturaRispetto(ris))
+  if (dati.verifica) righe.push(...letturaJs(ris))
   righe.push(...letturaScala(ris))
   if (derive.length) righe.push(`Calore: il riferimento di ogni gruppo da x${Math.min(...derive)} a x${Math.max(...derive)} del più fresco` +
     (Math.max(...derive) > 1.15 ? `; la lettura usa i ms divisi per quella deriva (le righe: ≈).` : ': stabile.'))

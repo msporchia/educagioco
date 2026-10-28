@@ -8,7 +8,7 @@ giocare il bambino: quanti mostri nello scontro, quante persone sopra, quanti ed
 ## Sul telefono
 
 Zona dei grandi (codice) → **Impostazioni** → tendina **Avanzate** → **Misura questo telefono** → **Avvia coi modelli veri** (la
-**verifica**, 20 scene e ~5 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
+**verifica**, 18 scene e ~4 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
 Le complete durano un quarto d'ora circa (57 scene, e fra un gruppo e l'altro 8 s di schermo nero perché il telefono si raffreddi): la barra in fondo dice a
 che scena si è, **Interrompi** la ferma e tiene il resoconto di quello che c'è. Le scene si vedono mentre girano: se una luce, un
 colore o la nebbia sembrano sbagliati, alla fine c'è un campo **Note** che finisce nel resoconto. Lo schermo non deve spegnersi
@@ -21,14 +21,16 @@ invio), **Copia**, **Rifai**. L'ultimo resoconto di ognuna delle due prove resta
 
 Il tasto «Avvia coi modelli veri» serve a **decidere**: se una modifica ha migliorato qualcosa e quale leva conviene. Tiene **solo
 le scene che servono alla leva di adesso**: quelle che hanno già risposto escono e restano nelle **Misure complete**. `TAPPE_VERIFICA`
-in `veri.js`, **20 scene, circa 5 minuti** (`stimaVerifica()`: i secondi attesi per scena più, a ogni gruppo, la pausa di 4,5 s, il
+in `veri.js`, **18 scene, circa 4 minuti** (`stimaVerifica()`: i secondi attesi per scena più, a ogni gruppo, la pausa di 4,5 s, il
 riferimento del calore e il caricamento; la scrive il foglio iniziale):
 
 | gruppo | scene |
 |---|---|
-| `scala` | `scala-0`…`scala-8` e `scala-ancora`: lo scontro con 3 mostri un gradino alla volta, vedi sotto |
-| `discese` | `sot-1`, `sot-3`, `sot-6`: lo scontro com'è (il LIMITE della serie: quanto degrada), tutti e tre contro l'ultima misura vera |
+| `scala-sopra` | `scala-sopra-0`…`8` e `scala-sopra-ancora`: il villaggio di sopra un gradino alla volta, vedi sotto |
 | `fps` | gli fps veri, in fondo: il gioco com'è (discese, mondo di sopra, fattoria) senza aspettare la GPU, [vecchio-telefono-fps.md](vecchio-telefono-fps.md) |
+
+Uscite il 28/10 sera, perché lo scontro delle discese andava a 59 fps veri: la scala dello scontro (si lancia per nome, `solo: ['scala']`)
+e lo scontro con 1, 3 e 6 mostri contro il 22/10 (resta nelle complete).
 
 Uscite il 28/10, perché avevano risposto: l'ingresso (il riscaldamento serve; il blocco al primo attacco è un lavoro a parte), la
 risoluzione (a 0,6 il 7% in meno: non è la leva, e la bassa non scende più), il mondo di sopra con 8 persone e 8 mostri, lo zaino (le foto
@@ -40,7 +42,15 @@ sugli stessi fotogrammi (uno ogni cinque): le mediane prese a parte non si sottr
 
 ### La scala
 
-Lo scontro con 3 mostri (`veri/scala.js`, la scena di `veri/elementi-sot.js` con `opz.mostri`) costruito **in salita**, in un Sotterraneo
+I ms della scala sono **lavoro in fila** (si aspetta la GPU a ogni fotogramma): sul Note 7 lo scontro con 3 mostri dava 44 ms di lavoro e
+59 fps veri. Contano i salti fra gradini, non il totale; le righe hanno `·` al posto di `ok`/`XX`. Due scale in `veri/scala.js` (`SCALE`):
+
+- **il villaggio di sopra** (`scala-sopra`, nella verifica; la scena di `veri/elementi-sopra.js`, 4 persone e 3 mostri finti): niente,
+  cielo-mare-luci, terreno, il rilievo del terreno, case e piazza, alberi e natura, nebbia della mappa-foschia-vita-scia, persone ed eroe,
+  mostri; il rumore rifà il terreno. L'ombra del sole sta col fondo: la bassa non la disegna (`ombre` spento spegne la mappa d'ombra di tutto il contesto).
+- **lo scontro delle discese**, sotto.
+
+Lo scontro con 3 mostri (la scena di `veri/elementi-sot.js` con `opz.mostri`) costruito **in salita**, in un Sotterraneo
 solo: il gradino 0 non disegna niente (il giro del gioco), l'1 la luce fissa e il resto senza pavimento né pareti, poi il pavimento, le
 pareti, colonne e arredo, rilievo-torcia-fuochi-lampi-nebbia insieme, l'eroe, i mostri, e in cima particelle, effetti, ombra e passaggio
 finale. I gradini che il log del 28/10 diceva gratis stanno insieme; il fondo (+13 ms) e le figure (+12,6) sono divisi.
