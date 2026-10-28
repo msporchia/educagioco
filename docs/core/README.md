@@ -26,6 +26,7 @@ comandi, pubblicazione, grafica, e le regole comuni a tutti i giochi.
 - [vecchio-telefono-veri.md](vecchio-telefono-veri.md) — la misura coi modelli veri dei giochi sul telefono: le scene, il limite, i colli di bottiglia, il resoconto in più invii
 - [vecchio-telefono-fps.md](vecchio-telefono-fps.md) — gli fps veri, in fondo alla verifica: il gioco com'è (un piano, gli scontri, il villaggio, il prato, due fattorie) senza aspettare la GPU
 - [vecchio-telefono-elementi.md](vecchio-telefono-elementi.md) — chi pesa, un elemento alla volta: le scene smontate (pavimento, muri, luci, nebbia, mostri…), la tabella, le leve semplici della fascia bassa
+- [insieme.md](insieme.md) — giocare in due su due telefoni (`src/insieme/`): il tavolo che tiene il posto, il canale che non si rompe a una caduta, il lockstep, le prove su una rete cattiva e il banco che tara la tolleranza
 - [amici.md](amici.md) — la lista di amici per tutta l'app: un legame fra due persone con chiave sua, codice breve a scadenza, spenta di base e chiesta ai grandi, presenza e inviti
 - [strumenti.md](strumenti.md) — voci, scatti e clip, icone, la guardia dei commenti
 - [convenzione-giochi.md](convenzione-giochi.md) — come è fatto un gioco nuovo in `src/giochi/`
