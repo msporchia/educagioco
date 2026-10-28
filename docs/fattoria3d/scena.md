@@ -127,15 +127,21 @@ compra toccandolo; tenuto premuto su un pezzo lo riprende, come prima.
 
 ## Le anteprime (le carte e l'insegna delle macchine)
 
-Una carta mostra il modello vero che poi si vede in scena, non un'icona: `scena3d/anteprime.js` lo fotografa una volta per tipo e la
-foto (dataURL PNG, 192×192) resta in cache per la sessione. `Mondo3d.anteprima(tipo)` → `Promise<dataURL|null>` (e `anteprimaPronta(tipo)`
-subito, se c'è); `Gioco.vue` le passa come funzioni a `CostruisciQui.vue` e a `Macchina.vue`, che non importano three.
+Una carta mostra il modello vero che poi si vede in scena, non un'icona. **Le foto si fanno sul computer**: `npm run anteprime`
+(`strumenti/anteprime-fattoria3d.mjs`) apre il file costruito, fotografa ogni pezzo, edificio e bestia di casa con `anteprima(tipo, { viva: true })`
+e le scrive in `dati/anteprime.js` (generato, WebP 160×160, ~1,4 MB), che il gioco carica a parte appena parte. Fatte sul Note 7 erano
+~250 render, letture dalla GPU e PNG di fila, una per fotogramma, appena si apriva «Costruisci»: gli fps crollavano e la coda andava avanti
+anche a foglio chiuso. Il test `unita/fattoria3d-anteprime-fatte` vuole una foto per tipo e ricalcola la firma dei sorgenti dei modelli
+(`scena3d/modelli*.js`, la fusione, la cache, le bestie, la posa): un modello cambiato senza `npm run anteprime` è rosso.
+`Mondo3d.anteprima(tipo)` → `Promise<dataURL|null>` (e `anteprimaPronta(tipo)` subito, se c'è) dà la foto fatta; solo se non c'è (il ritratto del
+contadino nel guardaroba, che dipende dal bambino) la disegna `scena3d/anteprime.js` come qui sotto, e resta in cache per la sessione.
+`Gioco.vue` le passa come funzioni a `CostruisciQui.vue`, `Macchina.vue`, `Bestia.vue` e `Guardaroba.vue`, che non importano three.
 - **Nessun contesto WebGL in più**: si disegna col renderer della scena stessa, in un render target (sRGB, 4 campioni), e si rimette tutto
   com'era (target, colore di fondo, ombre). La foto si legge con `readRenderTargetPixels`, si capovolge e si copia in un canvas 2D. Il
   catalogo 3D (`strumenti/banco`) fa altrimenti perché ha un renderer suo; qui il telefono ne ha già uno (due in visita).
 - **Una per fotogramma** (`requestAnimationFrame`, coda in `anteprime-pura.js`, senza three: `creaCache`): il menu chiede prima la
   scheda aperta e poi le altre, e non blocca la scena. Finché non è pronta la carta mostra l'emoji sbiadita; poi l'immagine entra con una
-  dissolvenza (`img[data-anteprima="pronta"]`). Costo: ~25 render una tantum (circa 0,3 s l'uno in SwiftShader, 9 s in tutto; su una GPU vera molto meno).
+  dissolvenza (`img[data-anteprima="pronta"]`).
 - **L'inquadratura** (`inquadra(box)` in `anteprime-pura.js`) guarda a tre quarti dall'alto e trova la distanza minima per cui gli otto
   angoli della scatola stanno nel quadro col 10% di margine, centrando la figura vista: un 1×1 e un 4×3 riempiono uguale. La scena di posa
   ha solo sole e emisferica (senza ombre) e un disco d'ombra morbida sotto.

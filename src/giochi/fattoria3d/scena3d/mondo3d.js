@@ -36,6 +36,9 @@ export const ELEMENTI_FATTORIA = ['terreno', 'strade', 'alberi', 'erba', 'acqua'
 export const NOME_BIOMA = { laghetto: '🏞️ laghetto', lago: '🏞️ lago', mare: '🌊 mare', costa: '🏖️ spiaggia' }
 const _c = new THREE.Vector3()        // il corpo del contadino per `contadinoSotto`
 const _v = new THREE.Vector3()        // di scorta per `proietta`: niente oggetti nuovi a ogni cartello a ogni fotogramma
+// le anteprime fotografate sul computer (`npm run anteprime`, dati/anteprime.js): il telefono le legge e non le disegna. Arrivano a parte
+let fotoFatte = null, fotoPromessa = null
+const caricaFoto = () => fotoPromessa || (fotoPromessa = import('../dati/anteprime.js').then(m => (fotoFatte = m.ANTEPRIME), () => (fotoFatte = {})))
 
 export class Mondo3d {
   /** `abito`: com'è vestito il contadino (dati/abiti.js, con la persona); senza, quello di serie. `stagione`: 'natale' | 'halloween' | null
@@ -102,10 +105,16 @@ export class Mondo3d {
     this.ro?.observe(canvas)
     this.applica(qualita)
     this.adatta()
+    caricaFoto()
   }
 
-  /** L'anteprima 3D (dataURL PNG) di un pezzo o di un edificio, in cache per tipo; le fa col renderer di questa scena, un tipo per fotogramma. */
-  anteprima(tipo) {
+  /** L'anteprima 3D di un pezzo, di un edificio o di una bestia: quella fotografata sul computer (dati/anteprime.js), e se non c'è (il ritratto
+      del contadino, che dipende dal bambino) la fa col renderer di questa scena, un tipo per fotogramma. `viva`: sempre col renderer (`npm run anteprime`). */
+  anteprima(tipo, { viva = false } = {}) {
+    if (viva) return this._anteprimaViva(tipo)
+    return caricaFoto().then(f => f[tipo] || this._anteprimaViva(tipo))
+  }
+  _anteprimaViva(tipo) {
     if (!this._anteprime) this._anteprime = creaAnteprime(this.renderer, t => t.startsWith('contadino:') ? this.modelloContadino(t.slice(10)) : t.startsWith('bestia:') ? this.modelloBestia(t.slice(7)) : this.pezzi.modelloAnteprima(t))
     return this._anteprime.chiedi(tipo)
   }
@@ -129,7 +138,7 @@ export class Mondo3d {
   }
   /** Il contadino cambia abito, senza ricrearlo: stesso posto, stessa direzione, stesso gesto. */
   vestiContadino(abito) { this.abito = abito; this.eroe.vesti(abito) }
-  anteprimaPronta(tipo) { return this._anteprime ? this._anteprime.leggi(tipo) : null }
+  anteprimaPronta(tipo) { return (fotoFatte && fotoFatte[tipo]) || (this._anteprime ? this._anteprime.leggi(tipo) : null) }
 
   /** Il gruppo dei pezzi in scena: una visita ne usa uno suo (scena3d/visita.js). */
   creaPezzi() { return new Pezzi(this.scena, this.m, this.fx, this.vista, this.q) }
