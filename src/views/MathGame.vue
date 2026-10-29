@@ -28,9 +28,8 @@ import { segnaPrimato, primatoDi, sosta, salvaSosta, buttaSosta, ritocca } from 
 import { hangarDi, vintaTappa, vintoVolo, bossNelVolo, livrea, pacchiDi } from '../motore/asteroidi/hangar.js'
 import { scrivi, leggi, dice, recordDi, chiaveDi } from '../motore/asteroidi/sosta.js'
 import Ripresa from '../giochi/Ripresa.vue'
-import { fraseDiFine, recordInParole, sfidaDi, inParole, scartoInParole } from '../giochi/primati.js'
-import { amiciNelGioco, rileggiTutte } from '../amici/bacheca.js'
-import { controAmici } from '../amici/istantanea.js'
+import { fraseDiFine, recordInParole, sfidaDi } from '../giochi/primati.js'
+import { usaAmici } from '../amici/usaAmici.js'
 import Festa from '../giochi/Festa.vue'
 import { suono } from '../audio.js'
 import { statoScafo, puntoRotto } from '../grafica/spazio.js'
@@ -145,12 +144,12 @@ const giroHangar = ref(0)
 const hangarMappa = computed(() => (giroHangar.value, hangarLetto()))
 const livreaMappa = computed(() => livrea(hangarMappa.value.nave))
 // gli amici dalla loro bacheca (docs/core/amici-bacheca.md): dove sono sulla rotta e il loro record del volo
-const amici = computed(() => amiciNelGioco('mate'))
+const amici = usaAmici('mate')
 const voloRotta = computed(() => ({
   aperto: !!progresso.value.libera, nome: VOLO.nome, record: recordVolo.value,
   che: 'tabelline e conti a mente insieme, sempre più tosti',
-  amici: amici.value.filter(a => a.record > 0).sort((x, y) => y.record - x.record)
-    .map(a => ({ ...a, record: inParole(a.record, SFIDA_VOLO.misura) })),
+  // gli amici al volo: i loro record, e chi c'è senza
+  amici: { record: amici.record(), qui: amici.allaFine() },
 }))
 const partiDa = pos => (pos < 0 ? iniziaVolo() : vuoleIniziare(pos))
 
@@ -1159,18 +1158,9 @@ function finePartita() {
   if (!campagna.value) {
     finale.primato = segnaPrimato('mate', hud.punti, Date.now(),
                                   { livello: hud.livello, centri: hud.giuste, serie: hud.serieMax })
-    finale.amici = controAmiciInParole(controAmici(hud.punti, finale.primato.prima, amici.value))
+    finale.amici = amici.contro(hud.punti, finale.primato.prima)
   }
   riassunto()
-}
-
-/* la notizia porta la misura, come quella del record (docs/core/primati.md) */
-function controAmiciInParole({ superati, prossimo }) {
-  const m = SFIDA_VOLO.misura
-  if (superati.length === 1) return `Hai superato ${superati[0].nome} (${inParole(superati[0].record, m)})!`
-  if (superati.length > 1) return `Hai superato ${superati.slice(0, -1).map(a => a.nome).join(', ')} e ${superati[superati.length - 1].nome}!`
-  if (prossimo) return `${prossimo.nome} ha fatto ${inParole(prossimo.record, m)}: te ne sono mancati ${scartoInParole(prossimo.mancano, m)}`
-  return ''
 }
 
 /* tornando alla mappa ci si rimette su **dove è arrivata la fila**: il
@@ -1209,7 +1199,6 @@ const quota = (n, tot) => Math.min(100, Math.round((n / tot) * 100)) + '%'
 const finoA = (n, max) => Math.min(n, max)
 
 onMounted(() => {
-  rileggiTutte()        // le bacheche degli amici: dove sono arrivati (docs/core/amici-bacheca.md)
   suFrontiera()
   // aggancio per i test automatici: permette di colpire l'asteroide giusto
   // senza dover indovinare dove il numero e' disegnato sul canvas
@@ -1369,7 +1358,8 @@ function dalCheat() {
                  @comincia="comincia" @annulla="chiede = null" />
       </div>
       <RottaAsteroidi :voci="vociRotta" :capitoli="CAPITOLI" :volo="voloRotta" :arrivo="dove"
-                      :chi="state.player || ''" :livrea="livreaMappa" :amici="amici" @parti="partiDa">
+                      :chi="state.player || ''" :livrea="livreaMappa" :amici="amici.amici"
+                      :davanti="amici.davanti" @parti="partiDa">
         <!-- l'astronave e i gettoni: si guadagnano giocando, quindi va
              detto una volta che esistono. Altrimenti il primo ❄️ che
              compare in basso è un'icona che nessuno ha capito. -->

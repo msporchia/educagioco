@@ -3,7 +3,7 @@
    notizia contro di loro. Gli amici sono già salvati sul telefono, come dopo una lettura: il servizio non serve (l'indirizzo
    punta a una porta chiusa, e una richiesta fallita non deve rompere niente). Un amico senza nome non si vede.
    `node test/esegui.mjs amici-rotta --niente-build` */
-import { apriBrowser, apriGioco, semina, seminaArchivio, attendi, scegli, scatto, GIOCATORE } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, semina, seminaAmici, amicoDiProva, attendi, scegli, scatto } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { SCALETTA } from '../../src/data/asteroidi.js'
 
@@ -12,14 +12,8 @@ const { page, errori } = await apriGioco(browser)
 await page.addInitScript(() => { globalThis.__SERVIZIO_SFIDE__ = 'http://127.0.0.1:9' })
 const veri = () => errori.filter(e => !/WebSocket connection|Failed to load resource|net::ERR|ERR_/.test(e))
 
-const due = n => String(n).padStart(2, '0')
-const giorno = fa => { const d = new Date(Date.now() - fa * 86_400_000); return `${d.getFullYear()}-${due(d.getMonth() + 1)}-${due(d.getDate())}` }
-const amico = (lettera, id, nome, fa, tappa, record) => ({
-  chiave: lettera.repeat(32), id, nome, visto: 1, bacheca: { v: 1, giorno: giorno(fa), giochi: { mate: { tappa, record } } },
-})
-async function conAmici(amici) {
-  await seminaArchivio(page, 'amici:' + GIOCATORE, { id: 'bancouno00', deciso: true, attivo: true, online: true, amici })
-}
+const amico = (lettera, id, nome, fa, tappa, record) => amicoDiProva(lettera, id, nome, { fa, giochi: { mate: { tappa, primati: record ? { '': record } : {} } } })
+const conAmici = amici => seminaAmici(page, amici)
 async function allaRotta() {
   await scegli(page, 'mate')
   await page.waitForSelector('[data-rotta] [data-tappa]')
@@ -71,7 +65,7 @@ uguale('nessuno è più avanti di chi è al volo: in cima non si dice niente', a
 uguale('il suo pallino sta al volo', (await pallini()).find(p => p.testo === 'L')?.al, String(SCALETTA.length))
 await page.click('[data-volo]')
 await page.waitForSelector('[data-fumetto] [data-record-amici]')
-const righe = await page.$$eval('[data-fumetto] [data-record-amici] .chi', l => l.map(e => e.textContent.replace(/\s+/g, ' ').trim()))
+const righe = await page.$$eval('[data-fumetto] [data-record-amico]', l => l.map(e => e.textContent.replace(/\s+/g, ' ').trim()))
 uguale('nel volo i record degli amici, dal più alto', righe.join(' | '), 'LLeonardo: 3400 punti | MMelody: 1 punto')
 uguale('chi ha un record non si ripete come «è qui»', await page.locator('[data-fumetto] [data-amici-qui]').count(), 0)
 await attendi(page, 300)
