@@ -6,6 +6,7 @@
 import { ref } from 'vue'
 import { riprendiSeChiesta } from '../../ripresa.js'
 import Ripresa from '../../Ripresa.vue'
+import AmiciQui from '../../../components/amici/AmiciQui.vue'
 
 const props = defineProps({
   scalini: { type: Array, required: true },   // [{ chiave, nome, icona, dritta, tappe: [] }]
@@ -13,6 +14,7 @@ const props = defineProps({
   infinita: { type: Object, default: null },  // { nome, icona, racconto, aperta, motivo }
   livelli: { type: Array, default: () => [] },  // [{ chiave, nome, icona }]
   livello: { type: String, default: 'medio' },
+  davanti: { type: String, default: '' },     // l'amico da raggiungere, in parole (docs/core/amici-nei-giochi.md)
 })
 const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'livello'])
 const SFIDA = 'sfida'   // la sfida in due non ha un indice: Gioco.vue la riconosce da questo
@@ -45,6 +47,8 @@ function vai() {
              @riprendi="chiede = null; emit('riprendi')" @scorda="emit('scorda')"
              @comincia="vai" @annulla="chiede = null" />
 
+    <p v-if="davanti" class="ar-davanti" data-amico-davanti>{{ davanti }}</p>
+
     <section v-for="s in scalini" :key="s.chiave" class="ar-scalino">
       <h3>
         <span class="em">{{ s.icona }}</span>
@@ -59,6 +63,7 @@ function vai() {
           <span class="ar-testo">
             <b>{{ t.nome }}</b>
             <i>{{ t.aperta ? t.racconto : s.nome }}</i>
+            <AmiciQui :amici="t.amici" class="ar-qui" :data-al="t.indice" />
           </span>
           <span class="ar-stelle em">
             <template v-if="t.stelle">{{ '⭐'.repeat(t.stelle) }}</template>
@@ -77,6 +82,7 @@ function vai() {
           <span class="ar-testo">
             <b>{{ infinita.nome }}</b>
             <i>{{ infinita.aperta ? infinita.racconto : infinita.motivo }}</i>
+            <AmiciQui :amici="infinita.amici" class="ar-qui" data-al="infinita" />
           </span>
         </button>
         <!-- quanto è bravo il nemico: vale solo qui, la campagna è sempre la stessa -->
