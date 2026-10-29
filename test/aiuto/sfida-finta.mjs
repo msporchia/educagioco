@@ -30,9 +30,9 @@ export function partitaInDue({ gioco, seme = 1, scenario = SCENARI.melody, minut
   const rete = reteFinta({ orologio, rnd: caso(seme), min: scenario.min, max: scenario.max })
   const codice = rete.nuovo(POSTO.host)
   const opzioni = posto => ({ posto, servizio: 'https://finto', WebSocketImpl: rete.WebSocketImpl, tempo: orologio, ascolta: false, tempi })
-  const host = new Incontro({ codice, regola: gioco.regola({ firma: firme[0] }), scelte: gioco.scelte(seme), opzioni: opzioni(POSTO.host) })
+  const host = new Incontro({ codice, regola: gioco.regola({ firma: firme[0], ruolo: 'host' }), scelte: gioco.scelte(seme), opzioni: opzioni(POSTO.host) })
   orologio.avanti(400)
-  const ospite = new Incontro({ codice, regola: gioco.regola({ firma: firme[1] }), opzioni: opzioni(POSTO.ospite) })
+  const ospite = new Incontro({ codice, regola: gioco.regola({ firma: firme[1], ruolo: 'ospite' }), opzioni: opzioni(POSTO.ospite) })
   const r = caso(seme * 31)
   const guasti = { taglia: 0, buco: 0, spegni: 0, ferma: 0 }
   const linee = new Set()

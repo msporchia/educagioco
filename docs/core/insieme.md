@@ -39,11 +39,17 @@ dipendenze e il servizio è un Worker di Cloudflare (Socket.IO e Colyseus voglio
 | `sfida.js` | `usaSfida`: la sfida vista da un gioco: crea, entra col codice, invita un amico (e l'invito che arriva), l'incontro dalla sala alla partita, il cartello della linea dopo 1,5 s, il libretto dei guasti | il gioco (gli dà `regola`, `alVia`, `mostra`) |
 | `SalaSfida.vue` | la sala: crea / entra / invita, il codice da dire, l'attesa, cosa è andato storto | le scelte di chi crea (slot `scelte`) |
 | `CartelloLinea.vue` | sopra la partita: «hai perso la linea», «l'altro ha perso la linea», la sfida finita col perché | |
+| `grafo.js` | la fotografia di uno stato qualunque (`fotoDi`, `rimettiDa`): le Map, i Set, gli array tipizzati, le classi dal nome e gli oggetti che stanno in due posti, che il JSON perde; le funzioni no (il caso si rimette dal suo stato) | il gioco |
 
 Un gioco dà all'`Incontro` una **regola** (`versione`, `proponi(scelte)`, `accetta(proposta)`, `crea(proposta)` → il motore) e il
 **motore** del lockstep (`passo`, `avanza()`, `applica(ruolo, mossa)`, `valida(mossa)`, `impronta()`, `simili(a, b)`, `foto()`,
 `rimetti(foto)`, `fine()`, `finisci(f)`); legge `stato`, `linea`, `motivo` e chiama `avanza(dt)`, `scegli(mossa)`, `finisci()`,
 `chiudi()`. Castle Battle: `src/giochi/arena/sfida/regia.js`.
+
+**Quando ognuno porta qualcosa di suo** (il sotterraneo: il proprio eroe), la regola ha anche `presentati()` (la parte di chi gioca
+qui) e `accettaParte(parte)`: l'host manda la sua con l'`inizio`, l'ospite la sua col `pronto`, e `crea(proposta, { host, ospite })`
+le riceve tutte e due, uguali sui due telefoni. Una parte storta rompe la sfida con «l'eroe dell'altro non si può portare qui».
+Un gioco senza `presentati` (Castle Battle) non manda niente e `crea` riceve solo la proposta.
 
 ## Il tavolo (`servizio/inoltro`, logica in `src/tavolo.js`, Durable Object `Tavolo`)
 
@@ -122,8 +128,8 @@ Rete, cadute, trattativa, sala e cartello non si riscrivono. Il gioco dà:
    sotterraneo in due ([../sotterraneo/in-due.md](../sotterraneo/in-due.md)), che chiede anche all'incontro di portare la parte
    dell'ospite (il suo eroe).
 4. **L'invito degli amici**: una voce in `src/amici/giochi.js` (`valida` per i dati che porta l'invito, oltre al codice).
-5. **I bambini finti** per le prove e il banco: `test/aiuto/sfide/<gioco>.mjs` (`regola`, `scelte(seme)`, `muovi(ruolo, incontro,
-   caso)`) e la sua riga in `sfide/index.mjs`.
+5. **I bambini finti** per le prove e il banco: `test/aiuto/sfide/<gioco>.mjs` (`regola({ firma, ruolo })`, `scelte(seme)`,
+   `muovi(ruolo, incontro, caso)`) e la sua riga in `sfide/index.mjs`. Ci sono Castle Battle e il sotterraneo.
 
 Un gioco a turni (uno muove, l'altro aspetta) usa lo stesso lockstep con un motore che cambia solo quando arriva una mossa: i tick
 costano poco. Una via più semplice (solo canale e incontro) si fa quando arriva il primo.
