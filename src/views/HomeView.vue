@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { state, level, countMastered, nomeCorrente, livelloOra,
          mateProgresso, mercatoProgresso,
          tabellineIntere, genProgresso,
@@ -151,13 +151,11 @@ const ripresa = computed(() => {
   const r = m && m.ripresa ? m.ripresa(progressoDi(k)) : null
   return r ? { ...g, punto: r.dove, immagine: r.immagine } : g
 })
-// il cartello dell'aggiornamento sta in cima (Nastri.vue): da giù in fondo lo si porta in vista
-// mentre lavora la ↻ del tasto gira: il cartello in cima può restare fuori schermo
+// la risposta compare in una finestrella al centro (Nastri.vue); qui la ↻ del tasto gira mentre lavora
 const cercando = computed(() => ['chiedo', 'scarico', 'pronta'].includes(aggiornando.value?.fase))
 function cercaVersione () {
   if (cercando.value) return
   aggiornaOra()
-  nextTick(() => document.querySelector('[data-nastro="versione"]')?.scrollIntoView?.({ block: 'center' }))
 }
 
 // la partita a metà riparte da sola, senza «torno da dove ero» (docs/core/ripresa.md)
