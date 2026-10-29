@@ -11,13 +11,13 @@ defineProps({
 
 <template>
   <span v-if="record.length" class="record-amici" data-record-amici>
-    <span v-for="a in record" :key="a.chiave" class="riga" data-record-amico>
+    <span v-for="a in record" :key="a.chiave" class="amici-riga" data-record-amico>
       <PallinoAmico :amico="a" :lato="lato" />{{ a.nome }}: <b>{{ a.record }}</b>
     </span>
   </span>
 </template>
 
 <style scoped>
-.record-amici { display:flex; flex-direction:column; gap:4px }
-.riga { display:flex; align-items:center; gap:6px; font-weight:600 }
+.record-amici { display:flex; flex-direction:column; align-items:flex-start; gap:4px }
+.amici-riga { display:flex; align-items:center; gap:6px; font-weight:600 }
 </style>

@@ -232,7 +232,7 @@ export async function seminaArchivio(page, chiave, valore) {
 }
 
 /* Gli amici del bambino come dopo una lettura delle loro bacheche (docs/core/amici-bacheca.md): accesi dai grandi, ognuno con
-   la sua istantanea. `amicoDiProva('a', 'leonardo1', 'Leonardo', { fa: 1, giochi: { mate: { tappa: 5, record: 0 } } })`; un
+   la sua istantanea. `amicoDiProva('a', 'leonardo1', 'Leonardo', { fa: 1, giochi: { mate: { posti: { '': 5 }, primati: {} } } })`; un
    nome vuoto è un amico mai incontrato online. Il servizio non serve: la prova punta `__SERVIZIO_SFIDE__` a una porta chiusa. */
 export function amicoDiProva(lettera, id, nome, { fa = 0, giochi = {} } = {}) {
   const d = new Date(Date.now() - fa * 86_400_000), due = n => String(n).padStart(2, '0')
