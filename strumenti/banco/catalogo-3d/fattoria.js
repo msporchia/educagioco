@@ -58,7 +58,7 @@ const P3 = 'src/giochi/fattoria3d/scena3d/pesca3d.js'
 const pezzo = t => `pezzo del vassoio, livello ${PEZZI[t].liv}, ${PEZZI[t].w}×${PEZZI[t].d} celle`
 const unico = t => `edificio unico, si mette dove si vuole nel terreno proprio (menu Costruisci, scheda Edifici), livello ${EDIFICI[t].liv}`
 const celle = d => `${d.w}×${d.d}`
-const CRESCITE = [0.75, 1, 0.2, 0.45]    // le tessere: dietro a sinistra, dietro a destra, davanti a sinistra, davanti a destra
+const CRESCITE = [0.75, 1, 0, 0.45]    // le tessere: dietro a sinistra, dietro a destra, davanti a sinistra, davanti a destra
 const FINE = Date.now() - 1000          // «pronta»: la gallina mostra l'uovo, la mucca il secchio
 // i tre stadi di un animale (docs/fattoria3d/animali.md, «I tre stadi»): 'fame', 'lavora' (a metà, p = 0,5) e 'pronta'. Lo stato si ricalcola a ogni fotogramma
 // (l'ora passa), e il modello è fermo in un punto (niente passeggiate) e già nello stadio, anche nella scheda che non anima.
@@ -97,10 +97,10 @@ export const VOCI = [
     crea: () => { const g = creaCampo(3); aggiornaCampo(g, [1, 1, 1, 1], 0, k, false); return g },
     anima: (g, dt, t) => aggiornaCampo(g, [1, 1, 1, 1], t, k, true),
   })),
-  // le stesse, a quattro età: davanti appena spuntata (0,2) e a metà (0,45), dietro col frutto (0,75) e matura (1)
+  // le stesse, a quattro età: davanti appena seminata (0, i germogli) e a metà (0,45), dietro col frutto (0,75) e matura (1)
   ...Object.keys(ASPETTO).map(k => ({
     id: `fattoria:crescita-${k}`, nome: `Campo di ${COLTURE[k].nome.toLowerCase()} in crescita`, gioco: 'fattoria', categoria: 'pianta',
-    dove: `il campo di ${COLTURE[k].nome.toLowerCase()} mentre cresce: tessere a 0,2 e 0,45 davanti, 0,75 e 1 dietro`,
+    dove: `il campo di ${COLTURE[k].nome.toLowerCase()} mentre cresce: tessere a 0 (appena seminata) e 0,45 davanti, 0,75 e 1 dietro`,
     file: `${MCO}:aggiornaCampo`, misure: celle(PEZZI.campo),
     crea: () => { const g = creaCampo(3); aggiornaCampo(g, CRESCITE, 0, k, false); return g },
     anima: (g, dt, t) => aggiornaCampo(g, CRESCITE, t, k, true),

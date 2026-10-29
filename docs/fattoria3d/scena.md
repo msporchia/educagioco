@@ -53,6 +53,9 @@ volta provando ogni coltura matura; `count` dice quante se ne disegnano e una fo
 - **La crescita si legge**: la pianta cresce di scala, le foglie arrivano una alla volta, il frutto compare oltre 0,55 e
   matura di colore (pomodori e fragole dal verde, la spiga dal verde all'oro); i pomodori arrivano uno alla volta, il palo
   c'è già dalla semina.
+- **Appena seminato si vede**: fino a 0,4 di crescita ogni posto ha due cotiledoni verde chiaro (`germoglio`, uno ogni due nel
+  fitto), che spariscono mentre la pianta prende la scala. Sul telefono, qualità bassa e camera lontana, la pianta a crescita 0
+  era un puntino e il campo seminato sembrava vuoto; la tessera a puntini verdi si legge.
 - **Il colore che deve variare per istanza** (il verde che matura) sta nel colore dell'istanza; dove una forma ha due
   colori fissi (la pannocchia con le brattee, la zucca col picciolo) sono colori ai vertici, e l'istanza li tinge appena.
 - **Il peso**: un campo maturo fa 1,3–5,5k triangoli (il grano il più caro), ~11–13 mesh contando il letto; prima erano

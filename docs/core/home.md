@@ -17,6 +17,7 @@ cartonato): fondo grigio chiarissimo, superfici bianche, pesi 600 e 400,
 caratteri piccoli, ombre appena accennate, testo `#1f2433` e grigio
 `#7a8193`. Il colore lo mettono le copertine, ognuna sul fondo del suo
 gioco (stinte erano più tristi), e il riquadro scuro di «riprendi».
+Dal 29/10 è la pelle di tutte le schermate di contorno: [pelle.md](pelle.md).
 La home parte dall'alto e non si centra: letti i nastri, il centrato
 lasciava un vuoto sopra il profilo.
 

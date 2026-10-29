@@ -76,6 +76,8 @@ compressa), controlla che dentro ci sia l'id promesso, la mette **al posto
 della vecchia** nelle cache del service worker e in quella della versione
 nuova, e solo allora riparte. Non tocca i progressi; se la rete cade a metà
 il gioco resta com'era.
+Mentre lavora la ↻ del tasto gira e dice «sto cercando…» (il cartello in
+cima può essere fuori schermo), e premerlo di nuovo non fa nulla.
 
 - **La pagina si chiede a `./?aggiorna=<id>` e `no-store`**: anche questa
   `fetch` passa dal service worker, che fuori dalle navigazioni risponde
@@ -107,6 +109,6 @@ in un `apriTelefono()`, cioè un profilo su disco — quello in incognito la
 pagina da otto megabyte non se la tiene, e senza la pagina tenuta il guasto
 non si vede. Dettagli degli attrezzi in `test/README.md`.
 
-Nei test: `[data-azione="cerca-versione"]`, `[data-aggiorna][data-fase=…]`,
+Nei test: `[data-azione="cerca-versione"]` (`[data-cercando]` mentre lavora), `[data-aggiorna][data-fase=…]`,
 `[data-scaricati]`, `[data-azione="aggiorna"]` sul nastro,
 `[data-azione="riprova"]`.

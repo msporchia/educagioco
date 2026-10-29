@@ -59,7 +59,7 @@ quale file.
 
 | Cartella | Cosa c'è — leggila prima di toccare… |
 |---|---|
-| `docs/core/` | architettura e file unico, archivio e salvataggi, progressi, sessioni, aggiornamento e service worker, guasti, test, comandi, pubblicare, la convenzione dei giochi nuovi, gli amici online (lista, codice breve, inviti: `src/amici/`, `servizio/inoltro/`), giocare in due (`src/insieme/`: il tavolo, il canale che regge le cadute, il lockstep, `strumenti/banco-rete.mjs`), la home (profilo, riprendi, carosello, indice), interfaccia (barra, ✕, pausa, v-if), la partita lasciata a metà, il dito, primati, aiuti a monete, la guida del primo giro, grafica, sprite, creature (il catalogo comune dei mostri dipinti), strumenti — prima di toccare `src/store/`, `src/grafica/`, `vite.config.js`, un componente comune o un gioco nuovo |
+| `docs/core/` | architettura e file unico, archivio e salvataggi, progressi, sessioni, aggiornamento e service worker, guasti, test, comandi, pubblicare, la convenzione dei giochi nuovi, gli amici online (lista, codice breve, inviti: `src/amici/`, `servizio/inoltro/`), giocare in due (`src/insieme/`: il tavolo, il canale che regge le cadute, il lockstep, `strumenti/banco-rete.mjs`), la home (profilo, riprendi, carosello, indice), la pelle delle schermate di contorno, interfaccia (barra, ✕, pausa, v-if), la partita lasciata a metà, il dito, primati, aiuti a monete, la guida del primo giro, grafica, sprite, creature (il catalogo comune dei mostri dipinti), strumenti — prima di toccare `src/store/`, `src/grafica/`, `vite.config.js`, un componente comune o un gioco nuovo |
 | `docs/apprendimento/` | il motore SRS, i moduli di quiz, livelli 0–100 e banda, ripasso, la domanda (fretta, perché e come si fa, il muro), saperi, età e portata delle tappe, **la calibrazione delle monete** — prima di toccare `src/store/srs.js`, `src/quiz/`, `data/partenze.js`, `data/portata*.js`, o di scrivere un prezzo o un premio |
 | `docs/genitori/` | cosa si può spegnere, la manopola dell'età, il quadro, i ritocchi ✎, «Come va», codice dei genitori, cestino e posta, le novità per i bambini, le guide in app — prima di toccare `components/eta/`, `src/guide/`, `store/pin.js`, `store/cestino.js`, `store/posta.js` |
 | `docs/asteroidi/` | Tabelline Asteroidi: la scaletta unica di pianeti e stazioni, il volo, i cieli, la nave madre e l'hangar, il cielo in 3D e i comandi col dito — prima di toccare `grafica/spazio3d/` |
@@ -102,6 +102,9 @@ Generale), `strumenti/sprite/*.md` (fogli e foglietti degli sprite),
 - **Un gioco non aggiunge campi al profilo**: l'avanzamento sta in
   `profile.campagne[<chiave>]` e lo muove `src/giochi/campagne.js`; i
   contatori si toccano con `segna()`/`segnaBest()`.
+- **Le schermate di contorno hanno una pelle sola** (home, profilo, impostazioni,
+  guide, benvenuto): `class="schermo pulito"` e i valori di `style.css`, mai
+  numeri a mano. → `docs/core/pelle.md`
 - **La barra in cima è una sola** (`components/Barra.vue`), indietro sempre
   primo a sinistra; **un foglio si chiude con la ✕ in alto a destra**;
   **la pausa è una sola** (`giochi/pausa.js`). → `docs/core/interfaccia.md`
@@ -149,7 +152,8 @@ Una riga ciascuna; il perché sta nel documento indicato.
   resta. → `docs/core/progressi.md`
 - **I file generati non si toccano a mano**: `src/data/taratura-castello.js`
   (`npm run tara`, un test confronta la firma), `docs/apprendimento/livelli-delle-domande.md`
-  (`npm run quiz:livelli`), `src/giochi/arena/dati/taratura.js`
+  (`npm run quiz:livelli`), `src/quiz/dati/sillabe-parole-vere.js`
+  (`npm run quiz:parole-sillabe`), `src/giochi/arena/dati/taratura.js`
   (`npm run tara:arena`, un test confronta la firma), `src/data/voci*.js`
   (`npm run voci`, e se dice «non incise» si rilancia), `src/giochi/sotterraneo/dati/icone-mondo.js`
   (`npm run scatti icone-mondo`, la firma sta nel file e un test la ricalcola), `src/giochi/fattoria3d/dati/anteprime.js` e

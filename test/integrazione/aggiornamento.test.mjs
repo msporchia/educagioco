@@ -213,6 +213,7 @@ try {
   {
     const dopo = ripartita()
     await page.click('[data-azione="cerca-versione"]')
+    controlla('il tasto gira mentre cerca', await arriva('[data-azione="cerca-versione"][data-cercando]'))
     const riparto = await arriva('[data-aggiorna][data-fase="pronta"]', 20000)
     dopoIlTasto = sito.richieste.length
     await svuotaLaCacheDelBrowser()

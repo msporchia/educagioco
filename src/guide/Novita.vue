@@ -33,7 +33,7 @@ async function letto () {
 </script>
 
 <template>
-  <div class="schermo" data-novita-pagina>
+  <div class="schermo pulito" data-novita-pagina>
     <Barra titolo="Novità" :audio="false" @indietro="$emit('vai','home')" />
 
     <div class="corpo">
@@ -66,19 +66,19 @@ async function letto () {
 <style scoped>
 .corpo { flex:1; overflow-y:auto; padding:12px 14px 0;
          display:flex; flex-direction:column; gap:11px;
-         width:min(520px,100%); margin:0 auto }
-.gruppo { padding:13px 16px 10px; border-radius:20px; background:var(--carta);
-          box-shadow:0 5px 0 #dde3ea, 0 10px 22px #8593a822 }
+         width:min(var(--colonna),100%); margin:0 auto }
+.gruppo { padding:13px 16px 10px; border-radius:var(--raggio); background:var(--superficie);
+          box-shadow:var(--ombra) }
 .testata { display:flex; align-items:center; gap:9px; margin:0 0 7px;
-           font-size:17px; color:var(--viola-scuro) }
+           font-size:15px; font-weight:600; color:var(--inchiostro) }
 .testata .ico { font-size:26px }
 .gruppo ul { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:7px }
 .gruppo li { display:flex; align-items:baseline; gap:10px; justify-content:space-between }
-.frase { font-size:15.5px; font-weight:700; color:#2f3a52; line-height:1.35 }
-.quando { flex:none; font-size:11.5px; color:var(--tenue); white-space:nowrap }
+.frase { font-size:14px; font-weight:400; color:var(--inchiostro); line-height:1.35 }
+.quando { flex:none; font-size:11.5px; color:var(--grigio); white-space:nowrap }
 .piede { position:sticky; bottom:0; margin-top:auto; display:flex; justify-content:center;
          padding:14px 0 calc(16px + env(safe-area-inset-bottom));
-         background:linear-gradient(180deg,#e3ecf300,#e3ecf3 40%) }
+         background:linear-gradient(180deg,#f6f7f900,var(--fondo) 40%) }
 .vuoto { align-self:center; text-align:center; margin-top:24px }
 .torna { align-self:center; margin-top:10px; padding:11px 26px; font-size:15px }
 </style>

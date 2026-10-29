@@ -11,7 +11,7 @@ export async function riavviaAmici() {
     if (!state.player) return ferma()
     await carica(state.player)
     // i profili che c'erano già non hanno mai risposto: spento, e il grande lo scopre dalla posta (non dalle novità dei bambini)
-    if (!dati.deciso) avvisaUnaVolta(`amici:${state.player}`, avvisoPosta(nomeCorrente()), { testo: 'Apri le impostazioni', scheda: 'bambini' })
+    if (!dati.deciso) avvisaUnaVolta(`amici:${state.player}`, avvisoPosta(nomeCorrente()), { testo: 'Apri le impostazioni', scheda: 'bambini', dove: 'amici' })
     avvia({ nome: nomeCorrente(), puoGiocare: giocoAcceso })
   } catch { /* gli amici non rompono mai niente */ }
 }

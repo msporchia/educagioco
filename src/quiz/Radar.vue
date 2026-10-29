@@ -43,12 +43,12 @@ const lettura = computed(() => props.assi.map(a => `${a.nome} ${a.vuota ? 'non a
 
 <style scoped>
 .radar { width:100%; max-width:380px; margin:0 auto; display:block; overflow:visible }
-.anello { fill:none; stroke:#ddd6f0; stroke-width:1 }
-.asse { stroke:#e6e0f4; stroke-width:1 }
-.forma { fill:#7c5cd655; stroke:#6a49c4; stroke-width:2.2; stroke-linejoin:round }
-.prima { fill:none; stroke:#9a8fc0; stroke-width:1.6; stroke-dasharray:4 3 }
-.punto { fill:#6a49c4 }
+.anello { fill:none; stroke:var(--filo); stroke-width:1 }
+.asse { stroke:var(--filo); stroke-width:1 }
+.forma { fill:#5b7cfa55; stroke:var(--accento); stroke-width:2.2; stroke-linejoin:round }
+.prima { fill:none; stroke:#a3a9b8; stroke-width:1.6; stroke-dasharray:4 3 }
+.punto { fill:var(--accento) }
 .etichetta { cursor:pointer }
-.nome { font-size:11.5px; font-weight:700; fill:#2d2745 }
-.pct { font-size:11px; font-weight:800; fill:#6a49c4 }
+.nome { font-size:11.5px; font-weight:600; fill:var(--inchiostro) }
+.pct { font-size:11px; font-weight:600; fill:var(--accento) }
 </style>

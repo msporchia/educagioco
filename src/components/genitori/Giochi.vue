@@ -205,56 +205,56 @@ const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
 </template>
 
 <style scoped>
-.giochi-impostazioni { display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; max-width:440px; margin:0 auto; box-sizing:border-box; overflow-x:clip }
+.giochi-impostazioni { display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; max-width:var(--colonna); margin:0 auto; box-sizing:border-box; overflow-x:clip }
 .giochi-impostazioni > .mini { align-self:stretch }
-.pannello { align-self:stretch; display:flex; flex-direction:column; gap:12px; padding:14px; border-radius:16px; background:#fff; text-align:left }
-.pannello h3 { margin:0; font-size:18px }
+.pannello { align-self:stretch; display:flex; flex-direction:column; gap:12px; padding:14px; border-radius:var(--raggio); background:var(--superficie); box-shadow:var(--ombra); text-align:left }
+.pannello h3 { margin:0; font-size:15px; font-weight:600; color:var(--inchiostro) }
 .che { margin:-8px 0 0 }
 .blocco { display:flex; flex-direction:column; gap:6px }
-.blocco > b { font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:#8a8576 }
+.blocco > b { font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--grigio) }
 .scelte { display:flex; gap:8px; align-items:center }
-.seg1 { flex:none; min-height:46px; padding:0 16px; border:2px solid #ece6d8; border-radius:999px; background:none; font:inherit; font-size:13px; color:#6c6757; touch-action:manipulation }
-.seg1.su { background:#fff; border-color:#6c8cff; color:#2b2a33; font-weight:700 }
-.seg { flex:1; display:flex; gap:2px; padding:3px; border-radius:999px; background:#ece6d8 }
-.seg button { flex:1; min-height:40px; border:0; border-radius:999px; background:none; font:inherit; font-size:13px; color:#6c6757; touch-action:manipulation }
-.seg button.su { background:#fff; color:#2b2a33; font-weight:700; box-shadow:0 1px 2px #0002 }
-.esito { margin:0; padding:7px 10px; border-radius:10px; background:#f4f0ff; color:#4a3fd1; font-size:13px }
-.grande { margin:0; font-size:24px; font-weight:800 }
-.grande small { font-size:12px; font-weight:500; color:#8a8576 }
+.seg1 { flex:none; min-height:46px; padding:0 16px; border:2px solid var(--tessera); border-radius:999px; background:none; font:inherit; font-size:13px; color:var(--grigio); touch-action:manipulation }
+.seg1.su { background:var(--superficie); border-color:var(--inchiostro); color:var(--inchiostro); font-weight:600 }
+.seg { flex:1; display:flex; gap:2px; padding:3px; border-radius:999px; background:var(--tessera) }
+.seg button { flex:1; min-height:40px; border:0; border-radius:999px; background:none; font:inherit; font-size:13px; color:var(--grigio); touch-action:manipulation }
+.seg button.su { background:var(--superficie); color:var(--inchiostro); font-weight:600; box-shadow:var(--ombra) }
+.esito { margin:0; padding:7px 10px; border-radius:var(--raggio-piccolo); background:var(--tessera); color:var(--inchiostro); font-size:13px }
+.grande { margin:0; font-size:24px; font-weight:600; color:var(--inchiostro) }
+.grande small { font-size:12px; font-weight:500; color:var(--grigio) }
 .barre { display:flex; gap:6px; align-items:flex-end; height:92px }
-.col { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; height:100%; font-size:10px; color:#8a8576 }
+.col { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; height:100%; font-size:10px; color:var(--grigio) }
 .asta { flex:1; width:100%; display:flex; align-items:flex-end }
-.asta i { display:block; width:100%; border-radius:4px 4px 2px 2px; background:#6c8cff; min-height:3px }
-.asta i.niente { background:#e5e0d3 }
+.asta i { display:block; width:100%; border-radius:4px 4px 2px 2px; background:#5b7cfa; min-height:3px }
+.asta i.niente { background:var(--filo) }
 .num { display:flex; gap:8px }
-.num div { flex:1; padding:6px; border-radius:10px; background:#f7f2e8; text-align:center }
+.num div { flex:1; padding:6px; border-radius:var(--raggio-piccolo); background:var(--tessera); text-align:center }
 .num b { display:block; font-size:14px }
-.num small { font-size:10px; color:#8a8576 }
-.insegna { margin:0; font-size:13.5px; line-height:1.45; color:#4a4638 }
-.tutte > summary { min-height:40px; display:flex; align-items:center; font-size:13px; font-weight:700; color:#4a3fd1; cursor:pointer }
+.num small { font-size:10px; color:var(--grigio) }
+.insegna { margin:0; font-size:13.5px; line-height:1.45; color:var(--inchiostro) }
+.tutte > summary { min-height:40px; display:flex; align-items:center; font-size:13px; font-weight:600; color:var(--inchiostro); cursor:pointer }
 .domande { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px }
-.domande li { display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-bottom:1px solid #f1ebdf }
+.domande li { display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-bottom:1px solid var(--filo) }
 .domande li:last-child { border-bottom:0 }
 .testo { flex:1; display:flex; flex-direction:column; gap:1px }
-.testo i { font-style:normal; font-size:12px; color:#6c6757 }
-.testo em { align-self:flex-start; margin-top:3px; padding:2px 7px; border-radius:8px; background:#fff1d6; color:#8a5a00; font-style:normal; font-size:11px }
+.testo i { font-style:normal; font-size:12px; color:var(--grigio) }
+.testo em { align-self:flex-start; margin-top:3px; padding:2px 7px; border-radius:var(--raggio-piccolo); background:#fff1d6; color:#8a5a00; font-style:normal; font-size:11px }
 .domande li.spenta .testo b, .domande li.spenta .testo i { opacity:.45; text-decoration:line-through }
 .testo em.serve { background:#fde5e5; color:#9a2b2b }
 .diff { display:flex; align-items:center; gap:6px; margin-top:6px }
-.diff button { width:36px; height:32px; border:0; border-radius:10px; background:#ece6d8; font:inherit; font-size:16px; font-weight:700; touch-action:manipulation }
-.diff i { font-style:normal; font-size:12px; color:#6c6757; min-width:110px; text-align:center }
-.avanzate > summary { min-height:40px; display:flex; align-items:center; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#8a8576; cursor:pointer }
+.diff button { width:36px; height:32px; border:0; border-radius:var(--raggio-piccolo); background:var(--tessera); font:inherit; font-size:16px; font-weight:600; touch-action:manipulation }
+.diff i { font-style:normal; font-size:12px; color:var(--grigio); min-width:110px; text-align:center }
+.avanzate > summary { min-height:40px; display:flex; align-items:center; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--grigio); cursor:pointer }
 .avanzate { gap:8px }
-.azione { display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; min-height:48px; margin-top:6px; padding:10px 12px; border:2px solid #ece6d8; border-radius:12px; background:#fff; font:inherit; text-align:left; touch-action:manipulation }
-.azione small { font-size:12px; color:#6c6757 }
+.azione { display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; min-height:48px; margin-top:6px; padding:10px 12px; border:2px solid var(--tessera); border-radius:var(--raggio-piccolo); background:#fff; font:inherit; text-align:left; touch-action:manipulation }
+.azione small { font-size:12px; color:var(--grigio) }
 .azione.pericolo { border-color:#f1c9c9 }
-.conferma { margin-top:6px; padding:10px 12px; border-radius:12px; background:#fdf2f2; font-size:13px }
+.conferma { margin-top:6px; padding:10px 12px; border-radius:var(--raggio-piccolo); background:#fdf2f2; font-size:13px }
 .conferma p { margin:0 0 8px }
 .conferma .riga { display:flex; gap:8px }
-.conferma .riga button { flex:1; min-height:44px; border:0; border-radius:12px; font:inherit; font-weight:700; touch-action:manipulation; background:#ece6d8 }
+.conferma .riga button { flex:1; min-height:44px; border:0; border-radius:var(--raggio-piccolo); font:inherit; font-weight:600; touch-action:manipulation; background:var(--tessera) }
 .conferma .riga .rosso { background:#d94b4b; color:#fff }
-.tasto { flex:none; position:relative; width:46px; height:28px; border:0; border-radius:14px; background:#cfc9b8; touch-action:manipulation }
+.tasto { flex:none; position:relative; width:46px; height:28px; border:0; border-radius:var(--raggio); background:#c9ced8; touch-action:manipulation }
 .tasto::after { content:""; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; transition:left .15s }
-.tasto.su { background:#2f9e5b }
+.tasto.su { background:var(--verde) }
 .tasto.su::after { left:21px }
 </style>

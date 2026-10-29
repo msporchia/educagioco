@@ -40,10 +40,10 @@ const inLettere = anniInLettere
 <style scoped>
 .conferma { position:sticky; bottom:0; z-index:5;
             display:flex; flex-direction:column; gap:8px;
-            background:#fff; border-radius:16px; padding:10px 12px;
-            box-shadow:0 -3px 14px #00000022, 0 0 0 2px #5b3fa833 }
-.che { margin:0; font-size:12.5px; line-height:1.35; color:#4a4a5a; text-align:left }
-.che b { font-size:14px; color:var(--viola-scuro, #3b2b6b) }
+            background:#fff; border-radius:var(--raggio); padding:10px 12px;
+            box-shadow:0 -3px 14px #00000022, 0 0 0 2px #1f243322 }
+.che { margin:0; font-size:12.5px; line-height:1.35; color:var(--inchiostro); text-align:left }
+.che b { font-size:14px; color:var(--viola-scuro, var(--inchiostro)) }
 /* non .avviso: quella globale ha sfondo e max-width, qui diventava un riquadro che si accavallava */
 .perde { color:#a33 }
 .tasti { display:flex; gap:8px }

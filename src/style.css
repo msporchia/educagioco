@@ -3,6 +3,9 @@
   --viola:#4f6bd0; --viola-scuro:#37509f; --rosa:#f0955e; --giallo:#ffc93c;
   --arancio:#ff9f1c; --verde:#38c172; --rosso:#ef5f5f; --testo:#222a38;
   --tenue:#6e7788; --carta:#fffffff0;
+  /* la pelle pulita delle schermate di contorno (.pulito): vedi docs/core/pelle.md */
+  --fondo:#f6f7f9; --superficie:#fff; --inchiostro:#1f2433; --grigio:#7a8193; --filo:#e3e7ef;
+  --tessera:#f1f3f7; --accento:#5b7cfa; --ombra:0 1px 2px #1f243312; --raggio:14px; --raggio-piccolo:10px; --colonna:400px;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body,#app{height:100%}
@@ -50,6 +53,18 @@ h2{font-size:clamp(20px,5.4vw,26px);font-weight:900;color:var(--viola-scuro)}
 .riga{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 .link{background:none;color:var(--tenue);opacity:.6;font-size:12px;text-decoration:underline;padding:4px}
 .avviso{font-size:12px;color:#b4603f;background:#fff0e6;border-radius:10px;padding:8px 12px;max-width:32ch}
+
+/* home, profilo, impostazioni, guide, benvenuto: una pelle sola, quella scelta per la home (docs/core/pelle.md).
+   Su `.schermo.pulito` e non globale: i giochi tengono i loro titoli e i loro tasti gialli */
+.pulito{background:var(--fondo)}
+.pulito h2{font-size:17px;font-weight:600;color:var(--inchiostro)}
+.pulito .testo,.pulito .mini{color:var(--grigio)}
+.pulito .bottone{padding:12px 22px;border-radius:999px;font-size:15px;font-weight:600;
+                 background:var(--inchiostro);color:#fff;box-shadow:none}
+.pulito .bottone:active{transform:scale(.98);box-shadow:none}
+.pulito .bottone.chiaro{background:var(--superficie);color:var(--inchiostro);box-shadow:inset 0 0 0 1px var(--filo)}
+.pulito .bottone.rosso{background:#c43b4f;color:#fff;box-shadow:none}
+.pulito .tondo{background:var(--superficie);box-shadow:var(--ombra)}
 
 
 /* verticale: l'app installata parte bloccata (manifest), dal browser si può solo chiederlo */

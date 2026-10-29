@@ -45,7 +45,7 @@ const pct = q => Math.round(q * 100) + '%'
 </script>
 
 <template>
-  <div class="schermo">
+  <div class="schermo pulito">
     <Barra titolo="I miei progressi" monete @indietro="$emit('vai','home')">
       <div class="gettone">🏅 <b>{{ presi.length }}/{{ quantiTotali }}</b></div>
     </Barra>
@@ -147,7 +147,7 @@ const pct = q => Math.round(q * 100) + '%'
 </template>
 
 <style scoped>
-.albo { justify-content:flex-start; gap:13px; max-width:520px; margin:0 auto; width:100%;
+.albo { justify-content:flex-start; gap:13px; max-width:calc(var(--colonna) + 36px); margin:0 auto; width:100%;
         padding-bottom:34px }
 /* la pagina scorre: nessuna fascia deve schiacciarsi per far entrare le altre.
    Serve soprattutto alla vetrina, che avendo overflow proprio perde la
@@ -158,21 +158,20 @@ const pct = q => Math.round(q * 100) + '%'
 
 /* ---- testata ---- */
 .testata { display:flex; align-items:center; gap:14px; width:100%; padding:14px 16px;
-           border-radius:22px; background:linear-gradient(120deg,#e8edf8,#fffffff0);
-           box-shadow:0 5px 0 #dde3ea, 0 10px 22px #8593a822; text-align:left }
+           border-radius:var(--raggio); background:var(--superficie);
+           box-shadow:var(--ombra); text-align:left }
 .stemma { position:relative; flex:none; width:66px; height:66px; border-radius:50%;
           display:grid; place-items:center; font-size:30px;
-          background:linear-gradient(180deg,var(--giallo),var(--arancio));
-          box-shadow:0 4px 0 #d97706 }
+          background:linear-gradient(180deg,var(--giallo),var(--arancio)) }
 .stemma b { position:absolute; bottom:-2px; right:-2px; font-size:16px; color:#fff;
-            background:var(--viola-scuro); border-radius:999px; padding:2px 7px;
+            background:var(--inchiostro); border-radius:999px; padding:2px 7px;
             box-shadow:0 2px 6px #0002 }
 .chi { flex:1; min-width:0 }
 .chi h2 { font-size:20px }
-.titolo { font-size:13px; font-weight:800; color:var(--viola); margin-bottom:5px }
+.titolo { font-size:13px; font-weight:600; color:var(--accento); margin-bottom:5px }
 
 /* ---- barre ---- */
-.barretta { height:9px; border-radius:999px; background:#e7dcf7; overflow:hidden }
+.barretta { height:9px; border-radius:999px; background:var(--filo); overflow:hidden }
 .barretta.grande { height:12px }
 .barretta.piccola { height:6px; width:100%; margin-top:5px }
 .barretta i { display:block; height:100%; border-radius:999px;
@@ -185,58 +184,57 @@ const pct = q => Math.round(q * 100) + '%'
 
 /* ---- strisce dei numeri ---- */
 .strisce { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; width:100% }
-.dato { background:var(--carta); border-radius:15px; padding:9px 4px;
-        box-shadow:0 3px 0 #e9ddf5 }
-.dato b { display:block; font-size:15px; font-weight:900; color:var(--viola-scuro) }
-.dato i { font-style:normal; font-size:10.5px; color:var(--tenue); line-height:1.15;
+.dato { background:var(--superficie); border-radius:var(--raggio); padding:9px 4px;
+        box-shadow:var(--ombra) }
+.dato b { display:block; font-size:15px; font-weight:600; color:var(--inchiostro) }
+.dato i { font-style:normal; font-size:10.5px; color:var(--grigio); line-height:1.15;
           display:block; margin-top:2px }
 
 /* ---- vetrina delle ultime medaglie ---- */
 .vetrina { display:flex; gap:8px; width:100%; overflow-x:auto; padding-bottom:3px }
 .ricordo { flex:none; display:flex; align-items:center; gap:7px; padding:8px 12px 8px 9px;
-           border-radius:999px; background:linear-gradient(120deg,#fff6e0,#fffffff0);
-           box-shadow:0 3px 0 #f0e2c8 }
+           border-radius:999px; background:#fff8e6;
+           box-shadow:var(--ombra) }
 .ricordo b { font-size:24px }
-.ricordo i { font-style:normal; font-size:11.5px; font-weight:800; text-align:left;
-             color:var(--viola-scuro); white-space:nowrap }
-.ricordo small { font-weight:600; color:var(--tenue); font-size:10px }
+.ricordo i { font-style:normal; font-size:11.5px; font-weight:600; text-align:left;
+             color:var(--inchiostro); white-space:nowrap }
+.ricordo small { font-weight:600; color:var(--grigio); font-size:10px }
 
 /* ---- materie ---- */
 .materie { display:flex; flex-direction:column; gap:9px; width:100% }
-.materia { background:var(--carta); border-radius:17px; padding:11px 13px;
-           box-shadow:0 4px 0 #e9ddf5; text-align:left }
+.materia { background:var(--superficie); border-radius:var(--raggio); padding:11px 13px;
+           box-shadow:var(--ombra); text-align:left }
 .capo { display:flex; align-items:center; gap:8px; margin-bottom:7px }
 .capo .ico { font-size:19px }
-.capo b { font-size:14.5px; font-weight:900; color:var(--viola-scuro) }
-.conta { font-size:12px; font-weight:800; color:var(--tenue) }
+.capo b { font-size:14.5px; font-weight:600; color:var(--inchiostro) }
+.conta { font-size:12px; font-weight:600; color:var(--grigio) }
 .sotto { text-align:left; margin-top:6px }
 /* le dieci tabelline: il numero finché non la sai, la stella quando la sai */
 .stelline { display:flex; gap:4px; margin-top:7px; flex-wrap:wrap }
 .stelline span { width:22px; height:22px; border-radius:7px; display:grid; place-items:center;
-                 font-size:11.5px; font-weight:900; color:var(--tenue); background:#efe8fa }
+                 font-size:11.5px; font-weight:600; color:var(--grigio); background:var(--tessera) }
 .stelline span.presa { background:linear-gradient(140deg,#fff3cf,#ffe08a); font-size:13px;
                        box-shadow:0 1px 0 #e6c976 }
 
 /* ---- traguardi ---- */
 .tabs { display:flex; gap:7px; flex-wrap:wrap; justify-content:center }
-.tabs button { padding:8px 15px; border-radius:999px; background:#ffffffcc; font-size:13px;
-               font-weight:800; color:var(--viola-scuro); box-shadow:0 3px 0 #d4dce6 }
-.tabs button.on { background:linear-gradient(180deg,var(--viola),var(--viola-scuro)); color:#fff;
-                  box-shadow:0 3px 0 #2c4283 }
+.tabs button { padding:8px 15px; border-radius:999px; background:var(--superficie); font-size:13px;
+               font-weight:600; color:var(--inchiostro); box-shadow:var(--ombra) }
+.tabs button.on { background:var(--inchiostro); color:#fff }
 .area { width:100%; text-align:left }
 .area-capo { margin:6px 0 8px }
-.liv { font-size:12px; font-weight:900; color:var(--arancio) }
+.liv { font-size:12px; font-weight:600; color:var(--arancio) }
 .griglia { display:grid; grid-template-columns:repeat(auto-fill,minmax(146px,1fr)); gap:8px }
-.badge { background:var(--carta); border-radius:16px; padding:10px 11px 9px;
-         box-shadow:0 4px 0 #e9ddf5; display:flex; flex-direction:column; gap:2px }
-.badge.oro { background:linear-gradient(140deg,#fff3cf,#fffffff2); box-shadow:0 4px 0 #efdca6 }
+.badge { background:var(--superficie); border-radius:var(--raggio); padding:10px 11px 9px;
+         box-shadow:var(--ombra); display:flex; flex-direction:column; gap:2px }
+.badge.oro { background:linear-gradient(140deg,#fff3cf,var(--superficie)) }
 .badge.spento { opacity:.62; filter:grayscale(.85) }
 /* la faccia si stringe sull'emoji: dentro una colonna flex un inline-block
    diventa blocco e la medaglia finirebbe in fondo alla riga, non sull'emoji */
 .faccia { font-size:27px; line-height:1.1; position:relative; align-self:flex-start }
 .faccia em { font-style:normal; font-size:15px; position:absolute; bottom:-2px; right:-11px }
-.badge b { font-size:13.5px; font-weight:900; color:var(--viola-scuro) }
-.badge i { font-style:normal; font-size:11px; color:var(--tenue); line-height:1.3 }
-.badge small { font-size:10px; color:var(--tenue); font-weight:700; margin-top:3px }
+.badge b { font-size:13.5px; font-weight:600; color:var(--inchiostro) }
+.badge i { font-style:normal; font-size:11px; color:var(--grigio); line-height:1.3 }
+.badge small { font-size:10px; color:var(--grigio); font-weight:600; margin-top:3px }
 .finale { max-width:32ch; margin-top:6px }
 </style>

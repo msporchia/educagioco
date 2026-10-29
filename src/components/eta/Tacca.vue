@@ -28,14 +28,14 @@ defineEmits(['muovi'])
 
 <style scoped>
 .tacca { display:flex; align-items:center; gap:10px; justify-content:space-between;
-         background:#fff; border-radius:16px; padding:8px 10px;
-         box-shadow:0 2px 8px #0000000f }
-.freccia { border:none; background:#f0eaff; color:#5b3fa8; font-size:20px; line-height:1;
-           width:46px; height:46px; border-radius:14px; cursor:pointer; font-family:inherit }
+         background:#fff; border-radius:var(--raggio); padding:8px 10px;
+         box-shadow:var(--ombra) }
+.freccia { border:none; background:var(--tessera); color:var(--inchiostro); font-size:20px; line-height:1;
+           width:46px; height:46px; border-radius:var(--raggio); cursor:pointer; font-family:inherit }
 .freccia:disabled { opacity:.3; cursor:default }
 .freccia:active:not(:disabled) { transform:translateY(1px) }
 .numero { flex:1; text-align:center; display:flex; flex-direction:column; gap:1px;
-          color:var(--viola-scuro, #3b2b6b) }
+          color:var(--viola-scuro, var(--inchiostro)) }
 .numero b { font-size:19px }
-.numero em { font-style:normal; font-size:11px; color:#7a7a8a }
+.numero em { font-style:normal; font-size:11px; color:var(--grigio) }
 </style>

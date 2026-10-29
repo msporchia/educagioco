@@ -36,28 +36,28 @@ defineEmits(['apri'])
 </template>
 
 <style scoped>
-.voce { display:flex; flex-direction:column; gap:3px; background:#fff; border-radius:14px;
+.voce { display:flex; flex-direction:column; gap:3px; background:#fff; border-radius:var(--raggio);
         padding:9px 12px; box-shadow:0 2px 8px #0000000d }
 .tit { display:flex; align-items:baseline; gap:7px;
-       font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:#8a8a99;
-       font-weight:800 }
+       font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:var(--grigio);
+       font-weight:600 }
 .tit > span:first-child { flex:1 }
-.tit > b { font-size:13px; font-weight:800; color:var(--viola-scuro);
+.tit > b { font-size:13px; font-weight:600; color:var(--inchiostro);
            text-transform:none; letter-spacing:0 }
-.tit > em { font-style:normal; font-size:13px; font-weight:800; color:var(--viola) }
-.tit > b.male { color:#8c2f2f; background:#ffdede; padding:1px 7px; border-radius:8px;
+.tit > em { font-style:normal; font-size:13px; font-weight:600; color:var(--accento) }
+.tit > b.male { color:#8c2f2f; background:#ffdede; padding:1px 7px; border-radius:var(--raggio-piccolo);
                 font-size:11px }
 
-.frase { font-size:13.5px; font-weight:650; line-height:1.4 }
-.frase.male { color:#8c2f2f; font-size:12.5px; font-weight:700 }
-.spiega { font-style:normal; font-size:11px; color:#9a9aa8; line-height:1.3; margin:-1px 0 3px }
+.frase { font-size:13.5px; font-weight:600; line-height:1.4 }
+.frase.male { color:#8c2f2f; font-size:12.5px; font-weight:600 }
+.spiega { font-style:normal; font-size:11px; color:var(--grigio); line-height:1.3; margin:-1px 0 3px }
 
 /* si tocca tutto il riquadro, non solo il titolo: su un telefono è l'unico bersaglio comodo */
 .voce.apribile { cursor:pointer; -webkit-tap-highlight-color:transparent }
 .voce.apribile:active { transform:scale(.995) }
-.voce.apribile.aperta { box-shadow:0 2px 10px #0000001a, inset 0 0 0 2px #f0eaff }
+.voce.apribile.aperta { box-shadow:0 2px 10px #0000001a, inset 0 0 0 2px var(--tessera) }
 
-.voce.muta { background:#faf9fd; box-shadow:none; border:1px dashed #e4e0ee }
-.voce.muta .tit > b { color:#9a9aa8 } /* quello che non si apre si vede che non si apre */
+.voce.muta { background:var(--tessera); box-shadow:none; border:1px dashed #e4e0ee }
+.voce.muta .tit > b { color:var(--grigio) } /* quello che non si apre si vede che non si apre */
 .voce.muta .frase { color:#6a6a7a; font-weight:600 }
 </style>

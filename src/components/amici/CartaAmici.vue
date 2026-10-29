@@ -102,12 +102,15 @@ function toglila(a) {
 <style scoped>
 .carta.amici-carta { display:flex; flex-direction:column; align-items:stretch; gap:10px; text-align:left }
 .testa { display:flex; align-items:center; gap:12px }
-.come summary { font-size:13px; font-weight:700; color:var(--viola); cursor:pointer; min-height:32px }
-.come p { margin:4px 0 0; font-size:12.5px; line-height:1.45; color:var(--tenue) }
+.testa .ico { font-size:22px }
+.testa b { font-size:14.5px; font-weight:600; color:var(--inchiostro) }
+.carta > i { font-style:normal; font-size:12.5px; line-height:1.45; color:var(--grigio) }
+.come summary { font-size:13px; font-weight:600; color:var(--inchiostro); cursor:pointer; min-height:32px }
+.come p { margin:4px 0 0; font-size:12.5px; line-height:1.45; color:var(--grigio) }
 .elenco { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px }
 .elenco li { display:flex; align-items:center; gap:10px; justify-content:space-between }
-.codice { display:flex; flex-direction:column; align-items:center; gap:6px; padding:10px; border-radius:12px; background:#fffbe8 }
-.grande { font-size:34px; font-weight:900; letter-spacing:6px }
+.codice { display:flex; flex-direction:column; align-items:center; gap:6px; padding:10px; border-radius:var(--raggio-piccolo); background:var(--tessera) }
+.grande { font-size:34px; font-weight:700; letter-spacing:6px; color:var(--inchiostro) }
 .riga { display:flex; gap:8px }
 .riga .nome { flex:1; min-width:0; text-transform:uppercase }
 </style>

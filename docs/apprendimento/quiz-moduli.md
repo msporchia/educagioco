@@ -154,6 +154,7 @@ npm run quiz:banco                       # tutti, senza browser
 npm run quiz:banco orologio --mostra 3
 npm run quiz:eta                         # chi vede cosa per età → chi-vede-cosa.md
 npm run quiz:livelli                     # rigenera livelli-delle-domande.md
+npm run quiz:parole-sillabe              # rigenera src/quiz/dati/sillabe-parole-vere.js
 node test/esegui.mjs quiz --niente-build
 ```
 
@@ -172,6 +173,13 @@ Due difetti che nessun controllo trova:
   un passo. Si chiede *in che stagione cade dicembre*; le date esatte
   stanno nell'`aiuto`; a memoria solo quello che ha una filastrocca (i
   giorni dei mesi) o che è la materia stessa (contrari, participi).
+- **Un falso che è una parola vera** (`sil:manca`: «ca-__» con «ni» fa
+  «cani», oltre a «casa»): il modulo scarta i falsi che completano una
+  parola dell'elenco `src/quiz/dati/sillabe-parole-vere.js`, **generato**
+  da `npm run quiz:parole-sillabe` (prova ogni sillaba del mazzo contro
+  `/usr/share/dict/italian`; `-- --controlla` non scrive). Si rilancia
+  dopo aver toccato `DIVISE`. Sta fuori da `moduli/` perché il registro
+  prende ogni file di quella cartella per un modulo.
 
 ### `Prova.vue`, i quattro modi di guardare
 

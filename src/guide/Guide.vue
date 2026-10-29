@@ -23,7 +23,7 @@ async function mandaIlLink () {
 </script>
 
 <template>
-  <div class="schermo">
+  <div class="schermo pulito">
     <Barra :titolo="aperta ? aperta.titolo : 'Come funziona'" :audio="false"
            @indietro="aperta ? (aperta = null, esito = '') : $emit('vai','home')" />
 
@@ -54,13 +54,13 @@ async function mandaIlLink () {
 <style scoped>
 .corpo { flex:1; overflow-y:auto; padding:12px 14px 26px;
          display:flex; flex-direction:column; gap:10px;
-         width:min(560px,100%); margin:0 auto }
+         width:min(var(--colonna),100%); margin:0 auto }
 .intro { max-width:none; margin-bottom:4px }
 
 .manda { margin-top:8px; display:flex; flex-direction:column; gap:3px; padding:13px;
-         border-radius:16px; background:#ffffffb0; box-shadow:0 2px 8px #8593a81f }
-.manda b { font-size:14.5px; color:var(--viola-scuro) }
-.manda i { font-size:12px; color:var(--tenue); font-style:normal;
+         border-radius:var(--raggio); background:var(--superficie); box-shadow:var(--ombra) }
+.manda b { font-size:14.5px; font-weight:600; color:var(--inchiostro) }
+.manda i { font-size:12px; color:var(--grigio); font-style:normal;
            overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .esito { margin-top:2px; -webkit-user-select:text; user-select:text;
          -webkit-touch-callout:default }

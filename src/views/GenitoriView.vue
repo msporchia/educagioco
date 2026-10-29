@@ -1,6 +1,6 @@
 <script setup>
 /* Schermata dei genitori, dietro il PIN (vedi docs/genitori/). */
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { state, esportaTutto, resetPlayer, nomeCorrente,
          rinominaGiocatore, eliminaGiocatore, cestinaOra, ripristinaCestinato,
          spostaLEta,
@@ -72,6 +72,16 @@ async function nonAvvertire() {
 async function hoLetto() {
   await segnaLetta()
   posta.value = await laPosta()
+}
+// «Vai a…» di una nota: la scheda da sola non basta, la carta sta sotto la posta e fuori schermo
+const DOVE = { nascita: '[data-nascita]', amici: '[data-flag="amici"]' }
+const DOVE_DI_PRIMA = { 'Vai a «Quando è nato»': 'nascita', 'Apri le impostazioni': 'amici' }   // note salvate senza `dove`
+async function vaiDallaPosta(azione) {
+  scheda.value = azione.scheda
+  await nextTick()
+  const dove = DOVE[azione.dove || DOVE_DI_PRIMA[azione.testo]]
+  const meta = (dove && document.querySelector(dove)) || document.querySelector('.barra-giu')?.nextElementSibling
+  meta?.scrollIntoView?.({ block: dove ? 'center' : 'start', behavior: 'smooth' })
 }
 // 'nuovo' mentre si sceglie il codice, 'ripeti' mentre lo si conferma
 const modo = ref('')
@@ -503,7 +513,7 @@ async function rimetti(v) {
   <Benvenuto v-if="aggiungendo" :primo="false"
              @fatto="fattoIlBambino" @lasciaStare="aggiungendo = false" />
 
-  <div v-else class="schermo">
+  <div v-else class="schermo pulito">
     <Barra titolo="Impostazioni" :audio="false" @indietro="$emit('vai','home')" />
 
     <!-- il codice dimenticato: stesso tastierino, stessa attesa dopo uno
@@ -590,12 +600,12 @@ async function rimetti(v) {
       <div v-if="cePosta" class="posta" data-posta>
         <h2>C'è una cosa da dirti</h2>
 
-        <div v-for="a in posta.avvisi" :key="a.quando" class="nota avviso">
+        <div v-for="a in posta.avvisi" :key="a.quando" class="nota dal-telefono">
           <b>Su questo telefono</b>
           <p>{{ a.testo }}</p>
           <small>{{ quando(a.quando) }}</small>
           <button v-if="a.azione" class="bottone chiaro" data-azione="posta-vai"
-                  @click="scheda = a.azione.scheda">{{ a.azione.testo }}</button>
+                  @click="vaiDallaPosta(a.azione)">{{ a.azione.testo }}</button>
           <button v-if="a.silenzia" class="bottone chiaro" data-azione="non-avvertire" @click="nonAvvertire">Non avvertirmi più</button>
         </div>
 
@@ -604,7 +614,7 @@ async function rimetti(v) {
           <p v-html="inGrassetto(n.testo)"></p>
           <small>{{ n.quando }}</small>
           <button v-if="n.azione" class="bottone chiaro" data-azione="posta-vai"
-                  @click="scheda = n.azione.scheda">{{ n.azione.testo }}</button>
+                  @click="vaiDallaPosta(n.azione)">{{ n.azione.testo }}</button>
         </div>
 
         <!-- niente ✕: solo «Ho letto», che vuole il codice -->
@@ -1030,32 +1040,30 @@ async function rimetti(v) {
 /* non è un interruttore né una carta: è una frase col rimando */
 
 .pallini { display:flex; gap:14px; margin:4px 0 2px }
-.pallini span { width:15px; height:15px; border-radius:50%; background:#ffffffcc;
-                box-shadow:inset 0 0 0 2px #d4dce6; transition:.12s }
-.pallini span.pieno { background:var(--viola); box-shadow:none; transform:scale(1.1) }
+.pallini span { width:15px; height:15px; border-radius:50%; background:var(--superficie);
+                box-shadow:inset 0 0 0 2px var(--filo); transition:.12s }
+.pallini span.pieno { background:var(--inchiostro); box-shadow:none; transform:scale(1.1) }
 
 /* un blocco che si legge, non una carta; il colore è quello dei nastri di casa, mai rosso d'allarme */
-.posta { width:100%; max-width:400px; margin:0 0 16px; text-align:left }
+.posta { width:100%; max-width:var(--colonna); margin:0 0 16px; text-align:left }
 .posta h2 { margin:0 0 8px }
-.nota { background:#eef4ff; border:2px solid #cfe0f8; border-radius:14px;
-        padding:11px 13px; margin-bottom:9px }
-.nota.avviso { background:#fff2ee; border-color:#f6cdbe }
-.nota b { display:block; font-size:14.5px; margin-bottom:4px }
+.nota { background:#eef4ff; border-radius:var(--raggio); padding:11px 13px; margin-bottom:9px }
+.nota.dal-telefono { background:#fff2ee }   /* non «avviso»: style.css lo stringe a 32ch */
+.nota b { display:block; font-size:14px; font-weight:600; color:var(--inchiostro); margin-bottom:4px }
 .nota p { margin:0; font-size:13px; line-height:1.45 }
-.nota small { display:block; margin-top:6px; font-size:11px; opacity:.6 }
+.nota small { display:block; margin-top:6px; font-size:11px; color:var(--grigio) }
 .nota .bottone { margin-top:9px }
 
 /* più grande del testo intorno: è la cosa a cui si sta rispondendo */
 .domanda { font-size:16px; font-weight:700; margin:2px 0 12px; text-align:center; max-width:300px }
 
 .tastierino { display:grid; grid-template-columns:repeat(3,1fr); gap:11px; width:100%; max-width:260px }
-.tasto { height:58px; border-radius:16px; background:#ffffffdd; color:var(--viola-scuro);
-         font-size:23px; font-weight:800; box-shadow:0 4px 0 #d4dce6 }
-.tasto:active { transform:translateY(2px); box-shadow:0 2px 0 #d4dce6 }
-.tasto.canc { font-size:19px; color:var(--tenue) }
+.tasto { height:58px; border-radius:var(--raggio); background:var(--superficie); color:var(--inchiostro);
+         font-size:23px; font-weight:600; box-shadow:var(--ombra) }
+.tasto:active { transform:scale(.97); background:var(--tessera) }
+.tasto.canc { font-size:19px; color:var(--grigio) }
 /* resta dov'è, spento: toglierlo farebbe pensare a una schermata rotta */
 .tastierino.spento { opacity:.45 }
-.tastierino.spento .tasto { box-shadow:0 4px 0 #d4dce6 }
 
 /* niente rosso: è una porta chiusa, non un errore. La barretta si muove
    perché due secondi muti sono indistinguibili da un tasto rotto */
@@ -1076,40 +1084,40 @@ async function rimetti(v) {
 .carta.avviso-copia { background:#fff1d6; color:#5b4300 }
 .carta.avviso-copia i { color:#7a5a10 }
 .barra-giu { position:fixed; left:0; right:0; bottom:0; z-index:60; display:flex; gap:4px; padding:6px 8px calc(6px + env(safe-area-inset-bottom));
-             background:#fffffff2; border-top:1px solid #e6dfd0; backdrop-filter:blur(6px) }
+             background:#fffffff2; border-top:1px solid var(--filo); backdrop-filter:blur(6px) }
 .barra-giu button { flex:1; display:flex; flex-direction:column; align-items:center; gap:1px; min-height:50px; padding:4px 0; border:0; border-radius:12px;
-                    font-size:11px; font-weight:800; color:var(--tenue); background:none; touch-action:manipulation }
+                    font-size:11px; font-weight:600; color:var(--grigio); background:none; touch-action:manipulation }
 .barra-giu button span { font-size:20px; line-height:1 }
-.barra-giu button.ora { color:var(--viola); background:#eeebff }
+.barra-giu button.ora { color:var(--inchiostro); background:var(--tessera) }
 .centro { padding-bottom:84px }      /* la barra in basso non copre l'ultima carta */
-.tendina { flex:none; width:100%; max-width:400px; border-radius:16px; background:#ffffffaa; overflow:hidden }
-.tendina > summary { padding:14px 16px; font-weight:800; cursor:pointer; list-style:none; display:flex; align-items:center; min-height:44px }
+.tendina { flex:none; width:100%; max-width:var(--colonna); border-radius:var(--raggio); background:var(--superficie); box-shadow:var(--ombra); overflow:hidden }
+.tendina > summary { padding:13px 14px; font-size:14px; font-weight:600; color:var(--inchiostro); cursor:pointer; list-style:none; display:flex; align-items:center; min-height:44px }
 .tendina > summary::-webkit-details-marker { display:none }
-.tendina > summary::after { content:"▸"; margin-left:auto; color:#b9b4a4 }
+.tendina > summary::after { content:"▸"; margin-left:auto; color:#a3a9b8 }
 .tendina[open] > summary::after { content:"▾" }
 .tendina > .carte, .tendina > h2, .tendina > p, .tendina > template { margin-left:10px; margin-right:10px }
 .tendina > .carte { width:auto; padding-bottom:12px }
 .tendina.senza-ritaglio { overflow:visible }   /* il cartello «Applica» della manopola è sticky: un overflow lo ancora alla tendina */
-.tendina.delicata > summary { color:#b4302e }
+.tendina.delicata > summary { color:#c43b4f }
 
-.schede { display:flex; gap:6px; width:100%; max-width:400px; margin:-4px 0 2px }
-.schede button { flex:1; padding:11px 6px; border-radius:14px; font-size:14px; font-weight:800;
-                 color:var(--tenue); background:#ffffff88 }
-.schede button.ora { background:var(--viola); color:#fff; box-shadow:0 4px 0 #00000018 }
+.schede { display:flex; gap:6px; width:100%; max-width:var(--colonna); margin:-4px 0 2px }
+.schede button { flex:1; padding:11px 6px; border-radius:var(--raggio); font-size:14px; font-weight:600;
+                 color:var(--grigio); background:var(--superficie); box-shadow:var(--ombra) }
+.schede button.ora { background:var(--inchiostro); color:#fff }
 .schede button:active { transform:translateY(2px) }
 
-h3.materia { margin:10px 0 -2px; font-size:13px; font-weight:900; letter-spacing:.6px;
-             text-transform:uppercase; color:var(--tenue); align-self:flex-start;
-             width:100%; max-width:400px }
+h3.materia { margin:10px 0 -2px; font-size:12px; font-weight:600; letter-spacing:.6px;
+             text-transform:uppercase; color:var(--grigio); align-self:flex-start;
+             width:100%; max-width:var(--colonna) }
 
-.carte { display:flex; flex-direction:column; gap:11px; width:100%; max-width:400px }
+.carte { display:flex; flex-direction:column; gap:8px; width:100%; max-width:var(--colonna) }
 .carta { display:grid; grid-template-columns:auto 1fr; grid-template-rows:auto auto;
-         gap:2px 14px; align-items:center; text-align:left; padding:15px 18px;
-         border-radius:18px; background:var(--carta); box-shadow:0 4px 14px #8593a822 }
-.carta .ico { grid-row:1/3; font-size:29px }
-.carta b { font-size:16px; font-weight:800; color:var(--viola-scuro) }
-.carta i { font-style:normal; font-size:12.5px; color:var(--tenue) }
-.carta:active { transform:translateY(2px) }
+         gap:2px 12px; align-items:center; text-align:left; padding:12px 14px;
+         border-radius:var(--raggio); background:var(--superficie); box-shadow:var(--ombra) }
+.carta .ico { grid-row:1/3; font-size:24px }
+.carta b { font-size:14.5px; font-weight:600; color:var(--inchiostro) }
+.carta i { font-style:normal; font-size:12px; color:var(--grigio) }
+.carta:active { transform:scale(.99) }
 
 /* l'interruttore: la leva a destra dice acceso/spento senza leggere */
 .carta.interruttore { grid-template-columns:auto 1fr auto }
@@ -1123,32 +1131,31 @@ h3.materia { margin:10px 0 -2px; font-size:13px; font-weight:900; letter-spacing
 /* una riga in più: l'esempio della domanda che sparisce spegnendola */
 .carta.sapere { grid-template-rows:auto auto auto; padding:12px 16px }
 .carta.sapere .ico, .carta.sapere .leva { grid-row:1/4 }
-.carta.sapere small { font-size:11.5px; color:var(--tenue); opacity:.85 }
+.carta.sapere small { font-size:11.5px; color:var(--grigio) }
 .carta.sapere.spento { opacity:.62 }
 
 /* sta sotto la sua carta, non a fianco: si legge come "dentro questo" */
 .dettaglio-tasto { align-self:flex-start; margin:-6px 0 0 14px; padding:8px 14px;
                    min-height:40px; border-radius:999px;
-                   font-size:13px; font-weight:750; color:var(--viola-scuro);
-                   background:#8593a81f;
+                   font-size:13px; font-weight:600; color:var(--inchiostro);
+                   background:var(--tessera);
                    display:flex; align-items:center; gap:8px }
-.dettaglio-tasto em { font-style:normal; font-size:11px; font-weight:700; color:#b23a5a;
-                      background:#b23a5a1a; border-radius:999px; padding:2px 7px }
+.dettaglio-tasto em { font-style:normal; font-size:11px; font-weight:700; color:#c43b4f;
+                      background:#c43b4f1a; border-radius:999px; padding:2px 7px }
 .dettaglio { display:flex; flex-direction:column; gap:1px; margin:-4px 0 4px 14px;
-             border-radius:14px; overflow:hidden; background:#8593a81a }
+             border-radius:var(--raggio); overflow:hidden; background:var(--filo) }
 .dettaglio .voce { display:flex; align-items:center; justify-content:space-between; gap:10px;
-                   width:100%; padding:9px 12px; text-align:left; background:var(--carta);
-                   font-size:13.5px; font-weight:700; color:var(--viola-scuro) }
+                   width:100%; padding:9px 12px; text-align:left; background:var(--superficie);
+                   font-size:13.5px; font-weight:600; color:var(--inchiostro) }
 .dettaglio .voce-chi { flex:1; min-width:0 }
-.dettaglio .voce-chi b { display:block; font-size:13.5px; font-weight:750 }
-.dettaglio .voce-chi i { display:block; font-style:normal; font-size:11px; color:var(--tenue);
-                         font-weight:600 }
+.dettaglio .voce-chi b { display:block; font-size:13.5px; font-weight:600 }
+.dettaglio .voce-chi i { display:block; font-style:normal; font-size:11px; color:var(--grigio) }
 /* un intervallo, non una media: la tipologia esce a più gradi di difficoltà */
 .dettaglio .voce-chi i .pallino { display:inline-block; width:8px; height:8px;
                                   border-radius:50%; margin-right:2px; vertical-align:-1px }
 .dettaglio .voce.spento .voce-chi i .pallino { opacity:.45 }
 .dettaglio .voce:active { transform:translateY(1px) }
-.dettaglio .voce.spento { color:var(--tenue) }
+.dettaglio .voce.spento { color:var(--grigio) }
 .dettaglio .voce .leva { flex:none; width:38px; height:22px; border-radius:999px;
                          background:#38c172; position:relative; transition:.15s }
 .dettaglio .voce .pallina { position:absolute; top:3px; left:19px; width:16px; height:16px;
@@ -1156,28 +1163,28 @@ h3.materia { margin:10px 0 -2px; font-size:13px; font-weight:900; letter-spacing
                             box-shadow:0 1px 3px #00000033 }
 .dettaglio .voce.spento .leva { background:#c9c2d6 }
 .dettaglio .voce.spento .pallina { left:3px }
-.carta.sapere.spento i { color:#b23a5a }
+.carta.sapere.spento i { color:#c43b4f }
 
 /* i due tasti che non spengono niente: stesso rientro del dettaglio, sotto la sua carta */
 .azioni-sapere { display:flex; align-items:center; gap:4px; flex-wrap:wrap;
                  margin:-6px 0 0 14px }
 .azioni-sapere .dettaglio-tasto { margin:0 }
-.prova-tasto { padding:8px 14px; min-height:40px; font-size:13px; font-weight:750;
-               color:var(--viola); background:#7c5cff1f; border-radius:999px }
+.prova-tasto { padding:8px 14px; min-height:40px; font-size:13px; font-weight:600;
+               color:var(--inchiostro); background:var(--tessera); border-radius:999px }
 .prova-tasto:active { transform:translateY(1px) }
 /* qui resta solo il triangolino: il nome lo dice l'aria-label */
-.dettaglio .voce-riga { display:flex; align-items:center; gap:2px; background:var(--carta) }
+.dettaglio .voce-riga { display:flex; align-items:center; gap:2px; background:var(--superficie) }
 .dettaglio .voce-riga .voce { flex:1; min-width:0 }
 .prova-tasto.solo-segno { flex:none; padding:10px 14px; font-size:12px; border-radius:0;
-                          background:none; color:var(--viola) }
+                          background:none; color:var(--inchiostro) }
 
 .carta.gioco { padding:11px 16px }
 .carta.gioco .ico { font-size:25px }
 .carta.gioco.spento { opacity:.62 }
 /* spento da un macrogruppo, non dai genitori: la leva resta ferma */
-.carta.gioco.bloccato i { color:#b23a5a }
+.carta.gioco.bloccato i { color:#c43b4f }
 .carta.gioco.bloccato .leva { background:#e3dce8 }
-.carta.gioco.prova b small { margin-left:6px; font-size:10px; font-weight:900; letter-spacing:.4px;
+.carta.gioco.prova b small { margin-left:6px; font-size:10px; font-weight:700; letter-spacing:.4px;
                              text-transform:uppercase; color:#8a6a1f; background:#fff2cf;
                              border-radius:7px; padding:2px 6px; vertical-align:middle }
 
@@ -1187,13 +1194,13 @@ h3.materia { margin:10px 0 -2px; font-size:13px; font-weight:900; letter-spacing
 .lista-guasti { grid-column:1/3; margin:8px 0 0; padding:0; list-style:none;
                 display:flex; flex-direction:column; gap:7px }
 .lista-guasti li { display:flex; flex-direction:column; gap:1px; padding:7px 10px;
-                   background:#fff0e6; border-radius:11px }
+                   background:#fff0e6; border-radius:var(--raggio-piccolo) }
 .lista-guasti b { font-size:12px; color:#b4603f }
 .lista-guasti span { font-size:11.5px; line-height:1.35; word-break:break-word;
                      font-family:"Emoji Gioco", ui-monospace,monospace; color:var(--viola-scuro) }
 .lista-guasti small { font-size:10.5px; color:var(--tenue); opacity:.8 }
 .carta.guasti .riga { grid-column:1/3; justify-content:flex-start; margin-top:9px }
-.carta.guasti .bottone { font-size:14px; padding:9px 15px; box-shadow:0 4px 0 #d4dce6 }
+.carta.guasti .bottone { font-size:14px; padding:9px 15px }
 
 /* l'unica carta che è un link: senza queste regole prenderebbe blu e sottolineatura */
 .carta.segnala { text-decoration:none; color:inherit }
@@ -1205,62 +1212,58 @@ a.bottone { text-decoration:none; display:inline-flex; align-items:center;
 .carta.sapere.quanto { display:flex; flex-direction:column; gap:5px; align-items:flex-start;
                        text-align:left; cursor:default }
 .carta.sapere.quanto.spento { opacity:.62 }
-.carta.sapere.quanto > em { font-style:normal; font-size:11px; color:var(--tenue) }
+.carta.sapere.quanto > em { font-style:normal; font-size:11px; color:var(--grigio) }
 .livelli { display:flex; gap:5px; flex-wrap:wrap; margin-top:3px }
 .livello { padding:7px 12px; min-height:36px; border:none; border-radius:999px;
-           font-family:inherit; font-size:12.5px; font-weight:750; cursor:pointer;
-           color:var(--viola-scuro); background:#eceff4 }
-.livello.on { color:#fff; background:linear-gradient(180deg,var(--viola),var(--viola-scuro)) }
-.livello.freccia { background:#eef2ff; color:var(--viola) }
+           font-family:inherit; font-size:12.5px; font-weight:600; cursor:pointer;
+           color:var(--inchiostro); background:var(--tessera) }
+.livello.on { color:#fff; background:var(--inchiostro) }
+.livello.freccia { background:var(--tessera); color:var(--inchiostro) }
 .livello:disabled { opacity:.4 }
-.livello.spegni.on { background:linear-gradient(180deg,#b23a5a,#8d2a45) }
+.livello.spegni.on { background:#c43b4f }
 /* il consiglio è un fatto misurato, non una descrizione: si vede che è un'altra cosa */
-.carta.sapere.quanto > em.consiglio { color:var(--viola-scuro); font-weight:650 }
-.fai { border:none; background:none; font-family:inherit; font-size:11px; font-weight:800;
-       color:var(--viola); text-decoration:underline; padding:2px 0; cursor:pointer }
+.carta.sapere.quanto > em.consiglio { color:var(--inchiostro); font-weight:600 }
+.fai { border:none; background:none; font-family:inherit; font-size:11px; font-weight:600;
+       color:var(--inchiostro); text-decoration:underline; padding:2px 0; cursor:pointer }
 .livello:active { transform:translateY(1px) }
 
 
 /* si vede da lontano che è quella che fa danni */
-.carta.pericolo b { color:#b23a5a }
+.carta.pericolo b { color:#c43b4f }
 .carta.pericolo.aperta { display:flex; flex-direction:column; gap:9px; align-items:center;
                          text-align:center; background:#fff0f3 }
 .carta.pericolo.aperta i { max-width:34ch }
-.bottone.rosso { background:linear-gradient(180deg,var(--rosso),#d63a5c); color:#fff;
-                 box-shadow:0 6px 0 #a82a46; font-size:16px; padding:13px 22px }
-.bottone.rosso:active { box-shadow:0 3px 0 #a82a46 }
-.bottone.chiaro { font-size:16px; padding:13px 22px }
+.bottone.rosso { font-size:15px; padding:12px 22px }
 
 /* una riga in più delle altre carte: sotto il nome i suoi tre gesti, a capo se serve */
 .carta.chi-gioca { grid-template-rows:auto auto auto }
 .carta.chi-gioca .ico { grid-row:1/4 }
 .carta.chi-gioca .riga { grid-column:2; justify-content:flex-start; margin-top:7px }
-.carta.chi-gioca .bottone { font-size:14px; padding:9px 15px; box-shadow:0 4px 0 #d4dce6 }
-.carta.chi-gioca .bottone:active { transform:translateY(2px); box-shadow:0 2px 0 #d4dce6 }
+.carta.chi-gioca .bottone { font-size:14px; padding:9px 15px }
 /* colonna intera: le altre carte restano a tre righe */
 .carta.chi-gioca .aspetto-sezione { grid-column:1/3; margin-top:9px;
-  padding-top:9px; border-top:1px solid #8593a822 }
+  padding-top:9px; border-top:1px solid var(--filo) }
 .carta.chi-gioca .aspetto-sezione .mini { text-align:left; margin:0 0 7px }
 /* stessa forma della conferma prima di cancellare, senza il rosso */
 .carta.aperta { display:flex; flex-direction:column; gap:9px; align-items:center; text-align:center }
 .carta.aperta i { max-width:34ch }
 .campo { width:100% }
 .campo .nome {
-  flex:1 1 130px; min-width:0; padding:12px 14px; border:none; border-radius:14px;
+  flex:1 1 130px; min-width:0; padding:12px 14px; border:none; border-radius:var(--raggio-piccolo);
   font-size:17px; font-family:inherit; text-align:center;
-  background:#fff; color:var(--viola-scuro); box-shadow:inset 0 0 0 2px #e3e8ef;
+  background:var(--superficie); color:var(--inchiostro); box-shadow:inset 0 0 0 1px var(--filo);
 }
-.campo .nome:focus { outline:3px solid var(--viola); outline-offset:1px }
+.campo .nome:focus { outline:2px solid var(--inchiostro); outline-offset:1px }
 .campo .bottone { font-size:15px; padding:11px 17px }
 
 /* sbiadita: l'ultima cosa della colonna, non deve competere con un'impostazione */
-.firma { width:100%; max-width:400px; margin:26px 0 6px; padding-top:14px;
-         border-top:1px solid #8593a826; text-align:center }
-.firma p { font-size:12.5px; line-height:1.5; color:var(--tenue); margin:0 }
-.firma b { color:var(--viola-scuro); font-weight:800 }
+.firma { width:100%; max-width:var(--colonna); margin:26px 0 6px; padding-top:14px;
+         border-top:1px solid var(--filo); text-align:center }
+.firma p { font-size:12.5px; line-height:1.5; color:var(--grigio); margin:0 }
+.firma b { color:var(--inchiostro); font-weight:600 }
 .firma .fuori { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:10px 0 }
-.firma .fuori a { font-size:12.5px; font-weight:800; color:var(--viola);
+.firma .fuori a { font-size:12.5px; font-weight:600; color:var(--inchiostro);
                   text-decoration:none; padding:7px 12px; border-radius:999px;
-                  background:#f5f2ff }
+                  background:var(--superficie); box-shadow:inset 0 0 0 1px var(--filo) }
 .firma .fuori a:active { transform:translateY(1px) }
 </style>

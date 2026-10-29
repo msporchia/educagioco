@@ -45,19 +45,19 @@ const doveGioca = a => (a.gioco && GIOCHI[a.gioco] ? `gioca a ${GIOCHI[a.gioco].
 
 <style scoped>
 .velo-amici { position:fixed; inset:0; z-index:120; display:flex; align-items:flex-end; justify-content:center; background:#1b2436aa }
-.foglio { position:relative; width:min(560px,100%); max-height:80vh; overflow:auto; display:flex; flex-direction:column; gap:10px;
+.foglio { position:relative; width:min(calc(var(--colonna) + 32px),100%); max-height:80vh; overflow:auto; display:flex; flex-direction:column; gap:10px;
           padding:16px 16px calc(16px + env(safe-area-inset-bottom)); border-radius:22px 22px 0 0;
-          background:linear-gradient(180deg,#fff9f0,#eef4ef); box-shadow:0 -8px 30px #00000030 }
-h2 { margin:0; text-align:center; font-size:20px }
+          background:var(--fondo); box-shadow:0 -8px 30px #00000030 }
+h2 { margin:0; text-align:center; font-size:17px; font-weight:600; color:var(--inchiostro) }
 .chiudi { position:absolute; top:10px; right:10px; width:44px; height:44px; border:0; border-radius:50%; background:#0000000f; font-size:20px }
 .lista { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px }
-li { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:14px; background:#fff; opacity:.6 }
+li { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:var(--raggio); background:var(--superficie); box-shadow:var(--ombra); opacity:.6 }
 li.su { opacity:1 }
-.pallino { width:12px; height:12px; border-radius:50%; background:#b9b4a4 }
-li.su .pallino { background:#2f9e5b }
+.pallino { width:12px; height:12px; border-radius:50%; background:#c9ced8 }
+li.su .pallino { background:var(--verde) }
 li b { flex:1 }
-li i { font-style:normal; font-size:13px; color:#6b6757 }
-.nota { margin:0; font-size:14px; color:#5b564a; text-align:center }
-.online { display:flex; align-items:center; gap:10px; padding:10px 12px; font-weight:700 }
+li i { font-style:normal; font-size:12px; color:var(--grigio) }
+.nota { margin:0; font-size:13px; color:var(--grigio); text-align:center }
+.online { display:flex; align-items:center; gap:10px; padding:10px 12px; font-weight:600 }
 .online input { width:22px; height:22px }
 </style>
