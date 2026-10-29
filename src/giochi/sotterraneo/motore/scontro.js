@@ -98,11 +98,12 @@ export const MetodiDelloScontro = {
     const f = this.foglio = {
       che: 'scontro', chi: m, campo, fermate: 0, pericolo: null, io: {}, pieni: 0, tirato: false, agguato, sorpresa, apertura: [],
       mosse: campo.map(() => statoDelleMosse()),
-      coda: nuovaFila([{ id: 'eroe', lato: 'eroe', velocita: this.velocita, fatti: primo ? -1 : 0 },
+      coda: nuovaFila([{ id: this.idInFila(), lato: 'eroe', velocita: this.velocita, fatti: primo ? -1 : 0 },
                        ...campo.map((x, i) => ({ id: i, lato: 'mostri', velocita: velocitaDel(x) }))]),
     }
     this.pronta = null
     f.partiti = this.apriConIPreparati(f)   // gli incanti preparati che aprono lo scontro (Rovi, Ruggito, Grido) partono ora
+    if (this.persone.length > 1) this.apriLoScontroInDue(f)   // il compagno è tirato dentro (motore/in-due.js)
     if (agguato) {
       const e = this.colpoDelMostro(m)
       e.agguato = true
@@ -113,7 +114,7 @@ export const MetodiDelloScontro = {
     const r = this.passaIlTurno(f, f.apertura)
     if (r === 'svenuto') return
     if (r === 'fine') { this.chiudi(); return }
-    this.iniziaTurnoEroe(f)
+    this.tocca(f)
   },
 
   vivi(f = this.foglio) { return f && f.campo ? f.campo.filter(x => !x.morto) : [] },
@@ -262,7 +263,7 @@ export const MetodiDelloScontro = {
     if (!f || f.che !== 'scontro') return
     const visti = new Map()
     f.turni = prossimi(f.coda, TURNI_VISIBILI).map(id => {
-      if (id === 'eroe') return { chi: 'eroe', salta: false }
+      if (typeof id === 'string') return f.ioDi ? { chi: 'eroe', salta: false, persona: this.indiceDellId(id) } : { chi: 'eroe', salta: false }
       const x = f.campo[id], k = visti.get(id) || 0
       visti.set(id, k + 1)
       return { chi: x, salta: ((x.stati || {}).fermo || 0) > k }
@@ -284,7 +285,7 @@ export const MetodiDelloScontro = {
     if (!f || f.che !== 'scontro') return 0
     const fatti = new Map()
     let somma = 0
-    for (const id of primaDelSuoProssimo(f.coda, 'eroe')) {
+    for (const id of primaDelSuoProssimo(f.coda, this.idInFila())) {
       const x = f.campo[id]
       const k = fatti.get(id) || 0
       fatti.set(id, k + 1)
@@ -366,12 +367,12 @@ export const MetodiDelloScontro = {
   finisciIlTurno(f, azioni, bersaglio) {
     f.io.gelato = 0   // il gelo di un mago dura il tuo turno: hai agito, ti sei scongelato
     if (!this.vivi(f).length) { this.faiPassi(PASSI_PER_TURNO); this.chiudi(); return this.esitoDello(azioni, bersaglio, { fine: true }) }
-    f.coda = agisci(f.coda, 'eroe')
+    f.coda = agisci(f.coda, this.idInFila())
     const r = this.passaIlTurno(f, azioni)
     this.faiPassi(PASSI_PER_TURNO)   // un turno dell'eroe vale qualche passo dell'orologio: gli incanti preparati calano dopo i colpi dei mostri
     if (r === 'svenuto') return this.esitoDello(azioni, bersaglio, { svenuto: true })
     if (r === 'fine') { this.chiudi(); return this.esitoDello(azioni, bersaglio, { fine: true }) }
-    return this.esitoDello(azioni, bersaglio, { ringhia: this.iniziaTurnoEroe(f) })
+    return this.esitoDello(azioni, bersaglio, { ringhia: this.tocca(f) })
   },
 
   // L'azione dell'eroe quando risponde giusto: sceglie l'abilità preparata (se si può), la paga, ne applica gli effetti a tutti
@@ -431,9 +432,10 @@ export const MetodiDelloScontro = {
   passaIlTurno(f, azioni) {
     for (let giri = 0; giri < 1000; giri++) {
       const a = chiAgisce(f.coda)
-      if (!a || a.lato === 'eroe') return null
+      if (!a || a.lato === 'eroe') { if (a && f.ioDi) f.diTurno = this.indiceDellId(a.id); return null }
       const x = f.campo[a.id]
-      const eventi = this.turnoDelMostro(x)
+      // in due il mostro sceglie chi colpire, e ogni colpo dice chi l'ha preso
+      const eventi = f.ioDi ? this.colpisceIlPiuForte(f, x) : this.turnoDelMostro(x)
       azioni.push(...eventi)
       // l'attacco forte fa aspettare di più (dati/mosse.js, `attesa`): colpisce più forte, non più spesso
       const fatta = eventi.find(e => e.mossa)
@@ -527,7 +529,8 @@ export const MetodiDelloScontro = {
     if (rimandato && x.ossa <= 0) { this.cade(x); evento.caduto = true; return evento }
     this.ferisci(male)
     if (this.vita <= 0 && this.resisti()) this.vita = 1
-    if (this.vita <= 0) { this.svieni(); evento.svenuto = true; return evento }
+    if (this.vita <= 0 && f.ioDi && this.restaInPiedi(f)) { this.cadeATerra(f); evento.aTerra = true; return evento }   // in due
+    if (this.vita <= 0) { if (f.ioDi) this.sviengonoTutti(f); else this.svieni(); evento.svenuto = true; return evento }
     // Bordo a punte: chi ti colpisce si fa male (una parte di quello che ti toglie, almeno uno)
     const spine = this.sempre('spine')
     if (male > 0 && spine > 0 && !ignora) {   // le spine pungono chi tocca, non un incantesimo da lontano
@@ -583,7 +586,7 @@ export const MetodiDelloScontro = {
     return f && f.che === 'scontro' ? this.vivi(f).reduce((a, x) => Math.max(a, this.botta(x)), 0) : 0
   },
   // se quel colpo farebbe svenire la fuga non si offre: non si obbliga a morire
-  puoScappare() { return this.costoFuga() < this.vita },
+  puoScappare() { return this.persone.length === 1 && this.costoFuga() < this.vita },   // in due non si scappa (docs/sotterraneo/in-due.md)
 
   // Dopo la fuga la calma vale per tutti quelli che erano in campo (non immunità: chi resta nella stanza se lo ritrova addosso)
   scappa() {

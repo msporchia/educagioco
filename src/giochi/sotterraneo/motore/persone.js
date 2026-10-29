@@ -12,7 +12,7 @@ export const CAMPI_DELLA_PERSONA = [
   'eroe', 'verso', 'guarda', 'strada', 'mira', 'bersaglio', 'stanzaOra', 'camminati',
   'foglio', 'chiesta', 'contaChieste', 'domande', 'giuste',
   'svenimenti', 'svenimentiQui', 'ultimoSvenimento', 'espPresa', 'eventi', 'trovati', 'cureRifiutate', 'cureTrovate',
-  'vincoloDelBanco',
+  'vincoloDelBanco', 'nome', 'aTerra',
 ]
 
 const METODI = {
