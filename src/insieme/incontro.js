@@ -5,7 +5,10 @@
 // regola = {
 //   versione: una firma di tutto quello che deve essere uguale sui due telefoni (regole, motore),
 //   proponi(scelte): la proposta dell'host (oggetto JSON, con il seme),   accetta(proposta): null se va bene, se no il perché,
-//   crea(proposta): il `motore` del lockstep (lockstep.js), con la partita dentro
+//   crea(proposta, parti): il `motore` del lockstep (lockstep.js), con la partita dentro,
+//   e, per i giochi in cui ognuno porta qualcosa di suo (il sotterraneo: il proprio eroe), anche
+//   presentati(): la parte di chi gioca qui (oggetto JSON),   accettaParte(parte): null se quella dell'altro va bene, se no il perché.
+//   `parti` è allora { host, ospite }: le stesse sui due telefoni
 // }
 import { Canale } from './rete.js'
 import { Lockstep } from './lockstep.js'
@@ -23,6 +26,7 @@ export const PAROLE = {
   indietro: 'l\'altro telefono non risponde più',
   versione: 'uno dei due ha una versione diversa del gioco: aggiornatelo',
   proposta: 'la sfida non è valida',
+  parte: 'l\'eroe dell\'altro non si può portare qui',
   separate: 'le due partite si sono separate',
 }
 
@@ -78,7 +82,7 @@ export class Incontro {
       this.stato = 'trattativa'
       if (this.ruolo === 'host') {
         this.proposta = this.regola.proponi(this.scelte)
-        this.canale.manda({ t: 'inizio', v: this.regola.versione, proposta: this.proposta })
+        this.canale.manda({ t: 'inizio', v: this.regola.versione, proposta: this.proposta, ...this.miaParte() })
       }
     }
     this.alCambio()
@@ -88,20 +92,38 @@ export class Incontro {
     if (!d || typeof d !== 'object') return
     if (this.stato === 'trattativa') {
       if (d.t === 'inizio' && this.ruolo === 'ospite') {
-        const no = d.v !== this.regola.versione ? 'versione' : this.regola.accetta(d.proposta)
+        const no = d.v !== this.regola.versione ? 'versione' : this.regola.accetta(d.proposta) || this.suaParte(d)
         if (no) { this.canale.manda({ t: 'no', motivo: no }); return this.cambia('rotta', no) }
-        this.canale.manda({ t: 'pronto' })
-        this.parti(d.proposta)
-      } else if (d.t === 'pronto' && this.ruolo === 'host') this.parti(this.proposta)
+        const mia = this.miaParte()
+        this.canale.manda({ t: 'pronto', ...mia })
+        this.parti(d.proposta, this.regola.presentati ? { host: d.parte, ospite: mia.parte } : undefined)
+      } else if (d.t === 'pronto' && this.ruolo === 'host') {
+        const no = this.suaParte(d)
+        if (no) { this.canale.manda({ t: 'no', motivo: no }); return this.cambia('rotta', no) }
+        this.parti(this.proposta, this.regola.presentati ? { host: this.miaParte().parte, ospite: d.parte } : undefined)
+      }
       else if (d.t === 'no' && this.ruolo === 'host') this.cambia('rotta', d.motivo === 'versione' ? 'versione' : 'proposta')
       return
     }
     if (this.stato === 'gioco') this.lockstep.ricevi(d)
   }
 
-  parti(proposta) {
+  /* la parte di chi gioca qui, da mandare all'altro (niente per i giochi in cui non si porta niente) */
+  miaParte() {
+    if (!this.regola.presentati) return {}
+    this._parte ??= this.regola.presentati()
+    return { parte: this._parte }
+  }
+  /* quella arrivata dall'altro: null se va bene */
+  suaParte(d) {
+    if (!this.regola.presentati) return null
+    return this.regola.accettaParte(d.parte) || null
+  }
+
+  parti(proposta, parti) {
     this.proposta = proposta
-    this.motore = this.regola.crea(proposta)
+    this.parti_ = parti || null
+    this.motore = this.regola.crea(proposta, parti)
     this.lockstep = new Lockstep({ motore: this.motore, ruolo: this.ruolo, invia: d => this.canale.manda(d),
       alGuasto: motivo => this.cambia('rotta', motivo === 'le due partite si sono separate' ? 'separate' : motivo) })
     this.acceso = tieniAcceso()

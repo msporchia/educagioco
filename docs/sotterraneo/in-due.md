@@ -1,7 +1,7 @@
 # Il sotterraneo in due (progetto)
 
 Due bambini, due telefoni, la stessa discesa: ognuno col suo eroe e la sua roba, insieme contro i mostri.
-**Stato: progetto** (29 ottobre 2026), niente di costruito. L'utente l'ha scelto fra i giochi da mettere in due perché giocarci
+**Stato: giocabile nel ramo** `claude/sotterraneo-in-due` (29 ottobre 2026), fuori da main fino al sì; da provare con due telefoni. L'utente l'ha scelto fra i giochi da mettere in due perché giocarci
 insieme è «veramente straordinario», e perché lo scontro è già a turni. Il pezzo comune (il tavolo, il canale, il lockstep, la
 sala) è quello di Castle Battle: [../core/insieme.md](../core/insieme.md). Qui c'è quello che il sotterraneo deve dargli.
 
@@ -9,8 +9,9 @@ sala) è quello di Castle Battle: [../core/insieme.md](../core/insieme.md). Qui 
 
 - **Una discesa insieme, sotto.** La terra di sopra, i mercanti, le missioni e il diario restano di chi gioca da solo: in due si
   scende e si torna. Il mondo di sopra in 3D e le sue terre sono fuori.
-- **Vale per il 2D e per il 3D**: il motore della discesa è uno (`Gioco3d.vue` monta `Gioco.vue` col disegno 3D,
-  [grafica-3d.md](grafica-3d.md)). Il 3D accende in più le botti e i copricapi nel bottino, che vanno col seme come il resto.
+- **Solo nel Sotterraneo 3D** (l'utente: «conta solo il 3D»). Il motore della discesa è lo stesso del 2D (`Gioco3d.vue` monta
+  `Gioco.vue` col disegno 3D, [grafica-3d.md](grafica-3d.md)), quindi il 2D non deve cambiare di niente: da soli, le misure del
+  banco restano identiche. In due il 3D accende anche le botti e i copricapi nel bottino, che vanno col seme come il resto.
 - **La domanda è di chi tocca**: chi apre la porta, il forziere o la fonte si prende la domanda; l'altro non ne ha.
 - **Ognuno porta il suo eroe** dalla sua avventura ([avventure.md](avventure.md)): classe, livello, roba addosso e nello zaino,
   abilità, pozioni. Due eroi della stessa classe vanno bene.
@@ -43,7 +44,10 @@ abbattere un mostro (l'offesa, il «quanto picchia») contro quanti ne regge pri
 - **Niente tetto per il più debole** (l'utente): l'equilibratore c'è già, perché i mostri puntano il più forte (sotto, «Lo scontro
   in due»). Se uno dei due resta troppo indietro si sceglie un livello più facile, o si scende con un altro eroe e si sale insieme.
 - **I numeri si misurano col banco**, con due giocatori finti di livelli diversi: «facile» deve vincere quasi sempre, «impossibile»
-  di rado ma non mai.
+  di rado ma non mai. La formula oggi (`livelloDellaCoppia`, `unita/sotterraneo-in-due`): un cavaliere e un mago del 14, che da soli
+  valgono 14, in due danno 22 a facile, 24 a normale, 26 a difficile e 26 a impossibile; un cavaliere dell'8 col mago del 15 fanno
+  16, 18, 22, 22. Difficile e impossibile vengono uguali perché la formula prende il livello più alto che passa e il confronto ha
+  dei gradini: è la prima cosa da guardare tarando.
 
 **Cosa cambia con la difficoltà**: i mostri (vita, colpo, livello), e quindi la roba che cade (del livello del posto) e
 l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livello di forza, non quelle del posto (`dif` di
@@ -72,10 +76,15 @@ l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livel
 
 ## I due eroi nella discesa
 
-- **Il motore oggi ha un eroe solo**, sparso in `Corsa` e `Corredo` (posizione, vita, energia, mana, roba, incanti preparati,
-  strada, foglio). Il lavoro grosso è portarlo in **una persona**: la discesa tiene il piano, i mostri e l'orologio, e una lista di
-  persone. Da soli la lista ha una persona, e **tutte le misure del banco devono restare identiche** (un test lo controlla, come
-  `unita/sotterraneo-strade` tiene fermo il mana).
+- **L'eroe sta in una persona** (**fatto** il 29 ottobre, nel ramo: `motore/persone.js`). Era sparso in `Corsa` e `Corredo`
+  (posizione, vita, energia, mana, roba, incanti, strada, il foglio aperto); ora `CAMPI_DELLA_PERSONA` dice quali campi sono
+  dell'eroe, e sulla classe sono accessori che vanno alla persona di adesso (`corsa.persona`, una di `corsa.persone`). Il codice di
+  sempre non è cambiato: `this.vita` è la vita di chi sta agendo. Per far agire un altro alleato, `corsa.come(i, () => …)`. Il
+  mondo resta della discesa: il piano, i mostri, la luce, l'orologio dei passi, la nebbia, come finisce. Da soli la lista ha una
+  persona e tutte le misure sono rimaste quelle (`npm test` verde); `unita/sotterraneo-persone` controlla che dopo una discesa
+  nessun campo dell'eroe sia rimasto sulla discesa, e che due persone non si pestino.
+  - Perché accessori e non una classe della persona coi suoi metodi: la classe vorrebbe dire riscrivere ogni `this.` di quasi
+    13.000 righe, gli accessori lasciano il codice com'è.
 - **La lista serve anche all'aiutante** che l'utente vuole mettere prima o poi: un alleato mosso dal gioco invece che da un
   bambino. La sua testa c'è già, il giocatore finto di `motore/banco.js`. Le regole dei due eroi (chi entra nello scontro, chi i
   mostri colpiscono, la fila) vanno scritte per «gli alleati», non per «i due bambini».
@@ -83,16 +92,16 @@ l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livel
   che raggiungono. La luce è l'unione dei due coni ([luce.md](luce.md)): un mostro nella luce dell'uno va dritto.
 - **L'orologio conta i passi di tutti e due**: i mostri morti tornano prima, la torcia brucia per chi la porta
   ([orologio.md](orologio.md)). Il mana torna a ognuno coi suoi passi.
-- **Non ci si allontana troppo** (l'utente): tutti e due devono stare nello schermo. **Al massimo 6 celle in largo e 9 in alto**
-  dal compagno, contate sulla mappa e non sulla strada, perché lo schermo è un rettangolo. Toccando oltre, l'eroe cammina fino al
+- **Non ci si allontana troppo** (l'utente): tutti e due devono stare nello schermo. **Al massimo 11 celle in largo e 11 in
+  profondo** dal compagno, contate sulla mappa e non sulla strada, perché lo schermo è un rettangolo. Toccando oltre, l'eroe cammina fino al
   limite e si ferma, con un fumetto («non mi allontano da Leo»).
-  - **Perché 6 e 9**: nel 2D, allo zoom di partenza (`SCALA_INIZIALE` 3, una cella è 48 px), un telefono stretto da 360 px vede
-    7 celle e mezzo in largo e una decina in alto, tolte la barra in cima e quella in basso. Il 3D ne vede almeno 15
-    (`scena3d/costanti.js`), quindi ci sta largo.
+  - **Perché 11**: la telecamera del 3D vede almeno 15 celle in largo e in profondo (`CAMERA.celle` in `scena3d/costanti.js`),
+    con lo zoom di partenza; ne restano due per parte di margine, per la barra in basso e perché un eroe sul bordo non si legge.
   - **In due la telecamera guarda il punto in mezzo ai due eroi**, non solo il proprio: centrata su uno, il compagno uscirebbe
-    dallo schermo già a 3 celle.
+    dallo schermo già a 7 celle.
   - **Il limite è del motore, uguale sui due telefoni**: non dipende dallo schermo né dallo zoom di ognuno, se no le due copie
-    si separano. Chi allarga lo zoom col pizzico vede di più, ma il limite resta quello.
+    si separano. Il pizzico avvicina fino a 1,4 (`zoomMax`), e allora si vedono una decina di celle: il compagno al limite esce, e
+    la freccina sul bordo dice dov'è.
   - Vuol dire la stessa stanza o quella accanto: le stanze sono larghe da 5 a 10 celle.
 - **La scala**: si scende quando ci sono tutti e due. Il primo che la tocca aspetta lì («Aspetto Leo alla scala»), e quando arriva
   l'altro si scende insieme. Così il piano nuovo comincia con tutti e due e non c'è un piano per ognuno.
@@ -106,13 +115,14 @@ l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livel
 - **Uno scontro alla volta**: col compagno tirato dentro, non ce ne possono essere due insieme. Lì si va a turni, e il resto del
   mondo è fermo come da soli.
 - **Il compagno è già previsto**: la fila ha un `lato` per ogni attore, e il palco ha il posto del compagno sfalsato sotto l'eroe,
-  in diagonale (`viste/campo.js`, `[data-posto-compagno]`, oggi spento). Ognuno ha la sua velocità e i suoi turni nella fila;
+  in diagonale (`viste/campo.js`, da cui prende i posti anche il palco del 3D, `scena3d/palco.js`; oggi spento). Ognuno ha la sua velocità e i suoi turni nella fila;
   `passaIlTurno`, che si ferma al primo del lato dell'eroe, va insegnato a fermarsi a chi tocca.
 - **Al suo turno risponde chi gioca quell'eroe**; l'altro vede la scelta e la domanda arrivare («Tocca a Leo»).
 - **I mostri colpiscono il più forte** (l'utente). Ogni alleato ha un peso, **pericolosità × vita rimasta in proporzione**, e il
   mostro punta quello col peso più alto. A parità vince l'ordine nella fila, quindi niente caso.
-  - **La pericolosità non è il livello**, ma quanto quell'alleato fa male a quel mostro: il danno a turno della formula della
-    forza (`offesa` in `motore/forza.js`, con le due abilità forti), contro le difese di quel mostro.
+  - **La pericolosità non è il livello**, ma quanto quell'alleato fa male a quel mostro: il suo colpo di sempre contro di lui
+    (`Corsa.colpo`, attacco meno le difese di quel mostro; `bersaglioDelMostro`). Non l'offesa della formula della forza, con le
+    due abilità forti: quella è una stima di uno scontro intero, non di un turno, e si rifarebbe a ogni colpo di mostro.
   - **La vita in proporzione fa girare i colpi**: il più forte prende i primi colpi, e quando è ferito il peso passa all'altro. Il
     più debole viene colpito solo quando il forte è già messo male. È l'equilibratore che protegge l'eroe di livello 8
     accanto all'amico del 15, e per questo la difficoltà non ha un tetto (sopra).
@@ -122,8 +132,11 @@ l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livel
     Le regole giuste che a schermo non si capiscono sono un gioco sbagliato.
 - **Le abilità che curano o proteggono** possono andare anche sul compagno: oggi «in area» non vuol dire niente perché l'eroe è
   solo ([mosse.md](mosse.md)), in due sì.
-- **Chi sviene resta a terra fino alla fine dello scontro**, poi si rialza con poca vita. Se svengono tutti e due vale la regola di
-  oggi per tutti e due ([regole.md](regole.md#svenire-e-il-fondo-degli-svenimenti)).
+- **Chi sviene resta a terra fino alla fine dello scontro** (fuori dalla fila, niente domanda), poi si rialza con un quarto della
+  vita. Se svengono tutti e due vale la regola di oggi per tutti e due ([regole.md](regole.md#svenire-e-il-fondo-degli-svenimenti)).
+- **In due non si scappa** (`puoScappare`, da confermare con l'utente): chi scappa lascerebbe il compagno in uno scontro che ferma
+  il mondo, e scappare insieme vorrebbe una scelta di tutti e due.
+- **Il bersaglio scelto è uno per lo scontro**: chi tocca un mostro lo sceglie anche per l'altro, che al suo turno lo può cambiare.
 - **Il pericolo** (lo stop dello scontro, [pericolo.md](pericolo.md)) guarda ognuno per sé.
 
 ## La roba: chi la prende
@@ -145,46 +158,40 @@ l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livel
   quello che aveva preso fino a lì**: una caduta della linea non deve buttare via mezz'ora di discesa.
 - **La storia non si muove in due** (l'utente): la discesa in due non chiude le porte della grande storia.
 
-## Il caso e i conti uguali sui due telefoni
+## Il codice
 
-Quello che va fatto prima di tutto, perché senza le due copie si separano (in Castle Battle si separavano per un `Math.hypot`):
+Come è fatto (i conti uguali sui due telefoni, quello che il sotterraneo dà al pezzo comune, la vista nel 3D): [in-due-codice.md](in-due-codice.md).
 
-- **Tutto il caso dal seme.** `Corsa` prende già `rnd`, e il bottino in buona parte usa `tiroDalSeme`; ma `bottino.js`,
-  `bottega.js` e `storia.js` hanno `rnd = Math.random` come valore di difetto, e ogni chiamata dentro la discesa deve passare quello
-  della corsa.
-- **Niente `Math.hypot`** nel motore (66 righe): `ipot`, come in `giochi/arena/motore/partita.js`. Gli `atan2` (5) e i `sin`/`cos`
-  (2) toccano la luce, quindi il gioco: si sostituiscono coi prodotti scalari, o con versioni uguali al bit: due browser possono
-  arrotondarli in modo diverso.
-- **Il passo fisso**: `passo(dt)` taglia già a 0,05 s; in due il battito è sempre 0,05.
-- **La fotografia c'è quasi**: la sosta (`motore/sosta.js`) salva il piano come differenza da quello nato dal seme, coi mostri dove
-  erano. In due serve anche lo scontro aperto e la fila, che la sosta non salva.
-- **L'impronta**: vita ed energia dei due, celle dei due, mostri vivi e somma delle loro posizioni, piano, passi.
-- `unita/sotterraneo-lockstep`: due discese con lo stesso seme e gli stessi comandi restano uguali al bit (come `unita/arena-lockstep`).
+## Riprendere il giorno dopo (proposta dell'utente, da fare)
 
-## Cosa dà il sotterraneo al pezzo comune
+Il servizio non tiene niente (inoltra e basta) e il tavolo vive un'ora e mezza: oggi una discesa in due finisce lì. L'utente: «tenerlo
+valido per un giorno, tanto basta sincronizzarsi sull'ultimo snapshot».
 
-Come Castle Battle ([../arena/multigiocatore.md](../arena/multigiocatore.md)): la regola (versione, proposta, cosa si accetta), il
-motore del lockstep (avanza, applica una mossa, impronta, foto), le mosse (`vai`, `tocca`, `rispondi`, `abilita`, `bevi`, `posa`,
-`scendi`…), i bambini finti in `test/aiuto/sfide/sotterraneo.mjs` (il giocatore finto di `motore/banco.js` sa già scendere).
-
-**Una cosa nuova nel pezzo comune**: oggi la proposta la fa solo chi crea, e l'ospite accetta. Qui anche l'ospite porta qualcosa,
-il suo eroe. L'incontro (`src/insieme/incontro.js`) deve far mandare a ognuno la sua parte prima di partire (l'ospite col
-`pronto`), e `crea` riceve tutte e due. Serve a ogni gioco in cui ognuno porta la sua roba.
+- **Ognuno tiene l'ultima fotografia** della discesa in due, valida un giorno; per riprendere si apre un tavolo nuovo, e vale quella
+  di chi aveva creato.
+- **Il mondo si riprende dalla fotografia** (il piano, i mostri, la roba per terra); **gli eroi entrano come sono adesso**, anche
+  cresciuti nel frattempo: quello che si prende in due va subito nell'avventura di ognuno, quindi non si conta due volte.
 
 ## In che ordine
 
-1. **Il caso e i conti uguali** (sopra), col test del lockstep su una discesa da soli. Non cambia niente a chi gioca.
-2. **Le persone nel motore**: un eroe diventa una lista di uno, con le misure del banco identiche.
-3. **Il secondo eroe**: i mostri, la luce, la scala, la pausa per tutti, lo scontro col compagno, il bottino a turno, il livello
-   della coppia con la difficoltà. Provato e tarato col banco con due giocatori finti, senza rete.
-4. **La regia** e l'incontro che porta l'eroe dell'ospite; la partita finta in due (`npm test`) e il banco della rete.
-5. **La vista 2D**: il secondo eroe col nome e cosa sta facendo, «Aspetto Leo alla scala», il compagno sul palco, la sala.
-6. **La vista 3D**: la scena prende già una lista di cose; un eroe in più.
+1. **Il caso e i conti uguali** (fatto), col test del lockstep su una discesa da soli. Non cambia niente a chi gioca.
+2. **Le persone nel motore** (fatto): un eroe diventa una lista di uno, con le misure identiche.
+3. **Il secondo eroe** (fatto, da tarare): `motore/in-due.js` (l'alleato in più, il mondo che non si ferma per una domanda, i mostri
+   verso il più vicino e chi risponde al riparo, la luce dei due coni, `LONTANO`, la scala con l'attesa, lo scontro di tutti coi turni
+   di ognuno, il bersaglio del più forte, l'esperienza a tutti, il bottino a turno), `livelloDellaCoppia` in `motore/forza.js`, e i
+   giocatori finti in due (`motore/banco-in-due.js`: il primo va alla chiave e alla scala, gli altri lo seguono).
+   `unita/sotterraneo-in-due` fa il copione regola per regola e tre discese intere; `unita/sotterraneo-lockstep` ne fa scendere
+   tre in due con le spie sui conti. Restano da tarare i moltiplicatori della difficoltà, e da decidere dove ci si risveglia
+   quando svengono tutti e due (oggi tutti e due all'ingresso del piano, nella stessa cella).
+4. **La regia** (fatto): l'incontro che porta l'eroe dell'ospite, le mosse, la fotografia, la partita finta in due e il banco della
+   rete ([in-due-codice.md](in-due-codice.md)).
+5. **La vista 3D** (fatto, [in-due-codice.md](in-due-codice.md)). Il 2D non si tocca.
 
 Il punto 2 è il lavoro più grosso e il più rischioso (il motore della discesa è di quasi 13.000 righe, e l'eroe solo ci sta
-dappertutto); i punti 1 e 2 si possono pubblicare senza che si veda niente.
+dappertutto); i punti 1-4 si possono pubblicare senza che si veda niente: da soli non cambia un numero. Dopo la vista, riprendere il
+giorno dopo (sopra).
 
 ## Da misurare
 
-Le scelte sono fatte. Restano i numeri: i quattro moltiplicatori della difficoltà, col banco a due giocatori finti; le 6 e 9 celle,
+Le scelte sono fatte. Restano i numeri: i quattro moltiplicatori della difficoltà, col banco a due giocatori finti; le 11 celle,
 col dito sui telefoni veri.

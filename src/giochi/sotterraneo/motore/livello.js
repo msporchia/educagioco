@@ -13,6 +13,7 @@ import { GROSSI } from '../dati/grossi.js'
 import { raggiungibili } from '../../../motore/passi.js'
 import { costruisci, pezziDa, celleDi, pozza, CELLE_SALA } from './forme.js'
 import { scavaIlPalco, arredaIlPalco } from './palco.js'
+import { ipot, potenza } from '../../../motore/conti-uguali.js'   // uguali al bit sui due telefoni (docs/sotterraneo/in-due.md)
 
 // un numero fisso per cella (senza consumare il caso del piano): da qui l'aspetto di un relitto
 const numeroDa = (x, y, sale) => {
@@ -220,7 +221,7 @@ export class Livello {
     for (let j = 0; j < h; j++) for (let i2 = 0; i2 < w; i2++) {
       if (!m[j * w + i2]) continue
       const aperta = viva(i2 - 1, j) && viva(i2 + 1, j) && viva(i2, j - 1) && viva(i2, j + 1)
-      const d = Math.hypot(i2 - (w >> 1), j - (h >> 1)) + (aperta ? 0 : 100)
+      const d = ipot(i2 - (w >> 1), j - (h >> 1)) + (aperta ? 0 : 100)
       if (d < quanto) { quanto = d; centro = [i2, j] }
     }
     st.cx = x + centro[0]; st.cy = y + centro[1]
@@ -457,7 +458,7 @@ export class Livello {
     if (lungo >= 12) {
       // la tappa: a metà strada, spostata di lato di un quarto della lunghezza al più (dalla parte che capita)
       const mx = (a.cx + b.cx) / 2, my = (a.cy + b.cy) / 2
-      const dx = b.cx - a.cx, dy = b.cy - a.cy, n = Math.hypot(dx, dy)
+      const dx = b.cx - a.cx, dy = b.cy - a.cy, n = ipot(dx, dy)
       const d = (rnd() < 0.5 ? -1 : 1) * (0.1 + 0.2 * rnd()) * lungo
       tappe.push({ x: Math.max(2, Math.min(L - 3, Math.round(mx - dy / n * d))), y: Math.max(2, Math.min(A - 3, Math.round(my + dx / n * d))) })
     }
@@ -645,7 +646,7 @@ export class Livello {
     let uscita = st[1] || st[0], quanto = -1
     for (const s of st) {
       if (s === ingresso) continue
-      const d = Math.hypot(s.cx - ingresso.cx, s.cy - ingresso.cy)
+      const d = ipot(s.cx - ingresso.cx, s.cy - ingresso.cy)
       if (d > quanto) { quanto = d; uscita = s }
     }
     uscita.ruolo = 'uscita'
@@ -722,8 +723,8 @@ export class Livello {
       // nessun posto buono accanto alla scala: la chiave la porta il mostro più lontano dall'ingresso (e, se il piano
       // ha un mostro grosso, diventa lui: dove stava quello)
       const lontano = this.robe.filter(r => r.che === 'mostro')
-        .sort((a, b) => Math.hypot(b.x - ingresso.cx, b.y - ingresso.cy) -
-                        Math.hypot(a.x - ingresso.cx, a.y - ingresso.cy))[0]
+        .sort((a, b) => ipot(b.x - ingresso.cx, b.y - ingresso.cy) -
+                        ipot(a.x - ingresso.cx, a.y - ingresso.cy))[0]
       if (lontano && this.grosso) Object.assign(lontano, this.mostroGrosso(this.grosso, lontano.x, lontano.y))
       if (lontano) lontano.chiave = true
     }
@@ -876,7 +877,7 @@ export class Livello {
       // il branco: una stanza stretta ne tiene meno (in una da venti celle tre mostri sono una folla)
       const celle = s.suolo.length
       const tetto = Math.max(2, Math.min(this.tettoBranco, TETTO_DEL_BRANCO, celle < 25 ? 3 : celle < 45 ? 4 : celle < CELLE_SALA ? 5 : TETTO_DEL_BRANCO))
-      const n = 2 + Math.floor(Math.pow(this.rnd(), 1.6) * (tetto - 1))   // la coda verso il tetto è corta
+      const n = 2 + Math.floor(potenza(this.rnd(), 1.6) * (tetto - 1))   // la coda verso il tetto è corta
       this.mettiIlBranco(s, tipiPer(0.15, n, true))
       if (s.grande && this.rnd() < 0.5) this.mettiUnAppostato(s, tipiPer(0.15, 1)[0])
     }
@@ -888,8 +889,8 @@ export class Livello {
     const s = this.stanzaDi(capo.x, capo.y)
     if (!s) return []
     const n = SCAGNOZZI_DEL_GROSSO[0] + Math.floor(this.rnd() * (SCAGNOZZI_DEL_GROSSO[1] - SCAGNOZZI_DEL_GROSSO[0] + 1))
-    const vicine = s.suolo.filter(c => this.liberaPerUnMostro(s, c.x, c.y) && Math.hypot(c.x - capo.x, c.y - capo.y) <= 2.5)
-      .map(c => ({ c, d: Math.hypot(c.x - capo.x, c.y - capo.y) + this.rnd() * 0.8 }))
+    const vicine = s.suolo.filter(c => this.liberaPerUnMostro(s, c.x, c.y) && ipot(c.x - capo.x, c.y - capo.y) <= 2.5)
+      .map(c => ({ c, d: ipot(c.x - capo.x, c.y - capo.y) + this.rnd() * 0.8 }))
       .sort((p, q) => p.d - q.d).map(o => o.c)
     this.branchi = (this.branchi || 0) + 1
     capo.branco = this.branchi
@@ -910,8 +911,8 @@ export class Livello {
       if (this.liberaPerUnMostro(s, c.x, c.y)) a = c
     }
     if (!a) return []
-    const vicine = s.suolo.filter(c => Math.hypot(c.x - a.x, c.y - a.y) <= 2 && this.liberaPerUnMostro(s, c.x, c.y))
-      .map(c => ({ c, d: Math.hypot(c.x - a.x, c.y - a.y) + this.rnd() * 0.8 }))   // l'ancora è sempre la prima
+    const vicine = s.suolo.filter(c => ipot(c.x - a.x, c.y - a.y) <= 2 && this.liberaPerUnMostro(s, c.x, c.y))
+      .map(c => ({ c, d: ipot(c.x - a.x, c.y - a.y) + this.rnd() * 0.8 }))   // l'ancora è sempre la prima
       .sort((p, q) => p.d - q.d).map(o => o.c)
     this.branchi = (this.branchi || 0) + 1
     const messi = []
@@ -928,10 +929,10 @@ export class Livello {
   mettiUnAppostato(s, tipo) {
     const roccia = (x, y) => this.a(x, y) === ROCCIA
     const solo = c => this.liberaPerUnMostro(s, c.x, c.y) &&
-      !this.robe.some(r => r.che === 'mostro' && Math.hypot(r.x - c.x, r.y - c.y) < 4)
+      !this.robe.some(r => r.che === 'mostro' && ipot(r.x - c.x, r.y - c.y) < 4)
     const angoli = s.suolo.filter(c => (roccia(c.x - 1, c.y) || roccia(c.x + 1, c.y)) &&
       (roccia(c.x, c.y - 1) || roccia(c.x, c.y + 1)) && solo(c))
-    const dallePorte = c => s.porte.reduce((m, p) => Math.min(m, Math.hypot(p.x - c.x, p.y - c.y)), Infinity)
+    const dallePorte = c => s.porte.reduce((m, p) => Math.min(m, ipot(p.x - c.x, p.y - c.y)), Infinity)
     const ingombri = [...s.colonne.map(c => ({ ...c, tipo: 'colonna' })), ...s.relitti.map(c => ({ ...c, tipo: 'relitto' }))]
     const dietro = ingombri.flatMap(col => [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => ({ x: col.x + dx, y: col.y + dy, da: col, tipo: col.tipo })))
       .filter(c => solo(c) && dallePorte(c) > dallePorte(c.da))
@@ -966,7 +967,7 @@ export class Livello {
       break
     }
     return uscita.vicine.map(i => this.stanze[i]).filter(s => s !== ingresso && s !== uscita)
-      .sort((p, q) => Math.hypot(q.cx - ingresso.cx, q.cy - ingresso.cy) - Math.hypot(p.cx - ingresso.cx, p.cy - ingresso.cy))[0] || null
+      .sort((p, q) => ipot(q.cx - ingresso.cx, q.cy - ingresso.cy) - ipot(p.cx - ingresso.cx, p.cy - ingresso.cy))[0] || null
   }
 
   // due o tre caporali (tre se l'anticamera è una sala) nel mezzo della stanza: il caporale del posto, più duri
@@ -1071,7 +1072,7 @@ export class Livello {
   // di roccia da scavare, che `chiudiPorte` scava solo se la stanza si chiude) o null se nessuna cella ci sta
   portaDritta(varco, s) {
     const centro = varco[Math.floor(varco.length / 2)]
-    const ordine = [...varco].sort((a, b) => Math.hypot(a.x - centro.x, a.y - centro.y) - Math.hypot(b.x - centro.x, b.y - centro.y))
+    const ordine = [...varco].sort((a, b) => ipot(a.x - centro.x, a.y - centro.y) - ipot(b.x - centro.x, b.y - centro.y))
     let squadrata = null
     for (const p of ordine) {
       const troppe = varco.filter(q => q !== p)
