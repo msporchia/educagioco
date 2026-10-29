@@ -172,15 +172,15 @@ form { display:flex; flex-direction:column; align-items:center; gap:14px; width:
             margin-top:-2px; box-shadow:0 3px 0 #d4dce6 }
 .che-roba:active { transform:translateY(1px) }
 
-.manopola-posto { width:min(360px, 92vw) }
-.amici-domanda { width:100%; max-width:420px; display:flex; flex-direction:column; gap:6px; padding:10px 12px; border-radius:14px; background:#ffffffaa; text-align:left }
-.amici-domanda p { margin:0 }
+/* una colonna sola, e sotto la manopola la pelle delle sue carte (Manopola.vue): se no sembrano tre schermate incollate */
+.manopola-posto, .nascita-domanda, .amici-domanda { width:100%; max-width:400px }
+.nascita-domanda, .amici-domanda { display:flex; flex-direction:column; gap:6px; padding:9px 12px; border-radius:14px;
+                                    background:#fff; box-shadow:0 2px 8px #0000000d; text-align:left }
+.nascita-domanda p, .amici-domanda p { margin:0; text-align:left }
 .amici-domanda .leggi { border:0; background:none; color:inherit; text-decoration:underline; font:inherit; padding:0 }
 .amici-domanda .scelta { display:flex; gap:8px }
 .amici-domanda .scelta button { flex:1; min-height:44px; border:2px solid #c9c2b0; border-radius:12px; background:#fff; font:inherit; font-weight:700 }
 .amici-domanda .scelta .su { border-color:#7a5cf0; background:#7a5cf0; color:#fff }
-.nascita-domanda { width:100%; max-width:420px; display:flex; flex-direction:column; gap:6px; padding:10px 12px; border-radius:14px; background:#ffffffaa; text-align:left }
-.nascita-domanda p { margin:0 }
 .nascita-domanda .selezioni { display:flex; gap:8px }
 .nascita-domanda select { flex:1; min-height:44px; padding:6px 10px; border-radius:12px; border:1px solid #d9d2c2; background:#fff; font:inherit }
 </style>
