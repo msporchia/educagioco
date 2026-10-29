@@ -14,11 +14,43 @@ sala) è quello di Castle Battle: [../core/insieme.md](../core/insieme.md). Qui 
 - **La domanda è di chi tocca**: chi apre la porta, il forziere o la fonte si prende la domanda; l'altro non ne ha.
 - **Ognuno porta il suo eroe** dalla sua avventura ([avventure.md](avventure.md)): classe, livello, roba addosso e nello zaino,
   abilità, pozioni. Due eroi della stessa classe vanno bene.
-- **La discesa la sceglie chi crea**, nello slot della sala comune. Quale, e a che livello, è una domanda aperta (sotto).
+- **Chi crea sceglie il posto e la difficoltà**; il livello lo calcola il gioco dai due eroi (sotto).
 - **Si risponde dal proprio telefono, alle proprie domande**: ognuno ha la sua età, i suoi saperi e il suo SRS. Le monete sono di
   chi risponde (🪙1 a risposta giusta, come sempre: [regole.md](regole.md#le-monete)). Nessuno guadagna con le risposte dell'altro.
 
-## Il mondo è uno solo, e si ferma per tutti e due
+## Il posto e la difficoltà
+
+Idea dell'utente: si sceglie l'ambientazione, e la discesa si tara sulla forza dei due insieme, con una manopola: «se fanno 100
+messi insieme, il dungeon è fatto per 100; facile per 80, difficile per 120, impossibile per 140».
+
+- **Il posto**: uno dei tredici dungeon (le sette discese della storia e i sei nuovi del mondo 3D, `CHIAVI_DEI_DUNGEON` in
+  `motore/rigenera.js`), ognuno col suo paesaggio, i suoi abitanti, il caporale e il grosso in fondo. Tutti, anche quelli che
+  nessuno dei due ha ancora aperto: non è la storia.
+- **La difficoltà**: facile, normale, difficile, impossibile. Nello slot della sala, accanto al posto.
+- **Il livello lo calcola il gioco quando partono**, perché serve l'eroe dell'ospite: chi crea sceglie prima che l'altro entri.
+  All'inizio si legge «La fornace · difficile · livello 19» sui due telefoni.
+- **Il dungeon c'è già**: `tappaDelMondo(chiave, { livello })` fa qualunque posto a qualunque livello, con mostri, bottino e
+  piani di una zona ([zone.md](zone.md)). Il lavoro nuovo è solo il livello.
+
+**Il livello della coppia** viene da `motore/forza.js`, che oggi lo fa per un eroe solo ([forza.md](forza.md)): il livello L più
+alto in cui l'eroe regge i mostri di L almeno quanto l'eroe che il gioco si aspetta a L. Il conto è quanti turni gli servono per
+abbattere un mostro (l'offesa, il «quanto picchia») contro quanti ne regge prima di cadere (la resistenza).
+
+- **Per due**: l'offesa è quella dei due insieme (si abbatte il mostro con i colpi di tutti e due), la resistenza quella dei due
+  insieme (i mostri dividono i colpi), confrontate con l'eroe atteso **da solo**. Così in due gli scontri durano quanto da soli.
+- **La difficoltà moltiplica l'offesa della coppia** prima del confronto: facile come se picchiassero all'80%, normale al 100%,
+  difficile al 120%, impossibile al 140%. A facile il livello scende, a impossibile sale.
+- **Il più debole non deve cadere al primo colpo** (proposta): il livello non sale oltre quello in cui il colpo di un mostro
+  porta via più di un terzo della sua vita. Senza, un eroe del livello 8 con un amico del 15 sverrebbe a ogni scontro.
+- **I numeri si misurano col banco**, con due giocatori finti di livelli diversi: «facile» deve vincere quasi sempre, «impossibile»
+  di rado ma non mai.
+
+**Cosa cambia con la difficoltà**: i mostri (vita, colpo, livello), e quindi la roba che cade (del livello del posto) e
+l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livello di forza, non quelle del posto (`dif` di
+`numeriDelLivello` si calcola per ognuno). **Le monete nemmeno**: una a risposta giusta, a ogni difficoltà. Il premio di
+«impossibile» è la roba e l'esperienza, non il pagamento delle risposte.
+
+## Il mondo è uno solo, e non si ferma per una domanda
 
 - **Il motore gira su tutti e due i telefoni col lockstep** (fette fisse da 0,05 s, le mosse applicate dopo 0,6 s), come Castle
   Battle. Chi crea è il primo eroe, l'ospite il secondo. Ogni telefono salva solo il suo eroe.
@@ -26,13 +58,16 @@ sala) è quello di Castle Battle: [../core/insieme.md](../core/insieme.md). Qui 
   telefono di chi ha toccato, così il tocco non sembra perso. Un tocco che dà un ordine regge mezzo secondo; il dito che guida
   (Survivors) no. Da sentire coi telefoni veri.
 - **Da soli, con un foglio aperto non si muove niente** (`Corsa.passo`): una domanda, una porta, un forziere, lo scontro. **In due
-  vale per tutti e due**: chi apre una porta ferma anche l'altro. È la pausa condivisa che l'utente ha voluto anche per Survivors
-  in due: fra compagni fermarsi insieme è giusto (in Castle Battle, uno contro l'altro, no).
-- **Chi aspetta lo sa**: sul telefono dell'altro la scena resta, ferma, con un cartello piccolo «Aspetto che Leo apra la porta»
-  («…finisca lo scontro», «…scelga cosa bere»), col nome del bambino. Non un velo che copre tutto: la scena dice già cosa succede.
-- **Dopo uno sbaglio si spiega**, come da soli ([../apprendimento/la-domanda.md](../apprendimento/la-domanda.md)): col mondo fermo
-  nessuno perde leggendo. Niente domanda `svelta`.
-- **Il ⏸ ferma tutti e due**, con «Leo ha messo in pausa». Non c'è la sosta: una discesa in due non si lascia a metà per riprenderla
+  il foglio è di chi lo apre, e il mondo va avanti per l'altro** (l'utente: «se sta rispondendo puoi andare avanti, è solo quando
+  sei in uno scontro che conta»). Chi apre la porta resta lì a rispondere; l'altro cammina, e i mostri con lui.
+- **Chi risponde non si tocca**: un mostro che lo raggiunge mentre ha una domanda aperta aspetta, e lo scontro parte quando ha
+  finito (l'utente: «finirà di aprirla e poi parte lo scontro»). Lo stesso se il compagno apre uno scontro nella sua stanza: chi
+  risponde finisce, poi entra. Da soli la regola c'è già, perché col foglio aperto i mostri non si muovono.
+- **Dopo uno sbaglio si spiega**, come da soli ([../apprendimento/la-domanda.md](../apprendimento/la-domanda.md)): chi legge è al
+  riparo. Niente domanda `svelta`.
+- **Si vede cosa fa l'altro**: sopra il suo eroe un segno piccolo mentre risponde (la porta, il forziere), e il suo nome.
+- **Il ⏸ ferma tutti e due**, con «Leo ha messo in pausa». È l'unica pausa condivisa, oltre alla scala. Non c'è la
+  sosta: una discesa in due non si lascia a metà per riprenderla
   (vedi «Finire», sotto).
 
 ## I due eroi nella discesa
@@ -52,7 +87,10 @@ sala) è quello di Castle Battle: [../core/insieme.md](../core/insieme.md). Qui 
 ## Lo scontro in due
 
 - **Entra chi è vicino**: i mostri entro il raggio da chi apre lo scontro, come oggi ([scontro.md](scontro.md#chi-entra)), e il
-  compagno se è nella stessa stanza. Chi è lontano non entra, e sul suo telefono lo scontro si guarda (il mondo è fermo comunque).
+  compagno se è nella stessa stanza (se sta rispondendo, appena ha finito).
+- **Chi è nello scontro esce dal tempo**: lì si va a turni, e la fila si muove solo agendo. **Chi è lontano** (da confermare con
+  l'utente): o continua a camminare, e allora ci possono essere due scontri insieme, ognuno con la sua fila, e chi arriva nella
+  stanza di uno scontro aperto entra al giro dopo; o il mondo si ferma anche per lui finché lo scontro non finisce, e lo guarda.
 - **Il compagno è già previsto**: la fila ha un `lato` per ogni attore, e il palco ha il posto del compagno sfalsato sotto l'eroe,
   in diagonale (`viste/campo.js`, `[data-posto-compagno]`, oggi spento). Ognuno ha la sua velocità e i suoi turni nella fila;
   `passaIlTurno`, che si ferma al primo del lato dell'eroe, va insegnato a fermarsi a chi tocca.
@@ -112,10 +150,10 @@ il suo eroe. L'incontro (`src/insieme/incontro.js`) deve far mandare a ognuno la
 
 1. **Il caso e i conti uguali** (sopra), col test del lockstep su una discesa da soli. Non cambia niente a chi gioca.
 2. **Le persone nel motore**: un eroe diventa una lista di uno, con le misure del banco identiche.
-3. **Il secondo eroe**: i mostri, la luce, la scala, la pausa per tutti, lo scontro col compagno, il bottino a turno. Provato col
-   banco con due giocatori finti, senza rete.
+3. **Il secondo eroe**: i mostri, la luce, la scala, la pausa per tutti, lo scontro col compagno, il bottino a turno, il livello
+   della coppia con la difficoltà. Provato e tarato col banco con due giocatori finti, senza rete.
 4. **La regia** e l'incontro che porta l'eroe dell'ospite; la partita finta in due (`npm test`) e il banco della rete.
-5. **La vista 2D**: il secondo eroe col nome, il cartello «Aspetto che…», il compagno sul palco, la sala.
+5. **La vista 2D**: il secondo eroe col nome e cosa sta facendo, «Aspetto Leo alla scala», il compagno sul palco, la sala.
 6. **La vista 3D**: la scena prende già una lista di cose; un eroe in più.
 
 Il punto 2 è il lavoro più grosso e il più rischioso (il motore della discesa è di quasi 13.000 righe, e l'eroe solo ci sta
@@ -123,10 +161,8 @@ dappertutto); i punti 1 e 2 si possono pubblicare senza che si veda niente.
 
 ## Da decidere (con l'utente)
 
-- **Quale discesa, a che livello.** Proposta: chi crea sceglie fra le discese che ha già finito, e i mostri hanno il livello della
-  zona ([zone.md](zone.md)). Due eroi lontani di livello (8 e 15) giocano lo stesso: il più forte porta l'altro.
-- **I mostri più forti in due?** Due eroi contro un branco tarato per uno vincono facile. Proposta: più vita ai mostri in due, alla
-  Diablo, tarata col banco a due giocatori finti.
+- **Il tetto per il più debole** (sopra): un terzo della vita è una proposta da provare.
 - **La storia in due**: proposta no (sopra). Se sì, una discesa nuova per l'ospite gli chiuderebbe una porta della storia giocata
   con l'eroe dell'altro.
-- **Chi è lontano durante lo scontro**: lo guarda (proposta), o può accorrere ed entrare al giro dopo.
+- **Chi è lontano durante lo scontro**: continua a camminare (due scontri possibili, chi arriva entra al giro dopo), o si ferma e lo
+  guarda. Il primo è più vivo; il secondo è più semplice da fare.
