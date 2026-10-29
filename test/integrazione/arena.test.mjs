@@ -6,9 +6,9 @@
    apre la prima tappa, il campo si dipinge (gli sprite del castello
    arrivano da un foglio che si decodifica dopo), la carta di una piazzola apre
    la scelta fra le truppe della tappa e il campo sta fermo, «i numeri» aprono i
-   dettagli, poi il calcolo a tutto schermo (il campo intanto rallenta, non si
-   ferma), e rispondere costruisce davvero la caserma con la truppa scelta, che
-   nei dettagli si può vendere. Poi
+   dettagli, poi il calcolo a tutto schermo (il campo intanto sta fermo), e
+   rispondere costruisce davvero la caserma con la truppa scelta, che nei
+   dettagli si può vendere. Poi
    si esce a metà e la mappa offre la partita, che si riprende con la caserma
    costruita.
 
@@ -218,8 +218,10 @@ async function nuvoletta(terreno, posto, nome) {
 await nuvoletta(terreno1, 0, 'arena-infinita-scelta')
 await page.locator('[data-scelta] [data-costruisci="scheletri"]').click()
 await page.waitForSelector('.ar .qz-tasto', { timeout: 6000 })
+await attendi(page, 450)                                 // la finestra cieca del montaggio: prima il tocco non conta
 await page.locator('.ar .qz-tasto').first().click()   // sbagliare non costa niente: la sosta c'è comunque
-await attendi(page, 600)
+// mentre si calcola il campo è fermo: finché il velo c'è l'orologio non arriva ai cinque secondi della sosta
+await page.waitForSelector('.ar .qz-velo', { state: 'detached', timeout: 12000 })
 
 /* si esce a metà: la sosta si scrive col suo terreno, la carta la offre, e una battaglia nuova ha un altro terreno */
 for (let t = 0; t < 30 && await tempoDelCampo() < 7; t++) await attendi(page, 500)
