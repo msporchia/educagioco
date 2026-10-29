@@ -17,11 +17,14 @@ import { dipingiMappa } from '../scena/mappa.js'
 import { rotta, lunghezza, durata, pezzoVisibile } from '../scena/rotte.js'
 import { posa, viaggia } from '../scena/nave.js'
 import { cosaServe } from '../motore/mappa.js'
+import { TAPPE } from '../dati/mondi.js'
+import AmiciQui from '../../../components/amici/AmiciQui.vue'
 
 const props = defineProps({
   stato: { type: Array, required: true },      // motore/mappa.js, statoMappa
   extra: { type: Object, default: () => ({}) }, // { <mondo>: { libro, cassetto } }
   prima: { type: Boolean, default: false },     // c'è il gioco di prima da offrire
+  amiciSu: { type: Function, default: () => [] }, // gli amici arrivati a un nodo (usaAmici: sullaTappa, docs/core/amici-nei-giochi.md)
 })
 const emit = defineEmits(['tappa', 'libro', 'cassetto', 'prima'])
 
@@ -131,6 +134,9 @@ function tocca(n) {
 // un tocco durante il viaggio lo chiude subito
 function arriva() { if (viaggio.value) viaggio.value.chiudi() }
 
+// il nodo di una tappa per gli amici è il suo posto nella fila di tutte le tappe
+const posto = new Map(TAPPE.map((t, i) => [t.id, i]))
+const amiciDi = n => (n.tipo === 'tappa' ? props.amiciSu(posto.get(n.id)) : [])
 const chiuso = n => n.stato === 'chiusa' || n.stato === 'arrivo'
 const NOMI = { libro: 'Il libro', cassetto: 'Il cassetto' }
 const etichetta = n => n.tipo === 'mondo' ? 'in arrivo' : n.nome || NOMI[n.tipo]
@@ -162,9 +168,10 @@ const racconto = n => n.tipo === 'tappa'
                 :data-grado="n.tipo === 'tappa' ? n.grado : null"
                 :data-stato="n.stato"
                 @click="tocca(n)"></button>
-        <span class="ing-nodo-nome" :class="{ 'ing-spento': chiuso(n) }"
+        <span class="ing-nodo-nome"
               :style="{ left: n.x + 'px', top: (n.y + n.r + 9) + 'px', width: Math.min(120, n.larg) + 'px' }">
-          {{ etichetta(n) }}
+          <span :class="{ 'ing-spento': chiuso(n) }">{{ etichetta(n) }}</span>
+          <AmiciQui :amici="amiciDi(n)" :lato="16" class="ing-amici" :data-al="posto.get(n.id)" />
         </span>
       </template>
 
