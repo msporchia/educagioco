@@ -1,7 +1,7 @@
 # Il sotterraneo in due (progetto)
 
 Due bambini, due telefoni, la stessa discesa: ognuno col suo eroe e la sua roba, insieme contro i mostri.
-**Stato: progetto** (29 ottobre 2026); si costruisce nel ramo `claude/sotterraneo-in-due`, fuori da main fino al sì. L'utente l'ha scelto fra i giochi da mettere in due perché giocarci
+**Stato: giocabile nel ramo** `claude/sotterraneo-in-due` (29 ottobre 2026), fuori da main fino al sì; da provare con due telefoni. L'utente l'ha scelto fra i giochi da mettere in due perché giocarci
 insieme è «veramente straordinario», e perché lo scontro è già a turni. Il pezzo comune (il tavolo, il canale, il lockstep, la
 sala) è quello di Castle Battle: [../core/insieme.md](../core/insieme.md). Qui c'è quello che il sotterraneo deve dargli.
 
@@ -158,46 +158,9 @@ l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livel
   quello che aveva preso fino a lì**: una caduta della linea non deve buttare via mezz'ora di discesa.
 - **La storia non si muove in due** (l'utente): la discesa in due non chiude le porte della grande storia.
 
-## Il caso e i conti uguali sui due telefoni
+## Il codice
 
-Il primo passo, **fatto** (29 ottobre, nel ramo): senza, le due copie si separano (in Castle Battle si separavano per un `Math.hypot`).
-
-- **Tutto il caso dal seme.** `Corsa` prende `rnd`, e dentro la discesa ogni pesca del bottino lo riceve: il giocatore finto scende
-  in tutti i tredici dungeon senza chiamare `Math.random` una volta. In due la regia passa `seminato(seme)`.
-- **Niente funzioni che il browser arrotonda a piacere.** `Math.hypot`, `acos` (la luce a cono), `atan2` e `cos` (le forme delle
-  grotte, cioè il piano che nasce), `pow` (quanti in un branco) e `**` (il salto dei colpi) in `corsa.js`, `livello.js`,
-  `scontro.js`, `forme.js` e `botti.js` sono passati ai **conti uguali** (`src/motore/conti-uguali.js`): le quattro operazioni e
-  `Math.sqrt`, che la specifica vuole esatte, più le serie. Danno quello che dava Math fino all'ultima cifra (`unita/conti-uguali`),
-  e da soli tutte le misure sono rimaste quelle (`npm test` verde). Il mondo di sopra (`aperta.js`, `mondo-*.js`, `terra.js`) non
-  è passato: in due non c'è.
-- **Il passo fisso**: `passo(dt)` taglia già a 0,05 s; in due il battito è sempre 0,05.
-- **La fotografia c'è quasi**: la sosta (`motore/sosta.js`) salva il piano come differenza da quello nato dal seme, coi mostri dove
-  erano. In due serve anche lo scontro aperto e la fila, che la sosta non salva.
-- **L'impronta**: vita ed energia dei due, celle dei due, mostri vivi e somma delle loro posizioni, piano, passi.
-- **`unita/sotterraneo-lockstep`**: il giocatore finto scende in ognuno dei tredici dungeon del 3D (botti e copricapi accesi), e il
-  test sostituisce `Math.random`, `hypot` e la trigonometria con spie che contano chi le chiama: devono essere zero, e la stessa
-  discesa rifatta deve dare la stessa impronta. Un `**` nuovo non lo vede nessuna spia: si scrive `potenzaIntera`.
-
-## Cosa dà il sotterraneo al pezzo comune (`sfida/`)
-
-Come Castle Battle ([../arena/multigiocatore.md](../arena/multigiocatore.md)), **fatto** il 29 ottobre nel ramo:
-
-- `sfida/protocollo.js`: le **mosse** (`vai`, `rispondi` con l'id della domanda, `scendi`, `sali`, `nonAspetto`, `chiudi`,
-  `riprendi`, `continua`, `bersaglio`, `prepara`, `bevi`, `usa`, `butta`, `pergamena`; `mossaValida`), l'**impronta** (uguale al
-  bit, niente tolleranza: il motore è deterministico), la **proposta** (seme, posto, difficoltà) e la **parte** di ognuno (il suo
-  eroe: classe, roba, crescita, nome). La versione è `VERSIONE_SFIDA` più la firma dei dati (discese, mostri, roba, eroi): due
-  telefoni con tabelle diverse non partono.
-- `sfida/regia.js`: `regolaSotterraneo({ eroe })` per l'incontro, `discesaDi` (il posto al livello della coppia, il caso col suo
-  stato), `eseguiMossa` (la mossa di un alleato, se adesso si può ancora: una domanda vecchia o un turno non suo non valgono) e
-  `motoreDi`, col `guarda(ruolo)` che dice alla vista quale alleato è di questo telefono.
-- `sfida/foto.js`: la **fotografia** della discesa intera (il mondo, gli alleati, lo scontro aperto, il caso), sul pezzo comune
-  `src/insieme/grafo.js`. Pesa sui 300 KB: passa in una decina di secondi, e serve solo quando le copie si separano.
-- **L'incontro porta la parte dell'ospite** (`presentati`, `accettaParte`: [../core/insieme.md](../core/insieme.md)).
-- I bambini finti in `test/aiuto/sfide/sotterraneo.mjs`: decidono sulla loro copia con le mete di `motore/banco-in-due.js` e
-  mandano una mossa alla volta. `unita/sotterraneo-sfida`: partite intere su quattro reti, mai separate; la fotografia presa a
-  scontro aperto e rimessa va avanti uguale, campo per campo. `node strumenti/banco-rete.mjs --gioco sotterraneo`: in fondo il
-  100% con la rete calma, il 92% con quella di casa e di Melody; con «pessima» (spenta fino a un minuto, otto volte al minuto) si
-  rompono tutte, come vuole il tavolo che tiene un posto vuoto due minuti.
+Come è fatto (i conti uguali sui due telefoni, quello che il sotterraneo dà al pezzo comune, la vista nel 3D): [in-due-codice.md](in-due-codice.md).
 
 ## Riprendere il giorno dopo (proposta dell'utente, da fare)
 
@@ -221,9 +184,8 @@ valido per un giorno, tanto basta sincronizzarsi sull'ultimo snapshot».
    tre in due con le spie sui conti. Restano da tarare i moltiplicatori della difficoltà, e da decidere dove ci si risveglia
    quando svengono tutti e due (oggi tutti e due all'ingresso del piano, nella stessa cella).
 4. **La regia** (fatto): l'incontro che porta l'eroe dell'ospite, le mosse, la fotografia, la partita finta in due e il banco della
-   rete (sopra).
-5. **La vista 3D**: il secondo eroe col nome e cosa sta facendo, la telecamera sul punto in mezzo, «Aspetto Leo alla scala», il
-   compagno sul palco dello scontro (`Scontro3d.vue`), la sala. Il 2D non si tocca.
+   rete ([in-due-codice.md](in-due-codice.md)).
+5. **La vista 3D** (fatto, [in-due-codice.md](in-due-codice.md)). Il 2D non si tocca.
 
 Il punto 2 è il lavoro più grosso e il più rischioso (il motore della discesa è di quasi 13.000 righe, e l'eroe solo ci sta
 dappertutto); i punti 1-4 si possono pubblicare senza che si veda niente: da soli non cambia un numero. Dopo la vista, riprendere il

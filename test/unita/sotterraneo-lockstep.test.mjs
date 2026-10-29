@@ -1,5 +1,5 @@
 /* La discesa deve venire uguale al bit su due telefoni con lo stesso seme e gli stessi comandi: è la condizione per scendere in
-   due scambiandosi solo le mosse (docs/sotterraneo/in-due.md, «Il caso e i conti uguali»). Due browser possono dare numeri
+   due scambiandosi solo le mosse (docs/sotterraneo/in-due-codice.md, «Il caso e i conti uguali»). Due browser possono dare numeri
    diversi da `Math.random` (sempre) e dalle funzioni che la specifica lascia arrotondare a piacere (`hypot`, la trigonometria,
    `pow`, `exp`, `log`): il giocatore finto scende in ogni dungeon del 3D, con le botti e i copricapi, e in tre di loro scendono
    due giocatori finti insieme: nessuna di queste deve essere chiamata. `sqrt` e le quattro operazioni sono esatte ovunque.
