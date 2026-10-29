@@ -5,7 +5,7 @@
    corte), a schermo mentre girano. Dove pesa: le due scale intere, la
    LETTURA gradino per gradino, la riga DATI; le note finiscono
    nell'invio; l'ultima si riapre dopo una ricarica. Gli fps veri: le
-   sette scene senza aspettare la GPU, nessuna «non regge».
+   nove scene senza aspettare la GPU, nessuna «non regge».
    `node test/esegui.mjs benchmark-veri --scatti` per la foto del resoconto.
    tempo: 300
    ═══════════════════════════════════════════════════════════════════ */
@@ -84,7 +84,8 @@ await page.waitForSelector('[data-benchmark-log]', { timeout: 280000 })
 const breve = await page.inputValue('[data-benchmark-log]')
 const vd = await page.evaluate(() => window.__benchmarkVeri)
 const fpsV = vd.risultati.filter(r => r.gruppo === 'fps')
-controlla('gli fps veri: le sette scene e basta, senza aspettare la GPU, con gli fps e i fotogrammi sotto i 30', vd.risultati.length === 7 && fpsV.length === 7 && fpsV.every(r => !r.errore && r.vero && r.fps > 0 && r.sotto30 != null && r.gpu === 0),
+// nei tempi corti la prima scena di un gioco può avere un fotogramma solo (gli shader che si compilano): basta che ne abbia
+controlla('gli fps veri: le nove scene e basta, senza aspettare la GPU, coi fotogrammi misurati e quelli sotto i 30', vd.risultati.length === 9 && fpsV.length === 9 && fpsV.every(r => !r.errore && r.vero && r.n > 0 && r.sotto30 != null && r.gpu === 0),
   JSON.stringify(vd.risultati.map(r => [r.id, r.errore || r.fps])))
 controlla('il resoconto: una riga per scena e la lettura degli fps veri', /\(fps veri\)/.test(breve.split('\n')[0]) && /scontro sul prato, 3 mostri: \d+ fps \(sotto i 30 il \d+%/.test(breve) && /FPS VERI \(fascia [a-z?]+, il gioco com'è\): camminare in un piano del sotterraneo \d+ fps/.test(breve), breve.slice(-1500))
 uguale('nessuna scena «non regge» negli fps veri', (breve.match(/non regge/g) || []).length, 0)

@@ -136,7 +136,7 @@ async function copia() {
         se il telefono si pianta, riapri questa pagina e «L'ultima» ha le scene fatte fin lì.</p>
       <h3>Gli fps veri</h3>
       <p>{{ quante.fps.scene }} scene, circa {{ quante.fps.minuti }} minuti: il gioco com'è, con la fascia di questo telefono. Camminare in un piano e
-        lo scontro con 3 e 6 mostri nel sotterraneo, il villaggio e lo scontro sul prato di sopra, due fattorie 3D. Dice a quanti fps gira davvero ogni scena.</p>
+        lo scontro con 3 e 6 mostri nel sotterraneo, il villaggio e lo scontro sul prato di sopra, due fattorie 3D, gli asteroidi col volo e con le esplosioni. Dice a quanti fps gira davvero ogni scena.</p>
       <button type="button" class="bottone" data-azione="benchmark-veri" @click="avvia('fps')">Avvia gli fps veri</button>
       <h3>Dove pesa</h3>
       <p>{{ quante.scale.scene }} scene, circa {{ quante.scale.minuti }} minuti: lo scontro nel sotterraneo e il villaggio di sopra costruiti un pezzo
