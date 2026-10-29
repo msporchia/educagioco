@@ -17,6 +17,9 @@ import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 const SERVIZIO = (process.env.SERVIZIO || 'https://sfida.educagioco.workers.dev').replace(/\/$/, '')
 const vivo = await fetch(`${SERVIZIO}/amici/codice`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' })
   .then(r => r.status === 400, () => false)
+// la bacheca c'è dalla migrazione v5: un servizio di prima risponde 404 (e quella parte si salta), uno nuovo 400 a una richiesta vuota
+const conBacheca = vivo && await fetch(`${SERVIZIO}/amici/bacheca`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' })
+  .then(r => r.status === 400, () => false)
 if (!vivo) { console.log(`⚠️  salto: il servizio degli amici non risponde su ${SERVIZIO} (lo prova \`SERVIZIO=http://localhost:8787\` con wrangler dev)`); process.exit(0) }
 
 const browser = await apriBrowser()
@@ -117,6 +120,8 @@ for (const [nome, p] of [['chi invita', a], ['chi accetta', b]]) {
 }
 
 /* ── la bacheca (docs/core/amici-bacheca.md): uno va avanti negli asteroidi, l'altro lo vede sulla rotta, passando dal servizio ── */
+if (!conBacheca) console.log(`⚠️  salto la bacheca: il servizio su ${SERVIZIO} non ce l'ha ancora (npx wrangler deploy)`)
+else {
 await semina(a, { mate: { tappa: 0, fila: 4, libera: false } }, 'leonardo')     // ricarica: all'avvio la bacheca si scrive
 await attendi(a, 4500)
 await b.reload(); await b.waitForSelector('.carte', { timeout: 10000 })
@@ -124,6 +129,7 @@ await scegli(b, 'mate')
 await b.waitForSelector('[data-amico-in-rotta]', { timeout: 15000 })
 const pallino = await b.$eval('[data-amico-in-rotta]', e => ({ al: e.dataset.al, testo: e.textContent.trim() }))
 controlla('l\'altro vede l\'amico sulla rotta, alla sua tappa, con l\'iniziale', pallino.al === '4' && pallino.testo === 'L', JSON.stringify(pallino))
+}
 
 controlla('nessun errore vero in console, da nessuna parte', veri([...A.errori, ...B.errori]).length === 0, veri([...A.errori, ...B.errori]).join(' | '))
 
