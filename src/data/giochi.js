@@ -5,6 +5,7 @@
    docs/core/primati.md. L'albo dei progressi resta fuori di proposito. */
 import { GIOCHI_NUOVI, gioco } from '../giochi/indice.js'
 import { LIBERE_RACCONTO } from './campagne-castello.js' // le quattro partite libere del castello
+import { SCALETTA, filaDi, posizioneOra } from './asteroidi.js'
 
 // un gioco nuovo che ha preso la carta di uno vecchio sta al suo posto, non in coda
 const AL_POSTO_DI_UNO_VECCHIO = ['inglese', 'spagnolo']
@@ -15,7 +16,8 @@ function riga(g) {
            copertina: g.copertina,
            sperimentale: !!g.sperimentale, serve: g.serve || [],
            chiede: g.chiede || [],
-           senzaFine: g.senzaFine || null }
+           senzaFine: g.senzaFine || null,
+           amici: g.amici || null }
 }
 
 export const GIOCHI = [
@@ -28,7 +30,9 @@ export const GIOCHI = [
       nome: 'Volo infinito', icona: '♾️', misura: 'punti', che: 'quanti punti fai',
       dettagli: d => [`livello ${d.livello}`, `${d.centri} centri`, `serie ${d.serie}`],
       vecchio: p => (p && p.best ? p.best.math : 0),
-    } },
+    },
+    // gli amici sulla rotta (docs/core/amici-bacheca.md): la fila sta in `profile.mate`, non nelle campagne
+    amici: { tappe: SCALETTA.length, dove: 'al volo infinito', tappa: p => posizioneOra(filaDi(p.mate)) } },
   // l'inglese e lo spagnolo a mondi hanno preso il posto delle carte di prima, e ne tengono il posto
   riga(gioco('inglese')),
   riga(gioco('spagnolo')),

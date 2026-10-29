@@ -91,7 +91,8 @@ export function fermaBacheca() {
 /* i colori dei pallini: uno per posto nella lista, quindi due amici non ne hanno mai uno uguale */
 export const COLORI = ['#ff6b6b', '#4ecdc4', '#b18cff', '#ffa94d', '#69db7c', '#f783ac']
 
-/* Gli amici da mostrare in un gioco: chi ha un nome e ha scritto qualcosa di quel gioco. */
+/* Gli amici da mostrare in un gioco: chi ha un nome e ha scritto qualcosa di quel gioco. { chiave, nome, iniziale, colore,
+   tappa, primati: { <sfida>: n }, quando }. Le schermate passano da usaAmici.js, che ne fa le cose da mostrare. */
 export function amiciNelGioco(gioco, ora = Date.now()) {
   if (!dati.attivo) return []
   return dati.amici.map((a, i) => ({ a, i })).filter(({ a }) => a.nome && a.bacheca?.giochi?.[gioco]).map(({ a, i }) => ({

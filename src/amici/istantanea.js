@@ -1,26 +1,48 @@
 // L'istantanea che un bambino lascia nella bacheca di ogni amicizia (docs/core/amici-bacheca.md): per ogni gioco dove è arrivato
-// e il suo record, e il giorno (non l'ora: serve solo a dire quanto è vecchia). Parte pura: gira in Node.
+// e i suoi record, e il giorno (non l'ora: serve solo a dire quanto è vecchia). Parte pura: gira in Node.
+// Cosa entra lo dichiarano i giochi, con `amici` nel manifesto (o nella loro riga di data/giochi.js): qui non si nomina nessun gioco.
 import { GIOCHI } from '../data/giochi.js'
-import { filaDi, posizioneOra } from '../data/asteroidi.js'
-import { apriQuaderno, sfideDi } from '../giochi/primati.js'
+import { apriQuaderno, sfideDi, inParole, scartoInParole } from '../giochi/primati.js'
 
 export const VERSIONE = 1
 const NUMERO_MAX = 10_000_000
 const GIORNO = /^\d{4}-\d{2}-\d{2}$/
+const SFIDA = /^[a-z0-9-]{0,24}$/                // la chiave di una sfida senza fine; '' è quella sola
 
-/* il record della sfida sola di un gioco, letto come lo legge `primatoDi` (record di prima compreso) */
-function recordDi(p, chiave) {
-  const s = sfideDi(GIOCHI.find(g => g.chiave === chiave)?.senzaFine)[0]
-  if (!s) return 0
-  return apriQuaderno((p.campagne || {})[chiave] || {}, s.chiave ? s : null, s.vecchio ? s.vecchio(p) : 0).best
+/* i giochi che mostrano gli amici: quelli con `amici` nel manifesto */
+export const giochiConAmici = () => GIOCHI.filter(g => g.amici)
+export const conAmici = chiave => GIOCHI.find(g => g.chiave === chiave && g.amici) || null
+
+/* La dichiarazione di un gioco, coi valori di serie: `tappe` quanti nodi ha la mappa prima della sfida senza fine (che è il nodo
+   `tappe`; senza, il gioco ha solo record), `tappa(p)` dove è arrivato (di serie il cursore di `campagne[chiave]`, e finita la
+   campagna la sfida senza fine), `dove` come si dice esserci arrivati («alla sopravvivenza»). */
+export function dichiarazione(g) {
+  const d = g.amici === true ? {} : g.amici
+  const tappe = Number.isInteger(d.tappe) && d.tappe > 0 ? d.tappe : 0
+  const cursore = p => {
+    const c = (p.campagne || {})[g.chiave] || {}
+    return c.libera ? tappe : Math.max(0, Math.min(tappe, Math.floor(Number(c.tappa) || 0)))
+  }
+  return { tappe, dove: d.dove || '', tappa: tappe ? (typeof d.tappa === 'function' ? d.tappa : cursore) : () => 0 }
 }
 
-/* I giochi nella bacheca: una riga per gioco, e solo quelli che qualcuno mostra (oggi gli Asteroidi).
-   `tappa` è il nodo della mappa (negli Asteroidi la lunghezza della fila è il volo infinito), `record` il primato.
-   Chi non ha ancora fatto niente in quel gioco non c'è: un pallino sulla prima tappa direbbe che ci sta giocando. */
-const seFatto = (tappa, record) => (tappa || record ? { tappa, record } : null)
-export const NELLA_BACHECA = {
-  mate: p => seFatto(posizioneOra(filaDi(p.mate)), recordDi(p, 'mate')),
+/* i record di un gioco, per sfida ('' la sola), letti come li legge `primatoDi` (record di prima compreso) */
+export function recordDel(p, g) {
+  const r = {}
+  for (const s of sfideDi(g.senzaFine)) {
+    const best = apriQuaderno((p.campagne || {})[g.chiave] || {}, s.chiave ? s : null, s.vecchio ? s.vecchio(p) : 0).best
+    if (best > 0) r[s.chiave || ''] = best
+  }
+  return r
+}
+
+/* Un gioco nell'istantanea: { tappa, primati: { <sfida>: n } }. Chi non ha ancora fatto niente in quel gioco non c'è: un pallino
+   sulla prima tappa direbbe che ci sta giocando. */
+export function leggiGioco(p, g) {
+  const d = dichiarazione(g)
+  const tappa = Math.max(0, Math.min(d.tappe, Math.floor(Number(d.tappa(p)) || 0)))
+  const primati = recordDel(p, g)
+  return tappa || Object.keys(primati).length ? { tappa, primati } : null
 }
 
 const due = n => String(n).padStart(2, '0')
@@ -29,9 +51,9 @@ export const giornoDi = ms => { const d = new Date(ms); return `${d.getFullYear(
 
 export function istantanea(profilo, ora = Date.now()) {
   const giochi = {}
-  for (const [chiave, leggi] of Object.entries(NELLA_BACHECA)) {
-    const g = leggi(profilo || {})
-    if (g) giochi[chiave] = g
+  for (const g of giochiConAmici()) {
+    const x = leggiGioco(profilo || {}, g)
+    if (x) giochi[g.chiave] = x
   }
   return { v: VERSIONE, giorno: giornoDi(ora), giochi }
 }
@@ -41,16 +63,21 @@ export const firma = ist => JSON.stringify(ist?.giochi || {})
 
 const numero = x => (Number.isInteger(x) && x >= 0 && x <= NUMERO_MAX ? x : null)
 
-/* quella che arriva dall'amico: torna la forma pulita (solo i giochi e i campi che conosciamo) o null */
+/* quella che arriva dall'amico: torna la forma pulita (solo i giochi, le sfide e i campi che conosciamo) o null */
 export function leggiIstantanea(x) {
   if (!x || typeof x !== 'object' || x.v !== VERSIONE || !GIORNO.test(x.giorno || '') || !x.giochi || typeof x.giochi !== 'object') return null
   const giochi = {}
-  for (const chiave of Object.keys(NELLA_BACHECA)) {
-    const g = x.giochi[chiave]
-    if (!g || typeof g !== 'object') continue
-    const tappa = numero(g.tappa), record = numero(g.record)
-    if (tappa === null && record === null) continue
-    giochi[chiave] = { tappa: tappa ?? 0, record: record ?? 0 }
+  for (const g of giochiConAmici()) {
+    const y = x.giochi[g.chiave]
+    if (!y || typeof y !== 'object') continue
+    const sfide = new Set(sfideDi(g.senzaFine).map(s => s.chiave || ''))
+    const primati = {}
+    for (const [k, v] of Object.entries(y.primati && typeof y.primati === 'object' ? y.primati : {})) {
+      if (SFIDA.test(k) && sfide.has(k) && numero(v)) primati[k] = v
+    }
+    const tappa = Math.min(numero(y.tappa) ?? 0, dichiarazione(g).tappe)
+    if (!tappa && !Object.keys(primati).length) continue
+    giochi[g.chiave] = { tappa, primati }
   }
   return { v: VERSIONE, giorno: x.giorno, giochi }
 }
@@ -70,6 +97,24 @@ export function quandoInParole(giorno, ora = Date.now()) {
   return d === 0 ? 'oggi' : d === 1 ? 'ieri' : `${d} giorni fa`
 }
 
+/* L'amico da raggiungere: il più vicino fra quelli più avanti di `qui` (un nodo della mappa). In parole; `ultimo` è il nodo della
+   sfida senza fine, e `dove` come dirlo («al volo infinito»). Chi è dietro non si dice: sulla mappa basta il pallino. */
+export function davantiInParole(amici, qui, { ultimo = Infinity, dove = '' } = {}) {
+  const a = (amici || []).filter(x => x.tappa > qui).sort((x, y) => x.tappa - y.tappa)[0]
+  if (!a) return ''
+  const n = a.tappa - qui
+  return a.tappa >= ultimo && dove ? `${a.nome} è già ${dove}.`
+    : `${a.nome} è ${n === 1 ? 'una tappa' : n + ' tappe'} più avanti di te.`
+}
+
+/* «Leonardo è qui», «Leonardo e Melody sono qui» */
+export const quiInParole = amici => (!amici || !amici.length ? '' : amici.length === 1 ? `${amici[0].nome} è qui`
+  : `${amici.slice(0, -1).map(a => a.nome).join(', ')} e ${amici[amici.length - 1].nome} sono qui`)
+
+/* I record degli amici per l'elenco sotto il proprio, dal più alto, già in parole */
+export const recordDegliAmici = (amici, misura) => (amici || []).filter(a => a.record > 0)
+  .sort((x, y) => y.record - x.record).map(a => ({ ...a, record: inParole(a.record, misura) }))
+
 /* A fine partita, il risultato contro i record degli amici (`amici`: [{ nome, record }]).
    `superati`: chi aveva un record che prima non avevi passato e adesso sì; `prossimo`: il record più basso fra quelli ancora
    sopra questo risultato, e quanto è mancato. Un pareggio non supera nessuno, come nei primati. */
@@ -79,4 +124,12 @@ export function controAmici(valore, prima, amici) {
   const superati = conRecord.filter(a => a.record >= p && a.record < v).sort((x, y) => y.record - x.record)
   const sopra = conRecord.filter(a => a.record > v).sort((x, y) => x.record - y.record)
   return { superati, prossimo: sopra.length ? { ...sopra[0], mancano: sopra[0].record - v } : null }
+}
+
+/* la notizia porta la misura, come quella del record (docs/core/primati.md) */
+export function controAmiciInParole({ superati, prossimo }, misura) {
+  if (superati.length === 1) return `Hai superato ${superati[0].nome} (${inParole(superati[0].record, misura)})!`
+  if (superati.length > 1) return `Hai superato ${superati.slice(0, -1).map(a => a.nome).join(', ')} e ${superati[superati.length - 1].nome}!`
+  if (prossimo) return `Per ${prossimo.nome} (${inParole(prossimo.record, misura)}) ti sono mancati ${scartoInParole(prossimo.mancano, misura)}`
+  return ''
 }
