@@ -2,6 +2,7 @@
    prende il suo posto, i messaggi controllati; i codici brevi, i tentativi sbagliati. Docs: docs/core/amici.md */
 import { dichiara, chiudi, inoltra, controllaMessaggio, MAX_BYTE, MAX_AL_SECONDO, MAX_CHIAVI, ID, CHIAVE } from '../../servizio/inoltro/src/presenza.js'
 import { nuovoCodice, contaErrore, bloccato, CODICE, ALFABETO, ERRORI_AL_MINUTO } from '../../servizio/inoltro/src/codici.js'
+import { leggiRichiesta, usa, SCADENZA, MAX_DATI } from '../../servizio/inoltro/src/bacheca.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const ugualeJ = (cosa, a, b) => uguale(cosa, JSON.stringify(a), JSON.stringify(b))
@@ -72,5 +73,24 @@ const ugualeJ = (cosa, a, b) => uguale(cosa, JSON.stringify(a), JSON.stringify(b
   controlla('il decimo sì: per un minuto non si prova più', bloccato(st, 3000))
   controlla('passato un minuto si riparte', !bloccato(st, 70_000))
   uguale('e il conto si azzera', contaErrore(st, 70_000).n, 1)
+}
+/* la bacheca (docs/core/amici-bacheca.md): di due, scade in una settimana, il servizio non legge */
+{
+  const K = 'a'.repeat(32)
+  uguale('la bacheca scade una settimana dopo l\'ultima scrittura', SCADENZA, 7 * 24 * 3600 * 1000)
+  controlla('una richiesta senza chiave o senza id è storta', !leggiRichiesta({ id: 'melody001' }).ok && !leggiRichiesta({ chiave: K }).ok)
+  controlla('dati null: si legge soltanto', leggiRichiesta({ chiave: K, id: 'melody001', dati: null }).testo === null)
+  controlla('dati che non sono un oggetto: no', !leggiRichiesta({ chiave: K, id: 'melody001', dati: [1] }).ok && !leggiRichiesta({ chiave: K, id: 'melody001', dati: 'x' }).ok)
+  controlla('dati troppo grandi: no', !leggiRichiesta({ chiave: K, id: 'melody001', dati: { x: 'y'.repeat(MAX_DATI) } }).ok)
+  let r = usa(undefined, 'melody001', '{"a":1}')
+  controlla('la prima scrive e non trova nessuno', r.scritto && r.altro === null && r.posti.melody001 === '{"a":1}')
+  r = usa(r.posti, 'leonardo1', null)
+  controlla('l\'amico legge senza scrivere e trova la prima', !r.scritto && r.altro === '{"a":1}' && !('leonardo1' in r.posti))
+  r = usa(r.posti, 'leonardo1', '{"b":2}')
+  controlla('e scrivendo prende il suo posto', r.scritto && r.altro === '{"a":1}' && r.posti.leonardo1 === '{"b":2}')
+  r = usa(r.posti, 'melody001', '{"a":3}')
+  controlla('chi riscrive sostituisce la sua e legge quella dell\'altro', r.posti.melody001 === '{"a":3}' && r.altro === '{"b":2}')
+  const terzo = usa(r.posti, 'estraneo01', '{"c":1}')
+  controlla('un terzo non entra in una bacheca di due, nemmeno per leggere', terzo.rifiutato && !terzo.altro && !('estraneo01' in terzo.posti))
 }
 riassunto('amici: le regole del servizio')

@@ -7,6 +7,8 @@
    davanti l'emoji del livello, che sulla mappa non c'è. La usano le due
    mappe; chi lo usa ne misura il `$el` per farlo vedere tutto.
    Vedi docs/passo-passo/mappa.md, «Il fumetto». */
+import AmiciQui from '../../../components/amici/AmiciQui.vue'
+
 defineProps({
   n: { type: Object, required: true },        // { id, tipo: casella | sentiero | blocco | zaino, nome, racconto, stato, serve, … }
   posto: { type: Object, required: true },    // { x, y, largo, sotto, coda } in pixel della mappa
@@ -27,6 +29,8 @@ const intestazione = n => (n.tipo === 'sentiero' ? `In fondo alla strada ${n.str
     <small>{{ intestazione(n) }}</small>
     <b><span v-if="n.icona" class="pp-em" data-livello-icona>{{ n.icona }}</span>{{ n.nome }}</b>
     <span v-if="n.racconto" class="pp-fumetto-racconto">{{ n.racconto }}</span>
+    <!-- gli amici arrivati a questa tappa: il nome (sulla casella ci sono solo i pallini) -->
+    <AmiciQui v-if="n.amici && n.amici.length" :amici="n.amici" class="pp-amici-fumetto" :data-al="n.numero - 1" />
     <!-- una cosa che il bambino incontra per la prima volta: come funziona -->
     <span v-for="(d, k) in (n.stato !== 'chiusa' && n.nuovo) || []" :key="k" class="pp-fumetto-nuovo" data-nuovo>
       <span class="pp-em">💡</span> {{ d }}</span>

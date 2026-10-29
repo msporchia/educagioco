@@ -59,6 +59,13 @@
                          background: var(--is-casella); color: var(--is-scuro); font-size: 14px; font-weight: 700;
                          box-shadow: 0 3px 0 var(--is-spessore) }
 .pp-mappa-cima > .ri-carta { margin: 8px 0 4px }
+/* gli amici (docs/core/amici-nei-giochi.md): chi è da raggiungere in cima, i pallini sotto la casella, il nome nel fumetto, i record sotto il sentiero */
+.pp-davanti { margin: 6px 0 2px; padding: 5px 14px; border-radius: 999px; background: var(--is-casella); color: var(--is-scuro);
+              font-size: 14px; font-weight: 700; text-align: center; box-shadow: 0 3px 0 var(--is-spessore) }
+.pp-amici-casella { position: absolute; z-index: 1; margin-top: 2px; transform: translateX(-50%); display: flex; gap: 2px; pointer-events: none }
+.pp-amici-fumetto { margin-top: 2px; font-size: 13px; color: var(--is-scuro) }
+.pp-amici-sentiero { margin-top: 3px; font-size: 12.5px; color: #7a3b12 }
+.pp-sentiero-nome .pp-amici-sentiero b { font-size: 12.5px; font-weight: 800 }
 
 /* lo stendardo di un'isola (o lo stemma solo, per un'isola piccola): disegnato in pixel
    da scena/stendardo.js, il nome è testo vero sopra la stoffa; non si tocca */

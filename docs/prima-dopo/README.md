@@ -8,4 +8,5 @@ Rimettere in fila una storia, per i quattro-sei anni (`src/giochi/prima-dopo/`).
 - [da-fare.md](da-fare.md) — le storie ancora a emoji, il cassetto dei concetti da promuovere a `src/grafica/`
 
 Vedi anche: le regole per scrivere una storia in testa a
-`src/giochi/prima-dopo/dati/storie.js`; [../core/convenzione-giochi.md](../core/convenzione-giochi.md).
+`src/giochi/prima-dopo/dati/storie.js`; [../core/convenzione-giochi.md](../core/convenzione-giochi.md);
+gli amici sulla mappa: [../core/amici-nei-giochi.md](../core/amici-nei-giochi.md).

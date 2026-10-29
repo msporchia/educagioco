@@ -3,11 +3,13 @@
 // tutto già deciso; qui si sceglie dove andare e basta. In cima, se c'è,
 // la tappa lasciata a metà (docs/pozioni/sosta.md).
 import Ripresa from '../../Ripresa.vue'
+import AmiciQui from '../../../components/amici/AmiciQui.vue'
 
 defineProps({
   blocchi: { type: Array, required: true },   // [{ chiave, nome, emoji, dritta, tappe: [] }]
   ripresa: { type: Object, default: null },   // { emoji, nome, dettaglio }
   chiede: { type: String, default: '' },      // la tappa che si sta per cominciare
+  davanti: { type: String, default: '' },     // l'amico da raggiungere, in parole (docs/core/amici-nei-giochi.md)
 })
 defineEmits(['gioca', 'riprendi', 'scorda', 'comincia', 'annulla'])
 </script>
@@ -17,6 +19,7 @@ defineEmits(['gioca', 'riprendi', 'scorda', 'comincia', 'annulla'])
     <Ripresa :ripresa="ripresa" :chiede="chiede"
              @riprendi="$emit('riprendi')" @scorda="$emit('scorda')"
              @comincia="$emit('comincia')" @annulla="$emit('annulla')" />
+    <p v-if="davanti" class="pz-davanti" data-amico-davanti>{{ davanti }}</p>
     <p class="pz-intro">La ricetta parla di chili, metri e litri. Ogni attrezzo conta nella
       sua unità e arriva fin dove arriva: sta a te scegliere quello giusto, e tradurre.</p>
     <section v-for="b in blocchi" :key="b.chiave" class="pz-blocco" :data-blocco="b.chiave">
@@ -33,6 +36,7 @@ defineEmits(['gioca', 'riprendi', 'scorda', 'comincia', 'annulla'])
           <span class="pz-testo">
             <b>{{ t.nome }}</b>
             <i>{{ t.dritta }}</i>
+            <AmiciQui :amici="t.amici" class="pz-qui" :data-al="t.indice" />
           </span>
           <span class="pz-stelle em">{{ !t.aperta ? '🔒' : t.stelle ? '⭐'.repeat(t.stelle) : '▶' }}</span>
         </button>

@@ -24,6 +24,8 @@ export default {
   copertina: { fondo: '#3c4651', disegno: '#566472', scena: 'griglia' },
   tappe: QUANTE_TAPPE,
   senzaFine: SENZA_FINE,
+  // gli amici sulla mappa (docs/core/amici-nei-giochi.md): il cursore della campagna, e dopo l'ultima tappa il gioco libero
+  amici: { tappe: QUANTE_TAPPE, dove: 'al gioco libero' },
 
   riassunto(av = { tappa: 0, libera: false, stelle: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)

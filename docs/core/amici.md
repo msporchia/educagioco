@@ -68,7 +68,8 @@ dopo che un grande ha fatto l'abbinamento col codice.
 
 > **Giocare con gli amici** — Si può giocare insieme a un amico, ognuno sul suo telefono. Vedrà solo gli amici con cui voi
 > grandi vi scambiate un codice, e funziona solo in alcuni giochi (per ora Castle Battle). Si gioca insieme soltanto quando
-> lo decide lui: arriva un invito e dice sì o no. Non ci sono chat e non può parlare con nessuno. È un divertimento in più,
+> lo decide lui: arriva un invito e dice sì o no. In alcuni giochi vede anche fin dove sono arrivati i suoi amici e i loro
+> record, e loro vedono i suoi. Non ci sono chat e non può parlare con nessuno. È un divertimento in più,
 > il resto del gioco non cambia. Lo potete cambiare quando volete, dalle impostazioni.
 > [Attiva] [Più tardi]
 
@@ -161,7 +162,8 @@ limitano chi lo fa a mano, non un attacco vero. Dove guardare: pannello Cloudfla
 ## Cosa questo apre (non è in questo lavoro)
 
 - **Rientro automatico** nella stanza dopo una caduta: l'`id` del bambino dice che è lo stesso giocatore.
-- **Record fra amici** e **visite alla fattoria**: stessi messaggi, `k` nuovi.
+- **Visite alla fattoria**: stessi messaggi, `k` nuovi. I **record fra amici** e dove è arrivato ognuno ci sono, anche senza
+  essere online insieme: [amici-bacheca.md](amici-bacheca.md).
 
 ## File e test
 

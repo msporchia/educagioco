@@ -23,6 +23,9 @@ import Stendardo from './Stendardo.vue'
 import InsegnaTana from './InsegnaTana.vue'
 import Coniglio from './Coniglio.vue'
 import Cane from './Cane.vue'
+import PallinoAmico from '../../../components/amici/PallinoAmico.vue'
+import AmiciQui from '../../../components/amici/AmiciQui.vue'
+import RecordAmici from '../../../components/amici/RecordAmici.vue'
 
 const props = defineProps({
   mondo: { type: String, default: 'valle' },          // 'valle' o 'zaino'
@@ -30,6 +33,7 @@ const props = defineProps({
   voci: { type: Array, required: true },
   sentieri: { type: Object, required: true },         // { coniglio, cane }, ognuno { aperto, record, serve }
   passaggio: { type: Object, required: true },        // la tana per l'altro mondo: { aperto, serve, sotto, chiama }
+  amici: { type: Object, required: true },            // gli amici di questa strada: usaAmici('passo', { percorso }), docs/core/amici-nei-giochi.md
   dove: { type: [Number, String], required: true },   // la tappa di adesso, o un sentiero
   partenza: { type: [Number, String], required: true },  // il nodo dove sta il segnalino
   meta: { type: [Number, String], default: null },    // dove va appena aperta la mappa (la tappa di adesso è cambiata)
@@ -63,8 +67,10 @@ const sentieroDi = id => {
     racconto: RACCONTO[strada], serve: f.serve || '', record: f.record || '',
   }
 }
+// gli amici sulla casella: il nodo è il posto sulla strada da 0; chi è al sentiero senza fine sta nella sua etichetta
+const amiciSu = n => (n.tipo === 'sentiero' ? [] : props.amici.sullaTappa(STRADE.numero[n.id] - 1))
 const caselle = computed(() => quadro.nodi.filter(n => n.tipo === 'casella' || n.tipo === 'sentiero')
-  .map(n => ({ ...n, ...(n.tipo === 'sentiero' ? sentieroDi(n.id) : props.voci[n.id]) })))
+  .map(n => ({ ...n, ...(n.tipo === 'sentiero' ? sentieroDi(n.id) : props.voci[n.id]), amici: amiciSu(n) })))
 const vocePer = id => caselle.value.find(c => c.id === id)
 const stato = computed(() => chiusure(quadro, id => !!props.voci[id] && props.voci[id].stato !== 'chiusa'))
 const velata = k => !stato.value.aperte.has(k)
@@ -453,12 +459,20 @@ const dove = (x, y) => ({ left: x + 'px', top: y + 'px' })
 
       <template v-for="c in caselle" :key="c.id">
         <Casella :c="c" :velata="velata(c.isola)" @tocca="tocca" />
+        <!-- gli amici arrivati qui: i pallini sotto la casella, il nome nel fumetto -->
+        <span v-if="c.amici.length" class="pp-amici-casella" data-amici-casella :data-al="STRADE.numero[c.id] - 1"
+              :style="dove(c.x, c.y + c.lato / 2 + 2)">
+          <PallinoAmico v-for="a in c.amici" :key="a.chiave" :amico="a" :lato="16" data-pallino-amico />
+        </span>
         <span v-if="c.tipo === 'sentiero'" class="pp-sentiero-nome pp-sentiero-nome-valle pp-a-destra"
               :class="'pp-' + c.stato" :style="dove(c.etichetta[0], c.etichetta[1])">
           <b>{{ c.nome }}</b>
           <i v-if="c.stato === 'chiusa'">{{ c.serve }}</i>
           <i v-else-if="c.record" data-record>record: {{ c.record }}</i>
           <i v-else>sentieri nuovi, uno dopo l'altro</i>
+          <!-- gli amici al sentiero: i loro record dal più alto, e chi c'è senza un record -->
+          <RecordAmici :record="amici.record(c.strada)" :lato="14" class="pp-amici-sentiero" />
+          <AmiciQui :amici="amici.allaFine(c.strada)" :lato="14" class="pp-amici-sentiero" :data-al="amici.tappe" />
         </span>
       </template>
 

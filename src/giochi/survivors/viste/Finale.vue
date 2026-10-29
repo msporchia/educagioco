@@ -16,6 +16,7 @@ defineProps({
   livello: { type: Number, default: 1 },
   // { record, primo, frase, … } nella Sopravvivenza, niente nelle tappe
   primato: { type: Object, default: null },
+  amici: { type: String, default: '' },        // il risultato contro i record degli amici, in parole
   libera: { type: Boolean, default: false },
   ultima: { type: Boolean, default: false },   // la campagna è finita qui
   puoiRestare: { type: Boolean, default: false },  // sei appena arrivato al traguardo
@@ -49,6 +50,7 @@ const minuti = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart
         🥇 {{ primato.frase }}
       </p>
       <p v-else-if="primato && primato.frase" data-primato="no">🏁 {{ primato.frase }}</p>
+      <p v-if="amici" class="sv-contro-amici" data-contro-amici>{{ amici }}</p>
       <p v-if="extra" class="sv-extra em">⏱️ altri {{ extra }}s dopo il traguardo</p>
       <p v-if="notaMonete" class="sv-nota-monete" data-nota-monete>{{ notaMonete }}</p>
       <p v-else-if="monete">+{{ monete }} 🪙</p>

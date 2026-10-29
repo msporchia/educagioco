@@ -38,6 +38,8 @@
 .pz-tappa b { display: block; font-size: 14.5px; font-weight: 900 }
 .pz-tappa i { display: block; font-style: normal; font-size: 11.5px; color: #c9bde6;
               line-height: 1.25 }
+.pz-tappa .pz-qui { margin-top: 3px; font-size: 12px; color: #fff }
+.pz-davanti { margin: 0; text-align: center; font-size: 14px; font-weight: 700; color: #fff }
 .pz-tappa .pz-stelle { flex: none; font-size: 14px; letter-spacing: 1px }
 .pz-tappa.pz-chiusa { opacity: .45; box-shadow: none }
 .pz-tappa.pz-adesso { box-shadow: 0 3px 0 var(--pz-viola), inset 0 0 0 2px var(--pz-viola) }

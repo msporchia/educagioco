@@ -12,6 +12,7 @@ import { borsa } from '../../store/varieta.js'   // paga e dice se il salvadanai
 import { PAGA } from '../../data/paghe.js'
 import { progresso, aperta, adesso, stelleDi, completa, sosta, salvaSosta, buttaSosta, ritocca } from '../campagne.js'
 import { usaPausa } from '../pausa.js'
+import { usaAmici } from '../../amici/usaAmici.js'
 import VeloPausa from '../VeloPausa.vue'
 import Domanda from '../../quiz/Domanda.vue'
 import { Giostra } from './scena/giostra.js'
@@ -69,6 +70,9 @@ function vuoto() { return { soli: 0, restano: 0, totale: 0, carte: [] } }
 
 const dovEravamo = computed(() => `🧟 ne restano ${cruscotto.value.restano} · ☀️ ${cruscotto.value.soli}`)
 
+// gli amici dalla loro bacheca (docs/core/amici-nei-giochi.md): la tappa da fare di ognuno
+const amici = usaAmici(CHIAVE)
+
 /* ── la mappa ── */
 const scalini = computed(() => SCALINI.map(s => ({
   ...s,
@@ -78,6 +82,7 @@ const scalini = computed(() => SCALINI.map(s => ({
     aperta: aperta(CHIAVE, t.indice),
     adesso: adesso(CHIAVE, t.indice),
     stelle: stelleDi(CHIAVE, t.indice),
+    amici: amici.sullaTappa(t.indice),
   })),
 })))
 
@@ -350,7 +355,7 @@ onUnmounted(() => {
            :pausa="siGioca" @pausa="metti()" @aiuto="aiuto" @indietro="indietro" />
 
     <div class="gi">
-      <Mappa v-if="vista === 'mappa'" :scalini="scalini" :ripresa="ripresa"
+      <Mappa v-if="vista === 'mappa'" :scalini="scalini" :ripresa="ripresa" :davanti="amici.davanti"
              @gioca="avvia" @riprendi="riprendiPartita" @scorda="scorda" />
 
       <CampoVista v-else :cruscotto="cruscotto" :avviso="avviso" :in-mano="inMano"

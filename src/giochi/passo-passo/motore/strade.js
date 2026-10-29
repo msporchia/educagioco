@@ -126,5 +126,15 @@ export function stradeDi(av, S = STRADE, extra = {}) {
   const fatta = i => (stelle[i] || 0) > 0 || i < eredita
   const { aperta } = aperture(S, { fatta, eredita, ...extra })
   const ultima = av && av.cfg && Number.isInteger(av.cfg.ultima) ? av.cfg.ultima : null
-  return { fatta, aperta, adesso: () => tappaDiAdesso(S, { ultima, cursore: (av && av.tappa) || 0, aperta, fatta }) }
+  return { fatta, aperta, adesso: (strada = null) => tappaDiAdesso(S, { ultima, cursore: (av && av.tappa) || 0, aperta, fatta, strada }) }
+}
+
+/* Dove è arrivato un protagonista sulla sua strada, per gli amici (docs/core/amici-nei-giochi.md): il posto della sua tappa di
+   adesso (da 0), il numero di tappe se le ha fatte tutte (è al sentiero senza fine), 0 se non ha niente da fare (strada chiusa).
+   Come la mappa sceglie il nodo del segnalino, ma dall'avanzamento e senza l'età. */
+export function postoSullaStrada(av, strada, S = STRADE) {
+  const { fatta, adesso } = stradeDi(av, S)
+  const i = adesso(strada)
+  if (i !== null) return S.numero[i] - 1
+  return fatta(S[strada].at(-1)) ? S[strada].length : 0
 }

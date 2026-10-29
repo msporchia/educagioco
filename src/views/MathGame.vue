@@ -29,6 +29,7 @@ import { hangarDi, vintaTappa, vintoVolo, bossNelVolo, livrea, pacchiDi } from '
 import { scrivi, leggi, dice, recordDi, chiaveDi } from '../motore/asteroidi/sosta.js'
 import Ripresa from '../giochi/Ripresa.vue'
 import { fraseDiFine, recordInParole, sfidaDi } from '../giochi/primati.js'
+import { usaAmici } from '../amici/usaAmici.js'
 import Festa from '../giochi/Festa.vue'
 import { suono } from '../audio.js'
 import { statoScafo, puntoRotto } from '../grafica/spazio.js'
@@ -142,9 +143,13 @@ const vociRotta = computed(() => fila.map(v => ({
 const giroHangar = ref(0)
 const hangarMappa = computed(() => (giroHangar.value, hangarLetto()))
 const livreaMappa = computed(() => livrea(hangarMappa.value.nave))
+// gli amici dalla loro bacheca (docs/core/amici-bacheca.md): dove sono sulla rotta e il loro record del volo
+const amici = usaAmici('mate')
 const voloRotta = computed(() => ({
   aperto: !!progresso.value.libera, nome: VOLO.nome, record: recordVolo.value,
   che: 'tabelline e conti a mente insieme, sempre più tosti',
+  // gli amici al volo: i loro record, e chi c'è senza
+  amici: { record: amici.record(), qui: amici.allaFine() },
 }))
 const partiDa = pos => (pos < 0 ? iniziaVolo() : vuoleIniziare(pos))
 
@@ -160,6 +165,7 @@ const hud = reactive({ vite: 3, punti: 0, giuste: 0, mirate: 0, sbagliate: 0, li
 const cartello = reactive({ testo: '', colore: '', n: 0 })
 const finale = reactive({ punti: 0, giuste: 0, mirate: 0, livello: 1, record: false, ripasso: [],
                           primato: null,         // `primato`: null in una tappa, il record non c'è
+                          amici: '',             // il volo contro i record degli amici, in parole
                           regalo: null, scappata: false })   // la nave madre in fondo alla tappa
 const recordVolo = computed(() => recordInParole(primatoDi('mate'), SFIDA_VOLO))
 // le monete di questa partita: un asteroide le paga quando cade (docs/apprendimento/calibrazione.md)
@@ -967,7 +973,7 @@ function inizia(i = posizione.value, dato = null) {
   // anche il volo riparte da 1, record o no (docs/asteroidi/volo.md)
   hud.partenza = 1
   hud.livello = hud.partenza; hud.serie = 0; hud.serieMax = 0
-  finale.primato = null
+  finale.primato = null; finale.amici = ''
   particelle = []; anelli = []; frammenti = []; raggi = []; pezzi = []
   scossa = 0; lampo = 0; chieste = 0; salto = 0
   Object.assign(madre, { attiva: false, chiamata: false, attesa: false, colpi: 0 })
@@ -1149,9 +1155,11 @@ function finePartita() {
   // il record del volo: va scritto PRIMA di `riassunto()`, che riscrive
   // `best.math` — letto dopo, ogni prima partita sarebbe un pareggio con sé
   // stessa (vedi docs/asteroidi/volo.md e docs/core/primati.md)
-  if (!campagna.value)
+  if (!campagna.value) {
     finale.primato = segnaPrimato('mate', hud.punti, Date.now(),
                                   { livello: hud.livello, centri: hud.giuste, serie: hud.serieMax })
+    finale.amici = amici.contro(hud.punti, finale.primato.prima)
+  }
   riassunto()
 }
 
@@ -1350,7 +1358,8 @@ function dalCheat() {
                  @comincia="comincia" @annulla="chiede = null" />
       </div>
       <RottaAsteroidi :voci="vociRotta" :capitoli="CAPITOLI" :volo="voloRotta" :arrivo="dove"
-                      :chi="state.player || ''" :livrea="livreaMappa" @parti="partiDa">
+                      :chi="state.player || ''" :livrea="livreaMappa" :amici="amici.amici"
+                      :davanti="amici.davanti" @parti="partiDa">
         <!-- l'astronave e i gettoni: si guadagnano giocando, quindi va
              detto una volta che esistono. Altrimenti il primo ❄️ che
              compare in basso è un'icona che nessuno ha capito. -->
@@ -1447,6 +1456,7 @@ function dalCheat() {
         {{ finale.primato.record ? '🏆 ' : '' }}{{ fraseDiFine(finale.primato, SFIDA_VOLO.misura) }}</div>
       <div v-else class="dato">{{ finale.record ? '🏆 Nuovo record: ' + finale.punti
                                                 : 'Record: ' + (state.profile.best.math || 0) }}</div>
+      <div v-if="finale.amici" class="dato" data-contro-amici>{{ finale.amici }}</div>
       <Festa v-if="finale.primato && finale.primato.record" />
       <div v-if="finale.ripasso.length" class="ripasso">
         <div class="tit">Da ripassare</div>

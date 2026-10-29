@@ -28,6 +28,10 @@ class_name = "Errori"
 name = "PRESENZA"
 class_name = "Presenza"
 
+[[durable_objects.bindings]]
+name = "BACHECHE"
+class_name = "Bacheca"
+
 # il piano gratuito vuole i Durable Object con la memoria SQLite
 [[migrations]]
 tag = "v1"
@@ -48,3 +52,8 @@ deleted_classes = ["Coppia"]
 [[migrations]]
 tag = "v4"
 new_sqlite_classes = ["Tavolo"]
+
+# la bacheca di ogni amicizia (docs/core/amici-bacheca.md): l'ultima istantanea dei due, che scade dopo una settimana
+[[migrations]]
+tag = "v5"
+new_sqlite_classes = ["Bacheca"]

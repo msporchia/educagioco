@@ -12,15 +12,21 @@ import { ref, shallowRef, computed, watch, onMounted, onUnmounted, nextTick } fr
 import { disponiRotta, stradaDaPunto, agganciaARotta, lunghezza, lungo, durataVolo, giro, GIRA_PRIMA,
          versoDellaRotta, LARGO_MAX } from '../motore/asteroidi/rotta.js'
 import { dipingiRotta, dipingiRazzo, ingombro, LATO_RAZZO } from '../grafica/rotta.js'
+import PallinoAmico from './amici/PallinoAmico.vue'
+import AmiciQui from './amici/AmiciQui.vue'
+import RecordAmici from './amici/RecordAmici.vue'
 
 const props = defineProps({
   // { pos, n, tipo, cap, nome, che, stato: fatta|ora|aperta|chiusa, serve, disegno }
   voci: { type: Array, required: true },
   capitoli: { type: Array, required: true },
-  volo: { type: Object, required: true },       // { aperto, nome, che, record }
+  volo: { type: Object, required: true },       // { aperto, nome, che, record, amici: { record, qui } }
   arrivo: { type: Number, required: true },     // il nodo del razzo: voci.length è il volo
   chi: { type: String, default: '' },
   livrea: { type: Object, default: null },      // la nave scelta nell'hangar (motore/asteroidi/hangar.js)
+  // gli amici dalla loro bacheca (docs/core/amici-bacheca.md, da usaAmici): [{ chiave, nome, iniziale, colore, tappa, quando }]
+  amici: { type: Array, default: () => [] },
+  davanti: { type: String, default: '' },       // l'amico da raggiungere, in parole
 })
 const emit = defineEmits(['parti'])
 
@@ -50,6 +56,25 @@ const info = k => (k < props.voci.length ? props.voci[k] : {
 })
 const nodi = computed(() => (quadro.value ? quadro.value.nodi.map((n, k) => ({ ...n, ...info(k), k })) : []))
 const firma = computed(() => nodi.value.map(n => n.stato).join())
+
+/* ---------- gli amici: un pallino sotto la tappa a cui sono arrivati ---------- */
+const amiciAl = computed(() => {
+  const m = new Map()
+  for (const a of props.amici) {
+    const k = Math.max(0, Math.min(ultimoNodo.value, a.tappa))
+    if (!m.has(k)) m.set(k, [])
+    m.get(k).push(a)
+  }
+  return m
+})
+const PALLINO = 22, PASSO_PALLINI = 17
+const pallini = computed(() => nodi.value.flatMap(n => (amiciAl.value.get(n.k) || []).map((a, j, tutti) => ({
+  ...a, k: n.k,
+  x: n.x - ((tutti.length - 1) * PASSO_PALLINI) / 2 + j * PASSO_PALLINI - PALLINO / 2,
+  y: n.y + n.r * 0.72 - PALLINO / 2,
+}))))
+// chi c'è su quella tappa; nel volo solo chi non ha un record (chi l'ha sta nell'elenco dei record)
+const amiciQui = n => (n.tipo === 'volo' ? props.volo.amici?.qui || [] : amiciAl.value.get(n.k) || [])
 
 function misura() {
   if (scorre.value) W.value = Math.min(LARGO_MAX, Math.floor(scorre.value.clientWidth))
@@ -263,6 +288,7 @@ const racconto = n => `${n.nome}: ${n.stato === 'chiusa' ? 'chiusa' : n.stato ==
 <template>
   <div ref="scorre" class="rotta" data-rotta @click="chiudi">
     <p class="spiega">Tocca un pianeta o una stazione. Superata, la tappa prende la sua ⭐.</p>
+    <p v-if="davanti" class="spiega davanti" data-amico-davanti>{{ davanti }}</p>
     <div v-if="quadro" ref="tavola" class="tavola" :style="{ width: quadro.W + 'px', height: quadro.H + 'px' }">
       <canvas ref="tela" class="tela"></canvas>
 
@@ -306,6 +332,10 @@ const racconto = n => `${n.nome}: ${n.stato === 'chiusa' ? 'chiusa' : n.stato ==
         <path :d="STELLA_D" />
       </svg>
 
+      <!-- gli amici: l'iniziale nel loro colore, sotto la tappa dove sono arrivati (docs/core/amici-bacheca.md) -->
+      <PallinoAmico v-for="p in pallini" :key="'a' + p.chiave" :amico="p" class="amico" data-amico-in-rotta
+                    :data-al="p.k" :style="{ left: p.x + 'px', top: p.y + 'px' }" />
+
       <!-- il razzo: la nave della partita, posata accanto alla tappa a cui si è arrivati -->
       <div ref="razzo" class="razzo" aria-hidden="true" data-razzo :data-al="posato"
            :data-in-viaggio="viaggio ? '1' : '0'">
@@ -321,6 +351,7 @@ const racconto = n => `${n.nome}: ${n.stato === 'chiusa' ? 'chiusa' : n.stato ==
         <span class="che">{{ nodoAperto.che }}</span>
         <span v-if="nodoAperto.pacchi && nodoAperto.stato !== 'chiusa'" class="che" data-pacchi-fumetto>
           In fondo c'è la nave madre: {{ nodoAperto.pacchi === 1 ? 'le resta un pacco' : 'ha ' + nodoAperto.pacchi + ' pacchi' }}.</span>
+        <AmiciQui :amici="amiciQui(nodoAperto)" righe class="amici" />
         <template v-if="nodoAperto.stato === 'chiusa'">
           <span class="serve" data-serve>🔒 {{ nodoAperto.serve }}</span>
         </template>
@@ -329,6 +360,8 @@ const racconto = n => `${n.nome}: ${n.stato === 'chiusa' ? 'chiusa' : n.stato ==
             {{ nodoAperto.tipo === 'volo' ? (volo.record ? 'record ' + volo.record : 'Ancora nessun record')
                                           : STATI[nodoAperto.stato] }}
           </span>
+          <!-- nel volo, i record degli amici sotto il proprio -->
+          <RecordAmici v-if="nodoAperto.tipo === 'volo'" :record="volo.amici?.record || []" class="amici" />
           <button type="button" class="parti" data-azione="parti" @click="parti(nodoAperto)">▶ parti</button>
         </template>
       </div>
@@ -374,6 +407,8 @@ const racconto = n => `${n.nome}: ${n.stato === 'chiusa' ? 'chiusa' : n.stato ==
 .pacchi svg { width:15px; height:15px }
 .nome-chiusa b { color:#6f789c }
 
+.davanti { margin-top:6px; color:#ffd94a; font-weight:600 }
+.amico { position:absolute; pointer-events:none; z-index:1 }
 .stelle-tappa { position:absolute; width:24px; height:24px; pointer-events:none; overflow:visible }
 .stelle-tappa path { fill:#ffd94a; stroke:#0b1029; stroke-width:2.5; stroke-linejoin:round; paint-order:stroke }
 .razzo { position:absolute; left:0; top:0; width:64px; height:64px; pointer-events:none;
@@ -395,6 +430,8 @@ const racconto = n => `${n.nome}: ${n.stato === 'chiusa' ? 'chiusa' : n.stato ==
 .fumetto .che { font-size:13px; color:#4c5568 }
 .fumetto .stato { margin-top:3px; font-size:13px; font-weight:600; color:#4c5568 }
 .fumetto .stato-ora { color:#b7791f }
+.fumetto .amici { margin-top:3px; font-size:13px; color:#2c3f86; align-items:center }
+.fumetto .amici :deep(small) { font-size:12.5px; letter-spacing:0; text-transform:none; color:#6e7788 }
 .fumetto .serve { margin-top:4px; font-size:13.5px; font-weight:600; color:#4c5568; line-height:1.35 }
 .fumetto .parti { margin-top:7px; padding:9px 26px; border:0; border-radius:999px;
                   background:#ffc93c; color:#3b2a00; font-size:16px; font-weight:700;

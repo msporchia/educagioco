@@ -9,6 +9,7 @@ import { suono } from '../../audio.js'
 import { segna, segnaBest } from '../../store/profile.js'
 import { incassa, premioDetto } from '../../store/varieta.js'   // pagano e dicono se il salvadanaio è stanco
 import { aperta, adesso, stelleDi, completa, sosta, salvaSosta, buttaSosta } from '../campagne.js'
+import { usaAmici } from '../../amici/usaAmici.js'
 
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, tappeDelloScalino } from './dati/campagna.js'
 import { MONDI, facciaDi } from './dati/mondi.js'
@@ -37,6 +38,9 @@ const serie = ref(0)                // risposte giuste di fila
 
 const tappaCorrente = computed(() => tappaIdx.value >= 0 ? CAMPAGNA[tappaIdx.value] : null)
 
+// gli amici dalla loro bacheca (docs/core/amici-nei-giochi.md): la tappa da fare di ognuno
+const amici = usaAmici(CHIAVE)
+
 const scalini = computed(() => SCALINI.map(s => ({
   ...s,
   tappe: tappeDelloScalino(s.chiave).map(t => ({
@@ -47,6 +51,7 @@ const scalini = computed(() => SCALINI.map(s => ({
     aperta: aperta(CHIAVE, t.indice),
     adesso: adesso(CHIAVE, t.indice),
     stelle: stelleDi(CHIAVE, t.indice),
+    amici: amici.sullaTappa(t.indice),
   })),
 })))
 
@@ -176,7 +181,7 @@ onBeforeUnmount(() => {
 
     <div class="ct" :style="{ '--ct-accento': accento }">
       <Mappa v-if="vista === 'mappa'" :scalini="scalini" :ripresa="ripresa"
-             :chiede="chiede ? chiede.nome : ''"
+             :chiede="chiede ? chiede.nome : ''" :davanti="amici.davanti"
              @gioca="vuoleIniziare" @riprendi="riprendiPartita" @scorda="scorda"
              @comincia="avviaTappa(chiede.i)" @annulla="chiede = null" />
 
