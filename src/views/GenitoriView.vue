@@ -976,25 +976,25 @@ async function rimetti(v) {
           <span class="leva"><span class="pallina"></span></span>
         </button>
 
- <div class="carta" data-fascia>
+        <div class="carta fascia" data-fascia>
           <span class="ico">🎚️</span>
           <b>Qualità della grafica 3D: {{ fasciaAttiva() }}</b>
           <i>{{ fasciaScelta === 'auto'
                 ? (fasciaMisura ? 'Scelta da sola, misurata il ' + new Date(fasciaMisura.quando).toLocaleDateString('it-IT') + ' (' + fasciaMisura.punti + ' punti, JS ' + fasciaMisura.js + ' ms)'
                                 : 'Scelta da sola: ancora da misurare, si fa in home')
                 : 'Scelta a mano' }}</i>
-          <div class="riga">
-            <button v-for="f in ['auto', ...FASCE]" :key="f" type="button" class="bottone chiaro" :class="{ attivo: fasciaScelta === f }"
+          <div class="scelte">
+            <button v-for="f in ['auto', ...FASCE]" :key="f" type="button" :class="{ attivo: fasciaScelta === f }"
                     :data-fascia-scelta="f" @click="scegliFascia(f)">{{ f }}</button>
-            <button type="button" class="bottone chiaro" data-azione="rimisura-fascia" :disabled="rimisurando" @click="rimisuraFascia">
-              {{ rimisurando ? 'Misuro…' : 'Rimisura' }}</button>
           </div>
+          <button type="button" class="rimisura" data-azione="rimisura-fascia" :disabled="rimisurando" @click="rimisuraFascia">
+            {{ rimisurando ? 'Misuro…' : '↻ Rimisura' }}</button>
         </div>
 
-        <button class="carta interruttore" data-azione="benchmark" @click="misuraAperta = true">
+        <button class="carta" data-azione="benchmark" @click="misuraAperta = true">
           <span class="ico">⏱️</span>
           <b>Misura questo telefono</b>
-          <i>Un minuto di scene di prova, o qualche minuto coi modelli veri dei giochi, e un resoconto da mandare: dice cosa lo fa andare a scatti</i>
+          <i>Qualche minuto di scene vere dei giochi, e un resoconto da mandare: a quanti fps girano e cosa le fa andare a scatti</i>
         </button>
         </div>
       <Benchmark v-if="misuraAperta" :modulo="SEGNALA_GIUDIZI" @chiudi="misuraAperta = false" />
@@ -1179,6 +1179,14 @@ h3.materia { margin:10px 0 -2px; font-size:12px; font-weight:600; letter-spacing
                           background:none; color:var(--inchiostro) }
 
 .carta.gioco { padding:11px 16px }
+/* la qualità della grafica: le quattro scelte in una riga sola, sotto il testo e a tutta larghezza, come un interruttore a più posti */
+.carta.fascia { grid-template-rows:auto auto auto auto }
+.carta.fascia .ico { grid-row:1/3 }
+.carta.fascia .scelte { grid-column:1/-1; display:flex; margin-top:10px; border-radius:999px; overflow:hidden; box-shadow:inset 0 0 0 1px var(--filo) }
+.carta.fascia .scelte button { flex:1; padding:8px 0; font-size:13px; font-weight:600; color:var(--inchiostro); background:none }
+.carta.fascia .scelte button + button { box-shadow:inset 1px 0 0 var(--filo) }
+.carta.fascia .scelte button.attivo { background:var(--inchiostro); color:#fff }
+.carta.fascia .rimisura { grid-column:1/-1; justify-self:start; margin-top:8px; padding:6px 0; font-size:12.5px; font-weight:600; color:var(--grigio); background:none }
 .carta.gioco .ico { font-size:25px }
 .carta.gioco.spento { opacity:.62 }
 /* spento da un macrogruppo, non dai genitori: la leva resta ferma */

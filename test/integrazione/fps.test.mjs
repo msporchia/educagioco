@@ -6,7 +6,7 @@
    la ritrova dopo una ricarica: la ragione per cui esiste è guardare
    il telefono vecchio senza cavi (docs/core/vecchio-telefono.md).
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, apriTendine } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, apriTendine, scatto } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -60,6 +60,11 @@ await page.waitForFunction(() => /punti/.test(document.querySelector('[data-fasc
 controlla('misurata: dice i punti', /punti, JS/.test(await page.textContent('[data-fascia]')))
 await page.click('[data-fascia-scelta="bassa"]')
 controlla('scelta a mano: bassa', /Qualità della grafica 3D: bassa/.test(await page.textContent('[data-fascia]')))
+// le scelte stanno sotto il testo, a tutta larghezza: non spingono il testo di lato
+const box = await page.evaluate(() => { const r = s => document.querySelector(s).getBoundingClientRect(); return { testo: r('[data-fascia] b').left, scelte: r('[data-fascia] .scelte').left, carta: r('[data-fascia]').left } })
+controlla('le scelte non spingono il testo a destra', box.scelte - box.carta < 30 && box.testo - box.carta < 70, JSON.stringify(box))
+await page.locator('[data-fascia]').scrollIntoViewIfNeeded()
+await scatto(page, 'fascia')
 await page.reload()
 await page.click('[data-azione="grandi"]'); await page.waitForSelector('.tastierino')
 for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
