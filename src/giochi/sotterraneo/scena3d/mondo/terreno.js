@@ -2,14 +2,15 @@
 // da lontano, con quattro trame mescolate per vertice (erba, terra battuta, sabbia, roccia) e la tinta del luogo; il fuori mappa
 // (colline e monti oltre la cornice); la piazza di ciottoli e i campi arati. Tutto è superficie: la nebbia ci passa sopra a velo
 // (vesti.js). Le celle di una zona mai caricata si leggono dalla loro base (suolo.js). Dal prototipo poc/mondo-sopra/terreno.js.
-import { BufferGeometry, BufferAttribute, Float32BufferAttribute, Mesh, MeshStandardMaterial, Vector2 } from 'three'
+import { BufferGeometry, BufferAttribute, Float32BufferAttribute, Mesh, Vector2, Vector3 } from 'three'
 import { fbm, quotaTerreno, quotaDellaCella, cellaDaDisegnare, ACQUA, ROCCIA } from './suolo.js'
 import { rettangoloDi } from './pezzi.js'
-import { vesti } from './vesti.js'
+import { vesti, materialeMondo } from './vesti.js'
 import { scatola } from './kit.js'
 import { forzaDellaTana } from './props-tana-dati.js'
 import { raggioDellaPiazza } from '../../dati/mondo-aperto.js'
 import { ACCESI } from '../costanti.js'
+import { mediaDellaTrama } from './trame.js'
 
 const TINTE = {
   villaggio: [0.56, 0.74, 0.30], campi: [0.66, 0.78, 0.30], frutteto: [0.58, 0.76, 0.32], prato: [0.62, 0.78, 0.32],
@@ -84,13 +85,16 @@ const bilineare = (arr, comp, F, x, z, out) => {
 // vicino è costruito il pezzo lontano si spegne: lontano.js)
 export function materialeTerreno(trame, { lontano = false } = {}) {
   // senza `rilievo` (la fascia bassa) niente normal map: il colore delle quattro trame e basta
-  const mat = new MeshStandardMaterial({ roughness: 0.95, metalness: 0, normalMap: ACCESI.rilievo ? trame.roccia.normalMap : null, normalScale: new Vector2(1, 1) })
+  const mat = materialeMondo({ roughness: 0.95, metalness: 0, normalMap: ACCESI.rilievo ? trame.roccia.normalMap : null, normalScale: new Vector2(1, 1) })
   mat.name = lontano ? 'terreno-lontano' : 'terreno'
+  // `terrenoSopraSemplice` (la bassa): una lettura sola, la grana dell'erba sopra i colori medi delle quattro trame
+  const semplice = ACCESI.terrenoSopraSemplice
   return vesti(mat, {
-    codice: 'terreno',
+    codice: semplice ? 'terreno-semplice' : 'terreno',
     prima: sh => {
       sh.uniforms.tErba = { value: trame.erba.map }; sh.uniforms.tTerra = { value: trame.terra.map }
       sh.uniforms.tSabbia = { value: trame.sabbia.map }; sh.uniforms.tRoccia = { value: trame.roccia.map }
+      if (semplice) for (const k of ['erba', 'terra', 'sabbia', 'roccia']) sh.uniforms['uMedia_' + k] = { value: new Vector3(...mediaDellaTrama(k)) }
       sh.vertexShader = sh.vertexShader
         .replace('#include <common>', `#include <common>
           attribute vec4 peso; attribute vec3 tinta; varying vec4 vPeso; varying vec3 vTinta; varying float vRipido;`)
@@ -98,10 +102,17 @@ export function materialeTerreno(trame, { lontano = false } = {}) {
           vPeso = peso; vTinta = tinta; vRipido = 1.0 - normal.y;`)
       sh.fragmentShader = sh.fragmentShader
         .replace('#include <common>', `#include <common>
-          uniform sampler2D tErba, tTerra, tSabbia, tRoccia; varying vec4 vPeso; varying vec3 vTinta; varying float vRipido;`)
+          uniform sampler2D tErba, tTerra, tSabbia, tRoccia; varying vec4 vPeso; varying vec3 vTinta; varying float vRipido;${semplice ? `
+          #define TERRENO_SEMPLICE
+          uniform vec3 uMedia_erba, uMedia_terra, uMedia_sabbia, uMedia_roccia;` : ''}`)
         .replace('#include <map_fragment>', `
           vec2 uvT = vMondo.xz * 0.5;
+#ifdef TERRENO_SEMPLICE
+          float grana = mix(1.0, texture(tErba, uvT * 0.7).g / uMedia_erba.g, 0.8);
+          vec3 ce = uMedia_erba * grana, ct = uMedia_terra * grana, cs = uMedia_sabbia * grana, cr = uMedia_roccia * grana;
+#else
           vec3 ce = mix(texture(tErba, uvT * 0.7).rgb, texture(tErba, mat2(0.8, 0.6, -0.6, 0.8) * uvT * 0.27 + 0.37).rgb, 0.5), ct = texture(tTerra, uvT).rgb, cs = texture(tSabbia, uvT).rgb, cr = texture(tRoccia, uvT * 0.45 + vec2(0.0, vMondo.y * 0.08)).rgb;
+#endif
           vec4 w = vPeso;
           float scuro = clamp(vPeso.y - 1.0, 0.0, 0.9);   // la terra smossa di una tana: il peso della terra oltre l'uno
           w.w = max(w.w, smoothstep(0.3, 0.55, vRipido));
@@ -229,8 +240,8 @@ export function creaFuori(m, mat) {
 export function materialiDelSuolo(trame) {
   return {
     terreno: materialeTerreno(trame), lontano: materialeTerreno(trame, { lontano: true }),
-    piazza: vesti(new MeshStandardMaterial({ map: trame.ciottoli.map, normalMap: ACCESI.rilievo ? trame.ciottoli.normalMap : null, roughness: 0.9, color: 0xd8cfc0, polygonOffset: true, polygonOffsetFactor: -1 })),
-    campo: vesti(new MeshStandardMaterial({ map: trame.campo.map, normalMap: ACCESI.rilievo ? trame.campo.normalMap : null, roughness: 1, color: 0xb59a78, polygonOffset: true, polygonOffsetFactor: -1 })),
+    piazza: vesti(materialeMondo({ map: trame.ciottoli.map, normalMap: ACCESI.rilievo ? trame.ciottoli.normalMap : null, roughness: 0.9, color: 0xd8cfc0, polygonOffset: true, polygonOffsetFactor: -1 })),
+    campo: vesti(materialeMondo({ map: trame.campo.map, normalMap: ACCESI.rilievo ? trame.campo.normalMap : null, roughness: 1, color: 0xb59a78, polygonOffset: true, polygonOffsetFactor: -1 })),
   }
 }
 

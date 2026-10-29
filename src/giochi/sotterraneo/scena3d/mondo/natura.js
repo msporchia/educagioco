@@ -4,12 +4,13 @@
 // (`componi`). La nebbia legge la cella di ogni istanza: un albero si vede o no tutto intero, e sale dal terreno. Dal prototipo
 // poc/mondo-sopra/natura.js.
 import { IcosahedronGeometry, DodecahedronGeometry, OctahedronGeometry, ConeGeometry, SphereGeometry, CircleGeometry, BufferGeometry, Float32BufferAttribute,
-         InstancedMesh, MeshStandardMaterial, DoubleSide, Matrix4, Quaternion, Euler, Vector3, Color } from 'three'
+         InstancedMesh, DoubleSide, Matrix4, Quaternion, Euler, Vector3, Color } from 'three'
 import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { caso, fbm, rumore, quotaTerreno, ERBA } from './suolo.js'
 import { rettangoloDi } from './pezzi.js'
 import { Cantiere, scatola, cilindro } from './kit.js'
-import { vesti, ombraDi } from './vesti.js'
+import { vesti, ombraDi, materialeMondo } from './vesti.js'
+import { ACCESI } from '../costanti.js'
 import { segna } from '../../../../grafica/elementi3d.js'
 
 // le chiome piccole e i cespugli a `det` 0 (20 facce): nel mondo a percorso i boschi sono fitti, e a 80 facce l'una il bosco vecchio
@@ -133,7 +134,7 @@ export function istanzeDelPezzo(m, p, q) {
     if (m.zona[k] < 0 || !m.zonaCaricata[m.zona[k]]) continue
     if (m.terreno[k] !== ERBA || m.strada[k] || m.blocco[k] || m.campo[k] || m.ponte[k] >= 0 || m.isola[k]) continue
     const h = m.regioni[m.reg[k]].habitat, t = TINTA[h] || TINTA.prato
-    const fitta = (FITTA[h] || 1.5) * (0.5 + fbm(x, y, 970, 6)), quanti = Math.floor(fitta) + (r() < fitta % 1 ? 1 : 0)
+    const fitta = (FITTA[h] || 1.5) * (0.5 + fbm(x, y, 970, 6)) * ACCESI.quantaErba, quanti = Math.floor(fitta) + (r() < fitta % 1 ? 1 : 0)
     for (let i = 0; i < quanti; i++) {
       const px = x + r(), pz = y + r(), s = 0.7 + r() * 0.6, v = 0.85 + s * 0.2
       metti('erba', px, quotaTerreno(m, px, pz) - 0.02, pz, s, r() * 6.28, t[0] * v, t[1] * v, t[2])
@@ -157,7 +158,7 @@ export function creaNatura(m, kit, scena) {
     const v = VENTO[tipo] || 0, rg = RIGIDO[tipo] || 0, roccia = ['sasso', 'masso', 'rupe', 'brace'].includes(tipo)
     const chiave = v ? `v${v}-${rg}${tipo === 'erba' ? '-erba' : ''}` : roccia ? 'roccia' : 'liscio'
     if (!mats[chiave]) {
-      const mt = new MeshStandardMaterial({ vertexColors: true, roughness: roccia ? 0.95 : tipo === 'erba' ? 1 : 0.85, flatShading: roccia, side: tipo === 'erba' ? DoubleSide : 0 })
+      const mt = materialeMondo({ vertexColors: true, roughness: roccia ? 0.95 : tipo === 'erba' ? 1 : 0.85, flatShading: roccia, side: tipo === 'erba' ? DoubleSide : 0 })
       mt.name = chiave
       mats[chiave] = vesti(mt, { vento: v, rigido: rg, oggetto: 'istanza' })
       ombre[chiave] = ombraDi({ vento: v, rigido: rg, oggetto: 'istanza' })

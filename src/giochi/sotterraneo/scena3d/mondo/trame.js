@@ -132,6 +132,14 @@ function pixelDelleTrame(L = 256) {
   return p
 }
 
+// il colore medio di una trama, in lineare come lo legge lo shader (il terreno semplice della bassa, terreno.js)
+const lineare = c => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4))
+export function mediaDellaTrama(nome) {
+  const { col } = pixelDelleTrame()[nome], s = [0, 0, 0], n = col.length / 4
+  for (let i = 0; i < col.length; i += 4) for (let c = 0; c < 3; c++) s[c] += lineare(col[i + c] / 255)
+  return s.map(v => v / n)
+}
+
 function aTrama(dati, w, h, srgb) {
   const c = document.createElement('canvas'); c.width = w; c.height = h
   c.getContext('2d').putImageData(new ImageData(dati, w, h), 0, 0)

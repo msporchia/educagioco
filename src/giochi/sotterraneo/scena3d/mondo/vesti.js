@@ -4,7 +4,7 @@
 // vede tutto intero o niente, letto alla cella della sua base (l'istanza, o l'attributo `aBase` per il kit unito), e che entrando
 // in vista sale dal terreno. Le uniform sono una copia sola per tutti. docs/sotterraneo/grafica-3d.md, «La nebbia di sopra».
 import { Vector2, Vector3, MeshDepthMaterial, RGBADepthPacking, DataTexture, RedFormat, UnsignedByteType, NearestFilter, LinearFilter,
-         RepeatWrapping } from 'three'
+         RepeatWrapping, MeshStandardMaterial, MeshLambertMaterial } from 'three'
 import { PEZZO } from './pezzi.js'
 import { ACCESI } from '../costanti.js'
 
@@ -56,7 +56,15 @@ function tramaRumore() {
   return t
 }
 /** Le define degli shader che usano GLSL_RUMORE, da chiedere quando si crea il materiale (dopo la fascia). */
-export const defineRumore = () => (ACCESI.rumoreTrama ? { RUMORE_TRAMA: '' } : {})
+export const defineRumore = () => ({ ...(ACCESI.rumoreTrama ? { RUMORE_TRAMA: '' } : {}), ...(ACCESI.rumoreUnaOttava ? { RUMORE_UNA: '' } : {}) })
+const defineInTesta = () => Object.keys(defineRumore()).map(k => `\n      #define ${k}`).join('')
+
+/** Un materiale del mondo di sopra: fisico, o di Lambert con la leva `lambertSopra` (la bassa; ruvidezza e metallo lì non ci sono). */
+export function materialeMondo(o) {
+  if (!ACCESI.lambertSopra) return new MeshStandardMaterial(o)
+  const { roughness, metalness, ...resto } = o
+  return new MeshLambertMaterial(resto)
+}
 
 export const GLSL_RUMORE = /* glsl */`
 #ifdef RUMORE_TRAMA
@@ -69,7 +77,11 @@ export const GLSL_RUMORE = /* glsl */`
     return mix(mix(hash12(i), hash12(i + vec2(1, 0)), u.x), mix(hash12(i + vec2(0, 1)), hash12(i + vec2(1, 1)), u.x), u.y);
   }
 #endif
+#ifdef RUMORE_UNA
+  float frumore (vec2 p) { return 0.5 + (vrumore(p) - 0.5) * 0.8; }
+#else
   float frumore (vec2 p) { return vrumore(p) * 0.55 + vrumore(p * 2.1 + 7.3) * 0.3 + vrumore(p * 4.3 + 1.7) * 0.15; }
+#endif
 `
 export const GLSL_CIELO = /* glsl */`
   uniform float uTempo; uniform sampler2D uVisto; uniform float uNebbia; uniform vec2 uMappa; uniform float uVeduta; uniform vec3 uTinta;
@@ -124,7 +136,7 @@ export function vesti(mat, { vento = 0, rigido = 0, nuvole = true, nebbia = true
   mat.onBeforeCompile = (sh, r) => {
     if (vecchio) vecchio(sh, r)
     cuciVertice(sh, { vento, rigido, oggetto, lontano })
-    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>${ACCESI.rumoreTrama ? '\n      #define RUMORE_TRAMA' : ''}
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>${defineInTesta()}
       varying vec3 vMondo;
       ${GLSL_CIELO}`)
     if (nuvole && sh.fragmentShader.includes('#include <aomap_fragment>'))
@@ -138,7 +150,7 @@ export function vesti(mat, { vento = 0, rigido = 0, nuvole = true, nebbia = true
     if (prima) prima(sh)
   }
   const chiave = `mondo-${vento > 0}-${nuvole}-${nebbia}-${oggetto}-${lontano}-${codice}`
-  mat.customProgramCacheKey = () => chiave + (ACCESI.rumoreTrama ? '-rt' : '')
+  mat.customProgramCacheKey = () => chiave + defineInTesta() + (mat.isMeshLambertMaterial ? '-l' : '')
   return mat
 }
 

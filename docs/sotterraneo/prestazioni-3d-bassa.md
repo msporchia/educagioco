@@ -83,3 +83,12 @@ andava a 60.
 
 - **Niente antialias** (la bassa, `antialias`; `contesto.js`): il mondo di sopra lo chiedeva sempre, le discese mai. Staccionate, corde e
   bordi dei tetti hanno i gradini.
+
+Il resto, tutte insieme il 29/10 (la verifica le misura una per una, `leve-sopra`); restava il terreno +19 ms, natura +7, nebbia +7:
+
+- **Lambert** (`lambertSopra`; `vesti.js`, `materialeMondo`): i materiali del mondo (terreno, piazza, campi, kit delle case, natura,
+  lontano) di Lambert invece che fisici. Ruvidi com'erano (0,85–1), il riflesso che si perde quasi non si vedeva.
+- **Il terreno semplice** (`terrenoSopraSemplice`; `terreno.js`): una lettura della trama dell'erba, come grana, sui colori medi delle
+  quattro trame (`mediaDellaTrama`), invece di cinque letture.
+- **Il rumore a un'ottava** (`rumoreUnaOttava`, `RUMORE_UNA`): `frumore` è un `vrumore` solo, un po' schiacciato verso il mezzo.
+- **Metà erba** (`quantaErba:0.5`; `natura.js`): i ciuffi dei prati.

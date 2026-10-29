@@ -3,17 +3,17 @@
 // UNA mesh per materiale per pezzo di mondo (pochi draw call): il colore sta nei vertici, la trama nel materiale, la cella della
 // base in `aBase` (la nebbia mostra o nasconde la casa tutta intera). Le parti che si muovono restano a parte. Dal prototipo
 // poc/mondo-sopra/kit.js; ponti, grate, cartelli e il resto in ponti.js.
-import { MeshStandardMaterial, MeshBasicMaterial, DoubleSide, BoxGeometry, CylinderGeometry, BufferGeometry, Float32BufferAttribute,
+import { MeshBasicMaterial, DoubleSide, BoxGeometry, CylinderGeometry, BufferGeometry, Float32BufferAttribute,
          BufferAttribute, Mesh, Matrix4, Quaternion, Euler, Vector3, OctahedronGeometry, ConeGeometry, CircleGeometry, TorusGeometry } from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { caso, quotaTerreno, LIVELLO_ACQUA } from './suolo.js'
-import { vesti, ombraDi } from './vesti.js'
+import { vesti, ombraDi, materialeMondo } from './vesti.js'
 
 // i materiali: pochi e condivisi. `fermi` per il kit unito (la base nell'attributo), `mobili` per i pezzi che si muovono (la base
 // è la loro posizione)
 export function materialiDelKit(trame) {
   const fai = oggetto => {
-    const std = (o, nome, codice = '') => { const m = new MeshStandardMaterial({ vertexColors: true, roughness: 0.88, metalness: 0, ...o }); m.name = nome; return vesti(m, { oggetto, codice }) }
+    const std = (o, nome, codice = '') => { const m = materialeMondo({ vertexColors: true, roughness: 0.88, metalness: 0, ...o }); m.name = nome; return vesti(m, { oggetto, codice }) }
     const stoffa = std({ map: trame.stoffa.map, side: DoubleSide, roughness: 0.95 }, 'stoffa', 'stoffa')   // le righe qui sotto: un codice suo
     const prima = stoffa.onBeforeCompile
     stoffa.onBeforeCompile = (sh, r) => {

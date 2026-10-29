@@ -5,14 +5,14 @@
 // una per fotogramma) e le altre si scaricano; i pezzi del mondo si costruiscono attorno all'eroe uno per fotogramma, solo nelle
 // zone caricate (pezzi.js); il resto è il mondo lontano. docs/sotterraneo/mondo-3d.md.
 import { Scene, Color, Fog, HemisphereLight, DirectionalLight, Group, Texture, SRGBColorSpace, NearestFilter, Vector3, Mesh,
-         MeshStandardMaterial, MeshBasicMaterial, OctahedronGeometry, RingGeometry, CircleGeometry, CylinderGeometry } from 'three'
+         MeshBasicMaterial, OctahedronGeometry, RingGeometry, CircleGeometry, CylinderGeometry } from 'three'
 import { ATLANTE, PEZZI } from '../../dati/atlante.js'
 import { caricaZona, scaricaZona, zonaDi, zoneAttorno } from '../../motore/mondo-percorso.js'
 import { creaContesto } from '../contesto.js'
 import { ACCESI, ELEMENTI_SOPRA, elementoAcceso } from '../costanti.js'
 import { segna, segnaNuovi, creaElementi } from '../../../../grafica/elementi3d.js'
 import { normaliAtlante } from '../trame.js'
-import { U, vesti, tramaDeiPezzi, tingi } from './vesti.js'
+import { U, vesti, tramaDeiPezzi, tingi, materialeMondo } from './vesti.js'
 import { creaTrame } from './trame.js'
 import { materialiDelSuolo, terrenoDelPezzo, creaFuori, creaPiazza, campiDelPezzo } from './terreno.js'
 import { creaAcqua, creaCielo } from './acqua.js'
@@ -97,7 +97,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
   const vita = el('vita', () => creaVita(scena, trame))
   const scia = el('scia', () => creaScia(scena, (x, z) => quotaA(m, x, z)))
   const conFontana = new Set(fontane.map(f => f.citta))   // le città dove l'acqua prende il posto del pozzo (fontana.js)
-  const matCristallo = vesti(new MeshStandardMaterial({ color: 0xb78cff, emissive: 0x6a3cff, emissiveIntensity: 0.6, roughness: 0.2 }), { oggetto: 'istanza' })
+  const matCristallo = vesti(materialeMondo({ color: 0xb78cff, emissive: 0x6a3cff, emissiveIntensity: 0.6, roughness: 0.2 }), { oggetto: 'istanza' })
   const quota = (x, z) => quotaA(m, x, z)
   const v = m.villaggio
   // lo stato da disegnare, scritto da chi gioca (Mondo3d.vue): niente di reattivo, si legge a ogni fotogramma

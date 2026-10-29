@@ -4,13 +4,13 @@
 // dalla base delle celle (suolo.js): non vuole nessuna zona caricata. Quando una zona si carica la prima volta (`zonaScritta`) si
 // rifanno i suoi pezzi di terreno e gli alberi, che allora vedono il lago e le rocce. Dove un pezzo è costruito, il lontano sparisce
 // da solo (`uPezzi`, vesti.js).
-import { InstancedMesh, BoxGeometry, ConeGeometry, BufferGeometry, Float32BufferAttribute, MeshStandardMaterial,
+import { InstancedMesh, BoxGeometry, ConeGeometry, BufferGeometry, Float32BufferAttribute,
          Matrix4, Quaternion, Euler, Vector3, Color } from 'three'
 import { terrenoDelPezzo } from './terreno.js'
 import { grigliaDi, rettangoloDi } from './pezzi.js'
 import { quotaTerreno, cellaDaDisegnare, caso, fbm, pontiDi, ERBA } from './suolo.js'
 import { zonaDi } from '../../motore/mondo-percorso.js'
-import { vesti } from './vesti.js'
+import { vesti, materialeMondo } from './vesti.js'
 
 const ALBERI = { tondo: [0.38, 0.62, 0.27], frutto: [0.44, 0.66, 0.28], pino: [0.2, 0.44, 0.24], abete: [0.17, 0.37, 0.31], salice: [0.52, 0.72, 0.34], secco: [0.42, 0.36, 0.32] }
 // gli alberi da lontano, per habitat: quanti ogni quattro celle e quale
@@ -70,7 +70,7 @@ export function creaLontano(m, scena, mats, { quotaFuori = null, M = 0 } = {}) {
   const fai = (r, vis) => { const t = terrenoDelPezzo(m, r, mats.lontano, 0.5); t.receiveShadow = false; t.visible = vis; scena.add(t); return t }
   const terreni = Array.from({ length: n }, (_, p) => fai(p, true))
   const blocchi = rettangoli.map(r => fai(r, false))
-  const matL = vesti(new MeshStandardMaterial({ vertexColors: true, roughness: 0.9, flatShading: true }), { oggetto: 'istanza', lontano: true })
+  const matL = vesti(materialeMondo({ vertexColors: true, roughness: 0.9, flatShading: true }), { oggetto: 'istanza', lontano: true })
   matL.name = 'lontano'
   const M4 = new Matrix4(), Q = new Quaternion(), E = new Euler(), P = new Vector3(), S = new Vector3(), C = new Color()
   const riempi = (im, geo, lista) => {
