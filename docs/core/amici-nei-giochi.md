@@ -33,6 +33,8 @@ amici: { percorsi: { coniglio: { tappe: 30, dove: 'al sentiero', tappa: p => …
 - `tappa(profilo)`: dove è arrivato il bambino, un nodo da 0 a `tappe`. **Di serie** il cursore di `campagne[chiave]` (la tappa
   da fare, quella con `adesso`), e a campagna finita (`libera`) la sfida senza fine. Si scrive solo se il gioco tiene il suo
   avanzamento altrove. Deve leggere il profilo come lo legge la mappa del gioco: è lo stesso nodo su cui sta il proprio segno.
+  **L'età non entra**: la `tappa` dice fin dove si è arrivati giocando, non cosa l'età apre (un manifesto non può leggere lo stato,
+  e le tappe aperte dall'età senza averle giocate non sono un posto raggiunto).
 - `dove`: come si dice essere arrivati alla sfida senza fine, per la riga in cima. Serve se ci sono `tappe`.
 - `percorsi`: un gioco con più mappe indipendenti (un protagonista per strada, una campagna per terreno) ne dichiara una per
   chiave, ognuna con `tappe`, `dove` e **sempre** la sua `tappa` (il cursore di serie è di un percorso solo). La vista di una
@@ -73,12 +75,13 @@ che dichiarano `amici` si allarga, e se il gioco ha una `tappa` sua, un controll
 | Asteroidi (`mate`) | fatto | pallini sulla rotta (tela), nomi nel fumetto, record nel fumetto del volo, `data-contro-amici` a fine volo |
 | Survivors | fatto | pallini e nomi sulla tappa, record sotto la sopravvivenza, a fine sopravvivenza |
 | Codice Segreto (`codice`) | fatto | pallini e nomi sulla tappa, record sotto il gioco libero, `data-contro-amici` al codice sbagliato che chiude la fila |
+| Passo passo (`passo`) | fatto | due percorsi, `coniglio` e `cane` (la mappa che si guarda): `tappa` è il posto della sua tappa di adesso sulla sua strada (`postoSullaStrada`, `motore/strade.js`), i numeri di tappe se le ha fatte tutte (è al suo sentiero); in cima `data-amico-davanti`, un pallino sotto la casella e il nome nel fumetto (sulla casella non c'è posto), sotto il sentiero i record di quella sfida e chi c'è senza, `data-contro-amici` sul cartello che chiude la serie (quando un 💡 pagato la chiude: «lascio perdere» non ha cartello) |
 
 ## Da fare
 
 - La colonna degli amici nella tabella dei record (l'albo).
 - «Melody ti ha superato» all'apertura dell'app: dopo aver visto se i pallini piacciono.
 
-Nei test: `integrazione/amici-rotta`, `integrazione/amici-survivors`, `integrazione/amici-codice`. Bersagli: `[data-amico-davanti]`; `[data-amici-qui]` (con
+Nei test: `integrazione/amici-rotta`, `integrazione/amici-survivors`, `integrazione/amici-codice`, `integrazione/amici-passo`. Bersagli: `[data-amico-davanti]`; `[data-amici-qui]` (con
 `[data-al]` dove serve) e dentro `[data-pallino-amico]`; `[data-record-amici]` con le righe `[data-record-amico]`;
-`[data-contro-amici]`; sulla rotta `[data-amico-in-rotta]` con `[data-al]` (il nodo).
+`[data-contro-amici]`; in Passo passo i pallini sulla casella `[data-amici-casella][data-al]` (il posto sulla strada) e i nomi nel fumetto `[data-fumetto] [data-amici-qui]`; sulla rotta `[data-amico-in-rotta]` con `[data-al]` (il nodo).

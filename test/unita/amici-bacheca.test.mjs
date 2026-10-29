@@ -6,6 +6,7 @@ import { istantanea, leggiIstantanea, firma, giornoDi, giorniFa, quandoInParole,
          davantiInParole, controAmiciInParole, recordDegliAmici, quiInParole, dichiarazione, leggiGioco, giochiConAmici, percorsoDi }
   from '../../src/amici/istantanea.js'
 import { QUANTE_TAPPE as TAPPE_SURVIVORS } from '../../src/giochi/survivors/dati/campagna.js'
+import { STRADE } from '../../src/giochi/passo-passo/motore/strade.js'
 import { sincronizza, amiciNelGioco, avviaBacheca, fermaBacheca, COLORI } from '../../src/amici/bacheca.js'
 import { dati, carica, accendi, mettiOnline, aggiungi, impara, ricorda } from '../../src/store/amici.js'
 import { SCALETTA } from '../../src/data/asteroidi.js'
@@ -49,7 +50,18 @@ const ORA = new Date(2026, 9, 29, 17, 42).getTime()
     leggiGioco({ c: 4, k: 0 }, dueStrade), { posti: { coniglio: 4 }, primati: {} })
   controlla('un percorso di più d\'uno non ha il cursore di serie', percorsoDi(gioco({ percorsi: { a: { tappe: 3 } } }), 'a').tappa({ campagne: { prova: { tappa: 2 } } }) === 0)
   controlla('e si trova per chiave', percorsoDi(dueStrade, 'cane').tappe === 6 && percorsoDi(dueStrade, 'boh') === null)
-  ugualeJ('i giochi che mostrano gli amici sono quelli che lo dichiarano', giochiConAmici().map(g => g.chiave).sort(), ['codice', 'mate', 'survivors'])
+  ugualeJ('i giochi che mostrano gli amici sono quelli che lo dichiarano', giochiConAmici().map(g => g.chiave).sort(), ['codice', 'mate', 'passo', 'survivors'])
+  // Passo passo: un posto per strada, la tappa di adesso di quel protagonista (come la mappa), in fondo il sentiero
+  const passo = c => istantanea({ campagne: { passo: c } }, ORA).giochi.passo
+  const { coniglio, cane } = STRADE
+  ugualeJ('Passo passo: chi non ha fatto niente non c\'è', passo({ tappa: 0, cfg: {} }), undefined)
+  ugualeJ('Passo passo: la tappa di adesso del coniglio è il suo posto sulla strada', passo({ tappa: 3, stelle: { 0: 1, 1: 1, 2: 1 }, cfg: { ultima: 2 } }).posti, { coniglio: 3 })
+  ugualeJ('e il cane, che ha la sua strada, non c\'è finché non ha cominciato', passo({ tappa: 0, stelle: { 0: 1 }, cfg: {} }).posti, { coniglio: 1 })
+  const fattaTutta = Object.fromEntries(coniglio.map(i => [i, 1]))
+  ugualeJ('fatta la strada del coniglio, è al suo sentiero e il cane comincia', passo({ tappa: 0, stelle: fattaTutta, cfg: { ultima: coniglio.at(-1) } }).posti, { coniglio: coniglio.length })
+  const caneFatta = { ...fattaTutta, ...Object.fromEntries(cane.slice(0, 2).map(i => [i, 1])) }
+  ugualeJ('il cane a metà ha il suo posto, indipendente', passo({ tappa: 0, stelle: caneFatta, cfg: { ultima: cane[1] } }).posti, { coniglio: coniglio.length, cane: 2 })
+  ugualeJ('ognuno ha il suo record', passo({ tappa: 0, stelle: { 0: 1 }, cfg: {}, primati: { cane: { best: 4, quando: 1, partite: 1, ultime: [] } } }).primati, { cane: 4 })
   controlla('ogni percorso dichiarato ha tappe intere e un «dove»', giochiConAmici().every(g =>
     dichiarazione(g).percorsi.every(x => Number.isInteger(x.tappe) && x.tappe > 0 && x.dove)))
 }

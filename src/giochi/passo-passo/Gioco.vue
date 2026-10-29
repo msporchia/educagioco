@@ -32,6 +32,7 @@ import { guidaDelPrato, guidaDelRipeti } from './motore/guida.js'
 import { usaGuida } from '../guida.js'
 import { scrivi, leggi, dice, scriviFila, scriviSerie, pagatoDa, svelatoDa } from './motore/sosta.js'
 import Ripresa from '../Ripresa.vue'
+import { usaAmici } from '../../amici/usaAmici.js'
 
 import Mappa from './viste/Mappa.vue'
 import Campo from './viste/Campo.vue'
@@ -96,6 +97,8 @@ const serie = ref(0)                // di fila, senza aiuti
 let semeSeduta = 1
 let famigliaPrima = null            // di che specie era il sentiero di prima («famiglia:forma»)
 let chiusaDallAiuto = null          // la frase di quando l'aiuto ha chiuso la serie
+let chiusaContro = ''               // e il risultato di quella serie contro i record degli amici (non va nella sosta)
+const amici = usaAmici(CHIAVE)      // la bacheca degli amici, per la frase di fine serie (la mappa ha i suoi: viste/Mappa.vue)
 let pronto = null                   // il prossimo posto, fatto mentre si guardava il cartello
 
 const avanza = progresso(CHIAVE)
@@ -374,6 +377,7 @@ function entra(t, indice, gia = indice >= 0 ? quaderno.livelli[t.chiave] : null)
   esitoInCorsa = null
   inTana = false
   chiusaDallAiuto = null
+  chiusaContro = ''
   vinta = false
   if (gia) {
     fila.value = gia.fila.slice()
@@ -628,6 +632,7 @@ function scendi() {
     if (sentiero.value) {
       const esito = chiudiLaSerie()
       chiusaDallAiuto = esito ? fraseDiFine(esito, SENZA_FINE.misura) : null
+      chiusaContro = esito ? amici.contro(esito.valore, esito.prima, quale.value) : ''
     }
   }
   if (p.cosa === 'pensa') { pensiero.value = { testo: pensieroDi(liv).join(' '), che: 'pensa', resta: true }; suona(); return }
@@ -870,7 +875,7 @@ function vittoriaSentiero(esito, strada) {
   }
   preparaIlProssimo()
   return { che: 'sentiero', titolo: tappa.value.nome, frase, record, monete,
-           ...strada, zaino: !!liv.zaino }
+           amici: pagato.value ? chiusaContro : '', ...strada, zaino: !!liv.zaino }
 }
 
 /* ═══════════ dopo il cartello ═══════════ */

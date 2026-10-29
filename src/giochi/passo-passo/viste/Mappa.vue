@@ -16,6 +16,7 @@ import { STRADE } from '../motore/strade.js'
 import { quadroValle, mondoDellIsola, MONDI } from '../scena/valle.js'
 import { SENTIERO_CANE } from '../scena/animale.js'
 import Valle from './Valle.vue'
+import { usaAmici } from '../../../amici/usaAmici.js'
 
 const props = defineProps({
   // per indice: { indice, numero, nome, icona, racconto, stelle, stato: fatta|ora|aperta|chiusa, aMeta, serve, scalino: { icona, nome }, nuovo }
@@ -46,6 +47,9 @@ const caneAperto = computed(() => !!props.voci[STRADE.cane[0]] && props.voci[STR
 const protagonista = ref(ultimo && ultimo.chi === props.chi && (ultimo.protagonista !== 'cane' || caneAperto.value)
   ? ultimo.protagonista : props.primo)
 const doveOra = computed(() => props.dove[protagonista.value])
+// gli amici di ogni strada dalla loro bacheca (docs/core/amici-nei-giochi.md): la mappa mostra quelli del protagonista che si guarda
+const amiciDi = { coniglio: usaAmici('passo', { percorso: 'coniglio' }), cane: usaAmici('passo', { percorso: 'cane' }) }
+const amici = computed(() => amiciDi[protagonista.value])
 const mondoDi = id => MONDO_DI[protagonista.value].get(id) ?? 'valle'
 
 // sull'insegna, quali numeri ci sono di là: dal primo in poi, o dal primo all'ultimo
@@ -149,10 +153,11 @@ const caneServe = computed(() => (props.voci[STRADE.cane[0]] || {}).serve || '')
           <span class="pp-em">🔒</span> {{ caneServe }}</p>
       </div>
       <slot />
+      <p v-if="amici.davanti" class="pp-davanti" data-amico-davanti>{{ amici.davanti }}</p>
     </div>
 
     <Valle :key="protagonista + stato.mondo + stato.n" :mondo="stato.mondo" :protagonista="protagonista"
-           :voci="voci" :sentieri="sentieri" :passaggio="passaggio"
+           :voci="voci" :sentieri="sentieri" :passaggio="passaggio" :amici="amici"
            :dove="doveOra" :partenza="stato.partenza" :meta="stato.meta ?? null" :entrata="stato.entrata" :verso="stato.verso || 1"
            @gioca="i => emit('gioca', i)" @senza-fine="s => emit('senza-fine', s)" @passa="passa" @posato="ricorda" />
   </div>

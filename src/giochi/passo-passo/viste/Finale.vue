@@ -19,6 +19,7 @@ const props = defineProps({
   prossima: { type: Boolean, default: false },    // c'è una tappa dopo, ed è aperta
   frase: { type: String, default: '' },           // il sentiero: di fila, e il record
   record: { type: Boolean, default: false },
+  amici: { type: String, default: '' },           // la serie chiusa contro i record degli amici, in parole
   /* la strada più corta: quante carte bastavano, quante ne sono servite,
      e se era la più corta (la quarta stella) */
   minimo: { type: Number, default: 0 },
@@ -67,6 +68,7 @@ onUnmounted(() => clearTimeout(sveglia))
         Si può fare con {{ minimo }} {{ parola }}: tu ne hai usate {{ usate }}.
       </p>
       <p v-if="frase" class="pp-frase" :class="{ 'pp-record': record }" data-primato>{{ frase }}</p>
+      <p v-if="amici" class="pp-frase pp-contro-amici" data-contro-amici>{{ amici }}</p>
       <p v-if="monete" class="pp-monete">+{{ monete }} 🪙</p>
       <p v-if="racconto" class="pp-racconto">{{ racconto }}</p>
 
