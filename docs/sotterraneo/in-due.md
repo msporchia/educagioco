@@ -40,8 +40,8 @@ abbattere un mostro (l'offesa, il «quanto picchia») contro quanti ne regge pri
   insieme (i mostri dividono i colpi), confrontate con l'eroe atteso **da solo**. Così in due gli scontri durano quanto da soli.
 - **La difficoltà moltiplica l'offesa della coppia** prima del confronto: facile come se picchiassero all'80%, normale al 100%,
   difficile al 120%, impossibile al 140%. A facile il livello scende, a impossibile sale.
-- **Il più debole non deve cadere al primo colpo** (proposta): il livello non sale oltre quello in cui il colpo di un mostro
-  porta via più di un terzo della sua vita. Senza, un eroe del livello 8 con un amico del 15 sverrebbe a ogni scontro.
+- **Niente tetto per il più debole** (l'utente): l'equilibratore c'è già, perché i mostri puntano il più forte (sotto, «Lo scontro
+  in due»). Se uno dei due resta troppo indietro si sceglie un livello più facile, o si scende con un altro eroe e si sale insieme.
 - **I numeri si misurano col banco**, con due giocatori finti di livelli diversi: «facile» deve vincere quasi sempre, «impossibile»
   di rado ma non mai.
 
@@ -83,9 +83,17 @@ l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livel
   che raggiungono. La luce è l'unione dei due coni ([luce.md](luce.md)): un mostro nella luce dell'uno va dritto.
 - **L'orologio conta i passi di tutti e due**: i mostri morti tornano prima, la torcia brucia per chi la porta
   ([orologio.md](orologio.md)). Il mana torna a ognuno coi suoi passi.
-- **Non ci si allontana troppo** (l'utente): un eroe non va più lontano di qualche stanza dal compagno. Toccando oltre, cammina fino
-  al limite e si ferma, con un fumetto («non mi allontano da Leo»). Quanto è «troppo», in celle di strada, si decide guardando i
-  piani ([orologio.md](orologio.md#quanti-passi-fa-un-piano): un piano girato tutto è sui 160 passi).
+- **Non ci si allontana troppo** (l'utente): tutti e due devono stare nello schermo. **Al massimo 6 celle in largo e 9 in alto**
+  dal compagno, contate sulla mappa e non sulla strada, perché lo schermo è un rettangolo. Toccando oltre, l'eroe cammina fino al
+  limite e si ferma, con un fumetto («non mi allontano da Leo»).
+  - **Perché 6 e 9**: nel 2D, allo zoom di partenza (`SCALA_INIZIALE` 3, una cella è 48 px), un telefono stretto da 360 px vede
+    7 celle e mezzo in largo e una decina in alto, tolte la barra in cima e quella in basso. Il 3D ne vede almeno 15
+    (`scena3d/costanti.js`), quindi ci sta largo.
+  - **In due la telecamera guarda il punto in mezzo ai due eroi**, non solo il proprio: centrata su uno, il compagno uscirebbe
+    dallo schermo già a 3 celle.
+  - **Il limite è del motore, uguale sui due telefoni**: non dipende dallo schermo né dallo zoom di ognuno, se no le due copie
+    si separano. Chi allarga lo zoom col pizzico vede di più, ma il limite resta quello.
+  - Vuol dire la stessa stanza o quella accanto: le stanze sono larghe da 5 a 10 celle.
 - **La scala**: si scende quando ci sono tutti e due. Il primo che la tocca aspetta lì («Aspetto Leo alla scala»), e quando arriva
   l'altro si scende insieme. Così il piano nuovo comincia con tutti e due e non c'è un piano per ognuno.
 - **Il portale** porta su tutti e due, e finisce la discesa.
@@ -106,8 +114,8 @@ l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livel
   - **La pericolosità non è il livello**, ma quanto quell'alleato fa male a quel mostro: il danno a turno della formula della
     forza (`offesa` in `motore/forza.js`, con le due abilità forti), contro le difese di quel mostro.
   - **La vita in proporzione fa girare i colpi**: il più forte prende i primi colpi, e quando è ferito il peso passa all'altro. Il
-    più debole viene colpito solo quando il forte è già messo male. È anche quello che protegge l'eroe di livello 8 accanto
-    all'amico del 15, oltre al tetto della difficoltà (sopra).
+    più debole viene colpito solo quando il forte è già messo male. È l'equilibratore che protegge l'eroe di livello 8
+    accanto all'amico del 15, e per questo la difficoltà non ha un tetto (sopra).
   - **Vale per qualunque numero di alleati**: due bambini, o un eroe col suo aiutante, quando ci sarà (sotto). Da soli il
     bersaglio è sempre l'eroe, e non cambia niente.
   - **Si vede a chi mira**: la mossa annunciata (`viste/MossaAnnunciata.vue`, [mosse.md](mosse.md)) dice anche il bersaglio.
@@ -135,7 +143,7 @@ l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livel
   livello, esperienza, roba, gemme, pozioni.
 - **La linea che cade** la regge il pezzo comune (il cartello, «riparte da dov'era»). Se la sfida finisce male, **ognuno tiene
   quello che aveva preso fino a lì**: una caduta della linea non deve buttare via mezz'ora di discesa.
-- **La storia non si muove in due** (proposta, sotto): la discesa in due non chiude le porte della grande storia.
+- **La storia non si muove in due** (l'utente): la discesa in due non chiude le porte della grande storia.
 
 ## Il caso e i conti uguali sui due telefoni
 
@@ -176,9 +184,7 @@ il suo eroe. L'incontro (`src/insieme/incontro.js`) deve far mandare a ognuno la
 Il punto 2 è il lavoro più grosso e il più rischioso (il motore della discesa è di quasi 13.000 righe, e l'eroe solo ci sta
 dappertutto); i punti 1 e 2 si possono pubblicare senza che si veda niente.
 
-## Da decidere (con l'utente)
+## Da misurare
 
-- **Il tetto per il più debole** (sopra): un terzo della vita è una proposta da provare.
-- **La storia in due**: proposta no (sopra). Se sì, una discesa nuova per l'ospite gli chiuderebbe una porta della storia giocata
-  con l'eroe dell'altro.
-- **Quanto lontano si può andare**: qualche stanza; il numero di celle si sceglie provando sui piani.
+Le scelte sono fatte. Restano i numeri: i quattro moltiplicatori della difficoltà, col banco a due giocatori finti; le 6 e 9 celle,
+col dito sui telefoni veri.
