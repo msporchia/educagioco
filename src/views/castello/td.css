@@ -64,6 +64,9 @@
 .sopra-regno { position:sticky; top:10px; left:12px; z-index:4; flex:none; height:0;
                width:calc(100% - 24px); max-width:420px }
 .sopra-regno > * { box-shadow:0 6px 18px #0006 }
+/* l'amico da raggiungere: una riga sopra il regno, che non scorre */
+.davanti { flex:none; width:100%; box-sizing:border-box; margin:0; padding:6px 12px; text-align:center;
+           background:#1d4f93; color:#fff; font-size:14px; font-weight:700 }
 
 /* l'attesa fra un'ondata e l'altra si può saltare; il bottone resta al suo
    posto anche quando non serve, così sotto il campo non balla niente */

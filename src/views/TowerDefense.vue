@@ -48,6 +48,7 @@ import SceltaTorre from '../components/castello/SceltaTorre.vue'
 import SchedaTorre from '../components/castello/SchedaTorre.vue'
 import RitrattoTorre from '../components/castello/RitrattoTorre.vue'
 import Regno from '../components/castello/Regno.vue'
+import { usaAmici } from '../amici/usaAmici.js'
 import FineTappa from '../components/castello/FineTappa.vue'
 import Regalo from '../components/castello/Regalo.vue'
 import Potenziamenti from '../components/castello/Potenziamenti.vue'
@@ -88,12 +89,19 @@ const regaloAperto = computed(() => fase.value === 'gioco' && vista.regalo > 0 &
 let borsellino = borsa('torri')
 const monete = reactive({ prese: 0, nota: '' })
 const primato = ref(null)          // la partita libera appena finita, rispetto al record
+const controAmici = ref('')        // e rispetto ai record degli amici, in parole
 const SENZA_FINE = GIOCHI.find(g => g.chiave === 'torri').senzaFine
+// gli amici dalla loro bacheca (docs/core/amici-nei-giochi.md): sullo scudo di ognuno, al centro chi è alle libere senza record
+const amici = usaAmici('torri')
+const amiciSugliScudi = computed(() => TAPPE.map((_, i) => amici.sullaTappa(i)))
+const amiciAlCentro = computed(() => amici.sullaTappa(TAPPE.length).filter(a => !Object.keys(a.primati || {}).length))
 // le quattro libere per la mappa, col record già in parole; si rilegge a
 // ogni partita finita (`primato` cambia), non a ogni fotogramma
 const libere = computed(() => (primato.value, LIBERE.map(l => ({
   chiave: l.chiave, nome: l.nome, emoji: l.emoji,
   primato: recordInParole(primatoDi('torri', l.chiave), sfidaDi(SENZA_FINE, l.chiave)),
+  // chi ha un record di questa sfida (col pallino sul torrione), e chi è alle libere ma non ne ha uno qui
+  record: amici.record(l.chiave), qui: amici.allaFine(l.chiave),
 }))))
 const doteLibera = computed(() => quantiRegali(regali.value))
 
@@ -455,12 +463,14 @@ function finePartita() {
   chiudi()
   suono.fine()
   primato.value = null
+  controAmici.value = ''
   monete.nota = borsellino.nota()
   if (!campagna.value) {
     const sfida = sfidaDi(SENZA_FINE, tappa.value.chiave)
     const esito = segnaPrimato('torri', Math.max(0, hud.onda - 1), Date.now(),
                                { uccisi: hud.uccisi, torri: hud.torri }, tappa.value.chiave)
     primato.value = { ...esito, frase: fraseDiFine(esito, sfida.misura) }
+    controAmici.value = amici.contro(Math.max(0, hud.onda - 1), esito.prima, tappa.value.chiave)
   }
 }
 
@@ -649,7 +659,10 @@ onMounted(() => {
         Manda la prossima ▶<template v-if="vista.premio"> · +{{ vista.premio }} ⚡</template>
       </button>
 
-      <div v-else class="banco" :class="{ 'sul-regno': fase === 'mappa' }">
+      <template v-else>
+      <!-- chi è da raggiungere: fuori dal banco, che si trascina -->
+      <p v-if="fase === 'mappa' && amici.davanti" class="davanti" data-amico-davanti>{{ amici.davanti }}</p>
+      <div class="banco" :class="{ 'sul-regno': fase === 'mappa' }">
         <template v-if="fase === 'mappa'">
           <div class="sopra-regno">
             <Ripresa :ripresa="ripresa" :chiede="chiede ? chiede.nome : ''"
@@ -658,14 +671,16 @@ onMounted(() => {
           </div>
           <Regno :tappe="TAPPE" :fatte="progresso.tappa"
                  :libera="libera" :libere="libere" :regali="doteLibera"
+                 :amici="amiciSugliScudi" :amici-al-centro="amiciAlCentro"
                  @gioca="i => vuoleIniziare(i)" @libera="quale => vuoleIniziare(-1, quale)" />
         </template>
         <FineTappa v-else :fase="fase" :tappa="tappa" :prossima="prossima" :hud="hud"
                    :monete="monete.prese" :nota-monete="monete.nota" :quante="TAPPE.length" :campagna="campagna"
-                   :divisioni="divisioni" :primato="primato"
+                   :divisioni="divisioni" :primato="primato" :amici="controAmici"
                    @avanti="prossimaTappa" @mappa="allaMappa" @libera="inizia(-1, liberaDiQui())"
                    @riprova="inizia()" />
       </div>
+      </template>
 
       <!-- ════════ IL FOGLIO ════════
            Quello che sale dal basso: la scelta della torre, la scheda di

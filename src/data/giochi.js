@@ -4,7 +4,7 @@
    in prova in docs/genitori/interruttori.md; senzaFine in
    docs/core/primati.md. L'albo dei progressi resta fuori di proposito. */
 import { GIOCHI_NUOVI, gioco } from '../giochi/indice.js'
-import { LIBERE_RACCONTO } from './campagne-castello.js' // le quattro partite libere del castello
+import { LIBERE_RACCONTO, RACCONTO } from './campagne-castello.js' // le quattro partite libere del castello, e le sue venti tappe
 import { SCALETTA, filaDi, posizioneOra } from './asteroidi.js'
 
 // un gioco nuovo che ha preso la carta di uno vecchio sta al suo posto, non in coda
@@ -48,7 +48,10 @@ export const GIOCHI = [
       sfide: LIBERE_RACCONTO.map((l, i) => ({
         chiave: l.chiave, nome: l.nome, icona: l.emoji, eredita: i === 0,
       })),
-    } },
+    },
+    // gli amici sul regno (docs/core/amici-nei-giochi.md): la tappa da fare sta in `profile.td`, non nelle campagne; finita, le libere al centro
+    amici: { tappe: RACCONTO.length, dove: 'alle partite libere',
+             tappa: p => { const td = p.td || {}; return td.libera ? RACCONTO.length : Math.floor(Number(td.tappa) || 0) } } },
   // senza `grandi`: la prima giornata è tarata sui 6,5 anni (portata: 32), contare monete non chiede di saper leggere
   { chiave: 'bancarella', ico: '🛒', nome: 'La bancarella',
     che: 'euro, centesimi e resto', area: 'numeri', come: 'fare',

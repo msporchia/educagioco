@@ -12,6 +12,9 @@ let ultimo = null
    Vedi docs/castello/regno.md. */
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import Fumetto from '../Fumetto.vue'
+import AmiciQui from '../amici/AmiciQui.vue'
+import RecordAmici from '../amici/RecordAmici.vue'
+import PallinoAmico from '../amici/PallinoAmico.vue'
 import { TORRI } from '../../data/ops.js'
 import { CAMPAGNE } from '../../data/campagne-castello.js'
 import { apertaQui } from '../../data/portata-giochi.js'
@@ -25,6 +28,10 @@ const props = defineProps({
   libera: { type: Boolean, default: false },
   libere: { type: Array, default: () => [] },   // [{ chiave, nome, emoji, primato }]
   regali: { type: Number, default: 0 },         // potenziamenti presi: uno per il castello, non per terreno
+  // gli amici (docs/core/amici-nei-giochi.md): per ogni tappa chi è arrivato lì; al centro chi è alle libere senza record;
+  // ogni libera porta `record` (gli amici che ne hanno uno) e `qui` (alle libere ma senza record di quella)
+  amici: { type: Array, default: () => [] },
+  amiciAlCentro: { type: Array, default: () => [] },
 })
 const emit = defineEmits(['gioca', 'libera'])
 
@@ -32,6 +39,9 @@ const radice = ref(null)
 const W = ref(0)
 const k = computed(() => W.value / LARGO)
 const aperto = ref(null)          // { tipo: 'tappa', i } | { tipo: 'libera', chiave }
+
+// il castello in mezzo ai torrioni
+const CENTRO = [512, 670]
 
 // lo scudo ha il colore del vestito dei campi della sua isola
 const TERRA = { bosco: 'bosco', sotterraneo: 'lava', mura: 'neve', palude: 'palude' }
@@ -46,12 +56,19 @@ const segni = computed(() => props.tappe.map((T, i) => {
   const sue = props.tappe.filter(t => t.campagna === T.campagna)
   const n = sue.indexOf(T)
   return { T, i, n: n + 1, di: sue.length, capo: n === sue.length - 1, campagna: c ? c.nome : '',
-           terra: TERRA[T.campagna] || 'bosco', x: POSTI[i][0] * k.value, y: POSTI[i][1] * k.value, stato: statoDi(i) }
+           terra: TERRA[T.campagna] || 'bosco', x: POSTI[i][0] * k.value, y: POSTI[i][1] * k.value, stato: statoDi(i),
+           amici: props.amici[i] || [] }
 }))
 const torrioni = computed(() => props.libere.map(l => ({
   ...l, x: LIBERE_POSTI[l.chiave][0] * k.value, y: LIBERE_POSTI[l.chiave][1] * k.value,
   stato: props.libera ? 'aperta' : 'chiusa',
 })))
+// i pallini sotto lo scudo (o il torrione) di chi è arrivato lì; quelli senza record al centro del castello
+const sotto = computed(() => [
+  ...segni.value.filter(s => s.amici.length).map(s => ({ al: s.i, amici: s.amici, x: s.x, y: s.y + (s.capo ? 31 : 28) })),
+  ...torrioni.value.filter(t => t.record.length).map(t => ({ al: t.chiave, amici: t.record, x: t.x, y: t.y + 31 })),
+  ...(props.amiciAlCentro.length ? [{ al: 'libere', amici: props.amiciAlCentro, x: CENTRO[0] * k.value, y: CENTRO[1] * k.value }] : []),
+])
 const qui = computed(() => segni.value.find(s => s.stato === 'ora') || null)
 
 const scelto = computed(() => {
@@ -228,6 +245,11 @@ onUnmounted(() => {
         </button>
       </div>
 
+      <span v-for="p in sotto" :key="p.al" class="amici-posto" data-amici-scudo :data-al="p.al"
+            :style="{ left: p.x + 'px', top: p.y + 'px' }">
+        <PallinoAmico v-for="a in p.amici" :key="a.chiave" :amico="a" :lato="14" data-pallino-amico />
+      </span>
+
       <div v-if="corpo && eroe.i !== null" class="eroe" :class="{ specchio: eroe.specchio }" data-eroe
            :data-in-viaggio="eroe.cammina ? 1 : 0" :data-dove="eroe.i"
            :style="{ left: eroe.x * k + 'px', top: eroe.y * k + 'px' }">
@@ -246,6 +268,7 @@ onUnmounted(() => {
           <span class="riga">{{ scelto.T.ondate }} ondate ·
             <template v-for="t in scelto.T.torri" :key="t">{{ TORRI[t].emoji }}</template></span>
           <span v-if="scelto.capo" class="riga">👑 alla fine arriva il capo</span>
+          <AmiciQui :amici="scelto.amici" :lato="16" class="amici-fumetto" :data-al="scelto.i" />
           <span v-if="scelto.stato === 'chiusa'" class="riga perche">
             {{ scelto.i > fatte ? `Si apre quando vinci «${prima(scelto)}».` : 'Per ora è chiusa.' }}</span>
           <button v-else class="bottone stretto" data-azione="gioca" @click="emit('gioca', scelto.i)">
@@ -255,6 +278,8 @@ onUnmounted(() => {
           <b class="titolo">{{ scelto.nome }}</b>
           <span class="riga">senza fine: si va avanti finché il castello regge</span>
           <span v-if="scelto.primato" class="riga record">record {{ scelto.primato }}</span>
+          <RecordAmici :record="scelto.record" :lato="16" class="amici-fumetto" />
+          <AmiciQui :amici="scelto.qui" :lato="16" class="amici-fumetto" :data-al="scelto.chiave" />
           <span v-if="scelto.stato === 'chiusa'" class="riga perche">Si apre quando hai vinto tutte le tappe.</span>
           <button v-else class="bottone stretto" data-azione="gioca" @click="emit('libera', scelto.chiave)">
             Gioca ▶</button>

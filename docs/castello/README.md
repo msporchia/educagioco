@@ -18,6 +18,7 @@ pagina per chi arriva da fuori e i documenti per chi ci lavora.
 - [da-fare.md](da-fare.md) — le voci aperte
 
 Vedi anche: [`../apprendimento/calibrazione.md`](../apprendimento/calibrazione.md)
-(quanto vale una moneta), [`../core/grafica.md`](../core/grafica.md) (la tela,
+(quanto vale una moneta), [`../core/amici-nei-giochi.md`](../core/amici-nei-giochi.md)
+(gli amici sul regno e sulle libere), [`../core/grafica.md`](../core/grafica.md) (la tela,
 la telecamera e le figure del castello), `strumenti/sprite/DA-GENERARE.md` (le
 immagini che mancano al castello).
