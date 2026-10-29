@@ -2,6 +2,7 @@
 // Sta fuori dal profilo, una chiave per bambino (`amici:<id>`), e non entra nei backup: le chiavi sono dei due telefoni.
 import { reactive } from 'vue'
 import { load, save, flush } from './storage.js'
+import { leggiIstantanea } from '../amici/istantanea.js'
 
 // Di partenza le funzioni online sono SPENTE e si chiedono ai genitori (nel modulo del bambino nuovo). Quando si vorrà che di
 // base siano accese si cambia questa riga sola.
@@ -22,7 +23,8 @@ export function casuale(n) {
 export const dati = reactive({ giocatore: null, id: '', deciso: false, attivo: false, online: true, amici: [] })
 
 const pulisci = a => (Array.isArray(a) ? a : []).filter(x => x && /^[a-z0-9]{32}$/.test(x.chiave || ''))
-  .map(x => ({ chiave: x.chiave, id: /^[a-z0-9]{8,32}$/.test(x.id || '') ? x.id : null, nome: String(x.nome || '').slice(0, NOME_MAX), visto: Number(x.visto) || 0 }))
+  .map(x => ({ chiave: x.chiave, id: /^[a-z0-9]{8,32}$/.test(x.id || '') ? x.id : null, nome: String(x.nome || '').slice(0, NOME_MAX), visto: Number(x.visto) || 0,
+               bacheca: leggiIstantanea(x.bacheca) }))
   .slice(0, MAX_AMICI)
 
 // La risposta data nel modulo del bambino nuovo, prima che il suo profilo esista: la prende il primo `carica` di quel profilo
@@ -57,7 +59,7 @@ export function mettiOnline(si) { dati.online = !!si; return scrivi() }
 /* una amicizia nuova (la chiave è l'unica cosa che c'è: nome e id si imparano quando ci si incontra) */
 export function aggiungi(chiave) {
   if (dati.amici.some(a => a.chiave === chiave) || dati.amici.length >= MAX_AMICI) return false
-  dati.amici.push({ chiave, id: null, nome: '', visto: 0 })
+  dati.amici.push({ chiave, id: null, nome: '', visto: 0, bacheca: null })
   scrivi()
   return true
 }
@@ -69,6 +71,17 @@ export function impara(chiave, id, nome) {
   const n = String(nome || '').trim().slice(0, NOME_MAX)
   if (a.id === id && a.nome === n) { a.visto = Date.now(); return true }
   a.id = id; a.nome = n; a.visto = Date.now()
+  scrivi()
+  return true
+}
+
+/* l'ultima istantanea dell'amico letta dalla sua bacheca (docs/core/amici-bacheca.md): si tiene qui, anche quando sul servizio
+   è scaduta, finché l'amicizia c'è. Si scrive solo se dice qualcosa di nuovo. */
+export function ricorda(chiave, istantanea) {
+  const a = dati.amici.find(x => x.chiave === chiave)
+  const ist = leggiIstantanea(istantanea)
+  if (!a || !ist || JSON.stringify(ist) === JSON.stringify(a.bacheca)) return false
+  a.bacheca = ist
   scrivi()
   return true
 }

@@ -8,6 +8,8 @@ const GIOCO = /^[a-z0-9-]{1,24}$/
 export const presento = (id, nome, gioco = null) => ({ k: 'presento', id, nome: String(nome || '').slice(0, NOME_MAX), gioco })
 export const invito = (gioco, dati) => ({ k: 'invito', gioco, dati })
 export const risposta = ok => ({ k: 'risposta', ok: !!ok })
+// «ho appena scritto la mia bacheca»: l'amico online la rilegge subito, invece di aspettare (docs/core/amici-bacheca.md)
+export const bacheca = () => ({ k: 'bacheca' })
 
 /* un messaggio arrivato dall'amico: torna la forma pulita, o null se non è una cosa che sappiamo leggere */
 export function leggi(m) {
@@ -21,5 +23,6 @@ export function leggi(m) {
     return { k: 'invito', gioco: m.gioco, dati: m.dati }
   }
   if (m.k === 'risposta') return typeof m.ok === 'boolean' ? { k: 'risposta', ok: m.ok } : null
+  if (m.k === 'bacheca') return { k: 'bacheca' }
   return null
 }
