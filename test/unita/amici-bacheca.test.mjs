@@ -49,7 +49,7 @@ const ORA = new Date(2026, 9, 29, 17, 42).getTime()
     leggiGioco({ c: 4, k: 0 }, dueStrade), { posti: { coniglio: 4 }, primati: {} })
   controlla('un percorso di più d\'uno non ha il cursore di serie', percorsoDi(gioco({ percorsi: { a: { tappe: 3 } } }), 'a').tappa({ campagne: { prova: { tappa: 2 } } }) === 0)
   controlla('e si trova per chiave', percorsoDi(dueStrade, 'cane').tappe === 6 && percorsoDi(dueStrade, 'boh') === null)
-  ugualeJ('i giochi che mostrano gli amici sono quelli che lo dichiarano', giochiConAmici().map(g => g.chiave).sort(), ['mate', 'survivors'])
+  ugualeJ('i giochi che mostrano gli amici sono quelli che lo dichiarano', giochiConAmici().map(g => g.chiave).sort(), ['codice', 'mate', 'survivors'])
   controlla('ogni percorso dichiarato ha tappe intere e un «dove»', giochiConAmici().every(g =>
     dichiarazione(g).percorsi.every(x => Number.isInteger(x.tappe) && x.tappe > 0 && x.dove)))
 }

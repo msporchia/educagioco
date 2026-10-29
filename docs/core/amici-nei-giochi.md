@@ -72,12 +72,13 @@ che dichiarano `amici` si allarga, e se il gioco ha una `tappa` sua, un controll
 |---|---|---|
 | Asteroidi (`mate`) | fatto | pallini sulla rotta (tela), nomi nel fumetto, record nel fumetto del volo, `data-contro-amici` a fine volo |
 | Survivors | fatto | pallini e nomi sulla tappa, record sotto la sopravvivenza, a fine sopravvivenza |
+| Codice Segreto (`codice`) | fatto | pallini e nomi sulla tappa, record sotto il gioco libero, `data-contro-amici` al codice sbagliato che chiude la fila |
 
 ## Da fare
 
 - La colonna degli amici nella tabella dei record (l'albo).
 - «Melody ti ha superato» all'apertura dell'app: dopo aver visto se i pallini piacciono.
 
-Nei test: `integrazione/amici-rotta`, `integrazione/amici-survivors`. Bersagli: `[data-amico-davanti]`; `[data-amici-qui]` (con
+Nei test: `integrazione/amici-rotta`, `integrazione/amici-survivors`, `integrazione/amici-codice`. Bersagli: `[data-amico-davanti]`; `[data-amici-qui]` (con
 `[data-al]` dove serve) e dentro `[data-pallino-amico]`; `[data-record-amici]` con le righe `[data-record-amico]`;
 `[data-contro-amici]`; sulla rotta `[data-amico-in-rotta]` con `[data-al]` (il nodo).

@@ -1,10 +1,13 @@
 <script setup>
 import Ripresa from '../../Ripresa.vue'
+import AmiciQui from '../../../components/amici/AmiciQui.vue'
+import RecordAmici from '../../../components/amici/RecordAmici.vue'
 // La mappa della campagna: tre scalini, nove tappe. Riceve tutto già
 // deciso (aperto, stelle, colore) e non sa niente di profili o motore.
 defineProps({
   scalini: { type: Array, required: true },   // [{ chiave, nome, icona, dritta, tappe: [] }]
-  libero: { type: Object, required: true },   // { aperto, quante, fatte, primato }
+  libero: { type: Object, required: true },   // { aperto, quante, fatte, primato, qui, record }
+  davanti: { type: String, default: '' },     // l'amico da raggiungere, in parole (docs/core/amici-nei-giochi.md)
   ripresa: { type: Object, default: null },   // la partita a metà: { emoji, nome, dettaglio }
   chiede: { type: String, default: '' },      // la partita nuova che la butterebbe
 })
@@ -16,6 +19,8 @@ defineEmits(['gioca', 'libero', 'riprendi', 'scorda', 'comincia', 'annulla'])
     <Ripresa :ripresa="ripresa" :chiede="chiede"
              @riprendi="$emit('riprendi')" @scorda="$emit('scorda')"
              @comincia="$emit('comincia')" @annulla="$emit('annulla')" />
+
+    <p v-if="davanti" class="cs-davanti" data-amico-davanti>{{ davanti }}</p>
 
     <section v-for="s in scalini" :key="s.chiave" class="cs-scalino">
       <h3>
@@ -33,6 +38,7 @@ defineEmits(['gioca', 'libero', 'riprendi', 'scorda', 'comincia', 'annulla'])
           <span class="cs-testo">
             <b>{{ t.nome }}</b>
             <i>{{ t.aperta ? t.racconto : t.temaNome }}</i>
+            <AmiciQui :amici="t.amici" class="cs-qui" :data-al="t.indice" />
           </span>
           <span class="cs-stelle em">{{ t.stelle ? '⭐'.repeat(t.stelle) : `${t.partite} 🔑` }}</span>
         </button>
@@ -48,5 +54,10 @@ defineEmits(['gioca', 'libero', 'riprendi', 'scorda', 'comincia', 'annulla'])
       </span>
       <span v-else>finisci le {{ libero.quante }} tappe ({{ libero.fatte }} fatte)</span>
     </button>
+    <!-- gli amici al gioco libero: i loro record sotto il proprio, e chi c'è senza record -->
+    <div v-if="libero.record.length || libero.qui.length" class="cs-amici-libero">
+      <RecordAmici :record="libero.record" />
+      <AmiciQui :amici="libero.qui" class="cs-qui" data-al="libero" />
+    </div>
   </div>
 </template>
