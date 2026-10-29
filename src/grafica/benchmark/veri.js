@@ -5,7 +5,7 @@
 import { proveCpu } from './prove.js'
 import { eventiContesto } from './veri/tela.js'
 import { tappeDegliElementi } from './veri/elementi-dati.js'
-import { sceneDellaScala, MOSTRI_SCALA } from './veri/scala.js'
+import { sceneDellaScala, sceneDelleLeve, MOSTRI_SCALA } from './veri/scala.js'
 
 export const SOGLIA = 33          // ms di lavoro al p95: oltre, a scatti (30 fps)
 export const SALTA_OLTRE = 400    // una scena oltre questo al p95: il resto della sua serie che cresce non si misura (il telefono si pianterebbe)
@@ -115,6 +115,8 @@ export const QUANTE = TAPPE.reduce((n, t) => n + t.scene.length, 0)
 // (il 28/10 lo scontro andava a 59 fps veri), si lancia per nome (`solo: ['scala']`)
 const SCALA_SOT = { gruppo: 'scala', carica: () => import('./veri/elementi-sot.js'), opz: { mostri: MOSTRI_SCALA }, tempi: 'verifica', scene: sceneDellaScala('sot') }
 const SCALA_SOPRA = { gruppo: 'scala-sopra', carica: () => import('./veri/elementi-sopra.js'), tempi: 'verifica', scene: sceneDellaScala('sopra') }
+// le leve della bassa nel mondo di sopra, una riaccesa alla volta: un mondo nuovo per scena (la fascia si legge alla nascita)
+const LEVE_SOPRA = sceneDelleLeve().map(s => ({ gruppo: 'leve-sopra', carica: () => import('./veri/elementi-sopra.js'), opz: { riaccendi: s.riaccendi }, tempi: 'verifica', scene: [s] }))
 /**
  * La VERIFICA (il tasto «Avvia coi modelli veri», ~5 minuti, `stimaVerifica`): solo quello che serve alla leva di adesso. Quello che ha già
  * risposto (l'ingresso, la risoluzione, lo zaino, le serie lunghe, la scala delle discese) sta in `TAPPE` e `TAPPE_SCALE`. Il riferimento del
@@ -123,6 +125,7 @@ const SCALA_SOPRA = { gruppo: 'scala-sopra', carica: () => import('./veri/elemen
 export const TAPPE_VERIFICA = [
   // la scala del mondo di sopra: il villaggio dal cielo e il mare fino a persone e mostri
   SCALA_SOPRA,
+  ...LEVE_SOPRA,
   // gli fps veri (docs/core/vecchio-telefono-veri.md, «Gli fps veri»): quello che vede chi gioca, con la fascia del telefono e senza aspettare la GPU
   ...TAPPE_FPS,
 ]

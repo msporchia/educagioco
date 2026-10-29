@@ -22,7 +22,7 @@ export async function prepara({ contenitore, opz = {} }) {
   let api = null
   const passo = (dt, t) => { if (api) api.S.mostri = mostriFinti(3, SPECIE, api.S.io.x, api.S.io.z, t) }
   api = creaMondo3d(tela.canvas, { m, nebbia: salvato.nebbia, fontane: fontaneDi(m, terraDelMondo(m)), strato: tela.strato, dpr: dprDelGioco(),
-                                   da: { x: m.partenza.x, y: m.partenza.y }, spegni: opz.spegni || [], passo, dopo: () => {} })
+                                   da: { x: m.partenza.x, y: m.partenza.y }, spegni: opz.spegni || [], riaccendi: opz.riaccendi || [], passo, dopo: () => {} })
   if (!api) { tela.via(); throw new Error('il mondo 3D non parte') }
   api.S.persone = personeFinte(4, api.S.io.x, api.S.io.z)
   const orig = { ...ACCESI }

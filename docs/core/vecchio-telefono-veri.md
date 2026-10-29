@@ -8,7 +8,7 @@ giocare il bambino: quanti mostri nello scontro, quante persone sopra, quanti ed
 ## Sul telefono
 
 Zona dei grandi (codice) → **Impostazioni** → tendina **Avanzate** → **Misura questo telefono** → **Avvia coi modelli veri** (la
-**verifica**, 18 scene e ~4 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
+**verifica**, 23 scene e ~6 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
 Le complete durano un quarto d'ora circa (57 scene, e fra un gruppo e l'altro 8 s di schermo nero perché il telefono si raffreddi): la barra in fondo dice a
 che scena si è, **Interrompi** la ferma e tiene il resoconto di quello che c'è. Le scene si vedono mentre girano: se una luce, un
 colore o la nebbia sembrano sbagliati, alla fine c'è un campo **Note** che finisce nel resoconto. Lo schermo non deve spegnersi
@@ -21,12 +21,13 @@ invio), **Copia**, **Rifai**. L'ultimo resoconto di ognuna delle due prove resta
 
 Il tasto «Avvia coi modelli veri» serve a **decidere**: se una modifica ha migliorato qualcosa e quale leva conviene. Tiene **solo
 le scene che servono alla leva di adesso**: quelle che hanno già risposto escono e restano nelle **Misure complete**. `TAPPE_VERIFICA`
-in `veri.js`, **18 scene, circa 4 minuti** (`stimaVerifica()`: i secondi attesi per scena più, a ogni gruppo, la pausa di 4,5 s, il
+in `veri.js`, **23 scene, circa 6 minuti** (`stimaVerifica()`: i secondi attesi per scena più, a ogni gruppo, la pausa di 4,5 s, il
 riferimento del calore e il caricamento; la scrive il foglio iniziale):
 
 | gruppo | scene |
 |---|---|
 | `scala-sopra` | `scala-sopra-0`…`9` e `scala-sopra-ancora`: il villaggio di sopra un gradino alla volta, vedi sotto |
+| `leve-sopra` | `leve-sopra-tutte` e `leve-sopra-<leva>`: il villaggio intero con tutte le leve della bassa e con una riaccesa com'era (`riaccendi`, un mondo per scena); la LETTURA dice quanto toglie ciascuna (`LEVE_SOPRA` in `veri/scala.js`) |
 | `fps` | gli fps veri, in fondo: il gioco com'è (discese, mondo di sopra, fattoria) senza aspettare la GPU, [vecchio-telefono-fps.md](vecchio-telefono-fps.md) |
 
 Uscite il 28/10 sera, perché lo scontro delle discese andava a 59 fps veri: la scala dello scontro (si lancia per nome, `solo: ['scala']`)
