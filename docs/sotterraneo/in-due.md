@@ -76,6 +76,9 @@ l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livel
   strada, foglio). Il lavoro grosso è portarlo in **una persona**: la discesa tiene il piano, i mostri e l'orologio, e una lista di
   persone. Da soli la lista ha una persona, e **tutte le misure del banco devono restare identiche** (un test lo controlla, come
   `unita/sotterraneo-strade` tiene fermo il mana).
+- **La lista serve anche all'aiutante** che l'utente vuole mettere prima o poi: un alleato mosso dal gioco invece che da un
+  bambino. La sua testa c'è già, il giocatore finto di `motore/banco.js`. Le regole dei due eroi (chi entra nello scontro, chi i
+  mostri colpiscono, la fila) vanno scritte per «gli alleati», non per «i due bambini».
 - **I mostri si svegliano per chi entra nella loro stanza** e vanno verso il più vicino dei due; l'agguato prende alle spalle quello
   che raggiungono. La luce è l'unione dei due coni ([luce.md](luce.md)): un mostro nella luce dell'uno va dritto.
 - **L'orologio conta i passi di tutti e due**: i mostri morti tornano prima, la torcia brucia per chi la porta
@@ -95,8 +98,19 @@ l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livel
   in diagonale (`viste/campo.js`, `[data-posto-compagno]`, oggi spento). Ognuno ha la sua velocità e i suoi turni nella fila;
   `passaIlTurno`, che si ferma al primo del lato dell'eroe, va insegnato a fermarsi a chi tocca.
 - **Al suo turno risponde chi gioca quell'eroe**; l'altro vede la scelta e la domanda arrivare («Tocca a Leo»).
-- **I mostri scelgono chi colpire** fra i due. Le abilità che curano o proteggono possono andare anche sul compagno: oggi «in area»
-  non vuol dire niente perché l'eroe è solo ([mosse.md](mosse.md)), in due sì.
+- **I mostri colpiscono il più forte** (l'utente). Ogni alleato ha un peso, **pericolosità × vita rimasta in proporzione**, e il
+  mostro punta quello col peso più alto. A parità vince l'ordine nella fila, quindi niente caso.
+  - **La pericolosità non è il livello**, ma quanto quell'alleato fa male a quel mostro: il danno a turno della formula della
+    forza (`offesa` in `motore/forza.js`, con le due abilità forti), contro le difese di quel mostro.
+  - **La vita in proporzione fa girare i colpi**: il più forte prende i primi colpi, e quando è ferito il peso passa all'altro. Il
+    più debole viene colpito solo quando il forte è già messo male. È anche quello che protegge l'eroe di livello 8 accanto
+    all'amico del 15, oltre al tetto della difficoltà (sopra).
+  - **Vale per qualunque numero di alleati**: due bambini, o un eroe col suo aiutante, quando ci sarà (sotto). Da soli il
+    bersaglio è sempre l'eroe, e non cambia niente.
+  - **Si vede a chi mira**: la mossa annunciata (`viste/MossaAnnunciata.vue`, [mosse.md](mosse.md)) dice anche il bersaglio.
+    Le regole giuste che a schermo non si capiscono sono un gioco sbagliato.
+- **Le abilità che curano o proteggono** possono andare anche sul compagno: oggi «in area» non vuol dire niente perché l'eroe è
+  solo ([mosse.md](mosse.md)), in due sì.
 - **Chi sviene resta a terra fino alla fine dello scontro**, poi si rialza con poca vita. Se svengono tutti e due vale la regola di
   oggi per tutti e due ([regole.md](regole.md#svenire-e-il-fondo-degli-svenimenti)).
 - **Il pericolo** (lo stop dello scontro, [pericolo.md](pericolo.md)) guarda ognuno per sé.
