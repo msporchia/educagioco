@@ -107,7 +107,9 @@ l'ha trovato, ed era anche nel codice di prima).
 
 Rete, cadute, trattativa, sala e cartello non si riscrivono. Il gioco dà:
 
-1. **Un motore deterministico**, fuori dalla view: tick fisso, caso col seme, niente tempo vero. È quasi tutto il lavoro quando la
+1. **Un motore deterministico**, fuori dalla view: tick fisso, caso col seme, niente tempo vero, e i conti di
+   `src/motore/conti-uguali.js` invece di `Math.hypot`, della trigonometria, di `pow`, `exp` e `log`, che due browser arrotondano
+   diversi. È quasi tutto il lavoro quando la
    logica sta ancora nel componente (i giochi in `src/views/`).
 2. **L'adattatore** (in Castle Battle `sfida/`, 130 righe): la `regola` e il `motore` del lockstep (sopra); la mossa, l'impronta e
    la fotografia sono le sole cose da pensare.
