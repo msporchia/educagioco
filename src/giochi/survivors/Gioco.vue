@@ -13,6 +13,7 @@ import { PAGA } from '../../data/paghe.js'
 import { progresso, aperta, adesso, stelleDi, completa, primatoDi, segnaPrimato,
          sosta, salvaSosta, buttaSosta } from '../campagne.js'
 import { fraseDiFine, recordInParole } from '../primati.js'
+import { usaAmici } from '../../amici/usaAmici.js'
 import { SENZA_FINE } from './gioco.js'
 import { usaPausa } from '../pausa.js'
 import VeloPausa from '../VeloPausa.vue'
@@ -139,6 +140,9 @@ function riprendiPartita() {
   if (pittore) prendiTela(pittore.tela)
 }
 
+// gli amici dalla loro bacheca (docs/core/amici-bacheca.md): il posto dopo l'ultima tappa è la sopravvivenza
+const amici = usaAmici(CHIAVE)
+
 // la mappa: le tappe arrivano già decise
 const scalini = computed(() => SCALINI.map(s => ({
   ...s,
@@ -150,6 +154,7 @@ const scalini = computed(() => SCALINI.map(s => ({
     aperta: aperta(CHIAVE, t.indice),
     adesso: adesso(CHIAVE, t.indice),
     stelle: stelleDi(CHIAVE, t.indice),
+    amici: amici.sullaTappa(t.indice),
   })),
 })))
 
@@ -158,6 +163,9 @@ const statoLibero = computed(() => ({
   quante: QUANTE_TAPPE,
   fatte: Math.min(avanza.tappa, QUANTE_TAPPE),
   primato: recordInParole(primatoDi(CHIAVE), SENZA_FINE),
+  // chi è arrivato alla sopravvivenza ma non ha ancora un record, e i record degli amici
+  qui: amici.allaFine(),
+  record: amici.record(),
 }))
 
 const titolo = computed(() =>
@@ -348,12 +356,13 @@ function chiudiPartita() {
   scorda()          // finita o vinta, non c'è più niente da riprendere
   const secondi = Math.floor(p.tempo)
   const extra = Math.floor(p.extra)
-  let primato = null
+  let primato = null, controGliAmici = ''
 
   if (libera.value) {
     const esito = segnaPrimato(CHIAVE, secondi, Date.now(),
                                { uccisi: p.uccisi, livello: p.livello })
     primato = { ...esito, frase: fraseDiFine(esito, SENZA_FINE.misura) }
+    controGliAmici = amici.contro(secondi, esito.prima)
   } else if (p.vinta && !pagata) {
     completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle: p.stelle })
     segna('survivorsTappe')
@@ -370,7 +379,7 @@ function chiudiPartita() {
   finale.value = {
     vinta: p.vinta, titolo: regoleOra.value.nome, stelle: p.stelle,
     monete: borsellino.dato, notaMonete: borsellino.nota(), tempo: p.tempo, uccisi: p.uccisi, livello: p.livello,
-    primato, libera: libera.value, extra,
+    primato, amici: controGliAmici, libera: libera.value, extra,
     puoiRestare: p.alTraguardo,
     ultima: p.vinta && !libera.value && tappaIdx.value === QUANTE_TAPPE - 1,
   }
@@ -468,7 +477,7 @@ onUnmounted(() => {
 
     <div class="sv" :style="{ '--sv-accento': veste.accento }">
       <Mappa v-if="vista === 'mappa'" :scalini="scalini" :libero="statoLibero"
-             :ripresa="ripresa"
+             :ripresa="ripresa" :davanti="amici.davanti"
              @gioca="avvia" @libero="avvia(-1)"
              @riprendi="riprendiPartita" @scorda="scorda" />
 

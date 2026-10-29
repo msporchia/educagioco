@@ -28,6 +28,8 @@ export default {
   quiz: true,
   tappe: QUANTE_TAPPE,
   senzaFine: SENZA_FINE,
+  // gli amici sulla mappa (docs/core/amici-bacheca.md): il cursore della campagna, e dopo l'ultima tappa la sopravvivenza
+  amici: { tappe: QUANTE_TAPPE, dove: 'alla sopravvivenza' },
 
   riassunto(av = { tappa: 0, libera: false, stelle: {}, cfg: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)
