@@ -53,8 +53,8 @@ const INGRESSO = { gruppo: 'ingresso', carica: () => import('./veri/ingresso.js'
   { id: 'ing-presto-x', nome: 'attacco a 0,5 s, senza riscaldamento', ingresso: 'discesa', presto: true, riscaldamento: false },
   { id: 'ing-mondo-x', nome: 'il mondo di sopra, senza riscaldamento', ingresso: 'mondo', riscaldamento: false },
 ] }
-// gli fps veri, in fondo alla verifica: le discese (camminare in un piano, lo scontro), il mondo di sopra (il villaggio, lo scontro sul prato,
-// e il villaggio senza antialias: quanto costa) e la fattoria 3D col suo degrado acceso; un gruppo solo, quindi un riferimento del calore solo
+// gli fps veri, in fondo alla verifica: le discese (camminare in un piano, lo scontro), il mondo di sopra (il villaggio, lo scontro sul prato)
+// e la fattoria 3D col suo degrado acceso; un gruppo solo, quindi un riferimento del calore solo
 const fattoria = () => import('./veri/fattoria.js'), sopraVero = () => import('./veri/sopra-vero.js')
 export const TAPPE_FPS = [
   { gruppo: 'fps', carica: discese, tempi: 'fps', scene: [
@@ -65,7 +65,6 @@ export const TAPPE_FPS = [
     { id: 'fps-villaggio', nome: 'camminare nel villaggio di sopra', dove: 'villaggio', stima: 18 },
     { id: 'fps-prato', nome: `scontro sul prato, 3 mostri`, dove: 'prato', stima: 16 },
   ] },
-  { gruppo: 'fps', carica: sopraVero, opz: { antialias: false }, tempi: 'fps', scene: [{ id: 'fps-villaggio-noaa', nome: 'il villaggio senza antialias', dove: 'villaggio', stima: 18 }] },
   ...[10, 30].map(l => ({ gruppo: 'fps', carica: fattoria, opz: { livello: l, degrado: true }, tempi: 'fps', scene: [{ id: `fps-fat-${l}`, nome: `fattoria 3D del livello ${l}`, stima: 16 }] })),
 ]
 /** Le scene delle MISURE COMPLETE, in ordine. `serie` e `quanti` dicono dove cercare il limite; `gruppo` è la sezione del log. */

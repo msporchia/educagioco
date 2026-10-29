@@ -6,9 +6,10 @@ import { DPR, LUCE, ACCESI, applicaFascia } from './costanti.js'
 import { profilo } from '../../../store/qualita.js'
 import { segui, rilascia } from '../../../grafica/rilascio3d.js'
 
-// `antialias`: il mondo di sopra lo vuole (staccionate, corde, bordi dei tetti); le discese no (il passaggio finale le ammorbidisce)
-export function creaContesto(canvas, { perso, fisso, antialias = false, spegni = [], riaccendi = [] } = {}) {
-  applicaFascia(spegni, riaccendi)   // prima di tutto: `ombre` lo legge subito sotto
+// `antialias`: il mondo di sopra lo vuole (staccionate, corde, bordi dei tetti), se la fascia non lo spegne; le discese no (il passaggio finale le ammorbidisce)
+export function creaContesto(canvas, { perso, fisso, antialias: chiesto = false, spegni = [], riaccendi = [] } = {}) {
+  applicaFascia(spegni, riaccendi)   // prima di tutto: `ombre` e `antialias` li legge subito sotto
+  const antialias = chiesto && ACCESI.antialias
   let gl = null
   try {
     gl = canvas.getContext('webgl2', { alpha: false, antialias, depth: true, stencil: false, premultipliedAlpha: true, powerPreference: 'high-performance' })

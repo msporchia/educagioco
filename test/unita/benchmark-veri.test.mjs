@@ -149,12 +149,11 @@ lp.ripristina()
 // la verifica compatta: la scala del mondo di sopra, poi gli fps veri
 const idV = TAPPE_VERIFICA.flatMap(t => t.scene.map(x => x.id))
 const stima = stimaVerifica()
-controlla('la verifica ha 19 scene tutte diverse, senza le serie lunghe', idV.length === 19 && new Set(idV).size === 19 && !idV.some(i => /^(tri|ch|luci|px|roba|fat|cal|sot|v-|ver-)/.test(i)), idV.join(','))
+controlla('la verifica ha 18 scene tutte diverse, senza le serie lunghe', idV.length === 18 && new Set(idV).size === 18 && !idV.some(i => /^(tri|ch|luci|px|roba|fat|cal|sot|v-|ver-)/.test(i)), idV.join(','))
 controlla('la verifica: la scala del mondo di sopra, poi gli fps veri', idV[0] === 'scala-sopra-0' && idV[10] === 'scala-sopra-ancora' && idV.slice(11).every(i => i.startsWith('fps-')))
 const fps = TAPPE_VERIFICA.filter(t => t.gruppo === 'fps')
-controlla('gli fps veri: un gruppo solo, tutti senza aspettare la GPU, discese, mondo di sopra (anche senza antialias) e fattoria col degrado', fps.every(t => t.tempi === 'fps') &&
-  ['fps-piano', 'fps-sot-3', 'fps-villaggio', 'fps-villaggio-noaa', 'fps-prato', 'fps-fat-10', 'fps-fat-30'].every(i => idV.includes(i)) && fps.filter(t => t.opz && t.opz.degrado).length === 2 &&
-  fps.find(t => t.scene[0].id === 'fps-villaggio-noaa').opz.antialias === false)
+controlla('gli fps veri: un gruppo solo, tutti senza aspettare la GPU, discese, mondo di sopra e fattoria col degrado', fps.every(t => t.tempi === 'fps') &&
+  ['fps-piano', 'fps-sot-3', 'fps-villaggio', 'fps-prato', 'fps-fat-10', 'fps-fat-30'].every(i => idV.includes(i)) && fps.filter(t => t.opz && t.opz.degrado).length === 2)
 // le due scale: ogni gradino sopra quello di prima, in fondo il gradino del rumore rifatto, in cima tutti gli elementi della scena e solo quelli
 const inSalita = gr => gr[0].accesi.length === 0 && gr.every((x, k) => !k || (gr[k - 1].accesi.every(a => x.accesi.includes(a)) && x.accesi.length > gr[k - 1].accesi.length))
 for (const [k, el, rumore] of [['sot', 'sot', 'pareteVicina'], ['sopra', 'sopra', 'terreno']]) {
@@ -164,7 +163,7 @@ for (const [k, el, rumore] of [['sot', 'sot', 'pareteVicina'], ['sopra', 'sopra'
   controlla(`la scala ${k}: l'ultimo gradino accende tutti gli elementi della scena, e solo quelli`, cima.length === SCENE_ELEMENTI[el].elementi.length && SCENE_ELEMENTI[el].elementi.every(a => cima.includes(a)), cima.join())
 }
 controlla('la scala del mondo di sopra nella verifica', TAPPE_VERIFICA.find(t => t.gruppo === 'scala-sopra').scene.length === SCALE.sopra.gradini.length + 1)
-controlla('la stima: 19 scene, sui 4 minuti (il testo del foglio)', stima.scene === 19 && stima.minuti === 4, JSON.stringify(stima))
+controlla('la stima: 18 scene, sui 4 minuti (il testo del foglio)', stima.scene === 18 && stima.minuti === 4, JSON.stringify(stima))
 controlla('lo scontro delle complete ha il riferimento', ['sot-1', 'sot-3', 'sot-6'].every(i => dellaScena(i)))
 const rif = dellaScena('sot-1')
 uguale('il riferimento è tolto il calore (83.1 / 1.13)', rif.ms, 73.5)
@@ -185,7 +184,6 @@ const dv = {
     s('fps-sot-3', 'fps', 18, 30, { nome: 'scontro nel sotterraneo, 3 mostri', vero: true, fps: 42, dt95: 36, sotto30: 12, fermi: 1, js: 18, gpu: 0 }),
     s('fps-fat-10', 'fps', 9, 12, { nome: 'fattoria 3D del livello 10', vero: true, fps: 58, dt95: 18, sotto30: 0, fermi: 0, js: 9, gpu: 0 }),
     s('fps-villaggio', 'fps', 16, 30, { nome: 'camminare nel villaggio di sopra', vero: true, fps: 17, dt95: 66, sotto30: 99, fermi: 2, js: 16, gpu: 0 }),
-    s('fps-villaggio-noaa', 'fps', 16, 30, { nome: 'il villaggio senza antialias', vero: true, fps: 24, dt95: 50, sotto30: 80, fermi: 0, js: 16, gpu: 0 }),
     s('scala-sopra-0', 'scala-sopra', 10, 14), s('scala-sopra-1', 'scala-sopra', 13, 18), s('scala-sopra-2', 'scala-sopra', 25, 30)],
   fascia: 'bassa',
 }
@@ -207,7 +205,6 @@ controlla('gli fps veri non sono «chi pesa di più» (il loro p95 è solo la CP
 controlla('LETTURA: dove va il JS (il giro del gioco, il disegno, il resto)', /Dove va il JS \(sot-3\): 30 ms, di cui il giro del gioco 9, il disegno di three 15, il resto 6/.test(lv2), lv2)
 controlla('la riga della scena dice il JS diviso', /sot-3: 70\/80 ms \(js 30: gioco 9 disegno 15 gpu 40\)/.test(tv), tv)
 controlla('LETTURA: lo scontro è lavoro in fila, non il fotogramma', /Scontro nelle discese \(1 mostro, effetti\), lavoro in fila: p95 66 ms \(telefono poi scheda/.test(lv2) && !/ancora oltre i 33/.test(lv2), lv2)
-controlla('LETTURA: l\'antialias nel villaggio, con e senza', /Antialias nel villaggio: 17 fps con, 24 senza \(\+7 fps\)\./.test(lv2), lv2)
 controlla('LETTURA: la scala del mondo di sopra a parte, fin dove è misurata', /SCALA \(il villaggio di sopra con 4 persone e 3 mostri/.test(lv2) && /  2 \+ mare: 25 ms[^\n]*→ \+12 ms/.test(lv2) && /  3 \+ terreno: non misurato; la scala si ferma qui/.test(lv2), lv2)
 controlla('le righe della scala senza ok/XX (lavoro in fila)', /\n·  scala-sopra-2: 25\/30 ms/.test(tv) && /\n·  scala-3: /.test(tv), tv)
 controlla('i DATI dicono la versione di riferimento', JSON.parse(tv.split('DATI ')[1]).vf === RIFERIMENTO.versione)

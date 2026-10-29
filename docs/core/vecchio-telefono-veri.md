@@ -8,7 +8,7 @@ giocare il bambino: quanti mostri nello scontro, quante persone sopra, quanti ed
 ## Sul telefono
 
 Zona dei grandi (codice) → **Impostazioni** → tendina **Avanzate** → **Misura questo telefono** → **Avvia coi modelli veri** (la
-**verifica**, 19 scene e ~4 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
+**verifica**, 18 scene e ~4 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
 Le complete durano un quarto d'ora circa (57 scene, e fra un gruppo e l'altro 8 s di schermo nero perché il telefono si raffreddi): la barra in fondo dice a
 che scena si è, **Interrompi** la ferma e tiene il resoconto di quello che c'è. Le scene si vedono mentre girano: se una luce, un
 colore o la nebbia sembrano sbagliati, alla fine c'è un campo **Note** che finisce nel resoconto. Lo schermo non deve spegnersi
@@ -21,7 +21,7 @@ invio), **Copia**, **Rifai**. L'ultimo resoconto di ognuna delle due prove resta
 
 Il tasto «Avvia coi modelli veri» serve a **decidere**: se una modifica ha migliorato qualcosa e quale leva conviene. Tiene **solo
 le scene che servono alla leva di adesso**: quelle che hanno già risposto escono e restano nelle **Misure complete**. `TAPPE_VERIFICA`
-in `veri.js`, **19 scene, circa 4 minuti** (`stimaVerifica()`: i secondi attesi per scena più, a ogni gruppo, la pausa di 4,5 s, il
+in `veri.js`, **18 scene, circa 4 minuti** (`stimaVerifica()`: i secondi attesi per scena più, a ogni gruppo, la pausa di 4,5 s, il
 riferimento del calore e il caricamento; la scrive il foglio iniziale):
 
 | gruppo | scene |

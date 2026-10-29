@@ -42,8 +42,7 @@ const CIELO = new Color(0xc9dcea)
 const COLORI_PALLINO = { grigio: 0x9a9a9a, verde: 0x5fd35f, arancio: 0xffa53a, rosso: 0xff4a3a }
 
 export function creaMondo3d(canvas, opz) {
-  // `antialias: false` solo per la misura del telefono (veri/sopra-vero.js): quanto costa
-  const ctx = creaContesto(canvas, { perso: opz.perso, fisso: opz.dpr, antialias: opz.antialias ?? true, spegni: opz.spegni, riaccendi: opz.riaccendi })
+  const ctx = creaContesto(canvas, { perso: opz.perso, fisso: opz.dpr, antialias: true, spegni: opz.spegni, riaccendi: opz.riaccendi })
   if (!ctx) return null
   try { return costruisci(canvas, ctx, opz) } catch (e) {
     console.warn('mondo 3D: non parte', e)

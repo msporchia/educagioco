@@ -26,8 +26,8 @@ function personeDi(m) {
   return l
 }
 
-/** Le scene: { dove: 'villaggio' | 'prato' }; `opz.antialias: false` il mondo senza antialias. */
-export async function prepara({ contenitore, opz = {} }) {
+/** Le scene: { dove: 'villaggio' | 'prato' }. */
+export async function prepara({ contenitore }) {
   const tela = nuovaTela(contenitore)
   const m = ilMondo({ terra: 1 }), terra = terraDelMondo(m)
   const salvato = mondoDaSalvato(m, null, [])
@@ -43,7 +43,7 @@ export async function prepara({ contenitore, opz = {} }) {
     scena.S.inCammino = true
     scena.scopri(io.x, io.z, VISTA_MONDO)
   }
-  const scena = creaMondo3d(tela.canvas, { m, nebbia: salvato.nebbia, fontane: fontaneDi(m, terra), strato: tela.strato, dpr: dprDelGioco(), antialias: opz.antialias,
+  const scena = creaMondo3d(tela.canvas, { m, nebbia: salvato.nebbia, fontane: fontaneDi(m, terra), strato: tela.strato, dpr: dprDelGioco(),
                                            da: { x: Math.floor(centro.x), y: Math.floor(centro.z) }, passo, dopo: () => {} })
   if (!scena) { tela.via(); throw new Error('il mondo 3D non parte (WebGL 2?)') }
   scena.S.persone = personeDi(m)

@@ -77,3 +77,9 @@ terreno +7, la nebbia della mappa +7, case e natura un paio di ms; il villaggio 
 - **Il rumore in trama** (la bassa, `rumoreTrama`; `mondo/vesti.js`): con `RUMORE_TRAMA` `vrumore` legge una trama 256×256 coi valori di
   hash12 ai nodi (filtro lineare, ripetuta, lo smoothstep sulla coordinata): una lettura invece di quattro hash. Vale per tutti gli shader
   che usano `GLSL_RUMORE`: acqua, terreno, ombra delle nuvole, nebbia della mappa, velo. Nella foto del villaggio non si vede la differenza.
+
+Con il rumore in trama (29/10, fps veri): villaggio da 18 a 54, prato da 17 a 48; il mare da +45 a +9 ms. Il villaggio senza antialias
+andava a 60.
+
+- **Niente antialias** (la bassa, `antialias`; `contesto.js`): il mondo di sopra lo chiedeva sempre, le discese mai. Staccionate, corde e
+  bordi dei tetti hanno i gradini.

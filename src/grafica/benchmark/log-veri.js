@@ -52,11 +52,7 @@ const letturaFps = (ris, fascia) => {
   const l = ris.filter(r => r.vero && misurata(r))
   if (!l.length) return []
   const piano = x => (x >= 50 ? 'liscio' : x >= 30 ? 'si gioca, a tratti scatta' : 'a scatti')
-  const righe = [`FPS VERI (fascia ${fascia || '?'}, il gioco com'è): ${l.map(r => `${r.nome} ${r.fps} fps (${piano(r.fps)}${r.sotto30 ? `, sotto i 30 il ${r.sotto30}%` : ''})`).join('; ')}.`]
-  // l'antialias del mondo di sopra: lo stesso giro del villaggio con e senza
-  const con = l.find(r => r.id === 'fps-villaggio'), senza = l.find(r => r.id === 'fps-villaggio-noaa')
-  if (con && senza) righe.push(`Antialias nel villaggio: ${con.fps} fps con, ${senza.fps} senza (${segnato(t1d(senza.fps - con.fps))} fps).`)
-  return righe
+  return [`FPS VERI (fascia ${fascia || '?'}, il gioco com'è): ${l.map(r => `${r.nome} ${r.fps} fps (${piano(r.fps)}${r.sotto30 ? `, sotto i 30 il ${r.sotto30}%` : ''})`).join('; ')}.`]
 }
 
 function rigaVera(r) {

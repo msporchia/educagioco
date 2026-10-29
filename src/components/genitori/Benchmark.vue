@@ -138,9 +138,9 @@ async function copia() {
       <p>Tieni lo schermo acceso e non toccare niente.</p>
       <button type="button" class="bottone" data-azione="benchmark-avvia" @click="avvia('sintetico')">Avvia la misura</button>
       <h3>Con i modelli veri del gioco</h3>
-      <p>19 scene, circa 4 minuti: la scala, cioè il villaggio di sopra costruito un pezzo alla volta (prima niente, poi il cielo, il mare,
+      <p>18 scene, circa 4 minuti: la scala, cioè il villaggio di sopra costruito un pezzo alla volta (prima niente, poi il cielo, il mare,
         il terreno, il suo rilievo, le case, gli alberi, la nebbia della mappa, le persone, i mostri);
-        poi gli fps veri, il gioco com'è: camminare in un piano, lo scontro con 3 e 6 mostri, il villaggio (anche senza antialias), lo scontro sul prato, due fattorie.
+        poi gli fps veri, il gioco com'è: camminare in un piano, lo scontro con 3 e 6 mostri, il villaggio, lo scontro sul prato, due fattorie.
         Il resoconto dice quanto aggiunge ogni gradino della scala, quali sono i più cari, e a quanti fps gira davvero ogni scena. Ogni scena si salva appena misurata: se il telefono si pianta, riapri questa
         pagina e «L'ultima coi modelli veri» ha le scene fatte fin lì.</p>
       <p><b>Guarda lo schermo</b>: se un colore, una luce o la nebbia ti sembrano strani, alla fine scrivilo nelle note.
