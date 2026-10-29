@@ -10,7 +10,6 @@ import { caso, fbm, rumore, quotaTerreno, ERBA } from './suolo.js'
 import { rettangoloDi } from './pezzi.js'
 import { Cantiere, scatola, cilindro } from './kit.js'
 import { vesti, ombraDi, materialeMondo } from './vesti.js'
-import { ACCESI } from '../costanti.js'
 import { segna } from '../../../../grafica/elementi3d.js'
 
 // le chiome piccole e i cespugli a `det` 0 (20 facce): nel mondo a percorso i boschi sono fitti, e a 80 facce l'una il bosco vecchio
@@ -134,7 +133,7 @@ export function istanzeDelPezzo(m, p, q) {
     if (m.zona[k] < 0 || !m.zonaCaricata[m.zona[k]]) continue
     if (m.terreno[k] !== ERBA || m.strada[k] || m.blocco[k] || m.campo[k] || m.ponte[k] >= 0 || m.isola[k]) continue
     const h = m.regioni[m.reg[k]].habitat, t = TINTA[h] || TINTA.prato
-    const fitta = (FITTA[h] || 1.5) * (0.5 + fbm(x, y, 970, 6)) * ACCESI.quantaErba, quanti = Math.floor(fitta) + (r() < fitta % 1 ? 1 : 0)
+    const fitta = (FITTA[h] || 1.5) * (0.5 + fbm(x, y, 970, 6)), quanti = Math.floor(fitta) + (r() < fitta % 1 ? 1 : 0)
     for (let i = 0; i < quanti; i++) {
       const px = x + r(), pz = y + r(), s = 0.7 + r() * 0.6, v = 0.85 + s * 0.2
       metti('erba', px, quotaTerreno(m, px, pz) - 0.02, pz, s, r() * 6.28, t[0] * v, t[1] * v, t[2])

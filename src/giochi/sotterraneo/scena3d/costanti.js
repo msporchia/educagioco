@@ -106,10 +106,8 @@ export const ACCESI = {
   // e (la bassa: `rumoreTrama:1`) il rumore degli shader del mondo di sopra (acqua, terreno, nuvole, nebbia) letto da una trama (mondo/vesti.js)
   rumoreTrama: false,
   // la bassa nel mondo di sopra (docs/sotterraneo/prestazioni-3d-bassa.md); come sopra, acceso è il semplice
-  lambertSopra: false,           // la luce di Lambert al posto di quella fisica in tutti i materiali del mondo (vesti.js, materialeMondo)
-  terrenoSopraSemplice: false,   // il terreno con una trama sola (la grana dell'erba) sui colori medi delle quattro (terreno.js)
-  rumoreUnaOttava: false,        // il rumore degli shader a un'ottava invece di tre (vesti.js)
-  quantaErba: 1,                 // quanta dell'erba dei prati (0,5: metà; natura.js)
+  lambertSopra: false,      // la luce di Lambert al posto di quella fisica in tutti i materiali del mondo (vesti.js, materialeMondo)
+  rumoreUnaOttava: false,   // il rumore degli shader a un'ottava invece di tre (vesti.js)
   antialias: true,   // del mondo di sopra (contesto.js); le discese non l'hanno mai. La bassa lo spegne: nel villaggio 54 fps con, 60 senza
   // gli elementi della scena (grafica/elementi3d.js): spento non si disegna, senza buttarlo né cambiare il gioco. Solo per misurare chi
   // pesa (`&spegni=pavimento`); anche arredo, fiamme, fuochi, palco, nebbia, effetti3d e chiarori qui sopra fanno da elemento. `resto`: quello
