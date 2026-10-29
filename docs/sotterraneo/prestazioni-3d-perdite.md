@@ -21,7 +21,7 @@ discesa dal suo ingresso, la home. Dopo ogni ciclo, col GC forzato due volte:
 Alla fine una retta per grandezza: **pendenza per ciclo e r²**; esce con 1 se una pendenza passa la soglia con r² ≥ 0,5.
 Le misure in home dicono se chiudere il 3D libera tutto; quelle nel mondo (sempre al villaggio) se il mondo di sopra
 lascia indietro qualcosa. `--resta` resta nella stessa scena del mondo per tutta la prova, `--giu` scende un piano a ciclo
-nell'abisso (la scena delle discese è una sola per discesa), `--veri` lancia «Chi pesa» e misura dopo ogni scena.
+nell'abisso (la scena delle discese è una sola per discesa), `--veri scala,scala-sopra` lancia «Dove pesa» (le scale della misura del telefono) e misura dopo ogni scena.
 
 Per trovare chi tiene una cosa che cresce: `--chi WebGL2RenderingContext` (la via più corta dalle radici nella fotografia
 dello heap, con la chiave della Map attraversata), `--nuovi materiali` (nati nel penultimo ciclo e ancora vivi alla fine:

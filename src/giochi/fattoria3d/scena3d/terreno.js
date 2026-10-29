@@ -46,7 +46,7 @@ export class Terreno {
     this.vento = { uT: { value: 0 }, uV: { value: 1 } }       // il tempo e l'intensità del vento, letti dal materiale dei ciuffi (e dell'acqua)
     this.centro = { a: 1e9, b: 1e9 }                          // il lotto al mezzo della finestra
     this.griglia = null; this._grigliaOn = false
-    // gli elementi (grafica/elementi3d.js): chi pesa si misura spegnendone uno alla volta (docs/core/vecchio-telefono-elementi.md)
+    // gli elementi (grafica/elementi3d.js): chi pesa si misura spegnendone uno alla volta (docs/core/vecchio-telefono-veri.md, «Come si spegne un elemento»)
     const el = (nome, fai) => segnaNuovi(scena, nome, fai)
     el('terreno', () => this._suolo()); el('acqua', () => this._mare()); el('strade', () => this._strade()); this._griglia(); el('terreno', () => this._lotti())
     el('alberi', () => { this._alberi(); this._ostacoli() }); el('erba', () => this._erba()); el('acqua', () => this._acqua()); el('edifici', () => this._fisse())

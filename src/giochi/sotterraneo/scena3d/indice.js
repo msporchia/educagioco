@@ -64,7 +64,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     scena.onBeforeRender = (r, s, camera) => luci.scriviVertice(camera, S.tempo)
   }
   const post = ACCESI.post ? creaPost(renderer) : null
-  // gli elementi (grafica/elementi3d.js): chi pesa si misura spegnendone uno alla volta (docs/core/vecchio-telefono-elementi.md)
+  // gli elementi (grafica/elementi3d.js): chi pesa si misura spegnendone uno alla volta (docs/core/vecchio-telefono-veri.md, «Come si spegne un elemento»)
   const elementi = creaElementi(ELEMENTI_DISCESE, elementoAcceso, 'resto', LEVE_ELEMENTI)
   const gruppo = nome => { const g = segna(new Group(), nome); scena.add(g); return g }
   const [aloni, colonne, anelli] = segnaNuovi(scena, 'chiarori', () => [creaAloni(scena, ALONI_MAX), creaColonne(scena), creaAnelli(scena)])

@@ -43,47 +43,32 @@ Cosa cambia una fascia sta tutto in `PROFILI` di `store/qualita.js`: negli Aster
 il tetto delle scintille (1400 / 700 / 350) e del fumo, e quanto in fretta il gioco scende di pixel (90 fotogrammi lenti a passo
 ×0,85 contro 20 a ×0,75); nel Sotterraneo 3D il pixel ratio massimo (1,5 / 1,25 / 1), le fette di nebbia (5 / 3 / 2) e, nella bassa, il passaggio finale
 spento, due luci dei fuochi invece di sei, niente luci del rimbalzo e del palco (lampo e magia in una), l'ombra a 512 a fotogrammi
-alterni, meno scintille ([../sotterraneo/grafica-3d-costi.md](../sotterraneo/grafica-3d-costi.md), «La fascia bassa»). **Botti e arredo restano in tutte le fasce** (le ombre no, dal 23/10: la fascia bassa le toglie, con la nebbia a una fetta e meno polvere: misurato sul Note 7, l'ombra costa ~8 ms, vedi vecchio-telefono-elementi.md): dai log del Note 7 i triangoli costano poco (10k → 100k: +1,4 ms), pesano i
+alterni, meno scintille ([../sotterraneo/grafica-3d-costi.md](../sotterraneo/grafica-3d-costi.md), «La fascia bassa»). **Botti e arredo restano in tutte le fasce** (le ombre no, dal 23/10: la fascia bassa le toglie, con la nebbia a una fetta e meno polvere: misurato sul Note 7, l'ombra costa ~8 ms): dai log del Note 7 i triangoli costano poco (10k → 100k: +1,4 ms), pesano i
 pixel. Emulazione (SwiftShader, CPU ×2,8), p50 di un fotogramma: esplorazione alta 50 ms → bassa 17; scontro con 3 mostri alta 67 →
 bassa 17 (p95 67). L'emulazione sovrastima i triangoli, quindi sul telefono dovrebbe andare meglio. **I numeri di media e bassa sono un'ipotesi dai log: da provare sul Note 7** (col
 contatore fps e `Misura questo telefono`) e ritoccare. In zona dei grandi (scheda *giochi*) la carta «Qualità della grafica 3D»
 dice la fascia, la fa scegliere a mano (`auto`/`alta`/`media`/`bassa`) e la rimisura; il cheat `#…&qualita=bassa` vince su tutto,
 per provarla sul computer (`[data-fascia]`, `[data-fascia-scelta]`, `[data-azione="rimisura-fascia"]`).
 
-## La misura a scene (il benchmark)
+## La misura del telefono
 
-Zona dei grandi → *Impostazioni* → *Avanzate* → **Misura questo telefono** (`components/genitori/Benchmark.vue`, nei test
-`[data-azione="benchmark"]`, `[data-benchmark-log]`). Un minuto di scene di `grafica/benchmark/prove.js`, ognuna con UNA
-cosa sola a qualità diverse: pixel (shader leggero e pesante, pixel ratio 1 / 1,5 / vero), 8 strati sfumati a schermo
-intero, scintille additive da 40 a 120 px (le esplosioni), 10k / 40k / 100k triangoli con luci, 30 / 150 / 400 oggetti
-separati (le chiamate), ombre a 1024 e 2048, il passaggio finale su tela half-float contro il disegno diretto, e una prova
-di CPU pura. Per ogni scena sono i **ms di lavoro** per fotogramma (disegno più attesa della GPU con una lettura di un
-pixel: non dipende dai 60 Hz) con p95 e fps. `grafica/benchmark/log.js` li compone in un testo (✓ sotto 8 ms, ~ fino a 16,
-XX sopra) con una «LETTURA» che nomina cosa pesa e cosa togliere, e in fondo la riga `DATI {…}`. «Manda» apre il modulo dei
-giudizi con il log nel campo `giudizi` (l'unico modulo con un campo lungo: ~3,5k caratteri, se l'indirizzo è troppo lungo
-c'è «Copia»); «Rifai» ripete. Un pezzo che il telefono non regge (la tela half-float) è una riga «non regge», non un errore.
-L'ultimo log resta sul telefono (`store/benchmark.js`) e «L'ultima a scene» lo riapre.
-
-Lo stesso foglio ha la **misura coi modelli veri** (i giochi veri, qualche minuto: il limite di mostri, persone ed edifici e il collo
-di bottiglia fra triangoli, chiamate, pixel e luci): [vecchio-telefono-veri.md](vecchio-telefono-veri.md).
+Zona dei grandi → *Impostazioni* → *Avanzate* → **Misura questo telefono**: gli fps veri e dove pesa, coi modelli veri dei giochi
+([vecchio-telefono-veri.md](vecchio-telefono-veri.md)). In testa dice la fascia del telefono e da dove viene.
 
 ## Tarare il computer sul telefono (una volta)
 
-1. Sul Note 7 si fa la misura e si manda (o si copia in un file `telefono.txt`).
-2. `node strumenti/vecchio-telefono.mjs calibra --log telefono.txt` cerca la CPU ×N che dà lo stesso `js` e la zavorra K che
-   dà gli stessi ms di «pixel, shader leggero, dpr nativo» e li salva in `strumenti/vecchio-telefono/profilo.json` (uno per
-   `--gpu`). Va rifatta se cambia il computer. **Senza taratura le leve sono una stima (CPU ×6, zavorra 4) e lo strumento lo
+1. Sul Note 7 si fa «dove pesa» e si manda (o si copia in un file `dovepesa.txt`).
+2. `node strumenti/vecchio-telefono.mjs calibra --log dovepesa.txt` cerca la CPU ×N che dà lo stesso `js` e la zavorra K che dà gli
+   stessi ms di una scena (di difetto il villaggio intero, `scala-sopra-9`) e li salva in `strumenti/vecchio-telefono/profilo.json`
+   (uno per `--gpu`). Va rifatta se cambia il computer, a macchina calma. **Senza taratura le leve sono una stima e lo strumento lo
    scrive.**
-3. `node strumenti/vecchio-telefono.mjs benchmark --contro telefono.txt` rifà la misura sul computer rallentato e dà il
-   rapporto riga per riga: vicino a 1 quella parte è imitata bene, lontano no (e allora per quella parte il computer non
-   vale come telefono: si misura sul telefono).
+3. `node strumenti/vecchio-telefono.mjs benchmark --contro dovepesa.txt` rifà la prova sul computer rallentato e dà il rapporto scena
+   per scena: vicino a 1 quella parte è imitata bene, lontano no (e allora per quella parte si misura sul telefono).
 
 Le misure vere stanno in `strumenti/vecchio-telefono/log/` (Redmi Note 7, Pixel 9a, iPhone 12 Pro Max), e il `profilo.json` è tarato
-sul Redmi: con `--gpu sw` 4 core e CPU ×5,0 (tarato il 19/10; una taratura fatta a computer carico dà numeri sbagliati: ripetere a macchina calma); con `--gpu hw` (la RTX) CPU ×2,9 e zavorra 16, che però sbaglia di tre volte gli shader pesanti. **Quanto somiglia**: il rapporto computer/telefono sta fra 0,8 e 1,2 per pixel semplici,
-triangoli, chiamate, ombre e passaggio finale; **non somiglia** per gli shader pesanti (×0,36: la RTX li mangia) e le
-sfumature a schermo intero (×0,3), e il pavimento di un fotogramma è più alto (la zavorra costa CPU: JS ×1,56). Quindi il
-simulatore va bene per confrontare un degrado con la versione di prima su geometria, chiamate e pixel; per nebbia, esplosioni
-e sfumature vale il log del telefono vero.
+sul Redmi: con `--gpu sw` 4 core e CPU ×5,0; con `--gpu hw` (la RTX) CPU ×2,9 e zavorra 16, che però sbaglia di tre volte gli shader
+pesanti. Il simulatore va bene per confrontare un degrado con la versione di prima su geometria, chiamate e pixel; per nebbia,
+esplosioni e sfumature vale il telefono vero.
 
 ## Cosa dice il Note 7 (19 ottobre 2026)
 

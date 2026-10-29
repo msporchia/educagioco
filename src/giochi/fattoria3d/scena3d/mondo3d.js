@@ -66,7 +66,7 @@ export class Mondo3d {
     this.scena.add(segna(this.sole, 'sole'), this.sole.target)
     this.camera = new Camera(this.sole)
 
-    // gli elementi (grafica/elementi3d.js, docs/core/vecchio-telefono-elementi.md): `spenti` non si disegnano; `#…&spegni=edifici,erba` per misurare
+    // gli elementi (grafica/elementi3d.js, docs/core/vecchio-telefono-veri.md, «Come si spegne un elemento»): `spenti` non si disegnano; `#…&spegni=edifici,erba` per misurare
     this.spenti = new Set(typeof location === 'undefined' ? [] : (new URLSearchParams(location.hash.slice(1)).get('spegni') || '').split(',').filter(Boolean))
     this.elementi = creaElementi(ELEMENTI_FATTORIA, k => !this.spenti.has(k))
     this.vista = { proietta: (p, extra) => this.proietta(p, extra), frustum: () => this._frustum() }

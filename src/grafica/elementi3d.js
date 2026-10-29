@@ -1,4 +1,4 @@
-// Gli elementi di una scena 3D, per sapere chi pesa (docs/core/vecchio-telefono-elementi.md): ogni cosa che si disegna porta il nome
+// Gli elementi di una scena 3D, per sapere chi pesa (docs/core/vecchio-telefono-veri.md, «Come si spegne un elemento»): ogni cosa che si disegna porta il nome
 // del suo elemento (`segna`, `userData.elemento3d`: `elemento` è già del gioco, quello di un'arma; i figli lo ereditano) e un elemento spento non si disegna né fa ombra, senza buttarlo
 // né toccare il gioco: va sullo strato 31, che nessuna telecamera guarda (la sua `visible` resta di chi gioca). Una mesh con più
 // materiali dice l'elemento di ognuno (`userData.elementiMateriali`): si spegne il materiale. Dato puro sulla scena di three.

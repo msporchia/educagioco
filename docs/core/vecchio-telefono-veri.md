@@ -1,237 +1,122 @@
 # La misura coi modelli veri
 
-La misura a scene ([vecchio-telefono.md](vecchio-telefono.md#la-misura-a-scene-il-benchmark)) dice quanto costa ogni cosa da
-sola, su forme finte. Questa fa girare **il codice vero dei giochi** sul telefono vero, per sapere fin dove regge senza farci
-giocare il bambino: quanti mostri nello scontro, quante persone sopra, quanti edifici nella fattoria, e che cosa rallenta
-(triangoli, chiamate, pixel, luci). Il computer imitato non lo dice: la GPU del telefono non si imita.
+Zona dei grandi (codice) → **Impostazioni** → tendina **Avanzate** → **Misura questo telefono** (`components/genitori/Benchmark.vue`).
+Due prove, con le scene vere dei giochi 3D e la fascia che il telefono ha: **gli fps veri** (a quanti fotogrammi gira il gioco) e
+**dove pesa** (quanto costa ogni pezzo di una scena). La fascia e come si decide stanno in [vecchio-telefono.md](vecchio-telefono.md),
+«La fascia»; il foglio la scrive in testa (`[data-benchmark-fascia]`: quale, da dove viene, i punti della misura di un secondo).
 
 ## Sul telefono
 
-Zona dei grandi (codice) → **Impostazioni** → tendina **Avanzate** → **Misura questo telefono** → **Avvia coi modelli veri** (la
-**verifica**, 7 scene e ~3 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
-Le complete durano un quarto d'ora circa (57 scene, e fra un gruppo e l'altro 8 s di schermo nero perché il telefono si raffreddi): la barra in fondo dice a
-che scena si è, **Interrompi** la ferma e tiene il resoconto di quello che c'è. Le scene si vedono mentre girano: se una luce, un
-colore o la nebbia sembrano sbagliati, alla fine c'è un campo **Note** che finisce nel resoconto. Lo schermo non deve spegnersi
-(niente wake lock nel progetto: lo dice l'avviso). Alla fine: **Manda** (o «Manda 1/2», «Manda 2/2» se il resoconto non sta in un
+Il foglio ha i due tasti, con quante scene e quanti minuti (`stima(prova)` in `veri.js`). Le scene si vedono mentre girano: se una
+luce, un colore o la nebbia sembrano sbagliati, alla fine c'è un campo **Note** che finisce nel resoconto. Lo schermo non deve
+spegnersi (niente wake lock nel progetto: lo dice il foglio). Alla fine: **Manda** (o «Manda 1/2»… se il resoconto non sta in un
 invio), **Copia**, **Rifai**. L'ultimo resoconto di ognuna delle due prove resta sul telefono (`store/benchmark.js`, chiave
-`benchmark`, fuori dai profili): «L'ultima coi modelli veri» lo riapre per mandarlo dopo. **Si salva a ogni scena** (`parziale` di
+`benchmark`, fuori dai profili): «L'ultima degli fps» e «L'ultima di dove pesa» lo riaprono. **Si salva a ogni scena** (`parziale` di
 `eseguiVeri`): se il telefono si pianta, l'ultima ha le scene fatte fin lì, con «A METÀ: N scene di M» in testa.
 
-## La verifica
+Quando si fa: **gli fps veri** dopo una modifica che pesa (un effetto, un modello, una leva della fascia), per sapere se si gioca
+ancora liscio; **dove pesa** quando una scena scatta, per sapere quale pezzo togliere o semplificare. Una misura nuova si chiede solo se
+è cambiato qualcosa che conta per lei.
 
-Il tasto «Avvia coi modelli veri» serve a **decidere**: se una modifica ha migliorato qualcosa e quale leva conviene. Tiene **solo
-le scene che servono alla leva di adesso**: quelle che hanno già risposto escono e restano nelle **Misure complete**. `TAPPE_VERIFICA`
-in `veri.js`, **7 scene, circa 3 minuti** (`stimaVerifica()`: i secondi attesi per scena più, a ogni gruppo, la pausa di 4,5 s, il
-riferimento del calore e il caricamento; la scrive il foglio iniziale):
+## Gli fps veri
 
-| gruppo | scene |
-|---|---|
-| `fps` | gli fps veri: il gioco com'è (discese, mondo di sopra, fattoria) senza aspettare la GPU, [vecchio-telefono-fps.md](vecchio-telefono-fps.md) |
+`PROVE.fps` in `veri.js`, gruppo `fps`, 7 scene, ~3 minuti: **a quanti fotogrammi al secondo gira davvero il gioco**. Le scale leggono un
+pixel a fine fotogramma per sapere quanto lavora la GPU, e così CPU e GPU vanno una dopo l'altra: il lavoro è giusto, gli fps sono più
+bassi del vero. Qui niente lettura (`TEMPI.fps`, `vero`): si contano solo gli intervalli fra un fotogramma e l'altro, come li vede chi gioca.
 
-Uscite il 29/10, perché il villaggio e il prato andavano a 59 e 58 fps veri: la scala del villaggio (si lancia per nome,
-`solo: ['scala-sopra']`) e le leve di sopra una per una (avevano detto quali tenere: [prestazioni-3d-bassa.md](../sotterraneo/prestazioni-3d-bassa.md)).
-
-Uscite il 28/10 sera, perché lo scontro delle discese andava a 59 fps veri: la scala dello scontro (si lancia per nome, `solo: ['scala']`)
-e lo scontro con 1, 3 e 6 mostri contro il 22/10 (resta nelle complete).
-
-Uscite il 28/10, perché avevano risposto: l'ingresso (il riscaldamento serve; il blocco al primo attacco è un lavoro a parte), la
-risoluzione (a 0,6 il 7% in meno: non è la leva, e la bassa non scende più), il mondo di sopra con 8 persone e 8 mostri, lo zaino (le foto
-fatte sul computer: resta il ritratto dell'eroe), lo scontro con 2 e 4 mostri (il rumore li confondeva).
-
-Ogni scena dura al massimo ~4,5 s dopo un rodaggio di ~2 s (`TEMPI.verifica`); fra i gruppi 4,5 s di schermo nero (`RAFFREDDA_BREVE`, 8 s
-nelle complete). La riga «Dove va il JS» divide il JS dello scontro con 3 mostri in giro del gioco, disegno di three e resto, misurati
-sugli stessi fotogrammi (uno ogni cinque): le mediane prese a parte non si sottraggono (davano un resto negativo).
-
-### La scala
-
-I ms della scala sono **lavoro in fila** (si aspetta la GPU a ogni fotogramma): sul Note 7 lo scontro con 3 mostri dava 44 ms di lavoro e
-59 fps veri. Contano i salti fra gradini, non il totale; le righe hanno `·` al posto di `ok`/`XX`. Due scale in `veri/scala.js` (`SCALE`):
-
-- **il villaggio di sopra** (`scala-sopra`, per nome; la scena di `veri/elementi-sopra.js`, 4 persone e 3 mostri finti): niente,
-  cielo e luci, mare, terreno, il rilievo del terreno, case e piazza, alberi-erba-natura, nebbia della mappa-foschia-vita-scia, persone ed eroe,
-  mostri; il rumore rifà il terreno. Fino al 28/10 la natura nasceva senza il suo nome e finiva nel gradino del cielo. L'ombra del sole sta col cielo: la bassa non la disegna (`ombre` spento spegne la mappa d'ombra di tutto il contesto).
-- **lo scontro delle discese**, sotto.
-
-Lo scontro con 3 mostri (la scena di `veri/elementi-sot.js` con `opz.mostri`) costruito **in salita**, in un Sotterraneo
-solo: il gradino 0 non disegna niente (il giro del gioco), l'1 la luce fissa e il resto senza pavimento né pareti, poi il pavimento, le
-pareti, colonne e arredo, rilievo-torcia-fuochi-lampi-nebbia insieme, l'eroe, i mostri, e in cima particelle, effetti, ombra e passaggio
-finale. I gradini che il log del 28/10 diceva gratis stanno insieme; il fondo (+13 ms) e le figure (+12,6) sono divisi.
-Ogni gradino accende i suoi pezzi sopra quelli di prima, nella fascia del telefono (un pezzo che la fascia spegne resta spento). Il
-**salto** da un gradino all'altro è il costo di quel pezzo dentro la scena vera, JS e GPU a parte; in fondo il gradino delle pareti si
-rifà (`scala-ancora`, `RUMORE`) e la differenza è il **rumore** (un salto più piccolo non dice niente; il calore non lo spiega: il riferimento resta a x1,02). La LETTURA ha una riga per gradino e i tre gradini più cari sopra il rumore.
-
-- **In salita, dal semplice**: se il telefono si pianta al gradino 6, i primi cinque sono già salvati e dicono qualcosa.
-- Provato: un elemento da solo su scena vuota (Chi pesa, `+k`) non dice il costo vero (una luce senza niente da illuminare è gratis),
-  tolto dalla scena intera (`-k`) si confonde con gli altri; l'A/B in giri alternati provava solo le leve scelte in anticipo.
-- Un gradino caro vuole la sua versione semplice (`SEMPLICE` in `elementi-dati.js`): si fa solo dove il salto è grosso.
-
-### Il confronto con la misura vera
-
-Sotto ogni scena col riferimento (nella verifica `sot-1`, `sot-3`, `sot-6`; nelle complete anche `per-8`, `mos-8`, `zaino-15`) la riga **«rispetto all'ultima misura vera (22/10): −12 ms (−11%),
-meglio; p95 −20, js −3 gpu −9»** (lo zaino: «−375 ms in tutto, fotogramma più lungo −233 ms»; sotto 3 ms o il 5% è «come prima»), e in testa
-alla LETTURA **MIGLIORATO** / **NON MIGLIORATO** con JS e GPU separati e la somma delle differenze. Attenzione: il log del 22/10 è «senza
-semplificazioni, senza pelle»: da oggi lo scontro le ha, quindi il merito di un pezzo lo dice la scala, non quel confronto. Il riferimento è
-`veri/riferimento.js` (ms, p95, js, gpu e deriva del calore del secondo log vero, `2026.10.22.1802-7505ba6f`; il confronto è fra ms tolto il
-calore); quando c'è una misura vera nuova da prendere per buona si cambiano `quando`, `versione` e le scene. La riga DATI ha `vf`
-(la versione del riferimento). Le **Misure complete** (`TAPPE`, il secondo tasto, `completa` in `eseguiVeri`) sono le scene qui sotto, tutte
-(circa due ore sul Note 7 imitato, un quarto d'ora sul telefono); con `solo` si pescano le scene di tutte e due, una volta per id (le complete
-vincono).
-
-## Le scene (le misure complete)
-
-| gruppo | scene | cosa c'è del gioco | cosa non c'è |
-|---|---|---|---|
-| `calore` | la stessa scena all'inizio e alla fine | lo scontro con 8 mostri e gli effetti | |
-| `pavimento` | lo schermo che si pulisce e basta; 100 cubi semplici (Lambert, una luce, una chiamata l'uno) | il renderer del Sotterraneo (`veri/base.js`) | il gioco: è quanto costa un fotogramma da solo |
-| `togli` | lo scontro con 1 mostro e gli effetti, intero e con UNA cosa tolta: l'ombra, le luci tranne il cono, tutte le luci, le particelle, le normal map, i materiali Lambert, i materiali Basic; e (un Sotterraneo ciascuna) le fette di nebbia, il passaggio finale, il pixel ratio a 0,6 | lo scontro vero | i materiali semplici non hanno la maschera della luce: tutto è illuminato |
-| `discese` | 1, 3, 6, 8 mostri, gli effetti a ripetizione (un colpo ogni 0,7 s, eroe e mostri a turno) | `creaSotterraneo3d` (luci, nebbia, ombra del cono, palco, mostri ed eroe 3D, effetti 3D) su una discesa vera del motore: il cheat `sotterraneo=branco&grado=leggendario&corredo=leggendario&stanza=sala` rifatto in `veri/discese.js` | il pannello e le domande; lo scontro ne prende al più 7 (l'ottavo resta attorno) |
-| `discese` | triangoli ×1, ×2, ×4, ×8; chiamate ×2, ×4 | lo scontro con 3 mostri, fermo | |
-| `luci` | 1, 2, 4, 6, 12 fuochi con l'ombra del cono; 1, 6, 12 senza | lo scontro con 3 mostri, la riserva dei fuochi spenta (`fuochi:0`) e fuochi uguali a quelli di `luci.js` attorno al palco | |
-| `pixel` | pixel ratio 1, 1,41, 2; senza nebbia | lo scontro con 3 mostri, un Sotterraneo per scena | |
-| `sopra` | 4, 8, 16, 24 persone; 4, 8, 16 mostri | i modelli di `persona3d.js` e `mostro3d.js` e l'eroe 3D, con sole, ombra, foschia e telecamera del mondo (`mondo/indice.js`, `veduta.js`), senza tetti | il mondo (zone, case, alberi): un prato |
-| `zaino` | 15 e 40 anteprime di fila | il fornitore vero (`viste/anteprima3d.js`: le foto fatte, il servizio per il ritratto dell'eroe; dal 28/10), cache vuota, chiavi diverse | |
-| `roba` | 24 lame, bastoni, scudi, vesti, gioielli, pozioni | `creaPezzo` con l'alone del leggendario (pozioni: del raro), animati; le vesti addosso a 24 eroi | |
-| `fattoria` | 10, 30, 60 edifici; 4 pollai e 4 stalle; Natale con 30 edifici | `Mondo3d` su `fattoriaTipo(10)`, le opzioni della fascia, il degrado fermo, `mondo.stress` | i fogli e il dito |
-
-Le scene del Sotterraneo usano la fascia del telefono (`store/qualita.js`) e il pixel ratio che il gioco darebbe, fermo. Le serie
-si fanno fino in fondo: una serie che cresce (mostri, persone, edifici) salta il resto solo se una scena supera i 400 ms al p95,
-per non piantare il telefono (provato a fermarle a 66 ms: sul Redmi si perdevano proprio 3, 6, 8 mostri, 24 persone, 30 e 60 edifici).
-
-## L'ingresso
-
-Le altre scene misurano dopo il rodaggio, quindi non vedono il fermo che conta: quello all'entrata in un piano e al primo attacco
-(gli shader, docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»). Il gruppo `ingresso` viene **per primo** (il browser
-tiene da parte gli shader già visti: più avanti sarebbe più caldo del vero) e rifà **ogni prova tre volte da capo** (tela, renderer e
-scena nuovi): la riga dice i tre valori in fila, perché la compilazione cambia da un giro all'altro.
-
-| scena | cosa | cosa riporta |
+| scena | cosa | dove |
 |---|---|---|
-| `ing-sot` | entrare nello scontro con 3 mostri (il piano nuovo), aspettare la fine del riscaldamento (al più 8 s), poi tre attacchi a 1,5 s (il colpo dell'arma dell'eroe, il mostro, di nuovo l'eroe) | il fotogramma più lungo nei 3 s dal primo disegno, quanti sopra 100 ms, i programmi al primo disegno → a 3 s, `daScaldare`, quando il riscaldamento è finito; per ogni attacco il fotogramma più lungo nei 1,3 s dopo e gli shader nuovi |
-| `ing-presto` | un attacco a 0,5 s dal primo disegno, prima che il riscaldamento cominci: il caso peggiore | lo stesso, un attacco |
-| `ing-zaino` | entrare e chiedere subito 15 anteprime dello zaino | il fotogramma più lungo e quanti sopra 100 ms |
-| `ing-mondo` | entrare nel mondo di sopra vero (la prima terra, dalla partenza; senza persone né mostri, che mette chi gioca) | come sopra, in 4 s (i pezzi si costruiscono uno per fotogramma), e se il riscaldamento è partito |
-| `ing-sot-x`, `ing-presto-x`, `ing-mondo-x` | le stesse col riscaldamento spento (`&spegni=riscaldamento`, la leva `riscaldamento` di `ACCESI`), dopo le altre: l'ordine non lo favorisce | |
+| `fps-piano` | l'eroe cammina da una stanza all'altra di un piano, senza mostri (la nebbia si apre camminando) | `veri/discese.js`, `passeggia` |
+| `fps-sot-3`, `fps-sot-6` | lo scontro con 3 e 6 mostri leggendari e un colpo ogni 0,7 s | `veri/discese.js` |
+| `fps-villaggio` | l'eroe gira attorno alla piazza alla velocità del gioco, con le persone del villaggio | `veri/sopra-vero.js` |
+| `fps-prato` | lo scontro sul prato davanti alla tana del primo luogo, aperto come lo apre il gioco (motore/aperta.js, palco di sopra), 3 mostri e i colpi | `veri/sopra-vero.js` |
+| `fps-fat-10`, `fps-fat-30` | la fattoria «tipo» del livello 10 e del 30, col degrado del gioco acceso | `veri/fattoria.js`, `opz.degrado` |
 
-Il tempo conta dal primo disegno (prima la scena aspetta l'atlante e non disegna), e il fotogramma del primo disegno è dentro: è
-quello che compila. La LETTURA dice il fotogramma più lungo all'ingresso col riscaldamento e senza, il primo attacco col
-riscaldamento e senza («il riscaldamento toglie N ms dal primo attacco», o «non serve» se la differenza sta sotto 20 ms o il 15%:
-nel rumore), gli shader nuovi ai tre attacchi, l'attacco presto, il mondo e lo zaino. Nella riga DATI: `[id, 'ing', fotogrammi più
-lunghi, sopra 100 ms, attacchi per giro, shader per giro, programmi al primo disegno, programmi dopo]`. Un minuto e mezzo-due in più.
+Otto secondi di misura dopo il rodaggio, un riferimento del calore solo (un gruppo). **Nel resoconto** una riga per scena: `ok`/`~`/`XX`
+(sopra 50, sopra 30, sotto 30 fps), gli fps, la parte di fotogrammi arrivati dopo più di 34 ms (sotto i 30 fps), il p95 dell'intervallo e
+i fermi oltre 100 ms; il js è solo la CPU (manca la GPU, e per questo queste righe non entrano in «CPU o GPU»). Nella LETTURA la riga
+**FPS VERI** le mette in fila: liscio, si gioca a tratti, a scatti. Gli fps non superano la frequenza dello schermo (60 sul Note 7).
+
+Sul Note 7 in fascia bassa, il 29/10: tutte fra 55 e 60 (villaggio 59, prato 58; un piano 55 con due fermi oltre 100 ms, gli shader
+compilati al primo incontro). Prima delle leve del mondo di sopra il villaggio andava a 17 e il prato a 15
+([../sotterraneo/prestazioni-3d-bassa.md](../sotterraneo/prestazioni-3d-bassa.md)).
+
+## Dove pesa: le due scale
+
+`PROVE.scale`, 21 scene, ~4 minuti: una scena vera costruita **un gradino alla volta**, dal fondo fino alla scena intera; ogni gradino
+accende i suoi pezzi sopra quelli di prima, nella fascia del telefono (un pezzo che la fascia spegne resta spento). Il **salto** da un
+gradino all'altro è il costo di quel pezzo dentro la scena vera, JS e GPU a parte; in fondo un gradino si rifà (`-ancora`) e la
+differenza è il **rumore** (un salto più piccolo non dice niente). Le scale sono in `veri/scala.js` (`SCALE`, `ELEMENTI_SCALA`):
+
+- **lo scontro delle discese** (`scala`, la scena di `veri/elementi-sot.js` con 3 mostri): niente disegnato (il giro del gioco), la luce
+  fissa e il resto, il pavimento, le pareti, colonne e arredo, rilievo-torcia-fuochi-lampi-nebbia, l'eroe, i mostri, e in cima
+  particelle, effetti, ombra e passaggio finale; il rumore rifà le pareti.
+- **il villaggio di sopra** (`scala-sopra`, la scena di `veri/elementi-sopra.js`, 4 persone e 3 mostri finti): niente, cielo e luci,
+  mare, terreno, il rilievo del terreno, case e piazza, alberi-erba-natura, nebbia della mappa-foschia-vita-scia, persone ed eroe,
+  mostri; il rumore rifà il terreno. L'ombra del sole sta col cielo: la bassa non la disegna.
+
+I ms sono **lavoro in fila** (si aspetta la GPU a ogni fotogramma): contano i salti, non il totale, e le righe hanno `·` al posto di
+`ok`/`XX`. La LETTURA ha una riga per gradino, i tre più cari sopra il rumore e, in cima a ogni scala, «Dove va il JS»: il giro del gioco
+(`grafica().msJs`), il disegno di three (`msDisegno`) e il resto, sugli stessi fotogrammi. **In salita, dal semplice**: se il telefono si
+pianta al gradino 6, i primi cinque sono già salvati.
+
+- Provato: un pezzo da solo su scena vuota non dice il costo vero (una luce senza niente da illuminare è gratis), tolto dalla scena
+  intera si confonde con gli altri. La scala li dice dentro la scena vera.
+- Per sapere quanto toglie una leva della fascia: la scala con e senza (`&riaccendi=` rimette un pezzo che la fascia spegne), o una
+  tappa con `opz.riaccendi` per scena, come si è fatto il 29/10 (prestazioni-3d-bassa.md).
+
+### Come si spegne un elemento
+
+`grafica/elementi3d.js`: ogni cosa porta il nome del suo elemento in `userData.elemento3d` (`segna`, `segnaNuovi` attorno a chi la
+crea; i figli lo ereditano), e una mesh a più materiali il nome di ogni materiale (`userData.elementiMateriali`, i muri). A ogni
+fotogramma `creaElementi` spegne quelli spenti in `ACCESI`: sullo strato 31 (né la telecamera né l'ombra lo guardano) o il materiale
+invisibile; tutto acceso non tocca niente. Quello senza nome in cima è il `resto`: col gradino 0 le chiamate devono essere 0 (la prova
+del browser lo controlla). Speciali delle scene: `ombra`, `normali` (`veri/normali.js`), `post`, `foschia`. A mano:
+`#…&spegni=pavimento,pareteVicina` nelle discese, `&spegni=case,natura` di sopra, `&spegni=edifici,erba` nella fattoria 3D (comandi.md).
 
 ## Come si misura
 
-- **Lavoro di un fotogramma**: dal primo `requestAnimationFrame` del fotogramma (chiesto prima del giro del gioco) all'ultimo
-  (chiesto dopo), con la lettura di un pixel che aspetta la GPU: il JS del gioco, il disegno e la GPU, senza i 60 Hz. Mediana e p95.
-  Diviso in due: **js** (fino alla lettura del pixel: il JS e l'invio dei comandi) e **gpu** (l'attesa della lettura: la scheda che
-  finisce). Se la gpu tiene quasi tutto, il collo sono pixel, luci e ombre; se tiene il js, le chiamate e il codice.
-- **Calore**: prima di ogni gruppo 8 s a schermo nero, poi un **riferimento** fisso (`veri/base.js`: 100 cubi lucidi, quattro luci,
-  un pavimento a tutto schermo, ~3 s; il primo si rifà sempre, perché è freddo, e uno più che doppio del più svelto si rifà una volta). La deriva (riferimento ÷ il più svelto) va nella testa del gruppo (`rif 31 ms x1.12`) e su ogni
-  riga; la LETTURA usa i ms divisi per la deriva (le righe scaldate dicono anche `≈` il valore corretto). Sul Redmi lo scontro con 8
-  mostri valeva 77 ms all'inizio e 137 alla fine: senza la correzione le serie in fondo sembravano il doppio. In testa anche la
-  batteria all'inizio e alla fine (`navigator.getBattery`) e la rete; il risparmio energetico il browser non lo dice.
-- **Prima apparizione**: i fotogrammi mentre la scena si prepara e i primi dieci (shader, geometrie e trame caricate, riserve di
-  modelli) si tengono a parte: `primo` è il più lungo, `+Nsh` gli shader nuovi (`renderer.info.programs`), `pronto` quanto ci ha
-  messo la scena (se più di 1,5 s).
-- **Rodaggio**: 2-5 s scartati, finché la mediana di 10 fotogrammi non cambia più del 15% dalle 10 prima. **Misura**: 5-8 s a
-  finestre di 1,5 s, finché la parte di fotogrammi lenti (oltre 33 ms) e la mediana di due finestre di fila non si fermano; al tetto
-  la riga dice «instabile». Una finestra vuole almeno 15 fotogrammi e una fase almeno 30 (il telefono imitato fa un fotogramma ogni
-  mezzo secondo: col tempo soltanto sarebbero dieci), con un tetto di 20 s a fase.
-- Chiamate e triangoli da `renderer.info`, la memoria (geometrie, trame) nella testa del gruppo; un contesto WebGL perso (non
-  buttato apposta a scena finita) si conta; gli avvisi e gli errori della console mentre gira (shader che non compilano, modelli
-  che non si saldano) si riassumono in **AVVISI**. Un gruppo che non si carica o una scena che si rompe sono «non regge».
+- **Lavoro di un fotogramma** (le scale): dal primo `requestAnimationFrame` del fotogramma (chiesto prima del giro del gioco)
+  all'ultimo (chiesto dopo), con la lettura di un pixel che aspetta la GPU. Mediana e p95, diviso in **js** (fino alla lettura) e
+  **gpu** (l'attesa della lettura). Se la gpu tiene quasi tutto, il collo sono pixel, luci e ombre; se tiene il js, chiamate e codice.
+- **Calore**: prima di ogni gruppo 4,5 s a schermo nero, poi un **riferimento** fisso (`veri/base.js`: 100 cubi lucidi, quattro luci,
+  un pavimento a tutto schermo, ~3 s; il primo si rifà sempre, perché è freddo, e uno più che doppio del più svelto si rifà una volta).
+  La deriva (riferimento ÷ il più svelto) va nella testa del gruppo (`rif 31 ms x1.12`) e su ogni riga; la LETTURA usa i ms divisi per
+  la deriva (le righe scaldate dicono `≈` il valore corretto). In testa anche la batteria all'inizio e alla fine e la rete.
+- **Prima apparizione**: i fotogrammi mentre la scena si prepara e i primi dieci si tengono a parte: `primo` è il più lungo, `+Nsh` gli
+  shader nuovi (`renderer.info.programs`), `pronto` quanto ci ha messo la scena (se più di 1,5 s).
+- **Rodaggio** 1,5-3 s scartati (doppio alla prima scena di un gruppo), finché la mediana di 10 fotogrammi non cambia più del 15% dalle
+  10 prima; **misura** 3-4,5 s a finestre di 1 s, finché fotogrammi lenti e mediana di due finestre di fila non si fermano; al tetto la
+  riga dice «instabile». Gli fps veri: 8 s.
+- Chiamate e triangoli da `renderer.info` (il più alto di un campione ogni 5 fotogrammi), la memoria nella testa del gruppo; un contesto
+  WebGL perso si conta; gli avvisi e gli errori della console mentre gira si riassumono in **AVVISI**. Un gruppo che non si carica o una
+  scena che si rompe sono «non regge».
 
-**Le leve dei colli di bottiglia** (`veri/moltiplica.js`): i triangoli ×k dividono ogni triangolo di ogni mesh in k (piatti: forma,
-materiali, luci e chiamate restano); le chiamate ×k spezzano ogni mesh in k gruppi dello stesso materiale (stessi triangoli).
-Valgono anche per le SkinnedMesh della pelle (`salda3d.js`, dove stanno quasi tutti mostri ed eroe): il vertice nuovo prende ossa e
-pesi di un capo del lato. Sul computer (22/10, con la pelle) triangoli 86k → 142k → 253k → 475k, chiamate 70 → 119 → 205: non
-×2 e ×4 esatti perché punti e sprite non si dividono, come prima della pelle (sul Redmi 241 → 440 → 892).
+### Il tetto di tempo e il lettore
+
+`veri.js`, `TETTO`, `conTetto`: ogni scena ha un tetto (le due fasi a `fine` più 15 s), il caricamento di un gruppo 30 s, il riferimento
+del calore la pausa più 45 s. Scaduto, la scena è «non regge: tempo scaduto (… oltre N s)», il gruppo si butta e si rifà da capo per la
+scena dopo, e la prova va avanti; una preparazione che arriva dopo il tetto si butta appena arriva. Il tetto non può niente se la
+pagina intera è ferma (un fotogramma che non torna dalla GPU blocca anche i timer): per questo c'è il lettore.
+
+**Il lettore**, in alto a sinistra mentre una prova gira: gli fps dell'ultimo mezzo secondo (un requestAnimationFrame suo, come
+`ContaFps.vue`) e i secondi nella scena di adesso; lo stesso nel riquadro in basso. Se i fotogrammi non arrivano per 5 s scrive «il
+telefono non risponde»; se si ferma tutta la pagina lo scrive il CSS, perché il battito che ogni mezzo secondo rimette la scritta
+invisibile non arriva più (l'opacità la anima il compositore).
 
 ## Il resoconto
 
-Testa: modello (da `userAgentData`: lo user agent ridotto di Chrome dice «K»), schermo, core, fascia; batteria e rete; GPU e fornitore; trame massime, uniform del vertice e del frammento, varying, i bit di
-`highp` e `mediump` (un `mediump` a 10 bit è mezzo float; senza `highp` nei frammenti luci, normal map e nebbia sgranano), le
-estensioni che il gioco usa e mancano. Poi un gruppo alla volta (`[discese] codice 50 ms, dpr 1, luci 3p 1s 0d 1h ombre 1, mem…, prog 57, rif 31 ms x1.12`)
-e una riga per scena: `ok`/`~`/`XX` (p95 sotto 20, fino a 33, oltre), `ms/p95`, `(js … gpu …)`, fps, chiamate, migliaia di triangoli,
-e `≈` (corretto dal calore), `primo`, `+Nsh`, `pronto` quando contano. La **LETTURA** dice il calore, il **pavimento** (schermo
-vuoto e 100 cubi), il **LIMITE** di ogni serie (fin dove sta sotto 33 ms al p95, da dove supera 33 e 66; con due scene la
-pendenza, ms per elemento in più, e la retta a zero: «ogni persona in più +3 ms, con zero ~31»), **TOGLIERE** (quanto si guadagna
-togliendo ogni cosa allo scontro, dalla più cara), i tre colli (triangoli: c'è margine per ~N× di dettaglio o no; ms ogni 100 chiamate; ms per milione di pixel; il salto
-più grande delle luci, l'ombra del cono, la nebbia) e il **COLLO DI BOTTIGLIA** (quello che a raddoppiarlo costa di più), la roba che
-pesa, lo zaino, la festa, il **calore** (il riferimento alla fine diviso quello all'inizio: sopra 1,15 il telefono si è scaldato),
-le prime apparizioni lente, chi pesa di più, la GPU, i contesti persi. In fondo le **NOTE** e la riga `DATI {"v":2,"k":"veri",…}`:
-`r` ha `[id, ms, p95, fps, chiamate, ktriangoli, primo, shader, js, gpu, deriva]` (le prime otto come nei log di prima) e, dove c'è, `gioco, disegno` in coda: il JS del pittore diviso fra il giro del gioco (`grafica().msJs`: logica, scena, segni) e il disegno di three (`msDisegno`: i comandi alla GPU, che sul telefono aspettano anche la GPU); la riga della scena li scrive dopo il js («js 25: gioco 6 disegno 15»), la scala dà il salto di ognuno e la LETTURA «Dove va il JS»; lo zaino `[id, totale, fotogramma max, lavoro, attesa]`.
+Testa: la prova (`(fps veri)` o `(dove pesa)`), modello (da `userAgentData`: lo user agent ridotto di Chrome dice «K»), schermo, core,
+fascia; batteria e rete; GPU e fornitore; trame massime, uniform, varying, i bit di `highp` e `mediump` (un `mediump` a 10 bit è mezzo
+float), le estensioni che il gioco usa e mancano. Poi un gruppo alla volta (`[scala] codice 3400 ms, dpr 1, luci 0p 0s 1d 1h ombre 0,
+mem…, prog 95, rif 25.6 ms x1`) e una riga per scena. La **LETTURA**: gli FPS VERI, «Dove va il JS», le SCALE, il calore, la CPU (la prova
+JS: un computer sta fra 110 e 160 ms), la batteria, CPU o GPU, le prime apparizioni lente (senza `KHR_parallel_shader_compile` gli shader
+si compilano bloccando), la GPU, i contesti persi, chi non regge. In fondo le **NOTE** e la riga `DATI {"v":3,"k":"veri","p":"scale",…}`:
+`r` ha `[id, ms, p95, fps, chiamate, ktriangoli, primo, shader, js, gpu, deriva]` e, dove c'è, `gioco, disegno` in coda.
 
-Un invio del modulo dei giudizi regge ~3,5k caratteri: un resoconto più lungo (quasi sempre, con 40 scene) si **spezza in più
-invii** a 3400 caratteri, fra una riga e l'altra, ognuno con «(parte k/n)» in testa e la riga DATI intera nell'ultimo. Per lo
-strumento basta incollare le parti in un file, una dopo l'altra. «Copia» copia tutto in una volta.
-
-## Sul computer
-
-```bash
-npm run build
-node strumenti/vecchio-telefono.mjs benchmark --veri                      # le misure complete sul Note 7 imitato (senza --solo)
-node strumenti/vecchio-telefono.mjs benchmark --contro veri.txt           # e riga per riga contro il telefono (ms e p95)
-node strumenti/vecchio-telefono.mjs benchmark --veri --solo sot-,tri-     # solo le scene che cominciano così
-node strumenti/vecchio-telefono.mjs calibra --log veri.txt [--scena px-1] [--prova]   # la CPU sul `js` del log, la zavorra su una sua scena (a computer scarico)
-```
-
-Con la CPU ×5 e SwiftShader su 4 core la prova dura molto di più che sul telefono (decine di minuti): per guardare solo che giri,
-`--cpu 1 --core 0 --gpu hw`.
-
-## Cosa dice il Redmi Note 7 (22/10)
-
-Il primo log vero (`strumenti/vecchio-telefono/log/redmi-note7-veri-22ott.txt`, fascia bassa, pixel ratio 1, 392×718; prima del
-riferimento del calore e delle serie fino in fondo). Lo scontro con 8 mostri valeva 77 ms all'inizio e 137 alla fine (×1,77): le serie
-in fondo (sopra, roba, fattoria) sono gonfiate dal calore.
-
-- **Scontro**: 1 mostro con gli effetti 64 ms (p95 98); 8 mostri 77 (p95 135) a telefono fresco. Già un mostro è oltre i 33 ms.
-- **Triangoli**: da 86k a 475k (×8) solo +17 ms (+23%): costano poco, ~0,04 ms ogni mille. Il dettaglio dei modelli non è il guaio.
-- **Chiamate**: da 241 a 892 +24 ms, ~3,7 ms ogni 100: contano più dei triangoli.
-- **Luci**: da 2 a 6 fuochi +14 ms, da 6 a 12 **+98 ms** (12 fuochi 194 ms; senza l'ombra del cono 153). Oltre la riserva di oggi (6
-  fuochi più alone, lampo e cono) il telefono crolla: 256 uniform nel frammento, ogni luce è un pezzo di shader per ogni pixel.
-  L'ombra del cono con 6 fuochi costa ~2,5 ms.
-- **Pixel**: pixel ratio 1 → 1,41 → 2: 84 → 98 → 135 ms, ~60 ms ogni milione di pixel. La nebbia in fascia bassa ~1 ms.
-- **Sopra**: persone 4 / 8 / 16 → p95 44 / 54 / 80: ~3 ms per persona e ~31 ms con zero (un pavimento alto: prato, sole con l'ombra
-  a 2048, l'eroe leggendario). Mostri 4 / 8 → 59 / 93: ~8,5 ms per mostro.
-- **Roba**: le vesti 109 ms (24 eroi, 1486 chiamate), le pozioni 70 (395 chiamate), le lame 39.
-- **Zaino**: 15 anteprime in 1,9 s con un fotogramma fermo di **400 ms**; 40 in 2,8 s.
-- **Fattoria**: 10 edifici 54 ms, Natale con 30 edifici 52, le bestie 57 (gonfiate dal calore).
-- **Prima apparizione**: 2-6 s per scena, 40-57 shader nuovi ognuna, 548 in tutto; il telefono non ha `KHR_parallel_shader_compile`.
-
-**Precompilare gli shader.** Senza `KHR_parallel_shader_compile` ogni programma nuovo si compila al primo disegno e ferma il
-fotogramma (il «primo» delle righe). La strada: `await renderer.compileAsync(scena, camera)` a una schermata di caricamento (lo
-scendere di piano, la porta di un villaggio), con la scena già com'è nel gioco: lo stesso numero di luci (luci.js lo tiene fisso
-apposta: una luce in più o in meno cambia la variante di ogni materiale), l'ombra accesa, e un esemplare di ogni modello che
-arriverà (le specie del piano, l'eroe vestito, gli effetti 3D: i loro materiali restano vivi fra un colpo e l'altro) appeso fuori
-vista durante la compilazione. Senza l'estensione `compileAsync` aspetta lo stesso programma per programma, ma il fermo cade sulla
-schermata di caricamento e non nello scontro. Gli shader dell'ombra (la profondità) si compilano al primo disegno con l'ombra:
-un fotogramma disegnato dietro la schermata li prende.
-
-## L'imitazione contro il Redmi
-
-`benchmark --contro redmi-note7-veri-22ott.txt` rifà le stesse scene sul Note 7 imitato. **I ms del computer non valgono** (il
-computer è condiviso con altri processi e agenti: fra due giri ballano del 20-50%), quindi non si tara `calibra` su questi giri e
-dal confronto si leggono la struttura e gli ordini di grandezza. La struttura torna: le stesse chiamate, gli stessi triangoli e gli
-stessi shader nuovi scena per scena (per esempio lo scontro dei colli 241 chiamate e 86k triangoli, le vesti 1486 chiamate, le
-persone 104 / 118 / 165, gli shader nuovi della prima scena di un Sotterraneo 34-57), quindi le scene sono le stesse. Chiamate e
-triangoli di una scena cambiano col fotogramma (chi entra ed esce dall'inquadratura: 226 o 241, 62k o 86k): dal 22/10 la riga dice
-il più alto di un campione ogni 15 fotogrammi. Come ordine di grandezza, SwiftShader (`--gpu sw`) va più piano del Redmi sui pixel
-(pixel ratio 2: ~3-4 volte) e più svelto con molte luci e nelle anteprime: per pixel, luci e zaino conta solo il telefono.
-
-## Il codice
-
-`grafica/benchmark/veri.js` (le scene, il giro dei fotogrammi, il calore, la GPU, gli avvisi), `veri/discese.js`, `sopra.js`,
-`zaino.js`, `roba.js`, `fattoria.js`, `base.js`, `ingresso.js`, `elementi-sot.js` (un gruppo ciascuno, caricati con `import()` quando tocca a loro), `veri/moltiplica.js`
-(le leve: triangoli, chiamate, materiali semplici, normal map, particelle), `veri/tela.js`, `veri/leggendario.js` (il corredo del
-cheat), `veri/scala.js` (i gradini e la loro LETTURA); il log in `grafica/benchmark/log-veri.js` (e `log-ingresso.js`) (`componiVeri`, `letturaVeri`, `limite`, `corretta`, `spezza`, `conNote`). Nel sito
-spezzato `vite.config.js` tiene `grafica/benchmark/` fuori dal file `comune`: si carica a richiesta, e i modelli veri tirano dentro i giochi.
-
-Nei test: `[data-azione="benchmark-veri"]`, `[data-benchmark-palco]` (dove girano le scene), `[data-azione="benchmark-interrompi"]`,
-`[data-benchmark-note]`, `[data-azione="benchmark-manda"][data-parte]`, `[data-azione="benchmark-ultima"][data-tipo]`;
-`window.__benchmarkVeri` (i dati), `window.__benchmarkSolo` (gli inizi degli id), `window.__benchmarkCorto` (scene di pochi decimi,
-senza pausa), `window.__benchmarkRaffredda` (i ms di pausa fra i gruppi: lo strumento la toglie quando tara).
-`[data-azione="benchmark-veri-lunga"]` (le misure complete); `unita/benchmark-veri` (il log, il limite, gli invii, le leve, la scala, la prova a metà, il confronto con la misura vera), `unita/benchmark-ingresso` (le righe e la LETTURA dell'ingresso),
-`integrazione/benchmark-veri` (una scena per gruppo e tutto l'ingresso in due giri, a schermo; poi la verifica compatta intera, in tempi corti).
+Un invio del modulo dei giudizi regge ~3,5k caratteri: un resoconto più lungo si **spezza in più invii** a 3400 caratteri, fra una
+riga e l'altra, ognuno con «(parte k/n)» in testa e la riga DATI intera nell'ultimo. Per lo strumento basta incollare le parti in un
+file, una dopo l'altra. «Copia» copia tutto in una volta.
 
 ## Mandare il resoconto al computer
 
@@ -239,28 +124,45 @@ senza pausa), `window.__benchmarkRaffredda` (i ms di pausa fra i gruppi: lo stru
 gli indirizzi da aprire sul telefono (IP di LAN; il nome e l'IP Tailscale se `tailscale status --json` c'è). In http su un IP il
 browser non registra il service worker (non è un contesto sicuro): la PWA non disturba. `GET /ricevi-log` risponde `{ok:true,v:1}`;
 `POST /ricevi-log` prende `{ testo, dati?, agente?, note?, quando? }` (JSON, max 200 KB) e scrive
-`strumenti/vecchio-telefono/log/ricevuti/AAAA-MM-GGThhmm-<modello>.txt` (non versionata) col `testo` (più `DATI …` se `dati` non è già
-dentro), poi risponde `{ok:true,file}` e la console stampa «ricevuto: <file> (<n> byte)». Il file va a `calibra --log` e a
-`benchmark --contro`. Si accettano solo Host e Origin di casa (localhost, reti private, tailnet `100.64/10` e `*.ts.net`, `.local`);
-il CORS si apre solo per quelle origini.
+`strumenti/vecchio-telefono/log/ricevuti/AAAA-MM-GGThhmm-<modello>.txt` (non versionata). Si accettano solo Host e Origin di casa
+(localhost, reti private, tailnet `100.64/10` e `*.ts.net`, `.local`).
 
-Lato app: `src/grafica/benchmark/invio-diretto.js` esporta `sondaRicevitore(origin)` (GET con timeout 1,5 s, `true`/`false`, mai
-errori) e `mandaAlRicevitore(payload, origin)` (`{ok,file}` o `{ok:false,errore}`). In `Benchmark.vue`: a fine prova (e riaprendo l'ultima) `sondaRicevitore()`; se la pagina è servita dal ricevitore il resoconto
-parte **da solo** al computer (intero, senza note) e compare **Manda al computer** (`[data-azione="benchmark-al-computer"]`) per
-rimandarlo con le note aggiunte; l'esito («Mandato al computer (<file>)») sta in `.esito`. Fuori dal ricevitore (sito vero, file
-unico) la sonda è falsa e il bottone non c'è: restano «Manda» (modulo) e «Copia».
-Sul telefono: `npm run build:sito`, `node strumenti/ricevi-log.mjs`, aprire sul Redmi l'indirizzo stampato, zona dei grandi →
-Impostazioni → Avanzate → Misura questo telefono.
+Lato app: `grafica/benchmark/invio-diretto.js` (`sondaRicevitore`, `mandaAlRicevitore`). A fine prova (e riaprendo l'ultima) il foglio
+sonda il ricevitore; se la pagina è servita da lui il resoconto parte **da solo** al computer e compare **Manda al computer** per
+rimandarlo con le note. Fuori dal ricevitore (sito vero, file unico) restano «Manda» (modulo) e «Copia».
 
-## Dove eravamo rimasti (la misura per elemento, 23/10)
+## Sul computer
 
-**Fatto.** La prova «Chi pesa» c'è: [vecchio-telefono-elementi.md](vecchio-telefono-elementi.md) (dal 27/10 senza tasto: sul
-Note 7 si piantava a metà; al suo posto la scala della verifica; le scene delle discese, del mondo di sopra, della fattoria 3D e degli Asteroidi, la tabella, la LETTURA, le leve,
-`--solo elementi` nello strumento, `unita/benchmark-elementi`, `integrazione/benchmark-elementi`). Le leve semplici (`ombre`,
-`rilievo`, `nebbiaFitta`, `quantaPolvere:0.4` nel Sotterraneo; `erba: false` nella fattoria) sono pronte e la prova le confronta;
-gli scatti prima/dopo sono in `tmp/scatti/leve-discese-*.png` e `leve-sopra-*.png` (fascia bassa, `&spegni=` di ogni leva).
+```bash
+npm run build
+node strumenti/vecchio-telefono.mjs benchmark                          # gli fps veri sul Note 7 imitato
+node strumenti/vecchio-telefono.mjs benchmark --scale [--solo scala-sopra]   # dove pesa, o solo alcune scene
+node strumenti/vecchio-telefono.mjs benchmark --contro telefono.txt    # e riga per riga contro il telefono (la prova la dice il log)
+node strumenti/vecchio-telefono.mjs calibra --log dovepesa.txt [--scena scala-sopra-9] [--prova]   # la CPU sul `js`, la zavorra su una scena
+```
 
-**Manca.**
-1. La scala del Redmi Note 7, e da lì quali leve vanno in `SPEGNI_BASSA` (`store/qualita.js`) e nel preset
-   `basso` della fattoria: dopo il sì di Marco sugli scatti.
-2. Per gli elementi più cari senza leva (secondo la tabella): la semplificazione scritta in `SEMPLICE` (`elementi-dati.js`).
+Con la CPU ×5 e SwiftShader su 4 core la prova dura molto di più che sul telefono: per guardare solo che giri, `--cpu 1 --core 0 --gpu hw`.
+**I ms del computer non valgono** come telefono (il computer è condiviso: fra due giri ballano del 20-50%; SwiftShader va più piano sui
+pixel e più svelto con molte luci): dal confronto si leggono la struttura (le stesse chiamate, triangoli e shader scena per scena) e gli
+ordini di grandezza. I numeri veri li dà il telefono.
+
+## Il codice
+
+`grafica/benchmark/veri.js` (le due prove, `PROVE`, `stima`, il giro dei fotogrammi, il calore, la GPU, gli avvisi, `proveCpu`),
+`veri/discese.js`, `sopra-vero.js`, `fattoria.js` (gli fps veri), `elementi-sot.js`, `elementi-sopra.js` (le scale), `base.js` (il
+riferimento), `tela.js`, `normali.js`, `leggendario.js` (il corredo del cheat), `scala.js` (i gradini e la loro LETTURA); il log in
+`log-veri.js` (`componiVeri`, `letturaVeri`, `corretta`, `spezza`, `conNote`). Nel sito spezzato `vite.config.js` tiene
+`grafica/benchmark/` fuori dal file `comune`: si carica a richiesta, e i modelli veri tirano dentro i giochi.
+
+Tolte il 29/10, perché avevano risposto (la storia in `git log`): la misura a scene sintetiche, le misure complete (serie di mostri,
+persone, edifici, triangoli, chiamate, luci, pixel, la roba, lo zaino, la scena con una cosa tolta alla volta), «chi pesa» un elemento
+alla volta, l'ingresso da freddo, il confronto con la misura del 22/10.
+
+Nei test: `[data-azione="benchmark-veri"]` (gli fps veri), `[data-azione="benchmark-scale"]` (dove pesa), `[data-benchmark-fascia]`,
+`[data-benchmark-palco]` (dove girano le scene), `[data-azione="benchmark-interrompi"]`, `[data-benchmark-note]`,
+`[data-azione="benchmark-manda"][data-parte]`, `[data-azione="benchmark-ultima"][data-tipo="fps"|"scale"]`,
+`[data-azione="benchmark-al-computer"]`, `[data-benchmark-lettore]`, `[data-benchmark-secondi]`, `[data-benchmark-muto]`;
+`window.__benchmarkVeri` (i dati), `window.__benchmarkSolo` (gli inizi degli id o dei gruppi), `window.__benchmarkCorto` (scene di pochi
+decimi), `window.__benchmarkRaffredda` (i ms di pausa fra i gruppi). `unita/benchmark-veri` (le prove, il log, la scala, gli invii, la
+prova a metà), `unita/benchmark-tetto` (una scena che non finisce, un gruppo che non si carica), `unita/elementi-3d`,
+`integrazione/benchmark-veri` (le due prove intere, in tempi corti).

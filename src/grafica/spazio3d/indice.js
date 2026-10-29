@@ -57,7 +57,7 @@ function ambiente(renderer) {
   return t
 }
 
-/** Gli elementi della scena, nell'ordine della tabella di chi pesa (docs/core/vecchio-telefono-elementi.md). */
+/** Gli elementi della scena, nell'ordine della tabella di chi pesa (docs/core/vecchio-telefono-veri.md, «Come si spegne un elemento»). */
 export const ELEMENTI_ASTEROIDI = ['cielo', 'sassi', 'nave', 'madre', 'effetti', 'luci', 'resto']
 
 export function creaSpazio3d(canvas, { perso, dpr } = {}) {
@@ -97,7 +97,7 @@ function costruisci(renderer, fisso) {
   const lampo = new PointLight(0xffa050, 0, 9, 1.6); scena.add(segna(lampo, 'luci'))
   const motori = new PointLight(0x66ccff, 2, 4, 1.8); scena.add(segna(motori, 'luci'))
 
-  // gli elementi (grafica/elementi3d.js): chi pesa si misura spegnendone uno alla volta (docs/core/vecchio-telefono-elementi.md);
+  // gli elementi (grafica/elementi3d.js): chi pesa si misura spegnendone uno alla volta (docs/core/vecchio-telefono-veri.md, «Come si spegne un elemento»);
   // `spenti` li sceglie (la prova), `post` spento disegna la scena dritta sullo schermo
   const spenti = new Set(), elementi = creaElementi(ELEMENTI_ASTEROIDI, k => !spenti.has(k))
   const el = (nome, fai) => segnaNuovi(scena, nome, fai)

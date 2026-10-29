@@ -86,7 +86,7 @@ export const ACCESI = {
   riscaldamento: true,   // gli shader del piano e del mondo chiesti prima che servano (indice.js scaldaPiano, mondo/indice.js); spento: al primo uso
   // spento: si fa come se KHR_parallel_shader_compile non ci fosse (il Redmi Note 7), per provare sul computer l'entrata a passi (indice.js)
   parallelo: true,
-  // le semplificazioni della fascia bassa (docs/core/vecchio-telefono-elementi.md, «Le leve»): spente, la versione semplice
+  // le semplificazioni della fascia bassa (docs/sotterraneo/prestazioni-3d-bassa.md): spente, la versione semplice
   rilievo: true,     // le normal map e le trame di ruvidezza di pavimento, pareti, colonne e terreno di sopra; spento: trame piatte
   nebbiaFitta: true, // le fette di nebbia della fascia; spenta: una fetta sola
   quantaPolvere: 1,  // quanta della polvere che fluttua nella luce (0,4: due granelli su cinque)
@@ -115,7 +115,7 @@ export const ACCESI = {
   pavimento: true, pareteLontana: true, pareteVicina: true, colonne: true, torcia: true, lampo: true, particelle: true, figure: true, eroe: true, mostri: true, resto: true,
   terreno: true, mare: true, natura: true, case: true, cielo: true, sole: true, velo: true, vita: true, scia: true, persone: true,
 }
-// gli elementi delle discese e del mondo di sopra, nell'ordine della tabella (docs/core/vecchio-telefono-elementi.md)
+// gli elementi delle discese e del mondo di sopra, nell'ordine della tabella (docs/core/vecchio-telefono-veri.md, «Come si spegne un elemento»)
 export const ELEMENTI_DISCESE = ['pavimento', 'pareteLontana', 'pareteVicina', 'colonne', 'arredo', 'fiamme', 'torcia', 'fuochi', 'lampo', 'palco',
   'nebbia', 'particelle', 'effetti3d', 'chiarori', 'figure', 'eroe', 'mostri', 'resto']
 export const ELEMENTI_SOPRA = ['terreno', 'mare', 'natura', 'case', 'cielo', 'sole', 'velo', 'vita', 'scia', 'persone', 'eroe', 'mostri', 'resto']

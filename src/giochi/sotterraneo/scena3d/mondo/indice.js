@@ -84,7 +84,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
   const trame = creaTrame()
   const suolo = materialiDelSuolo(trame), kit = materialiDelKit(trame)
   const griglia = grigliaDi(m), tPezzi = tramaDeiPezzi(griglia.nx, griglia.nz)
-  // gli elementi (grafica/elementi3d.js): chi pesa si misura spegnendone uno alla volta (docs/core/vecchio-telefono-elementi.md)
+  // gli elementi (grafica/elementi3d.js): chi pesa si misura spegnendone uno alla volta (docs/core/vecchio-telefono-veri.md, «Come si spegne un elemento»)
   const elementi = creaElementi(ELEMENTI_SOPRA, elementoAcceso)
   const el = (nome, fai) => segnaNuovi(scena, nome, fai)
   const nebbia = el('velo', () => creaNebbia(m, scena, bit))

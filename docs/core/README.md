@@ -23,9 +23,7 @@ comandi, pubblicazione, grafica, e le regole comuni a tutti i giochi.
 - [creature-catalogo-1.md](creature-catalogo-1.md), [creature-catalogo-2.md](creature-catalogo-2.md) — il catalogo descritto, generato dal JSON: com'è fatta ogni creatura, elemento, come combatte, dove sta bene, tenuta o scartata
 - [sprite-a-mano-dal-codice.md](sprite-a-mano-dal-codice.md) — disegnare uno sprite come dato nel codice, quando l'atlante non ce l'ha
 - [vecchio-telefono.md](vecchio-telefono.md) — il Redmi Note 7 come metro dei giochi 3D: come lo si imita sul computer, come si calibra, come si misura
-- [vecchio-telefono-veri.md](vecchio-telefono-veri.md) — la misura coi modelli veri dei giochi sul telefono: le scene, il limite, i colli di bottiglia, il resoconto in più invii
-- [vecchio-telefono-fps.md](vecchio-telefono-fps.md) — gli fps veri, in fondo alla verifica: il gioco com'è (un piano, gli scontri, il villaggio, il prato, due fattorie) senza aspettare la GPU
-- [vecchio-telefono-elementi.md](vecchio-telefono-elementi.md) — chi pesa, un elemento alla volta: le scene smontate (pavimento, muri, luci, nebbia, mostri…), la tabella, le leve semplici della fascia bassa
+- [vecchio-telefono-veri.md](vecchio-telefono-veri.md) — la misura del telefono coi modelli veri: gli fps veri (il gioco com'è) e dove pesa (le due scale, un pezzo alla volta), come si spegne un elemento, il resoconto in più invii
 - [insieme.md](insieme.md) — giocare in due su due telefoni (`src/insieme/`): il tavolo che tiene il posto, il canale che non si rompe a una caduta, il lockstep, la sala e il cartello comuni, come si mette in due un gioco nuovo, le prove su una rete cattiva e il banco che tara la tolleranza
 - [amici.md](amici.md) — la lista di amici per tutta l'app: un legame fra due persone con chiave sua, codice breve a scadenza, spenta di base e chiesta ai grandi, presenza e inviti
 - [strumenti.md](strumenti.md) — voci, scatti e clip, icone, la guardia dei commenti
