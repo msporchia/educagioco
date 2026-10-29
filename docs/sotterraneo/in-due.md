@@ -178,15 +178,36 @@ Il primo passo, **fatto** (29 ottobre, nel ramo): senza, le due copie si separan
   test sostituisce `Math.random`, `hypot` e la trigonometria con spie che contano chi le chiama: devono essere zero, e la stessa
   discesa rifatta deve dare la stessa impronta. Un `**` nuovo non lo vede nessuna spia: si scrive `potenzaIntera`.
 
-## Cosa dà il sotterraneo al pezzo comune
+## Cosa dà il sotterraneo al pezzo comune (`sfida/`)
 
-Come Castle Battle ([../arena/multigiocatore.md](../arena/multigiocatore.md)): la regola (versione, proposta, cosa si accetta), il
-motore del lockstep (avanza, applica una mossa, impronta, foto), le mosse (`vai`, `tocca`, `rispondi`, `abilita`, `bevi`, `posa`,
-`scendi`…), i bambini finti in `test/aiuto/sfide/sotterraneo.mjs` (il giocatore finto di `motore/banco.js` sa già scendere).
+Come Castle Battle ([../arena/multigiocatore.md](../arena/multigiocatore.md)), **fatto** il 29 ottobre nel ramo:
 
-**Una cosa nuova nel pezzo comune**: oggi la proposta la fa solo chi crea, e l'ospite accetta. Qui anche l'ospite porta qualcosa,
-il suo eroe. L'incontro (`src/insieme/incontro.js`) deve far mandare a ognuno la sua parte prima di partire (l'ospite col
-`pronto`), e `crea` riceve tutte e due. Serve a ogni gioco in cui ognuno porta la sua roba.
+- `sfida/protocollo.js`: le **mosse** (`vai`, `rispondi` con l'id della domanda, `scendi`, `sali`, `nonAspetto`, `chiudi`,
+  `riprendi`, `continua`, `bersaglio`, `prepara`, `bevi`, `usa`, `butta`, `pergamena`; `mossaValida`), l'**impronta** (uguale al
+  bit, niente tolleranza: il motore è deterministico), la **proposta** (seme, posto, difficoltà) e la **parte** di ognuno (il suo
+  eroe: classe, roba, crescita, nome). La versione è `VERSIONE_SFIDA` più la firma dei dati (discese, mostri, roba, eroi): due
+  telefoni con tabelle diverse non partono.
+- `sfida/regia.js`: `regolaSotterraneo({ eroe })` per l'incontro, `discesaDi` (il posto al livello della coppia, il caso col suo
+  stato), `eseguiMossa` (la mossa di un alleato, se adesso si può ancora: una domanda vecchia o un turno non suo non valgono) e
+  `motoreDi`, col `guarda(ruolo)` che dice alla vista quale alleato è di questo telefono.
+- `sfida/foto.js`: la **fotografia** della discesa intera (il mondo, gli alleati, lo scontro aperto, il caso), sul pezzo comune
+  `src/insieme/grafo.js`. Pesa sui 300 KB: passa in una decina di secondi, e serve solo quando le copie si separano.
+- **L'incontro porta la parte dell'ospite** (`presentati`, `accettaParte`: [../core/insieme.md](../core/insieme.md)).
+- I bambini finti in `test/aiuto/sfide/sotterraneo.mjs`: decidono sulla loro copia con le mete di `motore/banco-in-due.js` e
+  mandano una mossa alla volta. `unita/sotterraneo-sfida`: partite intere su quattro reti, mai separate; la fotografia presa a
+  scontro aperto e rimessa va avanti uguale, campo per campo. `node strumenti/banco-rete.mjs --gioco sotterraneo`: in fondo il
+  100% con la rete calma, il 92% con quella di casa e di Melody; con «pessima» (spenta fino a un minuto, otto volte al minuto) si
+  rompono tutte, come vuole il tavolo che tiene un posto vuoto due minuti.
+
+## Riprendere il giorno dopo (proposta dell'utente, da fare)
+
+Il servizio non tiene niente (inoltra e basta) e il tavolo vive un'ora e mezza: oggi una discesa in due finisce lì. L'utente: «tenerlo
+valido per un giorno, tanto basta sincronizzarsi sull'ultimo snapshot».
+
+- **Ognuno tiene l'ultima fotografia** della discesa in due, valida un giorno; per riprendere si apre un tavolo nuovo, e vale quella
+  di chi aveva creato.
+- **Il mondo si riprende dalla fotografia** (il piano, i mostri, la roba per terra); **gli eroi entrano come sono adesso**, anche
+  cresciuti nel frattempo: quello che si prende in due va subito nell'avventura di ognuno, quindi non si conta due volte.
 
 ## In che ordine
 
@@ -199,12 +220,14 @@ il suo eroe. L'incontro (`src/insieme/incontro.js`) deve far mandare a ognuno la
    `unita/sotterraneo-in-due` fa il copione regola per regola e tre discese intere; `unita/sotterraneo-lockstep` ne fa scendere
    tre in due con le spie sui conti. Restano da tarare i moltiplicatori della difficoltà, e da decidere dove ci si risveglia
    quando svengono tutti e due (oggi tutti e due all'ingresso del piano, nella stessa cella).
-4. **La regia** e l'incontro che porta l'eroe dell'ospite; la partita finta in due (`npm test`) e il banco della rete.
+4. **La regia** (fatto): l'incontro che porta l'eroe dell'ospite, le mosse, la fotografia, la partita finta in due e il banco della
+   rete (sopra).
 5. **La vista 3D**: il secondo eroe col nome e cosa sta facendo, la telecamera sul punto in mezzo, «Aspetto Leo alla scala», il
    compagno sul palco dello scontro (`Scontro3d.vue`), la sala. Il 2D non si tocca.
 
 Il punto 2 è il lavoro più grosso e il più rischioso (il motore della discesa è di quasi 13.000 righe, e l'eroe solo ci sta
-dappertutto); i punti 1, 2 e 3 si possono pubblicare senza che si veda niente: da soli non cambia un numero.
+dappertutto); i punti 1-4 si possono pubblicare senza che si veda niente: da soli non cambia un numero. Dopo la vista, riprendere il
+giorno dopo (sopra).
 
 ## Da misurare
 

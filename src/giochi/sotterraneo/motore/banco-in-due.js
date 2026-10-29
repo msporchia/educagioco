@@ -15,7 +15,7 @@ const VICINO = 3                     // il compagno si riavvicina quando è più
 const cellaDi = e => ({ x: Math.floor(e.x), y: Math.floor(e.y) })
 
 // dove andare per arrivare a `r`: dritto se si passa, se no la prima porta chiusa o il primo mostro che dorme sulla strada sgombra
-function versoDi(corsa, r) {
+export function versoDi(corsa, r) {
   const da = cellaDi(corsa.eroe)
   if (viaVerso(corsa.buona(), r, da, { sopra: ['scala', 'fonte'].includes(r.che) })) return r
   const sgombro = percorso((x, y) => corsa.livello.calpestabile(x, y), da, { x: r.x, y: r.y })
@@ -28,7 +28,7 @@ function versoDi(corsa, r) {
 }
 
 // la meta dell'alleato `i`, libero e fermo
-function metaDi(corsa, i) {
+export function metaDi(corsa, i) {
   const robe = corsa.livello.robe
   const scala = robe.find(r => r.che === 'scala')
   const qualcunoAspetta = corsa.persone.some(p => p.foglio && p.foglio.che === 'aspetta' && p.foglio.perche === 'scala')
