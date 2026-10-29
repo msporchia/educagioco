@@ -26,4 +26,5 @@ per chi lo aveva finito.
 - [spagnolo-trappole.md](spagnolo-trappole.md) — le trappole dello spagnolo: la tabella, le parole che una trappola può mostrare, le scelte delle operazioni
 
 Vedi anche: [../apprendimento/srs.md](../apprendimento/srs.md) (la forza di
-una parola).
+una parola), [../core/amici-nei-giochi.md](../core/amici-nei-giochi.md) (gli amici
+sulla mappa del tesoro, in tutte e due le lingue).

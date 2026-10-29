@@ -8,8 +8,7 @@
 
    Ne resta poco apposta: un prototipo che è diventato un gioco viene
    tolto da qui, così quello che si vede in `poc/` è sempre e solo
-   quello che non è ancora stato scritto. `eroi.html` è l'eccezione —
-   è un attrezzo, e da `file://` non carica i moduli: lo dice da sé.
+   quello che non è ancora stato scritto.
 
    Questo script apre un prototipo in Chrome, lo lascia girare qualche
    secondo battendoci sopra qualche tocco a caso, e riporta ogni errore

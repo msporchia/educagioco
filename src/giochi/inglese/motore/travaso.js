@@ -43,3 +43,11 @@ export function travasa(c) {
   if (c.tappa !== conta) { c.tappa = conta; return true }
   return cambiato
 }
+
+// Dove è arrivato, per gli amici (docs/core/amici-nei-giochi.md): il posto della tappa da fare sulla mappa, cioè la prima non vinta
+// nella fila dei mondi (è sempre aperta: ogni mondo viene dopo uno solo). TAPPE.length se le ha vinte tutte.
+export function tappaDaFare(c) {
+  const vinte = travasate((c && c.vinte) || {})
+  const i = TAPPE.findIndex(t => !vinte[t.id])
+  return i < 0 ? TAPPE.length : i
+}

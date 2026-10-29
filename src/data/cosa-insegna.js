@@ -28,11 +28,6 @@ export const INSEGNA = {
     titolo: 'Cosa chiede',
     testo: 'Euro, centesimi e resto: si sta dall\'altra parte del banco, il cliente prende la spesa e paga, e bisogna dargli il resto giusto.',
   },
-  generale: {
-    titolo: 'Cosa si impara',
-    testo: 'Non ha domande di scuola: si scrive un piano per un personaggio, a sequenze, cicli e attese di un evento, e si guarda cosa succede. '
-      + 'Si impara a ragionare per passi e a correggere un piano che non torna.',
-  },
   codice: {
     titolo: 'Cosa si impara',
     testo: 'Niente conti: si indovina una combinazione di figure leggendo gli indizi delle prove già fatte (quante giuste al posto giusto, quante al posto sbagliato). '

@@ -2,13 +2,11 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { state, level, countMastered, nomeCorrente, livelloOra,
          mateProgresso, mercatoProgresso,
-         tabellineIntere, genProgresso,
+         tabellineIntere,
          quantiGiochiAccesi } from '../store/profile.js'
 import { daLeggere, difficoltaDaDire } from '../store/posta.js'
 import { SCALETTA, posizioneOra, filaDi } from '../data/asteroidi.js'
 import { CAMPAGNE as GIORNATE } from '../data/bancarella.js'
-// conta le prove CHE SI VEDONO, non tutte: le non approvate sono dietro il cancello dei giochi in prova
-import { fatte as proveFatte, quante as proveQuante } from './generale/fila.js'
 import { gioco as giocoNuovo } from '../giochi/indice.js'
 import { progresso as progressoDi, primatoDi } from '../giochi/campagne.js'
 import { recordPiuRecente, recordInParole, sfidaDi } from '../giochi/primati.js'
@@ -61,10 +59,6 @@ const QUANTE_GIORNATE = GIORNATE.length
 const stelleBanco = computed(() => Object.values(mercato.value.stelle || {}).reduce((n, s) => n + s, 0))
 const codaBanco = computed(() => (stelleBanco.value ? ` · ⭐ ${stelleBanco.value}` : ''))
 
-const generale = computed(() => genProgresso())
-const stelleGen = computed(() =>
-  Object.values(generale.value.stelle || {}).reduce((n, s) => n + s, 0))
-
 const salita = computed(() => livelloOra())
 
 // azzerare i progressi vive dietro il PIN in GenitoriView, non qui
@@ -76,7 +70,7 @@ const nessunGioco = computed(() => quantiGiochiAccesi() === 0)
 // le classi dei giochi vecchi restano: le usano i test (`.carta.mate`)
 const CLASSE = {
   mate: 'mate', inglese: 'eng', spagnolo: 'esp', torri: 'td',
-  bancarella: 'banco', generale: 'gen',
+  bancarella: 'banco',
 }
 
 // un gruppo senza nemmeno un gioco acceso non si disegna
@@ -114,9 +108,6 @@ const dove = computed(() => {
       : clienti.value
         ? `🧺 giornata ${mercato.value.tappa + 1} di ${QUANTE_GIORNATE} · ✨ ${restiPerfetti.value} resti precisi${codaBanco.value}`
         : '',
-    generale: generale.value.tappa
-      ? `🎖️ livello ${Math.min(proveFatte + 1, proveQuante)} · ⭐ ${stelleGen.value} stelle`
-      : '',
   }
 })
 

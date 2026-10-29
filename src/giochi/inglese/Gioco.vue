@@ -36,6 +36,7 @@ import { scrivi as scriviSosta, leggi as leggiSosta, dice as diceSosta } from '.
 import * as F from './motore/fila.js'
 
 import Mappa from './viste/Mappa.vue'
+import { usaAmici } from '../../amici/usaAmici.js'
 import Domanda from './viste/Domanda.vue'
 import Pagina from './viste/Pagina.vue'
 import Libro from './viste/Libro.vue'
@@ -50,6 +51,8 @@ const emit = defineEmits(['vai'])
 
 const vista = ref('mappa')          // mappa | tappa | libro | prima
 const c = progresso(CHIAVE)
+// gli amici dalla loro bacheca (docs/core/amici-nei-giochi.md): la tappa da fare di ognuno sulla mappa
+const amici = usaAmici(CHIAVE)
 // chi aveva vinto tappe dei mondi di prima le ritrova (motore/travaso.js)
 if (travasa(c)) persist()
 // i lucchetti tolti dai grandi: l'età non apre mondi, si fanno tutti in fila
@@ -579,7 +582,9 @@ onUnmounted(() => { clearTimeout(bollaTimer); zittisci() })
                @riprendi="chiede = null; riprendiPartita()" @scorda="scorda"
                @comincia="cominciaComunque" @annulla="chiede = null" />
     </div>
-    <Mappa v-if="vista === 'mappa'" :stato="stato" :extra="extra" :prima="diPrima"
+    <!-- chi è da raggiungere: fuori dalla mappa, che scorre -->
+    <p v-if="vista === 'mappa' && amici.davanti" class="ing-davanti" data-amico-davanti>{{ amici.davanti }}</p>
+    <Mappa v-if="vista === 'mappa'" :stato="stato" :extra="extra" :prima="diPrima" :amici-su="amici.sullaTappa"
            @tappa="id => vuole(tappaDi(id).nome, () => giocaTappa(id))" @libro="apriLibro"
            @cassetto="m => vuole('Il cassetto', () => giocaCassetto(m))" @prima="vista = 'prima'" />
 

@@ -49,7 +49,6 @@ import { CAMPAGNA as SPAGNOLO } from '../../src/data/campagna-spagnolo.js'
 import { RACCONTO as CASTELLO } from '../../src/data/campagne-castello.js'
 import { CAMPAGNA as POZIONI } from '../../src/giochi/pozioni/dati/campagna.js'
 import { FILA as BANCARELLA } from '../../src/data/bancarella.js'
-import { TAPPE as GENERALE } from '../../src/data/generale.js'
 import { TAPPE_DEL_GIOCO } from '../../src/data/portata-giochi.js'
 import { GIOCHI, CHIAVI_GIOCHI } from '../../src/data/giochi.js'
 import { aperta, adesso, completa } from '../../src/giochi/campagne.js'
@@ -115,7 +114,6 @@ const CAMPAGNE = [
   ['asteroidi', SCALETTA.map(v => v.T)], ['tabelline', TABELLINE], ['calcolo a mente', STAZIONI],
   ['inglese', INGLESE], ['inglese a mondi', INGLESE_MONDI], ['spagnolo', SPAGNOLO], ['castello', CASTELLO],
   ['pozioni', POZIONI], ['bancarella', BANCARELLA],
-  ['generale', GENERALE],
 ]
 
 const CHIAVI_SAPERI = SAPERI.map(s => s.chiave)

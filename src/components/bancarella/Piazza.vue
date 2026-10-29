@@ -10,6 +10,8 @@ let ultimo = null      // { chi, citta: l'id della città, banco: l'indice del b
    dice solo quale giornata si vuole giocare. Vedi docs/bancarella/mappa.md. */
 import { ref, shallowRef, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import Fumetto from '../Fumetto.vue'
+import AmiciQui from '../amici/AmiciQui.vue'
+import PallinoAmico from '../amici/PallinoAmico.vue'
 import { fondalePiazza } from '../../data/bancarella-fondali.js'
 import { BANCHI, perLaProssima } from '../../data/bancarella.js'
 import { disponiPiazza, stradaCarretto, lungo, lunghezza, durataCarretto } from '../../motore/bancarella/mondo.js'
@@ -17,7 +19,7 @@ import { disegnaPiazza, disegnaBanco, viale, CARRETTO, CARTELLO, COLORI_PIAZZA }
 
 const props = defineProps({
   citta: { type: Object, required: true },        // la città: id, nome, monumento, accento…
-  // [{ id, numero, giornata, stato: fatta|ora|aperta|chiusa, stelle: 0-3, serve }]
+  // [{ id, numero, giornata, stato: fatta|ora|aperta|chiusa, stelle: 0-3, serve, amici }] (amici: arrivati a quella giornata)
   banchi: { type: Array, required: true },
   stelle: { type: String, default: '' },          // «2 di 4 giornate»
   chi: { type: String, default: '' },
@@ -212,6 +214,9 @@ const racconto = b => `${b.nome}: ${b.stato === 'chiusa' ? 'chiusa' : b.stato ==
            :style="{ left: (P.banchi[k].x - P.banchi[k].w / 2) + 'px', top: P.banchi[k].y + 'px' }">
         <svg class="disegno" viewBox="0 0 124 108" aria-hidden="true" v-html="disegni[k]"></svg>
         <span v-if="b.stato === 'ora'" class="alone"></span>
+        <span v-if="b.amici.length" class="amici-posto" data-amici-banco :data-al="b.id">
+          <PallinoAmico v-for="a in b.amici" :key="a.chiave" :amico="a" :lato="16" data-pallino-amico />
+        </span>
         <button type="button" class="banco" :class="'s-' + b.stato"
                 :data-camp="b.id" :data-stato="b.stato" :aria-label="racconto(b)" @click.stop="tocca(k)">
           <span class="tondo">{{ b.numero }}</span>
@@ -243,6 +248,7 @@ const racconto = b => `${b.nome}: ${b.stato === 'chiusa' ? 'chiusa' : b.stato ==
         <small>Giornata {{ banco.numero }} · {{ citta.nome }}</small>
         <b>{{ banco.giornata.emoji }} {{ banco.giornata.nome }}</b>
         <span class="che">{{ banco.giornata.nuovo || banco.giornata.dritta }}</span>
+        <AmiciQui :amici="banco.amici" :lato="16" class="amici-fumetto" :data-al="banco.id" />
         <span class="banchini">{{ icone(banco.giornata) }}<template v-if="!banco.giornata.libera"> · {{ banco.giornata.tappe.length }} banchi</template></span>
         <span v-if="banco.stato === 'chiusa'" class="serve" data-serve>🔒 {{ banco.serve }}</span>
         <template v-else>
@@ -310,6 +316,10 @@ const racconto = b => `${b.nome}: ${b.stato === 'chiusa' ? 'chiusa' : b.stato ==
 .carretto svg { display:block; width:40px; height:40px; overflow:visible }
 .carretto.cammina svg { animation:balla .3s ease-in-out infinite }
 @keyframes balla { 0%, 100% { transform:translateY(0) rotate(0) } 50% { transform:translateY(-2.5px) rotate(1.2deg) } }
+
+/* gli amici arrivati a questa giornata: i pallini sotto il banco, il nome nel fumetto */
+.amici-posto { position:absolute; left:50%; top:100%; transform:translateX(-50%); display:flex; gap:2px; z-index:1; pointer-events:none }
+.amici-fumetto { margin:4px 0 2px; font-size:12px; line-height:1.3 }
 
 .fumetto-banco small { display:block; font-size:11px; letter-spacing:.5px; text-transform:uppercase; color:#8b7a63 }
 .fumetto-banco b { display:block; font-size:17px; font-weight:900; color:#a8301f }

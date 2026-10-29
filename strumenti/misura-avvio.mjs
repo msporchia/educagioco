@@ -20,7 +20,7 @@ const valoriOpzioni = new Set(['dist', 'lento', 'soglia'].map(n => opz(n)).filte
 const scelti = argv.filter(a => !a.startsWith('--') && !valoriOpzioni.has(a))
 const file = resolve(opz('dist', 'dist/index.html'))
 const lento = Number(opz('lento', 1)), soglia = Number(opz('soglia', 0))
-const GIOCHI = ['mate', 'torri', 'bancarella', 'generale', 'codice', 'survivors', 'conta', 'prima', 'fattoria',
+const GIOCHI = ['mate', 'torri', 'bancarella', 'codice', 'survivors', 'conta', 'prima', 'fattoria',
   'sotterraneo', 'pozioni', 'passo', 'costruttore', 'inglese', 'spagnolo', 'arena']
 const elenco = (scelti.length ? scelti : GIOCHI).filter(n => n !== 'home')
 

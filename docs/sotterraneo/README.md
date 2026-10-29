@@ -52,6 +52,7 @@ senza fondo sotto le sette discese. Il codice sta in `src/giochi/sotterraneo/`.
 - [missioni-freccina.md](missioni-freccina.md) — le due freccine che ricordano una missione presa: giù attorno all'eroe (la cosa o la scala), sopra azzurra sul bordo, e «segui questa» per sceglierne una
 - [la-roba-che-resta.md](la-roba-che-resta.md) — la roba che scende e risale con l'avventuriero, le discese che contano su di lei, l'equilibrio di prima
 - [avventure.md](avventure.md) — un'avventura per eroe: cosa ha ognuno e dove sta nel salvataggio, cosa è in comune (monete, il massimo per medaglie ed esperienza), i salvataggi di prima, azzerati e poi riordinati
+- [amici sulla mappa di sopra](../core/amici-nei-giochi.md) — dove sono arrivati gli amici, dalla loro bacheca: un pallino ai piedi di ogni discesa, il nome nel fumetto, in cima chi è da raggiungere; niente record
 - [roba.md](roba.md) — gli eroi e cosa portano, due mani, la torcia, per terra e nello zaino, curiosità e arredo; la tabella delle cinque cure
 - [gioielli.md](gioielli.md) — due anelli e una collana: i tre posti, dove va un gioiello e quale anello si toglie, i salvataggi di prima, cosa ha cambiato per forza e gemme (14 ottobre)
 - [elmo.md](elmo.md) — la casella della testa (22 ottobre): elmi, cappelli e la cuffia, a frazione di un'armatura; nel bottino e dal fabbro e dall'incantatrice solo dove sono accesi (il 3D), i salvataggi di prima, la casella nel 2D, il modello e l'anteprima in 3D

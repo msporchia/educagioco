@@ -36,7 +36,10 @@
 .ing-nodo-nome { position: absolute; transform: translateX(-50%); text-align: center; pointer-events: none;
                  font: 700 12.5px/1.15 "Emoji Gioco", Georgia, 'Times New Roman', serif; color: var(--ing-inchiostro);
                  text-shadow: 0 0 3px #f3e6c4, 0 0 2px #f3e6c4 }
-.ing-nodo-nome.ing-spento { opacity: .55 }
+.ing-nodo-nome .ing-spento { opacity: .55 }
+/* gli amici arrivati a una tappa: i pallini e il nome sotto il nome della tappa (docs/core/amici-nei-giochi.md) */
+.ing-amici { justify-content: center; white-space: nowrap; margin-top: 2px; font-size: 12px; font-weight: 700 }
+.ing-davanti { flex: none; margin: 0; padding: 6px 12px 0; text-align: center; font: 700 14px/1.2 "Emoji Gioco", Georgia, 'Times New Roman', serif; color: var(--ing-inchiostro) }
 /* la nave: la sua tela la sposta scena/nave.js, a fotogrammi */
 .ing-nave { position: absolute; left: 0; top: 0; width: 120px; height: 120px; pointer-events: none;
             will-change: transform }

@@ -171,6 +171,9 @@
   box-shadow: 0 8px 24px #0007; animation: sot-appare .16s ease-out;
 }
 .sot-fumetto.sot-tenue { background: #e4ded3 }
+/* gli amici arrivati a una discesa: i pallini ai suoi piedi, i nomi nel fumetto (docs/core/amici-nei-giochi.md) */
+.sot-amici-posto { position: absolute; transform: translateX(-50%); display: flex; gap: 2px; pointer-events: none }
+.sot-amici-fum { margin-top: 6px; font-size: 13px }
 .sot-fumetto::after {
   content: ''; position: absolute; left: calc(var(--coda, 50%) - 8px); bottom: -9px; width: 14px; height: 14px;
   background: inherit; border: 2px solid #2b2433; border-top: 0; border-left: 0; transform: rotate(45deg);

@@ -19,7 +19,7 @@
    crea cicli di import con store/profile.js, che invece importa lui.
    ═══════════════════════════════════════════════════════════════════ */
 import { strength, isMastered, SRS, MAX_S } from './srs.js'
-import { TRAGUARDI, AREE, MEDAGLIE, PREMI, GENERALE_ATTIVO } from '../data/traguardi.js'
+import { TRAGUARDI, AREE, MEDAGLIE, PREMI } from '../data/traguardi.js'
 import { XP_GIOCHI, MATERIE_GIOCHI, giochiNuoviProvati } from '../giochi/albo.js'
 import { CAMPAGNA, calcoliTabellina, eCasella } from '../data/tabelline.js'
 import { TOTALE_ELEMENTI } from '../data/calcolo.js'
@@ -75,21 +75,12 @@ const MATERIE_TUTTE = [
   /* nel resto l'elemento non è la cifra ma il pezzo più piccolo che serve
      per comporla: cinque fasce, dagli euro tondi ai centesimi */
   { id: 'soldi',   prefisso: 'bancarella:', nome: 'Euro e resto', emoji: '🪙', totale: FASCE.length },
-  /* dal generale non si impara un vocabolario ma cinque modi di dare un
-     ordine: sequenza, condizione, ciclo, evento, attesa. Sono pochi e
-     fissi come le quattro operazioni del castello, quindi il totale sta
-     scritto qui: il catalogo vero arriverà in data/generale.js e allora
-     questo 5 diventerà la lunghezza di quell'elenco. */
-  { id: 'ordini',  prefisso: 'gen:',   nome: 'Ordini e programmi', emoji: '🎖️', totale: 5 },
 ]
-/* stesso interruttore dei traguardi (data/traguardi.js): finché il
-   generale non è in home, la sua riga non compare fra "cosa so fare" —
-   una barra a zero di un gioco che non si può aprire è un buco */
 /* i giochi nuovi che insegnano elementi con l'SRS aggiungono la loro riga
    dal manifesto (`albo.materia`); chi non insegna niente di misurabile —
    il Codice Segreto, per dire, dove non c'è un vocabolario ma un modo di
    ragionare — semplicemente non la dichiara e non compare qui */
-export const MATERIE = [...MATERIE_TUTTE.filter(m => m.id !== 'ordini' || GENERALE_ATTIVO),
+export const MATERIE = [...MATERIE_TUTTE,
                         ...MATERIE_GIOCHI]
 export const materiaDi = id => MATERIE.find(m => m.id === id) || null
 
@@ -138,10 +129,9 @@ export const XP_AREA = {
      resto è un giro solo, e costa più di una risposta a quiz */
   bancarella: m => m.tot('clienti') * 3 + m.tot('restiPerfetti') * 2
                   + m.imparati('bancarella:') * 10,
-  /* dal generale l'unità di lavoro è l'ordine firmato, che costa più di
-     una risposta a quiz ma si scrive a mazzi: vale un quarto l'uno. Il
-     resto sono le cose che si portano a casa una volta sola — il livello,
-     la stella, il tipo di ordine capito. */
+  /* Il Generale è stato tolto (29 ottobre 2026): un esperimento che non è diventato un gioco, Passo passo e il Robot insegnano
+     la stessa cosa meglio. Come la corsa e il Dungeon, le medaglie se ne vanno e l'esperienza resta, con la formula di quando
+     c'era; `gen` e i contatori `missioni`, `ordini`, `daSolo`, `avanzati` restano nel profilo apposta. */
   generale: m => Math.floor(m.tot('ordini') / 4) + m.stelleGen() * 5
                  + m.imparati('gen:') * 10 + m.tappeGen() * 40,
   /* La cameretta non c'è più, e nell'albo non ha più una famiglia sua:
@@ -299,7 +289,6 @@ export function misure(p, now = Date.now()) {
        par, una per gli altri. Rigiocare non ne aggiunge. */
     stelleGen: () => Object.values((p.gen && p.gen.stelle) || {})
       .reduce((s, n) => s + (Number(n) || 0), 0),
-    campagnaGen: () => (p.gen && p.gen.libera ? 1 : 0),
     /* le tabelline sapute per intero: è il traguardo che un bambino
        racconta a voce ("so la tabellina del 7"), e vale solo se tutti e
        dieci i calcoli reggono adesso, decadimento compreso */

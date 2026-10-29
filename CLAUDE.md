@@ -70,7 +70,6 @@ quale file.
 | `docs/bancarella/` | La bancarella: regole e difficoltà |
 | `docs/pozioni/` | Il laboratorio delle pozioni: regole e tappe |
 | `docs/passo-passo/` | Passo passo: regole del mondo, cane pastore, zaino e carte, stelle, sentiero, come si scrive un livello |
-| `docs/generale/` | Il Generale: didattica, mappe, livelli, cosa manca (come si scrive un livello: `src/data/livelli/GUIDA.md`) |
 | `docs/costruttore/` | Il Robot (era «Il costruttore»: chiave e cartelle restano `costruttore`): linguaggio, progetti e attrezzi, il porto, gli algoritmi, la campagna, la scheda e il robot disegnato |
 | `docs/sotterraneo/` | Il sotterraneo: la grande storia (le discese in fila e la roba attesa), le missioni, regole, roba, scenari e muri, i pensieri dell'eroe (`pensieri.md`), l'abisso com'è e il suo progetto, il Sotterraneo 3D in prova (`grafica-3d.md`, prima di toccare `scena3d/`; i mostri e gli effetti 3D in `mostri-3d.md`; il suo mondo di sopra in `mondo-3d.md`) |
 | `docs/survivors/` | Survivors, con le sue regole |
@@ -82,8 +81,7 @@ quale file.
 L'indice di tutto è `docs/README.md`. In ogni cartella di gioco `presentazione.md` è la pagina per chi arriva da
 fuori (linkata dal README) e `da-fare.md`, dove c'è, tiene le voci aperte.
 Altri documenti vivono accanto al codice che descrivono: `test/README.md`
-(come sono fatti i test), `src/data/livelli/GUIDA.md` (i livelli del
-Generale), `strumenti/sprite/*.md` (fogli e foglietti degli sprite),
+(come sono fatti i test), `strumenti/sprite/*.md` (fogli e foglietti degli sprite),
 `poc/*.md`.
 
 ## Convenzioni
@@ -180,10 +178,7 @@ Una riga ciascuna; il perché sta nel documento indicato.
 - **Le partenze scrivono eccezioni**: una riga si confronta con quello che
   l'età scriverebbe, non con «nessuna eccezione». → `docs/genitori/ritocchi.md`
 - **Le stelle di Passo passo e del Robot stanno sotto l'indice**:
-  riordinare la fila vuole una voce in `FILE` di `dati/campagna.js`. Quelle
-  del Generale stanno sotto l'`id`. → `docs/passo-passo/livelli.md`, `docs/costruttore/campagna.md`
-- **Un livello del Generale non ha un test suo**: dichiara `verifiche`, e
-  una chiave sconosciuta è un guasto. → `docs/generale/livelli.md`
+  riordinare la fila vuole una voce in `FILE` di `dati/campagna.js`. → `docs/passo-passo/livelli.md`, `docs/costruttore/campagna.md`
 - **Gli addobbi sospesi della fattoria non si cancellano**: gli id sono
   chiavi di salvataggio. → `docs/fattoria/animali.md`
 - **`#fattoria-tipo=` butta la fattoria del bambino attivo** (nel cestino):
