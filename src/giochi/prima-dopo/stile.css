@@ -68,6 +68,8 @@
 .pd-tappa i { display: block; font-style: normal; font-size: 13px;
               color: var(--pd-tenue); overflow: hidden; text-overflow: ellipsis;
               white-space: nowrap }
+.pd-tappa .pd-qui { margin-top: 3px; font-size: 13px; color: var(--pd-inchiostro) }
+.pd-davanti { margin: 0; text-align: center; font-size: 15px; font-weight: 700; color: var(--pd-inchiostro) }
 .pd-tappa .pd-stelle { font-size: 14px; letter-spacing: 1px; flex: none }
 .pd-tappa.pd-chiusa { opacity: .5; border-left-color: #cfd8c3; box-shadow: none }
 .pd-tappa.pd-adesso { box-shadow: 0 3px 0 var(--pd-accento) }
