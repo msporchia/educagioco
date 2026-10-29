@@ -19,7 +19,7 @@
      node strumenti/perdite-3d.mjs --cicli 40 --caldi 5 --solo discesa,zaino,mondo,dialoghi,dungeon
      node strumenti/perdite-3d.mjs --resta --solo zaino,mondo,dialoghi   # sempre nella stessa scena del mondo di sopra
      node strumenti/perdite-3d.mjs --giu                                 # nell'abisso, un piano più giù a ciclo
-     node strumenti/perdite-3d.mjs --veri elementi --corto               # «Chi pesa» della misura del telefono, una riga per scena
+     node strumenti/perdite-3d.mjs --veri scala,scala-sopra --corto      # «Dove pesa» della misura del telefono, una riga per scena
 
    Per cercare chi tiene una cosa che cresce: `--chi WebGL2RenderingContext` (la via più corta dalle
    radici, dalla fotografia dello heap), `--nuovi materiali` (nati nel penultimo ciclo e vivi alla fine,
@@ -461,7 +461,7 @@ const c = campagnaSeminata({ finite: 3, eroe: 'cavaliere', zaino: ZAINO, gemme: 
 Object.assign(c.cfg.avventure.cavaliere, { mondo: { giro: 0, parlato: true, firma: m.firma } })
 await semina(page, { coins: 0, settings: { sperimentali: true }, campagne: { sotterraneo: c } })
 await page.waitForSelector('.carte', { timeout: 15000 })
-// `--veri elementi-sot,elementi-sopra`: la misura del telefono (zona dei grandi → «Misura questo telefono» → «Chi pesa»), coi gruppi
+// `--veri scala,scala-sopra`: la misura del telefono (zona dei grandi → «Misura questo telefono» → «Dove pesa»), coi gruppi
 // chiesti, e i conteggi dopo OGNI scena: le scene di un gruppo accendono e spengono elementi della stessa scena, i gruppi la rifanno
 if (opz('veri')) await banco(opz('veri').split(','))
 async function banco(solo) {
@@ -476,8 +476,8 @@ async function banco(solo) {
   await page.evaluate(() => document.querySelectorAll('details.tendina').forEach(d => { d.open = true }))
   await page.evaluate(([so, co]) => { window.__benchmarkSolo = so; window.__benchmarkCorto = co; window.__benchmarkRaffredda = 0 }, [solo, argv.includes('--corto')])
   await page.click('[data-azione="benchmark"]')
-  await page.click('[data-azione="benchmark-elementi"]')
-  console.log(`la misura «chi pesa»: ${solo.join(', ')}${argv.includes('--corto') ? ' (corta)' : ''}; una riga per scena`)
+  await page.click('[data-azione="benchmark-scale"]')
+  console.log(`la misura «dove pesa»: ${solo.join(', ')}${argv.includes('--corto') ? ' (corta)' : ''}; una riga per scena`)
   const righe = [], campiB = ['geometrie', 'materiali', 'trame', 'oggetti3d', 'contesti', 'tele', 'bitmap', 'heapMB', 'bufferMB', 'nodi', 'ascoltatori', 'timer']
   let prima = null
   for (const fine = Date.now() + 3 * 3600e3; Date.now() < fine;) {

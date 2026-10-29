@@ -1,14 +1,14 @@
-// Chi pesa nel mondo di sopra (docs/core/vecchio-telefono-elementi.md): il mondo vero della prima terra dalla partenza (il villaggio,
-// come in veri/ingresso.js), con 4 persone e 3 mostri finti attorno all'eroe (mondo/folla-prova.js), e gli elementi accesi o spenti come
-// chiede la scena. Speciali: `ombra` (quella del sole), `foschia` (la nebbia di three), `normali` (veri/moltiplica.js).
+// La scala del mondo di sopra (veri/scala.js, docs/core/vecchio-telefono-veri.md): il mondo vero della prima terra dalla partenza (il
+// villaggio), con 4 persone e 3 mostri finti attorno all'eroe (mondo/folla-prova.js), e gli elementi accesi o spenti come chiede la
+// scena. Speciali: `ombra` (quella del sole), `foschia` (la nebbia di three), `normali` (veri/normali.js).
 import { creaMondo3d } from '../../../giochi/sotterraneo/scena3d/mondo/indice.js'
 import { personeFinte, mostriFinti } from '../../../giochi/sotterraneo/scena3d/mondo/folla-prova.js'
 import { ACCESI } from '../../../giochi/sotterraneo/scena3d/costanti.js'
 import { ilMondo, mondoDaSalvato, terraDelMondo, fontaneDi } from '../../../giochi/sotterraneo/motore/mondo-sopra.js'
 import { dprDelGioco } from './discese.js'
-import { leve } from './moltiplica.js'
+import { normali } from './normali.js'
 import { nuovaTela, finche } from './tela.js'
-import { SCENE_ELEMENTI } from './elementi-dati.js'
+import { ELEMENTI_SCALA } from './scala.js'
 import { mettiElementi } from './elementi-sot.js'
 
 const SPECIE = ['lupo', 'goblin', 'scheletro']
@@ -30,7 +30,7 @@ export async function prepara({ contenitore, opz = {} }) {
   let sole = null
   scena.traverse(o => { if (o.isDirectionalLight && !sole) sole = o })
   const soleOmbra = !!(sole && sole.castShadow)
-  const lv = leve(scena)
+  const lv = normali(scena)
   let pronta = false
   const speciale = (n, su) => {
     if (n === 'ombra') { if (sole) sole.castShadow = su && soleOmbra; return true }
@@ -48,7 +48,7 @@ export async function prepara({ contenitore, opz = {} }) {
     async scena(s) {
       // la prima volta: i pezzi attorno all'eroe si costruiscono uno per fotogramma
       if (!pronta) { pronta = true; await finche(() => api.pronto, 10000); await new Promise(r => setTimeout(r, 1500)) }
-      mettiElementi(SCENE_ELEMENTI.sopra.elementi, new Set(s.accesi), orig, speciale)
+      mettiElementi(ELEMENTI_SCALA.sopra, new Set(s.accesi), orig, speciale)
     },
     via() {
       lv.ripristina(); scena.fog = fog; Object.assign(ACCESI, orig)

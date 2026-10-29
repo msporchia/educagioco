@@ -1,4 +1,4 @@
-/* Il tetto di tempo della misura coi modelli veri (docs/core/vecchio-telefono-elementi.md, «Il tetto di tempo e il lettore»): una scena che non finisce
+/* Il tetto di tempo della misura coi modelli veri (docs/core/vecchio-telefono-veri.md, «Il tetto di tempo e il lettore»): una scena che non finisce
    (la sua preparazione non si risolve, o non arrivano fotogrammi) diventa «non regge: tempo scaduto», il gruppo si rifà da capo e la
    scena dopo si misura; un gruppo che non si carica entro il tetto è «non regge» per tutte le sue scene. Senza browser: finti
    requestAnimationFrame, finestra e documento. */
@@ -32,7 +32,7 @@ const tappe = [
   { gruppo: 'ultimo', carica: async () => famiglia(), scene: [{ id: 'd', nome: 'ultima' }] },
 ]
 const nomi = []
-const dati = await eseguiVeri({ contenitore: null, corto: true, raffredda: 0, solo: ['a', 'ferma', 'b', 'c', 'd'], tappe, tetti: { scena: 200, carica: 300, misura: 1000 },
+const dati = await eseguiVeri({ contenitore: null, corto: true, raffredda: 0, solo: ['a', 'ferma', 'b', 'c', 'd'], tappe, tetti: { scena: 200, carica: 300 },
   progresso: (i, n, nome) => nomi.push(`${i + 1}/${n} ${nome}`) })
 const di = id => dati.risultati.find(x => x.id === id)
 controlla('la scena prima si misura', di('a') && !di('a').errore && di('a').ms != null, JSON.stringify(di('a')))

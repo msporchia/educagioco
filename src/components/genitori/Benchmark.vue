@@ -1,26 +1,24 @@
 <script setup>
-/* La misura del telefono (docs/core/vecchio-telefono.md): un foglio a tutto schermo con due prove. Le scene di
-   `grafica/benchmark/prove.js` (una cosa sola a qualità diverse, un minuto) e quelle coi modelli veri dei giochi
-   (`grafica/benchmark/veri.js`, qualche minuto, docs/core/vecchio-telefono-veri.md). Ognuna compone un log da mandare dal modulo
-   (in più invii se è lungo) o da copiare, e l'ultimo resta sul telefono. Il codice (e three) si carica solo premendo il tasto.
+/* La misura del telefono (docs/core/vecchio-telefono-veri.md): un foglio a tutto schermo con le due prove coi modelli veri dei
+   giochi (`grafica/benchmark/veri.js`): gli fps veri e dove pesa. Ognuna compone un log da mandare dal modulo (in più invii se è
+   lungo) o da copiare, e l'ultimo resta sul telefono. Il codice (e three) si carica solo premendo il tasto.
    La ✕ in alto a destra chiude, e durante la misura la ferma; «Interrompi» la ferma e tiene quello che c'è. */
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { componi } from '../../grafica/benchmark/log.js'
 import { componiVeri, conNote, spezza } from '../../grafica/benchmark/log-veri.js'
+import { stima } from '../../grafica/benchmark/veri.js'
 import { ultimeMisure, salvaMisura } from '../../store/benchmark.js'
-import { fasciaAttiva } from '../../store/qualita.js'
+import { fasciaAttiva, misura as misuraFascia, scelta as sceltaFascia } from '../../store/qualita.js'
 import { sondaRicevitore, mandaAlRicevitore } from '../../grafica/benchmark/invio-diretto.js'
 
 const props = defineProps({ modulo: { type: String, required: true } })
 const emit = defineEmits(['chiudi'])
 
 const stato = ref('pronto')            // pronto | corre | fatto | guasto
-const modo = ref('sintetico')          // sintetico | veri
+const modo = ref('fps')                // fps | scale (le due prove di veri.js)
 const avanza = ref({ i: 0, n: 1, nome: '' })
 const log = ref('')
 const note = ref('')
 const esito = ref('')
-const tela = ref(null)
 const palco = ref(null)
 const ultime = ref({})
 let fermare = false
@@ -34,8 +32,14 @@ async function meta() {
 }
 
 onMounted(async () => { ultime.value = await ultimeMisure() })
+// la fascia di questo telefono e da dove viene (store/qualita.js): la misura di un secondo, o la scelta dei grandi
+const fascia = computed(() => {
+  const m = misuraFascia.value
+  if (sceltaFascia.value !== 'auto') return `${fasciaAttiva()}, scelta a mano dai grandi`
+  return m ? `${m.fascia}, misurata il ${quando(m.quando)} (${m.punti} punti, JS ${m.js} ms)` : `${fasciaAttiva()}, non ancora misurata`
+})
 
-// Il lettore in diretta mentre gira (docs/core/vecchio-telefono-elementi.md, «Il tetto di tempo e il lettore»): gli fps dell'ultimo mezzo secondo con un
+// Il lettore in diretta mentre gira: gli fps dell'ultimo mezzo secondo con un
 // requestAnimationFrame suo, come ContaFps.vue, e i secondi nella scena di adesso (anche nelle pause e nelle attese lunghe). Se i fotogrammi
 // non arrivano per 5 s lo dice; se si ferma tutta la pagina, lo dice il CSS (`.muto`, che compare da sé se il battito non lo rinnova)
 const fps = ref(0), secondi = ref(0), muto = ref(false), battito = ref(0)
@@ -59,7 +63,7 @@ function accendiLettore() {
 function spegniLettore() { cancelAnimationFrame(rafVivo); clearInterval(orologio); rafVivo = 0; ultimoRaf = 0; finestra = []; fps.value = 0 }
 onBeforeUnmount(spegniLettore)
 
-async function avvia(che = modo.value, lunga = false) {
+async function avvia(che = modo.value) {
   modo.value = che; stato.value = 'corre'; fermare = false; esito.value = ''; note.value = ''
   accendiLettore()
   // il tempo della scena riparte a ogni scena nuova (e fra la pausa e il riferimento), non a ogni secondo del conto alla rovescia
@@ -69,24 +73,17 @@ async function avvia(che = modo.value, lunga = false) {
     avanza.value = { i, n, nome }
   }
   try {
-    if (che === 'veri') {
-      const { eseguiVeri } = await import('../../grafica/benchmark/veri.js')
-      // chi pesa (docs/core/vecchio-telefono-elementi.md) non ha più un tasto: solo dal computer, con `window.__benchmarkSolo`
-      const solo = window.__benchmarkSolo || null
-      // a ogni scena il log fin lì diventa «l'ultima»: se il telefono si pianta, alla riapertura c'è quello che è stato misurato
-      const m = await meta()
-      const parziale = d => { salvaMisura(che, componiVeri(d, m)).catch(() => {}) }
-      const dati = await eseguiVeri({ contenitore: palco.value, corto: !!window.__benchmarkCorto, solo, fascia: fasciaAttiva(), completa: lunga,
-        ...(window.__benchmarkRaffredda != null ? { raffredda: window.__benchmarkRaffredda } : {}),
-        progresso, fermo: () => fermare, parziale })
-      window.__benchmarkVeri = dati
-      log.value = componiVeri(dati, await meta())
-    } else {
-      const { eseguiProve } = await import('../../grafica/benchmark/prove.js')
-      const dati = await eseguiProve({ canvas: tela.value, corto: !!window.__benchmarkCorto, solo: window.__benchmarkSolo || null, progresso, fermo: () => fermare })
-      window.__benchmarkFluidita = dati
-      log.value = componi(dati, await meta())
-    }
+    const { eseguiVeri } = await import('../../grafica/benchmark/veri.js')
+    // `window.__benchmarkSolo`: solo alcune scene (le prove e lo strumento dal computer)
+    const solo = window.__benchmarkSolo || null
+    // a ogni scena il log fin lì diventa «l'ultima»: se il telefono si pianta, alla riapertura c'è quello che è stato misurato
+    const m = await meta()
+    const parziale = d => { salvaMisura(che, componiVeri(d, m)).catch(() => {}) }
+    const dati = await eseguiVeri({ contenitore: palco.value, prova: che, corto: !!window.__benchmarkCorto, solo, fascia: fasciaAttiva(),
+      ...(window.__benchmarkRaffredda != null ? { raffredda: window.__benchmarkRaffredda } : {}),
+      progresso, fermo: () => fermare, parziale })
+    window.__benchmarkVeri = dati
+    log.value = componiVeri(dati, m)
     stato.value = 'fatto'
     mandaAuto()
     salvaMisura(che, log.value).then(async () => { ultime.value = await ultimeMisure() }).catch(() => {})
@@ -103,6 +100,7 @@ onBeforeUnmount(() => { fermare = true })
 const finale = computed(() => conNote(log.value, note.value))
 const parti = computed(() => spezza(finale.value))
 const link = testo => `${props.modulo}?${new URLSearchParams({ versione: versione(), giudizi: testo })}`
+const quante = { fps: stima('fps'), scale: stima('scale') }
 const quando = q => new Date(q).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 // il computer di sviluppo in LAN (`node strumenti/ricevi-log.mjs`, docs/core/vecchio-telefono-veri.md): se la pagina è servita da lui il resoconto
 // parte da solo a fine prova e c'è «Manda al computer» per rimandarlo con le note; altrimenti niente di tutto questo
@@ -123,8 +121,7 @@ async function copia() {
 
 <template>
   <div class="bench" data-benchmark>
-    <canvas ref="tela" class="tela" :class="{ vista: stato === 'corre' && modo === 'sintetico' }"></canvas>
-    <div ref="palco" class="palco" :class="{ vista: stato === 'corre' && modo !== 'sintetico' }" data-benchmark-palco></div>
+    <div ref="palco" class="palco" :class="{ vista: stato === 'corre' }" data-benchmark-palco></div>
     <button class="chiudi" type="button" aria-label="chiudi" data-azione="benchmark-chiudi" @click="chiudi">✕</button>
     <div v-if="stato === 'corre'" class="lettore" data-benchmark-lettore>
       <span class="pasti" :class="fps >= 50 ? 'ok' : fps >= 28 ? 'medio' : 'male'">{{ fps }} fps · {{ secondi }} s in questa scena</span>
@@ -133,24 +130,21 @@ async function copia() {
     </div>
     <div v-if="stato === 'pronto'" class="carta">
       <h2>Misura questo telefono</h2>
-      <p>Per circa un minuto lo schermo mostra scene di prova (pixel, sfumature, esplosioni, triangoli, ombre) a qualità diverse.
-        Alla fine c'è un resoconto che dice cosa lo fa andare a scatti e che si può mandare.</p>
-      <p>Tieni lo schermo acceso e non toccare niente.</p>
-      <button type="button" class="bottone" data-azione="benchmark-avvia" @click="avvia('sintetico')">Avvia la misura</button>
-      <h3>Con i modelli veri del gioco</h3>
-      <p>7 scene, circa 3 minuti: gli fps veri, il gioco com'è: camminare in un piano, lo scontro con 3 e 6 mostri, il villaggio, lo scontro sul prato, due fattorie.
-        Il resoconto dice a quanti fps gira davvero ogni scena. Ogni scena si salva appena misurata: se il telefono si pianta, riapri questa
-        pagina e «L'ultima coi modelli veri» ha le scene fatte fin lì.</p>
-      <p><b>Guarda lo schermo</b>: se un colore, una luce o la nebbia ti sembrano strani, alla fine scrivilo nelle note.
-        Tieni il telefono acceso e in carica se puoi: lo schermo non deve spegnersi.</p>
-      <button type="button" class="bottone" data-azione="benchmark-veri" @click="avvia('veri')">Avvia coi modelli veri</button>
-      <h3>Misure complete</h3>
-      <p>Un quarto d'ora circa (con pause a schermo nero perché il telefono non si scaldi): le serie lunghe, cioè sempre più mostri, persone, edifici,
-        triangoli, chiamate, luci e pixel, la roba, e la stessa scena con una cosa tolta alla volta, per sapere cosa la rallenta.</p>
-      <button type="button" class="bottone" data-azione="benchmark-veri-lunga" @click="avvia('veri', true)">Misure complete (lunga)</button>
-      <p v-if="ultime.sintetico || ultime.veri" class="riga">
-        <button v-if="ultime.sintetico" type="button" class="bottone chiaro" data-azione="benchmark-ultima" data-tipo="sintetico" @click="rivedi('sintetico')">L'ultima a scene ({{ quando(ultime.sintetico.quando) }})</button>
-        <button v-if="ultime.veri" type="button" class="bottone chiaro" data-azione="benchmark-ultima" data-tipo="veri" @click="rivedi('veri')">L'ultima coi modelli veri ({{ quando(ultime.veri.quando) }})</button>
+      <p class="fascia" data-benchmark-fascia>Grafica 3D: fascia <b>{{ fascia }}</b>. La fascia bassa semplifica i giochi 3D perché un telefono lento non scatti.</p>
+      <p>Lo schermo mostra scene vere dei giochi, una alla volta: tieni il telefono acceso, in carica se puoi, e non toccare niente.
+        Se un colore, una luce o la nebbia ti sembrano strani, alla fine scrivilo nelle note. Ogni scena si salva appena misurata:
+        se il telefono si pianta, riapri questa pagina e «L'ultima» ha le scene fatte fin lì.</p>
+      <h3>Gli fps veri</h3>
+      <p>{{ quante.fps.scene }} scene, circa {{ quante.fps.minuti }} minuti: il gioco com'è, con la fascia di questo telefono. Camminare in un piano e
+        lo scontro con 3 e 6 mostri nel sotterraneo, il villaggio e lo scontro sul prato di sopra, due fattorie 3D. Dice a quanti fps gira davvero ogni scena.</p>
+      <button type="button" class="bottone" data-azione="benchmark-veri" @click="avvia('fps')">Avvia gli fps veri</button>
+      <h3>Dove pesa</h3>
+      <p>{{ quante.scale.scene }} scene, circa {{ quante.scale.minuti }} minuti: lo scontro nel sotterraneo e il villaggio di sopra costruiti un pezzo
+        alla volta (prima niente, poi le luci, il pavimento, le pareti… fino ai mostri). Dice quanto costa ogni pezzo: serve quando qualcosa scatta.</p>
+      <button type="button" class="bottone" data-azione="benchmark-scale" @click="avvia('scale')">Avvia dove pesa</button>
+      <p v-if="ultime.fps || ultime.scale" class="riga">
+        <button v-if="ultime.fps" type="button" class="bottone chiaro" data-azione="benchmark-ultima" data-tipo="fps" @click="rivedi('fps')">L'ultima degli fps ({{ quando(ultime.fps.quando) }})</button>
+        <button v-if="ultime.scale" type="button" class="bottone chiaro" data-azione="benchmark-ultima" data-tipo="scale" @click="rivedi('scale')">L'ultima di dove pesa ({{ quando(ultime.scale.quando) }})</button>
       </p>
     </div>
     <div v-else-if="stato === 'corre'" class="carta piccola" data-benchmark-corre>
@@ -165,7 +159,7 @@ async function copia() {
       <h2>{{ stato === 'fatto' ? 'Misura finita' : 'Qualcosa non va' }}</h2>
       <template v-if="stato === 'fatto'">
         <textarea readonly class="testo" data-benchmark-log :value="log" rows="14"></textarea>
-        <label v-if="modo !== 'sintetico'" class="note">Note (facoltative): luci, colori, nebbia strani? cosa hai visto?
+        <label class="note">Note (facoltative): luci, colori, nebbia strani? cosa hai visto?
           <textarea v-model="note" class="testo" rows="3" data-benchmark-note></textarea>
         </label>
         <div class="riga">
@@ -184,8 +178,6 @@ async function copia() {
 
 <style scoped>
 .bench { position: fixed; inset: 0; z-index: 99990; background: #0c101e; color: #eef; display: flex; align-items: center; justify-content: center; padding: 16px; overflow: auto }
-.tela { position: fixed; inset: 0; width: 100vw; height: 100vh; opacity: 0; pointer-events: none }
-.tela.vista { opacity: 1 }
 .palco { position: fixed; inset: 0; visibility: hidden; pointer-events: none }
 .palco.vista { visibility: visible }
 .chiudi { position: fixed; top: 8px; right: 8px; z-index: 2; width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,.5); background: rgba(10,14,28,.85); color: #fff; font-size: 18px; cursor: pointer }
@@ -204,6 +196,7 @@ h3 { margin: 18px 0 6px; font-size: 17px }
 .bottone.chiaro { background: rgba(255,255,255,.14); font-weight: 600 }
 .bottone.mini { padding: 6px 12px; font-size: 13px; background: #b4462f }
 .esito { margin: 8px 0 0; font-size: 14px }
+.fascia { margin: 0 0 8px; font-size: 14px; opacity: .9 }
 .lettore { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 6px); left: 6px; z-index: 3; display: flex; flex-direction: column; gap: 4px; pointer-events: none;
   font: 700 12px/1.3 "Emoji Gioco", ui-monospace, monospace }
 .pasti { align-self: flex-start; background: rgba(10, 14, 28, .85); border: 1px solid rgba(255, 255, 255, .5); border-radius: 999px; padding: 3px 9px; color: #fff }

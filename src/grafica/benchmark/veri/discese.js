@@ -1,8 +1,7 @@
 // Il Sotterraneo 3D vero nella misura del telefono (docs/core/vecchio-telefono-veri.md): la scena delle discese di scena3d/indice.js
 // (luci, nebbia, ombra del cono, palco, mostri ed eroe 3D, effetti) su una discesa vera del motore, col cheat dello scontro rifatto
-// qui (`sotterraneo=branco&mostri=N&grado=leggendario&corredo=leggendario&stanza=sala`). Ogni scena dice quanti mostri, se partono
-// gli attacchi, e le leve dei colli di bottiglia (triangoli, chiamate, fuochi, ombra del cono, pixel ratio, pezzi spenti).
-import { PointLight, Color } from 'three'
+// qui (`sotterraneo=branco&mostri=N&grado=leggendario&corredo=leggendario&stanza=sala`). Ogni scena dice quanti mostri e se partono
+// gli attacchi, o che l'eroe passeggia da una stanza all'altra.
 import { creaSotterraneo3d } from '../../../giochi/sotterraneo/scena3d/indice.js'
 import { DPR } from '../../../giochi/sotterraneo/scena3d/costanti.js'
 import { Corsa } from '../../../giochi/sotterraneo/motore/corsa.js'
@@ -10,7 +9,6 @@ import { CAMPAGNA } from '../../../giochi/sotterraneo/dati/campagna.js'
 import { MOSTRI } from '../../../giochi/sotterraneo/dati/mostri.js'
 import { profilo } from '../../../store/qualita.js'
 import { vestiLeggendario } from './leggendario.js'
-import { leve } from './moltiplica.js'
 import { nuovaTela, finche } from './tela.js'
 
 // specie diverse, tutte col modello 3D; il grado leggendario porta armi e aloni
@@ -69,9 +67,8 @@ function avanti(corsa, k) {
 }
 
 /**
- * `opz`: { dpr (null: quello del gioco), spegni (pezzi di ACCESI, come `&spegni=`), riaccendi (come `&riaccendi=`: i pezzi che la fascia spegne e qui tornano) }. Le scene: { mostri, colpi, tri, ch, fuochi, ombra,
- * via: 'ombra' | 'luci1' (solo il cono) | 'luci0' | 'punti' | 'normali' | 'lambert' | 'basic' }.
- * → la famiglia per veri.js: { gl, renderer-info (conti), avvia, scena(s), via, dpr, luci() }.
+ * `opz`: { dpr (null: quello del gioco), spegni (pezzi di ACCESI, come `&spegni=`), riaccendi (come `&riaccendi=`: i pezzi che la fascia spegne e qui tornano) }.
+ * Le scene: { mostri, colpi, passeggia }. → la famiglia per veri.js: { gl, conti, avvia, scena(s), passo, via, dpr }.
  */
 export async function prepara({ contenitore, opz = {} }) {
   const tela = nuovaTela(contenitore)
@@ -79,24 +76,8 @@ export async function prepara({ contenitore, opz = {} }) {
   const pittore = creaSotterraneo3d(tela.canvas, { strato: tela.strato, dpr, spegni: opz.spegni || [], riaccendi: opz.riaccendi || [], cieca: 320 })
   if (!pittore) { tela.via(); throw new Error('il Sotterraneo 3D non parte (WebGL 2?)') }
   const gl = tela.canvas.getContext('webgl2')
-  const lv = leve(pittore.scena)
-  let corsa = null, quanti = -1, colpi = null, rifai = null, k = 0, extra = [], spente = [], passeggia = false, stanza = 0
-  const togliColpi = () => { clearInterval(colpi); colpi = null; clearInterval(rifai); rifai = null }
-  const riaccendi = () => { for (const l of spente) l.visible = true; spente = [] }
-  const togliFuochi = () => { for (const l of extra) pittore.scena.remove(l); extra = [] }
-  // i fuochi in più: come quelli della riserva (luci.js), attorno al palco, accesi e tremolanti
-  function fuochi(n) {
-    togliFuochi()
-    const c = corsa.eroe
-    for (let i = 0; i < n; i++) {
-      const l = new PointLight(new Color(0xff8a3c), 4.5, 7, 1.7), a = (i / n) * Math.PI * 2
-      l.position.set(c.x + Math.cos(a) * 3, 1.1, c.y + Math.sin(a) * 3)
-      pittore.scena.add(l); extra.push(l)
-    }
-  }
-  // l'ombra del cono (luci.js): la spot che la fa
-  const cono = () => { let s = null; pittore.scena.traverse(o => { if (o.isSpotLight) s = s || o }); return s }
-  const conoOmbra = cono() && cono().castShadow
+  let corsa = null, quanti = -1, colpi = null, k = 0, passeggia = false, stanza = 0
+  const togliColpi = () => { clearInterval(colpi); colpi = null }
   return {
     dpr,
     gl: () => gl,
@@ -115,7 +96,7 @@ export async function prepara({ contenitore, opz = {} }) {
       pittore.mostra({ corsa, orologio: t, fx: null })
     },
     async scena(s) {
-      togliColpi(); lv.ripristina(); riaccendi()
+      togliColpi()
       passeggia = !!s.passeggia
       if (passeggia) {
         corsa = corsaDellaPasseggiata(); quanti = -1; stanza = avanti(corsa, 0)
@@ -128,16 +109,6 @@ export async function prepara({ contenitore, opz = {} }) {
         pittore.mostra({ corsa, orologio: 0, fx: null })
         await finche(() => pittore.grafica().mostri3d >= Math.min(s.mostri, 12) && pittore.palco, 8000)
       }
-      if (s.fuochi != null) fuochi(s.fuochi); else togliFuochi()
-      const sp = cono()
-      if (sp) sp.castShadow = s.ombra === false || s.via === 'ombra' ? false : conoOmbra
-      if (s.tri > 1) lv.triangoli(s.tri)
-      if (s.ch > 1) lv.chiamate(s.ch)
-      // la scomposizione (`via`: una cosa tolta alla volta); luci tolte nascondendole (three non le conta più, e ricompila)
-      if (s.via === 'luci1' || s.via === 'luci0') pittore.scena.traverse(o => { if ((o.isPointLight || o.isSpotLight) && o.visible && !(s.via === 'luci1' && o.isSpotLight)) { o.visible = false; spente.push(o) } })
-      if (s.via === 'normali') lv.senzaNormali()
-      const sempre = s.via === 'punti' ? () => lv.senzaPunti() : s.via === 'lambert' || s.via === 'basic' ? () => lv.materiali(s.via) : null
-      if (sempre) { sempre(); rifai = setInterval(sempre, 250) }   // anche le cose che nascono dopo (gli effetti dei colpi)
       if (s.colpi) {
         colpi = setInterval(() => {
           const i = k % quanti, chiave = k % 2 ? 'mostro' : COLPI[(k >> 1) % COLPI.length]
@@ -146,6 +117,6 @@ export async function prepara({ contenitore, opz = {} }) {
         }, OGNI)
       }
     },
-    via() { togliColpi(); lv.ripristina(); riaccendi(); togliFuochi(); try { pittore.distruggi() } finally { tela.via() } },
+    via() { togliColpi(); try { pittore.distruggi() } finally { tela.via() } },
   }
 }

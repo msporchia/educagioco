@@ -2,7 +2,11 @@
 // intera; ogni gradino accende i suoi pezzi sopra quelli di prima. Il salto da un gradino all'altro è il costo di quel pezzo dentro la scena
 // vera; un gradino si rifà in fondo e la differenza è il rumore. Due scale: lo scontro del Sotterraneo con 3 mostri (gli elementi di
 // veri/elementi-sot.js) e il villaggio di sopra (veri/elementi-sopra.js). Dato puro: le scene per veri.js e la LETTURA per log-veri.js.
+import { ELEMENTI_DISCESE, ELEMENTI_SOPRA } from '../../../giochi/sotterraneo/scena3d/costanti.js'
+
 export const MOSTRI_SCALA = 3
+// gli elementi di ogni scena: i pezzi di ACCESI e gli speciali che la sua scena sa fare (ombra, normal map, passaggio finale, foschia)
+export const ELEMENTI_SCALA = { sot: [...ELEMENTI_DISCESE, 'ombra', 'normali', 'post'], sopra: [...ELEMENTI_SOPRA, 'ombra', 'normali', 'foschia'] }
 
 // i gradini che il telefono ha detto gratis (28/10: rilievo, torcia, fuochi, lampi, nebbia, particelle, ombra) stanno insieme; il fondo e le
 // figure, i più cari, sono divisi: la luce fissa da sola, il pavimento, le pareti; l'eroe, i mostri

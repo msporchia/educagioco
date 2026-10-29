@@ -12,7 +12,7 @@ const nellIndirizzo = re => typeof location !== 'undefined' && re.test(location.
 let caricaFatte = null
 const ottieniFatte = () => (caricaFatte ||= import('../dati/anteprime-fatte.js').then(m => m.ANTEPRIME, () => ({})))
 
-/** Il fornitore senza Vue (lo usa anche la misura dello zaino, grafica/benchmark/veri/zaino.js): le foto fatte, e il servizio per il resto. */
+/** Il fornitore senza Vue: le foto fatte, e il servizio per il resto. */
 export function creaFornitore(eroe, { senzaMostri = false, senzaEroe = false } = {}) {
   let servizio = null, carica = null, chiuso = false, fatte = null
   const ottieni = () => (carica ||= import('../scena3d/anteprime3d.js')
