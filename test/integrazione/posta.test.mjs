@@ -155,6 +155,7 @@ controlla('si entra col codice scelto durante il recupero',
 const primaDi = (await leggiProfilo(page))?.coins
 uguale('il bambino ha le sue monete', primaDi, 500)
 
+await page.click('[data-scheda="salvataggi"]')   // la zona delicata sta nei Salvataggi
 await apriTendine(page)      // «Zona delicata» nasce chiusa
 await page.click('.carta.pericolo')
 await page.waitForTimeout(150)

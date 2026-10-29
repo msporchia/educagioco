@@ -1059,7 +1059,7 @@ export function mercatoCompleta(indice, quanteGiornate, stelle = 1) {
   return m
 }
 
-// Il Generale: le stelle stavano sotto la POSIZIONE del livello nella fila
+// Il Generale (tolto il 29/10/2026: i suoi dati restano nel profilo, il livello li legge): le stelle stavano sotto la POSIZIONE del livello nella fila
 // (26 -> 6 livelli); adesso la chiave è l'`id`, e questa tabella traduce le
 // vecchie posizioni. I livelli tolti perdono il voto; `totals` non si tocca.
 const GEN_DA_POSIZIONE = { 0: 'primo', 1: 'chiave', 2: 'parole-due-chiavi',
@@ -1087,92 +1087,6 @@ export function migraGenerale(vuoto, salvato) {
   return g
 }
 
-/* ═══════════ campagna del generale ═══════════
-   Stessa forma delle altre campagne, con due cose in più che il gioco non
-   deve tenersi in tasca: il record di ordini per livello e le stelle
-   guadagnate su quel livello.
-
-   Un livello si vince superandone tutte e tre le varianti, quindi qui ci
-   si arriva una volta sola per partita: chi chiama questa funzione ha
-   già finito. `ordini` è quanti ne ha firmati, `avanzato` dice se fra
-   quegli ordini ce n'era almeno uno di alto livello (ciclo, condizione,
-   evento) — è il salto che il gioco insegna, e va contato a parte da
-   «ce l'ho fatta». `svelato` e `caduti` sono quello che decide la
-   seconda stella, e la regola sta in `daSolo()`.
-
-   I contatori li muove questa funzione, con `segna()`: così il gioco non
-   deve ricordarsi cinque nomi e non c'è modo di contare due volte.
-
-   ── E SI SEGNA SOTTO L'ID DEL LIVELLO ──
-   Non sotto la sua posizione nella fila: la fila si accorcia e si
-   riordina (è passata da ventisei livelli a sei in un colpo), e un voto
-   scritto per posizione finirebbe addosso al livello sbagliato. `tappa`
-   allora non è più una punta nella fila ma quello che il suo nome ha
-   sempre promesso: quanti livelli sono stati superati.
-
-   ── `finita` LA DECIDE CHI CHIAMA, E NON È UN CONTO DI POSIZIONI ──
-   Prima qui arrivava «quanti livelli ci sono» e la campagna era finita
-   quando `tappa` li raggiungeva. Non regge più da quando i livelli non
-   ancora approvati stanno dietro il cancello dei giochi in prova: la
-   fila che si sta giocando ha dei buchi, e `tappa` è una punta nella
-   fila piena — con sei livelli visibili su ventisei quel confronto non
-   sarebbe mai vero. Chi sa quali si vedono è il gioco
-   (`views/generale/fila.js`), e passa la risposta già fatta. */
-export const genProgresso = () => state.profile.gen
-
-// Seconda stella: ci sei arrivato da solo (nessuno caduto, nessuna
-// soluzione intera svelata). Non è più «il par» (pochi ordini).
-export const daSolo = ({ svelato = false, caduti = 0 } = {}) => !svelato && !caduti
-
-// Si tengono perché si pagano: un gradino pagato si rimette gratis. Massimo, non risalita.
-export const genAiutiPresi = id => ((state.profile.gen || {}).aiuti || {})[id] || 0
-export function genSegnaAiuti(id, n) {
-  const g = state.profile.gen
-  if (!g.aiuti || typeof g.aiuti !== 'object') g.aiuti = {}
-  if (!(n > (g.aiuti[id] || 0))) return g.aiuti[id] || 0
-  g.aiuti[id] = n
-  persist()
-  flush()
-  return n
-}
-
-export function genCompleta(id, conto = {}) {
-  const { ordini = 0, avanzato = false, finita = false } = conto
-  const g = state.profile.gen
-  const primaVolta = !g.stelle[id]
-  if (finita) g.libera = true
-
-  // il record è il MINORE: chiudere con meno ordini vuol dire aver capito
-  // meglio, non aver giocato di più
-  const rec = g.ordini[id] || 0
-  if (ordini > 0 && (!rec || ordini < rec)) g.ordini[id] = ordini
-
-  // due stelle a chi ci è arrivato da solo, una a chi ce la fa e basta.
-  // Si tiene la migliore: una partita storta non toglie la stella già
-  // guadagnata.
-  const solo = daSolo(conto)
-  const stelle = solo ? 2 : 1
-  const prima = g.stelle[id] || 0
-  if (stelle > prima) g.stelle[id] = stelle
-  // quanti livelli superati: non apre i lucchetti (quelli guardano le stelle), ma i contatori sì
-  g.tappa = Math.max(g.tappa || 0, Object.keys(g.stelle).length)
-
-  if (primaVolta) segna('missioni')
-  if (ordini > 0) segna('ordini', ordini)
-  // si conta una volta per livello — la prima volta che ci si riesce —
-  // perché è una cosa capita, non una cosa ripetuta
-  if (solo && prima < 2) segna('daSolo')
-  if (stelle > prima) segna('stelle', stelle - prima)
-  // questo invece è una vittoria per volta, come le operazioni perfette
-  // del castello: scrivere un ciclo resta il gesto che vale, anche la
-  // decima volta
-  if (avanzato) segna('avanzati')
-
-  controllaTraguardi()
-  persist()
-  flush()          // un livello si vince di rado: non deve perdersi
-  return g
-}
 
 /* i due nomi di prima, che la home e i test usano ancora */
 export const engProgresso = () => linguaProgresso('eng')

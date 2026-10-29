@@ -26,10 +26,10 @@ valgono per tutto il codice.
 | cartella | cosa c'è | dove si legge |
 |---|---|---|
 | `src/store/` | persistenza e stato: `storage.js` (archivio), `profile.js` (profilo e roster), `srs.js` (motore di ripasso), `progressi.js` (livelli, padronanza, traguardi), `sessioni.js`, `pin.js`, `cestino.js`, `posta.js`, `giudizi.js` | [archivio.md](archivio.md), [progressi.md](progressi.md), [`../apprendimento/`](../apprendimento/README.md) |
-| `src/data/` | dati puri: vocaboli (496 parole, 55 verbi e 153 frasi inglesi; 496, 55 e 160 spagnole), operazioni, campagne, negozio, traguardi, saperi, partenze e portata; `livelli/` sono i livelli del Generale | la cartella del gioco; `src/data/livelli/GUIDA.md` |
+| `src/data/` | dati puri: vocaboli (496 parole, 55 verbi e 153 frasi inglesi; 496, 55 e 160 spagnole), operazioni, campagne, negozio, traguardi, saperi, partenze e portata | la cartella del gioco |
 | `src/giochi/` | **i giochi nuovi, e la convenzione da seguire**: `dati/`, `motore/`, `scena/`, `viste/`, `Gioco.vue`, `gioco.js`; registro in `indice.js` e `schermate.js` | [convenzione-giochi.md](convenzione-giochi.md) |
 | `src/views/` | i giochi vecchi, fatti in quattro modi diversi. **Non sono un modello**: sono il motivo per cui esiste `src/giochi/` | — |
-| `src/motore/` | regole senza schermo: `battaglia.js` (il tower defense, gira uguale nel gioco e in Node — è l'unico motivo per cui il bilanciamento si misura invece di provarlo a occhio), `generale/`, `passi.js` | [`../castello/`](../castello/README.md), [`../generale/`](../generale/README.md) |
+| `src/motore/` | regole senza schermo: `battaglia.js` (il tower defense, gira uguale nel gioco e in Node — è l'unico motivo per cui il bilanciamento si misura invece di provarlo a occhio), `passi.js` | [`../castello/`](../castello/README.md) |
 | `src/grafica/` | canvas, telecamera, pittori, scheletri, atlanti e tessere | [grafica.md](grafica.md) |
 | `src/quiz/` | i moduli di quiz, staccati dai giochi | [`../apprendimento/`](../apprendimento/README.md) |
 | `src/guide/` | le guide dentro l'app, i nastri, le novità | [`../genitori/`](../genitori/README.md) |

@@ -23,7 +23,7 @@ comandi, pubblicazione, grafica, e le regole comuni a tutti i giochi.
 - [creature-catalogo-1.md](creature-catalogo-1.md), [creature-catalogo-2.md](creature-catalogo-2.md) — il catalogo descritto, generato dal JSON: com'è fatta ogni creatura, elemento, come combatte, dove sta bene, tenuta o scartata
 - [sprite-a-mano-dal-codice.md](sprite-a-mano-dal-codice.md) — disegnare uno sprite come dato nel codice, quando l'atlante non ce l'ha
 - [vecchio-telefono.md](vecchio-telefono.md) — il Redmi Note 7 come metro dei giochi 3D: come lo si imita sul computer, come si calibra, come si misura
-- [vecchio-telefono-veri.md](vecchio-telefono-veri.md) — la misura del telefono coi modelli veri: gli fps veri (il gioco com'è) e dove pesa (le due scale, un pezzo alla volta), come si spegne un elemento, il resoconto in più invii
+- [vecchio-telefono-veri.md](vecchio-telefono-veri.md) — la misura del telefono coi modelli veri: gli fps veri (il gioco com'è, con la fascia del telefono), come si spegne un elemento, il resoconto in più invii
 - [insieme.md](insieme.md) — giocare in due su due telefoni (`src/insieme/`): il tavolo che tiene il posto, il canale che non si rompe a una caduta, il lockstep, la sala e il cartello comuni, come si mette in due un gioco nuovo, le prove su una rete cattiva e il banco che tara la tolleranza
 - [amici.md](amici.md) — la lista di amici per tutta l'app: un legame fra due persone con chiave sua, codice breve a scadenza, spenta di base e chiesta ai grandi, presenza e inviti
 - [amici-bacheca.md](amici-bacheca.md) — dove è arrivato un amico e il suo record, anche se non è online: una bacheca per amicizia che scade in una settimana, cosa c'è dentro, quando si scrive e si legge

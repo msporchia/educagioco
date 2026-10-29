@@ -2,7 +2,7 @@
 
 Quando si lanciano le prove, come sono divise e le regole per scriverne
 una. Il dettaglio del lanciatore e degli attrezzi sta in `test/README.md`
-(e in testa a `test/esegui.mjs` e `test/aiuto/livello.mjs`): qui non si
+(e in testa a `test/esegui.mjs`): qui non si
 ripete.
 
 ## La cadenza
@@ -78,11 +78,6 @@ controlli: importa da `../aiuto/`.
   all'onboarding: `apriGioco` semina da sé un giocatore di prova, e
   `giocatori: null` prova il primo avvio vero. Gli id di prova sono
   `GIOCATORE` e `ALTRO`, mai nomi veri.
-- **Un livello del Generale non ha un test suo.** Ce n'è uno per tutti
-  (`unita/livelli`) che raccoglie i livelli dalla cartella e li passa al
-  banco; quello che uno scenario ha di suo si dichiara nel campo
-  `verifiche`, e una chiave sconosciuta è un guasto (contratto in testa a
-  `test/aiuto/livello.mjs`).
 - **Una quota a giocatore finto non si giudica su un seme solo.** Un test
   a seme fisso è deterministico, ma un cambiamento qualsiasi che consuma il
   caso in un altro ordine lo rimescola: una tappa al 46% su ventiquattro

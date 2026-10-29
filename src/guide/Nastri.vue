@@ -63,7 +63,7 @@ const altre = computed(() => novita.value.length - 1)
 </script>
 
 <template>
-  <div v-if="mostraInstalla || versioneNuova || aggiornando || daLeggere || novita.length" class="nastri">
+  <div v-if="mostraInstalla || (versioneNuova && !aggiornando) || daLeggere || novita.length" class="nastri">
     <button v-if="daLeggere" class="nastro posta" data-nastro="posta"
             data-azione="nastro-posta" @click="chiamaUnGrande">
       <span class="dentro">
@@ -91,30 +91,34 @@ const altre = computed(() => novita.value.length - 1)
               @click="nonMeLoDire">✕</button>
     </div>
 
-    <div v-if="versioneNuova || aggiornando" class="nastro nuovo" data-nastro="versione"
-         :data-aggiorna="aggiornando ? '' : null" :data-fase="aggiornando ? ag.fase : null">
-      <div class="dentro" aria-live="polite">
-        <template v-if="frase">
-          <b>{{ frase.segno }} {{ frase.titolo }}</b>
-          <i v-if="frase.riga">{{ frase.riga }}</i>
-          <template v-if="ag.fase === 'scarico'">
-            <div class="barra" :class="{ vaga: quota === null }">
-              <i :style="quota === null ? null : { width: Math.round(quota * 100) + '%' }"></i>
-            </div>
-            <i class="conto" data-scaricati>{{ conto }}</i>
-          </template>
-        </template>
-        <template v-else>
-          <b>✨ C'è una versione nuova</b>
-          <i>È quella del {{ versioneNuova.etichetta }}: i progressi non si toccano</i>
-        </template>
+    <div v-if="versioneNuova && !aggiornando" class="nastro nuovo" data-nastro="versione">
+      <div class="dentro">
+        <b>✨ C'è una versione nuova</b>
+        <i>È quella del {{ versioneNuova.etichetta }}: i progressi non si toccano</i>
       </div>
-      <button v-if="guasto" class="ora" data-azione="riprova" @click="aggiornaOra()">Riprova</button>
-      <button v-else-if="!aggiornando" class="ora" data-azione="aggiorna" @click="aggiornaOra()">Aggiorna</button>
-      <button v-if="aggiornando && ag.fase !== 'pronta'" class="chiudi" aria-label="chiudi"
-              data-chiudi @click="lasciaStare()">✕</button>
+      <button class="ora" data-azione="aggiorna" @click="aggiornaOra()">Aggiorna</button>
     </div>
   </div>
+
+  <!-- i passi dell'aggiornamento (dal nastro o da «cerca aggiornamenti» in fondo alla home): una finestrella al centro, sopra
+       tutto, dove la si vede da qualunque punto della pagina; la ✕ in alto a destra la chiude e ferma quello che c'è in corso -->
+  <Teleport to="body">
+    <div v-if="aggiornando && frase" class="velo-agg" @click.self="ag.fase !== 'pronta' && lasciaStare()">
+      <div class="finestrella nuovo" data-aggiorna :data-fase="ag.fase" role="dialog" aria-live="polite">
+        <button v-if="ag.fase !== 'pronta'" class="chiudi" aria-label="chiudi" data-chiudi @click="lasciaStare()">✕</button>
+        <b>{{ frase.segno }} {{ frase.titolo }}</b>
+        <i v-if="frase.riga">{{ frase.riga }}</i>
+        <template v-if="ag.fase === 'scarico'">
+          <div class="barra" :class="{ vaga: quota === null }">
+            <i :style="quota === null ? null : { width: Math.round(quota * 100) + '%' }"></i>
+          </div>
+          <i class="conto" data-scaricati>{{ conto }}</i>
+        </template>
+        <button v-if="guasto" class="ora" data-azione="riprova" @click="aggiornaOra()">Riprova</button>
+        <button v-else-if="ag.fase === 'gia'" class="ora" data-azione="va-bene" @click="lasciaStare()">Va bene</button>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -148,4 +152,16 @@ const altre = computed(() => novita.value.length - 1)
 @keyframes ag-vaga { from { transform:translateX(-10%) } to { transform:translateX(200%) } }
 .nuovo .conto { font-weight:600; font-variant-numeric:tabular-nums }
 .nuovo .ora:active { transform:scale(.97) }
+
+.velo-agg { position:fixed; inset:0; z-index:9000; display:flex; align-items:center; justify-content:center; padding:16px;
+            background:#1a1f2b66 }
+.finestrella { position:relative; width:100%; max-width:340px; display:flex; flex-direction:column; align-items:center; gap:6px;
+               padding:22px 18px 18px; border-radius:var(--raggio); text-align:center; box-shadow:0 12px 32px #0004;
+               animation:agg-entra .16s ease-out }
+.finestrella b { font-size:16px; font-weight:700; padding:0 22px }
+.finestrella i { font-style:normal; font-size:13px; line-height:1.4; opacity:.85 }
+.finestrella .chiudi { position:absolute; top:8px; right:8px }
+.finestrella .ora { margin-top:8px }
+@keyframes agg-entra { from { transform:scale(.94); opacity:0 } }
+@media (prefers-reduced-motion: reduce) { .finestrella { animation:none } }
 </style>

@@ -1,8 +1,7 @@
 /* ── LA LEVA ──
    Il pomello è rosso quando è da tirare e verde quando è tirata: a sei
    anni il colore si legge prima della posizione dell'asta.
-   `Leva.faccia()` (`motore/generale/elementi/leva.js`) consegna un
-   booleano, `premuta` — «premuta una volta, fatto per sempre», non un
+   Chi la usa passa `premuta` — «premuta una volta, fatto per sempre», non un
    interruttore — e questo pittore lo traduce in un numero fra 0 e 1
    perché un giorno, quando ci sarà l'animazione, sarà quel numero a
    farla scendere piano invece di scattare. */

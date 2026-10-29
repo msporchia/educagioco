@@ -6,7 +6,7 @@
    la ritrova dopo una ricarica: la ragione per cui esiste è guardare
    il telefono vecchio senza cavi (docs/core/vecchio-telefono.md).
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, apriTendine } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, apriTendine, scatto } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -39,7 +39,7 @@ await page.waitForSelector('[data-fps]', { timeout: 8000 })
 await page.click('[data-azione="fps-elenco"]')
 controlla('dopo la ricarica la misura c\'è ancora', /ultima/.test(await page.textContent('[data-fps-elenco]')))
 
-/* ── LA MISURA DEL TELEFONO: si apre, dice la fascia e le due prove (girano in integrazione/benchmark-veri) ── */
+/* ── LA MISURA DEL TELEFONO: si apre, dice la fascia e c'è il tasto (gira in integrazione/benchmark-veri) ── */
 await page.click('[data-azione="grandi"]')
 await page.waitForSelector('.tastierino', { timeout: 5000 })
 for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
@@ -48,7 +48,7 @@ await page.click('[data-scheda="impostazioni"]')
 await apriTendine(page)      // «Avanzate» nasce chiusa
 await page.click('[data-azione="benchmark"]')
 controlla('la misura dice la fascia del telefono', /fascia \w+/.test(await page.textContent('[data-benchmark-fascia]')))
-controlla('e le due prove', await page.isVisible('[data-azione="benchmark-veri"]') && await page.isVisible('[data-azione="benchmark-scale"]'))
+controlla('e il tasto degli fps veri', await page.isVisible('[data-azione="benchmark-veri"]'))
 await page.click('[data-azione="benchmark-chiudi"]')
 uguale('chiusa la misura', await page.locator('[data-benchmark]').count(), 0)
 
@@ -60,6 +60,13 @@ await page.waitForFunction(() => /punti/.test(document.querySelector('[data-fasc
 controlla('misurata: dice i punti', /punti, JS/.test(await page.textContent('[data-fascia]')))
 await page.click('[data-fascia-scelta="bassa"]')
 controlla('scelta a mano: bassa', /Qualità della grafica 3D: bassa/.test(await page.textContent('[data-fascia]')))
+// le scelte stanno sotto il testo, a tutta larghezza: non spingono il testo di lato
+const box = await page.evaluate(() => { const r = s => document.querySelector(s).getBoundingClientRect(); return { testo: r('[data-fascia] b').left, scelte: r('[data-fascia] .scelte').left, carta: r('[data-fascia]').left } })
+controlla('le scelte non spingono il testo a destra', box.scelte - box.carta < 30 && box.testo - box.carta < 70, JSON.stringify(box))
+await page.locator('[data-fascia]').scrollIntoViewIfNeeded()
+await scatto(page, 'fascia')
+// la scelta si scrive con flush(), che non si aspetta: una ricarica subito dopo il tocco può arrivare prima
+await page.waitForTimeout(500)
 await page.reload()
 await page.click('[data-azione="grandi"]'); await page.waitForSelector('.tastierino')
 for (const c of '0000') await page.click(`.tasto >> text="${c}"`)

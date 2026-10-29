@@ -1,7 +1,7 @@
 <script setup>
-/* La misura del telefono (docs/core/vecchio-telefono-veri.md): un foglio a tutto schermo con le due prove coi modelli veri dei
-   giochi (`grafica/benchmark/veri.js`): gli fps veri e dove pesa. Ognuna compone un log da mandare dal modulo (in più invii se è
-   lungo) o da copiare, e l'ultimo resta sul telefono. Il codice (e three) si carica solo premendo il tasto.
+/* La misura del telefono (docs/core/vecchio-telefono-veri.md): un foglio a tutto schermo con gli fps veri dei giochi
+   (`grafica/benchmark/veri.js`). Compone un log da mandare dal modulo (in più invii se è lungo) o da copiare, e l'ultimo resta sul
+   telefono. Il codice (e three) si carica solo premendo il tasto.
    La ✕ in alto a destra chiude, e durante la misura la ferma; «Interrompi» la ferma e tiene quello che c'è. */
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { componiVeri, conNote, spezza } from '../../grafica/benchmark/log-veri.js'
@@ -14,7 +14,6 @@ const props = defineProps({ modulo: { type: String, required: true } })
 const emit = defineEmits(['chiudi'])
 
 const stato = ref('pronto')            // pronto | corre | fatto | guasto
-const modo = ref('fps')                // fps | scale (le due prove di veri.js)
 const avanza = ref({ i: 0, n: 1, nome: '' })
 const log = ref('')
 const note = ref('')
@@ -63,10 +62,10 @@ function accendiLettore() {
 function spegniLettore() { cancelAnimationFrame(rafVivo); clearInterval(orologio); rafVivo = 0; ultimoRaf = 0; finestra = []; fps.value = 0 }
 onBeforeUnmount(spegniLettore)
 
-async function avvia(che = modo.value) {
-  modo.value = che; stato.value = 'corre'; fermare = false; esito.value = ''; note.value = ''
+async function avvia() {
+  stato.value = 'corre'; fermare = false; esito.value = ''; note.value = ''
   accendiLettore()
-  // il tempo della scena riparte a ogni scena nuova (e fra la pausa e il riferimento), non a ogni secondo del conto alla rovescia
+  // il tempo della scena riparte a ogni scena nuova
   const progresso = (i, n, nome) => {
     const chiave = `${i}|${String(nome).replace(/\d+ s$/, '')}`
     if (chiave !== chiaveScena) { chiaveScena = chiave; inizioScena = performance.now(); secondi.value = 0 }
@@ -78,20 +77,19 @@ async function avvia(che = modo.value) {
     const solo = window.__benchmarkSolo || null
     // a ogni scena il log fin lì diventa «l'ultima»: se il telefono si pianta, alla riapertura c'è quello che è stato misurato
     const m = await meta()
-    const parziale = d => { salvaMisura(che, componiVeri(d, m)).catch(() => {}) }
-    const dati = await eseguiVeri({ contenitore: palco.value, prova: che, corto: !!window.__benchmarkCorto, solo, fascia: fasciaAttiva(),
-      ...(window.__benchmarkRaffredda != null ? { raffredda: window.__benchmarkRaffredda } : {}),
+    const parziale = d => { salvaMisura('fps', componiVeri(d, m)).catch(() => {}) }
+    const dati = await eseguiVeri({ contenitore: palco.value, corto: !!window.__benchmarkCorto, solo, fascia: fasciaAttiva(),
       progresso, fermo: () => fermare, parziale })
     window.__benchmarkVeri = dati
     log.value = componiVeri(dati, m)
     stato.value = 'fatto'
     mandaAuto()
-    salvaMisura(che, log.value).then(async () => { ultime.value = await ultimeMisure() }).catch(() => {})
+    salvaMisura('fps', log.value).then(async () => { ultime.value = await ultimeMisure() }).catch(() => {})
   } catch (e) {
     log.value = ''; esito.value = 'Non è partita: ' + (e && e.message || e); stato.value = 'guasto'
   } finally { spegniLettore() }
 }
-function rivedi(che) { modo.value = che; log.value = ultime.value[che].log; note.value = ''; esito.value = ''; stato.value = 'fatto'; sonda() }
+function rivedi() { log.value = ultime.value.fps.log; note.value = ''; esito.value = ''; stato.value = 'fatto'; sonda() }
 function interrompi() { fermare = true }
 function chiudi() { fermare = true; emit('chiudi') }
 onBeforeUnmount(() => { fermare = true })
@@ -100,7 +98,7 @@ onBeforeUnmount(() => { fermare = true })
 const finale = computed(() => conNote(log.value, note.value))
 const parti = computed(() => spezza(finale.value))
 const link = testo => `${props.modulo}?${new URLSearchParams({ versione: versione(), giudizi: testo })}`
-const quante = { fps: stima('fps'), scale: stima('scale') }
+const quante = stima()
 const quando = q => new Date(q).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 // il computer di sviluppo in LAN (`node strumenti/ricevi-log.mjs`, docs/core/vecchio-telefono-veri.md): se la pagina è servita da lui il resoconto
 // parte da solo a fine prova e c'è «Manda al computer» per rimandarlo con le note; altrimenti niente di tutto questo
@@ -134,17 +132,11 @@ async function copia() {
       <p>Lo schermo mostra scene vere dei giochi, una alla volta: tieni il telefono acceso, in carica se puoi, e non toccare niente.
         Se un colore, una luce o la nebbia ti sembrano strani, alla fine scrivilo nelle note. Ogni scena si salva appena misurata:
         se il telefono si pianta, riapri questa pagina e «L'ultima» ha le scene fatte fin lì.</p>
-      <h3>Gli fps veri</h3>
-      <p>{{ quante.fps.scene }} scene, circa {{ quante.fps.minuti }} minuti: il gioco com'è, con la fascia di questo telefono. Camminare in un piano e
+      <p>{{ quante.scene }} scene, circa {{ quante.minuti }} minuti: il gioco com'è, con la fascia di questo telefono. Camminare in un piano e
         lo scontro con 3 e 6 mostri nel sotterraneo, il villaggio e lo scontro sul prato di sopra, due fattorie 3D, gli asteroidi col volo e con le esplosioni. Dice a quanti fps gira davvero ogni scena.</p>
-      <button type="button" class="bottone" data-azione="benchmark-veri" @click="avvia('fps')">Avvia gli fps veri</button>
-      <h3>Dove pesa</h3>
-      <p>{{ quante.scale.scene }} scene, circa {{ quante.scale.minuti }} minuti: lo scontro nel sotterraneo e il villaggio di sopra costruiti un pezzo
-        alla volta (prima niente, poi le luci, il pavimento, le pareti… fino ai mostri). Dice quanto costa ogni pezzo: serve quando qualcosa scatta.</p>
-      <button type="button" class="bottone" data-azione="benchmark-scale" @click="avvia('scale')">Avvia dove pesa</button>
-      <p v-if="ultime.fps || ultime.scale" class="riga">
-        <button v-if="ultime.fps" type="button" class="bottone chiaro" data-azione="benchmark-ultima" data-tipo="fps" @click="rivedi('fps')">L'ultima degli fps ({{ quando(ultime.fps.quando) }})</button>
-        <button v-if="ultime.scale" type="button" class="bottone chiaro" data-azione="benchmark-ultima" data-tipo="scale" @click="rivedi('scale')">L'ultima di dove pesa ({{ quando(ultime.scale.quando) }})</button>
+      <button type="button" class="bottone" data-azione="benchmark-veri" @click="avvia()">Avvia gli fps veri</button>
+      <p v-if="ultime.fps" class="riga">
+        <button type="button" class="bottone chiaro" data-azione="benchmark-ultima" data-tipo="fps" @click="rivedi()">L'ultima misura ({{ quando(ultime.fps.quando) }})</button>
       </p>
     </div>
     <div v-else-if="stato === 'corre'" class="carta piccola" data-benchmark-corre>

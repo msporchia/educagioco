@@ -9,13 +9,10 @@ da fuori, e `da-fare.md` tiene le voci aperte.
 - [apprendimento/](apprendimento/README.md) — motore di ripasso, quiz, età e portata, saperi, calibrazione delle monete
 - [genitori/](genitori/README.md) — cosa si spegne, manopola dell'età, quadro, codice, cestino e posta, novità, guide
 - [asteroidi/](asteroidi/README.md) · [castello/](castello/README.md) · [arena/](arena/README.md) · [giardino/](giardino/README.md) · [lingue/](lingue/README.md) · [bancarella/](bancarella/README.md) · [pozioni/](pozioni/README.md)
-- [passo-passo/](passo-passo/README.md) · [generale/](generale/README.md) · [costruttore/](costruttore/README.md) (il Robot)
+- [passo-passo/](passo-passo/README.md) · [costruttore/](costruttore/README.md) (il Robot)
 - [sotterraneo/](sotterraneo/README.md) · [survivors/](survivors/README.md)
 - [codice-segreto/](codice-segreto/README.md) · [fattoria/](fattoria/README.md) · [fattoria3d/](fattoria3d/README.md) · [conta/](conta/README.md) · [prima-dopo/](prima-dopo/README.md)
 - `img/` — le immagini e le clip del README (le rifà `npm run scatti`)
-
-`generale.md` e `generale_improvements.md` stanno ancora qui in cima: entrano
-in `generale/` quando il ramo del Generale arriva su main.
 
 **Dove va una spiegazione nuova**: nel file del suo argomento, o in un file
 nuovo della sua cartella (elencato nel `README.md` della cartella). Non in un

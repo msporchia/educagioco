@@ -20,7 +20,6 @@ import { TAPPE as SPAGNOLO } from '../giochi/spagnolo/dati/mondi.js'
 import { RACCONTO as CASTELLO } from './campagne-castello.js'
 import { CAMPAGNA as POZIONI } from '../giochi/pozioni/dati/campagna.js'
 import { FILA as BANCARELLA } from './bancarella.js'
-import { TAPPE as GENERALE } from './generale.js'
 import { CAMPAGNA as CONTA } from '../giochi/conta/dati/campagna.js'
 import { CAMPAGNA as PRIMA_DOPO } from '../giochi/prima-dopo/dati/campagna.js'
 import { CAMPAGNA as CODICE } from '../giochi/codice-segreto/dati/campagna.js'
@@ -39,7 +38,6 @@ export const TAPPE_DEL_GIOCO = {
   torri: CASTELLO,
   pozioni: POZIONI,
   bancarella: BANCARELLA,
-  generale: GENERALE,
   conta: CONTA,
   prima: PRIMA_DOPO,
   codice: CODICE,
@@ -57,7 +55,7 @@ const regole = () => ({ eta: etaDelBambino(), spenti: saperiSpenti() })
 // un gioco cominciato non sparisce mai: i vecchi si riconoscono dal loro contatore, i nuovi da albo.provato
 const CONTATORE_VECCHIO = {
   mate: 'math', inglese: 'en', spagnolo: 'es', torri: 'torri',
-  bancarella: 'clienti', generale: 'missioni',
+  bancarella: 'clienti',
 }
 
 // un gioco in prova che è un altro disegno di un gioco nuovo: si è provato se si è provato quello (la campagna è una)

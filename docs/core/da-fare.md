@@ -47,10 +47,6 @@ nessun test prende.
 
 - **La camminata della fattoria**: il cane che aggira la casa invece di
   attraversarla, e chi si accosta quando sulla meta non si può stare.
-- **La mappa del Generale che si trascina mentre si mira**: sotto la soglia
-  mira, sopra trascina; in mira la soglia è 16 px invece di 9
-  (`SOGLIA_MIRA` in `views/generale/CampoLivello.vue`), perché mirare col
-  dito trema.
 - **Il sotterraneo**: il tocco che manda a camminare, il dito premuto che
   fa inseguire, il pizzico dello zoom, i mostri che vengono addosso, lo
   scontro come modale al centro con la scena ferma — e **quanto ci mette un
