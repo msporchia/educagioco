@@ -44,7 +44,10 @@ abbattere un mostro (l'offesa, il «quanto picchia») contro quanti ne regge pri
 - **Niente tetto per il più debole** (l'utente): l'equilibratore c'è già, perché i mostri puntano il più forte (sotto, «Lo scontro
   in due»). Se uno dei due resta troppo indietro si sceglie un livello più facile, o si scende con un altro eroe e si sale insieme.
 - **I numeri si misurano col banco**, con due giocatori finti di livelli diversi: «facile» deve vincere quasi sempre, «impossibile»
-  di rado ma non mai.
+  di rado ma non mai. La formula oggi (`livelloDellaCoppia`, `unita/sotterraneo-in-due`): un cavaliere e un mago del 14, che da soli
+  valgono 14, in due danno 22 a facile, 24 a normale, 26 a difficile e 26 a impossibile; un cavaliere dell'8 col mago del 15 fanno
+  16, 18, 22, 22. Difficile e impossibile vengono uguali perché la formula prende il livello più alto che passa e il confronto ha
+  dei gradini: è la prima cosa da guardare tarando.
 
 **Cosa cambia con la difficoltà**: i mostri (vita, colpo, livello), e quindi la roba che cade (del livello del posto) e
 l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livello di forza, non quelle del posto (`dif` di
@@ -117,8 +120,9 @@ l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livel
 - **Al suo turno risponde chi gioca quell'eroe**; l'altro vede la scelta e la domanda arrivare («Tocca a Leo»).
 - **I mostri colpiscono il più forte** (l'utente). Ogni alleato ha un peso, **pericolosità × vita rimasta in proporzione**, e il
   mostro punta quello col peso più alto. A parità vince l'ordine nella fila, quindi niente caso.
-  - **La pericolosità non è il livello**, ma quanto quell'alleato fa male a quel mostro: il danno a turno della formula della
-    forza (`offesa` in `motore/forza.js`, con le due abilità forti), contro le difese di quel mostro.
+  - **La pericolosità non è il livello**, ma quanto quell'alleato fa male a quel mostro: il suo colpo di sempre contro di lui
+    (`Corsa.colpo`, attacco meno le difese di quel mostro; `bersaglioDelMostro`). Non l'offesa della formula della forza, con le
+    due abilità forti: quella è una stima di uno scontro intero, non di un turno, e si rifarebbe a ogni colpo di mostro.
   - **La vita in proporzione fa girare i colpi**: il più forte prende i primi colpi, e quando è ferito il peso passa all'altro. Il
     più debole viene colpito solo quando il forte è già messo male. È l'equilibratore che protegge l'eroe di livello 8
     accanto all'amico del 15, e per questo la difficoltà non ha un tetto (sopra).
@@ -128,8 +132,11 @@ l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livel
     Le regole giuste che a schermo non si capiscono sono un gioco sbagliato.
 - **Le abilità che curano o proteggono** possono andare anche sul compagno: oggi «in area» non vuol dire niente perché l'eroe è
   solo ([mosse.md](mosse.md)), in due sì.
-- **Chi sviene resta a terra fino alla fine dello scontro**, poi si rialza con poca vita. Se svengono tutti e due vale la regola di
-  oggi per tutti e due ([regole.md](regole.md#svenire-e-il-fondo-degli-svenimenti)).
+- **Chi sviene resta a terra fino alla fine dello scontro** (fuori dalla fila, niente domanda), poi si rialza con un quarto della
+  vita. Se svengono tutti e due vale la regola di oggi per tutti e due ([regole.md](regole.md#svenire-e-il-fondo-degli-svenimenti)).
+- **In due non si scappa** (`puoScappare`, da confermare con l'utente): chi scappa lascerebbe il compagno in uno scontro che ferma
+  il mondo, e scappare insieme vorrebbe una scelta di tutti e due.
+- **Il bersaglio scelto è uno per lo scontro**: chi tocca un mostro lo sceglie anche per l'altro, che al suo turno lo può cambiare.
 - **Il pericolo** (lo stop dello scontro, [pericolo.md](pericolo.md)) guarda ognuno per sé.
 
 ## La roba: chi la prende
@@ -185,14 +192,19 @@ il suo eroe. L'incontro (`src/insieme/incontro.js`) deve far mandare a ognuno la
 
 1. **Il caso e i conti uguali** (fatto), col test del lockstep su una discesa da soli. Non cambia niente a chi gioca.
 2. **Le persone nel motore** (fatto): un eroe diventa una lista di uno, con le misure identiche.
-3. **Il secondo eroe**: i mostri, la luce, la scala, la pausa per tutti, lo scontro col compagno, il bottino a turno, il livello
-   della coppia con la difficoltà. Provato e tarato col banco con due giocatori finti, senza rete.
+3. **Il secondo eroe** (fatto, da tarare): `motore/in-due.js` (l'alleato in più, il mondo che non si ferma per una domanda, i mostri
+   verso il più vicino e chi risponde al riparo, la luce dei due coni, `LONTANO`, la scala con l'attesa, lo scontro di tutti coi turni
+   di ognuno, il bersaglio del più forte, l'esperienza a tutti, il bottino a turno), `livelloDellaCoppia` in `motore/forza.js`, e i
+   giocatori finti in due (`motore/banco-in-due.js`: il primo va alla chiave e alla scala, gli altri lo seguono).
+   `unita/sotterraneo-in-due` fa il copione regola per regola e tre discese intere; `unita/sotterraneo-lockstep` ne fa scendere
+   tre in due con le spie sui conti. Restano da tarare i moltiplicatori della difficoltà, e da decidere dove ci si risveglia
+   quando svengono tutti e due (oggi tutti e due all'ingresso del piano, nella stessa cella).
 4. **La regia** e l'incontro che porta l'eroe dell'ospite; la partita finta in due (`npm test`) e il banco della rete.
 5. **La vista 3D**: il secondo eroe col nome e cosa sta facendo, la telecamera sul punto in mezzo, «Aspetto Leo alla scala», il
    compagno sul palco dello scontro (`Scontro3d.vue`), la sala. Il 2D non si tocca.
 
 Il punto 2 è il lavoro più grosso e il più rischioso (il motore della discesa è di quasi 13.000 righe, e l'eroe solo ci sta
-dappertutto); i punti 1 e 2 si possono pubblicare senza che si veda niente.
+dappertutto); i punti 1, 2 e 3 si possono pubblicare senza che si veda niente: da soli non cambia un numero.
 
 ## Da misurare
 

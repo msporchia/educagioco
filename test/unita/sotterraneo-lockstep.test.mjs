@@ -1,12 +1,14 @@
 /* La discesa deve venire uguale al bit su due telefoni con lo stesso seme e gli stessi comandi: è la condizione per scendere in
    due scambiandosi solo le mosse (docs/sotterraneo/in-due.md, «Il caso e i conti uguali»). Due browser possono dare numeri
    diversi da `Math.random` (sempre) e dalle funzioni che la specifica lascia arrotondare a piacere (`hypot`, la trigonometria,
-   `pow`, `exp`, `log`): il giocatore finto scende in ogni dungeon del 3D, con le botti e i copricapi, e nessuna di queste deve
-   essere chiamata. `sqrt` e le quattro operazioni sono esatte ovunque. `node test/esegui.mjs sotterraneo-lockstep --niente-build` */
+   `pow`, `exp`, `log`): il giocatore finto scende in ogni dungeon del 3D, con le botti e i copricapi, e in tre di loro scendono
+   due giocatori finti insieme: nessuna di queste deve essere chiamata. `sqrt` e le quattro operazioni sono esatte ovunque.
+   `node test/esegui.mjs sotterraneo-lockstep --niente-build` */
 import { tappaDelMondo, CHIAVI_DEI_DUNGEON } from '../../src/giochi/sotterraneo/motore/rigenera.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { gioca } from '../../src/giochi/sotterraneo/motore/banco.js'
+import { giocaInDue } from '../../src/giochi/sotterraneo/motore/banco-in-due.js'
 import { robaAttesaA, crescitaAttesaA } from '../../src/giochi/sotterraneo/motore/zone.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -44,9 +46,19 @@ function discesa(chiave, i, seme) {
   })
 }
 
-const impronte = []
+/* la stessa, in due: i giocatori finti (motore/banco-in-due.js) col cavaliere e il mago */
+function discesaInDue(chiave, seme) {
+  const tappa = tappaDelMondo(chiave, { eroe: 'cavaliere', livello: LIVELLO })
+  const g = giocaInDue(tappa, { eroi: ['cavaliere', 'mago'], seme, roba: ['cavaliere', 'mago'].map(e => robaAttesaA(e, LIVELLO)),
+    crescite: ['cavaliere', 'mago'].map(e => crescitaAttesaA(e, LIVELLO)) })
+  return JSON.stringify({ esito: g.esito, persone: g.persone, eroi: g.corsa.persone.map(p => [p.eroe.x, p.eroe.y]) })
+}
+const IN_DUE = ['altare', 'fornace', 'tombe']
+
+const impronte = [], inDue = []
 const viste = chiamateVietate(() => {
   CHIAVI_DEI_DUNGEON.forEach((chiave, i) => impronte.push(discesa(chiave, i, 101 + i * 37)))
+  IN_DUE.forEach((chiave, i) => inDue.push(discesaInDue(chiave, 7 + i)))
 })
 for (const [dove, n] of viste) nota(`${dove} (${n} volte)`)
 uguale('nessuna funzione che due browser arrotondano diversa, e niente Math.random', viste.size, 0)
@@ -54,5 +66,6 @@ uguale('nessuna funzione che due browser arrotondano diversa, e niente Math.rand
 /* la stessa discesa due volte dà la stessa impronta (qui lo stesso motore: il guasto che prende è il caso nascosto, uno stato
    che resta fra una partita e l'altra) */
 CHIAVI_DEI_DUNGEON.forEach((chiave, i) => controlla(`${chiave}: la stessa discesa, la stessa impronta`, discesa(chiave, i, 101 + i * 37) === impronte[i]))
+IN_DUE.forEach((chiave, i) => controlla(`${chiave} in due: la stessa discesa, la stessa impronta`, discesaInDue(chiave, 7 + i) === inDue[i]))
 
 riassunto('Il sotterraneo, la discesa uguale sui due telefoni')
