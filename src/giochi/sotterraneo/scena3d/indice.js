@@ -13,7 +13,7 @@ import { aspettoDi, paesaggioDi } from './aspetti.js'
 import { aggiornaVisibilita, scriviTexel, vistaOra } from './visibilita.js'
 import { pavimento, muro, pavimentoAPassi, muroAPassi, legno as tramaLegno, normaliAtlante } from './trame.js'
 import { creaFigure } from './figure.js'
-import { creaAloni, creaColonne, creaAnelli, creaFiamme } from './segni.js'
+import { creaAloni, creaColonne, creaAnelli, creaFiamme, creaMacchie } from './segni.js'
 import { creaPolvere, creaScintille } from './particelle.js'
 import { creaPost } from './post.js'
 import { creaEtichette } from './etichette.js'
@@ -28,7 +28,8 @@ import { creaAzione } from './azione.js'
 import { costruisciPianoAPassi } from './piano.js'
 import { creaScontro } from './scontro.js'
 import { creaContorno } from './contorno.js'
-import { ACCESI, POLVERE, SCINTILLE, FIGURE_MAX, ALONI_MAX, MARGINE_DITO, ELEMENTI_DISCESE, LEVE_ELEMENTI, elementoAcceso } from './costanti.js'
+import { ACCESI, POLVERE, SCINTILLE, FIGURE_MAX, ALONI_MAX, MARGINE_DITO, ELEMENTI_DISCESE, LEVE_ELEMENTI, LUCE, elementoAcceso } from './costanti.js'
+import { CONTORNO_PELLE } from './salda3d.js'
 import { segna, segnaNuovi, creaElementi } from '../../../grafica/elementi3d.js'
 import { verso } from './tempo.js'
 import { elencaProgrammi } from './programmi.js'
@@ -67,7 +68,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   // gli elementi (grafica/elementi3d.js): chi pesa si misura spegnendone uno alla volta (docs/core/vecchio-telefono-veri.md, «Come si spegne un elemento»)
   const elementi = creaElementi(ELEMENTI_DISCESE, elementoAcceso, 'resto', LEVE_ELEMENTI)
   const gruppo = nome => { const g = segna(new Group(), nome); scena.add(g); return g }
-  const [aloni, colonne, anelli] = segnaNuovi(scena, 'chiarori', () => [creaAloni(scena, ALONI_MAX), creaColonne(scena), creaAnelli(scena)])
+  const [aloni, colonne, anelli, macchie] = segnaNuovi(scena, 'chiarori', () => [creaAloni(scena, ALONI_MAX), creaColonne(scena), creaAnelli(scena), creaMacchie(scena)])
   const scintille = segnaNuovi(scena, 'particelle', () => (ACCESI.scintille ? creaScintille(scena, Math.round(SCINTILLE * Math.min(1, ACCESI.quanteScintille))) : NIENTE))
   const polvere = segnaNuovi(scena, 'particelle', () => (ACCESI.polvere ? creaPolvere(scena, Math.round(POLVERE * ACCESI.quantaPolvere), luci.condivise, maschera) : NIENTE))
   const etichette = creaEtichette(strato)
@@ -108,7 +109,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     figureEroe = segnaNuovi(scena, 'eroe', () => creaFigure(scena, { ...base, max: 8, ombra: false }))
     // una porta o un forziere che si apre: polvere o scintille d'oro, e un lampo caldo
     const oro = new Color('#ffd76a'), polvere = new Color('#c8b49a')
-    cose = creaCose({ figure, aloni, colonne, etichette, camera: cam, mostri3d, vicino: () => eroe.disegnato, apre: r => {
+    cose = creaCose({ figure, aloni, macchie, colonne, etichette, camera: cam, mostri3d, vicino: () => eroe.disegnato, apre: r => {
       const forziere = r.che === 'forziere'
       scintille.emetti(r.x + 0.5, 0.4, r.y + 0.5, forziere ? 50 : 24, { forza: 1.6, su: forziere ? 2.4 : 1, vita: 0.8, caldo: 0.2, taglia: 0.07, tinta: forziere ? oro : polvere })
       if (forziere) { luci.lampo.color.set(0xffd27a); luci.lampo.position.set(r.x + 0.5, 0.8, r.y + 0.8); luci.lampo.intensity = 12 }
@@ -348,7 +349,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     aggiornaVisibilita(piano.vis, { forza: corsa.forzaLuce, visto: corsa.visto, palco: scontro.punti(), k: verso(dtVero, 7) })
     if (scriviTexel(piano.vis)) maschera.rinfresca()
 
-    figure.inizia(); figureEroe.inizia(); aloni.inizia(); colonne.inizia(); etichette.inizia()
+    figure.inizia(); figureEroe.inizia(); aloni.inizia(); macchie.inizia(); colonne.inizia(); etichette.inizia()
     cose.disegna(corsa, { t, dt: dtVero, dtScena: dt, palco: scontro.palco ? { campo: scontro.palco.campo, fx } : null, salta })
     if (effetti3d) { statiAddosso(fx); effetti3d.aggiorna(dt) }
     // la fonte bevuta (lo dice il motore): l'acqua va all'eroe e la fontana si svuota, una volta sola
@@ -358,12 +359,13 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     luci.distribuisci(piano.sorgenti, eroe.x, eroe.z, t)
     disegnaEroe(eroe, corsa, { figure: figureEroe, luci, etichette, camera: cam, dt: dtVero, dtScena: dt, t, fontana: fo, portale: (passando && passando.portale) || piano.portale, bersaglio: scontro.bersaglio(corsa),
                        fiamma: fiammaEroe, aloni, scintille: ACCESI.scintille ? scintille : null, modello: eroe3d })
+    if (eroe.disegnato) macchie.metti(eroe.disegnato.x, eroe.disegnato.z, 0.36)
     luci.spegni(dtVero)
     // le scintille delle torce: solo da quelle che si vedono adesso
     if (ACCESI.scintille) for (const s of piano.sorgenti) if (s.trema && s.vis > 0.2 && Math.random() < dt * 3) scintille.emetti(s.pos.x, s.pos.y - 0.05, s.pos.z - 0.15, 1, { forza: 0.3, su: 1.4, vita: 0.9, caldo: 0.3, taglia: 0.035 })
     contorno.feste(this_.colonne, this_.numerini, quadro.orologio || 0, eroe, colonne, etichette)
     scontro.segni(corsa, dtVero, azione.roba, t)
-    figure.chiudi(); figureEroe.chiudi(); aloni.chiudi(); colonne.chiudi(); etichette.chiudi()
+    figure.chiudi(); figureEroe.chiudi(); aloni.chiudi(); macchie.chiudi(); colonne.chiudi(); etichette.chiudi()
 
     // la telecamera: sull'eroe, o sul palco sopra il pannello
     if (!scontro.centro(centro)) centro.set(eroe.disegnato.x, 0, eroe.disegnato.z)
@@ -390,6 +392,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
 
     S.rosso *= Math.exp(-5 * dtVero)
     figure.nitido(scontro.palco ? 1 : 0, dtVero); figureEroe.nitido(scontro.palco ? 1 : 0, dtVero)
+    CONTORNO_PELLE.value += ((scontro.palco ? LUCE.contornoScontro : 0) - CONTORNO_PELLE.value) * verso(dtVero, 3)
     if (post) {
       const u = post.uni
       u.uT.value = t; u.uRosso.value = S.rosso * 0.6; u.uLampo.value = Math.max(0, luci.lampo.intensity - 15) * 0.004
@@ -552,7 +555,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       if (piano) piano.via()
       piano = null
       for (const p of inArrivo.values()) liberaTrame({ pav: p.pav || {}, muro: p.muro || {} })
-      for (const x of [aloni, colonne, anelli, scintille, polvere, etichette, contorno, figure, figureEroe, fiammaEroe]) if (x) x.via()
+      for (const x of [aloni, macchie, colonne, anelli, scintille, polvere, etichette, contorno, figure, figureEroe, fiammaEroe]) if (x) x.via()
       for (const t of trame.values()) liberaTrame(t)
       if (legno) { legno.map.dispose(); legno.normalMap.dispose() }
       if (tex) tex.dispose()

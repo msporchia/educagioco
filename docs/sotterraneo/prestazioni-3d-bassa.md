@@ -29,6 +29,7 @@ della trama al posto della trama e del rilievo (`conMaschera`, maschera.js; pavi
 all'eroe fuse in un pezzo dal modello nuovo della figura (`appiattisci`, roba3d.js: colore dei materiali nei vertici, un materiale per
 tutte, niente aloni né fiamme; l'animazione gira una volta prima, se no le fiamme restano enormi). Non il ripiego della collezione, che
 viene dal disegno 2D. Le anteprime le tengono intere. Il 27/10 sera il gradino 2 è sceso da +12 ms a niente; il gradino 8 no (le armi non si notano).
+Dal 29/10 la bassa tiene le armi intere (`armiSemplici` resta una leva, spenta): non toglievano niente e la spada era una lama bianca a blocchi.
 
 **La torcia semplice** (la bassa, `torciaSemplice:1`, 28/10): la torcia è due luci, l'alone attorno all'eroe e il cono davanti, e i
 personaggi pagano ogni luce a ogni pixel (il gradino 4 della scala: +7 ms). Ai personaggi resta l'alone, 1,2 celle avanti e 2,5 volte più

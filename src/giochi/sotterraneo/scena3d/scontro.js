@@ -6,9 +6,28 @@
 import { disponiPalco } from './palco.js'
 import { MARGINE_DITO } from './costanti.js'
 
+// le scritte dei mostri non si accavallano: dalla più in basso (il più vicino) in su, chi tocca una già posata sale sopra di lei. Una
+// scritta (.sot-m) ha il fondo sull'aggancio, il nome sopra di lei; le misure si leggono prima di scrivere (niente impaginazione in più)
+function scansa(scritte) {
+  const posate = []
+  for (const w of scritte) {
+    if (!w.mostro) continue
+    const nome = w.el.firstElementChild && w.el.firstElementChild.classList.contains('sot-m-nome') ? w.el.firstElementChild : null
+    w.h = w.el.offsetHeight + (nome ? nome.offsetHeight + 2 : 0); w.w = Math.max(w.el.offsetWidth, nome ? nome.offsetWidth : 0)
+  }
+  const ordine = scritte.filter(w => w.mostro && w.h).sort((a, b) => b.ry - a.ry)
+  for (const w of ordine) {
+    for (let k = 0; k < posate.length; k++) {
+      const a = posate[k]
+      if (Math.abs(w.rx - a.rx) < (w.w + a.w) / 2 + 2 && w.ry - w.h < a.ry && w.ry > a.ry - a.h) { w.ry = a.ry - a.h - 2; k = -1 }
+    }
+    posate.push(w)
+  }
+}
+
 export function creaScontro({ S, cam, eroe, getPiano, getCose, getFigure, anelli, cieca }) {
   let palco = null, eraAttivo = false, liberoDa = 0, tTocco = 9, tArrivo = 9, mira = null
-  const agganci = new Map()
+  const agganci = new Map(), scritte = []
   const punti = []
   const p = { x: 0, y: 0 }, q = { x: 0, y: 0 }
 
@@ -63,10 +82,10 @@ export function creaScontro({ S, cam, eroe, getPiano, getCose, getFigure, anelli
       let x = e.x, z = e.z, n = 1
       for (const s of palco.stati) { if (s.morente > 1.5) continue; const m = s.meta || s; x += m.x; z += m.z; n++ }
       v.set(x / n, 0, z / n)
-      // quanto è largo il palco: la telecamera lo vuole tutto, con una cella e mezza di margine (le figure sono alte)
+      // quanto è largo il palco: la telecamera lo vuole tutto, con una cella di margine (a 1,6 i personaggi restavano piccoli)
       let r = Math.max(Math.abs(e.x - v.x), Math.abs(e.z - v.z))
       for (const s of palco.stati) { if (s.morente > 1.5) continue; const m = s.meta || s; r = Math.max(r, Math.abs(m.x - v.x), Math.abs(m.z - v.z)) }
-      this.celle = 2 * (r + 1.6)
+      this.celle = 2 * (r + 1.1)
       return true
     },
     tocca(pt, fx, { bersaglio, accorcia }) {
@@ -111,14 +130,16 @@ export function creaScontro({ S, cam, eroe, getPiano, getCose, getFigure, anelli
       const d = eroe.disegnato
       a.bolla.visible = S.tBolla < 0.9
       if (a.bolla.visible) { a.bolla.position.set(d.x, 0.75, d.z + 0.1); a.bolla.scale.setScalar(0.7 + Math.min(1, S.tBolla * 4) * 0.5); a.bolla.material.opacity = 0.32 * Math.sin(Math.min(1, S.tBolla / 0.9) * Math.PI) }
+      scritte.length = 0
       for (const [chi, el] of agganci) {
         const s = posDi(chi)
         if (!s) continue
         const x = chi === 'eroe' ? s.x : s.x + (s.dx || 0), z = chi === 'eroe' ? s.z : s.z + (s.dz || 0)
         cam.schermo(x, (chi === 'eroe' ? eroe.alto : s.alto || 1) + 0.12, z, p)
-        const rx = Math.round(p.x), ry = Math.round(p.y)
-        if (el._x !== rx || el._y !== ry) { el._x = rx; el._y = ry; el.style.transform = `translate(${rx}px, ${ry}px)` }
+        scritte.push({ el, rx: Math.round(p.x), ry: Math.round(p.y), mostro: chi !== 'eroe' })
       }
+      scansa(scritte)
+      for (const { el, rx, ry } of scritte) if (el._x !== rx || el._y !== ry) { el._x = rx; el._y = ry; el.style.transform = `translate(${rx}px, ${ry}px)` }
     },
     // il buco nei muri: attorno all'eroe, o attorno a tutto lo scontro (solo i pezzi a sud del più a nord di loro)
     buco(u, centro) {

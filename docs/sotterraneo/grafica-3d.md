@@ -167,8 +167,16 @@ dito. Il mouse conta solo col tasto sinistro premuto.
   1,25 celle (le figure sono alte una cella e mezza: a 0,85 stavano in pila),
   il grosso un passo più in là e chi viene dopo di lui ancora di più.
 - **La telecamera vuole tutti**: si allontana quanto serve perché il palco
-  (con una cella e mezza di margine) stia nello spazio sopra il pannello,
-  mai più vicino di `celleScontro`.
+  (con una cella di margine) stia nello spazio sopra il pannello, mai più
+  vicino di `celleScontro` (7); la scala intera degli sprite si arrotonda al
+  più vicino, non per difetto. Il 29/10, da 9,5 celle e 1,6 di margine:
+  i personaggi alti un terzo in più (un mostro era ~30 px sul telefono).
+- **Staccati dal pavimento**: una macchia d'ombra sfumata ai piedi di eroe e
+  mostri (`creaMacchie`, segni.js: una chiamata per tutte; la bassa non ha
+  ombre vere) e, nello scontro, il contorno caldo sui modelli 3D
+  (`CONTORNO_PELLE` dei fusi di salda3d.js, `LUCE.contornoScontro`).
+- **I nomi si scansano** (`scansa`, scontro.js): dal mostro più in basso in
+  su, una scritta che ne tocca una già posata sale sopra di lei.
 - **Le animazioni** leggono lo stesso `fx` della vista 2D: l'eroe carica,
   affonda all'`arrivo` dell'effetto e torna; il mostro scatta coi tempi del
   racconto; il colpo fa scintille nel colore dell'elemento, un lampo, la

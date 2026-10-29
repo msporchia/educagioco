@@ -164,6 +164,10 @@ function indicizza(c) { const n = c.attributes.position.count, a = n > 65535 ? n
 // programma per tutti i modelli. Chi accende l'emissivo dei materiali senza sapere della pelle (le mosse dei prototipi) trova
 // `materiale.lampo(colore, quanto, x, y)`.
 const UNIFORMI = new WeakMap()
+// il contorno caldo che stacca eroe e mostri dal pavimento (lo scontro delle discese lo accende: indice.js), uno per tutti i fusi; i Basic
+// non hanno luce né normali e restano senza
+export const CONTORNO_PELLE = { value: 0 }
+const CONTORNO = 'outgoingLight += vec3(1.0, 0.82, 0.6) * pow(1.0 - clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0), 2.0) * uContorno * (0.35 + diffuseColor.rgb);\n\t#include <opaque_fragment>'
 const TINTA = '#include <color_fragment>\n\tdiffuseColor.rgb = mix(diffuseColor.rgb, uTinta.rgb, uTinta.a);'
 function preparaFusa(c, tipo) {
   const u = { uTinta: { value: new Vector4(1, 1, 1, 0) }, uLampo: { value: new Vector4(0, 0, 0, 0) }, uLampoK: { value: new Vector2(1, 0) } }
@@ -172,6 +176,7 @@ function preparaFusa(c, tipo) {
   c.onBeforeCompile = sh => {
     Object.assign(sh.uniforms, u)
     let f = 'uniform vec4 uTinta;\n' + sh.fragmentShader.replace('#include <color_fragment>', TINTA)
+    if (!c.isMeshBasicMaterial) { sh.uniforms.uContorno = CONTORNO_PELLE; f = 'uniform float uContorno;\n' + f.replace('#include <opaque_fragment>', CONTORNO) }
     if (tipo === 'larga') {
       sh.vertexShader = 'attribute vec3 aMat;\nattribute vec3 aEmis;\nvarying vec3 vMat;\nvarying vec3 vEmis;\n' +
         sh.vertexShader.replace('#include <color_vertex>', '#include <color_vertex>\n\tvMat = aMat;\n\tvEmis = aEmis;')
@@ -182,7 +187,7 @@ function preparaFusa(c, tipo) {
     }
     sh.fragmentShader = f
   }
-  c.customProgramCacheKey = () => `pelle-${tipo}`
+  c.customProgramCacheKey = () => `pelle-${tipo}-c`
   if (tipo === 'larga') c.lampo = (col, quanto, x = 1, y = 0) => lampoFuso(c, col, quanto, x, y)
   return c
 }

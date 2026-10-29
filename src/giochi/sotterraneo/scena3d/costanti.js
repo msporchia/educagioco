@@ -8,7 +8,7 @@ export const CAMERA = {
   inclinazioneScontro: 36,   // nello scontro la telecamera si abbassa: non si va in giro, si guarda un combattimento (più di lato, i modelli 3D si vedono in figura)
   fov: 34,               // apertura verticale
   celle: 15,             // quante celle si vedono almeno, in largo e in profondo
-  celleScontro: 9.5,     // nello scontro la telecamera si avvicina
+  celleScontro: 7,       // nello scontro la telecamera si avvicina (a 9,5 un mostro era alto ~30 px sul telefono)
   guarda: 0.35,          // il punto guardato: poco sopra il pavimento
   zoomMin: 0.7, zoomMax: 1.4,   // il pizzico e la rotella
   // la distanza si arrotonda perché un pixel dello sprite stia su un numero intero di pixel dello schermo (nitido, uguale per
@@ -24,6 +24,7 @@ export const LUCE = {
   rim: 0.55,             // il contorno caldo che stacca le figure dal fondo
   // nello scontro, da vicino, la normal map finta e il contorno sporcano i colori e ammorbidiscono i bordi: si spengono quasi
   nitidoScontro: { rim: 0.12, rilievo: 0.25, minimo: 0.55 },
+  contornoScontro: 0.6,   // nello scontro il contorno caldo dei modelli 3D di eroe e mostri (salda3d.js): li stacca dal pavimento
   alone: 9, cono: 40,    // la luce dell'eroe: l'alone corto senza ombre e il cono che le fa
   // con la torcia accesa (in proporzione agli sgoccioli): quanto crescono alone e cono, quanto si allungano (celle) e si aprono
   // (radianti), la luce che rimbalza dal pavimento e il chiarore caldo per terra (docs/sotterraneo/grafica-3d.md)

@@ -32,7 +32,7 @@ export const DA_TOCCARE = ['porta', 'forziere', 'curiosita', 'fonte', 'scala', '
 
 // `apre(r)`: una porta o un forziere si è appena aperto (lo dice il motore): chi chiama ci mette le scintille
 // `mostri3d`: la riserva dei modelli (mostro3d.js) o null; `vicino()`: dove sta l'eroe disegnato, per scegliere chi ha il modello
-export function creaCose({ figure, aloni, colonne, etichette, camera, apre = null, mostri3d = null, vicino = null }) {
+export function creaCose({ figure, aloni, macchie = null, colonne, etichette, camera, apre = null, mostri3d = null, vicino = null }) {
   const stati = new WeakMap()
   const visibili = []   // i mostri da disegnare in questo fotogramma (riusato): prima si sceglie chi ha il modello, poi si disegna
   const punto = { x: 0, y: 0 }
@@ -97,6 +97,7 @@ export function creaCose({ figure, aloni, colonne, etichette, camera, apre = nul
         morente: morto ? s.morente : 0, bianco: s.flash * 1.4, tinta: s.tinta3d, forzaTinta: s.forzaTinta3d || 0, attacco: mossa ? -1 : p, mosse, mossa, annuncio })
       if (alto >= 0) { s.alto = alto; s.in3d = true }
     }
+    if (macchie) macchie.metti(x, z - 0.1, 0.36 * Math.min(2.5, scala), trasparenza)
     const o = figure.o()
     o.scala = scala; o.specchio = specchio; o.bianco = s.flash * 2.5; o.trasparenza = trasparenza; o.cosa = morto ? null : r
     if (!s.in3d) figure.metti(nome, x, 0, z, o)

@@ -1,5 +1,6 @@
 // I segni di scena, istanziati (una chiamata a famiglia): le fiamme delle torce e dei bracieri (vive solo dove si vede adesso:
-// lo shader legge la maschera), i chiarori per terra (rarità, missione, chiave, la scala che sale), le colonne di luce (il
+// lo shader legge la maschera), i chiarori per terra (rarità, missione, chiave, la scala che sale), le macchie d'ombra sotto le
+// figure, le colonne di luce (il
 // livello salito, il leggendario per terra), gli anelli del tocco e del bersaglio, la bolla degli scudi e delle cure.
 import { InstancedMesh, InstancedBufferAttribute, PlaneGeometry, CircleGeometry, CylinderGeometry, RingGeometry, SphereGeometry, Mesh,
          ShaderMaterial, MeshBasicMaterial, AdditiveBlending, Matrix4, Color } from 'three'
@@ -88,6 +89,37 @@ export function creaAloni(scena, max) {
       n++
     },
     chiudi() { mesh.count = ACCESI.chiarori ? n : 0; mesh.instanceMatrix.needsUpdate = true; geo.attributes.aAlone.needsUpdate = true },
+    via() { scena.remove(mesh); geo.dispose(); mat.dispose() },
+  }
+}
+
+// ── le macchie d'ombra sotto le figure: un disco scuro e sfumato ai piedi di eroe e mostri, perché non galleggino sul pavimento
+// (la fascia bassa non ha le ombre vere). Una chiamata per tutte ──
+export function creaMacchie(scena, max = 16) {
+  const geo = new CircleGeometry(1, 20).rotateX(-Math.PI / 2)
+  const forza = new Float32Array(max)
+  geo.setAttribute('aForza', new InstancedBufferAttribute(forza, 1))
+  const mat = new ShaderMaterial({
+    vertexShader: /* glsl */`attribute float aForza; varying float vF; varying vec2 vP;
+      void main(){ vF = aForza; vP = position.xz; gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0); }`,
+    fragmentShader: /* glsl */`varying float vF; varying vec2 vP;
+      void main(){ float d = length(vP); gl_FragColor = vec4(0.0, 0.0, 0.0, (1.0 - smoothstep(0.25, 1.0, d)) * 0.6 * vF); }`,
+    transparent: true, depthWrite: false,
+  })
+  const mesh = new InstancedMesh(geo, mat, max)
+  mesh.frustumCulled = false; mesh.renderOrder = 3; mesh.count = 0
+  scena.add(mesh)
+  const m = new Matrix4()
+  let n = 0
+  return {
+    inizia() { n = 0 },
+    // (x, z) in celle, `r` il raggio, `f` 0..1 (chi svanisce la porta via con sé)
+    metti(x, z, r, f = 1) {
+      if (n >= max || f <= 0.01) return
+      m.makeScale(r, 1, r * 0.7).setPosition(x, 0.012, z)
+      mesh.setMatrixAt(n, m); forza[n] = f; n++
+    },
+    chiudi() { mesh.count = n; mesh.instanceMatrix.needsUpdate = true; geo.attributes.aForza.needsUpdate = true },
     via() { scena.remove(mesh); geo.dispose(); mat.dispose() },
   }
 }

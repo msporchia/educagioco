@@ -47,8 +47,9 @@ export function creaCamera() {
       scostamento(celleOra, scontro ? Math.max(0.35, (A - coperto) / A) : 1).multiplyScalar(zoom)
       const tanV = 2 * Math.tan(MathUtils.degToRad(camera.fov) / 2) * 16
       const d0 = off.length()
-      // per difetto (la telecamera si allontana un poco, si avvicina al più dell'8%: il margine di una cella e mezza lo regge): quello che doveva starci ci sta ancora
-      const k = Math.min(CAMERA.pixelMassimo, Math.max(1, Math.floor(pxAlto / (tanV * d0) + 0.3)))
+      // per difetto (la telecamera si allontana un poco, si avvicina al più dell'8%): quello che doveva starci ci sta ancora; nello
+      // scontro al più vicino (si avvicina fino al 12%: le figure sono quasi tutte modelli 3D, e per difetto restavano piccole)
+      const k = Math.min(CAMERA.pixelMassimo, Math.max(1, Math.floor(pxAlto / (tanV * d0) + (scontro ? 0.6 : 0.3))))
       // se la scala intera porterebbe la telecamera troppo lontano o vicino (pochi pixel: un pixel ratio basso) non si arrotonda
       let dMeta = pxAlto / (tanV * k)
       if (dMeta < d0 * 0.8 || dMeta > d0 * 1.25) dMeta = d0
