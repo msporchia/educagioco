@@ -202,6 +202,31 @@ export function livelloDiForza(c) {
   return forza
 }
 
+/* ═══════════ il livello di una coppia (docs/sotterraneo/in-due.md, «Il posto e la difficoltà») ═══════════
+   Due (o più) eroi contro i mostri di L: lo abbattono coi colpi di tutti (le offese si sommano), e i mostri dividono i colpi fra
+   loro (le resistenze si sommano, il danno a turno è la media). Il confronto è con l'eroe atteso **da solo**, così in due gli
+   scontri durano quanto da soli. La difficoltà moltiplica l'offesa della coppia prima del confronto: a facile il posto si fa come
+   se picchiassero all'80%, a impossibile al 140%. `cs`: i corredi degli eroi (Corredo, come in forzaDi) */
+export const DIFFICOLTA = { facile: 0.8, normale: 1, difficile: 1.2, impossibile: 1.4 }
+export function rapportoDellaCoppia(cs, L, k = 1, o = {}) {
+  const m = mostroDiRiferimento(L)
+  const insieme = 1 / cs.reduce((n, c) => n + k / offesa(c, m, o).turni, 0)
+  const danno = cs.reduce((n, c) => n + dannoPerTurno(c, m, insieme), 0) / cs.length
+  const regge = danno > 0 ? cs.reduce((n, c) => n + resistenza(c), 0) / danno : Infinity
+  return regge / insieme
+}
+export function livelloDellaCoppia(cs, difficolta = 'normale') {
+  const k = DIFFICOLTA[difficolta] ?? 1
+  const atteso = L => cs.reduce((n, c) => n + rapportoAtteso(c.chiEro, L), 0) / cs.length
+  let livello = 1
+  for (let L = 2; L <= TETTO; L++) {
+    const r = rapportoDellaCoppia(cs, L, k)
+    if (r < RAPPORTO_MINIMO) break
+    if (r >= atteso(L)) livello = L
+  }
+  return livello
+}
+
 // lo stesso, da quello che sta nell'avventura (eroe, roba, crescita), con l'ultimo risultato a memoria: la mappa lo chiede
 // a ogni disegno
 const memoria = new Map()
