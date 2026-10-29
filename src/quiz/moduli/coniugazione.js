@@ -770,7 +770,8 @@ class Coniugazione extends Modulo {
     const aiuto = `con «${pron}»: adesso ${forma.presente}, una volta ${forma.imperfetto}, domani ${forma.futuro}`
 
     const falsi = raccogli(formaGiusta, [
-      ...TERNA.filter(t => t !== quale)
+      // «Domani vendiamo» è italiano: con un marcatore di futuro il presente non è mai un falso
+      ...TERNA.filter(t => t !== quale && !(quale === 'futuro' && t === 'presente'))
         .map(t => [forma[t], `«${forma[t]}» è ${NOME_TEMPO[t]}: ${SPIEGA[t]}`]),
       // tappo: se due tempi dessero mai la stessa forma, resterebbe una domanda con due risposte sole
       ...altreDue(formeDi(infinito, quale), formaGiusta, sorte).map(f => [f, aiuto]),

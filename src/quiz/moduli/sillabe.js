@@ -3,9 +3,10 @@
 // Le parole con l'accento scritto (città, perché) sono materia di ortografia, non di questo file.
 import { Modulo } from '../nucleo/modulo.js'
 import { domanda, testo, emoji } from '../nucleo/domanda.js'
+import { PAROLE_VERE_SILLABE } from '../dati/sillabe-parole-vere.js'
 
 // [parola, sillabe, emoji?]: l'emoji manca dove non c'è modo onesto di disegnare la parola; resta buona per dividere, non per il grado 1
-const DIVISE = [
+export const DIVISE = [
   ['casa', ['ca', 'sa'], '🏠'], ['sole', ['so', 'le'], '☀️'], ['luna', ['lu', 'na'], '🌙'],
   ['pane', ['pa', 'ne'], '🍞'], ['mano', ['ma', 'no'], '✋'], ['naso', ['na', 'so'], '👃'],
   ['mela', ['me', 'la'], '🍎'], ['rosa', ['ro', 'sa'], '🌹'], ['dado', ['da', 'do'], '🎲'],
@@ -53,7 +54,9 @@ const DIVISE = [
   ['riccio', ['ric', 'cio'], '🦔'], ['freccia', ['frec', 'cia'], '🎯'],
 ]
 
-const POOL_SILLABE = [...new Set(DIVISE.flatMap(w => w[1]))] // per pescare il finto buco al grado 4
+export const POOL_SILLABE = [...new Set(DIVISE.flatMap(w => w[1]))] // per pescare il finto buco al grado 4
+// le parole vere che un falso del buco può formare (ca-__ con «ni» fa «cani»): una seconda risposta giusta; elenco generato, vedi docs/apprendimento/quiz-moduli.md
+const PAROLE_VERE = new Set([...PAROLE_VERE_SILLABE, ...DIVISE.map(w => w[0])])
 const FACILI = DIVISE.filter(w => w[2] && w[1].length <= 3) // 2-3 sillabe e con l'emoji: il pubblico del grado 1
 
 const RIME = [
@@ -245,7 +248,7 @@ class Sillabe extends Modulo {
     const idx = sorte.fra(0, sill.length - 1)
     const buona = sill[idx]
     const modello = sill.map((s, i) => (i === idx ? '__' : s)).join('-')
-    const falsi = sorte.distrattori(POOL_SILLABE, 2, s => s === buona)
+    const falsi = sorte.distrattori(POOL_SILLABE, 2, s => s === buona || PAROLE_VERE.has(sill.map((x, i) => (i === idx ? s : x)).join('')))
     return domanda({
       testo: sorte.uno(FRASI_MANCA),
       soggetto: testo(modello),

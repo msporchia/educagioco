@@ -4,15 +4,14 @@ import { domanda, testo } from '../nucleo/domanda.js'
 
 // errori: [una forma regolare sbagliata, la parola invariata] — i due modi in cui un bambino la sbaglia
 const IRREGOLARI = [
-  { s: 'braccio', p: 'braccia', errori: ['bracci', 'braccio'], em: '💪' },
+  { s: 'braccio', p: 'braccia', errori: ['braccie', 'braccio'], em: '💪' },
   { s: 'uovo', p: 'uova', errori: ['uovi', 'uovo'], em: '🥚' },
-  { s: 'dito', p: 'dita', errori: ['diti', 'dito'], em: '👆' },
+  { s: 'dito', p: 'dita', errori: ['dite', 'dito'], em: '👆' },
   { s: 'mano', p: 'mani', errori: ['mano', 'mane'], em: '✋' },
   { s: 'uomo', p: 'uomini', errori: ['uomi', 'uomo'], em: '🧑' },
   { s: 'ala', p: 'ali', errori: ['ale', 'ala'], em: '🦅' },
   { s: 'bue', p: 'buoi', errori: ['bui', 'bue'], em: '🐂' },
-  { s: 'ginocchio', p: 'ginocchia', errori: ['ginocchi', 'ginocchio'] },
-  { s: 'orecchio', p: 'orecchie', errori: ['orecchi', 'orecchio'], em: '👂' },
+  { s: 'ginocchio', p: 'ginocchia', errori: ['ginocchie', 'ginocchio'] },
   { s: 'paio', p: 'paia', errori: ['pai', 'paio'] },
   { s: 'centinaio', p: 'centinaia', errori: ['centinai', 'centinaio'] },
 ]
@@ -188,7 +187,6 @@ const ARTICOLI = [
   { parola: 'api', genere: 'f', numero: 'p', tipo: 'vocale', em: '🐝' },
   { parola: 'isole', genere: 'f', numero: 'p', tipo: 'vocale' },
   { parola: 'automobili', genere: 'f', numero: 'p', tipo: 'vocale', em: '🚗' },
-  { parola: 'infermiere', genere: 'f', numero: 'p', tipo: 'vocale', em: '👩‍⚕️' },
   { parola: 'ombre', genere: 'f', numero: 'p', tipo: 'vocale' },
   { parola: 'arance', genere: 'f', numero: 'p', tipo: 'vocale', em: '🍊' },
 ]

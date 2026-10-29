@@ -149,7 +149,8 @@ Una riga ciascuna; il perché sta nel documento indicato.
   resta. → `docs/core/progressi.md`
 - **I file generati non si toccano a mano**: `src/data/taratura-castello.js`
   (`npm run tara`, un test confronta la firma), `docs/apprendimento/livelli-delle-domande.md`
-  (`npm run quiz:livelli`), `src/giochi/arena/dati/taratura.js`
+  (`npm run quiz:livelli`), `src/quiz/dati/sillabe-parole-vere.js`
+  (`npm run quiz:parole-sillabe`), `src/giochi/arena/dati/taratura.js`
   (`npm run tara:arena`, un test confronta la firma), `src/data/voci*.js`
   (`npm run voci`, e se dice «non incise» si rilancia), `src/giochi/sotterraneo/dati/icone-mondo.js`
   (`npm run scatti icone-mondo`, la firma sta nel file e un test la ricalcola), `src/giochi/fattoria3d/dati/anteprime.js` e

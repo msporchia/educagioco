@@ -42,6 +42,7 @@ pubblicato.** Per controllare solo che il build passi:
 | `npm run scatti` (`clip`, `castello`…) | le immagini e le clip di `docs/img/` | quando una schermata cambia faccia ([strumenti.md](strumenti.md)) |
 | `npm run scatti icone-mondo` | le icone dei posti del Sotterraneo 3D: fotografa nel mondo 3D (file costruito, eroe nascosto) i sette monumenti, l'abisso e le tre città con la stessa inquadratura e riscrive `src/giochi/sotterraneo/dati/icone-mondo.js` (generato, con firma: un test la ricalcola); non gira con `npm run scatti` senza nome; `ICONE_DEBUG=1` lascia i PNG in `tmp/scatti/icone-mondo/` | quando un monumento cambia faccia ([../sotterraneo/mondo-3d.md](../sotterraneo/mondo-3d.md#le-icone-dei-posti)) |
 | `npm run quiz:livelli` | `docs/apprendimento/livelli-delle-domande.md` | dopo aver toccato i `livelli:` di un modulo |
+| `npm run quiz:parole-sillabe` (`-- --controlla` non scrive, esce con 1 se il file è vecchio; `DICT=…` un altro dizionario) | `src/quiz/dati/sillabe-parole-vere.js` (generato) | dopo aver toccato `DIVISE` in `moduli/sillabe.js`: le parole vere che un falso del buco può formare, dal dizionario italiano di sistema (se manca lo dice e non scrive; `apt install witalian`) ([../apprendimento/quiz-moduli.md](../apprendimento/quiz-moduli.md)) |
 | `npm run promuovi3d` (`-- --controlla` non scrive, esce con 1 se una copia è vecchia) | `src/giochi/sotterraneo/scena3d/eroi3d/`, `mostri3d/` (più `elenchi.js`), `effetti3d/`, `roba3d/` (più `moduli.js` e `catalogo-roba.js`): le copie dei prototipi 3D di `poc/` che il Sotterraneo 3D usa, seguendo gli import; una zona di mostri o una famiglia della roba che non si importa (o non costruisce) resta fuori | dopo aver toccato un prototipo di eroi, armi, mostri o effetti in `poc/` ([../sotterraneo/mostri-3d.md](../sotterraneo/mostri-3d.md)) |
 | `npm run roba3d` (`-- --controlla` non scrive, esce con 1 se è vecchia) | `src/giochi/sotterraneo/dati/figure3d.js` (generato, con firma: un test la ricalcola): per ogni figura della roba dei fogli la famiglia 3D e i suoi dati, e gli sprite col nome loro → la figura, da `generati/roba.json` e dai foglietti | dopo aver toccato il catalogo della roba o un foglietto ([../sotterraneo/roba-3d.md](../sotterraneo/roba-3d.md)) |
 | `node strumenti/icone.mjs` | i PNG delle icone e l'anteprima del link, da `public/icona.svg` | quando cambia l'icona |
@@ -143,6 +144,7 @@ testa, e una modifica sparisce senza rumore alla prossima rigenerazione.
 | `src/giochi/arena/dati/caserme-dipinte.js` | `caserme-arena.py` |
 | `src/giochi/sotterraneo/dati/aspetti.js` (e il blocco `__aspetti` dei foglietti) | `roba.py --gioco` — `unita/sotterraneo-rarita` diventa rosso se non è quello del catalogo `roba.json` |
 | `docs/apprendimento/livelli-delle-domande.md` | `npm run quiz:livelli` |
+| `src/quiz/dati/sillabe-parole-vere.js` | `npm run quiz:parole-sillabe` |
 | `docs/img/*` | `npm run scatti` |
 
 Per gli atlanti non c'è una rete: se ne accorge l'occhio.

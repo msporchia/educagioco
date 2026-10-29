@@ -38,6 +38,7 @@
     "test:commenti": "node strumenti/solo-commenti.mjs",
     "quiz:banco": "node strumenti/quiz/banco.mjs",
     "quiz:livelli": "node strumenti/quiz/livelli.mjs",
+    "quiz:parole-sillabe": "node strumenti/quiz/parole-vere-sillabe.mjs",
     "quiz:eta": "node strumenti/quiz/eta.mjs",
     "scatti": "node strumenti/scatti.mjs",
     "emoji": "node strumenti/emoji.mjs",

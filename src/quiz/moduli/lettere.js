@@ -212,12 +212,14 @@ class Lettere extends Modulo {
 
     const gruppoVoci = sorte.uno(buone)
     const voce = sorte.uno(gruppoVoci)
-    const diverse = gruppoVoci.filter(v => sillaba(v) !== sillaba(voce))
+    // un falso la cui parola comincia comunque con la sillaba chiesta (CA: carota/cappello) sarebbe una seconda risposta giusta
+    const comincia = v => scritta(v).startsWith(sillaba(voce))
+    const diverse = gruppoVoci.filter(v => sillaba(v) !== sillaba(voce) && !comincia(v))
     const falsi = sorte.alcuni(diverse, Math.min(2, diverse.length))
     // il terzo falso viene da fuori, così non si riduce mai a una scelta fra due
     const fuori = PAROLE.filter(v =>
-      iniziale(v) !== iniziale(voce) && sillaba(v) !== sillaba(voce))
-    if (falsi.length < 3 && fuori.length) falsi.push(sorte.uno(fuori))
+      iniziale(v) !== iniziale(voce) && sillaba(v) !== sillaba(voce) && !comincia(v))
+    falsi.push(...sorte.alcuni(fuori, 3 - falsi.length))
 
     return domanda({
       testo: `Quale comincia con ${sillaba(voce)}?`,
