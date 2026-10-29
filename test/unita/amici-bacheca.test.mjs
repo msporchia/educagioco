@@ -7,6 +7,7 @@ import { istantanea, leggiIstantanea, firma, giornoDi, giorniFa, quandoInParole,
   from '../../src/amici/istantanea.js'
 import { QUANTE_TAPPE as TAPPE_SURVIVORS } from '../../src/giochi/survivors/dati/campagna.js'
 import { QUANTE_TAPPE as TAPPE_ROBOT } from '../../src/giochi/costruttore/dati/campagna.js'
+import { QUANTE_TAPPE as TAPPE_CONTA } from '../../src/giochi/conta/dati/campagna.js'
 import { RACCONTO as TAPPE_CASTELLO } from '../../src/data/campagne-castello.js'
 import { STRADE } from '../../src/giochi/passo-passo/motore/strade.js'
 import { sincronizza, amiciNelGioco, avviaBacheca, fermaBacheca, COLORI } from '../../src/amici/bacheca.js'
@@ -52,11 +53,15 @@ const ORA = new Date(2026, 9, 29, 17, 42).getTime()
     leggiGioco({ c: 4, k: 0 }, dueStrade), { posti: { coniglio: 4 }, primati: {} })
   controlla('un percorso di più d\'uno non ha il cursore di serie', percorsoDi(gioco({ percorsi: { a: { tappe: 3 } } }), 'a').tappa({ campagne: { prova: { tappa: 2 } } }) === 0)
   controlla('e si trova per chiave', percorsoDi(dueStrade, 'cane').tappe === 6 && percorsoDi(dueStrade, 'boh') === null)
-  ugualeJ('i giochi che mostrano gli amici sono quelli che lo dichiarano', giochiConAmici().map(g => g.chiave).sort(), ['codice', 'costruttore', 'mate', 'passo', 'survivors', 'torri'])
+  ugualeJ('i giochi che mostrano gli amici sono quelli che lo dichiarano', giochiConAmici().map(g => g.chiave).sort(), ['codice', 'conta', 'costruttore', 'mate', 'passo', 'survivors', 'torri'])
   // Il Robot: di serie il cursore della campagna (il livello da fare, che è dove sta il suo robot), a campagna finita il cantiere libero
   const robot = c => istantanea({ campagne: { costruttore: c } }, ORA).giochi.costruttore
   ugualeJ('Il Robot: il livello da fare, e nessun record', robot({ tappa: 5, stelle: { 0: 2 } }), { posti: { '': 5 }, primati: {} })
   uguale('Il Robot: finiti tutti i livelli si è al cantiere libero', robot({ tappa: TAPPE_ROBOT, libera: true }).posti[''], TAPPE_ROBOT)
+  // Conta gli animali: il cursore della campagna (la tappa con `adesso` nella mappa), niente record; finita, il nodo dopo l'ultima
+  const conta = c => istantanea({ campagne: { conta: c } }, ORA).giochi.conta
+  ugualeJ('Conta: la tappa da fare, e nessun record', conta({ tappa: 4, stelle: { 0: 3 } }), { posti: { '': 4 }, primati: {} })
+  uguale('Conta: finite le tappe si è dopo l\'ultima', conta({ tappa: TAPPE_CONTA }).posti[''], TAPPE_CONTA)
   // Il castello: la tappa da fare sta in `profile.td`, non nelle campagne; finita la campagna, le partite libere al centro; i record per sfida
   const castello = (td, torri = {}) => istantanea({ td, campagne: { torri } }, ORA).giochi.torri
   uguale('Il castello: la tappa da fare è quella del regno (profile.td)', castello({ tappa: 7, libera: false }).posti[''], 7)

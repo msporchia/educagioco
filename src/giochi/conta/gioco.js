@@ -14,6 +14,8 @@ export default {
   copertina: { fondo: '#9fd6ef', disegno: '#a8774a', scena: 'staccionata' },
   tappe: QUANTE_TAPPE,
   piccoli: true,
+  // gli amici sulla mappa (docs/core/amici-nei-giochi.md): il cursore della campagna; finite le tappe la mappa non ha un posto, solo la riga in cima
+  amici: { tappe: QUANTE_TAPPE, dove: 'in fondo alle tappe' },
 
   riassunto(av = { tappa: 0, stelle: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)

@@ -7,4 +7,5 @@ Contare senza leggere, per i quattro-sei anni (`src/giochi/conta/`).
 - [domande.md](domande.md) — come nasce una domanda: griglia sicura, anti-ripetizione, i casi per verbo
 
 Vedi anche: [../core/convenzione-giochi.md](../core/convenzione-giochi.md);
+gli amici sulla mappa: [../core/amici-nei-giochi.md](../core/amici-nei-giochi.md);
 i verbi del gioco in `src/giochi/conta/dati/verbi.js`.
