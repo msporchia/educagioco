@@ -83,17 +83,20 @@ l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livel
   che raggiungono. La luce è l'unione dei due coni ([luce.md](luce.md)): un mostro nella luce dell'uno va dritto.
 - **L'orologio conta i passi di tutti e due**: i mostri morti tornano prima, la torcia brucia per chi la porta
   ([orologio.md](orologio.md)). Il mana torna a ognuno coi suoi passi.
+- **Non ci si allontana troppo** (l'utente): un eroe non va più lontano di qualche stanza dal compagno. Toccando oltre, cammina fino
+  al limite e si ferma, con un fumetto («non mi allontano da Leo»). Quanto è «troppo», in celle di strada, si decide guardando i
+  piani ([orologio.md](orologio.md#quanti-passi-fa-un-piano): un piano girato tutto è sui 160 passi).
 - **La scala**: si scende quando ci sono tutti e due. Il primo che la tocca aspetta lì («Aspetto Leo alla scala»), e quando arriva
   l'altro si scende insieme. Così il piano nuovo comincia con tutti e due e non c'è un piano per ognuno.
 - **Il portale** porta su tutti e due, e finisce la discesa.
 
 ## Lo scontro in due
 
-- **Entra chi è vicino**: i mostri entro il raggio da chi apre lo scontro, come oggi ([scontro.md](scontro.md#chi-entra)), e il
-  compagno se è nella stessa stanza (se sta rispondendo, appena ha finito).
-- **Chi è nello scontro esce dal tempo**: lì si va a turni, e la fila si muove solo agendo. **Chi è lontano** (da confermare con
-  l'utente): o continua a camminare, e allora ci possono essere due scontri insieme, ognuno con la sua fila, e chi arriva nella
-  stanza di uno scontro aperto entra al giro dopo; o il mondo si ferma anche per lui finché lo scontro non finisce, e lo guarda.
+- **Lo scontro è di tutti e due, sempre** (l'utente: «banalmente viene tirato nello scontro»): i mostri entro il raggio da chi
+  apre lo scontro, come oggi ([scontro.md](scontro.md#chi-entra)), e il compagno ovunque sia, sul palco al posto suo. Se sta
+  rispondendo a una domanda, entra appena ha finito. Finito lo scontro, ognuno è dove era.
+- **Uno scontro alla volta**: col compagno tirato dentro, non ce ne possono essere due insieme. Lì si va a turni, e il resto del
+  mondo è fermo come da soli.
 - **Il compagno è già previsto**: la fila ha un `lato` per ogni attore, e il palco ha il posto del compagno sfalsato sotto l'eroe,
   in diagonale (`viste/campo.js`, `[data-posto-compagno]`, oggi spento). Ognuno ha la sua velocità e i suoi turni nella fila;
   `passaIlTurno`, che si ferma al primo del lato dell'eroe, va insegnato a fermarsi a chi tocca.
@@ -178,5 +181,4 @@ dappertutto); i punti 1 e 2 si possono pubblicare senza che si veda niente.
 - **Il tetto per il più debole** (sopra): un terzo della vita è una proposta da provare.
 - **La storia in due**: proposta no (sopra). Se sì, una discesa nuova per l'ospite gli chiuderebbe una porta della storia giocata
   con l'eroe dell'altro.
-- **Chi è lontano durante lo scontro**: continua a camminare (due scontri possibili, chi arriva entra al giro dopo), o si ferma e lo
-  guarda. Il primo è più vivo; il secondo è più semplice da fare.
+- **Quanto lontano si può andare**: qualche stanza; il numero di celle si sceglie provando sui piani.
