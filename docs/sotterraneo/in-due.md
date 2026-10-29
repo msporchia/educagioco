@@ -148,19 +148,23 @@ l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livel
 
 ## Il caso e i conti uguali sui due telefoni
 
-Quello che va fatto prima di tutto, perché senza le due copie si separano (in Castle Battle si separavano per un `Math.hypot`):
+Il primo passo, **fatto** (29 ottobre, nel ramo): senza, le due copie si separano (in Castle Battle si separavano per un `Math.hypot`).
 
-- **Tutto il caso dal seme.** `Corsa` prende già `rnd`, e il bottino in buona parte usa `tiroDalSeme`; ma `bottino.js`,
-  `bottega.js` e `storia.js` hanno `rnd = Math.random` come valore di difetto, e ogni chiamata dentro la discesa deve passare quello
-  della corsa.
-- **Niente `Math.hypot`** nel motore (66 righe): `ipot`, come in `giochi/arena/motore/partita.js`. Gli `atan2` (5) e i `sin`/`cos`
-  (2) toccano la luce, quindi il gioco: si sostituiscono coi prodotti scalari, o con versioni uguali al bit: due browser possono
-  arrotondarli in modo diverso.
+- **Tutto il caso dal seme.** `Corsa` prende `rnd`, e dentro la discesa ogni pesca del bottino lo riceve: il giocatore finto scende
+  in tutti i tredici dungeon senza chiamare `Math.random` una volta. In due la regia passa `seminato(seme)`.
+- **Niente funzioni che il browser arrotonda a piacere.** `Math.hypot`, `acos` (la luce a cono), `atan2` e `cos` (le forme delle
+  grotte, cioè il piano che nasce), `pow` (quanti in un branco) e `**` (il salto dei colpi) in `corsa.js`, `livello.js`,
+  `scontro.js`, `forme.js` e `botti.js` sono passati ai **conti uguali** (`src/motore/conti-uguali.js`): le quattro operazioni e
+  `Math.sqrt`, che la specifica vuole esatte, più le serie. Danno quello che dava Math fino all'ultima cifra (`unita/conti-uguali`),
+  e da soli tutte le misure sono rimaste quelle (`npm test` verde). Il mondo di sopra (`aperta.js`, `mondo-*.js`, `terra.js`) non
+  è passato: in due non c'è.
 - **Il passo fisso**: `passo(dt)` taglia già a 0,05 s; in due il battito è sempre 0,05.
 - **La fotografia c'è quasi**: la sosta (`motore/sosta.js`) salva il piano come differenza da quello nato dal seme, coi mostri dove
   erano. In due serve anche lo scontro aperto e la fila, che la sosta non salva.
 - **L'impronta**: vita ed energia dei due, celle dei due, mostri vivi e somma delle loro posizioni, piano, passi.
-- `unita/sotterraneo-lockstep`: due discese con lo stesso seme e gli stessi comandi restano uguali al bit (come `unita/arena-lockstep`).
+- **`unita/sotterraneo-lockstep`**: il giocatore finto scende in ognuno dei tredici dungeon del 3D (botti e copricapi accesi), e il
+  test sostituisce `Math.random`, `hypot` e la trigonometria con spie che contano chi le chiama: devono essere zero, e la stessa
+  discesa rifatta deve dare la stessa impronta. Un `**` nuovo non lo vede nessuna spia: si scrive `potenzaIntera`.
 
 ## Cosa dà il sotterraneo al pezzo comune
 

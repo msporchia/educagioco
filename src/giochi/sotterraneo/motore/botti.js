@@ -9,6 +9,7 @@ import { ROCCIA } from '../dati/mondo.js'
 import { BOTTI_PER_PAESAGGIO, PREMI_DELLE_BOTTI } from '../dati/botti.js'
 import { paesaggioDi } from '../dati/paesaggi.js'
 import { tiroDalSeme } from './bottino.js'
+import { ipot } from '../../../motore/conti-uguali.js'   // uguali al bit sui due telefoni (docs/sotterraneo/in-due.md)
 
 // un caso col seme (lo stesso di scena3d/rumore.js), per non toccare quello della discesa
 function caso(seme) {
@@ -94,7 +95,7 @@ export const MetodiDelleBotti = {
   rompiBotte(i) {
     const b = this.bottiQui()[i]
     if (!b || b.rotta || this.foglio || this.finita) return null
-    if (Math.hypot(b.fx - this.eroe.x, b.fy - this.eroe.y) > 1.9) return null
+    if (ipot(b.fx - this.eroe.x, b.fy - this.eroe.y) > 1.9) return null
     b.rotta = true
     this.livello.robe.push({ che: 'botte', x: b.x, y: b.y, botte: i, presa: true })
     const premio = premioDellaBotte(this.seme || 0, this.piano, i)

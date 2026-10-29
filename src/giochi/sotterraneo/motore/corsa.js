@@ -39,6 +39,7 @@ import { MetodiDeiPreparati } from './preparati.js'
 import { MetodiDellaRicomparsa } from './ricomparsa.js'
 import { MetodiDelleBotti } from './botti.js'
 import { RISPOSTE_PER_ENERGIA, aGrado } from '../dati/abilita.js'
+import { ipot, arcocoseno } from '../../../motore/conti-uguali.js'   // uguali al bit sui due telefoni (docs/sotterraneo/in-due.md)
 
 // nella storia i forzieri e i mostri di tutti i giorni danno solo quello che si consuma: la roba la dà la riga
 // della storia (dati/storia.js), o la discesa diventerebbe una lotteria e la tabella una bugia
@@ -283,7 +284,7 @@ export class Corsa extends Corredo {
 
   // l'eroe si volta (un passo, o il tocco su una cosa): se cambia il cono, la luce si rifà subito
   giraVerso(dx, dy) {
-    const d = Math.hypot(dx, dy)
+    const d = ipot(dx, dy)
     if (d < 0.001) return
     const v = this.versoEroe
     this.verso = { dx: dx / d, dy: dy / d }
@@ -314,11 +315,11 @@ export class Corsa extends Corredo {
     }
     const r = Math.ceil(cono) + 1
     for (let x = cx - r; x <= cx + r; x++) for (let y = cy - r; y <= cy + r; y++) {
-      const dx = x + 0.5 - ox, dy = y + 0.5 - oy, d = Math.hypot(dx, dy)
+      const dx = x + 0.5 - ox, dy = y + 0.5 - oy, d = ipot(dx, dy)
       // l'alone attorno e il cono davanti: piena nel cuore, sfuma ai bordi
       let f = Math.max(0, Math.min(1, (alone - d) / ALONE_SFUMA))
       if (d > 0 && d <= cono) {
-        const ang = Math.acos(Math.max(-1, Math.min(1, (dx * v.dx + dy * v.dy) / d)))
+        const ang = arcocoseno(Math.max(-1, Math.min(1, (dx * v.dx + dy * v.dy) / d)))
         const lungo = Math.min(1, (cono - d) / (cono * SFUMA_CONO))
         const largo = Math.min(1, (mezza - ang) / (mezza * sfumaArco))
         f = Math.max(f, Math.max(0, lungo) * Math.max(0, largo))
@@ -396,7 +397,7 @@ export class Corsa extends Corredo {
     for (const r of this.livello.robe) {
       // la scala che sale si tocca solo sulla sua cella: l'eroe ci nasce sopra, e un tocco vicino non deve aprirla
       if (r.che === 'gemme' || r.che === 'scala-su' || !this.toccabile(r)) continue
-      const d = Math.hypot(r.x - c.x, r.y - c.y)
+      const d = ipot(r.x - c.x, r.y - c.y)
       if (d <= largo && d < quanto) { quanto = d; vicina = r }
     }
     return vicina
@@ -469,7 +470,7 @@ export class Corsa extends Corredo {
       if (m.fx == null) { m.fx = m.x + 0.5; m.fy = m.y + 0.5; m.casa = { x: m.x, y: m.y }; m.calmo = 0 }
       if (m.calmo > 0) m.calmo -= dt
       const sua = this.livello.stanzaDi(m.casa.x, m.casa.y)
-      const vicino = Math.hypot(m.fx - this.eroe.x, m.fy - this.eroe.y) <= SVEGLIA
+      const vicino = ipot(m.fx - this.eroe.x, m.fy - this.eroe.y) <= SVEGLIA
       const sveglio = !!(mia && sua && mia === sua && m.calmo <= 0 && (m.sveglio || vicino))
       m.sveglio = sveglio
 
@@ -479,9 +480,9 @@ export class Corsa extends Corredo {
       const meta = !sveglio ? { x: m.casa.x + 0.5, y: m.casa.y + 0.5 }
         : nellaLuce || this.torciaAccesa ? this.eroe : this.versoLeSpalle(m, sua)
       const dx = meta.x - m.fx, dy = meta.y - m.fy
-      const d = Math.hypot(dx, dy)
+      const d = ipot(dx, dy)
 
-      if (sveglio && Math.hypot(this.eroe.x - m.fx, this.eroe.y - m.fy) < 0.75) {   // ti ha preso                 // ti ha preso
+      if (sveglio && ipot(this.eroe.x - m.fx, this.eroe.y - m.fy) < 0.75) {   // ti ha preso                 // ti ha preso
         this.strada = null; this.mira = null; this.bersaglio = null
         this.scontro(m)
         return
@@ -504,7 +505,7 @@ export class Corsa extends Corredo {
       if ((!liberoX || !liberoY) && sua && sveglio) {
         const strada = this.stradaDelMostro(m, sua, meta)
         if (strada) {
-          const px = strada.x + 0.5 - fx0, py = strada.y + 0.5 - fy0, dp = Math.hypot(px, py)
+          const px = strada.x + 0.5 - fx0, py = strada.y + 0.5 - fy0, dp = ipot(px, py)
           if (dp > 1e-6) { m.fx = fx0 + px / dp * Math.min(v, dp); m.fy = fy0 + py / dp * Math.min(v, dp) }
         }
       }
@@ -543,7 +544,7 @@ export class Corsa extends Corredo {
     const dietro = { x: e.x - v.dx * DIETRO, y: e.y - v.dy * DIETRO }
     // già nel cono dietro (lo stesso dell'agguato, motore/scontro.js): dritto alle spalle; di lato prima più indietro, o
     // toccherebbe l'eroe dal fianco
-    const r = Math.hypot(rx, ry)
+    const r = ipot(rx, ry)
     if (r > 1e-6 && (rx * v.dx + ry * v.dy) / r < -0.5) return dietro
     if (rx * v.dx + ry * v.dy <= ALLA_PAR) return { x: e.x - v.dx * LARGO_DIETRO, y: e.y - v.dy * LARGO_DIETRO }
     const lato = rx * -v.dy + ry * v.dx >= 0 ? 1 : -1
@@ -552,7 +553,7 @@ export class Corsa extends Corredo {
       w.x = Math.min(stanza.x + stanza.w - 0.5, Math.max(stanza.x + 0.5, w.x))
       w.y = Math.min(stanza.y + stanza.h - 0.5, Math.max(stanza.y + 0.5, w.y))
     }
-    return Math.hypot(w.x - m.fx, w.y - m.fy) < 0.5 ? dietro : w
+    return ipot(w.x - m.fx, w.y - m.fy) < 0.5 ? dietro : w
   }
 
   muoviEroe(dt) {
@@ -563,7 +564,7 @@ export class Corsa extends Corredo {
     const meta = this.strada[0]
     const mx = meta.x + 0.5, my = meta.y + 0.5
     const dx = mx - this.eroe.x, dy = my - this.eroe.y
-    const d = Math.hypot(dx, dy)
+    const d = ipot(dx, dy)
     const v = PASSO_EROE * dt
     if (d > 0.001) this.giraVerso(dx, dy)
     if (d <= v) {

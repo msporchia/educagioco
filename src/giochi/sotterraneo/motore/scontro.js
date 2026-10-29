@@ -19,6 +19,7 @@ import { GELO_DEL_MAGO } from '../dati/varianti.js'
 import { mosseDi, ruoloDi, statoDelleMosse, scegliMossa, registra, modDella, curaDella, vistaDella } from '../dati/mosse.js'
 import { pericoloDi } from './pericolo.js'
 import { nuovaFila, chiAgisce, agisci, togli, prossimi, primaDelSuoProssimo, TURNI_VISIBILI } from './turni.js'
+import { ipot, potenzaIntera } from '../../../motore/conti-uguali.js'   // uguali al bit sui due telefoni (docs/sotterraneo/in-due.md)
 
 // il mostro grosso occupa due posti del campo, gli altri uno
 export const postiDi = m => (m.grosso ? 2 : 1)
@@ -61,7 +62,7 @@ export const MetodiDelloScontro = {
   chiEntra(m) {
     const dove = x => this.livello.stanzaDi(x.casa ? x.casa.x : x.x, x.casa ? x.casa.y : x.y)
     const sua = dove(m)
-    const lontano = x => Math.hypot((x.fx != null ? x.fx : x.x + 0.5) - this.eroe.x, (x.fy != null ? x.fy : x.y + 0.5) - this.eroe.y)
+    const lontano = x => ipot((x.fx != null ? x.fx : x.x + 0.5) - this.eroe.x, (x.fy != null ? x.fy : x.y + 0.5) - this.eroe.y)
     const altri = !sua ? [] : this.livello.robe
       .filter(r => r.che === 'mostro' && !r.morto && r !== m && dove(r) === sua && lontano(r) <= RAGGIO_SCONTRO)
       .sort((a, b) => lontano(a) - lontano(b))
@@ -81,7 +82,7 @@ export const MetodiDelloScontro = {
     const v = this.versoEroe
     const dx = (m.fx != null ? m.fx : m.x + 0.5) - this.eroe.x, dy = (m.fy != null ? m.fy : m.y + 0.5) - this.eroe.y
     // solo dal cono di 120° dietro, lo specchio della luce: da un fianco l'alone lo fa vedere arrivare (docs/sotterraneo/luce.md)
-    const d = Math.hypot(dx, dy), n = Math.hypot(v.dx, v.dy)
+    const d = ipot(dx, dy), n = ipot(v.dx, v.dy)
     return d > 1e-6 && n > 1e-6 && (v.dx * dx + v.dy * dy) / (d * n) < -0.5
   },
 
@@ -213,7 +214,7 @@ export const MetodiDelloScontro = {
         ultimo = liberi[0]
         toccati.push(ultimo)
       }
-      return toccati.map((j, k) => ({ chi: vivi[j], fattore: FATTORE_DEL_SALTO ** k }))
+      return toccati.map((j, k) => ({ chi: vivi[j], fattore: potenzaIntera(FATTORE_DEL_SALTO, k) }))
     }
     return [presi(f.chi)]
   },
