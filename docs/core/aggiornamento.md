@@ -69,15 +69,16 @@ ref.
 ## «↻ cerca aggiornamenti»
 
 In fondo alla home accanto alla versione, e dietro «Aggiorna» del nastro
-(`aggiornaOra`; i passi si vedono nello stesso cartello in cima alla home, `guide/Nastri.vue`: una forma sola, niente foglio al centro). Chiede al sito che
+(`aggiornaOra`; i passi si vedono in una finestrella al centro dello schermo, sopra tutto, `guide/Nastri.vue`: il cartello in
+cima alla home, lontano dal tasto, sul telefono non si vedeva). Chiede al sito che
 versione ha, scarica la pagina **a mano** contando i megabyte (il totale è
 `peso` in `versione.json`: la lunghezza dichiarata dal sito è quella
 compressa), controlla che dentro ci sia l'id promesso, la mette **al posto
 della vecchia** nelle cache del service worker e in quella della versione
 nuova, e solo allora riparte. Non tocca i progressi; se la rete cade a metà
 il gioco resta com'era.
-Mentre lavora la ↻ del tasto gira e dice «sto cercando…» (il cartello in
-cima può essere fuori schermo), e premerlo di nuovo non fa nulla.
+Mentre lavora la ↻ del tasto gira e dice «sto cercando…», e premerlo di nuovo non fa nulla; la finestrella si chiude con
+la ✕ (che ferma quello che c'è in corso) o con «Va bene» se è già l'ultima.
 
 - **La pagina si chiede a `./?aggiorna=<id>` e `no-store`**: anche questa
   `fetch` passa dal service worker, che fuori dalle navigazioni risponde
