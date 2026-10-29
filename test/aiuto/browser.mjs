@@ -213,6 +213,24 @@ export async function semina(page, profilo, giocatore = GIOCATORE) {
   await page.waitForSelector('.carte', { timeout: 10000 })
 }
 
+/* Una chiave dell'archivio fuori dal profilo (`amici:<bambino>`, …), scritta così com'è in IndexedDB, poi si ricarica. Come
+   `semina`, prima lascia finire le scritture in coda. */
+export async function seminaArchivio(page, chiave, valore) {
+  await attendi(page, 400)
+  await page.evaluate(([k, v]) => new Promise((ok, ko) => {
+    const r = indexedDB.open('giochi-bambini', 1)
+    r.onerror = () => ko(new Error('IndexedDB non si apre'))
+    r.onsuccess = () => {
+      const tx = r.result.transaction('kv', 'readwrite')
+      tx.objectStore('kv').put(v, k)
+      tx.oncomplete = ok
+      tx.onerror = () => ko(new Error('scrittura fallita'))
+    }
+  }), [chiave, valore])
+  await page.reload()
+  await page.waitForSelector('.carte', { timeout: 10000 })
+}
+
 /* Le tendine delle impostazioni dei grandi («Zona delicata», «Per chi sviluppa») nascono chiuse: un test che deve premere lì dentro le
    apre. Un bambino non le vedrebbe nemmeno, ed è il punto. Docs: docs/genitori/riordino.md. */
 export const apriTendine = page => page.evaluate(() => document.querySelectorAll('details.tendina').forEach(d => { d.open = true }))
