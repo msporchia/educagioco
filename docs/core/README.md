@@ -26,6 +26,7 @@ comandi, pubblicazione, grafica, e le regole comuni a tutti i giochi.
 - [vecchio-telefono-veri.md](vecchio-telefono-veri.md) — la misura del telefono coi modelli veri: gli fps veri (il gioco com'è) e dove pesa (le due scale, un pezzo alla volta), come si spegne un elemento, il resoconto in più invii
 - [insieme.md](insieme.md) — giocare in due su due telefoni (`src/insieme/`): il tavolo che tiene il posto, il canale che non si rompe a una caduta, il lockstep, la sala e il cartello comuni, come si mette in due un gioco nuovo, le prove su una rete cattiva e il banco che tara la tolleranza
 - [amici.md](amici.md) — la lista di amici per tutta l'app: un legame fra due persone con chiave sua, codice breve a scadenza, spenta di base e chiesta ai grandi, presenza e inviti
+- [amici-bacheca.md](amici-bacheca.md) — dove è arrivato un amico e il suo record, anche se non è online: una bacheca per amicizia che scade in una settimana, il pallino sulla rotta, la notizia a fine volo
 - [strumenti.md](strumenti.md) — voci, scatti e clip, icone, la guardia dei commenti
 - [convenzione-giochi.md](convenzione-giochi.md) — come è fatto un gioco nuovo in `src/giochi/`
 - [home.md](home.md) — la home: il profilo, «riprendi da qui», il carosello delle copertine, l'indice, come la aprono i test

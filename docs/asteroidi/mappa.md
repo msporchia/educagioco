@@ -130,6 +130,8 @@ verso dove va, sulla sua tela piccola che la vista sposta.
 - **📊 Cosa so** è un tasto fermo in basso a destra, sopra la mappa: in
   fondo a ventitré tappe non lo troverebbe nessuno.
 - **L'astronave e i gettoni** si spiegano in fondo alla rotta, dopo il volo.
+- **Gli amici** ([../core/amici-bacheca.md](../core/amici-bacheca.md)): un pallino con l'iniziale sotto la tappa a cui è arrivato
+  ognuno, in cima chi è da raggiungere, nel fumetto chi c'è e nel volo i loro record.
 
 Nei test: `unita/rotta-asteroidi` (a cinque larghezze: tappe dentro lo
 schermo, la rotta che non passa sopra un nome né un capitolo, il razzo
