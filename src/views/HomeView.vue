@@ -33,6 +33,11 @@ const emit = defineEmits(['vai'])
 // gli amici: la riga c'è solo se i grandi hanno acceso «Amici online» (docs/core/amici.md)
 const amiciAperti = ref(false)
 const amiciOnline = computed(() => statoAmici.amici.filter(a => a.online).length)
+// la riga sta in cima solo se c'è qualcuno con cui giocare adesso, se no scende sopra «Impostazioni»
+const rigaAmici = computed(() => !(datiAmici.attivo && datiAmici.amici.length) ? null
+  : datiAmici.online && amiciOnline.value ? 'cima' : 'fondo')
+const amiciDice = computed(() => !datiAmici.online ? 'sei offline'
+  : amiciOnline.value ? amiciOnline.value + ' online' : 'nessuno online')
 
 const versione = __VERSIONE__   // la stringa la mette il build (vite.config.js)
 const siCerca = daUnSito()      // il tasto "cerca aggiornamenti": solo se c'è un sito a cui chiedere
@@ -178,10 +183,10 @@ function riprendi (k) { chiediRipresa(k); emit('vai', k) }
       </button>
 
       <!-- finché i grandi non collegano un amico non c'è niente da mostrare: «ancora nessuno» sarebbe solo triste (docs/core/amici.md) -->
-      <button v-if="datiAmici.attivo && datiAmici.amici.length" class="riga-amici" type="button" data-azione="amici" @click="amiciAperti = true">
+      <button v-if="rigaAmici === 'cima'" class="riga-amici" type="button" data-azione="amici" @click="amiciAperti = true">
         <span class="em" aria-hidden="true">👫</span>
         <b>Amici</b>
-        <i>{{ !datiAmici.online ? 'sei offline' : amiciOnline ? amiciOnline + (amiciOnline === 1 ? ' online' : ' online') : 'nessuno online' }}</i>
+        <i>{{ amiciDice }}</i>
       </button>
       <ListaAmici v-if="amiciAperti" @chiudi="amiciAperti = false" />
 
@@ -225,6 +230,11 @@ function riprendi (k) { chiediRipresa(k); emit('vai', k) }
 
            `data-azione="grandi"` resta com'era: è il bersaglio di tre
            test di integrazione, e non è cambiato dove porta. -->
+      <button v-if="rigaAmici === 'fondo'" class="riga-amici in-fondo" type="button" data-azione="amici" @click="amiciAperti = true">
+        <span class="em" aria-hidden="true">👫</span>
+        <b>Amici</b>
+        <i>{{ amiciDice }}</i>
+      </button>
       <button class="impostazioni" data-azione="grandi" @click="$emit('vai','genitori')">
         <!-- ══ il pallino della posta ══
              Fuori dal codice non si può distinguere un grande da un
@@ -278,6 +288,8 @@ function riprendi (k) { chiediRipresa(k); emit('vai', k) }
 .riga-amici .em { font-size:22px }
 .riga-amici b { flex:1 }
 .riga-amici i { font-style:normal; font-size:13px; opacity:.7 }
+.riga-amici.in-fondo { max-width:400px; margin-top:18px }
+.riga-amici.in-fondo + .impostazioni { margin-top:8px }
 .home { background:#f6f7f9 }
 /* in cima, non in mezzo: su un telefono alto il centrato lasciava un vuoto sopra il profilo */
 .home .centro { justify-content:flex-start }
