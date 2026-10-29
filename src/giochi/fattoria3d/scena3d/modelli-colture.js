@@ -402,10 +402,18 @@ function posaTutto (parti, disp, crescita, t, coltura, vento) {
     const f = c > 0.55 ? Math.min(1, (c - 0.55) / 0.4) : 0, m = tra(c, 0.62, 1)
     if (!CRESCE_DA_SE.has(coltura)) posa.su(p.x, p.y, p.z, p.fase, sway * (A.v ?? 1), 0.22 + 0.78 * Math.sqrt(c), (p.lean || 0) * (A.disp === 'fitto' ? 1 : 0.3))
     ricetta(p, c, f, m, A, sway * (A.v ?? 1))
+    if (c < GERMOGLIO && (A.disp !== 'fitto' || p.i % 2)) germoglio(p, c)        // nel fitto uno ogni due, se no è un tappeto
   }
 }
+/** Appena seminato: due cotiledoni verde chiaro su ogni posto, uguali per tutte le colture, che spariscono mentre la pianta prende la scala. */
+const GERMOGLIO = 0.4, VERDE_GERMOGLIO = new THREE.Color(0x6fd030)
+function germoglio (p, c) {
+  const s = 1 - tra(c, 0.2, GERMOGLIO)
+  posa.su(p.x, p.y ?? 0.12, p.z, p.fase, 0, 1)
+  for (const k of [0, Math.PI]) posa.metti('foglia', VERDE_GERMOGLIO, 0, 0, 0, -0.4, p.fase + k, 0, 0.17 * s, 0.17 * s, 0.22 * s)
+}
 
-/** Quante istanze servono al massimo per forma: si prova ogni coltura matura, una volta sola. */
+/** Quante istanze servono al massimo per forma: si prova ogni coltura matura e appena seminata, una volta sola. */
 let massimi = null
 function contaMassimi () {
   if (massimi) return massimi
@@ -413,8 +421,10 @@ function contaMassimi () {
   for (const k of Object.keys(ASPETTO)) {
     const parti = Object.fromEntries(Object.keys(FORME).map(n => [n, { n: 0 }]))
     const A = ASPETTO[k]
-    posaTutto(parti, disponi(A.disp, A.n, A.nz || A.n, 1), [1, 1, 1, 1], 0, k, false)
-    for (const [n, p] of Object.entries(parti)) massimi[n] = Math.max(massimi[n] || 0, p.n)
+    for (const c of [1, 0]) {                                                 // matura, e appena seminata (i germogli)
+      posaTutto(parti, disponi(A.disp, A.n, A.nz || A.n, 1), [c, c, c, c], 0, k, false)
+      for (const [n, p] of Object.entries(parti)) massimi[n] = Math.max(massimi[n] || 0, p.n)
+    }
   }
   return massimi
 }
