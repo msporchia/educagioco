@@ -65,6 +65,8 @@ const box = await page.evaluate(() => { const r = s => document.querySelector(s)
 controlla('le scelte non spingono il testo a destra', box.scelte - box.carta < 30 && box.testo - box.carta < 70, JSON.stringify(box))
 await page.locator('[data-fascia]').scrollIntoViewIfNeeded()
 await scatto(page, 'fascia')
+// la scelta si scrive con flush(), che non si aspetta: una ricarica subito dopo il tocco può arrivare prima
+await page.waitForTimeout(500)
 await page.reload()
 await page.click('[data-azione="grandi"]'); await page.waitForSelector('.tastierino')
 for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
