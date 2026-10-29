@@ -114,9 +114,11 @@ Rete, cadute, trattativa, sala e cartello non si riscrivono. Il gioco dà:
 3. **La schermata**: `const sfida = usaSfida({ gioco, regola, alVia, mostra })`; `<SalaSfida>` con le sue scelte nello slot
    `scelte` (le classi `ins-scelte`, `ins-scelta`, `ins-scelta-su`, `ins-nota` danno i tasti di tutti); nel battito
    `sfida.avanza(dt)` invece di avanzare la partita; le mosse con `sfida.regia.value.scegli(mossa)`; `<CartelloLinea>` sopra il
-   campo; `sfida.daInvito()` quando il gioco si apre; `sfida.chiudi()` uscendo. In due niente pausa, sosta, stelle, e le domande
+   campo; `sfida.daInvito()` quando il gioco si apre; `sfida.chiudi()` uscendo. Uno contro l'altro niente pausa, sosta, stelle, e le domande
    `svelta` ([../apprendimento/la-domanda.md](../apprendimento/la-domanda.md)); quello che si legge mentre il campo corre (prezzi,
-   menu) si rifà a ogni giro.
+   menu) si rifà a ogni giro. Insieme, contro il gioco, il mondo si può fermare per tutti e due mentre uno risponde: il progetto del
+   sotterraneo in due ([../sotterraneo/in-due.md](../sotterraneo/in-due.md)), che chiede anche all'incontro di portare la parte
+   dell'ospite (il suo eroe).
 4. **L'invito degli amici**: una voce in `src/amici/giochi.js` (`valida` per i dati che porta l'invito, oltre al codice).
 5. **I bambini finti** per le prove e il banco: `test/aiuto/sfide/<gioco>.mjs` (`regola`, `scelte(seme)`, `muovi(ruolo, incontro,
    caso)`) e la sua riga in `sfide/index.mjs`.
