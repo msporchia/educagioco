@@ -65,35 +65,35 @@ const muovi = passo => { if (puo(dove.value + passo)) dove.value += passo }
 
 <style scoped>
 .tre { display:flex; flex-direction:column; gap:7px; margin:6px 0 2px;
-       background:#f7f5ff; border-radius:13px; padding:9px 10px }
-.dice { margin:0; font-size:10.5px; color:#8a8a99; text-align:center }
+       background:var(--tessera); border-radius:var(--raggio); padding:9px 10px }
+.dice { margin:0; font-size:10.5px; color:var(--grigio); text-align:center }
 
-.tacca { display:flex; align-items:center; gap:8px; background:#fff; border-radius:12px;
+.tacca { display:flex; align-items:center; gap:8px; background:#fff; border-radius:var(--raggio-piccolo);
          padding:6px 7px; box-shadow:0 1px 4px #0000000f }
-.freccia { border:none; background:#f0eaff; color:#5b3fa8; font-size:15px; line-height:1;
-           width:38px; height:38px; border-radius:12px; cursor:pointer; font-family:inherit;
+.freccia { border:none; background:var(--tessera); color:var(--inchiostro); font-size:15px; line-height:1;
+           width:38px; height:38px; border-radius:var(--raggio-piccolo); cursor:pointer; font-family:inherit;
            flex:none }
 .freccia:disabled { opacity:.28; cursor:default }
 .freccia:active:not(:disabled) { transform:translateY(1px) }
 .valore { flex:1; min-width:0; text-align:center; display:flex; flex-direction:column; gap:1px }
-.valore b { font-size:14px; font-weight:850; color:var(--viola-scuro) }
-.valore em { font-style:normal; font-size:10.5px; color:#7a7a8a; line-height:1.25 }
+.valore b { font-size:14px; font-weight:600; color:var(--inchiostro) }
+.valore em { font-style:normal; font-size:10.5px; color:var(--grigio); line-height:1.25 }
 
 .puntini { display:flex; align-items:center; justify-content:center; gap:5px }
-.puntini span { width:6px; height:6px; border-radius:50%; background:#ded8ee }
+.puntini span { width:6px; height:6px; border-radius:50%; background:var(--filo) }
 /* dov'è la taratura di casa: un cerchietto vuoto, così si vede da che
    punto ci si è allontanati */
-.puntini span.casa { background:#fff; box-shadow:inset 0 0 0 2px #b9b0d6 }
-.puntini span.ora { background:var(--viola); box-shadow:none; transform:scale(1.35) }
+.puntini span.casa { background:#fff; box-shadow:inset 0 0 0 2px #a3a9b8 }
+.puntini span.ora { background:var(--accento); box-shadow:none; transform:scale(1.35) }
 /* una posizione che non si raggiunge resta al suo posto, sbiadita: la
    fila deve continuare a dire quante sono e dov'è la casa */
 .puntini span.chiusa { opacity:.3 }
 
 .riga { display:flex; gap:6px }
-.bottone { flex:1; border:none; border-radius:12px; padding:9px 6px; font-family:inherit;
-           font-size:12.5px; font-weight:800; cursor:pointer; color:#fff;
-           background:linear-gradient(180deg, var(--viola), var(--viola-scuro)) }
-.bottone.chiaro { color:var(--viola-scuro); background:#eee9fb }
+.bottone { flex:1; border:none; border-radius:var(--raggio-piccolo); padding:9px 6px; font-family:inherit;
+           font-size:12.5px; font-weight:600; cursor:pointer; color:#fff;
+           background:linear-gradient(180deg, var(--accento), var(--inchiostro)) }
+.bottone.chiaro { color:var(--inchiostro); background:var(--tessera) }
 .bottone:disabled { opacity:.35; cursor:default }
 .bottone:active:not(:disabled) { transform:translateY(1px) }
 </style>

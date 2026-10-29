@@ -166,7 +166,7 @@ function riprendi (k) { chiediRipresa(k); emit('vai', k) }
 
 <template>
   <!-- data-archivio: usato dai test di avvio per verificare IndexedDB vs memoria -->
-  <div class="schermo home" :data-archivio="state.storage">
+  <div class="schermo home pulito" :data-archivio="state.storage">
     <div class="centro">
       <!-- i nastri (installazione, versione nuova...) stanno solo qui: vedi docs/genitori/guide.md -->
       <Nastri @vai="v => $emit('vai', v)" />
@@ -283,25 +283,25 @@ function riprendi (k) { chiediRipresa(k); emit('vai', k) }
 </template>
 
 <style scoped>
-.riga-amici { display:flex; align-items:center; gap:10px; width:100%; min-height:48px; padding:8px 14px; border:0; border-radius:16px;
-              background:#ffffffcc; color:inherit; font:inherit; text-align:left; touch-action:manipulation }
+.riga-amici { display:flex; align-items:center; gap:10px; width:100%; max-width:var(--colonna); min-height:48px; padding:8px 12px; border:0;
+              border-radius:var(--raggio); background:var(--superficie); box-shadow:var(--ombra); color:inherit; font:inherit;
+              text-align:left; touch-action:manipulation }
 .riga-amici .em { font-size:22px }
-.riga-amici b { flex:1 }
-.riga-amici i { font-style:normal; font-size:13px; opacity:.7 }
-.riga-amici.in-fondo { max-width:400px; margin-top:18px }
+.riga-amici b { flex:1; font-size:14px; font-weight:600; color:var(--inchiostro) }
+.riga-amici i { font-style:normal; font-size:12px; color:var(--grigio) }
+.riga-amici.in-fondo { margin-top:18px }
 .riga-amici.in-fondo + .impostazioni { margin-top:8px }
-.home { background:#f6f7f9 }
 /* in cima, non in mezzo: su un telefono alto il centrato lasciava un vuoto sopra il profilo */
 .home .centro { justify-content:flex-start }
-.carte { width:100%; max-width:400px }
+.carte { width:100%; max-width:var(--colonna) }
 /* la riga del profilo */
-.fascia { display:flex; align-items:center; gap:11px; width:100%; max-width:400px; padding:9px 12px;
-          border-radius:16px; text-align:left; background:#fff; box-shadow:0 1px 2px #1f243312 }
+.fascia { display:flex; align-items:center; gap:11px; width:100%; max-width:var(--colonna); padding:9px 12px;
+          border-radius:var(--raggio); text-align:left; background:var(--superficie); box-shadow:var(--ombra) }
 .fascia:active { transform:scale(.99) }
 .dove { flex:1; min-width:0; display:flex; flex-direction:column }
-.dove b { font-size:14px; font-weight:600; color:#1f2433; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-.dove i { font-style:normal; font-size:11.5px; color:#7a8193 }
-.numeri { flex:none; font-size:13px; font-weight:600; color:#1f2433 }
+.dove b { font-size:14px; font-weight:600; color:var(--inchiostro); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.dove i { font-style:normal; font-size:11.5px; color:var(--grigio) }
+.numeri { flex:none; font-size:13px; font-weight:600; color:var(--inchiostro) }
 .freccia { flex:none; font-size:20px; color:#a3a9b8 }
 .vuoto { text-align:center; padding:6px 0 2px }
 /* le monete regalate dall'indirizzo: si vedono e poi se ne vanno */
@@ -327,22 +327,22 @@ function riprendi (k) { chiediRipresa(k); emit('vai', k) }
 .pallino-posta { position:absolute; top:9px; right:10px; width:9px; height:9px;
                  border-radius:50%; background:#e2564a }
 
-.impostazioni { display:block; width:100%; max-width:400px; margin-top:18px;
-                padding:11px 16px; border-radius:14px; text-align:left;
-                background:#fff; box-shadow:0 1px 2px #1f243312 }
-.impostazioni:active { background:#ffffffaa }
+.impostazioni { display:block; width:100%; max-width:var(--colonna); margin-top:18px;
+                padding:11px 14px; border-radius:var(--raggio); text-align:left;
+                background:var(--superficie); box-shadow:var(--ombra) }
+.impostazioni:active { background:var(--tessera) }
 .impostazioni.guide { margin-top:8px }
-.impostazioni b { display:block; font-size:13px; font-weight:600; color:#1f2433 }
-.impostazioni i { font-style:normal; font-size:11.5px; color:var(--tenue); opacity:.75 }
+.impostazioni b { display:block; font-size:13px; font-weight:600; color:var(--inchiostro) }
+.impostazioni i { font-style:normal; font-size:11.5px; color:var(--grigio) }
 
 .piede { display:flex; align-items:baseline; justify-content:center; gap:9px;
          flex-wrap:wrap; margin-top:10px }
-.versione { font-size:11px; opacity:.42; letter-spacing:.3px }
+.versione { font-size:11px; color:var(--grigio); opacity:.7; letter-spacing:.3px }
 /* la stessa pelle piatta di «Impostazioni», in piccolo: si legge senza
    occhiali e si prende col pollice, ma non chiama nessuno */
-.cerca { padding:7px 12px; border-radius:999px; font-size:11.5px; font-weight:800;
-         color:var(--tenue); background:#ffffff66; box-shadow:inset 0 0 0 1px #d7dfea }
-.cerca:active { background:#ffffffaa }
+.cerca { padding:7px 12px; border-radius:999px; font-size:11.5px; font-weight:600;
+         color:var(--grigio); background:var(--superficie); box-shadow:inset 0 0 0 1px var(--filo) }
+.cerca:active { background:var(--tessera) }
 .cerca .giro { display:inline-block }
 .cerca[data-cercando] .giro { animation:cerca-gira .9s linear infinite }
 @keyframes cerca-gira { to { transform:rotate(360deg) } }

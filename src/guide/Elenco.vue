@@ -21,12 +21,12 @@ defineEmits(['apri'])
 
 <style scoped>
 .voce { display:flex; align-items:center; gap:11px; text-align:left; width:100%;
-        padding:12px 13px; border-radius:16px; background:var(--carta);
-        box-shadow:0 3px 10px #8593a824 }
+        padding:12px 13px; border-radius:var(--raggio); background:var(--superficie);
+        box-shadow:var(--ombra) }
 .voce:active { transform:translateY(1px) }
 .voce .ico { font-size:25px; flex:none }
 .voce .dentro { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px }
-.voce b { font-size:15.5px; color:var(--viola-scuro) }
-.voce i { font-size:12.5px; color:var(--tenue); font-style:normal; line-height:1.35 }
-.voce .freccia { font-size:22px; color:#c3cbd8; flex:none }
+.voce b { font-size:14.5px; font-weight:600; color:var(--inchiostro) }
+.voce i { font-size:12px; color:var(--grigio); font-style:normal; line-height:1.35 }
+.voce .freccia { font-size:22px; color:#a3a9b8; flex:none }
 </style>

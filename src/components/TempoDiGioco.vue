@@ -97,33 +97,33 @@ function segno(d, i) {
 
 .modi { display: flex; gap: 5px }
 .modi button {
-  flex: 1; padding: 7px 4px; border: 0; border-radius: 10px;
-  background: #f1eefb; color: #6a5aa8; font: inherit; font-size: 11.5px;
-  font-weight: 700; cursor: pointer;
+  flex: 1; padding: 7px 4px; border: 0; border-radius: var(--raggio-piccolo);
+  background: var(--tessera); color: var(--grigio); font: inherit; font-size: 11.5px;
+  font-weight: 600; cursor: pointer;
 }
-.modi button.ora { background: #5b3fa8; color: #fff }
+.modi button.ora { background: var(--inchiostro); color: #fff }
 
-.totale { margin: 0; font-size: 12.5px; color: #8a8a99 }
-.totale b { font-size: 19px; font-weight: 800; color: #23233a }
+.totale { margin: 0; font-size: 12.5px; color: var(--grigio) }
+.totale b { font-size: 19px; font-weight: 600; color: var(--inchiostro) }
 
 .barre { display: flex; align-items: flex-end; gap: 4px; height: 84px }
 .barre.fitte { gap: 2px }
 .colonna { flex: 1; display: grid; gap: 3px; height: 100% }
 .asta { display: flex; align-items: flex-end; height: 66px;
-        background: #f5f3fc; border-radius: 5px; overflow: hidden }
-.asta i { display: block; width: 100%; min-height: 2px; background: #7c5cd6; border-radius: 5px }
-.asta i.niente { background: #e2e0ee }
-.gg { font-size: 9.5px; color: #9a9aa8; text-align: center; height: 12px }
+        background: var(--tessera); border-radius: 5px; overflow: hidden }
+.asta i { display: block; width: 100%; min-height: 2px; background: var(--accento); border-radius: 5px }
+.asta i.niente { background: var(--filo) }
+.gg { font-size: 9.5px; color: var(--grigio); text-align: center; height: 12px }
 
 .classifica { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px }
 .classifica li { display: flex; align-items: center; gap: 7px }
 .classifica .ico { font-size: 15px; width: 20px; text-align: center }
 .classifica .nome { flex: 0 0 33%; font-size: 11.5px; font-weight: 600;
                     overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
-.asta-oriz { flex: 1; height: 9px; background: #f5f3fc; border-radius: 5px; overflow: hidden }
+.asta-oriz { flex: 1; height: 9px; background: var(--tessera); border-radius: 5px; overflow: hidden }
 .asta-oriz i { display: block; height: 100%; min-width: 3px;
-               background: #7c5cd6; border-radius: 5px }
+               background: var(--accento); border-radius: 5px }
 .classifica b { font-size: 11.5px; min-width: 44px; text-align: right }
 
-.vuoto { margin: 0; font-size: 12px; color: #8a8a99 }
+.vuoto { margin: 0; font-size: 12px; color: var(--grigio) }
 </style>

@@ -353,7 +353,7 @@ const giu = n => String(n || '').charAt(0).toLowerCase() + String(n || '').slice
 <style scoped>
 .manopola { width:100%; display:flex; flex-direction:column; gap:10px }
 
-.invito { margin:0; text-align:center; font-size:13px; color:#7a7a8a }
+.invito { margin:0; text-align:center; font-size:13px; color:var(--grigio) }
 
 .quadro { display:flex; flex-direction:column; gap:8px; text-align:left }
 .chip-riga { display:flex; flex-wrap:wrap; gap:3px; margin-top:4px }
@@ -362,23 +362,23 @@ const giu = n => String(n || '').charAt(0).toLowerCase() + String(n || '').slice
 
 .elenco { list-style:none; margin:5px 0 0; padding:0; display:flex;
           flex-direction:column; gap:5px }
-.pesca { width:100%; margin-top:7px; border:none; border-radius:11px; cursor:pointer;
-         font-family:inherit; font-size:12px; font-weight:750; color:var(--viola);
-         background:#f4f2fd; padding:9px }
+.pesca { width:100%; margin-top:7px; border:none; border-radius:var(--raggio-piccolo); cursor:pointer;
+         font-family:inherit; font-size:12px; font-weight:600; color:var(--accento);
+         background:var(--tessera); padding:9px }
 .pesca:active { transform:translateY(1px) }
 
 /* ambra come le righe messe a mano, non rosso: non cancella monete, traguardi o campagne */
 .rimetti-tutto { display:flex; flex-direction:column; gap:7px; margin-top:2px }
-.tasto-rimetti { border:none; border-radius:13px; cursor:pointer; font-family:inherit;
+.tasto-rimetti { border:none; border-radius:var(--raggio); cursor:pointer; font-family:inherit;
                  padding:10px 12px; text-align:left; background:#fdf4e3; color:#8a5a10;
-                 font-size:12.5px; font-weight:800;
+                 font-size:12.5px; font-weight:600;
                  display:flex; flex-direction:column; gap:2px }
 .tasto-rimetti i { font-style:normal; font-size:10.5px; font-weight:600; color:#9a7434 }
 .tasto-rimetti:active { transform:translateY(1px) }
-.rimetti-tutto .che { margin:0; font-size:11.5px; color:#7a7a8a; line-height:1.35;
+.rimetti-tutto .che { margin:0; font-size:11.5px; color:var(--grigio); line-height:1.35;
                       text-align:left }
 .riga-tasti { display:flex; gap:6px }
 .riga-tasti .tasto-rimetti { flex:1; text-align:center; align-items:center; font-size:12.5px }
-.tasto-rimetti.chiaro { background:#eee9fb; color:var(--viola-scuro) }
+.tasto-rimetti.chiaro { background:var(--tessera); color:var(--inchiostro) }
 .tasto-rimetti.forte { background:linear-gradient(180deg,#e0a33c,#c07a10); color:#fff }
 </style>

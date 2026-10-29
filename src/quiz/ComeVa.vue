@@ -240,20 +240,20 @@ function vaBene(r) {
 
 <style scoped>
 .come-va { display: grid; gap: 10px }
-.quadro { display: grid; gap: 8px; padding: 12px; border-radius: 16px; background: #fff; box-shadow: 0 1px 6px #0000000f }
-.giudizio { display: grid; gap: 2px; margin: 0; padding: 10px 12px; border-radius: 12px; text-align: left; background: #f5f3fc }
-.giudizio b { font-size: 17px; font-weight: 850; color: #3a2a7a }
-.giudizio span { font-size: 13px; line-height: 1.4; color: #55556a }
+.quadro { display: grid; gap: 8px; padding: 12px; border-radius: var(--raggio); background: #fff; box-shadow: 0 1px 6px #0000000f }
+.giudizio { display: grid; gap: 2px; margin: 0; padding: 10px 12px; border-radius: var(--raggio-piccolo); text-align: left; background: var(--tessera) }
+.giudizio b { font-size: 17px; font-weight:600; color: var(--inchiostro) }
+.giudizio span { font-size: 13px; line-height: 1.4; color: var(--inchiostro) }
 .giudizio.bene { background: #e4f6ea } .giudizio.bene b { color: #1f6a3d }
 .giudizio.normale { background: #eef3ff } .giudizio.normale b { color: #2f4f9a }
 .giudizio.alcune { background: #fff4de } .giudizio.alcune b { color: #8a5a0a }
 .giudizio.tante { background: #ffe9e4 } .giudizio.tante b { color: #9a3a26 }
-.legenda { margin: 0; text-align: center; font-size: 11px; color: #8a8a99 }
-.legenda i { display: inline-block; width: 16px; height: 0; border-top: 3px solid #6a49c4; vertical-align: middle; margin: 0 4px 0 8px }
-.legenda i.prima { border-top: 2px dashed #9a8fc0 }
-.sotto { margin: 4px 0 0; font-size: 13px; font-weight: 850; color: #55556a }
-.dettaglio { border-radius: 14px; background: #ffffffaa; padding: 0 10px 10px }
-.dettaglio > summary { padding: 12px 4px; font-weight: 800; font-size: 14px; cursor: pointer; min-height: 44px; box-sizing: border-box; display: flex; align-items: center }
+.legenda { margin: 0; text-align: center; font-size: 11px; color: var(--grigio) }
+.legenda i { display: inline-block; width: 16px; height: 0; border-top: 3px solid var(--accento); vertical-align: middle; margin: 0 4px 0 8px }
+.legenda i.prima { border-top: 2px dashed #a3a9b8 }
+.sotto { margin: 4px 0 0; font-size: 13px; font-weight:600; color: var(--inchiostro) }
+.dettaglio { border-radius: var(--raggio); background: #ffffffaa; padding: 0 10px 10px }
+.dettaglio > summary { padding: 12px 4px; font-weight:600; font-size: 14px; cursor: pointer; min-height: 44px; box-sizing: border-box; display: flex; align-items: center }
 .dettaglio.libera { background: none; padding: 0 }
 .dettaglio.libera > summary { display: none }
 .come-va h2 { margin: 8px 0 0 }
@@ -261,57 +261,57 @@ function vaBene(r) {
 .dentro-testa { display: grid; gap: 6px }
 .dentro-testa h2 { margin: 0 }
 .torna {
-  justify-self: start; padding: 8px 12px; border: 0; border-radius: 11px;
-  background: #f1eefb; color: #5b3fa8; font: inherit; font-size: 12px;
-  font-weight: 750; cursor: pointer;
+  justify-self: start; padding: 8px 12px; border: 0; border-radius: var(--raggio-piccolo);
+  background: var(--tessera); color: var(--inchiostro); font: inherit; font-size: 12px;
+  font-weight:600; cursor: pointer;
 }
 .parti { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px }
-.parti li { display: grid; gap: 1px; padding: 9px 11px; border-radius: 12px; background: #f5f3fc }
+.parti li { display: grid; gap: 1px; padding: 9px 11px; border-radius: var(--raggio-piccolo); background: var(--tessera) }
 .parti b { font-size: 13px }
-.parti span { font-size: 11.5px; color: #8a8a99 }
+.parti span { font-size: 11.5px; color: var(--grigio) }
 
 .sommario { display: flex; gap: 8px }
 .sommario > div {
   flex: 1; display: grid; gap: 1px; padding: 9px 4px; text-align: center;
-  background: #f5f3fc; border-radius: 13px;
+  background: var(--tessera); border-radius: var(--raggio);
 }
-.sommario b { font-size: 18px; font-weight: 800 }
-.sommario span { font-size: 10.5px; color: #8a8a99; line-height: 1.2 }
+.sommario b { font-size: 18px; font-weight:600 }
+.sommario span { font-size: 10.5px; color: var(--grigio); line-height: 1.2 }
 .sommario .male { background: #ffdede }
 .sommario .male b { color: #8c2f2f }
 
-.mini { margin: 0; font-size: 11.5px; line-height: 1.45; color: #8a8a99 }
-.vuoto { margin: 0; font-size: 12.5px; line-height: 1.5; color: #55556a }
+.mini { margin: 0; font-size: 11.5px; line-height: 1.45; color: var(--grigio) }
+.vuoto { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--inchiostro) }
 
 .righe { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px }
 .riga {
   display: flex; align-items: center; gap: 8px; width: 100%;
-  padding: 4px 6px; margin: 0 -6px; border: 0; border-radius: 12px;
+  padding: 4px 6px; margin: 0 -6px; border: 0; border-radius: var(--raggio-piccolo);
   background: none; color: inherit; font: inherit; text-align: left;
   cursor: pointer; -webkit-tap-highlight-color: transparent;
 }
-.riga:active { background: #f5f3fc; transform: scale(.995) }
+.riga:active { background: var(--tessera); transform: scale(.995) }
 .ico { font-size: 17px; width: 22px; text-align: center }
 .testo { flex: 1; min-width: 0; display: grid }
-.testo b { font-size: 13px; font-weight: 700 }
-.testo i { font-style: normal; font-size: 11px; color: #8a8a99 }
+.testo b { font-size: 13px; font-weight:600 }
+.testo i { font-style: normal; font-size: 11px; color: var(--grigio) }
 
 .voto {
   display: grid; gap: 1px; min-width: 92px; padding: 6px 9px;
-  border-radius: 12px; background: #f5f3fc; color: #5b3fa8;
+  border-radius: var(--raggio-piccolo); background: var(--tessera); color: var(--inchiostro);
   text-align: right;
 }
 .voto .cuori { font-size: 13px; letter-spacing: 1px }
-.voto i { font-style: normal; font-size: 10.5px; color: #8a8a99 }
+.voto i { font-style: normal; font-size: 10.5px; color: var(--grigio) }
 /* poche prove: il segnale c'è, il verdetto no */
 .voto.poche { opacity: .55 }
 .voto.ritoccata { background: #fff6e4; color: #7d5410 }
-.voto.mai { background: #f2f2f6; color: #9a9aa8 }
-.righe.spente .testo b { color: #7a7a8a; font-weight: 600 }
+.voto.mai { background: #f2f2f6; color: var(--grigio) }
+.righe.spente .testo b { color: var(--grigio); font-weight: 600 }
 
 .altre {
-  margin-top: 2px; padding: 9px; border: 0; border-radius: 12px;
-  background: #f5f3fc; color: #5b3fa8; font: inherit; font-size: 12px;
-  font-weight: 700; cursor: pointer;
+  margin-top: 2px; padding: 9px; border: 0; border-radius: var(--raggio-piccolo);
+  background: var(--tessera); color: var(--inchiostro); font: inherit; font-size: 12px;
+  font-weight:600; cursor: pointer;
 }
 </style>

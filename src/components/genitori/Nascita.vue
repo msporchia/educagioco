@@ -91,16 +91,19 @@ function tieni() { impostaNascita(nascita.value); giro.value++; emit('cambiato')
 <style scoped>
 .carta.nascita { display:flex; flex-direction:column; align-items:stretch; gap:8px; text-align:left }
 .testa { display:flex; align-items:center; gap:12px }
+.testa .ico { font-size:22px }
+.testa b { font-size:14.5px; font-weight:600; color:var(--inchiostro) }
+.carta > i { font-style:normal; font-size:12.5px; line-height:1.45; color:var(--grigio) }
 .data { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap }
 .dove { display:flex; flex-direction:column; gap:1px }
-.dove b { font-size:15px; color:var(--viola-scuro) }
-.dove small { font-size:12.5px; color:var(--tenue) }
+.dove b { font-size:15px; font-weight:600; color:var(--inchiostro) }
+.dove small { font-size:12.5px; color:var(--grigio) }
 .azioni { display:flex; gap:14px }
-.link { background:none; border:0; padding:8px 2px; min-height:36px; font:inherit; font-size:13px; font-weight:800; color:var(--viola); cursor:pointer }
+.link { background:none; border:0; padding:8px 2px; min-height:36px; font:inherit; font-size:13px; font-weight:600; color:var(--inchiostro); text-decoration:underline; cursor:pointer }
 .riga { display:flex; gap:8px; flex-wrap:wrap }
-.riga select { flex:1; min-width:110px; min-height:44px; padding:6px 10px; border-radius:12px; border:1px solid #d9d2c2; background:#fff; font:inherit }
-.avviso-eta { padding:10px 12px; border-radius:12px; background:#fff1d6; color:#5b4300 }
+.riga select { flex:1; min-width:110px; min-height:44px; padding:6px 10px; border-radius:var(--raggio-piccolo); border:1px solid var(--filo); background:var(--superficie); font:inherit }
+.avviso-eta { padding:10px 12px; border-radius:var(--raggio-piccolo); background:#fff4dc; color:#5b4300 }
 .avviso-eta p { margin:0 0 6px }
-.rosso { color:#b4302e }
+.rosso { color:#c43b4f }
 .scarto, .prossimo { font-style:normal; font-size:13px }
 </style>

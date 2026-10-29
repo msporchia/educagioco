@@ -27,10 +27,10 @@ defineEmits(['chiudi'])
               justify-content:center; background:#1b2436aa; backdrop-filter:blur(2px) }
 .foglio { width:min(560px,100%); max-height:88vh; display:flex; flex-direction:column;
           gap:12px; padding:16px 16px calc(16px + env(safe-area-inset-bottom));
-          border-radius:22px 22px 0 0; background:linear-gradient(180deg,#fff9f0,#eef4ef);
+          border-radius:22px 22px 0 0; background:var(--fondo);
           box-shadow:0 -8px 30px #00000030; animation:sali .22s ease-out }
 @keyframes sali { from { transform:translateY(26px); opacity:.4 } }
-.foglio h2 { text-align:center; font-size:19px }
+.foglio h2 { text-align:center; font-size:17px; font-weight:600; color:var(--inchiostro) }
 .foglio .em { font-style:normal }
 .scorre { overflow-y:auto; padding:2px }
 .foglio .bottone { align-self:center; padding:12px 34px; font-size:17px }

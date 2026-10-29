@@ -121,24 +121,20 @@ const chiVieneSostituito = computed(() => {
 
 <style scoped>
 .carta { display:grid; grid-template-columns:auto 1fr; grid-template-rows:auto auto;
-         gap:2px 14px; align-items:center; text-align:left; padding:15px 18px;
-         border-radius:18px; background:var(--carta); box-shadow:0 4px 14px #8593a822;
+         gap:2px 12px; align-items:center; text-align:left; padding:12px 14px;
+         border-radius:var(--raggio); background:var(--superficie); box-shadow:var(--ombra);
          width:100%; box-sizing:border-box }
-.carta .ico { grid-row:1/3; font-size:29px }
-.carta b { font-size:16px; font-weight:800; color:var(--viola-scuro) }
-.carta i { font-style:normal; font-size:12.5px; color:var(--tenue) }
-.carta:active { transform:translateY(2px) }
-.carta.pericolo b { color:#b23a5a }
+.carta .ico { grid-row:1/3; font-size:24px }
+.carta b { font-size:14.5px; font-weight:600; color:var(--inchiostro) }
+.carta i { font-style:normal; font-size:12px; color:var(--grigio) }
+.carta:active { transform:scale(.99) }
+.carta.pericolo b { color:#c43b4f }
 .carta.pericolo.aperta { display:flex; flex-direction:column; gap:9px; align-items:center;
                          text-align:center; background:#fff0f3 }
 .carta.pericolo.aperta i { max-width:34ch }
 .carta.aperta { display:flex; flex-direction:column; gap:9px; align-items:center; text-align:center }
 .carta.aperta i { max-width:34ch }
 .carta.aperta .riga { display:flex; gap:8px; flex-wrap:wrap; justify-content:center }
-.bottone.rosso { background:linear-gradient(180deg,var(--rosso),#d63a5c); color:#fff;
-                 box-shadow:0 6px 0 #a82a46; font-size:16px; padding:13px 22px }
-.bottone.rosso:active { box-shadow:0 3px 0 #a82a46 }
-.bottone.chiaro { font-size:16px; padding:13px 22px }
-.persistenza { font-size:11.5px; color:var(--tenue); max-width:400px; line-height:1.4;
+.persistenza { font-size:11.5px; color:var(--grigio); max-width:var(--colonna); line-height:1.4;
                margin:2px 0 0 }
 </style>

@@ -44,38 +44,38 @@ defineEmits(['prova', 'apri', 'tara'])
 .voce-riga { display:flex; align-items:center; gap:8px }
 .voce-riga.apribile { cursor:pointer; -webkit-tap-highlight-color:transparent }
 .voce-riga.apribile:active { transform:scale(.995) }
-.apri { font-size:12px; font-weight:800; color:var(--viola); width:14px; text-align:center }
+.apri { font-size:12px; font-weight:600; color:var(--accento); width:14px; text-align:center }
 /* rientro largo + guida verticale, così l'annidamento si vede (non solo spazio bianco) */
 .voce-riga.dentro { padding-left:46px; position:relative }
 .voce-riga.dentro::before { content:''; position:absolute; left:27px; top:-4px; bottom:-4px;
-                       width:2px; border-radius:2px; background:#e7e0f7 }
+                       width:2px; border-radius:2px; background:var(--filo) }
 .voce-riga.dentro.ultima::before { bottom:50% } /* l'ultima chiude la guida a metà altezza */
 .voce-riga.dentro::after { content:''; position:absolute; left:29px; top:50%; width:10px;
-                      height:2px; border-radius:2px; background:#e7e0f7 }
+                      height:2px; border-radius:2px; background:var(--filo) }
 .ico { font-size:18px; line-height:1; width:22px; text-align:center }
 .testo { flex:1; display:flex; flex-direction:column; gap:0 }
-.testo b { font-size:13px; font-weight:750 }
+.testo b { font-size:13px; font-weight:600 }
 .voce-riga.dentro .testo b { font-size:12.5px; font-weight:600 }
-.testo i { font-style:normal; font-size:11px; color:#8a8a99; line-height:1.3 }
-em { font-style:normal; font-size:10.5px; font-weight:800; white-space:nowrap;
-     padding:2px 7px; border-radius:8px }
+.testo i { font-style:normal; font-size:11px; color:var(--grigio); line-height:1.3 }
+em { font-style:normal; font-size:10.5px; font-weight:600; white-space:nowrap;
+     padding:2px 7px; border-radius:var(--raggio-piccolo) }
 em.si { color:#2f6b3f; background:#dff0d8 }
 em.giu { color:#7a6a2f; background:#f3eed6 }
-em.su { color:#5b3fa8; background:#eee7ff }
+em.su { color:var(--inchiostro); background:#eee7ff }
 em.off { color:#8a4a4a; background:#f5e3e3 }
 /* unico rosso del quadro: soglia identica alle «Difficili» di «Come va» (quiz/consiglio.js) */
 em.va-male { color:#8c2f2f; background:#ffdede }
-.voce-riga.giu .testo b, .voce-riga.su .testo b, .voce-riga.off .testo b { color:#7a7a8a }
+.voce-riga.giu .testo b, .voce-riga.su .testo b, .voce-riga.off .testo b { color:var(--grigio) }
 
 .voce-riga.ritoccata { background:#fff6e4; box-shadow:inset 3px 0 0 #e5a52a;
-                       border-radius:9px }
+                       border-radius:var(--raggio-piccolo) }
 .voce-riga.ritoccata .testo b { color:#7d5410 }
 .voce-riga.ritoccata .testo i { color:#9a7434 }
 .voce-riga.ritoccata:not(.dentro) { padding:3px 6px; margin:0 -6px }
 
 .tondo { border:none; cursor:pointer; font-family:inherit; font-size:11px; line-height:1;
-         width:34px; height:34px; border-radius:11px; flex:none }
-.tondo.prova { background:#f0eaff; color:var(--viola) }
+         width:34px; height:34px; border-radius:var(--raggio-piccolo); flex:none }
+.tondo.prova { background:var(--tessera); color:var(--accento) }
 .tondo.matita { background:#fbf0dc; color:#a9741c }
 .tondo.matita.giu { background:#f2ddb2 }
 .tondo:active { transform:translateY(1px) }

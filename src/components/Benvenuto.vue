@@ -60,7 +60,7 @@ async function entra() {
 </script>
 
 <template>
-  <div class="schermo benvenuto">
+  <div class="schermo benvenuto pulito">
     <div v-if="passo === 1" class="centro">
       <span class="em">{{ primo ? '👋' : '➕' }}</span>
       <h1 v-if="primo">Ciao!<br><span>Come ti chiami?</span></h1>
@@ -151,36 +151,36 @@ form { display:flex; flex-direction:column; align-items:center; gap:14px; width:
 .nome {
   width:100%; padding:15px 18px; border:none; border-radius:16px;
   font-size:22px; text-align:center; font-family:inherit;
-  background:#ffffffee; color:var(--viola-scuro); box-shadow:0 3px 0 #0002;
+  background:var(--superficie); color:var(--inchiostro); box-shadow:var(--ombra), inset 0 0 0 1px var(--filo);
 }
-.nome:focus { outline:3px solid var(--viola); outline-offset:2px }
+.nome:focus { outline:2px solid var(--inchiostro); outline-offset:2px }
 .via {
-  padding:14px 34px; border:none; border-radius:999px; font-size:20px; font-weight:800;
+  padding:14px 34px; border:none; border-radius:999px; font-size:18px; font-weight:600;
   font-family:inherit; color:#fff; cursor:pointer;
-  background:linear-gradient(180deg, var(--viola), var(--viola-scuro)); box-shadow:0 4px 0 #0003;
+  background:var(--inchiostro); box-shadow:0 4px 14px #1f243333;
 }
 .via:disabled { opacity:.45; box-shadow:none }
 .via.in-fondo { position:sticky; bottom:6px; z-index:5 }
 .mini { opacity:.75; font-size:14px; text-align:center; margin:0 }
 .mini.alto { max-width:36ch; font-size:12.5px; margin:-4px 0 0 }
 .indietro { background:none; border:none; font-family:inherit; font-size:14px;
-            color:var(--tenue); opacity:.9; padding:4px 10px; cursor:pointer }
+            color:var(--grigio); padding:4px 10px; cursor:pointer }
 
-.che-roba { background:#ffffffcc; border:2px solid #d9d0f5; border-radius:999px;
-            font-family:inherit; font-size:14px; font-weight:800;
-            color:var(--viola-scuro); padding:11px 19px; cursor:pointer;
-            margin-top:-2px; box-shadow:0 3px 0 #d4dce6 }
+.che-roba { background:var(--superficie); border:0; border-radius:999px;
+            font-family:inherit; font-size:14px; font-weight:600;
+            color:var(--inchiostro); padding:11px 19px; cursor:pointer;
+            margin-top:-2px; box-shadow:inset 0 0 0 1px var(--filo) }
 .che-roba:active { transform:translateY(1px) }
 
 /* una colonna sola, e sotto la manopola la pelle delle sue carte (Manopola.vue): se no sembrano tre schermate incollate */
 .manopola-posto, .nascita-domanda, .amici-domanda { width:100%; max-width:400px }
-.nascita-domanda, .amici-domanda { display:flex; flex-direction:column; gap:6px; padding:9px 12px; border-radius:14px;
-                                    background:#fff; box-shadow:0 2px 8px #0000000d; text-align:left }
+.nascita-domanda, .amici-domanda { display:flex; flex-direction:column; gap:6px; padding:9px 12px; border-radius:var(--raggio);
+                                    background:var(--superficie); box-shadow:var(--ombra); text-align:left }
 .nascita-domanda p, .amici-domanda p { margin:0; text-align:left }
 .amici-domanda .leggi { border:0; background:none; color:inherit; text-decoration:underline; font:inherit; padding:0 }
 .amici-domanda .scelta { display:flex; gap:8px }
-.amici-domanda .scelta button { flex:1; min-height:44px; border:2px solid #c9c2b0; border-radius:12px; background:#fff; font:inherit; font-weight:700 }
-.amici-domanda .scelta .su { border-color:#7a5cf0; background:#7a5cf0; color:#fff }
+.amici-domanda .scelta button { flex:1; min-height:44px; border:1px solid var(--filo); border-radius:var(--raggio-piccolo); background:var(--superficie); font:inherit; font-weight:600; color:var(--inchiostro) }
+.amici-domanda .scelta .su { border-color:var(--inchiostro); background:var(--inchiostro); color:#fff }
 .nascita-domanda .selezioni { display:flex; gap:8px }
-.nascita-domanda select { flex:1; min-height:44px; padding:6px 10px; border-radius:12px; border:1px solid #d9d2c2; background:#fff; font:inherit }
+.nascita-domanda select { flex:1; min-height:44px; padding:6px 10px; border-radius:var(--raggio-piccolo); border:1px solid var(--filo); background:var(--superficie); font:inherit }
 </style>

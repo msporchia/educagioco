@@ -65,32 +65,32 @@ const nelleMaterie = a => a.materie.length + a.nonAncora.length
 
 <style scoped>
 .aree { display: grid; gap: 7px; text-align: left }
-.area { border-radius: 14px; background: #f5f3fc; overflow: hidden }
+.area { border-radius: var(--raggio); background: var(--tessera); overflow: hidden }
 .area.vuota { opacity: .65 }
 .capo, .materia { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; border: 0; background: none; font: inherit; color: #23233a; text-align: left; cursor: pointer; min-height: 52px; -webkit-tap-highlight-color: transparent }
 .capo:disabled { cursor: default }
-.capo:active:not(:disabled), .materia:active { background: #ece7fb }
+.capo:active:not(:disabled), .materia:active { background: var(--tessera) }
 .ico { font-size: 20px; flex: none }
 .testo { flex: 1; min-width: 0; display: grid; gap: 4px }
-.testo b { font-size: 14px; font-weight: 800 }
-.mai { font-size: 11.5px; color: #8a8a99 }
+.testo b { font-size: 14px; font-weight:600 }
+.mai { font-size: 11.5px; color: var(--grigio) }
 .misura { display: block; height: 7px; border-radius: 4px; background: #e4def5; overflow: hidden }
 .misura i { display: block; height: 100%; border-radius: 4px; background: #7c5cd6 }
 .num { flex: none; display: grid; justify-items: end; gap: 2px }
-.num b { font-size: 18px; font-weight: 850; color: #5b3fa8 }
-.freccia { font-style: normal; font-size: 10.5px; font-weight: 800; padding: 1px 6px; border-radius: 8px; white-space: nowrap }
+.num b { font-size: 18px; font-weight:600; color: var(--inchiostro) }
+.freccia { font-style: normal; font-size: 10.5px; font-weight:600; padding: 1px 6px; border-radius: var(--raggio-piccolo); white-space: nowrap }
 .freccia.su { background: #dff5e7; color: #1f7a45 }
 .freccia.giu { background: #ffe2dc; color: #9a3a26 }
-.freccia.pari { background: #ecebf2; color: #7a7a8a }
-.chev { color: #9a8fc0; flex: none }
+.freccia.pari { background: var(--filo); color: var(--grigio) }
+.chev { color: #a3a9b8; flex: none }
 .materie { list-style: none; margin: 0; padding: 0 6px 8px; display: grid; gap: 4px }
-.materia { background: #fff; border-radius: 11px; padding: 9px 10px }
+.materia { background: #fff; border-radius: var(--raggio-piccolo); padding: 9px 10px }
 .materia .ico { font-size: 17px }
 .materia .testo b { font-size: 13px }
 .etichetta { flex: none; min-width: 76px; text-align: right; font-size: 10.5px }
-.etichetta .dentro { color: #8a8a99 }
-.meglio, .peggio { font-style: normal; font-weight: 800; padding: 2px 7px; border-radius: 8px; white-space: nowrap }
+.etichetta .dentro { color: var(--grigio) }
+.meglio, .peggio { font-style: normal; font-weight:600; padding: 2px 7px; border-radius: var(--raggio-piccolo); white-space: nowrap }
 .meglio { background: #dff5e7; color: #1f7a45 }
 .peggio { background: #fff0d6; color: #8a5a0a }
-.non-ancora { padding: 2px 6px 0; font-size: 11.5px; color: #8a8a99 }
+.non-ancora { padding: 2px 6px 0; font-size: 11.5px; color: var(--grigio) }
 </style>

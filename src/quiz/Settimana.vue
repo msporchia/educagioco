@@ -112,38 +112,38 @@ function applica(r, { ritocco }) {
 <style scoped>
 .spegni { color: #8c2f2f }
 .spenta .voce { display: flex; align-items: center; justify-content: space-between; gap: 8px }
-.settimana { display: grid; gap: 8px; padding: 12px; text-align: left; border-radius: 16px; background: #fff;
+.settimana { display: grid; gap: 8px; padding: 12px; text-align: left; border-radius: var(--raggio); background: #fff;
              box-shadow: 0 1px 6px #0000000f }
 .settimana h2 { margin: 0 }
-h3 { margin: 4px 0 0; font-size: 13px; font-weight: 850; color: #55556a }
+h3 { margin: 4px 0 0; font-size: 13px; font-weight:600; color: var(--inchiostro) }
 
 .numeri { display: flex; gap: 7px }
 .numeri > div { flex: 1; display: grid; gap: 1px; padding: 8px 4px; text-align: center;
-                background: #f5f3fc; border-radius: 12px }
-.numeri b { font-size: 16px; font-weight: 850 }
-.numeri span { font-size: 10.5px; color: #8a8a99; line-height: 1.2 }
+                background: var(--tessera); border-radius: var(--raggio-piccolo) }
+.numeri b { font-size: 16px; font-weight:600 }
+.numeri span { font-size: 10.5px; color: var(--grigio); line-height: 1.2 }
 .numeri .su b { color: #1f7a45 }
 .numeri .male { background: #ffe9e4 }
 .numeri .male b { color: #9a3a26 }
 
-.vuoto { margin: 0; font-size: 11.5px; line-height: 1.45; color: #8a8a99 }
+.vuoto { margin: 0; font-size: 11.5px; line-height: 1.45; color: var(--grigio) }
 .righe { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px }
-.difficile { padding: 8px; border-radius: 13px; background: #fff6f3 }
+.difficile { padding: 8px; border-radius: var(--raggio); background: #fff6f3 }
 .voce { display: flex; align-items: center; gap: 8px }
 .ico { font-size: 17px; width: 22px; text-align: center }
 .testo { flex: 1; min-width: 0; display: grid; gap: 1px }
-.testo b { font-size: 13px; font-weight: 700 }
-.testo i { font-style: normal; font-size: 11px; color: #8a8a99 }
+.testo b { font-size: 13px; font-weight:600 }
+.testo i { font-style: normal; font-size: 11px; color: var(--grigio) }
 .alleggerita { font-style: normal; font-size: 10.5px; color: #1f6a8a; line-height: 1.3 }
 
 .tasti { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px }
-.tasti button { flex: 1 1 auto; padding: 8px 7px; border: 0; border-radius: 11px;
-                background: #f1eefb; color: #5b3fa8; font: inherit; font-size: 11.5px;
-                font-weight: 750; cursor: pointer }
-.tasti button.ora { background: #e3d9ff }
+.tasti button { flex: 1 1 auto; padding: 8px 7px; border: 0; border-radius: var(--raggio-piccolo);
+                background: var(--tessera); color: var(--inchiostro); font: inherit; font-size: 11.5px;
+                font-weight:600; cursor: pointer }
+.tasti button.ora { background: var(--filo) }
 
-.scala { flex: 0 0 72px; height: 8px; display: flex; border-radius: 4px; background: #eceaf3;
+.scala { flex: 0 0 72px; height: 8px; display: flex; border-radius: 4px; background: var(--filo);
          overflow: hidden }
-.scala i { display: block; height: 100%; background: #b9b0d6 }
+.scala i { display: block; height: 100%; background: #a3a9b8 }
 .scala i.ora { background: #38c172 }
 </style>

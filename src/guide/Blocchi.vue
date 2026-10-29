@@ -91,33 +91,33 @@ const testo = inGrassetto
                -webkit-user-select:text; user-select:text;
                -webkit-touch-callout:default }
 .par { font-size:15px; line-height:1.5; color:var(--testo) }
-.blocco { background:#ffffffb0; border-radius:14px; padding:12px 14px;
-          box-shadow:0 2px 8px #8593a81f }
-.blocco h3 { font-size:14px; font-weight:900; color:var(--viola-scuro);
+.blocco { background:var(--superficie); border-radius:var(--raggio); padding:12px 14px;
+          box-shadow:var(--ombra) }
+.blocco h3 { font-size:14px; font-weight:600; color:var(--inchiostro);
              margin-bottom:7px }
 .blocco ul, .blocco ol { padding-left:19px; display:flex; flex-direction:column; gap:7px }
 .blocco li { font-size:14.5px; line-height:1.45; color:var(--testo) }
 .blocco ul { list-style:disc }
 .blocco ol { list-style:decimal }
-.blocco :deep(b) { color:var(--viola-scuro) }
+.blocco :deep(b) { color:var(--inchiostro) }
 .par.dentro-blocco { font-size:14.5px }
 .par.dentro-blocco + ul, .par.dentro-blocco + ol { margin-top:9px }
 
-.pieghevole { padding:0; background:#ffffff8a }
-.pieghevole.aperto { background:#ffffffb0 }
+.pieghevole { padding:0; background:var(--superficie) }
+.pieghevole.aperto { background:var(--superficie) }
 .testa { display:flex; align-items:center; gap:9px; width:100%; text-align:left;
          padding:11px 13px; background:none; border:none; font-family:inherit;
-         cursor:pointer; border-radius:14px }
-.testa .freccia { font-size:13px; color:var(--viola); flex:none; width:12px }
-.testa b { font-size:14px; font-weight:800; color:var(--viola-scuro); line-height:1.35 }
+         cursor:pointer; border-radius:var(--raggio) }
+.testa .freccia { font-size:13px; color:var(--accento); flex:none; width:12px }
+.testa b { font-size:14px; font-weight:600; color:var(--inchiostro); line-height:1.35 }
 .testa:active { transform:translateY(1px) }
 .pieghevole .dentro { padding:0 13px 13px; display:flex; flex-direction:column; gap:9px }
 .pieghevole .dentro .par { font-size:14px }
 
 .collega { display:flex; flex-direction:column; gap:2px; margin-top:9px;
-           padding:10px 12px; border-radius:12px; background:#f5f2ff;
+           padding:10px 12px; border-radius:var(--raggio-piccolo); background:var(--tessera);
            text-decoration:none }
-.collega b { font-size:14px; color:var(--viola-scuro) }
-.collega i { font-style:normal; font-size:11.5px; color:var(--tenue); line-height:1.35 }
+.collega b { font-size:14px; font-weight:600; color:var(--inchiostro) }
+.collega i { font-style:normal; font-size:11.5px; color:var(--grigio); line-height:1.35 }
 .collega:active { transform:translateY(1px) }
 </style>

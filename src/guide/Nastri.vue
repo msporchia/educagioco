@@ -118,35 +118,34 @@ const altre = computed(() => novita.value.length - 1)
 </template>
 
 <style scoped>
-.nastri { display:flex; flex-direction:column; gap:7px; width:100%; max-width:400px }
+.nastri { display:flex; flex-direction:column; gap:7px; width:100%; max-width:var(--colonna) }
 .nastro { display:flex; align-items:center; gap:6px; padding:9px 10px;
-          border-radius:14px; text-align:left }
-.nastro.novita { width:100%; background:#e6f7ec; color:#1f5f36; border:2px solid #c3e8cf;
+          border-radius:var(--raggio); text-align:left }
+.nastro.novita { width:100%; background:#e6f7ec; color:#1f5f36;
                  cursor:pointer }
-.nastro.novita .freccia { flex:none; font-size:22px; font-weight:900; opacity:.7 }
-.nastro.posta { width:100%; background:#eef4ff; border:2px solid #cfe0f8; cursor:pointer }
+.nastro.novita .freccia { flex:none; font-size:20px; opacity:.6 }
+.nastro.posta { width:100%; background:#eef4ff; color:#2c4283; cursor:pointer }
 .nastro.posta .dentro { display:flex; flex-direction:column; gap:2px; min-width:0 }
 .nastro .dentro { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;
                   background:none; text-align:left; padding:0 }
-.nastro b { font-size:13.5px; font-weight:800 }
+.nastro b { font-size:13.5px; font-weight:600 }
 .nastro i { font-style:normal; font-size:11.5px; line-height:1.35; opacity:.8 }
 
-.installa { background:#e8f0ff; color:#2c4283; box-shadow:0 2px 8px #8593a81f }
+.installa { background:#e8f0ff; color:#2c4283 }
 .installa .chiudi { flex:none; width:26px; height:26px; border-radius:50%;
-                    background:#ffffff90; color:#2c4283; font-size:13px; font-weight:800 }
+                    background:#ffffff90; color:#2c4283; font-size:13px; font-weight:600 }
 
-.nuovo { background:#fff3d6; color:#7a4b00; box-shadow:0 2px 8px #8593a81f }
-.nuovo .ora { flex:none; padding:8px 14px; border-radius:999px; font-size:13px; font-weight:900;
-              background:linear-gradient(180deg,var(--giallo),var(--arancio)); color:#5a3200;
-              box-shadow:0 3px 0 #d97706 }
+.nuovo { background:#fff3d6; color:#7a4b00 }
+.nuovo .ora { flex:none; padding:8px 14px; border-radius:999px; font-size:13px; font-weight:600;
+              background:var(--inchiostro); color:#fff }
 .nuovo .chiudi { flex:none; width:26px; height:26px; border-radius:50%;
-                background:#ffffff90; color:#7a4b00; font-size:13px; font-weight:800 }
+                background:#ffffff90; color:#7a4b00; font-size:13px; font-weight:600 }
 .nuovo .barra { width:100%; height:10px; margin:5px 0 1px; border-radius:999px; overflow:hidden;
                 background:#ffffffcc; box-shadow:inset 0 0 0 1px #e6cf9d }
 .nuovo .barra i { display:block; height:100%; width:0; border-radius:999px; opacity:1;
                   background:linear-gradient(90deg,var(--arancio),var(--giallo)); transition:width .2s }
 .nuovo .barra.vaga i { width:35%; animation:ag-vaga 1.3s ease-in-out infinite alternate }
 @keyframes ag-vaga { from { transform:translateX(-10%) } to { transform:translateX(200%) } }
-.nuovo .conto { font-weight:800; font-variant-numeric:tabular-nums }
-.nuovo .ora:active { transform:translateY(2px); box-shadow:0 1px 0 #d97706 }
+.nuovo .conto { font-weight:600; font-variant-numeric:tabular-nums }
+.nuovo .ora:active { transform:scale(.97) }
 </style>
