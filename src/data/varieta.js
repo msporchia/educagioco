@@ -11,7 +11,7 @@ export const TETTO_MINUTI = 180   // quello che un grande può scrivere, per sog
 export const AVVISO_DA = 5        // sotto, è la monetina di un colpo: la dice la soglia, non il premio
 export const AREE_DI_SCUOLA = ['numeri', 'parole']
 // giochi che non danno monete: niente salvadanaio sulla carta (unita/varieta lo verifica sui sorgenti)
-export const NON_PAGANO = ['generale', 'castello']
+export const NON_PAGANO = ['castello']
 // una schermata che è un altro nome dello stesso gioco (App.vue)
 export const ALIAS = { verbi: 'inglese' }
 

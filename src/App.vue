@@ -15,7 +15,6 @@ const LinguaGame = caricaQuando(() => import('./views/LinguaGame.vue'))
 const MathGame = caricaQuando(() => import('./views/MathGame.vue'))
 const TowerDefense = caricaQuando(() => import('./views/TowerDefense.vue'))
 const BancarellaGame = caricaQuando(() => import('./views/BancarellaGame.vue'))
-const GeneraleGame = caricaQuando(() => import('./views/GeneraleGame.vue'))
 const AlboView = caricaQuando(() => import('./views/AlboView.vue'))
 const ProfiloView = caricaQuando(() => import('./views/ProfiloView.vue'))
 const GenitoriView = caricaQuando(() => import('./views/GenitoriView.vue'))
@@ -39,7 +38,6 @@ const viste = { home: HomeView,
                 inglese: LinguaGame, verbi: LinguaGame, spagnolo: LinguaGame,
                 mate: MathGame, torri: TowerDefense,
                 bancarella: BancarellaGame,
-                generale: GeneraleGame,
                 albo: AlboView, profilo: ProfiloView, genitori: GenitoriView,
                 guide: Guide,
                 novita: Novita,
@@ -49,7 +47,7 @@ const viste = { home: HomeView,
 // stesso componente con due lingue: il key le tiene separate, se no Vue riuserebbe la schermata di prima
 const lingue = { inglese: 'en', verbi: 'en', spagnolo: 'es' }
 
-// giochi.html#generale apre già quella schermata: non è un router, l'indirizzo
+// giochi.html#bancarella apre già quella schermata: non è un router, l'indirizzo
 // non viene mai riscritto da qui. hasOwnProperty e non viste[k]: #toString altrimenti sarebbe valida
 function dallIndirizzo() {
   if (typeof location === 'undefined') return

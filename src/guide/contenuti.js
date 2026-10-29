@@ -586,27 +586,6 @@ export const AIUTI = {
       ] },
     ],
   },
-  generale: {
-    emoji: '🎖️', titolo: 'Il generale',
-    blocchi: [
-      'Tu non giochi: **dai gli ordini**, e poi guardi come va a finire. Se qualcosa non torna, si cambia il piano e si riprova.',
-      { titolo: 'Come si gioca', righe: [
-        'Metti in fila gli ordini, uno sotto l\'altro.',
-        'Poi manda avanti e guarda: gli ordini vengono eseguiti in quell\'ordine.',
-        'Se finisce male, non hai perso niente: cambia un ordine e rilancia.',
-      ] },
-      'Le prime prove insegnano una cosa per volta. Non c\'è fretta e non c\'è punteggio a tempo.',
-      { titolo: 'Se ti blocchi', righe: [
-        'Il 💡 apre il cartello del livello. I primi aiuti sono **gratis** e fanno ragionare: cosa chiede il livello, e la domanda giusta da farsi.',
-        'Poi si pagano in monete: 🪙10 un indizio, e 🪙50 · 100 · 200 quelli che scrivono nel piano — un pezzo, la struttura coi bersagli da trovare, il piano intero. Il piano intero vince, ma vale una stella sola. Senza monete, niente aiuto.',
-      ] },
-      { titolo: 'Cosa allena', righe: [
-        'Pensare per passi e prevedere le conseguenze: è programmare, senza chiamarlo così.',
-        'E l\'idea che un errore si legge — «è andata storta qui» — invece di riprovare a caso.',
-      ] },
-    ],
-  },
-
   sotterraneo: {
     emoji: '🗝️', titolo: 'Il sotterraneo',
     blocchi: [

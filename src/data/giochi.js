@@ -49,10 +49,6 @@ export const GIOCHI = [
   { chiave: 'bancarella', ico: '🛒', nome: 'La bancarella',
     che: 'euro, centesimi e resto', area: 'numeri', come: 'fare',
     copertina: { fondo: '#ffd36b', disegno: '#e8553f', scena: 'tenda' } },
-  { chiave: 'generale',   ico: '🎖️', nome: 'Il generale',
-    che: 'sequenze, cicli ed eventi', area: 'logica', come: 'strategia', grandi: true,
-    sperimentale: true, // in pausa: incompleto, non gira bene (docs/generale/README.md)
-    copertina: { fondo: '#c9a36b', disegno: '#b08850', scena: 'griglia' } },
   // i giochi di src/giochi/ si aggiungono da soli dal loro manifesto: ripeterli qui sarebbe tenerli allineati a mano
   ...GIOCHI_NUOVI.filter(g => !AL_POSTO_DI_UNO_VECCHIO.includes(g.chiave)).map(riga),
   // lo stesso sotterraneo con la discesa disegnata in 3D, in prova sui telefoni: stessa avventura e stessa sosta (la chiave

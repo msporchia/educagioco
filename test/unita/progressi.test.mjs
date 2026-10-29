@@ -150,17 +150,7 @@ titolo('Traguardi')
   ok(salto.fatto === TRAGUARDI.find(t => t.id === 'mate-giuste').come(1000),
      'saltando gradi il cartello dice l\'ultimo preso')
 
-  // la prima vittoria «da solo» del Generale: il cartello diceva «Vinci 6 livelli…»
-  const g = nuovo()
-  g.totals.daSolo = 0
-  riscuotiTraguardi(g, now)
-  g.totals.daSolo = 1
-  const par = riscuotiTraguardi(g, now).nuovi.find(t => t.id === 'gen-par')
-  ok(par && par.fatto === 'Vinci un livello senza farti svelare niente',
-     'alla prima vittoria da solo il cartello dice «un livello»')
-  ok(par && par.come === 'Vinci 6 livelli senza farti svelare niente',
-     'e l\'albo dice già il prossimo gradino')
-  const vuoto = statoTraguardi(nuovo(), now).find(t => t.id === 'gen-par')
+  const vuoto = statoTraguardi(nuovo(), now).find(t => t.id === 'banco-incasso')
   ok(vuoto.fatto === '', 'un traguardo mai preso non ha niente da raccontare')
 
   /* le categorie inglesi: tre parole in una categoria la fanno contare */

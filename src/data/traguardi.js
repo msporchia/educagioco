@@ -5,16 +5,12 @@
    da soli dal loro manifesto. */
 import { AREE_GIOCHI, TRAGUARDI_GIOCHI } from '../giochi/albo.js'
 
-// toglierla quando il generale entra in home: finché è false l'area e i suoi traguardi non esistono per l'albo
-export const GENERALE_ATTIVO = true
-
 const AREE_TUTTE = [
   { id: 'mate',     nome: 'Tabelline Asteroidi', emoji: '☄️', classe: 'mate' },
   { id: 'inglese',  nome: 'English',             emoji: '🇬🇧', classe: 'eng' },
   { id: 'spagnolo', nome: 'Español',             emoji: '🇪🇸', classe: 'esp' },
   { id: 'torri',    nome: 'Difendi il Castello', emoji: '🏰', classe: 'td' },
   { id: 'bancarella', nome: 'La bancarella',       emoji: '🛒', classe: 'banco' },
-  { id: 'generale', nome: 'Il generale',           emoji: '🎖️', classe: 'gen' },
   { id: 'tutti',    nome: 'Tutti i giochi',      emoji: '🌈', classe: 'tutti' },
 ]
 
@@ -157,28 +153,6 @@ const TRAGUARDI_TUTTI = [
     come: n => `Incassa ${Math.round(n / 100)} € in tutto`,
     soglie: [10000, 50000, 200000], valore: m => m.tot('incasso') },
 
-  // ---------- Il generale ---------- non quante volte si è indovinato, quante volte ci si è arrivati da soli
-  { id: 'gen-livelli', area: 'generale', emoji: '🎖️', nome: 'Sul campo',
-    come: n => n === 1 ? 'Supera il primo livello del generale'
-                       : `Supera ${n} livelli del generale`,
-    soglie: [1, 5, 12], valore: m => m.tot('missioni') },
-  // id resta gen-par anche se il par non c'è più: è la chiave del badge salvato nei profili, cambiarla lo azzererebbe
-  { id: 'gen-par', area: 'generale', emoji: '🎯', nome: 'Ci sono arrivato da solo',
-    come: n => n === 1 ? 'Vinci un livello senza farti svelare niente'
-                       : `Vinci ${n} livelli senza farti svelare niente`,
-    soglie: [1, 6, 20], valore: m => m.tot('daSolo') },
-  // la riga che il gioco è venuto a insegnare: dire una volta sola una cosa che va fatta cento volte
-  { id: 'gen-avanzati', area: 'generale', emoji: '🔁', nome: 'Non lo ripeto due volte',
-    come: n => n === 1 ? 'Vinci un livello con un ordine che si ripete o che aspetta'
-                       : `Vinci ${n} livelli con un ordine di alto livello`,
-    soglie: [1, 10, 40], valore: m => m.tot('avanzati') },
-  { id: 'gen-stelle', area: 'generale', emoji: '⭐', nome: 'Petto di stelle',
-    come: n => `Raccogli ${n} stelle sul campo`,
-    soglie: [10, 30, 60], valore: m => m.stelleGen() },
-  { id: 'gen-campagna', area: 'generale', emoji: '🏁', nome: 'Generale in capo',
-    come: () => 'Finisci tutti i livelli della campagna',
-    soglie: [1], valore: m => m.campagnaGen() },
-
   // ---------- trasversali ----------
   { id: 'all-serie', area: 'tutti', emoji: '🔥', nome: 'Ogni giorno',
     come: n => `Gioca ${n} giorni di fila`,
@@ -196,16 +170,15 @@ const TRAGUARDI_TUTTI = [
     soglie: [100, 500, 2000], valore: m => m.tot('monete') },
 ]
 
-const acceso = a => a !== 'generale' || GENERALE_ATTIVO
 // i giochi nuovi vanno in fondo, prima dei trasversali (che parlano di tutti i giochi insieme)
 const trasversale = a => a.id === 'tutti'
 export const AREE = [
-  ...AREE_TUTTE.filter(a => acceso(a.id) && !trasversale(a)),
+  ...AREE_TUTTE.filter(a => !trasversale(a)),
   ...AREE_GIOCHI,
   ...AREE_TUTTE.filter(trasversale),
 ]
 export const TRAGUARDI = [
-  ...TRAGUARDI_TUTTI.filter(t => acceso(t.area) && t.area !== 'tutti'),
+  ...TRAGUARDI_TUTTI.filter(t => t.area !== 'tutti'),
   ...TRAGUARDI_GIOCHI,
   ...TRAGUARDI_TUTTI.filter(t => t.area === 'tutti'),
 ]

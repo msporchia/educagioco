@@ -279,7 +279,7 @@ const SPEZZATO = !!process.env.SPEZZATO
 // del Gioco.vue di sempre) e Rollup non gli dà una facciata — il suo Gioco.vue
 const schermataDi = c => c.facadeModuleId ||
   (c.name && /^Gioco(3d)?$/.test(c.name) && (c.moduleIds || Object.keys(c.modules || {})).find(id => /\/giochi\/[^/]+\/Gioco(3d)?\.vue$/.test(id))) || ''
-const VECCHI = { MathGame: 'mate', TowerDefense: 'castello', BancarellaGame: 'bancarella', GeneraleGame: 'generale', LinguaGame: 'inglese' }
+const VECCHI = { MathGame: 'mate', TowerDefense: 'castello', BancarellaGame: 'bancarella', LinguaGame: 'inglese' }
 const GRUPPI = new Map()   // nome del file prodotto → gruppo; lo riempie estraiDati, lo legge il service worker
 function gruppoDiModulo (id) {
   const m = /\/src\/giochi\/([^/]+)\//.exec(id)
