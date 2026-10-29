@@ -39,7 +39,7 @@ await page.waitForSelector('[data-fps]', { timeout: 8000 })
 await page.click('[data-azione="fps-elenco"]')
 controlla('dopo la ricarica la misura c\'è ancora', /ultima/.test(await page.textContent('[data-fps-elenco]')))
 
-/* ── LA MISURA DEL TELEFONO: si apre, dice la fascia e le due prove (girano in integrazione/benchmark-veri) ── */
+/* ── LA MISURA DEL TELEFONO: si apre, dice la fascia e c'è il tasto (gira in integrazione/benchmark-veri) ── */
 await page.click('[data-azione="grandi"]')
 await page.waitForSelector('.tastierino', { timeout: 5000 })
 for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
@@ -48,7 +48,7 @@ await page.click('[data-scheda="impostazioni"]')
 await apriTendine(page)      // «Avanzate» nasce chiusa
 await page.click('[data-azione="benchmark"]')
 controlla('la misura dice la fascia del telefono', /fascia \w+/.test(await page.textContent('[data-benchmark-fascia]')))
-controlla('e le due prove', await page.isVisible('[data-azione="benchmark-veri"]') && await page.isVisible('[data-azione="benchmark-scale"]'))
+controlla('e il tasto degli fps veri', await page.isVisible('[data-azione="benchmark-veri"]'))
 await page.click('[data-azione="benchmark-chiudi"]')
 uguale('chiusa la misura', await page.locator('[data-benchmark]').count(), 0)
 

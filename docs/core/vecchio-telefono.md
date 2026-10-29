@@ -52,17 +52,16 @@ per provarla sul computer (`[data-fascia]`, `[data-fascia-scelta]`, `[data-azion
 
 ## La misura del telefono
 
-Zona dei grandi → *Impostazioni* → *Avanzate* → **Misura questo telefono**: gli fps veri e dove pesa, coi modelli veri dei giochi
+Zona dei grandi → *Impostazioni* → *Avanzate* → **Misura questo telefono**: gli fps veri coi modelli veri dei giochi
 ([vecchio-telefono-veri.md](vecchio-telefono-veri.md)). In testa dice la fascia del telefono e da dove viene.
 
 ## Tarare il computer sul telefono (una volta)
 
-1. Sul Note 7 si fa «dove pesa» e si manda (o si copia in un file `dovepesa.txt`).
-2. `node strumenti/vecchio-telefono.mjs calibra --log dovepesa.txt` cerca la CPU ×N che dà lo stesso `js` e la zavorra K che dà gli
-   stessi ms di una scena (di difetto il villaggio intero, `scala-sopra-9`) e li salva in `strumenti/vecchio-telefono/profilo.json`
-   (uno per `--gpu`). Va rifatta se cambia il computer, a macchina calma. **Senza taratura le leve sono una stima e lo strumento lo
-   scrive.**
-3. `node strumenti/vecchio-telefono.mjs benchmark --contro dovepesa.txt` rifà la prova sul computer rallentato e dà il rapporto scena
+1. Sul Note 7 si fa la misura e si manda (o si copia in un file `telefono.txt`).
+2. `node strumenti/vecchio-telefono.mjs calibra --log telefono.txt` cerca la CPU ×N che dà lo stesso `js` della prova di CPU e la salva
+   in `strumenti/vecchio-telefono/profilo.json` (uno per `--gpu`); la zavorra sulla GPU resta quella salvata (`--zavorra` la cambia).
+   Va rifatta se cambia il computer, a macchina calma. **Senza taratura le leve sono una stima e lo strumento lo scrive.**
+3. `node strumenti/vecchio-telefono.mjs benchmark --contro telefono.txt` rifà la prova sul computer rallentato e dà il rapporto scena
    per scena: vicino a 1 quella parte è imitata bene, lontano no (e allora per quella parte si misura sul telefono).
 
 Le misure vere stanno in `strumenti/vecchio-telefono/log/` (Redmi Note 7, Pixel 9a, iPhone 12 Pro Max), e il `profilo.json` è tarato

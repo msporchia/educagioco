@@ -1,23 +1,17 @@
-// La misura del telefono coi modelli veri dei giochi (docs/core/vecchio-telefono-veri.md): due prove. Gli FPS VERI (le scene del
-// gioco com'è: discese, mondo di sopra, fattoria 3D) e DOVE PESA (le due scale: una scena vera costruita un pezzo alla volta). Ogni
-// gruppo di scene carica il suo codice con `import()` solo quando tocca a lui: un caricamento che fallisce è una riga «non regge», mai
-// un errore. Ogni scena ha un rodaggio (shader, geometrie, riserve: il primo fotogramma si tiene a parte) e poi la misura.
+// La misura del telefono coi modelli veri dei giochi (docs/core/vecchio-telefono-veri.md): gli FPS VERI, le scene del gioco com'è
+// (discese, mondo di sopra, fattoria 3D, asteroidi) con la fascia del telefono. Ogni gioco carica il suo codice con `import()` solo
+// quando tocca a lui: un caricamento che fallisce è una riga «non regge», mai un errore. Ogni scena ha un rodaggio (shader, geometrie,
+// riserve: il primo fotogramma si tiene a parte) e poi la misura.
 import { eventiContesto } from './veri/tela.js'
-import { sceneDellaScala, MOSTRI_SCALA } from './veri/scala.js'
 
 const LENTO = 33
 // [minimo, tetto] in ms; `quadri`: i fotogrammi che una finestra vuole almeno (a 500 ms l'uno, il telefono imitato, il tempo da solo
 // darebbe dieci fotogrammi); `fine`: il tetto di una fase anche senza i fotogrammi
 const TEMPI = {
   corto: { rodaggio: [120, 300], misura: [250, 500], finestra: 120, quadri: 0, fine: 3000 },        // le prove (`window.__benchmarkCorto`)
-  // il riferimento del calore all'inizio di ogni gruppo, dopo la pausa che fa raffreddare
-  rif: { rodaggio: [1000, 2500], misura: [2000, 3000], finestra: 1000, quadri: 10, fine: 8000 },
-  // le scale: rodaggio ~2 s e misura 3-4,5 s, aspettando la GPU a ogni fotogramma (lavoro in fila)
-  scala: { rodaggio: [1500, 3000], misura: [3000, 4500], finestra: 1000, quadri: 12, fine: 10000 },
   // gli fps veri: il gioco com'è, senza la lettura di un pixel che aspetta la GPU (`vero`: CPU e GPU lavorano insieme), 8 s fermi
   fps: { rodaggio: [2000, 4000], misura: [8000, 8000], finestra: 2000, quadri: 12, fine: 12000, vero: true },
 }
-const RAFFREDDA = 4500   // ms a schermo nero fra un gruppo e l'altro
 // I tetti di tempo: una scena che non finisce (un fotogramma che non torna, una promessa che non si risolve) diventa «non regge: tempo
 // scaduto» e la prova va avanti, col gruppo rifatto da capo per la scena dopo. `scena`: in più delle due fasi al loro tetto (`fine`);
 // `carica`: il codice e la scena di un gruppo
@@ -31,11 +25,10 @@ export function conTetto(p, ms, cosa) {
 const scaduto = e => /tempo scaduto/.test(String((e && e.message) || e))
 
 const discese = () => import('./veri/discese.js')
-const base = () => import('./veri/base.js')
 // gli fps veri: le discese (camminare in un piano, lo scontro), il mondo di sopra (il villaggio, lo scontro sul prato), la fattoria 3D
-// col suo degrado acceso e gli Asteroidi (il volo, e il volo con le esplosioni); un gruppo solo, quindi un riferimento del calore solo
+// col suo degrado acceso e gli Asteroidi (il volo, e il volo con le esplosioni)
 const fattoria = () => import('./veri/fattoria.js'), sopraVero = () => import('./veri/sopra-vero.js'), asteroidi = () => import('./veri/asteroidi.js')
-const TAPPE_FPS = [
+export const TAPPE_FPS = [
   { gruppo: 'fps', carica: discese, tempi: 'fps', scene: [
     { id: 'fps-piano', nome: 'camminare in un piano del sotterraneo', passeggia: true, stima: 16 },
     ...[3, 6].map(n => ({ id: `fps-sot-${n}`, nome: `scontro nel sotterraneo, ${n} mostri`, mostri: n, colpi: true, stima: 14 })),
@@ -49,27 +42,11 @@ const TAPPE_FPS = [
     { id: 'fps-ast', nome: 'asteroidi, il volo con 8 sassi e la nave madre', stima: 14 },
     { id: 'fps-ast-boom', nome: 'asteroidi, un\'esplosione al secondo', boom: true, stima: 12 },
   ] },
-  // il piano di nuovo in fondo (la prima scena del gruppo è anche la prima dopo il caricamento), e con le armi semplici della bassa di
-  // prima: il 29/10 alle 17:05 il piano era sceso da 55 a 41 fps, con le armi intere appena tornate (docs/sotterraneo/prestazioni-3d-bassa.md)
-  { gruppo: 'fps', carica: discese, opz: { spegni: ['armiSemplici:1'] }, tempi: 'fps', scene: [{ id: 'fps-piano-semplici', nome: 'camminare in un piano, con le armi semplici', passeggia: true, stima: 16 }] },
-  { gruppo: 'fps', carica: discese, tempi: 'fps', scene: [{ id: 'fps-piano-ancora', nome: 'camminare in un piano, di nuovo in fondo', passeggia: true, stima: 16 }] },
 ]
-// le scale (veri/scala.js): lo scontro delle discese e il villaggio di sopra, dal fondo alla scena intera
-const TAPPE_SCALE = [
-  { gruppo: 'scala', carica: () => import('./veri/elementi-sot.js'), opz: { mostri: MOSTRI_SCALA }, tempi: 'scala', scene: sceneDellaScala('sot') },
-  { gruppo: 'scala-sopra', carica: () => import('./veri/elementi-sopra.js'), tempi: 'scala', scene: sceneDellaScala('sopra') },
-]
-/** Le due prove: `fps` (il tasto «Gli fps veri») e `scale` («Dove pesa»). */
-export const PROVE = { fps: TAPPE_FPS, scale: TAPPE_SCALE }
-/**
- * Quanto dura una prova sul Note 7: la somma dei secondi attesi per scena (`stima`, dai log), più a ogni gruppo nuovo la pausa che
- * raffredda, il riferimento (~5 s) e il caricamento. Scritta sul foglio iniziale.
- */
-export function stima(prova) {
-  const tappe = PROVE[prova]
-  const gruppi = new Set(tappe.map(t => t.gruppo)).size
-  const scene = tappe.reduce((n, t) => n + t.scene.length, 0)
-  const secondi = tappe.reduce((n, t) => n + t.scene.reduce((m, x) => m + (x.stima || 8), 0), 0) + gruppi * (RAFFREDDA / 1000 + 6)
+/** Quanto dura la prova sul Note 7: la somma dei secondi attesi per scena (`stima`, dai log: caricamento, rodaggio e misura). Sul foglio iniziale. */
+export function stima() {
+  const scene = TAPPE_FPS.reduce((n, t) => n + t.scene.length, 0)
+  const secondi = TAPPE_FPS.reduce((n, t) => n + t.scene.reduce((m, x) => m + (x.stima || 14), 0), 0)
   return { scene, secondi, minuti: Math.ceil(secondi / 60) }
 }
 
@@ -207,28 +184,15 @@ async function ambiente() {
   return a
 }
 
-// il riferimento del calore: la pausa a schermo nero, poi la stessa scena fissa (veri/base.js), corta
-async function riferimento({ contenitore, fermo, corto, progresso, k, tot, raffredda }) {
-  if (!corto && raffredda > 0) {
-    for (let s = Math.round(raffredda / 1000); s > 0 && !fermo(); s--) { progresso(k, tot, `pausa per raffreddare, ${s} s`); await new Promise(r => setTimeout(r, 1000)) }
-  }
-  if (fermo()) return null
-  progresso(k, tot, 'riferimento del calore')
-  const m = await base(), f = await m.prepara({ contenitore })
-  const giro = creaGiro(f)
-  try { return await giro.misura(corto ? TEMPI.corto : TEMPI.rif, fermo, () => f.scena(), true) } finally { giro.ferma(); f.via() }
-}
-
 /**
- * Le scene della prova `prova` (`fps` o `scale`) nel `contenitore` (un elemento a tutto schermo). `progresso(i, n, nome)`, `fermo()` per
- * interrompere, `corto` per le prove, `solo`: gli inizi degli id o dei gruppi da fare (`['fps-sot', 'scala-sopra']`, e `js` per la prova di
- * CPU), `raffredda`: i ms di pausa fra i gruppi.
- * → { tipo: 'veri', prova, info, js, risultati, gruppi, avvisi, contesto, schermo, dpr, fascia, fermata }
+ * Le scene nel `contenitore` (un elemento a tutto schermo). `progresso(i, n, nome)`, `fermo()` per interrompere, `corto` per le prove,
+ * `solo`: gli inizi degli id da fare (`['fps-sot', 'fps-ast']`, e `js` per la prova di CPU).
+ * → { tipo: 'veri', info, js, risultati, gruppi, avvisi, contesto, schermo, dpr, fascia, fermata }
  */
-export async function eseguiVeri({ contenitore, prova = 'fps', progresso = () => {}, fermo = () => false, corto = false, solo = null, fascia = null, raffredda = RAFFREDDA,
+export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = () => false, corto = false, solo = null, fascia = null,
                                    tetti = TETTO, tappe: proprie = null, parziale = null }) {
   const info = infoGpuVeri()
-  const tappe = (proprie || PROVE[prova])
+  const tappe = (proprie || TAPPE_FPS)
     .map(t => ({ ...t, scene: t.scene.filter(s => !solo || solo.some(p => s.id.startsWith(p) || t.gruppo.startsWith(p))) })).filter(t => t.scene.length)
   const tot = tappe.reduce((n, t) => n + t.scene.length, 0)
   const risultati = [], gruppi = {}, avvisi = new Map()
@@ -246,34 +210,17 @@ export async function eseguiVeri({ contenitore, prova = 'fps', progresso = () =>
   window.addEventListener('error', guasto, true); window.addEventListener('unhandledrejection', guasto, true)
   const persi0 = eventiContesto.persi, ripresi0 = eventiContesto.ripresi
   const prima = await ambiente()
-  let k = 0, ultimo = null, rifOra = null
-  const dati = (dopo, extra) => ({ tipo: 'veri', prova, info, risultati, gruppi, fascia, ambiente: { prima, dopo }, avvisi: [...avvisi].map(([m, n]) => ({ m, n })).sort((a, b) => b.n - a.n),
+  let k = 0
+  const dati = (dopo, extra) => ({ tipo: 'veri', info, risultati, gruppi, fascia, ambiente: { prima, dopo }, avvisi: [...avvisi].map(([m, n]) => ({ m, n })).sort((a, b) => b.n - a.n),
     contesto: { persi: eventiContesto.persi - persi0, ripresi: eventiContesto.ripresi - ripresi0 },
     schermo: `${Math.round(window.innerWidth)}x${Math.round(window.innerHeight)}`, dpr: window.devicePixelRatio || 1, ...extra })
   // a ogni scena misurata, quello che c'è fin lì (`parziale`): se il telefono si pianta le scene fatte restano (docs/core/vecchio-telefono-veri.md)
   let salvate = 0
   const salva = () => { if (!parziale || risultati.length === salvate) return; salvate = risultati.length; try { parziale(dati(prima, { js: null, fermata: true, aMeta: [risultati.length, tot] })) } catch (e) { /* si salva la prossima */ } }
-  const rifs = []
   try {
     for (const tappa of tappe) {
       if (fermo()) break
-      const nuovo = tappa.gruppo !== ultimo
       const g = gruppi[tappa.gruppo] || (gruppi[tappa.gruppo] = { carica: [], dpr: [], luci: null, programmi: 0 })
-      // a ogni gruppo nuovo: la pausa e il riferimento (a fine prova, diviso il più svelto: di quanto il telefono è rallentato)
-      if (nuovo) {
-        let r = null
-        try { r = await conTetto(riferimento({ contenitore, fermo, corto, progresso, k, tot, raffredda }), raffredda + tetti.carica + tetti.scena, 'il riferimento') } catch (e) { r = null }
-        // un riferimento più che doppio del più svelto si rifà una volta (subito, senza pausa): un intoppo non deve correggere un gruppo intero;
-        // e il primo si rifà sempre: è freddo (shader e trame del riferimento ancora da compilare)
-        if (r && r.ms && (!rifs.length || r.ms > 2 * Math.min(...rifs))) {
-          try { const r2 = await conTetto(riferimento({ contenitore, fermo, corto, progresso, k, tot, raffredda: 0 }), tetti.carica + tetti.scena, 'il riferimento'); if (r2 && r2.ms && r2.ms < r.ms) r = r2 } catch (e) { /* si tiene il primo */ }
-        }
-        if (r && r.ms) {
-          rifOra = r.ms; rifs.push(r.ms)
-          if (!g.rif) g.rif = { ms: r.ms, p95: r.p95, js: r.js, gpu: r.gpu }
-        }
-      }
-      ultimo = tappa.gruppo
       progresso(k, tot, `${tappa.gruppo}: si carica…`)
       const opzTappa = (typeof tappa.opz === 'function' ? tappa.opz(risultati) : tappa.opz) || {}
       let f = null, giro = null, errore = null, scaduta = false
@@ -303,7 +250,7 @@ export async function eseguiVeri({ contenitore, prova = 'fps', progresso = () =>
           try {
             const prima = f.conti ? f.conti().programmi : 0
             // nelle prove corte i tempi corti, ma gli fps veri restano senza la lettura che aspetta la GPU
-            const tm = corto ? { ...TEMPI.corto, vero: !!(TEMPI[tappa.tempi] || {}).vero } : TEMPI[tappa.tempi] || TEMPI.scala
+            const tm = corto ? { ...TEMPI.corto, vero: !!(TEMPI[tappa.tempi] || {}).vero } : TEMPI[tappa.tempi] || TEMPI.fps
             // le due fasi stanno sotto `fine` l'una (se arrivano fotogrammi), più la preparazione della scena
             let r = await conTetto(giro.misura(tm, fermo, () => f.scena(s), s === tappa.scene[0]), 2 * tm.fine + tetti.scena, 'la scena')
             if (giro.guasto) throw giro.guasto
@@ -314,7 +261,7 @@ export async function eseguiVeri({ contenitore, prova = 'fps', progresso = () =>
             const l = luciDi(f.scena3d && f.scena3d())
             if (!g.luci || l.p + l.s > g.luci.p + g.luci.s) g.luci = l
             if (guasti.length > g0) throw new Error(`errore nel gioco: ${guasti[g0]}`)
-            risultati.push({ ...riga(s, tappa), ...r, ...(rifOra ? { rif: rifOra } : {}) })
+            risultati.push({ ...riga(s, tappa), ...r })
           } catch (e) {
             risultati.push({ ...riga(s, tappa), errore: breve(e) })
             if (scaduto(e)) scaduta = true
@@ -328,13 +275,6 @@ export async function eseguiVeri({ contenitore, prova = 'fps', progresso = () =>
     console.warn = orig.warn; console.error = orig.error
     window.removeEventListener('error', guasto, true); window.removeEventListener('unhandledrejection', guasto, true)
     for (const m of new Set(guasti)) avvisi.set(`errore: ${m}`, guasti.filter(x => x === m).length)
-  }
-  // la deriva del calore: il riferimento di ogni gruppo diviso il più svelto (il telefono più fresco; il primo è spesso freddo di
-  // shader e trame, e prenderlo come metro triplicava tutto)
-  const fresco = rifs.length ? Math.min(...rifs) : null
-  if (fresco) {
-    for (const r of risultati) if (r.rif) r.deriva = Math.round(r.rif / fresco * 100) / 100
-    for (const g of Object.values(gruppi)) if (g.rif) g.rif.deriva = Math.round(g.rif.ms / fresco * 100) / 100
   }
   const js = fermo() || (solo && !solo.includes('js')) ? null : proveCpu()
   return dati(await ambiente(), { js, fermata: fermo() })

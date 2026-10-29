@@ -19,7 +19,7 @@
      node strumenti/perdite-3d.mjs --cicli 40 --caldi 5 --solo discesa,zaino,mondo,dialoghi,dungeon
      node strumenti/perdite-3d.mjs --resta --solo zaino,mondo,dialoghi   # sempre nella stessa scena del mondo di sopra
      node strumenti/perdite-3d.mjs --giu                                 # nell'abisso, un piano più giù a ciclo
-     node strumenti/perdite-3d.mjs --veri scala,scala-sopra --corto      # «Dove pesa» della misura del telefono, una riga per scena
+     node strumenti/perdite-3d.mjs --veri fps-sot,fps-villaggio --corto  # gli fps veri della misura del telefono, una riga per scena
 
    Per cercare chi tiene una cosa che cresce: `--chi WebGL2RenderingContext` (la via più corta dalle
    radici, dalla fotografia dello heap), `--nuovi materiali` (nati nel penultimo ciclo e vivi alla fine,
@@ -461,7 +461,7 @@ const c = campagnaSeminata({ finite: 3, eroe: 'cavaliere', zaino: ZAINO, gemme: 
 Object.assign(c.cfg.avventure.cavaliere, { mondo: { giro: 0, parlato: true, firma: m.firma } })
 await semina(page, { coins: 0, settings: { sperimentali: true }, campagne: { sotterraneo: c } })
 await page.waitForSelector('.carte', { timeout: 15000 })
-// `--veri scala,scala-sopra`: la misura del telefono (zona dei grandi → «Misura questo telefono» → «Dove pesa»), coi gruppi
+// `--veri fps-sot,fps-villaggio`: la misura del telefono (zona dei grandi → «Misura questo telefono» → gli fps veri), con le scene
 // chiesti, e i conteggi dopo OGNI scena: le scene di un gruppo accendono e spengono elementi della stessa scena, i gruppi la rifanno
 if (opz('veri')) await banco(opz('veri').split(','))
 async function banco(solo) {
@@ -474,10 +474,10 @@ async function banco(solo) {
   for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
   await page.click('[data-scheda="impostazioni"]')
   await page.evaluate(() => document.querySelectorAll('details.tendina').forEach(d => { d.open = true }))
-  await page.evaluate(([so, co]) => { window.__benchmarkSolo = so; window.__benchmarkCorto = co; window.__benchmarkRaffredda = 0 }, [solo, argv.includes('--corto')])
+  await page.evaluate(([so, co]) => { window.__benchmarkSolo = so; window.__benchmarkCorto = co }, [solo, argv.includes('--corto')])
   await page.click('[data-azione="benchmark"]')
-  await page.click('[data-azione="benchmark-scale"]')
-  console.log(`la misura «dove pesa»: ${solo.join(', ')}${argv.includes('--corto') ? ' (corta)' : ''}; una riga per scena`)
+  await page.click('[data-azione="benchmark-veri"]')
+  console.log(`la misura degli fps veri: ${solo.join(', ')}${argv.includes('--corto') ? ' (corta)' : ''}; una riga per scena`)
   const righe = [], campiB = ['geometrie', 'materiali', 'trame', 'oggetti3d', 'contesti', 'tele', 'bitmap', 'heapMB', 'bufferMB', 'nodi', 'ascoltatori', 'timer']
   let prima = null
   for (const fine = Date.now() + 3 * 3600e3; Date.now() < fine;) {
@@ -493,12 +493,8 @@ async function banco(solo) {
     }
     await attendi(page, 300)
   }
-  // dentro un gruppo la scena è la stessa (si accendono e spengono elementi): lì non deve crescere niente. Fra i gruppi conta il
-  // riferimento del calore, misurato a ogni gruppo con la stessa scena: deve tornare uguale (le scene di prima buttate)
+  // ogni scena butta il gioco di prima: scena dopo scena non deve crescere niente (contesti, geometrie, heap)
   let rossi = 0
-  const gruppoDi = r => (/^\d+ \/ \d+ ([^:]+):/.exec(r.dove) || [])[1] || null
-  const perGruppo = new Map()
-  for (const r of righe) { const g = gruppoDi(r); if (g) (perGruppo.get(g) || perGruppo.set(g, []).get(g)).push(r) }
   const stampa = (titolo, lista, unita) => {
     console.log(`\n${titolo}`)
     for (const k of campiB) {
@@ -509,10 +505,7 @@ async function banco(solo) {
       console.log(`  ${rosso ? '✗' : ' '} ${k.padEnd(12)} ${R.pendenza >= 0 ? '+' : ''}${R.pendenza.toFixed(3).padStart(8)}/${unita}  r² ${R.r2.toFixed(2)}  (${Math.round(R.primo * 10) / 10} → ${Math.round(R.ultimo * 10) / 10})`)
     }
   }
-  for (const [g, l] of perGruppo) if (l.length >= 3) stampa(`dentro il gruppo ${g} (${l.length} scene; pendenza per scena, r²)`, l, 'scena')
-  const rif = righe.filter(r => /riferimento del calore/.test(r.dove))
-  if (rif.length >= 3) stampa(`al riferimento del calore, gruppo dopo gruppo (${rif.length} volte)`, rif, 'gruppo')
-  else console.log(`\nal riferimento del calore: ${rif.map(r => `geometrie ${r.geometrie} contesti ${r.contesti} heap ${Math.round(r.heapMB)} MB buffer ${Math.round(r.bufferMB || 0)} MB`).join(' → ')}`)
+  if (righe.length >= 3) stampa(`scena dopo scena (${righe.length} scene; pendenza per scena, r²)`, righe, 'scena')
   if (opz('json')) writeFileSync(resolve(opz('json')), JSON.stringify({ veri: solo, righe }, null, 1))
   if (errori.length) console.log(`errori della pagina: ${errori.length}\n  ${[...new Set(errori)].slice(0, 6).join('\n  ')}`)
   await browser.close()
