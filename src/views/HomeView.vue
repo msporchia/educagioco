@@ -26,7 +26,7 @@ import { chiediRipresa } from '../giochi/ripresa.js'
 import { vociInMemoria, versione as sessioniCambiate } from '../store/sessioni.js'
 import { giro, ricarica } from '../store/varieta.js'
 import { chiaveDelGioco } from '../data/varieta.js'
-import { aggiornaOra, daUnSito } from '../aggiornamento.js'
+import { aggiornaOra, aggiornando, daUnSito } from '../aggiornamento.js'
 
 const emit = defineEmits(['vai'])
 
@@ -147,7 +147,10 @@ const ripresa = computed(() => {
   return r ? { ...g, punto: r.dove, immagine: r.immagine } : g
 })
 // il cartello dell'aggiornamento sta in cima (Nastri.vue): da giù in fondo lo si porta in vista
+// mentre lavora la ↻ del tasto gira: il cartello in cima può restare fuori schermo
+const cercando = computed(() => ['chiedo', 'scarico', 'pronta'].includes(aggiornando.value?.fase))
 function cercaVersione () {
+  if (cercando.value) return
   aggiornaOra()
   nextTick(() => document.querySelector('[data-nastro="versione"]')?.scrollIntoView?.({ block: 'center' }))
 }
@@ -261,7 +264,8 @@ function riprendi (k) { chiediRipresa(k); emit('vai', k) }
         <span class="versione">aggiornato il {{ versione.etichetta
           }}<span v-if="versione.commit"> · {{ versione.commit }}</span></span>
         <button v-if="siCerca" type="button" class="cerca" data-azione="cerca-versione"
-                @click="cercaVersione">↻ cerca aggiornamenti</button>
+                :data-cercando="cercando ? '' : null" :aria-busy="cercando"
+                @click="cercaVersione"><span class="giro">↻</span> {{ cercando ? 'sto cercando…' : 'cerca aggiornamenti' }}</button>
       </p>
     </div>
 
@@ -327,4 +331,8 @@ function riprendi (k) { chiediRipresa(k); emit('vai', k) }
 .cerca { padding:7px 12px; border-radius:999px; font-size:11.5px; font-weight:800;
          color:var(--tenue); background:#ffffff66; box-shadow:inset 0 0 0 1px #d7dfea }
 .cerca:active { background:#ffffffaa }
+.cerca .giro { display:inline-block }
+.cerca[data-cercando] .giro { animation:cerca-gira .9s linear infinite }
+@keyframes cerca-gira { to { transform:rotate(360deg) } }
+@media (prefers-reduced-motion: reduce) { .cerca[data-cercando] .giro { animation:none } }
 </style>
