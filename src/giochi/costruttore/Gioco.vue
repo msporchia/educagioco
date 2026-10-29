@@ -14,6 +14,7 @@ import { scalaDi, applica } from './motore/aiuti.js'
 import { CAPITOLI, QUANTE_TAPPE, FILE, FILA_ATTUALE, riordina } from './dati/campagna.js'
 import { LIVELLI } from './dati/livelli.js'
 import { LIBERO, APRE_DOPO } from './dati/libero.js'
+import { usaAmici } from '../../amici/usaAmici.js'
 import { copia, programma as scriviProgramma } from './dati/scrivi.js'
 import * as mod from './motore/modifica.js'
 import { fraseDi } from './motore/esecutore.js'
@@ -92,18 +93,20 @@ const lasciatoAMeta = (l, i) => {
   const p = archivio.programmi[l.chiave]
   return !!p && stelleDi(CHIAVE, i) === 0 && impronta(p) !== improntaDiInizio(l)
 }
+// gli amici dalla loro bacheca (docs/core/amici-nei-giochi.md): il livello da fare di ognuno, dopo l'ultimo il cantiere libero
+const amici = usaAmici(CHIAVE)
 const livelliScheda = computed(() => LIVELLI.map((l, i) => {
   const stelle = stelleDi(CHIAVE, i)
   return {
     indice: i, nome: l.nome, impara: l.impara, capitolo: l.capitolo, stelle,
     stato: !aperta(CHIAVE, i) ? 'spento' : stelle > 0 ? 'vinto' : adesso(CHIAVE, i) ? 'adesso' : 'aperto',
-    aMeta: lasciatoAMeta(l, i),
+    aMeta: lasciatoAMeta(l, i), amici: amici.sullaTappa(i),
   }
 }))
 const fumettoMappa = ref(null)
 
 const liberoAperto = computed(() => (avanza.tappa || 0) >= APRE_DOPO)
-const libero = computed(() => ({ ...LIBERO, aperto: liberoAperto.value,
+const libero = computed(() => ({ ...LIBERO, aperto: liberoAperto.value, amici: amici.allaFine(),
   dice: liberoAperto.value ? 'Costruisci quello che vuoi, coi progetti dei livelli.'
     : `Si apre finito il livello ${APRE_DOPO}, «${LIVELLI[APRE_DOPO - 1].nome}».` }))
 
@@ -646,6 +649,7 @@ const progettoAperto = computed(() =>
     <div ref="radice" class="cst">
       <template v-if="vista === 'mappa'">
         <div v-if="passoGuida" class="cst-guida-scheda"><Guida :passo="passoGuida" /></div>
+        <p v-if="amici.davanti" class="cst-davanti" data-amico-davanti>{{ amici.davanti }}</p>
         <Scheda v-model:aperto="fumettoMappa" :livelli="livelliScheda" :capitoli="CAPITOLI"
                 :tappa="avanza.tappa || 0" :libero="libero" :chi="state.player || ''"
                 @gioca="apriLivello" @libero="apriLivello(LIBERO_IDX)" />

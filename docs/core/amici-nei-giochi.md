@@ -76,12 +76,13 @@ che dichiarano `amici` si allarga, e se il gioco ha una `tappa` sua, un controll
 | Survivors | fatto | pallini e nomi sulla tappa, record sotto la sopravvivenza, a fine sopravvivenza |
 | Codice Segreto (`codice`) | fatto | pallini e nomi sulla tappa, record sotto il gioco libero, `data-contro-amici` al codice sbagliato che chiude la fila |
 | Passo passo (`passo`) | fatto | due percorsi, `coniglio` e `cane` (la mappa che si guarda): `tappa` è il posto della sua tappa di adesso sulla sua strada (`postoSullaStrada`, `motore/strade.js`), i numeri di tappe se le ha fatte tutte (è al suo sentiero); in cima `data-amico-davanti`, un pallino sotto la casella e il nome nel fumetto (sulla casella non c'è posto), sotto il sentiero i record di quella sfida e chi c'è senza, `data-contro-amici` sul cartello che chiude la serie (quando un 💡 pagato la chiude: «lascio perdere» non ha cartello) |
+| Il Robot (`costruttore`) | fatto | un pallino sotto il led (sotto il connettore, per il cantiere libero), il nome nel fumetto del led; in cima alla scheda `data-amico-davanti`. Niente record né frase di fine: il gioco non ha una sfida senza fine |
 
 ## Da fare
 
 - La colonna degli amici nella tabella dei record (l'albo).
 - «Melody ti ha superato» all'apertura dell'app: dopo aver visto se i pallini piacciono.
 
-Nei test: `integrazione/amici-rotta`, `integrazione/amici-survivors`, `integrazione/amici-codice`, `integrazione/amici-passo`. Bersagli: `[data-amico-davanti]`; `[data-amici-qui]` (con
+Nei test: `integrazione/amici-rotta`, `integrazione/amici-survivors`, `integrazione/amici-codice`, `integrazione/amici-passo`, `integrazione/amici-costruttore`. Bersagli: `[data-amico-davanti]`; `[data-amici-qui]` (con
 `[data-al]` dove serve) e dentro `[data-pallino-amico]`; `[data-record-amici]` con le righe `[data-record-amico]`;
-`[data-contro-amici]`; in Passo passo i pallini sulla casella `[data-amici-casella][data-al]` (il posto sulla strada) e i nomi nel fumetto `[data-fumetto] [data-amici-qui]`; sulla rotta `[data-amico-in-rotta]` con `[data-al]` (il nodo).
+`[data-contro-amici]`; in Passo passo i pallini sulla casella `[data-amici-casella][data-al]` (il posto sulla strada) e i nomi nel fumetto `[data-fumetto] [data-amici-qui]`; sulla rotta `[data-amico-in-rotta]` con `[data-al]` (il nodo); nel Robot i pallini sul led `[data-amici-led][data-al]` (`libero` per il connettore) e il nome nel fumetto `[data-fumetto] [data-amici-qui]`.

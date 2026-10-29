@@ -28,6 +28,8 @@
 
 /* la mappa è la scheda del robot (viste/Scheda.vue): qui solo la riga della guida sopra */
 .cst-guida-scheda { flex: none; padding: 6px 10px; background: #0d3b2c }
+.cst-davanti { flex: none; margin: 0; padding: 6px 10px; background: #0d3b2c; color: #e8efe9; text-align: center;
+               font-size: 14px; font-weight: 700 }
 
 .cst-cantiere { flex: 1; min-height: 0; display: flex; flex-direction: column }
 .cst-sopra { flex: 0 0 auto; padding: 6px 10px 4px; display: flex; flex-direction: column; gap: 6px }

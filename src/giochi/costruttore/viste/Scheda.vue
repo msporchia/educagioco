@@ -10,17 +10,19 @@ let ultimo = null      // { chi, arrivo: dov'è il robot, gioco: il led da fare 
    vedi docs/costruttore/scheda.md. */
 import { ref, shallowRef, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import Fumetto from '../../../components/Fumetto.vue'
+import AmiciQui from '../../../components/amici/AmiciQui.vue'
+import PallinoAmico from '../../../components/amici/PallinoAmico.vue'
 import Robot from './Robot.vue'
 import { disponiScheda, stradaDaPunto, partenzaDa, durataViaggio, lungo, larghezzaScheda, ALONE, R_LED, CONNETTORE,
          STELLE_MAX, STELLA } from '../motore/scheda.js'
 import { disegnaDecoro, disegnaCoperchi, piediniChip, tracciato, STRATI, COLORI } from '../scena/scheda.js'
 
 const props = defineProps({
-  // [{ indice, nome, impara, capitolo, stato: vinto|adesso|aperto|spento, stelle, aMeta }]
+  // [{ indice, nome, impara, capitolo, stato: vinto|adesso|aperto|spento, stelle, aMeta, amici }]  (amici: chi è arrivato lì, docs/core/amici-nei-giochi.md)
   livelli: { type: Array, required: true },
   capitoli: { type: Array, required: true },     // [{ chiave, nome, icona }]
   tappa: { type: Number, required: true },       // il livello da fare; livelli.length a fila finita
-  libero: { type: Object, required: true },      // { nome, icona, aperto, dice }
+  libero: { type: Object, required: true },      // { nome, icona, aperto, dice, amici }
   chi: { type: String, default: '' },
   aperto: { type: [Number, String], default: null },   // il fumetto aperto: un indice o 'libero'
 })
@@ -204,7 +206,7 @@ const statoDi = n => {
 }
 const leds = computed(() => (scheda.value ? scheda.value.nodi.filter(n => n.tipo === 'led').map(n => {
   const l = perIndice.value[n.indice] || {}
-  return { ...n, nome: l.nome, stato: statoDi(n), stelle: l.stelle || 0, aMeta: !!l.aMeta && l.stato !== 'spento', guizzo: appena.value.has(n.k) }
+  return { ...n, nome: l.nome, stato: statoDi(n), stelle: l.stelle || 0, aMeta: !!l.aMeta && l.stato !== 'spento', guizzo: appena.value.has(n.k), amici: l.amici || [] }
 }) : []))
 const chips = computed(() => (scheda.value ? scheda.value.nodi.filter(n => n.tipo === 'chip').map(n => {
   const cap = props.capitoli.find(c => c.chiave === n.cap) || {}
@@ -341,6 +343,16 @@ function entra() { emit('update:aperto', null); emit('libero') }
               :style="{ left: (scheda.connettore.x - 86) + 'px', top: (scheda.connettore.y - 28) + 'px' }"
               :aria-label="libero.nome + (libero.aperto ? '' : ', chiuso')" @click.stop="tocca('libero')"></button>
 
+      <!-- gli amici arrivati qui: i pallini sotto il led (o il connettore), il nome nel fumetto -->
+      <span v-for="n in leds.filter(l => l.amici.length)" :key="'a' + n.indice" class="cst-amici-posto" data-amici-led :data-al="n.indice"
+            :style="{ left: n.x + 'px', top: (n.y + R_LED + 10) + 'px' }">
+        <PallinoAmico v-for="a in n.amici" :key="a.chiave" :amico="a" :lato="16" data-pallino-amico />
+      </span>
+      <span v-if="libero.amici.length" class="cst-amici-posto" data-amici-led data-al="libero"
+            :style="{ left: scheda.connettore.x + 'px', top: (scheda.connettore.y + CONNETTORE.alto / 2 + 12) + 'px' }">
+        <PallinoAmico v-for="a in libero.amici" :key="a.chiave" :amico="a" :lato="16" data-pallino-amico />
+      </span>
+
       <Fumetto v-if="fumetto" :key="String(aperto)" :x="fumetto.x" :y="fumetto.y" :raggio="fumetto.raggio"
                :limite="scheda.W" :largo="230" :scorre="scorre"
                :tenue="fumetto.libero ? !libero.aperto : fumetto.l.stato === 'spento'"
@@ -348,16 +360,19 @@ function entra() { emit('update:aperto', null); emit('libero') }
         <template v-if="fumetto.libero">
           <b class="cst-fu-titolo">{{ libero.aperto ? libero.icona : '🔒' }} {{ libero.nome }}</b>
           <span class="cst-fu-riga">{{ libero.dice }}</span>
+          <AmiciQui :amici="libero.amici" :lato="16" class="cst-fu-amici" data-al="libero" />
           <button v-if="libero.aperto" type="button" class="cst-fu-via" data-azione="costruisci" @click="entra">▶ costruisci</button>
         </template>
         <template v-else-if="fumetto.l.stato === 'spento'">
           <b class="cst-fu-titolo" data-serve>🔒 prima il livello {{ prossimo }}</b>
           <span class="cst-fu-riga">Il {{ fumetto.l.indice + 1 }} è «{{ fumetto.l.nome }}»</span>
+          <AmiciQui :amici="fumetto.l.amici" :lato="16" class="cst-fu-amici" :data-al="fumetto.l.indice" />
         </template>
         <template v-else>
           <b class="cst-fu-titolo">{{ fumetto.l.indice + 1 }} · {{ fumetto.l.nome }}</b>
           <span class="cst-fu-riga">Impari: {{ fumetto.l.impara }}</span>
           <span class="cst-fu-stelle" data-stelle>{{ stelline(fumetto.l.stelle) }}</span>
+          <AmiciQui :amici="fumetto.l.amici" :lato="16" class="cst-fu-amici" :data-al="fumetto.l.indice" />
           <span v-if="fumetto.l.aMeta" class="cst-fu-riga cst-fu-meta">✎ lasciato a metà: il programma ti aspetta</span>
           <button type="button" class="cst-fu-via" data-azione="costruisci" @click="costruisci(fumetto.l.indice)">▶ costruisci</button>
         </template>
@@ -402,6 +417,8 @@ function entra() { emit('update:aperto', null); emit('libero') }
 .cst-tasto-libero { position:absolute; width:172px; height:56px; padding:0; border:0; border-radius:8px;
                     background:transparent; box-shadow:none }
 .cst-in-viaggio { position:absolute; inset:0; z-index:4 }
+.cst-amici-posto { position:absolute; z-index:1; transform:translate(-50%,-50%); display:flex; gap:2px; pointer-events:none }
+.cst-fu-amici { margin:4px 0 2px; font-size:12.5px }
 
 .cst-fu-titolo { display:block; margin:0 0 3px; font-size:14px; font-weight:600 }
 .cst-fu-riga { display:block; font-size:12.5px; color:#4d5a53 }

@@ -14,6 +14,8 @@ export default {
   copertina: { fondo: '#1f6b4a', disegno: '#2f8a62', scena: 'circuito' },
   tappe: QUANTE_TAPPE,
   grandi: true,
+  // gli amici sulla scheda (docs/core/amici-nei-giochi.md): il cursore della campagna, e dopo l'ultimo livello il cantiere libero
+  amici: { tappe: QUANTE_TAPPE, dove: 'al cantiere libero' },
 
   riassunto(av = { tappa: 0, stelle: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)
