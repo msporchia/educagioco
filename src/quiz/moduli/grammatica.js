@@ -44,9 +44,9 @@ const COPPIE_GENERE = [
   { m: 'zio', mp: 'zii', f: 'zia', fp: 'zie' },
   { m: 'amico', mp: 'amici', f: 'amica', fp: 'amiche' },
   { m: 'cuoco', mp: 'cuochi', f: 'cuoca', fp: 'cuoche', em: '👨‍🍳' },
-  { m: 'studente', mp: 'studenti', f: 'studentessa', fp: 'studentesse', erroreF: 'studenta', erroreM: 'studento', em: '🎓' },
-  { m: 'professore', mp: 'professori', f: 'professoressa', fp: 'professoresse', erroreF: 'professora', erroreM: 'professoro', em: '🧑‍🏫' },
-  { m: 'dottore', mp: 'dottori', f: 'dottoressa', fp: 'dottoresse', erroreF: 'dottora', erroreM: 'dottoro', em: '⚕️' },
+  { m: 'studente', mp: 'studenti', f: 'studentessa', fp: 'studentesse', erroreM: 'studento', em: '🎓' },
+  { m: 'professore', mp: 'professori', f: 'professoressa', fp: 'professoresse', erroreM: 'professoro', em: '🧑‍🏫' },
+  { m: 'dottore', mp: 'dottori', f: 'dottoressa', fp: 'dottoresse', erroreM: 'dottoro', em: '⚕️' },
   { m: 'attore', mp: 'attori', f: 'attrice', fp: 'attrici', erroreF: 'attora', erroreM: 'attoro', em: '🎭' },
   { m: 'principe', mp: 'principi', f: 'principessa', fp: 'principesse', erroreF: 'principa', erroreM: 'principo', em: '🤴' },
   { m: 'leone', mp: 'leoni', f: 'leonessa', fp: 'leonesse', erroreF: 'leona', erroreM: 'leono', em: '🦁' },
@@ -58,8 +58,8 @@ const COPPIE_GENERE = [
   { m: 'orso', mp: 'orsi', f: 'orsa', fp: 'orse', em: '🐻' },
   { m: 'lupo', mp: 'lupi', f: 'lupa', fp: 'lupe', em: '🐺' },
   { m: 'sarto', mp: 'sarti', f: 'sarta', fp: 'sarte', em: '✂️' },
-  { m: 'pittore', mp: 'pittori', f: 'pittrice', fp: 'pittrici', erroreF: 'pittora', erroreM: 'pittoro', em: '🎨' },
-  { m: 'scrittore', mp: 'scrittori', f: 'scrittrice', fp: 'scrittrici', erroreF: 'scrittora', erroreM: 'scrittoro', em: '✍️' },
+  { m: 'pittore', mp: 'pittori', f: 'pittrice', fp: 'pittrici', erroreM: 'pittoro', em: '🎨' },
+  { m: 'scrittore', mp: 'scrittori', f: 'scrittrice', fp: 'scrittrici', erroreM: 'scrittoro', em: '✍️' },
   { m: 're', mp: 're', f: 'regina', fp: 'regine', erroreM: 'regino', em: '👑' },
   { m: 'eroe', mp: 'eroi', f: 'eroina', fp: 'eroine', em: '🦸' },
   { m: 'marito', mp: 'mariti', f: 'moglie', fp: 'mogli', em: '💍' },
@@ -119,9 +119,6 @@ const ARTICOLI = [
   { parola: 'scoiattolo', genere: 'm', numero: 's', tipo: 'z-gn-ps-x', em: '🐿️' },
   { parola: 'sbaglio', genere: 'm', numero: 's', tipo: 'z-gn-ps-x' },
   { parola: 'zucchero', genere: 'm', numero: 's', tipo: 'z-gn-ps-x', em: '🍬' },
-  { parola: 'gnocco', genere: 'm', numero: 's', tipo: 'z-gn-ps-x' },
-  { parola: 'pneumatico', genere: 'm', numero: 's', tipo: 'z-gn-ps-x' },
-  { parola: 'yogurt', genere: 'm', numero: 's', tipo: 'z-gn-ps-x', em: '🥣' },
   { parola: 'sport', genere: 'm', numero: 's', tipo: 'z-gn-ps-x', em: '⚽' },
   { parola: 'spazio', genere: 'm', numero: 's', tipo: 'z-gn-ps-x' },
   { parola: 'stadio', genere: 'm', numero: 's', tipo: 'z-gn-ps-x', em: '🏟️' },
@@ -147,8 +144,6 @@ const ARTICOLI = [
   { parola: 'gnomi', genere: 'm', numero: 'p', tipo: 'z-gn-ps-x', em: '🧙' },
   { parola: 'stivali', genere: 'm', numero: 'p', tipo: 'z-gn-ps-x', em: '👢' },
   { parola: 'specchi', genere: 'm', numero: 'p', tipo: 'z-gn-ps-x' },
-  { parola: 'gnocchi', genere: 'm', numero: 'p', tipo: 'z-gn-ps-x' },
-  { parola: 'pneumatici', genere: 'm', numero: 'p', tipo: 'z-gn-ps-x' },
   { parola: 'spazi', genere: 'm', numero: 'p', tipo: 'z-gn-ps-x' },
   { parola: 'stadi', genere: 'm', numero: 'p', tipo: 'z-gn-ps-x', em: '🏟️' },
   { parola: 'casa', genere: 'f', numero: 's', tipo: 'normale', em: '🏠' },
@@ -491,7 +486,7 @@ class Grammatica extends Modulo {
     })
   }
 
-  // maschile/femminile nei due versi: l'errore vero è scambiare il cambio di genere con un plurale
+  // maschile/femminile nei due versi: l'errore vero è scambiare il cambio di genere con un plurale; niente «dottora», «professora», «pittora»: sono attestati, il falso è il plurale
   genereSwitch(sorte) {
     const c = sorte.uno(COPPIE_GENERE)
     const versoFemminile = sorte.forse(0.5)

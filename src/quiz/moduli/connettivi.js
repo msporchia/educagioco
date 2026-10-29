@@ -152,7 +152,7 @@ const CONDIZIONI = [
   { condizione: 'riusciamo a evitare il traffico', conseguenza: 'Arriveremo in tempo per il film', emoji: '🚗' },
   { condizione: "superi l'esame di nuoto", conseguenza: 'Potrai fare la gara vera', emoji: '🏊' },
   { condizione: 'restano ancora posti liberi', conseguenza: 'Ci iscriveremo anche noi', emoji: '📋' },
-  { condizione: 'riesco a indovinare il numero pensato', conseguenza: 'Vincerai tu il prossimo giro', emoji: '🔢' },
+  { condizione: 'riesco a indovinare il numero pensato', conseguenza: 'Vincerò io il prossimo giro', emoji: '🔢' },
   { condizione: 'il negozio ha ancora la taglia giusta', conseguenza: 'Compreremo le scarpe nuove oggi', emoji: '👟' },
   { condizione: 'riusciamo a prenotare in tempo', conseguenza: 'Andremo al ristorante preferito sabato', emoji: '🍽️' },
   { condizione: 'riesci a fare centro al primo tiro', conseguenza: 'Vincerai il peluche del tiro a segno', emoji: '🎯' },
@@ -165,7 +165,7 @@ const CONDIZIONI = [
   { condizione: 'il portiere para il rigore decisivo', conseguenza: 'La nostra squadra vincerà la coppa', emoji: '🏆' },
   { condizione: 'riesci a stare in equilibrio sul monopattino', conseguenza: 'Potrai partecipare alla gara', emoji: '🛴' },
   { condizione: 'il gelato non si squaglia prima di arrivare a casa', conseguenza: 'Lo mangeremo tutti insieme', emoji: '🍦' },
-  { condizione: "l'uovo di Pasqua contiene la sorpresa che aspetti", conseguenza: 'Lo scambierai con quello di tuo cugino', emoji: '🥚' },
+  { condizione: "l'uovo di Pasqua contiene la sorpresa che aspetti", conseguenza: 'Sarai felicissimo', emoji: '🥚' },
   { condizione: 'riusciamo a costruire la tenda prima del buio', conseguenza: 'Dormiremo sotto le stelle', emoji: '⛺' },
   { condizione: 'il messaggio arriva prima di mezzanotte', conseguenza: 'Sapremo subito il risultato', emoji: '✉️' },
   { condizione: 'la torre di carte non crolla al primo piano', conseguenza: 'Continueremo a costruire fino al quinto piano', emoji: '🃏' },
@@ -289,7 +289,7 @@ const FALSI_TEMPO = {
   se: "«se» serve per un'ipotesi: queste invece sono cose che succedono davvero",
 }
 
-// lo stesso «mentre» dice due cose diverse: si capisce quale delle due, non si sceglie una parola. Metà tempo, metà contrasto.
+// lo stesso «mentre» dice due cose diverse: si capisce quale delle due, non si sceglie una parola. Metà tempo, metà contrasto; nel contrasto i due fatti non sono mai contemporanei (altrimenti anche «nello stesso momento» sarebbe vero).
 const MENTRE_SENSO = [
   { frase: 'La mamma stirava mentre il bambino faceva i compiti.', senso: 'tempo' },
   { frase: 'I nonni giocavano a carte mentre i nipoti guardavano un cartone.', senso: 'tempo' },
@@ -299,22 +299,22 @@ const MENTRE_SENSO = [
   { frase: 'Il pubblico applaudiva mentre gli attori uscivano dal palco.', senso: 'tempo' },
   { frase: 'Il treno partiva mentre correvo verso il binario.', senso: 'tempo' },
   { frase: 'La pioggia cadeva mentre aspettavamo sotto la pensilina.', senso: 'tempo' },
-  { frase: 'Io adoro la verdura, mentre mio fratello non la mangia mai.', senso: 'contrasto' },
-  { frase: 'La mia squadra ha vinto, mentre quella di Marco ha perso.', senso: 'contrasto' },
-  { frase: 'A me piace il mare, mentre a mia sorella piace la montagna.', senso: 'contrasto' },
-  { frase: 'Alcuni bambini erano già pronti, mentre altri dormivano ancora.', senso: 'contrasto' },
-  { frase: 'Il gatto ama dormire tutto il giorno, mentre il cane vuole sempre giocare.', senso: 'contrasto' },
-  { frase: "Un fratello è alto e magro, mentre l'altro è basso e robusto.", senso: 'contrasto' },
-  { frase: 'La maglietta rossa costava poco, mentre quella blu costava il triplo.', senso: 'contrasto' },
-  { frase: "Metà della classe ha scelto il disegno, mentre l'altra metà ha scelto la musica.", senso: 'contrasto' },
+  { frase: 'Da piccolo non mangiavo la verdura, mentre adesso mi piace moltissimo.', senso: 'contrasto' },
+  { frase: "L'anno scorso la mia squadra ha perso, mentre quest'anno ha vinto il campionato.", senso: 'contrasto' },
+  { frase: 'Da bambina mi piaceva il mare, mentre adesso preferisco la montagna.', senso: 'contrasto' },
+  { frase: 'Ieri ero già pronto alle sette, mentre oggi mi sono svegliato tardissimo.', senso: 'contrasto' },
+  { frase: 'Da cucciolo il cane giocava sempre, mentre adesso dorme tutto il giorno.', senso: 'contrasto' },
+  { frase: "Un anno fa mio fratello era magrissimo, mentre adesso è un po' rotondetto.", senso: 'contrasto' },
+  { frase: 'Ieri la maglietta costava poco, mentre oggi costa il triplo.', senso: 'contrasto' },
+  { frase: 'Lunedì la classe ha scelto il disegno, mentre martedì ha scelto la musica.', senso: 'contrasto' },
   { frase: 'Il fabbro batteva il ferro mentre le scintille volavano.', senso: 'tempo' },
   { frase: 'I nonni giocavano a bocce mentre noi mangiavamo un gelato.', senso: 'tempo' },
   { frase: 'Il vento muoveva le tende mentre le candele tremolavano.', senso: 'tempo' },
   { frase: 'Gli operai costruivano il ponte mentre le macchine aspettavano in coda.', senso: 'tempo' },
-  { frase: 'Il fiume era calmo a monte, mentre a valle correva impetuoso.', senso: 'contrasto' },
+  { frase: 'In estate il fiume era calmo, mentre in primavera correva impetuoso.', senso: 'contrasto' },
   { frase: "Il primo capitolo era lentissimo, mentre l'ultimo si leggeva tutto d'un fiato.", senso: 'contrasto' },
   { frase: 'Da piccolo era timidissimo, mentre oggi non ha paura di nessuno.', senso: 'contrasto' },
-  { frase: 'Il piatto sembrava piccolo, mentre in realtà saziava moltissimo.', senso: 'contrasto' },
+  { frase: "All'inizio il piatto sembrava piccolo, mentre alla fine ci ha saziati moltissimo.", senso: 'contrasto' },
 ]
 // le risposte sono le parole che potrebbero prendere il posto di «mentre»: si prova a rileggere la frase con ognuna
 const SENSO_MENTRE = {

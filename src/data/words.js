@@ -218,3 +218,13 @@ export const CATS = { a:'animali', f:'cibo', c:'colori', n:'numeri', h:'casa',
                       s:'scuola', t:'mezzi', b:'corpo', w:'natura', p:'vestiti',
                       g:'sport e giochi', k:'persone', d:'tempo e giorni',
                       y:'luoghi', e:'le feste', m:'i soldi', j:'com’è fatto', q:'parole di tutti i giorni' }
+
+// coppie di parole che in italiano si traducono quasi uguale (paese/nazione, via/strada): mai insieme in una domanda, sarebbero due risposte giuste. Si scrive solo la voce inglese
+export const SIMILI = [
+  ['village', 'country'], ['street', 'road'], ['baby', 'child'], ['boy', 'child'], ['girl', 'child'],
+  ['boy', 'man'], ['girl', 'woman'], ['goodbye', 'hello'], ['toilet', 'bathroom'], ['loud', 'strong'],
+  ['hard', 'difficult'], ['kind', 'sweet'], ['paint', 'crayon'], ['rabbit', 'bunny'], ['hat', 'cap'],
+  ['time', 'hour'], ['car', 'taxi'], ['short', 'small'], ['boat', 'ship'], ['truck', 'fire engine'],
+  ['coin', 'penny'], ['egg', 'Easter egg'], ['fish', 'shark'],
+  ['bird', 'chicken'], ['bird', 'duck'], ['bird', 'owl'], ['bird', 'penguin'], ['bird', 'parrot'], ['bird', 'peacock'],
+]

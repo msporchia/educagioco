@@ -119,6 +119,12 @@ sul cartello di fine tappa, `[data-nota-monete]` col salvadanaio stanco).
   d'occhio (facce, mestieri): `domande.js` non ne pesca due della
   stessa famiglia nella stessa domanda (`unita/lessico-icone`). Lo
   spagnolo riusa le emoji e le famiglie dell'inglese, voce per voce.
+  `SIMILI` / `SIMILI_ES` (in fondo a `words.js` / `parole-es.js`) sono
+  coppie di voci con la stessa traduzione o quasi (*village/country*,
+  *street/road*, *pueblo/país*): non escono mai insieme fra le risposte,
+  né nei quiz (`altreVoci`, `quiz/inglese.js`) né nei giochi
+  (`distrattori`, `data/domande.js`); il controllo è `sonoSimili` in
+  `data/lessico.js`.
 - **I verbi** (`verbi.js`, `verbi-es.js`): `[straniero, italiano,
   emoji]`. L'emoji è nei dati ma il gioco non la mostra ancora —
   accanto alla parola straniera svelerebbe la risposta. I distrattori

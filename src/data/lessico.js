@@ -2,10 +2,10 @@
 // stessi campi (chiave, lingua, genere, str, it, emoji, cat, famiglia,
 // frase?) — vedi docs/lingue/vocaboli.md. Le chiavi non si rinominano:
 // sono già nei profili dei bambini.
-import { WORDS } from './words.js'
+import { WORDS, SIMILI } from './words.js'
 import { VERBI } from './verbi.js'
 import { FRASI } from './frasi.js'
-import { PAROLE_ES } from './parole-es.js'
+import { PAROLE_ES, SIMILI_ES } from './parole-es.js'
 import { VERBI_ES } from './verbi-es.js'
 import { FRASI_ES } from './frasi-es.js'
 
@@ -19,6 +19,11 @@ export const PREFISSI = {
 export const chiaveParolaDi = lingua => s => PREFISSI[lingua].parola + s
 export const chiaveVerboDi = lingua => s => PREFISSI[lingua].verbo + s
 export const chiaveFraseDi = lingua => id => PREFISSI[lingua].frase + id
+
+// due voci che in italiano si traducono quasi uguale (SIMILI di words.js e parole-es.js): mai insieme fra le risposte
+const SIMILE_DI = new Set([['en', SIMILI], ['es', SIMILI_ES]].flatMap(([l, coppie]) =>
+  coppie.flatMap(([a, b]) => [`${PREFISSI[l].parola}${a}|${PREFISSI[l].parola}${b}`, `${PREFISSI[l].parola}${b}|${PREFISSI[l].parola}${a}`])))
+export const sonoSimili = (a, b) => SIMILE_DI.has(`${a.chiave}|${b.chiave}`)
 
 const voci = new Map()                    // chiave -> voce, di tutte le lingue
 const perLingua = new Map()               // 'en' -> [voci]

@@ -123,6 +123,8 @@ function dividiA(parola, confini) {
   return parti.join('-')
 }
 
+const VOCALI = 'aeiou'
+
 // sposta di una lettera un taglio già giusto: su una doppia dà «pa-lla», su un digramma «mon-tag-na» — esattamente gli errori veri
 function sillabeSbagliate(sillabeGiuste, sorte, quante) {
   const parola = sillabeGiuste.join('')
@@ -138,6 +140,8 @@ function sillabeSbagliate(sillabeGiuste, sorte, quante) {
     nuovi.sort((a, b) => a - b)
     const validi = nuovi.every((v, i) => v >= 1 && v <= parola.length - 1 && (i === 0 || v > nuovi[i - 1]))
     if (!validi) continue
+    // un taglio dentro st/sp/sc… (pas-ta, mi-nes-tra) è ammesso da alcune grammatiche: non è un errore
+    if (nuovi.some(v => parola[v - 1] === 's' && !VOCALI.includes(parola[v]))) continue
     const s = dividiA(parola, nuovi)
     if (s !== corretto) trovati.add(s)
   }

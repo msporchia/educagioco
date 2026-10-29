@@ -50,10 +50,16 @@ const spostaGiorno = (idx, delta) => ((idx + delta) % 7 + 7) % 7
 // ordina le date nell'anno (mese*100+giorno): solo per confrontare, mai per aritmetica vera sui giorni
 const vNum = (mese, giorno) => mese * 100 + giorno
 
-// a ridosso del cambio stagione la risposta non si ragiona, si ricorda (sapere che il 19 marzo è ancora inverno vuole a memoria che comincia il 21): le domande stanno alla larga da questa fascia
-const MARGINE_CONFINE = 4
-const daConfine = (mese, giorno) =>
-  STAGIONI.some(s => s.mese === mese && Math.abs(giorno - s.giorno) <= MARGINE_CONFINE)
+// a ridosso del cambio stagione la risposta non si ragiona, si ricorda (sapere che il 19 marzo è ancora inverno vuole a memoria che comincia il 21): le domande stanno alla larga da questa fascia, che va da due settimane prima del primo del mese (le stagioni dei meteorologi) a due settimane dopo il giorno dell'equinozio o del solstizio
+const MARGINE_CONFINE = 14
+const giornoDellAnno = (mese, giorno) => MESI.slice(0, mese - 1).reduce((t, m) => t + m.giorni, giorno)
+const ANNO = MESI.reduce((t, m) => t + m.giorni, 0)
+const daConfine = (mese, giorno) => STAGIONI.some(s => {
+  const da = giornoDellAnno(s.mese, 1) - MARGINE_CONFINE
+  const larga = giornoDellAnno(s.mese, s.giorno) + MARGINE_CONFINE - da
+  return ((giornoDellAnno(mese, giorno) - da) % ANNO + ANNO) % ANNO <= larga
+})
+const DATE_LONTANE = MESI.flatMap((m, i) => Array.from({ length: m.giorni }, (_, g) => [i, g + 1])).filter(([i, g]) => !daConfine(i + 1, g))
 
 // mesi tutti dentro una stagione sola: gli altri quattro (marzo, giugno, settembre, dicembre) sono a cavallo, niente risposta unica
 const MESI_INTERI = MESI.map((_, i) => i).filter(i => !STAGIONI.some(s => s.mese === i + 1))
@@ -244,12 +250,7 @@ class Calendario extends Modulo {
 
   // grado 3: «quando comincia la primavera?» è uscita — un equinozio si ricorda o non si ricorda, non si ragiona
   stagioneData(sorte) { // in che stagione cade una data, mai a ridosso del cambio
-    let meseIdx = sorte.fra(0, 11)
-    let giorno = sorte.fra(1, MESI[meseIdx].giorni)
-    for (let tentativi = 0; tentativi < 20 && daConfine(meseIdx + 1, giorno); tentativi++) {
-      meseIdx = sorte.fra(0, 11)
-      giorno = sorte.fra(1, MESI[meseIdx].giorni)
-    }
+    const [meseIdx, giorno] = sorte.uno(DATE_LONTANE)
     const s = stagioneDi(meseIdx + 1, giorno)
     const falsi = [
       testo(STAGIONI[(s + 1) % 4].nome, 'è la stagione vicina, ma non ci siamo ancora'),

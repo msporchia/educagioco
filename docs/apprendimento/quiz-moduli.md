@@ -140,6 +140,10 @@ modulo compare **in tutti i giochi** la sera stessa
 2. **I falsi sono gli errori veri** (*ho andato*, la lancetta scambiata, il
    perimetro contato come area), ognuno col suo `perche`. Un distrattore a
    caso si scarta a occhio.
+   **Un falso è sbagliato senza discussione**: niente sinonimi vicini,
+   forme ammesse, letture difendibili. La sfida è riconoscere la giusta fra
+   errori plausibili, non indovinare quale di due risposte buone il gioco
+   aveva in mente; nel dubbio il falso si toglie.
 3. **La varietà è un requisito**: il banco fallisce sotto le 25 domande
    diverse per grado, e va puntato molto più in alto.
 4. **Un `aiuto` che insegna il metodo in una riga** (vedi
@@ -173,6 +177,15 @@ Due difetti che nessun controllo trova:
   un passo. Si chiede *in che stagione cade dicembre*; le date esatte
   stanno nell'`aiuto`; a memoria solo quello che ha una filastrocca (i
   giorni dei mesi) o che è la materia stessa (contrari, participi).
+- **Un falso che è un'altra risposta giusta**, e il rimedio sta nei dati: le
+  voci vicine hanno un gruppo e un falso viene da fuori (`affini` in
+  `lessico.js`: sinonimi, contrari, parole difficili, modi di dire), ogni
+  verbo ha chi non lo sa fare (`NON_SANNO`, «Il bambino ___ sul letto»),
+  un'unità falsa dà un numero che nessuno scrive (`inUso`, `mis:unita`),
+  `LITIGA` tiene fuori il quadrato dal rombo e dal rettangolo, `anche`
+  (analogie) elenca le altre risposte difendibili, `SIMILI` (lingue) le
+  voci con la stessa traduzione. Le date delle stagioni stanno a due
+  settimane dai cambi, astronomici e dei meteorologi (`cal:stagioni`).
 - **Un falso che è una parola vera** (`sil:manca`: «ca-__» con «ni» fa
   «cani», oltre a «casa»): il modulo scarta i falsi che completano una
   parola dell'elenco `src/quiz/dati/sillabe-parole-vere.js`, **generato**

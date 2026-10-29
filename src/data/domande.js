@@ -3,7 +3,7 @@
 // tre livelli (riconoscere/capire/tirare fuori) sono in
 // docs/lingue/vocaboli.md. Vale per ogni lingua: qui non si sa mai se
 // `str` è inglese o spagnolo.
-import { compagne, tutteDi } from './lessico.js'
+import { compagne, tutteDi, sonoSimili } from './lessico.js'
 
 const mescola = a => a.slice().sort(() => Math.random() - 0.5)
 
@@ -22,7 +22,7 @@ function distrattori(v, quante, mostra, ammessa = () => true, viste = new Set(),
   const prova = fonte => {
     for (const c of fonte) {
       if (out.length >= quante) return
-      if (c.chiave === v.chiave || !ammessa(c)) continue
+      if (c.chiave === v.chiave || !ammessa(c) || sonoSimili(v, c)) continue
       if (conFamiglia && c.famiglia && famiglie.has(c.famiglia)) continue
       const testo = mostra(c)
       if (!testo || viste.has(testo)) continue
