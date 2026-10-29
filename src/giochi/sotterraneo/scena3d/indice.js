@@ -73,6 +73,9 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   const etichette = creaEtichette(strato)
   const eroe = creaEroe()
   const eroe3d = eroe3dAcceso() ? creaEroe3d(gruppo('eroe')) : null     // in prova: il personaggio in 3D al posto dello sprite (`#eroe2d` lo spegne)
+  // in due il compagno (docs/sotterraneo/in-due.md): la stessa figura, mossa dal suo alleato; il modello solo quando c'è
+  const compagno = creaEroe()
+  let compagno3d = null
   // la fiamma della torcia in mano all'eroe: una sola, si sposta con lui (scena3d/eroe.js)
   const fiammaEroe = ACCESI.fiamme ? segnaNuovi(scena, 'fiamme', () => creaFiamme(scena, maschera, [{ scala: 0.85, cx: 0, cz: 0, x: 0, y: -9, z: 0 }])) : null
   if (fiammaEroe) fiammaEroe.accesa(0, false)
@@ -125,7 +128,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   let aFotogrammaFinito = null
   const ZOOM = { 2: 1.3, 3: 1, 4: 0.84, 5: 0.72 }
   const centro = new Vector3()
-  const scontro = creaScontro({ S, cam, eroe, getPiano: () => piano, getCose: () => cose, getFigure: () => figure, anelli, cieca })
+  const scontro = creaScontro({ S, cam, eroe, compagno, getPiano: () => piano, getCose: () => cose, getFigure: () => figure, anelli, cieca })
   const torcia = (i, su) => piano && piano.torcia(i, su)   // le torce sui muri che si abbassano nello scontro
   const salta = r => (piano.fontana && r === piano.fontana.roba) || !!piano.portaleDi(r)
 
@@ -317,6 +320,20 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     return true
   }
 
+  // il compagno, disegnato come l'eroe ma con i dati del suo alleato (corsa.come); la sua torcia non sposta la luce di scena, e sopra
+  // la testa il suo nome
+  const luciDelCompagno = { torcia: () => 1, q: 0 }
+  function disegnaIlCompagno(corsa, o) {
+    const i = corsa.persone.findIndex(p => p !== corsa.persona)
+    if (i < 0) return
+    if (!compagno3d && eroe3dAcceso()) compagno3d = creaEroe3d(gruppo('eroe'))
+    corsa.come(i, () => disegnaEroe(compagno, corsa, { ...o, luci: luciDelCompagno, fiamma: null, scintille: null, modello: compagno3d }))
+    const d = compagno.disegnato, nome = corsa.persone[i].nome || ''
+    if (!d || !nome) return
+    const p = cam.schermo(d.x, (compagno.alto || 1.4) + 0.45, d.z)
+    etichette.metti(p.x, p.y, `compagno|${nome}`, () => `<span class="sot3d-nome-compagno">${nome.replace(/[<>&"]/g, '')}</span>`, { compagno: '1' })
+  }
+
   function passo(ora) {
     raf = requestAnimationFrame(passo)
     const ms = prima ? ora - prima : 16
@@ -358,6 +375,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     luci.distribuisci(piano.sorgenti, eroe.x, eroe.z, t)
     disegnaEroe(eroe, corsa, { figure: figureEroe, luci, etichette, camera: cam, dt: dtVero, dtScena: dt, t, fontana: fo, portale: (passando && passando.portale) || piano.portale, bersaglio: scontro.bersaglio(corsa),
                        fiamma: fiammaEroe, aloni, scintille: ACCESI.scintille ? scintille : null, modello: eroe3d })
+    if (corsa.persone && corsa.persone.length > 1) disegnaIlCompagno(corsa, { figure: figureEroe, etichette, camera: cam, dt: dtVero, dtScena: dt, t, bersaglio: scontro.bersaglio(corsa), aloni })
     luci.spegni(dtVero)
     // le scintille delle torce: solo da quelle che si vedono adesso
     if (ACCESI.scintille) for (const s of piano.sorgenti) if (s.trema && s.vis > 0.2 && Math.random() < dt * 3) scintille.emetti(s.pos.x, s.pos.y - 0.05, s.pos.z - 0.15, 1, { forza: 0.3, su: 1.4, vita: 0.9, caldo: 0.3, taglia: 0.035 })
@@ -366,7 +384,12 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     figure.chiudi(); figureEroe.chiudi(); aloni.chiudi(); colonne.chiudi(); etichette.chiudi()
 
     // la telecamera: sull'eroe, o sul palco sopra il pannello
-    if (!scontro.centro(centro)) centro.set(eroe.disegnato.x, 0, eroe.disegnato.z)
+    // in due il punto in mezzo ai due eroi: tutti e due nello schermo (LONTANO in motore/in-due.js)
+    if (!scontro.centro(centro)) {
+      const c2 = corsa.persone && corsa.persone.length > 1 && compagno.disegnato
+      if (c2) centro.set((eroe.disegnato.x + c2.x) / 2, 0, (eroe.disegnato.z + c2.z) / 2)
+      else centro.set(eroe.disegnato.x, 0, eroe.disegnato.z)
+    }
     S.scossa = Math.max(0, S.scossa - dtVero * 2.2)
     // quanto copre il pannello conta solo nello scontro: in esplorazione un foglio è un velo sopra la scena, e l'inquadratura resta
     cam.aggiorna(dtVero, centro, { scontro: !!scontro.palco, celle: scontro.celle, coperto: scontro.palco ? coperto : 0, scossa: S.scossa, t })
