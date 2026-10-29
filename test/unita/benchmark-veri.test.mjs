@@ -72,12 +72,12 @@ uguale('un log corto è un invio solo', spezza('corto').length, 1)
 // le due prove
 const idDi = p => PROVE[p].flatMap(t => t.scene.map(x => x.id))
 const idF = idDi('fps'), idS = idDi('scale')
-controlla('gli fps veri: 9 scene tutte diverse, un gruppo solo, senza aspettare la GPU, la fattoria col degrado', idF.length === 9 && new Set(idF).size === 9 &&
-  PROVE.fps.every(t => t.gruppo === 'fps' && t.tempi === 'fps') && ['fps-piano', 'fps-sot-3', 'fps-sot-6', 'fps-villaggio', 'fps-prato', 'fps-fat-10', 'fps-fat-30', 'fps-ast', 'fps-ast-boom'].every(i => idF.includes(i)) &&
+controlla('gli fps veri: 11 scene tutte diverse, un gruppo solo, senza aspettare la GPU, la fattoria col degrado', idF.length === 11 && new Set(idF).size === 11 &&
+  PROVE.fps.every(t => t.gruppo === 'fps' && t.tempi === 'fps') && ['fps-piano', 'fps-sot-3', 'fps-sot-6', 'fps-villaggio', 'fps-prato', 'fps-fat-10', 'fps-fat-30', 'fps-ast', 'fps-ast-boom', 'fps-piano-semplici', 'fps-piano-ancora'].every(i => idF.includes(i)) &&
   PROVE.fps.filter(t => t.opz && t.opz.degrado).length === 2, idF.join(','))
 controlla('dove pesa: le due scale intere, ogni scena una volta', idS.length === SCALE.sot.gradini.length + SCALE.sopra.gradini.length + 2 && new Set(idS).size === idS.length && idS[0] === 'scala-0' && idS[idS.length - 1] === 'scala-sopra-ancora', idS.join(','))
 const sf = stima('fps'), ss = stima('scale')
-controlla('le stime del foglio: 9 scene sui 3 minuti, 21 sui 4', sf.scene === 9 && sf.minuti === 3 && ss.scene === 21 && ss.minuti === 4, JSON.stringify([sf, ss]))
+controlla('le stime del foglio: 11 scene sui 3 minuti, 21 sui 4', sf.scene === 11 && sf.minuti === 3 && ss.scene === 21 && ss.minuti === 4, JSON.stringify([sf, ss]))
 // le due scale: ogni gradino sopra quello di prima, in fondo il gradino del rumore rifatto, in cima tutti gli elementi della scena e solo quelli
 const inSalita = gr => gr[0].accesi.length === 0 && gr.every((x, k) => !k || (gr[k - 1].accesi.every(a => x.accesi.includes(a)) && x.accesi.length > gr[k - 1].accesi.length))
 for (const [k, rumore] of [['sot', 'pareteVicina'], ['sopra', 'terreno']]) {

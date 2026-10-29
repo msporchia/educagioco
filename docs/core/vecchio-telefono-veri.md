@@ -20,7 +20,7 @@ ancora liscio; **dove pesa** quando una scena scatta, per sapere quale pezzo tog
 
 ## Gli fps veri
 
-`PROVE.fps` in `veri.js`, gruppo `fps`, 9 scene, ~3 minuti: **a quanti fotogrammi al secondo gira davvero il gioco**. Le scale leggono un
+`PROVE.fps` in `veri.js`, gruppo `fps`, 11 scene, ~3 minuti: **a quanti fotogrammi al secondo gira davvero il gioco**. Le scale leggono un
 pixel a fine fotogramma per sapere quanto lavora la GPU, e così CPU e GPU vanno una dopo l'altra: il lavoro è giusto, gli fps sono più
 bassi del vero. Qui niente lettura (`TEMPI.fps`, `vero`): si contano solo gli intervalli fra un fotogramma e l'altro, come li vede chi gioca.
 
@@ -31,6 +31,7 @@ bassi del vero. Qui niente lettura (`TEMPI.fps`, `vero`): si contano solo gli in
 | `fps-villaggio` | l'eroe gira attorno alla piazza alla velocità del gioco, con le persone del villaggio | `veri/sopra-vero.js` |
 | `fps-prato` | lo scontro sul prato davanti alla tana del primo luogo, aperto come lo apre il gioco (motore/aperta.js, palco di sopra), 3 mostri e i colpi | `veri/sopra-vero.js` |
 | `fps-fat-10`, `fps-fat-30` | la fattoria «tipo» del livello 10 e del 30, col degrado del gioco acceso | `veri/fattoria.js`, `opz.degrado` |
+| `fps-piano-semplici`, `fps-piano-ancora` | il piano con le armi semplici della bassa di prima (`opz.spegni`), e di nuovo in fondo al gruppo: il 29/10 alle 17:05 il piano era sceso da 55 a 41 fps con le armi intere | `veri/discese.js` |
 | `fps-ast`, `fps-ast-boom` | gli Asteroidi su una partita finta: 8 sassi, la nave, la nave madre; e lo stesso con un'esplosione al secondo (scintille sotto il tetto della fascia, l'anello, la scossa) | `veri/asteroidi.js`, `boom` |
 
 Otto secondi di misura dopo il rodaggio, un riferimento del calore solo (un gruppo). **Nel resoconto** una riga per scena: `ok`/`~`/`XX`

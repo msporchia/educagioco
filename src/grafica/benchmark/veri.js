@@ -49,6 +49,10 @@ const TAPPE_FPS = [
     { id: 'fps-ast', nome: 'asteroidi, il volo con 8 sassi e la nave madre', stima: 14 },
     { id: 'fps-ast-boom', nome: 'asteroidi, un\'esplosione al secondo', boom: true, stima: 12 },
   ] },
+  // il piano di nuovo in fondo (la prima scena del gruppo è anche la prima dopo il caricamento), e con le armi semplici della bassa di
+  // prima: il 29/10 alle 17:05 il piano era sceso da 55 a 41 fps, con le armi intere appena tornate (docs/sotterraneo/prestazioni-3d-bassa.md)
+  { gruppo: 'fps', carica: discese, opz: { spegni: ['armiSemplici:1'] }, tempi: 'fps', scene: [{ id: 'fps-piano-semplici', nome: 'camminare in un piano, con le armi semplici', passeggia: true, stima: 16 }] },
+  { gruppo: 'fps', carica: discese, tempi: 'fps', scene: [{ id: 'fps-piano-ancora', nome: 'camminare in un piano, di nuovo in fondo', passeggia: true, stima: 16 }] },
 ]
 // le scale (veri/scala.js): lo scontro delle discese e il villaggio di sopra, dal fondo alla scena intera
 const TAPPE_SCALE = [
