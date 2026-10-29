@@ -73,10 +73,15 @@ l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livel
 
 ## I due eroi nella discesa
 
-- **Il motore oggi ha un eroe solo**, sparso in `Corsa` e `Corredo` (posizione, vita, energia, mana, roba, incanti preparati,
-  strada, foglio). Il lavoro grosso è portarlo in **una persona**: la discesa tiene il piano, i mostri e l'orologio, e una lista di
-  persone. Da soli la lista ha una persona, e **tutte le misure del banco devono restare identiche** (un test lo controlla, come
-  `unita/sotterraneo-strade` tiene fermo il mana).
+- **L'eroe sta in una persona** (**fatto** il 29 ottobre, nel ramo: `motore/persone.js`). Era sparso in `Corsa` e `Corredo`
+  (posizione, vita, energia, mana, roba, incanti, strada, il foglio aperto); ora `CAMPI_DELLA_PERSONA` dice quali campi sono
+  dell'eroe, e sulla classe sono accessori che vanno alla persona di adesso (`corsa.persona`, una di `corsa.persone`). Il codice di
+  sempre non è cambiato: `this.vita` è la vita di chi sta agendo. Per far agire un altro alleato, `corsa.come(i, () => …)`. Il
+  mondo resta della discesa: il piano, i mostri, la luce, l'orologio dei passi, la nebbia, come finisce. Da soli la lista ha una
+  persona e tutte le misure sono rimaste quelle (`npm test` verde); `unita/sotterraneo-persone` controlla che dopo una discesa
+  nessun campo dell'eroe sia rimasto sulla discesa, e che due persone non si pestino.
+  - Perché accessori e non una classe della persona coi suoi metodi: la classe vorrebbe dire riscrivere ogni `this.` di quasi
+    13.000 righe, gli accessori lasciano il codice com'è.
 - **La lista serve anche all'aiutante** che l'utente vuole mettere prima o poi: un alleato mosso dal gioco invece che da un
   bambino. La sua testa c'è già, il giocatore finto di `motore/banco.js`. Le regole dei due eroi (chi entra nello scontro, chi i
   mostri colpiscono, la fila) vanno scritte per «gli alleati», non per «i due bambini».
@@ -178,8 +183,8 @@ il suo eroe. L'incontro (`src/insieme/incontro.js`) deve far mandare a ognuno la
 
 ## In che ordine
 
-1. **Il caso e i conti uguali** (sopra), col test del lockstep su una discesa da soli. Non cambia niente a chi gioca.
-2. **Le persone nel motore**: un eroe diventa una lista di uno, con le misure del banco identiche.
+1. **Il caso e i conti uguali** (fatto), col test del lockstep su una discesa da soli. Non cambia niente a chi gioca.
+2. **Le persone nel motore** (fatto): un eroe diventa una lista di uno, con le misure identiche.
 3. **Il secondo eroe**: i mostri, la luce, la scala, la pausa per tutti, lo scontro col compagno, il bottino a turno, il livello
    della coppia con la difficoltà. Provato e tarato col banco con due giocatori finti, senza rete.
 4. **La regia** e l'incontro che porta l'eroe dell'ospite; la partita finta in due (`npm test`) e il banco della rete.

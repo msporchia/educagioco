@@ -39,6 +39,7 @@ import { MetodiDeiPreparati } from './preparati.js'
 import { MetodiDellaRicomparsa } from './ricomparsa.js'
 import { MetodiDelleBotti } from './botti.js'
 import { RISPOSTE_PER_ENERGIA, aGrado } from '../dati/abilita.js'
+import { conLePersone } from './persone.js'
 import { ipot, arcocoseno } from '../../../motore/conti-uguali.js'   // uguali al bit sui due telefoni (docs/sotterraneo/in-due.md)
 
 // nella storia i forzieri e i mostri di tutti i giorni danno solo quello che si consuma: la roba la dà la riga
@@ -1300,3 +1301,4 @@ export class Corsa extends Corredo {
 
 // lo scontro a gruppi (motore/scontro.js) fa parte della Corsa
 Object.assign(Corsa.prototype, MetodiDelloScontro, MetodiDellOrologio, MetodiDeiPreparati, MetodiDellaRicomparsa, MetodiDelleBotti)
+conLePersone(Corsa)   // quello che è dell'eroe sta nella persona di adesso (motore/persone.js)
