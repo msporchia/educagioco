@@ -13,18 +13,28 @@ const SFIDA = /^[a-z0-9-]{0,24}$/                // la chiave di una sfida senza
 export const giochiConAmici = () => GIOCHI.filter(g => g.amici)
 export const conAmici = chiave => GIOCHI.find(g => g.chiave === chiave && g.amici) || null
 
-/* La dichiarazione di un gioco, coi valori di serie: `tappe` quanti nodi ha la mappa prima della sfida senza fine (che è il nodo
-   `tappe`; senza, il gioco ha solo record), `tappa(p)` dove è arrivato (di serie il cursore di `campagne[chiave]`, e finita la
-   campagna la sfida senza fine), `dove` come si dice esserci arrivati («alla sopravvivenza»). */
+/* La dichiarazione di un gioco, coi valori di serie. Un gioco ha uno o più percorsi (una mappa ciascuno: Passo passo ne ha uno per
+   protagonista); `{ tappe, dove, tappa? }` è il percorso solo (chiave ''), `{ percorsi: { coniglio: {…}, cane: {…} } }` più d'uno,
+   `true` nessuno (solo record). Per ogni percorso: `tappe` quanti nodi ha la mappa prima della sfida senza fine (che è il nodo
+   `tappe`), `tappa(p)` dove è arrivato (di serie, solo per il percorso solo, il cursore di `campagne[chiave]`, e finita la campagna
+   la sfida senza fine), `dove` come si dice esserci arrivati («alla sopravvivenza»). */
 export function dichiarazione(g) {
   const d = g.amici === true ? {} : g.amici
-  const tappe = Number.isInteger(d.tappe) && d.tappe > 0 ? d.tappe : 0
-  const cursore = p => {
+  const cursore = tappe => p => {
     const c = (p.campagne || {})[g.chiave] || {}
-    return c.libera ? tappe : Math.max(0, Math.min(tappe, Math.floor(Number(c.tappa) || 0)))
+    return c.libera ? tappe : Math.floor(Number(c.tappa) || 0)
   }
-  return { tappe, dove: d.dove || '', tappa: tappe ? (typeof d.tappa === 'function' ? d.tappa : cursore) : () => 0 }
+  const percorso = (chiave, x) => {
+    const tappe = Number.isInteger(x.tappe) && x.tappe > 0 ? x.tappe : 0
+    const tappa = typeof x.tappa === 'function' ? x.tappa : chiave === '' ? cursore(tappe) : () => 0
+    return { chiave, tappe, dove: x.dove || '', tappa: p => Math.max(0, Math.min(tappe, Math.floor(Number(tappa(p)) || 0))) }
+  }
+  const percorsi = d.percorsi && typeof d.percorsi === 'object'
+    ? Object.entries(d.percorsi).map(([k, x]) => percorso(k, x || {}))
+    : d.tappe ? [percorso('', d)] : []
+  return { percorsi: percorsi.filter(x => x.tappe) }
 }
+export const percorsoDi = (g, chiave = '') => dichiarazione(g).percorsi.find(x => x.chiave === (chiave || '')) || null
 
 /* i record di un gioco, per sfida ('' la sola), letti come li legge `primatoDi` (record di prima compreso) */
 export function recordDel(p, g) {
@@ -36,13 +46,16 @@ export function recordDel(p, g) {
   return r
 }
 
-/* Un gioco nell'istantanea: { tappa, primati: { <sfida>: n } }. Chi non ha ancora fatto niente in quel gioco non c'è: un pallino
-   sulla prima tappa direbbe che ci sta giocando. */
+/* Un gioco nell'istantanea: { posti: { <percorso>: nodo }, primati: { <sfida>: n } }. Chi non ha ancora fatto niente in un percorso
+   non ci ha un posto, e in un gioco non c'è: un pallino sulla prima tappa direbbe che ci sta giocando. */
 export function leggiGioco(p, g) {
-  const d = dichiarazione(g)
-  const tappa = Math.max(0, Math.min(d.tappe, Math.floor(Number(d.tappa(p)) || 0)))
+  const posti = {}
+  for (const x of dichiarazione(g).percorsi) {
+    const n = x.tappa(p)
+    if (n > 0) posti[x.chiave] = n
+  }
   const primati = recordDel(p, g)
-  return tappa || Object.keys(primati).length ? { tappa, primati } : null
+  return Object.keys(posti).length || Object.keys(primati).length ? { posti, primati } : null
 }
 
 const due = n => String(n).padStart(2, '0')
@@ -63,7 +76,7 @@ export const firma = ist => JSON.stringify(ist?.giochi || {})
 
 const numero = x => (Number.isInteger(x) && x >= 0 && x <= NUMERO_MAX ? x : null)
 
-/* quella che arriva dall'amico: torna la forma pulita (solo i giochi, le sfide e i campi che conosciamo) o null */
+/* quella che arriva dall'amico: torna la forma pulita (solo i giochi, i percorsi, le sfide e i campi che conosciamo) o null */
 export function leggiIstantanea(x) {
   if (!x || typeof x !== 'object' || x.v !== VERSIONE || !GIORNO.test(x.giorno || '') || !x.giochi || typeof x.giochi !== 'object') return null
   const giochi = {}
@@ -75,9 +88,13 @@ export function leggiIstantanea(x) {
     for (const [k, v] of Object.entries(y.primati && typeof y.primati === 'object' ? y.primati : {})) {
       if (SFIDA.test(k) && sfide.has(k) && numero(v)) primati[k] = v
     }
-    const tappa = Math.min(numero(y.tappa) ?? 0, dichiarazione(g).tappe)
-    if (!tappa && !Object.keys(primati).length) continue
-    giochi[g.chiave] = { tappa, primati }
+    const posti = {}
+    for (const p of dichiarazione(g).percorsi) {
+      const n = numero(y.posti && typeof y.posti === 'object' ? y.posti[p.chiave] : null)
+      if (n) posti[p.chiave] = Math.min(n, p.tappe)
+    }
+    if (!Object.keys(posti).length && !Object.keys(primati).length) continue
+    giochi[g.chiave] = { posti, primati }
   }
   return { v: VERSIONE, giorno: x.giorno, giochi }
 }

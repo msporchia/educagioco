@@ -3,7 +3,7 @@
    servizio/inoltro/prova.mjs. */
 import { reactive } from 'vue'
 import { istantanea, leggiIstantanea, firma, giornoDi, giorniFa, quandoInParole, controAmici, VERSIONE,
-         davantiInParole, controAmiciInParole, recordDegliAmici, quiInParole, dichiarazione, leggiGioco, giochiConAmici }
+         davantiInParole, controAmiciInParole, recordDegliAmici, quiInParole, dichiarazione, leggiGioco, giochiConAmici, percorsoDi }
   from '../../src/amici/istantanea.js'
 import { QUANTE_TAPPE as TAPPE_SURVIVORS } from '../../src/giochi/survivors/dati/campagna.js'
 import { sincronizza, amiciNelGioco, avviaBacheca, fermaBacheca, COLORI } from '../../src/amici/bacheca.js'
@@ -19,17 +19,17 @@ const ORA = new Date(2026, 9, 29, 17, 42).getTime()
 {
   const p = { mate: { fila: 7 }, campagne: { mate: { primato: { best: 3400, quando: 5, partite: 2, ultime: [] } } }, best: { math: 900 } }
   const ist = istantanea(p, ORA)
-  ugualeJ('dice dove si è arrivati e i record, per gioco', ist.giochi, { mate: { tappa: 7, primati: { '': 3400 } } })
+  ugualeJ('dice dove si è arrivati e i record, per gioco', ist.giochi, { mate: { posti: { '': 7 }, primati: { '': 3400 } } })
   uguale('e il giorno, non l\'ora', ist.giorno, '2026-10-29')
   controlla('niente ore, minuti o nomi', !/17|42|nome/.test(JSON.stringify(ist).replace(ist.giorno, '')))
-  ugualeJ('un record di prima del quaderno vale lo stesso, anche a tappa zero', istantanea({ best: { math: 900 } }, ORA).giochi.mate, { tappa: 0, primati: { '': 900 } })
-  uguale('la fila oltre la fine è il volo infinito', istantanea({ mate: { fila: 999 } }, ORA).giochi.mate.tappa, SCALETTA.length)
+  ugualeJ('un record di prima del quaderno vale lo stesso, anche a tappa zero', istantanea({ best: { math: 900 } }, ORA).giochi.mate, { posti: {}, primati: { '': 900 } })
+  uguale('la fila oltre la fine è il volo infinito', istantanea({ mate: { fila: 999 } }, ORA).giochi.mate.posti[''], SCALETTA.length)
   ugualeJ('chi non ha mai giocato non dice niente di quel gioco', istantanea({ mate: { fila: 0 } }, ORA).giochi, {})
   controlla('la firma non guarda il giorno', firma(istantanea(p, ORA)) === firma(istantanea(p, ORA + 3 * 86_400_000)))
   const sur = c => istantanea({ campagne: { survivors: c } }, ORA).giochi.survivors
-  ugualeJ('Survivors, di serie: il cursore della campagna e il record della sopravvivenza', sur({ tappa: 4, primato: { best: 190, quando: 1, partite: 1, ultime: [] } }), { tappa: 4, primati: { '': 190 } })
-  uguale('a campagna finita si è alla sopravvivenza', sur({ tappa: 2, libera: true }).tappa, TAPPE_SURVIVORS)
-  uguale('il cursore non va oltre', sur({ tappa: 99 }).tappa, TAPPE_SURVIVORS)
+  ugualeJ('Survivors, di serie: il cursore della campagna e il record della sopravvivenza', sur({ tappa: 4, primato: { best: 190, quando: 1, partite: 1, ultime: [] } }), { posti: { '': 4 }, primati: { '': 190 } })
+  uguale('a campagna finita si è alla sopravvivenza', sur({ tappa: 2, libera: true }).posti[''], TAPPE_SURVIVORS)
+  uguale('il cursore non va oltre', sur({ tappa: 99 }).posti[''], TAPPE_SURVIVORS)
   uguale('il record di prima (cfg.primato) vale lo stesso', sur({ tappa: 0, cfg: { primato: 75 } }).primati[''], 75)
   uguale('il giorno è quello del telefono', giornoDi(new Date(2026, 0, 5, 23, 59).getTime()), '2026-01-05')
 }
@@ -38,30 +38,33 @@ const ORA = new Date(2026, 9, 29, 17, 42).getTime()
 {
   const gioco = (amici, senzaFine = null) => ({ chiave: 'prova', amici, senzaFine })
   const d = dichiarazione(gioco(true))
-  controlla('«amici: true»: solo record, nessuna tappa', d.tappe === 0 && d.tappa({}) === 0 && d.dove === '')
+  controlla('«amici: true»: solo record, nessun percorso', d.percorsi.length === 0)
   const due = { misura: 'tempo', nome: 'x', icona: 'x', che: 'x', sfide: [{ chiave: 'bosco' }, { chiave: 'neve' }] }
   ugualeJ('più sfide: un record per sfida, sotto la sua chiave',
-    leggiGioco({ campagne: { prova: { tappa: 3, primati: { bosco: { best: 40 }, neve: { best: 0 } } } } }, gioco({ tappe: 5 }, due)), { tappa: 3, primati: { bosco: 40 } })
+    leggiGioco({ campagne: { prova: { tappa: 3, primati: { bosco: { best: 40 }, neve: { best: 0 } } } } }, gioco({ tappe: 5 }, due)), { posti: { '': 3 }, primati: { bosco: 40 } })
   ugualeJ('una tappa letta dal gioco, tenuta dentro le sue tappe',
-    leggiGioco({ x: 12 }, gioco({ tappe: 8, tappa: p => p.x })), { tappa: 8, primati: {} })
+    leggiGioco({ x: 12 }, gioco({ tappe: 8, tappa: p => p.x })), { posti: { '': 8 }, primati: {} })
+  const dueStrade = gioco({ percorsi: { coniglio: { tappe: 10, dove: 'al sentiero', tappa: p => p.c }, cane: { tappe: 6, tappa: p => p.k } } })
+  ugualeJ('più percorsi: un posto per percorso, e chi in uno non ha fatto niente lì non c\'è',
+    leggiGioco({ c: 4, k: 0 }, dueStrade), { posti: { coniglio: 4 }, primati: {} })
+  controlla('un percorso di più d\'uno non ha il cursore di serie', percorsoDi(gioco({ percorsi: { a: { tappe: 3 } } }), 'a').tappa({ campagne: { prova: { tappa: 2 } } }) === 0)
+  controlla('e si trova per chiave', percorsoDi(dueStrade, 'cane').tappe === 6 && percorsoDi(dueStrade, 'boh') === null)
   ugualeJ('i giochi che mostrano gli amici sono quelli che lo dichiarano', giochiConAmici().map(g => g.chiave).sort(), ['mate', 'survivors'])
-  controlla('ogni dichiarazione ha tappe intere, e un «dove» se ha tappe', giochiConAmici().every(g => {
-    const x = dichiarazione(g)
-    return Number.isInteger(x.tappe) && (!x.tappe || x.dove)
-  }))
+  controlla('ogni percorso dichiarato ha tappe intere e un «dove»', giochiConAmici().every(g =>
+    dichiarazione(g).percorsi.every(x => Number.isInteger(x.tappe) && x.tappe > 0 && x.dove)))
 }
 
 /* ── quella dell'amico ── */
 {
-  const buona = { v: VERSIONE, giorno: '2026-10-27', giochi: { mate: { tappa: 12, primati: { '': 3100 } } } }
+  const buona = { v: VERSIONE, giorno: '2026-10-27', giochi: { mate: { posti: { '': 12 }, primati: { '': 3100 } } } }
   ugualeJ('una buona si tiene', leggiIstantanea(buona), buona)
   controlla('un\'altra versione o un giorno storto no', leggiIstantanea({ ...buona, v: 99 }) === null && leggiIstantanea({ ...buona, giorno: '27/10' }) === null)
-  ugualeJ('i giochi che non conosciamo si lasciano', leggiIstantanea({ ...buona, giochi: { ...buona.giochi, boh: { tappa: 1 } } }).giochi, buona.giochi)
-  ugualeJ('le sfide che il gioco non ha si lasciano', leggiIstantanea({ ...buona, giochi: { mate: { tappa: 2, primati: { '': 5, neve: 9 } } } }).giochi, { mate: { tappa: 2, primati: { '': 5 } } })
+  ugualeJ('i giochi che non conosciamo si lasciano', leggiIstantanea({ ...buona, giochi: { ...buona.giochi, boh: { posti: { '': 1 } } } }).giochi, buona.giochi)
+  ugualeJ('le sfide che il gioco non ha si lasciano', leggiIstantanea({ ...buona, giochi: { mate: { posti: { '': 2, neve: 3 }, primati: { '': 5, neve: 9 } } } }).giochi, { mate: { posti: { '': 2 }, primati: { '': 5 } } })
   ugualeJ('solo numeri storti: quel gioco non c\'è, e i campi in più non passano',
-    leggiIstantanea({ ...buona, giochi: { mate: { tappa: -3, primati: { '': 12.5 }, nome: 'x' } } }), { ...buona, giochi: {} })
-  ugualeJ('un numero solo buono basta', leggiIstantanea({ ...buona, giochi: { mate: { tappa: 4, primati: { '': 'tanti' } } } }).giochi, { mate: { tappa: 4, primati: {} } })
-  uguale('una tappa oltre la mappa si tiene alla fine', leggiIstantanea({ ...buona, giochi: { mate: { tappa: 999 } } }).giochi.mate.tappa, SCALETTA.length)
+    leggiIstantanea({ ...buona, giochi: { mate: { posti: { '': -3 }, primati: { '': 12.5 }, nome: 'x' } } }), { ...buona, giochi: {} })
+  ugualeJ('un numero solo buono basta', leggiIstantanea({ ...buona, giochi: { mate: { posti: { '': 4 }, primati: { '': 'tanti' } } } }).giochi, { mate: { posti: { '': 4 }, primati: {} } })
+  uguale('una tappa oltre la mappa si tiene alla fine', leggiIstantanea({ ...buona, giochi: { mate: { posti: { '': 999 } } } }).giochi.mate.posti[''], SCALETTA.length)
   controlla('roba che non è un\'istantanea: null', leggiIstantanea(null) === null && leggiIstantanea('ciao') === null && leggiIstantanea([]) === null)
 }
 
@@ -111,7 +114,7 @@ const ORA = new Date(2026, 9, 29, 17, 42).getTime()
 /* ── la sincronia ── */
 {
   const chieste = []
-  let risposta = { altro: { v: VERSIONE, giorno: giornoDi(Date.now()), giochi: { mate: { tappa: 9, primati: { '': 2500 } } } } }
+  let risposta = { altro: { v: VERSIONE, giorno: giornoDi(Date.now()), giochi: { mate: { posti: { '': 9 }, primati: { '': 2500 } } } } }
   let rete = true
   const fetchImpl = async (url, o) => {
     if (!rete) throw new Error('niente rete')
@@ -133,13 +136,13 @@ const ORA = new Date(2026, 9, 29, 17, 42).getTime()
   uguale('una richiesta per amicizia', chieste.length, 1)
   const c = chieste[0]
   controlla('alla bacheca, con la chiave e l\'id del bambino', c.url === 'https://s.example/amici/bacheca' && c.corpo.chiave === K1 && c.corpo.id === dati.id)
-  uguale('e l\'istantanea di adesso', c.corpo.dati.giochi.mate.tappa, 3)
-  controlla('quella dell\'amico si tiene', dati.amici[0].bacheca?.giochi.mate.tappa === 9)
+  uguale('e l\'istantanea di adesso', c.corpo.dati.giochi.mate.posti[''], 3)
+  controlla('quella dell\'amico si tiene', dati.amici[0].bacheca?.giochi.mate.posti[''] === 9)
   ugualeJ('ma senza il nome non si mostra (non si sono ancora incontrati)', amiciNelGioco('mate'), [])
   impara(K1, 'leonardo1', 'leonardo')
   const [leo] = amiciNelGioco('mate')
   controlla('col nome sì: iniziale, colore, tappa, record, quando',
-    leo && leo.nome === 'leonardo' && leo.iniziale === 'L' && leo.colore === COLORI[0] && leo.tappa === 9 && leo.primati[''] === 2500 && leo.quando === 'oggi')
+    leo && leo.nome === 'leonardo' && leo.iniziale === 'L' && leo.colore === COLORI[0] && leo.posti[''] === 9 && leo.primati[''] === 2500 && leo.quando === 'oggi')
 
   chieste.length = 0
   await sincronizza()
@@ -147,7 +150,7 @@ const ORA = new Date(2026, 9, 29, 17, 42).getTime()
   p.mate.fila = 4
   chieste.length = 0
   await sincronizza()
-  uguale('un cambio si scrive', chieste[0].corpo.dati?.giochi.mate.tappa, 4)
+  uguale('un cambio si scrive', chieste[0].corpo.dati?.giochi.mate.posti[''], 4)
 
   await mettiOnline(false)
   chieste.length = 0
@@ -158,26 +161,26 @@ const ORA = new Date(2026, 9, 29, 17, 42).getTime()
   rete = false
   p.mate.fila = 5
   await sincronizza()
-  controlla('senza rete: nessun errore, e l\'amico resta com\'era', dati.amici[0].bacheca.giochi.mate.tappa === 9)
+  controlla('senza rete: nessun errore, e l\'amico resta com\'era', dati.amici[0].bacheca.giochi.mate.posti[''] === 9)
   rete = true
   chieste.length = 0
   await sincronizza()
-  uguale('la scrittura mancata si rifà alla prima occasione', chieste[0].corpo.dati?.giochi.mate.tappa, 5)
+  uguale('la scrittura mancata si rifà alla prima occasione', chieste[0].corpo.dati?.giochi.mate.posti[''], 5)
 
   risposta = { altro: null }
   await sincronizza({ forza: true })
-  controlla('una bacheca scaduta sul servizio non butta quella tenuta qui', dati.amici[0].bacheca.giochi.mate.tappa === 9)
-  risposta = { altro: { v: VERSIONE + 1, giorno: '2026-10-20', giochi: { mate: { tappa: 1 } } } }
+  controlla('una bacheca scaduta sul servizio non butta quella tenuta qui', dati.amici[0].bacheca.giochi.mate.posti[''] === 9)
+  risposta = { altro: { v: VERSIONE + 1, giorno: '2026-10-20', giochi: { mate: { posti: { '': 1 } } } } }
   await sincronizza({ forza: true })
-  controlla('una che non sappiamo leggere nemmeno', dati.amici[0].bacheca.giochi.mate.tappa === 9)
+  controlla('una che non sappiamo leggere nemmeno', dati.amici[0].bacheca.giochi.mate.posti[''] === 9)
 
   aggiungi(K2); impara(K2, 'melody001', 'Melody')
-  ricorda(K2, { v: VERSIONE, giorno: '2026-10-20', giochi: { mate: { tappa: 1, primati: {} } } })
+  ricorda(K2, { v: VERSIONE, giorno: '2026-10-20', giochi: { mate: { posti: { '': 1 }, primati: {} } } })
   const due = amiciNelGioco('mate', ORA)
   controlla('due amici, due colori', due.length === 2 && due[0].colore !== due[1].colore)
   uguale('e ognuno dice quando', due[1].quando, '9 giorni fa')
   await carica('provabacheca')
-  controlla('quello che si è letto resta anche dopo, offline', dati.amici[0].bacheca?.giochi.mate.tappa === 9 && dati.amici[1].bacheca?.giochi.mate.tappa === 1)
+  controlla('quello che si è letto resta anche dopo, offline', dati.amici[0].bacheca?.giochi.mate.posti[''] === 9 && dati.amici[1].bacheca?.giochi.mate.posti[''] === 1)
   fermaBacheca()
   await accendi(false)
 }

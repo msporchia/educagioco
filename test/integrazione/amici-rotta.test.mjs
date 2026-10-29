@@ -12,7 +12,7 @@ const { page, errori } = await apriGioco(browser)
 await page.addInitScript(() => { globalThis.__SERVIZIO_SFIDE__ = 'http://127.0.0.1:9' })
 const veri = () => errori.filter(e => !/WebSocket connection|Failed to load resource|net::ERR|ERR_/.test(e))
 
-const amico = (lettera, id, nome, fa, tappa, record) => amicoDiProva(lettera, id, nome, { fa, giochi: { mate: { tappa, primati: record ? { '': record } : {} } } })
+const amico = (lettera, id, nome, fa, tappa, record) => amicoDiProva(lettera, id, nome, { fa, giochi: { mate: { posti: tappa ? { '': tappa } : {}, primati: record ? { '': record } : {} } } })
 const conAmici = amici => seminaAmici(page, amici)
 async function allaRotta() {
   await scegli(page, 'mate')

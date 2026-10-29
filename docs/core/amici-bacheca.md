@@ -19,12 +19,13 @@ Ogni amicizia ha una **bacheca** sul servizio, sotto la sua chiave: l'ultima ist
 
 ## Cosa c'è dentro: numeri e il giorno
 
-`{ v: 1, giorno: 'AAAA-MM-GG', giochi: { mate: { tappa, primati: { '': 3400 } } } }` (`src/amici/istantanea.js`):
+`{ v: 1, giorno: 'AAAA-MM-GG', giochi: { mate: { posti: { '': 7 }, primati: { '': 3400 } } } }` (`src/amici/istantanea.js`):
 - **Il giorno, non l'ora**: serve solo a dire «oggi», «ieri», «3 giorni fa». L'ora direbbe quando gioca il bambino.
 - **Niente nome**: resta sui telefoni, e si impara come sempre la prima volta che i due sono online insieme. Un amico senza
   nome non si mostra. Il nome nella bacheca no: è l'unico dato personale, e starebbe su un archivio.
 - **Un gioco ci entra se lo dichiara** (`amici` nel manifesto, [amici-nei-giochi.md](amici-nei-giochi.md)): l'istantanea non
-  nomina nessun gioco. `tappa` è il nodo della sua mappa, `primati` i record delle sue sfide senza fine (`''` quella sola),
+  nomina nessun gioco. `posti` il nodo a cui è arrivato su ogni mappa del gioco (`''` la sola; un percorso dove non ha fatto niente
+  non c'è), `primati` i record delle sue sfide senza fine (`''` quella sola),
   letti come li legge `primatoDi`. **Chi non ha ancora fatto niente in un gioco non c'è**: un pallino sulla prima tappa direbbe
   che ci sta giocando.
 - **Quella dell'amico si controlla** (`leggiIstantanea`): solo i giochi, le sfide e i campi conosciuti, interi da 0 a 10 milioni; una

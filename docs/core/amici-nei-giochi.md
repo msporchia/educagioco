@@ -26,6 +26,7 @@ cose. Non legge la bacheca, non confronta, non scrive frasi.
 amici: { tappe: QUANTE_TAPPE, dove: 'alla sopravvivenza' },        // Survivors: tutto di serie
 amici: { tappe: SCALETTA.length, dove: 'al volo infinito', tappa: p => posizioneOra(filaDi(p.mate)) },   // Asteroidi
 amici: true,                                                       // solo record, nessuna mappa
+amici: { percorsi: { coniglio: { tappe: 30, dove: 'al sentiero', tappa: p => … }, cane: { … } } },   // più mappe
 ```
 
 - `tappe`: quanti nodi ha la mappa; il nodo `tappe` (dopo l'ultima) è la sfida senza fine. Senza, il gioco ha solo record.
@@ -33,10 +34,14 @@ amici: true,                                                       // solo recor
   da fare, quella con `adesso`), e a campagna finita (`libera`) la sfida senza fine. Si scrive solo se il gioco tiene il suo
   avanzamento altrove. Deve leggere il profilo come lo legge la mappa del gioco: è lo stesso nodo su cui sta il proprio segno.
 - `dove`: come si dice essere arrivati alla sfida senza fine, per la riga in cima. Serve se ci sono `tappe`.
+- `percorsi`: un gioco con più mappe indipendenti (un protagonista per strada, una campagna per terreno) ne dichiara una per
+  chiave, ognuna con `tappe`, `dove` e **sempre** la sua `tappa` (il cursore di serie è di un percorso solo). La vista di una
+  mappa chiede `usaAmici(CHIAVE, { percorso: 'cane' })`. Le chiavi sono di salvataggio: non si rinominano.
 - **I record vengono da soli** dal `senzaFine` del manifesto: tutte le sfide, ciascuna sotto la sua chiave.
 
-**2. Nel setup della vista**: `const amici = usaAmici(CHIAVE)` (`src/amici/usaAmici.js`). È reattivo, e rilegge le bacheche
-entrando. Dà:
+**2. Nel setup della vista**: `const amici = usaAmici(CHIAVE)` (`src/amici/usaAmici.js`; con più percorsi
+`usaAmici(CHIAVE, { percorso })`, uno per mappa). È reattivo, e rilegge le bacheche entrando. Sulla mappa ci sono solo gli amici
+che in quel percorso hanno un posto; i record sono di tutti. Dà:
 
 | | |
 |---|---|
