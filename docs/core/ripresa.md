@@ -82,8 +82,7 @@ Lo prova `integrazione/pozioni-sosta`.
     [../lingue/sosta.md](../lingue/sosta.md).
 - **Un posto per livello, senza carta**, perché aprire un livello non butta
   quello di un altro: il Robot (il programma, in archivio
-  `costruttore:<id>`), il Generale (il piano, in archivio `generale:<id>`:
-  [../generale/lasciare-a-meta.md](../generale/lasciare-a-meta.md)), Passo
+  `costruttore:<id>`), Passo
   passo (la fila e il gradino del 💡, nella sosta comune; il sentiero ha la
   carta: [../passo-passo/sosta.md](../passo-passo/sosta.md)). La mappa segna
   i livelli lasciati a metà (`[data-a-meta]`).

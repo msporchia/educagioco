@@ -123,7 +123,7 @@ le ore giocate né i programmi a metà.
 | `cestino` | le ultime copie dei profili cancellati | [`../genitori/`](../genitori/README.md) |
 | `note-lette`, `posta-avvisi`, `posta-detti` | la posta dei grandi | [`../genitori/`](../genitori/README.md) |
 | `costruttore:<id>` | i programmi del Robot, con una `v` loro | [`../costruttore/`](../costruttore/README.md) |
-| `generale:<id>` | i piani del Generale lasciati a metà, uno per livello | [`../generale/lasciare-a-meta.md`](../generale/lasciare-a-meta.md) |
+| `generale:<id>` | i piani del Generale (tolto il 29/10/2026) lasciati a metà: nessuno li scrive più, `eliminaGiocatore` li cancella ancora | — |
 
 Nei test: `apriGioco` semina un giocatore di prova da sé, gli id di prova
 sono `GIOCATORE` e `ALTRO`, e `giocatori: null` prova il primo avvio vero
