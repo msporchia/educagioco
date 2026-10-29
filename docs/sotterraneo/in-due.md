@@ -1,7 +1,7 @@
 # Il sotterraneo in due (progetto)
 
 Due bambini, due telefoni, la stessa discesa: ognuno col suo eroe e la sua roba, insieme contro i mostri.
-**Stato: progetto** (29 ottobre 2026), niente di costruito. L'utente l'ha scelto fra i giochi da mettere in due perché giocarci
+**Stato: progetto** (29 ottobre 2026); si costruisce nel ramo `claude/sotterraneo-in-due`, fuori da main fino al sì. L'utente l'ha scelto fra i giochi da mettere in due perché giocarci
 insieme è «veramente straordinario», e perché lo scontro è già a turni. Il pezzo comune (il tavolo, il canale, il lockstep, la
 sala) è quello di Castle Battle: [../core/insieme.md](../core/insieme.md). Qui c'è quello che il sotterraneo deve dargli.
 
@@ -9,8 +9,9 @@ sala) è quello di Castle Battle: [../core/insieme.md](../core/insieme.md). Qui 
 
 - **Una discesa insieme, sotto.** La terra di sopra, i mercanti, le missioni e il diario restano di chi gioca da solo: in due si
   scende e si torna. Il mondo di sopra in 3D e le sue terre sono fuori.
-- **Vale per il 2D e per il 3D**: il motore della discesa è uno (`Gioco3d.vue` monta `Gioco.vue` col disegno 3D,
-  [grafica-3d.md](grafica-3d.md)). Il 3D accende in più le botti e i copricapi nel bottino, che vanno col seme come il resto.
+- **Solo nel Sotterraneo 3D** (l'utente: «conta solo il 3D»). Il motore della discesa è lo stesso del 2D (`Gioco3d.vue` monta
+  `Gioco.vue` col disegno 3D, [grafica-3d.md](grafica-3d.md)), quindi il 2D non deve cambiare di niente: da soli, le misure del
+  banco restano identiche. In due il 3D accende anche le botti e i copricapi nel bottino, che vanno col seme come il resto.
 - **La domanda è di chi tocca**: chi apre la porta, il forziere o la fonte si prende la domanda; l'altro non ne ha.
 - **Ognuno porta il suo eroe** dalla sua avventura ([avventure.md](avventure.md)): classe, livello, roba addosso e nello zaino,
   abilità, pozioni. Due eroi della stessa classe vanno bene.
@@ -83,16 +84,16 @@ l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livel
   che raggiungono. La luce è l'unione dei due coni ([luce.md](luce.md)): un mostro nella luce dell'uno va dritto.
 - **L'orologio conta i passi di tutti e due**: i mostri morti tornano prima, la torcia brucia per chi la porta
   ([orologio.md](orologio.md)). Il mana torna a ognuno coi suoi passi.
-- **Non ci si allontana troppo** (l'utente): tutti e due devono stare nello schermo. **Al massimo 6 celle in largo e 9 in alto**
-  dal compagno, contate sulla mappa e non sulla strada, perché lo schermo è un rettangolo. Toccando oltre, l'eroe cammina fino al
+- **Non ci si allontana troppo** (l'utente): tutti e due devono stare nello schermo. **Al massimo 11 celle in largo e 11 in
+  profondo** dal compagno, contate sulla mappa e non sulla strada, perché lo schermo è un rettangolo. Toccando oltre, l'eroe cammina fino al
   limite e si ferma, con un fumetto («non mi allontano da Leo»).
-  - **Perché 6 e 9**: nel 2D, allo zoom di partenza (`SCALA_INIZIALE` 3, una cella è 48 px), un telefono stretto da 360 px vede
-    7 celle e mezzo in largo e una decina in alto, tolte la barra in cima e quella in basso. Il 3D ne vede almeno 15
-    (`scena3d/costanti.js`), quindi ci sta largo.
+  - **Perché 11**: la telecamera del 3D vede almeno 15 celle in largo e in profondo (`CAMERA.celle` in `scena3d/costanti.js`),
+    con lo zoom di partenza; ne restano due per parte di margine, per la barra in basso e perché un eroe sul bordo non si legge.
   - **In due la telecamera guarda il punto in mezzo ai due eroi**, non solo il proprio: centrata su uno, il compagno uscirebbe
-    dallo schermo già a 3 celle.
+    dallo schermo già a 7 celle.
   - **Il limite è del motore, uguale sui due telefoni**: non dipende dallo schermo né dallo zoom di ognuno, se no le due copie
-    si separano. Chi allarga lo zoom col pizzico vede di più, ma il limite resta quello.
+    si separano. Il pizzico avvicina fino a 1,4 (`zoomMax`), e allora si vedono una decina di celle: il compagno al limite esce, e
+    la freccina sul bordo dice dov'è.
   - Vuol dire la stessa stanza o quella accanto: le stanze sono larghe da 5 a 10 celle.
 - **La scala**: si scende quando ci sono tutti e due. Il primo che la tocca aspetta lì («Aspetto Leo alla scala»), e quando arriva
   l'altro si scende insieme. Così il piano nuovo comincia con tutti e due e non c'è un piano per ognuno.
@@ -106,7 +107,7 @@ l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livel
 - **Uno scontro alla volta**: col compagno tirato dentro, non ce ne possono essere due insieme. Lì si va a turni, e il resto del
   mondo è fermo come da soli.
 - **Il compagno è già previsto**: la fila ha un `lato` per ogni attore, e il palco ha il posto del compagno sfalsato sotto l'eroe,
-  in diagonale (`viste/campo.js`, `[data-posto-compagno]`, oggi spento). Ognuno ha la sua velocità e i suoi turni nella fila;
+  in diagonale (`viste/campo.js`, da cui prende i posti anche il palco del 3D, `scena3d/palco.js`; oggi spento). Ognuno ha la sua velocità e i suoi turni nella fila;
   `passaIlTurno`, che si ferma al primo del lato dell'eroe, va insegnato a fermarsi a chi tocca.
 - **Al suo turno risponde chi gioca quell'eroe**; l'altro vede la scelta e la domanda arrivare («Tocca a Leo»).
 - **I mostri colpiscono il più forte** (l'utente). Ogni alleato ha un peso, **pericolosità × vita rimasta in proporzione**, e il
@@ -178,13 +179,13 @@ il suo eroe. L'incontro (`src/insieme/incontro.js`) deve far mandare a ognuno la
 3. **Il secondo eroe**: i mostri, la luce, la scala, la pausa per tutti, lo scontro col compagno, il bottino a turno, il livello
    della coppia con la difficoltà. Provato e tarato col banco con due giocatori finti, senza rete.
 4. **La regia** e l'incontro che porta l'eroe dell'ospite; la partita finta in due (`npm test`) e il banco della rete.
-5. **La vista 2D**: il secondo eroe col nome e cosa sta facendo, «Aspetto Leo alla scala», il compagno sul palco, la sala.
-6. **La vista 3D**: la scena prende già una lista di cose; un eroe in più.
+5. **La vista 3D**: il secondo eroe col nome e cosa sta facendo, la telecamera sul punto in mezzo, «Aspetto Leo alla scala», il
+   compagno sul palco dello scontro (`Scontro3d.vue`), la sala. Il 2D non si tocca.
 
 Il punto 2 è il lavoro più grosso e il più rischioso (il motore della discesa è di quasi 13.000 righe, e l'eroe solo ci sta
 dappertutto); i punti 1 e 2 si possono pubblicare senza che si veda niente.
 
 ## Da misurare
 
-Le scelte sono fatte. Restano i numeri: i quattro moltiplicatori della difficoltà, col banco a due giocatori finti; le 6 e 9 celle,
+Le scelte sono fatte. Restano i numeri: i quattro moltiplicatori della difficoltà, col banco a due giocatori finti; le 11 celle,
 col dito sui telefoni veri.
