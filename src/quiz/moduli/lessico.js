@@ -128,6 +128,61 @@ const SINONIMI_VERBI = [
 const PAROLE_SIN_AGG = [...new Set(SINONIMI_AGG.flat())]
 const PAROLE_SIN_VERBI = [...new Set(SINONIMI_VERBI.flat())]
 
+// voci che dicono quasi la stessa cosa pur stando in righe diverse: una non è mai un falso dell'altra (le righe che condividono una parola contano già come un gruppo solo)
+function affini(righe, gruppi = []) {
+  const vicine = new Map()
+  const lega = g => g.forEach(a => g.forEach(b => vicine.set(a, (vicine.get(a) || new Set()).add(b))))
+  const perParola = new Map()
+  for (const r of righe) for (const p of r) perParola.set(p, [...(perParola.get(p) || []), ...r])
+  perParola.forEach(lega)
+  gruppi.forEach(lega)
+  return (a, b) => a === b || !!vicine.get(a)?.has(b)
+}
+const AFFINI_AGG = affini(SINONIMI_AGG, [
+  ['felice', 'contento', 'allegro', 'gioioso', 'vivace', 'energico'],
+  ['bello', 'carino', 'gradevole', 'simpatico', 'splendido', 'magnifico', 'incredibile', 'straordinario', 'splendente'],
+  ['furbo', 'astuto', 'intelligente', 'sveglio', 'bravo', 'capace'], ['sveglio', 'attento', 'vigile'],
+  ['amaro', 'acre', 'aspro', 'acido'], ['grande', 'enorme', 'largo', 'ampio', 'spazioso', 'capiente'],
+  ['forte', 'robusto', 'potente', 'massiccio'], ['piccolo', 'minuscolo', 'ridotto'],
+  ['debole', 'fragile', 'delicato', 'gracile'], ['magro', 'snello', 'gracile'],
+  ['pulito', 'immacolato', 'limpido'], ['luminoso', 'splendente', 'chiaro', 'limpido'],
+  ['silenzioso', 'quieto', 'tranquillo', 'calmo'], ['pauroso', 'timoroso', 'spaventato', 'terrorizzato'],
+  ['timido', 'vergognoso', 'timoroso'], ['strano', 'bizzarro', 'buffo'],
+  ['misterioso', 'enigmatico', 'sconosciuto', 'ignoto'], ['vecchio', 'anziano', 'antico', 'arcaico'],
+  ['educato', 'cortese', 'gentile', 'premuroso', 'dolce'], ['onesto', 'sincero', 'leale', 'fedele'],
+  ['preciso', 'esatto', 'giusto', 'corretto'], ['difficile', 'arduo', 'duro'], ['libero', 'disponibile', 'vuoto'],
+  ['nervoso', 'agitato', 'arrabbiato', 'furioso'], ['stanco', 'spossato', 'stufo', 'annoiato'],
+  ['importante', 'rilevante', 'famoso', 'celebre'], ['comodo', 'confortevole', 'gradevole'],
+])
+const AFFINI_VERBI = affini(SINONIMI_VERBI, [
+  ['guardare', 'osservare', 'scrutare', 'vedere', 'notare'],
+  ['parlare', 'chiacchierare', 'conversare', 'dire', 'affermare', 'dichiarare'],
+  ['buttare', 'gettare', 'scaraventare', 'lanciare', 'scagliare'],
+  ['cercare', 'ricercare', 'scovare', 'trovare', 'scoprire', 'rintracciare'],
+  ['pensare', 'riflettere', 'meditare', 'fantasticare', 'sognare'],
+  ['partire', 'andarsene', 'incamminarsi', 'uscire'], ['mostrare', 'rivelare', 'scoprire'],
+  ['portare', 'trasportare', 'mandare', 'inviare'], ['guidare', 'condurre', 'portare'],
+  ['saltare', 'balzare', 'scattare', 'correre'], ['iniziare', 'cominciare', 'avviare', 'partire'],
+  ['lasciare', 'abbandonare', 'andarsene'], ['prendere', 'afferrare', 'rubare', 'sottrarre'],
+  ['finire', 'terminare', 'concludere', 'chiudere'],
+])
+// per i contrari le liste sono dello stesso lato: «alto» e «grande» stanno dalla stessa parte, e il contrario dell'uno lo è un po' anche dell'altro
+const LATI_CONTRARI = [
+  ['alto', 'grande', 'maggiore'], ['sopra', 'alto'], ['largo', 'grande'],
+  ['basso', 'piccolo', 'minore'], ['sotto', 'basso'], ['stretto', 'piccolo'], ['superficiale', 'basso'],
+  ['felice', 'allegro'], ['triste', 'malinconico'],
+  ['avanti', 'davanti', 'primo'], ['indietro', 'dietro', 'ultimo'],
+  ['buono', 'bello', 'gentile'], ['cattivo', 'brutto', 'maleducato'],
+  ['sano', 'forte'], ['malato', 'debole'], ['magro', 'sottile'], ['grasso', 'spesso'],
+  ['facile', 'semplice'], ['difficile', 'complicato'],
+  ['giusto', 'vero', 'onesto'], ['sbagliato', 'falso', 'bugiardo'],
+  ['mattina', 'giorno'], ['sera', 'notte'],
+  ['distratto', 'indifferente', 'addormentato'], ['sveglio', 'attento'],
+  ['presto', 'veloce'], ['tardi', 'lento'], ['pulito', 'ordinato'], ['sporco', 'disordinato'],
+]
+const STESSO_LATO = affini([], LATI_CONTRARI)
+const CONTRARIO_DI = new Map(CONTRARI.flatMap(([a, b]) => [[a, b], [b, a]]))
+
 // il verbo giusto lo decide il complemento che chiude la frase, non il soggetto (tanti animali corrono, saltano, nuotano)
 const FRASI_AZIONE = [
   { verbo: 'volò', luogo: 'nel cielo azzurro',
@@ -195,6 +250,36 @@ const FRASI_AZIONE = [
   { verbo: 'sbadigliò', luogo: 'davanti alla televisione',
     soggetti: ['Il bambino', 'Il gatto', 'Il nonno', 'Il cane'] },
 ]
+
+// un falso è un verbo che il soggetto non sa proprio fare, o che col complemento non regge: «Il bambino corse sul letto» non è uno sbaglio, è un'altra frase giusta
+const TUTTI_I_VERBI = FRASI_AZIONE.map(c => c.verbo)
+const SUONI = ['abbaiò', 'miagolò', 'ruggì']
+const MESTIERI = ['disegnò', 'dipinse', 'costruì', 'cucinò', 'lesse', 'piantò', 'innaffiò', 'martellò', 'guidò', 'pilotò', 'navigò', 'remò', 'pescò']
+const SENZA_PESCA = MESTIERI.filter(v => v !== 'pescò')
+const SANNO_SOLO = (...verbi) => TUTTI_I_VERBI.filter(v => !verbi.includes(v))
+// chi non è una persona (che sa fare tutto tranne i versi): i verbi che quel genere di soggetto non sa fare, per nome senza articolo
+const NON_SANNO = [
+  { chi: ['cane', 'cucciolo', 'pastore tedesco', 'bassotto', 'levriero', 'volpe'], non: [...MESTIERI, 'volò', 'atterrò', 'miagolò'] },
+  { chi: ['gatto', 'gattino', 'micio', 'randagio', 'leone', 'tigre', 'giaguaro', 'leopardo', 'ghepardo'], non: [...SENZA_PESCA, 'volò', 'atterrò', 'abbaiò'] },
+  { chi: ['orso'], non: [...SENZA_PESCA, 'volò', 'atterrò', 'abbaiò', 'miagolò'] },
+  { chi: ['cavallo', 'topo', 'lepre', 'capretto', 'daino', 'canguro', 'rana', 'coniglio'], non: [...MESTIERI, ...SUONI, 'volò', 'atterrò'] },
+  { chi: ['uccellino', 'pipistrello', 'aquila', 'gabbiano', 'colomba', 'rondine', 'cicogna', 'pappagallo', 'anatra', 'pinguino'],
+    non: [...SENZA_PESCA, ...SUONI, 'pianse', 'sospirò', 'russò'] },
+  { chi: ['moscone', 'calabrone', 'farfalla', 'grillo', 'cavalletta'], non: SANNO_SOLO('volò', 'atterrò', 'saltò', 'corse', 'strisciò', 'cantò', 'ballò', 'scivolò') },
+  { chi: ['pesce', 'delfino', 'foca', 'balena', 'squalo', 'tartaruga marina'], non: SANNO_SOLO('nuotò', 'saltò', 'scivolò', 'strisciò', 'cantò', 'sbadigliò', 'abbaiò') },
+  { chi: ['serpente', 'lumaca', 'verme', 'bruco', 'lucertola', 'biscia'], non: SANNO_SOLO('strisciò', 'scivolò', 'corse', 'nuotò', 'sbadigliò') },
+  { chi: ['aereo', 'elicottero', 'mongolfiera'], non: SANNO_SOLO('volò', 'atterrò', 'scivolò', 'corse') },
+]
+const nonSanno = soggetto => {
+  const nome = soggetto.replace(/^(Il|Lo|La|L')\s*/, '').toLowerCase()
+  return (NON_SANNO.find(g => g.chi.includes(nome)) || { non: SUONI }).non
+}
+// il complemento è un oggetto (non lo prende chi non vuole un oggetto) o un posto all'asciutto (non ci va chi sta nell'acqua)
+const CON_OGGETTO = ['cantò', 'cucinò', 'lesse', 'dipinse', 'costruì', 'piantò', 'innaffiò', 'martellò']
+const SENZA_OGGETTO = ['volò', 'nuotò', 'strisciò', 'abbaiò', 'miagolò', 'ruggì', 'pianse', 'russò', 'starnutì', 'sbadigliò', 'scivolò', 'atterrò', 'corse']
+const ASCIUTTO = ['saltò', 'corse', 'strisciò', 'abbaiò', 'miagolò', 'ruggì', 'ballò', 'disegnò', 'guidò', 'atterrò', 'scivolò', 'sbadigliò', 'lesse', 'martellò']
+const IN_ACQUA = ['nuotò', 'navigò', 'remò', 'pescò']
+
 
 // [modo di dire, significato, situazione in cui si direbbe]: la terza colonna serve a «in quale situazione lo diresti?», la seconda tipologia
 const MODI = [
@@ -322,6 +407,30 @@ const PAROLE_DIFFICILI = [
   ['solitario', 'che sta volentieri da solo'],
 ]
 
+// parole e modi di dire con un significato quasi uguale: il significato dell'uno non è mai un falso dell'altro
+const AFFINI_DIFFICILI = affini([], [
+  ['minuscolo', 'minuto', 'rimpicciolire'], ['gracile', 'minuto', 'tarchiato'], ['gigantesco', 'immenso'],
+  ['goffo', 'sgraziato', 'malfermo', 'sgangherato'],
+  ['tetro', 'mogio', 'abbacchiato', 'malinconico', 'sventurato', 'accigliato'],
+  ['audace', 'spavaldo', 'impavido', 'baldanzoso', 'avventato', 'sfacciato'], ['spavaldo', 'arrogante', 'sfacciato'],
+  ['scaltro', 'sagace'], ['arzillo', 'esuberante', 'vispo', 'rigoglioso'], ['vispo', 'gioviale', 'spiritoso'],
+  ['sbigottito', 'attonito', 'sgomento', 'frastornato', 'smarrito'], ['ostinato', 'tenace', 'accanito', 'risoluto'],
+  ['sereno', 'spensierato', 'impassibile'], ['sonnecchiare', 'sonnolento'], ['schivo', 'solitario', 'taciturno'],
+  ['solerte', 'volenteroso', 'sgobbone'], ['avventato', 'sventato'], ['sgualcito', 'arruffato', 'rugoso'],
+  ['ansioso', 'inquieto', 'affannato', 'impaziente'], ['sfinito', 'affannato'], ['baccano', 'frastornato'], ['smarrito', 'incerto', 'frastornato'],
+  ['brontolone', 'burbero', 'ombroso', 'petulante', 'accigliato'], ['cauto', 'previdente'],
+  ['vezzeggiare', 'lezioso'], ['impettito', 'arrogante'],
+])
+const AFFINI_MODI = affini([], [
+  ['rompere il ghiaccio', 'fare il primo passo'], ['gettare la spugna', 'essere una pappa molle'],
+  ['avere le farfalle nello stomaco', 'avere il cuore in gola', "non vedere l'ora"],
+  ['avere un diavolo per capello', 'avere la luna storta', 'fare il broncio', 'alzarsi con il piede sbagliato'],
+  ['essere al verde', 'avere le mani bucate', 'costare un occhio della testa'],
+  ['non avere peli sulla lingua', 'mettere le carte in tavola', 'essere un libro aperto'],
+  ['essere al settimo cielo', 'andare a gonfie vele'], ['in bocca al lupo', 'fare il tifo per qualcuno'],
+  ['avere la testa fra le nuvole', 'fare orecchie da mercante'],
+])
+
 const SCALETTA = [
   'i contrari',
   "l'intruso",
@@ -368,7 +477,8 @@ class Lessico extends Modulo {
   contrario(sorte) { // grado 1: il contrario di una parola
     const coppia = sorte.uno(CONTRARI)
     const [a, b] = sorte.forse(0.5) ? coppia : [coppia[1], coppia[0]]
-    const falsi = sorte.distrattori(PAROLE_CONTRARI, 3, x => x === a || x === b)
+    // un falso non è mai un altro contrario possibile: né vicino alla giusta, né il contrario di una vicina alla chiesta
+    const falsi = sorte.distrattori(PAROLE_CONTRARI, 3, x => x === a || x === b || STESSO_LATO(x, b) || STESSO_LATO(CONTRARIO_DI.get(x), a))
     return domanda({
       testo: `Qual è il contrario di «${a}»?`,
       buona: testo(b),
@@ -400,7 +510,8 @@ class Lessico extends Modulo {
     const tabella = daAgg ? SINONIMI_AGG : SINONIMI_VERBI
     const pool = daAgg ? PAROLE_SIN_AGG : PAROLE_SIN_VERBI
     const [parola, sinon] = sorte.uno(tabella)
-    const falsi = sorte.distrattori(pool, 3, x => x === parola || x === sinon)
+    const affine = daAgg ? AFFINI_AGG : AFFINI_VERBI
+    const falsi = sorte.distrattori(pool, 3, x => affine(x, parola) || affine(x, sinon))
     return domanda({
       testo: `Quale parola vuol dire quasi la stessa cosa di «${parola}»?`,
       buona: testo(sinon),
@@ -414,14 +525,17 @@ class Lessico extends Modulo {
   frase(sorte) { // grado 4: il pezzo dopo il buco dice quale verbo ci sta davvero
     const cat = sorte.uno(FRASI_AZIONE)
     const soggetto = sorte.uno(cat.soggetti)
-    const altre = FRASI_AZIONE.filter(c => c !== cat)
-    const falsiCat = sorte.alcuni(altre, 3)
+    const non = nonSanno(soggetto)
+    const sicuri = FRASI_AZIONE.filter(c => c !== cat && (non.includes(c.verbo) ||
+      (CON_OGGETTO.includes(cat.verbo) && SENZA_OGGETTO.includes(c.verbo)) ||
+      (ASCIUTTO.includes(cat.verbo) && IN_ACQUA.includes(c.verbo))))
+    const falsiCat = sorte.alcuni(sicuri, 3)
     return domanda({
       testo: `${soggetto} ___ ${cat.luogo}.`,
       buona: testo(cat.verbo),
-      falsi: falsiCat.map(c => testo(c.verbo, `non ci si può "${c.verbo}" ${cat.luogo}`)),
+      falsi: falsiCat.map(c => testo(c.verbo, `«${soggetto} ${c.verbo} ${cat.luogo}» non ha senso`)),
       chiave: 'less:frase',
-      aiuto: 'guarda come finisce la frase: solo un verbo ci sta bene',
+      aiuto: 'guarda chi è e come finisce la frase: solo un verbo ci sta bene',
       sorte,
     })
   }
@@ -431,8 +545,8 @@ class Lessico extends Modulo {
     if (modo && sorte.forse(0.5)) return this.situazione(sorte)
     const tabella = modo ? MODI : PAROLE_DIFFICILI
     const [voce, giusto] = sorte.uno(tabella)
-    const pool = tabella.map(v => v[1])
-    const falsi = sorte.distrattori(pool, 3, x => x === giusto)
+    const affine = modo ? AFFINI_MODI : AFFINI_DIFFICILI
+    const falsi = sorte.alcuni(tabella.filter(v => v[1] !== giusto && !affine(v[0], voce)), 3).map(v => v[1])
     return domanda({
       testo: modo ? `Cosa vuol dire «${voce}»?` : `Cosa vuol dire la parola «${voce}»?`,
       buona: testo(giusto),
@@ -450,8 +564,7 @@ class Lessico extends Modulo {
   // stessa tabella vista dal contesto: i falsi sono situazioni di ALTRI modi di dire, mai inventate
   situazione(sorte) {
     const [modo, giusto, dove] = sorte.uno(MODI)
-    const pool = MODI.map(v => v[2])
-    const falsi = sorte.distrattori(pool, 3, x => x === dove)
+    const falsi = sorte.alcuni(MODI.filter(v => v[2] !== dove && !AFFINI_MODI(v[0], modo)), 3).map(v => v[2])
     return domanda({
       testo: 'In quale situazione lo diresti?',
       soggetto: { testo: modo },

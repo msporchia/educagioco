@@ -216,3 +216,13 @@ export const CATS_ES = { a:'animali', f:'cibo', c:'colori', n:'numeri', h:'casa'
                          s:'scuola', t:'mezzi', b:'corpo', w:'natura', p:'vestiti',
                          g:'sport e giochi', k:'persone', d:'tempo e giorni',
                          y:'luoghi', e:'le feste', m:'i soldi', j:'com’è fatto', q:'parole di tutti i giorni' }
+
+// coppie di parole che in italiano si traducono quasi uguale (paese/nazione, via/strada): mai insieme in una domanda, sarebbero due risposte giuste. Si scrive solo la voce spagnola
+export const SIMILI_ES = [
+  ['pueblo', 'país'], ['calle', 'carretera'], ['feliz', 'contento'], ['malo', 'enfermo'], ['barco', 'bote'],
+  ['chico', 'niño'], ['chica', 'niño'], ['bebé', 'niño'], ['chico', 'hombre'], ['chica', 'mujer'], ['hola', 'adiós'],
+  ['inodoro', 'baño'], ['sombrero', 'gorra'], ['fuerte', 'ruidoso'], ['duro', 'difícil'], ['amable', 'dulce'],
+  ['hora', 'tiempo'], ['pinturas', 'crayón'], ['bajo', 'pequeño'], ['auto', 'taxi'], ['camión', 'camión de bomberos'],
+  ['mañana', 'la mañana'], ['tarde', 'la tarde'], ['el atardecer', 'la tarde'], ['moneda', 'centavo'], ['pez', 'tiburón'],
+  ['pájaro', 'gallina'], ['pájaro', 'pato'], ['pájaro', 'búho'], ['pájaro', 'pingüino'], ['pájaro', 'loro'], ['pájaro', 'pavo real'],
+]

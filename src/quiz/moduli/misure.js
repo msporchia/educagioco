@@ -160,19 +160,29 @@ const FRASE_UNITA = {
   capacita: ogg => `Con che cosa misuri quanta acqua ci sta in ${ogg.nome}?`,
 }
 
+// un'unità vicina alla giusta non è un falso (un pane in kg, una passeggiata in m, una bottiglia in cl): lo è solo se la misura verrebbe un numero che nessuno scrive, sotto un centesimo o sopra centomila
+const inUso = (ogg, u) => {
+  const v = inBase(ogg.valore, ogg.unita, ogg.tipo) / FATTORE_BASE[ogg.tipo][u]
+  return v >= 0.01 && v < 100000
+}
+
 function unita(sorte) {
   const ogg = sorte.uno(OGGETTI)
-  const altraScala = sorte.uno(UNITA[ogg.tipo].filter(u => u !== ogg.unita)) || ogg.unita
-  const altriTipi = Object.keys(UNITA).filter(t => t !== ogg.tipo)
-  const altraCategoria = sorte.uno(UNITA[sorte.uno(altriTipi)])
+  const lontane = UNITA[ogg.tipo].filter(u => u !== ogg.unita && !inUso(ogg, u))
+  // i litri sono anche chili d'acqua: per la capacità le altre grandezze sono solo le lunghezze
+  const altriTipi = Object.keys(UNITA).filter(t => t !== ogg.tipo && !(ogg.tipo === 'capacita' && t === 'peso'))
+  const altreCategorie = altriTipi.flatMap(t => UNITA[t])
+  const altraScala = lontane.length ? sorte.uno(lontane) : null
+  const categorie = altraScala ? [sorte.uno(UNITA[sorte.uno(altriTipi)])] : sorte.alcuni(altreCategorie, 2)
+  const perCategoria = u => testo(u, `${u} misura ${NOME_TIPO[TIPO_DI_UNITA[u]]}, non ${NOME_TIPO[ogg.tipo]}: non è la grandezza giusta per ${ogg.nome}.`)
 
   return domanda({
     testo: FRASE_UNITA[ogg.tipo](ogg),
     soggetto: emoji(ogg.emoji),
     buona: testo(ogg.unita),
     falsi: [
-      testo(altraScala, `${capitalizza(ogg.nome)} si misura in ${ogg.unita}: ${altraScala} esiste ma è la scala sbagliata.`),
-      testo(altraCategoria, `${altraCategoria} misura ${NOME_TIPO[TIPO_DI_UNITA[altraCategoria]]}, non ${NOME_TIPO[ogg.tipo]}: non è la grandezza giusta per ${ogg.nome}.`),
+      ...(altraScala ? [testo(altraScala, `${capitalizza(ogg.nome)} si misura in ${ogg.unita}: ${altraScala} esiste ma è la scala sbagliata.`)] : []),
+      ...categorie.map(perCategoria),
     ],
     chiave: 'mis:unita',
     aiuto: `${capitalizza(ogg.nome)} si misura in ${ogg.unita}.`,

@@ -12,7 +12,7 @@ import { contesto, costruisci } from '../giochi/inglese/motore/formati.js'
 import { trappoleDi } from '../giochi/inglese/motore/trappole.js'
 import { parole } from '../giochi/inglese/motore/testo.js'
 import { FORME } from '../giochi/inglese/dati/forme.js'
-import { voceDi, compagne } from '../data/lessico.js'
+import { voceDi, compagne, sonoSimili } from '../data/lessico.js'
 
 export const QUOTA_INGLESE = 1 / 20
 export const QUOTA = { gruppo: 'inglese', quota: QUOTA_INGLESE }
@@ -40,11 +40,11 @@ export function vocePer(grado, sorte, vale = () => true) {
 }
 
 /* i distrattori: della stessa categoria, fra quelle già viste, mai uno che si confonde con la giusta
-   (stessa emoji o stessa famiglia visiva, stessa traduzione) */
+   (stessa emoji o stessa famiglia visiva, stessa traduzione o quasi) */
 export function altreVoci(voce, grado, sorte, quante = 3, { figure = false } = {}) {
   const note = new Set(vociFinoA(grado).map(v => v.chiave))
   const buona = x => x.chiave !== voce.chiave && x.str.toLowerCase() !== voce.str.toLowerCase() &&
-    x.it !== voce.it && (!figure || (x.emoji && x.emoji !== voce.emoji &&
+    x.it !== voce.it && !sonoSimili(voce, x) && (!figure || (x.emoji && x.emoji !== voce.emoji &&
       !(voce.famiglia && x.famiglia === voce.famiglia)))
   const vicine = compagne(voce, quante).filter(x => note.has(x.chiave) && buona(x))
   const tutte = vociFinoA(grado).filter(x => !vicine.includes(x) && buona(x))

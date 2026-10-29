@@ -62,8 +62,9 @@ const SOLIDI = [
 const CONTABILI = SOLIDI.filter(s => s.facce)      // solo quelli fatti di facce piatte
 const NOMI_CONTO = { facce: 'facce', spigoli: 'spigoli (gli orli)', vertici: 'vertici (le punte)' }
 
-// sagome viste schiacciando un solido su un foglio; quadrato e rettangolo non stanno mai insieme (un quadrato È un rettangolo)
+// sagome viste schiacciando un solido su un foglio
 const SAGOME = ['cerchio', 'quadrato', 'rettangolo', 'triangolo', 'esagono', 'rombo']
+// quadrato e rettangolo non stanno mai insieme in una domanda (un quadrato È un rettangolo e un rombo), né nelle sagome né fra le figure
 const LITIGA = { quadrato: ['rettangolo', 'rombo'], rettangolo: ['quadrato'], rombo: ['quadrato'] }
 
 // tutto quello che gira, si specchia e si confronta. Una figura è sempre "posata" (in alto a sinistra, in ordine): due liste sono uguali se e solo se si vedono uguali.
@@ -200,10 +201,11 @@ const scenaGriglia = (celle, colonne, righe, colore, asse = null) => {
   return s
 }
 
-// prima le figure con lo stesso numero di lati (la confusione vera), poi le vicine; un po' di caso per non proporre sempre gli stessi tre falsi
+// prima le figure con lo stesso numero di lati (la confusione vera), poi le vicine; un po' di caso per non proporre sempre gli stessi tre falsi. Mai una figura che è anche un caso della giusta (un quadrato è un rombo e un rettangolo)
 function vicine(bersaglio, quante, sorte) {
   const peso = f => Math.abs((f.lati || 12) - (bersaglio.lati || 12)) + sorte.frazione * 1.3
-  return FIGURE.filter(f => f.forma !== bersaglio.forma)
+  const litiga = LITIGA[bersaglio.forma] || []
+  return FIGURE.filter(f => f.forma !== bersaglio.forma && !litiga.includes(f.forma))
     .map(f => [f, peso(f)]).sort((a, b) => a[1] - b[1]).slice(0, quante).map(x => x[0])
 }
 

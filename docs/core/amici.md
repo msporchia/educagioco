@@ -170,7 +170,7 @@ limitano chi lo fa a mano, non un attacco vero. Dove guardare: pannello Cloudfla
 bambino, `AMICI_DI_BASE`); `src/amici/` — `rete.js` (codici e il `Ponte` che si rimette in piedi da solo), `servizio.js` (il motore:
 chi è online, gli inviti), `messaggi.js`, `giochi.js` (i giochi che ricevono inviti), `ingresso.js` («Gioca» → il gioco ritira i dati),
 `avvio.js`, `testi.js`; `components/amici/` — `ListaAmici.vue` (la lista in home), `InvitoAmico.vue` (il cartello, in `App.vue`),
-`CartaAmici.vue` (i grandi); in `arena/` la lista nella schermata Sfida e `invitaAmico` in `Gioco.vue`.
+`CartaAmici.vue` (i grandi); la lista nella sala comune (`src/insieme/SalaSfida.vue`) e l'invito in `src/insieme/sfida.js` (`invita`, `daInvito`).
 Test: `unita/amici-servizio` (le regole del servizio), `unita/amici` (archivio, messaggi, `Ponte`, codici, motore, con collegamenti
 finti), `integrazione/amici` (due pagine e il servizio: `SERVIZIO=http://localhost:8787` con `wrangler dev` in `servizio/inoltro`, o
 quello pubblicato; senza servizio **salta**), e `servizio/inoltro/prova.mjs` (le regole contro il servizio vero, in locale o online).

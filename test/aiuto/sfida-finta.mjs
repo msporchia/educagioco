@@ -1,15 +1,14 @@
 /* ═══════════════════════════════════════════════════════════════════
-   DUE TELEFONI CHE GIOCANO A CASTLE BATTLE SU UNA RETE FINTA
+   DUE TELEFONI CHE GIOCANO IN DUE SU UNA RETE FINTA
 
    Due Incontri veri (src/insieme/) sulla rete finta e cattiva
    (rete-finta.mjs), col seme: la stessa partita con gli stessi guasti
-   si rifà identica. L'host costruisce e potenzia spesso (così la
-   partita finisce), l'ospite muove poco; i guasti arrivano a caso con
-   la frequenza dello `scenario`. Lo usano il test (unita/arena-sfida)
+   si rifà identica. Il gioco dà la regola, le scelte di chi crea e le
+   mosse dei due bambini finti (sfide/<gioco>.mjs); i guasti arrivano a
+   caso con la frequenza dello `scenario`. Lo usano i test (unita/arena-sfida)
    e il banco che tara la tolleranza (strumenti/banco-rete.mjs).
    ═══════════════════════════════════════════════════════════════════ */
 import { caso } from '../../src/giochi/arena/motore/banco.js'
-import { regolaArena } from '../../src/giochi/arena/sfida/regia.js'
 import { Incontro } from '../../src/insieme/incontro.js'
 import { orologioFinto, reteFinta } from './rete-finta.mjs'
 
@@ -22,24 +21,18 @@ export const SCENARI = {
   melody:  { min: 40, max: 400, alMinuto: 3, spenta: [2000, 30000], ferma: [1000, 8000] },
   pessima: { min: 60, max: 900, alMinuto: 8, spenta: [5000, 60000], ferma: [2000, 15000] },
 }
-const AZIONI = ['costruisci', 'potenzia', 'miniera', 'ripara', 'castello', 'bomba']
-const mossaACaso = (r, p) => {
-  const azione = AZIONI[Math.floor(r() * AZIONI.length)]
-  if (azione === 'costruisci') return [azione, p.truppeAmmesse[Math.floor(r() * p.truppeAmmesse.length)], Math.floor(r() * 6)]
-  if (azione === 'potenzia') return [azione, Math.floor(r() * 6)]
-  return [azione]
-}
 const fra = (r, [a, b]) => a + r() * (b - a)
 
-/* una partita: fino alla fine, o a `minuti` di tempo vero. `tempi` cambia i tempi del canale (rete.js TEMPI), per tararli. */
-export function partitaInDue({ seme = 1, scenario = SCENARI.melody, minuti = 30, tempi = {}, firme = ['F', 'F'] }) {
+/* una partita: fino alla fine, o a `minuti` di tempo vero. `gioco`: sfide/<gioco>.mjs; `tempi` cambia i tempi del canale
+   (rete.js TEMPI), per tararli; `firme` diverse fanno due versioni che non si accordano. */
+export function partitaInDue({ gioco, seme = 1, scenario = SCENARI.melody, minuti = 30, tempi = {}, firme = ['F', 'F'] }) {
   const orologio = orologioFinto()
   const rete = reteFinta({ orologio, rnd: caso(seme), min: scenario.min, max: scenario.max })
   const codice = rete.nuovo(POSTO.host)
   const opzioni = posto => ({ posto, servizio: 'https://finto', WebSocketImpl: rete.WebSocketImpl, tempo: orologio, ascolta: false, tempi })
-  const host = new Incontro({ codice, regola: regolaArena({ firma: firme[0] }), scelte: { terreno: 'lava', secondiARisposta: 2.5, seme: seme * 13 }, opzioni: opzioni(POSTO.host) })
+  const host = new Incontro({ codice, regola: gioco.regola({ firma: firme[0] }), scelte: gioco.scelte(seme), opzioni: opzioni(POSTO.host) })
   orologio.avanti(400)
-  const ospite = new Incontro({ codice, regola: regolaArena({ firma: firme[1] }), opzioni: opzioni(POSTO.ospite) })
+  const ospite = new Incontro({ codice, regola: gioco.regola({ firma: firme[1] }), opzioni: opzioni(POSTO.ospite) })
   const r = caso(seme * 31)
   const guasti = { taglia: 0, buco: 0, spegni: 0, ferma: 0 }
   const linee = new Set()
@@ -55,16 +48,14 @@ export function partitaInDue({ seme = 1, scenario = SCENARI.melody, minuti = 30,
       linee.add(`${l.io}/${l.altro}`)
       guasta[nome] = inc.stato === 'gioco' && (l.io !== 'su' || l.altro !== 'su') ? guasta[nome] + PASSO : 0
       if (guasta[nome] > 1500) conLinea[nome] += PASSO
-      if (inc.stato !== 'gioco') continue
-      if (inc === host && r() < 0.02) { const x = r(); inc.scegli(x < 0.5 ? ['costruisci', inc.partita.truppeAmmesse[0], Math.floor(r() * 6)] : x < 0.85 ? ['potenzia', Math.floor(r() * 6)] : mossaACaso(r, inc.partita)) }
-      if (inc === ospite && r() < 0.001) inc.scegli(mossaACaso(r, inc.partita))
+      if (inc.stato === 'gioco') gioco.muovi(nome, inc, r)
     }
     if (r() < perPasso) {
       const chi = POSTO[r() < 0.5 ? 'host' : 'ospite'], x = r()
       if (x < 0.3) { guasti.taglia++; rete.taglia(chi) } else if (x < 0.5) { guasti.buco++; rete.buco(chi) }
       else if (x < 0.75) { guasti.spegni++; rete.spegni(chi, fra(r, scenario.spenta)) } else { guasti.ferma++; rete.ferma(chi, fra(r, scenario.ferma)) }
     }
-    const finite = [host, ospite].every(i => i.partita?.fine || i.stato === 'rotta' || i.stato === 'finita')
+    const finite = [host, ospite].every(i => i.motore?.fine() || i.stato === 'rotta' || i.stato === 'finita')
     if (finite) break
   }
   return { host, ospite, rete, guasti, linee, conLinea, durata: t, orologio }

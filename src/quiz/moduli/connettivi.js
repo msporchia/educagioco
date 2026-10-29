@@ -152,7 +152,7 @@ const CONDIZIONI = [
   { condizione: 'riusciamo a evitare il traffico', conseguenza: 'Arriveremo in tempo per il film', emoji: '🚗' },
   { condizione: "superi l'esame di nuoto", conseguenza: 'Potrai fare la gara vera', emoji: '🏊' },
   { condizione: 'restano ancora posti liberi', conseguenza: 'Ci iscriveremo anche noi', emoji: '📋' },
-  { condizione: 'riesco a indovinare il numero pensato', conseguenza: 'Vincerai tu il prossimo giro', emoji: '🔢' },
+  { condizione: 'riesco a indovinare il numero pensato', conseguenza: 'Vincerò io il prossimo giro', emoji: '🔢' },
   { condizione: 'il negozio ha ancora la taglia giusta', conseguenza: 'Compreremo le scarpe nuove oggi', emoji: '👟' },
   { condizione: 'riusciamo a prenotare in tempo', conseguenza: 'Andremo al ristorante preferito sabato', emoji: '🍽️' },
   { condizione: 'riesci a fare centro al primo tiro', conseguenza: 'Vincerai il peluche del tiro a segno', emoji: '🎯' },
@@ -165,7 +165,7 @@ const CONDIZIONI = [
   { condizione: 'il portiere para il rigore decisivo', conseguenza: 'La nostra squadra vincerà la coppa', emoji: '🏆' },
   { condizione: 'riesci a stare in equilibrio sul monopattino', conseguenza: 'Potrai partecipare alla gara', emoji: '🛴' },
   { condizione: 'il gelato non si squaglia prima di arrivare a casa', conseguenza: 'Lo mangeremo tutti insieme', emoji: '🍦' },
-  { condizione: "l'uovo di Pasqua contiene la sorpresa che aspetti", conseguenza: 'Lo scambierai con quello di tuo cugino', emoji: '🥚' },
+  { condizione: "l'uovo di Pasqua contiene la sorpresa che aspetti", conseguenza: 'Sarai felicissimo', emoji: '🥚' },
   { condizione: 'riusciamo a costruire la tenda prima del buio', conseguenza: 'Dormiremo sotto le stelle', emoji: '⛺' },
   { condizione: 'il messaggio arriva prima di mezzanotte', conseguenza: 'Sapremo subito il risultato', emoji: '✉️' },
   { condizione: 'la torre di carte non crolla al primo piano', conseguenza: 'Continueremo a costruire fino al quinto piano', emoji: '🃏' },
@@ -203,13 +203,14 @@ const CONDIZIONI = [
   { condizione: 'riesci a risolvere l\'enigma del castello', conseguenza: 'Passerai alla stanza segreta del gioco', emoji: '🏰' },
   { condizione: 'il pallone aerostatico si gonfia bene', conseguenza: 'Potremo salire a bordo per il volo di prova', emoji: '🎈' },
 ]
-// «quando» non è un falso qui: «potrai fare la gara quando superi l'esame» è italiano buono quanto «se», un falso difendibile non è un falso
+// né «quando» né «perché» sono falsi qui: «potrai fare la gara quando superi l'esame» e «andremo al parco perché domani non piove» (l'hanno detto alla radio) sono italiano buono quanto «se»
 const FALSI_CONDIZIONE = {
-  'perché': "«perché» spiega un motivo già certo; qui invece non sappiamo se succederà",
   quindi: 'con «quindi» sembra che questo causi quello che sta scritto dopo: qui è al contrario',
+  ma: "«ma» annuncia un contrasto: qui invece le due cose vanno d'accordo",
+  'anche se': "«anche se» annuncia un ostacolo: qui invece è proprio quello che serve perché succeda",
 }
 
-// sfondo che dura (imperfetto) + fatto puntuale (passato), nessun legame causale: pura coincidenza di tempo, «perché»/«quindi»/«se» restano falsi
+// sfondo che dura (imperfetto) + fatto puntuale (passato), nessun legame causale: pura coincidenza di tempo, «perché»/«quindi»/«se» restano falsi. Se una delle due cose può aver fatto succedere l'altra (il gessetto che si rompe disegnando) la coppia non entra: «quindi» sarebbe giusto anche lui
 const QUANDO = [
   { sfondo: 'Stavo facendo la doccia', evento: 'È suonato il telefono', emoji: '🚿' },
   { sfondo: 'Stavamo guardando un film', evento: 'È saltata la luce', emoji: '🎬' },
@@ -220,10 +221,8 @@ const QUANDO = [
   { sfondo: 'I bambini facevano merenda', evento: "È arrivato l'autobus", emoji: '🚌' },
   { sfondo: 'Stavamo giocando a carte', evento: 'È scoppiato un temporale', emoji: '🌩️' },
   { sfondo: 'La torta cuoceva nel forno', evento: 'È squillato il campanello', emoji: '🎂' },
-  { sfondo: 'Stavo facendo i compiti', evento: 'Si è rotta la matita', emoji: '✏️' },
   { sfondo: 'Il cane dormiva vicino al camino', evento: 'È entrato un topolino in cucina', emoji: '🐹' },
   { sfondo: "Stavamo aspettando l'autobus", evento: 'Ha cominciato a piovere', emoji: '🚏' },
-  { sfondo: 'La mamma cucinava', evento: 'È esploso il popcorn nel microonde', emoji: '🍿' },
   { sfondo: 'Stavamo facendo un puzzle', evento: 'Si è addormentato il gatto sui pezzi', emoji: '🧩' },
   { sfondo: 'Stavo annodando le scarpe', evento: 'È partito lo sparo della gara', emoji: '👟' },
   { sfondo: 'Il nonno raccontava una storia', evento: 'Si è fulminata la lampadina', emoji: '💡' },
@@ -233,54 +232,39 @@ const QUANDO = [
   { sfondo: 'I passeggeri salivano sul traghetto', evento: 'È cominciato a soffiare un vento fortissimo', emoji: '⛴️' },
   { sfondo: 'Stavamo montando la tenda', evento: 'È caduta la prima goccia di pioggia', emoji: '⛺' },
   { sfondo: 'La maestra spiegava la lezione', evento: "È entrata un'ape dalla finestra", emoji: '🐝' },
-  { sfondo: 'Stavo disegnando sulla lavagna', evento: 'Si è rotto il gessetto', emoji: '🖊️' },
   { sfondo: 'I nonni facevano un pisolino', evento: 'È squillata la sveglia del forno', emoji: '😴' },
   { sfondo: 'Stavamo aspettando il nostro turno', evento: 'È scoppiato un applauso dalla sala', emoji: '👏' },
   { sfondo: 'Il pappagallo dormiva sul trespolo', evento: 'È suonato il campanello della porta', emoji: '🦜' },
   { sfondo: "Stavo mescolando l'impasto della torta", evento: 'Si è spento improvvisamente il forno', emoji: '🎂' },
   { sfondo: 'I bambini disegnavano sul marciapiede', evento: 'È passata una macchina della polizia con la sirena', emoji: '🚓' },
-  { sfondo: 'Stavamo salendo le scale', evento: 'Si sono spente tutte le luci del palazzo', emoji: '🏢' },
   { sfondo: 'Il pesce nuotava tranquillo nella vasca', evento: "È caduta una foglia sull'acqua", emoji: '🐠' },
-  { sfondo: 'Stavo leggendo sotto le coperte con la torcia', evento: 'È entrata la mamma nella stanza', emoji: '🔦' },
   { sfondo: 'I turisti fotografavano il monumento', evento: 'È volato via il cappello di un signore', emoji: '📸' },
   { sfondo: 'Stavamo facendo la fila per il gelato', evento: 'È arrivato un temporale a sorpresa', emoji: '🍦' },
-  { sfondo: 'Il cane annusava un cespuglio', evento: 'È saltato fuori uno scoiattolo', emoji: '🐿️' },
 ]
-// due azioni che durano insieme (imperfetto), soggetti diversi, nessun legame causale
+// due azioni che durano insieme (imperfetto), soggetti diversi, nessun legame causale (niente vento e onde, pioggia e carte in casa: lo stesso filtro di QUANDO)
 const MENTRE = [
   { azione1: 'La mamma cucinava', azione2: 'i bambini giocavano in giardino', emoji: '👩‍🍳' },
   { azione1: 'Il papà lavava la macchina', azione2: "il cane dormiva all'ombra", emoji: '🚗' },
   { azione1: 'I nonni facevano una passeggiata', azione2: 'noi guardavamo un cartone', emoji: '🚶' },
-  { azione1: 'La maestra scriveva alla lavagna', azione2: 'gli alunni prendevano appunti', emoji: '📝' },
-  { azione1: 'Il vento soffiava forte', azione2: 'le onde si alzavano sul mare', emoji: '🌊' },
-  { azione1: 'Gli uccellini cantavano', azione2: 'il sole sorgeva piano piano', emoji: '🐦' },
   { azione1: 'Io facevo i compiti', azione2: 'mio fratello suonava il pianoforte', emoji: '🎹' },
   { azione1: 'Il fornaio impastava il pane', azione2: 'il forno si scaldava', emoji: '🍞' },
-  { azione1: 'I pesci nuotavano nella vasca', azione2: 'i bambini li osservavano', emoji: '🐠' },
   { azione1: 'Il treno correva veloce', azione2: 'i passeggeri chiacchieravano', emoji: '🚆' },
-  { azione1: 'La pioggia cadeva sul tetto', azione2: 'noi giocavamo a carte', emoji: '🌧️' },
   { azione1: 'Il cuoco tagliava le verdure', azione2: 'il sugo bolliva in pentola', emoji: '🍅' },
   { azione1: 'I bambini costruivano un castello di sabbia', azione2: 'i genitori prendevano il sole', emoji: '🏖️' },
-  { azione1: 'Le foglie cadevano dagli alberi', azione2: 'i bambini le raccoglievano', emoji: '🍂' },
   { azione1: 'La nonna faceva la maglia', azione2: 'il nipotino colorava un disegno', emoji: '🧶' },
-  { azione1: 'Il postino consegnava i pacchi', azione2: 'i cani del quartiere abbaiavano', emoji: '📦' },
   { azione1: 'Io suonavo il flauto', azione2: "mia sorella cantava in un'altra stanza", emoji: '🎵' },
-  { azione1: 'Il sole tramontava dietro le montagne', azione2: 'i pescatori tiravano su le reti', emoji: '🌅' },
   { azione1: 'I bambini saltavano sul trampolino', azione2: 'i genitori chiacchieravano vicino al cancello', emoji: '🤸' },
-  { azione1: 'Il fabbro batteva il ferro', azione2: "le scintille volavano nell'officina", emoji: '🔥' },
   { azione1: 'La maestra correggeva i quaderni', azione2: 'gli alunni facevano educazione fisica', emoji: '📓' },
-  { azione1: 'Il vento muoveva le tende', azione2: 'le candele tremolavano piano', emoji: '🕯️' },
   { azione1: 'Il contadino mungeva le vacche', azione2: 'i galli cantavano nel pollaio', emoji: '🐄' },
-  { azione1: 'Noi giocavamo a scacchi', azione2: 'la pioggia batteva sui vetri', emoji: '♟️' },
-  { azione1: 'Il panettiere infornava il pane', azione2: 'i clienti facevano la fila fuori dal negozio', emoji: '🥖' },
-  { azione1: "I delfini saltavano fuori dall'acqua", azione2: 'i turisti scattavano foto dalla barca', emoji: '🐬' },
+  { azione1: 'La zia annaffiava i fiori', azione2: "lo zio leggeva un libro sull'amaca", emoji: '🌷' },
+  { azione1: 'Mio fratello dormiva', azione2: 'io finivo il mio disegno', emoji: '🖍️' },
+  { azione1: 'Le galline beccavano nel cortile', azione2: 'il trattore arava il campo vicino', emoji: '🐔' },
+  { azione1: 'Il pittore dipingeva il muro', azione2: 'i bambini giocavano a nascondino nel cortile', emoji: '🖌️' },
+  { azione1: 'La sarta cuciva un vestito', azione2: 'il nonno ascoltava la radio', emoji: '🧵' },
   { azione1: 'Il nonno leggeva il giornale', azione2: 'il gatto dormiva sulle sue ginocchia', emoji: '🐱' },
-  { azione1: 'Gli operai costruivano il ponte', azione2: 'le macchine aspettavano in coda', emoji: '🚧' },
   { azione1: 'Io facevo i compiti di matematica', azione2: 'papà riparava la bicicletta in garage', emoji: '🔧' },
   { azione1: 'Le rondini volavano basse sul prato', azione2: 'i bambini rincorrevano una farfalla', emoji: '🦋' },
   { azione1: 'Il cuoco decorava la torta', azione2: 'gli ospiti aspettavano seduti a tavola', emoji: '🎂' },
-  { azione1: 'La maestra suonava il pianoforte', azione2: 'i bambini imparavano una canzone nuova', emoji: '🎹' },
-  { azione1: 'Il fiume scorreva lento sotto il ponte', azione2: 'i ragazzi pescavano dalla riva', emoji: '🎣' },
   { azione1: 'I nonni giocavano a bocce nel parco', azione2: 'noi mangiavamo un gelato sulla panchina', emoji: '🍨' },
 ]
 const FALSI_TEMPO = {
@@ -289,7 +273,7 @@ const FALSI_TEMPO = {
   se: "«se» serve per un'ipotesi: queste invece sono cose che succedono davvero",
 }
 
-// lo stesso «mentre» dice due cose diverse: si capisce quale delle due, non si sceglie una parola. Metà tempo, metà contrasto.
+// lo stesso «mentre» dice due cose diverse: si capisce quale delle due, non si sceglie una parola. Metà tempo, metà contrasto; nel contrasto i due fatti non sono mai contemporanei (altrimenti anche «nello stesso momento» sarebbe vero).
 const MENTRE_SENSO = [
   { frase: 'La mamma stirava mentre il bambino faceva i compiti.', senso: 'tempo' },
   { frase: 'I nonni giocavano a carte mentre i nipoti guardavano un cartone.', senso: 'tempo' },
@@ -299,22 +283,22 @@ const MENTRE_SENSO = [
   { frase: 'Il pubblico applaudiva mentre gli attori uscivano dal palco.', senso: 'tempo' },
   { frase: 'Il treno partiva mentre correvo verso il binario.', senso: 'tempo' },
   { frase: 'La pioggia cadeva mentre aspettavamo sotto la pensilina.', senso: 'tempo' },
-  { frase: 'Io adoro la verdura, mentre mio fratello non la mangia mai.', senso: 'contrasto' },
-  { frase: 'La mia squadra ha vinto, mentre quella di Marco ha perso.', senso: 'contrasto' },
-  { frase: 'A me piace il mare, mentre a mia sorella piace la montagna.', senso: 'contrasto' },
-  { frase: 'Alcuni bambini erano già pronti, mentre altri dormivano ancora.', senso: 'contrasto' },
-  { frase: 'Il gatto ama dormire tutto il giorno, mentre il cane vuole sempre giocare.', senso: 'contrasto' },
-  { frase: "Un fratello è alto e magro, mentre l'altro è basso e robusto.", senso: 'contrasto' },
-  { frase: 'La maglietta rossa costava poco, mentre quella blu costava il triplo.', senso: 'contrasto' },
-  { frase: "Metà della classe ha scelto il disegno, mentre l'altra metà ha scelto la musica.", senso: 'contrasto' },
+  { frase: 'Da piccolo non mangiavo la verdura, mentre adesso mi piace moltissimo.', senso: 'contrasto' },
+  { frase: "L'anno scorso la mia squadra ha perso, mentre quest'anno ha vinto il campionato.", senso: 'contrasto' },
+  { frase: 'Da bambina mi piaceva il mare, mentre adesso preferisco la montagna.', senso: 'contrasto' },
+  { frase: 'Ieri ero già pronto alle sette, mentre oggi mi sono svegliato tardissimo.', senso: 'contrasto' },
+  { frase: 'Da cucciolo il cane giocava sempre, mentre adesso dorme tutto il giorno.', senso: 'contrasto' },
+  { frase: "Un anno fa mio fratello era magrissimo, mentre adesso è un po' rotondetto.", senso: 'contrasto' },
+  { frase: 'Ieri la maglietta costava poco, mentre oggi costa il triplo.', senso: 'contrasto' },
+  { frase: 'Lunedì la classe ha scelto il disegno, mentre martedì ha scelto la musica.', senso: 'contrasto' },
   { frase: 'Il fabbro batteva il ferro mentre le scintille volavano.', senso: 'tempo' },
   { frase: 'I nonni giocavano a bocce mentre noi mangiavamo un gelato.', senso: 'tempo' },
   { frase: 'Il vento muoveva le tende mentre le candele tremolavano.', senso: 'tempo' },
   { frase: 'Gli operai costruivano il ponte mentre le macchine aspettavano in coda.', senso: 'tempo' },
-  { frase: 'Il fiume era calmo a monte, mentre a valle correva impetuoso.', senso: 'contrasto' },
+  { frase: 'In estate il fiume era calmo, mentre in primavera correva impetuoso.', senso: 'contrasto' },
   { frase: "Il primo capitolo era lentissimo, mentre l'ultimo si leggeva tutto d'un fiato.", senso: 'contrasto' },
   { frase: 'Da piccolo era timidissimo, mentre oggi non ha paura di nessuno.', senso: 'contrasto' },
-  { frase: 'Il piatto sembrava piccolo, mentre in realtà saziava moltissimo.', senso: 'contrasto' },
+  { frase: "All'inizio il piatto sembrava piccolo, mentre alla fine ci ha saziati moltissimo.", senso: 'contrasto' },
 ]
 // le risposte sono le parole che potrebbero prendere il posto di «mentre»: si prova a rileggere la frase con ognuna
 const SENSO_MENTRE = {
@@ -518,13 +502,12 @@ class Connettivi extends Modulo {
   concessione(sorte) { // grado 4-5: «anche se» (si sa già, è un ostacolo) contro «se» (non si sa ancora)
     if (sorte.forse(0.5)) {
       const c = sorte.uno(CONDIZIONI)
-      const falsi = ['anche se', 'perché']
-      const perche = { 'anche se': "«anche se» si usa quando la cosa è già vera; qui invece non si sa ancora", 'perché': FALSI_CONDIZIONE['perché'] }
+      const falsi = ['anche se', 'ma']
       return domanda({
         testo: `${c.conseguenza} ___ ${c.condizione}.`,
         soggetto: { emoji: c.emoji },
         buona: testo('se'),
-        falsi: falsi.map(f => testo(f, perche[f])),
+        falsi: falsi.map(f => testo(f, FALSI_CONDIZIONE[f])),
         chiave: 'conn:concessione',
         aiuto: '«se» si usa quando ancora non sappiamo se succederà',
         sorte,

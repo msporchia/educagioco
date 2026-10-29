@@ -1,49 +1,42 @@
 <script setup>
-// La sfida in due, prima della battaglia: chi crea sceglie terreno e quanto andare veloce e riceve un codice di cinque lettere,
-// chi entra lo scrive. Non conosce la rete: riceve la fase già decisa da Gioco.vue (docs/arena/multigiocatore.md).
+// La sala della sfida in due, uguale per ogni gioco (docs/core/insieme.md, «Un gioco nuovo in due»): crea una sfida, entra con un
+// codice, invita un amico; poi il codice da dire, l'attesa, e cosa è andato storto. Non conosce la rete: la fase e il resto
+// arrivano da `usaSfida` (sfida.js). Le scelte di chi crea (il terreno, il ritmo…) sono del gioco: le mette nello slot `scelte`,
+// e può usare le classi `ins-scelte`, `ins-scelta`, `ins-scelta-su` e `ins-nota` per avere i tasti di tutti.
 import { ref, computed } from 'vue'
 
 const props = defineProps({
   fase: { type: String, default: 'scelta' },      // scelta | creo | attesa | entro | accordo | errore | rotta
   codice: { type: String, default: '' },
   messaggio: { type: String, default: '' },        // l'errore o il motivo, già in parole da bambino
-  terreni: { type: Array, default: () => [] },     // [{ chiave, nome, icona }]
-  amici: { type: Array, default: () => [] },       // [{ chiave, id, nome, online, gioco }]: solo se i grandi hanno acceso gli amici online
+  amici: { type: Array, default: () => [] },       // [{ chiave, id, nome, online }]: solo se i grandi hanno acceso gli amici online
   invitato: { type: String, default: '' },         // il nome dell'amico che si aspetta, se si è invitato un amico invece di dare un codice
+  partita: { type: String, default: 'la partita' },   // come la chiama il gioco: «la battaglia»
+  spiega: { type: String, default: 'Due telefoni, la stessa partita. Serve internet su tutti e due.' },
+  domanda: { type: String, default: 'Come giocate?' }, // il titolo delle scelte di chi crea
 })
 const emit = defineEmits(['crea', 'entra', 'indietro', 'invita'])
-const amico = ref(null)               // l'amico che si sta per invitare
 
 const modo = ref(null)                // null | 'crea' | 'entra'
-const terreno = ref(props.terreni[0]?.chiave || 'bosco')
-// quanto ci mette un bambino a rispondere: le monete corrono in proporzione (docs/arena/multigiocatore.md)
-const RITMI = [
-  { chiave: 'piano', icona: '🐢', nome: 'Più piano', secondi: 15 },
-  { chiave: 'normale', icona: '⚖️', nome: 'Normale', secondi: 10 },
-  { chiave: 'svelto', icona: '🐇', nome: 'Svelto', secondi: 6 },
-]
-const ritmo = ref('normale')
+const amico = ref(null)               // l'amico che si sta per invitare
 const scritto = ref('')
 const pulito = computed(() => scritto.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5))
 const valido = computed(() => /^[A-Z]{5}$/.test(pulito.value))
-const secondi = () => RITMI.find(r => r.chiave === ritmo.value).secondi
-const crea = () => (amico.value
-  ? emit('invita', { chiave: amico.value.chiave, terreno: terreno.value, secondi: secondi() })
-  : emit('crea', { terreno: terreno.value, secondi: secondi() }))
+const crea = () => (amico.value ? emit('invita', amico.value.chiave) : emit('crea'))
 const scegliAmico = a => { amico.value = a; modo.value = 'crea' }
 const indietroDalleScelte = () => { modo.value = null; amico.value = null }
 </script>
 
 <template>
-  <div class="ar-sfida" data-sfida>
+  <div class="ins-sala" data-sfida>
     <template v-if="fase === 'scelta'">
       <template v-if="!modo">
         <h2>⚔️ Sfida un amico</h2>
-        <p>Due telefoni, la stessa battaglia: tu contro tuo fratello o tua sorella. Serve internet su tutti e due.</p>
+        <p>{{ spiega }}</p>
         <button class="bottone" data-sfida-crea @click="modo = 'crea'">Crea una sfida</button>
         <button class="bottone chiaro" data-sfida-entra @click="modo = 'entra'">Entra con un codice</button>
         <template v-if="amici.length">
-          <h3 class="ar-sfida-amici" data-sfida-amici>Oppure invita un amico</h3>
+          <h3 class="ins-amici" data-sfida-amici>Oppure invita un amico</h3>
           <button v-for="a in amici" :key="a.chiave" class="bottone chiaro" type="button" :disabled="!a.online"
                   :data-amico="a.id" @click="scegliAmico(a)">
             <span aria-hidden="true">{{ a.online ? '🟢' : '⚪' }}</span> {{ a.nome }}<small v-if="!a.online"> · non c'è</small>
@@ -51,23 +44,15 @@ const indietroDalleScelte = () => { modo.value = null; amico.value = null }
         </template>
       </template>
       <template v-else-if="modo === 'crea'">
-        <h2>{{ amico ? `Sfidi ${amico.nome}: dove?` : 'Dove vi sfidate?' }}</h2>
-        <div class="ar-sfida-scelte" role="group" aria-label="Terreno">
-          <button v-for="t in terreni" :key="t.chiave" type="button" class="ar-livello" :class="{ 'ar-livello-su': t.chiave === terreno }"
-                  :data-terreno="t.chiave" :aria-pressed="t.chiave === terreno" @click="terreno = t.chiave"><span class="em">{{ t.icona }}</span> {{ t.nome }}</button>
-        </div>
-        <h2>Quanto andate veloci?</h2>
-        <p class="ar-sfida-nota">Quanto ci mettete a rispondere a un conto: le monete corrono di conseguenza.</p>
-        <div class="ar-sfida-scelte" role="group" aria-label="Velocità">
-          <button v-for="r in RITMI" :key="r.chiave" type="button" class="ar-livello" :class="{ 'ar-livello-su': r.chiave === ritmo }"
-                  :data-ritmo="r.chiave" :aria-pressed="r.chiave === ritmo" @click="ritmo = r.chiave"><span class="em">{{ r.icona }}</span> {{ r.nome }}</button>
-        </div>
+        <h2 v-if="amico">Sfidi {{ amico.nome }}</h2>
+        <h2>{{ domanda }}</h2>
+        <slot name="scelte" />
         <button class="bottone" data-sfida-vai @click="crea">{{ amico ? `Invita ${amico.nome}` : 'Crea la sfida' }}</button>
         <button class="bottone chiaro" @click="indietroDalleScelte">Indietro</button>
       </template>
       <template v-else>
         <h2>Il codice del tuo amico</h2>
-        <input v-model="scritto" class="ar-sfida-codice" data-sfida-codice-input type="text" inputmode="text" autocapitalize="characters"
+        <input v-model="scritto" class="ins-codice" data-sfida-codice-input type="text" inputmode="text" autocapitalize="characters"
                autocomplete="off" spellcheck="false" maxlength="5" placeholder="KXRNM" aria-label="Codice della sfida" />
         <button class="bottone" data-sfida-vai :disabled="!valido" @click="emit('entra', pulito)">Entra</button>
         <button class="bottone chiaro" @click="modo = null">Indietro</button>
@@ -81,18 +66,18 @@ const indietroDalleScelte = () => { modo.value = null; amico.value = null }
     <template v-else-if="fase === 'attesa'">
       <template v-if="invitato">
         <h2>Aspetto {{ invitato }}…</h2>
-        <p data-sfida-invitato>Gli è arrivato l'invito: appena dice di sì, la battaglia comincia da sola.</p>
+        <p data-sfida-invitato>Gli è arrivato l'invito: appena dice di sì, {{ partita }} comincia da sola.</p>
       </template>
       <template v-else>
         <h2>Dì questo codice al tuo amico</h2>
-        <div class="ar-sfida-codice-grande" data-codice>{{ codice }}</div>
-        <p>Appena entra, la battaglia comincia da sola.</p>
+        <div class="ins-codice-grande" data-codice>{{ codice }}</div>
+        <p>Appena entra, {{ partita }} comincia da sola.</p>
       </template>
       <button class="bottone chiaro" data-sfida-indietro @click="emit('indietro')">Annulla</button>
     </template>
 
     <template v-else-if="fase === 'accordo'">
-      <h2>Preparo la battaglia…</h2>
+      <h2>Preparo {{ partita }}…</h2>
     </template>
 
     <template v-else>
@@ -102,3 +87,19 @@ const indietroDalleScelte = () => { modo.value = null; amico.value = null }
     </template>
   </div>
 </template>
+
+<style>
+/* non `scoped`: le classi dei tasti valgono anche per le scelte che il gioco mette nello slot */
+.ins-sala { display: flex; flex-direction: column; gap: 12px; padding: 18px 16px; align-items: stretch; text-align: center }
+.ins-sala h2 { margin: 6px 0 0; font-size: 20px }
+.ins-sala p { margin: 0; color: #5a574d }
+.ins-nota { font-size: 14px }
+.ins-scelte { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center }
+.ins-scelta { flex: 1 1 40%; min-height: 44px; padding: 8px 6px; border: 2px solid #c9c2b0; border-radius: 12px; background: #fff;
+              color: #3c3a33; font: inherit; font-weight: 700; touch-action: manipulation }
+.ins-scelta-su { border-color: #7a5cf0; background: #7a5cf0; color: #fff }
+.ins-codice { font: 700 32px/1.2 "Emoji Gioco", ui-monospace, monospace; letter-spacing: 8px; text-align: center; text-transform: uppercase;
+              padding: 10px; border: 2px solid #c9c2b0; border-radius: 12px }
+.ins-codice-grande { font: 800 46px/1.2 "Emoji Gioco", ui-monospace, monospace; letter-spacing: 10px; padding: 14px; border: 3px dashed #7a5cf0;
+                     border-radius: 14px; background: #fff; color: #5b3fc8; user-select: all }
+</style>

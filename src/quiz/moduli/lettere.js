@@ -106,6 +106,14 @@ const CONFUSE = {
   Q: 'OGP', R: 'PL', S: 'ZC', T: 'DF', U: 'VO', V: 'FUB', Z: 'SN',
 }
 
+// le iniziali dei nomi che la stessa figura ha anche (🍰 dolce, ⛵ veliero, 🦉 civetta): mai un falso, sarebbe un'altra risposta giusta
+const ALTRI_NOMI = {
+  torta: 'DF', barca: 'V', gufo: 'CA', regalo: 'PD', mucca: 'V', maiale: 'PS', lumaca: 'C', gallina: 'P',
+  topo: 'SR', gatto: 'M', pecora: 'A', coniglio: 'L', balena: 'C', serpente: 'V', treno: 'L', razzo: 'MN',
+  telefono: 'CS', gelato: 'C', pane: 'P', fungo: 'P', latte: 'B', albero: 'P', neve: 'F', foglia: 'V',
+  luna: 'M', fiore: 'C', tamburo: 'B',
+}
+
 class Lettere extends Modulo {
   constructor() {
     super({
@@ -149,8 +157,9 @@ class Lettere extends Modulo {
     const vicine = (CONFUSE[buona] || '').split('')
     const ultima = scritta(voce).slice(-1)
     // la lettera finale è il falso più onesto: il secondo posto dove un bambino guarda quando non è sicuro
-    const candidati = [...new Set([...vicine, ultima])].filter(l => l !== buona)
-    const altre = PAROLE.map(iniziale).filter(l => l !== buona && !candidati.includes(l))
+    const altriNomi = ALTRI_NOMI[parola(voce)] || ''
+    const candidati = [...new Set([...vicine, ultima])].filter(l => l !== buona && !altriNomi.includes(l))
+    const altre = PAROLE.map(iniziale).filter(l => l !== buona && !candidati.includes(l) && !altriNomi.includes(l))
     const falsi = [...sorte.mescola(candidati), ...sorte.mescola([...new Set(altre)])].slice(0, 2)
     return domanda({
       testo: 'Con che lettera comincia?',

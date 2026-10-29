@@ -12,6 +12,7 @@ import { Incontro } from '../../src/insieme/incontro.js'
 import { creaTavolo, CODICE } from '../../src/insieme/rete.js'
 import { orologioFinto, reteFinta } from '../aiuto/rete-finta.mjs'
 import { partitaInDue, POSTO } from '../aiuto/sfida-finta.mjs'
+import arena from '../aiuto/sfide/arena.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const TERRENO = 'neve', SEME = 77
@@ -179,7 +180,7 @@ console.warn = () => {}                                  // la rotta la scrive i
 const RETE_CATTIVA = { min: 30, max: 350, alMinuto: 1.5, spenta: [2000, 42000], ferma: [1000, 9000] }
 let finite = 0
 for (const seme of [21, 22, 23, 24]) {
-  const { host, ospite, guasti: visti, linee, rete } = partitaInDue({ seme, scenario: RETE_CATTIVA })
+  const { host, ospite, guasti: visti, linee, rete } = partitaInDue({ gioco: arena, seme, scenario: RETE_CATTIVA })
   const n = Object.values(visti).reduce((s, x) => s + x, 0)
   const ph = host.partita, po = ospite.partita
   if (ph?.fine && po?.fine) finite++
