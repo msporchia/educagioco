@@ -75,6 +75,15 @@ const falsiDi = d => d.risposte.filter((_, k) => k !== d.giusta)
   controlla('connettivi: ogni «invece» ha due momenti diversi', senza === 0, `${senza} domande`)
 }
 
+// «perché» col «se» regge quasi sempre («andremo al parco perché domani non piove»): non si offre
+{
+  let male = 0
+  for (const tipo of ['conn:condizione', 'conn:concessione']) gioca(connettivi, 5, tipo, d => {
+    if (d.risposte[d.giusta].testo === 'se' && falsiDi(d).some(x => x.testo === 'perché')) male++
+  })
+  controlla('connettivi: col «se» non c\'è mai «perché» fra le scelte', male === 0, `${male} domande`)
+}
+
 // le date delle stagioni stanno a due settimane da tutti i cambi, anche da quello dei meteorologi
 {
   const GG = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
