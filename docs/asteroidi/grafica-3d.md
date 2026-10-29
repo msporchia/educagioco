@@ -1,30 +1,8 @@
-# Asteroidi 3D: il cielo in 3D, e i comandi del telefono
+# Il cielo in 3D, e i comandi del telefono
 
-**Asteroidi 3D** (`mate3d`) è accanto agli Asteroidi (dal 16/10/2026, non più dietro i giochi in prova): gli stessi Asteroidi
-disegnati in WebGL con three.js, partendo dal prototipo approvato
-(`poc/asteroidi-3d`, ottobre 2026), per provarlo sui telefoni veri. Gli
-**Asteroidi** di sempre (`mate`) restano com'erano, in 2D e coi comandi di
-prima, per i bambini. Le regole del gioco non cambiano: tempi, ritmi,
-`rispostaEntro`, il cronometro che parte quando il sasso giusto è tutto in
-scena, l'SRS, le vite, i gettoni. Cambiano il disegno e i comandi.
-
-## Un gioco accanto all'altro, la stessa partita
-
-- **La carta c'è per tutti**, accanto a quella degli Asteroidi (la riga di `src/data/giochi.js` non è più
-  `sperimentale`). Resta così "per un po'": avanzamento e sosta sono in comune, quindi i due giochi
-  convivono senza danni, e se il 3D desse problemi basta rimettere `sperimentale: true`.
-- **La stessa vista, un disegno diverso**: `App.vue` monta `MathGame.vue`
-  per `mate3d` col prop `disegno: '3d'`. Senza il prop è il 2D di sempre.
-- **Lo stesso avanzamento**: la chiave della campagna resta `mate` (tappe,
-  stelle, hangar, record del volo, monete, sosta). Un gioco non aggiunge
-  campi al profilo, e due copie dello stesso avanzamento si separerebbero.
-  La sosta è una sola: una partita lasciata nel 3D si riprende anche dal 2D
-  e viceversa (i sassi non si salvano, il disegno non conta). La fila e
-  l'età si leggono uguali (`mate3d` in `TAPPE_DEL_GIOCO` e
-  `CONTATORE_VECCHIO` di `portata-giochi.js`).
-- **I comandi nuovi sono solo del 3D** (`comandiNuovi`): negli Asteroidi di
-  sempre si tocca solo sopra il sasso, la nave sta ferma, niente scudo, e i
-  falsi nascono come prima.
+Gli Asteroidi (`mate`) si disegnano in WebGL con three.js, partendo dal prototipo approvato (`poc/asteroidi-3d`, ottobre 2026),
+coi comandi del telefono: la nave si guida col dito e ha lo scudo. Le regole del gioco sono quelle di [volo.md](volo.md): tempi,
+ritmi, `rispostaEntro`, il cronometro che parte quando il sasso giusto è tutto in scena, l'SRS, le vite, i gettoni.
 
 ## Dove sta cosa
 
@@ -39,11 +17,11 @@ scena, l'SRS, le vite, i gettoni. Cambiano il disegno e i comandi.
 | `src/grafica/spazio3d/madre.js` | la nave madre col comandante |
 | `src/grafica/spazio3d/effetti.js` | scintille e fumo, anelli, raggi, cocci |
 | `src/motore/asteroidi/comandi.js` | quale sasso tocca il dito, il falso che urta la nave, le quote dei falsi (puro) |
-| `src/views/MathGame.vue` | col prop `disegno` sceglie chi disegna (`accendi3d`), passa la scena (`disegna3d`), guida la nave |
+| `src/views/MathGame.vue` | accende la tela (`accendi3d`), le passa la scena (`disegna3d`), guida la nave |
 
 ## Chi gioca non disegna
 
-- **La view passa la stessa scena al 3D e al 2D**: nave, sassi, nave madre,
+- **La view passa la scena al pittore**: nave, sassi, nave madre,
   raggi, anelli, particelle, cocci, in pixel dello schermo (`quadro` in
   `MathGame.vue`, un oggetto solo rinfrescato a ogni fotogramma). Il 3D la
   traduce: il piano z = 0 è lo schermo e un pixel vale `K` = 0,01 unità,
@@ -58,21 +36,17 @@ scena, l'SRS, le vite, i gettoni. Cambiano il disegno e i comandi.
   posti, i punti stanno in due `Points` (scintille e fumo), i cocci in un
   `InstancedMesh`.
 
-## Il disegno di riserva
+## Il contesto perso
 
-- **Se WebGL 2 non c'è, o il contesto si perde, si gioca col 2D di
-  sempre** (`grafica/spazio.js`, `cieli.js`, `nave-madre.js`): stesse
-  regole, stessi comandi. Il contesto si chiede a mano prima di three, così
-  senza WebGL non esce niente in console.
-- Negli Asteroidi 3D il 2D fa da riserva finché non si sa che i telefoni
-  veri reggono il 3D; `#tela=2d` lo chiede apposta.
-- La rotta e l'hangar restano in 2D (la nave piccola di `disegnaNave`):
-  il 3D legge la stessa `livrea`.
-- Sotto la rotta e «Cosa so», che coprono tutto, la tela 3D non disegna.
+- **Se il contesto WebGL si perde** (il telefono toglie la memoria alla GPU) il cielo si ferma e compare un tasto che lo
+  riaccende su una tela nuova (un canvas non riprende un contesto perso); la partita intanto resta com'è. Lo stesso, al primo
+  tentativo, se WebGL non c'è.
+- La rotta e l'hangar disegnano la nave piccola in 2D (`disegnaNave` di `grafica/spazio.js`, con le stesse sagome e la stessa
+  `livrea`); la nave grande dell'hangar è quella del pittore 3D.
+- Sotto la rotta e «Cosa so», che coprono tutto, la tela non disegna.
 
 ## I comandi
 
-Come sul telefono, negli Asteroidi 3D (anche quando disegna il 2D di riserva):
 
 - **Premere sopra un sasso, o appena fuori dal bordo** (1,15 del raggio,
   mai meno di 22 px: `TOCCO`), spara a quello: è la risposta, giusta o
@@ -129,24 +103,22 @@ sassi cambia col posto.
 
 ## La nave
 
-- **Le sagome sono quelle del 2D** (`ali`, `strappa`, `SCHEGGE`,
+- **Le sagome sono quelle della nave piccola** (`ali`, `strappa`, `SCHEGGE`,
   `PROPULSORI` di `spazio.js`), estruse: lo strappo è lo stesso, coi denti
-  dove li ha il 2D.
+  negli stessi posti.
 - **I tre stati**: intatta · l'ala sinistra strappata col bordo che arde, i
   due cocci che galleggiano, le scintille, la spia ambra · lo strappo che
   si mangia l'ala, il vetro crepato e rosso, la spia rossa doppia, l'alone
   d'allarme, il motore sinistro a singhiozzo. Il fumo è quello della view.
-- **Le stazze**: navetta (un motore), caccia (due, coi pod in punta d'ala),
-  incrociatore (tre, e la seconda coppia d'ali).
+- **La nave è l'incrociatore** (tre motori e la seconda coppia d'ali) dal primo livello; le sagome della navetta e del caccia
+  restano in `spazio.js`.
 - **La livrea si dipinge sulle ali** con `dipingiAla` e `disegnaStemma` di
   `livrea.js`, su una tela per lato che fa da colore all'ala: lo stemma se
   ne va col pezzo strappato. Scafo, ali e fiamme prendono le tinte di
   `tinteNave`; le tinte lucide fanno il metallo lucido.
 - Botta rossa, riparazione verde, scudo esagonale col gelo.
 
-- **L'hangar usa lo stesso pittore** quando il gioco è in 3D (`tre` in
-  `components/HangarAsteroidi.vue`): una scena con la sola nave sul suo cielo; senza
-  WebGL resta il disegno 2D. Lo scafo a tornio va dal basso al muso: nell'altro verso
+- **L'hangar usa lo stesso pittore** (`components/HangarAsteroidi.vue`): una scena con la sola nave sul suo cielo. Lo scafo a tornio va dal basso al muso: nell'altro verso
   le facce guardano dentro e si vede l'interno dello scafo dietro le ali.
 
 ## Quanto costa
@@ -172,12 +144,12 @@ sassi cambia col posto.
 
 Nei test: `unita/asteroidi-3d` (il dito, l'urto, le quote dei falsi, le
 forme di ogni specie), `integrazione/asteroidi-3d` (col dito vero: il 3D
-acceso e quanto costa, la carta anche coi giochi in prova spenti, il tocco sul
+acceso e quanto costa, una carta sola anche coi giochi in prova spenti, il tocco sul
 giusto, il vuoto che guida, il trascinare, appena fuori dal bordo, lo scudo,
-il giusto addosso alla nave, gli Asteroidi di sempre in 2D, il 2D senza
-WebGL). Bersagli: la tela `[data-tela="3d"|"2d"]`; `window.__mate.grafica()`
+il giusto addosso alla nave, senza WebGL il tasto che riaccende). Bersagli: la tela `[data-tela="3d"]`, il tasto
+`[data-riaccendi-tela]`; `window.__mate.grafica()`
 (`tre`, `chiamate`, `triangoli`, `dpr`, `ms`, `scena`, `disegno`);
 `window.__mate.nave` (`meta`, `urti`, `scudo`); sui sassi `respinto`,
-`rosso`, `urtato`. Il cheat `#mate3d=<tappa>` (o `#mate=` per il 2D; `volo`, `&livello=`, `&vite=`,
-`&madre=1`, `&nave=scafo:oro,…`, `&tela=2d`, `&dpr=2`) in
+`rosso`, `urtato`. Il cheat `#mate=<tappa>` (`volo`, `&livello=`, `&vite=`,
+`&madre=1`, `&nave=scafo:oro,…`, `&dpr=2`) in
 [../core/comandi.md](../core/comandi.md).

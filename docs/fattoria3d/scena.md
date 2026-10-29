@@ -2,7 +2,7 @@
 
 Come è fatto il disegno in `src/giochi/fattoria3d/scena3d/`: un modulo per cosa, e nessuno sa le regole (sono del
 motore). three.js è l'eccezione alle «niente dipendenze oltre Vue» ([../../CLAUDE.md](../../CLAUDE.md)), accettata come per
-gli Asteroidi 3D e il Sotterraneo 3D: il 3D non si scrive a mano.
+gli Asteroidi e il Sotterraneo 3D: il 3D non si scrive a mano.
 
 ## I moduli
 

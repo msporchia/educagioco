@@ -1,7 +1,7 @@
 # Il vecchio telefono: il metro dei giochi 3D
 
 Il metro di paragone è il **Redmi Note 7 della bambina** (Snapdragon 660, Adreno 512, 1080×2340, 393×851 a pixel ratio 2,75). Su
-quel telefono le esplosioni degli Asteroidi 3D e tutto il Sotterraneo 3D vanno a scatti: un gioco 3D è abbastanza leggero
+quel telefono le esplosioni degli Asteroidi e tutto il Sotterraneo 3D vanno a scatti: un gioco 3D è abbastanza leggero
 quando lì resta sotto i ~30 ms a fotogramma. Sul computer (RTX, 20 core) non si vede niente, quindi lo si rallenta:
 `node strumenti/vecchio-telefono.mjs` (le opzioni in testa al file).
 
@@ -39,7 +39,7 @@ vengono dai log veri: Redmi Note 7 = 52 punti (bassa), iPhone 12 Pro Max = 23 e 
 fuori dai profili (chiave `qualita`) e la rifà dopo 30 giorni, se cambia il pixel ratio dello schermo o se si alza
 `VERSIONE_MISURA`. Parte da sola in home dopo 4 secondi (mai sotto automazione: `navigator.webdriver`).
 
-Cosa cambia una fascia sta tutto in `PROFILI` di `store/qualita.js`: negli Asteroidi 3D il pixel ratio di partenza (2 / 1,5 / 1),
+Cosa cambia una fascia sta tutto in `PROFILI` di `store/qualita.js`: negli Asteroidi il pixel ratio di partenza (2 / 1,5 / 1),
 il tetto delle scintille (1400 / 700 / 350) e del fumo, e quanto in fretta il gioco scende di pixel (90 fotogrammi lenti a passo
 ×0,85 contro 20 a ×0,75); nel Sotterraneo 3D il pixel ratio massimo (1,5 / 1,25 / 1), le fette di nebbia (5 / 3 / 2) e, nella bassa, il passaggio finale
 spento, due luci dei fuochi invece di sei, niente luci del rimbalzo e del palco (lampo e magia in una), l'ombra a 512 a fotogrammi
@@ -76,7 +76,7 @@ Contro un Pixel 9a (ms per scena): CPU 4,3 volte più lenta (469 contro 108); sh
 23,7 contro 7,6; 8 strati a schermo intero a pixel ratio vero 26,9 contro 9,1; 400 chiamate 19,6 contro 9. Pixel semplici,
 triangoli e passaggio finale solo il doppio. L'iPhone 12 Pro Max (pixel ratio 3) paga comunque 22 ms le sfumature a schermo intero.
 
-**Il perché degli Asteroidi 3D** (da `grafica/spazio3d/`): parte a pixel ratio 2 (`DPR_START`), fino a 1400 scintille additive
+**Il perché degli Asteroidi** (da `grafica/spazio3d/`): parte a pixel ratio 2 (`DPR_START`), fino a 1400 scintille additive
 più 400 di fumo fino a ~50 px, dipinte su una tela half-float e poi un passaggio finale a schermo intero con tre letture
 della tela e la grana. Sul Note 7 le sole scintille a pixel ratio 1,5 costano già 24 ms e a 2 sono ~1,8 volte i pixel: da
 sole oltre il fotogramma. Il gioco abbassa il pixel ratio solo dopo 90 fotogrammi lenti, a passi di ×0,85: durante
@@ -88,7 +88,7 @@ un'esplosione non fa in tempo. **Sul Sotterraneo** il guaio probabile è la nebb
 
 ```bash
 node strumenti/vecchio-telefono.mjs 'sotterraneo3d=1&seme=7' --cpu 1,5 --zavorra 0,32 --secondi 10
-node strumenti/vecchio-telefono.mjs 'mate3d=3&volo' --esegui '<scatena le esplosioni>' --tocca 200,500
+node strumenti/vecchio-telefono.mjs 'mate=3&volo' --esegui '<scatena le esplosioni>' --tocca 200,500
 ```
 
 Una riga per ogni combinazione: fps, p50/p95/p99 fra due fotogrammi, quanti sopra 33 e 50 ms, e `grafica()` del gioco (pixel
@@ -142,7 +142,7 @@ sotto i 45 la misura «Misura questo telefono» non basta più: serve la scheda 
 
 ## Cosa può dare problemi (e cosa si è visto)
 
-**Nell'emulazione** (SwiftShader, CPU ×2,8 su tutti i core, quindi più lenta di una taratura giusta di quanto il computer fosse carico; 392×774 a 2,75: i valori sono da rifare con `--core 4` e CPU ×5), Asteroidi 3D, p50 di un fotogramma: fascia alta (pixel ratio 2) 83 ms,
+**Nell'emulazione** (SwiftShader, CPU ×2,8 su tutti i core, quindi più lenta di una taratura giusta di quanto il computer fosse carico; 392×774 a 2,75: i valori sono da rifare con `--core 4` e CPU ×5), Asteroidi, p50 di un fotogramma: fascia alta (pixel ratio 2) 83 ms,
 media 50, bassa (pixel ratio 1) 33: il pixel ratio è la leva che conta, il resto no. **Senza esplosioni è lo stesso**: l'emulazione
 sovrastima la scena di base (triangoli e passaggio finale ×2-4 contro il Note 7), quindi non separa le esplosioni; sul computer vero
 (RTX, nessun rallentamento) un'esplosione ogni 0,5 s porta da 59 a 39-51 fps. Il JS che prepara il fotogramma sta sotto il mezzo

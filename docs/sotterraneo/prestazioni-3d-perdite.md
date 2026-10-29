@@ -41,7 +41,7 @@ tengono in cache per tutta la pagina (le parti dell'eroe, i materiali dei mostri
 quindi vivi tutti i renderer chiusi: la discesa, il mondo, le anteprime, ognuno col suo contesto non perso (`ctx.via()`
 faceva solo `dispose`), le sue trame e i suoi buffer. **Correzione**: `src/grafica/rilascio3d.js` (`segui` alla nascita del
 renderer annota gli ascoltatori che appende, `rilascia` li toglie, lo butta e perde il contesto), in `scena3d/contesto.js`
-(discese, mondo di sopra, le scene della misura), `anteprime3d.js`, la Fattoria 3D (`mondo3d.js`) e gli Asteroidi 3D.
+(discese, mondo di sopra, le scene della misura), `anteprime3d.js`, la Fattoria 3D (`mondo3d.js`) e gli Asteroidi.
 
 **2. `window.__sotterraneo3d` e `window.__anteprime3d`** restavano sull'ultima scena buttata (per le prove): ora li toglie
 chi la butta (`Gioco.vue`, `viste/anteprima3d.js`).

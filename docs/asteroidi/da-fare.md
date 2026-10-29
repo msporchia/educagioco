@@ -13,11 +13,9 @@ ancora giudicato col dito: si guardano giocando, dopo una build.
   `src/store/calcolo.js` vale anche per le stazioni, che nessuno ha ancora
   giocato con quel numero: va guardato se otto domande su dieci sul
   concetto nuovo sono troppe quando il concetto pesa due o tre.
-- **Gli Asteroidi 3D su un telefono vero** ([grafica-3d.md](grafica-3d.md)), gioco in prova: se un
-  telefono di fascia media regge i sessanta fotogrammi, se il pixel ratio
-  scende (e quanto), se i numeri dei dischi volanti si leggono a sei sassi,
-  e se il 2D di riserva si può togliere. Poi: se prende il posto degli
-  Asteroidi di sempre, e con loro i comandi nuovi.
+- **Il cielo in 3D sul Note 7** ([grafica-3d.md](grafica-3d.md)): gli fps veri hanno il volo e il volo con le esplosioni
+  (`fps-ast`, `fps-ast-boom`, [../core/vecchio-telefono-veri.md](../core/vecchio-telefono-veri.md)); da guardare se il pixel ratio
+  scende (e quanto) e se i numeri dei dischi volanti si leggono a sei sassi.
 - **I cieli, la nave madre e l'hangar** ([cieli.md](cieli.md), [boss.md](boss.md),
   [hangar.md](hangar.md)). Da guardare col dito: se il Sole e il buco nero in
   alto sono troppo grandi; se la nave madre, in alto, copre le bombe che

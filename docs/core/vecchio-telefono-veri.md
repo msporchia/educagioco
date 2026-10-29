@@ -31,7 +31,7 @@ bassi del vero. Qui niente lettura (`TEMPI.fps`, `vero`): si contano solo gli in
 | `fps-villaggio` | l'eroe gira attorno alla piazza alla velocità del gioco, con le persone del villaggio | `veri/sopra-vero.js` |
 | `fps-prato` | lo scontro sul prato davanti alla tana del primo luogo, aperto come lo apre il gioco (motore/aperta.js, palco di sopra), 3 mostri e i colpi | `veri/sopra-vero.js` |
 | `fps-fat-10`, `fps-fat-30` | la fattoria «tipo» del livello 10 e del 30, col degrado del gioco acceso | `veri/fattoria.js`, `opz.degrado` |
-| `fps-ast`, `fps-ast-boom` | gli Asteroidi 3D su una partita finta: 8 sassi, la nave, la nave madre; e lo stesso con un'esplosione al secondo (scintille sotto il tetto della fascia, l'anello, la scossa) | `veri/asteroidi.js`, `boom` |
+| `fps-ast`, `fps-ast-boom` | gli Asteroidi su una partita finta: 8 sassi, la nave, la nave madre; e lo stesso con un'esplosione al secondo (scintille sotto il tetto della fascia, l'anello, la scossa) | `veri/asteroidi.js`, `boom` |
 
 Otto secondi di misura dopo il rodaggio, un riferimento del calore solo (un gruppo). **Nel resoconto** una riga per scena: `ok`/`~`/`XX`
 (sopra 50, sopra 30, sotto 30 fps), gli fps, la parte di fotogrammi arrivati dopo più di 34 ms (sotto i 30 fps), il p95 dell'intervallo e

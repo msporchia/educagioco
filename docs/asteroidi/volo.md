@@ -135,15 +135,14 @@ Quello che esce, per livello (misurato in `misure/asteroidi`):
   rossa che batte il doppio. Quello che si legge di sfuggita è qualcosa
   che si muove, un buco nel contorno e dei pezzi staccati. Provato: l'ala
   che si accorcia — non c'è niente con cui confrontarla, e non dice
-  *rotta*. (`statoScafo`, `puntoRotto` in `src/grafica/spazio.js`; in 3D
-  le stesse sagome, [grafica-3d.md](grafica-3d.md))
-- **La nave cresce col livello**: navetta, al 3 caccia, al 6 incrociatore. **Negli Asteroidi 3D no**: è
-  sempre l'incrociatore, dal primo livello, e le vite di scorta (sopra `CFG.vite`) si leggono come uno
+  *rotta*. (`statoScafo`, `puntoRotto` in `src/grafica/spazio.js`; la nave
+  in 3D ha le stesse sagome, [grafica-3d.md](grafica-3d.md))
+- **La nave è sempre l'incrociatore**, dal primo livello, e le vite di scorta (sopra `CFG.vite`) si leggono come uno
   **scudo sempre acceso**, più forte con più scorta; finite quelle, lo scudo se ne va e restano lo
   strappo e il fumo (`scorta` in `nave`, deciso il 16/10/2026).
-- **`src/grafica/spazio.js` (e `spazio3d/`) non sa di vite né di punti**:
+- **`src/grafica/spazio3d/` (e `spazio.js`) non sa di vite né di punti**:
   riceve fatti già decisi (`danno: 0.5`).
-- **Negli Asteroidi 3D (in prova) la nave si guida col dito** e si risponde
+- **La nave si guida col dito** e si risponde
   toccando il sasso; un falso che la tocca rimbalza sullo scudo senza
   costare niente, il giusto che la tocca esplode e costa come arrivare in fondo
   ([grafica-3d.md](grafica-3d.md#i-comandi)). Il pianeta in basso non c'è: una cosa in

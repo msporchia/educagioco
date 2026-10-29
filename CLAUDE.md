@@ -92,8 +92,8 @@ Generale), `strumenti/sprite/*.md` (fogli e foglietti degli sprite),
 - **I fine riga sono LF** (`.gitattributes`). Uno script che riscrive un file
   (Python lo fa senza chiedere) non deve cambiarli, se no il diff annega.
 - **Niente dipendenze a runtime oltre a Vue**, con un'eccezione: three.js
-  per gli Asteroidi 3D, il Sotterraneo 3D e la Fattoria 3D, giochi in prova (~640 KB, accettati dall'utente: il
-  3D non si scrive a mano; gli Asteroidi, il Sotterraneo e la fattoria di sempre restano in 2D). Suoni sintetizzati,
+  per gli Asteroidi (solo in 3D), il Sotterraneo 3D e la Fattoria 3D, giochi in prova (~640 KB, accettati dall'utente: il
+  3D non si scrive a mano; il Sotterraneo e la fattoria di sempre restano in 2D). Suoni sintetizzati,
   icone emoji o disegnate, nessun file esterno: il build resta un HTML
   unico. → `docs/asteroidi/grafica-3d.md`
 - **I giochi nuovi stanno in `src/giochi/`** col calco di `codice-segreto/`

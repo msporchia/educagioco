@@ -70,7 +70,7 @@ Dal 23/10 nella bassa il piano ha la luce per vertice e la nebbia nei vertici (`
 - non provato: disegnare solo la parte sopra il pannello (sotto c'è il 20-50% dei pixel): il pannello misurato ogni sei fotogrammi lascerebbe vedere il nero quando si abbassa.
 
 **Il peso**: `dist/index.html` da 29 190 a 29 289 kB (+99 kB: il codice di
-`scena3d/` e delle viste nuove; three c'era già per gli Asteroidi 3D). Nel sito
+`scena3d/` e delle viste nuove; three c'era già per gli Asteroidi). Nel sito
 spezzato three resta in `asteroidi-3d` (640 kB), `scena3d/` sta in
 `sotterraneo-3d` (81 kB), chiesto solo scendendo nel Sotterraneo 3D: il
 Sotterraneo di sempre non lo carica, né carica three. Il 3D non ha un

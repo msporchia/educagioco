@@ -9,7 +9,7 @@ Tabelline e calcolo a mente in una fila sola (`src/views/MathGame.vue`).
 - [cieli.md](cieli.md) — ogni tappa ha i suoi sassi, e il volo ripassa la storia
 - [boss.md](boss.md) — la nave madre in fondo alla tappa e nel volo, e i suoi pacchi
 - [hangar.md](hangar.md) — la nave da dipingere coi pezzi regalati
-- [grafica-3d.md](grafica-3d.md) — Asteroidi 3D, il gioco in prova: la stessa partita col cielo in 3D (three.js) e i comandi del telefono (il dito sul sasso risponde, altrove guida la nave, lo scudo)
+- [grafica-3d.md](grafica-3d.md) — il cielo in 3D (three.js) e i comandi del telefono (il dito sul sasso risponde, altrove guida la nave, lo scudo), il contesto perso
 - [sosta.md](sosta.md) — la partita lasciata a metà: cosa si salva, cosa no, e il record del volo
 - [da-fare.md](da-fare.md) — le voci aperte
 
