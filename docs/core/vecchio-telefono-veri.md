@@ -8,7 +8,7 @@ giocare il bambino: quanti mostri nello scontro, quante persone sopra, quanti ed
 ## Sul telefono
 
 Zona dei grandi (codice) → **Impostazioni** → tendina **Avanzate** → **Misura questo telefono** → **Avvia coi modelli veri** (la
-**verifica**, 23 scene e ~6 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
+**verifica**, 7 scene e ~3 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
 Le complete durano un quarto d'ora circa (57 scene, e fra un gruppo e l'altro 8 s di schermo nero perché il telefono si raffreddi): la barra in fondo dice a
 che scena si è, **Interrompi** la ferma e tiene il resoconto di quello che c'è. Le scene si vedono mentre girano: se una luce, un
 colore o la nebbia sembrano sbagliati, alla fine c'è un campo **Note** che finisce nel resoconto. Lo schermo non deve spegnersi
@@ -21,14 +21,15 @@ invio), **Copia**, **Rifai**. L'ultimo resoconto di ognuna delle due prove resta
 
 Il tasto «Avvia coi modelli veri» serve a **decidere**: se una modifica ha migliorato qualcosa e quale leva conviene. Tiene **solo
 le scene che servono alla leva di adesso**: quelle che hanno già risposto escono e restano nelle **Misure complete**. `TAPPE_VERIFICA`
-in `veri.js`, **23 scene, circa 6 minuti** (`stimaVerifica()`: i secondi attesi per scena più, a ogni gruppo, la pausa di 4,5 s, il
+in `veri.js`, **7 scene, circa 3 minuti** (`stimaVerifica()`: i secondi attesi per scena più, a ogni gruppo, la pausa di 4,5 s, il
 riferimento del calore e il caricamento; la scrive il foglio iniziale):
 
 | gruppo | scene |
 |---|---|
-| `scala-sopra` | `scala-sopra-0`…`9` e `scala-sopra-ancora`: il villaggio di sopra un gradino alla volta, vedi sotto |
-| `leve-sopra` | `leve-sopra-tutte` e `leve-sopra-<leva>`: il villaggio intero con tutte le leve della bassa e con una riaccesa com'era (`riaccendi`, un mondo per scena); la LETTURA dice quanto toglie ciascuna (`LEVE_SOPRA` in `veri/scala.js`) |
-| `fps` | gli fps veri, in fondo: il gioco com'è (discese, mondo di sopra, fattoria) senza aspettare la GPU, [vecchio-telefono-fps.md](vecchio-telefono-fps.md) |
+| `fps` | gli fps veri: il gioco com'è (discese, mondo di sopra, fattoria) senza aspettare la GPU, [vecchio-telefono-fps.md](vecchio-telefono-fps.md) |
+
+Uscite il 29/10, perché il villaggio e il prato andavano a 59 e 58 fps veri: la scala del villaggio (si lancia per nome,
+`solo: ['scala-sopra']`) e le leve di sopra una per una (avevano detto quali tenere: [prestazioni-3d-bassa.md](../sotterraneo/prestazioni-3d-bassa.md)).
 
 Uscite il 28/10 sera, perché lo scontro delle discese andava a 59 fps veri: la scala dello scontro (si lancia per nome, `solo: ['scala']`)
 e lo scontro con 1, 3 e 6 mostri contro il 22/10 (resta nelle complete).
@@ -46,7 +47,7 @@ sugli stessi fotogrammi (uno ogni cinque): le mediane prese a parte non si sottr
 I ms della scala sono **lavoro in fila** (si aspetta la GPU a ogni fotogramma): sul Note 7 lo scontro con 3 mostri dava 44 ms di lavoro e
 59 fps veri. Contano i salti fra gradini, non il totale; le righe hanno `·` al posto di `ok`/`XX`. Due scale in `veri/scala.js` (`SCALE`):
 
-- **il villaggio di sopra** (`scala-sopra`, nella verifica; la scena di `veri/elementi-sopra.js`, 4 persone e 3 mostri finti): niente,
+- **il villaggio di sopra** (`scala-sopra`, per nome; la scena di `veri/elementi-sopra.js`, 4 persone e 3 mostri finti): niente,
   cielo e luci, mare, terreno, il rilievo del terreno, case e piazza, alberi-erba-natura, nebbia della mappa-foschia-vita-scia, persone ed eroe,
   mostri; il rumore rifà il terreno. Fino al 28/10 la natura nasceva senza il suo nome e finiva nel gradino del cielo. L'ombra del sole sta col cielo: la bassa non la disegna (`ombre` spento spegne la mappa d'ombra di tutto il contesto).
 - **lo scontro delle discese**, sotto.

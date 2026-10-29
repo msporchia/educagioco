@@ -5,7 +5,7 @@
 import { proveCpu } from './prove.js'
 import { eventiContesto } from './veri/tela.js'
 import { tappeDegliElementi } from './veri/elementi-dati.js'
-import { sceneDellaScala, sceneDelleLeve, MOSTRI_SCALA } from './veri/scala.js'
+import { sceneDellaScala, MOSTRI_SCALA } from './veri/scala.js'
 
 export const SOGLIA = 33          // ms di lavoro al p95: oltre, a scatti (30 fps)
 export const SALTA_OLTRE = 400    // una scena oltre questo al p95: il resto della sua serie che cresce non si misura (il telefono si pianterebbe)
@@ -111,21 +111,16 @@ export const TAPPE = [
   { gruppo: 'calore', carica: discese, scene: [{ id: 'cal-2', nome: 'riferimento, di nuovo alla fine', mostri: 8, colpi: true }] },
 ]
 export const QUANTE = TAPPE.reduce((n, t) => n + t.scene.length, 0)
-// le scale (veri/scala.js): una scena dal fondo alla scena intera, un gradino alla volta; quella delle discese non è più nella verifica
-// (il 28/10 lo scontro andava a 59 fps veri), si lancia per nome (`solo: ['scala']`)
+// le scale (veri/scala.js): una scena dal fondo alla scena intera, un gradino alla volta; non sono più nella verifica (il 28/10 lo scontro
+// andava a 59 fps veri, il 29/10 il villaggio e il prato a 59 e 58), si lanciano per nome (`solo: ['scala']`, `['scala-sopra']`)
 const SCALA_SOT = { gruppo: 'scala', carica: () => import('./veri/elementi-sot.js'), opz: { mostri: MOSTRI_SCALA }, tempi: 'verifica', scene: sceneDellaScala('sot') }
 const SCALA_SOPRA = { gruppo: 'scala-sopra', carica: () => import('./veri/elementi-sopra.js'), tempi: 'verifica', scene: sceneDellaScala('sopra') }
-// le leve della bassa nel mondo di sopra, una riaccesa alla volta: un mondo nuovo per scena (la fascia si legge alla nascita)
-const LEVE_SOPRA = sceneDelleLeve().map(s => ({ gruppo: 'leve-sopra', carica: () => import('./veri/elementi-sopra.js'), opz: { riaccendi: s.riaccendi }, tempi: 'verifica', scene: [s] }))
 /**
  * La VERIFICA (il tasto «Avvia coi modelli veri», ~5 minuti, `stimaVerifica`): solo quello che serve alla leva di adesso. Quello che ha già
- * risposto (l'ingresso, la risoluzione, lo zaino, le serie lunghe, la scala delle discese) sta in `TAPPE` e `TAPPE_SCALE`. Il riferimento del
+ * risposto (l'ingresso, la risoluzione, lo zaino, le serie lunghe, le due scale) sta in `TAPPE` e nelle scale. Il riferimento del
  * calore è quello fisso che ogni gruppo ha già; la scala rifà un gradino.
  */
 export const TAPPE_VERIFICA = [
-  // la scala del mondo di sopra: il villaggio dal cielo e il mare fino a persone e mostri
-  SCALA_SOPRA,
-  ...LEVE_SOPRA,
   // gli fps veri (docs/core/vecchio-telefono-veri.md, «Gli fps veri»): quello che vede chi gioca, con la fascia del telefono e senza aspettare la GPU
   ...TAPPE_FPS,
 ]
@@ -303,7 +298,7 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
   // complete (gli elementi no: sono una prova a parte)
   const visti = new Set()
   const nuova = s => !visti.has(s.id) && !!visti.add(s.id)
-  const tappe = (proprie || (solo ? [...TAPPE, ...TAPPE_VERIFICA, SCALA_SOT, ...TAPPE_ELEMENTI] : completa ? TAPPE : TAPPE_VERIFICA))
+  const tappe = (proprie || (solo ? [...TAPPE, ...TAPPE_VERIFICA, SCALA_SOT, SCALA_SOPRA, ...TAPPE_ELEMENTI] : completa ? TAPPE : TAPPE_VERIFICA))
     .map(t => ({ ...t, scene: t.scene.filter(s => (!solo || solo.some(p => s.id.startsWith(p) || t.gruppo.startsWith(p))) && (!solo || nuova(s))) })).filter(t => t.scene.length)
   const tot = tappe.reduce((n, t) => n + t.scene.length, 0)
   const risultati = [], gruppi = {}, saltate = new Set(), avvisi = new Map()

@@ -23,8 +23,10 @@ entrano in «chi pesa di più» né in «CPU o GPU»). Nella LETTURA la riga **F
 Gli fps non superano la frequenza dello schermo (60 sul Note 7).
 
 Il primo giro sul Note 7 (28/10, fascia bassa): discese e fattoria a 59 fps senza un fotogramma sotto i 30; il villaggio 17 fps e lo
-scontro sul prato 15, perché il mondo di sopra non aveva ancora le semplificazioni della bassa (la sua scala è nella verifica).
+scontro sul prato 15, perché il mondo di sopra non aveva ancora le semplificazioni della bassa (la sua scala si lancia per nome, `solo: ['scala-sopra']`).
 Il 29/10, con le prime (il rumore in trama: `docs/sotterraneo/prestazioni-3d-bassa.md`), il villaggio 54 e il prato 48; il villaggio
 senza antialias 60, quindi l'antialias è diventato una leva della bassa (`antialias`) e la scena di confronto è tolta.
+Il 29/10 alle 12:19, con Lambert e il rumore a un'ottava: tutte le sette fra 55 e 60 (il villaggio 59, il prato 58); la verifica è
+rimasta queste sette.
 
 Nei test: `unita/benchmark-veri` (le scene, la riga, la lettura), `integrazione/benchmark-veri` (le sette scene girano in Chrome, `vero`, `gpu: 0`).

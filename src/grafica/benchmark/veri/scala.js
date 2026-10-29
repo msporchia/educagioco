@@ -48,21 +48,6 @@ export function sceneDellaScala(chiave) {
   return scene
 }
 
-// le leve della bassa nel mondo di sopra (29/10), sul villaggio intero (l'ultimo gradino): prima con tutte, poi ognuna riaccesa com'era
-// (`riaccendi`, un mondo nuovo per scena). Il salto è quanto toglie quella leva
-export const LEVE_SOPRA = [
-  { leva: 'lambertSopra', nome: 'la luce fisica invece di Lambert' },
-  { leva: 'terrenoSopraSemplice', nome: 'il terreno a cinque trame' },
-  { leva: 'rumoreUnaOttava', nome: 'il rumore a tre ottave' },
-  { leva: 'quantaErba', nome: "tutta l'erba" },
-]
-/** Le scene delle leve: `leve-sopra-tutte` e `leve-sopra-<leva>`, tutte col villaggio intero acceso. */
-export function sceneDelleLeve() {
-  const sc = sceneDellaScala('sopra'), tutti = sc[SCALE.sopra.gradini.length - 1].accesi
-  return [{ id: 'leve-sopra-tutte', nome: 'il villaggio con tutte le leve della bassa', accesi: tutti, riaccendi: [], stima: 22 },
-    ...LEVE_SOPRA.map(l => ({ id: `leve-sopra-${l.leva}`, nome: `il villaggio con ${l.nome}`, accesi: tutti, riaccendi: [l.leva], stima: 22 }))]
-}
-
 const t1 = x => Math.round(x * 10) / 10
 const piu = x => `${x >= 0 ? '+' : ''}${t1(x)}`
 const buona = r => r && !r.errore && !r.salta && r.ms != null
@@ -72,16 +57,7 @@ const buona = r => r && !r.errore && !r.salta && r.ms != null
  * `rumore` rifatto) e i gradini più cari. Un gradino non misurato (la prova si è fermata lì) chiude la scala: quelli prima restano buoni.
  * `ris`: i risultati, già tolti dal calore.
  */
-export const letturaScala = ris => [...Object.values(SCALE).flatMap(s => unaScala(ris, s)), ...letturaLeve(ris)]
-
-function letturaLeve(ris) {
-  const base = ris.find(r => r.id === 'leve-sopra-tutte')
-  if (!buona(base)) return []
-  const l = LEVE_SOPRA.map(v => ({ ...v, r: ris.find(r => r.id === `leve-sopra-${v.leva}`) })).filter(v => buona(v.r))
-    .map(v => ({ ...v, ms: v.r.ms - base.ms, gpu: (v.r.gpu ?? 0) - (base.gpu ?? 0) })).sort((a, b) => b.ms - a.ms)
-  return [`LEVE DI SOPRA (il villaggio intero, lavoro in fila): con tutte ${base.ms} ms (gpu ${base.gpu}); una riaccesa com'era, quanto toglie la leva:` +
-    (l.length ? ' ' + l.map(v => `${v.nome} ${piu(v.ms)} ms (gpu ${piu(v.gpu)})`).join(', ') + '.' : ' nessuna misurata.')]
-}
+export const letturaScala = ris => Object.values(SCALE).flatMap(s => unaScala(ris, s))
 
 function unaScala(ris, { id, titolo, gradini: GRADINI, rumore: RUMORE }) {
   const g = GRADINI.map((_, k) => ris.find(r => r.id === `${id}-${k}`))

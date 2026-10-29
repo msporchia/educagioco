@@ -65,7 +65,7 @@ function rigaVera(r) {
   const piu = [c !== r ? `≈${c.ms}` : '', r.primo > Math.max(50, 2 * r.ms) ? `primo ${Math.round(r.primo)}` : '', r.nuovi ? `+${r.nuovi}sh` : '',
                r.pronto > 1500 ? `pronto ${(r.pronto / 1000).toFixed(1)}s` : '', r.stabile === false ? 'instabile' : '', r.nascosta ? 'NASCOSTA' : ''].filter(Boolean).join(' ')
   const parti = r.agg != null ? `: gioco ${r.agg} disegno ${r.dis ?? '?'}` : ''
-  return `${/^(scala|leve)-/.test(r.id) ? '·  ' : segnoVero(r.p95)}${r.nome}: ${r.ms}/${r.p95} ms (js ${r.js ?? '?'}${parti} gpu ${r.gpu ?? '?'}) ${r.fps}fps ${r.ch ?? '?'}ch ${kt(r.tri)}kt${piu ? ' ' + piu : ''}`
+  return `${/^scala-/.test(r.id) ? '·  ' : segnoVero(r.p95)}${r.nome}: ${r.ms}/${r.p95} ms (js ${r.js ?? '?'}${parti} gpu ${r.gpu ?? '?'}) ${r.fps}fps ${r.ch ?? '?'}ch ${kt(r.tri)}kt${piu ? ' ' + piu : ''}`
 }
 
 const confrontabile = r => (misurata(r) || (r.tot != null && !r.errore && !r.salta)) && r.tipo !== 'ingresso'
@@ -217,7 +217,7 @@ export function letturaVeri(dati) {
   const parallelo = !((dati.info || {}).mancanti || []).includes('KHR_parallel_shader_compile')
   if (primi.length || sh) righe.push(`Prima apparizione: ${primi.map(r => `${r.nome} ${Math.round(r.primo)} ms`).join(', ') || 'nessuna sopra 100 ms'}; ${sh} shader nuovi, ` +
     `fino a ${prog} programmi in un gruppo` + (parallelo ? '.' : '; senza KHR_parallel_shader_compile si compilano bloccando: vanno precompilati (renderer.compileAsync) a una schermata di caricamento.'))
-  const pesante = ris.filter(r => misurata(r) && !r.el && !r.vero && !/^(scala|leve)-/.test(r.id) && r.p95 != null).sort((x, y) => y.p95 - x.p95)[0]
+  const pesante = ris.filter(r => misurata(r) && !r.el && !r.vero && !/^scala-/.test(r.id) && r.p95 != null).sort((x, y) => y.p95 - x.p95)[0]
   if (pesante) righe.push(`Chi pesa di più: ${pesante.nome} (p95 ${pesante.p95} ms, ${pesante.ch} chiamate, ${kt(pesante.tri)}k triangoli).`)
   const i = dati.info || {}, p = i.precisione
   if (p) righe.push(`GPU: highp nei frammenti ${p.fsAlta ? 'si' : 'NO'}, mediump a ${p.fsMedia} bit` +
