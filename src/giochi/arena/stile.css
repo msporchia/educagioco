@@ -190,12 +190,3 @@
 .ar-vendi-link { align-self: center; min-height: 44px; padding: 8px 16px; font-size: 13px; font-weight: 700; color: #93a0bd;
                  background: none; border: 0; text-decoration: underline }
 
-/* la sfida in due: la schermata prima della battaglia */
-.ar-sfida { display: flex; flex-direction: column; gap: 12px; padding: 18px 16px; align-items: stretch; text-align: center }
-.ar-sfida h2 { margin: 6px 0 0; font-size: 20px }
-.ar-sfida p { margin: 0; color: #5a574d }
-.ar-sfida-nota { font-size: 14px }
-.ar-sfida-scelte { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center }
-.ar-sfida-scelte .ar-livello { flex: 1 1 40% }
-.ar-sfida-codice { font: 700 32px/1.2 "Emoji Gioco", ui-monospace, monospace; letter-spacing: 8px; text-align: center; text-transform: uppercase; padding: 10px; border: 2px solid #c9c2b0; border-radius: 12px }
-.ar-sfida-codice-grande { font: 800 46px/1.2 "Emoji Gioco", ui-monospace, monospace; letter-spacing: 10px; padding: 14px; border: 3px dashed #7a5cf0; border-radius: 14px; background: #fff; color: #5b3fc8; user-select: all }

@@ -46,7 +46,7 @@ separano l'host manda la fotografia e si riparte da lì: due bambini che non han
 
 ## Nel gioco
 
-- **Si apre dalla mappa** («Sfida un amico», sopra la battaglia infinita). `viste/Sfida.vue`: chi crea sceglie il terreno e
+- **Si apre dalla mappa** («Sfida un amico», sopra la battaglia infinita). La sala è quella comune (`src/insieme/SalaSfida.vue`); nello slot `viste/SceltaSfida.vue`: chi crea sceglie il terreno e
   quanto andare veloce e riceve il codice; chi entra lo scrive. La battaglia è come l'infinita: senza timer, con le truppe del
   terreno e tutte le operazioni. Non c'è il ⏸, né la sosta, né le stelle. **Il terreno si legge dalla proposta**
   (`incontro.proposta.terreno`): l'incontro è di tutti i giochi e non lo sa. Provato a leggerlo dall'incontro: tornava vuoto, e
@@ -58,13 +58,12 @@ separano l'host manda la fotografia e si riparte da lì: due bambini che non han
   Il prezzo dello sbaglio resta la caserma che riposa.
 - **La nuvoletta, l'anello e i dettagli si rifanno a ogni giro** (cosa si può pagare, quanto riposa): da soli il campo sta fermo
   mentre sono aperti, in due no, e le monete arrivano con la nuvoletta aperta.
-- **La linea che va e viene**: dopo 1,5 s di guasto un cartello dice «Hai perso la linea… mi ricollego da solo» o «L'altro ha perso
+- **La linea che va e viene** (il cartello comune, `src/insieme/CartelloLinea.vue`): dopo 1,5 s di guasto dice «Hai perso la linea… mi ricollego da solo» o «L'altro ha perso
   la linea… lo aspetto», con «alla mappa»; il campo è fermo (il lockstep aspetta) e quando la linea torna riparte da dove era. Dopo
   due minuti senza notizie la sfida finisce. Chi esce lo sa l'altro subito, e chi finisce prima lo dice all'altro (`fine`).
 - In due il battito del gioco recupera fino a 0,25 s a fotogramma (`giostra.tetto`): un telefono lento non rallenta l'altro.
-- **Nei test:** `[data-sfida-apri]` (la mappa), `[data-sfida-crea]`, `[data-sfida-entra]`, `[data-terreno=…]`, `[data-ritmo=…]`,
-  `[data-sfida-codice-input]`, `[data-sfida-vai]`, `[data-codice]`, `[data-sfida-messaggio]`, `[data-sfida-linea]`,
-  `[data-sfida-rotta]`, `[data-sfida-esci]`; `unita/arena-lockstep`, `unita/arena-sfida`, e `integrazione/arena-sfida`
+- **Nei test:** `[data-sfida-apri]` (la mappa), `[data-terreno=…]`, `[data-ritmo=…]` (le scelte); quelli della sala e del
+  cartello in [../core/insieme.md](../core/insieme.md); `unita/arena-lockstep`, `unita/arena-sfida`, e `integrazione/arena-sfida`
   (**serve `wrangler dev`** in `servizio/inoltro`).
 
 ## Gli amici

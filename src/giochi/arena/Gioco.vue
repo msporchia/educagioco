@@ -5,7 +5,7 @@
 // potenziare, riparare…) si paga con monete di battaglia E con un calcolo:
 // il calcolo lo chiede `domande.js`, il campo intanto rallenta (non si ferma:
 // la pressione resta). Vedi docs/arena/regole.md.
-import { ref, shallowRef, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { segna, state, etaDelBambino, contiPermessi } from '../../store/profile.js'
@@ -18,13 +18,11 @@ import VeloPausa from '../VeloPausa.vue'
 import Domanda from '../../quiz/Domanda.vue'
 import { Giostra } from './scena/giostra.js'
 import { vistaDa, eventiDa } from './scena/prospettiva.js'
-import { Incontro } from '../../insieme/incontro.js'
-import { creaTavolo, nuovoPosto } from '../../insieme/rete.js'
+import { usaSfida } from '../../insieme/sfida.js'
+import SalaSfida from '../../insieme/SalaSfida.vue'
+import CartelloLinea from '../../insieme/CartelloLinea.vue'
 import { regolaArena, latoDi } from './sfida/regia.js'
-import { registra } from '../../incidenti.js'
-import { dati as datiAmici } from '../../store/amici.js'
-import { stato as amiciStato, invita, diciGioco } from '../../amici/servizio.js'
-import { ingresso, prendiIngresso } from '../../amici/ingresso.js'
+import { diciGioco } from '../../amici/servizio.js'
 
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, INFINITA, tappeDelloScalino, scalinoDi, scalinoDelTerreno, terrenoDiverso, operazioniDi, operazionePer, senzaSaperi, PESO_DEL_RIPIEGO, stellePer, sfidaDi, sfidaInfinita, LIVELLI, livelloValido } from './dati/campagna.js'
 import { TRUPPE, EDIFICI, EDIFICIO_DI, AZIONI, BOMBA, POSTI, CAMPO, CRESCITA, truppeDelTerreno } from './dati/regole.js'
@@ -38,7 +36,7 @@ import { basi, gradoDi, dopoLaRisposta } from './bravura.js'
 import Mappa from './viste/Mappa.vue'
 import CampoVista from './viste/Campo.vue'
 import Finale from './viste/Finale.vue'
-import Sfida from './viste/Sfida.vue'
+import SceltaSfida from './viste/SceltaSfida.vue'
 import Dettagli from './viste/Dettagli.vue'
 import './stile.css'
 
@@ -52,21 +50,14 @@ let borsellino = borsa(CHIAVE)   // le monete vere di questa partita, un calcolo
 
 const vista = ref('mappa')            // mappa | campo | sfida
 const tappaIdx = ref(0)
-/* la sfida in due (docs/arena/multigiocatore.md): `regia` è l'incontro dei due telefoni (src/insieme/), e `mio` è il lato di chi
-   gioca qui (chi ospita è `io`, l'ospite `nem`: il mondo è uno solo e l'ospite lo vede specchiato, scena/prospettiva.js) */
-const regia = shallowRef(null)
-const statoSfida = ref('')            // lo stato dell'incontro, per la schermata (l'incontro non è reattivo)
-const motivoSfida = ref('')
-const faseSfida = ref('scelta')       // scelta | creo | attesa | entro
-const invitato = ref('')              // il nome dell'amico invitato, mentre lo si aspetta
-let scadenzaInvito = 0
-const codiceSfida = ref('')
-const errore = ref('')
-const lineaGuasta = ref('')           // '' | 'io' (ho perso la linea) | 'altro' (non si sente): si dice dopo un attimo, non a ogni singhiozzo
-let guastaDa = 0
-const ASPETTA_A_DIRLO = 1.5           // secondi
-const mio = computed(() => (regia.value && statoSfida.value ? latoDi(regia.value.ruolo) : 'io'))
-const inDue = () => !!regia.value && regia.value.stato === 'gioco'
+/* la sfida in due (docs/arena/multigiocatore.md): la sala, l'incontro e la linea sono del pezzo comune (src/insieme/sfida.js), e
+   `mio` è il lato di chi gioca qui (chi ospita è `io`, l'ospite `nem`: il mondo è uno solo e l'ospite lo vede specchiato,
+   scena/prospettiva.js) */
+const sfida = usaSfida({ gioco: CHIAVE, regola: () => regolaArena(), alVia: partiInDue, mostra: mostraSala })
+const { regia, inDue } = sfida
+const sceltaTerreno = ref('bosco')
+const sceltaSecondi = ref(10)
+const mio = computed(() => (regia.value && sfida.stato.value ? latoDi(regia.value.ruolo) : 'io'))
 const livello = ref(livelloValido(progresso(CHIAVE).livello))   // facile | medio | difficile: lo sceglie la mappa
 const infinita = ref(null)            // il terreno, se si gioca la battaglia infinita (niente tappa)
 const chiaveCampo = ref(0)            // sale a ogni battaglia: il campo si rimonta, col suo terreno
@@ -215,14 +206,8 @@ function passo(dt) {
   const duello = inDue()
   // mentre si calcola il campo è fermo del tutto (vedi docs/arena/calcoli.md); in due corre sempre: non si ferma per uno solo
   const scala = !duello && (fermo.value || p.fine || domanda.value) ? 0 : 1
-  if (duello) {
-    regia.value.avanza(dt)
-    const l = regia.value.linea
-    const guasta = l.io !== 'su' ? 'io' : l.altro !== 'su' ? 'altro' : ''
-    guastaDa = guasta ? guastaDa + dt : 0
-    const detta = guastaDa > ASPETTA_A_DIRLO ? guasta : ''
-    if (detta !== lineaGuasta.value) lineaGuasta.value = detta
-  } else if (scala) {
+  if (duello) sfida.avanza(dt)
+  else if (scala) {
     p.avanza(dt * scala)
     daSalvare += dt
     if (daSalvare > 5) salva()
@@ -383,115 +368,33 @@ function avvia(indice) {
 }
 
 /* ── la sfida in due ── */
-function apriSfida() {
-  chiudiSfida()
-  faseSfida.value = 'scelta'
+function apriSfida() { sfida.apri() }
+
+/* la sala: da una battaglia a metà si esce come con «indietro» (la sosta si scrive), poi la sala */
+function mostraSala() {
+  if (vista.value === 'campo') indietro()
   vista.value = 'sfida'
 }
 
-async function creaSfida({ terreno, secondi }) {
-  faseSfida.value = 'creo'
-  const posto = nuovoPosto()
-  try {
-    codiceSfida.value = await creaTavolo({ posto })
-  } catch (e) {
-    errore.value = e.message
-    faseSfida.value = 'errore'
-    return
-  }
-  faseSfida.value = 'attesa'
-  collegati(codiceSfida.value, { terreno, secondiARisposta: secondi }, posto)
+const scelteSfida = () => ({ terreno: sceltaTerreno.value, secondiARisposta: sceltaSecondi.value })
+const creaSfida = () => sfida.crea(scelteSfida())
+const invitaAmico = chiave => sfida.invita(chiave, scelteSfida(), { terreno: sceltaTerreno.value, secondi: sceltaSecondi.value })
+
+/* l'incontro è partito: la stessa battaglia su tutti e due i telefoni */
+function partiInDue(r) {
+  clearTimeout(attesa); attesa = 0
+  togli()
+  scorda()                      // una partita nuova butta quella lasciata a metà (già chiesto dalla mappa)
+  tappaIdx.value = 0
+  infinita.value = r.proposta.terreno    // il terreno e tutte le sue truppe, come nella battaglia infinita
+  partita.value = r.partita
+  azzera()
+  toccato.value = false
+  giostra.tetto = 0.25          // in due un telefono lento deve recuperare, se no rallenta anche l'altro (il lockstep ha il suo tetto)
+  chiaveCampo.value++
+  vista.value = 'campo'
 }
 
-/* Un amico invitato (docs/core/amici.md): si prepara la stanza, ci si siede, e solo allora parte l'invito con il codice dentro. */
-async function invitaAmico({ chiave, terreno, secondi }) {
-  chiudiSfida()
-  const a = amiciStato.amici.find(x => x.chiave === chiave)
-  faseSfida.value = 'creo'
-  const posto = nuovoPosto()
-  try { codiceSfida.value = await creaTavolo({ posto }) } catch (e) { errore.value = e.message; faseSfida.value = 'errore'; return }
-  collegati(codiceSfida.value, { terreno, secondiARisposta: secondi }, posto)
-  const r = regia.value
-  for (let t = 0; regia.value === r && r.ruolo !== 'host' && t < 120; t++) await new Promise(res => setTimeout(res, 100))
-  if (regia.value !== r) return                                    // annullato nel frattempo
-  if (r.ruolo !== 'host' || !invita(chiave, 'arena', { terreno, secondi, codice: codiceSfida.value })) {
-    chiudiSfida(); errore.value = 'Non riesco a invitare adesso. Riprova fra un poco.'; faseSfida.value = 'errore'; return
-  }
-  invitato.value = a?.nome || 'il tuo amico'
-  faseSfida.value = 'attesa'
-  clearTimeout(scadenzaInvito)
-  scadenzaInvito = setTimeout(() => finisceInvito(`${invitato.value} non risponde`), 45000)
-}
-function finisceInvito(motivo) {
-  if (!invitato.value || faseSfida.value !== 'attesa') return
-  chiudiSfida(); errore.value = motivo; faseSfida.value = 'errore'
-}
-watch(() => amiciStato.risposta, r => { if (r && !r.ok) finisceInvito(`${invitato.value} adesso non può giocare`) })
-
-/* «Gioca» su un invito: si lascia quello che si stava facendo (la battaglia a metà si salva) e si entra nella stanza dell'amico */
-function entraDaInvito(d) {
-  if (!d) return
-  if (vista.value === 'campo') indietro()
-  apriSfida()
-  entraSfida(d.codice)
-}
-watch(ingresso, i => { if (i?.gioco === 'arena') entraDaInvito(prendiIngresso('arena')) })
-const amiciPerSfida = computed(() => (datiAmici.attivo && datiAmici.online ? amiciStato.amici.filter(a => !a.inAttesa) : []))
-
-function entraSfida(codice) {
-  faseSfida.value = 'entro'
-  codiceSfida.value = codice
-  collegati(codice, null)
-}
-
-/* `scelte`: { terreno, secondiARisposta } per chi crea (col `posto` prenotato creando il tavolo), null per chi entra */
-function collegati(codice, scelte, posto = nuovoPosto()) {
-  const r = new Incontro({ codice, regola: regolaArena(), scelte, alCambio: () => cambioSfida(r), opzioni: { posto } })
-  regia.value = r
-  statoSfida.value = r.stato
-}
-
-/* la regia cambia stato: in due si parte, o si dice perché non si può */
-function cambioSfida(r) {
-  if (!r || regia.value !== r) return
-  const prima = statoSfida.value
-  statoSfida.value = r.stato
-  motivoSfida.value = r.motivo
-  // nel libretto dei guasti dei grandi (docs/core/insieme.md): com'è andata la linea, da leggere senza cavo
-  if (r.stato === 'rotta' && prima !== 'rotta') registra('sfida', r.motivo, false)
-  if (r.stato === 'finita' && prima !== 'finita' && r.canale.diario.cadute) registra('sfida', `finita bene, ${r.diagnosi()}`, false)
-  if (r.stato === 'gioco' && prima !== 'gioco') {
-    clearTimeout(attesa); attesa = 0
-    togli()
-    scorda()                      // una partita nuova butta quella lasciata a metà (già chiesto dalla mappa)
-    tappaIdx.value = 0
-    infinita.value = r.proposta.terreno    // il terreno e tutte le sue truppe, come nella battaglia infinita
-    partita.value = r.partita
-    azzera()
-    toccato.value = false
-    lineaGuasta.value = ''; guastaDa = 0
-    giostra.tetto = 0.25          // in due un telefono lento deve recuperare, se no rallenta anche l'altro (il lockstep ha il suo tetto)
-    chiaveCampo.value++
-    vista.value = 'campo'
-  }
-}
-
-/* via la sfida (finita, annullata o caduta): il collegamento si chiude */
-function chiudiSfida() {
-  invitato.value = ''
-  clearTimeout(scadenzaInvito)
-  const r = regia.value
-  regia.value = null
-  statoSfida.value = ''
-  motivoSfida.value = ''
-  lineaGuasta.value = ''; guastaDa = 0
-  codiceSfida.value = ''
-  if (r) r.chiudi()
-}
-
-/* la fase che la schermata mostra */
-const faseVista = computed(() => (statoSfida.value === 'rotta' ? 'rotta' : statoSfida.value === 'trattativa' ? 'accordo' : faseSfida.value))
-const messaggioSfida = computed(() => (statoSfida.value === 'rotta' ? motivoSfida.value : errore.value))
 const TERRENI_SFIDA = SCALINI.map(s => ({ chiave: s.vestito, nome: s.nome.replace(/^(Il|La|Le) /, ''), icona: s.icona }))
 
 /* la battaglia infinita: il nemico è quello dell'ultima tappa, e il terreno è sempre un altro dall'ultima volta
@@ -729,7 +632,7 @@ function ancora() {
 }
 
 function allaMappa() {
-  chiudiSfida()
+  sfida.chiudi()
   diciGioco(null)
   clearTimeout(attesa); attesa = 0
   togli()
@@ -745,7 +648,7 @@ function allaMappa() {
 // uscire a metà non chiude la partita: si scrive dove si era e la mappa la offre in cima
 function indietro() {
   if (vista.value === 'mappa') return emit('vai', 'home')
-  if (vista.value === 'sfida') { chiudiSfida(); vista.value = 'mappa'; return }
+  if (vista.value === 'sfida') { sfida.chiudi(); vista.value = 'mappa'; return }
   const p = partita.value
   if (p && !p.fine && !regia.value) {
     salva({ subito: true })
@@ -774,7 +677,7 @@ function gancioDiProva() {
 
 onMounted(() => {
   diciGioco('arena')
-  entraDaInvito(prendiIngresso('arena'))
+  sfida.daInvito()
   gancioDiProva()
   addEventListener('resize', ridimensiona)
   document.addEventListener('visibilitychange', seSparisce)
@@ -786,7 +689,7 @@ onUnmounted(() => {
   removeEventListener('resize', ridimensiona)
   document.removeEventListener('visibilitychange', seSparisce)
   removeEventListener('pagehide', seSparisce)
-  chiudiSfida()
+  sfida.chiudi()
   clearTimeout(attesa)
   clearTimeout(orologioAvviso)
   giostra.ferma()
@@ -803,9 +706,12 @@ onUnmounted(() => {
       <Mappa v-if="vista === 'mappa'" :scalini="scalini" :infinita="laInfinita" :ripresa="ripresa"
              :livelli="LIVELLI" :livello="livello" @livello="scegliLivello" @gioca="avvia" @riprendi="riprendiPartita" @scorda="scorda" />
 
-      <Sfida v-else-if="vista === 'sfida'" :fase="faseVista" :codice="codiceSfida" :messaggio="messaggioSfida" :terreni="TERRENI_SFIDA"
-             :amici="amiciPerSfida" :invitato="invitato" @invita="invitaAmico"
-             @crea="creaSfida" @entra="entraSfida" @indietro="indietro" />
+      <SalaSfida v-else-if="vista === 'sfida'" :fase="sfida.fase.value" :codice="sfida.codice.value" :messaggio="sfida.messaggio.value"
+                 :amici="sfida.amici.value" :invitato="sfida.invitato.value" partita="la battaglia" domanda="Dove vi sfidate?"
+                 spiega="Due telefoni, la stessa battaglia: tu contro tuo fratello o tua sorella. Serve internet su tutti e due."
+                 @crea="creaSfida" @invita="invitaAmico" @entra="sfida.entra" @indietro="indietro">
+        <template #scelte><SceltaSfida v-model:terreno="sceltaTerreno" v-model:secondi="sceltaSecondi" :terreni="TERRENI_SFIDA" /></template>
+      </SalaSfida>
 
       <CampoVista v-else :key="chiaveCampo" :cruscotto="cruscotto" :pannello="pannello" :avviso="avviso"
                   :dritta="!toccato && !finale"
@@ -822,14 +728,8 @@ onUnmounted(() => {
       <Finale v-if="finale" v-bind="finale" @ancora="ancora" @esci="allaMappa" />
 
       <!-- la sfida si è rotta (l'altro se n'è andato, versioni diverse, la linea non è tornata), o la linea va e viene: si aspetta -->
-      <div v-if="vista === 'campo' && !finale && (statoSfida === 'rotta' || lineaGuasta)" class="ar-velo"
-           :data-sfida-rotta="statoSfida === 'rotta' ? '' : null" :data-sfida-linea="statoSfida === 'rotta' ? null : lineaGuasta">
-        <div class="ar-cartello">
-          <h2>{{ statoSfida === 'rotta' ? 'La sfida è finita qui' : lineaGuasta === 'io' ? 'Hai perso la linea…' : 'L\'altro ha perso la linea…' }}</h2>
-          <p>{{ statoSfida === 'rotta' ? motivoSfida : lineaGuasta === 'io' ? 'Mi ricollego da solo: la battaglia riparte da dove era.' : 'Lo aspetto: quando torna, la battaglia riparte da dove era.' }}</p>
-          <button class="ar-grosso ar-chiaro" data-sfida-esci @click="allaMappa"><span class="em">🗺️</span> alla mappa</button>
-        </div>
-      </div>
+      <CartelloLinea v-if="vista === 'campo' && !finale && (sfida.rotta.value || sfida.linea.value)" :rotta="sfida.rotta.value"
+                     :motivo="sfida.motivo.value" :linea="sfida.linea.value" partita="la battaglia" @esci="allaMappa" />
 
       <VeloPausa v-if="inPausa && siGioca" :dove="dovEravamo" @riprendi="togli" @esci="indietro" />
     </div>
