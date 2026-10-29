@@ -12,6 +12,7 @@ import { segna, answer } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'
 import { progresso, aperta, adesso, stelleDi, completa,
          sosta, salvaSosta, buttaSosta } from '../campagne.js'
+import { usaAmici } from '../../amici/usaAmici.js'
 import { attesaDellEsito, PONDERA, TEMPO_MAX } from '../../quiz/nucleo/domanda.js'
 
 import { CAMPAGNA, BLOCCHI, QUANTE_TAPPE, MONETE_A_DOSE } from './dati/campagna.js'
@@ -43,6 +44,9 @@ const avanza = progresso(CHIAVE)
 const tappa = computed(() => CAMPAGNA[tappaIdx.value])
 const titolo = computed(() => (vista.value === 'banco' ? tappa.value.nome : 'Le pozioni'))
 
+// gli amici dalla loro bacheca (docs/core/amici-nei-giochi.md): la tappa da fare di ognuno
+const amici = usaAmici(CHIAVE)
+
 // la mappa
 const blocchi = computed(() => BLOCCHI.map(b => ({
   ...b,
@@ -51,6 +55,7 @@ const blocchi = computed(() => BLOCCHI.map(b => ({
     aperta: aperta(CHIAVE, t.indice),
     adesso: adesso(CHIAVE, t.indice),
     stelle: stelleDi(CHIAVE, t.indice),
+    amici: amici.sullaTappa(t.indice),
   })),
 })))
 
@@ -292,7 +297,7 @@ if (typeof window !== 'undefined')
     </Barra>
 
     <Mappa v-if="vista === 'mappa'" :blocchi="blocchi" :ripresa="ripresa"
-           :chiede="chiede ? chiede.nome : ''" @gioca="vuoleIniziare"
+           :chiede="chiede ? chiede.nome : ''" :davanti="amici.davanti" @gioca="vuoleIniziare"
            @riprendi="riprendiPartita" @scorda="scorda"
            @comincia="comincia" @annulla="chiede = null" />
 
