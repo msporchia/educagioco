@@ -2,7 +2,7 @@
 //   node prova.mjs https://sfida.<tuo-sottodominio>.workers.dev
 // Il tavolo (docs/core/insieme.md): i posti, l'inoltro, il ping, chi cade e rientra col suo posto, chi se ne va, i no.
 // La stanza di prima (per i telefoni col gioco vecchio): i ruoli, l'inoltro, il terzo che non entra, il messaggio troppo
-// grande, il codice sbagliato e l'«via» quando uno se ne va. Poi gli amici.
+// grande, il codice sbagliato e l'«via» quando uno se ne va. Poi gli amici, con la bacheca.
 const BASE = (process.argv[2] || 'http://localhost:8787').replace(/\/$/, '')
 const WS = BASE.replace(/^http/, 'ws')
 let guasti = 0
@@ -149,6 +149,18 @@ controlla('e l\'altro sa che è giù', leo.arrivati.some(m => m.t === 'giu' && m
 const brutto = await apriPresenza(); brutto.ws.send(JSON.stringify({ k: 'dichiaro', id: 'X', chiavi: ['no'] })); await pausa(300)
 controlla('una dichiarazione storta chiude chi la manda', brutto.chiuso() === 1003, String(brutto.chiuso()))
 leo.ws.close(); estraneo.ws.close()
+// la bacheca (docs/core/amici-bacheca.md): di due, si scrive la propria e si ritira quella dell'altro
+const ist = (tappa, record) => ({ v: 1, giorno: '2026-10-29', giochi: { mate: { tappa, record } } })
+const b1 = await post('/amici/bacheca', { chiave, id: 'melody001', dati: ist(3, 0) }).then(r => r.json())
+controlla('la prima che scrive non trova nessuno', b1.altro === null, JSON.stringify(b1))
+const b2 = await post('/amici/bacheca', { chiave, id: 'leonardo1', dati: null }).then(r => r.json())
+controlla('l\'amico legge senza scrivere e la trova', b2.altro?.giochi?.mate?.tappa === 3, JSON.stringify(b2))
+await post('/amici/bacheca', { chiave, id: 'leonardo1', dati: ist(5, 3400) })
+const b3 = await post('/amici/bacheca', { chiave, id: 'melody001', dati: null }).then(r => r.json())
+controlla('e quando scrive, la prima trova la sua', b3.altro?.giochi?.mate?.record === 3400, JSON.stringify(b3))
+controlla('un terzo non entra in una bacheca di due', (await post('/amici/bacheca', { chiave, id: 'estraneo01', dati: null })).status === 409)
+controlla('una richiesta storta no', (await post('/amici/bacheca', { chiave: 'corta', id: 'melody001' })).status === 400)
+controlla('dati troppo grandi no', (await post('/amici/bacheca', { chiave, id: 'melody001', dati: { x: 'y'.repeat(3000) } })).status === 400)
 // per ultimo: indovinare i codici blocca l'indirizzo per un minuto
 let ultimoStato = 0
 for (let i = 0; i < 12; i++) ultimoStato = (await post('/amici/riscatta', { codice: 'AAAA' + 'BCDEFGHJKLMN'[i] })).status
