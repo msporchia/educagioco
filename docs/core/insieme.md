@@ -36,6 +36,9 @@ dipendenze e il servizio è un Worker di Cloudflare (Socket.IO e Colyseus voglio
 | `lockstep.js` | due copie che si scambiano le mosse, l'impronta ogni tanto, la fotografia se si separano | la rete, il gioco (gli dà un `motore`) |
 | `incontro.js` | dal tavolo alla fine: la trattativa (versione, proposta), il lockstep, gli stati per lo schermo, le frasi | gli schermi, il gioco (gli dà una `regola`) |
 | `schermo.js` | tiene lo schermo acceso mentre si gioca (Wake Lock; dove non c'è, niente) | |
+| `sfida.js` | `usaSfida`: la sfida vista da un gioco: crea, entra col codice, invita un amico (e l'invito che arriva), l'incontro dalla sala alla partita, il cartello della linea dopo 1,5 s, il libretto dei guasti | il gioco (gli dà `regola`, `alVia`, `mostra`) |
+| `SalaSfida.vue` | la sala: crea / entra / invita, il codice da dire, l'attesa, cosa è andato storto | le scelte di chi crea (slot `scelte`) |
+| `CartelloLinea.vue` | sopra la partita: «hai perso la linea», «l'altro ha perso la linea», la sfida finita col perché | |
 
 Un gioco dà all'`Incontro` una **regola** (`versione`, `proponi(scelte)`, `accetta(proposta)`, `crea(proposta)` → il motore) e il
 **motore** del lockstep (`passo`, `avanza()`, `applica(ruolo, mossa)`, `valida(mossa)`, `impronta()`, `simili(a, b)`, `foto()`,
@@ -100,12 +103,34 @@ l'ha trovato, ed era anche nel codice di prima).
 **Determinismo:** il motore non usa `Math.hypot` (non è arrotondato uguale da tutti i browser) ma `Math.sqrt(dx*dx + dy*dy)`, che lo
 è. Un gioco nuovo in due evita `Math.hypot`, `Math.sin/cos/exp/pow` nelle regole e `Math.random` fuori dal caso col seme.
 
+## Un gioco nuovo in due
+
+Rete, cadute, trattativa, sala e cartello non si riscrivono. Il gioco dà:
+
+1. **Un motore deterministico**, fuori dalla view: tick fisso, caso col seme, niente tempo vero. È quasi tutto il lavoro quando la
+   logica sta ancora nel componente (i giochi in `src/views/`).
+2. **L'adattatore** (in Castle Battle `sfida/`, 130 righe): la `regola` e il `motore` del lockstep (sopra); la mossa, l'impronta e
+   la fotografia sono le sole cose da pensare.
+3. **La schermata**: `const sfida = usaSfida({ gioco, regola, alVia, mostra })`; `<SalaSfida>` con le sue scelte nello slot
+   `scelte` (le classi `ins-scelte`, `ins-scelta`, `ins-scelta-su`, `ins-nota` danno i tasti di tutti); nel battito
+   `sfida.avanza(dt)` invece di avanzare la partita; le mosse con `sfida.regia.value.scegli(mossa)`; `<CartelloLinea>` sopra il
+   campo; `sfida.daInvito()` quando il gioco si apre; `sfida.chiudi()` uscendo. In due niente pausa, sosta, stelle, e le domande
+   `svelta` ([../apprendimento/la-domanda.md](../apprendimento/la-domanda.md)); quello che si legge mentre il campo corre (prezzi,
+   menu) si rifà a ogni giro.
+4. **L'invito degli amici**: una voce in `src/amici/giochi.js` (`valida` per i dati che porta l'invito, oltre al codice).
+5. **I bambini finti** per le prove e il banco: `test/aiuto/sfide/<gioco>.mjs` (`regola`, `scelte(seme)`, `muovi(ruolo, incontro,
+   caso)`) e la sua riga in `sfide/index.mjs`.
+
+Un gioco a turni (uno muove, l'altro aspetta) usa lo stesso lockstep con un motore che cambia solo quando arriva una mossa: i tick
+costano poco. Una via più semplice (solo canale e incontro) si fa quando arriva il primo.
+
 ## Le prove
 
 - `unita/insieme-canale`: il tavolo da solo e il canale sulla **rete finta** (`test/aiuto/rete-finta.mjs`: orologio finto, la
   logica vera del tavolo, quattro guasti: `taglia` il filo cade, `buco` il filo muore in silenzio, `spegni` niente rete per un po',
   `ferma` tutto in coda e poi in blocco), compresi dieci minuti con una trentina di guasti a caso: arrivano tutti i 6000 messaggi.
-- `unita/arena-sfida`: il lockstep col motore di Castle Battle e partite intere su una rete cattiva (`test/aiuto/sfida-finta.mjs`).
+- `unita/arena-sfida`: il lockstep col motore di Castle Battle e partite intere su una rete cattiva (`test/aiuto/sfida-finta.mjs`,
+  che fa giocare due bambini finti di un gioco qualunque: quelli di Castle Battle in `test/aiuto/sfide/arena.mjs`).
 - `integrazione/arena-sfida`: due browser veri, ognuno col suo **proxy cattivo** (`test/aiuto/proxy-cattivo.mjs`, gli stessi guasti
   a livello di TCP) davanti a `wrangler dev`; senza il servizio in locale salta.
 - `servizio/inoltro/prova.mjs`: le regole del tavolo contro il servizio vero (in locale o pubblicato).
@@ -113,7 +138,7 @@ l'ha trovato, ed era anche nel codice di prima).
 
 ### Tarare la tolleranza: `node strumenti/banco-rete.mjs`
 
-Partite intere fra due telefoni finti, per scenario (`calma`, `casa`, `melody`, `pessima`: latenza e guasti al minuto in
+Partite intere fra due telefoni finti di un gioco (`--gioco arena`, quelli di `test/aiuto/sfide/`), per scenario (`calma`, `casa`, `melody`, `pessima`: latenza e guasti al minuto in
 `SCENARI`), con il seme; `--partite`, `--seme`, `--minuti`, `--scenario`, `--tempi grazia=60000,sordo=4000` per provare altri
 tempi. Una riga per scenario: quante arrivano in fondo, quante si rompono e perché, quanto si vede il cartello della linea, quanto si
 resta fermi, cadute, rimandati, riallineamenti, fili chiusi dal servizio. Il 28/10, 12 partite: `casa` (mezzo guasto al minuto)
@@ -124,11 +149,13 @@ rimisurare quando si sa com'è davvero la rete di casa.
 ## Quando una sfida si rompe
 
 Il cartello dice il perché (`PAROLE` in `incontro.js`) e, fra parentesi, la diagnosi: tick, riallineamenti, quanto si è aspettato
-l'altro, cadute del filo e l'ultima chiusura (codice e ragione), rimandati. Castle Battle la scrive anche nel **libretto dei guasti**
+l'altro, cadute del filo e l'ultima chiusura (codice e ragione), rimandati. `usaSfida` la scrive anche nel **libretto dei guasti**
 (`src/incidenti.js`, la pagina dei grandi), insieme alle sfide finite bene dopo delle cadute: dal telefono di un bambino si legge
 cosa è successo senza cavo.
 
 ## Nei test
 
-`[data-sfida-linea="io"|"altro"]` (il cartello della linea, mentre si aspetta), `[data-sfida-rotta]` (finita male); gli altri
-bersagli della sfida in [../arena/multigiocatore.md](../arena/multigiocatore.md).
+La sala: `[data-sfida]`, `[data-sfida-crea]`, `[data-sfida-entra]`, `[data-sfida-amici]`, `[data-amico]`, `[data-sfida-vai]`,
+`[data-sfida-codice-input]`, `[data-codice]`, `[data-sfida-invitato]`, `[data-sfida-indietro]`, `[data-sfida-messaggio]`. Il
+cartello: `[data-sfida-linea="io"|"altro"]` (mentre si aspetta), `[data-sfida-rotta]` (finita male), `[data-sfida-esci]`. Quelli
+delle scelte sono del gioco ([../arena/multigiocatore.md](../arena/multigiocatore.md)).
