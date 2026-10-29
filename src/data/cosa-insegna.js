@@ -14,10 +14,6 @@ export const INSEGNA = {
     testo: 'Tabelline (i pianeti, dalla ×2 in su) e calcolo a mente (le stazioni): somme con il riporto, sottrazioni con il prestito, i doppi, '
       + 'il complemento a 10, le moltiplicazioni per 10. Le tappe seguono l\'ordine in cui servono: senza i doppi non c\'è la tabellina del 2.',
   },
-  mate3d: {
-    titolo: 'Cosa chiede',
-    testo: 'Gli stessi conti degli Asteroidi: tabelline e calcolo a mente, con i numeri sugli asteroidi da colpire prima che arrivino in fondo.',
-  },
   inglese: {
     titolo: 'Cosa chiede',
     testo: 'Parole e frasi in inglese, con la pronuncia. Ogni isola della mappa segue un anno di scuola (dalla prima alla quinta, più una sesta): '

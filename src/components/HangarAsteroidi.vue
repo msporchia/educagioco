@@ -6,13 +6,10 @@ import { state } from '../store/profile.js'
 import { ritocca } from '../giochi/campagne.js'
 import { TINTE, DISEGNI, STEMMI, pezzo, tipoDi } from '../data/hangar.js'
 import { hangarDi, possiede, scegli, visto, livrea, prossimoDelVolo } from '../motore/asteroidi/hangar.js'
-import { disegnaNave } from '../grafica/spazio.js'
 import { creaSpazio3d } from '../grafica/spazio3d/indice.js'
 import PezzoHangar from './PezzoHangar.vue'
 import Chiudi from '../giochi/fattoria/viste/Chiudi.vue'
 
-// `tre`: il gioco è in 3D, e la nave dell'hangar è quella vera (lo stesso pittore), non il disegno 2D di sempre
-const props = defineProps({ tre: { type: Boolean, default: false } })
 const emit = defineEmits(['chiudi'])
 
 const leggi = () => hangarDi(JSON.parse(JSON.stringify(((state.profile.campagne || {}).mate || {}).hangar || {})))
@@ -59,7 +56,7 @@ const scelto = campo => h.nave[campo] ?? null
 // nel volo non ogni nave madre lascia il pacco: va detto, se no sembra un guasto
 const voloAncora = computed(() => !!prossimoDelVolo(h))
 
-// la nave grande, che gira i motori piano
+// la nave grande, che gira i motori piano: quella vera del gioco (lo stesso pittore 3D)
 const tela = ref(null)
 let raf = 0
 let pittore3d = null, dimensione = '', prima = 0
@@ -79,25 +76,13 @@ function dipingi3d(cv, ts) {
 function dipingi(ts) {
   const cv = tela.value
   if (cv && pittore3d) dipingi3d(cv, ts)
-  else if (cv) {
-    const dpr = devicePixelRatio || 1, w = cv.clientWidth, alto = cv.clientHeight
-    if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(alto * dpr) }
-    const ctx = cv.getContext('2d')
-    if (!ctx) { raf = requestAnimationFrame(dipingi); return }   // la tela ha perso il 3D e non ha un 2D: niente nave, ma niente guasto
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    ctx.clearRect(0, 0, w, alto)
-    const r = Math.min(w, alto) * 0.3
-    disegnaNave(ctx, { x: w / 2, y: alto * 0.48, r, lv: 3, t: ts / 1000, spinta: 0.4,
-                       mira: -Math.PI / 2, livrea: livrea(h.nave) })
-  }
   raf = requestAnimationFrame(dipingi)
 }
 onMounted(() => {
-  // il contesto 3D si chiede una volta sola sulla tela: se manca WebGL o va perso, si resta sul 2D (con una tela nuova: un canvas non cambia contesto)
-  if (props.tre && tela.value) pittore3d = creaSpazio3d(tela.value, { perso: () => { pittore3d = null; erroreTela.value = true } })
+  // il contesto si chiede una volta sola sulla tela; se va perso la nave grande non c'è, il resto dell'hangar sì
+  if (tela.value) pittore3d = creaSpazio3d(tela.value, { perso: () => { pittore3d = null } })
   raf = requestAnimationFrame(dipingi)
 })
-const erroreTela = ref(false)
 onUnmounted(() => { cancelAnimationFrame(raf); pittore3d?.distruggi?.(); pittore3d = null })
 
 function chiudi() {

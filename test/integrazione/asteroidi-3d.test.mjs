@@ -9,9 +9,9 @@
    arrivare in fondo. Il dito è vero (`Input.dispatchTouchEvent`): un
    `page.click()` non trascina e non porta i pointer del tocco.
 
-   Il 3D (`mate3d`, «Asteroidi 3D») ha la sua carta accanto agli Asteroidi, anche coi
-   giochi in prova spenti, e gli Asteroidi di sempre restano in 2D. Con un
-   browser che il WebGL 2 non ce l'ha, anche gli Asteroidi 3D tornano al 2D.
+   Una carta sola, «Asteroidi», anche coi giochi in prova spenti. Senza il
+   contesto WebGL (perso, o un browser che non ce l'ha) il cielo si ferma e un
+   tasto lo riaccende, senza errori.
 
    `node test/esegui.mjs asteroidi-3d --niente-build`
    tempo: 120
@@ -22,7 +22,7 @@ import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mj
 const browser = await apriBrowser()
 
 // entra nella prima tappa e aspetta che il cielo scenda (il primo traguardo lo ferma tre secondi)
-async function entra(page, chiave = 'mate3d') {
+async function entra(page, chiave = 'mate') {
   await scegli(page, chiave)
   await page.waitForSelector('[data-rotta]', { timeout: 8000 })
   await parti(page, '[data-rotta] [data-tipo="pianeta"]')
@@ -49,7 +49,7 @@ const conto = page => page.evaluate(() => {
 /* ---------- 1. il 3D c'è, e costa poco ---------- */
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
-uguale('anche coi giochi in prova spenti c\'è la carta degli Asteroidi 3D', await page.locator('[data-indice="mate3d"]').count(), 1)
+uguale('anche coi giochi in prova spenti c\'è la carta degli Asteroidi, una sola', await page.locator('[data-indice="mate"]').count() + await page.locator('[data-indice="mate3d"]').count(), 1)
 await entra(page)
 const cdp = await page.context().newCDPSession(page)
 const giu = (x, y) => cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] })
@@ -59,8 +59,7 @@ const tocco = async (x, y) => { await giu(x, y); await attendi(page, 40); await 
 
 const g = await page.evaluate(() => window.__mate.grafica())
 uguale('il cielo si disegna in 3D', g.tre, true)
-controlla('la tela 3D si vede, quella 2D no',
-          await page.locator('[data-tela="3d"]').isVisible() && !(await page.locator('[data-tela="2d"]').isVisible()))
+controlla('la tela si vede, e niente tasto per riaccenderla', await page.locator('[data-tela="3d"]').isVisible() && !(await page.locator('[data-riaccendi-tela]').count()))
 dentro('pochi disegni per fotogramma', g.chiamate, 10, 140)
 nota(`un fotogramma: ${g.chiamate} disegni, ${Math.round(g.triangoli / 1000)}k triangoli, pixel ratio ${g.dpr}, ${g.ms} ms (SwiftShader)`)
 await scatto(page, 'asteroidi-3d-cielo')
@@ -146,23 +145,7 @@ uguale('non è un centro', dopo.giuste, prima.giuste)
 controlla('nessun errore in console', errori.length === 0, errori.join(' | '))
 await page.close()
 
-/* ---------- 8. gli Asteroidi di sempre restano in 2D ---------- */
-{
-  const { page, errori } = await apriGioco(browser)
-  await azzera(page)
-  await entra(page, 'mate')
-  uguale('gli Asteroidi di sempre sono in 2D', (await page.evaluate(() => window.__mate.grafica())).tre, false)
-  controlla('e la tela 2D si vede', await page.locator('[data-tela="2d"]').isVisible())
-  const prima = await conto(page)
-  const s = await unSasso(page, true)
-  await page.touchscreen.tap(s.x, s.y)
-  await attendi(page, 150)
-  uguale('si gioca lo stesso', (await conto(page)).giuste, prima.giuste + 1)
-  controlla('nessun errore in console (2D)', errori.length === 0, errori.join(' | '))
-  await page.close()
-}
-
-/* ---------- 9. un browser senza WebGL 2: anche gli Asteroidi 3D tornano al 2D, senza errori ---------- */
+/* ---------- 8. un browser senza WebGL 2: il cielo fermo e il tasto per riaccenderlo, senza errori ---------- */
 {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true })
   await ctx.addInitScript(() => {
@@ -176,12 +159,11 @@ await page.close()
   await azzera(page)
   await semina(page, { settings: { sperimentali: true } })
   await entra(page)
-  uguale('senza WebGL il cielo è quello 2D', (await page.evaluate(() => window.__mate.grafica())).tre, false)
-  const s = await unSasso(page, true)
-  const prima = await conto(page)
-  await page.touchscreen.tap(s.x, s.y)
-  await attendi(page, 150)
-  uguale('e si gioca', (await conto(page)).giuste, prima.giuste + 1)
+  uguale('senza WebGL la tela non disegna', (await page.evaluate(() => window.__mate.grafica())).tre, false)
+  controlla('e c\'è il tasto per riaccenderla', await page.locator('[data-riaccendi-tela]').isVisible())
+  await page.click('[data-riaccendi-tela]')
+  await attendi(page, 300)
+  controlla('riprovare non fa danni: il tasto resta', await page.locator('[data-riaccendi-tela]').isVisible())
   controlla('nessun errore in console (senza WebGL)', errori.length === 0, errori.join(' | '))
   await ctx.close()
 }

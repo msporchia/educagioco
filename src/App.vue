@@ -37,7 +37,7 @@ const pronto = ref(false)
 // verbi -> LinguaGame: la cameretta non c'è più (#cameretta, #animali restano ignorati sotto)
 const viste = { home: HomeView,
                 inglese: LinguaGame, verbi: LinguaGame, spagnolo: LinguaGame,
-                mate: MathGame, mate3d: MathGame, torri: TowerDefense,
+                mate: MathGame, torri: TowerDefense,
                 bancarella: BancarellaGame,
                 generale: GeneraleGame,
                 albo: AlboView, profilo: ProfiloView, genitori: GenitoriView,
@@ -48,8 +48,6 @@ const viste = { home: HomeView,
 
 // stesso componente con due lingue: il key le tiene separate, se no Vue riuserebbe la schermata di prima
 const lingue = { inglese: 'en', verbi: 'en', spagnolo: 'es' }
-// gli Asteroidi in prova col cielo in 3D: la stessa vista, che riceve il disegno (docs/asteroidi/grafica-3d.md)
-const disegni = { mate3d: '3d' }
 
 // giochi.html#generale apre già quella schermata: non è un router, l'indirizzo
 // non viene mai riscritto da qui. hasOwnProperty e non viste[k]: #toString altrimenti sarebbe valida
@@ -130,7 +128,7 @@ watch(vista, v => { if (v === 'home') controlla() })   // uscire da un gioco è 
   </div>
   <Benvenuto v-else-if="!state.player" />
   <template v-else>
-    <component :is="viste[vista]" :lingua="lingue[vista]" :disegno="disegni[vista]" @vai="vai"
+    <component :is="viste[vista]" :lingua="lingue[vista]" @vai="vai"
                :key="vista + state.player" />
     <!-- i giochi sono pensati in verticale: girato, il campo diventa una fessura -->
     <div class="gira"><span class="em">📱</span><b>Gira il telefono</b>

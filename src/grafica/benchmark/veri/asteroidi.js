@@ -1,4 +1,4 @@
-// Gli Asteroidi 3D negli fps veri (docs/core/vecchio-telefono-veri.md): la scena di grafica/spazio3d, con la fascia del telefono, su
+// Gli Asteroidi negli fps veri (docs/core/vecchio-telefono-veri.md): la scena di grafica/spazio3d, con la fascia del telefono, su
 // una partita finta (8 sassi che scendono, la nave, la nave madre). `boom`: a ogni secondo un sasso esplode (scintille, fumo, un anello,
 // la scossa), il momento più caro del gioco; le scintille stanno sotto il tetto della fascia come quelle del gioco.
 import { creaSpazio3d } from '../../spazio3d/indice.js'
@@ -10,7 +10,7 @@ const SPECIE = ['roccia', 'roccia', 'ghiaccio', 'roccia', 'lava', 'roccia', 'roc
 export async function prepara({ contenitore }) {
   const tela = nuovaTela(contenitore)
   const p = creaSpazio3d(tela.canvas, {})
-  if (!p) { tela.via(); throw new Error('gli Asteroidi 3D non partono') }
+  if (!p) { tela.via(); throw new Error('gli Asteroidi non partono') }
   const W = tela.W, H = tela.H, S = Math.max(0.6, Math.min(1.6, Math.min(W, H) / 700)), r = Math.min(W, H) * 0.07
   p.ridimensiona(W, H); p.prepara('cintura')
   const sassi = SPECIE.map((specie, i) => ({ x: W * (0.15 + 0.7 * ((i * 37) % 8) / 7), y: H * (0.1 + 0.07 * i), r, v: `${i + 2}×${i + 3}`, specie, seme: i, ph: i * 0.7 }))

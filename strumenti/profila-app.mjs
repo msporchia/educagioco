@@ -10,7 +10,7 @@
 //
 // `--apertura` apre la home, poi accende il profilo e solo allora apre il gioco: quello che pesa all'ingresso (la mappa
 // dell'inglese) altrimenti è già passato quando il profilo parte.
-// `--esegui '<espressione>'` la fa nella pagina quando il profilo parte (per scatenare qualcosa: le esplosioni degli Asteroidi 3D).
+// `--esegui '<espressione>'` la fa nella pagina quando il profilo parte (per scatenare qualcosa: le esplosioni degli Asteroidi).
 // `--tocca x,y` tocca lì dopo l'apertura e poi ogni due secondi un po' più in là (l'eroe cammina); `--lento N` (o `1,4,6`: una
 // misura per valore) rallenta la CPU di N volte. `--pronto '<espressione>'` apre la home, rallenta, cambia l'indirizzo e conta i
 // ms finché l'espressione è vera (il caricamento sul telefono lento), poi misura; `--prima '<espressione>'` la fa (e la aspetta)

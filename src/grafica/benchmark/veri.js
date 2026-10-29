@@ -33,7 +33,7 @@ const scaduto = e => /tempo scaduto/.test(String((e && e.message) || e))
 const discese = () => import('./veri/discese.js')
 const base = () => import('./veri/base.js')
 // gli fps veri: le discese (camminare in un piano, lo scontro), il mondo di sopra (il villaggio, lo scontro sul prato), la fattoria 3D
-// col suo degrado acceso e gli Asteroidi 3D (il volo, e il volo con le esplosioni); un gruppo solo, quindi un riferimento del calore solo
+// col suo degrado acceso e gli Asteroidi (il volo, e il volo con le esplosioni); un gruppo solo, quindi un riferimento del calore solo
 const fattoria = () => import('./veri/fattoria.js'), sopraVero = () => import('./veri/sopra-vero.js'), asteroidi = () => import('./veri/asteroidi.js')
 const TAPPE_FPS = [
   { gruppo: 'fps', carica: discese, tempi: 'fps', scene: [
@@ -46,8 +46,8 @@ const TAPPE_FPS = [
   ] },
   ...[10, 30].map(l => ({ gruppo: 'fps', carica: fattoria, opz: { livello: l, degrado: true }, tempi: 'fps', scene: [{ id: `fps-fat-${l}`, nome: `fattoria 3D del livello ${l}`, stima: 16 }] })),
   { gruppo: 'fps', carica: asteroidi, tempi: 'fps', scene: [
-    { id: 'fps-ast', nome: 'asteroidi 3D, il volo con 8 sassi e la nave madre', stima: 14 },
-    { id: 'fps-ast-boom', nome: 'asteroidi 3D, un\'esplosione al secondo', boom: true, stima: 12 },
+    { id: 'fps-ast', nome: 'asteroidi, il volo con 8 sassi e la nave madre', stima: 14 },
+    { id: 'fps-ast-boom', nome: 'asteroidi, un\'esplosione al secondo', boom: true, stima: 12 },
   ] },
 ]
 // le scale (veri/scala.js): lo scontro delle discese e il villaggio di sopra, dal fondo alla scena intera

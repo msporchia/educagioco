@@ -1,7 +1,6 @@
-// Il cielo degli asteroidi: solo fatti già decisi, mai vite/punti/tabelline
-// (vedi docs/asteroidi/volo.md). Contesto 2D nudo, non passa da tela.js.
+// L'astronave disegnata (la rotta, l'hangar e i pezzi; nel gioco la disegna grafica/spazio3d/nave.js con le stesse sagome): solo
+// fatti già decisi, mai vite/punti/tabelline (vedi docs/asteroidi/volo.md). Contesto 2D nudo, non passa da tela.js.
 
-import { CIELI, disegnaSasso } from './cieli.js'
 import { traccia, dipingiAla, disegnaStemma } from './livrea.js'
 
 const TAU = Math.PI * 2
@@ -13,37 +12,6 @@ export function mescola(a, b, q) {
   return '#' + [1, 3, 5].map(i =>
     Math.round(canale(a, i) + (canale(b, i) - canale(a, i)) * q)
       .toString(16).padStart(2, '0')).join('')
-}
-
-// Il fondale: nebulose e polvere ferme, dipinte una volta su una tela di
-// scorta e copiate da lì (lo sfondo in cache di tela.js, per un cielo).
-// La tavolozza di ogni cielo sta in cieli.js; `cintura` è quello di sempre.
-export function dipingiFondale(W, H, sorte = Math.random, cielo = 'cintura') {
-  const pal = CIELI[cielo] || CIELI.cintura
-  const cv = document.createElement('canvas')
-  cv.width = Math.max(1, Math.floor(W)); cv.height = Math.max(1, Math.floor(H))
-  const c = cv.getContext('2d')
-
-  const g = c.createLinearGradient(0, 0, 0, H)
-  g.addColorStop(0, pal.alto); g.addColorStop(0.55, pal.medio); g.addColorStop(1, pal.basso)
-  c.fillStyle = g; c.fillRect(0, 0, W, H)
-
-  const D = Math.max(W, H)
-  for (const n of pal.neb) {
-    const r = D * n.r
-    const rg = c.createRadialGradient(W * n.x, H * n.y, 0, W * n.x, H * n.y, r)
-    rg.addColorStop(0, n.c + '3a'); rg.addColorStop(0.5, n.c + '16'); rg.addColorStop(1, n.c + '00')
-    c.fillStyle = rg; c.fillRect(0, 0, W, H)
-  }
-
-  for (let i = 0; i < 260; i++) {
-    const x = sorte() * W, y = sorte() * H, r = sorte() * 1.1 + 0.25
-    c.globalAlpha = 0.18 + sorte() * 0.5
-    c.fillStyle = sorte() < 0.22 ? pal.stella : '#fff'
-    c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill()
-  }
-  c.globalAlpha = 1
-  return cv
 }
 
 // L'astronave: tre stati di danno a gradini, non a sfumatura. Vedi
@@ -319,103 +287,5 @@ export function disegnaNave(ctx, n) {
     ctx.beginPath(); ctx.arc(0, 0, R * 1.6, ang - 0.9, ang + 0.9)
     ctx.strokeStyle = '#7fe3ff' + esa(0.85 * Math.min(1, n.scudo)); ctx.lineWidth = Math.max(2, R * 0.1); ctx.stroke()
   }
-  ctx.restore()
-}
-
-// Gli asteroidi: un poligono (forma decisa dal gioco) con crateri, bordo
-// caldo di chi entra in atmosfera, e ombra portata.
-export function disegnaAsteroide(ctx, a, S, t) {
-  if (a.specie && a.specie !== 'roccia') { disegnaSasso(ctx, a, S, t); return }
-  const R = a.r
-  ctx.save(); ctx.translate(a.x, a.y)
-
-  if (a.boss) {
-    const k = 1 + Math.sin(t * 4 + a.ph) * 0.06
-    const h = ctx.createRadialGradient(0, 0, R * 0.8, 0, 0, R * 1.9 * k)
-    h.addColorStop(0, '#ff6b6b55'); h.addColorStop(0.6, '#ff9d1c22'); h.addColorStop(1, '#ff6b6b00')
-    ctx.fillStyle = h; ctx.beginPath(); ctx.arc(0, 0, R * 1.9 * k, 0, TAU); ctx.fill()
-    ctx.scale(k, k)
-  }
-
-  // l'attrito sta davanti (sotto), non dietro: il sasso scende, e si scalda sotto
-  const brina = Math.max(0, Math.min(1, a.gelo || 0))
-  const caldo = brina > 0 ? '#9fd8ff' : a.boss ? '#ff6b6b' : '#ff9d1c'
-  const bg = ctx.createRadialGradient(0, R * 0.55, R * 0.2, 0, R * 0.55, R * 1.25)
-  bg.addColorStop(0, caldo + (a.boss ? '77' : '55')); bg.addColorStop(1, caldo + '00')
-  ctx.fillStyle = bg
-  ctx.beginPath(); ctx.arc(0, R * 0.55, R * 1.25, 0, TAU); ctx.fill()
-  const sc = ctx.createLinearGradient(0, -R * 1.7, 0, 0)
-  sc.addColorStop(0, caldo + '00'); sc.addColorStop(1, caldo + '1c')
-  ctx.fillStyle = sc
-  ctx.beginPath(); ctx.moveTo(-R * 0.34, 0); ctx.lineTo(0, -R * 1.7); ctx.lineTo(R * 0.34, 0)
-  ctx.closePath(); ctx.fill()
-
-  ctx.save()
-  ctx.rotate(a.rot)
-  ctx.beginPath()
-  a.forma.forEach((m, i) => {
-    const ang = i / a.forma.length * TAU
-    const x = Math.cos(ang) * R * m, y = Math.sin(ang) * R * m
-    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)
-  })
-  ctx.closePath()
-  const rg = ctx.createRadialGradient(-R * 0.34, -R * 0.34, R * 0.12, 0, 0, R * 1.05)
-  if (a.boss) { rg.addColorStop(0, '#e07068'); rg.addColorStop(0.6, '#8f2a22'); rg.addColorStop(1, '#3a0f0c') }
-  else if (a.rossa) { rg.addColorStop(0, '#c9876a'); rg.addColorStop(0.6, '#8a4a38'); rg.addColorStop(1, '#3a1f18') }   // marte
-  else { rg.addColorStop(0, '#b3a591'); rg.addColorStop(0.6, '#6d6153'); rg.addColorStop(1, '#3a332b') }
-  ctx.fillStyle = rg; ctx.fill()
-  ctx.save(); ctx.clip()
-  for (const [cx, cy, cr] of a.crateri || []) {   // bordo chiaro in alto: la luce viene dall'alto
-    ctx.beginPath(); ctx.arc(cx * R, cy * R, cr * R, 0, TAU)
-    ctx.fillStyle = a.boss ? '#00000044' : '#00000038'; ctx.fill()
-    ctx.beginPath(); ctx.arc(cx * R, cy * R - cr * 0.18, cr * R, Math.PI * 1.1, Math.PI * 1.9)
-    ctx.strokeStyle = '#ffffff22'; ctx.lineWidth = Math.max(1, R * 0.04); ctx.stroke()
-  }
-  const og = ctx.createLinearGradient(-R * 0.3, -R * 0.3, R, R)
-  og.addColorStop(0, '#00000000'); og.addColorStop(1, '#00000066')
-  ctx.fillStyle = og; ctx.fillRect(-R, -R, R * 2, R * 2)
-  ctx.restore()
-  ctx.lineWidth = (a.boss ? 4.5 : 2.5) * S
-  ctx.strokeStyle = a.boss ? '#ffd94a' : '#241f19'
-  ctx.stroke()
-  ctx.restore()
-
-  ctx.restore()
-
-  // il numero si disegna per ultimo, dritto, e non ruota col sasso
-  ctx.fillStyle = '#fff'
-  ctx.font = `900 ${R * 0.85}px "Emoji Gioco", system-ui, sans-serif`
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-  ctx.lineWidth = 5 * S; ctx.strokeStyle = '#000000aa'
-  ctx.strokeText(a.v, a.x, a.y); ctx.fillText(a.v, a.x, a.y)
-}
-
-// Il colpo: due linee sovrapposte (larga sfumata + bianca sottile), per leggere «laser» e non «riga»
-export function disegnaRaggio(ctx, r, S) {
-  const q = Math.max(0, r.vita)
-  ctx.save()
-  ctx.globalAlpha = q
-  ctx.lineCap = 'round'
-  ctx.strokeStyle = r.c; ctx.lineWidth = 13 * S * q
-  ctx.beginPath(); ctx.moveTo(r.x0, r.y0); ctx.lineTo(r.x1, r.y1); ctx.stroke()
-  ctx.strokeStyle = '#fff'; ctx.lineWidth = 4.5 * S * q
-  ctx.beginPath(); ctx.moveTo(r.x0, r.y0); ctx.lineTo(r.x1, r.y1); ctx.stroke()
-  const g = ctx.createRadialGradient(r.x0, r.y0, 0, r.x0, r.y0, 26 * S * q)
-  g.addColorStop(0, '#ffffffcc'); g.addColorStop(1, '#ffffff00')
-  ctx.fillStyle = g
-  ctx.beginPath(); ctx.arc(r.x0, r.y0, 26 * S * q, 0, TAU); ctx.fill()
-  ctx.restore()
-}
-
-// spicchi della forma dell'asteroide, non cerchietti: un sasso che esplode lascia sassi
-export function disegnaFrammento(ctx, f) {
-  ctx.save()
-  ctx.globalAlpha = Math.max(0, f.vita)
-  ctx.translate(f.x, f.y); ctx.rotate(f.rot)
-  ctx.beginPath()
-  f.punti.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))
-  ctx.closePath()
-  ctx.fillStyle = f.c; ctx.fill()
-  ctx.strokeStyle = '#00000066'; ctx.lineWidth = 2; ctx.stroke()
   ctx.restore()
 }
