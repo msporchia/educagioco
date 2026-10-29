@@ -11,6 +11,7 @@ conto**. Cartella `src/giochi/giardino/`, chiave `giardino`. È **sperimentale**
 - [taratura.md](taratura.md) — il giocatore finto, cosa promette la campagna, cosa non è ancora tarato
 - [da-fare.md](da-fare.md) — le voci aperte
 
-Vedi anche: [`../arena/README.md`](../arena/README.md) (da cui arriva la
+Vedi anche: gli amici sulla mappa, [`../core/amici-nei-giochi.md`](../core/amici-nei-giochi.md);
+[`../arena/README.md`](../arena/README.md) (da cui arriva la
 bravura dei conti), [`../apprendimento/calibrazione.md`](../apprendimento/calibrazione.md)
 (quanto vale una moneta), [`../core/convenzione-giochi.md`](../core/convenzione-giochi.md).

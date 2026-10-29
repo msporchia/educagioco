@@ -5,10 +5,12 @@
 import { ref } from 'vue'
 import { riprendiSeChiesta } from '../../ripresa.js'
 import Ripresa from '../../Ripresa.vue'
+import AmiciQui from '../../../components/amici/AmiciQui.vue'
 
 const props = defineProps({
   scalini: { type: Array, required: true },   // [{ chiave, nome, icona, dritta, tappe: [] }]
   ripresa: { type: Object, default: null },   // { emoji, nome, dettaglio }
+  davanti: { type: String, default: '' },     // l'amico da raggiungere, in parole (docs/core/amici-nei-giochi.md)
 })
 const emit = defineEmits(['gioca', 'riprendi', 'scorda'])
 riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
@@ -31,6 +33,8 @@ function vai() {
              @riprendi="chiede = null; emit('riprendi')" @scorda="emit('scorda')"
              @comincia="vai" @annulla="chiede = null" />
 
+    <p v-if="davanti" class="gi-davanti" data-amico-davanti>{{ davanti }}</p>
+
     <section v-for="s in scalini" :key="s.chiave" class="gi-scalino">
       <h3>
         <span class="em">{{ s.icona }}</span>
@@ -45,6 +49,7 @@ function vai() {
           <span class="gi-testo">
             <b>{{ t.nome }}</b>
             <i>{{ t.aperta ? t.racconto : s.nome }}</i>
+            <AmiciQui :amici="t.amici" class="gi-qui" :data-al="t.indice" />
           </span>
           <span class="gi-stelle em">
             <template v-if="t.stelle">{{ '⭐'.repeat(t.stelle) }}</template>
