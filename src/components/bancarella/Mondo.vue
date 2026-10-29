@@ -10,6 +10,8 @@ let ultimo = null      // { chi, citta: dov'è, angolo, gioco: la città da fare
    Vedi docs/bancarella/mappa.md. */
 import { ref, shallowRef, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import Fumetto from '../Fumetto.vue'
+import AmiciQui from '../amici/AmiciQui.vue'
+import PallinoAmico from '../amici/PallinoAmico.vue'
 import { MONDO, CITTA, posteggio } from '../../data/bancarella-mondo.js'
 import { fondaleMondo } from '../../data/bancarella-fondali.js'
 import { arco, tratto, lunghezza, lungo, giro, GIRA_PRIMA, durataVolo, versoFinale, versoIniziale,
@@ -17,7 +19,7 @@ import { arco, tratto, lunghezza, lungo, giro, GIRA_PRIMA, durataVolo, versoFina
 import { disegnaMondo, nuvole, monumento, pista, AEREO, OMBRA_AEREO } from '../../grafica/bancarella-mondo.js'
 
 const props = defineProps({
-  // [{ ...città, k, stato: fatta|ora|aperta|chiusa, fatte, tot, stelle, stelleMax, serve }]
+  // [{ ...città, k, stato: fatta|ora|aperta|chiusa, fatte, tot, stelle, stelleMax, serve, amici }] (amici: arrivati a una sua giornata)
   voci: { type: Array, required: true },
   corrente: { type: Number, required: true },    // la città da fare adesso
   chi: { type: String, default: '' },
@@ -228,6 +230,10 @@ const racconto = n => `${n.nome}: ${n.stato === 'chiusa' ? 'chiusa' : n.stato ==
           <span v-else-if="n.fatte" class="stelle" data-stelle-citta :data-stelle="n.stelle" aria-hidden="true">★<i>{{ n.stelle }}<u>/{{ n.stelleMax }}</u></i></span>
         </button>
         <span class="nome" :class="'n-' + n.stato" :style="{ left: n.x + 'px', top: n.y + 'px' }">{{ n.nome }}</span>
+        <span v-if="n.amici.length" class="amici-posto" data-amici-citta :data-al="n.id"
+              :style="{ left: n.x + 'px', top: n.y + 'px' }">
+          <PallinoAmico v-for="a in n.amici" :key="a.chiave" :amico="a" :lato="16" data-pallino-amico />
+        </span>
       </template>
 
       <!-- l'aereo: sopra tutto, con la sua ombra che si stacca da terra quando vola -->
@@ -242,6 +248,7 @@ const racconto = n => `${n.nome}: ${n.stato === 'chiusa' ? 'chiusa' : n.stato ==
         <small>{{ nodoAperto.continente }} · {{ sulle(nodoAperto) }}</small>
         <b>{{ nodoAperto.nome }}</b>
         <span class="che">{{ nodoAperto.racconto }}</span>
+        <AmiciQui :amici="nodoAperto.amici" :lato="16" class="amici-fumetto" :data-al="nodoAperto.id" />
         <span v-if="nodoAperto.stato === 'chiusa'" class="serve" data-serve>🔒 {{ nodoAperto.serve }}</span>
         <template v-else>
           <span class="stato" :class="'stato-' + nodoAperto.stato">{{ STATI[nodoAperto.stato] }}</span>
@@ -290,6 +297,9 @@ const racconto = n => `${n.nome}: ${n.stato === 'chiusa' ? 'chiusa' : n.stato ==
         font-size:12.5px; font-weight:900; color:#4a3a28; box-shadow:0 2px 0 #0000001f }
 .n-ora { background:#ffe9a8; border-color:#ff9f1c }
 .n-fatta { border-color:#3a9d4a }
+/* gli amici arrivati in una città: i pallini sotto il suo nome, il nome nel fumetto */
+.amici-posto { position:absolute; transform:translate(-50%, 62px); display:flex; gap:2px; pointer-events:none }
+.amici-fumetto { margin:4px 0 2px; font-size:12px; line-height:1.3 }
 .n-chiusa { color:#7b838c; background:#ffffffcc; border-color:#b7bec6 }
 
 .fumetto-citta small { display:block; font-size:11px; letter-spacing:.5px; text-transform:uppercase; color:#8b7a63 }

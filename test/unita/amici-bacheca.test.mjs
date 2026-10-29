@@ -12,6 +12,7 @@ import { QUANTE_TAPPE as TAPPE_SOTTERRANEO } from '../../src/giochi/sotterraneo/
 import { TAPPE as TAPPE_INGLESE } from '../../src/giochi/inglese/dati/mondi.js'
 import { TAPPE as TAPPE_SPAGNOLO } from '../../src/giochi/spagnolo/dati/mondi.js'
 import { RACCONTO as TAPPE_CASTELLO } from '../../src/data/campagne-castello.js'
+import { CAMPAGNE as GIORNATE_BANCARELLA } from '../../src/data/bancarella.js'
 import { STRADE } from '../../src/giochi/passo-passo/motore/strade.js'
 import { sincronizza, amiciNelGioco, avviaBacheca, fermaBacheca, COLORI } from '../../src/amici/bacheca.js'
 import { dati, carica, accendi, mettiOnline, aggiungi, impara, ricorda } from '../../src/store/amici.js'
@@ -56,7 +57,7 @@ const ORA = new Date(2026, 9, 29, 17, 42).getTime()
     leggiGioco({ c: 4, k: 0 }, dueStrade), { posti: { coniglio: 4 }, primati: {} })
   controlla('un percorso di più d\'uno non ha il cursore di serie', percorsoDi(gioco({ percorsi: { a: { tappe: 3 } } }), 'a').tappa({ campagne: { prova: { tappa: 2 } } }) === 0)
   controlla('e si trova per chiave', percorsoDi(dueStrade, 'cane').tappe === 6 && percorsoDi(dueStrade, 'boh') === null)
-  ugualeJ('i giochi che mostrano gli amici sono quelli che lo dichiarano', giochiConAmici().map(g => g.chiave).sort(), ['arena', 'codice', 'conta', 'costruttore', 'giardino', 'inglese', 'mate', 'passo', 'pozioni', 'prima', 'sotterraneo', 'spagnolo', 'survivors', 'torri'])
+  ugualeJ('i giochi che mostrano gli amici sono quelli che lo dichiarano', giochiConAmici().map(g => g.chiave).sort(), ['arena', 'bancarella', 'codice', 'conta', 'costruttore', 'giardino', 'inglese', 'mate', 'passo', 'pozioni', 'prima', 'sotterraneo', 'spagnolo', 'survivors', 'torri'])
   // Il Robot: di serie il cursore della campagna (il livello da fare, che è dove sta il suo robot), a campagna finita il cantiere libero
   const robot = c => istantanea({ campagne: { costruttore: c } }, ORA).giochi.costruttore
   ugualeJ('Il Robot: il livello da fare, e nessun record', robot({ tappa: 5, stelle: { 0: 2 } }), { posti: { '': 5 }, primati: {} })
@@ -97,6 +98,13 @@ const ORA = new Date(2026, 9, 29, 17, 42).getTime()
   ugualeJ('Il castello: un record per partita libera, sotto la chiave della sfida',
     castello({ tappa: TAPPE_CASTELLO.length, libera: true }, { primati: { 'libera-bosco': { best: 30 }, 'libera-mura': { best: 12 } } }),
     { posti: { '': TAPPE_CASTELLO.length }, primati: { 'libera-bosco': 30, 'libera-mura': 12 } })
+  // La bancarella: la giornata da fare sta in `profile.mercato` (non nelle campagne); finite le sedici, la libera del Cairo; niente record
+  const bancarella = (mercato, campagne = {}) => istantanea({ mercato, campagne: { bancarella: campagne } }, ORA).giochi.bancarella
+  ugualeJ('La bancarella: la giornata da fare, e nessun record', bancarella({ tappa: 7, libera: false, stelle: { banchetto: 3 } }), { posti: { '': 7 }, primati: {} })
+  uguale('La bancarella: a campagna finita si è alla libera, dopo l\'ultima giornata', bancarella({ tappa: GIORNATE_BANCARELLA.length, libera: true }).posti[''], GIORNATE_BANCARELLA.length)
+  uguale('La bancarella: la tappa non va oltre la libera', bancarella({ tappa: 99, libera: true }).posti[''], GIORNATE_BANCARELLA.length)
+  uguale('La bancarella: i campagne.bancarella non contano per la tappa', bancarella({ tappa: 2 }, { tappa: 9, libera: true }).posti[''], 2)
+  controlla('La bancarella: chi non ha finito niente non ha un posto', bancarella({ tappa: 0, libera: false }) === undefined)
   // Passo passo: un posto per strada, la tappa di adesso di quel protagonista (come la mappa), in fondo il sentiero
   const passo = c => istantanea({ campagne: { passo: c } }, ORA).giochi.passo
   const { coniglio, cane } = STRADE
