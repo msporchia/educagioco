@@ -17,6 +17,9 @@ spiegazione, e cosa fa il gioco quando una domanda è un muro. Le regole pure st
   funziona: i moduli scritti bene hanno sempre un `perche`, e il metodo non
   arrivava mai, senza nessun errore da nessuna parte.
 - A risposta giusta non si spiega niente.
+- **L'eccezione è una partita che non si ferma** (`svelta`, oggi solo la sfida in due di Castle Battle): l'altro intanto gioca,
+  e chi legge perde. Lì non c'è l'esempio prima, né il perché, la dritta e la fretta dopo: «Era questa.» con la giusta accesa
+  per 0,7 s (`SVELTA`), e si torna al campo. Il ripasso annota lo sbaglio come sempre.
 - **È il motivo per cui una domanda su un concetto nuovo non si toglie**:
   se si spiega in una riga, sbagliarla è il momento in cui si impara. Quelle
   che in una riga non si spiegano si spengono (vedi [saperi.md](saperi.md)).

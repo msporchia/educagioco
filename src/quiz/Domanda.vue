@@ -34,6 +34,8 @@ const props = defineProps({
   origine: { type: Object, default: null },
   gioco: { type: String, default: '' },
   saltabile: { type: Boolean, default: false }, // vedi docs/apprendimento/la-domanda.md
+  // una partita che non si ferma (la sfida in due): niente esempio prima, niente perché né fretta dopo, solo la giusta un attimo
+  svelta: { type: Boolean, default: false },
 })
 const emit = defineEmits(['risposto'])
 let cieca = 0
@@ -95,7 +97,7 @@ const spiegazione = computed(() => spiegazioneDi(props.domanda, scelto.value))
 // la dritta: solo a chi sbaglia o a chi indovina tardi, vedi la-domanda.md
 const quantoCiHaMesso = ref(0)
 const dritta = computed(() => {
-  if (scelto.value < 0) return ''
+  if (scelto.value < 0 || props.svelta) return ''
   const giusto = scelto.value === props.domanda.giusta
   return serveLaDritta(props.domanda, { giusto, tempo: quantoCiHaMesso.value })
     ? props.domanda.dritta : ''
@@ -143,7 +145,7 @@ function scegli(i) {
      stessa attesa di quando si sbaglia */
   // chi ha avuto l'esempio davanti aveva più da leggere: il tempo di lettura lo conta
   const inPiu = daLeggerePrima(prima.value)
-  diFretta.value = troppoDiFretta(inPiu
+  diFretta.value = !props.svelta && troppoDiFretta(inPiu
     ? { ...props.domanda, testo: `${props.domanda.testo} ${inPiu}` } : props.domanda,
   { giusto, tempo })
   /* il conto della raffica si aggiorna **a ogni risposta**, anche
@@ -157,7 +159,7 @@ function scegli(i) {
      vuole tutte, se no la stessa funzione direbbe due cose diverse a
      seconda di chi la chiama. */
   const { perche, comeSiFa } = spiegazione.value
-  const quanto = attesaDellEsito({
+  const quanto = props.svelta ? Math.min(props.respiro, SVELTA) : attesaDellEsito({
     // sbagliando si torna a guardare il metodo dell'esempio sopra, e anche quello si legge
     righe: giusto ? [dritta.value]
       : ['Era questa.', perche, comeSiFa, dritta.value, svolto.value?.aiuto],
@@ -186,6 +188,7 @@ function scegli(i) {
    e `saltata` nell'evento dice a chi ascolta di non pagare né contare. Una
    pausa breve per vedere la giusta accendersi, non l'attesa di un esito vero. */
 const PAUSA_SALTO = 450
+const SVELTA = 700   // quanto si vede la giusta accesa in una partita che non si ferma
 function saltaQuesta() {
   if (scelto.value >= 0 || !pronta.value) return
   saltata.value = true
@@ -256,7 +259,7 @@ async function inizia() {
   quantoCiHaMesso.value = 0
   attesa.value = 0
   diFretta.value = false
-  prima.value = alleggerita(props.domanda.chiave) ? esempioSvolto({
+  prima.value = !props.svelta && alleggerita(props.domanda.chiave) ? esempioSvolto({
     vera: props.domanda,
     genera: generatoreDi(perId(props.origine?.modulo), props.origine?.grado, props.domanda.chiave),
     sorte: sorteQualunque(),
@@ -406,8 +409,9 @@ onUnmounted(() => {
           <span v-if="saltata" class="bene" data-saltata>⏭️ Saltata</span>
           <span v-else-if="scelto === domanda.giusta" class="bene">Giusto!</span>
           <!-- tre righe, tre mestieri: la correzione, il metodo (comeSiFa, l'unico utile anche domani), la dritta -->
+          <template v-else-if="svelta"><span class="male">Era questa.</span></template>
           <template v-else><span class="male">Era questa.</span> {{ spiegazione.perche }}</template>
-          <div v-if="spiegazione.comeSiFa" class="qz-come">
+          <div v-if="spiegazione.comeSiFa && !svelta" class="qz-come">
             <b>Si fa così:</b> {{ spiegazione.comeSiFa }}
           </div>
           <div v-if="dritta" class="qz-dritta">💡 {{ dritta }}</div>
