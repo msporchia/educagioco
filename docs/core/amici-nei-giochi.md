@@ -1,0 +1,78 @@
+# Gli amici nei giochi
+
+Come un gioco mostra dove sono arrivati gli amici e i loro record, dalla bacheca ([amici-bacheca.md](amici-bacheca.md)). **Il
+grosso è comune** (`src/amici/`, `src/components/amici/`): il gioco dichiara cosa conta come «tappa» e sceglie dove mettere le
+cose. Non legge la bacheca, non confronta, non scrive frasi.
+
+## Cosa vede il bambino (in ogni gioco)
+
+- **Sulla mappa, un pallino per amico** sulla tappa a cui è arrivato: l'iniziale nel suo colore (uno per posto nella lista,
+  `COLORI`: due amici non ne hanno mai uno uguale). Niente emoji, che cambiano da un telefono all'altro. Accanto, dove c'è
+  posto, il nome: «Leonardo è qui», «Leonardo e Ugo sono qui».
+- **In cima alla mappa, chi è da raggiungere**: il più vicino fra quelli più avanti («Leonardo è 2 tappe più avanti di te.»,
+  «Ugo è già alla sopravvivenza.»). Chi è dietro non si dice: sulla mappa basta il pallino, nessuno legge «sei ultimo».
+- **Sotto la sfida senza fine, i record degli amici** sotto il proprio, dal più alto («Leonardo: 3:10»), e chi c'è senza un
+  record. **La classifica vera è solo sui record**, dove il confronto è giusto a ogni età.
+- **A fine partita senza fine, la notizia porta la misura**: «Hai superato Leonardo (3:10)!», oppure «Per Leonardo (3:10) ti
+  sono mancati 25s». Un pareggio non supera nessuno; chi era già sotto il proprio record non è una notizia.
+- Un amico mai incontrato online (senza nome) non si vede; un amico che in quel gioco non ha fatto niente nemmeno.
+
+## Come si aggiunge un gioco
+
+**1. La dichiarazione**, nel manifesto (`src/giochi/<g>/gioco.js`) o, per un gioco vecchio, nella sua riga di
+`src/data/giochi.js`:
+
+```js
+amici: { tappe: QUANTE_TAPPE, dove: 'alla sopravvivenza' },        // Survivors: tutto di serie
+amici: { tappe: SCALETTA.length, dove: 'al volo infinito', tappa: p => posizioneOra(filaDi(p.mate)) },   // Asteroidi
+amici: true,                                                       // solo record, nessuna mappa
+```
+
+- `tappe`: quanti nodi ha la mappa; il nodo `tappe` (dopo l'ultima) è la sfida senza fine. Senza, il gioco ha solo record.
+- `tappa(profilo)`: dove è arrivato il bambino, un nodo da 0 a `tappe`. **Di serie** il cursore di `campagne[chiave]` (la tappa
+  da fare, quella con `adesso`), e a campagna finita (`libera`) la sfida senza fine. Si scrive solo se il gioco tiene il suo
+  avanzamento altrove. Deve leggere il profilo come lo legge la mappa del gioco: è lo stesso nodo su cui sta il proprio segno.
+- `dove`: come si dice essere arrivati alla sfida senza fine, per la riga in cima. Serve se ci sono `tappe`.
+- **I record vengono da soli** dal `senzaFine` del manifesto: tutte le sfide, ciascuna sotto la sua chiave.
+
+**2. Nel setup della vista**: `const amici = usaAmici(CHIAVE)` (`src/amici/usaAmici.js`). È reattivo, e rilegge le bacheche
+entrando. Dà:
+
+| | |
+|---|---|
+| `amici.davanti` | la riga in cima, già in parole (vuota se nessuno è avanti) |
+| `amici.sullaTappa(nodo)` | gli amici arrivati a quel nodo |
+| `amici.allaFine(sfida?)` | chi è alla sfida senza fine e non ha un record di quella sfida |
+| `amici.record(sfida?)` | i record di quella sfida, dal più alto, in parole |
+| `amici.contro(valore, prima, sfida?)` | a fine partita: la frase contro i record (`prima` = `esito.prima` di `segnaPrimato`) |
+| `amici.amici`, `amici.qui`, `amici.tappe` | per chi disegna da sé (la rotta degli asteroidi mette i pallini sulla tela) |
+
+**3. Dove si mostrano**, coi componenti di `src/components/amici/` (colore e misura del testo li dà il gioco intorno):
+- `<AmiciQui :amici="amici.sullaTappa(i)" />` sulla tappa: pallini e «… è qui»; `righe` per uno per riga con da quando.
+- `<RecordAmici :record="amici.record()" />` sotto la sfida senza fine, e `<AmiciQui :amici="amici.allaFine()" />`.
+- `amici.davanti` in cima alla mappa, con `data-amico-davanti`.
+- `amici.contro(...)` sul cartello di fine, con `data-contro-amici`.
+- `<PallinoAmico :amico="a" />` per un pallino da solo.
+Una mappa che non ha posto per il nome sulla tappa mette solo i pallini e dice i nomi dove si tocca la tappa (la rotta: nel
+fumetto). Niente fogli nuovi, niente tasti nuovi: gli amici stanno dentro le schermate che ci sono.
+
+**4. La prova**: un `test/integrazione/amici-<gioco>.test.mjs` sul calco di `amici-survivors`: `seminaAmici` e `amicoDiProva`
+(`test/aiuto/browser.mjs`) mettono gli amici già letti sul telefono, `__SERVIZIO_SFIDE__` punta a una porta chiusa. Si guarda
+la riga in cima, i pallini sulla tappa giusta, i record, e nessun errore. In `unita/amici-bacheca` la riga che elenca i giochi
+che dichiarano `amici` si allarga, e se il gioco ha una `tappa` sua, un controllo che la legga giusta.
+
+## I giochi
+
+| Gioco | Stato | Dove |
+|---|---|---|
+| Asteroidi (`mate`) | fatto | pallini sulla rotta (tela), nomi nel fumetto, record nel fumetto del volo, `data-contro-amici` a fine volo |
+| Survivors | fatto | pallini e nomi sulla tappa, record sotto la sopravvivenza, a fine sopravvivenza |
+
+## Da fare
+
+- La colonna degli amici nella tabella dei record (l'albo).
+- «Melody ti ha superato» all'apertura dell'app: dopo aver visto se i pallini piacciono.
+
+Nei test: `integrazione/amici-rotta`, `integrazione/amici-survivors`. Bersagli: `[data-amico-davanti]`; `[data-amici-qui]` (con
+`[data-al]` dove serve) e dentro `[data-pallino-amico]`; `[data-record-amici]` con le righe `[data-record-amico]`;
+`[data-contro-amici]`; sulla rotta `[data-amico-in-rotta]` con `[data-al]` (il nodo).
