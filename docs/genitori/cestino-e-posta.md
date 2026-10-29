@@ -53,6 +53,10 @@ cosa si è letto, fuori dai profili.
 - **Una nota si scrive solo se il genitore potrebbe voler fare qualcosa**:
   se non finisce con un tasto che porta da qualche parte, o non riguarda i
   salvataggi, non è una nota. Uno sprite nuovo non lo è.
+- **Il tasto porta alla carta, non solo alla scheda** (`azione: { testo,
+  scheda, dove }`, `dove` una chiave di `DOVE` in `GenitoriView.vue`): la
+  posta sta sopra le schede, e cambiare scheda senza scorrere sembrava un
+  tasto rotto, tanto più che «Bambino» è già quella aperta.
 - **Le note le decide il proprietario**, mai chi lavora al codice di sua
   iniziativa.
 - **L'ack è un id, non una versione.** Si pubblica venti volte e diciannove

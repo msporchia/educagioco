@@ -36,7 +36,7 @@ const entra = async page => {
   await page.waitForSelector('[data-posta]', { timeout: 5000 })
   const testo = await page.locator('[data-posta]').innerText()
   controlla('ai grandi il messaggio dice quale domanda, e cosa fare', /ancora difficoltà con/.test(testo) && /Come va/.test(testo), testo.replace(/\n/g, ' '))
-  uguale('è uno solo, non uno per domanda', await page.locator('[data-posta] .nota.avviso').count(), 1)
+  uguale('è uno solo, non uno per domanda', await page.locator('[data-posta] .nota.dal-telefono').count(), 1)
   controlla('con «Vai a Come va» e «Non avvertirmi più»', await page.locator('[data-posta] [data-azione="posta-vai"]').isVisible() && await page.locator('[data-posta] [data-azione="non-avvertire"]').isVisible())
 
   /* non torna a ogni avvio: una volta ogni due settimane */
@@ -57,7 +57,7 @@ const entra = async page => {
   await entra(page)
   await page.click('[data-posta] [data-azione="non-avvertire"]')
   await attendi(page, 400)
-  uguale('«Non avvertirmi più» toglie il messaggio', await page.locator('[data-posta] .nota.avviso').count(), 0)
+  uguale('«Non avvertirmi più» toglie il messaggio', await page.locator('[data-posta] .nota.dal-telefono').count(), 0)
   await page.click('[data-scheda="impostazioni"]')
   await apriTendine(page)
   controlla('e in Avanzate l\'interruttore è spento', await page.evaluate(() => document.querySelector('.carta[data-flag="avvisi-difficolta"]').className.includes('spento')))

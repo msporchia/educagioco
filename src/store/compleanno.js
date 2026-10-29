@@ -40,7 +40,7 @@ export async function controllaCompleanno() {
       + (apre.length ? ` Passando ai ${voluta} anni si aprirebbero: ${apre.join(', ')}.` : '')
       + (chiude.length ? ` Si chiuderebbero: ${chiude.join(', ')}.` : '')
       + ' Non cambio niente da solo: dalle impostazioni vedi cosa succede e decidi tu.'
-    await avvisaUnaVolta(`eta:${state.player}:${voluta}`, testo, { testo: 'Vai a «Quando è nato»', scheda: 'bambini' })
+    await avvisaUnaVolta(`eta:${state.player}:${voluta}`, testo, { testo: 'Vai a «Quando è nato»', scheda: 'bambini', dove: 'nascita' })
     return 'avviso'
   } catch { return null }     // l'età non rompe mai niente
 }

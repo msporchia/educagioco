@@ -1,6 +1,6 @@
 <script setup>
 /* Schermata dei genitori, dietro il PIN (vedi docs/genitori/). */
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { state, esportaTutto, resetPlayer, nomeCorrente,
          rinominaGiocatore, eliminaGiocatore, cestinaOra, ripristinaCestinato,
          spostaLEta,
@@ -72,6 +72,16 @@ async function nonAvvertire() {
 async function hoLetto() {
   await segnaLetta()
   posta.value = await laPosta()
+}
+// «Vai a…» di una nota: la scheda da sola non basta, la carta sta sotto la posta e fuori schermo
+const DOVE = { nascita: '[data-nascita]', amici: '[data-flag="amici"]' }
+const DOVE_DI_PRIMA = { 'Vai a «Quando è nato»': 'nascita', 'Apri le impostazioni': 'amici' }   // note salvate senza `dove`
+async function vaiDallaPosta(azione) {
+  scheda.value = azione.scheda
+  await nextTick()
+  const dove = DOVE[azione.dove || DOVE_DI_PRIMA[azione.testo]]
+  const meta = (dove && document.querySelector(dove)) || document.querySelector('.barra-giu')?.nextElementSibling
+  meta?.scrollIntoView?.({ block: dove ? 'center' : 'start', behavior: 'smooth' })
 }
 // 'nuovo' mentre si sceglie il codice, 'ripeti' mentre lo si conferma
 const modo = ref('')
@@ -590,12 +600,12 @@ async function rimetti(v) {
       <div v-if="cePosta" class="posta" data-posta>
         <h2>C'è una cosa da dirti</h2>
 
-        <div v-for="a in posta.avvisi" :key="a.quando" class="nota avviso">
+        <div v-for="a in posta.avvisi" :key="a.quando" class="nota dal-telefono">
           <b>Su questo telefono</b>
           <p>{{ a.testo }}</p>
           <small>{{ quando(a.quando) }}</small>
           <button v-if="a.azione" class="bottone chiaro" data-azione="posta-vai"
-                  @click="scheda = a.azione.scheda">{{ a.azione.testo }}</button>
+                  @click="vaiDallaPosta(a.azione)">{{ a.azione.testo }}</button>
           <button v-if="a.silenzia" class="bottone chiaro" data-azione="non-avvertire" @click="nonAvvertire">Non avvertirmi più</button>
         </div>
 
@@ -604,7 +614,7 @@ async function rimetti(v) {
           <p v-html="inGrassetto(n.testo)"></p>
           <small>{{ n.quando }}</small>
           <button v-if="n.azione" class="bottone chiaro" data-azione="posta-vai"
-                  @click="scheda = n.azione.scheda">{{ n.azione.testo }}</button>
+                  @click="vaiDallaPosta(n.azione)">{{ n.azione.testo }}</button>
         </div>
 
         <!-- niente ✕: solo «Ho letto», che vuole il codice -->
@@ -1039,7 +1049,7 @@ async function rimetti(v) {
 .posta h2 { margin:0 0 8px }
 .nota { background:#eef4ff; border:2px solid #cfe0f8; border-radius:14px;
         padding:11px 13px; margin-bottom:9px }
-.nota.avviso { background:#fff2ee; border-color:#f6cdbe }
+.nota.dal-telefono { background:#fff2ee; border-color:#f6cdbe }   /* non «avviso»: style.css lo stringe a 32ch */
 .nota b { display:block; font-size:14.5px; margin-bottom:4px }
 .nota p { margin:0; font-size:13px; line-height:1.45 }
 .nota small { display:block; margin-top:6px; font-size:11px; opacity:.6 }

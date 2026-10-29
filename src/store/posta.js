@@ -74,7 +74,7 @@ export async function segnaLetta() {
   return ricalcola()
 }
 
-// azione facoltativa, stessa forma delle note ({ testo, scheda })
+// azione facoltativa, stessa forma delle note ({ testo, scheda, dove? }: dove è una chiave di DOVE in GenitoriView)
 export async function avvisa(testo, azione = null, extra = {}) {
   const voci = await leggiAvvisi()
   voci.unshift({ quando: new Date().toISOString(), testo, azione, ...extra })
