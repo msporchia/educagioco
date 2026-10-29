@@ -1,4 +1,4 @@
-// Il sotterraneo in due, cosa viaggia fra i due telefoni (docs/sotterraneo/in-due.md, «Cosa dà il sotterraneo al pezzo comune»):
+// Il sotterraneo in due, cosa viaggia fra i due telefoni (docs/sotterraneo/in-due-codice.md, «Cosa dà il sotterraneo al pezzo comune»):
 // la mossa, l'impronta, la proposta di chi crea e la parte di ognuno (il suo eroe). Dato puro, senza rete né schermi.
 import { CHIAVI_DEI_DUNGEON } from '../motore/rigenera.js'
 import { DIFFICOLTA } from '../motore/forza.js'
@@ -32,7 +32,10 @@ export const MOSSE = {
   bersaglio: [intero],                   // il posto del mostro nello scontro
   prepara: [parola],                     // l'abilità per la prossima risposta giusta ('' la toglie)
   bevi: [intero],                        // la pozione nello zaino
-  usa: [intero, parola], butta: [intero], pergamena: [intero],
+  beviEnergia: [],
+  usa: [intero, parola], butta: [intero], riponi: [parola], indossa: [intero, parola], pergamena: [intero],
+  // l'albero e le tasche (la pagina dell'eroe, giù): si possono toccare anche in due, ma passano dal lockstep
+  impara: [parola], casella: [intero, parola], punto: [parola], tasca: [], riassegna: [], dimentica: [],
 }
 export function mossaValida(m) {
   if (!Array.isArray(m) || typeof m[0] !== 'string' || !Object.prototype.hasOwnProperty.call(MOSSE, m[0])) return false

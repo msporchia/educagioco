@@ -10,7 +10,7 @@ const FUORI = ['rnd', 'persona', 'persone', '_vie']
 
 export function fotoDellaDiscesa(corsa) {
   const mondo = {}
-  for (const k of Object.keys(corsa)) if (!FUORI.includes(k)) mondo[k] = corsa[k]
+  for (const k of Object.keys(corsa)) if (!FUORI.includes(k) && typeof corsa[k] !== 'function' && k !== 'inMotore') mondo[k] = corsa[k]
   return { ...fotoDi({ mondo, persone: corsa.persone }, { classi: CLASSI }), caso: corsa.rnd.stato() }
 }
 
@@ -19,7 +19,8 @@ export function rimettiLaDiscesa(corsa, foto, locale = 0) {
   if (!foto || !Array.isArray(foto.n) || !Number.isInteger(foto.caso)) throw new Error('fotografia storta')
   const { mondo, persone } = rimettiDa(foto, { classi: CLASSI })
   if (!mondo || !Array.isArray(persone) || !persone.length) throw new Error('fotografia storta')
-  for (const k of Object.keys(corsa)) if (!FUORI.includes(k) && !(k in mondo)) delete corsa[k]
+  // le azioni della vista (sfida/vista.js) sono funzioni sull'istanza: restano
+  for (const k of Object.keys(corsa)) if (!FUORI.includes(k) && !(k in mondo) && typeof corsa[k] !== 'function' && k !== 'inMotore') delete corsa[k]
   Object.assign(corsa, mondo)
   corsa._vie = undefined
   corsa.persone = persone

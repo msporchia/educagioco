@@ -36,38 +36,69 @@ export function discesaDi({ seme, chiave, difficolta }, { host, ospite }) {
   return corsa
 }
 
-/* una mossa dell'alleato `i`: quello che il dito ha chiesto, se adesso si può ancora */
+/* un cambio all'albero o alle tasche: quello che sale col tetto (Cuore saldo, l'intelligenza) arriva subito, come fa la vista da soli */
+function sullAlbero(corsa, fai) {
+  const vita = corsa.vitaMax, energia = corsa.energiaMax
+  const e = fai()
+  if (e) {
+    corsa.vita = Math.min(corsa.vitaMax, corsa.vita + Math.max(0, corsa.vitaMax - vita))
+    corsa.energia = Math.min(corsa.energiaMax, corsa.energia + Math.max(0, corsa.energiaMax - energia))
+  }
+  return e
+}
+
+/* una mossa dell'alleato `i`: quello che il dito ha chiesto, se adesso si può ancora. Torna quello che torna il motore (l'esito di una
+   risposta, di un sorso…), che la vista racconta */
 export function eseguiMossa(corsa, i, [azione, a, b, c]) {
-  corsa.come(i, () => {
+  return corsa.come(i, () => {
     const f = corsa.foglio
     const che = f && f.che
+    const scontro = che === 'scontro', mio = scontro && !corsa.nonTocca(f)
     switch (azione) {
-      case 'vai': if (!f) corsa.vaiVerso({ x: a, y: b }, !!c); break
-      case 'rispondi': if (corsa.chiesta && corsa.chiesta.id === a) corsa.rispondi(!!b); break
-      case 'scendi': if (che === 'scala') corsa.scendi(); break
-      case 'sali': if (che === 'scala-su') corsa.sali(); break
-      case 'nonAspetto': corsa.nonAspettoPiu(); break
-      case 'chiudi': if (f && !['scontro', 'aspetta', 'svenuto'].includes(che)) corsa.chiudi(); break
-      case 'riprendi': if (che === 'svenuto') corsa.riprendi(); break
-      case 'continua': if (che === 'scontro' && !corsa.nonTocca(f)) corsa.continua(); break
-      case 'bersaglio': if (che === 'scontro' && f.campo[a]) corsa.scegliBersaglio(f.campo[a]); break
-      case 'prepara': if (che === 'scontro' && !corsa.nonTocca(f)) corsa.prepara(a || null); break
-      case 'bevi': if (che === 'scontro') { if (!corsa.nonTocca(f)) corsa.beviNelloScontro(a) } else if (!f) corsa.usa(a); break
-      case 'usa': if (!f) corsa.usa(a, b || null); break
-      case 'butta': if (!f) corsa.butta(a); break
-      case 'pergamena': if (!f) corsa.apriLaPergamena(a); break
+      case 'vai': return f ? null : corsa.vaiVerso({ x: a, y: b }, !!c)
+      case 'rispondi': return corsa.chiesta && corsa.chiesta.id === a ? corsa.rispondi(!!b) : null
+      case 'scendi': return che === 'scala' ? corsa.scendi() : null
+      case 'sali': return che === 'scala-su' ? corsa.sali() : null
+      case 'nonAspetto': return corsa.nonAspettoPiu()
+      case 'chiudi': return f && !['scontro', 'aspetta', 'svenuto'].includes(che) ? corsa.chiudi() : null
+      case 'riprendi': return che === 'svenuto' ? corsa.riprendi() : null
+      case 'continua': return mio ? corsa.continua() : null
+      case 'bersaglio': return scontro && f.campo[a] ? corsa.scegliBersaglio(f.campo[a]) : null
+      case 'prepara': return mio ? corsa.prepara(a || null) : null
+      case 'bevi': return scontro ? (mio ? corsa.beviNelloScontro(a) : null) : f ? null : corsa.usa(a)
+      case 'beviEnergia': return mio ? corsa.beviEnergiaNelloScontro() : null
+      case 'usa': return f ? null : corsa.usa(a, b || null)
+      case 'butta': return f ? null : corsa.butta(a)
+      case 'riponi': return f ? null : corsa.riponi(a)
+      case 'indossa': return f ? null : corsa.indossaDallaTasca(a, b || null)
+      case 'pergamena': return f ? null : corsa.apriLaPergamena(a)
+      case 'impara': return sullAlbero(corsa, () => corsa.impara(a))
+      case 'casella': return sullAlbero(corsa, () => corsa.mettiInCasella(a, b || null))
+      case 'punto': return sullAlbero(corsa, () => corsa.daiUnPunto(a))
+      case 'tasca': return sullAlbero(corsa, () => corsa.compraTasca())
+      case 'riassegna': return sullAlbero(corsa, () => corsa.riassegnaPunti())
+      case 'dimentica': return sullAlbero(corsa, () => corsa.dimenticaAlbero())
     }
+    return null
   })
 }
 
-/* il motore del lockstep attorno alla discesa; `guarda(ruolo)`: l'alleato che la vista di questo telefono legge */
+/* il motore del lockstep attorno alla discesa; `guarda(ruolo)`: l'alleato che la vista di questo telefono legge. Mentre il motore
+   lavora `corsa.inMotore` è acceso: le azioni chiamate dalla vista diventano mosse solo quando è spento (sfida/vista.js).
+   `osserva({ prima, dopo })`: la vista vuole sapere di ogni mossa fatta, `prima()` appena prima, `dopo(i, mossa, esito, cosaPrima)` */
 export function motoreDi(corsa) {
-  let locale = 0
+  let locale = 0, occhio = null
+  const nelMotore = fai => { corsa.inMotore = (corsa.inMotore || 0) + 1; try { return fai() } finally { corsa.inMotore-- } }
   return {
     partita: corsa,
     passo: FETTA,
-    avanza: () => corsa.passo(FETTA),
-    applica: (ruolo, mossa) => eseguiMossa(corsa, alleatoDi(ruolo), mossa),
+    avanza: () => nelMotore(() => corsa.passo(FETTA)),
+    applica: (ruolo, mossa) => {
+      const prima = occhio && occhio.prima ? occhio.prima() : null
+      const esito = nelMotore(() => eseguiMossa(corsa, alleatoDi(ruolo), mossa))
+      if (occhio && occhio.dopo) occhio.dopo(alleatoDi(ruolo), mossa, esito, prima)
+    },
+    osserva: o => { occhio = o },
     valida: mossaValida,
     impronta: () => improntaDi(corsa),
     simili: impronteSimili,
