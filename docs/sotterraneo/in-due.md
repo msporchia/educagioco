@@ -9,6 +9,9 @@ sala) è quello di Castle Battle: [../core/insieme.md](../core/insieme.md). Qui 
 
 - **Una discesa insieme, sotto.** La terra di sopra, i mercanti, le missioni e il diario restano di chi gioca da solo: in due si
   scende e si torna. Il mondo di sopra in 3D e le sue terre sono fuori.
+- **Vale per il 2D e per il 3D**: il motore della discesa è uno (`Gioco3d.vue` monta `Gioco.vue` col disegno 3D,
+  [grafica-3d.md](grafica-3d.md)). Il 3D accende in più le botti e i copricapi nel bottino, che vanno col seme come il resto.
+- **La domanda è di chi tocca**: chi apre la porta, il forziere o la fonte si prende la domanda; l'altro non ne ha.
 - **Ognuno porta il suo eroe** dalla sua avventura ([avventure.md](avventure.md)): classe, livello, roba addosso e nello zaino,
   abilità, pozioni. Due eroi della stessa classe vanno bene.
 - **La discesa la sceglie chi crea**, nello slot della sala comune. Quale, e a che livello, è una domanda aperta (sotto).
