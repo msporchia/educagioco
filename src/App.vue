@@ -114,7 +114,9 @@ watch(vista, v => {
   if (v === 'home') misuraQualita = setTimeout(() => { if (vista.value === 'home' && !document.hidden) import('./grafica/benchmark/qualita-rapida.js').then(m => m.assicuraFascia()).catch(() => {}) }, 4000)
 })
 // «Gioca» su un invito: si apre il gioco, che ritira i dati dell'ingresso quando è pronto
-watch(ingresso, i => { if (i && Object.prototype.hasOwnProperty.call(viste, i.gioco)) vista.value = i.gioco })
+// dentro lo stesso gioco (la fattoria 3D che passa alla fattoria in comune) si rimonta: `giro` entra nella chiave
+const giro = ref(0)
+watch(ingresso, i => { if (!i || !Object.prototype.hasOwnProperty.call(viste, i.gioco)) return; if (vista.value === i.gioco) giro.value++; vista.value = i.gioco })
 watch(vista, v => { if (v === 'home') controlla() })   // uscire da un gioco è un buon momento per controllare
 </script>
 
@@ -127,7 +129,7 @@ watch(vista, v => { if (v === 'home') controlla() })   // uscire da un gioco è 
   <Benvenuto v-else-if="!state.player" />
   <template v-else>
     <component :is="viste[vista]" :lingua="lingue[vista]" @vai="vai"
-               :key="vista + state.player" />
+               :key="vista + state.player + giro" />
     <!-- i giochi sono pensati in verticale: girato, il campo diventa una fessura -->
     <div class="gira"><span class="em">📱</span><b>Gira il telefono</b>
       <span class="mini">i giochi si vedono in verticale</span></div>

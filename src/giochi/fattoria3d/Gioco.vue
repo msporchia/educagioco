@@ -61,6 +61,8 @@ import Carretto from './viste/Carretto.vue'
 import Visita from './viste/Visita.vue'
 import { usaVisite } from './visite.js'
 import { DAI as DAI_CARRETTO } from './motore/carretto.js'
+import { prendiIngresso, chiediIngresso } from '../../amici/ingresso.js'
+import { apriComune, amiciPerComune, nomeDellAmico, dettoDellaMossa, TERRA } from './comune.js'
 import './stile.css'
 import './stile-guida.css'
 
@@ -70,6 +72,11 @@ const emit = defineEmits(['vai'])
 
 const CHIAVE = 'fattoria3d'
 const CHIAVE_OPZIONI = 'fattoria3d-opz'
+// la fattoria in comune con un amico (docs/fattoria3d/in-comune.md): la chiave dell'amicizia, se si è entrati da «🤝»
+const comune = (prendiIngresso(CHIAVE) || {}).comune || null
+const statoComune = ref(comune ? 'collego' : '')       // '' | collego | errore | pronto
+const erroreComune = ref('')
+let sessione = null
 // `#fattoria3d&tela=niente`: per provare il messaggio su un browser che il WebGL ce l'ha
 const finto = typeof location !== 'undefined' && /(?:^#?|&)tela=niente(?:&|$)/.test(location.hash || '')
 const puo = ref(!finto && haWebGL2())
@@ -140,6 +147,7 @@ let sporco = false
 function salva({ subito = false } = {}) {
   if (!motore) return
   sporco = false
+  if (comune) return sessione?.ricorda({ subito })          // la fattoria in comune non sta nel profilo: la copia del telefono
   ricorda(CHIAVE, 'stato', motore.serializza())
   if (visite.vicini.value) ricorda(CHIAVE, 'vicini', visite.serializza())          // i vicini stanno a parte, accanto allo stato
   if (subito) flushNow()                   // `ricorda` scrive con ritardo: uscendo, la pagina può sparire prima
@@ -209,7 +217,7 @@ const ui = {
   apriBanco() { apriBanco() },
   apriMongolfiera() { naveMsg.value = ''; naveCons.value = null; nave.value = true },
   apriBottega(tipo) { bottegaMsg.value = ''; bottegaCons.value = null; bottegaAperta.value = tipo },
-  apriMappa() { visite.apriMappa() },
+  apriMappa() { if (comune) ui.avviso('Dai vicini si va col trattore della tua fattoria.'); else visite.apriMappa() },
   apriBestia(id) { bestiaMsg.value = ''; bestiaAperta.value = id },             // un tocco su una bestia di casa
   apriGuardaroba() { guardarobaAperto.value = true },             // un tocco sul contadino fermo                 // il trattore: la mappa dei villaggi (docs/fattoria3d/vicini.md)
   avviso(testo) {
@@ -548,6 +556,7 @@ function ritmo() {
 
 function indietro() {
   if (inVisita.value) return void visite.torna()          // in visita, «indietro» riporta a casa, non in home
+  if (comune) return void chiediIngresso(CHIAVE, {})       // dalla fattoria in comune si torna alla propria
   salva({ subito: true }); emit('vai', 'home')
 }
 
@@ -583,14 +592,37 @@ function cheatDellIndirizzo() {
   toast.value = { testo, fine: performance.now() + DURATA_TOAST }
 }
 
+// ── la fattoria in comune: entrare, e le mosse dell'amico che arrivano ──
+const amiciComune = computed(() => amiciPerComune())
+function apriInsieme() {
+  ui.chiedi('Insieme', 'Una fattoria in comune con un amico: ognuno ci gioca quando vuole, con le sue monete, e trova quello che ha fatto l\'altro. Serve internet.',
+    [...amiciComune.value.map(a => ({ t: `🤝 Con ${a.nome}`, fn: () => { salva({ subito: true }); chiediIngresso(CHIAVE, { comune: a.chiave }) } })), { t: 'Non ora', quieto: true }])
+}
+function arrivaDallAmico({ mosse, ricarica }) {
+  if (ricarica) return void chiediIngresso(CHIAVE, { comune })          // l'amico è andato troppo avanti: si riparte dalla fotografia
+  if (!mondo) return
+  mondo.cambiato()
+  if (mosse.some(m => TERRA.has(m.n))) mondo.terreno.ridisegnaTutto()
+  const ultima = mosse[mosse.length - 1]
+  toast.value = { testo: `🤝 ${nomeDellAmico(comune)} ${dettoDellaMossa(ultima.n)}`, fine: performance.now() + DURATA_TOAST }
+  const su = mosse.filter(m => m.livello).pop()
+  if (su) salito(su.livello.livello)
+  ripresa()
+}
+
 onMounted(async () => {
   if (!puo.value) return
-  motore = new Fattoria3d({ stato: statoDaCaricare(scelta), borsa })
+  if (comune) {
+    try { sessione = await apriComune({ chiave: comune, borsa }) } catch (e) { erroreComune.value = e.message; statoComune.value = 'errore'; return }
+    if (!vivo) return void sessione.chiudi()
+    motore = sessione.motore
+    statoComune.value = 'pronto'
+  } else motore = new Fattoria3d({ stato: statoDaCaricare(scelta), borsa })
   // `&stress=campo:10,edifici:15` (le prove di stress, che non si salvano) e `&degrado=no` (qualità ferma): per le misure, docs/fattoria3d/limiti.md
   const frammento = location.hash || ''
   const stress = ((/(?:^#?|&)stress=([\w:,]+)/.exec(frammento) || [])[1] || '').split(',').map(x => x.split(':')).filter(([t, n]) => t && Number(n) > 0)
   const degradoFermo = /(?:^#?|&)degrado=no(?:&|$)/.test(frammento)
-  cheatDellIndirizzo()
+  if (!comune) cheatDellIndirizzo()
   try { const c = await load(CHIAVE_OPZIONI); if (c && c.q && c.v === VERSIONE_OPZIONI) Object.assign(q, c.q) } catch (e) { /* le opzioni di serie */ }
   const { Mondo3d } = await import('./scena3d/mondo3d.js')          // three si scarica solo qui
   if (!vivo) return
@@ -598,8 +630,9 @@ onMounted(async () => {
   mondo.degradoFermo = degradoFermo
   for (const [t, n] of stress) mondo.stress(t, Number(n))
   mondo.avvia()
-  guidaAttiva.value = !saltaLeSpiegazioni() && !(scelta(CHIAVE, 'guida', null) || {}).finita && servePrimoGiro(motore.s)
-  visite.avvia(scelta(CHIAVE, 'vicini', null))
+  guidaAttiva.value = !comune && !saltaLeSpiegazioni() && !(scelta(CHIAVE, 'guida', null) || {}).finita && servePrimoGiro(motore.s)
+  if (sessione) { sessione.alCambio = arrivaDallAmico; sessione.avvia() }
+  else visite.avvia(scelta(CHIAVE, 'vicini', null))
   ripresa()
   battito = setInterval(ritmo, 250)
   document.addEventListener('visibilitychange', seSparisce)
@@ -612,6 +645,7 @@ onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', seSparisce)
   removeEventListener('pagehide', seSparisce)
   if (motore) salva({ subito: true })
+  sessione?.chiudi()
   visite.via()
   mondo?.via()
   delete window.__fattoria3d
@@ -620,7 +654,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="radice" class="schermo">
-    <Barra titolo="Fattoria 3D" guida="fattoria3d" monete @indietro="indietro" />
+    <Barra :titolo="comune ? `Con ${nomeDellAmico(comune)}` : 'Fattoria 3D'" guida="fattoria3d" monete @indietro="indietro" />
 
     <div v-if="!puo" class="f3-senza" data-senza-3d>
       <p class="em">🚜</p>
@@ -630,6 +664,11 @@ onBeforeUnmount(() => {
     </div>
 
     <div v-else class="f3" data-f3="campo">
+      <div v-if="statoComune === 'collego' || statoComune === 'errore'" class="f3-comune-attesa" data-f3="comune-attesa" :data-errore="statoComune === 'errore' ? '' : null">
+        <p class="em">🤝</p>
+        <p>{{ statoComune === 'errore' ? erroreComune : `Vado nella fattoria con ${nomeDellAmico(comune)}…` }}</p>
+        <button v-if="statoComune === 'errore'" type="button" data-f3="torna-mia" @click="indietro">🏠 Torno alla mia fattoria</button>
+      </div>
       <canvas ref="tela" class="f3-tela"></canvas>
       <div ref="sopra" class="f3-sopra"></div>
 
@@ -638,6 +677,8 @@ onBeforeUnmount(() => {
         <Hud v-bind="foto" :nuovo="livelloNuovo" :banco="banco" @livello="apriLivelli" @banco="apriBanco" @inventario="apriInventario" @abito="guardarobaAperto = true" />
         <div v-if="toast" class="f3-toast" data-f3="avviso-livello">⭐ {{ toast.testo }}</div>
         <button class="f3-angolo" aria-label="opzioni" data-f3="apri-opzioni" @click="opzioniAperte = !opzioniAperte">⚙</button>
+        <button v-if="!comune && amiciComune.length" class="f3-angolo f3-insieme" aria-label="la fattoria in comune" data-f3="apri-comune" @click="apriInsieme">🤝</button>
+        <button v-if="comune" class="f3-angolo f3-insieme" aria-label="torna alla tua fattoria" data-f3="torna-mia" @click="indietro">🏠</button>
         <button class="f3-adesso" aria-label="cosa faccio adesso" data-f3="apri-consiglio" @click="apriConsiglio">🧭 E adesso?</button>
         <div v-if="passoGuida" class="f3-guida" :class="{ su: guidaInAlto }"><Guida :passo="passoGuida" /></div>
         <button v-if="cameraLibera" class="f3-centra" data-f3="centra" @click="mondo.tornaAllEroe()">⌖ Torna {{ nomeDelContadino(abito, 'al') }}</button>

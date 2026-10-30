@@ -47,6 +47,16 @@ export async function scambiaBacheca(chiave, id, dati, opzioni) {
   return r.dato && typeof r.dato.altro === 'object' ? r.dato.altro : null
 }
 
+/* La fattoria in comune di un'amicizia (docs/fattoria3d/in-comune.md): si mandano le proprie mosse (e la fotografia, uscendo) e
+   si ritirano quelle dopo `dopo`. Torna { ultimo, corsia, foto, mosse }, null se l'amicizia è già di altri due, undefined senza rete. */
+export async function scambiaComune(chiave, id, { dopo = -1, mosse = [], foto = null } = {}, opzioni) {
+  const r = await chiedi('/amici/comune', { chiave, id, dopo, mosse, ...(foto ? { foto } : {}) }, { tentativi: 1, ...opzioni })
+  if (!r) return undefined
+  if (r.stato === 409) return null
+  if (!r.ok || !Number.isInteger(r.dato?.ultimo) || !Array.isArray(r.dato.mosse)) return undefined
+  return r.dato
+}
+
 export const RITARDI = [2000, 4000, 8000, 16000, 32000, 60000]
 // il battito: un filo morto in silenzio (il telefono crede di essere collegato) non riceve inviti; se il servizio non risponde al
 // ping per tanto, il filo si lascia e se ne apre un altro (lo stesso guaio della sfida: docs/core/insieme.md)
