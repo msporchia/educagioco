@@ -172,7 +172,7 @@ export const DIF_DELLA_ZONA = [0.92, 1]
 // attacco, come nelle discese della storia (dati/campagna.js). Crescono in linea retta col livello, mai esponenziali,
 // tarati col banco sull'eroe atteso a quel livello (misure/sotterraneo, docs/sotterraneo/zone.md «Le misure»)
 // (un oggetto e non quattro costanti: `npm run sotterraneo -- --tara zona.forzaA12=5` ne prova un valore senza toccare il file)
-export const CURVA_DELLE_ZONE = { forzaA12: 2.2, forzaPerLivello: 0.15, spintaA12: 9.5, spintaPerLivello: 1.3 }
+export const CURVA_DELLE_ZONE = { forzaA12: 5.8, forzaPerLivello: 0.35, spintaA12: 10, spintaPerLivello: 1 }
 // a pari livello le zone non vengono uguali: la cripta ha piani di quattro stanze e pochi mostri prima della chiave,
 // la botola sedici. Questo numero corregge la forza zona per zona (1 di difetto), misurato col banco
 export const FORMA_DELLA_ZONA = { altare: 1.7, cantine: 1, torre: 0.9, gallerie: 1.4, cisterna: 1.2, labirinto: 0.85, fondo: 1.2 }
@@ -199,6 +199,8 @@ export function zonaPotenziata(k, L) {
     livello,
     forza: forzaDellaZona(livello, t.chiave),
     spinta: spintaDellaZona(livello),
+    // la cripta della storia ha caporale e re più duri dei suoi comuni da un colpo; la sua zona ha i comuni da zona e i rapporti di sempre
+    ...(k === 0 ? { caporali: 0, grosso: 0 } : {}),
   }
 }
 

@@ -28,7 +28,9 @@ le domande che la missione chiede in più**, non di più.
 `unita/sotterraneo-missioni` rifà il conto e fallisce se `premio.monete` non
 torna). Coi livelli dell'eroe (8 ottobre) `PIU_DURO` è sceso da 1,6 a 1,25
 volte le ossa: in fondo chiedeva venti risposte di fila. Chela è passata da
-2 a 1, Grattanaso da 1 a 2, Zannagrigia da 4 a 2.
+2 a 1, Grattanaso da 1 a 2, Zannagrigia da 4 a 2. Dal 30 ottobre il mostro col nome ha solo le ossa
+in più (niente colpo in più, niente ossa del guardiano) e i comuni chiedono due o tre risposte: tutte le monete
+valgono 1, Grattanaso compreso ([costo-di-vincere.md](costo-di-vincere.md)).
 
 - **Chi cerca non ha monete**: un forziere è una sola domanda, già pagata, e
   il giro per arrivarci non si misura. Quindi 5 missioni su 17 danno monete (le cinque da contare no: [missioni-conteggio.md](missioni-conteggio.md)),

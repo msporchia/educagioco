@@ -193,7 +193,7 @@ il nome sopra la testa: [missioni-bersaglio.md](missioni-bersaglio.md).
 - **Sconfiggi N** (`tipo: 'conta'`): nessun bersaglio, nessuna freccina, nessun piano: vale in tutta la discesa e dice "3 di 8" nel diario e nel promemoria. Tutto in [missioni-conteggio.md](missioni-conteggio.md).
 - **Sconfiggi**: nel piano giusto c'è un mostro del bestiario col nome e
   la corona, più duro di quelli del suo piano (le ossa del guardiano
-  del piano o un quarto in più delle sue, e un colpo in più: `PIU_DURO`). Battuto
+  un quarto di ossa in più dei suoi simili: `PIU_DURO`; il colpo in più è tolto dal 30 ottobre, [costo-di-vincere.md](costo-di-vincere.md)). Battuto
   è fatta.
 - **Dove sta**: [missioni-bersaglio.md](missioni-bersaglio.md). Non nasce dal seme del piano: la sosta la tiene fra
   le cose nuove, e una missione presa sopra mentre la discesa è a metà

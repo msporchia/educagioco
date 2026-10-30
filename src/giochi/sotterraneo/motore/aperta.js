@@ -19,6 +19,8 @@ import { tiroDalSeme } from './bottino.js'
 export const VERSIONE_SOPRA = 2
 // l'indice di un mostro è `zona × BLOCCO_ZONA + j`: stabile anche ricaricando la zona, e con le zone non caricate che fanno i buchi
 export const BLOCCO_ZONA = 1000
+// le ossa di un caporale di sopra rispetto a un mostro di strada: come nelle discese della storia (dati/campagna.js, `caporali`)
+export const CAPORALI_DI_SOPRA = 2
 
 /* ═══════════ quanto è forte un mostro di sopra ═══════════ */
 
@@ -44,7 +46,7 @@ function fabbrica(L, rnd) {
   const c = crescitaDiSopra(L)
   const f = Object.create(Livello.prototype)
   f.piano = 0
-  f.crescita = { ossa: 0.22, attOgni: 2, forza: c.forza, spinta: c.spinta, caporali: 0, grosso: 0, gradi: c.gradi }
+  f.crescita = { ossa: 0.22, attOgni: 2, forza: c.forza, spinta: c.spinta, caporali: CAPORALI_DI_SOPRA, grosso: 0, gradi: c.gradi }
   f.livelloDelPosto = L
   f.rndVarianti = rnd
   return f

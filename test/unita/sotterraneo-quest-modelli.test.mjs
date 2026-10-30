@@ -5,6 +5,7 @@
    e gli id di prima (col forte, col rifugio, con la pietra davanti a un dungeon) che si rifanno sul villaggio e sulle zone.
    `node test/esegui.mjs sotterraneo-quest-modelli --niente-build` */
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
+import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { MOSTRI } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { missioneDi, personaDi } from '../../src/giochi/sotterraneo/dati/missioni.js'
@@ -163,7 +164,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   }
   uguale('si trova un esempio di ogni tipo acceso (tranne la consegna)', Object.keys(unaDi).length, NOMI_MODELLI.filter(n => modelloAcceso(n) && n !== 'consegna').length)
 
-  // il mostro col nome si può battere con la roba attesa, da tutti e quattro gli eroi, senza svenire (come le missioni di oggi)
+  // il mostro col nome si può battere con la roba attesa, da tutti e quattro gli eroi, a soli attacchi e con una pozione al più (bere non costa il turno)
   let provati = 0
   for (let k = 1; k < CAMPAGNA.length; k++) {
     const tp = CAMPAGNA[k]
@@ -174,7 +175,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
         while (c.piano < t.piano) { c.piano++; c.nuovoPiano() }
         const r = robaDellaMissione(c.livello, t, tp)
         const n = c.colpiPer(r), buono = Math.ceil(n * velocitaDel(r) / c.velocita) * c.danno(r)
-        controlla(`${t.id} (${e.chiave}): ${n} risposte giuste, e senza svenire (${buono} di ${c.vitaMax})`, n <= 14 && buono < c.vitaMax)
+        controlla(`${t.id} (${e.chiave}): ${n} risposte giuste, e senza svenire (${buono} di ${c.vitaMax} e una pozione)`, n <= 14 && buono < c.vitaMax + COSE.pozione.cura)
         provati++
       }
     }

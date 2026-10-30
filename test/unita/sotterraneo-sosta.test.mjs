@@ -11,7 +11,9 @@ import { CALMA, TASCHE } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { ROBA_VUOTA } from '../../src/giochi/sotterraneo/motore/corredo.js'
-import { gioca, robaPer } from '../../src/giochi/sotterraneo/motore/banco.js'
+import { gioca } from '../../src/giochi/sotterraneo/motore/banco.js'
+import { ingressoDelCurioso } from '../../src/giochi/sotterraneo/motore/storie.js'
+import { stileDi } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
 import { scrivi, leggi, dice, stringaDi, vistoDa, VERSIONE, viaDi, PORTALE, USCITA, forzeDi }
   from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -158,18 +160,19 @@ function rispondiFinche(c, giusto = () => true, giri = 40) {
    arriva alla scalinata: la roba resta, e la discesa conta su di lei. */
 {
   const t = CAMPAGNA[1]   // la scalinata: con i branchi nuovi le discese dopo non si vincono più nemmeno rispondendo sempre giusto (da ritarare, docs/sotterraneo/piani.md)
-  const roba = robaPer(1)
-  const c = new Corsa(t, { seme: 101, rnd: seminato(101), roba })
+  // la roba e il livello del curioso, che gioca come lui: coi comuni da due risposte chi va dritto alla scala non passa (docs/sotterraneo/giocatori-tipo.md)
+  const { roba, crescita } = ingressoDelCurioso(1), stile = stileDi('curioso')
+  const c = new Corsa(t, { seme: 101, rnd: seminato(101), roba, crescita })
   const mezzo = gioca(t, { seme: 101, bravura: 1, come: 'minimo', da: c })
   controlla('la prova parte da una discesa giocata', mezzo.esito.domande > 0)
 
   // il seme è il primo, da 202, in cui la discesa ripresa si vince: coi caporali duri non tutti i semi si vincono dritti alla scala, e qui
   // si prova la ripresa, non l'equilibrio (quello è del banco, `npm run taratura`)
   const riprendi = s => {
-    const dopo = new Corsa(t, { seme: s, rnd: seminato(s), roba })
+    const dopo = new Corsa(t, { seme: s, rnd: seminato(s), roba, crescita })
     const salvato = scrivi(dopo, 1)
     for (let i = 0; i < 60; i++) dopo.passo(1 / 30)
-    return gioca(t, { seme: s, bravura: 1, come: 'minimo', da: leggi(salvato, t, roba) })
+    return gioca(t, { seme: s, bravura: 1, come: 'tutto', stile, da: leggi(salvato, t, roba) })
   }
   let seme = 202, finita = riprendi(seme)
   while (seme < 400 && !finita.esito.vinta) finita = riprendi(++seme)
@@ -179,10 +182,10 @@ function rispondiFinche(c, giusto = () => true, giri = 40) {
   /* e una ripresa a metà della discesa vera, al secondo piano, si finisce lo stesso. Come sopra, il seme è il primo da 304 in cui la discesa
      ripresa si vince: il finto che va dritto coi mostri di oggi ne perde una parte, e qui si prova la ripresa, non l'equilibrio */
   const aMeta = s => {
-    const giu = new Corsa(t, { seme: s, rnd: seminato(s), roba })
+    const giu = new Corsa(t, { seme: s, rnd: seminato(s), roba, crescita })
     gioca(t, { seme: s, bravura: 1, come: 'tutto', da: giu, fino: 1 })
     const daMeta = leggi(scrivi(giu, 1), t, giu.roba)
-    return { daMeta, fine: daMeta && gioca(t, { seme: s, bravura: 1, come: 'minimo', da: daMeta }) }
+    return { daMeta, fine: daMeta && gioca(t, { seme: s, bravura: 1, come: 'tutto', stile, da: daMeta }) }
   }
   let seme2 = 304, m = aMeta(seme2)
   while (seme2 < 400 && !(m.fine && m.fine.esito.vinta)) m = aMeta(++seme2)
