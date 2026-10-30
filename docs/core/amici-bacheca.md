@@ -1,8 +1,7 @@
 # La bacheca degli amici
 
-**Stato: fatto negli Asteroidi e in Survivors** (29 ottobre 2026; scelte dell'utente); gli altri giochi si aggiungono uno per
-volta, con la base comune descritta in [amici-nei-giochi.md](amici-nei-giochi.md). **Da rimettere online il servizio** (`cd servizio/inoltro
-&& npx wrangler deploy`, lo fa l'utente: porta la migrazione `v5`). Si vede dove è arrivato un amico e qual è il suo record,
+**Stato: fatto** (29 ottobre 2026; scelte dell'utente) in tutti i giochi che lo dichiarano ([amici-nei-giochi.md](amici-nei-giochi.md)); il
+servizio con la migrazione `v5` è online dal 30 ottobre. Si vede dove è arrivato un amico e qual è il suo record,
 **anche se lui non è online**: basta che apra l'app quando può. Sta sotto lo stesso interruttore degli amici ([amici.md](amici.md)):
 spento dai grandi, non si scrive e non si legge niente.
 

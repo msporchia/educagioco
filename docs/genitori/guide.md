@@ -7,7 +7,7 @@ home e chi l'ha fatto.
 ## Due registri, dato puro
 
 `src/guide/contenuti.js`: **`GUIDE`** per i grandi (cos'è, che giochi ci
-sono, installare, il codice, l'età, le domande, i progressi, i guasti, chi
+sono, installare, il codice, l'età, le domande, gli amici, i progressi, i guasti, chi
 l'ha fatto) e **`AIUTI`**, uno per gioco, dietro il `?` della barra. Il
 grassetto si scrive `**così**` (`inGrassetto` in `src/guide/aiuto.js`):
 dentro un dato non ci va HTML.
@@ -23,7 +23,11 @@ dentro un dato non ci va HTML.
   cambia la difficoltà a chi non sa ancora cos'è l'app non serve.
 - **L'elenco dei giochi non si scrive a mano**: `giochi-elenco` lo compone
   da `src/data/giochi.js` e `src/data/aree.js`, se no il giorno dopo
-  direbbe il falso.
+  direbbe il falso. Così anche, in `amici`, i giochi dove ci si invita (`src/amici/giochi.js`) e
+  quelli che mostrano gli amici (`amici` nella dichiarazione); l'elenco degli inviti lo compone anche
+  il passo del primo avvio (`src/amici/testi.js`).
+- **Le guide che dicono «niente esce dal telefono»** (`progressi`, `chi`) nominano l'eccezione degli
+  amici e rimandano alla guida `amici`, che dice cosa passa e per quanto.
 - **Il codice di casa è scritto nelle guide**: `0000`, l'invito a
   cambiarlo, il recupero ([codice.md](codice.md)). Chi riceve il gioco da
   un'altra famiglia non ha nessuno a cui chiederlo. Un test lo controlla, ed
