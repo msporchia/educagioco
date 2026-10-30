@@ -1,6 +1,6 @@
 # Gli amici
 
-**Stato: fatto** (20 ottobre 2026; scelte dell'utente). **Da mettere online: il servizio** (`cd servizio/inoltro && npx wrangler deploy`, lo fa l'utente; senza, gli amici restano in grigio e non succede niente). Una lista di amici **per tutta l'app**, non per un gioco: ogni
+**Stato: fatto** (20 ottobre 2026; scelte dell'utente). Il servizio lo pubblica l'utente (`cd servizio/inoltro && npx wrangler deploy`); senza, gli amici restano in grigio e non succede niente. Per i genitori lo spiega la guida «Gli amici» (`amici` in `src/guide/contenuti.js`). Una lista di amici **per tutta l'app**, non per un gioco: ogni
 bambino ha i suoi amici, con il nome, e sa chi è online. Ci si invita a un gioco, a chi riceve compare un cartello e accetta.
 Oggi per sfidarsi in Castle Battle ci si passa un codice di cinque lettere ([../arena/multigiocatore.md](../arena/multigiocatore.md));
 con gli amici il codice sparisce. Servono il servizio su Cloudflare e internet: tutto il resto dell'app resta com'è, offline.
@@ -67,7 +67,7 @@ dopo che un grande ha fatto l'abbinamento col codice.
 **Cosa dice il passo** (parole per i grandi, in `src/amici/testi.js` insieme all'avviso della posta, così si cambiano in un posto):
 
 > **Giocare con gli amici** — Si può giocare insieme a un amico, ognuno sul suo telefono. Vedrà solo gli amici con cui voi
-> grandi vi scambiate un codice, e funziona solo in alcuni giochi (per ora Castle Battle). Si gioca insieme soltanto quando
+> grandi vi scambiate un codice, e funziona solo in alcuni giochi (per ora Castle Battle — l'elenco viene da `amici/giochi.js`). Si gioca insieme soltanto quando
 > lo decide lui: arriva un invito e dice sì o no. In alcuni giochi vede anche fin dove sono arrivati i suoi amici e i loro
 > record, e loro vedono i suoi. Non ci sono chat e non può parlare con nessuno. È un divertimento in più,
 > il resto del gioco non cambia. Lo potete cambiare quando volete, dalle impostazioni.
