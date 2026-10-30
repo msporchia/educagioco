@@ -8,7 +8,7 @@
 import { ref, shallowRef, computed, onMounted, onBeforeUnmount, onUnmounted, watch, nextTick } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { state, segna, segnaBest } from '../../store/profile.js'
+import { state, segna, segnaBest, nomeCorrente } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'
 import { PAGA } from '../../data/paghe.js'
 import { progresso, aperta, adesso, completa, scelta, ricorda, ritocca } from '../campagne.js'
@@ -17,6 +17,9 @@ import { prendiRipresa } from '../ripresa.js'
 import VeloPausa from '../VeloPausa.vue'
 import { domandaPerGioco } from '../../quiz/scelta.js'
 import Domanda from '../../quiz/Domanda.vue'
+import { usaSfida } from '../../insieme/sfida.js'
+import SalaSfida from '../../insieme/SalaSfida.vue'
+import CartelloLinea from '../../insieme/CartelloLinea.vue'
 
 import { CAMPAGNA, QUANTE_TAPPE, stelleDella, L_ABISSO, INDICE_ABISSO } from './dati/campagna.js'
 import { inPaesaggio } from './dati/paesaggi.js'
@@ -82,6 +85,9 @@ import Grosso from './viste/Grosso.vue'
 import LaBottega from './viste/Bottega.vue'   // la bottega dei mercanti di sopra
 import Fine from './viste/Fine.vue'
 import LascioPerdere from './viste/LascioPerdere.vue'   // la frase chiara prima di buttare una discesa
+import SceltaInDue from './viste/SceltaInDue.vue'
+import { regolaSotterraneo } from './sfida/regia.js'
+import { installaLeMosse } from './sfida/vista.js'
 import './stile.css'
 import './stile-scontro.css'
 import './stile-effetti.css'
@@ -142,6 +148,54 @@ const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!fine.v
 
 // unico posto in cui ⏸ e velo hanno senso: dentro una discesa, senza una domanda (già un velo) e senza il cartello di fine
 const siGioca = computed(() => !!corsa.value && !domanda.value && !fine.value)
+
+/* ═══════════ in due, solo nel Sotterraneo 3D (docs/sotterraneo/in-due-codice.md, «La vista») ═══════════
+   La sala, l'incontro e la linea sono del pezzo comune (src/insieme/sfida.js). Partiti, la discesa è quella dell'incontro: le azioni
+   della vista diventano mosse (sfida/vista.js), il battito fa correre il lockstep, e quello che il motore risponde arriva a mossa
+   fatta (`dopoLaMossa`). Niente sosta e niente storia: si salvano solo la roba e la crescita, in ogni momento */
+const salaAperta = ref(false)
+const inDueOra = ref(false)
+const postoInDue = ref('altare')
+const difficoltaInDue = ref('normale')
+const sfida = usaSfida({ gioco: 'sotterraneo3d', alVia: partiInDue, mostra: () => { salaAperta.value = true },
+  regola: () => regolaSotterraneo({ eroe: () => ({ eroe: eroeQui(), roba: roba.value, crescita: crescita.value, nome: nomeCorrente() }) }) })
+const scelteInDue = () => ({ chiave: postoInDue.value, difficolta: difficoltaInDue.value })
+const creaInDue = () => sfida.crea(scelteInDue())
+const invitaInDue = chiave => sfida.invita(chiave, scelteInDue(), { posto: postoInDue.value, difficolta: difficoltaInDue.value })
+function chiudiSala() { sfida.chiudi(); salaAperta.value = false }
+function partiInDue(r) {
+  const m = r.motore, c = r.partita
+  m.guarda(r.ruolo)
+  installaLeMosse(c, mossa => { if (sfida.regia.value) sfida.regia.value.scegli(mossa) })
+  m.osserva({ prima: () => fotoPrima(c), dopo: dopoLaMossa })
+  salaAperta.value = false
+  inDueOra.value = true
+  togli()
+  tappaIdx.value = null
+  fine.value = null
+  domanda.value = null
+  chiudiLaBarra()
+  corsa.value = c
+  borsellino = borsa(CHIAVE)
+  nuovoGiro({ nuovo: true })
+  suono.nota(180, 90, 0.4, 'sawtooth', 0.12)
+  nextTick(() => accendi())
+}
+// una mossa fatta (di chi gioca qui o dell'altro): lo scontro si racconta per tutti e due, il resto si sente solo da chi l'ha fatta
+function dopoLaMossa(i, mossa, esito, prima) {
+  tic.value++
+  const c = corsa.value
+  if (!esito || !c) return
+  if (esito.azioni) return mostra(esito, prima)
+  if (esito.che === 'sceso' || esito.che === 'salito') { nuovoGiro(); suono.livello(); return }
+  if (i === c.indiceDi() && ['rispondi', 'bevi', 'beviEnergia', 'usa'].includes(mossa[0])) mostra(esito, prima)
+}
+// nello scontro, quando tocca all'altro: il suo nome al posto della scelta
+const toccaAUnAltro = computed(() => {
+  tic.value
+  const c = corsa.value, f = c && c.foglio
+  return inDueOra.value && f && f.che === 'scontro' && c.nonTocca(f) ? (c.persone[f.diTurno] || {}).nome || 'il compagno' : null
+})
 
 // Ogni eroe ha la sua avventura (motore/avventure.js, docs/sotterraneo/avventure.md): cfg.eroe dice quale è
 // aperta, e la prima volta la scelta si presenta da sé. Cambiare eroe è cambiare avventura, senza perdere niente
@@ -213,7 +267,10 @@ let ultimoSalvato = 0
 // missioni fatte giù (la cosa trovata, il mostro col nome) passano subito nell'avventura: sopra si consegnano
 function salva({ subito = false, via } = {}) {
   const c = corsa.value
-  if (!c || c.finita || tappaIdx.value == null || salendo) return
+  // in due: la roba e la crescita di chi gioca qui, sempre (una linea che cade non butta via niente); niente sosta
+  if (inDueOra.value) { if (c) { ultimoSalvato = orologio; nellAvventura({ roba: c.roba, crescita: c.crescita }, { subito }) } return }
+  // lo scontro sul prato non è una discesa (lo scrive chiudiSopra): tappaIdx è ancora quella di prima, e la sosta rinascerebbe
+  if (!c || c.finita || tappaIdx.value == null || salendo || sopra.value) return
   ultimoSalvato = orologio
   nellAvventura({ roba: c.roba, crescita: c.crescita, sosta: scrivi(c, tappaIdx.value, { via }), ...fatteGiu(c),
                   ...conITrovati(c) }, { subito })
@@ -293,6 +350,7 @@ function scorda() {
 // compare il gemello (viste/Terra.vue), e l'eroe sbuca accanto a lui. Uscire con la ✕ non è questo: lì la sosta è
 // una 'uscita', senza gemello, e rientrando si riprende giù (docs/sotterraneo/portale-e-sosta.md, «Il portale e l'uscita»)
 function salgoDalPortale() {
+  if (inDueOra.value) return chiudi()   // in due il portale porta su e finisce la discesa (l'altro lo sa subito)
   const c = corsa.value
   if (!c || c.finita) return
   const sale = c.foglio && c.foglio.chi
@@ -1527,10 +1585,13 @@ function giro() {
     prima = ora
     const c = corsa.value
     // `fermo` (giochi/pausa.js) vale uguale in tutti i giochi; il resto è roba del motore, in uno shallowRef che non avvisa
-    if (!c || c.finita || fermo.value || !pittore) return
+    // in due il lockstep non si ferma per una pausa di uno (l'altro resterebbe fermo), e la discesa finisce anche per una mossa dell'altro
+    if (c && inDueOra.value && c.finita && !fine.value) { chiudi(); return }
+    if (!c || c.finita || (fermo.value && !inDueOra.value) || !pittore) return
     // l'orologio si muove DOPO: contarlo anche in pausa farebbe sparire all'istante la riga lasciata a metà
     orologio += dt
-    if (!sopra.value) c.passo(dt)   // sul palco di sopra non si cammina: finito lo scontro si torna al mondo
+    if (inDueOra.value) sfida.avanza(dt)
+    else if (!sopra.value) c.passo(dt)   // sul palco di sopra non si cammina: finito lo scontro si torna al mondo
     // col foglio aperto la telecamera alza l'eroe (lo scontro no: sta al centro e non chiede spazio)
     if ((contaGiri++ % 6) === 0) misuraFoglio()
     // ogni tanto, non a ogni fotogramma: una discesa salvata sono un paio di chilobyte
@@ -1576,7 +1637,9 @@ function guarda(c) {
             `|${c.energia}|${c.pronta}|${JSON.stringify(c.crescita.albero)}|${c.crescita.caselle}` +   // le abilità
             `|${c.preparati.map(p => p.id + Math.ceil(p.passi)).join()}` +   // gli incanti preparati, che calano camminando
             `|${c.livello.robe.reduce((n, r) => n + (r.che === 'mostro' && r.sveglio ? 1 : 0), 0)}`   // il mostro grosso che si sveglia
-  if (f !== firma) { firma = f; tic.value++ }
+  // in due anche l'altro: la sua vita, il suo foglio, chi tocca nello scontro
+  const altri = inDueOra.value ? `|${c.persone.map(p => `${p.vita}.${p.foglio ? p.foglio.che : '-'}.${p.aTerra ? 1 : 0}`).join()}|${c.foglio ? c.foglio.diTurno : ''}` : ''
+  if (f + altri !== firma) { firma = f + altri; tic.value++ }
   while (c.eventi.length) festeggia(c.eventi.shift(), c)
   if (c.avvisi.length) {
     const a = c.avvisi.shift()
@@ -1824,6 +1887,7 @@ function fuoriDallaBottega(e) {
 }
 
 function scendi() {
+  if (inDueOra.value) { corsa.value.scendi(); return }   // in due si scende insieme: lo dice dopoLaMossa
   const e = corsa.value.scendi()
   tic.value++
   if (e?.che === 'finita') return chiudi()
@@ -1836,6 +1900,7 @@ function scendi() {
 // la scala che sale: si torna al piano di sopra, accanto alla scala da cui si era scesi (docs/sotterraneo/scala-che-sale.md).
 // Dal primo piano non si sale da qui: il foglio è quello di «lascio perdere», l'unica strada su senza portale
 function sali() {
+  if (inDueOra.value) { corsa.value.sali(); return }
   const e = corsa.value.sali()
   tic.value++
   if (!e) return
@@ -1848,6 +1913,7 @@ function sali() {
 function chiudi({ senzaCartello = false } = {}) {
   const c = corsa.value
   if (!c) return
+  if (inDueOra.value) return chiudiInDue(c, { senzaCartello })
   if (!c.finita) c.risali()
   // la roba viene su (vinta, persa o finita la sera): quello che è rimasto per terra resta giù. Un giro nuovo: i
   // mercanti hanno roba nuova sul banco
@@ -1892,10 +1958,23 @@ function chiudi({ senzaCartello = false } = {}) {
                  abisso: nellAbisso.value, record: e.fondo > eraIlFondo }
 }
 
+// la discesa in due finisce (vinta, persa, o uno se ne va): si porta su la roba, e la sfida si chiude. Non tocca la storia né i dungeon
+function chiudiInDue(c, { senzaCartello = false } = {}) {
+  if (!c.finita) c.risali()
+  nellAvventura({ roba: c.roba, crescita: c.crescita }, { subito: true })
+  const e = c.esito
+  inDueOra.value = false
+  sfida.chiudi()
+  if (e.vinta) suono.livello(); else if (!senzaCartello) suono.fine()
+  if (senzaCartello) return allaMappa()
+  fine.value = { vinta: e.vinta, titolo: c.tappa.nome, stelle: 0, fatti: e, monete: borsellino.dato, notaMonete: borsellino.nota(),
+                 abisso: false, record: false, inDue: true }
+}
+
 function ancora() {
   const vinta = fine.value.vinta
-  // dall'abisso si torna alla mappa: "ci riprovo" ricomincerebbe dal piano 1, buttando quello appena salvato
-  const allaFila = vinta || fine.value.abisso
+  // dall'abisso si torna alla mappa: "ci riprovo" ricomincerebbe dal piano 1, buttando quello appena salvato; in due anche
+  const allaFila = vinta || fine.value.abisso || fine.value.inDue
   fine.value = null
   if (allaFila) return allaMappa()
   avvia(tappaIdx.value)
@@ -1920,6 +1999,8 @@ function allaMappa() {
 // è un portale, e la terra di sopra con i suoi mercanti non è dietro l'angolo per chi finge di uscire. Rientrando si
 // è già giù (riprendiSeUscito). Finita la discesa (il cartello di fine) la ✕ porta alla mappa, com'è giusto
 function indietro() {
+  if (salaAperta.value) return chiudiSala()
+  if (inDueOra.value && corsa.value && !fine.value) return chiudi({ senzaCartello: true })   // l'altro lo sa subito
   if (sopra.value) { chiudiSopra({ lascia: true }); return emit('vai', 'home') }   // lo scontro di sopra: i rimasti aspettano lì
   if (!corsa.value && !fine.value) return emit('vai', 'home')
   const c = corsa.value
@@ -2167,11 +2248,13 @@ onMounted(() => {
   // `visibilitychange` si ascolta sul document (dove viene lanciato); `pagehide` è della finestra
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
+  if (in3d) sfida.daInvito()   // l'invito di un amico può avere aperto il gioco
 })
 // lo scontro di sopra si chiude prima che il mondo se ne vada (dopo, il suo salvataggio non c'è più): come la ✕
 onBeforeUnmount(() => { if (sopra.value) chiudiSopra({ lascia: true }); if (anteprime) anteprime.via() })
 onUnmounted(() => {
   salva({ subito: true })
+  sfida.chiudi()
   removeEventListener('resize', ridimensiona)
   document.removeEventListener('visibilitychange', seSparisce)
   removeEventListener('pagehide', seSparisce)
@@ -2188,8 +2271,11 @@ function ridimensiona() { if (pittore) pittore.misura() }
   <div class="schermo">
     <!-- il ⏸ solo dentro una discesa: sulla mappa non c'è niente da fermare -->
     <Barra :titolo="titolo" guida="sotterraneo" @aiuto="aiuto" :monete="!corsa" scura
-           :pausa="siGioca" @pausa="metti()" @indietro="indietro">
+           :pausa="siGioca && !inDueOra" @pausa="metti()" @indietro="indietro">
       <!-- vita, gemme e zaino stanno nella barra in basso; attacco e difesa nella pagina dell'eroe (docs/sotterraneo/barra.md) -->
+      <!-- in due: solo nel 3D, dalla terra di sopra (docs/sotterraneo/in-due.md) -->
+      <button v-if="in3d && !corsa && !sopra && !salaAperta" type="button" class="sot-in-due-apri" data-sfida-apri
+              aria-label="Scendi con un amico" @click="sfida.apri()"><span class="em">👥</span></button>
     </Barra>
 
     <!-- l'aspetto dei pannelli in prova (`#tema=legno|rilievo`, docs/sotterraneo/tema-pannelli.md) -->
@@ -2239,6 +2325,14 @@ function ridimensiona() { if (pittore) pittore.misura() }
                   @compra="compraSopra" @vendi="vendiSopra" @riacquista="riacquistaSopra" @chiudi="chiudiBottega" @fuori="fuoriDallaBottega" />
         <Eroi v-if="scegliEroe" :avventure="avventure" :scelto="chiEro || ''" :primo="!chiEro"
               @scegli="scegli" @chiudi="chiudiLaScelta" />
+        <div v-if="salaAperta" class="sot-in-due" data-sot-in-due>
+          <SalaSfida :fase="sfida.fase.value" :codice="sfida.codice.value" :messaggio="sfida.messaggio.value"
+                     :amici="sfida.amici.value" :invitato="sfida.invitato.value" partita="la discesa" domanda="Dove scendete?"
+                     spiega="Due telefoni, la stessa discesa: ognuno col suo eroe. Serve internet su tutti e due."
+                     @crea="creaInDue" @invita="invitaInDue" @entra="sfida.entra" @indietro="chiudiSala">
+            <template #scelte><SceltaInDue v-model:posto="postoInDue" v-model:difficolta="difficoltaInDue" /></template>
+          </SalaSfida>
+        </div>
       </template>
 
       <template v-else>
@@ -2251,6 +2345,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
           <!-- il 3D: le scritte sopra la scena (sonno, nomi, barre, mappina) e quelle dello scontro, agganciate alle figure -->
           <div v-if="in3d" ref="strato" class="sot3d-strato" data-strato3d></div>
           <Scontro3d v-if="in3d && nemico" v-bind="nemico" :fx="racconto.fx" :aggancia="aggancia" />
+          <CartelloLinea v-if="inDueOra && (sfida.rotta.value || sfida.linea.value)" :rotta="sfida.rotta.value" :motivo="sfida.motivo.value"
+                         :linea="sfida.linea.value" partita="la discesa" esci="🗺️ torno su" @esci="chiudi({ senzaCartello: true })" />
 
           <!-- le missioni prese che riguardano questa discesa: una riga ciascuna, in cima (motore/missioni.js) -->
           <ul v-if="ricordo.length" class="sot-ricordo" data-promemoria>
@@ -2328,7 +2424,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
             <Scontro v-if="!in3d" v-bind="nemico" :fx="racconto.fx" @bersaglio="scegliIlBersaglio" @accorcia="racconto.accorcia" />
             <!-- prima si sceglie cosa fare (attacco, abilità, bere, scappare), poi compare la domanda per quel colpo
                  (docs/sotterraneo/abilita.md). Il pericolo non ha più un menu suo: è una riga sopra la stessa scelta -->
-            <CaselleAbilita v-if="abilitaScontro && (!sceltaFatta || animando)" :key="animando ? 'racconto' : 'scelta'" v-bind="abilitaScontro"
+            <p v-if="toccaAUnAltro && !animando" class="sot-tocca-a" data-tocca-a>Tocca a <b>{{ toccaAUnAltro }}</b></p>
+            <CaselleAbilita v-else-if="abilitaScontro && (!sceltaFatta || animando)" :key="animando ? 'racconto' : 'scelta'" v-bind="abilitaScontro"
                             :ferma="animando" :pericolo="animando ? null : abilitaScontro.pericolo"
                             @scegli="scegliColpo" @bevi="beviNelloScontro" @bevi-energia="beviEnergiaNelloScontro" @scappa="scappa" />
             <template v-else-if="domanda">
@@ -2430,6 +2527,11 @@ function ridimensiona() { if (pittore) pittore.misura() }
           </button>
         </Foglio>
 
+        <!-- in due: chi ha detto sì alla scala aspetta l'altro, al riparo (motore/in-due.js) -->
+        <Foglio v-else-if="foglio && foglio.che === 'aspetta'" em="👥" :titolo="`Aspetto ${foglio.chi}`" data-aspetta
+                :dice="foglio.perche === 'sali' ? 'Si sale insieme: quando arriva alla scala, si va.' : 'Si scende insieme: quando arriva alla scala, si va.'">
+          <button class="sot-grosso sot-chiaro" data-azione="non-aspetto" @click="corsa.nonAspettoPiu()">non aspetto più</button>
+        </Foglio>
         <Foglio v-else-if="foglio && foglio.che === 'scala'" em="🕳️" titolo="La scala che scende"
                 :dice="foglio.ultimo
                   ? 'Di qui si torna alla luce, con tutto quello che hai trovato.'

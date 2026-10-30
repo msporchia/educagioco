@@ -8,5 +8,6 @@ giochi nuovi: chi scrive un gioco parte da qui.
 - [sosta.md](sosta.md) — la partita lasciata a metà: cosa si salva, la serie del libero, il record
 
 Vedi anche: [../core/convenzione-giochi.md](../core/convenzione-giochi.md)
-(com'è fatto un gioco nuovo, sul modello di questo);
+(com'è fatto un gioco nuovo, sul modello di questo),
+[../core/amici-nei-giochi.md](../core/amici-nei-giochi.md) (gli amici sulla mappa e i loro record);
 `test/unita/codice-segreto.test.mjs` (il finto giocatore che gioca le nove tappe).

@@ -12,6 +12,7 @@ import { Pezzi } from './pezzi.js'
 import { creaAnteprime } from './anteprime.js'
 import { creaScaldo } from './scaldo-puro.js'
 import { Eroe } from './eroe.js'
+import { Ospite } from './ospite.js'
 import { creaContadino, posaGatto } from './modelli-compagni.js'
 import { Compagni } from './compagni.js'
 import { creaBestia, posaPiccolo, posaBeagle } from './modelli-bestie.js'
@@ -35,6 +36,7 @@ export const ELEMENTI_FATTORIA = ['terreno', 'strade', 'alberi', 'erba', 'acqua'
 /** Cosa dice il cartello di un lotto in vendita oltre al prezzo (il prato e il bosco non dicono niente). */
 export const NOME_BIOMA = { laghetto: '🏞️ laghetto', lago: '🏞️ lago', mare: '🌊 mare', costa: '🏖️ spiaggia' }
 const _c = new THREE.Vector3()        // il corpo del contadino per `contadinoSotto`
+const chiaveDi = abito => JSON.stringify(abito || null)
 const _v = new THREE.Vector3()        // di scorta per `proietta`: niente oggetti nuovi a ogni cartello a ogni fotogramma
 // le anteprime fotografate sul computer (`npm run anteprime`, dati/anteprime.js): il telefono le legge e non le disegna. Arrivano a parte
 let fotoFatte = null, fotoPromessa = null
@@ -138,6 +140,14 @@ export class Mondo3d {
   }
   /** Il contadino cambia abito, senza ricrearlo: stesso posto, stessa direzione, stesso gesto. */
   vestiContadino(abito) { this.abito = abito; this.eroe.vesti(abito) }
+  /** Il contadino dell'amico nella fattoria in comune (scena3d/ospite.js): nasce al primo segno di vita e sparisce se tace.
+      `chi` { nome, abito }, `p` { x, z, d, r, g }. */
+  ospiteQui(chi, p) {
+    if (!this.ospite) this.ospite = new Ospite({ scena: this.scena, motore: this.m, effetti: this.fx, sopra: this.sopra, vista: this.vista, ...chi })
+    else if (chi.abito && chiaveDi(chi.abito) !== chiaveDi(this.ospite.abito)) this.ospite.vesti(chi.abito)
+    this.ospite.qui(p)
+  }
+  ospiteVia() { this.ospite?.nascondi() }
   anteprimaPronta(tipo) { return (fotoFatte && fotoFatte[tipo]) || (this._anteprime ? this._anteprime.leggi(tipo) : null) }
 
   /** Il gruppo dei pezzi in scena: una visita ne usa uno suo (scena3d/visita.js). */
@@ -321,6 +331,7 @@ export class Mondo3d {
     const { m, eroe, ui } = this
     if (m.tick()) ui.cambio()
     eroe.aggiorna(dt, tt)
+    this.ospite?.aggiorna(dt, tt)
     this.compagni.aggiorna(dt, tt)
     this.pesca3d.aggiorna(dt, tt)
     if (this.coda.length && eroe.fermo && !eroe.dopo && !ui.fogliAperti()) {          // il prossimo della coda
@@ -493,7 +504,7 @@ export class Mondo3d {
 
   via() {
     this.ferma(); this.ro?.disconnect(); this.dito.via()
-    this.stagione?.via(); this.pezzi.via(); this.fx.via(); this.terreno.via(); this.compagni.via(); this.pesca3d.via()
+    this.stagione?.via(); this.pezzi.via(); this.fx.via(); this.terreno.via(); this.compagni.via(); this.pesca3d.via(); this.ospite?.via()
     this._anteprime?.via()
     rilascia(this.renderer)   // anche gli ascoltatori sulle cose che i moduli tengono in cache, e il contesto (grafica/rilascio3d.js)
   }

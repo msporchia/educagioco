@@ -25,7 +25,7 @@ function scansa(scritte) {
   }
 }
 
-export function creaScontro({ S, cam, eroe, getPiano, getCose, getFigure, anelli, cieca }) {
+export function creaScontro({ S, cam, eroe, compagno = null, getPiano, getCose, getFigure, anelli, cieca }) {
   let palco = null, eraAttivo = false, liberoDa = 0, tTocco = 9, tArrivo = 9, mira = null
   const agganci = new Map(), scritte = []
   const punti = []
@@ -37,6 +37,8 @@ export function creaScontro({ S, cam, eroe, getPiano, getCose, getFigure, anelli
     const stati = sc.campo.map(r => cose.stato(r))
     const d = disponiPalco(piano.pianta, piano.ingombri, { x: corsa.eroe.x, z: corsa.eroe.y }, stati.map((s, i) => ({ x: s.x, z: s.z, grande: !!sc.campo[i].grosso })))
     eroe.meta = d.eroe
+    // in due il compagno sta sfalsato sotto l'eroe, in diagonale (come il palco del 2D, viste/campo.js): solo disegno
+    if (compagno && corsa.persone && corsa.persone.length > 1) compagno.meta = { x: d.eroe.x - 0.55, z: d.eroe.z + 1.05 }
     stati.forEach((s, i) => { s.meta = d.mostri[i]; s.specchio = d.mostri[i].x > d.eroe.x })
     piano.terreno.abbassa(d.abbassa)
     palco = { campo: [...sc.campo], foglio: sc, stati, agio: d.agio }
@@ -61,6 +63,7 @@ export function creaScontro({ S, cam, eroe, getPiano, getCose, getFigure, anelli
       for (const s of palco.stati) s.meta = null
       eroe.meta = null
       eroe.ritorno = true
+      if (compagno && compagno.meta) { compagno.meta = null; compagno.ritorno = true }
       const piano = getPiano()
       if (piano) piano.terreno.abbassa(null)
       palco = null
@@ -71,6 +74,7 @@ export function creaScontro({ S, cam, eroe, getPiano, getCose, getFigure, anelli
       if (!palco) return null
       punti.length = 0
       punti.push(eroe.meta || eroe)
+      if (compagno && compagno.meta) punti.push(compagno.meta)
       for (const s of palco.stati) punti.push(s.meta || s)
       return punti
     },

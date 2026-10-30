@@ -1,7 +1,7 @@
 /* Passo passo — il manifesto. Dato puro, struttura di
    `docs/core/convenzione-giochi.md`: vedi `docs/passo-passo/README.md`. */
 import { CAMPAGNA, QUANTE_TAPPE, FINE_STRADA, TAPPE_PICCOLE, TAPPE_ZAINO, TAPPE_PRIME } from './dati/campagna.js'
-import { stradeDi, STRADE } from './motore/strade.js'
+import { stradeDi, postoSullaStrada, STRADE } from './motore/strade.js'
 import { recordPiuRecente, primatoInParole } from '../primati.js'
 
 export const CHIAVE = 'passo'
@@ -20,6 +20,8 @@ export const SENZA_FINE = {
   ],
 }
 
+const avanzamento = p => (p.campagne || {})[CHIAVE] || {}
+
 export default {
   chiave: CHIAVE,
   nome: 'Passo passo',
@@ -30,6 +32,12 @@ export default {
   copertina: { fondo: '#f29e5c', disegno: '#e07d3a', scena: 'caselle' },
   tappe: QUANTE_TAPPE,
   senzaFine: SENZA_FINE,
+  /* gli amici sulla mappa (docs/core/amici-nei-giochi.md): una strada per protagonista, la sua tappa di adesso, e in fondo il
+     suo sentiero senza fine. Le chiavi sono quelle delle sfide e dei protagonisti: di salvataggio */
+  amici: { percorsi: {
+    coniglio: { tappe: STRADE.coniglio.length, dove: 'al sentiero del coniglio', tappa: p => postoSullaStrada(avanzamento(p), 'coniglio') },
+    cane: { tappe: STRADE.cane.length, dove: 'al sentiero del cane', tappa: p => postoSullaStrada(avanzamento(p), 'cane') },
+  } },
 
   piccoli: true,
   cresce: true,  // vedi docs/core/convenzione-giochi.md

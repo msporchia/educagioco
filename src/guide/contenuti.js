@@ -4,6 +4,8 @@
 import { GIOCHI } from '../data/giochi.js'
 import { AREE, MODI } from '../data/aree.js'
 import { CHI, CODICE, AUTORE, SEGNALA } from './aiuto.js'
+import { GIOCHI as INVITI } from '../amici/giochi.js'
+import { inFila } from '../amici/testi.js'
 
 // composto da data/giochi.js, non scritto a mano: un elenco a mano direbbe
 // il falso il giorno che si aggiunge un gioco. Gli sperimentali restano fuori.
@@ -15,6 +17,10 @@ const perArea = () => AREE.map(a => ({
 })).filter(b => b.righe.length)
 
 const quanti = GIOCHI.filter(g => !g.sperimentale).length
+
+// anche questi composti: i giochi dove ci si invita (amici/giochi.js) e quelli che mostrano gli amici (`amici` nella dichiarazione)
+const siInvita = inFila(Object.values(INVITI).map(g => '**' + g.nome + '**'))
+const mostranoAmici = inFila(GIOCHI.filter(g => g.amici && !g.sperimentale).map(g => g.ico + ' ' + g.nome))
 
 export const GUIDE = [
   {
@@ -293,6 +299,49 @@ export const GUIDE = [
   },
 
   {
+    id: 'amici',
+    emoji: '👫',
+    titolo: 'Gli amici',
+    sommario: 'Giocare insieme, ognuno sul suo telefono, e vedere dove sono arrivati',
+    subito: true,
+    blocchi: [
+      'Un bambino può avere degli amici dentro il gioco: compagni di classe, cugini, chi volete voi. Si invitano a giocare insieme, ognuno sul suo telefono, e si vede fin dove è arrivato l\'altro. **Di partenza è spento**, e un amico c\'è solo dopo che voi grandi vi siete scambiati un codice: nessuno sconosciuto lo trova da solo. Non ci sono chat, e i bambini non si possono scrivere niente.',
+      { titolo: 'Accenderlo', passi: [
+        'Impostazioni (col codice dei genitori) → la carta **«Amici online»** del bambino → «Attiva gli amici online».',
+        'Ci vuole internet. Senza, il resto del gioco va come sempre e gli amici restano in grigio.',
+      ] },
+      { titolo: 'Fare amicizia', passi: [
+        'Uno dei due genitori tocca **«Invita un amico»** nella stessa carta: compare un codice di cinque lettere, che vale due ore e si usa una volta sola.',
+        'Lo manda all\'altro genitore (c\'è il tasto «Manda il codice»).',
+        'L\'altro lo scrive nella carta del suo bambino e tocca **«Ho un codice»**.',
+        'Il nome dell\'amico compare la prima volta che i due telefoni sono accesi insieme; fino ad allora in lista c\'è «in attesa».',
+      ] },
+      { titolo: 'Giocare insieme', righe: [
+        'Nella home c\'è la riga **«Amici»**: chi è online ha il pallino verde, e si vede a cosa sta giocando.',
+        'Per ora ci si invita a ' + siInvita + ': nella schermata del gioco c\'è «Invita un amico», si tocca un nome libero e online.',
+        'All\'altro compare un cartello, «… ti invita a giocare»: tocca sì o no, e se non tocca niente sparisce da solo dopo mezzo minuto.',
+        'Il bambino può spegnere **«Mi vedono online»** dalla sua lista: gli amici lo vedono offline e non gli arrivano inviti.',
+      ] },
+      { titolo: 'Vedere dove sono arrivati', righe: [
+        'Sulla mappa di un gioco l\'amico è **un pallino con la sua iniziale** sulla tappa a cui è arrivato, e in cima c\'è scritto chi è più avanti e di quante tappe. Nei giochi senza fine c\'è la classifica dei record, e a fine partita il gioco dice chi si è appena superato.',
+        'Quando un amico gli passa davanti, nella home compare «Leonardo ti ha superato»: toccandolo si va a riprenderlo.',
+        'L\'amico **non deve essere online**: basta che apra il gioco ogni tanto. Accanto c\'è da quando è il dato («oggi», «ieri», «3 giorni fa»).',
+        'Succede in ' + mostranoAmici + '.',
+      ] },
+      { titolo: 'Togliere un amico', righe: [
+        'Nella carta «Amici online», «Togli» accanto al nome: l\'amicizia sparisce da questo telefono, e con lei quello che si sapeva dell\'amico.',
+        'Se in lista compare qualcuno che non conosci (il codice è finito a chi non doveva), toglilo così: può entrare solo in quell\'amicizia, non vede gli altri.',
+        '«Spegni gli amici online» spegne tutto, per quel bambino: niente lista, niente inviti, niente pallini, e il telefono non si collega più a nessuno.',
+      ] },
+      { titolo: 'Cosa esce dal telefono', chiuso: true, testo: [
+        'Gli amici sono l\'unica parte del gioco che parla con un altro telefono, e solo per i bambini dove l\'avete acceso. Passa da un piccolo servizio su Cloudflare, a nome mio, che fa da postino fra i due telefoni.',
+        'Il **nome** del bambino va solo al telefono dell\'amico, mai su un archivio. Sul servizio, per ogni amicizia, resta per **una settimana al massimo** a che tappa è arrivato in ogni gioco e i suoi record: numeri, con il giorno ma non l\'ora, sotto un codice a caso e senza nome. Chi non apre il gioco per una settimana non ha più niente lì sopra. Cloudflare tiene per un mese le copie di sicurezza del servizio, che può riaprire solo chi ha l\'account, apposta.',
+        'Gli inviti e le risposte hanno una forma fissa (chi, quale gioco, sì o no): non c\'è un posto dove scrivere, quindi non c\'è niente da leggere.',
+      ] },
+    ],
+  },
+
+  {
     id: 'monete',
     emoji: '🪙',
     titolo: 'A cosa servono le monete',
@@ -317,7 +366,7 @@ export const GUIDE = [
     sommario: 'Dentro il telefono, e come portarli su un altro',
     subito: true,
     blocchi: [
-      'Non c\'è nessun account, nessuna registrazione, e niente esce da qui: monete, animali, traguardi e risposte stanno **dentro questo telefono**. Il gioco funziona senza internet proprio per questo.',
+      'Non c\'è nessun account, nessuna registrazione, e niente esce da qui: monete, animali, traguardi e risposte stanno **dentro questo telefono**. Il gioco funziona senza internet proprio per questo. L\'unica eccezione sono gli amici, se li accendete: la guida «Gli amici» dice cosa passa.',
       { titolo: 'Il rovescio della medaglia', righe: [
         'Se cancelli i dati del sito dal browser, spariscono.',
         'Se cambi telefono, non ti seguono da soli.',
@@ -334,7 +383,7 @@ export const GUIDE = [
       ] },
       'Il file contiene i nomi dei bambini e cosa hanno giocato. È roba tua: non mandarlo in giro più di quanto serve.',
       { titolo: 'Cosa vedo io di tuo figlio: niente', chiuso: true, testo: [
-        'Non c\'è un server dall\'altra parte, quindi non è una promessa di non guardare: **non c\'è proprio niente da guardare**. Nessuna statistica parte da qui, nessun nome, nessun risultato, nessun indirizzo. Il gioco non chiede permessi al telefono, non usa la fotocamera né la posizione, e l\'unica volta che tocca la rete è per vedere se c\'è una versione nuova di sé stesso.',
+        'Non c\'è un server dall\'altra parte, quindi non è una promessa di non guardare: **non c\'è proprio niente da guardare**. Nessuna statistica parte da qui, nessun nome, nessun risultato, nessun indirizzo. Il gioco non chiede permessi al telefono, non usa la fotocamera né la posizione, e l\'unica volta che tocca la rete è per vedere se c\'è una versione nuova di sé stesso — tranne gli amici, spenti finché non li accendi tu: cosa passa di lì, e per quanto, sta nella guida «Gli amici».',
         'L\'unica cosa che esce di qui è quella che decidi tu di mandare: il modulo di segnalazione, che porta la versione del gioco e l\'ultimo inciampo — e se hai acceso i giudizi sulle domande, quelle che hai segnato. Si vedono prima di mandarle.',
       ] },
       { titolo: 'Dove stanno davvero', chiuso: true, testo: [
@@ -381,7 +430,7 @@ export const GUIDE = [
     blocchi: [
       'L\'ho scritto io, ' + CHI + ', per i miei due figli. Non è il prodotto di nessuno e non c\'è un\'azienda dietro: è un progetto di casa, regalato così com\'è.',
       { titolo: 'Cosa ci guadagno', testo:
-        'Niente, e non è modestia: non c\'è pubblicità, non c\'è niente da comprare, non raccolgo dati e non ho nessun modo di sapere chi ci gioca — non esiste un server a cui potrebbe arrivare qualcosa. Se serve a un altro bambino, tanto meglio: è il motivo per cui è in giro.' },
+        'Niente, e non è modestia: non c\'è pubblicità, non c\'è niente da comprare, non raccolgo dati e non ho nessun modo di sapere chi ci gioca — l\'unico servizio in rete è il postino degli amici, che non tiene i nomi e dopo una settimana dimentica tutto. Se serve a un altro bambino, tanto meglio: è il motivo per cui è in giro.' },
       { titolo: 'Il codice è aperto', collegamenti: [
         { url: CODICE, testo: 'Il codice su GitHub',
           sotto: 'Tutto quello che c\'è dentro, com\'è fatto e perché. Licenza MIT: si scarica, si modifica, si ridà via.' },

@@ -21,6 +21,7 @@ const props = defineProps({
   /* solo nella partita libera: { record, frase } da `giochi/primati.js`
      — lì non si vince, e l'unica cosa da dire è se si è fatto meglio */
   primato: { type: Object, default: null },
+  amici: { type: String, default: '' },        // il risultato contro i record degli amici, in parole
 })
 defineEmits(['avanti', 'mappa', 'libera', 'riprova'])
 
@@ -74,6 +75,7 @@ const segno = k => segnoDi(k, props.sa)
     <p v-if="notaMonete" class="dritta" data-nota-monete>{{ notaMonete }}</p>
     <p v-if="primato && primato.record" class="primato" data-primato="nuovo">🥇 {{ primato.frase }}</p>
     <p v-else-if="primato && primato.frase" class="dritta" data-primato="no">🏁 {{ primato.frase }}</p>
+    <p v-if="amici" class="dritta" data-contro-amici>{{ amici }}</p>
     <div class="riga">
       <button class="bottone" @click="$emit('riprova')">Riprova ▶</button>
       <button class="bottone chiaro" @click="$emit('mappa')">Mappa</button>

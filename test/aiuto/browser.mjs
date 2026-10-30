@@ -213,6 +213,36 @@ export async function semina(page, profilo, giocatore = GIOCATORE) {
   await page.waitForSelector('.carte', { timeout: 10000 })
 }
 
+/* Una chiave dell'archivio fuori dal profilo (`amici:<bambino>`, …), scritta così com'è in IndexedDB, poi si ricarica. Come
+   `semina`, prima lascia finire le scritture in coda. */
+export async function seminaArchivio(page, chiave, valore) {
+  await attendi(page, 400)
+  await page.evaluate(([k, v]) => new Promise((ok, ko) => {
+    const r = indexedDB.open('giochi-bambini', 1)
+    r.onerror = () => ko(new Error('IndexedDB non si apre'))
+    r.onsuccess = () => {
+      const tx = r.result.transaction('kv', 'readwrite')
+      tx.objectStore('kv').put(v, k)
+      tx.oncomplete = ok
+      tx.onerror = () => ko(new Error('scrittura fallita'))
+    }
+  }), [chiave, valore])
+  await page.reload()
+  await page.waitForSelector('.carte', { timeout: 10000 })
+}
+
+/* Gli amici del bambino come dopo una lettura delle loro bacheche (docs/core/amici-bacheca.md): accesi dai grandi, ognuno con
+   la sua istantanea. `amicoDiProva('a', 'leonardo1', 'Leonardo', { fa: 1, giochi: { mate: { posti: { '': 5 }, primati: {} } } })`; un
+   nome vuoto è un amico mai incontrato online. Il servizio non serve: la prova punta `__SERVIZIO_SFIDE__` a una porta chiusa. */
+export function amicoDiProva(lettera, id, nome, { fa = 0, giochi = {} } = {}) {
+  const d = new Date(Date.now() - fa * 86_400_000), due = n => String(n).padStart(2, '0')
+  const giorno = `${d.getFullYear()}-${due(d.getMonth() + 1)}-${due(d.getDate())}`
+  return { chiave: lettera.repeat(32), id, nome, visto: 1, bacheca: { v: 1, giorno, giochi } }
+}
+export const seminaAmici = (page, amici, giocatore = GIOCATORE, { sorpassi = [] } = {}) =>
+  seminaArchivio(page, 'amici:' + giocatore, { id: 'banco' + giocatore.replace(/[^a-z0-9]/g, '').padEnd(8, '0').slice(0, 10),
+                                               deciso: true, attivo: true, online: true, amici, sorpassi })
+
 /* Le tendine delle impostazioni dei grandi («Zona delicata», «Per chi sviluppa») nascono chiuse: un test che deve premere lì dentro le
    apre. Un bambino non le vedrebbe nemmeno, ed è il punto. Docs: docs/genitori/riordino.md. */
 export const apriTendine = page => page.evaluate(() => document.querySelectorAll('details.tendina').forEach(d => { d.open = true }))

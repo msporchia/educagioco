@@ -15,6 +15,10 @@ import { MERCANTI, mercanteDi } from '../dati/mercanti.js'
 import { apertura, scelte as scelteDi, risposta, dopoLaPresa, dopoLaConsegna, novita as novitaDi,
          curaDi, mancaA, richiamoDi, dopoLaCura } from '../motore/dialoghi.js'
 import { laStoria } from '../motore/storia.js'
+import { usaAmici } from '../../../amici/usaAmici.js'
+import AmiciQui from '../../../components/amici/AmiciQui.vue'
+import PallinoAmico from '../../../components/amici/PallinoAmico.vue'
+import { QUANTE_TAPPE } from '../dati/campagna.js'
 import { POSTO_DI, POZZO_VECCHIO, FRECCE, SCALA_TERRA as S, SCALA_EROE, SCALA_DELL_EROE, PASSO_TERRA, VISTA, LUCE,
          BORDO, MORBIDA, iconaDi } from '../dati/terra.js'
 import { creaTerra, scopri, nebbiaNuova, nebbiaInCodice, nebbiaDaCodice } from '../motore/terra.js'
@@ -743,6 +747,14 @@ const divieto = p => {
   return { left: (x + w * 0.05) * S + 'px', top: Math.min(y + h, r[1] + r[3]) * S + 'px' }
 }
 const nomeDi = p => p.cosa.nome
+// gli amici dalla loro bacheca (docs/core/amici-nei-giochi.md): su ogni discesa chi è arrivato lì, sull'abisso chi ha finito le sette
+const amici = usaAmici('sotterraneo')
+const nodoDi = p => (p.abisso ? QUANTE_TAPPE : p.tappa ? p.tappa.indice : -1)
+const amiciQui = p => amici.sullaTappa(nodoDi(p))
+const aiPiedi = p => {
+  const [x, y, w, h] = p.ingresso, r = p.riquadro
+  return { left: (x + w / 2) * S + 'px', top: Math.min(y + h, r[1] + r[3]) * S + 6 + 'px' }
+}
 // una chiusa dice cosa la apre
 // (la storia: si apre battendo il mostro grosso della discesa di prima, non facendo missioni)
 const storia = computed(() => laStoria(props.tappe))
@@ -837,6 +849,14 @@ const rigaStoria = p => {
         </span>
       </template>
 
+      <!-- chi è arrivato a una discesa: i pallini ai suoi piedi, sotto quello della discesa; i nomi nel fumetto -->
+      <template v-for="p in posti" :key="'amici-' + p.nome">
+        <span v-if="trovati.has(p.nome) && amiciQui(p).length" class="sot-amici-posto" data-amici-posto
+              :data-al="nodoDi(p)" :style="aiPiedi(p)">
+          <PallinoAmico v-for="a in amiciQui(p)" :key="a.chiave" :amico="a" :lato="14" data-pallino-amico />
+        </span>
+      </template>
+
       <div ref="eroeEl" class="sot-io-sopra" :class="{ 'sot-specchio': specchio }" data-eroe-terra
            :data-cammina="cammina ? 1 : 0">
         <!-- con l'arma che ha addosso, come nella scelta delle avventure -->
@@ -883,6 +903,7 @@ const rigaStoria = p => {
           <b class="sot-fum-nome"><span v-if="!aperto.p.aperto" class="em">🔒</span>
             {{ aperto.p.cosa.nome }}</b>
           <i class="sot-fum-dritta">{{ aperto.p.cosa.dritta }}</i>
+          <AmiciQui :amici="amiciQui(aperto.p)" :lato="16" class="sot-amici-fum" :data-al="nodoDi(aperto.p)" />
           <template v-if="aperto.p.aperto">
             <p v-if="aperto.p.tappa" class="sot-fum-conto em">
               🪜 {{ aperto.p.tappa.piani }} piani<template v-if="aperto.p.tappa.stelle && !aperto.p.tappa.potenza"> · {{ '⭐'.repeat(aperto.p.tappa.stelle) }}</template>
@@ -954,7 +975,11 @@ const rigaStoria = p => {
          :data-meta-vicina="v.meta ? v.chiave : null" :data-consegna-vicina="v.meta ? null : v.chiave"
          :aria-label="(v.meta ? 'Verso la discesa della tua missione: ' : 'Verso ') + v.nome"><i></i></div>
 
-    <div ref="sopraEl" class="sot-terra-sopra"><slot name="sopra" /></div>
+    <div ref="sopraEl" class="sot-terra-sopra">
+      <!-- chi è da raggiungere: fuori dalla mappa, che segue l'eroe -->
+      <p v-if="amici.davanti" class="sot-trovato" data-amico-davanti>{{ amici.davanti }}</p>
+      <slot name="sopra" />
+    </div>
     <div ref="sottoEl" class="sot-terra-sotto">
       <p v-if="avviso" class="sot-trovato" data-avviso-terra>{{ avviso }}</p>
       <p v-else-if="primaVolta" class="sot-trovato sot-piano">Tocca dove vuoi andare.</p>

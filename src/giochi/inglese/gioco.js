@@ -5,7 +5,7 @@
 // dell'albo c'è già (data/traguardi.js, store/progressi.js) e le chiavi SRS
 // sono le stesse di prima.
 import { MONDI, TAPPE, CHIAVE } from './dati/mondi.js'
-import { travasate, quanteVinte } from './motore/travaso.js'
+import { travasate, quanteVinte, tappaDaFare } from './motore/travaso.js'
 
 export { CHIAVE }
 
@@ -18,6 +18,8 @@ export default {
   come: 'domande',
   copertina: { fondo: '#4d8de0', disegno: '#2f6fc4', scena: 'onde' },
   tappe: TAPPE.length,
+  // gli amici sulla mappa del tesoro (docs/core/amici-nei-giochi.md): la tappa da fare, le tappe vinte stanno sotto l'id e non nel cursore
+  amici: { tappe: TAPPE.length, dove: 'in fondo alla mappa', tappa: p => tappaDaFare((p.campagne || {})[CHIAVE]) },
   // niente `grandi`: il primo mondo è la prima elementare (portata 25), e chi
   // la carta la vede lo decide la portata delle tappe, come per gli altri giochi
 

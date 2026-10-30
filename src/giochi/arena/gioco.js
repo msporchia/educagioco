@@ -15,6 +15,8 @@ export default {
   // le domande passano da src/quiz/ (il modulo `conti`), tagliate dall'età
   quiz: true,
   tappe: QUANTE_TAPPE,
+  // gli amici sulla mappa (docs/core/amici-nei-giochi.md): il cursore della campagna, e finite le dodici tappe la battaglia infinita (senza record)
+  amici: { tappe: QUANTE_TAPPE, dove: 'alla battaglia infinita' },
 
   riassunto(av = { tappa: 0, stelle: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)

@@ -9,13 +9,27 @@ import { LANA, PRODOTTI_ANIMALI } from './animali.js'
 import { MANGIMI_SENZA_RICETTA } from './cortile2.js'
 import { coltura2d, siloDelProdotto2D, postiPerMerce, costoDelPassoDelSilo, SCOMPARTO_BASE, SCOMPARTO_PIU } from './parita2d.js'
 
-/** I tre silos: l'id è quello della 2D (`terra`, `stalla`, `bottega`). */
+/** I tre silos: l'id è quello della 2D (`terra`, `stalla`, `bottega`). Dal 30/10/2026 ognuno è anche un edificio in mappa (`edificio`, il pezzo
+    con l'id della 2D) che si tocca per guardarci dentro e ingrandirlo, e che cresce a ogni ingrandimento: docs/fattoria3d/magazzini.md.
+    `cosa` è come si chiama quello che tiene, `liv` quando arriva in mappa (quello della 2D). */
 export const SILOS = {
-  terra:   { nome: 'Magazzino dei raccolti', breve: 'Raccolti', emoji: '🌾' },
-  stalla:  { nome: 'Magazzino della stalla', breve: 'Stalla', emoji: '🥛' },
-  bottega: { nome: 'Dispensa', breve: 'Dispensa', emoji: '📦' },
+  terra:   { nome: 'Silo del raccolto', breve: 'Raccolti', emoji: '🌾', edificio: 'silo', art: 'il', cosa: 'raccolto', liv: 1 },
+  stalla:  { nome: 'Silo della stalla', breve: 'Stalla', emoji: '🥛', edificio: 'silo_bianco', art: 'il', cosa: 'prodotto degli animali', liv: 4 },
+  bottega: { nome: 'Dispensa', breve: 'Dispensa', emoji: '📦', edificio: 'dispensa', art: 'la', cosa: 'prodotto delle botteghe', liv: 16 },
 }
 export const TIPI_DI_SILO = Object.keys(SILOS)
+/** Il silo di cui un pezzo è l'edificio (`silo` → `terra`), o null. */
+export const siloDelPezzo = tipo => TIPI_DI_SILO.find(t => SILOS[t].edificio === tipo) || null
+
+// Quanti ingrandimenti regge un edificio prima di essere grande al massimo, e quanti edifici di un silo si possono avere: 6 × 3 = 18 passi,
+// 44 pezzi per scomparto (la 2D: 28 posti costano già sette ore di esercizi). Oltre, ne serve un altro accanto: così non diventa gigante.
+export const PASSI_PER_EDIFICIO = 6
+export const EDIFICI_PER_SILO = 3
+/** Quanti edifici servono per `passi` ingrandimenti (almeno uno). */
+export const edificiPerPassi = passi => Math.max(1, Math.ceil(Math.max(0, passi) / PASSI_PER_EDIFICIO))
+/** Quanto è cresciuto l'edificio numero `i` (0 il primo) di un silo ingrandito `passi` volte: 0 appena costruito, PASSI_PER_EDIFICIO al massimo.
+    Il secondo nasce già con il suo primo passo: comprarlo è un ingrandimento. */
+export const tagliaDelEdificio = (passi, i) => Math.max(0, Math.min(PASSI_PER_EDIFICIO, passi - PASSI_PER_EDIFICIO * i))
 
 /** In quale silo sta una merce (la chiave che sta in `merci`, `prodotti` o `lana`), o null se non è una merce. */
 export function siloDi(k) {
@@ -47,5 +61,6 @@ export function guastiDeiSilos() {
   if (!(SCOMPARTO_BASE === 8 && SCOMPARTO_PIU === 2)) g.push('gli scomparti non sono 8 più 2 come in 2D')
   for (let n = 0; n < 6; n++) if (!(prezzoDelPasso(n + 1) > prezzoDelPasso(n))) g.push(`l'ingrandimento ${n + 2} non costa più del precedente`)
   for (const t of TIPI_DI_SILO) if (!merciDelSilo(t).length) g.push(`il silo ${t} non tiene niente`)
+  for (const t of TIPI_DI_SILO) if (siloDelPezzo(SILOS[t].edificio) !== t) g.push(`il silo ${t} non ha un edificio suo`)
   return g
 }

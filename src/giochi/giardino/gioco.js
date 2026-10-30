@@ -17,6 +17,8 @@ export default {
   // in prova: sta dietro l'interruttore dei giochi sperimentali dei genitori (docs/genitori/interruttori.md)
   sperimentale: true,
   tappe: QUANTE_TAPPE,
+  // gli amici sulla mappa (docs/core/amici-nei-giochi.md): il cursore della campagna; finite le tappe la mappa non ha un posto, solo la riga in cima
+  amici: { tappe: QUANTE_TAPPE, dove: 'in fondo al giardino' },
 
   riassunto(av = { tappa: 0, stelle: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)

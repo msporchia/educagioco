@@ -6,11 +6,12 @@ import { indirizzo } from '../insieme/rete.js'
 const ATTESA = 4000                                   // ms per fare una richiesta prima di darla per persa
 const TENTATIVI = 3
 
-async function chiedi(percorso, corpo, { servizio = indirizzo(), fetchImpl = globalThis.fetch, tentativi = TENTATIVI, attesa = ATTESA } = {}) {
+// `keepalive`: la richiesta parte anche se la pagina si sta chiudendo (la bacheca scritta quando l'app va in secondo piano)
+async function chiedi(percorso, corpo, { servizio = indirizzo(), fetchImpl = globalThis.fetch, tentativi = TENTATIVI, attesa = ATTESA, keepalive = false } = {}) {
   for (let i = 0; i < tentativi; i++) {
     const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), attesa)
     try {
-      const r = await fetchImpl(`${servizio}${percorso}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(corpo), signal: ctl.signal })
+      const r = await fetchImpl(`${servizio}${percorso}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(corpo), signal: ctl.signal, keepalive })
       const dato = await r.json().catch(() => ({}))
       clearTimeout(t)
       return { stato: r.status, ok: r.ok, dato }
@@ -36,6 +37,24 @@ export async function riscattaCodice(codice, opzioni) {
   if (r.stato === 404) throw new Error('questo codice non c\'è o è scaduto')
   if (!r.ok || !/^[a-z0-9]{32}$/.test(r.dato.chiave || '')) throw new Error('il servizio degli amici non risponde ora')
   return r.dato.chiave
+}
+
+/* La bacheca di un'amicizia (docs/core/amici-bacheca.md): si lascia la propria istantanea (`dati`, o null per leggere soltanto) e
+   si ritira quella dell'amico. Torna l'oggetto dell'amico, null se non ha scritto, undefined se non si è riusciti (in silenzio). */
+export async function scambiaBacheca(chiave, id, dati, opzioni) {
+  const r = await chiedi('/amici/bacheca', { chiave, id, dati }, { tentativi: 1, ...opzioni })
+  if (!r || !r.ok) return undefined
+  return r.dato && typeof r.dato.altro === 'object' ? r.dato.altro : null
+}
+
+/* La fattoria in comune di un'amicizia (docs/fattoria3d/in-comune.md): si mandano le proprie mosse (e la fotografia, uscendo) e
+   si ritirano quelle dopo `dopo`. Torna { ultimo, corsia, foto, mosse }, null se l'amicizia è già di altri due, undefined senza rete. */
+export async function scambiaComune(chiave, id, { dopo = -1, mosse = [], foto = null } = {}, opzioni) {
+  const r = await chiedi('/amici/comune', { chiave, id, dopo, mosse, ...(foto ? { foto } : {}) }, { tentativi: 1, ...opzioni })
+  if (!r) return undefined
+  if (r.stato === 409) return null
+  if (!r.ok || !Number.isInteger(r.dato?.ultimo) || !Array.isArray(r.dato.mosse)) return undefined
+  return r.dato
 }
 
 export const RITARDI = [2000, 4000, 8000, 16000, 32000, 60000]

@@ -39,6 +39,8 @@
 .gi-tappa b { display: block; font-size: 16px }
 .gi-tappa i { display: block; font-style: normal; font-size: 12.5px; color: var(--gi-tenue);
               overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.gi-tappa .gi-qui { margin-top: 3px; font-size: 12.5px; color: var(--gi-inchiostro) }
+.gi-davanti { margin: 0; text-align: center; font-size: 14px; font-weight: 700; color: var(--gi-inchiostro) }
 .gi-tappa .gi-stelle { font-size: 14px; flex: none }
 .gi-chiusa { opacity: .5 }
 .gi-adesso { border-left-color: #e8a82e }

@@ -1,7 +1,7 @@
 /* Gli amici sul telefono (docs/core/amici.md): l'archivio, i messaggi, il collegamento che si rimette in piedi da solo e il motore
    che sa chi è online e riceve gli inviti. Il servizio è finto; quello vero lo prova servizio/inoltro/prova.mjs. */
 import { dati, carica, accendi, mettiOnline, aggiungi, impara, togli, casuale, MAX_AMICI, AMICI_DI_BASE } from '../../src/store/amici.js'
-import { leggi, presento, invito, risposta } from '../../src/amici/messaggi.js'
+import { leggi, presento, invito, risposta, qui, via } from '../../src/amici/messaggi.js'
 import { Ponte } from '../../src/amici/rete.js'
 import { creaCodice, riscattaCodice } from '../../src/amici/rete.js'
 import { stato, avvia, ferma, invita, rispondi, diciGioco, aggiungiPonte, togliPonte, DURATA_INVITO } from '../../src/amici/servizio.js'
@@ -58,6 +58,12 @@ const ultimo = () => Finto.tutti[Finto.tutti.length - 1]
   controlla('un id storto non passa', leggi({ k: 'presento', id: 'X', nome: 'a' }) === null)
   controlla('un nome che non è testo non passa', leggi({ k: 'presento', id: 'leonardo1', nome: 5 }) === null)
   controlla('un gioco con simboli diventa «niente»', leggi({ k: 'presento', id: 'leonardo1', nome: 'L', gioco: '<script>' }).gioco === null)
+  // il contadino nella fattoria in comune (docs/fattoria3d/in-comune.md)
+  const q = leggi(qui({ x: 3.14159, z: -2, d: 1.5, r: true, g: 'falcia', a: { persona: 'contadina', cappello: 'paglia' } }))
+  controlla('dove sta il contadino arriva arrotondato, col gesto e l\'abito', q.k === 'qui' && q.x === 3.14 && q.r && q.g === 'falcia' && q.a.cappello === 'paglia')
+  controlla('un gesto che non c\'è diventa «niente», un capo con simboli si toglie', leggi({ k: 'qui', x: 1, z: 1, d: 0, g: 'balla', a: { cappello: '<b>' } }).g === null && leggi({ k: 'qui', x: 1, z: 1, d: 0, a: { cappello: '<b>' } }).a === null)
+  controlla('un posto che non è un numero non passa', leggi({ k: 'qui', x: 'a', z: 1, d: 0 }) === null && leggi({ k: 'qui', x: 1e9, z: 1, d: 0 }) === null)
+  controlla('«via» quando esce', leggi(via())?.k === 'via' && JSON.stringify(qui({ x: 1, z: 2, d: 0 })).length < 80)
   controlla('un invito ha un gioco e dei dati', leggi(invito('arena', { terreno: 'bosco' }))?.k === 'invito' && leggi({ k: 'invito', gioco: 'arena', dati: [] }) === null && leggi({ k: 'invito', gioco: 'arena' }) === null)
   controlla('una risposta è sì o no, non altro', leggi(risposta(true)).ok === true && leggi({ k: 'risposta', ok: 'sì' }) === null)
   controlla('il resto non si legge', leggi(null) === null && leggi('x') === null && leggi({ k: 'chat', testo: 'ciao' }) === null)

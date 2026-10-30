@@ -44,6 +44,8 @@
 .ar-tappa.ar-adesso { box-shadow: 0 3px 0 var(--ar-accento) }
 .ar-tappa.ar-infinita { border-left-color: #7a5cf0 }
 .ar-infinita .ar-stelle { letter-spacing: 0; color: #5b3fc8 }
+.ar-tappa .ar-qui { margin-top: 3px; font-size: 12.5px; color: var(--ar-inchiostro) }
+.ar-davanti { margin: 0; text-align: center; font-size: 14px; font-weight: 700; color: var(--ar-inchiostro) }
 
 /* la difficoltà: tre pulsanti in cima alla mappa, quello scelto pieno */
 .ar-livelli { display: flex; gap: 8px; margin: 0 0 10px }

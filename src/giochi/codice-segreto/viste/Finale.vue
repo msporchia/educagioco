@@ -14,6 +14,7 @@ defineProps({
   libero: { type: Boolean, default: false },
   // solo nel gioco libero: { record, frase }, vedi docs/core/primati.md
   primato: { type: Object, default: null },
+  amici: { type: String, default: '' },        // la fila contro i record degli amici, in parole
 })
 defineEmits(['avanti', 'esci'])
 </script>
@@ -43,6 +44,7 @@ defineEmits(['avanti', 'esci'])
         🥇 {{ primato.frase }}
       </p>
       <p v-else-if="primato && primato.frase" data-primato="no">🔑 {{ primato.frase }}</p>
+      <p v-if="amici" class="cs-contro-amici" data-contro-amici>{{ amici }}</p>
 
       <p v-if="che === 'partita' && vinta && !libero && rimaste > 0">
         ne {{ rimaste === 1 ? 'manca ancora uno' : `mancano ancora ${rimaste}` }}

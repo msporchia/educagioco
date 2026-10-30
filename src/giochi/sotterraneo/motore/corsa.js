@@ -39,6 +39,9 @@ import { MetodiDeiPreparati } from './preparati.js'
 import { MetodiDellaRicomparsa } from './ricomparsa.js'
 import { MetodiDelleBotti } from './botti.js'
 import { RISPOSTE_PER_ENERGIA, aGrado } from '../dati/abilita.js'
+import { conLePersone } from './persone.js'
+import { MetodiInDue } from './in-due.js'
+import { ipot, arcocoseno } from '../../../motore/conti-uguali.js'   // uguali al bit sui due telefoni (docs/sotterraneo/in-due.md)
 
 // nella storia i forzieri e i mostri di tutti i giorni danno solo quello che si consuma: la roba la dà la riga
 // della storia (dati/storia.js), o la discesa diventerebbe una lotteria e la tabella una bugia
@@ -283,7 +286,7 @@ export class Corsa extends Corredo {
 
   // l'eroe si volta (un passo, o il tocco su una cosa): se cambia il cono, la luce si rifà subito
   giraVerso(dx, dy) {
-    const d = Math.hypot(dx, dy)
+    const d = ipot(dx, dy)
     if (d < 0.001) return
     const v = this.versoEroe
     this.verso = { dx: dx / d, dy: dy / d }
@@ -299,6 +302,7 @@ export class Corsa extends Corredo {
   }
 
   aggiornaLuce() {
+    if (this.persone.length > 1 && !this._unaLuce) return this.aggiornaLuceDiTutti()   // in due la luce è dei due coni
     const liv = this.livello, L = liv.largo, A = liv.alto
     const cx = Math.floor(this.eroe.x), cy = Math.floor(this.eroe.y)
     const ox = cx + 0.5, oy = cy + 0.5
@@ -314,11 +318,11 @@ export class Corsa extends Corredo {
     }
     const r = Math.ceil(cono) + 1
     for (let x = cx - r; x <= cx + r; x++) for (let y = cy - r; y <= cy + r; y++) {
-      const dx = x + 0.5 - ox, dy = y + 0.5 - oy, d = Math.hypot(dx, dy)
+      const dx = x + 0.5 - ox, dy = y + 0.5 - oy, d = ipot(dx, dy)
       // l'alone attorno e il cono davanti: piena nel cuore, sfuma ai bordi
       let f = Math.max(0, Math.min(1, (alone - d) / ALONE_SFUMA))
       if (d > 0 && d <= cono) {
-        const ang = Math.acos(Math.max(-1, Math.min(1, (dx * v.dx + dy * v.dy) / d)))
+        const ang = arcocoseno(Math.max(-1, Math.min(1, (dx * v.dx + dy * v.dy) / d)))
         const lungo = Math.min(1, (cono - d) / (cono * SFUMA_CONO))
         const largo = Math.min(1, (mezza - ang) / (mezza * sfumaArco))
         f = Math.max(f, Math.max(0, lungo) * Math.max(0, largo))
@@ -396,7 +400,7 @@ export class Corsa extends Corredo {
     for (const r of this.livello.robe) {
       // la scala che sale si tocca solo sulla sua cella: l'eroe ci nasce sopra, e un tocco vicino non deve aprirla
       if (r.che === 'gemme' || r.che === 'scala-su' || !this.toccabile(r)) continue
-      const d = Math.hypot(r.x - c.x, r.y - c.y)
+      const d = ipot(r.x - c.x, r.y - c.y)
       if (d <= largo && d < quanto) { quanto = d; vicina = r }
     }
     return vicina
@@ -453,6 +457,7 @@ export class Corsa extends Corredo {
 
   // col foglio aperto non si muove niente: un mostro che arriva mentre si legge è un colpo mai visto arrivare
   passo(dt) {
+    if (this.persone.length > 1) return this.passoInDue(dt)   // in due il mondo non si ferma per una domanda (motore/in-due.js)
     if (this.foglio || this.finita) return
     this.muoviMostri(Math.min(0.05, dt))
     if (this.foglio) return                 // un mostro ci ha raggiunti
@@ -462,62 +467,70 @@ export class Corsa extends Corredo {
   // un mostro dorme finché non ti avvicini nella sua stanza (SVEGLIA celle, con la luce o senza), e smette appena esci:
   // è la regola che rende la stanza un confine; la luce non c'entra (docs/sotterraneo/regole.md, «La luce»)
   muoviMostri(dt) {
+    if (this.persone.length > 1) return this.muoviMostriInDue(dt)
     const cella = { x: Math.floor(this.eroe.x), y: Math.floor(this.eroe.y) }
     const mia = this.livello.stanzaDi(cella.x, cella.y)
     for (const m of this.livello.robe) {
       if (m.che !== 'mostro' || m.morto) continue
-      if (m.fx == null) { m.fx = m.x + 0.5; m.fy = m.y + 0.5; m.casa = { x: m.x, y: m.y }; m.calmo = 0 }
-      if (m.calmo > 0) m.calmo -= dt
-      const sua = this.livello.stanzaDi(m.casa.x, m.casa.y)
-      const vicino = Math.hypot(m.fx - this.eroe.x, m.fy - this.eroe.y) <= SVEGLIA
-      const sveglio = !!(mia && sua && mia === sua && m.calmo <= 0 && (m.sveglio || vicino))
-      m.sveglio = sveglio
-
-      // nella luce va dritto; nell'ombra cerca di arrivare alle spalle, ma con la torcia accesa non ci prova
-      // nemmeno: va dritto anche lui (docs/sotterraneo/luce.md)
-      const nellaLuce = this.inLuce(m.y * this.livello.largo + m.x)
-      const meta = !sveglio ? { x: m.casa.x + 0.5, y: m.casa.y + 0.5 }
-        : nellaLuce || this.torciaAccesa ? this.eroe : this.versoLeSpalle(m, sua)
-      const dx = meta.x - m.fx, dy = meta.y - m.fy
-      const d = Math.hypot(dx, dy)
-
-      if (sveglio && Math.hypot(this.eroe.x - m.fx, this.eroe.y - m.fy) < 0.75) {   // ti ha preso                 // ti ha preso
-        this.strada = null; this.mira = null; this.bersaglio = null
-        this.scontro(m)
-        return
-      }
-      if (d < 0.05) continue
-      const v = (sveglio ? PASSO_MOSTRO : PASSO_RIENTRO) * dt
-      let nx = m.fx + dx / d * Math.min(v, d), ny = m.fy + dy / d * Math.min(v, d)
-      // non esce mai dalla sua stanza: il muro ferma l'asse che lo porterebbe fuori e lascia libero l'altro
-      if (sua) {
-        if (!this.livello.dentro(sua, Math.floor(nx), Math.floor(m.fy))) nx = m.fx
-        if (!this.livello.dentro(sua, Math.floor(nx), Math.floor(ny))) ny = m.fy
-      }
-      if (Math.abs(dx) > 0.05) m.guarda = dx < 0 ? 'sx' : 'dx'
-      const fx0 = m.fx, fy0 = m.fy
-      const liberoX = this.livello.calpestabile(Math.floor(nx), Math.floor(m.fy)), liberoY = this.livello.calpestabile(Math.floor(m.fx), Math.floor(ny))
-      if (liberoX) m.fx = nx
-      if (liberoY) m.fy = ny
-      // contro una colonna o un relitto (la stanza ne ha) non resta a guardarli: gira attorno per la strada più corta dentro la
-      // stanza, o i relitti lo fermerebbero e la discesa sarebbe più facile di quanto è tarata (docs/sotterraneo/piani-caverne.md)
-      if ((!liberoX || !liberoY) && sua && sveglio) {
-        const strada = this.stradaDelMostro(m, sua, meta)
-        if (strada) {
-          const px = strada.x + 0.5 - fx0, py = strada.y + 0.5 - fy0, dp = Math.hypot(px, py)
-          if (dp > 1e-6) { m.fx = fx0 + px / dp * Math.min(v, dp); m.fy = fy0 + py / dp * Math.min(v, dp) }
-        }
-      }
-      // fermo contro una colonna senza strada: scivola di lato invece di restare a guardarla
-      if (m.fx === fx0 && m.fy === fy0 && sua) {
-        const verso = (m.casa.x + m.casa.y) % 2 ? 1 : -1
-        for (const s of [verso, -verso]) {
-          const sx = m.fx - dy / d * v * s, sy = m.fy + dx / d * v * s
-          if (this.livello.dentro(sua, Math.floor(sx), Math.floor(sy)) && this.livello.calpestabile(Math.floor(sx), Math.floor(sy))) { m.fx = sx; m.fy = sy; break }
-        }
-      }
-      m.x = Math.floor(m.fx); m.y = Math.floor(m.fy)
+      if (this.muoviUnMostro(m, dt, mia)) return
     }
+  }
+
+  // un mostro verso l'eroe di adesso (`mia`: la sua stanza); true se lo ha raggiunto e lo scontro è aperto
+  muoviUnMostro(m, dt, mia) {
+    if (m.fx == null) { m.fx = m.x + 0.5; m.fy = m.y + 0.5; m.casa = { x: m.x, y: m.y }; m.calmo = 0 }
+    if (m.calmo > 0) m.calmo -= dt
+    const sua = this.livello.stanzaDi(m.casa.x, m.casa.y)
+    const vicino = ipot(m.fx - this.eroe.x, m.fy - this.eroe.y) <= SVEGLIA
+    const sveglio = !!(mia && sua && mia === sua && m.calmo <= 0 && (m.sveglio || vicino))
+    m.sveglio = sveglio
+
+    // nella luce va dritto; nell'ombra cerca di arrivare alle spalle, ma con la torcia accesa non ci prova
+    // nemmeno: va dritto anche lui (docs/sotterraneo/luce.md)
+    const nellaLuce = this.inLuce(m.y * this.livello.largo + m.x)
+    const meta = !sveglio ? { x: m.casa.x + 0.5, y: m.casa.y + 0.5 }
+      : nellaLuce || this.torciaAccesa ? this.eroe : this.versoLeSpalle(m, sua)
+    const dx = meta.x - m.fx, dy = meta.y - m.fy
+    const d = ipot(dx, dy)
+
+    if (sveglio && ipot(this.eroe.x - m.fx, this.eroe.y - m.fy) < 0.75) {   // ti ha preso
+      if (this.foglio) return false   // in due: chi sta rispondendo non si tocca, il mostro aspetta che abbia finito
+      this.strada = null; this.mira = null; this.bersaglio = null
+      this.scontro(m)
+      return true
+    }
+    if (d < 0.05) return false
+    const v = (sveglio ? PASSO_MOSTRO : PASSO_RIENTRO) * dt
+    let nx = m.fx + dx / d * Math.min(v, d), ny = m.fy + dy / d * Math.min(v, d)
+    // non esce mai dalla sua stanza: il muro ferma l'asse che lo porterebbe fuori e lascia libero l'altro
+    if (sua) {
+      if (!this.livello.dentro(sua, Math.floor(nx), Math.floor(m.fy))) nx = m.fx
+      if (!this.livello.dentro(sua, Math.floor(nx), Math.floor(ny))) ny = m.fy
+    }
+    if (Math.abs(dx) > 0.05) m.guarda = dx < 0 ? 'sx' : 'dx'
+    const fx0 = m.fx, fy0 = m.fy
+    const liberoX = this.livello.calpestabile(Math.floor(nx), Math.floor(m.fy)), liberoY = this.livello.calpestabile(Math.floor(m.fx), Math.floor(ny))
+    if (liberoX) m.fx = nx
+    if (liberoY) m.fy = ny
+    // contro una colonna o un relitto (la stanza ne ha) non resta a guardarli: gira attorno per la strada più corta dentro la
+    // stanza, o i relitti lo fermerebbero e la discesa sarebbe più facile di quanto è tarata (docs/sotterraneo/piani-caverne.md)
+    if ((!liberoX || !liberoY) && sua && sveglio) {
+      const strada = this.stradaDelMostro(m, sua, meta)
+      if (strada) {
+        const px = strada.x + 0.5 - fx0, py = strada.y + 0.5 - fy0, dp = ipot(px, py)
+        if (dp > 1e-6) { m.fx = fx0 + px / dp * Math.min(v, dp); m.fy = fy0 + py / dp * Math.min(v, dp) }
+      }
+    }
+    // fermo contro una colonna senza strada: scivola di lato invece di restare a guardarla
+    if (m.fx === fx0 && m.fy === fy0 && sua) {
+      const verso = (m.casa.x + m.casa.y) % 2 ? 1 : -1
+      for (const s of [verso, -verso]) {
+        const sx = m.fx - dy / d * v * s, sy = m.fy + dx / d * v * s
+        if (this.livello.dentro(sua, Math.floor(sx), Math.floor(sy)) && this.livello.calpestabile(Math.floor(sx), Math.floor(sy))) { m.fx = sx; m.fy = sy; break }
+      }
+    }
+    m.x = Math.floor(m.fx); m.y = Math.floor(m.fy)
+    return false
   }
 
   // la prossima cella sulla strada più corta di un mostro verso la sua meta, tutta dentro la sua stanza (e mai su un ostacolo); null
@@ -543,7 +556,7 @@ export class Corsa extends Corredo {
     const dietro = { x: e.x - v.dx * DIETRO, y: e.y - v.dy * DIETRO }
     // già nel cono dietro (lo stesso dell'agguato, motore/scontro.js): dritto alle spalle; di lato prima più indietro, o
     // toccherebbe l'eroe dal fianco
-    const r = Math.hypot(rx, ry)
+    const r = ipot(rx, ry)
     if (r > 1e-6 && (rx * v.dx + ry * v.dy) / r < -0.5) return dietro
     if (rx * v.dx + ry * v.dy <= ALLA_PAR) return { x: e.x - v.dx * LARGO_DIETRO, y: e.y - v.dy * LARGO_DIETRO }
     const lato = rx * -v.dy + ry * v.dx >= 0 ? 1 : -1
@@ -552,7 +565,7 @@ export class Corsa extends Corredo {
       w.x = Math.min(stanza.x + stanza.w - 0.5, Math.max(stanza.x + 0.5, w.x))
       w.y = Math.min(stanza.y + stanza.h - 0.5, Math.max(stanza.y + 0.5, w.y))
     }
-    return Math.hypot(w.x - m.fx, w.y - m.fy) < 0.5 ? dietro : w
+    return ipot(w.x - m.fx, w.y - m.fy) < 0.5 ? dietro : w
   }
 
   muoviEroe(dt) {
@@ -563,8 +576,9 @@ export class Corsa extends Corredo {
     const meta = this.strada[0]
     const mx = meta.x + 0.5, my = meta.y + 0.5
     const dx = mx - this.eroe.x, dy = my - this.eroe.y
-    const d = Math.hypot(dx, dy)
+    const d = ipot(dx, dy)
     const v = PASSO_EROE * dt
+    if (this.persone.length > 1 && this.troppoLontano(meta)) return this.fermatiQui()   // in due non ci si allontana troppo
     if (d > 0.001) this.giraVerso(dx, dy)
     if (d <= v) {
       this.eroe.x = mx; this.eroe.y = my
@@ -715,7 +729,7 @@ export class Corsa extends Corredo {
   // unico ingresso dall'esterno quando un foglio chiede qualcosa; torna cosa è successo per il suono e la scossa giusti
   rispondi(giusto, { saltata = false } = {}) {
     const f = this.foglio
-    if (!f) return null
+    if (!f || this.nonTocca(f)) return null
     // una domanda saltata (il tasto dei grandi, docs/core/comandi.md) fa il suo effetto nel
     // mondo ma non è una risposta data: non entra in `domande` né in `giuste`, che pagano l'abisso
     if (!saltata) {
@@ -822,17 +836,22 @@ export class Corsa extends Corredo {
     // l'esperienza: tanta quanto è forte la sua specie e quanto è giù il posto (dati/livelli.js), il grosso molta di più
     // e la dice un numerino «+N ✨» che sale dal campo (Gioco.vue). In una zona grigia un quarto, nell'abisso un terzo (dati/zone.js)
     // (il «grigio» si legge dalla forza dell'eroe, non dal livello: motore/forza.js; fuori dalle zone non serve)
-    const forza = this.tappa && this.tappa.potenza ? forzaDelCorredo(this) : this.livelloEroe
     const potenza = potenzaDelMostro(m)   // la sua vita, il suo attacco, i suoi poteri e il suo grado: una formula sola (dati/livelli.js)
-    const esp = Math.max(1, Math.round(esperienzaDi(potenza) * espNellaZona(this.tappa, forza)))
-    this.eventi.push({ che: 'esp', esp, x: m.x, y: m.y })
-    this.guadagna(esp)
-    // 💚 rigenera: ogni mostro battuto rimette in piedi un poco
-    const rig = this.addosso('rigenera')
-    if (rig && this.vita < this.vitaMax) this.vita = Math.min(this.vitaMax, this.vita + rig)
-    // 🍃 Respiro del bosco: l'energia torna battendo i mostri
-    const fiato = this.sempre('energiaPerMostro')
-    if (fiato) this.energia = Math.min(this.energiaMax, this.energia + fiato)
+    const premia = () => {
+      const forza = this.tappa && this.tappa.potenza ? forzaDelCorredo(this) : this.livelloEroe
+      const esp = Math.max(1, Math.round(esperienzaDi(potenza) * espNellaZona(this.tappa, forza)))
+      this.eventi.push({ che: 'esp', esp, x: m.x, y: m.y })
+      this.guadagna(esp)
+      // 💚 rigenera: ogni mostro battuto rimette in piedi un poco
+      const rig = this.addosso('rigenera')
+      if (rig && this.vita < this.vitaMax) this.vita = Math.min(this.vitaMax, this.vita + rig)
+      // 🍃 Respiro del bosco: l'energia torna battendo i mostri
+      const fiato = this.sempre('energiaPerMostro')
+      if (fiato) this.energia = Math.min(this.energiaMax, this.energia + fiato)
+    }
+    // in due l'esperienza va intera a ognuno di chi l'ha combattuto
+    if (this.persone.length > 1) for (const i of this.chiCombatte()) this.come(i, premia)
+    else premia()
     const scheda = MOSTRI[m.tipo]
     this.livello.robe.push({ che: 'gemme', x: m.x, y: m.y, em: '💎',
                              quante: gemmeDi(potenza) })
@@ -848,24 +867,24 @@ export class Corsa extends Corredo {
     if (premio) this.posaRoba({ che: 'cosa', cosa: premio, em: COSE[premio].em }, vicino)
     else if (m.chiave || tiro < (m.grosso || m.caporale || this.indice === 0 || CURE_DAI_MOSTRI.strada < 0 ? (scheda.droppa != null ? scheda.droppa : 0.5) : CURE_DAI_MOSTRI.strada)) {
       // da bere (anche nell'abisso: la roba da mettersi addosso la dà il tiro qui sotto, a tono)
-      const cosa = pescaCosa(daBere, { rnd: () => this.rnd(), tua: k => this.porta(k) })
+      const cosa = pescaCosa(daBere, { rnd: () => this.rnd(), tua: this.tuaDelBottino() })
       this.posaRoba({ che: 'cosa', cosa, em: COSE[cosa].em, da: m.grosso ? 'grosso' : m.caporale ? 'caporale' : 'strada' }, vicino)
     }
     // il mostro grosso: di sicuro un pezzo raro o meglio, e il suo pezzo col nome
     if (m.grosso) {
       this.posaPezzo(this.trovato(pezzoNuovo({ livello: this.livelloDelTrovato('grosso', m.x, m.y), chi: 'grosso', fortuna: this.fortuna,
-                                               rnd: () => this.rnd(), tua: k => this.porta(k) }), m.x, m.y), { x: m.x - 1, y: m.y })
+                                               rnd: () => this.rnd(), tua: this.tuaDelBottino() }), m.x, m.y), { x: m.x - 1, y: m.y })
       this.posaPezzo(pezzoDelGrosso(GROSSI[m.grosso].pezzo, this.livelloDelTrovato('grosso', m.x, m.y, 1)), { x: m.x, y: m.y + 1 })
       // il suo copricapo col nome, solo dove i copricapi sono accesi (il 3D): niente tiri, il resto del bottino non si sposta
       if (this.copricapi && GROSSI[m.grosso].copricapo) this.posaPezzo(pezzoDelGrosso(GROSSI[m.grosso].copricapo, this.livelloDelTrovato('grosso', m.x, m.y, 1)), { x: m.x - 1, y: m.y + 1 })
     } else if (this.rnd() < pezzoDalMostro(scheda)) {
       // a volte anche un mostro qualunque lascia un pezzo da mettersi addosso, a tono col posto e con l'eroe
       this.posaPezzo(this.trovato(pezzoNuovo({ livello: this.livelloDelTrovato('mostro', m.x, m.y), chi: 'mostro', fortuna: this.fortuna,
-                                               rnd: () => this.rnd(), tua: k => this.porta(k) }), m.x, m.y), { x: m.x, y: m.y + 1 })
+                                               rnd: () => this.rnd(), tua: this.tuaDelBottino() }), m.x, m.y), { x: m.x, y: m.y + 1 })
     }
     // il signore di una regione di sopra (motore/aperta.js): un raro della fascia di sicuro, come il grosso ma al livello di un mostro
     if (m.signore) this.posaPezzo(this.trovato(pezzoNuovo({ livello: this.livelloDelTrovato('mostro', m.x, m.y), chi: 'grosso', fortuna: this.fortuna,
-                                                            rnd: () => this.rnd(), tua: k => this.porta(k) }), m.x, m.y, 1), { x: m.x - 1, y: m.y })
+                                                            rnd: () => this.rnd(), tua: this.tuaDelBottino() }), m.x, m.y, 1), { x: m.x - 1, y: m.y })
     // l'elisir del toro: rarissimo, dal grosso o da un caporale (e dai forzieri)
     const chi = m.grosso ? 'grosso' : m.caporale ? 'caporale' : null
     if (chi && elisirCade(chi, this.seme, this.piano, m.x, m.y)) this.posaPezzo('elisir-toro', { x: m.x + 1, y: m.y + 1 })
@@ -1020,8 +1039,8 @@ export class Corsa extends Corredo {
     let cosa = premio
     if (!cosa && tiro < (this.indice >= 0 ? 0.34 : 0.6))
       cosa = this.trovato(pezzoNuovo({ livello: this.livelloDelTrovato('forziere', f.x, f.y), chi: 'forziere', fortuna: this.fortuna,
-                                       rnd: () => this.rnd(), tua: k => this.porta(k) }), f.x, f.y)
-    if (!cosa) cosa = pescaCosa(NEI_FORZIERI_DELLA_STORIA, { rnd: () => this.rnd(), tua: k => this.porta(k) })
+                                       rnd: () => this.rnd(), tua: this.tuaDelBottino() }), f.x, f.y)
+    if (!cosa) cosa = pescaCosa(NEI_FORZIERI_DELLA_STORIA, { rnd: () => this.rnd(), tua: this.tuaDelBottino() })
     this.posaPezzo(cosa, { x: f.x, y: f.y + 1 }, 'forziere')
     if (elisirCade('forziere', this.seme, this.piano, f.x, f.y)) this.posaPezzo('elisir-toro', { x: f.x - 1, y: f.y + 1 })
     if (ampollaCade('forziere', this.seme, this.piano, f.x, f.y)) this.posaPezzo('ampolla-vita', { x: f.x + 1, y: f.y }, 'ampolla')
@@ -1049,8 +1068,10 @@ export class Corsa extends Corredo {
   }
 
   chiudi() {
+    const f = this.foglio
     this.foglio = null
     this.chiesta = null
+    if (this.persone.length > 1) this.dopoChiuso(f)   // in due lo scontro si chiude per tutti, e chi aveva da fare ci entra
   }
 
   // le pozioni in tasca, per la casella della barra (docs/sotterraneo/barra.md): le cure e l'elisir, che è una
@@ -1157,6 +1178,7 @@ export class Corsa extends Corredo {
   }
 
   scendi() {
+    if (this.persone.length > 1) return this.scendiInDue()   // in due si scende insieme (motore/in-due.js)
     if (!this.foglio || this.foglio.che !== 'scala') return null
     // un piano già toccato (si era risaliti) non dà di nuovo la vita del piano né il riposo, e non conta due volte
     const nuovo = this.piano + 1 > this.fondo
@@ -1188,6 +1210,7 @@ export class Corsa extends Corredo {
 
   // sale al piano di sopra, e si compare accanto alla scala che scende da cui si era venuti. Dal primo piano non si sale: si esce
   sali() {
+    if (this.persone.length > 1) return this.saliInDue()
     if (!this.foglio || this.foglio.che !== 'scala-su' || this.piano === 0) return null
     this.lasciaIlPiano()
     this.piano--
@@ -1298,4 +1321,5 @@ export class Corsa extends Corredo {
 }
 
 // lo scontro a gruppi (motore/scontro.js) fa parte della Corsa
-Object.assign(Corsa.prototype, MetodiDelloScontro, MetodiDellOrologio, MetodiDeiPreparati, MetodiDellaRicomparsa, MetodiDelleBotti)
+Object.assign(Corsa.prototype, MetodiDelloScontro, MetodiDellOrologio, MetodiDeiPreparati, MetodiDellaRicomparsa, MetodiDelleBotti, MetodiInDue)
+conLePersone(Corsa)   // quello che è dell'eroe sta nella persona di adesso (motore/persone.js)

@@ -18,7 +18,7 @@ const { pezzoPer } = await import('../../src/giochi/fattoria3d/motore/migra.js')
 
 /** Le voci della 2D che non sono decorazioni e quindi non hanno un pezzo decorativo: il perché (parità: sono altrove). */
 const NON_DECORAZIONI = {
-  silo: 'i silos non sono pezzi da mettere: la 3D ha tre magazzini di serie, ingrandibili dall\'inventario (parita/colture-e-catena.md C11)',
+  silo: 'i silos non sono decorazioni: sono i magazzini, edifici che crescono (docs/fattoria3d/magazzini.md)',
   silo_bianco: 'idem: il magazzino della stalla',
   dispensa: 'idem: il magazzino della bottega',
   peschiera: 'la pesca della 3D (molo, porticciolo) ne prende il posto, allo stesso livello (dati/parita2d.js LIVELLO_PESCA)',

@@ -4,7 +4,9 @@
    in prova in docs/genitori/interruttori.md; senzaFine in
    docs/core/primati.md. L'albo dei progressi resta fuori di proposito. */
 import { GIOCHI_NUOVI, gioco } from '../giochi/indice.js'
-import { LIBERE_RACCONTO } from './campagne-castello.js' // le quattro partite libere del castello
+import { LIBERE_RACCONTO, RACCONTO } from './campagne-castello.js' // le quattro partite libere del castello, e le sue venti tappe
+import { SCALETTA, filaDi, posizioneOra } from './asteroidi.js'
+import { CAMPAGNE as GIORNATE } from './bancarella.js' // le sedici giornate della bancarella
 
 // un gioco nuovo che ha preso la carta di uno vecchio sta al suo posto, non in coda
 const AL_POSTO_DI_UNO_VECCHIO = ['inglese', 'spagnolo']
@@ -15,7 +17,8 @@ function riga(g) {
            copertina: g.copertina,
            sperimentale: !!g.sperimentale, serve: g.serve || [],
            chiede: g.chiede || [],
-           senzaFine: g.senzaFine || null }
+           senzaFine: g.senzaFine || null,
+           amici: g.amici || null }
 }
 
 export const GIOCHI = [
@@ -28,7 +31,9 @@ export const GIOCHI = [
       nome: 'Volo infinito', icona: '♾️', misura: 'punti', che: 'quanti punti fai',
       dettagli: d => [`livello ${d.livello}`, `${d.centri} centri`, `serie ${d.serie}`],
       vecchio: p => (p && p.best ? p.best.math : 0),
-    } },
+    },
+    // gli amici sulla rotta (docs/core/amici-bacheca.md): la fila sta in `profile.mate`, non nelle campagne
+    amici: { tappe: SCALETTA.length, dove: 'al volo infinito', tappa: p => posizioneOra(filaDi(p.mate)) } },
   // l'inglese e lo spagnolo a mondi hanno preso il posto delle carte di prima, e ne tengono il posto
   riga(gioco('inglese')),
   riga(gioco('spagnolo')),
@@ -44,11 +49,16 @@ export const GIOCHI = [
       sfide: LIBERE_RACCONTO.map((l, i) => ({
         chiave: l.chiave, nome: l.nome, icona: l.emoji, eredita: i === 0,
       })),
-    } },
+    },
+    // gli amici sul regno (docs/core/amici-nei-giochi.md): la tappa da fare sta in `profile.td`, non nelle campagne; finita, le libere al centro
+    amici: { tappe: RACCONTO.length, dove: 'alle partite libere',
+             tappa: p => { const td = p.td || {}; return td.libera ? RACCONTO.length : Math.floor(Number(td.tappa) || 0) } } },
   // senza `grandi`: la prima giornata è tarata sui 6,5 anni (portata: 32), contare monete non chiede di saper leggere
   { chiave: 'bancarella', ico: '🛒', nome: 'La bancarella',
     che: 'euro, centesimi e resto', area: 'numeri', come: 'fare',
-    copertina: { fondo: '#ffd36b', disegno: '#e8553f', scena: 'tenda' } },
+    copertina: { fondo: '#ffd36b', disegno: '#e8553f', scena: 'tenda' },
+    // gli amici sul giro del mondo (docs/core/amici-nei-giochi.md): la giornata da fare sta in `profile.mercato`; dopo l'ultima, la libera del Cairo
+    amici: { tappe: GIORNATE.length, dove: 'al mercato del Cairo', tappa: p => (p.mercato || {}).tappa } },
   // i giochi di src/giochi/ si aggiungono da soli dal loro manifesto: ripeterli qui sarebbe tenerli allineati a mano
   ...GIOCHI_NUOVI.filter(g => !AL_POSTO_DI_UNO_VECCHIO.includes(g.chiave)).map(riga),
   // lo stesso sotterraneo con la discesa disegnata in 3D, in prova sui telefoni: stessa avventura e stessa sosta (la chiave

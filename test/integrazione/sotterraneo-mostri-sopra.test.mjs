@@ -236,6 +236,32 @@ await page.evaluate(p => window.__mondo3d.porta(p.x, p.z), VESPE)
   uguale('e non è più per terra', (b.mondo?.sopra?.perTerra || []).length, 0)
 }
 
+/* ---------- 6. lasciata dalla scala, uno scontro sul prato non la fa rinascere ---------- */
+// la discesa di prima resta il punto da cui salvare: lo scontro sul prato la riscriveva, e la carta «torno giù» tornava sempre
+{
+  const c = campagnaSeminata({ finite: 2, eroe: 'cavaliere' })
+  Object.assign(c.cfg.avventure.cavaliere, { mondo: { giro: 0, parlato: true, firma: m.firma } })
+  await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
+  await azzera(page)
+  await semina(page, { coins: 0, settings: { sperimentali: true }, campagne: { sotterraneo: c } })
+  await page.evaluate(() => { location.hash = 'sotterraneo3d=1&stanza=al-scala-su' })
+  await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.corsa, null, { timeout: 30000 })
+  await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
+  await attendi(page, 1500)
+  await page.evaluate(() => { const c = window.__sotterraneo3d.corsa; c.interagisci(c.livello.robe.find(q => q.che === 'scala-su')) })
+  await page.waitForSelector('[data-azione="scorda-si"]', { timeout: 10000 })
+  await page.locator('[data-azione="scorda-si"]').click()
+  await mondoPronto(page)
+  await attendi(page, 1000)
+  uguale('uscito dalla scala: nessuna discesa a metà', (await avventura()).sosta || null, null)
+  await page.evaluate(p => window.__mondo3d.porta(p.x, p.z), VESPE)
+  await aspettaLoScontro()
+  uguale('lo scontro sul prato si vince', await finoAllaFine(true), 'finito')
+  await attendi(page, 1200)
+  uguale('e la discesa non è rinata', (await avventura()).sosta || null, null)
+  uguale('né la carta «torno giù»', await page.locator('[data-ripresa]').count(), 0)
+}
+
 uguale('nessun errore nella pagina', errori.join('\n'), '')
 await browser.close()
 riassunto('i mostri del mondo di sopra')

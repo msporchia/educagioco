@@ -1,6 +1,6 @@
 # Gli amici
 
-**Stato: fatto** (20 ottobre 2026; scelte dell'utente). **Da mettere online: il servizio** (`cd servizio/inoltro && npx wrangler deploy`, lo fa l'utente; senza, gli amici restano in grigio e non succede niente). Una lista di amici **per tutta l'app**, non per un gioco: ogni
+**Stato: fatto** (20 ottobre 2026; scelte dell'utente). Il servizio lo pubblica l'utente (`cd servizio/inoltro && npx wrangler deploy`); senza, gli amici restano in grigio e non succede niente. Per i genitori lo spiega la guida «Gli amici» (`amici` in `src/guide/contenuti.js`). Una lista di amici **per tutta l'app**, non per un gioco: ogni
 bambino ha i suoi amici, con il nome, e sa chi è online. Ci si invita a un gioco, a chi riceve compare un cartello e accetta.
 Oggi per sfidarsi in Castle Battle ci si passa un codice di cinque lettere ([../arena/multigiocatore.md](../arena/multigiocatore.md));
 con gli amici il codice sparisce. Servono il servizio su Cloudflare e internet: tutto il resto dell'app resta com'è, offline.
@@ -67,8 +67,9 @@ dopo che un grande ha fatto l'abbinamento col codice.
 **Cosa dice il passo** (parole per i grandi, in `src/amici/testi.js` insieme all'avviso della posta, così si cambiano in un posto):
 
 > **Giocare con gli amici** — Si può giocare insieme a un amico, ognuno sul suo telefono. Vedrà solo gli amici con cui voi
-> grandi vi scambiate un codice, e funziona solo in alcuni giochi (per ora Castle Battle). Si gioca insieme soltanto quando
-> lo decide lui: arriva un invito e dice sì o no. Non ci sono chat e non può parlare con nessuno. È un divertimento in più,
+> grandi vi scambiate un codice, e funziona solo in alcuni giochi (per ora Castle Battle — l'elenco viene da `amici/giochi.js`). Si gioca insieme soltanto quando
+> lo decide lui: arriva un invito e dice sì o no. In alcuni giochi vede anche fin dove sono arrivati i suoi amici e i loro
+> record, e loro vedono i suoi. Non ci sono chat e non può parlare con nessuno. È un divertimento in più,
 > il resto del gioco non cambia. Lo potete cambiare quando volete, dalle impostazioni.
 > [Attiva] [Più tardi]
 
@@ -124,6 +125,7 @@ non li legge):
 | `{ k: 'presento', id, nome, gioco }` | entrando, quando l'altro entra (`su`), e quando cambia qualcosa. `nome` ≤ 20 caratteri, `gioco` = a cosa sta giocando o `null` |
 | `{ k: 'invito', gioco, dati }` | `dati` per Castle Battle: `{ terreno, secondi }` |
 | `{ k: 'risposta', ok }` | accetto / no grazie |
+| `{ k: 'qui', x, z, d, r?, g?, a? }` / `{ k: 'via' }` | nella fattoria in comune: dove sta il mio contadino (fino a 5 al secondo), e quando esco ([../fattoria3d/in-comune.md](../fattoria3d/in-comune.md)) |
 
 Per Castle Battle non c'è un messaggio a parte per la stanza: chi invita crea il tavolo di sempre (`creaTavolo`), **si siede** (il
 suo collegamento deve essere `host`) e solo allora manda l'invito con il `codice` dentro (`dati: { terreno, secondi, codice }`);
@@ -161,7 +163,8 @@ limitano chi lo fa a mano, non un attacco vero. Dove guardare: pannello Cloudfla
 ## Cosa questo apre (non è in questo lavoro)
 
 - **Rientro automatico** nella stanza dopo una caduta: l'`id` del bambino dice che è lo stesso giocatore.
-- **Record fra amici** e **visite alla fattoria**: stessi messaggi, `k` nuovi.
+- **Visite alla fattoria**: stessi messaggi, `k` nuovi. La **fattoria in comune** di un'amicizia ha la sua richiesta (`POST /amici/comune`): [../fattoria3d/in-comune.md](../fattoria3d/in-comune.md). I **record fra amici** e dove è arrivato ognuno ci sono, anche senza
+  essere online insieme: [amici-bacheca.md](amici-bacheca.md).
 
 ## File e test
 

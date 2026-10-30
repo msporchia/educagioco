@@ -1,5 +1,6 @@
 <script setup>
 import Ripresa from '../../Ripresa.vue'
+import AmiciQui from '../../../components/amici/AmiciQui.vue'
 // La mappa della campagna, calcata su codice-segreto/viste/Mappa.vue con
 // le carte più grandi: qui legge un bambino di quattro anni. Riceve
 // tutto già deciso (aperto, stelle, colore).
@@ -7,6 +8,7 @@ defineProps({
   scalini: { type: Array, required: true },   // [{ chiave, nome, icona, dritta, tappe: [] }]
   ripresa: { type: Object, default: null },   // la tappa lasciata a metà: docs/prima-dopo/sosta.md
   chiede: { type: String, default: '' },      // la tappa che si sta per cominciare, se ce n'è una a metà
+  davanti: { type: String, default: '' },     // l'amico da raggiungere, in parole (docs/core/amici-nei-giochi.md)
 })
 defineEmits(['gioca', 'riprendi', 'scorda', 'comincia', 'annulla'])
 </script>
@@ -16,6 +18,7 @@ defineEmits(['gioca', 'riprendi', 'scorda', 'comincia', 'annulla'])
     <Ripresa :ripresa="ripresa" :chiede="chiede"
              @riprendi="$emit('riprendi')" @scorda="$emit('scorda')"
              @comincia="$emit('comincia')" @annulla="$emit('annulla')" />
+    <p v-if="davanti" class="pd-davanti" data-amico-davanti>{{ davanti }}</p>
     <section v-for="s in scalini" :key="s.chiave" class="pd-scalino">
       <h3>
         <span class="em">{{ s.icona }}</span>
@@ -33,6 +36,7 @@ defineEmits(['gioca', 'riprendi', 'scorda', 'comincia', 'annulla'])
             <b>{{ t.nome }}</b>
             <i v-if="t.aperta">{{ t.racconto }}</i>
             <i v-else>continua per aprirla</i>
+            <AmiciQui :amici="t.amici" class="pd-qui" :data-al="t.indice" />
           </span>
           <span class="pd-stelle em">{{ t.stelle ? '⭐'.repeat(t.stelle) : `${t.quante} 📖` }}</span>
         </button>

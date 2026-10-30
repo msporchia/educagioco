@@ -6,10 +6,13 @@
 // sulla mappa ci finisce comunque.
 import { riprendiSeChiesta } from '../../ripresa.js'
 import { ref } from 'vue'
+import AmiciQui from '../../../components/amici/AmiciQui.vue'
+import RecordAmici from '../../../components/amici/RecordAmici.vue'
 
 const props = defineProps({
-  scalini: { type: Array, required: true },   // [{ chiave, nome, icona, dritta, tappe: [] }]
-  libero: { type: Object, required: true },   // { aperto, quante, fatte, primato }
+  scalini: { type: Array, required: true },   // [{ chiave, nome, icona, dritta, tappe: [{ …, amici }] }]
+  libero: { type: Object, required: true },   // { aperto, quante, fatte, primato, qui, record }
+  davanti: { type: String, default: '' },     // l'amico da raggiungere, in parole (docs/core/amici-bacheca.md)
   ripresa: { type: Object, default: null },   // { nome, libera, restano, livello, cuori… }
 })
 const emit = defineEmits(['gioca', 'libero', 'riprendi', 'scorda'])
@@ -51,6 +54,8 @@ function vai(quale) {
       </button>
     </div>
 
+    <p v-if="davanti" class="sv-davanti" data-amico-davanti>{{ davanti }}</p>
+
     <section v-for="s in scalini" :key="s.chiave" class="sv-scalino">
       <h3>
         <span class="em">{{ s.icona }}</span>
@@ -70,6 +75,8 @@ function vai(quale) {
             <!-- chiusa, si dice cosa ci sarà: «la neve» è un motivo per
                  arrivarci, «prima finisci quella prima» no -->
             <i>{{ t.aperta ? t.racconto : t.scenarioNome }}</i>
+            <!-- gli amici arrivati qui: il pallino e il nome -->
+            <AmiciQui :amici="t.amici" class="sv-qui" :data-al="t.indice" />
           </span>
           <span class="sv-stelle em">
             {{ t.stelle ? '⭐'.repeat(t.stelle) : durata(t.durata) }}
@@ -92,6 +99,11 @@ function vai(quale) {
       </span>
       <span v-else>finisci le {{ libero.quante }} tappe ({{ libero.fatte }} fatte)</span>
     </button>
+    <!-- gli amici alla sopravvivenza: i loro record sotto il proprio, e chi c'è senza record -->
+    <div v-if="libero.record.length || libero.qui.length" class="sv-amici-libero">
+      <RecordAmici :record="libero.record" />
+      <AmiciQui :amici="libero.qui" class="sv-qui" data-al="libero" />
+    </div>
 
     <!-- «ne cominci un'altra?»: detto prima, mai dopo -->
     <div v-if="chiede" class="sv-velo" @click.self="chiede = null">

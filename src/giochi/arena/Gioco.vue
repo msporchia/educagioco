@@ -23,6 +23,7 @@ import SalaSfida from '../../insieme/SalaSfida.vue'
 import CartelloLinea from '../../insieme/CartelloLinea.vue'
 import { regolaArena, latoDi } from './sfida/regia.js'
 import { diciGioco } from '../../amici/servizio.js'
+import { usaAmici } from '../../amici/usaAmici.js'
 
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, INFINITA, tappeDelloScalino, scalinoDi, scalinoDelTerreno, terrenoDiverso, operazioniDi, operazionePer, senzaSaperi, PESO_DEL_RIPIEGO, stellePer, sfidaDi, sfidaInfinita, LIVELLI, livelloValido } from './dati/campagna.js'
 import { TRUPPE, EDIFICI, EDIFICIO_DI, AZIONI, BOMBA, POSTI, CAMPO, CRESCITA, truppeDelTerreno } from './dati/regole.js'
@@ -105,6 +106,9 @@ const dovEravamo = computed(() => {
 })
 
 /* ── la mappa ── */
+// gli amici dalla loro bacheca (docs/core/amici-nei-giochi.md): la tappa da fare di ognuno, e la battaglia infinita per chi ha finito
+const amici = usaAmici(CHIAVE)
+
 const scalini = computed(() => SCALINI.map(s => ({
   ...s,
   tappe: tappeDelloScalino(s.chiave).map(t => ({
@@ -113,6 +117,7 @@ const scalini = computed(() => SCALINI.map(s => ({
     aperta: aperta(CHIAVE, t.indice),
     adesso: adesso(CHIAVE, t.indice),
     stelle: stelleDi(CHIAVE, t.indice),
+    amici: amici.sullaTappa(t.indice),
   })),
 })))
 
@@ -123,6 +128,7 @@ const laInfinita = computed(() => {
     nome: INFINITA.nome, icona: INFINITA.icona, racconto: INFINITA.racconto,
     aperta: apertaQui(INFINITA, QUANTE_TAPPE, fatte),
     motivo: `finisci le ${QUANTE_TAPPE} tappe`,
+    amici: amici.sullaTappa(QUANTE_TAPPE),
   }
 })
 
@@ -703,7 +709,7 @@ onUnmounted(() => {
            :pausa="siGioca" @pausa="metti()" @aiuto="aiuto" @indietro="indietro" />
 
     <div class="ar">
-      <Mappa v-if="vista === 'mappa'" :scalini="scalini" :infinita="laInfinita" :ripresa="ripresa"
+      <Mappa v-if="vista === 'mappa'" :scalini="scalini" :infinita="laInfinita" :ripresa="ripresa" :davanti="amici.davanti"
              :livelli="LIVELLI" :livello="livello" @livello="scegliLivello" @gioca="avvia" @riprendi="riprendiPartita" @scorda="scorda" />
 
       <SalaSfida v-else-if="vista === 'sfida'" :fase="sfida.fase.value" :codice="sfida.codice.value" :messaggio="sfida.messaggio.value"

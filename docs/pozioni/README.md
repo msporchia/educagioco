@@ -7,4 +7,5 @@ Le misure col gesto giusto (`src/giochi/pozioni/`).
 - [sosta.md](sosta.md) — la tappa lasciata a metà: cosa si salva, cosa non si può rifare
 
 Vedi anche: [../core/convenzione-giochi.md](../core/convenzione-giochi.md);
+gli amici sulla mappa: [../core/amici-nei-giochi.md](../core/amici-nei-giochi.md);
 [../apprendimento/calibrazione.md](../apprendimento/calibrazione.md) (tre monete a dose).

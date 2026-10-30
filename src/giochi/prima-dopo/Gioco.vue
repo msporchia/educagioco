@@ -16,6 +16,7 @@ import { PAGA } from '../../data/paghe.js'
 import { aperta, adesso, stelleDi, completa,
          sosta, salvaSosta, buttaSosta } from '../campagne.js'
 
+import { usaAmici } from '../../amici/usaAmici.js'
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, tappeDelloScalino } from './dati/campagna.js'
 import { verbo as datiVerbo } from './dati/verbi.js'
 import { Corsa } from './motore/corsa.js'
@@ -51,6 +52,9 @@ const serie = ref(0)                // storie filate senza un errore, di fila
 const quesito = computed(() => corsa.value?.quesito || null)
 const verboAttuale = computed(() => quesito.value ? datiVerbo(quesito.value.verbo) : null)
 
+// gli amici dalla loro bacheca (docs/core/amici-nei-giochi.md): la tappa da fare di ognuno
+const amici = usaAmici(CHIAVE)
+
 const scalini = computed(() => SCALINI.map(s => ({
   ...s,
   tappe: tappeDelloScalino(s.chiave).map(t => ({
@@ -58,6 +62,7 @@ const scalini = computed(() => SCALINI.map(s => ({
     aperta: aperta(CHIAVE, t.indice),
     adesso: adesso(CHIAVE, t.indice),
     stelle: stelleDi(CHIAVE, t.indice),
+    amici: amici.sullaTappa(t.indice),
   })),
 })))
 
@@ -272,7 +277,7 @@ function indietro() {
 
     <div class="pd" :style="{ '--pd-accento': accento }">
       <Mappa v-if="vista === 'mappa'" :scalini="scalini"
-             :ripresa="ripresa" :chiede="chiede ? chiede.nome : ''"
+             :ripresa="ripresa" :chiede="chiede ? chiede.nome : ''" :davanti="amici.davanti"
              @gioca="vuoleIniziare" @riprendi="riprendiPartita" @scorda="scorda"
              @comincia="comincia" @annulla="chiede = null" />
 

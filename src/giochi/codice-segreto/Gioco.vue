@@ -10,6 +10,7 @@ import { addCoins, segna, segnaBest } from '../../store/profile.js'
 import { progresso, aperta, adesso, stelleDi, completa, scelta, ricorda,
          primatoDi, segnaPrimato, sosta, salvaSosta, buttaSosta } from '../campagne.js'
 import { fraseDiFine, primatoInParole } from '../primati.js'
+import { usaAmici } from '../../amici/usaAmici.js'
 
 import { SENZA_FINE } from './gioco.js'
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, tappeDelloScalino } from './dati/campagna.js'
@@ -53,6 +54,9 @@ const avanza = progresso(CHIAVE)
 const libero = computed(() => tappaIdx.value < 0)
 const partita = computed(() => corsa.value?.partita || null)
 
+// gli amici dalla loro bacheca (docs/core/amici-nei-giochi.md): il posto dopo l'ultima tappa è il gioco libero
+const amici = usaAmici(CHIAVE)
+
 const scalini = computed(() => SCALINI.map(s => ({
   ...s,
   tappe: tappeDelloScalino(s.chiave).map(t => ({
@@ -63,6 +67,7 @@ const scalini = computed(() => SCALINI.map(s => ({
     aperta: aperta(CHIAVE, t.indice),
     adesso: adesso(CHIAVE, t.indice),
     stelle: stelleDi(CHIAVE, t.indice),
+    amici: amici.sullaTappa(t.indice),
   })),
 })))
 
@@ -71,6 +76,9 @@ const statoLibero = computed(() => ({
   quante: QUANTE_TAPPE,
   fatte: Math.min(avanza.tappa, QUANTE_TAPPE),
   primato: primatoInParole(primatoDi(CHIAVE), SENZA_FINE.misura),
+  // chi è arrivato al gioco libero ma non ha ancora un record, e i record degli amici
+  qui: amici.allaFine(),
+  record: amici.record(),
 }))
 
 const scDifficolta = ref(scelta(CHIAVE, 'difficolta', PREDEFINITO))
@@ -204,7 +212,9 @@ function mostraFinale(tappaFinita) {
   } else {
     finale.value = { che: 'partita', vinta: p.vinta, codice: p.codice,
                      stelle: p.stelle, monete: p.monete, rimaste: c.rimaste,
-                     titolo: '', primato: libero.value ? primatoDelLibero(p.vinta) : null }
+                     titolo: '', primato: libero.value ? primatoDelLibero(p.vinta) : null,
+                     // la fila si chiude (e diventa un record) solo al codice sbagliato
+                     amici: libero.value && esitoFila ? amici.contro(esitoFila.valore, esitoFila.prima) : '' }
     if (p.vinta) { suono.moneta(); coriandoli() } else suono.fine()
   }
 }
@@ -355,7 +365,7 @@ function chiudiSpiegazione() {
 
     <div class="cs" :style="{ '--cs-accento': accento }">
       <Mappa v-if="vista === 'mappa'" :scalini="scalini" :libero="statoLibero"
-             :ripresa="ripresa" :chiede="chiede ? chiede.nome : ''"
+             :ripresa="ripresa" :chiede="chiede ? chiede.nome : ''" :davanti="amici.davanti"
              @gioca="vuoleIniziare" @libero="vuoleIniziare(-1)"
              @riprendi="riprendiPartita" @scorda="scorda"
              @comincia="comincia" @annulla="chiede = null" />

@@ -6,10 +6,11 @@ import { state, answer, segna, segnaBest,
          mercatoProgresso, mercatoCompleta, tappaAperta } from '../store/profile.js'
 import { generaCliente, esposizione, tappaDi, campagnaDi, scomponi, euro,
          centesimiScritti, scriviCifra, premioCliente, stelleDiGiornata, perLaProssima,
-         BANCHI, CAMPAGNE, CLIENTI_PER_TAPPA } from '../data/bancarella.js'
+         BANCHI, CAMPAGNE, LIBERA, CLIENTI_PER_TAPPA } from '../data/bancarella.js'
 import { CITTA, statoCitta, statoGiornata, cittaCorrente, fatteIn, indiceDi, giornataDi,
          cittaDelleGiornata, stelleGiornata, stelleCitta, stelleMassime } from '../data/bancarella-mondo.js'
 import { suono } from '../audio.js'
+import { usaAmici } from '../amici/usaAmici.js'
 import { borsa } from '../store/varieta.js'
 import Barra from '../components/Barra.vue'
 import TastoSalta from '../components/TastoSalta.vue'
@@ -57,6 +58,10 @@ let raf = 0, ultimo = 0, apertoIl = 0, occupato = false, rifiuti = 0
 let dettoFretta = false, nVolo = 0
 
 const prog = computed(() => mercatoProgresso())
+/* Gli amici dalla loro bacheca (docs/core/amici-nei-giochi.md): il nodo è la giornata nella fila, la libera del Cairo dopo
+   l'ultima. Sulla città e sul banco ci sono quelli arrivati lì. */
+const amici = usaAmici('bancarella')
+const amiciDi = id => amici.sullaTappa(id === LIBERA.id ? CAMPAGNE.length : indiceDi(id))
 const sbloccata = i => tappaAperta(i, prog.value.tappa)
 /* si può giocare: una giornata della fila se è aperta; la libera quando la fila è finita */
 const puoGiocare = i => (i >= 0 ? sbloccata(i) : tappaAperta(CAMPAGNE.length, prog.value.tappa))
@@ -67,6 +72,7 @@ const aperta = i => tappaAperta(i, prog.value.tappa)
 const cittaCorr = computed(() => cittaCorrente(prog.value.tappa, aperta))
 const vociMondo = computed(() => CITTA.map((c, k) => ({
   ...c, k, stato: statoCitta(c, prog.value.tappa, aperta), fatte: fatteIn(c, prog.value.tappa),
+  amici: c.giornate.flatMap(amiciDi),
   tot: c.libera ? 0 : c.giornate.length,
   stelle: stelleCitta(c, prog.value.tappa, prog.value.stelle), stelleMax: stelleMassime(c),
   serve: c.libera ? 'Si apre quando hai finito tutte le giornate.'
@@ -74,7 +80,7 @@ const vociMondo = computed(() => CITTA.map((c, k) => ({
 })))
 const banchiPiazza = computed(() => CITTA[citta.value].giornate.map(id => ({
   id, giornata: giornataDi(id), numero: id === 'libera' ? '∞' : indiceDi(id) + 1,
-  stato: statoGiornata(id, prog.value.tappa, aperta),
+  stato: statoGiornata(id, prog.value.tappa, aperta), amici: amiciDi(id),
   stelle: stelleGiornata(id, prog.value.tappa, prog.value.stelle),
   serve: prog.value.tappa < CAMPAGNE.length ? `Prima tocca a «${CAMPAGNE[prog.value.tappa].nome}».`
                                             : 'Si apre quando hai finito tutte le giornate.',
@@ -608,6 +614,8 @@ onBeforeUnmount(() => {
                  @riprendi="riprendiPartita" @scorda="scorda"
                  @comincia="comincia" @annulla="chiede = null" />
       </div>
+      <!-- chi è da raggiungere: fuori dal mondo, che scorre -->
+      <p v-if="amici.davanti" class="davanti" data-amico-davanti>{{ amici.davanti }}</p>
       <Mondo v-if="fase === 'mondo'" :voci="vociMondo" :corrente="cittaCorr"
              :chi="state.player || ''" @entra="entraInCitta" />
       <Piazza v-else :key="citta" :citta="CITTA[citta]" :banchi="banchiPiazza" :stelle="stellePiazza"
@@ -824,6 +832,7 @@ onBeforeUnmount(() => {
 .giro { flex:1; min-height:0; display:flex; flex-direction:column }
 .in-cima { flex:none; display:flex; justify-content:center; padding:0 12px }
 .in-cima:empty { display:none }
+.davanti { flex:none; margin:0; padding:6px 12px 2px; text-align:center; font-size:14px; font-weight:800; color:#3a2a1a }
 
 /* ---------- il percorso della giornata ---------- */
 .percorso { display:flex; align-items:center; justify-content:center; gap:5px;

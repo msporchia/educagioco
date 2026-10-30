@@ -22,6 +22,8 @@ export default {
   tappe: QUANTE_TAPPE,
   grandi: true,
   serve: ['misure', 'conversioni'],
+  // gli amici sulla mappa (docs/core/amici-nei-giochi.md): il cursore della campagna; finite le tappe la mappa non ha un posto, solo la riga in cima
+  amici: { tappe: QUANTE_TAPPE, dove: 'in fondo al laboratorio' },
 
   riassunto(av = { tappa: 0, libera: false, stelle: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)

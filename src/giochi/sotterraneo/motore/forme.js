@@ -4,6 +4,8 @@
 // Due famiglie: le costruite (rettangoli, forme squadrate e simmetriche) e le grotte (una massa di celle organica, un
 // automa cellulare: grotta, bilobata, galleria, antro).
 
+import { ipot, arcotangente2, coseno } from '../../../motore/conti-uguali.js'   // uguali al bit sui due telefoni (docs/sotterraneo/in-due.md)
+
 export const FORME_COSTRUITE = ['rettangolo', 'smussata', 'elle', 'tu', 'croce', 'cappella', 'doppia', 'sala']
 export const FORME_DI_GROTTA = ['grotta', 'bilobata', 'galleria', 'antro']
 export const FORME = [...FORME_COSTRUITE, ...FORME_DI_GROTTA]
@@ -232,13 +234,13 @@ export function blobCA(w, h, rnd, { minimo = 30, densita = 1.2, lobi = null, lar
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
       let d = 9, ang = 0
       if (lobi) for (const [lx, ly, r] of lobi) {
-        const dx = (x + 0.5) / w - lx, dy = ((y + 0.5) / h - ly) * (h / w), q = Math.hypot(dx, dy) / r
-        if (q < d) { d = q; ang = Math.atan2(dy, dx) }
+        const dx = (x + 0.5) / w - lx, dy = ((y + 0.5) / h - ly) * (h / w), q = ipot(dx, dy) / r
+        if (q < d) { d = q; ang = arcotangente2(dy, dx) }
       } else {
         const dx = ((x + 0.5) / w - 0.5) * 2, dy = ((y + 0.5) / h - 0.5) * 2
-        d = Math.hypot(dx, dy); ang = Math.atan2(dy, dx)
+        d = ipot(dx, dy); ang = arcotangente2(dy, dx)
       }
-      d /= Math.max(0.55, 1 + armoniche.reduce((n, o) => n + o.a * Math.cos(o.k * ang + o.f), 0))
+      d /= Math.max(0.55, 1 + armoniche.reduce((n, o) => n + o.a * coseno(o.k * ang + o.f), 0))
       d += (macchia(x, y) - 0.5) * 0.8
       const p = Math.max(0, Math.min(0.97, densita - d * 1.02))
       if (x > 0 && y > 0 && x < w - 1 && y < h - 1 && rnd() < p) m[y * w + x] = 1
@@ -298,7 +300,7 @@ export function pozza(w, h, rnd) {
   for (let prova = 0; prova < 10; prova++) {
     const m = vuota(w, h)
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++)
-      if (Math.hypot((x + 0.5 - w / 2) / (w / 2), (y + 0.5 - h / 2) / (h / 2)) + (rnd() - 0.5) * 0.55 < 1) m[y * w + x] = 1
+      if (ipot((x + 0.5 - w / 2) / (w / 2), (y + 0.5 - h / 2) / (h / 2)) + (rnd() - 0.5) * 0.55 < 1) m[y * w + x] = 1
     if (celleDi(m) >= 4 && connessa(m, w, h)) return { w, h, m }
   }
   return null

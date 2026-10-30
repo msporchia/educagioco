@@ -29,6 +29,10 @@
 .f3-toast { position: absolute; left: 50%; transform: translateX(-50%); top: 64px; z-index: 28; max-width: calc(100% - 32px); pointer-events: none; background: #ffe27a; color: #3a2a1a; font: 800 16px "Emoji Gioco", system-ui, sans-serif; padding: 9px 16px; border-radius: 18px; box-shadow: 0 3px 12px rgba(0,0,0,.3); text-align: center; }
 .f3-hud span { background: rgba(255,251,240,.92); color: #3a2a1a; font: 800 16px "Emoji Gioco", system-ui, sans-serif; padding: 5px 11px; border-radius: 16px; box-shadow: 0 2px 6px rgba(0,0,0,.18); }
 .f3-angolo { position: absolute; right: 8px; top: 8px; z-index: 20; width: 44px; height: 44px; border: 0; border-radius: 22px; background: rgba(255,255,255,.75); font-size: 20px; touch-action: manipulation; }
+.f3-insieme { top: 110px; }          /* sotto «🧭 E adesso?» */
+.f3-comune-attesa { position: absolute; inset: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; text-align: center; background: #8fcf63; color: #2a3a1a; font: 700 18px "Emoji Gioco", system-ui, sans-serif; }
+.f3-comune-attesa .em { font-size: 64px; margin: 0; }
+.f3-comune-attesa button { min-height: 48px; border: 0; border-radius: 24px; padding: 0 20px; background: #fffbf0; color: #3a2a1a; font: 800 16px "Emoji Gioco", system-ui, sans-serif; }
 .f3-centra { position: absolute; left: 50%; transform: translateX(-50%); top: 60px; z-index: 29; min-height: 44px; border: 0; border-radius: 22px; padding: 0 16px; background: rgba(255,251,240,.95); color: #3a2a1a; font: 800 14px "Emoji Gioco", system-ui, sans-serif; box-shadow: 0 3px 10px rgba(0,0,0,.3); touch-action: manipulation; }
 
 /* la barra delle azioni */
@@ -174,7 +178,8 @@
 .f3-badge.vendita { background: #ffd36a; }
 .f3-badge.chiuso { background: #dcd6c8; color: #6a5a4a; }
 @keyframes f3-salta { 50% { margin-top: -8px; } }
-.f3-badge[hidden], .f3-fumetto[hidden] { display: none; }
+.f3-badge[hidden], .f3-fumetto[hidden], .f3-ospite[hidden] { display: none; }
+.f3-ospite { position: absolute; transform: translate(-50%, -100%); pointer-events: none; background: rgba(58,42,26,.82); color: #fffbf0; font: 800 13px "Emoji Gioco", system-ui, sans-serif; padding: 3px 10px; border-radius: 10px; white-space: nowrap; }
 .f3-fumetto { position: absolute; transform: translate(-50%, -100%); background: rgba(255,251,240,.97); color: #3a2a1a; font: 700 15px "Emoji Gioco", system-ui, sans-serif; padding: 7px 13px; border-radius: 14px; box-shadow: 0 3px 10px rgba(0,0,0,.25); white-space: nowrap; }
 .f3-volo { position: absolute; transform: translate(-50%, -100%); font: 800 20px "Emoji Gioco", system-ui, sans-serif; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.6); animation: f3-sale 1.4s ease-out forwards; }
 @keyframes f3-sale { to { margin-top: -60px; opacity: 0; } }
