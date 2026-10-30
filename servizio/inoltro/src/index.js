@@ -11,6 +11,7 @@ import { CHIAVE, ID, MAX_CHIAVI, MAX_COLLEGAMENTI, dichiara, chiudi, inoltra, co
 import * as tavolo from './tavolo.js'
 import { CODICE, DURATA as DURATA_CODICE, CODICI_ORA, nuovoCodice as codiceBreve, contaErrore, bloccato } from './codici.js'
 import * as bacheca from './bacheca.js'
+import * as comune from './comune.js'
 
 const ALFABETO = 'ABCDEFGHJKLMNPQRSTUVWXYZ'      // senza la I e la O: si confondono con 1 e 0 a voce
 const LUNGHEZZA = 5
@@ -115,6 +116,19 @@ async function amici(richiesta, url, env) {
     const b = await env.BACHECHE.get(env.BACHECHE.idFromName(r.chiave)).fetch('https://bacheca/usa', { method: 'POST', body: JSON.stringify({ id: r.id, testo: r.testo }) })
     if (b.status === 409) return json({ errore: 'questa amicizia è già di due' }, 409)
     return json({ altro: JSON.parse((await b.json()).altro || 'null') })
+  }
+  if (url.pathname === '/amici/comune' && richiesta.method === 'POST') {
+    let corpo
+    try { corpo = await richiesta.json() } catch { return json({ errore: 'richiesta storta' }, 400) }
+    const r = comune.leggiRichiesta(corpo)
+    if (!r.ok) return json({ errore: r.errore }, 400)
+    const limite = env.LIMITE.get(env.LIMITE.idFromName('comune:' + ip))
+    if (!(await (await limite.fetch(`https://limite/conta?tetto=${comune.COMUNE_ORA}`)).json()).ok) return json({ errore: 'troppe richieste, riprova fra un po\'' }, 429)
+    const c = await env.COMUNI.get(env.COMUNI.idFromName(r.chiave)).fetch('https://comune/usa', { method: 'POST', body: JSON.stringify(r) })
+    if (c.status === 409) return json({ errore: 'questa amicizia è già di due' }, 409)
+    const d = await c.json()
+    return json({ ultimo: d.ultimo, corsia: d.corsia, foto: d.foto ? { seq: d.foto.seq, stato: JSON.parse(d.foto.testo) } : null,
+                  mosse: d.mosse.map(x => ({ s: x.s, id: x.id, m: JSON.parse(x.m) })) })
   }
   if (url.pathname === '/amici/presenza') {
     if (richiesta.headers.get('upgrade') !== 'websocket') return json({ errore: 'serve un WebSocket' }, 426)
@@ -346,6 +360,22 @@ export class Bacheca {
       await this.stato.storage.setAlarm(Date.now() + bacheca.SCADENZA)
     }
     return new Response(JSON.stringify({ altro: r.altro }))
+  }
+
+  async alarm() { await this.stato.storage.deleteAll() }
+}
+
+/* La fattoria in comune di un'amicizia (docs/fattoria3d/in-comune.md): la fila delle mosse e l'ultima fotografia. Ogni
+   richiesta sposta la sveglia a due mesi da adesso; alla sveglia non resta niente (i telefoni hanno la loro copia). */
+export class Comune {
+  constructor(stato) { this.stato = stato }
+
+  async fetch(richiesta) {
+    const r = comune.usa(await this.stato.storage.get('comune'), await richiesta.json())
+    if (r.rifiutato) return new Response('di due', { status: 409 })
+    await this.stato.storage.put('comune', r.stato)
+    await this.stato.storage.setAlarm(Date.now() + comune.SCADENZA)
+    return new Response(JSON.stringify(r.risposta))
   }
 
   async alarm() { await this.stato.storage.deleteAll() }

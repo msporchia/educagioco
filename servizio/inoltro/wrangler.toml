@@ -32,6 +32,10 @@ class_name = "Presenza"
 name = "BACHECHE"
 class_name = "Bacheca"
 
+[[durable_objects.bindings]]
+name = "COMUNI"
+class_name = "Comune"
+
 # il piano gratuito vuole i Durable Object con la memoria SQLite
 [[migrations]]
 tag = "v1"
@@ -57,3 +61,8 @@ new_sqlite_classes = ["Tavolo"]
 [[migrations]]
 tag = "v5"
 new_sqlite_classes = ["Bacheca"]
+
+# la fattoria in comune di ogni amicizia (docs/fattoria3d/in-comune.md): la fila delle mosse e l'ultima fotografia, due mesi
+[[migrations]]
+tag = "v6"
+new_sqlite_classes = ["Comune"]

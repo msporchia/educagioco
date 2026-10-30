@@ -3,6 +3,7 @@
 import { dichiara, chiudi, inoltra, controllaMessaggio, MAX_BYTE, MAX_AL_SECONDO, MAX_CHIAVI, ID, CHIAVE } from '../../servizio/inoltro/src/presenza.js'
 import { nuovoCodice, contaErrore, bloccato, CODICE, ALFABETO, ERRORI_AL_MINUTO } from '../../servizio/inoltro/src/codici.js'
 import { leggiRichiesta, usa, SCADENZA, MAX_DATI } from '../../servizio/inoltro/src/bacheca.js'
+import * as comune from '../../servizio/inoltro/src/comune.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const ugualeJ = (cosa, a, b) => uguale(cosa, JSON.stringify(a), JSON.stringify(b))
@@ -92,5 +93,45 @@ const ugualeJ = (cosa, a, b) => uguale(cosa, JSON.stringify(a), JSON.stringify(b
   controlla('chi riscrive sostituisce la sua e legge quella dell\'altro', r.posti.melody001 === '{"a":3}' && r.altro === '{"b":2}')
   const terzo = usa(r.posti, 'estraneo01', '{"c":1}')
   controlla('un terzo non entra in una bacheca di due, nemmeno per leggere', terzo.rifiutato && !terzo.altro && !('estraneo01' in terzo.posti))
+}
+/* la fattoria in comune (docs/fattoria3d/in-comune.md): la fila delle mosse dei due e l'ultima fotografia */
+{
+  const K = 'f'.repeat(32), C = comune
+  const chiedi = (stato, id, dopo, mosse = [], foto) => C.usa(stato, C.leggiRichiesta({ chiave: K, id, dopo, mosse, foto }))
+  controlla('una richiesta senza chiave o con un dopo storto è rifiutata', !C.leggiRichiesta({ id: 'melody001' }).ok && !C.leggiRichiesta({ chiave: K, id: 'melody001', dopo: 1.5 }).ok)
+  controlla('troppe mosse o una troppo grande sono rifiutate', !C.leggiRichiesta({ chiave: K, id: 'melody001', mosse: Array(C.MAX_MOSSE + 1).fill({}) }).ok &&
+    !C.leggiRichiesta({ chiave: K, id: 'melody001', mosse: [{ a: 'x'.repeat(C.MAX_MOSSA) }] }).ok)
+  controlla('una fotografia troppo grande è rifiutata', !C.leggiRichiesta({ chiave: K, id: 'melody001', foto: { seq: 0, stato: { a: 'x'.repeat(C.MAX_FOTO) } } }).ok)
+  // la prima apre la fattoria vuota con la sua fotografia
+  let r = chiedi(null, 'melody001', -1, [], { seq: 0, stato: { cose: 1 } })
+  controlla('su una fattoria vuota la prima fotografia entra', r.stato.foto?.s === 0 && r.stato.ultimo === 0)
+  r = chiedi(r.stato, 'leonardo1', -1)
+  controlla('chi arriva dopo riceve la fotografia', r.risposta.foto?.seq === 0 && r.risposta.foto.testo === '{"cose":1}' && r.risposta.mosse.length === 0)
+  uguale('il secondo arrivato ha la corsia 1', r.risposta.corsia, 1)
+  r = chiedi(r.stato, 'leonardo1', 0, [{ n: 'semina' }, { n: 'tosa' }])
+  ugualeJ('le mosse prendono i numeri in fila', r.risposta.mosse.map(x => [x.s, x.id]), [[1, 'leonardo1'], [2, 'leonardo1']])
+  r = chiedi(r.stato, 'melody001', 0, [{ n: 'abbatti' }])
+  ugualeJ('l\'altro riceve le mosse dopo il suo ultimo numero, compresa la sua', r.risposta.mosse.map(x => x.s), [1, 2, 3])
+  uguale('il terzo numero è la sua', r.risposta.mosse[2].id, 'melody001')
+  const terzo = chiedi(r.stato, 'estraneo01', -1)
+  controlla('un terzo non entra in una fattoria di due, nemmeno per guardare', terzo.rifiutato && !terzo.risposta)
+  // la fotografia di chi esce: vince se non è più vecchia, e le mosse lette da tutti e due e già dentro si buttano
+  r = chiedi(r.stato, 'leonardo1', 3, [], { seq: 3, stato: { cose: 4 } })
+  controlla('la fotografia nuova vince', r.stato.foto.s === 3)
+  uguale('le mosse lette da tutti e due e già nella fotografia non si tengono più', r.stato.mosse.length, 0)
+  const vecchia = chiedi(r.stato, 'melody001', 3, [], { seq: 1, stato: { cose: 2 } })
+  uguale('una fotografia più vecchia non sostituisce quella tenuta', vecchia.stato.foto.testo, '{"cose":4}')
+  const avanti = chiedi(r.stato, 'melody001', 3, [], { seq: 99, stato: { cose: 9 } })
+  uguale('una fotografia oltre l\'ultimo numero non entra in una fattoria viva', avanti.stato.foto.s, 3)
+  r = chiedi(r.stato, 'melody001', 3, [{ n: 'semina' }])
+  r = chiedi(r.stato, 'leonardo1', -1)
+  controlla('chi riapre da capo riceve la fotografia e le mosse dopo', r.risposta.foto.seq === 3 && r.risposta.mosse.map(x => x.s).join() === '4')
+  // scaduta sul servizio: la copia di un telefono la rimette in piedi
+  r = chiedi(null, 'melody001', 57, [], { seq: 57, stato: { cose: 7 } })
+  controlla('una fattoria scaduta riparte dalla fotografia di un telefono, col suo numero', r.stato.foto.s === 57 && r.stato.ultimo === 57)
+  let lunga = C.vuota()
+  for (let i = 0; i < C.MAX_FILA + 30; i++) lunga = chiedi(lunga, 'melody001', i, [{ n: 'semina' }]).stato
+  uguale('la fila non supera il tetto', lunga.mosse.length, C.MAX_FILA)
+  uguale('la fattoria in comune dura due mesi dall\'ultima volta', C.SCADENZA, 60 * 24 * 3600 * 1000)
 }
 riassunto('amici: le regole del servizio')
