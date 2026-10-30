@@ -47,9 +47,19 @@ Sul telefono (`comune.js`): aprendo si chiede tutto (`dopo: -1`), si parte dalla
 ogni 3 secondi (e 0,4 s dopo una mossa propria) si mandano le proprie e si ritirano le nuove. Ogni due minuti, e uscendo, si
 lascia la fotografia. Se l'amico è andato tanto avanti che le mosse sono state buttate, la fattoria si riapre dalla fotografia.
 
+## I due contadini
+
+Se l'amico è dentro anche lui, il suo contadino cammina nella scena col suo abito e il nome sopra la testa (`scena3d/ospite.js`):
+**è parte dell'esperienza** (l'utente). Non passa dal servizio della fila ma dal collegamento degli amici, quello degli inviti:
+ogni telefono manda `{ k: 'qui', x, z, d, r?, g?, a? }` (dove sta, verso dove guarda, se corre, il gesto, ogni due secondi l'abito)
+cinque volte al secondo se cambia qualcosa e ogni due secondi comunque, e `{ k: 'via' }` uscendo ([../core/amici.md](../core/amici.md)).
+Dall'altra parte il contadino ospite cammina verso l'ultimo punto arrivato, salta se è più indietro di cinque celle, fa i gesti, e
+sparisce dopo sei secondi senza notizie. Le mosse restano quelle della fila: il contadino ospite non tocca la fattoria.
+
+**Con più amici, più fattorie in comune**: una per amicizia, e il 🤝 ha un tasto per ognuno.
+
 ## Cosa non c'è ancora
 
-- Il contadino dell'amico non si vede: arriva solo l'avviso sopra la scena («🤝 Leonardo ha seminato»).
 - Dentro la fattoria in comune niente trattore verso i vicini (le visite toccano il motore senza passare dalle mosse), niente
   guida del primo giro, niente cheat dell'indirizzo.
 - Una fattoria in comune per amicizia, quindi di due; un gruppo vorrebbe una chiave di gruppo sul servizio.
@@ -60,7 +70,7 @@ lascia la fotografia. Se l'amico è andato tanto avanti che le mosse sono state 
 
 `unita/fattoria3d-registro` (due telefoni finti a mano: la stessa fattoria, il doppio raccolto, il doppio pezzo, le monete,
 gli id, le mosse storte), `unita/amici-servizio` (la fila e la fotografia), `integrazione/fattoria3d-comune` (due pagine e il
-servizio: entra, costruisce, l'altro trova, un lotto arriva mentre si gioca, la propria fattoria intatta, senza rete; **serve il
+servizio: entra, costruisce, l'altro trova, un lotto arriva mentre si gioca, il contadino dell'altro cammina col suo nome e sparisce quando esce, la propria fattoria intatta, senza rete; **serve il
 servizio con la v6**, in locale `cd servizio/inoltro && npx wrangler dev` e `SERVIZIO=http://localhost:8787`, se no salta).
 
 | bersaglio | cosa |
@@ -68,3 +78,4 @@ servizio con la v6**, in locale `cd servizio/inoltro && npx wrangler dev` e `SER
 | `[data-f3="apri-comune"]` | il 🤝 nella propria fattoria; apre il dialogo con un tasto per amico (`[data-f3="dialogo"] [data-scelta]`) |
 | `[data-f3="torna-mia"]` | il 🏠 dentro la fattoria in comune, e il tasto del cartello d'errore |
 | `[data-f3="comune-attesa"]` (`[data-errore]`) | «Vado nella fattoria con…» mentre si collega, o perché non si può |
+| `[data-f3="ospite"]` | il nome sopra il contadino dell'amico; il contadino è `window.__fattoria3d.mondo.ospite` (`visibile`, `eroe.x`, `eroe.z`) |

@@ -125,6 +125,7 @@ non li legge):
 | `{ k: 'presento', id, nome, gioco }` | entrando, quando l'altro entra (`su`), e quando cambia qualcosa. `nome` ≤ 20 caratteri, `gioco` = a cosa sta giocando o `null` |
 | `{ k: 'invito', gioco, dati }` | `dati` per Castle Battle: `{ terreno, secondi }` |
 | `{ k: 'risposta', ok }` | accetto / no grazie |
+| `{ k: 'qui', x, z, d, r?, g?, a? }` / `{ k: 'via' }` | nella fattoria in comune: dove sta il mio contadino (fino a 5 al secondo), e quando esco ([../fattoria3d/in-comune.md](../fattoria3d/in-comune.md)) |
 
 Per Castle Battle non c'è un messaggio a parte per la stanza: chi invita crea il tavolo di sempre (`creaTavolo`), **si siede** (il
 suo collegamento deve essere `host`) e solo allora manda l'invito con il `codice` dentro (`dati: { terreno, secondi, codice }`);
