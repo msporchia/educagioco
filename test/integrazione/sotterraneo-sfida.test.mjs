@@ -79,7 +79,8 @@ await scatto(a, 'sotterraneo-sfida-in-due')
   controlla('c\'è una cella dove andare', !!meta)
   await a.evaluate(m => window.__sotterraneo3d.corsa.vaiVerso(m, false), meta)
   // senza scheda video i fotogrammi sono lenti e il tempo del gioco corre più piano: si aspetta che arrivi
-  await a.waitForFunction(m => { const q = window.__sotterraneo3d.corsa.persone[0].eroe; return Math.floor(q.x) === m.x && Math.floor(q.y) === m.y }, meta, { timeout: 60000 }).catch(() => {})
+  // (fermo, non appena entrato nella cella: lì è ancora a 10,04 e l'altro telefono, più avanti, già a 10,5)
+  await a.waitForFunction(m => { const c = window.__sotterraneo3d.corsa, q = c.persone[0].eroe; return Math.floor(q.x) === m.x && Math.floor(q.y) === m.y && !c.strada }, meta, { timeout: 60000 }).catch(() => {})
   const [ca, cb] = [await corsaDi(a), await corsaDi(b)]
   const mosso = Math.abs(ca.persone[0].x - io.x) + Math.abs(ca.persone[0].y - io.y)
   controlla(`il cavaliere ha camminato fino alla cella toccata (${mosso.toFixed(1)} celle)`, Math.floor(ca.persone[0].x) === meta.x && Math.floor(ca.persone[0].y) === meta.y)
