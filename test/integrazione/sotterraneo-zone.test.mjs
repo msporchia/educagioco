@@ -159,7 +159,8 @@ await attendi(page, 800)
   const storia = new Corsa(CAMPAGNA[TORRE], { seme: s.seme, eroe: 'cavaliere' })
   const ossa = c => c.livello.robe.filter(r => r.che === 'mostro').map(r => r.ossa)
   uguale('le cose del piano tornano', zona.livello.robe.length, s.robe.n)
-  controlla('e i mostri hanno le ossa di una zona del 12', Math.max(...ossa(zona)) > 2 * Math.max(...ossa(storia)),
+  // una volta e mezza dal 30/10: anche i comuni della storia chiedono due o tre risposte (docs/sotterraneo/costo-di-vincere.md)
+  controlla('e i mostri hanno le ossa di una zona del 12', Math.max(...ossa(zona)) > 1.5 * Math.max(...ossa(storia)),
             `${Math.max(...ossa(zona))} contro ${Math.max(...ossa(storia))}`)
   nota(`seme ${s.seme}: ossa ${ossa(zona).join(' ')}`)
 }
