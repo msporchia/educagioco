@@ -269,7 +269,8 @@ function salva({ subito = false, via } = {}) {
   const c = corsa.value
   // in due: la roba e la crescita di chi gioca qui, sempre (una linea che cade non butta via niente); niente sosta
   if (inDueOra.value) { if (c) { ultimoSalvato = orologio; nellAvventura({ roba: c.roba, crescita: c.crescita }, { subito }) } return }
-  if (!c || c.finita || tappaIdx.value == null || salendo) return
+  // lo scontro sul prato non è una discesa (lo scrive chiudiSopra): tappaIdx è ancora quella di prima, e la sosta rinascerebbe
+  if (!c || c.finita || tappaIdx.value == null || salendo || sopra.value) return
   ultimoSalvato = orologio
   nellAvventura({ roba: c.roba, crescita: c.crescita, sosta: scrivi(c, tappaIdx.value, { via }), ...fatteGiu(c),
                   ...conITrovati(c) }, { subito })
