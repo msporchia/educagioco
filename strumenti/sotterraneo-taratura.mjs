@@ -176,6 +176,7 @@ async function stampaIlRapporto(passi, { completo = false, solo = null, tipi = n
   const R = rap.rapporto(P)
   const elenco = (tipi || NOMI_TIPO).filter(t => P.per[t])
   for (const t of elenco) console.log(`\n${rap.tabella(R, t)}`)
+  if (elenco.includes('curioso')) console.log(`\n${rap.tabellaCosto(P)}`)
   if (elenco.includes('curioso')) console.log(`\n${(await modulo('motore/rapporto-chiede.js')).tabellaChiede(P, 'curioso')}`)
   for (const t of ['curioso', 'bravo'].filter(x => elenco.includes(x))) {
     const f = rap.forbice(P, t)
@@ -318,7 +319,7 @@ async function cerca() {
     } else if (fuoriVita || fuoriDom) nota = 'fuori bersaglio ma non cercata (--discese)'
     // il passo che vale: i tre giocatori tipo coi valori proposti, e gli stati con cui si entra nella discesa dopo
     const cur = await cronometra(`${nome} verifica`, async () => {
-      const c = await passo(k, 'curioso', { sonde: ['sbadato'], rifai: true })
+      const c = await passo(k, 'curioso', { sonde: (await modulo('dati/giocatori-tipo.js')).SONDE, rifai: true })
       const br = await passo(k, 'bravo')
       stati = { curioso: c.nuovi, bravo: br.nuovi }
       return { c: c.passi, br: br.passi }
@@ -329,9 +330,9 @@ async function cerca() {
     mezzi.push({ k, nome, nota, prima, dopo: att(k),
       curioso: `vita dopo il grosso ${f(mc.vitaGrosso)} (era ${f(vita)}), domande ${f(mc.domande, 'n')} (era ${f(dom, 'n')}), vince ${f(mc.vinte)}`,
       bravo: `vita a fine scontro ${f(mb.vitaScontri)}, sopra il 90% ${f(mb.sopra90)}, vince ${f(mb.vinte)}`,
-      sbadato: `vince ${f(ms.vinte)}`,
+      sbadato: `sviene ${ms.svPerVincere == null ? '-' : ms.svPerVincere.toFixed(1)} volte per vincerla, la rifà ${ms.volte == null ? '-' : ms.volte.toFixed(1)}`,
       okBravo: !rap.fuori(mb.vitaScontri, bersaglioDi(rap, 'bravo', 'vitaScontri', k)) && !rap.fuori(mb.sopra90, bersaglioDi(rap, 'bravo', 'sopra90', k)) && !rap.fuori(mb.vinte, bersaglioDi(rap, 'bravo', 'vinte', k)),
-      okSbadato: !rap.fuori(ms.vinte, bersaglioDi(rap, 'sbadato', 'vinte', k)) })
+      okSbadato: !rap.fuori(ms.svPerVincere, bersaglioDi(rap, 'sbadato', 'svPerVincere', k)) && !rap.fuori(ms.volte, bersaglioDi(rap, 'sbadato', 'volte', k)) })
     console.log(`  ${nome}: ${nota}`)
   }
   return { mezzi, proposte, valutazioni, TENTATIVI }
