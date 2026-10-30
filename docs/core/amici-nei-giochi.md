@@ -104,10 +104,12 @@ che dichiarano `amici` si allarga, e se il gioco ha una `tappa` sua, un controll
 non c'è un posto dove mettere un amico; il Sotterraneo 3D ha il suo mondo in 3D (`viste/Mondo3d.vue`) e
 per ora mostra gli amici solo la terra di sopra del 2D.
 
+La colonna degli amici nell'albo (accanto al proprio record il migliore degli amici): non serve, deciso il 30/10; i
+record degli amici stanno nei giochi, sotto la sfida senza fine.
+
 ## Da fare
 
 - Il Sotterraneo 3D: i pallini nel suo mondo, dalla stessa dichiarazione del sotterraneo.
-- La colonna degli amici nella tabella dei record (l'albo).
 
 Nei test: `integrazione/amici-rotta`, `integrazione/amici-survivors`, `integrazione/amici-codice`, `integrazione/amici-passo`, `integrazione/amici-costruttore`, `integrazione/amici-castello`, `integrazione/amici-conta`, `integrazione/amici-prima-dopo`, `integrazione/amici-pozioni`, `integrazione/amici-giardino`, `integrazione/amici-arena`, `integrazione/amici-sotterraneo`, `integrazione/amici-inglese`, `integrazione/amici-spagnolo`, `integrazione/amici-bancarella`, `integrazione/amici-sorpassi` (la riga in home; le regole in `unita/amici-bacheca`). Bersagli: in home `[data-sorpasso][data-gioco]`; `[data-amico-davanti]`; `[data-amici-qui]` (con
 `[data-al]` dove serve) e dentro `[data-pallino-amico]`; `[data-record-amici]` con le righe `[data-record-amico]`;
