@@ -156,7 +156,7 @@ const maturo = (f, t, c) => { t.ora += COLTURE[c.coltura || 'grano'].ms + 1 }
   const sc = schedeDellInventario(f.s, 70, k => f.capienzaDi(k))
   stessaLista('il gettone dice n e il tetto, e «pieno»', [sc.raccolti.find(v => v.k === 'grano'), sc.raccolti.find(v => v.k === 'carota'), sc.prodotti.find(v => v.k === 'pane')].map(v => [v.n, v.max, !!v.pieno].join()), ['8,8,true', '3,8,false', '8,8,true'])
   uguale('senza la capienza l\'inventario è com\'era (nessun tetto)', 'max' in schedeDellInventario(f.s, 70).raccolti[0], false)
-  uguale('il rifiuto lo dice ai bambini', dettoDi('scomparto-pieno', { k: 'grano', max: 8 }), '🌾 Grano: lo scomparto è pieno (8). Usa un po\' di roba o ingrandisci il magazzino')
+  uguale('il rifiuto lo dice ai bambini', dettoDi('scomparto-pieno', { k: 'grano', max: 8 }), '🌾 Grano: lo scomparto è pieno (8). Usa un po\' di roba o ingrandisci il silo del raccolto')
   uguale('…e per la dispensa', /dispensa/.test(dettoDi('scomparto-pieno', { k: 'pane', max: 8 })), true)
 }
 
@@ -330,9 +330,9 @@ const maturo = (f, t, c) => { t.ora += COLTURE[c.coltura || 'grano'].ms + 1 }
   stessaLista('campo maturo ma a zero monete: dice che costa 🪙1 e rimanda ai giochi', [x.testo, x.azione && x.azione.che], ['Raccogliere costa 🪙 1: guadagna monete negli altri giochi', 'home'])
   b.monete = 5; f.s.merci.grano = 8
   const y = cosaFaccioAdesso(f)
-  controlla('campo maturo e scomparto pieno: dice che è pieno e apre l\'inventario', /lo scomparto è pieno \(8\)/.test(y.testo) && y.azione && y.azione.che === 'inventario', y.testo)
+  controlla('campo maturo e scomparto pieno: dice che è pieno e apre il silo del raccolto', /lo scomparto è pieno \(8\)/.test(y.testo) && y.azione && y.azione.che === 'magazzino' && y.azione.silo === 'terra', y.testo)
   const z = comeAvere(f, 'grano')
-  controlla('«come ho il grano?» con lo scomparto pieno non manda a raccogliere', z.azione && z.azione.che === 'inventario', z.testo)
+  controlla('«come ho il grano?» con lo scomparto pieno non manda a raccogliere: apre il silo', z.azione && z.azione.che === 'magazzino' && z.azione.silo === 'terra', z.testo)
   f.s.merci.grano = 0
   uguale('libero, di nuovo raccogli', cosaFaccioAdesso(f).azione.che, 'raccogli')
 }

@@ -250,7 +250,7 @@ export function statoDaSnapshot(f) {
 /** Il motore di una visita: la stessa classe del gioco, senza borsa (non si paga niente) e con l'orologio fermo. `soloLettura` lo
     dice alla scena (niente fantasmi di edifici da comprare, niente cartelli). Cassa e banco sono due ostacoli in più. */
 export function motoreDiVisita(f) {
-  const m = new Fattoria3d({ stato: statoDaSnapshot(f), borsa: { quante: () => 0, paga: () => false }, ora: () => ORA_VISITA, rnd: () => 0.5 })
+  const m = new Fattoria3d({ stato: statoDaSnapshot(f), borsa: { quante: () => 0, paga: () => false }, ora: () => ORA_VISITA, rnd: () => 0.5, magazzini: false })
   m.soloLettura = true
   for (const [nome, p] of Object.entries(f.posti)) {
     const d = MISURE_POSTI[nome]

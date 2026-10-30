@@ -33,10 +33,11 @@ import { guastiDellAlbo } from '../../src/giochi/albo.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
 /* un mondo con le monete e l'orologio in mano */
-function mondo({ monete = 1000, stato = null, ostacoli = false } = {}) {
+// `magazzini`: i silos che si mettono da soli in mappa (fattoria3d-magazzini li prova); qui spenti, così le coordinate dei pezzi restano quelle scritte
+function mondo({ monete = 1000, stato = null, ostacoli = false, magazzini = false } = {}) {
   const b = { monete }
   const t = { ora: 1_000_000 }
-  const f = new Fattoria3d({ stato, borsa: { quante: () => b.monete, paga: n => { b.monete -= n; return true } }, ora: () => t.ora, rnd: () => 0.5 })
+  const f = new Fattoria3d({ stato, borsa: { quante: () => b.monete, paga: n => { b.monete -= n; return true } }, ora: () => t.ora, rnd: () => 0.5, magazzini })
   // i test dei pezzi mettono le cose dove dicono le coordinate: sassi e cespugli (sezione 6-bis) li si toglie, se non servono
   if (!ostacoli) for (const o of f.ostacoli) if (!o.tolto) f._togliSenzaPagare(o)
   return { f, b, t }
@@ -1037,7 +1038,7 @@ function livelloDelPezzoDi(t) { return PEZZI[t].liv }
   controlla('ogni pezzo e ogni edificio ha una categoria valida', [...Object.values(PEZZI), ...Object.values(EDIFICI)].every(d => !!CATEGORIE[d.categoria]))
   controlla('ogni scheda ha almeno una carta (la scheda Feste solo in stagione o con un regalo della fiera: la linguetta si nasconde)', Object.keys(CATEGORIE).every(c => c === 'feste' || schedeDi(statoMenu({ livello: 99 }))[c].length > 0) && schedeDi(statoMenu({ livello: 99, stagione: 'natale' })).feste.length > 0)
   const tutte = Object.values(schedeDi(statoMenu({ livello: 99 }))).flat().filter(c => c.genere !== 'strumento' && c.genere !== 'bestia')
-  uguale('ogni pezzo e ogni edificio unico sta in una scheda sola', tutte.length, Object.values(PEZZI).filter(d => !d.stagione && !d.fiera).length + Object.keys(EDIFICI).length)          // le feste si offrono solo in stagione, la fiera solo a chi l'ha vinta
+  uguale('ogni pezzo e ogni edificio unico sta in una scheda sola', tutte.length, Object.values(PEZZI).filter(d => !d.stagione && !d.fiera && !d.magazzino).length + Object.keys(EDIFICI).length)          // le feste si offrono solo in stagione, la fiera solo a chi l'ha vinta, i magazzini mai
   controlla('le carte di una scheda stanno in ordine di livello, prima quelle col «!»', Object.keys(CATEGORIE).every(c => {
     const carte = carteDi(c, statoMenu({ livello: 99 })).filter(x => x.genere !== 'strumento')
     const inOrdine = sg => { const l = carte.filter(x => !!x.segnala === sg).map(x => x.liv); return l.every((v, k) => !k || v >= l[k - 1]) }
