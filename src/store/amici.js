@@ -1,6 +1,6 @@
 // Gli amici di un bambino (docs/core/amici.md): chi sono, la chiave di ogni amicizia, e se le funzioni online sono accese.
 // Sta fuori dal profilo, una chiave per bambino (`amici:<id>`), e non entra nei backup: le chiavi sono dei due telefoni.
-import { reactive } from 'vue'
+import { reactive, toRaw } from 'vue'
 import { load, save, flush } from './storage.js'
 import { leggiIstantanea } from '../amici/istantanea.js'
 
@@ -48,7 +48,8 @@ export async function carica(giocatore) {
 // mai il booleano nudo: storage.js scarta un `true` salvato da solo (docs/core/archivio.md)
 function scrivi() {
   if (!dati.giocatore) return
-  save(PREFISSO + dati.giocatore, { id: dati.id, deciso: dati.deciso, attivo: dati.attivo, online: dati.online, amici: dati.amici.map(a => ({ ...a })) })
+  // toRaw: la bacheca dentro l'amico è un oggetto reattivo, e IndexedDB non lo copia (si finirebbe nel ripiego, docs/core/archivio.md)
+  save(PREFISSO + dati.giocatore, { id: dati.id, deciso: dati.deciso, attivo: dati.attivo, online: dati.online, amici: dati.amici.map(a => ({ ...toRaw(a) })) })
   return flush()
 }
 
