@@ -125,6 +125,12 @@ scorda da sé). Lo stato della fattoria (`VERSIONE_STATO`) **non è stato toccat
 
 ## Domani: la fattoria di un amico
 
+**Scelte dell'utente (30/10/2026)**, da fare: entrando dall'amico si riempiono le casse della sua **mongolfiera**; si
+**coccolano le sue bestie** (e le bestie diventano tristi dopo un po' di *tempo di gioco* senza coccole, non di tempo vero); si
+**annaffia** un campo (cresce prima); si lasciano **adesivi** sulle sue cose; dalle visite si raccolgono **capi unici** per il
+guardaroba. Un aiuto perso non è grave. No a cartello, caccia al tesoro e minigiochi. La sua idea più forte, la **fattoria in
+comune**, c'è già: [in-comune.md](in-comune.md).
+
 `esportaLaMiaFattoria(motore, { id, nome, proprietario })` costruisce lo snapshot dalla fattoria vera (lotti, edifici, cose,
 strade; mercato e cassa fatti con ciò che si fa a quel livello, cassa e banco in due celle libere). **Solo legge**: oggi non la usa
 nessuno e un test la prova (esce valida, stabile se rinormalizzata, piccola, e un'altra fattoria la visita con `aggiungi`).

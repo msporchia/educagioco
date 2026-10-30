@@ -162,7 +162,7 @@ limitano chi lo fa a mano, non un attacco vero. Dove guardare: pannello Cloudfla
 ## Cosa questo apre (non è in questo lavoro)
 
 - **Rientro automatico** nella stanza dopo una caduta: l'`id` del bambino dice che è lo stesso giocatore.
-- **Visite alla fattoria**: stessi messaggi, `k` nuovi. I **record fra amici** e dove è arrivato ognuno ci sono, anche senza
+- **Visite alla fattoria**: stessi messaggi, `k` nuovi. La **fattoria in comune** di un'amicizia ha la sua richiesta (`POST /amici/comune`): [../fattoria3d/in-comune.md](../fattoria3d/in-comune.md). I **record fra amici** e dove è arrivato ognuno ci sono, anche senza
   essere online insieme: [amici-bacheca.md](amici-bacheca.md).
 
 ## File e test
