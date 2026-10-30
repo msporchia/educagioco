@@ -3,9 +3,9 @@
 // uscendo dall'app se c'era un cambio in coda; si rilegge rientrando e quando l'amico online avvisa. Mai un errore.
 import { watch } from 'vue'
 import { state } from '../store/profile.js'
-import { dati, ricorda } from '../store/amici.js'
+import { dati, ricorda, segnaSorpassi } from '../store/amici.js'
 import { scambiaBacheca } from './rete.js'
-import { istantanea, firma, quandoInParole } from './istantanea.js'
+import { istantanea, firma, quandoInParole, sorpassi, davantiIn } from './istantanea.js'
 import { quandoBacheca, avvisaPresenti } from './servizio.js'
 import { bacheca as avviso } from './messaggi.js'
 
@@ -17,6 +17,13 @@ let profilo = () => state.profile
 let opzioni = {}                          // servizio, fetchImpl: per le prove
 let scritta = null                       // la firma dell'ultima istantanea arrivata in tutte le bacheche
 let ferma = null, attesa = 0, avvio = 0, letta = 0, giro = 0
+
+/* tiene l'istantanea arrivata, e se dice che l'amico ci è passato davanti lo segna per la home */
+function arrivata(chiave, altro) {
+  const a = dati.amici.find(x => x.chiave === chiave)
+  const prima = a?.bacheca
+  if (ricorda(chiave, altro)) segnaSorpassi(chiave, sorpassi(prima, a.bacheca, istantanea(profilo())))
+}
 
 /* scrive (se `scrivi` e il bambino si fa vedere online) e rilegge tutte le amicizie; `forza` riscrive anche senza cambi */
 export async function sincronizza({ scrivi = true, forza = false, keepalive = false } = {}) {
@@ -30,7 +37,7 @@ export async function sincronizza({ scrivi = true, forza = false, keepalive = fa
     const altro = await scambiaBacheca(a.chiave, dati.id, manda ? ist : null, { ...opzioni, keepalive })
     if (mio !== giro) return                                              // un altro bambino nel frattempo
     if (altro === undefined) tutte = false
-    else if (altro) ricorda(a.chiave, altro)
+    else if (altro) arrivata(a.chiave, altro)
   }))
   if (mio !== giro) return
   letta = Date.now()
@@ -47,7 +54,7 @@ async function rileggi(chiave) {
   if (!a) return
   const mio = giro
   const altro = await scambiaBacheca(a.chiave, dati.id, null, opzioni)
-  if (mio === giro && altro) ricorda(a.chiave, altro)
+  if (mio === giro && altro) arrivata(a.chiave, altro)
 }
 
 /* entrando in un gioco che mostra gli amici: si rilegge, se non lo si è fatto da poco */
@@ -99,4 +106,16 @@ export function amiciNelGioco(gioco, ora = Date.now()) {
     chiave: a.chiave, nome: a.nome, iniziale: ([...a.nome.trim()][0] || '?').toUpperCase(), colore: COLORI[i % COLORI.length],
     ...a.bacheca.giochi[gioco], quando: quandoInParole(a.bacheca.giorno, ora),
   }))
+}
+
+/* I sorpassi da dire in home, dal più recente: solo nei giochi che il bambino vede (`giochi`, le chiavi), solo se l'amico ha un
+   nome e solo se è ancora davanti (chi l'ha già ripreso non ha niente da sentirsi dire) */
+export function sorpassiDaDire(giochi, quanti = 2) {
+  if (!dati.attivo) return []
+  const mia = istantanea(profilo())
+  return dati.sorpassi.map(x => ({ x, i: dati.amici.findIndex(a => a.chiave === x.chiave) }))
+    .filter(({ x, i }) => i >= 0 && dati.amici[i].nome && giochi.includes(x.gioco) && davantiIn(dati.amici[i].bacheca, mia, x.gioco, x.tipo))
+    .reverse().slice(0, quanti)
+    .map(({ x, i }) => ({ ...x, nome: dati.amici[i].nome, iniziale: ([...dati.amici[i].nome.trim()][0] || '?').toUpperCase(),
+      colore: COLORI[i % COLORI.length] }))
 }

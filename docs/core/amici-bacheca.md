@@ -14,7 +14,10 @@ Ogni amicizia ha una **bacheca** sul servizio, sotto la sua chiave: l'ultima ist
 - **L'app la riscrive a ogni avvio**, anche senza cambi: così la bacheca di chi gioca non scade.
 - **È di due**: il primo e il secondo `id` che scrivono la tengono, un terzo è rifiutato anche solo per leggere (come la presenza).
 - **La copia dell'amico sul proprio telefono si tiene** (`bacheca` dentro l'amico, in `amici:<bambino>`), anche quando sul
-  servizio è scaduta, e si butta con «Togli». Offline si vede l'ultima letta, con quanto è vecchia.
+  servizio è scaduta, e si butta con «Togli». Offline si vede l'ultima letta, con quanto è vecchia. Confrontata con la nuova
+  dice se l'amico ci è passato davanti ([amici-nei-giochi.md](amici-nei-giochi.md)).
+- **Si salva senza i proxy di Vue** (`toRaw` in `scrivi`): la bacheca dentro l'amico è reattiva, IndexedDB non la copia e il
+  salvataggio finiva in silenzio nel ripiego di localStorage.
 
 ## Cosa c'è dentro: numeri e il giorno
 
