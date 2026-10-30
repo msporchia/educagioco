@@ -11,7 +11,7 @@ import { RICETTE, MACCHINE, TIPI_DI_MACCHINA } from '../dati/ricette.js'
 import { POSTI_MASSIMI, postiInForma, prezzoDelPosto } from '../dati/posti.js'
 import { livelloPer, livelloDelPezzo, livelloDellaColtura, livelloDellaRicetta } from '../dati/livelli.js'
 import { COSTI, PECORE, prezzoDelLotto } from '../dati/regole.js'
-import { SILOS, TIPI_DI_SILO, siloDi, postiPerMerce, prezzoDelPasso } from '../dati/silos.js'
+import { SILOS, TIPI_DI_SILO, siloDi, postiPerMerce, prezzoDelPasso, siloDelPezzo, PASSI_PER_EDIFICIO, EDIFICI_PER_SILO, edificiPerPassi, tagliaDelEdificio } from '../dati/silos.js'
 import { generaLotto } from '../dati/lotti.js'
 import { biomaDiGen, acquaDelLotto, tipoAcqua } from '../dati/biomi.js'
 import { provaPesca, lanciaLenza, ritiraPesca, bancoDi, lenzeInAcqua, ripulisciPesca, riesaminaPesca, postiDiPesca } from './pesca.js'
@@ -25,8 +25,9 @@ import { vistaDellaMongolfiera, caricaLaCassa, partiLaMongolfiera, aggiornaMongo
 import { vistaDellaBottega, consegnaInBottega, rifiutaInBottega, aggiornaLeBotteghe, daConsegnareIn, daConsegnareOvunque } from './botteghe.js'
 
 export class Fattoria3d {
-  constructor({ stato = null, borsa, ora = Date.now, rnd = Math.random } = {}) {
+  constructor({ stato = null, borsa, ora = Date.now, rnd = Math.random, magazzini = true } = {}) {
     this.s = normalizza(stato)
+    this.magazzini = magazzini                     // falso nella fattoria di un vicino: i suoi magazzini non nascono da soli
     this.borsa = borsa
     this.ora = ora
     this.rnd = rnd
@@ -369,6 +370,7 @@ export class Fattoria3d {
     if (!forza && c.bestie) return { ok: false, motivo: 'ha-le-bestie' }
     if (!forza && this._ponteSopra(c)) return { ok: false, motivo: 'ponte-sopra' }
     if (!forza && EDIFICI[c.tipo] && this.edificioAlLavoro(c.tipo)) return { ok: false, motivo: 'macchina-al-lavoro' }
+    if (!forza && siloDelPezzo(c.tipo)) return { ok: false, motivo: 'magazzino' }          // un magazzino si sposta, non si mette via: è lì che sta la roba
     const costo = gratis ? 0 : COSTI.spostare
     if (!this._paga(costo)) return { ok: false, motivo: 'poche-monete', costo }
     this._libera(c)
@@ -394,7 +396,8 @@ export class Fattoria3d {
     return !!Q && (Q.coda.length > 0 || Object.keys(Q.pronti).length > 0)
   }
   /** Gli edifici che il livello ha aperto e non sono in mappa: il «!» (solo macchine e mongolfiera; mai una decorazione). */
-  edificiDaCostruire() { return edificiDaCostruire(this.livello(), this.s.posseduti) }
+  /** Gli edifici aperti dal livello e non ancora in mappa (il «!» su Costruisci), più i magazzini che aspettano nel magazzino dei pezzi. */
+  edificiDaCostruire() { return [...edificiDaCostruire(this.livello(), this.s.posseduti), ...TIPI_DI_SILO.map(t => SILOS[t].edificio).filter(t => this.nelMagazzino(t) > 0 && PEZZI[t].liv <= this.livello())] }
   /** Un posto dove ci sta: quello di prima se è libero, se no il primo libero nel terreno tuo (per i banchi di prova e i comandi; il gioco lo sceglie il bambino). */
   postoPer(tipo) {
     const vecchio = POSTI_STORICI[tipo]
@@ -488,15 +491,83 @@ export class Fattoria3d {
   spazioPer(k) { return Math.max(0, this.capienzaDi(k) - this.scortaDi(k)) }
   /** Il prezzo del prossimo ingrandimento di un silo (🪙 `40 + 130·ln(1+n)` come in 2D). */
   prezzoIngrandimento(silo) { return TIPI_DI_SILO.includes(silo) ? prezzoDelPasso(this.livelloDelSilo(silo)) : null }
-  /** Ingrandisce un silo: +2 pezzi per ogni scomparto. Costa monete (conta come esperienza); { ok, costo, posti } o un rifiuto (`sconosciuto`, `poche-monete`). */
+  /** Ingrandisce un silo: +2 pezzi per ogni scomparto, e il suo edificio cresce. Costa monete (conta come esperienza); { ok, costo, posti } o un
+      rifiuto (`sconosciuto`, `poche-monete`, `silo-al-massimo` quando i suoi edifici sono grandi al massimo: ne serve un altro, `costruisciMagazzino`). */
   ingrandisciSilo(silo) {
     if (!TIPI_DI_SILO.includes(silo)) return { ok: false, motivo: 'sconosciuto' }
+    if (this.passoDelSilo(silo) !== 'ingrandisci') return { ok: false, motivo: 'silo-al-massimo' }
     const costo = this.prezzoIngrandimento(silo)
     if (!this._spendi(costo)) return { ok: false, motivo: 'poche-monete', costo }
     this.s.silo[silo] = this.livelloDelSilo(silo) + 1
     this._evento('silo', { silo, livello: this.s.silo[silo] })
     return { ok: true, costo, posti: this.postiDelSilo(silo) }
   }
+
+  // ── i magazzini in mappa (docs/fattoria3d/magazzini.md): ogni silo ha i suoi edifici, che crescono con gli ingrandimenti; la capienza la dicono
+  //    gli ingrandimenti (`s.silo`), gli edifici la fanno vedere. Il primo silo del raccolto si mette da solo accanto a casa; gli altri arrivano
+  //    nel magazzino dei pezzi (al livello del silo, o comprati dal foglio) e li mette il bambino dove vuole (`_assicuraMagazzini`, nel tick) ──
+  /** Gli edifici di un silo in mappa, nell'ordine in cui sono nati: il primo cresce per primo. */
+  edificiDelSilo(silo) { const t = SILOS[silo].edificio; return this.s.cose.filter(c => c.tipo === t).sort((a, b) => a.id - b.id) }
+  /** Quanti edifici ha un silo, in mappa e nel magazzino. */
+  quantiMagazzini(silo) { return this.edificiDelSilo(silo).length + this.nelMagazzino(SILOS[silo].edificio) }
+  /** Quanto è cresciuto un edificio di un silo (0 appena nato, PASSI_PER_EDIFICIO al massimo), o null se la cosa non è un magazzino. */
+  tagliaDi(c) {
+    const silo = siloDelPezzo(c.tipo)
+    if (!silo) return null
+    return tagliaDelEdificio(this.livelloDelSilo(silo), Math.max(0, this.edificiDelSilo(silo).findIndex(x => x.id === c.id)))
+  }
+  /** Cosa si può fare per dare più posto: 'ingrandisci' (un edificio ha ancora da crescere), 'nuovo' (tutti al massimo: se ne costruisce un altro), 'basta'. */
+  passoDelSilo(silo) {
+    const quanti = Math.max(1, this.quantiMagazzini(silo))
+    if (this.livelloDelSilo(silo) < PASSI_PER_EDIFICIO * quanti) return 'ingrandisci'
+    return quanti < EDIFICI_PER_SILO ? 'nuovo' : 'basta'
+  }
+  /** Il primo posto libero per un pezzo di quel tipo, a spirale attorno a (i0, j0): { i, j } o null. Deterministico (lo rifà uguale l'amico). */
+  _postoVicino(tipo, i0, j0, raggio = 14) {
+    for (let r = 0; r <= raggio; r++) for (let b = -r; b <= r; b++) for (let a = -r; a <= r; a++) {
+      if (Math.max(Math.abs(a), Math.abs(b)) !== r) continue
+      if (this.puoMettere(tipo, i0 + a, j0 + b).ok) return { i: i0 + a, j: j0 + b }
+    }
+    return null
+  }
+  /** Il primo silo del raccolto si mette da solo, nel primo posto libero accanto alla casa: torna se c'è riuscito (se no resta da mettere). */
+  _mettiIlPrimoSilo() {
+    const casa = FISSI[0], p = this._postoVicino('silo', casa.i + casa.w + 1, casa.j + 1)
+    this.s.magazzino.silo = this.nelMagazzino('silo') + 1
+    return !!(p && this.mettiPezzo('silo', p.i, p.j).ok)
+  }
+  /** Quando tutti gli edifici di un silo sono grandi al massimo: se ne compra un altro, al prezzo del prossimo ingrandimento (lo è: nasce col suo
+      primo passo), e va nel magazzino dei pezzi, da mettere dove si vuole. { ok, costo, posti, tipo } o un rifiuto (`non-serve`, `poche-monete`). */
+  costruisciMagazzino(silo) {
+    if (!TIPI_DI_SILO.includes(silo)) return { ok: false, motivo: 'sconosciuto' }
+    if (this.passoDelSilo(silo) !== 'nuovo') return { ok: false, motivo: 'non-serve' }
+    const costo = this.prezzoIngrandimento(silo), tipo = SILOS[silo].edificio
+    if (!this._spendi(costo)) return { ok: false, motivo: 'poche-monete', costo }
+    this.s.silo[silo] = this.livelloDelSilo(silo) + 1
+    this.s.magazzino[tipo] = this.nelMagazzino(tipo) + 1
+    this._evento('silo', { silo, livello: this.s.silo[silo] })
+    return { ok: true, costo, posti: this.postiDelSilo(silo), tipo }
+  }
+  /** I magazzini arrivati al livello e non ancora in mappa si mettono da soli (anche per una fattoria di prima: nessuno perde posto). Torna se ne ha messi. */
+  _assicuraMagazzini() {
+    if (!this.magazzini) return false
+    const liv = this.livello(), firma = liv + ':' + TIPI_DI_SILO.map(t => this.livelloDelSilo(t)).join()
+    if (firma === this._firmaMagazzini) return false
+    this._firmaMagazzini = firma
+    let messo = false
+    for (const silo of TIPI_DI_SILO) {
+      if (liv < SILOS[silo].liv) continue
+      const tipo = SILOS[silo].edificio
+      for (let n = this.quantiMagazzini(silo); n < edificiPerPassi(this.livelloDelSilo(silo)); n++) {
+        if (silo === 'terra' && n === 0) this._mettiIlPrimoSilo()
+        else this.s.magazzino[tipo] = this.nelMagazzino(tipo) + 1
+        messo = true
+      }
+    }
+    if (messo) this.eventi = this.eventi.filter(e => !(e.tipo === 'pezzo' && siloDelPezzo(e.pezzo)))       // arrivati da soli: non sono pezzi messi dal bambino
+    return messo
+  }
+
   /** Mette `n` di `k` in magazzino, fin dove ci stanno: torna quanti ne sono entrati (il resto resta dov'era, a chi chiama). */
   _riponi(k, n) {
     const entra = Math.min(n, this.spazioPer(k))
@@ -901,6 +972,7 @@ export class Fattoria3d {
     if (aggiornaLeBotteghe(this)) cambiato = true
     ripulisciPesca(this)
     if (this._riempiOrdini()) cambiato = true
+    if (this._assicuraMagazzini()) cambiato = true
     return cambiato
   }
 

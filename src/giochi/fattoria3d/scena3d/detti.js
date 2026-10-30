@@ -27,7 +27,7 @@ export function dettoDi(motivo, extra = {}) {
     case 'scomparto-pieno': {
       // lo scomparto di quella merce è pieno (dati/silos.js): non si raccoglie e non si paga, il lavoro aspetta
       const m = extra.k && merceDi(extra.k), silo = extra.k && SILOS[siloDi(extra.k)]
-      return `${m ? `${m.emoji} ${m.nome}: ` : ''}lo scomparto è pieno${extra.max ? ` (${extra.max})` : ''}. Usa un po' di roba${silo ? ` o ingrandisci ${silo.breve === 'Dispensa' ? 'la dispensa' : 'il magazzino'}` : ''}`
+      return `${m ? `${m.emoji} ${m.nome}: ` : ''}lo scomparto è pieno${extra.max ? ` (${extra.max})` : ''}. Usa un po' di roba${silo ? ` o ingrandisci ${silo.art} ${silo.nome.toLowerCase()}` : ''}`
     }
     case 'sazie': return 'Sono tutte sazie'
     case 'forno-pieno': return extra.compra ? 'Tutti i posti sono occupati: puoi comprarne un altro' : 'Tutti i posti sono occupati'
@@ -64,6 +64,10 @@ export function dettoDi(motivo, extra = {}) {
     case 'sta-crescendo': return 'Quello che sta crescendo non si mette via'
     case 'ha-le-bestie': return 'Ci sono le bestie: spostalo, non si mette via'
     case 'macchina-al-lavoro': return 'Finisci prima il lavoro: poi la metti via (spostarla si può)'
+    case 'magazzino': return 'Un magazzino non si mette via: lì c\'è la tua roba (spostarlo si può)'
+    case 'silo-al-massimo': return 'È grande al massimo'
+    case 'niente-posto': return 'Non c\'è posto vicino: compra un po\' di terra lì accanto'
+    case 'non-serve': return 'Prima ingrandisci quello che hai'
     case 'ha-le-pecore': return 'Il recinto ha le pecore: spostalo, non si mette via'
     default: return 'Non si può'
   }

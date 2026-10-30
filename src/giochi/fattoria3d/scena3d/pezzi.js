@@ -25,6 +25,7 @@ import { BancoCampi } from './campi-istanze.js'
 import { BancoStatici, STATICI } from './statici-istanze.js'
 import { tempoBreve } from '../dati/tempo.js'
 
+import { creaSiloRosso, creaSiloBianco, creaDispensa, cresciMagazzino } from './modelli-magazzini.js'
 
 const CREA = {
   campo: () => creaCampo(Math.random() * 99 + 1),
@@ -46,6 +47,7 @@ const CREA = {
   pozzo: () => creaPozzo(),
   spaventapasseri: () => creaSpaventapasseri(),
   trattore: () => creaTrattore(),
+  silo: () => creaSiloRosso(), silo_bianco: () => creaSiloBianco(), dispensa: () => creaDispensa(),      // i magazzini, che crescono (modelli-magazzini.js)
   ponte: () => creaPonte(),
   passerella: () => creaPasserella(),
   tavolo: () => creaTavolo(),
@@ -206,6 +208,7 @@ export class Pezzi {
 
   _cosa(v, g, dt, tt, adesso) {
     const c = v.c
+    if (g.userData.altezzaPiena) return void cresciMagazzino(g, this.m.tagliaDi(c))          // un magazzino: grande quanto è stato ingrandito
     if (c.tipo === 'campo') {
       if (!this.banco.visto(g)) { v.chiave = null; return }          // fuori dall'inquadratura (o sollevato): non si ripone, e al ritorno si rifà
       const cr = this.m.crescita(c), chiave = cr.map(x => x.toFixed(2)).join(), col = c.coltura || 'grano'

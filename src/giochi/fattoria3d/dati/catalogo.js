@@ -43,6 +43,11 @@ export const PEZZI = {
   // le feste (docs/fattoria3d/stagioni.md): si offrono nel menu solo in stagione (`stagione` è una chiave di FINESTRE della fattoria di sempre); comprate restano
   zucca_intagliata: { nome: 'Zucca intagliata', emoji: '🎃', w: 1, d: 1, ...da2d('zucca_intagliata'), categoria: 'decori', stagione: 'halloween' },
   zucche_mucchio:  { nome: 'Due zucche',       emoji: '🎃', w: 2, d: 1, ...da2d('zucche_mucchio'), categoria: 'decori', stagione: 'halloween' },
+  // i magazzini (docs/fattoria3d/magazzini.md): non si comprano dal menu, arrivano da soli al livello del silo e il secondo si costruisce dal loro
+  // foglio, e si mettono dal menu (la carta c'è solo se ce n'è uno da mettere); `magazzino` è il silo di cui sono l'edificio. Il prezzo vero è quello dell'ingrandimento (dati/silos.js): questo serve solo ai controlli
+  silo:            { nome: 'Silo del raccolto', emoji: '🌾', art: 'il', w: 2, d: 2, prezzo: 40, rincaro: 0, cresce: 0, liv: 1, categoria: 'edifici', magazzino: 'terra' },
+  silo_bianco:     { nome: 'Silo della stalla', emoji: '🥛', art: 'il', w: 2, d: 2, prezzo: 40, rincaro: 0, cresce: 0, liv: 4, categoria: 'edifici', magazzino: 'stalla' },
+  dispensa:        { nome: 'Dispensa',          emoji: '📦', art: 'la', w: 3, d: 2, prezzo: 40, rincaro: 0, cresce: 0, liv: 16, categoria: 'edifici', magazzino: 'bottega' },
   trattore:        { nome: 'Trattore',        emoji: '🚜', w: 2, d: 2, ...da2d('trattore'), categoria: 'edifici' },     // si tocca e porta ai vicini (docs/fattoria3d/vicini.md)
   ...pezziDecori(da2d),    // le decorazioni della 2D portate in 3D (giro G8): verde, recinti e cartelli, raccolto, case e lampioni, bestiole (dati/decori.js)
   ...PEZZI_DEL_CORTILE,    // stagno delle anatre, porcile, capre (giro G4): livelli e prezzi provvisori in dati/cortile.js
@@ -101,7 +106,7 @@ export function edificiDaCostruire(livello, posseduti = {}) {
 
 /** Cosa dice l'avviso quando si sale di livello e si apre un edificio: «il Panificio! Costruiscilo» (vuoto se non se ne apre nessuno). */
 export function avvisoEdificiNuovi(livello) {
-  const nuovi = Object.values(EDIFICI).filter(e => e.liv === livello)
+  const nuovi = [...Object.values(EDIFICI), ...Object.values(PEZZI).filter(p => p.magazzino && p.liv > 1)].filter(e => e.liv === livello)      // anche un magazzino che arriva (il primo silo c'è da subito)
   if (!nuovi.length) return ''
   return nuovi.map(e => `${e.art} ${e.nome}`).join(' e ') + '! ' + (nuovi.length > 1 ? 'Costruiscili' : 'Costruiscilo')
 }

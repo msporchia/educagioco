@@ -20,7 +20,7 @@ import { RICETTE, emojiDi, dentroDi, PRONTO_DA_RITIRARE } from './dati/ricette.j
 import { POSTI_MASSIMI, prezzoDelPosto } from './dati/posti.js'
 import { avanzamento, roba, nomeDi, sogliaDi } from './dati/livelli.js'
 import { tempoBreve } from './dati/tempo.js'
-import { SILOS, TIPI_DI_SILO } from './dati/silos.js'
+import { SILOS, TIPI_DI_SILO, siloDelPezzo } from './dati/silos.js'
 import { clienteDi, LIVELLO_BANCO } from './dati/ordini.js'
 import { PEZZI } from './dati/catalogo.js'
 import { LIVELLO_MONGOLFIERA } from './dati/mongolfiera.js'
@@ -53,6 +53,8 @@ import { personaDi, normalizzaAbito, capiDi, chiaveAbito, vesti as vestiAbito, n
 import { schedeDellInventario, robaNuova, contoDi } from './viste/inventario-puro.js'
 import Bacheca from './viste/Bacheca.vue'
 import Mongolfiera from './viste/Mongolfiera.vue'
+import Magazzino from './viste/Magazzino.vue'
+import { vistaDelMagazzino } from './viste/magazzino-puro.js'
 import Bottega from './viste/Bottega.vue'
 import Dialogo from './viste/Dialogo.vue'
 import Opzioni from './viste/Opzioni.vue'
@@ -134,7 +136,7 @@ function consegnato(e) {
 function contaEventi() {
   for (const e of motore.prendiEventi()) {
     if (EVENTI[e.tipo]) segna(EVENTI[e.tipo])
-    if (e.tipo === 'pezzo') segnaBest('fattoria3dVarieta', new Set(motore.s.cose.map(c => c.tipo)).size)      // «Un po' di tutto»: i tipi diversi in mappa (un primato)
+    if (e.tipo === 'pezzo') segnaBest('fattoria3dVarieta', new Set(motore.s.cose.filter(c => !siloDelPezzo(c.tipo)).map(c => c.tipo)).size)      // «Un po' di tutto»: i tipi diversi in mappa (un primato); i magazzini arrivano da soli, non contano
     else if (e.tipo === 'prodotto') segna('fattoria3dProdotti', e.n)
     else if (e.tipo === 'uovo') segna('fattoria3dUova', e.n)
     else if (e.tipo === 'latte') segna('fattoria3dLatte', e.n)
@@ -180,6 +182,8 @@ const nave = ref(false)                    // il foglio della mongolfiera (docs/
 const naveMsg = ref('')
 const bottegaAperta = ref(null)            // il tipo della bottega del paese di cui si vede il foglio (docs/fattoria3d/botteghe.md)
 const bottegaMsg = ref('')
+const magazzinoAperto = ref(null)          // il silo di cui si vede il foglio (docs/fattoria3d/magazzini.md)
+const magazzinoMsg = ref('')
 const toast = ref(null)                  // { testo, fine }: l'avviso del livello, sopra la scena
 const DURATA_TOAST = 4500, DURATA_AVVISO = 6000
 let avvisoFine = 0
@@ -219,6 +223,7 @@ const ui = {
   apriBanco() { apriBanco() },
   apriMongolfiera() { naveMsg.value = ''; naveCons.value = null; nave.value = true },
   apriBottega(tipo) { bottegaMsg.value = ''; bottegaCons.value = null; bottegaAperta.value = tipo },
+  apriMagazzino(silo) { magazzinoMsg.value = ''; magazzinoAperto.value = silo },          // un tocco su un magazzino
   apriMappa() { if (comune) ui.avviso('Dai vicini si va col trattore della tua fattoria.'); else visite.apriMappa() },
   apriBestia(id) { bestiaMsg.value = ''; bestiaAperta.value = id },             // un tocco su una bestia di casa
   apriGuardaroba() { guardarobaAperto.value = true },             // un tocco sul contadino fermo                 // il trattore: la mappa dei villaggi (docs/fattoria3d/vicini.md)
@@ -227,7 +232,7 @@ const ui = {
     avvisoFine = testo ? performance.now() + DURATA_AVVISO : 0
   },
   apriCostruisci(i, j) { apriCostruisci(i, j) },                           // tenere premuto su un posto libero del terreno tuo
-  fogliAperti: () => !!alberoK.value || !!dialogo.value || !!consiglio.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!battesimoDi.value || bancoAperto.value || nave.value || !!bottegaAperta.value || mappaAperta.value || !!carretto.value || (opzioniAperte.value && !opzioniRidotte.value),
+  fogliAperti: () => !!alberoK.value || !!dialogo.value || !!consiglio.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!battesimoDi.value || bancoAperto.value || nave.value || !!bottegaAperta.value || !!magazzinoAperto.value || mappaAperta.value || !!carretto.value || (opzioniAperte.value && !opzioniRidotte.value),
   zonaDrop: () => (zonaVia.value || null)?.getBoundingClientRect() || null,
   trascinando(info) { trascinando.value = info },
 }
@@ -377,12 +382,27 @@ function ritira() {
 
 // ── l'inventario: le scorte a schede (si calcola solo a foglio aperto) ──
 const inventario = computed(() => { void versione.value; return inventarioAperto.value ? schedeDellInventario(motore.s, motore.livello(), k => motore.capienzaDi(k)) : null })
-/** I tre magazzini (raccolti, stalla, dispensa) col loro prossimo ingrandimento (dati/silos.js): +2 pezzi a ogni scomparto, il prezzo della 2D. */
-const magazzini = computed(() => { void versione.value; return inventarioAperto.value ? TIPI_DI_SILO.map(silo => ({ silo, nome: SILOS[silo].nome, emoji: SILOS[silo].emoji, posti: motore.postiDelSilo(silo), prezzo: motore.prezzoIngrandimento(silo), puoi: motore.monete() >= motore.prezzoIngrandimento(silo) })) : [] })
-function ingrandisciMagazzino(silo) {
-  const r = motore.ingrandisciSilo(silo)
-  if (!r.ok) return ui.avviso(dettoDi('poche-monete', { costo: r.costo, per: 'ingrandire il magazzino' }))
-  ui.avviso(`${SILOS[silo].emoji} ${SILOS[silo].nome}: ora ${r.posti} pezzi per scomparto`); ui.cambio()
+/** I magazzini già in mappa, per le scorciatoie in fondo all'inventario: quanto tiene ognuno, e un tocco apre il suo foglio. */
+const magazzini = computed(() => { void versione.value; return inventarioAperto.value ? TIPI_DI_SILO.filter(silo => motore.edificiDelSilo(silo).length).map(silo => ({ silo, nome: SILOS[silo].nome, emoji: SILOS[silo].emoji, posti: motore.postiDelSilo(silo) })) : [] })
+function vaiAlMagazzino(silo) { chiudiInventario(); ui.apriMagazzino(silo) }
+
+// ── il foglio di un magazzino: le sue merci e il posto in più (docs/fattoria3d/magazzini.md) ──
+const magazzino = computed(() => { void versione.value; return magazzinoAperto.value ? vistaDelMagazzino(motore, magazzinoAperto.value) : null })
+function piuPosto() {
+  const silo = magazzinoAperto.value, v = vistaDelMagazzino(motore, silo)
+  if (v.passo === 'basta') return
+  if (!v.puoi) return void (magazzinoMsg.value = `Ti mancano 🪙 ${v.mancano}: le monete si guadagnano negli altri giochi.`)
+  const r = v.passo === 'nuovo' ? motore.costruisciMagazzino(silo) : motore.ingrandisciSilo(silo)
+  if (!r.ok) return void (magazzinoMsg.value = dettoDiRifiuto(r, { costo: r.costo }))
+  if (v.passo === 'nuovo') {                 // quello nuovo è nel magazzino dei pezzi: si mette come dal menu, davanti al contadino o col fantasma da trascinare
+    magazzinoAperto.value = null; ui.cambio(); mondo.cambiato()
+    const [i, j] = mondo.cellaDavanti(), q = mondo.costruisciQui(r.tipo, i, j)
+    return void ui.avviso(q.esito === 'messo' ? `${SILOS[silo].emoji} Eccolo! Ogni ${SILOS[silo].cosa} ha posto per ${r.posti}.` : `${SILOS[silo].emoji} Mettilo dove vuoi: è nel menu Costruisci.`)
+  }
+  magazzinoMsg.value = `Fatto! Adesso ogni ${SILOS[silo].cosa} ha posto per ${r.posti}.`
+  ui.cambio(); mondo.cambiato()
+  for (const c of motore.edificiDelSilo(silo)) mondo.pezzi.salta(c.id)
+  mondo.eroe.avvia('esulta', 0.9)
 }
 function apriInventario() { inventarioVisto = contoDi(motore.s); inventarioAperto.value = true; ripresa() }
 function chiudiInventario() { inventarioVisto = contoDi(motore.s); inventarioAperto.value = false; ripresa() }
@@ -499,7 +519,7 @@ const quadroGuida = () => {
   return {
     campi: cs.length, vuoti: cs.filter(c => m.campoVuoto(c)).length, maturi: cs.filter(c => m.campoMaturo(c)).length, crescono: crescono.length,
     secondi: restanti.length ? Math.min(...restanti) : 0, modo: modo.value, semi: semiAperto.value, costruisci: !!costruisciQui.value,
-    foglio: !!(alberoK.value || dialogo.value || macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!battesimoDi.value || bancoAperto.value || nave.value || bottegaAperta.value || mappaAperta.value || !!carretto.value || opzioniAperte.value || consiglio.value || strumento.value || trascinando.value),
+    foglio: !!(alberoK.value || dialogo.value || macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!battesimoDi.value || bancoAperto.value || nave.value || bottegaAperta.value || magazzinoAperto.value || mappaAperta.value || !!carretto.value || opzioniAperte.value || consiglio.value || strumento.value || trascinando.value),
     raccolto: Object.values(m.s.merci).some(n => n > 0), visto: guidaVisto.value,
   }
 }
@@ -523,7 +543,7 @@ function apriConsiglio() { consiglio.value = cosaFaccioAdesso(motore) }
 function facciConsiglio(a) {
   if (a && a.che === 'albero') return apriAlbero(a.k)          // «Come si fa» si apre sopra il foglio, che resta dov'è
   alberoK.value = ''; if (inventarioAperto.value) chiudiInventario()
-  consiglio.value = null; macchinaAperta.value = null; bancoAperto.value = false; nave.value = false; bottegaAperta.value = null; semiAperto.value = false
+  consiglio.value = null; magazzinoAperto.value = null; macchinaAperta.value = null; bancoAperto.value = false; nave.value = false; bottegaAperta.value = null; semiAperto.value = false
   if (!a) return
   if (a.che === 'semina') { seme.value = a.seme || seme.value; mondo.imposta({ seme: seme.value }); impostaModo('semina') }
   else if (a.che === 'raccogli') impostaModo('raccogli')
@@ -532,6 +552,7 @@ function facciConsiglio(a) {
   else if (a.che === 'banco') apriBanco()
   else if (a.che === 'livelli') apriLivelli()
   else if (a.che === 'inventario') apriInventario()
+  else if (a.che === 'magazzino') ui.apriMagazzino(a.silo)
   else if (a.che === 'home') indietro()
 }
 /** Il consiglio per avere ciò che manca, col tasto «🌳 Come si fa» per la stessa merce (docs/fattoria3d/guida.md). */
@@ -726,8 +747,9 @@ onBeforeUnmount(() => {
                @consegna="consegna" @cambia="cambiaOrdine" @chiudi="bancoAperto = false" />
         <Mongolfiera v-if="nave" v-bind="{ nave: mongolfiera, traguardo: traguardoNave, livelloIngresso: LIVELLO_MONGOLFIERA }" :messaggio="naveMsg" :consiglio="naveCons" @consiglio="facciConsiglio"
                      @carica="caricaCassa" @parti="partiMongolfiera" @chiudi="nave = false" />
+        <Magazzino v-if="magazzino" :vista="magazzino" :messaggio="magazzinoMsg" @ingrandisci="piuPosto" @chiudi="magazzinoAperto = null" />
         <Bottega v-if="bottega" :bottega="bottega" :messaggio="bottegaMsg" :consiglio="bottegaCons" @consiglio="facciConsiglio" @consegna="consegnaBottega" @rifiuta="rifiutaBottega" @chiudi="bottegaAperta = null" />
-        <Inventario v-if="inventarioAperto && inventario" :schede="inventario" :magazzini="magazzini" @ingrandisci="ingrandisciMagazzino" @albero="apriAlbero" @chiudi="chiudiInventario" />
+        <Inventario v-if="inventarioAperto && inventario" :schede="inventario" :magazzini="magazzini" @magazzino="vaiAlMagazzino" @albero="apriAlbero" @chiudi="chiudiInventario" />
         <Guardaroba v-if="guardarobaAperto" :abito="abito" :livello="foto.livello" :aspetto="state.profile.aspetto" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
                     @vesti="vestiContadino" @aspetto="cambiaAspetto" @chiudi="guardarobaAperto = false" />
  <Albero v-if="albero" :albero="albero" @fai="facciConsiglio" @chiudi="chiudiAlbero" />

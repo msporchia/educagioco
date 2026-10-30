@@ -19,7 +19,7 @@ const testi = []
 const badge = () => ({ el: { hidden: false, style: {} }, testo: '', imposta(t) { this.testo = t; testi.push(t) }, togli() {}, metti() {}, bestie() {} })
 const fx = { nuovoBadge: badge, nuovoCartello: badge, fumata() {} }
 const b = { monete: 5000 }, t = { ora: 1_000_000 }
-const f = new Fattoria3d({ stato: null, borsa: { quante: () => b.monete, paga: n => { b.monete -= n; return true } }, ora: () => t.ora, rnd: () => 0.5 })
+const f = new Fattoria3d({ stato: null, borsa: { quante: () => b.monete, paga: n => { b.monete -= n; return true } }, ora: () => t.ora, rnd: () => 0.5, magazzini: false })
 f.s.esperienza = sogliaDi(40)
 for (const o of f.ostacoli) if (!o.tolto) f._togliSenzaPagare(o)
 const scena = new THREE.Scene()

@@ -37,6 +37,7 @@ export class Azioni {
       case 'molo': case 'molo_v': return this.pescaDalMolo(cosa)         // toccare il molo: si lancia in punta
       case 'stagno': case 'laghetto': return this.pescaSu(Math.floor(this.centro(cosa).x), Math.floor(this.centro(cosa).z))      // l'acqua costruita: la pesca (se il tocco non l'ha già fatto)
       case 'trattore': pezzi.salta(cosa.id); return this.c.ui.apriMappa && this.c.ui.apriMappa()      // porta ai vicini (docs/fattoria3d/vicini.md)
+      case 'silo': case 'silo_bianco': case 'dispensa': pezzi.salta(cosa.id); return this.c.ui.apriMagazzino && this.c.ui.apriMagazzino(PEZZI[cosa.tipo].magazzino)      // dentro, e ingrandirlo (docs/fattoria3d/magazzini.md)
       default: if (EDIFICI[cosa.tipo]) return this.edificio(cosa.tipo)         // una macchina o la mongolfiera
     }
   }

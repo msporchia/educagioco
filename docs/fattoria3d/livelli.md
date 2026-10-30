@@ -93,9 +93,9 @@ La 2D vende piazzole da 6×6 celle (🪙45 la prima oltre le nove, poi ×1,38); 
 ## Gli scomparti (D11)
 
 Ogni merce ha il suo scomparto da **8 pezzi**; ingrandire un silo aggiunge 2 a **tutti** gli scomparti di quel silo (`dati/silos.js`, prezzo `40 + 130·ln(1+n)`: 🪙40, 130,
-185, 220…). I silos sono tre come in 2D (`terra`: i raccolti; `stalla`: lana, uova, latte, pancetta, pesce, mangimi; `bottega`: i prodotti finiti, la dispensa), ma **nella forma
-più piccola**: ci sono da subito, senza pezzi da comprare e da mettere in mappa (le 🪙120 × 3 dei silos 2D non si pagano). Si ingrandiscono dall'**inventario** (tre bottoni in
-fondo; il gettone dice `n/max`, rosso se pieno). Il perché dei numeri è in [../fattoria/campi-e-silos.md](../fattoria/campi-e-silos.md).
+185, 220…). I silos sono tre come in 2D (`terra`: i raccolti; `stalla`: lana, uova, latte, pancetta, pesce, mangimi; `bottega`: i prodotti finiti, la dispensa), e dal 30/10
+sono **edifici in mappa che crescono**, senza le 🪙120 × 3 dei silos 2D: si ingrandiscono toccandoli ([magazzini.md](magazzini.md)); il gettone dell'inventario dice `n/max`,
+rosso se pieno. Il perché dei numeri è in [../fattoria/campi-e-silos.md](../fattoria/campi-e-silos.md).
 - **Uno scomparto pieno non si riempie: non si raccoglie e non si paga, il lavoro resta lì.** Un campo maturo con lo scomparto pieno non parte (`provaRaccolta`, controllato
   prima del gesto così il campo non resta a metà); le bestie pronte e le pecore da tosare aspettano (se ne ritirano quante ce ne stanno); una macchina ritira quanto entra
   e il resto resta fra i pronti (`ritiraDa` dice `pieno`); il pesce resta all'amo. Il rifiuto è `scomparto-pieno` (con `k` e `max`): «🌾 Grano: lo scomparto è pieno (8). Usa un

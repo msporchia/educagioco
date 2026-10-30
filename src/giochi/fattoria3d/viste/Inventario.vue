@@ -8,9 +8,9 @@ import '../stile-inventario.css'
 
 const props = defineProps({
   schede: { type: Object, required: true },                 // schedeDellInventario()
-  magazzini: { type: Array, default: () => [] },            // i silos: [{ silo, nome, emoji, posti, prezzo, puoi }] — ingrandirne uno aggiunge 2 pezzi a ogni scomparto
+  magazzini: { type: Array, default: () => [] },            // i magazzini in mappa: [{ silo, nome, emoji, posti }]; un tocco apre il foglio del magazzino, dove si ingrandisce
 })
-defineEmits(['chiudi', 'ingrandisci', 'albero'])
+defineEmits(['chiudi', 'magazzino', 'albero'])
 const scheda = ref('raccolti')
 const scelta = ref('')
 const voci = computed(() => props.schede[scheda.value] || [])
@@ -41,8 +41,8 @@ function cambia(id) { scheda.value = id; scelta.value = '' }
       </div>
     </div>
     <div v-if="magazzini.length" class="f3-inv-magazzini" data-f3="magazzini">
-      <button v-for="m in magazzini" :key="m.silo" class="f3-inv-mag" :class="{ povero: !m.puoi }" :data-magazzino="m.silo" :aria-label="`ingrandisci ${m.nome}: da ${m.posti} a ${m.posti + 2} pezzi per scomparto, ${m.prezzo} monete`" @click="$emit('ingrandisci', m.silo)">
-        <span aria-hidden="true">{{ m.emoji }}</span><b>{{ m.posti }}</b><small>＋2 · 🪙 {{ m.prezzo }}</small>
+      <button v-for="m in magazzini" :key="m.silo" class="f3-inv-mag" :data-magazzino="m.silo" :aria-label="`${m.nome}: ${m.posti} per tipo. Apri`" @click="$emit('magazzino', m.silo)">
+        <span aria-hidden="true">{{ m.emoji }}</span><b>{{ m.posti }}</b><small>per tipo · apri</small>
       </button>
     </div>
     <div class="f3-inv-riga" data-f3="inventario-riga">

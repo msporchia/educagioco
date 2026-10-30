@@ -10,6 +10,7 @@ import { PESCI } from '../dati/pesca.js'
 import { livelloDellaColtura, livelloDellaRicetta, livelloDelPezzo } from '../dati/livelli.js'
 import { MACCHINE } from '../dati/ricette.js'
 import { tempoBreve } from '../dati/tempo.js'
+import { SILOS, siloDi } from '../dati/silos.js'
 
 /** Le azioni che il consiglio sa chiedere alla vista: `che` e i campi che servono. */
 export const FORME = ['semina', 'raccogli', 'macchina', 'costruisci', 'banco', 'livelli', 'home', 'inventario']
@@ -27,6 +28,7 @@ const il = t => {
 const ETICHETTE = {
   semina: () => '🌱 Semina', raccogli: () => '✂️ Raccogli', banco: () => '🧺 Apri il banco', livelli: () => '⭐ I livelli', home: () => '🎮 Vai ai giochi',
   macchina: a => `${dove(a.tipo).emoji} Apri ${il(a.tipo)}`, costruisci: () => '🏗 Costruisci', inventario: () => '🎒 Apri la dispensa',
+  magazzino: a => `${SILOS[a.silo].emoji} Apri ${SILOS[a.silo].art} ${SILOS[a.silo].nome.toLowerCase()}`,
 }
 const dai = (testo, azione = null) => ({ testo, azione, etichetta: azione ? ETICHETTE[azione.che](azione) : '' })
 
@@ -37,7 +39,8 @@ const salire = (liv, cosa) => dai(`${cosa} arriva al livello ${liv}: spendi mone
 function fermoPerIlRaccolto(m, campo) {
   const r = m.provaRaccolta(campo.id)
   if (r.motivo === 'poche-monete') return dai(`Raccogliere costa 🪙 ${r.costo}: guadagna monete negli altri giochi`, { che: 'home' })
-  return dai(`${emojiDi(r.k)} ${nomeDi(r.k)}: lo scomparto è pieno (${r.max}). Usa un po' di roba, o ingrandisci il magazzino`, { che: 'inventario' })
+  const silo = siloDi(r.k)
+  return dai(`${emojiDi(r.k)} ${nomeDi(r.k)}: lo scomparto è pieno (${r.max}). Usa un po' di roba, o ingrandisci ${SILOS[silo].art} ${SILOS[silo].nome.toLowerCase()}`, { che: 'magazzino', silo })
 }
 
 /** Come si ha una cosa che c'è nelle ricette o nei campi: il prossimo passo, risalendo la catena. */
