@@ -3,7 +3,8 @@
    servizio/inoltro/prova.mjs. */
 import { reactive } from 'vue'
 import { istantanea, leggiIstantanea, firma, giornoDi, giorniFa, quandoInParole, controAmici, VERSIONE,
-         davantiInParole, controAmiciInParole, recordDegliAmici, quiInParole, dichiarazione, leggiGioco, giochiConAmici, percorsoDi }
+         davantiInParole, controAmiciInParole, recordDegliAmici, quiInParole, dichiarazione, leggiGioco, giochiConAmici, percorsoDi,
+         sorpassi, davantiIn, sorpassoInParole }
   from '../../src/amici/istantanea.js'
 import { QUANTE_TAPPE as TAPPE_SURVIVORS } from '../../src/giochi/survivors/dati/campagna.js'
 import { QUANTE_TAPPE as TAPPE_ROBOT } from '../../src/giochi/costruttore/dati/campagna.js'
@@ -14,8 +15,8 @@ import { TAPPE as TAPPE_SPAGNOLO } from '../../src/giochi/spagnolo/dati/mondi.js
 import { RACCONTO as TAPPE_CASTELLO } from '../../src/data/campagne-castello.js'
 import { CAMPAGNE as GIORNATE_BANCARELLA } from '../../src/data/bancarella.js'
 import { STRADE } from '../../src/giochi/passo-passo/motore/strade.js'
-import { sincronizza, amiciNelGioco, avviaBacheca, fermaBacheca, COLORI } from '../../src/amici/bacheca.js'
-import { dati, carica, accendi, mettiOnline, aggiungi, impara, ricorda } from '../../src/store/amici.js'
+import { sincronizza, amiciNelGioco, avviaBacheca, fermaBacheca, COLORI, sorpassiDaDire } from '../../src/amici/bacheca.js'
+import { dati, carica, accendi, mettiOnline, aggiungi, impara, ricorda, togli, levaSorpassi } from '../../src/store/amici.js'
 import { SCALETTA } from '../../src/data/asteroidi.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
@@ -247,6 +248,52 @@ const ORA = new Date(2026, 9, 29, 17, 42).getTime()
   uguale('e ognuno dice quando', due[1].quando, '9 giorni fa')
   await carica('provabacheca')
   controlla('quello che si è letto resta anche dopo, offline', dati.amici[0].bacheca?.giochi.mate.posti[''] === 9 && dati.amici[1].bacheca?.giochi.mate.posti[''] === 1)
+  fermaBacheca()
+  await accendi(false)
+}
+/* ── «ti ha superato» ── */
+{
+  const ist = (posto, record) => ({ v: VERSIONE, giorno: '2026-10-29', giochi: { mate: { posti: posto ? { '': posto } : {}, primati: record ? { '': record } : {} } } })
+  const io = ist(5, 3000)
+  ugualeJ('passato davanti sulla mappa', sorpassi(ist(4, 0), ist(7, 0), io), [{ gioco: 'mate', tipo: 'tappa' }])
+  ugualeJ('ha battuto il mio record', sorpassi(ist(2, 2900), ist(2, 3100), io), [{ gioco: 'mate', tipo: 'record' }])
+  ugualeJ('tutti e due: uno per gioco, la tappa', sorpassi(ist(4, 2900), ist(7, 3100), io), [{ gioco: 'mate', tipo: 'tappa' }])
+  ugualeJ('era già davanti: niente di nuovo', sorpassi(ist(6, 0), ist(8, 0), io), [])
+  ugualeJ('pari non è superare', sorpassi(ist(4, 0), ist(5, 0), io), [])
+  ugualeJ('la prima istantanea di un amico non supera nessuno', sorpassi(null, ist(9, 9000), io), [])
+  ugualeJ('dove io non ho mai giocato non mi supera nessuno', sorpassi(ist(1, 0), ist(9, 0), ist(0, 3000)), [])
+  ugualeJ('un gioco che prima non c\'era conta da zero', sorpassi({ v: VERSIONE, giorno: '2026-10-28', giochi: {} }, ist(7, 0), io), [{ gioco: 'mate', tipo: 'tappa' }])
+  controlla('davanti adesso, per la home', davantiIn(ist(7, 0), io, 'mate', 'tappa') && !davantiIn(ist(7, 0), ist(9, 0), 'mate', 'tappa'))
+  uguale('le parole: la tappa', sorpassoInParole('Leo', 'tappa'), 'Leo ti ha superato')
+  uguale('le parole: il record', sorpassoInParole('Leo', 'record'), 'Leo ha battuto il tuo record')
+
+  let risposta = null
+  const fetchImpl = async () => ({ status: 200, ok: true, json: async () => ({ altro: risposta }) })
+  const p = reactive({ mate: { fila: 5 } })
+  await carica('provasorpassi')
+  await accendi(true)
+  aggiungi(K1); impara(K1, 'leonardo1', 'Leonardo')
+  avviaBacheca({ profilo: () => p, servizio: 'https://s.example', fetchImpl })
+  risposta = ist(4, 0); await sincronizza({ forza: true })
+  ugualeJ('la prima lettura non dice niente', sorpassiDaDire(['mate']), [])
+  risposta = ist(7, 0); await sincronizza({ forza: true })
+  const [x] = sorpassiDaDire(['mate'])
+  controlla('poi Leonardo passa davanti: una riga, col suo pallino', x && x.nome === 'Leonardo' && x.tipo === 'tappa' && x.iniziale === 'L' && x.colore === COLORI[0])
+  ugualeJ('solo nei giochi che il bambino vede', sorpassiDaDire(['torri']), [])
+  await carica('provasorpassi')
+  uguale('resta anche dopo, finché non si dice', sorpassiDaDire(['mate']).length, 1)
+  p.mate.fila = 8
+  ugualeJ('ripreso: non c\'è più niente da dire', sorpassiDaDire(['mate']), [])
+  p.mate.fila = 5
+  levaSorpassi('mate')
+  ugualeJ('aperto il gioco, è detto', sorpassiDaDire(['mate']), [])
+  risposta = ist(7, 3100); await sincronizza({ forza: true })
+  ugualeJ('un suo record dove io non ne ho: niente da dire', sorpassiDaDire(['mate']), [])
+  p.mate.fila = 8
+  risposta = ist(9, 3100); await sincronizza({ forza: true })
+  uguale('ripassa davanti: di nuovo', sorpassiDaDire(['mate'])[0]?.tipo, 'tappa')
+  togli(K1)
+  ugualeJ('tolto l\'amico, tolti i suoi', dati.sorpassi, [])
   fermaBacheca()
   await accendi(false)
 }

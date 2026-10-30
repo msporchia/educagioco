@@ -324,6 +324,7 @@ export const GUIDE = [
       ] },
       { titolo: 'Vedere dove sono arrivati', righe: [
         'Sulla mappa di un gioco l\'amico è **un pallino con la sua iniziale** sulla tappa a cui è arrivato, e in cima c\'è scritto chi è più avanti e di quante tappe. Nei giochi senza fine c\'è la classifica dei record, e a fine partita il gioco dice chi si è appena superato.',
+        'Quando un amico gli passa davanti, nella home compare «Leonardo ti ha superato»: toccandolo si va a riprenderlo.',
         'L\'amico **non deve essere online**: basta che apra il gioco ogni tanto. Accanto c\'è da quando è il dato («oggi», «ieri», «3 giorni fa»).',
         'Succede in ' + mostranoAmici + '.',
       ] },

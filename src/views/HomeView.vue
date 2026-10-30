@@ -17,7 +17,10 @@ import Nastri from '../guide/Nastri.vue'
 import Carosello from '../components/home/Carosello.vue'
 import Riprendi from '../components/home/Riprendi.vue'
 import ListaAmici from '../components/amici/ListaAmici.vue'
-import { dati as datiAmici } from '../store/amici.js'
+import PallinoAmico from '../components/amici/PallinoAmico.vue'
+import { dati as datiAmici, levaSorpassi } from '../store/amici.js'
+import { sorpassiDaDire } from '../amici/bacheca.js'
+import { sorpassoInParole } from '../amici/istantanea.js'
 import { stato as statoAmici } from '../amici/servizio.js'
 import Iniziale from '../components/home/Iniziale.vue'
 import { chiediRipresa } from '../giochi/ripresa.js'
@@ -122,6 +125,11 @@ function aChePunto (chiave) {
 const elenco = computed(() => gruppi.value.flatMap(a => a.giochi)
   .map(g => ({ ...g, classe: CLASSE[g.chiave], punto: aChePunto(g.chiave) })))
 
+// gli amici che ci sono passati davanti, nei giochi che si vedono qui
+const sorpassi = computed(() => sorpassiDaDire(elenco.value.map(g => g.chiave))
+  .map(x => { const g = elenco.value.find(e => e.chiave === x.gioco); return { ...x, ico: g.ico, nomeGioco: g.nome } }))
+function vaiARiprendere (gioco) { levaSorpassi(gioco); emit('vai', gioco) }
+
 // l'ultimo gioco giocato, dal registro delle sessioni; uno spento non si ripropone
 onMounted(ricarica)
 watch(() => state.player, ricarica)
@@ -178,6 +186,13 @@ function riprendi (k) { chiediRipresa(k); emit('vai', k) }
         <i>{{ amiciDice }}</i>
       </button>
       <ListaAmici v-if="amiciAperti" @chiudi="amiciAperti = false" />
+      <!-- «Melody ti ha superato»: tocca e si va a riprenderla (docs/core/amici-nei-giochi.md) -->
+      <button v-for="x in sorpassi" :key="x.chiave + x.gioco" class="riga-amici sorpasso" type="button" data-sorpasso :data-gioco="x.gioco"
+              @click="vaiARiprendere(x.gioco)">
+        <PallinoAmico :amico="x" />
+        <b>{{ sorpassoInParole(x.nome, x.tipo) }}</b>
+        <i>{{ x.ico }} {{ x.nomeGioco }}</i>
+      </button>
 
       <Riprendi v-if="ripresa" :gioco="ripresa" :dove="ripresa.punto" :immagine="ripresa.immagine"
                 @apri="riprendi" />

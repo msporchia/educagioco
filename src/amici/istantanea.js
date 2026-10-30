@@ -124,6 +124,34 @@ export function davantiInParole(amici, qui, { ultimo = Infinity, dove = '' } = {
     : `${a.nome} è ${n === 1 ? 'una tappa' : n + ' tappe'} più avanti di te.`
 }
 
+/* L'amico è davanti in quel gioco? `tappa`: su una mappa è più avanti di me; `record`: in una sfida ha un record più alto del
+   mio. Solo dove io ci sono già (un posto, un record): chi non ha mai giocato non è stato superato. */
+function davantiPer(sua, mia, tipo) {
+  const campo = tipo === 'tappa' ? 'posti' : 'primati'
+  const suoi = sua?.[campo] || {}, miei = mia?.[campo] || {}
+  return Object.keys(suoi).filter(k => miei[k] > 0 && suoi[k] > miei[k])
+}
+export const davantiIn = (sua, mia, gioco, tipo) => davantiPer(sua?.giochi?.[gioco], mia?.giochi?.[gioco], tipo).length > 0
+
+/* «Melody ti ha superato» (docs/core/amici-nei-giochi.md): i giochi dove l'amico, fra la sua istantanea di `prima` e quella di
+   `dopo`, è passato davanti a dove sono io adesso (`mia`). Al massimo uno per gioco, la tappa prima del record. La prima
+   istantanea di un amico non supera nessuno: era già lì. */
+export function sorpassi(prima, dopo, mia) {
+  if (!prima || !dopo) return []
+  const fuori = []
+  for (const gioco of Object.keys(dopo.giochi || {})) {
+    const d = dopo.giochi[gioco], p = prima.giochi?.[gioco], m = mia?.giochi?.[gioco]
+    for (const tipo of ['tappa', 'record']) {
+      const gia = new Set(davantiPer(p, m, tipo))
+      if (davantiPer(d, m, tipo).some(k => !gia.has(k))) { fuori.push({ gioco, tipo }); break }
+    }
+  }
+  return fuori
+}
+
+/* in parole, per la riga in home */
+export const sorpassoInParole = (nome, tipo) => tipo === 'record' ? `${nome} ha battuto il tuo record` : `${nome} ti ha superato`
+
 /* «Leonardo è qui», «Leonardo e Melody sono qui» */
 export const quiInParole = amici => (!amici || !amici.length ? '' : amici.length === 1 ? `${amici[0].nome} è qui`
   : `${amici.slice(0, -1).map(a => a.nome).join(', ')} e ${amici[amici.length - 1].nome} sono qui`)

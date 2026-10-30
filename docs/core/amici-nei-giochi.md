@@ -17,6 +17,19 @@ cose. Non legge la bacheca, non confronta, non scrive frasi.
   sono mancati 25s». Un pareggio non supera nessuno; chi era già sotto il proprio record non è una notizia.
 - Un amico mai incontrato online (senza nome) non si vede; un amico che in quel gioco non ha fatto niente nemmeno.
 
+## «Leonardo ti ha superato», in home
+
+Quando arriva la bacheca di un amico, `sorpassi` (in `src/amici/istantanea.js`, pura) la confronta con quella di prima e con dove
+sono io adesso: se in un gioco è **passato davanti** (sulla mappa più avanti di me, o un record più alto del mio, e prima no), il
+sorpasso si segna (`dati.sorpassi` in `store/amici.js`, salvato con gli amici). In home, sotto la riga degli amici, una riga per
+ognuno dei due più recenti: il pallino, «Leonardo ti ha superato» o «Leonardo ha battuto il tuo record», e il gioco. Toccarla
+apre il gioco; aprire il gioco (`usaAmici`) dice tutti i suoi sorpassi, che spariscono.
+- **La prima bacheca di un amico non supera nessuno**: era già lì, e dire «ti ha superato» a tutti gli amici appena abbinati è falso.
+- **Solo dove io ci sono già** (un posto, un record): in un gioco mai giocato nessuno mi ha superato.
+- **Uno per gioco** (la tappa prima del record), il più recente per amico e gioco; al massimo `SORPASSI_MAX` in archivio.
+- **Si dice solo se è ancora vero** (`sorpassiDaDire`): chi l'ho già ripreso non ha riga; nemmeno un amico senza nome o un gioco
+  che il bambino non vede (spento o sperimentale).
+
 ## Come si aggiunge un gioco
 
 **1. La dichiarazione**, nel manifesto (`src/giochi/<g>/gioco.js`) o, per un gioco vecchio, nella sua riga di
@@ -95,8 +108,7 @@ per ora mostra gli amici solo la terra di sopra del 2D.
 
 - Il Sotterraneo 3D: i pallini nel suo mondo, dalla stessa dichiarazione del sotterraneo.
 - La colonna degli amici nella tabella dei record (l'albo).
-- «Melody ti ha superato» all'apertura dell'app: dopo aver visto se i pallini piacciono.
 
-Nei test: `integrazione/amici-rotta`, `integrazione/amici-survivors`, `integrazione/amici-codice`, `integrazione/amici-passo`, `integrazione/amici-costruttore`, `integrazione/amici-castello`, `integrazione/amici-conta`, `integrazione/amici-prima-dopo`, `integrazione/amici-pozioni`, `integrazione/amici-giardino`, `integrazione/amici-arena`, `integrazione/amici-sotterraneo`, `integrazione/amici-inglese`, `integrazione/amici-spagnolo`, `integrazione/amici-bancarella`. Bersagli: `[data-amico-davanti]`; `[data-amici-qui]` (con
+Nei test: `integrazione/amici-rotta`, `integrazione/amici-survivors`, `integrazione/amici-codice`, `integrazione/amici-passo`, `integrazione/amici-costruttore`, `integrazione/amici-castello`, `integrazione/amici-conta`, `integrazione/amici-prima-dopo`, `integrazione/amici-pozioni`, `integrazione/amici-giardino`, `integrazione/amici-arena`, `integrazione/amici-sotterraneo`, `integrazione/amici-inglese`, `integrazione/amici-spagnolo`, `integrazione/amici-bancarella`, `integrazione/amici-sorpassi` (la riga in home; le regole in `unita/amici-bacheca`). Bersagli: in home `[data-sorpasso][data-gioco]`; `[data-amico-davanti]`; `[data-amici-qui]` (con
 `[data-al]` dove serve) e dentro `[data-pallino-amico]`; `[data-record-amici]` con le righe `[data-record-amico]`;
 `[data-contro-amici]`; in Passo passo i pallini sulla casella `[data-amici-casella][data-al]` (il posto sulla strada) e i nomi nel fumetto `[data-fumetto] [data-amici-qui]`; sulla rotta `[data-amico-in-rotta]` con `[data-al]` (il nodo); nel Robot i pallini sul led `[data-amici-led][data-al]` (`libero` per il connettore) e il nome nel fumetto `[data-fumetto] [data-amici-qui]`; nel castello i pallini `[data-amici-scudo][data-al]` (l'indice dello scudo, la chiave della libera, `libere` per il centro) e il nome nel fumetto `[data-fumetto] [data-amici-qui]`. In Conta i pallini e il nome stanno sulla carta della tappa, `[data-amici-qui][data-al]` (l'indice della tappa). In Prima e dopo, nelle pozioni e nel giardino uguale a Conta; in Castle Battle uguale, e `[data-infinita] [data-amici-qui]` per la battaglia infinita. Nel sotterraneo i pallini stanno ai piedi del posto, `[data-amici-posto][data-al]` (l'indice della discesa, `7` per l'abisso), e il nome nel fumetto, `[data-fumetto] [data-amici-qui][data-al]`. Nelle lingue i pallini e il nome stanno sotto il nome della tappa, `[data-amici-qui][data-al]` (il posto nella fila di tutte le tappe), e `[data-nave][data-porto]` dice su quale sta il segno del bambino. Nella bancarella i pallini stanno sotto la città, `[data-amici-citta][data-al]` (l'id della città), e sotto il banco, `[data-amici-banco][data-al]` (l'id della giornata, `libera` per il Cairo); i nomi nel fumetto, `[data-fumetto] [data-amici-qui]`.

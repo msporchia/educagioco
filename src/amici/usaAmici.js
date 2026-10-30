@@ -4,6 +4,7 @@
 import { computed, onMounted, reactive } from 'vue'
 import { state } from '../store/profile.js'
 import { amiciNelGioco, rileggiTutte } from './bacheca.js'
+import { levaSorpassi } from '../store/amici.js'
 import { conAmici, percorsoDi, davantiInParole, recordDegliAmici, controAmici, controAmiciInParole } from './istantanea.js'
 import { sfideDi } from '../giochi/primati.js'
 
@@ -14,6 +15,7 @@ export function usaAmici(chiave, { percorso = '' } = {}) {
   if (percorso && !via) throw new Error(`«${chiave}» non dichiara il percorso «${percorso}»`)
   const tappe = via?.tappe || 0, dove = via?.dove || ''
   onMounted(rileggiTutte)                     // entrando si rilegge, se non lo si è fatto da poco
+  onMounted(() => levaSorpassi(chiave))       // e «ti ha superato» è detto: qui si vede chi è davanti
 
   // tutti, per i record; sulla mappa solo chi in questo percorso ha un posto, che diventa la sua `tappa`
   const tutti = computed(() => amiciNelGioco(chiave))
