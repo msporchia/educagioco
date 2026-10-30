@@ -18,6 +18,7 @@ lana) e uno stato suo, e non tocca quelli della fattoria di sempre; le monete so
 - [botteghe.md](botteghe.md) — le quattro botteghe del paese (pasticceria, osteria, mensa, merceria): edifici che chiedono, clienti per mestiere, la fama a cuori, i numeri della 2D
 - [mongolfiera.md](mongolfiera.md) — la nave: tre file di casse (quattro dal livello 66) da riempire un po' alla volta, i bonus, la sorpresa della fiera, il viaggio e il ritorno, il segnaposto di prima che si chiude
 - [vicini.md](vicini.md) — il trattore e i villaggi dei vicini: la fattoria visitabile come dato (snapshot), la cassa, il mercato che compra e che vende, la visita di sola lettura, e come domani entrerà quella di un amico
+- [magazzini.md](magazzini.md) — i tre silos come edifici in mappa: si toccano per guardarci dentro e ingrandirli, crescono a ogni passo, il secondo da mettere quando sono al massimo
 - [in-comune.md](in-comune.md) — la fattoria in comune fra due amici: si gioca collegati, le mosse al posto della fattoria, il merge permissivo, la fila e la fotografia sul servizio
 - [terreno.md](terreno.md) — i lotti da comprare, il recinto, gli alberi che si abbattono, le strade a pennello, la telecamera
 - [mondo-infinito.md](mondo-infinito.md) — il mondo senza confini: lotti `a_b` qualunque, generazione per lotto, gli id salvati, la finestra della scena, il prezzo che si auto-limita

@@ -75,7 +75,7 @@ quale file.
 | `docs/survivors/` | Survivors, con le sue regole |
 | `docs/codice-segreto/`, `docs/conta/`, `docs/prima-dopo/` | un gioco ciascuna; in `prima-dopo/disegni.md` la regola delle icone disegnate |
 | `docs/fattoria/` | La fattoria: regole, campi e silos, catena, macchine, chi chiede, livelli, animali, come si tocca, la pagina dell'albero, stagioni, sprite, dove sta cosa |
-| `docs/fattoria3d/` | La fattoria 3D (`src/giochi/fattoria3d/`, in prova): risorse sue e monete vere, i lotti da comprare dentro un recinto, il mare a ovest, i laghi a est e la pesca, alberi, strade, costruire trascinando, la scena three.js e il suo peso, la fattoria in comune fra due amici — prima di toccare `giochi/fattoria3d/` |
+| `docs/fattoria3d/` | La fattoria 3D (`src/giochi/fattoria3d/`, in prova): risorse sue e monete vere, i lotti da comprare dentro un recinto, il mare a ovest, i laghi a est e la pesca, alberi, strade, costruire trascinando, i magazzini che crescono, la scena three.js e il suo peso, la fattoria in comune fra due amici — prima di toccare `giochi/fattoria3d/` |
 | `docs/img/` | le immagini del README (le rifà `npm run scatti`) |
 
 L'indice di tutto è `docs/README.md`. In ogni cartella di gioco `presentazione.md` è la pagina per chi arriva da

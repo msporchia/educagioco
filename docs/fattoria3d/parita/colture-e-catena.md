@@ -25,7 +25,7 @@ Le arature non esistono in nessuna delle due.
 
 | id | cosa | 2D | 3D | pri |
 |---|---|---|---|---|
-| C11 | silo del raccolto / della stalla / dispensa | 3 silos da 🪙120, livelli 1 / 4 / 16 | 🟡 tre magazzini di serie (forma più piccola, D11), ingrandibili dall'inventario | – |
+| C11 | silo del raccolto / della stalla / dispensa | 3 silos da 🪙120, livelli 1 / 4 / 16 | ✅ tre edifici in mappa ai livelli 1 / 4 / 16, senza prezzo; si toccano per ingrandirli e crescono, il secondo da mettere quando sono al massimo ([../magazzini.md](../magazzini.md), 30/10) | – |
 | C12 | scomparti | 8 pezzi per merce, +2 a ogni ingrandimento, `40+130·ln(1+n)` | ✅ uguali | – |
 | C13 | scomparto pieno | non si raccoglie e non si paga, il campo resta pronto | ✅ vale per campi, bestie, tosa, macchine e pesca; il consiglio porta all'inventario | – |
 | C14 | «chi la usa» sulla roba | premere una merce dice dove si lavora (`dati/usi.js`) + «Come si fa» | 🟡 l'inventario dice «a cosa serve» in una frase (`dati/usi.js`) e ha il tasto «🌳 Come si fa» (I3); resta il «chi la usa» come foglio e gli scomparti (C11–C13) | P2 |
