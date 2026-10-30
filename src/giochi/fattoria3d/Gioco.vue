@@ -63,6 +63,8 @@ import { usaVisite } from './visite.js'
 import { DAI as DAI_CARRETTO } from './motore/carretto.js'
 import { prendiIngresso, chiediIngresso } from '../../amici/ingresso.js'
 import { apriComune, amiciPerComune, nomeDellAmico, dettoDellaMossa, TERRA } from './comune.js'
+import { quandoQui, mandaA } from '../../amici/servizio.js'
+import { qui as msgQui, via as msgVia, GESTI } from '../../amici/messaggi.js'
 import './stile.css'
 import './stile-guida.css'
 
@@ -610,6 +612,25 @@ function arrivaDallAmico({ mosse, ricarica }) {
   ripresa()
 }
 
+// il mio contadino all'amico, sul collegamento degli amici: cinque volte al secondo se cambia qualcosa, ogni due secondi comunque
+// (così sa che ci sono), con l'abito; il suo arriva a `arrivaQui` e cammina nella mia scena (scena3d/ospite.js)
+const OGNI_QUI = 200, ANCORA_QUI = 2000
+let timerQui = 0, spedito = '', speditoA = 0
+function mandaQui() {
+  if (!mondo) return
+  const e = mondo.eroe, g = e.az && GESTI.includes(e.az.tipo) ? e.az.tipo : null
+  const m = msgQui({ x: e.x, z: e.z, d: e.dir, r: e.corsa, g }), firma = JSON.stringify(m), t = performance.now()
+  if (firma === spedito && t - speditoA < ANCORA_QUI) return
+  if (t - speditoA >= ANCORA_QUI) m.a = { ...abito.value }
+  spedito = firma; speditoA = t
+  mandaA(comune, m)
+}
+function arrivaQui(chiave, l) {
+  if (chiave !== comune || !mondo) return
+  if (l.k === 'via') return void mondo.ospiteVia()
+  mondo.ospiteQui({ nome: nomeDellAmico(comune), abito: l.a ? normalizzaAbito(l.a, l.a.persona) : null }, l)
+}
+
 onMounted(async () => {
   if (!puo.value) return
   if (comune) {
@@ -631,7 +652,7 @@ onMounted(async () => {
   for (const [t, n] of stress) mondo.stress(t, Number(n))
   mondo.avvia()
   guidaAttiva.value = !comune && !saltaLeSpiegazioni() && !(scelta(CHIAVE, 'guida', null) || {}).finita && servePrimoGiro(motore.s)
-  if (sessione) { sessione.alCambio = arrivaDallAmico; sessione.avvia() }
+  if (sessione) { sessione.alCambio = arrivaDallAmico; sessione.avvia(); quandoQui(arrivaQui); timerQui = setInterval(mandaQui, OGNI_QUI) }
   else visite.avvia(scelta(CHIAVE, 'vicini', null))
   ripresa()
   battito = setInterval(ritmo, 250)
@@ -646,6 +667,7 @@ onBeforeUnmount(() => {
   removeEventListener('pagehide', seSparisce)
   if (motore) salva({ subito: true })
   sessione?.chiudi()
+  if (sessione) { clearInterval(timerQui); quandoQui(null); mandaA(comune, msgVia()) }
   visite.via()
   mondo?.via()
   delete window.__fattoria3d

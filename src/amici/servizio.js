@@ -18,6 +18,7 @@ let puoGiocare = () => true               // il bambino ha quel gioco in casa? (
 let opzioni = {}                         // WebSocketImpl, servizio, ritardi: per le prove
 let scadenza = 0
 let suBacheca = () => {}                 // l'amico ha riscritto la sua bacheca: la mette bacheca.js
+let suQui = () => {}                     // dove sta il contadino dell'amico nella fattoria in comune: lo mette la fattoria 3D
 
 function aggiorna() {
   stato.amici = dati.amici.map(a => {
@@ -45,6 +46,8 @@ function arrivato(chiave, m) {
     stato.risposta = { chiave, ok: l.ok }
   } else if (l.k === 'bacheca') {
     suBacheca(chiave)
+  } else if (l.k === 'qui' || l.k === 'via') {
+    return void suQui(chiave, l)                                          // tanti al secondo: niente da rifare nella lista
   }
   aggiorna()
 }
@@ -110,6 +113,9 @@ export function rispondi(ok) {
 
 /* la bacheca (docs/core/amici-bacheca.md): chi la rilegge quando l'amico avvisa, e l'avviso a chi è online adesso */
 export const quandoBacheca = f => { suBacheca = typeof f === 'function' ? f : () => {} }
+/* la fattoria in comune (docs/fattoria3d/in-comune.md): chi riceve il contadino dell'amico, e un messaggio a quell'amico solo */
+export const quandoQui = f => { suQui = typeof f === 'function' ? f : () => {} }
+export function mandaA(chiave, m) { return ponte?.presenti.has(chiave) ? !!ponte.invia(chiave, m) : false }
 export function avvisaPresenti(m) { for (const chiave of ponte?.presenti || []) ponte.invia(chiave, m) }
 
 /* lo schermo torna acceso: il collegamento riprova subito; spento, smettono di riprovare da soli */

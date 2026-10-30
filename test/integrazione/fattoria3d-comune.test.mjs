@@ -86,8 +86,25 @@ const avviso = await a.locator('[data-f3="avviso-livello"]').innerText().catch((
 await scatto(a, 'comune-2-arriva-melody')
 controlla('e sopra la scena c\'è chi l\'ha fatto', /melody/i.test(avviso), avviso)
 
+/* ── i due contadini: quello di Leonardo cammina nella scena di Melody, col suo nome, e sparisce quando esce ── */
+const meta = await fai(a, () => {
+  const { motore: m, mondo } = window.__fattoria3d, e = mondo.eroe, [i0, j0] = e.cella()
+  for (let r = 3; r < 8; r++) for (const [i, j] of [[i0 + r, j0], [i0 - r, j0], [i0, j0 + r], [i0, j0 - r]]) {
+    const via = m.percorsoVerso([i0, j0], [[i, j]])
+    if (via && via.length >= 2) { e.vaiA([[i, j]]); return [i + 0.5, j + 0.5] }
+  }
+  return null
+})
+controlla('Leonardo cammina fino a un posto lontano', !!meta)
+const vede = await b.waitForFunction(([x, z]) => { const o = window.__fattoria3d.mondo.ospite; return !!o && o.visibile && Math.hypot(o.eroe.x - x, o.eroe.z - z) < 0.6 }, meta, { timeout: 10000 }).then(() => true, () => false)
+controlla('Melody vede il contadino di Leonardo arrivare dove è andato', vede)
+controlla('col suo nome sopra la testa', /leonardo/i.test(await b.locator('[data-f3="ospite"]').innerText().catch(() => '')))
+await scatto(b, 'comune-4-due-contadini')
+
 /* ── la propria fattoria resta com'era; rientrando, quella in comune è ancora lì ── */
 await a.click('[data-f3="torna-mia"]')
+const sparito = await b.waitForFunction(() => !window.__fattoria3d.mondo.ospite?.visibile, null, { timeout: 5000 }).then(() => true, () => false)
+controlla('Leonardo esce e il suo contadino sparisce da Melody', sparito)
 await a.waitForFunction(() => !/Con /.test(document.querySelector('.barra-app .dove')?.innerText || '') && !!window.__fattoria3d?.mondo, null, { timeout: 20000 })
 uguale('tornato a casa, la fattoria di Leonardo ha le cose di prima', await fai(a, () => window.__fattoria3d.motore.s.cose.length), casaA)
 await entraInComune(a)

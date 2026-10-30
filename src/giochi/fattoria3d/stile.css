@@ -178,7 +178,8 @@
 .f3-badge.vendita { background: #ffd36a; }
 .f3-badge.chiuso { background: #dcd6c8; color: #6a5a4a; }
 @keyframes f3-salta { 50% { margin-top: -8px; } }
-.f3-badge[hidden], .f3-fumetto[hidden] { display: none; }
+.f3-badge[hidden], .f3-fumetto[hidden], .f3-ospite[hidden] { display: none; }
+.f3-ospite { position: absolute; transform: translate(-50%, -100%); pointer-events: none; background: rgba(58,42,26,.82); color: #fffbf0; font: 800 13px "Emoji Gioco", system-ui, sans-serif; padding: 3px 10px; border-radius: 10px; white-space: nowrap; }
 .f3-fumetto { position: absolute; transform: translate(-50%, -100%); background: rgba(255,251,240,.97); color: #3a2a1a; font: 700 15px "Emoji Gioco", system-ui, sans-serif; padding: 7px 13px; border-radius: 14px; box-shadow: 0 3px 10px rgba(0,0,0,.25); white-space: nowrap; }
 .f3-volo { position: absolute; transform: translate(-50%, -100%); font: 800 20px "Emoji Gioco", system-ui, sans-serif; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.6); animation: f3-sale 1.4s ease-out forwards; }
 @keyframes f3-sale { to { margin-top: -60px; opacity: 0; } }
