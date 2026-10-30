@@ -35,3 +35,17 @@
 .f3-inv-riga { display: flex; align-items: center; gap: 8px; }
 .f3-inv-riga p { margin: 0; flex: 1; min-width: 0; }
 .f3-inv-albero { flex: none; min-height: 44px; padding: 0 12px; border: 2px solid #e0a020; border-radius: 22px; background: #ffd36a; color: #4a2c12; font: 800 13px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; }
+/* il foglio di un magazzino (viste/Magazzino.vue): la stessa asse e la stessa griglia, e sotto il riquadro per avere più posto */
+.f3-mag .f3-corpo { min-height: 90px; max-height: 34vh; overflow: auto; }
+.f3-mag-piu { flex: none; margin: 10px 10px calc(12px + env(safe-area-inset-bottom)); padding: 10px 14px 12px; border-radius: 14px; background: #fff3cf; border: 3px solid #e0a020; box-shadow: 0 3px 0 #8d5a14; }
+.f3-mag-piu h3 { margin: 0 0 4px; font: 800 17px "Emoji Gioco", system-ui, sans-serif; color: #4a2c12; }
+.f3-mag-piu p { margin: 0 0 8px; font: 700 14px/1.35 "Emoji Gioco", system-ui, sans-serif; color: #3a2a1a; }
+.f3-mag-taglie { display: flex; gap: 12px; margin: 0 0 10px; }
+.f3-mag-edificio { display: flex; align-items: flex-end; gap: 3px; }
+.f3-mag-edificio i { display: block; width: 9px; border-radius: 3px; background: #e6cfa0; }
+.f3-mag-edificio i:nth-child(1) { height: 8px; } .f3-mag-edificio i:nth-child(2) { height: 11px; } .f3-mag-edificio i:nth-child(3) { height: 14px; }
+.f3-mag-edificio i:nth-child(4) { height: 17px; } .f3-mag-edificio i:nth-child(5) { height: 20px; } .f3-mag-edificio i:nth-child(6) { height: 23px; }
+.f3-mag-edificio i.fatta { background: #3f9a3a; }
+.f3-mag-tasto { width: 100%; min-height: 48px; border: 0; border-radius: 24px; background: #3f9a3a; color: #fff; font: 800 16px "Emoji Gioco", system-ui, sans-serif; box-shadow: 0 3px 0 #23621f; touch-action: manipulation; }
+.f3-mag-tasto.povero { background: #b9a98a; box-shadow: 0 3px 0 #7d6e55; }
+.f3-mag-piu .f3-mag-msg { margin: 8px 0 0; color: #7a3a14; }
