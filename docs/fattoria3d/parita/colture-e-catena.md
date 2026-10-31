@@ -1,7 +1,7 @@
 # Parità: colture, campi e catena
 
-Legenda in [README.md](README.md). 2D: [../../fattoria/campi-e-silos.md](../../fattoria/campi-e-silos.md),
-[catena.md](../../fattoria/catena.md), [macchine.md](../../fattoria/macchine.md). 3D: [../merci-e-ricette.md](../merci-e-ricette.md),
+Legenda in [README.md](README.md). 2D: i dati in `da2d/dati/` (`coltivazioni.js`, `catalogo.js`, `coda.js`), le regole in [../catena.md](../catena.md).
+3D: [../merci-e-ricette.md](../merci-e-ricette.md),
 [../mangime-e-catena.md](../mangime-e-catena.md), [../regole.md](../regole.md).
 
 ## Campi e colture
@@ -15,7 +15,7 @@ Legenda in [README.md](README.md). 2D: [../../fattoria/campi-e-silos.md](../../f
 | C5 | prezzo del raccolto | 🪙1 (🪙2 per mais, zucche, pomodori, melanzane) | ✅ stesso, pagato dall'ultima tessera | – | D13 |
 | C6 | prezzo del campo | 🪙22 e +60% a copia (22, 35, 48, 62, 75…) | ✅ la formula della 2D | – | `dati/catalogo.js` |
 | C7 | gli stadi del campo | 7 stati dipinti (da terra nuda a maturo); il seminato si distingue | 🟡 crescita continua (scala, foglie una alla volta, frutto oltre 0,55, colore che matura): si legge brullo → semini → maturo | – | [../scena.md](../scena.md) «Le colture» |
-| C8 | cartelli di coltura | 16 `cartello_*` da posare (decorazione) | ❌ | P2 | [mondo-e-stagioni.md](mondo-e-stagioni.md) |
+| C8 | cartelli di coltura | 16 `cartello_*` da posare (decorazione) | ✅ fra i 29 «Recinti» (W10) | – | [mondo-e-stagioni.md](mondo-e-stagioni.md) |
 | C9 | seminare e raccogliere con un gesto | semi e cesto da trascinare su più campi | 🟡 si arma «semina/raccogli» e si trascina; il contadino cammina | P2 | [interfaccia-e-guida.md](interfaccia-e-guida.md) |
 | C10 | terreni / pennello | `dati/terreni.js`: erba, acqua (pennello spento), strada e roccia annunciate | 🟡 strade a pennello ✅; acqua e mare sono geografia, non pennello; ✳ pesca | P2 | [mondo-e-stagioni.md](mondo-e-stagioni.md) |
 
@@ -32,7 +32,7 @@ Le arature non esistono in nessuna delle due.
 | C15 | carretto del vicino per svuotare lo scomparto | roba 5 → 1, mai monete | ✅ come vista del trattore (D10): «🛒 Il carretto» in cima alla mappa, 5 → 1 o regalo, mai monete né esperienza ([../vicini.md](../vicini.md)) | – |
 
 Perché i silos contano: sono un pozzo di monete che non si esaurisce (28 posti ≈ 7 ore di spesa) e il momento in cui il gioco
-insegna il resto della catena. Con ricette 60× più svelte e niente tetto, la 3D si riempie di roba senza uno scopo. Decisione D11.
+insegna il resto della catena ([../magazzini.md](../magazzini.md) «Perché gli scomparti»). Decisione D11.
 
 ## Le macchine (14 nella 2D, 14 nella 3D)
 

@@ -74,8 +74,7 @@ quale file.
 | `docs/sotterraneo/` | Il sotterraneo: la grande storia (le discese in fila e la roba attesa), le missioni, regole, roba, scenari e muri, i pensieri dell'eroe (`pensieri.md`), l'abisso com'è e il suo progetto, il Sotterraneo 3D in prova (`grafica-3d.md`, prima di toccare `scena3d/`; i mostri e gli effetti 3D in `mostri-3d.md`; il suo mondo di sopra in `mondo-3d.md`) |
 | `docs/survivors/` | Survivors, con le sue regole |
 | `docs/codice-segreto/`, `docs/conta/`, `docs/prima-dopo/` | un gioco ciascuna; in `prima-dopo/disegni.md` la regola delle icone disegnate |
-| `docs/fattoria/` | La fattoria: regole, campi e silos, catena, macchine, chi chiede, livelli, animali, come si tocca, la pagina dell'albero, stagioni, sprite, dove sta cosa |
-| `docs/fattoria3d/` | La fattoria 3D (`src/giochi/fattoria3d/`, in prova): risorse sue e monete vere, i lotti da comprare dentro un recinto, il mare a ovest, i laghi a est e la pesca, alberi, strade, costruire trascinando, i magazzini che crescono, la scena three.js e il suo peso, la fattoria in comune fra due amici — prima di toccare `giochi/fattoria3d/` |
+| `docs/fattoria3d/` | La fattoria (`src/giochi/fattoria3d/`: dal 31/10/2026 l'unica, in 3D; la chiave resta `fattoria3d`, i dati presi dalla 2D tolta stanno in `da2d/`): regole e catena, monete vere, i lotti da comprare dentro un recinto, il mare a ovest, i laghi a est e la pesca, alberi, strade, costruire trascinando, i magazzini che crescono, la scena three.js e il suo peso, la fattoria in comune fra due amici, la conversione dei salvataggi 2D (`parita/migrazione.md`) — prima di toccare `giochi/fattoria3d/` |
 | `docs/img/` | le immagini del README (le rifà `npm run scatti`) |
 
 L'indice di tutto è `docs/README.md`. In ogni cartella di gioco `presentazione.md` è la pagina per chi arriva da
@@ -90,8 +89,8 @@ Altri documenti vivono accanto al codice che descrivono: `test/README.md`
 - **I fine riga sono LF** (`.gitattributes`). Uno script che riscrive un file
   (Python lo fa senza chiedere) non deve cambiarli, se no il diff annega.
 - **Niente dipendenze a runtime oltre a Vue**, con un'eccezione: three.js
-  per gli Asteroidi (solo in 3D), il Sotterraneo 3D e la Fattoria 3D, giochi in prova (~640 KB, accettati dall'utente: il
-  3D non si scrive a mano; il Sotterraneo e la fattoria di sempre restano in 2D). Suoni sintetizzati,
+  per gli Asteroidi e la fattoria (tutti e due solo in 3D) e il Sotterraneo 3D (~640 KB, accettati dall'utente: il
+  3D non si scrive a mano; il Sotterraneo di sempre resta in 2D). Suoni sintetizzati,
   icone emoji o disegnate, nessun file esterno: il build resta un HTML
   unico. → `docs/asteroidi/grafica-3d.md`
 - **I giochi nuovi stanno in `src/giochi/`** col calco di `codice-segreto/`
@@ -179,10 +178,10 @@ Una riga ciascuna; il perché sta nel documento indicato.
   l'età scriverebbe, non con «nessuna eccezione». → `docs/genitori/ritocchi.md`
 - **Le stelle di Passo passo e del Robot stanno sotto l'indice**:
   riordinare la fila vuole una voce in `FILE` di `dati/campagna.js`. → `docs/passo-passo/livelli.md`, `docs/costruttore/campagna.md`
-- **Gli addobbi sospesi della fattoria non si cancellano**: gli id sono
-  chiavi di salvataggio. → `docs/fattoria/animali.md`
-- **`#fattoria-tipo=` butta la fattoria del bambino attivo** (nel cestino):
-  si usa con un bambino di prova. → `docs/core/comandi.md`
+- **Gli addobbi della fattoria non si tolgono dall'elenco** (`da2d/dati/addobbi.js`):
+  `normalizza` butta gli id che non conosce, e chi li ha comprati li perde. → `docs/fattoria3d/addobbi.md`
+- **`#fattoria-tipo=` e `#fattoria3d-tipo=` buttano la fattoria del bambino attivo** (nel cestino; il primo scrive una
+  2D e la fa convertire): si usano con un bambino di prova. → `docs/core/comandi.md`
 - **La copia di casa (`pubblica.sh`) è una sola e ha lo stesso origin del
   sito vero**: una prova che tocca l'archivio tocca i salvataggi veri. → `docs/core/pubblicare.md`
 - **Il `+` in coda alla versione** (`922257a+`) vuol dire build con modifiche

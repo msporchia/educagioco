@@ -6,7 +6,7 @@ nome interno, **mai** una stringa che si legge. Vale per i testi a schermo, gli 
 
 ## Chi si è: il genere viene dal profilo
 
-Come nella fattoria di sempre: il personaggio scelto dal bambino (`aspettoDi()` in `store/profile.js`, `'bambina' | 'bimbo'`; la scelta
+Come nella fattoria 2D: il personaggio scelto dal bambino (`aspettoDi()` in `store/profile.js`, `'bambina' | 'bimbo'`; la scelta
 è `components/SceltaAspetto.vue`) decide **contadina** o **contadino** (`personaDi(aspetto)`). Non si salva niente nella fattoria 3D: si
 rilegge a ogni apertura, quindi cambiare personaggio altrove cambia anche qui. Il guardaroba ha la stessa scelta (`SceltaAspetto`, che
 chiama `scegliAspetto`): cambiare lì cambia anche la fattoria 2D. Un valore sconosciuto ripiega su `ASPETTO_ERO` (`dati/compagni.js`).

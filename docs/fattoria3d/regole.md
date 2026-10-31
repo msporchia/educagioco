@@ -1,18 +1,27 @@
-# Le regole della fattoria 3D
+# Le regole della fattoria
 
 I principi, e dove vivono: le regole sono tutte in `motore/fattoria3d.js` (pure: niente schermo, niente profilo), i numeri
-in `dati/`. Da leggere prima di toccare un prezzo, un tempo o un rifiuto. Il perché di fondo è quello della fattoria di
-sempre ([../fattoria/regole.md](../fattoria/regole.md)); qui le differenze.
+in `dati/` (e, dove vengono dalla fattoria 2D tolta il 31/10/2026, in `da2d/dati/`). Da leggere prima di toccare un prezzo, un
+tempo o un rifiuto.
+
+## Il posto dove si spende
+
+- **Il money pit è uno**: la fattoria. Un bambino che può spendere in due posti non sceglie, si dimentica dell'altro (per questo la
+  fattoria ha preso il posto della cameretta, e la 3D quello della 2D).
+- **Niente di quello che dà la fattoria si può fare in fretta**: ogni premio in esperienza sta sotto il tempo che costa,
+  `premio ≤ 🪙6·minuti` ([ordini.md](ordini.md), [mongolfiera.md](mongolfiera.md)).
 
 ## Risorse sue, monete vere
 
 - **Raccolti, prodotti, lana, terra e pezzi stanno nello stato suo**, `profile.campagne.fattoria3d.cfg.stato`
-  (scritto da `Gioco.vue` con `ricorda`, a ritardo e subito quando la pagina sparisce). Non si leggono né si scrivono
-  quelli di `campagne.fattoria`: le due fattorie non si fanno casino a vicenda.
+  (scritto da `Gioco.vue` con `ricorda`, a ritardo e subito quando la pagina sparisce). `campagne.fattoria` (la 2D) si legge
+  solo per convertirla, una volta, e non si scrive mai ([parita/migrazione.md](parita/migrazione.md)).
 - **Le monete sono le vere** (`state.profile.coins`). Il motore non le conosce: passano da una `borsa` (`quante()`,
   `paga(n)`) che gli dà `Gioco.vue`. Un rimborso (`rimborsa`) **non conta come
   guadagnato**: non gonfia `totals.monete`.
-- **Niente si vende**: il verso è sempre monete → cose. Le monete entrano solo dagli esercizi degli altri giochi. Anche con i vicini ([vicini.md](vicini.md)): vendere dà esperienza e roba, mai monete.
+- **Niente si vende**: il verso è sempre monete → cose. Le monete entrano solo dagli esercizi degli altri giochi. Un banco che
+  comprasse il grano chiuderebbe l'anello (semina gratis, raccogli per 🪙1, vendi per 🪙5) e la strada più corta per le monete non
+  passerebbe più da nessuna tabellina. Anche con i vicini ([vicini.md](vicini.md)): vendere dà esperienza e roba, mai monete.
 
 ## Cosa non succede mai
 
@@ -20,14 +29,30 @@ sempre ([../fattoria/regole.md](../fattoria/regole.md)); qui le differenze.
   aspetta la forbice. Il tempo avanza anche a pagina chiusa: i campi leggono `ora()`, la cottura si rimette in pari
   con `tick()`.
 - **Niente si perde.** Un pezzo messo via va nel magazzino e si ripiazza gratis. Non c'è un «annulla»: si paga al rilascio, e un rilascio che non va non costa niente.
-- **Un rifiuto dice cosa fare** (`dettoDi` in `scena3d/azioni.js`): «Serve foraggio: lo fa il fienile», «Compra prima un terreno che
-  confina con questo», non un «no» nudo.
+  Un addobbo comprato non si consuma; quello che si è comprato per una festa resta anche dopo.
+- **Il livello non scende mai**, nemmeno mettendo via quello che si è comprato ([livelli.md](livelli.md)).
+- **Niente muore e niente si ammala**: le bestie hanno fame ma restano sopra un fondo ([bestie-di-casa.md](bestie-di-casa.md)). Un
+  raccolto che scade renderebbe dovere il premio degli esercizi, e il dovere si smette.
+
+## Come si dice di no
+
+- **Un «non si può» porta con sé cosa fare adesso**, e dove si può il tasto per farlo (`dettoDi` in `scena3d/azioni.js`, il consiglio di
+  [guida.md](guida.md)): «Serve foraggio: lo fa il fienile», «Compra prima un terreno che confina con questo», non un «no» nudo. Un
+  bambino di sei anni davanti a un no non ricostruisce una catena a ritroso: chiude il gioco.
+- **L'ordine delle risposte è quello in cui sono utili**: prima quello che si fa adesso e gratis, poi quello che c'è solo da aspettare,
+  poi la spesa.
+- **Un rifiuto nomina la ragione vera** (`motivo`: `non-sbloccato`, `gia-tuo`, `poche-monete`, `scomparto-pieno`…). Provato nella 2D:
+  un silo messo via non tornava sul prato e il cartello diceva «lì non ci sta», e si finiva a provare tutte le celle.
+- **Quello che non è ancora arrivato si vede in grigio col suo livello**, non come un tasto che non risponde; il banco e la mongolfiera
+  chiedono solo quello che si può fare adesso.
+- **Chi non vuole la fattoria spegne il gioco intero** (`settings.giochi`), come tutti gli altri: la 2D aveva provato a togliere i soli
+  campi, e restava un prato con dei mobili.
 
 ## Quanto costa
 
 | cosa | costo | perché |
 |---|---|---|
-| un campo | 20 + 8 per ogni copia (anche nel magazzino) | il rincaro lineare della fattoria di sempre |
+| un campo | 20 + 8 per ogni copia (anche nel magazzino) | rincaro lineare e non geometrico: a prezzo fisso l'unica strategia sarebbe comprare campi finché c'è terra; conta anche il magazzino, se no metterli via e ricomprarli sarebbe il modo di non pagarlo |
 | recinto / bancarella / bacheca / fontana | 45 / 15 / 12 / 30 | fissi; nel recinto una pecora, le altre si comprano (40, 60, 80) |
 | aiuola / panchina / pozzo / spaventapasseri | 6 / 10 / 18 / 12 | decorazioni, fissi |
 | passerella / ponte / tavolo | 8 / 14 / 18 | decorazioni (liv 3 / 5 / 4), fisse |
@@ -96,20 +121,20 @@ vale solo per comprare, seminare e avviare. → [livelli.md](livelli.md)
 
 ## Le macchine
 
-Fienile (il mangime delle bestie: [mangime-e-catena.md](mangime-e-catena.md)), mulino, pastificio (id `pasticceria`), panificio, caseificio, cucina (id `conserviera`), gelateria, telaio, zuccherificio, sartoria e tintoria sono **macchine** con le ricette della fattoria di sempre ([merci-e-ricette.md](merci-e-ricette.md)) (`MACCHINE` in `dati/ricette.js`): ognuna ha le
+Fienile (il mangime delle bestie: [mangime-e-catena.md](mangime-e-catena.md)), mulino, pastificio (id `pasticceria`), panificio, caseificio, cucina (id `conserviera`), gelateria, telaio, zuccherificio, sartoria e tintoria sono **macchine** con le ricette della 2D ([merci-e-ricette.md](merci-e-ricette.md), [catena.md](catena.md)) (`MACCHINE` in `dati/ricette.js`): ognuna ha le
 sue ricette (raccolti precisi e un tempo), **un posto di partenza** e cuoce **uno alla volta**. Gli ingredienti si scalano
 subito, il successivo parte quando finisce il precedente; i pronti restano finché non si ritirano (`ritiraDa`) e passano
 in dispensa (`stato.prodotti`).
 
-- **I posti si comprano, per macchina, fino a sei** (`dati/posti.js`): è la fila della 2D tale e quale ([../fattoria/macchine.md](../fattoria/macchine.md), «La fila»),
-  perché il metro è lo stesso (🪙1 = 10 s di esercizio): si parte con **un** posto, il 2º, 3º, 4º, 5º e 6º costano **🪙20 · 40 · 80 · 160 · 320**
+- **I posti si comprano, per macchina, fino a sei** (`dati/posti.js`): è la fila della 2D tale e quale (`da2d/dati/coda.js`, come in Hay Day: una macchina
+  lavora un pezzo alla volta e ne tiene altri in fila, così si caricano tre pasti prima di andare a dormire), perché il metro è lo stesso (🪙1 = 10 s di esercizio): si parte con **un** posto, il 2º, 3º, 4º, 5º e 6º costano **🪙20 · 40 · 80 · 160 · 320**
   (`PREZZI_DEI_POSTI`; un test li confronta con `PREZZI_DELLA_FILA` della 2D). In tutto 🪙620 per macchina, sotto le due ore di esercizio (🪙720):
   `guastiDeiPosti`. La fila è autonomia, e l'autonomia si compra; qui c'è una macchina per tipo, quindi una fila lunga lascia solo
   caricare di più (non va più svelta). `compraPosto(tipo)` paga (**conta come esperienza**, come ogni acquisto, quindi fa salire di livello; la
   scala di `npm run tara:fattoria3d` non lo conta, ed è verde), senza conferma; rifiuti `non-posseduta`, `pieno` (al sesto), `poche-monete` (con `costo`);
   evento `posto` (`macchina`, `posti`), nessun traguardo. `postiDi(tipo)` dice quanti sono; `avviaRicettaIn` rifiuta con `forno-pieno` quando la coda li riempie.
 - **Lo stato**: `stato.macchine[tipo].posti` (default 1, tetto 6, `normalizza` lo rimette in forma). Niente salto di versione: un vecchio stato senza il campo vale 1, ma
-  **una coda già lunga (fino a tre, quando i posti erano tre) lavora fino in fondo**; poi si torna ai posti pagati, come fa la 2D.
+  **una coda già lunga (fino a tre, quando i posti erano tre) lavora fino in fondo**; poi si torna ai posti pagati, come faceva la 2D.
 - **Nel foglio** i posti oltre quelli posseduti sono vani chiusi col prezzo («＋ 🪙 20», `data-f3="posto-chiuso"`), il prossimo in evidenza
   (`data-prossimo`): un tocco compra, un rifiuto dice «Servono 🪙 N». Il cartello sopra la macchina conta «posti occupati» sui posti veri.
 - **Ogni macchina ha il suo nome per la sezione dei posti** (`LAVORAZIONE`, `dentroDi(tipo)` in `dati/ricette.js`): mulino «Alla macina», pastificio e panificio
@@ -135,6 +160,6 @@ dopo due minuti con un carico nuovo. Il segnaposto di prima (2 raccolti, 14 s, `
 
 `Gioco.vue` li muove dagli **eventi** del motore (`prendiEventi()`), non dai gesti: `fattoria3dTerre`, `…Pezzi` (pezzi e
 edifici messi), `…Visite` e `…Aiuti` ([vicini.md](vicini.md)), `…Raccolti` (tessere tagliate), `…Alberi`, `…Prodotti`; sale anche l'evento `livello`. L'albo li legge dal blocco `albo` del
-manifesto (`gioco.js`); l'esperienza è modesta apposta, come nella fattoria di sempre.
+manifesto (`gioco.js`); l'esperienza è modesta apposta: non è la scorciatoia per salire di livello senza un esercizio.
 
 Nei test: `unita/fattoria3d` (le regole, a orologio finto) e `integrazione/fattoria3d` (il gioco col dito vero).

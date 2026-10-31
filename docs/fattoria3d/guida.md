@@ -1,7 +1,7 @@
 # La guida della fattoria 3D
 
 Il `?`, il primo giro e «E adesso?». Per bambini da 4 a 12 anni: frasi corte, la manina per chi non legge, e dopo un «non si può» il perché e come si fa.
-La 2D ha le stesse cose con altri nomi ([../fattoria/regole.md](../fattoria/regole.md)); i contratti comuni sono in [../core/guida.md](../core/guida.md) e [../genitori/guide.md](../genitori/guide.md).
+Le regole del «no» stanno in [regole.md](regole.md) «Come si dice di no»; i contratti comuni sono in [../core/guida.md](../core/guida.md) e [../genitori/guide.md](../genitori/guide.md).
 
 ## Il `?`
 

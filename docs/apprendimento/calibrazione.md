@@ -166,9 +166,9 @@ sforzo riparte da zero ogni volta e il prezzo va scritto in ore.
 - **Il controllo a mente**: quanto costa la decima volta, in ore? Più di
   due → la curva è sbagliata.
 - **L'eccezione è una curva col tetto vicino**: la fila delle macchine della
-  fattoria raddoppia (🪙20 · 40 · 80 · 160 · 320, `giochi/fattoria/dati/coda.js`)
+  fattoria raddoppia (🪙20 · 40 · 80 · 160 · 320, `giochi/fattoria3d/dati/posti.js`)
   e si ferma al quinto posto; l'ultimo costa meno di un'ora. Il tetto delle
-  due ore lo controlla `guastiDellaFila`.
+  due ore lo controlla `guastiDeiPosti`.
 
 ## Dentro una partita: l'energia del castello
 
@@ -187,10 +187,10 @@ davvero (`sequenzaTorri`, `pianoDi`). Due regole gemelle di quelle qui sopra:
 ## Il livello di un gioco che si spende
 
 La fattoria sale di livello **con le monete spese lì dentro**
-(`giochi/fattoria/dati/livelli.js`), forma riusabile: soglia
-`A·(n-1)² + B·(n-1)`, tanti livelli che danno poco, quello che arriva
-mostrato in una pagina dei livelli e non spento nel negozio, mai un livello
-che non porta niente.
+(`giochi/fattoria3d/dati/livelli.js`, sulle soglie della fattoria 2D di
+`da2d/dati/livelli.js`), forma riusabile: soglia `A·(n-1)² + B·(n-1)`, tanti
+livelli che danno poco, quello che arriva mostrato col suo livello e non
+come un tasto che non risponde, mai un livello che non porta niente.
 
 - **La roba di un livello non paga il livello dopo**: ogni salto è il passo
   della formula più il costo di quello che il livello apre
@@ -201,16 +201,16 @@ che non porta niente.
 
 | cosa | rende | il freno |
 |---|---|---|
-| un ordine del mercato | ⭐ 6 + 2·gesti, +20% per fase oltre la prima (8 un grano, 110 una lasagna); +25% in bottega, i bonus della mongolfiera | mai più del tempo di campo che chiede (`guastiDelMercato`) |
+| un ordine del mercato | ⭐ 6 + 2·gesti, +20% per fase oltre la prima (8 un grano, 110 una lasagna); +25% in bottega, i bonus della mongolfiera | mai più del tempo di campo che chiede (`guastiDegliOrdini`) |
 | una bestia di casa rimessa a posto (tre bisogni a «sta benissimo») | ⭐ un quindicesimo del prezzo: 6 cane, 5 gatto, 8 pappagallo | una volta per ciclo: non prima che un bisogno riscenda sotto «sta bene» (≥ tre ore) |
 
 Senza il ciclo, tre coccole da una monetina sarebbero una zecca di livelli.
 
 ## Dove stanno i numeri
 
-- `src/giochi/fattoria/dati/coltivazioni.js` — gesti, silos, `costoIngrandimento`
-- `src/giochi/fattoria/dati/catalogo.js` — prezzi, e `cresce` per chi rincara
-- `src/giochi/fattoria/dati/mondo.js` — il pezzo di terra e il suo rincaro
+- `src/giochi/fattoria3d/da2d/dati/coltivazioni.js` — gesti, silos, `costoIngrandimento` (la fattoria li legge dai dati della 2D tolta, col ponte `dati/parita2d.js`)
+- `src/giochi/fattoria3d/da2d/dati/catalogo.js` — prezzi, e `cresce` per chi rincara
+- `src/giochi/fattoria3d/dati/regole.js` — il lotto di terra e il suo rincaro (`TERRA`, sul prezzo della piazzola 2D)
 - `src/data/paghe.js` — quanto paga una cosa fatta, e le tabelle dei giochi che ne hanno una sua (sopra)
 
 Quello che ancora non torna è in [da-fare.md](da-fare.md).

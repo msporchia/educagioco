@@ -8,26 +8,26 @@ come si provano.
   momento*: il velo appena aperto, che si chiude da sé (`@click.self`), o
   un tasto del foglio, che si preme da solo. Col mouse il bersaglio si
   decide alla pressione. Rimedio: `zittisciIlFantasma` in
-  `src/giochi/fattoria/Gioco.vue`. Prova: un tocco vero,
-  `Input.dispatchTouchEvent` via CDP come in `integrazione/fattoria` — un
-  `page.click()` non porta nessun fantasma.
+  `src/giochi/sotterraneo/Gioco.vue` (e in `pozioni/viste/Banco.vue`). Prova:
+  un tocco vero, `Input.dispatchTouchEvent` via CDP come in
+  `integrazione/fattoria3d` — un `page.click()` non porta nessun fantasma.
 - **La soglia si misura sul dito, ~16 px** (`SCARTO_DITO`, contro
-  `SCARTO_MOUSE`, in `src/giochi/fattoria/scena/dito.js`). Sotto quella
+  `SCARTO_MOUSE`, in `src/giochi/fattoria3d/viste/dito-soglie.js`). Sotto quella
   misura Android e iOS considerano il dito fermo: un gioco più severo butta
   via i tocchi di chi preme forte, cioè dei bambini.
 - **Un elenco che scorre non agisce alla pressione.** Una voce presa al
-  `pointerdown` si porta via la strisciata (nel baule della fattoria,
+  `pointerdown` si porta via la strisciata (nel baule della fattoria 2D,
   comprando), e gli spazi fra le carte non servono: il telefono sposta il
-  tocco sull'elemento più vicino. Decide il movimento
-  (`src/giochi/fattoria/viste/Roba.vue`): fermo è un tocco, su e giù è del
-  browser (`touch-action: pan-y`; `pointercancel` = non è successo niente),
-  di lato si trascina. Lo vede solo un test che scorre col dito
-  (`integrazione/campi`): `scrollIntoViewIfNeeded` scorre da programma e
-  non incontra il guasto.
+  tocco sull'elemento più vicino. Decide il movimento: fermo è un tocco, su
+  e giù è del browser (`touch-action: pan-y`; `pointercancel` = non è
+  successo niente), di lato si trascina; il foglio della macchina della
+  fattoria lo fa da sé (`src/giochi/fattoria3d/viste/macchina-pura.js`). Lo
+  vede solo un test che scorre col dito: `scrollIntoViewIfNeeded` scorre da
+  programma e non incontra il guasto.
 - **Un pezzo tenuto al dito sta sotto il dito, centrato sul punto che il
   dito tiene** (o tenendo il punto preso se lo si riprende): ciò che si vede
   è dove cade, e contro il bordo la vista scorre. → `docs/fattoria3d/scena.md`
-  («Costruire»), `docs/fattoria/come-si-tocca.md`.
+  («Costruire»).
 - **Il dito non seleziona**, e la regola sta in un posto solo
   (`src/style.css`): niente evidenziazione blu né callout «Copia» su
   iPhone.

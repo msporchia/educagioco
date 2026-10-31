@@ -1,6 +1,32 @@
-# Da fare — la fattoria 3D
+# Da fare — la fattoria
 
-Le voci aperte tecniche. Una riga ciascuna, e quando una si chiude si toglie. Quello che manca rispetto alla fattoria 2D sta in [parita/](parita/README.md).
+Le voci aperte. Una riga ciascuna, e quando una si chiude si toglie (la regola che ne resta va nel file del suo argomento). Il registro di
+cosa la 3D ha preso dalla 2D sta in [parita/](parita/README.md).
+
+## Rimaste dalla sostituzione della 2D (31/10/2026)
+
+- **I clienti del banco per mestiere** (M4). Nella 2D chi ordina è uno a cui quella roba serve (`vuole` in `CLIENTI` di `da2d/dati/mercato.js`;
+  la nonna e il bottegaio prendono di tutto, così ogni merce ha un cliente): i mestieri sono la parte del mercato che un bambino racconta («è
+  arrivato l'apicoltore»). Il banco 3D ha dieci personaggi per tutti; le botteghe e la veterinaria scelgono già per mestiere ([ordini.md](ordini.md)).
+- **I «no» senza consiglio** (I4): il passo col tasto c'è sotto i «mancano» di macchina, banco e mongolfiera; gli altri rifiuti dicono il
+  perché ma non portano il tasto ([regole.md](regole.md) «Come si dice di no»).
+- **«Come si fa» senza le strade alternative** (I3): manca la riga piccola «o nel pollaio» sotto la macchina, che nella 2D diceva che l'altra
+  strada c'è. Una vista di «tutto l'albero» non c'è nemmeno, e la 2D l'aveva scartata apposta: un poster di quaranta nodi su un telefono, e
+  un bambino non cerca l'albero, cerca il maglione ([guida.md](guida.md)).
+- **La conversione non è mai stata provata su un salvataggio vero** (S1, T1): solo sulle fattorie 2D «tipo» 1–99 (`unita/fattoria3d-migra`).
+  Da provare con un salvataggio esportato, su un bambino di prova ([parita/migrazione.md](parita/migrazione.md)).
+- **I posti della fila dei recinti 2D non si portano**: in 3D un recinto ha bestie da comprare dentro, non una fila, e un recinto nel
+  magazzino non tiene bestie. Da decidere se diventano bestie in più quando il recinto si posa.
+- **Quello che resta «da regalare» non si vede** (`daRegalare`: i tartufi, le copie di una macchina oltre i sei posti): i grandi non lo
+  trovano nel quadro.
+- **I recinti in costume a Halloween** (W17, W21): la 2D aveva uno sprite vestito per ogni recinto; in 3D le bestie del cortile non si
+  travestono ([stagioni.md](stagioni.md)).
+- **La fila da un posto, da guardare giocando**: 🪙20 · 40 · 80 · 160 · 320 (`da2d/dati/coda.js`) sono una proposta; se il secondo posto lo
+  comprano tutti subito 🪙20 è una formalità, e da vedere se oltre il terzo ci arriva qualcuno.
+- **La parmigiana e i piatti di pancetta non hanno una faccia**: usano l'emoji finché l'atlante non ha i loro pezzi (`aspetta`,
+  [merci-e-ricette.md](merci-e-ricette.md)).
+
+## Tecniche e da guardare
 
 - **Le decorazioni (G8, G9) non sono viste su un telefono né col dito** ([decorazioni.md](decorazioni.md)): 206 modelli guardati nel catalogo 3D e misurati senza browser (~1,23 mesh l'uno); le 217 voci della 2D ci sono tutte, i livelli senza niente di nuovo sono zero. Da giudicare: le 38 carte della scheda Raccolto e le 33 dei Fiori su 360 px (il menu chiede 9 anteprime 3D in più per scheda: più di 200 carte da fotografare una per volta), se i cartelli delle colture e le corolle dei fiori si leggono a distanza di gioco (una corolla è pochi pixel), se un giardino da 200 pezzi pesa (fiori e arredo fermo sono già a istanze; rimedio pronto per verde, recinti e raccolto: aggiungerli a `STATICI`). Mulino ad acqua, ninfee e canne non sono provati su un lago vero col dito (la regola è nel test: `unita/fattoria3d-decori`, blocco 4). La giostrina, il mulinello e il mulino ad acqua girano: sono mesh sciolte, non istanze. Il lampione e le lucine non fanno luce di notte (non c'è un ciclo giorno e notte).
 - **Misurare su un telefono vero.** Tutti i numeri di peso (draw call, fps, caldo, batteria) sono da SwiftShader; il
@@ -9,7 +35,7 @@ Le voci aperte tecniche. Una riga ciascuna, e quando una si chiude si toglie. Qu
   (`npm run tara:fattoria3d`), ma mai giocati con un bambino. Da vedere: la terra (i primi lotti costano 🪙4–15 perché la 3D parte con meno celle della 2D), la pesca a un ciclo di 15 minuti
   per banco, i 22 livelli senza novità, i magazzini ingrandibili dall'inventario (bottoni in fondo), e un salvataggio vero di prima che si porta sulla scala nuova.
 - **Il secondo cortile non è visto in scena né giocato** ([cortile-2.md](cortile-2.md)): conigliera, alpaca, asini e apiario sono guardati solo dal catalogo 3D e in node; da giudicare a distanza di gioco il gomitolo e la nuvola d'angora, il favo dell'arnia e il peso coi quattro recinti pieni; `compitiScaldo` (`pezzi.js`) non li conosce ancora.
-- **Le bestie in più dentro un recinto non esistono in 2D.** Una 3D con 6 galline in parallelo produce più di un pollaio 2D (che lavora una ricetta alla volta): parità non decisa, i prezzi delle bestie restano 3D.
+- **Le bestie in più dentro un recinto non esistevano in 2D.** Una 3D con 6 galline in parallelo produce più di un pollaio 2D (che lavora una ricetta alla volta): parità non decisa, i prezzi delle bestie restano 3D.
 - **Il `mangime` del mulino** (cibo di cane e gatto) lo mangiano le bestie di casa (G6, [bestie-di-casa.md](bestie-di-casa.md)) e lo chiede la veterinaria; i compagni gratis (Watson, i gatti) non mangiano.
 - **Le bestie di casa non sono viste dal vero.** Guardate nel catalogo 3D e provate col dito su desktop, non dalla camera di serie su un telefono (corpi, foglio a 360 px). Gli addobbi ci sono ([addobbi.md](addobbi.md)), visti solo nel catalogo 3D.
 - **Giocare i prezzi delle bestie.** Pecora 20 (+10), gallina 15 (+8), mucca 30 (+15) sono scelti sul metro di
@@ -26,19 +52,16 @@ Le voci aperte tecniche. Una riga ciascuna, e quando una si chiude si toglie. Qu
   `integrazione/fattoria3d` è aggiornato ma **non eseguito sulla build** (vietata). Da sentire col dito: i 40 px di rialzo, la fascia di 72 px (la barra in alto è stimata 64 px), le 2–12 celle/s.
 - **Ruotare i pezzi: fatto** ([rotazione.md](rotazione.md)), ma **non provato col dito su un telefono**: il tasto ↻ con un secondo dito mentre il primo tiene il pezzo (in test con due tocchi CDP), la sua posizione a 360 px sopra la fascia «metti via», se un quarto di giro alla volta basta ai più piccoli. Resta, se serve sistemare un fantasma lontano, una vista «tutto» a un tasto (la telecamera alta del costruire è stata tolta con la barra).
 - **Le stagioni non sono viste su un telefono** ([stagioni.md](stagioni.md)): provate in Chrome senza schermo (Natale ≤ 8 draw call in più, Halloween con le zucche). Da giudicare: se i fiocchi (420 punti) si vedono a distanza di gioco, se le chiazze bastano a dire «inverno» senza il suolo bianco né i tetti innevati, il tramonto di Halloween a 360 px.
-- **Il menu «Costruisci qui» non è stato visto da un bambino né su un telefono**: la pressione lunga (0,45 s) e il fantasma da sistemare col dito sono da giocare; l'atlante della fattoria 2D (1,9 MB) entra nel gruppo `fattoria3d` del sito spezzato (`Faccia.vue`; le carte ora mostrano il modello 3D).
+- **Il menu «Costruisci qui» non è stato visto da un bambino né su un telefono**: la pressione lunga (0,45 s) e il fantasma da sistemare col dito sono da giocare; l'atlante della fattoria (`src/grafica/atlante-fattoria.js`, 1,9 MB) entra nel gruppo `fattoria3d` del sito spezzato (`Faccia.vue`; le carte ora mostrano il modello 3D).
 - **Le anteprime 3D non sono viste su un telefono.** Provate in Chrome senza schermo (SwiftShader): si dovrebbe misurare il tempo della preparazione e vedere se il render target a 4 campioni regge sui telefoni più vecchi (se no, `samples: 0`); il decoro grande (fontana, ponte) è inquadrato dalla scatola, non guardato uno per uno.
 - **I laghi naturali nuovi non sono visti su un telefono** ([laghi.md](laghi.md)): guardati in Chrome senza schermo (un lago grande a cavallo di tre lotti) e provati nei test unitari e in `integrazione/fattoria3d` (verde); non è provata la pesca
   nei laghi della fascia di mezzo col dito. Da giocare: se 12% di acqua e le catene di ponti da 13 celle sono troppe o poche per un bambino.
 - **Un lotto vecchio dentro un lago nuovo ha il bordo tagliato dritto** ([laghi.md](laghi.md), «I salvataggi di prima»): scelta per non toccare i pezzi piazzati; se si vede brutto, si può allargare il lago sui lotti non comprati confinanti.
 - **La pesca, il mare e i laghi non sono stati visti su un telefono né giocati** ([geografia-e-pesca.md](geografia-e-pesca.md)): provati in Chrome senza schermo (dev server: il mare, la costa, un lago con molo e contadino, il lancio, il galleggiante, «Abbocca!», il pesce, le anteprime delle carte) e nei test unitari; `integrazione/fattoria3d` ha il blocco «la pesca» ma **non è stato eseguito** (la build era vietata). Da guardare: i pesciolini a distanza di gioco e a 360 px, il mare dall'alto dopo qualche lotto, il porticciolo su una costa vera (non ruota: guarda sempre verso +z), se 12 s di attesa e un minuto di riposo vanno bene a un bambino, e se il pesce (che si pesca dal 4 ma serve dal 17) si accumula senza scopo troppo a lungo.
-- Spostata in [parita/](parita/README.md) (A1k).
 - **Gli amici e i vicini non conoscono `geo`.** Lo snapshot di una fattoria non dice se ha la geografia grande: la fattoria di un amico con lotti nelle zone del mare o dei laghi si vede com'era prima ([geografia-e-pesca.md](geografia-e-pesca.md)); un villaggio col molo è facoltativo e non c'è. Il cartello «🌊 mare» sui lotti e le dune della spiaggia (ci sono sabbia e canne, non dune) non sono visti da un bambino.
 - **Il mondo senza confini non è stato visto sul telefono né provato col dito**: provato in Chrome senza schermo (dev server) e nei test unitari; `integrazione/fattoria3d` è aggiornato (`lottiComprabili()`, `strada` è una mappa) ma non eseguito. Da guardare: il peso della finestra 9×9 (alberi e ciuffi), il laghetto a 360 px, un ponte attraversato dal vero, la lontananza (camera libera a 30 celle).
 - **three e il gruppo `mate`.** Nel sito spezzato three è nel gruppo degli Asteroidi: chi non l'ha ancora scaricato lo
   prende a richiesta alla prima apertura. Se pesa si sposta in un gruppo condiviso.
-- Spostata in [parita/](parita/README.md) (I26).
-- Spostata in [parita/](parita/README.md) (I20).
 - **I vicini.** Provati nel browser senza schermo vero e senza un build del sito spezzato: restano da guardare su un telefono (due contesti WebGL durante
   una visita) e da giocare i numeri del trattore e dei villaggi ([vicini.md](vicini.md)).
 - **Il carretto e il segnalino della festa** ([vicini.md](vicini.md), [stagioni.md](stagioni.md)) non sono visti su un telefono a 360 px: il foglio del carretto e il 🎃/🎄 sul tasto 🏗 sono provati solo col dito in Chrome senza schermo vero.
@@ -50,8 +73,8 @@ Le voci aperte tecniche. Una riga ciascuna, e quando una si chiude si toglie. Qu
 - **Le botteghe del paese** ([botteghe.md](botteghe.md)): il foglio è visto a 360 px da Chrome e provato col dito vero (CDP), i modelli dal catalogo 3D; non visti su un telefono né in scena con tutta la fattoria intorno, e nessun bambino ha giocato i tempi (10–20 minuti, 5 cuori). Niente contatori né traguardi nuovi: da decidere se serve «Consegne in bottega» (e la riga per i bambini si propone, non si scrive). Restano M4 (clienti per mestiere al banco) e M20 (la fiera di otto voci).
 - **I modelli di pastificio e cucina** (`creaPasticceria`, `creaConserviera`) sono ancora quelli di una pasticceria e di una conserviera: da ridisegnare
   con il mestiere giusto (pasta, forno, pentole).
-- **L'atlante nel sito spezzato.** `atlante.js` della 2D lo importa anche la 3D (`Faccia.vue`, `facce.js`, `Provino.vue`): il modulo diventa un
-  file condiviso nella base e il PNG resta nel gruppo `fattoria`. Da guardare con `node strumenti/prova-sito.mjs` (offline, solo la 3D).
+- **L'atlante nel sito spezzato.** `src/grafica/atlante-fattoria.js` lo importano la fattoria (`Faccia.vue`, `facce.js`, `Provino.vue`), il profilo
+  e Passo passo: da guardare in quale gruppo finisce con `node strumenti/prova-sito.mjs` (offline).
 - **Il foglio della macchina e i vani dei posti da comprare non sono stati visti col dito vero** (scritto senza build: `integrazione/fattoria3d` ha il tocco e due trascinate da eseguire): da guardare a 360 px, a 820 px e in orizzontale. Manca «accelera» (il motore non anticipa una cottura) e il ritiro di un solo pronto.
 - **La mongolfiera non è stata vista.** `Mongolfiera.vue` (360 px e tablet, cielo, cassette, pallone) è scritta ma non guardata su uno schermo né provata col dito
   (la build era vietata mentre altri lavoravano): il dito sul foglio e il pallone che parte e torna nella scena sono da guardare ([mongolfiera.md](mongolfiera.md)). Da giocare: i pezzi

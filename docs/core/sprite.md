@@ -23,6 +23,7 @@ strumenti/sprite/sorgenti/<gioco>/generati/<foglio>.png + .json   ← «i ritagl
             atlante.py (figure) / vesti.py (il castello)
                           ▼
          src/giochi/<gioco>/dati/atlante.js                     ← «il mondo» guarda qui
+         src/grafica/atlante-fattoria.js (la fattoria)
          src/giochi/castello/dati/vestiti.js, figure.js
 ```
 
@@ -188,14 +189,41 @@ il test (`unita/sprite-inutilizzati`) guarda solo che giri e sia coerente.
   danno molte perché il fondo è dipinto. **Di un foglio che resta in uso le macchie non si «eliminano»**:
   o si ritagliano (una riga nel foglietto) o restano nel PNG, che non si tocca.
 
+## La fattoria: chiedere un foglio
+
+L'atlante della fattoria (`src/grafica/atlante-fattoria.js`) dà la faccia alle merci della fattoria 3D (`Faccia.vue`) e le figure al
+profilo e a Passo passo. Una merce nata prima del suo disegno dichiara in `aspetta` il pezzo che arriverà e intanto usa l'emoji
+([../fattoria3d/merci-e-ricette.md](../fattoria3d/merci-e-ricette.md)).
+
+- **Prima di far disegnare, guardare cosa c'è**: l'atlante ha centinaia di pezzi, e nove delle prime quattordici merci avevano già
+  la faccia (le casse del raccolto, la balla di fieno, la bottiglia del latte).
+- **Il metodo è un'immagine di base allegata** (l'ultimo foglio buono) più «nello stesso stile di questa», e una scheda che dice
+  quello che il generatore altrimenti inventa: misura, vista, fondo, ombra, tavolozza, appoggio, griglia (`PROMPT-edificio.md`,
+  `PROMPT-merce.md`, `PROMPT-bestia.md` accanto ai fogli in `strumenti/sprite/sorgenti/fattoria/generati/`).
+- **Il prompt si copia nel foglietto nello stesso momento in cui si salva il PNG**: la chat non lascia un file. Per `merci_2` ed
+  `edifici_3` è andato perso: si rigenera dalla scheda e dalle descrizioni qui sotto.
+- **Le merci a sei per foglio**: sopra i sei il generatore stringe gli oggetti e i dettagli spariscono (una merce è larga 20–30 px).
+  Fondo trasparente (il magenta vietava il viola della lavanda); un alone attorno alle figure lo toglie `"alone": 128`.
+
+Le descrizioni di `merci_2`, nello stile di `merci.jpg` (un oggetto per riquadro, di fronte e un po' dall'alto, fondo trasparente,
+senza ombra):
+
+| pezzo | descrizione |
+|:--|:--|
+| `merce_stoffa` | rotolo di stoffa a righe crema e blu, un lembo srotolato |
+| `merce_farina` | sacco di tela chiaro aperto, con la farina bianca che trabocca |
+| `merce_burro` | panetto di burro giallo su un piattino, con un pezzo tagliato |
+| `merce_formaggio` | forma di formaggio giallo con uno spicchio tagliato che mostra i buchi |
+| `merce_minestrone` | scodella panciuta di terracotta con la minestra densa e i pezzi di verdura, un cucchiaio di legno sul bordo |
+| `merce_polenta` | fetta spessa di polenta gialla su un tagliere, con una scaglia di formaggio che si scioglie sopra |
+
 ## Gli agganci
 
-**Dove sta la testa di una bestia lo dice il suo foglietto** (`agganci`,
-verso per verso, in frazioni del riquadro), non una tabella per specie:
-`atlante.py` lo copia in `AGGANCI` dell'atlante della fattoria, e `puntiDi`
-in `giochi/fattoria/dati/animali.js` legge foglietto → scheda → ripiego. Si
-calibra a occhio nel banco («i ritagli» → modo **agganci**, trascinando i
-cerchietti con l'anteprima vestita accanto) e si controlla in
-`poc/scatti/agganci-fattoria.png`.
+I foglietti delle bestie della fattoria hanno ancora gli `agganci` (verso per verso, in frazioni del riquadro), e `atlante.py` li
+copia in `AGGANCI` dell'atlante: li leggeva la fattoria 2D, tolta il 31/10/2026, per posare cappelli e occhiali sugli sprite (si
+calibravano a occhio nel banco, «i ritagli» → modo **agganci**). La fattoria 3D aggancia sui modelli, non sugli sprite
+([../fattoria3d/addobbi.md](../fattoria3d/addobbi.md)).
+
+## La larghezza degli atlanti
 
 - **L'atlante nitido è largo 2048 px** (`LARGO_NITIDO` in `strumenti/sprite/atlante.py`), non 1024: alto 4279 px non stava in una texture su molti telefoni (il limite tipico è 4096) e il sotterraneo andava a scatti solo sul cellulare, anche da fermo (14 ottobre 2026). Nessuna immagine del file unico supera i 4096 px per lato.

@@ -1,6 +1,6 @@
 # Dove si può mettere il piede (`src/motore/passi.js`)
 
-Il pezzo di motore comune a fattoria e sotterraneo: quali celle sono buone e
+Il pezzo di motore dei giochi a celle (il sotterraneo; la fattoria 2D, tolta, lo usa ancora per rileggere i vecchi salvataggi): quali celle sono buone e
 che strada le unisce. Prima ognuno lo scriveva per conto suo.
 
 ## Lo spazio arriva da fuori

@@ -75,7 +75,7 @@ sbaglio si legge il perché, e come si fa.
 <table>
 <tr>
 <td align="center" width="33%" valign="top"><img src="docs/img/clip-codice.webp" width="220"><br><b><a href="docs/codice-segreto/presentazione.md">🔐 Codice Segreto</a></b><br>Deduzione pura: si indovina la combinazione leggendo i pallini.</td>
-<td align="center" width="33%" valign="top"><img src="docs/img/clip-fattoria.webp" width="220"><br><b><a href="docs/fattoria/presentazione.md">🚜 La fattoria</a></b><br>Dove si spendono le monete: campi, mulini e animali, col tempo vero.</td>
+<td align="center" width="33%" valign="top"><img src="docs/img/clip-fattoria.webp" width="220"><br><b><a href="docs/fattoria3d/presentazione.md">🚜 La fattoria</a></b><br>Dove si spendono le monete: una fattoria in 3D da girare, con campi, mulini e animali, col tempo vero.</td>
 <td width="33%"></td>
 </tr>
 </table>

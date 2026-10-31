@@ -1,8 +1,12 @@
 # Le stagioni: Halloween e Natale
 
-Come nella fattoria 2D ([../fattoria/stagioni.md](../fattoria/stagioni.md)), con le stesse finestre: **Halloween dal 1 al 31 ottobre,
-Natale dal 1 novembre al 6 gennaio**, in ora locale. Il *quando* è il dato della 2D importato così com'è (`dati/stagioni3d.js`
-riesporta `stagioneDi`, `FINESTRE`, `semeDelGiorno` da `../../fattoria/dati/stagioni.js`, e usa il suo `addobbiStagionali` per scegliere
+Le finestre della fattoria 2D: **Halloween dal 1 al 31 ottobre, Natale dal 1 novembre al 6 gennaio**, estremi compresi e in ora
+locale (la vigilia alle 23:30 è ancora la vigilia anche se a Greenwich è domani; Natale scavalca l'anno). Si ritoccano in `FINESTRE` e
+in nessun altro posto, e `guastiDelleStagioni` è rosso su una data impossibile o su due finestre che si accavallano. La fattoria è il
+posto dove si torna tutti i giorni: trovarla cambiata a dicembre è **una cosa che succede** senza che nessuno l'abbia comprata; le cose
+da mettere (zucche, albero, pupazzo, il cappello da strega) invece si comprano, **e comprate restano** tutto l'anno, e non sono premi di
+livello. Il *quando* è il dato della 2D importato così com'è (`dati/stagioni3d.js`
+riesporta `stagioneDi`, `FINESTRE`, `semeDelGiorno` da `../da2d/dati/stagioni.js`, e usa il suo `addobbiStagionali` per scegliere
 cosa va su un edificio); il *come* si vede è della 3D. `#stagione=natale|halloween` nell'indirizzo le accende fuori stagione
 (`stagioneAttiva(data, frammento)`, la stessa sintassi della 2D). Si decide una volta, all'apertura della fattoria.
 
@@ -45,7 +49,7 @@ rimetterli gratis; quelli in mappa restano dove sono). Non sono «roba» di un l
 
 ## Il segnalino della festa (W20)
 
-Come il 🎃/🎄 sul baule della 2D ([../fattoria/stagioni.md](../fattoria/stagioni.md)): in stagione, finché non possiedi **nessun** pezzo della festa (né in
+Come il 🎃/🎄 sul baule della 2D (le decorazioni sono una scelta della bambina, e la festa è l'eccezione perché dura poco): in stagione, finché non possiedi **nessun** pezzo della festa (né in
 mappa né nel magazzino), il tasto 🏗 Costruisci porta l'icona della festa (angolo in alto a sinistra, il «!» resta a destra), e nel menu la
 portano la linguetta della scheda (Decori a Halloween, Feste a Natale) e le carte di stagione aperte dal livello. Posato o comprato il primo
 pezzo se ne va. Non apre il menu da sé (si apre sempre sui Campi) e non cambia prezzi: è solo un dito puntato. Logica pura: `festaDaScoprire`

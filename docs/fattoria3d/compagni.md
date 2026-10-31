@@ -27,7 +27,7 @@ scintille e `ui.avviso` («Watson è arrivato!»). Il controllo è una volta al 
 
 - **Il contadino** (`creaContadino(abito)`): testa grande su corpo piccolo, faccia con una trama canvas (occhi grandi, guance, sorriso), cappello,
   maglia, salopette (o gonna), stivali, fazzoletto. È **vestibile**: l'abito (cappello, maglia, pantalone, stivali, collo, capelli, pelle) lo sceglie il
-  bambino nel guardaroba e se è contadino o contadina lo dice il profilo, come nella fattoria di sempre → [guardaroba.md](guardaroba.md). Di serie: lui
+  bambino nel guardaroba e se è contadino o contadina lo dice il profilo, come nella fattoria 2D → [guardaroba.md](guardaroba.md). Di serie: lui
   col cappello di paglia e la camicia a quadri, lei con le trecce, il nastro rosa e un fiore sul cappello. Ha **sempre gli stessi perni** (`gambe`,
   `busto`, `testa`, `bracci`, `falce`, `ascia`), quindi `eroe.js` e i gesti non cambiano con l'abito (il vecchio a scatole, `creaEroe`, è stato tolto: aveva
   la testa staccata). In più respira da fermo e inclina la testa camminando (poche righe in `Eroe._posa`).

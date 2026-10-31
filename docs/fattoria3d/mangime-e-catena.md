@@ -1,7 +1,7 @@
 # Il mangime e la catena
 
-Le bestie della fattoria 3D **non mangiano più un raccolto qualsiasi**: mangiano il mangime della fattoria di sempre, che si fa in una
-macchina. La catena è quella decisa in 2D ([../fattoria/catena.md](../fattoria/catena.md), [macchine.md](../fattoria/macchine.md)) e qui si
+Le bestie della fattoria 3D **non mangiano più un raccolto qualsiasi**: mangiano il mangime della fattoria 2D, che si fa in una
+macchina. La catena è quella decisa in 2D ([catena.md](catena.md)) e qui si
 rispetta: stesse trasformazioni, stesse quantità N → 1, stessa macchina. I dati stanno in `dati/mangime.js` (le ricette del fienile e i
 conti dei tempi), `dati/animali.js` e `dati/regole.js` (`PECORE.mangia`) per chi mangia cosa, `motore/fattoria3d.js` per il pasto.
 
@@ -9,7 +9,7 @@ conti dei tempi), `dati/animali.js` e `dati/regole.js` (`PECORE.mangia`) per chi
 
 - **Un raccolto non si dà da mangiare: si porta alla macchina.** Il grano è la cosa delle galline *dopo* il fienile, le carote (o l'erba
   medica) quella di mucche e pecore. Il gioco insegna anche questo: ogni coltura ha la sua bocca, e fra il campo e la bocca c'è un mestiere
-  ([../fattoria/catena.md](../fattoria/catena.md), «Tre mangimi, tre bocche»). Prima la 3D faceva mangiare grano e mais a chiunque: la catena
+  ([catena.md](catena.md), «Tre mangimi, tre bocche»). Prima la 3D faceva mangiare grano e mais a chiunque: la catena
   finiva nel campo.
 - **N → 1 e mai il contrario.** Due grani un becchime, due becchimi un uovo; due carote un foraggio, due foraggi un latte, un foraggio una lana.
 - **Il mangime c'è prima della bocca**, o insieme: una bestia che chiede una cosa che non si può ancora fare sarebbe un rifiuto senza uscita.
@@ -31,7 +31,7 @@ conti dei tempi), `dati/animali.js` e `dati/regole.js` (`PECORE.mangia`) per chi
 | `becchime` | 2 grano | 4 | 2 | |
 | `foraggio` | 2 erba medica | 5 | 9 | la seconda strada: stesso prodotto, stesso scomparto |
 
-Due strade per la stessa merce non sono una svista ([../fattoria/catena.md](../fattoria/catena.md)): la ricetta `foraggio_carote` ha `da: 'foraggio'`
+Due strade per la stessa merce non sono una svista ([catena.md](catena.md)): la ricetta `foraggio_carote` ha `da: 'foraggio'`
 (`tick` mette il pronto sotto il nome del prodotto), `foraggio` è quella dell'erba. **L'erba medica** (`erba`, `mangime: true`) è la
 coltura più svelta (12 s contro i 16 delle carote, come i 4 minuti contro i 6 della 2D) e perciò sta **fuori** dalla regola della scala
 «chi arriva dopo matura dopo» (`guastiDellaScala` salta le colture `mangime`). Arriva al 9, con la stalla, che è la bestia che ne mangia di più.

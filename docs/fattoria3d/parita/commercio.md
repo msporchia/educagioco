@@ -1,6 +1,6 @@
 # Parità: ordini e commercio
 
-Legenda in [README.md](README.md). 2D: [../../fattoria/chi-chiede.md](../../fattoria/chi-chiede.md). 3D: [../ordini.md](../ordini.md),
+Legenda in [README.md](README.md). 2D: i dati in `da2d/dati/` (`mercato.js`, `botteghe.js`, `mongolfiera.js`). 3D: [../ordini.md](../ordini.md),
 [../mongolfiera.md](../mongolfiera.md), [../vicini.md](../vicini.md).
 
 Regola comune, rispettata da entrambe: **si paga esperienza, mai monete**; un premio non supera 🪙6 per ogni minuto di lavoro.
@@ -12,10 +12,10 @@ Regola comune, rispettata da entrambe: **si paga esperienza, mai monete**; un pr
 | M1 | apertura | mercato 🪙40, livello 2 | ✅ bacheca 🪙12 o bancarella 🪙15, livello 2 | – |
 | M2 | posti | 3 fissi | 🟡 3 → 4 (liv 5) → 5 (8) → 6 (11) → 8 (14) | – |
 | M3 | cosa chiede | ≤3 merci, ≤3 pezzi; solo merci ottenibili; pesca pesata (`pesoDellaMerce`) | 🟡 1–3 cose, raccolti 1–4, prodotti 1–2; ottenibili; un posto su due chiede un prodotto | P2 |
-| M4 | clienti | 16 con mestiere: chi ordina «vuole» quella roba (`vuole`), nonna e bottegaio prendono tutto | 🟡 10, nessuno per mestiere | P1 |
-| M5 | premio | `PER_GESTO·gesti·(1+0,2(fasi−1))`, ordine = 6 + somma | 🟡 metà del tetto di tempo (6/min): `max(1, ⌊0,5·6·minuti⌋)`, senza base | P1 (D9) |
+| M4 | clienti | 16 con mestiere: chi ordina «vuole» quella roba (`vuole`), nonna e bottegaio prendono tutto | 🟡 10, nessuno per mestiere (aperta: [../da-fare.md](../da-fare.md)) | P1 |
+| M5 | premio | `PER_GESTO·gesti·(1+0,2(fasi−1))`, ordine = 6 + somma | ✅ lo stesso conto (`premioPer` della 2D, [../ordini.md](../ordini.md)) | – |
 | M6 | rifiuto | gratis, posto vuoto 5 minuti | 🟡 gratis, posto vuoto 3 minuti | P2 |
-| M7 | l'albero dalla merce che manca | si tocca e apre «Come si fa» | ❌ | P1 ([interfaccia-e-guida.md](interfaccia-e-guida.md) I3) |
+| M7 | l'albero dalla merce che manca | si tocca e apre «Come si fa» | ✅ dal passo sotto il «mancano» del banco ([interfaccia-e-guida.md](interfaccia-e-guida.md) I3) | – |
 | M8 | invito sulla bancarella (📋 muto se non c'è nulla) | sì | 🟡 il pallino sul tasto Banco e «N pronti!» sulla bacheca | – |
 | M9 | il banco a 360 px | visto | ❌ `Bacheca.vue` mai guardata su telefono | P1 |
 
