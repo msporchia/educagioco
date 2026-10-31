@@ -189,6 +189,16 @@ export class Mondo3d {
   }
 
   // ── cosa c'è sotto il dito ──
+  /** La bestia da tenere premuta sotto il dito, o null. La zona di tocco è larga (il dito è grosso, un gatto è piccolo): se sotto c'è anche un pezzo
+      vince la bestia solo se il dito prende proprio il suo corpo, se no si solleva il pezzo (un gatto accanto a un tavolo non lo blocca). */
+  bestiaSotto(cx, cy) {
+    const rg = this._raggio(cx, cy), c = this.compagni.bersaglio(rg)
+    if (!c) return null
+    const b = this.bersaglioSotto(cx, cy)
+    if (!b || b.kind !== 'cosa') return c
+    const zona = c.grp.userData.colpo
+    return rg.intersectObject(c.grp, true).some(h => h.object !== zona && h.object.visible) ? c : null
+  }
   /** { kind: 'cosa', id } (anche un edificio) | { kind: 'albero', n } | { kind: 'ostacolo', n } | null */
   bersaglioSotto(cx, cy) {
     const rg = this._raggio(cx, cy)

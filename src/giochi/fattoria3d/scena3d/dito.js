@@ -40,7 +40,7 @@ export class Dito {
     if (ui.fogliAperti()) return
     if (w.costruzione.parcheggiato) { this.inizio.parcheggio = true; w.costruzione.prendi(e.clientX, e.clientY); return }          // il fantasma del menu: lo si trascina o si tocca dove va
     if (this._pennello) { w.costruzione.pennello(e.clientX, e.clientY, this._pennello); return }
-    const ini = this.inizio, amico = ui.apriBestia && w.compagni.bersaglio(w._raggio(e.clientX, e.clientY))
+    const ini = this.inizio, amico = ui.apriBestia && w.bestiaSotto(e.clientX, e.clientY)
     if (amico) {                                        // tenere premuto su una bestia: il suo foglio (come sta, il nome, cosa le serve)
       this.lungo = setTimeout(() => {
         if (this.inizio !== ini || this.trascina || this.punti.size !== 1 || w.costruzione.attivo || ui.fogliAperti()) return
