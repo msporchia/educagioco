@@ -713,7 +713,7 @@ onUnmounted(() => {
              :livelli="LIVELLI" :livello="livello" @livello="scegliLivello" @gioca="avvia" @riprendi="riprendiPartita" @scorda="scorda" />
 
       <SalaSfida v-else-if="vista === 'sfida'" :fase="sfida.fase.value" :codice="sfida.codice.value" :messaggio="sfida.messaggio.value"
-                 :amici="sfida.amici.value" :invitato="sfida.invitato.value" partita="la battaglia" domanda="Dove vi sfidate?"
+                 :amici="sfida.amici.value" :invitato="sfida.invitato.value" :scelto="sfida.scelto.value" partita="la battaglia" domanda="Dove vi sfidate?"
                  spiega="Due telefoni, la stessa battaglia: tu contro tuo fratello o tua sorella. Serve internet su tutti e due."
                  @crea="creaSfida" @invita="invitaAmico" @entra="sfida.entra" @indietro="indietro">
         <template #scelte><SceltaSfida v-model:terreno="sceltaTerreno" v-model:secondi="sceltaSecondi" :terreni="TERRENI_SFIDA" /></template>

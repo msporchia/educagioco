@@ -2327,7 +2327,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
               @scegli="scegli" @chiudi="chiudiLaScelta" />
         <div v-if="salaAperta" class="sot-in-due" data-sot-in-due>
           <SalaSfida :fase="sfida.fase.value" :codice="sfida.codice.value" :messaggio="sfida.messaggio.value"
-                     :amici="sfida.amici.value" :invitato="sfida.invitato.value" partita="la discesa" domanda="Dove scendete?"
+                     :amici="sfida.amici.value" :invitato="sfida.invitato.value" :scelto="sfida.scelto.value" partita="la discesa" domanda="Dove scendete?"
                      spiega="Due telefoni, la stessa discesa: ognuno col suo eroe. Serve internet su tutti e due."
                      @crea="creaInDue" @invita="invitaInDue" @entra="sfida.entra" @indietro="chiudiSala">
             <template #scelte><SceltaInDue v-model:posto="postoInDue" v-model:difficolta="difficoltaInDue" /></template>
