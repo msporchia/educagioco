@@ -49,7 +49,7 @@ export async function leggiTema(predefinito = 'attuale') {
     letto = true
     const c = await load(CHIAVE)
     if (c && temaDi(c.tema) && !temaDi(dallIndirizzo())) tema.value = temaDi(c.tema)
-    // niente cheat e niente scelta ricordata: il predefinito di chi chiama (il Sotterraneo 3D, in prova, parte col legno)
+    // niente cheat e niente scelta ricordata: il predefinito di chi chiama (il sotterraneo parte col legno)
     else if (!c || !temaDi(c.tema)) tema.value = temaDi(predefinito) || 'attuale'
   }
   return tema.value

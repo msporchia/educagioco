@@ -1,4 +1,4 @@
-// Quale pezzo per quale cosa: dato puro, nome della cosa → nome dello sprite (letto da scena/tela.js). Lo
+// Quale pezzo per quale cosa: dato puro, nome della cosa → nome dello sprite. Lo
 // scenario intero di un piano sta in una voce di SCENARI, tutte con le stesse chiavi (docs/sotterraneo/scenari.md).
 // guastiDelleTessere chiede all'atlante ogni nome: un pezzo mancante è rosso nei test, non un muro invisibile.
 
@@ -50,7 +50,7 @@ export const SCENARI = {
     torcia: 'cripta-faccia-torcia',
     varianti: ['cripta-faccia-grata', 'cripta-faccia-liscia', 'cripta-faccia-toppa'],
     capi: { sx: 'cripta-capo-sx', dx: 'cripta-capo-dx' },
-    // bordi con la fascia scura: `luce` è quanto è larga la riga chiara, da ripassare (scena/tela.js)
+    // bordi con la fascia scura: `luce` è quanto è larga la riga chiara, da ripassare
     bordi: { n: 'cripta-bordo-n', o: 'cripta-bordo-o', e: 'cripta-bordo-e',
              angolo: 'cripta-bordo-angolo', luce: 3 },
     porte: {
@@ -211,7 +211,7 @@ export function guastiDelleTessere(nomi = null) {
   for (const q of [1, 6, 12, 24, 48]) chiedi(pezzoDelleGemme(q, 0), `gemme da ${q}`)
   chiedi('forziere-oro-chiuso', 'forziere d\'oro')
   if (nomi) {
-    // eroi e mostri si chiedono alle loro tabelle, non a un elenco a mano; `unaPosa` ha solo il respiro (scena/tela.js)
+    // eroi e mostri si chiedono alle loro tabelle, non a un elenco a mano; `unaPosa` ha solo il respiro
     const chiedeva = [
       ...EROI.map(e => ({ sprite: e.sprite, pose: ['fermo', 'corsa'] })),
       ...Object.values(MOSTRI).map(m => ({

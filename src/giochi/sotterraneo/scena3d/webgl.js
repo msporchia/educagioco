@@ -1,4 +1,4 @@
-// Se il telefono sa disegnare in WebGL 2: si chiede senza caricare three (Gioco3d.vue lo chiede prima di aprire il gioco, e il
+// Se il telefono sa disegnare in WebGL 2: si chiede senza caricare three (Entrata.vue lo chiede prima di aprire il gioco, e il
 // file di three si scarica solo se serve). Il contesto di prova si butta subito.
 export function haWebGL2() {
   if (typeof document === 'undefined') return false

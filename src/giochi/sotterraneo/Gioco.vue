@@ -119,7 +119,7 @@ const avviso = ref(null)
 const zainoAperto = ref(false)
 const diarioGiu = ref(false)       // il diario delle missioni, scheda della finestra dell'eroe, aperto in discesa (sopra sta in Campagna.vue)
 const preparatiAperti = ref(false) // la scelta degli incantesimi da preparare, dalla loro casella nella barra (docs/sotterraneo/orologio.md)
-const mappaGrande = ref(false)     // la mappina aperta grande dalla barra (scena/tela.js, minimappa)
+const mappaGrande = ref(false)     // la mappina aperta grande dalla barra (minimappa)
 const colpito = ref(false)         // il globo della vita sobbalza a un colpo
 const tic = ref(0)                 // batte quando cambia qualcosa che si vede
 // la corsa è uno shallowRef: niente computed a mano su quello che sta dentro (vedi viste/occhio.js)
@@ -142,7 +142,7 @@ const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!fine.v
 // unico posto in cui ⏸ e velo hanno senso: dentro una discesa, senza una domanda (già un velo) e senza il cartello di fine
 const siGioca = computed(() => !!corsa.value && !domanda.value && !fine.value)
 
-/* ═══════════ in due, solo nel Sotterraneo 3D (docs/sotterraneo/in-due-codice.md, «La vista») ═══════════
+/* ═══════════ in due (docs/sotterraneo/in-due-codice.md, «La vista») ═══════════
    La sala, l'incontro e la linea sono del pezzo comune (src/insieme/sfida.js). Partiti, la discesa è quella dell'incontro: le azioni
    della vista diventano mosse (sfida/vista.js), il battito fa correre il lockstep, e quello che il motore risponde arriva a mossa
    fatta (`dopoLaMossa`). Niente sosta e niente storia: si salvano solo la roba e la crescita, in ogni momento */
@@ -339,7 +339,7 @@ function scorda() {
 }
 
 // il portale: si sale al villaggio lasciando il piano com'è. La sosta è il portale aperto (`via: 'portale'`): sopra
-// compare il gemello (viste/Terra.vue), e l'eroe sbuca accanto a lui. Uscire con la ✕ non è questo: lì la sosta è
+// compare il gemello, e l'eroe sbuca accanto a lui. Uscire con la ✕ non è questo: lì la sosta è
 // una 'uscita', senza gemello, e rientrando si riprende giù (docs/sotterraneo/portale-e-sosta.md, «Il portale e l'uscita»)
 function salgoDalPortale() {
   if (inDueOra.value) return chiudi()   // in due il portale porta su e finisce la discesa (l'altro lo sa subito)
@@ -402,7 +402,7 @@ function riprendiSeUscito() {
 }
 
 // Salendo dal portale la vita e l'energia restano quelle di giù: lo dice la barra, e li rimettono a posto gratis la
-// guaritrice e l'incantatrice (viste/Terra.vue, docs/sotterraneo/terra-di-sopra.md, «Chi cura»). Null senza portale
+// guaritrice e l'incantatrice (docs/sotterraneo/terra-di-sopra.md, «Chi cura»). Null senza portale
 // `forzeDi` rifà la discesa dalla sosta (decine di ms): si tiene finché non cambiano sosta, roba e crescita, se no
 // la terra di sopra la rifaceva a ogni passo e andava a scatti
 let forzeTenute = { chiave: null, valore: null }
@@ -585,7 +585,7 @@ function vendiSopra(t) {
 }
 
 // la terra di sopra si ricorda per avventura: la nebbia, dove si era, se il minatore ha già parlato
-// il mondo di sopra del 3D (viste/Mondo3d.vue) si ricorda accanto, in `mondo`: la terra dipinta del 2D resta com'è
+// il mondo di sopra (viste/Mondo3d.vue) si ricorda accanto, in `mondo`
 // (docs/sotterraneo/mondo-aperto-dati.md). La veduta d'insieme si apre dalla casella della mappa nella barra
 // (`quest` lo scrive Gioco.vue, non la vista: la vista manda il suo e il resto resta com'è)
 const ricordaMondo = v => nelMondo3d({ ...(mondoQui.value || {}), ...v })
@@ -834,7 +834,7 @@ const grosso = dallaCorsa(c => {
 })
 
 /* ═══════════ le feste: un livello salito, un leggendario caduto (Corsa.eventi) ═══════════
-   Il livello: la colonna di luce sull'eroe (scena/tela.js), il globo che si accende e un suono suo. Il leggendario: la
+   Il livello: la colonna di luce sull'eroe (scena3d/contorno.js), il globo che si accende e un suono suo. Il leggendario: la
    colonna di luce su di lui finché sta per terra, e in mezzo al campo il nome in oro con la sua riga di storia */
 const festa = ref(null)          // { che: 'livello', livello } | { che: 'leggendario', nome, storia, cosa }
 const sale = ref(false)
@@ -957,7 +957,7 @@ watch(() => { tic.value; const f = corsa.value?.foglio; return f && f.che === 's
    (scena3d/mondo/palco.js, il pittore di questo scontro). Finito, l'esito va nell'avventura (roba, crescita, le forze, le taglie) e il
    mondo riprende. La ✕ a metà vale come una fuga senza il graffio: i rimasti aspettano accanto all'eroe (motore/aperta-scena.js) */
 const sopra = shallowRef(null)      // { stato, terra, portale, mod } dello scontro aperto, o null
-let motoreSopra = null              // motore/aperta-scena.js, chiesto la prima volta: il 2D non si porta dietro il mondo generato
+let motoreSopra = null              // motore/aperta-scena.js, chiesto la prima volta
 async function scontroSopra({ inc, stato, terra, verso }) {
   if (corsa.value || sopra.value) return
   const mod = motoreSopra || (motoreSopra = await import('./motore/aperta-scena.js'))
@@ -966,7 +966,7 @@ async function scontroSopra({ inc, stato, terra, verso }) {
   const dato = qui.value.sosta, portale = !!dato && viaDi(dato) === VIA_PORTALE, f = portale ? forze.value : null
   const c = mod.apriLoScontro(stato, inc, { eroe: eroeQui(), roba: roba.value, crescita: crescita.value, verso,
                                            forze: f ? { vita: f.vita, energia: f.energia } : null, missioni: [], conti: qui.value.conti || {},
-                                           copricapi: true })   // il mondo di sopra è solo del 3D: i copricapi cadono anche lassù (docs/sotterraneo/elmo.md)
+                                           copricapi: true })   // i copricapi cadono anche nel mondo di sopra (docs/sotterraneo/elmo.md)
   chiudiBottega(); chiudiLaBarra(); diarioSopra(false)
   domanda.value = null; fine.value = null; pensiero.value = null; detto.value = null
   sopra.value = { stato, terra, portale, mod }
@@ -1372,8 +1372,8 @@ function avvia(i, { prova = false } = {}) {
   // un dungeon del mondo si chiede anche per chiave (i sei nuovi non hanno indice): una delle sette torna il suo indice
   if (typeof i === 'string') { const j = CAMPAGNA.findIndex(t => t.chiave === i); if (j >= 0) i = j }
   const z = typeof i === 'string' ? (dungeonDelMondo.value || []).find(d => d.chiave === i) : tappe.value[i]
-  if (typeof i === 'string' && !z) return   // una chiave che non è un dungeon, o un nuovo nel 2D
-  // una discesa rossa non si scende: la guardia sta davanti all'ingresso (viste/Terra.vue, docs/sotterraneo/zone.md).
+  if (typeof i === 'string' && !z) return   // una chiave che non è un dungeon
+  // una discesa rossa non si scende: la guardia sta davanti all'ingresso (docs/sotterraneo/zone.md).
   // `prova`: il cheat `#giu=` scende lo stesso, per guardarla
   if (!prova && z && z.colore === 'rosso') return
   togli()          // vedi `riprendiDiscesa`: si scende, non si scende in pausa
@@ -1402,7 +1402,7 @@ function avvia(i, { prova = false } = {}) {
   nextTick(() => accendi())
 }
 
-// la discesa `i` com'è adesso: finita la storia la zona con la sua fascia, prima quella della storia; nel 3D il dungeon del mondo, col
+// la discesa `i` com'è adesso: finita la storia la zona con la sua fascia, prima quella della storia; il dungeon del mondo, col
 // suo seme fisso finché non lo si ripulisce (motore/rigenera.js). Anche per scaldarla prima di scendere (scaldaDiscesa)
 // quello da cui nuovaCorsa dipende: uguale, la corsa fatta prima è la stessa
 const firmaCorsa = i => { try { return JSON.stringify([i, eroeQui(), roba.value, crescita.value, missioni.value, qui.value.conti, semeDallIndirizzo()]) } catch (e) { return String(Math.random()) } }
@@ -1516,7 +1516,7 @@ function butta3d() {
   pittore = null
 }
 function siPerdeIl3d() {
-  salva({ subito: true })   // come la ✕: rientrando si riprende giù, anche dal Sotterraneo di sempre
+  salva({ subito: true })   // come la ✕: rientrando si riprende giù
   cancelAnimationFrame(raf)
   butta3d()
   perso3d.value = true
@@ -1839,7 +1839,7 @@ function toccoFuori(e) {
   if (!lasciaAndare()) return
   vai({ x: e.clientX - r.left, y: e.clientY - r.top }, true)
 }
-// la bottega di sopra: chiusa dal tocco fuori, il tocco passa alla terra (viste/Terra.vue, toccoDaFuori)
+// la bottega di sopra: chiusa dal tocco fuori, il tocco passa al mondo (viste/Mondo3d.vue)
 const campagnaEl = ref(null)
 function fuoriDallaBottega(e) {
   chiudiBottega()
@@ -2056,7 +2056,7 @@ function posaIlPensiero(c) {
   el.style.setProperty('--coda', Math.round(Math.max(14, Math.min(w - 14, t.x - left))) + 'px')
   if ((el.dataset.sotto === '1') !== sotto) el.dataset.sotto = sotto ? '1' : '0'
 }
-// sopra: la terra chiede quando l'eroe è fermo da un po' (viste/Terra.vue, `pensa`); i numeri sono quelli della roba di sopra
+// sopra: la terra chiede quando l'eroe è fermo da un po' (viste/Mondo3d.vue, `pensa`); i numeri sono quelli della roba di sopra
 function pensaSopra() {
   if (pensieriSpenti || pensiero.value || corsa.value || banco.value || zainoSopra.value || paginaEroe.value || preparatiAperti.value ||
       scegliEroe.value || state.festa.length) return

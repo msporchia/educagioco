@@ -1,4 +1,4 @@
-// I modelli che la fattoria ha preso dal Sotterraneo 3D (src/giochi/sotterraneo/scena3d/mondo/): la casa di legno, il banco della
+// I modelli che la fattoria ha preso dal sotterraneo (src/giochi/sotterraneo/scena3d/mondo/): la casa di legno, il banco della
 // guaritrice, la bacheca delle taglie, il cespuglio. SONO COPIE PICCOLE E ADATTATE, non import: kit.js e natura.js del sotterraneo
 // tirano dentro suolo.js → motore/mondo-aperto.js (i dati dell'intero mondo di sopra) e i materiali con la nebbia dell'esplorazione
 // (vesti.js), e il file del 3D della fattoria si porterebbe dietro mezzo sotterraneo. Qui le stesse forme, le stesse misure

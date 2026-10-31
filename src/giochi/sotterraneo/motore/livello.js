@@ -971,7 +971,7 @@ export class Livello {
   }
 
   // due o tre caporali (tre se l'anticamera è una sala) nel mezzo della stanza: il caporale del posto, più duri
-  // (`CAPORALE` in dati/mostri.js) e di un grado alto (dati/varianti.js), e si riconoscono dal segno che portano (galloni, scena/tela.js)
+  // (`CAPORALE` in dati/mostri.js) e di un grado alto (dati/varianti.js), e si riconoscono dal segno che portano (galloni)
   quantiCaporali(s) { return s.grande && this.stanze.length >= 8 ? 3 : 2 }
   mettiICaporali(s, tipiPer) {
     tipiPer(0.15, this.quantiCaporali(s))   // i tiri ci sono sempre stati (ora i tipi li dice il caporale del posto): tolti, il caso di tutto il piano si sposterebbe

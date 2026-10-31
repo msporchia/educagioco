@@ -1,4 +1,4 @@
-// L'eroe in 3D: la sua figura (le pose della famiglia, come il 2D: dati/tessere.js `pezzoAndante`), le armi in mano dove le tiene
+// L'eroe in 3D: la sua figura (le pose della famiglia: dati/tessere.js `pezzoAndante`), le armi in mano dove le tiene
 // (dati/impugna.js), il lampo della ferita e della cura, lo scatto dell'assalto, il giro su sé stesso, il passaggio nel portale,
 // e la sua torcia (scena3d/luci.js). Sta dove lo mette il motore; nello scontro il palco lo porta al suo posto (`meta`).
 import { COSE } from '../dati/cose.js'

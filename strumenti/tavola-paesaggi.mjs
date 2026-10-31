@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════
-   LA TAVOLA DEI PAESAGGI — tutti i paesaggi del Sotterraneo 3D, affiancati
+   LA TAVOLA DEI PAESAGGI — tutti i paesaggi del sotterraneo, affiancati
 
    Apre il file costruito (dist/index.html) una volta per paesaggio con
    il cheat `#sotterraneo=<discesa>&scenario=<paesaggio>`, l'eroe nella

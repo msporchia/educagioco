@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE ANTEPRIME DEI GIOCHI 3D, FOTOGRAFATE SUL COMPUTER
 
-     npm run anteprime                       ricompila, poi la Fattoria 3D e il Sotterraneo 3D
+     npm run anteprime                       ricompila, poi la Fattoria 3D e il sotterraneo
      npm run anteprime fattoria              solo la fattoria (strumenti/anteprime-fattoria3d.mjs)
      npm run anteprime sotterraneo           solo il sotterraneo (strumenti/anteprime-sotterraneo3d.mjs)
      npm run anteprime -- --niente-build     con il dist/ che c'è (solo se è di questo codice)

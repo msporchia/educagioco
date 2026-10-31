@@ -1,6 +1,6 @@
-// Quello che sta attorno alla scena 3D e non è tre dimensioni: la mappina (la stessa del 2D, scena/minimappa.js, su una tela
+// Quello che sta attorno alla scena 3D e non è tre dimensioni: la mappina (scena/minimappa.js, su una tela
 // piccola sopra il campo), le feste (la colonna di luce del livello salito, i «+12 ✨» che salgono), i segni sulla tela per le
-// prove (`data-eroe`, `data-eroe-schermo`, `data-scala`, come la tela 2D) e la scelta di cosa sta sotto il dito.
+// prove (`data-eroe`, `data-eroe-schermo`, `data-scala`) e la scelta di cosa sta sotto il dito.
 import { disegnaMinimappa } from '../scena/minimappa.js'
 import { scegli as scegliCosa } from './dito.js'
 import { esc } from './etichette.js'
@@ -25,7 +25,7 @@ export function creaContorno({ canvas, strato, cam }) {
       grandePrima = null
     },
     // ogni sei fotogrammi (è una misura del visto, non un'animazione), o subito se la mappa grande si apre o si chiude
-    // nello scontro (`via`) non c'è: lì in alto a destra sta la fila dei turni, come nel palco del 2D
+    // nello scontro (`via`) non c'è: lì in alto a destra sta la fila dei turni
     mappina(corsa, grande, via = false) {
       const stato = via ? 'via' : grande
       if (stato === grandePrima && (giro++ % 6)) return
@@ -34,7 +34,7 @@ export function creaContorno({ canvas, strato, cam }) {
       g.clearRect(0, 0, L, A)
       if (!via) disegnaMinimappa(g, corsa, L, A, !!grande)
     },
-    // le feste chieste da Gioco.vue (come alla tela 2D): `colonne` { x, y, t, colore, segui }, `numerini` { testo, x, y, t }
+    // le feste chieste da Gioco.vue: `colonne` { x, y, t, colore, segui }, `numerini` { testo, x, y, t }
     feste(lista, numerini, ora, eroe, colonne, etichette) {
       for (let i = lista.length - 1; i >= 0; i--) {
         const c = lista[i], k = (ora - c.t) / 1.6

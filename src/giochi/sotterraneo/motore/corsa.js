@@ -62,8 +62,8 @@ export class Corsa extends Corredo {
     // la pergamena del portale si trova (rara) solo dopo la missione dell'incantatrice: lo dice chi gioca (Gioco.vue)
     this.pergameneTrovabili = false
     this.ricomparsa = ricomparsa   // i mostri morti tornano (motore/ricomparsa.js); il banco la spegne: misura un passaggio solo
-    this.botti = botti             // le botti da rompere (motore/botti.js): solo il Sotterraneo 3D le accende; il 2D e il banco no
-    this.copricapi = copricapi     // i copricapi nel bottino (Corredo.copricapi, docs/sotterraneo/elmo.md): lo stesso, solo il 3D
+    this.botti = botti             // le botti da rompere (motore/botti.js): solo il gioco le accende; il banco no
+    this.copricapi = copricapi     // i copricapi nel bottino (Corredo.copricapi, docs/sotterraneo/elmo.md): lo stesso, solo il gioco
     this.tappa = tappa
     // il posto nella storia (−1 l'abisso, che pesca come sempre): dice cosa deve dare questa discesa
     this.indice = indiceDella(tappa)

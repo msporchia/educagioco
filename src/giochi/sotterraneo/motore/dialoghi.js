@@ -1,11 +1,11 @@
 // I dialoghi della terra di sopra, senza schermo (docs/sotterraneo/dialoghi.md): cosa dice un personaggio quando ci
 // si parla, a pagine, e quali domande gli si possono fare alla fine. Le pagine dipendono da dove si è nella storia
-// (le discese finite) e dalle sue missioni. Gira in Node; lo mostra viste/Dialogo.vue, lo usa viste/Terra.vue.
+// (le discese finite) e dalle sue missioni. Gira in Node; lo mostra viste/Dialogo.vue, lo usa viste/Mondo3d.vue.
 // Una pagina è { testo, dato?, missione?, fase?, manca? }: `dato` dice ai test (e allo stile) che riga è.
 // `ctx` è { stati, tappe, abisso, eroe, roba, annuncio, forze }: lo stato delle missioni, le tappe dell'avventura, se l'abisso è
 // aperto, chi scende e la sua roba contata (schedaConLaRoba), per la frase di chi è sotto il livello; e, finita la
 // storia, la zona appena nata (motore/zone.js, docs/sotterraneo/zone.md); `novita` quante volte si è chiesto «Novità?»
-// a ognuno ({ [chi]: { n, v } }, in `terra.novita` dell'avventura). `mondo`: nel Sotterraneo 3D, che ha la sua geografia (luogoDi); lì
+// a ognuno ({ [chi]: { n, v } }, in `terra.novita` dell'avventura). `mondo`: la geografia del sotterraneo (luogoDi); lì
 // `forza` (motore/forza.js) fa dire in quale zona stanno i mostri giusti per l'eroe, `terra` in quale terra si è, `terre` che la porta delle
 // terre in fondo alla landa è aperta, `dungeon` i dungeon del mondo (Gioco.vue), col volto di questa terra.
 import { DIALOGHI, ARRIVEDERCI, DOVE_VADO, LE_LUCI, perOra } from '../dati/dialoghi.js'

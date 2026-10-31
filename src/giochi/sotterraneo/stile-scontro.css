@@ -1,4 +1,4 @@
-/* ═══════════ lo scontro a gruppi (viste/Scontro.vue, FilaDeiTurni.vue; docs/sotterraneo/scontro.md, «La vista») ═══════════
+/* ═══════════ lo scontro a gruppi (viste/Scontro3d.vue, FilaDeiTurni.vue; docs/sotterraneo/scontro.md, «La vista») ═══════════
    Il palco è un pezzo di stanza: uno zoccolo di parete e il pavimento, con l'eroe a sinistra e i mostri a colonne sul lato destro
    (viste/campo.js, `piazza`: ogni figura ha i piedi in un punto `--x`, `--y`), la fila dei turni sul bordo destro.
    Tutto in un riquadro di altezza fissa: lo scontro non cambia misura mentre i mostri cadono. Il palco sta fermo in cima alla
@@ -10,7 +10,7 @@
   border-radius: 14px; box-shadow: inset 0 0 0 1px #c9a24a55, inset 0 -30px 40px -20px #000;
   animation: sot-entra .35s ease-out;
 }
-.sot-palco { position: absolute; left: 0; top: 0; image-rendering: pixelated; z-index: 0 }   /* la misura la dà Palco.vue: la scala degli sprite */
+.sot-palco { position: absolute; left: 0; top: 0; image-rendering: pixelated; z-index: 0 }
 .sot-duello::after {   /* la penombra ai bordi: il palco è la scena vera, ma non deve rubare l'occhio ai personaggi */
   content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
   background: radial-gradient(ellipse at 50% 60%, transparent 45%, #00000090 100%);
@@ -90,7 +90,7 @@
 .sot-m:nth-child(2n) .sot-respira { animation-delay: -.7s }
 .sot-m:nth-child(3n) .sot-respira { animation-delay: -1.4s }
 @keyframes sot-respira { 50% { transform: translateY(-3px) } }
-/* il mostro armato (viste/Creatura.vue): l'arma sta sopra la faccia, nella mano; un pezzo ammorbidito, senza il filo chiaro delle icone */
+/* il mostro armato: l'arma sta sopra la faccia, nella mano; un pezzo ammorbidito, senza il filo chiaro delle icone */
 .sot-creatura { position: relative; display: inline-block; line-height: 0 }
 .sot-arma-in-mano { position: absolute; display: block; pointer-events: none }
 .sot-arma-in-mano > i { position: absolute; top: 0; left: 0; display: block; filter: drop-shadow(0 1px 1px #000a) }

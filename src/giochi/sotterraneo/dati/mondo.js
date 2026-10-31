@@ -65,7 +65,7 @@ export const RAGGIO_SCONTRO = 4.5
 export const MOSTRI_IN_CAMPO = 7   // il palco ne tiene sette (viste/campo.js); i branchi da sei o sette sono delle discese tarde (motore/livello.js)
 export const COLPO_DEL_MOSTRO = 1.1
 
-// arredo (barili, casse...): non toccabile, disegnato più spento delle cose che rispondono (scena/tela.js).
+// arredo (barili, casse...): non toccabile, disegnato più spento delle cose che rispondono.
 // Cosa c'è, dove sta e quanto è epico lo dice dati/orpelli.js; qui resta la frase del generico, quella di chi non
 // dichiara lo scenario (le cantine)
 export const ARREDO_DICE = Object.fromEntries(ORPELLI.cantine.map(o => [o.pezzo, o.dice]))
@@ -76,7 +76,7 @@ export const SORSO = 8, RIPOSO_SCALA = 4, VITA_PER_PIANO = 2
 
 // il bersaglio di una missione (il mostro col nome, il forziere della cosa) si distingue dai suoi simili: più grande,
 // con un'aura che pulsa piano di un colore solo suo (lo stesso del punto sulla mappina), e il nome sopra la testa
-// quando è in vista (scena/tela.js, docs/sotterraneo/missioni.md)
+// quando è in vista (docs/sotterraneo/missioni.md)
 export const BERSAGLIO = { scala: 1.4, colore: '#ff7ad9', luce: '255,122,217' }
 
 export function guastiDelMondo() {

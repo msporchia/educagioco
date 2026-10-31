@@ -1,4 +1,4 @@
-// Ponte, passerella e tavolo con le panche: tre pezzi presi dal mondo di sopra del Sotterraneo 3D (ponti.js: `ponte`, props-modelli.js:
+// Ponte, passerella e tavolo con le panche: tre pezzi presi dal mondo di sopra del sotterraneo (ponti.js: `ponte`, props-modelli.js:
 // `tavolo`) e rifatti qui con i mattoncini e i materiali della fattoria. Una copia e non un import: i modelli del sotterraneo si posano in
 // un «cantiere» che vuole le sue trame, la sua nebbia e il suo mondo (vedi docs/fattoria3d/scena.md, «Ponte, passerella e tavolo»).
 // Origine al centro dell'impronta, davanti verso +z; la quota di chi ci cammina sopra sta in dati/catalogo.js (`alzato`).

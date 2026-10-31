@@ -40,7 +40,7 @@ const props = defineProps({
   cure: { type: Object, default: null },      // { n, max }: le pozioni di cura in tasca e il tetto (al più otto, di ogni stadio)
 })
 const emit = defineEmits(['usa', 'butta', 'riponi', 'chiudi', 'fuori', 'scheda', 'tasca'])
-const TORCIA = { chiave: 'torcia' }   // nel 3D la torcia della riga è il suo modello (docs/sotterraneo/roba-3d.md)
+const TORCIA = { chiave: 'torcia' }   // la torcia della riga è il suo modello (docs/sotterraneo/roba-3d.md)
 
 // una tasca ({ dove: 'zaino', i }) o una casella addosso ({ dove: 'mano' }); null è lo stato normale
 const scelto = ref(null)

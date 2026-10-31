@@ -4,7 +4,7 @@
      npm run anteprime sotterraneo      riscrive src/giochi/sotterraneo/dati/anteprime-fatte.js (il comando: strumenti/anteprime.mjs)
      ANTEPRIME_DEBUG=1 npm run anteprime sotterraneo   e lascia i WebP in tmp/scatti/anteprime-sotterraneo3d/
 
-   Apre il Sotterraneo 3D nel file costruito e chiede al servizio delle anteprime (`__anteprime3d.viva`) ogni chiave che il gioco può
+   Apre il sotterraneo nel file costruito e chiede al servizio delle anteprime (`__anteprime3d.viva`) ogni chiave che il gioco può
    chiedere tranne il ritratto dell'eroe vestito: la roba (ogni figura con ogni rarità ed elemento a cui può uscire, l'armatura su
    ognuno dei quattro eroi), i copricapi, i consumabili, i mostri con gradi e varianti, i grossi, le persone. Le chiavi le dà il
    codice del gioco (`chiaveDellaCosa` su ogni pezzo possibile), non un elenco a mano. Il file è GENERATO con la firma delle foto e

@@ -1,5 +1,5 @@
-// Le anteprime 3D nelle viste (docs/sotterraneo/anteprime-3d.md). Gioco.vue le fornisce solo nel Sotterraneo 3D: senza, ogni vista
-// resta com'era (il Sotterraneo di sempre non cambia). Il servizio (e three) si carica alla prima richiesta; finché l'immagine non
+// Le anteprime 3D nelle viste (docs/sotterraneo/anteprime-3d.md). Gioco.vue le fornisce: senza, ogni vista
+// mostra lo sprite. Il servizio (e three) si carica alla prima richiesta; finché l'immagine non
 // c'è, o se non verrà mai (niente modello, niente WebGL), la vista mostra lo sprite.
 import { inject, provide, shallowRef, watch } from 'vue'
 
@@ -43,7 +43,7 @@ export function creaFornitore(eroe, { senzaMostri = false, senzaEroe = false } =
   return api
 }
 
-/** In Gioco.vue (solo nel 3D). `eroe()`: la chiave dell'eroe di adesso (l'armatura si mostra su chi la porta). */
+/** In Gioco.vue. `eroe()`: la chiave dell'eroe di adesso (l'armatura si mostra su chi la porta). */
 export function fornisciAnteprime3d(eroe) {
   // `#icone2d` le spegne tutte; `#sprite` spegne i mostri e `#eroe2d` l'eroe, come in scena
   const spente = nellIndirizzo(/[#&?]icone2d\b/)
@@ -53,7 +53,7 @@ export function fornisciAnteprime3d(eroe) {
   return api
 }
 
-/** Il servizio, se c'è (null nel 2D). */
+/** Il servizio, se c'è (null se Gioco.vue non lo fornisce). */
 export const usaAnteprime3d = () => inject(ANTEPRIME, null)
 
 /** L'immagine 3D (una tela, viste/Quadro3d.vue) per la chiave che `chiave()` dà ora: un ref che resta null finché non è pronta (o se non lo sarà mai). */

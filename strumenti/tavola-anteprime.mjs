@@ -1,9 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA TAVOLA DELLE ANTEPRIME 3D — la roba, gli eroi e i mostri come li
    vedono lo zaino, le botteghe, il ritratto e la fila dei turni del
-   Sotterraneo 3D (docs/sotterraneo/anteprime-3d.md)
+   sotterraneo (docs/sotterraneo/anteprime-3d.md)
 
-   Apre il file costruito nel Sotterraneo 3D, chiede al servizio delle
+   Apre il file costruito nel sotterraneo, chiede al servizio delle
    anteprime (`window.__anteprime3d`) tutte le chiavi e le mette in una
    tavola col nome sotto; quelle che tornano null (niente modello: resta
    lo sprite) sono segnate. Stampa quanto ci mette ad averle tutte: il

@@ -1,7 +1,6 @@
-// I dungeon del mondo a percorso (docs/sotterraneo/dungeon-che-si-rigenerano.md): i quattordici posti del Sotterraneo 3D, due per zona,
+// I dungeon del mondo a percorso (docs/sotterraneo/dungeon-che-si-rigenerano.md): i quattordici posti del sotterraneo, due per zona,
 // legati alla forza della zona e rigenerati dopo ogni ripulitura. Qui i dati: le zone col loro mazzo, il livello di ogni dungeon, i
-// sei nuovi come tappe e le leve da tarare (tutte qui, in un posto solo). Le regole stanno in motore/rigenera.js. Solo del 3D: il
-// Sotterraneo di sempre non le legge.
+// sei nuovi come tappe e le leve da tarare (tutte qui, in un posto solo). Le regole stanno in motore/rigenera.js.
 
 // Le sette zone della serpentina (docs/sotterraneo/mondo-a-percorso.md, «Le zone»): i luoghi di sopra (le chiavi delle regioni) e i
 // dungeon. Il mazzo di una rigenerazione si pesca da qui: gli abitanti dei suoi dungeon e quelli di sopra dei suoi luoghi
@@ -28,7 +27,7 @@ export const SALTO_DELLA_TERRA = 14
 export const PIANI_DEI_NUOVI = 3
 
 /* ═══════════ le leve da tarare (dopo, col banco: docs/sotterraneo/dungeon-che-si-rigenerano.md, «Da tarare») ═══════════ */
-// La prima volta delle sette porte nel 3D: spento, i numeri della storia di oggi (CAMPAGNA, livelli attesi 1 2 3 5 7 8 10 12).
+// La prima volta delle sette porte: spento, i numeri della storia di oggi (CAMPAGNA, livelli attesi 1 2 3 5 7 8 10 12).
 // Acceso, il livello del dungeon (1 2 4 5 8 10 12) e la forza della curva dei dungeon a quel livello: costa una taratura della storia
 export const STORIA_DALLA_ZONA = false
 // Quanto una ripetuta è più forte della curva (la forza moltiplica le ossa, la spinta si aggiunge all'attacco): il «più uno» del

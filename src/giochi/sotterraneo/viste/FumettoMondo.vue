@@ -2,7 +2,7 @@
 // Il fumetto del mondo di sopra in 3D (viste/Mondo3d.vue): sopra un ingresso, una pietra del viaggio, il portale gemello, il
 // cartello, la bacheca, la fontana o la porta delle terre. Non decide niente: Mondo3d.vue gli dà i dati già pronti e lui dice cosa si è toccato
 // (`scendi`, `giu`, `viaggio`, `bevi`, `taglia` per un foglio della bacheca, `scava` per la X, `passa` la porta delle terre, `terra` il
-// villaggio di un'altra terra dalla pietra del villaggio). Gli stessi bersagli dei test del fumetto della terra dipinta (viste/Terra.vue).
+// villaggio di un'altra terra dalla pietra del villaggio).
 import { faccia, inFrase, titoloDi } from '../motore/missioni.js'
 
 defineProps({

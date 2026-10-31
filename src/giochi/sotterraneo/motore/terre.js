@@ -1,4 +1,4 @@
-// Le terre successive del Sotterraneo 3D (docs/sotterraneo/terre-successive.md): ripulite le tombe del vento, la porta in fondo alla
+// Le terre successive del sotterraneo (docs/sotterraneo/terre-successive.md): ripulite le tombe del vento, la porta in fondo alla
 // landa porta a un'altra terra, la stessa mappa coi mostri più forti. Dove si è sta in `terraOra` dell'avventura (manca: la prima),
 // il mondo della prima resta in `mondo` e quelli dopo in `mondi[t]`, con lo stesso contenuto. Funzioni pure: girano in Node
 // (unita/sotterraneo-terre); le chiamano Gioco.vue e viste/Mondo3d.vue.
@@ -12,7 +12,7 @@ const oggetto = v => !!v && typeof v === 'object' && !Array.isArray(v)
 const numero = t => { const n = Math.floor(Number(t)); return Number.isFinite(n) ? Math.max(1, Math.min(ULTIMA_TERRA, n)) : 1 }
 
 // la terra dove sta l'eroe dell'avventura `a`: 1 se manca (i salvataggi di prima) o è storta. Il campo `terra` dell'avventura è
-// della terra dipinta del 2D, per questo il numero sta in `terraOra`
+// lo stato della terra di sopra (la nebbia, dove si era), per questo il numero sta in `terraOra`
 export const terraDi = a => numero(oggetto(a) ? a.terraOra : 1)
 // il nome, il villaggio e la tinta di una terra (TERRE della scheda)
 export const laTerra = t => TERRE[numero(t) - 1]

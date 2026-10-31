@@ -1,4 +1,4 @@
-// Le botti da rompere (docs/sotterraneo/paesaggi-3d.md, «Le botti»): un passatempo come in Diablo, solo nel Sotterraneo 3D.
+// Le botti da rompere (docs/sotterraneo/paesaggi-3d.md, «Le botti»): un passatempo come in Diablo.
 // Quante ne ha ogni paesaggio e cosa lasciano. Dato puro: lo leggono il motore (motore/botti.js) e il disegno (scena3d/botti.js).
 
 // quanto hanno senso in ogni paesaggio. `stanze`: la probabilità che una stanza ne abbia; `magazzino`: che una di quelle sia un

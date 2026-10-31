@@ -108,7 +108,7 @@ export const DEI_GROSSI = {
   'amuleto-di-gorgo': { base: 'amuleto-azzurro', nome: 'Amuleto di Gorgo', abilita: ['rigenera', 'vita', 'pozioni'] },
   'giubbone-di-minotto': { base: 'panciotto', nome: 'Giubbone di Minotto', abilita: ['dif', 'vita', 'rigenera'] },
   'martello-di-carbonchio': { base: 'martello', nome: 'Martello di Carbonchio', abilita: ['att', 'fuoco'] },
-  // quelli dei sei grossi dei dungeon nuovi (solo del 3D); le chiavi sono quelle di prima dei nomi (salvataggi), la figura ha la chiave
+  // quelli dei sei grossi dei dungeon nuovi; le chiavi sono quelle di prima dei nomi (salvataggi), la figura ha la chiave
   'scudo-di-barbamuschio': { base: 'scudo-crociato', nome: 'Scudo di Roccaverde', abilita: ['dif', 'rigenera'] },
   'medaglione-di-piumanera': { base: 'medaglione', nome: 'Medaglione di Piumanera', abilita: ['schivata', 'torcia'] },
   'giubba-di-sibilla': { base: 'panciotto', nome: 'Giubba di Sibilla', abilita: ['dif', 'schivata', 'vita'] },
@@ -118,8 +118,8 @@ export const DEI_GROSSI = {
 }
 
 // Il copricapo col nome (docs/sotterraneo/elmo.md): un pezzo da testa di un grosso, che cade in più del suo pezzo solo dove i copricapi
-// sono accesi (`copricapo` in dati/grossi.js). Nessuna figura dei fogli: `modello` è quello di eroi3d/copricapi.js che lo disegna, e nel 2D
-// resta l'emoji. La base è la cuffia, senza famiglia: lo porta chiunque, come gli altri pezzi dei grossi
+// sono accesi (`copricapo` in dati/grossi.js). Nessuna figura dei fogli: `modello` è quello di eroi3d/copricapi.js che lo disegna, e senza
+// modello resta l'emoji. La base è la cuffia, senza famiglia: lo porta chiunque, come gli altri pezzi dei grossi
 export const COPRICAPI_DEI_GROSSI = {
   'elmo-di-piumanera': { base: 'cuffia', nome: 'Elmo alato di Piumanera', modello: 'elmo-alato', abilita: ['dif', 'schivata', 'vita'] },
 }

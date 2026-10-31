@@ -213,8 +213,8 @@
 .sot[data-tema~="legno"] :is(.sot-vita, .sot3d-vita) { background: #1a0d08; box-shadow: 0 0 0 1px #000, 0 0 0 2px #b98428, 0 1px 3px 2px #000a }
 .sot[data-tema~="legno"] :is(.sot-m-nome, .sot3d-nome) { font-family: "Emoji Gioco", var(--lg-titolo); letter-spacing: .02em }
 
-/* ── lo scontro nel 3D (viste/Pannello3d.vue): il pannello in fondo prende la cornice intera, coi quattro angoli d'oro, e sta
-   sopra la punta dei globi (--sot-sopra-barra), staccato dai bordi come la cornice del duello 2D ── */
+/* ── lo scontro (viste/Pannello3d.vue): il pannello in fondo prende la cornice intera, coi quattro angoli d'oro, e sta
+   sopra la punta dei globi (--sot-sopra-barra), staccato dai bordi ── */
 .sot[data-tema~="legno"] .sot3d-sotto {
   left: 6px; right: 6px; border: 2px solid transparent; border-radius: 14px; padding: 14px 12px 12px;
   background: var(--lg-grana) padding-box, var(--lg-vena) padding-box, var(--lg-legno) padding-box, var(--lg-oro-bordo) border-box;

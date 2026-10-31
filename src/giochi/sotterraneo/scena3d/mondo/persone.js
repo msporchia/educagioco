@@ -1,6 +1,6 @@
 // Le persone del mondo di sopra e l'eroe: sprite ancorati (la strada A di mondo-aperto-fasi.md). Le figure dell'atlante delle
 // discese (scena3d/figure.js) col filo scuro attorno e la luce di taglio dal lato del sole, un'ombra morbida a contatto sotto i
-// piedi (più l'ombra vera del sole), le persone a scala 1,25 dell'eroe, come sulla terra dipinta. L'eroe è quello delle discese
+// piedi (più l'ombra vera del sole), le persone a scala 1,25 dell'eroe. L'eroe è quello delle discese
 // (scena3d/eroe.js, con le armi in mano), posato sul terreno. Chi non si è visto non si disegna; entrando in vista sale dal
 // terreno come gli oggetti.
 import { Group, DataTexture, RGBAFormat, Vector2, InstancedMesh, PlaneGeometry, MeshBasicMaterial, Matrix4, Quaternion, Vector3, Euler } from 'three'

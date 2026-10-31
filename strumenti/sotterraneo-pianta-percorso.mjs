@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════
-   LA PIANTA DEL MONDO A PERCORSO — il mondo di sopra del Sotterraneo 3D
+   LA PIANTA DEL MONDO A PERCORSO — il mondo di sopra del sotterraneo
    (motore/mondo-percorso.js), visto dall'alto senza browser: un PNG con
    le zone colorate, la strada maestra, i confini (ponti e valichi), il
    villaggio con la sua pianta, le pietre runiche, i dungeon, le tane, la

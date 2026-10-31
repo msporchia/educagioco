@@ -2,7 +2,7 @@
 // La faccia di una cosa, una sola in tutto il gioco: dove il foglio ha il pezzo si usa il pezzo, l'emoji è
 // il ripiego (armature senza sprite, un pezzo che sparisse). La scala è dichiarata e uguale per tutti (×2):
 // "grande quanto ci sta" faceva uscire la stessa boccetta a misure diverse in tasca e in un avviso.
-// Nel Sotterraneo 3D, dove c'è un modello, l'anteprima 3D prende il posto dello sprite appena è pronta (viste/anteprima3d.js).
+// Dove c'è un modello, l'anteprima 3D prende il posto dello sprite appena è pronta (viste/anteprima3d.js).
 import { computed } from 'vue'
 import { figura, SCALA } from './figura.js'
 import { usaAnteprime3d, usaAnteprima } from './anteprima3d.js'

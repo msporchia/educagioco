@@ -1,5 +1,5 @@
 // Il tocco come in un punta-e-clicca: si sceglie una cosa (scena3d/dito.js), l'eroe ci va per la strada vera e, arrivato, la
-// usa. Usarla è il motore (`vaiVerso`, che da vicino la apre come nel 2D): porte, forzieri, fonti, mostri fanno quello che fanno
+// usa. Usarla è il motore (`vaiVerso`, che da vicino la apre): porte, forzieri, fonti, mostri fanno quello che fanno
 // nel gioco. Una cosa non ancora in luce (o di là da qualcosa): si va alla cella raggiungibile più vicina e lì si riprova. Un
 // tocco oltre una porta chiusa porta alla porta e prova ad aprirla. Un altro tocco annulla. Niente regole qui: solo quale
 // cella chiedere al motore. Una botte (scena3d/botti.js) è del disegno: ci si va, e arrivati `passo` la restituisce da rompere.

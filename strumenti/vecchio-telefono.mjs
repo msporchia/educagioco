@@ -19,7 +19,7 @@
 // altro file costruito; l'espressione può definire `window.__extra = () => …` e il risultato si stampa sotto la riga.
 // `--ritmo '<istruzioni>' --ogni 2500` le rifà nella pagina ogni tanti ms (un attacco dello scontro dopo l'altro), `--fasi
 // '<espressione>'` dà un nome a ogni fotogramma (una riga per nome: 'racconto' / 'fermo'); `--spegni ombre,nebbia` fa una riga per
-// ogni pezzo spento in più (`&spegni=` del Sotterraneo 3D, `-` è nessuno). `--scontro` è il Sotterraneo 3D in uno scontro: un attacco
+// ogni pezzo spento in più (`&spegni=` del sotterraneo, `-` è nessuno). `--scontro` è il sotterraneo in uno scontro: un attacco
 // giusto ogni `--ogni` ms (3000), le righe «fermo» e «racconto», e sotto ognuna il banco della tela da ferma (`banco()`, ms senza i
 // 60 Hz). Lo scontro: docs/core/vecchio-telefono.md, «Lo scontro». `--profilo 15` stampa le 15 funzioni che tengono di più il filo
 // principale (il profilatore di Chrome, tempo proprio) e le voci senza JS («(program)»: stili, impaginazione, disegno della pagina);
@@ -27,7 +27,7 @@
 // (le voci si annidano: «RunTask» contiene le altre), e quelle del filo che compone e disegna la pagina. Il pixel ratio dei giochi si adatta da sé: per vedere il costo vero a una risoluzione, il cheat `&dpr=N`.
 // `--per 'folla=0,8,16'` fa una riga per ogni valore aggiunto all'indirizzo (`&folla=0`, `&folla=8`…: quanti personaggi, quanti edifici);
 // `--banco 20` stampa sotto ogni riga il banco della tela (`banco(20)`: ms senza i 60 Hz) con chiamate, triangoli e JS della scena, per
-// il Sotterraneo 3D (discese e mondo di sopra) e la Fattoria 3D. I limiti misurati così: docs/sotterraneo/limiti-3d.md, docs/fattoria3d/limiti.md.
+// il sotterraneo (discese e mondo di sopra) e la Fattoria 3D. I limiti misurati così: docs/sotterraneo/limiti-3d.md, docs/fattoria3d/limiti.md.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -103,7 +103,7 @@ async function telefono(b, { cpu, K }) {
   if (cpu > 1) await s.send('Emulation.setCPUThrottlingRate', { rate: cpu })
   return { p, hog: await zavorra(b, K) }
 }
-// lo scontro del Sotterraneo 3D: si sceglie l'attacco e, quando c'è la domanda, si tocca la risposta giusta; il racconto è in corso
+// lo scontro del sotterraneo: si sceglie l'attacco e, quando c'è la domanda, si tocca la risposta giusta; il racconto è in corso
 // finché c'è `[data-racconto]` (viste/Scontro3d.vue). L'eroe non sviene (la vita torna piena): si misura il disegno, non lo scontro
 const ATTACCO = `const c = window.__sotterraneo3d && window.__sotterraneo3d.corsa; if (c && c.vitaMax) c.vita = c.vitaMax
   const a = document.querySelector('[data-caselle-abilita] [data-azione="attacco"]'); if (a) a.click()
@@ -249,7 +249,7 @@ async function misura() {
     const s = await page.context().newCDPSession(page)
     if (cpu > 1) await s.send('Emulation.setCPUThrottlingRate', { rate: cpu })
     if (esegui) await page.evaluate(esegui)
-    // il banco della tela e i conti della scena (Sotterraneo 3D, discese o mondo; Fattoria 3D), se l'espressione non ha lasciato il suo
+    // il banco della tela e i conti della scena (sotterraneo, discese o mondo; Fattoria 3D), se l'espressione non ha lasciato il suo
     if (banco) await page.evaluate(n => {
       if (window.__extra) return
       window.__extra = () => {

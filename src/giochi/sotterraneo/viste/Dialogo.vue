@@ -1,7 +1,7 @@
 <script setup>
 // Il dialogo con chi sta sulla terra di sopra: il ritratto, il nome, il testo a pagine (un tocco va avanti, niente
 // scorre) e all'ultima pagina le domande da fargli. Non decide niente: dice «ha scelto questa» a chi lo usa
-// (viste/Terra.vue), che sa cosa vuol dire. Le regole: docs/sotterraneo/dialoghi.md
+// (viste/Mondo3d.vue), che sa cosa vuol dire. Le regole: docs/sotterraneo/dialoghi.md
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import Ritratto from './Ritratto.vue'
 

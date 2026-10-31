@@ -1,7 +1,7 @@
 // Chi abita il sotterraneo. `ossa`/`att`/`dif`: il costo in domande non sta qui, è vita/attacco, e cambia
 // con quello che hai trovato (docs/sotterraneo/mostri.md, le coppie). La difesa è la manopola
 // velenosa: il tetto (~8 risposte contro l'eroe nudo, `guastiDeiMostri`) si vede solo contando, non a occhio.
-// `unaPosa: true`: il foglio disegna solo il respiro, niente corsa separata (scena/tela.js non cerca `-corsa-`).
+// `unaPosa: true`: il foglio disegna solo il respiro, niente corsa separata.
 // Ogni mostro dichiara `droppa` (quanto spesso lascia qualcosa): un mostro comune non deve intasare lo zaino, e la sua
 // `velocita` (nello scontro agisce ogni 100/velocita; l'eroe ha 7 più un punto a punto di destrezza: docs/sotterraneo/scontro.md).
 // Poche difese a mostro (docs/sotterraneo/mostri.md): `resiste` e `teme` sono elementi (metà danno, danno e mezzo), `immune`

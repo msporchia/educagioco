@@ -1,6 +1,6 @@
 // Le forze del mondo di sopra (docs/sotterraneo/mondo-aperto-mostri.md, «La scena»): la vita e l'energia che lo scontro sul prato
 // lascia in `mondo.sopra.forze` quando non si è saliti dal portale, come le leggono la barra e chi cura in città. Un file piccolo, senza
-// il mondo generato: lo legge anche Gioco.vue, che il 2D carica sempre. Puro.
+// il mondo generato: lo legge anche Gioco.vue, che il mondo lo carica a richiesta. Puro.
 
 // le forze per la barra e per chi cura: quelle salvate coi massimi della roba di adesso; null se sono piene (o se non ce ne sono)
 export function forzeDiSopra(f, vitaMax, energiaMax) {

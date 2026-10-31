@@ -1,4 +1,4 @@
-// Le taglie della bacheca nel mondo di sopra del Sotterraneo 3D: modelli con i buchi (docs/sotterraneo/mondo-aperto-quest.md,
+// Le taglie della bacheca nel mondo di sopra del sotterraneo: modelli con i buchi (docs/sotterraneo/mondo-aperto-quest.md,
 // «Le taglie»). Un modello più i suoi parametri, la città e il giro fanno una quest, e il suo **id dice tutto**:
 // `t:<città>:<modello>:<parametro>:<giro>` (`t:villaggio:caccia:cantine.ratto:3`). Nel salvataggio sta solo lo stato
 // (`mondo.quest.stati`, presa | fatta | consegnata): la quest si rifà dall'id con `rifaDaId`. **Gli id sono chiavi di salvataggio:

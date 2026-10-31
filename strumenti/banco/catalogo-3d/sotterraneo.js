@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL CATALOGO 3D — le voci del Sotterraneo
 
-   Tutti i modelli 3D in codice del Sotterraneo 3D, uno per voce, per la
+   Tutti i modelli 3D in codice del sotterraneo, uno per voce, per la
    pagina `strumenti/banco/catalogo-3d.html` (la fa la sessione della
    Fattoria 3D; l'altra metà dei dati è `catalogo-3d/fattoria.js`). Serve a
    vedere cosa c'è, dove si usa, e a dire «questo vale la pena usarlo anche

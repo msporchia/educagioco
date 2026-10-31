@@ -9,14 +9,14 @@
 //
 // classe: w, h (quante celle; il lato lungo sta in w, `orienta: 'entrambe'` lo gira anche in piedi) · peso: quanto è comune · posa:
 //   'parete' (contro un muro), 'libero' (staccato, tutt'attorno stanza), 'qualsiasi'.
-// aspetto: id · pezzo (lo sprite nell'atlante) oppure disegno (in codice, scena/relitti.js: provvisorio, da dipingere) · dice: cosa
+// aspetto: id · pezzo (lo sprite nell'atlante) oppure disegno (in codice, scena3d/relitti.js) · dice: cosa
 //   risponde a chi lo tocca · `inPiedi: false` se non si può girare lungo due celle in verticale · `basso: true` se è più basso
 //   dell'eroe (un sarcofago, una statua caduta, macerie, binari): blocca il passo ma non la luce, che ci passa sopra.
 
 export const FAMIGLIE = ['costruita', 'caverna']
 export const POSE_RELITTI = ['parete', 'libero', 'qualsiasi']
 
-// i disegni in codice: ognuno ha il suo pittore in scena/relitti.js
+// i disegni in codice: ognuno ha il suo pittore in scena3d/relitti.js
 export const DISEGNI = ['macerie', 'crollo', 'roccia', 'trave', 'stalagmite', 'carro', 'binari']
 
 // i colori di pietra dei disegni in codice, uno per scenario: chiaro, medio, scuro, il filo attorno, il ferro e il legno

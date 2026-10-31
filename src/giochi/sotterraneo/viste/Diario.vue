@@ -58,7 +58,7 @@ const stato = v => (v.stato === 'fatta' ? `Fatta: torna ${v.daChi}`
   : 'Consegnata')
 const fatto = v => v.stato === 'fatta' || v.stato === 'consegnata'
 const nomeFigura = v => (v.cosa.sprite ? `${v.cosa.sprite}-fermo-0` : null)
-// chi si è perso (una taglia «trova chi»): nel Sotterraneo 3D la faccia del suo modello (docs/sotterraneo/persone-3d.md)
+// chi si è perso (una taglia «trova chi»): la faccia del suo modello (docs/sotterraneo/persone-3d.md)
 const persona3d = v => (v.cosa.sprite && MODELLI_PERSONE.includes(v.cosa.sprite) ? `persona:${v.cosa.sprite}` : null)
 // «vai da …» c'è per chi aspetta qualcosa da te: un favore da chiederti, o la consegna di una missione fatta
 const puoiAndare = v => !props.giu && (v.stato === 'offerta' || v.stato === 'fatta')

@@ -1,4 +1,4 @@
-// Il sotterraneo in 3D: un'altra vista del motore, al posto della tela 2D (scena/tela.js) e con la stessa porta verso Gioco.vue
+// Il sotterraneo in 3D: la vista del motore, con la sua porta verso Gioco.vue
 // (`mostra`, `segui`, `misura`, `schermoDi`, `cellaDa`, `zoomA`, `numerini`, `colonne`, `mappaGrande`), più il dito da punta-e-
 // clicca (`premi`, `trascina`), il colpo dell'eroe (`colpo`), gli agganci delle scritte dello scontro (`aggancia`) e quanto costa
 // (`grafica`). Riceve fatti già decisi (la corsa, il racconto del turno) e li disegna: chi gioca non disegna. Se WebGL 2 non c'è
@@ -458,7 +458,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
 
   const this_ = {
     canvas,
-    numerini: [],      // l'esperienza di un mostro battuto che sale: { testo, x, y, t } (Gioco.vue, come per la tela 2D)
+    numerini: [],      // l'esperienza di un mostro battuto che sale: { testo, x, y, t } (Gioco.vue)
     colonne: [],       // le colonne di luce di un livello salito: { x, y, t, colore, segui }
     mappaGrande: false,
     get scala() { return scala },

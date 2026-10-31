@@ -31,7 +31,7 @@ defineProps({
   gemme: { type: Number, default: 0 },
   preparabili: { type: Number, default: 0 },   // gli incantesimi che l'eroe sa e si possono preparare: sulla casella degli incanti
   missioniPronte: { type: Number, default: 0 }, // le missioni fatte, da consegnare: una pastiglia d'oro sul globo rosso
-  mappa: { type: Boolean, default: false },     // la mappina è aperta grande (sopra, nel 3D: la veduta d'insieme)
+  mappa: { type: Boolean, default: false },     // la mappina è aperta grande (sopra: la veduta d'insieme)
   sopra: { type: Boolean, default: false },
 })
 defineEmits(['bevi', 'zaino', 'incanti', 'mappa', 'eroe', 'abilita'])

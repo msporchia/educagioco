@@ -141,7 +141,7 @@ const PANNELLI = {
     h('div', { class: 'sot-scelta sot-pronta sot-scelta-fatta' }, [h(Medaglione, { glifo: 'spada', tinta: '#e0a23a', stato: 'preso', misura: 28 }),
       h('span', { class: 'sot-scelta-testo' }, [h('b', 'Attacco'), h('small', 'fai 7 di danno')])]),
     h('div', { class: 'sot-domanda' }, [h(Domanda, { domanda: DOMANDA, gioco: 'prova', respiro: 600000 })])])]),
-  // lo scontro nel 3D: la scena è un fondo finto (il 3D vero si guarda con scatta-app), sopra la fila dei turni, in fondo il pannello
+  // lo scontro: la scena è un fondo finto (il 3D vero si guarda con scatta-app), sopra la fila dei turni, in fondo il pannello
   'scontro-3d': () => [h('div', { class: 'sot-campo banco-campo banco-scena3d' }, [h('div', { class: 'sot3d-fila' }, [palcoFila()])]),
     h(Pannello3d, { scontro: true }, () => [h('div', { class: 'sot3d-scelta' }, [h(CaselleAbilita, { ...scelte(), pericolo: { perche: 'duro', vita: 9, male: 12, bevuto: false } })])]),
     barra()],

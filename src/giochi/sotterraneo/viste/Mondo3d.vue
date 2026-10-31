@@ -49,12 +49,12 @@ const props = defineProps({
   segui: { type: String, default: null },
   forze: { type: Object, default: null },
   veduta: { type: Boolean, default: false },  // la veduta d'insieme, dalla casella «mappa grande» della barra
-  pensiero: { type: Object, default: null },  // il pensiero dell'eroe sopra la testa (docs/sotterraneo/pensieri.md), come in Terra.vue
+  pensiero: { type: Object, default: null },  // il pensiero dell'eroe sopra la testa (docs/sotterraneo/pensieri.md)
   forza: { type: Number, default: 1 },        // il livello di forza dell'eroe (motore/forza.js): il colore dell'annuncio di una regione
   fermo: { type: Boolean, default: false },   // un pannello di Gioco.vue è aperto sopra il mondo (bottega, zaino, eroe): i mostri aspettano
   terre: { type: Object, default: null },     // la porta delle terre (motore/terre.js, laPorta): { ora, aperta, ultima, qui, dopo, altre }
 })
-// `pensa`, `pensiero`, `pensiero-fine`, `trovati`: lo stesso contratto dei pensieri di viste/Terra.vue
+// `pensa`, `pensiero`, `pensiero-fine`, `trovati`: i pensieri dell'eroe (docs/sotterraneo/pensieri.md)
 // `scontro` ({ inc, stato, terra, verso }): un mostro di sopra apre uno scontro (Gioco.vue lo gioca, `apriPalco` lo disegna qui);
 // `raccogli` (i): la cosa per terra `i` è sotto i piedi dell'eroe. Le forze di sopra vanno in `mondo.sopra` col resto (salva)
 const emit = defineEmits(['scendi', 'davanti', 'mondo', 'bottega', 'riprendi', 'cura', 'risposta', 'veduta', 'pensa', 'pensiero', 'pensiero-fine', 'trovati',
@@ -336,7 +336,7 @@ function salutaChiPassa(adesso) {
   for (const [k, fine] of fineSaluto) if (adesso >= fine) { fineSaluto.delete(k); salutano.value = new Set([...salutano.value].filter(x => x !== k)) }
 }
 
-/* ═══════════ i pensieri dell'eroe (docs/sotterraneo/pensieri.md): come sulla terra dipinta (viste/Terra.vue, pensaDaFermo) ═══════════ */
+/* ═══════════ i pensieri dell'eroe (docs/sotterraneo/pensieri.md) ═══════════ */
 let fermoDa = 0, prossimaDomanda = 0, pensieroDa = null
 const pensieroEl = ref(null)
 function pensaDaFermo(dt) {
@@ -651,7 +651,7 @@ function viaggia(chiave) {
   dillo(nomeDellaPietra(chiave).replace(/^La pietra /, 'Sei alla pietra '))
 }
 
-/* ═══════════ il dialogo (motore/dialoghi.js), come sulla terra dipinta ═══════════ */
+/* ═══════════ il dialogo (motore/dialoghi.js) ═══════════ */
 const dialogo = ref(null)
 let giri = 0
 const chiParla = k => (personaDi(k) || mercanteDi(k) || { nome: '' }).nome
@@ -1278,7 +1278,7 @@ watch(giro, g => { if (mostri && g !== mostri.stato.giro) { mostri.giro(g); foto
             @pointerdown.stop @click.stop="tornaAllEroe"><span aria-hidden="true">⌖</span> torna all'eroe</button>
 
     <!-- i bersagli: chi sta fermo, gli ingressi, le pietre, il portale, il cartello, la bacheca, le grate chiuse. Stanno nel DOM
-         anche nel buio (`sot-buio` lascia passare il tocco): le prove ci camminano incontro come sulla terra dipinta -->
+         anche nel buio (`sot-buio` lascia passare il tocco): le prove ci camminano incontro -->
     <div class="sot3d-bersagli">
       <button v-for="b in bersagli" :key="b.chiave" :ref="el => (el ? elementi.set(b.chiave, el) : elementi.delete(b.chiave))"
               type="button" class="sot3d-bersaglio" data-bersaglio :data-vis="0"

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════
-   LA TAVOLA DELLE FASCE — le stesse scene del Sotterraneo 3D in più fasce, affiancate
+   LA TAVOLA DELLE FASCE — le stesse scene del sotterraneo in più fasce, affiancate
 
    Per ogni vista (una riga) e ogni colonna (una fascia, o una fascia con
    una leva tolta o rimessa) apre il gioco servito da Vite col cheat della

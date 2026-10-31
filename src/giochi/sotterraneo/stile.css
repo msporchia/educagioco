@@ -58,7 +58,7 @@
 
 .sot-faccia { font-size: 30px }
 
-/* ═══════════ la terra di sopra (viste/Terra.vue, docs/sotterraneo/terra-di-sopra.md) ═══════════
+/* ═══════════ la terra di sopra (docs/sotterraneo/terra-di-sopra.md) ═══════════
    La mappa sta in un mondo che si sposta (translate3d a mano, una volta per fotogramma); le carte in cima e in
    fondo galleggiano sopra e la vista lo sa (le misura). Niente si trascina col dito: `touch-action: none`. */
 .sot-tappe { flex: 1; min-height: 0; position: relative; display: flex }
@@ -114,7 +114,7 @@
 .sot-io-sopra > .sot-armato { position: absolute; left: 0; top: 0; transform: translate(-50%, -94%) }
 .sot-io-sopra.sot-specchio > .sot-armato { transform: translate(-50%, -94%) scaleX(-1) }
 
-/* il portale gemello (viste/Portale.vue): i piedi dell'ovale nel punto dato, e un bagliore morbido che i
+/* il portale gemello: i piedi dell'ovale nel punto dato, e un bagliore morbido che i
    pixel non hanno, apposta: è magia, non disegno */
 .sot-portale-sopra {
   position: absolute; padding: 0; margin: 0; border: 0; background: none; line-height: 0;
@@ -1438,7 +1438,7 @@
 
 /* ═══════════ i pensieri dell'eroe (docs/sotterraneo/pensieri.md): un fumetto a bolle sopra la testa ═══════════
    Giù lo posa Gioco.vue a ogni fotogramma (transform, e --coda dove cadono le bolle); sopra sta dentro l'eroe che cammina
-   (viste/Terra.vue, --sposta per restare nello schermo). Non si tocca, tranne quando ha un segno da accendere */
+   (--sposta per restare nello schermo). Non si tocca, tranne quando ha un segno da accendere */
 .sot-pensiero {
   position: absolute; left: 0; top: 0; z-index: 5; box-sizing: border-box; width: max-content; max-width: min(250px, calc(100% - 12px));
   display: flex; align-items: flex-start; gap: 6px; padding: 7px 11px 8px; border-radius: 18px;
@@ -1464,7 +1464,7 @@
 .sot-pensiero-sopra .sot-pensiero-bolla { left: calc(50% - var(--sposta, 0px)) }
 @keyframes sot-pensiero-entra { from { opacity: 0 } to { opacity: 1 } }
 @media (prefers-reduced-motion: reduce) { .sot-pensiero { animation: none } }
-/* col tema legno (il Sotterraneo 3D): una targhetta di legno col filo d'ottone, la scritta da gioco */
+/* col tema legno: una targhetta di legno col filo d'ottone, la scritta da gioco */
 .sot[data-tema~="legno"] .sot-pensiero {
   color: #f6ead0; border: 1.5px solid #c9963a; border-radius: 16px;
   background: var(--lg-grana), var(--lg-vena), linear-gradient(180deg, #3a2716, #24170d);

@@ -1,6 +1,6 @@
 // La telecamera del mondo di sopra e la veduta d'insieme. Da vicino sta dall'alto inclinata (52°) e segue l'eroe morbida, a una
 // distanza che viene dalla forma dello schermo (almeno 15 celle in largo, 18 in profondo), e tiene l'eroe nello spazio libero fra
-// le carte in cima e in fondo (`coperto`, come la terra dipinta). La veduta, del giocatore (la casella «mappa grande» della barra),
+// le carte in cima e in fondo (`coperto`). La veduta, del giocatore (la casella «mappa grande» della barra),
 // sale fino a vedere il mondo intero. Il sole fa una sola ombra, con una camera d'ombra piccola che segue l'eroe; nella veduta
 // l'ombra non si rifà. Il dito sposta la vista (`trascina`) e due dita la zoomano: la vista libera resta nel mondo e a `LONTANO`
 // celle dall'eroe, finché non lo si manda da qualche parte (`segui`); docs/sotterraneo/mondo-3d-telecamera.md.
@@ -107,7 +107,7 @@ export function creaVeduta(m, quota = () => 0) {
       const t = { x: mix(vicino.x, lontano.x), z: mix(vicino.z, lontano.z), y: mix(vicino.y, lontano.y), inc: mix(vicino.inc, lontano.inc), d: mix(vicino.d, lontano.d) }
       const k = primo ? 1 : 1 - Math.exp(-dt * (veduta ? 4 : 3.2))
       st.x += (t.x - st.x) * k; st.z += (t.z - st.z) * k; st.y += (t.y - st.y) * k; st.inc += (t.inc - st.inc) * k; st.d += (t.d - st.d) * k
-      // l'eroe sta a metà dello spazio libero, un poco più giù del mezzo (come sulla terra dipinta); nella veduta il mondo a metà
+      // l'eroe sta a metà dello spazio libero, un poco più giù del mezzo; nella veduta il mondo a metà
       const voluto = palco ? coperto * 0.5 : A / 2 - (sopra + libero * (0.55 - 0.05 * b))   // nello scontro comanda il pannello, non le carte
       st.spostaY += (voluto - st.spostaY) * (primo ? 1 : 1 - Math.exp(-dt * 5))
       if (Math.abs(st.spostaY) > 0.5) camera.setViewOffset(L, A, 0, st.spostaY, L, A)

@@ -1,4 +1,4 @@
-/* ═══════════ gli effetti dello scontro (viste/Scene.vue, viste/SegniAddosso.vue; docs/sotterraneo/scontro-effetti.md) ═══════════
+/* ═══════════ gli effetti dello scontro (scena3d/effetti3d/, viste/SegniAddosso.vue; docs/sotterraneo/scontro-effetti.md) ═══════════
    Tutto in codice: forme, luce, nessuna emoji. Ogni scena (`.sc`) sta ferma nel punto di chi la subisce o la fa, ha il suo ritardo
    (`--ritardo`) e le sue misure (`--u` quanto è grande la figura, `--s` lo stesso diviso 48, `--dx --dy --ang --lung` se vola,
    `--alto` quanto manca al bordo di sopra se cade). Dopo un tocco il racconto va in fretta: la regola `.sot-veloce` di

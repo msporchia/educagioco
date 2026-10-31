@@ -137,8 +137,8 @@ const BASI = {
 
   // i copricapi (docs/sotterraneo/elmo.md): il ferro per chi veste il ferro, la stoffa per gli altri, la cuffia per tutti. Un elmo vale
   // una frazione di un'armatura (un punto di difesa, e cresce a metà passo: DIF_TESTA_OGNI_LIVELLI); il 3D li disegna coi modelli
-  // dei copricapi (anteprime3d-pura.js, `COPRICAPI_3D`) e non hanno sprite: nel 2D l'emoji. `copricapo`: fuori dai banchi e dal
-  // bottino di sempre, ci entrano solo dove il gioco li accende (Corredo.copricapi, il 3D)
+  // dei copricapi (anteprime3d-pura.js, `COPRICAPI_3D`) e non hanno sprite: senza modello, l'emoji. `copricapo`: fuori dai banchi e dal
+  // bottino di sempre, ci entrano solo dove il gioco li accende (Corredo.copricapi)
   cuffia: { em: '🪖', nome: 'Cuffia di cuoio', dove: 'testa', copricapo: true, genere: 'f', vita: 3, prezzo: 7,
             dice: 'Cuoio imbottito: ti tiene in piedi un po\' di più.' },
   elmo: { em: '🪖', nome: 'Elmo', dove: 'testa', famiglia: 'ferro', copricapo: true, dif: 1, prezzo: 10,
@@ -329,7 +329,7 @@ export const ARMI_DI = grado =>
   CHIAVI_COSE.filter(k => COSE[k].dove === 'mano' && COSE[k].grado === grado)
 // le basi che si trovano e si comprano: senza le armi dei mostri grossi, e senza i copricapi (sotto)
 export const PEZZI_DI_BASE = CHIAVI_COSE.filter(k => COSE[k].dove && !COSE[k].deiGrossi && !COSE[k].copricapo)
-// i copricapi: un elenco a parte, perché il bottino e i banchi di sempre (il 2D, il banco di prova, la taratura) restino quelli di
+// i copricapi: un elenco a parte, perché il bottino e i banchi di sempre (il banco di prova, la taratura) restino quelli di
 // prima; li pescano solo `copricapoDalTrovato` (motore/bottino.js) e le linguette `copricapi` (dati/mercanti.js), dove sono accesi
 export const COPRICAPI = CHIAVI_COSE.filter(k => COSE[k].dove === 'testa')
 
@@ -428,7 +428,7 @@ export function guastiDelleCose(nomi = null) {
     if (c.dove && !TIPI_DI_POSTO.includes(c.dove)) g.push(`${k}: si indossa su "${c.dove}"?`)
     if (c.dove === 'mancina' && !c.dif) g.push(`${k}: nella mano debole, ma non para`)
     if (c.dove === 'corpo' && !c.dif) g.push(`${k}: si mette addosso, ma non para`)
-    // il copricapo non ha sprite: lo disegna il 3D (i modelli dei copricapi), e nel 2D si vede la sua emoji
+    // il copricapo non ha sprite: lo disegnano i modelli dei copricapi, e senza modello si vede la sua emoji
     if (c.dove && c.dove !== 'testa' && !c.sprite) g.push(`${k}: si indossa, ma non ha un pezzo disegnato`)
     if (c.dove === 'testa' && !(c.dif || c.vita)) g.push(`${k}: in testa, ma non para e non tiene in piedi`)
     if (c.dove === 'testa' && !c.copricapo) g.push(`${k}: in testa senza \`copricapo\`, entrerebbe nel bottino di sempre`)

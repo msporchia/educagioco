@@ -1,5 +1,5 @@
 // Lo scontro com'è per chi lo guarda (docs/sotterraneo/scontro.md, «La vista»): dal foglio della corsa i dati che
-// `Scontro.vue` disegna, e come stanno disposti i mostri in campo. Funzioni pure, nessuno stato: la corsa non sa niente
+// la vista dello scontro disegna, e come stanno disposti i mostri in campo. Funzioni pure, nessuno stato: la corsa non sa niente
 // di righe e di colonne, e la vista non calcola un numero.
 import { MOSTRI } from '../dati/mostri.js'
 import { ELEMENTI, STATI } from '../dati/elementi.js'
@@ -167,13 +167,13 @@ export function piazza(posti, campo, larg) {
   return { alto, eroe: { x: stretto ? 34 : 40, y: ey }, compagno: { x: stretto ? 52 : 60, y: ey + 58 }, mostri }
 }
 
-// il fondale del duello: la parete e il pavimento dello scenario in cui si combatte (viste/Palco.vue)
+// il fondale del duello: la parete e il pavimento dello scenario in cui si combatte
 export function palcoDi(c) {
   const sc = SCENARI[c.scenario] || SCENARI[SCENARIO]
   return { pavimento: sc.pavimento.stanza, faccia: sc.faccia, roccia: sc.colori && sc.colori.roccia }
 }
 
-// Tutto quello che `Scontro.vue` legge, rifatto a ogni cambio. I mostri sono dati semplici nell'ordine dei posti (l'indice `i` è
+// Tutto quello che la vista dello scontro legge, rifatto a ogni cambio. I mostri sono dati semplici nell'ordine dei posti (l'indice `i` è
 // quello di `foglio.campo`: la vista lo rimanda a `scegliBersaglio`); la corsa resta di chi la gioca
 export function vistaDelloScontro(c) {
   const f = c.foglio

@@ -1,7 +1,6 @@
 <script setup>
 // L'eroe armato con le caselle intorno, come il cerchio dei giochi di ruolo in piccolo: a sinistra lo scudo, il corpo e la
-// collana, a destra l'arma e i due anelli, sopra la testa il copricapo (docs/sotterraneo/elmo.md: c'è nel 3D, e nel 2D solo se ce
-// n'è uno da mostrare). Serve alla bottega e allo zaino; toccare una casella la sceglie, e il pannello dice cosa c'è. `va`: la
+// collana, a destra l'arma e i due anelli, sopra la testa il copricapo (docs/sotterraneo/elmo.md). Serve alla bottega e allo zaino; toccare una casella la sceglie, e il pannello dice cosa c'è. `va`: la
 // casella dove andrebbe il pezzo guardato, che si accende
 import { computed } from 'vue'
 import Armato from './Armato.vue'

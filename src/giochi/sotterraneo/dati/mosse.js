@@ -8,7 +8,7 @@ import { MOSTRI } from './mostri.js'
 export const RUOLI = ['comune', 'forte', 'boss', 'superboss']
 export const N_MOSSE = { comune: 1, forte: 2, boss: 2, superboss: 3 }
 
-// Com'è ogni tipo: l'icona dell'annuncio e il suo colore (numeri, come li vogliono le animazioni 3D; la vista 2D li fa '#rrggbb').
+// Com'è ogni tipo: l'icona dell'annuncio e il suo colore (numeri, come li vogliono le animazioni 3D).
 export const TIPI = {
   attacco: { icona: 'spada', colore: 0xff5a4a, dice: 'attacca' },
   cura: { icona: 'croce', colore: 0x6ee06a, dice: 'si cura' },
@@ -24,7 +24,7 @@ export const INCANTESIMO_DI = { fuoco: 'palla', gelo: 'scheggia', fulmine: 'fulm
 export const COLORE_ELEMENTO = { fisico: 0xb27cf2, fuoco: 0xe8742f, gelo: 0x58b4e6, fulmine: 0xb98af0, veleno: 0x7cc94a, sacro: 0xffe08a }
 
 // ───────── le mosse, scritte a mano ─────────
-// `via`: come si muove nel 3D ('principale' l'attacco del modello; 'carica', 'balzo', 'scatto', 'schianto' quell'attacco più un movimento
+// `via`: come si muove ('principale' l'attacco del modello; 'carica', 'balzo', 'scatto', 'schianto' quell'attacco più un movimento
 // del corpo intero: poc/mostri-3d/mosse-anim.js). `peso`: quanto spesso; `condizione`: quando si può; `max`: quante volte a scontro.
 const att = () => ({ id: 'attacco', nome: null, tipo: 'attacco', peso: 4, via: 'principale' })
 const forte = (id, nome, via, o = {}) => ({ id, nome, tipo: 'attacco', peso: 2, via, mod: 1.4, attesa: 1.5, ...o })

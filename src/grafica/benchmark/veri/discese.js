@@ -1,4 +1,4 @@
-// Il Sotterraneo 3D vero nella misura del telefono (docs/core/vecchio-telefono-veri.md): la scena delle discese di scena3d/indice.js
+// Il sotterraneo vero nella misura del telefono (docs/core/vecchio-telefono-veri.md): la scena delle discese di scena3d/indice.js
 // (luci, nebbia, ombra del cono, palco, mostri ed eroe 3D, effetti) su una discesa vera del motore, col cheat dello scontro rifatto
 // qui (`sotterraneo=branco&mostri=N&grado=leggendario&corredo=leggendario&stanza=sala`). Ogni scena dice quanti mostri e se partono
 // gli attacchi, o che l'eroe passeggia da una stanza all'altra.

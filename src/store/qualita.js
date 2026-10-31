@@ -12,7 +12,7 @@ export const VERSIONE_MISURA = 1     // si alza se cambia la prova o le soglie: 
 // Tutto quello che una fascia cambia, in un posto solo. Il Sotterraneo non perde botti, arredo e ombre (dai log del Note 7 i triangoli
 // costano poco: da 10k a 100k solo +1,4 ms): si abbassano i pixel, le fette di nebbia e il passaggio finale. `alta` è il gioco di prima. I numeri della bassa e della media sono da
 // provare sul telefono (docs/core/vecchio-telefono.md): si ritoccano qui.
-// La bassa nel Sotterraneo 3D (i nomi di ACCESI in scena3d/costanti.js, `nome:numero` per un numero): niente passaggio finale, due fuochi
+// La bassa nel sotterraneo (i nomi di ACCESI in scena3d/costanti.js, `nome:numero` per un numero): niente passaggio finale, due fuochi
 // accesi invece di sei, lampo e magia in una luce sola e niente rimbalzo né luce del palco (ogni luce puntiforme costa a ogni pixel
 // anche spenta), l'ombra a 512 ridisegnata a fotogrammi alterni, la nebbia con due strati di rumore, metà scintille
 // (docs/sotterraneo/grafica-3d-costi.md, «La fascia bassa»)
