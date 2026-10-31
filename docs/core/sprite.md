@@ -70,23 +70,20 @@ nello stesso modulo.
   ammorbidendo solo lì (`imageSmoothingEnabled` torna spento subito dopo).
 - **I contorni (`alone`) restano dal pezzo piccolo**: sono un filo di un
   pixel di sprite, e da lì vengono uguali.
-- **Peso**: per i tre fogli della roba del sotterraneo, 260 pezzi, 451 KB.
-- **Anche l'arredo dei fogli di scena**, pezzo per pezzo: `"nitido": "scelti"` sul foglio e `"nitido": true` sul pezzo (`sotterraneo_2`,
-  `4_3`, `5_2`, `5_3`). Una botte di 150 px ridotta a 26 sgrana, nitida regge; il resto del foglio (pavimenti, muri) resta com'è.
+- **Solo quello che un pannello mostra dipinto** (31 ottobre 2026): una cosa con un modello 3D nei pannelli si mostra con la sua foto
+  ([../sotterraneo/anteprime-3d.md](../sotterraneo/anteprime-3d.md)), e la scena 3D usa solo l'atlante piccolo. Nel sotterraneo il nitido è
+  `"nitido": "scelti"` sul foglio e `"nitido": true` sul pezzo: i tre gioielli senza modello e l'arco degli arcieri di Castle Battle
+  (`bottino-e-arredo`), le quattro curiosità del foglio della fonte (`scudi`). Otto pezzi, 12 KB (erano 497 pezzi, 2 MB).
 - **`riempi`** rimette il corpo a un pezzo mangiato da dentro: una porta nera su un foglio dal fondo nero resta trasparente dove il contorno ha dei varchi
   (`atlante.py`: `riempi_in`; `{"chiudi": 2}` chiude i varchi stretti, in pixel del foglietto, e dove la sagoma è piena mette il colore scuro). L'ha la porta del grosso.
-- **Anche le creature**, una per una: `"nitido": true` nella voce del catalogo ([creature.md](creature.md)); `atlante.py` prende i suoi
-  fotogrammi dal foglio grande (`fogli_delle_creature` li segna, `nitidi_di` salta gli altri). Tela e `figura()` lo scelgono da soli per nome.
-- Il foglietto lo dichiara per i fogli dipinti di oggetti (`bottino-e-arredo`,
-  `scudi`, `armature-e-vesti`), non per la pixel art vera (0x72), che è
-  già alla sua misura. `quanti` e `toppa` non li sa ancora fare: quel pezzo
+- **Anche le creature** potrebbero, una per una: `"nitido": true` nella voce del catalogo ([creature.md](creature.md)); oggi nessuna lo
+  chiede, perché nei pannelli un mostro è la foto del suo modello.
+- Non serve alla pixel art vera (0x72), che è già alla sua misura. `quanti` e `toppa` non li sa ancora fare: quel pezzo
   resta solo piccolo, e lo strumento lo dice (`cancella` sì, scalato). **`misura`
   vale solo per il piccolo** (impagina): il nitido tiene tutta la sua
   definizione e il gioco lo stira alla gabbia del piccolo (`figura()`, scala
   x e y a parte, ammorbidito: `.sot-ritratto` è `pixelated`, e il pezzo
-  nitido dichiara `image-rendering: auto`). È la strada dei personaggi del
-  mondo di sopra (`sopra-personaggi-*`: 22 pixel di altezza il piccolo,
-  200 il nitido): +400 KB di WebP per venti pose.
+  nitido dichiara `image-rendering: auto`).
 
 ## I pezzi derivati in codice
 
@@ -98,8 +95,9 @@ nello scenario e il derivato si butta.
 
 - **Come si usa**: una libreria, `strumenti/sprite/derivati.py` (`tessere_di(sorgente)`: le tessere di un foglio come le ritaglia `atlante.py`, stesso fondo,
   stessa scala), e **una configurazione per ogni uso** che dice quali tessere prendere e come chiamare i pezzi.
-- **`strumenti/sprite/inferno.py`** è l'unica oggi: i pezzi che mancano allo scenario dell'inferno e che nessuno ha dipinto (le porte chiara e aperta, i fianchi,
-  la scala chiusa, la fontana asciutta), ricavati dalla scena e dalle tavole dipinte; il perché e cosa esce sta in [../sotterraneo/scenari.md](../sotterraneo/scenari.md#linferno).
+- **`strumenti/sprite/inferno.py`** è l'unica oggi: i pezzi che mancano allo scenario dell'inferno e che nessuno ha dipinto (la porta chiara, i fianchi,
+  la scala chiusa), ricavati dalla scena e dalle tavole dipinte; un pezzo che serve solo al derivato (la grata, il lucchetto) sta nella tabella
+  `per_i_derivati` del foglietto, che `atlante.py` non legge (`tessere_di(sorgente, 'per_i_derivati')`); il perché e cosa esce sta in [../sotterraneo/scenari.md](../sotterraneo/scenari.md#linferno).
   Per un uso nuovo si copia `inferno.py` come calco: i nomi delle tessere, i pezzi che escono, e `scrivi` che li mette in un foglio col suo foglietto, nel formato di `atlante.py`.
 - **Il PNG non si tocca**: si rifà col comando, e `unita/sprite-derivati` confronta i pezzi rifatti con quelli scritti in `sorgenti/` (un foglio ritoccato a mano è rosso).
 
@@ -153,6 +151,12 @@ il test (`unita/sprite-inutilizzati`) guarda solo che giri e sia coerente.
   sua posa) compare come parola, oppure combacia con un modello come `recinto_${specie}_${stato}` le cui
   parti sono parole che compaiono. È un'euristica: sbaglia per un nome composto in un modo che nessuno scrive
   per intero, quindi **ogni voce si guarda prima di toglierla** (`--provino` la ritaglia dall'atlante).
+- **Nominato non vuol dire disegnato**: un nome può stare in un elenco che nessuno legge, in un ramo morto (una porta aperta, che in 3D
+  non si disegna; la fontana, che è modellata) o in un dato di un gioco tolto. Si segue ogni nome fino a chi lo legge. La controprova è
+  `node strumenti/pezzi-chiesti.mjs` (`--prove sotterraneo` anche con le prove d'integrazione): costruisce il gioco con `PEZZI` e `NITIDI`
+  avvolti in un contatore e dice, foglio per foglio, cosa non è mai stato chiesto. Un pezzo mai chiesto si segue nel codice; uno che il
+  codice vivo può chiedere resta anche se nessuna scena l'ha chiesto. Il 31 ottobre 2026, per il sotterraneo, così sono uscite le fontane,
+  le porte aperte, il mercante dei tre scenari, lo scheletro 0x72 e tredici pezzi d'arredo dell'inferno, e il nitido è sceso a otto pezzi.
 - **La roba del sotterraneo**: le figure di `roba.json` che nessun foglietto ritaglia e che non hanno un
   `pezzo` (le 17 «fuori» di [figure.md](../sotterraneo/figure.md)). **Le creature**: quelle del catalogo senza
   nessun gioco, e i fotogrammi che un gioco lascia fuori (`scelta`).

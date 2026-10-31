@@ -56,7 +56,7 @@ castello. Il catalogo descritto, per sapere cosa c'è:
   presa (lo scheletro dipinto è `scheletro-dipinto` nel sotterraneo, che ha già
   lo `scheletro` di 0x72). `atlante.py` si ferma se due pezzi hanno lo stesso
   nome.
-- **`nitido`**: i fotogrammi hanno anche la copia dal foglio com'è dipinto (WebP in `NITIDO`, come la roba: [sprite.md](sprite.md#i-pezzi-nitidi)).
+- **`nitido`**: i fotogrammi hanno anche la copia dal foglio com'è dipinto (WebP in `NITIDO`: [sprite.md](sprite.md#i-pezzi-nitidi)). Oggi nessuna creatura lo chiede: nei pannelli del sotterraneo un mostro è la foto del suo modello.
   Serve a chi ha un sorgente piccolo e pallido: lo scheletro è 45×73 px nel foglio, ridotto alla griglia a 12×19 diventava una macchia grigia
   (l'utente, 13 ottobre: «sfocati»). Oggi scheletro, scheletro cavaliere, mummia, **tutte quelle alte fino a 23 pixel nell'atlante** (zombie, diavoletto,
   fantasma, fantasma azzurro, teschio azzurro, granchio, pipistrello, ratto, serpente, fungo, occhio, pianta, cinghiale, mietitore, le melme viola e rosa,

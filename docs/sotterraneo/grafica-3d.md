@@ -203,12 +203,8 @@ che si adatta, `ACCESI`, il cheat `&spegni=` e il peso del file:
 
 ## Cosa manca
 
-- Le armi in mano (dell'eroe e dei mostri) vengono dall'atlante piccolo:
-  ingrandite sono a blocchi (il foglio nitido è 11 848×2 331: come texture non
-  entra in un telefono, andrebbe ritagliato).
-- I grossi di ripiego (Re Ossuto e gli altri senza figura dipinta) sono lo
-  sprite della specie ingrandito due volte e mezza, a pixel grossi; gli eroi e
-  le creature (elfa 16×28, spirito di fuoco 17×25) non hanno pezzi nitidi.
+- Le armi in pugno ai mostri delle varianti, quando il mostro è uno sprite (oltre il tetto dei modelli), vengono dall'atlante
+  piccolo: ingrandite sono a blocchi.
 - I muri obliqui delle stanze smussate sono a gradini nei paesaggi costruiti (in quelli di roccia gli spigoli si smussano,
   [paesaggi-3d.md](paesaggi-3d.md)); le porte aperte non si disegnano; le ragnatele e la roba per
   terra di decoro (`perTerra`) non ci sono.

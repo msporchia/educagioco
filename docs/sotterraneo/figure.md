@@ -92,9 +92,8 @@ proporzione all'eroe (corti 17 pixel, lunghi 24: `unita/sotterraneo-impugna`). *
 restano un anello con una corda: non si leggono come balestre a quella misura), l'arco con la lama (`arco-11`), la frusta a catena (`ascia-10`) e la
 mazza (`ascia-12`, che nel gioco è l'arma di Grumo e non si trova): nessun pezzo ha la loro forma.
 
-Pesano nell'atlante: con gli aspetti passa da 244 a 316 KB di PNG, più i
-pezzi nitidi (451 KB di WebP: [../core/sprite.md](../core/sprite.md)), che
-sono quelli che si vedono nello zaino e in scena.
+Pesano nell'atlante: con gli aspetti passa da 244 a 316 KB di PNG. Si vedono per terra e in pugno ai mostri delle varianti;
+nello zaino e nelle botteghe c'è la foto del modello 3D ([anteprime-3d.md](anteprime-3d.md)), e il pezzo nitido non c'è più.
 
 ## I pezzi col nome hanno la loro figura
 

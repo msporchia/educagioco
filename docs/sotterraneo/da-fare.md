@@ -55,7 +55,7 @@ libri, forzieri e simili** ([regole.md](regole.md), [arredo.md](arredo.md)), non
 ## Il disegno 3D
 
 Resta, in quest'ordine: l'arredo per
-ambientazione modellato (oggi sono le figure dell'atlante), le armi dai pezzi nitidi, i muri obliqui, la prova su un
+ambientazione modellato (oggi sono le figure dell'atlante), i muri obliqui, la prova su un
 telefono vero (i numeri di [grafica-3d-costi.md](grafica-3d-costi.md) sono di SwiftShader). Le voci piccole stanno lì,
 in «Cosa manca».
 
@@ -121,8 +121,6 @@ coi numeri di `npm run taratura` ([giocatori-tipo.md](giocatori-tipo.md)) e con 
 - **Le fuliggini della fornace** non sono state usate (alone magenta).
 - **Gli orpelli della grotta di cristallo e delle cantine nuove**: ogni scenario ha la sua
   lista in `dati/orpelli.js` ([arredo.md](arredo.md)); un posto nuovo ne vuole una, a fogli fitti.
-- **La fontana della cripta** è ancora quella di `sotterraneo_3.png`, piena e
-  asciutta: quella del foglio dei pezzi è a muro, e bevendo cambierebbe forma.
 - **Il suono**: c'è il minimo (passo, colpo, errore, il graffio). Col suono
   spento il gioco deve restare intero.
 

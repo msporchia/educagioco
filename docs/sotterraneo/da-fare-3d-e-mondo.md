@@ -58,9 +58,7 @@ Tutto è stato guardato solo in Chrome senza GPU, mai su un telefono vero.
   segni sul prato); «vai alla pietra» dal diario e la freccia sulla strada vera, non in linea d'aria.
 - **I paesaggi alle discese e all'abisso**: gallerie → grotta, cisterna → tempio, fondo → miniera (già fatti nel mondo
   3D) e per l'abisso i tratti neve, ghiaccio, palude con gli abitanti adatti ([paesaggi-3d.md](paesaggi-3d.md)).
-- **Le figure grandi a blocchi**: i grossi senza figura dipinta (Re Ossuto) sono lo sprite della specie ingrandito ~2,5
-  volte; le armi in mano nel 3D sono a blocchi (il foglio nitido misura 11 848×2 331 e non entra come texture su un
-  telefono: andrebbe ritagliato). Paladino, Luna e runico si distinguono nei pensieri solo dai nodi dell'albero.
+- Paladino, Luna e runico si distinguono nei pensieri solo dai nodi dell'albero.
 - **Le tane**: hanno il segno e la macchia ([mondo-3d-oggetti.md](mondo-3d-oggetti.md#la-tana), 21 ottobre). Da guardare col dito sul
   Note 7 (fps davanti a una tana con le guardie), e se la fossa di braci spenta deve diventare brace spenta (oggi le braci disegnate
   restano), e se i dipinti dei mostri (il foglio delle creature d'aperta campagna) vogliono un segno loro.

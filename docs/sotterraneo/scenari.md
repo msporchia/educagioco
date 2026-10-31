@@ -44,9 +44,9 @@ giochi (atlante, scala nel contesto) stanno in [../core/grafica.md](../core/graf
 Il quarto scenario (`inferno`, 15 ottobre 2026), quello della **botola segreta** (`labirinto`, la quinta discesa: ogni discesa il suo scenario, non più scenari che si alternano in orizzontale; i suoi abitanti sono in [mostri.md](mostri.md)): massi con le punte, mattoni scuri e brace, stendardi rossi e un toro cornuto sopra ogni porta. Nasce da **tre immagini di ChatGPT** (nella cartella dei fogli) e da **un attrezzo che fa i pezzi che mancano**.
 
 - **`sotterraneo_6.png`**, la scena (tre stanze e i corridoi). La cella è di 64 px come nelle altre, ma le facce sono più alte (coronamento di massi e mattoni): se ne prende l'alto, 76 px su 64, schiacciato di un quinto. Dalla scena: la porta col teschio cornuto (`bella`) e quella rossa senza (`ferro`).
-- **`arredo-inferno.png`**, una tavola di 71 pezzi su fondo magenta (nove file, scala circa 5,9 px per pixel di gioco): quasi tutto l'arredo (sarcofagi, altari, statue e gargoyle, colonne, torce, gabbie, stendardi, fucina, troni, tavolo del boia…), più la porta di legno, la scala in cornice di pietra, la grata, il lucchetto e la coppa di lava, che servono all'attrezzo.
-- **`bottega-inferno.png`**, il terzo foglio (una «bottega infernale»): è una tavola di ambienti, e ne vengono 24 pezzi (obelischi, forche, cristalli, il cerchio del pentagramma, il demone sul trono, punte di roccia e alberi secchi per i relitti, le cose piccole). **Restano fuori** gli ambienti interi (l'ingresso della caverna col teschio, il recinto, l'orto, la tenda, il ponte, la cascata di lava: sono scene, buoni semmai da sfondo di un grosso), il cancello a spuntoni (sembra un passaggio: regola del decoro), casse e botti, ossa e teschi, il forziere pieno d'oro (il d'oro è solo delle missioni).
-- **`python3 strumenti/sprite/inferno.py`** (`--provino` in `tmp/inferno.png`) fa in codice quello che nessuno ha dipinto: la porta **chiara** e quella **aperta**, i **cinque fianchi** (colori campionati dalle porte), la **scala chiusa** (la grata e il lucchetto sulla scala) e la **fontana asciutta** (la lava della coppa diventa pietra). Scrive `sotterraneo_6_derivati.png`; poi `atlante.py sotterraneo`. Se un pezzo non regge a schermo si fa chiedere al modello: la regola resta «prima in codice, poi dipinto».
+- **`arredo-inferno.png`**, una tavola su fondo magenta (nove file, scala circa 5,9 px per pixel di gioco): quasi tutto l'arredo (sarcofagi, altari, statue e gargoyle, colonne, torce, gabbie, stendardi, fucina, troni, tavolo del boia…), più la porta di legno e la scala in cornice di pietra. Se ne ritagliano i 60 pezzi che il gioco posa; la grata e il lucchetto servono solo all'attrezzo e stanno in `per_i_derivati` del foglietto, fuori dall'atlante.
+- **`bottega-inferno.png`**, il terzo foglio (una «bottega infernale»): è una tavola di ambienti, e ne vengono 21 pezzi (obelischi, forche, cristalli, il cerchio del pentagramma, il demone sul trono, punte di roccia e alberi secchi per i relitti, le cose piccole). **Restano fuori** gli ambienti interi (l'ingresso della caverna col teschio, il recinto, l'orto, la tenda, il ponte, la cascata di lava: sono scene, buoni semmai da sfondo di un grosso), il cancello a spuntoni (sembra un passaggio: regola del decoro), casse e botti, ossa e teschi, il forziere pieno d'oro (il d'oro è solo delle missioni).
+- **`python3 strumenti/sprite/inferno.py`** (`--provino` in `tmp/inferno.png`) fa in codice quello che nessuno ha dipinto: la porta **chiara**, i **quattro fianchi** (colori campionati dalle porte) e la **scala chiusa** (la grata e il lucchetto sulla scala). La porta aperta e la fontana non servono: in 3D una porta aperta non si disegna e la fonte è modellata. Scrive `sotterraneo_6_derivati.png`; poi `atlante.py sotterraneo`. Se un pezzo non regge a schermo si fa chiedere al modello: la regola resta «prima in codice, poi dipinto».
 - **I forzieri sono quelli della fornace** (la scena non li ha e il ferro con la brace sta bene): da chiedere al modello.
 - **Dove si vede**: la botola segreta (`giu=5` nei cheat); l'abisso, che attraversa cantine, cripta e fornace, non lo ha (le sue creature sono quelle della botola).
 
@@ -60,8 +60,10 @@ Il quarto scenario (`inferno`, 15 ottobre 2026), quello della **botola segreta**
   `armature-e-vesti.png`); eroi, forzieri e monete ancora da **0x72, «16×16
   DungeonTileset II», CC-0**.
 - **L'atlante** lo monta `strumenti/sprite/atlante.py sotterraneo` (formato
-  in `strumenti/sprite/FORMATO.md`): un PNG di circa 700 KB per 930 pezzi,
-  incorporato in base64, così il build resta un file solo. Si ritaglia **solo
+  in `strumenti/sprite/FORMATO.md`): un PNG di circa 660 KB per 890 pezzi,
+  incorporato in base64, così il build resta un file solo. Un pezzo sta
+  nell'atlante solo se il gioco lo può disegnare ([../core/sprite.md](../core/sprite.md#gli-inutilizzati)):
+  quello che ha un modello 3D si mostra con la sua foto. Si ritaglia **solo
   quello che qualcuno nomina** (di `armature-e-vesti.png` sette figure su
   centotrentasei), e il foglietto scrive cosa è rimasto nel foglio. Lo stesso
   modulo lo legge il banco `strumenti/banco/mondo.html` (`npm run mondo`): se
@@ -74,20 +76,11 @@ Il quarto scenario (`inferno`, 15 ottobre 2026), quello della **botola segreta**
 
 ## Armi, armature e arredo in scena
 
-- **L'arma si posa accanto al pugno, staccata, e respira col passo**: dodici
-  armi vanno bene per quattro personaggi senza disegnarne quarantotto. Chi ne
-  porta due le porta una per lato; un'arma a due mani sta in mezzo, davanti al
-  corpo.
-- **Le armature vivono solo come icona** — nello zaino, per terra, al banco.
-  0x72 non ha un fotogramma in cui il personaggio indossi o impugni qualcosa,
-  e la figura di ogni classe è fissa: è il patto del set. I sei scudi vengono
-  da `scudi.png`, le vesti da `armature-e-vesti.png`. Un buco così (le
-  armature restate emoji) va guardato *prima* di innamorarsi di un set.
-- **Di emoji in scena restano solo i segni sopra le porte.** La fontana
-  viene dallo scenario, e la fonte bevuta resta al suo posto, asciutta. Il
-  mercante disegnato nei fogli (`cantine-mercante-0`…) e la porta chiara col
-  suo segno non si usano più dal 7 ottobre 2026: il mercante è salito sul
-  mondo di sopra ([bottega.md](bottega.md#i-mercanti-di-sopra)).
+- **L'eroe porta armi e armature addosso nel suo modello 3D** ([roba-3d.md](roba-3d.md)); le figure dipinte della roba restano per
+  terra e in pugno ai mostri delle varianti.
+- **Di emoji in scena restano solo i segni sopra le porte.** La fontana è modellata (`scena3d/fontana.js`), e la fonte bevuta
+  resta al suo posto, asciutta. Il mercante dipinto nei fogli è stato tolto: il mercante è salito sul mondo di sopra
+  ([bottega.md](bottega.md#i-mercanti-di-sopra)).
 - **L'arredo è una lista per scenario**: `orpelli` nella voce di `SCENARI`
   (`dati/orpelli.js`): ogni pezzo sa come si piazza e quanto è epico, il piano
   decide quanto è epica una stanza. Le regole sono in [arredo.md](arredo.md).

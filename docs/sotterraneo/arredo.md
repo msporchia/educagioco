@@ -31,8 +31,8 @@ ogni nome, la posa e il numero.
 ## Cosa c'è, per ambientazione
 
 Ogni pezzo sta dove sta bene (le statue in una cripta, il legno in una cantina, il ferro e la brace in una fornace); le immagini vengono
-da `sotterraneo_2.png`, `sotterraneo_5_2/5_3.png`, `scudi.png` e `arredo-cripta-2.png`, e **i pezzi dei fogli dipinti sono nitidi**
-([../core/sprite.md](../core/sprite.md#i-pezzi-nitidi)).
+da `sotterraneo_2.png`, `sotterraneo_5_2/5_3.png`, `scudi.png` e `arredo-cripta-2.png`. Non hanno il pezzo nitido: la scena 3D
+usa solo l'atlante piccolo, e nessun pannello mostra l'arredo ([../core/sprite.md](../core/sprite.md#i-pezzi-nitidi)).
 
 - **Cantine**: botte sul cavalletto, scaffale, tavolaccio con la panca, pila di legna, macina, assi, panche, sgabello, tavolo, sedia, tavolino, tre candelabri e un candeliere, uno stendardo verde.
 - **Cripta**: oltre a sarcofagi, cavalieri e colonne, gli **altari** (di legno, di pietra, col bassorilievo, d'oro: `fondo`), due **troni**
