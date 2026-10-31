@@ -4,12 +4,12 @@
 
    Il portale si attraversa col dito: il velo lampeggia, l'eroe ci si stringe dentro, e a fotogramma finito il gioco
    torna sopra buttando il 3D della discesa. Prima il ciclo di disegno continuava dopo aver buttato il piano
-   («O is null», `piano.sorgenti`). Qui: il portale, la scala che sale del primo piano («lascio perdere») e lo
+   («O is null», `piano.sorgenti`). Qui: il portale (e sopra niente carta «torno giù»: si riprende dall'ingresso), la scala che sale del primo piano («lascio perdere») e lo
    svenimento all'ultima occasione (il cartello di fine, poi «esci»); ogni volta si arriva sopra, il 3D non c'è più e la console è pulita.
    `node test/esegui.mjs sotterraneo-3d-uscite`
    tempo: 120
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, finestraFerma } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, finestraFerma, scendiNelSotterraneo } from '../aiuto/browser.mjs'
 import { uguale, controlla, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
@@ -70,6 +70,16 @@ await entra(`sotterraneo3d=${DISCESA}&seme=${SEME}&stanza=al-portale&torcia=acce
   await scatto(page, 'sotterraneo-3d-uscite-portale')
   await toccaIl('[data-azione="portale"]')
   await sopra('dal portale')
+  // sopra niente carta che propone di tornare: la sosta si riprende dall'ingresso dello stesso dungeon (docs/sotterraneo/portale-e-sosta.md)
+  uguale('dal portale: in cima niente carta «torno giù»', await page.locator('[data-ripresa]').count(), 0)
+  await scendiNelSotterraneo(page, DISCESA, { tocca, scendi: false })
+  uguale('l\'ingresso dello stesso dungeon dice «riprendo da dove ero»', await page.locator('[data-fumetto] [data-azione="scendi"][data-sosta]').count(), 1)
+  await toccaIl('[data-fumetto] [data-azione="scendi"]')
+  await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.corsa && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 30000 })
+  uguale('e non chiede di lasciar perdere niente', await page.locator('[data-chiede]').count(), 0)
+  const d = await page.evaluate(([x, y]) => { const e = window.__sotterraneo3d.corsa.eroe; return Math.hypot(e.x - x - 0.5, e.y - y - 0.5) }, p)
+  controlla('si riprende accanto al portale di prima', d < 3, d.toFixed(2))
+  uguale('ripreso dall\'ingresso: nessun errore in console', errori.splice(0).join(' | '), '')
 }
 
 /* ── la scala che sale del primo piano: «lascio perdere» ── */

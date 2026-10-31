@@ -36,8 +36,9 @@ const minuscolo = s => { const t = String(s ?? ''); return t.charAt(0).toLowerCa
       <p v-if="f.detto" class="sot-fum-avviso" :data-detto-colore="f.colore" :data-ferma="f.colore === 'rosso' ? 1 : null">
         <b>{{ f.detto.chi }}:</b> «{{ f.detto.detto }}»
       </p>
-      <button v-if="f.colore !== 'rosso'" class="sot-grosso" data-azione="scendi" @click="$emit('scendi')">
-        <span class="em">🪜</span> {{ f.tappa && f.tappa.stelle && !f.tappa.potenza ? 'ci torno giù' : 'scendo' }}
+      <!-- la discesa lasciata a metà si riprende da qui (viste/Campagna.vue, tocca) -->
+      <button v-if="f.colore !== 'rosso'" class="sot-grosso" data-azione="scendi" :data-sosta="f.sosta ? 1 : null" @click="$emit('scendi')">
+        <span class="em">🪜</span> {{ f.sosta ? 'riprendo da dove ero' : f.tappa && f.tappa.stelle && !f.tappa.potenza ? 'ci torno giù' : 'scendo' }}
       </button>
     </template>
     <p v-else class="sot-fum-chiusa" data-chiusa-perche>{{ f.perche }}</p>
