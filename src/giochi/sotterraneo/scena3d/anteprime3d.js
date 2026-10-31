@@ -99,7 +99,7 @@ function inPosaCopricapo(c) {
   const g = finto.userData.copricapoMontato && finto.userData.copricapoMontato.gruppo
   if (!g) return null
   if (finto.userData.animaCopricapo) finto.userData.animaCopricapo(ISTANTE)
-  if (c.rarita !== 'comune') aggiungiAlone(g, { rarita: c.rarita, elemento: 'nessuno' })
+  if (c.rarita === 'leggendario') aggiungiAlone(g, { rarita: c.rarita, elemento: 'nessuno' })   // come la roba: brilla solo il leggendario
   animaTutto(g, ISTANTE)
   finto.rotation.set(0.25, -0.5, 0)
   return { obj: finto, verso: [0.15, 0.3, 1] }

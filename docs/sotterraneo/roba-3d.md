@@ -55,10 +55,12 @@ profondità: una chiamata in più, 60–200 punti. I punti si pescano sulla supe
 
 Più, se l'elemento non è «nessuno», una velatura del suo colore e piccoli motivi suoi (fiammelle che salgono per il fuoco, fiocchi
 che scendono per il ghiaccio, saette per il fulmine, bolle per veleno e acqua, foglie per la natura, rune per l'arcano). I colori
-stanno in `poc/roba-3d/palette.js` (`ELEMENTI`). L'alone si mette **solo ai pezzi non comuni**; un comune mostra già la sua figura.
+stanno in `poc/roba-3d/palette.js` (`ELEMENTI`). **Nel gioco l'alone si mette solo ai leggendari** (l'utente, 31 ottobre 2026: il
+luccichio dice «potenziato», non va su una cosa relativamente di base): comuni, magici e rari mostrano la loro figura, che può
+avere un bagliore suo (la lama di fuoco), e quello resta. Le righe del magico e del raro le usa solo il prototipo.
 `gruppo.userData.animaAlone(t)` lo muove (l'eroe lo chiama a ogni fotogramma, le anteprime una volta a 1,3 s: l'aura gonfia);
 `userData.aloneUniformi.uIntensita` lo fa svanire col portale. In mano all'eroe i punti sono più piccoli (`scalaAlone` 0,8): a
-grandezza piena coprivano la faccia del ritratto. Fra i consumabili brillano (come un raro) solo i «rarissimi»: l'ampolla della vita
+grandezza piena coprivano la faccia del ritratto. Fra i consumabili brillano (con l'alone del raro) solo i «rarissimi»: l'ampolla della vita
 e l'elisir del toro. Provato con le sole tinte dei materiali: clonarli rompe le animazioni
 dei moduli, che tengono i loro materiali.
 

@@ -108,7 +108,8 @@ export function creaPezzo(p, { moduli = MODULI, alone = true, scalaAlone = 1, se
     try { g = creaDaId(p.id) } catch (e) { avvisa(p.id, e); g = null }
   }
   if (!g) return null
-  if (alone && ACCESI.aloni && p.rarita && p.rarita !== 'comune') {
+  // brilla solo quello che è davvero potente: i leggendari, e i consumabili rarissimi (che arrivano come 'raro'); docs/sotterraneo/roba-3d.md
+  if (alone && ACCESI.aloni && (p.rarita === 'leggendario' || (p.consumabile && p.rarita === 'raro'))) {
     try { if (g.userData.anima) g.userData.anima(0.5); aggiungiAlone(g, { rarita: p.rarita, elemento: p.elemento, scala: scalaAlone }) } catch (e) { avvisa(`l'alone di ${p.figura || p.id}`, e) }
   }
   return g

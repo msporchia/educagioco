@@ -26,7 +26,7 @@ sua chiave e la dà alla vista come la tela di prima (`Quadro3d` copia un'immagi
 | file | cosa tiene |
 |---|---|
 | `scena3d/anteprime3d-pura.js` | senza three: `pezzo3dDi` (oggetto → figura, ripiego, rarità, elemento: [roba-3d.md](roba-3d.md)), `MODELLO_DI` (il ripiego della collezione), `dotazioneDi`, `pregioDi`, le chiavi, `leggiChiave`, la coda `creaCoda` |
-| `scena3d/roba3d.js` | la figura costruita dal modulo della sua famiglia, o il ripiego, con l'alone della rarità ([roba-3d.md](roba-3d.md)) |
+| `scena3d/roba3d.js` | la figura costruita dal modulo della sua famiglia, o il ripiego, con l'alone se è leggendaria ([roba-3d.md](roba-3d.md)) |
 | `scena3d/anteprime3d.js` | il renderer, la scena di posa, le inquadrature, `creaAnteprime3d` |
 | `scena3d/eroe3d.js` | `vestiEroe(g, roba)` e `vestiDotazione(g, d)`: l'eroe in scena e quello delle anteprime si vestono con la stessa funzione |
 | `viste/anteprima3d.js` | `creaFornitore` (le foto fatte, il servizio per il resto), `fornisciAnteprime3d` (Gioco.vue), `usaAnteprima(chiave)`: un ref null finché l'immagine non c'è |
@@ -47,7 +47,7 @@ La chiave dice la figura e l'aspetto, non l'oggetto: due spade con la stessa fig
 |---|---|---|
 | `arma:<gettone>` | l'arma (la figura, o il ripiego) in diagonale, la punta in alto a destra; l'arco girato di lato perché si veda la curva; l'alone fermo a 1,3 s | 128² |
 | `scudo:<gettone>` · `gioiello:<gettone>` | lo scudo, la collana o l'anello di fronte, appena girato | 128² |
-| `copricapo:<modello>:<rarità>` | il copricapo da solo su una testa finta, di tre quarti, con l'alone della rarità ([elmo.md](elmo.md)) | 128² |
+| `copricapo:<modello>:<rarità>` | il copricapo da solo su una testa finta, di tre quarti, con l'alone se è leggendario ([elmo.md](elmo.md)) | 128² |
 | `consumabile:<chiave>:<rarità>` | la pozione, la torcia, la chiave o la pergamena di fronte (l'alone solo ai rarissimi) | 128² |
 | `armatura:<tipo>:<pregio>:<eroe>:<corpo>` | l'armatura su un manichino: l'eroe di adesso senza testa e senza armi (la veste della figura se il modulo `vesti` c'è); `<corpo>` = `<tipo>.<pregio>.<figura>.<rarità>.<elemento>` | 128² |
 | `eroe:<chi>:<destra>:<sinistra>:<corpo>:<collo>` (e `:<copricapo>` in coda, solo se ce l'ha) | l'eroe intero nella guardia, con le armi, l'armatura, la collana e il copricapo | 150×176 |
