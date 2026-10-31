@@ -9,8 +9,8 @@
      · le figure della roba «fuori» sono figure di `roba.json`, e quelle col `pezzo` non ci sono;
      · l'euristica dei nomi composti (`campo_${coltura}${i}`) riconosce un modello e ne rifiuta uno
        con una parte variabile che non compare in nessun file.
-   La fattoria è l'eccezione: lì chi disegna dice quali pezzi prende (`VIVI`), e il conto è un cancello —
-   l'atlante ha tutti quei pezzi e nient'altro. */
+   La fattoria e il sotterraneo sono l'eccezione: lì chi disegna dice quali pezzi prende (`VIVI`), e il conto è un
+   cancello — l'atlante ha tutti quei pezzi e nient'altro. */
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
@@ -39,14 +39,14 @@ for (const [gioco, v] of Object.entries(r.voci)) {
   for (const x of v.nonNominate) controlla(`${gioco}: «${x.voce}» è una voce dell'atlante`, ids.has(x.voce))
 }
 
-// la fattoria: l'elenco esatto di chi disegna, contro l'atlante
-{
-  const { vivi, mancano } = await pezziVivi('fattoria')
-  const A = await import('../../' + moduloAtlante('fattoria'))
+// la fattoria e il sotterraneo: l'elenco esatto di chi disegna, contro l'atlante
+for (const gioco of ['fattoria', 'sotterraneo']) {
+  const { vivi, mancano } = await pezziVivi(gioco)
+  const A = await import('../../' + moduloAtlante(gioco))
   const morti = Object.keys(A.PEZZI).filter(n => !vivi.has(n))
-  nota(`fattoria: ${vivi.size} pezzi disegnati, ${Object.keys(A.PEZZI).length} nell'atlante`)
-  uguale('fattoria: ogni pezzo che il codice disegna è nell\'atlante', mancano.join(' '), '')
-  uguale('fattoria: l\'atlante non tiene pezzi che nessuno disegna (si tolgono dal foglietto, docs/core/sprite.md)', morti.join(' '), '')
+  nota(`${gioco}: ${vivi.size} pezzi disegnati, ${Object.keys(A.PEZZI).length} nell'atlante`)
+  uguale(`${gioco}: ogni pezzo che il codice disegna è nell'atlante`, mancano.join(' '), '')
+  uguale(`${gioco}: l'atlante non tiene pezzi che nessuno disegna (si tolgono dal foglietto, docs/core/sprite.md)`, morti.join(' '), '')
 }
 
 const roba = JSON.parse(readFileSync(path.join(SORGENTI, 'sotterraneo/generati/roba.json'), 'utf8')).figure

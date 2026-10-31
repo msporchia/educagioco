@@ -164,6 +164,8 @@ il test (`unita/sprite-inutilizzati`) guarda solo che giri e sia coerente — tr
   avvolti in un contatore e dice, foglio per foglio, cosa non è mai stato chiesto. Un pezzo mai chiesto si segue nel codice; uno che il
   codice vivo può chiedere resta anche se nessuna scena l'ha chiesto. Il 31 ottobre 2026, per il sotterraneo, così sono uscite le fontane,
   le porte aperte, il mercante dei tre scenari, lo scheletro 0x72 e tredici pezzi d'arredo dell'inferno, e il nitido è sceso a otto pezzi.
+  Da allora anche il sotterraneo ha il suo `VIVI` (le tabelle che la scena e i pannelli leggono: scenari, nicchie, relitti, gemme, roba
+  e figure, curiosità, specie, grossi, eroi, persone di sopra, Survivors; di ogni cosa tutte le pose), con lo stesso cancello.
 - **La roba del sotterraneo**: le figure di `roba.json` che nessun foglietto ritaglia e che non hanno un
   `pezzo` (le 17 «fuori» di [figure.md](../sotterraneo/figure.md)). **Le creature**: quelle del catalogo senza
   nessun gioco, e i fotogrammi che un gioco lascia fuori (`scelta`).
