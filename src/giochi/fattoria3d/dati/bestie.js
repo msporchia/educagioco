@@ -1,7 +1,8 @@
 /* Le bestie di casa della fattoria 3D (G6): quelle che si COMPRANO e si CURANO, come nella fattoria di sempre. Beagle, gatto rosso,
    coniglio e pappagallo hanno i numeri della 2D (prezzo, livello, premio di benessere: `ANIMALI_2D` dal ponte `parita2d.js`), i bisogni
    (pancia, pelo, gioco), la ciotola, le coccole, il premio e il nome vengono da `src/giochi/fattoria/dati/bisogni.js` e si riusano, non si
-   copiano. Watson, Sherlock, Irene e Pepe (`dati/compagni.js`) restano i compagni che girano gratis e non si curano.
+   copiano. Watson, Sherlock, Irene e Pepe (`dati/compagni.js`) arrivano gratis col livello e si curano come loro (`CURATI`): nella 2D il
+   bobtail e i gatti si compravano e si curavano.
    Qui: la tabella delle bestie, la ciotola nella lingua della 3D (dove sta la roba nelle scorte), lo stato che si salva (`stato.casa`) e le
    scelte pure. Il motore è `motore/cura.js`, il foglio `viste/Bestia.vue`, i corpi `scena3d/modelli-bestie.js`.
    Vedi docs/fattoria3d/bestie-di-casa.md. */
@@ -28,6 +29,20 @@ export const BESTIE = {
 export const IDS_BESTIE = Object.keys(BESTIE)
 export const bestia = id => BESTIE[id] || null
 
+/** I compagni gratis (`dati/compagni.js`) si curano come le bestie di casa: hanno la famiglia dei cibi, il premio di benessere della bestia 2D
+    che sostituiscono (Irene, che nella 2D non c'è, quello del gatto bianco e nero) e un nome vero che il bambino può cambiare. Non si comprano,
+    non si spostano: girano col contadino. */
+const curato = (id, chi, famiglia, emoji) => ({ chi, nome: COMPAGNI[id].nome, famiglia, emoji, premio: premioBenessere(chi), liv: COMPAGNI[id].liv, compagno: true })
+export const CURATI = {
+  watson:   curato('watson', 'cane-bobtail', 'cane', '🐶'),
+  sherlock: curato('sherlock', 'gatto-tuxedo', 'gatto', '🐈'),
+  irene:    curato('irene', 'gatto-tuxedo', 'gatto', '🐈'),
+  pepe:     curato('pepe', 'gatto-nero', 'gatto', '🐈'),
+}
+/** Una bestia che si cura: una di casa (`BESTIE`) o un compagno gratis (`CURATI`), o null. */
+export const curabile = id => BESTIE[id] || CURATI[id] || null
+export const eCompagno = id => !!CURATI[id]
+
 /** Le bestie della 2D che nella 3D sono già i compagni gratis (Watson, Sherlock, Pepe): chi le aveva comprate le ritrova in casa. Irene non ha un equivalente. */
 export const COMPAGNO_DI = { 'cane-bobtail': 'watson', 'gatto-tuxedo': 'sherlock', 'gatto-nero': 'pepe' }
 /** L'id 3D di una bestia della 2D (`chi`), o null se è un compagno (`COMPAGNO_DI`) o non c'è. */
@@ -39,7 +54,7 @@ export const inVendita = () => IDS_BESTIE.map(id => ({ id, ...BESTIE[id] })).sor
 export const bestieAl = (livello, soloQuesto = false) => inVendita().filter(b => (soloQuesto ? b.liv === livello : b.liv <= livello))
 
 /* ══════════ i nomi (da toccare, non da scrivere) ══════════ */
-export const nomiPer = id => (BESTIE[id] && NOMI_2D[BESTIE[id].famiglia]) || [...new Set(Object.values(NOMI_2D).flat())]
+export const nomiPer = id => (curabile(id) && NOMI_2D[curabile(id).famiglia]) || [...new Set(Object.values(NOMI_2D).flat())]
 export const NOME_MAX = 16
 export const pulisciNome = n => String(n ?? '').replace(/\s+/g, ' ').trim().slice(0, NOME_MAX)
 
@@ -67,7 +82,7 @@ export function gestiPer(bisogno, famiglia) {
 }
 
 /* ══════════ lo stato che si salva: stato.casa ══════════ */
-// { <id>: { pancia, pelo, gioco, quando, premiato, nome?, i?, j? } } — il record c'è se la bestia è tua. `i, j`: la cella dove l'hai messa
+// { <id>: { pancia, pelo, gioco, quando, premiato, nome?, i?, j? } } — il record c'è se la bestia è tua (un compagno gratis l'ha da quando arriva). `i, j`: la cella dove l'hai messa
 // (casa sua: ci gira intorno); senza, sta davanti alla casa.
 export const casaIniziale = () => ({})
 
@@ -89,7 +104,7 @@ export function bestiaInForma(letto, ora = Date.now()) {
 /** Tutta la casa letta da uno stato (o niente): solo le bestie che esistono. */
 export function casaInForma(letta, ora = Date.now()) {
   const c = casaIniziale(), l = oggetto(letta)
-  for (const [id, b] of Object.entries(l)) if (BESTIE[id] && b && typeof b === 'object') c[id] = bestiaInForma(b, ora)
+  for (const [id, b] of Object.entries(l)) if (curabile(id) && b && typeof b === 'object') c[id] = bestiaInForma(b, ora)
   return c
 }
 
@@ -122,7 +137,7 @@ const NON_PIACE = {
 }
 /** Perché quella bestia non vuole quel cibo (una frase per bambini). */
 export const perche = (id, ciboId) => {
-  const b = BESTIE[id], c = ciboId && CIBI.find(x => x.id === ciboId)
+  const b = curabile(id), c = ciboId && CIBI.find(x => x.id === ciboId)
   return `${c ? c.nome + ': no' : 'No'}! ` + (b ? NON_PIACE[b.famiglia] : '')
 }
 
@@ -153,5 +168,13 @@ export function guastiDelleBestie() {
   if (COCCOLE_3D.filter(c => !c.da && c.prezzo > 1).length || !COCCOLE_3D.some(c => !c.da)) g.push('le coccole sempre disponibili devono costare al più 🪙1')
   if (!(FONDO > 0)) g.push('il fondo dei bisogni dev\'essere sopra zero: una bestia non sta mai male')
   for (const chi of Object.keys(COMPAGNO_DI)) if (!ANIMALI_2D[chi] || !COMPAGNI[COMPAGNO_DI[chi]]) g.push(`${chi}: il compagno gratis che lo sostituisce non c'è`)
+  for (const id of Object.keys(COMPAGNI)) {
+    const c = CURATI[id]
+    if (!c) { g.push(`${id}: il compagno non si cura (manca in CURATI)`); continue }
+    if (!ANIMALI_2D[c.chi] || !(c.premio >= 1)) g.push(`${id}: il premio viene da una bestia 2D che non c'è`)
+    if (!NOMI_2D[c.famiglia]) g.push(`${id}: nessun nome da toccare per la famiglia ${c.famiglia}`)
+    if (pulisciNome(c.nome) !== c.nome) g.push(`${id}: il nome vero non sta in ${NOME_MAX} lettere`)
+    if (BESTIE[id]) g.push(`${id}: è anche una bestia da comprare`)
+  }
   return g
 }

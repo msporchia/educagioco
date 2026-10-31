@@ -193,13 +193,14 @@ export function statoDa2D(dato, { ora = Date.now() } = {}) {
     // 3. gli addobbi e le bestie di casa: la 3D non li ha ancora (i compagni arrivano col livello, senza nomi)
     for (const [id, n] of Object.entries(f.guardaroba)) aggiungi(daRegalare, 'addobbo:' + id, intero(n))
     // Le bestie di casa (G6, docs/fattoria3d/bestie-di-casa.md): chi aveva preso beagle, coniglio, pappagallo o gatto rosso li ritrova, col nome e con i bisogni a metà
-    // (niente monete, niente premio già preso); il bobtail, il gatto bianco e nero e il gatto nero sono già in casa come compagni gratis (Watson, Sherlock, Pepe).
+    // (niente monete, niente premio già preso); il bobtail, il gatto bianco e nero e il gatto nero sono i compagni gratis (Watson, Sherlock, Pepe): portano il nome che avevano.
     // Gli addobbi restano «da regalare»: i costumi si fanno più avanti.
     const bestieDa2D = []
     for (const b of f.bestie) {
       const bid = idDa2D(b.chi)
       if (bid) { s.casa[bid] = bestiaInForma({ nome: b.nome, pancia: 0.5, pelo: 0.5, gioco: 0.5, premiato: false }, ora); bestieDa2D.push(bid) }
-      else if (!COMPAGNO_DI[b.chi]) aggiungi(daRegalare, 'bestia:' + b.chi, 1)
+      else if (COMPAGNO_DI[b.chi]) s.casa[COMPAGNO_DI[b.chi]] = bestiaInForma({ nome: b.nome, pancia: 0.5, pelo: 0.5, gioco: 0.5, premiato: false }, ora)
+      else aggiungi(daRegalare, 'bestia:' + b.chi, 1)
       for (const id of Object.values(b.addobbi || {})) aggiungi(daRegalare, 'addobbo:' + id, 1)
     }
 

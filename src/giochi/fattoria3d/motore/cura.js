@@ -2,8 +2,10 @@
    (src/giochi/fattoria/motore/fattoria.js: compraBestia, nutri, coccola, rinominaBestia, spostaBestia), le tabelle sono in `dati/bestie.js`.
    Lo stato sta in `stato.casa` (un record per bestia). Principi: una bestia non sta mai male e non muore (i bisogni non scendono sotto
    `FONDO`); il rifiuto viene PRIMA del pagamento (sbagliare costa solo il gesto); una coccola gratis c'è sempre; il premio è esperienza,
-   mai monete, una volta per ciclo. Vedi docs/fattoria3d/bestie-di-casa.md. */
-import { BESTIE, IDS_BESTIE, cibo as ciboPerId, coccola as coccolaPerId, gradisce, scendi, tuttoAPosto, premiaSeStaBene, nuovo, pulisciNome, comeCompagno, perche } from '../dati/bestie.js'
+   mai monete, una volta per ciclo. I compagni gratis (Watson e i gatti) si curano allo stesso modo: il loro record nasce da sé quando arrivano
+   col livello, e non si comprano né si spostano. Vedi docs/fattoria3d/bestie-di-casa.md. */
+import { BESTIE, IDS_BESTIE, CURATI, curabile, cibo as ciboPerId, coccola as coccolaPerId, gradisce, scendi, tuttoAPosto, premiaSeStaBene, nuovo, pulisciNome, comeCompagno, perche } from '../dati/bestie.js'
+import { compagniAl } from '../dati/compagni.js'
 
 const PIENO = 0.93          // sopra, un bisogno è «a posto» e il gesto non serve (come in 2D)
 
@@ -12,16 +14,23 @@ export class Cura {
   constructor(m) { this.m = m }
 
   get casa() { return this.m.s.casa }
-  ho(id) { return !!this.casa[id] }
-  /** Le bestie tue, nell'ordine in cui sono nel catalogo. */
+  /** Il record di una bestia tua, o null. Un compagno gratis arrivato col livello lo riceve la prima volta che lo si guarda (bisogni di uno nuovo). */
+  _record(id) {
+    if (!this.casa[id] && CURATI[id] && CURATI[id].liv <= this.m.livello()) this.casa[id] = { ...nuovo(this.m.ora()), premiato: false }
+    return this.casa[id] || null
+  }
+  ho(id) { return !!this._record(id) }
+  /** Le bestie di casa comprate, nell'ordine in cui sono nel catalogo (senza i compagni gratis). */
   tue() { return IDS_BESTIE.filter(id => this.ho(id)) }
+  /** Tutte quelle che si curano adesso: i compagni arrivati, poi le bestie di casa. */
+  curate() { return [...compagniAl(this.m.livello()).map(c => c.id).filter(id => CURATI[id]), ...this.tue()] }
   /** La bestia com'è adesso (il calo si applica leggendo: non dipende da quanto spesso si guarda), o null se non è tua. */
   stato(id) {
-    const b = this.casa[id]
+    const b = this._record(id)
     if (!b) return null
     return scendi(b, this.m.ora())
   }
-  nomeDi(id) { const b = this.casa[id]; return (b && b.nome) || (BESTIE[id] && BESTIE[id].nome) || '' }
+  nomeDi(id) { const b = this.casa[id]; return (b && b.nome) || (curabile(id) && curabile(id).nome) || '' }
   /** Il nome scelto dal bambino, o '' se non l'ha ancora dato. */
   nomeScelto(id) { const b = this.casa[id]; return (b && b.nome) || '' }
 
@@ -42,7 +51,7 @@ export class Cura {
   nutri(id, cibo) {
     const b = this.stato(id), c = ciboPerId(typeof cibo === 'string' ? cibo : cibo && cibo.id)
     if (!b) return { ok: false, motivo: 'non-e-tua' }
-    if (!c || !gradisce(c, BESTIE[id].famiglia)) return { ok: false, motivo: 'non-gli-piace', perche: perche(id, c && c.id) }
+    if (!c || !gradisce(c, curabile(id).famiglia)) return { ok: false, motivo: 'non-gli-piace', perche: perche(id, c && c.id) }
     if (b.pancia > PIENO) return { ok: false, motivo: 'non-ha-fame' }
     return this._dai(id, b, c, 'pancia')
   }
@@ -58,7 +67,7 @@ export class Cura {
 
   /** Una carezza: gratis, sempre, a chiunque (anche a zero monete e con il granaio vuoto). Non riempie niente: fa solo bene al cuore (cuoricini nella scena). */
   carezza(id) {
-    if (!this.casa[id]) return { ok: false, motivo: 'non-e-tua' }
+    if (!this._record(id)) return { ok: false, motivo: 'non-e-tua' }
     this.m._evento('carezza', { bestia: id })
     return { ok: true, costo: 0 }
   }
@@ -83,14 +92,14 @@ export class Cura {
   /** Tutti e tre i bisogni nella fascia alta, e prima non lo erano: esperienza (un quindicesimo del prezzo), una volta per ciclo. */
   _premia(id, b, eraAPosto) {
     if (!premiaSeStaBene(b, eraAPosto)) return null
-    const xp = BESTIE[id].premio
+    const xp = curabile(id).premio
     this.m._guadagna(xp)
     return { xp }
   }
 
   /** Dà (o cambia) il nome: gratis e sempre. '' lo toglie (torna il nome della razza). */
   battezza(id, nome) {
-    const b = this.casa[id]
+    const b = this._record(id)
     if (!b) return { ok: false, motivo: 'non-e-tua' }
     const n = pulisciNome(nome)
     if (n) b.nome = n; else delete b.nome
@@ -99,10 +108,11 @@ export class Cura {
 
   /** Dove sta di casa: la cella dove l'hai messa, o null (davanti alla casa). */
   casaDi(id) { const b = this.casa[id]; return b && Number.isInteger(b.i) ? [b.i, b.j] : null }
-  /** La sposta, gratis: la cella dev'essere sul tuo terreno e libera. */
+  /** La sposta, gratis: la cella dev'essere sul tuo terreno e libera. Un compagno gratis non si sposta: gira col contadino. */
   sposta(id, i, j) {
     const b = this.casa[id]
     if (!b) return { ok: false, motivo: 'non-e-tua' }
+    if (CURATI[id]) return { ok: false, motivo: 'gira-con-te' }
     if (!this.m.cellaPropria(i, j) || !this.m.libera(i, j)) return { ok: false, motivo: 'non-ci-sta' }
     b.i = i; b.j = j
     return { ok: true, costo: 0 }

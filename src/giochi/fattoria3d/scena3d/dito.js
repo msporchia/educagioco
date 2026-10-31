@@ -1,5 +1,6 @@
 // Il dito sulla tela: un tocco fa la cosa (l'eroe ci va), un dito che scorre sposta la mappa, due dita zoomano. Tenere premuto su un
-// pezzo lo solleva per spostarlo o metterlo via; tenere premuto su un posto libero del proprio terreno apre il menu «Costruisci qui»;
+// pezzo lo solleva per spostarlo o metterlo via; tenere premuto su un posto libero del proprio terreno apre il menu «Costruisci qui»; tenere
+// premuto su Watson, un gatto o una bestia di casa apre il suo foglio (il tocco breve resta la sua festa);
 // col pennello delle strade si disegna; col fantasma del menu parcheggiato lo si trascina o lo si tocca dove va. Soglia di 16 px fra
 // tocco e trascinamento (docs/core/il-dito.md).
 // Il dito non è un mouse: niente click, solo pointer events. Non sa le regole: chiama il mondo.
@@ -39,7 +40,16 @@ export class Dito {
     if (ui.fogliAperti()) return
     if (w.costruzione.parcheggiato) { this.inizio.parcheggio = true; w.costruzione.prendi(e.clientX, e.clientY); return }          // il fantasma del menu: lo si trascina o si tocca dove va
     if (this._pennello) { w.costruzione.pennello(e.clientX, e.clientY, this._pennello); return }
-    const b = w.bersaglioSotto(e.clientX, e.clientY), ini = this.inizio
+    const ini = this.inizio, amico = ui.apriBestia && w.compagni.bersaglio(w._raggio(e.clientX, e.clientY))
+    if (amico) {                                        // tenere premuto su una bestia: il suo foglio (come sta, il nome, cosa le serve)
+      this.lungo = setTimeout(() => {
+        if (this.inizio !== ini || this.trascina || this.punti.size !== 1 || w.costruzione.attivo || ui.fogliAperti()) return
+        try { navigator.vibrate && navigator.vibrate(30) } catch (x) { /* niente vibrazione */ }
+        ini.menu = true; ui.apriBestia(amico.def.id)
+      }, ATTESA_PREMUTO)
+      return
+    }
+    const b = w.bersaglioSotto(e.clientX, e.clientY)
     if (b && b.kind === 'cosa') {                       // tenere premuto su un pezzo lo solleva: si sposta o si mette via
       const c = w.m.cosa(b.id)
       this.lungo = setTimeout(() => {

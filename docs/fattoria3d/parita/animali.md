@@ -44,7 +44,7 @@ zucca e la patata un'uscita. Livelli, prezzi e tempi sono provvisori (D2, D9) e 
 | A4f | coniglio | 85/12 | ✅ `coniglio` 85/12, premio 6 | – |
 | A4g | pappagallo | 120/49 | ✅ `pappagallo` 120/49, premio 8 | – |
 
-La 2D compra le bestie (🪙635 in tutto, il «money pit» piccolo) e le **cura**; la 3D ha le stesse quattro che non regala (🪙370, stessi prezzi e livelli) e le cura allo stesso modo; **Watson, Sherlock, Irene e Pepe restano i compagni gratis, che non si curano** (G6, [../bestie-di-casa.md](../bestie-di-casa.md)). ✳ i compagni 3D (richiamo, feste di Watson, carezze, incontro cane-gatto) sono più ricchi, ma non spendono monete e non si
+La 2D compra le bestie (🪙635 in tutto, il «money pit» piccolo) e le **cura**; la 3D ha le stesse quattro che non regala (🪙370, stessi prezzi e livelli) e le cura allo stesso modo; **Watson, Sherlock, Irene e Pepe restano gratis ma si curano anche loro** (bisogni, nome, premio del bobtail e dei gatti della 2D; si tiene premuto su di loro: [../bestie-di-casa.md](../bestie-di-casa.md)). ✳ i compagni 3D (richiamo, feste di Watson, carezze, incontro cane-gatto) sono più ricchi, ma non spendono monete e non si
 salvano (`VERSIONE_STATO` intatto, ripartono davanti alla casa).
 
 | id | cosa | 2D | 3D | pri |

@@ -31,12 +31,13 @@ export class Compagni {
   }
 
   /** Chi c'è a questo livello (i compagni gratis) o è una bestia di casa che hai preso (docs/fattoria3d/bestie-di-casa.md) e non è ancora in scena arriva;
-      `senzaAvviso` al caricamento (non è una novità). Il nome di una bestia di casa cambia da sé quando glielo dai. */
+      `senzaAvviso` al caricamento (non è una novità). Il nome cambia da sé quando glielo dai (anche a Watson e ai gatti). */
   sync(senzaAvviso = false) {
     const cura = this.m.cura
-    for (const d of [...compagniAl(this.m.livello()), ...(cura ? cura.compagniPresi() : [])]) {
+    const gratis = compagniAl(this.m.livello()).map(c => (cura ? { ...c, nome: cura.nomeDi(c.id) } : c))
+    for (const d of [...gratis, ...(cura ? cura.compagniPresi() : [])]) {
       const dentro = this.lista.find(c => c.def.id === d.id)
-      if (dentro) { if (d.daCurare) dentro.def.nome = d.nome; continue }
+      if (dentro) { dentro.def.nome = d.nome; continue }
       const grp = creaBestia(d); alleggeriOmbre(grp); this.scena.add(segna(grp, 'animali'))
       const c = { def: d, grp, tipo: d.tipo, x: CASA[0], z: CASA[1], dir: 0, stato: 'sta', tStato: 0, dur: 2, percorso: [], poi: null,
                   velo: 0, fase: Math.random() * 6, corsa: false, sopra: null, salto: null, guarda: null, controllo: 0,

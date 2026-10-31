@@ -31,7 +31,7 @@ prova `test/unita/fattoria3d-migra.test.mjs` (fattorie 2D vere a ogni livello, `
 | scorte di prodotti, uova, latte, pesce | `prodotti`; la lana il contatore `lana` |
 | piazzole comprate | tutta la terra che aveva la 2D in lotti 4×4, col regalo (`lottiPerPiazzole`), i più vicini al quadrato di partenza, solo prato o bosco, sempre confinanti |
 | raccolto maturo in un campo · lavoro finito in una macchina | la resa nelle scorte; il lavoro non finito rende gli ingredienti |
-| bestie di casa: beagle, coniglio, pappagallo, gatto rosso | in `casa`, col nome, i bisogni a metà; bobtail, gatto bianco e nero e gatto nero sono già i compagni gratis |
+| bestie di casa: beagle, coniglio, pappagallo, gatto rosso · bobtail, gatto bianco e nero, gatto nero | in `casa`, col nome, i bisogni a metà; le ultime tre sono i compagni gratis (Watson, Sherlock, Pepe) e portano il nome che avevano |
 | i tartufi (in 3D è la pancetta, un'altra merce: le scorte si perdono, decisione del 22/10/2026) · gli addobbi delle bestie | **`daRegalare`** |
 
 `daRegalare` è un conto `{ 'scorta:tartufi': 4, 'addobbo:cappello': 2, 'cosa:caseificio': 1 }`: non vale monete e non si spende. **Si consegna da

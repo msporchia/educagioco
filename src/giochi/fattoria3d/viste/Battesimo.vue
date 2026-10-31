@@ -3,12 +3,12 @@
 // per la sua famiglia (`nomiPer`). «Lascia così» tiene il nome della razza; si può cambiare quando si vuole dal foglio della bestia.
 // ✕ in alto a destra. Vedi docs/fattoria3d/bestie-di-casa.md.
 import { computed } from 'vue'
-import { BESTIE, nomiPer } from '../dati/bestie.js'
+import { curabile, nomiPer } from '../dati/bestie.js'
 import '../stile-bestia.css'
 
 const props = defineProps({ id: { type: String, required: true }, scelto: { type: String, default: '' } })
 const emit = defineEmits(['scegli', 'chiudi'])
-const b = computed(() => BESTIE[props.id])
+const b = computed(() => curabile(props.id))
 const nomi = computed(() => nomiPer(props.id))
 </script>
 

@@ -535,6 +535,7 @@ export const AIUTI = {
         '**Tocca 🌱 Semina**, scegli cosa far crescere, poi **tocca i campi vuoti**. Lo stesso con **✂️ Raccogli** sui campi pronti: puoi anche passare il dito su più campi.',
         '**Tieni il dito premuto** su un posto libero del tuo terreno: si apre «Costruisci qui». Anche il tasto 🏗 fa lo stesso.',
         '**Tieni premuto** su una cosa già messa per **spostarla**: la porti dove vuoi, oppure sulla scritta in basso per metterla via nel magazzino (rimetterla fuori è gratis).',
+        '**Un tocco** su Watson o su un gatto: fa la festa. **Tieni premuto** sopra di lui: vedi come sta, cosa gli serve e puoi cambiargli il nome.',
       ] },
       { titolo: 'Le prime cose da fare', righe: [
         'Semina il grano, aspetta qualche secondo, raccoglilo. Niente marcisce mai: se ti dimentichi un campo, lo trovi lì.',
