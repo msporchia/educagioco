@@ -8,7 +8,7 @@ import Cornice from './Cornice.vue'
 import Addosso from './Addosso.vue'
 import Casella from './Casella.vue'
 import Pannello from './Pannello.vue'
-import Icona from './Icona.vue'
+import RigaTorcia from './RigaTorcia.vue'
 import Pixel from './Pixel.vue'
 import { BISACCIA } from './pixel.js'
 import SchedeEroe from './SchedeEroe.vue'
@@ -40,7 +40,6 @@ const props = defineProps({
   cure: { type: Object, default: null },      // { n, max }: le pozioni di cura in tasca e il tetto (al più otto, di ogni stadio)
 })
 const emit = defineEmits(['usa', 'butta', 'riponi', 'chiudi', 'fuori', 'scheda', 'tasca'])
-const TORCIA = { chiave: 'torcia' }   // la torcia della riga è il suo modello (docs/sotterraneo/roba-3d.md)
 
 // una tasca ({ dove: 'zaino', i }) o una casella addosso ({ dove: 'mano' }); null è lo stato normale
 const scelto = ref(null)
@@ -141,15 +140,7 @@ const polso = computed(() => (props.vita / props.vitaMax > 0.6 ? '#4fce7c' : pro
       <span class="em sot-gemme-tue"><b>💎</b> {{ gemme }}</span>
     </Addosso>
 
-    <p v-if="torcia" class="sot-torcia-riga" data-torcia-zaino>
-      <Icona sprite="torcia" em="🔥" :emAlto="16" :cosa3d="TORCIA" :lato="30" />
-      <i class="sot-lume"><u :style="{ height: torcia.quota * 100 + '%' }"></u></i>
-      <b>ancora {{ torcia.resta }} {{ torcia.resta === 1 ? 'stanza' : 'stanze' }}</b>
-      <em v-if="torcia.scorta">
-        e {{ torcia.scorta }} alla cintura: {{ torcia.scorta === 1 ? 'si accende' : 'si accendono' }} da sé
-      </em>
-      <em v-else>poi si spegne</em>
-    </p>
+    <RigaTorcia :torcia="torcia" data-torcia-zaino />
 
     <div class="sot-banco-griglia">
       <div class="sot-griglia sot-tasche">

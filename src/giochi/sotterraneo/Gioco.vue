@@ -637,6 +637,12 @@ function segnaIlFondo(piano) {
   segnaBest('sotFondo', piano)
 }
 
+// le torce di chi si guarda, per la riga dello zaino e della pagina dell'eroe (viste/RigaTorcia.vue): quella che brucia (le stanze
+// che restano, e quanto della sua durata), quelle alla cintura e quante in tutto; null senza nessuna
+const torceDi = c => (c.torciaAccesa || c.torceInScorta > 0
+  ? { resta: c.torciaResta, quota: Math.min(1, c.torciaResta / Math.max(1, c.stanzeTorcia)), scorta: c.torceInScorta,
+      n: (c.torciaAccesa ? 1 : 0) + c.torceInScorta }
+  : null)
 const eroe = dallaCorsa(c => {
   const q = c.vita / Math.max(1, c.vitaMax)
   return {
@@ -646,11 +652,7 @@ const eroe = dallaCorsa(c => {
     posto: c.posto,                   // nell'abisso: dove si è arrivati
     livelloPosto: c.tappa.potenza ? c.livelloQui : null,   // in una zona potenziata: il livello dei mostri (docs/sotterraneo/zone.md)
     chiave: c.chiaveDelPiano,
-    // niente quando non se ne ha nessuna; `quota` (0..1) sta qui e non nella vista, che riceve solo il numero
-    torcia: c.torciaAccesa
-      ? { resta: c.torciaResta, quota: c.torciaResta / (COSE.torcia.stanze || 1),
-          scorta: c.torceInScorta, agliSgoccioli: c.torciaResta <= 3 && !c.torceInScorta }
-      : null,
+    torcia: torceDi(c),
     pozioni: c.pozioni,               // le cure in tasca, sulla casella 🧪 della barra
     pieni: c.postiUsati(), tasche: c.capienza,
     esp: c.crescita.esp, crescita: c.crescita,
@@ -720,6 +722,7 @@ const pagina = computed(() => {
     cambia: !corsa.value, tratti: corsa.value ? [trattoDegliElisir(c.crescita)].filter(Boolean) : robaSopra.value.tratti,
     tesori: { trovati: tesoriTrovati.value.length, tutti: Object.keys(LEGGENDARI).length },
     puntiAbilita: puntiAbilita(c.crescita), costoRiassegnare: c.costoRiassegnare,
+    torcia: torceDi(c),
   }
 })
 // l'albero delle abilità (viste/PaginaAbilita.vue, docs/sotterraneo/abilita.md): i numeri li dà il Corredo
@@ -814,6 +817,7 @@ const zainoDiSopra = computed(() => {
     testa: voce(c.testa), conTesta: true,
     tasche: tascheVoci(c, voce), costoTasca: c.costoTasca, cure: { n: c.pozioniDiCura, max: POZIONI_MASSIME },
     att: c.att, dif: c.dif, gemme: c.gemme, vita: c.vitaConLaRoba, vitaMax: c.vitaConLaRoba,
+    torcia: torceDi(c),   // quelle comprate aspettano alla cintura: lo zaino lo dice anche sopra
   }
 })
 function suLaRoba(fai) {

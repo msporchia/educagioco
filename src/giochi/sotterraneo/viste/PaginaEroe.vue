@@ -9,6 +9,7 @@ import Armato from './Armato.vue'
 import Glifo from './Glifo.vue'
 import Medaglione from './Medaglione.vue'
 import SchedeEroe from './SchedeEroe.vue'
+import RigaTorcia from './RigaTorcia.vue'
 
 const props = defineProps({
   eroe: { type: Object, required: true },        // la scheda: nome, sprite, em
@@ -29,6 +30,7 @@ const props = defineProps({
   puntiAbilita: { type: Number, default: 0 },    // i punti dell'albero: sul tasto delle abilità
   missioni: { type: Number, default: 0 },        // le missioni da consegnare, sulla scheda (SchedeEroe.vue)
   costoRiassegnare: { type: Number, default: 0 },   // i punti dati tornano da dare, e si paga in gemme
+  torcia: { type: Object, default: null },       // le torce (`torceDi` in Gioco.vue): quella accesa e quelle alla cintura
 })
 const emit = defineEmits(['dai', 'tesori', 'cambia', 'chiudi', 'fuori', 'scheda', 'riassegna'])
 // riassegnare costa gemme: il primo tocco chiede, il secondo fa
@@ -69,6 +71,8 @@ const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: 
     <span v-if="tratti.length" class="sot-tratti sot-eroe-tratti em" data-tratti-eroe>
       <span v-for="t in tratti" :key="t">{{ t }}</span>
     </span>
+    <!-- le torce si cercano qui (l'utente, 31 ottobre): quante, quanta luce resta, e senza nessuna chi le vende -->
+    <RigaTorcia :torcia="torcia" sempre class="sot-eroe-torce" data-torcia-eroe />
 
     <div class="sot-punti-riga">
       <p v-if="punti" class="sot-eroe-punti" data-punti-da-dare :data-n="punti">
