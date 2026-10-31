@@ -301,4 +301,26 @@ function rispondiFinche(c, giusto = () => true, giri = 40) {
   uguale('una sosta che non si rilegge non ha forze', forzeDi({ ...dato, v: -1 }, CAMPAGNA[1], c.roba), null)
 }
 
+/* ══════════ 10. le torce comprate sopra, tornando dal portale ══════════
+   Il guasto dell'utente: al buio sale dal portale, compra diciotto torce, torna giù e resta al buio. La sosta si
+   riprende con la roba di sopra (torcia spenta, diciotto alla cintura): una si accende da sé, come scendendo da capo.
+   E se la luce finisce in una discesa ripresa con la cintura piena, la stanza dopo ne accende un'altra. */
+{
+  const c = new Corsa(CAMPAGNA[1], { seme: 23, rnd: seminato(23) })
+  uguale('si sale al buio', c.torciaAccesa, false)
+  const roba = { ...c.roba, torcia: 0, torce: 18 }   // la roba di sopra, dopo l'erborista
+  const giu = leggi(scrivi(c, 1, { via: PORTALE }), CAMPAGNA[1], roba)
+  uguale('tornando giù una torcia si accende da sé', giu.torciaResta, giu.stanzeTorcia)
+  uguale('e le altre aspettano alla cintura', giu.torceInScorta, 17)
+  controlla('e il cono è quello della torcia', giu.luce.size > c.luce.size, `${giu.luce.size} contro ${c.luce.size}`)
+
+  // una corsa rimasta senza luce con la cintura piena (un salvataggio di prima): la prima stanza nuova la accende
+  giu.torciaResta = 0; giu.torceInScorta = 2
+  const altra = giu.livello.stanze.find(s => s.id !== giu.stanzaOra)
+  giu.eroe = { x: altra.cx + 0.5, y: altra.cy + 0.5 }
+  giu.bruciaLaTorcia()
+  uguale('entrando in una stanza, al buio con la cintura piena, se ne accende una', giu.torciaResta, giu.stanzeTorcia)
+  uguale('presa dalla cintura', giu.torceInScorta, 1)
+}
+
 riassunto('la discesa lasciata a metà, e il portale')

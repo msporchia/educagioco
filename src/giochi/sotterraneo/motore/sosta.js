@@ -172,6 +172,7 @@ export function leggi(dato, tappa, roba = null, missioni = [], crescita = null, 
     }
 
     if (roba) corsa.indossa(roba)
+    corsa.accendiDallaCintura()   // le torce comprate sopra, tornando dal portale al buio: una si accende come scendendo
     corsa.vitaPiu = Number.isFinite(dato.vitaPiu) ? dato.vitaPiu : 0
     corsa.vita = dato.vita
     corsa.energia = Number.isFinite(dato.energia) ? Math.max(0, Math.min(corsa.energiaMax, dato.energia)) : corsa.energiaMax

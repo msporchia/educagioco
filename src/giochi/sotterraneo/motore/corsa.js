@@ -115,10 +115,7 @@ export class Corsa extends Corredo {
     this.nuovoPiano()
     this.posaLeMissioni()
     // le torce comprate di sopra aspettano alla cintura: si scende con una accesa, come se la si fosse appena presa
-    if (!this.torciaAccesa && this.torceInScorta > 0 && !tappa.palco) {   // sopra è giorno: la torcia resta alla cintura (motore/palco.js)
-      this.torceInScorta--
-      this.accendi('torcia')
-    }
+    this.accendiDallaCintura()
     // la roba di prima delle avventure (una per tutti) può avere addosso quello che non porta: in tasca, o per terra
     this.sistemaIlCorredo()
     this.vita = this.vitaMax   // si scende in piedi: col dito o l'amuleto il massimo è già più alto
@@ -268,6 +265,15 @@ export class Corsa extends Corredo {
     this.chiaveDelPiano = false
     this.stanzeDentro = new Set()
     this.aggiornaLuce()
+  }
+
+  // al buio con una torcia alla cintura se ne accende una da sé: scendendo, tornando dal portale (motore/sosta.js), entrando in
+  // una stanza. Sul palco no: sopra è giorno, la torcia resta alla cintura (motore/palco.js). Vedi docs/sotterraneo/roba.md
+  accendiDallaCintura() {
+    if (this.torciaAccesa || this.torceInScorta <= 0 || (this.tappa && this.tappa.palco)) return false
+    this.torceInScorta--
+    this.accendi('torcia')
+    return true
   }
 
   // la luce è un cono davanti all'eroe e un alone corto attorno, con l'ombra alle spalle; la torcia allunga il cono e
@@ -653,7 +659,7 @@ export class Corsa extends Corredo {
     const st = this.livello.stanzaDi(Math.floor(this.eroe.x), Math.floor(this.eroe.y))
     if (!st || st.id === this.stanzaOra) return
     this.stanzaOra = st.id
-    if (!this.torciaAccesa) return
+    if (!this.torciaAccesa) { this.accendiDallaCintura(); return }
     this.torciaResta--
     // la luce non sta più nella barra (docs/sotterraneo/barra.md): agli sgoccioli, senza scorta, lo si dice
     if (this.torciaResta === 2 && !this.torceInScorta) this.dilloDi('torcia', ' sta per finire: ancora due stanze')

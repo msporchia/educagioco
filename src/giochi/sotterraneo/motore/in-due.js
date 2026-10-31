@@ -36,7 +36,7 @@ export const MetodiInDue = {
       for (const [k, v] of Object.entries(ALL_INIZIO())) this[k] = v
       this.nome = nome
       this.mettiAccanto(this.persone[0])
-      if (!this.torciaAccesa && this.torceInScorta > 0 && !this.tappa.palco) { this.torceInScorta--; this.accendi('torcia') }
+      this.accendiDallaCintura()
       this.sistemaIlCorredo()
       this.vita = this.vitaMax
       this.energia = this.energiaMax

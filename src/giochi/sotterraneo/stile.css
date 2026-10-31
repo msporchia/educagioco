@@ -533,6 +533,7 @@
 .sot-torcia-riga .sot-lume { width: 8px; height: 18px }
 .sot-torcia-riga b { color: #ffd9a0; font-weight: 650 }
 .sot-torcia-riga em { font-style: normal }
+.sot-torcia-niente b { color: var(--sot-tenue) }   /* senza torce la riga resta, spenta: dice dove si comprano */
 
 /* il pezzo parte dall'angolo in alto a sinistra (viste/figura.js), non dal centro: centrandolo, un'accetta
    piccola in una gabbia grande scalata ×2 usciva in basso a destra e overflow le tagliava il manico.
@@ -1094,6 +1095,7 @@
 .sot-eroe-tesori { margin-top: 10px; flex: none }
 .sot-eroe-tesori small { margin-left: 6px; opacity: .8 }
 .sot-eroe-tratti { justify-content: center; margin: 2px 0 4px; flex: none }
+.sot-cornice .sot-eroe-torce { justify-content: center; margin: 2px 0 6px }
 /* un tasto piccolo e a bordo d'oro, non un altro tasto grosso: serve di rado, e non deve farsi premere per sbaglio */
 .sot-eroe-cambia {
   flex: none; align-self: center; margin-top: 12px; padding: 8px 18px;
