@@ -7,8 +7,8 @@ giochi (atlante, scala nel contesto) stanno in [../core/grafica.md](../core/graf
 
 ## Lo scenario
 
-- **Il vestito intero di un piano è uno scenario**: pavimenti, tetto, facce,
-  bordi, porte, scala, fontana e le cose per terra stanno in una
+- **Il vestito intero di un piano è uno scenario**: il colore della roccia, le porte
+  (di fronte e di fianco), la scala, la fontana, i forzieri e l'arredo stanno in una
   voce di `SCENARI` (`dati/tessere.js`), e **tutte le voci hanno le stesse
   chiavi**: si cambia vestito a una discesa senza toccare il disegno. Aggiungere
   un pezzo è una riga lì, mai un `if` nel disegno. Oggi ce ne sono quattro: **l'inferno** (sotto) e tre ritagliati e dipinti prima: **le cantine**
@@ -31,19 +31,9 @@ giochi (atlante, scala nel contesto) stanno in [../core/grafica.md](../core/graf
   ne controlla la regola del muro. Provato col foglio delle cantine
   ridisegnato (la prima cripta): i pezzi tornano ai posti ma non stanno
   insieme fra loro.
-- **Uno scenario si può ritagliare dalla scena**: è il modo della cripta.
-  Pavimenti, tetto, facce, bordi e scala si prendono dalla scena, che ha una
+- **Uno scenario si può ritagliare dalla scena**: è il modo della cripta. La scena ha una
   mano sola; un foglio piccolo chiesto nella stessa chat porta solo quello
-  che la scena non ha (le porte, il mercante, le cose per terra).
-- **Ritagliare la scena vuole la stessa scala per bordi e facce** (4 px di
-  scena per pixel di gioco), partendo dalla riga dove il coronamento
-  ricalca il bordo: a 3,5 il coronamento usciva una riga più in basso e la
-  giunzione col muro spesso si vedeva.
-- **La scena può avere la griglia deformata** (la fornace: cella di 64 px
-  nella stanza in alto, 69 in quella in basso, facce più alte): allora ogni
-  pezzo si ritaglia dalla zona che ha la scala giusta, e il pavimento da una
-  toppa senza carbone né porte, o ripetuto mostra i mucchi come una carta da
-  parati.
+  che la scena non ha (le porte, il mercante).
 - **Quello che non c'è nella tavola non si disegna**: `guastiDelleTessere`
   chiede all'atlante ogni nome di ogni scenario, e un pezzo mancante è rosso
   nei test invece che un muro invisibile.
@@ -53,11 +43,11 @@ giochi (atlante, scala nel contesto) stanno in [../core/grafica.md](../core/graf
 
 Il quarto scenario (`inferno`, 15 ottobre 2026), quello della **botola segreta** (`labirinto`, la quinta discesa: ogni discesa il suo scenario, non più scenari che si alternano in orizzontale; i suoi abitanti sono in [mostri.md](mostri.md)): massi con le punte, mattoni scuri e brace, stendardi rossi e un toro cornuto sopra ogni porta. Nasce da **tre immagini di ChatGPT** (nella cartella dei fogli) e da **un attrezzo che fa i pezzi che mancano**.
 
-- **`sotterraneo_6.png`**, la scena (tre stanze e i corridoi). La cella è di 64 px come nelle altre, ma le facce sono più alte (coronamento di massi e mattoni): se ne prende l'alto, 76 px su 64, schiacciato di un quinto. Dalla scena: facce, capo, bordi, la porta col teschio cornuto (`bella`) e quella rossa senza (`ferro`), e due ritagli grezzi di pavimento.
+- **`sotterraneo_6.png`**, la scena (tre stanze e i corridoi). La cella è di 64 px come nelle altre, ma le facce sono più alte (coronamento di massi e mattoni): se ne prende l'alto, 76 px su 64, schiacciato di un quinto. Dalla scena: la porta col teschio cornuto (`bella`) e quella rossa senza (`ferro`).
 - **`arredo-inferno.png`**, una tavola di 71 pezzi su fondo magenta (nove file, scala circa 5,9 px per pixel di gioco): quasi tutto l'arredo (sarcofagi, altari, statue e gargoyle, colonne, torce, gabbie, stendardi, fucina, troni, tavolo del boia…), più la porta di legno, la scala in cornice di pietra, la grata, il lucchetto e la coppa di lava, che servono all'attrezzo.
-- **`bottega-inferno.png`**, il terzo foglio (una «bottega infernale»): è una tavola di ambienti, e ne vengono 27 pezzi (obelischi, forche, cristalli, il cerchio del pentagramma, il demone sul trono, punte di roccia e alberi secchi per i relitti, le cose piccole per terra). **Restano fuori** gli ambienti interi (l'ingresso della caverna col teschio, il recinto, l'orto, la tenda, il ponte, la cascata di lava: sono scene, buoni semmai da sfondo di un grosso), il cancello a spuntoni (sembra un passaggio: regola del decoro), casse e botti, ossa e teschi, il forziere pieno d'oro (il d'oro è solo delle missioni).
-- **`python3 strumenti/sprite/inferno.py`** (`--provino` in `tmp/inferno.png`) fa in codice quello che nessuno ha dipinto: i due pavimenti **senza cuciture** (il ritaglio con una banda di 6 px che sfuma sul lato opposto), il **tetto** (massi neri a macchie, una vena di brace ogni tanto), il **medaglione** (un pentagramma inciso: quello della scena ha la ciotola dentro e sulla fontana farebbe doppio), la porta **chiara** e quella **aperta**, i **cinque fianchi** (colori campionati dalle porte), la **scala chiusa** (la grata e il lucchetto sulla scala) e la **fontana asciutta** (la lava della coppa diventa pietra). Scrive `sotterraneo_6_derivati.png`; poi `atlante.py sotterraneo`. Se un pezzo non regge a schermo si fa chiedere al modello: la regola resta «prima in codice, poi dipinto».
-- **Le ragnatele e i forzieri sono quelli della fornace** (la scena non li ha e il ferro con la brace sta bene): da chiedere al modello con le altre cose per terra.
+- **`bottega-inferno.png`**, il terzo foglio (una «bottega infernale»): è una tavola di ambienti, e ne vengono 24 pezzi (obelischi, forche, cristalli, il cerchio del pentagramma, il demone sul trono, punte di roccia e alberi secchi per i relitti, le cose piccole). **Restano fuori** gli ambienti interi (l'ingresso della caverna col teschio, il recinto, l'orto, la tenda, il ponte, la cascata di lava: sono scene, buoni semmai da sfondo di un grosso), il cancello a spuntoni (sembra un passaggio: regola del decoro), casse e botti, ossa e teschi, il forziere pieno d'oro (il d'oro è solo delle missioni).
+- **`python3 strumenti/sprite/inferno.py`** (`--provino` in `tmp/inferno.png`) fa in codice quello che nessuno ha dipinto: la porta **chiara** e quella **aperta**, i **cinque fianchi** (colori campionati dalle porte), la **scala chiusa** (la grata e il lucchetto sulla scala) e la **fontana asciutta** (la lava della coppa diventa pietra). Scrive `sotterraneo_6_derivati.png`; poi `atlante.py sotterraneo`. Se un pezzo non regge a schermo si fa chiedere al modello: la regola resta «prima in codice, poi dipinto».
+- **I forzieri sono quelli della fornace** (la scena non li ha e il ferro con la brace sta bene): da chiedere al modello.
 - **Dove si vede**: la botola segreta (`giu=5` nei cheat); l'abisso, che attraversa cantine, cripta e fornace, non lo ha (le sue creature sono quelle della botola).
 
 ## I fogli e l'atlante
@@ -70,7 +60,7 @@ Il quarto scenario (`inferno`, 15 ottobre 2026), quello della **botola segreta**
   `armature-e-vesti.png`); eroi, forzieri e monete ancora da **0x72, «16×16
   DungeonTileset II», CC-0**.
 - **L'atlante** lo monta `strumenti/sprite/atlante.py sotterraneo` (formato
-  in `strumenti/sprite/FORMATO.md`): un PNG di circa 150 KB per 232 pezzi,
+  in `strumenti/sprite/FORMATO.md`): un PNG di circa 700 KB per 930 pezzi,
   incorporato in base64, così il build resta un file solo. Si ritaglia **solo
   quello che qualcuno nomina** (di `armature-e-vesti.png` sette figure su
   centotrentasei), e il foglietto scrive cosa è rimasto nel foglio. Lo stesso

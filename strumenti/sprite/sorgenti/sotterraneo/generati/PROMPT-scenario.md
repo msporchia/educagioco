@@ -417,14 +417,6 @@ Quattro controlli, in quest'ordine — e nessuno dei quattro è «è bello»:
 - **La cella del gioco resta di 16 px**: ogni pezzo del foglio si riduce
   alla sua `misura` in pixel di gioco, come i mostri, e l'eroe e le cose
   restano quelli di prima.
-- **I fondi sono quadrati di 4×4 celle**, non piastrelle: ogni cella
-  prende il suo pezzo del quadrato (`ritaglio` di `grafica/atlante.js`),
-  e il pavimento smette di essere una tabella senza bisogno di varianti a
-  caso.
-- **Il muro** lo decide `scena/muri.js` con la regola qui sopra, e lo
-  prova `unita/muri-sotterraneo` sui piani veri; `scena/tela.js` ci mette
-  i pezzi. I bordi sono blocchi di pietra presi dalla stanzetta, e gli
-  angoli si compongono per quarto di cella.
 - **Le porte scelgono il verso** dal muro in cui stanno.
 - **La scala con la grata** finché la chiave non è presa
   (`chiaveDelPiano`), e **la fonte asciutta** invece di una fonte che

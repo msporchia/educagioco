@@ -1,5 +1,5 @@
 {
-  "__": "Il foglietto di sotterraneo_4_2.png: i pezzi che mancano alla scena della cripta (ChatGPT, 30 settembre 2026, nella chat della scena, allegata la scena), più un secondo passaggio coi tasti di modifica per togliere la scacchiera dipinta. Si prendono porte, scala chiusa, mercante e medaglione. Fuori: la fontana (è a muro, quella della scena sta su un piede), le tre facce (nicchie alte una cella e mezza) e le cose per terra e le ragnatele (hanno sotto un quadrato di pavimento).",
+  "__": "Il foglietto di sotterraneo_4_2.png: i pezzi che mancano alla scena della cripta (ChatGPT, 30 settembre 2026, nella chat della scena, allegata la scena), più un secondo passaggio coi tasti di modifica per togliere la scacchiera dipinta. Si prendono porte, scala chiusa e mercante. Fuori: la fontana (è a muro, quella della scena sta su un piede) e le tre facce (nicchie alte una cella e mezza).",
   "prompt": {
     "scheda": "PROMPT-scenario.md",
     "base": "sotterraneo_4.png",
@@ -10,7 +10,6 @@
   "alone": 128,
   "cella": [1, 1],
   "famiglie": {
-    "cripta-medaglione": "fondo",
     "cripta-porta": "figura",
     "cripta-mercante": "figura"
   },
@@ -32,7 +31,6 @@
     "cripta-fianco-aperta": { "da": [889, 346], "cella": [69, 176], "misura": [10, 20] },
     "cripta-scala-chiusa": { "da": [33, 623], "cella": [162, 153], "misura": [16, 15] },
     "cripta-mercante-0": { "da": [476, 623], "cella": [238, 179], "misura": [28, 21] },
-    "cripta-mercante-1": { "da": [760, 623], "cella": [234, 179], "misura": [28, 21] },
-    "cripta-medaglione": { "da": [47, 851], "cella": [291, 282], "misura": [48, 48] }
+    "cripta-mercante-1": { "da": [760, 623], "cella": [234, 179], "misura": [28, 21] }
   }
 }

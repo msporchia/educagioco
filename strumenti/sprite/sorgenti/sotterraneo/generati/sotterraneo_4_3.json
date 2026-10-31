@@ -1,5 +1,5 @@
 {
-  "__": "Il foglietto di sotterraneo_4_3.png: le cose per terra della cripta (ChatGPT, 1 ottobre 2026, nella chat della scena), chieste su fondo magenta e tornate già trasparenti. La tela ne usa tre per scenario: foglie, schegge e lastra spaccata. Fuori la cera (la candela in piedi sembra una cosa da prendere), i calcinacci e i sassolini (un mucchio di sassi, come quelli che sostituiscono).",
+  "__": "Il foglietto di sotterraneo_4_3.png: le cose per terra della cripta (ChatGPT, 1 ottobre 2026, nella chat della scena), chieste su fondo magenta e tornate già trasparenti. Fuori la cera (la candela in piedi sembra una cosa da prendere), i calcinacci e i sassolini (un mucchio di sassi, come quelli che sostituiscono).",
   "prompt": {
     "scheda": "PROMPT-scenario.md",
     "base": "sotterraneo_4.png",
@@ -11,11 +11,6 @@
   "alone": 128,
   "cella": [1, 1],
   "sprite": {
-    "cripta-foglie": { "da": [158, 158], "cella": [240, 210], "misura": [12, 10] },
-    "cripta-schegge": { "da": [167, 500], "cella": [230, 198], "misura": [12, 10] },
-    "cripta-lastra": { "da": [158, 862], "cella": [244, 196], "misura": [12, 10] },
-    "cripta-ragnatela-sx": { "da": [182, 1210], "cella": [170, 171], "misura": [14, 14] },
-    "cripta-ragnatela-dx": { "da": [672, 1210], "cella": [170, 179], "misura": [13, 14] },
     "cripta-candela": { "da": [612, 160], "cella": [228, 196], "misura": [12, 10], "nitido": true },
     "cripta-macerie": { "da": [608, 500], "cella": [248, 204], "misura": [17, 14], "nitido": true },
     "cripta-rocce": { "da": [620, 864], "cella": [240, 196], "misura": [16, 13], "nitido": true }

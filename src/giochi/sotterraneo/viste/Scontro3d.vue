@@ -18,7 +18,7 @@ const props = defineProps({
   incanti: { type: Array, default: () => [] },
   fx: { type: Object, required: true },
   aggancia: { type: Function, required: true },   // (chi, elemento | null): la scena lo porta sopra la figura
-  posti: { type: Object, default: null }, apertura: { type: Object, default: null }, palco: { type: Object, default: null },
+  posti: { type: Object, default: null }, apertura: { type: Object, default: null },
 })
 
 const ossaDi = m => (props.fx.attivo && props.fx.ossa[m.i] != null ? props.fx.ossa[m.i] : m.ossa)
