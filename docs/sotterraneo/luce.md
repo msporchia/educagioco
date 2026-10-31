@@ -150,8 +150,8 @@ il disegno in `scena3d/` ([grafica-3d.md](grafica-3d.md)).
   scendendo da capo, tornando dal portale o riprendendo la sosta
   (`motore/sosta.js`), entrando in una stanza. Senza, chi saliva al buio dal
   portale e comprava torce tornava giù al buio (l'utente, 31 ottobre).
-- **Se ne trovano** (oltre a comprarle): da un forziere, da un mostro, da una
-  curiosità. Quante, e quanto buio resta: [sotto](#quante-se-ne-trovano).
+- **Se ne trovano** (oltre a comprarle) poche: da un forziere, da un mostro, da
+  una curiosità. Quante, e la regola proposta per trovarne di più: [sotto](#quante-se-ne-trovano).
 
 Nei test: `unita/sotterraneo-sosta` (§ 10: le diciotto torce comprate che
 tornando dal portale si accendono, la stanza al buio che ne accende una),
@@ -201,38 +201,34 @@ tutto), `data-resta` (le stanze di quella accesa, 0 se spenta) e
 
 ## Quante se ne trovano
 
-**Chi gira tutto trova circa una torcia a discesa, chi va dritto una ogni
-quattro o cinque; il buio resta in due stanze su tre.** L'utente, 31 ottobre:
-«ha senso che uno le trovi e non che si debba ricordare ogni volta di
-comprarne una valanga, che ci siano momenti di buio e che tu capisca che puoi
-comprarle». Una torcia trovata è un piano di luce; il resto lo si compra
-(la pagina dell'eroe dice chi le vende).
+**Oggi quasi nessuna.** Senza comprarne, chi gira tutto ne trova 0,2 a discesa e chi va dritto nessuna (`npm run sotterraneo --
+--luce`: roba e livello attesi, senza torce in tasca, 40 partite a discesa a 8/10, le sei discese dopo la cripta): il forziere che
+dà una torcia invece di una pozione, i pipistrelli e i fantasmi (`lascia`) quando un mostro lascia da bere (uno di strada su venti),
+le curiosità. Al buio sono 81–100% delle stanze di chi gira (media 93%) e tutte quelle di chi va dritto. Nella cripta i mostri
+lasciano da bere uno su due, e chi gira ne trova una.
 
-- **Da dove**: tre forzieri su dieci ne lasciano una accanto a quello che dà,
-  un mostro di strada su trenta, un caporale su dieci, il grosso mai (ha il suo
-  bottino) (`PROBABILITA_TORCIA`, `torciaCade` in `motore/bottino.js`). Il tiro
-  nasce dal seme, dal piano e dal posto, come l'elisir e l'ampolla: non sposta
-  niente di quello che cade già. Restano quelle di prima: il forziere che dà una
-  torcia invece di una pozione, i pipistrelli e i fantasmi (`lascia`) quando un
-  mostro lascia da bere, le curiosità. Sul prato di sopra no: è giorno.
-- **Misurato** (`npm run sotterraneo -- --luce`: roba e livello attesi, senza
-  torce in tasca, 40 partite a discesa a 8/10), nelle sei discese dopo la cripta:
+**La regola proposta, non applicata.** L'utente, 31 ottobre: «ha senso che uno le trovi e non che si debba ricordare ogni volta di
+comprarne una valanga, che ci siano momenti di buio e che tu capisca che puoi comprarle». La proposta: una torcia in più da tre
+forzieri su dieci, da un mostro di strada su trenta, da un caporale su dieci, mai dal grosso, con un tiro dal seme come l'elisir
+(`torciaCade` accanto a `ampollaCade` in `motore/bottino.js`, chiamato dove muore un mostro e dove si apre un forziere; sul prato
+di sopra no). Misurata:
 
-  | | torce a discesa, prima → dopo | stanze al buio, prima → dopo |
-  |---|---|---|
-  | chi gira tutto | 0–0,7 (media 0,2) → 0,5–1,8 (media 1) | 81–100% (media 93%) → 44–82% (media 67%) |
-  | chi va dritto | 0 → 0,1–0,5 (media 0,2) | 100% → 87–99% (media 94%) |
+| | torce a discesa, oggi → con la regola | stanze al buio, oggi → con la regola |
+|---|---|---|
+| chi gira tutto | 0–0,7 (media 0,2) → 0,5–1,8 (media 1) | 81–100% (media 93%) → 44–82% (media 67%) |
+| chi va dritto | 0 → 0,1–0,5 (media 0,2) | 100% → 87–99% (media 94%) |
 
-  Nella cripta i mostri lasciano da bere uno su due, e le torce erano già
-  una a discesa per chi gira. Le torce che avanzano uscendo (0,3–0,9 a discesa
-  per chi gira) scendono con lui alla discesa dopo.
-- **L'equilibrio** (`npm run taratura`, prima con `--tara torcia.mostro=0,torcia.caporale=0,torcia.forziere=0`): il curioso non
-  si muove oltre il caso (svenimenti per vincerla 0,2·1,2·1,2·1,6·1·1,4·1 → 0,2·1,2·1·1,6·0,9·1,5·0,6, storie finite 99% →
-  100%), il medio nemmeno; lo sbadato nella torre da 4,1 a 3,9 svenimenti (il bersaglio ne vuole almeno 4) e il curioso
-  sfortunato nella tana dei ragni (`gallerie`) da 75% a 33% di vinte alla prima (dodici storie: la coda è il caso). Con quaranta torce in tasca il curioso
-  sviene di meno, non di più (dodici storie del cavaliere nelle sale allagate, `cisterna`: 13 svenimenti contro 16): la luce non rende il
-  gioco più duro. Le sei storie del cavaliere in `unita/sotterraneo` e `unita/sotterraneo-roba` sono sensibili al caso: un
-  forziere su quattro faceva perdere le sale allagate due volte su sei (su ventiquattro storie 22 vinte contro 21 senza).
+Le torce che avanzano uscendo (0,3–0,9 a discesa per chi gira) scenderebbero alla discesa dopo. La taratura (`npm run taratura`,
+oggi con `--tara torcia.mostro=0,torcia.caporale=0,torcia.forziere=0`) non si muove oltre il caso: il curioso sviene per vincerla
+0,2·1,2·1,2·1,6·1·1,4·1 → 0,2·1,2·1·1,6·0,9·1,5·0,6. Con quaranta torce in tasca il curioso sviene meno (dodici storie del
+cavaliere nelle sale allagate: 13 svenimenti contro 16): la luce non rende il gioco più duro.
+
+**Perché è ferma**: `misure/sotterraneo` sta già ai margini (zone al 24 a 9/10 54% su un minimo di 50, l'eroe del 15 a 9/10 60% su
+un massimo di 60) e ogni cambio del caso delle storie ne fa cadere uno: con la regola le zone al 24 a 49% e il mago nella porta
+dell'inferno 12/20 (ne vuole 13); con altri sali o altre quote l'eroe del 15 al 63%, l'eroe del 20 a 6/10 al 48%, o le sei storie
+del cavaliere nelle sale allagate a 3 o 4 su 6. Le differenze vengono dalla roba con cui il curioso esce dalla storia, non dalla luce.
+Da decidere: allargare quei bersagli di qualche punto (sono misure arrotondate al 5%, e il caso ne vale altrettanto) e accendere la
+regola.
 
 Nei test: `unita/sotterraneo-piani` (§ 11 e 12: un relitto fa ombra come un muro, l'acqua no),
 `unita/sotterraneo-luce` (il cono davanti e l'ombra dietro con e
