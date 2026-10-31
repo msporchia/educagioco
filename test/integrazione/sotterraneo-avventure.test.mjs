@@ -119,8 +119,8 @@ uguale('con le sue gemme', await gemme(), 60)
 const casa = await cella()
 await unPasso()
 controlla('il cavaliere cammina', (await cella()) !== casa, await cella())
-const doveCav = await cella()   // dove il mondo lo ricorda: scendere non lo sposta (il salto dell'eroe davanti all'ingresso è della prova)
 await scendiNelSotterraneo(page, 1, { tocca, scendi: false })   // l'eroe è davanti all'ingresso, col fumetto aperto
+const doveCav = await cella()   // dove il mondo lo ricorderà: davanti all'ingresso da cui scende
 await page.click('[data-fumetto-di] [data-azione="scendi"]')
 await page.waitForSelector('[data-tela="3d"]', { timeout: 30000 })
 await attendi(page, 1500)
