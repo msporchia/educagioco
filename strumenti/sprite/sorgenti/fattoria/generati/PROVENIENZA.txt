@@ -8,6 +8,11 @@ casa.
 
 Cosa c'è dentro
 ---------------
+Il 31 ottobre 2026, tolta la fattoria 2D, i fogli che nessuno disegnava
+più (animali*, edifici*, festa, i gatti, il beagle, il pappagallo) sono
+usciti dalla cartella: l'elenco qui sotto li ricorda ancora, i file
+stanno nello storico di git (docs/core/sprite.md, «Gli inutilizzati»).
+
   animali.png      i cinque recinti da cortile, cinque stati per specie
   animali_2.png    altri cinque recinti (anatre, capre, api, alpaca,
                    asini), tre stati per specie e un fumetto dipinto

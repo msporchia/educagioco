@@ -156,17 +156,23 @@ pagina non si muove da sola mentre ci si lavora.
 **La regola** (dell'utente): niente «oggetti non utilizzati nel gioco ma già generati». Ogni pezzo o è un
 doppione (e si elimina), o si usa; se è già in un altro set o è brutto, si elimina. `npm run
 sprite:inutilizzati` dice quali sono oggi nel mezzo, per cartella-gioco. Non cambia niente e non è un cancello:
-il test (`unita/sprite-inutilizzati`) guarda solo che giri e sia coerente.
+il test (`unita/sprite-inutilizzati`) guarda solo che giri e sia coerente — tranne che per la fattoria, qui sotto.
 
 - **Immagini**: i file di `sorgenti/` che nessun foglietto, nessuno strumento (un nome o un glob nel codice,
   commenti esclusi: `terreno-*.png`) e nessun catalogo legge. Stati: `NESSUNO LA LEGGE` (anche tutto
   `non-usati/`), solo allegato ai prompt (sta in una scheda `PROMPT-*.md`), schema di `scenario.py`, set di
   terzi (`armm1998/`, `0x72/`: i nomi non si toccano). Una riga `?` dice «letta solo da uno strumento»: va
   guardata (oggi `td_1.png`, il riferimento delle misure di `vesti.py`, e due falsi allarmi dei glob).
-- **Voci dell'atlante** (fattoria, sotterraneo) che nessun file di `src/` nomina: il nome (o un pezzo della
+- **Voci dell'atlante** del sotterraneo che nessun file di `src/` nomina: il nome (o un pezzo della
   sua posa) compare come parola, oppure combacia con un modello come `recinto_${specie}_${stato}` le cui
   parti sono parole che compaiono. È un'euristica: sbaglia per un nome composto in un modo che nessuno scrive
   per intero, quindi **ogni voce si guarda prima di toglierla** (`--provino` la ritaglia dall'atlante).
+- **L'atlante della fattoria tiene solo i pezzi che qualcuno disegna, e il conto è esatto**: `VIVI` in
+  `inutilizzati.mjs` li chiede a chi disegna (`PERSONE` col fotogramma fermo per `SceltaAspetto.vue`, `DALL_ATLANTE` di
+  `passo-passo/scena/tela.js`, `facceDelleMerci()` di `fattoria3d/dati/ricette.js`), e `unita/sprite-inutilizzati` è
+  rosso se un pezzo vivo manca o se l'atlante ne ha uno in più. Un pezzo che nessuno disegna più si toglie dal suo
+  foglietto e si rilancia `atlante.py fattoria`; un foglio che non dà più niente si toglie con `git rm` (resta nello
+  storico, e la riga del foglietto pure). Il 31/10/2026, tolta la 2D: da 705 pezzi a 92, da 2,7 MB a 174 KB.
 - **La roba del sotterraneo**: le figure di `roba.json` che nessun foglietto ritaglia e che non hanno un
   `pezzo` (le 17 «fuori» di [figure.md](../sotterraneo/figure.md)). **Le creature**: quelle del catalogo senza
   nessun gioco, e i fotogrammi che un gioco lascia fuori (`scelta`).
@@ -195,13 +201,14 @@ L'atlante della fattoria (`src/grafica/atlante-fattoria.js`) dà la faccia alle 
 profilo e a Passo passo. Una merce nata prima del suo disegno dichiara in `aspetta` il pezzo che arriverà e intanto usa l'emoji
 ([../fattoria3d/merci-e-ricette.md](../fattoria3d/merci-e-ricette.md)).
 
-- **Prima di far disegnare, guardare cosa c'è**: l'atlante ha centinaia di pezzi, e nove delle prime quattordici merci avevano già
-  la faccia (le casse del raccolto, la balla di fieno, la bottiglia del latte).
+- **Prima di far disegnare, guardare cosa c'è nei fogli**: nove delle prime quattordici merci avevano già la faccia (le casse del
+  raccolto, la balla di fieno, la bottiglia del latte). L'atlante tiene solo quello che si disegna (vedi «Gli inutilizzati»): un
+  pezzo tolto si riprende rimettendo la sua riga nel foglietto, dallo storico di git, e i fogli tolti il 31/10/2026 pure.
 - **Il metodo è un'immagine di base allegata** (l'ultimo foglio buono) più «nello stesso stile di questa», e una scheda che dice
-  quello che il generatore altrimenti inventa: misura, vista, fondo, ombra, tavolozza, appoggio, griglia (`PROMPT-edificio.md`,
-  `PROMPT-merce.md`, `PROMPT-bestia.md` accanto ai fogli in `strumenti/sprite/sorgenti/fattoria/generati/`).
-- **Il prompt si copia nel foglietto nello stesso momento in cui si salva il PNG**: la chat non lascia un file. Per `merci_2` ed
-  `edifici_3` è andato perso: si rigenera dalla scheda e dalle descrizioni qui sotto.
+  quello che il generatore altrimenti inventa: misura, vista, fondo, ombra, tavolozza, appoggio, griglia (`PROMPT-merce.md`,
+  `PROMPT-bestia.md` accanto ai fogli in `strumenti/sprite/sorgenti/fattoria/generati/`; `PROMPT-edificio.md` era per la 2D).
+- **Il prompt si copia nel foglietto nello stesso momento in cui si salva il PNG**: la chat non lascia un file. Per `merci_2` è
+  andato perso: si rigenera dalla scheda e dalle descrizioni qui sotto.
 - **Le merci a sei per foglio**: sopra i sei il generatore stringe gli oggetti e i dettagli spariscono (una merce è larga 20–30 px).
   Fondo trasparente (il magenta vietava il viola della lavanda); un alone attorno alle figure lo toglie `"alone": 128`.
 
@@ -221,7 +228,8 @@ senza ombra):
 
 I foglietti delle bestie della fattoria hanno ancora gli `agganci` (verso per verso, in frazioni del riquadro), e `atlante.py` li
 copia in `AGGANCI` dell'atlante: li leggeva la fattoria 2D, tolta il 31/10/2026, per posare cappelli e occhiali sugli sprite (si
-calibravano a occhio nel banco, «i ritagli» → modo **agganci**). La fattoria 3D aggancia sui modelli, non sugli sprite
+calibravano a occhio nel banco, «i ritagli» → modo **agganci**); quelli di allora sono fermi in `fattoria3d/da2d/dati/disegni.js`, e
+oggi l'`AGGANCI` dell'atlante non lo legge nessuno. La fattoria 3D aggancia sui modelli, non sugli sprite
 ([../fattoria3d/addobbi.md](../fattoria3d/addobbi.md)).
 
 ## La larghezza degli atlanti

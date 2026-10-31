@@ -17,7 +17,6 @@ import { MANGIMI_SENZA_RICETTA, NUMERI_DEL_CORTILE_2 } from '../../src/giochi/fa
 import { guastiDeiLivelli, sogliaDi, livelloDelMangime, livelloDellaRicetta } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { guastiDellaScala, catenaMs, TETTO_ATTESA_MS } from '../../src/giochi/fattoria3d/motore/taratura.js'
 import { guastiDeiSilos, siloDi, merciDelSilo } from '../../src/giochi/fattoria3d/dati/silos.js'
-import { DISEGNI } from '../../src/giochi/fattoria3d/dati/carte.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { normalizza } from '../../src/giochi/fattoria3d/motore/stato.js'
 import { alberoDi } from '../../src/giochi/fattoria3d/dati/albero.js'
@@ -56,7 +55,6 @@ const COME_2D = { conigliera: 'conigliera', alpaca: 'recinto_alpaca', asini: 're
     uguale(`${t}: mangia ${JSON.stringify(d.prende)} come in 2D`, JSON.stringify([A.mangia[0], A.pasti]), JSON.stringify(Object.entries(d.prende)[0]))
     uguale(`${t}: il prodotto è «${d.da}»`, A.prodotto, d.da)
     controlla(`${t}: è un animale produttivo che sta tra gli animali`, P.categoria === 'animali' && P.produttivo === true && P.w === 4 && P.d === 3)
-    controlla(`${t}: la carta ha il disegno nell'atlante`, !!ATLANTE[DISEGNI[t]], String(DISEGNI[t]))
     controlla(`${t}: i numeri provvisori non ci sono più (livello e prezzo sono letti dalla 2D)`, NUMERI_DEL_CORTILE_2[t].liv === P.liv && NUMERI_DEL_CORTILE_2[t].prezzo === P.prezzo)
   }
   controlla('la peschiera non c\'è: la pesca ne prende il posto', !PEZZI.peschiera && PEZZI.molo.liv === VOCI_2D.peschiera.liv)

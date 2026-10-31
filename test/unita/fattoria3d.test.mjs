@@ -6,8 +6,7 @@
    tempo: 1 */
 import { guastiDelMondo, LOTTI_STORICI, LOTTI_INIZIALI, POSTI_STORICI, lottoPerId, PARTENZA } from '../../src/giochi/fattoria3d/dati/mondo.js'
 import { guastiDelCatalogo, PEZZI, EDIFICI, CATEGORIE, edificiDaCostruire, avvisoEdificiNuovi } from '../../src/giochi/fattoria3d/dati/catalogo.js'
-import { carteDi, schedeDi, schedeSegnalate, DISEGNI, STRUMENTI, guastiDelleCarte } from '../../src/giochi/fattoria3d/dati/carte.js'
-import { PEZZI as ATLANTE_PEZZI } from '../../src/grafica/atlante-fattoria.js'
+import { carteDi, schedeDi, schedeSegnalate, STRUMENTI } from '../../src/giochi/fattoria3d/dati/carte.js'
 import { guastiDelleColture, COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { guastiDeiPosti, POSTI_DI_PARTENZA, POSTI_MASSIMI, PREZZI_DEI_POSTI, TOTALE_DEI_POSTI, prezzoDelPosto, postiInForma } from '../../src/giochi/fattoria3d/dati/posti.js'
 import { POSTI_DI_PARTENZA as POSTI_DI_PARTENZA_2D, POSTI_MASSIMI as POSTI_MASSIMI_2D, PREZZI_DELLA_FILA } from '../../src/giochi/fattoria3d/da2d/dati/coda.js'
@@ -1034,7 +1033,6 @@ function livelloDelPezzoDi(t) { return PEZZI[t].liv }
 
 /* ══════════ il menu «Costruisci qui»: le carte dai dati (docs/fattoria3d/scena.md) ══════════ */
 {
-  controlla('le carte non hanno guasti', guastiDelleCarte().length === 0, guastiDelleCarte().join('; '))
   controlla('ogni pezzo e ogni edificio ha una categoria valida', [...Object.values(PEZZI), ...Object.values(EDIFICI)].every(d => !!CATEGORIE[d.categoria]))
   controlla('ogni scheda ha almeno una carta (la scheda Feste solo in stagione o con un regalo della fiera: la linguetta si nasconde)', Object.keys(CATEGORIE).every(c => c === 'feste' || schedeDi(statoMenu({ livello: 99 }))[c].length > 0) && schedeDi(statoMenu({ livello: 99, stagione: 'natale' })).feste.length > 0)
   const tutte = Object.values(schedeDi(statoMenu({ livello: 99 }))).flat().filter(c => c.genere !== 'strumento' && c.genere !== 'bestia')
@@ -1044,7 +1042,6 @@ function livelloDelPezzoDi(t) { return PEZZI[t].liv }
     const inOrdine = sg => { const l = carte.filter(x => !!x.segnala === sg).map(x => x.liv); return l.every((v, k) => !k || v >= l[k - 1]) }
     return inOrdine(true) && inOrdine(false) && !carte.some((x, k) => x.segnala && k > 0 && !carte[k - 1].segnala)
   }))
-  controlla('i disegni dell\'atlante della fattoria di sempre esistono', Object.values(DISEGNI).every(d => !!ATLANTE_PEZZI[d]), Object.values(DISEGNI).filter(d => !ATLANTE_PEZZI[d]).join(', '))
   const c1 = carteDi('campi', statoMenu({ livello: 1 }))
   controlla('il campo è aperto al livello 1 e costa il suo prezzo', c1[0].id === 'campo' && !c1[0].bloccata && c1[0].etichetta === '🪙 ' + PEZZI.campo.prezzo)
   const an = carteDi('animali', statoMenu({ livello: 1 }))

@@ -19,7 +19,6 @@
    `node test/esegui.mjs recinti --niente-build` */
 import { Fattoria } from '../../src/giochi/fattoria3d/da2d/motore/fattoria.js'
 import { PER_ID, statiDi } from '../../src/giochi/fattoria3d/da2d/dati/catalogo.js'
-import { PEZZI } from '../../src/grafica/atlante-fattoria.js'
 import { RICETTE, PER_RICETTA, COLTURE, PRODOTTI, MINUTO, SILI }
   from '../../src/giochi/fattoria3d/da2d/dati/coltivazioni.js'
 import { COCCOLE } from '../../src/giochi/fattoria3d/da2d/dati/bisogni.js'
@@ -73,8 +72,6 @@ for (const v of RECINTI) {
   stessaLista(`${v.id}: gli stati sono quelli attesi`,
     Object.keys(v.stati).sort(),
     ['calmo', 'dorme', 'fame', 'felice', 'mangia', 'pronto'])
-  for (const [quale, pezzo] of Object.entries(v.stati))
-    controlla(`${v.id}/${quale} è nell'atlante`, !!PEZZI[pezzo])
   /* Il ritratto del baule dev'essere uno di quelli: se fosse un disegno
      a parte, si comprerebbe una cosa e in mappa ne comparirebbe
      un'altra — e nessuno collegherebbe le due. */
@@ -300,7 +297,7 @@ for (const v of RECINTI) {
   const faccia = (a || {}).vuole || {}
   controlla(`${v.id}: e quella merce esiste`, !!PRODOTTI[faccia.prodotto])
   controlla(`${v.id}: col suo disegno, o almeno con un'emoji`,
-            (faccia.pezzo ? !!PEZZI[faccia.pezzo] : !!faccia.testo))
+            !!(faccia.pezzo || faccia.testo))
   /* Al lavoro il fumetto non c'è: chiederebbe da mangiare a chi sta
      già mangiando, e sopra la testa ci sono già gli stati del disegno. */
   for (const [k, n] of Object.entries(RICETTE.find(r => r.dove === v.macchina).prende))

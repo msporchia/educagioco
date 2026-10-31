@@ -13,7 +13,8 @@
                   parcheggiati in `non-usati/`), e quelli che servono solo
                   da allegato ai prompt
      2 ritagliate le voci dell'atlante di un gioco (fattoria, sotterraneo)
-                  che nessun file di `src/` nomina; le figure dei fogli
+                  che nessun file di `src/` nomina (la fattoria: i pezzi
+                  che nessuno disegna, dall'elenco esatto `VIVI`); le figure dei fogli
                   della roba del sotterraneo (`roba.json`) che nessun
                   foglietto ritaglia e nessun pezzo veste; le creature
                   del catalogo che nessun gioco disegna
@@ -230,9 +231,38 @@ export function nominatoDa(nome, { parole, modelli }) {
   return null
 }
 
+/* Dove l'elenco non si indovina: chi disegna dall'atlante di quel gioco dice quali pezzi prende, e il resto non serve.
+   L'atlante della fattoria tiene solo questi (docs/core/sprite.md). */
+const importa = f => import(pathToFileURL(path.join(RADICE, f)).href)
+export const VIVI = {
+  fattoria: async A => [
+    ...A.PERSONE.map(p => `${p}_giu0`),                                                       // components/SceltaAspetto.vue: un fotogramma fermo
+    ...(await importa('src/giochi/passo-passo/scena/tela.js')).DALL_ATLANTE,                  // Passo passo
+    ...(await importa('src/giochi/fattoria3d/dati/ricette.js')).facceDelleMerci(),            // fattoria3d: viste/Faccia.vue, scena3d/facce.js
+  ],
+}
+
+/* I pezzi che il codice vivo disegna (`vivi`) e i nomi vivi che l'atlante non ha (`mancano`), o null se il gioco non ha `VIVI`. */
+export async function pezziVivi(gioco) {
+  if (!VIVI[gioco]) return null
+  const A = await importa(ATLANTE_DI[gioco])
+  const vivi = new Set(), mancano = []
+  for (const n of await VIVI[gioco](A)) (A.PEZZI[n] ? vivi.add(n) : mancano.push(n))
+  return { vivi, mancano }
+}
+
 export async function vociNonNominate(gioco, W = paroleDelGioco()) {
   const A = await import(pathToFileURL(path.join(RADICE, ATLANTE_DI[gioco])).href)
   const fuori = []
+  const esatti = await pezziVivi(gioco)
+  if (esatti) {
+    // una voce è fuori per i pezzi che nessuno disegna, anche se un altro suo fotogramma serve
+    for (const v of A.VOCI) {
+      const tutti = Object.values(v.pose).flat(), morti = tutti.filter(n => !esatti.vivi.has(n))
+      if (morti.length) fuori.push({ gioco, voce: v.id, famiglia: v.famiglia, foglio: v.da, pezzi: morti.length, morti: morti.length < tutti.length ? morti : null, riquadri: morti.map(n => A.PEZZI[n]) })
+    }
+    return { voci: A.VOCI.length, pezzi: Object.keys(A.PEZZI).length, vivi: esatti.vivi.size, mancano: esatti.mancano, nonNominate: fuori, atlante: A.ATLANTE }
+  }
   for (const v of A.VOCI) {
     const pezzi = Object.values(v.pose).flat()
     const chi = [v.id, ...pezzi].find(n => nominatoDa(n, W))
@@ -344,9 +374,12 @@ function stampa(r) {
   }
   console.log('\n═══ 2 · VOCI DELL\'ATLANTE CHE NESSUN FILE DI src/ NOMINA ═══')
   for (const [g, v] of Object.entries(r.voci)) {
-    console.log(`\n${g}: ${v.nonNominate.length} voci su ${v.voci}`)
+    if (v.vivi != null) {
+      console.log(`\n${g}: ${v.pezzi - v.vivi} pezzi su ${v.pezzi} che nessuno disegna (${v.voci} voci; l'elenco esatto è VIVI)`)
+      if (v.mancano.length) console.log(`  ✗ disegnati e assenti dall'atlante: ${v.mancano.join(' ')}`)
+    } else console.log(`\n${g}: ${v.nonNominate.length} voci su ${v.voci}`)
     const per = {}
-    for (const x of v.nonNominate) (per[x.foglio] ||= []).push(x.voce)
+    for (const x of v.nonNominate) (per[x.foglio] ||= []).push(x.morti ? `${x.voce}(${x.pezzi} pezzi)` : x.voce)
     for (const [f, l] of Object.entries(per)) console.log(`  ${f}: ${l.join(' ')}`)
     if (v.provino) console.log(`  → ${v.provino}`)
   }
