@@ -41,7 +41,7 @@ strumenti/sprite/sorgenti/<gioco>/generati/<foglio>.png + .json   ← «i ritagl
   il video non si conserva, e i passi si portano alla misura della
   creatura in `vesti.py`. Tutti i comandi in [comandi.md](comandi.md).
 - **Le immagini dipinte entrano in WebP senza perdita a colori a passo 12**
-  (`strumenti/sprite/codifica.py`, per tutti: castello, terra di sopra, mappe
+  (`strumenti/sprite/codifica.py`, per tutti: castello, mappe
   di Passo passo); gli atlanti di `atlante.py` sono PNG senza perdita. Il perché
   e i numeri: [grafica.md](grafica.md#fedeli-ai-sorgenti).
 - **Il PNG non si tocca mai.** La sorgente è la verità: un PNG ritoccato a
@@ -84,8 +84,8 @@ nello stesso modulo.
   vale solo per il piccolo** (impagina): il nitido tiene tutta la sua
   definizione e il gioco lo stira alla gabbia del piccolo (`figura()`, scala
   x e y a parte, ammorbidito: `.sot-ritratto` è `pixelated`, e il pezzo
-  nitido dichiara `image-rendering: auto`). È la strada dei personaggi della
-  terra di sopra (`sopra-personaggi-*`: 22 pixel di altezza il piccolo,
+  nitido dichiara `image-rendering: auto`). È la strada dei personaggi del
+  mondo di sopra (`sopra-personaggi-*`: 22 pixel di altezza il piccolo,
   200 il nitido): +400 KB di WebP per venti pose.
 
 ## I pezzi derivati in codice
@@ -108,7 +108,7 @@ nello scenario e il derivato si butta.
   entrati in un bordo dopo `h` pixel di una diagonale a 45°: 1/√2 per colonna); `bordo_su_diagonale(roccia, bordo, lato)` (la roccia tagliata dalla linea col suo
   bordo che corre lungo la diagonale, a gradini di un pixel); `faccia_su_diagonale(fila, lato, parità, righe)` (una fascia di muro spostata di un pixel per
   colonna: la faccia di una parete obliqua, larga una cella e alta due); `scrivi_foglio` e `provino`. `quarto_di_cerchio` non ha ancora un uso.
-- **Dove sono usate**: i sei pezzi per scena dei muri obliqui ([../sotterraneo/scenari.md](../sotterraneo/scenari.md#i-muri-in-diagonale)), pezzi `<scena>-taglio-so|se`
+- **Dove sono usate**: i sei pezzi per scena dei muri obliqui, pezzi `<scena>-taglio-so|se`
   e `<scena>-faccia-no|ne-0|1` nell'atlante del sotterraneo (+9 KB di PNG per tutte e tre le scene).
 - **Il PNG non si tocca**: si rifà col comando, e `unita/sprite-derivati` confronta i pezzi rifatti con quelli scritti in `sorgenti/` (un foglio ritoccato a mano è rosso).
 - **I limiti visti**: la linea passa per gli angoli opposti della cella, quindi solo a 45° e a gradini di una cella (un passo da due celle per una e basta non

@@ -37,8 +37,7 @@ Tutto sta già nell'avventura (`profile.campagne.sotterraneo.cfg.avventure[eroe]
 
 - **Il mondo porta la sua firma**: `mondo.firma` si scrive salvando. Una firma diversa (o assente, cioè tutti i salvataggi di oggi)
   vuol dire mondo cambiato: **la nebbia, `dove` e `sopra` si rifanno** col travaso, il resto resta. La nebbia vecchia non si
-  allarga: `LARGHEZZE_VECCHIE` vale per la terra dipinta, dove la mappa nuova conteneva la vecchia; qui è un'altra mappa, e un
-  codice che non torna è già nebbia nuova (`nebbiaDaBase64`).
+  allarga: è un'altra mappa, e un codice che non torna è già nebbia nuova (`nebbiaDaBase64`).
 - **Il travaso** (`mondoNuovo`, la tabella di [mondo-aperto-dati.md](mondo-aperto-dati.md)): si ricomincia nella piazza; per ogni
   porta della storia finita si scopre la strada maestra fino a lei e si accende la pietra della sua zona.
 - **Le pietre accese**: le chiavi delle città restano; una chiave di dungeon (`altare`, …) diventa `zona:<la zona del dungeon>`.
@@ -49,7 +48,7 @@ Tutto sta già nell'avventura (`profile.campagne.sotterraneo.cfg.avventure[eroe]
 - **La sosta col portale**: il gemello nella città della zona del dungeon (villaggio, forte o rifugio); il caso peggiore resta il
   villaggio.
 - **I dungeon nuovi e le rigenerazioni**: `mondo.dungeon` manca nei salvataggi di oggi, cioè `rifatti` 0 per tutti.
-- **Le terre**: `terra` manca, cioè 1; `mondi` manca, cioè nessuna terra dopo. Il 2D (la terra dipinta, `terra` dell'avventura) non
+- **Le terre**: `terra` manca, cioè 1; `mondi` manca, cioè nessuna terra dopo. Il campo `terra` dell'avventura (della mappa dipinta, nei salvataggi di prima) non
   si tocca.
 
 ## Quanto costa
@@ -115,8 +114,7 @@ e poi di E; `Mondo3d.vue` e `scena3d/mondo/indice.js` sono di D e poi di E.
   sei nuovi). `Gioco.vue` dà `dungeonDelMondo` (i tredici per chiave) a `Campagna.vue` come `dungeon`, scende con `avvia(chiave)` e
   scrive il rifatti in `chiudi()`. Restano: a **D** passare `dungeon` da Campagna a `Mondo3d.vue`, i sei ingressi coi monumenti e le
   icone, la sentinella nel 3D; a **B** tenere `mondo.dungeon` nel travaso e `cittaDelDungeon` dei sei; a **E** `terraOra()` in
-  `Gioco.vue` e `mondi[t].dungeon`; alla taratura le leve di `dati/dungeon-del-mondo.js`. Il 2D non cambia (`npm run taratura --
-  --presto` uguale).
+  `Gioco.vue` e `mondi[t].dungeon`; alla taratura le leve di `dati/dungeon-del-mondo.js`.
 
 ### D. La scena — 3 giorni, dopo A (il villaggio e i monumenti anche prima)
 
@@ -135,7 +133,7 @@ e poi di E; `Mondo3d.vue` e `scena3d/mondo/indice.js` sono di D e poi di E.
 ### E. Le terre successive — 2 giorni, per ultimo
 
 - **Fatto** (22 ottobre): [terre-successive.md](terre-successive.md). In breve: `motore/terre.js` (`terraDi`, `mondoDellaTerra`,
-  `conMondo`, `apertaLaPorta`, `passaTerra`, `laPorta`), il numero in `terraOra` (il campo `terra` è della terra dipinta del 2D),
+  `conMondo`, `apertaLaPorta`, `passaTerra`, `laPorta`), il numero in `terraOra` (il campo `terra` è della mappa dipinta dei salvataggi di prima),
   `mondoQui` e `nelMondo3d` in `Gioco.vue`, la porta col tasto per passare, la tinta in `vesti.js` (`tingi`), il minatore e il
   capitano che la annunciano una volta. Resta il viaggio indietro.
 

@@ -1,4 +1,4 @@
-# I limiti del Sotterraneo 3D sul vecchio telefono
+# I limiti del sotterraneo sul vecchio telefono
 
 Fin dove regge il Redmi Note 7 (fascia bassa) con quanti personaggi, e chi pesa di più, senza giocare a mano. Due fonti, da non
 confondere:
@@ -33,7 +33,7 @@ sopra, dove la base è leggera, contano.
 
 ## Lo scontro delle discese, imitato
 
-`'sotterraneo3d=1&seme=11&sotterraneo=branco&tipo=…&stanza=sala&qualita=bassa&dpr=1&eroe=cavaliere'`, fermo (niente attacchi), due giri:
+`'sotterraneo=1&seme=11&sotterraneo=branco&tipo=…&stanza=sala&qualita=bassa&dpr=1&eroe=cavaliere'`, fermo (niente attacchi), due giri:
 
 | mostri | chiamate | triangoli | banco | compiti | telefono stimato |
 |---|---|---|---|---|---|
@@ -128,7 +128,7 @@ Le vesti non si misurano da sole (si mettono addosso a un eroe: «crea non torna
 
 ```bash
 npm run build
-B='sotterraneo3d=1&seme=11&sotterraneo=branco&stanza=sala&qualita=bassa&dpr=1&eroe=cavaliere'
+B='sotterraneo=1&seme=11&sotterraneo=branco&stanza=sala&qualita=bassa&dpr=1&eroe=cavaliere'
 A="new Promise(r => setTimeout(r, 5000))"
 node strumenti/vecchio-telefono.mjs "$B&tipo=scheletro" --scontro --ritmo ';' --per 'mostri=1,3,6,8' --secondi 8 --esegui "$A" --banco 20
 node strumenti/vecchio-telefono.mjs "$B&tipo=drago" --scontro --ritmo ';' --per 'mostri=3,6,8' --secondi 8 --esegui "$A" --banco 20
@@ -136,9 +136,9 @@ node strumenti/vecchio-telefono.mjs "$B&mostri=3&tipo=scheletro" --scontro --rit
 node strumenti/vecchio-telefono.mjs "$B&mostri=3&tipo=scheletro&variante=guerriero,arciere,mago&grado=leggendario&corredo=leggendario" --scontro --secondi 20 --spegni '-,effetti3d'
 # il mondo: il prato dei campi senza i mostri veri, la folla finta
 P="new Promise(r => { const t = setInterval(() => { if (window.__mondo3d && window.__sotterraneo3d && window.__sotterraneo3d.pronto) { clearInterval(t); window.__mondo3d.senzaMostri(); window.__mondo3d.porta(90.5, 43.5); setTimeout(r, 12000) } }, 300) })"
-node strumenti/vecchio-telefono.mjs 'sotterraneo3d=mondo&eroe=cavaliere&qualita=bassa&dpr=1&tetto3d=24' --per 'folla=0,4,8,12,16,24' --secondi 6 --esegui "$P" --banco 20
-node strumenti/vecchio-telefono.mjs 'sotterraneo3d=mondo&eroe=cavaliere&qualita=bassa&dpr=1&tetto3d=24' --per 'branco3d=0,4,8,16' --secondi 6 --esegui "$P" --banco 20
-node strumenti/vecchio-telefono.mjs 'sotterraneo3d=mondo&eroe=cavaliere&qualita=bassa&dpr=1&folla=8&branco3d=8' --spegni '-,ombre,ombreMorbide,saldatura,mostri3d:0' --secondi 6 --esegui "$P" --banco 20
+node strumenti/vecchio-telefono.mjs 'sotterraneo=mondo&eroe=cavaliere&qualita=bassa&dpr=1&tetto3d=24' --per 'folla=0,4,8,12,16,24' --secondi 6 --esegui "$P" --banco 20
+node strumenti/vecchio-telefono.mjs 'sotterraneo=mondo&eroe=cavaliere&qualita=bassa&dpr=1&tetto3d=24' --per 'branco3d=0,4,8,16' --secondi 6 --esegui "$P" --banco 20
+node strumenti/vecchio-telefono.mjs 'sotterraneo=mondo&eroe=cavaliere&qualita=bassa&dpr=1&folla=8&branco3d=8' --spegni '-,ombre,ombreMorbide,saldatura,mostri3d:0' --secondi 6 --esegui "$P" --banco 20
 node strumenti/pesi-3d.mjs --primi 15                     # la classifica (~40 minuti; --gruppo mostri per una parte)
 ```
 

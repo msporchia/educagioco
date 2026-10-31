@@ -5,10 +5,10 @@ fulmine che scende, radici che escono dal pavimento, scudo che si forma…»*; 1
 speciale, più animazioni per lo stun, veleno ecc.»*. La vista dello scontro ([scontro-interfaccia.md](scontro-interfaccia.md)) fa
 volare l'azione una cosa alla volta; qui com'è fatto quello che si vede quando l'eroe usa un'abilità, e cosa si vede addosso a chi
 subisce. Il codice: `dati/effetti.js` (le famiglie, la scelta dai dati), `viste/racconto.js` (i tempi e cosa posare sul palco),
-`viste/Scene.vue` (come si disegna), `viste/SegniAddosso.vue` (gli stati che restano), `stile-effetti.css`.
+`scena3d/effetti3d/` e `scena3d/racconto.js` (come si disegna: [mostri-3d.md](mostri-3d.md)), `viste/SegniAddosso.vue` (gli stati che restano), `stile-effetti.css`.
 
-**Disegnato in codice** (SVG e CSS, nessuna libreria, nessuna emoji: registro serio, [dialoghi.md](dialoghi.md#le-scritte) per le
-parole). Un tocco accorcia tutto (`.sot-veloce` azzera ritardi e durate), `prefers-reduced-motion` li spegne e restano i numeri.
+**Disegnato in codice** (modelli 3D di `scena3d/effetti3d/`, nessuna emoji: registro serio, [dialoghi.md](dialoghi.md#le-scritte) per le
+parole). Un tocco accorcia tutto, `prefers-reduced-motion` li spegne e restano i numeri.
 Niente lampi a tutto schermo: le luci stanno sulle figure.
 
 ## Come si sceglie l'effetto
@@ -100,6 +100,5 @@ Parole di gioco, corte, non istruzioni ([dialoghi.md](dialoghi.md#le-scritte)).
 sanguina|radici|rotto|fiacco"]` e quelli dell'eroe (`scudo`, `parato`, `intoccabile`, `specchio`, `linfa`), `.sa-stella`,
 `[data-segni] [data-segno-pre="resiste|teme|immune"]` (`title`), `.sot-numero-resiste`, `.sot-numero-teme`, `.sot-numero-segno`. Quello che compare
 dura meno del racconto e sotto carico una foto è lenta: la prova osserva la pagina con un `MutationObserver` e controlla dopo.
-`unita/sotterraneo-vista` (la scelta dall'elemento e dalla forma, ogni abilità ha un effetto che esiste, nessun effetto oltre 800 ms, Scene.vue
-disegna tutto, i segni, il racconto di palla, catena, resiste/teme/immune, Ninna nanna, scudo, i `presi` e il gelo del motore) e
+`unita/sotterraneo-vista` (la scelta dall'elemento e dalla forma, ogni abilità ha un effetto che esiste, nessun effetto oltre 800 ms, i segni, il racconto di palla, catena, resiste/teme/immune, Ninna nanna, scudo, i `presi` e il gelo del motore) e
 `integrazione/sotterraneo-gruppi` (un mago contro melme: palla, catena, prigione; uno stordito; foto `effetti-*` con `--scatti`).

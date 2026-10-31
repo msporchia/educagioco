@@ -1,6 +1,6 @@
 # La missione principale: le sette porte
 
-Sulla mappa le discese erano pallini di colore e nient'altro: l'utente, il
+Le discese erano pallini di colore e nient'altro: l'utente, il
 13 ottobre 2026, vedeva due verdi e il resto grigio e si chiedeva *«quindi
 devo finire le quest? cosa vuol dire la storia? metti una quest che me lo fa
 fare»*. La grande storia ([la-grande-storia.md](la-grande-storia.md)) adesso è
@@ -11,7 +11,7 @@ della seguente.
 
 Il codice: `dati/storia.js` (`STORIA`, `CAPITOLI`), `laStoria` in
 `motore/storia.js`, `storiaDelDiario` e `discesaDellaStoria` in
-`motore/missioni.js`, `viste/Diario.vue`, `viste/Terra.vue` (il fumetto e la
+`motore/missioni.js`, `viste/Diario.vue`, `viste/FumettoMondo.vue` e `viste/Mondo3d.vue` (il fumetto e la
 freccia), `motore/dialoghi.js` (`strada`).
 
 ## Cosa è
@@ -35,28 +35,27 @@ freccia), `motore/dialoghi.js` (`strada`).
 
 In cima, sotto «La storia», una scheda d'oro: il titolo, «Porta 3 di 7 · La
 torre bruciata» e una freccina che pulsa con «Batti Fiammetta, in fondo». Un
-tocco apre il dettaglio: il minatore col suo detto, la discesa ritagliata
-dalla mappa con come arrivarci (`LUOGHI`), il mostro da battere, **«segui
+tocco apre il dettaglio: il minatore col suo detto, l'icona della discesa
+con come arrivarci (`LUOGHI_MONDO`), il mostro da battere, **«segui
 questa»** e **«vai alla discesa»** (l'eroe ci va e si apre il fumetto; giù,
-dove non si cammina sulla mappa, non c'è), e in fondo **le sette porte** una
+dove non si cammina nel mondo, non c'è), e in fondo **le sette porte** una
 per una (chiusa col nome del grosso caduto, quella di adesso, le altre «si
 aprono dopo la porta di prima»): è qui che si capisce perché una discesa è
 chiusa. Titolo e testi non sono nel codice delle viste: vengono da `STORIA`.
 
-## Sulla mappa
+## Nel mondo di sopra
 
 - **La freccia azzurra** (quella delle missioni prese, [missioni-freccina.md](missioni-freccina.md))
-  porta alla discesa della storia quando nient'altro la chiede: di difetto la
-  missione presa più vicina, poi la storia; «segui questa» sulla storia la
-  mette davanti (`avventura.segui = 'storia'`, che non decade). Le consegne
-  hanno sempre la precedenza.
+  porta alla meta, che di difetto è la discesa della storia; «segui questa» su una
+  missione presa la sposta (`avventura.segui = 'storia'` riporta la storia, e non decade;
+  [mondo-3d-la-meta.md](mondo-3d-la-meta.md)).
 - **Il fumetto di una discesa** dice dov'è la storia: «La storia: continua
   qui, in fondo aspetta Re Ossuto» sulla discesa di adesso, «la porta è
   chiusa: Re Ossuto è caduto» su quelle finite, e una discesa chiusa dice cosa
   la apre, **battere il grosso della precedente**, non fare missioni («Si apre
   quando batti Re Ossuto in fondo alla cripta dei re»). Il grigio non è
   chiuso: il pallino grigio vuol dire «ormai sei più forte di tutto, rende
-  poco», e il minatore lo dice ([zone.md](zone.md#il-pallino-e-la-sentinella)).
+  poco», e il minatore lo dice ([zone.md](zone.md#il-colore-e-la-sentinella)).
 - **Il minatore** la dice ogni volta che si apre il suo dialogo (la pagina
   del capitolo, poi la strada); la prima volta si presenta, spiega che sono
   sette porte e la strada la dice la pagina dopo ([dialoghi.md](dialoghi.md)).

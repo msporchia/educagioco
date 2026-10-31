@@ -18,16 +18,16 @@ campagna), `Gioco.vue` (chi legge e scrive), `viste/Eroi.vue` (la scelta).
   nebbia nuova e il minatore che non ha ancora parlato. L'età apre lo stesso le
   discese già passate per lei (`aperta(…, fatte)` con le discese
   dell'avventura): il lucchetto guarda l'avventura, la portata il bambino.
-- **Dalla terra di sopra si torna alla scelta** con «Cambia eroe» in fondo alla
+- **Dal mondo di sopra si torna alla scelta** con «Cambia eroe» in fondo alla
   pagina dell'eroe (`[data-azione="eroe"]`, si apre dal livello sulla barra;
-  prima era un «cambio» sulla carta di chi scende, sulla mappa), senza perdere niente: la terra rinasce con
+  prima era un «cambio» sulla carta di chi scende), senza perdere niente: il mondo si riapre con
   la nebbia e il posto dell'eroe scelto (`:key` sull'eroe in `Gioco.vue`).
   **Da dentro una discesa** si cambia dal velo della pausa («scelgo un altro
   eroe»: la discesa si salva com'è): uscendo con la ✕ non si passa dalla terra di
   sopra ([regole.md](portale-e-sosta.md#il-portale-e-luscita)), quindi senza questo chi ha
   una discesa a metà non potrebbe giocare con un altro eroe senza buttarla.
   Scegliere un eroe con una discesa lasciata con la ✕ la riprende giù; con una
-  lasciata dal portale si arriva sulla terra, col gemello.
+  lasciata dal portale si arriva nel villaggio, col gemello.
 - **La scheda dice a che punto è**: discese finite e stelle, la roba principale
   addosso (arma e armatura), le gemme, il record dell'abisso, la discesa a
   metà; una mai cominciata dice «nuova avventura» (`cominciata`: una discesa
@@ -54,7 +54,7 @@ Tutto in `profile.campagne.sotterraneo`, nessun campo nuovo nel profilo:
     avventure: {
       cavaliere: { tappa, libera, stelle,   // le sue discese
                    roba,                    // gemme, addosso, tasche, torce (motore/corredo.js)
-                   terra,                   // { nebbia, dove, parlato }
+                   mondo,                   // il mondo di sopra: { firma, nebbia, dove, parlato, divieti, … } (mondo-3d.md)
                    botteghe,                // { banchi, scaffali, ruota }: i banchi di questo giro, i pezzi in più, chi deve cambiare (bottega.md)
                    venduti,                 // [{ k, prezzo }]: gli ultimi cinque pezzi venduti al rigattiere, per riprenderli allo stesso prezzo (bottega.md)
                    sosta,                   // la discesa lasciata a metà (motore/sosta.js); `via: 'portale'` la rende anche il gemello di sopra, `'uscita'` (la ✕) si riprende giù
@@ -96,9 +96,9 @@ Tutto in `profile.campagne.sotterraneo`, nessun campo nuovo nel profilo:
   `sotMostri`…) sono del bambino e salgono con chiunque scenda.
 - **«Riprendi da qui»** in home apre l'avventura aperta per ultima
   (`cfg.eroe`) e, se ha una discesa a metà, la riprende nel punto esatto
-  (giù direttamente se lasciata con la ✕, `riprendiSeUscito`; dalla carta della
-  terra di sopra se lasciata dal portale, `riprendiSeChiesta`); il riquadro dice quale discesa e mostra il suo posto
-  ritagliato dalla mappa (`ripresa` nel manifesto, `gioco.js`). La discesa a
+  (giù direttamente se lasciata con la ✕, `riprendiSeUscito`; dall'ingresso della
+  stessa discesa nel mondo di sopra se lasciata dal portale, `riprendiSeChiesta`); il riquadro dice quale discesa e mostra l'icona
+  del suo posto (`ripresa` nel manifesto, `gioco.js`). La discesa a
   metà di un altro eroe la si ritrova scegliendolo.
 
 ## I salvataggi di prima si azzerano
@@ -144,6 +144,6 @@ qui»). Nella scelta `.sot-eroe[data-eroe="<eroe>"]` con `data-nuova` (1 se mai
 cominciata), `[data-punto]` (a che punto è), `[data-addosso="<cosa>"]` (l'arma
 in mano, l'armatura e il gioiello), `[data-in-mano]` / `[data-in-braccio]` sul
 ritratto, `[data-tratti]`, `[data-fondo]`, `[data-a-meta]` (col suo
-`[data-ritaglio]`), `[data-livello-avventura]`; `[data-azione="eroe"]` («Cambia eroe», nella pagina dell'eroe) la apre dalla terra di sopra;
+`[data-ritaglio]`), `[data-livello-avventura]`; `[data-azione="eroe"]` («Cambia eroe», nella pagina dell'eroe) la apre dal mondo di sopra;
 `scegliAvventura` in `test/aiuto/browser.mjs` per chi deve solo scegliere. In
 home `[data-riprendi] [data-ritaglio]`.

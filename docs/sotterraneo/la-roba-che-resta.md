@@ -5,7 +5,7 @@ quello che si trova e si compra resta, e il mercante è salito sulla terra di
 sopra. La roba è di un'avventura, una per eroe ([avventure.md](avventure.md)).
  Qui le regole della roba che resta e la misura che le tiene in
 equilibrio; i mercanti stanno in [bottega.md](bottega.md#i-mercanti-di-sopra) e
-[terra-di-sopra.md](terra-di-sopra.md#i-mercanti), lo svenimento in
+[mondo-3d.md](mondo-3d.md#chi-sta-dove), lo svenimento in
 [regole.md](regole.md#svenire-e-il-fondo-degli-svenimenti).
 
 Il codice: `motore/corredo.js` (la roba e le regole che valgono sotto e
@@ -30,7 +30,7 @@ sopra), `motore/bottega.js` (i banchi),
   che la classe non porta va in tasca scendendo (`sistemaIlCorredo`), o per
   terra se le tasche sono piene: una rete sotto, mai un caso del gioco.
 - **Le gemme si spendono sopra**, dai mercanti
-  ([terra-di-sopra.md](terra-di-sopra.md#i-mercanti)); nelle discese non c'è
+  ([mondo-3d.md](mondo-3d.md#chi-sta-dove)); nelle discese non c'è
   più nessuno che vende. Le monete non cambiano (🪙1 a risposta giusta) e la
   roba **non si vende mai in monete**, solo in gemme.
 - **Le discese dopo la prima contano sulla roba** (`forza` sulle ossa e

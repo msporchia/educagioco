@@ -1,15 +1,15 @@
 # Chi cura: la guaritrice e l'incantatrice
 
-Il codice: `viste/Terra.vue` (il fumetto, il numero, la scelta), `motore/dialoghi.js` (`curaDi`, `mancaA`, `richiamoDi`, `dopoLaCura`),
-`dati/dialoghi.js` (`cura` di ogni personaggio), `motore/sosta.js` (`forzeDi`), `Gioco.vue` (`forze`, `curaDa`, la barra). La terra di sopra:
-[terra-di-sopra.md](terra-di-sopra.md); il dialogo: [dialoghi.md](dialoghi.md#chi-cura); la sosta: [portale-e-sosta.md](portale-e-sosta.md).
+Il codice: `viste/Mondo3d.vue` (il fumetto, il numero, la scelta), `motore/dialoghi.js` (`curaDi`, `mancaA`, `richiamoDi`, `dopoLaCura`),
+`dati/dialoghi.js` (`cura` di ogni personaggio), `motore/sosta.js` (`forzeDi`), `Gioco.vue` (`forze`, `curaDa`, la barra). Il mondo di sopra:
+[mondo-3d.md](mondo-3d.md); il dialogo: [dialoghi.md](dialoghi.md#chi-cura); la sosta: [portale-e-sosta.md](portale-e-sosta.md).
 
 L'utente, il 14 ottobre 2026: *«aggiungerei un personaggio che ti cura come in Diablo, così se non hai soldi sei comunque a
 posto»*, e *«se sali e hai meno vite del massimo, magari ti chiama dicendoti se vuoi essere curato»*. Perché tornare su
 conti: i mostri picchiano, le pozioni finiscono, e chi non ha gemme non resta bloccato.
 
 - **Salire non cura.** La sosta del portale porta la vita e l'energia di giù (`vita`, `energia`: [portale-e-sosta.md](portale-e-sosta.md)), e
-  la barra sulla terra di sopra le mostra com'erano (`forze` in `Gioco.vue`, `forzeDi` in `motore/sosta.js`, col massimo di
+  la barra sul mondo di sopra le mostra com'erano (`forze` in `Gioco.vue`, `forzeDi` in `motore/sosta.js`, col massimo di
   adesso: la roba comprata sopra può averlo alzato). Prima la barra dichiarava vita e energia piene e la discesa ripresa
   le ritrovava a metà: una bugia. Finita la discesa, e dopo «lascio perdere», non c'è sosta: la prossima parte in piena forma.
 - **La guaritrice (`erborista`) cura la vita, l'incantatrice l'energia**, gratis e senza limiti: ognuna il suo mestiere, e
@@ -23,7 +23,7 @@ conti: i mostri picchiano, le pozioni finiscono, e chi non ha gemme non resta bl
   ripetizioni a ogni passo; tace mentre ci si parla e scompare appena la sosta è a posto. Si vede solo se lei è già stata trovata
   nella nebbia, e solo con una discesa lasciata dal portale (l'abisso risalito per stasera conta: si è portati su ammaccati).
 - **Il 🧪 di sopra** con la vita sotto il massimo dice «la guaritrice ti cura, gratis» invece di «sei già in piena forma».
-- **Ferito sopra** (nel Sotterraneo 3D, uno scontro sul prato senza la sosta del portale): le ferite stanno in `mondo.sopra.forze`, e la
+- **Ferito sopra** (nel sotterraneo, uno scontro sul prato senza la sosta del portale): le ferite stanno in `mondo.sopra.forze`, e la
   barra, i richiami, la guaritrice, l'incantatrice e la fontana le trattano come la sosta ([mondo-aperto-mostri-scena.md](mondo-aperto-mostri-scena.md#svenire-le-ferite-chi-cura)).
 - **Il giocatore finto** (`motore/banco.js`, le risalite) risale, compra e ritorna giù a vita e energia piene: la guaritrice è
   parte del giro. Le soglie con cui risale (`RISALITA`) non le ha toccate: la taratura va rifatta con questa regola.

@@ -37,8 +37,8 @@ gioco che ha una partita più lunga di un paio di minuti.
 era («⚔️ ondata 2 di 5 · ❤️ 4 · ⚡ 35») e due tasti, «torno da dove ero» e
 «lascio perdere quella partita». Toccare un'altra tappa con una sosta aperta
 **chiede prima** («Hai una partita a metà»): il dito di un bambino sulla
-mappa ci finisce comunque, e l'avviso detto dopo non serve. Sotterraneo e
-Survivors hanno la loro carta, venuta prima e con il loro stile.
+mappa ci finisce comunque, e l'avviso detto dopo non serve. Survivors ha la sua carta, venuta prima e con il suo stile; il sotterraneo non ne ha: il mondo ha già la meta da seguire e il portale
+gemello per tornare, e l'ingresso della stessa discesa dice «riprendo da dove ero» ([../sotterraneo/portale-e-sosta.md](../sotterraneo/portale-e-sosta.md)).
 
 Nei test: `[data-ripresa]`, `[data-chiede]`, `[data-azione="riprendi"]`,
 `[data-azione="scorda"]`, `[data-azione="riprendi-invece"]`,
@@ -50,26 +50,23 @@ Nei test: `[data-ripresa]`, `[data-chiede]`, `[data-azione="riprendi"]`,
 riprendere: la partita a metà riparte senza la carta in mezzo
 (`src/giochi/ripresa.js`). La home la chiede (`chiediRipresa`), la carta
 del gioco appena ha una ripresa preme da sola «torno da dove ero»
-(`riprendiSeChiesta`, in `Ripresa.vue` e nelle carte di sotterraneo e
-Survivors), e cambiando schermata la richiesta si scorda (`lasciaRipresa`
+(`riprendiSeChiesta`, in `Ripresa.vue`, nella mappa di Survivors e nel mondo del sotterraneo), e cambiando schermata la richiesta si scorda (`lasciaRipresa`
 in `App.vue`): tornati alla mappa, la carta resta ferma. Un gioco nuovo può
 dire da sé cosa c'è da riprendere (`ripresa(av)` nel manifesto, `{ dove,
 immagine }`): il riquadro scrive `dove` e mostra `immagine` al posto della
-copertina — il sotterraneo, la discesa a metà ritagliata dalla mappa. Il Sotterraneo 3D non ha un manifesto: la home usa quello del gemello 2D (`gemelloDi`, stessa avventura e stessa sosta), quindi la
-carta è una sola e ha l'immagine anche per il 3D. Senza partita a
+copertina — il sotterraneo, l'icona del posto della discesa a metà. Senza partita a
 metà si apre la mappa come sempre. I giochi con un posto per livello
 (Robot, Generale, Passo passo) aprono la mappa, col livello segnato.
 Lo prova `integrazione/pozioni-sosta`.
 
 ## Chi ce l'ha
 
-- **La sosta con la carta in cima alla mappa**:
+- **La sosta riprendibile**:
   - sotterraneo ([../sotterraneo/regole.md](../sotterraneo/regole.md)), con una
     sosta per avventura e non per gioco ([../sotterraneo/avventure.md](../sotterraneo/avventure.md)),
     che riprende nel punto esatto coi mostri dove erano. Ricorda **come** si è
-    lasciata (`via`): dal portale è anche il gemello sulla terra di sopra e la
-    carta in cima; uscendo con la ✕ si va in home e rientrando si è già giù,
-    senza carta, dietro il velo della pausa ([../sotterraneo/regole.md](../sotterraneo/portale-e-sosta.md#il-portale-e-luscita));
+    lasciata (`via`): dal portale è anche il gemello nel villaggio; uscendo con la ✕ si va in home e rientrando si è già giù,
+    dietro il velo della pausa ([../sotterraneo/regole.md](../sotterraneo/portale-e-sosta.md#il-portale-e-luscita));
   - Survivors ([../survivors/regole.md](../survivors/regole.md));
   - castello ([../castello/sosta.md](../castello/sosta.md));
   - bancarella ([../bancarella/regole.md](../bancarella/regole.md));

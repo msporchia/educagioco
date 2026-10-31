@@ -11,13 +11,12 @@ domande per l'utente.
 
 ### La vista
 
-- **Una vista sua, accanto a quella di oggi**: `viste/Mondo3d.vue` (come dice `grafica-3d.md` del ramo del 3D: «la terra
-  di sopra in 3D è una vista sua accanto a `viste/Terra.vue`»), scelta da `Gioco.vue` con lo stesso `in3d`. Il disegno
+- **Una vista sua**: `viste/Mondo3d.vue`, caricata da `Campagna.vue`. Il disegno
   in `scena3d/mondo/`, un file per tema, dal prototipo: `terreno.js`, `acqua.js`, `kit.js`, `monumenti.js`, `natura.js`,
   `vita.js`, `nebbia.js`, `veduta.js`, `pezzi.js` (le regioni costruite e buttate), `dito.js`. Figure, contorno,
   etichette, contesto e WebGL sono quelli di `scena3d/` delle discese.
 - **La telecamera segue l'eroe** come nel prototipo e nelle discese (52°, la distanza dalla forma dello schermo, il
-  pizzico e la rotella), con lo spazio libero misurato sotto le carte e il dialogo come fa oggi `Terra.vue`.
+  pizzico e la rotella), con lo spazio libero misurato sotto le carte e il dialogo.
 - **La veduta d'insieme è del giocatore**: è la casella «la mappa grande» della barra, sopra ([barra.md](barra.md)); giù
   resta la mappina. Dall'alto si leggono fiumi, ponti, città, i nomi dei posti trovati, le pietre accese e i segni delle
   quest ([mondo-aperto-quest.md](mondo-aperto-quest.md#b-il-giornale-e-la-nebbia)). Un tocco nella veduta manda l'eroe
@@ -31,7 +30,7 @@ domande per l'utente.
 Il prototipo colora le superfici e lascia case e rocce come sagome bianche. La regola: **quello che non si è visto non
 si disegna, e sopra c'è un velo di nuvole**.
 
-- **La maschera è una trama del mondo**, un texel per cella (160×140), sfumata ai bordi come le nuvolette del 2D, letta
+- **La maschera è una trama del mondo**, un texel per cella (160×140), sfumata ai bordi a nuvolette, letta
   in ogni materiale: lo stesso innesto di `scena3d/maschera.js` delle discese, esteso a terreno, acqua, kit, istanze,
   figure e fiamme. Si riscrive solo quando si scopre una cella, mai a fotogramma.
 - **Un oggetto si vede o no tutto intero**: ogni pezzo del kit e ogni istanza porta la cella della sua base (un attributo
@@ -39,8 +38,8 @@ si disegna, e sopra c'è un velo di nuvole**.
   dal terreno in un attimo, invece di schiarirsi a strati. Niente sagome.
 - **Il velo**: sopra le celle mai viste nuvole basse istanziate (una manciata di cartelli di rumore morbido per
   regione), che dall'alto fanno la mappa da scoprire. **Da decidere**: il colore (le nuvole chiare del prototipo, che
-  all'utente piacciono, o il nero del 2D); raccomandate le chiare, perché sopra è giorno.
-- **Due stati sopra, non tre**: mai visto (nuvole) e visto (pieno). Lo «scuro dove si è stati» del 2D resta delle
+  all'utente piacciono, o il nero); raccomandate le chiare, perché sopra è giorno.
+- **Due stati sopra, non tre**: mai visto (nuvole) e visto (pieno). Lo «scuro dove si è stati» è delle
   discese; sopra lo fa il cerchio dei mostri.
 - **Si salva** come in [mondo-aperto-dati.md](mondo-aperto-dati.md), un bit per cella.
 
@@ -87,11 +86,11 @@ mondo è 2,3 volte più grande, quindi **si disegna a pezzi**:
   nella vista normale, sotto le 100 chiamate nella veduta. Il pixel ratio che si adatta e `ACCESI` sono quelli delle
   discese; il degrado a scalini non c'è (l'utente vuole prima provare).
 - **Il peso**: three c'è già; il mondo aggiunge il codice del prototipo (~165 KB di sorgente). Nel sito spezzato sta nel
-  pezzo del 3D, chiesto solo entrando nel Sotterraneo 3D ([../core/avvio-e-memoria.md](../core/avvio-e-memoria.md)).
+  pezzo del 3D, chiesto solo entrando nel sotterraneo ([../core/avvio-e-memoria.md](../core/avvio-e-memoria.md)).
 
 ### Le icone dei posti
 
-Le icone dei dungeon erano ritagli della mappa dipinta (`terra-icone.js`) e le usano anche la home e la scelta degli eroi, che
+Le icone dei dungeon le usano anche la home e la scelta degli eroi, che
 three non lo caricano. **Si fotografano i monumenti in 3D con un comando** (`npm run scatti icone-mondo`), in WebP piccole dentro
 un file di dati: niente una tantum, e la home resta senza three. Fatto: [mondo-3d.md](mondo-3d.md#le-icone-dei-posti).
 
@@ -106,9 +105,9 @@ L'utente: *«per forme geometriche così basilari i disegni sono dannosi»* (le 
   ([../core/grafica.md](../core/grafica.md)).
 - **Resta sprite quello che ha un viso o è piccolo**: le creature, l'eroe con la sua roba, le persone (salvo la strada C),
   il bottino per terra (gemme, pozioni, armi, curiosità), le icone dell'interfaccia.
-- **Dall'atlante 2D diventa sostituibile**, nel 3D soltanto: gli orpelli dell'arredo ([arredo.md](arredo.md)), i relitti
-  ([piani-caverne.md](piani-caverne.md)), le porte e i forzieri dei piani, il portale, la fontana, le scale; sopra, tutta la
-  mappa dipinta e i suoi ritagli. Il 2D tiene i suoi pezzi: niente si toglie dall'atlante finché il 2D c'è.
+- **Dall'atlante diventa sostituibile**: gli orpelli dell'arredo ([arredo.md](arredo.md)), i relitti
+  ([piani-caverne.md](piani-caverne.md)), le porte e i forzieri dei piani, il portale, la fontana, le scale; sopra, il mondo è
+  tutto in codice.
 
 ## 7. Le fasi
 
@@ -117,7 +116,7 @@ onesti, test compresi.
 
 | # | fase | cosa dà all'utente | giorni |
 |---|---|---|---|
-| 0 | **Il terreno comune**: il ramo del Sotterraneo 3D unito, `motore/aperta.js` portato dal ramo delle terre selvagge, le decisioni di questo progetto | niente a schermo; il punto di partenza | 1–2 |
+| 0 | **Il terreno comune**: il ramo del sotterraneo unito, `motore/aperta.js` portato dal ramo delle terre selvagge, le decisioni di questo progetto | niente a schermo; il punto di partenza | 1–2 |
 | 1 | **Il generatore del mondo** in `src/` (`motore/mondo.js`, `dati/mondo.js`): 5×5 regioni (superato: oggi la serpentina), anelli, confini, tre città, pietre, sette dungeon in fila, antri, strade, guasti, firma; `npm run pianta -- --mondo` | la pianta da giudicare, e il seme scelto | 3–4 |
 | 2 | **Il mondo da girare**, senza mostri: `Mondo3d.vue`, la telecamera, il dito con le persone che vincono, le figure ancorate (A), la nebbia vera e salvata, la veduta, il villaggio coi mercanti, dialoghi, bottega, quest di oggi, il portale gemello, i sette dungeon coi nomi nuovi | la storia intera giocabile nel mondo nuovo, coi dungeon 3D di oggi | 7–9 |
 | 3 | **Le prestazioni**: regioni a pezzi, dettaglio da lontano, ombra vicina; misure su due telefoni | il mondo che regge sul telefono | 2–4 |
@@ -126,14 +125,13 @@ onesti, test compresi.
 | 6 | **Le quest** ([mondo-aperto-quest.md](mondo-aperto-quest.md#e-cosa-si-fa-subito-e-cosa-vuole-mattoni-nuovi)): il dove a regione, i segni nella veduta, caccia e signori, consegna, esplora, trova chi, la bacheca coi modelli, le mappe del tesoro | il mondo con qualcosa da fare dappertutto | 8–12 |
 | 7 | **Gli antri**: ingressi a rotazione, uno o due piani, chiavi, Tesori | i dungeon da trovare | 4–6 |
 | 8 | **La storia e i nomi**: capitoli per zona, `LUOGHI`, `VOLTI`, dialoghi, le icone fotografate | il racconto che porta fuori | 2–3 |
-| 9 | **I salvataggi**: la chiave `sotterraneo3d` e «porta qui il tuo eroe»; il travaso del 2D solo il giorno che il mondo lo sostituisce | provarlo con l'eroe vero | 2–4 |
+| 9 | **I salvataggi**: il campo `mondo` nell'avventura e il travaso di quelli di prima | provarlo con l'eroe vero | 2–4 |
 | — | **La taratura**, segnalata e non fatta qui: banco e giocatori tipo nel mondo, fasce delle regioni, premi | i numeri giusti | 4–6 |
 
 **Fatte: la 0 e la 1** (16 ottobre 2026): il generatore e il seme 19 in [mondo-aperto-generatore.md](mondo-aperto-generatore.md).
 
-**Fatta la 2** (16 ottobre 2026, [mondo-3d.md](mondo-3d.md)): `viste/Mondo3d.vue` e `scena3d/mondo/` nel Sotterraneo 3D, il dito
-con le persone che vincono, le figure ancorate (A), la nebbia vera e salvata (`mondo` nell'avventura, la chiave `sotterraneo3d`
-resta la fase 9), la veduta, le tre città coi mercanti, dialoghi, bottega e missioni di oggi, i sette ingressi coi nomi nuovi e il
+**Fatta la 2** (16 ottobre 2026, [mondo-3d.md](mondo-3d.md)): `viste/Mondo3d.vue` e `scena3d/mondo/` nel sotterraneo, il dito
+con le persone che vincono, le figure ancorate (A), la nebbia vera e salvata (`mondo` nell'avventura), la veduta, le tre città coi mercanti, dialoghi, bottega e missioni di oggi, i sette ingressi coi nomi nuovi e il
 ritorno, il gemello nella città giusta. Anticipati dalla 3 e dalla 4: i pezzi costruiti e buttati col mondo lontano, l'ombra che
 segue, le pietre con la domanda e il viaggio, le grate dei passaggi. Restano della 3 le misure sui due telefoni.
 
@@ -143,9 +141,8 @@ pozzo dove manca **una** fra guaritrice e incantatrice (oggi il forte), e cura v
 com'erano; il generatore non è stato toccato (capitano e fontana stanno dove lui ha già messo la persona e il pozzo).
 
 **Fatta la 8** (19 ottobre 2026, [dialoghi.md](dialoghi.md#i-nomi)): `CAMPAGNA`, `CAPITOLI`, `VOLTI`, le missioni, i dialoghi, le novità e
-il resto dei testi dicono i nomi nuovi, per tutti e due i sotterranei; la **strada** del minatore no, perché è geografia (`LUOGHI_MONDO`).
-Le icone dei posti sono fotografate dai monumenti (`npm run scatti icone-mondo`, [mondo-3d.md](mondo-3d.md#le-icone-dei-posti)); il 2D
-tiene i suoi ritagli dipinti. Resta la carta «riprendi» della home, che per il 3D non ha un manifesto ([da-fare-3d-e-mondo.md](da-fare-3d-e-mondo.md)).
+il resto dei testi dicono i nomi nuovi; la **strada** del minatore è geografia (`LUOGHI_MONDO`).
+Le icone dei posti sono fotografate dai monumenti (`npm run scatti icone-mondo`, [mondo-3d.md](mondo-3d.md#le-icone-dei-posti)).
 
 **Fatta la 6, senza i mostri di sopra** (19 ottobre 2026, [mondo-aperto-quest.md](mondo-aperto-quest.md#fatto-le-taglie-della-bacheca-19-ottobre-2026)):
 la bacheca di ogni città appende tre taglie per giro (consegna, esplora, trova chi, mappa del tesoro e, nei dungeon, caccia, mostro col
@@ -193,8 +190,7 @@ antri, strade): da lì più agenti lavorano senza pestarsi i piedi, ognuno coi s
   `unita/sotterraneo-mondo-3d` (pura: la maschera, i pezzi da costruire, il bersaglio delle persone),
   `integrazione/sotterraneo-mondo` (col dito vero: il tocco su una persona sottile, la veduta e il tocco lì, la nebbia che
   si apre e si ritrova, una pietra accesa con la domanda, il viaggio, il gemello nella città giusta, quanto costa).
-- **Da adattare**: `unita/sotterraneo-terra` (le stesse prove sulla maschera generata: raggiungibili, chi sta fermo, il
-  gemello, la fila), `unita/sotterraneo-missioni` e `-storia` (i requisiti nel mondo), `unita/sotterraneo-zone` (i volti
+- **Da adattare**: `unita/sotterraneo-terra` (ora prova solo `motore/terra.js` su una maschera piccola), `unita/sotterraneo-missioni` e `-storia` (i requisiti nel mondo), `unita/sotterraneo-zone` (i volti
   nuovi), `integrazione/sotterraneo-terra`, `-mercanti`, `-missioni`, `-portale`, `-avventure` (il 3D li vuole sui bersagli
   HTML sopra la tela; `camminaVerso` e `scendiNelSotterraneo` di `test/aiuto/browser.mjs` imparano il mondo).
 - **I banchi**: `npm run pianta -- --mondo`; il banco del sotterraneo con un curioso che attraversa le regioni prima
@@ -209,8 +205,7 @@ superficie** che il catalogo non ha (dieci regioni senza abitanti propri); **la 
 **Le decisioni dell'utente, 16 ottobre 2026** (il progetto è approvato con queste; sotto, le domande come erano):
 
 1. **Mostri anche sopra**: sì.
-2. **3D e 2D con l'eroe separato**: per ora sì (chiave `sotterraneo3d`, «porta qui il tuo eroe»), «tanto ne rimarrà solo uno»: il 3D è destinato a
-   sostituire il 2D, quindi si progetta perché l'unione finale sia facile (stessi dati, nessuna scelta che la blocchi).
+2. **L'eroe**: uno solo, sotto la chiave `sotterraneo` («tanto ne rimarrà solo uno»).
 3. **Pietre del viaggio con una domanda**: sì, una volta.
 4. **Dopo la storia ruotano le regioni**: no; «forse possiamo semplicemente espandere il terreno»: aperto, da riprendere quando c'è il mondo da girare.
 5. **Gli antri a rotazione**: «vedi sopra»: aperto, collegato al punto 4 (rotazione o terreno che si espande).
@@ -224,7 +219,7 @@ Le domande, ognuna con la raccomandazione:
 
 1. **Mostri anche sopra, o mondo sicuro coi mostri solo nei dungeon?** Sopra: senza, le fasce degli anelli non vogliono
    dire niente.
-2. **Il 3D e il 2D condividono l'eroe?** No mentre è in prova: chiave `sotterraneo3d` e «porta qui il tuo eroe».
+2. **Un eroe solo o due?** Uno solo: la chiave `sotterraneo`.
 3. **Le pietre del viaggio si accendono con una domanda?** Sì, una volta; il viaggio è gratis.
 4. **Dopo la storia ruotano anche le regioni, come le zone?** No: ruotano i sette, le regioni restano ferme e gli antri
    prendono la fascia verde.

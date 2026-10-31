@@ -1,6 +1,6 @@
 # La meta del mondo di sopra (3D)
 
-Nel Sotterraneo 3D il mondo è grande e coperto di nuvole: alla prima partita si vede solo il villaggio. **Il bambino, anche di
+Nel sotterraneo il mondo è grande e coperto di nuvole: alla prima partita si vede solo il villaggio. **Il bambino, anche di
 sei anni, deve capire da solo «vado di là»**: in cima la carta della meta dice cosa e quanto, per terra le luci azzurre fanno la
 strada vera, e le nuvole si aprono lungo quella strada. Ci si va a piedi: niente cammino automatico, le luci bastano. Il mondo, la
 vista e il salvataggio sono in [mondo-3d.md](mondo-3d.md); le freccine sul bordo in [missioni-freccina.md](missioni-freccina.md); la
@@ -29,16 +29,14 @@ comodità (la più vicina, chi aspetta), così non cambia da sola camminando o f
 
 La scelta vale finché la missione è in mano (presa, o fatta e da consegnare): consegnata decade e torna la storia. Finita la storia
 (o ferma per l'età) e niente scelto, non c'è meta né carta. Le freccine d'oro «Hai una consegna per …» e i segni «!»/«?» sopra le
-persone restano: dicono che c'è qualcosa, non decidono la meta. La terra dipinta (`viste/Terra.vue`) tiene la sua regola
-(`discesaDaSeguire`).
+persone restano: dicono che c'è qualcosa, non decidono la meta.
 
 ## La strada vera
 
 - **Il campo delle distanze** (`campoVersoLaMeta(terra, meta, stradaDelMondo(m))`): una volta per meta, da lei a ogni cella sulla
   terra (`terraDelMondo`), con le mosse dell'A* di `motore/terra.js` (otto direzioni, √2 in diagonale, mai un angolo tagliato)
   ma con un **costo per cella**. Una decina di millisecondi (a caldo, in Node); poi la strada da qualunque cella è una discesa
-  del campo, e i passi una lettura. Senza il terzo parametro è il più corto, quello dei mostri e del banco (`motore/terra.js`
-  e il 2D non cambiano).
+  del campo, e i passi una lettura. Senza il terzo parametro è il più corto, quello dei mostri e del banco (`motore/terra.js`).
 - **Il costo** (`strada-sopra.js`, `LIVELLI`): strada 1, erba 1,7; sull'erba +5, +1,5, +0,5 a 1, 2, 3 celle da un ostacolo (casa,
   albero, acqua, roccia), sulla strada +0,7 e +0,2. Il tragitto va per la strada e non passa fra due case a meno di tre celle
   se girarci attorno costa poco; **non è mai più lungo di 1,4 volte il più corto più 4 celle** (`LIMITE`, `MARGINE`: se il costo

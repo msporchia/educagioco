@@ -66,7 +66,7 @@ Ogni tipo dice cosa fa il bambino, dove la si trova, e se il motore lo sa già f
   secondo la regola di sempre ([../core/sprite.md](../core/sprite.md)). **Il 22 ottobre** la cacciatrice e il carovaniere hanno il
   modello 3D ([persone-3d.md](persone-3d.md)), ma non stanno ancora nel mondo: il forte e il rifugio non ci sono più, metterli
   vicino a un dungeon (`PERSONE` in `dati/mondo-aperto.js`) cambia la firma del mondo, e cosa chiedono sono quest scritte a mano
-  ancora da scrivere; non hanno sprite 2D.
+  ancora da scrivere.
 - **La bacheca delle taglie** in ogni città: un cartello modellato con i fogli appesi, una taglia per foglio. Si tocca
   come un personaggio e apre lo stesso dialogo (il ritratto è la bacheca).
 - **I mercanti non danno quest** (oggi neanche): parlano di quello che vendono. **Da decidere**.
@@ -106,8 +106,7 @@ questa» e «vai da …». Nel mondo aperto cambia il **dove**:
 - **I capitoli si riscrivono** (`CAPITOLI` in `dati/storia.js`, le frasi `LUOGHI`) sulla geografia e sui nomi nuovi.
   La regola: il minatore dice la strada con quello che si vede («oltre il ponte di pietra, nella brughiera»), mai coi
   punti cardinali.
-- **Dopo la storia**: le zone come oggi ([zone.md](zone.md)), le taglie, gli antri, i Tesori. Il minatore racconta la
-  zona nata (la notizia) nella città dove sta.
+- **Dopo la storia**: i dungeon si rigenerano ([dungeon-che-si-rigenerano.md](dungeon-che-si-rigenerano.md)), le taglie, i Tesori.
 
 ## (d) Ricompense: cosa va ricalibrato
 
@@ -144,7 +143,7 @@ In tutto **8–12 giorni** senza scorta ed eventi, più i testi e gli sprite dei
 
 ## Fatto: le taglie della bacheca (19 ottobre 2026)
 
-La fase 6 nel mondo di sopra del Sotterraneo 3D, senza i mostri di sopra. Il codice: `dati/missioni-modelli.js` (i modelli, i testi, le
+La fase 6 nel mondo di sopra del sotterraneo, senza i mostri di sopra. Il codice: `dati/missioni-modelli.js` (i modelli, i testi, le
 gemme, `rifaDaId`), `motore/taglie.js` (lo stato, il tetto, la pulizia, l'aggancio dei mostri), `motore/taglie-bacheca.js` (cosa appende
 una bacheca, il posto sul prato), e gli agganci in `motore/missioni.js`, `Gioco.vue`, `Mondo3d.vue`, `FumettoMondo.vue`, `Diario.vue`.
 
@@ -168,7 +167,7 @@ una bacheca, il posto sul prato), e gli agganci in `motore/missioni.js`, `Gioco.
   La bacheca ha il «!» d'oro se c'è un foglio da prendere, il «?» d'oro che pulsa se c'è da consegnare, il «?» grigio se hai preso
   qualcosa e non è fatto; il diario le mostra con 📜 e «vai dalla bacheca …»; «segui questa» dà la freccia sul bordo (azzurra, con la
   faccia della taglia) e il cerchio nella veduta, verso il cuore della regione, l'ingresso, la pietra o la bacheca (dove andare, non cosa
-  si trova). La freccina dei dungeon è quella di sempre (`discesaDaSeguire`).
+  si trova). La freccina dei dungeon è la meta ([mondo-3d-la-meta.md](mondo-3d-la-meta.md)).
 
 ### I tipi fatti
 
@@ -176,7 +175,7 @@ una bacheca, il posto sul prato), e gli agganci in `motore/missioni.js`, `Gioco.
 |---|---|---|---|
 | `consegna` | portare una cosa (🍞 ✉️ 🍎 📜 🧶 📦) a un'altra città | si tocca la bacheca di laggiù | in un colpo |
 | `esplora-regione` · `-ingresso` · `-pietra` | vedere un posto | la nebbia scopre il cuore della regione, l'ingresso, la pietra | da sé, camminando |
-| `trova-chi` | cercare una persona persa in una regione | le si parla | c'è solo a taglia in mano; nel 3D è la persona del suo sprite ([persone-3d.md](persone-3d.md)) |
+| `trova-chi` | cercare una persona persa in una regione | le si parla | c'è solo a taglia in mano; è la persona del suo modello ([persone-3d.md](persone-3d.md)) |
 | `mappa` | seguire la X e scavare | una domanda giusta alla X; sbagliando si riprova | solo a taglia in mano: terra smossa, due assi rosse a croce e la pala (`creaScavo` in `scena3d/mondo/ponti.js`, `S.scavi`), col ✕ sopra |
 | `caccia` | battere N di una specie in un dungeon | N morti, anche tornati | è la «conta» di sempre (`Corsa.conti`) |
 | `mostro` | un mostro col nome e la corona, più duro | cade | come «sconfiggi» di sempre |

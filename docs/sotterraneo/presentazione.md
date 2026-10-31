@@ -15,11 +15,11 @@ compie senza rispondere, e nessuna risposta resta senza qualcosa che si
 apre.
 
 Si parte da un villaggio, e le sette discese stanno in fila lungo la
-strada, sotto una campagna da girare a piedi nella nebbia: dietro l'altare,
-sotto l'arco, sotto la torre in rovina, nella grotta, nello stagno, sotto
-una botola, nella miniera. Un vecchio minatore dice dov'è la prossima; fra
+strada, in un mondo da girare a piedi sotto un velo di nuvole che si apre
+camminando: dietro l'altare, sotto l'arco, sotto la torre in rovina, nella
+grotta, nello stagno, sotto una botola, nella miniera. Un vecchio minatore dice dov'è la prossima; fra
 le case stanno quattro botteghe — il fabbro, l'incantatrice, la guaritrice, il mercante — dove
-si spendono le gemme trovate giù ([terra-di-sopra.md](terra-di-sopra.md)).
+si spendono le gemme trovate giù ([mondo-3d.md](mondo-3d.md)).
 Con tutti si parla: un ritratto, poche righe a pagine, e le domande da
 fargli, che cambiano andando avanti nella storia ([dialoghi.md](dialoghi.md)).
 E in giro c'è chi chiede un favore: la ragazza del pozzo ha perso la
@@ -28,7 +28,7 @@ pescatore un granchio che gli taglia le reti ([missioni.md](missioni.md)):
 una cosa da trovare o un mostro col nome, a un piano preciso, e un premio
 in gemme (a volte anche qualche moneta). Le missioni si sbloccano da sole man
 mano che si avanza, se ne possono prendere più d'una (al più tre aperte
-insieme), un diario sulla mappa le riassume e in cima a ogni discesa una riga
+insieme), un diario le riassume e in cima a ogni discesa una riga
 ricorda quelle prese.
 
 | cosa si tocca | cosa costa |
@@ -67,7 +67,7 @@ cosa obbligatoria di ogni piano.
 Quattro eroi — cavaliere, elfa, mago, nano — che differiscono in quanto
 reggono, quanto picchiano e cosa possono impugnare. **Ognuno ha la sua
 avventura**, come i personaggi di Diablo: la sua roba, le sue discese, la sua
-strada sulla terra di sopra. Si cambia quando si vuole e si ritrova ognuno
+strada sul mondo di sopra. Si cambia quando si vuole e si ritrova ognuno
 dove l'aveva lasciato; le monete sono in comune, e i traguardi contano l'eroe
 arrivato più avanti.
 Sotto abitano quattordici creature, e più si scende più sono dure.

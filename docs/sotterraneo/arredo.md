@@ -2,7 +2,7 @@
 
 L'arredo non si tocca, non blocca e non vale niente: serve a far sembrare
 che qui sotto ci abbia vissuto qualcuno. È disegnato più spento delle cose
-che rispondono (`scena/tela.js`), e toccarlo dice solo cos'è.
+che rispondono (`scena3d/cose.js`), e toccarlo dice solo cos'è.
 
 **L'arredo non è un relitto.** I relitti (macerie, statue rotte, sarcofagi,
 rocce) bloccano il passo e la luce e fanno parte del piano, non della
@@ -81,7 +81,7 @@ stanza (`dentro`), mai davanti a una porta.
   orpelli o cambiare le regole qui non sposta mostri, forzieri e stanze di un
   piano già visto. Lo scenario arriva a `generaPiano` dalla corsa
   (`faiIlPiano`): nell'abisso cambia con i piani.
-- **`r.pezzo` è già lo sprite dello scenario**: la tela non traduce più niente
+- **`r.pezzo` è già lo sprite dello scenario**: il disegno non traduce più niente
   (`PEZZO_DI.arredo`). La frase di chi lo tocca si cerca nella lista dello
   scenario per `pezzo`.
 - **Nei test**: `unita/sotterraneo` (5a e 5a bis: posa, epicità, coppie, porte,

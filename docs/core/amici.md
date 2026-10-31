@@ -39,7 +39,7 @@ Perché regge (non è un buco di sicurezza):
 
 - **La lista** («Amici» in home): i nomi, con un pallino verde per chi è online e «sta giocando a …» se l'ha detto. Gli amici
   non online restano, in grigio. In fondo «＋ Aggiungi un amico» (sopra), finché c'è posto.
-- **Invitare**: nella schermata di un gioco che sa ricevere inviti (Castle Battle, il Sotterraneo 3D) c'è «Invita un amico» con la
+- **Invitare**: nella schermata di un gioco che sa ricevere inviti (Castle Battle, il sotterraneo) c'è «Invita un amico» con la
   lista; si tocca un nome online e libero. **Oppure dalla lista**: accanto a un amico online «Gioca» apre i giochi in due che i
   grandi hanno lasciato accesi; toccato il gioco, si apre la sua sala già su «Sfidi …» con quell'amico, e restano da fare solo le
   scelte della partita. Passa da `ingresso.js` con `{ amico }` al posto dell'invito: `daInvito` lo riconosce e la sala lo riceve in

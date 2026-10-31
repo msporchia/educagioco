@@ -87,7 +87,7 @@ vede. Tre cose, tutte derivate a scena (la pianta e la sua firma non cambiano, l
 | landa | quattro croci storte, ossa e un teschio, un ometto |
 
 Costa circa 1 270 triangoli a tana (30k in tutto il mondo, ma se ne vede una per volta) e nessuna chiamata in più: le forme vanno nel
-cantiere del pezzo. **Davanti a una tana** (`node strumenti/scatta-app.mjs 'sotterraneo3d=mondo&eroe=cavaliere&dpr=1&nebbia=no' --dist --tana
+cantiere del pezzo. **Davanti a una tana** (`node strumenti/scatta-app.mjs 'sotterraneo=mondo&eroe=cavaliere&dpr=1&nebbia=no' --dist --tana
 bosco --senza-mostri`): bosco 91 → 90 chiamate e 401,8k → 406,6k triangoli, ceneri 68 → 70 e 253,2k → 255,1k, landa 76 → 75 e 322,4k →
 324,5k; il cimitero col dito 82 chiamate, 379k. Il bosco è già oltre i 400k senza la tana: il limite lo sfiora il decoro, non il segno.
 **Nella veduta** c'è un teschio 💀 (`[data-nome-posto="tana:<luogo>"]`) quando la cella del cuore è stata vista (la stessa regola della

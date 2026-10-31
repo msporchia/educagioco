@@ -1,9 +1,9 @@
 # Il mondo di sopra in 3D
 
-Nel **Sotterraneo 3D** (`sotterraneo3d`, in prova) la terra di sopra non è la mappa dipinta ma il **mondo a percorso** (seme 8,
+Le discese non si scelgono da un elenco: si raggiungono a piedi nel **mondo a percorso** (seme 8,
 504×300 celle, sette zone in serpentina dal villaggio: [mondo-a-percorso.md](mondo-a-percorso.md), il generatore e il suo
-contratto in [mondo-aperto-generatore.md](mondo-aperto-generatore.md)) disegnato in WebGL. Il Sotterraneo di sempre resta sulla
-terra dipinta ([terra-di-sopra.md](terra-di-sopra.md)), identico. Il motore di sopra (il mondo tenuto, la terra, la nebbia, le
+contratto in [mondo-aperto-generatore.md](mondo-aperto-generatore.md)), disegnato in WebGL, e chi le cerca ha qualcuno che gli
+indica la strada; nel villaggio stanno i mercanti. Il motore di sopra (il mondo tenuto, la terra, la nebbia, le
 pietre, il salvato) è in [mondo-sopra-contratto.md](mondo-sopra-contratto.md); i mostri di sopra a schermo in
 [mondo-aperto-mostri-scena.md](mondo-aperto-mostri-scena.md); dove andare in [mondo-3d-la-meta.md](mondo-3d-la-meta.md); gli
 oggetti di scena (del villaggio e fuori) in [mondo-3d-oggetti.md](mondo-3d-oggetti.md).
@@ -12,7 +12,7 @@ oggetti di scena (del villaggio e fuori) in [mondo-3d-oggetti.md](mondo-3d-ogget
 
 | file | cosa tiene |
 |---|---|
-| `viste/Mondo3d.vue` | la vista: l'eroe che cammina, chi sta dove, il dito, i dialoghi, il fumetto, le pietre, la veduta, il cartello della zona, il salvataggio. Le stesse porte di `Terra.vue` verso `Campagna.vue`, più `mondo`, `risposta`, `veduta`; la prop `dungeon` (i tredici dungeon di `Gioco.vue`) |
+| `viste/Mondo3d.vue` | la vista: l'eroe che cammina, chi sta dove, il dito, i dialoghi, il fumetto, le pietre, la veduta, il cartello della zona, il salvataggio. Le sue porte verso `Campagna.vue` sono `mondo`, `risposta`, `veduta`; la prop `dungeon` (i tredici dungeon di `Gioco.vue`) |
 | `viste/FumettoMondo.vue` | quello che dice il fumetto: un ingresso, una pietra, il portale, il cartello, la bacheca, la fontana, la porta delle terre |
 | `scena3d/mondo/indice.js` | la porta verso la vista: lo stato `S` da disegnare, **le zone caricate attorno all'eroe**, i pezzi costruiti e buttati, il giro di ogni fotogramma, `grafica()` |
 | `pezzi.js`, `dito.js`, `suolo.js` | puri: il mondo a pezzi di 32×28 celle e cosa ci sta (dallo scheletro e dalle zone caricate); i bersagli del dito (e le persone vicine che si dividono lo spazio); l'altezza del terreno e dei ponti, con le celle mai caricate lette dalla loro base |
@@ -25,7 +25,7 @@ oggetti di scena (del villaggio e fuori) in [mondo-3d-oggetti.md](mondo-3d-ogget
 | `natura.js`, `vita.js`, `persone.js`, `trame.js`, `veduta.js` | alberi e decoro a istanze, per pezzo; fumo, spruzzi, faville, fiamme, uccelli; le figure ancorate (anche i mostri); le trame su canvas; la telecamera e la veduta |
 | `mostri.js`, `palco.js` | i mostri di sopra a schermo e il palco dello scontro ([mondo-aperto-mostri-scena.md](mondo-aperto-mostri-scena.md)) |
 
-`Campagna.vue` sceglie `Mondo3d.vue` con `disegno: '3d'` e la carica a richiesta (il Sotterraneo di sempre non tira dentro three).
+`Campagna.vue` monta `Mondo3d.vue` e la carica a richiesta (three non entra con l'app).
 `Gioco.vue` passa `mondo`, la veduta (`vedutaSopra`, la casella «mappa grande» della barra di sopra) e i tredici dungeon
 (`dungeonDelMondo`, [dungeon-che-si-rigenerano.md](dungeon-che-si-rigenerano.md)), e paga la pietra.
 
@@ -49,8 +49,7 @@ oggetti di scena (del villaggio e fuori) in [mondo-3d-oggetti.md](mondo-3d-ogget
 
 ## Il salvataggio
 
-Il campo `mondo` nell'avventura (`profile.campagne.sotterraneo.cfg.avventure[eroe].mondo`), accanto a `terra` del 2D che non si
-tocca: `{ firma, nebbia, dove, giro, pietre, parlato, divieti, novita, sopra, quest, dungeon }` (`quest` lo scrive `Gioco.vue`, le
+Il campo `mondo` nell'avventura (`profile.campagne.sotterraneo.cfg.avventure[eroe].mondo`), `{ firma, nebbia, dove, giro, pietre, parlato, divieti, novita, sopra, quest, dungeon }` (`quest` lo scrive `Gioco.vue`, le
 taglie; `dungeon` i dungeon rifatti, `motore/rigenera.js`). Lo legge `mondoDaSalvato` e lo scrive `mondoDaSalvare`
 ([mondo-sopra-contratto.md](mondo-sopra-contratto.md)): la nebbia è un bit per cella in base64 (25 200 caratteri), e una firma
 diversa (i salvataggi del mondo ad anelli) vuol dire il travaso. **Il villaggio si vede tutto da subito**: la vista ne scopre le
@@ -81,13 +80,16 @@ celle aprendo il mondo. Si salva arrivando, scoprendo (al più ogni tre secondi)
   mezza dai piedi di qualcuno è un tocco su di lui (`dito.js`).
 - Si agisce sul `click`; oltre i 16 px il tocco diventa un trascinare **che sposta la vista** (l'eroe non insegue più il dito: come
   nella fattoria; nella veduta il mondo scorre); due dita zoomano; il mouse conta solo a tasto premuto; un tocco nuovo annulla la
-  meta. L'A* è quello di `motore/terra.js` sulle celle scritte. Il gesto per intero: [mondo-3d-telecamera.md](mondo-3d-telecamera.md).
+  meta. L'A* è quello di `motore/terra.js` sulle celle scritte; un tocco dove non si arriva (l'acqua, un bosco) porta alla cella raggiungibile più vicina in linea d'aria. Il gesto per intero: [mondo-3d-telecamera.md](mondo-3d-telecamera.md).
 
 ## Chi sta dove
 
 - **Le figure ancorate**: le figure dell'atlante delle discese col filo scuro, la luce di taglio dal lato del sole, l'ombra a
-  contatto e quella vera; le persone a scala 1,25 dell'eroe. Chi saluta, i segni sopra la testa, chi cura e il richiamo sono quelli
-  della terra dipinta.
+  contatto e quella vera; le persone a scala 1,25 dell'eroe. I segni sopra la testa, chi cura e il richiamo sono in [dialoghi.md](dialoghi.md) e [chi-cura.md](chi-cura.md).
+- **Chi sta fermo saluta**: alza la mano per 1,4 secondi quando l'eroe gli si avvicina (entro sei celle; si riarma solo dopo che l'eroe
+  si è allontanato oltre nove) e quando gli si parla, poi torna fermo. Il tempo è quello dei fotogrammi, non un `setTimeout`: a schermo
+  spento non scorre. Il minatore, i mercanti e chi dà le missioni stanno fermi e non gli si passa attraverso (`ostacoli`); per parlargli
+  ci si ferma `accanto`.
 - **Il villaggio, l'unica città** (la pianta fissa, una piazza tonda col pozzo in mezzo e le botteghe a ventaglio): i quattro
   mercanti davanti alle loro botteghe col banco girato verso il pozzo, la ragazza del pozzo, il capitano (venuto dal forte), il
   minatore col suo campo, la bacheca, il cartello (una freccia: la strada maestra), la pietra, il portale gemello quando c'è la
@@ -102,7 +104,7 @@ celle aprendo il mondo. Si salva arrivando, scoprendo (al più ogni tre secondi)
   pali nello stagno, la scaletta, la botola nel ballatoio), **la fornace** (il forno a cupola col camino, le fumarole, la porta di
   ferro che si alza sul fuoco), **la cava gelata** (la miniera con la brina, i ghiaccioli e i cristalli azzurri), **le tombe del
   vento** (il mausoleo col frontone, la lastra che scorre, le bandiere strappate). Arrivati a uno aperto il monumento si apre e il
-  fumetto è quello di sempre (piani, livello, la storia, le missioni, «scendo»), coi dati della lista dei tredici di `Gioco.vue`; uno
+  fumetto dice piani, livello, la storia, le missioni e «scendo», coi dati della lista dei tredici di `Gioco.vue`; uno
   chiuso pianta il divieto e dice cosa lo apre. **Davanti a uno rosso la sentinella**, anche per i sei nuovi: è il colore della forza
   dell'eroe sul livello del dungeon, come giù.
 - **Nessuna grata**: i confini fra le zone (un fiume col ponte ad arco o la passerella, una cresta col valico) sono sempre aperti; i
@@ -112,6 +114,20 @@ celle aprendo il mondo. Si salva arrivando, scoprendo (al più ogni tre secondi)
   le regole, la tinta e il salvataggio in [terre-successive.md](terre-successive.md).
 - **Si torna** dove si era: risalendo, lasciando perdere o svenuti si è davanti all'ingresso; dal portale accanto al gemello del
   villaggio.
+
+## Le discese sui posti
+
+- **Toccando un ingresso trovato e aperto l'eroe ci va e si apre il fumetto** sopra (sotto, se sopra non c'è posto): nome, dritta, piani,
+  stelle e «scendo»; dell'abisso il piano più giù toccato. Toccare il prato col fumetto aperto lo chiude, e l'eroe parte verso dove si è
+  toccato ([../core/interfaccia.md](../core/interfaccia.md#un-tocco-altrove-chiude)).
+- **Un ingresso chiuso dice cosa lo apre** («Si apre quando batti Re Ossuto in fondo alla cripta dell'altare»: il grosso della discesa
+  prima, non una missione: [la-storia-principale.md](la-storia-principale.md)), senza tasto; chiuso per l'età non promette niente.
+  Quando l'eroe ci va **si pianta un cartello di divieto** davanti all'ingresso, che resta piantato finché la discesa non si apre: sta
+  in `mondo.divieti`, e una discesa aperta lo perde da sola.
+- **Il nome dice cosa c'è disegnato**, in italiano semplice; «Si apre quando finisci …» lo riscrive in minuscolo, quindi deve reggere
+  anche in mezzo a una frase.
+- **Con una discesa a metà**, scenderne un'altra avverte prima (`[data-chiede]`): [portale-e-sosta.md](portale-e-sosta.md).
+- **Il colore dice quanto è forte per l'eroe** (grigio, verde, arancio, rosso: [zone.md](zone.md)); davanti a una rossa sta la sentinella.
 
 ## Il capitano, la fontana, la bacheca
 
@@ -137,12 +153,13 @@ accesa si va al villaggio sempre e alle altre accese (il viaggio è subito e gra
 
 ## Le icone dei posti
 
-I quattordici ingressi e il villaggio hanno un'icona **fotografata nel mondo 3D**: `npm run scatti icone-mondo`
+I quattordici ingressi e il villaggio hanno un'icona **fotografata nel mondo**, al posto di un'emoji (un 🕳️ non diceva quale posto): la
+usano la scelta delle avventure, il fumetto del gemello, il diario e «riprendi da qui» in home. Si fa così: `npm run scatti icone-mondo`
 (`strumenti/icone-mondo.mjs`; `ICONE_DEBUG=1` lascia i PNG in `tmp/scatti/icone-mondo/`) apre il file costruito con un profilo
 che ha finito le sette discese, porta la telecamera su ogni monumento (zoom 0,7, il 62% del quadro) e sul centro della piazza (1,5,
 il 90%), ritaglia, riduce a 112 px col tondo sfumato e scrive `dati/icone-mondo.js` (WebP, ~6 KB l'una, ~85 KB in tutto), che porta
-la firma del suo contenuto e non si scrive a mano. Si rilancia quando un monumento cambia faccia. Le legge `iconaDi(chiave, mondo)`
-di `dati/terra.js` (nel 2D i ritagli dipinti); la home non importa three.
+la firma del suo contenuto e non si scrive a mano. Si rilancia quando un monumento cambia faccia. Le legge `iconaDi(chiave)`
+di `dati/terra.js`; la home non importa three.
 
 ## La nebbia
 

@@ -1,4 +1,4 @@
-# Il Sotterraneo 3D: quanto costa
+# Il sotterraneo: quanto costa
 
 Misurato in Chrome senza schermo (SwiftShader: la CPU fa la GPU, i ms non
 dicono niente del telefono), 390×844, sullo stesso inizio della prima discesa
@@ -72,10 +72,10 @@ Dal 23/10 nella bassa il piano ha la luce per vertice e la nebbia nei vertici (`
 **Il peso**: `dist/index.html` da 29 190 a 29 289 kB (+99 kB: il codice di
 `scena3d/` e delle viste nuove; three c'era già per gli Asteroidi). Nel sito
 spezzato three resta in `asteroidi-3d` (640 kB), `scena3d/` sta in
-`sotterraneo-3d` (81 kB), chiesto solo scendendo nel Sotterraneo 3D: il
-Sotterraneo di sempre non lo carica, né carica three. Il 3D non ha un
+`sotterraneo-3d` (81 kB), chiesto solo aprendo il sotterraneo: la home non
+carica né lui né three. Il 3D non ha un
 `manualChunks`: è il confine dell'import a richiesta (con un `manualChunks` si
-tirava dentro i dati in comune col 2D, e il 2D finiva per caricare three)
+tiravano dentro i dati in comune, e la home finiva per caricare three)
 ([../core/avvio-e-memoria.md](../core/avvio-e-memoria.md)).
 
 Le scene più pesanti con la CPU rallentata (eroe, mostri, persone, anteprime): [prestazioni-3d.md](prestazioni-3d.md). Quanti personaggi

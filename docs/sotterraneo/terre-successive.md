@@ -1,6 +1,6 @@
 # Le terre successive
 
-Nel Sotterraneo 3D, ripulite **le tombe del vento** (il boss della terra, in fondo alla landa vecchia), in fondo alla strada si
+Nel sotterraneo, ripulite **le tombe del vento** (il boss della terra, in fondo alla landa vecchia), in fondo alla strada si
 apre **la porta delle terre**: passarla porta al villaggio di un'altra terra, **la stessa mappa coi mostri più forti** e una tinta
 sua. Il progetto è in [mondo-a-percorso.md](mondo-a-percorso.md#le-terre-successive) (compito E di
 [mondo-a-percorso-lavori.md](mondo-a-percorso-lavori.md)); qui com'è fatto. Codice: `motore/terre.js`.
@@ -18,9 +18,9 @@ sua. Il progetto è in [mondo-a-percorso.md](mondo-a-percorso.md#le-terre-succes
 - **L'eroe viene intero**: livello, punti, abilità, roba addosso e nello zaino, gemme, pozioni stanno nell'avventura e non nel mondo.
 - **Il mondo ricomincia**: nebbia, pietre accese, giro, taglie della bacheca (`mondo.quest`), dungeon ripuliti, mostri morti, chi ha
   già parlato. Il minatore nelle terre dopo non si ripresenta (lo si conosce).
-- **Le missioni dei personaggi restano dell'eroe** (in `missioni` dell'avventura, come nel 2D): chiedono la chiave del dungeon, che c'è
+- **Le missioni dei personaggi restano dell'eroe** (in `missioni` dell'avventura): chiedono la chiave del dungeon, che c'è
   in ogni terra, quindi si fanno dove si è. Scelta di questo lavoro: il progetto le voleva da capo, ma tenerle per terra voleva dire
-  spostarle dal campo che il 2D legge.
+  spostarle dal campo che l'avventura già legge.
 - **La storia sta nella prima terra**: nelle dopo le sette porte sono aperte, ripetute dal primo giro (`dungeonDellAvventura` con
   `terra > 1` non è mai la storia), nessuna è «adesso», e vincerle non dà stelle né capitoli.
 - **Arrivando** si parte dalla piazza del villaggio nuovo, e la riga in basso dice il nome della terra e del villaggio
@@ -60,7 +60,7 @@ Tutto nell'avventura (`profile.campagne.sotterraneo.cfg.avventure[eroe]`), nient
 | `mondo` | il mondo della prima terra, com'era | — |
 | `mondi` | `{ 2: {…}, 3: {…} }`, il mondo di ogni terra dopo, con lo stesso contenuto di `mondo` | nessuna terra dopo |
 
-- **Perché `terraOra` e non `terra`**: `terra` dell'avventura è già della terra dipinta del 2D (la nebbia, dove si era).
+- **Perché `terraOra` e non `terra`**: `terra` dell'avventura è già della mappa dipinta dei salvataggi di prima (la nebbia, dove si era).
 - **Il mondo di una terra nuova manca** finché non si salva: `mondoDaSalvato` lo fa nuovo, senza il travaso della storia (le strade
   scoperte fino alle porte finite valgono solo nella prima).
 - **Chi legge o scrive il mondo di sopra in `Gioco.vue` passa da `mondoQui` e `nelMondo3d`** (`mondoDellaTerra` e `conMondo`): le

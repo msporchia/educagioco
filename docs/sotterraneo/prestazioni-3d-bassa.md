@@ -1,4 +1,4 @@
-# Le semplificazioni della fascia bassa nel Sotterraneo 3D
+# Le semplificazioni della fascia bassa nel sotterraneo
 
 Quello che la bassa (`SPEGNI_BASSA`, store/qualita.js) fa diverso nelle discese e nel mondo di sopra, leva per leva, con quanto ha tolto sul Note 7. Le misure
 di partenza e il comando per rifarle stanno in [prestazioni-3d.md](prestazioni-3d.md); la scala del telefono in
@@ -27,8 +27,7 @@ alle trame. Sul Note 7 (27/10 18:19) il gradino 1 è sceso da +20 a +10 ms.
 **Arredo e armi semplici** (la bassa, `arredoSemplice:1`, `armiSemplici:1`): colonne, arredo, botti, fontana e portale col colore medio
 della trama al posto della trama e del rilievo (`conMaschera`, maschera.js; pavimento e pareti dicono `arredo: false`); le armi in mano
 all'eroe fuse in un pezzo dal modello nuovo della figura (`appiattisci`, roba3d.js: colore dei materiali nei vertici, un materiale per
-tutte, niente aloni né fiamme; l'animazione gira una volta prima, se no le fiamme restano enormi). Non il ripiego della collezione, che
-viene dal disegno 2D. Le anteprime le tengono intere. Il 27/10 sera il gradino 2 è sceso da +12 ms a niente; il gradino 8 no (le armi non si notano).
+tutte, niente aloni né fiamme; l'animazione gira una volta prima, se no le fiamme restano enormi). Non il ripiego della collezione. Le anteprime le tengono intere. Il 27/10 sera il gradino 2 è sceso da +12 ms a niente; il gradino 8 no (le armi non si notano).
 Dal 29/10 la bassa tiene le armi intere (`armiSemplici` resta una leva, spenta): non toglievano niente e la spada era una lama bianca a blocchi.
 
 **La torcia semplice** (la bassa, `torciaSemplice:1`, 28/10): la torcia è due luci, l'alone attorno all'eroe e il cono davanti, e i

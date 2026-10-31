@@ -26,7 +26,7 @@ grossi), `dati/cose.js` (la chiave composta: `leggiPezzo`, `chiaveDelPezzo`,
   abilità dalla chiave stessa ([figure.md](figure.md)): la Spada
   fiammeggiante è una spada del fuoco. L'aura sta sul bordo e dentro la
   casella (`.sot-r-<rarità>` in `stile.css`), per terra è un alone che
-  respira (`aura` in `scena/tela.js`), e torna nel nome del pannello e
+  respira (`aloni` in `scena3d/cose.js`), e torna nel nome del pannello e
   nell'avviso quando si raccoglie. Il comune non ha aura.
 - **Il livello alza anche un pezzo comune**, sul suo numero principale:
   l'attacco di un'arma +1 ogni 5 livelli, la difesa di scudi e armature +1
@@ -163,7 +163,7 @@ mille anni»); ogni classe ne può portare almeno quattro.
 - **Rari davvero**: uno su 250 mostri, uno su 80 forzieri, uno su sedici
   mostri grossi (con la fortuna e la profondità di più).
 - **Quando cade**: la colonna di luce arancio-oro sopra di lui finché
-  nessuno lo prende (`aura` in `scena/tela.js`), in mezzo al campo il nome in
+  nessuno lo prende (`colonne` in `scena3d/segni.js`), in mezzo al campo il nome in
   oro con la sua storia sotto, e un suono suo (`suoniDellaFesta` in
   `Gioco.vue`). Nella bottega e nello zaino la casella pulsa d'arancio e il
   pannello ripete la storia.

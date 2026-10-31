@@ -2,7 +2,7 @@
 
 Come è fatto il disegno in `src/giochi/fattoria3d/scena3d/`: un modulo per cosa, e nessuno sa le regole (sono del
 motore). three.js è l'eccezione alle «niente dipendenze oltre Vue» ([../../CLAUDE.md](../../CLAUDE.md)), accettata come per
-gli Asteroidi e il Sotterraneo 3D: il 3D non si scrive a mano.
+gli Asteroidi e il sotterraneo: il 3D non si scrive a mano.
 
 ## I moduli
 
@@ -25,7 +25,7 @@ gli Asteroidi e il Sotterraneo 3D: il 3D non si scrive a mano.
 | `modelli-passaggi.js` | ponte ad arco (3×1, la gobba), passerella di assi su pali con la corda (1×3) e tavolo con le panche (3×2): vedi sotto |
 | `modelli-acqua.js` | lo stagno (3×3) e il laghetto (5×4): un solo `creaStagno(w, d)` con la lastra d'acqua, la riva in rilievo, sassi, canne e ninfee; il materiale dell'acqua è lo stesso dei laghi del terreno ([laghi.md](laghi.md)) |
 | `modelli-pesca.js`, `pesci.js`, `pesca3d.js` | il molo e il porticciolo; i pesciolini (una `InstancedMesh`, tutto nello shader); il galleggiante, il filo e il cartello «Abbocca!»: [geografia-e-pesca.md](geografia-e-pesca.md). Il mare lontano è un piano solo in `terreno.js` (`_mare`) |
-| `dal-sotterraneo.js` | la casa di legno, il banco della guaritrice, la bacheca delle taglie e il cespuglio, presi dal Sotterraneo 3D (copie adattate: vedi sotto). Un `Cantiere` che unisce i pezzi in una mesh per materiale, colori nei vertici |
+| `dal-sotterraneo.js` | la casa di legno, il banco della guaritrice, la bacheca delle taglie e il cespuglio, presi dal sotterraneo (copie adattate: vedi sotto). Un `Cantiere` che unisce i pezzi in una mesh per materiale, colori nei vertici |
 | `compagni.js`, `modelli-compagni.js` | Watson e i gatti che girano per la fattoria, e il contadino con la sua faccia: il comportamento, i corpi e le pose ([compagni.md](compagni.md)) |
 | `modelli-bestie.js` | i corpi delle bestie di casa che si comprano: beagle, coniglio, pappagallo (il gatto rosso è un mantello di `creaGatto`), le pose dei piccoli, `creaBestia`; il `bestia:<id>` delle anteprime ([bestie-di-casa.md](bestie-di-casa.md)) |
 | `webgl.js` | `haWebGL2()`: si chiede senza caricare three |
@@ -66,7 +66,7 @@ volta provando ogni coltura matura; `count` dice quante se ne disegnano e una fo
 
 ## Ponte, passerella e tavolo: copia, non import
 
-Vengono dal Sotterraneo 3D (`mondo/ponti.js:ponte`, `mondo/props-modelli.js:MODELLI.tavolo`) ma sono **una copia piccola** in
+Vengono dal sotterraneo (`mondo/ponti.js:ponte`, `mondo/props-modelli.js:MODELLI.tavolo`) ma sono **una copia piccola** in
 `scena3d/modelli-passaggi.js`, non un import: quei modelli si posano in un `Cantiere` (`mondo/kit.js`) che vuole le trame del
 sotterraneo, la sua nebbia (`vesti.js`) e un mondo (`pontiDi(m)`, `suolo.js`), e portarli qui trascinerebbe `kit.js` e mezzo
 `mondo/` nel gruppo `fattoria3d`. La forma è la stessa (arcata di pietra con i parapetti, assi su pali, tavolo con tovaglia e
@@ -76,7 +76,7 @@ e le quote per cella di `dati/catalogo.js` (`alzato`) la campionano: il contadin
 
 ## Casa, banco, bacheca, cespuglio: copia, non import
 
-Come per il ponte: vengono dal Sotterraneo 3D (`mondo/kit.js:casa` col seme che dà il legno, `kit.js:bottega('erbe')`,
+Come per il ponte: vengono dal sotterraneo (`mondo/kit.js:casa` col seme che dà il legno, `kit.js:bottega('erbe')`,
 `ponti.js:bacheca`, `natura.js:GEO.cespuglio`) ma sono **copie piccole** in `scena3d/dal-sotterraneo.js`, perché `kit.js` e
 `natura.js` tirano dentro `suolo.js` → `motore/mondo-aperto.js` (i dati di tutto il mondo di sopra) e i materiali con la nebbia
 dell'esplorazione: nel gruppo `fattoria3d` finirebbe mezzo sotterraneo. Cambia lo stile (niente trame, colori nei vertici, flat
@@ -264,7 +264,7 @@ Prima di questo non si vedeva niente: i ciuffi solo fuori dal mondo (sottili e d
 - **Il peso nel sito spezzato**: `fattoria3d-3d-*.js` (~50 kB, il disegno) e `gioco-fattoria3d-*.js` (~40 kB) stanno nel
   gruppo `fattoria3d`; **three sta in `asteroidi-3d` (640 kB, gruppo `mate`)** e lo prende anche questo gioco. Il file
   del 3D si chiede a richiesta, quindi senza WebGL 2 o senza entrarci non si scarica (e `vite.config.js` lo sa, come per
-  il Sotterraneo 3D).
+  il sotterraneo).
 - Il tempo è del tempo, non dei fotogrammi: `dt` capato a 0,05 s, le animazioni dal tempo, la crescita dall'orologio.
 
 ### Le bestie di casa (G6)

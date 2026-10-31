@@ -2,7 +2,7 @@
 
 Chiesto dall'utente il 21 ottobre 2026: i boss e in genere i mostri più forti hanno più di un attacco, due per ora, i super boss
 tre, «così possono curarsi (non molto) oppure lanciarti un incantesimo base». Il progetto e la prova in 3D sono in
-`poc/mostri-3d/MOSSE.md` (`poc/mosse-3d.html`); qui come sta nel gioco, 2D e 3D, con lo stesso motore.
+`poc/mostri-3d/MOSSE.md` (`poc/mosse-3d.html`); qui come sta nel gioco.
 
 ## Chi ha quante mosse
 
@@ -59,9 +59,9 @@ tre, «così possono curarsi (non molto) oppure lanciarti un incantesimo base».
 
 ## A schermo
 
-- **L'annuncio** (`viste/MossaAnnunciata.vue`, nel 2D in `Scontro.vue`, nel 3D in `Scontro3d.vue`): sopra chi ha più mosse, fra un
+- **L'annuncio** (`viste/MossaAnnunciata.vue`, in `Scontro3d.vue`): sopra chi ha più mosse, fra un
   turno e l'altro, un tondo col segno disegnato (spada rossa, due spade arancioni il colpo forte, croce verde, stella viola, onde
-  gialle) e il nome sotto; nel 2D un anello del suo colore sotto i piedi, nel 3D l'anello a terra del prototipo. Forma e colore
+  gialle) e il nome sotto, e l'anello a terra del prototipo. Forma e colore
   diversi: col suono spento si capisce lo stesso.
 - **Il racconto** (`viste/racconto.js`): la cura dice il nome, poi sale «+6» verde e la barra risale (650 ms); l'urlo dice il nome
   e trema di giallo; l'incantesimo parte da lontano e arriva un po' dopo (320 ms invece di 170); una mossa in più dice il suo nome.
@@ -93,7 +93,7 @@ Solo i mostri con mosse cambiano, quindi si misura prima e dopo con gli strument
 le condizioni, mai due di fila, i tetti della cura e dell'urlo, la cura del 12% e del 15% solo sotto la metà, l'incantesimo che passa
 lo scudo ma non la schivata, l'urlo che scade dopo tre mosse, l'attacco forte che aspetta 1,5, il comune senza annuncio. Bersagli:
 `[data-mossa]` (il tipo), `[data-mossa-id]`, `[data-icona]`. Per guardarle: `#sotterraneo=branco&mostri=3&grosso=barbamuschio&ferito=0.3`
-(`&ferito=` fa entrare i mostri con quella parte della vita: sotto la metà la cura si annuncia), nel 3D con `sotterraneo3d=0&…`;
+(`&ferito=` fa entrare i mostri con quella parte della vita: sotto la metà la cura si annuncia), nel 3D con `sotterraneo=0&…`;
 `window.__sotterraneo3d.prova('mossa:radici', 0)` fa fare al mostro 0 quella mossa, solo il disegno.
 
 ## Cosa resta

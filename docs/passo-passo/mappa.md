@@ -6,9 +6,7 @@ il coniglio o il cane: ognuno ha la sua strada e vede solo le sue caselle
 **la valle dei piccoli** (prato, salto, ghiaccio, buche, massi e il pascolo,
 e sulle stesse isole tutta la strada del cane) e **il mondo dello zaino**
 (ripeti, fino a, se, tutto il mondo: solo del coniglio). Si passa dall'uno
-all'altro da una tana. Il modello è la terra di sopra del sotterraneo
-([../sotterraneo/terra-di-sopra.md](../sotterraneo/terra-di-sopra.md)): il
-disegno si tiene com'è, il codice ci posa sopra caselle, segnalino, blocchi e
+all'altro da una tana. Il disegno si tiene com'è, il codice ci posa sopra caselle, segnalino, blocchi e
 fumetto, con la stessa vista per tutti e due. Chi apre cosa sta in
 [livelli.md](livelli.md#le-due-strade).
 
@@ -118,7 +116,7 @@ nel modulo: [foglietto.md](foglietto.md).
   mappa e si sposta con lei, sopra la sua casella: trascinare non lo chiude.
 - **Toccando un punto che non è una casella il segnalino ci va**: al posto
   raggiungibile più vicino (una casella, un incrocio, una sosta), senza
-  fumetto. È il modo di esplorare, come nella terra di sopra; col fumetto
+  fumetto. È il modo di esplorare; col fumetto
   aperto un tocco fuori lo chiude e basta.
 - **Scorre col `scrollLeft`/`scrollTop` di un riquadro `overflow: hidden`**
   mosso dal codice (`touch-action: none`: la pagina non scorre sotto): una

@@ -9,7 +9,7 @@ migliore più il suo pezzo col nome. Richiesta dell'utente dell'8 ottobre
 Il codice: `dati/grossi.js` (chi sono, dove stanno, quanto sono grossi),
 `motore/livello.js` (`mostroGrosso`: lo mette al posto del guardiano),
 `motore/corsa.js` (`cade`: il bottino), `figuraDelGrosso` in `dati/grossi.js`
-(quale sprite), `scena/tela.js` (`grosso`), `viste/Grosso.vue` (la figura
+(quale sprite), `scena3d/cose.js` (il grosso in scena), `viste/Grosso.vue` (la figura
 nello scontro e nella barra in cima).
 
 ## Chi sono
@@ -24,7 +24,7 @@ nello scontro e nella barra in cima).
 | la botola segreta | Minotto | la bestia cornuta | troll | il Giubbone di Minotto (difesa, vita, rigenera) |
 | la miniera abbandonata | Carbonchio | il drago di lava | gigante | il Martello di Carbonchio (attacco, fuoco) |
 
-I sei dei dungeon nuovi del 3D (Roccaverde, Piumanera, Sibilla, Vulcanor, Gelomagno, Falcenera: il golem di muschio, il grifone,
+I sei dei dungeon nuovi del mondo (Roccaverde, Piumanera, Sibilla, Vulcanor, Gelomagno, Falcenera: il golem di muschio, il grifone,
 il serpente, il golem di magma, il golem di ghiaccio, il mietitore) stanno in [dungeon-che-si-rigenerano.md](dungeon-che-si-rigenerano.md#i-tredici-dungeon).
 
 - **La creatura giusta** (12 ottobre 2026, l'utente: «Zannaverde il ragno, Carbonchio il drago di lava, Minotto la bestia cornuta, Gorgo il
@@ -76,7 +76,7 @@ il serpente, il golem di magma, il golem di ghiaccio, il mietitore) stanno in [d
   Lo sprite `fermo`/`corsa` di quella creatura ingrandito dentro la sua scatola (alto al più 1,9 altezze dell'eroe, largo al più 3 larghezze, a quarti:
   `ingrandimentoDelGrosso`; con un'altezza sola un ragno usciva largo il doppio del palco e la corona era grande quanto lui), la corona
   👑 sopra la testa (un terzo della figura; quella del bersaglio di una missione è più grande) e un chiarore della sua `tinta` dietro, che distingue Re Ossuto da Carbonchio.
-  Sulla tela respira (più svelto da sveglio) e, se la creatura ha i passi (il ragno, l'orco), **cammina da sveglia**; guarda verso l'eroe, ha l'alone
+  In scena respira (più svelto da sveglio) e, se la creatura ha i passi (il ragno, l'orco), **cammina da sveglia**; guarda verso l'eroe, ha l'alone
   rosso più largo, il nome sopra la corona quando è in luce, la chiave, il sonno e la barretta come gli altri. **Nello scontro** (`viste/Grosso.vue`)
   è la posa di lato ferma per chi ha i passi (il ragno, l'orco, specchiati verso l'eroe), il respiro per gli altri, con la scala dell'eroe
   per l'ingrandimento (`scalaDelGrosso`) e la stessa corona. La figura disegnata in codice (`scena/grossi.js`, 32×32) è stata tolta: non serve più, e un boss dipinto da chi non è il modello

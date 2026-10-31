@@ -1,6 +1,6 @@
 # Il mondo a percorso
 
-Il progetto della forma nuova del mondo di sopra del Sotterraneo 3D: **il generatore c'è** (compito A,
+Il progetto della forma nuova del mondo di sopra del sotterraneo: **il generatore c'è** (compito A,
 [mondo-aperto-generatore.md](mondo-aperto-generatore.md)), il gioco ci arriva coi compiti B–E. L'utente, 20 ottobre 2026: «darei un
 po' più di forma al mondo e non lo farei così a cerchio, lascia che ci sia un po' di strada da fare che giustifica un cambio di
 terreno», una pietra runica al centro di ogni zona per tornare alla base, i dungeon legati alla forza della zona e rigenerati dopo il
@@ -12,7 +12,7 @@ della **serpentina a sette zone** e ha chiesto le **terre successive**. La spart
 la griglia 5×5 ad anelli, le marche, le grate e `regolaDi` (via tutte), il seme 19, i passi 7–9 dell'algoritmo per il villaggio,
 gli antri (ne prende il posto il secondo dungeon di ogni zona), le pietre davanti a ogni ingresso. Di
 [mondo-aperto-mostri.md](mondo-aperto-mostri.md): le fasce per anello (ora per zona) e la cintura (ora un dato del generatore).
-Di [mondo-3d.md](mondo-3d.md): le grate modellate e i campi del villaggio. Di [zone.md](zone.md), solo nel 3D: le zone che rinascono
+Di [mondo-3d.md](mondo-3d.md): le grate modellate e i campi del villaggio. Di [zone.md](zone.md): le zone che rinascono
 in cima (il loro posto lo prendono le terre successive). Il resto (motore dello scontro, nebbia, pezzi, figure, taglie) resta.
 
 ## La forma
@@ -110,8 +110,7 @@ Due per zona, quattordici. **Un po' più forti dei mostri della zona**: il livel
   la sosta e ritrova tutto com'era (non è ripulito); chi lascia perdere, sviene o esce con la ✕ ritrova **la stessa forma**, coi
   mostri tornati: non è ripulito nemmeno lui.
 - **Ripulito, rientrando è un altro**: un'altra forma, altri abitanti, lo stesso boss col volto nuovo, la stessa zona e lo stesso
-  tema. Il seme è `(eroe, chiave, rifatti, terra)`: si impara la mappa di sopra, non quella di sotto. Oggi il seme è a caso a ogni
-  entrata nuova: diventa fisso finché non lo si ripulisce.
+  tema. Il seme è `(eroe, chiave, rifatti, terra)`: si impara la mappa di sopra, non quella di sotto. Il seme è fisso finché non lo si ripulisce.
 - **Altri abitanti**: tre presi dal mazzo della zona (gli abitanti del dungeon e quelli di sopra della zona) secondo `rifatti`, il
   caporale a giro fra i caporali della zona; il nome di chi comanda dal volto (`VOLTI[chiave][rifatti % 3]`).
 - **La storia resta la prima volta**: la prima ripulitura di una delle sette è il capitolo (stelle, `completa`, medaglie e

@@ -1,7 +1,7 @@
 # Il sotterraneo in due: il codice
 
 Come è costruita la discesa in due ([in-due.md](in-due.md) per le regole): i conti che vengono uguali sui due telefoni, quello che
-il sotterraneo dà al pezzo comune (`src/insieme/`, [../core/insieme.md](../core/insieme.md)) e la vista nel 3D. Il motore in due
+il sotterraneo dà al pezzo comune (`src/insieme/`, [../core/insieme.md](../core/insieme.md)) e la vista. Il motore in due
 (gli alleati, i mostri, lo scontro, la scala) è descritto con le regole.
 
 ## Il caso e i conti uguali sui due telefoni
@@ -20,7 +20,7 @@ Il primo passo, **fatto** (29 ottobre, nel ramo): senza, le due copie si separan
 - **La fotografia c'è quasi**: la sosta (`motore/sosta.js`) salva il piano come differenza da quello nato dal seme, coi mostri dove
   erano. In due serve anche lo scontro aperto e la fila, che la sosta non salva.
 - **L'impronta**: vita ed energia dei due, celle dei due, mostri vivi e somma delle loro posizioni, piano, passi.
-- **`unita/sotterraneo-lockstep`**: il giocatore finto scende in ognuno dei tredici dungeon del 3D (botti e copricapi accesi), e il
+- **`unita/sotterraneo-lockstep`**: il giocatore finto scende in ognuno dei tredici dungeon (botti e copricapi accesi), e il
   test sostituisce `Math.random`, `hypot` e la trigonometria con spie che contano chi le chiama: devono essere zero, e la stessa
   discesa rifatta deve dare la stessa impronta. Un `**` nuovo non lo vede nessuna spia: si scrive `potenzaIntera`.
 
@@ -45,12 +45,12 @@ Come Castle Battle ([../arena/multigiocatore.md](../arena/multigiocatore.md)), *
   100% con la rete calma, il 92% con quella di casa e di Melody; con «pessima» (spenta fino a un minuto, otto volte al minuto) si
   rompono tutte, come vuole il tavolo che tiene un posto vuoto due minuti.
 
-## La vista (fatto, nel 3D)
+## La vista (fatto)
 
-- **Si apre dalla terra di sopra del 3D**: il tasto 👥 nella barra in cima apre la sala comune, con il posto e la difficoltà nello
-  slot (`viste/SceltaInDue.vue`). Un amico si invita come in Castle Battle (`src/amici/giochi.js`, `sotterraneo3d`).
+- **Si apre dal mondo di sopra**: il tasto 👥 nella barra in cima apre la sala comune, con il posto e la difficoltà nello
+  slot (`viste/SceltaInDue.vue`). Un amico si invita come in Castle Battle (`src/amici/giochi.js`, `sotterraneo`).
 - **Gioco.vue cambia poco**: in due le azioni che la vista chiama sulla discesa (camminare, rispondere, bere, scendere, l'albero, lo
-  zaino; anche i tocchi della scena 3D) diventano mosse (`sfida/vista.js`); quando le chiama il motore restano quelle vere
+  zaino; anche i tocchi della scena) diventano mosse (`sfida/vista.js`); quando le chiama il motore restano quelle vere
   (`corsa.inMotore`). Quello che il motore risponde arriva a mossa fatta (`motore.osserva`, `dopoLaMossa`): lo scontro si racconta
   su tutti e due i telefoni, anche il turno dell'altro.
 - **Il battito fa correre il lockstep** e non si ferma per la pausa di uno (l'altro resterebbe fermo): in due il ⏸ non c'è.

@@ -1,6 +1,6 @@
 # Il budget del 3D: le regole per chi crea
 
-Un modello, un effetto o una scena nuova del Sotterraneo 3D nasce dentro il budget del Redmi Note 7, non lo si appiattisce dopo. Le
+Un modello, un effetto o una scena nuova del sotterraneo nasce dentro il budget del Redmi Note 7, non lo si appiattisce dopo. Le
 regole vengono dalle misure di [appiattimento-3d.md](appiattimento-3d.md): sul Note 7 costano **gli oggetti** (il JS di three per
 ognuno) e **le luci per pixel**, non i triangoli. Il bersaglio dello scontro è js ≤ 25 e gpu ≤ 28 ms (30 fps).
 

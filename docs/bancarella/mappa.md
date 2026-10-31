@@ -44,8 +44,7 @@ mondo le raggruppa e basta, e le tre stazioni sono mondo → città → banco.
 ## Il mondo
 
 - **Più grande dello schermo**: 1152×780 (`MONDO`), la scala 3/4 di un
-  dipinto da 1536×1040 — come la terra di sopra del sotterraneo
-  ([../sotterraneo/terra-di-sopra.md](../sotterraneo/terra-di-sopra.md)).
+  dipinto da 1536×1040.
   Scorre col dito, nativo (`overflow: auto`, niente selezione), e si apre
   sull'aereo.
 - **Le tappe sono tondi col numero**: il numero della città (1-6, ∞ per la
@@ -170,13 +169,13 @@ l'aereo restano.
   `image-rendering: pixelated`), uno che manca no. Senza file non entra niente
   nel file unico.
 - **Le misure**: il mondo 1536×1040 mostrato a 3/4 (1152×780, un pixel di
-  disegno da 4 px diventa 3, come la terra di sopra); la piazza 1040×1680
+  disegno da 4 px diventa 3); la piazza 1040×1680
   mostrata a 520 px di larghezza, ancorata in basso.
 - **I prompt** sono in `strumenti/sprite/sorgenti/bancarella/PROMPT-mappa.md`:
   prima il mondo, poi le piazze.
 - **I punti non si indovinano, si rileggono**: arrivato un dipinto, i punti
   delle città (`x, y` in `CITTA`) e dei banchi (`disponiPiazza`) si rileggono
-  sul dipinto come per la terra di sopra, e si scrivono nel codice; il test
+  sul dipinto e si scrivono nel codice; il test
   `unita/bancarella-mondo` continua a controllare che non si pestino.
 
 ## Nei test

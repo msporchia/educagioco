@@ -7,11 +7,10 @@ sala) è quello di Castle Battle: [../core/insieme.md](../core/insieme.md). Qui 
 
 ## Cosa si gioca
 
-- **Una discesa insieme, sotto.** La terra di sopra, i mercanti, le missioni e il diario restano di chi gioca da solo: in due si
-  scende e si torna. Il mondo di sopra in 3D e le sue terre sono fuori.
-- **Solo nel Sotterraneo 3D** (l'utente: «conta solo il 3D»). Il motore della discesa è lo stesso del 2D (`Gioco3d.vue` monta
-  `Gioco.vue` col disegno 3D, [grafica-3d.md](grafica-3d.md)), quindi il 2D non deve cambiare di niente: da soli, le misure del
-  banco restano identiche. In due il 3D accende anche le botti e i copricapi nel bottino, che vanno col seme come il resto.
+- **Una discesa insieme, sotto.** Il mondo di sopra, i mercanti, le missioni e il diario restano di chi gioca da solo: in due si
+  scende e si torna. Il mondo di sopra e le sue terre sono fuori.
+- **Solo nel sotterraneo**. Il motore della discesa è quello di sempre (`Gioco.vue`, [grafica-3d.md](grafica-3d.md)): da soli, le
+  misure del banco restano identiche. In due si accendono anche le botti e i copricapi nel bottino, che vanno col seme come il resto.
 - **La domanda è di chi tocca**: chi apre la porta, il forziere o la fonte si prende la domanda; l'altro non ne ha.
 - **Ognuno porta il suo eroe** dalla sua avventura ([avventure.md](avventure.md)): classe, livello, roba addosso e nello zaino,
   abilità, pozioni. Due eroi della stessa classe vanno bene.
@@ -24,7 +23,7 @@ sala) è quello di Castle Battle: [../core/insieme.md](../core/insieme.md). Qui 
 Idea dell'utente: si sceglie l'ambientazione, e la discesa si tara sulla forza dei due insieme, con una manopola: «se fanno 100
 messi insieme, il dungeon è fatto per 100; facile per 80, difficile per 120, impossibile per 140».
 
-- **Il posto**: uno dei tredici dungeon (le sette discese della storia e i sei nuovi del mondo 3D, `CHIAVI_DEI_DUNGEON` in
+- **Il posto**: uno dei tredici dungeon (le sette discese della storia e i sei nuovi del mondo, `CHIAVI_DEI_DUNGEON` in
   `motore/rigenera.js`), ognuno col suo paesaggio, i suoi abitanti, il caporale e il grosso in fondo. Tutti, anche quelli che
   nessuno dei due ha ancora aperto: non è la storia.
 - **La difficoltà**: facile, normale, difficile, impossibile. Nello slot della sala, accanto al posto.
@@ -95,7 +94,7 @@ l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livel
 - **Non ci si allontana troppo** (l'utente): tutti e due devono stare nello schermo. **Al massimo 11 celle in largo e 11 in
   profondo** dal compagno, contate sulla mappa e non sulla strada, perché lo schermo è un rettangolo. Toccando oltre, l'eroe cammina fino al
   limite e si ferma, con un fumetto («non mi allontano da Leo»).
-  - **Perché 11**: la telecamera del 3D vede almeno 15 celle in largo e in profondo (`CAMERA.celle` in `scena3d/costanti.js`),
+  - **Perché 11**: la telecamera vede almeno 15 celle in largo e in profondo (`CAMERA.celle` in `scena3d/costanti.js`),
     con lo zoom di partenza; ne restano due per parte di margine, per la barra in basso e perché un eroe sul bordo non si legge.
   - **In due la telecamera guarda il punto in mezzo ai due eroi**, non solo il proprio: centrata su uno, il compagno uscirebbe
     dallo schermo già a 7 celle.
@@ -115,7 +114,7 @@ l'esperienza. **Le domande no**: ognuno ha quelle della sua età e del suo livel
 - **Uno scontro alla volta**: col compagno tirato dentro, non ce ne possono essere due insieme. Lì si va a turni, e il resto del
   mondo è fermo come da soli.
 - **Il compagno è già previsto**: la fila ha un `lato` per ogni attore, e il palco ha il posto del compagno sfalsato sotto l'eroe,
-  in diagonale (`viste/campo.js`, da cui prende i posti anche il palco del 3D, `scena3d/palco.js`; oggi spento). Ognuno ha la sua velocità e i suoi turni nella fila;
+  in diagonale (`viste/campo.js`, da cui prende i posti anche il palco, `scena3d/palco.js`; oggi spento). Ognuno ha la sua velocità e i suoi turni nella fila;
   `passaIlTurno`, che si ferma al primo del lato dell'eroe, va insegnato a fermarsi a chi tocca.
 - **Al suo turno risponde chi gioca quell'eroe**; l'altro vede la scelta e la domanda arrivare («Tocca a Leo»).
 - **I mostri colpiscono il più forte** (l'utente). Ogni alleato ha un peso, **pericolosità × vita rimasta in proporzione**, e il
@@ -185,7 +184,7 @@ valido per un giorno, tanto basta sincronizzarsi sull'ultimo snapshot».
    quando svengono tutti e due (oggi tutti e due all'ingresso del piano, nella stessa cella).
 4. **La regia** (fatto): l'incontro che porta l'eroe dell'ospite, le mosse, la fotografia, la partita finta in due e il banco della
    rete ([in-due-codice.md](in-due-codice.md)).
-5. **La vista 3D** (fatto, [in-due-codice.md](in-due-codice.md)). Il 2D non si tocca.
+5. **La vista** (fatto, [in-due-codice.md](in-due-codice.md)).
 
 Il punto 2 è il lavoro più grosso e il più rischioso (il motore della discesa è di quasi 13.000 righe, e l'eroe solo ci sta
 dappertutto); i punti 1-4 si possono pubblicare senza che si veda niente: da soli non cambia un numero. Dopo la vista, riprendere il

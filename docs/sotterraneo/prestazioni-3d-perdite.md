@@ -1,6 +1,6 @@
 # Le perdite di memoria del 3D
 
-Sul Redmi Note 7 (4 GB) il Sotterraneo 3D «a un certo punto si pianta», e la misura «Chi pesa» si è fermata alla scena
+Sul Redmi Note 7 (4 GB) il sotterraneo «a un certo punto si pianta», e la misura «Chi pesa» si è fermata alla scena
 50/138 senza che «Interrompi» rispondesse. Una perdita si vede sul computer senza i tempi: **coi conteggi**, ripetendo le
 stesse azioni senza ricaricare la pagina e guardando cosa cresce a ogni giro.
 

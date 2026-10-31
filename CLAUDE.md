@@ -71,7 +71,7 @@ quale file.
 | `docs/pozioni/` | Il laboratorio delle pozioni: regole e tappe |
 | `docs/passo-passo/` | Passo passo: regole del mondo, cane pastore, zaino e carte, stelle, sentiero, come si scrive un livello |
 | `docs/costruttore/` | Il Robot (era «Il costruttore»: chiave e cartelle restano `costruttore`): linguaggio, progetti e attrezzi, il porto, gli algoritmi, la campagna, la scheda e il robot disegnato |
-| `docs/sotterraneo/` | Il sotterraneo: la grande storia (le discese in fila e la roba attesa), le missioni, regole, roba, scenari e muri, i pensieri dell'eroe (`pensieri.md`), l'abisso com'è e il suo progetto, il Sotterraneo 3D in prova (`grafica-3d.md`, prima di toccare `scena3d/`; i mostri e gli effetti 3D in `mostri-3d.md`; il suo mondo di sopra in `mondo-3d.md`) |
+| `docs/sotterraneo/` | Il sotterraneo: la grande storia (le discese in fila e la roba attesa), le missioni, regole, roba, scenari, i pensieri dell'eroe (`pensieri.md`), l'abisso com'è e il suo progetto, il disegno in 3D (`grafica-3d.md`, prima di toccare `scena3d/`; i mostri e gli effetti in `mostri-3d.md`; il mondo di sopra in `mondo-3d.md`) |
 | `docs/survivors/` | Survivors, con le sue regole |
 | `docs/codice-segreto/`, `docs/conta/`, `docs/prima-dopo/` | un gioco ciascuna; in `prima-dopo/disegni.md` la regola delle icone disegnate |
 | `docs/fattoria/` | La fattoria: regole, campi e silos, catena, macchine, chi chiede, livelli, animali, come si tocca, la pagina dell'albero, stagioni, sprite, dove sta cosa |
@@ -90,8 +90,8 @@ Altri documenti vivono accanto al codice che descrivono: `test/README.md`
 - **I fine riga sono LF** (`.gitattributes`). Uno script che riscrive un file
   (Python lo fa senza chiedere) non deve cambiarli, se no il diff annega.
 - **Niente dipendenze a runtime oltre a Vue**, con un'eccezione: three.js
-  per gli Asteroidi (solo in 3D), il Sotterraneo 3D e la Fattoria 3D, giochi in prova (~640 KB, accettati dall'utente: il
-  3D non si scrive a mano; il Sotterraneo e la fattoria di sempre restano in 2D). Suoni sintetizzati,
+  per gli Asteroidi e il sotterraneo (solo in 3D) e per la Fattoria 3D, gioco in prova accanto alla fattoria 2D (~640 KB, accettati
+  dall'utente: il 3D non si scrive a mano). Suoni sintetizzati,
   icone emoji o disegnate, nessun file esterno: il build resta un HTML
   unico. → `docs/asteroidi/grafica-3d.md`
 - **I giochi nuovi stanno in `src/giochi/`** col calco di `codice-segreto/`

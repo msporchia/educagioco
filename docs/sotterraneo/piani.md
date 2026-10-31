@@ -14,8 +14,8 @@ costruite e le grotte, e hanno relitti da aggirare e acqua
 ([piani-caverne.md](piani-caverne.md)).
 
 Il codice: `motore/livello.js` (il piano), `motore/forme.js` (le forme, pura:
-gira in Node), `dati/mostri.js` (`CAPORALE`), `scena/tela.js` (pavimento,
-galloni, relitti), `motore/corsa.js` (solo dove una stanza è un'area).
+gira in Node), `dati/mostri.js` (`CAPORALE`), `scena3d/pianta.js` (pavimento,
+relitti), `motore/corsa.js` (solo dove una stanza è un'area).
 
 ## Come nasce un piano
 

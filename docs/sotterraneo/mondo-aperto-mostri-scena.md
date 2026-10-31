@@ -1,15 +1,15 @@
 # Il mondo aperto: i mostri di sopra a schermo
 
 La fase 5, la metà della **scena** ([mondo-aperto-fasi.md](mondo-aperto-fasi.md#7-le-fasi)), sul contratto del motore
-([mondo-aperto-mostri.md](mondo-aperto-mostri.md#il-contratto)): nel Sotterraneo 3D i branchi delle regioni si vedono, si svegliano,
+([mondo-aperto-mostri.md](mondo-aperto-mostri.md#il-contratto)): nel sotterraneo i branchi delle regioni si vedono, si svegliano,
 vengono incontro e si combattono sul prato, con lo scontro delle discese. Il motore (`motore/aperta.js`, `dati/mondo-aperto-mostri.js`)
-non è cambiato; il Sotterraneo 2D e le discese nemmeno.
+non è cambiato.
 
 | file | cosa tiene |
 |---|---|
 | `viste/mondo-mostri.js` | lo stato del motore per l'eroe e il giro, il passo di ogni fotogramma, i passi, il tocco, cosa si disegna e cosa si salva |
 | `motore/aperta-scena.js` | puro: la ✕ a metà (`fotoDelloScontro`, `lasciaLoScontro`, `rimettiLoScontro`), dove toccare un mostro, il conto delle taglie |
-| `motore/forze-sopra.js` | puro e piccolo (lo legge `Gioco.vue` anche nel 2D): le ferite di sopra per la barra, chi le cura, «al villaggio» |
+| `motore/forze-sopra.js` | puro e piccolo (lo legge `Gioco.vue`): le ferite di sopra per la barra, chi le cura, «al villaggio» |
 | `scena3d/mondo/mostri.js` | puro: il cerchio di luce, la figura di un mostro a un istante, la lista da posare, il bottino per terra |
 | `scena3d/mondo/palco.js` | il palco dello scontro posato sul prato, coi pezzi dello scontro delle discese; il pittore per `Gioco.vue` |
 | `viste/ScontroSopra.vue` | il pannello dello scontro delle discese sopra il mondo, le feste, gli avvisi, il foglio del risveglio |

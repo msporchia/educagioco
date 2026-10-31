@@ -59,8 +59,8 @@ dà un terzo dell'esperienza, e cresce come prima.
   sbagliava di più (e combatteva più a lungo) si ritrovava curato più spesso.
 - **Si torna in forze solo al villaggio**: la guaritrice e l'incantatrice curano gratis chi è salito dal portale
   ([chi-cura.md](chi-cura.md)); a metà discesa niente cure regalate.
-- **Si festeggia**: la colonna di luce d'oro sull'eroe (`colonneDiLuce` in
-  `scena/tela.js`), la riga dell'esperienza che si accende, un arpeggio suo
+- **Si festeggia**: la colonna di luce d'oro sull'eroe (`colonne` in
+  `scena3d/segni.js`), la riga dell'esperienza che si accende, un arpeggio suo
   (`suoniDellaFesta` in `Gioco.vue`) e in mezzo al campo «✨ Livello 5!» con
   sotto «Un punto per l'eroe e uno per le abilità». Il gioco ricorda a chi gioca di rado
   dove si danno i punti: il «+» d'oro sul livello (e sul globo blu, per

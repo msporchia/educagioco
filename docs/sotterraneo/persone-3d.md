@@ -1,8 +1,8 @@
 # Le persone del mondo di sopra in 3D
 
-Nel Sotterraneo 3D ([grafica-3d.md](grafica-3d.md)) l'eroe e i mostri sono modelli ([mostri-3d.md](mostri-3d.md)); dal 22 ottobre
-anche chi sta sulla terra di sopra: i quattro mercanti, i personaggi delle missioni, il capitano, il minatore, i viandanti da
-cercare e le sentinelle delle discese rosse. Le bancarelle e le botteghe restano quelle di prima. Il 2D di sempre non cambia.
+Nel sotterraneo ([grafica-3d.md](grafica-3d.md)) l'eroe e i mostri sono modelli ([mostri-3d.md](mostri-3d.md)); dal 22 ottobre
+anche chi sta sul mondo di sopra: i quattro mercanti, i personaggi delle missioni, il capitano, il minatore, i viandanti da
+cercare e le sentinelle delle discese rosse. Le bancarelle e le botteghe restano quelle di prima.
 
 ## I quattordici modelli
 
@@ -27,7 +27,7 @@ non si toccano a mano. Ognuno si riconosce dalla sagoma e dai colori, e non somi
 | carovaniere | (nessuno ancora) | turbante ocra col lembo, barba nera, spolverino rosso mattone, fascia gialla con la frusta, bastone col lume | apre la carta delle strade e la legge |
 
 La cacciatrice e il carovaniere sono le persone nuove delle città del progetto ([mondo-aperto-quest.md](mondo-aperto-quest.md#chi-le-dà)):
-il modello c'è, nel mondo ancora no (né sprite 2D).
+il modello c'è, nel mondo ancora no.
 
 Un corpo solo coi parametri (corporatura, testa, braccia col gomito e la mano), la faccia su una trama canvas come gli eroi
 (che ammicca, e apre la bocca salutando), sotto i 2500 triangoli.
@@ -65,7 +65,7 @@ chiamate. Un pezzo nella pelle non si spegne con `visible`: si scala a zero (il 
 
 Il servizio delle anteprime ([anteprime-3d.md](anteprime-3d.md)) ha la chiave `persona:<modello>`: la faccia e le spalle, appena
 girata, 96 px. La usano `Ritratto.vue` (il dialogo, il diario; e la bottega, che ora usa lo stesso ritratto) e l'icona di chi si è
-perso nelle taglie «trova chi» del diario. Finché l'immagine non è pronta, e nel 2D, resta lo sprite.
+perso nelle taglie «trova chi» del diario. Finché l'immagine non è pronta resta lo sprite.
 
 ## Quanto costa
 

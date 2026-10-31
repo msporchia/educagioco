@@ -1,10 +1,10 @@
 # Le anteprime 3D nei pannelli
 
-Nel Sotterraneo 3D ([grafica-3d.md](grafica-3d.md)) l'eroe, i mostri e gli effetti sono modelli ([mostri-3d.md](mostri-3d.md));
+Nel sotterraneo ([grafica-3d.md](grafica-3d.md)) l'eroe, i mostri e gli effetti sono modelli ([mostri-3d.md](mostri-3d.md));
 per coerenza (l'utente, 21 ottobre 2026) lo sono anche le immagini dei pannelli: le caselle della roba (zaino, botteghe, il
 pannello del pezzo, il confronto affiancato), il ritratto dell'eroe (zaino, bottega, pagina dell'eroe, scelta dell'avventura) e la
-fila dei turni dello scontro. Sono fotografie dei modelli veri, fatte una volta e tenute. **Il Sotterraneo di sempre non cambia**:
-le anteprime le fornisce solo Gioco.vue col `disegno: '3d'`.
+fila dei turni dello scontro. Sono fotografie dei modelli veri, fatte una volta e tenute.
+Le anteprime le fornisce Gioco.vue.
 
 ## Fatte sul computer (28/10)
 
@@ -111,8 +111,8 @@ npm run build && node strumenti/tavola-anteprime.mjs          # tutte, in tmp/sc
 node strumenti/tavola-anteprime.mjs --solo eroi --eroe mago    # roba, eroi, mostri; l'armatura sul mago
 node strumenti/tavola-anteprime.mjs --solo rarita              # le figure e gli aloni: ogni base comune, magica, rara, e i pezzi col nome
 node strumenti/tavola-anteprime.mjs --chiavi arma:spada-28.spada-lunga.l.fuoco,busto:nano:-:-:-:-
-node strumenti/scatta-app.mjs 'sotterraneo3d=1&eroe=cavaliere&sotterraneo=roba&dpr=1' --dist --aspetta 6000 --tocca '[data-azione="zaino"]'
-node strumenti/scatta-app.mjs 'sotterraneo3d=mondo&eroe=cavaliere&bottega=armaiolo&livello=12&roba=rara&gemme=800&dpr=1' --dist --aspetta 8000
+node strumenti/scatta-app.mjs 'sotterraneo=1&eroe=cavaliere&sotterraneo=roba&dpr=1' --dist --aspetta 6000 --tocca '[data-azione="zaino"]'
+node strumenti/scatta-app.mjs 'sotterraneo=mondo&eroe=cavaliere&bottega=armaiolo&livello=12&roba=rara&gemme=800&dpr=1' --dist --aspetta 8000
 ```
 
 `window.__anteprime3d.stato()` dice quante disegnate, i ms (modelli, render, copia), quante volte s'è aperto il renderer, se è
@@ -126,5 +126,5 @@ aperto, quante in coda, e `prima`/`ultima` (il primo chiedere e l'ultima pronta)
 Nei test: `unita/sotterraneo-anteprime-3d` (il ripiego copre ogni arma e scudo del gioco, il pezzo 3D con la figura, le chiavi, null dove resta lo
 sprite, la lettura delle chiavi, i mostri allo stesso modello della scena, la coda), `integrazione/sotterraneo-3d-anteprime` (lo
 zaino coi modelli e gli sprite dove servono, un renderer solo, la pagina dell'eroe, la fila con l'eroe a mezzo busto e la pianta
-sprite, il 2D e `#icone2d` senza anteprime). Bersagli: `[data-anteprima="3d"]` con `[data-anteprima-chiave]` sull'icona, e
+sprite, e `#icone2d` senza anteprime). Bersagli: `[data-anteprima="3d"]` con `[data-anteprima-chiave]` sull'icona, e
 `.sot-armato[data-anteprima="3d"]` sul ritratto.

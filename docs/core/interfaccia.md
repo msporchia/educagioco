@@ -31,7 +31,7 @@ Nei test: `button[aria-label="indietro"]` (mai il carattere),
 
 ## Un tocco altrove chiude
 
-Per ora nel sotterraneo, giù e sulla terra di sopra (l'utente, 8 ottobre: «un
+Per ora nel sotterraneo, giù e nel mondo di sopra (l'utente, 8 ottobre: «un
 po' tutti i menu e i messaggi dovrebbero potersi chiudere con un tocco
 altrove»). Dover cercare «ok» per andarsene è un tocco in più che non decide
 niente.
@@ -51,8 +51,8 @@ niente.
   si chiude al `pointerdown`, e il click che il dito lascia lo ingoia
   `zittisciIlFantasma` ([il-dito.md](il-dito.md)). Sopra una finestra il tocco
   è il click sul velo stesso, e chi la usa decide dove va (`toccoFuori` in
-  `src/giochi/sotterraneo/Gioco.vue`, `toccoDaFuori` in `viste/Terra.vue`):
-  sul campo e sulla mappa sì, sulle carte in cima e in fondo no. La bottega
+  `src/giochi/sotterraneo/Gioco.vue`):
+  sul campo e sul mondo sì, sulle carte in cima e in fondo no. La bottega
   ascolta il velo solo dopo i suoi 320 ms ciechi.
 - **Andrebbe estesa al resto dell'app**, un gioco alla volta: altrove un velo
   con `@click.self` chiude e basta (il `?`, i fogli del costruttore e della

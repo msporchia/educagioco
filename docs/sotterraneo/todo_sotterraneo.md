@@ -102,8 +102,7 @@ fuori») e i branchi a 14 celle (`292a98f5`); il villaggio tondo (24×20); la sc
 ### Decisioni prese da Marco (22 ottobre)
 
 - **La torcia sopra non serve**: si consuma e si usa solo dentro i dungeon, sopra è sempre giorno.
-- **Il pannello dei genitori**: niente di nuovo da spegnere, come nel 2D. Il 3D è già dietro l'interruttore dei giochi in prova (`sperimentali`,
-  [../genitori/interruttori.md](../genitori/interruttori.md)); le terre non hanno un interruttore.
+- **Il pannello dei genitori**: niente di nuovo da spegnere; le terre non hanno un interruttore.
 - **I nomi dei boss nuovi** li sceglie Claude: basta che suonino epici.
 - **L'elmo è uno slot tutto suo** (drop, botteghe, zaino, `copri` dell'eroe 3D): in lavorazione (22 ottobre).
 - **Nessuna riga di novità per i bambini** per ora.
@@ -132,7 +131,7 @@ fuori») e i branchi a 14 celle (`292a98f5`); il villaggio tondo (24×20); la sc
 
 | Voce | Chi | Stato |
 |---|---|---|
-| Un elmo vero nello slot testa: fatto il 22/10, la casella `testa`, sei copricapi e l'Elmo alato di Piumanera, solo nel 3D, anche negli scontri sul prato ([elmo.md](elmo.md)); resta lo sprite per il 2D dei copricapi (nessun foglio ha un elmo: oggi l'emoji; serve un disegno in codice) | Mostri | fatto, da guardare col dito |
+| Un elmo vero nello slot testa: fatto il 22/10, la casella `testa`, sei copricapi e l'Elmo alato di Piumanera, anche negli scontri sul prato ([elmo.md](elmo.md)); resta lo sprite dei copricapi (nessun foglio ha un elmo: oggi l'emoji; serve un disegno in codice) | Mostri | fatto, da guardare col dito |
 | Costi in chiamate: scontro sul prato ~231, mondo con due branchi ~250 (soglia del test 260) | Mostri | tenere d'occhio |
 | Peso e fluidità sul telefono: misurati il 22/10 ([limiti-3d.md](limiti-3d.md)); restano i rimedi grossi proposti lì (draghi saldati per osso, fantasma e melme, ombra del sole nella bassa, luce della gemma del mago, eroe vestito) | Mostri | da decidere dopo la misura vera |
 | Prove del browser complete (`npm run test:browser`) e `test:misure` non lanciate dopo il 3D | Mostri | da fare prima del prossimo giro grande |

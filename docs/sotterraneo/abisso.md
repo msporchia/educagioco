@@ -35,7 +35,7 @@ quella di sempre.
   discese dal 7 ottobre 2026), e l'abisso non ne fa parte.
 - **La roba dell'abisso è quella di tutte le discese**: ci si scende con lo
   zaino della campagna, e quello che si trova là sotto sale come da ogni altra
-  discesa. Il mercante che stava in ogni piano è salito sulla terra di sopra,
+  discesa. Il mercante che stava in ogni piano è salito sul mondo di sopra,
   e al suo posto c'è il portale per il villaggio: lo stesso delle discese
   ([regole.md](portale-e-sosta.md#il-portale-e-luscita)). Salendo dal portale si fa la spesa e
   si torna giù al piano, nella stanza e nel punto dov'eri.

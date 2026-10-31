@@ -7,7 +7,7 @@ destra — e mostra solo il visto più tre punti: dove sei, la scala, chi ha la
 chiave. La 🗺️ della barra in basso la apre grande ([barra.md](barra.md)).
 
 Il codice: `aggiornaLuce` in `motore/corsa.js`, le misure in `dati/mondo.js`,
-il disegno in `scena/tela.js`.
+il disegno in `scena3d/` ([grafica-3d.md](grafica-3d.md)).
 
 ## Un cono davanti, l'ombra dietro
 
@@ -54,24 +54,14 @@ il disegno in `scena/tela.js`.
 
 ## Come si vede
 
-- **La luce sono le caselle accese**, come sempre. Provato un cerchio sfumato
-  disegnato sopra (`Tela.buio`): «terribile», tolto. Per non fare scalini ai
+- **La luce sono le caselle accese**. Provato un cerchio sfumato
+  disegnato sopra: «terribile», tolto. Per non fare scalini ai
   bordi ogni casella accesa ha una **forza** da 0,22 a 1 (`forzaDi`): piena nel
   cuore del cono, sfuma nell'ultimo tratto in lunghezza (`SFUMA_CONO`) e ai
-  fianchi (`SFUMA_ARCO`); sotto 0,22 è ricordo.
-- In `scena/tela.js` la forza porta il pavimento da mezzo spento a pieno, e il
-  velo del ricordo si alleggerisce di conseguenza; sopra le caselle accese
-  un velo d'ambra (più forte con la torcia) rende la luce calda davanti e fredda
-  ai bordi. **I veli si posano a gradini di un quarto, ognuno in un tracciato
-  solo**: due rettangoli che si sovrappongono lasciano la riga della giunzione
-  più scura (provato).
-- **Un oggetto non diventa trasparente, diventa scuro.** Il pavimento e i muri
-  si spengono con la trasparenza sul nero, ma un oggetto posato sul pavimento
-  (roba, arredo, relitti, scale, portale, mostri) è sempre opaco: la luce che
-  manca lo scurisce con la sua sagoma nera (`scuro`, `grafica/atlante.js`),
-  se no il pavimento traspare e gli oggetti nel ricordo sono fantasmi
-  (l'utente, 14 ottobre 2026). → [grafica.md](../core/grafica.md#un-oggetto-non-è-trasparente)
-- **Nelle celle ricordate** la tela disegna porte, forzieri, scala, fonte,
+  fianchi (`SFUMA_ARCO`); sotto 0,22 è ricordo. La forza va nella maschera
+  del visto ([grafica-3d.md](grafica-3d.md#la-vista)), che porta pavimento e muri da mezzo
+  spenti a pieni, col colore caldo davanti e freddo ai bordi.
+- **Nelle celle ricordate** si disegnano porte, forzieri, scala, fonte,
   arredo e roba per terra, mai i mostri: il ricordo non si muove. Sulla mappina
   il custode della chiave è un segno fisso, sta dov'è la sua casa.
 
@@ -120,7 +110,7 @@ il disegno in `scena/tela.js`.
 - **Contare le stanze (`stanzeViste`, la torcia che brucia, le missioni) non
   dipende dalla luce**: è l'eroe a entrarci.
 
-## La torcia nel 3D
+## La torcia in scena
 
 - **Quello che si vede lo decide il motore**: la maschera è `forzaLuce`, e
   con la torcia il cono è più lungo e più aperto e l'alone copre le spalle

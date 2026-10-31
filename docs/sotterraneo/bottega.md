@@ -1,6 +1,6 @@
 # I mercanti e la bottega
 
-Le quattro botteghe sulla terra di sopra, cosa portano, i pezzi delle righe dopo
+Le quattro botteghe sul mondo di sopra, cosa portano, i pezzi delle righe dopo
 a sovrapprezzo, quanta scelta c'è sul banco e come cambia da un giro all'altro
 (il tetto di rarità, i dieci pezzi, i salti e i sogni, il banco che ruota e si
 rinnova, comprare senza le caratteristiche, il riacquisto). La finestra da gioco di ruolo dove si compra e
@@ -13,15 +13,15 @@ codice: `dati/mercanti.js`, `motore/bottega.js`, `motore/storia.js`
 
 ## I mercanti di sopra
 
-Quattro botteghe sulla terra di sopra, vicino alle case e al carro
+Quattro botteghe sul mondo di sopra, vicino alle case e al carro
 (`MERCANTI` in `dati/mercanti.js`; dove stanno:
-[terra-di-sopra.md](terra-di-sopra.md#i-mercanti)). Nelle discese non vende
+[mondo-3d.md](mondo-3d.md#chi-sta-dove)). Nelle discese non vende
 più nessuno.
 
 | chi | vende | in cima, sempre |
 |---|---|---|
-| ⚒️ l'armaiolo (il fabbro), sotto la tettoia a sinistra | il ferro: spade, asce, archi, scudi, corazze e giubbe di cuoio; nel 3D la linguetta «Elmi» ([elmo.md](elmo.md)) | — |
-| 🔮 l'incantatrice (`incantatrice`), alla porta della casa di destra | la magia: bacchette e bastoni, vesti di stoffa; nel 3D la linguetta «Cappelli» ([elmo.md](elmo.md)) | boccetta blu e ampolla delle stelle (l'energia); la pergamena del portale dopo la sua missione ([portale-e-sosta.md](portale-e-sosta.md#la-pergamena-del-portale)) |
+| ⚒️ l'armaiolo (il fabbro), sotto la tettoia a sinistra | il ferro: spade, asce, archi, scudi, corazze e giubbe di cuoio; la linguetta «Elmi» ([elmo.md](elmo.md)) | — |
+| 🔮 l'incantatrice (`incantatrice`), alla porta della casa di destra | la magia: bacchette e bastoni, vesti di stoffa; la linguetta «Cappelli» ([elmo.md](elmo.md)) | boccetta blu e ampolla delle stelle (l'energia); la pergamena del portale dopo la sua missione ([portale-e-sosta.md](portale-e-sosta.md#la-pergamena-del-portale)) |
 | 🌿 l'erborista (la guaritrice), al banco con le erbe | niente di pescato: solo quello che sta sempre in cima | le quattro cure (le grandi dopo qualche discesa finita), torcia |
 | 🧺 il rigattiere (il mercante), accanto al carro | anelli, collane (amuleti, medaglione), chiavi: tutti sotto la linguetta «Gioielli» | — e **compra** quello che hai in tasca, e te lo ridà (sotto) |
 
