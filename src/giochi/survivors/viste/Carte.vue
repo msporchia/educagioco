@@ -1,5 +1,5 @@
 <script setup>
-// Le tre carte: si sale di livello e il gioco si ferma. Sopra ognuna
+// Le carte: si sale di livello e il gioco si ferma. Sopra ognuna
 // c'è scritto quanto costa (facile, media, tosta) — il prezzo di quella
 // carta a quel livello, prima che il bambino scelga. Le carte arrivano
 // già vestite (nome, disegno, pallini): questa schermata non sa come
@@ -24,7 +24,8 @@ defineEmits(['scegli'])
       <span class="sv-testi">
         <b>{{ c.nome }}</b>
         <small class="sv-chiaro">{{ c.chiaro }}</small>
-        <i v-if="c.nuova" class="sv-nuova">NUOVA!</i>
+        <i v-if="c.cura" class="sv-salita">quante ne vuoi</i>
+        <i v-else-if="c.nuova" class="sv-nuova">NUOVA!</i>
         <!-- oltre il tetto (solo Sopravvivenza) rende ogni volta un po' meno -->
         <i v-else-if="c.oltreIlTetto" class="sv-ancora">ancora un po' di più</i>
         <i v-else class="sv-salita">livello {{ c.livello }} di {{ c.max }}</i>

@@ -24,7 +24,8 @@ import { SCENARI, guastiDegliScenari } from '../../src/giochi/survivors/dati/sce
 import { OGGETTI, pescaOggetto, guastiDegliOggetti }
   from '../../src/giochi/survivors/dati/oggetti.js'
 import { MAZZO, FASCE, PALLINI, prezzoDomanda, maturita, palliniDelPrezzo,
-         scalinoDelPrezzo, resa, tettoDi, RESA_OLTRE, RESA_TOTALE, guastiDelMazzo }
+         scalinoDelPrezzo, resa, tettoDi, RESA_OLTRE, RESA_TOTALE, guastiDelMazzo,
+         OFFERTA, ARMI_DI_PARTENZA }
   from '../../src/giochi/survivors/dati/mazzo.js'
 import { CAMPAGNA, SCALINI, LIBERO, QUANTE_TAPPE, guastiDellaCampagna }
   from '../../src/giochi/survivors/dati/campagna.js'
@@ -177,7 +178,7 @@ controlla('il riassunto conta le stelle',
   uguale('l\'ultima copia possibile è a maturità piena', maturita(4, 5), 1)
   uguale('una carta che si prende una volta sola non matura', maturita(0, 1), 0)
 
-  for (const c of MAZZO) {
+  for (const c of MAZZO.filter(c => !c.cura)) {
     const nuova = prezzoDomanda(c.fascia, 0, 0, c.max)
     const matura = prezzoDomanda(c.fascia, 0, c.max - 1, c.max)
     controlla(`«${c.nome}»: la prima copia costa quanto la sua fascia`,
@@ -223,7 +224,7 @@ controlla('il riassunto conta le stelle',
          scalinoDelPrezzo(prezzoDomanda('debole', 0, 0, 9)).nome, 'facile')
 }
 
-/* ══════════ 3. l'offerta: tre carte, tre prezzi ══════════ */
+/* ══════════ 3. l'offerta: quattro carte, tre prezzi ══════════ */
 {
   const p = new Partita(new Regole(CAMPAGNA[4]), { rnd: caso(3), campo })
   /* si sale di livello a mano, senza dover giocare mezza partita */
@@ -237,13 +238,15 @@ controlla('il riassunto conta le stelle',
   uguale('aprirlo lo spende', p.daSpendere, 0)
   const o = p.offerta
   controlla('aperto, la partita si ferma', p.inPausa)
-  uguale('e propone tre carte', o.length, 3)
-  stessaLista('una per fascia, dalla più a buon mercato',
-              o.map(c => c.fascia), ['debole', 'media', 'forte'])
-  controlla('i prezzi salgono', o[0].prezzo < o[1].prezzo && o[1].prezzo < o[2].prezzo)
-  uguale('la più a buon mercato è la prima', o[0].prezzo, Math.min(...o.map(c => c.prezzo)))
-  controlla('ogni carta dice a che livello porta', o.every(c => c.livello === 1))
-  controlla('e che è nuova', o.every(c => c.nuova))
+  uguale('e propone quattro carte', o.length, OFFERTA.carte)
+  stessaLista('almeno una per fascia', [...new Set(o.map(c => c.fascia))].sort(),
+              ['debole', 'forte', 'media'])
+  controlla('dalla più a buon mercato', o.every((c, i) => !i || o[i - 1].prezzo <= c.prezzo),
+            o.map(c => c.prezzo.toFixed(2)).join(' ≤ '))
+  controlla('e c\'è un\'arma che raddoppia l\'attacco',
+            o.some(c => ARMI_DI_PARTENZA.includes(c.chiave)), o.map(c => c.chiave).join(' '))
+  controlla('ogni carta dice a che livello porta', o.every(c => c.cura || c.livello === 1))
+  controlla('e che è nuova', o.every(c => c.cura || c.nuova))
 
   /* in pausa il tempo non passa: la scelta si guarda con calma */
   const prima = p.tempo
@@ -265,13 +268,41 @@ controlla('il riassunto conta le stelle',
   p.avanza(1 / 30)
   p.apriOfferta()
   const o = p.offerta
-  controlla('c\'è un\'offerta aperta', o?.length === 3)
+  controlla('c\'è un\'offerta aperta', o?.length === OFFERTA.carte)
   const primaDi = o.map(c => p.livelloDi(c.chiave))
   uguale('rinunciare non consegna niente', p.rinuncia(), null)
   controlla('la partita riparte lo stesso', !p.inPausa)
-  stessaLista('e nessuna delle tre carte è arrivata',
+  stessaLista('e nessuna delle carte è arrivata',
               o.map(c => p.livelloDi(c.chiave)), primaDi)
   uguale('nemmeno la più debole', p.livelloDi(o[0].chiave), 0)
+}
+{
+  /* ══ le carte prese tornano, e all'inizio c'è sempre un'arma ══
+     Come in Vampire Survivors: due delle carte già prese tornano a ogni
+     offerta, così si portano in cima. E nelle prime quattro prese c'è
+     sempre Frecce gemelle o Frecce grosse: senza, una tappa alta partiva
+     persa per la sfortuna della pesca (docs/survivors/regole.md). */
+  let senzArma = 0, senzaRiprese = 0
+  for (let s = 0; s < 40; s++) {
+    const p = new Partita(new Regole(CAMPAGNA[8]), { rnd: caso(900 + s), campo })
+    for (let giro = 0; giro < 8; giro++) {
+      const o = p.offri()
+      const prese = MAZZO.filter(c => !c.cura && p.livelloDi(c.chiave) > 0 && p.livelloDi(c.chiave) < c.max)
+      if (giro < OFFERTA.curate && !o.some(c => ARMI_DI_PARTENZA.includes(c.chiave))) senzArma++
+      if (o.filter(c => prese.some(x => x.chiave === c.chiave)).length < Math.min(OFFERTA.riprese, prese.length))
+        senzaRiprese++
+      /* si prende sempre la prima che non è un'arma: l'arma deve tornare lo stesso */
+      p.offerta = o
+      p.prendi((o.find(c => !ARMI_DI_PARTENZA.includes(c.chiave) && !c.cura) || o[0]).chiave)
+    }
+  }
+  uguale('nelle prime quattro prese un\'arma c\'è sempre', senzArma, 0)
+  uguale('e due delle carte prese tornano a ogni offerta', senzaRiprese, 0)
+
+  /* la mela non conta fra le prese: prenderne tante non spegne le armi */
+  const p = new Partita(new Regole(CAMPAGNA[8]), { rnd: caso(950), campo })
+  p.potenziamenti.mela = 6
+  controlla('dopo sei mele l\'arma c\'è ancora', p.offri().some(c => ARMI_DI_PARTENZA.includes(c.chiave)))
 }
 {
   /* la stessa carta, presa e ripresa, costa sempre di più — ed è la
@@ -302,13 +333,19 @@ controlla('il riassunto conta le stelle',
   /* anche il colore della carta è quello del prezzo: è la prima cosa che
      un bambino guarda, e se dicesse la fascia direbbe il contrario dei
      pallini */
-  const mela = MAZZO.find(x => x.chiave === 'mela')
-  q.potenziamenti[mela.chiave] = mela.max - 1
-  const dolce = q.vestiCarta(mela)
+  const calamita = MAZZO.find(x => x.chiave === 'magnete')
+  q.potenziamenti[calamita.chiave] = calamita.max - 1
+  const dolce = q.vestiCarta(calamita)
   uguale('una debole cresciuta si tinge come il suo prezzo', dolce.tinta, 'media')
   uguale('e una debole nuova resta verde',
-         new Partita(new Regole(CAMPAGNA[0]), { rnd: caso(33), campo }).vestiCarta(mela).tinta,
+         new Partita(new Regole(CAMPAGNA[0]), { rnd: caso(33), campo }).vestiCarta(calamita).tinta,
          'debole')
+  /* la mela no: è una cura, non cresce, e la decima costa come la prima */
+  const mela = MAZZO.find(x => x.chiave === 'mela')
+  q.potenziamenti[mela.chiave] = 9
+  const decima = q.vestiCarta(mela)
+  uguale('la decima mela resta facile', decima.tinta, 'debole')
+  controlla('e non dice un livello né «nuova»', decima.cura && !decima.nuova && !decima.oltreIlTetto)
 
   uguale('la media matura è una fascia media', cara.fascia, 'media')
   controlla('ma il suo prezzo si dichiara tosto', cara.etichetta === 'tosta',
@@ -545,7 +582,7 @@ controlla('il riassunto conta le stelle',
   const livello = p.livello, xp = p.xp
   p.oggetti.push({ tipo: 'cassa', x: p.eroe.x, y: p.eroe.y, resta: 5, fase: 0 })
   p.avanza(1 / 30)
-  controlla('la cassa ferma la partita con tre carte', p.inPausa && p.offerta?.length === 3)
+  controlla('la cassa ferma la partita con quattro carte', p.inPausa && p.offerta?.length === OFFERTA.carte)
   uguale('e dice che viene da una cassa', p.motivoOfferta, 'cassa')
   uguale('anche nel cruscotto', p.cruscotto.cassa, true)
   uguale('senza salire di livello', p.livello, livello)
@@ -562,13 +599,14 @@ controlla('il riassunto conta le stelle',
   uguale('una salita di livello si dichiara livello', p.motivoOfferta, 'livello')
   uguale('e il cruscotto non dice cassa', p.cruscotto.cassa, false)
   p.prendi(p.offerta[0].chiave)
-  /* col mazzo finito, in campagna, la cassa è vuota e non ferma niente */
+  /* col mazzo finito, in campagna, la cassa ha solo la mela: le cure non finiscono */
   const pieno = new Partita(new Regole(CAMPAGNA[4]), { rnd: caso(47), campo })
   for (const x of MAZZO) pieno.potenziamenti[x.chiave] = x.max
   pieno.ricalcola()
   pieno.oggetti.push({ tipo: 'cassa', x: 0, y: 0, resta: 5, fase: 0 })
   pieno.avanza(1 / 30)
-  controlla('col mazzo finito la cassa è vuota e non ferma la partita', !pieno.inPausa)
+  stessaLista('col mazzo finito la cassa offre solo la mela',
+              (pieno.offerta || []).map(c => c.chiave), ['mela'])
 }
 {
   /* ── la cassa è rara, e il tetto è un conto ──
@@ -879,13 +917,15 @@ for (const [i, t] of CAMPAGNA.entries()) {
      salita che chiede di aver risposto bene: si scende. Chi perde non
      perde niente e riprova, e intanto ha fatto i suoi conti.
 
-     Le attese sono misurate (12 semi × 24 partite, il 9/10/2026, coi
-     capi più duri): chi risponde bene 99·98·84·78·66·58·60·41·40%, chi
-     schiva a sprazzi 94·86·60·43·30·22·22·12·19%. Ventiquattro partite oscillano di dieci
-     punti, quindi una casella da sola regge solo un crollo (`regge`);
-     lo scalino intero, tre tappe insieme, tiene una soglia più stretta. */
-  const attesaSa = [0.99, 0.98, 0.84, 0.78, 0.66, 0.58, 0.60, 0.41, 0.40]
-  const attesaBimbo = [0.94, 0.86, 0.60, 0.43, 0.30, 0.22, 0.22, 0.12, 0.19]
+     Le attese sono misurate (288 partite per tappa, il 31/10/2026, con
+     l'offerta a quattro carte: `node strumenti/survivors-banco.mjs
+     --volte 288 --tappe N`): chi risponde bene 100·100·96·85·72·66·68·54·59%,
+     chi schiva a sprazzi 100·98·82·64·42·28·33·23·24%. Ventiquattro partite
+     oscillano di dieci punti, quindi una casella da sola regge solo un
+     crollo (`regge`); lo scalino intero, tre tappe insieme, tiene una
+     soglia più stretta. */
+  const attesaSa = [1.00, 1.00, 0.96, 0.85, 0.72, 0.66, 0.68, 0.54, 0.59]
+  const attesaBimbo = [1.00, 0.98, 0.82, 0.64, 0.42, 0.28, 0.33, 0.23, 0.24]
   controlla(`tappa ${i + 1} (${t.nome}): chi risponde bene la porta a casa`,
             regge(sa.quota, attesaSa[i], VOLTE), `ce la fa il ${(sa.quota * 100).toFixed(0)}%`)
   controlla(`tappa ${i + 1} (${t.nome}): chi schiva a sprazzi non resta fuori`,
@@ -910,7 +950,7 @@ for (const [i, t] of CAMPAGNA.entries()) {
 }
 {
   /* lo scalino intero: tre tappe, settantadue partite per profilo; a
-     quattro deviazioni, perché tre tappe molto diverse (99, 98 e 84%)
+     quattro deviazioni, perché tre tappe molto diverse (100, 98 e 82%)
      oscillano più di quanto dice il conto, e resta più stretta lo stesso
      della casella sola */
   const media = v => v.reduce((a, b) => a + b, 0) / v.length
@@ -1118,7 +1158,9 @@ for (const [i, t] of CAMPAGNA.entries()) {
    marea vinca comunque. */
 {
   /* ── i conti della resa ── */
-  for (const c of MAZZO) {
+  for (const c of MAZZO.filter(c => c.cura))
+    controlla(`«${c.nome}»: una cura non ha tetto`, tettoDi(c, false) === Infinity && tettoDi(c, true) === Infinity)
+  for (const c of MAZZO.filter(c => !c.cura)) {
     uguale(`«${c.nome}»: in campagna il tetto è il suo max`, tettoDi(c, false), c.max)
     uguale(`«${c.nome}»: nel gioco libero il tetto ${c.intera ? 'resta' : 'sparisce'}`,
            tettoDi(c, true), c.intera ? c.max : Infinity)
@@ -1149,8 +1191,9 @@ for (const [i, t] of CAMPAGNA.entries()) {
   const t = new Partita(new Regole(CAMPAGNA[4]), { rnd: caso(71), campo })
   for (const x of MAZZO) t.potenziamenti[x.chiave] = x.max
   t.ricalcola()
-  uguale('in campagna il mazzo pieno chiude le offerte', t.offri(), null)
-  for (const x of MAZZO)
+  stessaLista('in campagna il mazzo pieno offre solo la mela',
+              (t.offri() || []).map(c => c.chiave), ['mela'])
+  for (const x of MAZZO.filter(c => !c.cura))
     uguale(`in campagna la resa di «${x.chiave}» è il numero di copie`,
            t.resaDi(x.chiave), x.max)
 }
@@ -1160,20 +1203,20 @@ for (const [i, t] of CAMPAGNA.entries()) {
   for (const x of MAZZO) p.potenziamenti[x.chiave] = x.max
   p.ricalcola()
   const o = p.offri()
-  controlla('col mazzo finito la Sopravvivenza offre ancora tre carte', o?.length === 3,
+  controlla('col mazzo finito la Sopravvivenza offre ancora quattro carte', o?.length === OFFERTA.carte,
             `ne offre ${o?.length}`)
-  stessaLista('e sono ancora una per fascia', o.map(x => x.fascia),
-              ['debole', 'media', 'forte'])
-  controlla('tutte e tre dicono di essere oltre il loro ultimo livello',
-            o.every(x => x.oltreIlTetto) && o.every(x => !x.nuova))
+  stessaLista('e c\'è ancora ogni fascia', [...new Set(o.map(x => x.fascia))].sort(),
+              ['debole', 'forte', 'media'])
+  controlla('tutte dicono di essere oltre il loro ultimo livello (la mela è una cura)',
+            o.every(x => x.cura || x.oltreIlTetto) && o.every(x => !x.nuova))
   controlla('e nessuna è una carta che dà una cosa intera',
             o.every(x => !MAZZO.find(c => c.chiave === x.chiave).intera),
             o.map(x => x.chiave).join(' '))
   /* la scelta «quanto voglio lavorare» non si spegne nel secondo giro:
      i tre prezzi restano una scala, alta ma una scala */
   controlla('i prezzi del secondo giro sono ancora una scala',
-            o[0].prezzo < o[1].prezzo && o[1].prezzo < o[2].prezzo,
-            o.map(x => x.prezzo.toFixed(2)).join(' < '))
+            o.every((x, i) => !i || o[i - 1].prezzo <= x.prezzo) && o[0].prezzo < o.at(-1).prezzo,
+            o.map(x => x.prezzo.toFixed(2)).join(' ≤ '))
   /* oltre il tetto il prezzo è quello dell'ultima copia e non sale più:
      la difficoltà di una domanda è una manopola da 0 a 1, e sopra «la più
      tosta» non c'è niente */

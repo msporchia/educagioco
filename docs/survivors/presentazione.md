@@ -24,8 +24,10 @@ grande più del doppio, con la corona, che ci vuole un po' ad abbattere.
 
 Salendo di livello il gioco **non** si ferma: compare il pulsante
 **potenzia**, col numero dei potenziamenti messi da parte, e quando lo si
-tocca il gioco offre **tre carte**: un'arma nuova, più velocità, più vita,
-un colpo che rimbalza. Il momento lo sceglie chi gioca.
+tocca il gioco offre **quattro carte**: un'arma nuova, più velocità, più vita,
+un colpo che rimbalza. Due sono carte già prese, da far crescere, e
+all'inizio c'è sempre un'arma che raddoppia l'attacco. Il momento lo
+sceglie chi gioca.
 
 ## La regola che rende il gioco un gioco
 
