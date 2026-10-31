@@ -461,7 +461,7 @@ export async function scendiNelSotterraneo(page, quale, { scendi = true, tocca =
   return scendiNelMondo(page, quale, { scendi, tocca })
 }
 
-/* Il mondo di sopra del Sotterraneo 3D (viste/Mondo3d.vue, docs/sotterraneo/terra-di-sopra.md «Il mondo in 3D»). Aspetta che
+/* Il mondo di sopra del Sotterraneo 3D (viste/Mondo3d.vue, docs/sotterraneo/mondo-3d.md). Aspetta che
    sia nato e che la scena abbia costruito i pezzi attorno all'eroe */
 export async function mondoPronto(page) {
   await page.waitForSelector('[data-mondo3d][data-pronto="1"]', { timeout: 30000 })
