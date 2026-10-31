@@ -565,7 +565,7 @@ const banco = computed(() => {
 function dopoIlBanco(e) {
   const a = bottega.avvisi.pop()
   bottega.avvisi = []
-  if (a) dettoBanco.value = typeof a === 'string' ? { testo: a } : { ...(COSE[a.cosa] || {}), testo: a.testo }
+  if (a) dettoBanco.value = typeof a === 'string' ? { testo: a } : { ...(COSE[a.cosa] || {}), chiave: a.cosa, testo: a.testo }
   bottega.prepara(aperto.value)   // una linguetta che si è svuotata si rimette a metà giro
   nellAvventura({ roba: bottega.roba, botteghe: bottega.botteghe, venduti: bottega.venduti.length ? bottega.venduti : null })
   tocco.value++
@@ -2347,13 +2347,13 @@ function ridimensiona() { if (pittore) pittore.misura() }
             <span v-else>la chiave ce l'ha qualcuno, qua sotto</span>
           </p>
           <p v-if="avviso" class="sot-avviso" :class="avviso.rarita ? 'sot-r-' + avviso.rarita : null">
-            <Icona v-if="avviso.cosa" :sprite="avviso.sprite" :em="avviso.em" :emAlto="20" />
+            <Icona v-if="avviso.cosa" :sprite="avviso.sprite" :em="avviso.em" :emAlto="20" :cosa3d="{ chiave: avviso.cosa }" />
             {{ avviso.testo }}
           </p>
 
           <!-- il mostro grosso: la sua vita in cima, da quando ci si entra nella stanza (docs/sotterraneo/grossi.md) -->
           <div v-if="grosso" class="sot-grosso-vita" data-grosso :data-chi="grosso.chiave" :data-ossa="grosso.ossa">
-            <span class="sot-grosso-faccia"><Grosso :chi="grosso.chiave" :scala="0.6" /></span>
+            <span class="sot-grosso-faccia"><Grosso :chi="grosso.chiave" :lato="38" /></span>
             <span class="sot-grosso-dati">
               <b>{{ grosso.nome }}</b>
               <span class="sot-grosso-barra"><i :style="{ width: (grosso.ossa / grosso.ossaMax) * 100 + '%' }"></i>
@@ -2368,7 +2368,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
           </div>
           <div v-else-if="festa && festa.che === 'leggendario'" class="sot-festa sot-festa-leggendario" data-leggendario
                :data-cosa="festa.cosa">
-            <Icona :sprite="festa.sprite" :em="festa.em" :scala="3" :emAlto="34" />
+            <Icona :sprite="festa.sprite" :em="festa.em" :scala="3" :emAlto="34" :cosa3d="festa.cosa ? { chiave: festa.cosa } : null" :lato="56" />
             <b>{{ festa.nome }}</b>
             <i>{{ festa.storia }}</i>
           </div>

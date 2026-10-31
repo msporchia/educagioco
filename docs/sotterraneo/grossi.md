@@ -71,21 +71,13 @@ il serpente, il golem di magma, il golem di ghiaccio, il mietitore) stanno in [d
 
 ## Come si vede
 
-- **Lo sprite della creatura che veste, ingrandito, con la corona** (`figuraDelGrosso` in `dati/grossi.js`; l'utente, 12 ottobre 2026: i boss li fa
-  dipingere ChatGPT, perché lo stile resti lo stesso del bestiario, e finché non ci sono si prende uno sprite che c'è già, ingrandito e con la corona).
-  Lo sprite `fermo`/`corsa` di quella creatura ingrandito dentro la sua scatola (alto al più 1,9 altezze dell'eroe, largo al più 3 larghezze, a quarti:
-  `ingrandimentoDelGrosso`; con un'altezza sola un ragno usciva largo il doppio del palco e la corona era grande quanto lui), la corona
-  👑 sopra la testa (un terzo della figura; quella del bersaglio di una missione è più grande) e un chiarore della sua `tinta` dietro, che distingue Re Ossuto da Carbonchio.
-  In scena respira (più svelto da sveglio) e, se la creatura ha i passi (il ragno, l'orco), **cammina da sveglia**; guarda verso l'eroe, ha l'alone
-  rosso più largo, il nome sopra la corona quando è in luce, la chiave, il sonno e la barretta come gli altri. **Nello scontro** (`viste/Grosso.vue`)
-  è la posa di lato ferma per chi ha i passi (il ragno, l'orco, specchiati verso l'eroe), il respiro per gli altri, con la scala dell'eroe
-  per l'ingrandimento (`scalaDelGrosso`) e la stessa corona. La figura disegnata in codice (`scena/grossi.js`, 32×32) è stata tolta: non serve più, e un boss dipinto da chi non è il modello
-  avrebbe cambiato stile.
-- **L'immagine dipinta prende il posto da sola**: se l'atlante ha
-  `grosso-<chiave>-fermo-0` (come `armaiolo-fermo-0` per i mercanti) si usa
-  quella, a misura vera (32×32), senza corona né ingrandimento; se no il
-  ripiego. I prompt, uno per volta e nell'ordine della tabella:
-  `strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-grossi.md`.
+- **Il modello 3D della creatura che veste** ([mostri-3d.md](mostri-3d.md): ogni grosso ha il suo), con la corona 👑 sopra la testa e un
+  chiarore della sua `tinta` dietro, che distingue Re Ossuto da Carbonchio. La misura la dà lo sprite `fermo`/`corsa` di quella creatura
+  ingrandito nella sua scatola (`figuraDelGrosso` in `dati/grossi.js`: alto al più 1,9 altezze dell'eroe, largo al più 3 larghezze, a quarti,
+  `ingrandimentoDelGrosso`), che resta anche per chi è oltre il tetto dei modelli. In scena respira, cammina da sveglio se la creatura ha i
+  passi, guarda verso l'eroe, ha l'alone rosso più largo, il nome sopra la corona quando è in luce, la chiave, il sonno e la barretta come gli altri.
+- **La sua faccia nella barra in cima** (`viste/Grosso.vue`) è la foto del suo modello (`mostro:grosso:<chiave>`, [anteprime-3d.md](anteprime-3d.md)),
+  con la stessa corona. I boss non si fanno più dipingere: la figura viene dal modello.
 - **La sua vita in cima allo schermo** (`[data-grosso]` in `Gioco.vue`): da
   quando si sveglia (si entra nella sua stanza) e mentre lo si combatte, con
   la sua faccia, il nome e la barra rossa che cala a ogni colpo. Nello

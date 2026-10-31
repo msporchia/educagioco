@@ -15,8 +15,8 @@ import { creaRacconto } from '../racconto.js'
 import { creaScontro } from '../scontro.js'
 import { EROE_SUL_PALCO } from '../../motore/palco.js'
 import { mascheraPiena } from './persone.js'
-import { creaEroe3d, eroe3dAcceso } from '../eroe3d.js'
-import { creaMostri3d, mostri3dAccesi } from '../mostro3d.js'
+import { creaEroe3d } from '../eroe3d.js'
+import { creaMostri3d } from '../mostro3d.js'
 import { creaGestore, statoDi } from '../effetti3d/gestore.js'
 import { ACCESI } from '../costanti.js'
 import { statiDel } from '../../viste/campo.js'
@@ -63,9 +63,9 @@ export function creaPalcoSopra(scena, { tex, norm, larga, alta, pezzi, quota, ca
   const luci = { lampo: luce(), magia: luce(), tinta: new Color(), tTinta: 0, q: 0, torcia: () => 1 }
   const eroe = creaEroe()
   // i modelli 3D e gli effetti 3D come nello scontro delle discese (scena3d/indice.js, docs/sotterraneo/mostri-3d.md): dentro il gruppo
-  // del palco, quindi sul prato dove si è; lo sprite resta se il modello manca (`#sprite`, `#eroe2d` li spengono)
-  const eroe3d = eroe3dAcceso() ? creaEroe3d(gruppo) : null
-  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(gruppo, { quanti: () => ACCESI.mostri3d, ozio: 60 }) : null
+  // del palco, quindi sul prato dove si è; un mostro resta sprite se il suo modello manca (`&spegni=mostri3d` li spegne)
+  const eroe3d = creaEroe3d(gruppo)
+  const mostri3d = ACCESI.mostri3d > 0 ? creaMostri3d(gruppo, { quanti: () => ACCESI.mostri3d, ozio: 60 }) : null
   const effetti3d = ACCESI.effetti3d ? creaGestore(gruppo, { camera: cam.camera }) : null
   const cose = creaCose({ figure: fig, aloni, colonne, etichette, camera: camPalco, mostri3d, vicino: () => eroe.disegnato })
   const S = { eroe, campo: null, scintille, luci, anelli, fermo: 0, scossa: 0, rosso: 0, tBolla: 9, tempo: 0, colpoEroe: null, stato: cose.stato,

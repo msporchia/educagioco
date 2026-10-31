@@ -58,7 +58,6 @@ export function creaCose({ figure, aloni, macchie = null, colonne, etichette, ca
       if (!F) return
       nome = spriteDelGrosso(F, inCampo >= 0 ? 'scontro' : r.sveglio, (t * 8) | 0)
       scala = F.k * (1 + 0.035 * Math.sin(t * (r.sveglio ? 5 : 2.2)))
-      s.dipinto = F.dipinto
     } else {
       const passi = !scheda.unaPosa && quantiFotogrammi(scheda.sprite, 'corsa') > 0
       const corre = s.corre && passi
@@ -118,7 +117,7 @@ export function creaCose({ figure, aloni, macchie = null, colonne, etichette, ca
     if (r.grosso) aloni.metti(x, z, 1.1 * scala, TINTE_GROSSI[r.grosso] || ROSSO, r.sveglio ? 0.5 : 0.3)
     if (r.caporale) aloni.metti(x, z - 0.1, 0.5, ORO, 0.5)
     // i segni sopra la testa
-    const corona = r.missione || (r.grosso && !s.dipinto)
+    const corona = r.missione || r.grosso
     const nomeSopra = (r.missione || r.grosso) && luce === 2 ? r.nome : ''
     const q = r.ossa < r.ossaMax ? Math.max(0, r.ossa / r.ossaMax) : -1
     const chiave = `m|${corona ? 1 : 0}|${nomeSopra}|${r.sveglio ? 1 : 0}|${r.caporale ? 1 : 0}|${q < 0 ? '' : Math.round(q * 20)}`

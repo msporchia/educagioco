@@ -465,12 +465,12 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   controlla('la fatta non si segue: si porta', !col.seguibile && !col.segui)
   const ros = d.inMano.find(v => v.id === 'rosicchione')
   controlla('Rosicchione: il mostro col nome, la sua faccia e la richiesta del mugnaio',
-            ros.cosa.tipo === 'sconfiggi' && ros.cosa.nome === 'Rosicchione' && ros.cosa.sprite === 'pipistrello' && ros.cosa.em === '🦇'
+            ros.cosa.tipo === 'sconfiggi' && ros.cosa.nome === 'Rosicchione' && ros.cosa.mostro === 'pipistrello' && ros.cosa.em === '🦇'
             && ros.da === 'mugnaio' && /Rosicchione/.test(ros.dice) && ros.seguibile, JSON.stringify(ros.cosa))
   controlla('il premio a pezzi: il gioiello col suo nome e le monete', ros.gemme === 0 && ros.monete === 1
             && ros.regalo && ros.regalo.nome === 'Amuleto azzurro' && ros.regalo.sprite === 'amuleto-azzurro')
   const ch = d.inMano.find(v => v.id === 'chiavi')
-  controlla('Le chiavi: una cosa da trovare, in gemme', ch.cosa.tipo === 'trova' && ch.cosa.sprite === null && ch.cosa.em === '🔑'
+  controlla('Le chiavi: una cosa da trovare, in gemme', ch.cosa.tipo === 'trova' && !ch.cosa.mostro && ch.cosa.em === '🔑'
             && ch.gemme === 20 && ch.regalo === null && ch.monete === 0)
   controlla('la voce dice da chi andare', ch.daChi === 'dalla guardia della torre' && ros.daChi === 'dal mugnaio')
   const fin = d.consegnate.find(v => v.id === 'badessa')

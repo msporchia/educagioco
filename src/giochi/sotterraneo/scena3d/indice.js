@@ -19,8 +19,8 @@ import { creaPost } from './post.js'
 import { creaEtichette } from './etichette.js'
 import { creaCose } from './cose.js'
 import { creaEroe, disegnaEroe } from './eroe.js'
-import { creaEroe3d, eroe3dAcceso } from './eroe3d.js'
-import { creaMostri3d, mostri3dAccesi } from './mostro3d.js'
+import { creaEroe3d } from './eroe3d.js'
+import { creaMostri3d } from './mostro3d.js'
 import { creaGestore, statoDi, effettiPrevisti } from './effetti3d/gestore.js'
 import { statiDel } from '../viste/campo.js'
 import { creaRacconto, assalto } from './racconto.js'
@@ -73,15 +73,15 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   const polvere = segnaNuovi(scena, 'particelle', () => (ACCESI.polvere ? creaPolvere(scena, Math.round(POLVERE * ACCESI.quantaPolvere), luci.condivise, maschera) : NIENTE))
   const etichette = creaEtichette(strato)
   const eroe = creaEroe()
-  const eroe3d = eroe3dAcceso() ? creaEroe3d(gruppo('eroe')) : null     // in prova: il personaggio in 3D al posto dello sprite (`#eroe2d` lo spegne)
+  const eroe3d = creaEroe3d(gruppo('eroe'))     // il personaggio in 3D (eroe3d.js), senza sprite di ripiego
   // in due il compagno (docs/sotterraneo/in-due.md): la stessa figura, mossa dal suo alleato; il modello solo quando c'è
   const compagno = creaEroe()
   let compagno3d = null
   // la fiamma della torcia in mano all'eroe: una sola, si sposta con lui (scena3d/eroe.js)
   const fiammaEroe = ACCESI.fiamme ? segnaNuovi(scena, 'fiamme', () => creaFiamme(scena, maschera, [{ scala: 0.85, cx: 0, cz: 0, x: 0, y: -9, z: 0 }])) : null
   if (fiammaEroe) fiammaEroe.accesa(0, false)
-  // in prova: i mostri in 3D al posto degli sprite (`#sprite` li spegne) e gli effetti 3D dello scontro (docs/sotterraneo/mostri-3d.md)
-  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(gruppo('mostri'), { quanti: () => ACCESI.mostri3d }) : null
+  // i mostri in 3D al posto degli sprite (`&spegni=mostri3d` li spegne) e gli effetti 3D dello scontro (docs/sotterraneo/mostri-3d.md)
+  const mostri3d = ACCESI.mostri3d > 0 ? creaMostri3d(gruppo('mostri'), { quanti: () => ACCESI.mostri3d }) : null
   const effetti3d = ACCESI.effetti3d ? creaGestore(gruppo('effetti3d'), { renderer, camera: cam.camera }) : null
   const S = { eroe, campo: null, scintille, luci, anelli, fermo: 0, scossa: 0, aberr: 0, rosso: 0, tBolla: 9, tempo: 0, colpoEroe: null, stato: null,
               mostri3d, effetti3d, eroe3d }
@@ -327,7 +327,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   function disegnaIlCompagno(corsa, o) {
     const i = corsa.persone.findIndex(p => p !== corsa.persona)
     if (i < 0) return
-    if (!compagno3d && eroe3dAcceso()) compagno3d = creaEroe3d(gruppo('eroe'))
+    if (!compagno3d) compagno3d = creaEroe3d(gruppo('eroe'))
     corsa.come(i, () => disegnaEroe(compagno, corsa, { ...o, luci: luciDelCompagno, fiamma: null, scintille: null, modello: compagno3d }))
     const d = compagno.disegnato, nome = corsa.persone[i].nome || ''
     if (!d || !nome) return

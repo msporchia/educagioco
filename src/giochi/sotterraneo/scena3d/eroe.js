@@ -1,8 +1,6 @@
-// L'eroe in 3D: la sua figura (le pose della famiglia: dati/tessere.js `pezzoAndante`), le armi in mano dove le tiene
-// (dati/impugna.js), il lampo della ferita e della cura, lo scatto dell'assalto, il giro su sé stesso, il passaggio nel portale,
-// e la sua torcia (scena3d/luci.js). Sta dove lo mette il motore; nello scontro il palco lo porta al suo posto (`meta`).
-import { COSE } from '../dati/cose.js'
-import { impugnatura } from '../dati/impugna.js'
+// L'eroe in 3D: il suo modello (eroe3d.js, con le armi in mano), il lampo della ferita e della cura, lo scatto dell'assalto, il giro
+// su sé stesso, il passaggio nel portale, e la sua torcia (scena3d/luci.js). Sta dove lo mette il motore; nello scontro il palco lo
+// porta al suo posto (`meta`). La misura viene dalla sua figura dell'atlante (le pose: dati/tessere.js `pezzoAndante`).
 import { PEZZI } from '../dati/atlante.js'
 import { pezzoAndante } from '../dati/tessere.js'
 import { PIXEL_CELLA, ALLUNGA, LUCE } from './costanti.js'
@@ -63,25 +61,10 @@ export function disegnaEroe(e, corsa, { figure, luci, etichette, camera, dt, dtS
   const o = figure.o()
   o.rosso = e.colpito * 2; o.verde = e.cura * 0.9; o.blu = e.cura * 1.3; o.trasparenza = trasparenza; o.specchio = e.specchio; o.giro = giro
   e.alto = figure.alto(nome)
-  // in prova: al posto dello sprite il modello 3D (scena3d/eroe3d.js), che porta da sé le armi
+  // il modello 3D (scena3d/eroe3d.js), che porta da sé le armi: senza, il posto resta vuoto (niente sprite di ripiego)
   if (modello) modello.aggiorna(e, corsa, { x, z, y: quota ? quota(x, z) : 0, trasparenza, dt, alto: e.alto })
-  else figure.metti(nome, x, 0, z + 0.1, o)
-  // le armi: due si portano una per lato (la debole dietro), una a due mani di lato come nel ritratto (dati/impugna.js)
   const su = Math.sin(e.t * (e.cammina ? 0.9 : 0.6)) * (e.cammina ? 0.9 : 0.5)
   const lato = e.specchio ? -1 : 1
-  const arma = (k, verso, specchio, dz) => {
-    const cosa = COSE[k] || {}, p = cosa.sprite && PEZZI[cosa.sprite]
-    if (!p) return
-    const { dx, base } = impugnatura(cosa, p[2], p[3])
-    o.specchio = specchio
-    figure.metti(cosa.sprite, x + verso * dx / PIXEL_CELLA, Math.max(0, base - su) / PIXEL_CELLA * ALLUNGA, z + 0.1 + dz, o)
-  }
-  if (modello) { /* le armi sono nel modello */ }
-  else if (corsa.mano && (COSE[corsa.mano] || {}).mani === 2) arma(corsa.mano, lato, e.specchio, 0.03)
-  else {
-    if (corsa.mancina) arma(corsa.mancina, -lato, !e.specchio, -0.03)
-    if (corsa.mano) arma(corsa.mano, lato, e.specchio, 0.03)
-  }
   // la torcia accesa (agli sgoccioli un po' meno): in mano dalla parte della mancina, con la fiamma, le faville e un chiarore
   // caldo per terra; al buio niente fiamma, e la luce resta quella di prima (docs/sotterraneo/luce.md, «La torcia nel 3D»)
   const accesa = corsa.torciaAccesa ? (corsa.torciaAgliSgoccioli ? 0.6 : 1) : 0

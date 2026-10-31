@@ -1,80 +1,38 @@
 <script setup>
-// L'eroe come lo si vede in discesa: fermo, con l'arma in pugno e lo scudo dall'altra parte, alla stessa scala
-// della figura (il pugno sta 0,42 caselle a lato e in basso, lo scudo è girato). Serve alle
-// carte fuori dalla discesa e all'eroe che cammina sulla terra di sopra (`posa`, `fotogramma`): un bambino riconosce lo spadone dal
-// ritratto prima di leggere i numeri. Diverso dal campo: l'arma a due mani sta lo stesso a lato e non in mezzo,
-// perché a questa scala, davanti al corpo, lo nasconde (uno spadone è alto quanto l'eroe).
+// L'eroe vestito nei pannelli (zaino, pagina dell'eroe, scelta dell'avventura): la foto del suo modello 3D con l'arma in pugno,
+// lo scudo, l'armatura e il copricapo (viste/anteprima3d.js, `eroe:`). Finché la foto non c'è il riquadro resta vuoto della sua
+// misura: niente sprite sotto (docs/sotterraneo/anteprime-3d.md). I segni della roba in mano (`data-in-mano`, `data-addosso`,
+// `data-in-braccio`) stanno su elementi vuoti, per le prove.
 import { computed } from 'vue'
-import { figura } from './figura.js'
-import { pezzoAndante } from '../dati/tessere.js'
-import { PEZZI } from '../dati/atlante.js'
 import { COSE } from '../dati/cose.js'
-import { impugnatura } from '../dati/impugna.js'
 import { usaAnteprima } from './anteprima3d.js'
 import Quadro3d from './Quadro3d.vue'
 import { chiaveDellEroe, EROI } from '../scena3d/anteprime3d-pura.js'
 
 const props = defineProps({
-  eroe: { type: Object, required: true },        // la scheda: sprite, em
+  eroe: { type: Object, required: true },        // la scheda: sprite (o chiave), em
   mano: { type: String, default: null },         // la chiave dell'arma in pugno (COSE)
   mancina: { type: String, default: null },      // lo scudo, o la seconda arma
-  scala: { type: Number, default: 3 },           // intera: uno sprite a scala storta esce a pixel disuguali
-  posa: { type: String, default: 'fermo' },      // 'corsa' quando cammina: l'arma resta in pugno
-  fotogramma: { type: Number, default: 0 },
-  corpo: { type: String, default: null },        // l'armatura: si vede solo nel ritratto 3D
-  testa: { type: String, default: null },        // il copricapo: si vede solo nel ritratto 3D (docs/sotterraneo/elmo.md)
-  in3d: { type: Boolean, default: false },       // il ritratto è l'eroe 3D vestito (viste/anteprima3d.js)
+  scala: { type: Number, default: 3 },           // la misura del riquadro: 24 × 28 volte questa
+  corpo: { type: String, default: null },        // l'armatura
+  testa: { type: String, default: null },        // il copricapo (docs/sotterraneo/elmo.md)
 })
 
-const T = 16       // la casella del campo, in pixel di sprite
-const ALTO = 28    // l'eroe fermo: 16 × 28
-const MARGINE = 4  // un po' d'aria ai lati, dove l'arma esce dal corpo
-
-const corpo = computed(() => figura(pezzoAndante(props.eroe.sprite, props.posa, props.fotogramma), { scala: props.scala }))
-const larga = computed(() => (T + 2 * MARGINE) * props.scala)
+const LARGO = 24   // il riquadro di sempre, in pixel di sprite: la figura (16) e un po' d'aria ai lati
+const ALTO = 28
 
 const dueMani = computed(() => !!(props.mano && COSE[props.mano] && COSE[props.mano].mani === 2))
-
-// un pezzo posato come lo tiene una mano (dati/impugna.js), centrato `verso` volte la distanza della mano dal centro
-function posato(chiave, verso, dy = 0, specchia = false) {
-  const cosa = COSE[chiave]
-  const p = cosa && cosa.sprite ? PEZZI[cosa.sprite] : null
-  if (!p) return null
-  const f = figura(cosa.sprite, { scala: props.scala })
-  const s = props.scala
-  const { dx, base } = impugnatura(cosa, p[2], p[3])
-  const x = (MARGINE + T / 2 + verso * dx) * s - p[2] * s / 2
-  const y = (ALTO - base - p[3] + dy) * s
-  return {
-    chiave, gabbia: f.gabbia, pezzo: f.pezzo,
-    posto: { left: `${Math.round(x)}px`, top: `${Math.round(y)}px`, transform: specchia ? 'scaleX(-1)' : null },
-  }
-}
-
-const inPugno = computed(() => (props.mano ? posato(props.mano, 1) : null))
-const inBraccio = computed(() => (props.mancina && !dueMani.value ? posato(props.mancina, -1, 0, true) : null))
-
-// il ritratto 3D, quando c'è: sopra lo sprite, che resta sotto (nascosto) finché l'immagine non arriva
 const chi = computed(() => [props.eroe.sprite, props.eroe.chiave].find(k => EROI.includes(k)) || null)
-const tre = usaAnteprima(() => (props.in3d && props.posa === 'fermo' && chi.value
-  ? chiaveDellEroe(chi.value, { mano: props.mano, mancina: props.mancina, corpo: props.corpo, testa: props.testa }) : null))
+const chiave = computed(() => (chi.value ? chiaveDellEroe(chi.value, { mano: props.mano, mancina: props.mancina, corpo: props.corpo, testa: props.testa }) : null))
+const tre = usaAnteprima(() => chiave.value)
 </script>
 
 <template>
-  <span class="sot-armato" :class="{ 'sot-armato-3d': tre }" :data-anteprima="tre ? '3d' : null" :style="{ width: larga + 'px', height: (ALTO * scala) + 'px' }">
-    <span class="sot-ritratto" :style="corpo ? { ...corpo.gabbia, left: MARGINE * scala + 'px' } : null">
-      <i v-if="corpo" :style="corpo.pezzo"></i>
-      <b v-else class="em">{{ eroe.em }}</b>
-    </span>
-    <!-- lo scudo prima: se si toccano, copre l'arma buona e non il contrario -->
-    <span v-if="inBraccio" class="sot-pezzo" :data-in-braccio="inBraccio.chiave"
-          :style="{ ...inBraccio.gabbia, ...inBraccio.posto }">
-      <i :style="inBraccio.pezzo"></i>
-    </span>
-    <span v-if="inPugno" class="sot-pezzo" :data-in-mano="inPugno.chiave" :data-addosso="inPugno.chiave"
-          :style="{ ...inPugno.gabbia, ...inPugno.posto }">
-      <i :style="inPugno.pezzo"></i>
-    </span>
+  <span class="sot-armato" :data-anteprima="tre ? '3d' : 'attesa'"
+        :style="{ width: (LARGO * scala) + 'px', height: (ALTO * scala) + 'px' }">
+    <span v-if="mancina && !dueMani" class="sot-pezzo" :data-in-braccio="mancina"></span>
+    <span v-if="mano" class="sot-pezzo" :data-in-mano="mano" :data-addosso="mano"></span>
     <Quadro3d v-if="tre" class="sot-armato-img" :immagine="tre" />
+    <b v-else-if="!chiave" class="em">{{ eroe.em }}</b>
   </span>
 </template>

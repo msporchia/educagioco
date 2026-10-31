@@ -6,8 +6,8 @@
 import { Group, DataTexture, RGBAFormat, Vector2, InstancedMesh, PlaneGeometry, MeshBasicMaterial, Matrix4, Quaternion, Vector3, Euler } from 'three'
 import { creaFigure } from '../figure.js'
 import { disegnaEroe } from '../eroe.js'
-import { creaEroe3d, eroe3dAcceso } from '../eroe3d.js'
-import { creaMostri3d, mostri3dAccesi } from '../mostro3d.js'
+import { creaEroe3d } from '../eroe3d.js'
+import { creaMostri3d } from '../mostro3d.js'
 import { creaPersone3d, persone3dAccese } from '../persona3d.js'
 import { ACCESI } from '../costanti.js'
 import { SALITA } from './vesti.js'
@@ -50,15 +50,15 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
   const terra = { metti: (n, x, y, z, o) => figureEroe.metti(n, x, y + quota(x, z - 0.1), z, o), o: () => figureEroe.o(), alto: (n, s) => figureEroe.alto(n, s) }
   const finta = { eroe: { x: 0, y: 0 }, versoEroe: { dx: 0, dy: 1 }, io: { sprite: 'cavaliere' }, mano: null, mancina: null, vita: 1, vitaMax: 1 }
   const nessuna = { torcia() {} }, niente = { metti() {} }
-  // in prova: l'eroe è il modello 3D delle discese, posato sul terreno (`#eroe2d` torna allo sprite)
-  const eroe3d = eroe3dAcceso() ? creaEroe3d(gruppo('eroe')) : null
+  // l'eroe è il modello 3D delle discese, posato sul terreno
+  const eroe3d = creaEroe3d(gruppo('eroe'))
   const quotaEroe = (x, z) => quota(x, z - 0.1)
   // i mostri di sopra: i più vicini (al più MOSTRI_3D_SOPRA) con il modello 3D delle discese, gli altri restano sprite; lo stato di disegno
   // di ognuno (la sua istanza, dove guarda) sta qui per indice del mostro
   // `&folla=`, `&branco3d=`, `&tetto3d=`: la folla finta delle misure (folla-prova.js, docs/sotterraneo/limiti-3d.md)
   const prova = leggiFolla()
   const tettoMostri = prova.tetto || (profilo('sotterraneo').mostriSopra ?? MOSTRI_3D_SOPRA), tettoPersone = prova.tetto || PERSONE_3D_SOPRA
-  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(gruppo('mostri'), { quanti: () => Math.min(ACCESI.mostri3d, tettoMostri), ozio: OZIO }) : null
+  const mostri3d = ACCESI.mostri3d > 0 ? creaMostri3d(gruppo('mostri'), { quanti: () => Math.min(ACCESI.mostri3d, tettoMostri), ozio: OZIO }) : null
   const statiMostri = new Map()
   const persone3d = persone3dAccese() ? creaPersone3d(gruppo('persone'), { quanti: () => tettoPersone, ozio: OZIO }) : null
   const statiPersone = new Map()

@@ -93,7 +93,8 @@ uguale('si apre il dettaglio giusto', await dett.getAttribute('data-missione'), 
 uguale('è una missione presa', await dett.getAttribute('data-stato'), 'presa')
 uguale('l\'elenco non c\'è più, nella stessa finestra', await page.locator('[data-sezione]').count(), 0)
 uguale('chi te l\'ha data: il suo nome', (await dett.locator('[data-dettaglio-chi] b').innerText()).trim(), P.nome)
-uguale('e la sua faccia (il modello 3D, o lo sprite finché non è pronto)', await dett.locator('[data-dettaglio-chi] [data-anteprima="3d"], [data-dettaglio-chi] .sot-ritratto, [data-dettaglio-chi] svg').count(), 1)
+await page.waitForSelector('[data-dettaglio-chi] [data-anteprima="3d"]', { timeout: 5000 }).catch(() => {})
+uguale('e la sua faccia: la foto del suo modello', await dett.locator('[data-dettaglio-chi] [data-anteprima="3d"]').count(), 1)
 uguale('il racconto è la sua battuta', (await dett.locator('[data-racconto]').innerText()).trim(), `«${M.dice}»`)
 {
   const dove = await dett.locator('[data-dettaglio-dove]').innerText()

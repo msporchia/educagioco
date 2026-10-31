@@ -3,7 +3,7 @@
 
    Nello scontro i mostri col modello sono modelli 3D (`grafica().mostri3d`),
    un'abilità dell'eroe accende il suo effetto 3D, un mostro attacca con la
-   sua posa senza errori; con `#sprite` tornano tutti sprite. Gli scatti
+   sua posa senza errori; con `&spegni=mostri3d` tornano tutti sprite. Gli scatti
    (`--scatti`) per guardarli: lo scontro, la palla di fuoco, la cura.
    `node test/esegui.mjs sotterraneo-3d-mostri`
    tempo: 90
@@ -51,8 +51,8 @@ await entra('sotterraneo=0&seme=7&stanza=sala&dpr=1&luce=stanza&sotterraneo=bran
   controlla('dopo gli attacchi restano modelli', s.every(Boolean), s.join())
 }
 
-await entra('sotterraneo=0&seme=7&stanza=sala&dpr=1&luce=stanza&sotterraneo=branco&mostri=3&tipo=goblin&sprite')
-uguale('con #sprite nessun modello', (await grafica()).mostri3d, 0)
+await entra('sotterraneo=0&seme=7&stanza=sala&dpr=1&luce=stanza&sotterraneo=branco&mostri=3&tipo=goblin&spegni=mostri3d')
+uguale('con &spegni=mostri3d nessun modello', (await grafica()).mostri3d, 0)
 
 uguale('nessun errore in console', errori.join(' | '), '')
 await browser.close()

@@ -27,7 +27,7 @@ const props = defineProps({
   eroe: { type: Object, required: true },       // la scheda (Armato)
   addosso: { type: Object, required: true },    // { mano, mancina, corpo, dito }: voci o null
   numeri: { type: Object, required: true },     // { vita, att, dif, gemme }
-  detto: { type: Object, default: null },       // l'ultima riga: { testo, sprite?, em? }
+  detto: { type: Object, default: null },       // l'ultima riga: { testo, sprite?, em?, chiave? (la cosa: la sua foto) }
   chiCompra: { type: String, default: '' },     // «al mercante, vicino al carro»: detto da chi non compra
   scheda: { type: String, default: null },      // la linguetta da cui aprire (dal dialogo: «ho roba da vendere»)
 })
@@ -216,7 +216,7 @@ const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean)
 
     <div class="sot-banco-piede">
       <p v-if="detto && dettoVivo" class="sot-detto-banco" data-detto-banco>
-        <Icona v-if="detto.sprite || detto.em" :sprite="detto.sprite" :em="detto.em" :emAlto="18" />
+        <Icona v-if="detto.sprite || detto.em" :sprite="detto.sprite" :em="detto.em" :emAlto="18" :cosa3d="detto.chiave ? detto : null" />
         {{ detto.testo }}
       </p>
       <Pannello v-if="cosa" :cosa="cosa" :prova="prova" :note="note">

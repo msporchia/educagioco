@@ -332,7 +332,7 @@ await page.evaluate(() => { const P = WebGL2RenderingContext.prototype, o = P.li
 /* ---------- 7. i paesaggi solo del 3D: il cheat `#scenario=` veste la discesa (docs/sotterraneo/paesaggi-3d.md) ---------- */
 for (const [k, pianta] of [['ghiaccio', 'caverna'], ['tempio', 'costruita']]) {
   await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
-  await page.evaluate(h => { location.hash = h }, `sotterraneo=1&eroe=cavaliere&seme=11&stanza=grande&luce=stanza&scenario=${k}&sprite&eroe2d`)   // il paesaggio da solo: l'eroe e i mostri 3D (in prova) si misurano a parte
+  await page.evaluate(h => { location.hash = h }, `sotterraneo=1&eroe=cavaliere&seme=11&stanza=grande&luce=stanza&scenario=${k}&spegni=mostri3d,eroe`)   // il paesaggio da solo: l'eroe e i mostri 3D (in prova) si misurano a parte
   await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 15000 })
   await attendi(page, 800)
   const g = await g3d()

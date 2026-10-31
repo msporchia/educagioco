@@ -193,10 +193,6 @@ coi numeri di `npm run taratura` ([giocatori-tipo.md](giocatori-tipo.md)) e con 
 - **La scalinata a mani nude** (con la roba di una discesa prima) non si fa
   più neanche a otto su dieci: il minatore lo dice, l'armaiolo ha la spada
   corta.
-- **Gli sprite dei mostri grossi**: oggi sono lo sprite della loro specie
-  ingrandito con la corona; `grosso-<chiave>-fermo-0` nell'atlante prende il
-  loro posto da solo. I prompt per ChatGPT, in ordine, sono nella scheda
-  `strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-grossi.md`.
 - **Le porte che si aprono**: una discesa appena aperta non ha ancora un
   momento suo nel mondo (le assi che cadono, la grata che si alza).
 - Da guardare col dito: la velocità del passo, quanto si vede attorno

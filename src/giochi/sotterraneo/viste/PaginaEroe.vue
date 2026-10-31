@@ -47,7 +47,7 @@ const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: 
   <Cornice alta data-pagina-eroe @chiudi="$emit('chiudi')" @fuori="e => $emit('fuori', e)">
     <SchedeEroe attiva="eroe" :punti="punti" :punti-abilita="puntiAbilita" :missioni="missioni" @scheda="s => $emit('scheda', s)" />
     <header class="sot-eroe-testa">
-      <span class="sot-eroe-ritratto"><Armato :eroe="eroe" :mano="mano" :mancina="mancina" :corpo="corpo" :testa="testa" :scala="3" in3d /></span>
+      <span class="sot-eroe-ritratto"><Armato :eroe="eroe" :mano="mano" :mancina="mancina" :corpo="corpo" :testa="testa" :scala="3" /></span>
       <span class="sot-eroe-nome">
         <b>{{ eroe.nome }}</b>
         <i data-livello-eroe :data-livello="livello">Livello {{ livello }}</i>

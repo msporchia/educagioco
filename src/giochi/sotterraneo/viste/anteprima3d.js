@@ -1,11 +1,8 @@
-// Le anteprime 3D nelle viste (docs/sotterraneo/anteprime-3d.md). Gioco.vue le fornisce: senza, ogni vista
-// mostra lo sprite. Il servizio (e three) si carica alla prima richiesta; finché l'immagine non
-// c'è, o se non verrà mai (niente modello, niente WebGL), la vista mostra lo sprite.
+// Le anteprime 3D nelle viste (docs/sotterraneo/anteprime-3d.md). Gioco.vue le fornisce. Il servizio (e three) si carica alla
+// prima richiesta; finché l'immagine non c'è, o se non verrà (un contesto perso), la vista tiene il posto vuoto della sua misura.
 import { inject, provide, shallowRef, watch } from 'vue'
 
 const ANTEPRIME = Symbol('anteprime3d')
-
-const nellIndirizzo = re => typeof location !== 'undefined' && re.test(location.hash + location.search)
 
 // Le anteprime fotografate sul computer (`npm run anteprime`, dati/anteprime-fatte.js): la roba, i mostri e le persone arrivano già fatte,
 // decodificate una volta per chiave; il servizio (e three) disegna solo quel che manca, il ritratto dell'eroe vestito
@@ -13,7 +10,7 @@ let caricaFatte = null
 const ottieniFatte = () => (caricaFatte ||= import('../dati/anteprime-fatte.js').then(m => m.ANTEPRIME, () => ({})))
 
 /** Il fornitore senza Vue: le foto fatte, e il servizio per il resto. */
-export function creaFornitore(eroe, { senzaMostri = false, senzaEroe = false } = {}) {
+export function creaFornitore(eroe) {
   let servizio = null, carica = null, chiuso = false, fatte = null
   const ottieni = () => (carica ||= import('../scena3d/anteprime3d.js')
     .then(m => (chiuso ? null : (servizio = m.creaAnteprime3d())))
@@ -28,7 +25,7 @@ export function creaFornitore(eroe, { senzaMostri = false, senzaEroe = false } =
     return p
   }
   const pronta = k => { const x = decodificate.get(k); return x && !(x instanceof Promise) ? x : null }
-  const vale = k => !!k && !(k.startsWith('mostro:') && senzaMostri) && !((k.startsWith('eroe:') || k.startsWith('busto:')) && senzaEroe)
+  const vale = k => !!k
   const viva = k => ottieni().then(s => (s ? s.chiedi(k) : null))
   const api = {
     eroe,
@@ -45,11 +42,10 @@ export function creaFornitore(eroe, { senzaMostri = false, senzaEroe = false } =
 
 /** In Gioco.vue. `eroe()`: la chiave dell'eroe di adesso (l'armatura si mostra su chi la porta). */
 export function fornisciAnteprime3d(eroe) {
-  // `#icone2d` le spegne tutte; `#sprite` spegne i mostri e `#eroe2d` l'eroe, come in scena
-  const spente = nellIndirizzo(/[#&?]icone2d\b/)
-  const api = creaFornitore(eroe, { senzaMostri: nellIndirizzo(/[#&?]sprite\b/), senzaEroe: nellIndirizzo(/[#&?]eroe2d\b/) })
-  if (!spente) { provide(ANTEPRIME, api); ottieniFatte() }
-  if (typeof window !== 'undefined' && !spente) window.__anteprime3d = api   // per le prove: stato()
+  const api = creaFornitore(eroe)
+  provide(ANTEPRIME, api)
+  ottieniFatte()
+  if (typeof window !== 'undefined') window.__anteprime3d = api   // per le prove: stato()
   return api
 }
 
