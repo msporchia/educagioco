@@ -9,13 +9,13 @@ import Barra from '../Barra.vue'
 
 defineEmits(['chiudi'])
 const chi = computed(() => nomeCorrente() || 'questo bambino')
-const { codice, scritto, messaggio, occupato, fatto, pieno, pulito, scadeTra, invita, riscatta, manda } = usaAbbina()
+const { codice, scritto, messaggio, occupato, fatto, pieno, pulito, scadeTra, invita, riscatta, manda, azzera } = usaAbbina()
 const modo = ref(null)                // null | 'do' | 'ho'
 
 onMounted(() => { if (dati.giocatore !== state.player) carica(state.player) })
 
 function dai() { modo.value = 'do'; invita() }
-const indietro = () => { modo.value = null; codice.value = null; scritto.value = ''; messaggio.value = ''; fatto.value = false }
+const indietro = () => { modo.value = null; scritto.value = ''; azzera() }
 </script>
 
 <template>

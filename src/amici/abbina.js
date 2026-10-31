@@ -44,7 +44,8 @@ export function usaAbbina() {
     try { if (navigator.share) return await navigator.share({ text: testo }); await navigator.clipboard.writeText(testo); messaggio.value = 'Copiato.' } catch { /* annullato */ }
   }
 
-  const azzera = () => { codice.value = null; scritto.value = ''; messaggio.value = ''; fatto.value = false }
+  // il campo resta: nella carta dei grandi si azzera dopo «Attiva», quando il codice ricevuto può essere già scritto
+  const azzera = () => { codice.value = null; messaggio.value = ''; fatto.value = false }
 
   return { codice, scritto, messaggio, occupato, fatto, pieno, pulito, scadeTra, invita, riscatta, manda, azzera }
 }
