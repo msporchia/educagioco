@@ -21,7 +21,7 @@ import { creaCose } from './cose.js'
 import { creaEroe, disegnaEroe } from './eroe.js'
 import { creaEroe3d } from './eroe3d.js'
 import { creaMostri3d } from './mostro3d.js'
-import { creaRobaPerTerra } from './roba-per-terra.js'
+import { creaRobaPerTerra, creaTorciaInMano } from './roba-per-terra.js'
 import { creaGestore, statoDi, effettiPrevisti } from './effetti3d/gestore.js'
 import { statiDel } from '../viste/campo.js'
 import { creaRacconto, assalto } from './racconto.js'
@@ -84,6 +84,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   // i mostri in 3D al posto degli sprite (`&spegni=mostri3d` li spegne) e gli effetti 3D dello scontro (docs/sotterraneo/mostri-3d.md)
   const mostri3d = ACCESI.mostri3d > 0 ? creaMostri3d(gruppo('mostri'), { quanti: () => ACCESI.mostri3d }) : null
   const perTerra = creaRobaPerTerra(gruppo('figure'))   // la roba da raccogliere col suo modello (roba-per-terra.js)
+  const torciaEroe = creaTorciaInMano(gruppo('eroe')), torciaCompagno = creaTorciaInMano(gruppo('eroe'))   // la torcia in mano, il modello
   const effetti3d = ACCESI.effetti3d ? creaGestore(gruppo('effetti3d'), { renderer, camera: cam.camera }) : null
   const S = { eroe, campo: null, scintille, luci, anelli, fermo: 0, scossa: 0, aberr: 0, rosso: 0, tBolla: 9, tempo: 0, colpoEroe: null, stato: null,
               mostri3d, effetti3d, eroe3d }
@@ -330,7 +331,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     const i = corsa.persone.findIndex(p => p !== corsa.persona)
     if (i < 0) return
     if (!compagno3d) compagno3d = creaEroe3d(gruppo('eroe'))
-    corsa.come(i, () => disegnaEroe(compagno, corsa, { ...o, luci: luciDelCompagno, fiamma: null, scintille: null, modello: compagno3d }))
+    corsa.come(i, () => disegnaEroe(compagno, corsa, { ...o, luci: luciDelCompagno, fiamma: null, scintille: null, modello: compagno3d, torcia: torciaCompagno }))
     const d = compagno.disegnato, nome = corsa.persone[i].nome || ''
     if (!d || !nome) return
     const p = cam.schermo(d.x, (compagno.alto || 1.4) + 0.45, d.z)
@@ -377,7 +378,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     for (const s of piano.sorgenti) if (s.cella != null) s.vis = piano.vis.ora[s.cella] || 0
     luci.distribuisci(piano.sorgenti, eroe.x, eroe.z, t)
     disegnaEroe(eroe, corsa, { figure: figureEroe, luci, etichette, camera: cam, dt: dtVero, dtScena: dt, t, fontana: fo, portale: (passando && passando.portale) || piano.portale, bersaglio: scontro.bersaglio(corsa),
-                       fiamma: fiammaEroe, aloni, scintille: ACCESI.scintille ? scintille : null, modello: eroe3d })
+                       fiamma: fiammaEroe, aloni, scintille: ACCESI.scintille ? scintille : null, modello: eroe3d, torcia: torciaEroe })
     if (eroe.disegnato) macchie.metti(eroe.disegnato.x, eroe.disegnato.z, 0.36)
     if (corsa.persone && corsa.persone.length > 1) disegnaIlCompagno(corsa, { figure: figureEroe, etichette, camera: cam, dt: dtVero, dtScena: dt, t, bersaglio: scontro.bersaglio(corsa), aloni })
     if (corsa.persone && corsa.persone.length > 1 && compagno.disegnato) macchie.metti(compagno.disegnato.x, compagno.disegnato.z, 0.36)
@@ -578,6 +579,8 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       if (effetti3d) effetti3d.svuota()
       if (mostri3d) mostri3d.via()
       perTerra.via()
+      if (torciaEroe) torciaEroe.via()
+      if (torciaCompagno) torciaCompagno.via()
       cam.ripristina()
       lasciaCantiere()
       if (piano) piano.via()

@@ -142,7 +142,7 @@ const polso = computed(() => (props.vita / props.vitaMax > 0.6 ? '#4fce7c' : pro
     </Addosso>
 
     <p v-if="torcia" class="sot-torcia-riga" data-torcia-zaino>
-      <Icona sprite="torcia" em="🔥" :emAlto="16" :cosa3d="TORCIA" :lato="30" />
+      <Icona em="🔥" :emAlto="16" :cosa3d="TORCIA" :lato="30" />
       <i class="sot-lume"><u :style="{ height: torcia.quota * 100 + '%' }"></u></i>
       <b>ancora {{ torcia.resta }} {{ torcia.resta === 1 ? 'stanza' : 'stanze' }}</b>
       <em v-if="torcia.scorta">

@@ -92,6 +92,8 @@ La roba da raccogliere nella discesa e il bottino rimasto sul prato di sopra si 
   tre gioielli di base. Le gemme e le monete non sono roba e non hanno un modello: restano sprite. I copricapi restano la loro
   emoji ([elmo.md](elmo.md)): il modello c'è solo su una testa.
 - Il dito li prende col raggio come la fontana e i mostri (`modellati`, dito.js); `grafica().perTerra` dice quanti ce n'è in vista.
+- **Anche la torcia accesa in mano all'eroe è il suo modello** (`creaTorciaInMano`, alta `ALTO_TORCIA`), semplice; la fiamma e le
+  faville restano quelle della scena sulla sua punta ([luce.md](luce.md)). La torcia non ha più uno sprite.
 
 ## La tabella generata: `npm run roba3d`
 

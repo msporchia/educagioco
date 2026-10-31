@@ -83,3 +83,31 @@ export function creaRobaPerTerra(gruppo) {
     },
   }
 }
+
+// la torcia in mano all'eroe: il modello della torcia (roba3d/pozioni.js), semplice, in piedi; la fiamma e le faville sono quelle della
+// scena (scena3d/eroe.js), sulla sua punta. Alta quanto lo sprite di prima per il rapporto dell'eroe 3D (× 0,72)
+export const ALTO_TORCIA = 0.55
+
+/** → { alto, metti(x, y, z), nascondi(), via() }, o null se il modello non si costruisce (allora l'eroe è senza torcia in mano). */
+export function creaTorciaInMano(gruppo) {
+  let g = null
+  try {
+    g = creaPezzo({ consumabile: 'torcia', rarita: 'comune', elemento: 'nessuno' }, { alone: false, semplice: true })
+    if (g && !g.userData.semplice) g = appiattisci(g)
+  } catch (e) { g = null }
+  if (!g) return null
+  g.updateMatrixWorld(true)
+  const box = new Box3().setFromObject(g), dim = box.getSize(new Vector3()), centro = box.getCenter(new Vector3())
+  g.position.x -= centro.x; g.position.y -= box.min.y; g.position.z -= centro.z
+  const w = new Group()
+  w.add(g)
+  w.scale.setScalar(ALTO_TORCIA / Math.max(dim.y, 1e-3))
+  w.visible = false
+  gruppo.add(w)
+  return {
+    alto: ALTO_TORCIA,
+    metti(x, y, z) { w.visible = true; w.position.set(x, y, z) },
+    nascondi() { w.visible = false },
+    via() { gruppo.remove(w); g.traverse(o => { if (o.geometry) o.geometry.dispose() }) },
+  }
+}

@@ -32,7 +32,6 @@
     "amuleto-rosso": { "da": [205, 107], "cella": [13, 16], "buchi": true, "nitido": true },
     "medaglione": { "da": [208, 153], "cella": [10, 9], "nitido": true },
 
-    "torcia": { "da": [209, 175], "cella": [9, 15] },
 
     "candelabro": { "da": [385, 202], "cella": [13, 11] },
     "lanterna": { "da": [289, 175], "cella": [11, 16] },

@@ -121,8 +121,8 @@ il disegno in `scena3d/` ([grafica-3d.md](grafica-3d.md)).
   nette, il colore più caldo, un tremolio più vivo e una luce che rimbalza dal
   pavimento davanti (`rimbalzo`, senza ombre). Agli sgoccioli vale 0,6 della
   torcia piena, e si passa da uno stato all'altro in un terzo di secondo.
-- **La torcia si vede in mano**: lo sprite della torcia dello zaino, piccolo,
-  dalla parte della mano libera e **fuori dalla sagoma** (dentro, il corpo
+- **La torcia si vede in mano**: il modello della torcia (`roba3d/pozioni.js`, nella versione semplice:
+  `creaTorciaInMano` in `scena3d/roba-per-terra.js`), nella mano libera del modello dell'eroe e **fuori dalla sagoma** (dentro, il corpo
   la copre: provato), con una fiamma come quelle dei muri (`creaFiamme`, una
   sola, che si sposta con `sposta`), le faville e un chiarore caldo per terra.
 - Provato con più forza (alone ×1,8, rimbalzo 5): il pavimento attorno
