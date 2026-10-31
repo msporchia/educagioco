@@ -19,11 +19,13 @@
      no resta con «bevi» spento (una pozione per turno) e il turno dopo si
      può bere ancora;
    - in un altro scontro «scappo via» dallo stop esce, col suo costo fisso.
+   Lo scontro è quello 3D: la scelta sta nel pannello in fondo (`[data-pannello3d]`), sopra c'è la scena con le scritte
+   dei mostri (`[data-scontro-3d]`). Si entra dal cheat dell'indirizzo, che scende da sé (`#sotterraneo=1&…`).
    Si tocca come un bambino (`Input.dispatchTouchEvent` via CDP).
    `node test/esegui.mjs sotterraneo-pericolo`
-   tempo: 150
+   tempo: 200
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scendiNelSotterraneo , finestraFerma }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, finestraFerma }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
@@ -67,18 +69,15 @@ async function entra() {
   // l'indirizzo della prova di prima (`#sotterraneo=…`) aprirebbe il gioco al ricaricamento: si riparte dalla home
   await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
   await azzera(page)
-  const avventura = { tappa: TAPPA, libera: false, stelle: { 0: 3 }, missioni: {}, roba, crescita,
-    terra: { nebbia: 'f'.repeat(768), dove: [55, 11], parlato: true } }
+  await page.setViewportSize({ width: 390, height: 844 })
+  const avventura = { tappa: TAPPA, libera: false, stelle: { 0: 3 }, missioni: {}, roba, crescita, mondo: { parlato: true } }
   await semina(page, {
-    coins: 300, settings: { sperimentali: true },
+    coins: 300,
     campagne: { sotterraneo: { tappa: TAPPA, libera: false, stelle: { 0: 3 },
       cfg: { mondo: MONDO, eroe: EROE, avventure: { [EROE]: avventura } } } },
   })
-  await scegli(page, 'sotterraneo')
-  await page.waitForSelector('[data-terra]', { timeout: 5000 })
-  await page.evaluate(() => { location.hash = 'seme=11&sotterraneo=branco&mostri=6&grado=leggendario' })
-  await scendiNelSotterraneo(page, TAPPA)
-  await page.waitForSelector('.sot-velo-scontro [data-caselle-abilita]', { timeout: 10000 })
+  await page.evaluate(() => { location.hash = 'sotterraneo=1&seme=11&sotterraneo=branco&mostri=6&grado=leggendario' })
+  await page.waitForSelector('[data-pannello3d] [data-caselle-abilita]', { timeout: 40000 })
 }
 // scegliere un colpo e rispondere giusto: i mostri colpiscono, poi tocca a lui
 async function rispondiGiusto() {
@@ -117,7 +116,7 @@ uguale('e due pozioni sulla casella', await pozioni(), 2)
          'attacco,bevi-scontro,scappa')
   controlla('l\'avviso è generico, senza nome di mostro', /Attenzione/.test(await stop().innerText()))
   controlla('e dice i colpi che arrivano, tutti insieme', /ti toglie \d+/.test(await stop().innerText()), await stop().innerText())
-  controlla('lo scontro è ancora lì, modale', await page.locator('.sot-velo-scontro').count() === 1)
+  controlla('lo scontro è ancora lì, col suo pannello', await page.locator('[data-scontro-3d]').count() === 1 && await page.locator('[data-pannello3d]').count() === 1)
   uguale('con i mostri in vista', await page.locator('[data-mostro]').count(), 6)
   await scatto(page, 'pericolo')
 }
@@ -129,7 +128,7 @@ await scatto(page, 'pericolo-pronto')
   const vita1 = await numeroDel('vita')
   uguale('prima di scegliere la vita è quella dell\'inizio', vita1, vita0)
   await toccaIl('[data-caselle-abilita] [data-azione="attacco"]')
-  await page.waitForSelector('.sot-velo-scontro .sot-domanda', { timeout: 5000 })
+  await page.waitForSelector('[data-pannello3d] .sot-domanda', { timeout: 5000 })
   uguale('«continuo» toglie lo stop', await stop().count(), 0)
   uguale('e non costa vita', await numeroDel('vita'), vita1)
   await attendi(page, 500)
@@ -150,17 +149,24 @@ await scatto(page, 'pericolo-pronto')
   // con due stadi in tasca bere apre la scelta (viste/ScegliPozione.vue): nello scontro dice che poi tocca ancora a te
   await page.waitForSelector('[data-scegli-pozione][data-pronto]', { timeout: 3000 })
   controlla('la scelta dice che poi tocca ancora a te', /tocca ancora a te/.test(await page.locator('[data-scegli-pozione]').innerText()))
+  // il numero che sale dura poco e un fotogramma in SwiftShader è lento: un osservatore dentro la pagina lo ricorda appena compare
+  await page.evaluate(() => {
+    window.__cure = []
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => {
+      if (n.nodeType !== 1) return
+      for (const e of [n, ...n.querySelectorAll('*')]) if (e.classList && e.classList.contains('sot-numero-cura')) window.__cure.push(e.textContent.trim())
+    }))).observe(document.body, { childList: true, subtree: true })
+  })
   await toccaIl('[data-azione="bevi-questa"][data-cosa="pozione-grande"]')
   await page.waitForSelector('[data-duello][data-racconto]', { timeout: 8000 })
-  await page.waitForSelector('.sot-numero-cura', { timeout: 3000 })
-  uguale('il sorso si vede: il numero che sale', (await page.locator('.sot-numero-cura').first().innerText()).trim(), '+30')
   await scatto(page, 'pericolo-bevuto-racconto')
   await finito()
+  uguale('il sorso si vede: il numero che sale', (await page.evaluate(() => window.__cure))[0], '+30')
   await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 5000 })
   uguale('«bevi» consuma una pozione', await pozioni(), n - 1)
   uguale('la vita è salita della cura, senza i colpi dei mostri', await numeroDel('vita'), v + 30)
   uguale('ora la vita basta: lo stop sparisce', await stop().count(), 0)
-  uguale('e lo scontro è aperto con la sua scelta', await page.locator('.sot-velo-scontro [data-caselle-abilita]').count(), 1)
+  uguale('e lo scontro è aperto con la sua scelta', await page.locator('[data-pannello3d] [data-caselle-abilita]').count(), 1)
   uguale('una pozione sola per turno: «bevi» è spento', await page.locator('[data-azione="bevi-scontro"]').isDisabled(), true)
   controlla('e dice perché', /una per turno/.test(await page.locator('[data-azione="bevi-scontro"]').innerText()))
   await scatto(page, 'pericolo-bevuto')
@@ -173,7 +179,7 @@ await scatto(page, 'pericolo-pronto')
 
 /* ---------- 1b. il sorso non basta: lo stop resta ---------- */
 await entra()
-await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 8000 })
+await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 20000 })
 {
   const v = await numeroDel('vita'), n = await pozioni()
   uguale('lo stop è lì', await stop().getAttribute('data-perche'), 'duro')
@@ -192,21 +198,27 @@ await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 800
   uguale('niente domanda', await page.locator('.sot-domanda').count(), 0)
   await scatto(page, 'pericolo-dopo-sorso')
   await toccaIl('[data-caselle-abilita] [data-azione="attacco"]')
-  await page.waitForSelector('.sot-velo-scontro .sot-domanda', { timeout: 5000 })
+  await page.waitForSelector('[data-pannello3d] .sot-domanda', { timeout: 5000 })
   uguale('«continuo» toglie lo stop', await stop().count(), 0)
 }
 
 /* ---------- 2. «scappo via» dallo stop ---------- */
 await entra()
-await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 3000 })
+await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 20000 })
 uguale('lo stop è lì', await stop().count(), 1)
 {
   const v = await numeroDel('vita')
   const costo = Number(((await page.locator('[data-azione="scappa"] small').innerText()).match(/\d+/) || [0])[0])
+  // i mostri del cheat nascono dentro lo scontro e non hanno mai fatto un passo: il motore dà loro il posto al primo passo e lì azzera la
+  // calma che la fuga appena data (muoviUnMostro, `fx == null`). In una discesa vera chi arriva allo scontro ha già camminato: gli si dà il posto
+  await page.evaluate(() => { for (const m of window.__sotterraneo3d.corsa.livello.robe) if (m.che === 'mostro' && m.fx == null) { m.fx = m.x + 0.5; m.fy = m.y + 0.5; m.casa = { x: m.x, y: m.y }; m.calmo = 0 } })
   await toccaIl('[data-azione="scappa"]')
-  await page.waitForSelector('.sot-velo-scontro', { state: 'detached', timeout: 5000 })
-  uguale('scappando lo scontro si chiude', await page.locator('[data-ringhio], .sot-velo-scontro').count(), 0)
-  uguale('col costo fisso detto sul tasto', await numeroDel('vita'), v - costo)
+  await page.waitForSelector('[data-scontro-3d]', { state: 'detached', timeout: 15000 })
+  uguale('scappando lo scontro si chiude', await page.locator('[data-ringhio], [data-scontro-3d]').count(), 0)
+  // il numero del globo scende a poco a poco (in SwiftShader più piano): si legge quando si è fermato
+  let ora = await numeroDel('vita')
+  for (let i = 0; i < 20; i++) { await attendi(page, 500); const n = await numeroDel('vita'); if (n === ora) break; ora = n }
+  uguale('col costo fisso detto sul tasto', ora, v - costo)
   uguale('le pozioni non si toccano', await pozioni(), 2)
 }
 

@@ -8,24 +8,24 @@
    l'eroe che intanto cammina; quello che chiede una scelta no
    (docs/core/interfaccia.md, «Un tocco altrove chiude»).
 
-   Qui: sopra, la barra c'è con la stessa forma di giù (la mappa grande
+   Qui: sopra (il mondo 3D, si entra dalla carta), la barra c'è con la stessa forma di giù (la mappa grande
    spenta); poi, nella prima discesa scelta dal seme (`#seme=`, come
-   `sotterraneo-portale`), una curiosità, con la domanda che non si chiude
+   `sotterraneo-portale`), che si prende camminando fino all'ingresso, una curiosità, con la domanda che non si chiude
    toccando fuori e la battuta che invece sì, mentre l'eroe parte; un
    mostro che colpisce e il globo della vita che scende; la pozione bevuta
    dalla casella, e una pozione buttata e raccolta col dito che fa
    risalire la casella (il guasto della casella che non saliva); lo zaino
    e la mappa grande chiusi da un tocco sul campo; «lascio perdere» che
    resta. Poi le foto: la vita a metà, e la barra a 320 px.
+   Giù la scena è WebGL: dov'è una cella sullo schermo lo dice `__sotterraneo3d.aSchermo`, e dov'è l'eroe la tela (`data-eroe`).
    Si tocca come un bambino (`Input.dispatchTouchEvent` via CDP).
    `node test/esegui.mjs sotterraneo-barra`
-   tempo: 150
+   tempo: 300
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegliAttacco, scendiNelSotterraneo, finestraFerma }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegliAttacco, scendiNelSotterraneo, finestraFerma, mondoPronto }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { T } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { scrivi } from '../../src/giochi/sotterraneo/motore/sosta.js'
@@ -70,14 +70,14 @@ const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
 const avventura = extra => ({ tappa: 0, libera: false, stelle: {}, missioni: {}, roba,
-  terra: { nebbia: 'f'.repeat(768), dove: [55, 11], parlato: true }, ...extra })
+  mondo: { parlato: true }, ...extra })
 await semina(page, {
-  coins: 300, settings: { sperimentali: true },
+  coins: 300,
   campagne: { sotterraneo: { tappa: 0, libera: false, stelle: {},
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: avventura() } } } },
 })
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await mondoPronto(page)
 
 const cdp = await page.context().newCDPSession(page)
 async function tocca(x, y) {
@@ -98,7 +98,7 @@ uguale('sopra c\'è la barra in basso', await page.locator('[data-barra="sopra"]
 const formaSopra = await forma(), globiSopra = await globi()
 uguale('coi due globi: la vita e l\'energia', globiSopra, 'vita,energia')
 uguale('sopra la vita è piena', Number(await page.locator('[data-globo="vita"]').getAttribute('data-quota')), 1)
-uguale('sopra la mappa grande è spenta (la terra è già la mappa)', await page.locator('[data-casella-barra="mappa"]').isDisabled(), true)
+uguale('sopra la mappa grande è accesa: apre la veduta d\'insieme del mondo', await page.locator('[data-casella-barra="mappa"]').isDisabled(), false)
 uguale('il tasto del globo sa il livello', await page.locator('[data-azione="eroe-pagina"]').getAttribute('data-livello'), '1')
 controlla('il globo dice fatta/serve, da zero', /^0\/\d+$/.test((await page.locator('[data-esperienza-barra] .sot-esp-numero').textContent()).trim()))
 uguale('le gemme sono una casella come le altre', await page.locator('[data-casella-barra="gemme"]').evaluate(e => e.tagName), 'BUTTON')
@@ -135,29 +135,25 @@ uguale('la ✕ la chiude', await page.locator('[data-preparati]').count(), 0)
 
 await page.evaluate(s => { location.hash = 'seme=' + s }, piano.seme)
 await scendiNelSotterraneo(page, 0)
-await page.waitForSelector('.sot-tela', { timeout: 5000 })
+await page.waitForSelector('[data-tela="3d"]', { timeout: 20000 })
+await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 30000 })
 await attendi(page, 700)
 
-/* ── giù: dov'è l'eroe lo dice la tela (come in sotterraneo-portale) ── */
-const tela = page.locator('.sot-tela')
+/* ── giù: dov'è l'eroe lo dice la tela (`data-eroe`), dov'è una cella sullo schermo la scena (`aSchermo`) ── */
+const tela = page.locator('[data-tela="3d"]')
 const cellaGiu = () => tela.getAttribute('data-eroe')
-async function schermoDi(c) {
-  const [ex, ey] = (await cellaGiu()).split(',').map(Number)
-  const [sx, sy] = (await tela.getAttribute('data-eroe-schermo')).split(',').map(Number)
-  const s = Number(await tela.getAttribute('data-scala')) * T
+// `su`: a che quota si tocca (a terra la cella, a mezza altezza una cosa o un mostro)
+async function schermoDi(c, su = 0.05) {
+  const [sx, sy] = await page.evaluate(([a, b, q]) => window.__sotterraneo3d.aSchermo(a, q, b), [c.x + 0.5, c.y + 0.5, su])
   const b = await tela.boundingBox()
-  return { x: b.x + sx + (c.x - ex) * s, y: b.y + sy + (c.y - ey) * s, b }
+  return { x: b.x + sx, y: b.y + sy, b }
 }
-// sullo schermo e lontano dalla mappina (in alto a destra) e dalla riga in fondo; la barra sta fuori dalla tela
-const dentro = ({ x, y, b }) => x > b.x + 30 && x < b.x + b.width - 30 && y > b.y + 140 && y < b.y + b.height - 50
+// nel campo, fuori dalla mappina in alto a destra e dalla barra in basso (la barra sta fuori dalla tela)
+const dentro = ({ x, y, b }) => x > b.x + 20 && x < b.x + b.width - 140 && y > b.y + 30 && y < b.y + b.height - 60
+// l'eroe fermo: il motore non ha più strada da fare, e la telecamera morbida ha finito di seguirlo (in SwiftShader un fotogramma è lento)
 async function fermoGiu() {
-  let prima = null
-  for (let i = 0; i < 40; i++) {
-    const ora = await cellaGiu()
-    if (ora === prima) return
-    prima = ora
-    await attendi(page, 300)
-  }
+  await page.waitForFunction(() => { const c = window.__sotterraneo3d && window.__sotterraneo3d.corsa; return c && !(c.strada && c.strada.length) }, null, { timeout: 20000 })
+  await attendi(page, 1200)
 }
 const vuota = (x, y) => L.calpestabile(x, y) && !L.robe.some(r => r.x === x && r.y === y && r.che !== 'gemme')
 // fin accanto alla cosa, toccando la cella più lontana della strada che sta sullo schermo; poi la si tocca
@@ -169,11 +165,17 @@ async function vaiGiu(a, { toccala = true } = {}) {
       await attendi(page, 300)
       continue
     }
+    // un tocco a terra vicino a una fonte la prende (il tocco ha un margine, come per ogni cosa): «più tardi» e si riparte
+    if (await page.locator('.sot-foglio:has-text("Una fonte") [data-azione="dopo"]').count()) {
+      await page.locator('.sot-foglio:has-text("Una fonte") [data-azione="dopo"]').click()
+      await attendi(page, 500)
+      continue
+    }
     if (await page.locator('.sot-domanda, [data-azione="scappa"]').count()) break
     const [ex, ey] = (await cellaGiu()).split(',').map(Number)
     const via = percorso(vuota, { x: ex, y: ey }, a, { arrivoLibero: false }) || []
     if (via.length <= 1) {
-      const qui = await schermoDi(a)
+      const qui = await schermoDi(a, 0.5)
       if (toccala && dentro(qui)) await tocca(qui.x, qui.y)
       await attendi(page, 300)
       await fermoGiu()
@@ -290,6 +292,9 @@ await page.locator('[data-azione="scappa"]').click()
 await attendi(page, 500)
 await fermoGiu()
 await scatto(page, 'barra-colpito')
+// il resto della prova vuole il campo libero: chi ha colpito sta accanto all'eroe, e passata la calma della fuga (qualche secondo di gioco)
+// riaprirebbe lo scontro sopra lo zaino. Si spengono i mostri del piano, come fa sotterraneo-3d con le botti
+await page.evaluate(() => { for (const m of window.__sotterraneo3d.corsa.livello.robe) if (m.che === 'mostro') { m.morto = true; m.presa = true; m.sveglio = false } })
 
 /* ---------- 4. la pozione si beve dalla casella ---------- */
 {
@@ -309,11 +314,11 @@ await scatto(page, 'barra-colpito')
   const [ex, ey] = (await cellaGiu()).split(',').map(Number)
   await toccaIl('[data-azione="zaino"]')
   await page.waitForSelector('[data-zaino]', { timeout: 3000 })
-  await attendi(page, 300)
+  await attendi(page, 800)   // i 320 ms ciechi dello zaino, in SwiftShader più lunghi
   for (let i = 0; i < n0; i++) {
     const tasca = page.locator('[data-tasca][data-cosa^="pozione"]').first()
     await toccaIl(`[data-tasca="${await tasca.getAttribute('data-tasca')}"]`)
-    await attendi(page, 200)
+    await attendi(page, 600)
     await toccaIl('[data-azione="butta"]')
     await attendi(page, 300)
   }
@@ -404,7 +409,7 @@ async function aMeta(viewport, nome) {
   const { page: p, errori: e } = await apriGioco(browser, { viewport })
   await azzera(p)
   await semina(p, {
-    coins: 300, settings: { sperimentali: true },
+    coins: 300,
     campagne: { sotterraneo: { tappa: 0, libera: false, stelle: {},
       cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: avventura({
         roba: { ...roba, torcia: 2 }, sosta: scrivi(c, 0) }) } } } },

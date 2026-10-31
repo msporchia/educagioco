@@ -5,7 +5,8 @@
    più. Qui si prova che **ci è arrivato davvero** in ognuno, e la
    ragione per cui non basta fidarsi è che ognuno dei due lo monta su un
    orologio diverso: Survivors su una giostra a fotogrammi, il
-   sotterraneo su un `requestAnimationFrame` suo.
+   sotterraneo su un `requestAnimationFrame` suo (il giro di Gioco.vue,
+   che muove il motore: il testimone è l'eroe che cammina).
 
    Il telefono posato si finge con `visibilityState`: la pagina resta
    davvero visibile, quindi gli orologi continuano a girare — ed è
@@ -114,42 +115,53 @@ await aCasa()                        // in home
 nota(`survivors: fermo a ${svFermi}s, ripartito fino a ${svRipartiti}s`)
 
 /* ═══════════════════════════════════════════════════════════════════
-   2. IL SOTTERRANEO — la caverna è il testimone
+   2. IL SOTTERRANEO — l'eroe che cammina è il testimone
 
-   Qui non c'è nessun numero che scorre: l'eroe respira, le torce
-   tremolano, e quando il giro si ferma la tela resta **esattamente**
-   l'ultimo fotogramma. Si confronta una firma corta dei pixel, che è
-   l'unico modo di chiedere «questa scena si muove ancora?».
+   Il motore gira sul `requestAnimationFrame` di Gioco.vue (`giro`), e
+   quello la pausa ferma. La scena 3D ha il suo giro, che disegna di
+   continuo (il respiro, le torce, la roba che pulsa) anche dietro il velo:
+   i suoi fotogrammi non dicono niente sulla pausa, e i suoi pixel (WebGL)
+   non si rileggono. Quello che la pausa ferma davvero è il tempo di gioco:
+   si manda l'eroe a camminare per qualche cella (un tocco lontano dalla
+   scala che sale sotto di lui) e si guarda dov'è, a pausa e fuori.
    ═══════════════════════════════════════════════════════════════════ */
-const caverna = () => page.evaluate(() => {
-  const c = document.querySelector('.sot-tela')
-  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data
-  let h = 0
-  for (let i = 0; i < d.length; i += 97) h = (h * 31 + d[i]) | 0
-  return h
-})
+const eroePos = () => page.evaluate(() => { const e = window.__sotterraneo3d.corsa.eroe; return `${e.x.toFixed(3)},${e.y.toFixed(3)}` })
 
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('.sot-tappe', { timeout: 5000 })
 /* la prima volta si sceglie chi scende, e finché quella carta è aperta
    non si è ancora dentro niente */
 await scegliAvventura(page, 'cavaliere')
-uguale('sotterraneo: sulla mappa non c\'è niente da fermare', await pausaInBarra(), 0)
+uguale('sotterraneo: sul mondo di sopra non c\'è niente da fermare', await pausaInBarra(), 0)
 
 await scendiNelSotterraneo(page, 0)
-await page.waitForSelector('.sot-tela', { timeout: 5000 })
-await attendi(page, 700)
+await page.waitForSelector('[data-tela="3d"]', { timeout: 15000 })
+await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 30000 })
+await attendi(page, 3000)   // la telecamera morbida arriva all'eroe: il primo tocco trova la scena ferma
 uguale('nella discesa il ⏸ c\'è', await pausaInBarra(), 1)
 
-/* L'eroe non si tocca e non si manda a spasso, ed è una scelta: un
-   tocco a caso sul campo può finire su una porta o addosso a un mostro,
-   e allora si apre un foglio — il ⏸ sparisce, com'è giusto, e il test
-   racconta ogni volta una storia diversa. Fermo basta: l'eroe respira,
-   le torce tremolano, la roba per terra pulsa, e tutto questo vive
-   sull'orologio del giro (`scena/tela.js`). */
-const sotPrima = await caverna()
-await attendi(page, 700)
-controlla('e intanto la caverna si muove', await caverna() !== sotPrima)
+/* L'eroe va a spasso lungo una strada libera di sei celle (un tocco a caso
+   può finire su una porta o addosso a un mostro, e allora si apre un
+   foglio: il ⏸ sparisce, com'è giusto, e il test racconta ogni volta una
+   storia diversa). Il tocco è quello del dito (CDP). */
+const cdp = await page.context().newCDPSession(page)
+{
+  const [ex, ey] = (await page.locator('[data-tela="3d"]').getAttribute('data-eroe')).split(',').map(Number)
+  const versi = await page.evaluate(([x, y]) => {
+    const b = window.__sotterraneo3d.corsa.buona()
+    return [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => { let k = 0; while (k < 6 && b(x + dx * (k + 1), y + dy * (k + 1))) k++; return { dx, dy, k } }).sort((a, c) => c.k - a.k)
+  }, [ex, ey])
+  controlla('c\'è una strada libera di almeno quattro celle', versi[0].k >= 4, JSON.stringify(versi))
+  const { dx, dy, k } = versi[0]
+  const [sx, sy] = await page.evaluate(([a, b]) => window.__sotterraneo3d.aSchermo(a, 0.05, b), [ex + dx * k + 0.5, ey + dy * k + 0.5])
+  const box = await page.locator('[data-tela="3d"]').boundingBox()
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: box.x + sx, y: box.y + sy }] })
+  await attendi(page, 60)
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+}
+const sotPrima = await eroePos()
+// l'eroe è partito: la pausa si preme mentre cammina, a metà strada
+await page.waitForFunction(p => { const e = window.__sotterraneo3d.corsa.eroe; return `${e.x.toFixed(3)},${e.y.toFixed(3)}` !== p }, sotPrima, { timeout: 15000 })
+controlla('e intanto l\'eroe cammina', await eroePos() !== sotPrima, sotPrima)
 
 await page.locator('button[aria-label="pausa"]').click()
 uguale('il velo compare', await veli(), 1)
@@ -157,14 +169,15 @@ controlla('e dice a che piano si era',
           (await page.locator('[data-pausa]').textContent()).includes('piano 1'))
 await scatto(page, 'pausa-sotterraneo')
 await attendi(page, 400)
-const sotFermo = await caverna()
+const sotFermo = await eroePos()
+controlla('la pausa è arrivata a metà strada: all\'eroe resta strada da fare', await page.evaluate(() => { const c = window.__sotterraneo3d.corsa; return !!(c.strada && c.strada.length) }))
 await attendi(page, 1200)
-uguale('e la caverna non si muove di un pixel', await caverna(), sotFermo)
+uguale('e l\'eroe non si muove di un millimetro', await eroePos(), sotFermo)
 
 await page.locator('[data-azione="riprendi"]').click()
 uguale('il velo sparisce al tocco', await veli(), 0)
-await attendi(page, 700)
-controlla('e la discesa riparte', await caverna() !== sotFermo)
+await attendi(page, 900)
+controlla('e la discesa riparte', await eroePos() !== sotFermo, sotFermo)
 
 await posa()
 uguale('posare il telefono mette in pausa', await veli(), 1)
@@ -174,7 +187,7 @@ uguale('riaprendolo la discesa NON riparte da sola', await veli(), 1)
 await page.locator('[data-azione="riprendi"]').click()
 uguale('si riparte solo toccando', await veli(), 0)
 
-await aCasa()                        // in home: la ✕ dalla discesa non passa dalla terra di sopra
+await aCasa()                        // in home: la ✕ dalla discesa non passa dal mondo di sopra
 uguale('uscendo dal sotterraneo si è in casa', await page.locator('.carte').count() > 0, true)
 
 uguale('nessun errore in console', errori.join(' · '), '')
