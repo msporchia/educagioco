@@ -66,7 +66,7 @@ sbagliato dato per gioco insegna il sbagliato; una coccola gratis c'è sempre (`
 
 | id | cosa | 2D | 3D | pri |
 |---|---|---|---|---|
-| A13 | addobbi | 12: fiore 6, cappellino 12, cilindro 18, corona 24, occhialini 10, occhiali 16, cappello da strega 8 (solo Halloween); sospesi (fiocco, sciarpa, campanella, mantellina, zainetto) | ❌ | P2 |
-| A14 | punti di aggancio (testa, muso, collo, schiena) | dal foglietto di ogni sprite | ❌ servirebbero sui modelli 3D | P2 |
+| A13 | addobbi | 12: fiore 6, cappellino 12, cilindro 18, corona 24, occhialini 10, occhiali 16, cappello da strega 8 (solo Halloween); sospesi (fiocco, sciarpa, campanella, mantellina, zainetto) | ✅ tutti e dodici in vendita (in 3D sono modelli, niente sospesi), stessi prezzi, anche sui compagni ([../addobbi.md](../addobbi.md)) | – |
+| A14 | punti di aggancio (testa, muso, collo, schiena) | dal foglietto di ogni sprite | ✅ `AGGANCI` per forma sui perni testa e corpo (`scena3d/modelli-addobbi.js`) | – |
 | A15 | guardaroba del contadino | ❌ | ✳ gratuito (cappello, maglia, pantalone, stivali, collo, capelli, pelle), speciali dai livelli 6–12 | tieni (D10) |
 

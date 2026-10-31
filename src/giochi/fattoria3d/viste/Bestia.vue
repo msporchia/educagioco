@@ -1,6 +1,7 @@
 <script setup>
 // Il foglio di una bestia di casa o di un compagno gratis (G6, docs/fattoria3d/bestie-di-casa.md): come sta, a blocchi (pancia, pelo, gioco), con
-// solo le cose che riempiono ogni bisogno; una carezza gratis sempre; «Sposta» (non ai compagni: girano col contadino) e «Cambia nome». ✕ in alto a destra. Qui non si decide niente: ogni gesto va
+// solo le cose che riempiono ogni bisogno; una carezza gratis sempre; «Sposta» (non ai compagni: girano col contadino) e «Cambia nome»; sotto, «Vestilo»:
+// gli addobbi che le stanno (dati/addobbi.js), toccati si mettono (comprandoli, se non li hai) o si tolgono. ✕ in alto a destra. Qui non si decide niente: ogni gesto va
 // a chi lo usa (`nutri`, `coccola`, ...), che parla col motore (motore/cura.js) e rimanda il testo. Il ritratto lo fotografa `anteprime.js` (`bestia:<id>`).
 import { ref, computed, watch, onMounted } from 'vue'
 import { BISOGNI, CHIAVI, curabile, comeSta, gestiPer, cibiPer } from '../dati/bestie.js'
@@ -16,8 +17,11 @@ const props = defineProps({
   messaggio: { type: String, default: '' },
   anteprima: { type: Function, default: null },
   anteprimaPronta: { type: Function, default: null },
+  vestiario: { type: Array, default: () => [] },     // [{ id, nome, emoji, prezzo, dove, addosso, hai }] (Cura.vestiarioDi)
 })
-const emit = defineEmits(['nutri', 'coccola', 'carezza', 'nome', 'sposta', 'chiudi'])
+const emit = defineEmits(['nutri', 'coccola', 'carezza', 'nome', 'sposta', 'vesti', 'spoglia', 'chiudi'])
+const prezzoAddobbo = a => a.addosso ? '✓ addosso' : a.hai ? '×' + a.hai : '🪙' + a.prezzo
+const toccaAddobbo = a => (a.addosso ? emit('spoglia', a) : emit('vesti', a))
 
 const b = computed(() => curabile(props.id))
 const pieno = k => (props.stato[k] ?? 0) > 0.93
@@ -77,6 +81,15 @@ const faccia = g => g.da ? ((merceDi(g.da) || {}).emoji || g.emoji) : g.emoji
         <button v-if="!b.compagno" type="button" class="f3-bes-az" data-azione="sposta" @click="emit('sposta')">📍 Sposta<small>gratis</small></button>
         <button type="button" class="f3-bes-az" data-azione="nome" @click="emit('nome')">✎ Nome</button>
       </div>
+      <section v-if="vestiario.length" class="f3-bes-blocco" data-f3="bestia-vestiario">
+        <div class="f3-bes-riga"><b>🎩 Vestilo</b><em>tocca per mettere o togliere</em></div>
+        <div class="f3-bes-gesti">
+          <button v-for="a in vestiario" :key="a.id" type="button" class="f3-bes-gesto" :class="{ sel: a.addosso, manca: !a.addosso && !a.hai && a.prezzo > monete }"
+                  :data-addobbo="a.id" :aria-pressed="a.addosso" @click="toccaAddobbo(a)">
+            <b aria-hidden="true">{{ a.emoji }}</b><span>{{ a.nome }}</span><em>{{ prezzoAddobbo(a) }}</em>
+          </button>
+        </div>
+      </section>
     </div>
     <p class="f3-bes-msg" data-f3="bestia-msg">{{ messaggio || 'Tocca una cosa per darla a ' + nome + '.' }}</p>
   </div>

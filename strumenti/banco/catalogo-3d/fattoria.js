@@ -21,6 +21,8 @@ import { materialeAcqua, materialeMare } from '../../../src/giochi/fattoria3d/sc
 import { creaContadino, creaCane, posaCane, creaGatto, posaGatto } from '../../../src/giochi/fattoria3d/scena3d/modelli-compagni.js'
 import { creaBestia, posaPiccolo, posaBeagle } from '../../../src/giochi/fattoria3d/scena3d/modelli-bestie.js'
 import { BESTIE as BESTIE_DI_CASA, comeCompagno } from '../../../src/giochi/fattoria3d/dati/bestie.js'
+import { creaAddobbo, vestiBestia, ADDOBBI_DISEGNATI } from '../../../src/giochi/fattoria3d/scena3d/modelli-addobbi.js'
+import { staA, PER_ID as ADDOBBI_3D } from '../../../src/giochi/fattoria3d/dati/addobbi.js'
 import { creaPonte, creaPasserella, creaTavolo } from '../../../src/giochi/fattoria3d/scena3d/modelli-passaggi.js'
 import { creaStagno } from '../../../src/giochi/fattoria3d/scena3d/modelli-acqua.js'
 import { creaDecoro } from '../../../src/giochi/fattoria3d/scena3d/modelli-decori.js'
@@ -276,6 +278,27 @@ export const VOCI = [
       crea: () => { const g = creaBestia(comeCompagno(id)); posa(g, stato, 0.4, stato === 'vaga' ? 0.6 : 0); return g },
       anima: (g, dt, t) => posa(g, stato, t, stato === 'vaga' ? 0.6 : 0),
     }))
+  }),
+
+  // gli addobbi delle bestie (docs/fattoria3d/addobbi.md): ognuno da solo, poi addosso a ogni corpo, quattro per volta (uno per aggancio)
+  ...ADDOBBI_DISEGNATI.map(id => ({
+    id: `fattoria:addobbo-${id}`, nome: `${ADDOBBI_3D[id].nome} (addobbo)`, gioco: 'fattoria', categoria: 'prop',
+    dove: `addobbo «${ADDOBBI_3D[id].dove}» delle bestie, 🪙${ADDOBBI_3D[id].prezzo} (dati/addobbi.js)`, file: `${MBE.replace('modelli-bestie', 'modelli-addobbi')}:creaAddobbo`,
+    crea: () => creaAddobbo(id),
+  })),
+  ...[['watson', 'cane'], ['beagle', 'beagle'], ['sherlock', 'gatto'], ['coniglio', 'coniglio'], ['pappagallo', 'pappagallo']].flatMap(([bid, forma]) => {
+    const giri = [['cappellino', 'occhialini', 'sciarpa', 'zainetto'], ['cilindro', 'occhiali', 'fiocco', 'mantellina'], ['corona', 'campanella', 'fiore'], ['cappello_strega']]
+    const corpo = () => {
+      if (bid === 'watson') { const g = creaCane(); g.userData.id = 'watson'; posaCane(g, { stato: 'sta', t: 0.4 }); return g }
+      if (bid === 'sherlock') { const g = creaGatto('bianconero'); posaGatto(g, { stato: 'sta', t: 0.4 }); return g }
+      const b = BESTIE_DI_CASA[bid], g = creaBestia(comeCompagno(bid)); (b.tipo === 'cane' ? posaBeagle : posaPiccolo)(g, { stato: 'sta', t: 0.4 }); return g
+    }
+    return giri.map((ids, k) => {
+      const addosso = Object.fromEntries(ids.filter(id => staA(id, bid)).map(id => [ADDOBBI_3D[id].dove, id]))
+      return { id: `fattoria:vestita-${bid}-${k + 1}`, nome: `${bid} vestito: ${Object.values(addosso).join(', ')}`, gioco: 'fattoria', categoria: 'animale',
+        dove: `addobbi sulla forma «${forma}» (AGGANCI di modelli-addobbi.js)`, file: `${MBE.replace('modelli-bestie', 'modelli-addobbi')}:vestiBestia`,
+        crea: () => { const g = corpo(); vestiBestia(g, addosso); return g } }
+    })
   }),
 
   // ── il terreno: a istanze nel gioco, qui un esemplare con le stesse geometrie ──

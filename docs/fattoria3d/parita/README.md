@@ -32,7 +32,7 @@ vince il codice.
 | macchine | 14 | 14 |
 | recinti del cortile | 11 | 10 (pecore, galline, mucche, anatre, maiali, capre, conigli, alpaca, asini, arnie; la peschiera è la pesca) |
 | bestie di casa (si comprano, hanno bisogni) | 7 | 4 (beagle, gatto rosso, coniglio, pappagallo; bobtail, gatto bianco e nero e gatto nero sono i compagni gratis Watson, Sherlock e Pepe, che non si curano) |
-| addobbi per le bestie | 12 (7 in vendita) | 0 (il guardaroba è del contadino; i costumi si rimandano a prima di Natale, come modelli sostituiti) |
+| addobbi per le bestie | 12 (7 in vendita) | 12, tutti in vendita, anche su Watson e i gatti |
 | botteghe del paese | 4 | 4 (G7: [../botteghe.md](../botteghe.md)) |
 | clienti del banco | 16 (per mestiere) | 10 (per tutti) |
 | silos | 3 (scomparti da 8, ingrandibili) | 3 magazzini (scomparti da 8, +2, prezzo 2D), senza pezzi da comprare |

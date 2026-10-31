@@ -6,6 +6,7 @@
    col livello, e non si comprano né si spostano. Vedi docs/fattoria3d/bestie-di-casa.md. */
 import { BESTIE, IDS_BESTIE, CURATI, curabile, cibo as ciboPerId, coccola as coccolaPerId, gradisce, scendi, tuttoAPosto, premiaSeStaBene, nuovo, pulisciNome, comeCompagno, perche } from '../dati/bestie.js'
 import { compagniAl } from '../dati/compagni.js'
+import { addobbo as addobboPerId, addobbiPer, staA } from '../dati/addobbi.js'
 
 const PIENO = 0.93          // sopra, un bisogno è «a posto» e il gesto non serve (come in 2D)
 
@@ -116,6 +117,47 @@ export class Cura {
     if (!this.m.cellaPropria(i, j) || !this.m.libera(i, j)) return { ok: false, motivo: 'non-ci-sta' }
     b.i = i; b.j = j
     return { ok: true, costo: 0 }
+  }
+
+  // ── gli addobbi (dati/addobbi.js): si comprano una volta e non si consumano; un aggancio tiene una cosa sola, e una seconda cambia la prima ──
+  get cassetto() { return this.m.s.addobbi }
+  quantiNelCassetto(id) { return this.cassetto[id] || 0 }
+  /** Quello che porta una bestia: { aggancio: id }. */
+  addossoA(id) { const b = this.casa[id]; return (b && b.addobbi) || {} }
+  /** Gli addobbi da mostrare nel foglio di una bestia, ognuno con `addosso` (lo porta lei), `hai` (quanti nel cassetto) e il prezzo. */
+  vestiarioDi(id, stagione = '') {
+    const su = this.addossoA(id), tieni = [...Object.keys(this.cassetto), ...Object.values(su)]
+    return addobbiPer(id, { stagione, tieni }).map(a => ({ ...a, addosso: su[a.dove] === a.id, hai: this.quantiNelCassetto(a.id) }))
+  }
+  /** Mette un addobbo a una bestia: se non è nel cassetto lo compra (il prezzo è sul tasto), e quello che c'era su quell'aggancio torna nel cassetto.
+      Rifiuti: `non-e-tua`, `non-esiste`, `non-gli-sta` (con `dove`), `gia-addosso`, `fuori-stagione`, `poche-monete` (con `costo`). */
+  vesti(id, addobboId, { stagione = '' } = {}) {
+    const b = this._record(id), a = addobboPerId(addobboId)
+    if (!b) return { ok: false, motivo: 'non-e-tua' }
+    if (!a) return { ok: false, motivo: 'non-esiste' }
+    if (!staA(a.id, id)) return { ok: false, motivo: 'non-gli-sta', dove: a.dove }
+    const su = b.addobbi || {}, prima = su[a.dove] || null
+    if (prima === a.id) return { ok: false, motivo: 'gia-addosso' }
+    let costo = 0
+    if (this.quantiNelCassetto(a.id) < 1) {
+      if (a.stagione && a.stagione !== stagione) return { ok: false, motivo: 'fuori-stagione', stagione: a.stagione }
+      if (a.prezzo > this.m.monete()) return { ok: false, motivo: 'poche-monete', costo: a.prezzo }
+      this.m._spendi(a.prezzo); costo = a.prezzo
+    } else if (--this.cassetto[a.id] < 1) delete this.cassetto[a.id]
+    if (prima) this.cassetto[prima] = this.quantiNelCassetto(prima) + 1
+    b.addobbi = { ...su, [a.dove]: a.id }
+    this.m._evento('vestita', { bestia: id, addobbo: a.id })
+    return { ok: true, costo, addobbo: a, tolto: prima }
+  }
+  /** Toglie quello che una bestia porta su un aggancio: torna nel cassetto, gratis. */
+  spoglia(id, dove) {
+    const b = this.casa[id], su = b && b.addobbi
+    if (!su || !su[dove]) return { ok: false, motivo: 'non-lo-porta' }
+    const tolto = su[dove]
+    delete su[dove]
+    if (!Object.keys(su).length) delete b.addobbi
+    this.cassetto[tolto] = this.quantiNelCassetto(tolto) + 1
+    return { ok: true, costo: 0, tolto }
   }
 
   /** Le bestie tue nella forma dei compagni (per la scena); il nome è quello scelto. */

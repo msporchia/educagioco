@@ -10,6 +10,7 @@ import { BISOGNI, CHIAVI, CIBI as CIBI_2D, COCCOLE, FONDO, nuovo, foto, scendi, 
 import { ANIMALI_2D, NOMI_2D, premioBenessere } from './parita2d.js'
 import { COMPAGNI } from './compagni.js'
 import { merceDi } from './ricette.js'
+import { PER_ID as ADDOBBO_2D } from '../../fattoria/dati/addobbi.js'
 
 export { BISOGNI, CHIAVI, FONDO, nuovo, foto, scendi, riarma, BENISSIMO, BENE, tuttoAPosto, premiaSeStaBene, umore, comeSta, haBisogno, COCCOLE }
 
@@ -82,7 +83,7 @@ export function gestiPer(bisogno, famiglia) {
 }
 
 /* ══════════ lo stato che si salva: stato.casa ══════════ */
-// { <id>: { pancia, pelo, gioco, quando, premiato, nome?, i?, j? } } — il record c'è se la bestia è tua (un compagno gratis l'ha da quando arriva). `i, j`: la cella dove l'hai messa
+// { <id>: { pancia, pelo, gioco, quando, premiato, nome?, i?, j?, addobbi? } } (`addobbi`: { aggancio: id }, dati/addobbi.js) — il record c'è se la bestia è tua (un compagno gratis l'ha da quando arriva). `i, j`: la cella dove l'hai messa
 // (casa sua: ci gira intorno); senza, sta davanti alla casa.
 export const casaIniziale = () => ({})
 
@@ -98,6 +99,8 @@ export function bestiaInForma(letto, ora = Date.now()) {
   const nome = pulisciNome(l.nome)
   if (nome) r.nome = nome
   if (Number.isInteger(l.i) && Number.isInteger(l.j) && Math.abs(l.i) < 1e6 && Math.abs(l.j) < 1e6) { r.i = l.i; r.j = l.j }
+  const addosso = Object.entries(oggetto(l.addobbi)).filter(([dove, id]) => ADDOBBO_2D[id] && ADDOBBO_2D[id].dove === dove)
+  if (addosso.length) r.addobbi = Object.fromEntries(addosso)
   return r
 }
 

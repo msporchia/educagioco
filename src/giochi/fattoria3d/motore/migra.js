@@ -19,6 +19,7 @@ import { lottiPerPiazzole } from '../dati/regole.js'
 import { LOTTI_INIZIALI, lottoPerId, VICINI_4, vicinoDi } from '../dati/mondo.js'
 import { biomaDi } from '../dati/biomi.js'
 import { BESTIE, idDa2D, COMPAGNO_DI, bestiaInForma } from '../dati/bestie.js'
+import { PER_ID as ADDOBBI_3D, staA } from '../dati/addobbi.js'
 import { POSTI_MASSIMI } from '../dati/posti.js'
 import { SILOS, TIPI_DI_SILO, PASSI_PER_EDIFICIO, EDIFICI_PER_SILO } from '../dati/silos.js'
 import { statoIniziale, normalizza } from './stato.js'
@@ -26,9 +27,9 @@ import { statoIniziale, normalizza } from './stato.js'
 /** Il tetto di una scorta portata: nessuno ne ha tante, ma un dato guasto non deve gonfiare lo stato. */
 const TETTO = 9999
 const ESPERIENZA_MASSIMA = 1e9
-/** Il numero di questa conversione: 1 non portava gli ingrandimenti dei silos, i posti della fila, le zucche e la peschiera.
-    Uno stato convertito da una versione più vecchia si ritocca all'apertura (`ritoccaLaConversione`). */
-export const MIGRAZIONE = 2
+/** Il numero di questa conversione: 1 non portava gli ingrandimenti dei silos, i posti della fila, le zucche e la peschiera; 2 non portava
+    gli addobbi delle bestie. Uno stato convertito da una versione più vecchia si ritocca all'apertura (`ritoccaLaConversione`). */
+export const MIGRAZIONE = 3
 
 // ── la 2D → il pezzo o l'edificio 3D più vicino ──
 // Le macchine: stesso mestiere, a volte altro nome (la Cucina 2D è la `conserviera`, il Pastificio 2D la `pasticceria`).
@@ -190,18 +191,21 @@ export function statoDa2D(dato, { ora = Date.now() } = {}) {
       }
     }
 
-    // 3. gli addobbi e le bestie di casa: la 3D non li ha ancora (i compagni arrivano col livello, senza nomi)
-    for (const [id, n] of Object.entries(f.guardaroba)) aggiungi(daRegalare, 'addobbo:' + id, intero(n))
+    // 3. gli addobbi (il guardaroba della 2D è il cassetto della 3D) e le bestie di casa
+    const nelCassetto = (id, n) => { if (ADDOBBI_3D[id]) aggiungi(s.addobbi, id, n); else aggiungi(daRegalare, 'addobbo:' + id, n) }
+    for (const [id, n] of Object.entries(f.guardaroba)) nelCassetto(id, intero(n))
     // Le bestie di casa (G6, docs/fattoria3d/bestie-di-casa.md): chi aveva preso beagle, coniglio, pappagallo o gatto rosso li ritrova, col nome e con i bisogni a metà
     // (niente monete, niente premio già preso); il bobtail, il gatto bianco e nero e il gatto nero sono i compagni gratis (Watson, Sherlock, Pepe): portano il nome che avevano.
-    // Gli addobbi restano «da regalare»: i costumi si fanno più avanti.
+    // Gli addobbi che portava li porta ancora, se le stanno; se no tornano nel cassetto.
     const bestieDa2D = []
     for (const b of f.bestie) {
-      const bid = idDa2D(b.chi)
-      if (bid) { s.casa[bid] = bestiaInForma({ nome: b.nome, pancia: 0.5, pelo: 0.5, gioco: 0.5, premiato: false }, ora); bestieDa2D.push(bid) }
-      else if (COMPAGNO_DI[b.chi]) s.casa[COMPAGNO_DI[b.chi]] = bestiaInForma({ nome: b.nome, pancia: 0.5, pelo: 0.5, gioco: 0.5, premiato: false }, ora)
-      else aggiungi(daRegalare, 'bestia:' + b.chi, 1)
-      for (const id of Object.values(b.addobbi || {})) aggiungi(daRegalare, 'addobbo:' + id, 1)
+      const bid = idDa2D(b.chi) || COMPAGNO_DI[b.chi] || null
+      const addosso = Object.values(b.addobbi || {})
+      if (!bid) { aggiungi(daRegalare, 'bestia:' + b.chi, 1); for (const id of addosso) nelCassetto(id, 1); continue }
+      const su = Object.fromEntries(addosso.filter(id => staA(id, bid)).map(id => [ADDOBBI_3D[id].dove, id]))
+      s.casa[bid] = bestiaInForma({ nome: b.nome, pancia: 0.5, pelo: 0.5, gioco: 0.5, premiato: false, addobbi: su }, ora)
+      for (const id of addosso) if (!Object.values(su).includes(id)) nelCassetto(id, 1)
+      if (BESTIE[bid]) bestieDa2D.push(bid)
     }
 
     // 4. la terra: tutta quella che aveva (col regalo), rimessa in lotti da 4×4 (`lottiPerPiazzole`: la 2D parte con 324 celle, la 3D con 144, quindi anche chi non
@@ -259,6 +263,8 @@ function consegnaIlDovuto(s, ora) {
       const m = merceDel(id)
       if (m && m.dove === 'lana') { s.lana = Math.min(TETTO, s.lana + resta); resta = 0 }
       else if (m) { aggiungi(s[m.dove], m.id, resta); resta = 0 }
+    } else if (genere === 'addobbo') {
+      if (ADDOBBI_3D[id]) { s.addobbi[id] = Math.min(99, (s.addobbi[id] || 0) + resta); resta = 0 }
     } else if (genere === 'bestia') {
       const bid = idDa2D(id)
       if (bid && !s.casa[bid]) { s.casa[bid] = bestiaInForma({ nome: '', pancia: 0.5, pelo: 0.5, gioco: 0.5, premiato: false }, ora); resta-- }
