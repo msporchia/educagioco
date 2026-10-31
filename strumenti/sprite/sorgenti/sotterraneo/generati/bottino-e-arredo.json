@@ -26,19 +26,12 @@
     "mazza": { "da": [93, 15], "cella": [8, 20] },
     "martello": { "da": [100, 105], "cella": [9, 21] },
 
-    "pozione-piccola": { "da": [78, 135], "cella": [10, 17] },
-    "pozione": { "da": [207, 15], "cella": [11, 16] },
-    "ampolla-blu": { "da": [227, 37], "cella": [10, 15] },
-    "pozione-grande": { "da": [306, 37], "cella": [11, 16] },
-    "ampolla-maggiore": { "da": [206, 37], "cella": [11, 16] },
-    "ampolla-vita": { "da": [366, 16], "cella": [11, 16] },
 
     "anello-ambra": { "da": [117, 135], "cella": [11, 17], "buchi": true },
     "anello-verde": { "da": [158, 135], "cella": [11, 17], "buchi": true },
     "amuleto-rosso": { "da": [205, 107], "cella": [13, 16], "buchi": true, "nitido": true },
     "medaglione": { "da": [208, 153], "cella": [10, 9], "nitido": true },
 
-    "chiave-oro": { "da": [284, 83], "cella": [9, 15], "buchi": true },
     "torcia": { "da": [209, 175], "cella": [9, 15] },
 
     "candelabro": { "da": [385, 202], "cella": [13, 11] },

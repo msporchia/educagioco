@@ -4,6 +4,7 @@
 // respira piano, chi è sveglio corre; il caporale e il signore della regione sono più grandi. Puro, senza three: unita/sotterraneo-mostri-sopra-scena.
 import { MOSTRI } from '../../dati/mostri.js'
 import { PEZZI } from '../../dati/atlante.js'
+import { haModelloPerTerra } from '../per-terra-pura.js'
 import { fotogrammaDi, quantiFotogrammi } from '../../dati/fotogrammi.js'
 import { fattoreDelMostro } from '../../viste/campo.js'
 import { SOPRA } from '../../dati/mondo-aperto-mostri.js'
@@ -53,13 +54,14 @@ export function mostriDaDisegnare(vicini, { x, z, t, visto = () => true, salta =
   return l
 }
 
-// le cose rimaste per terra dopo uno scontro (stato.perTerra) dove si è già visto: il loro sprite, un poco sopra il prato
+// le cose rimaste per terra dopo uno scontro (stato.perTerra) dove si è già visto: un poco sopra il prato, col modello (persone.js,
+// roba-per-terra.js) o lo sprite di chi non ce l'ha; `r` è la cosa dello stato, che resta la stessa da un fotogramma all'altro
 export function coseDaDisegnare(perTerra, { visto = () => true, cose }) {
   const l = []
   perTerra.forEach((c, i) => {
     const k = cose[c.cosa]
-    if (!k || !k.sprite || !visto(c.x + 0.5, c.y + 0.5)) return
-    l.push({ i, pezzo: k.sprite, x: c.x + 0.5, z: c.y + 0.5, rarita: k.rarita || null })
+    if (!k || !(k.sprite || haModelloPerTerra(c.cosa)) || !visto(c.x + 0.5, c.y + 0.5)) return
+    l.push({ i, r: c, cosa: c.cosa, pezzo: k.sprite, x: c.x + 0.5, z: c.y + 0.5, rarita: k.rarita || null })
   })
   return l
 }

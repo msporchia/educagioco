@@ -8,6 +8,7 @@ import { creaFigure } from '../figure.js'
 import { disegnaEroe } from '../eroe.js'
 import { creaEroe3d } from '../eroe3d.js'
 import { creaMostri3d } from '../mostro3d.js'
+import { creaRobaPerTerra } from '../roba-per-terra.js'
 import { creaPersone3d, persone3dAccese } from '../persona3d.js'
 import { ACCESI } from '../costanti.js'
 import { SALITA } from './vesti.js'
@@ -62,6 +63,7 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
   const statiMostri = new Map()
   const persone3d = persone3dAccese() ? creaPersone3d(gruppo('persone'), { quanti: () => tettoPersone, ozio: OZIO }) : null
   const statiPersone = new Map()
+  const robaInTerra = creaRobaPerTerra(gruppo('persone'))   // il bottino per terra col suo modello (roba-per-terra.js)
   const salita = (x, z, t) => { const k = Math.max(0, Math.min(1, (t - nebbia.quando(x, z)) / SALITA)); return k * k * (3 - 2 * k) }
 
   return {
@@ -99,12 +101,16 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
           if (q.alfa > 0.5) ombra(q.x, y, q.z + 0.1, 0.9 * Math.min(1.4, q.scala))
         }
         if (mostri3d) mostri3d.chiudi()
-        // il bottino che non stava in tasca: piccolo, che ondeggia sul prato
+        // il bottino che non stava in tasca: piccolo, che ondeggia sul prato; col modello se ce l'ha
+        robaInTerra.inizia()
         for (const c of perTerra) {
-          const o = figure.o(), y = quota(c.x, c.z)
+          const y = quota(c.x, c.z) + 0.1 + Math.sin(t * 2.6 + c.x) * 0.06
+          if (c.r && robaInTerra.metti(c.r, c.cosa, c.x, y, c.z, 0.35 * Math.sin(t * 1.3 + c.x))) continue
+          const o = figure.o()
           o.scala = 0.8
-          figure.metti(c.pezzo, c.x, y + 0.1 + Math.sin(t * 2.6 + c.x) * 0.06, c.z, o)
+          figure.metti(c.pezzo, c.x, y, c.z, o)
         }
+        robaInTerra.chiudi()
         // le persone: le più vicine col modello 3D (persona3d.js), le altre (e chi non ha il modello) sprite
         if (persone3d) persone3d.inizia()
         const d2 = q => (q.x - eroe.x) ** 2 + (q.z - eroe.z) ** 2
@@ -144,6 +150,6 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
     /** Quante persone hanno il modello 3D adesso, e quante istanze ci sono (per le prove: `grafica()`). */
     get persone3d() { return persone3d ? { visibili: persone3d.visibili, istanze: persone3d.quante } : null },
     get mostri3d() { return mostri3d ? mostri3d.visibili : 0 },
-    via() { if (eroe3d) eroe3d.toglie(); if (mostri3d) mostri3d.via(); if (persone3d) persone3d.via(); figure.via(); figureEroe.via(); scena.remove(ombre); geo.dispose(); mat.dispose(); ombre.dispose(); maschera.t.dispose() },
+    via() { if (eroe3d) eroe3d.toglie(); if (mostri3d) mostri3d.via(); if (persone3d) persone3d.via(); robaInTerra.via(); figure.via(); figureEroe.via(); scena.remove(ombre); geo.dispose(); mat.dispose(); ombre.dispose(); maschera.t.dispose() },
   }
 }

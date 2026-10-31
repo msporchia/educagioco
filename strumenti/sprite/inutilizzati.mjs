@@ -248,7 +248,9 @@ export const VIVI = {
     const { NICCHIE } = await D('dati/orpelli.js')
     const { pezziDeiRelitti } = await D('dati/relitti.js')
     const { COSE, chiaveDelPezzo } = await D('dati/cose.js')
+    const { haModelloPerTerra } = await D('scena3d/per-terra-pura.js')
     const { ASPETTI } = await D('dati/aspetti.js')
+    const { SPRITE_FIGURA } = await D('dati/figure3d.js')
     const { UNICI } = await D('dati/pezzi.js')
     const { MOSTRI } = await D('dati/mostri.js')
     const { GROSSI, figuraDelGrosso } = await D('dati/grossi.js')
@@ -265,8 +267,10 @@ export const VIVI = {
       ...SOGLIE_DELLE_GEMME.map(([, n]) => n), 'moneta-0',                                    // pezzoDelleGemme
       PEZZO_DI.forziere({ aperto: true }), PEZZO_DI.forziere({}), 'forziere-oro-chiuso',      // il forziere aperto, quello dei salvataggi vecchi, il d'oro
       'torcia',                                                                               // scena3d/eroe.js: la torcia in mano
-      ...Object.values(COSE).map(c => c.sprite),                                              // la roba per terra (scena3d/cose.js, mondo/mostri.js)
-      ...Object.values(ASPETTI).flat().map(a => a.sprite),                                    // le figure: per terra e in pugno ai mostri (dati/varianti.js)
+      ...Object.entries(COSE).filter(([k]) => !haModelloPerTerra(k)).map(([, c]) => c.sprite),   // per terra senza modello (roba-per-terra.js), nei pannelli senza chiave
+      // le figure della roba: il loro ritaglio è anche quello che dice che la figura c'è (roba.py `in_gioco`, figure3d.js `SPRITE_FIGURA`),
+      // e lo sprite resta per terra a chi non ha un modello e in pugno ai mostri a sprite (dati/varianti.js)
+      ...Object.values(ASPETTI).flat().map(a => a.sprite), ...Object.keys(SPRITE_FIGURA),
       ...Object.entries(UNICI).map(([id, u]) => (COSE[chiaveDelPezzo(u.base, 1, u.rarita || 'leggendario', [], id)] || {}).sprite),
       ...CURIOSITA.map(c => c.pezzo),                                                         // per terra e nel foglio che si apre (viste/Foglio.vue)
       ...Object.values(MOSTRI).map(m => `${m.sprite}-fermo-0`),                               // i mostri oltre il tetto dei modelli, e la loro misura

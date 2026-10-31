@@ -8,9 +8,6 @@
   "moneta-2": [305, 385, 6, 7],
   "moneta-3": [313, 385, 6, 7],
 
-  "pozione-rossa": [288, 352, 16, 16],
-  "pozione-blu": [304, 352, 16, 16],
-
   "cavaliere-fermo-0": [128, 100, 16, 28],
   "cavaliere-fermo-1": [144, 100, 16, 28],
   "cavaliere-fermo-2": [160, 100, 16, 28],
@@ -76,9 +73,5 @@
   "mostro-grosso-corsa-0": [144, 428, 32, 36],
   "mostro-grosso-corsa-1": [176, 428, 32, 36],
   "mostro-grosso-corsa-2": [208, 428, 32, 36],
-  "mostro-grosso-corsa-3": [240, 428, 32, 36],
-
-  "arma-1": [293, 10, 6, 13],
-  "arma-2": [323, 10, 10, 21],
-  "arma-3": [288, 167, 16, 24]
+  "mostro-grosso-corsa-3": [240, 428, 32, 36]
 }

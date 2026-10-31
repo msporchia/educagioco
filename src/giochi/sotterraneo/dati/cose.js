@@ -98,17 +98,17 @@ const BASI = {
 
   // le armi col nome proprio stanno un gradino sopra la scala, non dentro: portano un tratto, non più braccio
   'bipenne-solare': {
-    em: '🔥', nome: 'Ascia doppia solare', sprite: 'arma-3', dove: 'mano', famiglia: 'asce', mani: 2, genere: 'f',
+    em: '🔥', nome: 'Ascia doppia solare', dove: 'mano', famiglia: 'asce', mani: 2, genere: 'f',
     att: DUE_MANI_DEL_TERZO, luce: 2, prezzo: 36,
     dice: 'Le lame brillano di loro: al buio vedi molto più lontano. Due mani.',
   },
   'spada-del-ladro': {
-    em: '💰', nome: 'Spada del ladro', sprite: 'arma-2', dove: 'mano', famiglia: 'spade', mani: 2, genere: 'f',
+    em: '💰', nome: 'Spada del ladro', dove: 'mano', famiglia: 'spade', mani: 2, genere: 'f',
     att: DUE_MANI_DEL_TERZO, gemme: 0.5, prezzo: 34,
     dice: 'Ogni gemma che raccogli ne vale una e mezza. Due mani.',
   },
   'pugnale-vampiro': {
-    em: '🩸', nome: 'Pugnale vampiro', sprite: 'arma-1', dove: 'mano', mani: 1,
+    em: '🩸', nome: 'Pugnale vampiro', dove: 'mano', mani: 1,
     att: 2, vita: 6, prezzo: 30,
     dice: 'Corto e cattivo: finché lo tieni, sei punti di vita in più.',
   },
@@ -165,38 +165,39 @@ const BASI = {
   martello: { em: '🔨', nome: 'Martello', sprite: 'martello', dove: 'mano', mani: 1, att: 2, prezzo: 24, deiGrossi: true,
               dice: 'Batte come un fabbro, e scotta.' },
 
+  // i consumabili non hanno uno sprite: si vedono col loro modello (scena3d/roba3d/pozioni.js), nei pannelli e per terra
   // le cinque cure (docs/sotterraneo/roba.md, «Le pozioni»): numeri fissi, e più è grande più costa ogni punto di vita.
   // `dalla`: da quante discese finite la guaritrice la mette sul banco; `tutta`: rimette tutta la vita
-  'pozione-piccola': { em: '🧪', nome: 'Boccetta', sprite: 'pozione-piccola', usa: 'cura', cura: 8, genere: 'f',
+  'pozione-piccola': { em: '🧪', nome: 'Boccetta', usa: 'cura', cura: 8, genere: 'f',
                        prezzo: 8, dalla: 0, dice: 'Otto punti di vita, subito.' },
-  pozione: { em: '🧪', nome: 'Pozione', sprite: 'pozione', usa: 'cura', cura: 14, prezzo: 21, genere: 'f', dalla: 1,
+  pozione: { em: '🧪', nome: 'Pozione', usa: 'cura', cura: 14, prezzo: 21, genere: 'f', dalla: 1,
              dice: 'Quattordici punti di vita, subito.' },
-  'pozione-grande': { em: '🍷', nome: 'Ampolla', sprite: 'pozione-grande', usa: 'cura', cura: 30, genere: 'f',
+  'pozione-grande': { em: '🍷', nome: 'Ampolla', usa: 'cura', cura: 30, genere: 'f',
                       prezzo: 75, dalla: 3, dice: 'Trenta punti di vita: ti rimette in piedi.' },
-  'ampolla-maggiore': { em: '🍷', nome: 'Ampolla maggiore', sprite: 'ampolla-maggiore', usa: 'cura', cura: 50, genere: 'f',
+  'ampolla-maggiore': { em: '🍷', nome: 'Ampolla maggiore', usa: 'cura', cura: 50, genere: 'f',
                         prezzo: 200, dalla: 5, dice: 'Cinquanta punti di vita: per le discese che fanno male.' },
   // non si compra: cade dal grosso, da un caporale o da un forziere (bottino.js, `ampollaCade`), ed è quella da tenere per un boss
-  'ampolla-vita': { em: '🍷', nome: 'Ampolla della vita', sprite: 'ampolla-vita', usa: 'cura', tutta: true, prezzo: 120, rarissimo: true,
+  'ampolla-vita': { em: '🍷', nome: 'Ampolla della vita', usa: 'cura', tutta: true, prezzo: 120, rarissimo: true,
                     genere: 'f', dice: 'Tutta la vita, subito. Una sola, da tenere per un boss.' },
   // l'energia delle abilità (docs/sotterraneo/abilita.md): si beve dallo zaino, fra uno scontro e l'altro
-  'pozione-blu': { em: '🧪', nome: 'Pozione blu', sprite: 'pozione-blu', usa: 'energia', energia: 8, prezzo: 8, genere: 'f',
+  'pozione-blu': { em: '🧪', nome: 'Pozione blu', usa: 'energia', energia: 8, prezzo: 8, genere: 'f',
                    dice: 'Otto punti di energia, per le abilità.' },
   // la boccetta grande dell'energia: stesso disegno, nome epico (l'utente, 9 ottobre)
-  'ampolla-blu': { em: '🧪', nome: 'Ampolla delle stelle', sprite: 'ampolla-blu', usa: 'energia', energia: 16, prezzo: 18, genere: 'f',
+  'ampolla-blu': { em: '🧪', nome: 'Ampolla delle stelle', usa: 'energia', energia: 16, prezzo: 18, genere: 'f',
                    dice: 'Sedici punti di energia: un fiume per le abilità.' },
   // l'unica che non torna indietro: alza la vita massima dell'eroe per sempre (crescita.elisir). Un ritrovamento rarissimo,
   // mai in vendita (`rarissimo`: fuori da IN_VENDITA); il prezzo resta per quando lo si rivende (docs/sotterraneo/rarita.md)
-  'elisir-toro': { em: '🐂', nome: 'Elisir del toro', sprite: 'pozione-rossa',
+  'elisir-toro': { em: '🐂', nome: 'Elisir del toro',
                    usa: 'cresci', cresce: 3, prezzo: 22, rarissimo: true,
                    dice: 'Tre punti di vita massima, per sempre.' },
   // l'unità è la stanza e non il tempo: un conto a orologio farebbe pagare la luce a chi legge piano
   torcia: { em: '🔥', nome: 'Torcia', sprite: 'torcia', usa: 'luce', genere: 'f',
             stanze: STANZE_TORCIA, prezzo: 5,
             dice: `La prendi e si accende: ${STANZE_TORCIA} stanze di luce, poi si spegne.` },
-  chiave: { em: '🗝️', nome: 'Chiave', sprite: 'chiave-oro', usa: 'porta', prezzo: 6, genere: 'f',
+  chiave: { em: '🗝️', nome: 'Chiave', usa: 'porta', prezzo: 6, genere: 'f',
             dice: 'Apre una porta senza rispondere.' },
   // lo sprite è un rotolo col sigillo ritagliato da scudi.png (il foglietto, strumenti/sprite/sorgenti/sotterraneo/generati/scudi.json)
-  'pergamena-portale': { em: '📜', nome: 'Pergamena del portale', sprite: 'pergamena-portale', usa: 'portale', prezzo: PREZZO_PERGAMENA, genere: 'f', dopo: 'quaderno',
+  'pergamena-portale': { em: '📜', nome: 'Pergamena del portale', usa: 'portale', prezzo: PREZZO_PERGAMENA, genere: 'f', dopo: 'quaderno',
                          dice: 'La apri e si accende un portale: ti porta a casa, e quando torni giù riparti proprio da qui.' },
 }
 
@@ -428,8 +429,9 @@ export function guastiDelleCose(nomi = null) {
     if (c.dove && !TIPI_DI_POSTO.includes(c.dove)) g.push(`${k}: si indossa su "${c.dove}"?`)
     if (c.dove === 'mancina' && !c.dif) g.push(`${k}: nella mano debole, ma non para`)
     if (c.dove === 'corpo' && !c.dif) g.push(`${k}: si mette addosso, ma non para`)
-    // il copricapo non ha sprite: lo disegnano i modelli dei copricapi, e senza modello si vede la sua emoji
-    if (c.dove && c.dove !== 'testa' && !c.sprite) g.push(`${k}: si indossa, ma non ha un pezzo disegnato`)
+    // il copricapo non ha sprite: lo disegnano i modelli dei copricapi, e senza modello si vede la sua emoji; armi e scudi li disegna
+    // sempre un modello (la figura, o il ripiego della collezione: unita/sotterraneo-roba-3d), e tre armi non hanno sprite
+    if (c.dove && !['testa', 'mano', 'mancina'].includes(c.dove) && !c.sprite) g.push(`${k}: si indossa, ma non ha un pezzo disegnato`)
     if (c.dove === 'testa' && !(c.dif || c.vita)) g.push(`${k}: in testa, ma non para e non tiene in piedi`)
     if (c.dove === 'testa' && !c.copricapo) g.push(`${k}: in testa senza \`copricapo\`, entrerebbe nel bottino di sempre`)
     if (c.usa === 'cura' && !c.cura && !c.tutta) g.push(`${k}: cura zero`)

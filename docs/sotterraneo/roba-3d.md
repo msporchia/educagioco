@@ -65,6 +65,21 @@ dei moduli, che tengono i loro materiali.
 Per guardarli: `poc/roba-3d-aloni.html` (le 50 armi × le quattro rarità con l'elemento dell'arma; `?famiglia=spada`,
 `?vista=elementi&arma=bastone-nodoso`, `?lato=`, `?pausa`, `?t=`).
 
+## Per terra
+
+La roba da raccogliere nella discesa e il bottino rimasto sul prato di sopra si vedono col modello, non con lo sprite dipinto
+(`scena3d/roba-per-terra.js`, l'utente il 31 ottobre 2026: «è corretto che queste due armi siano 2d?»).
+
+- **Sempre la versione semplice** (`appiattisci`): una mesh e una chiamata di disegno per pezzo, niente aloni né fiamme; il chiarore
+  della rarità per terra resta quello di `scena3d/cose.js`. Un modello per figura, fatto la prima volta e copiato per ogni pezzo
+  (geometria e materiale in comune): una spada per terra costa una chiamata, contro zero dello sprite nel lotto delle figure.
+- **Lungo `LATO_PER_TERRA` (0,6 celle)** dal lato più lungo, piegato all'indietro (`INCLINA`) perché dalla telecamera alta una spada
+  in piedi è una riga; ondeggia un poco, non gira.
+- **Chi non ha un modello resta sprite**: le armature (sono vesti da indossare, `vesti(eroe, figura)`, non un oggetto da posare) e i
+  tre gioielli di base. Le gemme e le monete non sono roba e non hanno un modello: restano sprite. I copricapi restano la loro
+  emoji ([elmo.md](elmo.md)): il modello c'è solo su una testa.
+- Il dito li prende col raggio come la fontana e i mostri (`modellati`, dito.js); `grafica().perTerra` dice quanti ce n'è in vista.
+
 ## La tabella generata: `npm run roba3d`
 
 `strumenti/mappa-roba3d.mjs` scrive `src/giochi/sotterraneo/dati/figure3d.js` (generato, non si tocca a mano, con la firma) da
@@ -92,7 +107,8 @@ entrano nel file unico).
 - Le armi in mano ai mostri (gli scheletri guerriero e mago) restano quelle della collezione: non sono oggetti con una chiave.
 - L'alone non c'è sulle vesti (starebbe su tutto l'eroe): la rarità della veste si vede dalla figura.
 
-Nei test: `unita/sotterraneo-roba-3d` (la tabella uguale a quella dello strumento e la firma; ogni figura ha la sua famiglia e il
+Nei test: `unita/sotterraneo-roba-per-terra` (per terra: il modello semplice, la misura, chi resta sprite, la geometria in comune),
+`unita/sotterraneo-roba-3d` (la tabella uguale a quella dello strumento e la firma; ogni figura ha la sua famiglia e il
 modulo la costruisce, o la famiglia è fra quelle che mancano; ogni oggetto da impugnare ha figura o ripiego; il ripiego senza modulo
 e con un modulo che si rompe; ogni veste addosso all'eroe; ogni consumabile, con l'alone solo ai rarissimi; le chiavi composte; gli
 aloni), `unita/sotterraneo-mostri-3d` (anche: ogni famiglia col prototipo è fra i moduli del gioco), le copie uguali ai prototipi,
