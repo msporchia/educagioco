@@ -61,8 +61,8 @@ basta: l'attrezzo non cambia.
   ogni figura (alfa 1–50, di solito rossastro) e il corpo appena sotto
   il pieno (alfa 252). Sotto la soglia il pixel sparisce, sopra diventa
   pieno, e si fa sul foglio grande **prima** della riduzione: dopo,
-  l'alone è già impastato nei pixel del bordo. Il primo foglio così è
-  `edifici_4.png`.
+  l'alone è già impastato nei pixel del bordo. L'hanno `merci_3`,
+  `merci_4` e `campi_3`.
 - **`ombra`** — `true` toglie anche **l'ombra che il fondo si porta
   dietro**. Un generatore a cui si chiede «gli oggetti su un fondo
   piatto» quasi sempre disegna una macchia d'ombra sotto ognuno: non è
@@ -138,7 +138,7 @@ basta: l'attrezzo non cambia.
   ```
 
   I quattro nomi sono `testa`, `muso`, `collo`, `schiena` — sono gli
-  slot del vestiario della fattoria (`fattoria/dati/addobbi.js`) — e
+  slot del vestiario della fattoria (`fattoria3d/da2d/dati/addobbi.js`) — e
   un aggancio che un verso non ha vuol dire «da qui non si vede»: di
   spalle il muso non si scrive, se no gli occhialini finiscono sulla
   nuca. Di lato la bestia guarda a destra (vedi `specchia`), quindi la

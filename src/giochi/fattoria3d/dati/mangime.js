@@ -1,4 +1,4 @@
-/* Il mangime: ciò che mangiano le bestie, come nella fattoria di sempre (src/giochi/fattoria/dati/coltivazioni.js). Un raccolto non si dà
+/* Il mangime: ciò che mangiano le bestie, come nella fattoria di sempre (src/giochi/fattoria3d/da2d/dati/coltivazioni.js). Un raccolto non si dà
    da mangiare: si porta al fienile e diventa becchime (le galline) o foraggio (mucche e pecore); l'erba medica è la seconda strada del
    foraggio. Qui stanno le tre ricette del fienile (le usa `MACCHINE.fienile` in dati/ricette.js) e il conto del loro tempo, in un
    file a parte perché `animali.js` ne ha bisogno e `ricette.js` importa `animali.js`. Vedi docs/fattoria3d/mangime-e-catena.md. */

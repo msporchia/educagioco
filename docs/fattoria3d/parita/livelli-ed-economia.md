@@ -1,6 +1,6 @@
 # Parità: livelli, esperienza ed economia
 
-Legenda in [README.md](README.md). 2D: [../../fattoria/livelli.md](../../fattoria/livelli.md). 3D: [../livelli.md](../livelli.md).
+Legenda in [README.md](README.md). 2D: i dati in `da2d/dati/livelli.js`. 3D: [../livelli.md](../livelli.md), che ne riporta anche i perché.
 Metro: 🪙1 = dieci secondi di esercizio, 🪙6 = un minuto ([../../apprendimento/calibrazione.md](../../apprendimento/calibrazione.md)).
 
 ## Esperienza e soglie
@@ -14,36 +14,14 @@ Metro: 🪙1 = dieci secondi di esercizio, 🪙6 = un minuto ([../../apprendimen
 | L5 | il livello non scende | ✅ | ✅ | – |
 | L6 | una cosa produttiva per livello | sì, con le coppie legate dalla catena | ✅ (`guastiDeiLivelli`) | – |
 | L7 | nessuna ricetta prima dei suoi ingredienti | `guastiDegliSblocchi` | ✅ `livelloDellaRicetta` | – |
-| L8 | fra due cose che lavorano non più di 5–6 livelli | sì fino alla fine | 🟡 stessi livelli, ma la 3D ha meno cose: 22 livelli senza novità | P1 |
+| L8 | fra due cose che lavorano non più di 5–6 livelli | sì fino alla fine | ✅ gli stessi livelli della 2D (la pesca al posto della peschiera, al 57) | – |
 | L9 | i premi da prendere (il livello apre, il bambino preme) | pagina dei livelli con quadratini e pallino sul ⭐ | 🟡 scala con scatola aperta/chiusa e pallino; `prendere` non c'è: arriva da solo | P2 |
 | L10 | fattorie col metro vecchio | `soglie` nel salvataggio | – (la 3D riparte da 0 senza `esperienza`) | – |
 | L11 | tarare | `npm run tara` | ✅ `npm run tara:fattoria3d`: scala 2D + parità voce per voce | – |
 
-## Cosa arriva quando: la 2D contro la 3D
-
-**Da G3 il livello è lo stesso**: la tabella è la storia di com'era prima.
-
-Livello a cui compare la stessa cosa (💥 = arrivava molto prima nella 3D).
-
-| cosa | 2D | 3D | | cosa | 2D | 3D |
-|---|--:|--:|---|---|--:|--:|
-| campo, grano | 1 | 1 | | caseificio | 20 | 11 💥 |
-| mercato / banco | 2 | 2 | | cucina | 25 | 12 💥 |
-| mulino | 4 | 3 | | mongolfiera | 26 | 10 💥 |
-| fienile | 6 | 2 | | zuccherificio | 31 | 13 💥 |
-| pollaio | 9 | 5 | | gelateria | 34 | 14 💥 |
-| ovile | 14 | 4 💥 | | pastificio | 37 | 6 💥 |
-| telaio | 16 | 8 | | sartoria | 42 | 15 💥 |
-| panificio | 17 | 7 | | tintoria | 55 | 16 💥 |
-| stalla | 18 | 9 | | friggitoria | 58 | 17 💥 |
-| trattore / carretto | 8 | 7 | | sushi bar | 62 | 18 💥 |
-
-I prezzi seguono: fienile 🪙150 contro 40, mulino 150 contro 60, panificio 180 contro 90, sartoria 250 contro 150, sushi bar 340
-contro 180. La 3D costa da metà a un quarto, e quasi tutto compare entro il livello 18.
-
 ## Dove le monete escono
 
-La 2D ha **un pozzo con molti rubinetti**; la 3D ne ha pochi, e tutti una tantum.
+La 2D aveva **un pozzo con molti rubinetti**, e la 3D li ha presi tutti (i silos senza le 🪙120 dei tre edifici).
 
 | id | rubinetto | 2D | 3D | pri |
 |---|---|---|---|---|
@@ -56,10 +34,11 @@ La 2D ha **un pozzo con molti rubinetti**; la 3D ne ha pochi, e tutti una tantum
 | L18 | spostare / mettere via | 🪙1 | ✅ | – |
 | L19 | **bestie di casa**, cibo, coccole | 7 bestie 🪙75–120, cibo 5–14, coccole 1 | ✅ le 4 che non sono compagni gratis, stessi prezzi e livelli (🪙75–120), cibo 5–14, coccole 🪙1; la spesa conta come esperienza ([../bestie-di-casa.md](../bestie-di-casa.md)) | – |
 | L20 | **decorazioni** | 217 voci da 🪙3 a 🪙95 | ✅ tutte e 217 (11 dei primi giri + 130 del G8 + 76 del G9: fiori, arredo, acqua, albero di Natale e fiera), stessi prezzo e livello via `VOCE`; non spostano la scala; **i livelli senza niente di nuovo sono 0** (erano 18; 22 sulla lettura del giro G8) ([../decorazioni.md](../decorazioni.md)) | – |
-| L21 | addobbi | 🪙6–24 | ❌ | P2 |
+| L21 | addobbi | 🪙6–24 | ✅ gli stessi ([../addobbi.md](../addobbi.md)) | – |
 
-Il rischio per il metro: se un bambino spende le monete in pochi giorni e poi non c'è altro, la 3D smette di essere «il posto dove
-si spendono» e le monete degli esercizi non hanno più uno scopo. Con la 2D a 70 livelli un bambino ha un obiettivo per mesi.
+Il rischio per il metro: se un bambino spende le monete in pochi giorni e poi non c'è altro, la fattoria smette di essere «il posto
+dove si spendono» e le monete degli esercizi non hanno più uno scopo. Per questo la 3D ha preso la scala intera della 2D (D2): 70 livelli,
+un obiettivo per mesi.
 
 ## Tempi (la scala del gioco)
 
@@ -71,5 +50,5 @@ si spendono» e le monete degli esercizi non hanno più uno scopo. Con la 2D a 7
 | L25 | riposo del banco / della mongolfiera | 5 min / 60 min | ✅ gli stessi | – |
 | L26 | pesca | – | ✳ livello 57 (la peschiera), un pesce ogni 15 minuti per banco | – |
 
-La 2D è un posto dove si torna («torna più tardi, ci mette qualche minuto vero»); la 3D finora è un posto dove si resta a lavorare.
-Sono due ritmi: scelta D9.
+La fattoria è un posto dove si torna («torna più tardi, ci mette qualche minuto vero»), non dove si resta a lavorare: per questo i
+tempi sono in minuti come nella 2D (D9).

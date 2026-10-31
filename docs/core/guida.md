@@ -49,6 +49,6 @@ usaGuida(radice, passoGuida)
 | Il Robot | `costruttore/motore/guida.js` | il primo muretto, finché non è vinto (`guida: true`): comincia sulla scheda, dal led 1 |
 | Passo passo | `passo-passo/motore/guida.js` | il primo prato, e 🔁 alla prima tappa dello zaino |
 | Difendi il Castello | `passoGuida` in `views/TowerDefense.vue` | la prima partita della vita |
-| Fattoria 3D | `fattoria3d/motore/guida.js` | dal campo vuoto al primo raccolto e al menu delle costruzioni; chi ha già giocato non la vede ([../fattoria3d/guida.md](../fattoria3d/guida.md)) |
+| La fattoria | `fattoria3d/motore/guida.js` | dal campo vuoto al primo raccolto e al menu delle costruzioni; chi ha già giocato non la vede ([../fattoria3d/guida.md](../fattoria3d/guida.md)) |
 
 Nei test: `[data-indicato]` (`="mano"` con la manina), `[data-guida-riga]`.

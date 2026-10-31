@@ -4,8 +4,8 @@
    «da bello» e non è una decorazione sta in una lista col perché. L'acqua (ninfee, canne, mulino), la fiera (non si compra) e l'albero di Natale (solo in stagione). Senza browser. `node test/esegui.mjs fattoria3d-decori`
    tempo: 1 */
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
-import { CATEGORIE as CATEGORIE_2D, PER_ID as VOCI_2D } from '../../src/giochi/fattoria/dati/catalogo.js'
-import { livelloDellaVoce } from '../../src/giochi/fattoria/dati/livelli.js'
+import { CATEGORIE as CATEGORIE_2D, PER_ID as VOCI_2D } from '../../src/giochi/fattoria3d/da2d/dati/catalogo.js'
+import { livelloDellaVoce } from '../../src/giochi/fattoria3d/da2d/dati/livelli.js'
 
 const ctx = new Proxy({}, { get: (_, k) => k === 'canvas' ? {} : () => {}, set: () => true })
 globalThis.document = { createElement: () => ({ width: 0, height: 0, getContext: () => ctx }) }
@@ -103,7 +103,7 @@ const ECCEZIONI = { recinto: 'recinto_legno', pane: 'pane_decoro', torta: 'torta
   uguale('la scheda Acqua ha le 7 voci nuove (fontana, pozzo, stagno e laghetto stanno sotto Decori, il ponte fra le Strade)', s.acqua.length, 7)
   uguale('la scheda Bestiole ha le 17 voci', s.bestiole.length, 17)
   uguale('fuori stagione e senza regali la scheda Feste è vuota (la linguetta si nasconde)', s.feste.length, 0)
-  uguale('a Natale c\'è l\'albero, solo quello', schedeDi({ ...stato, stagione: 'natale' }).feste.map(c => c.id).join(), 'albero_natale')
+  uguale('a Natale ci sono l\'albero e il pupazzo di neve, solo quelli', schedeDi({ ...stato, stagione: 'natale' }).feste.map(c => c.id).sort().join(), 'albero_natale,pupazzo_neve')
   uguale('a Halloween nella scheda Feste non c\'è niente (le zucche stanno sotto Decori)', schedeDi({ ...stato, stagione: 'halloween' }).feste.length, 0)
   const regalo = schedeDi({ ...stato, nelMagazzino: id => id === 'fiera_giostra' ? 2 : 0 }).feste
   uguale('chi ha una giostrina in magazzino la vede nella scheda Feste, con 📦 ×2', regalo.map(c => c.id + ':' + c.etichetta).join(), 'fiera_giostra:📦 ×2')

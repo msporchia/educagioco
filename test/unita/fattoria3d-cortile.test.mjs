@@ -4,8 +4,8 @@
    il prodotto in vista solo da pronte). Senza browser. Docs: docs/fattoria3d/cortile-e-pentolone.md, parita/colture-e-catena.md (C18, C23), parita/animali.md (A1d–A1f).
    `node test/esegui.mjs fattoria3d-cortile`
    tempo: 1 */
-import { PRODOTTI, RICETTE as RICETTE_2D } from '../../src/giochi/fattoria/dati/coltivazioni.js'
-import { PEZZI as ATLANTE } from '../../src/giochi/fattoria/dati/atlante.js'
+import { PRODOTTI, RICETTE as RICETTE_2D } from '../../src/giochi/fattoria3d/da2d/dati/coltivazioni.js'
+import { PEZZI as ATLANTE } from '../../src/grafica/atlante-fattoria.js'
 import { PEZZI, EDIFICI, guastiDelCatalogo } from '../../src/giochi/fattoria3d/dati/catalogo.js'
 import { COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { RICETTE, MACCHINE, guastiDelleRicette } from '../../src/giochi/fattoria3d/dati/ricette.js'
@@ -14,7 +14,6 @@ import { MANGIMI, MANGIMI_DEL_FIENILE, MANGIMI_DEL_PENTOLONE, RICETTE_PENTOLONE,
 import { NUMERI_DEL_CORTILE as PROVVISORI } from '../../src/giochi/fattoria3d/dati/cortile.js'
 import { guastiDeiLivelli, sogliaDi, roba, livelloDelMangime, livelloDellaRicetta, nomeDi, ULTIMO } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { guastiDellaScala, catenaMs, TETTO_ATTESA_MS } from '../../src/giochi/fattoria3d/motore/taratura.js'
-import { DISEGNI } from '../../src/giochi/fattoria3d/dati/carte.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { dettoDi } from '../../src/giochi/fattoria3d/scena3d/detti.js'
 import { dettaglioDi } from '../../src/giochi/fattoria3d/viste/inventario-puro.js'
@@ -74,7 +73,6 @@ const IDS = ['beverone', 'zuppa', 'zuppa_orto', 'pastura']
     uguale(`${t}: mangia quello che mangia in 2D`, JSON.stringify([A.mangia, A.pasti]), JSON.stringify([Object.keys(d.prende), Object.values(d.prende)[0]]))
     uguale(`${t}: dà il prodotto della 2D (il porcile: tartufi in 2D, pancetta in 3D)`, A.prodotto, t === 'porcile' ? 'pancetta' : d.da)
     controlla(`${t}: è un pezzo del catalogo, produttivo e di animali`, PEZZI[t] && PEZZI[t].produttivo === true && PEZZI[t].categoria === 'animali')
-    controlla(`${t}: ha il disegno d'atlante`, !!ATLANTE[DISEGNI[t]], DISEGNI[t])
     controlla(`${t}: tutto ciò che mangia lo fa il pentolone`, A.mangia.every(k => RICETTE[k] && RICETTE[k].dove === 'pentolone'))
     controlla(`${t}: il mangime c'è prima della bestia`, A.mangia.every(k => livelloDelMangime(k) <= PEZZI[t].liv))
     controlla(`${t}: ha un nome per il livello`, nomeDi(PEZZI[t].liv) !== `Livello ${PEZZI[t].liv}`)

@@ -20,13 +20,13 @@
 
    `node test/esegui.mjs fattoria-tipo --niente-build`
    ═══════════════════════════════════════════════════════════════════ */
-import { fattoriaTipo, LIVELLI_TIPO, LIVELLO_MAX } from '../../src/giochi/fattoria/motore/tipo.js'
-import { Fattoria } from '../../src/giochi/fattoria/motore/fattoria.js'
+import { fattoriaTipo, LIVELLI_TIPO, LIVELLO_MAX } from '../../src/giochi/fattoria3d/da2d/motore/tipo.js'
+import { Fattoria } from '../../src/giochi/fattoria3d/da2d/motore/fattoria.js'
 import { CATALOGO, PER_ID, piedeDi, eCampo, eMercato, eMongolfiera, macchinaDi }
-  from '../../src/giochi/fattoria/dati/catalogo.js'
-import { livelloDellaVoce, zonaDi } from '../../src/giochi/fattoria/dati/livelli.js'
-import { PER_RICETTA, SILI, siloDelProdotto } from '../../src/giochi/fattoria/dati/coltivazioni.js'
-import { chiave } from '../../src/giochi/fattoria/dati/mondo.js'
+  from '../../src/giochi/fattoria3d/da2d/dati/catalogo.js'
+import { livelloDellaVoce, zonaDi } from '../../src/giochi/fattoria3d/da2d/dati/livelli.js'
+import { PER_RICETTA, SILI, siloDelProdotto } from '../../src/giochi/fattoria3d/da2d/dati/coltivazioni.js'
+import { chiave } from '../../src/giochi/fattoria3d/da2d/dati/mondo.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const T0 = 1770000000000            // un'ora qualunque, fissa: niente Date.now()

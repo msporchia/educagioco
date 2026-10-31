@@ -1,18 +1,19 @@
-# Merci e ricette della fattoria 3D
+# Merci e ricette della fattoria
 
-Le merci della fattoria 3D (raccolti, prodotti delle macchine, uova e latte) **sono quelle della fattoria di sempre**:
-stesso nome, stessa faccia, stessi ingredienti. Prima la 3D aveva inventato le sue (popcorn, pane integrale, gelato alla
-lavanda…) e le disegnava con le emoji; la 2D ha una catena curata ([../fattoria/catena.md](../fattoria/catena.md),
-[macchine.md](../fattoria/macchine.md)) e un atlante di sprite. Qui le regole che le tengono allineate.
+Le merci della fattoria (raccolti, prodotti delle macchine, uova e latte) **sono quelle della fattoria 2D** (tolta il 31/10/2026, i
+dati in `da2d/dati/`): stesso nome, stessa faccia, stessi ingredienti. Prima la 3D aveva inventato le sue (popcorn, pane integrale,
+gelato alla lavanda…) e le disegnava con le emoji; la 2D aveva una catena curata ([catena.md](catena.md)) e un atlante di sprite
+(`src/grafica/atlante-fattoria.js`). Qui le regole che le tengono allineate.
 
 ## Una faccia per ogni merce
 
 - **Ogni merce dichiara il suo `pezzo` dell'atlante** nei dati 3D (`dati/colture.js`, `dati/ricette.js`, `PRODOTTI_ANIMALI`
   in `dati/animali.js`, dove il `pesce` di `dati/pesca.js` sta con uova e latte), e dove l'id coincide con uno di `PRODOTTI` (2D, `dati/coltivazioni.js`) è **lo stesso pezzo**. Un test
-  (`unita/fattoria3d-merci`) lo confronta con la 2D: nome e faccia di una merce comune non possono scostarsi.
-- **`viste/Faccia.vue`** disegna la merce (`k` = la chiave 3D) con `Provino.vue` della 2D, che non si tocca: la 3D importa la
-  vista e i dati dell'atlante, non mezza fattoria. L'**emoji è il ripiego dichiarato**: una merce senza `pezzo` ha `aspetta`
-  (il pezzo che un foglio futuro porterà), come in 2D ([../fattoria/sprite.md](../fattoria/sprite.md)). Oggi la parmigiana e la **pancetta** con i suoi tre piatti (qui sotto).
+  (`unita/fattoria3d-merci`) lo confronta coi dati 2D: nome e faccia di una merce comune non possono scostarsi.
+- **`viste/Faccia.vue`** disegna la merce (`k` = la chiave 3D) con `viste/Provino.vue` (la figura in scala della 2D) e l'atlante. Un'emoji
+  la disegna il telefono, non si tinge e in un riquadro piccolo non si distingue da un'altra della stessa tinta. L'**emoji è il ripiego
+  dichiarato**: una merce senza `pezzo` ha `aspetta` (il pezzo che un foglio futuro porterà), così una merce si aggiunge prima del suo
+  disegno; come si chiede un foglio: [../core/sprite.md](../core/sprite.md). Oggi la parmigiana e la **pancetta** con i suoi tre piatti (qui sotto).
 - **Deviazione dichiarata: la pancetta** (decisione dell'utente del 22/10/2026). Il maiale fa la `pancetta` 🥓 (2D: `tartufi` 🍄, tolto perché sembrava una cacca) e tre ricette **solo 3D** la usano: `uova_pancetta`, `panino_pancetta`, `ravioli_pancetta` (`dati/pancetta.js`, numeri provvisori; `solo3d`, `silo`, `premioCome`). Non hanno omonimo in 2D: i test di parità le escludono con `SOLO_3D` (`unita/fattoria3d-merci`) e `taratura.js` le salta. Dettagli in [cortile-e-pentolone.md](cortile-e-pentolone.md).
 - **Dove si vede**: il foglio dell'inventario (il HUD non mostra più scorte), i dischi del banco, ingredienti, ricette, posti (col nome della macchina: «Nel forno», «Al telaio»…) e pronti di ogni macchina, la scelta
   del seme, i fogli dei livelli, la cassa e il mercato dei vicini, il volo «+1» sopra la scena. Restano emoji i **testi**

@@ -1,8 +1,9 @@
 # Gli ordini: il banco della fattoria 3D
 
 Chi chiede i raccolti e i prodotti delle macchine. Dati in `dati/ordini.js`, regole pure in `motore/ordini.js`, il banco
-(i posti, `consegna`, `rifiuta`) nella `Fattoria3d`. Il modello è il mercato della fattoria di sempre
-([../fattoria/chi-chiede.md](../fattoria/chi-chiede.md)); qui le differenze.
+(i posti, `consegna`, `rifiuta`) nella `Fattoria3d`. Il modello è il mercato della fattoria 2D, da
+Hay Day: il banco è il camion (tanti ordini piccoli, sempre), le [botteghe](botteghe.md) i visitatori, la [mongolfiera](mongolfiera.md)
+la nave. Tutti pagano esperienza e mai monete ([regole.md](regole.md)).
 
 ## Le regole
 
@@ -26,28 +27,34 @@ Chi chiede i raccolti e i prodotti delle macchine. Dati in `dati/ordini.js`, reg
 - **Consegnare** (`consegna(idx)`) toglie la roba dalle scorte (`merci` o `prodotti`), dà esperienza, riempie subito il
   posto con un ordine nuovo. Se manca roba non cambia niente: `{ ok: false, motivo: 'mancano', mancano: { chiave: n } }`.
   Altri motivi: `banco-chiuso`, `sconosciuto` (posto vuoto o fuori numero).
-- **Rifiutare / cambiare** (`rifiuta(idx)`, `cambia` è lo stesso) è gratis ma il posto resta vuoto per tre minuti
-  (`RIPOSO_MS`): senza attesa si premerebbe finché esce l'ordine facile. L'attesa è sull'orologio (`ora()`), quindi vale
+- **Rifiutare / cambiare** (`rifiuta(idx)`, `cambia` è lo stesso) è gratis ma il posto resta vuoto per cinque minuti
+  (`RIPOSO_MS`, da `RIPOSO_MIN` della 2D): senza attesa si premerebbe finché esce l'ordine facile; cinque minuti sono un campo di grano,
+  quindi chi rifiuta torna a coltivare. L'attesa è sull'orologio (`ora()`), quindi vale
   anche a pagina chiusa.
 - **Un ordine non scade**: aspetta finché non si consegna o si rifiuta. Niente marcisce, niente si perde.
 - **Niente monete**: il verso è sempre monete → cose. Un ordine paga **esperienza** (la stessa della spesa: un salto di
   soglia manda l'evento `livello`, come comprare).
 
-## Il premio: si paga il tempo
+## Il premio: si paga il lavoro
+
+Il conto è quello della 2D (`premioPer`, `premioDelPezzo` di `da2d/dati/mercato.js`; `premioDi` in `dati/ordini.js` traduce gli id):
 
 ```
-minuti   = Σ quantità · ms(cosa) / 60000      ms di un raccolto = la sua maturazione
-tetto    = 6 · minuti                          ms di un prodotto = la ricetta + i suoi ingredienti, a catena
-premio   = max(1, floor(tetto · 0,5))
+⭐ di un pezzo  = PER_GESTO · gesti · (1 + BONUS_FASE · (fasi − 1))      PER_GESTO = 2 · BONUS_FASE = 0,2
+⭐ di un ordine = PREMIO_BASE + Σ pezzi                                  PREMIO_BASE = 6
 ```
 
-- **Il tetto è 🪙6 al minuto** ([calibrazione](../apprendimento/calibrazione.md): una moneta vale dieci secondi): un ordine
-  non rende mai più del tempo che costa. `guastiDegliOrdini()` e `unita/fattoria3d-ordini` lo tengono fermo.
-- **Si paga la metà del tetto** (`FRAZIONE_DEL_TETTO`): il tempo di un raccolto è contato una tessera alla volta, ma un campo
-  ne fa quattro e più campi crescono insieme, quindi il tempo vero è minore. Se la roba arriva troppo in fretta la leva è
-  questa frazione.
-- **La catena si paga da sola**: un prodotto conta anche il tempo degli ingredienti, così il pane integrale rende più
-  del grano che contiene. Il premio non ha un numero scritto: si ricalcola dai dati, anche per un ordine già salvato.
+`gestiDi` conta raccolti e lavorazioni lungo la strada più corta, `profonditaDi` le fasi.
+
+- **A parità di gesti la catena lunga rende di più** (da ⭐2 a ⭐4 per gesto). Provato `6 + 4·valoreDi`, cioè il costo in monete: un
+  raccolto costa 🪙1 e una lavorazione 🪙0–2, quindi trasformare quasi non contava, e la mossa giusta era rifiutare la torta e aspettare
+  il grano.
+- **Perché 2 e non 3**: a 3 un raccolto al banco rendeva il 20–30% in più, e con botteghe (+25%), mongolfiera e fila i livelli sarebbero
+  arrivati prima di aver giocato con quello che c'era. Se la roba nuova arriva troppo in fretta, la leva è `PER_GESTO`.
+- **Il tetto**: un ordine non rende mai più di 🪙6 per ogni minuto che costa produrlo ([calibrazione](../apprendimento/calibrazione.md):
+  una moneta vale dieci secondi). `guastiDegliOrdini()` e `unita/fattoria3d-ordini` lo tengono fermo. Il conto «metà del tetto»
+  (`FRAZIONE_DEL_TETTO`) di prima, coi tempi in minuti veri, avrebbe pagato una lasagna sei volte tanto.
+- Il premio non ha un numero scritto: si ricalcola dai dati, anche per un ordine già salvato.
 
 ## Lo stato (versione 3)
 

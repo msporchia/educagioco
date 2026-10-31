@@ -1,7 +1,7 @@
 # Le decorazioni in 3D
 
 Giri G8 e G9 della parità ([parita/mondo-e-stagioni.md](parita/mondo-e-stagioni.md) W7–W15; [parita/livelli-ed-economia.md](parita/livelli-ed-economia.md) L20):
-la 2D ha 217 decorazioni, la 3D ne aveva 11. Ora **206 voci in più** (130 nel G8, 76 nel G9), nove schede nuove del menu «Costruisci qui»: **tutte le decorazioni della 2D sono in 3D**.
+la 2D aveva 217 decorazioni, la 3D 11. Ora **206 voci in più** (130 nel G8, 76 nel G9), nove schede nuove del menu «Costruisci qui»: **tutte le decorazioni della 2D sono in 3D**.
 
 ## Cosa c'è
 
@@ -15,7 +15,7 @@ la 2D ha 217 decorazioni, la 3D ne aveva 11. Ora **206 voci in più** (130 nel G
 | 🌸 Fiori | 33 | fiorellino, germoglio, fiorellini, fiori bianchi, fioritura, prato fiorito (2×2); i vasi (fiorito, alto, azzurro, tulipani, margherite, lavanda, girasoli, rosa, a colonna, pianta); girasole a cuore, ortensie (blu, rosa), azalea; fioriere (tre), cassetta e cesti di fiori; carriola, bici, due carretti; palo e arco di rose, fiore appeso | `modelli-decori-fiori.js` |
 | 🪑 Arredo | 27 | quattro panche (la panca, di legno, bianca, a cuore), sedia, sdraio, amaca (3×1), altalena, dondolo (3×2), tavolino da tè, bancone, due casse, tre barili, due sacchi, posta, specchio, campanelle, girandola, mulinello (gira), palloncini, festone, lucine, paiolo | `modelli-decori-arredo.js` |
 | ⛲ Acqua | 7 | fontana grande (3×3), cantina, pozzo coperto, **mulino ad acqua** (3×3, sulla riva, la ruota gira), **ninfee** (due) e **canne** (sull'acqua) | `modelli-decori-acqua.js` |
-| 🎪 Feste | 9 | l'albero di Natale (solo da novembre al 6 gennaio) e le **otto della fiera**: bandierine, giostrina (gira), zucchero filato, lanterne, tiro al barattolo, girasole di legno, spaventapasseri in festa, palco della banda | `modelli-decori-feste.js` |
+| 🎪 Feste | 10 | l'albero di Natale e il pupazzo di neve (solo da novembre al 6 gennaio) e le **otto della fiera**: bandierine, giostrina (gira), zucchero filato, lanterne, tiro al barattolo, girasole di legno, spaventapasseri in festa, palco della banda | `modelli-decori-feste.js` |
 
 `modelli-decori-base.js` ha gli attrezzi comuni (il caso deterministico, sassi, ciuffi, ceste, cassette, **il motivo di ogni coltura**: lo stesso frutto
 disegna il cartello e la cassa; `filo`, `listello`, `botte`, `festoneFra` per aste, tavole, botti e catenarie; `luce` per ciò che «fa luce») e `decoro(id, costruisci)`, che mette il modello in cache e lo fonde; `modelli-decori.js` è il registro `DECORI_CREA`
@@ -36,7 +36,7 @@ disegna il cartello e la cassa; `filo`, `listello`, `botte`, `festoneFra` per as
 - **Il menu**: nove schede in più dopo «Decori» (`SCHEDE_DECORI`: Verde, Fiori, Recinti, Raccolto, Case, Arredo, Acqua, Bestiole, Feste), che scorrono di lato come le altre; le carte sono ordinate per livello, 38 al massimo (Raccolto), e il corpo scorre in verticale.
   **I pezzi dei primi giri restano dove erano** (Decori: aiuola, panchina, fontana, pozzo, spaventapasseri, tavolo, stagno, laghetto, zucche; il ponte fra le Strade): spostarli avrebbe riscritto test e abitudini. È una deviazione: «Fontana» sta in Decori e «Fontana grande» in Acqua.
   Una riga di `stile.css` per scheda dà il colore della piastrella. **La scheda Feste sparisce quando è vuota** (`visibile(k)` in `CostruisciQui.vue`): fuori stagione e senza regali non c'è.
-- **Le feste**: l'**albero di Natale** (`stagione: 'natale'`, 🪙24) si offre solo da novembre al 6 gennaio, come le zucche ([stagioni.md](stagioni.md)); comprato resta nel magazzino. Le zucche stanno in Decori (anche per i test); l'albero in Feste.
+- **Le feste**: l'**albero di Natale** (`stagione: 'natale'`, 🪙24) si offre solo da novembre al 6 gennaio, come le zucche ([stagioni.md](stagioni.md)); comprato resta nel magazzino. Così il **pupazzo di neve** (🪙8, solo 3D: `decoroSolo3D` in `catalogo.js`, modello in `modelli-feste.js`). Le zucche stanno in Decori (anche per i test); l'albero e il pupazzo in Feste.
 - **La fiera non si compra, si vince** (`fiera: true`): `compraPezzo` risponde `non-in-vendita`, la carta compare in «Feste» solo se ne hai una nel magazzino (`📦 ×N`), `roba()` non la conta come roba di un livello. Arriva dalla **sorpresa della mongolfiera**, che ora regala **solo una delle otto** (come in 2D), preferendo quelle che hai di meno ([mongolfiera.md](mongolfiera.md)).
 - **La migrazione** (`motore/migra.js`, `pezzoPer`): ogni decorazione 2D diventa il pezzo 3D con lo stesso id (la `recinto` di legno → `recinto_legno`). Il bocciolo resta l'aiuola; fontana grande, cantina,
   pozzo coperto, panche e tavolino da tè non sono più la fontana, il pozzo, la panchina e il tavolo piccoli: hanno il loro pezzo. Anche le voci della fiera.

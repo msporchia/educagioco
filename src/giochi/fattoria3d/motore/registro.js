@@ -10,7 +10,7 @@ export const MOSSE = [
   'compraEdificio', 'semina', 'raccogliTessera', 'ingrandisciSilo', 'costruisciMagazzino', 'abbatti', 'togliOstacolo', 'tosa', 'nutri', 'nutriBestie',
   'raccogliProdotti', 'compraBestia', 'compraPosto', 'avviaRicettaIn', 'ritiraDa', 'caricaCassa', 'partiMongolfiera', 'consegna',
   'rifiuta', 'consegnaBottega', 'rifiutaBottega', 'lanciaLenza', 'ritiraPesca',
-  'cura.compra', 'cura.nutri', 'cura.coccola', 'cura.carezza', 'cura.battezza', 'cura.sposta',
+  'cura.compra', 'cura.nutri', 'cura.coccola', 'cura.carezza', 'cura.battezza', 'cura.sposta', 'cura.vesti', 'cura.spoglia',
 ]
 const NOTE = new Set(MOSSE)
 // un acquisto che qui non va (la cella è presa, l'edificio c'è già): il pezzo pagato va nel magazzino, da mettere

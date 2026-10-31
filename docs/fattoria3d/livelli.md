@@ -1,6 +1,6 @@
-# I livelli della fattoria 3D
+# I livelli della fattoria
 
-**Dal 22/10/2026 sono quelli della fattoria di sempre** ([../fattoria/livelli.md](../fattoria/livelli.md)): 70 livelli, le stesse soglie, gli stessi
+**Dal 22/10/2026 sono quelli della fattoria 2D** (tolta il 31/10; i suoi dati stanno in `da2d/dati/`): 70 livelli, le stesse soglie, gli stessi
 prezzi, i tempi in minuti veri, il costo di un gesto, gli scomparti dei silos. La 3D non ha numeri suoi dove la 2D ne ha uno (decisioni D2, D9, D11,
 D13 e le eccezioni: [parita/decisioni.md](parita/decisioni.md) «Regola generale»). Il codice è `dati/livelli.js`; l'esperienza e i rifiuti stanno in
 `motore/fattoria3d.js`; il ponte con i dati 2D è **`dati/parita2d.js`** (foglia: importa solo dati 2D).
@@ -11,15 +11,17 @@ Chi scrive un pezzo, una coltura o una ricetta 3D dice solo **chi è nella 2D** 
 `COLTURA` (id singolare → id 2D), `RICETTA_DELLA_BESTIA` (pollaio → `uova`…). Da lì vengono `prezzo`, `liv`, `cresce` (rincaro per copia), `ms`
 (i minuti × 60 000), `costo` (🪙 a ogni avvio), `raccolta` (🪙 a campo), gli scomparti. Un id nuovo che la 2D non ha non si inventa: si dichiara
 solo 3D a mano (bacheca, passerella, molo, porticciolo). `unita/fattoria3d-parita` e `guastiDiParita()` (motore/taratura.js) confrontano **voce per
-voce**: se la 2D cambia un numero, il test dice quale.
+voce**: se un numero di `da2d/dati/` cambia, il test dice quale.
 
 ## L'esperienza
 
 - **È la spesa in monete fatta dentro questo gioco**: pezzi, lotti, edifici, strade, **e ora anche i gesti** (raccogliere un campo, avviare una ricetta,
   nutrire una bestia: 🪙0–2 come in 2D). Non gli spostamenti né il mettere via, e un rimborso non la riduce. Sta in `stato.esperienza` e **non scende mai**.
 - Le monete vengono solo dagli esercizi, quindi il livello è tempo di studio riletto; le consegne (banco, mongolfiera, vicini) danno esperienza, mai
-  monete. **Il premio di un ordine e di una cassa è quello della 2D** (`premioPer`/`premioDelPezzo` di `fattoria/dati/mercato.js`: 6 di base, 2 per gesto,
-  +20% per fase): col tempo in minuti il vecchio conto «metà del tempo a 🪙6/min» avrebbe pagato una lasagna 621 invece di 110.
+  monete: un mercato che non paga niente non è un mercato, e sommate il livello resta tempo. **Il premio di un ordine e di una cassa è quello della 2D**
+  (`premioPer`/`premioDelPezzo` di `da2d/dati/mercato.js`: 6 di base, 2 per gesto, +20% per fase): col tempo in minuti il vecchio conto «metà del tempo a
+  🪙6/min» avrebbe pagato una lasagna 621 invece di 110.
+- **Serve a non vendere duecento cose dal primo minuto**: nella 2D, in undici linguette, il campo che fa partire la catena stava in mezzo a novanta cespugli.
 
 ## Le soglie
 
@@ -27,7 +29,11 @@ voce**: se la 2D cambia un numero, il test dice quale.
   di esercizio), il 10 a 3867, il 70 a ~72500 (**~202 ore**, contando solo la spesa).
 - **Un solo ritocco, la pesca** ([sotto](#la-pesca-al-posto-della-peschiera)): `sogliaDi(l) = sogliaDi2D(l) + (l > 57 ? SCARTO_DELLA_PESCA : 0)`, con
   `SCARTO_DELLA_PESCA` = molo + porticciolo (102) − peschiera (360) = **−258**. Si ritara solo la parte alta della scala, di meno del 2%.
-- Un guasto verifica che il resto di ogni salto sia almeno `SOGLIA_B` (200) dopo aver comprato la roba produttiva del livello (`costoDelLivello`).
+- **Il passo è una formula, non una tabella**, così i livelli non finiscono mai: chi ha giocato per mesi ha ancora un gradino davanti.
+- **La roba di un livello non paga il livello dopo**: un guasto verifica che il resto di ogni salto sia almeno `SOGLIA_B` (200) dopo aver comprato la
+  roba produttiva del livello (`costoDelLivello`). Provato senza, nella 2D: si costruiva quello che era appena arrivato ed eri già al livello dopo, un
+  bersaglio che si sposta mentre lo si insegue.
+- **Nessun tappo** («per salire devi aver provato le ricette nuove»): chi accumula monete e le spende tutte insieme salta avanti, ed è una scelta sua.
 - Dopo l'ultimo livello (`ULTIMO` = 70) la formula continua e non si apre altro.
 
 ## La misura
@@ -57,7 +63,9 @@ parallelo, una macchina alla volta.
 
 Lo dicono le cose stesse: `liv` sul pezzo, sull'edificio, sulla coltura e sulla ricetta, **letto dalla 2D**; `roba(liv)` le raccoglie girando i dati veri.
 
-- **Una cosa produttiva per livello al massimo** (pezzo o edificio), più le decorazioni. Con i livelli della 2D resta vero: bancarella 2, mulino 4, fienile 6,
+- **Una cosa produttiva per livello al massimo** (pezzo o edificio), più le decorazioni: un livello che dà tre cose da costruire si paga da sé, e uno
+  che ne porta una è più divertente di un regalo enorme ogni tanto. Fra due cose che lavorano non passano più di cinque o sei livelli, se no chi ha
+  imparato la catena riceve solo decorazioni. Con i livelli della 2D resta vero: bancarella 2, mulino 4, fienile 6,
   trattore 8, pollaio 9, recinto 14, telaio 16, panificio 17, stalla 18, caseificio 20, pentolone 23, anatre 24, cucina 25, mongolfiera 26, porcile 28,
   zuccherificio 31, gelateria 34, pastificio 37, capre 40, sartoria 42, tintoria 55, pesca 57, friggitoria 58, sushi bar 62.
 - **Le colture** arrivano dove la 2D le apre: grano 1, carote 5, mais 11, erba medica 13, patate/cavolfiori 22, zucche 27, barbabietola 30, pomodori 33,
@@ -95,7 +103,7 @@ La 2D vende piazzole da 6×6 celle (🪙45 la prima oltre le nove, poi ×1,38); 
 Ogni merce ha il suo scomparto da **8 pezzi**; ingrandire un silo aggiunge 2 a **tutti** gli scomparti di quel silo (`dati/silos.js`, prezzo `40 + 130·ln(1+n)`: 🪙40, 130,
 185, 220…). I silos sono tre come in 2D (`terra`: i raccolti; `stalla`: lana, uova, latte, pancetta, pesce, mangimi; `bottega`: i prodotti finiti, la dispensa), e dal 30/10
 sono **edifici in mappa che crescono**, senza le 🪙120 × 3 dei silos 2D: si ingrandiscono toccandoli ([magazzini.md](magazzini.md)); il gettone dell'inventario dice `n/max`,
-rosso se pieno. Il perché dei numeri è in [../fattoria/campi-e-silos.md](../fattoria/campi-e-silos.md).
+rosso se pieno. Il perché dei numeri è in [magazzini.md](magazzini.md) «Perché gli scomparti».
 - **Uno scomparto pieno non si riempie: non si raccoglie e non si paga, il lavoro resta lì.** Un campo maturo con lo scomparto pieno non parte (`provaRaccolta`, controllato
   prima del gesto così il campo non resta a metà); le bestie pronte e le pecore da tosare aspettano (se ne ritirano quante ce ne stanno); una macchina ritira quanto entra
   e il resto resta fra i pronti (`ritiraDa` dice `pieno`); il pesce resta all'amo. Il rifiuto è `scomparto-pieno` (con `k` e `max`): «🌾 Grano: lo scomparto è pieno (8). Usa un

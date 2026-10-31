@@ -97,7 +97,7 @@ const ALLA_VOLTA = Number(argomenti.find(a => a.startsWith('--alla-volta='))?.sl
 const strette = ALLA_VOLTA === CORSIE && CORSIE === PER_MEMORIA && CORSIE < 8
 
 /* Un test può chiedersi più tempo scrivendo `tempo: 900` fra i primi
-   commenti: le simulazioni lunghe sono legittime, purché lo dichiarino.
+   commenti (i primi 4000 caratteri: con 1200 le teste lunghe lo perdevano): le simulazioni lunghe sono legittime, purché lo dichiarino.
    Chi non dice niente ha il tempo normale, e se sfora è rotto.
 
    La riga dev'essere SOLO `tempo:` (a parte spazi davanti): una
@@ -107,7 +107,7 @@ const strette = ALLA_VOLTA === CORSIE && CORSIE === PER_MEMORIA && CORSIE < 8
    commento — è già successo con "...perde tempo:\n\n  1. il grafo..."
    che veniva letto come "tempo: 1". */
 function tempoDichiarato(file) {
-  const testa = readFileSync(file, 'utf8').slice(0, 1200)
+  const testa = readFileSync(file, 'utf8').slice(0, 4000)
   const m = /^[ \t]*tempo:\s*(\d{1,4})/m.exec(testa)
   return m ? Number(m[1]) : 0
 }

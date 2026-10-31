@@ -81,7 +81,7 @@ EXTRA_DOC = """
               e una tabella sola per tutte le specie metteva il
               cappello a metà collo a uno dei due. Chi non lo dichiara
               non compare, e il gioco ripiega sulla sua tabella
-              (`fattoria/dati/animali.js`).
+              (`fattoria3d/da2d/dati/animali.js`).
 """
 
 CODA = """
@@ -102,7 +102,7 @@ export const AGGANCI = {agganci}
 
    ⚠ `pezzoAttore` torna **le coordinate** — `[x, y, largo, alto]` — e
    `fotogrammi` torna **quanti sono**, un numero. Sono i due contratti
-   che questo atlante ha sempre avuto e che `fattoria/scena/tela.js`
+   che questo atlante ha sempre avuto e che `passo-passo/scena/tela.js`
    passa dritti a `drawImage`. Cambiarli in nomi e in elenchi è già
    costato una fattoria senza più nessuno dentro: `drawImage` con un
    argomento non finito, per specifica, torna senza disegnare **e senza

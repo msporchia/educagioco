@@ -10,26 +10,11 @@
   "fondo": "trasparente",
   "tipo": "persona",
   "sprite": {
-    "bimbo_giu": {
+    "bimbo_giu0": {
       "da": [
         0,
         0
-      ],
-      "quanti": 4
-    },
-    "bimbo_lato": {
-      "da": [
-        0,
-        1
-      ],
-      "quanti": 4
-    },
-    "bimbo_su": {
-      "da": [
-        0,
-        2
-      ],
-      "quanti": 4
+      ]
     }
   },
   "copie": {

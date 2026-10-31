@@ -45,7 +45,7 @@ const vista = ref('mappa')            // mappa | campo
 const tappaIdx = ref(-1)              // -1 = gioco libero
 const partita = shallowRef(null)      // il motore: NON reattivo dentro
 const cruscotto = ref(vuoto())
-const offerta = ref(null)             // le tre carte, a livello appena salito
+const offerta = ref(null)             // le carte, a livello appena salito
 const domanda = ref(null)             // la domanda che paga la carta scelta
 const finale = ref(null)
 const brindisi = ref('')
@@ -72,7 +72,7 @@ const libera = computed(() => tappaIdx.value < 0)
 const regoleOra = computed(() => libera.value ? LIBERO : CAMPAGNA[tappaIdx.value] || CAMPAGNA[0])
 const veste = computed(() => scenario(regoleOra.value.scenario))
 
-// dove il gioco scorre davvero: le tre carte, la domanda e il cartello
+// dove il gioco scorre davvero: le carte, la domanda e il cartello
 // finale sono già veli sopra una partita ferma
 const siGioca = computed(() => vista.value === 'campo'
   && !offerta.value && !domanda.value && !finale.value)

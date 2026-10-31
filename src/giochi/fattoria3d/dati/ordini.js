@@ -1,6 +1,6 @@
 /* Chi chiede: il banco della bancarella e i suoi ordini (dato puro; le regole stanno in motore/ordini.js).
    Niente si vende: un ordine consegnato paga ESPERIENZA, mai monete, e mai più del tempo che costa (🪙6 al minuto). Il premio è quello della 2D
-   (`premioPer` di src/giochi/fattoria/dati/mercato.js: 6 di base e 2 per ogni gesto, più il 20% per fase): con i tempi in minuti veri il conto
+   (`premioPer` di src/giochi/fattoria3d/da2d/dati/mercato.js: 6 di base e 2 per ogni gesto, più il 20% per fase): con i tempi in minuti veri il conto
    «metà del tempo» di prima avrebbe pagato sei volte tanto una lasagna, e le consegne avrebbero mangiato la scala dei livelli.
    Non c'è un elenco di ordini: si compongono da colture e ricette vere (`livello` dice cosa si può chiedere).
    Vedi docs/fattoria3d/ordini.md. */
@@ -9,7 +9,7 @@ import { RICETTE } from './ricette.js'
 import { PRODOTTI_ANIMALI, LANA, msDelProdotto } from './animali.js'
 import { livelloDellaColtura, livelloDellaRicetta } from './livelli.js'
 import { sullaScalaDellaDueD, RIPOSO_MIN, msDaMinuti, coltura2d } from './parita2d.js'
-import { premioPer as premioPer2D, premioDelPezzo as premioDelPezzo2D } from '../../fattoria/dati/mercato.js'
+import { premioPer as premioPer2D, premioDelPezzo as premioDelPezzo2D } from '../da2d/dati/mercato.js'
 
 // Il paese: chi passa al banco. Nessuno chiede una cosa sola per mestiere: il banco è per tutti.
 export const CLIENTI = [
@@ -73,7 +73,7 @@ export const tipoDelOrdine = chiede => {
 /** Da che livello si può chiedere: il più alto fra le cose chieste (e almeno il banco). */
 export const livelloDelOrdine = chiede => Math.max(LIVELLO_BANCO, ...Object.keys(chiede).map(livelloDi))
 
-/** La veterinaria (C32): è l'unica che chiede il mangime, come in 2D (`vuole` di src/giochi/fattoria/dati/mercato.js: mangime, pastone, becchime,
+/** La veterinaria (C32): è l'unica che chiede il mangime, come in 2D (`vuole` di src/giochi/fattoria3d/da2d/dati/mercato.js: mangime, pastone, becchime,
     foraggio, beverone, pastura). In 3D i nomi sono quelli del cortile: il mangime del mulino, la pappa di mais, becchime e foraggio del fienile,
     verdure lesse, pastone e verdura fresca del pentolone. Gli altri clienti non li chiedono mai (`chiedibili`). */
 export const VETERINARIA_VUOLE = ['mangime', 'pastone', 'becchime', 'foraggio', 'beverone', 'zuppa', 'pastura']

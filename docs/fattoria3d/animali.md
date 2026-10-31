@@ -3,14 +3,14 @@
 Seconda filiera della fattoria 3D, accanto alle pecore: il **pollaio** (galline → uova) e la **stalla** (mucche → latte).
 Le bestie di tutti e tre i pezzi (anche le pecore del recinto) si comprano allo stesso modo, dal cartello sopra l'edificio.
 I numeri sono in `dati/animali.js`, le regole in `motore/fattoria3d.js` (sezione «gli animali da cortile»), il disegno in
-`scena3d/modelli.js` (`creaPollaio`, `creaStalla`, `creaGallina`, `creaMucca`). Ispirati alle bestie della fattoria di
-sempre ([../fattoria/animali.md](../fattoria/animali.md)) ma più semplici delle pecore: niente nascite, niente fasi di crescita.
+`scena3d/modelli.js` (`creaPollaio`, `creaStalla`, `creaGallina`, `creaMucca`). Ispirati ai recinti della fattoria
+2D ([catena.md](catena.md)) ma più semplici delle pecore: niente nascite, niente fasi di crescita.
 
 ## Le regole
 
 - **Due pezzi del catalogo**, piazzabili liberamente nel terreno proprio come il recinto: `pollaio` 3×2 (🪙55, livello 5) e
   `stalla` 4×3 (🪙90, livello 9), produttivi (il loro prezzo si somma al salto di livello), rincaro 0.
-- **Una bestia è nel prezzo** e parte con fame. Nutrirla costa **mangime**, quello della fattoria di sempre
+- **Una bestia è nel prezzo** e parte con fame. Nutrirla costa **mangime**, quello della fattoria 2D
   ([mangime-e-catena.md](mangime-e-catena.md)): la gallina **2 becchimi**, la mucca **2 foraggi** (li fa il fienile da grano e carote), non un raccolto qualsiasi. Dopo `ms` la bestia ha il suo prodotto: 25 s per un
   uovo, 40 s per un latte (da prova).
 - **Il prodotto aspetta**: una bestia pronta non ne fa un altro, non lo perde, non marcisce; anche a pagina chiusa conta
@@ -33,7 +33,7 @@ sempre ([../fattoria/animali.md](../fattoria/animali.md)) ma più semplici delle
 (`livelloDellaRicetta` lo sa), e per il premio degli ordini valgono il loro tempo più il mangime che mangiano
 (`msDelProdotto`: 113 s un uovo, 98 s un latte; il conto è `lavoroDelMangime`, due pasti di becchime o di foraggio). Ognuno ha la sua faccia nell'atlante (`pezzo`: `merce_uova`, `latte`).
 
-Le ricette sono quelle della fattoria di sempre ([merci-e-ricette.md](merci-e-ricette.md)):
+Le ricette sono quelle della fattoria 2D ([merci-e-ricette.md](merci-e-ricette.md)):
 
 | ricetta | macchina | ingredienti | livello |
 |---|---|---|---|

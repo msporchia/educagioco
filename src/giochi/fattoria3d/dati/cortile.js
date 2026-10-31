@@ -2,7 +2,7 @@
    (docs/fattoria3d/parita/). Dal giro G3 livelli, prezzi e tempi sono quelli della 2D (dati/parita2d.js: pentolone 23, stagno delle anatre 24,
    porcile 28, capre 40; il tempo di una bestia è la sua ricetta, uova d'anatra 6 min, pancetta 20, latte di capra 12). Restano solo 3D le
    capienze e il prezzo delle singole bestie dentro il recinto (`posti`, `prezzoBestia`, `rincaroBestia`): nella 2D non esistono (c'è la fila di
-   un posto per macchina). Tutto il resto (id, ingredienti, quantità, cosa mangia chi) è quello della 2D (`src/giochi/fattoria/dati/coltivazioni.js`).
+   un posto per macchina). Tutto il resto (id, ingredienti, quantità, cosa mangia chi) è quello della 2D (`src/giochi/fattoria3d/da2d/dati/coltivazioni.js`).
    Importa solo `parita2d.js`: `mangime.js`, `animali.js`, `catalogo.js` e `ricette.js` leggono da qui. Vedi docs/fattoria3d/cortile-e-pentolone.md. */
 import { numeriRicetta as N, prezzoDa2D, livelloDa2D, crescitaDa2D, bestia2d, msDaMinuti } from './parita2d.js'
 

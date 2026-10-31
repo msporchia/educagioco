@@ -167,10 +167,13 @@ function costruisciContadino (arg = 'contadino') {
     cil(testa, 0.19, 0.21, 0.13, cm, 0, 0.43, 0, 14)
     cil(testa, 0.212, 0.214, 0.035, mat(scurisci(cap.c, 0.6)), 0, 0.395, 0, 14)
   } else if (cap.forma === 'fascia') {
-    cil(testa, 0.19, 0.19, 0.045, cm, 0, 0.385, 0, 14)
-    const fiore = mat(0xfff2f6), cuore = mat(0xe8b94a)
-    for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; sfera(testa, 0.032, fiore, -0.12 + Math.cos(a) * 0.04 * 0.8, 0.405 + Math.sin(a) * 0.04, 0.15 + Math.cos(a) * 0.04 * 0.6) }
-    sfera(testa, 0.025, cuore, -0.125, 0.405, 0.165)
+    // un cerchietto sottile da un orecchio all'altro sopra i capelli, piegato verso la fronte, col fiore di lato (un disco attorno alla testa
+    // sembrava un berretto)
+    const arco = perno(testa, 0, 0.23, -0.03); arco.rotation.x = 0.12
+    pezzo(arco, G('fascia', () => new THREE.TorusGeometry(0.262, 0.024, 6, 20, Math.PI - 0.5)), cm, 0, 0, 0).rotation.z = 0.25
+    const fiore = mat(0xfff2f6), cuore = mat(0xe8b94a), fx = 0.262 * Math.cos(2.35), fy = 0.262 * Math.sin(2.35)
+    for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; sfera(arco, 0.034, fiore, fx + Math.cos(a) * 0.045, fy + Math.sin(a) * 0.045, 0.03) }
+    sfera(arco, 0.028, cuore, fx, fy, 0.05)
   } else if (cap.forma === 'cowboy') {
     cil(testa, 0.4, 0.4, 0.025, cm, 0, 0.38, 0, 16)
     cil(testa, 0.15, 0.2, 0.2, cm, 0, 0.49, 0, 12)

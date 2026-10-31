@@ -1,7 +1,6 @@
 # Parità: interfaccia, guida, genitori
 
-Legenda in [README.md](README.md). 2D: [../../fattoria/come-si-tocca.md](../../fattoria/come-si-tocca.md), [baule.md](../../fattoria/baule.md),
-[pagina-albero.md](../../fattoria/pagina-albero.md), [regole.md](../../fattoria/regole.md) «Come si dice di no». Comuni:
+Legenda in [README.md](README.md). 2D: il gioco è tolto, le sue regole del «no» stanno in [../regole.md](../regole.md) «Come si dice di no». Comuni:
 [../../core/guida.md](../../core/guida.md), [../../core/il-dito.md](../../core/il-dito.md), [../../core/ripresa.md](../../core/ripresa.md).
 
 ## Guida e aiuto (S6)
@@ -24,9 +23,9 @@ Legenda in [README.md](README.md). 2D: [../../fattoria/come-si-tocca.md](../../f
 | I9 | semina/raccolta a strisciata | seme e cesto trascinati su più campi | ✅ armare e passare sui campi | – |
 | I10 | il baule in tre metà e lo scaffale che scorre | sì | 🟡 «Costruisci qui» a 5 schede con anteprime 3D | – |
 | I11 | il magazzino (pezzi messi via) | baule | ✅ `magazzino`, gratis rimetterli | – |
-| I12 | soglie del dito (16 px, click fantasma, 420 ms) | `scena/dito.js` | ✅ in `scena3d/dito.js`; **non provato su un telefono** | P1 |
+| I12 | soglie del dito (16 px, click fantasma, 420 ms) | `scena/dito.js` (le soglie ora in `viste/dito-soglie.js`) | ✅ in `scena3d/dito.js`; **non provato su un telefono** | P1 |
 | I13 | fogli con la ✕ in alto a destra | sì | ✅ | – |
-| I14 | home: carta, riassunto, traguardi dell'albo | `gioco.js` | ✅ riassunto e 10 traguardi (la 2D ne ha 7): stesse soglie dove il gesto è lo stesso (terre, posati/pezzi, varietà `[8,20,32]` come primato, ordini), soglie sue dove il conto è diverso (raccolti a tessere: ×~7). «Sgomberi» = `f3d-alberi`; **«Che eleganza» (vestiti) tolto: in 3D il guardaroba è del contadino, le bestie non si vestono** ([animali.md](animali.md)). Contatori `fattoria3d*` con `segna()`/`segnaBest()` in `Gioco.vue`, niente campi nuovi nel profilo | – |
+| I14 | home: carta, riassunto, traguardi dell'albo | `gioco.js` | ✅ riassunto e 10 traguardi (la 2D ne ha 7): stesse soglie dove il gesto è lo stesso (terre, posati/pezzi, varietà `[8,20,32]` come primato, ordini), soglie sue dove il conto è diverso (raccolti a tessere: ×~7). «Sgomberi» = `f3d-alberi`; «Che eleganza» c'è anche in 3D da quando le bestie si vestono (`fattoria3dVestiti`, [../addobbi.md](../addobbi.md)). Contatori `fattoria3d*` con `segna()`/`segnaBest()` in `Gioco.vue`, niente campi nuovi nel profilo | – |
 | I15 | ripresa / sosta | il mondo si salva da sé ([../../core/ripresa.md](../../core/ripresa.md)) | ✅ lo stesso (`posto: true`) | – |
 | I16 | **pausa** | assente di proposito | assente | n/a |
 
@@ -34,10 +33,10 @@ Legenda in [README.md](README.md). 2D: [../../fattoria/come-si-tocca.md](../../f
 
 | id | cosa | 2D | 3D | pri |
 |---|---|---|---|---|
-| I17 | «Ricomincia la fattoria di …» (`GenitoriView`, `cestinaOra('fattoria')`, `azzeraCampagna`) | sì, con cestino | ✅ azzera anche `fattoria3d` (stato e vicini), con la stessa copia nel cestino; la carta compare se uno dei due giochi è stato aperto | – |
-| I18 | interruttori dei grandi (in prova, «In casa» a tre posizioni, tempo, domande) | la 2D non è in prova: è un `posto` (non si spegne per età) | ✅ già fatto, niente da aggiungere: `sperimentale: true` la nasconde finché i giochi in prova sono spenti ([../../genitori/interruttori.md](../../genitori/interruttori.md) §3), e in `Giochi › La fattoria 3D` c'è la stessa tendina «In casa», il tempo e «Cosa si impara» (`cosa-insegna.js`) della 2D. **Uscire dalla prova** vuol dire togliere `sperimentale: true` dal manifesto (`gioco.js`): da quel giorno compare per tutti come la 2D, la riga «è un gioco in prova» sparisce da sé, e un bambino che l'ha già aperta la tiene comunque. Non si fa prima di G10 | uscire dalla prova (G10) |
-| I19 | il quadro dei genitori / «Come va» | `posto: true`: non si giudica per età, non paga monete (`paga()` in `data/varieta.js`), il tempo è per vista | ✅ verificato: la 3D è `posto: true` e passa dagli stessi filtri generici (`data/quadro.js` la mostra solo con i giochi in prova accesi; sessioni per chiave `fattoria3d`; nessun codice la nomina). Niente di suo da mostrare: livello e cosa ha costruito stanno nella carta di home (`riassunto`) e nell'albo, come per la 2D | – |
-| I20 | le novità per i bambini | righe 6, 7, 8, 24, 29 | ❌ «un gioco in prova non la vuole» ([../../genitori/novita-bambini.md](../../genitori/novita-bambini.md)). **Al giorno del cambio** (uscita dalla prova, G10) servono, proposte e mai scritte prima: (1) una riga «🚜 C'è la fattoria in 3D: girala col trattore!» (2) se la migrazione converte la 2D, una riga che dice che la sua fattoria c'è ancora, nuova (D1); (3) niente righe per i traguardi, dentro l'albo. Si propongono a fine lavoro, si aggiungono solo dopo il sì | P1 |
+| I17 | «Ricomincia la fattoria di …» (`GenitoriView`, `cestinaOra('fattoria')`, `azzeraCampagna`) | sì, con cestino | ✅ azzera la 3D (stato e vicini) e la 2D salvata insieme, con la copia nel cestino; accanto c'è «Riconverti», che la rifà dalla 2D ([../../genitori/giochi.md](../../genitori/giochi.md)) | – |
+| I18 | interruttori dei grandi (in prova, «In casa» a tre posizioni, tempo, domande) | la 2D non era in prova: un `posto` (non si spegne per età) | ✅ **fuori dalla prova dal 31/10/2026** (`sperimentale` tolto dal manifesto, `gioco.js`): compare per tutti come la 2D; in `Giochi › La fattoria` la tendina «In casa», il tempo e «Cosa si impara» (`cosa-insegna.js`) ([../../genitori/interruttori.md](../../genitori/interruttori.md)) | – |
+| I19 | il quadro dei genitori / «Come va» | `posto: true`: non si giudica per età, non paga monete (`paga()` in `data/varieta.js`), il tempo è per vista | ✅ verificato: la 3D è `posto: true` e passa dagli stessi filtri generici (sessioni per chiave `fattoria3d`; nessun codice la nomina). Niente di suo da mostrare: livello e cosa ha costruito stanno nella carta di home (`riassunto`) e nell'albo, come per la 2D | – |
+| I20 | le novità per i bambini | righe 6, 7, 8, 24, 29 | 🟡 finché era in prova niente righe (D16); al cambio del 31/10 una riga si **propone** a fine lavoro e si scrive solo dopo il sì ([../../genitori/novita-bambini.md](../../genitori/novita-bambini.md)); niente righe per i traguardi, stanno nell'albo | – |
 | I21 | la guida in app per i grandi | – | – | – |
 
 ## Cheat di indirizzo
@@ -45,7 +44,7 @@ Legenda in [README.md](README.md). 2D: [../../fattoria/come-si-tocca.md](../../f
 | id | cosa | 2D | 3D | pri |
 |---|---|---|---|---|
 | I22 | alzare il livello (`#fattoria=40`) | sì | ✅ `#fattoria3d=N` (alza, non abbassa mai; `Gioco.vue`, `cheatDellIndirizzo`) | – |
-| I23 | una fattoria già giocata di quel livello (`#fattoria-tipo=30`, `motore/tipo.js`) | sì: la fattoria sta in piedi a ogni livello (test) | ✅ `#fattoria3d-tipo=N` (1–99, `motore/tipo.js`, test `unita/fattoria3d-tipo`); butta quella del bambino attivo nel cestino | – |
+| I23 | una fattoria già giocata di quel livello (`#fattoria-tipo=30`, `motore/tipo.js`) | sì: la fattoria sta in piedi a ogni livello (test) | ✅ `#fattoria3d-tipo=N` (1–99, `motore/tipo.js`, test `unita/fattoria3d-tipo`); `#fattoria-tipo=N` scrive una 2D già giocata (`da2d/motore/tipo.js`) e la fa convertire ([migrazione.md](migrazione.md)). Tutti e due buttano la fattoria del bambino attivo nel cestino | – |
 | I24 | `#stagione=` | sì | ✅ `#stagione=natale|halloween` (`dati/stagioni3d.js`, [../stagioni.md](../stagioni.md)) | – |
 | I25 | `#fattoria3d&tela=niente` | – | ✅ prova il messaggio senza WebGL | – |
 
@@ -61,7 +60,7 @@ Il cheat 3D va nella pagina `#admin` accanto agli altri e in [../../core/comandi
 
 | id | cosa | 2D | 3D | pri |
 |---|---|---|---|---|
-| I27 | figure al posto delle frasi | faccia disegnata per ogni merce (atlante) | ✅ `Faccia.vue` con l'atlante 2D; i testi restano emoji | – |
+| I27 | figure al posto delle frasi | faccia disegnata per ogni merce (atlante) | ✅ `Faccia.vue` con l'atlante (`src/grafica/atlante-fattoria.js`); i testi restano emoji | – |
 | I28 | `portata` e età: i giochi senza campagna non si giudicano | `posto: true` | ✅ | – |
 | I29 | testi da leggere a 4–6 anni | pochi, figure grandi | 🟡 il banco ha dettagli in testo; da verificare con un bambino piccolo | P1 |
 | I30 | 44 px minimi di tocco | `MINIMO_TOCCO` | da verificare su 360 px (bacheca, macchina, mongolfiera mai guardate) | P1 |

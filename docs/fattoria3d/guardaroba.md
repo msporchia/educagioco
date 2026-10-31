@@ -6,7 +6,7 @@ nome interno, **mai** una stringa che si legge. Vale per i testi a schermo, gli 
 
 ## Chi si è: il genere viene dal profilo
 
-Come nella fattoria di sempre: il personaggio scelto dal bambino (`aspettoDi()` in `store/profile.js`, `'bambina' | 'bimbo'`; la scelta
+Come nella fattoria 2D: il personaggio scelto dal bambino (`aspettoDi()` in `store/profile.js`, `'bambina' | 'bimbo'`; la scelta
 è `components/SceltaAspetto.vue`) decide **contadina** o **contadino** (`personaDi(aspetto)`). Non si salva niente nella fattoria 3D: si
 rilegge a ogni apertura, quindi cambiare personaggio altrove cambia anche qui. Il guardaroba ha la stessa scelta (`SceltaAspetto`, che
 chiama `scegliAspetto`): cambiare lì cambia anche la fattoria 2D. Un valore sconosciuto ripiega su `ASPETTO_ERO` (`dati/compagni.js`).
@@ -30,7 +30,7 @@ Cambiando personaggio i capi compatibili (cappello, pantalone, stivali, collo, p
 
 | categoria | scelte | di serie (lui / lei) |
 |---|---|---|
-| cappello | paglia, berretto, tesa larga, **fascia e fiore** (lei), cowboy (liv 6), nessuno | paglia |
+| cappello | paglia, berretto, tesa larga, **fascia e fiore** (lei: un cerchietto sottile sopra i capelli col fiore di lato; un disco attorno alla testa sembrava un berretto), cowboy (liv 6), nessuno | paglia |
 | maglia | lui: a quadri, blu, maglione, gilet da festa (liv 10); lei: camicetta, a pois, grembiule, abito da festa (liv 10) | quadri / camicetta |
 | pantalone | blu, verde, marrone, rosso, giallo: **salopette** (lui) o **gonna** (lei) | blu |
 | stivali | marroni, gialli, rossi, verdi, neri, dorati (liv 12) | marroni |

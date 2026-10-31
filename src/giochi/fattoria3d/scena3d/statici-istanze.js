@@ -11,7 +11,7 @@ import { segna } from '../../../grafica/elementi3d.js'
 
 /** I tipi che si adottano: pezzi fermi, uguali a ogni copia (si aggiunge un tipo qui e basta: i controlli sono in `adotta`). I fiori e l'arredo (W8, W12) si
     ripetono più di ogni altra decorazione: ogni copia di uno stesso id è una draw call sola. Quelli che si muovono (il mulinello) non entrano: `adotta` li rifiuta da sé. */
-export const STATICI = new Set(['aiuola', 'panchina', 'pozzo', 'bancarella', 'ponte', 'passerella', 'tavolo', 'molo', 'molo_v', 'trattore', 'zucca_intagliata', 'zucche_mucchio',
+export const STATICI = new Set(['aiuola', 'panchina', 'pozzo', 'bancarella', 'ponte', 'passerella', 'tavolo', 'molo', 'molo_v', 'trattore', 'zucca_intagliata', 'zucche_mucchio', 'pupazzo_neve',
   ...Object.entries(PEZZI).filter(([, p]) => p.decoro && (p.categoria === 'fiori' || p.categoria === 'arredo')).map(([id]) => id)])
 
 const REL = new THREE.Matrix4(), W = new THREE.Matrix4(), SFERA = new THREE.Sphere(), SC = new THREE.Vector3()

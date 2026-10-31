@@ -1,7 +1,7 @@
 # La mongolfiera: la nave
 
-Un ordine grosso che si riempie un po' alla volta, come la nave di Hay Day e come la mongolfiera della fattoria di sempre
-([../fattoria/chi-chiede.md](../fattoria/chi-chiede.md), «La mongolfiera»). Prima era un segnaposto: si caricavano 2 raccolti, dopo 14 s
+Un ordine grosso che si riempie un po' alla volta, come la nave di Hay Day e come la mongolfiera della fattoria 2D, di cui legge i
+numeri (`da2d/dati/mongolfiera.js`). Un pallone che scende dal cielo si nota in un modo in cui un carro fermo no. Prima era un segnaposto: si caricavano 2 raccolti, dopo 14 s
 tornava una cassa che dava `+2 🧶`, e nessuno capiva a cosa servisse. Ora ha un mestiere suo, diverso dal banco: il banco
 ([ordini.md](ordini.md)) è il camion (tanti ordini piccoli, sempre), la mongolfiera è la nave (un carico grande che non ha fretta).
 Dati in `dati/mongolfiera.js`, regole in `motore/mongolfiera.js`, il foglio in `viste/Mongolfiera.vue` (stile `stile-mongolfiera.css`).
@@ -33,13 +33,13 @@ Dati in `dati/mongolfiera.js`, regole in `motore/mongolfiera.js`, il foglio in `
 ## Il premio: esperienza ⭐, mai monete
 
 ```
-cassa    = premioDi({ merce: pezzi })        quello che renderebbero gli stessi pezzi al banco: metà del tetto di 🪙6/min
+cassa    = premioDi({ merce: pezzi })        quello che renderebbero gli stessi pezzi al banco (il conto della 2D, ordini.md)
 fila     = Σ casse + 25% di quelle casse     (arrotondato)
 tutto    = Σ casse + 25% per fila + 50% di tutte le casse
 ```
 
 - **Il tetto è lo stesso del banco** ([ordini.md](ordini.md), «Il premio»): un carico non rende mai più di 🪙6 per ogni minuto che costa farne la roba.
-  Con tutti e due i bonus un carico rende al massimo il 87,5% del tetto (`0,5 · 1,75`). `guastiDellaMongolfiera()` lo controlla merce per merce sul caso
+  `guastiDellaMongolfiera()` lo controlla merce per merce sul caso
   peggiore (una fila di tre casse da tre pezzi, tutti i bonus) e `unita/fattoria3d-mongolfiera` su ogni livello, dal 10 all'ultimo.
 - **Il bonus è esperienza** (`_guadagna`, con l'evento `livello` se si sale): niente monete, come tutto ciò che si consegna nella 3D. Le monete si guadagnano
   esercitandosi; qui l'unico modo di averne dalla mongolfiera è il traguardo dell'albo (sotto).

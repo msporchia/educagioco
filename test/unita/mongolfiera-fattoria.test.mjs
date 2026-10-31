@@ -1,6 +1,6 @@
 /* LA MONGOLFIERA DELLA FATTORIA, SENZA BROWSER
 
-   Le cose che questo file difende (`docs/fattoria/chi-chiede.md`):
+   Le cose che questo file difende (`docs/fattoria3d/mongolfiera.md`):
      1. **si chiede solo roba lavorata e ottenibile adesso** — due fasi
         o più, una merce diversa per fila, controllato a ogni livello
         da quando la mongolfiera arriva;
@@ -14,22 +14,22 @@
      6. **al 66 il pallone è più grande**;
      7. **una fattoria di ieri si riapre senza rompersi**.
    `node test/esegui.mjs mongolfiera --niente-build` */
-import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria/motore/fattoria.js'
+import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria3d/da2d/motore/fattoria.js'
 import {
   SORPRESE, mongolfieraIn, merciDaCassa, componiLaMongolfiera, aggiornaLaMongolfiera,
   caricaLaCassa, parti, minutiAlProssimo, qualcosaDaCaricare, naveDi, aTerra,
   scegliLaSorpresa,
-} from '../../src/giochi/fattoria/motore/mongolfiera.js'
-import { merciOrdinabili } from '../../src/giochi/fattoria/motore/mercato.js'
+} from '../../src/giochi/fattoria3d/da2d/motore/mongolfiera.js'
+import { merciOrdinabili } from '../../src/giochi/fattoria3d/da2d/motore/mercato.js'
 import {
   guastiDellaMongolfiera, FILE, FILE_GRANDE, LIVELLO_GRANDE, CASSE_MIN, CASSE_MAX,
   PEZZI_MIN, PEZZI_MAX, CIELO_VUOTO_MIN, BONUS_FILA, BONUS_TUTTO, fileAl,
-} from '../../src/giochi/fattoria/dati/mongolfiera.js'
-import { premioDelPezzo } from '../../src/giochi/fattoria/dati/mercato.js'
-import { profonditaDi, PRODOTTI } from '../../src/giochi/fattoria/dati/coltivazioni.js'
-import { PER_ID, guastiDelCatalogo } from '../../src/giochi/fattoria/dati/catalogo.js'
+} from '../../src/giochi/fattoria3d/da2d/dati/mongolfiera.js'
+import { premioDelPezzo } from '../../src/giochi/fattoria3d/da2d/dati/mercato.js'
+import { profonditaDi, PRODOTTI } from '../../src/giochi/fattoria3d/da2d/dati/coltivazioni.js'
+import { PER_ID, guastiDelCatalogo } from '../../src/giochi/fattoria3d/da2d/dati/catalogo.js'
 import { ULTIMO, sogliaDi, premiDi, roba, livelloDellaVoce }
-  from '../../src/giochi/fattoria/dati/livelli.js'
+  from '../../src/giochi/fattoria3d/da2d/dati/livelli.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const MINUTO = 60000

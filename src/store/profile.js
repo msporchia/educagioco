@@ -13,7 +13,7 @@ import { CAMPAGNE as GIORNATE_BANCARELLA } from '../data/bancarella.js'
 import { eccezioniDi, eccezioniPerEta, spostandoLEta,
          rimettendoLEta, partenzaPerEta } from '../data/partenze.js'
 import { finestraDi } from '../quiz/nucleo/classi.js'
-import { PERSONE } from '../giochi/fattoria/dati/atlante.js'
+import { PERSONE } from '../grafica/atlante-fattoria.js'
 import { ULTIMA as ULTIMA_NOVITA } from '../guide/novita-bambini.js'
 import { SCALETTA, campagneDaFila, filaDaCampagne, filaDopo } from '../data/asteroidi.js'
 import { allineaCalcolo } from './calcolo.js'

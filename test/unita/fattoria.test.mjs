@@ -3,37 +3,31 @@
    terra, il costo secco dello sgombero, il gratis di rimettere una cosa
    dov'era),
    un giocatore finto compra e sgombera finché può senza lasciare il mondo
-   incoerente, e i traguardi scattano solo a chi ha davvero giocato.
+   incoerente.
    `node test/esegui.mjs fattoria --niente-build` */
-import { readdirSync, readFileSync } from 'node:fs'
-import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria/motore/fattoria.js'
-import { Camminatore } from '../../src/giochi/fattoria/motore/camminata.js'
+import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria3d/da2d/motore/fattoria.js'
 import {
   guastiDelMondo, MARGINE, PIAZZOLE_INIZIALI, PRIMA, COSTO_SPOSTARE, chiave,
   LIMITI_VECCHI,
-} from '../../src/giochi/fattoria/dati/mondo.js'
+} from '../../src/giochi/fattoria3d/da2d/dati/mondo.js'
 import { guastiDelCatalogo, CATALOGO, PER_ID, piedeDi, assettoDi, quantiVersi,
-         puoGirare, puoSpecchiare } from '../../src/giochi/fattoria/dati/catalogo.js'
-import { VOCI, PEZZI } from '../../src/giochi/fattoria/dati/atlante.js'
+         puoGirare, puoSpecchiare } from '../../src/giochi/fattoria3d/da2d/dati/catalogo.js'
+import { DISEGNI } from '../../src/giochi/fattoria3d/da2d/dati/disegni.js'
 
 /* Se il disegno di questa voce regge il capovolgimento. Sta nel test e
    non nel catalogo perché al gioco non serve saperlo — al gioco serve
    solo la lista dei giri leciti, che è quello che il catalogo rende. */
 const ribaltabile = v => {
-  const voce = VOCI.find(x => Object.values(x.pose || {}).flat().includes(v.pezzo))
-  return v.ribalta != null ? v.ribalta : (voce || {}).ribalta !== false
+  return v.ribalta != null ? v.ribalta : (DISEGNI[v.pezzo] || [])[4] !== false
 }
-import { guastiDegliOstacoli, OSTACOLI } from '../../src/giochi/fattoria/dati/ostacoli.js'
+import { guastiDegliOstacoli, OSTACOLI } from '../../src/giochi/fattoria3d/da2d/dati/ostacoli.js'
 import { guastiDeiBisogni, CIBI, COCCOLE, CHIAVI, cibiPer, foto,
          tuttoAPosto, nuovo as bisogniNuovi, comeSta, BENISSIMO, BENE,
-         premiaSeStaBene } from '../../src/giochi/fattoria/dati/bisogni.js'
+         premiaSeStaBene } from '../../src/giochi/fattoria3d/da2d/dati/bisogni.js'
 import { guastiDegliAnimali, famigliaDi, IN_VENDITA,
-         premioBenessere } from '../../src/giochi/fattoria/dati/animali.js'
-import { premioPer } from '../../src/giochi/fattoria/dati/mercato.js'
-import { sogliaDi } from '../../src/giochi/fattoria/dati/livelli.js'
-import manifesto from '../../src/giochi/fattoria/gioco.js'
-import { guastiDellAlbo } from '../../src/giochi/albo.js'
-import { misure, statoTraguardo } from '../../src/store/progressi.js'
+         premioBenessere } from '../../src/giochi/fattoria3d/da2d/dati/animali.js'
+import { premioPer } from '../../src/giochi/fattoria3d/da2d/dati/mercato.js'
+import { sogliaDi } from '../../src/giochi/fattoria3d/da2d/dati/livelli.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* Una borsa che tiene davvero il conto, per provare che le monete si
@@ -68,8 +62,6 @@ const guastiC = guastiDelCatalogo()
 controlla('il catalogo non ha guasti', guastiC.length === 0, guastiC.join(' · '))
 const guastiO = guastiDegliOstacoli()
 controlla('gli ostacoli non hanno guasti', guastiO.length === 0, guastiO.join(' · '))
-const guastiAlbo0 = guastiDellAlbo([manifesto])
-controlla('il blocco albo del manifesto non ha guasti', guastiAlbo0.length === 0, guastiAlbo0.join(' · '))
 const guastiB = guastiDeiBisogni()
 controlla('i bisogni non hanno guasti', guastiB.length === 0, guastiB.join(' · '))
 const guastiA = guastiDegliAnimali()
@@ -78,24 +70,17 @@ controlla('gli animali non hanno guasti', guastiA.length === 0, guastiA.join(' �
 /* ══════════ 1b. I RITRATTI DI UN RECINTO, E IL RIPIEGO ══════════
    I sei stati di un recinto sono **sei domande al foglio**, non sei
    disegni obbligatori: chi il ritratto non ce l'ha mostra quello
-   calmo (`RECINTO` in `dati/catalogo.js`). Le cinque specie della
-   prima metà hanno cinque disegni su sei — il `fame` era stato tolto
-   apposta — e le cinque dell'orto ne hanno tre.
-
-   Il guasto che questo controlla è **muto**: `drawImage` con un nome
-   che l'atlante non ha torna senza disegnare e senza lanciare, quindi
-   il recinto sparirebbe in un certo momento della giornata e in
-   nessun altro, senza niente in console. `guastiDelCatalogo` lo dice
-   già riga per riga; qui si guarda che il ripiego sia **quello
-   giusto** e non un nome qualunque che esiste per caso. */
+   calmo (`RECINTO` in `dati/catalogo.js`, coi ritratti di allora fermi
+   in `dati/disegni.js`). Le cinque specie della prima metà hanno cinque
+   disegni su sei — il `fame` era stato tolto apposta — e le cinque
+   dell'orto ne hanno tre. Qui si guarda che il ripiego sia **quello
+   giusto** e non un nome qualunque. */
 {
   const recinti = Object.values(PER_ID).filter(v => v.stati)
   for (const v of recinti) {
     const specie = v.pezzo.replace(/^recinto_|_calmo$/g, '')
     uguale(`${v.id}: chi ha fame mostra il ritratto calmo`,
            v.stati.fame, `recinto_${specie}_calmo`)
-    for (const [quale, nome] of Object.entries(v.stati))
-      controlla(`${v.id}/${quale}: il ritratto è nell'atlante`, !!PEZZI[nome])
   }
   /* Le due metà del contratto, una per verso: chi il disegno ce l'ha
      lo usa, chi non ce l'ha ripiega. Senza la prima riga il ripiego
@@ -414,45 +399,11 @@ for (const [id, o] of Object.entries(OSTACOLI)) {
          JSON.stringify(fa.ostacoli), JSON.stringify(fb.ostacoli))
 }
 
-/* il manifesto racconta la propria home senza esplodere */
-controlla('riassunto() regge un profilo senza niente salvato',
-          typeof manifesto.riassunto() === 'string')
-controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto.riassunto({
-  tappa: 0, libera: false, stelle: {},
-  cfg: { stato: new Fattoria().serializza() },
-}) === 'string')
-
-/* ══════════ 4. i traguardi scattano ══════════ */
-{
-  const vuoto = { totals: {}, best: {}, items: {}, campagne: {} }
-  const mVuoto = misure(vuoto)
-  controlla('a profilo vuoto non se n\'è preso nessuno',
-            manifesto.albo.traguardi.every(t => statoTraguardo(t, mVuoto).grado === 0))
-  uguale('e il gioco non risulta provato', manifesto.albo.provato(mVuoto), false)
-  uguale('e non vale esperienza', manifesto.albo.xp(mVuoto), 0)
-
-  /* un bambino che ha comprato tanta terra, sgombrato tanto bosco e
-     sistemato tante cose, ben oltre l'ultima soglia di ogni traguardo */
-  const pieno = {
-    totals: { fattoriaTerre: 40, fattoriaSgomberi: 60, fattoriaPosati: 130,
-              fattoriaRaccolti: 50, fattoriaRitiri: 20, fattoriaOrdini: 40 },
-    best: { fattoriaVarieta: 40, fattoriaVestiti: 12 },
-    items: {}, campagne: {},
-  }
-  const mPieno = misure(pieno)
-  const presi = manifesto.albo.traguardi.map(t => statoTraguardo(t, mPieno))
-  controlla('chi ha giocato tanto li prende tutti d\'oro', presi.every(s => s.finito),
-            presi.filter(s => !s.finito).map(s => `${s.id} fermo a ${s.valore}`).join(' · '))
-  controlla('e il gioco vale esperienza', manifesto.albo.xp(mPieno) > 0)
-  controlla('e risulta provato', manifesto.albo.provato(mPieno) === true)
-}
-
 /* ══════════ 5. chi cammina non attraversa le case ══════════
    È il genere di guasto che si vede solo a schermo, e tardi: il cane
    che passa dentro il muro non fa niente di sbagliato secondo nessun
    conto, semplicemente non lo si controllava. Qui si controlla la
-   cella (`calpestabile`) e la passeggiata vera (`Camminatore`), che
-   sono le due metà della stessa cosa.
+   cella (`calpestabile`).
 
    Le celle 12..29 sono quelle delle piazzole di partenza, e lì dentro
    il bosco non nasce: quello che c'è in mezzo ce lo mette il test. */
@@ -587,72 +538,6 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
   uguale('e lo specchio pure', rilette.m, 1)
   const dritta = dopo.cose.find(c => c.id !== 'siepe')
   if (dritta) uguale('chi non è rovesciato non si porta dietro un campo', dritta.m, undefined)
-}
-
-/* Il cane con una casa in mezzo alla strada: la aggira, e non c'entra
-   mai — prima ci passava dritto attraverso, perché la meta era una
-   riga tirata in linea d'aria. */
-{
-  const f = cresciuta({ borsa: borsaInfinita() })
-  controlla('la casa di traverso si posa', f.posa('casa', 14, 16).ok)   // 14..18 × 16..17
-  const buona = (x, y) => f.calpestabile(x, y)
-  const cane = new Camminatore(16, 14, { velocita: 3.4 })
-
-  controlla('la strada dall\'altra parte della casa c\'è', cane.vaiA(16, 19, buona))
-  let dentro = 0, giri = 0
-  while (cane.cammina && giri++ < 400) {
-    cane.muovi(0.05, buona)
-    const c = cane.cella
-    if (!buona(c.x, c.y)) dentro++
-  }
-  uguale('non ha mai messo il piede dentro la casa', dentro, 0)
-  uguale('ed è arrivato dall\'altra parte',
-         JSON.stringify(cane.cella), JSON.stringify({ x: 16, y: 19 }))
-}
-
-/* Una meta dove non si arriva non fa camminare nessuno dentro i muri:
-   si resta fermi. Lo stagno è chiuso, quindi non c'è nemmeno una cella
-   accanto a cui accostarsi. */
-{
-  const f = cresciuta({ borsa: borsaInfinita() })
-  for (let x = 20; x <= 22; x++) for (let y = 20; y <= 22; y++) f.dipingiAcqua(x, y)
-  const buona = (x, y) => f.calpestabile(x, y)
-  const cane = new Camminatore(15, 15, {})
-  const partenza = JSON.stringify(cane.cella)
-
-  uguale('una meta chiusa nell\'acqua non si accetta', cane.vaiA(21, 21, buona), false)
-  for (let i = 0; i < 40; i++) cane.muovi(0.1, buona)
-  uguale('e chi cammina resta dov\'era', JSON.stringify(cane.cella), partenza)
-
-  /* Sul bordo dello stagno invece ci si accosta: chiedere di andare
-     sull'acqua non deve sembrare un tocco andato perso. */
-  const bordo = new Camminatore(15, 20, {})
-  controlla('la riva si raggiunge accostandosi', bordo.vaiA(20, 20, buona))
-  for (let i = 0; i < 200 && bordo.cammina; i++) bordo.muovi(0.05, buona)
-  controlla('e si finisce su una cella dove si può stare',
-            buona(bordo.cella.x, bordo.cella.y))
-}
-
-/* Chi vaga per il prato per conto suo si sceglie le mete da sé: la
-   regola stava dentro il disegno e conosceva solo «è terra mia». */
-{
-  const f = cresciuta({ borsa: borsaInfinita() })
-  f.posa('casa', 13, 13); f.posa('casa', 13, 17); f.posa('fontana', 20, 15)
-  const buona = (x, y) => f.calpestabile(x, y)
-  /* il caso arriva da fuori: una passeggiata si rifà identica */
-  let seme = 12345
-  const sorte = () => { seme = (seme * 1103515245 + 12345) % 2147483648; return seme / 2147483648 }
-  const cane = new Camminatore(19, 19, { velocita: 2.4, vaga: 0.4, sorte })
-
-  let male = 0, camminati = 0
-  for (let i = 0; i < 600; i++) {
-    cane.muovi(0.05, buona)
-    if (cane.cammina) camminati++
-    const c = cane.cella
-    if (!buona(c.x, c.y)) male++
-  }
-  uguale('chi vaga da sé non finisce mai dentro una casa', male, 0)
-  controlla('e vaga davvero, non resta fermo', camminati > 50, `passi: ${camminati}`)
 }
 
 /* Non si fa comparire un animale sopra una fontana. */
@@ -1021,36 +906,5 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
 
 nota(`la fattoria parte con ${PIAZZOLE_INIZIALI} piazzole, ` +
      `e il mondo tiene ${MARGINE} piazzole di margine per lato`)
-
-/* ══════════ LA ✕ STA IN TUTTI I FOGLI ══════════
-   Un foglio nuovo si aggiunge scrivendo un `.vue` in `viste/`, e la via
-   d'uscita è la cosa che ci si dimentica: ci si ricorda del titolo, dei
-   tasti, di quello che il foglio deve dire — e si esce toccando il velo
-   fuori, che funziona e quindi non sembra un difetto. Poi lo apre un
-   bambino su un telefono, dove «fuori dal foglio» sono dodici pixel di
-   margine.
-
-   Questo controllo guarda **il sorgente**, non lo schermo: ogni vista
-   che sa chiudersi (`'chiudi'` fra i suoi `emits`) deve montare
-   `Chiudi.vue`. È l'unico modo di dirlo di un foglio che ancora non
-   esiste. Il perché della ✕ sta in `viste/Chiudi.vue`. */
-{
-  const viste = readdirSync(new URL('../../src/giochi/fattoria/viste/', import.meta.url))
-    .filter(f => f.endsWith('.vue') && f !== 'Chiudi.vue')
-  const senza = []
-  let quanti = 0
-  for (const f of viste) {
-    const src = readFileSync(
-      new URL(`../../src/giochi/fattoria/viste/${f}`, import.meta.url), 'utf8')
-    /* si chiude da sé solo chi lo dichiara: `Merce.vue` e `Provino.vue`
-       sono pezzi dentro un foglio, non fogli */
-    if (!/emits?\s*\(\s*\[[^\]]*'chiudi'/s.test(src) &&
-        !/defineEmits\(\[[^\]]*'chiudi'/s.test(src)) continue
-    quanti++
-    if (!src.includes('<Chiudi')) senza.push(f)
-  }
-  controlla(`${quanti} fogli sanno chiudersi`, quanti >= 10, `ne ho contati ${quanti}`)
-  uguale('e tutti montano la ✕ di Chiudi.vue', senza.join(', '), '')
-}
 
 riassunto('la fattoria')

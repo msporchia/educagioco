@@ -2,7 +2,7 @@
    LA FILA NELLE MACCHINE, SENZA BROWSER
 
    Una macchina lavora un pezzo alla volta e ne tiene altri in fila
-   (`dati/coda.js`, `docs/fattoria/macchine.md`). Qui si gioca la fila
+   (`dati/coda.js`, `docs/fattoria3d/regole.md`). Qui si gioca la fila
    per davvero, con l'orologio in mano: si carica, si chiude il gioco e
    si riapre più tardi, si toglie un pezzo, si ritira a silo pieno, si
    rilegge un salvataggio di prima che la fila esistesse.
@@ -24,13 +24,12 @@
    Nessun numero di ricetta è scritto a mano: si legge dalle tabelle.
    `node test/esegui.mjs coda --niente-build`
    ═══════════════════════════════════════════════════════════════════ */
-import { Fattoria } from '../../src/giochi/fattoria/motore/fattoria.js'
-import { PER_RICETTA, PRODOTTI, MINUTO, SILI } from '../../src/giochi/fattoria/dati/coltivazioni.js'
-import { statiDi } from '../../src/giochi/fattoria/dati/catalogo.js'
+import { Fattoria } from '../../src/giochi/fattoria3d/da2d/motore/fattoria.js'
+import { PER_RICETTA, PRODOTTI, MINUTO, SILI } from '../../src/giochi/fattoria3d/da2d/dati/coltivazioni.js'
+import { statiDi } from '../../src/giochi/fattoria3d/da2d/dati/catalogo.js'
 import { POSTI_DI_PARTENZA, POSTI_MASSIMI, PREZZI_DELLA_FILA, PRIMO_POSTO, postiDellaFila,
-         prezzoDellaFila, guastiDellaFila } from '../../src/giochi/fattoria/dati/coda.js'
-import { alberoDi } from '../../src/giochi/fattoria/dati/albero.js'
-import { sogliaDi } from '../../src/giochi/fattoria/dati/livelli.js'
+         prezzoDellaFila, guastiDellaFila } from '../../src/giochi/fattoria3d/da2d/dati/coda.js'
+import { sogliaDi } from '../../src/giochi/fattoria3d/da2d/dati/livelli.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const T0 = 1770000000000            // un'ora qualunque, fissa: niente Date.now()
@@ -364,39 +363,6 @@ function fattoria(monete = 1000, larghi = 4, { fila = 2 } = {}) {
   uguale('uno', r.pronti, 1)
   uguale('finito tutto, il ritratto del pronto',
          f.aspettoDellaCosa(pollaio, fra(3 * uova.minuti)).invece, statiDi(pollaio).pronto)
-}
-
-/* ══════════ 10. l'albero dice quanti ne fa ══════════ */
-{
-  const { f, mulino } = fattoria()
-  f.metti('grano', GRANO * 2)
-  f.avvia(mulino, 'mangime', T0)
-  f.avvia(mulino, 'mangime', T0)
-  const a = alberoDi(f, 'mangime', fra(1))
-  uguale('col mulino che ne fa due, la riga lavora', a.via.macchina.stato, 'lavora')
-  uguale('e dice quanti', a.via.macchina.ne, 2)
-  uguale('e fra quanto esce il primo', a.via.macchina.manca, M - 1)
-
-  /* Pieno di altro: la riga dice che la fila è piena. */
-  const { f: g, mulino: m } = fattoria()
-  const pastone = PER_RICETTA.pastone
-  const posti = g.statoMacchina(m, T0).posti
-  for (const [k, n] of Object.entries(pastone.prende)) g.metti(k, n * posti)
-  while (g.avvia(m, 'pastone', T0).ok);
-  const b = alberoDi(g, 'mangime', fra(1))
-  uguale('pieno di pastone, per il mangime la fila è piena', b.via.macchina.piena, true)
-  uguale('e non ne fa nessuno', b.via.macchina.ne, 0)
-  uguale('con tre posti la fila si dice piena', b.via.macchina.unPosto, false)
-
-  /* Un posto solo, occupato da altro: è piena anche lei, ma la riga
-     dice che la macchina fa altro — «fila piena» di un posto solo non
-     si capisce. */
-  const { f: h, mulino: uno } = fattoria(1000, 4, { fila: 0 })
-  for (const [k, n] of Object.entries(pastone.prende)) h.metti(k, n)
-  controlla('il pastone parte', h.avvia(uno, 'pastone', T0).ok)
-  const c = alberoDi(h, 'mangime', fra(1))
-  uguale('con un posto solo occupato, per il mangime è piena', c.via.macchina.piena, true)
-  uguale('ed è la fila da uno', c.via.macchina.unPosto, true)
 }
 
 /* ══════════ 11. la fila di ieri, più lunga dei posti di oggi ══════════

@@ -122,7 +122,7 @@ compra toccandolo; tenuto premuto su un pezzo lo riprende, come prima.
   celle/s (col quadrato della profondità; × `dt`, non coi fotogrammi), anche a dito fermo; la cella del fantasma si ricalcola a ogni fotogramma
   con la camera di adesso, quindi resta sotto il dito. Il limite è `LONTANO` = 30 celle dal contadino (il mondo non ha confini); su «metti via» non
   scorre; alzato il dito (o `pointercancel`) si ferma. «⌖ Torna al contadino» compare come per ogni camera libera. Come la 2D
-  ([../fattoria/come-si-tocca.md](../fattoria/come-si-tocca.md), `spinta.js`), ma in celle di mondo e non in px di vista.
+  (lo scorrimento al bordo: lo schermo di un telefono tiene meno di metà fattoria), ma in celle di mondo e non in px di vista.
 - **Non c'è più la telecamera «costruzione»** (alta, «Vicino» / «Tutto») né la barra: il posto si sceglie premendo dove lo si vuole.
   Il fantasma si sistema sulla mappa di sempre (la telecamera segue il contadino, due dita zoomano).
 - Il foglio si rifà dai dati a ogni cambio: una carta nuova nel catalogo compare da sola, e il test fallisce se manca la categoria.

@@ -3,7 +3,7 @@
 // aspettoDi/scegliAspetto), non del gioco. PERSONE viene dall'atlante generato
 // da strumenti/sprite/atlante.py: un personaggio nuovo compare qui da solo.
 import { ref } from 'vue'
-import { ATLANTE, PEZZI, PERSONE } from '../giochi/fattoria/dati/atlante.js'
+import { ATLANTE, PEZZI, PERSONE } from '../grafica/atlante-fattoria.js'
 
 defineProps({
   scelto: { type: String, default: '' },

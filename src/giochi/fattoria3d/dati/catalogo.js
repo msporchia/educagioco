@@ -43,6 +43,7 @@ export const PEZZI = {
   // le feste (docs/fattoria3d/stagioni.md): si offrono nel menu solo in stagione (`stagione` è una chiave di FINESTRE della fattoria di sempre); comprate restano
   zucca_intagliata: { nome: 'Zucca intagliata', emoji: '🎃', w: 1, d: 1, ...da2d('zucca_intagliata'), categoria: 'decori', stagione: 'halloween' },
   zucche_mucchio:  { nome: 'Due zucche',       emoji: '🎃', w: 2, d: 1, ...da2d('zucche_mucchio'), categoria: 'decori', stagione: 'halloween' },
+  pupazzo_neve:    { nome: 'Pupazzo di neve',  emoji: '⛄', w: 1, d: 1, ...decoroSolo3D(8), categoria: 'feste', stagione: 'natale' },      // solo 3D: la 2D non l'ha
   // i magazzini (docs/fattoria3d/magazzini.md): non si comprano dal menu, arrivano da soli al livello del silo e il secondo si costruisce dal loro
   // foglio, e si mettono dal menu (la carta c'è solo se ce n'è uno da mettere); `magazzino` è il silo di cui sono l'edificio. Il prezzo vero è quello dell'ingrandimento (dati/silos.js): questo serve solo ai controlli
   silo:            { nome: 'Silo del raccolto', emoji: '🌾', art: 'il', w: 2, d: 2, prezzo: 40, rincaro: 0, cresce: 0, liv: 1, categoria: 'edifici', magazzino: 'terra' },

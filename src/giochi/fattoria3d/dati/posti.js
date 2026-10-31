@@ -1,4 +1,4 @@
-/* I posti delle macchine, la fila della 2D (src/giochi/fattoria/dati/coda.js) tale e quale: ogni macchina parte con un posto e gli
+/* I posti delle macchine, la fila della 2D (src/giochi/fattoria3d/da2d/dati/coda.js) tale e quale: ogni macchina parte con un posto e gli
    altri si comprano, macchina per macchina, fino a sei. Il metro è lo stesso (🪙1 = dieci secondi di esercizio), quindi anche i prezzi
    (un test li confronta con la 2D); la spesa conta come esperienza, come ogni acquisto. Vedi docs/fattoria3d/regole.md («I posti delle macchine»). */
 

@@ -1,8 +1,8 @@
 /* Le stagioni della fattoria 3D (dato puro): QUANDO è festa lo dice `dati/stagioni.js` della fattoria di sempre (importato così com'è,
    con le sue finestre e il suo `addobbiStagionali`); qui COME si vede in 3D. Niente three, niente disegno: la scena (scena3d/stagione.js)
    legge questi numeri. Vedi docs/fattoria3d/stagioni.md. */
-import { stagioneDi, FINESTRE, semeDelGiorno, addobbiStagionali } from '../../fattoria/dati/stagioni.js'
-import { caso } from '../../fattoria/dati/mondo.js'
+import { stagioneDi, FINESTRE, semeDelGiorno, addobbiStagionali } from '../da2d/dati/stagioni.js'
+import { caso } from '../da2d/dati/mondo.js'
 
 export { stagioneDi, FINESTRE, semeDelGiorno }
 
@@ -69,6 +69,21 @@ export function chiazzeDiNeve(i0, j0, i1, j1, vuota, seme = 0) {
     if (caso(i, j, seme + 7) * CHIAZZE.ogni >= 1 || !vuota(i, j)) continue
     out.push({ x: i + 0.2 + caso(i, j, seme + 8) * 0.6, z: j + 0.2 + caso(i, j, seme + 9) * 0.6, r: 0.2 + caso(i, j, seme + 10) * 0.26 })
     if (out.length >= CHIAZZE.massimo) return out
+  }
+  return out
+}
+
+/** I ghiaccioli sotto la gronda: fra due lucine vicine della stessa fila (mezzo metro), appesi poco sopra di loro, lunghi a caso (fermo:
+    dipende dal posto). Ne salta uno su quattro, perché la fila non sia un pettine. `luci` in fila come le dà `addobbiNatale` (sui fianchi
+    sinistra e destra si alternano: la vicina è due posti più in là). Torna [{ x, y, z, lungo }]. */
+export function ghiaccioli(luci) {
+  const out = []
+  for (let n = 0; n < luci.length; n++) for (const m of [n + 1, n + 2]) {
+    const a = luci[n], b = luci[m]
+    if (!b || a.y !== b.y || Math.hypot(a.x - b.x, a.z - b.z) > 0.6) continue
+    const x = (a.x + b.x) / 2, z = (a.z + b.z) / 2, h = caso(Math.round(x * 4), Math.round(z * 4), 31)
+    if (h < 0.25) continue
+    out.push({ x, y: a.y + 0.06, z, lungo: 0.12 + (h - 0.25) * 0.3 })
   }
   return out
 }

@@ -13,7 +13,7 @@ import { CFG, soglia, stellePerFerite } from '../dati/taratura.js'
 import { MOSTRI, CHIAVI_MOSTRI, ammessi } from '../dati/mostri.js'
 import { OGGETTI, pescaOggetto } from '../dati/oggetti.js'
 import { MAZZO, prezzoDomanda, palliniDelPrezzo, scalinoDelPrezzo, PALLINI,
-         resa, tettoDi }
+         resa, tettoDi, ARMI_DI_PARTENZA, OFFERTA }
   from '../dati/mazzo.js'
 import { Terreno, semeDi, ATTENZIONE } from './terreno.js'
 
@@ -961,8 +961,10 @@ export class Partita {
     return offerta
   }
 
-  // tre carte, una per fascia: se capitassero tre dello stesso prezzo
-  // la scelta tornerebbe a essere "quale disegno mi piace"
+  // quattro carte (OFFERTA in dati/mazzo.js), in quest'ordine: un'arma
+  // nelle prime prese, poi due di quelle già prese (per portarle in cima),
+  // poi una per fascia (tre dello stesso prezzo farebbero scegliere il
+  // disegno), poi a caso — vedi docs/survivors/regole.md
   offri() {
     const libere = this.mazzo.filter(c => this.livelloDi(c.chiave) < this.tettoDi(c))
     if (!libere.length) return null
@@ -970,17 +972,24 @@ export class Partita {
     // ancora un livello vero da dare, l'offerta pesca solo fra quelle
     // (il secondo giro del gioco libero comincia quando il mazzo è
     // finito davvero) — vedi docs/survivors/regole.md
-    const fresche = libere.filter(c => this.livelloDi(c.chiave) < c.max)
-    const banco = fresche.length ? fresche : libere
+    // (la mela non finisce mai: non tiene aperto il primo giro)
+    const fresche = libere.filter(c => c.cura || this.livelloDi(c.chiave) < c.max)
+    const banco = fresche.some(c => !c.cura) ? fresche : libere
     const scelte = []
-    for (const f of ['debole', 'media', 'forte']) {
-      const dentro = banco.filter(c => c.fascia === f && !scelte.includes(c))
-      if (dentro.length) scelte.push(dentro[Math.floor(this.rnd() * dentro.length)])
+    const pesca = (fra, quante = 1) => {
+      for (let n = 0; n < quante; n++) {
+        const resto = fra.filter(c => !scelte.includes(c))
+        if (!resto.length || scelte.length >= OFFERTA.carte) return
+        scelte.push(resto[Math.floor(this.rnd() * resto.length)])
+      }
     }
-    while (scelte.length < 3 && scelte.length < banco.length) {
-      const resto = banco.filter(c => !scelte.includes(c))
-      scelte.push(resto[Math.floor(this.rnd() * resto.length)])
-    }
+    const prese = this.mazzo.reduce((n, c) => n + (c.cura ? 0 : this.livelloDi(c.chiave)), 0)
+    if (prese < OFFERTA.curate)
+      pesca(banco.filter(c => ARMI_DI_PARTENZA.includes(c.chiave)))
+    pesca(banco.filter(c => !c.cura && this.livelloDi(c.chiave) > 0), OFFERTA.riprese)
+    for (const f of ['debole', 'media', 'forte'])
+      if (!scelte.some(c => c.fascia === f)) pesca(banco.filter(c => c.fascia === f))
+    pesca(banco, OFFERTA.carte)
     return scelte
       .map(c => this.vestiCarta(c))
       .sort((a, b) => a.prezzo - b.prezzo)
@@ -992,15 +1001,15 @@ export class Partita {
   // costare quanto la prima. `oltreIlTetto` è la carta ripresa nel
   // gioco libero oltre il suo ultimo livello.
   vestiCarta(c) {
-    const preso = this.livelloDi(c.chiave)
+    const preso = c.cura ? 0 : this.livelloDi(c.chiave)
     const prezzo = prezzoDomanda(c.fascia, this.regole.rincaro, preso, c.max)
     const scalino = scalinoDelPrezzo(prezzo)
     return {
       chiave: c.chiave, nome: c.nome, icona: c.icona, chiaro: c.chiaro,
       fascia: c.fascia, etichetta: scalino.nome, colore: scalino.colore,
       tinta: scalino.chiave,          // il colore della carta è quello del prezzo
-      livello: preso + 1, nuova: preso === 0, max: c.max,
-      oltreIlTetto: preso >= c.max,
+      livello: preso + 1, nuova: !c.cura && preso === 0, max: c.max,
+      cura: !!c.cura, oltreIlTetto: !c.cura && preso >= c.max,
       pallini: palliniDelPrezzo(prezzo), pallinoTot: PALLINI,
       prezzo,
     }

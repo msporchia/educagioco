@@ -61,6 +61,7 @@ Fatto: parole e frasi, una domanda su 20; tabelline, una su 40 ([quote.md](quote
   monete al minuto vere, gioco per gioco, e se una delle due scelte va
   ritoccata.
 - **Il pezzo di terra della fattoria rincara ancora geometrico**
-  (`RINCARO = 1.38` in `src/giochi/fattoria/dati/mondo.js`): il decimo pezzo
-  costa già 🪙800, più di due ore. Va portato a una curva lineare o
+  (`RINCARO = 1.38` in `src/giochi/fattoria3d/da2d/dati/mondo.js`, che la
+  fattoria usa per il prezzo dei lotti: `TERRA` in `dati/regole.js`): il
+  decimo pezzo costa già 🪙800, più di due ore. Va portato a una curva lineare o
   logaritmica la prossima volta che si tocca l'economia.

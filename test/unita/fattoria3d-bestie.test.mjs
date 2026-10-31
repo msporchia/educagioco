@@ -6,7 +6,7 @@
 import { BESTIE, IDS_BESTIE, guastiDelleBestie, CIBI, COCCOLE_3D, cibiPer, gestiPer, nomiPer, pulisciNome, casaInForma, bestiaInForma, COMPAGNO_DI, idDa2D, perche,
   bestieAl, FONDO, BENISSIMO, BENE, scortaDi3D } from '../../src/giochi/fattoria3d/dati/bestie.js'
 import { ANIMALI_2D, premioBenessere } from '../../src/giochi/fattoria3d/dati/parita2d.js'
-import { CIBI as CIBI_2D, COCCOLE as COCCOLE_2D, BISOGNI } from '../../src/giochi/fattoria/dati/bisogni.js'
+import { CIBI as CIBI_2D, COCCOLE as COCCOLE_2D, BISOGNI } from '../../src/giochi/fattoria3d/da2d/dati/bisogni.js'
 import { COMPAGNI } from '../../src/giochi/fattoria3d/dati/compagni.js'
 import { sogliaDi, guastiDeiLivelli, roba } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
@@ -282,6 +282,30 @@ const motoreCon = ({ liv = 70, monete = 100000, t = { ora: ORA }, stato = null }
   uguale('dove l\'hai messa', String(f.cura.casaDi('coniglio')), String(libera))
   uguale('lontano dal tuo terreno no', f.cura.sposta('coniglio', 500, 500).motivo, 'non-ci-sta')
   uguale('...e resta dov\'era', String(f.cura.casaDi('coniglio')), String(libera))
+}
+
+/* ══════════ i compagni gratis si curano: Watson e i gatti hanno bisogni, nome e premio, non si comprano e non si spostano ══════════ */
+{
+  const { f, b } = motoreCon({ liv: 2 })
+  uguale('al livello 2 si curano Watson e Sherlock, non ancora Irene e Pepe', f.cura.curate().join(), 'watson,sherlock')
+  uguale('le bestie comprate restano a parte', f.cura.tue().join(), '')
+  controlla('Watson ha i suoi bisogni da quando arriva', !!f.cura.stato('watson'))
+  uguale('Pepe non è ancora arrivato', f.cura.stato('pepe'), null)
+  uguale('il nome vero', f.cura.nomeDi('watson'), 'Watson')
+  uguale('al gatto niente osso', f.cura.nutri('sherlock', 'osso').motivo, 'non-gli-piace')
+  f.cura.casa.watson.pancia = 0.3
+  const m0 = b.monete, r = f.cura.nutri('watson', 'osso')
+  controlla('Watson mangia l\'osso, e si paga', r.ok && b.monete === m0 - r.costo && r.costo > 0)
+  uguale('si cambia il nome', f.cura.battezza('watson', 'Bobby').nome, 'Bobby')
+  uguale('vuoto = torna Watson', f.cura.battezza('watson', '').nome, 'Watson')
+  uguale('non si sposta: gira col contadino', f.cura.sposta('watson', 0, 0).motivo, 'gira-con-te')
+  uguale('non si compra', f.cura.compra('watson').motivo, 'sconosciuta')
+  Object.assign(f.cura.casa.watson, { pancia: 0.5, pelo: 0.99, gioco: 0.99, premiato: false })
+  const xp0 = f.s.esperienza, p = f.cura.nutri('watson', 'bistecca')
+  controlla('rimesso a posto dà il premio del bobtail della 2D, in esperienza', p.ok && p.premio && p.premio.xp === premioBenessere('cane-bobtail') && f.s.esperienza > xp0, JSON.stringify(p))
+  const letto = new Fattoria3d({ stato: normalizza(JSON.parse(JSON.stringify(f.s))), borsa: { quante: () => 0, paga: () => false } })
+  controlla('i bisogni e il nome di Watson si salvano', letto.s.casa.watson && letto.s.casa.watson.pancia > 0.5)
+  uguale('nomiPer dà i nomi della sua famiglia', nomiPer('sherlock').join(), nomiPer('gatto_rosso').join())
 }
 
 riassunto('Fattoria 3D — le bestie di casa (dati, stato, motore)')

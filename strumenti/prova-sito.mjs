@@ -17,7 +17,7 @@ const argv = process.argv.slice(2)
 const opz = (n, d = null) => { const i = argv.indexOf('--' + n); return i >= 0 && argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : d }
 const usati = new Set(['rete', 'lento', 'dist'].map(n => opz(n)).filter(Boolean))
 const giochi = argv.filter(a => !a.startsWith('--') && !usati.has(a))
-const GIOCHI = giochi.length ? giochi : ['sotterraneo', 'fattoria', 'torri', 'inglese']
+const GIOCHI = giochi.length ? giochi : ['sotterraneo', 'fattoria3d', 'torri', 'inglese']
 const radice = resolve(opz('dist', 'dist-sito'))
 const rete = Number(opz('rete', 0)), lento = Number(opz('lento', 1))
 if (!existsSync(join(radice, 'sw.js'))) { console.error(`manca ${radice}/sw.js: prima npm run build:sito`); process.exit(1) }

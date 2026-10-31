@@ -1,5 +1,5 @@
 /* Le macchine: ogni edificio produttivo ha le sue ricette, un posto di partenza (gli altri si comprano fino a sei: dati/posti.js) e lavora uno alla volta. Le ricette sono quelle
-   della fattoria di sempre (src/giochi/fattoria/dati/coltivazioni.js): stesso id, stessi ingredienti, stesse quantità (N → 1), e dal giro G3
+   della fattoria di sempre (src/giochi/fattoria3d/da2d/dati/coltivazioni.js): stesso id, stessi ingredienti, stesse quantità (N → 1), e dal giro G3
    anche gli stessi tempi (minuti veri), lo stesso livello e lo stesso costo del gesto: `...N('id')` li legge da dati/parita2d.js. Una ricetta chiede raccolti (le chiavi di COLTURE),
    prodotti di un'altra macchina (le chiavi di un'altra ricetta) oppure uova e latte (dati/animali.js): è così che nasce la
    catena (grano → farina → pane). `liv` è il livello a cui la ricetta si può fare; dati/livelli.js lo controlla contro quello
@@ -129,8 +129,11 @@ export const MERCI_VECCHIE = {
 }
 export const nuovoId = k => (typeof k === 'string' && Object.prototype.hasOwnProperty.call(MERCI_VECCHIE, k)) ? MERCI_VECCHIE[k] : k
 
+const MERCI = [COLTURE, RICETTE, PRODOTTI_ANIMALI, LANA, MANGIMI_SENZA_RICETTA]      // dove si cerca una merce, in quest'ordine
 /** Una merce qualunque (raccolto, prodotto di una macchina, uova o latte) o null: ha `nome`, `emoji` e `pezzo` (o `aspetta`). */
-export const merceDi = k => COLTURE[k] || RICETTE[k] || PRODOTTI_ANIMALI[k] || LANA[k] || MANGIMI_SENZA_RICETTA[k] || null
+export const merceDi = k => MERCI.reduce((m, t) => m || t[k], null) || null
+/** Le facce di tutte le merci: i pezzi che l'atlante della fattoria tiene per loro (strumenti/sprite/inutilizzati.mjs). */
+export const facceDelleMerci = () => [...new Set(MERCI.flatMap(t => Object.keys(t).map(pezzoDi)).filter(Boolean))]
 /** L'emoji di una cosa che sta nella scorta, per i testi (la faccia disegnata è `viste/Faccia.vue`). */
 export const emojiDi = k => (merceDi(k) || {}).emoji || '❔'
 /** Il pezzo dell'atlante che disegna la merce, o null se aspetta il suo foglio (allora vale l'emoji). */

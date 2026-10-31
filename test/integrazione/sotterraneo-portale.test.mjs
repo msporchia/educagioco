@@ -233,8 +233,13 @@ const vicino = await schermoDi(piano.portale, 0.6)
 controlla('il portale si vede sullo schermo', dentro(vicino))
 await attendi(page, 400)
 await scatto(page, 'portale-discesa')
-await tocca(vicino.x, vicino.y)
-await page.waitForSelector('[data-azione="portale"]', { timeout: 40000 })
+// sotto carico il tocco può cadere mentre la telecamera si assesta: si riprova, ricalcolando dove sta il portale
+for (let i = 0; i < 3 && !(await page.locator('[data-azione="portale"]').isVisible()); i++) {
+  const p = i ? await schermoDi(piano.portale, 0.6) : vicino
+  await tocca(p.x, p.y)
+  await page.waitForSelector('[data-azione="portale"]', { timeout: 15000 }).catch(() => null)
+}
+await page.waitForSelector('[data-azione="portale"]', { timeout: 5000 })
 uguale('il portale non chiede niente', await page.locator('.sot-domanda').count(), 0)
 await scatto(page, 'portale-foglio')
 const dovEro = await cellaGiu()

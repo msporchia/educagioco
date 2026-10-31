@@ -1,9 +1,15 @@
 # Le bestie di casa (G6)
 
-Le bestie che si **comprano e si curano**, come nella fattoria di sempre ([../fattoria/animali.md](../fattoria/animali.md)): beagle, gatto rosso, coniglio e
-pappagallo. Hanno i numeri **esatti della 2D** (prezzo, livello, premio: `ANIMALI_2D` dal ponte `dati/parita2d.js`), i bisogni, la ciotola, le coccole, il
+Le bestie che si **comprano e si curano**, come nella fattoria 2D (i suoi dati in `da2d/dati/animali.js` e `bisogni.js`): beagle, gatto rosso, coniglio e
+pappagallo. I prezzi sono alti apposta: una bestia si desidera per giorni, e una per tipo (due beagle identici non sono due cani). Hanno i numeri **esatti della 2D** (prezzo, livello, premio: `ANIMALI_2D` dal ponte `dati/parita2d.js`), i bisogni, la ciotola, le coccole, il
 premio, il nome e la posizione. Codice: `dati/bestie.js` (tabella, ciotola, stato, guasti), `motore/cura.js` (le regole), `viste/Bestia.vue` e
 `viste/Battesimo.vue` (i fogli), `scena3d/modelli-bestie.js` (i corpi), `scena3d/compagni.js` (la scena).
+
+**Si curano anche i compagni gratis** (Watson, Sherlock, Irene, Pepe: `CURATI` in `dati/bestie.js`), come nella 2D si curavano bobtail e
+gatti: stessi bisogni, ciotola, coccole e foglio; il premio è quello della bestia 2D che sostituiscono (Watson 6 come il bobtail, i gatti 5;
+Irene quello del gatto bianco e nero). Il loro record in `stato.casa` nasce da sé quando arrivano col livello (`Cura._record`); il nome vero
+si può cambiare dal foglio e «Lascia “Watson”» lo rimette. **Non si comprano e non si spostano** (girano col contadino: `sposta` dice
+`gira-con-te`, il foglio non ha «📍 Sposta»). `cura.tue()` resta le comprate, `cura.curate()` le dice tutte.
 
 ## Chi sono
 
@@ -20,7 +26,7 @@ la 2D: un numero diverso è un guasto (vale la 2D).
 ## Compagni gratis e bestie comprabili
 
 **Watson, Sherlock, Irene e Pepe restano i compagni che girano gratis** ([compagni.md](compagni.md)): non hanno bisogni, non si curano, non hanno premio, il
-nome è fisso (sono gli animali veri di casa, scelta dell'utente: «tieni **e** aggiungi le bestie che si curano»). Nella 2D si comprano anche il bobtail (90/3), il gatto
+nome è fisso (sono gli animali veri di casa, scelta dell'utente: «tieni **e** aggiungi le bestie che si curano»). Nella 2D si compravano anche il bobtail (90/3), il gatto
 bianco e nero (75/10) e il gatto nero (75/19): **tolti perché in 3D ci sono già, gratis** (Watson, Sherlock, Pepe), quindi comprarli sarebbe pagare una cosa che si ha.
 Chi li aveva comprati nella 2D li ritrova come compagni (`COMPAGNO_DI`), senza nome scelto. Irene (calico) non ha un equivalente 2D. Le quattro bestie comprabili sono
 quelle che la 3D **non** regala.
@@ -29,7 +35,12 @@ quelle che la 3D **non** regala.
 
 `dati/bisogni.js` della 2D, riusato: **pancia** (cala in 14 ore), **pelo** (30), **gioco** (20); `FONDO` 0,15: **non stanno mai male e non muoiono**; soglie `BENE` 0,55 e
 `BENISSIMO` 0,78. Il calo si applica leggendo (`Cura.stato`), col tempo e non con quante volte si guarda. Una bestia appena presa non nasce a posto (il primo premio non
-è gratis). Il perché sta in [../fattoria/animali.md](../fattoria/animali.md): ogni bestia deve costare qualcosa ogni giorno.
+è gratis).
+
+- **Il fondo è 0,15 e non zero**: ha fame ma non sta male, non si ammala, non muore. Un animale che fa sentire in colpa se non apri l'app è
+  l'ennesimo compito.
+- **Ogni gesto che riempie costa una monetina**: una bestia deve costare qualcosa ogni giorno, se no conta solo il primo, e un gesto gratis in
+  mezzo a gesti che costano diventa quello che si preme sempre (la carezza è gratis perché non riempie niente).
 
 ## La ciotola (A6)
 
@@ -44,7 +55,9 @@ carota 5, insalata 14) e **6 del granaio**. Il granaio della 2D è la scorta del
 | fieno | `merci.erba` (l'erba medica del campo; «Fieno» in 2D) | coniglio |
 | formaggio, minestrone | `prodotti` | solo cane |
 
-**Il cibo sbagliato è rifiutato col perché, prima di pagare** (`non-gli-piace` con `perche`): sbagliare non costa niente e insegna chi mangia cosa (niente formaggio al
+**Ogni bestia mangia solo quello che le fa bene davvero**, e un cibo sbagliato dato per gioco resta in testa: niente latte al gatto e al cane (da grandi
+non lo digeriscono), niente pane, formaggio o minestrone al coniglio (è erbivoro), niente pane o miele al pappagallo; formaggio e minestrone solo al cane.
+Un cibo dichiara *o* `prezzo` *o* `da` (la scorta), mai tutti e due. **Il cibo sbagliato è rifiutato col perché, prima di pagare** (`non-gli-piace` con `perche`): sbagliare non costa niente e insegna chi mangia cosa (niente formaggio al
 gatto, niente carne al coniglio). Il foglio mostra solo i cibi giusti per quella famiglia; il rifiuto vale per chi chiama il motore. Pancia piena (> 0,93): «non ha fame».
 
 ## Le coccole (A7)
@@ -56,7 +69,13 @@ riempie niente. Nessun gesto paga una risposta sbagliata, le monete vengono solo
 ## Il premio (A8)
 
 Quando tutti e tre i bisogni sono nella fascia alta (> `BENISSIMO`) e un gesto li ha portati lì, la bestia paga ⭐ (6, 6, 5, 8), **una volta per ciclo**: `premiato` si riarma
-quando un bisogno scende sotto `BENE`; uno stato già in forma prima del gesto non premia. È `premiaSeStaBene` della 2D, usato tale e quale.
+quando un bisogno scende sotto `BENE` (circa tre ore); uno stato già in forma prima del gesto non premia: il premio è per averla rimessa a posto. È
+`premiaSeStaBene` della 2D, usato tale e quale.
+
+- **Un quindicesimo del prezzo**: sta sotto l'ordine più piccolo del banco (tre grano, ⭐12, un quarto d'ora di campo), ed è legato al prezzo così non è
+  scritto due volte.
+- **Per singola bestia**, non «quando stanno bene tutte»: chi ne ha una deve poter vincere qualcosa, chi ne ha sei non deve fare diciotto gesti.
+- **Una volta per ciclo**: senza, tre spazzolate sarebbero una zecca di livelli.
 
 ## Battesimo e posizione (A9, A10)
 
@@ -80,11 +99,8 @@ ha `casa` e si legge dritto; `casaInForma` non lancia mai (bisogni fra `FONDO` e
 ## La migrazione dalla 2D
 
 Chi aveva comprato beagle, coniglio, pappagallo o gatto rosso li ritrova in `stato.casa` **col nome e con i bisogni a metà** (`statoDa2D`), il livello 3D non scende sotto
-quello della bestia. Il bobtail, il gatto bianco e nero e il gatto nero sono già compagni gratis (non finiscono in `daRegalare`). **Mai monete.** Gli addobbi restano «da regalare».
-
-## Costumi e addobbi: non ancora
-
-A13 e L21 **non si fanno**: l'utente li rimanda a prima di Natale, e quando si faranno saranno **modelli sostituiti**, non vestiti sulla testa.
+quello della bestia. Il bobtail, il gatto bianco e nero e il gatto nero sono già compagni gratis (non finiscono in `daRegalare`). **Mai monete.** Gli addobbi vanno nel
+cassetto o addosso ([addobbi.md](addobbi.md)).
 
 ## I corpi e la scena
 
@@ -100,7 +116,9 @@ Il ritratto del foglio e delle carte è un `bestia:<id>` di `anteprime.js`.
 
 ## L'interfaccia
 
-Le bestie si prendono dal menu 🏗 «Costruisci», scheda **Animali** (carte `🪙 prezzo`, il lucchetto dice il livello; una già tua dice «🐾 è tua» e apre il foglio). Il foglio (`Bestia.vue`): ✕ in
+Le bestie si prendono dal menu 🏗 «Costruisci», scheda **Animali** (carte `🪙 prezzo`, il lucchetto dice il livello; una già tua dice «🐾 è tua» e apre il foglio).
+**Tenendo premuto** su una bestia in scena (anche Watson e i gatti) si apre il suo foglio (`scena3d/dito.js`, dopo 0,45 s come gli altri «tieni
+premuto»); il tocco breve resta la festa dei compagni, e sulle bestie comprate apre il foglio come prima. Il foglio (`Bestia.vue`): ✕ in
 alto a destra, ritratto, la frase «come sta», tre blocchi (barra, gesti), 🤚 Carezza / 📍 Sposta / ✎ Nome, una riga che dice cosa è successo e, quando manca roba, **dove si fa** («Non hai 🥚 uova: lo fanno
 gli animali: pollaio») o **quante monete mancano**. Bottoni da 44 px e più, il dito non è un mouse.
 
@@ -117,3 +135,5 @@ salvati, lo stato letto dritto, la migrazione è in `unita/fattoria3d-migra`), `
 - Provato: il beagle, il coniglio e il pappagallo a palle lisce con i colori sfumati nei vertici (come i gatti): sembravano palloncini gonfiati accanto a pecora, mucca e Watson; rifatti facettati.
 - Da guardare col dito su un telefono: le bestie in scena dalla camera di serie, il foglio a 360 px dal vero.
 - Il tocco sul gatto rosso/beagle apre il foglio (non c'è la festa lunga di Watson né le risposte dei gatti): una scelta, le bestie di casa sono cose da curare.
+- Il ritratto dei compagni nel foglio si disegna dal vivo (`Mondo3d.modelloBestia`): le foto fatte di `anteprime.js` sono delle bestie comprate.
+- Da giocare: se i bisogni di Watson e dei gatti pesano troppo sulle monete dei più piccoli (sono quattro bocche in più dal livello 1–19).

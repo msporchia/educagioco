@@ -88,7 +88,8 @@
 .sot3d-bersaglio > .sot-tre-punti { right: auto; left: var(--cx, 50%); top: calc(var(--testa, 30px) - 28px); translate: -50% 0 }
 .sot3d-bersaglio > .sot-richiamo { right: auto; left: var(--cx, 50%); bottom: auto; top: calc(var(--testa, 30px) - 46px); translate: -50% 0 }
 /* i pallini degli amici arrivati a una discesa: accanto all'ingresso, in basso a destra; sotto cadrebbero sui piedi dell'eroe che ci sta davanti (docs/core/amici-nei-giochi.md) */
-.sot3d-bersaglio > .sot-amici-posto { left: calc(100% + 4px); top: auto; bottom: 0; transform: none }
+.sot3d-bersaglio > .sot-amici-posto { position: absolute; display: flex; gap: 2px; pointer-events: none; left: calc(100% + 4px); bottom: 0 }
+.sot-amici-fum { margin-top: 6px; font-size: 13px }
 .sot3d-segno-arrivo {
   position: absolute; left: 0; top: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; z-index: 1;
   border: 2px solid #fffaf0; pointer-events: none; animation: sot-segno .5s ease-out forwards;

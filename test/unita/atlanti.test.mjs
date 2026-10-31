@@ -20,7 +20,7 @@
    riceva quello che si aspetta di ricevere.
 */
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
-import * as FATTORIA from '../../src/giochi/fattoria/dati/atlante.js'
+import * as FATTORIA from '../../src/grafica/atlante-fattoria.js'
 import * as SOTTERRANEO from '../../src/giochi/sotterraneo/dati/atlante.js'
 
 const ATLANTI = [['fattoria', FATTORIA], ['sotterraneo', SOTTERRANEO]]
@@ -111,9 +111,13 @@ nota('la fattoria, che è quella che si è spenta')
    un elenco vuoto lì si presenta come una lista di personaggi vuota. */
 controlla('ci sono delle persone', FATTORIA.PERSONE.length > 0)
 controlla('e delle bestie', FATTORIA.BESTIE.length > 0)
-const senzaVersi = [...FATTORIA.PERSONE, ...FATTORIA.BESTIE]
+/* Una persona si vede solo ferma, di fronte (SceltaAspetto.vue); le bestie camminano in Passo passo, e l'atlante tiene
+   solo quello che qualcuno disegna (docs/core/sprite.md). */
+const senzaFaccia = FATTORIA.PERSONE.filter(chi => !FATTORIA.PEZZI[`${chi}_giu0`])
+uguale('ogni persona ha il fotogramma fermo di fronte', senzaFaccia.length, 0, senzaFaccia.join(' '))
+const senzaVersi = FATTORIA.BESTIE
   .filter(chi => !['giu', 'lato', 'su'].every(v => FATTORIA.fotogrammi(chi, v) > 0))
-uguale('tutti hanno i tre versi', senzaVersi.length, 0, senzaVersi.join(' '))
+uguale('le bestie hanno i tre versi', senzaVersi.length, 0, senzaVersi.join(' '))
 
 /* Gli agganci degli addobbi: `AGGANCI` è bestia → verso → aggancio →
    `[fx, fy]`, copiato dal foglietto. La forma la tiene ferma questo

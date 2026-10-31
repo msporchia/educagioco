@@ -1,7 +1,7 @@
 # Dove sta cosa in `src/giochi/fattoria3d/`
 
 ```
-gioco.js             il manifesto: in prova, tappe 0, il blocco albo (dieci traguardi), il riassunto in home
+gioco.js             il manifesto: «La fattoria», chiave `fattoria3d`, tappe 0, il blocco albo (dieci traguardi), il riassunto in home
 Gioco.vue            il coordinatore: monete vere, contatori (anche `fattoria3dUova`/`…Latte`), salvataggio, le finestre
 stile.css            tutto sotto il prefisso .f3-
 stile-vicini.css    la mappa, il viaggio, la visita (`.f3-vic-`)
@@ -16,8 +16,8 @@ dati/
   biomi.js           prato / bosco / laghetto e lo stagno ([laghi.md](laghi.md)), il mare a ovest, la costa e la spiaggia, i laghi grandi a est (`eMare`, `eSpiaggia`, `eLago`, `tipoAcqua`: funzioni della cella), `biomaVecchio`; semi.js: il caso del mondo
   pesca.js           i numeri della pesca (`PESCA`: 12 s, riposo 60 s, raggio 6), `resaDellaPesca`, il pesce (`PESCI`, in `PRODOTTI_ANIMALI`)
   rotazione.js       ruotare i pezzi: `ruotabile`, `misureGirate`, `DAVANTI`, `rotLetta` ([rotazione.md](rotazione.md))
-  stagioni3d.js      le feste in 3D: importa le finestre della 2D; `ASPETTI`, `PARTICELLE`, `addobbiNatale`, `chiazzeDiNeve`, `stagioneAttiva` ([stagioni.md](stagioni.md))
-  carte.js           le carte del menu «Costruisci qui»: `carteDi(categoria, stato)`, `schedeDi`, `DISEGNI` (carta → pezzo dell'atlante 2D, ormai solo come dato: la carta mostra il modello 3D), `STRUMENTI`, i guasti
+  stagioni3d.js      le feste in 3D: importa le finestre della 2D; `ASPETTI`, `PARTICELLE`, `addobbiNatale`, `chiazzeDiNeve`, `ghiaccioli`, `stagioneAttiva` ([stagioni.md](stagioni.md))
+  carte.js           le carte del menu «Costruisci qui»: `carteDi(categoria, stato)`, `schedeDi` (la carta mostra il modello 3D), `STRUMENTI`
   catalogo.js        i pezzi (ora con la `categoria` di ogni pezzo e edificio, `CATEGORIE`; ora anche passerella, ponte e tavolo; i primi due `calpestabile`, con `alzato`: regole.md) — dieci all'inizio:  (campo, recinto, pollaio, stalla, bancarella, bacheca, aiuola, panchina, fontana, pozzo, spaventapasseri) e i dodici
                      edifici unici (fienile, pasticceria = il Pastificio, mongolfiera, mulino, panificio, caseificio, conserviera = la Cucina, gelateria, telaio, zuccherificio, sartoria, tintoria: gli id sono quelli dei salvataggi): prezzi, misure, `liv`, `slot`
   colture.js         le sedici colture (con l'erba medica, `mangime: true`): nome, emoji, `pezzo` (la faccia nell'atlante 2D), tempo, `liv`
@@ -38,7 +38,15 @@ dati/
   qualita.js         i preset di qualità, le scale, le ombre
   degrado.js         il degrado adattivo (senza three): fps → livello → risoluzione e cadenza dell'ombra
   vicini.js          i villaggi dei vicini e il formato di una fattoria visitabile (snapshot, `normalizzaFattoriaVisitabile`, i numeri di prezzi, premi e doni), i guasti ([vicini.md](vicini.md))
+da2d/                quello che resta della fattoria 2D (tolta il 31/10/2026), da cui la 3D prende numeri e vecchi salvataggi; non si gioca più
+  dati/              i dati 2D da cui la 3D legge i numeri (`dati/parita2d.js` è il ponte): coltivazioni (colture, ricette, merci, silos, `PROFONDITA`),
+                     catalogo, livelli (soglie, `roba`), mercato (clienti, premio a gesti), botteghe, mongolfiera, coda (la fila), bisogni, animali,
+                     addobbi, stagioni (le finestre), mondo, terreni, ostacoli ([catena.md](catena.md), [livelli.md](livelli.md))
+  dati/disegni.js    quello che la 2D ricavava dall'atlante (piede, giri, ritratti dei recinti, bestie e agganci), fermo: l'atlante non lo tiene più ([parita/migrazione.md](parita/migrazione.md))
+  motore/fattoria.js la `Fattoria` 2D: rilegge un salvataggio 2D per la conversione (`motore/migra.js`, [parita/migrazione.md](parita/migrazione.md))
+  motore/tipo.js     la fattoria 2D «tipo» di un livello, per il cheat `#fattoria-tipo=N` e le prove della conversione; mercato, botteghe e mongolfiera i suoi motori
 motore/
+  migra.js           la conversione 2D → 3D (`statoDa2D`, `ritoccaLaConversione`, `statoRifattoDa2D`): [parita/migrazione.md](parita/migrazione.md)
   fattoria3d.js      le regole: la classe Fattoria3d (borsa e orologio da fuori)
   guida.js           il primo giro: dal quadro di quello che c'è, il passo `{ testo, dove, mano }` (pura; [guida.md](guida.md))
   consiglio.js       «E adesso?» (`cosaFaccioAdesso`) e il passo per avere una merce (`comeAvere`, risale la catena) con l'azione per farlo (pura)
@@ -62,11 +70,13 @@ scena3d/             il disegno (vedi scena.md); `facce.js` la faccia di una mer
   scena3d/modelli-botteghe.js   pasticceria, osteria, mensa e merceria (3×3, 3–5 mesh fuse l'una) con un dettaglio che si muove ([botteghe.md](botteghe.md))
   scena3d/modelli-pesca.js      il molo (3×1 e 1×3) e il porticciolo (4×3, la barca dondola); friggitoria e sushi bar stanno in `modelli-macchine.js` ([geografia-e-pesca.md](geografia-e-pesca.md))
   scena3d/pesci.js              i pesciolini: una `InstancedMesh` sola, tutta nello shader (`uTPesci`), nell'acqua dei laghi, del mare e degli stagni
-  scena3d/stagione.js           le feste in scena: cielo e luci tinti, i fiocchi (un `Points`), chiazze, stelle, alberelli e lucine a istanze; `via()` rimette tutto ([stagioni.md](stagioni.md))
-  scena3d/modelli-feste.js      le zucche di Halloween (`zucca_intagliata`, `zucche_mucchio`)
+  scena3d/stagione.js           le feste in scena: cielo e luci tinti, i fiocchi (un `Points`), chiazze, stelle, alberelli, lucine e ghiaccioli a istanze; `via()` rimette tutto ([stagioni.md](stagioni.md))
+  scena3d/neve.js               a Natale: il prato innevato, la neve sulle facce in alto (copie innevate dei materiali, da fuori ai modelli), il ghiaccio dei laghi
+  scena3d/fiato.js              a Natale: la nuvoletta del fiato del contadino e dei compagni (un `Points`)
+  scena3d/modelli-feste.js      le zucche di Halloween (`zucca_intagliata`, `zucche_mucchio`) e il pupazzo di Natale (`pupazzo_neve`)
   scena3d/pesca3d.js            il galleggiante (tre stadi: calma, attesa, «Abbocca!»), il filo dalla canna, il ritiro da sé se il contadino è lì
 viste/
-  Faccia.vue         la faccia di una merce (`k` la chiave, `n` il numerino): il pezzo dell'atlante 2D con `Provino.vue`, l'emoji come ripiego; la usano inventario, banco, macchina, semi, livelli, visita
+  Faccia.vue         la faccia di una merce (`k` la chiave, `n` il numerino): il pezzo dell'atlante (`src/grafica/atlante-fattoria.js`) con `Provino.vue` (la figura in scala, venuta dalla 2D), l'emoji come ripiego; la usano inventario, banco, macchina, semi, livelli, visita
   Hud.vue            il gettone del livello (⭐ N con la barra sottile, apre i livelli), il tasto «🎒 Inventario» (pallino se è entrata roba dall'ultima apertura) e, da livello 2, «🧺 Banco» col pallino degli ordini consegnabili. Niente liste di scorte sul prato
   Albero.vue         «🌳 Come si fa»: la strada di una merce a figure con le rotaie (dati/albero.js); si apre da inventario e da sotto un «non si può» ([guida.md](guida.md); stile: `stile-albero.css`)
   Inventario.vue     il foglio delle scorte a schede (🌾 raccolti, 🧺 prodotti, 🧶 lana e altro): gettoni con faccia e numero, un tocco dice nome e a cosa serve; solo lettura, niente vendere. Il conto sta in `inventario-puro.js` (stile: `stile-inventario.css`)
@@ -135,14 +145,14 @@ Registrazione: `src/giochi/indice.js` (il manifesto, in coda) e `src/giochi/sche
 
 ## Il foglio della macchina: il gesto
 
-La 2D non ha un foglio per le macchine (i gettoni stanno sul prato, [../fattoria/come-si-tocca.md](../fattoria/come-si-tocca.md)): qui il foglio c'è,
+La 2D non aveva un foglio per le macchine (i gettoni stavano sul prato: un foglio, anche piccolo, i bambini lo vivevano come un gioco «fermo»): qui il foglio c'è,
 ma il gesto è lo stesso, «si porta la ricetta dove serve».
 
 - **Tocco = in fila** (una ricetta, subito: è la scorciatoia); **trascinata = su un posto o sulla fila**. Lasciata sull'insegna, sulla fila, sui pronti o su un
   posto (anche occupato: il motore la mette nel primo libero) va in fila; **lasciata altrove non succede niente** (niente ingredienti persi, il fantasma sparisce).
   I posti liberi si accendono mentre si trascina e quello sotto il dito si alza. Un no (posti occupati, mancano ingredienti, livello, monete per il posto) lo dice `macchina-msg`. Un tocco su un vano chiuso compra il posto (`compraPosto`), non è un bersaglio di trascinata.
 - **Il bersaglio è il punto sotto il dito**, non il fantasma, che sta 40 px sopra perché il dito non lo copra.
-- **Soglia ~16 px col dito, 6 col mouse** (`SCARTO_DITO`/`SCARTO_MOUSE` di `fattoria/scena/dito.js`, [../core/il-dito.md](../core/il-dito.md)). Le carte hanno
+- **Soglia ~16 px col dito, 6 col mouse** (`SCARTO_DITO`/`SCARTO_MOUSE` di `viste/dito-soglie.js`, [../core/il-dito.md](../core/il-dito.md)). Le carte hanno
   `touch-action: none` (se no il browser si prende il dito e manda `pointercancel`) e lo scorrimento del foglio lo fa il codice: **su e giù svelto scorre**
   (solo se il foglio scorre davvero), **di lato, o tenuto fermo 160 ms e poi mosso in qualunque verso, trascina**. Se il foglio non scorre, ogni verso trascina:
   la fila sta *sopra* le carte e un bambino trascina in su. Una carta chiusa non si porta in giro.

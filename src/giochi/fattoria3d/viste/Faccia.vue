@@ -3,7 +3,7 @@
 // ce l'ha, l'emoji dei dati come ripiego dichiarato (`aspetta`). `k` è la chiave 3D (un raccolto, un prodotto, uova, latte); `emoji` serve
 // solo se la chiave non si conosce; `n` > 0 mette il numerino «×n» in alto a destra. Vedi docs/fattoria3d/merci-e-ricette.md.
 import { computed } from 'vue'
-import Provino from '../../fattoria/viste/Provino.vue'
+import Provino from './Provino.vue'
 import { merceDi } from '../dati/ricette.js'
 
 const props = defineProps({

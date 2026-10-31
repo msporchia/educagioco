@@ -14,8 +14,10 @@ export const fascia = chiave => FASCE.find(f => f.chiave === chiave) || FASCE[0]
 // sola (si legge sulla carta prima di sceglierla). `intera: true` vuol
 // dire che quello che dà non si può dare a metà (una freccia, un
 // cuore): sono le carte che nel gioco libero hanno un tetto vero.
+// `cura: true` è una carta che non cresce e non finisce mai (la mela):
+// costa sempre quanto la sua fascia e non conta fra le carte prese.
 export const MAZZO = [
-  { chiave: 'mela',     nome: 'Mela curativa',   icona: '🍎', fascia: 'debole', max: 9, intera: true,
+  { chiave: 'mela',     nome: 'Mela curativa',   icona: '🍎', fascia: 'debole', max: 1, cura: true,
     chiaro: 'ti torna un cuore, subito' },
   // la calamita di base non c'è più (le gemme si prendono a contatto):
   // questa carta è l'unico modo di averne una, il raggio si allarga copia
@@ -63,6 +65,14 @@ export const MAZZO = [
     chiaro: 'una lancia parte dove corri e trapassa tutti' },
 ]
 
+// com'è fatta un'offerta (Partita.offri): `carte` quante, `riprese` quante
+// al massimo fra quelle già prese, e nelle prime `curate` carte prese ce
+// n'è sempre una di ARMI_DI_PARTENZA, quelle che raddoppiano l'attacco
+// (con la sfortuna della pesca una tappa alta partiva già persa) — vedi
+// docs/survivors/regole.md
+export const OFFERTA = { carte: 4, riprese: 2, curate: 4 }
+export const ARMI_DI_PARTENZA = ['frecce', 'grandi']
+
 export const carta = chiave => MAZZO.find(c => c.chiave === chiave) || null
 
 // Il prezzo (0..1) ha tre pezzi: la fascia, il rincaro della tappa, e la
@@ -94,8 +104,9 @@ export const resa = (lv = 0, max = 1) => {
 }
 
 // fin dove si può cumulare una carta: in campagna è sempre il suo max
+// (una cura non ha tetto)
 export const tettoDi = (c, infinita = false) =>
-  infinita && !c.intera ? Infinity : c.max
+  c.cura || (infinita && !c.intera) ? Infinity : c.max
 
 // il prezzo come si vede: cinque pallini, uno ogni due decimi — devono
 // dire il prezzo di adesso, non quello della fascia
@@ -124,6 +135,8 @@ export function guastiDelMazzo(mazzo = MAZZO, fasce = FASCE) {
     if (!fasce.some(f => f.chiave === c.fascia)) guasti.push(`${dove}: fascia "${c.fascia}" sconosciuta`)
     if (c.nome.length > 22) guasti.push(`${dove}: nome lungo ${c.nome.length} caratteri`)
   }
+  for (const k of ARMI_DI_PARTENZA)
+    if (!mazzo.some(c => c.chiave === k)) guasti.push(`l'arma di partenza "${k}" non è nel mazzo`)
   for (const f of fasce) {
     const quante = mazzo.filter(c => c.fascia === f.chiave).length
     if (quante < 3) guasti.push(`la fascia "${f.chiave}" ha solo ${quante} carte`)
@@ -160,6 +173,10 @@ export function guastiDelMazzo(mazzo = MAZZO, fasce = FASCE) {
   if (!(RESA_OLTRE > 0 && RESA_OLTRE < 1))
     guasti.push(`la resa delle copie in più vale ${RESA_OLTRE}: sopra 1 non è una serie che si chiude`)
   for (const c of mazzo) {
+    if (c.cura) {
+      if (Number.isFinite(tettoDi(c))) guasti.push(`carta "${c.chiave}": una cura finisce`)
+      continue
+    }
     if (tettoDi(c, false) !== c.max)
       guasti.push(`carta "${c.chiave}": in campagna il tetto non è il suo max`)
     const senzaFine = tettoDi(c, true)
@@ -184,7 +201,7 @@ export function guastiDelMazzo(mazzo = MAZZO, fasce = FASCE) {
                   `${RESA_TOTALE.toFixed(2)} gradi in più`)
   }
   for (const f of fasce) {
-    const ancora = mazzo.filter(c => c.fascia === f.chiave && !c.intera).length
+    const ancora = mazzo.filter(c => c.fascia === f.chiave && !c.intera && !c.cura).length
     if (ancora < 3)
       guasti.push(`la fascia "${f.chiave}" ha solo ${ancora} carte che crescono oltre il tetto`)
   }

@@ -4,10 +4,10 @@
    il prodotto in vista solo da pronte, pochi mesh). Senza browser. Docs: docs/fattoria3d/cortile-2.md, parita/animali.md (A1g–A1k), parita/colture-e-catena.md (C18, C19).
    `node test/esegui.mjs fattoria3d-cortile2`
    tempo: 1 */
-import { PRODOTTI, RICETTE as RICETTE_2D } from '../../src/giochi/fattoria/dati/coltivazioni.js'
-import { PER_ID as VOCI_2D } from '../../src/giochi/fattoria/dati/catalogo.js'
-import { livelloDellaVoce, livelloDellaRicetta as livello2D } from '../../src/giochi/fattoria/dati/livelli.js'
-import { PEZZI as ATLANTE } from '../../src/giochi/fattoria/dati/atlante.js'
+import { PRODOTTI, RICETTE as RICETTE_2D } from '../../src/giochi/fattoria3d/da2d/dati/coltivazioni.js'
+import { PER_ID as VOCI_2D } from '../../src/giochi/fattoria3d/da2d/dati/catalogo.js'
+import { livelloDellaVoce, livelloDellaRicetta as livello2D } from '../../src/giochi/fattoria3d/da2d/dati/livelli.js'
+import { PEZZI as ATLANTE } from '../../src/grafica/atlante-fattoria.js'
 import { PEZZI, guastiDelCatalogo } from '../../src/giochi/fattoria3d/dati/catalogo.js'
 import { COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { RICETTE, MACCHINE, guastiDelleRicette, merceDi } from '../../src/giochi/fattoria3d/dati/ricette.js'
@@ -17,7 +17,6 @@ import { MANGIMI_SENZA_RICETTA, NUMERI_DEL_CORTILE_2 } from '../../src/giochi/fa
 import { guastiDeiLivelli, sogliaDi, livelloDelMangime, livelloDellaRicetta } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { guastiDellaScala, catenaMs, TETTO_ATTESA_MS } from '../../src/giochi/fattoria3d/motore/taratura.js'
 import { guastiDeiSilos, siloDi, merciDelSilo } from '../../src/giochi/fattoria3d/dati/silos.js'
-import { DISEGNI } from '../../src/giochi/fattoria3d/dati/carte.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { normalizza } from '../../src/giochi/fattoria3d/motore/stato.js'
 import { alberoDi } from '../../src/giochi/fattoria3d/dati/albero.js'
@@ -56,7 +55,6 @@ const COME_2D = { conigliera: 'conigliera', alpaca: 'recinto_alpaca', asini: 're
     uguale(`${t}: mangia ${JSON.stringify(d.prende)} come in 2D`, JSON.stringify([A.mangia[0], A.pasti]), JSON.stringify(Object.entries(d.prende)[0]))
     uguale(`${t}: il prodotto è «${d.da}»`, A.prodotto, d.da)
     controlla(`${t}: è un animale produttivo che sta tra gli animali`, P.categoria === 'animali' && P.produttivo === true && P.w === 4 && P.d === 3)
-    controlla(`${t}: la carta ha il disegno nell'atlante`, !!ATLANTE[DISEGNI[t]], String(DISEGNI[t]))
     controlla(`${t}: i numeri provvisori non ci sono più (livello e prezzo sono letti dalla 2D)`, NUMERI_DEL_CORTILE_2[t].liv === P.liv && NUMERI_DEL_CORTILE_2[t].prezzo === P.prezzo)
   }
   controlla('la peschiera non c\'è: la pesca ne prende il posto', !PEZZI.peschiera && PEZZI.molo.liv === VOCI_2D.peschiera.liv)

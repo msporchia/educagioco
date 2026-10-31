@@ -6,7 +6,6 @@ const CodiceSegreto = caricaQuando(() => import('./codice-segreto/Gioco.vue'))
 const Survivors = caricaQuando(() => import('./survivors/Gioco.vue'))
 const Conta = caricaQuando(() => import('./conta/Gioco.vue'))
 const PrimaDopo = caricaQuando(() => import('./prima-dopo/Gioco.vue'))
-const Fattoria = caricaQuando(() => import('./fattoria/Gioco.vue'))
 // il sotterraneo è disegnato in WebGL: Entrata.vue lo apre solo se il telefono sa disegnarlo (docs/sotterraneo/grafica-3d.md)
 const Sotterraneo = caricaQuando(() => import('./sotterraneo/Entrata.vue'))
 const Pozioni = caricaQuando(() => import('./pozioni/Gioco.vue'))
@@ -16,7 +15,7 @@ const Inglese = caricaQuando(() => import('./inglese/Gioco.vue'))
 const Spagnolo = caricaQuando(() => import('./spagnolo/Gioco.vue'))
 const Arena = caricaQuando(() => import('./arena/Gioco.vue'))
 const Giardino = caricaQuando(() => import('./giardino/Gioco.vue'))
-// la fattoria disegnata in 3D, gioco in prova: stato e risorse suoi (docs/fattoria3d/)
+// la fattoria (in 3D: chiave e cartelle restano fattoria3d, docs/fattoria3d/)
 const Fattoria3d = caricaQuando(() => import('./fattoria3d/Gioco.vue'))
 
 export const SCHERMATE = {
@@ -24,7 +23,6 @@ export const SCHERMATE = {
   survivors: Survivors,
   conta: Conta,
   prima: PrimaDopo,
-  fattoria: Fattoria,
   sotterraneo: Sotterraneo,
   pozioni: Pozioni,
   passo: PassoPasso,

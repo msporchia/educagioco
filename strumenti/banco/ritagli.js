@@ -44,7 +44,7 @@
    sapere se c'è qualcosa da salvare, e non passa da un parse e un
    serialize che potrebbero perdere per strada una chiave che non
    conosciamo. */
-import { AGGANCI as AGGANCI_RIPIEGO, AGGANCI_TUTTI } from '../../src/giochi/fattoria/dati/animali.js'
+import { AGGANCI as AGGANCI_RIPIEGO, AGGANCI_TUTTI } from '../../src/giochi/fattoria3d/da2d/dati/animali.js'
 
 const FOGLIETTI = import.meta.glob('/strumenti/sprite/sorgenti/**/*.json',
                                    { eager: true, query: '?raw', import: 'default' })

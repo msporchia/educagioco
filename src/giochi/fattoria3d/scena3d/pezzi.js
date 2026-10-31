@@ -14,7 +14,7 @@ import { creaBottegaPasticceria, creaBottegaOsteria, creaBottegaMensa, creaBotte
 import { eBottega } from '../dati/botteghe.js'
 import { creaStagnoAnatre, creaPorcile, creaRecintoCapre, creaPentolone, creaAnatra, creaMaiale, creaCapra } from './modelli-cortile.js'
 import { creaConigliera, creaRecintoAlpaca, creaRecintoAsini, creaApiario } from './modelli-cortile2.js'
-import { creaZucca, creaZucche } from './modelli-feste.js'
+import { creaZucca, creaZucche, creaPupazzo } from './modelli-feste.js'
 import { DECORI_CREA } from './modelli-decori.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { RICETTE, MACCHINE, merceDi } from '../dati/ricette.js'
@@ -58,6 +58,7 @@ const CREA = {
   porticciolo: () => creaPorticciolo(),
   zucca_intagliata: () => creaZucca(),
   zucche_mucchio: () => creaZucche(),
+  pupazzo_neve: () => creaPupazzo(),
   ...DECORI_CREA,                    // le decorazioni portate dalla 2D (giro G8): verde, recinti, raccolto, case, bestiole (modelli-decori*.js)
 }
 const CREA_EDIFICIO = {
@@ -126,7 +127,7 @@ export class Pezzi {
       urgenti per primi: il campo, il recinto, il pollaio e la stalla con le loro bestie, poi il resto dei pezzi e dei creatori di
       bestie, infine gli edifici (non sono in scena finché non si comprano: il primo costruito non deve pagare il modello). Una fila di funzioni, ognuna costruisce e butta un'istanza. */
   compitiScaldo() {
-    const pezzi = ['campo', 'recinto', 'pollaio', 'stalla', 'anatre', 'porcile', 'capre', 'aiuola', 'panchina', 'pozzo', 'fontana', 'spaventapasseri', 'ponte', 'passerella', 'tavolo', 'bancarella', 'bacheca', 'stagno', 'laghetto', 'molo', 'molo_v', 'porticciolo', 'zucca_intagliata', 'zucche_mucchio']
+    const pezzi = ['campo', 'recinto', 'pollaio', 'stalla', 'anatre', 'porcile', 'capre', 'aiuola', 'panchina', 'pozzo', 'fontana', 'spaventapasseri', 'ponte', 'passerella', 'tavolo', 'bancarella', 'bacheca', 'stagno', 'laghetto', 'molo', 'molo_v', 'porticciolo', 'zucca_intagliata', 'zucche_mucchio', 'pupazzo_neve']
     const fai = tipo => ({ nome: tipo, fai: () => { if (PEZZI[tipo]) modelloDi(tipo, PEZZI[tipo], CORTILE[tipo] ? { pecore: [], bestie: [] } : undefined) } })
     return [...pezzi.slice(0, 4).map(fai), { nome: 'pecora', fai: () => creaPecora() }, { nome: 'gallina', fai: () => { creaGallina(0); creaGallina(1) } },
             { nome: 'mucca', fai: () => { creaMucca(0); creaMucca(1) } },

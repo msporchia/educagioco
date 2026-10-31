@@ -56,6 +56,8 @@ il livello resta dov'era, un secondo passaggio non cambia i conti.
   `liberaFesta()` quando finisce (uno per uno); `Traguardo.vue` mostra la
   festa solo a contatore zero. Prima il velo compariva sotto il dito, si
   prendeva il resto del gesto, e la fattoria restava col gettone in mano.
+  La chiamava la fattoria 2D (il cesto strisciato sui campi); tolta lei il
+  31/10/2026, oggi non la chiama nessun gioco.
 
 ## La pagina «I miei progressi»
 

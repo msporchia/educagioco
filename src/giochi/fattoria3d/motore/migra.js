@@ -1,17 +1,17 @@
-/* La conversione 2D → 3D: da quello che la fattoria di sempre ha salvato (src/giochi/fattoria/) allo stato della fattoria 3D. Funzione
+/* La conversione 2D → 3D: da quello che la fattoria di sempre ha salvato (campagne.fattoria, letto con da2d/motore/fattoria.js) allo stato della fattoria 3D. Funzione
    pura (nessun profilo, nessun DOM; l'orologio arriva da fuori) che non lancia mai: un dato guasto o vuoto torna `null` e la 3D parte
    da zero. Le regole le ha decise l'utente (D1, docs/fattoria3d/parita/decisioni.md): fedele in tutto tranne nei piazzamenti, e MAI
    monete (le monete vengono solo dagli esercizi). Dal 22/10/2026 (D2) la scala dei livelli è la stessa della 2D: la mappatura è 1 a 1.
    Il perché di ogni scelta e la tabella cosa → cosa: docs/fattoria3d/parita/migrazione.md. */
-import { Fattoria } from '../../fattoria/motore/fattoria.js'
-import { PER_ID as COSE_2D } from '../../fattoria/dati/catalogo.js'
-import { PER_COLTURA as COLTURE_2D, PER_RICETTA as RICETTE_2D, quantoCresciuto, MINUTO } from '../../fattoria/dati/coltivazioni.js'
-import { livelloPer as livello2D, avanzamento as avanzamento2D, categoriaDi } from '../../fattoria/dati/livelli.js'
-import { PIAZZOLE_INIZIALI } from '../../fattoria/dati/mondo.js'
+import { Fattoria } from '../da2d/motore/fattoria.js'
+import { PER_ID as COSE_2D } from '../da2d/dati/catalogo.js'
+import { PER_COLTURA as COLTURE_2D, PER_RICETTA as RICETTE_2D, quantoCresciuto, MINUTO } from '../da2d/dati/coltivazioni.js'
+import { livelloPer as livello2D, avanzamento as avanzamento2D, categoriaDi } from '../da2d/dati/livelli.js'
+import { PIAZZOLE_INIZIALI } from '../da2d/dati/mondo.js'
 import { PEZZI, EDIFICI } from '../dati/catalogo.js'
 import { VOCE_DECORI } from '../dati/parita2d.js'
 import { COLTURE } from '../dati/colture.js'
-import { RICETTE } from '../dati/ricette.js'
+import { RICETTE, TIPI_DI_MACCHINA } from '../dati/ricette.js'
 import { PRODOTTI_ANIMALI } from '../dati/animali.js'
 import { MANGIMI_SENZA_RICETTA } from '../dati/cortile2.js'
 import { sogliaDi as soglia3D, livelloDelPezzo, livelloDellaColtura } from '../dati/livelli.js'
@@ -19,11 +19,17 @@ import { lottiPerPiazzole } from '../dati/regole.js'
 import { LOTTI_INIZIALI, lottoPerId, VICINI_4, vicinoDi } from '../dati/mondo.js'
 import { biomaDi } from '../dati/biomi.js'
 import { BESTIE, idDa2D, COMPAGNO_DI, bestiaInForma } from '../dati/bestie.js'
+import { PER_ID as ADDOBBI_3D, staA } from '../dati/addobbi.js'
+import { POSTI_MASSIMI } from '../dati/posti.js'
+import { SILOS, TIPI_DI_SILO, PASSI_PER_EDIFICIO, EDIFICI_PER_SILO } from '../dati/silos.js'
 import { statoIniziale, normalizza } from './stato.js'
 
 /** Il tetto di una scorta portata: nessuno ne ha tante, ma un dato guasto non deve gonfiare lo stato. */
 const TETTO = 9999
 const ESPERIENZA_MASSIMA = 1e9
+/** Il numero di questa conversione: 1 non portava gli ingrandimenti dei silos, i posti della fila, le zucche e la peschiera; 2 non portava
+    gli addobbi delle bestie. Uno stato convertito da una versione più vecchia si ritocca all'apertura (`ritoccaLaConversione`). */
+export const MIGRAZIONE = 3
 
 // ── la 2D → il pezzo o l'edificio 3D più vicino ──
 // Le macchine: stesso mestiere, a volte altro nome (la Cucina 2D è la `conserviera`, il Pastificio 2D la `pasticceria`).
@@ -41,7 +47,13 @@ const ALTRE = {
   fontana: 'fontana', pozzo: 'pozzo', stagno: 'stagno', laghetto: 'laghetto',      // fontana grande, cantina, pozzo coperto, panche e tavolino hanno ora il loro pezzo (DECORO_DA_2D)
   ponte: 'ponte', panchina: 'panchina', tavolo: 'tavolo', spaventapasseri: 'spaventapasseri',
   pasticceria: 'bottega_pasticceria', osteria: 'bottega_osteria', mensa: 'bottega_mensa', merceria: 'bottega_merceria',      // le botteghe del paese (giro G7): la 3D le ha dello stesso nome
+  zucca_intagliata: 'zucca_intagliata', zucche_mucchio: 'zucche_mucchio',      // le zucche di Halloween: stesso id, ma stanno nella scheda delle feste, non fra i decori
+  peschiera: 'porticciolo',            // la pesca ne ha preso il posto allo stesso livello (A1k): il pezzo più vicino è il porticciolo, uno solo
 }
+/** I silos della 2D sono edifici che la 3D mette da sé (`_assicuraMagazzini`) secondo gli ingrandimenti: non si portano come pezzi. */
+const EDIFICI_DEI_SILOS = new Set(TIPI_DI_SILO.map(t => SILOS[t].edificio))
+const PASSI_MASSIMI = PASSI_PER_EDIFICIO * EDIFICI_PER_SILO
+const MACCHINA_3D = new Set(TIPI_DI_MACCHINA)
 
 /** Le decorazioni portate in 3D (giro G8) hanno lo stesso id (tranne il `recinto` di legno): id 2D → id 3D. */
 const DECORO_DA_2D = Object.fromEntries(Object.entries(VOCE_DECORI).map(([id3d, id2d]) => [id2d, id3d]))
@@ -121,21 +133,34 @@ export function statoDa2D(dato, { ora = Date.now() } = {}) {
     const possedute = {}                                  // id 2D → quante (in mappa o nel magazzino)
     for (const c of f.cose) aggiungi(possedute, c.id, 1)
     for (const [id, q] of Object.entries(f.magazzino)) aggiungi(possedute, id, intero(q))
+    // i posti della fila comprati, copia per copia: quelli delle macchine in mappa stanno nella cosa, quelli delle macchine messe via in `fileRiposte`
+    const filaComprata = {}                               // id 2D → posti comprati in tutto
+    for (const c of f.cose) aggiungi(filaComprata, c.id, intero(c.fila))
+    for (const [id, lista] of Object.entries(f.fileRiposte || {})) for (const n of lista) aggiungi(filaComprata, id, intero(n))
 
-    // 1. le cose: un pezzo nel magazzino per ognuna; gli edifici sono uno per tipo, i doppioni e ciò che non esiste in 3D restano «da regalare»
+    // 1. le cose: un pezzo nel magazzino per ognuna; gli edifici sono uno per tipo, i doppioni e ciò che non esiste in 3D restano «da regalare».
+    //    Una macchina ha una fila sola: i posti comprati e le copie in più diventano posti della sua fila, fino a sei; quel che non ci sta resta da regalare.
     let campi = 0
     for (const [id, q] of Object.entries(possedute)) {
+      if (EDIFICI_DEI_SILOS.has(id)) continue
       const t = pezzoPer(id)
       if (!t) { aggiungi(daRegalare, 'cosa:' + id, q); continue }
-      if (EDIFICI[t]) {
-        const dentro = magazzino[t] ? 0 : 1
-        magazzino[t] = 1
-        aggiungi(daRegalare, 'cosa:' + id, q - dentro)
+      if (EDIFICI[t] || (PEZZI[t] && PEZZI[t].unico)) {
+        let avanzo = q
+        if (!magazzino[t]) { magazzino[t] = 1; avanzo-- }
+        if (MACCHINA_3D.has(t)) {
+          const M = s.macchine[t]
+          M.posti = Math.min(POSTI_MASSIMI, M.posti + (filaComprata[id] || 0))
+          while (avanzo > 0 && M.posti < POSTI_MASSIMI) { M.posti++; avanzo-- }
+        }
+        aggiungi(daRegalare, 'cosa:' + id, avanzo)
         continue
       }
       if (t === 'campo') campi += q
       else aggiungi(magazzino, t, q)
     }
+    // i silos: gli ingrandimenti si portano (la capienza è la stessa della 2D); gli edifici li mette la 3D, quanti ne servono
+    for (const t of TIPI_DI_SILO) s.silo[t] = Math.min(PASSI_MASSIMI, intero((f.silos || {})[t]))
     // il campo di partenza della 3D è già in mappa: ne contano uno in meno nel magazzino (i campi rincarano per copia, anche quelle nel magazzino)
     if (campi > 1) magazzino.campo = campi - 1
     for (const [t, n] of Object.entries(magazzino)) s.magazzino[t] = n
@@ -166,17 +191,21 @@ export function statoDa2D(dato, { ora = Date.now() } = {}) {
       }
     }
 
-    // 3. gli addobbi e le bestie di casa: la 3D non li ha ancora (i compagni arrivano col livello, senza nomi)
-    for (const [id, n] of Object.entries(f.guardaroba)) aggiungi(daRegalare, 'addobbo:' + id, intero(n))
+    // 3. gli addobbi (il guardaroba della 2D è il cassetto della 3D) e le bestie di casa
+    const nelCassetto = (id, n) => { if (ADDOBBI_3D[id]) aggiungi(s.addobbi, id, n); else aggiungi(daRegalare, 'addobbo:' + id, n) }
+    for (const [id, n] of Object.entries(f.guardaroba)) nelCassetto(id, intero(n))
     // Le bestie di casa (G6, docs/fattoria3d/bestie-di-casa.md): chi aveva preso beagle, coniglio, pappagallo o gatto rosso li ritrova, col nome e con i bisogni a metà
-    // (niente monete, niente premio già preso); il bobtail, il gatto bianco e nero e il gatto nero sono già in casa come compagni gratis (Watson, Sherlock, Pepe).
-    // Gli addobbi restano «da regalare»: i costumi si fanno più avanti.
+    // (niente monete, niente premio già preso); il bobtail, il gatto bianco e nero e il gatto nero sono i compagni gratis (Watson, Sherlock, Pepe): portano il nome che avevano.
+    // Gli addobbi che portava li porta ancora, se le stanno; se no tornano nel cassetto.
     const bestieDa2D = []
     for (const b of f.bestie) {
-      const bid = idDa2D(b.chi)
-      if (bid) { s.casa[bid] = bestiaInForma({ nome: b.nome, pancia: 0.5, pelo: 0.5, gioco: 0.5, premiato: false }, ora); bestieDa2D.push(bid) }
-      else if (!COMPAGNO_DI[b.chi]) aggiungi(daRegalare, 'bestia:' + b.chi, 1)
-      for (const id of Object.values(b.addobbi || {})) aggiungi(daRegalare, 'addobbo:' + id, 1)
+      const bid = idDa2D(b.chi) || COMPAGNO_DI[b.chi] || null
+      const addosso = Object.values(b.addobbi || {})
+      if (!bid) { aggiungi(daRegalare, 'bestia:' + b.chi, 1); for (const id of addosso) nelCassetto(id, 1); continue }
+      const su = Object.fromEntries(addosso.filter(id => staA(id, bid)).map(id => [ADDOBBI_3D[id].dove, id]))
+      s.casa[bid] = bestiaInForma({ nome: b.nome, pancia: 0.5, pelo: 0.5, gioco: 0.5, premiato: false, addobbi: su }, ora)
+      for (const id of addosso) if (!Object.values(su).includes(id)) nelCassetto(id, 1)
+      if (BESTIE[bid]) bestieDa2D.push(bid)
     }
 
     // 4. la terra: tutta quella che aveva (col regalo), rimessa in lotti da 4×4 (`lottiPerPiazzole`: la 2D parte con 324 celle, la 3D con 144, quindi anche chi non
@@ -208,17 +237,76 @@ export function statoDa2D(dato, { ora = Date.now() } = {}) {
     if (niente) return null
 
     s.daRegalare = daRegalare
-    s.migrato = 1
+    s.migrato = MIGRAZIONE
     return normalizza(s)
   } catch (e) {
     return null
   }
 }
 
-/** Lo stato con cui parte la 3D: il suo, se c'è; se no quello portato dalla fattoria 2D (se c'è); se no niente (parte da zero). `leggi(chiave, campo)` legge il profilo. */
+/** Ha la 3D, oggi, un posto per ciò che sta «da regalare»? Lo mette dove va e lo toglie dal conto; il resto aspetta. Muta `s` (normalizzato). */
+function consegnaIlDovuto(s, ora) {
+  const tiene = t => s.cose.some(c => c.tipo === t) || s.magazzino[t] > 0
+  for (const [k, n] of Object.entries(s.daRegalare)) {
+    const [genere, id] = [k.slice(0, k.indexOf(':')), k.slice(k.indexOf(':') + 1)]
+    let resta = n
+    if (genere === 'cosa') {
+      if (EDIFICI_DEI_SILOS.has(id)) resta = 0                   // i silos li mette la 3D dagli ingrandimenti
+      else {
+        const t = pezzoPer(id)
+        if (t && (EDIFICI[t] || (PEZZI[t] && PEZZI[t].unico))) {
+          if (!tiene(t)) { s.magazzino[t] = 1; resta-- }
+          if (MACCHINA_3D.has(t)) while (resta > 0 && s.macchine[t].posti < POSTI_MASSIMI) { s.macchine[t].posti++; resta-- }
+        } else if (t) { s.magazzino[t] = Math.min(TETTO, (s.magazzino[t] || 0) + resta); resta = 0 }
+      }
+    } else if (genere === 'scorta') {
+      const m = merceDel(id)
+      if (m && m.dove === 'lana') { s.lana = Math.min(TETTO, s.lana + resta); resta = 0 }
+      else if (m) { aggiungi(s[m.dove], m.id, resta); resta = 0 }
+    } else if (genere === 'addobbo') {
+      if (ADDOBBI_3D[id]) { s.addobbi[id] = Math.min(99, (s.addobbi[id] || 0) + resta); resta = 0 }
+    } else if (genere === 'bestia') {
+      const bid = idDa2D(id)
+      if (bid && !s.casa[bid]) { s.casa[bid] = bestiaInForma({ nome: '', pancia: 0.5, pelo: 0.5, gioco: 0.5, premiato: false }, ora); resta-- }
+      else if (COMPAGNO_DI[id]) resta = 0
+    }
+    if (resta > 0) s.daRegalare[k] = resta
+    else delete s.daRegalare[k]
+  }
+}
+
+/** Uno stato convertito da una conversione più vecchia (`migrato` < MIGRAZIONE) riprende dalla 2D, che non si tocca mai, quello che allora
+    non si portava (gli ingrandimenti dei silos, i posti della fila: mai meno di quanti ne ha già) e riceve ciò che sta «da regalare» e oggi c'è.
+    Torna lo stesso oggetto se non c'è niente da fare. Mai monete, non lancia mai. */
+export function ritoccaLaConversione(stato, dato2D, { ora = Date.now() } = {}) {
+  try {
+    if (!stato || typeof stato !== 'object' || !(stato.migrato > 0) || stato.migrato >= MIGRAZIONE) return stato
+    const s = normalizza(stato)
+    const rifatto = statoDa2D(dato2D, { ora })
+    if (rifatto) {
+      for (const t of TIPI_DI_SILO) s.silo[t] = Math.max(s.silo[t], rifatto.silo[t])
+      for (const t of TIPI_DI_MACCHINA) s.macchine[t].posti = Math.max(s.macchine[t].posti, rifatto.macchine[t].posti)
+      // le copie in più di una macchina, che allora erano «da regalare», ora sono posti della fila: resta da regalare solo quel che non ci sta
+      for (const k of Object.keys(s.daRegalare)) {
+        const t = k.startsWith('cosa:') && pezzoPer(k.slice(5))
+        if (!t || !MACCHINA_3D.has(t)) continue
+        if (rifatto.daRegalare[k] > 0) s.daRegalare[k] = Math.min(s.daRegalare[k], rifatto.daRegalare[k])
+        else delete s.daRegalare[k]
+      }
+    }
+    consegnaIlDovuto(s, ora)
+    s.migrato = MIGRAZIONE
+    return s
+  } catch (e) {
+    return stato
+  }
+}
+
+/** Lo stato con cui parte la 3D: il suo, se c'è (ritoccato se viene da una conversione vecchia); se no quello portato dalla fattoria 2D (se c'è);
+    se no niente (parte da zero). `leggi(chiave, campo)` legge il profilo. */
 export function statoDaCaricare(leggi) {
   const suo = leggi('fattoria3d', 'stato', null)
-  if (suo) return suo
+  if (suo) return suo.migrato > 0 && suo.migrato < MIGRAZIONE ? ritoccaLaConversione(suo, leggi('fattoria', 'stato', null)) : suo
   return statoDa2D(leggi('fattoria', 'stato', null))
 }
 

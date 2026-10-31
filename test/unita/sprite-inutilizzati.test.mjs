@@ -8,11 +8,13 @@
        nome non c'è;
      · le figure della roba «fuori» sono figure di `roba.json`, e quelle col `pezzo` non ci sono;
      · l'euristica dei nomi composti (`campo_${coltura}${i}`) riconosce un modello e ne rifiuta uno
-       con una parte variabile che non compare in nessun file. */
+       con una parte variabile che non compare in nessun file.
+   La fattoria è l'eccezione: lì chi disegna dice quali pezzi prende (`VIVI`), e il conto è un cancello —
+   l'atlante ha tutti quei pezzi e nient'altro. */
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
-import { inventario, nominatoDa, RADICE, SORGENTI } from '../../strumenti/sprite/inutilizzati.mjs'
+import { inventario, nominatoDa, moduloAtlante, pezziVivi, RADICE, SORGENTI } from '../../strumenti/sprite/inutilizzati.mjs'
 
 const r = await inventario()
 const STATI = ['letta', 'nessuno', 'allegato', 'schema', 'terzi']
@@ -30,11 +32,21 @@ for (const nome of ['scudi.png', 'bottino-e-arredo.png', 'armature-e-vesti.png']
 }
 
 for (const [gioco, v] of Object.entries(r.voci)) {
-  const A = await import(`../../src/giochi/${gioco}/dati/atlante.js`)
+  const A = await import('../../' + moduloAtlante(gioco))
   const ids = new Set(A.VOCI.map(x => x.id))
   nota(`${gioco}: ${v.nonNominate.length} voci su ${v.voci} che nessun file di src/ nomina`)
   uguale(`${gioco}: il totale delle voci è quello dell'atlante`, v.voci, A.VOCI.length)
   for (const x of v.nonNominate) controlla(`${gioco}: «${x.voce}» è una voce dell'atlante`, ids.has(x.voce))
+}
+
+// la fattoria: l'elenco esatto di chi disegna, contro l'atlante
+{
+  const { vivi, mancano } = await pezziVivi('fattoria')
+  const A = await import('../../' + moduloAtlante('fattoria'))
+  const morti = Object.keys(A.PEZZI).filter(n => !vivi.has(n))
+  nota(`fattoria: ${vivi.size} pezzi disegnati, ${Object.keys(A.PEZZI).length} nell'atlante`)
+  uguale('fattoria: ogni pezzo che il codice disegna è nell\'atlante', mancano.join(' '), '')
+  uguale('fattoria: l\'atlante non tiene pezzi che nessuno disegna (si tolgono dal foglietto, docs/core/sprite.md)', morti.join(' '), '')
 }
 
 const roba = JSON.parse(readFileSync(path.join(SORGENTI, 'sotterraneo/generati/roba.json'), 'utf8')).figure

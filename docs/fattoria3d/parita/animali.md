@@ -1,7 +1,6 @@
 # Parità: gli animali
 
-Legenda in [README.md](README.md). 2D: [../../fattoria/animali.md](../../fattoria/animali.md) (bestie di casa),
-[macchine.md](../../fattoria/macchine.md) (recinti). 3D: [../animali.md](../animali.md), [../compagni.md](../compagni.md),
+Legenda in [README.md](README.md). 2D: i dati in `da2d/dati/` (`animali.js`, `bisogni.js`, `addobbi.js`, i recinti in `catalogo.js`). 3D: [../animali.md](../animali.md), [../compagni.md](../compagni.md),
 [../regole.md](../regole.md) «Le pecore».
 
 ## I recinti del cortile (11 nella 2D, 10 nella 3D: la peschiera è la pesca)
@@ -29,7 +28,7 @@ zucca e la patata un'uscita. Livelli, prezzi e tempi sono provvisori (D2, D9) e 
 
 | id | cosa | stato | pri |
 |---|---|---|---|
-| A2 | gli animali dei recinti camminano | 🟡 la 2D no (disegno che cambia stato); la 3D sì, e i tre stadi si leggono (fame, al lavoro, pronta) | – |
+| A2 | gli animali dei recinti camminano | 🟡 la 2D no (un disegno che cambiava stato); la 3D sì, e i tre stadi si leggono (fame, al lavoro, pronta) | – |
 | A3 | stadi visti dalla camera di gioco / su telefono | ❌ non visti (solo catalogo 3D e test) | P1 [../da-fare.md](../da-fare.md) |
 
 ## Le bestie di casa (7 nella 2D, 4 comprabili nella 3D + i compagni gratis)
@@ -44,7 +43,7 @@ zucca e la patata un'uscita. Livelli, prezzi e tempi sono provvisori (D2, D9) e 
 | A4f | coniglio | 85/12 | ✅ `coniglio` 85/12, premio 6 | – |
 | A4g | pappagallo | 120/49 | ✅ `pappagallo` 120/49, premio 8 | – |
 
-La 2D compra le bestie (🪙635 in tutto, il «money pit» piccolo) e le **cura**; la 3D ha le stesse quattro che non regala (🪙370, stessi prezzi e livelli) e le cura allo stesso modo; **Watson, Sherlock, Irene e Pepe restano i compagni gratis, che non si curano** (G6, [../bestie-di-casa.md](../bestie-di-casa.md)). ✳ i compagni 3D (richiamo, feste di Watson, carezze, incontro cane-gatto) sono più ricchi, ma non spendono monete e non si
+La 2D comprava le bestie (🪙635 in tutto, il «money pit» piccolo) e le **curava**; la 3D ha le stesse quattro che non regala (🪙370, stessi prezzi e livelli) e le cura allo stesso modo; **Watson, Sherlock, Irene e Pepe restano gratis ma si curano anche loro** (bisogni, nome, premio del bobtail e dei gatti della 2D; si tiene premuto su di loro: [../bestie-di-casa.md](../bestie-di-casa.md)). ✳ i compagni 3D (richiamo, feste di Watson, carezze, incontro cane-gatto) sono più ricchi, ma non spendono monete e non si
 salvano (`VERSIONE_STATO` intatto, ripartono davanti alla casa).
 
 | id | cosa | 2D | 3D | pri |
@@ -66,8 +65,7 @@ sbagliato dato per gioco insegna il sbagliato; una coccola gratis c'è sempre (`
 
 | id | cosa | 2D | 3D | pri |
 |---|---|---|---|---|
-| A13 | addobbi | 12: fiore 6, cappellino 12, cilindro 18, corona 24, occhialini 10, occhiali 16, cappello da strega 8 (solo Halloween); sospesi (fiocco, sciarpa, campanella, mantellina, zainetto) | ❌ | P2 |
-| A14 | punti di aggancio (testa, muso, collo, schiena) | dal foglietto di ogni sprite | ❌ servirebbero sui modelli 3D | P2 |
+| A13 | addobbi | 12: fiore 6, cappellino 12, cilindro 18, corona 24, occhialini 10, occhiali 16, cappello da strega 8 (solo Halloween); sospesi (fiocco, sciarpa, campanella, mantellina, zainetto) | ✅ tutti e dodici in vendita (in 3D sono modelli, niente sospesi), stessi prezzi, anche sui compagni ([../addobbi.md](../addobbi.md)) | – |
+| A14 | punti di aggancio (testa, muso, collo, schiena) | dal foglietto di ogni sprite | ✅ `AGGANCI` per forma sui perni testa e corpo (`scena3d/modelli-addobbi.js`) | – |
 | A15 | guardaroba del contadino | ❌ | ✳ gratuito (cappello, maglia, pantalone, stivali, collo, capelli, pelle), speciali dai livelli 6–12 | tieni (D10) |
 
-Nota: il «fascia con il fiore» della contadina sembra un berretto (feedback aperto, [piano-a-giri.md](piano-a-giri.md)).

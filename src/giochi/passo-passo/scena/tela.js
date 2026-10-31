@@ -5,7 +5,7 @@
    **lati** delle celle che non danno su un posto dove si cammina, non
    sulle celle stesse. Le figure in piedi si disegnano in ordine di dove
    toccano terra (più in basso sullo schermo = più davanti). */
-import { ATLANTE, PEZZI, TESSERA } from '../../fattoria/dati/atlante.js'
+import { ATLANTE, PEZZI, TESSERA } from '../../../grafica/atlante-fattoria.js'
 import { creaFoglio, netto } from '../../../grafica/atlante.js'
 import { pezzo, COLORI, STAGIONI, CAROTA, ALBERO, ALBERO_NEVE, ALBERO_AUTUNNO, TANA, MASSO,
          CESPUGLIO, TAVOLOZZA_BACCHE, TAVOLOZZA_FIORI, PALO, FUMETTO, CUORE, STELLINA,
@@ -27,6 +27,12 @@ const CORRIDORI = {
   coniglio: { nome: 'coniglio', vuote: 3, lato: 0 },
   cane: { nome: 'cane-bobtail', vuote: 0, lato: 0 },
 }
+const SASSO = 'sasso_fiorito7', TRONCO = 'tronco_corto'      // i due ostacoli dipinti
+
+// I pezzi che questa tela prende dall'atlante della fattoria (i corridori: tre versi, quattro fotogrammi): l'atlante tiene
+// solo quello che qualcuno disegna, e lo legge strumenti/sprite/inutilizzati.mjs (docs/core/sprite.md).
+export const DALL_ATLANTE = [...Object.values(CORRIDORI).flatMap(c => ['giu', 'lato', 'su'].flatMap(v => [0, 1, 2, 3].map(fr => `${c.nome}_${v}${fr}`))),
+  SASSO, TRONCO]
 
 /* un numero fisso per cella, per le decorazioni: lo stesso livello si
    disegna sempre uguale, e due celle vicine non si somigliano */
@@ -265,7 +271,7 @@ export class Tela {
       specchiato(ctx, d, Math.round(cx - 8), fy - 13, hash(x, y, 8) < 0.5)
     } else if (o === 'sasso') {
       ombra(ctx, cx, fy - 1, 13)
-      this.foglio.posa(ctx, 'sasso_fiorito7', cx, fy)
+      this.foglio.posa(ctx, SASSO, cx, fy)
       if (this.tema === 'inverno') {
         ctx.fillStyle = '#ffffff'
         ctx.fillRect(Math.round(cx - 4), fy - 15, 7, 1)
@@ -273,7 +279,7 @@ export class Tela {
       }
     } else if (o === 'tronco') {
       ombra(ctx, cx, fy - 3, 14)
-      this.foglio.posa(ctx, 'tronco_corto', cx, fy - 3)
+      this.foglio.posa(ctx, TRONCO, cx, fy - 3)
     } else if (o === 'staccionata') {
       this.staccionata(x, y)
     }

@@ -1,7 +1,7 @@
 # Il secondo cortile: conigli, alpaca, asini, api
 
 Giro G5 della parità ([parita/](parita/README.md): A1g–A1k, C18, C19, C24). Quattro recinti e le merci che portano; ricette, mangime e prodotti sono
-**quelli della fattoria di sempre** ([../fattoria/macchine.md](../fattoria/macchine.md), [../fattoria/catena.md](../fattoria/catena.md)) e dal giro G3 anche
+**quelli della fattoria 2D** (`da2d/dati/`, le regole in [catena.md](catena.md)) e dal giro G3 anche
 livelli, prezzi e tempi (minuti) li legge `dati/parita2d.js`. Restano solo 3D le capienze e il prezzo delle singole bestie. I dati stanno in `dati/cortile2.js`
 (foglia, importa solo `parita2d.js`); i modelli in `scena3d/modelli-cortile2.js`, i profili dei tre stadi in `scena3d/bestie-puro-cortile2.js`.
 

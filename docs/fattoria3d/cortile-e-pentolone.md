@@ -1,8 +1,8 @@
 # Il pentolone e il cortile nuovo (anatre, maiali, capre)
 
 Giro G4 della parità ([parita/](parita/README.md): C18, C23, A1d–A1f, C30). La 14ª macchina della 2D e le tre bestie che mangiano da lei:
-ricette, mangime, prodotti e cosa mangia chi sono **quelli della fattoria di sempre** ([../fattoria/macchine.md](../fattoria/macchine.md),
-[../fattoria/catena.md](../fattoria/catena.md)); cambiano solo i tempi (minuti → secondi) e la scaletta.
+ricette, mangime, prodotti e cosa mangia chi sono **quelli della fattoria 2D** (`da2d/dati/`, le regole in [catena.md](catena.md)); cambiano
+solo i tempi (minuti → secondi) e la scaletta.
 
 ## I numeri: dal 22/10/2026 sono della 2D
 
@@ -51,7 +51,7 @@ sono quelle dell'atlante.
  carote + cavolfiore ─▶ pentolone: verdura fresca ─1─▶ capre (capra)   ─▶ 🥛 latte (lo stesso della stalla) 45 s
 ```
 
-**Tre mangimi, tre bocche** ([../fattoria/catena.md](../fattoria/catena.md)) torna intero (C30): ogni coltura ha la bocca che la mangia, e fra il
+**Tre mangimi, tre bocche** ([catena.md](catena.md)) torna intero (C30): ogni coltura ha la bocca che la mangia, e fra il
 campo e la bocca c'è un mestiere. `MANGIMI` (dati/mangime.js) è l'elenco dei cinque; `ricetteDelMangime`, `livelloDelMangime` e `lavoroDelMangime`
 li vedono tutti, quindi il rifiuto («Serve 🫕 pastone (2 a testa): lo fa il pentolone»), l'inventario e i tempi di ordini e scala funzionano senza
 casi a parte. Resta fuori il `mangime` del mulino (cane, gatto, peschiera): è dei compagni, A6.
