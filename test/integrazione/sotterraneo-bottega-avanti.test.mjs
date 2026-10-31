@@ -9,31 +9,34 @@
    è nella riga dopo, quindi una riga avanti e costa il doppio, e lo vende
    l'incantatrice (le bacchette non sono del fabbro).
    `node test/esegui.mjs sotterraneo-bottega-avanti`
-   tempo: 60
+   tempo: 200
    ═══════════════════════════════════════════════════════════════════ */
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
-import { apriBrowser, apriGioco, azzera, semina, attendi, scegli, allaLinguettaDi, nelDialogo, finestraFerma, scatto } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, attendi, scegli, allaLinguettaDi, mondoPronto, finestraFerma, scatto, alBancoDi,
+         senzaPensieri } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
-import { MERCANTI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { prezzoAvanti } from '../../src/giochi/sotterraneo/dati/mercanti.js'
 
 const mago = EROI.find(e => e.chiave === 'mago')
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
-const roba = { v: 1, gemme: 99, zaino: [], mano: 'verga', mancina: null, corpo: 'saio', collo: 'amuleto-azzurro',
+// gemme per lo scettro del doppio prezzo e poi per un pezzo col 🔒 qualunque (il banco ne pesca uno diverso a ogni giro: con 99 non sempre bastavano)
+const GEMME = 250
+const roba = { v: 1, gemme: GEMME, zaino: [], mano: 'verga', mancina: null, corpo: 'saio', collo: 'amuleto-azzurro',
                torcia: 0, torce: 0 }
 const stelle = { 0: 3, 1: 3, 2: 3 }
 await semina(page, {
   coins: 300, settings: { sperimentali: true },
   campagne: { sotterraneo: { tappa: 3, libera: false, stelle,
     cfg: { mondo: MONDO, eroe: 'mago', avventure: { mago: { tappa: 3, libera: false, stelle, missioni: {},
-      roba, terra: { nebbia: 'f'.repeat(768), dove: MERCANTI.incantatrice.accanto, parlato: true } } } } } },
+      roba, mondo: { parlato: true } } } } } },
 })
+await senzaPensieri(page)   // il fumetto dei pensieri, con un segno, prende il tocco
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await mondoPronto(page)
 await attendi(page, 500)
 
 const cdp = await page.context().newCDPSession(page)
@@ -49,10 +52,7 @@ async function toccaIl(sel) {
 }
 const gemmeBottega = async () => Number((await page.locator('[data-gemme-bottega]').innerText()).match(/\d+/)[0])
 
-await toccaIl('[data-mercante="incantatrice"]')
-await nelDialogo(page, '[data-scelta="bottega"]', { tocca: toccaIl })   // si parla, e «fammi vedere» apre il banco
-await page.waitForSelector('[data-bottega]', { timeout: 5000 })
-await attendi(page, 500)   // la bottega è cieca per un attimo (Bottega.vue, CIECO)
+await alBancoDi(page, 'incantatrice', { tocca, toccaIl })   // l'eroe va da lei, si parla, e «fammi vedere» apre il banco
 
 /* ---------- niente roba che non fa per lui, in nessuna linguetta ---------- */
 const mostrati = []
@@ -74,7 +74,7 @@ controlla('e dei pezzi da tenere per dopo, col 🔒', daTenere > 0, String(daTen
 uguale('e niente «Hai già il meglio che ho»', await page.locator('[data-banco-vuoto]').count(), 0)
 const altrui = mostrati.filter(k => COSE[k].famiglia && !mago.porta.includes(COSE[k].famiglia))
 uguale('il mago non vede armi o armature che non porta', altrui.join(), '')
-uguale('ha le sue tre linguette', (await page.locator('[data-bottega] [data-scheda]').evaluateAll(els => els.map(e => e.dataset.scheda))).join(), 'bacchette,vesti,energia')
+uguale('ha le sue quattro linguette: bacchette, vesti, cappelli, energia', (await page.locator('[data-bottega] [data-scheda]').evaluateAll(els => els.map(e => e.dataset.scheda))).join(), 'bacchette,vesti,cappelli,energia')
 controlla('e niente di ferro: né spade né asce né archi', mostrati.every(k => !['spade', 'asce', 'archi', 'ferro'].includes(COSE[k].famiglia)), mostrati.join())
 uguale('né la ✋ di quello che non fa per lui', await page.locator('[data-non-puoi]').count(), 0)
 
@@ -95,7 +95,7 @@ uguale('il tasto compra', (await page.locator('[data-azione="compra"]').innerTex
 uguale('ed è acceso', await page.locator('[data-azione="compra"]').isDisabled(), false)
 await toccaIl('[data-azione="compra"]')
 await attendi(page, 300)
-uguale('si paga il prezzo alto', await gemmeBottega(), 99 - prezzo)
+uguale('si paga il prezzo alto', await gemmeBottega(), GEMME - prezzo)
 uguale('e se ne va dalla vetrina', await page.locator('[data-casella-pezzo="scettro"]').count(), 0)
 
 {
@@ -116,8 +116,9 @@ uguale('e se ne va dalla vetrina', await page.locator('[data-casella-pezzo="scet
   await toccaIl('[data-azione="compra"]')
   await attendi(page, 300)
   controlla('si paga', (await gemmeBottega()) < costo)
-  await toccaIl('[data-chiudi]')
-  await page.waitForSelector('[data-chiudi]', { state: 'detached', timeout: 3000 })
+  await toccaIl('[data-bottega] [data-chiudi]')
+  await page.waitForSelector('[data-bottega]', { state: 'detached', timeout: 3000 })
+  await attendi(page, 400)
   await page.locator('[data-azione="zaino"]').click()
   await page.waitForSelector('[data-zaino]', { timeout: 3000 })
   await attendi(page, 300)

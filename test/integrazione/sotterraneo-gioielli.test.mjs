@@ -2,20 +2,20 @@
    DUE ANELLI E UNA COLLANA, NELLO ZAINO E ALLA BOTTEGA
 
    L'eroe ha sei caselle intorno (a sinistra scudo, corpo, collana; a destra arma
-   e due anelli: docs/sotterraneo/roba.md, «Due anelli e una collana»). Qui il giro
-   col dito: un salvataggio di prima con un amuleto «al dito» lo ritrova al collo,
-   le sei caselle ci sono e si toccano senza far ballare la pagina (390 px), un
+   e due anelli: docs/sotterraneo/roba.md, «Due anelli e una collana»; la settima, la testa, è dell'elmo: docs/sotterraneo/elmo.md). Qui il giro
+   col dito, dal mondo di sopra: un salvataggio di prima con un amuleto «al dito» lo ritrova al collo,
+   le caselle ci sono e si toccano senza far ballare la pagina (390 px), un
    anello nuovo con i due anelli pieni dice quale sostituirebbe e il tasto
    «l'altro anello» ribalta la scelta, «Indossa» mette dove si guarda e quello che
    c'era torna in tasca; e il rigattiere ha anelli e collane sotto la stessa linguetta.
    I tocchi sono tocchi, via CDP (docs/core/il-dito.md).
    `node test/esegui.mjs sotterraneo-gioielli`
-   tempo: 60
+   tempo: 300
    ═══════════════════════════════════════════════════════════════════ */
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { chiaveDelPezzo } from '../../src/giochi/sotterraneo/dati/cose.js'
-import { MERCANTI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, nelDialogo, finestraFerma } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, mondoPronto, finestraFerma, alBancoDi,
+         senzaPensieri } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -33,10 +33,11 @@ await semina(page, {
   coins: 300, settings: { sperimentali: true },
   campagne: { sotterraneo: { tappa: 6, libera: false, stelle,
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: 6, libera: false, stelle, missioni: {},
-      roba, terra: { nebbia: 'f'.repeat(768), dove: MERCANTI.rigattiere.accanto, parlato: true } } } } } },
+      roba, mondo: { parlato: true } } } } } },
 })
+await senzaPensieri(page)   // il fumetto dei pensieri, con un segno, prende il tocco
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await mondoPronto(page)
 await attendi(page, 500)
 
 const cdp = await page.context().newCDPSession(page)
@@ -141,14 +142,11 @@ const salvata = p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.roba
 controlla('la roba salvata ha il collo, il dito e il secondo dito', !!salvata && salvata.collo === 'amuleto-rosso' && !!salvata.dito && !!salvata.dito2, JSON.stringify(salvata))
 
 /* ---------- 6. il rigattiere: anelli e collane sotto la stessa linguetta ---------- */
-await toccaIl('[data-mercante="rigattiere"]')
-await nelDialogo(page, '[data-scelta="bottega"]', { tocca: toccaIl })
-await page.waitForSelector('[data-bottega]', { timeout: 5000 })
-await attendi(page, 500)
+await alBancoDi(page, 'rigattiere', { tocca, toccaIl })   // l'eroe va dal rigattiere del villaggio, si parla, e il banco si apre
 uguale('la linguetta dei gioielli', await page.locator('[data-bottega] [data-scheda="gioielli"]').count(), 1)
 const tipi = await page.locator('[data-bottega] [data-casella-pezzo]').evaluateAll(els => els.map(e => e.dataset.casellaPezzo))
 controlla('il banco ha dei gioielli', tipi.length > 0, tipi.join())
-uguale('e le sei caselle dell\'eroe sono anche qui', await page.locator('[data-bottega] [data-casella]').count(), 6)
+uguale('e le sette caselle dell\'eroe (con la testa) sono anche qui', await page.locator('[data-bottega] [data-casella]').count(), 7)
 uguale('con la collana al collo', await page.locator('[data-bottega] [data-casella="collo"]').getAttribute('data-cosa'), 'amuleto-rosso')
 await scatto(page, 'gioielli-bottega')
 

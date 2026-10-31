@@ -1,14 +1,14 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE ANTEPRIME 3D NEI PANNELLI (docs/sotterraneo/anteprime-3d.md)
 
-   Nel Sotterraneo 3D lo zaino mostra la roba coi modelli 3D (la spada,
+   Lo zaino mostra la roba coi modelli 3D (la spada,
    lo scudo, l'armatura sul manichino) e il ritratto è l'eroe 3D vestito;
    anelli e collane hanno la loro figura 3D dove c'è (docs/sotterraneo/roba-3d.md), le pozioni restano sprite. Le caselle compaiono subito e
    le anteprime arrivano poco dopo, tutte; i `data-` di sempre restano.
    Nella fila dei turni l'eroe e i mostri sono 3D (anche la pianta, dal
    22 ottobre: nessuna specie resta sprite); una chiave senza modello vale
-   null, e la vista tiene lo sprite. Nel Sotterraneo di sempre e con `#icone2d`
-   niente cambia. `--scatti`: lo zaino e la fila.
+   null, e la vista tiene lo sprite. Con `#icone2d` niente anteprime
+   (il sotterraneo in 2D, che non le aveva, è stato tolto). `--scatti`: lo zaino e la fila.
    `node test/esegui.mjs sotterraneo-3d-anteprime`
    tempo: 90
    ═══════════════════════════════════════════════════════════════════ */
@@ -19,21 +19,20 @@ import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 const roba = { v: 1, gemme: 0, zaino: [], mano: null, mancina: null, corpo: null, dito: null, torcia: 0, torce: 0 }
-async function entra(hash, tre = true) {
+async function entra(hash) {
   await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
   await azzera(page)
   await page.setViewportSize({ width: 390, height: 844 })
-  const a = { tappa: 1, libera: false, stelle: { 0: 3 }, missioni: {}, roba, terra: { nebbia: 'f'.repeat(768), dove: [55, 11], parlato: true } }
+  const a = { tappa: 1, libera: false, stelle: { 0: 3 }, missioni: {}, roba, mondo: { parlato: true } }
   await semina(page, { coins: 300, settings: { sperimentali: true },
     campagne: { sotterraneo: { tappa: 1, libera: false, stelle: { 0: 3 }, cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: a } } } } })
   await page.evaluate(h => { location.hash = h }, hash)
-  if (tre) await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 30000 })
-  else await page.waitForSelector('[data-tela="2d"]', { timeout: 30000 })
+  await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 30000 })
   await attendi(page, 2500)
 }
 const conta = sel => page.locator(sel).count()
 
-/* ── lo zaino nel 3D ── */
+/* ── lo zaino ── */
 await entra('sotterraneo=1&eroe=cavaliere&sotterraneo=roba&seme=11&dpr=1')
 {
   const t0 = Date.now()
@@ -76,12 +75,7 @@ await entra('sotterraneo=1&eroe=elfa&sotterraneo=branco&mostri=3&tipo=lupo,piant
   await scatto(page, 'sotterraneo-3d-anteprime-fila')
 }
 
-/* ── il Sotterraneo di sempre e #icone2d: niente cambia ── */
-await entra('sotterraneo=roba&giu=1&eroe=cavaliere&seme=11', false)
-await page.locator('[data-azione="zaino"]').first().click()
-await page.waitForSelector('[data-casella="mano"]', { timeout: 5000 })
-await attendi(page, 1500)
-uguale('nel 2D nessuna anteprima', await conta('[data-anteprima]'), 0)
+/* ── #icone2d: niente anteprime ── */
 await entra('sotterraneo=1&eroe=cavaliere&sotterraneo=roba&seme=11&dpr=1&icone2d')
 await page.locator('[data-azione="zaino"]').first().click()
 await page.waitForSelector('[data-casella="mano"]', { timeout: 5000 })

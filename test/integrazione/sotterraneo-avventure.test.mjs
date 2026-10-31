@@ -6,23 +6,25 @@
    discesa a metà sue. Qui il giro col dito: un profilo di prima si
    azzera aprendo il gioco (le avventure ripartono da zero, il record di
    fuori e le monete restano); poi, con un cavaliere che ha già la sua
-   roba, si cammina e si lascia a metà il pozzo; dal velo della pausa si
-   passa al mago (da sopra non si può: uscire non porta di sopra), che
-   comincia dalla scalinata con lo zaino vuoto e la nebbia nuova; si torna
+   roba, si cammina nel mondo di sopra e si lascia a metà una discesa; dal
+   velo della pausa si passa al mago (da sopra non si può: uscire non porta
+   di sopra), che comincia dal villaggio con lo zaino vuoto; si torna
    al cavaliere e si riprende giù dov'era, e «riprendi da qui» in home
-   riprende la sua discesa, con l'icona ritagliata dalla mappa.
+   riprende la sua discesa, con l'icona del suo posto.
+   L'eroe cammina col salto delle prove (`__mondo3d.vai`): la strada a
+   piedi la prova `integrazione/sotterraneo-mondo`.
 
    I tocchi sono tocchi (`Input.dispatchTouchEvent` via CDP): il click che
    il dito si lascia dietro cadrebbe sulla scheda appena aperta, e un
    `page.click()` non lo porterebbe.
    `node test/esegui.mjs sotterraneo-avventure`
-   tempo: 90
+   tempo: 300
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo , finestraFerma }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo, finestraFerma, mondoPronto }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
-import { PARTENZA } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
+import { ilMondo } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -36,7 +38,7 @@ await semina(page, {
     cfg: { eroe: 'cavaliere', roba, terra: { nebbia: 'f'.repeat(384), dove: [17, 41], parlato: true } } } },
 })
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await mondoPronto(page)
 await attendi(page, 500)
 
 const cdp = await page.context().newCDPSession(page)
@@ -50,7 +52,7 @@ async function toccaIl(sel) {
   const b = await page.locator(sel).first().boundingBox()
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
-const cella = () => page.locator('[data-eroe-terra]').getAttribute('data-cella')
+const cella = () => page.locator('[data-eroe-mondo]').getAttribute('data-cella')
 const gemme = async () => Number(await page.locator('[data-gemme-barra]').getAttribute('data-n'))
 /* chi scende lo dice la pagina dell'eroe (si apre dal globo): sulla mappa non c'è più la carta */
 async function chiScende() {
@@ -62,17 +64,10 @@ async function chiScende() {
   await attendi(page, 200)
   return chi
 }
-const trovati = () => page.locator('[data-posto][data-trovato="1"]').count()
-async function fermo() {
-  await page.waitForFunction(() => document.querySelector('[data-eroe-terra]')?.dataset.cammina === '0',
-                             null, { timeout: 15000 })
-  await attendi(page, 200)
-}
-// un passo sul prato: in alto a sinistra della vista, lontano dalle carte in cima e in fondo
+// l'eroe si porta davanti al rigattiere del villaggio (il salto delle prove): non è la piazza da cui si parte
 async function unPasso() {
-  const v = await page.locator('[data-terra]').boundingBox()
-  await tocca(v.x + 60, v.y + v.height * 0.45)
-  await fermo()
+  await page.evaluate(() => window.__mondo3d.vai('mercante:villaggio:rigattiere'))
+  await attendi(page, 1000)
 }
 /* «Cambia eroe» sta in fondo alla pagina dell'eroe: la pagina si chiude e si apre la scelta */
 async function apriLaScelta() {
@@ -87,7 +82,7 @@ async function apriLaScelta() {
 async function scegliCol(eroe) {
   await toccaIl(`.sot-eroe[data-eroe="${eroe}"]`)
   await page.waitForSelector('.sot-eroe[data-eroe]', { state: 'detached', timeout: 3000 })
-  await page.waitForSelector('[data-terra]', { timeout: 5000 })
+  await mondoPronto(page)
   await attendi(page, 400)
 }
 
@@ -102,8 +97,6 @@ uguale('con le sue stelle', sot?.stelle?.[0], 3)
 uguale('le monete restano', p?.coins, 300)
 controlla('si riparte col cavaliere, l\'eroe di prima', (await chiScende()).includes('Cavaliere'))
 uguale('senza gemme', await gemme(), 0)
-uguale('senza discese a metà', await page.locator('[data-ripresa]').count(), 0)
-uguale('e solo la scalinata aperta', await page.locator('[data-discesa][data-aperta="1"]').count(), 1)
 await scatto(page, 'avventure-azzerata')
 
 /* da qui un cavaliere di adesso, con la sua roba: si torna in home e si semina */
@@ -112,41 +105,35 @@ await page.waitForSelector('.carte', { timeout: 5000 })
 await semina(page, {
   campagne: { sotterraneo: { tappa: 1, libera: false, stelle: { 0: 3 },
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: 1, libera: false, stelle: { 0: 3 },
-      missioni: {}, roba, terra: { nebbia: 'f'.repeat(768), dove: [17, 41], parlato: true } } } } } },
+      missioni: {}, roba, mondo: { parlato: true } } } } } },
 })
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await mondoPronto(page)
 await attendi(page, 500)
 controlla('la pagina dell\'eroe è del cavaliere', (await chiScende()).includes('Cavaliere'))
-uguale('e sulla mappa non c\'è la carta di chi scende né il «cambio»',
+uguale('e sul mondo non c\'è la carta di chi scende né il «cambio»',
        await page.locator('[data-chi-sopra], [data-azione="eroe"]').count(), 0)
 uguale('con le sue gemme', await gemme(), 60)
-uguale('e il pozzo gli è aperto', await page.locator('[data-discesa="1"]').getAttribute('data-aperta'), '1')
-const trovatiCav = await trovati()
 
-/* ---------- 2. col cavaliere si cammina, e si lascia a metà il pozzo ---------- */
+/* ---------- 2. col cavaliere si cammina, e si lascia a metà una discesa ---------- */
 const casa = await cella()
 await unPasso()
 controlla('il cavaliere cammina', (await cella()) !== casa, await cella())
-await scendiNelSotterraneo(page, 1)
-await page.waitForSelector('.sot-tela', { timeout: 5000 })
-await attendi(page, 600)
-const campo = await page.locator('.sot-tela').boundingBox()
-await tocca(campo.x + campo.width * 0.6, campo.y + campo.height * 0.5)
-await attendi(page, 800)
+const doveCav = await cella()   // dove il mondo lo ricorda: scendere non lo sposta (il salto dell'eroe davanti all'ingresso è della prova)
+await scendiNelSotterraneo(page, 1, { tocca, scendi: false })   // l'eroe è davanti all'ingresso, col fumetto aperto
+await page.click('[data-fumetto-di] [data-azione="scendi"]')
+await page.waitForSelector('[data-tela="3d"]', { timeout: 30000 })
+await attendi(page, 1500)
 // da dentro la discesa: ⏸, «scelgo un altro eroe» (la discesa si salva com'è, come un'uscita)
 await page.click('button[aria-label="pausa"]')
 await page.waitForSelector('[data-pausa] [data-azione="eroe-giu"]', { timeout: 3000 })
 await attendi(page, 400)
 await page.click('[data-azione="eroe-giu"]')
 await page.waitForSelector('.sot-eroe[data-eroe]', { timeout: 3000 })
-await attendi(page, 300)
-const doveCav = await cella()
+await attendi(page, 900)   // il mondo che se ne va si scrive un attimo dopo
 p = await leggiProfilo(page)
-uguale('il pozzo resta a metà, col cavaliere, lasciato con un\'uscita',
+uguale('la discesa resta a metà, col cavaliere, lasciato con un\'uscita',
        p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.sosta?.via, 'uscita')
-controlla('e la carta, dietro la scelta, dice con chi', (await page.locator('.sot-ripresa .sot-dove').innerText()).includes('Cavaliere'))
-const nebbiaCav = p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.terra?.nebbia
 
 /* ---------- 3. le quattro avventure ---------- */
 uguale('quattro schede', await page.locator('.sot-eroe[data-eroe]').count(), 4)
@@ -157,7 +144,7 @@ controlla('e dice a che punto è: discese, stelle, gemme', schedaCav.includes('1
           && schedaCav.includes('💎 60'), schedaCav)
 controlla('la roba principale addosso', await page.locator('.sot-eroe[data-eroe="cavaliere"] [data-addosso="spada"]').count() === 1)
 controlla('e la discesa a metà', schedaCav.includes('a metà: le cantine dei goblin'), schedaCav)
-controlla('col pozzo ritagliato dalla mappa, non un\'emoji',
+controlla('con l\'icona del suo posto, non un\'emoji',
           await page.locator('.sot-eroe[data-eroe="cavaliere"] [data-a-meta] [data-ritaglio]').count() === 1)
 // la roba del seme: spada (braccio 2) e corazza (difesa 2) sopra i 18 · 3 · 1 di base del cavaliere
 // innerText mette un a capo fra l'icona e il numero: si confronta il testo compatto
@@ -177,12 +164,10 @@ await scatto(page, 'avventure-scelta')
 /* ---------- 4. il mago comincia da capo ---------- */
 await scegliCol('mago')
 controlla('la pagina dell\'eroe è del mago', (await chiScende()).includes('Mago'))
-uguale('dalla scalinata di casa', await cella(), PARTENZA.piede.join(','))
+// un eroe nuovo comincia dalla partenza del villaggio (docs/sotterraneo/avventure.md), non da dove stava l'altro
+uguale('dalla partenza del villaggio', await cella(), `${ilMondo().partenza.x},${ilMondo().partenza.y}`)
 uguale('con lo zaino vuoto', await gemme(), 0)
-uguale('senza discese a metà', await page.locator('[data-ripresa]').count(), 0)
-uguale('solo la scalinata è aperta', await page.locator('[data-discesa][data-aperta="1"]').count(), 1)
-controlla('e con la nebbia nuova', (await trovati()) < trovatiCav, `${await trovati()} posti trovati contro ${trovatiCav}`)
-await scatto(page, 'avventure-mago-terra')
+await scatto(page, 'avventure-mago-mondo')
 await unPasso()
 const doveMago = await cella()
 
@@ -190,18 +175,18 @@ const doveMago = await cella()
 await apriLaScelta()
 controlla('la scelta segna il mago', await page.locator('.sot-eroe.sot-scelto[data-eroe="mago"]').count() === 1)
 await toccaIl('.sot-eroe[data-eroe="cavaliere"]')
-await page.waitForSelector('.sot-tela', { timeout: 5000 })
-uguale('scegliere il cavaliere riprende la sua discesa, senza la terra di sopra', await page.locator('[data-terra]').count(), 0)
+await page.waitForSelector('[data-tela="3d"]', { timeout: 30000 })
+uguale('scegliere il cavaliere riprende la sua discesa, senza il mondo di sopra', await page.locator('[data-mondo3d]').count(), 0)
 controlla('nel pozzo, a metà', (await page.locator('.sot-piede').innerText()).includes('piano 1'))
 await page.waitForSelector('[data-pausa]', { timeout: 3000 })
 await attendi(page, 800)   // il profilo si scrive un attimo dopo
 p = await leggiProfilo(page)
 const av = p?.campagne?.sotterraneo?.cfg?.avventure || {}
-uguale('la terra del cavaliere è dov\'era rimasto', (av.cavaliere?.terra?.dove || []).join(','), doveCav)
-uguale('con la sua nebbia', av.cavaliere?.terra?.nebbia, nebbiaCav)
+const cellaDi = d => d && d.x != null ? `${d.x},${d.y}` : ''
+uguale('il mondo del cavaliere è dov\'era rimasto', cellaDi(av.cavaliere?.mondo?.dove), doveCav.replace(/\b0+(\d)/g, '$1'))
 // almeno le sue 60: ripresa la discesa, l'eroe può raccogliere una gemma prima che il profilo si legga
 controlla('e le sue gemme', av.cavaliere?.roba?.gemme >= 60, av.cavaliere?.roba?.gemme)
-uguale('nel profilo il mago ha la sua terra', (av.mago?.terra?.dove || []).join(','), doveMago)
+uguale('nel profilo il mago ha il suo mondo', cellaDi(av.mago?.mondo?.dove), doveMago.replace(/\b0+(\d)/g, '$1'))
 controlla('e non ha la roba del cavaliere', !av.mago?.roba?.mano && !(av.mago?.roba?.gemme > 0), JSON.stringify(av.mago?.roba))
 uguale('il cavaliere ha la sua sosta', av.cavaliere?.sosta?.tappa, 1)
 uguale('l\'avventura aperta è del cavaliere', p?.campagne?.sotterraneo?.cfg?.eroe, 'cavaliere')
@@ -217,7 +202,7 @@ uguale('con il pozzo ritagliato dalla mappa al posto della copertina',
        await page.locator('[data-riprendi] [data-ritaglio]').count(), 1)
 await scatto(page, 'avventure-riprendi-home')
 await toccaIl('[data-riprendi]')
-await page.waitForSelector('.sot-tela', { timeout: 5000 })
+await page.waitForSelector('[data-tela="3d"]', { timeout: 30000 })
 controlla('e si torna giù nel pozzo, col cavaliere', (await page.locator('.sot-piede').innerText()).includes('piano 1'))
 await attendi(page, 400)
 await toccaIl('[data-pausa] [data-azione="riprendi"]')
@@ -227,6 +212,5 @@ await page.waitForSelector('[data-zaino]', { timeout: 3000 })
 controlla('con la sua pozione in tasca', await page.locator('[data-tasca][data-cosa="pozione"]').count() === 1)
 
 uguale('nessun errore in console', errori.join(' · '), '')
-nota(`${trovatiCav} posti trovati dal cavaliere, il mago parte da casa`)
 await browser.close()
 riassunto('le quattro avventure col dito')

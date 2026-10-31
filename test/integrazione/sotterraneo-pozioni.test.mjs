@@ -7,16 +7,15 @@
    Con più stadi in tasca, bere apre la scelta (`[data-scegli-pozione]`): una riga per stadio, la ✕ in alto a destra, e nello
    scontro dice che poi tocca ancora a te (bere non costa il turno); con un solo stadio si beve e basta (lo prova `integrazione/sotterraneo-barra`).
    `node test/esegui.mjs sotterraneo-pozioni`
-   tempo: 120
+   tempo: 150
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scendiNelSotterraneo, finestraFerma }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, finestraFerma, scegliAttacco }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { COSE, CURE_IN_VENDITA } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { POZIONI_MASSIME } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { crescitaAttesa, robaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
-import { PARTENZA } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 
 const FINITE = 5   // dopo cinque discese la guaritrice ha tutte e quattro le cure
 const STELLE = Object.fromEntries(Array.from({ length: FINITE }, (_, i) => [i, 3]))
@@ -32,7 +31,7 @@ await semina(page, {
   coins: 300, settings: { sperimentali: true },
   campagne: { sotterraneo: { tappa: FINITE, libera: false, stelle: STELLE,
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: FINITE, libera: false, stelle: STELLE, missioni: {}, roba, crescita,
-      terra: { nebbia: 'f'.repeat(768), dove: PARTENZA.piede, parlato: true } } } } } },
+      mondo: { parlato: true } } } } } },
 })
 // la guaritrice si apre dall'indirizzo (docs/core/comandi.md: `#bottega=`), con le sole cose in tasca scritte lì
 await page.evaluate(z => { location.hash = `bottega=erborista&gemme=2000&zaino=${z}`; location.reload() }, ZAINO.join(','))
@@ -95,7 +94,7 @@ await attendi(page, 200)
 uguale('e la torcia si compra anche col tetto', await page.locator('[data-azione="compra"]').isDisabled(), false)
 
 /* ---------- 3. lo zaino: quante, e l'ampolla della vita ---------- */
-await toccaIl('[data-chiudi]')
+await toccaIl('[data-bottega] [data-chiudi]')
 await page.waitForSelector('[data-bottega]', { state: 'detached', timeout: 3000 })
 await toccaIl('[data-azione="zaino"]')
 await page.waitForSelector('[data-zaino]', { timeout: 3000 })
@@ -113,25 +112,24 @@ await page.waitForSelector('[data-zaino]', { state: 'detached', timeout: 3000 })
 /* ---------- 4. con più stadi in tasca, bere apre la scelta ---------- */
 // un cavaliere ferito nella discesa della storia: sbagliando una risposta i mostri colpiscono, e il menu offre di bere. L'indirizzo
 // della guaritrice riporta l'eroe al livello 1 (è fatto per guardare un banco): si riparte dal suo livello, con le cure di adesso. Si scende
-// nella scalinata, rifatta: la sentinella della botola non farebbe passare un eroe senza i punti dati
+// nella scalinata, rifatta: la sentinella della botola non farebbe passare un eroe senza i punti dati. Si scende dall'indirizzo
+// (`#sotterraneo=1`, con la prima discesa dei mostri vicina): l'eroe che cammina fino all'ingresso lo prova `integrazione/sotterraneo-mondo`
 const finale = { ...robaAttesa('cavaliere', FINITE), gemme: 1000, zaino: [...ZAINO, 'ampolla-maggiore', 'ampolla-maggiore'] }
 await page.evaluate(() => { location.hash = '' })
 await semina(page, {
   campagne: { sotterraneo: { tappa: FINITE, libera: false, stelle: STELLE,
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: FINITE, libera: false, stelle: STELLE, missioni: {}, roba: finale, crescita,
-      terra: { nebbia: 'f'.repeat(768), dove: PARTENZA.piede, parlato: true } } } } } },
+      mondo: { parlato: true } } } } } },
 })
-await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
-await page.evaluate(() => { location.hash = 'seme=11&sotterraneo=branco&mostri=2' })
-await scendiNelSotterraneo(page, 1).catch(async e => { await scatto(page, 'pozioni-errore'); throw e })
-await page.waitForSelector('.sot-velo-scontro [data-caselle-abilita][data-pronto]', { timeout: 10000 })
+await page.evaluate(() => { location.hash = 'sotterraneo=1&seme=11&sotterraneo=branco&mostri=2&tipo=ratto,goblin&stanza=sala' })
+await page.waitForSelector('[data-scontro-3d]', { timeout: 30000 }).catch(async e => { await scatto(page, 'pozioni-errore'); throw e })
+await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 20000 })
 const pozioni = async () => Number(await page.locator('[data-casella-barra="pozione"]').getAttribute('data-n'))
 const vita = async () => Number((await page.locator('[data-globo="vita"] .sot-globo-numero').textContent()) || 0)
 uguale('in discesa le cure sono quelle di prima: otto di quattro stadi', await pozioni(), POZIONI_MASSIME + 0)
 uguale('in piena forma non c\'è «bevi»', await page.locator('[data-azione="bevi-scontro"]').count(), 0)
 const piena = await vita()
-await toccaIl('[data-caselle-abilita] [data-azione="attacco"]')
+await scegliAttacco(page)
 await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 8000 })
 await attendi(page, 500)
 await page.locator('.sot-domanda .qz-tasto:not([data-giusta])').first().click()
@@ -157,12 +155,12 @@ await scatto(page, 'pozioni-scelta-scontro')
 await toccaIl('[data-scegli-pozione] [data-chiudi]')
 await page.waitForSelector('[data-scegli-pozione]', { state: 'detached', timeout: 3000 })
 uguale('chiusa la scelta non si è bevuto niente', await pozioni(), n0)
-uguale('e lo scontro è ancora lì, col suo menu', await page.locator('.sot-velo-scontro [data-caselle-abilita]').count(), 1)
+uguale('e lo scontro è ancora lì, col suo menu', await page.locator('[data-caselle-abilita]').count(), 1)
 await toccaIl('[data-azione="bevi-scontro"]')
 await page.waitForSelector('[data-scegli-pozione][data-pronto]', { timeout: 3000 })
 await toccaIl('[data-azione="bevi-questa"][data-cosa="pozione-grande"]')
-await page.waitForSelector('[data-duello][data-racconto]', { timeout: 8000 })
-await page.waitForSelector('[data-duello]:not([data-racconto])', { timeout: 20000 })
+await page.waitForSelector('[data-scontro-3d][data-racconto]', { timeout: 8000 })
+await page.waitForSelector('[data-scontro-3d]:not([data-racconto])', { timeout: 20000 })
 await attendi(page, 300)
 uguale('toccata una riga beve quella: una pozione in meno', await pozioni(), n0 - 1)
 uguale('e la scelta si è chiusa', await page.locator('[data-scegli-pozione]').count(), 0)
