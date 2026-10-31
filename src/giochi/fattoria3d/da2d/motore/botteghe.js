@@ -1,5 +1,5 @@
 /* Le botteghe del paese: le regole (chi arriva, cosa chiede, cosa succede consegnando). I numeri stanno
-   in dati/botteghe.js, l'elenco sulla voce del catalogo — vedi docs/fattoria/chi-chiede.md. La fama
+   in dati/botteghe.js, l'elenco sulla voce del catalogo — vedi docs/fattoria3d/botteghe.md. La fama
    non si salva, si conta da consegne (famaDi). Stessa forma di motore/mercato.js (pure, caso e ora da fuori). */
 import { PRODOTTI } from '../dati/coltivazioni.js'
 import { PER_ID, postoDi } from '../dati/catalogo.js'

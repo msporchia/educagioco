@@ -1,5 +1,5 @@
 /* La fila di una macchina: un posto di partenza, gli altri si comprano per macchina fino a sei, il
-   prezzo raddoppia (🪙20·40·80·160·320) — vedi docs/fattoria/macchine.md. */
+   prezzo raddoppia (🪙20·40·80·160·320) — vedi docs/fattoria3d/regole.md («Le macchine»). */
 
 export const POSTI_DI_PARTENZA = 1
 export const POSTI_MASSIMI = 6

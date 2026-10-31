@@ -1,5 +1,5 @@
 /* Le bestie che si possono comprare: incrociate con BESTIE dell'atlante (si vende solo quello che si
-   sa disegnare); si prendono e si spostano come un oggetto, e dove stanno si salva — vedi docs/fattoria/animali.md. */
+   sa disegnare); si prendono e si spostano come un oggetto, e dove stanno si salva — vedi docs/fattoria3d/bestie-di-casa.md. */
 import { BESTIE, AGGANCI as AGGANCI_DEL_FOGLIO } from '../../../../grafica/atlante-fattoria.js'
 import { cibiPer } from './bisogni.js'
 
@@ -17,14 +17,14 @@ export const ANIMALI = {
                     porta: ['testa', 'muso', 'collo'] },
 }
 
-// Esperienza, mai monete: un quindicesimo del prezzo (sotto l'ordine più piccolo del mercato) — vedi docs/fattoria/animali.md.
+// Esperienza, mai monete: un quindicesimo del prezzo (sotto l'ordine più piccolo del mercato) — vedi docs/fattoria3d/bestie-di-casa.md.
 export const QUOTA_BENESSERE = 1 / 15
 const PREZZO_MINIMO = Math.min(...Object.values(ANIMALI).map(a => a.prezzo))
 export const premioBenessere = chi =>
   Math.max(1, Math.round(((ANIMALI[chi] || {}).prezzo || PREZZO_MINIMO) * QUOTA_BENESSERE))
 
 // Dove sta la testa dentro lo sprite (frazioni del riquadro, non pixel), per verso: il foglietto della
-// bestia vince (agganci in strumenti/sprite/…), questa tabella è solo il ripiego — vedi docs/fattoria/animali.md.
+// bestia vince (agganci in strumenti/sprite/…), questa tabella è solo il ripiego — vedi docs/core/sprite.md («Gli agganci»).
 export const AGGANCI = {
   giu:  { testa: [0.50, 0.25],  muso: [0.50, 0.375], collo: [0.50, 0.48], schiena: [0.50, 0.59] },
   lato: { testa: [0.72, 0.22],  muso: [0.84, 0.34],  collo: [0.66, 0.41], schiena: [0.47, 0.38] },

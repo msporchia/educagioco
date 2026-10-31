@@ -1,6 +1,6 @@
 /* La fattoria tipo: una fattoria già giocata del livello chiesto, costruita giocando (stesso motore,
    borsa infinita), già in moto (campi a stadi diversi, macchine cariche, botteghe coi clienti).
-   Deterministica (caso(), mai Math.random) — vedi docs/fattoria/livelli.md, il cheat #fattoria-tipo=. */
+   Deterministica (caso(), mai Math.random) — vedi docs/fattoria3d/parita/migrazione.md, il cheat #fattoria-tipo=. */
 import { Fattoria, borsaInfinita } from './fattoria.js'
 import { CATALOGO, PER_ID, piedeDi, eCampo, eMercato, eMongolfiera, eVicino, macchinaDi }
   from '../dati/catalogo.js'

@@ -1,4 +1,4 @@
-/* Le stagioni della fattoria: neve a Natale, zucche a Halloween (dato puro) — vedi docs/fattoria/stagioni.md.
+/* Le stagioni della fattoria: neve a Natale, zucche a Halloween (dato puro) — vedi docs/fattoria3d/stagioni.md.
    Le finestre sono in data locale (getMonth/getDate), non UTC: Natale scavalca l'anno. */
 import { caso } from './mondo.js'
 

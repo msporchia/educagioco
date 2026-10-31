@@ -1,5 +1,5 @@
 <script setup>
-/* La fattoria 3D (in prova) — il coordinatore: le regole sono in motore/fattoria3d.js, il disegno in scena3d/, le tabelle in dati/,
+/* La fattoria (in 3D) — il coordinatore: le regole sono in motore/fattoria3d.js, il disegno in scena3d/, le tabelle in dati/,
    le finestre in viste/. È l'unico file che sa delle monete vere (state.profile.coins), dei contatori (segna) e del salvataggio
    (profile.campagne.fattoria3d.cfg.stato). Usa raccolti, prodotti e lana suoi: non tocca quelli della fattoria di sempre.
    Senza WebGL 2 non si apre niente: lo si dice e si torna in home. Vedi docs/fattoria3d/. */
@@ -714,7 +714,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="radice" class="schermo">
-    <Barra :titolo="comune ? `Con ${nomeDellAmico(comune)}` : 'Fattoria 3D'" guida="fattoria3d" monete @indietro="indietro" />
+    <Barra :titolo="comune ? `Con ${nomeDellAmico(comune)}` : 'La fattoria'" guida="fattoria3d" monete @indietro="indietro" />
 
     <div v-if="!puo" class="f3-senza" data-senza-3d>
       <p class="em">🚜</p>

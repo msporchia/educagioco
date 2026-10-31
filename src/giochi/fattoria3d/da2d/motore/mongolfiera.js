@@ -1,5 +1,5 @@
 /* La mongolfiera: le regole (quando atterra, cosa chiede, cosa succede caricando). I numeri stanno
-   in dati/mongolfiera.js — vedi docs/fattoria/chi-chiede.md. Non ha fretta: costa solo tempo (il
+   in dati/mongolfiera.js — vedi docs/fattoria3d/mongolfiera.md. Non ha fretta: costa solo tempo (il
    cielo resta vuoto CIELO_VUOTO_MIN dopo la partenza). Stessa forma pura di motore/mercato.js. */
 import { PRODOTTI } from '../dati/coltivazioni.js'
 import { PER_ID, CATALOGO, eMongolfiera } from '../dati/catalogo.js'

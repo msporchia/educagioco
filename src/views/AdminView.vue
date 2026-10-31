@@ -11,8 +11,8 @@ import { azzeraPin } from '../store/pin.js'
 import { saltoAcceso, accendiSalto } from '../store/salto.js'
 import { ripara } from '../incidenti.js'
 import { GIOCHI } from '../data/giochi.js'
-import { LIVELLI_TIPO } from '../giochi/fattoria3d/da2d/motore/tipo.js'
-import { LIVELLI_TIPO as LIVELLI_TIPO_3D } from '../giochi/fattoria3d/motore/tipo.js'
+import { LIVELLI_TIPO as LIVELLI_TIPO_2D } from '../giochi/fattoria3d/da2d/motore/tipo.js'
+import { LIVELLI_TIPO } from '../giochi/fattoria3d/motore/tipo.js'
 
 const emit = defineEmits(['vai'])
 
@@ -55,11 +55,10 @@ const ALTRE = [
 const A_MANO = [
   ['#admin', 'questa pagina'],
   ['#monete=500', 'monete in più (con − le toglie)'],
-  ['#fattoria-tipo=30', 'fattoria già giocata di quel livello, 1–99'],
-  ['#fattoria=40', 'solo il livello della fattoria, il prato resta'],
-  ['#fattoria3d-tipo=10', 'fattoria 3D già giocata di quel livello, 1–99'],
-  ['#fattoria3d-da2d', 'rifà la conversione 2D→3D del bambino (la 3D di prima va nel cestino)'],
-  ['#fattoria3d=10', 'solo il livello della fattoria 3D (non lo abbassa mai)'],
+  ['#fattoria3d-tipo=10', 'fattoria già giocata di quel livello, 1–99 (quella di prima va nel cestino)'],
+  ['#fattoria-tipo=30', 'un bambino che arriva dalla 2D: la fattoria 2D di quel livello, 1–99, convertita (la fattoria di prima va nel cestino)'],
+  ['#fattoria3d-da2d', 'rifà la conversione dalla 2D che il bambino ha già (la fattoria di prima va nel cestino)'],
+  ['#fattoria3d=10', 'solo il livello della fattoria (non lo abbassa mai)'],
   ['#stagione=natale', 'la fattoria a Natale (o halloween)'],
   ['#sotterraneo=roba', 'si scende equipaggiati'],
   ['#abisso=12', 'l\'abisso dal piano 12'],
@@ -68,7 +67,7 @@ const A_MANO = [
   ['#sotterraneo&tema=legno', 'i pannelli del sotterraneo in prova (legno, rilievo, attuale): il telefono se lo ricorda'],
   ['#pin=1234', 'il codice dei grandi rimesso a quello'],
   ['#ripara', 'butta la copia del gioco e la riscarica'],
-  ['#fattoria', 'apre un gioco: la chiave dopo il #'],
+  ['#fattoria3d', 'apre un gioco: la chiave dopo il #'],
 ]
 </script>
 
@@ -104,35 +103,30 @@ const A_MANO = [
         <h3>Fattoria di prova, già giocata</h3>
         <p class="nota">Prende il posto di quella di {{ chi }}, che finisce nel cestino.</p>
         <div class="tasti">
-          <button v-for="l in LIVELLI_TIPO" :key="l" :data-trucco="'fattoria-tipo=' + l"
-                  @click="trucco('fattoria-tipo=' + l, 'fattoria')">livello {{ l }}</button>
-        </div>
-        <h3>Solo il livello — il prato resta com'è</h3>
-        <div class="tasti">
-          <button v-for="l in [10, 20, 40, 65]" :key="l" :data-trucco="'fattoria=' + l"
-                  @click="trucco('fattoria=' + l, 'fattoria')">livello {{ l }}</button>
-        </div>
-        <h3>Fattoria 3D (in prova) già giocata</h3>
-        <p class="nota">Prende il posto della fattoria 3D di {{ chi }}, che finisce nel cestino.</p>
-        <div class="tasti">
-          <button v-for="l in LIVELLI_TIPO_3D" :key="'3d' + l" :data-trucco="'fattoria3d-tipo=' + l"
+          <button v-for="l in LIVELLI_TIPO" :key="l" :data-trucco="'fattoria3d-tipo=' + l"
                   @click="trucco('fattoria3d-tipo=' + l, 'fattoria3d')">livello {{ l }}</button>
         </div>
-        <h3>Fattoria 3D: rifà la conversione dalla 2D</h3>
-        <p class="nota">Butta la 3D di {{ chi }} nel cestino e la rifà dalla sua fattoria 2D; senza una 2D non tocca niente.</p>
+        <h3>Un bambino che arriva dalla 2D</h3>
+        <p class="nota">Scrive la fattoria 2D di quel livello e la converte: quella di {{ chi }} va nel cestino.</p>
+        <div class="tasti">
+          <button v-for="l in LIVELLI_TIPO_2D" :key="'2d' + l" :data-trucco="'fattoria-tipo=' + l"
+                  @click="trucco('fattoria-tipo=' + l)">2D livello {{ l }}</button>
+        </div>
+        <h3>Rifà la conversione dalla 2D</h3>
+        <p class="nota">Butta la fattoria di {{ chi }} nel cestino e la rifà dalla sua fattoria 2D; senza una 2D non tocca niente.</p>
         <div class="tasti">
           <button data-trucco="fattoria3d-da2d" @click="trucco('fattoria3d-da2d', 'fattoria3d')">converti dalla 2D</button>
         </div>
-        <h3>Fattoria 3D: solo il livello</h3>
+        <h3>Solo il livello</h3>
         <div class="tasti">
           <button v-for="l in [5, 10, 18]" :key="'l3d' + l" :data-trucco="'fattoria3d=' + l"
                   @click="trucco('fattoria3d=' + l, 'fattoria3d')">livello {{ l }}</button>
         </div>
         <h3>Le feste, fuori stagione</h3>
         <div class="tasti">
-          <button data-trucco="stagione=natale" @click="trucco('stagione=natale', 'fattoria')">🎄 Natale</button>
+          <button data-trucco="stagione=natale" @click="trucco('stagione=natale', 'fattoria3d')">🎄 Natale</button>
           <button data-trucco="stagione=halloween"
-                  @click="trucco('stagione=halloween', 'fattoria')">🎃 Halloween</button>
+                  @click="trucco('stagione=halloween', 'fattoria3d')">🎃 Halloween</button>
         </div>
       </section>
 
@@ -182,7 +176,7 @@ const A_MANO = [
         <ul class="a-mano">
           <li v-for="[c, d] in A_MANO" :key="c"><code class="copiabile">{{ c }}</code> {{ d }}</li>
         </ul>
-        <p class="nota">Si sommano con <code>&amp;</code>: <code class="copiabile">#fattoria-tipo=30&amp;monete=2000</code></p>
+        <p class="nota">Si sommano con <code>&amp;</code>: <code class="copiabile">#fattoria3d-tipo=30&amp;monete=2000</code></p>
       </section>
     </div>
   </div>

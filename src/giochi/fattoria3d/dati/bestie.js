@@ -131,7 +131,7 @@ export const PICCOLI = ['coniglio', 'pappagallo']
 export const ePiccolo = tipo => PICCOLI.includes(tipo)
 
 /* ══════════ il perché di un cibo rifiutato ══════════ */
-// Una bestia non mangia tutto: il rifiuto dice cosa le piace davvero e perché il resto no (docs/fattoria/animali.md, «Il cibo giusto»).
+// Una bestia non mangia tutto: il rifiuto dice cosa le piace davvero e perché il resto no (docs/fattoria3d/bestie-di-casa.md, «La ciotola»).
 const NON_PIACE = {
   cane:       'Il cane mangia ossi e carne, e un po\' di formaggio e uova: erba e semini non sono roba sua.',
   gatto:      'Il gatto vuole pesce e carne morbida, uova e pappa. Formaggio e minestrone gli fanno male al pancino, e l\'erba non la mangia.',

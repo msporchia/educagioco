@@ -1,5 +1,5 @@
 /* Le regole della fattoria, senza schermo: classe pura, gira uguale in Node e nel browser. Riceve
-   una borsa {quante(),paga(n)} e non conosce il profilo. Vedi docs/fattoria/regole.md e catena.md. */
+   una borsa {quante(),paga(n)} e non conosce il profilo. Vedi docs/fattoria3d/regole.md e catena.md. */
 import {
   CELLE, PRIMA, ULTIMA, COSTO_SPOSTARE, LIMITI_VECCHI, celleDi, dentroI,
   limitiPer, piazzolaDi, DENSITA_BOSCO, caso, chiave, prezzoPiazzola,
@@ -248,7 +248,7 @@ export class Fattoria {
     return this
   }
 
-  // Le due sorgenti dell'esperienza (spesa + consegne) — vedi docs/fattoria/livelli.md.
+  // Le due sorgenti dell'esperienza (spesa + consegne) — vedi docs/fattoria3d/livelli.md.
   spendi(n) {
     // paga(-n) incassa (un'entrata non è esperienza).
     if (n > 0) this.speso = (this.speso || 0) + n
@@ -283,7 +283,7 @@ export class Fattoria {
     return Math.max(n, sogliaDi(serve))
   }
 
-  // I premi: il livello apre, prenderli è un gesto a parte — vedi docs/fattoria/livelli.md.
+  // I premi: il livello apre, prenderli è un gesto a parte (era la pagina dei livelli della 2D, tolta il 31/10/2026).
   reclamato(chiave) { return !!this.reclamati[chiave] }
 
   // Si ferma all'ultimo livello che porta roba, se no un cheat al livello 300 girerebbe a vuoto.

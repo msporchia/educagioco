@@ -1,5 +1,5 @@
 /* Il livello della fattoria: solo le soglie. Cosa arriva a ogni livello lo dicono le cose stesse
-   (liv sulla voce, roba(liv) le raccoglie) — vedi docs/fattoria/livelli.md. */
+   (liv sulla voce, roba(liv) le raccoglie) — vedi docs/fattoria3d/livelli.md. */
 import { CATEGORIE, CATALOGO } from './catalogo.js'
 import { COLTURE, RICETTE, PROFONDITA } from './coltivazioni.js'
 import { ANIMALI } from './animali.js'
@@ -209,7 +209,7 @@ export function roba(livello) {
 export const vuoto = r => !r.schede.length && !r.cose.length &&
   !r.colture.length && !r.animali.length
 
-// I premi si prendono premendoli (non arrivano più da soli): vedi docs/fattoria/livelli.md.
+// I premi si prendono premendoli (non arrivano più da soli): era la pagina dei livelli della 2D (tolta il 31/10/2026).
 export const chiaveDi = (tipo, id) => `${tipo}:${id}`
 
 // I premi di un livello, pronti da mostrare: figura vera (non un'emoji), nome, e che cosa è.

@@ -1,5 +1,5 @@
 /* Il mercato: le regole (cosa si può chiedere, quando arriva un ordine, cosa succede consegnando).
-   I numeri stanno in dati/mercato.js — vedi docs/fattoria/chi-chiede.md e regole.md. rnd arriva da
+   I numeri stanno in dati/mercato.js — vedi docs/fattoria3d/ordini.md e regole.md. rnd arriva da
    fuori (una partita si deve poter rifare identica). */
 import { PRODOTTI } from '../dati/coltivazioni.js'
 import { eMercato } from '../dati/catalogo.js'

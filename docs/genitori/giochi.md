@@ -50,7 +50,7 @@ Prima e dopo, le fattorie). Se un gioco cambia si cambia anche quella riga; `uni
 con le tacche, quando c'è, sta in una tendina chiusa («Vedi e ritocca tutte»). La scelta «Nella home» è **Default | Acceso/Spento** (si torna al default
 ritoccando quello già scelto), con parole sul bambino: «adatto», «troppo facile», «per più grandi».
 
-**Avanzate (la fattoria).** Sul foglio della fattoria (2D e 3D), se il bambino l'ha aperta, c'è una tendina «Avanzate» con i reset: «Ricomincia la fattoria»
-(azzera 2D e 3D insieme, con la copia nel cestino; non sta più nella «Zona delicata») e, sul foglio della 3D se c'è una 2D, «Riconverti dalla fattoria 2D» (butta la 3D
-nel cestino e la rifà dalla 2D alla prossima apertura). Ognuno chiede conferma. Bersagli: `data-gioco-avanzate`, `riconverti-fattoria(-si)`, `azzera-fattoria(-si)`; test:
-`integrazione/giochi-impostazioni`.
+**Avanzate (la fattoria).** Sul foglio della fattoria (`fattoria3d`: la fattoria è una sola, la 2D è stata tolta), se il bambino l'ha aperta, c'è una tendina «Avanzate» con i reset:
+«Ricomincia la fattoria» (azzera la fattoria e anche la vecchia 2D, se no tornerebbe a convertirsi; con la copia nel cestino; non sta più nella «Zona delicata») e, se il bambino ha ancora
+un salvataggio 2D, «Riconverti dalla fattoria 2D» (butta la fattoria nel cestino e la rifà dalla 2D alla prossima apertura). Ognuno chiede conferma. Bersagli: `data-gioco-avanzate`,
+`riconverti-fattoria(-si)`, `azzera-fattoria(-si)`; test: `integrazione/giochi-impostazioni`.

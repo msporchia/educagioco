@@ -1,5 +1,5 @@
 /* Gli addobbi delle bestie (dato puro): dove si attaccano lo dice la scheda dell'animale (dati/animali.js).
-   Sono emoji, per ora solo in testa e sul muso (collo e schiena sono sospesi) — vedi docs/fattoria/animali.md. */
+   Sono emoji, per ora solo in testa e sul muso (collo e schiena sono sospesi) — vedi docs/fattoria3d/addobbi.md. */
 import { AGGANCI_TUTTI, famigliaDi, portaDi } from './animali.js'
 
 // dove è l'aggancio, misura in pixel dello sprite (non dello schermo, resta la stessa taglia a ogni zoom).

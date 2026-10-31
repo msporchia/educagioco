@@ -1,5 +1,5 @@
 /* Le botteghe del paese: i numeri (sorella di dati/mercato.js). Chi chiede cosa sta sulla voce del
-   catalogo (posto: {chiede, clienti}). Vedi docs/fattoria/chi-chiede.md per il perché di ogni numero. */
+   catalogo (posto: {chiede, clienti}). Vedi docs/fattoria3d/botteghe.md per il perché di ogni numero. */
 import { CATALOGO } from './catalogo.js'
 import { PRODOTTI } from './coltivazioni.js'
 import { CLIENTI, premioPer, minutiPer, MONETE_AL_MINUTO } from './mercato.js'

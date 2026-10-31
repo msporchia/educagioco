@@ -1,10 +1,10 @@
 /* Il mercato: chi ordina e quanto rende un ordine (dato puro; le regole stanno in motore/mercato.js).
-   Paga esperienza, mai monete (niente si vende) — vedi docs/fattoria/chi-chiede.md e regole.md. */
+   Paga esperienza, mai monete (niente si vende) — vedi docs/fattoria3d/ordini.md e regole.md. */
 import { COLTURE, RICETTE, PRODOTTI, PROFONDITA, profonditaDi } from './coltivazioni.js'
 import { livelloDelProdotto } from './livelli.js'
 
 // I clienti sono mestieri, non nomi propri. vuole restringe chi può chiedere una merce (clientiPer);
-// chi non lo dichiara (la nonna, il bottegaio) prende di tutto — vedi docs/fattoria/chi-chiede.md.
+// chi non lo dichiara (la nonna, il bottegaio) prende di tutto — vedi docs/fattoria3d/da-fare.md (M4).
 export const CLIENTI = [
   { id: 'fornaio',     nome: 'Il fornaio',     emoji: '🥖',
     vuole: ['grano', 'uova', 'latte', 'patate', 'farina', 'pane', 'biscotti'] },
@@ -80,7 +80,7 @@ export const BONUS_FASE = 0.2
 // 🪙6 = un minuto di esercizio: il cambio con cui si controlla che un ordine non renda più del tempo che chiede.
 export const MONETE_AL_MINUTO = 6
 
-// Risalgono la catena da soli, sulla strada più economica e più svelta — vedi docs/fattoria/catena.md.
+// Risalgono la catena da soli, sulla strada più economica e più svelta — vedi docs/fattoria3d/catena.md.
 const menoDi = (a, b) => (a < b ? a : b)
 
 // giri è PROFONDITA di dati/coltivazioni.js, non un numero scritto qui.

@@ -1,5 +1,5 @@
 /* Dato puro sulla catena della fattoria: colture, ricette, merci, silos. Le regole stanno in
-   motore/fattoria.js. Vedi docs/fattoria/catena.md, campi-e-silos.md e regole.md. */
+   motore/fattoria.js. Vedi docs/fattoria3d/catena.md, magazzini.md e regole.md. */
 
 import { PEZZI } from '../../../../grafica/atlante-fattoria.js'
 
@@ -7,7 +7,7 @@ import { PEZZI } from '../../../../grafica/atlante-fattoria.js'
 export const MINUTO = 60000
 
 // Il rosso è dei campi, il bianco è degli animali, la dispensa è delle botteghe (silo: …).
-// pezzo è la faccia in dati/atlante.js, aspetta quella che arriverà — vedi docs/fattoria/sprite.md.
+// pezzo è la faccia in dati/atlante.js, aspetta quella che arriverà — vedi docs/core/sprite.md.
 export const PRODOTTI = {
   // dai campi — il silo del raccolto
   grano:   { nome: 'Grano',   emoji: '🌾', silo: 'terra', pezzo: 'raccolto_grano' },
@@ -61,7 +61,7 @@ export const PRODOTTI = {
   sapone:    { nome: 'Sapone',    emoji: '🧼', silo: 'bottega', pezzo: 'merce_sapone' },
 
   minestrone: { nome: 'Minestrone', emoji: '🍜', silo: 'bottega', pezzo: 'merce_minestrone' },
-  // La parmigiana non ha ancora il suo disegno: l'emoji è il ripiego dichiarato (docs/fattoria/sprite.md).
+  // La parmigiana non ha ancora il suo disegno: l'emoji è il ripiego dichiarato (docs/core/sprite.md).
   parmigiana: { nome: 'Parmigiana', emoji: '🍆', silo: 'bottega', aspetta: 'merce_parmigiana' },
   salsa:     { nome: 'Salsa',     emoji: '🥫', silo: 'bottega', pezzo: 'merce_salsa' },
   conserva:  { nome: 'Conserva d\'orto', emoji: '🥗', silo: 'bottega', pezzo: 'merce_conserva' },
@@ -188,7 +188,7 @@ export const COLTURE = [
 export const PER_COLTURA = Object.fromEntries(COLTURE.map(c => [c.id, c]))
 
 // Una ricetta sta in una macchina (dove); senza quell'oggetto in mappa non si può fare.
-// liv è quando compare (ripiego: il livello della macchina) — vedi docs/fattoria/catena.md e macchine.md.
+// liv è quando compare (ripiego: il livello della macchina) — vedi docs/fattoria3d/catena.md.
 export const RICETTE = [
   // il mulino: la ciotola di casa
   {
@@ -302,7 +302,7 @@ export const RICETTE = [
     prende: { foraggio: 2 }, costo: 1, minuti: 10, da: 'concime', resa: 1,
   },
 
-  // Le botteghe: l'albero a più fasi, in dispensa — vedi docs/fattoria/catena.md.
+  // Le botteghe: l'albero a più fasi, in dispensa — vedi docs/fattoria3d/catena.md.
 
   // il telaio: la stoffa
   {
@@ -497,7 +497,7 @@ export const PER_RICETTA = Object.fromEntries(RICETTE.map(r => [r.id, r]))
 export const ricetteDi = (dove, liv = null) =>
   RICETTE.filter(r => r.dove === dove && (liv === null || (r.liv || 1) <= liv))
 
-// Il magazzino è piccolo (8 posti), condiviso e si ingrandisce pagando — vedi docs/fattoria/campi-e-silos.md.
+// Il magazzino è piccolo (8 posti), condiviso e si ingrandisce pagando — vedi docs/fattoria3d/magazzini.md.
 // vuoto è la frase di un silo costruito ma non ancora riempito (viste/Granaio.vue).
 export const SILI = {
   terra:  { cosa: 'silo',        nome: 'Silo del raccolto', emoji: '🌾',
@@ -509,7 +509,7 @@ export const SILI = {
              vuoto: 'quello che esce dalle botteghe' },
 }
 
-// Uno scomparto per merce, non posti condivisi — il perché sta in docs/fattoria/campi-e-silos.md.
+// Uno scomparto per merce, non posti condivisi — il perché sta in docs/fattoria3d/magazzini.md.
 export const SCOMPARTO_BASE = 8
 export const SCOMPARTO_PIU = 2
 
@@ -564,7 +564,7 @@ export function minutiCheMancano(da, minuti, ora = Date.now()) {
   return Math.max(1, Math.ceil((1 - q) * minuti))
 }
 
-// N → 1, mai N → M: è quanto costa capire, non bilanciamento — vedi docs/fattoria/catena.md.
+// N → 1, mai N → M: è quanto costa capire, non bilanciamento — vedi docs/fattoria3d/catena.md.
 export const RESA = 1
 
 // La profondità massima di una catena, in un posto solo (prima era copiata in quattro file) — vedi catena.md.

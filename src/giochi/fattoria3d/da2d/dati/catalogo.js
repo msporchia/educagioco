@@ -1,6 +1,6 @@
 /* Dato puro: cosa si vede (pezzo), quanto occupa (piede), quanto costa. Come si disegna sta in scena/,
    se si può posare sta in motore/. piede si ricava dal disegno (piedeDalDisegno); girare/rovesciare
-   e stati dei recinti — vedi docs/fattoria/come-si-tocca.md e macchine.md. */
+   e stati dei recinti — vedi docs/fattoria3d/catena.md e regole.md. */
 import { PEZZI, TESSERA, VOCI } from '../../../../grafica/atlante-fattoria.js'
 import { ricetteDi, SILI } from './coltivazioni.js'
 import { FINESTRE } from './stagioni.js'
@@ -24,14 +24,14 @@ const V = (id, pezzo, nome, prezzo, extra) =>
 // Il campo rincara come un pezzo di terra: senza, l'unica strategia sarebbe riempire il prato di campi.
 export const RINCARO = 0.6
 
-// Rincaro lineare (base·(1+n·cresce)), non geometrico — vedi docs/fattoria/campi-e-silos.md.
+// Rincaro lineare (base·(1+n·cresce)), non geometrico — vedi docs/fattoria3d/regole.md («Quanto costa»).
 export function prezzoDellaVoce(v, quante = 0) {
   if (!v) return 0
   if (!v.cresce || !(quante > 0)) return v.prezzo
   return Math.round(v.prezzo * (1 + quante * v.cresce))
 }
 
-// I ritratti di un recinto: chi non ce l'ha mostra il calmo — vedi docs/fattoria/macchine.md.
+// I ritratti di un recinto: chi non ce l'ha mostra il calmo (era la fattoria 2D, tolta il 31/10/2026).
 const RECINTO = specie => Object.fromEntries(
   ['calmo', 'fame', 'mangia', 'felice', 'dorme', 'pronto'].map(q => {
     const suo = `recinto_${specie}_${q}`
@@ -106,26 +106,26 @@ export const CATEGORIE = [
     V('fiore_appeso',  'ciondolo_fiore',    'Fiore appeso',       7),
   ] },
 
-  // Il lavoro: campi, macchine, silos e recinti in una linguetta sola — vedi docs/fattoria/macchine.md.
+  // Il lavoro: campi, macchine, silos e recinti in una linguetta sola — vedi docs/fattoria3d/catena.md.
   { chiave: 'campi', zona: 'lavoro', nome: 'Il lavoro', icona: '🌾', voci: [
     V('orto',          'campo_vuoto',       'Campo',             22,
       { sotto: true, campo: true, piede: [2, 2], cresce: RINCARO }),
     V('mulino',        'mulino_vento',      'Mulino',           150, { macchina: 'mulino', liv: 4, cresce: RINCARO }),
     V('silo',          'silo_rosso',        'Silo del raccolto', 120, { silo: 'terra', unico: true }),
-    // Il carretto del vicino: era una decorazione — vedi docs/fattoria/chi-chiede.md.
+    // Il carretto del vicino: era una decorazione — vedi docs/fattoria3d/vicini.md.
     V('carretto_mercato', 'carretto',       'Carretto del vicino', 32,
       { vicino: true, liv: 8, unico: true }),
-    // La bancarella del mercato: era una decorazione — vedi docs/fattoria/chi-chiede.md.
+    // La bancarella del mercato: era una decorazione — vedi docs/fattoria3d/ordini.md.
     V('mercato',       'bancarella',        'Mercato',            40,
       { mercato: true, liv: 2, unico: true }),
-    // La mongolfiera: due facce (a terra / partita) — vedi docs/fattoria/chi-chiede.md.
+    // La mongolfiera: due facce (a terra / partita) — vedi docs/fattoria3d/mongolfiera.md.
     V('mongolfiera',   'mongolfiera',       'Mongolfiera',       250,
       { mongolfiera: true, liv: 26, unico: true, la: true, piede: [3, 2],
         partita: { pezzo: 'mongolfiera_partita' } }),
     // Insieme al mulino, non dopo: il mangime deve avere subito dove finire.
     V('silo_bianco',   'silo_bianco',       'Silo della stalla', 120, { silo: 'stalla', liv: 4, unico: true }),
 
-    // Le botteghe e il terzo silo: l'albero a più fasi — vedi docs/fattoria/catena.md e sprite.md.
+    // Le botteghe e il terzo silo: l'albero a più fasi — vedi docs/fattoria3d/catena.md e docs/core/sprite.md.
     V('dispensa',      'dispensa',          'Dispensa',         120,
       { silo: 'bottega', liv: 16, unico: true, la: true }),
     V('telaio',        'telaio',            'Telaio',           170,
@@ -145,7 +145,7 @@ export const CATEGORIE = [
     V('cucina',        'cucina',            'Cucina',           210,
       { macchina: 'cucina', liv: 25, cresce: RINCARO, la: true }),
 
-    // L'albero nuovo: cinque botteghe in più — vedi docs/fattoria/macchine.md.
+    // L'albero nuovo: cinque botteghe in più — vedi docs/fattoria3d/catena.md.
     V('zuccherificio', 'zuccherificio',     'Zuccherificio',    230,
       { macchina: 'zuccherificio', liv: 31, cresce: RINCARO }),
     V('gelateria',     'gelateria',         'Gelateria',        240,
@@ -157,7 +157,7 @@ export const CATEGORIE = [
     V('sushi_bar',     'sushi_bar',         'Sushi bar',        340,
       { macchina: 'sushi_bar', liv: 62, cresce: RINCARO }),
 
-    // Le botteghe del paese: chiedono da un elenco chiuso — vedi docs/fattoria/chi-chiede.md.
+    // Le botteghe del paese: chiedono da un elenco chiuso — vedi docs/fattoria3d/botteghe.md.
     V('pasticceria',   'pasticceria',       'Pasticceria',      180,
       { liv: 21, unico: true, la: true, posto: {
         chiede: ['torta', 'burro', 'uova', 'latte', 'merenda', 'crostata',
@@ -180,9 +180,9 @@ export const CATEGORIE = [
                  'berretto', 'sacchetto', 'sapone'],
         clienti: ['sarta', 'lavandaia'] } }),
 
-    // Il cortile: fienile e cinque recinti, in fila dopo i campi — vedi docs/fattoria/macchine.md.
+    // Il cortile: fienile e cinque recinti, in fila dopo i campi — vedi docs/fattoria3d/catena.md.
 
-    // Il fienile: era una decorazione — vedi docs/fattoria/catena.md.
+    // Il fienile: era una decorazione — vedi docs/fattoria3d/catena.md.
     V('fienile',       'fienile0',          'Fienile',         150,
       { macchina: 'fienile', liv: 6, cresce: RINCARO }),
     V('conigliera',    'recinto_conigli_calmo', 'Conigliera',    95,
@@ -198,7 +198,7 @@ export const CATEGORIE = [
     V('porcile',       'recinto_maiali_calmo',  'Porcile',      260,
       { macchina: 'porcile', stati: RECINTO('maiali'), piede: [4, 3], liv: 28, cresce: RINCARO }),
 
-    // Le cinque bocche dell'orto — vedi docs/fattoria/macchine.md e coltivazioni.js.
+    // Le cinque bocche dell'orto — vedi docs/fattoria3d/catena.md e coltivazioni.js.
     V('stagno_anatre', 'recinto_anatre_calmo',  'Stagno delle anatre', 240,
       { macchina: 'anatre', stati: RECINTO('anatre'), piede: [4, 3], liv: 24, cresce: RINCARO }),
     V('recinto_capre', 'recinto_capre_calmo',   'Recinto delle capre', 280,
@@ -212,7 +212,7 @@ export const CATEGORIE = [
     V('recinto_asini', 'recinto_asini_calmo',   'Recinto degli asini', 355,
       { macchina: 'asini', stati: RECINTO('asini'), piede: [4, 3], liv: 52, cresce: RINCARO }),
 
-    // La peschiera: il settimo recinto, senza foglio ancora (aspetta) — vedi docs/fattoria/da-fare.md.
+    // La peschiera: il settimo recinto, senza foglio ancora (aspetta) — vedi docs/fattoria3d/parita/animali.md (A1k).
     V('peschiera',      'recinto_anatre_calmo', 'Peschiera',      360,
       { macchina: 'pesci', stati: RECINTO('anatre'),
         piede: [4, 3], liv: 57, cresce: RINCARO, la: true, aspetta: 'recinto_pesci_calmo' }),
@@ -364,7 +364,7 @@ export const CATEGORIE = [
       anima: ['calderone0', 'calderone1'] }),
   ] },
 
-  // Le feste: stagione: è una chiave di FINESTRE — vedi docs/fattoria/stagioni.md.
+  // Le feste: stagione: è una chiave di FINESTRE — vedi docs/fattoria3d/stagioni.md.
   { chiave: 'feste', zona: 'bello', nome: 'Feste', icona: '🎉', stagionale: true, voci: [
     // Le zucche sono disegnate in pixel nel codice (scena/pixel-festa.js, poi strumenti/sprite/festa.mjs).
     V('zucca_intagliata', 'zucca_intagliata', 'Zucca intagliata', 6, { stagione: 'halloween' }),
@@ -373,7 +373,7 @@ export const CATEGORIE = [
       { stagione: 'natale', luci: true }),
   ] },
 
-  // La fiera: non si compra, si vince (fiera: true) — vedi docs/fattoria/chi-chiede.md.
+  // La fiera: non si compra, si vince (fiera: true) — vedi docs/fattoria3d/mongolfiera.md.
   { chiave: 'fiera', zona: 'bello', nome: 'La fiera', icona: '🎪', fiera: true, voci: [
     V('fiera_bandierine', 'fiera_bandierine', 'Bandierine della fiera', 30,
       { fiera: true }),
@@ -460,7 +460,7 @@ const quartiDelPezzo = nome => (VOCE_DEL_PEZZO[nome] || {}).giri || 1
 const specchioDelPezzo = nome => (VOCE_DEL_PEZZO[nome] || {}).specchia !== false
 const ribaltaDelPezzo = nome => (VOCE_DEL_PEZZO[nome] || {}).ribalta !== false
 
-// giri e ribalta sono due domande indipendenti — vedi docs/fattoria/come-si-tocca.md.
+// giri e ribalta sono due domande indipendenti (era la fattoria 2D, tolta il 31/10/2026).
 function giriPossibili(v) {
   const q = v.quarti != null ? v.quarti : quartiDelPezzo(v.pezzo)
   if (q !== 4) return [0]

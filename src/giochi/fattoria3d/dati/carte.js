@@ -1,6 +1,6 @@
 /* Le carte del menu «Costruisci qui» (viste/CostruisciQui.vue): cosa si offre in ogni scheda, ordinato per livello, tutto dai dati
    (`PEZZI` e `EDIFICI` di catalogo.js, ognuno con la sua `categoria`). Puro: niente Vue, niente disegno; la vista le mostra, il
-   coordinatore dice cosa farne. `DISEGNI` dice quale pezzo dell'atlante della fattoria di sempre (fattoria/dati/atlante.js) è il
+   coordinatore dice cosa farne. `DISEGNI` dice quale pezzo dell'atlante dipinto (grafica/atlante-fattoria.js) è il
    disegno di una carta; dove manca resta l'emoji, su una piastrella del colore della scheda. Vedi docs/fattoria3d/scena.md. */
 import { PEZZI, EDIFICI, CATEGORIE } from './catalogo.js'
 import { livelloDelPezzo } from './livelli.js'

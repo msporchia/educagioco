@@ -1,5 +1,5 @@
 /* Come sta una bestia e cosa le serve (dato puro; il conto è nel motore, il disegno nella scena).
-   Vedi docs/fattoria/animali.md per il perché di ogni numero. */
+   Vedi docs/fattoria3d/bestie-di-casa.md per il perché di ogni numero. */
 import { RICETTE, PRODOTTI } from './coltivazioni.js'
 
 export const FONDO = 0.15
@@ -22,12 +22,12 @@ export const CIBI = [
   { id: 'frutta',  nome: 'Frutta',  emoji: '🍎', prezzo: 14, quanto: 0.70, per: ['pappagallo'] },
   { id: 'carota',  nome: 'Carota',  emoji: '🥕', prezzo: 5,  quanto: 0.30, per: ['coniglio'] },
   { id: 'insalata', nome: 'Insalata', emoji: '🥬', prezzo: 14, quanto: 0.70, per: ['coniglio'] },
-  // quelli che non si comprano: costano zero monete e un pezzo di granaio — vedi docs/fattoria/animali.md
+  // quelli che non si comprano: costano zero monete e un pezzo di granaio — vedi docs/fattoria3d/bestie-di-casa.md
   { id: 'mangime', nome: 'Mangime', emoji: '🥣', prezzo: 0, da: 'mangime',
     quanto: 0.30, per: ['cane', 'gatto', 'pappagallo', 'coniglio'] },
   // Solo quello che a quella bestia fa bene davvero: il gioco insegna anche questo. Niente latte al
   // gatto (da grande non lo digerisce), niente pane o formaggio al coniglio (è erbivoro), niente
-  // tartufo (il cane lo cerca, non lo mangia) — vedi docs/fattoria/animali.md.
+  // tartufo (il cane lo cerca, non lo mangia) — vedi docs/fattoria3d/bestie-di-casa.md.
   { id: 'uova', nome: 'Uovo', emoji: '🥚', prezzo: 0, da: 'uova',
     quanto: 0.45, per: ['cane', 'gatto', 'pappagallo'] },
   { id: 'pastone', nome: 'Pappa di mais', emoji: '🍲', prezzo: 0, da: 'pastone',
