@@ -1,7 +1,6 @@
 /* Di cosa è fatta una cella: una mappa (prato, acqua, strada, roccia), non "prato più pozze sopra".
    Il bordo è fra due materie (acqua contro prato ≠ acqua contro roccia), indicizzato per chi c'è di
    fronte (bordi: {erba:…, roccia:…, '*':…}); il pittore chiede solo le nove chiavi di sempre. */
-import { PEZZI } from '../../../../grafica/atlante-fattoria.js'
 
 // Le nove chiavi che un insieme di bordi deve avere, sempre le stesse per qualunque materia.
 export const LATI = ['centro', 'n', 's', 'e', 'o', 'no', 'ne', 'so', 'se']
@@ -48,27 +47,15 @@ export function bordiFra(materia, vicino) {
 export const siPassa = materia => TERRENI[materia] ? TERRENI[materia].passa !== false : true
 export const prezzoDi = materia => (TERRENI[materia] && TERRENI[materia].prezzo) || 0
 
-// Quali materie si possono davvero dipingere oggi (prezzo + bordi completi), ricavato e non scritto.
-export const dipingibili = () => CHIAVI.filter(m => {
-  const t = TERRENI[m]
-  if (!t.prezzo) return false
-  return Object.values(t.bordi || {}).some(b => LATI.every(l => PEZZI[b[l]]))
-})
-
 export function guastiDeiTerreni() {
   const g = []
   if (!TERRENI[BASE]) g.push(`la materia di base «${BASE}» non è dichiarata`)
   for (const [m, t] of Object.entries(TERRENI)) {
     if (!t.nome) g.push(`${m}: senza nome`)
-    for (const nome of t.tessere || [])
-      if (!PEZZI[nome]) g.push(`${m}: la tessera «${nome}» non è nell'atlante`)
     for (const [vicino, b] of Object.entries(t.bordi || {})) {
       const mancanti = LATI.filter(l => !b[l])
       if (mancanti.length)
         g.push(`${m} contro ${vicino}: mancano ${mancanti.join(', ')}`)
-      for (const l of LATI)
-        if (b[l] && !PEZZI[b[l]])
-          g.push(`${m} contro ${vicino}: «${b[l]}» non è nell'atlante`)
     }
     // non è un guasto, è un promemoria che si vede
     if (m !== BASE && !Object.keys(t.bordi || {}).length && !t.tessere)

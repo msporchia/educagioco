@@ -1,16 +1,14 @@
 /* Dato puro: cosa si vede (pezzo), quanto occupa (piede), quanto costa. Come si disegna sta in scena/,
-   se si può posare sta in motore/. piede si ricava dal disegno (piedeDalDisegno); girare/rovesciare
-   e stati dei recinti — vedi docs/fattoria3d/catena.md e regole.md. */
-import { PEZZI, TESSERA, VOCI } from '../../../../grafica/atlante-fattoria.js'
+   se si può posare sta in motore/. piede, giri e ritratti dei recinti vengono dai disegni di allora, fermati in
+   disegni.js — vedi docs/fattoria3d/catena.md e regole.md. */
+import { DISEGNI, RITRATTI } from './disegni.js'
 import { ricetteDi, SILI } from './coltivazioni.js'
 import { FINESTRE } from './stagioni.js'
 
 // Il piede ricavato dal disegno; chi non ci si ritrova scrive piede nella sua riga e vince lui.
 export function piedeDalDisegno(pezzo) {
-  const p = PEZZI[pezzo]
-  if (!p) return [1, 1]
-  const largo = Math.max(1, Math.round(p[2] / TESSERA))
-  return [largo, largo >= 3 && p[3] / TESSERA >= 2.5 ? 2 : 1]
+  const d = DISEGNI[pezzo]
+  return d ? [d[0], d[1]] : [1, 1]
 }
 
 // la/plurale: il genere del nome, dichiarato — non si ricava ("nel conigliera", "nel arnie" erano
@@ -35,7 +33,7 @@ export function prezzoDellaVoce(v, quante = 0) {
 const RECINTO = specie => Object.fromEntries(
   ['calmo', 'fame', 'mangia', 'felice', 'dorme', 'pronto'].map(q => {
     const suo = `recinto_${specie}_${q}`
-    return [q, PEZZI[suo] ? suo : `recinto_${specie}_calmo`]
+    return [q, (RITRATTI[specie] || '').split(' ').includes(q) ? suo : `recinto_${specie}_calmo`]
   }))
 
 export const CATEGORIE = [
@@ -449,16 +447,10 @@ export const ZONE = [
 export const CATALOGO = CATEGORIE.flatMap(c => c.voci)
 export const PER_ID = Object.fromEntries(CATALOGO.map(v => [v.id, v]))
 
-// Da un nome di pezzo alla voce che lo contiene (il catalogo cita i pezzi, non i gruppi).
-const VOCE_DEL_PEZZO = {}
-for (const v of VOCI)
-  for (const fotogrammi of Object.values(v.pose || {}))
-    for (const nome of fotogrammi) VOCE_DEL_PEZZO[nome] = v
-
-// Un pezzo che l'atlante non conosce non gira e non si specchia.
-const quartiDelPezzo = nome => (VOCE_DEL_PEZZO[nome] || {}).giri || 1
-const specchioDelPezzo = nome => (VOCE_DEL_PEZZO[nome] || {}).specchia !== false
-const ribaltaDelPezzo = nome => (VOCE_DEL_PEZZO[nome] || {}).ribalta !== false
+// Come si poteva girare il disegno (disegni.js); un pezzo che non c'è non gira e si specchia.
+const quartiDelPezzo = nome => (DISEGNI[nome] || [])[2] || 1
+const specchioDelPezzo = nome => (DISEGNI[nome] || [])[3] !== false
+const ribaltaDelPezzo = nome => (DISEGNI[nome] || [])[4] !== false
 
 // giri e ribalta sono due domande indipendenti (era la fattoria 2D, tolta il 31/10/2026).
 function giriPossibili(v) {
@@ -534,24 +526,10 @@ export function guastiDelCatalogo() {
   for (const v of CATALOGO) {
     if (visti.has(v.id)) g.push(`id doppio nel catalogo: ${v.id}`)
     visti.add(v.id)
-    if (!PEZZI[v.pezzo]) g.push(`${v.id}: la tessera «${v.pezzo}» non è nell'atlante`)
-    // Una voce che aspetta il suo disegno va aggiornata il giorno che il pezzo c'è.
-    if (v.aspetta && PEZZI[v.aspetta])
-      g.push(`${v.id}: aspetta «${v.aspetta}», che nell'atlante c'è già — scrivilo come pezzo`)
-    // La seconda faccia della mongolfiera (partita) vale come la prima.
-    if (v.partita) {
-      if (!PEZZI[v.partita.pezzo])
-        g.push(`${v.id}: la faccia «partita» (${v.partita.pezzo}) non è nell'atlante`)
-      if (v.partita.aspetta && PEZZI[v.partita.aspetta])
-        g.push(`${v.id}: aspetta «${v.partita.aspetta}», che nell'atlante c'è già — scrivilo come pezzo`)
-    }
     if (!(v.prezzo > 0)) g.push(`${v.id}: prezzo impossibile`)
     if (!Array.isArray(v.piede) || v.piede.length !== 2 || v.piede.some(n => n < 1))
       g.push(`${v.id}: piede impossibile`)
-    for (const nome of v.anima || [])
-      if (!PEZZI[nome]) g.push(`${v.id}: il fotogramma «${nome}» non è nell'atlante`)
     for (const veduta of v.vedute || []) {
-      if (!PEZZI[veduta.pezzo]) g.push(`${v.id}: la veduta «${veduta.pezzo}» non è nell'atlante`)
       if (!Array.isArray(veduta.piede) || veduta.piede.length !== 2)
         g.push(`${v.id}: una veduta senza piede`)
     }
@@ -569,9 +547,6 @@ export function guastiDelCatalogo() {
     // Una macchina senza ricette è un tasto rotto.
     if (v.macchina && !ricetteDi(v.macchina).length)
       g.push(`${v.id}: la macchina «${v.macchina}» non ha nessuna ricetta`)
-    // Uno stato che l'atlante non ha è muto: il recinto sparisce in certi momenti senza errore.
-    for (const [quale, nome] of Object.entries(v.stati || {}))
-      if (!PEZZI[nome]) g.push(`${v.id}: lo stato «${quale}» non è nell'atlante`)
     if (v.stati && !v.macchina)
       g.push(`${v.id}: ha degli stati e non è una macchina — non li vedrebbe nessuno`)
     // Un ritratto che non è fra gli stati: in baule si compra una cosa, in mappa ne compare un'altra.
