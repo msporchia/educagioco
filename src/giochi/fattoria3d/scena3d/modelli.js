@@ -80,18 +80,15 @@ function costruisciPasticceria () {
   g.userData.fumo = new THREE.Vector3(0.65, 2.5, -0.85)
   // il telo a righe verdi, bianche e rosse sopra la vetrina
   for (let n = 0; n < 9; n++) { const t = scatola(g, 0.31, 0.05, 0.6, [verde, bianco, rosso][n % 3], -1.59 + n * 0.31, 1.06, 0.75); t.rotation.x = 0.32 }
-  // porta e vetrina coi barattoli: spaghetti, farfalle, conchiglie
+  // porta e vetrina, e sulla mensola davanti la pasta in mostra: il mazzo di spaghetti legato, le farfalle, le conchiglie
   scatola(g, 0.6, 1.0, 0.08, legno, 0.62, 0.52, 0.52)
   sfera(g, 0.05, mat(0xf0c040), 0.82, 0.52, 0.58, 1, 1, 1, 6)
   scatola(g, 1.4, 0.75, 0.06, mat(0xa6d8ee, { emissive: 0x405a66 }), -0.75, 0.82, 0.52)
-  scatola(g, 1.5, 0.06, 0.2, legno, -0.75, 0.42, 0.58)
-  const vetro = mat(0xdff2f6, { roughness: 0.25, transparent: true, opacity: 0.55 })
-  for (const [i, x] of [-1.25, -0.75, -0.25].entries()) {
-    cilindro(g, 0.15, 0.15, 0.36, vetro, x, 0.63, 0.66, 8)
-    if (i === 0) for (let k = 0; k < 5; k++) cilindro(g, 0.012, 0.012, 0.34, pasta, x - 0.08 + k * 0.04, 0.63, 0.66, 4)
-    else for (let k = 0; k < 4; k++) sfera(g, 0.055, i === 1 ? pasta : pastaScura, x + (k % 2 - 0.5) * 0.09, 0.52 + Math.floor(k / 2) * 0.12, 0.66, 1.3, 0.55, 0.7, 6)
-    cilindro(g, 0.16, 0.16, 0.05, legno, x, 0.83, 0.66, 8)
-  }
+  scatola(g, 1.5, 0.06, 0.26, legno, -0.75, 0.42, 0.62)
+  for (let k = 0; k < 7; k++) cilindro(g, 0.014, 0.014, 0.4, pasta, -1.31 + (k % 4) * 0.035, 0.65, 0.6 + Math.floor(k / 4) * 0.035, 4)
+  cilindro(g, 0.075, 0.075, 0.04, rosso, -1.26, 0.66, 0.62, 8)
+  for (const [x, m] of [[-0.75, pasta], [-0.25, pastaScura]]) for (let k = 0; k < 5; k++)
+    sfera(g, 0.06, m, x + ((k * 3) % 5 - 2) * 0.07, 0.49 + (k > 2 ? 0.06 : 0), 0.6 + (k % 2) * 0.06, 1.3, 0.55, 0.7, 6)
   insegna(g, '🍝 PASTIFICIO', 2.2, 0.3, -0.35, 1.32, 0.52, { w: 512, h: 72, sfondo: '#2f6e3e', px: 44 })
   // a destra lo stendino: due pali, la stanga e le tagliatelle appese ad asciugare
   for (const z of [0.15, 1.15]) cilindro(g, 0.04, 0.05, 1.3, legno, 1.6, 0.65, z, 6)
