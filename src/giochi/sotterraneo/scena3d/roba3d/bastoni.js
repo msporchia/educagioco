@@ -449,7 +449,8 @@ function arco (fig) {
   const E = ELEMENTI[fig.elemento] || ELEMENTI.nessuno, pre = fig.pregio || 1, anims = []
   let c = [0, 0.4, 0], R = 0.06
   if (A.balestra) {
-    // il fusto lungo +y, l'arco trasversale in cima, la corda tesa con una fila di punti bianchi
+    // costruita col fusto lungo +y e poi girata in avanti (+z, sotto): l'arco trasversale in cima, i flettenti piegati verso chi tira,
+    // la corda tesa fino alla noce con una fila di punti bianchi
     const V = 0x4a2a6a, V2 = 0x6a3a9a, yb = 0.62, W = 0.4
     f.metti(sca(0.06, 0.78, 0.05), V, 0, 0.3, -0.005)
     f.metti(sca(0.05, 0.74, 0.012), V2, 0, 0.32, 0.03)                                  // la guida
@@ -459,17 +460,17 @@ function arco (fig) {
     f.metti(sca(0.08, 0.05, 0.07), 0x3a2060, 0, yb - 0.02, 0, {})
     for (const s of [-1, 1]) {
       const pts = [], pts2 = []
-      for (let i = 0; i <= 6; i++) { const t = i / 6; pts.push([s * (0.04 + W * t), yb + 0.2 * t * t, 0]); pts2.push([s * (0.04 + W * t), yb + 0.2 * t * t, 0.028]) }
+      for (let i = 0; i <= 6; i++) { const t = i / 6; pts.push([s * (0.04 + W * t), yb - 0.1 * t * t, 0]); pts2.push([s * (0.04 + W * t), yb - 0.1 * t * t, 0.028]) }
       f.fila(pts, 0.034, 0.016, V, 'pieno', 6)
       f.fila(pts2, 0.012, 0.007, 0xe6edf2, 'metallo', 4)                                // la lama chiara
-      f.metti(sfe(0.018, 5, 4), 0xdfe6ee, s * (0.04 + W), yb + 0.2, 0, {}, 'metallo')
+      f.metti(sfe(0.018, 5, 4), 0xdfe6ee, s * (0.04 + W), yb - 0.1, 0, {}, 'metallo')
     }
     // la corda tesa, e il dardo
-    const tip = [W + 0.04, yb + 0.2, 0], nock = [0, 0.46, 0]
+    const tip = [W + 0.04, yb - 0.1, 0], nock = [0, 0.34, 0]
     for (const s of [-1, 1]) f.asta([s * tip[0], tip[1], 0], nock, 0.005, 0.005, 0xe8e0c8, 'pieno', 4)
     for (let i = 1; i < 9; i++) for (const s of [-1, 1]) { const t = i / 9; f.metti(sfe(0.007, 4, 3), 0xffffff, s * (tip[0] * (1 - t)), tip[1] + (nock[1] - tip[1]) * t, 0.0, {}, 'pieno') }
-    f.asta([0, 0.46, 0.04], [0, 0.86, 0.04], 0.007, 0.007, 0xc9955a, 'pieno', 4)
-    f.metti(con(0.02, 0.07, 4), 0xdfe6ee, 0, 0.9, 0.04, {}, 'metallo')
+    f.asta([0, 0.34, 0.04], [0, 0.8, 0.04], 0.007, 0.007, 0xc9955a, 'pieno', 4)
+    f.metti(con(0.02, 0.07, 4), 0xdfe6ee, 0, 0.84, 0.04, {}, 'metallo')
     c = [0, yb + 0.1, 0]; R = 0.12
   } else {
     const H = A.H, rec = A.rec || 0, z = t => -A.curva * t * t + rec * 1.3 * Math.max(0, t - 0.74) ** 2
@@ -514,6 +515,13 @@ function arco (fig) {
   }
   elemento(f, {}, fig.elemento, pre, A.balestra ? [0, 0.7, 0.05] : [0, A.H * 0.8, -A.curva * 0.4], 0.06, anims)
   const g = f.chiudi()
+  if (A.balestra) {
+    // una balestra si tiene col fusto in avanti e l'arco di piatto, non ritta come un arco: tutto il modello gira di un quarto
+    const dentro = new THREE.Group()
+    dentro.rotation.x = Math.PI / 2
+    for (const m of [...g.children]) dentro.add(m)
+    g.add(dentro)
+  }
   g.userData.famiglia = 'arco'; g.userData.tipo = 'arco'; g.userData.figura = fig.id
   const luce = PREGIO[pre]?.bagliore ?? 0
   g.userData.anima = anima(respira(g, 2.4, 0.2 + 0.1 * luce, 0.85 + 0.2 * luce, rng() * 6), ...anims)
