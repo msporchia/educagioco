@@ -43,7 +43,7 @@ for (const k of [...CAMPAGNA.map(t => t.chiave), 'abisso']) {
 // il minatore e il diario dicono la strada del mondo
 const tappe = CAMPAGNA.map((t, i) => ({ ...t, indice: i, adesso: i === 2, aperta: true, fatta: i < 2 }))
 const detto = ctx => strada({ stati: {}, tappe, ...ctx }).find(p => p.dato === 'detto').testo
-uguale('il minatore', detto({ mondo: true }), `La torre bruciata: ${LUOGHI_MONDO.torre}.`)
-uguale('il diario', storiaDelDiario(tappe, null, true).corrente.luogo, LUOGHI_MONDO.torre)
+uguale('il minatore', detto({}), `La torre bruciata: ${LUOGHI_MONDO.torre}.`)
+uguale('il diario', storiaDelDiario(tappe, null).corrente.luogo, LUOGHI_MONDO.torre)
 
 riassunto('i nomi nuovi dei dungeon')

@@ -29,7 +29,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['chiudi', 'segui', 'vai', 'pietra', 'fuori', 'scheda'])
 
-const d = computed(() => diario(props.stati, props.tappe, props.segui, props.conti, true))
+const d = computed(() => diario(props.stati, props.tappe, props.segui, props.conti))
 
 // il dettaglio: l'id della voce aperta (null = l'elenco). Si cerca fra tutte le voci a ogni giro, così se la voce
 // cambia sotto (consegnata mentre il diario è aperto) il dettaglio la segue, e se sparisce si torna all'elenco

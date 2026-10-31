@@ -15,7 +15,7 @@ import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { crescitaA } from '../../src/giochi/sotterraneo/motore/crescita.js'
 import { impara, metti, conLaStrada } from '../../src/giochi/sotterraneo/motore/abilita.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
-import { fasciaDi, coloreDi, coloreNellaStoria, potenzaDi, zoneDi, rinascitaDi, zoneConForza, zoneConSentita, notiziaDi }
+import { fasciaDi, coloreDi, coloreNellaStoria, potenzaDi, zoneDi, rinascitaDi, zoneConForza }
   from '../../src/giochi/sotterraneo/motore/zone.js'
 import { eroeAtteso, robaDelLivello, livelloDiForza, forzaDi, forzaDelCorredo, mostroDiRiferimento, offesa, colpoContro,
          dannoDell, resistenza, riparo, dannoPerTurno, rapporto, abilitaDelloScontro, energiaTipica, TETTO, ABILITA_A_SCONTRO }
@@ -258,13 +258,8 @@ for (const e of esempi) nota(e)
   // il bambino vende l'arma: la forza cala a 12, ma la zona rinata non torna indietro
   uguale('il massimo resta', rinascitaDi(a, 14, 12), 26)
   uguale('le zone non tornano indietro vendendo l\'arma', potenzaDi(a, k, 14, 12), fasciaDi('torre', 26).da)
-  uguale('e la notizia è sempre quella della zona nuova', notiziaDi(a, 14, 12).da, notiziaDi(a, 14, 26).da)
   // ma i colori sì: debole com'è, quelle zone sono rosse
   uguale('i colori seguono la forza di adesso: la torre rinata è rossa', coloreDi(a, k, 14, 12), 'rosso')
-  // la notizia sentita non cancella il massimo, e il massimo non cancella la notizia
-  const sentita = zoneConSentita(a, 'cantine:40')
-  uguale('la notizia sentita tiene il massimo', sentita.forza, 26)
-  uguale('e il massimo tiene la notizia', zoneConForza({ ...a, zone: sentita }, 40, 14).sentita, 'cantine:40')
   uguale('un livello dell\'eroe più alto del massimo comanda', rinascitaDi(a, 30, 12), 30)
   uguale('la sosta dentro una zona tiene la sua potenza', potenzaDi({ ...a, sosta: { tappa: k, potenza: 12 } }, k, 14, 26), 12)
 }
