@@ -1,5 +1,5 @@
 /* La tabella della grande storia sotto il banco (docs/sotterraneo/la-grande-storia.md e livelli.md), misurata col curioso.
-   tempo: 900
+   tempo: 1500
    Il metro è il curioso (docs/sotterraneo/giocatori-tipo.md): gira tutte le stanze, risponde giusto nove volte su dieci e spende il meglio che
    può; i mostri e la roba sono tarati su di lui. Ogni discesa si gioca venti volte per eroe dall'ingresso che la storia del curioso gli ha
    dato (roba, livello, pozioni: `giocaDalCurioso`, motore/storie.js), cambiando solo le risposte giuste o una cosa dell'ingresso
