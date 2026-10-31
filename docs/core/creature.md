@@ -33,7 +33,7 @@ castello. Il catalogo descritto, per sapere cosa c'è:
 - **`fotogrammi`**: i rettangoli del respiro, `[x, y, largo, alto]` in pixel del
   **foglio grande**, una copia sola. L'altezza è comune ai fotogrammi (i piedi
   restano fermi per terra; a schermo un pezzo si appoggia col fondo della sua
-  cella, `scena/tela.js`), la larghezza è quella della sagoma (un rettangolo
+  cella), la larghezza è quella della sagoma (un rettangolo
   comune prenderebbe il vicino: misurato) e ci sono tre pixel di margine per le
   sfumature. **I fotogrammi di morte non ci sono**: nessun gioco disegna un
   mostro morto, lo toglie. Sono tenute solo le pose di **respiro coerenti**

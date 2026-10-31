@@ -3,8 +3,8 @@
 // (un mostro col nome, più duro di quelli del suo piano). Formano un albero: ognuna dichiara i suoi `richiede`
 // (una discesa finita, un'altra missione consegnata) e si sblocca da sola quando ci sono tutti. Non bloccano
 // niente; il premio è in gemme o in roba (un piccolo vantaggio, mai un passo intero della storia, dati/storia.js),
-// e a volte in monete, quante sono le domande in più che chiede. Dove stanno lo dice il foglietto (PERSONAGGI in
-// dati/terra-mappa.js).
+// e a volte in monete, quante sono le domande in più che chiede. Dove stanno lo dice la scheda del mondo di sopra
+// (dati/mondo-aperto.js).
 import { COSE } from './cose.js'
 import { MOSTRI } from './mostri.js'
 import { CAMPAGNA } from './campagna.js'
@@ -20,7 +20,7 @@ export const PERSONAGGI = {
   pescatore: { nome: 'Il pescatore', chi: 'il pescatore dello stagno', sprite: 'pescatore' },
   boscaiolo: { nome: 'Il boscaiolo', chi: 'il boscaiolo', sprite: 'boscaiolo' },
 }
-// il vecchio minatore sta sulla mappa per conto suo (viste/Terra.vue), non fra i personaggi: dà la sua missione
+// il vecchio minatore sta sulla mappa per conto suo (dati/mondo-aperto.js), non fra i personaggi: dà la sua missione
 // come gli altri, e il diario deve poterlo nominare
 const IL_MINATORE = { nome: 'Il vecchio minatore', chi: 'il vecchio minatore' }
 // anche l'incantatrice sta per conto suo (è una mercante, dati/mercanti.js): dà la missione del quaderno, e dopo vende le pergamene

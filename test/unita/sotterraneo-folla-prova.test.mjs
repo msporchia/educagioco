@@ -5,9 +5,9 @@
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { leggiFolla, personeFinte, mostriFinti } from '../../src/giochi/sotterraneo/scena3d/mondo/folla-prova.js'
 
-const vuota = leggiFolla('#sotterraneo3d=mondo&eroe=cavaliere')
+const vuota = leggiFolla('#sotterraneo=mondo&eroe=cavaliere')
 controlla('senza cheat nessuna folla e nessun tetto', vuota.folla === 0 && vuota.branco === 0 && vuota.tetto === null)
-const f = leggiFolla('#sotterraneo3d=mondo&folla=12&branco3d=8&specie=lupo,orco&tetto3d=24')
+const f = leggiFolla('#sotterraneo=mondo&folla=12&branco3d=8&specie=lupo,orco&tetto3d=24')
 uguale('si leggono folla, branco, tetto e specie', [f.folla, f.branco, f.tetto, f.specie.join()].join('|'), '12|8|24|lupo,orco')
 uguale('un numero esagerato si ferma a 64', leggiFolla('#folla=900').folla, 64)
 

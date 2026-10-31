@@ -37,7 +37,7 @@ export function creaScontro({ S, cam, eroe, compagno = null, getPiano, getCose, 
     const stati = sc.campo.map(r => cose.stato(r))
     const d = disponiPalco(piano.pianta, piano.ingombri, { x: corsa.eroe.x, z: corsa.eroe.y }, stati.map((s, i) => ({ x: s.x, z: s.z, grande: !!sc.campo[i].grosso })))
     eroe.meta = d.eroe
-    // in due il compagno sta sfalsato sotto l'eroe, in diagonale (come il palco del 2D, viste/campo.js): solo disegno
+    // in due il compagno sta sfalsato sotto l'eroe, in diagonale (viste/campo.js): solo disegno
     if (compagno && corsa.persone && corsa.persone.length > 1) compagno.meta = { x: d.eroe.x - 0.55, z: d.eroe.z + 1.05 }
     stati.forEach((s, i) => { s.meta = d.mostri[i]; s.specchio = d.mostri[i].x > d.eroe.x })
     piano.terreno.abbassa(d.abbassa)

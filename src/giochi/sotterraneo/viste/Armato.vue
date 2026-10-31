@@ -1,6 +1,6 @@
 <script setup>
 // L'eroe come lo si vede in discesa: fermo, con l'arma in pugno e lo scudo dall'altra parte, alla stessa scala
-// della figura (scena/tela.js `arma`: il pugno sta 0,42 caselle a lato e in basso, lo scudo è girato). Serve alle
+// della figura (il pugno sta 0,42 caselle a lato e in basso, lo scudo è girato). Serve alle
 // carte fuori dalla discesa e all'eroe che cammina sulla terra di sopra (`posa`, `fotogramma`): un bambino riconosce lo spadone dal
 // ritratto prima di leggere i numeri. Diverso dal campo: l'arma a due mani sta lo stesso a lato e non in mezzo,
 // perché a questa scala, davanti al corpo, lo nasconde (uno spadone è alto quanto l'eroe).
@@ -22,8 +22,8 @@ const props = defineProps({
   posa: { type: String, default: 'fermo' },      // 'corsa' quando cammina: l'arma resta in pugno
   fotogramma: { type: Number, default: 0 },
   corpo: { type: String, default: null },        // l'armatura: si vede solo nel ritratto 3D
-  testa: { type: String, default: null },        // il copricapo: anche lui solo nel 3D (docs/sotterraneo/elmo.md)
-  in3d: { type: Boolean, default: false },       // nel Sotterraneo 3D: il ritratto è l'eroe 3D vestito (viste/anteprima3d.js)
+  testa: { type: String, default: null },        // il copricapo: si vede solo nel ritratto 3D (docs/sotterraneo/elmo.md)
+  in3d: { type: Boolean, default: false },       // il ritratto è l'eroe 3D vestito (viste/anteprima3d.js)
 })
 
 const T = 16       // la casella del campo, in pixel di sprite

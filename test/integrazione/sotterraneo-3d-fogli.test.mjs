@@ -42,7 +42,7 @@ async function ferma() {
 
 /* ── la porta: prima, con la domanda aperta, dopo ── */
 // il pixel ratio fisso: quello che si adatta ai fotogrammi lenti di SwiftShader cambierebbe la scala da sé
-await entra('sotterraneo3d=0&seme=11&stanza=sala&dpr=1')
+await entra('sotterraneo=0&seme=11&stanza=sala&dpr=1')
 {
   const prima = await ferma()
   const c = await page.evaluate(() => {
@@ -63,7 +63,7 @@ await entra('sotterraneo3d=0&seme=11&stanza=sala&dpr=1')
 }
 
 /* ── lo scontro: lì la telecamera alza i combattenti sopra il pannello, come prima ── */
-await entra('sotterraneo3d=0&seme=11&stanza=sala&sotterraneo=branco&mostri=2&tipo=ratto')
+await entra('sotterraneo=0&seme=11&stanza=sala&sotterraneo=branco&mostri=2&tipo=ratto')
 {
   await page.waitForSelector('[data-pannello3d]', { timeout: 15000 })
   await attendi(page, 4000)

@@ -1,10 +1,10 @@
-# I mostri e gli effetti 3D nel Sotterraneo 3D
+# I mostri e gli effetti 3D nel sotterraneo
 
-Nel Sotterraneo 3D (gioco in prova, [grafica-3d.md](grafica-3d.md)) i mostri non sono più sprite ma i modelli in codice dei
+Nel sotterraneo ([grafica-3d.md](grafica-3d.md)) i mostri non sono più sprite ma i modelli in codice dei
 prototipi approvati (`poc/mostri-3d/`, `poc/mostri-3d.html` e le pagine per zona), con il loro respiro e il loro attacco; le
 abilità dell'eroe, i colpi dei mostri e gli stati addosso sono gli effetti 3D di `poc/effetti-3d/` (provati in `poc/arena-3d.html`).
 L'eroe era già passato al 3D (`scena3d/eroe3d.js`, dai prototipi di eroi, armi, armature e copricapi); la roba che porta è la
-figura del suo oggetto, con l'alone della rarità ([roba-3d.md](roba-3d.md)). Il 2D di sempre non cambia.
+figura del suo oggetto, con l'alone della rarità ([roba-3d.md](roba-3d.md)).
 
 ## Prototipi e copie: `npm run promuovi3d`
 

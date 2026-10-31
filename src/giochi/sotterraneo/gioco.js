@@ -23,6 +23,7 @@
 import { CAMPAGNA, QUANTE_TAPPE, INDICE_ABISSO, L_ABISSO } from './dati/campagna.js'
 import { iconaDi } from './dati/terra.js'
 import { MONDO } from './motore/avventure.js'
+import { DUNGEON_NUOVI, PIANI_DEI_NUOVI } from './dati/dungeon-del-mondo.js'
 
 export const CHIAVE = 'sotterraneo'
 
@@ -45,7 +46,7 @@ export default {
      che nessuno pescherà, e vanno detti per quello che sono. */
   quiz: true,
   tappe: QUANTE_TAPPE,
-  // gli amici sulla terra di sopra (docs/core/amici-nei-giochi.md): il cursore di serie (il massimo fra gli eroi, avventure.md), le sette discese, poi l'abisso
+  // gli amici nel mondo di sopra (docs/core/amici-nei-giochi.md): il cursore di serie (il massimo fra gli eroi, avventure.md), le sette discese, poi l'abisso
   amici: { tappe: QUANTE_TAPPE, dove: 'all\'abisso' },
 
   /* ── ESCE DALLA PROVA ──
@@ -79,18 +80,24 @@ export default {
 
   /* «Riprendi da qui» in home, quando l'avventura aperta ha una discesa
      a metà: dice quale e a che piano, e al posto della copertina mostra
-     il suo posto ritagliato dalla mappa (docs/sotterraneo/terra-di-sopra.md,
-     «Le icone delle discese»). Senza, null: la home usa `riassunto`.
-     Un profilo non ancora azzerato (`cfg.mondo`) non ha niente da riprendere. */
+     il suo monumento fotografato nel mondo (dati/icone-mondo.js). Anche i
+     sei dungeon nuovi, che nella sosta hanno la chiave e non l'indice. I
+     piani si dicono quando si sanno senza il motore: la storia e i nuovi.
+     Senza, null: la home usa `riassunto`. Un profilo non ancora azzerato
+     (`cfg.mondo`) non ha niente da riprendere. */
   ripresa(av = {}) {
     const cfg = av.cfg || {}
     const a = cfg.mondo === MONDO && cfg.avventure ? cfg.avventure[cfg.eroe] : null
     const s = a && a.sosta
-    const t = s ? (s.tappa === INDICE_ABISSO ? L_ABISSO : CAMPAGNA[s.tappa]) : null
+    if (!s) return null
+    const d = s.dungeon && typeof s.dungeon.chiave === 'string' ? s.dungeon : null
+    const nuovo = d && DUNGEON_NUOVI[d.chiave]
+    const t = s.tappa === INDICE_ABISSO ? L_ABISSO : nuovo || CAMPAGNA[s.tappa]
     if (!t) return null
     const piano = (s.piano || 0) + 1
+    const piani = t.abisso ? null : nuovo ? PIANI_DEI_NUOVI : !d || d.storia ? t.piani : null
     return {
-      dove: `${t.nome} · piano ${piano}${t.abisso ? '' : ` di ${t.piani}`}`,
+      dove: `${t.nome} · piano ${piano}${piani ? ` di ${piani}` : ''}`,
       immagine: iconaDi(t.abisso ? 'abisso' : t.chiave),
     }
   },
@@ -104,7 +111,7 @@ export default {
        sotInteri   discese finite senza svenire nemmeno una volta
        sotGemme    (primato) le gemme portate a casa in una discesa sola
        sotFondo    (primato) il piano più profondo toccato nell'abisso
-       sotTerra    (primato) la terra più lontana raggiunta nel 3D (passando la porta delle terre)
+       sotTerra    (primato) la terra più lontana raggiunta (passando la porta delle terre)
      Si scrivono alla fine e non stanza per stanza apposta: salvare venti
      volte per discesa non aggiunge niente e costa a ogni tocco. */
   albo: {

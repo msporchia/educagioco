@@ -10,7 +10,7 @@ pagina dice cosa cambia fra le due famiglie, i relitti e l'acqua.
 
 Il codice: `motore/livello.js` (il piano), `motore/forme.js` (le forme e
 l'automa cellulare, pura), `dati/relitti.js` (classi e aspetti dei relitti),
-`scena/relitti.js` (i disegni in codice e l'acqua), `scena/tela.js`.
+`scena3d/relitti.js` (i disegni in codice) e `scena3d/acqua.js` (l'acqua).
 
 ## Chi è quale
 
@@ -133,14 +133,12 @@ spostare o da raccogliere** (regola dell'utente): niente casse, sacchi, barili;
   | fornace, grotta (la miniera) | – | roccia, macerie, crollo, trave, stalagmite, **carro rovesciato, binari divelti** |
   | cantine, costruita e grotta | – | macerie, crollo, roccia, trave, stalagmite |
 
-  I disegni in codice (`scena/relitti.js`: pixel pieni, luce da in alto a sinistra, i colori
+  I disegni in codice (`scena3d/relitti.js`: una forma per disegno, istanziata, nei colori
   di pietra dello scenario in `TINTE_RELITTI`) **sono provvisori e vanno dipinti**; per le
   cantine non c'è nessun pezzo dipinto. Quando ci saranno, si mette il pezzo
   nell'atlante e lo si nomina nell'aspetto al posto del `disegno`.
-- **Come si vedono**: sono terreno, non roba: la tela li posa sotto i veli, così il
-  ricordo e il cono li scuriscono come il pavimento (`Tela.ingombri`); sulla
-  mappina sono quasi roccia, l'acqua azzurra. Limite: un eroe a nord di un relitto
-  alto (una colonna) gli passa davanti invece che dietro.
+- **Come si vedono**: sono terreno, non roba: fanno ombra e la maschera del visto li spegne come il
+  pavimento; sulla mappina sono quasi roccia, l'acqua azzurra.
 - **Toccarli** dice cos'è, ogni volta (un ostacolo non è rumore).
 
 ## Le domande per discesa

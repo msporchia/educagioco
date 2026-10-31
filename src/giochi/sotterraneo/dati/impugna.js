@@ -1,5 +1,5 @@
-// Dove sta un'arma in mano all'eroe, in pixel di sprite (l'eroe è 16×28, i piedi sono lo zero): la usano la tela del campo
-// (scena/tela.js `arma`) e il ritratto (viste/Armato.vue), perché due copie diventano due eroi. Il perché: docs/sotterraneo/roba.md.
+// Dove sta un'arma in mano all'eroe, in pixel di sprite (l'eroe è 16×28, i piedi sono lo zero): la usano l'eroe 3D
+// (scena3d/eroe.js) e il ritratto (viste/Armato.vue), perché due copie diventano due eroi. Il perché: docs/sotterraneo/roba.md.
 //   dx    di quanto sta davanti al centro dell'eroe, verso dove guarda
 //   base  l'altezza del bordo basso dell'arma sopra i piedi
 // Una spada si tiene per l'impugnatura, col fondo vicino ai piedi. Un arco si tiene al centro, all'altezza della mano, con la corda

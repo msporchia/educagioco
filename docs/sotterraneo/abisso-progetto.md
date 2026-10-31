@@ -21,7 +21,7 @@ schermo) · 3 il bottino graduato (una giornata) · 5 il banco e le monete
   salvataggi vecchi si rileggono e nessun test cambia colore.
 - **Tutte le letture `COSE[k]` fuori da `dati/cose.js` diventano
   `cosa(k)`** (oggi sono una sessantina, in `motore/corsa.js`, `Gioco.vue`,
-  `scena/tela.js`, `motore/banco.js`, `motore/sosta.js` e nei test):
+  `scena3d/cose.js`, `motore/banco.js`, `motore/sosta.js` e nei test):
 
   ```js
   export function cosa(k) {
@@ -41,7 +41,7 @@ schermo) · 3 il bottino graduato (una giornata) · 5 il banco e le monete
   mercanti non offrono `spada#3` a chi ha `spada#7`, e il grado non diventa
   una scappatoia al limite di classe.
 - **Lo sprite viene dalla base**: nessuna arte nuova. Se si vuole che si veda
-  il grado, il posto è il filo di luce di `scena/tela.js`, più acceso.
+  il grado, il posto è l'alone di `scena3d/cose.js`, più acceso.
 
 ## 3. Il bottino graduato
 

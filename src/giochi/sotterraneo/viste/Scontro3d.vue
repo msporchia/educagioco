@@ -1,8 +1,8 @@
 <script setup>
-// Lo scontro nel Sotterraneo 3D: i combattenti li disegna la scena (scena3d/), qui ci sono le scritte sopra di loro — il nome di chi
+// Lo scontro: i combattenti li disegna la scena (scena3d/), qui ci sono le scritte sopra di loro — il nome di chi
 // ha un grado o è il bersaglio, la barra della vita senza numeri, gli stati addosso, i segni di «resiste» e «teme», i numeri che
-// salgono —, la fila dei turni sul bordo destro, la riga dell'agguato e il nome dell'abilità usata. Gli stessi pezzi e le stesse
-// classi di viste/Scontro.vue; ogni scritta sta in un aggancio che la scena porta sopra la testa della sua figura (`aggancia`).
+// salgono —, la fila dei turni sul bordo destro, la riga dell'agguato e il nome dell'abilità usata. Le classi sono quelle di
+// stile-scontro.css; ogni scritta sta in un aggancio che la scena porta sopra la testa della sua figura (`aggancia`).
 // Non calcola niente: i numeri vengono dal motore (viste/campo.js) e dal racconto (viste/racconto.js, `fx`).
 import { onUnmounted } from 'vue'
 import FilaDeiTurni from './FilaDeiTurni.vue'
@@ -18,7 +18,7 @@ const props = defineProps({
   incanti: { type: Array, default: () => [] },
   fx: { type: Object, required: true },
   aggancia: { type: Function, required: true },   // (chi, elemento | null): la scena lo porta sopra la figura
-  posti: { type: Object, default: null }, apertura: { type: Object, default: null }, palco: { type: Object, default: null },
+  posti: { type: Object, default: null }, apertura: { type: Object, default: null },
 })
 
 const ossaDi = m => (props.fx.attivo && props.fx.ossa[m.i] != null ? props.fx.ossa[m.i] : m.ossa)
@@ -40,7 +40,7 @@ onUnmounted(() => { props.aggancia('eroe', null); for (const m of props.mostri) 
       <SegniAddosso :stati="mie" :largo="34" />
       <span v-for="n in numeriDi('eroe')" :key="n.id" class="sot-numero" :class="'sot-numero-' + n.tipo" data-cifra>{{ n.testo }}</span>
     </div>
-    <!-- sopra ogni mostro: le stesse scritte del palco 2D (il bersaglio si sceglie toccando la figura nella scena) -->
+    <!-- sopra ogni mostro: le scritte (il bersaglio si sceglie toccando la figura nella scena) -->
     <div v-for="m in mostri" :key="m.i" :ref="aggancio(m.i)" class="sot3d-ancora sot-m" :class="{ 'sot-morto': mortoDi(m), 'sot-bersaglio': pulita(m) && m.bersaglio }"
          data-mostro :data-i="m.i" :data-tipo="m.tipo" :data-nome="m.nome" :data-grado="m.grado" :data-variante="m.variante" :data-colpisce="m.colpisce"
          :data-bersaglio="pulita(m) && m.bersaglio ? '' : null" :data-colpito="pulita(m) && m.colpito ? m.colpito : null"

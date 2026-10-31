@@ -38,7 +38,7 @@ let cieco = 0
 onMounted(() => { cieco = setTimeout(() => { pronto.value = true }, CIECO) })
 onBeforeUnmount(() => clearTimeout(cieco))
 
-// il ritratto del mercante: lo stesso del dialogo (viste/Ritratto.vue), col modello 3D nel Sotterraneo 3D
+// il ritratto del mercante: lo stesso del dialogo (viste/Ritratto.vue), col modello 3D
 
 const scheda = ref(props.chi.schede.some(s => s.chiave === props.scheda) ? props.scheda : props.chi.schede[0].chiave)
 const laScheda = computed(() => props.chi.schede.find(s => s.chiave === scheda.value))

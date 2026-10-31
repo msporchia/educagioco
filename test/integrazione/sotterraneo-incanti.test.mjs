@@ -6,11 +6,13 @@
    sopra il globo compare la pastiglia coi passi; un secondo tocco dice «ce l'hai già»; in fondo il tasto dell'albero lo apre, e il
    riquadro del nodo dice che si può preparare. Poi uno scontro aperto con l'incanto già addosso: la pastiglia sotto il palco coi
    passi, la barriera disegnata sull'eroe, il badge sul primo turno della fila.
+   Si entra dal cheat dell'indirizzo, che scende da sé nella discesa 3D (`#sotterraneo=1&…`); lo scontro è quello 3D, con la pastiglia
+   sotto la scena, la barriera sull'eroe (`[data-eroe-scontro]`) e il badge sulla fila.
    Si tocca come un bambino (`Input.dispatchTouchEvent` via CDP).
    `node test/esegui.mjs sotterraneo-incanti --scatti`
-   tempo: 120
+   tempo: 150
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scendiNelSotterraneo } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
@@ -37,27 +39,24 @@ async function toccaIl(sel) {
   await attendi(page, 300)
 }
 
-// scende nella cripta: `hash` dice cosa si trova (un cheat, docs/core/comandi.md)
+// scende nella scalinata: `hash` dice cosa si trova (un cheat, docs/core/comandi.md)
 async function entra(hash) {
   await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
   await azzera(page)
   await page.setViewportSize({ width: 390, height: 844 })
-  const avventura = { tappa: TAPPA, libera: false, stelle: { 0: 3 }, missioni: {}, roba, crescita,
-    terra: { nebbia: 'f'.repeat(768), dove: [55, 11], parlato: true } }
+  const avventura = { tappa: TAPPA, libera: false, stelle: { 0: 3 }, missioni: {}, roba, crescita, mondo: { parlato: true } }
   await semina(page, {
-    coins: 300, settings: { sperimentali: true },
+    coins: 300,
     campagne: { sotterraneo: { tappa: TAPPA, libera: false, stelle: { 0: 3 }, cfg: { mondo: MONDO, eroe: 'mago', avventure: { mago: avventura } } } },
   })
-  await scegli(page, 'sotterraneo')
-  await page.waitForSelector('[data-terra]', { timeout: 5000 })
-  await page.evaluate(h => { location.hash = h }, hash)
-  await scendiNelSotterraneo(page, TAPPA)
+  await page.evaluate(h => { location.hash = h }, 'sotterraneo=' + TAPPA + '&' + hash)
+  await page.waitForSelector('[data-tela="3d"]', { timeout: 40000 })
 }
 const energia = () => page.locator('[data-globo="energia"] .sot-globo-numero').first().textContent().then(Number)
 
 /* ---------- 1. dalla casella degli incanti si sceglie e si lancia ---------- */
 {
-  await entra('seme=11&sotterraneo=1')
+  await entra('seme=11')
   await page.waitForSelector('[data-barra-giu]', { timeout: 10000 })
   await attendi(page, 600)
   uguale('prima di lanciare niente è addosso', await page.locator('[data-incanti]').count(), 0)

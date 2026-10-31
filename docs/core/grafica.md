@@ -33,7 +33,7 @@ entrano energia e prezzi: solo fatti già decisi (`potenziabile: true`).
 - **`spazio3d/`** — il cielo degli asteroidi (three.js, WebGL 2): riceve
   dalla view la scena in pixel e la traduce in mondo; riceve `danno: 0.5`,
   non sa che esistano le vite. `spazio.js` disegna la nave piccola della
-  rotta e dell'hangar ([../asteroidi/grafica-3d.md](../asteroidi/grafica-3d.md)). Il Sotterraneo 3D (gioco in prova) ha il suo
+  rotta e dell'hangar ([../asteroidi/grafica-3d.md](../asteroidi/grafica-3d.md)). Il sotterraneo ha il suo
   3D accanto al gioco, `giochi/sotterraneo/scena3d/`: la discesa del motore vero in WebGL, con le
   figure dell'atlante istanziate e la maschera del visto ([../sotterraneo/grafica-3d.md](../sotterraneo/grafica-3d.md)).
 - **`corpo.js`** — **lo scheletro**: `persona()` per chi cammina su due
@@ -114,10 +114,6 @@ Per disegnare con fogli di figure invece che coi poligoni:
   `giraSocket` fa un quarto di giro (i giri sono quattro perché la pixel
   art regge i 90°, non i 45°), pose identiche su ogni lato (un incrocio
   girato) restano una sola.
-- **Il calco da guardare** è `giochi/sotterraneo/scena/tela.js`. La forma
-  dei muri però viene da `scena/muri.js`: a tre quarti la faccia di un muro
-  non è il bordo di una zona, è una cella intera che si vede da una parte
-  sola (la regola sta in [`../sotterraneo/`](../sotterraneo/README.md)).
 
 ## Fedeli ai sorgenti
 
@@ -132,8 +128,6 @@ dB, e i comandi stampano `KB, dB` a ogni giro.
 
 | immagine | strumento | prima: formato, peso, dB | ora | come si mostra |
 |---|---|---|---|---|
-| terra di sopra 2048×1536 | `terra-di-sopra.py` | q75, 856 KB, 29,8 | 2241 KB, 37,3 | 3/4, `pixelated` (invariato) |
-| icone delle discese, 8 × 96² | idem (`icone.passo` 16) | q80, 34 KB, 28,9 | 66 KB, 34,8 | piccole; ognuna sotto i 10 KB (un test) |
 | valle di Passo passo 1536×1024 | `isole-passo-passo.py` | q80, 257 KB, 31,8 | 675 KB, 37,2 | scala 1, `pixelated` |
 | regno del castello 1024×1536 | `regno-castello.py` | — | 1127 KB, 37,9 | almeno 760 px di larghezza, si naviga |
 | zaino di Passo passo | idem | q80, 363 KB, 30,2 | 892 KB, 37,9 | idem |
@@ -157,7 +151,7 @@ rifare. Il file unico passa da 14,4 a 19,0 MB, quasi tutto qui.
 - **Il disegno non sta su una griglia, e a 3/4 si vede.** Ridotto a blocchi
   di p×p (p da 3 a 10, ogni fase) e rigonfiato dà 20–23 dB: i «pixel» hanno i
   bordi sfumati dal generatore. A scala intera (valle, zaino, atlanti)
-  `pixelated` ripete il pixel e basta. A 3/4 (la terra di sopra) il vicino
+  `pixelated` ripete il pixel e basta. A 3/4 il vicino
   più prossimo fa gradini di larghezza diversa: è il sorgente, ingrandito.
   Il filtro morbido li toglie ma sfoca: contro la stessa immagine ridotta con
   Lanczos al pixel del telefono, sul pezzo del cartello `auto` dà 36,1 dB e
@@ -166,19 +160,12 @@ rifare. Il file unico passa da 14,4 a 19,0 MB, quasi tutto qui.
 - **Provato: WebP qualità 75–80 a scala 3/4 con `pixelated`: bordi impastati
   (la codifica, ora a posto) e pixel irregolari (il sorgente).** Provato:
   `image-rendering: auto` a 3/4: sfocato nel gioco. Provato: tavolozza a 256 colori (libimagequant) più
-  WebP senza perdita: 33 dB a 2,3 MB sulla terra, peggio del passo 12; non
+  WebP senza perdita: 33 dB a 2,3 MB su una mappa da 2048×1536, peggio del passo 12; non
   basta, perché sono immagini con grana. Provato: predire il pixel dal vicino
   e appiattire il rumore: più pesante del passo 12 a pari dB. Provato: un
   passo diverso per luce e colore (alla JPEG): nessun guadagno. Provato:
-  la terra a 1536×1152 con Lanczos nello strumento: più molle di quella a
+  la mappa a 1536×1152 con Lanczos nello strumento: più molle di quella a
   2048 sui telefoni a 3×, e il browser deve comunque ingrandirla.
-- **Scala 1 con l'eroe a scala 4 per la terra di sopra** (`SCALA_TERRA` e
-  `SCALA_EROE` in `dati/terra.js`, due costanti) dà pixel regolari e netti
-  come nella valle: è la resa migliore che si è vista. Il campo però si
-  restringe di un quarto (sei celle in larghezza su 390 px) e tre prove del
-  dito, scritte sulla vista di adesso, falliscono (`sotterraneo-terra`:
-  `camminaVerso` si ferma a metà strada; `-missioni` e `-avventure`: tocchi
-  e indicatori contati sullo schermo). È una scelta di gioco, non di codifica.
 - **I canvas del sotterraneo contano al più due pixel per
   pixel CSS** (`Math.min(2, devicePixelRatio)`): su un telefono a 3× il
   browser li ingrandisce di 1,5 con la sfocatura, e un pixel netto sbava. Non

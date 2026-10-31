@@ -17,7 +17,7 @@ const props = defineProps({
   incanti: { type: Array, default: () => [] },   // gli incanti preparati addosso: sul primo turno dell'eroe quello che finisce prima, coi passi che restano
 })
 
-// nel 3D le facce sono le anteprime dei modelli (eroe a mezzo busto, mostri dalla testa a metà corpo), già della misura giusta
+// le facce sono le anteprime dei modelli (eroe a mezzo busto, mostri dalla testa a metà corpo), già della misura giusta
 const in3d = !!usaAnteprime3d()
 const LATO = 22   // le figurine piccole stanno in una scatola di 22 px; chi è più alto o più largo si rimpicciolisce
 const voci = computed(() => props.turni.map((t, k) => {

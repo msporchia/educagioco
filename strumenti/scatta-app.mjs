@@ -16,8 +16,8 @@
    `--dist` apre dist/index.html (o il percorso dopo, se c'è) invece del
    server di Vite: è quello che provano i test, e non serve una porta.
 
-   `--storia N` apre il sotterraneo sulla terra di sopra con N discese finite, come le avrebbe un eroe in regola
-   (`--gioco sotterraneo3d` lo apre nel mondo 3D di sopra; `--eroe mago`, `--missioni collana:consegnata,rosicchione:presa`, `--non-parlato` se il minatore non ha ancora
+   `--storia N` apre il sotterraneo sul mondo di sopra con N discese finite, come le avrebbe un eroe in regola
+   (`--eroe mago`, `--missioni collana:consegnata,rosicchione:presa`, `--non-parlato` se il minatore non ha ancora
    detto niente): il diario e i dialoghi si guardano senza giocare la storia. `--zaino bastone-magico,elisir-toro` mette quei
    pezzi in tasca in più (una chiave composta, `spada@7.m.fuoco`, va bene), per guardarli nel pannello o berli; `--punti 3` lascia tre
    punti delle caratteristiche da dare, per vedere cosa cambia sotto ogni «+».
@@ -93,7 +93,7 @@ await page.waitForTimeout(1200)                 // l'app aspetta il profilo
 await page.waitForTimeout(Number(opz('aspetta', 0)))
 // `--prima '<espressione>'`: la si fa (e la si aspetta, se è una promessa) prima dei tocchi e dello scatto: `window.__mondo3d.vai('pietra:altare')`
 if (opz('prima', null)) await page.evaluate(opz('prima')).catch(e => errori.push('--prima: ' + e.message))
-// `--tana <luogo>` (con `--gioco sotterraneo3d` o `#sotterraneo3d=mondo`): porta l'eroe del mondo di sopra a `--distanza` celle (4,5) a sud
+// `--tana <luogo>` (con `--storia` o `#sotterraneo=mondo`): porta l'eroe del mondo di sopra a `--distanza` celle (4,5) a sud
 // della tana di quel luogo (`bosco`, `ceneri`, `landa`… le chiavi di `m.regioni`) e aspetta che la zona si carichi; `--senza-mostri`
 // li spegne (si vede il segno e basta), `--tana-lista` stampa i luoghi con la loro tana
 if (opz('tana', null)) {
@@ -126,7 +126,7 @@ async function apriPagina() {
 if (opz('storia', null) != null) {
   const { seminaIlSotterraneo } = await import('../test/aiuto/sotterraneo-semina.mjs')
   await seminaIlSotterraneo(page, {
-    finite: Number(opz('storia')), eroe: opz('eroe', 'cavaliere'), gioco: opz('gioco', 'sotterraneo'), parlato: !args.includes('--non-parlato'),
+    finite: Number(opz('storia')), eroe: opz('eroe', 'cavaliere'), parlato: !args.includes('--non-parlato'),
     missioni: Object.fromEntries((opz('missioni', '') || '').split(',').filter(Boolean).map(x => x.split(':'))),
     zaino: (opz('zaino', '') || '').split(',').filter(Boolean), punti: Number(opz('punti', 0)),
   })

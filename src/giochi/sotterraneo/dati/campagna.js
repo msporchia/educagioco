@@ -10,7 +10,7 @@
 // `portata`: niente `scuola` qui, quello che insegna questa campagna non lo dà nessuna scuola.
 import { MOSTRI, costoInRisposte } from './mostri.js'
 
-// `paesaggio`: come la veste il Sotterraneo 3D (docs/sotterraneo/paesaggi-3d.md); scenario, pianta e numeri restano del motore
+// `paesaggio`: come la veste il sotterraneo (docs/sotterraneo/paesaggi-3d.md); scenario, pianta e numeri restano del motore
 export const CAMPAGNA = [
   { chiave: 'altare', nome: 'La cripta dei re', icona: '🕯️', dove: 'nella cripta',
     scenario: 'cripta', pianta: 'costruita',

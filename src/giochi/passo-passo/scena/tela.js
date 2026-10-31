@@ -57,8 +57,7 @@ export class Tela {
   }
 
   /* la tela può cambiare sotto i piedi: tornando alla mappa il `v-if`
-     smonta il campo, e il canvas della partita dopo è un altro elemento
-     (vedi `sotterraneo/scena/tela.js`, dove questo guasto si è visto) */
+     smonta il campo, e il canvas della partita dopo è un altro elemento */
   attacca(canvas) {
     if (this.canvas === canvas) return false
     this.canvas = canvas

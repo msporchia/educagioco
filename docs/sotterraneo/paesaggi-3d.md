@@ -1,4 +1,4 @@
-# I paesaggi del Sotterraneo 3D
+# I paesaggi del sotterraneo
 
 Dieci posti, e ognuno si deve riconoscere **dalla sola forma e trama di muri e pavimento**, anche in piccolo e in grigio:
 non basta una tinta diversa sulla stessa stanza di mattoni (l'utente, 16 ottobre 2026: «servono pattern completamente
@@ -33,7 +33,7 @@ discese non cambiano. La mappa dei moduli sta in [grafica-3d.md](grafica-3d.md).
 | `miniera` | roccia viva · roccia a strati | assi inchiodate | puntelli con la trave | gialla, polvere | travi con le lanterne (fanno luce), binari nei corridoi, carrelli, sassi |
 
 I quattro del motore (`cantine`, `cripta`, `fornace`, `inferno`) sono quelli delle discese di oggi, rifatti con forma e disegno
-propri; gli altri sei sono **solo del 3D**: si vedono col cheat ([../core/comandi.md](../core/comandi.md), `#scenario=`) e
+propri; gli altri sei non sono discese della storia: si vedono col cheat ([../core/comandi.md](../core/comandi.md), `#scenario=`) e
 prendono porte, forzieri e arredo da toccare dalla loro `base` (la grotta, la neve e la palude dalle cantine, il ghiaccio e il
 tempio dalla cripta, la miniera dalla fornace). La famiglia di piante va col posto: `caverna` (grotte a bolle, passaggi storti)
 per grotta, neve, ghiaccio, palude, miniera; `costruita` (stanze, colonnati, nicchie) per gli altri. Palude e tempio vogliono
@@ -63,8 +63,8 @@ l'acqua.
 ## Le botti
 
 Un passatempo, come in Diablo: ogni tanto una stanza ha qualche botte, e romperle fa perdere un po' di tempo. Il motore le conosce
-(`motore/botti.js`, la tabella in `dati/botti.js`), ma la regola è **spenta di difetto** e la accende solo il 3D (`Corsa.botti`):
-il 2D e il banco non le hanno, e le misure d'equilibrio restano quelle di prima.
+(`motore/botti.js`, la tabella in `dati/botti.js`), ma la regola è **spenta di difetto** e la accende il gioco (`Corsa.botti`):
+il banco di prova non le ha, e le misure d'equilibrio restano quelle di prima.
 
 | paesaggio | stanze con le botti | come sono |
 |---|---|---|
@@ -84,10 +84,10 @@ il 2D e il banco non le hanno, e le misure d'equilibrio restano quelle di prima.
   mostri, e si raccoglie allo stesso modo. Il tiro nasce dal seme, dal piano e dalla botte: rompere e riaprire non lo rifà.
   Nient'altro: rompere non conta come mostro o tesoro, non dà esperienza, non tocca vita né energia.
 - **La sosta**: una botte rotta lascia nel piano un segno già preso (`{ che: 'botte', botte: i, presa: true }`), che la sosta
-  salva con le cose nuove del piano: nessun campo nuovo, `VERSIONE` non sale, e il 2D (che salta le cose prese) non lo vede.
+  salva con le cose nuove del piano: nessun campo nuovo, `VERSIONE` non sale, e il banco (che salta le cose prese) non lo vede.
   Rientrando, la botte è a terra a pezzi.
 - **Non bloccano**: l'eroe ci passa attraverso, come prima. Farle bloccare vorrebbe che `buona()` del motore le conoscesse (le
-  strade, il palco, la ricerca dei mostri): si può, ma cambia le strade solo nel 3D; per ora no.
+  strade, il palco, la ricerca dei mostri): si può, ma cambia le strade; per ora no.
 - Una cosa trovata provando: togliere i mostri dalla lista `robe` (`splice`) rompe la sosta, che conta le cose per indice; la
   tavola e il test li spengono (`presa`, `morto`) invece di toglierli.
 
@@ -130,7 +130,7 @@ posa in `POSE_ARREDO`, il nome in `ARREDI` e la sua forma in `forma()` (una geom
 ## Nel gioco, e la proposta per l'abisso
 
 **Fatto** (16 ottobre 2026, con il mondo di sopra): un `paesaggio:` sulla discesa (in `dati/campagna.js`, letto da `paesaggioDi`)
-veste il 3D senza toccare il 2D né i numeri (scenario, pianta e acqua restano del motore): la tana dei ragni (`gallerie`,
+veste la discesa senza toccare i numeri (scenario, pianta e acqua restano del motore): la tana dei ragni (`gallerie`,
 cantine in caverna) è **grotta**, le sale allagate (`cisterna`, cripta in caverna con l'acqua) **tempio**, le miniere di brace
 (`fondo`, fornace in caverna) **miniera**. Il tempio sta su una pianta a caverna (la sua famiglia sarebbe `costruita`): le pareti
 sono a lastroni sulle grotte. Da decidere ancora:

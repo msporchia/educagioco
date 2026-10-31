@@ -1,4 +1,4 @@
-// Quale pezzo per quale cosa: dato puro, nome della cosa → nome dello sprite (letto da scena/tela.js). Lo
+// Quale pezzo per quale cosa: dato puro, nome della cosa → nome dello sprite. Lo
 // scenario intero di un piano sta in una voce di SCENARI, tutte con le stesse chiavi (docs/sotterraneo/scenari.md).
 // guastiDelleTessere chiede all'atlante ogni nome: un pezzo mancante è rosso nei test, non un muro invisibile.
 
@@ -10,18 +10,7 @@ import { guastiDeiRelitti } from './relitti.js'
 
 export const SCENARI = {
   cantine: {
-    // quadrati di 4×4 celle, non piastrelle; stanza e corridoio hanno due disegni diversi
-    pavimento: { stanza: 'cantine-pav-stanze', corridoio: 'cantine-pav-corridoi' },
-    medaglione: 'cantine-medaglione',   // 3×3, sotto la fontana: si vede da lontano dov'è la stanza della fonte
-    tetto: 'cantine-tetto',   // trama solo vicino a dove si cammina, o farebbe carta da parati sui muri spessi
     colori: { roccia: '#25201d' },
-    faccia: 'cantine-faccia-fila',   // striscia di sei celle; le varianti sono una cella e ci si mettono in mezzo
-    torcia: 'cantine-faccia-torcia',
-    varianti: ['cantine-faccia-grata', 'cantine-faccia-arco', 'cantine-faccia-liscia',
-               'cantine-faccia-toppa', 'cantine-faccia-mensola'],
-    capi: { sx: 'cantine-capo-sx', dx: 'cantine-capo-dx' },
-    bordi: { n: 'cantine-bordo-n', o: 'cantine-bordo-o', e: 'cantine-bordo-e',
-             angolo: 'cantine-bordo-angolo' },
     // la porta non dice cosa c'è dietro: semplice, ferrata o di legno chiaro a caso, e solo la stanza del grosso ha la sua più bella (docs/sotterraneo/piani.md, «Le porte»)
     porte: {
       davanti: { semplice: 'cantine-porta-semplice', ferro: 'cantine-porta-ferro', chiara: 'cantine-porta-chiara', bella: 'porta-nera-teschio', aperta: 'cantine-porta-aperta' },
@@ -29,98 +18,45 @@ export const SCENARI = {
     },
     scala: { aperta: 'cantine-scala-aperta', chiusa: 'cantine-scala-chiusa' },
     fontana: { piena: 'cantine-fontana-piena', asciutta: 'cantine-fontana-asciutta' },   // bevuta resta lì, asciutta
-    perTerra: ['cantine-terriccio', 'cantine-sassolini', 'cantine-radice'],
-    ragnatele: { sx: 'cantine-ragnatela-sx', dx: 'cantine-ragnatela-dx' },
     // i forzieri del posto (docs/sotterraneo/roba.md): legno e ferro, pietra e ferro freddo, ferro e brace; il d'oro è solo quello delle missioni
     forzieri: ['cantine-forziere-a', 'cantine-forziere-b', 'cantine-forziere-c', 'cantine-forziere-d'],
     orpelli: ORPELLI.cantine,   // l'arredo: cosa c'è, dove sta, quanto è epico (dati/orpelli.js)
-    // i muri obliqui, fatti in codice dalle tessere dritte (strumenti/sprite/diagonali.py, docs/sotterraneo/scenari.md, «I muri in diagonale»)
-    diagonali: {
-      taglio: { so: 'cantine-taglio-so', se: 'cantine-taglio-se' },
-      faccia: { no: ['cantine-faccia-no-0', 'cantine-faccia-no-1'], ne: ['cantine-faccia-ne-0', 'cantine-faccia-ne-1'] },
-    },
   },
-  // la cripta (sotterraneo_4*.png): ritagliata da una scena, più due fogli coi pezzi che la scena non ha
+  // la cripta (sotterraneo_4*.png)
   cripta: {
-    pavimento: { stanza: 'cripta-pav-stanze', corridoio: 'cripta-pav-corridoi' },
-    medaglione: 'cripta-medaglione',
-    tetto: 'cripta-tetto',
     colori: { roccia: '#14181b' },
-    faccia: 'cripta-faccia-fila',
-    torcia: 'cripta-faccia-torcia',
-    varianti: ['cripta-faccia-grata', 'cripta-faccia-liscia', 'cripta-faccia-toppa'],
-    capi: { sx: 'cripta-capo-sx', dx: 'cripta-capo-dx' },
-    // bordi con la fascia scura: `luce` è quanto è larga la riga chiara, da ripassare (scena/tela.js)
-    bordi: { n: 'cripta-bordo-n', o: 'cripta-bordo-o', e: 'cripta-bordo-e',
-             angolo: 'cripta-bordo-angolo', luce: 3 },
     porte: {
       davanti: { semplice: 'cripta-porta-semplice', ferro: 'cripta-porta-ferro', chiara: 'cripta-porta-chiara', bella: 'porta-nera-teschio', aperta: 'cripta-porta-aperta' },
       fianco: { semplice: 'cripta-fianco-semplice', ferro: 'cripta-fianco-ferro', chiara: 'cripta-fianco-chiara', bella: 'cripta-fianco-teschio', aperta: 'cripta-fianco-aperta' },
     },
     scala: { aperta: 'cripta-scala-aperta', chiusa: 'cripta-scala-chiusa' },
     fontana: { piena: 'cripta-fontana-piena', asciutta: 'cripta-fontana-asciutta' },
-    perTerra: ['cripta-foglie', 'cripta-schegge', 'cripta-lastra'],
-    ragnatele: { sx: 'cripta-ragnatela-sx', dx: 'cripta-ragnatela-dx' },
     forzieri: ['cripta-forziere', 'forziere-scuro-chiuso', 'cripta-forziere-b'],
     orpelli: ORPELLI.cripta,
-    // i muri obliqui delle stanze smussate e delle cappelle, fatti in codice dalle tessere dritte (strumenti/sprite/diagonali.py):
-    // taglio = cella di roccia con il pavimento in diagonale (bordo), faccia = fascia alta due celle, due pezzi per la fila di due
-    diagonali: {
-      taglio: { so: 'cripta-taglio-so', se: 'cripta-taglio-se' },
-      faccia: { no: ['cripta-faccia-no-0', 'cripta-faccia-no-1'], ne: ['cripta-faccia-ne-0', 'cripta-faccia-ne-1'] },
-    },
   },
-  // la fornace (sotterraneo_5*.png): ritagliata da una scena, più un foglio coi pezzi che la scena non ha
+  // la fornace (sotterraneo_5*.png)
   fornace: {
-    pavimento: { stanza: 'fornace-pav-stanze', corridoio: 'fornace-pav-corridoi' },
-    medaglione: 'fornace-medaglione',
-    tetto: 'fornace-tetto',
     colori: { roccia: '#1b1312' },
-    faccia: 'fornace-faccia-fila',
-    torcia: 'fornace-faccia-torcia',
-    varianti: ['fornace-faccia-grata', 'fornace-faccia-liscia', 'fornace-faccia-toppa'],
-    capi: { sx: 'fornace-capo-sx', dx: 'fornace-capo-dx' },
-    bordi: { n: 'fornace-bordo-n', o: 'fornace-bordo-o', e: 'fornace-bordo-e', angolo: 'fornace-bordo-angolo' },
     porte: {
       davanti: { semplice: 'fornace-porta-semplice', ferro: 'fornace-porta-ferro', chiara: 'fornace-porta-chiara', bella: 'fornace-porta-corna', aperta: 'fornace-porta-aperta' },
       fianco: { semplice: 'fornace-fianco-semplice', ferro: 'fornace-fianco-ferro', chiara: 'fornace-fianco-chiara', bella: 'fornace-fianco-corna', aperta: 'fornace-fianco-aperta' },
     },
     scala: { aperta: 'fornace-scala-aperta', chiusa: 'fornace-scala-chiusa' },
     fontana: { piena: 'fornace-fontana-piena', asciutta: 'fornace-fontana-asciutta' },
-    perTerra: ['fornace-cenere', 'fornace-sassi', 'fornace-scoria'],
-    ragnatele: { sx: 'fornace-ragnatela-sx', dx: 'fornace-ragnatela-dx' },
     forzieri: ['fornace-forziere-b', 'fornace-forziere-c'],
     orpelli: ORPELLI.fornace,
-    diagonali: {
-      taglio: { so: 'fornace-taglio-so', se: 'fornace-taglio-se' },
-      faccia: { no: ['fornace-faccia-no-0', 'fornace-faccia-no-1'], ne: ['fornace-faccia-ne-0', 'fornace-faccia-ne-1'] },
-    },
   },
-  // l'inferno (sotterraneo_6*.png): ritagliato da una scena, più i pezzi derivati in codice (strumenti/sprite/inferno.py) e due tavole d'arredo
+  // l'inferno (sotterraneo_6*.png), più due tavole d'arredo
   inferno: {
-    pavimento: { stanza: 'inferno-pav-stanze', corridoio: 'inferno-pav-corridoi' },
-    medaglione: 'inferno-medaglione',
-    tetto: 'inferno-tetto',
     colori: { roccia: '#0d0a0b' },
-    faccia: 'inferno-faccia-fila',
-    torcia: 'inferno-faccia-torcia',
-    varianti: ['inferno-faccia-grata', 'inferno-faccia-liscia', 'inferno-faccia-toppa'],
-    capi: { sx: 'inferno-capo-sx', dx: 'inferno-capo-dx' },
-    bordi: { n: 'inferno-bordo-n', o: 'inferno-bordo-o', e: 'inferno-bordo-e', angolo: 'inferno-bordo-angolo' },
     porte: {
       davanti: { semplice: 'inferno-porta-semplice', ferro: 'inferno-porta-ferro', chiara: 'inferno-porta-chiara', bella: 'inferno-porta-bella', aperta: 'inferno-porta-aperta' },
       fianco: { semplice: 'inferno-fianco-semplice', ferro: 'inferno-fianco-ferro', chiara: 'inferno-fianco-chiara', bella: 'inferno-fianco-bella', aperta: 'inferno-fianco-aperta' },
     },
     scala: { aperta: 'inferno-scala-aperta', chiusa: 'inferno-scala-chiusa' },
     fontana: { piena: 'inferno-coppa-lava', asciutta: 'inferno-fontana-asciutta' },
-    perTerra: ['inferno-anello-catena', 'inferno-sassolini', 'inferno-erba-secca'],
-    ragnatele: { sx: 'fornace-ragnatela-sx', dx: 'fornace-ragnatela-dx' },   // la scena non le ha: restano quelle della fornace, da chiedere al modello
-    forzieri: ['fornace-forziere-b', 'fornace-forziere-c'],   // idem: ferro e brace stanno bene anche qui
+    forzieri: ['fornace-forziere-b', 'fornace-forziere-c'],   // ferro e brace stanno bene anche qui
     orpelli: ORPELLI.inferno,
-    diagonali: {
-      taglio: { so: 'inferno-taglio-so', se: 'inferno-taglio-se' },
-      faccia: { no: ['inferno-faccia-no-0', 'inferno-faccia-no-1'], ne: ['inferno-faccia-ne-0', 'inferno-faccia-ne-1'] },
-    },
   },
 }
 
@@ -205,13 +141,11 @@ export function guastiDelleTessere(nomi = null) {
   // chi lo chiede per nome deve trovarlo: la tela ripiegherebbe in silenzio
   for (const t of [...CAMPAGNA, ...TRATTI_DELL_ABISSO])
     if (t.scenario && !SCENARI[t.scenario]) g.push(`${t.nome}: lo scenario "${t.scenario}" non esiste`)
-  for (const [k, sc] of Object.entries(SCENARI))
-    if (!(sc.perTerra || []).length) g.push(`lo scenario ${k} non ha niente per terra`)
   g.push(...guastiDeiRelitti(nomi))   // i relitti hanno il loro scenario e i loro sprite (dati/relitti.js)
   for (const q of [1, 6, 12, 24, 48]) chiedi(pezzoDelleGemme(q, 0), `gemme da ${q}`)
   chiedi('forziere-oro-chiuso', 'forziere d\'oro')
   if (nomi) {
-    // eroi e mostri si chiedono alle loro tabelle, non a un elenco a mano; `unaPosa` ha solo il respiro (scena/tela.js)
+    // eroi e mostri si chiedono alle loro tabelle, non a un elenco a mano; `unaPosa` ha solo il respiro
     const chiedeva = [
       ...EROI.map(e => ({ sprite: e.sprite, pose: ['fermo', 'corsa'] })),
       ...Object.values(MOSTRI).map(m => ({

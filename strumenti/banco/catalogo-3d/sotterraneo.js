@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL CATALOGO 3D — le voci del Sotterraneo
 
-   Tutti i modelli 3D in codice del Sotterraneo 3D, uno per voce, per la
+   Tutti i modelli 3D in codice del sotterraneo, uno per voce, per la
    pagina `strumenti/banco/catalogo-3d.html` (la fa la sessione della
    Fattoria 3D; l'altra metà dei dati è `catalogo-3d/fattoria.js`). Serve a
    vedere cosa c'è, dove si usa, e a dire «questo vale la pena usarlo anche
@@ -585,7 +585,7 @@ export const ID_DEI_MOSTRI = id => 'sot:mostri:' + id.replace('/', '-')
 const VOCI_MOSTRI = [...USI_DEI_MOSTRI].map(([id, chi]) => ({
   id: ID_DEI_MOSTRI(id), nome: `Mostro 3D ${id.split('/')[1]}`, categoria: 'personaggio', file: SCENA + 'mostri3d/registro.js:costruisci',
   crea: () => costruisciMostro(id),
-  dove: `Nel Sotterraneo 3D, al posto dello sprite (dalla zona ${id.split('/')[0]} dei prototipi): ${[...new Set(chi)].join(', ')}`,
+  dove: `Nel sotterraneo, al posto dello sprite (dalla zona ${id.split('/')[0]} dei prototipi): ${[...new Set(chi)].join(', ')}`,
 }))
 
 /* ═══════════════════ l'elenco ═══════════════════ */

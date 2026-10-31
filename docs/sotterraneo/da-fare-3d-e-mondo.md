@@ -1,6 +1,6 @@
 # Da fare: il 3D, il mondo aperto e il resto del giro del 16 ottobre 2026
 
-Le voci aperte alla fine del giro che ha portato il Sotterraneo 3D, il mondo di sopra generato, i paesaggi, le botti, i
+Le voci aperte alla fine del giro che ha portato il sotterraneo, il mondo di sopra generato, i paesaggi, le botti, i
 pensieri, la torcia, la pergamena del portale e il tema legno e ottone. Il resto delle voci del sotterraneo sta in
 [da-fare.md](da-fare.md). Il progetto del mondo: [mondo-aperto-progetto.md](mondo-aperto-progetto.md) e
 [mondo-aperto-fasi.md](mondo-aperto-fasi.md).
@@ -9,11 +9,11 @@ pensieri, la torcia, la pergamena del portale e il tema legno e ottone. Il resto
 
 Tutto è stato guardato solo in Chrome senza GPU, mai su un telefono vero.
 
-- **I mostri a 120 Hz**: la cadenza (8 al secondo da svegli, 4 respirando, 1,5 i passi dei dormienti, come il 2D) è giusta o
+- **I mostri a 120 Hz**: la cadenza (8 al secondo da svegli, 4 respirando, 1,5 i passi dei dormienti) è giusta o
   a scatti? Se i fotogrammi sono troppo distanti si alza (10–12) tenendo il tempo reale. L'eroe va bene com'è.
 - **La torcia**: cono 9,5 celle, alone 3,8, apertura 300°, nessun agguato alle spalle con la torcia accesa: dà il «respiro»
   che si voleva? ([luce.md](luce.md))
-- **Il villaggio 3D** e il mondo di sopra ([mondo-3d.md](mondo-3d.md)): leggibilità dell'eroe (~25 px su 390), stile degli sprite
+- **Il villaggio** e il mondo di sopra ([mondo-3d.md](mondo-3d.md)): leggibilità dell'eroe (~25 px su 390), stile degli sprite
   accanto al 3D liscio, nebbia, veduta, pietre del viaggio.
 - **Gli oggetti delle città** ([mondo-3d.md](mondo-3d.md#gli-oggetti-delle-città)): se a telefono si leggono (insegne, panche, bracieri
   sono piccoli), se i bracieri e le torce non sono troppi, se il rifugio (poco spazio) sembra abbastanza suo.
@@ -25,20 +25,16 @@ Tutto è stato guardato solo in Chrome senza GPU, mai su un telefono vero.
   servono la riga «aggiornato il…» in fondo alla home, il carattere minimo e lo zoom del browser).
 - **I globi** A (canvas 2D, predefinito) e B (WebGL, `#globi=3d`): quale resta.
 - **Le prestazioni su un telefono più vecchio**: draw call e triangoli sono misurati, i millisecondi no (villaggio ~120
-  chiamate e ~310 mila triangoli). Il degrado automatico a scalini è rimandato: si fa solo se il 3D convince.
+  chiamate e ~310 mila triangoli). Il degrado automatico a scalini è rimandato: si fa solo se serve.
 
 ## Decisioni aperte
 
 - **Le botti bloccano finché sono intere?** Oggi l'eroe ci passa attraverso. Farle bloccare vuol dire insegnarle a `buona()` del
   motore (strade, palco, mostri), solo nel 3D.
-- **La missione dell'incantatrice e la pergamena nel 2D dei bambini**: oggi ci sono anche lì (il segno sopra di lei, la
-  merce, la missione «Il quaderno degli incantesimi»). Tenerle o limitarle al 3D in prova?
-- **I pensieri dell'eroe nel 2D dei bambini**: ci sono anche lì. Nessun interruttore dei genitori (scelto), nessuna riga di
-  novità (scelto). Eventuale voce («io» senza nome) da rivedere.
-- **Il tema legno e ottone** è predefinito solo nel 3D; nel 2D resta l'aspetto di sempre (`#tema=legno|rilievo|attuale`).
-  Quando il 3D sostituisce il 2D ([mondo-aperto-fasi.md](mondo-aperto-fasi.md): «ne rimarrà solo uno») va deciso se il legno diventa l'unico.
-- **L'eroe fra il mondo nuovo e il 2D**: oggi il mondo nuovo vive nel campo `mondo` dell'avventura sotto la stessa chiave
-  `sotterraneo`; la chiave `sotterraneo3d` e «porta qui il tuo eroe» restano per la fase 9.
+- **I pensieri dell'eroe**: nessun interruttore dei genitori (scelto), nessuna riga di novità (scelto). Eventuale voce («io» senza
+  nome) da rivedere.
+- **Il tema legno e ottone** è di serie; `rilievo` e `attuale` restano dietro `#tema=` ([tema-pannelli.md](tema-pannelli.md)): va
+  deciso se il legno diventa l'unico.
 - **Dopo la storia: le regioni ruotano o si espande il terreno?** E gli antri, a rotazione o sempre aperti? (blocco delle
   decisioni in [mondo-aperto-fasi.md](mondo-aperto-fasi.md))
 
@@ -47,10 +43,8 @@ Tutto è stato guardato solo in Chrome senza GPU, mai su un telefono vero.
 - **La pergamena del portale**: lo sprite disegnato (oggi l'emoji; a terra in 3D si vede solo il bagliore), la casella nella
   barra come la pozione (oggi si apre dallo zaino), un banco nelle altre città, l'abisso «dall'inizio del tratto» (oggi
   chiude la serata come il ritorno di sempre). Il pensiero «sono lontano da casa» per ricordare che si può usare.
-- **La carta «riprendi» della home per il Sotterraneo 3D**: `sotterraneo3d` non ha un manifesto con `ripresa()` (è una riga di
-  `data/giochi.js`), quindi in home la partita a metà non mostra l'icona; quando l'avrà, `iconaDi(chiave, true)` è già pronta
-  (le icone del mondo fotografate stanno in [mondo-3d.md](mondo-3d.md#le-icone-dei-posti)). La città non ha ancora un posto
-  dove mostrarsi: le tre icone ci sono, nessuna schermata le chiede.
+- **Le icone delle città**: le tre icone fotografate ci sono ([mondo-3d.md](mondo-3d.md#le-icone-dei-posti)), nessuna schermata le
+  chiede.
 - **Il mondo con i mostri sopra** (fase 5): fatti il motore e la scena ([mondo-aperto-mostri-scena.md](mondo-aperto-mostri-scena.md)).
   Da guardare col dito sul Note 7: lo scontro sul prato col pannello, il tocco su un mostro che cammina, il 💤 e i galloni, gli fps del
   mondo (in emulazione tre volte lo scontro delle discese, coi mostri o senza). Restano il signore del cimitero che stende chi ci va
@@ -75,7 +69,7 @@ Tutto è stato guardato solo in Chrome senza GPU, mai su un telefono vero.
 
 ## Da ritarare (non è stato rimisurato niente in questo giro)
 
-Prima di accendere nel gioco normale quello che oggi è solo in prova, si rifà `npm run taratura` coi giocatori tipo: la
+Quello che questo giro ha acceso senza rimisurarlo si ritara con `npm run taratura` coi giocatori tipo: la
 torcia (il curioso a 9/10 vince ogni discesa, a 4/10 il fondo 4 volte su 6 invece di 2; la guardia di
 `unita/sotterraneo-roba` è allentata di uno slot), il bottino delle botti (una su cinque, Boccetta o 1–2 gemme), la
 pergamena (prezzo 25 gemme, tetto 5, 3% nei forzieri dopo la missione), le risalite col portale gemello gratuito (il costo

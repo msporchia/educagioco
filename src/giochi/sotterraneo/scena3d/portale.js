@@ -1,6 +1,6 @@
 // Il portale in 3D: un varco IN PIEDI, non un bacino (l'utente, 16 ottobre 2026: «sembra dell'acqua magica in un pentolone
 // di minestra»). Due pilastri e un architrave di pietra con le rune incise che si accendono, una soglia per terra, e dentro un
-// velo ritto coi colori del portale vero (scena/portale.js: l'anello dal bianco al viola, il vortice scuro che gira al
+// velo ritto coi colori del portale (l'anello dal bianco al viola, il vortice scuro che gira al
 // contrario) che si piega verso il centro e si increspa ai bordi; per terra davanti un cerchio di rune che pulsa, le scintille
 // risucchiate dentro e la sua luce (una sorgente della riserva fissa). Vivo solo dove si vede adesso, nel ricordo la pietra
 // ferma e spenta. `attraversa()` è il lampo del passaggio; chi passa lo disegna chi lo chiama. Lo stesso modulo fa il gemello

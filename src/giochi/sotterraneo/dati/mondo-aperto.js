@@ -1,4 +1,4 @@
-// La scheda del mondo di sopra del Sotterraneo 3D (docs/sotterraneo/mondo-aperto-generatore.md): il mondo a percorso, da cui
+// La scheda del mondo di sopra del sotterraneo (docs/sotterraneo/mondo-aperto-generatore.md): il mondo a percorso, da cui
 // motore/mondo-percorso.js fa la mappa. Le parti di sempre (le botteghe, chi sta fermo, gli habitat, i lotti, le domande di un
 // livello) e, sotto, la serpentina: le misure e il seme, il tracciato, i luoghi, le zone, i quattordici ingressi, il villaggio, le
 // terre. Il mondo ad anelli che c'era prima è stato tolto il 20 ottobre 2026 (docs/sotterraneo/mondo-a-percorso.md). Dato puro:

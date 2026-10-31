@@ -1,6 +1,6 @@
 # I dialoghi, e le scritte del gioco
 
-Chi sta fermo sulla terra di sopra si **parla**: il vecchio minatore, i sei
+Chi sta fermo sul mondo di sopra si **parla**: il vecchio minatore, i sei
 che danno le missioni, i quattro mercanti. Prima c'era un fumetto con tutto
 dentro e i tasti sotto; l'utente, l'8 ottobre 2026: *«dà un tocco di… sto
 controllando il gioco invece di seguirlo»*. Il dialogo fa seguire: chi parla
@@ -10,15 +10,15 @@ asciugate (sotto, «Le scritte») e i nomi difficili sono cambiati («I nomi»).
 
 Il codice: `dati/dialoghi.js` (cosa dice ognuno, per punto della storia),
 `motore/dialoghi.js` (le pagine di apertura, le domande, le risposte; gira in
-Node), `viste/Dialogo.vue` (il riquadro), `viste/Terra.vue` (`parla`,
+Node), `viste/Dialogo.vue` (il riquadro), `viste/Mondo3d.vue` (`parla`,
 `scegli`: chi apre il dialogo e cosa fa ogni scelta), `viste/Ritratto.vue`.
 
 ## Com'è fatto
 
-- **In fondo alla mappa**: legno scuro e
+- **In fondo al mondo**: legno scuro e
   oro come la bottega, il ritratto nel tondo d'oro, il nome, il testo. Sta
   nella fascia in basso che la vista già misura, quindi l'eroe e chi gli
-  parla restano visibili sopra. Niente velo: la mappa resta lì.
+  parla restano visibili sopra. Niente velo: il mondo resta lì.
 - **Il testo è a pagine, non scorre**: una o due frasi per pagina (`inPagine`
   spezza le frasi lunghe, al più due frasi e ~120 caratteri), un tocco sul
   testo va avanti, il triangolo d'oro che dondola dice che c'è un'altra
@@ -107,7 +107,7 @@ cosa, prima della storia; `dati/novita.js`, `novita` in `motore/dialoghi.js`):
   ragni» valgono per ognuna.
 - **Come girano**: prima le reazioni valide adesso, poi le tre sue; a ogni
   «Novità?» la successiva, e dopo l'ultima si riparte. Si ricorda quante volte
-  si è chiesto a ognuno e per quale situazione (`terra.novita[chi] = { n, v }`
+  si è chiesto a ognuno e per quale situazione (`mondo.novita[chi] = { n, v }`
   nell'avventura): **cambiata la situazione (una discesa finita, un livello di
   fascia) si riparte dalla notizia fresca**. La domanda non torna nello stesso
   dialogo, come la storia.
@@ -167,16 +167,15 @@ Nei documenti i personaggi e i pezzi si chiamano ancora con la chiave.
 
 I **dungeon** hanno i nomi nuovi in ogni testo (19 ottobre): *La cripta dei re, Le cantine dei goblin, La torre bruciata, La tana dei
 ragni, Le sale allagate, La porta dell'inferno, Le miniere di brace, Il pozzo senza fondo* (la regola dei nomi:
-[mondo-aperto-progetto.md](mondo-aperto-progetto.md#2-i-dungeon)). Un nome dice l'interno, quindi vale anche per il Sotterraneo di
-sempre, che li mostra uguali; la **strada** del minatore no, perché dipende da dove stanno i posti: `LUOGHI` per la mappa dipinta,
-`LUOGHI_MONDO` per il mondo aperto (`luogoDi(chiave, mondo)` in `dati/terra.js`; `ctx.mondo` nei dialoghi, `mondo` nel diario). Un
+[mondo-aperto-progetto.md](mondo-aperto-progetto.md#2-i-dungeon)). Un nome dice l'interno e vale ovunque; la **strada** del minatore no, perché dipende da dove stanno i posti:
+`LUOGHI_MONDO` (`luogoDi(chiave)` in `dati/terra.js`). Un
 test (`unita/sotterraneo-nomi`) controlla che nessun testo dica un nome di prima.
 
 ## Il capitano del forte
 
-Solo nel mondo 3D, nel villaggio: veniva dal forte del guado, che sul mondo a percorso non c'è più (le decisioni del 20 ottobre,
+Sta nel villaggio: veniva dal forte del guado, che sul mondo a percorso non c'è più (le decisioni del 20 ottobre,
 [mondo-a-percorso.md](mondo-a-percorso.md#decisioni-del-20-ottobre)). `PERSONAGGI_DI_SOPRA`, `CITTADINI` in `dati/missioni.js`: non chiede
-favori, la mappa dipinta non lo conosce. Lo sprite è quello della guardia, più alto (1,38 contro 1,25) e col blu del suo mantello (un
+favori. Lo sprite è quello della guardia, più alto (1,38 contro 1,25) e col blu del suo mantello (un
 lampo additivo piccolo, `tinta`); niente figura nuova. Quando la porta di adesso è la quinta (le sale allagate) o la sesta (la porta
 dell'inferno) la dice lui, a modo suo (`DIALOGHI.capitano.porte`, `stradaDelCapitano` in `motore/dialoghi.js`), con la strada del mondo
 e, se serve, la frase di chi è sotto il livello; per le altre saluta e racconta (`racconti`, da 0 a 7 porte finite). Finché non l'ha

@@ -1,9 +1,9 @@
 # La roba in 3D: oggetto → figura → modello
 
-Nel Sotterraneo 3D ([grafica-3d.md](grafica-3d.md)) un oggetto trovato si disegna con **la sua figura**, non con la sua base: la
+Nel sotterraneo ([grafica-3d.md](grafica-3d.md)) un oggetto trovato si disegna con **la sua figura**, non con la sua base: la
 `spada@7.m.fuoco` che nello zaino ha lo sprite `spada-28` (la lama di fuoco, [figure.md](figure.md)) in mano all'eroe e nelle
 anteprime è il modello 3D di `spada-28`, con l'alone della sua rarità. Prima tutte le spade erano la spada lunga della collezione
-(l'utente, 21 ottobre 2026: «abbiamo creato più modelli… con il 3D possiamo giocare con effetti, colori»). Il 2D non cambia.
+(l'utente, 21 ottobre 2026: «abbiamo creato più modelli… con il 3D possiamo giocare con effetti, colori»).
 
 ## La mappa
 

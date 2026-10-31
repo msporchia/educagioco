@@ -13,7 +13,7 @@ corretto»*, e *«va calcolata a run-time, è più una formula da creare che un
 algoritmo»*. Quindi: una formula sui numeri veri, nessuna partita finta.
 
 Il codice: `motore/forza.js` (la formula, per tutti i pezzi), `motore/zone.js`
-(`rinascitaDi`, `zoneConForza`, i colori che prendono la forza), `Gioco.vue`
+(`zoneConForza`, i colori che prendono la forza), `Gioco.vue`
 (`forzaOra`, il watch che scrive il massimo), `motore/corsa.js` (la grigia che
 dà un quarto), `viste/PaginaEroe.vue` (la riga «Forza N»).
 
@@ -92,28 +92,16 @@ suo livello, al più uno di scarto (`unita/sotterraneo-forza` lo prova da 1 a 45
 formula o il mostro e il controllo si rompe, è la formula da sistemare, non il
 test.
 
-## Le zone ruotano col massimo
+## Il massimo della forza
 
-La rinascita (`fasciaDi`) dipendeva dal livello, che non scende mai. Ora dipende
-da `rinascitaDi = max(livello dell'eroe, forza di adesso, zone.forza)`, con
-`zone.forza` il livello di forza più alto mai raggiunto, **scritto
-nell'avventura** (`zoneConForza`): chi è forte fa ruotare le zone prima, ma la
-forza scende vendendo un'arma e una zona già rinata non deve tornare indietro.
+Il massimo della forza raggiunta (`zone.forza`) è **scritto nell'avventura** (`zoneConForza`): la forza scende vendendo un'arma,
+il massimo no ([zone.md](zone.md)).
 
-- **Quando si scrive** (`Gioco.vue`, un `watch`): sulla terra di sopra (non
-  durante una discesa, non nella scelta dell'eroe), appena si arriva, a ogni
-  cambio di roba o di livello; e **solo se la forza supera il massimo scritto e
-  il livello** (se no `rinascitaDi` prenderebbe già quello).
-- **Salvataggi vecchi**: senza `zone.forza` il massimo vale zero e la
-  rinascita è il livello dell'eroe. Niente da azzerare. Scrivere `forza` e
-  scrivere la notizia sentita non si cancellano a vicenda (`zoneConSentita`).
+- **Quando si scrive** (`Gioco.vue`, un `watch`): nel mondo di sopra (non durante una discesa, non nella scelta dell'eroe), appena si
+  arriva, a ogni cambio di roba o di livello; e **solo se la forza supera il massimo scritto e il livello**.
+- **Salvataggi vecchi**: senza `zone.forza` il massimo vale zero. Niente da azzerare.
 - **La sosta** dentro una zona tiene la sua `potenza` come prima.
-- **I colori**, invece, si leggono dalla forza di *adesso*: se si vende l'arma,
-  la forza cala e le zone già rinate tornano rosse. Le fasce non tornano, i
-  colori sì.
-
-Il rovescio è voluto: un eroe forte arriva prima a zone «rinate», cioè difficili, e
-le trova al loro posto.
+- **I colori** si leggono dalla forza di *adesso*: se si vende l'arma, la forza cala e i colori tornano più rossi.
 
 ## Esempi misurati
 
@@ -188,6 +176,6 @@ così per ogni mostro che batte, ed è il livello 20.
 del calcolo, la roba che alza (+12 livelli, la sola arma) e toglie (a mani nude),
 le due abilità forti che alzano la forza, l'arma che manca che le toglie dalle
 caselle, il colpo uguale a quello di `Corsa.colpo` (con `passa` come numero), i
-colori dalla forza, la rinascita che non torna indietro vendendo, il campo che
+colori dalla forza, il massimo che non scende vendendo, il campo che
 manca nei salvataggi vecchi, la memoria. Sulla pagina dell'eroe
 `[data-forza-eroe][data-forza]`.

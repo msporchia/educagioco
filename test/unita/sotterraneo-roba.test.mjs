@@ -13,7 +13,7 @@ import { COSE, CURE, CURE_IN_VENDITA, IN_VENDITA, STANZE_TORCIA, baseDi, aLivell
 import { TASCHE, POZIONI_MASSIME } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { MERCANTI, mercanteDi, vendeLa, righeDi, guastiDeiMercanti, schedaDi, schedeDi, sovrapprezzo, prezzoAvanti }
   from '../../src/giochi/sotterraneo/dati/mercanti.js'
-import { MERCANTI as DOVE_MERCANTI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
+import { VILLAGGIO } from '../../src/giochi/sotterraneo/dati/mondo-aperto.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Corredo, ROBA_VUOTA, rileggiRoba, ABILITA_CONFRONTATE } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { Bottega, PEZZI_PER_LINGUETTA, SUBITO_PER_LINGUETTA, RARI_PER_LINGUETTA, ULTIMI_VENDUTI, alGiroNuovo, SALTI_MINIMI, SOGNI_MINIMI, SALTO_RELATIVO,
@@ -37,7 +37,7 @@ import { stileDi } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
   const g = guastiDeiMercanti()
   controlla('i mercanti stanno in piedi', g.length === 0, g.join(' · '))
   uguale('quattro mercanti', MERCANTI.length, 4)
-  for (const m of MERCANTI) controlla(`${m.chiave}: ha un posto sulla terra di sopra`, !!DOVE_MERCANTI[m.chiave])
+  for (const m of MERCANTI) controlla(`${m.chiave}: ha un posto nel villaggio`, VILLAGGIO.lotti.some(l => l.tipo === 'mercante' && l.chiave === m.chiave))
   uguale('uno solo compra la roba', MERCANTI.filter(m => m.compra).map(m => m.chiave).join(), 'rigattiere')
   /* il fabbro lavora il ferro, l'incantatrice la magia (docs/sotterraneo/bottega.md): bacchette e stoffa solo da lei, il resto delle armi
      e delle armature solo da lui, l'energia da lei e le cure e la torcia dalla guaritrice */

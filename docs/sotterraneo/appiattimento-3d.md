@@ -1,6 +1,6 @@
-# L'appiattimento del Sotterraneo 3D: cosa costa sul Note 7
+# L'appiattimento del sotterraneo: cosa costa sul Note 7
 
-Il Sotterraneo 3D sta a 10-14 fps nello scontro sul Redmi Note 7. Qui: **cosa gli dà fastidio e su cosa si può osare**, misurato una
+Il sotterraneo sta a 10-14 fps nello scontro sul Redmi Note 7. Qui: **cosa gli dà fastidio e su cosa si può osare**, misurato una
 leva alla volta sulla scena vera, e i due livelli che ne vengono (alta e bassa). Le regole per chi crea modelli ed effetti:
 [appiattimento-3d-regole.md](appiattimento-3d-regole.md). Il prototipo: `poc/appiattimento-3d.html` ([../../poc/appiattimento-3d.md](../../poc/appiattimento-3d.md)).
 

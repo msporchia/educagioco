@@ -6,46 +6,46 @@
    indicano le freccine (docs/sotterraneo/missioni-freccina.md) e la scelta resta nell'avventura; «vai da …»
    manda l'eroe da chi aspetta.
 
-   1. Sopra, con due missioni prese: la freccia azzurra va a quella più vicina; si apre il dettaglio dell'altra,
-      si tocca «segui questa», la freccia cambia discesa e la scelta sta nell'avventura; «‹ indietro» torna
-      all'elenco, «smetti» ridà la regola di prima, il tocco fuori chiude il diario.
+   1. Sopra, con due missioni prese: la carta della meta in cima (`[data-meta-carta]`) dice la discesa della storia, di
+      difetto; si apre il dettaglio di una missione, si tocca «segui questa», la meta cambia discesa e la scelta sta
+      nell'avventura; «‹ indietro» torna all'elenco, «smetti» ridà la meta di prima, il tocco fuori chiude il diario.
    2. Giù, la stessa scelta guida la freccina in discesa (stesso piano, per seme).
    3. Una consegna pronta e un favore che aspetta: il dettaglio dice «torna dal mugnaio», «vai dal mugnaio» ci
       porta, la consegnata ha anche il suo grazie.
 
    I tocchi sono tocchi (`Input.dispatchTouchEvent` via CDP).
    `node test/esegui.mjs sotterraneo-dettaglio`
-   tempo: 200
+   tempo: 500
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo,
-         lasciaLaDiscesa, nelDialogo , finestraFerma } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo, mondoPronto,
+         lasciaLaDiscesa, nelDialogo, finestraFerma, senzaPensieri } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { PARTENZA } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { missioneDi, personaDi } from '../../src/giochi/sotterraneo/dati/missioni.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { daLui, titoloDi } from '../../src/giochi/sotterraneo/motore/missioni.js'
 import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { GROSSI, GROSSO_DELLA_DISCESA } from '../../src/giochi/sotterraneo/dati/grossi.js'
-// al livello atteso della torre: due gradini sotto la guardia non fa scendere (docs/sotterraneo/zone.md)
 
 const TORRE = CAMPAGNA.findIndex(t => t.chiave === 'torre')
 const DISCESE = TORRE + 1
 const roba = robaAttesa('cavaliere', TORRE, { gemme: 5 })
-// la forza dell'eroe atteso è sotto il livello (docs/sotterraneo/forza.md): due livelli in più perché la torre non abbia la sentinella
-const crescita = crescitaAttesa('cavaliere', TORRE + 2)
+// le discese stanno nel mondo, ognuna col suo livello (docs/sotterraneo/zone.md): l'eroe è al livello atteso di fine storia, così la torre
+// non ha la sentinella che non fa scendere (la prova cerca la freccina, non la difficoltà)
+const crescita = crescitaAttesa('cavaliere', CAMPAGNA.length)
 const nomeDiscesa = chiave => CAMPAGNA.find(t => t.chiave === chiave).nome
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
+await senzaPensieri(page)   // il fumetto dei pensieri, con un segno, prende il tocco
 
-const profilo = (missioni, extra = {}, dove = PARTENZA.piede) => ({
+const profilo = (missioni, extra = {}) => ({
   coins: 300, settings: { sperimentali: true },
   campagne: { sotterraneo: { tappa: DISCESE, libera: false, stelle: { 0: 3, 1: 3, 2: 3 },
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: DISCESE, libera: false,
       stelle: { 0: 3, 1: 3, 2: 3 }, missioni, roba, crescita, ...extra,
-      terra: { nebbia: 'f'.repeat(768), dove, parlato: true } } } } } },
+      mondo: { parlato: true } } } } } },
 })
 const cdp = await page.context().newCDPSession(page)
 async function tocca(x, y) {
@@ -71,15 +71,16 @@ const apriIlDiario = async () => {
 async function entra(missioni, extra) {
   await semina(page, profilo(missioni, extra))
   await scegli(page, 'sotterraneo')
-  await page.waitForSelector('[data-terra]', { timeout: 5000 })
+  await mondoPronto(page)
+  await page.evaluate(() => window.__mondo3d.senzaMostri())   // i mostri di sopra non c'entrano (li prova `integrazione/sotterraneo-mostri-sopra`)
   await attendi(page, 600)
 }
 
 /* ---------- 1. sopra: scegliere quale missione seguire ---------- */
 await entra({ badessa: 'presa', rosicchione: 'presa' })
-const prima = await page.locator('[data-meta-fuori]').getAttribute('data-meta-fuori')
-controlla('la freccia azzurra c\'è e va a una delle due discese', ['altare', 'torre'].includes(prima), prima)
-const altra = prima === 'torre' ? 'badessa' : 'rosicchione'   // la missione che non è la più vicina
+const prima = await page.locator('[data-meta-carta]').getAttribute('data-meta')
+uguale('la carta della meta c\'è, e di difetto dice la discesa della storia', prima, CAMPAGNA[DISCESE].chiave)
+const altra = missioneDi('badessa').discesa !== prima ? 'badessa' : 'rosicchione'   // una missione con un\'altra discesa
 const M = missioneDi(altra), P = personaDi(M.da)
 
 await apriIlDiario()
@@ -92,7 +93,7 @@ uguale('si apre il dettaglio giusto', await dett.getAttribute('data-missione'), 
 uguale('è una missione presa', await dett.getAttribute('data-stato'), 'presa')
 uguale('l\'elenco non c\'è più, nella stessa finestra', await page.locator('[data-sezione]').count(), 0)
 uguale('chi te l\'ha data: il suo nome', (await dett.locator('[data-dettaglio-chi] b').innerText()).trim(), P.nome)
-uguale('e la sua faccia', await dett.locator('[data-dettaglio-chi] .sot-ritratto, [data-dettaglio-chi] svg').count(), 1)
+uguale('e la sua faccia (il modello 3D, o lo sprite finché non è pronto)', await dett.locator('[data-dettaglio-chi] [data-anteprima="3d"], [data-dettaglio-chi] .sot-ritratto, [data-dettaglio-chi] svg').count(), 1)
 uguale('il racconto è la sua battuta', (await dett.locator('[data-racconto]').innerText()).trim(), `«${M.dice}»`)
 {
   const dove = await dett.locator('[data-dettaglio-dove]').innerText()
@@ -129,7 +130,7 @@ uguale('e la missione seguita è segnata', await page.locator(`[data-diario] li[
 await attendi(page, 300)
 uguale('il tocco fuori chiude il diario', await page.locator('[data-diario]').count(), 0)
 await attendi(page, 300)
-uguale('la freccia azzurra va alla discesa della missione scelta', await page.locator('[data-meta-fuori]').getAttribute('data-meta-fuori'), M.discesa)
+uguale('la meta va alla discesa della missione scelta', await page.locator('[data-meta-carta]').getAttribute('data-meta'), M.discesa)
 controlla('e non è più quella di prima', M.discesa !== prima)
 
 // smettere ridà la regola di prima
@@ -142,7 +143,7 @@ await attendi(page, 400)
 uguale('smesso: la scelta non c\'è più nell\'avventura', (await avventura()).segui, undefined)
 await toccaIl('[data-diario] [data-chiudi]')
 await attendi(page, 300)
-uguale('e la freccia torna alla più vicina', await page.locator('[data-meta-fuori]').getAttribute('data-meta-fuori'), prima)
+uguale('e la meta torna alla storia', await page.locator('[data-meta-carta]').getAttribute('data-meta'), prima)
 
 /* ---------- 2. giù: la stessa scelta guida la freccina ---------- */
 // due missioni nella torre: quella più vicina cambia a seconda del piano, quindi si guarda quale vince di
@@ -150,9 +151,9 @@ uguale('e la freccia torna alla più vicina', await page.locator('[data-meta-fuo
 const SEME = 11
 async function scendiENota(missioni, extra) {
   await entra(missioni, extra)
-  await page.evaluate(s => { location.hash = 'seme=' + s }, SEME)
-  await scendiNelSotterraneo(page, TORRE)
-  await page.waitForSelector('.sot-tela', { timeout: 5000 })
+  await page.evaluate(s => { location.hash = 'pensieri=no&seme=' + s }, SEME)
+  await scendiNelSotterraneo(page, TORRE, { tocca })
+  await page.waitForSelector('[data-tela="3d"]', { timeout: 30000 })
   await page.waitForSelector('[data-rotta]', { state: 'attached', timeout: 5000 })
   await attendi(page, 500)
   return page.locator('[data-rotta]').getAttribute('data-missione-rotta')
@@ -180,10 +181,13 @@ uguale('«vai dal mugnaio»', (await page.locator('[data-azione="vai-da"]').inne
   controlla('il premio ha il gioiello col suo nome e le monete', premio.includes('Amuleto azzurro') && premio.includes('🪙 1'), premio)
 }
 await scatto(page, 'missioni-dettaglio-fatta')
+// il mugnaio sta lontano dalla partenza: l'eroe si porta nel suo villaggio (il salto delle prove), e «vai da» lo manda da lui
+await page.evaluate(() => window.__mondo3d.vai('mugnaio'))
+await attendi(page, 800)
 await toccaIl('[data-azione="vai-da"]')
 await attendi(page, 300)
 uguale('«vai da» chiude il diario', await page.locator('[data-diario]').count(), 0)
-await page.waitForSelector('[data-dialogo="mugnaio"] [data-missione="rosicchione"][data-fase="consegna"]', { timeout: 30000 })
+await page.waitForSelector('[data-dialogo="mugnaio"] [data-missione="rosicchione"][data-fase="consegna"]', { timeout: 90000 })
 uguale('e l\'eroe va dal mugnaio: il dialogo è aperto', await page.locator('[data-dialogo="mugnaio"]').count(), 1)
 await nelDialogo(page, '[data-scelta="consegna"][data-missione="rosicchione"]', { tocca: toccaIl })
 await attendi(page, 700)
@@ -224,8 +228,7 @@ await apriIlDiario()
   controlla('dice il titolo, la porta di adesso e chi battere',
             riga.includes('Chiudi le sette porte') && riga.includes(`Porta ${DISCESE + 1} di 7`) && riga.includes(prossima.nome) && riga.includes(grosso), riga)
   uguale('con la freccina', await page.locator('[data-freccia-storia] .sot-freccina').count(), 1)
-  uguale('e la freccia azzurra sulla mappa è già per la sua discesa (nessuna missione presa)',
-         await page.locator('[data-meta-fuori], [data-meta-vicina]').evaluateAll(els => els.map(e => e.dataset.metaFuori || e.dataset.metaVicina).join(',')), prossima.chiave)
+  uguale('e la carta della meta è già per la sua discesa (nessuna missione presa)', await page.locator('[data-meta-carta]').getAttribute('data-meta'), prossima.chiave)
   await toccaIl('[data-storia]')
   await page.waitForSelector('[data-dettaglio][data-missione="storia"]', { timeout: 3000 })
   const porte = await page.locator('[data-porte] [data-porta]').evaluateAll(els => els.map(e => e.dataset.stato))
@@ -239,8 +242,10 @@ await apriIlDiario()
   uguale('«segui questa» la sceglie', (await avventura()).segui, 'storia')
   controlla('e il tasto lo dice', (await page.locator('[data-dettaglio] [data-azione="segui"]').getAttribute('data-segui-attivo')) === '1')
   // «vai alla discesa»: il diario si chiude e l'eroe va a quella della storia, dove il fumetto lo ripete
+  await page.evaluate(k => window.__mondo3d.vai('ingresso:' + k), prossima.chiave)   // la strada è lunga: il salto delle prove
+  await attendi(page, 800)
   await toccaIl('[data-dettaglio] [data-azione="vai-da"]')
-  await page.waitForSelector('[data-storia-qui="adesso"]', { timeout: 30000 })
+  await page.waitForSelector('[data-storia-qui="adesso"]', { timeout: 90000 })
   controlla('il fumetto della discesa dice che la storia continua qui', (await page.locator('[data-storia-qui]').innerText()).includes(grosso))
   await scatto(page, 'storia-fumetto')
 }

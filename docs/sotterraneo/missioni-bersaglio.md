@@ -7,7 +7,7 @@ lo indica in [missioni-freccina.md](missioni-freccina.md); la scala che sale, ch
 permette di tornare a prenderlo in un piano di sopra, in
 [scala-che-sale.md](scala-che-sale.md). Il codice: `postoPer` e
 `robaDellaMissione` in `motore/missioni.js`; `BERSAGLIO` in `dati/mondo.js`;
-`scena/tela.js`.
+`scena3d/cose.js`.
 
 Il ladro di una missione (allora un goblin) si confondeva coi mostri di tutti i giorni ed
 era comparso vicino all'entrata (l'utente, giocando, 8 ottobre). Il bersaglio
@@ -22,16 +22,15 @@ sta lontano e si vede.
   del piano e nome della missione): rientrando la cosa è nello stesso posto.
   Il perché: chi gioca deve attraversare il piano per trovarla.
 - **Più grande dei suoi simili** (×1,4, `BERSAGLIO.scala` in `dati/mondo.js`),
-  **con un'aura e un contorno rosa che pulsano piano** (il rosa della sua
-  tacca sulla mappina) al posto del filo d'oro, e **il nome sopra la testa**
+  **con un alone rosa che pulsa piano** (il rosa della sua
+  tacca sulla mappina), e **il nome sopra la testa**
   in una targhetta, solo quando è in vista (in piena luce, non nel ricordo). Il
-  mostro ha anche la corona di prima; il forziere d'oro ha la cosa che
-  galleggia. Tutto in `scena/tela.js` (`auraDelBersaglio`, `contornoDelBersaglio`,
-  `etichetta`, tirata fuori dopo l'eroe per non finirgli sotto).
+  mostro ha anche la corona; il forziere d'oro ha la cosa che
+  galleggia. Tutto in `scena3d/cose.js` (l'alone, il nome sopra la testa).
 - **La freccina lo indica ancora**: legge il posto della cosa, non dove la
   mette il generatore ([missioni-freccina.md](missioni-freccina.md)).
 
 Nei test: `unita/sotterraneo-scala-su` (le dodici missioni, sei semi ciascuna: nella
 stanza più lontana, né d'arrivo né accanto, sempre nello stesso posto, la freccina
 sulla cosa), `integrazione/sotterraneo-scale` (col dito: in vista il bersaglio ha il suo
-rosa sulla tela, la freccina `[data-rotta][data-verso="qui"]`).
+rosa in scena, la freccina `[data-rotta][data-verso="qui"]`).

@@ -1,6 +1,6 @@
 # Le missioni dei personaggi
 
-Sulla terra di sopra, in posti che hanno un senso, stanno persone che
+Sul mondo di sopra, in posti che hanno un senso, stanno persone che
 chiedono un favore legato a una discesa precisa: *«la collana della nonna è
 al primo piano della scalinata»*. Danno un motivo per scendere che non sia
 «giù senza fine». Decise dall'utente il 7 ottobre 2026 con la grande storia
@@ -11,30 +11,29 @@ pronti, e di averle sempre davanti: *«una specie di albero di missioni»*,
 `dati/missioni.js` (chi, cosa, dove, i requisiti, il premio, `TETTO`),
 `motore/missioni.js` (l'albero, il segno, prendere e consegnare, il diario e il
 promemoria, dove sta la cosa nel piano), `motore/dialoghi.js` e
-`viste/Dialogo.vue` (quello che dice chi le dà, [dialoghi.md](dialoghi.md)), `viste/Diario.vue` (col dettaglio) e `viste/Ritratto.vue`, `viste/Terra.vue` (chi sta fermo),
+`viste/Dialogo.vue` (quello che dice chi le dà, [dialoghi.md](dialoghi.md)), `viste/Diario.vue` (col dettaglio) e `viste/Ritratto.vue`, `viste/Mondo3d.vue` (chi sta fermo),
 `motore/corsa.js` (`posaLeMissioni`, `contaPerLeMissioni`). Le «sconfiggi N»: [missioni-conteggio.md](missioni-conteggio.md).
 
 ## Chi le dà, e dove sta
 
-Dove sta lo dice il foglietto (`personaggi`, con `piede` e `accanto` come i
-mercanti: [terra-strumento.md](terra-strumento.md)). Non si attraversano e
-non chiudono la strada a nessuno (`unita/sotterraneo-terra`).
+Stanno fermi vicino al posto della loro missione, nel mondo di sopra ([mondo-3d.md](mondo-3d.md#chi-sta-dove)): non si
+attraversano e non chiudono la strada a nessuno.
 
-| chi | dove | piede · accanto |
-|---|---|---|
-| la ragazza del pozzo | al pozzo del villaggio, dove si beve | [49, 36] · [51, 36] |
-| il mugnaio | sotto il mulino, sul sentiero dei campi | [54, 22] · [56, 22] |
-| l'eremita | davanti all'altare fra le colonne | [58, 9] · [60, 9] |
-| la guardia | sul prato davanti alla torre | [45, 9] · [47, 9] |
-| il pescatore | sulla riva dello stagno | [10, 23] · [12, 23] |
-| il boscaiolo | dove il sentiero entra nel bosco, accanto al carretto | [21, 26] · [19, 26] |
-| il vecchio minatore | nel villaggio, dove parte la strada per il bosco | [40, 36] · [42, 36] |
+| chi | dove |
+|---|---|
+| la ragazza del pozzo | in piazza, accanto al pozzo del villaggio |
+| il vecchio minatore | nel villaggio |
+| il mugnaio | al mulino, nei prati |
+| l'eremita (il frate) | vicino alla cripta dei re |
+| la guardia | vicino alla torre bruciata |
+| il boscaiolo | vicino alla tana dei ragni |
+| il pescatore | vicino alle sale allagate |
 
-- **Figure disegnate in codice** (`RAGAZZA`, `MUGNAIO`, `EREMITA`,
-  `GUARDIA`, `PESCATORE`, `BOSCAIOLO` in `viste/pixel.js`) finché non
-  arrivano gli sprite: `<sprite>-fermo-0` nell'atlante (`ragazza-fermo-0`…)
-  si usa da solo, come per il minatore. I prompt sono nella scheda
-  `PROMPT-terra-di-sopra.md`.
+Le posizioni: `VILLAGGIO.lotti` e `PERSONE` in `dati/mondo-aperto.js`.
+
+- **Le figure** sono i modelli 3D delle persone ([persone-3d.md](persone-3d.md)); se un modello manca vale lo sprite
+  `<sprite>-fermo-0` dell'atlante (`ragazza-fermo-0`…), e in ultimo la figura in codice di `viste/pixel.js` (`RAGAZZA`, `MUGNAIO`,
+  `EREMITA`, `GUARDIA`, `PESCATORE`, `BOSCAIOLO`). I prompt degli sprite sono nella scheda `PROMPT-terra-di-sopra.md`.
 - **Si parla con loro** ([dialoghi.md](dialoghi.md)): chi dà una missione la
   chiede a voce, a pagine, e «Ci penso io» la prende; tornando a cosa fatta
   se ne accorge, e la prima domanda è consegnarla.
@@ -118,12 +117,11 @@ Zannagrigia, lanterna e le cinque da contare) sono radici senza seguito.
   dice tutte le sue missioni aperte, una dopo l'altra. Con `prefers-reduced-motion` il «?» d'oro resta fermo ma
   grande e col suo alone.
 - **Chi aspetta ed è fuori schermo si trova**: sul bordo della vista, nella
-  sua direzione, un «?» d'oro con una freccia (`viste/Terra.vue`, `fuori`,
+  sua direzione, un «?» d'oro con una freccia (`viste/Mondo3d.vue`, `fuori`,
   ricalcolato a ogni fotogramma insieme alla telecamera; il minatore
   compreso). Toccarlo (`click`, soglia 16 px) è come toccare lui: l'eroe ci
-  va e il dialogo si apre all'arrivo. Quando lui è in vista il bordo cede alla
-  freccina attorno all'eroe, che lo punta finché non gli si è accanto
-  (`[data-consegna-vicina]`, vedi [missioni-freccina.md](missioni-freccina.md)).
+  va e il dialogo si apre all'arrivo. Vedi
+  [missioni-freccina.md](missioni-freccina.md).
 - **Il minatore dice chi ti cerca**: indicando la strada aggiunge una riga
   per chi (`chiTiCerca`): «La ragazza del pozzo ti aspetta: quello che ti ha
   chiesto l'hai fatto», «… ha un favore / due favori da chiederti», «…
@@ -140,10 +138,10 @@ conta nel tetto né nel numero d'oro delle missioni da consegnare.
   scheda della finestra dell'eroe ([barra.md](barra.md)), sopra e sotto; si apre dal
   globo rosso o da una linguetta e non ha più una casella sua. Le missioni da
   consegnare si vedono senza aprirlo: una pastiglia d'oro sul globo rosso e il numero
-  sulla linguetta. Si chiude con la ✕ o toccando fuori (e il tocco passa alla mappa). Quattro elenchi: **da consegnare** (le fatte, in cima e
+  sulla linguetta. Si chiude con la ✕ o toccando fuori (e il tocco passa al mondo). Quattro elenchi: **da consegnare** (le fatte, in cima e
   in oro: «Torna dal mugnaio: hai il sacco di farina buona», «… hai battuto
-  Rosicchione»), **da fare** (le prese: la cosa, la discesa col suo ritaglio
-  dalla mappa e il piano, chi la vuole, «da fare», il premio), **ti
+  Rosicchione»), **da fare** (le prese: la cosa, la discesa con la sua icona
+  e il piano, chi la vuole, «da fare», il premio), **ti
   aspettano** (le offerte: chi ha un favore da chiederti, e dove), **consegnate**
   (solo i nomi). Vuoto, dice che qualcuno al villaggio ti chiederà un favore
   a discesa finita. **Giù** è la stessa scheda, senza «vai da …» (chi aspetta sta
@@ -158,7 +156,7 @@ conta nel tetto né nel numero d'oro delle missioni da consegnare.
   (le prese: sceglie quale indicano le freccine,
   [missioni-freccina.md](missioni-freccina.md)) e **«vai da …»** (le fatte e quelle
   che ti aspettano: chiude il diario e l'eroe va dal personaggio, `vaDa` di
-  `Terra.vue`). Richiesta dell'utente, 8 ottobre: *«quando rivedo le missioni
+  `Mondo3d.vue`). Richiesta dell'utente, 8 ottobre: *«quando rivedo le missioni
   dovrei poter premere su una missione e farmi dare i dettagli»*.
 - **Il promemoria in discesa** (`promemoria`): in cima al campo una riga per
   ogni missione presa o fatta che riguarda quella discesa, ricalcolata a ogni
@@ -167,7 +165,7 @@ conta nel tetto né nel numero d'oro delle missioni da consegnare.
   con la corona»); superato il piano, in grigio, «era al primo piano: risali con
   la scala che sale» ([scala-che-sale.md](scala-che-sale.md): non è più sfuggita,
   ma la freccina non la indica); fatta, in verde, «Missione compiuta: …, torna dal
-  mugnaio». Il fumetto di una discesa sulla mappa ricorda le missioni prese
+  mugnaio». Il fumetto di una discesa nel mondo ricorda le missioni prese
   per lei (`data-missioni-qui`).
 - **La cosa si nota** già prima del promemoria: [missioni-bersaglio.md](missioni-bersaglio.md).
 
@@ -229,7 +227,7 @@ tasche piene), `integrazione/sotterraneo-missioni` (col dito: due «!» e un «?
 d'oro sul villaggio, il mugnaio lontano e il suo indicatore sul bordo che
 porta da lui, due missioni prese da due persone (i «?» diventano grigi), il
 diario con le tre righe e il tetto, giù il promemoria, su la consegna con le
-monete e il «!» che arriva sull'eremita). Sulla mappa `[data-personaggio="<chi>"]` con
+monete e il «!» che arriva sull'eremita). Nel mondo `[data-personaggio="<chi>"]` con
 `data-segno` (`nuova`, `attesa` o `consegna`; quello del minatore è
 `[data-minatore] [data-segno-di]`), l'indicatore sul bordo
 `[data-consegna-fuori="<chi>"]` (c'è solo se chi aspetta è fuori schermo), il

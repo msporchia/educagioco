@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE MISSIONI, COL DITO VERO
 
-   Chi sta sulla terra di sopra dà missioni legate a una discesa, e formano
+   Chi sta sul mondo di sopra dà missioni legate a una discesa, e formano
    un albero (docs/sotterraneo/missioni.md). Qui il giro intero di chi ne
    prende più d'una: sul villaggio due «!» (la ragazza e la guardia) e un «?»
    (il mugnaio, a cui Rosicchione è già stato battuto); si prendono le due
@@ -11,17 +11,18 @@
    si risale, si consegna Rosicchione e si ricevono le monete (e il
    gioiello); consegnata una, arriva la successiva con il «!» sul mugnaio.
 
-   I tocchi sono tocchi (`Input.dispatchTouchEvent` via CDP). Il piano di
-   sotto non si gioca: il promemoria si legge appena si arriva, e si risale
-   dalla freccia indietro (la discesa resta a metà, col portale).
+   I tocchi sono tocchi (`Input.dispatchTouchEvent` via CDP). L'eroe va da
+   chi parla col salto delle prove (`__mondo3d.vai`, in `sopraVaDa`): la strada
+   a piedi la prova `integrazione/sotterraneo-mondo`; la bussola d'oro sul bordo
+   si tocca, e si guarda che l'eroe parta. Il piano di sotto non si gioca: il
+   promemoria si legge appena si arriva, e si risale lasciando perdere la discesa.
    `node test/esegui.mjs sotterraneo-missioni`
-   tempo: 240
+   tempo: 400
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo,
-         camminaVerso, lasciaLaDiscesa, nelDialogo , finestraFerma } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, mondoPronto, sopraVaDa,
+         lasciaLaDiscesa, nelDialogo, finestraFerma } from '../aiuto/browser.mjs'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { PERSONAGGI, MINATORE } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { missioneDi } from '../../src/giochi/sotterraneo/dati/missioni.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
@@ -30,6 +31,7 @@ import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 
 const DISCESA = CAMPAGNA.findIndex(t => t.chiave === 'torre')
 const roba = robaAttesa('cavaliere', DISCESA, { gemme: 5 })
+roba.torce = 3   // con una torcia in tasca l'eroe fermo non pensa alla guaritrice: il suo fumetto copre chi gli sta davanti
 // la forza dell'eroe atteso è sotto il livello (docs/sotterraneo/forza.md): due livelli in più perché la torre non abbia la sentinella
 const crescita = crescitaAttesa('cavaliere', DISCESA + 2)
 const ROSICCHIONE = missioneDi('rosicchione'), GOBLIN = missioneDi('goblin'), CHIAVI = missioneDi('chiavi')
@@ -37,18 +39,17 @@ const ROSICCHIONE = missioneDi('rosicchione'), GOBLIN = missioneDi('goblin'), CH
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
-const ragazza = PERSONAGGI.ragazza
 await semina(page, {
   coins: 300, settings: { sperimentali: true },
   campagne: { sotterraneo: { tappa: DISCESA, libera: false, stelle: { 0: 3, 1: 3 },
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: DISCESA, libera: false, stelle: { 0: 3, 1: 3 },
       // la collana è consegnata, Rosicchione battuto e da riportare, la Dama Grigia mai presa
       missioni: { collana: 'consegnata', rosicchione: 'fatta' }, roba, crescita,
-      terra: { nebbia: 'f'.repeat(768), dove: ragazza.accanto, parlato: true } } } } },
+      mondo: { parlato: true } } } } },
   },
 })
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await mondoPronto(page)
 await attendi(page, 600)
 
 const cdp = await page.context().newCDPSession(page)
@@ -82,41 +83,29 @@ uguale('il globo rosso dice che c\'è una missione da consegnare', await page.lo
 await scatto(page, 'missioni-villaggio')
 
 /* ---------- 1b. chi aspetta ed è lontano: l'indicatore sul bordo ---------- */
-{
-  // dalla ragazza il mugnaio si vede o no secondo quanto è alta la vista (la barra in basso ne prende un pezzo): se si
-  // vede, nessun indicatore; se no, il suo
-  const v = await page.locator('[data-terra]').boundingBox(), m = await page.locator('[data-personaggio="mugnaio"]').boundingBox()
-  const sotto = (await page.locator('.sot-terra-sotto').boundingBox())?.height || 0
-  const inVista = m.y > v.y && m.y + m.height < v.y + v.height - sotto
-  uguale(inVista ? 'con il mugnaio in vista non serve nessun indicatore' : 'il mugnaio fuori vista: il suo indicatore',
-         await page.locator('[data-consegna-fuori]').count(), inVista ? 0 : 1)
-}
-await camminaVerso(page, MINATORE.accanto, { tocca })
-await page.waitForSelector('[data-consegna-fuori="mugnaio"]', { timeout: 5000 })
+// il mugnaio sta al mulino, lontano dal villaggio: il suo «?» d'oro sul bordo, uno solo
+await page.waitForSelector('[data-consegna-fuori="mugnaio"]', { timeout: 10000 })
 uguale('il mugnaio è lontano: un solo indicatore, e solo per lui (gli altri non hanno una consegna)',
        await page.locator('[data-consegna-fuori]').count(), 1)
 {
-  const v = await page.locator('[data-terra]').boundingBox(), b = await page.locator('[data-consegna-fuori="mugnaio"]').boundingBox()
+  const v = await page.locator('[data-mondo3d]').boundingBox(), b = await page.locator('[data-consegna-fuori="mugnaio"]').boundingBox()
   controlla('sta sul bordo della vista, tutto dentro', b.x >= v.x && b.y >= v.y && b.x + b.width <= v.x + v.width && b.y + b.height <= v.y + v.height, JSON.stringify([v, b]))
   controlla('ed è abbastanza grande per un dito', b.width >= 40 && b.height >= 40, JSON.stringify(b))
-  controlla('verso nord-est, dov\'è il mugnaio: in alto a destra del centro', b.y + b.height / 2 < v.y + v.height / 2 && b.x + b.width / 2 > v.x + v.width / 2, JSON.stringify([v, b]))
 }
 await scatto(page, 'missioni-bussola')
 await toccaIl('[data-consegna-fuori="mugnaio"]')
-await page.waitForSelector('[data-dialogo="mugnaio"] [data-missione="rosicchione"][data-fase="consegna"]', { timeout: 30000 })
-uguale('toccandolo l\'eroe va dal mugnaio e si parla', await page.locator('[data-dialogo="mugnaio"]').count(), 1)
+await page.waitForFunction(() => document.querySelector('[data-eroe-mondo]')?.dataset.cammina === '1', null, { timeout: 15000 })
+uguale('toccandolo l\'eroe si mette in cammino', await page.locator('[data-eroe-mondo]').getAttribute('data-cammina'), '1')
+// la strada fino al mulino è lunga: si arriva col salto delle prove, e si parla
+await sopraVaDa(page, '[data-personaggio="mugnaio"]', 'mugnaio', { tocca, atteso: '[data-dialogo="mugnaio"] [data-missione="rosicchione"][data-fase="consegna"]' })
+uguale('si parla al mugnaio', await page.locator('[data-dialogo="mugnaio"]').count(), 1)
 uguale('arrivati, il mugnaio è in vista e l\'indicatore sparisce', await page.locator('[data-consegna-fuori]').count(), 0)
-{
-  const v = await page.locator('[data-terra]').boundingBox()
-  await tocca(v.x + 12, v.y + v.height * 0.3)   // sul prato, sopra il dialogo: si chiude
-  await attendi(page, 300)
-}
-uguale('un tocco sul prato chiude il dialogo', await page.locator('[data-dialogo]').count(), 0)
-await camminaVerso(page, ragazza.accanto, { tocca })
+await nelDialogo(page, '[data-scelta="ciao"]', { tocca: toccaIl })
+await attendi(page, 300)
+uguale('«ciao» chiude il dialogo', await page.locator('[data-dialogo]').count(), 0)
 
 /* ---------- 2. si prendono due missioni ---------- */
-await toccaIl('[data-personaggio="ragazza"]')
-await page.waitForSelector(`[data-dialogo="ragazza"] [data-missione="goblin"][data-fase="offre"]`, { timeout: 8000 })
+await sopraVaDa(page, '[data-personaggio="ragazza"]', 'ragazza', { tocca, atteso: '[data-dialogo="ragazza"] [data-missione="goblin"][data-fase="offre"]' })
 // la richiesta è a pagine: si legge tutta, e alla fine «ci penso io» dice il premio
 let chiede = ''
 for (let n = 0; n < 4; n++) {
@@ -134,10 +123,8 @@ uguale('presa, lei ringrazia', await page.locator('[data-dialogo="ragazza"] [dat
 uguale('nell\'avventura il goblin è preso', (await avventura()).missioni?.goblin, 'presa')
 uguale('la ragazza adesso ha il punto di domanda grigio', await page.locator('[data-personaggio="ragazza"]').getAttribute('data-segno'), 'attesa')
 
-await camminaVerso(page, PERSONAGGI.guardia.accanto, { tocca })
-await scatto(page, 'missioni-villaggio-guardia')
-await toccaIl('[data-personaggio="guardia"]')
-await page.waitForSelector(`[data-dialogo="guardia"] [data-missione="chiavi"][data-fase="offre"]`, { timeout: 8000 })
+await sopraVaDa(page, '[data-personaggio="guardia"]', 'guardia', { tocca, atteso: '[data-dialogo="guardia"] [data-missione="chiavi"][data-fase="offre"]' })
+await scatto(page, 'missioni-guardia')
 await nelDialogo(page, '[data-scelta="prendi"][data-missione="chiavi"]', { tocca: toccaIl })
 await attendi(page, 500)
 const dopoDue = (await avventura()).missioni
@@ -171,12 +158,14 @@ await attendi(page, 300)
 uguale('si chiude con la ✕', await page.locator('[data-diario]').count(), 0)
 
 /* ---------- 4. giù, il promemoria ---------- */
-await scendiNelSotterraneo(page, DISCESA, { scendi: false })
-const qui = await page.locator('[data-fumetto] [data-missioni-qui]').innerText()
+await sopraVaDa(page, `[data-posto="${CAMPAGNA[DISCESA].chiave}"]`, 'ingresso:' + CAMPAGNA[DISCESA].chiave, { tocca, atteso: `[data-fumetto-di="${CAMPAGNA[DISCESA].chiave}"] [data-azione="scendi"]` })
+await attendi(page, 300)
+const qui = await page.locator('[data-fumetto-di] [data-missioni-qui]').innerText()
 controlla('prima di scendere il fumetto della torre ricorda le due prese (non quella già fatta)',
           qui.includes('Grattanaso') && qui.includes('piano 1') && qui.includes('chiavi') && qui.includes('piano 3') && !qui.includes('Rosicchione'), qui)
-await page.locator('[data-fumetto] [data-azione="scendi"]').click()
-await page.waitForSelector('.sot-tela', { timeout: 5000 })
+await page.locator('[data-fumetto-di] [data-azione="scendi"]').click()
+await page.waitForSelector('[data-tela="3d"]', { timeout: 20000 })
+await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.corsa && window.__sotterraneo3d.grafica().figure > 0 && !window.__sotterraneo3d.grafica().mondo, null, { timeout: 30000 })
 await attendi(page, 900)
 const promemoria = await page.locator('[data-promemoria] li').evaluateAll(els => els.map(e => ({ id: e.dataset.missione, dove: e.dataset.dove, testo: e.innerText })))
 stessaLista('in cima, una riga per missione, nell\'ordine della storia', promemoria.map(r => r.id), ['goblin', 'rosicchione', 'chiavi'])
@@ -199,9 +188,7 @@ await lasciaLaDiscesa(page)
 await attendi(page, 700)
 const monete = (await leggiProfilo(page)).coins
 const gemmePrima = (await avventura()).roba?.gemme
-await camminaVerso(page, PERSONAGGI.mugnaio.accanto, { tocca })
-await toccaIl('[data-personaggio="mugnaio"]')
-await page.waitForSelector('[data-dialogo="mugnaio"] [data-missione="rosicchione"][data-fase="consegna"]', { timeout: 8000 })
+await sopraVaDa(page, '[data-personaggio="mugnaio"]', 'mugnaio', { tocca, atteso: '[data-dialogo="mugnaio"] [data-missione="rosicchione"][data-fase="consegna"]' })
 await nelDialogo(page, null, { tocca: toccaIl })
 await scatto(page, 'missioni-consegna')
 await toccaIl('[data-dialogo] [data-scelta="consegna"]')

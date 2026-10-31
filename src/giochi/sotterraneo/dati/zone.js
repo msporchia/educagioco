@@ -140,13 +140,6 @@ export const voltoDi = (chiave, volta) => {
   return v[((volta % v.length) + v.length) % v.length]
 }
 
-// la zona appena nata è sempre la rossa: il minatore la racconta, e chiude dicendo che per adesso non si passa.
-// La prima volta (la storia appena finita) prima di tutto dice cosa è cambiato
-export const ANNUNCIO_IN_CODA = 'Per adesso è troppo forte per te, e la sentinella non ti fa passare: fatti le ossa dove il pallino è verde.'
-export const PRIMA_NOTIZIA = 'Hai chiuso tutte le porte, ma laggiù non dorme niente. Adesso ogni discesa ha i suoi livelli, e il pallino ti dice quali fanno per te.'
-// la riga in fondo alla terra di sopra, finché il minatore non l'ha raccontata
-export const C_E_UNA_NOTIZIA = 'Il minatore ha una notizia: vai a sentirla.'
-
 // Chi lo dice, nel fumetto di una discesa, secondo il colore del suo pallino (motore/zone.js): la guardia
 // davanti alla rossa (e non si scende), il minatore per la grigia e l'arancio. La verde non ha bisogno di niente
 export const DETTI_DEL_COLORE = {

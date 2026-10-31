@@ -1,5 +1,5 @@
 // I mercanti della terra di sopra: chi vende cosa, e quanta roba ha sul banco secondo le discese finite. Dove
-// stanno sulla mappa lo dice il foglietto (dati/terra-mappa.js, MERCANTI); come si compra motore/bottega.js.
+// stanno nel mondo lo dice la scheda (dati/mondo-aperto.js); come si compra motore/bottega.js.
 // Il perché: docs/sotterraneo/bottega.md, "I mercanti di sopra".
 import { COSE, CURE_IN_VENDITA, IN_VENDITA, COPRICAPI, baseDi, tipoDellaCasella } from './cose.js'
 import { CAMPAGNA, QUANTE_TAPPE } from './campagna.js'

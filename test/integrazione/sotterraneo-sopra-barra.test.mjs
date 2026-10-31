@@ -61,7 +61,7 @@ for (const [w, h, px] of MISURE) {
   for (const tre of [true, false]) {
     const dove = tre ? '3D' : '2D'
     const sel = tre ? '[data-pannello3d]' : '.sot-velo-scontro .sot-cornice'
-    await scontro(page, tre ? 'sotterraneo3d=1&eroe=mago&seme=5&sotterraneo=branco&mostri=3&tema=legno&dpr=1'
+    await scontro(page, tre ? 'sotterraneo=1&eroe=mago&seme=5&sotterraneo=branco&mostri=3&tema=legno&dpr=1'
                             : 'sotterraneo=branco&mostri=3&eroe=mago&giu=1&seme=5&tema=legno', tre)
     const pericolo = await page.locator('[data-ringhio]').count()
     giudica(`${qui}, scontro ${dove}, cosa fare${pericolo ? ' (col pericolo)' : ''}`, await misura(page, sel), { scena: tre })

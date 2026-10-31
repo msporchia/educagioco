@@ -1,28 +1,30 @@
 /* ═══════════════════════════════════════════════════════════════════
    LO SCONTRO A GRUPPI, COL DITO
-   tempo: 420
+   tempo: 300
 
    (docs/sotterraneo/scontro.md, «La vista»; docs/sotterraneo/scontro-interfaccia.md)
-   Uno scontro con più mostri a schermo, aperto da `#sotterraneo=branco`
-   (`&mostri=6`, `&grosso=grumo`, `&agguato=1`, `&sorpresa=1`: docs/core/comandi.md):
-   - sei mostri a 390 px: tutti dentro il palco, in due file, ognuno con la
-     sua barra e il suo nome; un bersaglio solo; la fila dei turni
-     di sette figurine con l'eroe in cima;
+   Uno scontro con più mostri in scena, aperto dal cheat dell'indirizzo che scende da sé nella discesa 3D
+   (`#sotterraneo=1&seme=11&sotterraneo=branco&mostri=6`; `&grosso=grumo`, `&agguato=1`, `&sorpresa=1`: docs/core/comandi.md).
+   Le figure le disegna la scena (scena3d/), le scritte sopra di loro sono elementi della pagina agganciati alla testa di ognuno
+   (`[data-mostro]`, `viste/Scontro3d.vue`), la scelta sta nel pannello in fondo (`[data-pannello3d]`). Un mostro si tocca nella
+   scena, sul suo corpo (`palco.stati` + `aSchermo`), non sulla sua scritta. Si prova:
+   - sei mostri a 390 px: tutti dentro il campo, in tre colonne e a altezze diverse, ognuno con la sua barra e il nome solo sul
+     bersaglio e su chi ha un grado; un bersaglio solo; la fila dei turni di sette figurine con l'eroe in cima;
    - toccare un mostro lo fa bersaglio (non nei primi 320 ms);
-   - un'abilità su tutti (il Grido di guerra) accende tutti col contorno e,
-     rispondendo giusto, colpisce tutti; il racconto è un'azione alla volta,
-     i mostri colpiscono nell'ordine della fila, la scelta torna solo a
-     racconto finito, e un tocco lo accorcia;
-   - il mostro grosso sta grande al centro, con gli altri intorno;
+   - un'abilità su tutti (il Grido di guerra) accende tutti col contorno e, rispondendo giusto, colpisce tutti; il racconto è un'azione
+     alla volta, i mostri scattano nell'ordine della fila (l'assalto nello stato della scena), la scelta torna solo a racconto finito, e
+     un tocco lo accorcia (non se ne misura la fretta: in SwiftShader un fotogramma dura mezzo secondo);
+   - il mostro grosso sta in scena più alto degli altri e senza coprirli;
    - l'agguato e la sorpresa dicono la loro riga e la fila li racconta;
-   - a 320 px il palco non esce dalla finestra (scorre al più la scelta);
-   - gli effetti delle abilità (docs/sotterraneo/scontro-effetti.md): la palla di fuoco vola e scoppia, la catena di fulmini salta
-     da un mostro all'altro, chi resiste ha il numero piccolo e chi teme grande (con il segno sopra già prima di rispondere), il
-     gelo e lo stordimento si vedono addosso. Foto a metà effetto con `--scatti`.
+   - a 320 px i sei mostri stanno nella scena sopra il pannello;
+   - gli effetti delle abilità (docs/sotterraneo/scontro-effetti.md): le melme resistono al fulmine e temono il fuoco (il segno sopra già
+     prima di rispondere, il numero piccolo o grande col suo «resiste» / «lo teme!»), la palla di fuoco, la catena di fulmini, la
+     prigione di ghiaccio e la spallata sono effetti vivi nella scena (`grafica().effetti3d`, non c'è altro da leggere: sono modelli
+     WebGL), e il gelo e lo stordimento si vedono addosso come pastiglia del fermo (`[data-stato="fermo"]`). Foto a metà effetto con `--scatti`.
    Si tocca come un bambino (`Input.dispatchTouchEvent` via CDP).
    `node test/esegui.mjs sotterraneo-gruppi`
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scendiNelSotterraneo , finestraFerma } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, finestraFerma } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
@@ -46,8 +48,8 @@ async function toccaIl(sel) {
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
 
-// scende nella cripta con lo scontro già aperto (il gioco lo apre da `hash`)
-async function entra(hash, { eroe = 'cavaliere', r = roba, cr = crescita } = {}) {
+// scende nella cripta con lo scontro già aperto (il cheat `#sotterraneo=<tappa>&sotterraneo=branco&…` lo apre da sé, come in sotterraneo-3d)
+async function entra(hash, { eroe = 'cavaliere', r = roba, cr = crescita, disegno = true } = {}) {
   // l'indirizzo della prova di prima (`#sotterraneo=…`) aprirebbe il gioco al ricaricamento: si riparte dalla home
   await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
   await azzera(page)
@@ -55,15 +57,26 @@ async function entra(hash, { eroe = 'cavaliere', r = roba, cr = crescita } = {})
   const avventura = { tappa: TAPPA, libera: false, stelle: { 0: 3 }, missioni: {}, roba: r, crescita: cr,
     terra: { nebbia: 'f'.repeat(768), dove: [55, 11], parlato: true } }
   await semina(page, {
-    coins: 300, settings: { sperimentali: true },
+    coins: 300,
     campagne: { sotterraneo: { tappa: TAPPA, libera: false, stelle: { 0: 3 },
       cfg: { mondo: MONDO, eroe, avventure: { [eroe]: avventura } } } },
   })
-  await scegli(page, 'sotterraneo')
-  await page.waitForSelector('[data-terra]', { timeout: 5000 })
-  await page.evaluate(h => { location.hash = h }, 'seme=11&sotterraneo=branco&' + hash)
-  await scendiNelSotterraneo(page, TAPPA)
-  await page.waitForSelector('[data-duello]', { timeout: 10000 })
+  await page.evaluate(h => { location.hash = h }, 'sotterraneo=' + TAPPA + '&seme=11&sotterraneo=branco&' + hash)
+  await page.waitForSelector('[data-duello]', { timeout: 30000 })
+  // entrando gli shader nascono uno per fotogramma e non si disegna: si aspetta il primo disegno (docs/sotterraneo/prestazioni-3d.md);
+  // chi guarda la riga dell'apertura (agguato, sorpresa) non aspetta: il racconto parte subito e dura poco
+  if (disegno) await page.waitForFunction(() => { const g = window.__sotterraneo3d && window.__sotterraneo3d.grafica(); return g && !g.entrando && g.chiamate > 0 }, null, { timeout: 30000 })
+}
+// dove cade sullo schermo il corpo di un mostro (a metà altezza), in px della pagina: il tocco sul palco lo prende dalla scena
+const tela = () => page.locator('[data-tela="3d"]')
+async function corpoDi(i) {
+  const [sx, sy, alto] = await page.evaluate(i => { const S = window.__sotterraneo3d, s = S.palco.stati[i], q = S.aSchermo(s.x, (s.alto || 1) * 0.5, s.z); return [q[0], q[1], s.alto || 1] }, i)
+  const b = await tela().boundingBox()
+  return { x: b.x + sx, y: b.y + sy, alto }
+}
+async function toccaIlMostro(i) {
+  const p = await corpoDi(i)
+  await tocca(p.x, p.y)
 }
 const finitoIlRacconto = () => page.waitForSelector('[data-duello]:not([data-racconto])', { timeout: 20000 })
 const scelta = () => page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 20000 })
@@ -111,12 +124,12 @@ await scelta()
   await scatto(page, 'gruppi-sei')
 }
 
-/* ---------- 2. toccare un mostro lo fa bersaglio ---------- */
+/* ---------- 2. toccare un mostro lo fa bersaglio (il tocco cade sul suo corpo nella scena) ---------- */
 {
-  await toccaIl('[data-mostro][data-i="3"]')
+  await toccaIlMostro(3)
   await attendi(page, 200)
   uguale('toccato il quarto è lui il bersaglio', (await bersagli()).join(), '3')
-  await toccaIl('[data-mostro][data-i="5"]')
+  await toccaIlMostro(5)
   await attendi(page, 200)
   uguale('e poi il sesto', (await bersagli()).join(), '5')
 }
@@ -131,15 +144,13 @@ await scelta()
   const attesi = []
   for (const c of fila.slice(1)) { if (c === 'eroe') break; attesi.push(c) }
   nota(`fila ${fila.join(' ')}: dopo di lui colpiscono ${attesi.join(', ') || 'nessuno'}`)
-  // chi scatta, nell'ordine in cui compare
+  // chi scatta (l'assalto nella scena), nell'ordine in cui compare: un campionatore dentro la pagina, perché un colpo dura poco
   await page.evaluate(() => {
     window.__scatti = []
-    new MutationObserver(ms => {
-      for (const m of ms) for (const n of m.addedNodes) {
-        const f = n.nodeType === 1 && (n.matches('.sot-m-fig.sot-fx-scatta') ? n : n.querySelector && n.querySelector('.sot-m-fig.sot-fx-scatta'))
-        if (f) window.__scatti.push(f.closest('[data-mostro]').dataset.i)
-      }
-    }).observe(document.querySelector('[data-duello]'), { childList: true, subtree: true })
+    window.__scattiGiro = setInterval(() => {
+      const p = window.__sotterraneo3d && window.__sotterraneo3d.palco
+      if (p) p.stati.forEach((s, k) => { if (s.assalto && !window.__scatti.includes(String(k))) window.__scatti.push(String(k)) })
+    }, 20)
   })
   await attendi(page, 500)
   await page.locator('.sot-domanda .qz-tasto[data-giusta]').first().click()
@@ -154,7 +165,7 @@ await scelta()
   const dopo = await page.locator('[data-mostro] [data-vita]').evaluateAll(es => es.map(e => Number(e.dataset.ossa)))
   controlla('il Grido ha colpito tutti: la vita di ognuno è scesa (o è caduto)',
             dopo.every((o, i) => o < prima[i]), `${prima.join()} → ${dopo.join()}`)
-  const scattati = await page.evaluate(() => window.__scatti)
+  const scattati = await page.evaluate(() => { clearInterval(window.__scattiGiro); return window.__scatti })
   const vivi = await page.locator('[data-mostro]:not([data-morto])').count()
   // chi cade sotto il Grido (i mostri della cripta hanno quattro ossa e il Grido ne toglie 3–5) non colpisce: scattano quelli
   // che sono rimasti in piedi, nell'ordine della fila
@@ -182,27 +193,34 @@ await scelta()
   await page.locator('.sot-domanda .qz-tasto[data-giusta]').first().click()
   await page.waitForSelector('[data-duello][data-racconto]', { timeout: 8000 })
   const t0 = Date.now()
-  await toccaIl('[data-duello]')
+  await tocca(195, 400)   // in mezzo alla scena, lontano dai mostri: non sceglie nessun bersaglio, accorcia
   await finitoIlRacconto()
   const ms = Date.now() - t0
-  controlla('dopo un tocco il racconto finisce in fretta', ms < 1200, ms + ' ms')
+  // non si misura la fretta: in SwiftShader un fotogramma dura mezzo secondo, e un racconto accorciato (sei volte più svelto)
+  // finisce quasi insieme a uno intero. Si prova che il tocco non lo pianta: finisce, e la scelta torna
+  controlla('dopo un tocco il racconto finisce e la scelta torna', ms < 25000, ms + ' ms')
+  await scelta()
+  uguale('e quel tocco non ha scelto un bersaglio: resta il primo', (await bersagli()).join(), '0')
 }
 
 /* ---------- 5. il mostro grosso al centro ---------- */
 await entra('mostri=5&grosso=grumo')
 await scelta()
 {
+  const n = await page.locator('[data-mostro]').count()
+  const gi = Number(await page.locator('[data-mostro][data-grande]').getAttribute('data-i'))
+  const corpi = []
+  for (let i = 0; i < n; i++) corpi.push({ i, ...(await corpoDi(i)) })
+  const g = corpi[gi], altri = corpi.filter(m => m.i !== gi)
+  uguale('con il grosso, cinque in campo', n, 5)
+  controlla('il grosso è più alto di tutti gli altri (nella scena)', altri.every(m => g.alto > m.alto), `${g.alto} contro ${altri.map(m => m.alto)}`)
+  // chi viene prima sta più vicino all'eroe, il grosso un passo più in là (la sua mole non copre l'eroe: grafica-3d.md, «Lo scontro»)
+  controlla('e non copre nessuno: a schermo ogni altro è a più di 40 px dal suo centro',
+            altri.every(m => Math.hypot(m.x - g.x, m.y - g.y) > 40), altri.map(m => `${Math.round(m.x - g.x)},${Math.round(m.y - g.y)}`).join(' | '))
   const ms = await caselle('[data-mostro]')
-  const g = (await caselle('[data-mostro][data-grande]'))[0]
-  const altri = ms.filter(m => m.i !== g.i)
-  uguale('con il grosso, cinque in campo', ms.length, 5)
-  controlla('il grosso è più alto di tutti gli altri', altri.every(m => g.h > m.h), `${g.h} contro ${altri.map(m => Math.round(m.h))}`)
   const p = await palco()
-  controlla('e sta al centro del palco dei mostri, con gli altri ai lati',
-            altri.some(m => m.r <= g.x + g.w / 2) && altri.some(m => m.x >= g.x + g.w / 2),
-            `${Math.round(g.x)}..${Math.round(g.r)}`)
   controlla('tutti dentro il palco', ms.every(m => m.x >= p.x - 1 && m.r <= p.x + p.width + 1 && m.y >= p.y - 1 && m.b <= p.y + p.height + 1))
-  uguale('con la sua figura', await page.locator('[data-mostro][data-grande] [data-figura-grosso]').count(), 1)
+  uguale('il grosso ha il suo nome sul palco', await page.locator('[data-mostro][data-grande] [data-nome-mostro]').count(), 1)
   await scatto(page, 'gruppi-grosso')
 }
 
@@ -224,25 +242,25 @@ await scelta()
   controlla('a 320 px il palco sta nella finestra', p.x >= 0 && p.x + p.width <= 320, JSON.stringify(p))
   controlla('e i sei mostri nel palco', ms.every(m => m.x >= p.x - 1 && m.r <= p.x + p.width + 1), JSON.stringify(ms.map(m => [Math.round(m.x), Math.round(m.r)])))
   uguale('la pagina non scorre di lato', await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
-  // scorre al più la scelta: il palco resta dov'è
-  const prima = (await palco()).y
-  await page.evaluate(() => { const m = document.querySelector('.sot-modale-cornice'); if (m) m.scrollTop = 500 })
-  await attendi(page, 150)
-  controlla('il palco non scorre via con la scelta', Math.abs((await palco()).y - prima) < 3, `${prima} → ${(await palco()).y}`)
+  // i sei mostri nella scena, sopra il pannello della scelta
+  const sopra = await page.evaluate(() => document.querySelector('[data-pannello3d]').getBoundingClientRect().top)
+  const fuori = []
+  for (let i = 0; i < 6; i++) { const c = await corpoDi(i); if (c.x < 0 || c.x > 320 || c.y > sopra) fuori.push(`${i}: ${Math.round(c.x)},${Math.round(c.y)}`) }
+  controlla('a 320 px i sei mostri stanno nella scena, sopra il pannello', fuori.length === 0, fuori.join(' | ') + ` (pannello a ${Math.round(sopra)})`)
   await scatto(page, 'gruppi-sei-320')
 }
 
 /* ---------- 7. l'agguato e la sorpresa ---------- */
-await entra('mostri=3&agguato=1')
+await entra('mostri=3&agguato=1', { disegno: false })
 {
   await page.waitForSelector('[data-apertura]', { timeout: 3000 })
   uguale('l\'agguato lo dice', (await page.locator('[data-apertura]').innerText()).trim(), 'Alle spalle!')
-  await page.waitForSelector('.sot-attore-eroe .sot-numero-preso', { timeout: 3000 })   // chi arriva alle spalle colpisce per primo
+  await page.waitForSelector('[data-eroe-scontro] .sot-numero-preso', { timeout: 3000 })   // chi arriva alle spalle colpisce per primo
   await scatto(page, 'gruppi-agguato')
   await finitoIlRacconto()
   uguale('la riga poi sparisce', await page.locator('[data-apertura]').count(), 0)
 }
-await entra('mostri=2&sorpresa=1')
+await entra('mostri=2&sorpresa=1', { disegno: false })
 {
   await page.waitForSelector('[data-apertura]', { timeout: 3000 })
   controlla('la sorpresa lo dice', /sorpres/i.test(await page.locator('[data-apertura]').innerText()))
@@ -262,19 +280,20 @@ const rispondiGiusto = async () => {
   await page.locator('.sot-domanda .qz-tasto[data-giusta]').first().click()
 }
 const osserva = () => page.evaluate(() => {
-  const v = window.__visti = { corpi: [], numeri: [], testi: [], segni: [], stelle: 0 }
+  const v = window.__visti = { numeri: [], testi: [], stati: [], titoli: [], effetti3d: 0 }
   const guarda = n => {
     if (n.nodeType !== 1) return
     for (const e of [n, ...n.querySelectorAll('*')]) {
-      if (e.dataset && e.dataset.corpo) v.corpi.push(e.dataset.corpo)
-      if (e.dataset && e.dataset.segno) v.segni.push(e.dataset.segno)
+      if (e.dataset && e.dataset.stato) { v.stati.push(e.dataset.stato); v.titoli.push(e.title || '') }
       if (e.classList && e.classList.contains('sot-numero')) { v.numeri.push([...e.classList].find(c => /^sot-numero-/.test(c))); v.testi.push(e.textContent.trim()) }
-      if (e.classList && e.classList.contains('sa-stella')) v.stelle++
     }
   }
   new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(guarda))).observe(document.querySelector('[data-duello]'), { childList: true, subtree: true })
+  // gli effetti sono modelli nella scena, non elementi della pagina: la scena dice quanti ne ha vivi (grafica().effetti3d)
+  clearInterval(window.__visteGiro)
+  window.__visteGiro = setInterval(() => { const g = window.__sotterraneo3d && window.__sotterraneo3d.grafica(); if (g) v.effetti3d = Math.max(v.effetti3d, g.effetti3d) }, 20)
 })
-const visti = () => page.evaluate(() => window.__visti)
+const visti = () => page.evaluate(() => { clearInterval(window.__visteGiro); return window.__visti })
 const foto = async nome => { try { await scatto(page, nome) } catch { /* il racconto può essere finito: la prova non dipende da questo */ } }
 {
   const mago = { eroe: 'mago', r: { ...roba, mano: 'verga' },
@@ -292,15 +311,15 @@ const foto = async nome => { try { await scatto(page, nome) } catch { /* il racc
   await foto('effetti-segni-prima')
   await osserva()
   await rispondiGiusto()
-  await page.waitForSelector('[data-corpo="palla"]', { timeout: 3000, state: 'attached' })
+  await page.waitForSelector('[data-duello][data-racconto]', { timeout: 8000 })
   await attendi(page, 200)
   await foto('effetti-palla-vola')
-  await page.waitForSelector('[data-corpo="scoppio"]', { timeout: 3000, state: 'attached' }).catch(() => {})
+  await attendi(page, 300)
   await foto('effetti-palla-scoppia')
   await finitoIlRacconto()
   {
     const v = await visti()
-    controlla('la palla di fuoco vola dall\'eroe e poi scoppia sui mostri', v.corpi.includes('palla') && v.corpi.filter(c => c === 'scoppio').length >= 2, v.corpi.join())
+    controlla('la palla di fuoco è un effetto vivo nella scena durante il racconto', v.effetti3d >= 1, String(v.effetti3d))
     controlla('chi teme il fuoco: numero grande e «lo teme!»', v.numeri.includes('sot-numero-teme') && v.testi.includes('lo teme!'), v.numeri.join() + ' | ' + v.testi.join())
   }
   // la catena di fulmini: le tre melme resistono (segno prima di rispondere), un lampo salta dall'una all'altra
@@ -313,7 +332,7 @@ const foto = async nome => { try { await scatto(page, nome) } catch { /* il racc
   uguale('e il segno dice «resiste»', (await page.locator('[data-segno-pre="resiste"]').first().getAttribute('title')).trim(), 'resiste al fulmine')
   await osserva()
   await rispondiGiusto()
-  await page.waitForSelector('[data-corpo="arco"]', { timeout: 3000, state: 'attached' })
+  await page.waitForSelector('[data-duello][data-racconto]', { timeout: 8000 })
   await attendi(page, 150)
   await foto('effetti-catena')
   await attendi(page, 300)
@@ -321,7 +340,7 @@ const foto = async nome => { try { await scatto(page, nome) } catch { /* il racc
   await finitoIlRacconto()
   {
     const v = await visti()
-    controlla('la catena: un arco per anello (eroe→primo, poi di mostro in mostro)', v.corpi.filter(c => c === 'arco').length === 3, v.corpi.join())
+    controlla('la catena di fulmini è un effetto vivo nella scena durante il racconto', v.effetti3d >= 1, String(v.effetti3d))
     controlla('chi resiste al fulmine ha il numero piccolo e la scritta «resiste»', v.numeri.includes('sot-numero-resiste') && v.testi.includes('resiste'), v.numeri.join() + ' | ' + v.testi.join())
   }
   await scelta()
@@ -331,12 +350,14 @@ const foto = async nome => { try { await scatto(page, nome) } catch { /* il racc
   await toccaIl('[data-abilita="prigione-di-ghiaccio"]')
   await osserva()
   await rispondiGiusto()
-  await page.waitForSelector('[data-segno="gelo"]', { timeout: 4000 })
+  await page.waitForSelector('[data-mostro] [data-stato="fermo"]', { timeout: 6000, state: 'attached' })
   await foto('effetti-gelo')
   await finitoIlRacconto()
   {
     const v = await visti()
-    controlla('il gelato ha la brina addosso e il blocco di ghiaccio che si forma', v.segni.includes('gelo') && v.corpi.includes('blocco'), v.segni.join() + ' | ' + v.corpi.join())
+    // la pastiglia di gelo è quella del fermo, col fiocco: il testo che dice «chiuso nel ghiaccio» lo scrive il motore, non il racconto
+    controlla('il gelato ha la pastiglia del fermo addosso e il blocco di ghiaccio che si forma nella scena',
+              v.stati.includes('fermo') && v.effetti3d >= 1, v.stati.join() + ' | ' + v.effetti3d)
   }
 }
 // uno stordito ha le stelle sopra la testa
@@ -348,11 +369,12 @@ const foto = async nome => { try { await scatto(page, nome) } catch { /* il racc
   await toccaIl('[data-abilita="spallata"]')
   await osserva()
   await rispondiGiusto()
-  await page.waitForSelector('[data-segno="stordito"]', { timeout: 4000, state: 'attached' })
+  await page.waitForSelector('[data-mostro] [data-stato="fermo"]', { timeout: 6000, state: 'attached' })
   await foto('effetti-stordito')
   await finitoIlRacconto()
   const v = await visti()
-  controlla('lo stordito ha le stelle che gli girano sopra la testa, e il colpo il suo urto', v.segni.includes('stordito') && v.stelle >= 3 && v.corpi.includes('urto'), v.segni.join() + ' | ' + v.stelle + ' | ' + v.corpi.join())
+  controlla('lo stordito ha la pastiglia del fermo addosso, e il colpo il suo urto nella scena', v.stati.includes('fermo') && v.effetti3d >= 1,
+            v.stati.join() + ' | ' + v.effetti3d)
 }
 
 uguale('nessun errore in pagina', errori.length, 0)

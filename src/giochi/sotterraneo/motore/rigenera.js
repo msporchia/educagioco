@@ -1,6 +1,6 @@
-// I dungeon che si rigenerano (docs/sotterraneo/dungeon-che-si-rigenerano.md): nel Sotterraneo 3D ogni dungeon ha il livello della sua
+// I dungeon che si rigenerano (docs/sotterraneo/dungeon-che-si-rigenerano.md): ogni dungeon ha il livello della sua
 // zona, un seme fisso finché non lo si ripulisce e, ripulito, un'altra forma e altri abitanti. Funzioni pure: girano in Node, e
-// Gioco.vue le chiama scendendo, riprendendo e chiudendo una discesa. Il Sotterraneo di sempre non le chiama.
+// Gioco.vue le chiama scendendo, riprendendo e chiudendo una discesa.
 import { CAMPAGNA, INDICE_ABISSO, L_ABISSO, guastiDegliAbitanti } from '../dati/campagna.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { ABITANTI_DI_SOPRA } from '../dati/mondo-aperto-mostri.js'

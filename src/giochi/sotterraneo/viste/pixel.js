@@ -123,30 +123,6 @@ export const RIGATTIERE = pixel([
   '....kkkk.kkkk.....',
 ], { k: '#221b16', H: '#5a4632', s: '#d79f78', e: '#221b16', n: '#8a6a52', S: '#b99a6a', C: '#6d5a8a', b: '#a8873f', p: '#4e4234', o: '#2b221c' })
 
-// il cartello di divieto piantato davanti a una discesa chiusa: un paletto di legno e un disco rosso con la barra
-// bianca, come i divieti veri
-export const DIVIETO = pixel([
-  '....kkkk....',
-  '..kkrRRRkk..',
-  '.krRRRRRRRk.',
-  '.kRRRRRRRRk.',
-  'krRRRRRRRRRk',
-  'kRwwwwwwwwRk',
-  'kRwwwwwwwwRk',
-  'kRRRRRRRRRRk',
-  '.kRRRRRRRRk.',
-  '.kRRRRRRRRk.',
-  '..kkRRRRkk..',
-  '....kkkk....',
-  '....kPpk....',
-  '....kPpk....',
-  '....kPpk....',
-  '....kPpk....',
-  '....kPpk....',
-  '...kkPpkk...',
-  '..kkkkkkkk..',
-], { k: '#241812', R: '#c8281e', r: '#ea5a45', w: '#f6efe0', P: '#b27a45', p: '#7d5230' })
-
 /* chi dà le missioni (dati/missioni.js): figure provvisorie come il minatore, finché l'atlante non ha
    `<nome>-fermo-0` (il prompt dei personaggi nella scheda PROMPT-terra-di-sopra.md) */
 
@@ -257,11 +233,6 @@ const RIGHE_DELLA_GUARDIA = [
 ]
 export const GUARDIA = pixel(RIGHE_DELLA_GUARDIA, { k: '#1f1d22', R: '#a82a2a', M: '#b9c0c6', m: '#7f878e', s: '#dca47c',
   S: '#ba8460', e: '#1f1d22', C: '#8d9399', b: '#6b4a2a', p: '#4b4038', o: '#2a221c', g: '#8a5a32' })
-// la sentinella davanti a una discesa troppo forte (docs/sotterraneo/zone.md): la stessa guardia in ferro scuro e
-// mantello nero, perché non la si scambi con quella della torre che dà le missioni
-export const SENTINELLA = pixel(RIGHE_DELLA_GUARDIA, { k: '#141217', R: '#2b2a33', M: '#6f767d', m: '#4a5056', s: '#dca47c',
-  S: '#ba8460', e: '#141217', C: '#555b61', b: '#3a2a1a', p: '#2a2530', o: '#191418', g: '#5a3a22' })
-
 // il pescatore dello stagno: cappellaccio di paglia, la canna sulla spalla col filo che pende
 export const PESCATORE = pixel([
   '.............g..',

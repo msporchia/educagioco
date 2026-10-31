@@ -2,37 +2,33 @@
    I MERCANTI DI SOPRA, COL DITO VERO
 
    La roba resta fra una discesa e l'altra, e il mercante è uscito dalle
-   discese: quattro botteghe sulla terra di sopra (docs/sotterraneo/
-   terra-di-sopra.md). Qui il giro intero col dito: toccare un mercante e
-   vedere l'eroe andarci e il banco aprirsi, comprare, vendere al
-   rigattiere, scendere con la roba comprata, risalire e ritrovarla, e
-   alla discesa dopo ritrovarla nello zaino. La bottega è quella da gioco
-   di ruolo (docs/sotterraneo/bottega-finestra.md, «La bottega e lo zaino»): le
-   linguette, un tocco che sceglie e il tasto che compra, il confronto coi
-   numeri giusti, i pezzi più su che si vedono spenti; e lo zaino che
+   discese: quattro botteghe nel villaggio del mondo di sopra (docs/sotterraneo/
+   mondo-3d.md). Qui il giro intero col dito: toccare un mercante, parlargli
+   e vedere il banco aprirsi, comprare, vendere al rigattiere, scendere con la roba
+   comprata, risalire e ritrovarla, e alla discesa dopo ritrovarla nello zaino.
+   La bottega è quella da gioco di ruolo (docs/sotterraneo/bottega-finestra.md,
+   «La bottega e lo zaino»): le linguette, un tocco che sceglie e il tasto che compra,
+   il confronto coi numeri giusti, i pezzi più su che si vedono spenti; e lo zaino che
    indossa e fa bere.
 
+   L'eroe va dal mercante col salto delle prove (`__mondo3d.vai`, in `alBancoDi`): la
+   strada a piedi la prova `integrazione/sotterraneo-mondo`.
    I tocchi sono tocchi (`Input.dispatchTouchEvent` via CDP): il click che
    il dito si lascia dietro è quello che apre il banco, e un
    `page.click()` non lo porterebbe.
    `node test/esegui.mjs sotterraneo-mercanti`
-   tempo: 90
+   tempo: 420
    ═══════════════════════════════════════════════════════════════════ */
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo, nelDialogo,
-         lasciaLaDiscesa, vendiNellaBottega, riacquistaNellaBottega, allaLinguettaDi , finestraFerma } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo, mondoPronto,
+         lasciaLaDiscesa, vendiNellaBottega, allaLinguettaDi, finestraFerma, alBancoDi, senzaPensieri } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
-import { MERCANTI, CELLA } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
-import { SCALA_TERRA as S } from '../../src/giochi/sotterraneo/dati/terra.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
-/* la nebbia già tolta (768 cifre esadecimali, un bit per cella): i mercanti
-   si trovano camminando, e camminare la mappa lo prova `integrazione/
-   sotterraneo-terra`. Nello zaino un'ascia da vendere, un medaglione da
-   mettersi giù, e le gemme */
+/* nello zaino un'ascia da vendere, un medaglione da mettersi giù, e le gemme */
 // le cure costano un numero fisso (la guaritrice ha la pozione a 24): con cento gemme restano quelle per la spada del passo dopo
 const GEMME = 100
 const roba = { v: 1, gemme: GEMME, zaino: ['ascia', 'medaglione', 'amuleto-rosso'], mano: null, mancina: null, corpo: null, dito: null,
@@ -41,10 +37,11 @@ await semina(page, {
   coins: 300, settings: { sperimentali: true },
   campagne: { sotterraneo: { tappa: 2, libera: false, stelle: { 0: 3, 1: 3 },
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: 2, libera: false, stelle: { 0: 3, 1: 3 }, missioni: {},
-      roba, terra: { nebbia: 'f'.repeat(768), dove: [17, 41], parlato: true } } } } } },
+      roba, mondo: { parlato: true } } } } } },
 })
+await senzaPensieri(page)   // il fumetto dei pensieri, con un segno, prende il tocco
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await mondoPronto(page)
 await attendi(page, 500)
 
 const cdp = await page.context().newCDPSession(page)
@@ -58,94 +55,23 @@ async function toccaIl(sel) {
   const b = await page.locator(sel).first().boundingBox()
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
-const cella = () => page.locator('[data-eroe-terra]').getAttribute('data-cella')
 const gemmeBottega = async () => Number((await page.locator('[data-gemme-bottega]').innerText()).match(/\d+/)[0])
 const gemme = async () => Number(await page.locator('[data-gemme-barra]').getAttribute('data-n'))
-async function alBanco(chi) {
-  // i mercanti stanno lontani fra loro e fuori dallo schermo: si cammina verso la cella dove ci si ferma
-  // accanto a lui (`vaiVerso`, qui sotto), poi lo si tocca. Lungo la strada un tocco può cadere su un altro
-  // mercante e aprire il suo banco: `vaiVerso` lo richiude e prosegue
-  // se è già sullo schermo lo si tocca e basta, come un bambino: il rigattiere sta accanto all'erborista, e i
-  // tocchi di avvicinamento verso di lui cadrebbero sul banco di lei
-  if (!(await aVista(chi))) await vaiVerso(...MERCANTI[chi].accanto)
-  // toccandolo si parla (docs/sotterraneo/dialoghi.md): la prima domanda apre la bottega
-  if (!(await page.locator('[data-bottega]').count())) {
-    if (!(await page.locator(`[data-dialogo="${chi}"]`).count())) await toccaIl(`[data-mercante="${chi}"]`)
-    await nelDialogo(page, '[data-scelta="bottega"]', { tocca: toccaIl })
-  }
-  await page.waitForSelector('[data-chiudi]', { timeout: 10000 })
-  await attendi(page, 500)    // la bottega è cieca per un attimo, contro il click fantasma (Bottega.vue, CIECO)
-}
-
-async function aVista(chi) {
-  const m = page.locator(`[data-mercante="${chi}"]`)
-  if (await m.evaluate(el => el.classList.contains('sot-buio'))) return false
-  const b = await m.boundingBox(), v = await page.locator('[data-terra]').boundingBox()
-  return !!b && b.x > v.x + 10 && b.x + b.width < v.x + v.width - 10 && b.y > v.y + 150 && b.y + b.height < v.y + v.height - 130
-}
+const alBanco = (chi, opz = {}) => alBancoDi(page, chi, { tocca, toccaIl, ...opz })
 
 async function chiudiBanco() {
-  await toccaIl('[data-chiudi]')
-  await page.waitForSelector('[data-chiudi]', { state: 'detached', timeout: 3000 })
+  await toccaIl('[data-bottega] [data-chiudi]')
+  await page.waitForSelector('[data-bottega]', { state: 'detached', timeout: 3000 })
+  await attendi(page, 400)
 }
 
-/* ---------- 1. i mercanti stanno sulla mappa ---------- */
-uguale('sulla terra di sopra ci sono quattro mercanti', await page.locator('[data-mercante]').count(), 4)
-controlla('e la carta di chi scende dice le gemme', (await gemme()) === GEMME, String(await gemme()))
-await scatto(page, 'mercanti-mappa-casa')
-
-/* ---------- 1b. la mappa è larga due schermi e mezzo: la vista scorre verso destra, oltre la giunta ---------- */
-const camera = async () => (await page.locator('[data-terra]').getAttribute('data-camera')).split(',').map(Number)
-async function vaiVerso(cx, cy) {
-  // un tocco dentro lo schermo, nella direzione giusta: l'eroe va alla cella raggiungibile più vicina
-  for (let giro = 0; giro < 14; giro++) {
-    const [x, y] = (await cella()).split(',').map(Number)
-    if (x === cx && y === cy) return
-    const v = await page.locator('[data-terra]').boundingBox()
-    const [camx, camy] = await camera()
-    // un tocco sul prato, non su chi ci sta sopra: se il punto cade su un mercante, o così vicino che il
-    // telefono gli attribuisce il tocco (Chrome aggiusta il dito verso il bottone più vicino), si cambia fila
-    let punto = null
-    for (const dy of [0, 1, -1, 2, -2]) {
-      const sx = v.x + ((x + 0.5 + Math.max(-3, Math.min(3, cx - x))) * CELLA - camx) * S
-      const sy = v.y + ((y + 0.5 + dy + Math.max(-3, Math.min(3, cy - y))) * CELLA - camy) * S
-      punto = [Math.max(v.x + 30, Math.min(v.x + v.width - 30, sx)), Math.max(v.y + 150, Math.min(v.y + v.height - 130, sy))]
-      const sopra = await page.evaluate(([px, py]) => [...document.querySelectorAll('[data-mercante]')].some(m => {
-        const r = m.getBoundingClientRect()
-        return px > r.left - 24 && px < r.right + 24 && py > r.top - 24 && py < r.bottom + 24
-      }), punto)
-      if (!sopra) break
-    }
-    await tocca(...punto)
-    await page.waitForFunction(() => document.querySelector('[data-eroe-terra]')?.dataset.cammina === '0',
-                               null, { timeout: 15000 })
-    await attendi(page, 150)
-    // un banco aperto per sbaglio (il tocco è caduto su un mercante): si chiude e si va avanti,
-    // tranne all'arrivo, dove il banco è quello giusto
-    const [ax, ay] = (await cella()).split(',').map(Number)
-    if ((await page.locator('[data-chiudi]').count()) && !(ax === cx && ay === cy)) await chiudiBanco()
-  }
-}
-const [cam0] = await camera()
-await vaiVerso(31, 35)                 // il sentiero esce dal bordo della prima mappa
-const allaGiunta = (await cella()).split(',').map(Number)
-controlla('l\'eroe arriva alla giunta', allaGiunta[0] >= 30, allaGiunta.join(','))
-await attendi(page, 400)
-await scatto(page, 'terra-giunta')
-await vaiVerso(34, 36)                 // e la passa, dentro il bosco
-const oltre = (await cella()).split(',').map(Number)
-controlla('passa la giunta: il sentiero continua nel pezzo nuovo', oltre[0] >= 33, oltre.join(','))
-const [cam1] = await camera()
-controlla('e la vista è scorsa verso destra, fino oltre la giunta', cam1 > cam0 + 300 && cam1 + 390 / S > 1024 + 100,
-          `${cam0} → ${cam1}`)
-await scatto(page, 'terra-giunta-oltre')
+/* ---------- 1. i mercanti stanno nel villaggio ---------- */
+uguale('nel villaggio ci sono quattro mercanti', await page.locator('[data-mercante][data-citta="villaggio"]').count(), 4)
+controlla('e la barra di chi scende dice le gemme', (await gemme()) === GEMME, String(await gemme()))
+await scatto(page, 'mercanti-mondo-casa')
 
 /* ---------- 2. l'erborista: ci si va, si guarda, e si compra ---------- */
 await alBanco('erborista')
-{
-  const [x, y] = (await cella()).split(',').map(Number)
-  uguale('l\'eroe si è fermato accanto all\'erborista', `${x},${y}`, MERCANTI.erborista.accanto.join(','))
-}
 uguale('la bottega si apre', await page.locator('[data-bottega]').count(), 1)
 uguale('con le sue linguette: pozioni e torce', await page.locator('[data-bottega] [data-scheda]').count(), 2)
 uguale('e la prima è quella delle pozioni', await page.locator('[data-scheda="pozioni"][aria-selected="true"]').count(), 1)
@@ -182,7 +108,6 @@ uguale('e la carta di sopra ha le gemme di adesso', await gemme(), GEMME - spese
 
 /* ---------- 2b. l'incantatrice: a un cavaliere solo l'energia (le bacchette e la stoffa non le porta) ---------- */
 await alBanco('incantatrice')
-uguale('l\'eroe si è fermato accanto all\'incantatrice', await cella(), MERCANTI.incantatrice.accanto.join(','))
 uguale('una linguetta sola: l\'energia', (await page.locator('[data-bottega] [data-scheda]').evaluateAll(els => els.map(e => e.dataset.scheda))).join(), 'energia')
 for (const k of ['pozione-blu', 'ampolla-blu']) uguale(`sotto «Energia» ${k}`, await page.locator(`[data-casella-pezzo="${k}"]`).count(), 1)
 uguale('e non compra: dice chi lo fa', await page.locator('[data-chi-compra]').count(), 1)
@@ -230,8 +155,7 @@ await scatto(page, 'mercanti-mappa-rigattiere')
 
 /* ---------- 4. l'armaiolo: le linguette, il confronto, i pezzi più su ---------- */
 await alBanco('armaiolo')
-uguale('l\'eroe si è fermato accanto all\'armaiolo', await cella(), MERCANTI.armaiolo.accanto.join(','))
-uguale('l\'armaiolo ha armi e difese, e non «Vendi»', await page.locator('[data-bottega] [data-scheda]').count(), 2)
+uguale('l\'armaiolo ha armi, difese ed elmi, e non «Vendi»', await page.locator('[data-bottega] [data-scheda]').count(), 3)
 uguale('e non compra: dice chi lo fa', await page.locator('[data-chi-compra]').count(), 1)
 /* il banco porta la riga della storia con cui si entra nella prossima discesa (la torre): chi non ha niente ci
    trova la spada corta, lo scudo di legno e il panciotto (dati/storia.js) */
@@ -297,9 +221,9 @@ uguale('le gemme sono scese della spada', await gemme(), dopo)
 await scatto(page, 'mercanti-mappa-armaiolo')
 
 /* ---------- 5. si scende con la roba comprata ---------- */
-await scendiNelSotterraneo(page, 0)
-await page.waitForSelector('.sot-tela', { timeout: 5000 })
-await attendi(page, 500)
+await scendiNelSotterraneo(page, 0, { tocca })
+await page.waitForSelector('[data-tela="3d"]', { timeout: 30000 })
+await attendi(page, 800)
 await page.locator('[data-azione="zaino"]').click()
 await page.waitForSelector('[data-zaino]', { timeout: 3000 })
 uguale('nello zaino c\'è la pozione comprata sopra', await page.locator('[data-tasca][data-cosa="pozione"]').count(), 1)
@@ -315,12 +239,12 @@ const su = p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.roba
 controlla('la roba è nel profilo, nell\'avventura del cavaliere', !!su && su.zaino.includes('pozione'), JSON.stringify(su))
 uguale('con le gemme di prima', su && su.gemme, dopo)
 uguale('lasciata perdere la discesa, la roba resta', await gemme(), dopo)
-uguale('e la discesa no: ricomincia da capo, nessuna carta', await page.locator('[data-ripresa]').count(), 0)
+uguale('e la discesa no: ricomincia da capo, nessuna sosta scritta', !!(p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.sosta), false)
 
 /* ---------- 7. e alla discesa dopo si ritrova, e lo zaino la usa ---------- */
-await scendiNelSotterraneo(page, 0)
-await page.waitForSelector('.sot-tela', { timeout: 5000 })
-await attendi(page, 500)
+await scendiNelSotterraneo(page, 0, { tocca })
+await page.waitForSelector('[data-tela="3d"]', { timeout: 30000 })
+await attendi(page, 800)
 await page.locator('[data-azione="zaino"]').click()
 await page.waitForSelector('[data-zaino]', { timeout: 3000 })
 uguale('la discesa dopo ritrova la pozione', await page.locator('[data-tasca][data-cosa="pozione"]').count(), 1)

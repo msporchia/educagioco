@@ -37,7 +37,7 @@ export const GROSSI = {
   carbonchio: { nome: 'Carbonchio', tipo: 'gigante', figura: 'drago-lava', ossa: 1.1, att: 1, tinta: '#ff5a1c', ruolo: 'superboss',
                 difese: { resiste: ['fuoco'], teme: ['gelo'], immune: ['brucia'] },
                 pezzo: 'martello-di-carbonchio', dice: 'Il drago di lava delle miniere: le sue squame sono carbone acceso.' },
-  // i sei dei dungeon nuovi del mondo a percorso (solo del 3D, dati/dungeon-del-mondo.js): creature del catalogo ingrandite con la
+  // i sei dei dungeon nuovi del mondo a percorso (dati/dungeon-del-mondo.js): creature del catalogo ingrandite con la
   // corona, sulle basi e coi numeri dei sette (il troll fino al 9, poi il gigante); da tarare col banco a lavoro finito
   barbamuschio: { nome: 'Roccaverde', tipo: 'troll', figura: 'golem-muschio', ossa: 1.1, att: 1, tinta: '#6fbf4a',
                   difese: { resiste: ['veleno', 'fisico'], teme: ['fuoco'], immune: ['stordisce', 'avvelena'] },

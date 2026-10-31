@@ -9,8 +9,7 @@
 import { CAMPAGNA, L_ABISSO, TRATTI_DELL_ABISSO, guardianoDi, formaDi, brancoDi, caporaleDi, tettoDelBrancoDi, piantaDi, conAcquaDi, scenarioDi }
   from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { ROCCIA, PAVIMENTO, PORTA, RELITTO, ACQUA } from '../../src/giochi/sotterraneo/dati/mondo.js'
-import { CLASSI, ASPETTI, DISEGNI, guastiDeiRelitti } from '../../src/giochi/sotterraneo/dati/relitti.js'
-import { DISEGNATI } from '../../src/giochi/sotterraneo/scena/relitti.js'
+import { CLASSI, ASPETTI, guastiDeiRelitti } from '../../src/giochi/sotterraneo/dati/relitti.js'
 import { PEZZI } from '../../src/giochi/sotterraneo/dati/atlante.js'
 import { grossoDi } from '../../src/giochi/sotterraneo/dati/grossi.js'
 import { CAPORALE } from '../../src/giochi/sotterraneo/dati/mostri.js'
@@ -584,7 +583,6 @@ const camminabile = (l, x, y) => l.a(x, y) === PAVIMENTO || l.a(x, y) === PORTA
 {
   const g = guastiDeiRelitti(Object.keys(PEZZI))
   controlla('relitti: nessun guasto (sprite nell\'atlante, disegni in codice, niente da spostare)', g.length === 0, g.slice(0, 3).join(' · '))
-  uguale('ogni disegno in codice ha il suo pittore e viceversa', DISEGNATI.slice().sort().join(), DISEGNI.slice().sort().join())
   controlla('i dati reggono anche senza l\'atlante', guastiDeiRelitti(null).length === 0)
 }
 

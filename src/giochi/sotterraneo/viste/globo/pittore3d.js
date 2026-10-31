@@ -2,7 +2,7 @@
 // della sfera dà l'ombra e il fresnel del vetro; il liquido è un volume tagliato da un piano ondulato visto un po' dall'alto
 // (il pelo è un'ellisse che riflette), con la profondità che scurisce verso il fondo e le bolle dentro. Un contesto WebGL solo
 // per tutti e due i globi, su una tela che non si vede: si disegna lì e si copia nel canvas 2D del globo (drawImage), così
-// sul telefono c'è un contesto in più e non due, e niente si lega alla scena del Sotterraneo 3D. Senza WebGL, o col contesto
+// sul telefono c'è un contesto in più e non due, e niente si lega alla scena del sotterraneo. Senza WebGL, o col contesto
 // perso, `pronto()` è falso e GloboVivo.vue ripiega sulla strada A
 import { COLORI } from './pittore2d.js'
 

@@ -71,7 +71,7 @@ quale file.
 | `docs/pozioni/` | Il laboratorio delle pozioni: regole e tappe |
 | `docs/passo-passo/` | Passo passo: regole del mondo, cane pastore, zaino e carte, stelle, sentiero, come si scrive un livello |
 | `docs/costruttore/` | Il Robot (era «Il costruttore»: chiave e cartelle restano `costruttore`): linguaggio, progetti e attrezzi, il porto, gli algoritmi, la campagna, la scheda e il robot disegnato |
-| `docs/sotterraneo/` | Il sotterraneo: la grande storia (le discese in fila e la roba attesa), le missioni, regole, roba, scenari e muri, i pensieri dell'eroe (`pensieri.md`), l'abisso com'è e il suo progetto, il Sotterraneo 3D in prova (`grafica-3d.md`, prima di toccare `scena3d/`; i mostri e gli effetti 3D in `mostri-3d.md`; il suo mondo di sopra in `mondo-3d.md`) |
+| `docs/sotterraneo/` | Il sotterraneo: la grande storia (le discese in fila e la roba attesa), le missioni, regole, roba, scenari, i pensieri dell'eroe (`pensieri.md`), l'abisso com'è e il suo progetto, il disegno in 3D (`grafica-3d.md`, prima di toccare `scena3d/`; i mostri e gli effetti in `mostri-3d.md`; il mondo di sopra in `mondo-3d.md`) |
 | `docs/survivors/` | Survivors, con le sue regole |
 | `docs/codice-segreto/`, `docs/conta/`, `docs/prima-dopo/` | un gioco ciascuna; in `prima-dopo/disegni.md` la regola delle icone disegnate |
 | `docs/fattoria3d/` | La fattoria (`src/giochi/fattoria3d/`: dal 31/10/2026 l'unica, in 3D; la chiave resta `fattoria3d`, i dati presi dalla 2D tolta stanno in `da2d/`): regole e catena, monete vere, i lotti da comprare dentro un recinto, il mare a ovest, i laghi a est e la pesca, alberi, strade, costruire trascinando, i magazzini che crescono, la scena three.js e il suo peso, la fattoria in comune fra due amici, la conversione dei salvataggi 2D (`parita/migrazione.md`) — prima di toccare `giochi/fattoria3d/` |
@@ -89,8 +89,8 @@ Altri documenti vivono accanto al codice che descrivono: `test/README.md`
 - **I fine riga sono LF** (`.gitattributes`). Uno script che riscrive un file
   (Python lo fa senza chiedere) non deve cambiarli, se no il diff annega.
 - **Niente dipendenze a runtime oltre a Vue**, con un'eccezione: three.js
-  per gli Asteroidi e la fattoria (tutti e due solo in 3D) e il Sotterraneo 3D (~640 KB, accettati dall'utente: il
-  3D non si scrive a mano; il Sotterraneo di sempre resta in 2D). Suoni sintetizzati,
+  per gli Asteroidi, il sotterraneo e la fattoria (tutti e tre solo in 3D) (~640 KB, accettati dall'utente: il
+  3D non si scrive a mano). Suoni sintetizzati,
   icone emoji o disegnate, nessun file esterno: il build resta un HTML
   unico. → `docs/asteroidi/grafica-3d.md`
 - **I giochi nuovi stanno in `src/giochi/`** col calco di `codice-segreto/`

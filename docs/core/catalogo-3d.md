@@ -1,7 +1,7 @@
 # Il catalogo 3D
 
 Una pagina sola dove vedere **tutti i modelli 3D costruiti** (Fattoria 3D e
-Sotterraneo 3D) e **in quale gioco si usano**, per decidere «questo vale la
+sotterraneo) e **in quale gioco si usano**, per decidere «questo vale la
 pena usarlo anche di là». Due mulini non sono per forza uno spreco: la
 pagina mostra, non impone il riuso.
 
@@ -58,7 +58,7 @@ stesse geometrie. Un modello che vuole un canvas lo fa da sé: siamo in pagina.
 - `catalogo-3d/fattoria.js`: chi lavora sulla Fattoria 3D. `dove` si ricava
   dai dati (`dati/catalogo.js`, `colture.js`, `compagni.js`), non si scrive a
   mano. Un `crea…` nuovo in `modelli.js` vuole una voce qui.
-- `catalogo-3d/sotterraneo.js`: chi lavora sul Sotterraneo 3D.
+- `catalogo-3d/sotterraneo.js`: chi lavora sul sotterraneo.
 - Un modello che compare in entrambi i giochi: una voce sola con
   `gioco: 'entrambi'`, nel file di chi l'ha costruito.
 - Un modello **copiato** da un gioco all'altro (ponte, passerella e tavolo: Sotterraneo → Fattoria) sta in entrambi i file con **id

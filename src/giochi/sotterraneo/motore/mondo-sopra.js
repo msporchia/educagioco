@@ -1,4 +1,4 @@
-// Il mondo di sopra del Sotterraneo 3D, senza disegno, sul mondo a percorso (motore/mondo-percorso.js): il mondo tenuto una volta
+// Il mondo di sopra del sotterraneo, senza disegno, sul mondo a percorso (motore/mondo-percorso.js): il mondo tenuto una volta
 // sola con le zone caricate attorno all'eroe, la terra dove si cammina, la nebbia in base64, la firma salvata e il travaso di chi
 // ha già giocato, le pietre (una per zona e quella del villaggio), il villaggio unico, il cartello. Gira in Node
 // (unita/sotterraneo-mondo-salva). Il contratto per la scena: docs/sotterraneo/mondo-sopra-contratto.md.
@@ -157,7 +157,7 @@ export function nebbiaDaBase64(s, W, H) {
   return n
 }
 
-// La prima volta: si vede attorno alla piazza, e chi ha già finito delle discese (la stessa avventura del Sotterraneo di sempre) ritrova
+// La prima volta: si vede attorno alla piazza, e chi ha già finito delle discese ritrova
 // scoperta la strada maestra fino a ognuna, la sua stradina e il suo ingresso, e accesa la pietra della sua zona (la tabella del travaso
 // di mondo-aperto-dati.md). Non vuole zone caricate: la strada è quella del tracciato. `tappe` come le dà Gioco.vue; la firma di prima,
 // (m, terra, tappe), vale ancora

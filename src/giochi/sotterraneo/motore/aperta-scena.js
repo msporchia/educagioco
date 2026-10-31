@@ -7,7 +7,7 @@ import { rifaDaId } from '../dati/missioni-modelli.js'
 import { POSTI_SUL_PALCO } from './palco.js'
 import { SOPRA } from '../dati/mondo-aperto-mostri.js'
 
-// Gioco.vue chiede questo file solo nel Sotterraneo 3D, a richiesta (il 2D non si porta dietro il mondo generato): quello che gli
+// Gioco.vue chiede questo file a richiesta: quello che gli
 // serve del motore passa da qui
 export { apriLoScontro, esitoDelloScontro, raccogliDaTerra, cittaDelRisveglio } from './aperta.js'
 

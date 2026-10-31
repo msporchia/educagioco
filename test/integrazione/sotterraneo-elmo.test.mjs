@@ -2,12 +2,11 @@
    L'ELMO COME CASELLA SUA (docs/sotterraneo/elmo.md)
 
    Un salvataggio di prima (la roba senza `testa`) con un elmo cornuto in
-   tasca. Nel Sotterraneo 3D lo zaino ha la settima casella, vuota con
-   l'ombra; «Indossa» mette l'elmo in testa, la casella ha l'anteprima
-   `copricapo:` e la difesa sale. Nel Sotterraneo di sempre le caselle
-   restano sei finché in testa non c'è niente, e la settima compare solo
-   indossandolo (con l'emoji). Il fabbro del 3D ha la linguetta «Elmi».
-   `--scatti`: lo zaino 3D con l'elmo, il fabbro.
+   tasca. Lo zaino ha la settima casella, vuota con l'ombra; «Indossa»
+   mette l'elmo in testa, la casella ha l'anteprima `copricapo:` e la
+   difesa sale. Il fabbro ha la linguetta «Elmi». (Le caselle di un tempo,
+   sei finché la testa era vuota, erano del sotterraneo in 2D: tolto.)
+   `--scatti`: lo zaino con l'elmo, il fabbro.
    `node test/esegui.mjs sotterraneo-elmo`
    tempo: 90
    ═══════════════════════════════════════════════════════════════════ */
@@ -19,16 +18,15 @@ const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 // la roba di prima: niente `testa`, e l'elmo nello zaino
 const roba = { v: 1, gemme: 0, zaino: ['elmo-cornuto'], mano: 'spada-corta', mancina: null, corpo: null, collo: null, dito: null, dito2: null, torcia: 0, torce: 0 }
-async function entra(hash, tre) {
+async function entra(hash) {
   await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
   await azzera(page)
   await page.setViewportSize({ width: 390, height: 844 })
-  const a = { tappa: 1, libera: false, stelle: { 0: 3 }, missioni: {}, roba, terra: { nebbia: 'f'.repeat(768), dove: [55, 11], parlato: true } }
+  const a = { tappa: 1, libera: false, stelle: { 0: 3 }, missioni: {}, roba, mondo: { parlato: true } }
   await semina(page, { coins: 300, settings: { sperimentali: true },
     campagne: { sotterraneo: { tappa: 1, libera: false, stelle: { 0: 3 }, cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: a } } } } })
   await page.evaluate(h => { location.hash = h }, hash)
-  if (tre) await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 30000 })
-  else await page.waitForSelector('[data-tela="2d"]', { timeout: 30000 })
+  await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 30000 })
   await attendi(page, 2000)
 }
 const conta = sel => page.locator(sel).count()
@@ -40,11 +38,11 @@ async function indossaLaTasca(i) {
   await attendi(page, 400)
 }
 
-/* ── nel 3D ── */
-await entra('sotterraneo3d=1&eroe=cavaliere&seme=11&dpr=1', true)
+/* ── lo zaino, giù in una discesa ── */
+await entra('sotterraneo=1&eroe=cavaliere&seme=11&dpr=1')
 await page.locator('[data-azione="zaino"]').first().click()
 await page.waitForSelector('[data-zaino] [data-casella="mano"]', { timeout: 5000 })
-uguale('nel 3D le caselle sono sette', await conta('[data-zaino] [data-casella]'), 7)
+uguale('le caselle sono sette', await conta('[data-zaino] [data-casella]'), 7)
 uguale('la testa è vuota (il salvataggio di prima non l\'aveva)', await cosaIn('testa'), null)
 uguale('e mostra cosa ci va', (await page.locator('[data-zaino] [data-casella="testa"]').innerText()).trim(), '🪖')
 {
@@ -61,10 +59,10 @@ uguale('e mostra cosa ci va', (await page.locator('[data-zaino] [data-casella="t
   await scatto(page, 'sotterraneo-elmo-zaino-3d')
 }
 
-/* ── il fabbro del 3D ── */
+/* ── il fabbro ── */
 await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
 await azzera(page)
-await page.evaluate(() => { location.hash = 'sotterraneo3d=mondo&eroe=cavaliere&bottega=armaiolo&livello=6&roba=nuda&gemme=800&scheda=elmi&dpr=1' })
+await page.evaluate(() => { location.hash = 'sotterraneo=mondo&eroe=cavaliere&bottega=armaiolo&livello=6&roba=nuda&gemme=800&scheda=elmi&dpr=1' })
 await page.waitForSelector('[data-bottega]', { timeout: 30000 })
 await attendi(page, 1500)
 uguale('il fabbro ha la linguetta degli elmi', await conta('[data-bottega] [data-scheda="elmi"]'), 1)
@@ -74,15 +72,6 @@ uguale('il fabbro ha la linguetta degli elmi', await conta('[data-bottega] [data
 }
 uguale('l\'eroe ha la settima casella anche qui', await conta('[data-bottega] [data-casella="testa"]'), 1)
 await scatto(page, 'sotterraneo-elmo-fabbro')
-
-/* ── nel Sotterraneo di sempre ── */
-await entra('sotterraneo=1&giu=1&eroe=cavaliere&seme=11', false)
-await page.locator('[data-azione="zaino"]').first().click()
-await page.waitForSelector('[data-zaino] [data-casella="mano"]', { timeout: 5000 })
-uguale('nel 2D le caselle restano sei', await conta('[data-zaino] [data-casella]'), 6)
-await indossaLaTasca(0)
-uguale('indossato, compare la casella della testa', await cosaIn('testa'), 'elmo-cornuto')
-uguale('con la sua emoji', await conta('[data-zaino] [data-casella="testa"] [data-anteprima="3d"]'), 0)
 
 controlla('nessun errore nella pagina', errori.length === 0, errori.join(' | '))
 await browser.close()

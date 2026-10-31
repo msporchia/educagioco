@@ -9,7 +9,6 @@ export const DOMANDE = {
   arena: { moduli: ['conti'] },
   giardino: { moduli: ['conti'] },
   sotterraneo: 'tutte',
-  sotterraneo3d: 'tutte',
   survivors: 'tutte',
 }
 

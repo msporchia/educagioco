@@ -1,9 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA TAVOLA DELLE ANTEPRIME 3D — la roba, gli eroi e i mostri come li
    vedono lo zaino, le botteghe, il ritratto e la fila dei turni del
-   Sotterraneo 3D (docs/sotterraneo/anteprime-3d.md)
+   sotterraneo (docs/sotterraneo/anteprime-3d.md)
 
-   Apre il file costruito nel Sotterraneo 3D, chiede al servizio delle
+   Apre il file costruito nel sotterraneo, chiede al servizio delle
    anteprime (`window.__anteprime3d`) tutte le chiavi e le mette in una
    tavola col nome sotto; quelle che tornano null (niente modello: resta
    lo sprite) sono segnate. Stampa quanto ci mette ad averle tutte: il
@@ -78,7 +78,7 @@ else {
 }
 
 const browser = await apriBrowser()
-const { page, errori } = await apriGioco(browser, { viewport: { width: 390, height: 844 }, hash: `sotterraneo3d=1&eroe=${eroe}&dpr=1&seme=11`,
+const { page, errori } = await apriGioco(browser, { viewport: { width: 390, height: 844 }, hash: `sotterraneo=1&eroe=${eroe}&dpr=1&seme=11`,
                                                      attesa: null, indirizzo: `file://${dist}` })
 await page.waitForFunction(() => !!window.__anteprime3d, null, { timeout: 30000 })
 // la discesa si accende prima: la misura è quella di uno zaino aperto a scena già in piedi (`--aspetta`, ms)

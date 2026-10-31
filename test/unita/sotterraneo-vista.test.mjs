@@ -8,10 +8,9 @@ import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { disponi, piazza, ZOCCOLO, vistaDelloScontro, statiDel, statoNuovo, segniDel } from '../../src/giochi/sotterraneo/viste/campo.js'
 import { nuovoRacconto, modoDelColpo } from '../../src/giochi/sotterraneo/viste/racconto.js'
 import { NODI } from '../../src/giochi/sotterraneo/dati/abilita.js'
-import { EFFETTI, CORPI, SEGNI, effettoDi, effettoDelColpo, aureDelNodo, statiDelNodo, guastiDegliEffetti } from '../../src/giochi/sotterraneo/dati/effetti.js'
+import { EFFETTI, effettoDi, effettoDelColpo, aureDelNodo, statiDelNodo, guastiDegliEffetti } from '../../src/giochi/sotterraneo/dati/effetti.js'
 import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { statoDi } from '../../src/giochi/sotterraneo/scena3d/effetti3d/gestore.js'
-import { readFileSync } from 'node:fs'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
 const roba = { v: 1, gemme: 0, zaino: [], mano: 'spada', mancina: null, corpo: null, dito: null, torcia: 0, torce: 0 }
@@ -210,11 +209,8 @@ function scena(n, { grosso = -1 } = {}) {
   uguale('l\'invulnerabilità è pietra', d('montagna'), 'pietra')
   uguale('un colpo di mano con la bacchetta è un dardo, con l\'arco una freccia, senz\'armi un taglio',
          [effettoDelColpo('bacchette'), effettoDelColpo('archi'), effettoDelColpo(null)].join(), 'dardo,freccia,taglio')
-  // cosa dura e come arriva: mai oltre 800 ms, e ogni corpo e segno si sa disegnare
+  // cosa dura e come arriva: mai oltre 800 ms
   controlla('nessun effetto dura più di 800 ms', Object.values(EFFETTI).every(e => e.dura <= 800))
-  const scene = readFileSync(new URL('../../src/giochi/sotterraneo/viste/Scene.vue', import.meta.url), 'utf8')
-  const mancano = [...CORPI, ...SEGNI].filter(c => !scene.includes(`'${c}'`) && !scene.includes(`sc-${c}`) && !scene.includes(`sg-${c}`))
-  uguale('Scene.vue disegna tutti i corpi e i segni dichiarati', mancano.join(), '')
   // le aure: la Danza delle lame fa danno e para; la Fortezza cura e para
   uguale('la Fortezza ha due aure: cura e scudo', aureDelNodo(NODI.fortezza).sort().join(), 'cura,scudo')
   uguale('un nodo senza protezione non ne ha', aureDelNodo(NODI.fendente).length, 0)

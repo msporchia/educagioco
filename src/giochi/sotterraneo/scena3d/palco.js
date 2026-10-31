@@ -1,4 +1,4 @@
-// Il palco dello scontro sul pavimento vero: l'eroe a sinistra e i mostri a colonne a destra (come il palco del 2D, viste/campo.js),
+// Il palco dello scontro sul pavimento vero: l'eroe a sinistra e i mostri a colonne a destra (viste/campo.js),
 // dove il pavimento lo lascia, con almeno AGIO celle dai muri, dalle colonne e dalle cose posate. Si provano quattro formazioni
 // (orizzontale, specchiata, in piedi) col centro spostato fino a quattro celle verso lo spazio libero, mai di là da un muro (solo
 // celle a cui si arriva camminando); dove non basta, i muri alti alle spalle si abbassano a parapetto (`abbassa`). Solo disegno:
@@ -33,7 +33,7 @@ export function disponiPalco(pianta, ingombri, eroe, mostri) {
   }
   const prova = (cx, cz, l, verticale) => {
     const p = (u, v) => (verticale ? [cx + v * 0.8, cz + u * l] : [cx + u * l, cz + v])
-    // il grosso è largo due celle: chi viene dopo di lui sta una cella più in là (nel palco 2D «ne vale due»)
+    // il grosso è largo due celle: chi viene dopo di lui sta una cella più in là
     let spinta = 0
     const posti = [p(-1.25, 0), ...mostri.map((m, i) => {
       // il grosso stesso sta un passo più in là dall'eroe (la sua spada copriva l'eroe), e chi viene dopo ancora di più

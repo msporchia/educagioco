@@ -4,7 +4,7 @@ import { COSE, COPRICAPI, chiaveDelPezzo } from '../../../giochi/sotterraneo/dat
 import { LEGGENDARI } from '../../../giochi/sotterraneo/dati/pezzi.js'
 import { pescaAbilita } from '../../../giochi/sotterraneo/motore/bottino.js'
 
-/** Veste il corredo `c` (una Corsa o un Corredo) di leggendari, come il cheat nel 3D. */
+/** Veste il corredo `c` (una Corsa o un Corredo) di leggendari, come il cheat. */
 export function vestiLeggendario(c) {
   const L = c.livelloDelBottino || 1
   const leggendario = dove => {

@@ -6,7 +6,7 @@ mezzo l'esperienza in una riga col livello e sotto le caselle, tutto in una
 cornice di pietra. Dal 9 ottobre (l'albero delle abilità, [abilita.md](abilita.md))
 l'esperienza non è più un globo: il posto a destra è dell'energia. L'utente, 8
 ottobre: «è tutt'altra cosa e penso si possa migliorare molto»; poi, lo
-stesso giorno, il globo di destra all'esperienza, la barra anche sulla terra
+stesso giorno, il globo di destra all'esperienza, la barra anche sul mondo
 di sopra, via attacco e difesa dalla barra in cima, via la casella delle
 torce («ha una forma diversa dalle altre e non è così utile»). Il codice:
 `viste/BarraDiSotto.vue`, `viste/Globo.vue`, le regole `.sot-plancia`,
@@ -26,7 +26,7 @@ restano in codice anche dopo: si muovono.
   (più l'area sicura in fondo): la riga dell'esperienza (14 px) l'ha
   alzata, e le caselle sono scese da 47 a 40 px per farcela stare. Un foglio che sale dal basso la copre; la
   telecamera conta solo la parte di foglio che sta sopra la tela
-  (`misuraFoglio` in `Gioco.vue`). Sopra sta sotto la terra, che arriva fino
+  (`misuraFoglio` in `Gioco.vue`). Sopra sta sotto il mondo, che arriva fino
   alla barra: in fondo non c'è più nessuna carta, e l'eroe non ci finisce sotto.
 - **I globi** (`--globo`: da 54 px a 74 px, il 18,5% della larghezza): un
   anello di pietra, il vetro scuro, il liquido che si svuota dall'alto con
@@ -90,7 +90,7 @@ radice `.sot` è quanto si alza la barra dal fondo del gioco, punta dei globi co
 non si stima**: `BarraDiSotto.vue` legge la cima della barra e dei globi (la loro scatola, `offsetTop`: il battito del
 cuore li scala e non deve far ballare i pannelli) e scrive il valore in px, a ogni cambio di misura (ResizeObserver) e di
 finestra; `stile.css` tiene solo la stima per il primo istante (70 px o la punta dei globi). La usano il pannello dello
-scontro nel 3D (`stile-3d.css`), il duello 2D (`.sot-velo-scontro`) e il dialogo della terra (`.sot-terra-sotto`). La
+scontro (`stile-3d.css`) e il dialogo del mondo di sopra (`.sot-terra-sotto`). La
 camera dello scontro misura il pannello da sé (`misuraFoglio`), quindi usa lo spazio che resta. Un foglio che sale dal
 basso (porta, forziere) copre la barra apposta, e lì i globi stanno sotto.
 
@@ -98,7 +98,7 @@ Due guasti: il 16 ottobre il pannello del 3D finiva dietro i globi su un telefon
 CSS, su un monitor l'utente lo vedeva ancora sopra la calotta. In Chrome senza schermo, a 700–1861 px e a 1, 1,25 e 1,5
 di pixel ratio, la stima reggeva: la differenza vera è una barra più alta del solito (le scritte più grandi di un
 monitor, il minimo dei caratteri del browser), che la stima non vedeva e la misura sì. Nei test:
-`integrazione/sotterraneo-sopra-barra` (scontro 3D e 2D, la domanda, quale pozione, il dialogo, a sei misure, e con la
+`integrazione/sotterraneo-sopra-barra` (lo scontro, la domanda, quale pozione, il dialogo, a sei misure, e con la
 barra alzata apposta): il rettangolo del pannello non tocca quello dei globi né della barra, e sopra resta scena.
 
 ## Col tema legno
@@ -123,8 +123,8 @@ chiede fotogrammi**, e a schermo nascosto nemmeno.
 - **B · WebGL** (`globo/pittore3d.js`, `#globi=3d`): una sfera calcolata pixel per pixel (normale, fresnel, riflessi da
   un ambiente finto), il liquido come volume tagliato da un piano ondulato visto dall'alto, più scuro in fondo, le bolle
   dentro. **Un contesto WebGL solo, su una tela che non si vede**, per tutti e due i globi: si disegna lì e si copia nel
-  canvas del globo. Riusare il contesto del Sotterraneo 3D con lo scissor costerebbe un contesto in meno ma legherebbe la
-  barra alla scena (il suo post, i suoi stati, la perdita del contesto) e nel 2D non c'è: provato a pensarci, scartato.
+  canvas del globo. Riusare il contesto del sotterraneo con lo scissor costerebbe un contesto in meno ma legherebbe la
+  barra alla scena (il suo post, i suoi stati, la perdita del contesto): provato a pensarci, scartato.
   Senza WebGL o col contesto perso, B ripiega su A.
 
 Costo: A sono qualche gradiente per fotogramma e solo durante un movimento (meno di un millisecondo per globo); B uno
@@ -142,7 +142,7 @@ Le prove: `npm run pannelli`, righe «I globi da vicino» e «I globi: un colpo 
 | 🧪 | beve la pozione giusta | «❤️ sei già in piena forma», o «la guaritrice ti cura, gratis» se si è ferito |
 | bisaccia | lo zaino della discesa | lo zaino di sopra: ci si veste e ci si spoglia, ma non si beve e non si butta |
 | ✦ incanti | la scelta di quelli da preparare | spenta, ma si tocca: dice che si preparano giù |
-| 🗺️ | la mappa grande | spenta: la terra è già la mappa |
+| 🗺️ | la mappa grande | la veduta d'insieme del mondo ([mondo-3d.md](mondo-3d.md#la-vista-e-la-veduta)) |
 | 💎 | le gemme, apre lo zaino | uguale |
 
 La barra non cambia forma: quello che sopra non ha senso resta al suo posto,
@@ -183,7 +183,7 @@ Tutto quello che apre il diario (il globo, la linguetta) apre la scheda Missioni
   sai e porta all'albero; sopra dice che si preparano giù. La pastiglia di un
   incanto addosso, sopra il globo blu, apre la stessa scelta.
 - **🗺️ apre la mappina grande** al centro del campo, sulla tela
-  (`mappaGrande` in `scena/tela.js`); il gioco non si ferma. La chiude un
+  (`mappaGrande` nel disegno, `scena3d/`); il gioco non si ferma. La chiude un
   tocco sul campo, un foglio che si apre, o la casella stessa.
 - **Zaino, mappa grande e finestra dell'eroe (diario compreso) si chiudono toccando
   altrove**, e quel tocco porta l'eroe dove si è toccato

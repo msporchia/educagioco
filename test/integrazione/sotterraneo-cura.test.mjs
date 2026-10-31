@@ -2,27 +2,28 @@
    CHI CURA GRATIS, COL DITO VERO
 
    Salendo dal portale la vita e l'energia restano quelle di giù
-   (docs/sotterraneo/terra-di-sopra.md, «Chi cura»): la barra lo dice, la
+   (docs/sotterraneo/chi-cura.md): la barra lo dice, la
    guaritrice e l'incantatrice chiamano con un fumetto sulla testa finché
    serve, e nel dialogo «Curami» / «Ricaricami» rimettono a posto, gratis e
    senza limiti. Qui: la sosta di un portale con l'eroe ferito e scarico, i
    due fumetti, il dialogo che cura (il numero che sale, la barra, la sosta
    scritta), la domanda che dice «sei già in forze», e il gemello che riporta
-   giù a vita e energia piene.
+   giù a vita e energia piene. Nel mondo l'eroe va da chi cura col salto delle
+   prove (`__mondo3d.vai`, in `vaDa`).
    `node test/esegui.mjs sotterraneo-cura`
-   tempo: 90
+   tempo: 480
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, camminaVerso, nelDialogo, finestraFerma }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, nelDialogo, finestraFerma, mondoPronto, toccaNelMondo }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { MERCANTI, PORTALE } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { scrivi, PORTALE as VIA_PORTALE } from '../../src/giochi/sotterraneo/motore/sosta.js'
 
-const roba = { v: 1, gemme: 60, zaino: [], mano: null, mancina: null, corpo: 'corazza', dito: null, torcia: 0, torce: 0 }
+// una spada e una torcia in tasca: senza, l'eroe fermo pensa al fabbro o alla guaritrice, e il suo fumetto copre chi gli sta davanti
+const roba = { v: 1, gemme: 60, zaino: [], mano: 'spada', mancina: null, corpo: 'corazza', dito: null, torcia: 0, torce: 3 }
 // una discesa lasciata dal portale, ferito e senza energia
 const c = new Corsa(CAMPAGNA[0], { seme: 21, eroe: 'cavaliere', roba, rnd: seminato(21) })
 c.vita = Math.max(1, Math.floor(c.vitaMax / 3))
@@ -38,10 +39,10 @@ await semina(page, {
   coins: 300, settings: { sperimentali: true },
   campagne: { sotterraneo: { tappa: 0, libera: false, stelle: {},
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: 0, libera: false, stelle: {}, missioni: {},
-      roba, sosta, terra: { nebbia: 'f'.repeat(768), dove: [...PORTALE.accanto], parlato: true } } } } } },
+      roba, sosta, mondo: { dove: { portale: true }, parlato: true } } } } } },
 })
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await mondoPronto(page)
 await attendi(page, 600)
 
 const cdp = await page.context().newCDPSession(page)
@@ -63,6 +64,26 @@ async function toccaIl(sel) {
   }
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
+// l'eroe va (salto delle prove) accanto a `k` e lo si tocca (`sel` è il suo bersaglio nel mondo) finché non compare `atteso`
+async function vaDa(sel, k, atteso = '[data-dialogo]') {
+  // il fumetto del pensiero dell'eroe fermo (docs/sotterraneo/pensieri.md) può coprire chi gli sta accanto e prende il tocco: se il tocco
+  // non ha aperto quello che si aspettava, si riporta l'eroe lì e si riprova
+  for (let giro = 0; giro < 5; giro++) {
+    await page.evaluate(k => { window.__mondo3d.senzaMostri(); window.__mondo3d.vai(k) }, k)
+    // dopo il salto la telecamera arriva morbida, e a pochi fotogrammi al secondo due letture uguali non bastano: tre di fila, a mezzo secondo
+    let uguali = 0, ultimo = ''
+    for (let i = 0; i < 60 && uguali < 3; i++) {
+      await attendi(page, 500)
+      const b = await page.locator(sel).first().boundingBox().catch(() => null)
+      const ora = b ? `${Math.round(b.x)},${Math.round(b.y)}` : ''
+      uguali = ora && ora === ultimo ? uguali + 1 : 0
+      ultimo = ora
+    }
+    await page.waitForSelector('[data-pensiero]', { state: 'detached', timeout: 20000 }).catch(() => {})
+    await toccaNelMondo(page, sel, { tocca })
+    if (await page.waitForSelector(atteso, { timeout: 12000 }).then(() => true).catch(() => false)) return
+  }
+}
 const sostaOra = async () => (await leggiProfilo(page))?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.sosta || {}
 const vitaInBarra = async () => (await page.locator('[data-barra="sopra"] [data-azione="vita"]').getAttribute('aria-label')).match(/vita (\d+) su (\d+)/).slice(1).map(Number)
 
@@ -74,9 +95,8 @@ uguale('il fabbro e il mercante no', await page.locator('[data-mercante="armaiol
 await scatto(page, 'cura-richiamo')
 
 /* ---------- 2. la guaritrice: «Curami» ---------- */
-await camminaVerso(page, MERCANTI.erborista.accanto, { tocca })
-await toccaIl('[data-mercante="erborista"]')
-await page.waitForSelector('[data-dialogo="erborista"]', { timeout: 15000 })
+await vaDa('[data-mercante="erborista"][data-citta="villaggio"]', 'mercante:villaggio:erborista')
+await page.waitForSelector('[data-dialogo="erborista"]', { timeout: 60000 })
 uguale('mentre si parla il suo fumetto tace', await page.locator('[data-mercante="erborista"] [data-richiamo]').count(), 0)
 await nelDialogo(page)
 uguale('ferito, «Curami» è la prima domanda', await page.locator('[data-scelte] [data-scelta]').first().getAttribute('data-scelta'), 'cura')
@@ -99,8 +119,8 @@ uguale('curato, il fumetto se ne va', await page.locator('[data-mercante="erbori
 controlla('quello dell\'incantatrice resta, non blocca niente', (await page.locator('[data-mercante="incantatrice"] [data-richiamo]').count()) === 1)
 
 /* ---------- 3. di nuovo: «sei già in forze» ---------- */
-await toccaIl('[data-mercante="erborista"]')
-await page.waitForSelector('[data-dialogo="erborista"]', { timeout: 15000 })
+await vaDa('[data-mercante="erborista"][data-citta="villaggio"]', 'mercante:villaggio:erborista')
+await page.waitForSelector('[data-dialogo="erborista"]', { timeout: 60000 })
 await nelDialogo(page, '[data-scelta="cura"]', { tocca: toccaIl })
 await attendi(page, 300)
 controlla('in forze lo dice, senza far finta', (await page.locator('[data-riga][data-in-forze]').innerText()).includes('in forze'))
@@ -109,9 +129,8 @@ await toccaIl('[data-dialogo] [data-scelta="ciao"]')
 await attendi(page, 300)
 
 /* ---------- 4. l'incantatrice: «Ricaricami» ---------- */
-await camminaVerso(page, MERCANTI.incantatrice.accanto, { tocca })
-await toccaIl('[data-mercante="incantatrice"]')
-await page.waitForSelector('[data-dialogo="incantatrice"]', { timeout: 15000 })
+await vaDa('[data-mercante="incantatrice"][data-citta="villaggio"]', 'mercante:villaggio:incantatrice')
+await page.waitForSelector('[data-dialogo="incantatrice"]', { timeout: 60000 })
 await nelDialogo(page, '[data-scelta="cura"]', { tocca: toccaIl })
 await page.waitForSelector('[data-cura-fiocco][data-risorsa="energia"]', { timeout: 3000 })
 await attendi(page, 300)
@@ -122,10 +141,12 @@ await attendi(page, 300)
 uguale('non chiama più nessuno', await page.locator('[data-richiamo]').count(), 0)
 
 /* ---------- 5. il gemello riporta giù in forze ---------- */
-await toccaIl('[data-portale]')
-await page.waitForSelector('[data-azione="portale-giu"]', { timeout: 15000 })
-await toccaIl('[data-azione="portale-giu"]')
-await page.waitForSelector('.sot-tela', { timeout: 5000 })
+await vaDa('[data-portale]', 'portale', '[data-fumetto-di="portale"] [data-azione="portale-giu"]')
+await page.waitForSelector('[data-fumetto-di="portale"] [data-azione="portale-giu"]', { timeout: 60000 })
+await attendi(page, 400)
+await toccaIl('[data-fumetto-di="portale"] [data-azione="portale-giu"]')
+await page.waitForSelector('[data-tela="3d"]', { timeout: 20000 })
+await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0 && !window.__sotterraneo3d.grafica().mondo, null, { timeout: 30000 })
 await attendi(page, 500)
 const giu = await page.locator('[data-barra="giu"] [data-azione="vita"]').getAttribute('aria-label')
 uguale('giù si riprende a vita piena', giu.match(/vita (\d+) su (\d+)/).slice(1).join('/'), `${VITA_MAX}/${VITA_MAX}`)

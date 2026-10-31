@@ -1,14 +1,16 @@
 /* ═══════════════════════════════════════════════════════════════════
    COME CADE UN MOSTRO
 
-   (docs/sotterraneo/scontro-interfaccia.md, «La caduta»; docs/core/creature.md, `morte`)
+   (docs/sotterraneo/scontro-interfaccia.md, «La caduta»; docs/core/creature.md, `morte`; scena3d/cose.js)
    Chi cade nello scontro non svanisce in piedi: prende il suo pezzo a terra (`<nome>-morto-0`), un attimo dopo, se ce n'è un secondo, i
    resti (`<nome>-morto-1`), e solo dopo svanisce. Lo zombie ha un pezzo solo, la mummia due, il grosso nessuno (svanisce com'era).
-   Un osservatore dentro la pagina registra quello che compare: il racconto dura poco e le foto sotto carico sono lente.
+   Nella scena 3D il nome della posa di adesso lo scrive `cose.js` nello stato del mostro (`__sotterraneo3d.statoDi(mostro).nome`, anche
+   quando si disegna il modello): un campionatore dentro la pagina lo legge a ogni giro e registra quello che compare, perché il
+   racconto dura poco e le foto sotto carico sono lente.
    `node test/esegui.mjs sotterraneo-caduta`
-   tempo: 60
+   tempo: 90
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scegli, scendiNelSotterraneo, attendi, scatto } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, attendi, scatto } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
@@ -33,31 +35,36 @@ async function entra(hash) {
   await azzera(page)
   await page.setViewportSize({ width: 390, height: 844 })
   const avventura = { tappa: TAPPA, libera: false, stelle: { 0: 3 }, missioni: {}, roba, crescita,
-    terra: { nebbia: 'f'.repeat(768), dove: [55, 11], parlato: true } }
+    mondo: { parlato: true } }
   await semina(page, {
-    coins: 300, settings: { sperimentali: true },
+    coins: 300,
     campagne: { sotterraneo: { tappa: TAPPA, libera: false, stelle: { 0: 3 },
       cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: avventura } } } },
   })
-  await scegli(page, 'sotterraneo')
-  await page.waitForSelector('[data-terra]', { timeout: 5000 })
-  await page.evaluate(h => { location.hash = h }, 'seme=11&sotterraneo=branco&' + hash)
-  await scendiNelSotterraneo(page, TAPPA)
-  await page.waitForSelector('[data-duello]', { timeout: 10000 })
+  await page.evaluate(h => { location.hash = h }, 'sotterraneo=' + TAPPA + '&seme=11&sotterraneo=branco&' + hash)
+  await page.waitForSelector('[data-duello]', { timeout: 30000 })
+  await page.waitForFunction(() => { const g = window.__sotterraneo3d && window.__sotterraneo3d.grafica(); return g && !g.entrando && g.chiamate > 0 }, null, { timeout: 30000 })
 }
 
 // attacca finché il mostro cade, e dice cosa si è visto a terra
 async function abbatti(tipo) {
   await entra(`mostri=1&tipo=${tipo}`)
   await page.evaluate(() => {
-    const v = window.__caduta = { aTerra: false, resti: 0, primo: false }
-    new MutationObserver(() => {
-      const m = document.querySelector('[data-mostro][data-morto]')
-      if (!m) return
-      v.aTerra = v.aTerra || m.classList.contains('sot-a-terra')
-      v.primo = v.primo || !!m.querySelector('.sot-resti-a')
-      v.resti = Math.max(v.resti, m.querySelectorAll('.sot-resti-b').length)
-    }).observe(document.querySelector('[data-campo]'), { childList: true, subtree: true, attributes: true })
+    window.__lui = null
+    const v = window.__caduta = { aTerra: false, resti: 0, primo: false, nomi: [] }
+    const guarda = () => {
+      const S = window.__sotterraneo3d
+      // il mostro dello scontro lo dice il palco; finito lo scontro il palco non c'è più, ma il mostro caduto resta in scena
+      if (S && S.palco && S.palco.campo[0]) window.__lui = S.palco.campo[0]
+      const st = S && window.__lui && S.statoDi(window.__lui)
+      if (st && st.nome && /-morto-\d$/.test(st.nome)) {
+        v.aTerra = true
+        if (/-morto-0$/.test(st.nome)) v.primo = true
+        if (/-morto-1$/.test(st.nome)) v.resti = 1
+        if (!v.nomi.includes(st.nome)) v.nomi.push(st.nome)
+      }
+    }
+    window.__cadutaGiro = setInterval(guarda, 25)
   })
   for (let i = 0; i < 12; i++) {
     // lo scontro si chiude da sé quando l'ultimo cade: finito quello, finita la prova
@@ -69,8 +76,8 @@ async function abbatti(tipo) {
     await page.locator('.sot-domanda .qz-tasto[data-giusta]').first().click()
     await attendi(page, 300)
   }
-  await attendi(page, 600)
-  return page.evaluate(() => window.__caduta)
+  await attendi(page, 1500)
+  return page.evaluate(() => { clearInterval(window.__cadutaGiro); return window.__caduta })
 }
 
 {

@@ -1,7 +1,7 @@
 # I dungeon che si rigenerano
 
 Il compito C del [mondo a percorso](mondo-a-percorso.md) ([i lavori](mondo-a-percorso-lavori.md), compito C),
-**solo del Sotterraneo 3D**. L'utente, 20 ottobre 2026: «i dungeon sono legati alla forza di quella zona, sono in genere un po' più
+**solo del sotterraneo**. L'utente, 20 ottobre 2026: «i dungeon sono legati alla forza di quella zona, sono in genere un po' più
 forti dei mostri di quella zona e hanno ognuno il suo boss; ogni volta che li ripulisci […] si rigenerano con un'altra forma, altri
 mostri ecc. (sempre stessa zona, stessa cosa), quindi in una zona puoi avere più dungeon». Per i sei nuovi «usa quello che puoi»:
 paesaggi, abitanti e boss che ci sono già; i numeri si tarano dopo.
@@ -15,18 +15,17 @@ chiave), `Gioco.vue` (scendere, riprendere, chiudere).
 - **Ripulito vuol dire**: battuto il grosso e usciti dalla scala dell'ultimo piano (la discesa è `vinta`; la chiave dell'ultima
   scala ce l'ha il grosso). Salire dal portale lascia la sosta e si ritrova tutto com'era; lasciar perdere, svenire, uscire con la
   ✕ ritrovano **la stessa forma**, coi mostri tornati. Nessuno dei tre conta.
-- **Il seme è fisso finché non lo si ripulisce**: `(eroe, chiave, rifatti, terra)`. Nel 2D il seme è a caso a ogni entrata, come
-  sempre. `#seme=` vince su tutti e due (le prove).
+- **Il seme è fisso finché non lo si ripulisce**: `(eroe, chiave, rifatti, terra)`. `#seme=` vince (le prove).
 - **Ripulito, rientrando è un altro**: un altro seme (un'altra forma dei piani), altri abitanti, il volto nuovo (nome, dritta,
   annuncio) e lo stesso grosso, la stessa zona, lo stesso paesaggio, lo stesso livello.
 - **La storia resta la prima volta**: la prima ripulitura di una delle sette è il capitolo (stelle, `completa`, medaglie,
   `XP_AREA`), come oggi. Dopo, è una **ripetuta**: una tappa con la `potenza` come una zona di [zone.md](zone.md) (il bottino come
   l'abisso, niente stelle né storia), esperienza e gemme come sempre. Nessuna risposta sbagliata paga mai.
 - **I sei nuovi non hanno indice**: non toccano `tappa`, le stelle né le medaglie; sono ripetute da subito e aperti da subito.
-- **Nel 3D le zone non rinascono**: la ripetuta di una porta finita ha il livello del dungeon, non la fascia di [zone.md](zone.md);
-  il minatore non ha la notizia della zona rinata (`notizia` è null nel 3D). Il 2D ha le zone come prima.
+- **Le zone non rinascono**: la ripetuta di una porta finita ha il livello del dungeon, non una fascia che sale
+  ([zone.md](zone.md)); il minatore non ha una notizia da raccontare.
 - **La sentinella resta**: un dungeon rosso per la forza dell'eroe (`coloreDellaFascia` sul livello del dungeon) non si scende,
-  come oggi. Se debba restare nel 3D lo decide chi fa il mondo (compito D).
+  come sempre.
 
 ## I tredici dungeon
 
@@ -69,7 +68,7 @@ chiave), `Gioco.vue` (scendere, riprendere, chiudere).
   eroe, dungeon e terra: mai la terna di sempre, mai due volte di fila la stessa. Il caporale gira fra quelli della zona,
   cominciando dal suo e saltando chi sta per strada.
 - **«Una creatura in una zona sola»** (la proposta 5 del progetto): nei sei nuovi la regola di [mostri.md](mostri.md) «in un posto
-  solo» diventa «nella sua zona»; `postiDelleCreature` resta quella dei sette e dell'abisso, e il 2D non cambia.
+  solo» diventa «nella sua zona»; `postiDelleCreature` resta quella dei sette e dell'abisso.
 - **Il volto** della volta `rifatti` è `VOLTI[chiave][(rifatti + terra − 1) % 3]`: per i sette quelli delle zone di oggi, per i sei
   il primo è il dungeon com'è e gli altri due le sue rigenerazioni.
 
@@ -89,7 +88,7 @@ ritarato. Da misurare col banco, a lavoro finito (tutte le leve in `dati/dungeon
   (12); **i sei grossi** (ossa e attacco) e la forma dei loro piani;
 - **i piani**: una ripetuta della cripta a cinque piani al livello 1, i sei nuovi a tre.
 
-`npm run taratura -- --presto` dà lo stesso output di prima: il 2D e il banco non leggono niente di questo.
+`npm run taratura -- --presto` dà lo stesso output di prima: il banco non legge niente di questo.
 
 ## Il contratto
 
@@ -112,7 +111,7 @@ ritarato. Da misurare col banco, a lavoro finito (tutte le leve in `dati/dungeon
   nebbia e al resto del mondo di sopra: niente nel profilo, `MONDO` non sale. Manca nei salvataggi di oggi: `rifatti` 0 per tutti.
   Le terre dopo (compito E) lo tengono in `mondi[t].dungeon`, lo stesso oggetto per terra.
 - **La sosta** scrive `dungeon: { chiave, rifatti, terra, storia? }` (con la `potenza` della ripetuta) e, per i sei nuovi, la chiave
-  in `tappa` al posto dell'indice. Una sosta senza `dungeon` (le soste di prima, il 2D) si rilegge come prima.
+  in `tappa` al posto dell'indice. Una sosta senza `dungeon` (le soste di prima) si rilegge come prima.
 
 ### Chi chiama cosa
 
@@ -132,7 +131,7 @@ ritarato. Da misurare col banco, a lavoro finito (tutte le leve in `dati/dungeon
 
 ## Come si guarda
 
-`#sotterraneo3d=cerchio` scende nel cerchio di pietre (una chiave qualunque dei tredici; con gli altri cheat: `&eroe=`, `&piano=3`,
+`#sotterraneo=cerchio` scende nel cerchio di pietre (una chiave qualunque dei tredici; con gli altri cheat: `&eroe=`, `&piano=3`,
 `&seme=`). Per vedere una rigenerazione: si ripulisce (il cheat `&piano=3`, il grosso battuto, «esco dal sotterraneo») e si rientra.
 
 Nei test: `unita/sotterraneo-rigenera` (le tredici chiavi e l'ordine, i sei con i loro grossi, difese, figura e pezzi; lo stesso

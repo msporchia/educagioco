@@ -18,7 +18,7 @@
    tempo: 480
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegliAvventura, leggiProfilo, mondoPronto,
-         fermoNelMondo, toccaNelMondo, nelDialogo, scendiNelSotterraneo, lasciaLaDiscesa } from '../aiuto/browser.mjs'
+         toccaNelMondo, nelDialogo, scendiNelSotterraneo, lasciaLaDiscesa } from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
@@ -37,6 +37,13 @@ async function tocca(x, y) {
   await attendi(page, 60)
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
 }
+// quanto ci mette l'eroe ad arrivare dipende dalla macchina (SwiftShader a dieci fotogrammi al secondo cammina piano): si aspetta con calma
+const fermo = async () => {
+  await page.waitForFunction(() => document.querySelector('[data-eroe-mondo]')?.dataset.cammina === '0', null, { timeout: 240000 })
+    .catch(async e => { throw new Error(`l'eroe non si ferma: ${await page.locator('[data-eroe-mondo]').getAttribute('data-cella')} ${e.message}`) })
+  await attendi(page, 300)
+}
+const ultimaPagina = () => page.waitForSelector('[data-dialogo][data-ultima]', { timeout: 30000 })
 const m = ilMondo()
 const terra = terraDelMondo(m)
 // una cella dove si cammina, a qualche passo da (x, y) verso (dx, dy)
@@ -53,7 +60,7 @@ async function schermoDi(x, z, su = 0) {
 /* ---------- 1. si entra: il mondo in 3D, non la terra dipinta, e quanto costa ---------- */
 await azzera(page)
 await semina(page, { settings: { sperimentali: true } })
-await scegli(page, 'sotterraneo3d')
+await scegli(page, 'sotterraneo')
 await scegliAvventura(page, 'cavaliere')
 await mondoPronto(page)
 await attendi(page, 2500)
@@ -94,7 +101,7 @@ await scatto(page, 'sotterraneo-mondo-villaggio')
   const p = await schermoDi(meta.x + 0.5, meta.y + 0.5)
   await tocca(p.x, p.y)
   await attendi(page, 300)
-  await fermoNelMondo(page)
+  await fermo()
   const [x1, y1] = await cella()
   controlla('l\'eroe è arrivato dove si è toccato', Math.hypot(x1 - meta.x, y1 - meta.y) <= 1, `${x0},${y0} → ${x1},${y1} (toccato ${meta.x},${meta.y})`)
 }
@@ -108,11 +115,13 @@ controlla('toccata la ragazza, si apre il suo dialogo', true)
   controlla('il ritratto del dialogo è la faccia del modello 3D', ok, await page.evaluate(() => (document.querySelector('[data-ritratto-dialogo]') || {}).innerHTML + ' ' + JSON.stringify(window.__anteprime3d && window.__anteprime3d.stato())))
 }
 await scatto(page, 'sotterraneo-mondo-ragazza')
+await ultimaPagina()
 await nelDialogo(page, '[data-scelta="ciao"]')
 
 /* ---------- 4. il fabbro: si va da lui e si apre la bottega ---------- */
 await toccaNelMondo(page, '[data-mercante="armaiolo"][data-citta="villaggio"]', { tocca })
 await page.waitForSelector('[data-dialogo="armaiolo"]', { timeout: 60000 })   // SwiftShader: l'eroe ci arriva piano
+await ultimaPagina()
 await nelDialogo(page, '[data-scelta="bottega"]')
 await page.waitForSelector('[data-bottega][data-mercante-aperto="armaiolo"]', { timeout: 8000 })
 controlla('la bottega del fabbro si apre', true)
@@ -165,7 +174,7 @@ await attendi(page, 500)
   await tocca(p.x, p.y)
   await attendi(page, 500)
   uguale('toccando, la veduta si chiude', await page.locator('[data-veduta]').count(), 0)
-  await fermoNelMondo(page)
+  await fermo()
   const [x1, y1] = await cella()
   controlla('e l\'eroe ci è andato a piedi', Math.hypot(x1 - meta.x, y1 - meta.y) <= 6 && Math.hypot(x1 - x0, y1 - y0) > 20, `${x0},${y0} → ${x1},${y1} (toccato ${meta.x},${meta.y})`)
 }
@@ -200,7 +209,7 @@ await attendi(page, 500)
   await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
   await azzera(page)
   await semina(page, { settings: { sperimentali: true }, campagne: { sotterraneo: { tappa: 0, libera: false, stelle: {}, cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: a } } } } })
-  await scegli(page, 'sotterraneo3d')
+  await scegli(page, 'sotterraneo')
   await mondoPronto(page)
   await attendi(page, 1500)
   uguale('il gemello sta nel villaggio', await page.locator('[data-portale][data-citta="villaggio"]').count(), 1)
@@ -224,7 +233,7 @@ await attendi(page, 500)
   await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
   await azzera(page)
   await semina(page, { coins: 300, settings: { sperimentali: true }, campagne: { sotterraneo: { tappa: k, libera: false, stelle, cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: a } } } } })
-  await scegli(page, 'sotterraneo3d')
+  await scegli(page, 'sotterraneo')
   await mondoPronto(page)
   await attendi(page, 2000)
   uguale('il gemello della quinta discesa sta nel villaggio', await page.locator('[data-portale][data-citta="villaggio"]').count(), 1)

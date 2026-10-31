@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
-   LA TAVOLA DEI PAESAGGI — tutti i paesaggi del Sotterraneo 3D, affiancati
+   LA TAVOLA DEI PAESAGGI — tutti i paesaggi del sotterraneo, affiancati
 
    Apre il file costruito (dist/index.html) una volta per paesaggio con
-   il cheat `#sotterraneo3d=<discesa>&scenario=<paesaggio>`, l'eroe nella
+   il cheat `#sotterraneo=<discesa>&scenario=<paesaggio>`, l'eroe nella
    stanza più grande accesa tutta (`stanza=grande&luce=stanza`), fotografa
    la sola discesa (senza barre) e mette le foto in una tavola, col nome
    e quanto costa ognuno (chiamate e triangoli). Il criterio: dalla sola
@@ -44,7 +44,7 @@ const stanza = opz('stanza', 'grande'), con = opz('con', ''), nome = opz('nome',
 const browser = await apriBrowser()
 const foto = []
 for (const k of chiavi) {
-  const hash = `sotterraneo3d=${discesa}&eroe=cavaliere&stanza=${stanza}&luce=stanza&seme=${seme}&dpr=1&scenario=${k}${con}`
+  const hash = `sotterraneo=${discesa}&eroe=cavaliere&stanza=${stanza}&luce=stanza&seme=${seme}&dpr=1&scenario=${k}${con}`
   const { page, errori } = await apriGioco(browser, { viewport: { width: larghezza, height: 844 }, hash, attesa: null, indirizzo: `file://${dist}` })
   await page.waitForTimeout(1500)
   // i mostri via (tranne con `--mostri`): la foto è del posto, e uno che si sveglia apre lo scontro e avvicina la telecamera.

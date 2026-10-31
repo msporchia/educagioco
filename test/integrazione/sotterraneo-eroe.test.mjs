@@ -8,23 +8,22 @@
    correrebbe troppo avanti è spento mentre quella rimasta indietro
    brilla (la regola del bilanciamento); un punto dato si vede subito; i
    Tesori mostrano il leggendario trovato e il posto vuoto degli altri.
-   Giù, all'ultimo piano della cripta (`#piano=2`): Re Ossuto, messo dal
-   cheat attorno all'eroe (`#sotterraneo=branco&grosso=ossuto`: i piani nuovi
-   hanno i caporali davanti al grosso, una strada libera non c'è più), con la
-   sua vita in cima allo schermo e la sua figura nello scontro; battuto,
-   l'eroe sale di livello e lo si festeggia. Poi, in un'altra discesa, un
-   leggendario caduto accanto all'ingresso (`#sotterraneo=leggendario`) col
-   nome in oro e la sua storia, che si raccoglie col dito e finisce fra i
-   Tesori.
+   Sopra c'è il mondo 3D (la barra è la stessa di giù: si entra dalla carta). Poi si scende (a piedi, `scendiNelSotterraneo`): un
+   leggendario caduto accanto all'ingresso (`#sotterraneo=leggendario`) col nome in oro e la sua storia, che si raccoglie col dito
+   (un tocco sulla sua cella nella scena) e finisce fra i Tesori. Poi, con un eroe nuovo a un soffio dal livello 2, all'ultimo piano
+   della cripta (`#piano=2`): Re Ossuto, messo dal cheat attorno all'eroe (`#sotterraneo=branco&grosso=ossuto`: i piani nuovi
+   hanno i caporali davanti al grosso, una strada libera non c'è più), con la sua vita in cima allo schermo (la sua figura nella
+   scena è un modello, non un elemento della pagina: la prova sul 3D è sotterraneo-3d-mostri); battuto, l'eroe sale di livello e lo si
+   festeggia. Il leggendario va prima del grosso: messo dopo, scendendo di nuovo dal mondo il tocco sull'ingresso non apriva il fumetto
+   (l'eroe partiva a piedi verso il villaggio e in un minuto non arrivava); non indagato, la prova non ne ha bisogno.
    Si tocca come un bambino (`Input.dispatchTouchEvent` via CDP).
    `node test/esegui.mjs sotterraneo-eroe`
-   tempo: 150
+   tempo: 300
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegliAttacco, scendiNelSotterraneo, lasciaLaDiscesa, finestraFerma }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegliAttacco, scendiNelSotterraneo, lasciaLaDiscesa, finestraFerma, mondoPronto }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { T } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { sogliaDi, VITA_PER_TEMPRA } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
@@ -33,7 +32,7 @@ import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 const roba = { v: 1, gemme: 40, zaino: ['pozione'], mano: 'spada@6.r.att.fuoco.vita', mancina: 'scudo-legno@4',
                corpo: 'panciotto@4', dito: null, torcia: 12, torce: 0 }
 const avventura = extra => ({ tappa: 1, libera: false, stelle: { 0: 3 }, missioni: {}, roba,
-  terra: { nebbia: 'f'.repeat(768), dove: [55, 11], parlato: true }, ...extra })
+  mondo: { parlato: true }, ...extra })
 
 
 /* ── il piano del leggendario: l'ultimo della cripta, senza mostri vicini all'ingresso, dove il pezzo cade ──
@@ -57,13 +56,13 @@ const { page, errori } = await apriGioco(browser)
 await azzera(page)
 // livello 12 con nove punti dati alla forza e due ancora da dare: il decimo alla forza la staccherebbe di dieci dalle altre
 await semina(page, {
-  coins: 300, settings: { sperimentali: true },
+  coins: 300,
   campagne: { sotterraneo: { tappa: 1, libera: false, stelle: { 0: 3 },
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: avventura({
       crescita: { v: 2, esp: sogliaDi(12), forza: 9, destrezza: 0, intelligenza: 0, tempra: 0 }, tesori: ['zanna-del-drago'] }) } } } },
 })
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await mondoPronto(page)
 await attendi(page, 600)
 
 const cdp = await page.context().newCDPSession(page)
@@ -86,8 +85,8 @@ uguale('e il «+» d\'oro dice che ci sono punti da dare', await page.locator('[
 uguale('sopra non c\'è la carta di chi scende: il livello sta sul globo e nella pagina',
        await page.locator('[data-chi-sopra], [data-roba-sopra], [data-azione="ritratto"], [data-azione="eroe"]').count(), 0)
 {
-  /* la mappa si guarda tutta fino alla barra: l'eroe non finisce sotto, e in fondo non c'è una fascia vuota */
-  const eroe = await page.locator('[data-eroe-terra]').boundingBox()
+  /* il mondo si guarda tutto fino alla barra: l'eroe non finisce sotto */
+  const eroe = await page.locator('[data-eroe-mondo]').boundingBox()
   const barra = await page.locator('[data-barra-giu]').boundingBox()
   controlla('l\'eroe sta sopra la barra', eroe.y + eroe.height < barra.y, `${eroe.y + eroe.height} contro ${barra.y}`)
 }
@@ -156,24 +155,69 @@ await scatto(page, 'eroe-tesori')
   uguale('un tocco fuori chiude i Tesori e la pagina', await page.locator('[data-tesori], [data-pagina-eroe]').count(), 0)
 }
 
-/* ---------- 4. giù: il mostro grosso, la sua vita in cima, la sua figura nello scontro ---------- */
+/* ---------- 4. giù: un leggendario caduto ---------- */
+await page.evaluate(s => { location.hash = `seme=${s}&piano=2&sotterraneo=leggendario` }, piano.seme)
+await scendiNelSotterraneo(page, 0)
+await page.waitForSelector('[data-tela="3d"]', { timeout: 20000 })
+await page.waitForSelector('[data-leggendario]', { timeout: 30000 })
+const leggendario = await page.locator('[data-leggendario]').getAttribute('data-cosa')
+controlla('cade un leggendario: il nome in oro, la sua storia', COSE[leggendario]?.rarita === 'leggendario' &&
+          (await page.locator('[data-leggendario]').innerText()).includes(COSE[leggendario].nome) &&
+          (await page.locator('[data-leggendario]').innerText()).includes(COSE[leggendario].storia), leggendario)
+await scatto(page, 'eroe-leggendario')
+
+const tela = page.locator('[data-tela="3d"]')
+// dove cade sullo schermo una cella (a quota `su`), in px della pagina
+async function schermoDi(c, su = 0.2) {
+  const [sx, sy] = await page.evaluate(([a, b, q]) => window.__sotterraneo3d.aSchermo(a, q, b), [c.x + 0.5, c.y + 0.5, su])
+  const b = await tela.boundingBox()
+  return { x: b.x + sx, y: b.y + sy }
+}
+async function fermoGiu() {
+  await page.waitForFunction(() => { const c = window.__sotterraneo3d && window.__sotterraneo3d.corsa; return c && !(c.strada && c.strada.length) }, null, { timeout: 20000 })
+  await attendi(page, 1200)
+}
+await attendi(page, 4500)   // la festa del leggendario sparisce da sé
+uguale('la festa del leggendario va via da sola', await page.locator('[data-leggendario]').count(), 0)
+{
+  const s = await schermoDi(piano.dove)
+  await tocca(s.x, s.y)
+  await attendi(page, 900)
+  await fermoGiu()
+}
+uguale('toccato, siamo ancora giù', await tela.count(), 1)
+
+// i Tesori si scrivono nell'avventura quando la discesa si chiude: si risale, e dalla terra di sopra si guardano
+await lasciaLaDiscesa(page)
+await attendi(page, 600)
+await toccaIl('[data-azione="eroe-pagina"]')
+await page.waitForSelector('[data-pagina-eroe]', { timeout: 3000 })
+await attendi(page, 300)
+await toccaIl('[data-azione="tesori"]')
+await page.waitForSelector('[data-tesori]', { timeout: 3000 })
+uguale('e il leggendario raccolto è fra i Tesori', await page.locator(`[data-tesoro="${COSE[leggendario].unico}"]`).getAttribute('data-trovato'), '1')
+await toccaIl('[data-tesori] [data-chiudi]')
+await attendi(page, 300)
+
+/* ---------- 5. il mostro grosso, la sua vita in cima ---------- */
 // un eroe nuovo per la discesa: a un soffio dal livello 2, per vederlo salire battendo il mostro grosso
+// (l'indirizzo della discesa di prima aprirebbe il gioco al ricaricamento: si riparte dalla home)
+await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
 await semina(page, {
-  coins: 300, settings: { sperimentali: true },
+  coins: 300,
   campagne: { sotterraneo: { tappa: 1, libera: false, stelle: { 0: 3 },
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: avventura({ crescita: { esp: sogliaDi(2) - 3 } }) } } } },
 })
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await mondoPronto(page)
 // la discesa del mostro grosso: Re Ossuto attorno all'eroe, all'ultimo piano della cripta (il cheat si legge alla partenza)
 await page.evaluate(() => { location.hash = 'piano=2&sotterraneo=branco&grosso=ossuto&mostri=1' })
 await scendiNelSotterraneo(page, 0)
-await page.waitForSelector('.sot-tela', { timeout: 5000 })
-await page.waitForSelector('.sot-velo-scontro', { timeout: 10000 })   // lo scontro c'è già, col cheat
+await page.waitForSelector('[data-tela="3d"]', { timeout: 20000 })
+await page.waitForSelector('[data-scontro-3d]', { timeout: 20000 })   // lo scontro c'è già, col cheat
 uguale('la vita del mostro grosso è in cima allo schermo', await page.locator('[data-grosso]').getAttribute('data-chi'), 'ossuto')
 controlla('col suo nome', (await page.locator('[data-grosso]').innerText()).includes('Re Ossuto'))
-uguale('nello scontro c\'è la sua figura (lo sprite della sua specie ingrandito)', await page.locator('.sot-modale [data-figura-grosso]').count(), 1)
-controlla('con la corona sopra la testa', await page.locator('.sot-modale [data-figura-grosso] .sot-corona').count() === 1)
+uguale('nello scontro c\'è lui, il grande', await page.locator('[data-scontro-3d] [data-mostro][data-grande]').count(), 1)
 await scatto(page, 'eroe-grosso')
 /* La festa del livello dura 2,6 s e comincia quando il mostro cade: a macchina carica il test la trova già sparita.
    Un osservatore la ricorda appena compare. */
@@ -185,14 +229,14 @@ await page.evaluate(() => {
 })
 const ossa0 = Number(await page.locator('[data-grosso]').getAttribute('data-ossa'))
 let calata = false
-for (let n = 0; n < 12 && (await page.locator('.sot-velo-scontro').count()); n++) {
+for (let n = 0; n < 12 && (await page.locator('[data-scontro-3d]').count()); n++) {
   await scegliAttacco(page)
   await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 5000 }).catch(() => {})
   await attendi(page, 400)
   const t = page.locator('.sot-domanda .qz-tasto[data-giusta]')
   if (await t.count()) await t.first().click()
   // il turno si racconta (docs/sotterraneo/scontro-interfaccia.md): si aspetta che la scelta torni, o che lo scontro sia finito
-  await page.waitForFunction(() => !document.querySelector('.sot-velo-scontro') || document.querySelector('[data-caselle-abilita][data-pronto]'), null, { timeout: 15000 })
+  await page.waitForFunction(() => !document.querySelector('[data-scontro-3d]') || document.querySelector('[data-caselle-abilita][data-pronto]'), null, { timeout: 30000 })
   await attendi(page, 200)
   if (await page.locator('[data-grosso]').count() && Number(await page.locator('[data-grosso]').getAttribute('data-ossa')) < ossa0) calata = true
 }
@@ -220,58 +264,6 @@ await attendi(page, 300)
 await toccaIl('[data-pagina-eroe] [data-chiudi]')
 await attendi(page, 300)
 await lasciaLaDiscesa(page)
-
-/* ---------- 7. un'altra discesa: un leggendario caduto ---------- */
-await page.evaluate(s => { location.hash = `seme=${s}&piano=2&sotterraneo=leggendario` }, piano.seme)
-await scendiNelSotterraneo(page, 0)
-await page.waitForSelector('.sot-tela', { timeout: 5000 })
-await page.waitForSelector('[data-leggendario]', { timeout: 3000 })
-const leggendario = await page.locator('[data-leggendario]').getAttribute('data-cosa')
-controlla('cade un leggendario: il nome in oro, la sua storia', COSE[leggendario]?.rarita === 'leggendario' &&
-          (await page.locator('[data-leggendario]').innerText()).includes(COSE[leggendario].nome) &&
-          (await page.locator('[data-leggendario]').innerText()).includes(COSE[leggendario].storia), leggendario)
-await scatto(page, 'eroe-leggendario')
-
-const tela = page.locator('.sot-tela')
-const cellaGiu = () => tela.getAttribute('data-eroe')
-async function schermoDi(c) {
-  const [ex, ey] = (await cellaGiu()).split(',').map(Number)
-  const [sx, sy] = (await tela.getAttribute('data-eroe-schermo')).split(',').map(Number)
-  const s = Number(await tela.getAttribute('data-scala')) * T
-  const b = await tela.boundingBox()
-  return { x: b.x + sx + (c.x - ex) * s, y: b.y + sy + (c.y - ey) * s, b }
-}
-const dentro = ({ x, y, b }) => x > b.x + 30 && x < b.x + b.width - 30 && y > b.y + 140 && y < b.y + b.height - 50
-async function fermoGiu() {
-  let prima = null
-  for (let i = 0; i < 40; i++) {
-    const ora = await cellaGiu()
-    if (ora === prima) return
-    prima = ora
-    await attendi(page, 300)
-  }
-}
-await attendi(page, 4500)   // la festa del leggendario sparisce da sé
-uguale('la festa del leggendario va via da sola', await page.locator('[data-leggendario]').count(), 0)
-{
-  const s = await schermoDi(piano.dove)
-  await tocca(s.x, s.y)
-  await attendi(page, 900)
-  await fermoGiu()
-}
-uguale('toccato, il leggendario finisce nello zaino o addosso', await page.locator('.sot-tela').count(), 1)
-
-// i Tesori si scrivono nell'avventura quando la discesa si chiude: si risale, e dalla terra di sopra si guardano
-await lasciaLaDiscesa(page)
-await attendi(page, 600)
-await toccaIl('[data-azione="eroe-pagina"]')
-await page.waitForSelector('[data-pagina-eroe]', { timeout: 3000 })
-await attendi(page, 300)
-await toccaIl('[data-azione="tesori"]')
-await page.waitForSelector('[data-tesori]', { timeout: 3000 })
-uguale('e il leggendario raccolto è fra i Tesori', await page.locator(`[data-tesoro="${COSE[leggendario].unico}"]`).getAttribute('data-trovato'), '1')
-await toccaIl('[data-tesori] [data-chiudi]')
-await attendi(page, 300)
 
 uguale('nessun errore in console', errori.join(' · '), '')
 nota(`il piano del leggendario: seme ${piano.seme}`)

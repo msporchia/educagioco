@@ -1,13 +1,11 @@
 # Il mondo aperto: i dati e il salvataggio
 
-Dove vive lo stato del mondo aperto, la nebbia nuova, se il 3D e il 2D condividono l'avanzamento, e il travaso di chi ha
-già giocato. È la quarta parte del progetto ([mondo-aperto-progetto.md](mondo-aperto-progetto.md)); come oggi:
+Dove vive lo stato del mondo aperto, la nebbia nuova e il travaso di chi ha già giocato. È la quarta parte del progetto ([mondo-aperto-progetto.md](mondo-aperto-progetto.md)); come oggi:
 [avventure.md](avventure.md), [portale-e-sosta.md](portale-e-sosta.md), [../core/ripresa.md](../core/ripresa.md).
 
 ## Dove sta
 
-- **Tutto in `profile.campagne`**, nessun campo nel profilo. Nell'avventura un campo `mondo` (se 2D e 3D tengono la
-  stessa chiave, accanto a `terra`, che resta del 2D):
+- **Tutto in `profile.campagne`**, nessun campo nel profilo. Nell'avventura un campo `mondo`, sotto la chiave `sotterraneo`:
 
 ```js
 mondo: { firma,         // la firma dello scheletro del mondo a percorso: diversa o assente vuol dire mappa cambiata (il travaso, sotto)
@@ -25,27 +23,12 @@ mondo: { firma,         // la firma dello scheletro del mondo a percorso: divers
 - **`MONDO` (`cfg.mondo`, oggi 4) non sale**: salire azzera tutte le avventure (`azzeraIlVecchio`). Il mondo aperto
   si aggiunge, non azzera.
 
-## Il 3D e il 2D: insieme o no
-
-**Da decidere. Raccomandato: separati mentre il mondo è in prova**, con una chiave sua (`profile.campagne.sotterraneo3d`,
-le stesse forme: avventure, roba, missioni, sosta) e il tasto «porta qui il tuo eroe» che **copia** una volta l'avventura
-del 2D (roba, livello, gemme, discese finite, missioni) e da lì va per conto suo.
-
-- **Il perché**: il mondo aperto cambia la progressione (esperienza di sopra, antri, quest, città), e la stessa
-  avventura giocata nei due farebbe arrivare nel 2D un eroe fuori tabella; le soste non si capirebbero (una sosta di
-  sopra non esiste nel 2D). Il Sotterraneo 3D di oggi condivide tutto perché cambia solo il disegno; il mondo aperto
-  cambia il gioco.
-- **Il costo**: medaglie, esperienza dell'app e riga della home leggono `sotterraneo`, e il 3D in prova non li muove
-  (i contatori del bambino, `segna()`, sì). Una chiave nuova di campagna è un dato del gioco, non un campo del profilo.
-- **L'alternativa**: la stessa chiave e il campo `mondo` accanto a `terra` (quello sopra). Meno codice, ma il 2D e il
-  3D si sporcano a vicenda.
-
-## La migrazione, il giorno che il mondo sostituisce il 2D
+## Il travaso dei salvataggi di prima
 
 Si travasa ogni avventura di `sotterraneo` sul mondo, all'apertura, una volta (un `mondoAperto: 1` in `cfg`), senza
 toccare il record di fuori, le stelle, la roba, le missioni e la sosta di un dungeon:
 
-| nel 2D, o nel mondo ad anelli | nel mondo a percorso |
+| in un salvataggio di prima (la mappa dipinta o il mondo ad anelli) | nel mondo a percorso |
 |---|---|
 | nessuna discesa finita | si parte nel villaggio, nebbia nuova |
 | una discesa della storia finita (o con le stelle) | scoperta la strada maestra dal cancello fino a lei, la sua stradina e il suo ingresso; accesa la pietra della sua zona (`altare` e `cantine` i prati, `torre` e `gallerie` il bosco, `cisterna` la palude, `labirinto` le ceneri, `fondo` il monte) |
@@ -53,7 +36,7 @@ toccare il record di fuori, le stelle, la roba, le missioni e la sosta di un dun
 | le pietre accese (`villaggio`, `forte`, `rifugio`, `altare`…) | le città sono il villaggio, i dungeon la pietra della loro zona (`pietraDiOggi`) |
 | una sosta con `via: 'portale'` | il gemello del villaggio, l'unica città |
 | una sosta con `via: 'uscita'` | uguale: si riprende giù |
-| `terra.nebbia`, `terra.dove` del 2D; `mondo.nebbia`, `mondo.dove` degli anelli | buttati: la mappa è un'altra (la nebbia si rifà dalle discese finite, si riparte dalla piazza) |
+| `terra.nebbia`, `terra.dove` della mappa dipinta; `mondo.nebbia`, `mondo.dove` degli anelli | buttati: la mappa è un'altra (la nebbia si rifà dalle discese finite, si riparte dalla piazza) |
 | `mondo.sopra` degli anelli (i morti per indice) | buttato: con un'altra mappa gli indici sono altri mostri, e tornano tutti |
 | `giro`, `parlato`, `divieti`, `novita` | uguali |
 | missioni e taglie prese o fatte | uguali, per id: `t:forte:…` e `t:rifugio:…` si leggono e si consegnano al villaggio, i luoghi tengono le chiavi delle regioni |

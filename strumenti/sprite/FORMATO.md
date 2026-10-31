@@ -461,12 +461,12 @@ I quattro numeri non si contano a mano: si guardano. `npm run mondo`, metà
 trascinare; da lì si buca, si rinomina, si sdoppia un gruppo che era due
 cose, e si riscrive il foglietto. Poi si rilancia `atlante.py`.
 
-## Un foglio fatto in codice (`diagonali.py`)
+## Un foglio fatto in codice (`inferno.py`)
 
-Non tutti i fogli vengono da un generatore: `strumenti/sprite/diagonali.py` costruisce i pezzi dei muri obliqui della cripta
-(`sotterraneo_4_diagonali.png`) dalle tessere dritte di `sotterraneo_4.png`, ritagliate con le stesse funzioni di `atlante.py`. Il foglio è a
+Non tutti i fogli vengono da un generatore: `strumenti/sprite/inferno.py` costruisce i pezzi che mancano allo scenario dell'inferno
+(`sotterraneo_6_derivati.png`) dai pezzi dipinti di `sotterraneo_6.png` e di `arredo-inferno.png`, ritagliati con le stesse funzioni di `atlante.py`. Il foglio è a
 pixel veri (`"cella": [1, 1]`, niente `misura`, fondo trasparente) e **il PNG e il suo foglietto si riscrivono insieme dallo strumento**: a mano non si
-toccano, e un pezzo nuovo è una riga in `PEZZI` del programma. Per il metodo e il perché: `docs/sotterraneo/scenari.md`, «I muri in diagonale».
+toccano, e un pezzo nuovo è una riga in `costruisci()` del programma. Per il metodo e il perché: `docs/core/sprite.md`, «I pezzi derivati in codice».
 
 ## Per quale gioco è questo foglio
 

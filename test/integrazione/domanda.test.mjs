@@ -30,7 +30,7 @@
    col mouse il bersaglio si decide alla pressione, e il fantasma che
    causa il guasto non parte nemmeno.
    `node test/esegui.mjs domanda`
-   tempo: 60
+   tempo: 120
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, leggiProfilo, scegli, scegliAttacco,
          scendiNelSotterraneo, scegliAvventura } from '../aiuto/browser.mjs'
@@ -477,63 +477,39 @@ await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
    quattro goblin attorno all'ingresso. Prima si camminava verso un goblin con `#seme=96`, ma i piani hanno cambiato
    forma più volte (porte, branchi, stanze) e un seme scelto a occhio non regge; il cheat non cammina e non dipende dalla
    generazione. Quattro e non uno: con un goblin solo il colpo giusto lo finisce alla prima domanda, e qui ne servono
-   almeno due nella stessa istanza. Il cheat si legge quando parte la discesa, quindi si scrive nell'indirizzo un attimo prima di toccare la tappa. */
+   almeno due nella stessa istanza. Il cheat si legge quando parte la discesa, quindi si scrive nell'indirizzo un attimo prima di
+   scendere dal mondo di sopra (`scendiNelSotterraneo`, che cammina fino all'ingresso); lo scontro 3D ha la scelta e la domanda nel
+   pannello in fondo (`[data-pannello3d]`) e la scena sopra. */
 await page.click('button[aria-label="indietro"]')
 await page.waitForSelector('.carte', { timeout: 5000 })
-await semina(page, { coins: 300, settings: { sperimentali: true } })
+await semina(page, { coins: 300 })
 await page.waitForSelector('.carta.gioco[data-gioco="sotterraneo"]', { timeout: 5000 })
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('.sot-tappe', { timeout: 5000 })
 /* ── prima si sceglie chi scende ──
    Alla prima apertura il sotterraneo mette davanti i quattro eroi
    (`viste/Eroi.vue`), e il velo si mangia il tocco sulla tappa. Il
    velo è arrivato dopo questo test, e per un pomeriggio l'ha lasciato
    rosso senza che nessuno se ne accorgesse: la CI le prove col browser
    non le lancia. */
-await page.waitForSelector('.sot-velo .sot-eroe', { timeout: 5000 })
+await page.waitForSelector('.sot-velo .sot-eroe', { timeout: 30000 })
 await scegliAvventura(page, 'cavaliere')
 await page.evaluate(() => { location.hash = 'sotterraneo=branco&mostri=4&tipo=goblin' })
 await scendiNelSotterraneo(page, 0)
-await page.waitForSelector('.sot-tela', { timeout: 5000 })
-await attendi(page, 700)
+// il cheat apre lo scontro da sé, a discesa partita: non c'è niente da camminare
+await page.waitForSelector('[data-scontro-3d]', { timeout: 40000 })
+await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 20000 })
+controlla('col cheat si è già addosso a un mostro', await page.locator('[data-scontro-3d] [data-mostro]').count() === 4)
 
-const campo = await page.locator('.sot-tela').boundingBox()
-const versoEst = async () => {
-  const p = [{ x: campo.x + campo.width / 2 + 96, y: campo.y + campo.height / 2 }]
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: p })
-  await attendi(page, 45)
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
-}
-/* Col seme scelto la strada fino al goblin è vuota — nessuna porta,
-   niente da raccogliere — quindi il foglio non dovrebbe mai comparire.
-   Il ramo che lo chiude resta come rete di sicurezza: se cambiasse la
-   generazione della stanza (o un domani si cambiasse seme) e spuntasse
-   comunque un foglio, meglio chiuderlo e proseguire che restare fermi a
-   toccare un campo che, foglio aperto, non risponde più ai tocchi — col
-   rischio, questo sì noto da aa2f628, che sia proprio una porta e quindi
-   non si riesca comunque ad aggirarla. */
-let inBattaglia = false
-for (let i = 0; i < 24 && !inBattaglia; i++) {
-  await versoEst()
-  await attendi(page, 800)
-  inBattaglia = await page.locator('.sot-velo, .sot-velo-scontro').count() > 0
-  if (!inBattaglia && await page.locator('.sot-foglio').count())
-    await page.locator('.sot-foglio .sot-grosso').last().click()
-}
-controlla('col cheat si è già addosso a un mostro', inBattaglia)
-
-/* La battaglia sta **al centro**, non in fondo: comincia mentre si
-   cammina, e un pannello in fondo allo schermo compare dove chi guarda
-   il proprio eroe non sta guardando. Si controlla che sia davvero in
-   mezzo, con lo stesso spazio sopra e sotto. */
+/* Lo scontro sta in due pezzi: la scena sopra e il pannello con la scelta e la domanda in fondo, sopra la barra. Si controlla che
+   sopra al pannello resti scena (i mostri non finiscono sotto la domanda). */
 const posto = await page.evaluate(() => {
-  const m = document.querySelector('.sot-modale')?.getBoundingClientRect()
-  const t = document.querySelector('.sot-tela')?.getBoundingClientRect()
+  const m = document.querySelector('[data-pannello3d]')?.getBoundingClientRect()
+  const t = document.querySelector('[data-tela="3d"]')?.getBoundingClientRect()
   return m && t ? { sopra: Math.round(m.top - t.top), sotto: Math.round(t.bottom - m.bottom) } : null
 })
-controlla('lo scontro è una modale in mezzo allo schermo',
-          posto && Math.abs(posto.sopra - posto.sotto) < 60,
-          posto ? `${posto.sopra} px sopra, ${posto.sotto} sotto` : 'nessuna modale')
+controlla('lo scontro ha la scena sopra e il pannello sotto',
+          posto && posto.sopra >= 80 && posto.sotto >= 0,
+          posto ? `${posto.sopra} px di scena sopra il pannello` : 'nessun pannello')
 
 /* Ed ecco la catena. Si conta quante volte di fila **il tocco viene
    registrato**: il componente colora la risposta appena si sceglie,
@@ -554,6 +530,8 @@ controlla('lo scontro è una modale in mezzo allo schermo',
 let risposteDate = 0
 let diFretta = 0
 for (let giro = 0; giro < 2; giro++) {
+  // il racconto del turno di prima, nella scena 3D, dura più di quanto scegliAttacco aspetta: si aspetta che la scelta torni
+  await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 40000 }).catch(() => {})
   await scegliAttacco(page)   // lo scontro è in due fasi: prima il colpo, poi la domanda (docs/sotterraneo/abilita.md)
   const cEDaRispondere = await page.locator('.qz-tasto').count() > 0
   controlla(`la ${giro + 1}ª domanda è lì da rispondere`, cEDaRispondere)

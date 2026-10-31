@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    I DIALOGHI, COL DITO VERO
 
-   Sulla terra di sopra chi sta fermo si parla (docs/sotterraneo/dialoghi.md):
+   Sul mondo di sopra chi sta fermo si parla (docs/sotterraneo/dialoghi.md):
    toccandolo l'eroe ci va e si apre il dialogo in fondo, col ritratto, il
    testo a pagine e alla fine le domande. Qui: la ragazza chiede il seguito
    della collana (due pagine, un tocco va avanti, le domande solo
@@ -12,15 +12,17 @@
    poi dice la strada; la guaritrice e l'incantatrice portano alla bottega, il mercante alla
    linguetta delle tasche.
 
-   I tocchi sono tocchi (`Input.dispatchTouchEvent` via CDP).
+   L'eroe va da chi parla col salto delle prove (`__mondo3d.vai`, in `vaDa`): la strada a
+   piedi la prova `integrazione/sotterraneo-mondo`. I tocchi sono tocchi
+   (`Input.dispatchTouchEvent` via CDP).
    `node test/esegui.mjs sotterraneo-dialoghi`
-   tempo: 200
+   tempo: 480
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, camminaVerso, nelDialogo , finestraFerma }
-  from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, nelDialogo, finestraFerma, mondoPronto,
+         toccaNelMondo, fermoNelMondo } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { PERSONAGGI, MINATORE, MERCANTI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
+import { ilMondo, terraDelMondo } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
 import { missioneDi } from '../../src/giochi/sotterraneo/dati/missioni.js'
 import { DIALOGHI } from '../../src/giochi/sotterraneo/dati/dialoghi.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
@@ -28,6 +30,7 @@ import { robaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 
 const DISCESA = CAMPAGNA.findIndex(t => t.chiave === 'torre')
 const roba = robaAttesa('cavaliere', DISCESA, { gemme: 5 })
+roba.torce = 3   // con una torcia in tasca l'eroe fermo non pensa alla guaritrice: il suo fumetto copre chi gli sta davanti e prende il tocco
 const ROSICCHIONE = missioneDi('rosicchione')
 
 const browser = await apriBrowser()
@@ -38,11 +41,11 @@ await semina(page, {
   campagne: { sotterraneo: { tappa: DISCESA, libera: false, stelle: { 0: 3, 1: 3 },
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: DISCESA, libera: false, stelle: { 0: 3, 1: 3 },
       missioni: { collana: 'consegnata', rosicchione: 'fatta' }, roba,
-      terra: { nebbia: 'f'.repeat(768), dove: PERSONAGGI.ragazza.accanto, parlato: false } } } } },
+      mondo: { parlato: false } } } } },
   },
 })
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await mondoPronto(page)
 await attendi(page, 600)
 
 const cdp = await page.context().newCDPSession(page)
@@ -56,12 +59,32 @@ async function toccaIl(sel) {
   const b = await page.locator(sel).first().boundingBox()
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
+// l'eroe va (salto delle prove) accanto a `k` e lo si tocca: `sel` è il suo bersaglio nel mondo
+async function vaDa(sel, k, atteso = '[data-dialogo]') {
+  // il fumetto del pensiero dell'eroe fermo (docs/sotterraneo/pensieri.md) può coprire chi gli sta accanto e prende il tocco: se il tocco
+  // non ha aperto quello che si aspettava, si riporta l'eroe lì e si riprova
+  for (let giro = 0; giro < 5; giro++) {
+    await page.evaluate(k => { window.__mondo3d.senzaMostri(); window.__mondo3d.vai(k) }, k)
+    // dopo il salto la telecamera arriva morbida, e a pochi fotogrammi al secondo due letture uguali non bastano: tre di fila, a mezzo secondo
+    let uguali = 0, ultimo = ''
+    for (let i = 0; i < 60 && uguali < 3; i++) {
+      await attendi(page, 500)
+      const b = await page.locator(sel).first().boundingBox().catch(() => null)
+      const ora = b ? `${Math.round(b.x)},${Math.round(b.y)}` : ''
+      uguali = ora && ora === ultimo ? uguali + 1 : 0
+      ultimo = ora
+    }
+    await page.waitForSelector('[data-pensiero]', { state: 'detached', timeout: 20000 }).catch(() => {})
+    await toccaNelMondo(page, sel, { tocca })
+    if (await page.waitForSelector(atteso, { timeout: 12000 }).then(() => true).catch(() => false)) return
+  }
+}
 const avventura = async () => (await leggiProfilo(page))?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere || {}
 const pagina = async () => Number(await page.locator('[data-dialogo]').getAttribute('data-pagina'))
 
 /* ---------- 1. la ragazza: si apre toccandola, e le pagine vanno avanti col dito ---------- */
-await toccaIl('[data-personaggio="ragazza"]')
-await page.waitForSelector('[data-dialogo="ragazza"]', { timeout: 8000 })
+await vaDa('[data-personaggio="ragazza"]', 'ragazza')
+await page.waitForSelector('[data-dialogo="ragazza"]', { timeout: 60000 })
 uguale('toccandola si apre il dialogo, sulla prima pagina', await pagina(), 1)
 uguale('col ritratto', await page.locator('[data-dialogo] [data-ritratto-dialogo]').count(), 1)
 // chi sta fermo saluta per un attimo (`<nome>-saluta-0`) quando gli si parla, e torna ferma
@@ -101,7 +124,7 @@ await nelDialogo(page, null, { tocca: toccaIl })
 uguale('chiesta, la novità non si richiede', await page.locator('[data-scelta="novita"]').count(), 0)
 await attendi(page, 800)   // l'archivio rimanda le scritture
 uguale('e l\'avventura ricorda che gliel\'hai chiesto',
-       (await avventura()).terra?.novita?.ragazza?.n, 1)
+       (await avventura()).mondo?.novita?.ragazza?.n, 1)
 
 /* ---------- 3. una scelta porta alla sua azione: prendere la missione ---------- */
 await toccaIl('[data-scelta="prendi"][data-missione="goblin"]')
@@ -112,20 +135,28 @@ uguale('sopra la testa il «?» grigio', await page.locator('[data-personaggio="
 
 /* ---------- 4. un tocco altrove chiude, e cammina ---------- */
 {
-  const v = await page.locator('[data-terra]').boundingBox()
-  const prima = await page.locator('[data-eroe-terra]').getAttribute('data-cella')
-  await tocca(v.x + 30, v.y + v.height * 0.3)
+  // una cella dove si cammina, a qualche passo dall'eroe, e dove cade a schermo (sopra il dialogo, che sta in fondo)
+  const m = ilMondo(), terra = terraDelMondo(m)
+  const [x0, y0] = (await page.locator('[data-eroe-mondo]').getAttribute('data-cella')).split(',').map(Number)
+  let meta = null
+  // in linea retta (nord, ovest o est: sotto c'è il dialogo), tutta strada libera
+  for (const [dx, dy] of [[0, -1], [-1, 0], [1, 0]]) for (let k = 5; k >= 3 && !meta; k--)
+    if (Array.from({ length: k }, (_, i) => i + 1).every(i => terra.passa(x0 + dx * i, y0 + dy * i))) meta = { x: x0 + dx * k, y: y0 + dy * k }
+  const p = await page.evaluate(([a, b]) => { const s = window.__sotterraneo3d; const q = s.aSchermo(a, s.quota(a, b), b); return [q.x, q.y] }, [meta.x + 0.5, meta.y + 0.5])
+  const v = await page.locator('[data-mondo3d]').boundingBox()
+  const prima = await page.locator('[data-eroe-mondo]').getAttribute('data-cella')
+  await tocca(v.x + p[0], v.y + p[1])
   await attendi(page, 300)
   uguale('un tocco sul prato chiude il dialogo', await page.locator('[data-dialogo]').count(), 0)
-  await page.waitForFunction(c => document.querySelector('[data-eroe-terra]').dataset.cella !== c, prima, { timeout: 5000 })
+  await page.waitForFunction(c => document.querySelector('[data-eroe-mondo]').dataset.cella !== c, prima, { timeout: 60000 })
+  await fermoNelMondo(page)
   controlla('e l\'eroe va dove si è toccato', true)
   uguale('e la barra in basso è al suo posto', await page.locator('[data-barra-giu]').count(), 1)
 }
 
 /* ---------- 5. il mugnaio: la consegna, e il premio detto ---------- */
-await camminaVerso(page, PERSONAGGI.mugnaio.accanto, { tocca })
-await toccaIl('[data-personaggio="mugnaio"]')
-await page.waitForSelector('[data-dialogo="mugnaio"]', { timeout: 15000 })
+await vaDa('[data-personaggio="mugnaio"]', 'mugnaio')
+await page.waitForSelector('[data-dialogo="mugnaio"]', { timeout: 60000 })
 uguale('se ne accorge: la frase del ritorno', await page.locator('[data-riga]').innerText(), ROSICCHIONE.ritorno)
 await nelDialogo(page, '[data-scelta="consegna"][data-missione="rosicchione"]', { tocca: toccaIl })
 await page.waitForSelector('[data-riga][data-fase="grazie"]', { timeout: 3000 })
@@ -142,9 +173,8 @@ await attendi(page, 200)
 uguale('arrivederci chiude', await page.locator('[data-dialogo]').count(), 0)
 
 /* ---------- 6. il minatore: la prima volta si presenta, poi la strada ---------- */
-await camminaVerso(page, MINATORE.accanto, { tocca })
-await toccaIl('[data-minatore]')
-await page.waitForSelector('[data-dialogo="minatore"]', { timeout: 15000 })
+await vaDa('[data-minatore]', 'minatore')
+await page.waitForSelector('[data-dialogo="minatore"]', { timeout: 60000 })
 controlla('la prima volta si presenta', !(await page.locator('[data-riga]').getAttribute('data-detto') != null))
 await attendi(page, 400)
 await scatto(page, 'dialogo-minatore')
@@ -159,18 +189,16 @@ await nelDialogo(page, null, { tocca: toccaIl })
 uguale('dopo un\'altra domanda, «dove vado adesso?» torna', await page.locator('[data-scelta="strada"]').count(), 1)
 
 /* ---------- 7. i mercanti: il dialogo porta alla bottega ---------- */
-await camminaVerso(page, MERCANTI.erborista.accanto, { tocca })
-await toccaIl('[data-mercante="erborista"]')
-await page.waitForSelector('[data-dialogo="erborista"]', { timeout: 15000 })
+await vaDa('[data-mercante="erborista"][data-citta="villaggio"]', 'mercante:villaggio:erborista')
+await page.waitForSelector('[data-dialogo="erborista"]', { timeout: 60000 })
 await nelDialogo(page, '[data-scelta="bottega"]', { tocca: toccaIl })
 await page.waitForSelector('[data-bottega][data-mercante-aperto="erborista"]', { timeout: 3000 })
 uguale('«mi servono pozioni» apre la bottega della guaritrice', await page.locator('[data-dialogo]').count(), 0)
 await attendi(page, 400)
 await toccaIl('[data-bottega] [data-chiudi]')
 await attendi(page, 300)
-await camminaVerso(page, MERCANTI.incantatrice.accanto, { tocca })
-await toccaIl('[data-mercante="incantatrice"]')
-await page.waitForSelector('[data-dialogo="incantatrice"]', { timeout: 15000 })
+await vaDa('[data-mercante="incantatrice"][data-citta="villaggio"]', 'mercante:villaggio:incantatrice')
+await page.waitForSelector('[data-dialogo="incantatrice"]', { timeout: 60000 })
 await nelDialogo(page, '[data-scelta="bottega"]', { tocca: toccaIl })
 await page.waitForSelector('[data-bottega][data-mercante-aperto="incantatrice"]', { timeout: 3000 })
 uguale('«fammi vedere la magia» apre la bottega dell\'incantatrice', await page.locator('[data-dialogo]').count(), 0)
@@ -178,8 +206,7 @@ await attendi(page, 400)
 await scatto(page, 'dialogo-incantatrice-bottega')
 await toccaIl('[data-bottega] [data-chiudi]')
 await attendi(page, 300)
-await camminaVerso(page, MERCANTI.rigattiere.accanto, { tocca })
-await toccaIl('[data-mercante="rigattiere"]')
+await vaDa('[data-mercante="rigattiere"][data-citta="villaggio"]', 'mercante:villaggio:rigattiere')
 await nelDialogo(page, '[data-scelta="vendi"]', { tocca: toccaIl })
 await page.waitForSelector('[data-bottega][data-mercante-aperto="rigattiere"]', { timeout: 15000 })
 uguale('«ho roba da vendere» apre il mercante sulla linguetta delle tasche',

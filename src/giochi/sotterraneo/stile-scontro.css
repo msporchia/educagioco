@@ -1,27 +1,7 @@
-/* ═══════════ lo scontro a gruppi (viste/Scontro.vue, FilaDeiTurni.vue; docs/sotterraneo/scontro.md, «La vista») ═══════════
-   Il palco è un pezzo di stanza: uno zoccolo di parete e il pavimento, con l'eroe a sinistra e i mostri a colonne sul lato destro
-   (viste/campo.js, `piazza`: ogni figura ha i piedi in un punto `--x`, `--y`), la fila dei turni sul bordo destro.
-   Tutto in un riquadro di altezza fissa: lo scontro non cambia misura mentre i mostri cadono. Il palco sta fermo in cima alla
-   finestra (`sticky`): su un telefono stretto scorre al più la scelta, mai il fondale. */
-.sot-scontro { display: contents }
-.sot-duello {
-  position: sticky; top: 0; z-index: 5; overflow: hidden; height: var(--alto, 264px); margin: 0 -4px;
-  background: #0e0b16;
-  border-radius: 14px; box-shadow: inset 0 0 0 1px #c9a24a55, inset 0 -30px 40px -20px #000;
-  animation: sot-entra .35s ease-out;
-}
-.sot-palco { position: absolute; left: 0; top: 0; image-rendering: pixelated; z-index: 0 }   /* la misura la dà Palco.vue: la scala degli sprite */
-.sot-duello::after {   /* la penombra ai bordi: il palco è la scena vera, ma non deve rubare l'occhio ai personaggi */
-  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background: radial-gradient(ellipse at 50% 60%, transparent 45%, #00000090 100%);
-}
+/* ═══════════ lo scontro a gruppi (viste/Scontro3d.vue, FilaDeiTurni.vue; docs/sotterraneo/scontro.md, «La vista») ═══════════
+   La scena è in 3D (scena3d/palco.js): qui stanno le scritte e le barre che la scena porta sopra le figure (ogni mostro ha i piedi in un punto
+   `--x`, `--y`, viste/campo.js, `piazza`), la fila dei turni sul bordo destro e i numeri che salgono. */
 
-/* ── l'eroe, e il posto vuoto del compagno ── */
-.sot-attore-eroe { position: absolute; z-index: 3; left: var(--x); top: var(--y); translate: -50% -100% }   /* i piedi nel punto */
-.sot-compagno {   /* il posto del compagno: sfalsato sotto l'eroe, in diagonale */
-  position: absolute; z-index: 2; left: var(--x); top: var(--y); translate: -50% -50%; width: 54px; height: 18px;
-  border: 1.5px dashed #ffffff2e; border-radius: 50%; background: #0000004d;
-}
 /* l'ombra ovale sotto i piedi di ognuno: la figura sta sul pavimento, non ci galleggia */
 .sot-ombra {
   position: absolute; left: 50%; bottom: -6px; z-index: 0; translate: -50% 0; height: 13px; min-width: 24px; pointer-events: none;
@@ -34,7 +14,6 @@
 }
 
 /* ── i mostri ── */
-.sot-schiera { position: absolute; z-index: 3; inset: 0; pointer-events: none }
 .sot-m {   /* in fondo ai piedi ci sono la barra della vita (3 + 6) e 4 px di margine: i piedi stanno 13 px sopra il fondo */
   position: absolute; left: var(--x); top: calc(var(--y) + 13px); translate: -50% -100%; pointer-events: auto;
   min-width: 48px; margin: 0; padding: 0 0 4px; font: inherit; color: inherit; cursor: pointer;
@@ -45,29 +24,13 @@
 .sot-m-corpo { position: relative; display: flex; justify-content: center; align-items: flex-end }
 .sot-m:disabled { cursor: default }
 .sot-m.sot-morto { opacity: 0; transform: translateY(10px) scale(.9); pointer-events: none }
-/* chi cade e ha il suo pezzo a terra ci resta un momento (il secondo pezzo, i resti, dopo un attimo) e poi svanisce */
-.sot-m.sot-a-terra { transition: opacity .6s ease .95s, transform .6s ease .95s }
 .sot-m.sot-morto .sot-vita { opacity: 0 }
-.sot-a-terra .sot-respira { position: relative; animation: none }   /* a terra non si respira */
-.sot-resti-b { position: absolute; left: 50%; bottom: 0; translate: -50% 0; opacity: 0 }
-.sot-a-terra .sot-resti-b { animation: sot-resto-entra .01s .3s forwards }
-.sot-a-terra .sot-resti-a { animation: sot-resto-esce .01s .3s forwards }
-@keyframes sot-resto-entra { to { opacity: 1 } }
-@keyframes sot-resto-esce { to { opacity: 0 } }
-.sot-m-grosso .sot-vita { width: 84px }
 .sot-vita {
   display: block; width: var(--barra, 60px); height: 6px; border-radius: 999px; background: #1a1018; overflow: hidden;
   box-shadow: 0 0 0 1px #000c, 0 1px 3px #000;
 }
 .sot-vita i { display: block; height: 100%; background: linear-gradient(90deg, #e0644f, #ff9b7a); transition: width .25s ease-out }
-/* il bersaglio: un anello d'oro sotto i piedi. Chi verrà colpito dalla scelta fatta: un contorno */
-.sot-anello { position: absolute; left: 50%; bottom: -5px; width: calc(100% + 14px); max-width: 96px; height: 12px; translate: -50% 0; opacity: 0;
-  border: 2px solid #ffd23f; border-radius: 50%; box-shadow: 0 0 9px #ffd23f99, inset 0 0 6px #ffd23f66; pointer-events: none }
-.sot-bersaglio .sot-anello { opacity: 1 }
-.sot-colpito-da-me { outline: 2px solid color-mix(in srgb, #ffd23f calc(var(--f, 1) * 100%), transparent); outline-offset: -2px;
-  background: #ffd23f14 }
 .sot-m:focus-visible { outline: 2px solid #fff }
-.sot-m-chiave { position: absolute; left: 0; top: 4px; color: #ffd23f; filter: drop-shadow(0 1px 1px #000) }
 /* gli stati addosso: una pastiglia piccola per ognuno, col numero dei turni che restano */
 .sot-m-stati { position: absolute; right: -3px; top: 2px; display: flex; flex-direction: column; gap: 2px; align-items: flex-end; pointer-events: none }
 .sot-chip {
@@ -82,25 +45,7 @@
 .sot-chip-esposto { color: #8bd04a; border-color: #4fa02a99 }
 .sot-chip-rotto { color: #c8c8d4 }
 
-/* ── le figure: tre strati, perché ognuno ha la sua animazione (chi si fa sotto, chi trema, chi respira) ── */
-.sot-figura { position: relative; display: grid; place-items: end center; filter: drop-shadow(0 1px 1px #0008) }
-.sot-corpo { display: grid; place-items: end center }
-.sot-respira { display: block; animation: sot-respira 2.2s ease-in-out infinite }
-.sot-m-fig .sot-respira { scale: -1 1 }   /* guarda l'eroe (la proprietà `scale` non litiga con il respiro, che muove) */
-.sot-m:nth-child(2n) .sot-respira { animation-delay: -.7s }
-.sot-m:nth-child(3n) .sot-respira { animation-delay: -1.4s }
-@keyframes sot-respira { 50% { transform: translateY(-3px) } }
-/* il mostro armato (viste/Creatura.vue): l'arma sta sopra la faccia, nella mano; un pezzo ammorbidito, senza il filo chiaro delle icone */
-.sot-creatura { position: relative; display: inline-block; line-height: 0 }
-.sot-arma-in-mano { position: absolute; display: block; pointer-events: none }
-.sot-arma-in-mano > i { position: absolute; top: 0; left: 0; display: block; filter: drop-shadow(0 1px 1px #000a) }
-/* il grado (dati/varianti.js): un alone del colore della sua rarità sulla figura, e il nome nello stesso colore */
-.sot-figura.sot-grado-magico { --grado: #6f8dff }
-.sot-figura.sot-grado-raro { --grado: #ffd23f }
-.sot-figura.sot-grado-leggendario { --grado: #ff9a2e }
-.sot-figura[class*="sot-grado-"] { filter: drop-shadow(0 1px 1px #0008) drop-shadow(0 0 4px var(--grado)) drop-shadow(0 0 9px color-mix(in srgb, var(--grado) 70%, transparent)) }
-@keyframes sot-brilla { 50% { filter: drop-shadow(0 1px 1px #0008) drop-shadow(0 0 6px var(--grado)) drop-shadow(0 0 14px var(--grado)) } }
-.sot-figura.sot-grado-leggendario { animation: sot-brilla 1.8s ease-in-out infinite }
+/* il grado (dati/varianti.js): il nome nel colore della sua rarità */
 .sot-m-nome {   /* il nome sopra la testa, senza articolo, in piccolo: il comune è tenue, un grado ha il suo colore */
   position: absolute; left: 50%; bottom: 100%; translate: -50% 0; width: max-content; max-width: 112px; margin-bottom: 2px;
   font-size: 9.5px; line-height: 1.05; font-weight: 800; text-align: center; color: #c9c3d6;
@@ -110,34 +55,7 @@
 .sot-m-nome.sot-grado-magico { --grado: #8fa6ff }
 .sot-m-nome.sot-grado-raro { --grado: #ffd23f }
 .sot-m-nome.sot-grado-leggendario { --grado: #ffab4a }
-/* gli effetti che durano cambiano il colore della figura */
-.sot-addosso-fuoco { filter: drop-shadow(0 0 7px #ff7a2a) sepia(.35) saturate(2) brightness(1.1) }
-.sot-addosso-veleno { filter: drop-shadow(0 0 7px #7ae04a) hue-rotate(60deg) saturate(1.5) }
-.sot-addosso-fermo { filter: drop-shadow(0 0 5px #ffd23f) grayscale(.4) }
-.sot-addosso-esposto { filter: drop-shadow(0 0 7px #6fbf3a) saturate(1.3) }
-.sot-eroe-fig .sot-respira.sot-protetto { filter: drop-shadow(0 0 8px #7cc8ff) drop-shadow(0 0 3px #fff) }
-.sot-eroe-fig .sot-respira.sot-guarisce { filter: drop-shadow(0 0 8px #6fe08a) }
 
-/* ── le azioni, una alla volta (viste/racconto.js): chi agisce scatta, chi prende trema ── */
-.sot-eroe-fig.sot-fx-scatta { animation: sot-scatta-dx .36s ease-out }
-.sot-eroe-fig.sot-fx-tira { animation: sot-rincula .32s ease-out }
-.sot-eroe-fig.sot-fx-vuoto { animation: sot-vuoto .42s ease-out }
-.sot-m-fig.sot-fx-scatta { animation: sot-scatta-sx .4s ease-out }
-.sot-fx-colpito .sot-corpo { animation: sot-scossa .36s }
-.sot-m-fig.sot-fx-colpito .sot-corpo { filter: drop-shadow(0 0 8px #ff5a3c) brightness(1.5) }
-.sot-eroe-fig.sot-fx-colpito::after {   /* il graffio sull'eroe: tre segni rossi */
-  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; animation: sot-lampo .36s ease-out both;
-  background: repeating-linear-gradient(60deg, transparent 0 22%, #ff3b2a 24% 27%, transparent 29% 40%);
-}
-.sot-fx-protegge .sot-corpo, .sot-fx-cura .sot-corpo { animation: sot-alone 1s ease-out }
-.sot-fx-cura { --tinta: #6fe08a }
-@keyframes sot-scatta-dx { 35% { transform: translateX(44px) scale(1.06) } 100% { transform: none } }
-@keyframes sot-scatta-sx { 35% { transform: translateX(-48px) scale(1.1) } 100% { transform: none } }
-@keyframes sot-rincula { 30% { transform: translateX(-8px) } 100% { transform: none } }
-@keyframes sot-vuoto { 40% { transform: translateX(26px) } 100% { transform: none } }
-@keyframes sot-scossa { 25% { transform: translateX(-5px) rotate(-4deg) } 75% { transform: translateX(5px) rotate(4deg) } }
-@keyframes sot-lampo { 0% { opacity: 0 } 25% { opacity: 1 } 100% { opacity: 0 } }
-@keyframes sot-alone { 0% { filter: none } 30% { filter: drop-shadow(0 0 14px var(--tinta, #7cc8ff)) brightness(1.4) } 100% { filter: none } }
 @keyframes sot-entra { from { opacity: 0; transform: scale(.94) } }
 
 /* i numeri che salgono sopra chi li prende */
@@ -151,7 +69,6 @@
 .sot-numero-cura { color: #6fe08a }
 .sot-numero-veleno { color: #8be060; font-size: 20px }
 .sot-numero-nota { color: #e8e2d4; font-size: 12.5px; font-weight: 800; letter-spacing: .02em }
-.sot-attore-eroe .sot-numero { top: -6px }
 @keyframes sot-numero-sale { 0% { opacity: 0; transform: translateY(10px) scale(.7) } 20% { opacity: 1; transform: translateY(0) scale(1.15) } 100% { opacity: 0; transform: translateY(-34px) } }
 
 /* la riga d'apertura (l'agguato, la sorpresa) */
@@ -181,9 +98,6 @@
   background: #121117; border: 1px solid var(--tinta); color: var(--tinta); font-size: 8.5px; line-height: 1.3;
 }
 .sot-turno-incanto b { font-weight: 800; color: #f3ece0 }
-.sot-fila-enter-from, .sot-fila-leave-to { opacity: 0; transform: translateY(-10px) scale(.8) }
-.sot-fila-leave-active { position: absolute; z-index: -1 }
-.sot-fila-move { transition: transform .25s ease }
 
 /* ── le pastiglie dell'eroe, sotto il palco ── */
 .sot-stati-mie { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px }
@@ -193,10 +107,7 @@
 }
 .sot-stati-mie .sot-glifo { vertical-align: -2px }
 
-/* dopo un tocco il racconto va in fretta */
-.sot-veloce *, .sot-veloce *::after { animation-duration: .14s !important; animation-delay: 0s !important; transition-duration: .1s !important }
 @media (prefers-reduced-motion: reduce) {
-  .sot-duello, .sot-duello * , .sot-duello *::after { animation: none !important }
   .sot-numero { opacity: 1 }
 }
 
@@ -207,10 +118,3 @@
 .sot-mossa-nome { font-size: 9px; line-height: 1.05; font-weight: 800; max-width: 84px; text-align: center; white-space: nowrap; overflow: hidden;
   text-overflow: ellipsis; text-shadow: 0 1px 2px #000, 0 0 3px #000 }
 @keyframes sot-mossa-pulsa { 50% { transform: scale(1.12) } }
-.sot-mossa-sopra { position: absolute; left: 50%; bottom: calc(100% + 14px); translate: -50% 0; z-index: 3 }
-.sot-anello-mossa { position: absolute; left: 50%; bottom: -3px; width: calc(100% + 6px); max-width: 90px; height: 10px; translate: -50% 0;
-  border: 2px solid var(--tinta); border-radius: 50%; box-shadow: 0 0 8px var(--tinta); opacity: .75; pointer-events: none }
-/* le mosse a turno del mostro: la cura brilla di verde, l'urlo trema di giallo, l'incantesimo si carica del suo colore */
-.sot-m-fig.sot-fx-cura .sot-corpo { filter: drop-shadow(0 0 9px #6fe08a) brightness(1.25) }
-.sot-m-fig.sot-fx-urla .sot-corpo { animation: sot-scossa-lieve .5s; filter: drop-shadow(0 0 9px #ffc83a) }
-.sot-m-fig.sot-fx-lancia .sot-corpo { animation: sot-alone .6s ease-out; filter: drop-shadow(0 0 9px #b27cf2) brightness(1.3) }

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// La promozione dei prototipi 3D nel Sotterraneo 3D (docs/sotterraneo/mostri-3d.md): copia da `poc/` in `src/` i moduli che il
+// La promozione dei prototipi 3D nel sotterraneo (docs/sotterraneo/mostri-3d.md): copia da `poc/` in `src/` i moduli che il
 // gioco usa, seguendo gli import a partire dalle radici di ogni gruppo (solo il referenziato), li mette in una cartella sola per
 // gruppo riscrivendo gli import relativi e premette a ognuno la riga «Generato da…». I prototipi restano autonomi e non si toccano:
 // si cambia il prototipo e si rilancia. Per i mostri scrive anche `mostri3d/elenchi.js`, gli elenchi che ci sono davvero: una

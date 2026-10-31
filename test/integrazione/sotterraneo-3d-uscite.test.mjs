@@ -60,7 +60,7 @@ async function sopra(chi) {
 
 /* ── il portale, toccato col dito ── */
 // con la torcia il portale a tre celle è in luce, quindi si tocca (al buio il dito porterebbe sulla sua cella e basta)
-await entra(`sotterraneo3d=${DISCESA}&seme=${SEME}&stanza=al-portale&torcia=accesa`)
+await entra(`sotterraneo=${DISCESA}&seme=${SEME}&stanza=al-portale&torcia=accesa`)
 {
   const p = await page.evaluate(() => { const c = window.__sotterraneo3d.corsa, r = c.livello.robe.find(q => q.che === 'portale'); return [r.x, r.y] })
   const [sx, sy] = await page.evaluate(([x, y]) => window.__sotterraneo3d.aSchermo(x + 0.5, 0.3, y + 0.5), p)
@@ -83,7 +83,7 @@ await entra(`sotterraneo3d=${DISCESA}&seme=${SEME}&stanza=al-portale&torcia=acce
 }
 
 /* ── la scala che sale del primo piano: «lascio perdere» ── */
-await entra(`sotterraneo3d=${DISCESA}&seme=${SEME}&stanza=al-scala-su`)
+await entra(`sotterraneo=${DISCESA}&seme=${SEME}&stanza=al-scala-su`)
 {
   await page.evaluate(() => { const c = window.__sotterraneo3d.corsa; c.interagisci(c.livello.robe.find(q => q.che === 'scala-su')) })
   await page.waitForSelector('[data-azione="scorda-si"]', { timeout: 10000 })
@@ -92,7 +92,7 @@ await entra(`sotterraneo3d=${DISCESA}&seme=${SEME}&stanza=al-scala-su`)
 }
 
 /* ── svenuti all'ultima occasione: si torna su ── */
-await entra(`sotterraneo3d=${DISCESA}&seme=${SEME}&stanza=sala`)
+await entra(`sotterraneo=${DISCESA}&seme=${SEME}&stanza=sala`)
 {
   // le occasioni prima dell'ultima si spendono nel motore (ci si rialza all'ingresso, sempre giù); l'ultima col dito
   const prove = await page.evaluate(() => {

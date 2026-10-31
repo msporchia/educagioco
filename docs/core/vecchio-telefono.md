@@ -1,7 +1,7 @@
 # Il vecchio telefono: il metro dei giochi 3D
 
 Il metro di paragone è il **Redmi Note 7 della bambina** (Snapdragon 660, Adreno 512, 1080×2340, 393×851 a pixel ratio 2,75). Su
-quel telefono le esplosioni degli Asteroidi e tutto il Sotterraneo 3D vanno a scatti: un gioco 3D è abbastanza leggero
+quel telefono le esplosioni degli Asteroidi e tutto il sotterraneo vanno a scatti: un gioco 3D è abbastanza leggero
 quando lì resta sotto i ~30 ms a fotogramma. Sul computer (RTX, 20 core) non si vede niente, quindi lo si rallenta:
 `node strumenti/vecchio-telefono.mjs` (le opzioni in testa al file).
 
@@ -41,7 +41,7 @@ fuori dai profili (chiave `qualita`) e la rifà dopo 30 giorni, se cambia il pix
 
 Cosa cambia una fascia sta tutto in `PROFILI` di `store/qualita.js`: negli Asteroidi il pixel ratio di partenza (2 / 1,5 / 1),
 il tetto delle scintille (1400 / 700 / 350) e del fumo, e quanto in fretta il gioco scende di pixel (90 fotogrammi lenti a passo
-×0,85 contro 20 a ×0,75); nel Sotterraneo 3D il pixel ratio massimo (1,5 / 1,25 / 1), le fette di nebbia (5 / 3 / 2) e, nella bassa, il passaggio finale
+×0,85 contro 20 a ×0,75); nel sotterraneo il pixel ratio massimo (1,5 / 1,25 / 1), le fette di nebbia (5 / 3 / 2) e, nella bassa, il passaggio finale
 spento, due luci dei fuochi invece di sei, niente luci del rimbalzo e del palco (lampo e magia in una), l'ombra a 512 a fotogrammi
 alterni, meno scintille ([../sotterraneo/grafica-3d-costi.md](../sotterraneo/grafica-3d-costi.md), «La fascia bassa»). **Botti e arredo restano in tutte le fasce** (le ombre no, dal 23/10: la fascia bassa le toglie, con la nebbia a una fetta e meno polvere: misurato sul Note 7, l'ombra costa ~8 ms): dai log del Note 7 i triangoli costano poco (10k → 100k: +1,4 ms), pesano i
 pixel. Emulazione (SwiftShader, CPU ×2,8), p50 di un fotogramma: esplorazione alta 50 ms → bassa 17; scontro con 3 mostri alta 67 →
@@ -80,13 +80,13 @@ più 400 di fumo fino a ~50 px, dipinte su una tela half-float e poi un passaggi
 della tela e la grana. Sul Note 7 le sole scintille a pixel ratio 1,5 costano già 24 ms e a 2 sono ~1,8 volte i pixel: da
 sole oltre il fotogramma. Il gioco abbassa il pixel ratio solo dopo 90 fotogrammi lenti, a passi di ×0,85: durante
 un'esplosione non fa in tempo. **Sul Sotterraneo** il guaio probabile è la nebbia (shader pesante a tutto schermo) e l'ombra
-(15 ms a mappa 1024). Sono ipotesi da confermare togliendo il pezzo (`&spegni=nebbia,post` nel Sotterraneo 3D).
+(15 ms a mappa 1024). Sono ipotesi da confermare togliendo il pezzo (`&spegni=nebbia,post` nel sotterraneo).
 
 
 ## Misurare
 
 ```bash
-node strumenti/vecchio-telefono.mjs 'sotterraneo3d=1&seme=7' --cpu 1,5 --zavorra 0,32 --secondi 10
+node strumenti/vecchio-telefono.mjs 'sotterraneo=1&seme=7' --cpu 1,5 --zavorra 0,32 --secondi 10
 node strumenti/vecchio-telefono.mjs 'mate=3&volo' --esegui '<scatena le esplosioni>' --tocca 200,500
 ```
 
@@ -95,12 +95,12 @@ ratio, chiamate, triangoli). **Liscio** se p95 < 20 ms, **a scatti** se > 33. I 
 «si adatta» dice che è successo; per il costo vero a una risoluzione si fissa col cheat `&dpr=N`, e per confrontare un
 degrado con quello che c'era si usa `--dist` su due file.
 
-Provato il 19 ottobre 2026 (taratura inventata, solo per vedere che le leve muovano): il Sotterraneo 3D (seme 7) passa da
+Provato il 19 ottobre 2026 (taratura inventata, solo per vedere che le leve muovano): il sotterraneo (seme 7) passa da
 55 fps (p95 33 ms) a 27 fps con CPU ×5 e a 13 con in più la zavorra 32; il pixel ratio scende da 1,4 a 1.
 
 ## Lo scontro
 
-`node strumenti/vecchio-telefono.mjs '<cheat dello scontro>' --scontro` porta il Sotterraneo 3D in uno scontro ripetibile: un attacco
+`node strumenti/vecchio-telefono.mjs '<cheat dello scontro>' --scontro` porta il sotterraneo in uno scontro ripetibile: un attacco
 con la risposta giusta ogni tre secondi (`--ogni`), l'eroe che non sviene (la vita torna piena: si misura il disegno, non lo scontro),
 una riga per fase (`fermo` col pannello, `racconto` mentre il colpo si racconta, `fuori`) e sotto il **banco della tela**:
 `window.__sotterraneo3d.banco(30)` disegna la scena ferma trenta volte aspettando ognuna (una lettura di un pixel), quindi dice i ms
@@ -108,12 +108,12 @@ della sola tela senza i 60 Hz e senza la pagina. È la misura da usare per un de
 carichi del computer, il banco molto meno. Il cheat dello scontro:
 
 ```bash
-node strumenti/vecchio-telefono.mjs 'sotterraneo3d=1&seme=11&sotterraneo=branco&mostri=3&tipo=scheletro&stanza=sala&qualita=bassa&dpr=1&eroe=cavaliere' --scontro --secondi 20
+node strumenti/vecchio-telefono.mjs 'sotterraneo=1&seme=11&sotterraneo=branco&mostri=3&tipo=scheletro&stanza=sala&qualita=bassa&dpr=1&eroe=cavaliere' --scontro --secondi 20
 … --scontro --ritmo ';'                       # fermo e basta (nessun attacco)
 … --scontro --ritmo ';' --spegni '-,fuochi:2,lampi,palco,nebbia' --secondi 2   # il banco con un pezzo spento per riga
 … --scontro --gpu hw --core 0 --cpu 5 --traccia 30   # la GPU vera e la CPU lenta: cosa tiene il filo principale
 # lo scontro di sopra, sul prato dei campi (il mondo dà anche lui `corsa`, `palco` e `banco()`): si aspetta il mondo, ci si porta alle vespe
-node strumenti/vecchio-telefono.mjs 'sotterraneo3d=mondo&eroe=cavaliere&qualita=bassa&dpr=1' --scontro --secondi 20 --esegui "new Promise(r => { const t = setInterval(() => { if (window.__mondo3d && window.__sotterraneo3d && window.__sotterraneo3d.pronto) { clearInterval(t); window.__mondo3d.porta(90.5, 43.5); setTimeout(() => { window.__extra = () => window.__sotterraneo3d.banco(30); r() }, 12000) } }, 300) })"
+node strumenti/vecchio-telefono.mjs 'sotterraneo=mondo&eroe=cavaliere&qualita=bassa&dpr=1' --scontro --secondi 20 --esegui "new Promise(r => { const t = setInterval(() => { if (window.__mondo3d && window.__sotterraneo3d && window.__sotterraneo3d.pronto) { clearInterval(t); window.__mondo3d.porta(90.5, 43.5); setTimeout(() => { window.__extra = () => window.__sotterraneo3d.banco(30); r() }, 12000) } }, 300) })"
 ```
 
 Il 19/10 (fascia bassa, 4 core, CPU ×5): il banco della tela nello scontro di sopra 290 ms, il mondo fermo nello stesso posto 281; lo
@@ -156,4 +156,4 @@ correggono a mano o con «Rimisura»; (2) soglie ricavate da tre telefoni: un te
 un secondo carica la GPU in home (un'attesa di 4 secondi, e non parte se si è già entrati in un gioco); (4) una fascia bassa
 toglie nitidezza (pixel ratio 1 su uno schermo a 2,75) e nel Sotterraneo le ombre; (5) lo shader compilato la prima volta in una
 scena (un anello, un guscio) è un fermo che il computer non vede (3 ms contro i ~140 ms misurati sul Note 7): si contano i programmi,
-e il Sotterraneo 3D li compila in anticipo ([../sotterraneo/prestazioni-3d.md](../sotterraneo/prestazioni-3d.md), «Shader e prima apparizione»).
+e il sotterraneo li compila in anticipo ([../sotterraneo/prestazioni-3d.md](../sotterraneo/prestazioni-3d.md), «Shader e prima apparizione»).

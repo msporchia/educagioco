@@ -4,7 +4,7 @@ L'utente, 12 ottobre 2026: «gli scheletri possono avere in mano un'arma e diven
 arciere: basta appiccicarci qualcosa; si possono fare vari livelli di scheletro aumentando la qualità dell'arma, quindi c'è molta varianza; e nella
 schermata chiamali scheletro, scheletro mago, scheletro spettrale magico, insomma le solite combinazioni come per le armi, per dargli gradatura ed
 epicità». Il codice: `dati/varianti.js` (tutto il dato e le funzioni pure), `motore/livello.js` (`mostro`, `faiCaporale`: dove si pescano),
-`scena/tela.js` (`armaDelMostro`: sul campo), `viste/Creatura.vue` e `viste/Scontro.vue` (nello scontro), `motore/scontro.js` (il gelo del mago).
+`scena3d/mostro3d.js` e `scena3d/cose.js` (l'arma in pugno, sul campo e nello scontro), `motore/scontro.js` (il gelo del mago).
 
 ## Le varianti
 
@@ -44,8 +44,7 @@ mani ne ha uno, e anche **ogni caporale**, che non è mai comune: sono i buoni p
   «Scheletro mago antico» (magico: antico, tetro, cupo), «Scheletro mago spettrale» (raro: spettrale, runico, oscuro), «Scheletro mago spettrale arcano»
   (leggendario: l'aggettivo del raro e uno suo, arcano, immortale, eterno). Al femminile dove la specie lo è («tartaruga corazzata antica»). Quale degli
   aggettivi lo decide il caso del piano. Il caporale aggiunge in fondo «caporale».
-- **Il colore e l'alone**: il nome sullo schermo ha il colore della rarità (`coloreDelGrado`, quello di `RARITA`) e la figura un alone dello stesso colore (nello
-  scontro `drop-shadow` sul `sot-figura`, il leggendario brilla; sul campo la stessa aura della roba per terra). L'arma ha il pregio del grado (1 comune,
+- **Il colore e l'alone**: il nome sullo schermo ha il colore della rarità (`coloreDelGrado`, quello di `RARITA`) e la figura un alone dello stesso colore (il leggendario brilla). L'arma ha il pregio del grado (1 comune,
   2 magico, 3 raro, 4 leggendario): `armaDi` prende fra le figure delle basi della variante, e delle sue tinte (il mago ha il bastone del ghiaccio, a
   leggendario anche arcano) quelle col pregio più vicino.
 - **Cosa cambia di vero**: raro e leggendario hanno **un punto di velocità in più** (`VELOCITA_DEL_GRADO`), e abbatterli vale di più (gemme ed

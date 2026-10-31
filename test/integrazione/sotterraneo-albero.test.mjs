@@ -7,11 +7,12 @@
    guerriero (spada nella destra, bacchetta nella mancina) vede la Lama
    arcana, che vuole la spada e picchia con l'intelligenza; due nodi nella
    stessa riga sono una scelta; il medaglione toccato dice l'elemento e chi
-   prende il colpo; un punto dato accende il nodo.
+   prende il colpo; un punto dato accende il nodo. La pagina si apre dal mondo
+   di sopra (il globo dell'eroe nella barra), dove si entra dalla carta.
    `node test/esegui.mjs sotterraneo-albero --scatti`
-   tempo: 40
+   tempo: 150
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, mondoPronto } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
@@ -21,19 +22,19 @@ const roba = { v: 1, gemme: 40, zaino: ['pozione'], mano: 'spada', mancina: 'ver
 // un mago guerriero del livello 12: i primi tre nodi di tre rami già imparati, un punto ancora da dare
 const albero = { 'dardo-di-fuoco': 1, 'fiamma-viva': 1, 'sfera-di-fuoco': 1, 'scudo-arcano': 1, 'fonte-arcana': 1, 'lama-incantata': 1, incanto: 1, 'lama-di-fuoco': 1, 'falciata-arcana': 1 }
 const avventura = { tappa: 1, libera: false, stelle: { 0: 3 }, missioni: {}, roba,
-  terra: { nebbia: 'f'.repeat(768), dove: [55, 11], parlato: true },
+  mondo: { parlato: true },
   crescita: { v: 2, esp: sogliaDi(12), forza: 1, destrezza: 0, intelligenza: 4, tempra: 0, albero, caselle: ['sfera-di-fuoco', 'lama-incantata', 'scudo-arcano'] } }
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
 await semina(page, {
-  coins: 300, settings: { sperimentali: true },
+  coins: 300,
   campagne: { sotterraneo: { tappa: 1, libera: false, stelle: { 0: 3 },
     cfg: { mondo: MONDO, eroe: 'mago', avventure: { mago: avventura } } } },
 })
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await mondoPronto(page)
 await attendi(page, 600)
 
 const cdp = await page.context().newCDPSession(page)

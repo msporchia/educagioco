@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    I PESI DEI MODELLI 3D — `pesi-3d.html`, la pagina di `strumenti/pesi-3d.mjs`
 
-   Ogni modello 3D (mostri, persone, eroi, roba del Sotterraneo 3D; i pezzi della Fattoria 3D) costruito come lo costruisce il
+   Ogni modello 3D (mostri, persone, eroi, roba del sotterraneo; i pezzi della Fattoria 3D) costruito come lo costruisce il
    gioco (i mostri e l'eroe saldati), in `copie` copie su un fondo fisso con le luci delle discese in fascia bassa (emisferica,
    sole, due fuochi), tutte alla stessa misura (la più grande dimensione 1,6): così la classifica dice la complessità (chiamate,
    triangoli, shader, animazione), non quanto è grande a schermo. Per ogni voce: chiamate, triangoli, mesh, punti (gli aloni),

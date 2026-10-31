@@ -22,7 +22,7 @@ import { creaMaschera } from '../../src/giochi/sotterraneo/scena3d/maschera.js'
 import { BOTTI_PER_PAESAGGIO } from '../../src/giochi/sotterraneo/dati/botti.js'
 import { AGIO, FIGURE_MAX } from '../../src/giochi/sotterraneo/scena3d/costanti.js'
 import { Scene, InstancedMesh } from 'three'
-import { gemelloDi } from '../../src/data/portata-giochi.js'
+import { GIOCHI } from '../../src/data/giochi.js'
 import { gioco as giocoNuovo } from '../../src/giochi/indice.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -181,11 +181,12 @@ for (const p of [0, 6, 12]) { const c = corsaDi(L_ABISSO, 5); if (p) { c.piano =
 
 // le botti da rompere hanno il loro test: unita/sotterraneo-botti
 
-/* ── la carta «riprendi» della home: il 3D prende la ripresa del gemello 2D (stessa sosta, un manifesto solo) ── */
+/* ── una carta sola: il sotterraneo è questo, per tutti (docs/sotterraneo/grafica-3d.md) ── */
 {
-  uguale('il 3D è il gemello del sotterraneo', gemelloDi('sotterraneo3d'), 'sotterraneo')
-  uguale('un gioco senza gemello è se stesso', gemelloDi('torri'), 'torri')
-  const m = giocoNuovo(gemelloDi('sotterraneo3d'))
+  const carte = GIOCHI.filter(g => /sotterraneo/.test(g.chiave))
+  uguale('una carta sola, la chiave di sempre', carte.map(g => g.chiave).join(), 'sotterraneo')
+  controlla('non sta fra i giochi in prova', !carte[0].sperimentale)
+  const m = giocoNuovo('sotterraneo')
   const r = m.ripresa({})
   uguale('senza sosta niente da riprendere', r, null)
 }

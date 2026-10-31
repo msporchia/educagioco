@@ -1,8 +1,8 @@
 # Lo scontro a gruppi: l'interfaccia e la vista
 
 La regola dello scontro sta in [scontro.md](scontro.md); qui com'è fatta la vista e cosa le dà il motore. Il codice:
-`viste/Scontro.vue` (il palco), `viste/FilaDeiTurni.vue` (la colonna dei turni), `viste/CaselleAbilita.vue` (la scelta in
-basso), `viste/Grosso.vue` (la figura del grosso), `viste/campo.js` (dal foglio ai dati della vista, `piazza`: i piedi di ognuno), `viste/racconto.js` (le azioni di un turno, una alla volta), `Gioco.vue` (`nemico`, `scegliColpo`, `scegliIlBersaglio`,
+`viste/Scontro3d.vue` (le scritte sopra le figure; il palco sul pavimento è in `scena3d/palco.js`, [grafica-3d.md](grafica-3d.md#lo-scontro)), `viste/FilaDeiTurni.vue` (la colonna dei turni), `viste/CaselleAbilita.vue` (la scelta in
+basso), `viste/Grosso.vue` (la figura del grosso), `viste/campo.js` (dal foglio ai dati della vista), `viste/racconto.js` (le azioni di un turno, una alla volta), `Gioco.vue` (`nemico`, `scegliColpo`, `scegliIlBersaglio`,
 `mostra`), `stile-scontro.css`.
 
 ## L'interfaccia del motore
@@ -45,39 +45,23 @@ Tutto sta in `Corsa.foglio` (`che: 'scontro'`) e nelle funzioni di `Corsa`; un m
 
 - **Il palco è un pezzo di stanza, non una fascia con uno sfondo.** L'utente, 12 ottobre 2026: «è una questione di dimensione del
   mostro rispetto allo spazio sul terreno: ti aspetti le proporzioni di Diablo, dove c'è più terreno, e non è solo un piccolo
-  sfondo il terreno». Il fondale è lo scenario vero (`Palco.vue`: parete e pavimento delle stanze), con **la parete ridotta a uno
-  zoccolo in cima** (`ZOCCOLO`, 40 px: la striscia della parete a ×2) e **il pavimento che riempie il resto**, disegnato alla
-  scala degli sprite (`SCALA_PALCO` = 2: una piastrella è grande quanto le figure che ci stanno sopra, mai ingrandita a parte).
-  Il riquadro ha altezza fissa (264 px, 316 da quattro mostri in su: `ALTO_PALCO`) e sta fermo in cima alla finestra (`sticky`):
-  su un telefono stretto scorre al più la scelta, mai il fondale.
-- **Le figure stanno in piedi sul pavimento, mai sulla parete**, ognuna con un'ombra ovale sotto i piedi. `piazza` (`viste/campo.js`)
-  dà a ogni posto il punto dei piedi (`--x`, `--y`); chi sta più in basso è davanti (`z`), chi sta più in alto è appena più
-  piccolo (scala ×0,875, a quarti: i pixel restano nitidi) e disegnato prima. Piccoli scarti per posto, ma stabili (non a caso a
-  ogni render).
+  sfondo il terreno». Combattenti, ombre, telecamera e disposizione: [grafica-3d.md](grafica-3d.md#lo-scontro).
 - **L'eroe a sinistra, a metà del pavimento** (l'utente, 13 ottobre: il compagno non c'è, «mettilo al centro»). Quando ci sarà il
   compagno la formazione cambia: l'eroe un po' sopra e il compagno sfalsato sotto, in diagonale ([scontro.md](scontro.md#cosa-resta-fuori-per-dopo)).
 - **Niente chiave sui mostri**, né nello scontro né sul campo (l'utente, 13 ottobre): chi ha la chiave della scala lo dice la mappina.
 - **I mostri sono in colonne verticali sul lato destro, non in file** (l'utente, 12 ottobre: «sono disposti come statuine su due file,
-  è poco realistico»; come i Final Fantasy e i side-view di RPG Maker): due colonne fino a quattro mostri, tre da cinque (fino a sette: quattro, tre e due, `SLOT[7]`); la
-  colonna più vicina all'eroe è davanti; dentro una colonna sono uno sopra l'altro e sfalsati a scaletta. I punti sono la tabella
-  `SLOT` di `campo.js` (u: 0 vicino all'eroe, 1 in fondo; v: 0 lontano, 1 vicino), tarati perché il «ti colpisce N» di uno non cada
-  sull'altro. Uno o due mostri stanno al centro del pavimento. **Il grosso sta davanti e al centro**, gli altri ai lati e dietro (i
-  piccoli negli spazi). I posti sono quelli del motore e i consecutivi stanno nella stessa colonna o in colonne accanto, così i
-  «vicini» delle forme `vicini` e `catena` lo sono anche nel disegno. `disponi` dice ancora quante «file» (1 o 2, l'altezza) e chi è il grosso.
-  Chi cade resta al suo posto e svanisce: niente scatta di posto.
-- **La caduta** (`restiDi`, `.sot-a-terra` in `viste/Scontro.vue`): chi cade non svanisce in piedi ma prende il suo pezzo a terra, `<nome>-morto-0` (le pose
-  che i fogli dipingono dopo ogni creatura: un cadavere, delle ossa, una pozza, un mucchio di brace o di polvere, secondo la creatura), e se c'è un secondo
-  pezzo (`-morto-1`, i resti) lo prende dopo 0,3 secondi; ci resta quasi un secondo e poi svanisce come prima. Non respira, e niente barra della vita.
-  Il grosso e chi non ha il pezzo (il pipistrello occhio, le creature di 0x72) svaniscono in piedi com'era. Nei test: `integrazione/sotterraneo-caduta`.
-- **Gli sprite hanno una sola scala per tutti** (`SCALA_FIGURE`; i mostri dipinti `TAGLIA` volte l'eroe, a quarti; **il grosso sta in una
-  scatola**: alto al più 1,9 eroi e largo al più 3, `ingrandimentoDelGrosso` in `dati/grossi.js`, perché un ragno largo e un negromante alto
-  non debordino né restino nani; l'utente, 13 ottobre: Zannaverde e la sua corona troppo grandi). La corona è un terzo della figura. **Lo stesso
-  vale sul campo** (`fattoreDelMostro`): le bestie piccole sono piccole come nello scontro, le grosse restano com'erano, un ingrandimento
-  non supera i 44 px di larghezza (le caselle sono di 16).
+  è poco realistico»; come i Final Fantasy e i side-view di RPG Maker): la colonna più vicina all'eroe è davanti; dentro una colonna sono
+  uno sopra l'altro e sfalsati a scaletta. **Il grosso sta davanti e al centro**, gli altri ai lati e dietro. I posti sono quelli del
+  motore e i consecutivi stanno nella stessa colonna o in colonne accanto, così i «vicini» delle forme `vicini` e `catena` lo sono anche
+  nel disegno. `disponi` (`viste/campo.js`) dice quante «file» (1 o 2, l'altezza) e chi è il grosso. Chi cade resta al suo posto: niente
+  scatta di posto.
+- **La caduta**: chi cade non svanisce in piedi ma prende il suo pezzo a terra (le pose che i fogli dipingono dopo ogni creatura: un
+  cadavere, delle ossa, una pozza, un mucchio di brace o di polvere, secondo la creatura), ci resta quasi un secondo e poi svanisce.
+  Non respira, e niente barra della vita. Il grosso e chi non ha il pezzo svaniscono in piedi. Nei test: `integrazione/sotterraneo-caduta`.
 - **Il nome sta solo sul bersaglio e su chi ha un grado** (`[data-nome-mostro]`, senza articolo e piccolo: «Scheletro», «Scheletro mago spettrale»;
   l'utente, 13 ottobre: un nome sopra tutti affollava il palco; il bersaglio lo porta tenue, un grado ha il colore della sua rarità e la figura un
-  alone dello stesso colore; il grosso ha il suo nome nella barra in cima) e, se è una variante armata, **l'arma in pugno** (`viste/Creatura.vue`,
-  [varianti.md](varianti.md)). Chi ha i passi è di profilo (la posa di lato ferma); gli altri respirano.
+  alone dello stesso colore; il grosso ha il suo nome nella barra in cima) e, se è una variante armata, l'arma in pugno
+  ([varianti.md](varianti.md)). Chi ha i passi è di profilo; gli altri respirano.
 - **Sotto ogni mostro la sua barra della vita, senza numeri** (il brivido di non sapere quanto resiste); **sopra «ti colpisce
   N»**, o «salta il turno» se è stordito. Gli stati addosso sono pastiglie piccole (glifo e turni che restano; il testo intero
   sta nel `title`) e cambiano il colore della figura. Chi porta la chiave ha una chiavetta in un angolo.

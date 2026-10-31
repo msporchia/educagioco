@@ -8,7 +8,6 @@ import { COSE, IN_VENDITA, A_SORTE, PREZZO_PERGAMENA, PERGAMENE_MASSIME } from '
 import { mercanteDi, schedeDi, guastiDeiMercanti } from '../../src/giochi/sotterraneo/dati/mercanti.js'
 import { missioneDi, guastiDelleMissioni, personaDi } from '../../src/giochi/sotterraneo/dati/missioni.js'
 import { eroeDi } from '../../src/giochi/sotterraneo/dati/eroi.js'
-import { PORTALE } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { Bottega } from '../../src/giochi/sotterraneo/motore/bottega.js'
 import { tascheDello } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
@@ -172,7 +171,6 @@ function scesa(tappa = CAMPAGNA[1], zaino = [P, P]) {
 {
   const v = ultimoPostoSicuro({})
   uguale('oggi è il villaggio', v.chiave, 'villaggio')
-  uguale('accanto al gemello, sulla terra di sopra', v.terra.join(), PORTALE.accanto.join())
   controlla('e nel mondo in 3D al portale', v.mondo.portale === true)
   const n = ultimoPostoSicuro({ mondo: { sicuro: { chiave: 'roccalta' } } })
   controlla('quando il mondo nuovo scrive la città toccata, la si legge (col portale di ripiego)', n.chiave === 'roccalta' && n.mondo.sicuro === 'roccalta' && n.mondo.portale)

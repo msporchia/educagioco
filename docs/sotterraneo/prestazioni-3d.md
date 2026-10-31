@@ -1,4 +1,4 @@
-# Il Sotterraneo 3D sul telefono lento
+# Il sotterraneo sul telefono lento
 
 Il bersaglio è il Redmi Note 7 della bambina (fascia bassa, la CPU 4-6 volte più lenta di un PC). Qui le quattro scene più pesanti
 misurate in Chrome senza schermo con la CPU rallentata (`Emulation.setCPUThrottlingRate`) e la GPU finta (SwiftShader: la CPU fa la
@@ -104,15 +104,15 @@ solo, e la scena (muri, pavimento, colonne, arredo, particelle) contata per fami
 
 ```bash
 npm run build && cp dist/index.html tmp/prima.html   # il file di prima; poi la modifica, di nuovo npm run build
-S='sotterraneo3d=1&seme=11&stanza=sala&sotterraneo=branco&mostri=3&tipo=scheletro&variante=guerriero,arciere,mago&grado=leggendario&corredo=leggendario&eroe=cavaliere&qualita=bassa&dpr=1'
+S='sotterraneo=1&seme=11&stanza=sala&sotterraneo=branco&mostri=3&tipo=scheletro&variante=guerriero,arciere,mago&grado=leggendario&corredo=leggendario&eroe=cavaliere&qualita=bassa&dpr=1'
 node strumenti/profila-app.mjs "$S" --contro tmp/prima.html --lento 1,4,6 --secondi 8 --funzioni 0 \
   --pronto 'window.__sotterraneo3d && window.__sotterraneo3d.grafica().mostri3d >= 3' --stampa 'window.__sotterraneo3d.grafica()'
 # il villaggio (per i due branchi --prima porta l'eroe fra i due branchi più vicini: il punto medio dei loro centri)
-node strumenti/profila-app.mjs 'sotterraneo3d=mondo&eroe=cavaliere&qualita=bassa&dpr=1' --contro tmp/prima.html --lento 1,4,6 --secondi 8 --funzioni 0 \
+node strumenti/profila-app.mjs 'sotterraneo=mondo&eroe=cavaliere&qualita=bassa&dpr=1' --contro tmp/prima.html --lento 1,4,6 --secondi 8 --funzioni 0 \
   --pronto 'window.__sotterraneo3d && window.__sotterraneo3d.pronto' --prima "window.__mondo3d.vai('personaggio:villaggio:capitano')" \
   --stabile 'window.__sotterraneo3d.grafica().pezzi.join() + window.__sotterraneo3d.grafica().zone.join()' --stampa 'window.__sotterraneo3d.grafica()'
 # lo zaino
-node strumenti/profila-app.mjs 'sotterraneo3d=1&seme=11&eroe=cavaliere&sotterraneo=roba&qualita=bassa&dpr=1' --contro tmp/prima.html --lento 1,4,6 --secondi 8 --funzioni 0 \
+node strumenti/profila-app.mjs 'sotterraneo=1&seme=11&eroe=cavaliere&sotterraneo=roba&qualita=bassa&dpr=1' --contro tmp/prima.html --lento 1,4,6 --secondi 8 --funzioni 0 \
   --pronto 'window.__sotterraneo3d && window.__sotterraneo3d.grafica().chiamate > 0' --esegui "document.querySelector('[data-azione=\"zaino\"]').click()" \
   --stampa 'window.__anteprime3d.stato()'
 ```
@@ -140,7 +140,7 @@ Il ritaglio, il terreno, l'arredo e la torcia semplici, l'arredo fuso e le matri
 ## Shader e prima apparizione
 
 Sul Redmi Note 7 (log del 22/10, `strumenti/vecchio-telefono/log/redmi-note7-veri-22ott.txt`) la prima apparizione di una scena del
-Sotterraneo 3D ferma il fotogramma **2-6 s**, con 40-57 programmi di shader nuovi (548 in tutta la prova); il telefono non ha
+Il sotterraneo ferma il fotogramma **2-6 s**, con 40-57 programmi di shader nuovi (548 in tutta la prova); il telefono non ha
 `KHR_parallel_shader_compile`, quindi ogni programma si compila al suo primo disegno, ~140 ms l'uno, e lo zaino con 15 anteprime ha un
 fotogramma fermo di **400 ms**. three fa un programma per ogni combinazione di tipo di materiale, luci, ombra, nebbia, colori ai
 vertici, trame, trasparenza, facce, istanze e codice aggiunto (`customProgramCacheKey`). Le leve, in quest'ordine:
@@ -203,7 +203,7 @@ stesso tipo; `grafica().programmi` quanti, `grafica().daScaldare` quanti pezzi r
 sul telefono lo dice la misura coi modelli veri, «L'ingresso» ([../core/vecchio-telefono-veri.md](../core/vecchio-telefono-veri.md)).
 
 ```bash
-S='sotterraneo3d=1&seme=11&stanza=sala&sotterraneo=branco&mostri=3&tipo=scheletro&variante=guerriero,arciere,mago&grado=leggendario&corredo=leggendario&eroe=cavaliere&qualita=bassa&dpr=1'
+S='sotterraneo=1&seme=11&stanza=sala&sotterraneo=branco&mostri=3&tipo=scheletro&variante=guerriero,arciere,mago&grado=leggendario&corredo=leggendario&eroe=cavaliere&qualita=bassa&dpr=1'
 node strumenti/profila-app.mjs "$S" --secondi 3 --funzioni 0 --pronto 'window.__sotterraneo3d && window.__sotterraneo3d.grafica().mostri3d >= 3' \
   --stampa 'window.__sotterraneo3d.programmi()'
 ```

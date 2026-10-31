@@ -256,7 +256,7 @@ async function cicloGiu(i) {
   passi.length = 0
   if (i === 0) await prova('abisso', async () => {
     await via()
-    await page.evaluate(() => { location.hash = 'sotterraneo3d=abisso&abisso=1&eroe=cavaliere&qualita=bassa&dpr=1' })
+    await page.evaluate(() => { location.hash = 'sotterraneo=abisso&abisso=1&eroe=cavaliere&qualita=bassa&dpr=1' })
     await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.corsa && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 30000 })
     await attendi(page, 3000)
   })
@@ -290,7 +290,7 @@ async function ciclo(i) {
   if (!(RESTA && i > 0)) {
     // (a) una discesa con uno scontro, nel paesaggio del giro
     await via()
-    const h = `sotterraneo3d=1&eroe=cavaliere&seme=${11 + i}&sotterraneo=branco&mostri=3&tipo=${TIPI[i % TIPI.length]}&stanza=sala&scenario=${SCENARI[i % SCENARI.length]}&qualita=bassa&dpr=1`
+    const h = `sotterraneo=1&eroe=cavaliere&seme=${11 + i}&sotterraneo=branco&mostri=3&tipo=${TIPI[i % TIPI.length]}&stanza=sala&scenario=${SCENARI[i % SCENARI.length]}&qualita=bassa&dpr=1`
     if (FASI.has('discesa')) await prova('discesa', async () => {
       await page.evaluate(h => { location.hash = h }, h)
       await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 30000 })
@@ -466,7 +466,7 @@ await page.waitForSelector('.carte', { timeout: 15000 })
 if (opz('veri')) await banco(opz('veri').split(','))
 async function banco(solo) {
   // prima una discesa, per prendere i prototipi di three (la misura non espone le sue scene), poi in home
-  await page.evaluate(() => { location.hash = 'sotterraneo3d=1&eroe=cavaliere&seme=11&qualita=bassa&dpr=1' })
+  await page.evaluate(() => { location.hash = 'sotterraneo=1&eroe=cavaliere&seme=11&qualita=bassa&dpr=1' })
   await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 30000 })
   await misura('discesa')
   await aCasa()

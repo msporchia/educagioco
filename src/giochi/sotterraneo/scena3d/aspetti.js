@@ -1,6 +1,6 @@
 // Ogni paesaggio ha il suo aspetto in 3D: la forma delle pareti, il disegno del pavimento, i colori, la luce, la nebbia, l'aria,
 // l'arredo fitto, l'acqua. La chiave è lo scenario vero del piano (`corsa.scenario`, dati/campagna.js `scenarioDi`: nell'abisso
-// cambia coi tratti) o, se c'è, il `paesaggio` della discesa o del tratto: un paesaggio solo del 3D (la grotta, la neve, il
+// cambia coi tratti) o, se c'è, il `paesaggio` della discesa o del tratto: un paesaggio che il motore non ha (la grotta, la neve, il
 // ghiaccio…) porta in sé lo scenario del motore di cui usa i pezzi (`base`: porte, forzieri, arredo da toccare). Il colore della
 // roccia viene dallo scenario. Dato puro, gira in Node: unita/sotterraneo-3d e unita/sotterraneo-paesaggi. Le regole e come se
 // ne aggiunge uno: docs/sotterraneo/paesaggi-3d.md.
@@ -58,7 +58,7 @@ export const ASPETTI_3D = {
     arredo: [['spuntoni', 0.7], ['ossa', 0.35]],
   },
 
-  // ── i paesaggi solo del 3D: `base` è lo scenario del motore da cui prendono porte, forzieri e arredo ──
+  // ── i paesaggi senza scenario proprio: `base` è lo scenario del motore da cui prendono porte, forzieri e arredo ──
   // la grotta: terra battuta coi sassi, pareti di roccia viva che strapiombano, stalagmiti, funghi azzurri che fanno luce, gocce
   grotta: {
     nome: 'la grotta',

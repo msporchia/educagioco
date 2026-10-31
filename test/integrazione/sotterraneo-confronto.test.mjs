@@ -5,24 +5,24 @@
    e «Questo» a destra, una riga per ogni abilità che almeno uno dei due
    ha (docs/sotterraneo/bottega-finestra.md, «La bottega e lo zaino»). Il caso con una
    riga sola lo copre `sotterraneo-mercanti`; qui un eroe vestito (spada e
-   scudo, un amuleto al dito) davanti al banco dell'armaiolo: lo spadone
+   scudo borchiato) dal fabbro del villaggio: lo spadone
    prende il posto di arma e scudo insieme, e uno scudo con più abilità
    sta contro quello che si ha. Sul telefono (390 px) le colonne stanno.
    I tocchi sono tocchi, via CDP (docs/core/il-dito.md).
    `node test/esegui.mjs sotterraneo-confronto`
-   tempo: 40
+   tempo: 200
    ═══════════════════════════════════════════════════════════════════ */
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, allaLinguettaDi, nelDialogo, finestraFerma } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, allaLinguettaDi, mondoPronto, finestraFerma, alBancoDi,
+         senzaPensieri } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
-import { MERCANTI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
 /* sei discese finite: l'armaiolo porta lo spadone e, in vetrina, lo scudo del teschio (dati/storia.js). L'eroe sta già
-   accanto a lui, vestito di spada e scudo borchiato (braccio 2, difesa 1, vita 3) */
+   vestito di spada e scudo borchiato (braccio 2, difesa 1, vita 3) */
 const roba = { v: 1, gemme: 99, zaino: [], mano: 'spada', mancina: 'scudo-borchiato', corpo: null, dito: null,
                torcia: 0, torce: 0 }
 const stelle = { 0: 3, 1: 3, 2: 3, 3: 3, 4: 3, 5: 3 }
@@ -30,10 +30,11 @@ await semina(page, {
   coins: 300, settings: { sperimentali: true },
   campagne: { sotterraneo: { tappa: 6, libera: false, stelle,
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: 6, libera: false, stelle, missioni: {},
-      roba, terra: { nebbia: 'f'.repeat(768), dove: MERCANTI.armaiolo.accanto, parlato: true } } } } } },
+      roba, mondo: { parlato: true } } } } } },
 })
+await senzaPensieri(page)   // il fumetto dei pensieri, con un segno, prende il tocco
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await mondoPronto(page)
 await attendi(page, 500)
 
 const cdp = await page.context().newCDPSession(page)
@@ -49,10 +50,7 @@ async function toccaIl(sel) {
 }
 const testo = async sel => (await page.locator(sel).innerText()).replace(/\s+/g, '')
 
-await toccaIl('[data-mercante="armaiolo"]')
-await nelDialogo(page, '[data-scelta="bottega"]', { tocca: toccaIl })   // si parla, e «fammi vedere» apre il banco
-await page.waitForSelector('[data-bottega]', { timeout: 5000 })
-await attendi(page, 500)   // la bottega è cieca per un attimo (Bottega.vue, CIECO)
+await alBancoDi(page, 'armaiolo', { tocca, toccaIl })   // l'eroe va dal fabbro, si parla, e «fammi vedere» apre il banco
 
 /* ---------- lo spadone: arma e scudo insieme contro un pezzo a due mani ---------- */
 uguale('lo spadone sta al banco', await allaLinguettaDi(page, 'spadone', { tocca }), true)

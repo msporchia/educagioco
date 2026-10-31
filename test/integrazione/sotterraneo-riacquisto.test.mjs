@@ -8,14 +8,13 @@
    bottega.md, «Riacquista»). In più il banco di chi veste ha le sue dieci
    caselle per linguetta e a 390 px la griglia regge: scorre solo lei.
    `node test/esegui.mjs sotterraneo-riacquisto`
-   tempo: 60
+   tempo: 300
    ═══════════════════════════════════════════════════════════════════ */
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
-import { apriBrowser, apriGioco, azzera, semina, attendi, scegli, leggiProfilo, nelDialogo, scatto,
-         vendiNellaBottega, riacquistaNellaBottega , finestraFerma } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, attendi, scegli, leggiProfilo, mondoPronto, scatto, alBancoDi, senzaPensieri,
+         vendiNellaBottega, riacquistaNellaBottega, finestraFerma } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
-import { MERCANTI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -27,10 +26,11 @@ await semina(page, {
   coins: 300, settings: { sperimentali: true },
   campagne: { sotterraneo: { tappa: 2, libera: false, stelle,
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: 2, libera: false, stelle, missioni: {},
-      roba, terra: { nebbia: 'f'.repeat(768), dove: MERCANTI.rigattiere.accanto, parlato: true } } } } } },
+      roba, mondo: { parlato: true } } } } } },
 })
+await senzaPensieri(page)   // il fumetto dei pensieri, con un segno, prende il tocco
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await mondoPronto(page)
 await attendi(page, 500)
 
 const cdp = await page.context().newCDPSession(page)
@@ -46,15 +46,12 @@ async function toccaIl(sel) {
 }
 const gemmeBottega = async () => Number((await page.locator('[data-gemme-bottega]').innerText()).match(/\d+/)[0])
 const daRiprendere = () => page.locator('[data-riacquisto]').evaluateAll(els => els.map(e => e.dataset.riacquisto))
-async function apriDalRigattiere() {
-  await toccaIl('[data-mercante="rigattiere"]')
-  await nelDialogo(page, '[data-scelta="bottega"]', { tocca: toccaIl })
-  await page.waitForSelector('[data-bottega]', { timeout: 5000 })
-  await attendi(page, 500)    // la bottega è cieca per un attimo (Bottega.vue, CIECO)
-}
+// l'eroe va dal rigattiere del villaggio, gli parla, e il banco si apre (la bottega è cieca per un attimo: lo aspetta l'aiuto)
+const apriDalRigattiere = () => alBancoDi(page, 'rigattiere', { tocca, toccaIl })
 async function chiudiBanco() {
-  await toccaIl('[data-chiudi]')
-  await page.waitForSelector('[data-chiudi]', { state: 'detached', timeout: 3000 })
+  await toccaIl('[data-bottega] [data-chiudi]')
+  await page.waitForSelector('[data-bottega]', { state: 'detached', timeout: 3000 })
+  await attendi(page, 400)
 }
 
 await apriDalRigattiere()

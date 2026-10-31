@@ -35,7 +35,7 @@ async function misura(hz) {
     setTimeout(giro, 0)
   }, hz)
   // il cambio del solo indirizzo dopo il # non ricarica la pagina: si ricarica, perché l'orologio finto entri prima del gioco
-  await page.evaluate(() => { location.hash = 'sotterraneo3d=2&eroe=elfa&seme=7&stanza=sala&luce=stanza&sotterraneo=branco&mostri=2&campo=1&dpr=0.6&spegni=nebbia,polvere,ombre' })
+  await page.evaluate(() => { location.hash = 'sotterraneo=2&eroe=elfa&seme=7&stanza=sala&luce=stanza&sotterraneo=branco&mostri=2&campo=1&dpr=0.6&spegni=nebbia,polvere,ombre' })
   await page.reload()
   await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 2, null, { timeout: 60000 })
   // un secondo simulato: i cambi di sprite, e dove va la telecamera mentre l'eroe resta fermo (da subito ferma)

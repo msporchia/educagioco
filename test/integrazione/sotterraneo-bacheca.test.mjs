@@ -67,7 +67,7 @@ await semina(page, {
       // tre taglie in mano: una fatta da consegnare, una mappa da scavare, uno da cercare (il tetto)
       missioni: {}, mondo: { giro: 0, parlato: true, quest: { stati: { [FATTA]: 'fatta', [MAPPA]: 'presa', [CERCA]: 'presa' }, fatte: 0 } } } } } } },
 })
-await scegli(page, 'sotterraneo3d')
+await scegli(page, 'sotterraneo')
 await scegliAvventura(page, 'cavaliere')
 await mondoPronto(page)
 // la bacheca non è uno scontro: i mostri di sopra (la X sta vicino alla tana della regione) si tolgono, li prova integrazione/sotterraneo-mostri-sopra

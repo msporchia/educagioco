@@ -752,7 +752,7 @@ const anello = (x, y, c, max) => anelli.push({ x, y, r: 0, max, vita: 1, c })
 let osservatore = null
 function ridimensiona() {
   const prima = W
-  // il campo, non la finestra: su un PC il gioco sta in una colonna (come nel Sotterraneo 3D)
+  // il campo, non la finestra: su un PC il gioco sta in una colonna (come nel sotterraneo)
   const c = campoEl.value
   W = c?.clientWidth || window.innerWidth; H = c?.clientHeight || window.innerHeight
   S = Math.max(0.6, Math.min(1.6, Math.min(W, H) / 700))

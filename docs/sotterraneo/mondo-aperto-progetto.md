@@ -2,21 +2,20 @@
 
 # Il mondo aperto: il progetto
 
-**Una proposta, non ancora decisa né costruita.** La terra di sopra del Sotterraneo 3D diventa un mondo grande generato da
+**Una proposta, non ancora decisa né costruita.** Il mondo di sopra del sotterraneo diventa un mondo grande generato da
 un seme, alla Diablo: si parte da una città al centro, le regioni salgono di livello man mano che ci si allontana, i
 confini si leggono (fiumi, creste, ponti, valichi), più città si collegano con pietre del viaggio, e nelle regioni
 si trovano dungeon in cui entrare. La direzione è dell'utente (16 ottobre 2026): *«ridisegnare la mappa usando questo
 sistema, rinominare i dungeon e sfruttare a pieno le potenzialità senza limitarci a come eravamo messi prima»*. Parte dal
-prototipo `poc/mondo-sopra` ([../../poc/mondo-sopra.md](../../poc/mondo-sopra.md)) e dal Sotterraneo 3D in prova
-(ramo `worktree-agent-a4eaa3fe3a5843957`, `docs/sotterraneo/grafica-3d.md` di quel ramo).
+prototipo `poc/mondo-sopra` ([../../poc/mondo-sopra.md](../../poc/mondo-sopra.md)) e dal disegno del sotterraneo
+([grafica-3d.md](grafica-3d.md)).
 
 Le quest e la storia: [mondo-aperto-quest.md](mondo-aperto-quest.md). I dati e il travaso:
 [mondo-aperto-dati.md](mondo-aperto-dati.md). Il 3D, gli oggetti modellati, le fasi, i test e i rischi:
 [mondo-aperto-fasi.md](mondo-aperto-fasi.md). Le scelte non ovvie sono segnate **da decidere**, con la
 raccomandazione e il perché.
 
-- **Nasce nel Sotterraneo 3D**, il gioco in prova; il Sotterraneo di sempre (2D, mappa dipinta, discese in fila) resta
-  com'è finché non si decide altro.
+- **Vive nel sotterraneo**: sotto le discese, il mondo di sopra.
 - **Le regole del sotterraneo non cambiano**: ogni cosa costa una risposta, la domanda è quella di oggi (`quiz/scelta.js`
   col `dif` del posto), nessuna risposta sbagliata paga, l'età non chiude i posti (solo la storia).
 
@@ -95,8 +94,7 @@ Le grate e i passaggi chiusi dalla storia non ci sono più (nessun passaggio chi
   mezzo a una frase («sotto la torre bruciata non duri»). Il nome dice l'interno (l'ambientazione,
   [ambientazioni.md](ambientazioni.md)), non il disegno di sopra, che adesso è un monumento modellato e può cambiare.
   Niente nome del grosso nel nome: il grosso è la sorpresa in fondo.
-- **L'ordine resta quello della fila**: dungeon k più lontano dalla partenza del dungeon k−1 (lo controlla il test,
-  come oggi `unita/sotterraneo-terra`), ma non più tutti su una strada: girano attorno al centro.
+- **L'ordine resta quello della fila**: dungeon k più lontano dalla partenza del dungeon k−1 (lo controlla il test), ma non più tutti su una strada: girano attorno al centro.
 
 | # | chiave | oggi | nome nuovo | regione (anello) | il monumento di sopra |
 |---|---|---|---|---|---|
@@ -184,25 +182,23 @@ la storia in fila, e **il mondo aperto cambia la progressione**.
 | la nebbia salvata | una nebbia nuova per il mondo, salvata allo stesso modo |
 | i mercanti | divisi fra tre città, i banchi per mercante come oggi |
 | il minatore e il cartello | il minatore parla della storia nella città dove sta; il cartello in ogni città |
-| le icone delle discese (ritagli dalla mappa dipinta) | il monumento fotografato in 3D: [mondo-aperto-fasi.md](mondo-aperto-fasi.md) |
+| le icone delle discese | il monumento fotografato in 3D: [mondo-aperto-fasi.md](mondo-aperto-fasi.md) |
 
 - **Si riusa tale e quale**: `motore/terra.js` (`creaTerra`: l'A* e la lisciatura prendono una maschera di qualunque
-  misura; `scopri`, `nebbiaInCodice`, `nebbiaDaCodice`), `motore/corsa.js` e `motore/livello.js` per i dungeon e gli
+  misura; `scopri`), `motore/corsa.js` e `motore/livello.js` per i dungeon e gli
   antri, `motore/zone.js`, `motore/storia.js`, `motore/missioni.js` (con gli agganci nuovi), `motore/sosta.js`, la
   bottega, i dialoghi, la barra, la scena 3D delle discese.
 - **Si porta dal ramo `terre-selvagge`**: `motore/aperta.js` (regioni, fiumi, creste, valichi, la luce a cerchio, lo
   scontro del solo branco) e i suoi agganci in `corsa.js`, `livello.js`, `scontro.js`, `sosta.js`.
 - **Si porta dal prototipo**: `generatore.js` (con le regioni a ruolo, i ponti modellati, i lotti, le strade, la quota),
   `strada.js` assorbito da `motore/terra.js`, il kit, i monumenti, la natura, le trame.
-- **Si riscrive**: la vista della terra di sopra (`viste/Terra.vue` è DOM e immagine; il 3D ne fa una sua accanto),
-  `dati/terra.js` (`POSTO_DI`, `LUOGHI`, `FRECCE` sulla geografia nuova), `dati/terra-mappa.js` (non più generato dal
-  foglietto dipinto ma dal generatore), le frasi della storia e dei volti.
+- **Si riscrive**: la vista del mondo di sopra (`viste/Mondo3d.vue`), `dati/terra.js` (`LUOGHI_MONDO` sulla geografia
+  nuova), le frasi della storia e dei volti.
 
 ## 4. I dati e il salvataggio
 
 In [mondo-aperto-dati.md](mondo-aperto-dati.md): il campo `mondo` nell'avventura (nessun campo nel profilo), la nebbia
-in base64 (3,7 KB per 160×140 celle), il 3D separato dal 2D mentre è in prova (raccomandato), e la tabella del travaso
-per il giorno che il mondo sostituisce la mappa dipinta.
+in base64 (3,7 KB per 160×140 celle) e il travaso dei salvataggi di prima.
 
 Nei test (da scrivere): `unita/sotterraneo-mondo` (la pianta, la firma, gli anelli, le città, le pietre, i dungeon in
 fila); il resto in [mondo-aperto-fasi.md](mondo-aperto-fasi.md#i-test).

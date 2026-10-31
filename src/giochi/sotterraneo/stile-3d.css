@@ -1,4 +1,4 @@
-/* Il Sotterraneo 3D (docs/sotterraneo/grafica-3d.md): lo strato delle scritte sopra la scena, gli agganci dello scontro, il
+/* Il sotterraneo in 3D (docs/sotterraneo/grafica-3d.md): lo strato delle scritte sopra la scena, gli agganci dello scontro, il
    pannello in fondo con la scelta e la domanda, il messaggio senza WebGL. I pannelli sono quelli veri: qui solo dove stanno. */
 
 /* lo strato sopra la tela: non si tocca (il dito va alla scena) */
@@ -29,7 +29,7 @@
   animation: sot3d-sale 1.1s ease-out both }
 @keyframes sot3d-sale { from { transform: translateY(0); opacity: 1 } to { transform: translateY(-34px); opacity: 0 } }
 
-/* lo scontro: le scritte agganciate sopra le figure (viste/Scontro3d.vue), con le classi del palco 2D */
+/* lo scontro: le scritte agganciate sopra le figure (viste/Scontro3d.vue), con le classi di stile-scontro.css */
 .sot3d-scontro { position: absolute; inset: 0; z-index: 4; pointer-events: none; overflow: hidden }
 .sot3d-ancora { position: absolute; left: 0; top: 0; will-change: transform }
 .sot3d-scontro .sot-m { left: 0; top: 0; min-width: 44px; padding: 0; pointer-events: none; transition: opacity .55s ease; cursor: default }
@@ -67,7 +67,7 @@
 .sot3d-senza .sot-grosso { max-width: 280px }
 .sot3d-perso { position: absolute; inset: 0; z-index: 40 }
 
-/* il mondo di sopra in 3D (viste/Mondo3d.vue, docs/sotterraneo/terra-di-sopra.md «Il mondo in 3D»): la tela sotto, sopra i bersagli
+/* il mondo di sopra in 3D (viste/Mondo3d.vue, docs/sotterraneo/mondo-3d.md): la tela sotto, sopra i bersagli
    del dito (trasparenti, posati a ogni fotogramma), i nomi della veduta, il fumetto, le carte in cima e in fondo */
 .sot3d-mondo { background: #c9dcea }
 .sot3d-tela-mondo { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none }
@@ -87,6 +87,9 @@
 /* il segno sopra la testa e il richiamo di chi cura: in cima al rettangolo, sopra il piede (`--cx`: il rettangolo può essere tagliato da un lato) */
 .sot3d-bersaglio > .sot-tre-punti { right: auto; left: var(--cx, 50%); top: calc(var(--testa, 30px) - 28px); translate: -50% 0 }
 .sot3d-bersaglio > .sot-richiamo { right: auto; left: var(--cx, 50%); bottom: auto; top: calc(var(--testa, 30px) - 46px); translate: -50% 0 }
+/* i pallini degli amici arrivati a una discesa: accanto all'ingresso, in basso a destra; sotto cadrebbero sui piedi dell'eroe che ci sta davanti (docs/core/amici-nei-giochi.md) */
+.sot3d-bersaglio > .sot-amici-posto { position: absolute; display: flex; gap: 2px; pointer-events: none; left: calc(100% + 4px); bottom: 0 }
+.sot-amici-fum { margin-top: 6px; font-size: 13px }
 .sot3d-segno-arrivo {
   position: absolute; left: 0; top: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; z-index: 1;
   border: 2px solid #fffaf0; pointer-events: none; animation: sot-segno .5s ease-out forwards;

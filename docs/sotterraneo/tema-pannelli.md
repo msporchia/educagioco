@@ -1,10 +1,10 @@
-# I pannelli in prova: «legno» e «rilievo»
+# I pannelli: «legno» e «rilievo»
 
 I pannelli del sotterraneo avevano due stili: la barra in basso e le finestre (legno scuro, oro, angoli disegnati)
-curate, la domanda dei quiz e i fogli piatti, blu, coi tasti a pillola. L'utente, 16 ottobre: «stona parecchio». Ci
-sono due temi da provare, scelti dall'indirizzo; di difetto resta l'aspetto di prima:
+curate, la domanda dei quiz e i fogli piatti, blu, coi tasti a pillola. L'utente, 16 ottobre: «stona parecchio». Il sotterraneo
+parte col tema **legno**; `rilievo` e `attuale` (l'aspetto piatto di prima) si provano dall'indirizzo:
 
-- **A · legno** (`tema/legno.css`): il linguaggio della cornice e della barra su tutti i pannelli, in 2D.
+- **A · legno** (`tema/legno.css`, di serie): il linguaggio della cornice e della barra su tutti i pannelli.
 - **B · rilievo** (`tema/rilievo.css`, `tema/rilievo.js`): legno più lo spessore, in CSS.
 
 Si sceglie con `#sotterraneo&tema=legno` (o `rilievo`, `attuale`): il telefono se lo ricorda (`sotterraneo-tema`
@@ -26,7 +26,7 @@ Due, più l'oro; la luce viene dall'alto a sinistra come il riflesso dei globi. 
 (`--lg-…`).
 
 - **Legno scuro** (`--lg-legno`, `--lg-vena`: quelli della cornice) — la tavola della domanda, i fogli dal basso, le
-  modali, il dialogo, la ripresa, il cartello di fine, il pannello dello scontro nel 3D. Bordo d'oro (`--lg-oro-bordo`),
+  modali, il dialogo, la ripresa, il cartello di fine, il pannello dello scontro. Bordo d'oro (`--lg-oro-bordo`),
   e sulla domanda e sul cartello quattro **rivetti d'ottone** negli angoli, disegnati come livelli di fondo
   (`--lg-rivetti`: nessun elemento in più).
 - **Tavole** (`--lg-tavola`, `--lg-vena-tavola`) — le risposte, le righe da scegliere, i tasti chiari: legno più chiaro
@@ -45,18 +45,14 @@ tavole e scuro sulla targa. La grana è un `feTurbulence` in una piastrella SVG 
 disegna una volta; **frequenza per lato intera**, se no si vede la cucitura (provato 0,018 × 220: una riga a metà tasto).
 La barra in basso ha il suo foglio, sotto.
 
-## Lo scontro nel 3D
+## Lo scontro
 
-Nel Sotterraneo 3D la scena è il palco e la scelta del colpo, la domanda e le risposte stanno nel pannello in fondo
+Nel sotterraneo la scena è il palco e la scelta del colpo, la domanda e le risposte stanno nel pannello in fondo
 (`viste/Pannello3d.vue`). Col tema il pannello prende la cornice: legno, bordo d'oro e i due angoli d'oro in cima
-(`viste/Angoli.vue`, gli stessi di `Cornice.vue`; nel 3D ci sono sempre, spenti di difetto in `stile-3d.css`); la
-tavola della domanda dentro ha il filo scuro come nella cornice del duello 2D. Le barre della vita sopra le figure
+(`viste/Angoli.vue`, gli stessi di `Cornice.vue`; spenti di difetto in `stile-3d.css`); la
+tavola della domanda dentro ha il filo scuro come nella cornice. Le barre della vita sopra le figure
 hanno il filo d'ottone, i nomi le grazie, la fila dei turni i gettoni di legno col cerchio d'ottone. Il pannello è alto
 quanto prima: i combattenti restano sopra.
-
-**2D e 3D adesso hanno lo stesso materiale, non la stessa forma**: nel 2D il duello è una finestra a quattro angoli col
-palco dentro, nel 3D una cornice aperta in fondo con la scena sopra. Renderli uguali vorrebbe dire portare anche il
-duello 2D in un pannello in fondo (la scelta resta all'utente).
 
 **Il pannello sta sopra la punta dei globi**, con la cornice intera e i quattro angoli, staccato di 6 px dai bordi
 (`--sot-sopra-barra`, [barra.md](barra.md#sopra-la-barra)); il pannello resta alto al più il 70% del campo, quindi su un
@@ -105,14 +101,13 @@ Prova che gli altri giochi non sono cambiati: lo stile calcolato di ogni element
 ## Il banco
 
 `npm run pannelli` apre `strumenti/banco/pannelli.html`: una riga per pannello (la domanda aperta, giusta e sbagliata,
-lo scontro 2D col pericolo e con la domanda, lo scontro 3D col pannello in fondo, zaino, bottega, pagina dell'eroe,
+lo scontro col pericolo e con la domanda, col pannello in fondo, zaino, bottega, pagina dell'eroe,
 albero, quale pozione, dialogo, barra, fine, pausa), una colonna per tema, la larghezza (390, 320, 768, 1100) e la scala.
 Ogni riquadro è un iframe di `pannello.html?p=zaino&tema=legno`, così le `@media` rispondono al riquadro; nello
-scontro 3D la scena è un fondo finto. Uno scatto: `node strumenti/scatta-app.mjs --pagina
+scontro la scena è un fondo finto. Uno scatto: `node strumenti/scatta-app.mjs --pagina
 'strumenti/banco/pannelli.html?solo=barra' --porta 5207 --larghezza 1250`. Il gioco vero:
-`node strumenti/scatta-app.mjs 'sotterraneo=branco&mostri=3&eroe=mago&giu=1&tema=rilievo' --dist`, il 3D
-`'sotterraneo3d=1&eroe=mago&sotterraneo=branco&mostri=3&dpr=1&tema=legno' --dist --aspetta 6000`, la terra di sopra
-`'tema=legno' --storia 2 --tocca '[data-azione="vita"]'`.
+`node strumenti/scatta-app.mjs 'sotterraneo=1&eroe=mago&sotterraneo=branco&mostri=3&dpr=1&tema=rilievo' --dist --aspetta 6000`, il mondo di sopra
+`'tema=rilievo' --storia 2 --tocca '[data-azione="vita"]'`.
 
 ## Cosa costa, e la scelta
 
@@ -134,7 +129,7 @@ farebbe solo il fondo dei tasti, con un contesto per pannello e la memoria della
 
 - Le caselle della barra restano alte 40 px ([barra.md](barra.md)): il bersaglio scende di 6 px verso il bordo, a 46.
 - Il livello (24×15) e la riga dell'esperienza restano piccoli come prima.
-- Scelto il tema, si toglie l'altro e il cheat, e i valori passano in `stile.css`.
+- Si tiene un tema solo: toglie gli altri e il cheat, e i valori passano in `stile.css`.
 
-Nei test: nessun bersaglio nuovo; il DOM e i `[data-…]` sono gli stessi in tutti i temi (nel 3D due `svg.sot-angolo`
+Nei test: nessun bersaglio nuovo; il DOM e i `[data-…]` sono gli stessi in tutti i temi (due `svg.sot-angolo`
 spenti in più). `data-tema` sulla radice `.sot`, `data-piega` sul tasto premuto in rilievo.

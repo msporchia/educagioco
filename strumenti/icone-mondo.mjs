@@ -4,7 +4,7 @@
      npm run scatti icone-mondo        riscrive src/giochi/sotterraneo/dati/icone-mondo.js
      ICONE_DEBUG=1 npm run scatti icone-mondo   e lascia i PNG in tmp/scatti/icone-mondo/
 
-   Apre il Sotterraneo 3D sul mondo di sopra (profilo con tutte le discese finite, così nessun ingresso porta il divieto),
+   Apre il sotterraneo sul mondo di sopra (profilo con tutte le discese finite, così nessun ingresso porta il divieto),
    porta la telecamera su ogni monumento e su ogni città con **la stessa inquadratura per tutti** (quadrata, tondo sfumato, zoom e
    inclinazione fissi, sole di giorno, nebbia di mappa spenta `&nebbia=no`, l'eroe nascosto `&senzaeroe`), ritaglia il
    quadro e lo riduce a 112 px in WebP. Il file di dati è GENERATO (con la sua firma): non si scrive a mano.
@@ -81,7 +81,7 @@ export async function fotografaIcone({ browser, gioco, profilo }) {
   }, p)
   const errori = []
   page.on('pageerror', e => errori.push(e.message))
-  await page.goto(gioco + '#sotterraneo3d=mondo&eroe=cavaliere&nebbia=no&senzaeroe&dpr=2')
+  await page.goto(gioco + '#sotterraneo=mondo&eroe=cavaliere&nebbia=no&senzaeroe&dpr=2')
   await page.waitForSelector('[data-mondo3d][data-pronto="1"]', { timeout: 30000 })
   await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.pronto, null, { timeout: 30000 })
   // niente interfaccia sopra la scena: solo la tela

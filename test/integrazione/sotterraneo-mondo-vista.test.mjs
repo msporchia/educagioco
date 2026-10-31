@@ -47,7 +47,7 @@ const cella = async () => (await page.locator('[data-eroe-mondo]').getAttribute(
 /* ---------- 1. si entra, la vista segue l'eroe ---------- */
 await azzera(page)
 await semina(page, { settings: { sperimentali: true } })
-await scegli(page, 'sotterraneo3d')
+await scegli(page, 'sotterraneo')
 await scegliAvventura(page, 'cavaliere')
 await mondoPronto(page)
 await attendi(page, 2500)

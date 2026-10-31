@@ -1,4 +1,4 @@
-# Il Sotterraneo 3D: il portale, le uscite e le ombre
+# Il sotterraneo: il portale, le uscite e le ombre
 
 Il resto del 3D sta in [grafica-3d.md](grafica-3d.md).
 
@@ -15,8 +15,7 @@ Il resto del 3D sta in [grafica-3d.md](grafica-3d.md).
   risucchiate nel centro e la sua luce.
 - **È più alto dei muri** (`VARCO.alto` 1,9 contro 1,25): un varco ritto
   visto a 52° si accorcia, e deve leggersi come una porta. Guarda verso la
-  telecamera. I colori sono quelli del portale del 2D (`COLORI_PORTALE`,
-  come `scena/portale.js`).
+  telecamera. I colori sono `COLORI_PORTALE` (azzurro e viola, di nessuno scenario).
 - **La pietra prende il chiarore del velo** (un emissivo viola): con la sola
   luce dell'eroe di lato i pilastri erano neri.
 - **Lo stesso modulo fa il gemello di sopra**: `creaPortale(scena, { cella,
@@ -24,7 +23,7 @@ Il resto del 3D sta in [grafica-3d.md](grafica-3d.md).
   maschera. `apri()` lo accende dal basso (il velo e le rune dei pilastri) e
   disegna le rune per terra in giro, `chiudi()` lo spegne; `attraversa()` è
   il lampo del passaggio (l'eroe ci entra e svanisce: `scena3d/eroe.js`).
-- Gli scatti: `node strumenti/scatta-app.mjs 'sotterraneo3d=1&seme=1&stanza=al-portale&torcia=accesa' --dist --aspetta 5000`,
+- Gli scatti: `node strumenti/scatta-app.mjs 'sotterraneo=1&seme=1&stanza=al-portale&torcia=accesa' --dist --aspetta 5000`,
   e il passaggio con `--esegui` (il foglio dal motore), `--tocca
   '[data-azione="portale"]' --sequenza 8 --ogni 200`
   ([comandi.md](../core/comandi.md)).
@@ -34,7 +33,7 @@ Il resto del 3D sta in [grafica-3d.md](grafica-3d.md).
 - **Quello che può buttare il 3D si fa a fotogramma finito**
   (`aFotogrammaFinito` in `scena3d/indice.js`). Il passaggio nel portale
   finisce dentro il disegno dell'eroe, e chi lo aspetta (Gioco.vue,
-  `allaMappa`) butta il 3D e torna alla terra di sopra: se lo faceva lì, il
+  `allaMappa`) butta il 3D e torna al mondo di sopra: se lo faceva lì, il
   resto del fotogramma toccava un piano che non c'era più («`piano` is null»,
   `piano.sorgenti`, sulla versione pubblicata). Ora il fotogramma finisce,
   disegna, e solo dopo chiama; e un ciclo con il 3D buttato non disegna più

@@ -1,4 +1,4 @@
-// Il Sotterraneo 3D vero nella misura del telefono (docs/core/vecchio-telefono-veri.md): la scena delle discese di scena3d/indice.js
+// Il sotterraneo vero nella misura del telefono (docs/core/vecchio-telefono-veri.md): la scena delle discese di scena3d/indice.js
 // (luci, nebbia, ombra del cono, palco, mostri ed eroe 3D, effetti) su una discesa vera del motore, col cheat dello scontro rifatto
 // qui (`sotterraneo=branco&mostri=N&grado=leggendario&corredo=leggendario&stanza=sala`). Ogni scena dice quanti mostri e se partono
 // gli attacchi, o che l'eroe passeggia da una stanza all'altra.
@@ -74,7 +74,7 @@ export async function prepara({ contenitore, opz = {} }) {
   const tela = nuovaTela(contenitore)
   const dpr = opz.dpr || dprDelGioco()
   const pittore = creaSotterraneo3d(tela.canvas, { strato: tela.strato, dpr, spegni: opz.spegni || [], riaccendi: opz.riaccendi || [], cieca: 320 })
-  if (!pittore) { tela.via(); throw new Error('il Sotterraneo 3D non parte (WebGL 2?)') }
+  if (!pittore) { tela.via(); throw new Error('il sotterraneo non parte (WebGL 2?)') }
   const gl = tela.canvas.getContext('webgl2')
   let corsa = null, quanti = -1, colpi = null, k = 0, passeggia = false, stanza = 0
   const togliColpi = () => { clearInterval(colpi); colpi = null }

@@ -43,7 +43,7 @@ const mondo = { parlato: true, dungeon: { tombe: { rifatti: 1 } } }
 const a = { tappa: 7, libera: true, stelle: { 0: 3 }, missioni: {}, roba, mondo }
 await semina(page, { coins: 300, settings: { sperimentali: true },
   campagne: { sotterraneo: { tappa: 7, libera: true, stelle: { 0: 3 }, cfg: { mondo: MONDO, eroe: EROE, avventure: { [EROE]: a } } } } })
-await scegli(page, 'sotterraneo3d')
+await scegli(page, 'sotterraneo')
 await nelMondo()
 
 /* ── nella prima terra: la porta è aperta e il minatore la annuncia ── */
@@ -113,7 +113,7 @@ await attendi(page, 800)   // le scritture in coda dell'archivio
 }
 await page.reload()
 await page.waitForSelector('.carte', { timeout: 15000 })
-await scegli(page, 'sotterraneo3d')
+await scegli(page, 'sotterraneo')
 await nelMondo()
 uguale('ricaricando, ancora la seconda terra', await page.locator('[data-mondo3d]').getAttribute('data-terra-ora'), '2')
 

@@ -6,9 +6,8 @@ const CodiceSegreto = caricaQuando(() => import('./codice-segreto/Gioco.vue'))
 const Survivors = caricaQuando(() => import('./survivors/Gioco.vue'))
 const Conta = caricaQuando(() => import('./conta/Gioco.vue'))
 const PrimaDopo = caricaQuando(() => import('./prima-dopo/Gioco.vue'))
-const Sotterraneo = caricaQuando(() => import('./sotterraneo/Gioco.vue'))
-// lo stesso sotterraneo con la discesa in 3D, gioco in prova (docs/sotterraneo/grafica-3d.md)
-const Sotterraneo3d = caricaQuando(() => import('./sotterraneo/Gioco3d.vue'))
+// il sotterraneo è disegnato in WebGL: Entrata.vue lo apre solo se il telefono sa disegnarlo (docs/sotterraneo/grafica-3d.md)
+const Sotterraneo = caricaQuando(() => import('./sotterraneo/Entrata.vue'))
 const Pozioni = caricaQuando(() => import('./pozioni/Gioco.vue'))
 const PassoPasso = caricaQuando(() => import('./passo-passo/Gioco.vue'))
 const Costruttore = caricaQuando(() => import('./costruttore/Gioco.vue'))
@@ -25,7 +24,6 @@ export const SCHERMATE = {
   conta: Conta,
   prima: PrimaDopo,
   sotterraneo: Sotterraneo,
-  sotterraneo3d: Sotterraneo3d,
   pozioni: Pozioni,
   passo: PassoPasso,
   costruttore: Costruttore,

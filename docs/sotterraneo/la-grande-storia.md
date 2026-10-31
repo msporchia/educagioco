@@ -15,11 +15,9 @@ Il codice: `dati/campagna.js` (le discese), `dati/storia.js` (la tabella),
 
 ## Le discese
 
-Si parte nel villaggio, nella metà di destra della mappa (`partenza` nel
-foglietto, [terra-di-sopra.md](terra-di-sopra.md)), e **le discese sono in
+Si parte nel villaggio ([mondo-3d.md](mondo-3d.md)), e **le discese sono in
 fila per strada**: la prima è la più vicina, l'abisso il posto più lontano.
-I passi sono la strada vera da casa (`unita/sotterraneo-terra` controlla che
-la fila salga).
+I passi sono la strada vera da casa.
 
 | | discesa (chiave) | posto | passi | forma | scenario | piani | mostri di strada · capo |
 |---|---|---|---|---|---|---|---|
@@ -172,7 +170,7 @@ vesti è mandato dall'incantatrice, che vende la bacchetta e la stoffa; `daChiAn
 `dove` nella tappa per il posto in mezzo alla frase). Lo ripete il minatore
 quando indica la prossima. Non vieta niente: si scende lo stesso. Vieta
 solo il colore del pallino, quando la discesa è due gradini sopra la forza dell'eroe ([forza.md](forza.md)):
-davanti c'è la sentinella ([zone.md](zone.md#il-pallino-e-la-sentinella)).
+davanti c'è la sentinella ([zone.md](zone.md#il-colore-e-la-sentinella)).
 Finita la storia ogni discesa è una zona con una fascia di livelli fissa: [zone.md](zone.md).
 
 ## Le misure
@@ -222,8 +220,8 @@ discesa dà il primo pezzo della riga dopo e a chi è avanti niente, la roba
 attesa coi pezzi dei grossi e il livello atteso, i mostri di tutti i
 giorni che lasciano un pezzo poco e a tono, chi è sotto il livello e la
 frase, le missioni), `unita/sotterraneo-roba` (il banco porta il passo dopo e
-mai la riga dopo, sei semi d'equilibrio), `unita/sotterraneo-terra` (la
-partenza nel villaggio, le discese in fila per strada),
+mai la riga dopo, sei semi d'equilibrio), `unita/sotterraneo-terra` (l'A* e la nebbia di
+`motore/terra.js` su una maschera piccola),
 `misure/sotterraneo` (la tabella qui sopra). Nel fumetto di una discesa
 `[data-sotto-livello]` con `data-manca` (`livello`, `arma` o `difesa`); i pezzi avanti nella
 bottega: [bottega-finestra.md](bottega-finestra.md#la-bottega-e-lo-zaino).

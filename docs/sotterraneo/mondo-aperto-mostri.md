@@ -11,7 +11,7 @@ Diablo, più ci si allontana dal villaggio più sale il livello. Puro, senza sce
 - `dati/mondo-aperto-mostri.js` — gli abitanti dei diciotto luoghi senza, la curva della forza, le tarature (`SOPRA`).
 - `motore/banco-mondo.js` — il banco (`npm run sotterraneo -- --mondo`).
 
-Il Sotterraneo 2D e le discese non cambiano: gli agganci si accendono solo con `tappa.palco` e `m.signore`, che esistono solo sopra
+Gli agganci si accendono solo con `tappa.palco` e `m.signore`, che esistono solo sopra
 (la taratura `--presto` e `test:misure` danno gli stessi numeri di prima).
 
 ## Le regole
@@ -91,7 +91,7 @@ in celle con il centro a `+0,5` (nella scena `io.x`, `io.z`). Cosa cambia per la
 | `esitoDelloScontro(stato, corsa)` | `{ come: 'vinto' / 'scappato' / 'svenuto' / 'aperto', roba, crescita, forze, esp, gemme, presi, rimasti, uccisi, risveglio, eventi, avvisi, domande, giuste, passi, conti, missioniFatte, preparati }` |
 | `raccogliDaTerra(stato, i, { eroe, roba, crescita })` | prende la cosa `i` di `stato.perTerra` come giù (addosso o in tasca); `{ presa, roba, avvisi }` |
 | `annuncioDi(m, x, y, forza)` | nel villaggio `{ citta, nome, sicura, testo }`; fuori `{ zona, nome, luogo, nomeLuogo, fascia, colore, segno, testo: '🟢 Il bosco vecchio · livello 3–5' }` |
-| `coloreDellaRegione(fascia, forza)` (`coloreDellaZona`) | verde, arancio, rosso, grigio: il conto del pallino ([zone.md](zone.md#il-pallino-e-la-sentinella)) |
+| `coloreDellaRegione(fascia, forza)` (`coloreDellaZona`) | verde, arancio, rosso, grigio: il conto del pallino ([zone.md](zone.md#il-colore-e-la-sentinella)) |
 | `alSicuro(m, x, y)` | il villaggio, la cintura, un ponte o un varco, una zona mai caricata: lì nessuno si sveglia |
 | `tanaDi(stato, luogo)` | la tana di un luogo e il suo signore (`{ x, y, zona, signore: { nome, tipo, vivo } }`), null se la zona non è caricata |
 | `tagliaDi`, `taglieDaContare(taglie, { specie, regione, signore, zona })` | l'aggancio delle quest di caccia, sotto |

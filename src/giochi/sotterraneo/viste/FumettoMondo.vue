@@ -2,8 +2,9 @@
 // Il fumetto del mondo di sopra in 3D (viste/Mondo3d.vue): sopra un ingresso, una pietra del viaggio, il portale gemello, il
 // cartello, la bacheca, la fontana o la porta delle terre. Non decide niente: Mondo3d.vue gli dà i dati già pronti e lui dice cosa si è toccato
 // (`scendi`, `giu`, `viaggio`, `bevi`, `taglia` per un foglio della bacheca, `scava` per la X, `passa` la porta delle terre, `terra` il
-// villaggio di un'altra terra dalla pietra del villaggio). Gli stessi bersagli dei test del fumetto della terra dipinta (viste/Terra.vue).
+// villaggio di un'altra terra dalla pietra del villaggio).
 import { faccia, inFrase, titoloDi } from '../motore/missioni.js'
+import AmiciQui from '../../../components/amici/AmiciQui.vue'
 
 defineProps({
   f: { type: Object, required: true },   // { tipo, … } (vedi fumetto in Mondo3d.vue)
@@ -16,6 +17,7 @@ const minuscolo = s => { const t = String(s ?? ''); return t.charAt(0).toLowerCa
   <template v-if="f.tipo === 'posto'">
     <b class="sot-fum-nome"><span v-if="!f.aperto" class="em">🔒</span> {{ f.nome }}</b>
     <i class="sot-fum-dritta">{{ f.dritta }}</i>
+    <AmiciQui :amici="f.amici" :lato="16" class="sot-amici-fum" :data-al="f.al" />
     <template v-if="f.aperto">
       <p v-if="f.tappa" class="sot-fum-conto em">
         🪜 {{ f.tappa.piani }} piani<template v-if="f.tappa.stelle && !f.tappa.potenza"> · {{ '⭐'.repeat(f.tappa.stelle) }}</template>

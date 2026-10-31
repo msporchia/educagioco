@@ -1,6 +1,6 @@
 <script setup>
 // Un foglio solo per tutti i pannelli (scontro, porta, forziere, zaino, il banco di sopra): stesso gesto,
-// qualcosa ti si mette davanti. Sale dal basso senza coprire tutto (la telecamera alza l'eroe, scena/tela.js); se
+// qualcosa ti si mette davanti. Sale dal basso senza coprire tutto (la telecamera alza l'eroe); se
 // non chiede una scelta lo chiude anche un tocco sul campo (Gioco.vue, `leggero`). `centro`: per lo zaino e il banco, dove il campo si ferma del
 // tutto — non porta la classe `sot-foglio` apposta, o misuraFoglio() alzerebbe l'eroe per un pannello che non
 // lo chiede. `chiudi`: la ✕ in alto a destra (docs/core/interfaccia.md), dove non c'è una scelta da fare in fondo.

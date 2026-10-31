@@ -1,5 +1,5 @@
 // Gli effetti grafici dello scontro (docs/sotterraneo/scontro-effetti.md): cosa si vede quando l'eroe usa un'abilità. Dato
-// puro, senza import oltre a elementi.js e abilita.js: lo leggono viste/racconto.js (i tempi e le cose da posare sul palco) e viste/Scene.vue
+// puro, senza import oltre a elementi.js e abilita.js: lo leggono viste/racconto.js (i tempi e le cose da posare sul palco) e scena3d/effetti3d/gestore.js
 // (come si disegnano). Le famiglie sono poche e i nodi tanti: un nodo non scrive il suo effetto, lo ricava da `elemento`,
 // `forma` e da cosa fa (`effettoDi`); solo le abilità importanti hanno il loro, con `effetto: '<chiave>'` sul nodo
 // (dati/abilita.js). Un nodo nuovo ne ha già uno da sé.
@@ -21,7 +21,7 @@ import { colpisce } from './abilita.js'
 
 export const VIE = ['vicino', 'attorno', 'lancio', 'fascio', 'cielo', 'catena', 'terra', 'su-chi', 'onda', 'su-me']
 
-// Tutto quello che Scene.vue sa disegnare (un guasto se una scheda ne nomina uno che manca)
+// Tutto quello che effetti3d sa disegnare (un guasto se una scheda ne nomina uno che manca)
 export const CORPI = [
   'palla', 'dardo', 'freccia', 'quadrello', 'scheggia', 'lancia', 'ascia', 'falce', 'arco', 'fascio', 'fulmine', 'colonna', 'meteora',
   'frecce', 'massi', 'brace', 'neve', 'radici', 'crepa', 'blocco', 'nube', 'esplosione', 'rogo', 'fiammata', 'onda', 'turbine', 'sonno',

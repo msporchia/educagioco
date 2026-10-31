@@ -1,5 +1,5 @@
 // Le botti da rompere (docs/sotterraneo/paesaggi-3d.md, «Le botti»): una regola del motore SPENTA di difetto (`Corsa.botti`), accesa
-// solo dal Sotterraneo 3D; il 2D e il banco non ne hanno, quindi le misure d'equilibrio restano identiche (come `ricomparsa`). Dove
+// solo dal gioco; il banco non ne ha, quindi le misure d'equilibrio restano identiche (come `ricomparsa`). Dove
 // stanno lo decide il seme della discesa e il piano (puro: `postiDelleBotti`); non sono roba del piano, non bloccano niente e non
 // cambiano il generatore. Una botte rotta lascia nel piano un segno già preso (`{ che: 'botte', botte: i, presa: true }`): la
 // sosta lo salva da sé con le cose nuove del piano (motore/sosta.js), e rientrando la botte è ancora rotta. Una su cinque lascia

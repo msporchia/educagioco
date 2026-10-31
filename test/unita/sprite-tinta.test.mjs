@@ -1,6 +1,6 @@
 /* La ricolorazione di un pezzo, `"tinta"` nel foglietto (strumenti/sprite/atlante.py, `ritinge_in`): la tonalità dei pixel
    verdi ruota al viola, la pelle e il grigio restano, l'alfa non si tocca. Per una figura provvisoria fatta da un'altra
-   (l'incantatrice è la guaritrice col verde ruotato, docs/sotterraneo/terra-di-sopra.md). Lancia il vero script Python su
+   (l'incantatrice è la guaritrice col verde ruotato, docs/sotterraneo/chi-cura.md). Lancia il vero script Python su
    una figurina finta; senza python3 o Pillow (come in CI, che lancia solo le unità) salta e lo dice. L'ultimo pezzo guarda
    che l'atlante del sotterraneo abbia le due pose dell'incantatrice. */
 import { spawnSync } from 'node:child_process'

@@ -4,7 +4,7 @@
      npm run anteprime sotterraneo      riscrive src/giochi/sotterraneo/dati/anteprime-fatte.js (il comando: strumenti/anteprime.mjs)
      ANTEPRIME_DEBUG=1 npm run anteprime sotterraneo   e lascia i WebP in tmp/scatti/anteprime-sotterraneo3d/
 
-   Apre il Sotterraneo 3D nel file costruito e chiede al servizio delle anteprime (`__anteprime3d.viva`) ogni chiave che il gioco può
+   Apre il sotterraneo nel file costruito e chiede al servizio delle anteprime (`__anteprime3d.viva`) ogni chiave che il gioco può
    chiedere tranne il ritratto dell'eroe vestito: la roba (ogni figura con ogni rarità ed elemento a cui può uscire, l'armatura su
    ognuno dei quattro eroi), i copricapi, i consumabili, i mostri con gradi e varianti, i grossi, le persone. Le chiavi le dà il
    codice del gioco (`chiaveDellaCosa` su ogni pezzo possibile), non un elenco a mano. Il file è GENERATO con la firma delle foto e
@@ -87,7 +87,7 @@ ${righe.join('\n')}
 /** `browser` di Playwright col file costruito. → { foto, senza } */
 export async function fotografaSotterraneo(browser) {
   const { apriGioco, GIOCO } = await import('../test/aiuto/browser.mjs')
-  const { page, errori } = await apriGioco(browser, { hash: 'sotterraneo3d=1&eroe=cavaliere&dpr=1&seme=11', attesa: null, indirizzo: GIOCO })
+  const { page, errori } = await apriGioco(browser, { hash: 'sotterraneo=1&eroe=cavaliere&dpr=1&seme=11', attesa: null, indirizzo: GIOCO })
   await page.waitForFunction(() => !!window.__anteprime3d, null, { timeout: 30000 })
   if (process.env.ANTEPRIME_DEBUG) mkdirSync(DEBUG, { recursive: true })
   const chiavi = chiaviDaFotografare(), foto = {}, senza = []

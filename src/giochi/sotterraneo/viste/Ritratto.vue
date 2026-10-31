@@ -1,6 +1,6 @@
 <script setup>
 // Il ritratto di chi sta sulla terra di sopra (il minatore, i sei delle missioni, il capitano, i quattro mercanti): lo sprite `<nome>-fermo-0` se l'atlante
-// ce l'ha, se no la figura di pixel.js, la stessa che sta in piedi sulla mappa (viste/Terra.vue). Nel Sotterraneo 3D, appena è pronta,
+// ce l'ha, se no la figura di pixel.js. Appena è pronta,
 // la faccia del modello 3D (`persona:<modello>`, docs/sotterraneo/persone-3d.md); finché non c'è, lo sprite
 import { computed } from 'vue'
 import { usaAnteprima } from './anteprima3d.js'

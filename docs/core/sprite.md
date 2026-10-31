@@ -42,7 +42,7 @@ strumenti/sprite/sorgenti/<gioco>/generati/<foglio>.png + .json   ← «i ritagl
   il video non si conserva, e i passi si portano alla misura della
   creatura in `vesti.py`. Tutti i comandi in [comandi.md](comandi.md).
 - **Le immagini dipinte entrano in WebP senza perdita a colori a passo 12**
-  (`strumenti/sprite/codifica.py`, per tutti: castello, terra di sopra, mappe
+  (`strumenti/sprite/codifica.py`, per tutti: castello, mappe
   di Passo passo); gli atlanti di `atlante.py` sono PNG senza perdita. Il perché
   e i numeri: [grafica.md](grafica.md#fedeli-ai-sorgenti).
 - **Il PNG non si tocca mai.** La sorgente è la verità: un PNG ritoccato a
@@ -85,37 +85,24 @@ nello stesso modulo.
   vale solo per il piccolo** (impagina): il nitido tiene tutta la sua
   definizione e il gioco lo stira alla gabbia del piccolo (`figura()`, scala
   x e y a parte, ammorbidito: `.sot-ritratto` è `pixelated`, e il pezzo
-  nitido dichiara `image-rendering: auto`). È la strada dei personaggi della
-  terra di sopra (`sopra-personaggi-*`: 22 pixel di altezza il piccolo,
+  nitido dichiara `image-rendering: auto`). È la strada dei personaggi del
+  mondo di sopra (`sopra-personaggi-*`: 22 pixel di altezza il piccolo,
   200 il nitido): +400 KB di WebP per venti pose.
 
 ## I pezzi derivati in codice
 
-**Quando conviene**: un pezzo **geometrico** (una diagonale, un angolo smussato, un quarto di cerchio) che si può ricavare da tessere già dipinte. Generarlo
-con un modello costa un giro di prompt e non esce mai della stessa mano delle tessere vicine; in codice è della stessa mano per costruzione (usa i loro
-pixel) e si rifà con un comando. **Non conviene** per un pezzo con un disegno suo (un'arma, una porta, un mostro) o quando la geometria non è esatta
+**Quando conviene**: un pezzo che si può ricavare da tessere già dipinte (una variante di colore, un'anta girata, una cornice che chiude una grata). Generarlo
+con un modello costa un giro di prompt e non esce mai della stessa mano dei pezzi vicini; in codice è della stessa mano per costruzione (usa i loro
+pixel) e si rifà con un comando. **Non conviene** per un pezzo con un disegno suo (un'arma, un mostro) o quando la geometria non è esatta
 (una grotta ha bordi naturali: lì un pezzo semplice raramente migliora). Prima in codice, poi dipinto: se un domani c'è il pezzo dipinto, si cambia il nome
 nello scenario e il derivato si butta.
 
-- **Come si usa**: una libreria, `strumenti/sprite/derivati.py`, e **una configurazione per ogni uso** che dice quali tessere prendere e come chiamare i pezzi.
-  Oggi ce ne sono due: `strumenti/sprite/diagonali.py`: i muri obliqui del sotterraneo, una voce di `SCENE` per scena (cripta, cantine, fornace, inferno) con il foglio
-  da cui ritagliare, il nome del foglio che esce e due numeri (le righe del coronamento e dove cominciano i mattoni). Una scena nuova è una voce lì, poi
-  `python3 strumenti/sprite/diagonali.py <scena> --provino` (il foglio da guardare in `tmp/diagonali-<scena>.png`) e `atlante.py sotterraneo`. Per un uso
-  nuovo (altri giochi, altre forme) si copia `diagonali.py` come calco: i nomi delle tessere, i pezzi che escono, e `scrivi_foglio` che li mette in un
-  foglio col suo foglietto (famiglie «tessera», un giro, fondo trasparente), nel formato di `atlante.py`.
-- **`strumenti/sprite/inferno.py`** (15 ottobre 2026) è l'altra: i pezzi che mancano allo scenario dell'inferno e che non sono geometria ma «il resto» (pavimenti senza cuciture, tetto a massi, il pentagramma, le porte chiara e aperta, i fianchi, la scala chiusa, la fontana asciutta), ricavati dalla scena e dalle tavole dipinte; il perché e cosa esce sta in [../sotterraneo/scenari.md](../sotterraneo/scenari.md#linferno). La regola è la stessa («prima in codice, poi dipinto») e il test (`unita/sprite-derivati`) confronta il foglio scritto con quello che il codice rifà.
-- **Le funzioni di `derivati.py`**: `tessere_di(sorgente)` (le tessere di un foglio come le ritaglia `atlante.py`: stesso fondo, stessa scala);
-  `triangolo(dim, angolo)` e `quarto_di_cerchio(dim, angolo, raggio)` (maschere `L`, 255 dentro); `mascherata(tessera, maschera)`; `profondita(h)` (quanto si è
-  entrati in un bordo dopo `h` pixel di una diagonale a 45°: 1/√2 per colonna); `bordo_su_diagonale(roccia, bordo, lato)` (la roccia tagliata dalla linea col suo
-  bordo che corre lungo la diagonale, a gradini di un pixel); `faccia_su_diagonale(fila, lato, parità, righe)` (una fascia di muro spostata di un pixel per
-  colonna: la faccia di una parete obliqua, larga una cella e alta due); `scrivi_foglio` e `provino`. `quarto_di_cerchio` non ha ancora un uso.
-- **Dove sono usate**: i sei pezzi per scena dei muri obliqui ([../sotterraneo/scenari.md](../sotterraneo/scenari.md#i-muri-in-diagonale)), pezzi `<scena>-taglio-so|se`
-  e `<scena>-faccia-no|ne-0|1` nell'atlante del sotterraneo (+9 KB di PNG per tutte e tre le scene).
+- **Come si usa**: una libreria, `strumenti/sprite/derivati.py` (`tessere_di(sorgente)`: le tessere di un foglio come le ritaglia `atlante.py`, stesso fondo,
+  stessa scala), e **una configurazione per ogni uso** che dice quali tessere prendere e come chiamare i pezzi.
+- **`strumenti/sprite/inferno.py`** è l'unica oggi: i pezzi che mancano allo scenario dell'inferno e che nessuno ha dipinto (le porte chiara e aperta, i fianchi,
+  la scala chiusa, la fontana asciutta), ricavati dalla scena e dalle tavole dipinte; il perché e cosa esce sta in [../sotterraneo/scenari.md](../sotterraneo/scenari.md#linferno).
+  Per un uso nuovo si copia `inferno.py` come calco: i nomi delle tessere, i pezzi che escono, e `scrivi` che li mette in un foglio col suo foglietto, nel formato di `atlante.py`.
 - **Il PNG non si tocca**: si rifà col comando, e `unita/sprite-derivati` confronta i pezzi rifatti con quelli scritti in `sorgenti/` (un foglio ritoccato a mano è rosso).
-- **I limiti visti**: la linea passa per gli angoli opposti della cella, quindi solo a 45° e a gradini di una cella (un passo da due celle per una e basta non
-  si ricava: resta a scaletta); la fascia è alta al più una cella (la faccia delle cantine, alta 20, ne perde quattro righe di mattoni); la tessera della roccia
-  si campiona sempre dalla stessa cella, e dove ha un disegno (le pietre delle cantine) il pezzo non si salda alla vicina; il pezzo vuole il pavimento sotto già
-  posato dalla tela, perché dentro la diagonale è trasparente.
 
 ## Il banco — `npm run mondo`
 

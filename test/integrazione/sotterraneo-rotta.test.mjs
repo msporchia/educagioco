@@ -4,24 +4,24 @@
    Chi gioca poco spesso non si ricorda cosa aveva preso tre giorni fa
    (docs/sotterraneo/missioni.md, «La freccina»). Giù, attorno all'eroe,
    una freccina punta verso la missione presa e non ancora fatta: il
-   forziere d'oro se sta su questo piano, la scala se è più in basso. Sulla
-   terra di sopra, sul bordo, un'altra azzurra col ritaglio della discesa
-   porta alla discesa della missione; le consegne pronte hanno la
-   precedenza, col loro «?» d'oro.
+   forziere d'oro se sta su questo piano, la scala se è più in basso. Sul
+   mondo di sopra le consegne pronte hanno il loro «?» d'oro
+   sul bordo, e la freccia azzurra verso la meta sta accanto (non la
+   sostituisce più: la meta, la carta e la scia le prova
+   `integrazione/sotterraneo-mondo-meta`).
 
    La direzione non si crede al gioco: si misura sullo schermo. Il piano
    nasce dal seme (`#seme=`, lo stesso generatore gira qui in Node e dice
    dove stanno hero, forziere e scala), e la punta della freccina deve
-   cadere sulla retta che va dall'eroe alla cosa.
+   cadere sulla retta che va dall'eroe alla cosa (nella scena 3D il punto
+   sullo schermo lo dà `aSchermo`).
    `node test/esegui.mjs sotterraneo-rotta`
-   tempo: 150
+   tempo: 300
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scendiNelSotterraneo, lasciaLaDiscesa , finestraFerma }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, sopraVaDa, mondoPronto }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { T } from '../../src/giochi/sotterraneo/dati/mondo.js'
-import { PARTENZA } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { presePer, PRESA, FATTA, rotta } from '../../src/giochi/sotterraneo/motore/missioni.js'
@@ -59,12 +59,12 @@ const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
 
-const profilo = (missioni, dove = PARTENZA.piede) => ({
+const profilo = missioni => ({
   coins: 300, settings: { sperimentali: true },
   campagne: { sotterraneo: { tappa: DISCESE, libera: false, stelle: { 0: 3, 1: 3, 2: 3 },
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: DISCESE, libera: false,
       stelle: { 0: 3, 1: 3, 2: 3 }, missioni, roba, crescita,
-      terra: { nebbia: 'f'.repeat(768), dove, parlato: true } } } } } },
+      mondo: { parlato: true } } } } } },
 })
 
 const cdp = await page.context().newCDPSession(page)
@@ -82,25 +82,37 @@ const gradi = (da, a) => Math.atan2(a.y - da.y, a.x - da.x) * 180 / Math.PI
 // la differenza fra due angoli, in gradi, da 0 a 180
 const scarto = (a, b) => Math.abs(((a - b + 540) % 360) - 180)
 
-/* Dove cade sulla pagina l'eroe (la tela lo scrive), e dove cadrebbe una cosa del piano `c` in celle */
-async function geometria(c, cosa) {
-  const tela = page.locator('.sot-tela')
+/* Dove cade sulla pagina la cosa del piano (in celle, a terra), e dove stanno l'attacco della freccina (l'origine della sua rotazione,
+   attorno all'eroe) e la sua punta: la scena 3D dà il punto sullo schermo (`aSchermo`) */
+async function geometria(cosa) {
+  const tela = page.locator('[data-tela="3d"]')
   const b = await tela.boundingBox()
-  const [sx, sy] = (await tela.getAttribute('data-eroe-schermo')).split(',').map(Number)
-  const scala = Number(await tela.getAttribute('data-scala')) * T
-  const eroe = { x: b.x + sx, y: b.y + sy }
-  const verso = { x: eroe.x + (cosa.x - c.eroe.x) * scala, y: eroe.y + (cosa.y - c.eroe.y) * scala }
+  const [sx, sy] = await page.evaluate(([x, y]) => window.__sotterraneo3d.aSchermo(x, 0.05, y), [cosa.x, cosa.y])
+  const anello = await page.locator('[data-rotta]').boundingBox()
   const punta = await page.locator('[data-rotta] i').boundingBox()
-  return { eroe, verso, punta: { x: punta.x + punta.width / 2, y: punta.y + punta.height / 2 }, scala }
+  return { anello: { x: anello.x, y: anello.y }, verso: { x: b.x + sx, y: b.y + sy },
+           punta: { x: punta.x + punta.width / 2, y: punta.y + punta.height / 2 } }
+}
+// la discesa 3D è pronta: la tela, e la scena con le sue figure
+const giuPronto = async () => {
+  await page.waitForSelector('[data-tela="3d"]', { timeout: 20000 })
+  await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.corsa && window.__sotterraneo3d.grafica().figure > 0 && !window.__sotterraneo3d.grafica().mondo, null, { timeout: 30000 })
+}
+// dal mondo di sopra, con il seme del piano, alla discesa `i`
+async function giu(seme, i) {
+  await mondoPronto(page)
+  await page.evaluate(s => { location.hash = 'sotterraneo&seme=' + s + '&torcia=accesa&dpr=1' }, seme)
+  const chiave = CAMPAGNA[i].chiave
+  await sopraVaDa(page, `[data-posto="${chiave}"]`, 'ingresso:' + chiave, { atteso: `[data-fumetto-di="${chiave}"] [data-azione="scendi"]` })
+  await attendi(page, 300)
+  await page.click(`[data-fumetto-di="${chiave}"] [data-azione="scendi"]`)
+  await giuPronto()
 }
 
 /* ---------- 1. giù, verso il forziere d'oro della collana ---------- */
 await semina(page, profilo({ collana: 'presa' }))
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
-await page.evaluate(s => { location.hash = 'seme=' + s }, forziere.seme)
-await scendiNelSotterraneo(page, CANTINE)
-await page.waitForSelector('.sot-tela', { timeout: 5000 })
+await giu(forziere.seme, CANTINE)
 await page.waitForSelector('[data-rotta]', { state: 'attached', timeout: 5000 })
 await attendi(page, 500)
 uguale('la freccina c\'è, e segue la collana', await page.locator('[data-rotta]').getAttribute('data-missione-rotta'), 'collana')
@@ -108,14 +120,13 @@ uguale('il forziere è su questo piano: «qui»', await page.locator('[data-rott
 controlla('la riga in cima dice di cercare il forziere d\'oro',
           (await page.locator('[data-promemoria] li[data-segui]').innerText()).includes('cerca il forziere d\'oro'))
 {
-  const g = await geometria(forziere.c, forziere.r)
-  const anello = { x: g.eroe.x, y: g.eroe.y - 0.25 * g.scala }
-  const voluto = gradi(g.eroe, g.verso)
+  const g = await geometria(forziere.r)
+  const voluto = gradi(g.anello, g.verso)
   dentro('la freccina guarda il forziere (scarto in gradi)', scarto(Number(await page.locator('[data-rotta]').getAttribute('data-gradi')), voluto), 0, 2)
-  dentro('e la sua punta sta sulla stessa retta, attorno all\'eroe', scarto(gradi(anello, g.punta), voluto), 0, 4)
-  const lontano = Math.hypot(g.punta.x - anello.x, g.punta.y - anello.y)
+  dentro('e la sua punta sta sulla stessa retta, attorno all\'eroe', scarto(gradi(g.anello, g.punta), voluto), 0, 4)
+  const lontano = Math.hypot(g.punta.x - g.anello.x, g.punta.y - g.anello.y)
   dentro('a pochi passi dall\'eroe, non sul bordo dello schermo', lontano, 30, 90)
-  nota(`forziere a ${forziere.r.distanza.toFixed(1)} celle, a ${Math.round(voluto)}°; la punta a ${Math.round(gradi(anello, g.punta))}°`)
+  nota(`forziere a ${forziere.r.distanza.toFixed(1)} celle, a ${Math.round(voluto)}°; la punta a ${Math.round(gradi(g.anello, g.punta))}°`)
 }
 uguale('non intralcia il dito: la freccina non prende i tocchi',
        await page.locator('[data-rotta]').evaluate(e => getComputedStyle(e).pointerEvents), 'none')
@@ -126,14 +137,12 @@ await page.click('button[aria-label="pausa"]')
 await attendi(page, 400)
 await page.click('[data-pausa] [data-azione="esci"]')
 await page.waitForSelector('.carte', { timeout: 5000 })
+await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))   // senza il cheat dell'indirizzo, che ricaricando riscende
 
 /* ---------- 2. giù, la missione è più in basso: la freccina punta alla scala ---------- */
 await semina(page, profilo({ chiavi: 'presa' }))
-await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })   // il profilo seminato non ha la sosta di prima
-await page.evaluate(s => { location.hash = 'seme=' + s }, alla_scala.seme)
-await scendiNelSotterraneo(page, TORRE)
-await page.waitForSelector('.sot-tela', { timeout: 5000 })
+await scegli(page, 'sotterraneo')   // il profilo seminato non ha la sosta di prima
+await giu(alla_scala.seme, TORRE)
 await page.waitForSelector('[data-rotta]', { state: 'attached', timeout: 5000 })
 await attendi(page, 500)
 uguale('la freccina segue le chiavi', await page.locator('[data-rotta]').getAttribute('data-missione-rotta'), 'chiavi')
@@ -144,11 +153,12 @@ controlla('la riga in cima dice di scendere: «al terzo piano: scendi»',
 {
   const scala = alla_scala.c.livello.robe.find(r => r.che === 'scala')
   const dove = { x: scala.x + 0.5, y: scala.y + 0.5 }
-  const g = await geometria(alla_scala.c, dove)
-  const anello = { x: g.eroe.x, y: g.eroe.y - 0.25 * g.scala }
-  const voluto = gradi(g.eroe, g.verso)
-  dentro('la freccina guarda la scala (scarto in gradi)', scarto(Number(await page.locator('[data-rotta]').getAttribute('data-gradi')), voluto), 0, 2)
-  dentro('e la sua punta sta sulla stessa retta', scarto(gradi(anello, g.punta), voluto), 0, 4)
+  const g = await geometria(dove)
+  const voluto = gradi(g.anello, g.verso)
+  // la scala è a trentatré celle, fuori dallo schermo: la prospettiva schiaccia la profondità e la direzione sullo schermo si scosta di
+  // qualche grado da quella della mappa (a otto celle, il forziere, resta dentro i due); la freccina dice la direzione, non la strada
+  dentro('la freccina guarda la scala (scarto in gradi)', scarto(Number(await page.locator('[data-rotta]').getAttribute('data-gradi')), voluto), 0, 8)
+  dentro('e la sua punta sta sulla stessa retta', scarto(gradi(g.anello, g.punta), voluto), 0, 8)
   uguale('la scala non si è ancora vista (la nebbia non conta)',
          alla_scala.c.visto[scala.y * alla_scala.c.livello.largo + scala.x], 0)
   nota(`scala a ${alla_scala.r.distanza.toFixed(1)} celle, a ${Math.round(voluto)}°`)
@@ -163,136 +173,19 @@ await page.click('[data-azione="chiudi"]')
 await attendi(page, 300)
 uguale('e chiuso torna', await page.locator('[data-rotta]').count(), 1)
 
-// senza nessuna missione di questa discesa, niente freccina: lasciando perdere si riparte da capo
-await lasciaLaDiscesa(page)
-
-/* ---------- 3. sopra: una missione presa, la freccia azzurra sul bordo ---------- */
-await semina(page, profilo({ rosicchione: 'presa' }))
-await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
-await attendi(page, 600)
-uguale('niente consegne da fare: la freccia d\'oro non c\'è', await page.locator('[data-consegna-fuori]').count(), 0)
-uguale('la freccia azzurra c\'è, e va alla torre', await page.locator('[data-meta-fuori]').getAttribute('data-meta-fuori'), 'torre')
-uguale('la torre è lontana: la freccina attorno all\'eroe non c\'è', await page.locator('[data-rotta-terra]').count(), 0)
-controlla('stesso stampo dell\'altra, e col ritaglio della discesa',
-          await page.locator('.sot-bussola.sot-bussola-meta [data-ritaglio]').count() === 1)
-controlla('il colore è azzurro e non d\'oro',
-          await page.locator('.sot-bussola-meta b').evaluate(e => getComputedStyle(e).backgroundColor) === 'rgb(127, 208, 255)')
-{
-  const v = await page.locator('[data-terra]').boundingBox()
-  const b = await page.locator('[data-meta-fuori]').boundingBox()
-  const cx = b.x + b.width / 2, cy = b.y + b.height / 2
-  controlla('sta dentro lo schermo, sul bordo', cx > v.x && cx < v.x + v.width && cy > v.y && cy < v.y + v.height,
-            `${cx},${cy}`)
-}
-await scatto(page, 'rotta-sopra')
-const prima = await page.locator('[data-eroe-terra]').getAttribute('data-cella')
-await toccaIl('[data-meta-fuori]')
-await page.waitForFunction(p => document.querySelector('[data-eroe-terra]')?.dataset.cella !== p, prima, { timeout: 5000 })
-uguale('toccandola l\'eroe ci va', await page.locator('[data-eroe-terra]').getAttribute('data-cammina'), '1')
-/* Durante la camminata si guarda ogni fotogramma: B = solo il bordo, V = la freccina attorno all'eroe, N = niente.
-   Il passaggio è uno solo, in avanti (B poi V poi N): se tornasse indietro sarebbe lo sfarfallio al confine */
-await page.evaluate(() => {
-  window.__stati = ''
-  const giro = () => {
-    const b = document.querySelectorAll('[data-meta-fuori]').length, v = document.querySelectorAll('[data-rotta-terra]').length
-    const s = b && v ? 'X' : b ? 'B' : v ? 'V' : 'N'
-    if (window.__stati.slice(-1) !== s) window.__stati += s
-    window.__giro = requestAnimationFrame(giro)
-  }
-  giro()
-})
-await page.waitForSelector('[data-fumetto-di="torre"]', { timeout: 30000 })
-{
-  const stati = await page.evaluate(() => { cancelAnimationFrame(window.__giro); return window.__stati })
-  controlla('camminando il bordo e la freccina attorno all\'eroe non si vedono mai insieme, e non sfarfallano',
-            /^B(V)?N*$/.test(stati), stati)
-  nota(`dal bordo all'arrivo: ${stati}`)
-}
-controlla('e arrivato si apre il fumetto della discesa, con «scendo»',
-          await page.locator('[data-fumetto-di="torre"] [data-azione="scendi"]').count() === 1)
-uguale('vicino alla torre il bordo non serve più', await page.locator('[data-meta-fuori]').count(), 0)
-uguale('e la freccina attorno all\'eroe ha fatto il suo: sparisce', await page.locator('[data-rotta-terra]').count(), 0)
-
-/* ---------- 3b. sopra, la torre è in vista: la freccina attorno all'eroe continua a puntarla ---------- */
-const misuraSopra = (selFreccina, selMeta) => page.evaluate(([f, m]) => {
-  const fr = document.querySelector(f), mt = document.querySelector(m)
-  if (!fr || !mt) return null
-  const a = fr.getBoundingClientRect(), p = fr.querySelector('i').getBoundingClientRect(), q = mt.getBoundingClientRect()
-  return { anello: { x: a.x, y: a.y }, punta: { x: p.x + p.width / 2, y: p.y + p.height / 2 },
-           meta: { x: q.x + q.width / 2, y: q.y + q.height / 2 }, gradi: Number(fr.dataset.gradi),
-           colore: getComputedStyle(fr.querySelector('i')).borderLeftColor,
-           eventi: getComputedStyle(fr).pointerEvents,
-           bordo: document.querySelectorAll('[data-meta-fuori]').length }
-}, [selFreccina, selMeta])
-await semina(page, profilo({ rosicchione: 'presa' }, [47, 9]))
-await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
-await page.waitForSelector('[data-rotta-terra][data-meta-vicina="torre"]', { state: 'attached', timeout: 5000 })
+/* ---------- 3. sopra: chi aspetta una consegna ha il «?» d'oro sul bordo ---------- */
+await page.click('button[aria-label="pausa"]')
 await attendi(page, 400)
-{
-  const m = await misuraSopra('[data-rotta-terra][data-meta-vicina="torre"]', '[data-posto="torre"]')
-  controlla('la torre è in vista, l\'eroe non c\'è ancora: la freccina c\'è', !!m)
-  if (m) {
-    const voluto = gradi(m.anello, m.meta)
-    dentro('guarda la torre (scarto in gradi)', scarto(m.gradi, voluto), 0, 3)
-    dentro('e la sua punta sta sulla retta dall\'eroe alla torre', scarto(gradi(m.anello, m.punta), voluto), 0, 4)
-    uguale('azzurra, come l\'indicatore sul bordo', m.colore, 'rgb(127, 208, 255)')
-    uguale('non prende i tocchi', m.eventi, 'none')
-    uguale('e sul bordo non c\'è più niente: una cosa sola per volta', m.bordo, 0)
-    nota(`torre a ${Math.round(voluto)}°, la punta a ${Math.round(gradi(m.anello, m.punta))}°`)
-  }
-  await scatto(page, 'rotta-sopra-vicina')
-}
-await toccaIl('[data-posto="torre"]')
-await page.waitForSelector('[data-fumetto-di="torre"]', { timeout: 30000 })
-uguale('arrivato al piede della discesa la freccina sparisce', await page.locator('[data-rotta-terra]').count(), 0)
-
-/* ---------- 4. una consegna da fare ha la precedenza ---------- */
+await page.click('[data-pausa] [data-azione="esci"]')
+await page.waitForSelector('.carte', { timeout: 5000 })
+await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))   // senza il cheat dell'indirizzo, che ricaricando riscende
 await semina(page, profilo({ badessa: 'fatta', rosicchione: 'presa' }))
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await mondoPronto(page)
 await attendi(page, 600)
 uguale('chi aspetta la consegna è lontano: il «?» d\'oro sul bordo', await page.locator('[data-consegna-fuori="eremita"]').count(), 1)
-uguale('e la freccia azzurra non c\'è', await page.locator('[data-meta-fuori]').count(), 0)
-// con l'eremita in vista il «?» sul bordo cede alla freccina d'oro attorno all'eroe, che lo punta finché non gli si
-// è accanto; la precedenza resta (la azzurra non compare mai)
-await semina(page, profilo({ badessa: 'fatta', rosicchione: 'presa' }, [55, 9]))
-await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
-await page.waitForSelector('[data-rotta-terra][data-consegna-vicina="eremita"]', { state: 'attached', timeout: 5000 })
-await attendi(page, 400)
-{
-  const m = await misuraSopra('[data-rotta-terra][data-consegna-vicina="eremita"]', '[data-personaggio="eremita"]')
-  controlla('l\'eremita è in vista e la freccina d\'oro c\'è', !!m)
-  if (m) {
-    const voluto = gradi(m.anello, m.meta)
-    // la cosa è il piede del personaggio, la scatola è alta: un po' più di tolleranza
-    dentro('guarda l\'eremita (scarto in gradi)', scarto(m.gradi, voluto), 0, 8)
-    dentro('e la sua punta sta sulla stessa retta', scarto(gradi(m.anello, m.punta), m.gradi), 0, 4)
-    uguale('d\'oro e non azzurra', m.colore, 'rgb(255, 210, 63)')
-    uguale('sul bordo non c\'è più il «?»', await page.locator('[data-consegna-fuori]').count(), 0)
-    uguale('e la freccia azzurra non è comparsa', m.bordo + await page.locator('[data-rotta-terra][data-meta-vicina]').count(), 0)
-  }
-  await scatto(page, 'rotta-consegna-vicina')
-}
-await toccaIl('[data-personaggio="eremita"]')
-await page.waitForSelector('[data-dialogo="eremita"]', { timeout: 30000 })
-uguale('arrivato accanto all\'eremita la freccina sparisce', await page.locator('[data-rotta-terra]').count(), 0)
-
-
-/* ---------- 5. niente missioni prese: la freccia è quella della storia ---------- */
-await semina(page, profilo({ badessa: 'consegnata' }))
-await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
-await attendi(page, 600)
-uguale('senza missioni prese né da consegnare, nessuna consegna sul bordo',
-       await page.locator('[data-consegna-fuori]').count(), 0)
-// la porta della storia (la discesa dopo quelle finite) si indica da sola, in vista o sul bordo
-uguale('e la freccia azzurra, sul bordo o attorno all\'eroe, è una sola e porta alla discesa della storia',
-       await page.locator('[data-meta-fuori], [data-meta-vicina]').evaluateAll(els => els.map(e => e.dataset.metaFuori || e.dataset.metaVicina).join(',')),
-       CAMPAGNA[DISCESE].chiave)
+await scatto(page, 'rotta-consegna-fuori')
 
 uguale('nessun errore in console', errori.join(' · '), '')
 await browser.close()
-riassunto('la freccina verso la missione, giù e sopra')
+riassunto('la freccina verso la missione, giù, e la consegna sul bordo sopra')

@@ -31,9 +31,8 @@ defineProps({
   gemme: { type: Number, default: 0 },
   preparabili: { type: Number, default: 0 },   // gli incantesimi che l'eroe sa e si possono preparare: sulla casella degli incanti
   missioniPronte: { type: Number, default: 0 }, // le missioni fatte, da consegnare: una pastiglia d'oro sul globo rosso
-  mappa: { type: Boolean, default: false },     // la mappina è aperta grande (sopra, nel 3D: la veduta d'insieme)
+  mappa: { type: Boolean, default: false },     // la mappina è aperta grande (sopra: la veduta d'insieme)
   sopra: { type: Boolean, default: false },
-  mappaSopra: { type: Boolean, default: false }, // sopra la casella della mappa apre la veduta d'insieme (il mondo in 3D)
 })
 defineEmits(['bevi', 'zaino', 'incanti', 'mappa', 'eroe', 'abilita'])
 // col tema dei pannelli i globi sono vivi (GloboVivo.vue, strada A o B); senza, quelli di sempre
@@ -118,8 +117,9 @@ onBeforeUnmount(() => {
                 @click="$emit('incanti')">
           <Glifo nome="incanto" :misura="19" /><b>{{ incanti.length }}/{{ preparabili }}</b>
         </button>
-        <button type="button" class="sot-cella" :class="{ 'sot-vuota': sopra && !mappaSopra }" data-casella-barra="mappa"
-                data-azione="mappina" :disabled="sopra && !mappaSopra" :aria-label="sopra && !mappaSopra ? 'la mappa: sei già sopra' : 'la mappa'"
+        <!-- sopra apre la veduta d'insieme del mondo, giù la mappa del piano -->
+        <button type="button" class="sot-cella" data-casella-barra="mappa"
+                data-azione="mappina" aria-label="la mappa"
                 :aria-pressed="mappa ? 'true' : 'false'" @click="$emit('mappa')">
           <span class="em">🗺️</span>
         </button>

@@ -1,6 +1,6 @@
 # Il mondo di sopra: il generatore a percorso
 
-Il mondo di sopra del Sotterraneo 3D come **dato puro**, da una scheda e da un seme fisso, che gira in Node senza Vue, three o
+Il mondo di sopra del sotterraneo come **dato puro**, da una scheda e da un seme fisso, che gira in Node senza Vue, three o
 DOM: la serpentina a sette zone di [mondo-a-percorso.md](mondo-a-percorso.md), generata **a blocchi**. Quello che queste
 funzioni restituiscono è il **contratto** per il motore di sopra (compito B), la scena (D) e le terre (E): sotto, per intero.
 

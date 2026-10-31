@@ -11,8 +11,7 @@ import { readFileSync, existsSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ICONE_MONDO, FIRMA } from '../../src/giochi/sotterraneo/dati/icone-mondo.js'
-import { ICONE } from '../../src/giochi/sotterraneo/dati/terra-icone.js'
-import { iconaDi, POSTO_DI } from '../../src/giochi/sotterraneo/dati/terra.js'
+import { iconaDi } from '../../src/giochi/sotterraneo/dati/terra.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { INGRESSI_DEL_MONDO } from '../../src/giochi/sotterraneo/dati/mondo-aperto.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
@@ -50,13 +49,8 @@ controlla(`tutte insieme sotto i 130 KB (${Math.round(totale / 1024)} KB)`, tota
 const firma = createHash('sha1').update(JSON.stringify(ICONE_MONDO)).digest('hex').slice(0, 12)
 uguale('la firma del file generato torna (se no: npm run scatti icone-mondo)', FIRMA, firma)
 
-// chi le legge: il 3D le sue, il Sotterraneo di sempre i ritagli dipinti, e le città senza ritaglio non hanno icona nel 2D
-for (const t of [...CAMPAGNA.map(t => t.chiave), 'abisso']) {
-  uguale(`${t}: nel 3D la sua fotografia`, iconaDi(t, true), ICONE_MONDO[t])
-  uguale(`${t}: nel 2D il ritaglio dipinto`, iconaDi(t), ICONE[POSTO_DI[t]])
-  controlla(`${t}: le due sono diverse`, iconaDi(t, true) !== iconaDi(t))
-}
-for (const c of CITTA) uguale(`${c}: nessun ritaglio dipinto`, iconaDi(c), null)
+// chi le legge: ogni discesa e ogni città la sua fotografia
+for (const t of [...CAMPAGNA.map(t => t.chiave), 'abisso', ...CITTA]) uguale(`${t}: la sua fotografia`, iconaDi(t), ICONE_MONDO[t])
 
 /* La home non carica three. Si cammina sulle importazioni statiche (non quelle dinamiche, `import('…')`, che sono il
    caricamento a richiesta) dalla home, dal registro dei giochi e dal punto d'ingresso, e non si deve mai arrivare a three né

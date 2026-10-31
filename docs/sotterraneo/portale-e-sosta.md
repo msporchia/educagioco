@@ -2,8 +2,8 @@
 
 Come si lascia una discesa a metà, come la si ritrova e cosa si salva. Le
 regole della discesa (la scala, i mostri, gli svenimenti) sono in
-[regole.md](regole.md); la terra di sopra, dove sta il portale gemello, in
-[terra-di-sopra.md](terra-di-sopra.md); la sosta per avventura in
+[regole.md](regole.md); il mondo di sopra, dove sta il portale gemello, in
+[mondo-3d.md](mondo-3d.md); la sosta per avventura in
 [avventure.md](avventure.md) e quella di tutti i giochi in
 [../core/ripresa.md](../core/ripresa.md). Il codice: `motore/sosta.js` (cosa si
 scrive e come si rilegge), `Gioco.vue` (chi la scrive e la riprende),
@@ -22,50 +22,48 @@ una strada per salire e tornare giù, la ✕ è andare via.
 - **Salendo dal portale si lascia la discesa com'è**, e la sosta lo ricorda
   (`via: 'portale'`, `motore/sosta.js`): l'eroe sbuca sopra accanto al
   **portale gemello**, nel villaggio dei mercanti
-  ([terra-di-sopra.md](terra-di-sopra.md#il-portale-gemello)); si fanno le
+  ([mondo-3d.md](mondo-3d.md#chi-sta-dove)); si fanno le
   spese e toccando il gemello si torna giù nella stanza e nel punto di prima.
   Il portale nel piano resta: si sale e si torna quante volte si vuole.
-- **Salire non cura**: la sosta porta la vita e l'energia di giù, e la terra di sopra le mostra così (la barra); a rimetterle a
+- **Salire non cura**: la sosta porta la vita e l'energia di giù, e il mondo di sopra le mostra così (la barra); a rimetterle a
   posto, gratis, sono la guaritrice e l'incantatrice ([chi-cura.md](chi-cura.md)), che chiamano da sole chi è
   ferito o scarico. Il gemello riporta giù con quello che la sosta dice: curata, vita e energia piene (`forzeDi` la legge col
   massimo di adesso). Uscire con la ✕ non cura niente: si riprende com'era.
 - **Uscire con la ✕ non è un portale** (`via: 'uscita'`): la ✕ (e il «← esco»
   della pausa) salva la discesa nel punto esatto e porta **in home**, non
-  sulla terra di sopra. Rientrando nel sotterraneo — dalla copertina, da
+  sul mondo di sopra. Rientrando nel sotterraneo — dalla copertina, da
   «riprendi da qui», o scegliendo l'eroe giusto nella scelta — si è **già
   giù**, nel punto esatto, dietro il velo della pausa
   ([../core/ripresa.md](../core/ripresa.md)): niente mercanti, niente gemello
   (`riprendiSeUscito` in `Gioco.vue`). Una sosta di prima, senza `via`, vale
-  come uscita. Provato: sosta e portale insieme, cioè la ✕ che porta sulla
-  terra di sopra con il gemello: uscire diventava un portale gratis, «basta
+  come uscita. Provato: sosta e portale insieme, cioè la ✕ che porta sul
+  mondo di sopra con il gemello: uscire diventava un portale gratis, «basta
   far finta di uscire dal gioco» (l'utente).
-- **Il gemello c'è solo dopo il portale vero.** La carta in cima alla terra
-  di sopra («torno giù da dove ero») e «riprendi da qui» in home riprendono la
-  stessa sosta; il gemello se ne va con la sosta, quando la discesa finisce o
-  con «lascio perdere». L'abisso risalito per stasera (svenimenti finiti: si è
-  portati su) conta come portale: è sopra, con la strada per tornare giù.
-- **Nel 3D la carta in cima non c'è**: il mondo ha già la sua meta da seguire e
-  il gemello per tornare, e la carta proponeva di tornare giù a ogni salita.
-  La sosta resta (la scelta dell'eroe dice «a metà», «riprendi da qui» in home
-  la riprende): sopra si torna giù dal gemello o toccando l'ingresso dello
-  stesso dungeon, il cui fumetto dice «riprendo da dove ero»
+- **Il gemello c'è solo dopo il portale vero.** Il gemello se ne va con la
+  sosta, quando la discesa finisce o con «lascio perdere». L'abisso risalito
+  per stasera (svenimenti finiti: si è portati su) conta come portale: è sopra,
+  con la strada per tornare giù.
+- **Sopra non c'è una carta «torno giù»**: il mondo ha già la sua meta da
+  seguire e il gemello per tornare, e la carta proponeva di tornare giù a ogni
+  salita. La sosta resta (la scelta dell'eroe dice «a metà», «riprendi da qui»
+  in home la riprende): sopra si torna giù dal gemello o toccando l'ingresso
+  dello stesso dungeon, il cui fumetto dice «riprendo da dove ero»
   (`[data-azione="scendi"][data-sosta]`). Un altro dungeon avverte col foglio
-  di sempre, ma il suo no («no, non adesso») resta sopra invece di riportare
-  giù (`Campagna.vue`, `tocca`).
+  `[data-chiede]`, ma il suo no («no, non adesso») resta sopra invece di
+  riportare giù (`Campagna.vue`, `tocca`).
 - **«Lascio perdere questa discesa»** è l'unico modo di salire al villaggio senza
   portale: dal ⏸ in discesa (il velo ha, accanto a «esco», «lascio perdere
-  questa discesa» e «scelgo un altro eroe»), dalla scala che sale del primo
-  piano (stesso foglio: [scala-che-sale.md](scala-che-sale.md)) e dalla carta
-  in cima alla terra di sopra (solo nel 2D). Un foglio (`viste/LascioPerdere.vue`,
-  `[data-lascio-perdere]`) dice prima la frase, la stessa nei tre posti: la roba che hai addosso e nello
+  questa discesa» e «scelgo un altro eroe»), e dalla scala che sale del primo
+  piano (stesso foglio: [scala-che-sale.md](scala-che-sale.md)). Un foglio (`viste/LascioPerdere.vue`,
+  `[data-lascio-perdere]`) dice prima la frase, la stessa nei due posti: la roba che hai addosso e nello
   zaino resta tua, ma la discesa ricomincia da capo, la prossima volta. In
-  discesa si risale subito sulla terra di sopra (la roba e le missioni fatte
+  discesa si risale subito sul mondo di sopra (la roba e le missioni fatte
   passano nell'avventura, come a ogni uscita; niente cartello di fine). Nell'abisso
   il tasto non c'è: la strada su è il portale, e il piano raggiunto è il
   record. Scenderne un'altra con una discesa a metà lo dice anche l'avviso
   (`[data-chiede]`), con le stesse parole.
 - **Cambiare eroe da dentro la discesa** (`[data-azione="eroe-giu"]`, sul velo
-  della pausa): dalla terra di sopra non si può più, perché da lì non si
+  della pausa): dal mondo di sopra non si può più, perché da lì non si
   passa. La discesa si salva com'è e si apre la scelta; chiuderla senza
   scegliere riporta giù, e scegliere un eroe con una discesa lasciata con la ✕
   la riprende.
@@ -98,25 +96,25 @@ comprarle da lei»*.
   all'eroe, o accanto, si accende un portale come quello fisso. Lo si tocca e
   si sale. Nello scontro no («nello scontro no»), con un foglio aperto no,
   e **uno per piano**: con uno già aperto la pergamena non si spende.
-- **Il gemello è gratis**: sopra c'è il gemello di sempre, e tornando giù si
+- **Il gemello è gratis**: sopra c'è il gemello, e tornando giù si
   è nel punto di prima, col portale della pergamena ancora aperto (è una cosa
   nuova del piano: la sosta la tiene). Da lì si risale senza un'altra
   pergamena, **finché non si lascia il piano** (`lasciaIlPiano` lo chiude).
 - **Nell'abisso non lascia il gemello** (`senzaGemello`): attraversarlo è
   «torno su per stasera», la sera finisce e l'abisso si riprende come dopo
-  la risalita di sempre. Il portale fisso dell'abisso resta com'è.
+  ogni risalita. Il portale fisso dell'abisso resta com'è.
 - **Dove si sbuca: l'ultimo posto sicuro** (`ultimoPostoSicuro` in
   `motore/posto-sicuro.js`, per il portale fisso e per la pergamena). Oggi è
   il villaggio, accanto al gemello; il mondo nuovo potrà scrivere la città o
   la pietra del viaggio toccata per ultima in `avventura.mondo.sicuro`, e
   finché il mondo in 3D non la sa raggiungere si torna al portale.
-- **Nel 3D** il portale della pergamena è lo stesso varco in piedi del
+- **Il portale della pergamena** è lo stesso varco in piedi del
   portale fisso ([grafica-3d-portale.md](grafica-3d-portale.md)): nasce
   accendendosi dal basso, con le rune per terra che si disegnano in giro, e
-  se ne va col piano. Nel 2D è il disegno del portale di sempre.
+  se ne va col piano.
 - **Il quaderno, a voce**: la richiesta, il ritorno e il grazie stanno nella
   missione; sopra la testa dell'incantatrice c'è il segno delle missioni come
-  per gli altri (terra dipinta e mondo in 3D).
+  per gli altri.
 
 Nei test: `unita/sotterraneo-pergamena` (la cosa, la missione e la bottega
 prima e dopo, il tetto, per terra solo dopo e mai dai mostri, aprirla, il
@@ -131,8 +129,7 @@ dal gemello e su di nuovo gratis).
   sosta per avventura: [avventure.md](avventure.md)): stessa stanza, stesso
   punto anche a metà di un passo, porte aperte, forzieri aperti, roba per
   terra, mostri feriti **dove erano** e non a casa. Uscendo con la ✕ si riprende
-  giù; salendo dal portale la terra di sopra offre in cima «piano 2 di 3 ·
-  ❤️ 14 · 💎 37 — torno giù da dove ero».
+  giù; salendo dal portale si ritrova il gemello nel villaggio, e la scelta dell'eroe dice «piano 2 di 3 · ❤️ 14 · 💎 37».
 - **Anche l'orologio**: `passi`, il mana del cammino e gli incanti preparati addosso ([orologio.md](orologio.md)); senza quei campi una sosta di prima si rilegge da zero.
 - **Anche i mostri che torneranno**: `torna` e `morti` stanno sul mostro, quindi nei campi cambiati e in `dietro`; riprendendo, gli scaduti tornano ([ricomparsa.md](ricomparsa.md)). Una sosta di prima non li ha: i suoi morti restano morti.
 - **Si salvano il seme e i cambiamenti, non il piano**: il piano si rifà dal

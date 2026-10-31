@@ -1,6 +1,6 @@
 // Il racconto di un turno (docs/sotterraneo/scontro.md, «La vista»): il motore fa tutto dentro `rispondi` e consegna le azioni
 // in ordine (`esito.azioni`); qui si rifanno una alla volta, perché chi guarda capisca chi ha fatto cosa a chi. Non calcola
-// niente: ogni numero è già nell'azione. Quello che si vede passa da `fx`, un oggetto reattivo che `Scontro.vue` legge:
+// niente: ogni numero è già nell'azione. Quello che si vede passa da `fx`, un oggetto reattivo che `Scontro3d.vue` legge:
 // le ossa mostrate (le vere sono già scese), chi è caduto, chi scatta e chi prende, i numeri che salgono, gli effetti
 // dell'abilità (`scene`, dati/effetti.js) e la fila dei turni che scorre. Un tocco accorcia (`accorcia`); la domanda dopo
 // compare a racconto finito (`fx.attivo`). Come si sceglie e si disegna l'effetto: docs/sotterraneo/scontro-effetti.md.
@@ -28,7 +28,7 @@ const nuovo = () => ({
   ossa: {}, morti: {},            // per posto: le ossa mostrate, chi è caduto
   stati: {},                      // per posto: gli stati addosso mostrati adesso (la verità arriva a racconto finito)
   effetto: {},                    // per posto o 'eroe': { tipo, n } (scatta, colpito, protegge…): riavvia l'animazione di quella figura
-  numeri: [], scene: [],          // { id, su, testo, tipo, riga?, glifo? } · gli effetti dell'abilità (dati/effetti.js, viste/Scene.vue)
+  numeri: [], scene: [],          // { id, su, testo, tipo, riga?, glifo? } · gli effetti dell'abilità (dati/effetti.js)
   nome: null,                     // l'abilità che l'eroe sta usando { glifo, nome, tinta }
   fila: null,                     // la fila dei turni mentre si racconta (null: quella vera)
   riga: null,                     // la riga d'apertura («Alle spalle!»)

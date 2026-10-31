@@ -20,7 +20,7 @@ const corpo = computed(() => {
   return figura(spriteDelGrosso(f, 'scontro', 0), { scala: scalaDelGrosso(props.chi, props.scala) })
 })
 // i fotogrammi sono quadrati con righe vuote in cima: la corona si posa dove comincia la testa, non in cima alla scatola
-// (come in scena/tela.js con `vuotoSopra`). Si misura una volta per sprite, sul foglio
+// Si misura una volta per sprite, sul foglio
 const vuoti = new Map()
 let immagine = null
 const caricaIlFoglio = () => (immagine = immagine || new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.src = ATLANTE }))

@@ -1,11 +1,10 @@
-/* Un eroe del sotterraneo in regola con la storia, sulla terra di sopra: N discese finite, la roba e il livello che la
-   storia si aspetta, la mappa scoperta. Lo usano gli strumenti che guardano una schermata (strumenti/scatta-app.mjs,
+/* Un eroe del sotterraneo in regola con la storia, sul mondo di sopra: N discese finite, la roba e il livello che la
+   storia si aspetta. Lo usano gli strumenti che guardano una schermata (strumenti/scatta-app.mjs,
    `--storia`) e i test che non vogliono ripetere il seme (docs/core/comandi.md). */
 import { semina, scegli, attendi } from './browser.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
-import { PARTENZA } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 
 // `zaino`: chiavi di pezzi da mettere in tasca in più (un bastone da guardare nel pannello, un elisir da bere); `punti`: quanti
 // punti delle caratteristiche tenere ancora da dare (si tolgono dalle ultime), per vedere cosa cambia sotto ogni «+»
@@ -22,17 +21,17 @@ export function campagnaSeminata({ finite = 0, eroe = 'cavaliere', missioni = {}
   }
   const avv = { tappa: k, libera: false, stelle, missioni, roba,
                 crescita,
-                terra: { nebbia: 'f'.repeat(768), dove: PARTENZA.piede, parlato } }
+                mondo: { parlato } }
   return { tappa: k, libera: false, stelle, cfg: { mondo: MONDO, eroe, avventure: { [eroe]: avv } } }
 }
 
 export async function seminaIlSotterraneo(page, opzioni = {}) {
-  const { eroe = 'cavaliere', gioco = 'sotterraneo' } = opzioni
+  const { eroe = 'cavaliere' } = opzioni
   await semina(page, {
-    coins: 300, settings: { sperimentali: true },
+    coins: 300,
     campagne: { sotterraneo: campagnaSeminata({ ...opzioni, eroe }) },
   })
-  await scegli(page, gioco)
-  await page.waitForSelector(gioco === 'sotterraneo3d' ? '[data-mondo3d][data-pronto]' : '[data-terra]', { timeout: 20000 })
+  await scegli(page, 'sotterraneo')
+  await page.waitForSelector('[data-mondo3d][data-pronto]', { timeout: 20000 })
   await attendi(page, 600)
 }

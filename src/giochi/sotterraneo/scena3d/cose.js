@@ -1,5 +1,5 @@
 // La roba del piano in 3D, a ogni fotogramma: per ogni cosa del motore (corsa.livello.robe) la sua figura dell'atlante, scelta
-// come la sceglie il 2D (dati/tessere.js `PEZZO_DI`, dati/fotogrammi.js, dati/grossi.js), il chiarore per terra di chi lo
+// come la sceglie il gioco (dati/tessere.js `PEZZO_DI`, dati/fotogrammi.js, dati/grossi.js), il chiarore per terra di chi lo
 // chiede e i segni scritti sopra. Si vede quello che il motore dice (`luceDi`): nel ricordo la roba ferma, mai i mostri.
 // I mostri hanno uno stato di disegno (dove stanno smussati, il lampo del colpo, lo scatto, la caduta), che il palco muove; i più
 // vicini all'eroe hanno il modello 3D al posto dello sprite, se il registro ne ha uno (mostro3d.js, docs/sotterraneo/mostri-3d.md).
@@ -63,7 +63,7 @@ export function creaCose({ figure, aloni, macchie = null, colonne, etichette, ca
       const passi = !scheda.unaPosa && quantiFotogrammi(scheda.sprite, 'corsa') > 0
       const corre = s.corre && passi
       const posa = corre || (passi && (r.sveglio || scheda.fermoDaiPassi) && inCampo < 0) ? 'corsa' : 'fermo'
-      // i fotogrammi al secondo del 2D (scena/tela.js): 8 da sveglio o di corsa, 1,5 i passi di chi dorme, 4 il respiro. `s.t` è in
+      // i fotogrammi al secondo: 8 da sveglio o di corsa, 1,5 i passi di chi dorme, 4 il respiro. `s.t` è in
       // secondi: prima cresceva di 6 al secondo e qui si moltiplicava ancora, e i mostri giravano 48 pose al secondo
       const fr = (s.t * (corre || r.sveglio ? 8 : posa === 'corsa' ? 1.5 : 4)) | 0
       nome = fotogrammaDi(scheda.sprite, posa, inCampo >= 0 && passi && !corre ? 0 : fr)

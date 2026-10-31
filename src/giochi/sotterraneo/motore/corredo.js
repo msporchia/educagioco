@@ -131,8 +131,8 @@ export class Corredo {
     this.dito = null      // gli anelli: due posti, `dito` e `dito2`
     this.dito2 = null
     this.testa = null     // il copricapo (docs/sotterraneo/elmo.md)
-    // i copricapi si trovano e si comprano solo dove il gioco li accende (il Sotterraneo 3D, come le botti): spenti di difetto,
-    // così il 2D, il banco di prova e la taratura restano quelli di prima. Quello che si ha già si porta dappertutto
+    // i copricapi si trovano e si comprano solo dove il gioco li accende (il sotterraneo, come le botti): spenti di difetto,
+    // così il banco di prova e la taratura restano quelli di prima. Quello che si ha già si porta dappertutto
     this.copricapi = false
     // `torciaResta`: stanze davanti alla torcia accesa (0 = spenta). `torceInScorta`: quante aspettano alla cintura
     this.torciaResta = 0

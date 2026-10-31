@@ -39,22 +39,22 @@ torcia ha cono 9,5, alone 3,8, apertura 300° e, accesa, niente agguati
 - Il banco (`npm run sotterraneo -- --torce 40`) non la sente: va dritto e
   non si volta, e gli agguati erano già pochi (2% → 0%).
 
-## Le botti da rompere (idea del 15 ottobre 2026, fatte nel 3D il 16)
+## Le botti da rompere
 
-**Fatto, solo nel Sotterraneo 3D**: botti in alcune stanze (una su quattro o cinque nelle cantine e nella miniera, rade e
+**Fatto, solo nel sotterraneo**: botti in alcune stanze (una su quattro o cinque nelle cantine e nella miniera, rade e
 vecchie nella cripta e nel tempio, marce nella palude, un accampamento nella grotta, niente nel ghiaccio, nella neve, nella
 fornace e nell'inferno), si toccano, l'eroe le rompe, restano rotte (anche nella sosta), e **una su cinque lascia una
 boccetta o una o due gemme**, per terra come il bottino dei mostri. La regola è del motore (`motore/botti.js`, la tabella in
-`dati/botti.js`) ma **spenta di difetto**: la accende solo il 3D (`Corsa.botti`), il 2D e il banco non la conoscono, quindi
+`dati/botti.js`) ma **spenta di difetto**: la accende il gioco (`Corsa.botti`), il banco non la conosce, quindi
 `npm run taratura` e `npm run test:misure` misurano il gioco di prima ([paesaggi-3d.md](paesaggi-3d.md#le-botti)).
 
 **Resta**: ricalibrare il bottino coi giocatori tipo (`npm run taratura`, [giocatori-tipo.md](giocatori-tipo.md)) con le botti
-accese, e solo dopo accenderle nel gioco normale (il 2D vorrà le sue). L'altra metà dell'idea, **niente domanda per aprire
+accese. L'altra metà dell'idea, **niente domanda per aprire
 libri, forzieri e simili** ([regole.md](regole.md), [arredo.md](arredo.md)), non è fatta: va decisa insieme alla taratura.
 
-## Il Sotterraneo 3D (fase 1 fatta il 15 ottobre 2026)
+## Il disegno 3D
 
-La discesa è in 3D ([grafica-3d.md](grafica-3d.md)); resta, in quest'ordine: la terra di sopra in 3D, l'arredo per
+Resta, in quest'ordine: l'arredo per
 ambientazione modellato (oggi sono le figure dell'atlante), le armi dai pezzi nitidi, i muri obliqui, la prova su un
 telefono vero (i numeri di [grafica-3d-costi.md](grafica-3d-costi.md) sono di SwiftShader). Le voci piccole stanno lì,
 in «Cosa manca».
@@ -126,7 +126,7 @@ coi numeri di `npm run taratura` ([giocatori-tipo.md](giocatori-tipo.md)) e con 
 - **Il suono**: c'è il minimo (passo, colpo, errore, il graffio). Col suono
   spento il gioco deve restare intero.
 
-## La terra di sopra
+## Il mondo di sopra
 
 - **Il terzo foglio dei personaggi** (prompt 9 di `PROMPT-terra-di-sopra.md`, da chiedere a ChatGPT): la figura vera
   dell'incantatrice, che ha una provvisoria (la guaritrice ruotata al viola), e nove che il gioco non ha, ognuna con un ruolo
@@ -144,7 +144,7 @@ coi numeri di `npm run taratura` ([giocatori-tipo.md](giocatori-tipo.md)) e con 
   I requisiti «il piano N toccato» e «un pezzo di roba» non ci sono: vedi
   il perché in [missioni.md](missioni.md). Da guardare col dito: se il tetto
   di tre basta, o se un bambino con tre in mano e nessun «!» pensa che le
-  missioni siano finite (il diario lo dice, ma non da sola la mappa).
+  missioni siano finite (il diario lo dice, ma non da sola il mondo).
 - **La grande storia da guardare col dito**
   ([la-grande-storia.md](la-grande-storia.md)): la grotta ha piani da quattro
   stanze e quindi niente forzieri (il pezzo lo dà il mostro grosso
@@ -198,10 +198,9 @@ coi numeri di `npm run taratura` ([giocatori-tipo.md](giocatori-tipo.md)) e con 
   loro posto da solo. I prompt per ChatGPT, in ordine, sono nella scheda
   `strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-grossi.md`.
 - **Le porte che si aprono**: una discesa appena aperta non ha ancora un
-  momento suo sulla mappa (le assi che cadono, la grata che si alza).
-- Da guardare col dito: la velocità del passo (`PASSO_TERRA`), quanto
-  presto scorre la vista (`BORDO`, `MORBIDA`), quanto si vede attorno
-  (`VISTA`, `LUCE`), e se senza i sassi la strada si trova lo stesso.
+  momento suo nel mondo (le assi che cadono, la grata che si alza).
+- Da guardare col dito: la velocità del passo, quanto si vede attorno
+  (`VISTA_MONDO`, `LUCE`), e se la strada si trova senza sassi che luccicano.
 
 ## Da guardare col dito
 
@@ -225,10 +224,8 @@ il telefono in mano.
   montaggio vanno sentiti col dito — sono la differenza fra un tocco fantasma
   ingoiato e un tasto che sembra lento.
 - **I relitti e l'acqua da dipingere**: macerie, crolli, rocce, travi, stalagmiti, il
-  carro rovesciato, i binari e le pozze sono disegnati in codice (`scena/relitti.js`), tranne
-  le macerie e le rocce della cripta (`sotterraneo_4_3.png`); per le cantine e la fornace non c'è nessun pezzo dipinto; da guardare col dito anche **l'eroe
-  che passa davanti a un relitto alto invece che dietro** quando gli sta a nord, e
-  se le grotte (passaggi stretti, un solo varco per stanza) si leggono sul telefono
+  carro rovesciato, i binari e le pozze sono fatti in codice (`scena3d/relitti.js`), tranne
+  le macerie e le rocce della cripta (`sotterraneo_4_3.png`); per le cantine e la fornace non c'è nessun pezzo dipinto; da guardare col dito se le grotte (passaggi stretti, un solo varco per stanza) si leggono sul telefono
   ([piani-caverne.md](piani-caverne.md)).
 
 ## Le strade e le caratteristiche (13 ottobre)

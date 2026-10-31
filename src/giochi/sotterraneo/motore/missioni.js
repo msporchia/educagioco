@@ -230,13 +230,13 @@ function voceDiario(m, stato, segui = null, conti = {}) {
 // offerte per il tetto: il diario lo dice, o chi ne ha tre in mano non capirebbe perché non ne arrivano
 // La missione principale nel diario (docs/sotterraneo/la-storia-principale.md): le sette porte, e per il capitolo di adesso la
 // discesa con dov'è e il mostro grosso che la chiude. Non conta fra le aperte né nel tetto: è sempre lì, in cima
-export function storiaDelDiario(tappe, segui = null, mondo = false) {
+export function storiaDelDiario(tappe, segui = null) {
   const s = laStoria(tappe)
   const c = s.corrente
   const g = c && GROSSI[GROSSO_DELLA_DISCESA[c.chiave]]
   return {
     ...s, segui: segui === SEGUI_LA_STORIA, fine: STORIA.fine, ferma: STORIA.ferma,
-    corrente: c && { ...c, luogo: luogoDi(c.chiave, mondo),
+    corrente: c && { ...c, luogo: luogoDi(c.chiave),
                      cosa: g ? { tipo: 'sconfiggi', nome: g.nome, em: MOSTRI[g.tipo].em, sprite: MOSTRI[g.tipo].sprite } : null },
   }
 }
@@ -247,7 +247,7 @@ export function discesaDellaStoria(tappe) {
   return c && !c.ferma ? c.chiave : null
 }
 
-export function diario(stati, tappe, segui = null, conti = {}, mondo = false) {
+export function diario(stati, tappe, segui = null, conti = {}) {
   const sg = seguita(stati, segui)
   const mano = inMano(stati).map(m => voceDiario(m, statoDi(stati, m.id), sg, conti))
   const offerta = offerte(stati, tappe).map(m => voceDiario(m, 'offerta', null, conti))
@@ -255,7 +255,7 @@ export function diario(stati, tappe, segui = null, conti = {}, mondo = false) {
   const nelTetto = [...inMano(stati), ...offerte(stati, tappe)].filter(m => !m.fuoriDalTetto).length
   const finite = tutteLeMissioni(stati).filter(m => statoDi(stati, m.id) === CONSEGNATA).sort(dellaStoria).map(m => voceDiario(m, CONSEGNATA, null, conti))
   return {
-    segui: sg, storia: storiaDelDiario(tappe, sg, mondo),
+    segui: sg, storia: storiaDelDiario(tappe, sg),
     inMano: mano, pronte: mano.filter(v => v.stato === FATTA), daFare: mano.filter(v => v.stato !== FATTA),
     offerte: offerta, consegnate: finite,
     aperte: nelTetto,

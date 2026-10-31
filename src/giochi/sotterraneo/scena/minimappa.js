@@ -1,5 +1,5 @@
 // La mappina del sotterraneo: solo quello che si è visto, più i punti che servono (dove sei, la scala, chi ha la chiave, la roba
-// da toccare). In alto a destra, o grande al centro dalla 🗺️ della barra. La usa la tela 2D (scena/tela.js) e il 3D, che la
+// da toccare). In alto a destra, o grande al centro dalla 🗺️ della barra. La usa il 3D, che la
 // disegna su una tela piccola sopra la scena (scena3d/indice.js). `L`, `A`: la misura del campo, in px.
 import { ROCCIA, RELITTO, ACQUA } from '../dati/mondo.js'
 

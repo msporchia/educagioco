@@ -30,7 +30,7 @@ async function veduta(aperta) {
 
 await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
 await azzera(page)
-await seminaIlSotterraneo(page, { finite: 0, gioco: 'sotterraneo3d' })
+await seminaIlSotterraneo(page, { finite: 0 })
 await mondoPronto(page)
 await attendi(page, 2000)
 
