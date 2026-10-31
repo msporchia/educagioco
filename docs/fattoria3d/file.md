@@ -16,7 +16,7 @@ dati/
   biomi.js           prato / bosco / laghetto e lo stagno ([laghi.md](laghi.md)), il mare a ovest, la costa e la spiaggia, i laghi grandi a est (`eMare`, `eSpiaggia`, `eLago`, `tipoAcqua`: funzioni della cella), `biomaVecchio`; semi.js: il caso del mondo
   pesca.js           i numeri della pesca (`PESCA`: 12 s, riposo 60 s, raggio 6), `resaDellaPesca`, il pesce (`PESCI`, in `PRODOTTI_ANIMALI`)
   rotazione.js       ruotare i pezzi: `ruotabile`, `misureGirate`, `DAVANTI`, `rotLetta` ([rotazione.md](rotazione.md))
-  stagioni3d.js      le feste in 3D: importa le finestre della 2D; `ASPETTI`, `PARTICELLE`, `addobbiNatale`, `chiazzeDiNeve`, `stagioneAttiva` ([stagioni.md](stagioni.md))
+  stagioni3d.js      le feste in 3D: importa le finestre della 2D; `ASPETTI`, `PARTICELLE`, `addobbiNatale`, `chiazzeDiNeve`, `ghiaccioli`, `stagioneAttiva` ([stagioni.md](stagioni.md))
   carte.js           le carte del menu «Costruisci qui»: `carteDi(categoria, stato)`, `schedeDi`, `DISEGNI` (carta → pezzo dell'atlante 2D, ormai solo come dato: la carta mostra il modello 3D), `STRUMENTI`, i guasti
   catalogo.js        i pezzi (ora con la `categoria` di ogni pezzo e edificio, `CATEGORIE`; ora anche passerella, ponte e tavolo; i primi due `calpestabile`, con `alzato`: regole.md) — dieci all'inizio:  (campo, recinto, pollaio, stalla, bancarella, bacheca, aiuola, panchina, fontana, pozzo, spaventapasseri) e i dodici
                      edifici unici (fienile, pasticceria = il Pastificio, mongolfiera, mulino, panificio, caseificio, conserviera = la Cucina, gelateria, telaio, zuccherificio, sartoria, tintoria: gli id sono quelli dei salvataggi): prezzi, misure, `liv`, `slot`
@@ -62,8 +62,10 @@ scena3d/             il disegno (vedi scena.md); `facce.js` la faccia di una mer
   scena3d/modelli-botteghe.js   pasticceria, osteria, mensa e merceria (3×3, 3–5 mesh fuse l'una) con un dettaglio che si muove ([botteghe.md](botteghe.md))
   scena3d/modelli-pesca.js      il molo (3×1 e 1×3) e il porticciolo (4×3, la barca dondola); friggitoria e sushi bar stanno in `modelli-macchine.js` ([geografia-e-pesca.md](geografia-e-pesca.md))
   scena3d/pesci.js              i pesciolini: una `InstancedMesh` sola, tutta nello shader (`uTPesci`), nell'acqua dei laghi, del mare e degli stagni
-  scena3d/stagione.js           le feste in scena: cielo e luci tinti, i fiocchi (un `Points`), chiazze, stelle, alberelli e lucine a istanze; `via()` rimette tutto ([stagioni.md](stagioni.md))
-  scena3d/modelli-feste.js      le zucche di Halloween (`zucca_intagliata`, `zucche_mucchio`)
+  scena3d/stagione.js           le feste in scena: cielo e luci tinti, i fiocchi (un `Points`), chiazze, stelle, alberelli, lucine e ghiaccioli a istanze; `via()` rimette tutto ([stagioni.md](stagioni.md))
+  scena3d/neve.js               a Natale: il prato innevato, la neve sulle facce in alto (copie innevate dei materiali, da fuori ai modelli), il ghiaccio dei laghi
+  scena3d/fiato.js              a Natale: la nuvoletta del fiato del contadino e dei compagni (un `Points`)
+  scena3d/modelli-feste.js      le zucche di Halloween (`zucca_intagliata`, `zucche_mucchio`) e il pupazzo di Natale (`pupazzo_neve`)
   scena3d/pesca3d.js            il galleggiante (tre stadi: calma, attesa, «Abbocca!»), il filo dalla canna, il ritiro da sé se il contadino è lì
 viste/
   Faccia.vue         la faccia di una merce (`k` la chiave, `n` il numerino): il pezzo dell'atlante 2D con `Provino.vue`, l'emoji come ripiego; la usano inventario, banco, macchina, semi, livelli, visita
