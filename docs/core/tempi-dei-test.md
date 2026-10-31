@@ -47,7 +47,7 @@ l'albero dei processi, Chrome compresi.
   somma divisa per le corsie.** Un test che si allunga si sente subito:
   è il primo posto dove guardare. Due casi da non rifare:
   - cercare una cosa sulla tela partendo dall'angolo quando la telecamera
-    si apre al centro (`integrazione/fattoria` trovava la bancarella al
+    si apre al centro (la prova della fattoria 2D trovava la bancarella al
     166° tocco; percorsa dal centro in fuori, al primo);
   - un ciclo che aspetta uno stato che non arriverà più
     (`integrazione/survivors` girava a vuoto a eroe morto, e passava lo

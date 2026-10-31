@@ -487,49 +487,10 @@ export const AIUTI = {
     ],
   },
 
-  fattoria: {
+  fattoria3d: {
     emoji: '🚜', titolo: 'La fattoria',
     blocchi: [
-      'Qui non si vince: è il posto dove si spendono le monete guadagnate negli altri giochi. Cresce piano, e resta com\'era lasciata.',
-      { titolo: 'I due tocchi', righe: [
-        '**Un tocco** apre o raccoglie.',
-        '**Tenere il dito premuto** su una cosa già messa la prende, per spostarla.',
-        '**Tenere premuto sul prato vuoto** apre il baule, senza andare fino al tasto in alto.',
-      ] },
-      { titolo: 'Le prime cose da fare', righe: [
-        'Compra un pezzo di terra: la fattoria diventa più grande.',
-        'Sgombra il bosco per fare posto.',
-        'Semina un campo, e **torna più tardi** a raccoglierlo: ci mette qualche minuto vero.',
-        'Niente marcisce mai: se ti dimentichi un campo, lo trovi lì.',
-      ] },
-      { titolo: 'Gli animali', righe: [
-        'Si comprano dal baule e poi girano per il prato per conto loro.',
-        'Hanno fame, voglia di giocare e di essere spazzolati: ogni gesto costa una monetina.',
-        'Nessuno sta mai male davvero e **nessuno muore**: se il gioco resta chiuso una settimana, al ritorno hanno solo fame.',
-        'Per metterne uno nel recinto lo si **prende e si posa** dentro, tenendo il dito premuto: da solo la staccionata non la passa.',
-      ] },
-      { titolo: 'Le cose nuove nel baule', righe: [
-        'Non c\'è tutto dal primo giorno: il baule si riempie **spendendo**. Più monete si spendono qui, più sale il livello della fattoria e più roba arriva.',
-        'Cosa arriva al livello dopo si legge nella pagina dei livelli — così si sa per cosa si sta risparmiando.',
-        'A **Halloween** e a **Natale** la fattoria si addobba da sola — zucche sul prato, neve sui tetti — e nel baule compare per qualche giorno la linguetta delle feste: quello che si compra lì resta tutto l\'anno.',
-      ] },
-      { titolo: 'La catena', righe: [
-        'Il raccolto non si mangia così com\'è: al **fienile** diventa mangime, e il mangime si dà ai recinti.',
-        'Un recinto che ha fame lo dice da solo: sopra gli galleggia **proprio quello che aspetta**.',
-        'Quello che ne torna — uova, latte, lana — finisce nella ciotola, oppure **al mercato**: lì c\'è sempre qualcuno che chiede qualcosa, e consegnarglielo fa crescere la fattoria.',
-        'Se una cosa non si può fare, il foglio dice **cosa fare adesso** e porta il tasto per farlo.',
-      ] },
-      { titolo: 'Cosa allena', righe: [
-        'Niente domande: qui non si studia, si **spende**. È il motivo per cui vale la pena esercitarsi negli altri giochi.',
-        'Quello che chiede davvero è aspettare e fare un progetto: risparmiare per il pezzo di terra invece di comprare subito la cosa piccola.',
-      ] },
-    ],
-  },
-
-  fattoria3d: {
-    emoji: '🚜', titolo: 'La fattoria 3D',
-    blocchi: [
-      'Qui non si vince: è il posto dove si spendono le monete guadagnate negli altri giochi. Il contadino cammina da solo fino alle cose e le fa, e la fattoria resta com\'era lasciata. È ancora un gioco **in prova**.',
+      'Qui non si vince: è il posto dove si spendono le monete guadagnate negli altri giochi. Il contadino cammina da solo fino alle cose e le fa, e la fattoria resta com\'era lasciata.',
       { titolo: 'I tocchi', righe: [
         '**Un tocco** su una cosa: il contadino ci va e la fa — raccoglie, dà da mangiare, apre la macchina.',
         '**Tocca 🌱 Semina**, scegli cosa far crescere, poi **tocca i campi vuoti**. Lo stesso con **✂️ Raccogli** sui campi pronti: puoi anche passare il dito su più campi.',

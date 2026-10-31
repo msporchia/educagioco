@@ -2,7 +2,7 @@
    carte, i posti della fila, dove cade il dito e che gesto è. Vedi docs/fattoria3d/file.md. `node test/esegui.mjs fattoria3d-macchina`
    tempo: 1 */
 import { quanteNePuoiFare, ordinaRicette, statoDelPosto, primoLibero, bersaglioSotto, gestoDelDito, TENUTO_MS } from '../../src/giochi/fattoria3d/viste/macchina-pura.js'
-import { SCARTO_DITO, SCARTO_MOUSE } from '../../src/giochi/fattoria/scena/dito.js'
+import { SCARTO_DITO, SCARTO_MOUSE } from '../../src/giochi/fattoria3d/viste/dito-soglie.js'
 import { uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
 // quante se ne possono fare

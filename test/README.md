@@ -57,7 +57,7 @@ Tre cose cambiano a vederlo girare:
   minuto partito per ultimo allungherebbe il giro di un minuto intero.
 - **il giro non finisce prima del suo test più lungo.** Oggi sono i
   file di integrazione attorno al minuto (`torri`, `genitori`,
-  `fattoria`), e fra le misure `misure/survivors`, che da solo valeva
+  `fattoria3d`), e fra le misure `misure/survivors`, che da solo valeva
   quanto tutte le unità insieme. Un test che si allunga
   lì si sente subito sul totale, ed è il primo posto dove guardare: la
   fattoria era a due minuti, e metà li passava a cercare la bancarella

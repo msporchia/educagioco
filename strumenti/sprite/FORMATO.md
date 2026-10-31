@@ -138,7 +138,7 @@ basta: l'attrezzo non cambia.
   ```
 
   I quattro nomi sono `testa`, `muso`, `collo`, `schiena` — sono gli
-  slot del vestiario della fattoria (`fattoria/dati/addobbi.js`) — e
+  slot del vestiario della fattoria (`fattoria3d/da2d/dati/addobbi.js`) — e
   un aggancio che un verso non ha vuol dire «da qui non si vede»: di
   spalle il muso non si scrive, se no gli occhialini finiscono sulla
   nuca. Di lato la bestia guarda a destra (vedi `specchia`), quindi la

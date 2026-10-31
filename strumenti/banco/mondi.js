@@ -107,7 +107,7 @@ function mondoASprite({ id, nome, atl }) {
    standardizzazione. */
 export const MONDI = [
   { id: 'fattoria', nome: 'La fattoria',
-    carica: () => import('../../src/giochi/fattoria/dati/atlante.js') },
+    carica: () => import('../../src/grafica/atlante-fattoria.js') },
   { id: 'sotterraneo', nome: 'Il sotterraneo',
     carica: () => import('../../src/giochi/sotterraneo/dati/atlante.js') },
 ]

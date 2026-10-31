@@ -1,11 +1,11 @@
 /* La mongolfiera: la nave. Dato puro (le regole stanno in motore/mongolfiera.js). Un ordine grosso, tre file di casse, una merce per
    fila, che si riempie un po' alla volta; chiede solo prodotti finiti delle macchine; paga ESPERIENZA, mai monete, dentro il tetto
-   di 🪙6 al minuto. Modello: la mongolfiera della fattoria di sempre (src/giochi/fattoria/dati/mongolfiera.js). Vedi docs/fattoria3d/mongolfiera.md. */
+   di 🪙6 al minuto. Modello: la mongolfiera della fattoria di sempre (src/giochi/fattoria3d/da2d/dati/mongolfiera.js). Vedi docs/fattoria3d/mongolfiera.md. */
 import { RICETTE } from './ricette.js'
 import { PEZZI, EDIFICI } from './catalogo.js'
 import { livelloDi, msDi, premioDelPezzo, tettoDi, MONETE_AL_MINUTO } from './ordini.js'
 import { CIELO_VUOTO_MIN, msDaMinuti } from './parita2d.js'
-import { FILE_GRANDE, LIVELLO_GRANDE, fileAl as fileAl2D } from '../../fattoria/dati/mongolfiera.js'
+import { FILE_GRANDE, LIVELLO_GRANDE, fileAl as fileAl2D } from '../da2d/dati/mongolfiera.js'
 
 export const FILE = 3                 // file di casse, una merce per fila (meno, se al livello non ci sono tre merci)
 export const FILE_MAX = FILE_GRANDE   // dal livello 66 (quello della 2D) il pallone cresce: quattro file, non una cosa da comprare (M17)

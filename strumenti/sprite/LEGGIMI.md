@@ -5,7 +5,7 @@ modulo generato** che non si scrive a mano.
 
 | bersaglio | attrezzo | dove finisce |
 |---|---|---|
-| `fattoria` | `atlante.py` | [`src/giochi/fattoria/dati/atlante.js`](../../src/giochi/fattoria/dati/atlante.js) |
+| `fattoria` | `atlante.py` | [`src/grafica/atlante-fattoria.js`](../../src/grafica/atlante-fattoria.js) |
 | `sotterraneo` | `atlante.py` | [`src/giochi/sotterraneo/dati/atlante.js`](../../src/giochi/sotterraneo/dati/atlante.js) |
 | `castello` | `vesti.py --atlante` | [`src/giochi/castello/dati/figure.js`](../../src/giochi/castello/dati/figure.js) e `vestiti.js` |
 
@@ -138,12 +138,12 @@ dall'alfa, e non c'è nessun rettangolo da spostare.
 
 ## Aggiungere roba
 
-**Una tessera** — una panchina, un albero, una fontana — è **una riga** in
-[`dati/tessere.js`](../../src/giochi/fattoria/dati/tessere.js):
-`nome: [colonna, riga, larghezza, altezza]`, contate sul foglio sorgente.
-Poi si rilancia il generatore. Quel file è **l'unico posto dove esistono
-delle coordinate**: questo script le legge da lì e non ne tiene una copia,
-e il gioco parla solo di nomi.
+**Una tessera** — una panchina, un albero, una fontana — è **una riga**
+nel foglietto del suo foglio (`sorgenti/<gioco>/…/<foglio>.json`, chiave
+`sprite`), scritta come dice [`FORMATO.md`](FORMATO.md). Poi si rilancia
+il generatore.
+Il foglietto è **l'unico posto dove esistono delle coordinate**: il gioco
+parla solo di nomi.
 
 **Un attore** — chiunque cammini — non ha nemmeno quella: si mette il png
 in `attori/` e basta. Il formato è fisso e il generatore lo trova da sé:

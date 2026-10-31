@@ -30,6 +30,7 @@ import AvvisoMonete from './components/varieta/Avviso.vue'   // importarlo accen
 import { SCHERMATE } from './giochi/schermate.js'
 import { caricaQuando } from './giochi/carica.js'
 import { lasciaRipresa } from './giochi/ripresa.js'
+import { ricorda } from './giochi/campagne.js'
 
 const vista = ref('home')
 const pronto = ref(false)
@@ -47,15 +48,26 @@ const viste = { home: HomeView,
 // stesso componente con due lingue: il key le tiene separate, se no Vue riuserebbe la schermata di prima
 const lingue = { inglese: 'en', verbi: 'en', spagnolo: 'es' }
 
+// `#fattoria-tipo=N`: un bambino che arriva dalla 2D. Scrive la fattoria 2D di quel livello e passa il testimone a `#fattoria3d-da2d`,
+// che butta la 3D nel cestino e converte (docs/core/comandi.md)
+const TIPO_2D = /(^|&)fattoria-tipo=(\d{1,2})(?=&|$)/i
+async function arrivaDalla2D(chiave) {
+  const [, , livello] = TIPO_2D.exec(chiave)
+  const { fattoriaTipo } = await import('./giochi/fattoria3d/da2d/motore/tipo.js')
+  ricorda('fattoria', 'stato', fattoriaTipo(parseInt(livello, 10)).serializza())
+  location.hash = chiave.replace(TIPO_2D, '$1fattoria3d-da2d')
+  vista.value = 'fattoria3d'
+}
+
 // giochi.html#bancarella apre già quella schermata: non è un router, l'indirizzo
-// non viene mai riscritto da qui. hasOwnProperty e non viste[k]: #toString altrimenti sarebbe valida
+// viene riscritto solo dal cheat qui sopra. hasOwnProperty e non viste[k]: #toString altrimenti sarebbe valida
 function dallIndirizzo() {
   if (typeof location === 'undefined') return
   const chiave = (location.hash || '').replace(/^#/, '')
   const ha = k => Object.prototype.hasOwnProperty.call(viste, k)
   if (ha(chiave)) vista.value = chiave
   // il cheat della fattoria si legge ENTRANDO nella fattoria, quindi ci porta anche l'indirizzo
-  else if (/(?:^|&)fattoria-tipo=\d/i.test(chiave)) vista.value = 'fattoria'
+  else if (TIPO_2D.test(chiave)) arrivaDalla2D(chiave)
   else if (/(?:^|&)fattoria3d(?:-tipo=\d|-da2d)/i.test(chiave)) vista.value = 'fattoria3d'
   // un cheat che porta il nome di un gioco (`#sotterraneo=branco&mostri=6`) apre anche quel gioco
   else { const k = [...new URLSearchParams(chiave).keys()].find(ha); if (k) vista.value = k }

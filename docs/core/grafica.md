@@ -179,7 +179,7 @@ rifare. Il file unico passa da 14,4 a 19,0 MB, quasi tutto qui.
   dito, scritte sulla vista di adesso, falliscono (`sotterraneo-terra`:
   `camminaVerso` si ferma a metà strada; `-missioni` e `-avventure`: tocchi
   e indicatori contati sullo schermo). È una scelta di gioco, non di codifica.
-- **I canvas del sotterraneo e della fattoria contano al più due pixel per
+- **I canvas del sotterraneo contano al più due pixel per
   pixel CSS** (`Math.min(2, devicePixelRatio)`): su un telefono a 3× il
   browser li ingrandisce di 1,5 con la sfocatura, e un pixel netto sbava. Non
   è stato toccato.

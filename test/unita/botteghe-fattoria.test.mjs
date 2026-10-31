@@ -1,6 +1,6 @@
 /* LE BOTTEGHE DEL PAESE, SENZA BROWSER
 
-   Le cose che questo file difende (`docs/fattoria/chi-chiede.md`):
+   Le cose che questo file difende (`docs/fattoria3d/botteghe.md`):
      1. **una bottega chiede solo dal suo elenco, e solo l'ottenibile** —
         controllato al livello in cui arriva e in cima alla scaletta;
      2. **un cliente, una merce, 2–4 pezzi**, e il premio è quello del
@@ -11,20 +11,20 @@
      5. **un salvataggio si riapre uguale**, e uno di ieri nasce vuoto;
      6. **i dati stanno in piedi**: nessun guasto, tetto compreso.
    `node test/esegui.mjs botteghe --niente-build` */
-import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria/motore/fattoria.js'
+import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria3d/da2d/motore/fattoria.js'
 import {
   bottegaIn, aggiornaLaBottega, aggiornaLeBotteghe, consegnaInBottega,
   rifiutaInBottega, famaDi, bottegaDi, daConsegnareIn, merciDellaBottega,
-} from '../../src/giochi/fattoria/motore/botteghe.js'
-import { merciOrdinabili } from '../../src/giochi/fattoria/motore/mercato.js'
+} from '../../src/giochi/fattoria3d/da2d/motore/botteghe.js'
+import { merciOrdinabili } from '../../src/giochi/fattoria3d/da2d/motore/mercato.js'
 import {
   guastiDelleBotteghe, POSTI, PEZZI_MIN, PEZZI_MAX, ATTESA_MIN, ATTESA_MAX,
   CUORI, BANCONI_MAX, PIU_DEL_BANCO,
-} from '../../src/giochi/fattoria/dati/botteghe.js'
-import { premioPer, guastiDelMercato, CLIENTI } from '../../src/giochi/fattoria/dati/mercato.js'
-import { PER_ID, guastiDelCatalogo } from '../../src/giochi/fattoria/dati/catalogo.js'
+} from '../../src/giochi/fattoria3d/da2d/dati/botteghe.js'
+import { premioPer, guastiDelMercato, CLIENTI } from '../../src/giochi/fattoria3d/da2d/dati/mercato.js'
+import { PER_ID, guastiDelCatalogo } from '../../src/giochi/fattoria3d/da2d/dati/catalogo.js'
 import { ULTIMO, sogliaDi, guastiDegliSblocchi, livelloDellaVoce, livelloDelProdotto }
-  from '../../src/giochi/fattoria/dati/livelli.js'
+  from '../../src/giochi/fattoria3d/da2d/dati/livelli.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const MINUTO = 60000

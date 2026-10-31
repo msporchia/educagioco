@@ -43,14 +43,14 @@ const registro = () => page.evaluate(chi => new Promise((ok, ko) => {
    (`MINIMA`): un tocco di passaggio non è una partita. Se ne aspettano
    sei, e non è tempo buttato — è il controllo che quella soglia esista
    davvero. */
-await page.goto(page.url().split('#')[0] + '#fattoria')
+await page.goto(page.url().split('#')[0] + '#fattoria3d')
 await page.waitForTimeout(6200)
 await page.evaluate(() => { location.hash = '#home' })
 await page.waitForTimeout(900)
 
 const dopoUna = await registro()
 uguale('uscendo dal gioco si è scritta una riga', dopoUna.length, 1)
-uguale('e dice a cosa ha giocato', dopoUna[0]?.g, 'fattoria')
+uguale('e dice a cosa ha giocato', dopoUna[0]?.g, 'fattoria3d')
 controlla('per quanto', dopoUna[0]?.s >= 5, `${dopoUna[0]?.s}s`)
 controlla('e da quando', dopoUna[0]?.t > 0)
 
@@ -84,7 +84,7 @@ await attendi(page, 400)
 const totale = await page.locator('[data-tempo-totale]').innerText()
 controlla('il totale di oggi non è zero', /\d+s|\d+m/.test(totale), totale)
 controlla('e la fattoria è nella classifica',
-          await page.locator('[data-tempo-gioco="fattoria"]').count() > 0)
+          await page.locator('[data-tempo-gioco="fattoria3d"]').count() > 0)
 
 /* le sette barre della settimana ci sono tutte, vuote comprese: un
    grafico che salta i giorni senza partite mente sulla forma */

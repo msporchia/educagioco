@@ -2,7 +2,7 @@
    la merenda e le caramelle): i dati del giro G5 della parità con la fattoria di sempre (docs/fattoria3d/parita/, A1g–A1k, C18, C19).
    Come per il cortile di G4 (dati/cortile.js) livelli, prezzi e tempi sono quelli della 2D, letti da dati/parita2d.js; restano solo 3D le capienze
    e il prezzo delle singole bestie dentro il recinto. Ricette, ingredienti, quantità e cosa mangia chi sono quelli della 2D
-   (`src/giochi/fattoria/dati/coltivazioni.js`). La peschiera non c'è: la pesca (molo, porticciolo) ne prende il posto allo stesso livello.
+   (`src/giochi/fattoria3d/da2d/dati/coltivazioni.js`). La peschiera non c'è: la pesca (molo, porticciolo) ne prende il posto allo stesso livello.
    Importa solo `parita2d.js`: `mangime.js`, `animali.js`, `catalogo.js` e `ricette.js` leggono da qui. Vedi docs/fattoria3d/cortile-2.md. */
 import { numeriRicetta as N, prezzoDa2D, livelloDa2D, crescitaDa2D, bestia2d, msDaMinuti } from './parita2d.js'
 

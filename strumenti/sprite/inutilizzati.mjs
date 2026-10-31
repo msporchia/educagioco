@@ -48,6 +48,9 @@ export const RADICE = path.resolve(path.dirname(fileURLToPath(import.meta.url)),
 export const SORGENTI = path.join(RADICE, 'strumenti/sprite/sorgenti')
 const ESTENSIONI = /\.(png|jpe?g|webp)$/i
 const GIOCHI_ATLANTE = ['sotterraneo', 'fattoria']
+/* dove sta l'atlante di ciascun gioco (quello della fattoria è comune, sta in `grafica/`) */
+const ATLANTE_DI = { sotterraneo: 'src/giochi/sotterraneo/dati/atlante.js', fattoria: 'src/grafica/atlante-fattoria.js' }
+export const moduloAtlante = gioco => ATLANTE_DI[gioco]
 
 const rel = p => path.relative(RADICE, p)
 const leggi = p => fs.readFileSync(p, 'utf8')
@@ -228,7 +231,7 @@ export function nominatoDa(nome, { parole, modelli }) {
 }
 
 export async function vociNonNominate(gioco, W = paroleDelGioco()) {
-  const A = await import(pathToFileURL(path.join(RADICE, `src/giochi/${gioco}/dati/atlante.js`)).href)
+  const A = await import(pathToFileURL(path.join(RADICE, ATLANTE_DI[gioco])).href)
   const fuori = []
   for (const v of A.VOCI) {
     const pezzi = Object.values(v.pose).flat()

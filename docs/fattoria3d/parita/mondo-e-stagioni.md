@@ -1,7 +1,7 @@
 # Parità: terra, decorazioni, acqua, stagioni
 
-Legenda in [README.md](README.md). 2D: [../../fattoria/stagioni.md](../../fattoria/stagioni.md), [baule.md](../../fattoria/baule.md).
-3D: [../terreno.md](../terreno.md), [../mondo-infinito.md](../mondo-infinito.md), [../laghi.md](../laghi.md), [../geografia-e-pesca.md](../geografia-e-pesca.md),
+Legenda in [README.md](README.md). 2D: i dati in `da2d/dati/` (`catalogo.js`, `stagioni.js`, `mondo.js`, `terreni.js`, `ostacoli.js`).
+3D: [../stagioni.md](../stagioni.md), [../terreno.md](../terreno.md), [../mondo-infinito.md](../mondo-infinito.md), [../laghi.md](../laghi.md), [../geografia-e-pesca.md](../geografia-e-pesca.md),
 [../edifici-liberi.md](../edifici-liberi.md).
 
 ## La terra
@@ -48,7 +48,7 @@ riusando le forme già nel catalogo 3D (`strumenti/banco/catalogo-3d/`).
 | W18 | Natale (1 nov–6 gen) | neve, lucine, tetti innevati, albero 🪙24 | ✅ cielo, fiocchi, prato innevato con l'erba che spunta, neve sui tetti e su tutto ciò che guarda in alto (bosco, sassi, recinti), ghiaccio ai bordi dei laghi, ⭐/🔔, lucine coi ghiaccioli e alberelli sugli edifici, il fiato; da comprare l'albero (W15) e il pupazzo di neve, solo 3D ([../stagioni.md](../stagioni.md)) | P2 |
 | W19 | `#stagione=` per guardarle fuori stagione | sì | ✅ stessa sintassi (`stagioneAttiva`) | – |
 | W20 | il fumetto «lo vorrei» / segnalino 🎃 | il fumetto è delle bestie col cappello (W21), il segnalino 🎃/🎄 è quello del baule («Decorazioni») | 🟡 il segnalino sì: 🎃/🎄 sul tasto 🏗, sulla scheda e sulle carte della festa, finché non ne hai una (`festaDaScoprire`, [../stagioni.md](../stagioni.md)); **tolto perché** il fumetto «lo vorrei» in 3D non c'è: il cappello da strega si compra dal foglio della bestia ([../addobbi.md](../addobbi.md)), nessuna lo chiede col fumetto | P2 |
-| W21 | i costumi di Halloween da rifare (galline/capre fantasmini, alpaca grigia…) | aperto in [../../fattoria/da-fare.md](../../fattoria/da-fare.md) | – | P2 |
+| W21 | i recinti in costume a Halloween | uno sprite vestito per ogni recinto (alcuni da rifare) | ❌ le bestie del cortile non si travestono ([../da-fare.md](../da-fare.md)) | P2 |
 
 Le stagioni sono **un dato puro** (`dati/stagioni.js`: `stagioneDi(data)`, `addobbiStagionali`) che la 3D importa così com'è
 (`dati/stagioni3d.js`); il disegno 3D è in [../stagioni.md](../stagioni.md): cielo e luci, fiocchi e fiato (un `Points` ciascuno), la neve sui materiali, addobbi a istanze, zucche e pupazzo come pezzi.

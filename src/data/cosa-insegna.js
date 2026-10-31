@@ -53,7 +53,6 @@ export const INSEGNA = {
     testo: 'Programmare senza scrivere codice: si compone il programma con cui un robot costruisce un muro, una scala, un castello. '
       + 'Il robot fa alla lettera quello che c\'è scritto, quindi un risultato storto vuol dire un programma da correggere. Funzioni, parametri e variabili.',
   },
-  fattoria: FATTORIA,
   fattoria3d: FATTORIA,
 }
 

@@ -12,7 +12,7 @@
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
-import { inventario, nominatoDa, RADICE, SORGENTI } from '../../strumenti/sprite/inutilizzati.mjs'
+import { inventario, nominatoDa, moduloAtlante, RADICE, SORGENTI } from '../../strumenti/sprite/inutilizzati.mjs'
 
 const r = await inventario()
 const STATI = ['letta', 'nessuno', 'allegato', 'schema', 'terzi']
@@ -30,7 +30,7 @@ for (const nome of ['scudi.png', 'bottino-e-arredo.png', 'armature-e-vesti.png']
 }
 
 for (const [gioco, v] of Object.entries(r.voci)) {
-  const A = await import(`../../src/giochi/${gioco}/dati/atlante.js`)
+  const A = await import('../../' + moduloAtlante(gioco))
   const ids = new Set(A.VOCI.map(x => x.id))
   nota(`${gioco}: ${v.nonNominate.length} voci su ${v.voci} che nessun file di src/ nomina`)
   uguale(`${gioco}: il totale delle voci è quello dell'atlante`, v.voci, A.VOCI.length)

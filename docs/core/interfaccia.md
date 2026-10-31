@@ -13,8 +13,8 @@ sua pagina: [il-dito.md](il-dito.md).
   gli indicatori del gioco (❤️ 🌊 ⚡ nel castello). `?` e ⏸ compaiono solo
   dove il gioco li chiede.
 - **Un foglio si chiude con la ✕ in alto a destra, sempre visibile**
-  (`src/giochi/fattoria/viste/Chiudi.vue`, `sticky`: in un baule da
-  duecento voci l'uscita non sta due schermate più giù). Il tasto in fondo
+  (`sticky`, `[data-chiudi]`: in un menu da duecento voci l'uscita non sta
+  due schermate più giù). Il tasto in fondo
   resta solo dove è una scelta («Lascia stare / Compra»).
 - **Lo scorrimento è uno solo**: il foglio è una colonna (`display: flex`),
   titolo e tasti fermi, l'elenco in mezzo si stringe e scorre
@@ -22,9 +22,6 @@ sua pagina: [il-dito.md](il-dito.md).
   su un telefono solo, e sopra e sotto l'elenco c'è altro che in `vh` non
   si conta — un foglio che sborda ha i tasti irraggiungibili, e non si
   chiude più.
-- `unita/fattoria` legge i `.vue` e pretende la ✕ da ogni vista che
-  dichiara `'chiudi'` negli `emits`, anche da un foglio che ancora non
-  esiste.
 
 Nei test: `button[aria-label="indietro"]` (mai il carattere),
 `[data-chiudi]`.

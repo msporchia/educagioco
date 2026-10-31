@@ -13,10 +13,10 @@
    `node test/esegui.mjs stagioni --niente-build` */
 import {
   FINESTRE, stagioneDi, semeDelGiorno, addobbiStagionali, guastiDelleStagioni,
-} from '../../src/giochi/fattoria/dati/stagioni.js'
-import { CATALOGO, CATEGORIE, PER_ID } from '../../src/giochi/fattoria/dati/catalogo.js'
-import { roba, ULTIMO, livelloDellaVoce } from '../../src/giochi/fattoria/dati/livelli.js'
-import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria/motore/fattoria.js'
+} from '../../src/giochi/fattoria3d/da2d/dati/stagioni.js'
+import { CATALOGO, CATEGORIE, PER_ID } from '../../src/giochi/fattoria3d/da2d/dati/catalogo.js'
+import { roba, ULTIMO, livelloDellaVoce } from '../../src/giochi/fattoria3d/da2d/dati/livelli.js'
+import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria3d/da2d/motore/fattoria.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* ══════════ 1. le finestre ══════════ */

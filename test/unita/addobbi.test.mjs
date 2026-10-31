@@ -17,16 +17,16 @@
         schiena sono fuori dal negozio finché non arrivano come sprite,
         e chi li ha già comprati se li tiene, in guardaroba o addosso.
    `node test/esegui.mjs addobbi --niente-build` */
-import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria/motore/fattoria.js'
+import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria3d/da2d/motore/fattoria.js'
 import {
   ADDOBBI, IN_VENDITA, PER_ID, addobbiPer, inVendita, staA, addossoA, guastiDegliAddobbi,
-} from '../../src/giochi/fattoria/dati/addobbi.js'
+} from '../../src/giochi/fattoria3d/da2d/dati/addobbi.js'
 import {
   ANIMALI, AGGANCI, AGGANCI_TUTTI, BOB, portaDi, puntiDi, agganciDi, famigliaDi,
   guastiDegliAnimali,
-} from '../../src/giochi/fattoria/dati/animali.js'
-import { VERSI, BESTIE, fotogrammi } from '../../src/giochi/fattoria/dati/atlante.js'
-import { sogliaDi } from '../../src/giochi/fattoria/dati/livelli.js'
+} from '../../src/giochi/fattoria3d/da2d/dati/animali.js'
+import { VERSI, BESTIE, fotogrammi } from '../../src/grafica/atlante-fattoria.js'
+import { sogliaDi } from '../../src/giochi/fattoria3d/da2d/dati/livelli.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 function borsaTracciata(iniziale) {

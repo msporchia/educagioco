@@ -17,13 +17,12 @@
    quello che esce da qualcosa entra in qualcos'altro, e la lana è il
    primo prodotto che non finisce in una ciotola ma addosso a un cane.
    `node test/esegui.mjs recinti --niente-build` */
-import { Fattoria } from '../../src/giochi/fattoria/motore/fattoria.js'
-import { PER_ID, statiDi } from '../../src/giochi/fattoria/dati/catalogo.js'
-import { PEZZI } from '../../src/giochi/fattoria/dati/atlante.js'
+import { Fattoria } from '../../src/giochi/fattoria3d/da2d/motore/fattoria.js'
+import { PER_ID, statiDi } from '../../src/giochi/fattoria3d/da2d/dati/catalogo.js'
+import { PEZZI } from '../../src/grafica/atlante-fattoria.js'
 import { RICETTE, PER_RICETTA, COLTURE, PRODOTTI, MINUTO, SILI }
-  from '../../src/giochi/fattoria/dati/coltivazioni.js'
-import { COCCOLE } from '../../src/giochi/fattoria/dati/bisogni.js'
-import { comeAvere } from '../../src/giochi/fattoria/motore/consiglio.js'
+  from '../../src/giochi/fattoria3d/da2d/dati/coltivazioni.js'
+import { COCCOLE } from '../../src/giochi/fattoria3d/da2d/dati/bisogni.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const T0 = 1770000000000            // un'ora qualunque, fissa: niente Date.now()
@@ -349,11 +348,6 @@ for (const v of RECINTI) {
   g.metti('zucche', 4)
   uguale('la prossima zuppa nel fienile non parte',
          g.avvia(ieri, 'zuppa', fra(60)).motivo, 'non-esiste')
-  /* E il consiglio manda a comprare il pentolone, non a fare altro. */
-  const c = comeAvere(g, 'zuppa', fra(60))
-  uguale('il consiglio manda a comprare il pentolone', (c.azione || {}).voce, 'pentolone')
-  controlla('e lo dice per nome', /nel pentolone/i.test(c.testo), c.testo)
-  nota(`migrazione: ${c.testo}`)
 }
 
 riassunto('i recinti del cortile')

@@ -6,7 +6,7 @@
 import { BESTIE, IDS_BESTIE, guastiDelleBestie, CIBI, COCCOLE_3D, cibiPer, gestiPer, nomiPer, pulisciNome, casaInForma, bestiaInForma, COMPAGNO_DI, idDa2D, perche,
   bestieAl, FONDO, BENISSIMO, BENE, scortaDi3D } from '../../src/giochi/fattoria3d/dati/bestie.js'
 import { ANIMALI_2D, premioBenessere } from '../../src/giochi/fattoria3d/dati/parita2d.js'
-import { CIBI as CIBI_2D, COCCOLE as COCCOLE_2D, BISOGNI } from '../../src/giochi/fattoria/dati/bisogni.js'
+import { CIBI as CIBI_2D, COCCOLE as COCCOLE_2D, BISOGNI } from '../../src/giochi/fattoria3d/da2d/dati/bisogni.js'
 import { COMPAGNI } from '../../src/giochi/fattoria3d/dati/compagni.js'
 import { sogliaDi, guastiDeiLivelli, roba } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'

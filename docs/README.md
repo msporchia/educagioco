@@ -11,7 +11,7 @@ da fuori, e `da-fare.md` tiene le voci aperte.
 - [asteroidi/](asteroidi/README.md) · [castello/](castello/README.md) · [arena/](arena/README.md) · [giardino/](giardino/README.md) · [lingue/](lingue/README.md) · [bancarella/](bancarella/README.md) · [pozioni/](pozioni/README.md)
 - [passo-passo/](passo-passo/README.md) · [costruttore/](costruttore/README.md) (il Robot)
 - [sotterraneo/](sotterraneo/README.md) · [survivors/](survivors/README.md)
-- [codice-segreto/](codice-segreto/README.md) · [fattoria/](fattoria/README.md) · [fattoria3d/](fattoria3d/README.md) · [conta/](conta/README.md) · [prima-dopo/](prima-dopo/README.md)
+- [codice-segreto/](codice-segreto/README.md) · [fattoria3d/](fattoria3d/README.md) (la fattoria) · [conta/](conta/README.md) · [prima-dopo/](prima-dopo/README.md)
 - `img/` — le immagini e le clip del README (le rifà `npm run scatti`)
 
 **Dove va una spiegazione nuova**: nel file del suo argomento, o in un file

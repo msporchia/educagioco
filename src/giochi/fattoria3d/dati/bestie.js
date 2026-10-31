@@ -1,16 +1,16 @@
 /* Le bestie di casa della fattoria 3D (G6): quelle che si COMPRANO e si CURANO, come nella fattoria di sempre. Beagle, gatto rosso,
    coniglio e pappagallo hanno i numeri della 2D (prezzo, livello, premio di benessere: `ANIMALI_2D` dal ponte `parita2d.js`), i bisogni
-   (pancia, pelo, gioco), la ciotola, le coccole, il premio e il nome vengono da `src/giochi/fattoria/dati/bisogni.js` e si riusano, non si
+   (pancia, pelo, gioco), la ciotola, le coccole, il premio e il nome vengono da `src/giochi/fattoria3d/da2d/dati/bisogni.js` e si riusano, non si
    copiano. Watson, Sherlock, Irene e Pepe (`dati/compagni.js`) arrivano gratis col livello e si curano come loro (`CURATI`): nella 2D il
    bobtail e i gatti si compravano e si curavano.
    Qui: la tabella delle bestie, la ciotola nella lingua della 3D (dove sta la roba nelle scorte), lo stato che si salva (`stato.casa`) e le
    scelte pure. Il motore è `motore/cura.js`, il foglio `viste/Bestia.vue`, i corpi `scena3d/modelli-bestie.js`.
    Vedi docs/fattoria3d/bestie-di-casa.md. */
-import { BISOGNI, CHIAVI, CIBI as CIBI_2D, COCCOLE, FONDO, nuovo, foto, scendi, riarma, BENISSIMO, BENE, tuttoAPosto, premiaSeStaBene, umore, comeSta, haBisogno } from '../../fattoria/dati/bisogni.js'
+import { BISOGNI, CHIAVI, CIBI as CIBI_2D, COCCOLE, FONDO, nuovo, foto, scendi, riarma, BENISSIMO, BENE, tuttoAPosto, premiaSeStaBene, umore, comeSta, haBisogno } from '../da2d/dati/bisogni.js'
 import { ANIMALI_2D, NOMI_2D, premioBenessere } from './parita2d.js'
 import { COMPAGNI } from './compagni.js'
 import { merceDi } from './ricette.js'
-import { PER_ID as ADDOBBO_2D } from '../../fattoria/dati/addobbi.js'
+import { PER_ID as ADDOBBO_2D } from '../da2d/dati/addobbi.js'
 
 export { BISOGNI, CHIAVI, FONDO, nuovo, foto, scendi, riarma, BENISSIMO, BENE, tuttoAPosto, premiaSeStaBene, umore, comeSta, haBisogno, COCCOLE }
 
@@ -131,7 +131,7 @@ export const PICCOLI = ['coniglio', 'pappagallo']
 export const ePiccolo = tipo => PICCOLI.includes(tipo)
 
 /* ══════════ il perché di un cibo rifiutato ══════════ */
-// Una bestia non mangia tutto: il rifiuto dice cosa le piace davvero e perché il resto no (docs/fattoria/animali.md, «Il cibo giusto»).
+// Una bestia non mangia tutto: il rifiuto dice cosa le piace davvero e perché il resto no (docs/fattoria3d/bestie-di-casa.md, «La ciotola»).
 const NON_PIACE = {
   cane:       'Il cane mangia ossi e carne, e un po\' di formaggio e uova: erba e semini non sono roba sua.',
   gatto:      'Il gatto vuole pesce e carne morbida, uova e pappa. Formaggio e minestrone gli fanno male al pancino, e l\'erba non la mangia.',

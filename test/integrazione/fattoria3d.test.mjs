@@ -2,7 +2,7 @@
    LA FATTORIA 3D, COL DITO — docs/fattoria3d/
 
    Il test unitario prova le regole; questo dice che **il gioco vero sta in
-   piedi nel browser**: è in prova (carta dietro l'interruttore), si apre sul
+   piedi nel browser**: la carta è in home, si apre sul
    prato in WebGL, tenendo premuto su un posto libero si apre «Costruisci qui» e la
    carta scelta va sulla cella premuta e si paga (senza conferme; se la cella non
    basta resta il fantasma da sistemare, e un tocco su un posto che non va non
@@ -52,15 +52,15 @@ const mie = st => st.cose.filter(c => !['silo', 'silo_bianco', 'dispensa'].inclu
 const fermo = async () => { for (let i = 0; i < 100; i++) { if (await page.evaluate(() => { const m = window.__fattoria3d.mondo; return m.eroe.fermo && !m.coda.length })) break; await attendi(page, 150) } await attendi(page, 200) }
 const monete = async () => (await leggiProfilo(page)).coins
 
-/* ── la carta è in prova: dietro l'interruttore ── */
-controlla('la carta sta in home (interruttore acceso)', await page.locator('[data-indice="fattoria3d"]').count() === 1)
+/* ── la carta sta in home ── */
+controlla('la carta sta in home', await page.locator('[data-indice="fattoria3d"]').count() === 1)
 
 /* ── si apre sul prato ── */
 await scegli(page, 'fattoria3d')
 await page.waitForSelector('[data-f3="campo"] canvas', { timeout: 10000 })
 await page.waitForFunction(() => !!(window.__fattoria3d && window.__fattoria3d.mondo), null, { timeout: 15000 })
 await attendi(page, 1200)
-uguale('la barra dice dove siamo', (await page.locator('.barra-app .dove').innerText()).trim(), 'Fattoria 3D')
+uguale('la barra dice dove siamo', (await page.locator('.barra-app .dove').innerText()).trim(), 'La fattoria')
 uguale('le quattro azioni ci sono', await page.locator('[data-f3^="az-"]').count(), 4)
 controlla('c\'è un campo vuoto da seminare', mie(await stato()).length === 1 && (await page.locator('.f3-n').first().innerText()).trim() === '1')
 const disegna = await page.evaluate(() => window.__fattoria3d.mondo.statistiche())

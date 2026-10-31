@@ -3,7 +3,7 @@
 Pasticceria, osteria, mensa e merceria (giro G7 della [parità](parita/commercio.md), righe M10–M14). Sono **edifici unici** come le
 macchine ([edifici-liberi.md](edifici-liberi.md): si costruiscono dal menu «Costruisci qui», uno per tipo, dove si vuole) ma **non
 lavorano: chiedono**. Ogni bottega ha il suo elenco chiuso di merci e i suoi clienti per mestiere; consegnare rende esperienza ⭐, mai monete.
-Sono le sorelle di quelle della fattoria di sempre ([../fattoria/chi-chiede.md](../fattoria/chi-chiede.md)) e **ne leggono i numeri**: la 3D non ne scrive
+Sono le sorelle di quelle della fattoria 2D (da Hay Day, sono i visitatori: qualcuno che vuole una cosa sua) e **ne leggono i numeri** (`da2d/dati/botteghe.js`): la 3D non ne scrive
 nessuno (decisione D del 22/10/2026: [parita/decisioni.md](parita/decisioni.md), «Regola generale»).
 
 | bottega (tipo 3D) | 🪙 | livello | clienti | disegno |
@@ -24,9 +24,9 @@ bambini: la scuola che chiede la merenda.
   una consegna, né di più né di meno: qui non c'è niente da scorrere, basta che rifiutare non sia più svelto di consegnare. Non dà esperienza e non è un cuore.
 - **Rende il 25% in più del banco** (`premioInBottega` = `premioPer` della 2D × `PIU_DEL_BANCO`, arrotondato): lo stesso conto del banco, mai una formula
   nostra. Dentro il tetto di 🪙6 al minuto (`guastiDelleBotteghe`, controllato per merce e per numero di pezzi, coi minuti della 3D).
-- **La fama a cuori**: ogni consegna è un cuore; a cinque (`CUORI`) la bottega cresce di un bancone e i cuori ripartono, fino a tre banconi (`BANCONI_MAX`).
+- **La fama a cuori**, la progressione per posto che il banco unico non può avere: ogni consegna è un cuore; a cinque (`CUORI`) la bottega cresce di un bancone e i cuori ripartono, fino a tre banconi (`BANCONI_MAX`).
   Non si salva: si conta dalle consegne (`famaDi`). Il bancone nuovo ha subito il suo cliente.
-- **Chi chiede cosa**: il cliente è un mestiere della 2D (`CLIENTI` di `src/giochi/fattoria/dati/mercato.js`, con `vuole`); `clientiDellaBottega` della 2D sceglie
+- **Chi chiede cosa**: il cliente è un mestiere della 2D (`CLIENTI` di `src/giochi/fattoria3d/da2d/dati/mercato.js`, con `vuole`); `clientiDellaBottega` della 2D sceglie
   fra i suoi quello che vuole quella merce. Due banconi della stessa bottega non chiedono la stessa merce se ce n'è un'altra.
 - **Le merci**: l'elenco di ogni bottega è quello della 2D (`posto.chiede`), nei nomi della 3D (`MERCE_3D`: `carote` → `carota`, `fragole` → `fragola`). La 3D non fa
   `merenda` e `caramelle`: cadono dall'elenco (la pasticceria ne ha nove, la mensa dieci) e ogni bottega arriva con almeno tre merci già chiedibili al suo livello
@@ -66,6 +66,5 @@ L'evento `bottega` (`{ bottega, cliente, xp, chiede, cresciuta }`) c'è per chi 
 
 ## Cosa non c'è
 
-- Niente clienti per mestiere al banco della bacheca (M4): restano i dieci personaggi per tutti.
-- Niente sorpresa della fiera tarata sulle otto voci `fiera` (M20): la mongolfiera regala ancora una decorazione qualunque.
+- Niente clienti per mestiere al banco della bacheca (M4): restano i dieci personaggi per tutti ([da-fare.md](da-fare.md)).
 - Le botteghe non sono viste su un telefono né giocate con un bambino: i modelli sono guardati dal catalogo 3D, il foglio da Chrome a 360 px e col dito vero via CDP.

@@ -1,11 +1,11 @@
 /* Le quattro botteghe del paese della fattoria 3D (giro G7 della parità, docs/fattoria3d/botteghe.md): pasticceria, osteria, mensa e
    merceria. Sono edifici unici come gli altri (si costruiscono dal menu e si mettono dove si vuole) ma non lavorano: ogni bottega ha il
    suo elenco chiuso di merci e i suoi clienti per mestiere, e chiede una merce sola a ogni bancone. TUTTI i numeri sono quelli della 2D
-   (src/giochi/fattoria/dati/botteghe.js: pezzi 2–4, attesa 10–20 minuti, +25% del banco, cinque cuori per un bancone, fino a tre; prezzo e
+   (src/giochi/fattoria3d/da2d/dati/botteghe.js: pezzi 2–4, attesa 10–20 minuti, +25% del banco, cinque cuori per un bancone, fino a tre; prezzo e
    livello di ogni bottega dal catalogo 2D): qui si legge soltanto, mai si riscrive. Cambia solo il nome delle merci: la 3D chiama
    `carota` quel che la 2D chiama `carote` (`MERCE_3D`, `PRODOTTO_2D`), e i clienti sono quelli per mestiere della 2D (oste, pizzaiolo…).
    Foglia di catalogo.js (come cortile.js): importa solo dati della 2D e le tabelle delle merci, mai catalogo, livelli o ordini. */
-import { POSTI as POSTI_2D, PEZZI_MIN, PEZZI_MAX, ATTESA_MIN, ATTESA_MAX, CUORI, BANCONI_MAX, PIU_DEL_BANCO, premioInBottega } from '../../fattoria/dati/botteghe.js'
+import { POSTI as POSTI_2D, PEZZI_MIN, PEZZI_MAX, ATTESA_MIN, ATTESA_MAX, CUORI, BANCONI_MAX, PIU_DEL_BANCO, premioInBottega } from '../da2d/dati/botteghe.js'
 import { COLTURE } from './colture.js'
 import { RICETTE } from './ricette.js'
 import { PRODOTTI_ANIMALI, LANA } from './animali.js'

@@ -1,13 +1,14 @@
 # Gli addobbi delle bestie
 
-Le bestie si vestono come nella fattoria di sempre ([../fattoria/animali.md](../fattoria/animali.md) «Vestirle»): un cappello, gli occhiali,
-qualcosa al collo e sulla schiena, che **si vede in scena** mentre la bestia gira. Vale per le bestie comprate e per i compagni gratis
+Le bestie si vestono come nella fattoria 2D (i dati in `da2d/dati/addobbi.js`): un cappello, gli occhiali,
+qualcosa al collo e sulla schiena, che **si vede in scena** mentre la bestia gira: un vestito che si guarda solo aprendo una scheda non lo mette nessuno. Vale per le bestie comprate e per i compagni gratis
 (Watson, Sherlock, Irene, Pepe). Codice: `dati/addobbi.js` (i dati), `motore/cura.js` (`vesti`, `spoglia`, `vestiarioDi`),
 `scena3d/modelli-addobbi.js` (i modelli e gli agganci), `viste/Bestia.vue` (la sezione «🎩 Vestilo»).
 
 ## Le regole (quelle della 2D)
 
-- **Gli stessi dodici della 2D**, con gli stessi prezzi (🪙6–24, la fascia «una cosetta») e gli stessi agganci: fiorellino, cappellino, cilindro,
+- **Gli stessi dodici della 2D**, con gli stessi prezzi (🪙6–24, la fascia «una cosetta», uno-quattro minuti di esercizi: un cappello che costasse quanto
+  un pollaio metterebbe una decorazione in concorrenza con la catena) e gli stessi agganci: fiorellino, cappellino, cilindro,
   coroncina e cappello da strega in testa; occhialini e occhiali da sole sul muso; fiocco, sciarpa e campanella al collo; mantellina e
   zainetto sulla schiena. Nella 2D gli ultimi cinque erano sospesi perché un'emoji non sta su una bestia a quattro zampe: **in 3D sono
   modelli, e sono tutti in vendita**.
@@ -30,7 +31,8 @@ gatto e la frangia di Watson la allungano, e il cappello finiva per aria. Si gua
 ## Salvataggi
 
 `stato.addobbi` (il cassetto, `{ id: quanti }`) e `stato.casa[<bestia>].addobbi` (`{ aggancio: id }`): letti da `normalizza`, un id che non
-esiste o sull'aggancio sbagliato si butta. La conversione dalla 2D porta il guardaroba nel cassetto e gli addobbi addosso alle bestie (se
+esiste o sull'aggancio sbagliato si butta. Per questo **un addobbo non si toglie dall'elenco** (`da2d/dati/addobbi.js`, da cui `dati/addobbi.js`
+prende i suoi): chi l'ha comprato lo perderebbe al primo caricamento. La conversione dalla 2D porta il guardaroba nel cassetto e gli addobbi addosso alle bestie (se
 le stanno, se no nel cassetto); chi era stato convertito prima li riceve dal «da regalare» (`MIGRAZIONE` 3, [parita/migrazione.md](parita/migrazione.md)).
 
 ## Nei test

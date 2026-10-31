@@ -22,7 +22,7 @@ import { state, init, creaGiocatore, selectPlayer, nomeDi, migraProfilo,
 import { save, load, remove, chiavi, flush } from '../../src/store/storage.js'
 import { inCasa } from '../../src/data/portata-giochi.js'
 import { SAPERI } from '../../src/data/saperi.js'
-import { PERSONE } from '../../src/giochi/fattoria/dati/atlante.js'
+import { PERSONE } from '../../src/grafica/atlante-fattoria.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* L'archivio è uno solo per tutto il file: fra un caso e l'altro si

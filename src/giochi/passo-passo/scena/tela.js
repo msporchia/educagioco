@@ -5,7 +5,7 @@
    **lati** delle celle che non danno su un posto dove si cammina, non
    sulle celle stesse. Le figure in piedi si disegnano in ordine di dove
    toccano terra (più in basso sullo schermo = più davanti). */
-import { ATLANTE, PEZZI, TESSERA } from '../../fattoria/dati/atlante.js'
+import { ATLANTE, PEZZI, TESSERA } from '../../../grafica/atlante-fattoria.js'
 import { creaFoglio, netto } from '../../../grafica/atlante.js'
 import { pezzo, COLORI, STAGIONI, CAROTA, ALBERO, ALBERO_NEVE, ALBERO_AUTUNNO, TANA, MASSO,
          CESPUGLIO, TAVOLOZZA_BACCHE, TAVOLOZZA_FIORI, PALO, FUMETTO, CUORE, STELLINA,

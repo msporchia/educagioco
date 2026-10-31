@@ -1,5 +1,5 @@
 /* «Come si fa» di una merce: tutta la strada dal campo alla cosa finita, e a che punto si è (puro, gira in Node).
-   Il modello è dati/albero.js della fattoria di sempre (docs/fattoria/pagina-albero.md), ma più corto: qui non ci sono silos, scomparti né
+   Il modello è dati/albero.js della fattoria 2D (docs/fattoria3d/guida.md), ma più corto: qui non ci sono silos, scomparti né
    baule, e le bestie hanno il loro mangime come ramo (un uovo vuole becchime, il becchime vuole grano).
    `alberoDi(m, k)` legge il motore `m` (livello, scorte, edifici, campi, macchine) e torna un nodo:
    `{ k, nome, emoji, servono, ho, stato: 'ok' | 'manca' | 'arriva', arriva, via, rami }`, dove

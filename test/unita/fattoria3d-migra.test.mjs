@@ -14,8 +14,8 @@
    `node test/esegui.mjs fattoria3d-migra --niente-build`
    tempo: 1
    ═══════════════════════════════════════════════════════════════════ */
-import { fattoriaTipo, LIVELLI_TIPO, LIVELLO_MAX } from '../../src/giochi/fattoria/motore/tipo.js'
-import { Fattoria } from '../../src/giochi/fattoria/motore/fattoria.js'
+import { fattoriaTipo, LIVELLI_TIPO, LIVELLO_MAX } from '../../src/giochi/fattoria3d/da2d/motore/tipo.js'
+import { Fattoria } from '../../src/giochi/fattoria3d/da2d/motore/fattoria.js'
 import { statoDa2D, statoDaCaricare, statoRifattoDa2D, ritoccaLaConversione, MIGRAZIONE, pezzoPer, merceDel, livelloPerProporzione } from '../../src/giochi/fattoria3d/motore/migra.js'
 import { normalizza, statoIniziale, VERSIONE_STATO } from '../../src/giochi/fattoria3d/motore/stato.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'

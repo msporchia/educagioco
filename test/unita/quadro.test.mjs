@@ -139,7 +139,7 @@ controlla('a 5 anni la bancarella non c\'è ancora',
    eccezioni della partenza addosso — che è il caso in cui è successo. */
 for (const a of [4, 5, 5.5, 7, 9, 12])
   controlla(`a ${a} anni la fattoria c'è`,
-            inCasa(giochiDiUnEta({ eta: a, ...eccezioniPerEta(a) })).includes('fattoria'))
+            inCasa(giochiDiUnEta({ eta: a, ...eccezioniPerEta(a) })).includes('fattoria3d'))
 
 /* ── le domande ──
    Ogni classe cade in un blocco e in uno solo, e i conti dei blocchi

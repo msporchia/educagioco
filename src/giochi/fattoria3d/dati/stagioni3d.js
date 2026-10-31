@@ -1,8 +1,8 @@
 /* Le stagioni della fattoria 3D (dato puro): QUANDO è festa lo dice `dati/stagioni.js` della fattoria di sempre (importato così com'è,
    con le sue finestre e il suo `addobbiStagionali`); qui COME si vede in 3D. Niente three, niente disegno: la scena (scena3d/stagione.js)
    legge questi numeri. Vedi docs/fattoria3d/stagioni.md. */
-import { stagioneDi, FINESTRE, semeDelGiorno, addobbiStagionali } from '../../fattoria/dati/stagioni.js'
-import { caso } from '../../fattoria/dati/mondo.js'
+import { stagioneDi, FINESTRE, semeDelGiorno, addobbiStagionali } from '../da2d/dati/stagioni.js'
+import { caso } from '../da2d/dati/mondo.js'
 
 export { stagioneDi, FINESTRE, semeDelGiorno }
 

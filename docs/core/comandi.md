@@ -113,7 +113,7 @@ scrivono niente: stanno in [sprite.md](sprite.md).
 | `node strumenti/perdite-3d.mjs` (`--cicli 30`, `--caldi 5`, `--solo discesa,zaino,mondo,dialoghi,dungeon`, `--resta`, `--giu`, `--veri fps-sot,fps-villaggio --corto`, `--json file`, `--soglia geometrie=2,heapMB=1`, `--dist file`; per cercare chi tiene: `--chi WebGL2RenderingContext`, `--nuovi materiali`, `--segna 'materiali:o => …'`, `--elenca geometrie`, `--senza-dispose`) | il banco delle perdite di memoria del 3D (soak test): Chrome senza schermo col GC a mano ripete senza ricaricare discesa con scontro, zaino e cambio di roba, risalita, zone del mondo, scontro sul prato, dialogo e bottega, dungeon dall'ingresso, home; dopo ogni ciclo i conteggi (oggetti di three vivi, contesti WebGL e tele, heap e ArrayBuffer, nodi, ascoltatori, timer, rAF per fotogramma, la scena) e alla fine la retta per grandezza: esce con 1 se una cresce oltre la soglia. `--resta` sempre nel mondo di sopra, `--giu` di piano in piano nell'abisso, `--veri` la misura del telefono («Chi pesa») con una riga per scena. Conteggi, non tempi: vale anche sul computer carico ([../sotterraneo/prestazioni-3d-perdite.md](../sotterraneo/prestazioni-3d-perdite.md)) |
 | `node strumenti/pesi-3d.mjs` (`--gruppo mostri,persone,eroi,roba,fattoria`, `--q testo`, `--primi 10`, `--copie 6`, `--giri 15`, `--cpu`, `--core`, `--senzasalda`, `--json file`) | la classifica di chi pesa: ogni modello 3D (mostri saldati, persone, eroi nudi e vestiti, la roba e i suoi aloni, i pezzi della Fattoria 3D) in copie su un fondo fisso, nel computer rallentato come il vecchio telefono: ms di disegno e di animazione per copia, chiamate, triangoli, mesh, punti; serve Vite da sé, niente build (`strumenti/banco/pesi-3d.html`; [../sotterraneo/limiti-3d.md](../sotterraneo/limiti-3d.md)) |
 | `node strumenti/misura-modelli3d.mjs [N]` (`SENZA_CACHE=1`, `SENZA_FUSIONE=1`) | i ms per creare la prima e le altre istanze di ogni modello della fattoria 3D, mesh e geometrie, senza browser ([../fattoria3d/scena.md](../fattoria3d/scena.md) «Qualità e peso») |
-| `node strumenti/misura-avvio.mjs` (`--lento 4`, `sotterraneo fattoria…`, `--dist file`, `--soglia MB`) | quanto ci mette la home a esserci e quanta memoria d'immagini decodificate tiene ogni gioco ([avvio-e-memoria.md](avvio-e-memoria.md)) |
+| `node strumenti/misura-avvio.mjs` (`--lento 4`, `sotterraneo fattoria3d…`, `--dist file`, `--soglia MB`) | quanto ci mette la home a esserci e quanta memoria d'immagini decodificate tiene ogni gioco ([avvio-e-memoria.md](avvio-e-memoria.md)) |
 | `node strumenti/ricevi-log.mjs` (`--porta 8787`, `--dist dist-sito`) | il sito spezzato (`dist-sito/`, prima `npm run build:sito`) servito in LAN su `http://<ip>:8787/` (stampa gli indirizzi di LAN e di Tailscale) e il ricevitore dei log del telefono: `POST /ricevi-log` scrive in `strumenti/vecchio-telefono/log/ricevuti/` (non versionata) → [vecchio-telefono-veri.md](vecchio-telefono-veri.md#mandare-il-resoconto-al-computer) |
 | `npm run build:sito` · `node strumenti/prova-sito.mjs` (`--rete KB/s`, `--lento N`, `--dist dist --solo-prima`) | il sito in file separati (`dist-sito/`, ignorato da git) e la sua prova: prima visita, poi senza rete, giochi aperti offline ([avvio-e-memoria.md](avvio-e-memoria.md)) |
 | `node strumenti/tavola-fasce.mjs --porta <vite>` | le stesse scene del Sotterraneo 3D in più fasce, affiancate: una riga per vista (`--viste scontro,cantina,fuoco,vicino`), una colonna per fascia (`--colonne 'alta=qualita=alta\|oggi=qualita=bassa&riaccendi=lucePerVertice\|bassa=qualita=bassa'`, di difetto), in `tmp/scatti/<nome>.png`; `--conta` misura a scena ferma i conti che non dipendono dal carico (chiamate, triangoli, programmi in uso, chiamate a WebGL, i frammenti pesati di `poc/appiattimento-3d/conta.js`) e li stampa in tabella; `--shader` conta nel sorgente degli shader del piano (coi `#define` risolti, solo quello che `main()` raggiunge) letture di trama, derivate e righe, e lascia i sorgenti in `tmp/scatti/fasce/` per confrontarli ([../sotterraneo/appiattimento-3d.md](../sotterraneo/appiattimento-3d.md), «Nel gioco») |
@@ -135,7 +135,7 @@ testa, e una modifica sparisce senza rumore alla prossima rigenerazione.
 | `src/giochi/arena/dati/taratura.js` | `npm run tara:arena` — idem, la firma è in `motore/firma.js` |
 | `src/data/voci.js`, `voci-es.js` | `npm run voci` |
 | `src/emoji/*`, `strumenti/emoji/elenco.json` | `npm run emoji` — `unita/emoji` diventa rosso se un'emoji di `src/` non c'è |
-| `src/giochi/fattoria/dati/atlante.js`, `src/giochi/sotterraneo/dati/atlante.js` | `atlante.py` |
+| `src/grafica/atlante-fattoria.js`, `src/giochi/sotterraneo/dati/atlante.js` | `atlante.py` |
 | `src/giochi/castello/dati/vestiti.js`, `figure.js` | `vesti.py --atlante` |
 | `src/giochi/sotterraneo/dati/terra-mappa.js` | `terra-di-sopra.py` — `unita/sotterraneo-terra` diventa rosso se la maschera o i posti non sono quelli del foglietto |
 | `src/giochi/castello/dati/regno.js` | `regno-castello.py` — `unita/castello-regno` diventa rosso se il foglietto è cambiato dopo |
@@ -151,12 +151,12 @@ Per gli atlanti non c'è una rete: se ne accorge l'occhio.
 
 ## I cheat dell'indirizzo
 
-Si scrivono dopo il `#` e si sommano (`#fattoria-tipo=30&monete=2000`: le
+Si scrivono dopo il `#` e si sommano (`#fattoria3d-tipo=30&monete=2000`: le
 monete tolgono dall'indirizzo solo il loro pezzo, così un ricaricamento non
 le raddoppia). Dall'app installata non si scrivono (non ha la barra
 dell'indirizzo): si usano dal browser.
 
-Un cheat che porta il nome di un gioco (`#fattoria=40`, `#sotterraneo=roba`)
+Un cheat che porta il nome di un gioco (`#fattoria3d=10`, `#sotterraneo=roba`)
 **apre quel gioco da sé**, anche cambiando solo il `#` (`dallIndirizzo` in
 `src/App.vue`). Nei test: non c'è la carta da toccare, e l'indirizzo va tolto
 appena dentro (la fattoria lo fa da sé, `azzera` lo toglie sempre; altrove
@@ -168,11 +168,10 @@ posto della home e `.carte` non arriva.
 | `#admin` | la pagina dei trucchi (`views/AdminView.vue`) |
 | `#monete=500` | monete al bambino attivo, anche a gioco già aperto; `#monete=-100` le toglie, mai sotto zero |
 | `#pin=1234` | rimette il codice dei grandi |
-| `#fattoria=40` | alza il livello della fattoria (non lo abbassa mai), il prato resta |
-| `#fattoria-tipo=30` | mette una fattoria già giocata di quel livello (1–99, `giochi/fattoria/motore/tipo.js`); **butta quella del bambino attivo** nel cestino: si usa con un bambino di prova |
-| `#fattoria3d=10` | alza il livello della fattoria 3D (non lo abbassa mai), il resto resta |
-| `#fattoria3d-tipo=10` | mette una fattoria 3D già giocata di quel livello (1–99, `giochi/fattoria3d/motore/tipo.js`: stesso motore, borsa infinita, campi a stadi diversi e macchine in moto); **butta quella del bambino attivo** nel cestino: si usa con un bambino di prova |
-| `#fattoria3d-da2d` | rifà la conversione 2D→3D sul bambino attivo (`statoRifattoDa2D`, `giochi/fattoria3d/motore/migra.js`): **butta la 3D del bambino** nel cestino e la rimette convertita dalla sua 2D; senza una 2D avvisa e non butta niente: si usa con un bambino di prova ([../fattoria3d/parita/migrazione.md](../fattoria3d/parita/migrazione.md)) |
+| `#fattoria-tipo=30` | un bambino che arriva dalla 2D: scrive in `campagne.fattoria` la fattoria 2D di quel livello (1–99, `giochi/fattoria3d/da2d/motore/tipo.js`) e apre la fattoria, che la converte; è `dallIndirizzo` (`src/App.vue`) a scriverla e a passare il testimone a `#fattoria3d-da2d`, quindi **butta la fattoria del bambino attivo** nel cestino: si usa con un bambino di prova |
+| `#fattoria3d=10` | alza il livello della fattoria (non lo abbassa mai), il resto resta; `#fattoria=N`, il livello della 2D, non c'è più |
+| `#fattoria3d-tipo=10` | mette una fattoria già giocata di quel livello (1–99, `giochi/fattoria3d/motore/tipo.js`: stesso motore, borsa infinita, campi a stadi diversi e macchine in moto); **butta quella del bambino attivo** nel cestino: si usa con un bambino di prova |
+| `#fattoria3d-da2d` | rifà la conversione 2D→3D sul bambino attivo (`statoRifattoDa2D`, `giochi/fattoria3d/motore/migra.js`): **butta la fattoria del bambino** nel cestino e la rimette convertita dalla sua 2D; senza una 2D avvisa e non butta niente: si usa con un bambino di prova ([../fattoria3d/parita/migrazione.md](../fattoria3d/parita/migrazione.md)) |
 | `#stagione=natale` | la fattoria a Natale (o `halloween`) fuori stagione |
 | `#fattoria3d&stress=edifici:12,campo:20` | la Fattoria 3D con le prove di stress (non si salvano, anche sul terreno non comprato e sopra gli alberi): `campo`, `recinto`, `pollaio`, `stalla`, ogni pezzo o edificio, `edifici` a giro (anche più di uno per tipo); `&degrado=no` ferma il degrado adattivo (qualità costante): per le misure ([../fattoria3d/limiti.md](../fattoria3d/limiti.md)) |
 | `#eroe=mago&giu=3` | il sotterraneo con quell'eroe, già giù in quella discesa (l'indice della storia, o `abisso`): con gli altri cheat qui sotto una schermata si guarda senza camminare (`node strumenti/scatta-app.mjs 'sotterraneo=branco&mostri=6&eroe=mago&giu=1' --dist`) |
@@ -193,7 +192,7 @@ posto della home e `.carte` non arriva.
 | `#luce=stanza&zoom=2` | con `#stanza=`: tutta la stanza accesa, e lo zoom a 2 (più campo): per fotografare l'arredo senza girare il cono (`node strumenti/scatta-app.mjs 'sotterraneo=roba&giu=1&seme=812&piano=9&stanza=uscita&luce=stanza&zoom=2' --dist --larghezza 560`: la stanza della scala dell'ultimo piano, la più arredata); `&luce=ricordo` la segna solo vista: il cono resta e il resto è memoria, per guardare roba in luce, al bordo e nel ricordo nella stessa foto |
 | `#stanza=sala` | il sotterraneo comincia al centro della prima stanza di quella forma (`sala`, `smussata`, `elle`, `tu`, `croce`, `cappella`, `doppia`, e nelle grotte `grotta`, `bilobata`, `galleria`, `antro`) o di quel ruolo (`anticamera`, `uscita`, `tesoro`, `portale`…); `grande` in mezzo alla stanza più grande (lontano dai mostri), `angolo` nel suo angolo in alto a sinistra, `corridoio` nel tratto di corridoio più lungo; `#stanza=relitto`, `acqua`, `nicchia`, `portone`, `al-portale` e `al-scala-su` mettono l'eroe a tre celle dal primo relitto, dalla prima pozza, dalla prima nicchia, dal portone del mostro grosso, dal portale o dalla scala che sale, rivolto verso di lei (per vedere l'ombra che fa); con `#piano=` (da 1) e `#seme=` per guardare un piano ([../sotterraneo/piani.md](../sotterraneo/piani.md), [../sotterraneo/piani-caverne.md](../sotterraneo/piani-caverne.md)) |
 | `#ripara` | butta la copia del gioco e la riscarica ([guasti.md](guasti.md)) |
-| `#<chiave>` (es. `#fattoria`) | apre quel gioco |
+| `#<chiave>` (es. `#fattoria3d`) | apre quel gioco |
 
 **`#admin`** non ha codice né carta in home: un tasto per cheat, uno per
 aprire qualunque gioco anche se in home non c'è, il bambino di prova

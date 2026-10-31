@@ -1,7 +1,7 @@
 # Le decorazioni in 3D
 
 Giri G8 e G9 della parità ([parita/mondo-e-stagioni.md](parita/mondo-e-stagioni.md) W7–W15; [parita/livelli-ed-economia.md](parita/livelli-ed-economia.md) L20):
-la 2D ha 217 decorazioni, la 3D ne aveva 11. Ora **206 voci in più** (130 nel G8, 76 nel G9), nove schede nuove del menu «Costruisci qui»: **tutte le decorazioni della 2D sono in 3D**.
+la 2D aveva 217 decorazioni, la 3D 11. Ora **206 voci in più** (130 nel G8, 76 nel G9), nove schede nuove del menu «Costruisci qui»: **tutte le decorazioni della 2D sono in 3D**.
 
 ## Cosa c'è
 

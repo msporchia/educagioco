@@ -154,6 +154,13 @@ export const XP_AREA = {
      contatori `dungeon*` restano nel profilo apposta. */
   dungeon: m => m.tot('dungeonStanze') * 2 + m.tot('dungeonBoss') * 15
                 + m.stelleDi('dungeon') * 5 + m.tappeDi('dungeon') * 40,
+  /* La fattoria 2D è stata tolta (31 ottobre 2026): la 3D ha preso il suo posto e converte la sua roba. Come il Dungeon, le
+     medaglie se ne vanno e l'esperienza resta, con la formula del suo manifesto; `campagne.fattoria` e i contatori
+     `fattoria*` restano nel profilo apposta (la conversione rilegge il primo). */
+  fattoria: m => m.tot('fattoriaTerre') + m.tot('fattoriaSgomberi')
+                 + Math.floor(m.tot('fattoriaPosati') / 2) + m.best('fattoriaVarieta')
+                 + Math.floor(m.tot('fattoriaRaccolti') / 2) + m.tot('fattoriaRitiri')
+                 + 2 * m.tot('fattoriaOrdini') + m.best('fattoriaVestiti'),
   /* i giochi nuovi (`src/giochi/`) portano la loro formula nel manifesto:
      qui non c'è una riga per ognuno, e aggiungerne uno non si fa più qui */
   ...XP_GIOCHI,

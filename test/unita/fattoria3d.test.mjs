@@ -7,13 +7,13 @@
 import { guastiDelMondo, LOTTI_STORICI, LOTTI_INIZIALI, POSTI_STORICI, lottoPerId, PARTENZA } from '../../src/giochi/fattoria3d/dati/mondo.js'
 import { guastiDelCatalogo, PEZZI, EDIFICI, CATEGORIE, edificiDaCostruire, avvisoEdificiNuovi } from '../../src/giochi/fattoria3d/dati/catalogo.js'
 import { carteDi, schedeDi, schedeSegnalate, DISEGNI, STRUMENTI, guastiDelleCarte } from '../../src/giochi/fattoria3d/dati/carte.js'
-import { PEZZI as ATLANTE_PEZZI } from '../../src/giochi/fattoria/dati/atlante.js'
+import { PEZZI as ATLANTE_PEZZI } from '../../src/grafica/atlante-fattoria.js'
 import { guastiDelleColture, COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { guastiDeiPosti, POSTI_DI_PARTENZA, POSTI_MASSIMI, PREZZI_DEI_POSTI, TOTALE_DEI_POSTI, prezzoDelPosto, postiInForma } from '../../src/giochi/fattoria3d/dati/posti.js'
-import { POSTI_DI_PARTENZA as POSTI_DI_PARTENZA_2D, POSTI_MASSIMI as POSTI_MASSIMI_2D, PREZZI_DELLA_FILA } from '../../src/giochi/fattoria/dati/coda.js'
+import { POSTI_DI_PARTENZA as POSTI_DI_PARTENZA_2D, POSTI_MASSIMI as POSTI_MASSIMI_2D, PREZZI_DELLA_FILA } from '../../src/giochi/fattoria3d/da2d/dati/coda.js'
 import { guastiDelleRicette, RICETTE, MACCHINE, FORNO_POSTI, LAVORAZIONE, dentroDi, PRONTO_DA_RITIRARE, TIPI_DI_MACCHINA, emojiDi, nuovoId, MERCI_VECCHIE } from '../../src/giochi/fattoria3d/dati/ricette.js'
 import { guastiDeiLivelli, sogliaDi, livelloPer, roba, nomeDi, ULTIMO, costoDelLivello, livelloDellaRicetta, livelloDelMangime, vuoto, SCARTO_DELLA_PESCA } from '../../src/giochi/fattoria3d/dati/livelli.js'
-import { sogliaDi as sogliaDi2D, ULTIMO as ULTIMO_2D, livelloPer as livelloPer2D } from '../../src/giochi/fattoria/dati/livelli.js'
+import { sogliaDi as sogliaDi2D, ULTIMO as ULTIMO_2D, livelloPer as livelloPer2D } from '../../src/giochi/fattoria3d/da2d/dati/livelli.js'
 import { msDi } from '../../src/giochi/fattoria3d/dati/ordini.js'
 import { ANIMALI, CORTILE, PRODOTTI_ANIMALI, LANA, guastiDegliAnimali, prezzoDellaBestia, msDelProdotto } from '../../src/giochi/fattoria3d/dati/animali.js'
 import { guastiDelleRegole, COSTI, PECORE, prezzoDelLotto } from '../../src/giochi/fattoria3d/dati/regole.js'
@@ -57,7 +57,7 @@ controlla('i dati non hanno guasti', guasti.length === 0, guasti.join(' · '))
 stessaLista('quarantadue lotti storici, nove di partenza', [LOTTI_STORICI.length, Object.keys(LOTTI_INIZIALI).length], [42, 9])
 controlla('gli alberi sono sempre gli stessi', JSON.stringify(alberiStorici()) === JSON.stringify(alberiStorici()))
 controlla('e i sassi e i cespugli pure', JSON.stringify(ostacoliStorici()) === JSON.stringify(ostacoliStorici()))
-controlla('il manifesto è in prova e senza tappe', manifesto.sperimentale === true && manifesto.tappe === 0 && manifesto.chiave === 'fattoria3d')
+controlla('il manifesto è «La fattoria», non è in prova e senza tappe', manifesto.sperimentale !== true && manifesto.tappe === 0 && manifesto.chiave === 'fattoria3d' && manifesto.nome === 'La fattoria')
 const gA = guastiDellAlbo([manifesto])
 controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · '))
 

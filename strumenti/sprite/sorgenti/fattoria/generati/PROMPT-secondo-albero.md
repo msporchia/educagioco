@@ -1,14 +1,13 @@
 # I prompt del secondo albero
 
-Il progetto è [`docs/fattoria/`](../../../../../docs/fattoria/README.md)
-§8. I primi tre fogli (✅) sono quelli che arrivano entro il livello 30;
+Il progetto era la fattoria 2D (tolta il 31/10/2026; oggi [`docs/fattoria3d/`](../../../../../docs/fattoria3d/README.md)). I primi tre fogli (✅) sono quelli che arrivano entro il livello 30;
 gli altri chiudono il resto — **tutte** le merci che mancano in un
 foglio solo, la friggitoria e la fiera in un altro, e la peschiera in
 un terzo, perché è un recinto e si chiede accanto ai recinti. In fondo
 c'è l'unica cosa che non è dell'albero: gli addobbi al collo e sulla
 schiena, sospesi finché non sono sprite. La lista di quello che manca,
 sprite e non, sta in
-[`docs/fattoria/da-fare.md`](../../../../../docs/fattoria/da-fare.md).
+[`docs/fattoria3d/da-fare.md`](../../../../../docs/fattoria3d/da-fare.md).
 
 Zuccherificio, pastificio, pasticceria, osteria (`rosticceria`),
 merceria e sushi bar sono già in `edifici_3.png`.

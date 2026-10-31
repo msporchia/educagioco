@@ -23,6 +23,21 @@ Codice: `dati/silos.js`, il motore (`edificiDelSilo`, `tagliaDi`, `passoDelSilo`
 - Una fattoria di prima con più ingrandimenti di quanti ne regge un edificio ritrova il primo in mappa e gli altri da mettere.
 - **«Un po' di tutto» non conta i magazzini**: arrivano da soli, sarebbe un traguardo regalato.
 
+## Perché gli scomparti
+
+Le regole vengono dalla 2D, e i numeri da `da2d/dati/coltivazioni.js` (`SCOMPARTO_BASE`, `SCOMPARTO_PIU`, `costoIngrandimento`).
+
+- **Ogni merce ha il suo scomparto, da 8.** Otto sono quattro giri di una ricetta da due: abbastanza per non contare, poco abbastanza
+  perché chi semina sempre e non trasforma mai trovi lo scomparto colmo, che è il momento in cui il gioco insegna il resto della catena.
+- **Non posti in comune**: provati dodici posti condivisi, un bambino non alterna le colture e 32 di mais e 4 di carote tappavano il silo
+  senza che niente fosse andato storto. Provato anche un tetto per merce a 90: invisibile, non mordeva mai. Questo è visibile e piccolo.
+- **L'ingrandimento costa `40 + 130·ln(1+n)`**, logaritmico: le monete arrivano sempre allo stesso ritmo, e con l'esponenziale 28 posti
+  chiedevano centoundici ore di esercizi. Così il salto vero è il secondo, poi ogni passo costa più o meno un'ora.
+- **Il rosso è dei campi, il bianco degli animali** (quello che mangiano e quello che danno), la dispensa delle botteghe. Provato il
+  criterio «da dove viene»: il mangime «veniva dalla terra», vero e invisibile a chi gioca. **Una merce non cambia mai silo**: in un
+  salvataggio dove la famiglia nuova non c'è si troverebbe a capienza zero.
+- **Nessuna coltura rende più di quanto tiene uno scomparto nuovo**, se no chiederebbe un ingrandimento prima del primo raccolto.
+
 ## Crescere, e il secondo
 
 Un edificio regge **6 ingrandimenti** (`PASSI_PER_EDIFICIO`) e se ne hanno **al massimo 3 per silo** (`EDIFICI_PER_SILO`): 18 passi,

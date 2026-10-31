@@ -13,20 +13,20 @@
      5. **una fattoria di ieri si riapre senza rompersi**, e senza
         ordini fantasma.
    `node test/esegui.mjs mercato --niente-build` */
-import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria/motore/fattoria.js'
+import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria3d/da2d/motore/fattoria.js'
 import {
   mercatoIn, merciOrdinabili, aggiornaIlMercato, ordiniDi, riposiDi, ordineDi,
   consegna, rifiuta, cheMancaPer, puoiConsegnare, qualcosaDaConsegnare, bancoDi,
-} from '../../src/giochi/fattoria/motore/mercato.js'
+} from '../../src/giochi/fattoria3d/da2d/motore/mercato.js'
 import {
   guastiDelMercato, CLIENTI, POSTI, PEZZI_MAX, MERCI_MAX, RIPOSO_MIN,
   merciDelLivello, valoreDi, minutiDi, premioPer, PREMIO_BASE, premioDelPezzo, gestiDi, pesoDellaMerce,
   MONETE_AL_MINUTO, clientiPer,
-} from '../../src/giochi/fattoria/dati/mercato.js'
-import { PRODOTTI, RICETTE, COLTURE } from '../../src/giochi/fattoria/dati/coltivazioni.js'
+} from '../../src/giochi/fattoria3d/da2d/dati/mercato.js'
+import { PRODOTTI, RICETTE, COLTURE } from '../../src/giochi/fattoria3d/da2d/dati/coltivazioni.js'
 import { ULTIMO, sogliaDi, livelloDelProdotto }
-  from '../../src/giochi/fattoria/dati/livelli.js'
-import { PER_ID } from '../../src/giochi/fattoria/dati/catalogo.js'
+  from '../../src/giochi/fattoria3d/da2d/dati/livelli.js'
+import { PER_ID } from '../../src/giochi/fattoria3d/da2d/dati/catalogo.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* Una sorte seminabile: una partita si deve poter rifare identica, se no
@@ -110,7 +110,7 @@ uguale('i posti al banco sono tre', POSTI, 3)
 }
 
 /* I due conti che risalgono la catena rifanno **esatti** i numeri della
-   tabella in `docs/fattoria/catena.md`: è il modo di sapere che non se li sono
+   tabella in `docs/fattoria3d/catena.md`: è il modo di sapere che non se li sono
    inventati, e diventa rosso il giorno che qualcuno ritocca una ricetta
    senza aggiornare la documentazione. */
 {
