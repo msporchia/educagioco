@@ -173,37 +173,10 @@ non è mai la più conveniente (`guastiDelleCose`). Le chiavi `pozione-piccola`,
 Il resto (il rapporto fra una spada e le pozioni, quando arrivano le grandi, l'ampolla della vita, il tetto di otto, la scelta di quale bere, il
 giocatore finto): [pozioni.md](pozioni.md).
 
-## La torcia si accende da sé, e finisce
+## La torcia
 
-- **Accenderla non è una scelta**: si accende appena presa e non entra nello
-  zaino. Brucia sulla corsa (`corsa.torciaResta`), e le altre aspettano alla
-  cintura (`corsa.torceInScorta`) e si accendono da sé. **La scorta non ha
-  tetto**: provata la torcia per tutta la discesa, e ogni altra torcia
-  diventava roba da rifiutare.
-- **Dura dodici stanze** (`STANZE_TORCIA`). **L'unità è la stanza, non il
-  tempo** (e nemmeno i passi dell'orologio del gioco, [orologio.md](orologio.md)): sotto una domanda l'orologio è fermo, e un conto che scorre farebbe
-  pagare la luce a chi legge piano. Scendere e risvegliarsi non consumano.
-  Dodici è misurato: chi tocca tutto entra in 34 stanze nel pozzo, 36 nella
-  grotta, 45 nella scala sommersa, 44 nella miniera, 83 nella botola — undici o
-  dodici per piano. Una torcia vale un piano.
-- **Costa 5 gemme**, appena sotto la boccetta: un piano di luce è una
-  comodità, non la sopravvivenza. Il prezzo è l'unica scala su cui sta tutto
-  il catalogo.
-- **Cosa fa vedere la torcia**: allunga il cono di luce davanti all'eroe
-  (6,2 celle contro 3,2) e allarga l'alone attorno; la stanza non si accende
-  tutta e dietro c'è sempre ombra; all'ultima stanza il cono si accorcia
-  ([luce.md](luce.md)).
-- **Quanta ne resta si vede** nella scena (il buio che si stringe), nello
-  zaino per esteso («ancora 7 stanze, e 1 alla cintura»), e agli sgoccioli,
-  solo senza scorta, una riga in mezzo al campo («Torcia sta per finire:
-  ancora due stanze»). Senza, il buio arriverebbe come un guasto. Nella
-  barra in basso non c'è più: il globo di destra è l'esperienza
-  ([barra.md](barra.md)).
-- **I pezzi ⏳ allungano la torcia**: una torcia nuova dura le sue dodici
-  stanze più quelle dei pezzi (`stanzeTorcia`).
-- Una sosta vecchia con `torcia: true` si riprende con una torcia piena.
-- **Comprata sopra aspetta alla cintura**, e scendendo se ne accende una:
-  sopra non c'è buio da rischiarare.
+Si accende da sé, dura dodici stanze, costa cinque gemme, aspetta alla cintura, si vede nella pagina dell'eroe e
+nello zaino, e se ne trovano: [luce.md](luce.md#la-torcia-si-accende-da-sé-e-finisce).
 
 ## I mercanti e la bottega
 

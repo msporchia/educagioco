@@ -70,7 +70,7 @@ restano in codice anche dopo: si muovono.
   torce alla cintura non ci sono più: la luce si vede nella scena (il cono
   che si accorcia), agli sgoccioli e senza scorta lo dice una riga in mezzo al
   campo («🔥 Torcia sta per finire: ancora due stanze», `bruciaLaTorcia`), e
-  per esteso nello zaino ([roba.md](roba.md#la-torcia-si-accende-da-sé-e-finisce)).
+  per esteso nella pagina dell'eroe e nello zaino ([luce.md](luce.md#la-torcia-si-accende-da-sé-e-finisce)).
 - **L'esperienza sta in un posto solo**: la riga sopra le caselle. Quando era
   un globo, una scanalatura in più sarebbe stata un doppione.
 - **Attacco e difesa non stanno più in cima**, accanto al titolo: si leggono

@@ -1,5 +1,5 @@
 <script setup>
-// La riga delle torce, nello zaino e nella pagina dell'eroe (docs/sotterraneo/roba.md, «La torcia si accende da sé»): quella
+// La riga delle torce, nello zaino e nella pagina dell'eroe (docs/sotterraneo/luce.md, «La torcia si accende da sé»): quella
 // che brucia con le stanze che restano, quelle alla cintura, e senza nessuna (solo con `sempre`) chi le vende
 import Icona from './Icona.vue'
 

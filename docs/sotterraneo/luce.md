@@ -110,6 +110,59 @@ il disegno in `scena3d/` ([grafica-3d.md](grafica-3d.md)).
 - **Contare le stanze (`stanzeViste`, la torcia che brucia, le missioni) non
   dipende dalla luce**: è l'eroe a entrarci.
 
+## La torcia si accende da sé, e finisce
+
+- **Accenderla non è una scelta**: si accende appena presa e non entra nello
+  zaino. Brucia sulla corsa (`corsa.torciaResta`), e le altre aspettano alla
+  cintura (`corsa.torceInScorta`) e si accendono da sé. **La scorta non ha
+  tetto**: provata la torcia per tutta la discesa, e ogni altra torcia
+  diventava roba da rifiutare.
+- **Dura dodici stanze** (`STANZE_TORCIA`). **L'unità è la stanza, non il
+  tempo** (e nemmeno i passi dell'orologio del gioco, [orologio.md](orologio.md)): sotto una domanda l'orologio è fermo, e un conto che scorre farebbe
+  pagare la luce a chi legge piano. Scendere e risvegliarsi non consumano.
+  Dodici è misurato: chi tocca tutto entra in 34 stanze nel pozzo, 36 nella
+  grotta, 45 nella scala sommersa, 44 nella miniera, 83 nella botola — undici o
+  dodici per piano. Una torcia vale un piano.
+- **Costa 5 gemme**, appena sotto la boccetta: un piano di luce è una
+  comodità, non la sopravvivenza. Il prezzo è l'unica scala su cui sta tutto
+  il catalogo.
+- **Cosa fa vedere la torcia**: allunga il cono di luce davanti all'eroe
+  (9,5 celle contro 3,2), lo apre e allarga l'alone attorno; la stanza non si
+  accende tutta e dietro c'è sempre un po' d'ombra; all'ultima stanza il cono
+  si accorcia (sopra).
+- **Quanta ne resta si vede** nella scena (il buio che si stringe), per esteso
+  nella pagina dell'eroe e nello zaino, sopra e sotto («ancora 7 stanze, e 1
+  alla cintura»; sopra «3 torce alla cintura: scendendo se ne accende una»;
+  senza nessuna, solo nella pagina dell'eroe, «nessuna torcia: la guaritrice
+  le vende»), e agli sgoccioli, solo senza scorta, una riga in mezzo al campo
+  («Torcia sta per finire: ancora due stanze»). Senza, il buio arriverebbe
+  come un guasto. La riga è una sola, `viste/RigaTorcia.vue`, coi numeri di
+  `torceDi` in `Gioco.vue`. Nella pagina dell'eroe l'ha cercata l'utente (31
+  ottobre: «dove si vedono le torce? dovrebbero essere visibili nel
+  profilo»). Nella barra in basso non c'è: la casella delle torce l'ha tolta
+  lui ([barra.md](barra.md)).
+- **I pezzi ⏳ allungano la torcia**: una torcia nuova dura le sue dodici
+  stanze più quelle dei pezzi (`stanzeTorcia`).
+- Una sosta vecchia con `torcia: true` si riprende con una torcia piena.
+- **Comprata sopra aspetta alla cintura**, e scendendo se ne accende una:
+  sopra non c'è buio da rischiarare. **Al buio con la cintura piena se ne
+  accende una sempre** (`accendiDallaCintura` in `motore/corsa.js`):
+  scendendo da capo, tornando dal portale o riprendendo la sosta
+  (`motore/sosta.js`), entrando in una stanza. Senza, chi saliva al buio dal
+  portale e comprava torce tornava giù al buio (l'utente, 31 ottobre).
+- **Se ne trovano** (oltre a comprarle): da un forziere, da un mostro, da una
+  curiosità. Quante, e quanto buio resta: [sotto](#quante-se-ne-trovano).
+
+Nei test: `unita/sotterraneo-sosta` (§ 10: le diciotto torce comprate che
+tornando dal portale si accendono, la stanza al buio che ne accende una),
+`integrazione/sotterraneo-torce` (col dito: la pagina dell'eroe senza torce,
+tre comprate dalla guaritrice, la pagina e lo zaino di sopra che le contano
+alla cintura, il gemello che riporta giù con una accesa in mano e il cono
+lungo, la pagina e lo zaino di giù); `[data-torcia-eroe]` nella pagina
+dell'eroe e `[data-torcia-zaino]` nello zaino, con `data-torce` (quante in
+tutto), `data-resta` (le stanze di quella accesa, 0 se spenta) e
+`data-scorta` (quelle alla cintura).
+
 ## La torcia in scena
 
 - **Quello che si vede lo decide il motore**: la maschera è `forzaLuce`, e
@@ -143,9 +196,43 @@ il disegno in `scena3d/` ([grafica-3d.md](grafica-3d.md)).
   [da-fare.md](da-fare.md)). I numeri dei bersagli di
   `unita/sotterraneo` e `unita/sotterraneo-roba` sono in
   [scontro-bilancio.md](scontro-bilancio.md#la-luce-a-cono-e-gli-agguati).
-- La torcia costa 5 gemme a piano (l'erborista ne ha sempre, i pipistrelli e i
-  fantasmi ne lasciano una ogni dieci morti circa), contro 6–16 gemme a piano
-  che esce il giro minimo: la comodità adesso pesa.
+- La torcia costa 5 gemme a piano (la guaritrice ne ha sempre), contro 6–16
+  gemme a piano che esce il giro minimo: la comodità adesso pesa.
+
+## Quante se ne trovano
+
+**Chi gira tutto trova circa una torcia a discesa, chi va dritto una ogni
+quattro o cinque; il buio resta in due stanze su tre.** L'utente, 31 ottobre:
+«ha senso che uno le trovi e non che si debba ricordare ogni volta di
+comprarne una valanga, che ci siano momenti di buio e che tu capisca che puoi
+comprarle». Una torcia trovata è un piano di luce; il resto lo si compra
+(la pagina dell'eroe dice chi le vende).
+
+- **Da dove**: tre forzieri su dieci ne lasciano una accanto a quello che dà,
+  un mostro di strada su trenta, un caporale su dieci, il grosso mai (ha il suo
+  bottino) (`PROBABILITA_TORCIA`, `torciaCade` in `motore/bottino.js`). Il tiro
+  nasce dal seme, dal piano e dal posto, come l'elisir e l'ampolla: non sposta
+  niente di quello che cade già. Restano quelle di prima: il forziere che dà una
+  torcia invece di una pozione, i pipistrelli e i fantasmi (`lascia`) quando un
+  mostro lascia da bere, le curiosità. Sul prato di sopra no: è giorno.
+- **Misurato** (`npm run sotterraneo -- --luce`: roba e livello attesi, senza
+  torce in tasca, 40 partite a discesa a 8/10), nelle sei discese dopo la cripta:
+
+  | | torce a discesa, prima → dopo | stanze al buio, prima → dopo |
+  |---|---|---|
+  | chi gira tutto | 0–0,7 (media 0,2) → 0,5–1,8 (media 1) | 81–100% (media 93%) → 44–82% (media 67%) |
+  | chi va dritto | 0 → 0,1–0,5 (media 0,2) | 100% → 87–99% (media 94%) |
+
+  Nella cripta i mostri lasciano da bere uno su due, e le torce erano già
+  una a discesa per chi gira. Le torce che avanzano uscendo (0,3–0,9 a discesa
+  per chi gira) scendono con lui alla discesa dopo.
+- **L'equilibrio** (`npm run taratura`, prima con `--tara torcia.mostro=0,torcia.caporale=0,torcia.forziere=0`): il curioso non
+  si muove oltre il caso (svenimenti per vincerla 0,2·1,2·1,2·1,6·1·1,4·1 → 0,2·1,2·1·1,6·0,9·1,5·0,6, storie finite 99% →
+  100%), il medio nemmeno; lo sbadato nella torre da 4,1 a 3,9 svenimenti (il bersaglio ne vuole almeno 4) e il curioso
+  sfortunato nella tana dei ragni (`gallerie`) da 75% a 33% di vinte alla prima (dodici storie: la coda è il caso). Con quaranta torce in tasca il curioso
+  sviene di meno, non di più (dodici storie del cavaliere nelle sale allagate, `cisterna`: 13 svenimenti contro 16): la luce non rende il
+  gioco più duro. Le sei storie del cavaliere in `unita/sotterraneo` e `unita/sotterraneo-roba` sono sensibili al caso: un
+  forziere su quattro faceva perdere le sale allagate due volte su sei (su ventiquattro storie 22 vinte contro 21 senza).
 
 Nei test: `unita/sotterraneo-piani` (§ 11 e 12: un relitto fa ombra come un muro, l'acqua no),
 `unita/sotterraneo-luce` (il cono davanti e l'ombra dietro con e
