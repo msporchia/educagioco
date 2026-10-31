@@ -21,6 +21,17 @@ anteprime è il modello 3D di `spada-28`, con l'alone della sua rarità. Prima t
    pergamena del portale) hanno un modello per chiave in `pozioni.js` (`crea(chiave)`, `CHIAVI`: la forma dal grado, il colore dal
    tipo). Nelle caselle, nella scelta della pozione e nella riga della torcia dello zaino.
 
+## La balestra si tiene a modo suo
+
+Una balestra non è un arco ritto (l'utente, 31 ottobre 2026: l'elfa la teneva col fusto in su e l'arco di traverso sul corpo). Il modello,
+sia la figura `arco-07` (`bastoni.js`) sia il ripiego `balestra` della collezione, ha **l'impugnatura nel pugno, il fusto verso +z** (dove
+tira anche l'arco), la guida e il dardo sopra, l'arco di piatto lungo x coi flettenti piegati verso chi tira; `userData.tipo = 'balestra'`
+(la famiglia resta `arco`: va nella sinistra). In mano la tiene `tieniBalestra` (`poc/eroi-3d/eroi.js`), in fondo alla guardia e alla
+marcia: il braccio la porge davanti, appena sotto la spalla, e il perno annulla il giro del braccio, così il fusto va dove guarda (o
+mira) l'eroe, un poco in giù, per tutti e quattro. Provato a girare solo il modello: il perno segue il braccio, che in ogni posa sta in un
+altro modo (l'elfa lo tende in avanti, il cavaliere lo tiene basso), e il fusto finiva in su o di sbieco. I motivi dell'elemento della
+figura (fatti per le aste ritte, attorno a z = 0) stanno spostati sul davanti.
+
 Il copricapo non passa dalle figure: ha i modelli dei copricapi per base (`COPRICAPI_3D`, [elmo.md](elmo.md)).
 
 `scena3d/roba3d.js`: `modelloDiRoba(chiave)` → `{ figura, famiglia, modulo, ripiego, crea(), look }`; `creaPezzo(p)` costruisce e

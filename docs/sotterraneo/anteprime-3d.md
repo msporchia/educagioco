@@ -45,7 +45,7 @@ La chiave dice la figura e l'aspetto, non l'oggetto: due spade con la stessa fig
 
 | chiave | cosa si vede | pixel |
 |---|---|---|
-| `arma:<gettone>` | l'arma (la figura, o il ripiego) in diagonale, la punta in alto a destra; l'arco girato di lato perché si veda la curva; l'alone fermo a 1,3 s | 128² |
+| `arma:<gettone>` | l'arma (la figura, o il ripiego) in diagonale, la punta in alto a destra; l'arco girato di lato perché si veda la curva; la balestra con la bocca in alto a destra, vista da sopra e un poco di fianco perché si veda la croce dell'arco di piatto ([roba-3d.md](roba-3d.md#la-balestra-si-tiene-a-modo-suo)); l'alone fermo a 1,3 s | 128² |
 | `scudo:<gettone>` · `gioiello:<gettone>` | lo scudo, la collana o l'anello di fronte, appena girato | 128² |
 | `copricapo:<modello>:<rarità>` | il copricapo da solo su una testa finta, di tre quarti, con l'alone se è leggendario ([elmo.md](elmo.md)) | 128² |
 | `consumabile:<chiave>:<rarità>` | la pozione, la torcia, la chiave o la pergamena di fronte (l'alone solo ai rarissimi) | 128² |
@@ -111,6 +111,7 @@ npm run build && node strumenti/tavola-anteprime.mjs          # tutte, in tmp/sc
 node strumenti/tavola-anteprime.mjs --solo eroi --eroe mago    # roba, eroi, mostri; l'armatura sul mago
 node strumenti/tavola-anteprime.mjs --solo rarita              # le figure e gli aloni: ogni base comune, magica, rara, e i pezzi col nome
 node strumenti/tavola-anteprime.mjs --chiavi arma:spada-28.spada-lunga.l.fuoco,busto:nano:-:-:-:-
+node strumenti/tavola-anteprime.mjs --chiavi eroe:elfa:-:arco-07.balestra.c.ombra:-:- --zoom 4   # da vicino: l'arma in mano
 node strumenti/scatta-app.mjs 'sotterraneo=1&eroe=cavaliere&sotterraneo=roba&dpr=1' --dist --aspetta 6000 --tocca '[data-azione="zaino"]'
 node strumenti/scatta-app.mjs 'sotterraneo=mondo&eroe=cavaliere&bottega=armaiolo&livello=12&roba=rara&gemme=800&dpr=1' --dist --aspetta 8000
 ```
