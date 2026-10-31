@@ -8,7 +8,7 @@
 import { ref, shallowRef, computed, onMounted, onBeforeUnmount, onUnmounted, watch, nextTick } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { state, segna, segnaBest, nomeCorrente } from '../../store/profile.js'
+import { state, segna, segnaBest, nomeCorrente, flushNow } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'
 import { PAGA } from '../../data/paghe.js'
 import { progresso, aperta, adesso, completa, scelta, ricorda, ritocca } from '../campagne.js'
@@ -2171,7 +2171,10 @@ function nienteClickDalCampo(e) { if (e.cancelable) e.preventDefault() }
 // su un telefono l'app non si chiude, sparisce: visibilitychange è l'ultimo momento per scrivere.
 // giochi/pausa.js ferma la discesa ascoltando lo stesso evento: qui resta solo la scrittura
 function seSparisce(e) {
-  if (e?.type === 'pagehide' || document.visibilityState === 'hidden') salva({ subito: true })
+  if (e?.type !== 'pagehide' && document.visibilityState !== 'hidden') return
+  salva({ subito: true })
+  // il mondo di sopra si salva da sé ogni pochi secondi (viste/Mondo3d.vue): qui gli ultimi passi
+  if ((!corsa.value || sopra.value) && campagnaEl.value) { campagnaEl.value.salvaSopra(); flushNow() }
 }
 
 // rientrando con la discesa lasciata con la ✕ si nasce già giù: decisa qui, prima del primo disegno, perché la carta
