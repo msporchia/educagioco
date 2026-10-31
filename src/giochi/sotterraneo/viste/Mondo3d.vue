@@ -26,6 +26,10 @@ import Domanda from '../../../quiz/Domanda.vue'
 import Dialogo from './Dialogo.vue'
 import Foglio from './Foglio.vue'
 import FumettoMondo from './FumettoMondo.vue'
+import PallinoAmico from '../../../components/amici/PallinoAmico.vue'
+import { usaAmici } from '../../../amici/usaAmici.js'
+import { CHIAVE } from '../gioco.js'
+import { QUANTE_TAPPE } from '../dati/campagna.js'
 import { RITMO } from '../dati/pensieri.js'
 import { creaMostriSopra } from './mondo-mostri.js'
 import { annuncioDi, alSicuro, signoreVivo } from '../motore/aperta.js'
@@ -98,6 +102,11 @@ const datoDelPosto = b => {
   const d = dungeonDi(b.k), t = tappaDi(b.k), abisso = b.k === 'abisso'
   return { d, t, abisso, nuovo: !!d && d.indice == null, aperto: abisso ? !!props.abisso : !!(t && t.aperta) }
 }
+// gli amici dalla loro bacheca (docs/core/amici-nei-giochi.md): su ogni discesa chi è arrivato lì, sull'abisso chi ha finito le sette.
+// I sei dungeon nuovi non sono tappe: nessuno
+const amici = usaAmici(CHIAVE)
+const nodoDi = b => (b.k === 'abisso' ? QUANTE_TAPPE : (dungeonDi(b.k) || {}).indice ?? -1)
+const amiciDi = b => (b.ruolo === 'ingresso' ? amici.sullaTappa(nodoDi(b)) : [])
 
 // il posto sul prato di una taglia (il viandante, la X): lo stesso per lo stesso id, calcolato una volta per taglia
 const postiTaglie = new Map()
@@ -522,7 +531,7 @@ const fumettoDati = computed(() => {
     const lv = livelloDi(t), dettoCol = colore === 'arancio' && lv ? null : DETTI_DEL_COLORE[colore] || null
     return { tipo: 'posto', nome: d.d.nome, dritta: d.abisso ? 'dicono che non abbia fondo' : (t && t.dritta) || '', aperto: d.aperto, tappa: d.abisso ? null : t,
              fondo: d.abisso && props.abisso ? props.abisso.fondo : 0, storia: rigaStoria(t), prese: t ? presePer(props.missioni, t.chiave) : [],
-             livello: lv, detto: dettoCol, colore, perche: d.aperto ? null : chiusaPerche(d),
+             livello: lv, detto: dettoCol, colore, perche: d.aperto ? null : chiusaPerche(d), amici: amiciDi(b), al: nodoDi(b),
              sosta: props.giaScesa != null && (d.abisso ? !!props.abisso && props.abisso.indice === props.giaScesa : !!t && (t.indice ?? t.chiave) === props.giaScesa) }
   }
   // la pietra del villaggio riporta anche ai villaggi delle terre già viste (docs/sotterraneo/terre-successive.md, «Il viaggio indietro»)
@@ -1302,6 +1311,10 @@ watch(giro, g => { if (mostri && g !== mostri.stato.giro) { mostri.giro(g); foto
         <b v-else-if="segnoSopra(b)" class="sot-tre-punti sot-segno-missione" :class="'sot-segno-' + segnoSopra(b)">{{ GLIFO[segnoSopra(b)] }}</b>
         <span v-if="b.ruolo === 'mercante' && trovati.has(b.chiave) && richiamo(b.k)" class="sot-richiamo" data-richiamo :data-richiamo-di="curaDi(b.k).risorsa">{{ richiamo(b.k) }}</span>
         <span v-else-if="b.ruolo === 'fontana' && trovati.has(b.chiave) && !(aperto && aperto.chiave === b.chiave) && curaDellaFontana(forze).serve" class="sot-richiamo" data-richiamo data-richiamo-di="fontana">{{ FONTANA.richiamo }}</span>
+        <!-- chi è arrivato a questa discesa: i pallini ai piedi dell'ingresso, i nomi nel fumetto -->
+        <span v-if="amiciDi(b).length" class="sot-amici-posto" data-amici-posto :data-al="nodoDi(b)">
+          <PallinoAmico v-for="a in amiciDi(b)" :key="a.chiave" :amico="a" :lato="14" data-pallino-amico />
+        </span>
       </button>
     </div>
 
@@ -1361,6 +1374,8 @@ watch(giro, g => { if (mostri && g !== mostri.stato.giro) { mostri.giro(g); foto
     </button>
 
     <div ref="sopraEl" class="sot-terra-sopra">
+      <!-- chi è da raggiungere: fuori dal mondo, che segue l'eroe -->
+      <p v-if="amici.davanti && pronto && !inScontroV" class="sot-trovato" data-amico-davanti>{{ amici.davanti }}</p>
       <!-- la meta di adesso: cosa, e quanto lontano (docs/sotterraneo/mondo-3d-la-meta.md) -->
       <div v-if="metaOra && pronto && !inScontroV" class="sot3d-meta" data-meta-carta :data-meta="metaOra.chiave" @click.stop>
         <span class="sot3d-meta-icona" :class="{ 'sot3d-meta-consegna': metaOra.consegna }" aria-hidden="true">
