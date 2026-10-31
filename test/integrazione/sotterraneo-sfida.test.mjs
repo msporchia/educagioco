@@ -25,7 +25,7 @@ for (const [p, eroe] of [[a, 'cavaliere'], [b, 'mago']]) {
   await azzera(p)
   await semina(p, { settings: { eta: 8, sperimentali: true } })
   await p.evaluate(s => { globalThis.__SERVIZIO_SFIDE__ = s }, SERVIZIO)
-  await scegli(p, 'sotterraneo3d')
+  await scegli(p, 'sotterraneo')
   await scegliAvventura(p, eroe)
 }
 const corsaDi = p => p.evaluate(() => {

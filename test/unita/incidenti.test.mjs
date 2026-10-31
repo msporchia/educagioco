@@ -71,10 +71,10 @@ controlla('un oggetto qualunque dice qualcosa', typeof testoDi({ a: 1 }) === 'st
    adesso in testa, il guasto più recente per primo, la pila sotto. */
 const mandato = testoDaMandare([
   { ...voce('il primo'), versione: 'v1', pila: 'at a (x.js:1)' },
-  { ...voce('sotterraneo3d: l\'altro se n\'è andato', 'sfida'), versione: 'v2', volte: 3, dettagli: ['tick 700'] },
+  { ...voce('sotterraneo: l\'altro se n\'è andato', 'sfida'), versione: 'v2', volte: 3, dettagli: ['tick 700'] },
 ], 'v3')
 controlla('in testa la versione di adesso', mandato.startsWith('Ultimi inciampi di Educagioco v3'))
-controlla('il più recente prima', mandato.indexOf('sotterraneo3d') < mandato.indexOf('il primo'))
+controlla('il più recente prima', mandato.indexOf('sotterraneo') < mandato.indexOf('il primo'))
 controlla('con quante volte, la pila e i dettagli', /3 volte/.test(mandato) && mandato.includes('at a (x.js:1)') && mandato.includes('tick 700'))
 uguale('un libretto vuoto è la testa sola', testoDaMandare([], 'v3'), 'Ultimi inciampi di Educagioco v3')
 

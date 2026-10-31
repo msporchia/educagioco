@@ -2,7 +2,7 @@
    I DUNGEON CHE SI RIGENERANO, COL DITO
    (docs/sotterraneo/dungeon-che-si-rigenerano.md)
 
-   Nel Sotterraneo 3D il cerchio di pietre (un dungeon nuovo, per chiave: `#sotterraneo3d=cerchio`) ha il seme della sua volta;
+   Nel Sotterraneo 3D il cerchio di pietre (un dungeon nuovo, per chiave: `#sotterraneo=cerchio`) ha il seme della sua volta;
    lasciato perdere dalla scala che sale si ritrova uguale; ripulito (il grosso battuto, «esco dal sotterraneo» toccato col dito)
    il mondo scrive un rifatti in più e rientrando è un altro: un altro seme, altri abitanti, il volto nuovo. La storia non si muove.
    `node test/esegui.mjs sotterraneo-rigenera`
@@ -36,7 +36,7 @@ async function entra(resto = '') {
   await attendi(page, 500)   // le scritture in coda dell'archivio
   await page.reload()
   await page.waitForSelector('.carte', { timeout: 15000 })
-  await page.evaluate(h => { location.hash = h }, `sotterraneo3d=cerchio&eroe=${EROE}${resto}`)
+  await page.evaluate(h => { location.hash = h }, `sotterraneo=cerchio&eroe=${EROE}${resto}`)
   await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.corsa && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 30000 })
   await attendi(page, 1500)
   return page.evaluate(() => { const c = window.__sotterraneo3d.corsa; return { seme: c.seme, mostri: [...c.tappa.mostri], nome: c.tappa.nome, piani: c.quantiPiani } })

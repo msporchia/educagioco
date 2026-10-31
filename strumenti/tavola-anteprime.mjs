@@ -78,7 +78,7 @@ else {
 }
 
 const browser = await apriBrowser()
-const { page, errori } = await apriGioco(browser, { viewport: { width: 390, height: 844 }, hash: `sotterraneo3d=1&eroe=${eroe}&dpr=1&seme=11`,
+const { page, errori } = await apriGioco(browser, { viewport: { width: 390, height: 844 }, hash: `sotterraneo=1&eroe=${eroe}&dpr=1&seme=11`,
                                                      attesa: null, indirizzo: `file://${dist}` })
 await page.waitForFunction(() => !!window.__anteprime3d, null, { timeout: 30000 })
 // la discesa si accende prima: la misura è quella di uno zaino aperto a scena già in piedi (`--aspetta`, ms)

@@ -58,7 +58,7 @@ async function sopraLaTesta(page, nome) {
 
 /* ---------- 2. il Sotterraneo 3D: lo stesso fumetto, col tema legno ---------- */
 {
-  const { page, errori } = await apriGioco(browser, { hash: 'eroe=cavaliere&sotterraneo3d=0&seme=5', attesa: '.sot-tela' })
+  const { page, errori } = await apriGioco(browser, { hash: 'eroe=cavaliere&sotterraneo=0&seme=5', attesa: '.sot-tela' })
   await page.waitForSelector('[data-pensiero]', { timeout: 15000 }).catch(() => {})
   uguale('3D: entrando senza torcia, il pensiero della torcia', await page.locator('[data-pensiero]').getAttribute('data-pensiero-id').catch(() => null), 'senza-torcia')
   if (await page.locator('[data-pensiero]').count()) {
@@ -99,7 +99,7 @@ async function sopraLaTesta(page, nome) {
 /* ---------- 4. sopra nel Sotterraneo 3D: il mondo generato (viste/Mondo3d.vue), lo stesso pensiero e lo stesso segno ---------- */
 {
   // la bottega del cheat dà le gemme a mani nude; chiusa, l'eroe fermo pensa all'arma
-  const { page, errori } = await apriGioco(browser, { hash: 'sotterraneo3d=mondo&eroe=cavaliere&bottega=armaiolo&gemme=60&roba=nuda', attesa: '[data-mondo3d]' })
+  const { page, errori } = await apriGioco(browser, { hash: 'sotterraneo=mondo&eroe=cavaliere&bottega=armaiolo&gemme=60&roba=nuda', attesa: '[data-mondo3d]' })
   await page.waitForSelector('[data-chiudi]', { timeout: 15000 })
   await page.click('[data-chiudi]')
   await page.waitForSelector('[data-mondo3d][data-pronto="1"]', { timeout: 30000 })

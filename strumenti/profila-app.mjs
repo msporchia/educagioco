@@ -6,7 +6,7 @@
 //   node strumenti/profila-app.mjs 'sotterraneo' --dist tmp/dist-chiaro/index.html
 //   node strumenti/profila-app.mjs 'sotterraneo=1&eroe=elfa&giu=1&seme=11' --dist --tocca 210,300 --secondi 12
 //   node strumenti/profila-app.mjs 'sotterraneo' --dist --contro tmp/vecchio/dist/index.html   # due file a confronto
-//   node strumenti/profila-app.mjs 'sotterraneo3d=1&…' --lento 1,4,6 --pronto 'window.__sotterraneo3d?.pronto' --stampa 'window.__sotterraneo3d.grafica()'
+//   node strumenti/profila-app.mjs 'sotterraneo=1&…' --lento 1,4,6 --pronto 'window.__sotterraneo3d?.pronto' --stampa 'window.__sotterraneo3d.grafica()'
 //
 // `--apertura` apre la home, poi accende il profilo e solo allora apre il gioco: quello che pesa all'ingresso (la mappa
 // dell'inglese) altrimenti è già passato quando il profilo parte.

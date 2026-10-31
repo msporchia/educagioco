@@ -6,10 +6,9 @@
    `node test/esegui.mjs sotterraneo-dialoghi --niente-build` */
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { DIALOGHI, guastiDeiDialoghi, ARRIVEDERCI } from '../../src/giochi/sotterraneo/dati/dialoghi.js'
-import { MISSIONI, missioneDi } from '../../src/giochi/sotterraneo/dati/missioni.js'
+import { MISSIONI, PERSONAGGI, missioneDi } from '../../src/giochi/sotterraneo/dati/missioni.js'
 import { MERCANTI } from '../../src/giochi/sotterraneo/dati/mercanti.js'
 import { NOVITA_DI } from '../../src/giochi/sotterraneo/dati/novita.js'
-import { PERSONAGGI as DOVE_PERSONAGGI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { apertura, scelte, risposta, dopoLaPresa, dopoLaConsegna, inPagine, strada, novita, curaDi, mancaA, richiamoDi, dopoLaCura }
   from '../../src/giochi/sotterraneo/motore/dialoghi.js'
 import { PRESA, FATTA, CONSEGNATA } from '../../src/giochi/sotterraneo/motore/missioni.js'
@@ -22,7 +21,7 @@ const che = s => s.map(x => x.che)
 
 /* ══════════ 1. i testi stanno in piedi ══════════ */
 {
-  const chi = ['minatore', ...Object.keys(DOVE_PERSONAGGI), ...MERCANTI.map(m => m.chiave)]
+  const chi = ['minatore', ...Object.keys(PERSONAGGI), ...MERCANTI.map(m => m.chiave)]
   const g = guastiDeiDialoghi(chi)
   controlla('ognuno sulla mappa ha il suo dialogo, a pagine corte e in ordine', !g.length, g.join(' · '))
   uguale('undici che parlano: il minatore, i sei delle missioni, i quattro mercanti', chi.length, 11)
@@ -167,7 +166,7 @@ const che = s => s.map(x => x.che)
 
 /* ══════════ 7. «Novità?»: frasi che ruotano e reagiscono ══════════ */
 {
-  const chi = ['minatore', ...Object.keys(DOVE_PERSONAGGI), ...MERCANTI.map(m => m.chiave)]
+  const chi = ['minatore', ...Object.keys(PERSONAGGI), ...MERCANTI.map(m => m.chiave)]
   const roba = livello => ({ att: 5, dif: 5, mano: null, mancina: null, corpo: null, livello })
   // ognuno ha la domanda, dopo la sua cosa e prima della storia
   for (const c of chi) {

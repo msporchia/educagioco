@@ -11,8 +11,8 @@
 import { CAMPAGNA, QUANTE_TAPPE } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
-import { POSTO_DI, iconaDi } from '../../src/giochi/sotterraneo/dati/terra.js'
-import { ICONE } from '../../src/giochi/sotterraneo/dati/terra-icone.js'
+import { iconaDi } from '../../src/giochi/sotterraneo/dati/terra.js'
+import { ICONE_MONDO } from '../../src/giochi/sotterraneo/dati/icone-mondo.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { ROBA_VUOTA, schedaConLaRoba } from '../../src/giochi/sotterraneo/motore/corredo.js'
@@ -21,6 +21,7 @@ import { Bottega } from '../../src/giochi/sotterraneo/motore/bottega.js'
 import { avventuraDi, scriviNellAvventura, vintaNellAvventura, ilMassimo, cominciata, azzeraIlVecchio, ricordaIlFondo, MONDO,
          AVVENTURA_NUOVA } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import manifesto from '../../src/giochi/sotterraneo/gioco.js'
+import { DUNGEON_NUOVI, PIANI_DEI_NUOVI } from '../../src/giochi/sotterraneo/dati/dungeon-del-mondo.js'
 import { misure } from '../../src/store/progressi.js'
 import { init, creaGiocatore, state } from '../../src/store/profile.js'
 import { progresso, aperta, adesso, completa, ritocca } from '../../src/giochi/campagne.js'
@@ -187,7 +188,7 @@ function azzera(nome, sot) {
   uguale('la roba del mago resta', avventuraDi(c, 'mago').roba.gemme, 7)
 }
 
-/* «riprendi da qui» in home: la discesa a metà dell'avventura aperta, col suo posto ritagliato dalla mappa */
+/* «riprendi da qui» in home: la discesa a metà dell'avventura aperta, col suo monumento fotografato nel mondo */
 {
   const c = { tappa: 2, libera: false, stelle: {}, cfg: {} }
   azzeraIlVecchio(c)
@@ -199,20 +200,22 @@ function azzera(nome, sot) {
   scriviNellAvventura(c, 'cavaliere', { sosta: scrivi(corsa, 1) })
   const r = manifesto.ripresa(c)
   uguale('con una discesa a metà la home dice quale', r && r.dove, `${CAMPAGNA[1].nome} · piano 2 di ${CAMPAGNA[1].piani}`)
-  controlla('e mostra il suo posto ritagliato dalla mappa', !!r && r.immagine === ICONE[POSTO_DI[CAMPAGNA[1].chiave]] &&
+  controlla('e mostra il suo monumento fotografato nel mondo', !!r && r.immagine === ICONE_MONDO[CAMPAGNA[1].chiave] &&
             r.immagine.startsWith('data:image/webp'))
+  // uno dei sei dungeon nuovi: nella sosta la chiave al posto dell'indice
+  const s = avventuraDi(c, 'cavaliere').sosta
+  scriviNellAvventura(c, 'cavaliere', { sosta: { ...s, tappa: 'cerchio', piano: 0, dungeon: { chiave: 'cerchio', rifatti: 0, terra: 1 } } })
+  const n = manifesto.ripresa(c)
+  uguale('anche un dungeon nuovo, coi suoi piani', n && n.dove, `${DUNGEON_NUOVI.cerchio.nome} · piano 1 di ${PIANI_DEI_NUOVI}`)
+  controlla('e la sua fotografia', !!n && n.immagine === ICONE_MONDO.cerchio)
   c.cfg.eroe = 'mago'
   uguale('la discesa a metà di un altro eroe la si ritrova scegliendolo', manifesto.ripresa(c), null)
 }
 
-/* le icone delle discese: una per ogni discesa e per l'abisso, ritagliate dalla mappa, leggere */
-{
-  for (const k of [...CAMPAGNA.map(t => t.chiave), 'abisso']) {
-    const i = iconaDi(k)
-    controlla(`${k}: ha la sua icona ritagliata`, typeof i === 'string' && i.startsWith('data:image/webp;base64,'), k)
-    controlla(`${k}: leggera (sotto i 10 KB)`, !!i && i.length * 3 / 4 < 10240, i && `${Math.round(i.length * 3 / 4)} byte`)
-  }
-  uguale('una icona per posto, non di più', Object.keys(ICONE).length, Object.keys(POSTO_DI).length)
+/* le icone delle discese: una per ogni discesa e per l'abisso, fotografate nel mondo (le misure: unita/sotterraneo-icone-mondo) */
+for (const k of [...CAMPAGNA.map(t => t.chiave), 'abisso']) {
+  const i = iconaDi(k)
+  controlla(`${k}: ha la sua icona`, typeof i === 'string' && i.startsWith('data:image/webp;base64,'), k)
 }
 
 /* la scheda dice i numeri veri: quelli che la discesa userà con la roba addosso, non quelli di base */

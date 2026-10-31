@@ -11,7 +11,9 @@ import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { COSE, baseDi, livelloDelPezzo } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { PASSI, passoDi, premiDella, guastiDellaStoria, LIVELLI_ATTESI, CASELLE } from '../../src/giochi/sotterraneo/dati/storia.js'
 import { MISSIONI, PERSONAGGI, missioneDi, guastiDelleMissioni } from '../../src/giochi/sotterraneo/dati/missioni.js'
-import { PERSONAGGI as DOVE_PERSONAGGI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
+import { VILLAGGIO, PERSONE } from '../../src/giochi/sotterraneo/dati/mondo-aperto.js'
+// chi sta fermo sul mondo di sopra: nella piazza del villaggio, o fuori vicino alle sue missioni
+const DOVE_PERSONAGGI = Object.fromEntries([...VILLAGGIO.lotti.filter(l => l.tipo === 'persona'), ...PERSONE].map(p => [p.chiave, p]))
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Corredo, schedaConLaRoba } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'

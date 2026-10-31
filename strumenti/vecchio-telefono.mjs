@@ -10,9 +10,9 @@
 //   node strumenti/vecchio-telefono.mjs benchmark --contro telefono.txt # e il confronto riga per riga col telefono
 //     (docs/core/vecchio-telefono-veri.md); con `--contro` anche la fascia del log; `--qualita bassa` forza la fascia grafica;
 //     `--foto f.png` la schermata del resoconto
-//   node strumenti/vecchio-telefono.mjs 'sotterraneo3d=1&dpr=2' --dist  # fotogrammi di un gioco, con la taratura salvata
+//   node strumenti/vecchio-telefono.mjs 'sotterraneo=1&dpr=2' --dist  # fotogrammi di un gioco, con la taratura salvata
 //   node strumenti/vecchio-telefono.mjs 'mate=3&volo' --tocca 200,500 --secondi 20
-//   node strumenti/vecchio-telefono.mjs 'sotterraneo3d' --cpu 1,3,6 --zavorra 0,4   # una riga per ogni combinazione
+//   node strumenti/vecchio-telefono.mjs 'sotterraneo' --cpu 1,3,6 --zavorra 0,4   # una riga per ogni combinazione
 //
 // Senza taratura le leve partono da una stima (CPU ×3, zavorra 0) e lo strumento lo dice. `--esegui '<espressione>'` la fa
 // nella pagina dopo l'apertura (per scatenare le esplosioni), `--tocca x,y` tocca lì ogni due secondi, `--dist file` apre un

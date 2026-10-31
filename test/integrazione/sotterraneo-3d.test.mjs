@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL SOTTERRANEO 3D, COL DITO — docs/sotterraneo/grafica-3d.md
 
-   Il Sotterraneo 3D è un gioco in prova (`sotterraneo3d`): la sua carta
+   Il Sotterraneo 3D è un gioco in prova (`sotterraneo`): la sua carta
    c'è solo coi giochi in prova accesi, e il Sotterraneo di sempre resta in
    2D. Qui si entra dalla carta, si sceglie l'eroe e si scende dal mondo
    di sopra in 3D (integrazione/sotterraneo-mondo); giù la scena è WebGL (in Chrome
@@ -57,15 +57,15 @@ async function dentroIlCampo(p) {
 
 /* ---------- 1. la carta solo coi giochi in prova, e si scende dalla terra di sopra ---------- */
 await azzera(page)
-uguale('coi giochi in prova spenti il Sotterraneo 3D non c\'è', await page.locator('[data-indice="sotterraneo3d"]').count(), 0)
+uguale('coi giochi in prova spenti il Sotterraneo 3D non c\'è', await page.locator('[data-indice="sotterraneo"]').count(), 0)
 await semina(page, { settings: { sperimentali: true } })
-uguale('accesi, la carta c\'è', await page.locator('[data-indice="sotterraneo3d"]').count(), 1)
+uguale('accesi, la carta c\'è', await page.locator('[data-indice="sotterraneo"]').count(), 1)
 uguale('e il Sotterraneo di sempre resta', await page.locator('[data-indice="sotterraneo"]').count(), 1)
-await scegli(page, 'sotterraneo3d')
+await scegli(page, 'sotterraneo')
 await scegliAvventura(page, 'cavaliere')
 controlla('sopra c\'è il mondo in 3D, non la terra dipinta', await page.locator('[data-mondo3d]').count() === 1 && await page.locator('[data-terra]').count() === 0)
 // un seme con una porta chiusa a pochi passi dall'arrivo (lo legge chi scende, come `#seme=` dei cheat)
-await page.evaluate(() => { location.hash = 'sotterraneo3d&seme=11' })
+await page.evaluate(() => { location.hash = 'sotterraneo&seme=11' })
 await scendiNelSotterraneo(page, 0, { tocca, scendi: false })
 // col fumetto dell'ingresso aperto la discesa si scalda (docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»): una tela
 // fuori dalla pagina compila il primo piano un programma per fotogramma; scendendo è lei che entra, e l'entrata non ne chiede quasi
@@ -173,7 +173,7 @@ async function entra(hash, avventura = {}) {
     campagne: { sotterraneo: { tappa: a.tappa, libera: false, stelle: { 0: 3 }, cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: a } } } } })
   await page.evaluate(h => { location.hash = h }, hash)
 }
-await entra('sotterraneo3d=1&seme=11&sotterraneo=branco&mostri=2&tipo=ratto,goblin&stanza=sala')
+await entra('sotterraneo=1&seme=11&sotterraneo=branco&mostri=2&tipo=ratto,goblin&stanza=sala')
 await page.waitForSelector('[data-scontro-3d]', { timeout: 15000 })
 await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 20000 })
 // entrando gli shader nascono uno per fotogramma e non si disegna (docs/sotterraneo/prestazioni-3d.md): si aspetta il primo disegno
@@ -238,7 +238,7 @@ const ossa = () => page.evaluate(() => window.__sotterraneo3d.corsa.foglio ? win
 }
 
 /* ---------- 4b. lo stesso scontro nella fascia bassa (docs/sotterraneo/grafica-3d-costi.md): meno luci, il colpo va uguale ---------- */
-await entra('sotterraneo3d=1&seme=11&sotterraneo=branco&mostri=2&tipo=ratto,goblin&stanza=sala&qualita=bassa')
+await entra('sotterraneo=1&seme=11&sotterraneo=branco&mostri=2&tipo=ratto,goblin&stanza=sala&qualita=bassa')
 await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 20000 })
 await attendi(page, 600)
 {
@@ -256,7 +256,7 @@ await attendi(page, 600)
 /* ---------- 4c. tre attacchi contro gli scheletri armati: dopo il primo giro nessuno shader si ricompila (gli effetti tengono i programmi,
    docs/sotterraneo/limiti-3d.md: buttarli faceva ricompilare a ogni colpo, sul telefono 50-300 ms l'uno) ---------- */
 // `spegni=parallelo`: come il Redmi Note 7, senza KHR_parallel_shader_compile (l'entrata a passi)
-await entra('sotterraneo3d=1&seme=11&sotterraneo=branco&mostri=3&tipo=scheletro&variante=guerriero,arciere,mago&grado=leggendario&stanza=sala&qualita=bassa&spegni=parallelo')
+await entra('sotterraneo=1&seme=11&sotterraneo=branco&mostri=3&tipo=scheletro&variante=guerriero,arciere,mago&grado=leggendario&stanza=sala&qualita=bassa&spegni=parallelo')
 await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 20000 })
 // il riscaldamento (docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»): finito, il primo attacco trova gli shader pronti
 await page.waitForFunction(() => window.__sotterraneo3d.grafica().daScaldare === 0, null, { timeout: 30000 })
@@ -294,7 +294,7 @@ await page.evaluate(() => { const P = WebGL2RenderingContext.prototype, o = P.li
   const sosta = scrivi(c, TORRE)
   const su = { x: Math.floor(c.eroe.x), y: Math.floor(c.eroe.y) }
   await entra('', { tappa: TORRE, roba: r, sosta })
-  await scegli(page, 'sotterraneo3d')
+  await scegli(page, 'sotterraneo')
   await page.waitForSelector('[data-pausa]', { timeout: 10000 })   // si rientra già giù, dietro il velo della pausa
   await attendi(page, 500)
   await page.locator('[data-pausa] [data-azione="riprendi"]').click()
@@ -326,7 +326,7 @@ await page.evaluate(() => { const P = WebGL2RenderingContext.prototype, o = P.li
 /* ---------- 6. senza WebGL 2 si dice e si esce, senza toccare niente ---------- */
 {
   await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
-  await page.evaluate(() => { location.hash = 'sotterraneo3d&tela=niente' })
+  await page.evaluate(() => { location.hash = 'sotterraneo&tela=niente' })
   await page.waitForSelector('[data-senza-3d]', { timeout: 8000 })
   const prima = JSON.stringify((await leggiProfilo(page))?.campagne || {})
   await page.locator('[data-senza-3d] [data-azione="esci-3d"]').click()
@@ -337,7 +337,7 @@ await page.evaluate(() => { const P = WebGL2RenderingContext.prototype, o = P.li
 /* ---------- 7. i paesaggi solo del 3D: il cheat `#scenario=` veste la discesa (docs/sotterraneo/paesaggi-3d.md) ---------- */
 for (const [k, pianta] of [['ghiaccio', 'caverna'], ['tempio', 'costruita']]) {
   await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
-  await page.evaluate(h => { location.hash = h }, `sotterraneo3d=1&eroe=cavaliere&seme=11&stanza=grande&luce=stanza&scenario=${k}&sprite&eroe2d`)   // il paesaggio da solo: l'eroe e i mostri 3D (in prova) si misurano a parte
+  await page.evaluate(h => { location.hash = h }, `sotterraneo=1&eroe=cavaliere&seme=11&stanza=grande&luce=stanza&scenario=${k}&sprite&eroe2d`)   // il paesaggio da solo: l'eroe e i mostri 3D (in prova) si misurano a parte
   await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 15000 })
   await attendi(page, 800)
   const g = await g3d()
@@ -355,7 +355,7 @@ for (const [k, pianta] of [['ghiaccio', 'caverna'], ['tempio', 'costruita']]) {
 for (const [w, h] of [[1100, 900], [1861, 1900], [390, 844]]) {
   await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
   await page.setViewportSize({ width: w, height: h })
-  await page.evaluate(() => { location.hash = 'sotterraneo3d=0&eroe=cavaliere&seme=11' })
+  await page.evaluate(() => { location.hash = 'sotterraneo=0&eroe=cavaliere&seme=11' })
   await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 15000 })
   await attendi(page, 1200)
   const misure = () => page.evaluate(() => {
@@ -391,7 +391,7 @@ for (const [w, h] of [[1100, 900], [1861, 1900], [390, 844]]) {
 for (const [w, h, n] of [[390, 844, 3], [360, 640, 6]]) {
   await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
   await page.setViewportSize({ width: w, height: h })
-  await page.evaluate(q => { location.hash = q }, `sotterraneo3d=2&eroe=elfa&seme=7&stanza=sala&sotterraneo=branco&mostri=${n}&tipo=spirito-fuoco&dpr=1.5`)
+  await page.evaluate(q => { location.hash = q }, `sotterraneo=2&eroe=elfa&seme=7&stanza=sala&sotterraneo=branco&mostri=${n}&tipo=spirito-fuoco&dpr=1.5`)
   await page.waitForSelector('[data-scontro-3d]', { timeout: 15000 })
   await attendi(page, 6500)   // i combattenti vanno ai loro posti e la telecamera ci arriva morbida (SwiftShader: pochi fotogrammi)
   const g = await g3d()
@@ -411,7 +411,7 @@ for (const [w, h, n] of [[390, 844, 3], [360, 640, 6]]) {
 
 /* ── la torcia (docs/sotterraneo/luce.md, «La torcia nel 3D»): accesa, in mano con la fiamma e le spalle in luce; spenta, niente ── */
 for (const t of ['accesa', 'spenta']) {
-  await entra(`sotterraneo3d=1&seme=11&stanza=sala&torcia=${t}`)
+  await entra(`sotterraneo=1&seme=11&stanza=sala&torcia=${t}`)
   await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 30000 })
   await attendi(page, 1500)
   const r = await page.evaluate(() => {
@@ -457,7 +457,7 @@ for (const t of ['accesa', 'spenta']) {
   let fatto = false
   for (let seme = 11; seme < 40 && !fatto; seme++) {
     await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
-    await page.evaluate(h => { location.hash = h }, `sotterraneo3d=1&eroe=cavaliere&seme=${seme}&scenario=cantine`)
+    await page.evaluate(h => { location.hash = h }, `sotterraneo=1&eroe=cavaliere&seme=${seme}&scenario=cantine`)
     await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0 && window.__sotterraneo3d.corsa, null, { timeout: 15000 })
     const info = await page.evaluate(() => { const c = window.__sotterraneo3d.corsa; return { seme: c.seme, piano: c.piano, n: c.bottiQui().length } })
     const conPremio = [...Array(info.n).keys()].filter(i => premioDellaBotte(info.seme, info.piano, i))

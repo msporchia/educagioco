@@ -44,10 +44,10 @@ const seme = opz('seme', '7')
 // le viste: lo scontro della misura del telefono, una stanza accesa tutta senza mostri, la torcia accesa, l'eroe da vicino (lo
 // scontro con un mostro, e la foto è il quarto di tela attorno all'eroe, ingrandito: `vicino` nel cheat)
 const VISTE = {
-  scontro: `sotterraneo3d=1&sotterraneo=branco&mostri=3&seme=${seme}`,
-  cantina: `sotterraneo3d=1&stanza=grande&luce=stanza&seme=11&via-mostri`,
-  fuoco: `sotterraneo3d=1&stanza=grande&torcia=accesa&seme=11&via-mostri`,
-  vicino: `sotterraneo3d=1&sotterraneo=branco&mostri=1&seme=${seme}&vicino`,
+  scontro: `sotterraneo=1&sotterraneo=branco&mostri=3&seme=${seme}`,
+  cantina: `sotterraneo=1&stanza=grande&luce=stanza&seme=11&via-mostri`,
+  fuoco: `sotterraneo=1&stanza=grande&torcia=accesa&seme=11&via-mostri`,
+  vicino: `sotterraneo=1&sotterraneo=branco&mostri=1&seme=${seme}&vicino`,
 }
 const COLONNE = 'alta=qualita=alta|oggi=qualita=bassa&riaccendi=lucePerVertice|bassa=qualita=bassa'
 const colonne = opz('colonne', COLONNE).split('|').map(x => { const i = x.indexOf('='); return { nome: x.slice(0, i), cheat: x.slice(i + 1) } })

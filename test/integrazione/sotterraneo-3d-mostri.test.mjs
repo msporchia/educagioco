@@ -29,7 +29,7 @@ async function entra(hash) {
 }
 const grafica = () => page.evaluate(() => window.__sotterraneo3d.grafica())
 
-await entra('sotterraneo3d=0&seme=7&stanza=sala&dpr=1&luce=stanza&sotterraneo=branco&mostri=3&tipo=goblin,scheletro,lupo')
+await entra('sotterraneo=0&seme=7&stanza=sala&dpr=1&luce=stanza&sotterraneo=branco&mostri=3&tipo=goblin,scheletro,lupo')
 {
   const g = await grafica()
   nota(`scontro con tre mostri: ${g.mostri3d} modelli 3D, ${g.chiamate} chiamate, ${g.triangoli} triangoli`)
@@ -51,7 +51,7 @@ await entra('sotterraneo3d=0&seme=7&stanza=sala&dpr=1&luce=stanza&sotterraneo=br
   controlla('dopo gli attacchi restano modelli', s.every(Boolean), s.join())
 }
 
-await entra('sotterraneo3d=0&seme=7&stanza=sala&dpr=1&luce=stanza&sotterraneo=branco&mostri=3&tipo=goblin&sprite')
+await entra('sotterraneo=0&seme=7&stanza=sala&dpr=1&luce=stanza&sotterraneo=branco&mostri=3&tipo=goblin&sprite')
 uguale('con #sprite nessun modello', (await grafica()).mostri3d, 0)
 
 uguale('nessun errore in console', errori.join(' | '), '')

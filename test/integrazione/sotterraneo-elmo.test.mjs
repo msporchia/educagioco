@@ -41,7 +41,7 @@ async function indossaLaTasca(i) {
 }
 
 /* ── nel 3D ── */
-await entra('sotterraneo3d=1&eroe=cavaliere&seme=11&dpr=1', true)
+await entra('sotterraneo=1&eroe=cavaliere&seme=11&dpr=1', true)
 await page.locator('[data-azione="zaino"]').first().click()
 await page.waitForSelector('[data-zaino] [data-casella="mano"]', { timeout: 5000 })
 uguale('nel 3D le caselle sono sette', await conta('[data-zaino] [data-casella]'), 7)
@@ -64,7 +64,7 @@ uguale('e mostra cosa ci va', (await page.locator('[data-zaino] [data-casella="t
 /* ── il fabbro del 3D ── */
 await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
 await azzera(page)
-await page.evaluate(() => { location.hash = 'sotterraneo3d=mondo&eroe=cavaliere&bottega=armaiolo&livello=6&roba=nuda&gemme=800&scheda=elmi&dpr=1' })
+await page.evaluate(() => { location.hash = 'sotterraneo=mondo&eroe=cavaliere&bottega=armaiolo&livello=6&roba=nuda&gemme=800&scheda=elmi&dpr=1' })
 await page.waitForSelector('[data-bottega]', { timeout: 30000 })
 await attendi(page, 1500)
 uguale('il fabbro ha la linguetta degli elmi', await conta('[data-bottega] [data-scheda="elmi"]'), 1)

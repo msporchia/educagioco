@@ -214,9 +214,9 @@ const ultimo = () => Finto.tutti[Finto.tutti.length - 1]
 {
   let mostrata = 0
   const sfida = usaSfida({ gioco: 'arena', regola: () => null, alVia: () => {}, mostra: () => { mostrata++ } })
-  chiediIngresso('sotterraneo3d', { amico: K1 })
+  chiediIngresso('sotterraneo', { amico: K1 })
   sfida.daInvito()
-  controlla('un ingresso di un altro gioco non si tocca', mostrata === 0 && sfida.scelto.value === '' && ingresso.value?.gioco === 'sotterraneo3d')
+  controlla('un ingresso di un altro gioco non si tocca', mostrata === 0 && sfida.scelto.value === '' && ingresso.value?.gioco === 'sotterraneo')
   chiediIngresso('arena', { amico: K1 })
   sfida.daInvito()
   controlla('il gioco giusto mostra la sala, con l\'amico scelto', mostrata === 1 && sfida.scelto.value === K1 && ingresso.value === null)

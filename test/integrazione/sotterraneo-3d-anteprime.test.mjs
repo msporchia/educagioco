@@ -34,7 +34,7 @@ async function entra(hash, tre = true) {
 const conta = sel => page.locator(sel).count()
 
 /* ── lo zaino nel 3D ── */
-await entra('sotterraneo3d=1&eroe=cavaliere&sotterraneo=roba&seme=11&dpr=1')
+await entra('sotterraneo=1&eroe=cavaliere&sotterraneo=roba&seme=11&dpr=1')
 {
   const t0 = Date.now()
   await page.locator('[data-azione="zaino"]').first().click()
@@ -61,7 +61,7 @@ await entra('sotterraneo3d=1&eroe=cavaliere&sotterraneo=roba&seme=11&dpr=1')
 }
 
 /* ── la fila dei turni ── */
-await entra('sotterraneo3d=1&eroe=elfa&sotterraneo=branco&mostri=3&tipo=lupo,pianta&seme=11&dpr=1')
+await entra('sotterraneo=1&eroe=elfa&sotterraneo=branco&mostri=3&tipo=lupo,pianta&seme=11&dpr=1')
 {
   await page.waitForSelector('[data-fila] [data-turno]', { timeout: 15000 })
   await page.waitForFunction(() => document.querySelector('[data-fila] [data-turno][data-chi="eroe"] [data-anteprima="3d"]')
@@ -82,7 +82,7 @@ await page.locator('[data-azione="zaino"]').first().click()
 await page.waitForSelector('[data-casella="mano"]', { timeout: 5000 })
 await attendi(page, 1500)
 uguale('nel 2D nessuna anteprima', await conta('[data-anteprima]'), 0)
-await entra('sotterraneo3d=1&eroe=cavaliere&sotterraneo=roba&seme=11&dpr=1&icone2d')
+await entra('sotterraneo=1&eroe=cavaliere&sotterraneo=roba&seme=11&dpr=1&icone2d')
 await page.locator('[data-azione="zaino"]').first().click()
 await page.waitForSelector('[data-casella="mano"]', { timeout: 5000 })
 await attendi(page, 1500)

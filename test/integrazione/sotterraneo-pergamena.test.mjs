@@ -75,7 +75,7 @@ await sopra({ quaderno: 'consegnata' })
 }
 
 /* ── giù, nel 3D: dallo zaino si apre il portale, e si sale ── */
-await page.evaluate(() => { location.hash = 'sotterraneo3d=1&seme=11&stanza=sala&torcia=accesa&dpr=1' })
+await page.evaluate(() => { location.hash = 'sotterraneo=1&seme=11&stanza=sala&torcia=accesa&dpr=1' })
 await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 30000 })
 await attendi(page, 3000)
 let dove = null

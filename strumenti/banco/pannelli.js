@@ -12,7 +12,7 @@ const PANNELLI = [
   ['domanda-sbagliata', 'La domanda, risposta sbagliata', 'il segno, il tremolio, il perché e come si fa'],
   ['scontro', 'Lo scontro: cosa fare, col pericolo', 'CaselleAbilita.vue nella cornice del duello, la fila dei turni sul palco'],
   ['scontro-domanda', 'Lo scontro: la domanda del colpo', 'la scelta fatta sopra, la domanda sotto'],
-  ['scontro-3d', 'Lo scontro nel 3D: cosa fare', 'Pannello3d.vue in fondo, sopra la barra; la scena è un fondo finto (quella vera: scatta-app sotterraneo3d=1)'],
+  ['scontro-3d', 'Lo scontro nel 3D: cosa fare', 'Pannello3d.vue in fondo, sopra la barra; la scena è un fondo finto (quella vera: scatta-app sotterraneo=1)'],
   ['scontro-3d-domanda', 'Lo scontro nel 3D: la domanda', 'la scelta fatta e la domanda nel pannello in fondo'],
   ['zaino', 'Lo zaino', 'Zaino.vue con le schede dell\'eroe'],
   ['bottega', 'La bottega', 'Bottega.vue, l\'armaiolo'],

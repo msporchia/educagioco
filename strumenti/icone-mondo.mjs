@@ -81,7 +81,7 @@ export async function fotografaIcone({ browser, gioco, profilo }) {
   }, p)
   const errori = []
   page.on('pageerror', e => errori.push(e.message))
-  await page.goto(gioco + '#sotterraneo3d=mondo&eroe=cavaliere&nebbia=no&senzaeroe&dpr=2')
+  await page.goto(gioco + '#sotterraneo=mondo&eroe=cavaliere&nebbia=no&senzaeroe&dpr=2')
   await page.waitForSelector('[data-mondo3d][data-pronto="1"]', { timeout: 30000 })
   await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.pronto, null, { timeout: 30000 })
   // niente interfaccia sopra la scena: solo la tela
