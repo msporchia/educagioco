@@ -80,7 +80,7 @@ export function voltiDellaTerra(ctx, { tombe = false } = {}) {
     const v = d && d.annuncio ? d : voltoDelDungeon(k, 0, t)
     if (!v || !v.annuncio) continue   // l'abisso non ha volti
     for (const testo of inPagine(v.annuncio)) pagine.push({ testo, dato: 'volto', chiave: k })
-    pagine.push({ testo: `${v.nome}: ${luogoDi(k, ctx.mondo)}.`, dato: 'volto-dove', chiave: k })
+    pagine.push({ testo: `${v.nome}: ${luogoDi(k)}.`, dato: 'volto-dove', chiave: k })
   }
   if (tombe && t < ULTIMA_TERRA) pagine.push({ testo: DIALOGHI.minatore.voltiPorta, dato: 'volti' })
   return pagine
@@ -96,20 +96,20 @@ export function strada(ctx, { capitolo = true } = {}) {
   if (z && !ctx.annuncio.sentita) {
     // finita la storia il minatore racconta la zona appena nata, e dove sta
     for (const testo of inPagine(ctx.annuncio.detto)) pagine.push({ testo, dato: 'annuncio' })
-    pagine.push({ testo: `${z.nome}: ${luogoDi(z.chiave, ctx.mondo)}.`, dato: 'detto' })
+    pagine.push({ testo: `${z.nome}: ${luogoDi(z.chiave)}.`, dato: 'detto' })
   }
   if (z) {
     // e dove farsi le ossa: le zone col pallino verde
-    for (const v of verdi) pagine.push({ testo: `Alla tua altezza c'è ${inFrase(v.nome)}: ${luogoDi(v.chiave, ctx.mondo)}.`, dato: 'verde' })
+    for (const v of verdi) pagine.push({ testo: `Alla tua altezza c'è ${inFrase(v.nome)}: ${luogoDi(v.chiave)}.`, dato: 'verde' })
   } else if (t) {
     // la storia: perché questa porta, e chi la chiude (dati/storia.js, CAPITOLI)
     if (capitolo && CAPITOLI[t.chiave]) for (const testo of inPagine(CAPITOLI[t.chiave].dice)) pagine.push({ testo, dato: 'storia' })
-    pagine.push({ testo: `${t.nome}: ${luogoDi(t.chiave, ctx.mondo)}.`, dato: 'detto' })
+    pagine.push({ testo: `${t.nome}: ${luogoDi(t.chiave)}.`, dato: 'detto' })
     if (ctx.mondo) pagine.push({ testo: LE_LUCI, dato: 'luci' })
     const s = !t.fatta && ctx.roba && ctx.eroe ? dettoDelLivello(ctx.eroe, ctx.roba, t, t.indice) : null
     if (s) pagine.push({ testo: s.detto, dato: 'sotto-livello', manca: s.manca })
   } else if (ctx.abisso) {
-    pagine.push({ testo: `Le sette discese le hai fatte tutte. Resta l'abisso: ${luogoDi('abisso', ctx.mondo)}.`, dato: 'detto' })
+    pagine.push({ testo: `Le sette discese le hai fatte tutte. Resta l'abisso: ${luogoDi('abisso')}.`, dato: 'detto' })
   } else {
     pagine.push({ testo: 'Le discese aperte le hai fatte tutte. Tornaci quando vuoi: là sotto cambia sempre.', dato: 'detto' })
   }
@@ -126,7 +126,7 @@ export function stradaDelCapitano(ctx) {
   const testo = t && !ctx.annuncio && d.porte[t.chiave]
   if (!testo) return []
   const pagine = inPagine(testo).map(p => ({ testo: p, dato: 'storia' }))
-  pagine.push({ testo: `${t.nome}: ${luogoDi(t.chiave, ctx.mondo)}.`, dato: 'detto' })
+  pagine.push({ testo: `${t.nome}: ${luogoDi(t.chiave)}.`, dato: 'detto' })
   if (ctx.mondo) pagine.push({ testo: LE_LUCI, dato: 'luci' })
   const s = !t.fatta && ctx.roba && ctx.eroe ? dettoDelLivello(ctx.eroe, ctx.roba, t, t.indice) : null
   if (s) pagine.push({ testo: s.detto, dato: 'sotto-livello', manca: s.manca })

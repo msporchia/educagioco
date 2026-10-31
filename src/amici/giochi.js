@@ -9,10 +9,10 @@ export const GIOCHI = {
     valida: d => TERRENI.includes(d?.terreno) && Number.isInteger(d.secondi) && d.secondi >= 3 && d.secondi <= 30 && /^[A-Z]{5}$/.test(d.codice || ''),
     descrivi: () => 'una battaglia a due',
   },
-  // il Sotterraneo 3D in due (docs/sotterraneo/in-due.md): il posto e la difficoltà li ha scelti chi invita; i nomi si controllano
+  // il sotterraneo in due (docs/sotterraneo/in-due.md): il posto e la difficoltà li ha scelti chi invita; i nomi si controllano
   // a forma, senza caricare i dati del sotterraneo con l'app
-  sotterraneo3d: {
-    nome: 'Sotterraneo 3D',
+  sotterraneo: {
+    nome: 'Il sotterraneo',
     valida: d => /^[a-z0-9-]{2,30}$/.test(d?.posto || '') && ['facile', 'normale', 'difficile', 'impossibile'].includes(d.difficolta) &&
       /^[A-Z]{5}$/.test(d.codice || ''),
     descrivi: () => 'una discesa in due',

@@ -236,7 +236,7 @@ export function storiaDelDiario(tappe, segui = null, mondo = false) {
   const g = c && GROSSI[GROSSO_DELLA_DISCESA[c.chiave]]
   return {
     ...s, segui: segui === SEGUI_LA_STORIA, fine: STORIA.fine, ferma: STORIA.ferma,
-    corrente: c && { ...c, luogo: luogoDi(c.chiave, mondo),
+    corrente: c && { ...c, luogo: luogoDi(c.chiave),
                      cosa: g ? { tipo: 'sconfiggi', nome: g.nome, em: MOSTRI[g.tipo].em, sprite: MOSTRI[g.tipo].sprite } : null },
   }
 }

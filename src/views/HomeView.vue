@@ -11,7 +11,7 @@ import { gioco as giocoNuovo } from '../giochi/indice.js'
 import { progresso as progressoDi, primatoDi } from '../giochi/campagne.js'
 import { recordPiuRecente, recordInParole, sfidaDi } from '../giochi/primati.js'
 import { GIOCHI } from '../data/giochi.js'
-import { inCasa, gemelloDi } from '../data/portata-giochi.js'
+import { inCasa } from '../data/portata-giochi.js'
 import { AREE } from '../data/aree.js'
 import Nastri from '../guide/Nastri.vue'
 import Carosello from '../components/home/Carosello.vue'
@@ -144,10 +144,8 @@ const ultimo = computed(() => {
 const ripresa = computed(() => {
   const g = elenco.value.find(g => g.chiave === ultimo.value)
   if (!g) return null
-  // il Sotterraneo 3D ha la stessa avventura e la stessa sosta del 2D: la ripresa è quella del gemello (una sola, vedi docs/core/ripresa.md)
-  const k = gemelloDi(g.chiave)
-  const m = giocoNuovo(k)
-  const r = m && m.ripresa ? m.ripresa(progressoDi(k)) : null
+  const m = giocoNuovo(g.chiave)
+  const r = m && m.ripresa ? m.ripresa(progressoDi(g.chiave)) : null
   return r ? { ...g, punto: r.dove, immagine: r.immagine } : g
 })
 // la risposta compare in una finestrella al centro (Nastri.vue); qui la ↻ del tasto gira mentre lavora

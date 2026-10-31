@@ -23,6 +23,7 @@
 import { CAMPAGNA, QUANTE_TAPPE, INDICE_ABISSO, L_ABISSO } from './dati/campagna.js'
 import { iconaDi } from './dati/terra.js'
 import { MONDO } from './motore/avventure.js'
+import { DUNGEON_NUOVI, PIANI_DEI_NUOVI } from './dati/dungeon-del-mondo.js'
 
 export const CHIAVE = 'sotterraneo'
 
@@ -79,18 +80,24 @@ export default {
 
   /* «Riprendi da qui» in home, quando l'avventura aperta ha una discesa
      a metà: dice quale e a che piano, e al posto della copertina mostra
-     il suo posto ritagliato dalla mappa (docs/sotterraneo/terra-di-sopra.md,
-     «Le icone delle discese»). Senza, null: la home usa `riassunto`.
-     Un profilo non ancora azzerato (`cfg.mondo`) non ha niente da riprendere. */
+     il suo monumento fotografato nel mondo (dati/icone-mondo.js). Anche i
+     sei dungeon nuovi, che nella sosta hanno la chiave e non l'indice. I
+     piani si dicono quando si sanno senza il motore: la storia e i nuovi.
+     Senza, null: la home usa `riassunto`. Un profilo non ancora azzerato
+     (`cfg.mondo`) non ha niente da riprendere. */
   ripresa(av = {}) {
     const cfg = av.cfg || {}
     const a = cfg.mondo === MONDO && cfg.avventure ? cfg.avventure[cfg.eroe] : null
     const s = a && a.sosta
-    const t = s ? (s.tappa === INDICE_ABISSO ? L_ABISSO : CAMPAGNA[s.tappa]) : null
+    if (!s) return null
+    const d = s.dungeon && typeof s.dungeon.chiave === 'string' ? s.dungeon : null
+    const nuovo = d && DUNGEON_NUOVI[d.chiave]
+    const t = s.tappa === INDICE_ABISSO ? L_ABISSO : nuovo || CAMPAGNA[s.tappa]
     if (!t) return null
     const piano = (s.piano || 0) + 1
+    const piani = t.abisso ? null : nuovo ? PIANI_DEI_NUOVI : !d || d.storia ? t.piani : null
     return {
-      dove: `${t.nome} · piano ${piano}${t.abisso ? '' : ` di ${t.piani}`}`,
+      dove: `${t.nome} · piano ${piano}${piani ? ` di ${piani}` : ''}`,
       immagine: iconaDi(t.abisso ? 'abisso' : t.chiave),
     }
   },

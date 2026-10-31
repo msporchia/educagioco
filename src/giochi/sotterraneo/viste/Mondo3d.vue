@@ -1,11 +1,10 @@
 <script setup>
-// Il mondo di sopra del Sotterraneo 3D: il mondo a percorso (motore/mondo-percorso.js, seme 8: sette zone in serpentina, il
-// villaggio in fondo a sud-ovest) disegnato in WebGL (scena3d/mondo/), al posto della terra dipinta (viste/Terra.vue, che resta del
-// Sotterraneo di sempre). L'eroe cammina dove si tocca, i mercanti e chi dà le missioni stanno nel villaggio, i quattordici dungeon
+// Il mondo di sopra del sotterraneo: il mondo a percorso (motore/mondo-percorso.js, seme 8: sette zone in serpentina, il villaggio
+// in fondo a sud-ovest) disegnato in WebGL (scena3d/mondo/). L'eroe cammina dove si tocca, i mercanti e chi dà le missioni stanno nel villaggio, i quattordici dungeon
 // hanno i loro ingressi modellati, le pietre del viaggio (una per zona) si accendono con una domanda, la nebbia si apre camminando e
-// si salva. La scena carica le zone attorno all'eroe e lo dice qui (`zone`): la terra dove si cammina si rifà. Le stesse porte di
-// Terra.vue verso Campagna.vue (`scendi`, `bottega`, `riprendi`, `sentito`, `cura`) più `mondo` (ricordati questo), `risposta` (la
-// domanda di una pietra: le monete) e `veduta` (chiudi la veduta d'insieme). Le regole: docs/sotterraneo/mondo-3d.md.
+// si salva. La scena carica le zone attorno all'eroe e lo dice qui (`zone`): la terra dove si cammina si rifà. Le porte verso
+// Campagna.vue: `scendi`, `bottega`, `riprendi`, `cura`, `mondo` (ricordati questo), `risposta` (la domanda di una pietra: le
+// monete) e `veduta` (chiudi la veduta d'insieme). Le regole: docs/sotterraneo/mondo-3d.md.
 import { ref, shallowRef, computed, watch, onMounted, onBeforeUnmount, nextTick, markRaw } from 'vue'
 import { PERSONAGGI_DI_SOPRA, personaDi, missioneDi } from '../dati/missioni.js'
 import { FONTANA } from '../dati/dialoghi.js'
@@ -16,7 +15,7 @@ import { vociDellaBacheca, segnoDellaBacheca, postoSulPrato } from '../motore/ta
 import { apertura, scelte as scelteDi, risposta as rispostaDi, dopoLaPresa, dopoLaConsegna, novita as novitaDi,
          curaDi, mancaA, richiamoDi, dopoLaCura, stradaDelCapitano } from '../motore/dialoghi.js'
 import { laStoria, dettoDelLivello } from '../motore/storia.js'
-import { DETTI_DEL_COLORE, C_E_UNA_NOTIZIA } from '../dati/zone.js'
+import { DETTI_DEL_COLORE } from '../dati/zone.js'
 import { iconaDi } from '../dati/terra.js'
 import { ilMondo, seguiLEroe, terraDelMondo, zonaDi, baseDi, postiDi, cittaInCella, regioneInCella, zonaInCella, portaleDella, minatoreDi, ingressoDi,
          nomeDellaPietra, difDellaPietra, pietraAccanto, meteDelViaggio, mondoDaSalvato, mondoDaSalvare, lontanoDalleCitta,
@@ -48,7 +47,6 @@ const props = defineProps({
   missioni: { type: Object, default: () => ({}) },
   azioneMissione: { type: Function, default: null },
   segui: { type: String, default: null },
-  annuncio: { type: Object, default: null },
   forze: { type: Object, default: null },
   veduta: { type: Boolean, default: false },  // la veduta d'insieme, dalla casella «mappa grande» della barra
   pensiero: { type: Object, default: null },  // il pensiero dell'eroe sopra la testa (docs/sotterraneo/pensieri.md), come in Terra.vue
@@ -59,7 +57,7 @@ const props = defineProps({
 // `pensa`, `pensiero`, `pensiero-fine`, `trovati`: lo stesso contratto dei pensieri di viste/Terra.vue
 // `scontro` ({ inc, stato, terra, verso }): un mostro di sopra apre uno scontro (Gioco.vue lo gioca, `apriPalco` lo disegna qui);
 // `raccogli` (i): la cosa per terra `i` è sotto i piedi dell'eroe. Le forze di sopra vanno in `mondo.sopra` col resto (salva)
-const emit = defineEmits(['scendi', 'davanti', 'mondo', 'bottega', 'riprendi', 'sentito', 'cura', 'risposta', 'veduta', 'pensa', 'pensiero', 'pensiero-fine', 'trovati',
+const emit = defineEmits(['scendi', 'davanti', 'mondo', 'bottega', 'riprendi', 'cura', 'risposta', 'veduta', 'pensa', 'pensiero', 'pensiero-fine', 'trovati',
                           'scontro', 'raccogli', 'terre'])
 const minuscolo = s => { const t = String(s ?? ''); return t.charAt(0).toLowerCase() + t.slice(1) }   // un nome che manca non rompe la pagina
 // la terra dove si cammina (docs/sotterraneo/terre-successive.md): la stessa mappa, i mostri più su; la prima se Gioco.vue non lo dice
@@ -497,7 +495,7 @@ const LARGO_FUM = 244
 const ctxBacheca = () => ({ m, eroe: props.eroe.chiave, giro: giro.value, tappe: props.tappe, stati: props.missioni,
                             visto: (x, y) => nebbia[y * m.W + x] === 1 })
 const ctx = () => ({ stati: props.missioni, tappe: props.tappe, abisso: !!props.abisso, eroe: props.eroe.chiave,
-                     roba: props.roba, annuncio: props.annuncio, novita: ascoltate.value, forze: props.forze, mondo: true,
+                     roba: props.roba, novita: ascoltate.value, forze: props.forze, mondo: true,
                      forza: props.forza, terra: terraQui(), dungeon: props.dungeon })   // la forza: il minatore e il capitano dicono in che zona stanno i mostri giusti per te
 // sotto il livello di una discesa della storia (i sei nuovi non hanno l'eroe atteso: lo dice il colore del pallino)
 const livelloDi = t => (t && !t.fatta && t.indice != null && t.indice >= 0 && props.roba ? dettoDelLivello(props.eroe.chiave, props.roba, t, t.indice) : null)
@@ -671,7 +669,6 @@ function parla(b) {
   const porta = annunciaLaPorta(chi)
   if (porta) { ascoltate.value = { ...ascoltate.value, porta: { ...(ascoltate.value.porta || {}), [chi]: true } }; salva() }
   if (chi === 'capitano' && capitanoHaDaDire()) { ascoltate.value = { ...ascoltate.value, capitano: { n: 1, v: (props.tappe.find(t => t.adesso) || {}).chiave } }; salva() }
-  if (chi === 'minatore' && props.annuncio && !props.annuncio.sentita) { avviso.value = ''; emit('sentito') }
   dialogo.value = { chi, nome: chiParla(chi), pagine: apertura(chi, { ...ctx(), terre: porta }, { primaVolta: prima, nuovaTerra }), giro: ++giri, chieste: new Set(chi === 'minatore' || chi === 'capitano' ? ['strada'] : []) }
 }
 function chiudiDialogo() { dialogo.value = null }
@@ -1043,7 +1040,7 @@ function trovaLaMeta() {
   const s = portaDellaStoria.value
   const k = (sc && sc.tipo === 'missione' && !sc.fatta && ingresso(t.discesa) ? t.discesa : null) || (sc ? s : null)
   const b = ingresso(k)
-  return b ? { chiave: k, nome: dungeonDi(k).nome, immagine: iconaDi(k, true), cella: b.accanto, b, regione: (ingressoDi(m, k) || {}).regione } : null
+  return b ? { chiave: k, nome: dungeonDi(k).nome, immagine: iconaDi(k), cella: b.accanto, b, regione: (ingressoDi(m, k) || {}).regione } : null
 }
 // a tempo (con le bussole): la meta, i passi che mancano, da quale luce si accende la scia. Da fermi e lontani dalla scia se ne fa
 // una nuova da qui; camminando no (la strada si rifà solo quando serve, non a ogni cella)
@@ -1203,10 +1200,9 @@ async function nasci() {
   misura()
   scena.avvia()
   pronto.value = true
-  if (props.annuncio && !props.annuncio.sentita) dillo(C_E_UNA_NOTIZIA)
   // arrivati in una terra nuova dalla porta: il suo nome e quello del villaggio
   // o tornati in una già vista (motore/terre.js, passaTerra: `dove.arrivo`)
-  else if (props.terre && props.terre.qui && ((terraQui() > 1 && !props.mondo) || (props.mondo && props.mondo.dove && props.mondo.dove.arrivo)))
+  if (props.terre && props.terre.qui && ((terraQui() > 1 && !props.mondo) || (props.mondo && props.mondo.dove && props.mondo.dove.arrivo)))
     dillo(`${props.terre.qui.nome}: ${props.terre.qui.villaggio}.`)
   if (typeof window !== 'undefined') {
     window.__sotterraneo3d = scena
@@ -1303,7 +1299,6 @@ watch(giro, g => { if (mostri && g !== mostri.stato.giro) { mostri.giro(g); foto
               :tabindex="trovati.has(b.chiave) ? 0 : -1" @click.stop="tocca(b)">
         <b v-if="b.ruolo === 'scavo'" class="sot-tre-punti sot-segno-x" aria-hidden="true">✕</b>
         <b v-else-if="b.ruolo === 'minatore' && !parlato" class="sot-tre-punti">…</b>
-        <b v-else-if="b.ruolo === 'minatore' && annuncio && !annuncio.sentita" class="sot-tre-punti sot-segno-missione sot-segno-nuova" data-segno-di="annuncio">!</b>
         <b v-else-if="segnoSopra(b)" class="sot-tre-punti sot-segno-missione" :class="'sot-segno-' + segnoSopra(b)">{{ GLIFO[segnoSopra(b)] }}</b>
         <span v-if="b.ruolo === 'mercante' && trovati.has(b.chiave) && richiamo(b.k)" class="sot-richiamo" data-richiamo :data-richiamo-di="curaDi(b.k).risorsa">{{ richiamo(b.k) }}</span>
         <span v-else-if="b.ruolo === 'fontana' && trovati.has(b.chiave) && !(aperto && aperto.chiave === b.chiave) && curaDellaFontana(forze).serve" class="sot-richiamo" data-richiamo data-richiamo-di="fontana">{{ FONTANA.richiamo }}</span>
@@ -1366,7 +1361,6 @@ watch(giro, g => { if (mostri && g !== mostri.stato.giro) { mostri.giro(g); foto
     </button>
 
     <div ref="sopraEl" class="sot-terra-sopra">
-      <slot name="sopra" />
       <!-- la meta di adesso: cosa, e quanto lontano (docs/sotterraneo/mondo-3d-la-meta.md) -->
       <div v-if="metaOra && pronto && !inScontroV" class="sot3d-meta" data-meta-carta :data-meta="metaOra.chiave" @click.stop>
         <span class="sot3d-meta-icona" :class="{ 'sot3d-meta-consegna': metaOra.consegna }" aria-hidden="true">

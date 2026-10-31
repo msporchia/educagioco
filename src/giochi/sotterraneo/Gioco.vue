@@ -34,7 +34,7 @@ import { robaAttesa } from './motore/storia.js'
 import { puntiAbilita, caselleDella, gradoDi } from './motore/abilita.js'
 import { NODI, RAMI, preparabile } from './dati/abilita.js'
 import { zonaDi } from './dati/zone.js'
-import { notiziaDi, potenzaDi, livelloDellaZona, coloreDi, coloreDellaFascia, zoneConForza, zoneConSentita } from './motore/zone.js'
+import { potenzaDi, livelloDellaZona, coloreDi, coloreDellaFascia, zoneConForza } from './motore/zone.js'
 import { dungeonDellAvventura, tappaDellaSosta, dopoLaDiscesa, CHIAVI_DEI_DUNGEON } from './motore/rigenera.js'
 import { terraDi, mondoDellaTerra, conMondo, passaTerra, laPorta } from './motore/terre.js'
 import { forzaDi, forzaDelCorredo } from './motore/forza.js'
@@ -54,7 +54,6 @@ import { avventuraDi, scriviNellAvventura, vintaNellAvventura, azzeraIlVecchio, 
   from './motore/avventure.js'
 import { iconaDi } from './dati/terra.js'
 import { mercanteDi, schedeDi } from './dati/mercanti.js'
-import { Tela } from './scena/tela.js'
 import { situazioneDi, scegli as scegliPensiero, ricorda as ricordaPensiero, entraNelGiro, giroDi } from './motore/pensieri.js'
 import { RITMO } from './dati/pensieri.js'
 import { usaGuida } from '../guida.js'
@@ -64,7 +63,6 @@ import Eroi from './viste/Eroi.vue'
 import Foglio from './viste/Foglio.vue'
 import Icona from './viste/Icona.vue'
 import { occhio } from './viste/occhio.js'
-import Scontro from './viste/Scontro.vue'
 import Scontro3d from './viste/Scontro3d.vue'
 import ScontroSopra from './viste/ScontroSopra.vue'
 import Pannello3d from './viste/Pannello3d.vue'
@@ -79,7 +77,6 @@ import PaginaEroe from './viste/PaginaEroe.vue'
 import PaginaAbilita from './viste/PaginaAbilita.vue'
 import CaselleAbilita from './viste/CaselleAbilita.vue'
 import Medaglione from './viste/Medaglione.vue'
-import Cornice from './viste/Cornice.vue'
 import Tesori from './viste/Tesori.vue'
 import Grosso from './viste/Grosso.vue'
 import LaBottega from './viste/Bottega.vue'   // la bottega dei mercanti di sopra
@@ -99,10 +96,6 @@ import { fornisciAnteprime3d } from './viste/anteprima3d.js'
 
 defineOptions({ name: 'IlSotterraneo' })
 const emit = defineEmits(['vai'])
-// `disegno: '3d'`: il Sotterraneo 3D dei giochi in prova (Gioco3d.vue), stessa avventura e stessa sosta; la discesa la disegna
-// scena3d/ invece di scena/tela.js. Senza, il Sotterraneo di sempre (docs/sotterraneo/grafica-3d.md)
-const props = defineProps({ disegno: { type: String, default: null } })
-const in3d = props.disegno === '3d'
 
 const CHIAVE = 'sotterraneo'
 // il dito si lascia dietro un click che va ingoiato (vedi giochi/fattoria)
@@ -112,9 +105,9 @@ const FERMO_PX = 16   // sotto i 16px Android/iOS considerano il dito ancora fer
 
 const tela = ref(null)
 const radice = ref(null)
-const tema = usaTema(radice, in3d ? 'legno' : 'attuale')
-// nel 3D le caselle della roba, il ritratto e la fila dei turni mostrano i modelli 3D (docs/sotterraneo/anteprime-3d.md)
-const anteprime = in3d ? fornisciAnteprime3d(() => eroeQui()) : null
+const tema = usaTema(radice, 'legno')
+// le caselle della roba, il ritratto e la fila dei turni mostrano i modelli 3D (docs/sotterraneo/anteprime-3d.md)
+const anteprime = fornisciAnteprime3d(() => eroeQui())
 const corsa = shallowRef(null)
 // indice della campagna, o INDICE_ABISSO (−1); null vuol dire nessuna discesa
 const tappaIdx = ref(null)
@@ -157,7 +150,7 @@ const salaAperta = ref(false)
 const inDueOra = ref(false)
 const postoInDue = ref('altare')
 const difficoltaInDue = ref('normale')
-const sfida = usaSfida({ gioco: 'sotterraneo3d', alVia: partiInDue, mostra: () => { salaAperta.value = true },
+const sfida = usaSfida({ gioco: 'sotterraneo', alVia: partiInDue, mostra: () => { salaAperta.value = true },
   regola: () => regolaSotterraneo({ eroe: () => ({ eroe: eroeQui(), roba: roba.value, crescita: crescita.value, nome: nomeCorrente() }) }) })
 const scelteInDue = () => ({ chiave: postoInDue.value, difficolta: difficoltaInDue.value })
 const creaInDue = () => sfida.crea(scelteInDue())
@@ -209,9 +202,9 @@ const scegliEroe = ref(!chiEro.value)
 // l'avventura aperta, riletta dal profilo a ogni scrittura; ci si scrive solo da qui
 const qui = computed(() => avventuraDi(progresso(CHIAVE), eroeQui()))
 const nellAvventura = (campi, opz) => ritocca(CHIAVE, c => scriviNellAvventura(c, eroeQui(), campi), opz)
-// Nel 3D la terra dove si è (motore/terre.js, docs/sotterraneo/terre-successive.md) e il suo mondo: `mondo` la prima, `mondi[t]` le
-// dopo. Tutto quello che legge o scrive il mondo di sopra passa da qui; nel 2D è sempre la prima
-const terraOra = () => (in3d ? terraDi(qui.value) : 1)
+// La terra dove si è (motore/terre.js, docs/sotterraneo/terre-successive.md) e il suo mondo: `mondo` la prima, `mondi[t]` le
+// dopo. Tutto quello che legge o scrive il mondo di sopra passa da qui
+const terraOra = () => terraDi(qui.value)
 const mondoQui = computed(() => mondoDellaTerra(qui.value, terraOra()))
 const nelMondo3d = (mondo, opz, t = terraOra()) => nellAvventura(conMondo(qui.value, mondo, t), opz)
 
@@ -241,7 +234,7 @@ const avventure = computed(() => EROI.map(e => {
     gemme: r.gemme,
     fondo: (a.abisso && a.abisso.fondo) || 0,
     aMeta: meta ? meta.nome : null,
-    aMetaIcona: meta ? iconaDi(meta.chiave, in3d) : null,
+    aMetaIcona: meta ? iconaDi(meta.chiave) : null,
   }
 }))
 
@@ -259,7 +252,7 @@ const conITrovati = c => {
 // la carta "riprendi" dice la sosta dell'avventura aperta (motore/sosta.js). Le gemme sono quelle della roba:
 // sopra si può essere passati da un mercante
 const conNome = d => (d ? { ...d, chi: d.eroe ? eroeDi(d.eroe).nome : '', gemme: roba.value.gemme,
-                              immagine: iconaDi(d.chiave, in3d) } : null)
+                              immagine: iconaDi(d.chiave) } : null)
 const ripresa = computed(() => conNome(dice(qui.value.sosta, CAMPAGNA)))
 let ultimoSalvato = 0
 
@@ -286,13 +279,12 @@ function fatteGiu(c) {
    Si prendono parlando con chi le dà (anche più insieme), si fanno giù (Corsa.missioni), si consegnano sopra: il
    premio va sulla roba dell'avventura, gemme o un gioiello, e a volte monete, che passano dalla borsa del gioco
    come ogni altra (docs/sotterraneo/missioni.md) */
-// Nel Sotterraneo 3D le taglie della bacheca (motore/taglie.js) stanno nel campo `mondo.quest` e si fondono qui con le missioni dei
-// personaggi: il diario, la Corsa e la freccina le vedono come le altre, e il 2D non le vede (docs/sotterraneo/mondo-aperto-quest.md)
-const questSopra = computed(() => (in3d ? questDi(mondoQui.value) : null))
-const missioni = computed(() => (questSopra.value ? { ...(qui.value.missioni || {}), ...questSopra.value.stati } : qui.value.missioni || {}))
+// Le taglie della bacheca (motore/taglie.js) stanno nel campo `mondo.quest` e si fondono qui con le missioni dei personaggi: il
+// diario, la Corsa e la freccina le vedono come le altre (docs/sotterraneo/mondo-aperto-quest.md)
+const questSopra = computed(() => questDi(mondoQui.value))
+const missioni = computed(() => ({ ...(qui.value.missioni || {}), ...questSopra.value.stati }))
 // Lo stato nuovo dopo un'azione, rimesso dove sta: le missioni dei personaggi in `missioni`, le taglie in `mondo.quest` (ripulito e contato)
 function statiDaScrivere(nuovi) {
-  if (!in3d) return { missioni: nuovi }
   const normali = {}, taglie = {}
   for (const [id, v] of Object.entries(nuovi)) (eTaglia(id) ? taglie : normali)[id] = v
   const mondo = mondoQui.value || {}, q = questDi(mondo)
@@ -358,19 +350,18 @@ function salgoDalPortale() {
   if (sale && sale.senzaGemello) {
     c.chiudi()
     suono.nota(260, 880, 0.5, 'sine', 0.12)
-    if (in3d && pittore && pittore.attraversa) { pittore.attraversa(() => chiudi(), sale); return }
+    if (pittore && pittore.attraversa) { pittore.attraversa(() => chiudi(), sale); return }
     return chiudi()
   }
   c.chiudi()
   salva({ subito: true, via: VIA_PORTALE })
   // si sbuca nell'ultimo posto sicuro (motore/posto-sicuro.js): oggi il villaggio, accanto al gemello
   const sicuro = ultimoPostoSicuro({ ...qui.value, mondo: mondoQui.value })
-  nellAvventura({ terra: { ...(qui.value.terra || {}), dove: sicuro.terra } }, { subito: true })
-  // nel mondo in 3D si sbuca accanto al gemello, nella città che serve quel dungeon (viste/Mondo3d.vue lo trova)
-  if (in3d) nelMondo3d({ ...(mondoQui.value || {}), dove: sicuro.mondo }, { subito: true })
+  // si sbuca accanto al gemello, nella città che serve quel dungeon (viste/Mondo3d.vue lo trova)
+  nelMondo3d({ ...(mondoQui.value || {}), dove: sicuro.mondo }, { subito: true })
   suono.nota(260, 880, 0.5, 'sine', 0.12)
-  // in 3D si vede il passaggio (il velo lampeggia, l'eroe ci si stringe dentro): la sosta è già scritta, non si riscrive
-  if (in3d && pittore && pittore.attraversa) { salendo = true; pittore.attraversa(allaMappa, sale); return }
+  // si vede il passaggio (il velo lampeggia, l'eroe ci si stringe dentro): la sosta è già scritta, non si riscrive
+  if (pittore && pittore.attraversa) { salendo = true; pittore.attraversa(allaMappa, sale); return }
   allaMappa()
 }
 let salendo = false
@@ -388,8 +379,8 @@ function riprendiDiscesa({ ferma = false } = {}) {
   fine.value = null
   domanda.value = null
   chiudiLaBarra()
-  c.botti = in3d   // le botti da rompere sono solo del 3D (motore/botti.js)
-  c.copricapi = in3d   // e i copricapi nel bottino (docs/sotterraneo/elmo.md)
+  c.botti = true   // le botti da rompere (motore/botti.js), spente di difetto nel motore e nel banco
+  c.copricapi = true   // e i copricapi nel bottino (docs/sotterraneo/elmo.md)
   corsa.value = c
   c.pergameneTrovabili = dopoLaMissione(COSE['pergamena-portale'].dopo, missioni.value)
   borsellino = borsa(CHIAVE)
@@ -427,7 +418,7 @@ const forze = computed(() => {
   return valore
 })
 const forzeDelMondo = computed(() => {
-  const s = in3d && !corsa.value && mondoQui.value && mondoQui.value.sopra
+  const s = !corsa.value && mondoQui.value && mondoQui.value.sopra
   return s ? forzeDiSopra(s.forze, robaSopra.value.vita, robaSopra.value.energiaMax) : null
 })
 const ferito = computed(() => !!forze.value && forze.value.vita < forze.value.vitaMax)
@@ -459,11 +450,9 @@ const livelloOra = computed(() => livelloDella(crescita.value))
 // il livello di forza (motore/forza.js, docs/sotterraneo/forza.md): quanto vale l'eroe con la roba e le abilità di adesso. I
 // colori dei pallini si leggono da lì; le fasce, da quello più alto raggiunto (rilevato qui sotto, sulla terra di sopra)
 const forzaOra = computed(() => forzaDi(eroeQui(), roba.value, crescita.value))
-// nel 3D le zone non rinascono: ogni dungeon ha il livello della sua zona (motore/rigenera.js), e il minatore non ha la notizia
-const notizia = computed(() => (in3d ? null : notiziaDi(qui.value, livelloOra.value, forzaOra.value)))
-// Il dungeon del mondo a percorso (solo nel 3D, docs/sotterraneo/dungeon-che-si-rigenerano.md): la storia la prima volta delle sette,
-// se no la ripetuta della volta `rifatti` (mondo.dungeon della terra di adesso)
-const nelMondo = k => (in3d ? dungeonDellAvventura(qui.value, k, { eroe: eroeQui(), terra: terraOra(), mondo: mondoQui.value }) : null)
+// Il dungeon del mondo a percorso (docs/sotterraneo/dungeon-che-si-rigenerano.md): la storia la prima volta delle sette, se no la
+// ripetuta della volta `rifatti` (mondo.dungeon della terra di adesso). Le zone non rinascono: ogni dungeon ha il livello della sua zona
+const nelMondo = k => dungeonDellAvventura(qui.value, k, { eroe: eroeQui(), terra: terraOra(), mondo: mondoQui.value })
 const ripetuta = (d, extra) => ({ ...d.tappa, ...extra, livello: d.livello, colore: coloreDellaFascia(d.livello, forzaOra.value),
                                    nuova: false, rifatti: d.rifatti, zona: d.zona })
 const tappe = computed(() => {
@@ -482,28 +471,17 @@ const tappe = computed(() => {
       stelle: a.stelle[i] || 0,
       fatta: i < a.tappa,
       livello, colore: coloreDi(a, i, livelloOra.value, forzaOra.value),
-      nuova: !!notizia.value && !notizia.value.sentita && notizia.value.indice === i,
-      ...(d ? { rifatti: d.rifatti, zona: d.zona } : {}),
+      nuova: false,
+      rifatti: d.rifatti, zona: d.zona,
     }
   })
 })
 // I tredici dungeon del mondo, per chiave (i sette come in `tappe`, i sei nuovi senza indice, aperti da subito): li legge il mondo di
-// sopra (viste/Campagna.vue → Mondo3d.vue), e un tocco su uno di loro scende con la sua chiave (`avvia`). Null nel 2D
-const dungeonDelMondo = computed(() => (in3d
-  ? CHIAVI_DEI_DUNGEON.map(k => {
-    const i = CAMPAGNA.findIndex(t => t.chiave === k)
-    return i >= 0 ? tappe.value[i] : ripetuta(nelMondo(k), { indice: null, aperta: true, adesso: false, stelle: 0, fatta: false })
-  })
-  : null))
-// quello che racconta il minatore della zona appena nata; sentito, il segno sopra la sua testa si spegne
-const annuncio = computed(() => (notizia.value
-  ? { chiave: notizia.value.chiave, nome: notizia.value.nome, livello: notizia.value.da,
-      detto: notizia.value.detto, sentita: notizia.value.sentita }
-  : null))
-function annuncioSentito() {
-  if (!notizia.value || notizia.value.sentita) return
-  nellAvventura({ zone: zoneConSentita(qui.value, notizia.value.id) }, { subito: true })
-}
+// sopra (viste/Campagna.vue → Mondo3d.vue), e un tocco su uno di loro scende con la sua chiave (`avvia`)
+const dungeonDelMondo = computed(() => CHIAVI_DEI_DUNGEON.map(k => {
+  const i = CAMPAGNA.findIndex(t => t.chiave === k)
+  return i >= 0 ? tappe.value[i] : ripetuta(nelMondo(k), { indice: null, aperta: true, adesso: false, stelle: 0, fatta: false })
+}))
 // Il massimo della forza si scrive nell'avventura (`zone.forza`): una zona rinata non torna indietro se si vende l'arma.
 // Si guarda sulla terra di sopra, appena si arriva e a ogni cambio di roba o di livello; durante una discesa no
 watch([forzaOra, livelloOra, () => !!corsa.value], () => {
@@ -530,7 +508,7 @@ let bottega = null
 function apriBottega(k, scheda = null) {
   if (!mercanteDi(k)) return
   bottega = new Bottega({ eroe: eroeQui(), roba: roba.value, finite: qui.value.tappa, crescita: crescita.value,
-                          ...(qui.value.botteghe || {}), venduti: qui.value.venduti, missioni: missioni.value, copricapi: in3d })
+                          ...(qui.value.botteghe || {}), venduti: qui.value.venduti, missioni: missioni.value, copricapi: true })
   bottega.prepara(k)   // il banco di questo giro, o il suo cambio a metà se è finita una discesa
   nellAvventura({ botteghe: bottega.botteghe })
   dettoBanco.value = null
@@ -567,10 +545,10 @@ const banco = computed(() => {
     })
   return {
     // le linguette di una famiglia che l'eroe non porta non si mostrano (dati/mercanti.js, schedeDi)
-    chi: { ...m, schede: schedeDi(m, eroeDi(eroeQui()), missioni.value, { copricapi: in3d }) },
+    chi: { ...m, schede: schedeDi(m, eroeDi(eroeQui()), missioni.value, { copricapi: true }) },
     roba: vendibili,
     addosso: { mano: voce(b.mano), mancina: voce(b.mancina), corpo: voce(b.corpo), collo: voce(b.collo), dito: voce(b.dito), dito2: voce(b.dito2),
-               testa: voce(b.testa), conTesta: in3d || !!b.testa },
+               testa: voce(b.testa), conTesta: true },
     numeri: { vita: b.vitaConLaRoba, att: b.att, dif: b.dif, gemme: b.gemme },
     tasche: m.compra ? Array.from({ length: b.capienza }, (_, i) => {
       const t = b.tasche()[i]
@@ -607,14 +585,13 @@ function vendiSopra(t) {
 }
 
 // la terra di sopra si ricorda per avventura: la nebbia, dove si era, se il minatore ha già parlato
-const ricordaTerra = v => nellAvventura({ terra: v })
 // il mondo di sopra del 3D (viste/Mondo3d.vue) si ricorda accanto, in `mondo`: la terra dipinta del 2D resta com'è
 // (docs/sotterraneo/mondo-aperto-dati.md). La veduta d'insieme si apre dalla casella della mappa nella barra
 // (`quest` lo scrive Gioco.vue, non la vista: la vista manda il suo e il resto resta com'è)
 const ricordaMondo = v => nelMondo3d({ ...(mondoQui.value || {}), ...v })
 // la porta delle terre attraversata (viste/Mondo3d.vue): si scrive la terra nuova e il mondo di sopra rinasce lì (la chiave di
 // Campagna). Una terra mai raggiunta prima si segna nel primato `sotTerra`
-const porta = computed(() => (in3d ? laPorta(qui.value) : null))
+const porta = computed(() => laPorta(qui.value))
 function allaTerra(t) {
   const p = passaTerra(qui.value, t)
   if (!p) return
@@ -820,7 +797,7 @@ const zainoDiSopra = computed(() => {
   const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), ancora: c.porta(k) && !c.posso(k), prova: c.seLoMetto(k, { ancora: true }), ...((COSE[k].cura || COSE[k].tutta) ? { cura: c.curaDi(k) } : {}) } : null)
   return {
     mano: voce(c.mano), mancina: voce(c.mancina), corpo: voce(c.corpo), collo: voce(c.collo), dito: voce(c.dito), dito2: voce(c.dito2),
-    testa: voce(c.testa), conTesta: in3d || !!c.testa,
+    testa: voce(c.testa), conTesta: true,
     tasche: tascheVoci(c, voce), costoTasca: c.costoTasca, cure: { n: c.pozioniDiCura, max: POZIONI_MASSIME },
     att: c.att, dif: c.dif, gemme: c.gemme, vita: c.vitaConLaRoba, vitaMax: c.vitaConLaRoba,
   }
@@ -1147,7 +1124,7 @@ const zaino = dallaCorsa(c => {
   return {
     mano: voce(c.mano), mancina: voce(c.mancina),
     corpo: voce(c.corpo), collo: voce(c.collo), dito: voce(c.dito), dito2: voce(c.dito2),
-    testa: voce(c.testa), conTesta: in3d || !!c.testa,   // il copricapo (docs/sotterraneo/elmo.md): nel 2D solo se ce n'è uno
+    testa: voce(c.testa), conTesta: true,   // il copricapo (docs/sotterraneo/elmo.md)
     tasche: tascheVoci(c, voce), costoTasca: c.costoTasca, cure: { n: c.pozioniDiCura, max: POZIONI_MASSIME },
   }
 })
@@ -1177,7 +1154,7 @@ function semeDallIndirizzo() {
 // `#sotterraneo=roba` scende già equipaggiato, per guardare una schermata senza giocare mezza discesa
 function corredoDaProva(c) {
   const h = new URLSearchParams(location.hash.slice(1))
-  if (h.get('sotterraneo') !== 'roba') return
+  if (!h.getAll('sotterraneo').includes('roba')) return
   // `&mano=arco-corto@7`: solo quell'arma in pugno, anche di una famiglia che l'eroe non porta (strumenti/sotterraneo-armi.mjs)
   const sola = COSE[h.get('mano')] ? h.get('mano') : null
   c.mano = 'spada-di-ghiaccio'
@@ -1186,8 +1163,8 @@ function corredoDaProva(c) {
   c.collo = 'teschio-cercatore'
   c.dito = 'anello-verde'
   c.dito2 = 'anello-ambra'
-  // nel 3D anche il copricapo (docs/sotterraneo/elmo.md), della famiglia che l'eroe veste: il 2D resta com'era
-  if (in3d) c.testa = c.porta('elmo-cornuto') ? 'elmo-cornuto@6.m.vita' : 'cappello-mago@6.m.vita'
+  // anche il copricapo (docs/sotterraneo/elmo.md), della famiglia che l'eroe veste
+  c.testa = c.porta('elmo-cornuto') ? 'elmo-cornuto@6.m.vita' : 'cappello-mago@6.m.vita'
   // le tre armature (mai visibili addosso) e i due gioielli: le cose che si vedono solo qui
   c.zaino = ['panciotto', 'manto', 'saio', 'amuleto-azzurro', 'pozione-grande', 'chiave']
   if (sola) { c.mano = c.mancina = c.corpo = c.collo = c.dito = c.dito2 = c.testa = null; c.zaino = [] }
@@ -1213,7 +1190,7 @@ function corredoLeggendarioDaProva(c) {
   c.corpo = leggendario('corpo')
   c.collo = leggendario('collo')
   c.dito = c.dito2 = leggendario('dito')
-  if (in3d) { const t = COPRICAPI.find(k => !COSE[k].deiGrossi && c.porta(k)); c.testa = t ? chiaveDelPezzo(t, L, 'raro', pescaAbilita(t, 2)) : null }
+  { const t = COPRICAPI.find(k => !COSE[k].deiGrossi && c.porta(k)); c.testa = t ? chiaveDelPezzo(t, L, 'raro', pescaAbilita(t, 2)) : null }
   c.sistemaIlCorredo()
 }
 
@@ -1333,7 +1310,7 @@ function luceDaProva(c, s) {
 // `#sotterraneo=leggendario` posa un leggendario accanto all'ingresso, come se fosse appena caduto: per guardare la
 // festa senza aspettare la fortuna di una sera intera
 function leggendarioDaProva(c) {
-  if (new URLSearchParams(location.hash.slice(1)).get('sotterraneo') !== 'leggendario') return
+  if (!new URLSearchParams(location.hash.slice(1)).getAll('sotterraneo').includes('leggendario')) return
   const k = pescaLeggendario({ livello: c.livelloDelBottino, rnd: Math.random, tua: x => c.porta(x) })
   c.posaPezzo(k, { x: Math.floor(c.eroe.x) + 1, y: Math.floor(c.eroe.y) })
 }
@@ -1356,7 +1333,7 @@ function preparatiDaProva(c) {
 const BRANCO = ['goblin', 'scheletro', 'ratto', 'orco', 'pipistrello', 'lupo']
 function brancoDaProva(c) {
   const h = new URLSearchParams(location.hash.slice(1))
-  if (h.get('sotterraneo') !== 'branco') return
+  if (!h.getAll('sotterraneo').includes('branco')) return
   const n = Math.max(1, Math.min(8, Number(h.get('mostri')) || 3))
   const ex = Math.floor(c.eroe.x), ey = Math.floor(c.eroe.y)
   const stanza = c.livello.stanzaDi(ex, ey)
@@ -1402,7 +1379,7 @@ function avvia(i, { prova = false } = {}) {
   togli()          // vedi `riprendiDiscesa`: si scende, non si scende in pausa
   scorda()
   // si scende in piedi (la Corsa nasce con le forze piene): le ferite di uno scontro sul prato restano sopra, e tornando sono guarite
-  const ms = in3d && mondoQui.value && mondoQui.value.sopra
+  const ms = mondoQui.value && mondoQui.value.sopra
   if (ms && ms.forze) nelMondo3d({ ...mondoQui.value, sopra: { ...ms, forze: null } })
   tappaIdx.value = i
   fine.value = null
@@ -1430,33 +1407,24 @@ function avvia(i, { prova = false } = {}) {
 // quello da cui nuovaCorsa dipende: uguale, la corsa fatta prima è la stessa
 const firmaCorsa = i => { try { return JSON.stringify([i, eroeQui(), roba.value, crescita.value, missioni.value, qui.value.conti, semeDallIndirizzo()]) } catch (e) { return String(Math.random()) } }
 function nuovaCorsa(i, prova = false) {
-  let t = i === INDICE_ABISSO ? L_ABISSO : in3d ? nelMondo(i).tappa : zonaDi(i, potenzaDi(qui.value, i, livelloOra.value, forzaOra.value))
-  // `#scenario=ghiaccio` (solo nel 3D, solo col cheat che scende): la discesa vestita da quel paesaggio (dati/paesaggi.js), per guardarlo
-  if (prova && in3d) t = inPaesaggio(t, new URLSearchParams(location.hash.slice(1)).get('scenario'))
+  let t = i === INDICE_ABISSO ? L_ABISSO : nelMondo(i).tappa
+  // `#scenario=ghiaccio` (solo col cheat che scende): la discesa vestita da quel paesaggio (dati/paesaggi.js), per guardarlo
+  if (prova) t = inPaesaggio(t, new URLSearchParams(location.hash.slice(1)).get('scenario'))
   const c = new Corsa(t, { seme: semeDallIndirizzo() ?? t.seme ?? null, eroe: eroeQui(), roba: roba.value,
                            crescita: crescita.value, missioni: presePer(missioni.value, t.chiave), conti: qui.value.conti })
-  c.botti = in3d   // le botti da rompere sono solo del 3D (motore/botti.js)
-  c.copricapi = in3d   // e i copricapi nel bottino (docs/sotterraneo/elmo.md)
+  c.botti = true   // le botti da rompere (motore/botti.js), spente di difetto nel motore e nel banco
+  c.copricapi = true   // e i copricapi nel bottino (docs/sotterraneo/elmo.md)
   c.pergameneTrovabili = dopoLaMissione(COSE['pergamena-portale'].dopo, missioni.value)   // si trova solo dopo la missione dell'incantatrice
   return c
 }
 
 function accendi() {
   if (!tela.value || !corsa.value) return
-  if (in3d) return accendi3d()
-  // il canvas di prima è stato smontato tornando alle discese: il pittore va riagganciato al nuovo
-  if (!pittore) pittore = new Tela(tela.value)
-  else pittore.attacca(tela.value)
-  pittore.misura()
-  pittore.zoomA(Number(new URLSearchParams(location.hash.slice(1)).get('zoom')) || pittore.scala)   // `#zoom=2`: più campo, per le foto
-  pittore.segui(corsa.value.livello, corsa.value.eroe.x, corsa.value.eroe.y)
-  pittore.mostra({ corsa: corsa.value, orologio })   // il primo quadro c'è subito: rientrando si nasce dietro il velo della pausa, e il giro non disegna finché si è fermi
-  pittore.avvia()
-  giro()
+  return accendi3d()
 }
 
 /* ═══════════ il disegno 3D (scena3d/, docs/sotterraneo/grafica-3d.md) ═══════════
-   Lo stesso posto della tela 2D: il pittore riceve la corsa a ogni fotogramma e la disegna. Il modulo (e three) si caricano solo
+   Il pittore riceve la corsa a ogni fotogramma e la disegna. Il modulo (e three) si caricano solo
    qui, la prima volta che si scende. Se il contesto WebGL si perde la discesa si salva come con la ✕ e si dice cosa è successo */
 const strato = ref(null)
 const perso3d = ref(false)
@@ -1501,7 +1469,6 @@ async function accendi3d() {
    Chiuso il fumetto senza scendere, si butta dopo un poco */
 let caldo = null   // { i, pittore, canvas, corsa, firma, via }
 async function scaldaDiscesa(k) {
-  if (!in3d) return
   let i = k
   if (typeof i === 'string') { const j = CAMPAGNA.findIndex(t => t.chiave === i); if (j >= 0) i = j }
   if (i == null) { if (caldo && !caldo.via) caldo.via = setTimeout(buttaCaldo, 4000); return }
@@ -1560,19 +1527,12 @@ function siPerdeIl3d() {
 // testo); rilettura ogni sei fotogrammi perché è una misura del DOM. Lo scontro non c'entra: sta al centro, misura zero.
 let altoFoglio = 0, contaGiri = 0
 function misuraFoglio() {
-  if (in3d) {
-    // in 3D conta solo il pannello dello scontro, che alza i combattenti; i fogli dell'esplorazione (porta, forziere, fonte…)
-    // stanno sopra la scena come un velo e la telecamera non si muove (l'utente, 16 ottobre: «è più un overlay»)
-    const f = corsa.value && corsa.value.foglio && corsa.value.foglio.che === 'scontro' ? document.querySelector('[data-pannello3d]') : null
-    const dove = tela.value || (sopra.value && document.querySelector('[data-mondo3d]'))   // lo scontro di sopra sta sul mondo
-    const campo = dove && dove.getBoundingClientRect()
-    altoFoglio = f && campo ? Math.max(0, campo.bottom - f.getBoundingClientRect().top) : 0
-    return
-  }
-  const f = document.querySelector('.sot-foglio')
-  // il foglio sale dal fondo e copre prima la barra in basso, che sta già fuori dal campo
-  const b = f && document.querySelector('[data-barra-giu]')
-  altoFoglio = f ? Math.max(0, f.getBoundingClientRect().height - (b ? b.getBoundingClientRect().height : 0)) : 0
+  // conta solo il pannello dello scontro, che alza i combattenti; i fogli dell'esplorazione (porta, forziere, fonte…) stanno sopra la
+  // scena come un velo e la telecamera non si muove (l'utente, 16 ottobre: «è più un overlay»)
+  const f = corsa.value && corsa.value.foglio && corsa.value.foglio.che === 'scontro' ? document.querySelector('[data-pannello3d]') : null
+  const dove = tela.value || (sopra.value && document.querySelector('[data-mondo3d]'))   // lo scontro di sopra sta sul mondo
+  const campo = dove && dove.getBoundingClientRect()
+  altoFoglio = f && campo ? Math.max(0, campo.bottom - f.getBoundingClientRect().top) : 0
 }
 
 let raf = 0, prima = 0
@@ -1924,7 +1884,7 @@ function chiudi({ senzaCartello = false } = {}) {
   // nel mondo della terra di quella discesa (una sosta lasciata in un'altra terra torna lì)
   const tGiu = c.tappa && c.tappa.delMondo ? c.tappa.delMondo.terra : terraOra()
   const dopo = dopoLaDiscesa(mondoDellaTerra(qui.value, tGiu), c.tappa, { ...e, grossoBattuto: !c.livello.robe.some(r => r.che === 'mostro' && r.grosso && !r.morto) })
-  if (in3d && dopo.mondo) nelMondo3d(dopo.mondo, undefined, tGiu)
+  if (dopo.mondo) nelMondo3d(dopo.mondo, undefined, tGiu)
   // l'abisso non si butta (finisce la sera, non la discesa): si scrive il punto da cui si rientra
   const eraIlFondo = fondoDellAbisso.value   // il record DI PRIMA: segnaIlFondo lo sposta subito dopo
   if (nellAbisso.value) {
@@ -1986,7 +1946,7 @@ function allaMappa() {
   salendo = false
   if (pittore) pittore.ferma()
   // il 3D si butta col campo: la scheda video non tiene un piano che nessuno guarda (alla prossima discesa si rifà)
-  if (in3d && pittore) butta3d()
+  if (pittore) butta3d()
   fine.value = null
   domanda.value = null
   corsa.value = null
@@ -2130,11 +2090,11 @@ function punto(e) {
 }
 
 function premi(e) {
-  if (in3d && e.pointerType === 'mouse' && e.button !== 0) return   // il mouse conta solo col tasto sinistro premuto
+  if (e.pointerType === 'mouse' && e.button !== 0) return   // il mouse conta solo col tasto sinistro premuto
   dita.set(e.pointerId, e)
   if (zainoAperto.value || diarioGiu.value || preparatiAperti.value || paginaEroe.value || fine.value) return
-  // nello scontro in 3D il campo si tocca: un mostro lo fa bersaglio, altrove si accorcia il racconto
-  if (in3d && corsa.value && corsa.value.foglio && corsa.value.foglio.che === 'scontro') { if (pittore) pittore.premi(punto(e)); return }
+  // nello scontro il campo si tocca: un mostro lo fa bersaglio, altrove si accorcia il racconto
+  if (corsa.value && corsa.value.foglio && corsa.value.foglio.che === 'scontro') { if (pittore) pittore.premi(punto(e)); return }
   // un foglio da leggere, la mappa grande, un avviso: il tocco li chiude e intanto cammina
   if (!lasciaAndare()) return
   if (dita.size > 1) { premuto = false; return }
@@ -2189,8 +2149,8 @@ function zittisciIlFantasma(x, y) {
 function vai(p, preciso) {
   const c = corsa.value
   if (!c || c.finita || !pittore) return
-  // in 3D il tocco è un punta-e-clicca (scena3d/azione.js): la cosa sotto il dito, con un margine, e poi la strada del motore
-  if (in3d) { if (preciso) pittore.premi(p); else pittore.trascina(p) } else c.vaiVerso(pittore.cellaDa(p.x, p.y), preciso)
+  // il tocco è un punta-e-clicca (scena3d/azione.js): la cosa sotto il dito, con un margine, e poi la strada del motore
+  if (preciso) pittore.premi(p); else pittore.trascina(p)
   tic.value++
 }
 
@@ -2215,12 +2175,12 @@ function scesaDaProva() {
   const h = new URLSearchParams(location.hash.slice(1))
   const e = h.get('eroe')
   if (e && EROI.some(x => x.chiave === e)) { chiEro.value = ricorda(CHIAVE, 'eroe', e); scegliEroe.value = false }
-  // `#sotterraneo3d=2` scende nel 3D (anche coi giochi in prova spenti), come `#giu=2`
-  const g = h.get('giu') ?? (in3d && h.get('sotterraneo3d') ? h.get('sotterraneo3d') : null)
+  // `#sotterraneo=2` scende anche lui, come `#giu=2`; può stare accanto agli altri suoi valori (`#sotterraneo=2&sotterraneo=branco`)
+  const g = h.get('giu') ?? h.getAll('sotterraneo').find(v => v === 'abisso' || /^\d+$/.test(v) || CHIAVI_DEI_DUNGEON.includes(v)) ?? null
   if (g == null || corsa.value) return
   const i = g === 'abisso' ? INDICE_ABISSO : Number(g)
   if (i === INDICE_ABISSO || (Number.isInteger(i) && i >= 0 && i < CAMPAGNA.length)) avvia(i, { prova: true })
-  else if (in3d && CHIAVI_DEI_DUNGEON.includes(g)) avvia(g, { prova: true })   // `#sotterraneo3d=cerchio`: un dungeon del mondo per chiave
+  else if (CHIAVI_DEI_DUNGEON.includes(g)) avvia(g, { prova: true })   // `#sotterraneo=cerchio`: un dungeon del mondo per chiave
 }
 scesaDaProva()
 // `#bottega=armaiolo` (o `incantatrice`) apre subito quel banco (`&scheda=difese`), con l'eroe a `&livello=12` e `&roba=rara` (un raro per posto), `&roba=nuda`
@@ -2248,7 +2208,7 @@ onMounted(() => {
   // `visibilitychange` si ascolta sul document (dove viene lanciato); `pagehide` è della finestra
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
-  if (in3d) sfida.daInvito()   // l'invito di un amico può avere aperto il gioco
+  sfida.daInvito()   // l'invito di un amico può avere aperto il gioco
 })
 // lo scontro di sopra si chiude prima che il mondo se ne vada (dopo, il suo salvataggio non c'è più): come la ✕
 onBeforeUnmount(() => { if (sopra.value) chiudiSopra({ lascia: true }); if (anteprime) anteprime.via() })
@@ -2261,7 +2221,7 @@ onUnmounted(() => {
   cancelAnimationFrame(raf)
   racconto.ferma()
   if (pittore) pittore.ferma()
-  if (in3d && pittore) butta3d()
+  if (pittore) butta3d()
   buttaCaldo()
 })
 function ridimensiona() { if (pittore) pittore.misura() }
@@ -2273,8 +2233,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
     <Barra :titolo="titolo" guida="sotterraneo" @aiuto="aiuto" :monete="!corsa" scura
            :pausa="siGioca && !inDueOra" @pausa="metti()" @indietro="indietro">
       <!-- vita, gemme e zaino stanno nella barra in basso; attacco e difesa nella pagina dell'eroe (docs/sotterraneo/barra.md) -->
-      <!-- in due: solo nel 3D, dalla terra di sopra (docs/sotterraneo/in-due.md) -->
-      <button v-if="in3d && !corsa && !sopra && !salaAperta" type="button" class="sot-in-due-apri" data-sfida-apri
+      <!-- in due: dalla terra di sopra (docs/sotterraneo/in-due.md) -->
+      <button v-if="!corsa && !sopra && !salaAperta" type="button" class="sot-in-due-apri" data-sfida-apri
               aria-label="Scendi con un amico" @click="sfida.apri()"><span class="em">👥</span></button>
     </Barra>
 
@@ -2284,13 +2244,12 @@ function ridimensiona() { if (pittore) pittore.misura() }
       <template v-if="!corsa || sopra">
         <!-- la chiave è l'eroe e la terra: cambiando avventura o terra il mondo di sopra rinasce con la nebbia e il posto suoi -->
         <Campagna ref="campagnaEl" :key="eroeQui() + ':' + terraOra()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
-                  :roba="robaSopra" :terra="qui.terra || null" @terra="ricordaTerra"
-                  :disegno="in3d ? '3d' : null" :mondo="mondoQui" @mondo="ricordaMondo" :dungeon="dungeonDelMondo" :terre="porta" @terre="allaTerra"
+                  :roba="robaSopra" :mondo="mondoQui" @mondo="ricordaMondo" :dungeon="dungeonDelMondo" :terre="porta" @terre="allaTerra"
                   :veduta="vedutaSopra" @veduta="v => { vedutaSopra = v }" @risposta="rispostaSopra"
                   :punti="barra.punti" :punti-abilita="barra.puntiAbilita" @scheda="apriScheda"
-                  :annuncio="annuncio" @sentito="annuncioSentito" :forze="forze" @cura="curaDa"
+                  :forze="forze" @cura="curaDa"
                   :missioni="missioni" :conti="conti" :azione-missione="azioneMissione" :segui="segui" @segui="seguiMissione"
-                  @gioca="i => avvia(i)" @davanti="scaldaDiscesa" @riprendi="riprendiDiscesa" @scorda="scorda" @bottega="apriBottega"
+                  @gioca="i => avvia(i)" @davanti="scaldaDiscesa" @riprendi="riprendiDiscesa" @bottega="apriBottega"
                   :pensiero="pensiero" @pensa="pensaSopra" @pensiero="toccaPensiero" @pensiero-fine="pensiero = null"
                   @trovati="v => (mercantiTrovati = v)"
                   :forza="forzaOra" :fermo="!!banco || zainoSopra || paginaEroe || preparatiAperti || scegliEroe || !!state.festa.length"
@@ -2299,7 +2258,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
         </Campagna>
         <p v-if="detto" class="sot-avviso sot-avviso-sopra" data-detto-sopra>{{ detto }}</p>
         <!-- la stessa barra di giù (docs/sotterraneo/barra.md): sopra la vita è piena e la mappa grande non c'è -->
-        <BarraDiSotto sopra :mappa-sopra="in3d" :mappa="vedutaSopra" @mappa="vedutaSopra = !vedutaSopra" :vita="barra.vita" :vita-max="barra.vitaMax" :livello="barra.livello"
+        <BarraDiSotto sopra :mappa="vedutaSopra" @mappa="vedutaSopra = !vedutaSopra" :vita="barra.vita" :vita-max="barra.vitaMax" :livello="barra.livello"
                       :esperienza="barra.esperienza" :esp-fatta="barra.espFatta" :esp-serve="barra.espServe" :punti="barra.punti" :pozioni="barra.pozioni" :pieni="barra.pieni"
                       :energia="barra.energia" :energia-max="barra.energiaMax" :punti-abilita="barra.puntiAbilita"
                       :tasche="barra.tasche" :gemme="barra.gemme" :preparabili="barra.preparabili" :missioni-pronte="barra.missioniPronte"
@@ -2338,13 +2297,13 @@ function ridimensiona() { if (pittore) pittore.misura() }
       <template v-else>
         <div class="sot-campo">
           <!-- il campo si tocca coi puntatori: il click che il dito lascia finirebbe sul foglio appena aperto -->
-          <canvas ref="tela" class="sot-tela" :data-tela="in3d ? '3d' : '2d'"
+          <canvas ref="tela" class="sot-tela" data-tela="3d"
                   @pointerdown="premi" @pointermove="muovi" @pointerup="lascia"
                   @pointercancel="lascia" @touchend="nienteClickDalCampo"
                   @wheel.prevent="rotella"></canvas>
-          <!-- il 3D: le scritte sopra la scena (sonno, nomi, barre, mappina) e quelle dello scontro, agganciate alle figure -->
-          <div v-if="in3d" ref="strato" class="sot3d-strato" data-strato3d></div>
-          <Scontro3d v-if="in3d && nemico" v-bind="nemico" :fx="racconto.fx" :aggancia="aggancia" />
+          <!-- le scritte sopra la scena (sonno, nomi, barre, mappina) e quelle dello scontro, agganciate alle figure -->
+          <div ref="strato" class="sot3d-strato" data-strato3d></div>
+          <Scontro3d v-if="nemico" v-bind="nemico" :fx="racconto.fx" :aggancia="aggancia" />
           <CartelloLinea v-if="inDueOra && (sfida.rotta.value || sfida.linea.value)" :rotta="sfida.rotta.value" :motivo="sfida.motivo.value"
                          :linea="sfida.linea.value" partita="la discesa" esci="🗺️ torno su" @esci="chiudi({ senzaCartello: true })" />
 
@@ -2419,9 +2378,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
              fondo allo schermo chi guarda il proprio eroe non lo vedrebbe. Niente classe `sot-foglio`
              apposta: `misuraFoglio()` cerca quella, e non trovandola la telecamera non fa spazio a un pannello -->
         <!-- in 3D lo scontro è nella scena: qui in fondo restano la scelta e la domanda (viste/Pannello3d.vue) -->
-        <component :is="in3d ? Pannello3d : Cornice" v-if="nemico" scontro>
-          <div :class="in3d ? 'sot3d-scelta' : 'sot-modale sot-modale-cornice'">
-            <Scontro v-if="!in3d" v-bind="nemico" :fx="racconto.fx" @bersaglio="scegliIlBersaglio" @accorcia="racconto.accorcia" />
+        <Pannello3d v-if="nemico" scontro>
+          <div class="sot3d-scelta">
             <!-- prima si sceglie cosa fare (attacco, abilità, bere, scappare), poi compare la domanda per quel colpo
                  (docs/sotterraneo/abilita.md). Il pericolo non ha più un menu suo: è una riga sopra la stessa scelta -->
             <p v-if="toccaAUnAltro && !animando" class="sot-tocca-a" data-tocca-a>Tocca a <b>{{ toccaAUnAltro }}</b></p>
@@ -2440,7 +2398,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
               </div>
             </template>
           </div>
-        </component>
+        </Pannello3d>
 
         <Foglio v-else-if="foglio && foglio.che === 'porta'" em="🚪" titolo="Una porta chiusa">
           <div v-if="domanda" class="sot-domanda">
@@ -2586,7 +2544,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
                @chiudi="zainoAperto = false" @fuori="toccoFuori" />
 
         <!-- il diario delle missioni, giù: lo stesso di sopra, senza «vai da» (chi aspetta sta sopra) -->
-        <Diario v-else-if="diarioGiu" giu :mondo="in3d" :stati="missioni" :conti="conti" :tappe="tappe" :segui="segui" :punti="barra.punti" :punti-abilita="barra.puntiAbilita"
+        <Diario v-else-if="diarioGiu" giu :stati="missioni" :conti="conti" :tappe="tappe" :segui="segui" :punti="barra.punti" :punti-abilita="barra.puntiAbilita"
                 @scheda="apriScheda" @chiudi="diarioGiu = false" @segui="seguiMissione" @fuori="toccoFuori" />
 
         <!-- gli incantesimi da preparare prima di uno scontro, dalla loro casella nella barra (docs/sotterraneo/orologio.md) -->
