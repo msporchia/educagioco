@@ -193,13 +193,6 @@ delle discese chiuse, chi ti indica la strada, i sassi che luccicano, la
 nebbia) e lo spazio dove si cammina. I prompt 2 e 3 non servono più; il 4
 (i personaggi) sì, nella stessa chat.
 
-Le discese chiuse **non si chiedono più** come mappa sbarrata: sopra una
-chiusa il gioco non posa niente di disegnato dall'esterno, il disegno resta
-pulito e, quando l'eroe ci va, pianta un cartello di divieto disegnato in
-codice (`DIVIETO` in `viste/pixel.js`). Il prompt «rifai la mappa con i
-passaggi sbarrati» e il ritaglio delle pezze dallo strumento sono stati
-tolti il 7/10/2026.
-
 I personaggi dei prompt 4 e 5, quando arrivano, si ritagliano come gli
 altri fogli (`atlante.py`, un foglietto accanto): il minatore che si chiama
 ## Prompt 7 — chi dà le missioni (il primo da fare)

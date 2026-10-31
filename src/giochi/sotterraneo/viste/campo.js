@@ -115,9 +115,6 @@ export function disponi(campo) {
 // punto (u, v): u da 0 (vicino all'eroe) a 1 (in fondo a destra), v da 0 (lontano, in alto sul pavimento) a 1 (vicino, in
 // basso). I posti restano quelli del motore; i consecutivi stanno nella stessa colonna o in colonne accanto, così i «vicini»
 // del motore lo sono anche nel disegno.
-export const SCALA_PALCO = 2         // pixel di schermo per pixel di foglio delle piastrelle del pavimento
-// le figure un quinto più piccole delle piastrelle: c'è più pavimento attorno e la stanza sembra meno affollata (l'utente, 12 ottobre)
-export const SCALA_FIGURE = 1.6
 // niente parete in cima: «non aggiunge valore e spreca spazio verticale» (l'utente, 12 ottobre); tutto il palco è pavimento
 export const ZOCCOLO = 0
 export const ALTO_PALCO = { 1: 264, 2: 316 }
@@ -232,7 +229,4 @@ export const fattoreDelMostro = (tipo, altoSprite, largoSprite = 0) => {
   if (f <= 1 || !largoSprite) return f
   return Math.max(1, Math.floor(Math.min(f, LARGO_SUL_CAMPO / largoSprite) * 4) / 4)
 }
-// la scala di un mostro alla scala `s` dell'eroe: alto TAGLIA volte l'eroe, a quarti (i pixel restano quasi interi)
-export const scalaDelMostro = (tipo, altoSprite, s) => (TAGLIA[tipo] == null ? s
-  : Math.max(1, Math.round(s * ALTO_EROE * TAGLIA[tipo] / Math.max(1, altoSprite) * 4) / 4))
 
