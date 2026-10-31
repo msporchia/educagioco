@@ -46,7 +46,7 @@ export default {
      che nessuno pescherà, e vanno detti per quello che sono. */
   quiz: true,
   tappe: QUANTE_TAPPE,
-  // gli amici sulla terra di sopra (docs/core/amici-nei-giochi.md): il cursore di serie (il massimo fra gli eroi, avventure.md), le sette discese, poi l'abisso
+  // gli amici (docs/core/amici-nei-giochi.md), dichiarati ma il mondo non li mostra ancora: il cursore di serie (il massimo fra gli eroi, avventure.md), le sette discese, poi l'abisso
   amici: { tappe: QUANTE_TAPPE, dove: 'all\'abisso' },
 
   /* ── ESCE DALLA PROVA ──

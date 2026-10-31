@@ -1,15 +1,13 @@
 /* ═══════════════════════════════════════════════════════════════════
-   IL SOTTERRANEO 3D, COL DITO — docs/sotterraneo/grafica-3d.md
+   IL SOTTERRANEO IN 3D, COL DITO — docs/sotterraneo/grafica-3d.md
 
-   Il Sotterraneo 3D è un gioco in prova (`sotterraneo`): la sua carta
-   c'è solo coi giochi in prova accesi, e il Sotterraneo di sempre resta in
-   2D. Qui si entra dalla carta, si sceglie l'eroe e si scende dal mondo
+   La carta del sotterraneo c'è per tutti, una sola, anche coi giochi in
+   prova spenti. Qui si entra dalla carta, si sceglie l'eroe e si scende dal mondo
    di sopra in 3D (integrazione/sotterraneo-mondo); giù la scena è WebGL (in Chrome
    senza schermo la disegna SwiftShader, lento ma vero) e il motore è lo
    stesso: si cammina, si apre una porta rispondendo, si combatte (una
    risposta sbagliata, una giusta, il mostro che cade), si sale e si scende
-   una scala da una sosta scritta in Node — che il 3D riprende come il 2D,
-   perché la sosta è una sola. E senza WebGL lo si dice e si esce.
+   una scala da una sosta scritta in Node. E senza WebGL lo si dice e si esce.
    Si tocca come un telefono (`Input.dispatchTouchEvent` via CDP).
    `node test/esegui.mjs sotterraneo-3d`
    tempo: 240
@@ -55,15 +53,13 @@ async function dentroIlCampo(p) {
   return p.x > b.x + 20 && p.x < b.x + b.width - 140 && p.y > b.y + 30 && p.y < b.y + b.height - 60
 }
 
-/* ---------- 1. la carta solo coi giochi in prova, e si scende dalla terra di sopra ---------- */
+/* ---------- 1. una carta sola per tutti, e si scende dal mondo di sopra ---------- */
 await azzera(page)
-uguale('coi giochi in prova spenti il Sotterraneo 3D non c\'è', await page.locator('[data-indice="sotterraneo"]').count(), 0)
-await semina(page, { settings: { sperimentali: true } })
-uguale('accesi, la carta c\'è', await page.locator('[data-indice="sotterraneo"]').count(), 1)
-uguale('e il Sotterraneo di sempre resta', await page.locator('[data-indice="sotterraneo"]').count(), 1)
+uguale('coi giochi in prova spenti la carta c\'è', await page.locator('[data-indice="sotterraneo"]').count(), 1)
+uguale('e non c\'è un secondo sotterraneo', await page.locator('[data-indice="sotterraneo3d"]').count(), 0)
 await scegli(page, 'sotterraneo')
 await scegliAvventura(page, 'cavaliere')
-controlla('sopra c\'è il mondo in 3D, non la terra dipinta', await page.locator('[data-mondo3d]').count() === 1 && await page.locator('[data-terra]').count() === 0)
+controlla('sopra c\'è il mondo in 3D', await page.locator('[data-mondo3d]').count() === 1)
 // un seme con una porta chiusa a pochi passi dall'arrivo (lo legge chi scende, come `#seme=` dei cheat)
 await page.evaluate(() => { location.hash = 'sotterraneo&seme=11' })
 await scendiNelSotterraneo(page, 0, { tocca, scendi: false })
@@ -169,7 +165,7 @@ async function entra(hash, avventura = {}) {
   await azzera(page)
   await page.setViewportSize({ width: 390, height: 844 })
   const a = { tappa: 1, libera: false, stelle: { 0: 3 }, missioni: {}, roba, crescita, terra: { nebbia: 'f'.repeat(768), dove: [55, 11], parlato: true }, ...avventura }
-  await semina(page, { coins: 300, settings: { sperimentali: true },
+  await semina(page, { coins: 300,
     campagne: { sotterraneo: { tappa: a.tappa, libera: false, stelle: { 0: 3 }, cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: a } } } } })
   await page.evaluate(h => { location.hash = h }, hash)
 }
@@ -299,7 +295,7 @@ await page.evaluate(() => { const P = WebGL2RenderingContext.prototype, o = P.li
   await attendi(page, 500)
   await page.locator('[data-pausa] [data-azione="riprendi"]').click()
   await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 15000 })
-  controlla('la sosta scritta per il 2D si riprende nel 3D: secondo piano', (await piede()).includes('piano 2 di 3'))
+  controlla('la sosta scritta in Node si riprende: secondo piano', (await piede()).includes('piano 2 di 3'))
   uguale('sulla scala che sale', (await cellaOra()).join(), `${su.x},${su.y}`)
   await toccaLaCella(su.x, su.y, 0.4)
   await page.waitForSelector('[data-azione="sali"]', { timeout: 5000 })
@@ -314,13 +310,12 @@ await page.evaluate(() => { const P = WebGL2RenderingContext.prototype, o = P.li
   await page.locator('[data-azione="scendi"]').click()
   await attendi(page, 800)
   controlla('riscendendo si torna al secondo', (await piede()).includes('piano 2 di 3'))
-  // la ✕ salva la sosta: il Sotterraneo di sempre la riprende uguale (la sosta è una sola)
+  // la ✕ salva la sosta, nell'avventura del sotterraneo
   await page.locator('button[aria-label="indietro"]').first().click()
   await page.waitForSelector('.carte', { timeout: 8000 })
   await attendi(page, 600)
   const p = await leggiProfilo(page)
-  uguale('la sosta è nella stessa avventura del Sotterraneo', p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.sosta?.piano, 1)
-  uguale('e nessun salvataggio a parte per il 3D', p?.campagne?.sotterraneo3d, undefined)
+  uguale('la sosta è nell\'avventura', p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.sosta?.piano, 1)
 }
 
 /* ---------- 6. senza WebGL 2 si dice e si esce, senza toccare niente ---------- */
