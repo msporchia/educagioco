@@ -128,6 +128,8 @@ Rete, cadute, trattativa, sala e cartello non si riscrivono. Il gioco dà:
    sotterraneo in due ([../sotterraneo/in-due.md](../sotterraneo/in-due.md)), che chiede anche all'incontro di portare la parte
    dell'ospite (il suo eroe).
 4. **L'invito degli amici**: una voce in `src/amici/giochi.js` (`valida` per i dati che porta l'invito, oltre al codice).
+   Chi invita aspetta la risposta 45 s (`ATTESA_INVITO` in `sfida.js`); quell'attesa si spegne appena l'amico è al tavolo, se no
+   chiudeva la partita a metà (`unita/insieme-invito`).
 5. **I bambini finti** per le prove e il banco: `test/aiuto/sfide/<gioco>.mjs` (`regola({ firma, ruolo })`, `scelte(seme)`,
    `muovi(ruolo, incontro, caso)`) e la sua riga in `sfide/index.mjs`. Ci sono Castle Battle e il sotterraneo.
 

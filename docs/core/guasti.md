@@ -22,8 +22,12 @@ promesse rifiutate) fa tre cose:
 3. **Offre di riparare.**
 
 I guasti si rileggono dalla pagina dei grandi: è così che si diagnostica
-un telefono che non è il proprio. Quello che `incidenti.js` non può fare:
-se è rotta la copia dell'app, questo codice non gira — lì la difesa è il
+un telefono che non è il proprio. Sul telefono «Invia» apre il foglio
+«condividi» (WhatsApp, posta) col testo intero, pile comprese, che
+nell'indirizzo del modulo «Segnala» non ci sta; dove non c'è (il computer)
+restano «Copia» e il modulo. Il testo lo fa `testoDaMandare()`.
+
+Quello che `incidenti.js` non può fare: se è rotta la copia dell'app, questo codice non gira — lì la difesa è il
 service worker che per la pagina prova la rete prima della cache (vedi
 [aggiornamento.md](aggiornamento.md)).
 
@@ -52,6 +56,12 @@ rete lascia il telefono senza gioco finché la rete non torna.
   *Progressi* (vedi [`../genitori/`](../genitori/README.md)).
 - **Riprodurre uno stato difficile da raggiungere**: i cheat e la pagina
   `#admin`, in [comandi.md](comandi.md#i-cheat-dellindirizzo).
+- **Un telefono col cavo** (debug USB acceso): `node strumenti/telefono.mjs
+  ascolta --log tmp/telefono.txt` scrive in diretta console, errori, ogni
+  filo WebSocket (aperto, chiuso dopo quanto, i messaggi), richieste
+  fallite, schermo acceso/spento e rete; `inciampi` legge il libretto, `esegui`
+  un'espressione nella pagina. Così si è trovato l'invito che chiudeva le
+  sfide dopo 45 s: l'`addio` partiva da chi invitava, a impronte uguali.
 - **Un guasto che si vede solo dal telefono** (un tocco non è un click):
   si pubblica sul server di casa, vedi [pubblicare.md](pubblicare.md), e
   per il dito [il-dito.md](il-dito.md).

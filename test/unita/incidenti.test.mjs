@@ -13,7 +13,7 @@
    worker, e non c'è modo di farli girare senza schermo. Si provano
    guardandoli, ed è scritto in `src/incidenti.js` cosa devono fare.
    ═══════════════════════════════════════════════════════════════════ */
-import { aggiungi, testoDi } from '../../src/incidenti.js'
+import { aggiungi, testoDi, testoDaMandare } from '../../src/incidenti.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
 const voce = (testo, dove = 'vue') => ({ quando: '2026-08-12T10:00:00.000Z', dove, testo })
@@ -65,5 +65,17 @@ uguale('un Error si legge nome e messaggio',
 uguale('una stringa resta sé stessa', testoDi('rotto e basta'), 'rotto e basta')
 uguale('niente non è un guasto senza nome', testoDi(null), 'errore senza nome')
 controlla('un oggetto qualunque dice qualcosa', typeof testoDi({ a: 1 }) === 'string')
+
+/* ══════════ 6. il testo da mandare ══════════
+   Quello che «Copia» e «Invia» danno a chi deve capire: la versione di
+   adesso in testa, il guasto più recente per primo, la pila sotto. */
+const mandato = testoDaMandare([
+  { ...voce('il primo'), versione: 'v1', pila: 'at a (x.js:1)' },
+  { ...voce('sotterraneo3d: l\'altro se n\'è andato', 'sfida'), versione: 'v2', volte: 3, dettagli: ['tick 700'] },
+], 'v3')
+controlla('in testa la versione di adesso', mandato.startsWith('Ultimi inciampi di Educagioco v3'))
+controlla('il più recente prima', mandato.indexOf('sotterraneo3d') < mandato.indexOf('il primo'))
+controlla('con quante volte, la pila e i dettagli', /3 volte/.test(mandato) && mandato.includes('at a (x.js:1)') && mandato.includes('tick 700'))
+uguale('un libretto vuoto è la testa sola', testoDaMandare([], 'v3'), 'Ultimi inciampi di Educagioco v3')
 
 riassunto('il libretto degli incidenti')
