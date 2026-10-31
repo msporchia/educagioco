@@ -504,7 +504,7 @@ const LARGO_FUM = 244
 const ctxBacheca = () => ({ m, eroe: props.eroe.chiave, giro: giro.value, tappe: props.tappe, stati: props.missioni,
                             visto: (x, y) => nebbia[y * m.W + x] === 1 })
 const ctx = () => ({ stati: props.missioni, tappe: props.tappe, abisso: !!props.abisso, eroe: props.eroe.chiave,
-                     roba: props.roba, novita: ascoltate.value, forze: props.forze, mondo: true,
+                     roba: props.roba, novita: ascoltate.value, forze: props.forze,
                      forza: props.forza, terra: terraQui(), dungeon: props.dungeon })   // la forza: il minatore e il capitano dicono in che zona stanno i mostri giusti per te
 // sotto il livello di una discesa della storia (i sei nuovi non hanno l'eroe atteso: lo dice il colore del pallino)
 const livelloDi = t => (t && !t.fatta && t.indice != null && t.indice >= 0 && props.roba ? dettoDelLivello(props.eroe.chiave, props.roba, t, t.indice) : null)

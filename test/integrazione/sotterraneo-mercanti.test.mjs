@@ -3,7 +3,7 @@
 
    La roba resta fra una discesa e l'altra, e il mercante è uscito dalle
    discese: quattro botteghe nel villaggio del mondo di sopra (docs/sotterraneo/
-   terra-di-sopra.md). Qui il giro intero col dito: toccare un mercante, parlargli
+   mondo-3d.md). Qui il giro intero col dito: toccare un mercante, parlargli
    e vedere il banco aprirsi, comprare, vendere al rigattiere, scendere con la roba
    comprata, risalire e ritrovarla, e alla discesa dopo ritrovarla nello zaino.
    La bottega è quella da gioco di ruolo (docs/sotterraneo/bottega-finestra.md,

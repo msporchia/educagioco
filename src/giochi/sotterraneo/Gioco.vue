@@ -402,7 +402,7 @@ function riprendiSeUscito() {
 }
 
 // Salendo dal portale la vita e l'energia restano quelle di giù: lo dice la barra, e li rimettono a posto gratis la
-// guaritrice e l'incantatrice (docs/sotterraneo/terra-di-sopra.md, «Chi cura»). Null senza portale
+// guaritrice e l'incantatrice (docs/sotterraneo/chi-cura.md). Null senza portale
 // `forzeDi` rifà la discesa dalla sosta (decine di ms): si tiene finché non cambiano sosta, roba e crescita, se no
 // la terra di sopra la rifaceva a ogni passo e andava a scatti
 let forzeTenute = { chiave: null, valore: null }
