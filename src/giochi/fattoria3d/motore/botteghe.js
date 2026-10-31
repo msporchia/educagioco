@@ -13,8 +13,8 @@ import { EDIFICI } from '../dati/catalogo.js'
 import { livelloDellaColtura, livelloDellaRicetta, livelloDelPezzo } from '../dati/livelli.js'
 import { tettoDi } from '../dati/ordini.js'
 import { MINUTO } from '../dati/parita2d.js'
-import { clientiDellaBottega } from '../../fattoria/dati/botteghe.js'
-import { clienteDi as clienteDi2D, pesoDellaMerce } from '../../fattoria/dati/mercato.js'
+import { clientiDellaBottega } from '../da2d/dati/botteghe.js'
+import { clienteDi as clienteDi2D, pesoDellaMerce } from '../da2d/dati/mercato.js'
 
 /** Il livello a cui si può avere una merce: il raccolto e la ricetta dicono il loro; uova, latte, tartufi e lana quello del pezzo che li fa. */
 export function livelloDellaMerce(k) {

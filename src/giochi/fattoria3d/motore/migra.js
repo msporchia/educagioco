@@ -3,11 +3,11 @@
    da zero. Le regole le ha decise l'utente (D1, docs/fattoria3d/parita/decisioni.md): fedele in tutto tranne nei piazzamenti, e MAI
    monete (le monete vengono solo dagli esercizi). Dal 22/10/2026 (D2) la scala dei livelli è la stessa della 2D: la mappatura è 1 a 1.
    Il perché di ogni scelta e la tabella cosa → cosa: docs/fattoria3d/parita/migrazione.md. */
-import { Fattoria } from '../../fattoria/motore/fattoria.js'
-import { PER_ID as COSE_2D } from '../../fattoria/dati/catalogo.js'
-import { PER_COLTURA as COLTURE_2D, PER_RICETTA as RICETTE_2D, quantoCresciuto, MINUTO } from '../../fattoria/dati/coltivazioni.js'
-import { livelloPer as livello2D, avanzamento as avanzamento2D, categoriaDi } from '../../fattoria/dati/livelli.js'
-import { PIAZZOLE_INIZIALI } from '../../fattoria/dati/mondo.js'
+import { Fattoria } from '../da2d/motore/fattoria.js'
+import { PER_ID as COSE_2D } from '../da2d/dati/catalogo.js'
+import { PER_COLTURA as COLTURE_2D, PER_RICETTA as RICETTE_2D, quantoCresciuto, MINUTO } from '../da2d/dati/coltivazioni.js'
+import { livelloPer as livello2D, avanzamento as avanzamento2D, categoriaDi } from '../da2d/dati/livelli.js'
+import { PIAZZOLE_INIZIALI } from '../da2d/dati/mondo.js'
 import { PEZZI, EDIFICI } from '../dati/catalogo.js'
 import { VOCE_DECORI } from '../dati/parita2d.js'
 import { COLTURE } from '../dati/colture.js'

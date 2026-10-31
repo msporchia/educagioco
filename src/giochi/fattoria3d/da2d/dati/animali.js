@@ -1,6 +1,6 @@
 /* Le bestie che si possono comprare: incrociate con BESTIE dell'atlante (si vende solo quello che si
    sa disegnare); si prendono e si spostano come un oggetto, e dove stanno si salva — vedi docs/fattoria/animali.md. */
-import { BESTIE, AGGANCI as AGGANCI_DEL_FOGLIO } from './atlante.js'
+import { BESTIE, AGGANCI as AGGANCI_DEL_FOGLIO } from '../../../../grafica/atlante-fattoria.js'
 import { cibiPer } from './bisogni.js'
 
 // nome dello sprite → come si presenta, prezzo, liv; prezzi alti apposta (si desidera per giorni).

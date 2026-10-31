@@ -1,6 +1,6 @@
 /* Quello che c'è nel bosco, e quanto costa toglierlo: sgombrare costa e basta, non rende — vedi
    docs/fattoria/regole.md e catena.md. costo è l'unico numero che serve. */
-import { PEZZI } from './atlante.js'
+import { PEZZI } from '../../../../grafica/atlante-fattoria.js'
 
 // Costi piccoli, con la fatica; solo roba da buttare (non l'albero o la siepe, che si comprano).
 export const OSTACOLI = {

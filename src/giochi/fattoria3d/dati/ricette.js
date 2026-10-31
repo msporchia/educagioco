@@ -1,5 +1,5 @@
 /* Le macchine: ogni edificio produttivo ha le sue ricette, un posto di partenza (gli altri si comprano fino a sei: dati/posti.js) e lavora uno alla volta. Le ricette sono quelle
-   della fattoria di sempre (src/giochi/fattoria/dati/coltivazioni.js): stesso id, stessi ingredienti, stesse quantità (N → 1), e dal giro G3
+   della fattoria di sempre (src/giochi/fattoria3d/da2d/dati/coltivazioni.js): stesso id, stessi ingredienti, stesse quantità (N → 1), e dal giro G3
    anche gli stessi tempi (minuti veri), lo stesso livello e lo stesso costo del gesto: `...N('id')` li legge da dati/parita2d.js. Una ricetta chiede raccolti (le chiavi di COLTURE),
    prodotti di un'altra macchina (le chiavi di un'altra ricetta) oppure uova e latte (dati/animali.js): è così che nasce la
    catena (grano → farina → pane). `liv` è il livello a cui la ricetta si può fare; dati/livelli.js lo controlla contro quello

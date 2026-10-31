@@ -4,7 +4,7 @@
 import { ref, computed, watch } from 'vue'
 import { creaGiocatore } from '../store/profile.js'
 import { eccezioniPerEta } from '../data/partenze.js'
-import { PERSONE } from '../giochi/fattoria/dati/atlante.js'
+import { PERSONE } from '../grafica/atlante-fattoria.js'
 import SceltaAspetto from './SceltaAspetto.vue'
 import ManopolaEta from './eta/Manopola.vue'
 import Prova from '../quiz/Prova.vue'

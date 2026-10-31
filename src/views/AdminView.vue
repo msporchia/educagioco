@@ -11,7 +11,7 @@ import { azzeraPin } from '../store/pin.js'
 import { saltoAcceso, accendiSalto } from '../store/salto.js'
 import { ripara } from '../incidenti.js'
 import { GIOCHI } from '../data/giochi.js'
-import { LIVELLI_TIPO } from '../giochi/fattoria/motore/tipo.js'
+import { LIVELLI_TIPO } from '../giochi/fattoria3d/da2d/motore/tipo.js'
 import { LIVELLI_TIPO as LIVELLI_TIPO_3D } from '../giochi/fattoria3d/motore/tipo.js'
 
 const emit = defineEmits(['vai'])

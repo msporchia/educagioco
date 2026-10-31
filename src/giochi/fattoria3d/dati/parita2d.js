@@ -1,15 +1,15 @@
 /* Il ponte con la fattoria di sempre: la 3D non ha numeri suoi dove la 2D ne ha uno. Qui, in un punto solo, si legge dai dati 2D
-   (src/giochi/fattoria/dati/) tutto quello che la 3D riusa tale e quale: i prezzi, il livello a cui arriva ogni cosa, i tempi in
+   (src/giochi/fattoria3d/da2d/dati/) tutto quello che la 3D riusa tale e quale: i prezzi, il livello a cui arriva ogni cosa, i tempi in
    minuti, il costo di un gesto, gli scomparti dei silos. Chi scrive un pezzo, una coltura o una ricetta 3D dice solo CHI è nella 2D
    (le tabelle `VOCE`, `COLTURA`) e prende il resto da qui. Decisione dell'utente del 22/10/2026 (docs/fattoria3d/parita/decisioni.md,
    «Regola generale»). Foglia: importa solo dati 2D, mai la 3D. Vedi docs/fattoria3d/livelli.md. */
-import { PER_ID as VOCI_2D, prezzoDellaVoce, CATALOGO as CATALOGO_2D, CATEGORIE as CATEGORIE_2D } from '../../fattoria/dati/catalogo.js'
-import { PER_COLTURA as COLTURE_2D, PER_RICETTA as RICETTE_2D, PRODOTTI as PRODOTTI_2D, SCOMPARTO_BASE, SCOMPARTO_PIU, costoIngrandimento, MINUTO } from '../../fattoria/dati/coltivazioni.js'
-import { livelloDellaVoce, livelloDellaRicetta as livelloRicetta2D, ULTIMO as ULTIMO_2D, sogliaDi as sogliaDi2D, SOGLIA_A, SOGLIA_B, ALLUNGA, zonaDi, PRIMO_DECORO, DECORI_PER_LIVELLO } from '../../fattoria/dati/livelli.js'
-import { ANIMALI as ANIMALI_2D, NOMI as NOMI_2D, premioBenessere } from '../../fattoria/dati/animali.js'
-import { RIPOSO_MIN } from '../../fattoria/dati/mercato.js'
-import { CIELO_VUOTO_MIN } from '../../fattoria/dati/mongolfiera.js'
-import { PIAZZOLE_INIZIALI, PREZZO_PIAZZOLA, RINCARO, CELLE } from '../../fattoria/dati/mondo.js'
+import { PER_ID as VOCI_2D, prezzoDellaVoce, CATALOGO as CATALOGO_2D, CATEGORIE as CATEGORIE_2D } from '../da2d/dati/catalogo.js'
+import { PER_COLTURA as COLTURE_2D, PER_RICETTA as RICETTE_2D, PRODOTTI as PRODOTTI_2D, SCOMPARTO_BASE, SCOMPARTO_PIU, costoIngrandimento, MINUTO } from '../da2d/dati/coltivazioni.js'
+import { livelloDellaVoce, livelloDellaRicetta as livelloRicetta2D, ULTIMO as ULTIMO_2D, sogliaDi as sogliaDi2D, SOGLIA_A, SOGLIA_B, ALLUNGA, zonaDi, PRIMO_DECORO, DECORI_PER_LIVELLO } from '../da2d/dati/livelli.js'
+import { ANIMALI as ANIMALI_2D, NOMI as NOMI_2D, premioBenessere } from '../da2d/dati/animali.js'
+import { RIPOSO_MIN } from '../da2d/dati/mercato.js'
+import { CIELO_VUOTO_MIN } from '../da2d/dati/mongolfiera.js'
+import { PIAZZOLE_INIZIALI, PREZZO_PIAZZOLA, RINCARO, CELLE } from '../da2d/dati/mondo.js'
 
 export { NOMI_2D, premioBenessere }      // le bestie di casa (dati/bestie.js): i nomi da toccare e il premio di benessere sono quelli della 2D
 export { CIELO_VUOTO_MIN, MINUTO, SCOMPARTO_BASE, SCOMPARTO_PIU, costoIngrandimento, ULTIMO_2D, sogliaDi2D, SOGLIA_A, SOGLIA_B, ALLUNGA, ANIMALI_2D, RIPOSO_MIN, PIAZZOLE_INIZIALI, PREZZO_PIAZZOLA, RINCARO, CELLE, PRODOTTI_2D }

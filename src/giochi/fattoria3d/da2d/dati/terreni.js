@@ -1,7 +1,7 @@
 /* Di cosa è fatta una cella: una mappa (prato, acqua, strada, roccia), non "prato più pozze sopra".
    Il bordo è fra due materie (acqua contro prato ≠ acqua contro roccia), indicizzato per chi c'è di
    fronte (bordi: {erba:…, roccia:…, '*':…}); il pittore chiede solo le nove chiavi di sempre. */
-import { PEZZI } from './atlante.js'
+import { PEZZI } from '../../../../grafica/atlante-fattoria.js'
 
 // Le nove chiavi che un insieme di bordi deve avere, sempre le stesse per qualunque materia.
 export const LATI = ['centro', 'n', 's', 'e', 'o', 'no', 'ne', 'so', 'se']

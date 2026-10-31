@@ -1,5 +1,5 @@
 /* La cura delle bestie di casa (G6): comprarle, nutrirle, coccolarle, dare un nome, spostarle. Le regole sono quelle della fattoria di sempre
-   (src/giochi/fattoria/motore/fattoria.js: compraBestia, nutri, coccola, rinominaBestia, spostaBestia), le tabelle sono in `dati/bestie.js`.
+   (src/giochi/fattoria3d/da2d/motore/fattoria.js: compraBestia, nutri, coccola, rinominaBestia, spostaBestia), le tabelle sono in `dati/bestie.js`.
    Lo stato sta in `stato.casa` (un record per bestia). Principi: una bestia non sta mai male e non muore (i bisogni non scendono sotto
    `FONDO`); il rifiuto viene PRIMA del pagamento (sbagliare costa solo il gesto); una coccola gratis c'è sempre; il premio è esperienza,
    mai monete, una volta per ciclo. I compagni gratis (Watson e i gatti) si curano allo stesso modo: il loro record nasce da sé quando arrivano

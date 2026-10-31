@@ -1,6 +1,6 @@
 // Il conto puro del foglio di una macchina (Macchina.vue), senza DOM: quante ricette si possono fare, in che ordine stanno le carte,
 // com'è fatto un posto della fila, dove cade il dito e che gesto è. Vedi docs/fattoria3d/file.md («Il foglio della macchina»).
-import { SCARTO_DITO, SCARTO_MOUSE } from '../../fattoria/scena/dito.js'
+import { SCARTO_DITO, SCARTO_MOUSE } from './dito-soglie.js'
 
 /** Da quanto un dito fermo, che poi si muove, vuole trascinare in qualunque verso (ms). Sotto, un gesto verticale è uno scorrimento. */
 export const TENUTO_MS = 160

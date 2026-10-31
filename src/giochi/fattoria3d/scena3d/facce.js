@@ -1,7 +1,7 @@
 /* La faccia di una merce per i pezzi di HTML sopra la scena (il «+1» che vola): una tela col pezzo dell'atlante della fattoria di
    sempre, come `viste/Faccia.vue` ma senza Vue. Torna null se la merce aspetta il suo disegno (allora vale l'emoji). Una sola
    immagine per tutti, caricata alla prima richiesta. Vedi docs/fattoria3d/merci-e-ricette.md. */
-import { ATLANTE, PEZZI } from '../../fattoria/dati/atlante.js'
+import { ATLANTE, PEZZI } from '../../../grafica/atlante-fattoria.js'
 import { pezzoDi } from '../dati/ricette.js'
 
 let immagine = null

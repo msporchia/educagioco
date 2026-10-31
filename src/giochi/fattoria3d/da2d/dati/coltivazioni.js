@@ -1,7 +1,7 @@
 /* Dato puro sulla catena della fattoria: colture, ricette, merci, silos. Le regole stanno in
    motore/fattoria.js. Vedi docs/fattoria/catena.md, campi-e-silos.md e regole.md. */
 
-import { PEZZI } from './atlante.js'
+import { PEZZI } from '../../../../grafica/atlante-fattoria.js'
 
 // Un minuto in millisecondi: i tempi qui sotto sono in minuti veri.
 export const MINUTO = 60000

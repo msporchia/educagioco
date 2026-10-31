@@ -26,7 +26,7 @@ import { qualcosaDaConsegnare } from './mercato.js'
 import { daConsegnareIn, leggiLeBotteghe } from './botteghe.js'
 import { aspettoDellaMongolfiera, leggiLaMongolfiera } from './mongolfiera.js'
 import { postoDi } from '../dati/catalogo.js'
-import { primaLibera } from '../../../motore/passi.js'
+import { primaLibera } from '../../../../motore/passi.js'
 
 // Il più grosso ostacolo del bosco: calpestabile guarda poche celle indietro invece di scorrere tutto.
 const PIEDE_MASSIMO = Object.values(OSTACOLI).reduce(

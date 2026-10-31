@@ -5,7 +5,6 @@ import codiceSegreto from './codice-segreto/gioco.js'
 import survivors from './survivors/gioco.js'
 import conta from './conta/gioco.js'
 import primaDopo from './prima-dopo/gioco.js'
-import fattoria from './fattoria/gioco.js'
 import sotterraneo from './sotterraneo/gioco.js'
 import pozioni from './pozioni/gioco.js'
 import passoPasso from './passo-passo/gioco.js'
@@ -16,8 +15,8 @@ import arena from './arena/gioco.js'
 import giardino from './giardino/gioco.js'
 import fattoria3d from './fattoria3d/gioco.js'
 
-export const GIOCHI_NUOVI = [codiceSegreto, survivors, conta, primaDopo, fattoria,
-                             sotterraneo, pozioni, passoPasso, costruttore, inglese, spagnolo, arena, giardino, fattoria3d]
+export const GIOCHI_NUOVI = [codiceSegreto, survivors, conta, primaDopo, fattoria3d,
+                             sotterraneo, pozioni, passoPasso, costruttore, inglese, spagnolo, arena, giardino]
 
 export const gioco = chiave => GIOCHI_NUOVI.find(g => g.chiave === chiave) || null
 

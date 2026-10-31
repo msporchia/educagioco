@@ -3,7 +3,7 @@
    l'atlante. Il riquadro è sempre lato×lato (il pezzo ci sta in scala, ingrandito solo di un intero
    di pixel del telefono quando è piccolo), bottom-aligned come sul piede della scena, imageSmoothingEnabled false e dpr suo. */
 import { onMounted, ref, watch } from 'vue'
-import { ATLANTE, PEZZI } from '../dati/atlante.js'
+import { ATLANTE, PEZZI } from '../../../grafica/atlante-fattoria.js'
 
 const props = defineProps({
   pezzo: { type: String, required: true },

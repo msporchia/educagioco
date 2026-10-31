@@ -8,7 +8,6 @@ import { TINTE, DISEGNI, STEMMI, pezzo, tipoDi } from '../data/hangar.js'
 import { hangarDi, possiede, scegli, visto, livrea, prossimoDelVolo } from '../motore/asteroidi/hangar.js'
 import { creaSpazio3d } from '../grafica/spazio3d/indice.js'
 import PezzoHangar from './PezzoHangar.vue'
-import Chiudi from '../giochi/fattoria/viste/Chiudi.vue'
 
 const emit = defineEmits(['chiudi'])
 
@@ -96,7 +95,7 @@ function chiudi() {
     <div class="foglio">
       <div class="testa">
         <b>Hangar</b>
-        <Chiudi @chiudi="chiudi" />
+        <button type="button" class="chiudi-x" aria-label="chiudi" data-chiudi @click="chiudi">✕</button>
       </div>
       <canvas ref="tela" class="nave"></canvas>
       <div class="linguette">
@@ -145,8 +144,8 @@ function chiudi() {
           padding:10px 14px calc(14px + env(safe-area-inset-bottom)); box-sizing:border-box; color:#e6ebff }
 .testa { display:flex; align-items:center; justify-content:space-between; position:sticky; top:0 }
 .testa b { font-size:20px }
-/* la ✕ comune (fattoria/viste/Chiudi.vue): il suo stile sta nel foglio della fattoria */
-.testa :deep(.fa-chiudi) { position:static; margin:0; width:38px; height:38px; display:grid; place-items:center; padding:0;
+/* la ✕ rossa e tonda dei fogli (docs/core/interfaccia.md) */
+.testa .chiudi-x { position:static; margin:0; width:38px; height:38px; display:grid; place-items:center; padding:0;
   border:3px solid #fff; border-radius:50%; background:radial-gradient(circle at 35% 30%, #ff7a62, #d93a2a 70%);
   box-shadow:0 3px 0 #8a1f14, 0 4px 8px #0004; color:#fff; font-size:17px; font-weight:900; line-height:1 }
 .nave { width:100%; height:200px; flex:0 0 auto;

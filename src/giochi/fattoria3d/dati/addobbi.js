@@ -1,9 +1,9 @@
 /* Gli addobbi delle bestie nella fattoria 3D (dato puro): gli stessi dodici della 2D (id, nome, prezzo, aggancio, la campanella solo ai gatti,
-   il cappello da strega solo a Halloween: src/giochi/fattoria/dati/addobbi.js), ma tutti in vendita. Nella 2D cinque erano sospesi perché
+   il cappello da strega solo a Halloween: src/giochi/fattoria3d/da2d/dati/addobbi.js), ma tutti in vendita. Nella 2D cinque erano sospesi perché
    un'emoji di fiocco o di zainetto non sta su una bestia a quattro zampe; in 3D ognuno è un modello (scena3d/modelli-addobbi.js).
    Dove cade un aggancio su ogni corpo lo dice `AGGANCI` in scena3d/modelli-addobbi.js. Vedi docs/fattoria3d/addobbi.md. */
-import { ADDOBBI as ADDOBBI_2D } from '../../fattoria/dati/addobbi.js'
-import { AGGANCI_TUTTI } from '../../fattoria/dati/animali.js'
+import { ADDOBBI as ADDOBBI_2D } from '../da2d/dati/addobbi.js'
+import { AGGANCI_TUTTI } from '../da2d/dati/animali.js'
 import { curabile } from './bestie.js'
 
 export { AGGANCI_TUTTI }

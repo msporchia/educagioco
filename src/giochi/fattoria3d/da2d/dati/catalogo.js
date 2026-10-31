@@ -1,7 +1,7 @@
 /* Dato puro: cosa si vede (pezzo), quanto occupa (piede), quanto costa. Come si disegna sta in scena/,
    se si può posare sta in motore/. piede si ricava dal disegno (piedeDalDisegno); girare/rovesciare
    e stati dei recinti — vedi docs/fattoria/come-si-tocca.md e macchine.md. */
-import { PEZZI, TESSERA, VOCI } from './atlante.js'
+import { PEZZI, TESSERA, VOCI } from '../../../../grafica/atlante-fattoria.js'
 import { ricetteDi, SILI } from './coltivazioni.js'
 import { FINESTRE } from './stagioni.js'
 
