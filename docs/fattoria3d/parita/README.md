@@ -11,7 +11,7 @@ vince il codice.
 
 | # | criterio | oggi |
 |---|---|---|
-| S1 | **Nessun salvataggio si perde.** Chi ha una fattoria 2D la ritrova (convertita) o la tiene finché non decide lui | 🟡 la conversione c'è (`statoDa2D`), manca l'aggancio nel caricamento ([migrazione.md](migrazione.md)) |
+| S1 | **Nessun salvataggio si perde.** Chi ha una fattoria 2D la ritrova (convertita) o la tiene finché non decide lui | ✅ la conversione c'è ed è agganciata, con il ritocco per chi era stato convertito prima ([migrazione.md](migrazione.md)); manca la prova su un salvataggio vero |
 | S2 | **Il posto dove si spendono le monete è uno solo.** Le due fattorie non convivono: ora la 3D spende monete vere accanto alla 2D ([../../fattoria/regole.md](../../fattoria/regole.md) «Il money pit è uno») | 🟡 convivono, la 3D è dietro «giochi in prova» |
 | S3 | **Lo stesso patto**: le monete vengono solo dagli esercizi, niente si vende, niente marcisce, nessun gioco paga una risposta sbagliata, un «no» dice cosa fare ([../../apprendimento/calibrazione.md](../../apprendimento/calibrazione.md)) | ✅ rispettato |
 | S4 | **Dura quanto la 2D**: la scaletta regge mesi, non giorni (70 livelli, ~202 ore di esercizio spese, uguali) | ✅ G3 (22/10/2026); restano 18 livelli senza novità ([livelli-ed-economia.md](livelli-ed-economia.md)) |
@@ -70,7 +70,7 @@ da trascinare con scorrimento ai bordi. Vanno tenuti? Decisione D10 ([decisioni.
 
 ## I P0 in una riga
 
-1. **T1** agganciare `statoDaCaricare` in `Gioco.vue` (la conversione `statoDa2D` c'è: [migrazione.md](migrazione.md)).
+1. ~~**T1** la conversione agganciata~~ fatta, coi silos, i posti della fila e il ritocco ([migrazione.md](migrazione.md)); resta un salvataggio vero da provare.
 2. ~~**L1–L3** una scaletta che regge mesi~~ fatta (G3): 70 livelli, ~201 ore; mancano le cose che riempiono i 22 livelli senza novità.
 3. ~~**A1–A3** il cortile completo~~ fatto (G4, G5, G6: 10 recinti, il pentolone, le bestie di casa con i loro bisogni).
 4. **T7, T8, T19** misurare la 3D su un telefono vero, decidere cosa fa senza WebGL 2, eseguire le prove d'integrazione.
