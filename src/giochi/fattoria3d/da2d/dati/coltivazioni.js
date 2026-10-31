@@ -1,8 +1,6 @@
 /* Dato puro sulla catena della fattoria: colture, ricette, merci, silos. Le regole stanno in
    motore/fattoria.js. Vedi docs/fattoria3d/catena.md, magazzini.md e regole.md. */
 
-import { PEZZI } from '../../../../grafica/atlante-fattoria.js'
-
 // Un minuto in millisecondi: i tempi qui sotto sono in minuti veri.
 export const MINUTO = 60000
 
@@ -611,12 +609,6 @@ export function guastiDelleColture() {
     // Almeno due stadi (seminato e maturo), se no la crescita non si vedrebbe.
     if (!Array.isArray(c.stadi) || c.stadi.length < 2)
       g.push(`${c.id}: meno di due stadi — la crescita non si vedrebbe`)
-    // Uno stadio che l'atlante non ha è muto: drawImage non disegna e non lancia, e non c'è niente in console.
-    for (const s of c.stadi || [])
-      if (s && !PEZZI[s]) g.push(`${c.id}: lo stadio «${s}» non è nell'atlante`)
-    // aspetta è il prefisso dei sette riquadri: il giorno che il primo c'è, la riga va aggiornata.
-    if (c.aspetta && PEZZI[`${c.aspetta}0`])
-      g.push(`${c.id}: aspetta «${c.aspetta}0…», che nell'atlante c'è già — prendi i suoi stadi`)
   }
   const idRicette = new Set()
   for (const r of RICETTE) {
@@ -635,12 +627,6 @@ export function guastiDelleColture() {
   // Un prodotto senza silo non si potrebbe raccogliere: quantoCiSta risponderebbe zero per sempre.
   for (const [id, pr] of Object.entries(PRODOTTI)) {
     if (!SILI[pr.silo]) g.push(`${id}: sta in un silo che non esiste («${pr.silo}»)`)
-    // Un pezzo che l'atlante non ha è muto come uno stadio storto: resta un fumetto vuoto.
-    if (pr.pezzo && !PEZZI[pr.pezzo])
-      g.push(`${id}: il pezzo «${pr.pezzo}» non è nell'atlante`)
-    // aspetta è quello che un foglio futuro porterà: il giorno che c'è, la riga va aggiornata.
-    if (pr.aspetta && PEZZI[pr.aspetta])
-      g.push(`${id}: aspetta «${pr.aspetta}», che nell'atlante c'è già — scrivilo come pezzo`)
     if (!pr.pezzo && !pr.aspetta)
       g.push(`${id}: senza pezzo e senza dire quale aspetta — un'emoji per sempre`)
   }

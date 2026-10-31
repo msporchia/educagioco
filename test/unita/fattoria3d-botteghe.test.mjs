@@ -22,7 +22,6 @@ import { guastiDeiLivelli, sogliaDi, livelloPer, ULTIMO } from '../../src/giochi
 import { guastiDelMondo, POSTI_STORICI } from '../../src/giochi/fattoria3d/dati/mondo.js'
 import { guastiDegliAlberi } from '../../src/giochi/fattoria3d/dati/alberi.js'
 import { guastiDellaScala } from '../../src/giochi/fattoria3d/motore/taratura.js'
-import { guastiDelleCarte, DISEGNI } from '../../src/giochi/fattoria3d/dati/carte.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { Fattoria } from '../../src/giochi/fattoria3d/da2d/motore/fattoria.js'
 import { statoDa2D, pezzoPer } from '../../src/giochi/fattoria3d/motore/migra.js'
@@ -69,9 +68,9 @@ stessaLista('quattro botteghe: pasticceria, osteria, mensa, merceria', TIPI_DI_B
   stessaLista('i nomi delle merci: il carota 3D è la carote 2D, il foraggio resta foraggio', [prodotto2D('carota'), prodotto2D('foraggio_carote'), MERCE_3D('carote'), MERCE_3D('fragole')], ['carote', 'foraggio', 'carota', 'fragola'])
 }
 {
-  const g = [...guastiDelCatalogo(), ...guastiDeiLivelli(), ...guastiDelMondo(), ...guastiDegliAlberi(), ...guastiDellaScala(), ...guastiDelleCarte()]
-  controlla('catalogo, livelli, mondo, alberi, scala e carte sono sani con le botteghe dentro', g.length === 0, g.join(' · '))
-  controlla('ogni bottega ha il suo posto di prima (solo per i controlli: nuovo) e il suo disegno di carta', TIPI_DI_BOTTEGA.every(t => POSTI_STORICI[t] && POSTI_STORICI[t].nuovo && DISEGNI[t]))
+  const g = [...guastiDelCatalogo(), ...guastiDeiLivelli(), ...guastiDelMondo(), ...guastiDegliAlberi(), ...guastiDellaScala()]
+  controlla('catalogo, livelli, mondo, alberi e scala sono sani con le botteghe dentro', g.length === 0, g.join(' · '))
+  controlla('ogni bottega ha il suo posto di prima (solo per i controlli: nuovo)', TIPI_DI_BOTTEGA.every(t => POSTI_STORICI[t] && POSTI_STORICI[t].nuovo))
 }
 
 /* ══════════ 2. un cliente è sempre un cliente di quel mestiere, e il premio è il +25% del banco ══════════ */

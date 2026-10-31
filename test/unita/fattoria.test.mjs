@@ -12,14 +12,13 @@ import {
 } from '../../src/giochi/fattoria3d/da2d/dati/mondo.js'
 import { guastiDelCatalogo, CATALOGO, PER_ID, piedeDi, assettoDi, quantiVersi,
          puoGirare, puoSpecchiare } from '../../src/giochi/fattoria3d/da2d/dati/catalogo.js'
-import { VOCI, PEZZI } from '../../src/grafica/atlante-fattoria.js'
+import { DISEGNI } from '../../src/giochi/fattoria3d/da2d/dati/disegni.js'
 
 /* Se il disegno di questa voce regge il capovolgimento. Sta nel test e
    non nel catalogo perché al gioco non serve saperlo — al gioco serve
    solo la lista dei giri leciti, che è quello che il catalogo rende. */
 const ribaltabile = v => {
-  const voce = VOCI.find(x => Object.values(x.pose || {}).flat().includes(v.pezzo))
-  return v.ribalta != null ? v.ribalta : (voce || {}).ribalta !== false
+  return v.ribalta != null ? v.ribalta : (DISEGNI[v.pezzo] || [])[4] !== false
 }
 import { guastiDegliOstacoli, OSTACOLI } from '../../src/giochi/fattoria3d/da2d/dati/ostacoli.js'
 import { guastiDeiBisogni, CIBI, COCCOLE, CHIAVI, cibiPer, foto,
@@ -71,24 +70,17 @@ controlla('gli animali non hanno guasti', guastiA.length === 0, guastiA.join(' �
 /* ══════════ 1b. I RITRATTI DI UN RECINTO, E IL RIPIEGO ══════════
    I sei stati di un recinto sono **sei domande al foglio**, non sei
    disegni obbligatori: chi il ritratto non ce l'ha mostra quello
-   calmo (`RECINTO` in `dati/catalogo.js`). Le cinque specie della
-   prima metà hanno cinque disegni su sei — il `fame` era stato tolto
-   apposta — e le cinque dell'orto ne hanno tre.
-
-   Il guasto che questo controlla è **muto**: `drawImage` con un nome
-   che l'atlante non ha torna senza disegnare e senza lanciare, quindi
-   il recinto sparirebbe in un certo momento della giornata e in
-   nessun altro, senza niente in console. `guastiDelCatalogo` lo dice
-   già riga per riga; qui si guarda che il ripiego sia **quello
-   giusto** e non un nome qualunque che esiste per caso. */
+   calmo (`RECINTO` in `dati/catalogo.js`, coi ritratti di allora fermi
+   in `dati/disegni.js`). Le cinque specie della prima metà hanno cinque
+   disegni su sei — il `fame` era stato tolto apposta — e le cinque
+   dell'orto ne hanno tre. Qui si guarda che il ripiego sia **quello
+   giusto** e non un nome qualunque. */
 {
   const recinti = Object.values(PER_ID).filter(v => v.stati)
   for (const v of recinti) {
     const specie = v.pezzo.replace(/^recinto_|_calmo$/g, '')
     uguale(`${v.id}: chi ha fame mostra il ritratto calmo`,
            v.stati.fame, `recinto_${specie}_calmo`)
-    for (const [quale, nome] of Object.entries(v.stati))
-      controlla(`${v.id}/${quale}: il ritratto è nell'atlante`, !!PEZZI[nome])
   }
   /* Le due metà del contratto, una per verso: chi il disegno ce l'ha
      lo usa, chi non ce l'ha ripiega. Senza la prima riga il ripiego

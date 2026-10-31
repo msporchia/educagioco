@@ -44,7 +44,7 @@ bambini: la scuola che chiede la merenda.
 | `scena3d/pezzi.js`, `azioni.js`, `Gioco.vue` | il cartello «🧁 N pronti!» sull'edificio (clienti che hanno già la roba), il tocco che apre il foglio, il foglio |
 
 Gli stessi file condivisi toccati: `catalogo.js` (una riga: `...EDIFICI_BOTTEGHE`), `dati/mondo.js` (i quattro posti storici `nuovo: true`, solo per i controlli),
-`dati/carte.js` (`DISEGNI`), `dati/livelli.js` (`NOMI`; una bottega non ha ricette, come la mongolfiera), `dati/parita2d.js` (`VOCE`), `motore/migra.js`
+`dati/livelli.js` (`NOMI`; una bottega non ha ricette, come la mongolfiera), `dati/parita2d.js` (`VOCE`), `motore/migra.js`
 (le botteghe della 2D diventano le botteghe 3D nel magazzino, con le consegne: la fama si porta dietro), `motore/tipo.js` (`TERRA_MAX` +12: quattro edifici 3×3 in più
 nella fattoria «tipo»).
 

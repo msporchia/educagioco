@@ -28,9 +28,16 @@ import { PRODOTTI_ANIMALI } from '../../src/giochi/fattoria3d/dati/animali.js'
 import { MANGIMI_SENZA_RICETTA } from '../../src/giochi/fattoria3d/dati/cortile2.js'
 import { lottoPerId, LOTTI_INIZIALI } from '../../src/giochi/fattoria3d/dati/mondo.js'
 import { biomaDi } from '../../src/giochi/fattoria3d/dati/biomi.js'
+import { CATALOGO as CATALOGO_2D, quantiVersi, puoSpecchiare, assettoDi } from '../../src/giochi/fattoria3d/da2d/dati/catalogo.js'
+import { ANIMALI as ANIMALI_2D, IN_VENDITA as IN_VENDITA_2D, AGGANCI_TUTTI, agganciDi, puntiDi } from '../../src/giochi/fattoria3d/da2d/dati/animali.js'
+import { createHash } from 'node:crypto'
 import { controlla, uguale, riassunto, nota } from '../aiuto/verifica.mjs'
 
 const T0 = 1770000000000
+// le firme della 2D ferma (vedi in fondo, «la 2D è ferma»)
+const FIRMA_TIPI_2D = 'e05f1bf82a5a'
+const FIRMA_CATALOGO_2D = '6309d84d9297'
+const FIRMA_BESTIE_2D = 'bc50807ca27a'
 
 // ── la mappatura dei livelli ──
 {
@@ -297,6 +304,26 @@ nota('livelli 2D → 3D:', forme.join(' '))
   const leggi = (c, k, d) => (c === 'fattoria3d' ? vecchio : c === 'fattoria' ? dato2D : d)
   uguale('statoDaCaricare ritocca lo stato vecchio', statoDaCaricare(leggi).silo.terra, 4)
   uguale('un dato guasto non lancia', ritoccaLaConversione({ migrato: 1, daRegalare: 'x' }, 7).migrato, MIGRAZIONE)
+}
+
+// ── la 2D è ferma: i suoi dati non cambiano più (da2d/, docs/fattoria3d/parita/migrazione.md) ──
+// La firma delle fattorie tipo 1–99 e del catalogo 2D (piede, giri, specchio, assetto) è quella del 31/10/2026: se cambia, è
+// cambiato quello che la conversione legge. La firma della conversione stessa la si stampa e basta: la 3D può cambiare.
+{
+  const firma = x => createHash('sha1').update(JSON.stringify(x)).digest('hex').slice(0, 12)
+  const tipi = [], convertite = []
+  for (let l = 1; l <= LIVELLO_MAX; l++) {
+    const dato = JSON.parse(JSON.stringify(fattoriaTipo(l, { ora: T0 }).serializza()))
+    tipi.push(dato)
+    convertite.push(statoDa2D(dato, { ora: T0 }))
+  }
+  const catalogo = CATALOGO_2D.map(v => [v, quantiVersi(v), puoSpecchiare(v),
+    [0, 1, 2, 3].map(g => [false, true].map(m => assettoDi({ id: v.id, g, m })))])
+  const bestie = [IN_VENDITA_2D, Object.keys(ANIMALI_2D).map(chi => [chi, agganciDi(chi), AGGANCI_TUTTI.map(d => puntiDi(chi, d))])]
+  uguale('le fattorie tipo 2D sono quelle di sempre', firma(tipi), FIRMA_TIPI_2D)
+  uguale('il catalogo 2D (piedi, giri, specchio) è quello di sempre', firma(catalogo), FIRMA_CATALOGO_2D)
+  uguale('le bestie 2D (in vendita, agganci) sono quelle di sempre', firma(bestie), FIRMA_BESTIE_2D)
+  nota('firma della conversione delle fattorie tipo 1–99:', firma(convertite))
 }
 
 riassunto('fattoria3d-migra')

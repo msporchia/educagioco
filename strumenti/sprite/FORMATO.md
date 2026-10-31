@@ -61,8 +61,8 @@ basta: l'attrezzo non cambia.
   ogni figura (alfa 1–50, di solito rossastro) e il corpo appena sotto
   il pieno (alfa 252). Sotto la soglia il pixel sparisce, sopra diventa
   pieno, e si fa sul foglio grande **prima** della riduzione: dopo,
-  l'alone è già impastato nei pixel del bordo. Il primo foglio così è
-  `edifici_4.png`.
+  l'alone è già impastato nei pixel del bordo. L'hanno `merci_3`,
+  `merci_4` e `campi_3`.
 - **`ombra`** — `true` toglie anche **l'ombra che il fondo si porta
   dietro**. Un generatore a cui si chiede «gli oggetti su un fondo
   piatto» quasi sempre disegna una macchia d'ombra sotto ognuno: non è

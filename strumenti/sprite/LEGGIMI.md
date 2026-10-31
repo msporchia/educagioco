@@ -145,6 +145,12 @@ il generatore.
 Il foglietto è **l'unico posto dove esistono delle coordinate**: il gioco
 parla solo di nomi.
 
+**La fattoria ritaglia solo quello che qualcuno disegna**: un pezzo entra
+nel foglietto insieme al codice che lo nomina (`VIVI` in `inutilizzati.mjs`
+dice chi è), e quando nessuno lo disegna più la sua riga se ne va. Se no
+`unita/sprite-inutilizzati` è rosso
+([`docs/core/sprite.md`](../../docs/core/sprite.md#gli-inutilizzati)).
+
 **Un attore** — chiunque cammini — non ha nemmeno quella: si mette il png
 in `attori/` e basta. Il formato è fisso e il generatore lo trova da sé:
 16×32, quattro fotogrammi per riga, bande a passo 32 (giù, di lato, su).

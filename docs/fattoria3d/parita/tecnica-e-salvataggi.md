@@ -27,7 +27,7 @@ Com'è fatta e cosa converte: [migrazione.md](migrazione.md).
 | T9 | fasce di qualità e degrado | – | ✅ `dati/qualita.js` (basso/medio/alto dalla fascia del telefono), degrado adattivo `dati/degrado.js` (scende sotto 30 fps per 2 s, risale dopo 10 s a 55); **da tarare su un telefono** | P1 |
 | T10 | istanziare il campo (−100 draw call), aiuole/panchine/pali, LOD, compagni più leggeri | – | ✅ banchi di istanze (campi e pezzi fermi, taglio fuori inquadratura), LOD dei compagni (−60% triangoli oltre 12 m), sole sulla griglia: [../istanze.md](../istanze.md) (le draw call in vista scendono meno del previsto: la scena è fatta di edifici e compagni; i pali e i fiori erano già istanze o fusi); **da misurare su un telefono** | P1 |
 | T11 | costo dell'avvio dei modelli | – | cache, ma ×5–8 sui telefoni: da misurare | P1 |
-| T12 | peso nel file | atlante 1,9 MB | three ~640 KB + `fattoria3d`; l'atlante della 2D resta, in `src/grafica/atlante-fattoria.js` (lo usano `Faccia.vue`, il profilo e Passo passo) | P1 |
+| T12 | peso nel file | atlante 1,9 MB | three ~640 KB + `fattoria3d`; l'atlante della 2D resta, in `src/grafica/atlante-fattoria.js`, coi soli pezzi che si disegnano (174 KB: `Faccia.vue`, il profilo e Passo passo) | P1 |
 | T13 | ogni modello nuovo si paga in mesh | – | ~30 modelli nuovi per la parità (recinti, pentolone, botteghe, decori): il budget va fissato per famiglia (`strumenti/misura-modelli3d.mjs`) | P1 |
 | T14 | contesti WebGL durante una visita | – | due tele insieme; da provare su un telefono | P1 |
 

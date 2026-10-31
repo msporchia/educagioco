@@ -91,7 +91,7 @@ sono edifici liberi come gli altri: `posseduti[tipo]` = in mappa, un posto di co
 | Sushi bar (`sushi_bar`) | 18 | 180 | **sushi** (riso 1, pesce 1, 8 s), maki (riso 1, carota 1, peperone 1, 6 s) |
 
 Id, ingredienti, quantità e tempi (minuti → secondi) sono quelli della 2D (`unita/fattoria3d-merci` li confronta uno per uno); le facce sono quelle dell'atlante (`merce_patatine`, `merce_fritto`,
-`merce_arancini`, `merce_sushi`, `merce_maki`, `merce_pesce`; la carta usa `friggitoria` e `sushi_bar` dell'atlante). **Il sushi è un prodotto finito visibile**: sta in inventario, negli ordini
+`merce_arancini`, `merce_sushi`, `merce_maki`, `merce_pesce`). **Il sushi è un prodotto finito visibile**: sta in inventario, negli ordini
 del banco (`chiedibili`: da livello 18), nelle casse della mongolfiera e nel mercato dei vicini come ogni ricetta.
 
 **I livelli**: la scaletta ha **una cosa produttiva per livello** e tutti e sedici i livelli ne avevano una, quindi le due macchine aprono due livelli in coda: **17 e 18**.

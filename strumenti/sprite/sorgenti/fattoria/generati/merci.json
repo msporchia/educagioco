@@ -13,7 +13,6 @@
     "merce_lana": {"da": [326, 225], "cella": [181, 205], "misura": [20, 23]},
     "merce_becchime": {"da": [561, 211], "cella": [215, 220], "misura": [24, 24]},
     "merce_zuppa": {"da": [821, 213], "cella": [224, 226], "misura": [25, 25]},
-    "merce_tartufi": {"da": [1067, 255], "cella": [234, 182], "misura": [26, 20]},
     "merce_mangime": {"da": [1328, 247], "cella": [196, 178], "misura": [22, 20]}
   }
 }

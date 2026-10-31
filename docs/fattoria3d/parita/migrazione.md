@@ -6,6 +6,10 @@ salvataggio (`campagne.fattoria`) resta nel profilo e si converte alla prima ape
 fa le fattorie 2D di prova). La prova è `test/unita/fattoria3d-migra.test.mjs` (fattorie 2D vere a ogni livello, `fattoriaTipo` 1–99). Voci della
 tabella: [tecnica-e-salvataggi.md](tecnica-e-salvataggi.md) T1–T3.
 
+**`da2d/` non legge l'atlante**: quello che ne ricavava (il piede dal disegno, i giri, i ritratti dei recinti, le bestie e i loro agganci)
+è un dato fermo in `da2d/dati/disegni.js`, perché l'atlante tiene solo quello che si disegna e la 2D non cambia più; la prova ne tiene la
+firma, con quella delle fattorie tipo.
+
 ## Le regole
 
 1. **Fedele in tutto, imprecisa nei piazzamenti.** Ogni cosa posseduta con un equivalente 3D diventa un pezzo nel `magazzino`, da ripiazzare

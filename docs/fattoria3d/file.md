@@ -17,7 +17,7 @@ dati/
   pesca.js           i numeri della pesca (`PESCA`: 12 s, riposo 60 s, raggio 6), `resaDellaPesca`, il pesce (`PESCI`, in `PRODOTTI_ANIMALI`)
   rotazione.js       ruotare i pezzi: `ruotabile`, `misureGirate`, `DAVANTI`, `rotLetta` ([rotazione.md](rotazione.md))
   stagioni3d.js      le feste in 3D: importa le finestre della 2D; `ASPETTI`, `PARTICELLE`, `addobbiNatale`, `chiazzeDiNeve`, `ghiaccioli`, `stagioneAttiva` ([stagioni.md](stagioni.md))
-  carte.js           le carte del menu «Costruisci qui»: `carteDi(categoria, stato)`, `schedeDi`, `DISEGNI` (carta → pezzo dell'atlante 2D, ormai solo come dato: la carta mostra il modello 3D), `STRUMENTI`, i guasti
+  carte.js           le carte del menu «Costruisci qui»: `carteDi(categoria, stato)`, `schedeDi` (la carta mostra il modello 3D), `STRUMENTI`
   catalogo.js        i pezzi (ora con la `categoria` di ogni pezzo e edificio, `CATEGORIE`; ora anche passerella, ponte e tavolo; i primi due `calpestabile`, con `alzato`: regole.md) — dieci all'inizio:  (campo, recinto, pollaio, stalla, bancarella, bacheca, aiuola, panchina, fontana, pozzo, spaventapasseri) e i dodici
                      edifici unici (fienile, pasticceria = il Pastificio, mongolfiera, mulino, panificio, caseificio, conserviera = la Cucina, gelateria, telaio, zuccherificio, sartoria, tintoria: gli id sono quelli dei salvataggi): prezzi, misure, `liv`, `slot`
   colture.js         le sedici colture (con l'erba medica, `mangime: true`): nome, emoji, `pezzo` (la faccia nell'atlante 2D), tempo, `liv`
@@ -42,6 +42,7 @@ da2d/                quello che resta della fattoria 2D (tolta il 31/10/2026), d
   dati/              i dati 2D da cui la 3D legge i numeri (`dati/parita2d.js` è il ponte): coltivazioni (colture, ricette, merci, silos, `PROFONDITA`),
                      catalogo, livelli (soglie, `roba`), mercato (clienti, premio a gesti), botteghe, mongolfiera, coda (la fila), bisogni, animali,
                      addobbi, stagioni (le finestre), mondo, terreni, ostacoli ([catena.md](catena.md), [livelli.md](livelli.md))
+  dati/disegni.js    quello che la 2D ricavava dall'atlante (piede, giri, ritratti dei recinti, bestie e agganci), fermo: l'atlante non lo tiene più ([parita/migrazione.md](parita/migrazione.md))
   motore/fattoria.js la `Fattoria` 2D: rilegge un salvataggio 2D per la conversione (`motore/migra.js`, [parita/migrazione.md](parita/migrazione.md))
   motore/tipo.js     la fattoria 2D «tipo» di un livello, per il cheat `#fattoria-tipo=N` e le prove della conversione; mercato, botteghe e mongolfiera i suoi motori
 motore/
