@@ -19,6 +19,8 @@ import { passiDi, turnoLibero, segnaTurno } from './coda-shader.js'
 import { segui, rilascia } from '../../../grafica/rilascio3d.js'
 
 const FOV = 24
+// `#anteprime-zoom=4` nell'indirizzo: le foto quattro volte più grandi, per guardarle da vicino (`tavola-anteprime.mjs --zoom 4`)
+const ZOOM = typeof location === 'undefined' ? 1 : Math.min(8, Math.max(1, Number((/[#&?]anteprime-zoom=(\d+)/.exec(location.hash + location.search) || [])[1]) || 1))
 const ATTESA_PROGRAMMA = 60   // ms lasciati alla compilazione di un programma nuovo, senza KHR_parallel_shader_compile (l'Adreno 512: 50-300)
 const _b = new THREE.Box3()
 
@@ -208,7 +210,7 @@ export function creaAnteprime3d({ ozio = 30000, budget = 16, perdite = 3 } = {})
     const p = inPosa(c)
     if (!p) return null
     const t1 = performance.now()
-    const [w, h] = MISURE[c.tipo] || [128, 128]
+    const [w, h] = (MISURE[c.tipo] || [128, 128]).map(x => x * ZOOM)
     scena.add(p.obj)
     try {
       const s = p.scatola || scatolaDi(p.obj)
