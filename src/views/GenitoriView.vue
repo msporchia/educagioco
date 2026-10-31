@@ -16,7 +16,7 @@ import { inGrassetto } from '../guide/aiuto.js'
 import SceltaAspetto from '../components/SceltaAspetto.vue'
 import { leggiPin, scriviPin, azzeraPin, PIN_INIZIALE, DOMANDA, rispostaGiusta, cosaDopoIlCodice,
          segnaSbaglio, azzeraSbagli, attesa } from '../store/pin.js'
-import { leggi as leggiIncidenti, dimentica as scordaIncidenti, ripara } from '../incidenti.js'
+import { leggi as leggiIncidenti, dimentica as scordaIncidenti, ripara, testoDaMandare } from '../incidenti.js'
 import { giudiziAccesi, accendiGiudizi, leggi as leggiGiudizi,
          dimentica as svuotaGiudizi, riga as rigaGiudizio,
          pacco as paccoGiudizi, verdettoDi } from '../store/giudizi.js'
@@ -116,13 +116,22 @@ function quando (iso) {
 }
 
 async function copiaGuasti () {
-  const testo = incidenti.value.map(g =>
-    `${g.quando} · ${g.dove} · ${g.versione}\n${g.testo}\n${g.pila || (g.dettagli || []).join('\n')}`).join('\n\n')
+  const testo = testoDaMandare(incidenti.value, __VERSIONE__.id)
   try {
     await navigator.clipboard.writeText(testo)
     esito.value = { ok: true, testo: 'Copiato negli appunti.' }
   } catch (e) {
     esito.value = { ok: false, testo: 'Non si riesce a copiare: si legge da qui.' }
+  }
+}
+
+// sul telefono il foglio «condividi» (WhatsApp, posta…): il testo intero, che nell'indirizzo del modulo non ci sta
+const siCondivide = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+async function inviaGuasti () {
+  try {
+    await navigator.share({ title: 'Ultimi inciampi di Educagioco', text: testoDaMandare(incidenti.value, __VERSIONE__.id) })
+  } catch (e) {
+    if (e?.name !== 'AbortError') copiaGuasti()      // chiuso il foglio senza scegliere: niente da dire
   }
 }
 
@@ -861,6 +870,8 @@ async function rimetti(v) {
               </li>
             </ul>
             <div class="riga">
+              <button v-if="siCondivide" class="bottone" data-azione="invia-guasti" @click="inviaGuasti">
+                Invia</button>
               <button class="bottone chiaro" data-azione="copia-guasti" @click="copiaGuasti">
                 Copia</button>
               <button class="bottone chiaro" data-azione="scorda-guasti" @click="scordaGuasti">

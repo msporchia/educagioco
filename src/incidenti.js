@@ -28,6 +28,15 @@ export function testoDi (e) {
 const primeRighe = (pila, quante = 4) =>
   typeof pila === 'string' ? pila.split('\n').slice(0, quante).join('\n') : ''
 
+/* il libretto come lo si copia o lo si manda dalla pagina dei grandi: la versione di adesso in testa, il più recente prima */
+export function testoDaMandare (lista, versioneOra = '') {
+  const righe = (Array.isArray(lista) ? lista : []).slice().reverse().map(g => {
+    const pila = g.pila || (g.dettagli || []).join('\n')
+    return `${g.quando} · ${g.dove} · ${g.versione || '?'}${g.volte > 1 ? ` · ${g.volte} volte` : ''}\n${g.testo}${pila ? '\n' + pila : ''}`
+  })
+  return [`Ultimi inciampi di Educagioco${versioneOra ? ' ' + versioneOra : ''}`, ...righe].join('\n\n')
+}
+
 export const leggi = () => load(CHIAVE).then(l => (Array.isArray(l) ? l : []))
 export const dimentica = () => { save(CHIAVE, []); return flush() }
 
