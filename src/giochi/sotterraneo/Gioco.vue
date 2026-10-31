@@ -588,7 +588,14 @@ function vendiSopra(t) {
 // il mondo di sopra (viste/Mondo3d.vue) si ricorda accanto, in `mondo`
 // (docs/sotterraneo/mondo-aperto-dati.md). La veduta d'insieme si apre dalla casella della mappa nella barra
 // (`quest` lo scrive Gioco.vue, non la vista: la vista manda il suo e il resto resta com'è)
-const ricordaMondo = v => nelMondo3d({ ...(mondoQui.value || {}), ...v })
+// `di` (eroe:terra, la chiave di Campagna) dice di chi è: il mondo che si smonta cambiando eroe si salva a scelta già fatta
+function ricordaMondo(v, di) {
+  const [eroe, t] = di ? di.split(':') : [eroeQui(), terraOra()]
+  ritocca(CHIAVE, c => {
+    const a = avventuraDi(c, eroe)
+    return scriviNellAvventura(c, eroe, conMondo(a, { ...(mondoDellaTerra(a, t) || {}), ...v }, t))
+  })
+}
 // la porta delle terre attraversata (viste/Mondo3d.vue): si scrive la terra nuova e il mondo di sopra rinasce lì (la chiave di
 // Campagna). Una terra mai raggiunta prima si segna nel primato `sotTerra`
 const porta = computed(() => laPorta(qui.value))
@@ -2243,7 +2250,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
       <!-- lo scontro di sopra (`sopra`) si gioca sul mondo, che resta montato: il pannello è quello delle discese (viste/ScontroSopra.vue) -->
       <template v-if="!corsa || sopra">
         <!-- la chiave è l'eroe e la terra: cambiando avventura o terra il mondo di sopra rinasce con la nebbia e il posto suoi -->
-        <Campagna ref="campagnaEl" :key="eroeQui() + ':' + terraOra()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
+        <Campagna ref="campagnaEl" :key="eroeQui() + ':' + terraOra()" :di="eroeQui() + ':' + terraOra()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
                   :roba="robaSopra" :mondo="mondoQui" @mondo="ricordaMondo" :dungeon="dungeonDelMondo" :terre="porta" @terre="allaTerra"
                   :veduta="vedutaSopra" @veduta="v => { vedutaSopra = v }" @risposta="rispostaSopra"
                   :punti="barra.punti" :punti-abilita="barra.puntiAbilita" @scheda="apriScheda"

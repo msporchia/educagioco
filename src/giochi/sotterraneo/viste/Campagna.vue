@@ -22,6 +22,7 @@ const props = defineProps({
   forze: { type: Object, default: null },    // vita ed energia di chi ha lasciato la discesa dal portale, o ferito sopra: { vita, vitaMax, energia, energiaMax }
   // il mondo generato, col suo salvataggio (`mondo`) e la veduta d'insieme
   mondo: { type: Object, default: null },
+  di: { type: String, default: null },   // di chi è il mondo (eroe:terra): torna col salvataggio, anche da un mondo che si smonta
   veduta: { type: Boolean, default: false },
   // i tredici dungeon del mondo a percorso per chiave (Gioco.vue, docs/sotterraneo/dungeon-che-si-rigenerano.md): da passare al mondo
   dungeon: { type: Array, default: null },
@@ -97,7 +98,7 @@ function comincia() {
            :giaScesa="ripresa ? ripresa.tappa : null" :portale="portale"
            :forze="forze" @cura="r => $emit('cura', r)"
            @scendi="tocca" @davanti="t => $emit('davanti', t ? t.indice ?? t.chiave : null)" @bottega="(k, s) => $emit('bottega', k, s)"
-           @mondo="v => $emit('mondo', v)" @risposta="r => $emit('risposta', r)" @veduta="v => $emit('veduta', v)"
+           @mondo="v => $emit('mondo', v, di)" @risposta="r => $emit('risposta', r)" @veduta="v => $emit('veduta', v)"
            @riprendi="$emit('riprendi')" :pensiero="pensiero" @pensa="$emit('pensa')" @pensiero="p => $emit('pensiero', p)"
            @pensiero-fine="$emit('pensiero-fine')" @trovati="v => $emit('trovati', v)"
            @scontro="v => $emit('scontro', v)" @raccogli="i => $emit('raccogli', i)" @terre="t => $emit('terre', t)">
