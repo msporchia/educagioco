@@ -7,7 +7,7 @@
    per giusta. Qui la leva, e la Domanda comune (`quiz/Domanda.vue`)
    raggiunta dal banco di prova dei grandi: spenta il tasto non c'è,
    accesa c'è e fa passare alla domanda dopo. Che non lasci traccia
-   (ripasso, monete, contatori) lo prova `salto-giochi`, dentro i giochi.
+   (ripasso, contatori) e che paghi lo prova `salto-giochi`, dentro i giochi.
    Vedi docs/core/comandi.md.
    `node test/esegui.mjs salto --niente-build`
    tempo: 60

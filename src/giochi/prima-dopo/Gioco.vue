@@ -197,8 +197,8 @@ function tocca(id) {
 }
 
 /* Il tasto «salta» dei grandi (docs/core/comandi.md): la storia è rimessa a
-   posto da sola e la tappa avanza, ma nessuno l'ha fatto: niente monete, niente
-   contatori, la serie resta com'è. */
+   posto da sola e la tappa avanza, ma nessuno l'ha fatto: paga come una giusta,
+   niente contatori, la serie resta com'è. */
 function salta() {
   if (fase.value !== 'gioca' || cieco.value || !quesito.value || !quesito.value.risolvi()) return
   vinta(true)
@@ -207,11 +207,11 @@ function salta() {
 
 function vinta(saltata = false) {
   corsa.value.registraSuccesso()
+  borsellino.paga(PAGA.storia)   // subito, e a fine tappa niente di più: docs/prima-dopo/presentazione.md
   if (!saltata) {
     segna('storie')
     serie.value++
     segnaBest('serieStorie', serie.value)
-    borsellino.paga(PAGA.storia)   // subito, e a fine tappa niente di più: docs/prima-dopo/presentazione.md
   }
   suono.ok()
   fase.value = 'vinta'

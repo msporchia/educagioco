@@ -206,7 +206,7 @@ function riponi() { if (libero()) { p().riponi(); salva() } }
 
 function conferma(saltata = false) {
   if (!libero()) return
-  // il tasto «salta» dei grandi (docs/core/comandi.md): dose fatta, ma nessuno ha misurato
+  // il tasto «salta» dei grandi (docs/core/comandi.md): dose fatta e pagata, ma nessuno ha misurato
   const e = saltata ? p().salta() : p().conferma()
   if (!e) return
   if (e.tipo === 'sbaglio') return sbagliato(e)

@@ -607,8 +607,8 @@ function allaTerra(t) {
 }
 const vedutaSopra = ref(false)
 // la domanda di una pietra del viaggio: una risposta giusta paga come giù, una sbagliata no (docs/apprendimento/calibrazione.md)
-function rispostaSopra({ giusto, saltata }) {
-  if (giusto && !saltata) { borsa(CHIAVE).paga(PAGA.mossa); suono.ok() } else if (!giusto) suono.no()
+function rispostaSopra({ giusto }) {
+  if (giusto) { borsa(CHIAVE).paga(PAGA.mossa); suono.ok() } else if (!giusto) suono.no()
 }
 
 // il nome della discesa (una zona potenziata ha il suo, docs/sotterraneo/zone.md)
@@ -1637,8 +1637,8 @@ function risposto({ giusto, saltata }) {
   // rispondere È il tocco che riprende: il freno può essersi acceso durante la domanda
   togli()
   // una risposta giusta paga subito, nelle discese come nell'abisso: docs/sotterraneo/regole.md
-  // (il tasto «salta» dei grandi dà la giusta ma non paga: docs/core/comandi.md)
-  if (giusto && !saltata) borsellino.paga(PAGA.mossa)
+  // (il tasto «salta» dei grandi paga come una giusta, ma non conta: docs/core/comandi.md)
+  if (giusto) borsellino.paga(PAGA.mossa)
   risolvi(giusto, saltata)
 }
 

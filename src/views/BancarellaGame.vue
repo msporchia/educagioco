@@ -344,14 +344,17 @@ function proponi() {
 }
 
 /* Il tasto «salta» dei grandi (docs/core/comandi.md), alla cassa: il conto e il
-   resto sono dati per fatti. Il cliente se ne va contento, ma non è un cliente servito:
-   niente ripasso, niente monete, niente contatori (clienti, incasso, restiPerfetti). */
+   resto sono dati per fatti. Il cliente se ne va contento e paga come uno servito,
+   ma non è un cliente servito: niente ripasso, niente contatori (clienti, incasso, restiPerfetti). */
 function salta() {
   const c = cliente.value
   if (occupato || !c || momento.value !== 'cassa') return
   occupato = true
   battuta.value = pick(GRAZIE)
   suono.moneta()
+  const preso = borsellino.paga(premioCliente(camp.value))
+  guadagno.monete = borsellino.dato
+  if (preso) { moneta.value = preso; setTimeout(() => (moneta.value = 0), 1100) }
   programma(prossimo, 600)
 }
 

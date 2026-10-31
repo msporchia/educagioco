@@ -185,7 +185,7 @@ function scegli(i) {
 
 /* «salta» (solo se chi sviluppa l'ha acceso): la domanda va al gioco per giusta, ma
    non passa da `scegli` — niente ripasso, niente alleggerimento, niente fretta —
-   e `saltata` nell'evento dice a chi ascolta di non pagare né contare. Una
+   e `saltata` nell'evento dice a chi ascolta di pagare ma non contare. Una
    pausa breve per vedere la giusta accendersi, non l'attesa di un esito vero. */
 const PAUSA_SALTO = 450
 const SVELTA = 700   // quanto si vede la giusta accesa in una partita che non si ferma

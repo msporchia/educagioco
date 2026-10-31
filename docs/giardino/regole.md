@@ -22,7 +22,7 @@ schermo, gira in Node), i numeri stanno in `dati/`.
    lì si spendono i soli e parte la **ricarica fissa** della pianta.
 4. **Un conto sbagliato non costa niente**: si riprova quando si vuole. Una
    moneta vera per conto giusto (`PAGA.mossa`); il tasto «salta» dei grandi dà
-   la pianta ma non paga e non conta.
+   la pianta e paga, ma non conta.
 
 **Il campo sta fermo durante il conto e mentre si sceglie la cella.** È una
 scelta dell'utente («mentre fai i conti il tempo va in pausa»): così il conto

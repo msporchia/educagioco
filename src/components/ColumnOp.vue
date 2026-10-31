@@ -93,7 +93,7 @@ function scrivi(d) {
 }
 
 /* il tasto «salta» dei grandi (docs/core/comandi.md): il conto è dato per
-   fatto senza errori; `saltata` dice a chi ascolta di non annotare né pagare */
+   fatto senza errori; `saltata` dice a chi ascolta di non annotare né contare (paga come un conto pulito) */
 function salta() {
   if (passo.value >= props.op.passi.length) return
   passo.value = props.op.passi.length

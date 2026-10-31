@@ -179,7 +179,8 @@ function conferma(saltata = false) {
   const tappaFinita = corsa.value.registra()
   esitoFila = null
   if (p.saltata) {
-    // il tasto «salta» dei grandi (docs/core/comandi.md): avanti, ma niente monete, contatori o serie
+    // il tasto «salta» dei grandi (docs/core/comandi.md): avanti e pagato come una vinta, ma niente contatori o serie
+    addCoins(p.monete)
   } else if (p.vinta) {
     addCoins(p.monete)
     segna('codici')

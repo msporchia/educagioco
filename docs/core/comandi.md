@@ -209,11 +209,14 @@ partenza, **del telefono** e non di un bambino: `store/salto.js`, chiave
 per passare i giochi senza pensare alle risposte. Non c'è segno in home né
 testo per i genitori: se ci si dimentica acceso, basta spegnerlo da `#admin`.
 
-- **Un salto non lascia traccia**: niente ripasso (`answer`/`annota`, né
-  giusta né sbagliata), niente monete, niente `segna()` né record, la
-  fretta e il filotto non si muovono. Nell'evento di `Domanda.vue` c'è
-  `saltata: true` (`rispostaSaltata` in `quiz/nucleo/domanda.js`); chi
-  ascolta lo guarda prima di pagare o contare.
+- **Un salto paga come una giusta, e il resto non lo sente**: le monete
+  arrivano uguali (stessa cifra, stesso momento, stesso borsellino, quindi
+  la varietà vale come sempre), per simulare l'economia di un bambino che
+  gioca; ma niente ripasso (`answer`/`annota`, né giusta né sbagliata),
+  niente `segna()` né record, la fretta e il filotto non si muovono.
+  Nell'evento di `Domanda.vue` c'è `saltata: true` (`rispostaSaltata` in
+  `quiz/nucleo/domanda.js`); chi ascolta lo guarda prima di contare, non di
+  pagare.
 - **Conta solo come avanzamento**: per andare avanti il gioco lo tratta da
   giusta (la tappa si avvicina, la porta si apre, la carta si prende) e per
   le stelle «senza errori» come una risposta pulita: saltando tutto si vince

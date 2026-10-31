@@ -564,8 +564,9 @@ function risposto({ giusto, saltata, tempo }) {
   }
   if (giusto) {
     if (eseguiMossa(v.azione, v.chi, v.dove)) {
-      // il tasto «salta» dei grandi dà la scelta ma non paga e non conta (docs/core/comandi.md)
-      if (!saltata) { borsellino.paga(PAGA.mossa); segna('arenaCalcoli') }
+      // il tasto «salta» dei grandi dà la scelta e paga, ma non conta il calcolo (docs/core/comandi.md)
+      borsellino.paga(PAGA.mossa)
+      if (!saltata) segna('arenaCalcoli')
       if (v.azione === 'costruisci' || v.azione === 'potenzia') segna('arenaCaserme')
       dici(frase(v))
     } else dici('le monete non bastavano più')

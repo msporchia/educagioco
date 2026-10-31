@@ -218,8 +218,9 @@ function risposto({ giusto, saltata, tempo }) {
     ritocca(CHIAVE, c => { c.bravura = { ...(c.bravura || {}), [v.op]: nuova } })
   }
   if (giusto) {
-    // il tasto «salta» dei grandi dà la pianta ma non paga e non conta (docs/core/comandi.md)
-    if (!saltata) { borsellino.paga(PAGA.mossa); segna('giardinoCalcoli') }
+    // il tasto «salta» dei grandi dà la pianta e paga, ma non conta il calcolo (docs/core/comandi.md)
+    borsellino.paga(PAGA.mossa)
+    if (!saltata) segna('giardinoCalcoli')
     inMano.value = { id: v.id, emoji: PIANTE[v.id].emoji }
   } else {
     dici('conto sbagliato: ci riprovi quando vuoi')

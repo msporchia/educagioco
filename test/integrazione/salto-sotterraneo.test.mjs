@@ -1,10 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════════
-   IL TASTO «SALTA» NEL SOTTERRANEO: UNA PORTA SI APRE SENZA PAGARE
+   IL TASTO «SALTA» NEL SOTTERRANEO: UNA PORTA SI APRE E PAGA
 
    Il sotterraneo fa le domande con la Domanda comune, ma paga e conta
-   da sé: ogni giusta paga subito (`borsellino.paga`), e `giuste` paga
-   l'abisso risalendo. Il salto deve aprire la porta, come una giusta,
-   e non lasciare niente: né ripasso, né monete, né contatori. Si va
+   da sé: ogni giusta paga subito (`borsellino.paga`). Il salto deve
+   aprire la porta e pagare, come una giusta, e non lasciare altro: né
+   ripasso, né contatori. Si va
    alla porta come in `sotterraneo-portale` (un seme, la strada toccando
    la tela 3D, la cella sullo schermo la dà `aSchermo`) e si guarda il profilo su disco prima e dopo.
    La leva si accende da `#admin`; qui si scrive la sua chiave in archivio.
@@ -153,7 +153,12 @@ async function accendiLaLeva() {
 const foto = async () => {
   await attendi(page, 800)
   const p = (await leggiProfilo(page)) || {}
-  return JSON.stringify({ items: p.items || {}, coins: p.coins || 0, totals: p.totals || {}, best: p.best || {} })
+  const { monete, ...totals } = p.totals || {}          // quanto è entrato nel salvadanaio sale col salto, come le monete
+  return JSON.stringify({ items: p.items || {}, totals, best: p.best || {} })
+}
+const soldi = async () => {
+  await attendi(page, 800)
+  return ((await leggiProfilo(page)) || {}).coins || 0
 }
 
 /* ---------- la porta, saltata ---------- */
@@ -162,11 +167,12 @@ await page.waitForSelector('.sot-domanda', { timeout: 40000 })
 await attendi(page, 450)                              // la finestra cieca del montaggio
 const salta = page.locator('.sot-domanda [data-azione="salta"]')
 controlla('la domanda della porta ha il suo «salta»', await salta.isVisible())
-const prima = await foto()
+const prima = await foto(), soldiPrima = await soldi()
 await salta.click()
 await page.waitForSelector('.sot-domanda', { state: 'detached', timeout: 5000 })
 uguale('la porta si apre', await page.locator('.sot-domanda').count(), 0)
-uguale('né ripasso, né monete, né contatori, né record: il profilo è identico', await foto(), prima)
+uguale('né ripasso, né contatori, né record: il resto del profilo è identico', await foto(), prima)
+controlla('e la porta ha pagato come una giusta', await soldi() > soldiPrima)
 
 uguale('nessun errore in console', errori.join(' · '), '')
 await browser.close()

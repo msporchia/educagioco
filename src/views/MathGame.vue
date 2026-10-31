@@ -567,8 +567,8 @@ function usaMirino() {
 
 /* Il tasto «salta» dei grandi (docs/core/comandi.md): il sasso giusto
    esplode come se l'avessero preso, e la partita va avanti. Non è una risposta:
-   niente ripasso, niente monete, niente punti, filotto e gettoni fermi, e
-   `segna()` non si tocca. Conta solo per andare avanti (centri, livello, tappa). */
+   niente ripasso, niente punti, filotto e gettoni fermi, e `segna()` non si
+   tocca; la moneta invece arriva come per un centro. Conta per andare avanti (centri, livello, tappa). */
 function salta() {
   if (fase.value !== 'gioco') return
   const a = asteroidi.find(x => x.ok && !x.morto)
@@ -576,6 +576,11 @@ function salta() {
   spara(a, '#8cff9d'); rompi(a, '#8cff9d'); suono.ok()
   hud.giuste++
   if (eMirata(domanda.chiave)) hud.mirate++
+  borsellino.paga(PAGA.asteroide)
+  if (hud.giuste % CFG.cartelloMonete === 0 && borsellino.dato > mostrate) {
+    mostraCartello('+' + (borsellino.dato - mostrate) + ' 🪙', '#ffd94a'); suono.moneta()
+    mostrate = borsellino.dato
+  }
   if (madre.attiva) return colpoAllaMadre(a)
   avanti()
 }

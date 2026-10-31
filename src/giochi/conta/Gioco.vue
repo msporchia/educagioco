@@ -118,11 +118,11 @@ function avviaTappa(i) {
 function rispondi(valore, { saltata = false } = {}) {
   const giusta = corsa.value.rispondi(valore)
   if (giusta) {
-    // il tasto «salta» dei grandi (docs/core/comandi.md): la tappa avanza, ma non paga né conta
+    // il tasto «salta» dei grandi (docs/core/comandi.md): la tappa avanza e paga, ma non conta
+    const pagato = incassa(tappaCorrente.value.premio)
+    monete.value += pagato.dato
+    chieste += pagato.chiesto
     if (!saltata) {
-      const pagato = incassa(tappaCorrente.value.premio)
-      monete.value += pagato.dato
-      chieste += pagato.chiesto
       segna('contate')
       serie.value++
       segnaBest('serieConta', serie.value)

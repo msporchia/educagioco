@@ -128,7 +128,7 @@ export function troppoDiFretta(d, { giusto, tempo }) {
 
 /* Il tasto «salta» (docs/core/comandi.md): l'evento di una domanda
    data per giusta senza che nessuno abbia risposto. `saltata` è la bandiera
-   che chi ascolta deve guardare per NON pagare e NON contare niente; `tempo`
+   che chi ascolta deve guardare per NON contare niente (paga come una giusta); `tempo`
    è 0 perché nessuno l'ha guardata, e `diFretta` è falso perché la fretta
    punisce chi sbaglia leggendo male, e qui nessuno ha sbagliato. */
 export function rispostaSaltata(d) {

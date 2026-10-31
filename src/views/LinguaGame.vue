@@ -144,7 +144,7 @@ function rispondi(o, { saltata = false } = {}) {
   occupato = true
   const t = turno.value
   const giusto = !!o.giusta
-  // il tasto «salta» dei grandi (docs/core/comandi.md): si avanza, ma nessuno ha risposto
+  // il tasto «salta» dei grandi (docs/core/comandi.md): si avanza e si paga, ma nessuno ha risposto
   if (!saltata) {
     answer(t.chiave, { correct: giusto })
     picker.afterAnswer(t.chiave, giusto)
@@ -159,12 +159,10 @@ function rispondi(o, { saltata = false } = {}) {
     hud.giuste++
     if (!saltata) hud.serie++
     if (nuoveDiTappa.value.has(t.chiave)) hud.mirate++
-    if (!saltata) {
-      segna(conta)
-      borsellino.paga(PAGA.parola)
-      prese.monete = borsellino.dato
-    }
-    if (!saltata && hud.giuste % CARTELLO === 0 && borsellino.dato > mostrate) {
+    if (!saltata) segna(conta)
+    borsellino.paga(PAGA.parola)
+    prese.monete = borsellino.dato
+    if (hud.giuste % CARTELLO === 0 && borsellino.dato > mostrate) {
       moneta.value = borsellino.dato - mostrate; mostrate = borsellino.dato
       setTimeout(() => (moneta.value = 0), 1100)
       suono.moneta()
