@@ -1,6 +1,6 @@
 /* Le stagioni della fattoria 3D (docs/fattoria3d/stagioni.md): quando (il calendario della 2D e `#stagione=`), come si vede (i dati), gli
-   addobbi di Natale scelti come nella 2D, le zucche di Halloween nel menu solo in stagione, e la scena che si tinge e si rimette a posto
-   senza lasciare niente. Senza browser (three senza WebGL). `node test/esegui.mjs fattoria3d-stagioni`
+   addobbi di Natale scelti come nella 2D, i ghiaccioli, le zucche di Halloween e il pupazzo di Natale nel menu solo in stagione, e la scena
+   che si tinge (la neve sui materiali, il fiato) e si rimette a posto senza lasciare niente. Senza browser (three senza WebGL). `node test/esegui.mjs fattoria3d-stagioni`
    tempo: 1 */
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
@@ -61,6 +61,15 @@ controlla('ogni voce stagionale del catalogo ha una stagione che esiste', Object
   controlla('ogni giorno ha le sue', JSON.stringify(c) !== JSON.stringify(S.chiazzeDiNeve(-10, -10, 10, 10, vuota, 100)))
   uguale('il tetto vale', S.chiazzeDiNeve(-200, -200, 200, 200, () => true, 1).length, S.CHIAZZE.massimo)
 }
+{
+  const edifici = [{ i: 0, j: 0, w: 3, d: 3, alto: 2.6 }, { i: 6, j: 0, w: 2, d: 2, alto: 3 }]
+  const luci = S.addobbiNatale(edifici, () => true, 7).luci, g = S.ghiaccioli(luci)
+  stessaLista('i ghiaccioli stanno sempre allo stesso posto', g, S.ghiaccioli(luci))
+  controlla('ce ne sono, ma non uno per ogni coppia di lucine (la fila non è un pettine)', g.length > 5 && g.length < luci.length - 1)
+  controlla('sotto la gronda, fra due lucine vicine, corti', g.every(x => luci.some(l => Math.hypot(l.x - x.x, l.z - x.z) < 0.3 && x.y > l.y)) && g.every(x => x.lungo >= 0.12 && x.lungo <= 0.35))
+  controlla('mai a cavallo di due edifici', g.every(x => edifici.some(e => x.x >= e.i - 0.1 && x.x <= e.i + e.w + 0.1 && x.z >= e.j - 0.1 && x.z <= e.j + e.d + 0.1)))
+  stessaLista('senza lucine niente ghiaccioli', S.ghiaccioli([]), [])
+}
 
 /* ══════════ 3. Halloween: le zucche si offrono solo in stagione ══════════ */
 {
@@ -70,6 +79,8 @@ controlla('ogni voce stagionale del catalogo ha una stagione che esiste', Object
   controlla('a Natale neanche', !ids(statoMenu('natale')).includes('zucca_intagliata'))
   controlla('a Halloween ci sono, nei decori', ids(statoMenu('halloween')).includes('zucca_intagliata') && schedeDi(statoMenu('halloween')).decori.some(c => c.id === 'zucche_mucchio'))
   controlla('comprata e finita la festa, nel magazzino si offre ancora (si rimette gratis)', ids(statoMenu('', { zucca_intagliata: 1 })).includes('zucca_intagliata'))
+  controlla('il pupazzo di neve c\'è solo a Natale, fra le feste', schedeDi(statoMenu('natale')).feste.some(c => c.id === 'pupazzo_neve') && !ids(statoMenu('halloween')).includes('pupazzo_neve') && !ids(statoMenu(null)).includes('pupazzo_neve'))
+  uguale('e costa come una zucca', PEZZI.pupazzo_neve.prezzo, 8)
   // W20: il segnalino 🎃/🎄 (come quello del baule 2D) finché non si possiede nessun pezzo della festa
   {
     const { festaDaScoprire } = await import('../../src/giochi/fattoria3d/dati/carte.js')
@@ -125,11 +136,24 @@ controlla('ogni voce stagionale del catalogo ha una stagione che esiste', Object
   controlla('la luce cambia', sole.color.getHex() === S.ASPETTI.natale.sole[0] && Math.abs(sole.intensity - S.ASPETTI.natale.sole[1]) < 1e-9)
   controlla('ci sono chiazze, una stella, le lucine', n.chiazze.count > 5 && n.stelle.count === 1 && n.lucine.count > 5)
   const disegni = []; n.gruppo.traverse(o => { if (o.isMesh) disegni.push(o) }); disegni.push(n.punti)
-  controlla('i disegni di Natale sono pochi: una sola draw call per famiglia (≤ 7 oggetti)', disegni.length <= 7, 'oggetti ' + disegni.length)
+  controlla('i disegni di Natale sono pochi: una sola draw call per famiglia (≤ 8 oggetti: sette famiglie e i fiocchi)', disegni.length <= 8, 'oggetti ' + disegni.length)
+  // la neve: le facce in alto del mulino prendono la copia innevata del loro materiale, una per materiale
+  const mulino = [...p.voci.values()].find(v => v.tipo === 'mulino').grp, innevate = []
+  mulino.traverse(o => { if (o.isMesh && o.visible) innevate.push(o.material.userData.innevato === true) })
+  controlla('a Natale il mulino ha la neve sui materiali', innevate.length > 0 && innevate.every(Boolean), innevate.join())
+  const copie = n.neve.copie.size; n.sporca(); n.aggiorna(0.5, 1)
+  uguale('rifare non moltiplica le copie', n.neve.copie.size, copie)
+  // il fiato: un solo Points, spento col basso, e butta una nuvoletta quando è il momento
+  const chi = new THREE.Group(); chi.add(new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.6, 0.3).translate(0, 0.8, 0)))
+  n.respira(() => [{ grp: chi, tipo: 'contadino' }])
+  controlla('il fiato è un solo Points', n.fiato.punti.isPoints && n.fiato.punti.visible)
+  n.aggiorna(10, 1); n.aggiorna(14, 1)
+  const nate = Array.from(n.fiato.nata.array).filter(t => t > 0)
+  controlla('respira: una nuvoletta davanti alla bocca, all\'altezza della testa', nate.length === 1 && n.fiato.pos.getY(0) > 1.1 && n.fiato.pos.getZ(0) > 0.2, n.fiato.pos.array.slice(0, 3).join())
   controlla('e istanziati, non mesh una per una', disegni.filter(o => o.isMesh).every(o => o.isInstancedMesh))
   controlla('i fiocchi sono un solo Points', n.punti.isPoints && n.punti.visible)
   n.applica({ particelle: false })
-  uguale('col preset basso i fiocchi si spengono (il resto resta)', n.punti.visible === false && n.chiazze.count > 5, true)
+  uguale('col preset basso i fiocchi e il fiato si spengono (il resto resta)', n.punti.visible === false && n.fiato.punti.visible === false && n.chiazze.count > 5, true)
   n.applica({ particelle: true })
   const c1 = n.chiazze.count
   camera.x += 40; n.aggiorna(1, 1)
@@ -141,6 +165,8 @@ controlla('ogni voce stagionale del catalogo ha una stagione che esiste', Object
   f.compraEMetti('fienile', 0, 0)                                   // anche un rifiuto va bene: il punto è che `sporca()` non rompe
   n.sporca(); n.aggiorna(3, 1)
   n.via()
+  const tornate = []; mulino.traverse(o => { if (o.isMesh && o.visible) tornate.push(!o.material.userData.innevato) })
+  controlla('finita la festa il mulino ha di nuovo i suoi materiali', tornate.every(Boolean))
   uguale('finita la festa il cielo torna com\'era', scena.background.getHex(), 0xbfe0f0)
   controlla('e la nebbia e le luci', scena.fog.color.getHex() === 0xbfe0f0 && sole.color.getHex() === 0xfff0d0 && Math.abs(sole.intensity - 2.3) < 1e-9 && Math.abs(emisfero.intensity - 1.05) < 1e-9)
   uguale('e la scena non ha più niente di suo', scena.children.length, figli0)

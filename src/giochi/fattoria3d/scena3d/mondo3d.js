@@ -75,11 +75,12 @@ export class Mondo3d {
     this.fx = new Effetti(this.scena, sopra, this.vista, qualita)
     this.terreno = new Terreno(this.scena, motore)
     this.pezzi = this.creaPezzi()
-    this.stagione = stagione ? new Stagione({ scena: this.scena, emisfero: this.emisfero, sole: this.sole, motore, pezzi: this.pezzi, camera: this.camera, qualita, nome: stagione }) : null
+    this.stagione = stagione ? new Stagione({ scena: this.scena, emisfero: this.emisfero, sole: this.sole, motore, pezzi: this.pezzi, camera: this.camera, qualita, nome: stagione, terreno: this.terreno }) : null
     this.scaldo = creaScaldo(this.pezzi.compitiScaldo())      // i modelli che servono presto, costruiti in tempo morto (scaldo-puro.js)
     this.eroe = new Eroe(this.scena, motore, this.fx, abito)
     this.eroe.alVia = () => this.camera.segui()
     this.compagni = new Compagni(this.scena, motore, this.eroe, this.fx, ui); this.compagni.camera = this.camera.cam
+    this.stagione?.respira(() => [{ grp: this.eroe.grp, tipo: 'contadino' }, ...this.compagni.lista.map(c => ({ grp: c.grp, tipo: c.tipo }))])      // a Natale il fiato
     this.pesca3d = new Pesca3d(this.scena, motore, this.eroe, this.fx, this.vista)          // i galleggianti, il filo e il cartello «abbocca!»
 
     this.ctx = {
@@ -347,7 +348,7 @@ export class Mondo3d {
       eroe: { x: eroe.x, z: eroe.z, vel: eroe.vel }, distanza: this.q.camera,
     })
     this.costruzione.fotogramma(dt)                               // il dito contro il bordo con un pezzo in mano: la camera scorre (costruzione.js)
-    this.stagione?.aggiorna(tt, this.renderer.getPixelRatio())     // i fiocchi: due uniform (scena3d/stagione.js)
+    this.stagione?.aggiorna(tt, this.renderer.getPixelRatio())     // i fiocchi e il fiato: pochi uniform (scena3d/stagione.js)
     this.terreno.segui(this.camera.x, this.camera.z)              // il suolo segue la camera; se cambia il lotto al mezzo si rifà la finestra
     const fineLogica = performance.now()
     // l'ombra: subito se qualcosa è cambiato o il sole è scattato sulla griglia; a camera ferma e contadino fermo (restano solo le bestie e le pale)

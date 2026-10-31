@@ -1,14 +1,17 @@
-// Le stagioni in scena: il cielo e la luce di Natale e di Halloween, i fiocchi di neve (o le lucciole arancioni), le chiazze di neve sul
-// prato, le lucine, le stelle e gli alberelli accanto agli edifici. Tutto effimero: non si salva, non occupa niente. Peso: ogni famiglia è
-// UNA draw call a istanze (o un solo `Points`), il moto dei fiocchi sta nel vertex shader. Quando non è festa non esiste niente (nessun
-// oggetto, nessuna chiamata). Cosa c'è e dove lo dicono i dati (dati/stagioni3d.js). Vedi docs/fattoria3d/stagioni.md.
+// Le stagioni in scena: il cielo e la luce di Natale e di Halloween, i fiocchi di neve (o le lucciole arancioni), a Natale la neve sul
+// mondo (scena3d/neve.js), l'erba che spunta, le lucine coi ghiaccioli, le stelle e gli alberelli accanto agli edifici, il fiato
+// (scena3d/fiato.js). Tutto effimero: non si salva, non occupa niente. Peso: ogni famiglia è UNA draw call a istanze (o un solo `Points`),
+// il moto dei fiocchi sta nel vertex shader. Quando non è festa non esiste niente (nessun oggetto, nessuna chiamata). Cosa c'è e dove lo
+// dicono i dati (dati/stagioni3d.js). Vedi docs/fattoria3d/stagioni.md.
 import * as THREE from 'three'
 import { segna } from '../../../grafica/elementi3d.js'
-import { ASPETTI, PARTICELLE, addobbiNatale, chiazzeDiNeve, semeDelGiorno } from '../dati/stagioni3d.js'
+import { ASPETTI, PARTICELLE, addobbiNatale, chiazzeDiNeve, ghiaccioli, semeDelGiorno } from '../dati/stagioni3d.js'
+import { Neve } from './neve.js'
+import { Fiato } from './fiato.js'
 
 const RAGGIO = 17                  // celle: le chiazze si spargono attorno alla telecamera, in una scacchiera quantizzata a QUANTO
 const QUANTO = 6                   // la scacchiera si rifà quando la camera ha cambiato quadrato (non a ogni passo)
-const CAP = { chiazze: 160, stelle: 40, alberelli: 40, luci: 700 }
+const CAP = { chiazze: 160, stelle: 40, alberelli: 40, luci: 700, ghiaccioli: 400 }
 const _o = new THREE.Object3D(), _c = new THREE.Color()
 
 const VERT = `
@@ -57,9 +60,11 @@ function creaPunti(n, alto, colore, dim, su) {
 }
 
 export class Stagione {
-  /** `nome`: 'natale' | 'halloween'. Prende il cielo, la nebbia e le luci della scena e le tinge; `via()` li rimette. */
-  constructor({ scena, emisfero, sole, motore, pezzi, camera, qualita, nome }) {
+  /** `nome`: 'natale' | 'halloween'. Prende il cielo, la nebbia e le luci della scena e le tinge; `via()` li rimette. `terreno` (può
+      mancare nelle prove senza WebGL): a Natale il suolo, i ciuffi e i laghi prendono la neve. */
+  constructor({ scena, emisfero, sole, motore, pezzi, camera, qualita, nome, terreno = null }) {
     this.scena = scena; this.emisfero = emisfero; this.sole = sole; this.m = motore; this.pezzi = pezzi; this.camera = camera; this.q = qualita
+    this.terreno = terreno; this.neve = null; this.fiato = null
     this.nome = nome; this.A = ASPETTI[nome]; this.seme = semeDelGiorno(new Date())
     this.gruppo = segna(new THREE.Group(), 'stagione'); this.gruppo.name = 'stagione'; scena.add(this.gruppo)
     this.prima = {
@@ -88,8 +93,9 @@ export class Stagione {
     im.count = 0; im.frustumCulled = false; this.gruppo.add(im); return im
   }
   _costruisciNatale() {
+    // col prato innevato le chiazze sono il contrario: l'erba che spunta dalla neve
     this.chiazze = this._istanze(new THREE.CircleGeometry(1, 9).rotateX(-Math.PI / 2),
-      new THREE.MeshStandardMaterial({ color: 0xf6f9ff, emissive: 0x8a96a6, roughness: 1, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), CAP.chiazze)
+      new THREE.MeshStandardMaterial({ color: 0x6f9a4a, roughness: 1, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), CAP.chiazze)
     this.chiazze.receiveShadow = true
     this.stelle = this._istanze(new THREE.OctahedronGeometry(0.17), new THREE.MeshBasicMaterial({ color: 0xffffff }), CAP.stelle)
     this.stelle.setColorAt(0, _c.set(0xffffff))
@@ -98,6 +104,15 @@ export class Stagione {
     this.cime = this._istanze(new THREE.ConeGeometry(0.17, 0.4, 7).translate(0, 0.78, 0), new THREE.MeshStandardMaterial({ color: 0xf6f9ff, roughness: 1, flatShading: true }), CAP.alberelli)
     this.lucine = this._istanze(new THREE.SphereGeometry(0.05, 4, 3), new THREE.MeshBasicMaterial({ color: 0xffffff }), CAP.luci)
     this.lucine.setColorAt(0, _c.set(0xffffff))
+    this.ghiaccioli = this._istanze(new THREE.ConeGeometry(0.035, 1, 5).rotateX(Math.PI).translate(0, -0.5, 0),
+      new THREE.MeshStandardMaterial({ color: 0xe2f3ff, emissive: 0x4a6070, roughness: 0.15, flatShading: true }), CAP.ghiaccioli)
+    this.neve = new Neve({ scena: this.scena, gruppo: this.gruppo, motore: this.m, pezzi: this.pezzi, terreno: this.terreno })
+  }
+
+  /** A Natale il fiato di chi sta all'aperto (`chi()`: [{ grp, tipo }], scena3d/fiato.js). Il mondo lo chiama quando contadino e compagni ci sono. */
+  respira(chi) {
+    if (this.nome !== 'natale' || this.fiato) return
+    this.fiato = new Fiato(this.scena, chi); this.fiato.applica(this.q)
   }
 
   _particelle() {
@@ -108,7 +123,7 @@ export class Stagione {
   }
 
   /** Le opzioni di qualità sono cambiate: il basso spegne i fiocchi (si vede lo stesso il resto). */
-  applica(q) { this.q = q; if (this.punti) this.punti.visible = !!q.particelle }
+  applica(q) { this.q = q; if (this.punti) this.punti.visible = !!q.particelle; this.fiato?.applica(q); this.neve?.applica(q) }
 
   /** Qualcosa è cambiato in mappa (o la camera ha cambiato quadrato): rifà le chiazze, le lucine e gli alberelli. */
   rinfresca(forza = false) {
@@ -120,7 +135,7 @@ export class Stagione {
     // le chiazze: celle vuote del prato (nessuna cosa, strada, acqua o sasso)
     const vuota = (i, j) => !m.occupata(i, j) && !m.acqua(i, j) && !m.ostacoloSu(i, j)
     const ch = chiazzeDiNeve(Math.floor(ci - RAGGIO), Math.floor(cj - RAGGIO), Math.ceil(ci + RAGGIO), Math.ceil(cj + RAGGIO), vuota, this.seme)
-    ch.forEach((c, n) => { _o.position.set(c.x, 0.022, c.z); _o.scale.set(c.r, 1, c.r * 0.85); _o.rotation.set(0, n, 0); _o.updateMatrix(); this.chiazze.setMatrixAt(n, _o.matrix) })
+    ch.forEach((c, n) => { _o.position.set(c.x, 0.022, c.z); _o.scale.set(c.r * 0.55, 1, c.r * 0.47); _o.rotation.set(0, n, 0); _o.updateMatrix(); this.chiazze.setMatrixAt(n, _o.matrix) })
     this.chiazze.count = ch.length; this.chiazze.instanceMatrix.needsUpdate = true
     // gli edifici: la stella sul tetto, le lucine sotto la gronda, l'alberello accanto
     const alti = []
@@ -146,6 +161,12 @@ export class Stagione {
       this.lucine.setMatrixAt(n, _o.matrix); this.lucine.setColorAt(n, _c.set(l.rosso ? 0xff3a3a : 0xffd84a))
     })
     this.lucine.count = Math.min(ad.luci.length, CAP.luci); this.lucine.instanceMatrix.needsUpdate = true; if (this.lucine.instanceColor) this.lucine.instanceColor.needsUpdate = true
+    const gh = ghiaccioli(ad.luci.slice(0, CAP.luci)).slice(0, CAP.ghiaccioli)
+    gh.forEach((g, n) => {
+      _o.position.set(g.x, g.y, g.z); _o.scale.set(1, g.lungo, 1); _o.rotation.set(0, 0, 0); _o.updateMatrix(); this.ghiaccioli.setMatrixAt(n, _o.matrix)
+    })
+    this.ghiaccioli.count = gh.length; this.ghiaccioli.instanceMatrix.needsUpdate = true
+    this.neve.rinfresca(ci, cj, RAGGIO)
   }
   /** La mappa è cambiata (un pezzo messo, spostato, girato, tolto): al prossimo fotogramma si rifà. */
   sporca() { this._sporca = true }
@@ -154,6 +175,7 @@ export class Stagione {
   aggiorna(tt, pxRatio = 1) {
     const u = this.punti.material.uniforms
     u.uT.value = tt; u.uPx.value = pxRatio; u.uCentro.value.set(this.camera.x, this.camera.z)
+    this.fiato?.aggiorna(tt, pxRatio)
     if (this._sporca || this.nome === 'natale') this.rinfresca()
   }
 
@@ -162,6 +184,7 @@ export class Stagione {
     this.scena.background.copy(p.cielo); this.scena.fog.color.copy(p.nebbia)
     this.emisfero.color.copy(p.emisfero[0]); this.emisfero.groundColor.copy(p.emisfero[1]); this.emisfero.intensity = p.emisfero[2]
     this.sole.color.copy(p.sole[0]); this.sole.intensity = p.sole[1]
+    this.neve?.via(); this.fiato?.via()
     this.scena.remove(this.gruppo, this.punti)
     this.gruppo.traverse(o => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose() } })
     this.punti.geometry.dispose(); this.punti.material.dispose()
