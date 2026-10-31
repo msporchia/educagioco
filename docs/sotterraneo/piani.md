@@ -88,9 +88,6 @@ La forma che non ci sta si ritira. Le grotte hanno `grotta`, `bilobata`,
 - **Una colonna è roccia sola o a coppia, mai attaccata al muro, mai a meno di
   due celle da un'altra e dal centro.** Si gira attorno e ci si nasconde dietro,
   ma non si chiude mai una strada: tutt'attorno c'è stanza.
-- **Il muro alto una cella le disegna da solo** (`scena/muri.js`): una colonna
-  da una cella è una faccia con i due spigoli, una coppia in verticale ha
-  il suo tetto sopra la faccia. Guardato con uno scatto: sembrano pilastri.
 - **Nascondono alla luce** (una colonna è roccia: ferma il cono come un muro).
 
 ## I mostri: branchi, appostati, caporali

@@ -114,9 +114,6 @@ Per disegnare con fogli di figure invece che coi poligoni:
   `giraSocket` fa un quarto di giro (i giri sono quattro perché la pixel
   art regge i 90°, non i 45°), pose identiche su ogni lato (un incrocio
   girato) restano una sola.
-- **La forma dei muri** viene da `giochi/sotterraneo/scena/muri.js`: a tre quarti la faccia di un muro
-  non è il bordo di una zona, è una cella intera che si vede da una parte
-  sola (la regola sta in [`../sotterraneo/`](../sotterraneo/README.md)).
 
 ## Fedeli ai sorgenti
 
