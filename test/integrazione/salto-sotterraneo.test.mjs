@@ -6,17 +6,16 @@
    l'abisso risalendo. Il salto deve aprire la porta, come una giusta,
    e non lasciare niente: né ripasso, né monete, né contatori. Si va
    alla porta come in `sotterraneo-portale` (un seme, la strada toccando
-   la tela) e si guarda il profilo su disco prima e dopo.
+   la tela 3D, la cella sullo schermo la dà `aSchermo`) e si guarda il profilo su disco prima e dopo.
    La leva si accende da `#admin`; qui si scrive la sua chiave in archivio.
    Vedi docs/core/comandi.md.
    `node test/esegui.mjs salto-sotterraneo --niente-build`
-   tempo: 90
+   tempo: 120
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, attendi, scegli, leggiProfilo, scendiNelSotterraneo }
+import { apriBrowser, apriGioco, azzera, semina, attendi, scegli, leggiProfilo, scendiNelSotterraneo, mondoPronto }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { T } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { percorso } from '../../src/motore/passi.js'
@@ -60,13 +59,14 @@ await semina(page, {
   coins: 300, settings: { sperimentali: true },
   campagne: { sotterraneo: { tappa: 0, libera: false, stelle: {},
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: 0, libera: false, stelle: {}, missioni: {},
-      roba, terra: { nebbia: 'f'.repeat(768), dove: [55, 11], parlato: true } } } } } },
+      roba, mondo: { parlato: true } } } } } },
 })
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
-await page.evaluate(s => { location.hash = 'seme=' + s }, piano.seme)
+await mondoPronto(page)
+await page.evaluate(s => { location.hash = 'sotterraneo&seme=' + s + '&torcia=accesa&dpr=1' }, piano.seme)
 await scendiNelSotterraneo(page, 0)
-await page.waitForSelector('.sot-tela', { timeout: 5000 })
+await page.waitForSelector('[data-tela="3d"]', { timeout: 20000 })
+await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.corsa && window.__sotterraneo3d.grafica().figure > 0 && !window.__sotterraneo3d.grafica().mondo, null, { timeout: 30000 })
 await attendi(page, 700)
 
 const cdp = await page.context().newCDPSession(page)
@@ -81,17 +81,15 @@ async function toccaIl(sel) {
 }
 
 /* ── giù: dov'è l'eroe lo dice la tela, e una cella si trova sullo schermo da lì ── */
-const tela = page.locator('.sot-tela')
+const tela = page.locator('[data-tela="3d"]')
 const cellaGiu = () => tela.getAttribute('data-eroe')
-async function schermoDi(c) {
-  const [ex, ey] = (await cellaGiu()).split(',').map(Number)
-  const [sx, sy] = (await tela.getAttribute('data-eroe-schermo')).split(',').map(Number)
-  const s = Number(await tela.getAttribute('data-scala')) * T
+async function schermoDi(c, su = 0.05) {
+  const [sx, sy] = await page.evaluate(([x, y, h]) => window.__sotterraneo3d.aSchermo(x + 0.5, h, y + 0.5), [c.x, c.y, su])
   const b = await tela.boundingBox()
-  return { x: b.x + sx + (c.x - ex) * s, y: b.y + sy + (c.y - ey) * s, b }
+  return { x: b.x + sx, y: b.y + sy, b }
 }
 // sullo schermo e lontano dalla mappina (in alto a destra), dallo zaino e dalla riga in fondo
-const dentro = ({ x, y, b }) => x > b.x + 30 && x < b.x + b.width - 30 && y > b.y + 140 && y < b.y + b.height - 110
+const dentro = ({ x, y, b }) => x > b.x + 30 && x < b.x + b.width - 140 && y > b.y + 140 && y < b.y + b.height - 160
 async function fermoGiu() {
   let prima = null
   for (let i = 0; i < 40; i++) {
@@ -101,7 +99,7 @@ async function fermoGiu() {
     await attendi(page, 300)
   }
 }
-const apertoGiu = async () => (await page.locator('.sot-domanda, [data-azione="portale"], [data-azione="scappa"], .sot-velo-scontro').count()) > 0
+const apertoGiu = async () => (await page.locator('.sot-domanda, [data-azione="portale"], [data-azione="scappa"], .sot-velo-scontro, [data-scontro-3d]').count()) > 0
 // cammina verso la cosa in `a` toccando la cella più lontana della strada che sta sullo schermo, finché si è
 // accanto; poi tocca la cosa, che da accanto è in luce (una cosa al buio non si tocca: si cammina lì)
 async function vaiGiu(a, { toccala = true } = {}) {
@@ -160,7 +158,7 @@ const foto = async () => {
 
 /* ---------- la porta, saltata ---------- */
 await vaiGiu(piano.porta)
-await page.waitForSelector('.sot-domanda', { timeout: 8000 })
+await page.waitForSelector('.sot-domanda', { timeout: 40000 })
 await attendi(page, 450)                              // la finestra cieca del montaggio
 const salta = page.locator('.sot-domanda [data-azione="salta"]')
 controlla('la domanda della porta ha il suo «salta»', await salta.isVisible())

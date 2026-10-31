@@ -2,18 +2,17 @@
    LA PERGAMENA DEL PORTALE, COL DITO
    (docs/sotterraneo/portale-e-sosta.md, «La pergamena del portale»)
 
-   Sulla terra di sopra l'incantatrice non vende pergamene finché non le si è riportato il quaderno; dopo sì, e la si
-   compra dal suo banco. Giù (nel Sotterraneo 3D, che ha la stessa avventura) la si apre dallo zaino: accanto all'eroe
-   si accende un portale, lo si tocca e si sale nel mondo di sopra, dove c'è il gemello; dal gemello si torna giù nel
-   punto di prima, col portale della pergamena ancora aperto, e da lì si risale gratis. Console pulita.
+   Sul mondo di sopra l'incantatrice non vende pergamene finché non le si è riportato il quaderno; dopo sì, e la si
+   compra dal suo banco (l'eroe ci va col salto delle prove, `__mondo3d.vai`). Giù la si apre dallo zaino: accanto
+   all'eroe si accende un portale, lo si tocca e si sale nel mondo di sopra, dove c'è il gemello; dal gemello si torna
+   giù nel punto di prima, col portale della pergamena ancora aperto, e da lì si risale gratis. Console pulita.
    `node test/esegui.mjs sotterraneo-pergamena`
-   tempo: 240
+   tempo: 480
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, finestraFerma, nelDialogo, compraNellaBottega,
-         allaLinguettaDi, leggiProfilo, toccaNelMondo } from '../aiuto/browser.mjs'
+         allaLinguettaDi, leggiProfilo, toccaNelMondo, mondoPronto, scendiNelSotterraneo } from '../aiuto/browser.mjs'
 import { uguale, controlla, riassunto } from '../aiuto/verifica.mjs'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
-import { MERCANTI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { PREZZO_PERGAMENA } from '../../src/giochi/sotterraneo/dati/cose.js'
 
 const P = 'pergamena-portale'
@@ -33,19 +32,39 @@ async function toccaIl(sel) {
 }
 const avventura = async () => (await leggiProfilo(page)).campagne.sotterraneo.cfg.avventure.cavaliere
 
-// sulla terra di sopra dipinta (il Sotterraneo di sempre), accanto all'incantatrice
+// l'eroe va (salto delle prove) accanto all'incantatrice e la tocca: il fumetto del pensiero dell'eroe fermo può coprirla e prendere il
+// tocco, e allora si riporta l'eroe lì e si riprova
+async function daLei() {
+  for (let giro = 0; giro < 5; giro++) {
+    await page.evaluate(() => { window.__mondo3d.senzaMostri(); window.__mondo3d.vai('mercante:villaggio:incantatrice') })
+    let uguali = 0, ultimo = ''   // la telecamera arriva morbida: tre letture uguali di fila, a mezzo secondo
+    for (let i = 0; i < 60 && uguali < 3; i++) {
+      await attendi(page, 500)
+      const b = await page.locator('[data-mercante="incantatrice"]').first().boundingBox().catch(() => null)
+      const ora = b ? `${Math.round(b.x)},${Math.round(b.y)}` : ''
+      uguali = ora && ora === ultimo ? uguali + 1 : 0
+      ultimo = ora
+    }
+    await page.waitForSelector('[data-pensiero]', { state: 'detached', timeout: 20000 }).catch(() => {})
+    await toccaNelMondo(page, '[data-mercante="incantatrice"][data-citta="villaggio"]', { tocca })
+    if (await page.waitForSelector('[data-dialogo]', { timeout: 12000 }).then(() => true).catch(() => false)) return
+  }
+}
+
+// sul mondo di sopra, accanto all'incantatrice
 async function sopra(missioni) {
   await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
   await azzera(page)
   await page.setViewportSize({ width: 390, height: 844 })
-  const roba = { v: 1, gemme: GEMME, zaino: [], mano: null, mancina: null, corpo: 'corazza', dito: null, torcia: 0, torce: 0 }
+  // una spada e una torcia in tasca: senza, l'eroe fermo pensa al fabbro o alla guaritrice (con cento gemme)
+  const roba = { v: 1, gemme: GEMME, zaino: [], mano: 'spada', mancina: null, corpo: 'corazza', dito: null, torcia: 0, torce: 3 }
   await semina(page, { coins: 300, settings: { sperimentali: true },
     campagne: { sotterraneo: { tappa: 2, libera: false, stelle: { 0: 3, 1: 3 }, cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: {
-      tappa: 2, libera: false, stelle: { 0: 3, 1: 3 }, missioni, roba, terra: { nebbia: 'f'.repeat(768), dove: MERCANTI.incantatrice.accanto, parlato: true } } } } } } })
+      tappa: 2, libera: false, stelle: { 0: 3, 1: 3 }, missioni, roba, mondo: { parlato: true } } } } } } })
   await scegli(page, 'sotterraneo')
-  await page.waitForSelector('[data-terra]', { timeout: 8000 })
+  await mondoPronto(page)
   await attendi(page, 600)
-  await toccaIl('[data-mercante="incantatrice"]')
+  await daLei()
 }
 
 /* ── prima del quaderno: lei lo chiede, e le pergamene non le vende ── */
@@ -75,8 +94,10 @@ await sopra({ quaderno: 'consegnata' })
 }
 
 /* ── giù, nel 3D: dallo zaino si apre il portale, e si sale ── */
-await page.evaluate(() => { location.hash = 'sotterraneo=1&seme=11&stanza=sala&torcia=accesa&dpr=1' })
-await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 30000 })
+await page.evaluate(() => { location.hash = 'sotterraneo&seme=11&stanza=sala&torcia=accesa&dpr=1' })
+await scendiNelSotterraneo(page, 1, { tocca })
+await page.waitForSelector('[data-tela="3d"]', { timeout: 20000 })
+await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.corsa && window.__sotterraneo3d.grafica().figure > 0 && !window.__sotterraneo3d.grafica().mondo, null, { timeout: 30000 })
 await attendi(page, 3000)
 let dove = null
 {

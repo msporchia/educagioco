@@ -20,18 +20,19 @@
    porta, mostro e portale. Si sceglie la scalinata e non la cripta perché là i
    mostri hanno due ossa e a mani nude cadono in un colpo: uno «ferito» non
    c'è. Si cammina toccando la tela come un bambino, una cella lontana alla
-   volta (`Input.dispatchTouchEvent` via CDP), e si risponde col tasto giusto
-   della domanda (`data-giusta`).
+   volta (`Input.dispatchTouchEvent` via CDP; la cella sullo schermo la dà la
+   scena 3D, `aSchermo`), e si risponde col tasto giusto della domanda
+   (`data-giusta`). Sopra l'eroe va dall'erborista e dal gemello col salto delle
+   prove (`__mondo3d.vai`).
    `node test/esegui.mjs sotterraneo-portale`
-   tempo: 120
+   tempo: 600
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegliAttacco, leggiProfilo, scendiNelSotterraneo,
-         compraNellaBottega, nelDialogo , finestraFerma }
+         compraNellaBottega, nelDialogo, finestraFerma, mondoPronto, toccaNelMondo }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { T } from '../../src/giochi/sotterraneo/dati/mondo.js'
-import { PORTALE } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
+import { ilMondo, postiDi } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { percorso } from '../../src/motore/passi.js'
@@ -89,18 +90,23 @@ const aperte = new Set()   // i gruppi di porte aperti, per camminare nel modell
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
+// la discesa 3D è pronta: la tela, e la scena con le sue figure
+const giuPronto = async () => {
+  await page.waitForSelector('[data-tela="3d"]', { timeout: 20000 })
+  await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.corsa && window.__sotterraneo3d.grafica().figure > 0 && !window.__sotterraneo3d.grafica().mondo, null, { timeout: 30000 })
+}
 await azzera(page)
 await semina(page, {
   coins: 300, settings: { sperimentali: true },
   campagne: { sotterraneo: { tappa: DISCESA, libera: false, stelle: { 0: 3 },
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: DISCESA, libera: false, stelle: { 0: 3 }, missioni: {},
-      roba, terra: { nebbia: 'f'.repeat(768), dove: [55, 11], parlato: true } } } } } },
+      roba, mondo: { parlato: true } } } } } },
 })
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
-await page.evaluate(s => { location.hash = 'seme=' + s + '&stanza=portale' }, piano.seme)
+await mondoPronto(page)
+await page.evaluate(s => { location.hash = 'sotterraneo&seme=' + s + '&stanza=portale' }, piano.seme)
 await scendiNelSotterraneo(page, DISCESA)
-await page.waitForSelector('.sot-tela', { timeout: 5000 })
+await giuPronto()
 await attendi(page, 700)
 
 const cdp = await page.context().newCDPSession(page)
@@ -118,15 +124,13 @@ async function toccaIl(sel) {
 /* ── giù: dov'è l'eroe lo dice la tela, e una cella si trova sullo schermo da lì ── */
 const tela = page.locator('.sot-tela')
 const cellaGiu = () => tela.getAttribute('data-eroe')
-async function schermoDi(c) {
-  const [ex, ey] = (await cellaGiu()).split(',').map(Number)
-  const [sx, sy] = (await tela.getAttribute('data-eroe-schermo')).split(',').map(Number)
-  const s = Number(await tela.getAttribute('data-scala')) * T
+async function schermoDi(c, su = 0.05) {
+  const [sx, sy] = await page.evaluate(([x, y, h]) => window.__sotterraneo3d.aSchermo(x + 0.5, h, y + 0.5), [c.x, c.y, su])
   const b = await tela.boundingBox()
-  return { x: b.x + sx + (c.x - ex) * s, y: b.y + sy + (c.y - ey) * s, b }
+  return { x: b.x + sx, y: b.y + sy, b }
 }
 // sullo schermo e lontano dalla mappina (in alto a destra), dallo zaino e dalla riga in fondo
-const dentro = ({ x, y, b }) => x > b.x + 30 && x < b.x + b.width - 30 && y > b.y + 140 && y < b.y + b.height - 110
+const dentro = ({ x, y, b }) => x > b.x + 30 && x < b.x + b.width - 140 && y > b.y + 140 && y < b.y + b.height - 160
 async function fermoGiu() {
   let prima = null
   for (let i = 0; i < 40; i++) {
@@ -136,7 +140,7 @@ async function fermoGiu() {
     await attendi(page, 300)
   }
 }
-const apertoGiu = async () => (await page.locator('.sot-domanda, [data-azione="portale"], [data-azione="scappa"], .sot-velo-scontro').count()) > 0
+const apertoGiu = async () => (await page.locator('.sot-domanda, [data-azione="portale"], [data-azione="scappa"], [data-scontro-3d]').count()) > 0
 // cammina verso la cosa in `a` toccando la cella più lontana della strada che sta sullo schermo, finché si è
 // accanto; poi tocca la cosa, che da accanto è in luce (una cosa al buio non si tocca: si cammina lì)
 async function vaiGiu(a, { toccala = true } = {}) {
@@ -175,6 +179,24 @@ async function vaiGiu(a, { toccala = true } = {}) {
     await fermoGiu()
   }
 }
+// l'eroe va (salto delle prove) accanto a `k` e lo si tocca (`sel` è il suo bersaglio nel mondo) finché non compare `atteso`: il fumetto
+// del pensiero dell'eroe fermo (docs/sotterraneo/pensieri.md) può coprire chi gli sta accanto e prendere il tocco, e allora si riprova
+async function vaDa(sel, k, atteso = '[data-dialogo]') {
+  for (let giro = 0; giro < 5; giro++) {
+    await page.evaluate(k => { window.__mondo3d.senzaMostri(); window.__mondo3d.vai(k) }, k)
+    let uguali = 0, ultimo = ''   // la telecamera arriva morbida: tre letture uguali di fila, a mezzo secondo
+    for (let i = 0; i < 60 && uguali < 3; i++) {
+      await attendi(page, 500)
+      const b = await page.locator(sel).first().boundingBox().catch(() => null)
+      const ora = b ? `${Math.round(b.x)},${Math.round(b.y)}` : ''
+      uguali = ora && ora === ultimo ? uguali + 1 : 0
+      ultimo = ora
+    }
+    await page.waitForSelector('[data-pensiero]', { state: 'detached', timeout: 20000 }).catch(() => {})
+    await toccaNelMondo(page, sel, { tocca })
+    if (await page.waitForSelector(atteso, { timeout: 12000 }).then(() => true).catch(() => false)) return
+  }
+}
 async function rispondi(giusto = true) {
   await scegliAttacco(page)
   await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 5000 })
@@ -207,12 +229,12 @@ await fermoGiu()
 
 /* ---------- 3. il portale ---------- */
 await vaiGiu(piano.portale, { toccala: false })
-const vicino = await schermoDi(piano.portale)
+const vicino = await schermoDi(piano.portale, 0.6)
 controlla('il portale si vede sullo schermo', dentro(vicino))
 await attendi(page, 400)
 await scatto(page, 'portale-discesa')
 await tocca(vicino.x, vicino.y)
-await page.waitForSelector('[data-azione="portale"]', { timeout: 8000 })
+await page.waitForSelector('[data-azione="portale"]', { timeout: 40000 })
 uguale('il portale non chiede niente', await page.locator('.sot-domanda').count(), 0)
 await scatto(page, 'portale-foglio')
 const dovEro = await cellaGiu()
@@ -221,13 +243,13 @@ controlla('si sale ammaccati: la fuga e i colpi hanno costato vita', vitaGiu[0] 
 await page.locator('[data-azione="portale"]').click()
 
 /* ---------- 4. su nel villaggio: il gemello ---------- */
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await mondoPronto(page)
 await attendi(page, 700)
-uguale('si sbuca accanto al portale gemello', await page.locator('[data-eroe-terra]').getAttribute('data-cella'),
-       PORTALE.accanto.join(','))
+const gemello = postiDi(ilMondo(), 'portale').find(q => q.citta === 'villaggio')
+uguale('si sbuca accanto al portale gemello', await page.locator('[data-eroe-mondo]').getAttribute('data-cella'),
+       `${gemello.accanto.x},${gemello.accanto.y}`)
 uguale('che sta nel villaggio', await page.locator('[data-portale]').count(), 1)
 uguale('salendo non si guarisce: la barra dice la vita di giù', (await vitaInBarra('sopra')).join('/'), vitaGiu.join('/'))
-uguale('e la carta in cima dice la discesa a metà', await page.locator('[data-ripresa] [data-ritaglio]').count(), 1)
 await scatto(page, 'portale-villaggio')
 let p = await leggiProfilo(page)
 const sosta = p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.sosta
@@ -244,7 +266,7 @@ uguale('e la sosta porta la vita di giù', sosta?.vita, vitaGiu[0])
 nota(`la sosta pesa ${JSON.stringify(sosta).length} byte`)
 
 /* ---------- 5. dall'erborista: prima la cura (gratis), poi la bottega ---------- */
-await toccaIl('[data-mercante="erborista"]')
+await vaDa('[data-mercante="erborista"][data-citta="villaggio"]', 'mercante:villaggio:erborista')
 await nelDialogo(page, '[data-scelta="cura"]', { tocca: toccaIl })
 await page.waitForSelector('[data-cura-fiocco][data-risorsa="vita"]', { timeout: 3000 })
 await attendi(page, 500)
@@ -260,14 +282,11 @@ await toccaIl('[data-chiudi]')
 await page.waitForSelector('[data-chiudi]', { state: 'detached', timeout: 3000 })
 
 /* ---------- 6. giù dal gemello: tutto com'era ---------- */
-await toccaIl('[data-portale]')
-await page.waitForSelector('[data-fumetto-di="portale"] [data-azione="portale-giu"]', { timeout: 10000 })
+await vaDa('[data-portale]', 'portale', '[data-fumetto-di="portale"] [data-azione="portale-giu"]')
 await attendi(page, 300)
-uguale('il fumetto del gemello mostra la discesa ritagliata dalla mappa',
-       await page.locator('[data-fumetto-di="portale"] [data-ritaglio]').count(), 1)
 await scatto(page, 'portale-gemello-fumetto')
-await toccaIl('[data-azione="portale-giu"]')
-await page.waitForSelector('.sot-tela', { timeout: 5000 })
+await toccaIl('[data-fumetto-di="portale"] [data-azione="portale-giu"]')
+await giuPronto()
 await attendi(page, 700)
 uguale('si torna giù nel punto esatto', await cellaGiu(), dovEro)
 uguale('a vita piena', (await vitaInBarra('giu')).join('/'), `${vitaGiu[1]}/${vitaGiu[1]}`)
@@ -283,7 +302,7 @@ await attendi(page, 300)
    un'uscita, senza gemello, e lo stesso piano si ritrova com'era. */
 await toccaIl('button[aria-label="indietro"]')
 await page.waitForSelector('.carte', { timeout: 5000 })
-uguale('la ✕ dalla discesa porta in home', await page.locator('[data-terra]').count(), 0)
+uguale('la ✕ dalla discesa porta in home', await page.locator('[data-mondo3d]').count(), 0)
 await attendi(page, 400)
 p = await leggiProfilo(page)
 const dopo = p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.sosta
@@ -297,13 +316,12 @@ uguale('e l\'eroe è dove era', `${Math.floor(dopo?.dove?.x)},${Math.floor(dopo?
 uguale('in home si riprende il sotterraneo', await page.locator('[data-riprendi]').getAttribute('data-riprendi'), 'sotterraneo')
 controlla('e dice dove', (await page.locator('[data-riprendi]').innerText()).includes(`${TAPPA.nome} · piano 1 di`),
           await page.locator('[data-riprendi]').innerText())
-uguale('con la scalinata ritagliata dalla mappa', await page.locator('[data-riprendi] [data-ritaglio]').count(), 1)
 await scatto(page, 'portale-riprendi-home')
 await toccaIl('[data-riprendi]')
-await page.waitForSelector('.sot-tela', { timeout: 5000 })
+await giuPronto()
 await attendi(page, 700)
-uguale('si è già giù, senza la terra di sopra', await page.locator('[data-terra]').count(), 0)
-uguale('senza carta in cima e senza gemello', await page.locator('[data-ripresa], [data-portale]').count(), 0)
+uguale('si è già giù, senza il mondo di sopra', await page.locator('[data-mondo3d]').count(), 0)
+uguale('e senza gemello', await page.locator('[data-portale]').count(), 0)
 uguale('e si riprende nel punto esatto', await cellaGiu(), dovEro)
 await page.waitForSelector('[data-pausa]', { timeout: 3000 })
 await scatto(page, 'portale-riprende-fermo')
@@ -318,16 +336,18 @@ await vaiGiu(piano.portale, { toccala: false })
   const q = await schermoDi(piano.portale)
   await tocca(q.x, q.y)
 }
-await page.waitForSelector('[data-azione="portale"]', { timeout: 8000 })
+await page.waitForSelector('[data-azione="portale"]', { timeout: 40000 })
 await page.locator('[data-azione="portale"]').click()
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await mondoPronto(page)
 await attendi(page, 500)
 await toccaIl('button[aria-label="indietro"]')
 await page.waitForSelector('.carte', { timeout: 5000 })
 await scegli(page, 'sotterraneo')
-await page.waitForSelector('[data-terra]', { timeout: 5000 })
+await mondoPronto(page)
 uguale('uscendo dal villaggio e rientrando, il gemello c\'è ancora', await page.locator('[data-portale]').count(), 1)
-uguale('con la carta della discesa a metà', await page.locator('[data-ripresa]').count(), 1)
+// la carta «torno giù» non c'è più (docs/core/ripresa.md): l'ingresso della stessa discesa dice «riprendo da dove ero»
+await vaDa(`[data-posto="${TAPPA.chiave}"]`, 'ingresso:' + TAPPA.chiave, `[data-fumetto-di="${TAPPA.chiave}"] [data-azione="scendi"][data-sosta="1"]`)
+uguale('e l\'ingresso della stessa discesa riprende da dove si era', await page.locator(`[data-fumetto-di="${TAPPA.chiave}"] [data-azione="scendi"][data-sosta="1"]`).count(), 1)
 
 uguale('nessun errore in console', errori.join(' · '), '')
 nota(`seme ${piano.seme}: porta ${indice(piano.porta)}, mostro ${indice(piano.mostro)} (${piano.mostro.tipo}), ` +

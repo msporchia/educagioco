@@ -619,3 +619,47 @@ export async function scegliAvventura(page, eroe) {
   await page.waitForSelector('.sot-eroe[data-eroe]', { state: 'detached', timeout: 30000 })
   await page.waitForSelector('[data-mondo3d]', { state: 'attached', timeout: 30000 })
 }
+
+/* roba (le prove delle botteghe): l'eroe va dal mercante `chi` del villaggio (il salto delle prove: `__mondo3d.vai`), lo si
+   tocca, si parla e la domanda `scelta` ('bottega', o 'vendi' per il rigattiere) apre il banco. `tocca(x, y)` è il dito che
+   tocca nel mondo, `toccaIl(sel)` quello che tocca i fogli (il dialogo): senza, il mouse. Aspetta la bottega, e i suoi 320 ms ciechi */
+export async function alBancoDi(page, chi, { tocca = null, toccaIl = null, scelta = 'bottega' } = {}) {
+  await mondoPronto(page)
+  // si parte accanto a un altro mercante, lontano: portato accanto a lui l'eroe starebbe davanti al mercante, e il tocco cadrebbe sull'eroe
+  const da = chi === 'erborista' ? 'armaiolo' : 'erborista'
+  await page.evaluate(k => { window.__mondo3d.senzaMostri(); window.__mondo3d.vai(k) }, `mercante:villaggio:${da}`)
+  await attendi(page, 1200)
+  if (!(await page.locator('[data-dialogo]').count())) await toccaNelMondo(page, `[data-mercante="${chi}"][data-citta="villaggio"]`, { tocca })
+  await page.waitForSelector(`[data-dialogo="${chi}"]`, { timeout: 90000 })   // SwiftShader: l'eroe ci arriva piano
+  await nelDialogo(page, `[data-scelta="${scelta}"]`, { tocca: toccaIl })
+  await page.waitForSelector(`[data-bottega][data-mercante-aperto="${chi}"]`, { timeout: 10000 })
+  await attendi(page, 500)
+}
+
+/* roba: spegne i pensieri dell'eroe (`#pensieri=no`) per la partita che si sta per aprire: il fumetto con un segno prende il tocco, e
+   cade sul mercante che sta dietro. Si chiama dopo `azzera` e prima di `scegli('sotterraneo')` */
+export const senzaPensieri = page => page.evaluate(() => history.replaceState(null, '', location.pathname + location.search + '#pensieri=no'))
+
+/* sopra (le prove del mondo di sopra): l'eroe va (salto delle prove, `__mondo3d.vai(k)`) accanto a `k` e si tocca il suo bersaglio `sel`
+   finché non compare `atteso` (di difetto il dialogo). A pochi fotogrammi al secondo due letture uguali non bastano per dire che la
+   telecamera ha finito: tre di fila, a mezzo secondo. Il fumetto del pensiero dell'eroe fermo (docs/sotterraneo/pensieri.md) può
+   coprire chi gli sta accanto e prendere il tocco, e un bersaglio che sta uscendo dalla vista lo lascia cadere sul prato: se `atteso`
+   non compare, si riporta l'eroe lì e si riprova. `tocca(x, y)`: il dito (CDP) o, di difetto, il mouse */
+export async function sopraVaDa(page, sel, k, { tocca = null, atteso = '[data-dialogo]' } = {}) {
+  await mondoPronto(page)
+  for (let giro = 0; giro < 5; giro++) {
+    await page.evaluate(k => { window.__mondo3d.senzaMostri(); window.__mondo3d.vai(k) }, k)
+    let uguali = 0, ultimo = ''
+    for (let i = 0; i < 60 && uguali < 3; i++) {
+      await attendi(page, 500)
+      const b = await page.locator(sel).first().boundingBox().catch(() => null)
+      const ora = b ? `${Math.round(b.x)},${Math.round(b.y)}` : ''
+      uguali = ora && ora === ultimo ? uguali + 1 : 0
+      ultimo = ora
+    }
+    await page.waitForSelector('[data-pensiero]', { state: 'detached', timeout: 20000 }).catch(() => {})
+    await toccaNelMondo(page, sel, { tocca })
+    if (await page.waitForSelector(atteso, { timeout: 12000 }).then(() => true).catch(() => false)) return
+  }
+  throw new Error(`sopraVaDa: toccato ${sel} cinque volte e non compare ${atteso}`)
+}
