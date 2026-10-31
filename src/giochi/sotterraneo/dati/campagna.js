@@ -5,7 +5,7 @@
 // è il numero di tagli del BSP (2 → quattro stanze, 4 → sedici); `largo` e `alto`, se ci sono, danno la forma
 // al posto del quadrato `misura` (la torre alta e stretta, la scala sommersa lunga). `dove` è il posto in mezzo
 // a una frase («sotto la torre non duri», motore/storia.js). `densita`: quante stanze hanno qualcuno, 1 di difetto e di norma assente (una stanza ordinaria su cinque è vuota, di più sotto 1: docs/sotterraneo/piani.md, «I mostri»); `tettoBranco`: quanti, al più,
-// in un branco di quella discesa (cresce scendendo: 2 alla cripta, che è dove si impara, 3 alla scalinata e alla torre, 5 alla botola, 6 alla miniera e alla fornace dell'abisso); `pianta`: la famiglia dei piani, `costruita` (stanze a pianta, colonnati,
+// in un branco di quella discesa (cresce scendendo: 2 alla cripta, che è dove si impara, 3 alla scalinata e alla torre, 4 alla botola, 6 alla miniera e alla fornace dell'abisso); `pianta`: la famiglia dei piani, `costruita` (stanze a pianta, colonnati,
 // nicchie) o `caverna` (grotte e passaggi storti); `acqua`: pozze da aggirare (docs/sotterraneo/piani-caverne.md).
 // `portata`: niente `scuola` qui, quello che insegna questa campagna non lo dà nessuna scuola.
 import { MOSTRI, costoInRisposte } from './mostri.js'
@@ -16,14 +16,14 @@ export const CAMPAGNA = [
     scenario: 'cripta', pianta: 'costruita',
     portata: 25,
     dritta: 'due piani di tombe, e qualcuno che non dorme',
-    piani: 2, misura: 34, giri: 2, dif: [0.05, 0.22], forza: 0.25, livello: 1, gradi: 0,
+    piani: 2, misura: 34, giri: 2, dif: [0.05, 0.22], forza: 0.25, spinta: -1, livello: 1, gradi: 0, caporali: 2.5, grosso: 4.5,   // i comuni a un colpo e che picchiano piano, il caporale a due e il re a quattro: si impara giocando, ma si vede chi è forte
     mostri: ['scheletro', 'zombie', 'fantasma'], caporale: 'scheletro-scudo', tettoBranco: 2, capo: 'scheletro' },
 
   { chiave: 'cantine', nome: 'Le cantine dei goblin', icona: '🪜', dove: 'giù nelle cantine',
     scenario: 'cantine', pianta: 'costruita',
     portata: 31,
     dritta: 'tante stanze, e tutte al buio',
-    piani: 2, misura: 46, giri: 4, dif: [0.12, 0.32], forza: 0.5, spinta: 2, livello: 2, caporali: 6, grosso: 3.5,   // senza forza: il primo avvio si vince anche a mani nude (docs/sotterraneo/la-grande-storia.md, «Il primo avvio»)
+    piani: 2, misura: 46, giri: 4, dif: [0.12, 0.32], forza: 1.7, spinta: -1, livello: 2, caporali: 1.8, grosso: 1.4,
     mostri: ['ratto', 'goblin', 'melma'], caporale: 'orco', tettoBranco: 3, capo: 'orco' },
 
   // alta e stretta come la torre: le stanze una sopra l'altra
@@ -31,7 +31,7 @@ export const CAMPAGNA = [
     scenario: 'fornace', pianta: 'costruita',
     portata: 37,
     dritta: 'stretta e alta: le scale non finiscono mai',
-    piani: 3, misura: 40, largo: 26, alto: 54, giri: 3, dif: [0.2, 0.44], forza: 0.5, spinta: 4, livello: 3, caporali: 6.5, grosso: 3.5,
+    piani: 3, misura: 40, largo: 26, alto: 54, giri: 3, dif: [0.2, 0.44], forza: 3.2, spinta: 3, livello: 3, caporali: 1.8, grosso: 1.3,
     mostri: ['pipistrello', 'diavoletto', 'vespa', 'spirito-fuoco'], caporale: 'golem-magma', tettoBranco: 3, capo: 'troll' },
 
   // tutta in profondità: piani piccoli, tanti
@@ -39,7 +39,7 @@ export const CAMPAGNA = [
     scenario: 'cantine', pianta: 'caverna', paesaggio: 'grotta',
     portata: 43,
     dritta: 'piani piccoli, uno sotto l\'altro, sempre più giù',
-    piani: 5, misura: 28, giri: 2, dif: [0.28, 0.54], forza: 0.8, spinta: 6.5, livello: 5, caporali: 7, grosso: 4,
+    piani: 5, misura: 28, giri: 2, dif: [0.28, 0.54], forza: 3.9, spinta: 6.2, livello: 5, caporali: 2.2, grosso: 1.1,
     mostri: ['ragno', 'fungo', 'pianta', 'melma-rosa'], caporale: 'mostro-verde', tettoBranco: 4, capo: 'orco' },
 
   // lunga e stretta: un canale sott'acqua
@@ -47,21 +47,21 @@ export const CAMPAGNA = [
     scenario: 'cripta', pianta: 'caverna', acqua: true, paesaggio: 'tempio',
     portata: 50,
     dritta: 'lunga e stretta, e in fondo gorgoglia qualcosa',
-    piani: 3, misura: 40, largo: 64, alto: 24, giri: 3, dif: [0.36, 0.66], forza: 1.1, spinta: 7.7, livello: 6, caporali: 6.5, grosso: 4,
+    piani: 3, misura: 40, largo: 64, alto: 24, giri: 3, dif: [0.36, 0.66], forza: 4.8, spinta: 9.3, livello: 6, caporali: 2.2, grosso: 1.25,
     mostri: ['granchio', 'piranha', 'polpo', 'fantasma-azzurro'], caporale: 'tartaruga', tettoBranco: 4, capo: 'gigante' },
 
   { chiave: 'labirinto', nome: 'La porta dell\'inferno', icona: '🌀', dove: 'oltre la porta dell\'inferno',
     scenario: 'inferno', pianta: 'costruita',
     portata: 57,
     dritta: 'un labirinto: senza mappina ci si perde',
-    piani: 3, misura: 50, giri: 4, dif: [0.44, 0.78], forza: 1.25, spinta: 8.7, livello: 8, caporali: 6, grosso: 4,
-    mostri: ['bestia-cornuta', 'negromante', 'troll-clava'], caporale: 'drago-lava', tettoBranco: 5, capo: 'troll' },
+    piani: 3, misura: 50, giri: 4, dif: [0.44, 0.78], forza: 6, spinta: 9.2, livello: 8, caporali: 2, grosso: 1.3,
+    mostri: ['bestia-cornuta', 'negromante', 'troll-clava'], caporale: 'drago-lava', tettoBranco: 4, capo: 'troll' },
 
   { chiave: 'fondo', nome: 'Le miniere di brace', icona: '⛏️', dove: 'nelle miniere',
     scenario: 'fornace', pianta: 'caverna', paesaggio: 'miniera',
     portata: 64,
     dritta: 'stretta, profonda, e le pietre bruciano',
-    piani: 4, misura: 40, giri: 3, dif: [0.52, 0.92], forza: 1.8, spinta: 9.5, livello: 10, caporali: 6.5, grosso: 3.5,
+    piani: 4, misura: 40, giri: 3, dif: [0.52, 0.92], forza: 5.8, spinta: 13.5, livello: 10, caporali: 2.8, grosso: 1.4,
     mostri: ['scorpione', 'golem', 'spirito-elettrico'], caporale: 'golem-lava', tettoBranco: 6, capo: 'gigante' },
 ]
 
@@ -105,7 +105,7 @@ export const L_ABISSO = {
   // la difesa dell'eroe ha un tetto (l'attacco dei mostri no): lasciando crescere il piano e basta ci si
   // ferma sempre fra il settimo e l'undicesimo, perché i mostri fanno troppo male (misurato dal banco)
   attOgni: 3,
-  forza: 2.2, spinta: 9, ossaPerPiano: 0.12,   // misurati col banco (docs/sotterraneo/abisso.md): chi parte nudo regge tre piani, e poi i mostri crescono più dell'eroe
+  forza: 2.5, spinta: 9, ossaPerPiano: 0.12,   // misurati col banco (docs/sotterraneo/abisso.md): chi parte nudo regge tre piani, e poi i mostri crescono più dell'eroe
   // niente `portata`: il cancello non è l'età ma "hai finito le sei discese", dimostrato invece che stimato
 }
 
@@ -268,7 +268,7 @@ export function guastiDellaCampagna() {
     const [da, a] = t.dif
     if (da < 0 || a > 1 || da > a) g.push(`${t.chiave}: difficoltà ${da}..${a} storta`)
     if (t.forza != null && !(t.forza >= 0.2 && t.forza <= 8)) g.push(`${t.chiave}: forza ${t.forza} fuori da 0.2..8`)
-    if (t.spinta != null && !(t.spinta >= -3 && t.spinta <= 12)) g.push(`${t.chiave}: spinta ${t.spinta} fuori da -3..12`)
+    if (t.spinta != null && !(t.spinta >= -3 && t.spinta <= 16)) g.push(`${t.chiave}: spinta ${t.spinta} fuori da -3..16`)
     if (t.densita != null && !(t.densita >= 0.5 && t.densita <= 2)) g.push(`${t.chiave}: densità ${t.densita} fuori da 0.5..2`)
     if (!(t.livello >= 1)) g.push(`${t.chiave}: senza livello, e il bottino non sa a che livello cadere`)
   }

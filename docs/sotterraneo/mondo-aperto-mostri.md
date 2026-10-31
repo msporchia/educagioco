@@ -37,8 +37,10 @@ Il Sotterraneo 2D e le discese non cambiano: gli agganci si accendono solo con `
   zona l'inizio della fascia, in fondo la fine (`livelloDi` del generatore, dall'arco della strada maestra). **Ogni terra dopo** la
   stessa mappa a +14 livelli (`terra`, fino al 71). Il `dif` della zona (le domande) è quello della discesa della storia del suo inizio.
 - **Quanto è forte un mostro al livello L** (`CURVA_DI_SOPRA`): le discese della storia messe al loro livello atteso (cripta 0,25 · 0,
-  scalinata 0,5 · 2, torre 0,5 · 4, grotta 0,8 · 6,5, sommersa 1,1 · 7,7, botola 1,25 · 8,7, miniera 1,8 · 9,5), in linea retta fra due,
-  dal 12 la curva delle zone, scritta fino al 15 (fine della prima terra); oltre la segue da sola per le terre dopo. I numeri, le
+  scalinata 1,7 · 0, torre 3,2 · 3, grotta 3,9 · 6,2, sommersa 4,8 · 9,3, botola 6 · 9,2, miniera 5,8 · 13,5), in linea retta fra due,
+  dal 12 la curva delle zone, scritta fino al 15 (fine della prima terra) con l'attacco della miniera finché le zone non la passano; oltre
+  la segue da sola per le terre dopo. I caporali hanno il doppio delle ossa di un comune (`CAPORALI_DI_SOPRA`), come nelle discese
+  ([costo-di-vincere.md](costo-di-vincere.md)). I numeri, le
   varianti e i gradi li fa `Livello.mostro` del dungeon.
 - **La tana**: una per luogo, riservata dal generatore (o, se lì non si può, la cella più avanti lungo la strada). Ci sta **il signore**,
   il caporale del luogo col nome («Il signore del bosco vecchio»), due volte le ossa di un caporale e un colpo in più, all'inizio della

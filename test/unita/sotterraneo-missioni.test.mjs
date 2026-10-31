@@ -4,6 +4,7 @@
    è in `sotterraneo-storia`; col dito, in `integrazione/sotterraneo-missioni`.
    `node test/esegui.mjs sotterraneo-missioni --niente-build` */
 import { CAMPAGNA, QUANTE_TAPPE } from '../../src/giochi/sotterraneo/dati/campagna.js'
+import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { MISSIONI, PERSONAGGI, TETTO, missioneDi, guastiDelleMissioni, premioDetto, personaDi }
   from '../../src/giochi/sotterraneo/dati/missioni.js'
@@ -100,7 +101,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   uguale('e non resta niente da proporre', aperte(stati, tappeAl(QUANTE_TAPPE)).length, 0)
   nota('l\'albero: ' + giusti.map((l, n) => `${CAMPAGNA[n].chiave}[${l.join(',')}]`).join(' · '))
 
-  // ogni missione si sblocca prima che si entri nella sua discesa, e con la roba attesa è fattibile
+  // ogni missione si sblocca prima che si entri nella sua discesa, e con la roba attesa è fattibile: a soli attacchi, con una pozione al più
   const colpi = (eroe, k, m) => {
     const c = new Corsa(CAMPAGNA[k], { seme: 5, eroe, roba: robaAttesa(eroe, k), crescita: crescitaAttesa(eroe, k), rnd: seminato(5), missioni: [] })
     while (c.piano < m.piano) { c.piano++; c.nuovoPiano() }
@@ -111,8 +112,8 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
     const k = CAMPAGNA.findIndex(t => t.chiave === m.discesa)
     for (const e of EROI) {
       const { colpi: n, rispondendoBene, vita } = colpi(e.chiave, k, m)
-      controlla(`${m.id} (${e.chiave}): ${n} risposte giuste, e senza svenire (${rispondendoBene} di ${vita})`,
-                n <= 14 && rispondendoBene < vita)
+      controlla(`${m.id} (${e.chiave}): ${n} risposte giuste, e senza svenire (${rispondendoBene} di ${vita} e una pozione)`,
+                n <= 14 && rispondendoBene < vita + COSE.pozione.cura)
     }
   }
 

@@ -3,7 +3,7 @@
    ogni cella fuori bersaglio, la tabella delle specie si legge, la potenza del mostro porta esperienza e gemme, il danno è continuo; le strade di
    spesa, la fine della discesa e i checkpoint (una tappa da un checkpoint dà gli stessi numeri del giro intero, la firma dice cosa rifare).
    `node test/esegui.mjs sotterraneo-taratura --niente-build` */
-import { GIOCATORI_TIPO, NOMI_TIPO, COLPI_PER_STENDERE, stileDi, STRADE, NOMI_STRADA, RISALITA, sogliaDiRisalita } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
+import { GIOCATORI_TIPO, NOMI_TIPO, COLPI_PER_STENDERE, stileDi, STRADE, NOMI_STRADA, RISALITA, sogliaDiRisalita, SONDE, TENTATIVI_SONDA } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { storiaDi, passoDellaStoria, STATO_NUOVO, rifatteAl, lineeDelGiro, compatta } from '../../src/giochi/sotterraneo/motore/storie.js'
 import { allaBottega, gioca } from '../../src/giochi/sotterraneo/motore/banco.js'
@@ -27,7 +27,9 @@ import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs
 
 /* ══════════ 1. i giocatori tipo ══════════ */
 {
-  stessaLista('tre giocatori tipo', NOMI_TIPO, ['curioso', 'bravo', 'sbadato'])
+  stessaLista('quattro giocatori tipo', NOMI_TIPO, ['curioso', 'bravo', 'medio', 'sbadato'])
+  stessaLista('il medio e lo sbadato giocano dall\'ingresso del curioso, fino a vincere', SONDE, ['medio', 'sbadato'])
+  uguale('il medio 8 su 10', GIOCATORI_TIPO.medio.bravura, 0.8)
   uguale('il curioso risponde giusto 9 volte su 10', GIOCATORI_TIPO.curioso.bravura, 0.9)
   uguale('lo sbadato 6 su 10', GIOCATORI_TIPO.sbadato.bravura, 0.6)
   controlla('il bravo 9–10 su 10 e va dritto', GIOCATORI_TIPO.bravo.bravura >= 0.9 && GIOCATORI_TIPO.bravo.come === 'minimo')
@@ -49,7 +51,8 @@ const passi = [
   const ancora = storiaDi({ tipo: 'curioso', eroe: 'cavaliere', seme: 1, fino: 1 })
   uguale('lo stesso seme, la stessa storia', JSON.stringify(ancora), JSON.stringify(passi.filter(p => p.tipo === 'curioso' && p.eroe === 'cavaliere')))
   const cur = passi.find(p => p.tipo === 'curioso' && p.k === 0)
-  controlla('il curioso porta con sé lo sbadato e la discesa si gioca', !!cur.sonde.sbadato && cur.tentativi.length >= 1)
+  controlla('il curioso porta con sé le sonde e la discesa si gioca', SONDE.every(t => cur.sonde[t] && cur.sonde[t].length >= 1) && cur.tentativi.length >= 1)
+  controlla('una sonda rifà la discesa finché non la vince, e non oltre', SONDE.every(t => cur.sonde[t].slice(0, -1).every(r => !r.v) && cur.sonde[t].length <= TENTATIVI_SONDA))
   controlla('si registra uno scontro per volta, con la vita a fine scontro', cur.tentativi[0].sc.length > 0 && cur.tentativi[0].sc.every(c => c.vf >= 0 && c.vf <= 1 && c.tipi.length >= 1))
   controlla('l\'ingresso dice la forza e i pezzi', cur.ingresso.forza >= 1 && Array.isArray(cur.ingresso.pezzi))
   const bravo = passi.find(p => p.tipo === 'bravo' && p.k === 0)
@@ -157,11 +160,11 @@ const passi = [
   const intera = storiaDi({ tipo: 'curioso', eroe: 'elfa', seme: 2, fino: 2 })
   let stato = STATO_NUOVO()
   const tappe = []
-  for (let k = 0; k <= 1; k++) { const r = passoDellaStoria(k, stato, { tipo: 'curioso', eroe: 'elfa', seme: 2, sonde: ['sbadato'], rifai: rifatteAl(k) }); tappe.push(r.passo); stato = r.stato }
+  for (let k = 0; k <= 1; k++) { const r = passoDellaStoria(k, stato, { tipo: 'curioso', eroe: 'elfa', seme: 2, sonde: SONDE, rifai: rifatteAl(k) }); tappe.push(r.passo); stato = r.stato }
   const dir = mkdtempSync(join(tmpdir(), 'taratura-'))
   scrivi(dir, 1, { firma: 'f1', linee: { 'armaPrima·curioso': [{ passo: tappe[1], stato }] } })
   const letto = leggi(dir, 1).linee['armaPrima·curioso'][0]
-  const ripresa = passoDellaStoria(2, letto.stato, { tipo: 'curioso', eroe: 'elfa', seme: 2, sonde: ['sbadato'], rifai: rifatteAl(2) })
+  const ripresa = passoDellaStoria(2, letto.stato, { tipo: 'curioso', eroe: 'elfa', seme: 2, sonde: SONDE, rifai: rifatteAl(2) })
   uguale('la tappa dal checkpoint è la tappa del giro intero', JSON.stringify(ripresa.passo), JSON.stringify(intera[2]))
   uguale('e anche la discesa prima, riletta dal file', JSON.stringify(letto.passo), JSON.stringify(intera[1]))
   uguale('la testa si legge senza il corpo', leggi(dir, 1, { soloLaTesta: true }).firma, 'f1')

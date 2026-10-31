@@ -61,8 +61,11 @@ confrontare due tappe; numeri dopo la taratura del 13/10/2026 (sera, coi branchi
 
 - **La forbice è il punto**: se «tutto» costasse quanto «il minimo» non ci
   sarebbe niente da scegliere.
-- **Il tetto è una seduta: 85 risposte obbligate.** Oltre è un compito, e
-  `unita/sotterraneo` diventa rosso (anche per ognuno dei quattro eroi).
+- **Il tetto è una seduta: 150 risposte obbligate** per scendere dritti alla
+  scala. Oltre, `unita/sotterraneo` diventa rosso (anche per ognuno dei quattro
+  eroi). Era 85 finché i comuni cadevano a un colpo; l'utente, il 30/10: una
+  discesa non va fatta per forza entro un certo tempo, e mostri tutti uguali
+  sono solo noiosi.
 - **Il patto del banco**: rispondendo bene otto volte su dieci, con la roba
   che ci si porta dietro, si arriva in fondo quasi tutte le volte.
 - **Stanze per piano: da quattro a sedici** (la scalinata e la botola ne

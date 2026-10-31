@@ -15,6 +15,11 @@ export const CODA = 0.1
 // quante volte si rifà una discesa persa, prima di dire che è un muro (e si va avanti lo stesso per misurare le altre)
 export const TENTATIVI = 4
 
+// i giocatori tipo che giocano la discesa dall'ingresso del curioso (la sua roba, il suo livello), rifacendola finché non la vincono: al più
+// TENTATIVI_SONDA volte. Misurano quanto costa vincere a chi sbaglia di più (docs/sotterraneo/giocatori-tipo.md, «Quanto costa vincere»)
+export const SONDE = ['medio', 'sbadato']
+export const TENTATIVI_SONDA = 6
+
 // «Tanti mostri che picchiano poco» (l'utente): in quanti colpi un mostro solo stende l'eroe atteso, almeno, per ruolo. Sotto, la specie
 // picchia fuori misura e il rapporto la segnala per nome. I numeri sono di chi ha scritto lo strumento: da confermare con l'utente
 export const COLPI_PER_STENDERE = { comune: 7, caporale: 4.5, grosso: 3 }
@@ -35,13 +40,14 @@ export const GIOCATORI_TIPO = {
     },
     punti: 'strada',              // i punti alle caratteristiche e all'albero come li dà la strada della classe (COME_LI_DA, STRADA)
     spesa: 'il meglio',           // dal fabbro, dall'incantatrice e dal rigattiere compra il meglio che può, poi le pozioni (allaBottega)
+    // non conta se vince ma quanto gli costa vincere (l'utente, 30/10): chi risponde bene sviene poco e non rifà la discesa
     bersagli: {
-      vinte: { min: 0.85 },                       // la prima volta che scende, la discesa si vince: «arriva in fondo quasi sempre»
+      svPerVincere: { max: 1.7, cripta: { max: 0.5 } },   // svenimenti in tutto, rifacendola finché non la vince: «uno molto bravo dovrebbe svenire poco»
+      volte: { max: 1.3, cripta: { max: 1.1 } },
       storiaFinita: { min: 0.9 },                 // e la storia si finisce (le sette discese, al più quattro tentativi l'una)
       svenuto: { min: 0.2, max: 0.6, cripta: { min: 0, max: 0.3 } },   // quota di discese nuove con almeno uno svenimento: «ogni tanto»
       pozioni: { min: 1, max: 3, cripta: { min: 0, max: 2 } },         // beve da 1 a 3 pozioni a discesa
       vitaGrosso: { min: 0.4, max: 0.7 },         // dopo uno scontro grosso gli resta il 40–70% della vita (uno svenimento vale 0)
-      domande: { max: 85 },                       // da confermare: «un piano girato tutto» letto come una discesa girata tutta (regole.md, «Il tetto è una seduta»)
       rifatteSvenute: { max: 0.05 },              // le discese già vinte, rifatte con la roba di dopo: non sviene mai
       sfortunato: { vinte: { min: 0.6 }, muri: { max: 0.1 } },   // il 10° percentile della roba con cui entra: non trova un muro
       fortunato: { vitaGrosso: { max: 0.8 }, sopra90: { max: 0.55 } },   // il 90°: non stravince
@@ -57,10 +63,25 @@ export const GIOCATORI_TIPO = {
     punti: 'strada',
     spesa: 'il meglio',
     bersagli: {
-      vinte: { min: 0.9 },
-      vitaScontri: { min: 0.45, max: 0.85, cripta: { min: 0.3 } },   // vince, ma non a vita piena
+      vinte: { max: 0.5, cripta: { max: 1 } },    // senza esplorare non bastano roba e livello: «esplorare abbastanza» (l'utente, 30/10)
       sopra90: { max: 0.45, cripta: { max: 1 } },                     // se esce da quasi ogni scontro sopra il 90% è troppo facile (la cripta si impara)
       domande: { max: 85 },                                           // il tetto della seduta, oggi in unita/sotterraneo
+    },
+  },
+
+  medio: {
+    nome: 'Il medio',
+    chi: 'il curioso che risponde giusto 8 volte su 10: dallo stesso ingresso, fino a vincere',
+    bravura: 0.8,
+    come: 'tutto',
+    daiCurioso: true,
+    soloSonda: true,              // gioca solo dall'ingresso del curioso, mai una storia sua
+    stile: 'curioso',
+    punti: 'strada',
+    spesa: 'il meglio',
+    bersagli: {
+      svPerVincere: { min: 1, max: 3.5, cripta: { min: 0, max: 1 } },   // sviene qualche volta più del curioso
+      volte: { max: 1.6, cripta: { max: 1.2 } },
     },
   },
 
@@ -74,8 +95,9 @@ export const GIOCATORI_TIPO = {
     punti: 'strada',
     spesa: 'il meglio',
     bersagli: {
-      // «perde quasi sempre»: arriva in fondo al più una volta su sette-otto
-      vinte: { max: 0.15, cripta: { max: 0.5 } },   // da confermare con l'utente: la cripta si impara, non si perde otto volte su nove
+      // «uno che sbaglia spesso dovrebbe svenire più volte e quindi fare più volte la discesa» (l'utente, 30/10)
+      svPerVincere: { min: 4, cripta: { min: 1 } },
+      volte: { min: 1.5, cripta: { min: 1 } },
     },
   },
 }

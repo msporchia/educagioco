@@ -25,7 +25,7 @@ export function partite(passi) {
     const base = { eroe: s.eroe, seme: s.seme, k: s.k, ing: s.ingresso, scarto: s.ingresso.forza - attesa,
                    potere: s.ingresso.forza * 1000 + s.ingresso.att + 2 * s.ingresso.dif + s.ingresso.vita / 100 }
     aggiungi(s.tipo, s.k, { ...base, rec: s.tentativi[0], tent: s.tentativi })
-    if (s.sonde && s.sonde.sbadato) aggiungi('sbadato', s.k, { ...base, rec: s.sonde.sbadato, tent: [s.sonde.sbadato] })
+    for (const [t, regs] of Object.entries(s.sonde || {})) if (regs.length) aggiungi(t, s.k, { ...base, rec: regs[0], tent: regs })
   }
   const rifatte = {}   // rifatte[k] = [registro]
   for (const s of passi) if (s.tipo === 'curioso') for (const [j, r] of Object.entries(s.rifatte || {})) (rifatte[j] = rifatte[j] || []).push({ eroe: s.eroe, seme: s.seme, rec: r })
@@ -62,7 +62,8 @@ export function misure(P) {
     colpiStrada: media(colpiDi(sc, 0)), colpiCaporale: media(colpiDi(sc, 1)), colpiGrosso: media(colpiDi(sc, 2)),
     persaNormale: media(sc.filter(c => !pesante(c)).map(c => c.pe)), persaPesante: media(sc.filter(pesante).map(c => c.pe)),
     cureTrovate: media(P.map(p => cureRaccolte(p.rec))), tetto: media(P.map(p => p.rec.tc || 0)),
-    muri: media(P.map(p => (p.tent.filter(t => !t.v).length >= 2 ? 1 : 0))) }
+    muri: media(P.map(p => (p.tent.filter(t => !t.v).length >= 2 ? 1 : 0))),
+    svPerVincere: media(P.map(p => p.tent.reduce((a, t) => a + (t.sv || 0), 0))), volte: media(P.filter(p => p.tent.some(t => t.v)).map(p => p.tent.length)) }
 }
 
 // le code della fortuna: le partite entrate con la roba più debole e più forte (almeno 3 per coda)
@@ -70,6 +71,35 @@ export function code(P) {
   const o = [...P].sort((a, b) => a.potere - b.potere)
   const q = Math.max(3, Math.round(P.length * CODA))
   return { sfortunato: o.slice(0, q), fortunato: o.slice(-q) }
+}
+
+/* ═══════════ quanto costa vincere ═══════════
+   Il curioso e le sonde (SONDE) dallo stesso ingresso, ognuno fino a vincere: quante volte rifà la discesa, quante volte sviene, quante domande e
+   pozioni ci mette in tutto, e se ne esce più ricco o più povero (docs/sotterraneo/giocatori-tipo.md, «Quanto costa vincere») */
+export function costoDiVincere(P) {
+  const vinta = p => p.tent.some(t => t.v)
+  const somma = (p, f) => p.tent.reduce((a, t) => a + (t[f] || 0), 0)
+  const ultimo = p => p.tent[p.tent.length - 1]
+  return { n: P.length, vinte: media(P.map(p => (vinta(p) ? 1 : 0))),
+    tentativi: media(P.filter(vinta).map(p => p.tent.length)), svenimenti: media(P.map(p => somma(p, 'sv'))),
+    domande: media(P.map(p => somma(p, 'dom'))), pozioni: media(P.map(p => somma(p, 'pz'))),
+    gemme: media(P.map(p => (ultimo(p).ge || 0) - (p.ing.gemme || 0))), tasche: media(P.map(p => (ultimo(p).pt ?? 0) - (p.ing.poz || 0))) }
+}
+export function tabellaCosto(P) {
+  const ks = CAMPAGNA.map((_, k) => k)
+  const tipi = ['curioso', ...Object.keys(P.per).filter(t => t !== 'curioso' && t !== 'bravo')]
+  const righe = [`Quanto costa vincere, dallo stesso ingresso fino a vincere (al più ${Math.max(...tipi.flatMap(t => ks.flatMap(k => ((P.per[t] || {})[k] || []).map(p => p.tent.length))), 0)} volte): a discesa, in media`,
+    ''.padEnd(28) + ks.map(k => CAMPAGNA[k].chiave.slice(0, 6).padStart(8)).join('')]
+  const voci = [['vinte', 'vinta alla fine', v => `${Math.round(v * 100)}%`], ['tentativi', 'volte per vincerla', v => v.toFixed(1)],
+    ['svenimenti', 'svenimenti in tutto', v => v.toFixed(1)], ['domande', 'domande in tutto', v => String(Math.round(v))],
+    ['pozioni', 'pozioni bevute', v => v.toFixed(1)], ['gemme', 'gemme uscendo − entrando', v => String(Math.round(v))],
+    ['tasche', 'pozioni in tasca, − entrando', v => (v > 0 ? '+' : '') + v.toFixed(1)]]
+  for (const t of tipi) {
+    const c = ks.map(k => costoDiVincere((P.per[t] || {})[k] || []))
+    righe.push(`${GIOCATORI_TIPO[t].nome} (${Math.round(GIOCATORI_TIPO[t].bravura * 10)}/10)`)
+    for (const [f, nome, fmt] of voci) righe.push(`  ${nome}`.padEnd(28) + c.map(x => (x[f] == null ? '-' : fmt(x[f])).padStart(8)).join(''))
+  }
+  return righe.join('\n')
 }
 
 /* ═══════════ i bersagli e le celle ═══════════ */
@@ -91,6 +121,8 @@ export const MISURE = {
   cureTrovate: { nome: 'cure trovate a discesa', u: 'uno' },
   tetto: { nome: 'discese col tetto delle cure toccato', u: 'perc' },
   muri: { nome: 'muri (2 sconfitte di fila)', u: 'perc' },
+  svPerVincere: { nome: 'svenimenti per vincerla, in tutto', u: 'uno' },
+  volte: { nome: 'volte per vincerla', u: 'uno' },
 }
 const fmt = (v, u) => (v == null ? '-' : u === 'perc' ? `${Math.round(v * 100)}` : u === 'uno' ? v.toFixed(1) : String(Math.round(v)))
 export const unitaDi = chiave => MISURE[chiave.split('.').pop()].u

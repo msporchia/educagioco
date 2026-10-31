@@ -7,7 +7,7 @@
    SOMMA dei colpi che arrivano prima del suo prossimo turno
    (docs/sotterraneo/scontro.md, «Lo stop del pericolo»), quindi qui, nella
    scalinata (un mago al livello 10 non è rosso: `coloreNellaStoria`) e con
-   cinque mostri addosso (`#sotterraneo=branco&mostri=5`, docs/core/comandi.md)
+   sei mostri leggendari addosso (`#sotterraneo=branco&mostri=6&grado=leggendario`, docs/core/comandi.md)
    e due pozioni in tasca:
    - lo stop scatta già al primo turno, al posto della domanda, con la
      ragione «duro»; per i primi 320 ms i tasti non sentono il tocco;
@@ -33,10 +33,11 @@ import { forzaDi } from '../../src/giochi/sotterraneo/motore/forza.js'
 import { coloreNellaStoria } from '../../src/giochi/sotterraneo/motore/zone.js'
 
 const TAPPA = 1   // la scalinata
-const EROE = 'mago'   // il più fragile: coi punti non dati, cinque mostri pesano
-const roba = { v: 1, gemme: 0, zaino: ['pozione-piccola', 'pozione'], mano: null, mancina: null, corpo: null,
+const EROE = 'mago'   // il più fragile: coi punti non dati, sei mostri pesano
+const roba = { v: 1, gemme: 0, zaino: ['pozione-piccola', 'pozione-grande'], mano: null, mancina: null, corpo: null,
                dito: null, torcia: 0, torce: 0 }
-// il mago di livello 9 senza punti in tempra ha 29 vita contro un giro di 21: lo stop «duro» (vita ≤ 2 giri) c'è, e dopo un giro
+// il mago di livello 9 senza punti in tempra ha 29 vita contro un giro di 22 (dal 30/10 i comuni della scalinata picchiano piano: sei e
+// leggendari invece di cinque; e la pozione grande, perché la normale dopo un giro non basta più): lo stop «duro» (vita ≤ 2 giri) c'è, e dopo un giro
 // (16 di vita persa) c'è quello «ultimo» (vita ≤ 1 giro). Con più vita il primo stop non scatta (a livello 10 con otto punti ne ha 76)
 const crescita = { esp: sogliaDi(9), tempra: 0 }
 // il pallino della discesa non deve essere rosso (la sentinella non fa scendere): lo dice la forza (docs/sotterraneo/forza.md)
@@ -61,7 +62,7 @@ const pozioni = async () => Number(await page.locator('[data-casella-barra="pozi
 const stop = () => page.locator('[data-ringhio]')
 const finito = () => page.waitForSelector('[data-duello]:not([data-racconto])', { timeout: 20000 })
 
-// un mago nella scalinata, con cinque mostri addosso e la prima scelta davanti
+// un mago nella scalinata, con sei mostri addosso e la prima scelta davanti
 async function entra() {
   // l'indirizzo della prova di prima (`#sotterraneo=…`) aprirebbe il gioco al ricaricamento: si riparte dalla home
   await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
@@ -75,7 +76,7 @@ async function entra() {
   })
   await scegli(page, 'sotterraneo')
   await page.waitForSelector('[data-terra]', { timeout: 5000 })
-  await page.evaluate(() => { location.hash = 'seme=11&sotterraneo=branco&mostri=5' })
+  await page.evaluate(() => { location.hash = 'seme=11&sotterraneo=branco&mostri=6&grado=leggendario' })
   await scendiNelSotterraneo(page, TAPPA)
   await page.waitForSelector('.sot-velo-scontro [data-caselle-abilita]', { timeout: 10000 })
 }
@@ -117,7 +118,7 @@ uguale('e due pozioni sulla casella', await pozioni(), 2)
   controlla('l\'avviso è generico, senza nome di mostro', /Attenzione/.test(await stop().innerText()))
   controlla('e dice i colpi che arrivano, tutti insieme', /ti toglie \d+/.test(await stop().innerText()), await stop().innerText())
   controlla('lo scontro è ancora lì, modale', await page.locator('.sot-velo-scontro').count() === 1)
-  uguale('con i mostri in vista', await page.locator('[data-mostro]').count(), 5)
+  uguale('con i mostri in vista', await page.locator('[data-mostro]').count(), 6)
   await scatto(page, 'pericolo')
 }
 await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 3000 })
@@ -149,15 +150,15 @@ await scatto(page, 'pericolo-pronto')
   // con due stadi in tasca bere apre la scelta (viste/ScegliPozione.vue): nello scontro dice che poi tocca ancora a te
   await page.waitForSelector('[data-scegli-pozione][data-pronto]', { timeout: 3000 })
   controlla('la scelta dice che poi tocca ancora a te', /tocca ancora a te/.test(await page.locator('[data-scegli-pozione]').innerText()))
-  await toccaIl('[data-azione="bevi-questa"][data-cosa="pozione"]')
+  await toccaIl('[data-azione="bevi-questa"][data-cosa="pozione-grande"]')
   await page.waitForSelector('[data-duello][data-racconto]', { timeout: 8000 })
   await page.waitForSelector('.sot-numero-cura', { timeout: 3000 })
-  uguale('il sorso si vede: il numero che sale', (await page.locator('.sot-numero-cura').first().innerText()).trim(), '+14')
+  uguale('il sorso si vede: il numero che sale', (await page.locator('.sot-numero-cura').first().innerText()).trim(), '+30')
   await scatto(page, 'pericolo-bevuto-racconto')
   await finito()
   await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 5000 })
   uguale('«bevi» consuma una pozione', await pozioni(), n - 1)
-  uguale('la vita è salita della cura, senza i colpi dei mostri', await numeroDel('vita'), v + 14)
+  uguale('la vita è salita della cura, senza i colpi dei mostri', await numeroDel('vita'), v + 30)
   uguale('ora la vita basta: lo stop sparisce', await stop().count(), 0)
   uguale('e lo scontro è aperto con la sua scelta', await page.locator('.sot-velo-scontro [data-caselle-abilita]').count(), 1)
   uguale('una pozione sola per turno: «bevi» è spento', await page.locator('[data-azione="bevi-scontro"]').isDisabled(), true)
@@ -167,7 +168,7 @@ await scatto(page, 'pericolo-pronto')
   await rispondiGiusto()
   await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 8000 })
   uguale('il turno dopo «bevi» è acceso', await page.locator('[data-azione="bevi-scontro"]').isDisabled(), false)
-  nota(`vita ${v} → ${v + 14} bevendo → ${await numeroDel('vita')} dopo i colpi del turno`)
+  nota(`vita ${v} → ${v + 30} bevendo → ${await numeroDel('vita')} dopo i colpi del turno`)
 }
 
 /* ---------- 1b. il sorso non basta: lo stop resta ---------- */

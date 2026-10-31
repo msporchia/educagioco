@@ -155,7 +155,8 @@ così per ogni mostro che batte, ed è il livello 20.
   la strada è il fabbro e la roba.
 - **Chi segue la storia non si blocca** (13 ottobre sera, [taratura-branchi.md](taratura-branchi.md#i-colori-per-chi-segue-la-storia)): l'eroe atteso
   (roba, livello e abilità della strada) vale il suo livello per tutti e quattro, quindi la discesa in cui entra è verde e la successiva arancio, mai rossa.
-  La forza dei mostri di riferimento sale senza salti dalla storia alle zone (forza 0,25 · 0,5 · 0,5 · 0,8 · 1,1 · 1,25 · 1,8, poi 2,2 al 12): con la miniera
+  La forza dei mostri di riferimento sale senza salti dalla storia alle zone (dal 30 ottobre forza 0,25 · 1,7 · 3,2 · 3,9 · 4,8 · 6 · 5,8, poi 5,8 al 12:
+  [costo-di-vincere.md](costo-di-vincere.md)); le ossa e l'attacco tengono il massimo fin lì, perché la miniera picchia più delle prime zone. Con la miniera
   a 2,2 contro la botola a 1,1 il rapporto dell'eroe atteso faceva una gobba e il mago all'8 valeva 10. Un eroe in regola che non ha speso i punti
   dell'albero vale uno o due livelli meno e trova rossa la grotta o la sommersa (la cura e le due abilità forti sono circa tre volte il suo rapporto).
 - La pagina dell'eroe dice «Forza N» sotto il livello (`[data-forza-eroe]`).

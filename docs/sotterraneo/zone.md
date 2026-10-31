@@ -147,7 +147,8 @@ il «!» torna.
 - **il livello del posto è L** (più uno ogni due piani): dice il livello
   del bottino, le gemme e l'esperienza dei mostri ([livelli.md](livelli.md));
 - **i mostri del livello L**: gli abitanti e il caporale della discesa ([mostri.md](mostri.md): una zona tiene i suoi per sempre) con
-  `forza` = (2,2 + 0,15 · (L − 12)) × la forma e `spinta` = 9,5 + 1,3 · (L − 12), a un decimo (`CURVA_DELLE_ZONE`). In linea retta, mai esponenziali. La forma
+  `forza` = (5,8 + 0,35 · (L − 12)) × la forma e `spinta` = 10 + 1 · (L − 12), a un decimo (`CURVA_DELLE_ZONE`; dal 30 ottobre, quando i comuni sono passati a due o tre
+  risposte: [costo-di-vincere.md](costo-di-vincere.md); prima 2,2 + 0,15 e 9,5 + 1,3). In linea retta, mai esponenziali. La forma
   (`FORMA_DELLA_ZONA`) dice quanto gli abitanti sono più comodi o più duri a pari livello: cripta ×1,7, scalinata ×1, torre ×0,9, grotta ×1,4, botola ×0,85, scala
   sommersa ×1,2, miniera ×1,2. Ritarate la sera del 13 ottobre sui branchi grossi ([taratura-branchi.md](taratura-branchi.md); prima forza 4 + 0,6 a livello e spinta 13 + 1,0, forme 2,2 · 0,75 · 0,9 · 1,4 · 0,85 · 0,95 · 1,35).
 - **il bottino come nell'abisso** (`indiceDella` dà −1): i forzieri danno un

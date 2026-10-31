@@ -17,7 +17,10 @@ incontrano e si tiene**: anche offline la lista dice «Melody» (in grigio), non
 ## Come ci si abbina: un codice breve che scade
 
 Lo fa un **grande**, nella zona del codice dei genitori (carta «Amici», `GenitoriView.vue`, per il bambino che ha «Amici online»
-acceso): fare amicizia fra bambini è una cosa da genitori.
+acceso): fare amicizia fra bambini è una cosa da genitori. La stessa cosa si apre dalla lista del bambino, «＋ Aggiungi un amico»: chiede
+il codice dei genitori (`chiediDopoIlCodice('amico')`, [../genitori/codice.md](../genitori/codice.md)) e poi una pagina a tutto
+schermo come la sala della sfida, «Do il mio codice» / «Ho un codice» (`AggiungiAmico.vue`); chiusa, si torna ai giochi. I conti
+del codice sono uno solo per le due porte: `src/amici/abbina.js`.
 1. Chi invita: «Invita un amico». Il telefono crea la chiave di quell'amicizia e la affida al servizio, che risponde con un
    **codice di 5 lettere** (alfabeto senza I e O) valido **2 ore**. Il genitore lo manda all'altro. L'amico compare in lista
    «in attesa».
@@ -35,9 +38,12 @@ Perché regge (non è un buco di sicurezza):
 ## Cosa vede il bambino
 
 - **La lista** («Amici» in home): i nomi, con un pallino verde per chi è online e «sta giocando a …» se l'ha detto. Gli amici
-  non online restano, in grigio.
-- **Invitare**: nella schermata di un gioco che sa ricevere inviti (oggi Castle Battle) c'è «Invita un amico» con la lista; si
-  tocca un nome online e libero.
+  non online restano, in grigio. In fondo «＋ Aggiungi un amico» (sopra), finché c'è posto.
+- **Invitare**: nella schermata di un gioco che sa ricevere inviti (Castle Battle, il Sotterraneo 3D) c'è «Invita un amico» con la
+  lista; si tocca un nome online e libero. **Oppure dalla lista**: accanto a un amico online «Gioca» apre i giochi in due che i
+  grandi hanno lasciato accesi; toccato il gioco, si apre la sua sala già su «Sfidi …» con quell'amico, e restano da fare solo le
+  scelte della partita. Passa da `ingresso.js` con `{ amico }` al posto dell'invito: `daInvito` lo riconosce e la sala lo riceve in
+  `scelto` ([insieme.md](insieme.md)).
 - **Ricevere**: **un cartello su qualunque schermata** («Leonardo ti invita a Castle Battle · Gioca / No grazie», montato una volta
   in `App.vue`, come `Avviso.vue`). «Gioca» apre il gioco già dentro la partita; sparisce da solo dopo 30 secondi.
 - **Si è raggiungibili mentre l'app è aperta** (se i grandi l'hanno acceso): il telefono tiene aperto **un collegamento solo**
@@ -173,12 +179,15 @@ limitano chi lo fa a mano, non un attacco vero. Dove guardare: pannello Cloudfla
 bambino, `AMICI_DI_BASE`); `src/amici/` — `rete.js` (codici e il `Ponte` che si rimette in piedi da solo), `servizio.js` (il motore:
 chi è online, gli inviti), `messaggi.js`, `giochi.js` (i giochi che ricevono inviti), `ingresso.js` («Gioca» → il gioco ritira i dati),
 `avvio.js`, `testi.js`; `components/amici/` — `ListaAmici.vue` (la lista in home), `InvitoAmico.vue` (il cartello, in `App.vue`),
-`CartaAmici.vue` (i grandi); la lista nella sala comune (`src/insieme/SalaSfida.vue`) e l'invito in `src/insieme/sfida.js` (`invita`, `daInvito`).
+`CartaAmici.vue` (i grandi), `AggiungiAmico.vue` (il codice dalla lista, dietro il codice dei genitori), e `amici/abbina.js` (crea e
+riscatta il codice, per tutte e due); la lista nella sala comune (`src/insieme/SalaSfida.vue`) e l'invito in `src/insieme/sfida.js` (`invita`, `daInvito`).
 Test: `unita/amici-servizio` (le regole del servizio), `unita/amici` (archivio, messaggi, `Ponte`, codici, motore, con collegamenti
 finti), `integrazione/amici` (due pagine e il servizio: `SERVIZIO=http://localhost:8787` con `wrangler dev` in `servizio/inoltro`, o
 quello pubblicato; senza servizio **salta**), e `servizio/inoltro/prova.mjs` (le regole contro il servizio vero, in locale o online).
 Il banco (`test/aiuto/browser.mjs`) parte con la domanda già risposta (spento); `amiciDecisi: false` rimette l'avviso nella posta.
-**La riga in home compare solo con almeno un amico** (21/10): acceso ma senza amici non c'è niente da mostrare, e «ancora nessuno» al bambino sarebbe solo triste. **In cima solo se qualcuno è online**: offline o con nessuno online scende sopra «Impostazioni», perché lì in cima prendeva il posto dei giochi per dire che non c'è niente da fare. Bersagli: `[data-azione="amici"]` (la riga in home), `[data-amici]` e `[data-amico]` (la lista), `[data-invito]`, `[data-invito-gioca]`,
+**La riga in home compare solo con almeno un amico** (21/10): acceso ma senza amici non c'è niente da mostrare, e «ancora nessuno» al bambino sarebbe solo triste. **In cima solo se qualcuno è online**: offline o con nessuno online scende sopra «Impostazioni», perché lì in cima prendeva il posto dei giochi per dire che non c'è niente da fare. Bersagli: `[data-azione="amici"]` (la riga in home), `[data-amici]` e `[data-amico]` (la lista), `[data-amico-gioca]` e
+`[data-amico-gioco="<gioco>"]` («Gioca» e i giochi), `[data-azione="amici-aggiungi"]`; la pagina `[data-aggiungi-amico]` con
+`[data-azione="amici-invita"|"amici-ho-codice"|"amici-riscatta"|"amici-fatto"]`; `[data-invito]`, `[data-invito-gioca]`,
 `[data-invito-no]`, `[data-sfida-amici]`, `[data-sfida-invitato]`; nei grandi `.carta[data-flag="amici"]` con `[data-azione="amici-attiva"|
 "amici-invita"|"amici-riscatta"|"amici-togli"]`, `[data-amici-codice]`, `[data-amici-codice-input]`, `[data-amici-messaggio]`; nel modulo
 del bambino `[data-amici-domanda]`.

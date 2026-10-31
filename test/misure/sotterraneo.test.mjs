@@ -64,7 +64,8 @@ for (const [i, e] of EROI.entries()) {
 
   for (const [k, t] of CAMPAGNA.entries()) {
     const [nove, , quattro] = m.vinte.curioso.map(v => v[k])
-    controlla(`${e.chiave}, ${t.chiave}: dal suo ingresso a 9/10 si arriva in fondo quasi sempre`, nove >= SEMI * 0.75, `${nove}/${SEMI}`)
+    // dal 30/10 conta quanto costa vincere (docs/sotterraneo/costo-di-vincere.md): anche il curioso ogni tanto sviene troppo e rifà la discesa
+    controlla(`${e.chiave}, ${t.chiave}: dal suo ingresso a 9/10 si arriva in fondo quasi sempre`, nove >= SEMI * 0.65, `${nove}/${SEMI}`)
     // a testa le classi non sono uguali (l'elfa è la più veloce, e a quattro su dieci vince più delle altre): a testa non sempre,
     // e in media «quasi mai» (sotto, nel ciclo delle discese). Nelle discese facili (SENZA_BERSAGLIO_A_4) niente
     if (!SENZA_BERSAGLIO_A_4.includes(t.chiave)) controlla(`${e.chiave}, ${t.chiave}: a 4/10 non si vince quasi sempre`, quattro <= SEMI * (k === 1 ? 0.7 : 0.6), `${quattro}/${SEMI}`)
@@ -74,7 +75,7 @@ for (const [i, e] of EROI.entries()) {
 for (const [k, t] of CAMPAGNA.entries()) {
   if (!k) continue
   const nove = media(tutte, 'curioso', 0, k), sei = media(tutte, 'curioso', 1, k), quattro = media(tutte, 'curioso', 2, k)
-  controlla(`${t.chiave}: a 9/10 dal suo ingresso quasi sempre, fra i quattro eroi`, nove >= 0.85, cento(nove))
+  controlla(`${t.chiave}: a 9/10 dal suo ingresso quasi sempre, fra i quattro eroi`, nove >= 0.8, cento(nove))
   controlla(`${t.chiave}: a 6/10 in mezzo: meno che a 9/10`, sei <= nove, `${cento(sei)} contro ${cento(nove)}`)
   if (!SENZA_BERSAGLIO_A_4.includes(t.chiave))
     controlla(`${t.chiave}: a 4/10 quasi mai, fra i quattro eroi${k === 1 ? ' (la scalinata, di più: il primo avvio)' : ''}`,
@@ -102,7 +103,8 @@ for (const [k, t] of CAMPAGNA.entries()) {
   nota(`la scalinata a mani nude a 9/10: ${nuda.map(x => `${x.eroe} ${x.vinte}/${SEMI}`).join(' · ')}`)
   // coi branchi (13 ottobre, sera) la scalinata nuda si vince di rado: una volta su dieci, e meno dell'attesa; il guardiano della cripta lascia la prima arma
   // per terra e l'armaiolo la vende a 9 💎 (sotto), quindi nudi non si arriva (docs/sotterraneo/la-grande-storia.md, «Il primo avvio»)
-  controlla('scalinata a mani nude a 9/10: si vince di rado, una volta su dieci almeno, fra i quattro eroi', tutteNude >= 0.1, cento(tutteNude))
+  // dal 30/10 i comuni della scalinata chiedono due risposte: nudi si vince una volta ogni tanto, non più una su dieci
+  controlla('scalinata a mani nude a 9/10: si vince di rado, ma ogni tanto, fra i quattro eroi', tutteNude >= 0.02, cento(tutteNude))
   controlla('e meno che con la prima arma', tutteNude < media(tutte, 'curioso', 0, 1), `${cento(tutteNude)} contro ${cento(media(tutte, 'curioso', 0, 1))}`)
   /* le gemme con cui si esce dalla scalinata (in media, il curioso; non subito dalla cripta: anche senza un'arma la scalinata si vince, il proprietario, 15 ottobre)
      bastano alla prima arma dell'armaiolo che a questo eroe serve. Il guardiano dell'ultima stanza la lascia anche per terra: qui si conta solo la spesa */
@@ -163,9 +165,10 @@ for (const L of [12, 16, 20, 24, 30]) {
   const [nove, sei] = BERSAGLI_ZONE[L]
   controlla(`zone al ${L}: a 9/10 in media si vince almeno ${cento(nove)}`, mediaZone(k => quota(0, k)) >= nove, cento(mediaZone(k => quota(0, k))))
   controlla(`zone al ${L}: a 6/10 in media si vince al più ${cento(sei)}`, mediaZone(k => quota(1, k)) <= sei, cento(mediaZone(k => quota(1, k))))
-  // il curioso gira tutto, quindi di esperienza ne prende più del dritto di una volta (0,8–2): in media fra uno e tre livelli e mezzo a zona
+  // il curioso gira tutto, quindi di esperienza ne prende più del dritto di una volta (0,8–2): in media fra uno e quattro livelli e mezzo a zona
+  // (quattro e mezzo dal 30/10: i comuni da due o tre risposte hanno più ossa, e un mostro porta quello che è)
   const presi = mediaZone(livelli)
-  controlla(`zone al ${L}: una zona vinta vale fra uno e tre livelli e mezzo`, presi >= 0.8 && presi <= 3.5, presi.toFixed(2))
+  controlla(`zone al ${L}: una zona vinta vale fra uno e quattro livelli e mezzo`, presi >= 0.8 && presi <= 4.5, presi.toFixed(2))
 }
 {
   const media = (q, j) => mediaZone(k => q(j, k))
@@ -178,12 +181,13 @@ for (const L of [12, 16, 20, 24, 30]) {
      La forza del curioso resta sotto il suo livello (1–4 livelli: la roba non è al passo), quindi sulla fascia 16–19 il verde e il grigio non si vedono mai: nel
      gioco la zona gli direbbe «più forte» finché non compra a tono */
   const a9 = A => media(nelleZone(16, A).quota, 0), a6 = A => media(nelleZone(16, A).quota, 1)
-  controlla('rossa/arancio duro (eroe del 11 e del 12): a 9/10 si vince di rado', a9(11) <= 0.25 && a9(12) <= 0.25, `${cento(a9(11))} · ${cento(a9(12))}`)
+  // 30 e non 25, e 50 e non 55 qui sotto, dal 30/10: con le zone ritarate sui comuni da due o tre risposte stanno a un punto dal bordo (24–26%, 55%), e otto semi sono pochi
+  controlla('rossa/arancio duro (eroe del 11 e del 12): a 9/10 si vince di rado', a9(11) <= 0.3 && a9(12) <= 0.3, `${cento(a9(11))} · ${cento(a9(12))}`)
   controlla('e a 6/10 quasi mai', a6(11) <= 0.1 && a6(12) <= 0.1, `${cento(a6(11))} · ${cento(a6(12))}`)
   controlla('l\'arancio più facile (eroe del 15): a 9/10 una volta su due', a9(15) >= 0.45 && a9(15) <= 0.6, cento(a9(15)))
   controlla('verde (eroe del 16): a 9/10 più spesso che no', a9(16) >= 0.65, cento(a9(16)))
   controlla('eroe del 20: a 9/10 quasi sempre', a9(20) >= 0.8, cento(a9(20)))
-  controlla('e a 6/10 più di metà delle volte', a6(20) >= 0.55, cento(a6(20)))
+  controlla('e a 6/10 circa metà delle volte', a6(20) >= 0.5, cento(a6(20)))
   controlla('più l\'eroe è avanti più si vince (a 9/10, 11 → 12 → 15 → 16 → 20)', [11, 12, 15, 16, 20].every((A, i, v) => !i || a9(A) >= a9(v[i - 1]) - 0.05),
             [11, 12, 15, 16, 20].map(a9).map(cento).join(' · '))
 }

@@ -32,8 +32,8 @@ export const TETTO = 200
 /* ═══════════ il mostro di riferimento al livello L ═══════════
    Quello che le zone mettono a quel livello: `forza` moltiplica le ossa, `spinta` aggiunge all'attacco (dati/zone.js).
    Dal 12 sono le formule delle zone; sotto, le discese della storia, ognuna al livello con cui ci si entra
-   (dati/storia.js), e fra una e l'altra in linea retta. Le ossa non scendono mai: la botola e la miniera hanno la
-   «forma» del loro posto, ma un livello più su non ha mai mostri più molli (si tiene il massimo fin lì) */
+   (dati/storia.js), e fra una e l'altra in linea retta. Le ossa e l'attacco non scendono mai: la botola e la miniera hanno la
+   «forma» del loro posto, e la miniera picchia più delle prime zone, ma un livello più su non ha mai mostri più molli (si tiene il massimo fin lì) */
 const PUNTI = [...CAMPAGNA.map((t, k) => ({ L: LIVELLI_ATTESI[k], forza: t.forza || 1, spinta: t.spinta || 0 })),
                { L: 12, forza: forzaDellaZona(12, null), spinta: spintaDellaZona(12) }]
 function fraI(L, campo) {
@@ -43,10 +43,11 @@ function fraI(L, campo) {
   if (!dopo || dopo.L === prima.L) return prima[campo]
   return prima[campo] + (dopo[campo] - prima[campo]) * (L - prima.L) / (dopo.L - prima.L)
 }
-const FORZE = [0]
+const FORZE = [0], SPINTE = [0]
 for (let L = 1, massimo = 0; L <= TETTO + 1; L++) FORZE[L] = massimo = Math.max(massimo, L >= 12 ? forzaDellaZona(L, null) : fraI(L, 'forza'))
+for (let L = 1, massimo = -Infinity; L <= TETTO + 1; L++) SPINTE[L] = massimo = Math.max(massimo, L >= 12 ? spintaDellaZona(L) : fraI(L, 'spinta'))
 export const forzaDei = L => FORZE[Math.max(1, Math.min(TETTO + 1, Math.round(L)))]
-export const spintaDei = L => (L >= 12 ? spintaDellaZona(L) : fraI(L, 'spinta'))
+export const spintaDei = L => SPINTE[Math.max(1, Math.min(TETTO + 1, Math.round(L)))]
 export function mostroDiRiferimento(L) {
   const m = MOSTRI[MOSTRO_TIPICO]
   const ossa = m.ossa * (1 + PIANO_TIPICO * OSSA_PER_PIANO) * forzaDei(L)

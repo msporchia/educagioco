@@ -30,6 +30,7 @@ import { crescitaA, rileggiCrescita, trattoDegliElisir } from '../../src/giochi/
 import { elisirCade, PROBABILITA_ELISIR, ampollaCade, PROBABILITA_AMPOLLA } from '../../src/giochi/sotterraneo/motore/bottino.js'
 import { schedaConLaRoba } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
+import { stileDi } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
 
 /* ══════════ 1. i dati ══════════ */
 {
@@ -118,7 +119,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   uguale('e l\'altra resta alla cintura', t.torceInScorta, 1)
 
   /* giocata davvero: la roba della scalinata scende nel pozzo */
-  const g = gioca(CAMPAGNA[0], { seme: 11, bravura: 0.9, come: 'tutto' })
+  const g = gioca(CAMPAGNA[0], { seme: 11, bravura: 0.9, come: 'tutto', stile: stileDi('curioso') })   // il curioso: il banco nudo, senza pozioni nello scontro, nella cripta del re a quattro colpi sviene
   controlla('la scalinata si vince', g.esito.vinta)
   const su = g.corsa.roba
   const giu = new Corsa(CAMPAGNA[1], { seme: 12, rnd: seminato(12), roba: su })

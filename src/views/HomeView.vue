@@ -185,7 +185,7 @@ function riprendi (k) { chiediRipresa(k); emit('vai', k) }
         <b>Amici</b>
         <i>{{ amiciDice }}</i>
       </button>
-      <ListaAmici v-if="amiciAperti" @chiudi="amiciAperti = false" />
+      <ListaAmici v-if="amiciAperti" @chiudi="amiciAperti = false" @vai="v => $emit('vai', v)" />
       <!-- «Melody ti ha superato»: tocca e si va a riprenderla (docs/core/amici-nei-giochi.md) -->
       <button v-for="x in sorpassi" :key="x.chiave + x.gioco" class="riga-amici sorpasso" type="button" data-sorpasso :data-gioco="x.gioco"
               @click="vaiARiprendere(x.gioco)">

@@ -6,7 +6,7 @@
 import { MISSIONI, PERSONAGGI, personaDi, missioneDi, premioDetto, PIU_DURO, TETTO, posto, titoloDi, faccia } from '../dati/missioni.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { COSE, aLivello } from '../dati/cose.js'
-import { CAMPAGNA, guardianoDi } from '../dati/campagna.js'
+import { CAMPAGNA } from '../dati/campagna.js'
 import { GROSSI, GROSSO_DELLA_DISCESA } from '../dati/grossi.js'
 import { luogoDi } from '../dati/terra.js'
 import { STORIA } from '../dati/storia.js'
@@ -406,9 +406,8 @@ export function robaDellaMissione(livello, m, tappa) {
     return { che: 'forziere', x: dove.x, y: dove.y, em: m.cosa.em, nome: m.cosa.nome,
              pelle: 'forziere-oro-chiuso', aperto: false, missione: m.id }
   const r = livello.mostro(m.mostro.tipo, dove.x, dove.y)
-  const g = livello.mostro(guardianoDi(tappa, livello.piano), dove.x, dove.y)
-  r.ossa = r.ossaMax = Math.round(Math.max(r.ossa * PIU_DURO.ossa, g.ossa))
-  r.att = Math.max(r.att, g.att) + PIU_DURO.att
+  r.ossa = r.ossaMax = Math.round(r.ossa * PIU_DURO.ossa)
+  r.att += PIU_DURO.att
   r.dif = Math.max(r.dif, MOSTRI[m.mostro.tipo].dif)
   return { ...r, nome: m.mostro.nome, missione: m.id }
 }

@@ -3,7 +3,7 @@
 // codice, invita un amico; poi il codice da dire, l'attesa, e cosa è andato storto. Non conosce la rete: la fase e il resto
 // arrivano da `usaSfida` (sfida.js). Le scelte di chi crea (il terreno, il ritmo…) sono del gioco: le mette nello slot `scelte`,
 // e può usare le classi `ins-scelte`, `ins-scelta`, `ins-scelta-su` e `ins-nota` per avere i tasti di tutti.
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const props = defineProps({
   fase: { type: String, default: 'scelta' },      // scelta | creo | attesa | entro | accordo | errore | rotta
@@ -11,6 +11,7 @@ const props = defineProps({
   messaggio: { type: String, default: '' },        // l'errore o il motivo, già in parole da bambino
   amici: { type: Array, default: () => [] },       // [{ chiave, id, nome, online }]: solo se i grandi hanno acceso gli amici online
   invitato: { type: String, default: '' },         // il nome dell'amico che si aspetta, se si è invitato un amico invece di dare un codice
+  scelto: { type: String, default: '' },           // la chiave di un amico già scelto dalla lista degli amici: si parte dalle scelte con lui
   partita: { type: String, default: 'la partita' },   // come la chiama il gioco: «la battaglia»
   spiega: { type: String, default: 'Due telefoni, la stessa partita. Serve internet su tutti e due.' },
   domanda: { type: String, default: 'Come giocate?' }, // il titolo delle scelte di chi crea
@@ -25,6 +26,13 @@ const valido = computed(() => /^[A-Z]{5}$/.test(pulito.value))
 const crea = () => (amico.value ? emit('invita', amico.value.chiave) : emit('crea'))
 const scegliAmico = a => { amico.value = a; modo.value = 'crea' }
 const indietroDalleScelte = () => { modo.value = null; amico.value = null }
+// dalla lista degli amici («Gioca con…»): appena l'amico c'è ed è online, la sala salta al «Sfidi …», una volta sola (con
+// «Indietro» si resta sulla scelta, anche se intanto la lista cambia)
+let preso = ''
+watch(() => [props.scelto, props.fase, props.amici], () => {
+  const a = props.scelto !== preso && props.fase === 'scelta' && !modo.value && props.amici.find(x => x.chiave === props.scelto && x.online)
+  if (a) { preso = props.scelto; scegliAmico(a) }
+}, { immediate: true })
 </script>
 
 <template>

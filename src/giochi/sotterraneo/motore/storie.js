@@ -8,7 +8,7 @@ import { COSE } from '../dati/cose.js'
 import { ROBA_VUOTA, Corredo } from './corredo.js'
 import { CRESCITA_NUOVA } from './crescita.js'
 import { forzaDelCorredo } from './forza.js'
-import { GIOCATORI_TIPO, NOMI_TIPO, STRADE, NOMI_STRADA, STRADA_BASE, stileDi, TENTATIVI, RISALITA } from '../dati/giocatori-tipo.js'
+import { GIOCATORI_TIPO, NOMI_TIPO, STRADE, NOMI_STRADA, STRADA_BASE, stileDi, TENTATIVI, RISALITA, SONDE, TENTATIVI_SONDA } from '../dati/giocatori-tipo.js'
 import { livelloAtteso } from './storia.js'
 import { dannoPerRisposta, colpoBase, valoreDellaRoba, utiliComprati } from './fine.js'
 
@@ -33,7 +33,7 @@ function registro(g) {
   const e = g.esito
   return { v: e.vinta ? 1 : 0, sv: e.svenimenti, dom: e.domande, giu: e.giuste, pz: g.pozioni || 0, fo: g.fonti || 0, tt: g.alTetto ? 1 : 0, tc: g.toccaIlTetto ? 1 : 0, ct: g.cureTrovate || {}, cr: g.cureRifiutate || 0, sl: g.scale || [], ge: e.gemme,
            mo: e.mostri, liv: g.corsa.livelloEroe, pp: (g.perPiano || []).map(n => intero(n)), sc: g.scontri || [], guasto: g.guasto || null,
-           ri: g.risalite || [], ar: g.armi || { trovati: 0, inutili: 0, rimandati: 0 } }
+           ri: g.risalite || [], ar: g.armi || { trovati: 0, inutili: 0, rimandati: 0 }, pt: pozioniDi(((g.corsa && g.corsa.roba) || {}).zaino || []) }
 }
 
 // il seme della partita n di una discesa: lo stesso per chi gioca la discesa dallo stesso ingresso, così il sotterraneo è lo stesso
@@ -66,7 +66,7 @@ export function passoDellaStoria(k, stato, { tipo, eroe, seme, sonde = [], rifai
   for (const j of rifai) passo.rifatte[j] = registro(giocaCome(tipo, j, { roba, crescita }, { eroe, seme, n: 100, strada }))
   const stati = () => ({ roba, crescita, obiettivo, ...(botteghe ? { botteghe } : {}) })
   if (k >= CAMPAGNA.length) return { passo, stato: stati() }
-  for (const s of sonde) passo.sonde[s] = registro(giocaCome(s, k, stati(), { eroe, seme }))
+  for (const s of sonde) passo.sonde[s] = finoAVincere(s, k, stati(), { eroe, seme, tentativi: TENTATIVI_SONDA })
   for (let n = 0; n < tentativi; n++) {
     const g = giocaCome(tipo, k, stati(), { eroe, seme, n, strada })
     passo.tentativi.push(registro(g))
@@ -81,6 +81,27 @@ export function passoDellaStoria(k, stato, { tipo, eroe, seme, sonde = [], rifai
     passo.pre += utiliComprati(eroe, crescita, robaPersa, roba)
   }
   return { passo, stato: stati() }
+}
+
+/* Una sonda (docs/sotterraneo/giocatori-tipo.md, «Quanto costa vincere»): dallo stesso ingresso, la discesa rigiocata finché non la vince, al più
+   `tentativi` volte, rifacendo la spesa dopo ogni sconfitta come chi gioca la storia. Torna un registro per tentativo */
+function finoAVincere(tipo, k, stato, { eroe, seme, tentativi }) {
+  const strada = STRADA_BASE, spesa = STRADE[strada].spesa, scaffale = !!RISALITA.scaffale
+  let { roba, crescita, obiettivo } = stato
+  let botteghe = stato.botteghe ? copia(stato.botteghe) : null
+  const regs = []
+  for (let n = 0; n < tentativi; n++) {
+    const g = giocaCome(tipo, k, { roba, crescita, obiettivo, ...(botteghe ? { botteghe } : {}) }, { eroe, seme, n })
+    regs.push(registro(g))
+    if (g.esito.vinta) break
+    roba = g.corsa.roba
+    crescita = g.corsa.crescita
+    if (botteghe) botteghe = alGiroNuovo(g.botteghe) || g.botteghe
+    const dopo = { pezzi: [], pozioni: 0, speso: 0, venduto: 0, obiettivo: null }
+    roba = allaBottega(roba, { finite: k, eroe, seme: seme * 101 + k + n * 17, crescita, spesa, scaffale, botteghe, registro: dopo })
+    obiettivo = dopo.obiettivo
+  }
+  return regs
 }
 
 /* Il metro delle unità (docs/sotterraneo/giocatori-tipo.md, «Il metro è il curioso»): la discesa k giocata dal curioso (o da chi si dice) con la
@@ -111,14 +132,14 @@ export function giocaDalCurioso(k, { eroe = 'cavaliere', seme = 1, n = 0, bravur
 // quali discese già vinte si rifanno al passo k: quella di due prima (la roba di chi è un po' più avanti), le ultime due all'uscita
 export const rifatteAl = k => (k >= CAMPAGNA.length ? [CAMPAGNA.length - 2, CAMPAGNA.length - 1] : k >= 2 ? [k - 2] : [])
 
-/* La storia intera di un eroe e un seme, per un giocatore di fila: `tipo` la gioca; il curioso porta con sé lo sbadato come sonda e le
+/* La storia intera di un eroe e un seme, per un giocatore di fila: `tipo` la gioca; il curioso porta con sé le sonde (SONDE) e le
    rifatte. `da`/`fino`: da quale discesa a quale (il passo `da` parte dalla roba attesa se `stato` manca, vedi `statoAtteso`) */
 export function storiaDi({ tipo, eroe, seme, fino = CAMPAGNA.length, stato = null, da = 0, strada = STRADA_BASE }) {
   const curioso = tipo === 'curioso'
   const passi = []
   let s = stato || STATO_NUOVO()
   for (let k = da; k <= fino; k++) {
-    const r = passoDellaStoria(k, s, { tipo, eroe, seme, strada, sonde: curioso ? ['sbadato'] : [], rifai: curioso ? rifatteAl(k).filter(j => j >= da) : [] })
+    const r = passoDellaStoria(k, s, { tipo, eroe, seme, strada, sonde: curioso ? SONDE : [], rifai: curioso ? rifatteAl(k).filter(j => j >= da) : [] })
     passi.push(r.passo)
     s = r.stato
   }
@@ -129,10 +150,10 @@ export function storiaDi({ tipo, eroe, seme, fino = CAMPAGNA.length, stato = nul
    il bravo di arma prima sono la `base` dei bersagli; le altre sono più corte (`semiStrade`) e compatte: serve l'esito, non ogni scontro. */
 export function lineeDelGiro({ giocatori = NOMI_TIPO, strade = NOMI_STRADA, eroi, semi, semiStrade, semeDa = 1 }) {
   const lista = []
-  for (const strada of strade) for (const tipo of giocatori) {
-    const base = strada === STRADA_BASE && tipo !== 'sbadato'
+  for (const strada of strade) for (const tipo of giocatori.filter(t => !GIOCATORI_TIPO[t].soloSonda)) {
+    const base = strada === STRADA_BASE && !SONDE.includes(tipo)
     const n = base ? semi : semiStrade
-    lista.push({ id: `${strada}·${tipo}`, tipo, strada, base, compatta: !base, sonde: base && tipo === 'curioso' ? ['sbadato'] : [], rifai: base && tipo === 'curioso',
+    lista.push({ id: `${strada}·${tipo}`, tipo, strada, base, compatta: !base, sonde: base && tipo === 'curioso' ? SONDE : [], rifai: base && tipo === 'curioso',
                  storie: eroi.flatMap(eroe => Array.from({ length: n }, (_, i) => ({ eroe, seme: semeDa + i }))) })
   }
   return lista
@@ -142,5 +163,5 @@ export function lineeDelGiro({ giocatori = NOMI_TIPO, strade = NOMI_STRADA, eroi
 export function compatta(passo) {
   const senza = r => { const { sc, ...resto } = r; return resto }
   return { ...passo, tentativi: passo.tentativi.map(senza), rifatte: Object.fromEntries(Object.entries(passo.rifatte).map(([j, r]) => [j, senza(r)])),
-           sonde: Object.fromEntries(Object.entries(passo.sonde).map(([j, r]) => [j, senza(r)])) }
+           sonde: Object.fromEntries(Object.entries(passo.sonde).map(([j, r]) => [j, r.map(senza)])) }
 }

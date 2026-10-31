@@ -92,7 +92,7 @@ difficile da sopravvivere**: la progressione sta tutta sulle altre leve.
 ## Come crescono i mostri
 
 ```
-ossa = base.ossa × forza × (1 + p · 0,12)     forza 2,2, ossaPerPiano 0,12
+ossa = base.ossa × forza × (1 + p · 0,12)     forza 2,5, ossaPerPiano 0,12 (era 2,2: costo-di-vincere.md)
 att  = base.att  + spinta + floor(p / 3)      spinta 9, attOgni 3 (la campagna resta a 2)
 dif  = base.dif                               ferma per sempre
 ```

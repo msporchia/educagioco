@@ -545,9 +545,9 @@ export function finoADove(tappa, { bravura = 0.8, semi = [7, 41, 99, 203],
 
 // se il minimo cresce, scendere diventa un compito; se la forbice si stringe, non si sceglie più.
 // `roba`: quella che ci si porta giù (robaPer), da quando le discese dopo la prima contano su di lei
-export function costoDi(tappa, { seme = 7, bravura = 1, eroe = undefined, roba = null, crescita = null } = {}) {
-  const minimo = gioca(tappa, { seme, bravura, come: 'minimo', eroe, roba, crescita })
-  const tutto = gioca(tappa, { seme, bravura, come: 'tutto', eroe, roba, crescita })
+export function costoDi(tappa, { seme = 7, bravura = 1, eroe = undefined, roba = null, crescita = null, stile = null } = {}) {
+  const minimo = gioca(tappa, { seme, bravura, come: 'minimo', eroe, roba, crescita, stile })
+  const tutto = gioca(tappa, { seme, bravura, come: 'tutto', eroe, roba, crescita, stile })
   return {
     minimo: minimo.esito.domande,
     tutto: tutto.esito.domande,

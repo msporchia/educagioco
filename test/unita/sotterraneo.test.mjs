@@ -27,7 +27,8 @@ import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { gioca, costoDi, quanteVolteSiVince, pianiSani, robaPer, crescitaPer } from '../../src/giochi/sotterraneo/motore/banco.js'
 import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
-import { giocaDalCurioso } from '../../src/giochi/sotterraneo/motore/storie.js'
+import { giocaDalCurioso, ingressoDelCurioso } from '../../src/giochi/sotterraneo/motore/storie.js'
+import { stileDi } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
 import manifesto from '../../src/giochi/sotterraneo/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
 import { misure, statoTraguardo } from '../../src/store/progressi.js'
@@ -111,10 +112,12 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
 }
 
 /* ══════════ 4. le discese si vincono, e quanto costano ══════════ */
+// il tetto delle risposte obbligate per scendere dritti: 150 dal 30/10, quando i comuni sono passati a due o tre risposte (docs/sotterraneo/regole.md)
+const SEDUTA = 150
 {
   const conti = []
   for (const [i, t] of CAMPAGNA.entries()) {
-    const roba = robaPer(i), crescita = crescitaPer(i)
+    const { roba, crescita } = ingressoDelCurioso(i)   // la roba e il livello con cui il curioso ci arriva, e si gioca come lui (beve nello scontro)
     /* Il metro è il curioso (docs/sotterraneo/giocatori-tipo.md): sei storie, ognuna con la roba e il livello con cui il curioso arriva a
        questa discesa (gira tutto, 9 giuste su 10), e la discesa si vince alla prima. Il finto che andava dritto con la roba attesa
        entra uno o due livelli sotto e coi mostri di oggi non vince quasi più: non è più il riferimento. */
@@ -122,18 +125,18 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
     const vinte = sei.filter(g => g.esito.vinta).length
     controlla(`${t.chiave}: il curioso la vince alla prima, quasi sempre`, vinte >= sei.length - 1,
               `${vinte}/${sei.length} ${sei.map(g => g.guasto).filter(Boolean).slice(0, 2).join(' · ')}`)
-    const c = costoDi(t, { roba, crescita })
+    const c = costoDi(t, { roba, crescita, stile: stileDi('curioso') })
     conti.push([t, c])
     /* Il tetto è una seduta: oltre le ottanta domande obbligate non è più
        un gioco, è un compito. Il pavimento è la forbice — se «tutto»
        costa quanto «il minimo», in mezzo non si sceglie più niente, ed è
        la scelta il motivo per cui il posto è un posto. */
-    dentro(`${t.chiave}: il minimo per scendere sta in una seduta`, c.minimo, 5, 85)   // 5 e non 6: un seme su cinque ci sta, già prima
+    dentro(`${t.chiave}: il minimo per scendere sta in una seduta`, c.minimo, 5, SEDUTA)   // 5 e non 6: un seme su cinque ci sta, già prima
     // la grotta ha cinque piani da quattro stanze: quasi tutto quello che c'è sta sulla strada della scala, e la forbice è più stretta
     controlla(`${t.chiave}: chi ripulisce il piano paga molto di più`,
               c.tutto > c.minimo * (t.chiave === 'gallerie' ? 1.2 : 1.3), `minimo ${c.minimo}, tutto ${c.tutto}`)
   }
-  nota('costo in domande, per tappa, con la roba di chi ci arriva andando dritto:')
+  nota('costo in domande, per tappa, con la roba del curioso:')
   for (const [t, c] of conti)
     nota(`  ${t.nome.padEnd(14)} minimo ${String(c.minimo).padStart(3)} · ` +
          `tutto ${String(c.tutto).padStart(3)} · ${t.piani} piani`)
@@ -150,7 +153,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
     const costi = CAMPAGNA.map((t, i) => costoDi(t, { eroe: e.chiave, roba: robaPer(i, { eroe: e.chiave }),
                                                      crescita: crescitaPer(i, { eroe: e.chiave }) }).minimo)
     const peggio = Math.max(...costi)
-    controlla(`${e.chiave}: nessuna discesa esce dalla seduta`, peggio <= 85,
+    controlla(`${e.chiave}: nessuna discesa esce dalla seduta`, peggio <= SEDUTA,
               `la peggiore costa ${peggio} domande`)
     /* due file per eroe, quattro discese ciascuna: con lo zaino di chi ci
        arriva andando dritto il mago (che regge meno) cade una volta su

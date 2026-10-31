@@ -27,6 +27,7 @@ import { gioca } from '../../src/giochi/sotterraneo/motore/banco.js'
 import { scrivi, leggi, dice } from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { strada } from '../../src/giochi/sotterraneo/motore/dialoghi.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
+import { stileDi } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
 
 const indiceDi = k => CAMPAGNA.findIndex(t => t.chiave === k)
 const detta = (E, chiavi = null) => disposizioneDi(E).filter(z => !chiavi || chiavi.includes(z.chiave))
@@ -163,7 +164,8 @@ uguale('e l\'abisso resta l\'abisso', zonaDi(-1).abisso, true)
   uguale('il bottino è del suo livello', c.livelloDelBottino, 16)
   const storia = new Corsa(CAMPAGNA[k], { seme: 31, eroe: 'cavaliere', roba: robaAttesa('cavaliere', k) })
   const ossa = cc => Math.max(...cc.livello.robe.filter(r => r.che === 'mostro').map(r => r.ossa))
-  controlla('i mostri hanno più ossa che nella storia', ossa(c) > 2 * ossa(storia), `${ossa(c)} contro ${ossa(storia)}`)
+  // una volta e mezza, non più il doppio: dal 30/10 anche i comuni della storia chiedono due o tre risposte (docs/sotterraneo/costo-di-vincere.md)
+  controlla('i mostri hanno più ossa che nella storia', ossa(c) > 1.5 * ossa(storia), `${ossa(c)} contro ${ossa(storia)}`)
   c.piano = z.piani - 1
   c.nuovoPiano()
   const g = c.livello.robe.find(r => r.grosso)
@@ -226,7 +228,7 @@ uguale('e l\'abisso resta l\'abisso', zonaDi(-1).abisso, true)
     // fra otto semi quelli vinti (coi branchi nuovi un seme solo può perdere: il passo si legge dove si vince)
     const vinte = []
     for (let seme = 41; seme < 49; seme++) {
-      const g = gioca(zonaPotenziata(k, L), { seme, bravura: 1, eroe: 'cavaliere', crescita: cr, roba: robaAttesaA('cavaliere', L) })
+      const g = gioca(zonaPotenziata(k, L), { seme, bravura: 1, eroe: 'cavaliere', crescita: cr, roba: robaAttesaA('cavaliere', L), stile: stileDi('curioso') })   // beve nello scontro come il curioso: il banco nudo non passa più i comuni da due risposte
       if (g.esito.vinta) vinte.push((g.corsa.crescita.esp - cr.esp) / salto(L))
     }
     const livelli = vinte.reduce((n, x) => n + x, 0) / Math.max(1, vinte.length)

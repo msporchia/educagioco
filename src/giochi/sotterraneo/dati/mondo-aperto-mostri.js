@@ -34,15 +34,15 @@ export const ABITANTI_DI_SOPRA = {
 // al 71) la seguono da sola (motore/aperta.js, crescitaDiSopra). La cripta non ha spinta (si comincia a mani nude)
 export const CURVA_DI_SOPRA = [
   { livello: 1, forza: 0.25, spinta: 0, branco: 2, gradi: 0 },
-  { livello: 2, forza: 0.5, spinta: 2, branco: 3 },
-  { livello: 3, forza: 0.5, spinta: 4, branco: 3 },
-  { livello: 5, forza: 0.8, spinta: 6.5, branco: 4 },
-  { livello: 7, forza: 1.1, spinta: 7.7, branco: 4 },
-  { livello: 8, forza: 1.25, spinta: 8.7, branco: 5 },
-  { livello: 10, forza: 1.8, spinta: 9.5, branco: 6 },
-  { livello: 12, forza: 2.2, spinta: 9.5, branco: 6 },
-  { livello: 13, forza: 2.35, spinta: 10.8, branco: 6 },
-  { livello: 15, forza: 2.65, spinta: 13.4, branco: 6 },
+  { livello: 2, forza: 1.7, spinta: 0, branco: 3 },
+  { livello: 3, forza: 3.2, spinta: 3, branco: 3 },
+  { livello: 5, forza: 3.9, spinta: 6.2, branco: 4 },
+  { livello: 7, forza: 4.8, spinta: 9.3, branco: 4 },
+  { livello: 8, forza: 6, spinta: 9.2, branco: 4 },
+  { livello: 10, forza: 5.8, spinta: 13.5, branco: 6 },
+  { livello: 12, forza: 5.8, spinta: 13.5, branco: 6 },
+  { livello: 13, forza: 6.2, spinta: 13.5, branco: 6 },
+  { livello: 15, forza: 7, spinta: 13.5, branco: 6 },
 ]
 
 // Le regole di sopra, tutte in un posto (docs/sotterraneo/mondo-aperto-mostri.md, «Le tarature»). Le distanze sono in celle

@@ -29,7 +29,7 @@ npm run taratura -- --da 4             # rigioca dalla quinta discesa in poi, da
 npm run taratura -- --tara 2.spinta=8,livelli.A=40,potenza.gemme=0.5   # prova dei valori senza toccare i sorgenti
 ```
 
-## I tre giocatori tipo
+## I giocatori tipo
 
 | | il curioso | il bravo | lo sbadato |
 |---|---|---|---|
@@ -40,7 +40,11 @@ npm run taratura -- --tara 2.spinta=8,livelli.A=40,potenza.gemme=0.5   # prova d
 | pozioni | beve nel rosso (sotto il 30%, la soglia dello stop) **anche nello scontro**, una per turno e poi attacca (non costa il turno) | sotto il 45% fuori dallo scontro, mai dentro | come il curioso |
 | fonti | si ferma se è sotto il 65% di vita o il 40% di energia, e a fine piano se non è pieno | sotto il 45% di vita | come il curioso |
 | spesa e punti | il meglio che può dal fabbro, dall'incantatrice e dal rigattiere, poi le pozioni; punti secondo la strada della classe | idem | idem |
-| la storia | la sua, di fila | la sua, di fila | gioca ogni discesa dall'**ingresso del curioso** |
+| la storia | la sua, di fila | la sua, di fila | gioca ogni discesa dall'**ingresso del curioso**, e la rifà finché non la vince |
+
+**Il medio** (dal 30 ottobre) è il curioso che risponde giusto 8 volte su 10: come lo sbadato gioca solo dall'ingresso del curioso (`soloSonda`),
+mai una storia sua. Il medio e lo sbadato sono le **sonde** (`SONDE`): rifanno la discesa finché non la vincono, al più `TENTATIVI_SONDA` volte,
+e il rapporto stampa **quanto costa vincere** a ognuno (svenimenti, volte, domande, pozioni, gemme): [costo-di-vincere.md](costo-di-vincere.md).
 
 Lo sbadato non fa un viaggio suo: è il curioso in una giornata storta, con la roba e il livello di quel punto della sua storia
 («se perdi e devi tornare su è stata comunque interessante, dovevi fermarti prima a ricaricarti»). Così ogni discesa ha un bersaglio chiaro e
@@ -64,7 +68,10 @@ da risparmiare; ne tiene al più `RISALITA.perDopo` (2) in attesa del livello, s
 
 ## I bersagli
 
-Misurati sulla **prima volta** che si scende in una discesa («la discesa nuova»), in media fra i quattro eroi. I numeri precisi sono di chi
+Misurati sulla **prima volta** che si scende in una discesa («la discesa nuova»), in media fra i quattro eroi. **Dal 30 ottobre la regola è
+quanto costa vincere, non se si vince** ([costo-di-vincere.md](costo-di-vincere.md)): le righe «vinte alla prima» del curioso e dello sbadato e
+il tetto delle domande del curioso sono sostituite dagli svenimenti e dalle volte per vincere la discesa, il bravo vince alla prima al più metà delle volte.
+La tabella qui sotto è quella del 14 ottobre, per le righe che restano. I numeri precisi sono di chi
 ha scritto lo strumento dentro le frasi dell'utente; **[da confermare]** dove la frase è ambigua. Stanno in `dati/giocatori-tipo.js`.
 
 | giocatore | misura | bersaglio | la frase dell'utente |

@@ -98,7 +98,7 @@ export const MISSIONI = [
     dice: 'Il goblin che mi ha rubato la collana ha fatto scuola: adesso un diavoletto ladro ruba al villaggio da sotto la torre bruciata, al primo piano. Lo chiamano Grattanaso. Fermalo, ti prego.',
     grazie: 'Grattanaso non ruberà più niente al villaggio! Prendi queste gemme: le tenevo da parte per la nonna.',
     ritorno: 'Al villaggio non sparisce più niente. Grattanaso?',
-    premio: { gemme: 10 } },
+    premio: { gemme: 10, monete: 1 } },
 
   { id: 'ascia', da: 'boscaiolo', discesa: 'gallerie', piano: 3, tipo: 'trova',
     cosa: { nome: 'L\'ascia di mio padre', em: '🪓' },
@@ -198,10 +198,9 @@ export const MISSIONI = [
     premio: { gemme: 20 } },
 ]
 
-// il mostro col nome è più duro di quelli del suo piano: più ossa e un colpo in più (il motore lo applica). Era una volta
-// e mezza: da quando i mostri delle discese di fondo hanno tante ossa (contano anche i livelli dell'eroe) chiedeva venti
-// risposte di fila, e un quarto in più basta a farlo notare
-export const PIU_DURO = { ossa: 1.25, att: 1 }
+// il mostro col nome è più duro di quelli del suo piano: un quarto di ossa in più (il motore lo applica). Il colpo in più è
+// tolto dal 30/10, quando i comuni sono passati a due o tre risposte: in duello non si batteva più senza svenire
+export const PIU_DURO = { ossa: 1.25, att: 0 }
 
 // una taglia della bacheca (`t:…`) si rifà dall'id (dati/missioni-modelli.js): non sta nell'elenco, sta nel salvataggio
 export const missioneDi = id => (eTaglia(id) ? rifaDaId(id) : MISSIONI.find(m => m.id === id) || null)
