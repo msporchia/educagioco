@@ -2,8 +2,8 @@
 // La collezione di armi 3D: una cinquantina di pezzi, dieci per tipo, dalla più umile alla leggendaria.
 // Contratto: CATALOGO = [{ id, famiglia, nome, grado 1..10, elemento, crea() }], creaDaId(id).
 // Orientamento come `creaArma` di armi.js: origine nel pugno, lama/testa/bastone verso +y; l'arco verticale col pancione
-// verso +z; lo scudo con la faccia verso +z. `userData.famiglia` è quella che `equipaggia` capisce (spada | arco | scudo | staffa);
-// `userData.tipo` è il tipo della collezione (spada | ascia | arco | bacchetta | scudo).
+// verso +z (la balestra no: il fusto verso +z e il prodo di piatto); lo scudo con la faccia verso +z. `userData.famiglia` è quella che `equipaggia` capisce (spada | arco | scudo | staffa);
+// `userData.tipo` è il tipo della collezione (spada | ascia | arco | bacchetta | scudo), o `balestra`, che si tiene a modo suo.
 import { SPADE } from './collezione-spade.js'
 import { ASCE } from './collezione-asce.js'
 import { ARCHI } from './collezione-archi.js'
@@ -18,7 +18,7 @@ export const CATALOGO = FAMIGLIE.flatMap(famiglia => TABELLE[famiglia].map(([id,
   id, famiglia, nome, grado, elemento,
   crea () {
     const g = costruisci()
-    g.userData.famiglia = PER_EQUIPAGGIA[famiglia]; g.userData.tipo = famiglia
+    g.userData.famiglia = PER_EQUIPAGGIA[famiglia]; g.userData.tipo = g.userData.balestra ? 'balestra' : famiglia
     g.userData.id = id; g.userData.nome = nome; g.userData.grado = grado; g.userData.elemento = elemento
     return g
   }

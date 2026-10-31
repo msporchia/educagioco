@@ -333,6 +333,13 @@ const ricordo = dallaCorsa(c => {
   const t = c.tappa
   return t && !t.abisso ? promemoria(missioni.value, t.chiave, c.piano + 1, conti.value) : []
 }, [])
+// si vede arrivando su un piano, o quando una missione cambia (fatta, il suo piano), per qualche secondo di gioco; poi restano il diario e
+// la freccina (docs/sotterraneo/missioni.md, «Il promemoria in discesa»)
+const RICORDO_SECONDI = 6
+const ricordoAcceso = ref(false)
+let ricordoDa = 0
+const firmaRicordo = dallaCorsa(c => c.piano + '|' + ricordo.value.map(r => r.id + ':' + r.dove).join(','), '')
+watch(firmaRicordo, () => { ricordoAcceso.value = ricordo.value.length > 0; ricordoDa = orologio })
 
 function scorda() {
   nellAvventura({ sosta: null }, { subito: true })
@@ -1557,6 +1564,7 @@ function giro() {
     if (!c || c.finita || (fermo.value && !inDueOra.value) || !pittore) return
     // l'orologio si muove DOPO: contarlo anche in pausa farebbe sparire all'istante la riga lasciata a metà
     orologio += dt
+    if (ricordoAcceso.value && orologio - ricordoDa > RICORDO_SECONDI) ricordoAcceso.value = false
     if (inDueOra.value) sfida.avanza(dt)
     else if (!sopra.value) c.passo(dt)   // sul palco di sopra non si cammina: finito lo scontro si torna al mondo
     // col foglio aperto la telecamera alza l'eroe (lo scontro no: sta al centro e non chiede spazio)
@@ -2317,8 +2325,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
           <CartelloLinea v-if="inDueOra && (sfida.rotta.value || sfida.linea.value)" :rotta="sfida.rotta.value" :motivo="sfida.motivo.value"
                          :linea="sfida.linea.value" partita="la discesa" esci="🗺️ torno su" @esci="chiudi({ senzaCartello: true })" />
 
-          <!-- le missioni prese che riguardano questa discesa: una riga ciascuna, in cima (motore/missioni.js) -->
-          <ul v-if="ricordo.length" class="sot-ricordo" data-promemoria>
+          <!-- le missioni prese che riguardano questa discesa: una riga ciascuna, in cima, per qualche secondo; mai sopra uno scontro -->
+          <ul v-if="ricordo.length && ricordoAcceso && !nemico" class="sot-ricordo" data-promemoria>
             <li v-for="r in ricordo" :key="r.id" :data-missione="r.id" :data-dove="r.dove"
                 :data-segui="rotta && rotta.id === r.id ? 1 : null">
               <span class="em">{{ r.em }}</span> {{ r.testo }}

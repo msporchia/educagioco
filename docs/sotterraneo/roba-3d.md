@@ -21,6 +21,17 @@ anteprime è il modello 3D di `spada-28`, con l'alone della sua rarità. Prima t
    pergamena del portale) hanno un modello per chiave in `pozioni.js` (`crea(chiave)`, `CHIAVI`: la forma dal grado, il colore dal
    tipo). Nelle caselle, nella scelta della pozione e nella riga della torcia dello zaino.
 
+## La balestra si tiene a modo suo
+
+Una balestra non è un arco ritto (l'utente, 31 ottobre 2026: l'elfa la teneva col fusto in su e l'arco di traverso sul corpo). Il modello,
+sia la figura `arco-07` (`bastoni.js`) sia il ripiego `balestra` della collezione, ha **l'impugnatura nel pugno, il fusto verso +z** (dove
+tira anche l'arco), la guida e il dardo sopra, l'arco di piatto lungo x coi flettenti piegati verso chi tira; `userData.tipo = 'balestra'`
+(la famiglia resta `arco`: va nella sinistra). In mano la tiene `tieniBalestra` (`poc/eroi-3d/eroi.js`), in fondo alla guardia e alla
+marcia: il braccio la porge davanti, appena sotto la spalla, e il perno annulla il giro del braccio, così il fusto va dove guarda (o
+mira) l'eroe, un poco in giù, per tutti e quattro. Provato a girare solo il modello: il perno segue il braccio, che in ogni posa sta in un
+altro modo (l'elfa lo tende in avanti, il cavaliere lo tiene basso), e il fusto finiva in su o di sbieco. I motivi dell'elemento della
+figura (fatti per le aste ritte, attorno a z = 0) stanno spostati sul davanti.
+
 Il copricapo non passa dalle figure: ha i modelli dei copricapi per base (`COPRICAPI_3D`, [elmo.md](elmo.md)).
 
 `scena3d/roba3d.js`: `modelloDiRoba(chiave)` → `{ figura, famiglia, modulo, ripiego, crea(), look }`; `creaPezzo(p)` costruisce e
@@ -55,10 +66,12 @@ profondità: una chiamata in più, 60–200 punti. I punti si pescano sulla supe
 
 Più, se l'elemento non è «nessuno», una velatura del suo colore e piccoli motivi suoi (fiammelle che salgono per il fuoco, fiocchi
 che scendono per il ghiaccio, saette per il fulmine, bolle per veleno e acqua, foglie per la natura, rune per l'arcano). I colori
-stanno in `poc/roba-3d/palette.js` (`ELEMENTI`). L'alone si mette **solo ai pezzi non comuni**; un comune mostra già la sua figura.
+stanno in `poc/roba-3d/palette.js` (`ELEMENTI`). **Nel gioco l'alone si mette solo ai leggendari** (l'utente, 31 ottobre 2026: il
+luccichio dice «potenziato», non va su una cosa relativamente di base): comuni, magici e rari mostrano la loro figura, che può
+avere un bagliore suo (la lama di fuoco), e quello resta. Le righe del magico e del raro le usa solo il prototipo.
 `gruppo.userData.animaAlone(t)` lo muove (l'eroe lo chiama a ogni fotogramma, le anteprime una volta a 1,3 s: l'aura gonfia);
 `userData.aloneUniformi.uIntensita` lo fa svanire col portale. In mano all'eroe i punti sono più piccoli (`scalaAlone` 0,8): a
-grandezza piena coprivano la faccia del ritratto. Fra i consumabili brillano (come un raro) solo i «rarissimi»: l'ampolla della vita
+grandezza piena coprivano la faccia del ritratto. Fra i consumabili brillano (con l'alone del raro) solo i «rarissimi»: l'ampolla della vita
 e l'elisir del toro. Provato con le sole tinte dei materiali: clonarli rompe le animazioni
 dei moduli, che tengono i loro materiali.
 

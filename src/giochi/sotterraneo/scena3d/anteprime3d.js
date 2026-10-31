@@ -19,6 +19,8 @@ import { passiDi, turnoLibero, segnaTurno } from './coda-shader.js'
 import { segui, rilascia } from '../../../grafica/rilascio3d.js'
 
 const FOV = 24
+// `#anteprime-zoom=4` nell'indirizzo: le foto quattro volte più grandi, per guardarle da vicino (`tavola-anteprime.mjs --zoom 4`)
+const ZOOM = typeof location === 'undefined' ? 1 : Math.min(8, Math.max(1, Number((/[#&?]anteprime-zoom=(\d+)/.exec(location.hash + location.search) || [])[1]) || 1))
 const ATTESA_PROGRAMMA = 60   // ms lasciati alla compilazione di un programma nuovo, senza KHR_parallel_shader_compile (l'Adreno 512: 50-300)
 const _b = new THREE.Box3()
 
@@ -45,14 +47,17 @@ function animaTutto(radice, t) {
 // ── i modelli in posa: ognuno torna { obj, scatola, verso } ──
 // l'istante delle anteprime: a 1,3 s l'aura del leggendario è gonfia e i luccichii del raro accesi (un fotogramma bello, fermo)
 const ISTANTE = 1.3
+const DA_SOPRA = new THREE.Matrix4().makeBasis(new THREE.Vector3(-1, 0, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 1, 0))   // il fusto (+z) in su, il sopra (+y) verso chi guarda
 function inPosaArma(pezzo, modo) {
   const a = creaPezzo(pezzo)
   if (!a) return null
   const perno = new THREE.Group()
   perno.add(a); animaTutto(a, ISTANTE)
   if (modo === 'scudo' || modo === 'gioiello' || modo === 'consumabile') { perno.rotation.y = -0.35; return { obj: perno, verso: [0.15, 0.22, 1] } }
-  // l'arco è disegnato col pancione verso +z: girato di lato si vede la curva; tutto in diagonale, la punta in alto a destra
-  if (a.userData.famiglia === 'arco') a.rotation.y = -Math.PI / 2
+  // l'arco è disegnato col pancione verso +z: girato di lato si vede la curva; tutto in diagonale, la punta in alto a destra.
+  // La balestra (il fusto verso +z, l'arco di piatto) la bocca in alto a destra, vista da sopra e un poco di fianco: la T di una balestra
+  if (a.userData.tipo === 'balestra') a.quaternion.setFromRotationMatrix(DA_SOPRA).premultiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.45, 0.55, 0)))
+  else if (a.userData.famiglia === 'arco') a.rotation.y = -Math.PI / 2
   else a.rotation.y = 0.45
   perno.rotation.z = -Math.PI / 4
   return { obj: perno, verso: [0, 0.1, 1] }
@@ -99,7 +104,7 @@ function inPosaCopricapo(c) {
   const g = finto.userData.copricapoMontato && finto.userData.copricapoMontato.gruppo
   if (!g) return null
   if (finto.userData.animaCopricapo) finto.userData.animaCopricapo(ISTANTE)
-  if (c.rarita !== 'comune') aggiungiAlone(g, { rarita: c.rarita, elemento: 'nessuno' })
+  if (c.rarita === 'leggendario') aggiungiAlone(g, { rarita: c.rarita, elemento: 'nessuno' })   // come la roba: brilla solo il leggendario
   animaTutto(g, ISTANTE)
   finto.rotation.set(0.25, -0.5, 0)
   return { obj: finto, verso: [0.15, 0.3, 1] }
@@ -208,7 +213,7 @@ export function creaAnteprime3d({ ozio = 30000, budget = 16, perdite = 3 } = {})
     const p = inPosa(c)
     if (!p) return null
     const t1 = performance.now()
-    const [w, h] = MISURE[c.tipo] || [128, 128]
+    const [w, h] = (MISURE[c.tipo] || [128, 128]).map(x => x * ZOOM)
     scena.add(p.obj)
     try {
       const s = p.scatola || scatolaDi(p.obj)

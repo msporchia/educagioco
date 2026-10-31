@@ -410,7 +410,7 @@ export function creaEroe (chiave) {
 
 // ══════════ le pose ══════════
 const smussa = x => x * x * (3 - 2 * x)
-/** Una fase di marcia (in radianti): gambe e braccia opposte, il busto che rimbalza. Non tocca le armi montate. */
+/** Una fase di marcia (in radianti): gambe e braccia opposte, il busto che rimbalza. Non tocca le armi montate, tranne la balestra. */
 export function posaMarcia (e, fase) {
   const u = e.userData, s = Math.sin(fase), a = Math.abs(Math.cos(fase))
   u.gambe[0].rotation.x = s * 0.75; u.gambe[1].rotation.x = -s * 0.75
@@ -418,11 +418,22 @@ export function posaMarcia (e, fase) {
   u.busto.position.y = u.altezzaBusto + a * 0.02; u.busto.rotation.y = s * 0.08
   u.busto.position.x = 0; u.busto.rotation.z = 0; for (const gm of u.gambe) gm.rotation.z = 0
   u.testa.rotation.y = -s * 0.05
+  tieniBalestra(u, 0.05 * s)
 }
 /** Il colpo con il braccio destro, p da 0 (riposo) a 1 (a fondo); il busto si gira. */
 export function posaColpo (e, p) {
   const u = e.userData, k = p < 0.5 ? smussa(p / 0.5) : 1 - smussa((p - 0.5) / 0.5) * 0.0
   u.bracci[1].rotation.set(-0.35 - 1.9 * smussa(Math.min(1, p)), 0, -0.1); u.busto.rotation.y = 0.15 - 0.45 * k
+}
+// la balestra (docs/sotterraneo/roba-3d.md) non si tiene come l'arco: il braccio la porge davanti, appena sotto la spalla, e il perno
+// annulla il giro del braccio, così il fusto resta dove guarda l'eroe, un poco in giù (pronta), in guardia e in marcia
+const PRONTA = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.22, 0, 0))
+function tieniBalestra (u, dondolo = 0) {
+  const p = u.perniArmi && u.perniArmi.sinistra, a = p && p.children[0]
+  if (!a || a.userData.tipo !== 'balestra') return
+  const b = u.bracci[0]
+  b.rotation.set(-1.2 + dondolo, 0, 0.22)
+  p.quaternion.copy(b.quaternion).invert().multiply(PRONTA)
 }
 /** Un'arma in mano oscilla attorno alla sua posa base (memorizzata la prima volta): la punta si muove appena. */
 function oscilla (p, dx, dy, dz) {
@@ -512,4 +523,5 @@ export function posaGuardia (e, t = 0) {
   }
   u.busto.position.y = u.altezzaBusto - (0.015 + 0.02 * bn) - tuffo + busY
   u.busto.position.x = 0.012 * peso; u.busto.rotation.z = -0.03 * peso
+  tieniBalestra(u, 0.03 * o1)
 }

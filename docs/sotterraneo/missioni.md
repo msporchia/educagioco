@@ -160,7 +160,10 @@ conta nel tetto né nel numero d'oro delle missioni da consegnare.
   dovrei poter premere su una missione e farmi dare i dettagli»*.
 - **Il promemoria in discesa** (`promemoria`): in cima al campo una riga per
   ogni missione presa o fatta che riguarda quella discesa, ricalcolata a ogni
-  piano. «Missione: la collana della nonna è al terzo piano: scendi»; sul piano
+  piano. **Si vede per sei secondi di gioco** arrivando su un piano o quando
+  una missione cambia (fatta, il suo piano), mai sopra uno scontro: poi restano
+  il diario e la freccina (l'utente, 31 ottobre 2026: tenerle sempre in cima
+  era troppo, con la freccina che già ci porta). «Missione: la collana della nonna è al terzo piano: scendi»; sul piano
   giusto, in oro, «… è su questo piano: cerca il forziere d'oro» (o «il mostro
   con la corona»); superato il piano, in grigio, «era al primo piano: risali con
   la scala che sale» ([scala-che-sale.md](scala-che-sale.md): non è più sfuggita,

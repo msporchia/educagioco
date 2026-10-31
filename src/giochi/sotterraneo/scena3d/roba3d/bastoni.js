@@ -449,28 +449,32 @@ function arco (fig) {
   const E = ELEMENTI[fig.elemento] || ELEMENTI.nessuno, pre = fig.pregio || 1, anims = []
   let c = [0, 0.4, 0], R = 0.06
   if (A.balestra) {
-    // il fusto lungo +y, l'arco trasversale in cima, la corda tesa con una fila di punti bianchi
-    const V = 0x4a2a6a, V2 = 0x6a3a9a, yb = 0.62, W = 0.4
-    f.metti(sca(0.06, 0.78, 0.05), V, 0, 0.3, -0.005)
-    f.metti(sca(0.05, 0.74, 0.012), V2, 0, 0.32, 0.03)                                  // la guida
-    f.metti(sca(0.034, 0.1, 0.034), 0x2e1a46, 0, -0.1, -0.05, { rx: 0.3 })               // l'impugnatura
-    f.metti(cil(0.034, 0.034, 0.1, 7), 0x2a1c38, 0, 0, -0.01, {})
-    f.metti(tor(0.05, 0.012, 4, 10), 0xa8b4c2, 0, 0.74, 0.0, {}, 'metallo')              // la staffa
-    f.metti(sca(0.08, 0.05, 0.07), 0x3a2060, 0, yb - 0.02, 0, {})
+    // come si tiene (docs/sotterraneo/roba-3d.md): l'impugnatura nel pugno, il fusto in avanti (+z, dove tira anche l'arco), la
+    // guida e il dardo sopra (+y), l'arco di piatto e di traverso (x) coi flettenti piegati verso chi tira, la corda tesa alla noce
+    const V = 0x4a2a6a, V2 = 0x6a3a9a, VS = 0x2e1a46, y0 = 0.075, zb = 0.5, W = 0.38, zn = 0.1
+    f.metti(sca(0.06, 0.065, 0.66), V, 0, y0, 0.2)                                       // il fusto
+    f.metti(sca(0.068, 0.11, 0.2), V, 0, y0 - 0.02, -0.2, { rx: -0.12 })                 // il calcio
+    f.metti(sca(0.03, 0.012, 0.56), V2, 0, y0 + 0.037, 0.24)                             // la guida
+    f.metti(sca(0.04, 0.13, 0.05), VS, 0, 0.0, 0.0, { rx: -0.3 })                        // l'impugnatura, nel pugno
+    f.metti(sca(0.012, 0.045, 0.014), 0xa8b4c2, 0, y0 - 0.06, 0.06, { rx: 0.4 }, 'metallo')   // il grilletto
+    f.metti(sca(0.11, 0.07, 0.07), 0x3a2060, 0, y0, zb)                                  // il blocco dell'arco
+    f.metti(tor(0.05, 0.012, 4, 10), 0xa8b4c2, 0, y0 - 0.01, zb + 0.13, { ry: Math.PI / 2, s: [1, 1, 1.2] }, 'metallo')   // la staffa
+    const pt = t => [0.05 + W * t, y0, zb - 0.13 * t * t]
     for (const s of [-1, 1]) {
       const pts = [], pts2 = []
-      for (let i = 0; i <= 6; i++) { const t = i / 6; pts.push([s * (0.04 + W * t), yb + 0.2 * t * t, 0]); pts2.push([s * (0.04 + W * t), yb + 0.2 * t * t, 0.028]) }
-      f.fila(pts, 0.034, 0.016, V, 'pieno', 6)
+      for (let i = 0; i <= 6; i++) { const [x, y, z] = pt(i / 6); pts.push([s * x, y, z]); pts2.push([s * x, y + 0.026, z]) }
+      f.fila(pts, 0.03, 0.014, V, 'pieno', 6)
       f.fila(pts2, 0.012, 0.007, 0xe6edf2, 'metallo', 4)                                // la lama chiara
-      f.metti(sfe(0.018, 5, 4), 0xdfe6ee, s * (0.04 + W), yb + 0.2, 0, {}, 'metallo')
+      const [x, y, z] = pt(1); f.metti(sfe(0.018, 5, 4), 0xdfe6ee, s * x, y, z, {}, 'metallo')
     }
-    // la corda tesa, e il dardo
-    const tip = [W + 0.04, yb + 0.2, 0], nock = [0, 0.46, 0]
-    for (const s of [-1, 1]) f.asta([s * tip[0], tip[1], 0], nock, 0.005, 0.005, 0xe8e0c8, 'pieno', 4)
-    for (let i = 1; i < 9; i++) for (const s of [-1, 1]) { const t = i / 9; f.metti(sfe(0.007, 4, 3), 0xffffff, s * (tip[0] * (1 - t)), tip[1] + (nock[1] - tip[1]) * t, 0.0, {}, 'pieno') }
-    f.asta([0, 0.46, 0.04], [0, 0.86, 0.04], 0.007, 0.007, 0xc9955a, 'pieno', 4)
-    f.metti(con(0.02, 0.07, 4), 0xdfe6ee, 0, 0.9, 0.04, {}, 'metallo')
-    c = [0, yb + 0.1, 0]; R = 0.12
+    // la corda tesa fino alla noce, coi suoi punti bianchi, e il dardo sulla guida
+    const [xt, yt, zt] = pt(1), nock = [0, y0 + 0.045, zn]
+    f.metti(sca(0.05, 0.03, 0.04), 0x2a1c38, 0, y0 + 0.035, zn - 0.025)                  // la noce
+    for (const s of [-1, 1]) f.asta([s * xt, yt, zt], nock, 0.005, 0.005, 0xe8e0c8, 'pieno', 4)
+    for (let i = 1; i < 9; i++) for (const s of [-1, 1]) { const t = i / 9; f.metti(sfe(0.007, 4, 3), 0xffffff, s * xt * (1 - t), yt + (nock[1] - yt) * t, zt + (nock[2] - zt) * t, {}, 'pieno') }
+    f.asta([0, y0 + 0.052, zn], [0, y0 + 0.052, zb + 0.18], 0.008, 0.008, 0xc9955a, 'pieno', 4)
+    f.metti(con(0.02, 0.07, 4), 0xdfe6ee, 0, y0 + 0.052, zb + 0.21, { rx: Math.PI / 2 }, 'metallo')
+    for (const s of [-1, 1]) f.metti(sca(0.004, 0.03, 0.05), 0xc04a6a, s * 0.012, y0 + 0.062, zn + 0.04, {})   // le alette
   } else {
     const H = A.H, rec = A.rec || 0, z = t => -A.curva * t * t + rec * 1.3 * Math.max(0, t - 0.74) ** 2
     const colA = A.col, colB = A.col2
@@ -512,9 +516,13 @@ function arco (fig) {
     if (A.s) for (const s of [1, -1]) for (let i = 1; i < 4; i++) { const t = i * 0.22; f.metti(sfe(0.011, 4, 3), 0xfff0b0, -0.032, s * t * H, z(t), {}, 'oro') }
     c = [0, 0, 0.06]; R = 0.08
   }
-  elemento(f, {}, fig.elemento, pre, A.balestra ? [0, 0.7, 0.05] : [0, A.H * 0.8, -A.curva * 0.4], 0.06, anims)
+  // i motivi dell'elemento stanno attorno a z = 0 (sono fatti per le aste ritte): quelli della balestra si spostano sul davanti
+  const fe = A.balestra ? new Fucina() : f
+  elemento(fe, {}, fig.elemento, pre, A.balestra ? [0, 0.1, 0] : [0, A.H * 0.8, -A.curva * 0.4], 0.06, anims)
   const g = f.chiudi()
-  g.userData.famiglia = 'arco'; g.userData.tipo = 'arco'; g.userData.figura = fig.id
+  if (A.balestra) { const e = fe.chiudi([0, 0, 0.42]); g.add(e); g.userData.triangoli += e.userData.triangoli }
+  // la balestra si tiene in un altro modo dall'arco (eroi-3d/eroi.js, `tieniBalestra`)
+  g.userData.famiglia = 'arco'; g.userData.tipo = A.balestra ? 'balestra' : 'arco'; g.userData.figura = fig.id
   const luce = PREGIO[pre]?.bagliore ?? 0
   g.userData.anima = anima(respira(g, 2.4, 0.2 + 0.1 * luce, 0.85 + 0.2 * luce, rng() * 6), ...anims)
   return g
