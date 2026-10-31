@@ -100,6 +100,16 @@ const falsiDi = d => d.risposte.filter((_, k) => k !== d.giusta)
   controlla('calendario: nessuna data a meno di due settimane da un cambio di stagione', vicine === 0, `${vicine} domande`)
 }
 
+// «Oggi è venerdì 25, che giorno è il 2?» ha due letture (questo mese o il prossimo): il verbo dice da che parte si conta, e il mese è questo
+{
+  let ambigue = 0
+  gioca(calendario, 4, 'cal:conta-giorni', d => {
+    const m = d.testo.match(/^Oggi è \S+ (\d+)\. Che giorno della settimana (era|sarà) il (\d+) di questo mese\?$/)
+    if (m) { if ((+m[3] < +m[1]) !== (m[2] === 'era')) ambigue++ } else if (/^Oggi è \S+ \d+\./.test(d.testo)) ambigue++
+  })
+  controlla('calendario: «che giorno era/sarà il N di questo mese», mai il mese dopo sottinteso', ambigue === 0, `${ambigue} domande`)
+}
+
 // «Il bambino ___ sul letto»: restano sempre tre falsi, e nessuno è un verbo che il soggetto sa fare
 {
   let poche = 0, corse = 0

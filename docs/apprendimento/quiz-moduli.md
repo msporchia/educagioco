@@ -172,6 +172,9 @@ Due difetti che nessun controllo trova:
 
 - **Due risposte difendibili** («con che cosa misuri un secchio»: litri o
   centimetri) superano ogni controllo di forma: si vedono solo leggendo.
+  «Oggi è venerdì 25, che giorno è il 2?» si legge anche come il 2 del mese
+  dopo, senza risposta: il verbo (era/sarà) e «di questo mese» la chiudono
+  (`cal:conta-giorni`).
 - **Le domande che si possono solo ricordare** («quando comincia
   l'inverno?») non insegnano niente, perché fra domanda e risposta non c'è
   un passo. Si chiede *in che stagione cade dicembre*; le date esatte
