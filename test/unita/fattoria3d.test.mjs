@@ -69,7 +69,7 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
             manifesto.albo.traguardi.every(t => statoTraguardo(t, mV).grado === 0) && manifesto.albo.xp(mV) === 0 && !manifesto.albo.provato(mV))
   const totals = {}
   for (const k of ['Terre', 'Pezzi', 'Raccolti', 'Alberi', 'Prodotti', 'Uova', 'Latte', 'Ordini', 'Mongolfiera', 'Visite', 'Aiuti']) totals['fattoria3d' + k] = 500
-  const mP = misure({ totals, best: { fattoria3dVarieta: 40 }, items: {}, campagne: {} })
+  const mP = misure({ totals, best: { fattoria3dVarieta: 40, fattoria3dVestiti: 9 }, items: {}, campagne: {} })
   const presi = manifesto.albo.traguardi.map(t => statoTraguardo(t, mP))
   controlla('da pieno li prende tutti d\'oro', presi.every(s => s.finito), presi.filter(s => !s.finito).map(s => s.id).join(' · '))
   controlla('«Un po\' di tutto» c\'è e vale esperienza', manifesto.albo.traguardi.some(t => t.id === 'f3d-varieta') && manifesto.albo.xp(misure({ totals: {}, best: { fattoria3dVarieta: 9 }, items: {}, campagne: {} })) === 9)

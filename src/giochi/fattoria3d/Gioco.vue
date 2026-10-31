@@ -137,6 +137,7 @@ function contaEventi() {
   for (const e of motore.prendiEventi()) {
     if (EVENTI[e.tipo]) segna(EVENTI[e.tipo])
     if (e.tipo === 'pezzo') segnaBest('fattoria3dVarieta', new Set(motore.s.cose.filter(c => !siloDelPezzo(c.tipo)).map(c => c.tipo)).size)      // «Un po' di tutto»: i tipi diversi in mappa (un primato); i magazzini arrivano da soli, non contano
+    else if (e.tipo === 'vestita') segnaBest('fattoria3dVestiti', Object.values(motore.s.casa).reduce((n, b) => n + Object.keys(b.addobbi || {}).length, 0))      // «Che eleganza»: gli addobbi addosso, un primato come nella 2D
     else if (e.tipo === 'prodotto') segna('fattoria3dProdotti', e.n)
     else if (e.tipo === 'uovo') segna('fattoria3dUova', e.n)
     else if (e.tipo === 'latte') segna('fattoria3dLatte', e.n)
@@ -280,7 +281,8 @@ const bestiaVista = computed(() => {
   const st = motore.cura.stato(id); if (!st) return null
   const scorte = {}
   for (const g of [...CIBI_BESTIE, ...COCCOLE_3D]) if (g.da) scorte[g.da] = motore.scortaDi(g.da)
-  return { id, nome: motore.cura.nomeDi(id), stato: { pancia: st.pancia, pelo: st.pelo, gioco: st.gioco }, monete: motore.monete(), scorte }
+  return { id, nome: motore.cura.nomeDi(id), stato: { pancia: st.pancia, pelo: st.pelo, gioco: st.gioco }, monete: motore.monete(), scorte,
+           vestiario: motore.cura.vestiarioDi(id, stagione.value || '') }
 })
 function esitoBestia(r, id) {
   const nome = motore.cura.nomeDi(id)
@@ -291,6 +293,21 @@ function esitoBestia(r, id) {
 function nutriBestia(cibo) { const id = bestiaAperta.value; if (id) esitoBestia(motore.cura.nutri(id, cibo.id), id) }
 function coccolaBestia(gesto) { const id = bestiaAperta.value; if (id) esitoBestia(motore.cura.coccola(id, gesto.id), id) }
 function carezzaBestia() { const id = bestiaAperta.value; if (id) esitoBestia(motore.cura.carezza(id), id) }
+/** Un addobbo toccato nel foglio: si mette (comprandolo se non c'è nel cassetto) o si toglie; la bestia in scena si veste da sé (compagni.sync). */
+function vestiBestia(a) {
+  const id = bestiaAperta.value; if (!id) return
+  const r = motore.cura.vesti(id, a.id, { stagione: stagione.value || '' }), nome = motore.cura.nomeDi(id)
+  bestiaMsg.value = r.ok ? `${a.emoji} ${nome}: che eleganza!` : dettoCura(r, { monete: motore.monete() })
+  if (r.ok) { mondo.compagni.sync(); mondo.compagni.festa(id) }
+  ui.cambio()
+}
+function spogliaBestia(a) {
+  const id = bestiaAperta.value; if (!id) return
+  const r = motore.cura.spoglia(id, a.dove)
+  bestiaMsg.value = r.ok ? `${a.emoji} ${a.nome}: torna nel cassetto.` : dettoCura(r, { monete: motore.monete() })
+  if (r.ok) mondo.compagni.sync()
+  ui.cambio()
+}
 function spostaBestia() { const id = bestiaAperta.value; if (id && mondo.iniziaSposta(id)) bestiaAperta.value = null }
 function daiIlNome(nome) {
   const id = battesimoDi.value; battesimoDi.value = null
@@ -756,7 +773,7 @@ onBeforeUnmount(() => {
  <Consiglio v-if="consiglio" :consiglio="consiglio" @fai="facciConsiglio" @chiudi="consiglio = null" />
         <Livelli v-if="livelliAperto" v-bind="livelli" @chiudi="livelliAperto = false" />
         <Bestia v-if="bestiaVista" :key="bestiaVista.id" v-bind="bestiaVista" :messaggio="bestiaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
-                @nutri="nutriBestia" @coccola="coccolaBestia" @carezza="carezzaBestia" @sposta="spostaBestia" @nome="battesimoDi = bestiaAperta; bestiaAperta = null" @chiudi="bestiaAperta = null" />
+                @nutri="nutriBestia" @coccola="coccolaBestia" @carezza="carezzaBestia" @sposta="spostaBestia" @vesti="vestiBestia" @spoglia="spogliaBestia" @nome="battesimoDi = bestiaAperta; bestiaAperta = null" @chiudi="bestiaAperta = null" />
         <Battesimo v-if="battesimoDi" :id="battesimoDi" :scelto="motore.cura.nomeScelto(battesimoDi)" @scegli="daiIlNome" @chiudi="battesimoDi = null" />
         <Opzioni v-if="opzioniAperte" :q="q" :stat="stat" :conta="conta" :rapporto="rapporto" @cambia="cambiaOpzioni"
                  @stress="(t, n) => { mondo.stress(t, n); ui.cambio() }" @rapporto="creaRapporto" @ridotto="v => opzioniRidotte = v"

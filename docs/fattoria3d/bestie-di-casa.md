@@ -5,6 +5,12 @@ pappagallo. Hanno i numeri **esatti della 2D** (prezzo, livello, premio: `ANIMAL
 premio, il nome e la posizione. Codice: `dati/bestie.js` (tabella, ciotola, stato, guasti), `motore/cura.js` (le regole), `viste/Bestia.vue` e
 `viste/Battesimo.vue` (i fogli), `scena3d/modelli-bestie.js` (i corpi), `scena3d/compagni.js` (la scena).
 
+**Si curano anche i compagni gratis** (Watson, Sherlock, Irene, Pepe: `CURATI` in `dati/bestie.js`), come nella 2D si curavano bobtail e
+gatti: stessi bisogni, ciotola, coccole e foglio; il premio è quello della bestia 2D che sostituiscono (Watson 6 come il bobtail, i gatti 5;
+Irene quello del gatto bianco e nero). Il loro record in `stato.casa` nasce da sé quando arrivano col livello (`Cura._record`); il nome vero
+si può cambiare dal foglio e «Lascia “Watson”» lo rimette. **Non si comprano e non si spostano** (girano col contadino: `sposta` dice
+`gira-con-te`, il foglio non ha «📍 Sposta»). `cura.tue()` resta le comprate, `cura.curate()` le dice tutte.
+
 ## Chi sono
 
 | id | bestia | 🪙 | livello | premio ⭐ | corpo |
@@ -100,7 +106,9 @@ Il ritratto del foglio e delle carte è un `bestia:<id>` di `anteprime.js`.
 
 ## L'interfaccia
 
-Le bestie si prendono dal menu 🏗 «Costruisci», scheda **Animali** (carte `🪙 prezzo`, il lucchetto dice il livello; una già tua dice «🐾 è tua» e apre il foglio). Il foglio (`Bestia.vue`): ✕ in
+Le bestie si prendono dal menu 🏗 «Costruisci», scheda **Animali** (carte `🪙 prezzo`, il lucchetto dice il livello; una già tua dice «🐾 è tua» e apre il foglio).
+**Tenendo premuto** su una bestia in scena (anche Watson e i gatti) si apre il suo foglio (`scena3d/dito.js`, dopo 0,45 s come gli altri «tieni
+premuto»); il tocco breve resta la festa dei compagni, e sulle bestie comprate apre il foglio come prima. Il foglio (`Bestia.vue`): ✕ in
 alto a destra, ritratto, la frase «come sta», tre blocchi (barra, gesti), 🤚 Carezza / 📍 Sposta / ✎ Nome, una riga che dice cosa è successo e, quando manca roba, **dove si fa** («Non hai 🥚 uova: lo fanno
 gli animali: pollaio») o **quante monete mancano**. Bottoni da 44 px e più, il dito non è un mouse.
 
@@ -117,3 +125,5 @@ salvati, lo stato letto dritto, la migrazione è in `unita/fattoria3d-migra`), `
 - Provato: il beagle, il coniglio e il pappagallo a palle lisce con i colori sfumati nei vertici (come i gatti): sembravano palloncini gonfiati accanto a pecora, mucca e Watson; rifatti facettati.
 - Da guardare col dito su un telefono: le bestie in scena dalla camera di serie, il foglio a 360 px dal vero.
 - Il tocco sul gatto rosso/beagle apre il foglio (non c'è la festa lunga di Watson né le risposte dei gatti): una scelta, le bestie di casa sono cose da curare.
+- Il ritratto dei compagni nel foglio si disegna dal vivo (`Mondo3d.modelloBestia`): le foto fatte di `anteprime.js` sono delle bestie comprate.
+- Da giocare: se i bisogni di Watson e dei gatti pesano troppo sulle monete dei più piccoli (sono quattro bocche in più dal livello 1–19).

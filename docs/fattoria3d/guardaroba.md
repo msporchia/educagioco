@@ -30,7 +30,7 @@ Cambiando personaggio i capi compatibili (cappello, pantalone, stivali, collo, p
 
 | categoria | scelte | di serie (lui / lei) |
 |---|---|---|
-| cappello | paglia, berretto, tesa larga, **fascia e fiore** (lei), cowboy (liv 6), nessuno | paglia |
+| cappello | paglia, berretto, tesa larga, **fascia e fiore** (lei: un cerchietto sottile sopra i capelli col fiore di lato; un disco attorno alla testa sembrava un berretto), cowboy (liv 6), nessuno | paglia |
 | maglia | lui: a quadri, blu, maglione, gilet da festa (liv 10); lei: camicetta, a pois, grembiule, abito da festa (liv 10) | quadri / camicetta |
 | pantalone | blu, verde, marrone, rosso, giallo: **salopette** (lui) o **gonna** (lei) | blu |
 | stivali | marroni, gialli, rossi, verdi, neri, dorati (liv 12) | marroni |

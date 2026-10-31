@@ -13,10 +13,11 @@ import { creaAnteprime } from './anteprime.js'
 import { creaScaldo } from './scaldo-puro.js'
 import { Eroe } from './eroe.js'
 import { Ospite } from './ospite.js'
-import { creaContadino, posaGatto } from './modelli-compagni.js'
+import { creaContadino, posaGatto, posaCane } from './modelli-compagni.js'
 import { Compagni } from './compagni.js'
 import { creaBestia, posaPiccolo, posaBeagle } from './modelli-bestie.js'
 import { BESTIE, comeCompagno } from '../dati/bestie.js'
+import { COMPAGNI } from '../dati/compagni.js'
 import { Effetti } from './effetti.js'
 import { Camera } from './camera.js'
 import { Azioni } from './azioni.js'
@@ -122,14 +123,16 @@ export class Mondo3d {
   }
   /** Il ritratto del guardaroba: `contadino:<chiave dell'abito>` (dati/abiti.js, `chiaveAbito`), fotografato come un pezzo. */
   modelloContadino(chiave) { return creaContadino(abitoDaChiave(chiave)) }
-  /** Il ritratto di una bestia di casa (`bestia:<id>`, dati/bestie.js): il suo corpo com'è in scena, in posa da fermo. */
+  /** Il ritratto di una bestia di casa o di un compagno gratis (`bestia:<id>`, dati/bestie.js): il suo corpo com'è in scena, in posa da fermo. */
   modelloBestia(id) {
+    const c = COMPAGNI[id]
+    if (c) { const g = creaBestia({ id, ...c }); (c.tipo === 'cane' ? posaCane : posaGatto)(g, { stato: 'sta', t: 0.4 }); return g }
     const b = BESTIE[id]; if (!b) return null
     const g = creaBestia(comeCompagno(id)); (b.tipo === 'cane' ? posaBeagle : b.tipo === 'gatto' ? posaGatto : posaPiccolo)(g, { stato: 'sta', t: 0.4 })
     return g
   }
   /** Il modo «sposta»: il prossimo tocco su una cella tua e libera porta lì la bestia di casa (gratis). Torna false se non è tua. */
-  iniziaSposta(id) { if (!this.m.cura.ho(id)) return false; this.inSposta = id; this.fx.parla('Tocca dove vuoi metterla'); return true }
+  iniziaSposta(id) { if (!this.m.cura.ho(id) || COMPAGNI[id]) return false; this.inSposta = id; this.fx.parla('Tocca dove vuoi metterla'); return true }
   annullaSposta() { this.inSposta = null }
   _sposta(x, y) {
     const id = this.inSposta, p = this.puntaSuolo(x, y)
