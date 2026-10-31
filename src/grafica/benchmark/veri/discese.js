@@ -74,7 +74,7 @@ export async function prepara({ contenitore, opz = {} }) {
   const tela = nuovaTela(contenitore)
   const dpr = opz.dpr || dprDelGioco()
   const pittore = creaSotterraneo3d(tela.canvas, { strato: tela.strato, dpr, spegni: opz.spegni || [], riaccendi: opz.riaccendi || [], cieca: 320 })
-  if (!pittore) { tela.via(); throw new Error('il Sotterraneo 3D non parte (WebGL 2?)') }
+  if (!pittore) { tela.via(); throw new Error('il sotterraneo non parte (WebGL 2?)') }
   const gl = tela.canvas.getContext('webgl2')
   let corsa = null, quanti = -1, colpi = null, k = 0, passeggia = false, stanza = 0
   const togliColpi = () => { clearInterval(colpi); colpi = null }

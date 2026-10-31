@@ -585,7 +585,7 @@ export const ID_DEI_MOSTRI = id => 'sot:mostri:' + id.replace('/', '-')
 const VOCI_MOSTRI = [...USI_DEI_MOSTRI].map(([id, chi]) => ({
   id: ID_DEI_MOSTRI(id), nome: `Mostro 3D ${id.split('/')[1]}`, categoria: 'personaggio', file: SCENA + 'mostri3d/registro.js:costruisci',
   crea: () => costruisciMostro(id),
-  dove: `Nel Sotterraneo 3D, al posto dello sprite (dalla zona ${id.split('/')[0]} dei prototipi): ${[...new Set(chi)].join(', ')}`,
+  dove: `Nel sotterraneo, al posto dello sprite (dalla zona ${id.split('/')[0]} dei prototipi): ${[...new Set(chi)].join(', ')}`,
 }))
 
 /* ═══════════════════ l'elenco ═══════════════════ */

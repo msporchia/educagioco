@@ -2584,8 +2584,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
       <LascioPerdere v-if="perdendo && siGioca" :nome="titolo" giu @si="lascioPerdere" @no="perdendo = false" />
       <!-- il 3D si è fermato (la scheda video ha perso il contesto): la discesa è salvata, si esce pulito -->
       <div v-if="perso3d" class="sot3d-senza sot3d-perso" data-perso-3d>
-        <h1>Il disegno 3D si è fermato</h1>
-        <p>La discesa è salvata: la riprendi da qui o dal Sotterraneo di sempre.</p>
+        <h1>Il disegno si è fermato</h1>
+        <p>La discesa è salvata: la riprendi rientrando nel sotterraneo.</p>
         <button type="button" class="sot-grosso" data-azione="esci-3d" @click="emit('vai', 'home')">torno ai giochi</button>
       </div>
     </div>
