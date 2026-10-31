@@ -34,6 +34,7 @@ import Prova from '../quiz/Prova.vue'
 import ComeVa from '../quiz/ComeVa.vue'
 import ArchivioGenitori from '../components/genitori/Archivio.vue'
 import CartaAmici from '../components/amici/CartaAmici.vue'
+import AggiungiAmico from '../components/amici/AggiungiAmico.vue'
 import GiochiImpostazioni from '../components/genitori/Giochi.vue'
 import Nascita from '../components/genitori/Nascita.vue'
 import { ultima as ultimaCopia, leggiCopia, segnaCopia, giorniDaUltima, statoCopia } from '../store/copia.js'
@@ -420,8 +421,13 @@ function apriElimina(g) { chiudiTutto(); eliminando.value = g.id }
 // il bambino nuovo apre il wizard del primo avvio e finisce entrando in
 // partita con lui; il codice non si richiede due volte
 function apriAggiungi() { chiudiTutto(); aggiungendo.value = true }
-// dal profilo si arriva qui per aggiungere un bambino: entrati col codice, si apre quello
-watch(dentro, d => { if (d && cosaDopoIlCodice() === 'aggiungi') apriAggiungi() })
+// dal profilo si arriva qui per aggiungere un bambino, dalla lista degli amici per aggiungere un amico: entrati col codice, si apre quello
+const aggiungendoAmico = ref(false)
+watch(dentro, d => {
+  const cosa = d ? cosaDopoIlCodice() : null
+  if (cosa === 'aggiungi') apriAggiungi()
+  else if (cosa === 'amico') aggiungendoAmico.value = true
+})
 onUnmounted(cosaDopoIlCodice)
 function fattoIlBambino() {
   aggiungendo.value = false
@@ -512,6 +518,9 @@ async function rimetti(v) {
   <!-- il bambino nuovo: la stessa schermata del primo avvio, a tutto schermo -->
   <Benvenuto v-if="aggiungendo" :primo="false"
              @fatto="fattoIlBambino" @lasciaStare="aggiungendo = false" />
+
+  <!-- un amico nuovo, chiesto dalla lista degli amici: fatto, si torna ai giochi (docs/core/amici.md) -->
+  <AggiungiAmico v-else-if="aggiungendoAmico" @chiudi="$emit('vai','home')" />
 
   <div v-else class="schermo pulito">
     <Barra titolo="Impostazioni" :audio="false" @indietro="$emit('vai','home')" />
