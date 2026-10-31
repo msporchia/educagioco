@@ -144,17 +144,6 @@ export function pergamenaCade(chi, seme, piano, x, y) {
   return ((h ^ (h >>> 15)) >>> 0) / 4294967296 < (PROBABILITA_PERGAMENA[chi] || 0)
 }
 
-// La torcia in più (docs/sotterraneo/luce.md, «Quante se ne trovano»): chi gira ne trova una a discesa circa, chi va dritto di rado, e il buio
-// resta. Da un mostro di strada, un caporale o un forziere, oltre a quello che lasciano già; un sale suo, come l'ampolla
-export const PROBABILITA_TORCIA = { mostro: 0.03, caporale: 0.1, forziere: 0.3 }
-export function torciaCade(chi, seme, piano, x, y) {
-  let h = 2166136261
-  for (const n of [seme, piano, x, y, chi.length, 15485863]) h = Math.imul(h ^ (Math.floor(n) | 0), 16777619)
-  h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d)
-  h = Math.imul(h ^ (h >>> 12), 0x297a2d39)
-  return ((h ^ (h >>> 15)) >>> 0) / 4294967296 < (PROBABILITA_TORCIA[chi] || 0)
-}
-
 // Il copricapo nel bottino (docs/sotterraneo/elmo.md): dove è acceso (Corredo.copricapi), un pezzo trovato su sette diventa un copricapo
 // dello stesso livello e della stessa rarità, con altrettante abilità: un posto su sette addosso, e i pezzi che cadono restano quanti erano.
 // `tiro` e `sorte` nascono dal seme e non dal caso della discesa (Corsa.trovato): accenderlo non sposta niente di quello che cade.

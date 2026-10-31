@@ -21,7 +21,7 @@ import { valoreDelLivello } from '../dati/pezzi.js'
 import { esperienzaDi, gemmeDi } from '../dati/livelli.js'
 import { potenzaDelMostro } from './potenza.js'
 import { espNellaZona } from '../dati/zone.js'
-import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino, livelloDelTrovato, tiroDalSeme, elisirCade, ampollaCade, pergamenaCade, torciaCade, CURE_DAI_MOSTRI,
+import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino, livelloDelTrovato, tiroDalSeme, elisirCade, ampollaCade, pergamenaCade, CURE_DAI_MOSTRI,
          copricapoDalTrovato } from './bottino.js'
 import { generaPiano } from './livello.js'
 import { percorso, viaVerso, primaLibera } from '../../../motore/passi.js'
@@ -895,9 +895,6 @@ export class Corsa extends Corredo {
     const chi = m.grosso ? 'grosso' : m.caporale ? 'caporale' : null
     if (chi && elisirCade(chi, this.seme, this.piano, m.x, m.y)) this.posaPezzo('elisir-toro', { x: m.x + 1, y: m.y + 1 })
     if (chi && ampollaCade(chi, this.seme, this.piano, m.x, m.y)) this.posaPezzo('ampolla-vita', { x: m.x, y: m.y + 1 }, 'ampolla')
-    // una torcia in più, dal seme: chi gira trova la luce, e il buio resta (sul prato di sopra è giorno)
-    if (!m.grosso && !this.tappa.palco && torciaCade(m.caporale ? 'caporale' : 'mostro', this.seme, this.piano, m.x, m.y))
-      this.posaPezzo('torcia', { x: m.x - 1, y: m.y + 1 }, m.caporale ? 'caporale' : 'strada')
     // un mostro che cade si vede, anche il grosso: niente avviso. Quello di una missione sì, dice cosa fare dopo
     if (m.missione) {
       this.missioniFatte.add(m.missione)
@@ -1053,7 +1050,6 @@ export class Corsa extends Corredo {
     this.posaPezzo(cosa, { x: f.x, y: f.y + 1 }, 'forziere')
     if (elisirCade('forziere', this.seme, this.piano, f.x, f.y)) this.posaPezzo('elisir-toro', { x: f.x - 1, y: f.y + 1 })
     if (ampollaCade('forziere', this.seme, this.piano, f.x, f.y)) this.posaPezzo('ampolla-vita', { x: f.x + 1, y: f.y }, 'ampolla')
-    if (cosa !== 'torcia' && torciaCade('forziere', this.seme, this.piano, f.x, f.y)) this.posaPezzo('torcia', { x: f.x + 1, y: f.y + 1 }, 'forziere')
     if (this.pergameneTrovabili && pergamenaCade('forziere', this.seme, this.piano, f.x, f.y)) this.posaPezzo('pergamena-portale', { x: f.x - 1, y: f.y })
     this.posaRoba({ che: 'gemme', em: '💎', quante: Math.round((6 + this.piano * 3) * valoreDelLivello(this.livelloQui)) },
                   { x: f.x + 1, y: f.y + 1 })

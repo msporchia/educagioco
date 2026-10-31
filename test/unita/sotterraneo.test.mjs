@@ -428,12 +428,10 @@ const SEDUTA = 150
   c.luce.add(f.y * c.livello.largo + f.x)
   controlla('un forziere chiuso si tocca', c.toccabile(f))
   c.foglio = { che: 'forziere', chi: f }
-  const prima = c.livello.robe.length
   c.rispondi(true)
   uguale('aperto, non si tocca più: è pavimento dipinto', c.toccabile(f), false)
 
-  // la prima cosa posata è quella del forziere: accanto può cadere una torcia in più (motore/bottino.js, torciaCade)
-  const lasciata = c.livello.robe.slice(prima).find(r => r.che === 'cosa')
+  const lasciata = c.livello.robe.filter(r => r.che === 'cosa').pop()
   controlla('il forziere ha lasciato qualcosa', !!lasciata)
   controlla('e non l\'ha lasciato sopra di sé',
             !(lasciata.x === f.x && lasciata.y === f.y), `${lasciata.x},${lasciata.y}`)
