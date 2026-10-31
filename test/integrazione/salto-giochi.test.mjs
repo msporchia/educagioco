@@ -1,13 +1,13 @@
 /* ═══════════════════════════════════════════════════════════════════
-   IL TASTO «SALTA» DENTRO I GIOCHI: NON SPORCA NIENTE
+   IL TASTO «SALTA» DENTRO I GIOCHI: PAGA, MA NON SPORCA IL RESTO
 
    Ogni gioco che fa domande ha il suo «⏭️ salta», e in ognuno vale la
-   stessa regola: la partita va avanti come se avesse risposto bene, ma
-   **il profilo non cambia** — né il ripasso (`items`), né le monete, né i
-   contatori e i record (`totals`, `best`). Si prova guardando il profilo
-   su disco prima e dopo il salto, gioco per gioco: un salto che si
-   limitasse a chiamare «la risposta giusta» passerebbe da tutti i
-   controlli di schermo e pagherebbe, annoterebbe e conterebbe.
+   stessa regola: la partita va avanti e paga come se avesse risposto bene
+   (le monete salgono), ma **il resto del profilo non cambia** — né il
+   ripasso (`items`), né i contatori e i record (`totals`, `best`). Si prova
+   guardando il profilo su disco prima e dopo il salto, gioco per gioco: un
+   salto che si limitasse a chiamare «la risposta giusta» passerebbe da
+   tutti i controlli di schermo e annoterebbe e conterebbe.
    La leva si accende da `#admin` (`salto`); qui si scrive in archivio
    come farebbe il tocco, per non rifare il giro in ogni gioco.
    Il sotterraneo, che vuole un piano e una porta, sta in
@@ -36,11 +36,17 @@ async function accendiLaLeva() {
     }
   }))
 }
-/* il profilo senza quello che si muove da sé: il ripasso, il salvadanaio, i contatori, i record */
+/* il profilo senza quello che si muove da sé e senza le monete, che un salto paga: il ripasso, i contatori, i record */
 const foto = async () => {
   await attendi(page, 800)                          // l'archivio scrive a scatto ritardato
   const p = (await leggiProfilo(page)) || {}
-  return JSON.stringify({ items: p.items || {}, coins: p.coins || 0, totals: p.totals || {}, best: p.best || {} })
+  const { monete, ...totals } = p.totals || {}          // quanto è entrato nel salvadanaio sale col salto, come le monete
+  return JSON.stringify({ items: p.items || {}, totals, best: p.best || {} })
+}
+/* il salvadanaio: un salto lo riempie come una giusta */
+const soldi = async () => {
+  await attendi(page, 800)
+  return ((await leggiProfilo(page)) || {}).coins || 0
 }
 const salta = page.locator('[data-azione="salta"]')
 /* si riparte da zero, con la leva accesa e un profilo di quell'età */
@@ -64,13 +70,14 @@ await page.waitForFunction(() => window.__mate.fase.value === 'gioco', null, { t
 await attendi(page, 500)
 {
   controlla('asteroidi: il tasto c\'è', await salta.isVisible())
-  const prima = await foto()
+  const prima = await foto(), soldiPrima = await soldi()
   await salta.click()
   await attendi(page, 300)
   uguale('asteroidi: il sasso giusto è dato per centrato', await page.evaluate(() => window.__mate.hud.giuste), 1)
   uguale('asteroidi: senza punti', await page.evaluate(() => window.__mate.hud.punti), 0)
   uguale('asteroidi: senza filotto', await page.evaluate(() => window.__mate.hud.serie), 0)
-  uguale('asteroidi: ripasso, monete e contatori intatti', await foto(), prima)
+  uguale('asteroidi: ripasso e contatori intatti', await foto(), prima)
+  controlla('asteroidi: le monete sono salite', await soldi() > soldiPrima)
 }
 
 /* ---------- 2. castello ---------- */
@@ -83,7 +90,7 @@ await page.evaluate(() => window.__td.scegliTorre('add'))
 await page.waitForSelector('.tastiera button', { timeout: 3000 })
 {
   controlla('castello: il conto ha il suo tasto', await salta.isVisible())
-  const prima = await foto()
+  const prima = await foto(), soldiPrima = await soldi()
   await salta.click()
   await attendi(page, 400)
   uguale('castello: il conto si chiude', await page.evaluate(() => window.__td.op.value), null)
@@ -93,7 +100,8 @@ await page.waitForSelector('.tastiera button', { timeout: 3000 })
   const dopo = JSON.parse(await foto()), era = JSON.parse(prima)
   uguale('castello: le torri costruite sono una', dopo.totals.torri, era.totals.torri + 1)
   dopo.totals.torri = era.totals.torri
-  uguale('castello: ripasso, monete e contatori intatti', JSON.stringify(dopo), JSON.stringify(era))
+  uguale('castello: ripasso e contatori intatti', JSON.stringify(dopo), JSON.stringify(era))
+  controlla('castello: le monete sono salite', await soldi() > soldiPrima)
 }
 
 /* ---------- 3. bancarella ---------- */
@@ -109,14 +117,15 @@ await page.evaluate(() => {
 await page.waitForFunction(() => window.__shop.momento.value === 'cassa', null, { timeout: 3000 })
 {
   const inFila = () => page.evaluate(() => window.__shop.coda.value.length)
-  const prima = await foto()
+  const prima = await foto(), soldiPrima = await soldi()
   const quanti = await inFila()
   controlla('bancarella: la cassa ha il suo tasto', await salta.isVisible())
   await salta.click()
   await page.waitForFunction(n => window.__shop.coda.value.length < n || !!window.__shop.cambio.value, quanti,
                              { timeout: 4000 })
   uguale('bancarella: nessun cliente servito', await page.evaluate(() => window.__shop.hud.serviti), 0)
-  uguale('bancarella: ripasso, monete e contatori intatti', await foto(), prima)
+  uguale('bancarella: ripasso e contatori intatti', await foto(), prima)
+  controlla('bancarella: le monete sono salite', await soldi() > soldiPrima)
 }
 
 /* ---------- 4. pozioni ---------- */
@@ -126,13 +135,14 @@ await page.locator('.pz-tappa[data-tappa="0"]').click()
 await page.waitForSelector('[data-vista="banco"]', { timeout: 5000 })
 await attendi(page, 700)
 {
-  const prima = await foto()
+  const prima = await foto(), soldiPrima = await soldi()
   controlla('pozioni: il banco ha il suo tasto', await salta.isVisible())
   await salta.click()
   await attendi(page, 300)
   uguale('pozioni: la dose è fatta', await page.evaluate(() => window.__poz.partita.value.dosi.length), 1)
-  uguale('pozioni: senza monete', await page.evaluate(() => window.__poz.partita.value.monete), 0)
-  uguale('pozioni: ripasso, monete e contatori intatti', await foto(), prima)
+  controlla('pozioni: la dose vale monete', await page.evaluate(() => window.__poz.partita.value.monete) > 0)
+  uguale('pozioni: ripasso e contatori intatti', await foto(), prima)
+  controlla('pozioni: le monete sono salite', await soldi() > soldiPrima)
   // saltando tutto la tappa si chiude
   for (let i = 0; i < 60 && !(await page.locator('[data-fine="tappa"]').count()); i++) {
     await attendi(page, 500)
@@ -148,13 +158,14 @@ await page.locator('.ct-tappa[data-tappa="0"]').click()
 await page.waitForSelector('.ct-scena', { timeout: 5000 })
 await attendi(page, 500)
 {
-  const prima = await foto()
+  const prima = await foto(), soldiPrima = await soldi()
   controlla('conta: la domanda ha il suo tasto', await salta.isVisible())
   await salta.click()
   await attendi(page, 300)
   const dopo = (await leggiProfilo(page))?.campagne?.conta?.sosta
   controlla('conta: la tappa è andata avanti', dopo ? dopo.fatte === 1 : true, JSON.stringify(dopo))
-  uguale('conta: ripasso, monete e contatori intatti', await foto(), prima)
+  uguale('conta: ripasso e contatori intatti', await foto(), prima)
+  controlla('conta: le monete sono salite', await soldi() > soldiPrima)
   for (let i = 0; i < 20 && !(await page.locator('.ct-velo').count()); i++) {
     if (await salta.count()) await salta.click().catch(() => {})
     await attendi(page, 300)
@@ -169,11 +180,12 @@ await page.locator('.pd-tappa[data-tappa="0"]').click()
 await page.waitForSelector('.pd-storia', { timeout: 5000 })
 await attendi(page, 500)
 {
-  const prima = await foto()
+  const prima = await foto(), soldiPrima = await soldi()
   controlla('prima e dopo: la storia ha il suo tasto', await salta.isVisible())
   await salta.click()
   await attendi(page, 300)
-  uguale('prima e dopo: ripasso, monete e contatori intatti', await foto(), prima)
+  uguale('prima e dopo: ripasso e contatori intatti', await foto(), prima)
+  controlla('prima e dopo: le monete sono salite', await soldi() > soldiPrima)
   for (let i = 0; i < 30 && !(await page.locator('.pd-velo[data-fine="tappa"]').count()); i++) {
     if (await salta.count()) await salta.click().catch(() => {})
     await attendi(page, 500)
@@ -190,11 +202,12 @@ await page.waitForSelector('[data-velo="spiegazione"]', { timeout: 5000 })
 await page.locator('[data-velo="spiegazione"] .cs-grosso').click()
 await page.waitForSelector('.cs-tasto', { timeout: 5000 })
 {
-  const prima = await foto()
+  const prima = await foto(), soldiPrima = await soldi()
   controlla('codice segreto: il tavolo ha il suo tasto', await salta.isVisible())
   await salta.click()
   await page.waitForSelector('.cs-velo', { timeout: 5000 })
-  uguale('codice segreto: ripasso, monete e contatori intatti', await foto(), prima)
+  uguale('codice segreto: ripasso e contatori intatti', await foto(), prima)
+  controlla('codice segreto: le monete sono salite', await soldi() > soldiPrima)
 }
 
 /* ---------- 8. inglese ---------- */
@@ -205,18 +218,19 @@ await page.locator('[data-tappa="prima-colori"]').click()
 await page.waitForSelector('[data-domanda]', { timeout: 5000 })
 await attendi(page, 500)
 {
-  const prima = await foto()
+  const prima = await foto(), soldiPrima = await soldi()
   controlla('inglese: la domanda ha il suo tasto', await salta.isVisible())
   await salta.click()
   await page.waitForSelector('[data-esito="giusta"]', { timeout: 2000 })
   controlla('inglese: l\'esito dice «saltata»', (await page.locator('[data-esito="giusta"]').innerText()).includes('Saltata'))
   controlla('inglese: la barra della tappa è avanzata',
             /^✅ 1 \//.test((await page.locator('[data-conto]').innerText()).trim()))
-  uguale('inglese: ripasso, monete e contatori intatti', await foto(), prima)
+  uguale('inglese: ripasso e contatori intatti', await foto(), prima)
+  controlla('inglese: le monete sono salite', await soldi() > soldiPrima)
 }
 
 await tornaInHome()
 uguale('nessun errore in console', errori.join(' · '), '')
 await browser.close()
 nota('asteroidi, castello, bancarella, pozioni, conta, prima e dopo, codice segreto, inglese')
-riassunto('il tasto salta dentro i giochi — non sporca niente')
+riassunto('il tasto salta dentro i giochi — paga, ma non sporca il resto')

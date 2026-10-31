@@ -270,7 +270,7 @@ function rispondi(risposta, scelta, { saltata = false } = {}) {
   if (esito.value || !orologio.pronta.value || !sessione) return
   const q = d.value
   const tempo = orologio.guardata()
-  // il tasto «salta» dei grandi (docs/core/comandi.md): la tappa avanza, il ripasso non sente
+  // il tasto «salta» dei grandi (docs/core/comandi.md): la tappa avanza e paga come una giusta, il ripasso non sente
   const e = saltata ? sessione.salta(q) : sessione.rispondi(q, risposta, { tocchi })
   for (const r of e.registra) answer(r.chiave, { correct: r.correct, ms: r.chiave === q.chiave ? tempo * 1000 : 0 })
   if (e.giusta) {
@@ -420,11 +420,10 @@ function rispondiLibro(risposta, { saltata = false } = {}) {
   libroRisposta.value = risposta
   libroGiusta.value = giusta
   libroSaltata.value = saltata
-  // saltata (docs/core/comandi.md): giusta per andare avanti, ma non conta e non paga
-  if (giusta && saltata) suono.ok()
-  else if (giusta) { libroGiuste++; conti.giuste++; suono.ok() } else { conti.errori++; suono.no() }
+  // saltata (docs/core/comandi.md): nel libro vale come una giusta vera, paga compresa
+  if (giusta) { libroGiuste++; conti.giuste++; suono.ok() } else { conti.errori++; suono.no() }
   // la domanda giusta paga adesso, se un tocco a pagamento non se l'è già mangiata
-  if (giusta && !saltata && domandeCheLPagano(libroGiuste, tocchiLibro.aPagamento) > libroPagate) {
+  if (giusta && domandeCheLPagano(libroGiuste, tocchiLibro.aPagamento) > libroPagate) {
     libroPagate++
     const p = incassa(pagaDelCapitolo(libro.value.pagine.length))
     conti.monete += p.dato

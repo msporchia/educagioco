@@ -136,8 +136,8 @@ export class Partita {
   }
 
   /* Il tasto «salta» dei grandi (docs/core/comandi.md): la dose è fatta come
-     se fosse giusta, senza gesti. La riga di `dosi` ha `giusta: false` e `chiave: null`:
-     non paga (`monete`), non annota (`annota: null`) e non sposta le stelle (`sbagli`). */
+     se fosse giusta, senza gesti. La riga di `dosi` ha `giusta: true` e `chiave: null`:
+     paga (`monete`) come una dose pulita, ma non annota (`annota: null`) e non sposta le stelle (`sbagli`). */
   salta() {
     if (this.occupato) return null
     const i = this.corrente >= 0 ? this.corrente : this.ricetta.ingredienti.findIndex(x => !x.fatto)
@@ -145,7 +145,7 @@ export class Partita {
     this.corrente = i
     const ing = this.ingrediente
     const str = this.strumento || this.consigliato(ing.dose) || this.strumenti[0]
-    this.dosi.push({ chiave: null, giusta: false, chiesta: false })
+    this.dosi.push({ chiave: null, giusta: true, chiesta: false })
     this.saltateRicetta++
     ing.fatto = true
     this.esito = { tipo: 'giusto', ingrediente: ing, strumento: str, annota: null, saltata: true,

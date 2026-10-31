@@ -1,14 +1,14 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL TASTO «SALTA» PER PROVARE I GIOCHI
 
-   Un salto dà una domanda per giusta senza che nessuno abbia risposto, e
-   non deve lasciare traccia di quello che il gioco chiede ai bambini:
-   niente ripasso (né giusta né sbagliata), niente monete, niente
-   contatori. Il browser prova lo schermo (`integrazione/salto`); qui si
+   Un salto dà una domanda per giusta senza che nessuno abbia risposto:
+   paga come una giusta (per simulare l'economia di un bambino che gioca),
+   ma non deve lasciare traccia di quello che il gioco chiede ai bambini:
+   niente ripasso (né giusta né sbagliata), niente contatori. Il browser prova lo schermo (`integrazione/salto`); qui si
    prova ciò che si può provare senza: i motori, uno per uno, dove il
    salto passa per un metodo suo. Il guasto da non rifare è il salto che
    «funziona» perché si limita a chiamare la risposta giusta — e allora
-   paga, annota e conta come se l'avesse data un bambino.
+   annota e conta come se l'avesse data un bambino.
    Vedi docs/core/comandi.md.
    `node test/esegui.mjs salto --niente-build`
    ═══════════════════════════════════════════════════════════════════ */
@@ -76,7 +76,7 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
   uguale('e si ricorda spento', (await load('tasto-salta')).acceso, false)
 }
 
-/* ══════════ 3. inglese e spagnolo: la tappa avanza, il ripasso non sente ══════════ */
+/* ══════════ 3. inglese e spagnolo: la tappa avanza e paga, il ripasso non sente ══════════ */
 for (const [nome, Sessione, TAPPE, libro, eGiusta] of [
   ['inglese', SessioneEn, TAPPE_EN, libroEn, eGiustaEn],
   ['spagnolo', SessioneEs, TAPPE_ES, libroEs, eGiustaEs],
@@ -89,19 +89,20 @@ for (const [nome, Sessione, TAPPE, libro, eGiusta] of [
     const items = {}
     const itemDi = k => items[k] || (items[k] = newItem())
     const s = new Sessione({ tappa, itemDi, presenta })
-    let giri = 0, registrate = 0, pagate = 0
+    let giri = 0, registrate = 0, pagate = 0, saltate = 0
     while (!s.finita && giri++ < 400) {
       const q = s.prossima()
       if (!q) break
       const dopo = JSON.stringify(items)
       const e = s.salta(q)
+      saltate++
       registrate += e.registra.length
       if (e.paga) pagate++
       if (JSON.stringify(items) !== dopo) registrate++
     }
     controlla(`${nome} (${che}): saltando si arriva in fondo alla tappa`, s.finita, `giri ${giri}`)
     uguale(`${nome} (${che}): niente da mandare al ripasso`, registrate, 0)
-    uguale(`${nome} (${che}): niente da pagare`, pagate, 0)
+    uguale(`${nome} (${che}): ogni salto paga come una giusta`, pagate, saltate)
     uguale(`${nome} (${che}): nessun errore`, s.errori, 0)
     controlla(`${nome} (${che}): le giuste arrivano al bersaglio`, s.giuste >= s.bersaglio,
               `${s.giuste}/${s.bersaglio}`)
@@ -118,7 +119,7 @@ for (const [nome, Sessione, TAPPE, libro, eGiusta] of [
               eGiusta(dom, libro(dom)))
 }
 
-/* ══════════ 4. le pozioni: la dose è fatta, ma non vale monete né stelle ══════════ */
+/* ══════════ 4. le pozioni: la dose è fatta e vale le monete, ma non le stelle né il ripasso ══════════ */
 {
   const t = POZIONI[1]
   const p = new PartitaPozioni(t, { rnd: casoPozioni(3) })
@@ -132,8 +133,8 @@ for (const [nome, Sessione, TAPPE, libro, eGiusta] of [
   }
   controlla('saltando si arriva in fondo alla tappa', p.finita, `giri ${giri}`)
   uguale('niente da annotare', annotate, 0)
-  uguale('nessuna dose conta come giusta: niente monete', p.monete, 0)
-  uguale('e quindi MONETE_A_DOSE non scatta mai', p.dosiGiuste * MONETE_A_DOSE, 0)
+  controlla('ogni dose saltata vale MONETE_A_DOSE, come una giusta al primo colpo',
+            p.dosi.length > 0 && p.monete === p.dosi.length * MONETE_A_DOSE, `${p.monete}/${p.dosi.length}`)
   uguale('nessuno sbaglio', p.sbagli, 0)
   uguale('una pozione saltata non è perfetta', p.perfette, 0)
   controlla('le pozioni vanno avanti comunque', p.pozioni === t.clienti, `${p.pozioni}/${t.clienti}`)
@@ -173,7 +174,7 @@ for (const [nome, Sessione, TAPPE, libro, eGiusta] of [
   }
 }
 
-/* ══════════ 6. codice segreto: indovinato alla prima riga, ma non paga ══════════ */
+/* ══════════ 6. codice segreto: indovinato alla prima riga, e paga come tale ══════════ */
 {
   const regole = Regole.perTappa(CODICI[0])
   const p = new PartitaCodice(regole, { rnd: casoCodice(7) })
@@ -182,14 +183,15 @@ for (const [nome, Sessione, TAPPE, libro, eGiusta] of [
   uguale('la partita è vinta', p.vinta, true)
   uguale('è finita', p.finita, true)
   uguale('è segnata come saltata', p.saltata, true)
-  uguale('non vale monete', p.monete, 0)
+  uguale('vale le monete di una vittoria alla prima riga', p.monete, regole.premio * p.stelle)
+  controlla('e sono davvero monete', p.monete > 0, `${p.monete}`)
   controlla('le stelle ci sono (la tappa deve poter finire)', p.stelle >= 1, `${p.stelle}`)
   uguale('una partita finita non si salta due volte', p.salta(), null)
   const c = CorsaCodice.perTappa(CODICI[0], { rnd: casoCodice(8) })
   let giri = 0
   while (!c.finita && giri++ < 50) { c.partita.salta(); c.registra(); c.avanti() }
   controlla('saltando la tappa si finisce', c.finita, `giri ${giri}`)
-  uguale('e la tappa non ha incassato niente', c.monete, 0)
+  controlla('e la tappa ha incassato', c.monete > 0, `${c.monete}`)
 }
 
 /* ══════════ 7. sotterraneo: il mondo risponde, ma la domanda non è data ══════════ */
@@ -210,5 +212,5 @@ for (const [nome, Sessione, TAPPE, libro, eGiusta] of [
   uguale('ma nel mondo succede la stessa cosa', es.che, ev.che)
 }
 
-nota('il salto passa dai motori senza lasciare traccia')
+nota('il salto passa dai motori pagando, senza lasciare traccia nel ripasso e nei contatori')
 riassunto()

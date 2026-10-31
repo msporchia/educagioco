@@ -2,8 +2,8 @@
 /* Il tasto «salta» per provare i giochi (docs/core/comandi.md):
    c'è solo se chi sviluppa l'ha acceso da `#admin`, e dice al gioco
    «dai questa domanda per risposta giusta». Non decide niente: chi lo
-   monta sa cosa significa per la sua domanda, e non scrive mai nel ripasso,
-   né paga, né conta (docs/core/comandi.md, «Il tasto salta»).
+   monta sa cosa significa per la sua domanda: paga come una giusta, ma non
+   scrive mai nel ripasso e non conta (docs/core/comandi.md, «Il tasto salta»).
    Sta in un posto solo per non rifarlo in dieci giochi con dieci stili. */
 import { saltoAcceso } from '../store/salto.js'
 

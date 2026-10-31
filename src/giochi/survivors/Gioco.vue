@@ -313,8 +313,8 @@ function risposto({ giusto, saltata }) {
   // dietro un velo comparso dal niente
   togli()
   if (giusto) {
-    // il tasto «salta» dei grandi dà la carta ma non paga e non conta (docs/core/comandi.md)
-    if (!saltata) borsellino.paga(PAGA.domanda)
+    // il tasto «salta» dei grandi dà la carta e paga, ma non conta (docs/core/comandi.md)
+    borsellino.paga(PAGA.domanda)
     const presa = p.prendi(voluta.chiave)
     brinda(`${presa.icona} ${presa.nome} — ${presa.chiaro}`, true)
     if (!saltata) {

@@ -189,11 +189,11 @@ export class Sessione {
 
   /* Il tasto «salta» dei grandi (docs/core/comandi.md): la domanda va avanti come
      giusta — la tappa si avvicina, la presentazione procede — ma nessuno ha risposto.
-     `registra` è vuoto (il ripasso non sente niente) e `paga` è falso. */
+     `registra` è vuoto (il ripasso non sente niente) e `paga` è vero, come per una giusta. */
   salta(d) {
     if (d.genere !== 'frase' && d.chiave) this.indovinate.add(d.chiave)
     this.giuste++
-    const esito = { giusta: true, saltata: true, paga: false, registra: [], perche: null, siFa: null }
+    const esito = { giusta: true, saltata: true, paga: true, registra: [], perche: null, siFa: null }
     if (d.genere === 'frase') this.seguiIlConcetto(d, esito)
     return esito
   }
