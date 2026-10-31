@@ -65,47 +65,55 @@ function insegna (g, testo, larg, alt, x, y, z, o) {
 export { ASPETTO, creaCampo, aggiornaCampo, campoMosso } from './modelli-colture.js'
 
 // ── la pasticceria: 4×3, la porta davanti ──
+// ── il pastificio (id `pasticceria`, come nei salvataggi): la bottega color semola col telo tricolore, la pasta stesa ad asciugare,
+//    la vetrina dei barattoli di pasta e una farfalla gigante sulla cresta che gira piano (la pasticceria del paese è un'altra: modelli-botteghe.js) ──
 function costruisciPasticceria () {
   const g = new THREE.Group()
-  const muro = mat(0xf6e3c8), rosa = mat(0xd9577a), bianco = mat(0xfff7ea), legno = mat(0x7b4a24)
-  scatola(g, 3.6, 1.5, 2.2, muro, 0, 0.75, -0.3)
-  scatola(g, 3.8, 0.12, 2.4, mat(0xc9b79a), 0, 0.06, -0.3)
-  const alt = tetto(g, 3.9, 2.7, 1.5, 0xb4455f, 0.5); g.position.y = 0
-  // camino con il fumo che esce dal motore
-  scatola(g, 0.38, 0.9, 0.38, mat(0xb06a4a), 1.2, 1.9, -0.7)
-  g.userData.fumo = new THREE.Vector3(1.2, 2.45, -0.7)
-  // tenda a righe sul davanti
-  for (let n = 0; n < 8; n++) {
-    const s = scatola(g, 0.42, 0.05, 0.62, n % 2 ? bianco : rosa, -1.47 + n * 0.42, 1.28, 1.12)
-    s.rotation.x = 0.3
+  const muro = mat(0xf1d79a), legno = mat(0x7b4a24), bianco = mat(0xfff7ea), verde = mat(0x2f8a4a), rosso = mat(0xc8382e)
+  const pasta = mat(0xf4cf6a), pastaScura = mat(0xdcae45)
+  lastra(g, 3.9, 2.9)
+  scatola(g, 2.9, 1.5, 1.9, muro, -0.35, 0.75, -0.45)
+  const falde = new THREE.Group(); falde.position.set(-0.35, 0, -0.45); g.add(falde)
+  const alt = tetto(falde, 3.0, 1.9, 1.5, 0x9a5a34, 0.5)
+  // il camino: fuma solo quando la pasta cuoce
+  scatola(g, 0.34, 0.9, 0.34, mat(0xb06a4a), 0.65, 1.95, -0.85)
+  g.userData.fumo = new THREE.Vector3(0.65, 2.5, -0.85)
+  // il telo a righe verdi, bianche e rosse sopra la vetrina
+  for (let n = 0; n < 9; n++) { const t = scatola(g, 0.31, 0.05, 0.6, [verde, bianco, rosso][n % 3], -1.59 + n * 0.31, 1.06, 0.75); t.rotation.x = 0.32 }
+  // porta e vetrina, e sulla mensola davanti la pasta in mostra: il mazzo di spaghetti legato, le farfalle, le conchiglie
+  scatola(g, 0.6, 1.0, 0.08, legno, 0.62, 0.52, 0.52)
+  sfera(g, 0.05, mat(0xf0c040), 0.82, 0.52, 0.58, 1, 1, 1, 6)
+  scatola(g, 1.4, 0.75, 0.06, mat(0xa6d8ee, { emissive: 0x405a66 }), -0.75, 0.82, 0.52)
+  scatola(g, 1.5, 0.06, 0.26, legno, -0.75, 0.42, 0.62)
+  for (let k = 0; k < 7; k++) cilindro(g, 0.014, 0.014, 0.4, pasta, -1.31 + (k % 4) * 0.035, 0.65, 0.6 + Math.floor(k / 4) * 0.035, 4)
+  cilindro(g, 0.075, 0.075, 0.04, rosso, -1.26, 0.66, 0.62, 8)
+  for (const [x, m] of [[-0.75, pasta], [-0.25, pastaScura]]) for (let k = 0; k < 5; k++)
+    sfera(g, 0.06, m, x + ((k * 3) % 5 - 2) * 0.07, 0.49 + (k > 2 ? 0.06 : 0), 0.6 + (k % 2) * 0.06, 1.3, 0.55, 0.7, 6)
+  insegna(g, '🍝 PASTIFICIO', 2.2, 0.3, -0.35, 1.32, 0.52, { w: 512, h: 72, sfondo: '#2f6e3e', px: 44 })
+  // a destra lo stendino: due pali, la stanga e le tagliatelle appese ad asciugare
+  for (const z of [0.15, 1.15]) cilindro(g, 0.04, 0.05, 1.3, legno, 1.6, 0.65, z, 6)
+  cilindro(g, 0.03, 0.03, 1.1, legno, 1.6, 1.25, 0.65, 6).rotation.x = Math.PI / 2
+  for (let k = 0; k < 9; k++) {
+    const lung = 0.5 + ((k * 7) % 4) * 0.07
+    scatola(g, 0.05, lung, 0.012, k % 3 ? pasta : pastaScura, 1.6 + (k % 2 ? 0.03 : -0.03), 1.25 - lung / 2, 0.25 + k * 0.1)
   }
-  for (const x of [-1.6, 1.6]) cilindro(g, 0.04, 0.04, 1.2, legno, x, 0.6, 1.4, 6)
-  // porta e finestre
-  scatola(g, 0.7, 1.05, 0.08, legno, 0, 0.55, 0.82)
-  sfera(g, 0.05, mat(0xf0c040), 0.22, 0.55, 0.88, 1, 1, 1, 6)
-  for (const x of [-1.25, 1.25]) {
-    scatola(g, 0.7, 0.62, 0.06, mat(0xa6d8ee, { emissive: 0x405a66 }), x, 0.85, 0.82)
-    scatola(g, 0.78, 0.05, 0.1, legno, x, 0.52, 0.84); scatola(g, 0.78, 0.05, 0.1, legno, x, 1.18, 0.84)
-    scatola(g, 0.05, 0.7, 0.1, legno, x, 0.85, 0.84)
+  // il sacco della farina accanto alla porta, legato in cima
+  cilindro(g, 0.2, 0.25, 0.46, bianco, 1.05, 0.23, 1.05, 8)
+  cilindro(g, 0.07, 0.2, 0.14, bianco, 1.05, 0.53, 1.05, 8)
+  cilindro(g, 0.075, 0.075, 0.04, legno, 1.05, 0.6, 1.05, 6)
+  cilindro(g, 0.11, 0.06, 0.08, bianco, 1.05, 0.66, 1.05, 6)
+  scatola(g, 0.3, 0.12, 0.01, mat(0x3d6fb0), 1.05, 0.26, 1.29)
+  // la farfalla gigante sulla cresta, che gira piano: due ali a ventaglio strette al centro dal nodo
+  const farfalla = new THREE.Group(); farfalla.position.set(-0.35, 1.5 + alt + 0.42, -0.45)
+  for (const v of [1, -1]) {
+    const ala = cono(farfalla, 0.34, 0.46, pasta, v * 0.23, 0, 0, 6)
+    ala.rotation.z = v * Math.PI / 2; ala.scale.set(1, 1, 0.32)
+    for (const dy of [-0.18, 0, 0.18]) scatola(farfalla, 0.03, 0.05, 0.12, pastaScura, v * 0.44, dy, 0)
   }
-  // il banco fuori, con le torte
-  scatola(g, 1.5, 0.5, 0.42, legno, -1.05, 0.25, 1.28)
-  for (const x of [-1.5, -1.05, -0.6]) {
-    cilindro(g, 0.17, 0.17, 0.1, bianco, x, 0.55, 1.28, 10)
-    cilindro(g, 0.14, 0.14, 0.12, mat(0xc77a3c), x, 0.66, 1.28, 10)
-    sfera(g, 0.1, mat(0xfff0f4), x, 0.76, 1.28, 1, 0.7, 1, 8)
-    sfera(g, 0.035, mat(0xd8212f), x, 0.84, 1.28, 1, 1, 1, 6)
-  }
-  insegna(g, 'PASTICCERIA', 2.3, 0.4, 0, 1.38, 0.83, { w: 512, h: 90, sfondo: '#a8344f', px: 54 })
-  // il dolce gigante sulla cresta, che gira piano
-  const dolce = new THREE.Group(); dolce.position.set(0, 1.5 + alt + 0.2, 0)
-  cilindro(dolce, 0.3, 0.24, 0.3, mat(0xc77a3c), 0, 0, 0, 10)
-  sfera(dolce, 0.34, mat(0xff9cb8), 0, 0.28, 0, 1, 0.75, 1, 12)
-  sfera(dolce, 0.2, mat(0xffc4d4), 0, 0.5, 0, 1, 0.8, 1, 10)
-  sfera(dolce, 0.07, mat(0xd8212f), 0, 0.68, 0, 1, 1, 1, 8)
-  g.add(dolce); g.userData.gira = dolce
-  g.userData.altezza = 3.4
-  fondiPerMateriale(dolce); fondiPerMateriale(g, { escludi: [dolce] })
+  sfera(farfalla, 0.11, pastaScura, 0, 0, 0, 0.8, 1.3, 0.8, 8)
+  g.add(farfalla); g.userData.gira = farfalla
+  g.userData.altezza = 1.5 + alt + 0.8
+  fondiPerMateriale(farfalla); fondiPerMateriale(g, { escludi: [farfalla] })
   return g
 }
 
@@ -207,32 +215,59 @@ function costruisciPanificio () {
   return g
 }
 
+// ── la cucina (id `conserviera`, come nei salvataggi): la casa bianca dalle imposte verdi, il fornello fuori col paiolo che bolle, la treccia
+//    d'aglio e i peperoncini appesi, la cassetta di pomodori e il tagliere della polenta; sul tetto il cappello da cuoco, che sobbalza ──
 function costruisciConserviera () {
   const g = new THREE.Group()
-  const legno = mat(0x9a6a3a), scuro = mat(0x6b4426), rame = mat(0xb8683a, { metalness: 0.6, roughness: 0.4 })
+  const muro = mat(0xf4efe4), legno = mat(0x7b4a24), imposta = mat(0x3f8a5a), pietra = mat(0x8e8576), rame = mat(0xd98a4a, { metalness: 0.5, roughness: 0.4 })
   lastra(g, 3.0, 2.9)
-  scatola(g, 2.8, 1.2, 1.7, legno, 0, 0.6, -0.55)
-  const falde = new THREE.Group(); falde.position.set(0, 0, -0.55); g.add(falde)
-  const alt = tetto(falde, 2.9, 1.7, 1.2, 0x5e4a3a, 0.3)
-  for (const x of [-1.0, -0.33, 0.33, 1.0]) scatola(g, 0.05, 1.2, 0.04, scuro, x, 0.6, 0.31)     // le assi
-  scatola(g, 0.6, 0.95, 0.08, scuro, -0.8, 0.5, 0.32)
-  // i vasi di vetro: grandi sul tetto, piccoli sullo scaffale davanti
-  const colori = [0xd8352a, 0x8a3aa8, 0x6cb83a, 0xf09a20, 0xe0408a]
-  const vasi = colori.map(c => mat(c, { emissive: c, emissiveIntensity: 0.25, roughness: 0.3 }))
-  const coperchio = mat(0xe8e0d0)
-  const vaso = (x, y, z, r, h, i) => { cilindro(g, r, r, h, vasi[i % vasi.length], x, y + h / 2, z, 8); cilindro(g, r * 1.05, r * 1.05, h * 0.14, coperchio, x, y + h * 1.07, z, 8) }
-  const cresta = 1.2 + alt
-  for (let i = 0; i < 3; i++) vaso(-0.85 + i * 0.85, cresta - 0.05, -0.55, 0.26, 0.5, i)
-  scatola(g, 1.4, 0.4, 0.4, scuro, 0.15, 0.2, 1.0)
-  for (let i = 0; i < 5; i++) vaso(-0.4 + i * 0.28, 0.4, 1.0, 0.1, 0.22, i + 2)
-  // la caldaia di rame con il suo tubo
-  cilindro(g, 0.42, 0.46, 0.8, rame, 1.0, 0.5, 0.95, 12)
-  sfera(g, 0.42, rame, 1.0, 0.9, 0.95, 1, 0.7, 1, 12)
-  cilindro(g, 0.07, 0.07, 0.8, rame, 1.0, 1.4, 0.95, 6)
-  g.userData.fumo = new THREE.Vector3(1.0, 1.85, 0.95)
-  insegna(g, '🍯 CONSERVE', 1.7, 0.34, 0.2, 1.05, 0.32, { w: 384, h: 76, sfondo: '#4a6a32', px: 46 })
-  g.userData.altezza = cresta + 0.9
-  fondiPerMateriale(g)
+  scatola(g, 2.6, 1.3, 1.6, muro, -0.15, 0.65, -0.6)
+  const falde = new THREE.Group(); falde.position.set(-0.15, 0, -0.6); g.add(falde)
+  const alt = tetto(falde, 2.7, 1.6, 1.3, 0x6a5444, 0.5)
+  // il comignolo grande, che fuma anche a riposo
+  scatola(g, 0.4, 0.8, 0.4, pietra, -0.95, 1.75, -0.85)
+  scatola(g, 0.48, 0.08, 0.48, pietra, -0.95, 2.17, -0.85)
+  g.userData.fumo = new THREE.Vector3(-0.95, 2.3, -0.85)
+  // porta e finestra con le imposte verdi
+  scatola(g, 0.55, 0.95, 0.08, legno, -0.75, 0.48, 0.21)
+  scatola(g, 0.55, 0.5, 0.06, mat(0xa6d8ee, { emissive: 0x405a66 }), 0.3, 0.85, 0.21)
+  for (const x of [-0.06, 0.66]) scatola(g, 0.18, 0.55, 0.06, imposta, x, 0.85, 0.24)
+  insegna(g, '🍳 CUCINA', 1.5, 0.32, -0.15, 1.18, 0.22, { w: 384, h: 80, sfondo: '#3f6e4a', px: 48 })
+  // accanto alla porta la treccia d'aglio e la fila di peperoncini
+  const aglio = mat(0xf2ead6), peperoncino = mat(0xd8281e)
+  for (let k = 0; k < 4; k++) sfera(g, 0.06, aglio, -1.15, 0.95 - k * 0.11, 0.26, 1, 0.9, 1, 6)
+  for (let k = 0; k < 5; k++) cono(g, 0.03, 0.12, peperoncino, -0.38, 1.0 - k * 0.09, 0.26, 5).rotation.x = Math.PI
+  // fuori, a destra: il fornello di pietra col paiolo di rame che bolle
+  scatola(g, 0.8, 0.5, 0.7, pietra, 0.95, 0.25, 0.75)
+  const fiamma = scatola(g, 0.4, 0.14, 0.06, mat(0x2a1a14, { emissive: 0xff6a10, emissiveIntensity: 0.9 }), 0.95, 0.24, 1.11)
+  cilindro(g, 0.32, 0.26, 0.26, rame, 0.95, 0.63, 0.75, 12)
+  cilindro(g, 0.34, 0.34, 0.04, rame, 0.95, 0.76, 0.75, 12)
+  const sugo = cilindro(g, 0.3, 0.3, 0.03, mat(0xc0392b, { emissive: 0x6a1a10, emissiveIntensity: 0.5 }), 0.95, 0.775, 0.75, 12)
+  cilindro(g, 0.02, 0.02, 0.55, legno, 1.05, 0.95, 0.75, 5).rotation.z = 0.35               // il mestolo
+  // il tavolo: la cassetta di pomodori, il tagliere con la polenta, i vasetti della conserva
+  scatola(g, 1.3, 0.06, 0.55, legno, -0.4, 0.5, 0.95)
+  for (const x of [-0.98, 0.18]) for (const z of [0.73, 1.17]) scatola(g, 0.06, 0.5, 0.06, legno, x, 0.25, z)
+  scatola(g, 0.42, 0.16, 0.3, mat(0xa8763e), -0.78, 0.61, 0.95)
+  for (let k = 0; k < 4; k++) sfera(g, 0.075, mat(0xd8352a), -0.9 + (k % 2) * 0.17, 0.72, 0.88 + Math.floor(k / 2) * 0.14, 1, 0.85, 1, 8)
+  cilindro(g, 0.2, 0.2, 0.04, mat(0x9a6a3a), -0.25, 0.55, 0.95, 10)
+  sfera(g, 0.17, mat(0xf2c14e), -0.25, 0.58, 0.95, 1, 0.35, 1, 10)
+  for (const [k, c] of [0xd8352a, 0xf09a20].entries()) {
+    cilindro(g, 0.07, 0.07, 0.16, mat(c, { emissive: c, emissiveIntensity: 0.25, roughness: 0.3 }), 0.05 + k * 0.17, 0.61, 0.95, 8)
+    cilindro(g, 0.075, 0.075, 0.03, mat(0xe8e0d0), 0.05 + k * 0.17, 0.705, 0.95, 8)
+  }
+  // il cappello da cuoco sulla cresta, che sobbalza piano
+  const cappello = new THREE.Group(); cappello.position.set(0.25, 1.3 + alt + 0.08, -0.6)
+  cilindro(cappello, 0.26, 0.26, 0.26, mat(0xffffff), 0, 0.13, 0, 12)
+  for (const [x, z] of [[0, 0], [0.16, 0], [-0.16, 0], [0, 0.15], [0, -0.15]]) sfera(cappello, 0.2, mat(0xffffff), x, 0.38, z, 1, 0.8, 1, 10)
+  g.add(cappello)
+  g.userData.altezza = 1.3 + alt + 0.8
+  g.userData.cappello = cappello; g.userData.fiamma = fiamma; g.userData.sugo = sugo
+  g.userData.anima = function (dt, tt) {
+    this.cappello.position.y = 1.3 + alt + 0.08 + Math.abs(Math.sin(tt * 2.2)) * 0.08
+    this.fiamma.material.emissiveIntensity = 0.8 + Math.sin(tt * 9) * 0.2
+    this.sugo.position.y = 0.775 + Math.sin(tt * 6) * 0.008
+  }
+  fondiPerMateriale(cappello); fondiPerMateriale(g, { escludi: [cappello, fiamma, sugo] })
   return g
 }
 

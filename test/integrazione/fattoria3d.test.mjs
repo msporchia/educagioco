@@ -1099,13 +1099,20 @@ controlla('il pollaio con le bestie non si mette via', via.ok === false && via.m
   controlla('ci sono la neve sul prato e i fiocchi', n.chiazze > 5 && n.fiocchi)
   uguale('il cielo è quello di Natale', n.cielo, 0xdbe6f0)
   await scatto(festa, 'fattoria3d-natale')
-  // le draw call della festa: lo stesso fotogramma disegnato con la festa accesa e spenta (renderer.info si azzera a ogni render)
+  // le draw call della festa: lo stesso fotogramma disegnato con la festa accesa e poi tolta (`via()`: anche la neve sui materiali e i
+  // ciuffi d'erba tornano com'erano; renderer.info si azzera a ogni render). La pagina dopo si chiude.
   const conti = await festa.evaluate(() => {
     const { mondo } = window.__fattoria3d, st = mondo.stagione, r = mondo.renderer, chiama = () => { r.info.autoReset = true; r.render(mondo.scena, mondo.camera.cam); return r.info.render.calls }
-    const con = chiama(); st.gruppo.visible = false; st.punti.visible = false
-    const senza = chiama(); st.gruppo.visible = true; st.punti.visible = true
-    return { con, senza }
+    const con = chiama(), ciuffi = mondo.terreno.ciuffi.visible, fiato = !!(st.fiato && st.fiato.punti.isPoints)
+    let innevate = 0, bestieInnevate = 0
+    for (const o of mondo.scena.children) if (o.userData.elemento3d === 'edifici') o.traverse(m => { if (m.isMesh && m.material.userData.innevato) innevate++ })
+    mondo.compagni.lista.forEach(c => c.grp.traverse(m => { if (m.isMesh && m.material.userData.innevato) bestieInnevate++ }))
+    mondo.eroe.grp.traverse(m => { if (m.isMesh && m.material.userData.innevato) bestieInnevate++ })
+    st.via(); mondo.terreno.applica(mondo.q)
+    return { con, senza: chiama(), ciuffi, fiato, innevate, bestieInnevate, suolo: mondo.terreno.suolo.material.map !== null }
   })
+  controlla('a Natale la casa ha la neve sul tetto, l\'erba è sotto la neve, c\'è il fiato', conti.innevate > 0 && !conti.ciuffi && conti.fiato, JSON.stringify(conti))
+  uguale('il contadino, il cane e i gatti restano senza neve', conti.bestieInnevate, 0)
   controlla('Natale costa pochi disegni in più (≤ 8 draw call)', conti.con - conti.senza <= 8 && conti.con > conti.senza, `${conti.con} contro ${conti.senza}`)
   controlla('nessun errore in console a Natale', erroriFesta.length === 0, erroriFesta.join(' · '))
   await festa.context().close().catch(() => {})

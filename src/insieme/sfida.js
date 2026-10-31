@@ -22,6 +22,7 @@ export function usaSfida({ gioco, regola, alVia, mostra }) {
   const codice = ref('')
   const errore = ref('')
   const invitato = ref('')              // il nome dell'amico invitato, mentre lo si aspetta
+  const scelto = ref('')                // la chiave dell'amico già scelto dalla lista degli amici («Gioca con…»): la sala parte da lui
   const linea = ref('')                 // '' | 'io' (ho perso la linea) | 'altro' (non si sente)
   let guastaDa = 0, scadenza = 0
 
@@ -41,6 +42,8 @@ export function usaSfida({ gioco, regola, alVia, mostra }) {
     // nel libretto dei guasti dei grandi: com'è andata la linea, da leggere senza cavo
     if (r.stato === 'rotta' && prima !== 'rotta') registra('sfida', `${gioco}: ${r.motivo}`, false)
     if (r.stato === 'finita' && prima !== 'finita' && r.canale.diario.cadute) registra('sfida', `${gioco}: finita bene, ${r.diagnosi()}`, false)
+    // l'amico invitato è arrivato al tavolo: non lo si aspetta più (se no dopo 45 s la sfida si chiudeva a partita in corso)
+    if (r.stato !== 'attesa' && invitato.value) { clearTimeout(scadenza); invitato.value = '' }
     if (r.stato === 'gioco' && prima !== 'gioco') {
       linea.value = ''; guastaDa = 0
       alVia(r)
@@ -66,6 +69,7 @@ export function usaSfida({ gioco, regola, alVia, mostra }) {
   function apri() {
     mostra()
     chiudi()
+    scelto.value = ''
     passo.value = 'scelta'
   }
 
@@ -98,7 +102,7 @@ export function usaSfida({ gioco, regola, alVia, mostra }) {
     scadenza = setTimeout(() => finisceInvito(`${invitato.value} non risponde`), ATTESA_INVITO)
   }
   function finisceInvito(perche) {
-    if (!invitato.value || passo.value !== 'attesa') return
+    if (!invitato.value || passo.value !== 'attesa' || (regia.value && regia.value.stato !== 'attesa')) return
     chiudi(); sbaglia(perche)
   }
   watch(() => amiciStato.risposta, r => { if (r && !r.ok) finisceInvito(`${invitato.value} adesso non può giocare`) })
@@ -110,12 +114,14 @@ export function usaSfida({ gioco, regola, alVia, mostra }) {
   }
 
   /* «Gioca» su un invito: il gioco lascia quello che stava facendo e mostra la sala, e si entra al tavolo dell'amico. Il gioco
-     la chiama anche quando si apre (l'invito può averlo aperto lui) */
+     la chiama anche quando si apre (l'invito può averlo aperto lui). Con `amico` invece del codice si arriva dalla lista degli
+     amici: la sala si apre sulle scelte, con quell'amico già da invitare */
   function daInvito() {
     const d = prendiIngresso(gioco)
     if (!d) return
     apri()
-    entra(d.codice)
+    if (d.amico) scelto.value = d.amico
+    else entra(d.codice)
   }
   watch(ingresso, i => { if (i?.gioco === gioco) daInvito() })
 
@@ -137,5 +143,5 @@ export function usaSfida({ gioco, regola, alVia, mostra }) {
   const messaggio = computed(() => (stato.value === 'rotta' ? motivo.value : errore.value))
   const rotta = computed(() => stato.value === 'rotta')
 
-  return { regia, stato, motivo, codice, invitato, linea, fase, messaggio, rotta, amici, inDue, apri, crea, invita, entra, daInvito, chiudi, avanza }
+  return { regia, stato, motivo, codice, invitato, scelto, linea, fase, messaggio, rotta, amici, inDue, apri, crea, invita, entra, daInvito, chiudi, avanza }
 }

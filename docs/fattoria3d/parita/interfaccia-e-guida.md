@@ -26,7 +26,7 @@ Legenda in [README.md](README.md). 2D: [../../fattoria/come-si-tocca.md](../../f
 | I11 | il magazzino (pezzi messi via) | baule | ✅ `magazzino`, gratis rimetterli | – |
 | I12 | soglie del dito (16 px, click fantasma, 420 ms) | `scena/dito.js` | ✅ in `scena3d/dito.js`; **non provato su un telefono** | P1 |
 | I13 | fogli con la ✕ in alto a destra | sì | ✅ | – |
-| I14 | home: carta, riassunto, traguardi dell'albo | `gioco.js` | ✅ riassunto e 10 traguardi (la 2D ne ha 7): stesse soglie dove il gesto è lo stesso (terre, posati/pezzi, varietà `[8,20,32]` come primato, ordini), soglie sue dove il conto è diverso (raccolti a tessere: ×~7). «Sgomberi» = `f3d-alberi`; **«Che eleganza» (vestiti) tolto: in 3D il guardaroba è del contadino, le bestie non si vestono** ([animali.md](animali.md)). Contatori `fattoria3d*` con `segna()`/`segnaBest()` in `Gioco.vue`, niente campi nuovi nel profilo | – |
+| I14 | home: carta, riassunto, traguardi dell'albo | `gioco.js` | ✅ riassunto e 10 traguardi (la 2D ne ha 7): stesse soglie dove il gesto è lo stesso (terre, posati/pezzi, varietà `[8,20,32]` come primato, ordini), soglie sue dove il conto è diverso (raccolti a tessere: ×~7). «Sgomberi» = `f3d-alberi`; «Che eleganza» c'è anche in 3D da quando le bestie si vestono (`fattoria3dVestiti`, [../addobbi.md](../addobbi.md)). Contatori `fattoria3d*` con `segna()`/`segnaBest()` in `Gioco.vue`, niente campi nuovi nel profilo | – |
 | I15 | ripresa / sosta | il mondo si salva da sé ([../../core/ripresa.md](../../core/ripresa.md)) | ✅ lo stesso (`posto: true`) | – |
 | I16 | **pausa** | assente di proposito | assente | n/a |
 

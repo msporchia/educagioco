@@ -21,6 +21,8 @@ import { materialeAcqua, materialeMare } from '../../../src/giochi/fattoria3d/sc
 import { creaContadino, creaCane, posaCane, creaGatto, posaGatto } from '../../../src/giochi/fattoria3d/scena3d/modelli-compagni.js'
 import { creaBestia, posaPiccolo, posaBeagle } from '../../../src/giochi/fattoria3d/scena3d/modelli-bestie.js'
 import { BESTIE as BESTIE_DI_CASA, comeCompagno } from '../../../src/giochi/fattoria3d/dati/bestie.js'
+import { creaAddobbo, vestiBestia, ADDOBBI_DISEGNATI } from '../../../src/giochi/fattoria3d/scena3d/modelli-addobbi.js'
+import { staA, PER_ID as ADDOBBI_3D } from '../../../src/giochi/fattoria3d/dati/addobbi.js'
 import { creaPonte, creaPasserella, creaTavolo } from '../../../src/giochi/fattoria3d/scena3d/modelli-passaggi.js'
 import { creaStagno } from '../../../src/giochi/fattoria3d/scena3d/modelli-acqua.js'
 import { creaDecoro } from '../../../src/giochi/fattoria3d/scena3d/modelli-decori.js'
@@ -172,13 +174,13 @@ export const VOCI = [
   { id: 'fattoria:cassa', nome: 'Cassa di legno', gioco: 'fattoria', categoria: 'prop', dove: 'in lavorazione: il costruttore c\'è in modelli.js, non è ancora montato in scena', file: `${M}:creaCassa`, misure: '1×1', crea: () => creaCassa() },
 
   // ── gli edifici unici, uno per tipo, in lotti fissi ──
-  { id: 'fattoria:pasticceria', nome: 'Pastificio (id pasticceria)', gioco: 'fattoria', categoria: 'edificio', dove: unico('pasticceria') + ': forno, torta che gira', file: `${M}:creaPasticceria`, misure: celle(EDIFICI.pasticceria), crea: () => creaPasticceria(), anima: animaEdificio },
+  { id: 'fattoria:pasticceria', nome: 'Pastificio (id pasticceria)', gioco: 'fattoria', categoria: 'edificio', dove: unico('pasticceria') + ': telo tricolore, pasta stesa ad asciugare, farfalla che gira', file: `${M}:creaPasticceria`, misure: celle(EDIFICI.pasticceria), crea: () => creaPasticceria(), anima: animaEdificio },
   { id: 'fattoria:mongolfiera', nome: 'Mongolfiera', gioco: 'fattoria', categoria: 'edificio', dove: unico('mongolfiera') + ': parte per i viaggi di vendita', file: `${M}:creaMongolfiera`, misure: celle(EDIFICI.mongolfiera),
     crea: () => creaMongolfiera(), anima: (g, dt, t) => { const u = g.userData; u.volo.position.y = Math.sin(t * 1.3) * 0.08; u.volo.rotation.z = Math.sin(t * 0.9) * 0.02; u.fiamma.scale.set(1, 1.2 + Math.sin(t * 14) * 0.4, 1) } },
   { id: 'fattoria:fienile-macchina', nome: 'Fienile (la macchina del mangime)', gioco: 'fattoria', categoria: 'edificio', dove: unico('fienile') + ': capanna aperta con le balle, una balla tonda che gira; foraggio e becchime', file: `${MM}:creaFienileMacchina`, misure: celle(EDIFICI.fienile), crea: () => creaFienileMacchina(), anima: animaEdificio },
   { id: 'fattoria:mulino', nome: 'Mulino', gioco: 'fattoria', categoria: 'edificio', dove: unico('mulino') + ': pale a vento, macina il grano', file: `${M}:creaMulino`, misure: celle(EDIFICI.mulino), crea: () => creaMulino(), anima: animaEdificio },
   { id: 'fattoria:panificio', nome: 'Panificio', gioco: 'fattoria', categoria: 'edificio', dove: unico('panificio') + ': forno con la bocca accesa', file: `${M}:creaPanificio`, misure: celle(EDIFICI.panificio), crea: () => creaPanificio(), anima: animaEdificio },
-  { id: 'fattoria:conserviera', nome: 'Cucina (id conserviera)', gioco: 'fattoria', categoria: 'edificio', dove: unico('conserviera'), file: `${M}:creaConserviera`, misure: celle(EDIFICI.conserviera), crea: () => creaConserviera(), anima: animaEdificio },
+  { id: 'fattoria:conserviera', nome: 'Cucina (id conserviera)', gioco: 'fattoria', categoria: 'edificio', dove: unico('conserviera') + ': fornello col paiolo, aglio e peperoncini, cappello da cuoco che sobbalza', file: `${M}:creaConserviera`, misure: celle(EDIFICI.conserviera), crea: () => creaConserviera(), anima: animaEdificio },
   { id: 'fattoria:gelateria', nome: 'Gelateria', gioco: 'fattoria', categoria: 'edificio', dove: unico('gelateria') + ': il cono che gira sul tetto', file: `${M}:creaGelateria`, misure: celle(EDIFICI.gelateria), crea: () => creaGelateria(), anima: animaEdificio },
   { id: 'fattoria:caseificio', nome: 'Caseificio', gioco: 'fattoria', categoria: 'edificio', dove: unico('caseificio') + ': la ruota del formaggio', file: `${M}:creaCaseificio`, misure: celle(EDIFICI.caseificio), crea: () => creaCaseificio(), anima: animaEdificio },
   { id: 'fattoria:telaio', nome: 'Telaio', gioco: 'fattoria', categoria: 'edificio', dove: unico('telaio') + ': la navetta che scorre sul telaio, balle di lana', file: `${MM}:creaTelaio`, misure: celle(EDIFICI.telaio), crea: () => creaTelaio(), anima: animaEdificio },
@@ -276,6 +278,27 @@ export const VOCI = [
       crea: () => { const g = creaBestia(comeCompagno(id)); posa(g, stato, 0.4, stato === 'vaga' ? 0.6 : 0); return g },
       anima: (g, dt, t) => posa(g, stato, t, stato === 'vaga' ? 0.6 : 0),
     }))
+  }),
+
+  // gli addobbi delle bestie (docs/fattoria3d/addobbi.md): ognuno da solo, poi addosso a ogni corpo, quattro per volta (uno per aggancio)
+  ...ADDOBBI_DISEGNATI.map(id => ({
+    id: `fattoria:addobbo-${id}`, nome: `${ADDOBBI_3D[id].nome} (addobbo)`, gioco: 'fattoria', categoria: 'prop',
+    dove: `addobbo «${ADDOBBI_3D[id].dove}» delle bestie, 🪙${ADDOBBI_3D[id].prezzo} (dati/addobbi.js)`, file: `${MBE.replace('modelli-bestie', 'modelli-addobbi')}:creaAddobbo`,
+    crea: () => creaAddobbo(id),
+  })),
+  ...[['watson', 'cane'], ['beagle', 'beagle'], ['sherlock', 'gatto'], ['coniglio', 'coniglio'], ['pappagallo', 'pappagallo']].flatMap(([bid, forma]) => {
+    const giri = [['cappellino', 'occhialini', 'sciarpa', 'zainetto'], ['cilindro', 'occhiali', 'fiocco', 'mantellina'], ['corona', 'campanella', 'fiore'], ['cappello_strega']]
+    const corpo = () => {
+      if (bid === 'watson') { const g = creaCane(); g.userData.id = 'watson'; posaCane(g, { stato: 'sta', t: 0.4 }); return g }
+      if (bid === 'sherlock') { const g = creaGatto('bianconero'); posaGatto(g, { stato: 'sta', t: 0.4 }); return g }
+      const b = BESTIE_DI_CASA[bid], g = creaBestia(comeCompagno(bid)); (b.tipo === 'cane' ? posaBeagle : posaPiccolo)(g, { stato: 'sta', t: 0.4 }); return g
+    }
+    return giri.map((ids, k) => {
+      const addosso = Object.fromEntries(ids.filter(id => staA(id, bid)).map(id => [ADDOBBI_3D[id].dove, id]))
+      return { id: `fattoria:vestita-${bid}-${k + 1}`, nome: `${bid} vestito: ${Object.values(addosso).join(', ')}`, gioco: 'fattoria', categoria: 'animale',
+        dove: `addobbi sulla forma «${forma}» (AGGANCI di modelli-addobbi.js)`, file: `${MBE.replace('modelli-bestie', 'modelli-addobbi')}:vestiBestia`,
+        crea: () => { const g = corpo(); vestiBestia(g, addosso); return g } }
+    })
   }),
 
   // ── il terreno: a istanze nel gioco, qui un esemplare con le stesse geometrie ──

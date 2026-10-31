@@ -1,5 +1,6 @@
 /* Lo stato che si salva (in profile.campagne.fattoria3d.cfg.stato) e come si rimette in forma quando si legge: un salvataggio
    di ieri non ha bisogno di migrazioni, i campi che mancano si riempiono. Dato + funzioni pure. */
+import { cassettoInForma } from '../dati/addobbi.js'
 import { LOTTI_INIZIALI, PEZZO_DI_PARTENZA, POSTI_STORICI, lottoPerId } from '../dati/mondo.js'
 import { lottoDiversoDa } from '../dati/biomi.js'
 import { CHIAVI_COLTURE, TESSERE } from '../dati/colture.js'
@@ -71,10 +72,11 @@ export function statoIniziale() {
     vecchi: [],                // gli id (`a_b`) dei lotti comprati prima della geografia grande dove ora cambierebbe qualcosa: si generano alla vecchia (generaLotto `vecchio: true`)
     vecchi1: [],               // gli id dei lotti comprati con `geo: 1` dove ora c'è un lago naturale al posto della pozzanghera: restano com'erano (generaLotto `vecchio: 1`)
     casa: casaIniziale(),      // le bestie di casa che hai preso (docs/fattoria3d/bestie-di-casa.md): { beagle: { pancia, pelo, gioco, quando, premiato, nome?, i?, j? } }
+    addobbi: {},               // il cassetto degli addobbi delle bestie: comprati e non addosso, { id: quanti } (dati/addobbi.js)
     pesca: {},                 // per lotto d'acqua tuo: { i, j (dove sta il galleggiante), fine (quando abbocca, null se non c'è la lenza), riposo (quando il banco si ripopola, null) }
     strade: [],                // le celle (indice di griglia) disegnate dal bambino
     daRegalare: {},            // ciò che la fattoria 2D aveva e la 3D non ha ancora ({ 'cosa:ovile': 1, 'scorta:miele': 4, 'terra': 2 }): solo un conto, mai monete (motore/migra.js)
-    migrato: 0,                // 1 se lo stato viene dalla fattoria 2D
+    migrato: 0,                // >0 se lo stato viene dalla fattoria 2D: il numero della conversione che l'ha fatto (motore/migra.js, MIGRAZIONE)
     magazzino: {},             // pezzi pagati e non ancora messi: { campo: 1 }
     tagliati: [],              // i numeri degli alberi abbattuti
     ostacoli: [],              // gli id (le celle) dei sassi e dei cespugli tolti
@@ -129,6 +131,7 @@ export function normalizza(letto) {
     s.vecchi = Object.keys(s.lotti).filter(id => diverso(0, id))
     s.vecchi1 = []
   }
+  s.addobbi = cassettoInForma(letto.addobbi)
   s.casa = casaInForma(letto.casa)       // le bestie di casa (assenti prima del giro G6, senza cambiare versione): uno stato di prima non ne ha
   for (const [id, v] of Object.entries(oggetto(letto.pesca))) {
     if (!lottoPerId(id) || !v || typeof v !== 'object' || !Number.isInteger(v.i) || !Number.isInteger(v.j)) continue
@@ -136,7 +139,7 @@ export function normalizza(letto) {
     if (fine !== null || riposo !== null) s.pesca[id] = { i: v.i, j: v.j, fine, riposo }
   }
   for (const [k, n] of Object.entries(oggetto(letto.daRegalare)).slice(0, 400)) if (typeof k === 'string' && k.length <= 64 && numero(n) >= 1) s.daRegalare[k] = Math.min(9999, Math.floor(n))
-  s.migrato = letto.migrato === 1 ? 1 : 0
+  s.migrato = Number.isInteger(letto.migrato) && letto.migrato > 0 ? Math.min(99, letto.migrato) : 0
   s.strade = Array.isArray(letto.strade) ? letto.strade.filter(Number.isInteger) : []
   for (const [k, n] of Object.entries(oggetto(letto.magazzino))) if (numero(n) > 0) s.magazzino[k] = numero(n)
   s.tagliati = Array.isArray(letto.tagliati) ? letto.tagliati.filter(Number.isInteger) : []

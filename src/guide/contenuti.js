@@ -384,7 +384,7 @@ export const GUIDE = [
       'Il file contiene i nomi dei bambini e cosa hanno giocato. È roba tua: non mandarlo in giro più di quanto serve.',
       { titolo: 'Cosa vedo io di tuo figlio: niente', chiuso: true, testo: [
         'Non c\'è un server dall\'altra parte, quindi non è una promessa di non guardare: **non c\'è proprio niente da guardare**. Nessuna statistica parte da qui, nessun nome, nessun risultato, nessun indirizzo. Il gioco non chiede permessi al telefono, non usa la fotocamera né la posizione, e l\'unica volta che tocca la rete è per vedere se c\'è una versione nuova di sé stesso — tranne gli amici, spenti finché non li accendi tu: cosa passa di lì, e per quanto, sta nella guida «Gli amici».',
-        'L\'unica cosa che esce di qui è quella che decidi tu di mandare: il modulo di segnalazione, che porta la versione del gioco e l\'ultimo inciampo — e se hai acceso i giudizi sulle domande, quelle che hai segnato. Si vedono prima di mandarle.',
+        'L\'unica cosa che esce di qui è quella che decidi tu di mandare: il modulo di segnalazione, che porta la versione del gioco e l\'ultimo inciampo, o gli inciampi che mandi tu con «Invia» — e se hai acceso i giudizi sulle domande, quelle che hai segnato. Si vedono prima di mandarle.',
       ] },
       { titolo: 'Dove stanno davvero', chiuso: true, testo: [
         'Nella memoria del browser di questo dispositivo (IndexedDB), sotto il nome del sito da cui il gioco è stato aperto. Vuol dire due cose che è meglio sapere prima: **il gioco installato dall\'icona e la stessa pagina aperta da un altro indirizzo non condividono niente**, e «cancella i dati del sito» dalle impostazioni del browser porta via tutto — è l\'unico gesto, fuori dal gioco, che lo può fare.',
@@ -535,6 +535,7 @@ export const AIUTI = {
         '**Tocca 🌱 Semina**, scegli cosa far crescere, poi **tocca i campi vuoti**. Lo stesso con **✂️ Raccogli** sui campi pronti: puoi anche passare il dito su più campi.',
         '**Tieni il dito premuto** su un posto libero del tuo terreno: si apre «Costruisci qui». Anche il tasto 🏗 fa lo stesso.',
         '**Tieni premuto** su una cosa già messa per **spostarla**: la porti dove vuoi, oppure sulla scritta in basso per metterla via nel magazzino (rimetterla fuori è gratis).',
+        '**Un tocco** su Watson o su un gatto: fa la festa. **Tieni premuto** sopra di lui: vedi come sta, cosa gli serve e puoi cambiargli il nome.',
       ] },
       { titolo: 'Le prime cose da fare', righe: [
         'Semina il grano, aspetta qualche secondo, raccoglilo. Niente marcisce mai: se ti dimentichi un campo, lo trovi lì.',

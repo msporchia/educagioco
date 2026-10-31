@@ -25,11 +25,12 @@ lana) e uno stato suo, e non tocca quelli della fattoria di sempre; le monete so
 - [laghi.md](laghi.md) — i laghetti (biomi), gli stagni e i laghetti che costruisce il bambino, l'acqua, i ponti, il disegno, e dove la pesca si aggancia
 - [geografia-e-pesca.md](geografia-e-pesca.md) — il mare a ovest e i laghi grandi a est (forme continue fra lotti), i salvataggi di prima che tengono i loro lotti, il molo, il porticciolo, i banchi di pesce, i pesciolini a istanze, il pesce, friggitoria e sushi bar, i livelli 17 e 18
 - [bestie-di-casa.md](bestie-di-casa.md) — le bestie che si comprano e si curano (beagle, gatto rosso, coniglio, pappagallo): numeri della 2D, bisogni, ciotola, coccole, premio, battesimo, sposta, la veterinaria; il rapporto con i compagni gratis
+- [addobbi.md](addobbi.md) — vestire le bestie (anche Watson e i gatti): i dodici addobbi della 2D tutti in vendita, comprare è mettere, il cassetto, gli agganci su ogni corpo, «Che eleganza»
 - [compagni.md](compagni.md) — Watson e i gatti che girano per la fattoria, il contadino nuovo: quando arrivano, come sono fatti, come si muovono
 - [guardaroba.md](guardaroba.md) — cambiare abito al contadino o alla contadina: il genere dal profilo, i capi e gli sblocchi, il salvataggio, come si aggiunge un pezzo
 - [rotazione.md](rotazione.md) — ruotare i pezzi e gli edifici: `rot` 0–3 nello stato, l'ingombro e il davanti che seguono, il tasto ↻ col secondo dito
 - [decorazioni.md](decorazioni.md) — le 206 decorazioni della 2D portate in 3D (verde, fiori, recinti e cartelli, raccolto, case e lampioni, arredo, acqua, bestiole, feste e fiera): le schede nuove del menu, gli id, le eccezioni, l'acqua e la fiera, il peso misurato e cosa manca
-- [stagioni.md](stagioni.md) — Halloween e Natale come nella 2D (stesse finestre, `#stagione=`): cielo e luci, fiocchi, chiazze, addobbi sugli edifici, le zucche da comprare; il peso
+- [stagioni.md](stagioni.md) — Halloween e Natale come nella 2D (stesse finestre, `#stagione=`): cielo e luci, fiocchi, la neve sul prato e su ciò che guarda in alto, il ghiaccio, i ghiaccioli, il fiato, addobbi sugli edifici, le zucche e il pupazzo da comprare; il peso
 - [guida.md](guida.md) — il `?`, il primo giro (la riga e l'anello), «E adesso?» e il consiglio col tasto sotto un «non si può»
 - [scena.md](scena.md) — il disegno: i moduli di `scena3d/`, il dito, costruire trascinando, le opzioni di qualità e il peso
 - [istanze.md](istanze.md) — i banchi di istanze (campi, pezzi fermi), il LOD dei compagni, l'ombra agganciata alla griglia; **come si aggiunge un pezzo istanziato**

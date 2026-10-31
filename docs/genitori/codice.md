@@ -24,6 +24,9 @@ Gli altri cheat dell'indirizzo e la pagina `#admin` stanno in
 - **Dal profilo dei bambini c'è una seconda porta, per una cosa sola**:
   «＋ aggiungi un bambino» chiede questo codice e poi apre l'aggiunta
   (`chiediDopoIlCodice`, [../core/home.md](../core/home.md#il-profilo)).
+- **Dalla lista degli amici, un'altra**: «＋ Aggiungi un amico» chiede il
+  codice e apre la pagina del codice breve (`chiediDopoIlCodice('amico')`,
+  [../core/amici.md](../core/amici.md)); chiusa, si torna ai giochi.
 - **Sbagliare costa un'attesa**: 3 s, poi 10, poi 30, col tastierino spento
   e una barretta che si riempie (`segnaSbaglio`/`attesa`, `ATTESE`). Il
   conto sta nel modulo, non in un `ref` della schermata, se no uscire e

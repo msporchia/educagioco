@@ -16,7 +16,7 @@ import { inGrassetto } from '../guide/aiuto.js'
 import SceltaAspetto from '../components/SceltaAspetto.vue'
 import { leggiPin, scriviPin, azzeraPin, PIN_INIZIALE, DOMANDA, rispostaGiusta, cosaDopoIlCodice,
          segnaSbaglio, azzeraSbagli, attesa } from '../store/pin.js'
-import { leggi as leggiIncidenti, dimentica as scordaIncidenti, ripara } from '../incidenti.js'
+import { leggi as leggiIncidenti, dimentica as scordaIncidenti, ripara, testoDaMandare } from '../incidenti.js'
 import { giudiziAccesi, accendiGiudizi, leggi as leggiGiudizi,
          dimentica as svuotaGiudizi, riga as rigaGiudizio,
          pacco as paccoGiudizi, verdettoDi } from '../store/giudizi.js'
@@ -34,6 +34,7 @@ import Prova from '../quiz/Prova.vue'
 import ComeVa from '../quiz/ComeVa.vue'
 import ArchivioGenitori from '../components/genitori/Archivio.vue'
 import CartaAmici from '../components/amici/CartaAmici.vue'
+import AggiungiAmico from '../components/amici/AggiungiAmico.vue'
 import GiochiImpostazioni from '../components/genitori/Giochi.vue'
 import Nascita from '../components/genitori/Nascita.vue'
 import { ultima as ultimaCopia, leggiCopia, segnaCopia, giorniDaUltima, statoCopia } from '../store/copia.js'
@@ -116,13 +117,22 @@ function quando (iso) {
 }
 
 async function copiaGuasti () {
-  const testo = incidenti.value.map(g =>
-    `${g.quando} · ${g.dove} · ${g.versione}\n${g.testo}\n${g.pila || (g.dettagli || []).join('\n')}`).join('\n\n')
+  const testo = testoDaMandare(incidenti.value, __VERSIONE__.id)
   try {
     await navigator.clipboard.writeText(testo)
     esito.value = { ok: true, testo: 'Copiato negli appunti.' }
   } catch (e) {
     esito.value = { ok: false, testo: 'Non si riesce a copiare: si legge da qui.' }
+  }
+}
+
+// sul telefono il foglio «condividi» (WhatsApp, posta…): il testo intero, che nell'indirizzo del modulo non ci sta
+const siCondivide = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+async function inviaGuasti () {
+  try {
+    await navigator.share({ title: 'Ultimi inciampi di Educagioco', text: testoDaMandare(incidenti.value, __VERSIONE__.id) })
+  } catch (e) {
+    if (e?.name !== 'AbortError') copiaGuasti()      // chiuso il foglio senza scegliere: niente da dire
   }
 }
 
@@ -420,8 +430,13 @@ function apriElimina(g) { chiudiTutto(); eliminando.value = g.id }
 // il bambino nuovo apre il wizard del primo avvio e finisce entrando in
 // partita con lui; il codice non si richiede due volte
 function apriAggiungi() { chiudiTutto(); aggiungendo.value = true }
-// dal profilo si arriva qui per aggiungere un bambino: entrati col codice, si apre quello
-watch(dentro, d => { if (d && cosaDopoIlCodice() === 'aggiungi') apriAggiungi() })
+// dal profilo si arriva qui per aggiungere un bambino, dalla lista degli amici per aggiungere un amico: entrati col codice, si apre quello
+const aggiungendoAmico = ref(false)
+watch(dentro, d => {
+  const cosa = d ? cosaDopoIlCodice() : null
+  if (cosa === 'aggiungi') apriAggiungi()
+  else if (cosa === 'amico') aggiungendoAmico.value = true
+})
 onUnmounted(cosaDopoIlCodice)
 function fattoIlBambino() {
   aggiungendo.value = false
@@ -512,6 +527,9 @@ async function rimetti(v) {
   <!-- il bambino nuovo: la stessa schermata del primo avvio, a tutto schermo -->
   <Benvenuto v-if="aggiungendo" :primo="false"
              @fatto="fattoIlBambino" @lasciaStare="aggiungendo = false" />
+
+  <!-- un amico nuovo, chiesto dalla lista degli amici: fatto, si torna ai giochi (docs/core/amici.md) -->
+  <AggiungiAmico v-else-if="aggiungendoAmico" @chiudi="$emit('vai','home')" />
 
   <div v-else class="schermo pulito">
     <Barra titolo="Impostazioni" :audio="false" @indietro="$emit('vai','home')" />
@@ -861,6 +879,8 @@ async function rimetti(v) {
               </li>
             </ul>
             <div class="riga">
+              <button v-if="siCondivide" class="bottone" data-azione="invia-guasti" @click="inviaGuasti">
+                Invia</button>
               <button class="bottone chiaro" data-azione="copia-guasti" @click="copiaGuasti">
                 Copia</button>
               <button class="bottone chiaro" data-azione="scorda-guasti" @click="scordaGuasti">

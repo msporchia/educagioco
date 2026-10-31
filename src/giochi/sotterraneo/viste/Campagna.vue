@@ -1,6 +1,6 @@
 <script setup>
 // Le discese sulla terra di sopra (viste/Terra.vue): riceve le tappe già decise, sceglie solo dove andare. La
-// discesa lasciata a metà sta in cima; scenderne un'altra avverte invece di buttare la partita in silenzio.
+// discesa lasciata a metà sta in cima (nel 3D no: vedi tocca); scenderne un'altra avverte invece di buttare la partita in silenzio.
 import { riprendiSeChiesta } from '../../ripresa.js'
 import { ref, computed, defineAsyncComponent } from 'vue'
 import Terra from './Terra.vue'
@@ -79,8 +79,12 @@ const statoSopra = () => (terraEl.value && terraEl.value.statoSopra ? terraEl.va
 const salvaSopra = () => { if (terraEl.value && terraEl.value.salvaSopra) terraEl.value.salvaSopra() }
 defineExpose({ toccoDaFuori, apriDiario, vaDaMercante, apriPalco, dopoLoScontro, statoSopra, salvaSopra })
 
+// nel 3D niente carta in cima: si torna giù dal gemello o dall'ingresso dello stesso dungeon (docs/sotterraneo/portale-e-sosta.md)
+const dellaSosta = t => !!props.ripresa && (t.chiave ? t.chiave === props.ripresa.chiave : t.indice === props.ripresa.tappa)
+
 function tocca(t) {
   if (!props.ripresa) return emit('gioca', t.indice ?? t.chiave)   // un dungeon nuovo del mondo non ha indice: si scende per chiave
+  if (in3d && dellaSosta(t)) return emit('riprendi')
   chiede.value = t
 }
 
@@ -106,7 +110,7 @@ function comincia() {
            @scontro="v => $emit('scontro', v)" @raccogli="i => $emit('raccogli', i)" @terre="t => $emit('terre', t)">
       <template #scontro><slot name="scontro" /></template>
       <template #sopra>
-        <div v-if="ripresa" class="sot-ripresa" data-ripresa="1">
+        <div v-if="ripresa && !in3d" class="sot-ripresa" data-ripresa="1">
           <p class="sot-dove">
             <!-- la discesa ritagliata dalla mappa: un'emoji non dice quale pozzo -->
             <img v-if="ripresa.immagine" class="sot-ritaglio" :src="ripresa.immagine" alt="" data-ritaglio>
@@ -145,9 +149,10 @@ function comincia() {
           Se cominci <b>{{ chiede.nome }}</b> lasci perdere quella che avevi in sospeso:
           quello che hai addosso e nello zaino resta tuo, ma quella discesa ricomincia da capo.
         </p>
+        <!-- nel 3D il no non riporta giù: si resta dove si è -->
         <button class="sot-grosso" data-azione="riprendi-invece"
-                @click="chiede = null; $emit('riprendi')">
-          no, torno a quella di prima
+                @click="chiede = null; in3d || $emit('riprendi')">
+          {{ in3d ? 'no, non adesso' : 'no, torno a quella di prima' }}
         </button>
         <button class="sot-grosso sot-chiaro" data-azione="comincia" @click="comincia">
           va bene, comincio {{ chiede.nome.toLowerCase() }}

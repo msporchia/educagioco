@@ -42,7 +42,7 @@ const props = defineProps({
   abisso: { type: Object, default: null },
   eroe: { type: Object, required: true },
   mondo: { type: Object, default: null },     // { nebbia, dove, giro, pietre, parlato, divieti, novita } dell'avventura, o null la prima volta
-  giaScesa: { type: Number, default: null },
+  giaScesa: { type: [Number, String], default: null },   // la tappa della sosta: l'indice, o la chiave per i sei nuovi
   portale: { type: Object, default: null },   // la sosta lasciata dal portale: { tappa, nome, piano, immagine }
   roba: { type: Object, default: null },
   missioni: { type: Object, default: () => ({}) },
@@ -524,7 +524,8 @@ const fumettoDati = computed(() => {
     const lv = livelloDi(t), dettoCol = colore === 'arancio' && lv ? null : DETTI_DEL_COLORE[colore] || null
     return { tipo: 'posto', nome: d.d.nome, dritta: d.abisso ? 'dicono che non abbia fondo' : (t && t.dritta) || '', aperto: d.aperto, tappa: d.abisso ? null : t,
              fondo: d.abisso && props.abisso ? props.abisso.fondo : 0, storia: rigaStoria(t), prese: t ? presePer(props.missioni, t.chiave) : [],
-             livello: lv, detto: dettoCol, colore, perche: d.aperto ? null : chiusaPerche(d) }
+             livello: lv, detto: dettoCol, colore, perche: d.aperto ? null : chiusaPerche(d),
+             sosta: props.giaScesa != null && (d.abisso ? !!props.abisso && props.abisso.indice === props.giaScesa : !!t && (t.indice ?? t.chiave) === props.giaScesa) }
   }
   // la pietra del villaggio riporta anche ai villaggi delle terre già viste (docs/sotterraneo/terre-successive.md, «Il viaggio indietro»)
   if (b.ruolo === 'pietra') return { tipo: 'pietra', nome: nomeDellaPietra(b.k), mete: meteDelViaggio(m, b.k, [...accese.value]),

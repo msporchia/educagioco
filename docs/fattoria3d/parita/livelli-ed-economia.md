@@ -56,7 +56,7 @@ La 2D ha **un pozzo con molti rubinetti**; la 3D ne ha pochi, e tutti una tantum
 | L18 | spostare / mettere via | 🪙1 | ✅ | – |
 | L19 | **bestie di casa**, cibo, coccole | 7 bestie 🪙75–120, cibo 5–14, coccole 1 | ✅ le 4 che non sono compagni gratis, stessi prezzi e livelli (🪙75–120), cibo 5–14, coccole 🪙1; la spesa conta come esperienza ([../bestie-di-casa.md](../bestie-di-casa.md)) | – |
 | L20 | **decorazioni** | 217 voci da 🪙3 a 🪙95 | ✅ tutte e 217 (11 dei primi giri + 130 del G8 + 76 del G9: fiori, arredo, acqua, albero di Natale e fiera), stessi prezzo e livello via `VOCE`; non spostano la scala; **i livelli senza niente di nuovo sono 0** (erano 18; 22 sulla lettura del giro G8) ([../decorazioni.md](../decorazioni.md)) | – |
-| L21 | addobbi | 🪙6–24 | ❌ | P2 |
+| L21 | addobbi | 🪙6–24 | ✅ gli stessi ([../addobbi.md](../addobbi.md)) | – |
 
 Il rischio per il metro: se un bambino spende le monete in pochi giorni e poi non c'è altro, la 3D smette di essere «il posto dove
 si spendono» e le monete degli esercizi non hanno più uno scopo. Con la 2D a 70 livelli un bambino ha un obiettivo per mesi.

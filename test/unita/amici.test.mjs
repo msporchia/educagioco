@@ -5,6 +5,8 @@ import { leggi, presento, invito, risposta, qui, via } from '../../src/amici/mes
 import { Ponte } from '../../src/amici/rete.js'
 import { creaCodice, riscattaCodice } from '../../src/amici/rete.js'
 import { stato, avvia, ferma, invita, rispondi, diciGioco, aggiungiPonte, togliPonte, DURATA_INVITO } from '../../src/amici/servizio.js'
+import { chiediIngresso, ingresso } from '../../src/amici/ingresso.js'
+import { usaSfida } from '../../src/insieme/sfida.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const pausa = ms => new Promise(r => setTimeout(r, ms))
@@ -208,4 +210,18 @@ const ultimo = () => Finto.tutti[Finto.tutti.length - 1]
   controlla('«mi vedono online» spento: nessun collegamento', Finto.tutti.length === 0 && stato.acceso === false)
   await mettiOnline(true); await accendi(false)
 }
-riassunto('amici: archivio, messaggi, collegamento e motore')
+/* ── «Gioca» dalla lista degli amici: il gioco si apre sulla sala, con l'amico già scelto e senza entrare in nessun tavolo ── */
+{
+  let mostrata = 0
+  const sfida = usaSfida({ gioco: 'arena', regola: () => null, alVia: () => {}, mostra: () => { mostrata++ } })
+  chiediIngresso('sotterraneo3d', { amico: K1 })
+  sfida.daInvito()
+  controlla('un ingresso di un altro gioco non si tocca', mostrata === 0 && sfida.scelto.value === '' && ingresso.value?.gioco === 'sotterraneo3d')
+  chiediIngresso('arena', { amico: K1 })
+  sfida.daInvito()
+  controlla('il gioco giusto mostra la sala, con l\'amico scelto', mostrata === 1 && sfida.scelto.value === K1 && ingresso.value === null)
+  controlla('e resta sulle scelte: nessun tavolo, nessun codice', sfida.fase.value === 'scelta' && !sfida.regia.value && sfida.codice.value === '')
+  sfida.apri()
+  controlla('riaperta la sala dal gioco, l\'amico di prima non è più scelto', sfida.scelto.value === '')
+}
+riassunto('amici: archivio, messaggi, collegamento motore e «Gioca» dalla lista')

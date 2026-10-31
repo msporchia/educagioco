@@ -325,7 +325,8 @@ class Calendario extends Modulo {
     return sorte.forse(0.5) ? this.contaStessoMese(sorte) : this.contaFraGiorni(sorte)
   }
 
-  contaStessoMese(sorte) { // oggi è [giorno] [numero]. che giorno della settimana è il [altro numero]?
+  // era «Oggi è venerdì 25. Che giorno della settimana è il 2?»: si legge anche come il 2 del mese dopo, che non si può contare senza sapere quanti giorni ha questo. Il verbo (era/sarà) e «di questo mese» lasciano una lettura sola.
+  contaStessoMese(sorte) {
     const partenza = sorte.fra(0, 6)
     const numero1 = sorte.fra(1, 27)
     let numero2 = sorte.fra(1, 28)
@@ -334,7 +335,7 @@ class Calendario extends Modulo {
     const { giusto, falsi } = propostiErroriGiorno(partenza, delta, sorte)
 
     return domanda({
-      testo: `Oggi è ${GIORNI[partenza]} ${numero1}. Che giorno della settimana è il ${numero2}?`,
+      testo: `Oggi è ${GIORNI[partenza]} ${numero1}. Che giorno della settimana ${delta < 0 ? 'era' : 'sarà'} il ${numero2} di questo mese?`,
       buona: testo(GIORNI[giusto]),
       falsi,
       chiave: 'cal:conta-giorni',

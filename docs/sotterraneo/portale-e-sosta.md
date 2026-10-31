@@ -44,11 +44,19 @@ una strada per salire e tornare giù, la ✕ è andare via.
   stessa sosta; il gemello se ne va con la sosta, quando la discesa finisce o
   con «lascio perdere». L'abisso risalito per stasera (svenimenti finiti: si è
   portati su) conta come portale: è sopra, con la strada per tornare giù.
+- **Nel 3D la carta in cima non c'è**: il mondo ha già la sua meta da seguire e
+  il gemello per tornare, e la carta proponeva di tornare giù a ogni salita.
+  La sosta resta (la scelta dell'eroe dice «a metà», «riprendi da qui» in home
+  la riprende): sopra si torna giù dal gemello o toccando l'ingresso dello
+  stesso dungeon, il cui fumetto dice «riprendo da dove ero»
+  (`[data-azione="scendi"][data-sosta]`). Un altro dungeon avverte col foglio
+  di sempre, ma il suo no («no, non adesso») resta sopra invece di riportare
+  giù (`Campagna.vue`, `tocca`).
 - **«Lascio perdere questa discesa»** è l'unico modo di salire al villaggio senza
   portale: dal ⏸ in discesa (il velo ha, accanto a «esco», «lascio perdere
   questa discesa» e «scelgo un altro eroe»), dalla scala che sale del primo
   piano (stesso foglio: [scala-che-sale.md](scala-che-sale.md)) e dalla carta
-  in cima alla terra di sopra. Un foglio (`viste/LascioPerdere.vue`,
+  in cima alla terra di sopra (solo nel 2D). Un foglio (`viste/LascioPerdere.vue`,
   `[data-lascio-perdere]`) dice prima la frase, la stessa nei tre posti: la roba che hai addosso e nello
   zaino resta tua, ma la discesa ricomincia da capo, la prossima volta. In
   discesa si risale subito sulla terra di sopra (la roba e le missioni fatte

@@ -96,15 +96,28 @@ await b.waitForFunction(() => /1 online/.test(document.querySelector('[data-azio
 await a.click('[data-azione="amici"]')
 await a.waitForSelector('[data-amici] [data-amico]', { timeout: 5000 })
 controlla('nella lista c\'è il nome dell\'amico, online', /melody/i.test(await a.locator('[data-amici]').innerText()))
-await a.click('[data-azione="chiudi-amici"]')
 
-/* ── uno invita l'altro a Castle Battle ── */
-await scegli(a, 'arena'); await a.waitForSelector('.ar-mappa', { timeout: 8000 })
-await a.locator('[data-sfida-apri]').click()
-await a.waitForSelector('[data-sfida-amici]', { timeout: 5000 })
-const amicoA = a.locator('[data-sfida] button[data-amico]').first()
-controlla('c\'è l\'amico, pronto da invitare', await amicoA.isEnabled())
-await amicoA.click()
+/* ── «Aggiungi un amico» dalla lista: prima il codice dei grandi, poi la pagina del codice breve ── */
+await a.click('[data-azione="amici-aggiungi"]')
+await a.waitForSelector('.tastierino', { timeout: 5000 })
+controlla('«Aggiungi un amico» chiede prima il codice dei grandi', await a.locator('[data-aggiungi-amico]').count() === 0)
+await digita(a, '0000')
+await a.waitForSelector('[data-aggiungi-amico]', { timeout: 8000 })
+await a.click('[data-azione="amici-ho-codice"]')
+await a.waitForSelector('[data-amici-codice-input]', { timeout: 5000 })
+controlla('dentro, si scrive il codice ricevuto (a metà non si aggiunge)', await a.locator('[data-azione="amici-riscatta"]').isDisabled())
+await a.click('button[aria-label="indietro"]')
+await a.waitForSelector('[data-azione="amici"]', { timeout: 5000 })
+controlla('indietro si torna ai giochi, non nelle impostazioni', await a.locator('.tastierino').count() === 0 && await a.locator('[data-aggiungi-amico]').count() === 0)
+
+/* ── uno invita l'altro a Castle Battle, dalla lista: «Gioca», il gioco, e la sala parte con l'amico già scelto ── */
+await a.click('[data-azione="amici"]')
+await a.waitForSelector('[data-amici] [data-amico-gioca]', { timeout: 15000 })
+await a.click('[data-amici] [data-amico-gioca]')
+await a.click('[data-amici] [data-amico-gioco="arena"]')
+await a.waitForSelector('[data-sfida] [data-terreno]', { timeout: 8000 })
+controlla('si apre la sala di Castle Battle già sull\'amico da sfidare', /Sfidi melody/i.test(await a.locator('[data-sfida]').innerText()) &&
+  /Invita melody/i.test(await a.locator('[data-sfida-vai]').innerText()))
 await a.locator('[data-terreno="palude"]').click()
 await a.locator('[data-sfida-vai]').click()
 await a.waitForSelector('[data-sfida-invitato]', { timeout: 15000 })

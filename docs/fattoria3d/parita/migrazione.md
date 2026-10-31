@@ -19,21 +19,32 @@ prova `test/unita/fattoria3d-migra.test.mjs` (fattorie 2D vere a ogni livello, `
 | 2D | 3D |
 |---|---|
 | `orto` (campo) | `campo` (uno è già in mappa, gli altri nel magazzino) |
-| macchine: mulino, fienile, panificio, caseificio, telaio, zuccherificio, gelateria, sartoria, tintoria, friggitoria, sushi bar | lo stesso edificio, nel magazzino, **uno per tipo**; i doppioni sono «da regalare» |
+| macchine: mulino, fienile, panificio, caseificio, telaio, zuccherificio, gelateria, sartoria, tintoria, friggitoria, sushi bar, pentolone | lo stesso edificio, nel magazzino, **uno per tipo**. I **posti della fila comprati** (in mappa `fila`, messe via `fileRiposte`) e **ogni copia in più** diventano posti della sua fila, fino a sei; le copie che non ci stanno sono «da regalare» |
 | `pastificio` · `cucina` | `pasticceria` · `conserviera` (gli id 3D sono quelli dei salvataggi; la `pasticceria` 2D è una bottega e non c'entra) |
 | `mongolfiera` · `mercato` · `carretto_mercato` | `mongolfiera` · `bancarella` · `trattore` |
-| `ovile` · `pollaio` · `stalla` | `recinto` · `pollaio` · `stalla` (anche più d'uno) |
-| fontane, pozzi, stagno, laghetto, ponte, panchine, tavoli, spaventapasseri | il decoro 3D omonimo (`fontana`, `pozzo`, `stagno`, `laghetto`, `ponte`, `panchina`, `tavolo`, `spaventapasseri`) |
-| tutta la categoria `fiori` (vasi, fioriere, prati fioriti…) | `aiuola` |
+| i dieci recinti (ovile, pollaio, stalla, porcile, anatre, capre, conigliera, arnie, alpaca, asini) | il recinto 3D dello stesso mestiere (anche più d'uno), con una bestia dentro |
+| `peschiera` | `porticciolo` (uno solo: la pesca ne ha preso il posto allo stesso livello, A1k); le altre copie «da regalare» |
+| le botteghe del paese | la bottega 3D (`bottega_*`) con la sua fama (le consegne fatte) |
+| i silos (`silo`, `silo_bianco`, `dispensa`) | **gli ingrandimenti** (`silos` della 2D → `silo` della 3D, fino a 18 passi); gli edifici li mette la 3D da sé, quanti ne servono ([../magazzini.md](../magazzini.md)) |
+| le 217 decorazioni, le zucche di Halloween | il decoro 3D con lo stesso id (il `recinto` di legno è `recinto_legno`); i fiori e i vasi senza un loro pezzo sono `aiuola` |
 | scorte di raccolti (`carote`, `fieno`…) | `merci` (singolare: `carota`, `erba`…) |
 | scorte di prodotti, uova, latte, pesce | `prodotti`; la lana il contatore `lana` |
-| piazzole comprate oltre le 9 di partenza | 2 lotti ciascuna (36 celle contro 16), i più vicini al quadrato di partenza, solo prato o bosco, sempre confinanti |
+| piazzole comprate | tutta la terra che aveva la 2D in lotti 4×4, col regalo (`lottiPerPiazzole`), i più vicini al quadrato di partenza, solo prato o bosco, sempre confinanti |
 | raccolto maturo in un campo · lavoro finito in una macchina | la resa nelle scorte; il lavoro non finito rende gli ingredienti |
-| tutto il resto (conigliera, porcile, anatre, capre, arnie, alpaca, asini, peschiera, pentolone, silos, alberi, sassi, case, recinti, feste…) · scorte senza equivalente (miele, tartufi — in 3D è la pancetta, un'altra merce: le scorte si perdono, decisione del 22/10/2026 —, concime, merenda, mangime del cane…) · addobbi · bestie di casa | **`daRegalare`** |
+| bestie di casa: beagle, coniglio, pappagallo, gatto rosso · bobtail, gatto bianco e nero, gatto nero | in `casa`, col nome, i bisogni a metà; le ultime tre sono i compagni gratis (Watson, Sherlock, Pepe) e portano il nome che avevano |
+| i tartufi (in 3D è la pancetta, un'altra merce: le scorte si perdono, decisione del 22/10/2026) · gli addobbi delle bestie | **`daRegalare`** |
 
-`daRegalare` è un conto `{ 'cosa:ovile': 1, 'scorta:miele': 4, 'addobbo:cappello': 2, 'bestia:cane-bobtail': 1, 'terra': 2 }`: serve a regalare
-la cosa quando il suo modello arriva (G4–G6), non vale monete e non si spende. Lo stato porta anche `migrato: 1`. Non si portano: i
-piazzamenti, gli ordini aperti al banco, le botteghe e il volo in corso, i nomi e i bisogni delle bestie di casa (i compagni 3D arrivano col livello).
+`daRegalare` è un conto `{ 'scorta:tartufi': 4, 'addobbo:cappello': 2, 'cosa:caseificio': 1 }`: non vale monete e non si spende. **Si consegna da
+sé**: all'apertura, uno stato con `migrato` più vecchio di `MIGRAZIONE` passa da `ritoccaLaConversione`, che mette nel magazzino, nelle scorte o
+in casa tutto quello che nel frattempo ha un equivalente; il resto aspetta. Lo stato porta `migrato: MIGRAZIONE` (oggi 2). Non si portano, e non
+c'è niente di pagato dentro: i piazzamenti, gli ordini aperti al banco e ai banconi (il premio arriva alla consegna), il volo in corso (ogni cassa
+è già pagata quando la si riempie).
+
+**Una conversione nuova** (un equivalente in più, una cosa che prima non si portava) alza `MIGRAZIONE`: chi era stato convertito prima si ritocca
+all'apertura. `ritoccaLaConversione` rilegge la 2D (che non si tocca mai) e prende il più alto fra quello che ha e quello che la 2D gli darebbe
+oggi, per i silos e i posti della fila; le cose «da regalare» le consegna. Con `MIGRAZIONE` 2 sono arrivati gli ingrandimenti dei silos, i posti
+della fila e le copie delle macchine, le zucche, la peschiera, e tutto ciò che i giri G4–G6 hanno portato (recinti, scorte, bestie) a chi era
+stato convertito prima.
 
 ## Il livello (1 a 1 dal 22/10/2026, D2)
 
@@ -45,10 +56,10 @@ Fatto: `livelloPerProporzione` è l'identità (70 livelli uguali). La terra è t
 
 ## L'aggancio
 
-`statoDaCaricare(leggi)` sta nello stesso file; `leggi` è `scelta` di `src/giochi/campagne.js`. Manca solo di chiamarla dove la 3D legge il suo stato
-la prima volta, `onMounted` di `src/giochi/fattoria3d/Gioco.vue`:
-`new Fattoria3d({ stato: statoDaCaricare(scelta), borsa })` al posto di `scelta(CHIAVE, 'stato', null)`. Quando la 3D salva, il suo stato
-sostituisce la conversione. «Ricomincia la fattoria» (G1b, ora in Giochi › Avanzate, [../../genitori/giochi.md](../../genitori/giochi.md)) azzera anche `fattoria3d`, o la conversione tornerebbe a ogni avvio.
+`statoDaCaricare(leggi)` (`leggi` è `scelta` di `src/giochi/campagne.js`) è quello che `onMounted` di `src/giochi/fattoria3d/Gioco.vue` passa al
+motore: lo stato della 3D se c'è (ritoccato se viene da una conversione vecchia), se no la conversione della 2D. Quando la 3D salva, il suo stato
+sostituisce la conversione. «Ricomincia la fattoria» (Giochi › Avanzate, [../../genitori/giochi.md](../../genitori/giochi.md)) azzera anche
+`fattoria3d`, o la conversione tornerebbe a ogni avvio.
 
 ## Rifare la conversione (cheat)
 
@@ -59,5 +70,7 @@ bambino non ha una 2D da portare, il gioco lo dice con un avviso e non butta nie
 ## Da fare
 
 - Provarla su un salvataggio vero esportato (non solo sulle fattorie tipo).
-- L'aggancio in `Gioco.vue` (un altro agente ci lavora) e una riga «la tua fattoria è arrivata» per i bambini, da proporre (D16).
-- Dare la `daRegalare` quando i modelli arrivano (G4–G6); mostrarla ai genitori nel quadro.
+- I posti della fila comprati per un **recinto** 2D non si portano: in 3D un recinto non ha fila ma bestie da comprare dentro, e un recinto nel
+  magazzino non tiene bestie. Da decidere se diventano bestie in più quando il recinto si posa.
+- Gli addobbi arrivano quando la 3D li avrà: allora si alza `MIGRAZIONE` e `consegnaIlDovuto` impara la voce `addobbo:`.
+- Mostrare la `daRegalare` ai genitori nel quadro; la riga «la tua fattoria è arrivata» per i bambini, da proporre (D16).

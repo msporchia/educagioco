@@ -37,7 +37,7 @@ dipendenze e il servizio è un Worker di Cloudflare (Socket.IO e Colyseus voglio
 | `incontro.js` | dal tavolo alla fine: la trattativa (versione, proposta), il lockstep, gli stati per lo schermo, le frasi | gli schermi, il gioco (gli dà una `regola`) |
 | `schermo.js` | tiene lo schermo acceso mentre si gioca (Wake Lock; dove non c'è, niente) | |
 | `sfida.js` | `usaSfida`: la sfida vista da un gioco: crea, entra col codice, invita un amico (e l'invito che arriva), l'incontro dalla sala alla partita, il cartello della linea dopo 1,5 s, il libretto dei guasti | il gioco (gli dà `regola`, `alVia`, `mostra`) |
-| `SalaSfida.vue` | la sala: crea / entra / invita, il codice da dire, l'attesa, cosa è andato storto | le scelte di chi crea (slot `scelte`) |
+| `SalaSfida.vue` | la sala: crea / entra / invita, il codice da dire, l'attesa, cosa è andato storto; con `scelto` (un amico scelto dalla lista degli amici) parte su «Sfidi …» | le scelte di chi crea (slot `scelte`) |
 | `CartelloLinea.vue` | sopra la partita: «hai perso la linea», «l'altro ha perso la linea», la sfida finita col perché | |
 | `grafo.js` | la fotografia di uno stato qualunque (`fotoDi`, `rimettiDa`): le Map, i Set, gli array tipizzati, le classi dal nome e gli oggetti che stanno in due posti, che il JSON perde; le funzioni no (il caso si rimette dal suo stato) | il gioco |
 
@@ -122,12 +122,14 @@ Rete, cadute, trattativa, sala e cartello non si riscrivono. Il gioco dà:
 3. **La schermata**: `const sfida = usaSfida({ gioco, regola, alVia, mostra })`; `<SalaSfida>` con le sue scelte nello slot
    `scelte` (le classi `ins-scelte`, `ins-scelta`, `ins-scelta-su`, `ins-nota` danno i tasti di tutti); nel battito
    `sfida.avanza(dt)` invece di avanzare la partita; le mosse con `sfida.regia.value.scegli(mossa)`; `<CartelloLinea>` sopra il
-   campo; `sfida.daInvito()` quando il gioco si apre; `sfida.chiudi()` uscendo. Uno contro l'altro niente pausa, sosta, stelle, e le domande
+   campo; `sfida.daInvito()` quando il gioco si apre (anche «Gioca» dalla lista degli amici: la sala vuole `:scelto="sfida.scelto.value"`); `sfida.chiudi()` uscendo. Uno contro l'altro niente pausa, sosta, stelle, e le domande
    `svelta` ([../apprendimento/la-domanda.md](../apprendimento/la-domanda.md)); quello che si legge mentre il campo corre (prezzi,
    menu) si rifà a ogni giro. Insieme, contro il gioco, chi risponde può stare al riparo mentre l'altro va avanti: il progetto del
    sotterraneo in due ([../sotterraneo/in-due.md](../sotterraneo/in-due.md)), che chiede anche all'incontro di portare la parte
    dell'ospite (il suo eroe).
 4. **L'invito degli amici**: una voce in `src/amici/giochi.js` (`valida` per i dati che porta l'invito, oltre al codice).
+   Chi invita aspetta la risposta 45 s (`ATTESA_INVITO` in `sfida.js`); quell'attesa si spegne appena l'amico è al tavolo, se no
+   chiudeva la partita a metà (`unita/insieme-invito`).
 5. **I bambini finti** per le prove e il banco: `test/aiuto/sfide/<gioco>.mjs` (`regola({ firma, ruolo })`, `scelte(seme)`,
    `muovi(ruolo, incontro, caso)`) e la sua riga in `sfide/index.mjs`. Ci sono Castle Battle e il sotterraneo.
 

@@ -11,7 +11,7 @@ Le voci aperte tecniche. Una riga ciascuna, e quando una si chiude si toglie. Qu
 - **Il secondo cortile non è visto in scena né giocato** ([cortile-2.md](cortile-2.md)): conigliera, alpaca, asini e apiario sono guardati solo dal catalogo 3D e in node; da giudicare a distanza di gioco il gomitolo e la nuvola d'angora, il favo dell'arnia e il peso coi quattro recinti pieni; `compitiScaldo` (`pezzi.js`) non li conosce ancora.
 - **Le bestie in più dentro un recinto non esistono in 2D.** Una 3D con 6 galline in parallelo produce più di un pollaio 2D (che lavora una ricetta alla volta): parità non decisa, i prezzi delle bestie restano 3D.
 - **Il `mangime` del mulino** (cibo di cane e gatto) lo mangiano le bestie di casa (G6, [bestie-di-casa.md](bestie-di-casa.md)) e lo chiede la veterinaria; i compagni gratis (Watson, i gatti) non mangiano.
-- **Le bestie di casa non sono viste dal vero.** Guardate nel catalogo 3D e provate col dito su desktop, non dalla camera di serie su un telefono (corpi, foglio a 360 px). Costumi e addobbi (A13, L21) rimandati a prima di Natale, come modelli sostituiti.
+- **Le bestie di casa non sono viste dal vero.** Guardate nel catalogo 3D e provate col dito su desktop, non dalla camera di serie su un telefono (corpi, foglio a 360 px). Gli addobbi ci sono ([addobbi.md](addobbi.md)), visti solo nel catalogo 3D.
 - **Giocare i prezzi delle bestie.** Pecora 20 (+10), gallina 15 (+8), mucca 30 (+15) sono scelti sul metro di
   [calibrazione.md](../apprendimento/calibrazione.md) e sul prezzo del pezzo, non ancora giocati; i fogli ridisegnati
   (macchine, banco, livelli) non sono stati visti su uno schermo da 360 px.
@@ -35,7 +35,6 @@ Le voci aperte tecniche. Una riga ciascuna, e quando una si chiude si toglie. Qu
 - Spostata in [parita/](parita/README.md) (A1k).
 - **Gli amici e i vicini non conoscono `geo`.** Lo snapshot di una fattoria non dice se ha la geografia grande: la fattoria di un amico con lotti nelle zone del mare o dei laghi si vede com'era prima ([geografia-e-pesca.md](geografia-e-pesca.md)); un villaggio col molo è facoltativo e non c'è. Il cartello «🌊 mare» sui lotti e le dune della spiaggia (ci sono sabbia e canne, non dune) non sono visti da un bambino.
 - **Il mondo senza confini non è stato visto sul telefono né provato col dito**: provato in Chrome senza schermo (dev server) e nei test unitari; `integrazione/fattoria3d` è aggiornato (`lottiComprabili()`, `strada` è una mappa) ma non eseguito. Da guardare: il peso della finestra 9×9 (alberi e ciuffi), il laghetto a 360 px, un ponte attraversato dal vero, la lontananza (camera libera a 30 celle).
-- Spostata in [parita/](parita/README.md) (A13).
 - **three e il gruppo `mate`.** Nel sito spezzato three è nel gruppo degli Asteroidi: chi non l'ha ancora scaricato lo
   prende a richiesta alla prima apertura. Se pesa si sposta in un gruppo condiviso.
 - Spostata in [parita/](parita/README.md) (I26).
