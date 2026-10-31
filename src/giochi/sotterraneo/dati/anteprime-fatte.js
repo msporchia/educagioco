@@ -7,7 +7,7 @@
 */
 
 export const FIRMA = 'd3db8b832537'
-export const SORGENTI = 'bb3bba49cb56'
+export const SORGENTI = 'd06200868795'
 export const SENZA = []
 
 export const ANTEPRIME = {
