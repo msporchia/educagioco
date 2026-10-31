@@ -1311,7 +1311,7 @@ watch(giro, g => { if (mostri && g !== mostri.stato.giro) { mostri.giro(g); foto
         <b v-else-if="segnoSopra(b)" class="sot-tre-punti sot-segno-missione" :class="'sot-segno-' + segnoSopra(b)">{{ GLIFO[segnoSopra(b)] }}</b>
         <span v-if="b.ruolo === 'mercante' && trovati.has(b.chiave) && richiamo(b.k)" class="sot-richiamo" data-richiamo :data-richiamo-di="curaDi(b.k).risorsa">{{ richiamo(b.k) }}</span>
         <span v-else-if="b.ruolo === 'fontana' && trovati.has(b.chiave) && !(aperto && aperto.chiave === b.chiave) && curaDellaFontana(forze).serve" class="sot-richiamo" data-richiamo data-richiamo-di="fontana">{{ FONTANA.richiamo }}</span>
-        <!-- chi è arrivato a questa discesa: i pallini ai piedi dell'ingresso, i nomi nel fumetto -->
+        <!-- chi è arrivato a questa discesa: i pallini accanto all'ingresso, i nomi nel fumetto -->
         <span v-if="amiciDi(b).length" class="sot-amici-posto" data-amici-posto :data-al="nodoDi(b)">
           <PallinoAmico v-for="a in amiciDi(b)" :key="a.chiave" :amico="a" :lato="14" data-pallino-amico />
         </span>

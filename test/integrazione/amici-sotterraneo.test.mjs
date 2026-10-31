@@ -1,4 +1,4 @@
-/* Gli amici nel mondo di sopra del Sotterraneo, dalla loro bacheca (docs/core/amici-nei-giochi.md): ai piedi dell'ingresso di ogni
+/* Gli amici nel mondo di sopra del Sotterraneo, dalla loro bacheca (docs/core/amici-nei-giochi.md): accanto all'ingresso di ogni
    discesa il pallino di chi è arrivato lì e il suo nome nel fumetto, sull'abisso chi ha finito le sette; in cima chi è da raggiungere.
    Il gioco non ha una sfida senza fine: niente record. Gli amici sono già salvati sul telefono e il servizio non risponde: niente
    deve rompersi. I pallini stanno nel DOM anche dove la nebbia copre ancora l'ingresso (si vedono quando è trovato): per guardarli
@@ -46,13 +46,13 @@ async function apriIlFumetto(al) {
   await attendi(page, 300)
 }
 const pallini = al => page.locator(`[data-amici-posto][data-al="${al}"] [data-pallino-amico]`).count()
-// i pallini stanno ai piedi dell'ingresso (sotto il suo rettangolo), non altrove sul mondo
+// i pallini stanno accanto all'ingresso, in basso a destra del suo rettangolo (non sotto, dove sta l'eroe), non altrove sul mondo
 async function aiPiedi(al) {
   const k = await davantiA(al)
   await attendi(page, 1500)   // la telecamera segue l'eroe morbida: si misura a scena ferma
   const d = await page.locator(`[data-amici-posto][data-al="${al}"]`).boundingBox(), p = await page.locator(`[data-posto="${k}"]`).boundingBox()
-  controlla(`i pallini della discesa ${al} stanno ai piedi del suo ingresso`,
-    !!d && !!p && d.x + d.width / 2 > p.x && d.x + d.width / 2 < p.x + p.width && d.y >= p.y + p.height - 1 && d.y < p.y + p.height + 12,
+  controlla(`i pallini della discesa ${al} stanno accanto al suo ingresso, in basso a destra`,
+    !!d && !!p && d.x >= p.x + p.width - 1 && d.x < p.x + p.width + 12 && Math.abs(d.y + d.height - (p.y + p.height)) < 3,
     JSON.stringify({ d, p }))
   controlla(`e si vedono (l'ingresso ${k} è trovato)`, await page.locator(`[data-amici-posto][data-al="${al}"]`).isVisible())
 }
