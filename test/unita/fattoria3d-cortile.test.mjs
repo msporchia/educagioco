@@ -4,8 +4,8 @@
    il prodotto in vista solo da pronte). Senza browser. Docs: docs/fattoria3d/cortile-e-pentolone.md, parita/colture-e-catena.md (C18, C23), parita/animali.md (A1d–A1f).
    `node test/esegui.mjs fattoria3d-cortile`
    tempo: 1 */
-import { PRODOTTI, RICETTE as RICETTE_2D } from '../../src/giochi/fattoria/dati/coltivazioni.js'
-import { PEZZI as ATLANTE } from '../../src/giochi/fattoria/dati/atlante.js'
+import { PRODOTTI, RICETTE as RICETTE_2D } from '../../src/giochi/fattoria3d/da2d/dati/coltivazioni.js'
+import { PEZZI as ATLANTE } from '../../src/grafica/atlante-fattoria.js'
 import { PEZZI, EDIFICI, guastiDelCatalogo } from '../../src/giochi/fattoria3d/dati/catalogo.js'
 import { COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { RICETTE, MACCHINE, guastiDelleRicette } from '../../src/giochi/fattoria3d/dati/ricette.js'

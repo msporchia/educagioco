@@ -1,15 +1,15 @@
 /* La parità della fattoria 3D con quella di sempre (giro G3, decisioni del 22/10/2026 in docs/fattoria3d/parita/decisioni.md): stessi livelli (70),
    stessi prezzi, stessi tempi in minuti, il costo 🪙1–2 per gesto di raccolta e di lavorazione, i silos con gli scomparti da 8 ingrandibili, la terra
    che costa come in 2D cella per cella, un fienile solo, e i salvataggi di prima che si portano sulla scala nuova senza perdere niente.
-   Si confronta VOCE PER VOCE con i dati della 2D (src/giochi/fattoria/dati/): se la 2D cambia un numero, qui si rompe e dice quale.
+   Si confronta VOCE PER VOCE con i dati della 2D (src/giochi/fattoria3d/da2d/dati/): se la 2D cambia un numero, qui si rompe e dice quale.
    `node test/esegui.mjs fattoria3d-parita`
    tempo: 1 */
-import * as D from '../../src/giochi/fattoria/dati/catalogo.js'
-import { COLTURE as COLTURE_2D, RICETTE as RICETTE_2D, PRODOTTI as PRODOTTI_2D, MINUTO, SCOMPARTO_BASE, SCOMPARTO_PIU, costoIngrandimento } from '../../src/giochi/fattoria/dati/coltivazioni.js'
-import { ULTIMO as ULTIMO_2D, sogliaDi as sogliaDi2D, livelloDellaVoce, livelloDellaRicetta as livelloRicetta2D } from '../../src/giochi/fattoria/dati/livelli.js'
-import { ANIMALI as ANIMALI_2D } from '../../src/giochi/fattoria/dati/animali.js'
-import { RIPOSO_MIN, premioPer as premioPer2D } from '../../src/giochi/fattoria/dati/mercato.js'
-import { CIELO_VUOTO_MIN } from '../../src/giochi/fattoria/dati/mongolfiera.js'
+import * as D from '../../src/giochi/fattoria3d/da2d/dati/catalogo.js'
+import { COLTURE as COLTURE_2D, RICETTE as RICETTE_2D, PRODOTTI as PRODOTTI_2D, MINUTO, SCOMPARTO_BASE, SCOMPARTO_PIU, costoIngrandimento } from '../../src/giochi/fattoria3d/da2d/dati/coltivazioni.js'
+import { ULTIMO as ULTIMO_2D, sogliaDi as sogliaDi2D, livelloDellaVoce, livelloDellaRicetta as livelloRicetta2D } from '../../src/giochi/fattoria3d/da2d/dati/livelli.js'
+import { ANIMALI as ANIMALI_2D } from '../../src/giochi/fattoria3d/da2d/dati/animali.js'
+import { RIPOSO_MIN, premioPer as premioPer2D } from '../../src/giochi/fattoria3d/da2d/dati/mercato.js'
+import { CIELO_VUOTO_MIN } from '../../src/giochi/fattoria3d/da2d/dati/mongolfiera.js'
 import { PEZZI, EDIFICI } from '../../src/giochi/fattoria3d/dati/catalogo.js'
 import { COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { RICETTE } from '../../src/giochi/fattoria3d/dati/ricette.js'

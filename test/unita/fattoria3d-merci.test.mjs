@@ -2,8 +2,8 @@
    di una merce 2D (`PRODOTTI`) anche il nome e il pezzo sono gli stessi; le ricette in comune hanno gli stessi ingredienti e le stesse
    quantità: nessuna ricetta è adattata. Vedi docs/fattoria3d/merci-e-ricette.md. `node test/esegui.mjs fattoria3d-merci`
    tempo: 1 */
-import { PEZZI } from '../../src/giochi/fattoria/dati/atlante.js'
-import { PRODOTTI, RICETTE as RICETTE_2D, COLTURE as COLTURE_2D, profonditaDi } from '../../src/giochi/fattoria/dati/coltivazioni.js'
+import { PEZZI } from '../../src/grafica/atlante-fattoria.js'
+import { PRODOTTI, RICETTE as RICETTE_2D, COLTURE as COLTURE_2D, profonditaDi } from '../../src/giochi/fattoria3d/da2d/dati/coltivazioni.js'
 import { COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { RICETTE, MACCHINE, merceDi, pezzoDi, emojiDi, MERCI_VECCHIE } from '../../src/giochi/fattoria3d/dati/ricette.js'
 import { PRODOTTI_ANIMALI, LANA, ANIMALI } from '../../src/giochi/fattoria3d/dati/animali.js'

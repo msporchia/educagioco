@@ -8,7 +8,7 @@ const ctx = new Proxy({}, { get: (_, k) => k === 'canvas' ? {} : () => {}, set: 
 globalThis.document = { createElement: () => ({ width: 0, height: 0, getContext: () => ctx }) }
 const THREE = await import('three')
 const S = await import('../../src/giochi/fattoria3d/dati/stagioni3d.js')
-const D2 = await import('../../src/giochi/fattoria/dati/stagioni.js')
+const D2 = await import('../../src/giochi/fattoria3d/da2d/dati/stagioni.js')
 const { Stagione } = await import('../../src/giochi/fattoria3d/scena3d/stagione.js')
 const { Pezzi } = await import('../../src/giochi/fattoria3d/scena3d/pezzi.js')
 const { Fattoria3d } = await import('../../src/giochi/fattoria3d/motore/fattoria3d.js')

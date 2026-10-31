@@ -11,13 +11,13 @@
    tempo: 1
    ═══════════════════════════════════════════════════════════════════ */
 import { ADDOBBI, PER_ID, staA, addobbiPer, guastiDegliAddobbi3d, cassettoInForma } from '../../src/giochi/fattoria3d/dati/addobbi.js'
-import { ADDOBBI as ADDOBBI_2D } from '../../src/giochi/fattoria/dati/addobbi.js'
+import { ADDOBBI as ADDOBBI_2D } from '../../src/giochi/fattoria3d/da2d/dati/addobbi.js'
 import { ADDOBBI_DISEGNATI, AGGANCI } from '../../src/giochi/fattoria3d/scena3d/modelli-addobbi.js'
 import { sogliaDi } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { statoIniziale, normalizza } from '../../src/giochi/fattoria3d/motore/stato.js'
 import { statoDa2D, ritoccaLaConversione, MIGRAZIONE } from '../../src/giochi/fattoria3d/motore/migra.js'
-import { Fattoria } from '../../src/giochi/fattoria/motore/fattoria.js'
+import { Fattoria } from '../../src/giochi/fattoria3d/da2d/motore/fattoria.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const ORA = 1_000_000_000_000

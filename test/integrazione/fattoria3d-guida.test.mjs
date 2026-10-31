@@ -37,7 +37,7 @@ await attendi(page, 1200)
 controlla('il ? c\'è nella barra', await page.locator('[data-azione="aiuto"]').count() === 1)
 await toccaEl('[data-azione="aiuto"]')
 await page.waitForSelector('[data-azione="chiudi-aiuto"]')
-controlla('il foglio parla della fattoria 3D', /fattoria 3D/i.test(await page.locator('body').innerText()))
+controlla('il foglio è la guida della fattoria', /il contadino cammina da solo/i.test(await page.locator('body').innerText()))
 await toccaEl('[data-azione="chiudi-aiuto"]')
 await attendi(page, 300)
 

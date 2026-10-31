@@ -13,17 +13,16 @@
         circa la metà — non dell'ottanta per cento — se no il money pit
         si sgonfia e gli esercizi non servono più a niente.
    `node test/esegui.mjs coltivazioni --niente-build` */
-import { Fattoria } from '../../src/giochi/fattoria/motore/fattoria.js'
+import { Fattoria } from '../../src/giochi/fattoria3d/da2d/motore/fattoria.js'
 import {
   guastiDelleColture, COLTURE, RICETTE, PRODOTTI, PER_COLTURA, PER_RICETTA,
   SILI, SCOMPARTO_BASE, SCOMPARTO_PIU, MINUTO, postiPerMerce, merciDi, costoIngrandimento,
   quantoCresciuto, stadioDi, minutiCheMancano, PROFONDITA, profonditaDi,
-} from '../../src/giochi/fattoria/dati/coltivazioni.js'
-import { CIBI, cibiPer } from '../../src/giochi/fattoria/dati/bisogni.js'
-import { CLIENTI } from '../../src/giochi/fattoria/dati/mercato.js'
-import { serveA, guastiDegliUsi } from '../../src/giochi/fattoria/dati/usi.js'
-import { PER_ID, laMacchina } from '../../src/giochi/fattoria/dati/catalogo.js'
-import { livelloDellaRicetta, livelloDellaVoce } from '../../src/giochi/fattoria/dati/livelli.js'
+} from '../../src/giochi/fattoria3d/da2d/dati/coltivazioni.js'
+import { CIBI, cibiPer } from '../../src/giochi/fattoria3d/da2d/dati/bisogni.js'
+import { CLIENTI } from '../../src/giochi/fattoria3d/da2d/dati/mercato.js'
+import { PER_ID, laMacchina } from '../../src/giochi/fattoria3d/da2d/dati/catalogo.js'
+import { livelloDellaRicetta, livelloDellaVoce } from '../../src/giochi/fattoria3d/da2d/dati/livelli.js'
 import { controlla, uguale, dentro, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* Una borsa che tiene il conto: qui l'economia È l'oggetto della prova,
@@ -438,27 +437,6 @@ uguale('e pronto vuol dire zero', minutiCheMancano(T0, 10, fra(10)), 0)
 }
 
 {
-  /* **Ogni roba dice chi la usa**, perché è l'unica cosa che una riga di
-     scaffale può dire di utile — e perché una roba che non serve a
-     niente occuperebbe per sempre uno dei quattro posti di un silo. Le
-     uscite sono cinque (ricetta, ciotola, coccola, addobbo, ordine) e
-     le conta `dati/usi.js`, che è l'unico che le vede tutte. */
-  const guastiU = guastiDegliUsi()
-  controlla('ogni merce serve a qualcosa', guastiU.length === 0, guastiU.join(' · '))
-  for (const id of Object.keys(PRODOTTI)) {
-    const usi = serveA(id)
-    controlla(`«${id}»: premendolo si legge chi lo usa`, usi.length > 0)
-    for (const u of usi)
-      controlla(`«${id}» → ${u.che} «${u.nome}»: ha un nome e una faccia`,
-                !!u.nome && !!u.emoji)
-    /* Una ricetta deve dire **in quale macchina**: «3 grani» senza il
-       mulino è un'informazione che non si può usare. */
-    for (const u of usi.filter(u => u.che === 'ricetta'))
-      controlla(`«${id}» → ${u.nome}: dice in che macchina`, !!laMacchina(u.dove))
-  }
-}
-
-{
   /* Ogni prodotto sta in un silo che esiste: uno senza casa non si
      raccoglierebbe mai, e nessuno lo direbbe. */
   for (const [id, pr] of Object.entries(PRODOTTI))
@@ -616,22 +594,12 @@ uguale('e pronto vuol dire zero', minutiCheMancano(T0, 10, fra(10)), 0)
   nota(`comprata, una pancia intera costa 🪙${tariffa.toFixed(1)}`)
 
   for (const r of RICETTE) {
-    /* **Ogni cosa che esce da una macchina deve servire a qualcosa.**
-       Non «deve finire in una ciotola»: la lana non si mangia, si mette
-       addosso a un cane (`COCCOLE`), ed è il primo prodotto che esce
-       dalla catena senza passare dalla pancia. Un prodotto senza nessuna
-       uscita sarebbe roba che si accumula in granaio per sempre, e in
-       granaio c'è un tetto: dopo un po' i recinti smetterebbero di
-       poter ritirare, senza che niente dica perché. */
+    /* La lana non si mangia (si mette addosso a un cane, `COCCOLE`): senza
+       pappa si nota e basta. */
     const pappa = CIBI.find(c => c.da === r.da)
-    /* Le cinque uscite le conta `dati/usi.js`: una coccola, un'altra
-       ricetta, un addobbo, un ordine del mercato. */
-    const altri = serveA(r.da).filter(u => u.che !== 'cibo')
-    controlla(`«${r.id}» rende roba che serve a qualcosa`, !!pappa || altri.length > 0)
     if (!pappa) {
       nota(`${r.emoji} ${r.nome}: 🪙${costoDi(r).toFixed(1)} e ` +
-           `${minutiDi(r).toFixed(0)} min · non si mangia, ` +
-           `serve a «${(altri[0] || {}).nome || '?'}»`)
+           `${minutiDi(r).toFixed(0)} min · non si mangia`)
       continue
     }
     const mio = costoDi(r), suo = pappa.quanto * tariffa

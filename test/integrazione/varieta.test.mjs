@@ -56,7 +56,7 @@ controlla('Survivors dice quanto resta a metà',
           /a metà · ancora 15′/.test(await salvadanaio('survivors').innerText()),
           await salvadanaio('survivors').innerText())
 uguale('un gioco non ancora aperto oggi non dice niente', await segno('codice'), null)
-uguale('la fattoria non paga, e non ha salvadanaio', await segno('fattoria'), null)
+uguale('la fattoria non paga, e non ha salvadanaio', await segno('fattoria3d'), null)
 await scatto(page, 'varieta-home')
 
 /* ── 2. niente da regolare ──

@@ -5,7 +5,7 @@
    i confronti. `npm run tara:fattoria3d` stampa la tabella. `node test/esegui.mjs fattoria3d-taratura`
    tempo: 1 */
 import { sogliaDi, ULTIMO, SCARTO_DELLA_PESCA } from '../../src/giochi/fattoria3d/dati/livelli.js'
-import { sogliaDi as sogliaDi2D } from '../../src/giochi/fattoria/dati/livelli.js'
+import { sogliaDi as sogliaDi2D } from '../../src/giochi/fattoria3d/da2d/dati/livelli.js'
 import { COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { RICETTE } from '../../src/giochi/fattoria3d/dati/ricette.js'
 import { PEZZI } from '../../src/giochi/fattoria3d/dati/catalogo.js'

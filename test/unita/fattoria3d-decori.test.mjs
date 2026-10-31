@@ -4,8 +4,8 @@
    «da bello» e non è una decorazione sta in una lista col perché. L'acqua (ninfee, canne, mulino), la fiera (non si compra) e l'albero di Natale (solo in stagione). Senza browser. `node test/esegui.mjs fattoria3d-decori`
    tempo: 1 */
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
-import { CATEGORIE as CATEGORIE_2D, PER_ID as VOCI_2D } from '../../src/giochi/fattoria/dati/catalogo.js'
-import { livelloDellaVoce } from '../../src/giochi/fattoria/dati/livelli.js'
+import { CATEGORIE as CATEGORIE_2D, PER_ID as VOCI_2D } from '../../src/giochi/fattoria3d/da2d/dati/catalogo.js'
+import { livelloDellaVoce } from '../../src/giochi/fattoria3d/da2d/dati/livelli.js'
 
 const ctx = new Proxy({}, { get: (_, k) => k === 'canvas' ? {} : () => {}, set: () => true })
 globalThis.document = { createElement: () => ({ width: 0, height: 0, getContext: () => ctx }) }

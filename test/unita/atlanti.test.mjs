@@ -20,7 +20,7 @@
    riceva quello che si aspetta di ricevere.
 */
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
-import * as FATTORIA from '../../src/giochi/fattoria/dati/atlante.js'
+import * as FATTORIA from '../../src/grafica/atlante-fattoria.js'
 import * as SOTTERRANEO from '../../src/giochi/sotterraneo/dati/atlante.js'
 
 const ATLANTI = [['fattoria', FATTORIA], ['sotterraneo', SOTTERRANEO]]

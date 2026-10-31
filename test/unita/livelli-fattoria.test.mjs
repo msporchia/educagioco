@@ -16,16 +16,16 @@
         se no si insegue un bersaglio che si sposta;
      5. **cambiare le soglie non fa scendere nessuno**.
    `node test/esegui.mjs livelli-fattoria --niente-build` */
-import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria/motore/fattoria.js'
+import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria3d/da2d/motore/fattoria.js'
 import {
   guastiDeiLivelli, ULTIMO, DECORI_PER_LIVELLO, livelloPer, sogliaDi, avanzamento,
   roba, vuoto, livelloDellaVoce, livelloDellaScheda, zonaDi, premiDi,
   costoDelLivello, livelloVecchioPer, SOGLIA_B, SOGLIE_ORA,
-} from '../../src/giochi/fattoria/dati/livelli.js'
+} from '../../src/giochi/fattoria3d/da2d/dati/livelli.js'
 import { CATALOGO, CATEGORIE, PER_ID, prezzoDellaVoce }
-  from '../../src/giochi/fattoria/dati/catalogo.js'
-import { COLTURE } from '../../src/giochi/fattoria/dati/coltivazioni.js'
-import { ANIMALI } from '../../src/giochi/fattoria/dati/animali.js'
+  from '../../src/giochi/fattoria3d/da2d/dati/catalogo.js'
+import { COLTURE } from '../../src/giochi/fattoria3d/da2d/dati/coltivazioni.js'
+import { ANIMALI } from '../../src/giochi/fattoria3d/da2d/dati/animali.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* ══════════ 1. le soglie stanno in piedi ══════════ */
