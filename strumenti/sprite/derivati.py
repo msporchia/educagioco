@@ -17,10 +17,14 @@ REPO = atlante.REPO
 SORGENTI = atlante.SORGENTI
 
 
-def tessere_di(sorgente):
-    """Le tessere di un foglio sorgente (`sotterraneo/generati/sotterraneo_6.png`), come le ritaglia atlante.py."""
+def tessere_di(sorgente, tabella='sprite'):
+    """Le tessere di un foglio sorgente (`sotterraneo/generati/sotterraneo_6.png`), come le ritaglia atlante.py. `tabella`: un'altra
+    tabella di ritagli del foglietto al posto di `sprite` (`per_i_derivati`: i pezzi che servono solo a un derivato, e che atlante.py
+    non mette nell'atlante)."""
     f = SORGENTI / sorgente
     fg = json.loads(f.with_suffix('.json').read_text())
+    if tabella != 'sprite':
+        fg = {**fg, 'sprite': fg[tabella]}
     fg['_file'] = str(f)
     im = atlante.pulisci(atlante.alla_misura_vera(atlante.senza_alone(Image.open(f).convert('RGBA'), fg), fg), fg)
     r, pv, fa, tr, an = {}, {}, {}, {}, {}

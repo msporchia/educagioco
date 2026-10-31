@@ -11,13 +11,13 @@ import { guastiDeiRelitti } from './relitti.js'
 export const SCENARI = {
   cantine: {
     colori: { roccia: '#25201d' },
-    // la porta non dice cosa c'è dietro: semplice, ferrata o di legno chiaro a caso, e solo la stanza del grosso ha la sua più bella (docs/sotterraneo/piani.md, «Le porte»)
+    // la porta non dice cosa c'è dietro: semplice, ferrata o di legno chiaro a caso, e solo la stanza del grosso ha la sua più bella (docs/sotterraneo/piani.md, «Le porte»);
+    // aperta non si disegna (scena3d/cose.js), e la fonte è modellata (scena3d/fontana.js): niente sprite per loro
     porte: {
-      davanti: { semplice: 'cantine-porta-semplice', ferro: 'cantine-porta-ferro', chiara: 'cantine-porta-chiara', bella: 'porta-nera-teschio', aperta: 'cantine-porta-aperta' },
-      fianco: { semplice: 'cantine-fianco-semplice', ferro: 'cantine-fianco-ferro', chiara: 'cantine-fianco-chiara', bella: 'cantine-fianco-teschio', aperta: 'cantine-fianco-aperta' },
+      davanti: { semplice: 'cantine-porta-semplice', ferro: 'cantine-porta-ferro', chiara: 'cantine-porta-chiara', bella: 'porta-nera-teschio' },
+      fianco: { semplice: 'cantine-fianco-semplice', ferro: 'cantine-fianco-ferro', chiara: 'cantine-fianco-chiara', bella: 'cantine-fianco-teschio' },
     },
     scala: { aperta: 'cantine-scala-aperta', chiusa: 'cantine-scala-chiusa' },
-    fontana: { piena: 'cantine-fontana-piena', asciutta: 'cantine-fontana-asciutta' },   // bevuta resta lì, asciutta
     // i forzieri del posto (docs/sotterraneo/roba.md): legno e ferro, pietra e ferro freddo, ferro e brace; il d'oro è solo quello delle missioni
     forzieri: ['cantine-forziere-a', 'cantine-forziere-b', 'cantine-forziere-c', 'cantine-forziere-d'],
     orpelli: ORPELLI.cantine,   // l'arredo: cosa c'è, dove sta, quanto è epico (dati/orpelli.js)
@@ -26,11 +26,10 @@ export const SCENARI = {
   cripta: {
     colori: { roccia: '#14181b' },
     porte: {
-      davanti: { semplice: 'cripta-porta-semplice', ferro: 'cripta-porta-ferro', chiara: 'cripta-porta-chiara', bella: 'porta-nera-teschio', aperta: 'cripta-porta-aperta' },
-      fianco: { semplice: 'cripta-fianco-semplice', ferro: 'cripta-fianco-ferro', chiara: 'cripta-fianco-chiara', bella: 'cripta-fianco-teschio', aperta: 'cripta-fianco-aperta' },
+      davanti: { semplice: 'cripta-porta-semplice', ferro: 'cripta-porta-ferro', chiara: 'cripta-porta-chiara', bella: 'porta-nera-teschio' },
+      fianco: { semplice: 'cripta-fianco-semplice', ferro: 'cripta-fianco-ferro', chiara: 'cripta-fianco-chiara', bella: 'cripta-fianco-teschio' },
     },
     scala: { aperta: 'cripta-scala-aperta', chiusa: 'cripta-scala-chiusa' },
-    fontana: { piena: 'cripta-fontana-piena', asciutta: 'cripta-fontana-asciutta' },
     forzieri: ['cripta-forziere', 'forziere-scuro-chiuso', 'cripta-forziere-b'],
     orpelli: ORPELLI.cripta,
   },
@@ -38,11 +37,10 @@ export const SCENARI = {
   fornace: {
     colori: { roccia: '#1b1312' },
     porte: {
-      davanti: { semplice: 'fornace-porta-semplice', ferro: 'fornace-porta-ferro', chiara: 'fornace-porta-chiara', bella: 'fornace-porta-corna', aperta: 'fornace-porta-aperta' },
-      fianco: { semplice: 'fornace-fianco-semplice', ferro: 'fornace-fianco-ferro', chiara: 'fornace-fianco-chiara', bella: 'fornace-fianco-corna', aperta: 'fornace-fianco-aperta' },
+      davanti: { semplice: 'fornace-porta-semplice', ferro: 'fornace-porta-ferro', chiara: 'fornace-porta-chiara', bella: 'fornace-porta-corna' },
+      fianco: { semplice: 'fornace-fianco-semplice', ferro: 'fornace-fianco-ferro', chiara: 'fornace-fianco-chiara', bella: 'fornace-fianco-corna' },
     },
     scala: { aperta: 'fornace-scala-aperta', chiusa: 'fornace-scala-chiusa' },
-    fontana: { piena: 'fornace-fontana-piena', asciutta: 'fornace-fontana-asciutta' },
     forzieri: ['fornace-forziere-b', 'fornace-forziere-c'],
     orpelli: ORPELLI.fornace,
   },
@@ -50,11 +48,10 @@ export const SCENARI = {
   inferno: {
     colori: { roccia: '#0d0a0b' },
     porte: {
-      davanti: { semplice: 'inferno-porta-semplice', ferro: 'inferno-porta-ferro', chiara: 'inferno-porta-chiara', bella: 'inferno-porta-bella', aperta: 'inferno-porta-aperta' },
-      fianco: { semplice: 'inferno-fianco-semplice', ferro: 'inferno-fianco-ferro', chiara: 'inferno-fianco-chiara', bella: 'inferno-fianco-bella', aperta: 'inferno-fianco-aperta' },
+      davanti: { semplice: 'inferno-porta-semplice', ferro: 'inferno-porta-ferro', chiara: 'inferno-porta-chiara', bella: 'inferno-porta-bella' },
+      fianco: { semplice: 'inferno-fianco-semplice', ferro: 'inferno-fianco-ferro', chiara: 'inferno-fianco-chiara', bella: 'inferno-fianco-bella' },
     },
     scala: { aperta: 'inferno-scala-aperta', chiusa: 'inferno-scala-chiusa' },
-    fontana: { piena: 'inferno-coppa-lava', asciutta: 'inferno-fontana-asciutta' },
     forzieri: ['fornace-forziere-b', 'fornace-forziere-c'],   // ferro e brace stanno bene anche qui
     orpelli: ORPELLI.inferno,
   },
@@ -78,11 +75,10 @@ export const PEZZO_DI = {
     : typeof r.pelle === 'number' ? sc.forzieri[r.pelle % sc.forzieri.length] : (r.pelle || 'forziere-chiuso')),
   porta: (r, t, sc, { verso = 'davanti' } = {}) => {
     const pelli = sc.porte[verso]
-    return r.aperta ? pelli.aperta : (pelli[r.pelle] || pelli.semplice)
+    return pelli[r.pelle] || pelli.semplice
   },
   gemme: (r, t) => pezzoDelleGemme(r.quante, t),
   curiosita: r => r.pezzo,
-  fonte: (r, t, sc) => (r.morto ? sc.fontana.asciutta : sc.fontana.piena),
 }
 
 // tre o quattro fotogrammi per posa, guardano a destra: la sinistra è la stessa specchiata
@@ -134,7 +130,7 @@ export function guastiDelleTessere(nomi = null) {
     if (!(sc.orpelli || []).some(o => o.epica <= 1 && o.posa !== 'coppia'))
       g.push(`scenario ${k}: nessun orpello da stanza qualunque (epicità 1)`)
     for (const verso of ['davanti', 'fianco'])
-      for (const pelle of ['semplice', 'ferro', 'chiara', 'bella', 'aperta'])
+      for (const pelle of ['semplice', 'ferro', 'chiara', 'bella'])
         if (!(sc.porte && sc.porte[verso] && sc.porte[verso][pelle]))
           g.push(`lo scenario ${k} non ha la porta ${pelle} vista ${verso}`)
   }

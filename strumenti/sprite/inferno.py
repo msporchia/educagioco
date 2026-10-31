@@ -8,12 +8,10 @@ Poi `python3 strumenti/sprite/atlante.py sotterraneo`. Regola «prima in codice,
 un pezzo che manca si ricava da quelli dipinti, e se non regge si fa chiedere al modello. Cosa esce, in pixel di gioco:
 
   inferno-porta-chiara   la porta di legno più chiara
-  inferno-porta-aperta   la stessa con l'anta girata e il buio nell'arco
-  inferno-fianco-*       le stesse viste da sopra in un muro laterale (tavola stretta di 6×20), colori campionati da ogni porta
-  inferno-scala-chiusa   la scala in cornice di pietra chiusa dalla grata col lucchetto
-  inferno-fontana-asciutta  la coppa di lava senza lava
+  inferno-fianco-*       le porte viste da sopra in un muro laterale (tavola stretta di 6×20), colori campionati da ogni porta
+  inferno-scala-chiusa   la scala in cornice di pietra chiusa dalla grata col lucchetto (la grata e il lucchetto stanno in
+                         `per_i_derivati` del foglietto della tavola: nell'atlante non servono)
 """
-import colorsys
 import json
 import sys
 
@@ -42,26 +40,7 @@ def chiara(porta):
     return out
 
 
-def aperta(porta):
-    """L'arco resta, dentro c'è il buio e a sinistra l'anta girata contro lo stipite."""
-    w, h = porta.size
-    out = porta.copy()
-    px = out.load()
-    legno = colore_medio(porta, (w // 3, h // 2, 2 * w // 3, 4 * h // 5))
-    x0, x1, y0, y1 = round(w * 0.24), round(w * 0.76), round(h * 0.30), round(h * 0.92)
-    for y in range(y0, y1):
-        t = (y - y0) / max(1, y1 - y0)
-        for x in range(x0, x1):
-            if px[x, y][3] < 200:
-                continue
-            px[x, y] = (round(18 - 8 * t), round(12 - 6 * t), round(12 - 6 * t), 255)
-    for y in range(y0 + 1, y1):
-        for x in (x0, x0 + 1):
-            px[x, y] = (*legno, 255) if x == x0 else tuple(round(v * 0.72) for v in legno) + (255,)
-    return out
-
-
-def fianco(colore, ferro=False, oro=False, aperto=False):
+def fianco(colore, ferro=False, oro=False):
     """La tavola stretta vista da sopra: una guancia di pietra a sinistra (come le facce vere del posto) e il legno a destra."""
     im = Image.new('RGBA', (6, 20), (0, 0, 0, 0))
     px = im.load()
@@ -80,11 +59,6 @@ def fianco(colore, ferro=False, oro=False, aperto=False):
             px[4, y] = px[5, y] = (92, 92, 98, 255)
     if oro:
         px[4, 5] = px[4, 11] = px[4, 16] = (210, 160, 50, 255)
-    if aperto:
-        for y in range(3, 18):
-            px[4, y] = px[5, y] = (14, 10, 10, 255)
-        for y in range(3, 7):
-            px[4, y] = (*colore, 255)
     return im
 
 
@@ -100,28 +74,12 @@ def scala_chiusa(scala, grata, lucchetto):
     return out
 
 
-def asciutta(coppa):
-    """La lava (rossi, arancioni e gialli saturi) diventa pietra scura del colore della coppa."""
-    out = coppa.copy()
-    px = out.load()
-    for y in range(out.height):
-        for x in range(out.width):
-            r, g, b, a = px[x, y]
-            if a < 200:
-                continue
-            h, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
-            if (h < 0.17 or h > 0.96) and s > 0.55 and v > 0.45:
-                px[x, y] = (round(34 + 14 * (1 - v)), round(26 + 10 * (1 - v)), round(26 + 10 * (1 - v)), 255)
-    return out
-
-
 def costruisci():
     sc = derivati.tessere_di(SCENA)
     ar = derivati.tessere_di(ARREDO)
     p = {}
     semplice = ar['inferno-porta-semplice']
     p['inferno-porta-chiara'] = chiara(semplice)
-    p['inferno-porta-aperta'] = aperta(semplice)
     col = {k: colore_medio(v, (v.width // 3, v.height // 2, 2 * v.width // 3, 4 * v.height // 5))
            for k, v in (('semplice', semplice), ('ferro', sc['inferno-porta-ferro']), ('bella', sc['inferno-porta-bella']),
                         ('chiara', p['inferno-porta-chiara']))}
@@ -129,9 +87,8 @@ def costruisci():
     p['inferno-fianco-ferro'] = fianco(col['ferro'], ferro=True)
     p['inferno-fianco-bella'] = fianco(col['bella'], oro=True)
     p['inferno-fianco-chiara'] = fianco(col['chiara'])
-    p['inferno-fianco-aperta'] = fianco(col['semplice'], aperto=True)
-    p['inferno-scala-chiusa'] = scala_chiusa(ar['inferno-scala-aperta'], ar['inferno-grata'], ar['inferno-lucchetto'])
-    p['inferno-fontana-asciutta'] = asciutta(ar['inferno-coppa-lava'])
+    solo = derivati.tessere_di(ARREDO, 'per_i_derivati')
+    p['inferno-scala-chiusa'] = scala_chiusa(ar['inferno-scala-aperta'], solo['inferno-grata'], solo['inferno-lucchetto'])
     return p
 
 
@@ -154,13 +111,13 @@ def scrivi(pezzi):
     dest = derivati.SORGENTI / 'sotterraneo/generati' / FOGLIO
     foglio.save(dest.with_suffix('.png'), optimize=True)
     nota = ("Il foglietto di sotterraneo_6_derivati.png: i pezzi dell'inferno costruiti in codice da `strumenti/sprite/inferno.py` (il PNG si rifà col comando, non si tocca): "
-            "le porte chiara e aperta, i fianchi, la scala chiusa e la fontana asciutta. "
+            "la porta chiara, i fianchi e la scala chiusa. "
             "Dalla scena sotterraneo_6.png e dalla tavola arredo-inferno.png.")
     foglietto = {
         '__': nota, 'fondo': 'trasparente', 'cella': [1, 1],
-        'famiglie': {'inferno-porta': 'figura', 'inferno-fianco': 'figura', 'inferno-scala': 'figura', 'inferno-fontana': 'figura'},
+        'famiglie': {'inferno-porta': 'figura', 'inferno-fianco': 'figura', 'inferno-scala': 'figura'},
         'trasforma': {'inferno-porta': {'giri': 1}, 'inferno-fianco': {'giri': 1, 'specchia': False},
-                      'inferno-scala': {'giri': 1, 'specchia': False}, 'inferno-fontana': {'giri': 1}},
+                      'inferno-scala': {'giri': 1, 'specchia': False}},
         'sprite': sprite,
     }
     dest.with_suffix('.json').write_text(json.dumps(foglietto, indent=2, ensure_ascii=False) + '\n')

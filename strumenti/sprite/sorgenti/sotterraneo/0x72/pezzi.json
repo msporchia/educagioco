@@ -51,15 +51,6 @@
   "nano-corsa-3": [240, 292, 16, 28],
   "nano-colpito-0": [256, 292, 16, 28],
 
-  "scheletro-fermo-0": [368, 88, 16, 16],
-  "scheletro-fermo-1": [384, 88, 16, 16],
-  "scheletro-fermo-2": [400, 88, 16, 16],
-  "scheletro-fermo-3": [416, 88, 16, 16],
-  "scheletro-corsa-0": [432, 88, 16, 16],
-  "scheletro-corsa-1": [448, 88, 16, 16],
-  "scheletro-corsa-2": [464, 88, 16, 16],
-  "scheletro-corsa-3": [480, 88, 16, 16],
-
   "goblin-fermo-0": [368, 40, 16, 16],
   "goblin-fermo-1": [384, 40, 16, 16],
   "goblin-fermo-2": [400, 40, 16, 16],

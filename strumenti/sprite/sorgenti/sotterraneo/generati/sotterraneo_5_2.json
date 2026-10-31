@@ -6,7 +6,6 @@
     "generatore": "ChatGPT, 2 ottobre 2026",
     "testo": "il prompt dei pezzi che mancano su magenta della scheda (porte di fronte e di fianco, scala chiusa, fontanella asciutta, mercante, pavimento speciale 3×3, sei cose per terra), con le braci, le candele e le monete vietate"
   },
-  "nitido": "scelti",
   "fondo": [
     255,
     0,
@@ -19,8 +18,7 @@
     1
   ],
   "famiglie": {
-    "fornace-porta": "figura",
-    "fornace-mercante": "figura"
+    "fornace-porta": "figura"
   },
   "trasforma": {
     "fornace-porta": {
@@ -33,9 +31,6 @@
     "fornace-scala": {
       "giri": 1,
       "specchia": false
-    },
-    "fornace-mercante": {
-      "giri": 1
     }
   },
   "sprite": {
@@ -95,20 +90,6 @@
         25
       ]
     },
-    "fornace-porta-aperta": {
-      "da": [
-        848,
-        88
-      ],
-      "cella": [
-        128,
-        216
-      ],
-      "misura": [
-        16,
-        27
-      ]
-    },
     "fornace-fianco-semplice": {
       "da": [
         80,
@@ -165,20 +146,6 @@
         20
       ]
     },
-    "fornace-fianco-aperta": {
-      "da": [
-        860,
-        368
-      ],
-      "cella": [
-        72,
-        244
-      ],
-      "misura": [
-        6,
-        20
-      ]
-    },
     "fornace-scala-chiusa": {
       "da": [
         40,
@@ -193,34 +160,6 @@
         17
       ]
     },
-    "fornace-mercante-0": {
-      "da": [
-        474,
-        700
-      ],
-      "cella": [
-        224,
-        196
-      ],
-      "misura": [
-        28,
-        24
-      ]
-    },
-    "fornace-mercante-1": {
-      "da": [
-        750,
-        700
-      ],
-      "cella": [
-        224,
-        196
-      ],
-      "misura": [
-        28,
-        24
-      ]
-    },
     "fornace-fontana-ferro": {
       "da": [
         280,
@@ -233,8 +172,7 @@
       "misura": [
         12,
         19
-      ],
-      "nitido": true
+      ]
     }
   }
 }
