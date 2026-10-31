@@ -65,6 +65,8 @@ export const NOVITA = [
     testo: '⚔️ Nel sotterraneo il tuo eroe sale di livello battendo i mostri: tocca il globo viola per dare i punti! In fondo a ogni discesa ti aspetta un mostro grosso col suo nome, e la roba può essere magica, rara o leggendaria. Le avventure ricominciano da capo.' },
   { id: 32, quando: '2026-10-15', gioco: 'arena',
     testo: '⚔️ Nuovo gioco: Castle Battle! Tocca le piazzole e costruisci caserme di scheletri, mummie, negromanti e draghi, o una miniera per avere più monete. Le tue truppe partono da sole contro il castello nemico, e ogni mossa è un conto a mente: fallo in fretta, il nemico non aspetta! E in cima alla mappa c\'è la battaglia infinita.' },
+  { id: 33, quando: '2026-10-31', gioco: 'fattoria3d',
+    testo: '🚜 La fattoria adesso è in 3D: ritrovi tutta la tua roba nel magazzino, da rimettere dove vuoi.' },
 ]
 
 export const PER_GIOCO = 4
