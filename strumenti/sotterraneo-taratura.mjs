@@ -17,6 +17,7 @@
 //   npm run taratura -- --rifai                   # rifà tutti i checkpoint (di difetto si rifanno da sé quelli che la firma dei sorgenti dice vecchi)
 //   npm run taratura -- --salti                   # i prezzi dei salti per livello e la soglia delle risalite (senza giocare)
 //   npm run taratura -- --tara risalita.acceso=0,risalita.scaffale=0 --riassunto tmp/prima.json   # il giro di prima, salvato; poi `--contro tmp/prima.json` confronta
+//   npm run taratura -- --tara torcia.mostro=0,torcia.caporale=0,torcia.forziere=0   # senza le torce in più dai mostri e dai forzieri
 //   npm run taratura -- --strade armaPrima        # solo quelle strade di spesa (di difetto armaPrima e beveTutto); --semi-strade N le storie per eroe
 //
 // Il caso è dichiarato: `--seme-da N` (di difetto 1) fa le storie N..N+semi−1, due giri danno le stesse cifre. `--processi N` (di difetto 4)
@@ -46,8 +47,9 @@ async function applicaTara(tara) {
   const { RISALITA } = await modulo('dati/giocatori-tipo.js')
   const { CAPORALE } = await modulo('dati/mostri.js')
   const { OSSA_DEL_GRADO, ATT_DEL_GRADO } = await modulo('dati/varianti.js')
-  const { CURE_DAI_MOSTRI } = await modulo('motore/bottino.js')
-  const mani = { caporale: CAPORALE, ossaGrado: OSSA_DEL_GRADO, attGrado: ATT_DEL_GRADO, cure: CURE_DAI_MOSTRI }
+  const { CURE_DAI_MOSTRI, PROBABILITA_TORCIA } = await modulo('motore/bottino.js')
+  // `torcia.forziere=0`: le torce in più che si trovano (docs/sotterraneo/luce.md, «Quante se ne trovano»); su un commit che non le ha, niente
+  const mani = { caporale: CAPORALE, ossaGrado: OSSA_DEL_GRADO, attGrado: ATT_DEL_GRADO, cure: CURE_DAI_MOSTRI, torcia: PROBABILITA_TORCIA || {} }
   for (const voce of (tara || '').split(',').filter(Boolean)) {
     const [k, campo] = voce.split('=')[0].split('.')
     const v = Number(voce.split('=')[1])

@@ -33,6 +33,7 @@
 //   npm run sotterraneo -- --domande             # le domande obbligate per discesa e per piano rispondendo sempre giusto: dritto alla scala e girando tutto, per eroe (il tetto è 85)
 //   npm run sotterraneo -- --costi               # l'energia: globo atteso, costo e lanci col globo pieno per classe e riga
 //   npm run sotterraneo -- --passi               # i passi che il giocatore finto fa davvero per piano e per discesa (dritto e giro), e quanto globo ridanno
+//   npm run sotterraneo -- --luce                # le torce che si trovano senza comprarne: a discesa e da dove, le stanze al buio, dritto e girando
 //   npm run sotterraneo -- --mondo               # il mondo a percorso coi mostri: il curioso dalla pietra all'ingresso di ogni dungeon (per strada e passando dalle tane)
 //   npm run sotterraneo -- --senza-abilita       # il banco di prima: solo attacco, nessun albero
 //   npm run sotterraneo -- --senza-preparati     # il banco senza gli incanti preparati dal campo (resta il mana che torna camminando)
@@ -87,9 +88,45 @@ if (argv[0] === '--lavoro') {
   else if (lavoro.che === 'diag') r = await diagnosi(lavoro.opz)
   else if (lavoro.che === 'strada') r = await strada(lavoro.opz)
   else if (lavoro.che === 'passi') r = await passiFatti(lavoro.opz)
+  else if (lavoro.che === 'luce') r = await luce(lavoro.opz)
   else if (lavoro.che === 'domande') r = await domandeDi(lavoro.opz)
   else if (lavoro.che === 'mondo') r = (await mod('motore/banco-mondo.js')).misuraIlMondo(lavoro.opz)
   console.log(JSON.stringify(r))
+
+  // la luce di chi non compra torce (docs/sotterraneo/luce.md, «Quante se ne trovano»): quante torce trova una discesa, da dove (la cosa
+  // per terra dice `da`: forziere, strada, caporale, grosso; la curiosità le accende senza posarle), le stanze in cui entra e quante al buio,
+  // e quante gliene restano uscendo. Conta dal motore com'è, anche su un commit di prima (`--contro`): la torcia che si accende dalla cintura
+  // non è una trovata
+  async function luce({ eroe, k, semi, come, bravura }) {
+    const { CAMPAGNA } = await mod('dati/campagna.js')
+    const { COSE } = await mod('dati/cose.js')
+    const { Corsa } = await mod('motore/corsa.js')
+    const { robaAttesa, crescitaAttesa } = await mod('motore/storia.js')
+    const n = { torce: 0, forziere: 0, mostro: 0, curiosita: 0, stanze: 0, buio: 0, restano: 0, aperti: 0, mostri: 0, piani: 0, partite: semi }
+    let da = null
+    const trovata = Corsa.prototype.trovata, accendi = Corsa.prototype.accendi, brucia = Corsa.prototype.bruciaLaTorcia
+    const dallaCintura = Corsa.prototype.accendiDallaCintura, curiosita = Corsa.prototype.rispostaCuriosita
+    Corsa.prototype.trovata = function (r) { da = r && COSE[r.cosa] && COSE[r.cosa].usa === 'luce' ? (r.da === 'forziere' ? 'forziere' : r.da ? 'mostro' : 'terra') : null; try { return trovata.apply(this, arguments) } finally { da = null } }
+    Corsa.prototype.accendi = function () { n.torce++; if (da) n[da] = (n[da] || 0) + 1; else if (this._curiosa) n.curiosita++; return accendi.apply(this, arguments) }
+    if (dallaCintura) Corsa.prototype.accendiDallaCintura = function () { const ok = dallaCintura.apply(this, arguments); if (ok) n.torce--; return ok }
+    if (curiosita) Corsa.prototype.rispostaCuriosita = function () { this._curiosa = true; try { return curiosita.apply(this, arguments) } finally { this._curiosa = false } }
+    Corsa.prototype.bruciaLaTorcia = function () {
+      const prima = this.stanzaOra
+      const r = brucia.apply(this, arguments)
+      if (this.stanzaOra !== prima) { n.stanze++; if (!this.torciaAccesa) n.buio++ }
+      return r
+    }
+    for (let s = 0; s < semi; s++) {
+      const g = banco.gioca(CAMPAGNA[k], { seme: 7000 + s * 89 + k * 11, bravura, eroe, roba: robaAttesa(eroe, k), crescita: crescitaAttesa(eroe, k), come })
+      n.restano += (g.corsa.torciaAccesa ? 1 : 0) + g.corsa.torceInScorta
+      // i forzieri aperti e i mostri battuti: da dove le torce possono venire
+      const livelli = new Set([g.corsa.livello, ...[...(g.corsa.piani || new Map()).values()].map(p => p.livello)])
+      for (const L of livelli) n.aperti += L.robe.filter(q => q.che === 'forziere' && q.aperto).length
+      n.mostri += g.esito.mostri || 0
+      n.piani += g.esito.piani || 0
+    }
+    return n
+  }
 
   // le domande obbligate di una discesa rispondendo sempre giusto (la misura di `unita/sotterraneo`, «il minimo sta in una seduta»): dritto
   // alla scala (minimo) e girando tutto, in totale e piano per piano, con la roba e la crescita di chi ci arriva andando dritto; la media di più semi
@@ -414,6 +451,29 @@ async function misura(radice) {
       righe.push({ titolo: `   passi per discesa`, celle: discese.map(k => Math.round(somma(come, k, 'passi') / (OPZ.eroi.length * OPZ.semi))), numeri: true })
     }
     return { intestazione: nomi, titolo: `i passi che il giocatore finto fa davvero (${OPZ.eroi.length * OPZ.semi} partite a discesa, bravura ${OPZ.prove[0] * 10}/10)`, righe, numeri: true }
+  }
+
+  // `--luce`: le torce che si trovano senza comprarne (docs/sotterraneo/luce.md, «Quante se ne trovano»), dritto e girando tutto, con la roba
+  // e il livello attesi e senza torce in tasca: quante a discesa e da dove, le stanze entrate e quante al buio, quante ne restano uscendo
+  if (argv.includes('--luce')) {
+    const lavori = []
+    for (const come of ['minimo', 'tutto']) for (const eroe of OPZ.eroi) for (const k of discese) lavori.push({ ...base, che: 'luce', opz: { eroe, k, semi: OPZ.semi, come, bravura: OPZ.prove[0] }, come, k })
+    const r = await inParallelo(lavori)
+    const somma = (come, k, f) => lavori.reduce((n, l, x) => (l.come === come && l.k === k ? n + (r[x][f] || 0) : n), 0)
+    const part = OPZ.eroi.length * OPZ.semi
+    const a = (come, f) => discese.map(k => +(somma(come, k, f) / part).toFixed(1))
+    const righe = []
+    for (const come of ['minimo', 'tutto']) {
+      righe.push({ titolo: `${come === 'minimo' ? 'dritto' : 'giro'}: torce trovate`, celle: a(come, 'torce'), numeri: true })
+      righe.push({ titolo: '   dai forzieri', celle: a(come, 'forziere'), numeri: true })
+      righe.push({ titolo: '   dai mostri', celle: a(come, 'mostro'), numeri: true })
+      righe.push({ titolo: '   dalle curiosità', celle: a(come, 'curiosita'), numeri: true })
+      righe.push({ titolo: '   stanze entrate', celle: a(come, 'stanze').map(Math.round), numeri: true })
+      righe.push({ titolo: '   al buio (%)', celle: discese.map(k => percento(somma(come, k, 'buio'), somma(come, k, 'stanze') || 1)), numeri: true })
+      righe.push({ titolo: '   torce uscendo', celle: a(come, 'restano'), numeri: true })
+      righe.push({ titolo: '   piani · forzieri aperti · mostri', celle: discese.map((k, i) => `${a(come, 'piani')[i]}·${a(come, 'aperti')[i]}·${Math.round(a(come, 'mostri')[i])}`), numeri: true })
+    }
+    return { intestazione: nomi, titolo: `la luce di chi non compra torce (${part} partite a discesa, bravura ${OPZ.prove[0] * 10}/10, roba attesa)`, righe, numeri: true }
   }
 
   // `--mondo`: il mondo a percorso coi mostri (docs/sotterraneo/mondo-aperto-mostri.md, «Le misure»): il curioso esce dalla pietra accesa
