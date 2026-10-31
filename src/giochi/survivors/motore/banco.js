@@ -10,6 +10,7 @@
 // Il pilota non bara: legge solo quello che si vede a schermo.
 import { Partita } from './partita.js'
 import { CFG } from '../dati/taratura.js'
+import { ARMI_DI_PARTENZA } from '../dati/mazzo.js'
 
 const SGUARDO = 300          // fin dove il pilota guarda per decidere
 const PORTATA = 420          // fin dove conta una gemma o un oggetto
@@ -246,7 +247,7 @@ export class Pilota {
   rispondi(partita) {
     const offerta = partita.offerta
     if (!offerta?.length) return null
-    const voluta = this.scegli(offerta)
+    const voluta = this.scegli(offerta, partita)
     this.domande++
     if (partita.motivoOfferta === 'cassa') this.casse++
     const giusto = this.rnd() < this.probabilita(voluta.prezzo)
@@ -254,10 +255,13 @@ export class Pilota {
     return giusto ? partita.prendi(voluta.chiave) : partita.rinuncia()
   }
 
-  scegli(offerta) {
+  scegli(offerta, partita = null) {
     if (this.gusto === 'debole') return offerta[0]
     if (this.gusto === 'caso') return offerta[Math.floor(this.rnd() * offerta.length)]
-    return offerta[offerta.length - 1]          // la più cara
+    // l'arma di partenza la prende, come farebbe un bambino che ha già giocato
+    const senzArma = partita && ARMI_DI_PARTENZA.every(k => !partita.livelloDi(k))
+    return (senzArma && offerta.find(c => ARMI_DI_PARTENZA.includes(c.chiave))) ||
+           offerta[offerta.length - 1]          // la più cara
   }
 
   probabilita(prezzo) {

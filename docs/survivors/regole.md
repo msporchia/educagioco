@@ -29,7 +29,7 @@ verso il grumo quando ha un'arma che guarda avanti.
   - **🧲 la calamita** tira per quattro secondi le gemme entro un
     raggio di 420 punti, cioè quelle dello schermo: quelle lasciate lontano
     sulla mappa restano dove sono;
-  - **📦 la cassa** apre un'offerta di tre carte **pagata con la domanda come
+  - **📦 la cassa** apre un'offerta di carte **pagata con la domanda come
     sempre** — sopra c'è scritto «una cassa», non «livello». È rara con un
     tetto dichiarato (`CFG.oggetti.cassa`): mai nei primi dieci secondi, mai
     due insieme, non più di una ogni tre quarti di minuto. Senza, a fine
@@ -88,7 +88,7 @@ verso il grumo quando ha un'arma che guarda avanti.
 
 Salire di livello **non ferma il campo**: il potenziamento si mette da parte
 (`daSpendere`), e il pulsante dorato «potenzia» in basso a sinistra (o Invio
-al computer) apre le tre carte quando lo decide chi gioca. Prima le carte si
+al computer) apre le carte quando lo decide chi gioca. Prima le carte si
 aprivano a ogni livello e il gioco si interrompeva di continuo. I
 potenziamenti da parte si salvano uscendo; quelli non spesi a fine tappa si
 perdono. Il pilota del banco li apre subito, perché sotto le carte il campo è
@@ -97,6 +97,31 @@ quelle di prima. **Cominciato, si finisce**: dopo una risposta (giusta o no) la 
 offerta si apre da sé finché ce n'è da spendere, senza ripremere il
 pulsante. La cassa invece apre le carte subito, perché ci si è
 andati sopra apposta. Nei test: `[data-potenzia]`.
+
+## Quattro carte, e quelle prese tornano
+
+L'offerta ha **quattro carte** (`OFFERTA` in `dati/mazzo.js`, composta da
+`Partita.offri`), scelte in quest'ordine:
+
+1. **Nelle prime quattro carte prese c'è sempre un'arma**: Frecce gemelle o
+   Frecce grosse (`ARMI_DI_PARTENZA`), che raddoppiano l'attacco. Con tre
+   carte a caso una tappa alta a volte partiva persa: misurato su 160
+   partite per tappa, le ferite del primo minuto si dimezzano su tutte le
+   tappe (la tana da 1,1 a 0,5 per chi risponde bene), e le vittorie della
+   tana passano dal 54 al 64% (chi schiva a sprazzi dall'11 al 26%).
+2. **Due delle carte già prese tornano**, come in Vampire Survivors: così si
+   portano in cima invece di aspettare che la pesca le ripeschi.
+3. **Una per fascia** dove manca: tre carte dello stesso prezzo farebbero
+   scegliere il disegno invece di quanto lavorare.
+4. Il resto a caso.
+
+Niente «escludi» o «ripesca»: più scelta sì, più comandi no. Per lo stesso
+motivo i nemici non sono stati ammorbiditi e i cuori sono quelli di prima:
+il troppo duro delle tappe alte erano le partenze sfortunate.
+
+**La mela non finisce mai** (`cura: true`): costa sempre una domanda facile,
+non dice un livello, non conta fra le carte prese e non tiene aperto il
+primo giro. In campagna, col mazzo pieno, l'offerta è la mela da sola.
 
 **Tolta l'armatura a spine** (8/10/2026): pungeva solo chi era già addosso,
 cioè quando era tardi, e non si vedeva bene. Un salvataggio che la aveva la
@@ -146,9 +171,9 @@ imparato che di là si esce non deve scoprire che qui no.
   che qui ha preso il posto di un `inAttesa` scritto a mano.
 - **Dopo il traguardo non si salva più**: le stelle sono già contate, e un
   salvataggio che se lo scorda segna la tappa due volte.
-- **Le tre carte in attesa si salvano per chiave** e si rivestono: ripescarle
+- **Le carte in attesa si salvano per chiave** e si rivestono: ripescarle
   farebbe uscire e rientrare finché non capita un'offerta migliore.
-- **Il ⏸ sparisce** dove il gioco è già fermo dietro un altro velo — le tre
+- **Il ⏸ sparisce** dove il gioco è già fermo dietro un altro velo — le
   carte, la domanda che le paga, il cartello finale.
 
 ## La Sopravvivenza, e le carte oltre il tetto
