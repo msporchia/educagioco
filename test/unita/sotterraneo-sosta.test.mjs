@@ -282,7 +282,7 @@ function rispondiFinche(c, giusto = () => true, giri = 40) {
 
 /* ══════════ 9. salendo dal portale la vita resta quella di giù ══════════
    Non c'è una cura che salire dia da sé: la sosta porta la vita e l'energia di prima, e le rimettono a posto, gratis, la
-   guaritrice e l'incantatrice (docs/sotterraneo/terra-di-sopra.md, «Chi cura»). `forzeDi` le legge col massimo di adesso. */
+   guaritrice e l'incantatrice (docs/sotterraneo/chi-cura.md). `forzeDi` le legge col massimo di adesso. */
 {
   const c = new Corsa(CAMPAGNA[1], { seme: 21, rnd: seminato(21) })
   c.vita = Math.floor(c.vitaMax / 3)

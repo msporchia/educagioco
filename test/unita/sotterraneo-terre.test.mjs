@@ -180,7 +180,7 @@ const b = { ...a, ...passo }
 
 /* ══════════ 7b. il minatore racconta i volti nuovi ══════════ */
 {
-  const ctx = { mondo: true, tappe: [], stati: {}, forza: 1, terra: 2 }
+  const ctx = { tappe: [], stati: {}, forza: 1, terra: 2 }
   uguale('nella prima terra niente volti', voltiDellaTerra({ ...ctx, terra: 1 }).length, 0)
   const v = voltiDellaTerra(ctx)
   stessaLista('quelli della zona per te: i prati', [...new Set(v.map(p => p.chiave))], ['altare', 'cantine'])
@@ -208,7 +208,7 @@ const b = { ...a, ...passo }
 
 /* ══════════ 7. chi annuncia la porta, e la tinta ══════════ */
 {
-  const ctx = { mondo: true, terre: true, tappe: [], stati: {} }
+  const ctx = { terre: true, tappe: [], stati: {} }
   controlla('il minatore dice la porta', apertura('minatore', ctx).some(p => p.dato === 'terre'))
   controlla('il capitano anche', apertura('capitano', ctx).some(p => p.dato === 'terre'))
   controlla('porta chiusa: niente', !apertura('minatore', { ...ctx, terre: false }).some(p => p.dato === 'terre'))

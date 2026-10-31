@@ -217,7 +217,7 @@ const s0 = popolaMondo({ mondo: m, eroe: 'cavaliere', giro: 0 })
   const n = e.uccisi.filter(x => x.specie === 'zombie').length
   uguale('lo scontro vero: la caccia conta gli zombie caduti', taglieDelloScontro(e.uccisi, { stati, conti: {}, stato: s }).conti[caccia], n)
   // il diario le sa mostrare: la caccia col suo conto, il signore e la tana col loro caporale
-  const d = diario({ [caccia]: 'presa', [sig]: 'presa', [tana]: 'fatta' }, [], null, { [caccia]: 4 }, true)
+  const d = diario({ [caccia]: 'presa', [sig]: 'presa', [tana]: 'fatta' }, [], null, { [caccia]: 4 })
   const v = id => d.inMano.find(x => x.id === id)
   stessaLista('la caccia aperta: 4 di 6', v(caccia).progresso, { fatti: 4, quanti: 6 })
   controlla('il signore ha la faccia del suo caporale', !!v(sig).cosa.sprite && v(sig).cosa.nome.startsWith('Il signore'), JSON.stringify(v(sig).cosa))

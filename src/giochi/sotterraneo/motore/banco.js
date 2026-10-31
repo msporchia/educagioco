@@ -433,7 +433,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
     corsa.indossa(nuova)
     for (const [k] of reg.pezzi) comprati.add(k)
     corsa.sistemaIlCorredo()
-    // sopra la guaritrice e l'incantatrice curano gratis (docs/sotterraneo/terra-di-sopra.md): si risale sano e carico
+    // sopra la guaritrice e l'incantatrice curano gratis (docs/sotterraneo/chi-cura.md): si risale sano e carico
     corsa.vita = corsa.vitaMax
     corsa.energia = corsa.energiaMax
     corsa.chiudi()

@@ -168,7 +168,7 @@ Nei documenti i personaggi e i pezzi si chiamano ancora con la chiave.
 I **dungeon** hanno i nomi nuovi in ogni testo (19 ottobre): *La cripta dei re, Le cantine dei goblin, La torre bruciata, La tana dei
 ragni, Le sale allagate, La porta dell'inferno, Le miniere di brace, Il pozzo senza fondo* (la regola dei nomi:
 [mondo-aperto-progetto.md](mondo-aperto-progetto.md#2-i-dungeon)). Un nome dice l'interno e vale ovunque; la **strada** del minatore no, perché dipende da dove stanno i posti:
-`LUOGHI_MONDO` (`luogoDi(chiave)` in `dati/terra.js`; `ctx.mondo` nei dialoghi, `mondo` nel diario). Un
+`LUOGHI_MONDO` (`luogoDi(chiave)` in `dati/terra.js`). Un
 test (`unita/sotterraneo-nomi`) controlla che nessun testo dica un nome di prima.
 
 ## Il capitano del forte

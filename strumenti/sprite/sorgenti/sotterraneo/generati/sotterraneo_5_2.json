@@ -1,5 +1,5 @@
 {
-  "__": "Il foglietto di sotterraneo_5_2.png: i pezzi che mancano alla scena della fornace (ChatGPT, 2 ottobre 2026, nella chat della scena, su fondo magenta). Le porte sono a 8 px per pixel di gioco, il doppio della scena. Si prendono porte, scala chiusa, mercante, medaglione, cenere, sassi, scoria e le due ragnatele. Fuori la fuliggine viola (ha l'alone magenta dentro). L'ottagono di ferro che il foglio porta come fontana è stato sostituito da sotterraneo_5_4.png e _5_5.png (la stessa fontana asciutta e piena).",
+  "__": "Il foglietto di sotterraneo_5_2.png: i pezzi che mancano alla scena della fornace (ChatGPT, 2 ottobre 2026, nella chat della scena, su fondo magenta). Le porte sono a 8 px per pixel di gioco, il doppio della scena. Si prendono porte, scala chiusa e mercante. Fuori la fuliggine viola (ha l'alone magenta dentro). L'ottagono di ferro che il foglio porta come fontana è stato sostituito da sotterraneo_5_4.png e _5_5.png (la stessa fontana asciutta e piena).",
   "prompt": {
     "scheda": "PROMPT-scenario.md",
     "base": "sotterraneo_4.png",
@@ -19,7 +19,6 @@
     1
   ],
   "famiglie": {
-    "fornace-medaglione": "fondo",
     "fornace-porta": "figura",
     "fornace-mercante": "figura"
   },
@@ -220,90 +219,6 @@
       "misura": [
         28,
         24
-      ]
-    },
-    "fornace-medaglione": {
-      "da": [
-        348,
-        988
-      ],
-      "cella": [
-        324,
-        316
-      ],
-      "misura": [
-        48,
-        48
-      ]
-    },
-    "fornace-cenere": {
-      "da": [
-        196,
-        1364
-      ],
-      "cella": [
-        148,
-        116
-      ],
-      "misura": [
-        12,
-        10
-      ]
-    },
-    "fornace-sassi": {
-      "da": [
-        380,
-        1368
-      ],
-      "cella": [
-        108,
-        112
-      ],
-      "misura": [
-        9,
-        9
-      ]
-    },
-    "fornace-scoria": {
-      "da": [
-        528,
-        1372
-      ],
-      "cella": [
-        100,
-        96
-      ],
-      "misura": [
-        8,
-        8
-      ]
-    },
-    "fornace-ragnatela-sx": {
-      "da": [
-        52,
-        1324
-      ],
-      "cella": [
-        148,
-        164
-      ],
-      "misura": [
-        13,
-        14
-      ]
-    },
-    "fornace-ragnatela-dx": {
-      "da": [
-        832,
-        1328
-      ],
-      "cella": [
-        144,
-        160
-      ],
-      "misura": [
-        13,
-        14
       ]
     },
     "fornace-fontana-ferro": {

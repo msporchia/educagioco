@@ -3,7 +3,7 @@
 // di righe e di colonne, e la vista non calcola un numero.
 import { MOSTRI } from '../dati/mostri.js'
 import { ELEMENTI, STATI } from '../dati/elementi.js'
-import { SCENARI, SCENARIO, pezzoAndante } from '../dati/tessere.js'
+import { pezzoAndante } from '../dati/tessere.js'
 import { fotogrammaDi, quantiFotogrammi } from '../dati/fotogrammi.js'
 import { coloreDelGrado, etichettaDi } from '../dati/varianti.js'
 import { NODI, RAMI } from '../dati/abilita.js'
@@ -115,9 +115,6 @@ export function disponi(campo) {
 // punto (u, v): u da 0 (vicino all'eroe) a 1 (in fondo a destra), v da 0 (lontano, in alto sul pavimento) a 1 (vicino, in
 // basso). I posti restano quelli del motore; i consecutivi stanno nella stessa colonna o in colonne accanto, così i «vicini»
 // del motore lo sono anche nel disegno.
-export const SCALA_PALCO = 2         // pixel di schermo per pixel di foglio delle piastrelle del pavimento
-// le figure un quinto più piccole delle piastrelle: c'è più pavimento attorno e la stanza sembra meno affollata (l'utente, 12 ottobre)
-export const SCALA_FIGURE = 1.6
 // niente parete in cima: «non aggiunge valore e spreca spazio verticale» (l'utente, 12 ottobre); tutto il palco è pavimento
 export const ZOCCOLO = 0
 export const ALTO_PALCO = { 1: 264, 2: 316 }
@@ -167,12 +164,6 @@ export function piazza(posti, campo, larg) {
   return { alto, eroe: { x: stretto ? 34 : 40, y: ey }, compagno: { x: stretto ? 52 : 60, y: ey + 58 }, mostri }
 }
 
-// il fondale del duello: la parete e il pavimento dello scenario in cui si combatte
-export function palcoDi(c) {
-  const sc = SCENARI[c.scenario] || SCENARI[SCENARIO]
-  return { pavimento: sc.pavimento.stanza, faccia: sc.faccia, roccia: sc.colori && sc.colori.roccia }
-}
-
 // Tutto quello che la vista dello scontro legge, rifatto a ogni cambio. I mostri sono dati semplici nell'ordine dei posti (l'indice `i` è
 // quello di `foglio.campo`: la vista lo rimanda a `scegliBersaglio`); la corsa resta di chi la gioca
 export function vistaDelloScontro(c) {
@@ -204,7 +195,6 @@ export function vistaDelloScontro(c) {
     posti: disponi(mostri),
     turni: (f.turni || []).map(t => (t.chi === 'eroe' ? { chi: 'eroe', salta: false } : { chi: indice(t.chi), salta: !!t.salta })),
     apertura: { agguato: !!f.agguato, sorpresa: !!f.sorpresa, mostri: f.campo.length },
-    palco: palcoDi(c),
     eroe: { sprite: c.io.sprite ? pezzoAndante(c.io.sprite, 'fermo', 0) : null, em: c.io.em, vita: c.vita, vitaMax: c.vitaMax,
             // chi è e cosa ha in mano e addosso: per il ritratto 3D della fila dei turni (viste/anteprima3d.js)
             chi: c.io.sprite || null, mano: c.mano || null, mancina: c.mancina || null, corpo: c.corpo || null },
@@ -239,7 +229,4 @@ export const fattoreDelMostro = (tipo, altoSprite, largoSprite = 0) => {
   if (f <= 1 || !largoSprite) return f
   return Math.max(1, Math.floor(Math.min(f, LARGO_SUL_CAMPO / largoSprite) * 4) / 4)
 }
-// la scala di un mostro alla scala `s` dell'eroe: alto TAGLIA volte l'eroe, a quarti (i pixel restano quasi interi)
-export const scalaDelMostro = (tipo, altoSprite, s) => (TAGLIA[tipo] == null ? s
-  : Math.max(1, Math.round(s * ALTO_EROE * TAGLIA[tipo] / Math.max(1, altoSprite) * 4) / 4))
 

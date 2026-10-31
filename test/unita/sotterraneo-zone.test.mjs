@@ -1,19 +1,18 @@
 /* Le zone (docs/sotterraneo/zone.md): finita la storia ogni discesa è
    una zona con una fascia di livelli fissa, che tiene finché l'eroe non
    la supera di tanto; allora rinasce rossa sopra la più alta, con un
-   nome nuovo, e il minatore la racconta. Qui: le fasce alla nascita, i
-   quattro gruppi sempre pieni, i colori con gli esempi del documento, la
-   rinascita, la notizia, com'è fatta una zona (più piani, la stessa forma,
+   nome nuovo. Qui: le fasce alla nascita, i quattro gruppi sempre pieni,
+   i colori con gli esempi del documento, la rinascita, com'è fatta una zona (più piani, la stessa forma,
    i mostri e il bottino del suo livello), la sosta che la rifà uguale,
    l'esperienza (un quarto nelle grigie, la curva oltre la storia).
    `node test/esegui.mjs sotterraneo-zone --niente-build` */
 import { conLaStrada } from '../../src/giochi/sotterraneo/motore/abilita.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { ORDINE_DELLE_ZONE, VOLTI, voltoDi, zonaPotenziata, zonaDi, forzaDellaZona, spintaDellaZona, guastiDelleZone,
-         DETTI_DEL_COLORE, PIANI_DELLA_ZONA, NASCITA, GIRO, LARGA, ESP_GRIGIA, PRIMA_NOTIZIA, ANNUNCIO_IN_CODA }
+         DETTI_DEL_COLORE, PIANI_DELLA_ZONA, NASCITA, GIRO, LARGA, ESP_GRIGIA }
   from '../../src/giochi/sotterraneo/dati/zone.js'
-import { fasciaDi, coloreDellaFascia, coloreNellaStoria, coloreDi, disposizioneDi, potenzaDi, livelloDellaZona, zoneDi,
-         notiziaDi, gradinoDi, COLORI, robaAttesaA, crescitaAttesaA } from '../../src/giochi/sotterraneo/motore/zone.js'
+import { fasciaDi, coloreDellaFascia, coloreNellaStoria, coloreDi, potenzaDi, livelloDellaZona, zoneDi,
+         gradinoDi, COLORI, robaAttesaA, crescitaAttesaA } from '../../src/giochi/sotterraneo/motore/zone.js'
 import { LIVELLI_ATTESI } from '../../src/giochi/sotterraneo/dati/storia.js'
 import { sogliaDi, esperienzaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { potenzaDelMostro } from '../../src/giochi/sotterraneo/motore/potenza.js'
@@ -25,11 +24,14 @@ import { robaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { gioca } from '../../src/giochi/sotterraneo/motore/banco.js'
 import { scrivi, leggi, dice } from '../../src/giochi/sotterraneo/motore/sosta.js'
-import { strada } from '../../src/giochi/sotterraneo/motore/dialoghi.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { stileDi } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
 
 const indiceDi = k => CAMPAGNA.findIndex(t => t.chiave === k)
+// tutte le zone, dalla più bassa: le fasce da `rinasce`, i colori da `forza` (se non c'è, lo stesso livello)
+const disposizioneDi = (rinasce, forza = rinasce) => ORDINE_DELLE_ZONE
+  .map(k => { const f = fasciaDi(k, rinasce); return { ...f, colore: coloreDellaFascia(f.da, forza) } })
+  .sort((x, y) => x.da - y.da)
 const detta = (E, chiavi = null) => disposizioneDi(E).filter(z => !chiavi || chiavi.includes(z.chiave))
   .map(z => `${z.chiave} ${z.da}-${z.a} ${z.colore}`).join(' | ')
 
@@ -97,47 +99,21 @@ for (const [zona, eroe, colore, perche] of [
   [10, 12, 'verde', 'la miniera, appena finita'],
 ]) uguale(`nella storia, ${perche}: ${colore}`, coloreNellaStoria(zona, eroe), colore)
 
-/* ══════════ 5. nella storia e dopo: potenza, colore, notizia ══════════ */
+/* ══════════ 5. nella storia e dopo: potenza e colore ══════════ */
 {
   const storia = { tappa: 4, libera: false, stelle: {} }
   uguale('nella storia nessuna discesa è una zona', CAMPAGNA.map((_, k) => potenzaDi(storia, k, 9)).filter(Boolean).length, 0)
   uguale('il livello è quello atteso', livelloDellaZona(storia, 3, 9), LIVELLI_ATTESI[3])
   uguale('e il colore dai gradini: la torre al livello 1 è rossa', coloreDi(storia, indiceDi('torre'), 1), 'rosso')
-  uguale('nella storia non c\'è notizia', notiziaDi(storia, 9), null)
 
   const finita = { tappa: 7, libera: true, stelle: {} }
   uguale('finita la storia la torre ha la sua fascia', potenzaDi(finita, indiceDi('torre'), 12), 12)
   uguale('e il suo colore', coloreDi(finita, indiceDi('torre'), 12), 'verde')
   uguale('la cripta al 12 è la rossa', coloreDi(finita, indiceDi('altare'), 12), 'rosso')
-  const n = notiziaDi(finita, 12)
-  uguale('la notizia è la zona più alta: la cripta', `${n.chiave}:${n.da}`, 'altare:18')
-  uguale('mai sentita', n.sentita, false)
-  controlla('la prima volta dice cosa è cambiato, poi la sua storia, poi che non si passa',
-            n.detto.startsWith(PRIMA_NOTIZIA) && n.detto.includes(VOLTI.altare[0].annuncio) && n.detto.endsWith(ANNUNCIO_IN_CODA), n.detto)
-  const sentita = { ...finita, zone: { sentita: n.id } }
-  uguale('sentita, resta sentita salendo di un livello', notiziaDi(sentita, 13).sentita, true)
-  const nuova = notiziaDi(sentita, 14)
-  uguale('al 14 la scalinata rinasce: una notizia nuova', `${nuova.chiave}:${nuova.da}`, 'cantine:20')
-  uguale('da raccontare', nuova.sentita, false)
-  controlla('senza la presentazione, col nome nuovo', !nuova.detto.startsWith(PRIMA_NOTIZIA) && nuova.nome === VOLTI.cantine[1].nome, nuova.detto)
-  // lo stato delle zone che si svegliavano (8/10) vale come mai sentito, senza azzerare niente
+  // lo stato delle zone che si svegliavano (8/10) si rilegge senza azzerare niente
   const vecchio = { ...finita, zone: { n: 3, livelli: { cantine: 13 }, sentita: true } }
-  uguale('lo stato di prima si rilegge come mai sentito', zoneDi(vecchio).sentita, null)
+  uguale('lo stato di prima non dà una forza', zoneDi(vecchio).forza, 0)
   uguale('e la cantina vinta al 13 di prima prende la sua fascia', potenzaDi(vecchio, indiceDi('cantine'), 12), 6)
-  {
-    // il minatore la racconta per prima cosa, dice dove sta e poi le zone verdi; sentita, dice solo le verdi
-    const tappe = CAMPAGNA.map((t, i) => ({ ...zonaDi(i, potenzaDi(finita, i, 12)), indice: i, fatta: true,
-                                            colore: coloreDi(finita, i, 12) }))
-    const pagine = strada({ tappe, stati: {}, abisso: true, annuncio: { chiave: n.chiave, detto: n.detto, sentita: false } })
-    uguale('nel dialogo del minatore la prima pagina è l\'annuncio', pagine[0].dato, 'annuncio')
-    controlla('poi la strada per la zona nuova', pagine.some(p => p.dato === 'detto' && p.testo.startsWith(VOLTI.altare[0].nome)),
-              pagine.map(p => p.testo).join(' | '))
-    uguale('e le due verdi', pagine.filter(p => p.dato === 'verde').length, 2)
-    const poi = strada({ tappe, stati: {}, abisso: true, annuncio: { chiave: n.chiave, detto: n.detto, sentita: true } })
-    uguale('sentita, niente annuncio', poi.filter(p => p.dato === 'annuncio').length, 0)
-    controlla('ma le verdi sì', poi[0].dato === 'verde' && poi.some(p => p.testo.includes(VOLTI.labirinto[0].nome.slice(3))),
-              poi.map(p => p.testo).join(' | '))
-  }
   // scesi dentro: la sosta tiene la potenza di quando si è scesi, anche se intanto la zona è rinata
   const giu = { ...finita, sosta: { tappa: indiceDi('cantine'), potenza: 6 } }
   uguale('lasciata a metà, la zona resta quella di quando si è scesi', potenzaDi(giu, indiceDi('cantine'), 14), 6)

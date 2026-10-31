@@ -2,7 +2,7 @@
 // rettangolo a schermo allargato ad almeno 72×96 px; un tocco sul terreno entro una cella e mezza dal suo piede è un tocco su di
 // lei. L'ordine: prima le persone, poi i posti (ingressi, pietre, il portale, le grate), poi le cose (cartello, bacheca), poi il
 // terreno. Gli elementi HTML sopra la tela (viste/Mondo3d.vue) usano questi rettangoli; la tela, per il tocco che cade fuori.
-// docs/sotterraneo/terra-di-sopra.md, «Il mondo in 3D».
+// docs/sotterraneo/mondo-3d.md.
 
 export const SCARTO_DITO = 16              // px: sotto, il dito è fermo (docs/core/il-dito.md)
 export const PERSONA = { largo: 72, alto: 96 }

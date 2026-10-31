@@ -7,10 +7,6 @@
 Poi `python3 strumenti/sprite/atlante.py sotterraneo`. Regola «prima in codice, poi dipinto» (docs/sotterraneo/scenari.md, «L'inferno»):
 un pezzo che manca si ricava da quelli dipinti, e se non regge si fa chiedere al modello. Cosa esce, in pixel di gioco:
 
-  inferno-pav-stanze     64×48  il pavimento delle stanze: il ritaglio grezzo della scena con le cuciture sfumate (una banda di 6 px ai bordi)
-  inferno-pav-corridoi   16×64  il pavimento dei corridoi, come sopra
-  inferno-tetto          64×64  la roccia nera da sopra: massi scuri a macchie (Voronoi sul toro, quindi senza cuciture) e qualche vena di brace
-  inferno-medaglione     48×48  un pentagramma inciso sul pavimento, sotto la fontana (la scena ne ha uno con la ciotola dentro, che sulla fontana farebbe doppio)
   inferno-porta-chiara   la porta di legno più chiara
   inferno-porta-aperta   la stessa con l'anta girata e il buio nell'arco
   inferno-fianco-*       le stesse viste da sopra in un muro laterale (tavola stretta di 6×20), colori campionati da ogni porta
@@ -19,87 +15,15 @@ un pezzo che manca si ricava da quelli dipinti, e se non regge si fa chiedere al
 """
 import colorsys
 import json
-import random
 import sys
 
-from PIL import Image, ImageDraw, ImageEnhance
+from PIL import Image, ImageEnhance
 
 import derivati
 
 SCENA = 'sotterraneo/generati/sotterraneo_6.png'
 ARREDO = 'sotterraneo/generati/arredo-inferno.png'
 FOGLIO = 'sotterraneo_6_derivati'
-BANDA = 6                              # larghezza della sfumatura sulle cuciture, in pixel di gioco
-
-
-def senza_cuciture(im, banda=BANDA):
-    """Un ritaglio che si ripete: la banda di destra sfuma verso i pixel di sinistra, quella in basso verso quelli in alto."""
-    w, h = im.size
-    px = im.load()
-    out = im.copy()
-    o = out.load()
-    for x in range(w - banda, w):
-        t = (x - (w - banda) + 1) / (banda + 1)           # 0 dentro, 1 al bordo
-        for y in range(h):
-            a, b = px[x, y], px[x - (w - banda), y]
-            o[x, y] = tuple(round(a[i] * (1 - t) + b[i] * t) for i in range(4))
-    px = out.load()
-    for y in range(h - banda, h):
-        t = (y - (h - banda) + 1) / (banda + 1)
-        for x in range(w):
-            a, b = px[x, y], px[x, y - (h - banda)]
-            o[x, y] = tuple(round(a[i] * (1 - t) + b[i] * t) for i in range(4))
-    return out
-
-
-def tetto(dim=64, semi=1015, n=26):
-    """Massi scuri su un toro: ogni pixel prende il seme più vicino (con la distanza che si avvolge), il tono viene dal seme, il filo fra due massi è più scuro."""
-    r = random.Random(semi)
-    seme = [(r.randrange(dim), r.randrange(dim), r.choice([(26, 20, 22), (31, 24, 27), (22, 17, 19), (36, 28, 31), (28, 21, 24)]), r.random() < 0.10)
-            for _ in range(n)]
-    im = Image.new('RGBA', (dim, dim))
-    px = im.load()
-
-    def dist(x, y, s):
-        dx, dy = abs(x - s[0]), abs(y - s[1])
-        dx, dy = min(dx, dim - dx), min(dy, dim - dy)
-        return dx * dx + dy * dy
-    for y in range(dim):
-        for x in range(dim):
-            ds = sorted(((dist(x, y, s), s) for s in seme), key=lambda t: t[0])
-            (d1, s1), (d2, _) = ds[0], ds[1]
-            filo = (d2 ** 0.5) - (d1 ** 0.5)
-            c = s1[2]
-            # il lume viene da in alto a sinistra: il masso è un poco più chiaro dove guarda il lume
-            dx, dy = x - s1[0], y - s1[1]
-            dx, dy = (dx + dim // 2) % dim - dim // 2, (dy + dim // 2) % dim - dim // 2
-            k = 1 + 0.18 * (-(dx + dy) / 14)
-            c = tuple(max(0, min(255, round(v * k))) for v in c)
-            if filo < 1.6:
-                c = (11, 8, 9)
-            elif filo < 2.6 and s1[3]:
-                c = (70, 26, 18)                      # una vena di brace in qualche filo
-            px[x, y] = (*c, 255)
-    return im
-
-
-def medaglione(pav, dim=48):
-    """Pentagramma inciso: pavimento, un cerchio, la stella e cinque punti di brace; il bagliore è un cerchio più scuro dentro."""
-    base = Image.new('RGBA', (dim, dim))
-    for x in range(0, dim, pav.width):
-        base.paste(pav.crop((0, 0, min(pav.width, dim - x), dim)), (x, 0))
-    d = ImageDraw.Draw(base)
-    c, R = (dim - 1) / 2, dim / 2 - 4
-    d.ellipse([c - R - 2, c - R - 2, c + R + 2, c + R + 2], outline=(52, 22, 18, 255))
-    d.ellipse([c - R, c - R, c + R, c + R], outline=(150, 46, 26, 255))
-    import math
-    p = [(c + R * math.sin(2 * math.pi * k / 5), c - R * math.cos(2 * math.pi * k / 5)) for k in range(5)]
-    for k in range(5):
-        a, b = p[k], p[(k + 2) % 5]
-        d.line([a, b], fill=(150, 46, 26, 255), width=1)
-    for a in p:
-        d.ellipse([a[0] - 1.5, a[1] - 1.5, a[0] + 1.5, a[1] + 1.5], fill=(214, 96, 40, 255))
-    return base
 
 
 def colore_medio(im, box):
@@ -195,10 +119,6 @@ def costruisci():
     sc = derivati.tessere_di(SCENA)
     ar = derivati.tessere_di(ARREDO)
     p = {}
-    p['inferno-pav-stanze'] = senza_cuciture(sc['inferno-grezzo-pav-stanze'])
-    p['inferno-pav-corridoi'] = senza_cuciture(sc['inferno-grezzo-pav-corridoi'])
-    p['inferno-tetto'] = tetto()
-    p['inferno-medaglione'] = medaglione(p['inferno-pav-stanze'])
     semplice = ar['inferno-porta-semplice']
     p['inferno-porta-chiara'] = chiara(semplice)
     p['inferno-porta-aperta'] = aperta(semplice)
@@ -234,12 +154,11 @@ def scrivi(pezzi):
     dest = derivati.SORGENTI / 'sotterraneo/generati' / FOGLIO
     foglio.save(dest.with_suffix('.png'), optimize=True)
     nota = ("Il foglietto di sotterraneo_6_derivati.png: i pezzi dell'inferno costruiti in codice da `strumenti/sprite/inferno.py` (il PNG si rifà col comando, non si tocca): "
-            "pavimenti senza cuciture, il tetto, il medaglione del pentagramma, le porte chiara e aperta, i fianchi, la scala chiusa e la fontana asciutta. "
+            "le porte chiara e aperta, i fianchi, la scala chiusa e la fontana asciutta. "
             "Dalla scena sotterraneo_6.png e dalla tavola arredo-inferno.png.")
     foglietto = {
         '__': nota, 'fondo': 'trasparente', 'cella': [1, 1],
-        'famiglie': {'inferno-pav': 'fondo', 'inferno-tetto': 'fondo', 'inferno-medaglione': 'fondo', 'inferno-porta': 'figura',
-                     'inferno-fianco': 'figura', 'inferno-scala': 'figura', 'inferno-fontana': 'figura'},
+        'famiglie': {'inferno-porta': 'figura', 'inferno-fianco': 'figura', 'inferno-scala': 'figura', 'inferno-fontana': 'figura'},
         'trasforma': {'inferno-porta': {'giri': 1}, 'inferno-fianco': {'giri': 1, 'specchia': False},
                       'inferno-scala': {'giri': 1, 'specchia': False}, 'inferno-fontana': {'giri': 1}},
         'sprite': sprite,

@@ -24,7 +24,7 @@ const uguale = (nome, a, b) => uguale0(nome, JSON.stringify(a), JSON.stringify(b
 const m = ilMondo()
 const aperta = terraDelMondo(m)
 const testi = pagine => pagine.map(p => p.testo).join(' | ')
-const ctxCon = finite => ({ stati: {}, mondo: true, tappe: CAMPAGNA.map((t, i) => ({ ...t, indice: i, fatta: i < finite, aperta: i <= finite, adesso: i === finite })) })
+const ctxCon = finite => ({ stati: {}, tappe: CAMPAGNA.map((t, i) => ({ ...t, indice: i, fatta: i < finite, aperta: i <= finite, adesso: i === finite })) })
 
 /* ── il capitano: chi è, dov'è ── */
 {
@@ -54,7 +54,6 @@ const ctxCon = finite => ({ stati: {}, mondo: true, tappe: CAMPAGNA.map((t, i) =
   controlla('alla sesta Minotto, e rimanda dal minatore', /Minotto/.test(testi(lab)) && /minatore/.test(testi(lab)), testi(lab))
   uguale('con la sua strada', lab.find(p => p.dato === 'detto').testo, `La porta dell'inferno: ${LUOGHI_MONDO.labirinto}.`)
   uguale('dopo la sesta non dice più la strada', stradaDelCapitano(ctxCon(6)).length, 0)
-  uguale('nemmeno finita la storia, con una zona nata', stradaDelCapitano({ ...ctxCon(4), annuncio: { chiave: 'cantine' } }).length, 0)
   // la pagina del saluto, e le scelte
   const ap = apertura('capitano', ctxCon(4))
   uguale('parlandogli alla quinta porta, la strada c\'è', ap.some(p => p.dato === 'detto'), true)
@@ -104,7 +103,6 @@ const ctxCon = finite => ({ stati: {}, mondo: true, tappe: CAMPAGNA.map((t, i) =
   uguale('il minatore lo dice dopo la strada', strada(c).filter(p => p.dato === 'zona').map(p => p.zona).join(), 'brughiera')
   uguale('anche il capitano, alla sua porta', stradaDelCapitano({ ...ctxCon(4), forza: 8 }).filter(p => p.dato === 'zona').map(p => p.zona).join(), 'palude')
   uguale('senza la forza non lo dice', strada(ctxCon(2)).some(p => p.dato === 'zona'), false)
-  uguale('nel Sotterraneo di sempre nemmeno', strada({ ...c, mondo: false }).some(p => p.dato === 'zona'), false)
   const terre = { ...ctxCon(7), terre: true }
   for (const chi of ['minatore', 'capitano']) {
     const a = apertura(chi, terre)

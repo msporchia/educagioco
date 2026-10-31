@@ -209,7 +209,7 @@ export function leggi(dato, tappa, roba = null, missioni = [], crescita = null, 
 }
 
 // vita ed energia di chi ha lasciato la discesa a metà, col massimo di adesso (sopra la roba può essere cambiata): le guarisce
-// la guaritrice e l'incantatrice (docs/sotterraneo/terra-di-sopra.md, «Chi cura»). Null se la sosta non si rilegge
+// la guaritrice e l'incantatrice (docs/sotterraneo/chi-cura.md). Null se la sosta non si rilegge
 export function forzeDi(dato, tappa, roba = null, missioni = [], crescita = null) {
   const c = leggi(dato, tappa, roba, missioni, crescita)
   return c ? { vita: Math.min(c.vita, c.vitaMax), vitaMax: c.vitaMax, energia: c.energia, energiaMax: c.energiaMax } : null

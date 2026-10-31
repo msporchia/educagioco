@@ -67,7 +67,7 @@
 .sot3d-senza .sot-grosso { max-width: 280px }
 .sot3d-perso { position: absolute; inset: 0; z-index: 40 }
 
-/* il mondo di sopra in 3D (viste/Mondo3d.vue, docs/sotterraneo/terra-di-sopra.md «Il mondo in 3D»): la tela sotto, sopra i bersagli
+/* il mondo di sopra in 3D (viste/Mondo3d.vue, docs/sotterraneo/mondo-3d.md): la tela sotto, sopra i bersagli
    del dito (trasparenti, posati a ogni fotogramma), i nomi della veduta, il fumetto, le carte in cima e in fondo */
 .sot3d-mondo { background: #c9dcea }
 .sot3d-tela-mondo { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none }

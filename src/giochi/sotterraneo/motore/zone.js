@@ -1,10 +1,9 @@
 // Le zone, in movimento (docs/sotterraneo/zone.md): che fascia ha ogni zona per l'eroe di adesso, di che colore è il
-// suo pallino, qual è la zona appena nata che il minatore racconta, e la roba attesa oltre la storia. Il colore si legge
-// dal livello di FORZA dell'eroe (motore/forza.js, docs/sotterraneo/forza.md), non dal livello che ha scritto sulla barra.
+// suo pallino, e la roba attesa oltre la storia. Il colore si legge dal livello di FORZA dell'eroe (motore/forza.js,
+// docs/sotterraneo/forza.md), non dal livello che ha scritto sulla barra.
 // Funzioni pure sull'avventura (motore/avventure.js): girano in Node, e Gioco.vue le passa a ritocca().
 import { CAMPAGNA } from '../dati/campagna.js'
-import { ORDINE_DELLE_ZONE, NASCITA, LARGA, MARGINE, GIRO, voltaDi, voltoDi, ANNUNCIO_IN_CODA, PRIMA_NOTIZIA }
-  from '../dati/zone.js'
+import { NASCITA, LARGA, MARGINE, GIRO, voltaDi } from '../dati/zone.js'
 import { LIVELLI_ATTESI, POZIONI_ATTESE } from '../dati/storia.js'
 import { COSE, CASELLE, chiaveDelPezzo } from '../dati/cose.js'
 import { eroeDi } from '../dati/eroi.js'
@@ -12,7 +11,6 @@ import { crescitaA } from './crescita.js'
 import { robaAttesa } from './storia.js'
 
 const oggetto = v => !!v && typeof v === 'object' && !Array.isArray(v)
-const indiceDi = chiave => CAMPAGNA.findIndex(t => t.chiave === chiave)
 
 /* ═══════════ la fascia di una zona ═══════════
    Nasce a NASCITA[chiave] e ci resta; quando l'eroe la supera di più di MARGINE livelli (sopra la fine della fascia)
@@ -35,20 +33,11 @@ export function coloreDellaFascia(da, forza) {
   return 'grigio'
 }
 
-// tutte le zone, dalla più bassa: le fasce da `rinasce`, i colori da `forza` (se non c'è, lo stesso livello):
-// { chiave, da, a, volta, colore, nome }
-export const disposizioneDi = (rinasce, forza = rinasce) => ORDINE_DELLE_ZONE
-  .map(k => { const f = fasciaDi(k, rinasce); return { ...f, colore: coloreDellaFascia(f.da, forza), nome: voltoDi(k, f.volta).nome } })
-  .sort((x, y) => x.da - y.da)
-
-// Lo stato nell'avventura: `zone: { sentita, forza }`. `sentita`: la zona appena nata che il minatore ha già raccontato
-// («cantine:20», la chiave e dove comincia la fascia); un campo storto, o quello di prima ({ n, livelli, sentita: true },
-// le zone che si svegliavano), vale come mai sentita. `forza`: il livello di forza più alto mai raggiunto (0 se non c'è:
-// i salvataggi di prima), che fa ruotare le zone anche se l'eroe, vendendo l'arma, si indebolisce (rinascitaDi)
+// Lo stato nell'avventura: `zone: { forza }`. `forza`: il livello di forza più alto mai raggiunto (0 se non c'è: i salvataggi
+// di prima), che fa ruotare le zone anche se l'eroe, vendendo l'arma, si indebolisce (rinascitaDi)
 export function zoneDi(a) {
   const z = a && oggetto(a.zone) ? a.zone : {}
-  return { sentita: typeof z.sentita === 'string' ? z.sentita : null,
-           forza: Number.isFinite(z.forza) && z.forza > 0 ? Math.floor(z.forza) : 0 }
+  return { forza: Number.isFinite(z.forza) && z.forza > 0 ? Math.floor(z.forza) : 0 }
 }
 
 // Il livello da cui le zone rinascono: il più alto fra il livello dell'eroe (che non scende mai), il livello di forza più
@@ -56,16 +45,13 @@ export function zoneDi(a) {
 export const rinascitaDi = (a, livelloEroe, forza = 0) => Math.max(livelloEroe || 1, zoneDi(a).forza, forza || 0)
 
 // Cosa scrivere in `zone` quando il livello di forza di adesso supera sia il massimo scritto sia il livello dell'eroe
-// (se no non cambierebbe niente: rinascitaDi prende già il più alto): l'oggetto nuovo, con la notizia sentita al suo
-// posto, o null se non c'è niente da cambiare. Si scrive sulla terra di sopra (Gioco.vue)
+// (se no non cambierebbe niente: rinascitaDi prende già il più alto): l'oggetto nuovo, o null se non c'è niente da cambiare.
+// Si scrive sulla terra di sopra (Gioco.vue)
 export function zoneConForza(a, forza, livelloEroe = 1) {
   const z = zoneDi(a)
   if (!(forza > Math.max(z.forza, livelloEroe || 1))) return null
   return { ...(a && oggetto(a.zone) ? a.zone : {}), forza: Math.floor(forza) }
 }
-// La notizia sentita, senza perdere il resto di `zone`
-export const zoneConSentita = (a, id) => ({ ...(a && oggetto(a.zone) ? a.zone : {}), sentita: id })
-
 // Con che potenza si scende nella discesa `k`: finita la storia l'inizio della sua fascia (almeno 1), o se si è scesi e
 // la si è lasciata a metà quella scritta nella sosta (una zona lasciata a metà non cambia mentre si fa la spesa).
 // Nella storia null: la discesa è quella di sempre. Le fasce vengono da rinascitaDi(livello dell'eroe, forza)
@@ -103,19 +89,6 @@ export function coloreNellaStoria(livelloDiscesa, forza) {
 export function coloreDi(a, k, livelloEroe, forza = livelloEroe) {
   const p = potenzaDi(a, k, livelloEroe, forza)
   return p ? coloreDellaFascia(p, forza) : coloreNellaStoria(LIVELLI_ATTESI[k] || 1, forza)
-}
-
-// La notizia: la zona nata per ultima (la fascia più alta, sempre rossa), che il minatore racconta finché non l'ha
-// detta. null finché la storia non è finita. `prima`: la prima notizia dopo la storia, che dice anche cosa è cambiato
-export function notiziaDi(a, livelloEroe, forza = 0) {
-  if (!a || !a.libera) return null
-  const f = disposizioneDi(rinascitaDi(a, livelloEroe, forza)).at(-1)
-  const id = `${f.chiave}:${f.da}`
-  const z = zoneDi(a)
-  const volto = voltoDi(f.chiave, f.volta)
-  return { id, chiave: f.chiave, indice: indiceDi(f.chiave), da: f.da, a: f.a, nome: volto.nome,
-           sentita: z.sentita === id, prima: !z.sentita,
-           detto: `${!z.sentita ? PRIMA_NOTIZIA + ' ' : ''}${volto.annuncio} ${ANNUNCIO_IN_CODA}` }
 }
 
 /* ═══════════ oltre la storia: con che roba e che livello si arriva ═══════════

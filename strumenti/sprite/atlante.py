@@ -603,7 +603,7 @@ def ritinge_in(pezzo, regola, nome):
     """Un pezzo ricolorato: `"tinta": {"da": [50, 170], "gradi": 195}` ruota di `gradi` la tonalità dei pixel che ce l'hanno
     fra `da` (gradi sul cerchio dei colori, 0 rosso, 120 verde, 240 blu) e che non sono grigi (`saturo`, da 0 a 255, 40 di ripiego);
     pelle, cuoio e bianchi restano com'erano. Per un personaggio provvisorio: la guaritrice con il cappuccio verde diventa
-    la maga col cappuccio viola, finché il generatore non porta la sua figura (docs/sotterraneo/terra-di-sopra.md)."""
+    la maga col cappuccio viola, finché il generatore non porta la sua figura (docs/sotterraneo/chi-cura.md)."""
     if not regola:
         return pezzo
     try:
