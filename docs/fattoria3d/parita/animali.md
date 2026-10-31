@@ -70,4 +70,3 @@ sbagliato dato per gioco insegna il sbagliato; una coccola gratis c'è sempre (`
 | A14 | punti di aggancio (testa, muso, collo, schiena) | dal foglietto di ogni sprite | ❌ servirebbero sui modelli 3D | P2 |
 | A15 | guardaroba del contadino | ❌ | ✳ gratuito (cappello, maglia, pantalone, stivali, collo, capelli, pelle), speciali dai livelli 6–12 | tieni (D10) |
 
-Nota: il «fascia con il fiore» della contadina sembra un berretto (feedback aperto, [piano-a-giri.md](piano-a-giri.md)).

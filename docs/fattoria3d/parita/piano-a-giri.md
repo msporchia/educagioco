@@ -33,7 +33,7 @@ Rischi:
 | richiesta | stato | dove |
 |---|---|---|
 | deve essere al pari del vecchio fattoria | questo documento | – |
-| la fascia della contadina col fiore sembra un berretto | aperta | `scena3d/modelli-compagni.js` (`creaContadino`), [../guardaroba.md](../guardaroba.md) |
+| la fascia della contadina col fiore sembra un berretto | fatta: un cerchietto da un orecchio all'altro col fiore di lato | `scena3d/modelli-compagni.js` (`creaContadino`), [../guardaroba.md](../guardaroba.md) |
 | cibo specifico per animale | fatto per le bestie del cortile (mangime); mancano le bestie di casa | A6 |
 | HUD ridotto | fatto (le scorte stanno nell'inventario) | – |
 | il richiamo di Watson | fatto, da giudicare col dito | [../compagni.md](../compagni.md) |
