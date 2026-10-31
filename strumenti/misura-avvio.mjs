@@ -2,7 +2,7 @@
 //
 //   node strumenti/misura-avvio.mjs                         # home + tutti i giochi, CPU normale
 //   node strumenti/misura-avvio.mjs --lento 4               # come un telefono di fascia media (6 = bassa)
-//   node strumenti/misura-avvio.mjs sotterraneo fattoria    # solo quei giochi (la home c'è sempre)
+//   node strumenti/misura-avvio.mjs sotterraneo fattoria3d    # solo quei giochi (la home c'è sempre)
 //   node strumenti/misura-avvio.mjs --dist tmp/vecchio/dist/index.html   # un altro file costruito
 //   node strumenti/misura-avvio.mjs --soglia 200            # MB decodificati oltre i quali esce con errore
 //
@@ -20,7 +20,7 @@ const valoriOpzioni = new Set(['dist', 'lento', 'soglia'].map(n => opz(n)).filte
 const scelti = argv.filter(a => !a.startsWith('--') && !valoriOpzioni.has(a))
 const file = resolve(opz('dist', 'dist/index.html'))
 const lento = Number(opz('lento', 1)), soglia = Number(opz('soglia', 0))
-const GIOCHI = ['mate', 'torri', 'bancarella', 'codice', 'survivors', 'conta', 'prima', 'fattoria',
+const GIOCHI = ['mate', 'torri', 'bancarella', 'codice', 'survivors', 'conta', 'prima', 'fattoria3d',
   'sotterraneo', 'pozioni', 'passo', 'costruttore', 'inglese', 'spagnolo', 'arena']
 const elenco = (scelti.length ? scelti : GIOCHI).filter(n => n !== 'home')
 

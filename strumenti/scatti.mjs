@@ -35,20 +35,11 @@ import { dirname, join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
 import { spawnSync } from 'node:child_process'
 
-/* Il motore della fattoria gira anche qui: è l'unico modo di fotografare
-   una fattoria *giocata* senza scrivere a mano un salvataggio, che si
-   scosterebbe dal formato vero al primo cambio di campo. */
-import { Fattoria } from '../src/giochi/fattoria/motore/fattoria.js'
-import { PRIMA, CELLE } from '../src/giochi/fattoria/dati/mondo.js'
-import { PER_COLTURA, PER_RICETTA, MINUTO } from '../src/giochi/fattoria/dati/coltivazioni.js'
-import { sogliaDi } from '../src/giochi/fattoria/dati/livelli.js'
 import { SOSTA } from './clip/survivors.mjs'
-import ricettaFattoria, { FATTORIA as FATTORIA_CLIP, puntoSchermo } from './clip/fattoria.mjs'
 import { FILA_ATTUALE } from '../src/giochi/costruttore/dati/campagna.js'
 // le discese del sotterraneo stanno sulla terra di sopra: ci si va a piedi, come nelle prove
 import { scendiNelSotterraneo, giocaGiornata } from '../test/aiuto/browser.mjs'
 
-const LIVELLO_FOTO = 10
 const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const GIOCO = 'file://' + resolve(RADICE, 'dist/index.html')
 const FUORI = resolve(RADICE, 'docs/img')
@@ -86,56 +77,7 @@ const PROFILO = {
   lab: { tappa: 5, libera: false, v: 2 },
   gen: { tappa: 8, libera: false, ordini: {}, stelle: {} },
   giorni: { ultimo: '', serie: 4, record: 9, totali: 30 },
-  /* Una fattoria già cominciata. Non si scrive a mano: la si **gioca** col
-     motore vero, qui in Node, e si fotografa quello che ne esce. Una
-     fattoria appena nata è un prato vuoto — è deciso così, la prima
-     panchina vale perché è costata — e fotografata racconterebbe che qui
-     non c'è niente da fare. */
-  campagne: undefined,          // riscritto qui sotto, dopo il motore
-}
-
-/* ── la fattoria da fotografare ──
-   Un campo di grano pronto, uno a metà crescita, il mulino al lavoro, un
-   pollaio contento e qualche cosa attorno: sono le quattro cose che la
-   fattoria ha da mostrare, e nessuna si vede in un prato appena aperto. Le celle sono dentro la terra
-   di partenza (`PRIMA`…`ULTIMA` di `dati/mondo.js`), dove il bosco non
-   nasce mai — quindi è sempre libera. */
-function fattoriaGiocata() {
-  const f = new Fattoria()
-  /* Il livello prima di posare: mulino e pollaio si aprono al 3 e all'8,
-     e il bobtail va anche reclamato (`bestiaAperta`). Senza, `posa` e
-     `compraBestia` tornano `non-sbloccato` in silenzio e la foto esce
-     un prato con un campo. */
-  f.speso = sogliaDi(LIVELLO_FOTO)
-  f.reclamaTutto()
-  /* Cinque celle dentro l'angolo della terra di partenza: la telecamera si
-     centra sul mezzo delle terre, e partendo dall'angolo il campo di grano
-     — la cosa da guardare — finiva tagliato dal bordo sinistro. */
-  const c = PRIMA * CELLE + 5
-  f.posa('fienile', c + 7, c + 1)
-  f.posa('arbusto_tondo', c + 8, c + 4)
-  f.posa('arbusto_tondo', c + 10, c + 4)
-  f.posa('ceppo', c + 1, c + 9)
-  f.posa('fiori1', c, c + 8)
-
-  const campoPronto = f.posa('orto', c, c + 1).cosa
-  const campoAMeta = f.posa('orto', c + 3, c + 1).cosa
-  const mulino = f.posa('mulino', c + 1, c + 5).cosa
-  f.posa('silo', c + 10, c + 7)
-  const pollaio = f.posa('pollaio', c + 5, c + 5).cosa
-
-  const grano = PER_COLTURA.grano
-  f.seminaCampo(campoPronto, 'grano', ADESSO - (grano.minuti + 1) * MINUTO)
-  f.seminaCampo(campoAMeta, 'mais', ADESSO - 4 * MINUTO)
-  f.metti('grano', 9)
-  f.avvia(mulino, 'mangime', ADESSO - MINUTO)
-  /* Il pollaio a metà lavoro: è lo stato «contento», col cuore, ed è il
-     modo di far vedere in una foto sola che un recinto **si legge da
-     lontano** senza aprire niente. */
-  f.avvia(pollaio, 'uova', ADESSO - PER_RICETTA.uova.minuti * 0.5 * MINUTO)
-
-  f.compraBestia('cane-bobtail', 0, 'Watson', { x: c + 5, y: c + 8 })
-  return f.serializza()
+  campagne: undefined,          // riscritto qui sotto
 }
 
 PROFILO.campagne = {
@@ -149,7 +91,6 @@ PROFILO.campagne = {
                     nave: { scafo: 'nero', ali: 'rubino', fiamma: 'arancio', disegno: 'fiamme',
                             colDisegno: 'oro', stemma: 'corona', colStemma: 'oro' } } },
   codice: { tappa: 5, libera: true, stelle: {}, cfg: {} },
-  fattoria: { tappa: 0, libera: false, stelle: {}, cfg: { stato: fattoriaGiocata() } },
   // tre tappe del primo mondo vinte: la mappa ha un sentiero battuto e la nave a metà
   inglese: { tappa: 3, libera: false, stelle: {}, cfg: {},
              vinte: { 'prima-colori': ADESSO - 3 * 864e5, 'prima-animali': ADESSO - 2 * 864e5,
@@ -382,19 +323,12 @@ const RICETTE = [
   { file: 'codice-gioco', dove: 'codice', attesa: '.tappe, .mappa, .cs-tappe',
     passi: [['.tappa:not(.chiusa), .cs-tappa', 3000]] },
 
-  /* La fattoria si fotografa **giocata** (vedi `fattoriaGiocata()`): un
-     campo di grano pronto col cestino sopra, uno che cresce, il mulino al
-     lavoro. Appena aperta è un prato vuoto, e lo è per scelta. */
-  { file: 'fattoria-gioco', dove: 'fattoria', attesa: '.fa-tela',
-    /* l'orto grande della clip, e un campo pronto toccato: spunta il cesto */
-    profilo: ricettaFattoria.profilo,
-    passi: [async page => {
-      const box = await page.locator('.fa-tela').boundingBox()
-      const { x, y } = puntoSchermo(box, FATTORIA_CLIP.pronti[0].x, FATTORIA_CLIP.pronti[0].y)
-      await page.waitForTimeout(6500)          // il fumetto d'avvio se ne va da sé
-      await page.mouse.click(x, y)
-      await page.waitForTimeout(900)
-    }] },
+  /* La fattoria si fotografa **giocata**: il cheat `#fattoria3d-tipo=N` mette una fattoria già
+     cominciata (campi a stadi diversi, macchine al lavoro: `fattoria3d/motore/tipo.js`). Appena
+     aperta è un prato vuoto, e lo è per scelta. Il cheat butta quella del bambino nel cestino:
+     qui è il bambino finto di `PROFILO`. */
+  { file: 'fattoria-gioco', dove: 'fattoria3d-tipo=30', attesa: '[data-f3="campo"]',
+    passi: [async page => { await page.waitForTimeout(4000) }] },       // il mondo si disegna, il fumetto d'avvio se ne va
 
   /* tre domande di tre materie, per il README: una col disegno del tempo,
      una di matematica disegnata, una di ragionamento a parole. Si ritaglia

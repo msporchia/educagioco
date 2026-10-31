@@ -8,7 +8,8 @@ cella da 16 px accanto, per giudicare se un pezzo sta bene a schermo.
     python3 strumenti/sprite/vedi.py sotterraneo cantine- --fuori tmp/pezzi/cantine.png
 
 Scrive `tmp/pezzi/<nome>.png` (di difetto il primo nome o prefisso). Il riquadro giallo scuro è una cella di gioco (16 px,
-col fondo del pezzo): dice quanto è grande il pezzo accanto all'eroe (14×16). Legge `src/giochi/<gioco>/dati/atlante.js`.
+col fondo del pezzo): dice quanto è grande il pezzo accanto all'eroe (14×16). Legge il modulo dell'atlante di quel gioco (`MODULI`: la fattoria sta in `src/grafica/atlante-fattoria.js`,
+gli altri in `src/giochi/<gioco>/dati/atlante.js`).
 """
 import argparse
 import base64
@@ -23,8 +24,11 @@ from PIL import Image, ImageDraw, ImageFont
 RADICE = Path(__file__).resolve().parent.parent.parent
 
 
+MODULI = {'fattoria': RADICE / 'src' / 'grafica' / 'atlante-fattoria.js'}
+
+
 def leggi(gioco):
-    testo = (RADICE / 'src' / 'giochi' / gioco / 'dati' / 'atlante.js').read_text()
+    testo = MODULI.get(gioco, RADICE / 'src' / 'giochi' / gioco / 'dati' / 'atlante.js').read_text()
     def blocco(nome):
         m = re.search(rf'^export const {nome} = (.*)$', testo, re.M)
         return m.group(1).rstrip(';') if m else None

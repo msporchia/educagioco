@@ -9,7 +9,7 @@ altro gioco**.
 
 ```
 sorgenti/
-  fattoria/       atlante.json → src/giochi/fattoria/dati/atlante.js
+  fattoria/       atlante.json → src/grafica/atlante-fattoria.js
   sotterraneo/    atlante.json → src/giochi/sotterraneo/dati/atlante.js
   castello/       atlante.json → src/giochi/castello/dati/figure.js e vestiti.js  (li compone vesti.py)
 ```
