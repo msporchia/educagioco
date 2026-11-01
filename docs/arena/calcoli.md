@@ -16,7 +16,9 @@ grossi sono del castello.
 - **La grandezza dei numeri la decide il bambino, poi il prezzo** (`bravura.js`).
   Ogni operazione ha una **base**, un grado del modulo: la prima caserma chiede
   quella, e una scelta cara sale di un grado ogni due di «peso» (`calcoloDi`, da 1
-  a 10: costruire `1 + prezzo/4`, potenziare il livello dell'edificio, la miniera
+  a 10: costruire e potenziare una truppa pesano **quanto vale l'edificio** (`pesoDelValore`: la
+  spesa totale fatta su di lui, col prezzo che si sta pagando, a scala logaritmica — un drago al livello 1 vale
+  più di un arciere al livello 1, e un arciere al livello 10 più di tutti; l'utente 1/11), la miniera
   `3 + livello`, il castello `2 + livello/2`). Prima la grandezza era solo del
   prezzo, e la prima caserma chiedeva `7 + 6` a tutti (l'utente: «troppo facili»).
 - **La base si muove giocando**: un conto giusto entro 6 secondi la alza di un

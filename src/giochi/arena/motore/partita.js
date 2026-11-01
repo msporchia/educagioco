@@ -21,6 +21,11 @@ const dist = (a, b) => ipot(a.x - b.x, a.y - b.y)
 const viva = e => e.hp > 0
 const sponda = y => (y < CAMPO.fiume.alto ? -1 : y > CAMPO.fiume.basso ? 1 : 0)   // -1 sopra, 1 sotto, 0 nell'acqua
 
+/* quanto pesa un conto in base a quanto vale l'edificio (tutto quello che ci si è speso, col prezzo che si
+   sta pagando): sale col logaritmo, 6 monete → 2, 20 → 6, 60 → 9, da 100 in su → 10. Un drago al livello 1
+   chiede più di un arciere al livello 1, e un arciere al livello 10 chiede più di tutti. Docs: calcoli.md */
+const pesoDelValore = v => Math.max(1, Math.min(10, Math.round(1 + 2 * Math.log2(v / 4))))
+
 export class Partita {
   /* `sfida`: { nemico: 'normale' | {moneteAlSecondo, pensa, forza}, durata, monete, truppe, forzaNemico }.
      `eviaIA`: il carattere dell'ultima partita, per cambiarlo. `registra`: tiene gli eventi per la scena (un banco di prova non li vuole). */
@@ -379,11 +384,11 @@ export class Partita {
      traduce nella grandezza dei numeri */
   calcoloDi(lato, azione, chi) {
     if (azione === 'costruisci' && chi === 'miniera') return { op: AZIONI.miniera.op, peso: 3 }
-    if (azione === 'costruisci') return { op: TRUPPE[chi].op, peso: 1 + Math.ceil(TRUPPE[chi].costo / 4) }
+    if (azione === 'costruisci') return { op: TRUPPE[chi].op, peso: pesoDelValore(TRUPPE[chi].costo) }
     if (azione === 'potenzia') {
       const c = this.edificioIn(lato, chi)
       if (c.tipo === 'miniera') return { op: AZIONI.miniera.op, peso: Math.min(10, c.liv + 3) }
-      return { op: TRUPPE[c.id].op, peso: Math.min(10, c.liv + 1) }
+      return { op: TRUPPE[c.id].op, peso: pesoDelValore(c.spesa + this.prezzo(lato, 'potenzia', chi)) }
     }
     if (azione === 'miniera') return { op: AZIONI.miniera.op, peso: Math.min(10, 2 + this.lati[lato].miniera) }
     if (azione === 'bomba') return { op: AZIONI.bomba.op, peso: 5 }
