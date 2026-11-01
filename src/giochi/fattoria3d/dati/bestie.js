@@ -11,6 +11,7 @@ import { ANIMALI_2D, NOMI_2D, premioBenessere } from './parita2d.js'
 import { COMPAGNI } from './compagni.js'
 import { merceDi } from './ricette.js'
 import { PER_ID as ADDOBBO_2D } from '../da2d/dati/addobbi.js'
+import { COLORI_2D, NATALE, chiaveDi } from './addobbi-colori.js'
 
 export { BISOGNI, CHIAVI, FONDO, nuovo, foto, scendi, riarma, BENISSIMO, BENE, tuttoAPosto, premiaSeStaBene, umore, comeSta, haBisogno, COCCOLE }
 
@@ -99,7 +100,10 @@ export function bestiaInForma(letto, ora = Date.now()) {
   const nome = pulisciNome(l.nome)
   if (nome) r.nome = nome
   if (Number.isInteger(l.i) && Number.isInteger(l.j) && Math.abs(l.i) < 1e6 && Math.abs(l.j) < 1e6) { r.i = l.i; r.j = l.j }
-  const addosso = Object.entries(oggetto(l.addobbi)).filter(([dove, id]) => ADDOBBO_2D[id] && ADDOBBO_2D[id].dove === dove)
+  // quello che porta: { aggancio: chiave `<id>:<colore>` }; un id solo (salvataggio di prima) vale il colore di base. Non importa dati/addobbi.js (importa questo).
+  const natale = id => NATALE.find(n => n.id === id)
+  const addosso = Object.entries(oggetto(l.addobbi)).map(([dove, v]) => [dove, chiaveDi(v, id => COLORI_2D[id] || (natale(id) && natale(id).colori) || null)])
+    .filter(([dove, k]) => k && ((ADDOBBO_2D[k.split(':')[0]] || natale(k.split(':')[0])).dove === dove))
   if (addosso.length) r.addobbi = Object.fromEntries(addosso)
   return r
 }

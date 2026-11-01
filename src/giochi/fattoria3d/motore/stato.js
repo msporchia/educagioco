@@ -74,7 +74,7 @@ export function statoIniziale() {
     vecchi: [],                // gli id (`a_b`) dei lotti comprati prima della geografia grande dove ora cambierebbe qualcosa: si generano alla vecchia (generaLotto `vecchio: true`)
     vecchi1: [],               // gli id dei lotti comprati con `geo: 1` dove ora c'è un lago naturale al posto della pozzanghera: restano com'erano (generaLotto `vecchio: 1`)
     casa: casaIniziale(),      // le bestie di casa che hai preso (docs/fattoria3d/bestie-di-casa.md): { beagle: { pancia, pelo, gioco, quando, premiato, nome?, i?, j? } }
-    addobbi: {},               // il cassetto degli addobbi delle bestie: comprati e non addosso, { id: quanti } (dati/addobbi.js)
+    addobbi: {},               // il cassetto degli addobbi delle bestie: comprati e non addosso, { 'id:colore': quanti } (dati/addobbi.js; un id solo di prima vale il colore di base)
     pesca: {},                 // per lotto d'acqua tuo: { i, j (dove sta il galleggiante), fine (quando abbocca, null se non c'è la lenza), riposo (quando il banco si ripopola, null) }
     strade: [],                // le celle (indice di griglia) disegnate dal bambino
     aspettoStrade: {},         // per le strade che non sono quella di base: { idCella: 'ghiaia.cordolo' } (tipo.bordo, dati/strade.js); le altre sono terra senza bordo

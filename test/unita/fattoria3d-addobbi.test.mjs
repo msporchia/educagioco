@@ -10,7 +10,7 @@
    `node test/esegui.mjs fattoria3d-addobbi --niente-build`
    tempo: 1
    ═══════════════════════════════════════════════════════════════════ */
-import { ADDOBBI, PER_ID, staA, addobbiPer, guastiDegliAddobbi3d, cassettoInForma } from '../../src/giochi/fattoria3d/dati/addobbi.js'
+import { ADDOBBI, PER_ID, N_ADDOBBI_2D, staA, addobbiPer, guastiDegliAddobbi3d, cassettoInForma, chiaveAddobbo } from '../../src/giochi/fattoria3d/dati/addobbi.js'
 import { ADDOBBI as ADDOBBI_2D } from '../../src/giochi/fattoria3d/da2d/dati/addobbi.js'
 import { ADDOBBI_DISEGNATI, AGGANCI } from '../../src/giochi/fattoria3d/scena3d/modelli-addobbi.js'
 import { sogliaDi } from '../../src/giochi/fattoria3d/dati/livelli.js'
@@ -32,7 +32,7 @@ const motoreCon = ({ liv = 70, monete = 1000, stato = null } = {}) => {
 {
   const g = guastiDegliAddobbi3d()
   controlla('i dati degli addobbi non hanno guasti', !g.length, g.join(' · '))
-  uguale('gli stessi della 2D, con gli stessi prezzi e agganci', ADDOBBI.map(a => `${a.id}:${a.prezzo}:${a.dove}`).join(), ADDOBBI_2D.map(a => `${a.id}:${a.prezzo}:${a.dove}`).join())
+  uguale('i primi sono quelli della 2D, con gli stessi prezzi e agganci', ADDOBBI.slice(0, N_ADDOBBI_2D).map(a => `${a.id}:${a.prezzo}:${a.dove}`).join(), ADDOBBI_2D.map(a => `${a.id}:${a.prezzo}:${a.dove}`).join())
   uguale('ognuno ha il suo modello', ADDOBBI_DISEGNATI.slice().sort().join(), ADDOBBI.map(a => a.id).sort().join())
   for (const [forma, tab] of Object.entries(AGGANCI)) {
     const attesi = forma === 'pappagallo' ? ['testa', 'muso', 'collo'] : ['testa', 'muso', 'collo', 'schiena']
@@ -44,7 +44,7 @@ const motoreCon = ({ liv = 70, monete = 1000, stato = null } = {}) => {
   controlla('a chi non si cura non sta niente', !staA('fiore', 'drago'))
   controlla('il cappello da strega si vede solo a Halloween', !addobbiPer('watson').some(a => a.id === 'cappello_strega') && addobbiPer('watson', { stagione: 'halloween' })[0].id === 'cappello_strega')
   controlla('…o se ce l\'hai già', addobbiPer('watson', { tieni: ['cappello_strega'] }).some(a => a.id === 'cappello_strega'))
-  uguale('il cassetto letto da un salvataggio guasto tiene solo i buoni', JSON.stringify(cassettoInForma({ fiore: 2, drago: 1, corona: -1, cilindro: 'x' })), '{"fiore":2}')
+  uguale('il cassetto letto da un salvataggio guasto tiene solo i buoni', JSON.stringify(cassettoInForma({ fiore: 2, drago: 1, corona: -1, cilindro: 'x', 'mantellina:blu': 1, 'mantellina:turchese': 1 })), '{"fiore:rosa":2,"mantellina:blu":1}')
 }
 
 // ── il motore: comprare è mettere, un aggancio tiene una cosa, togliere rimette nel cassetto ──
@@ -53,10 +53,10 @@ const motoreCon = ({ liv = 70, monete = 1000, stato = null } = {}) => {
   uguale('una bestia che non hai', f.cura.vesti('beagle', 'fiore').motivo, 'non-e-tua')
   const r = f.cura.vesti('watson', 'cilindro')
   controlla('Watson mette il cilindro, e lo paga', r.ok && r.costo === PER_ID.cilindro.prezzo && b.monete === 100 - PER_ID.cilindro.prezzo, JSON.stringify(r))
-  uguale('lo porta', f.cura.addossoA('watson').testa, 'cilindro')
+  uguale('lo porta', f.cura.addossoA('watson').testa, 'cilindro:nero')
   uguale('rimetterlo non lo ricompra', f.cura.vesti('watson', 'cilindro').motivo, 'gia-addosso')
   const m0 = b.monete, r2 = f.cura.vesti('watson', 'corona')
-  controlla('la corona cambia il cilindro, che torna nel cassetto', r2.ok && r2.tolto === 'cilindro' && f.cura.quantiNelCassetto('cilindro') === 1 && b.monete === m0 - PER_ID.corona.prezzo)
+  controlla('la corona cambia il cilindro, che torna nel cassetto', r2.ok && r2.tolto === 'cilindro:nero' && f.cura.quantiNelCassetto('cilindro') === 1 && b.monete === m0 - PER_ID.corona.prezzo)
   const r3 = f.cura.vesti('sherlock', 'cilindro')
   controlla('il cilindro nel cassetto va a Sherlock gratis', r3.ok && r3.costo === 0 && f.cura.quantiNelCassetto('cilindro') === 0)
   uguale('al cane niente campanella', f.cura.vesti('watson', 'campanella').motivo, 'non-gli-sta')
@@ -69,12 +69,12 @@ const motoreCon = ({ liv = 70, monete = 1000, stato = null } = {}) => {
   const povero = motoreCon({ liv: 20, monete: 3 })
   uguale('senza monete dice quante servono', povero.f.cura.vesti('watson', 'zainetto').costo, PER_ID.zainetto.prezzo)
   const v = f.cura.vestiarioDi('watson')
-  controlla('il vestiario dice cosa porta e cosa hai', v.find(a => a.id === 'cappello_strega').addosso && v.find(a => a.id === 'corona').hai === 1)
+  controlla('il vestiario dice cosa porta e cosa hai', v.find(a => a.id === 'cappello_strega').addosso === 'notte' && v.find(a => a.id === 'corona').colori[0].hai === 1)
   const letto = normalizza(JSON.parse(JSON.stringify(f.s)))
-  uguale('quello che porta si salva', JSON.stringify(letto.casa.watson.addobbi), '{"testa":"cappello_strega"}')
-  uguale('il cassetto si salva', JSON.stringify(letto.addobbi), '{"corona":1}')
+  uguale('quello che porta si salva', JSON.stringify(letto.casa.watson.addobbi), '{"testa":"cappello_strega:notte"}')
+  uguale('il cassetto si salva', JSON.stringify(letto.addobbi), '{"corona:oro":1}')
   uguale('uno stato di prima ha il cassetto vuoto', JSON.stringify(normalizza({ v: 10 }).addobbi), '{}')
-  uguale('un addobbo sull\'aggancio sbagliato si butta', JSON.stringify(normalizza({ ...statoIniziale(), casa: { watson: { addobbi: { muso: 'corona', testa: 'fiore' } } } }).casa.watson.addobbi), '{"testa":"fiore"}')
+  uguale('un addobbo sull\'aggancio sbagliato si butta', JSON.stringify(normalizza({ ...statoIniziale(), casa: { watson: { addobbi: { muso: 'corona', testa: 'fiore' } } } }).casa.watson.addobbi), '{"testa":"fiore:rosa"}')
 }
 
 // ── la conversione dalla 2D: il guardaroba è il cassetto, quello che le bestie portano lo portano ancora ──
@@ -87,16 +87,42 @@ const motoreCon = ({ liv = 70, monete = 1000, stato = null } = {}) => {
   f.bestie.push({ chi: 'gatto-tuxedo', nome: 'Ombra', x: 12, y: 10, addobbi: { collo: 'campanella' } })
   f.reclamati = {}
   const s = statoDa2D(JSON.parse(JSON.stringify(f.serializza())), { ora: ORA })
-  uguale('il guardaroba diventa il cassetto', JSON.stringify(s.addobbi), '{"cilindro":1,"fiocco":2}')
-  uguale('il beagle porta ancora corona e occhiali', JSON.stringify(s.casa.beagle.addobbi), '{"testa":"corona","muso":"occhiali"}')
-  uguale('il pappagallo il fiore', JSON.stringify(s.casa.pappagallo.addobbi), '{"testa":"fiore"}')
-  uguale('Sherlock (il gatto bianco e nero) la campanella', JSON.stringify(s.casa.sherlock.addobbi), '{"collo":"campanella"}')
+  uguale('il guardaroba diventa il cassetto', JSON.stringify(s.addobbi), '{"cilindro:nero":1,"fiocco:fucsia":2}')
+  uguale('il beagle porta ancora corona e occhiali', JSON.stringify(s.casa.beagle.addobbi), '{"testa":"corona:oro","muso":"occhiali:nero"}')
+  uguale('il pappagallo il fiore', JSON.stringify(s.casa.pappagallo.addobbi), '{"testa":"fiore:rosa"}')
+  uguale('Sherlock (il gatto bianco e nero) la campanella', JSON.stringify(s.casa.sherlock.addobbi), '{"collo":"campanella:rosso"}')
   controlla('nessun addobbo è più «da regalare»', !Object.keys(s.daRegalare).some(k => k.startsWith('addobbo:')), JSON.stringify(s.daRegalare))
   const vecchio = { ...s, migrato: 2, addobbi: {}, daRegalare: { 'addobbo:zainetto': 2, 'scorta:tartufi': 1 } }
   const r = ritoccaLaConversione(vecchio, f.serializza(), { ora: ORA })
-  uguale('chi era convertito prima riceve gli addobbi che aspettavano', r.addobbi.zainetto, 2)
+  uguale('chi era convertito prima riceve gli addobbi che aspettavano', r.addobbi['zainetto:giallo'], 2)
   uguale('…e resta da regalare il resto', JSON.stringify(r.daRegalare), '{"scorta:tartufi":1}')
   uguale('con la conversione nuova', r.migrato, MIGRAZIONE)
+}
+
+// ── i colori: si compra un colore e quello resta tuo; un altro colore si paga di nuovo ──
+{
+  const { f, b } = motoreCon({ liv: 20, monete: 200 })
+  const r = f.cura.vesti('watson', 'mantellina:blu')
+  controlla('la mantellina blu si compra e si mette', r.ok && r.costo === PER_ID.mantellina.prezzo && f.cura.addossoA('watson').schiena === 'mantellina:blu', JSON.stringify(r))
+  const m0 = b.monete, r2 = f.cura.vesti('watson', 'mantellina:verde')
+  controlla('un altro colore si paga di nuovo, e il blu torna nel cassetto', r2.ok && r2.costo === PER_ID.mantellina.prezzo && b.monete === m0 - PER_ID.mantellina.prezzo && f.cura.quantiNelCassetto('mantellina:blu') === 1)
+  const m1 = b.monete, r3 = f.cura.vesti('watson', 'mantellina:blu')
+  controlla('il blu è tuo: rimetterlo è gratis', r3.ok && r3.costo === 0 && b.monete === m1)
+  uguale('un colore che non esiste', f.cura.vesti('watson', 'mantellina:turchese').motivo, 'non-esiste')
+  const v = f.cura.vestiarioDi('watson').find(a => a.id === 'mantellina')
+  controlla('lo scaffale dice il colore addosso e quello nel cassetto', v.addosso === 'blu' && v.colori.find(c => c.id === 'verde').hai === 1 && v.colori.find(c => c.id === 'rosso').hai === 0)
+  uguale('l\'id solo vale il colore di base', chiaveAddobbo('mantellina'), 'mantellina:' + PER_ID.mantellina.colori[0].id)
+}
+
+// ── Natale: solo nei giorni di Natale, col suo livello; comprati restano ──
+{
+  const { f } = motoreCon({ liv: 3, monete: 300 })
+  uguale('fuori Natale non si compra', f.cura.vesti('sherlock', 'cappello_babbo').motivo, 'fuori-stagione')
+  controlla('a Natale sì, al livello giusto', f.cura.vesti('sherlock', 'cappello_babbo', { stagione: 'natale' }).ok)
+  uguale('prima del suo livello no', f.cura.vesti('sherlock', 'corna_renna', { stagione: 'natale' }).motivo, 'troppo-presto')
+  controlla('lo scaffale lo segna bloccato', f.cura.vestiarioDi('sherlock', 'natale').find(a => a.id === 'corna_renna').bloccato === PER_ID.corna_renna.liv)
+  controlla('i campanelli stanno anche al cane', staA('campanelli', 'watson') && staA('pacco_regalo', 'watson') && !staA('pacco_regalo', 'pappagallo'))
+  controlla('passato Natale resta nel negozio quello che hai', f.cura.vestiarioDi('sherlock', '').some(a => a.id === 'cappello_babbo') && !f.cura.vestiarioDi('sherlock', '').some(a => a.id === 'campanelli'))
 }
 
 riassunto('fattoria3d-addobbi')
