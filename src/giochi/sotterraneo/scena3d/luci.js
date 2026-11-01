@@ -81,7 +81,8 @@ export function creaLuci(scena, aspetto) {
     },
     distribuisci(sorgenti, ex, ez, t) {
       condivise.uLn.value = 0
-      for (const s of sorgenti) s.d = s.vis > 0.2 ? (s.pos.x - ex) ** 2 + (s.pos.z - ez) ** 2 : Infinity
+      // la torcia appesa da prendere (`prima`) passa davanti: è così che la si trova (docs/sotterraneo/luce.md)
+      for (const s of sorgenti) s.d = s.vis > 0.2 ? (s.prima ? -1 : (s.pos.x - ex) ** 2 + (s.pos.z - ez) ** 2) : Infinity
       sorgenti.sort((a, b) => a.d - b.d)
       nFuochiV = 0
       const n = ACCESI.lucePerVertice ? N_FUOCHI : fuochi.length

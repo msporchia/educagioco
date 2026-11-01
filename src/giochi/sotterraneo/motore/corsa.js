@@ -26,6 +26,7 @@ import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino, livelloD
 import { generaPiano } from './livello.js'
 import { percorso, viaVerso, primaLibera } from '../../../motore/passi.js'
 import { Corredo, eCura, curePerTipo } from './corredo.js'
+import { torceDelPiano, ALONE_APPESA } from './torce-a-muro.js'
 
 // l'ordine degli stadi: l'ampolla della vita sta in fondo anche quando la vita è poca e un'ampolla ne curerebbe di più
 const pesoDiCura = p => (COSE[p.k].tutta ? Infinity : p.cura)
@@ -242,6 +243,8 @@ export class Corsa extends Corredo {
       livello.robe = livello.robe.filter(r => !(r.che === 'gemme' && r.x === dentro.cx && r.y === dentro.cy))
       livello.robe.push({ che: 'scala-su', x: dentro.cx, y: dentro.cy, em: '🪜', nome: 'La scala che sale' })
     }
+    // le torce a muro, e ogni tanto una da prendere (motore/torce-a-muro.js): fuori dalle robe, o una sosta di prima non si rileggerebbe
+    if (!t.palco) livello.torce = torceDelPiano(livello, this.seme + p * 7919)
     return livello
   }
 
@@ -343,6 +346,7 @@ export class Corsa extends Corredo {
       }
       if (libero) accendi(x, y, f)
     }
+    this.luceDellAppesa(accendi, porte, cx, cy)
     // il muro accanto a un pavimento acceso si accende con lui, o i corridoi sembrerebbero senza pareti
     for (const [k, f] of [...forza]) {
       const x = k % L, y = Math.floor(k / L)
@@ -358,6 +362,32 @@ export class Corsa extends Corredo {
     // entrare in una stanza si conta anche al buio: è l'eroe a esserci, non la luce
     if (st && cx >= st.x - 1 && cy >= st.y - 1 && cx <= st.x + st.w && cy <= st.y + st.h &&
         !this.stanzeDentro.has(st.id)) { this.stanzeDentro.add(st.id); this.stanzeViste++ }
+  }
+
+  // la torcia da prendere del piano, finché sta appesa
+  get torciaAppesa() { return (this.livello && this.livello.torce || []).find(t => t.prendi && !t.presa) || null }
+
+  // la torcia appesa fa luce attorno a sé, così la si trova: la vede chi è nella sua stanza (la stanza è il confine), e la luce non
+  // passa dai muri. Piena sotto di lei, sfuma fino a ALONE_APPESA (docs/sotterraneo/luce.md, «Le torce appese»)
+  luceDellAppesa(accendi, porte, cx, cy) {
+    const t = this.torciaAppesa, liv = this.livello
+    if (!t) return
+    const st = liv.stanze.find(s => s.id === t.stanza)
+    if (!st || cx < st.x - 1 || cy < st.y - 1 || cx > st.x + st.w || cy > st.y + st.h) return
+    const ox = t.x + 0.5, oy = t.y + 1.5, r = Math.ceil(ALONE_APPESA)
+    accendi(t.x, t.y, 1)
+    for (let x = t.x - r; x <= t.x + r; x++) for (let y = t.y + 1; y <= t.y + 1 + r; y++) {
+      const dx = x + 0.5 - ox, dy = y + 0.5 - oy, d = ipot(dx, dy)
+      const f = Math.min(1, (ALONE_APPESA - d) / ALONE_SFUMA)
+      if (f < FORZA_MINIMA || this.fermaLaLuce(porte, x, y)) continue
+      const n = Math.max(1, Math.ceil(d * 4))
+      let libero = true
+      for (let i = 1; i < n && libero; i++) {
+        const px = Math.floor(ox + dx * i / n), py = Math.floor(oy + dy * i / n)
+        if ((px !== x || py !== y) && this.fermaLaLuce(porte, px, py)) libero = false
+      }
+      if (libero) accendi(x, y, f)
+    }
   }
 
   // un mostro si vede solo se sta in una cella accesa adesso, sveglio o no (docs/sotterraneo/regole.md, «La luce»)
@@ -435,6 +465,9 @@ export class Corsa extends Corredo {
   // `preciso` distingue il tocco dal trascinamento: trascinando l'eroe insegue senza aprire pannelli
   vaiVerso(c, preciso = true) {
     if (this.foglio || this.finita) return
+    // un tocco sulla torcia appesa (la sua cella di muro): ci si va sotto, che la stacca (raccogli)
+    const appesa = this.torciaAppesa
+    if (appesa && c.x === appesa.x && c.y === appesa.y) c = { x: appesa.x, y: appesa.y + 1 }
     const mira = preciso ? this.cosaC(c) : null
     // un tocco su una cassa non resta muto, ma guarda solo la cella premuta (l'arredo non ruba il tocco a un forziere accanto)
     if (preciso && !mira) this.diCheCosaC(c)
@@ -616,6 +649,13 @@ export class Corsa extends Corredo {
       this.gemme += quante
       r.presa = true
       this.dillo(`💎 +${quante}`)
+    }
+    // la torcia appesa si stacca passandoci sotto: diventa la propria, e da lì brucia (prima no)
+    const t = this.torciaAppesa
+    if (t && cx === t.x && cy === t.y + 1) {
+      t.presa = true
+      this.accendi('torcia')
+      this.aggiornaLuce()
     }
   }
 

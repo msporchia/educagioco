@@ -10,9 +10,10 @@
    dell'eroe che dice «nessuna torcia» e chi le vende, tre torce comprate,
    la pagina dell'eroe e lo zaino di sopra che le contano alla cintura, il
    gemello che riporta giù con una accesa (il motore, la torcia in mano, il
-   cono lungo) e la pagina dell'eroe e lo zaino di giù che lo dicono.
+   cono lungo) e la pagina dell'eroe e lo zaino di giù che lo dicono. Poi la torcia appesa a un muro: accesa, fa
+   luce; toccata, l'eroe ci va sotto e diventa la sua, e sul muro resta la staffa vuota.
    `node test/esegui.mjs sotterraneo-torce`
-   tempo: 300
+   tempo: 420
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, finestraFerma, mondoPronto, alBancoDi,
          compraNellaBottega, sopraVaDa, senzaPensieri } from '../aiuto/browser.mjs'
@@ -133,6 +134,48 @@ await page.waitForSelector('[data-zaino] [data-torcia-zaino]', { timeout: 5000 }
 uguale('e lo zaino di giù', (await riga('[data-torcia-zaino]')).resta, STANZE_TORCIA)
 await chiudi('[data-zaino]')
 
+/* ---------- 6. la torcia appesa: fa luce sul muro, la si tocca, l'eroe ci va sotto e diventa la sua ----------
+   (docs/sotterraneo/luce.md, «Le torce appese»). Si scende al buio nelle cantine col seme 1, che al primo piano ne ha una, a tre celle */
+await page.evaluate(() => { location.hash = '' })
+await semina(page, {
+  coins: 300, settings: { sperimentali: true },
+  campagne: { sotterraneo: { tappa: 1, libera: false, stelle: { 0: 3 },
+    cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: 1, libera: false, stelle: { 0: 3 }, missioni: {}, roba, mondo: { parlato: true } } } } } },
+})
+await page.evaluate(() => { location.hash = 'sotterraneo=1&seme=1&stanza=appesa&pensieri=no' })
+await page.waitForSelector('[data-tela="3d"]', { timeout: 40000 })
+await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 30000 })
+await attendi(page, 3000)
+const appesa = () => page.evaluate(() => {
+  const s3 = window.__sotterraneo3d, c = s3.corsa, t = c.torciaAppesa, tutte = c.livello.torce || []
+  const q = tutte.find(x => x.prendi)
+  let scala = null
+  s3.scena.traverse(o => { if (o.isInstancedMesh && o.userData.elemento3d === 'arredo' && o.material && o.material.vertexColors && o.count === 1 && scala == null) { const m = new o.matrix.constructor(); o.getMatrixAt(0, m); scala = Math.round(Math.hypot(m.elements[0], m.elements[1], m.elements[2]) * 100) / 100 } })
+  return { appesa: !!t, x: q && q.x, y: q && q.y, luce: !!q && c.luce.has(q.y * c.livello.largo + q.x), sotto: !!q && c.luce.has((q.y + 1) * c.livello.largo + q.x),
+           accesa: c.torciaAccesa, resta: c.torciaResta, scala }
+})
+let a = await appesa()
+uguale('al buio, nel primo piano c\'è una torcia appesa da prendere', a.appesa, true)
+uguale('e l\'eroe è al buio', a.accesa, false)
+controlla('fa luce: il suo muro e la cella sotto sono accesi', a.luce && a.sotto, JSON.stringify(a))
+controlla('appesa si vede il suo modello nella staffa', a.scala > 0, String(a.scala))
+await scatto(page, 'torce-appesa')
+// un tocco sulla torcia (la cella di muro): l'eroe va sotto, e la stacca
+{
+  const tela = page.locator('[data-tela="3d"]'), b = await tela.boundingBox()
+  const [sx, sy] = await page.evaluate(([x, y]) => window.__sotterraneo3d.aSchermo(x + 0.5, 0.8, y + 1), [a.x, a.y])
+  await tocca(b.x + sx, b.y + sy)
+  for (let i = 0; i < 20 && (await appesa()).appesa; i++) await attendi(page, 400)
+}
+a = await appesa()
+uguale('toccata, l\'eroe ci va sotto e la prende', a.appesa, false)
+uguale('e diventa la sua torcia, accesa e piena', `${a.accesa}|${a.resta}`, `true|${STANZE_TORCIA}`)
+uguale('sul muro resta la staffa vuota', a.scala, 0)
+await scatto(page, 'torce-appesa-presa')
+r = await paginaEroe()
+uguale('la pagina dell\'eroe la conta', `${r.n}|${r.resta}`, `1|${STANZE_TORCIA}`)
+await chiudi('[data-pagina-eroe]')
+
 uguale('nessun errore in console', errori.join(' | '), '')
 await browser.close()
-riassunto('le torce comprate, col dito')
+riassunto('le torce comprate e quella appesa, col dito')

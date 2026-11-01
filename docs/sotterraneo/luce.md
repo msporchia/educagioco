@@ -150,15 +150,16 @@ il disegno in `scena3d/` ([grafica-3d.md](grafica-3d.md)).
   scendendo da capo, tornando dal portale o riprendendo la sosta
   (`motore/sosta.js`), entrando in una stanza. Senza, chi saliva al buio dal
   portale e comprava torce tornava giù al buio (l'utente, 31 ottobre).
-- **Se ne trovano** (oltre a comprarle) poche: da un forziere, da un mostro, da
-  una curiosità. Quante, e la regola proposta per trovarne di più: [sotto](#quante-se-ne-trovano).
+- **Se ne trovano**, oltre a comprarle: appese ai muri ([sotto](#le-torce-appese)),
+  e poche da un forziere, da un mostro, da una curiosità.
 
 Nei test: `unita/sotterraneo-sosta` (§ 10: le diciotto torce comprate che
 tornando dal portale si accendono, la stanza al buio che ne accende una),
 `integrazione/sotterraneo-torce` (col dito: la pagina dell'eroe senza torce,
 tre comprate dalla guaritrice, la pagina e lo zaino di sopra che le contano
 alla cintura, il gemello che riporta giù con una accesa in mano e il cono
-lungo, la pagina e lo zaino di giù); `[data-torcia-eroe]` nella pagina
+lungo, la pagina e lo zaino di giù; poi la torcia appesa: accesa fa luce sul suo muro, il modello nella staffa, toccata l'eroe ci va
+sotto e diventa sua, sul muro resta la staffa vuota; `--scatti` lascia `torce-appesa` e `torce-appesa-presa`); `[data-torcia-eroe]` nella pagina
 dell'eroe e `[data-torcia-zaino]` nello zaino, con `data-torce` (quante in
 tutto), `data-resta` (le stanze di quella accesa, 0 se spenta) e
 `data-scorta` (quelle alla cintura).
@@ -199,36 +200,37 @@ tutto), `data-resta` (le stanze di quella accesa, 0 se spenta) e
 - La torcia costa 5 gemme a piano (la guaritrice ne ha sempre), contro 6–16
   gemme a piano che esce il giro minimo: la comodità adesso pesa.
 
-## Quante se ne trovano
+## Le torce appese
 
-**Oggi quasi nessuna.** Senza comprarne, chi gira tutto ne trova 0,2 a discesa e chi va dritto nessuna (`npm run sotterraneo --
---luce`: roba e livello attesi, senza torce in tasca, 40 partite a discesa a 8/10, le sei discese dopo la cripta): il forziere che
-dà una torcia invece di una pozione, i pipistrelli e i fantasmi (`lascia`) quando un mostro lascia da bere (uno di strada su venti),
-le curiosità. Al buio sono 81–100% delle stanze di chi gira (media 93%) e tutte quelle di chi va dritto. Nella cripta i mostri
-lasciano da bere uno su due, e chi gira ne trova una.
+**Ogni tanto una torcia a muro si prende** (l'utente, 1 novembre: «le torce potremmo anche trovarle appese alle pareti, è meno
+costoso e ha più senso»; «sono già lì e fanno già luce, da quando le prendi parte il counter»). Le torce a muro sono quelle di
+sempre, una ogni cinque celle sulla parete in alto di una stanza (`torceAMuroDi` in `motore/torce-a-muro.js`: il motore le sa, e
+`scena3d/pianta.js` le disegna da lì). In poco più di otto piani su dieci (`PIANI_CON_LA_TORCIA` 0,85) una di loro si prende, mai
+nella stanza d'ingresso né in quella della scala, che sono sulla strada di tutti; quale lo dice un tiro dal seme del piano, così non
+sposta il caso della discesa.
 
-**La regola proposta, non applicata.** L'utente, 31 ottobre: «ha senso che uno le trovi e non che si debba ricordare ogni volta di
-comprarne una valanga, che ci siano momenti di buio e che tu capisca che puoi comprarle». La proposta: una torcia in più da tre
-forzieri su dieci, da un mostro di strada su trenta, da un caporale su dieci, mai dal grosso, con un tiro dal seme come l'elisir
-(`torciaCade` accanto a `ampollaCade` in `motore/bottino.js`, chiamato dove muore un mostro e dove si apre un forziere; sul prato
-di sopra no). Misurata:
+- **Si riconosce**: nella staffa c'è la torcia dello zaino (il modello di `roba3d/pozioni.js`, la versione semplice, più grande e più
+  scura di quella per terra perché il fuoco le sta addosso), storta di lato perché dall'alto si veda; quelle di decoro sono solo la
+  staffa di ferro con la fiamma. Una mesh istanziata per tutte (`scena3d/torce-appese.js`).
+- **Fa luce, ed è così che la si trova**: per chi è nella sua stanza accende il suo muro e attorno, fino a `ALONE_APPESA` 2,6 celle,
+  piena sotto di lei (`luceDellAppesa` in `motore/corsa.js`): la stanza è il confine, da fuori non si vede. Nella scena la sua fiamma e
+  la sua luce sono quelle del fuoco a muro che già c'era; nella riserva fissa dei fuochi (`scena3d/luci.js`) passa davanti agli altri
+  (`prima`), così non resta mai senza luce. Nessuna luce in più.
+- **Appesa non si consuma.** Passandoci sotto, o toccandola (l'eroe ci va), diventa la propria: si accende piena (o va alla cintura se
+  una brucia già) e da lì conta le stanze. Sul muro resta la staffa vuota, senza fiamma, e non torna: la sosta lo scrive (`appesa`).
+- **Quante se ne trovano** (`npm run sotterraneo -- --luce`: roba e livello attesi, senza torce in tasca, 40 partite a discesa a 8/10,
+  le sei discese dopo la cripta; il giocatore finto che gira passa sotto quella che vede accesa):
 
-| | torce a discesa, oggi → con la regola | stanze al buio, oggi → con la regola |
-|---|---|---|
-| chi gira tutto | 0–0,7 (media 0,2) → 0,5–1,8 (media 1) | 81–100% (media 93%) → 44–82% (media 67%) |
-| chi va dritto | 0 → 0,1–0,5 (media 0,2) | 100% → 87–99% (media 94%) |
+  | | torce a discesa, prima → con le appese | stanze al buio, prima → con le appese |
+  |---|---|---|
+  | chi gira tutto | 0–0,7 (media 0,2) → 0,3–2,2 (media 1) | 81–100% (media 93%) → 41–86% (media 63%) |
+  | chi va dritto | 0 → 0–0,3 (media 0,1) | 100% → 86–99% (media 94%) |
 
-Le torce che avanzano uscendo (0,3–0,9 a discesa per chi gira) scenderebbero alla discesa dopo. La taratura (`npm run taratura`,
-oggi con `--tara torcia.mostro=0,torcia.caporale=0,torcia.forziere=0`) non si muove oltre il caso: il curioso sviene per vincerla
-0,2·1,2·1,2·1,6·1·1,4·1 → 0,2·1,2·1·1,6·0,9·1,5·0,6. Con quaranta torce in tasca il curioso sviene meno (dodici storie del
-cavaliere nelle sale allagate: 13 svenimenti contro 16): la luce non rende il gioco più duro.
-
-**Perché è ferma**: `misure/sotterraneo` sta già ai margini (zone al 24 a 9/10 54% su un minimo di 50, l'eroe del 15 a 9/10 60% su
-un massimo di 60) e ogni cambio del caso delle storie ne fa cadere uno: con la regola le zone al 24 a 49% e il mago nella porta
-dell'inferno 12/20 (ne vuole 13); con altri sali o altre quote l'eroe del 15 al 63%, l'eroe del 20 a 6/10 al 48%, o le sei storie
-del cavaliere nelle sale allagate a 3 o 4 su 6. Le differenze vengono dalla roba con cui il curioso esce dalla storia, non dalla luce.
-Da decidere: allargare quei bersagli di qualche punto (sono misure arrotondate al 5%, e il caso ne vale altrettanto) e accendere la
-regola.
+  Le altre torce restano poche: il forziere che dà una torcia invece di una pozione, i pipistrelli e i fantasmi quando un mostro
+  lascia da bere, le curiosità. Le torce che avanzano uscendo (0,2–0,8 a discesa per chi gira) scendono con lui alla discesa dopo.
+- **L'equilibrio**: `misure/sotterraneo` col bersaglio dell'eroe del 15 nelle zone allargato da 60% a 67% (vince il 63%: la roba con
+  cui il curioso esce dalla storia cambia col caso); gli altri bersagli non cadono. Provate prima (31 ottobre) le torce in più da
+  forzieri e mostri: facevano ballare un bersaglio diverso a ogni quota, e trovarle per terra non aveva il senso di una torcia a muro.
 
 Nei test: `unita/sotterraneo-piani` (§ 11 e 12: un relitto fa ombra come un muro, l'acqua no),
 `unita/sotterraneo-luce` (il cono davanti e l'ombra dietro con e
@@ -237,7 +239,9 @@ da dietro e di lato che con la torcia, piena o agli sgoccioli, non fanno mai
 agguato né giro largo e al buio sì, la sorpresa che resta, la stanza che non si accende tutta, la sfumatura, la porta che
 ferma la luce, il verso che segue il passo, il mostro fuori luce che punta
 alle spalle e quello in luce che va dritto, l'agguato da dietro e non da
-davanti), `unita/sotterraneo` (§ «la torcia conta»: la torcia che allunga il
+davanti; in fondo la torcia appesa: in molti piani e non in tutti, al più una, mai nell'ingresso né nella stanza della scala, dove la
+disegna la scena, la luce che fa nella sua stanza e non fuori, toccata ci si va sotto e diventa propria e piena, non torna riprendendo la
+sosta), `unita/sotterraneo` (§ «la torcia conta»: la torcia che allunga il
 cono, la sveglia dei mostri, gli sgoccioli), `integrazione/sotterraneo-luce`
 (i pixel accesi della tela con, senza e agli sgoccioli, e la luce che segue il
 verso; `--scatti` lascia le foto `sotterraneo-luce-con`, `-senza`,

@@ -94,7 +94,7 @@ if (argv[0] === '--lavoro') {
   console.log(JSON.stringify(r))
 
   // la luce di chi non compra torce (docs/sotterraneo/luce.md, «Quante se ne trovano»): quante torce trova una discesa, da dove (la cosa
-  // per terra dice `da`: forziere, strada, caporale, grosso; la curiosità le accende senza posarle), le stanze in cui entra e quante al buio,
+  // per terra dice `da`: forziere, strada, caporale, grosso; la curiosità le accende senza posarle; le appese ai muri sono il resto), le stanze in cui entra e quante al buio,
   // e quante gliene restano uscendo. Conta dal motore com'è, anche su un commit di prima (`--contro`): la torcia che si accende dalla cintura
   // non è una trovata
   async function luce({ eroe, k, semi, come, bravura }) {
@@ -468,6 +468,8 @@ async function misura(radice) {
       righe.push({ titolo: '   dai forzieri', celle: a(come, 'forziere'), numeri: true })
       righe.push({ titolo: '   dai mostri', celle: a(come, 'mostro'), numeri: true })
       righe.push({ titolo: '   dalle curiosità', celle: a(come, 'curiosita'), numeri: true })
+      // le torce appese (motore/torce-a-muro.js) si accendono passandoci sotto, senza una cosa per terra: sono quelle che restano
+      righe.push({ titolo: '   appese ai muri', celle: discese.map(k => +((somma(come, k, 'torce') - somma(come, k, 'forziere') - somma(come, k, 'mostro') - somma(come, k, 'curiosita') - somma(come, k, 'terra')) / part).toFixed(1)), numeri: true })
       righe.push({ titolo: '   stanze entrate', celle: a(come, 'stanze').map(Math.round), numeri: true })
       righe.push({ titolo: '   al buio (%)', celle: discese.map(k => percento(somma(come, k, 'buio'), somma(come, k, 'stanze') || 1)), numeri: true })
       righe.push({ titolo: '   torce uscendo', celle: a(come, 'restano'), numeri: true })

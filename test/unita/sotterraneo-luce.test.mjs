@@ -4,7 +4,7 @@
    che sfuma ai bordi e si ferma a una porta chiusa, il verso che segue il passo (da fermo resta, toccando una cosa si
    gira), il mostro fuori luce che punta alle spalle e quello in luce che va dritto, l'agguato che scatta da dietro e non
    da davanti; con la torcia accesa il cono quasi gira attorno, l'alone copre le spalle e nessuno arriva da dietro (né
-   agguato né giro largo), mentre la sorpresa dell'eroe resta.
+   agguato né giro largo), mentre la sorpresa dell'eroe resta. In fondo la torcia appesa da prendere.
    `node test/esegui.mjs sotterraneo-luce --niente-build` */
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { RAGGIO, RAGGIO_TORCIA, RAGGIO_SGOCCIOLI, ALONE, ALONE_TORCIA, APERTURA_CONO, APERTURA_TORCIA, APERTURA_SGOCCIOLI, DIETRO, FIANCO, PASSO_EROE, PASSO_MOSTRO }
@@ -251,5 +251,49 @@ const io = { x: lunga.x + 3, y: riga }   // tre celle di stanza dietro, sei dava
 /* ── i mostri restano più lenti, e il verso resta l'ultimo passo ── */
 controlla('i mostri restano più lenti dell\'eroe', PASSO_MOSTRO < PASSO_EROE)
 controlla('lunghezze in ordine: senza torcia, agli sgoccioli, con la torcia', RAGGIO < RAGGIO_SGOCCIOLI && RAGGIO_SGOCCIOLI < RAGGIO_TORCIA)
+
+/* ── la torcia appesa (docs/sotterraneo/luce.md, «Le torce appese»): ogni tanto una torcia a muro si prende. Accesa fa luce attorno a sé
+   per chi è nella sua stanza, così la si trova; non si consuma finché è appesa; passandoci sotto (o toccandola) diventa la propria,
+   piena; non torna, nemmeno riprendendo la sosta; e sta dove il disegno mette le torce a muro ── */
+{
+  const { torceAMuroDi, PIANI_CON_LA_TORCIA, NON_NELLE_STANZE } = await import('../../src/giochi/sotterraneo/motore/torce-a-muro.js')
+  const { piantaDi } = await import('../../src/giochi/sotterraneo/scena3d/pianta.js')
+  const { scrivi, leggi } = await import('../../src/giochi/sotterraneo/motore/sosta.js')
+  let con = 0, una = true, fuori = true, pari = true, c = null
+  for (let s = 1; s <= 60; s++) {
+    const k = new Corsa(CAMPAGNA[1], { seme: s, rnd: seminato(s), roba })
+    const prese = (k.livello.torce || []).filter(t => t.prendi)
+    if (prese.length) con++
+    if (prese.length > 1) una = false
+    for (const t of prese) if (NON_NELLE_STANZE.includes(k.livello.stanze.find(r => r.id === t.stanza).ruolo)) fuori = false
+    if (JSON.stringify(torceAMuroDi(k.livello).map(t => [t.x, t.y])) !== JSON.stringify(piantaDi(k.livello).torce.map(t => [t.x, t.y]))) pari = false
+    if (!c && prese.length) c = k
+  }
+  controlla('una torcia da prendere in molti piani, non in tutti', con > 60 * (PIANI_CON_LA_TORCIA - 0.2) && con < 60, `${con}/60`)
+  controlla('al più una per piano', una)
+  controlla('mai nella stanza d\'ingresso né in quella della scala', fuori)
+  controlla('il disegno mette le torce a muro dove le sa il motore', pari)
+  const t = c.torciaAppesa, L = c.livello.largo
+  for (const r of c.livello.robe) if (r.che === 'mostro') r.morto = true
+  const st = c.livello.stanze.find(r => r.id === t.stanza)
+  const dentro = st.suolo.find(q => Math.abs(q.x - t.x) + Math.abs(q.y - t.y - 1) >= 3) || st.suolo[0]
+  c.eroe = { x: dentro.x + 0.5, y: dentro.y + 0.5 }; c.segnaLaStanza(); c.aggiornaLuce()
+  controlla('nella sua stanza la torcia appesa fa luce: il suo muro e la cella sotto', c.luce.has(t.y * L + t.x) && c.luce.has((t.y + 1) * L + t.x))
+  uguale('e l\'eroe resta al buio: appesa non è sua', c.torciaAccesa, false)
+  // da un'altra stanza non si vede (la stanza è il confine)
+  const altra = c.livello.stanze.find(r => r.id !== t.stanza && Math.abs(r.cx - t.x) + Math.abs(r.cy - t.y) > 12)
+  c.eroe = { x: altra.cx + 0.5, y: altra.cy + 0.5 }; c.segnaLaStanza(); c.aggiornaLuce()
+  uguale('da un\'altra stanza la sua luce non c\'è', c.luce.has((t.y + 1) * L + t.x), false)
+  // un tocco sul muro della torcia porta l'eroe sotto, e passandoci la stacca
+  c.eroe = { x: dentro.x + 0.5, y: dentro.y + 0.5 }; c.segnaLaStanza(); c.aggiornaLuce()
+  c.vaiVerso({ x: t.x, y: t.y }, false)
+  for (let i = 0; i < 400 && c.strada; i++) c.passo(0.05)
+  uguale('toccata, l\'eroe ci va sotto e la stacca', c.torciaAppesa, null)
+  uguale('è la sua: accesa e piena', c.torciaResta, c.stanzeTorcia)
+  const giu = leggi(scrivi(c, 1), CAMPAGNA[1], c.roba)
+  uguale('riprendendo la sosta non torna sul muro', giu.torciaAppesa, null)
+  const sul = new Corsa(CAMPAGNA[1], { seme: c.seme, rnd: seminato(c.seme), roba })
+  uguale('e in una discesa nuova dallo stesso seme è al suo posto', !!sul.torciaAppesa, true)
+}
 
 riassunto('la luce a cono')

@@ -10,6 +10,7 @@ import { creaTerrenoAPassi } from './terreno.js'
 import { creaRelitti } from './relitti.js'
 import { creaPozze } from './acqua.js'
 import { creaFiamme } from './segni.js'
+import { creaTorceAppese } from './torce-appese.js'
 import { creaFontana } from './fontana.js'
 import { creaPortale } from './portale.js'
 import { creaBotti } from './botti.js'
@@ -62,6 +63,15 @@ export function* costruisciPianoAPassi(scena, corsa, { maschera, luci, trameDi, 
   const fiamme = ACCESI.fiamme ? el('fiamme', () => creaFiamme(scena, maschera, fuochi, aspetto.fiamma)) : { aggiorna() {}, accesa() {}, via() {} }
   via.push(fiamme.via)
   const sorgenti = fuochi.map(f => ({ pos: f.luce, colore, forza: f.forza, vis: 0, seme: Math.random() * 100, trema: true, raggio: 7, cella: f.cz * pianta.W + f.cx }))
+  // la torcia da prendere (motore/torce-a-muro.js): il modello nella staffa, e la sua luce passa davanti alle altre nella riserva
+  pianta.torce.forEach((t, i) => { if (t.prendi) sorgenti[i].prima = true })
+  const appese = el('arredo', () => creaTorceAppese(scena, { torce: pianta.torce, facce: terreno.facce, maschera })); via.push(appese.via)
+  const giu = new Set()   // le torce di muro spente adesso (un muro abbassato nello scontro)
+  const accesa = i => !giu.has(i) && !(pianta.torce[i] && pianta.torce[i].presa)
+  const rifai = i => { const su = accesa(i); fiamme.accesa(i, su); if (sorgenti[i]) sorgenti[i].forza = su ? fuochi[i].forza : 0; appese.posa(i, su) }
+  const prese = new Set()
+  const sincronizzaAppese = () => pianta.torce.forEach((t, i) => { if (t.prendi && t.presa && !prese.has(i)) { prese.add(i); rifai(i) } })
+  sincronizzaAppese()   // una sosta ripresa con la torcia già presa
   yield 'fiamme'
 
   // la fonte e il portale, modellati; il loro stato è del motore (la fonte bevuta resta secca)
@@ -124,8 +134,10 @@ export function* costruisciPianoAPassi(scena, corsa, { maschera, luci, trameDi, 
         const k = sorgenti.indexOf(p.luce); if (k >= 0) sorgenti.splice(k, 1)
       }
     },
-    // le torce che stanno su un muro abbassato per lo scontro si spengono, e tornano
-    torcia(i, su) { fiamme.accesa(i, su); if (sorgenti[i]) sorgenti[i].forza = su ? fuochi[i].forza : 0 },
+    // le torce che stanno su un muro abbassato per lo scontro si spengono, e tornano (la presa no)
+    torcia(i, su) { if (su) giu.delete(i); else giu.add(i); rifai(i) },
+    // a ogni fotogramma: la torcia appesa presa nel motore si stacca dal muro, e la sua fiamma e la sua luce se ne vanno
+    sincronizzaAppese,
     via() { for (const f of via) f() },
   }
 }
