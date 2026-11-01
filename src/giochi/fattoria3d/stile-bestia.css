@@ -35,5 +35,12 @@
 .f3-bes-msg { flex: none; margin: 8px 10px calc(12px + env(safe-area-inset-bottom)); padding: 8px 12px; min-height: 42px; box-sizing: border-box; border-radius: 12px; background: #fff7e4; border: 3px solid #6b4423; font-weight: 800; font-size: 13px; line-height: 1.25; }
 .f3-bat .f3-bes-corpo { margin-bottom: calc(14px + env(safe-area-inset-bottom)); }
 .f3-bat .f3-bes-gesto { flex: 1 1 40%; min-height: 48px; font-size: 14px; }
+.f3-bat-scrivi { display: flex; gap: 6px; margin-top: 10px; }
+/* 16 px: sotto, Safari ingrandisce la pagina quando la casella prende il fuoco */
+.f3-bat-scrivi input { flex: 1 1 0; min-width: 0; min-height: 48px; box-sizing: border-box; padding: 0 12px; border: 2px solid #6b4423; border-radius: 14px; background: #fffdf6;
+  color: #3a2a1a; font: 800 16px "Emoji Gioco", system-ui, sans-serif; }
+.f3-bat-scrivi input:focus { outline: none; border-color: #f0a020; background: #fff3cf; }
+.f3-bat-scrivi .f3-bes-az { flex: none; padding: 0 14px; }
+.f3-bat-scrivi .f3-bes-az:disabled { opacity: .45; }
 @media (min-width: 700px) { .f3-bes.f3-foglio { left: 0; right: 0; margin: 0 auto; max-width: 720px; border-radius: 22px 22px 0 0; } }
 @media (prefers-reduced-motion: reduce) { .f3-bes *, .f3-bes-barra i { animation: none !important; transition: none !important; } }
