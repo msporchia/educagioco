@@ -1,5 +1,5 @@
 // Le strade di tutti i tipi, coi loro bordi: un banco di istanze per tipo (il fondo, una cella l'una) e uno o due per ogni stile di bordo
-// (cordolo, sassi, erba alta). Il bordo si calcola dai vicini (dati/tessere.js): sta solo sui lati che non toccano un'altra strada dello
+// (cordolo, ciottolini, steccato, ciuffi). Il bordo si calcola dai vicini (dati/tessere.js): sta solo sui lati che non toccano un'altra strada dello
 // stesso tipo, e sugli angoli rientranti. Il peso è quello delle istanze: non cresce con la fattoria (finestra di lotti, come il resto).
 // Vedi docs/fattoria3d/terreno.md «Le strade: tipi e bordi» e «Gli strati del terreno».
 import * as THREE from 'three'
