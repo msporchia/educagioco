@@ -6,7 +6,7 @@
    col livello, e non si comprano né si spostano. Vedi docs/fattoria3d/bestie-di-casa.md. */
 import { BESTIE, IDS_BESTIE, CURATI, curabile, cibo as ciboPerId, coccola as coccolaPerId, gradisce, scendi, tuttoAPosto, premiaSeStaBene, nuovo, pulisciNome, comeCompagno, perche } from '../dati/bestie.js'
 import { compagniAl } from '../dati/compagni.js'
-import { addobbo as addobboPerId, addobbiPer, staA } from '../dati/addobbi.js'
+import { addobbiPer, staA, leggiAddobbo, faChiave, chiaveAddobbo } from '../dati/addobbi.js'
 
 const PIENO = 0.93          // sopra, un bisogno è «a posto» e il gesto non serve (come in 2D)
 
@@ -121,33 +121,40 @@ export class Cura {
 
   // ── gli addobbi (dati/addobbi.js): si comprano una volta e non si consumano; un aggancio tiene una cosa sola, e una seconda cambia la prima ──
   get cassetto() { return this.m.s.addobbi }
-  quantiNelCassetto(id) { return this.cassetto[id] || 0 }
+  quantiNelCassetto(chiave) { return this.cassetto[chiaveAddobbo(chiave)] || 0 }      // l'id solo vale il colore di base
   /** Quello che porta una bestia: { aggancio: id }. */
   addossoA(id) { const b = this.casa[id]; return (b && b.addobbi) || {} }
-  /** Gli addobbi da mostrare nel foglio di una bestia, ognuno con `addosso` (lo porta lei), `hai` (quanti nel cassetto) e il prezzo. */
+  /** Gli addobbi da mostrare nel negozio di una bestia, ognuno con `colori` (ognuno con `hai` = quanti nel cassetto e `addosso` = lo porta lei), `addosso`
+      (il colore che porta, o null) e `bloccato` (il livello che manca, o 0), `fuoriStagione` (la festa è finita: i colori che non hai non si comprano). Un addobbo si compra in un colore, e quel colore resta tuo. */
   vestiarioDi(id, stagione = '') {
-    const su = this.addossoA(id), tieni = [...Object.keys(this.cassetto), ...Object.values(su)]
-    return addobbiPer(id, { stagione, tieni }).map(a => ({ ...a, addosso: su[a.dove] === a.id, hai: this.quantiNelCassetto(a.id) }))
+    const su = this.addossoA(id), tieni = [...Object.keys(this.cassetto), ...Object.values(su)].map(k => k.split(':')[0]), liv = this.m.livello()
+    return addobbiPer(id, { stagione, tieni }).map(a => {
+      const portato = su[a.dove] && su[a.dove].split(':')[0] === a.id ? su[a.dove].split(':')[1] : null
+      return { ...a, addosso: portato, bloccato: a.liv > liv ? a.liv : 0, fuoriStagione: !!a.stagione && a.stagione !== stagione, colori: a.colori.map(c => ({ ...c, hai: this.quantiNelCassetto(faChiave(a.id, c.id)), addosso: portato === c.id })) }
+    })
   }
-  /** Mette un addobbo a una bestia: se non è nel cassetto lo compra (il prezzo è sul tasto), e quello che c'era su quell'aggancio torna nel cassetto.
-      Rifiuti: `non-e-tua`, `non-esiste`, `non-gli-sta` (con `dove`), `gia-addosso`, `fuori-stagione`, `poche-monete` (con `costo`). */
-  vesti(id, addobboId, { stagione = '' } = {}) {
-    const b = this._record(id), a = addobboPerId(addobboId)
+  /** Mette un addobbo a una bestia, nel colore dato (`<id>:<colore>`; l'id solo vale il colore di base). Se quel colore non è nel cassetto lo compra
+      (il prezzo è sul tasto: ogni colore si paga), e quello che c'era su quell'aggancio torna nel cassetto.
+      Rifiuti: `non-e-tua`, `non-esiste`, `non-gli-sta` (con `dove`), `gia-addosso`, `fuori-stagione`, `troppo-presto` (con `liv`), `poche-monete` (con `costo`). */
+  vesti(id, chiave, { stagione = '' } = {}) {
+    const b = this._record(id), l = leggiAddobbo(chiave)
     if (!b) return { ok: false, motivo: 'non-e-tua' }
-    if (!a) return { ok: false, motivo: 'non-esiste' }
+    if (!l) return { ok: false, motivo: 'non-esiste' }
+    const a = l.addobbo, k = l.chiave
     if (!staA(a.id, id)) return { ok: false, motivo: 'non-gli-sta', dove: a.dove }
     const su = b.addobbi || {}, prima = su[a.dove] || null
-    if (prima === a.id) return { ok: false, motivo: 'gia-addosso' }
+    if (prima === k) return { ok: false, motivo: 'gia-addosso' }
     let costo = 0
-    if (this.quantiNelCassetto(a.id) < 1) {
+    if (this.quantiNelCassetto(k) < 1) {
       if (a.stagione && a.stagione !== stagione) return { ok: false, motivo: 'fuori-stagione', stagione: a.stagione }
+      if (a.liv > this.m.livello()) return { ok: false, motivo: 'troppo-presto', liv: a.liv }
       if (a.prezzo > this.m.monete()) return { ok: false, motivo: 'poche-monete', costo: a.prezzo }
       this.m._spendi(a.prezzo); costo = a.prezzo
-    } else if (--this.cassetto[a.id] < 1) delete this.cassetto[a.id]
+    } else if (--this.cassetto[k] < 1) delete this.cassetto[k]
     if (prima) this.cassetto[prima] = this.quantiNelCassetto(prima) + 1
-    b.addobbi = { ...su, [a.dove]: a.id }
-    this.m._evento('vestita', { bestia: id, addobbo: a.id })
-    return { ok: true, costo, addobbo: a, tolto: prima }
+    b.addobbi = { ...su, [a.dove]: k }
+    this.m._evento('vestita', { bestia: id, addobbo: a.id, colore: l.colore.id })
+    return { ok: true, costo, addobbo: a, colore: l.colore, tolto: prima }
   }
   /** Toglie quello che una bestia porta su un aggancio: torna nel cassetto, gratis. */
   spoglia(id, dove) {
