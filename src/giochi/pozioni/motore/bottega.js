@@ -1,7 +1,7 @@
 // La bottega del mercante (in prova): una pozione con tanti ingredienti,
-// un banchetto di ampolle a prezzo per ognuno, e i gettoni contati. Si
-// compra un'ampolla e finisce nel suo misurino; oltre la tacca d'oro
-// trabocca, e prima di comprare ancora si pulisce. Puro: il caso arriva
+// un listino di ampolle a prezzo per ognuno, e i gettoni contati. Si
+// ordinano due o tre ampolle e il mercante le versa nei loro misurini;
+// oltre la tacca d'oro trabocca, e prima di ordinare ancora si pulisce. Puro: il caso arriva
 // da fuori (`rnd`). Le regole in docs/pozioni/bottega.md.
 import { FAMIGLIA, INGREDIENTI, POZIONI, CLIENTI, VALE, scrivi } from '../dati/misure.js'
 import { PEZZI, PREZZO, PULIZIA, MONETE_A_DOSE, DOSI } from '../dati/bottega.js'
@@ -104,7 +104,7 @@ export class Bottega {
     this.gettoni = this.minimo + tappa.margine
     this.speso = 0
     this.corrente = 0
-    this.macchia = null          // { ingrediente, colore }: quello che è traboccato, da pulire
+    this.macchie = []            // i misurini con la macchia attorno, da pulire prima del prossimo ordine
     this.traboccate = 0
     this.pulizie = 0
     this.monete = 0              // quante ne ha rese la pozione (le paga Gioco.vue)
@@ -115,53 +115,68 @@ export class Bottega {
   get extra() { return this.speso - this.minimo }
   // le stelle dicono quanto si è speso, non quante volte si è sbagliato
   get stelle() { return this.extra <= 0 ? 3 : this.extra <= 3 ? 2 : 1 }
+  get quanteInOrdine() { return this.tappa.ordine || 3 }
   fatto(i) { const g = this.ingredienti[i]; return g.messo >= g.dose }
   manca(i) { const g = this.ingredienti[i]; return scrivi(g.dose - g.messo, g.unita) }
 
+  // quale listino si guarda: si sceglie anche con le macchie, ordinare no
   scegli(i) {
-    if (this.finita || this.macchia || !this.ingredienti[i] || this.fatto(i)) return false
+    if (this.finita || !this.ingredienti[i] || this.fatto(i)) return false
     this.corrente = i
     return true
   }
 
-  compra(k) {
-    if (this.finita || this.macchia) return null
-    const i = this.corrente, g = this.ingredienti[i], o = g.offerte[k]
-    if (!o || this.fatto(i)) return null
-    this.speso += o.prezzo
+  /* L'ordine al mercante: due o tre ampolle (`voci`: { i, k }, anche di
+     ingredienti diversi), pagate tutte insieme e versate in fila. Ognuna
+     ci sta o trabocca da sola, nell'ordine scritto. Torna gli esiti, uno
+     per ampolla, già decisi: la scena li suona uno dopo l'altro. */
+  ordina(voci) {
+    if (this.finita || this.macchie.length || !voci || !voci.length || voci.length > this.quanteInOrdine) return null
+    if (voci.some(v => !this.ingredienti[v.i] || !this.ingredienti[v.i].offerte[v.k])) return null
+    const costo = voci.reduce((s, v) => s + this.ingredienti[v.i].offerte[v.k].prezzo, 0)
+    this.speso += costo
+    const esiti = voci.map(v => this.versaUna(v.i, v.k))
+    if (this.fatto(this.corrente)) {
+      const dopo = this.ingredienti.findIndex((_, j) => !this.fatto(j))
+      if (dopo >= 0) this.corrente = dopo
+    }
+    this.finita = this.ingredienti.every((_, j) => this.fatto(j))
+    return { costo, esiti, finita: this.finita }
+  }
+
+  versaUna(i, k) {
+    const g = this.ingredienti[i], o = g.offerte[k]
     const u = g.unita, letto = scrivi(o.base, o.unita)
     const vale = o.unita === u ? letto : `${letto} = ${scrivi(o.base, u)}`
     const chiave = chiaveDi(o.unita, u)
+    const base = { ingrediente: i, ampolla: k, testo: letto, prima: g.messo }
     if (g.messo + o.base > g.dose) {
       this.traboccate++; g.traboccate++
-      this.macchia = { ingrediente: i, colore: g.colore }
-      return { tipo: 'trabocca', ampolla: k, ingrediente: i, prezzo: o.prezzo,
-               annota: chiave && { chiave, giusto: false },
-               righe: [`Trabocca! ${vale}.`,
-                       `Di ${g.nome} c'erano ${scrivi(g.messo, u)}: ${scrivi(g.messo, u)} + ${scrivi(o.base, u)} = ${scrivi(g.messo + o.base, u)}, oltre la tacca di ${scrivi(g.dose, u)}.`,
-                       `Ne mancavano ${scrivi(g.dose - g.messo, u)}. Ora c'è da pulire.`] }
+      if (!this.macchie.includes(i)) this.macchie.push(i)
+      return { ...base, tipo: 'trabocca', dopo: g.messo, annota: chiave && { chiave, giusto: false },
+               righe: [`Trabocca! ${vale} di ${g.nome}.`,
+                       g.messo === g.dose
+                         ? `Il misurino era già pieno: ${scrivi(g.dose, u)}.`
+                         : `C'erano ${scrivi(g.messo, u)}: ${scrivi(g.messo, u)} + ${scrivi(o.base, u)} = ${scrivi(g.messo + o.base, u)}, oltre la tacca di ${scrivi(g.dose, u)}. Ne mancavano ${scrivi(g.dose - g.messo, u)}.`] }
     }
     g.messo += o.base
     g.pezzi.push(o.base)
     const pieno = g.messo === g.dose
     const monete = pieno && !g.traboccate ? MONETE_A_DOSE : 0
     this.monete += monete
-    if (pieno) {
-      const dopo = this.ingredienti.findIndex((_, j) => j !== i && !this.fatto(j))
-      if (dopo >= 0) this.corrente = dopo
-      else this.finita = true
-    }
-    return { tipo: 'giusto', ampolla: k, ingrediente: i, prezzo: o.prezzo, pieno, finita: this.finita, monete,
+    return { ...base, tipo: 'giusto', dopo: g.messo, pezzi: [...g.pezzi], pieno, monete,
              annota: chiave && { chiave, giusto: true },
-             righe: [`${vale}: ${g.nome} arriva a ${scrivi(g.messo, u)}${pieno ? ', giusto sulla tacca d\'oro' : ''}.`] }
+             righe: [`${vale}: ${g.nome} arriva a ${scrivi(g.messo, u)}${pieno ? ', sulla tacca d\'oro' : ''}.`] }
   }
 
+  // tutte le macchie in una volta, un gettone l'una
   pulisci() {
-    if (!this.macchia) return false
-    this.speso += PULIZIA
-    this.pulizie++
-    this.macchia = null
-    return true
+    const n = this.macchie.length
+    if (!n) return 0
+    this.speso += PULIZIA * n
+    this.pulizie += n
+    this.macchie = []
+    return n
   }
 
   // il modo più economico, ingrediente per ingrediente, da dire alla fine
@@ -173,13 +188,11 @@ export class Bottega {
   }
 }
 
-// Due giocatori finti, per i test e per tarare: chi fa sempre il minimo,
-// e il goloso che prende ogni volta l'ampolla più grande che ci sta.
+// Due giocatori finti, per i test e per tarare: chi ordina sempre il
+// minimo, e il goloso che ordina ogni volta l'ampolla più grande che ci sta.
 export function giocaBene(b) {
-  b.ingredienti.forEach((g, i) => {
-    b.scegli(i)
-    for (const k of g.ottimo.pezzi) b.compra(k)
-  })
+  const voci = b.ingredienti.flatMap((g, i) => g.ottimo.pezzi.map(k => ({ i, k })))
+  for (let n = 0; n < voci.length; n += b.quanteInOrdine) b.ordina(voci.slice(n, n + b.quanteInOrdine))
   return b
 }
 export function giocaGoloso(b) {
@@ -188,7 +201,7 @@ export function giocaGoloso(b) {
     const k = g.offerte.map((o, k) => k).filter(k => g.messo + g.offerte[k].base <= g.dose)
       .sort((a, c) => g.offerte[c].base - g.offerte[a].base || g.offerte[a].prezzo - g.offerte[c].prezzo)[0]
     if (k == null) break
-    b.compra(k)
+    b.ordina([{ i: b.corrente, k }])
   }
   return b
 }

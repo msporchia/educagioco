@@ -1,6 +1,6 @@
 /* La bottega del mercante (in prova): ogni pozione si compone, il
-   minimo è davvero il minimo, il trucco del mercante c'è, e traboccare
-   costa l'ampolla e la pulizia. Vedi docs/pozioni/bottega.md.
+   minimo è davvero il minimo, il trucco del mercante c'è, l'ordine si
+   paga tutto e si versa in fila, e traboccare costa l'ampolla e la pulizia. Vedi docs/pozioni/bottega.md.
    `node test/esegui.mjs pozioni-bottega --niente-build` */
 import { PROVE, PULIZIA, MONETE_A_DOSE } from '../../src/giochi/pozioni/dati/bottega.js'
 import { Bottega, ottimo, giocaBene, giocaGoloso } from '../../src/giochi/pozioni/motore/bottega.js'
@@ -47,35 +47,43 @@ for (const t of PROVE) {
   uguale('il minimo non usa la copia che costa di più', o.pezzi.includes(3), false)
 }
 
-/* ---------- traboccare: si perde l'ampolla, si pulisce, e il misurino resta ---------- */
+/* ---------- l'ordine: pagato tutto insieme, versato in fila ---------- */
 {
   const b = new Bottega(PROVE[1], { rnd: caso(7) })
-  const g = b.ingredienti[b.corrente]
+  const g = b.ingredienti[0]
   const k = g.offerte.reduce((m, o, k) => (o.base > g.offerte[m].base ? k : m), 0)
+  uguale('più ampolle di quante se ne ordinano non si ordinano', b.ordina(Array(b.quanteInOrdine + 1).fill({ i: 0, k })), null)
   // si riempie fino a non far più stare la più grande
-  while (g.messo + g.offerte[k].base <= g.dose) b.compra(k)
+  while (g.messo + g.offerte[k].base <= g.dose) b.ordina([{ i: 0, k }])
   const prima = g.messo, spesoPrima = b.speso
-  const e = b.compra(k)
-  uguale('oltre la tacca trabocca', e.tipo, 'trabocca')
-  uguale('il misurino resta com\'era', g.messo, prima)
-  uguale('l\'ampolla si paga lo stesso', b.speso, spesoPrima + g.offerte[k].prezzo)
-  controlla('il perché ha i numeri di quel momento', e.righe.length === 3 && e.righe[1].includes('oltre la tacca'), e.righe.join(' | '))
-  uguale('con la macchia non si compra', b.compra(0), null)
-  uguale('né si cambia ingrediente', b.scegli((b.corrente + 1) % b.ingredienti.length), false)
-  controlla('si pulisce', b.pulisci())
-  uguale('pulire costa', b.speso, spesoPrima + g.offerte[k].prezzo + PULIZIA)
-  uguale('due pulizie non si pagano', b.pulisci(), false)
+  const altro = b.ingredienti[1], piccola = altro.offerte.reduce((m, o, kk) => (o.base < altro.offerte[m].base ? kk : m), 0)
+  const r = b.ordina([{ i: 0, k }, { i: 1, k: piccola }])
+  uguale('due esiti, nell\'ordine scritto', r.esiti.map(e => e.tipo).join(','), 'trabocca,giusto')
+  uguale('il misurino traboccato resta com\'era', g.messo, prima)
+  uguale('l\'altra ampolla dell\'ordine si versa lo stesso', altro.messo, altro.offerte[piccola].base)
+  uguale('l\'ordine si paga tutto', b.speso, spesoPrima + g.offerte[k].prezzo + altro.offerte[piccola].prezzo)
+  controlla('il perché ha i numeri di quel momento', r.esiti[0].righe.length === 2 && r.esiti[0].righe[1].includes('oltre la tacca'), r.esiti[0].righe.join(' | '))
+  uguale('con la macchia non si ordina', b.ordina([{ i: 1, k: piccola }]), null)
+  controlla('ma il listino si sfoglia', b.scegli(1))
+  uguale('si pulisce', b.pulisci(), 1)
+  uguale('pulire costa', b.speso, spesoPrima + g.offerte[k].prezzo + altro.offerte[piccola].prezzo + PULIZIA)
+  uguale('due pulizie non si pagano', b.pulisci(), 0)
+  // due misurini traboccati: due macchie, due gettoni
+  const c = new Bottega(PROVE[1], { rnd: caso(8) })
+  const troppo = i => ({ i, k: c.ingredienti[i].offerte.reduce((m, o, kk) => (o.base > c.ingredienti[i].offerte[m].base ? kk : m), 0) })
+  for (const i of [0, 1]) while (c.ingredienti[i].messo + c.ingredienti[i].offerte[troppo(i).k].base <= c.ingredienti[i].dose) c.ordina([troppo(i)])
+  c.ordina([troppo(0), troppo(1)])
+  uguale('due misurini traboccati fanno due macchie', c.macchie.length, 2)
+  uguale('e la spugna costa due gettoni', c.pulisci(), 2)
   // finito l'ingrediente traboccato non paga monete; gli altri sì
   const pagate = []
-  for (const [i, h] of b.ingredienti.entries()) {
-    b.scegli(i)
+  for (const [i, h] of b.ingredienti.entries())
     while (h.messo < h.dose) {
       const kk = h.offerte.map((o, kk) => kk).filter(kk => h.messo + h.offerte[kk].base <= h.dose)
         .sort((a, c) => h.offerte[c].base - h.offerte[a].base)[0]
-      const r = b.compra(kk)
-      if (r.pieno) pagate.push(r.monete)
+      const e = b.ordina([{ i, k: kk }]).esiti[0]
+      if (e.pieno) pagate.push(e.monete)
     }
-  }
   uguale('l\'ingrediente traboccato non paga, gli altri sì', pagate.filter(m => m === MONETE_A_DOSE).length, b.ingredienti.length - 1)
   controlla('la pozione è finita', b.finita)
   controlla('e le stelle non sono tre', b.stelle < 3, `extra ${b.extra}`)
