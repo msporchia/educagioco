@@ -4,7 +4,7 @@
    ossa e la difesa restano quelle della specie, e a pari grado si costa uguale (entro il 15%). Il grado, dal magico in su, rende il mostro più duro
    (OSSA_DEL_GRADO, ATT_DEL_GRADO): un nome epico è un mostro più forte.
    `node test/esegui.mjs sotterraneo-varianti --niente-build` */
-import { VARIANTI, MANI, GRADI, AGGETTIVI, armaDi, nomeDelMostro, etichettaDi, vesti, pescaIlGrado, pescaLaVariante, pesiDeiGradi, coloreDelGrado,
+import { VARIANTI, GRADI, AGGETTIVI, armaDi, nomeDelMostro, etichettaDi, vesti, pescaIlGrado, pescaLaVariante, pesiDeiGradi, coloreDelGrado,
          guastiDelleVarianti, VELOCITA_DEL_GRADO, PREMIO_DEL_GRADO, OSSA_DEL_GRADO, ATT_DEL_GRADO } from '../../src/giochi/sotterraneo/dati/varianti.js'
 import { MOSTRI, costoInRisposte } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -24,7 +24,6 @@ controlla('i dati delle varianti non hanno guasti', guastiDelleVarianti().length
 stessaLista('le specie con le varianti', Object.keys(VARIANTI).sort(), ['goblin', 'orco', 'scheletro', 'zombie'])
 stessaLista('lo scheletro: senza arma, guerriero, arciere, mago', VARIANTI.scheletro.map(v => v.chiave), ['semplice', 'guerriero', 'arciere', 'mago'])
 for (const [tipo, lista] of Object.entries(VARIANTI)) {
-  controlla(`${tipo}: dice dove tiene l'arma`, !!MANI[tipo] && MANI[tipo].x > 0 && MANI[tipo].x <= 1 && MANI[tipo].y > 0 && MANI[tipo].y < 1)
   for (const v of lista.filter(x => x.armi))
     for (const g of GRADI) {
       const a = armaDi(tipo, v.chiave, g, 3)

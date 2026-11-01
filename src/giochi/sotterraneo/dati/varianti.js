@@ -16,15 +16,6 @@ export const GRADI = ORDINE_RARITA
 export const coloreDelGrado = g => (RARITA[g] || RARITA.comune).colore
 export const rangoDelGrado = g => Math.max(0, GRADI.indexOf(g))
 
-// Come si tiene l'arma: dove sta la mano sullo sprite (frazioni della larghezza e dell'altezza, dal vertice in alto a sinistra dello
-// sprite com'è disegnato, che guarda a destra) e quanto è alta l'arma rispetto a lui
-export const MANI = {
-  scheletro: { x: 0.86, y: 0.7, k: 0.95 },
-  zombie: { x: 0.9, y: 0.68, k: 0.9 },
-  goblin: { x: 0.98, y: 0.72, k: 0.8 },
-  orco: { x: 0.98, y: 0.72, k: 0.62 },
-}
-
 // le varianti di ogni specie: `peso` quanto spesso (quella senza arma è la specie com'è); `armi` le basi della roba da cui
 // pescare la figura (chiavi di ASPETTI), `tinte` se l'arma dev'essere di un certo elemento; `velocita` e `att` si sommano alla
 // specie; `resiste`/`teme` si aggiungono alle sue difese; `incanto` è l'elemento del colpo di un mago
@@ -163,7 +154,6 @@ export function vesti(m, scheda, { variante = null, grado = 'comune', k = 0, pes
 export function guastiDelleVarianti() {
   const g = []
   for (const [tipo, lista] of Object.entries(VARIANTI)) {
-    if (!MANI[tipo]) g.push(`${tipo}: ha delle varianti ma non si sa dove tiene l'arma`)
     if (!lista.length || lista[0].chiave !== 'semplice') g.push(`${tipo}: la prima variante è quella senza arma`)
     for (const v of lista) {
       if (v.chiave !== 'semplice' && !(v.nome && v.armi && v.armi.length)) g.push(`${tipo} ${v.chiave}: senza nome o senza armi`)

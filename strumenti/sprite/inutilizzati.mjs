@@ -262,7 +262,7 @@ export const VIVI = {
       PEZZO_DI.forziere({ aperto: true }), PEZZO_DI.forziere({}), 'forziere-oro-chiuso',      // il forziere aperto, quello dei salvataggi vecchi, il d'oro
       ...Object.entries(COSE).filter(([k]) => !haModelloPerTerra(k)).map(([, c]) => c.sprite),   // per terra senza modello (roba-per-terra.js), nei pannelli senza chiave
       // le figure della roba: il loro ritaglio è anche quello che dice che la figura c'è (roba.py `in_gioco`, figure3d.js `SPRITE_FIGURA`),
-      // e lo sprite resta per terra a chi non ha un modello e in pugno ai mostri a sprite (dati/varianti.js)
+      // e lo sprite resta per terra a chi non ha un modello
       ...Object.values(ASPETTI).flat().map(a => a.sprite), ...Object.keys(SPRITE_FIGURA),
       ...Object.entries(UNICI).map(([id, u]) => (COSE[chiaveDelPezzo(u.base, 1, u.rarita || 'leggendario', [], id)] || {}).sprite),
       ...CURIOSITA.map(c => c.pezzo),                                                         // per terra e nel foglio che si apre (viste/Foglio.vue)
