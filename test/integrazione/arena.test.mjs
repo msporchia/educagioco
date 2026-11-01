@@ -5,7 +5,7 @@
    gioco vero sta in piedi nel browser**: si apre dalla home, la mappa
    apre la prima tappa, il campo si dipinge (gli sprite del castello
    arrivano da un foglio che si decodifica dopo), la carta di una piazzola apre
-   la scelta fra le truppe della tappa e il campo sta fermo, «i numeri» aprono i
+   la scelta fra le truppe della tappa (il campo corre), «i numeri» aprono i
    dettagli, poi il calcolo a tutto schermo (il campo intanto sta fermo), e
    rispondere costruisce davvero la caserma con la truppa scelta, che nei
    dettagli si può vendere. Poi
@@ -73,23 +73,23 @@ controlla('restano solo ripara e bomba, e il muro non si compra',
           await page.locator('.ar-azioni [data-azione]').count() === 2 &&
           await page.locator('[data-azione="muro"]').count() === 0)
 
-/* ── toccare una piazzola apre la scelta, e il campo sta fermo mentre si sceglie ── */
+/* ── toccare una piazzola apre la scelta, e il campo corre mentre si sceglie (le monete si accumulano) ── */
 const orologio = () => page.locator('.ar-hud b').first().innerText()
 await page.locator('[data-piazzola="0"]').click()
 await page.waitForSelector('[data-scelta="0"]', { timeout: 4000 })
 const t0 = await orologio()
 await attendi(page, 1600)
-uguale('mentre si sceglie il campo sta fermo', await orologio(), t0)
+controlla('mentre si sceglie il campo corre', await orologio() !== t0, t0)
 controlla('la scelta mostra le due truppe della prima tappa',
           await page.locator('[data-scelta] [data-variante="scheletri"]').count() === 1 &&
           await page.locator('[data-scelta] [data-variante="guardiano"]').count() === 1)
 await scatto(page, 'arena-scelta')
 
-/* ── «i numeri» spiegano, e il campo resta fermo ── */
+/* ── «i numeri» spiegano, e il campo corre ── */
 await page.locator('[data-scelta] [data-dettagli="guardiano"]').click()
 await page.waitForSelector('[data-dettagli-aperti]', { timeout: 4000 })
 await attendi(page, 800)
-uguale('mentre si leggono i dettagli il campo sta fermo', await orologio(), t0)
+controlla('mentre si leggono i dettagli il campo corre', await orologio() !== t0, t0)
 const testo = await page.locator('[data-dettagli-aperti]').innerText()
 controlla('i dettagli dicono com\'è adesso e com\'è al livello dopo, coi numeri',
           /Livello 1/.test(testo) && /Livello 2/.test(testo) && /Una squadra ogni/.test(testo) && /Vita di ogni truppa/.test(testo) && !/%/.test(testo), testo.slice(0, 300))

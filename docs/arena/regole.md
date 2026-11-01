@@ -247,8 +247,8 @@ che cade per ultimo, «vince il castello più sano» finiva quasi sempre pari.
 - **I dettagli** (`viste/Dettagli.vue`, la scheda dei «numeri») hanno le righe «adesso →
   livello dopo» di `motore/dettagli.js`, tre righe su chi colpisce e se vola, il pulsante col
   prezzo, e per un edificio costruito «Vendi» in disparte.
-- **Il campo sta fermo** finché dettagli o nuvoletta sono aperti: servono a confrontare
-  con calma.
+- **Il campo corre** mentre dettagli o nuvoletta sono aperti (l'utente 1/11: così intanto le monete
+  si accumulano mentre si decide); si ferma solo per il calcolo.
 - **Sotto resta una barra sottile**: le monete, 🔧 ripara e 💣 bomba, che non stanno su un
   edificio.
 

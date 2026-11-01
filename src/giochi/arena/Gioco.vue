@@ -68,8 +68,8 @@ const pannello = ref({ bersagli: [], anello: null, scelta: null, azioni: [] })
 const anello = ref(null)              // l'edificio toccato, con l'anello di pulsanti attorno: { chiave, posto } o { chiave, castello }
 const domanda = ref(null)             // la domanda che paga la scelta
 const finale = ref(null)
-const dettaglio = ref(null)           // la schermata dei dettagli: il campo sta fermo finché è aperta
-const scelta = ref(null)              // quale truppa per un edificio da costruire: anche qui il campo sta fermo
+const dettaglio = ref(null)           // la schermata dei dettagli: il campo corre (si aspettano le monete)
+const scelta = ref(null)              // quale truppa per un edificio da costruire: il campo corre anche qui
 const avviso = ref('')                // la riga che dice cosa è successo
 const toccato = ref(false)
 
@@ -82,7 +82,7 @@ let daSalvare = 0
 let ora = 0
 const giostra = new Giostra(passo)
 
-const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!finale.value || !!dettaglio.value || !!scelta.value })
+const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!finale.value })
 
 const avanza = progresso(CHIAVE)
 const tappa = computed(() => CAMPAGNA[tappaIdx.value] || CAMPAGNA[0])
