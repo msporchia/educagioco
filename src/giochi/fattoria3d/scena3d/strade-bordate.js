@@ -9,7 +9,38 @@ import { TIPI } from '../dati/strade.js'
 
 /** Quante istanze al massimo (il peso è questo, qualunque sia l'estensione). */
 export const CAPACITA_STRADE = { fondo: 4000, lati: 3200, sassi: 9000, ciuffi: 6000, pali: 3000, angoli: 800 }
-const ALTEZZA = 0.03                                          // lo spessore del fondo: sopra il prato, sotto ogni cosa
+const ALTEZZA = 0.022                                         // dove sta il fondo: una lastra sopra il prato, sotto ogni cosa
+
+/** Il fondo sfuma nel prato: ogni istanza sa quali lati e quali angoli rientranti sono «vuoti» (`aAperto`, `aAngoli`) e vicino a quelli diventa trasparente, con un
+    margine irregolare (rumore sulla posizione nel mondo, quindi uguale fra celle vicine: niente cuciture). Dove due strade si uniscono il lato è chiuso e non sfuma. */
+function sfumaIBordi(mat) {
+  mat.transparent = true; mat.depthWrite = false; mat.alphaTest = 0.01
+  mat.customProgramCacheKey = () => 'strade-fondo-sfumato'
+  mat.onBeforeCompile = sh => {
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nattribute vec4 aAperto; attribute vec4 aAngoli; varying vec4 vAperto; varying vec4 vAngoli; varying vec2 vMondo; varying vec2 vCella;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvAperto = aAperto; vAngoli = aAngoli; vCella = uv; vMondo = (modelMatrix * instanceMatrix * vec4(transformed, 1.0)).xz;')
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', `#include <common>
+varying vec4 vAperto; varying vec4 vAngoli; varying vec2 vMondo; varying vec2 vCella;
+float hh(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hh(i), hh(i + vec2(1.0, 0.0)), f.x), mix(hh(i + vec2(0.0, 1.0)), hh(i + vec2(1.0, 1.0)), f.x), f.y); }`)
+      .replace('#include <map_fragment>', `#include <map_fragment>
+{
+  float d = 9.0;
+  if (vAperto.x > 0.5) d = min(d, 1.0 - vCella.y);
+  if (vAperto.y > 0.5) d = min(d, 1.0 - vCella.x);
+  if (vAperto.z > 0.5) d = min(d, vCella.y);
+  if (vAperto.w > 0.5) d = min(d, vCella.x);
+  if (vAngoli.x > 0.5) d = min(d, length(vCella - vec2(1.0, 1.0)) - 0.12);
+  if (vAngoli.y > 0.5) d = min(d, length(vCella - vec2(1.0, 0.0)) - 0.12);
+  if (vAngoli.z > 0.5) d = min(d, length(vCella - vec2(0.0, 0.0)) - 0.12);
+  if (vAngoli.w > 0.5) d = min(d, length(vCella - vec2(0.0, 1.0)) - 0.12);
+  float ir = vn(vMondo * 7.0) * 0.16 + vn(vMondo * 19.0) * 0.07;
+  diffuseColor.a *= smoothstep(0.0, 0.18, d + 0.07 - ir * 0.75);
+}`)
+  }
+}
 
 function tela(px, py = px) { const c = document.createElement('canvas'); c.width = px; c.height = py; return c }
 function texturaDa(c, ripeti = false) {
@@ -86,12 +117,16 @@ export class StradeBordate {
   constructor(scena, motore, sabbia, texture, dentroFinestra) {
     this.m = motore; this.dentro = dentroFinestra
     const ripeti = t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; return t }
-    const fondo = new THREE.BoxGeometry(1, ALTEZZA, 1)
+    const fondo = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2)
     this.fondi = {}
     for (const tipo of TIPI) {
       const mappa = tipo === 'terra' ? sabbia : texturaDa((() => { const c = tela(128), x = c.getContext('2d'); FONDI[tipo](x, 128, dado(tipo.length * 977 + tipo.charCodeAt(0))); return c })(), true)
       if (tipo !== 'terra') texture.push(ripeti(mappa))
-      this.fondi[tipo] = this._banco(scena, fondo, new THREE.MeshStandardMaterial({ map: mappa, roughness: tipo === 'lastricato' || tipo === 'mattoni' ? 0.85 : 1 }), CAPACITA_STRADE.fondo, true)
+      const materiale = new THREE.MeshStandardMaterial({ map: mappa, roughness: tipo === 'lastricato' || tipo === 'mattoni' ? 0.85 : 1 }); sfumaIBordi(materiale)
+      const banco = this.fondi[tipo] = this._banco(scena, fondo, materiale, CAPACITA_STRADE.fondo, true)
+      banco.geometry = fondo.clone()                                                  // ogni banco ha i suoi attributi per istanza
+      banco.geometry.setAttribute('aAperto', new THREE.InstancedBufferAttribute(new Float32Array(CAPACITA_STRADE.fondo * 4), 4))
+      banco.geometry.setAttribute('aAngoli', new THREE.InstancedBufferAttribute(new Float32Array(CAPACITA_STRADE.fondo * 4), 4))
     }
     const erba = texturaErba(); texture.push(erba)
     const matErba = new THREE.MeshStandardMaterial({ map: erba, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 1 })
@@ -139,10 +174,15 @@ export class StradeBordate {
       if (!this.dentro(i, j)) continue
       const a = m.aspettoStrada(i, j)
       const t = 0.93 + (((i * 7 + j * 13) % 9) + 9) % 9 * 0.014
-      this._metti(this.fondi[a.tipo], i + 0.5, ALTEZZA / 2, j + 0.5, 0, 1, 1, 1, t)
+      const banco = this.fondi[a.tipo], n = banco.count
+      this._metti(banco, i + 0.5, ALTEZZA, j + 0.5, 0, 1, 1, 1, t)
+      const morbido = a.bordo === 'nessuno' || a.bordo === 'erba'                       // col cordolo, i ciottolini o lo steccato il bordo resta netto; senza, sfuma nel prato
+      const vic = viciniDi(this._aspetto, UNISCE, i, j), ap = banco.geometry.attributes.aAperto.array, an = banco.geometry.attributes.aAngoli.array
+      if (banco.count > n) for (let q = 0; q < 4; q++) { ap[n * 4 + q] = morbido && vic.lati[q] === 'vuoto' ? 1 : 0; an[n * 4 + q] = morbido && vic.angoli[q] ? 1 : 0 }
       if (a.bordo !== 'nessuno') this._bordo(a.bordo, i, j)
     }
     for (const b of this.banchi) { b.instanceMatrix.needsUpdate = true; if (b.instanceColor) b.instanceColor.needsUpdate = true }
+    for (const b of Object.values(this.fondi)) { b.geometry.attributes.aAperto.needsUpdate = true; b.geometry.attributes.aAngoli.needsUpdate = true }
   }
 
   /** Il bordo di una cella: sui lati vuoti, e un pezzo negli angoli rientranti. Due strade dello stesso tipo si uniscono; un tipo diverso è un confine netto, senza bordo. */

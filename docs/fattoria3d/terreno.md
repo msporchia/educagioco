@@ -78,6 +78,9 @@ di esercizio: la cella più cara, mattoni + ciottolini o steccato, costa 🪙 8,
 - **Il bordo si calcola dai vicini** (`dati/tessere.js`, `viciniDi`): due strade dello **stesso tipo** affiancate si **uniscono** (niente bordo fra loro,
   neanche se hanno bordi diversi); la cornice sta solo sui lati che toccano il prato, più un pezzo negli **angoli rientranti** (due lati uniti e la diagonale
   vuota). Fra **due tipi diversi** il confine è netto, senza bordo né dall'una né dall'altra (scelta: due cornici affiancate sarebbero un muretto doppio; se serve un confine, si disegna un tipo in mezzo).
+- **Il fondo sfuma nel prato** (bordo «nessuno» e «erba alta»): ogni istanza porta quali lati e angoli rientranti sono vuoti (`aAperto`, `aAngoli`, calcolati da `viciniDi`) e lo shader
+  (`sfumaIBordi` in `strade-bordate.js`) la rende trasparente lì, con un margine irregolare fatto di rumore sulla posizione nel mondo (uguale fra celle vicine: niente cuciture). Dove due
+  strade si uniscono il lato è chiuso e non sfuma. Cordolo, ciottolini e steccato tengono il fondo netto: la cornice sta sul bordo. Il fondo è una lastra trasparente (non più una scatola), `depthWrite` spento.
 - **Ridipingere**: sopra una strada tua di un altro aspetto si disegna di nuovo e si paga il nuovo (il vecchio non si rimborsa). Quelle di serie non si ridipingono.
   La gomma toglie tutto allo stesso modo, gratis.
 - **Il disegno** (`scena3d/strade-bordate.js`): un banco di istanze per tipo (una texture a canvas per tipo, che ripetuta cella per cella si cuce da sola) e uno
