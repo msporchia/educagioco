@@ -19,6 +19,7 @@ import { casaIniziale, casaInForma } from '../dati/bestie.js'
 import { POSTI_DI_PARTENZA, postiInForma } from '../dati/posti.js'
 import { TIPI_DI_SILO } from '../dati/silos.js'
 import { aspettoDaCodice } from '../dati/strade.js'
+import { staccionataDaCodice } from '../dati/staccionate.js'
 import { esperienzaDaPrima, livelloMinimoDi } from './scala-vecchia.js'
 
 const LANA_DEL_SEGNAPOSTO = 2     // il premio della cassa del segnaposto di prima (v7)
@@ -45,6 +46,7 @@ const LANA_DEL_SEGNAPOSTO = 2     // il premio della cassa del segnaposto di pri
 //    nello stesso punto del percorso (motore/scala-vecchia.js), senza scendere sotto il livello che serve a tenere ciò che si ha. `silo`: quante volte è stato
 //    ingrandito ciascun magazzino (dati/silos.js), assente = zero. Un raccolto di prima in scorta resta anche se supera lo scomparto: il tetto frena solo ciò che entra.
 //    Senza cambiare versione: `aspettoStrade` (tipo e bordo delle strade, docs/fattoria3d/terreno.md «Le strade: tipi e bordi»); assente = ogni strada è terra senza bordo, come prima.
+//    Senza cambiare versione: `staccionate` (le staccionate e i cancelli, { idCella: 'legno' | 'legno.c' }, dati/staccionate.js, docs/fattoria3d/staccionate.md); assente = niente.
 export const VERSIONE_STATO = 10
 export const SCALA_ATTUALE = 2
 
@@ -78,6 +80,7 @@ export function statoIniziale() {
     pesca: {},                 // per lotto d'acqua tuo: { i, j (dove sta il galleggiante), fine (quando abbocca, null se non c'è la lenza), riposo (quando il banco si ripopola, null) }
     strade: [],                // le celle (indice di griglia) disegnate dal bambino
     aspettoStrade: {},         // per le strade che non sono quella di base: { idCella: 'ghiaia.cordolo' } (tipo.bordo, dati/strade.js); le altre sono terra senza bordo
+    staccionate: {},           // le staccionate: { idCella: 'legno' } o 'legno.c' se è un cancello (tipo[.c], dati/staccionate.js)
     daRegalare: {},            // ciò che la fattoria 2D aveva e la 3D non ha ancora ({ 'cosa:ovile': 1, 'scorta:miele': 4, 'terra': 2 }): solo un conto, mai monete (motore/migra.js)
     migrato: 0,                // >0 se lo stato viene dalla fattoria 2D: il numero della conversione che l'ha fatto (motore/migra.js, MIGRAZIONE)
     magazzino: {},             // pezzi pagati e non ancora messi: { campo: 1 }
@@ -146,6 +149,7 @@ export function normalizza(letto) {
   s.strade = Array.isArray(letto.strade) ? letto.strade.filter(Number.isInteger) : []
   const sonoStrade = new Set(s.strade)
   for (const [id, cod] of Object.entries(oggetto(letto.aspettoStrade)).slice(0, 20000)) if (aspettoDaCodice(cod) && sonoStrade.has(+id)) s.aspettoStrade[id] = cod     // un tipo che non c'è più, o una cella non più strada: torna quella di base
+  for (const [id, cod] of Object.entries(oggetto(letto.staccionate)).slice(0, 20000)) if (Number.isInteger(+id) && staccionataDaCodice(cod)) s.staccionate[id] = cod       // un tipo che non c'è più: la cella torna prato
   for (const [k, n] of Object.entries(oggetto(letto.magazzino))) if (numero(n) > 0) s.magazzino[k] = numero(n)
   s.tagliati = Array.isArray(letto.tagliati) ? letto.tagliati.filter(Number.isInteger) : []
   s.ostacoli = Array.isArray(letto.ostacoli) ? [...new Set(letto.ostacoli.filter(Number.isInteger))] : []
