@@ -85,13 +85,18 @@ function rimettiIMostri(robe, nate) {
 }
 
 // i piani lasciati (Corsa.piani) come differenza dal seme, ognuno col suo piano, la mappa girata e se la scala era aperta
+// la torcia appesa del piano è già stata presa (motore/torce-a-muro.js): una al più per piano, basta un sì. Una sosta di prima non lo
+// dice, e la torcia è al suo posto
+const appesaPresa = liv => (liv.torce || []).some(t => t.prendi && t.presa)
+const segnaLAppesa = (liv, presa) => { if (presa) for (const t of liv.torce || []) if (t.prendi) t.presa = true }
+
 function pianiAlleSpalle(corsa) {
   return [...corsa.piani.entries()]
     .sort((a, b) => Math.abs(a[0] - corsa.piano) - Math.abs(b[0] - corsa.piano))
     .slice(0, PIANI_ALLE_SPALLE)
     .sort((a, b) => a[0] - b[0])
     .map(([p, r]) => ({ p, robe: cambiDelPiano(r.livello.robe, r.robeDelSeme), visto: stringaDi(r.visto),
-                        stanze: [...r.stanzeDentro], chiave: r.chiave }))
+                        stanze: [...r.stanzeDentro], chiave: r.chiave, ...(appesaPresa(r.livello) ? { appesa: 1 } : {}) }))
 }
 
 // `tappa` è l'indice nella campagna (l'abisso è −1, INDICE_ABISSO); `potenza` il livello di una zona potenziata
@@ -133,6 +138,7 @@ export function scrivi(corsa, tappa, { anchePerFinite = false, via = USCITA } = 
       qui: corsa.svenimentiQui,   // spese su QUESTO piano (solo l'abisso)
     },
     robe: cambiDelPiano(corsa.livello.robe, corsa.robeDelSeme),
+    ...(appesaPresa(corsa.livello) ? { appesa: 1 } : {}),
     // quelli di prima, che si può risalire a ritrovare: tolti se la discesa non ne ha lasciato nessuno
     ...(corsa.piani.size ? { dietro: pianiAlleSpalle(corsa) } : {}),
     missioni: [...corsa.missioniFatte],   // quelle fatte giù e non ancora portate su
@@ -149,6 +155,7 @@ export function leggi(dato, tappa, roba = null, missioni = [], crescita = null, 
     const corsa = new Corsa(tappa, { seme: dato.seme, eroe: dato.eroe, missioni, crescita, conti })
     corsa.piano = dato.piano || 0
     corsa.nuovoPiano()   // lo stesso piano di allora, dal seme
+    segnaLAppesa(corsa.livello, dato.appesa)
 
     const robe = corsa.livello.robe
     if (robe.length !== dato.robe.n) return null   // il piano non nasce più uguale: un altro generatore
@@ -162,6 +169,7 @@ export function leggi(dato, tappa, roba = null, missioni = [], crescita = null, 
     // i piani alle spalle: un piano che non nasce più uguale non si ricorda, si rifà dal seme quando ci si torna
     for (const d of Array.isArray(dato.dietro) ? dato.dietro : []) {
       const livello = corsa.faiIlPiano(d.p)
+      segnaLAppesa(livello, d.appesa)
       if (!d.robe || livello.robe.length !== d.robe.n) continue
       const nate = livello.robe.map(r => ({ ...r }))
       for (const [i, c] of Object.entries(d.robe.cambi || {})) if (livello.robe[i]) Object.assign(livello.robe[i], c)

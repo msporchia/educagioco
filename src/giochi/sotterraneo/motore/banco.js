@@ -239,6 +239,16 @@ function raccogliVicino(corsa, persi) {
   return true
 }
 
+// la torcia appesa (motore/torce-a-muro.js): chi gira tutto la vede accesa sul muro della stanza e ci passa sotto, che la stacca.
+// Una volta per torcia: un mostro che intercetta per strada non deve farci tornare a ogni giro
+function prendiLAppesa(corsa, provate) {
+  const t = corsa.torciaAppesa
+  if (!t || provate.has(t) || !corsa.luce.has(t.y * corsa.livello.largo + t.x)) return false
+  provate.add(t)
+  cammina(corsa, { x: t.x, y: t.y + 1 })
+  return true
+}
+
 // il giocatore finto non gira a caso, va a colpo sicuro: si vuole misurare il costo, non la bravura a orientarsi
 function robeInteressanti(corsa, quali) {
   const da = { x: Math.floor(corsa.eroe.x), y: Math.floor(corsa.eroe.y) }
@@ -338,6 +348,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
   if (strada) { corsa.vincoloDelBanco = ammette(strada); punti = punti || strada.punti }
   let giri = 0
   const persi = []
+  const appeseProvate = new Set()   // le torce appese già cercate (prendiLAppesa)
   const provati = new Map()
   const conto = { fonti: 0, pozioni: 0, scale: [] }
   const alTettoIn = corsa.alTettoDelleCure   // scende con il tetto delle cure già pieno: la taratura lo conta
@@ -468,6 +479,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
     // giocare, come chiave e scala. Era il mercante, che adesso sta sopra
     if (serveLaFonte(false) && allaFonte()) continue
 
+    if (come === 'tutto' && prendiLAppesa(corsa, appeseProvate)) continue
     if (come === 'tutto') {
       // chi si ferma alle fonti le lascia per quando servono: non le beve a vita piena
       const roba = robeInteressanti(corsa, st.fonte ? ['porta', 'forziere', 'mostro', 'cosa'] : ['porta', 'forziere', 'fonte', 'mostro', 'cosa'])
