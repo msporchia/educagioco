@@ -6,11 +6,14 @@ import { PEZZI, EDIFICI, CATEGORIE } from './catalogo.js'
 import { livelloDelPezzo } from './livelli.js'
 import { COSTI } from './regole.js'
 import { BESTIE } from './bestie.js'
+import { PREZZO_CANCELLO } from './staccionate.js'
 import { FINESTRE } from './stagioni3d.js'
 
 /** Gli strumenti del pennello, nella scheda delle strade: non sono pezzi, scegliendoli si disegna col dito. */
 export const STRUMENTI = {
   strada: { nome: 'Strada', emoji: '🛣️', nota: `🪙 ${COSTI.strada}/pezzo` },
+  staccionata: { nome: 'Staccionata', emoji: '🚧', nota: "da 🪙 2/pezzo" },
+  cancello: { nome: 'Cancello', emoji: '🚪', nota: `🪙 ${PREZZO_CANCELLO}` },
   gomma:  { nome: 'Gomma',  emoji: '🧽', nota: 'gratis' },
 }
 

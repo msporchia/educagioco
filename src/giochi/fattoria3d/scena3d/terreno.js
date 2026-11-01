@@ -13,6 +13,7 @@ import { mescola, sequenza } from '../dati/semi.js'
 import { materialeAcqua, materialeMare, uTAcqua } from './modelli-acqua.js'
 import { Pesci } from './pesci.js'
 import { StradeBordate } from './strade-bordate.js'
+import { Staccionate } from './staccionate.js'
 import { ZONA } from '../dati/biomi.js'
 
 const ZERO = new THREE.Matrix4().makeScale(0, 0, 0)
@@ -49,7 +50,7 @@ export class Terreno {
     this.griglia = null; this._grigliaOn = false
     // gli elementi (grafica/elementi3d.js): chi pesa si misura spegnendone uno alla volta (docs/core/vecchio-telefono-veri.md, «Come si spegne un elemento»)
     const el = (nome, fai) => segnaNuovi(scena, nome, fai)
-    el('terreno', () => this._suolo()); el('acqua', () => this._mare()); el('strade', () => this._strade()); this._griglia(); el('terreno', () => this._lotti())
+    el('terreno', () => this._suolo()); el('acqua', () => this._mare()); el('strade', () => this._strade()); el('strade', () => { this.staccionate = new Staccionate(this.scena, this.m, (i, j) => this.dentroFinestra(i, j)) }); this._griglia(); el('terreno', () => this._lotti())
     el('alberi', () => { this._alberi(); this._ostacoli() }); el('erba', () => this._erba()); el('acqua', () => this._acqua()); el('edifici', () => this._fisse())
     this.pesci = el('acqua', () => new Pesci(scena, motore))
     this.segui(0, 0, true)
@@ -89,6 +90,7 @@ export class Terreno {
   _strade() { this.stradeBordate = new StradeBordate(this.scena, this.m, this.sabbia, this.texture, (i, j) => this.dentroFinestra(i, j)) }
   ridisegnaStrade() {
     this.stradeBordate.ridisegna()
+    this.staccionate?.ridisegna()
     if (this.ciuffi) this._ridisegnaErba()                // un ciuffo non cresce sulla strada
   }
 

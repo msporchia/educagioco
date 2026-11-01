@@ -26,7 +26,7 @@ export class Dito {
 
   _centro() { const [a, b] = [...this.punti.values()]; return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2] }
   _distanza() { const [a, b] = [...this.punti.values()]; return Math.hypot(a[0] - b[0], a[1] - b[1]) }
-  get _pennello() { const s = this.w.cmd.strumento; return s === 'strada' || s === 'gomma' ? s : null }
+  get _pennello() { const s = this.w.cmd.strumento; return s === 'strada' || s === 'staccionata' || s === 'cancello' || s === 'gomma' ? s : null }
 
   _giu(e) {
     const w = this.w, { ui } = w
