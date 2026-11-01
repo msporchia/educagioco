@@ -5,25 +5,13 @@ import * as THREE from 'three'
 import { decoro, mat, pronto, scatola, cilindro, cono, palla, filo, listello, festoneFra, arco, luce } from './modelli-decori-base.js'
 import { tetto } from './modelli.js'
 import { fondiPerMateriale } from './fondi.js'
+import { creaAlberoNatale } from './modelli-natale.js'
 
 const LEGNO = 0x9a6a36, LEGNO_SCURO = 0x6e4a2c, LEGNO_CHIARO = 0xd9b27a, ROSSO = 0xd8352a, GIALLO = 0xf0c52a, BIANCO = 0xf4efe4, ROSA = 0xf29ab6, AZZURRO = 0x3f78c8, VERDE = 0x5aa84c
 const VARI = [ROSSO, GIALLO, AZZURRO, ROSA, VERDE]
 
 export const FESTE_DECORI = {
-  albero_natale: decoro('albero_natale', (g, rnd) => {
-    cilindro(g, 0.2, 0.17, 0.24, mat(0xb8243a), 0, 0.12, 0, 10); cilindro(g, 0.21, 0.21, 0.03, mat(0xf0c52a), 0, 0.24, 0, 10)
-    cilindro(g, 0.06, 0.08, 0.5, mat(LEGNO_SCURO), 0, 0.45, 0, 6)
-    const T = [[0.22, 0.6, 0.56, 0x2f7a3a], [0.55, 0.55, 0.45, 0x3a8a44], [0.85, 0.5, 0.35, 0x2f7a3a], [1.12, 0.46, 0.25, 0x3a8a44]]
-    for (const [b, h, r, c] of T) cono(g, r, h, mat(c), 0, b + h / 2, 0, 9)
-    const colori = [ROSSO, GIALLO, 0xffffff, AZZURRO, ROSSO]
-    for (let i = 0; i < 26; i++) {
-      const [b, h, r] = T[i % 4], u = 0.08 + rnd() * 0.38, y = b + u * h, rr = r * (1 - u) * 1.0, a = i * 2.4 + rnd()
-      if (i % 2) palla(g, 0.07, colori[i % 5], Math.cos(a) * rr, y, Math.sin(a) * rr, 1, 1, 1, 0)
-      else palla(g, 0.05, 0xfff1b0, Math.cos(a) * rr, y, Math.sin(a) * rr, 1, 1, 1, 0).material = luce(0xffe07a)
-    }
-    const stella = pronto(new THREE.Mesh(new THREE.OctahedronGeometry(0.15, 0), luce(0xffd54a))); stella.position.set(0, 1.66, 0); stella.scale.set(1, 1.1, 0.5); g.add(stella)
-    return { altezza: 1.9 }
-  }),
+  albero_natale: () => creaAlberoNatale.albero_natale(),      // il disegno è in modelli-natale.js, con gli altri alberi e le feste di Natale
 
   fiera_bandierine: decoro('fiera_bandierine', g => {
     for (const s of [-1, 1]) { cilindro(g, 0.045, 0.06, 1.7, mat(LEGNO_CHIARO), s * 1.4, 0.85, 0, 6); palla(g, 0.07, GIALLO, s * 1.4, 1.74, 0, 1, 1, 1, 0); cilindro(g, 0.12, 0.14, 0.06, mat(0x8f8a7e), s * 1.4, 0.03, 0, 8) }

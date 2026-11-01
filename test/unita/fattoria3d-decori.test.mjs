@@ -75,7 +75,8 @@ const ECCEZIONI = { recinto: 'recinto_legno', pane: 'pane_decoro', torta: 'torta
     if (!DECORI_CREA[id]) { tutteLeVoci = false; continue }
     const g = DECORI_CREA[id](), n = meshes(g).length, t = tri(g)
     maxMesh = Math.max(maxMesh, n); maxTri = Math.max(maxTri, t); somma += n
-    if (n < 1 || n > 3 || t > 1300) { peso = false; console.log('   troppo pesante:', id, n, t) }
+    if (n < 1 || n > (id === 'albero_natale' ? 4 : 3) || t > 1300)   // l'albero di Natale ne ha quattro: il verde e le lucine rosse, gialle e azzurre (tre luci proprie)
+       { peso = false; console.log('   troppo pesante:', id, n, t) }
     controlla(`${id}: l'altezza di riferimento c'è`, g.userData.altezza > 0)
   }
   controlla('ogni decorazione ha il suo modello', tutteLeVoci)
@@ -103,7 +104,7 @@ const ECCEZIONI = { recinto: 'recinto_legno', pane: 'pane_decoro', torta: 'torta
   uguale('la scheda Acqua ha le 7 voci nuove (fontana, pozzo, stagno e laghetto stanno sotto Decori, il ponte fra le Strade)', s.acqua.length, 7)
   uguale('la scheda Bestiole ha le 17 voci', s.bestiole.length, 17)
   uguale('fuori stagione e senza regali la scheda Feste è vuota (la linguetta si nasconde)', s.feste.length, 0)
-  uguale('a Natale ci sono l\'albero e il pupazzo di neve, solo quelli', schedeDi({ ...stato, stagione: 'natale' }).feste.map(c => c.id).sort().join(), 'albero_natale,pupazzo_neve')
+  uguale('a Natale ci sono gli alberi, il pupazzo e le decorazioni natalizie, solo quelli', schedeDi({ ...stato, stagione: 'natale' }).feste.map(c => c.id).sort().join(), 'albero_natale,albero_natale_alto,albero_natale_gigante,albero_natale_grande,bastoni_zucchero,bastoni_zucchero_fila,ghirlanda_natale,pacchi_regalo,pupazzo_neve,renna_natale,slitta_natale')
   uguale('a Halloween nella scheda Feste non c\'è niente (le zucche stanno sotto Decori)', schedeDi({ ...stato, stagione: 'halloween' }).feste.length, 0)
   const regalo = schedeDi({ ...stato, nelMagazzino: id => id === 'fiera_giostra' ? 2 : 0 }).feste
   uguale('chi ha una giostrina in magazzino la vede nella scheda Feste, con 📦 ×2', regalo.map(c => c.id + ':' + c.etichetta).join(), 'fiera_giostra:📦 ×2')

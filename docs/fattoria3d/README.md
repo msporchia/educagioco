@@ -32,6 +32,7 @@ convertire) sta in `src/giochi/fattoria3d/da2d/`. Le monete sono quelle vere.
 - [guardaroba.md](guardaroba.md) — cambiare abito al contadino o alla contadina: il genere dal profilo, i capi e gli sblocchi, il salvataggio, come si aggiunge un pezzo
 - [rotazione.md](rotazione.md) — ruotare i pezzi e gli edifici: `rot` 0–3 nello stato, l'ingombro e il davanti che seguono, il tasto ↻ col secondo dito
 - [decorazioni.md](decorazioni.md) — le 206 decorazioni della 2D portate in 3D (verde, fiori, recinti e cartelli, raccolto, case e lampioni, arredo, acqua, bestiole, feste e fiera): le schede nuove del menu, gli id, le eccezioni, l'acqua e la fiera, il peso misurato e cosa manca
+- [natale.md](natale.md) — gli alberi di Natale grandi (2×2, 3×3, 4×4), i bastoni di zucchero, i pacchi, la ghirlanda, la renna e la slitta: prezzi, livelli, lucine che lampeggiano, niente neve sopra
 - [stagioni.md](stagioni.md) — Halloween e Natale come nella 2D (stesse finestre, `#stagione=`): cielo e luci, fiocchi, la neve sul prato e su ciò che guarda in alto, il ghiaccio, i ghiaccioli, il fiato, addobbi sugli edifici, le zucche e il pupazzo da comprare; il peso
 - [guida.md](guida.md) — il `?`, il primo giro (la riga e l'anello), «E adesso?» e il consiglio col tasto sotto un «non si può»
 - [scena.md](scena.md) — il disegno: i moduli di `scena3d/`, il dito, costruire trascinando, le opzioni di qualità e il peso
