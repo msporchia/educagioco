@@ -43,12 +43,14 @@ castello. Il catalogo descritto, per sapere cosa c'è:
   solo quelle che nomina** (la regola «generare solo il referenziato»: il file
   unico non si porta creature che nessuno disegna). Il castello prende quelle
   col `castello` e `unita/castello-bestiario` pretende che siano esattamente
-  quelle del suo bestiario; il sotterraneo quelle col `sotterraneo`, e
-  `unita/creature` guarda che ogni sprite dei suoi mostri (`dati/mostri.js`)
-  ci sia **e che ogni creatura col `sotterraneo` sia disegnata da una specie o
-  da un grosso** (`figura` in `dati/grossi.js`): quella che alla fine nessuno
-  usa si toglie dal suo `giochi` (il troll, ora solo del castello: nel
-  sotterraneo conta solo come base delle statistiche di due grossi).
+  quelle del suo bestiario; il sotterraneo quelle col `sotterraneo`. Dal 1°
+  novembre 2026 i mostri del sotterraneo non hanno sprite (il modello 3D, o la
+  sua foto: [../sotterraneo/sagome-3d.md](../sotterraneo/sagome-3d.md)): col
+  `sotterraneo` restano solo la vespa e il fungo, che Survivors prende da
+  quell'atlante (`sot:` del suo bestiario), e `unita/creature` pretende che
+  siano esattamente quelle. Le sette che non servivano più a nessuno (ratto,
+  polpo, mostro verde, piranha, golem di muschio, ghoul, mietitore) sono state
+  tolte dal catalogo: restano nello storico e nei due fogli, che il castello usa.
 - **`scelta`**: i fotogrammi (indici) che un gioco prende, se non tutti: il
   sotterraneo lascia fuori, per esempio, la fiammata della bestia cornuta. Il
   castello non sceglie: i suoi sono quelli del catalogo, com'erano.
@@ -80,9 +82,8 @@ castello. Il catalogo descritto, per sapere cosa c'è:
   nel campo (`<nome>-corsa-N`, di lato) e nello scontro sta sulla posa di lato
   ferma, specchiata verso l'eroe (`viste/campo.js`); chi non li ha respira. Il
   drago ha il respiro rotto (un fotogramma con due draghi e la fiammata): da
-  fermo usa i passi, lenti (`fermoDaiPassi` in `dati/mostri.js`). Quanti
-  fotogrammi ha una posa lo dice l'atlante (`dati/fotogrammi.js`: due, tre o
-  quattro di respiro, sei di passi), non un `% 4`.
+  fermo usa i passi, lenti (`fermoDaiPassi` in `dati/mostri.js`). Oggi i passi
+  li usa solo il castello.
 
 ## Come le prende un gioco
 

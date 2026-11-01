@@ -48,28 +48,28 @@ chiamate. Un pezzo nella pelle non si spegne con `visible`: si scala a zero (il 
 
 ## In scena (`scena3d/persona3d.js`, `mondo/persone.js`)
 
-- **Chi**: il modello è il nome dello sprite (`<sprite>-fermo-0`), il capitano ha il suo (`modelloDellaPersona` in `Mondo3d.vue`);
+- **Chi**: il modello è il campo `sprite` della persona (il nome è rimasto), il capitano ha il suo (`modelloDellaPersona` in `Mondo3d.vue`);
   le sentinelle sono la guardia. Le liste senza three per le viste: `dati/persone3d.js` (`MODELLI_PERSONE`).
-- **Quanti**: le persone più vicine all'eroe, entro 18 celle, al più 8 (`PERSONE_3D_SOPRA`); le altre restano sprite. Una
+- **Quanti**: le persone più vicine all'eroe, entro 18 celle, al più 8 (`PERSONE_3D_SOPRA`); le altre hanno la sagoma del modello ([sagome-3d.md](sagome-3d.md)). Una
   riserva per modello, riusata come quella dei mostri.
-- **Quanto grandi**: alte quanto lo sprite che sostituiscono × 0,72 (lo stesso rapporto dell'eroe e dei mostri), misurate su
-  `altezza`. La ragazza resta più bassa quanto lo è il suo sprite.
+- **Quanto grandi**: 0,72 volte il loro posto (`dati/altezze.js`, `ALTO_DELLA_PERSONA` per la scala della persona; lo stesso rapporto
+  dell'eroe e dei mostri), misurate su `altezza`.
 - **Dove guardano**: verso la telecamera; con l'eroe a meno di 6 celle si girano verso di lui, col tempo.
 - **Il saluto**: quando `Mondo3d.vue` accende il saluto (l'eroe entra nel raggio di 6 celle, `RAGGIO_SALUTO`) parte `saluta(t)`.
 - **Il dito** non cambia: il rettangolo di una persona viene dal bersaglio (`rettangoloPersona`, `alto` 2,2), non dal disegno;
   `data-vis`, `data-saluta` e gli altri bersagli dei test restano quelli di prima.
-- **Il gioco non si rompe**: un modello che manca, non si costruisce o si rompe animando torna allo sprite (`console.warn`).
-  `#persone2d` nell'indirizzo li spegne tutti.
+- **Il gioco non si rompe**: un modello che manca, non si costruisce o si rompe animando ha la sua sagoma (`console.warn`).
+  `#persone2d` nell'indirizzo mette tutti in sagoma.
 
 ## I ritratti
 
 Il servizio delle anteprime ([anteprime-3d.md](anteprime-3d.md)) ha la chiave `persona:<modello>`: la faccia e le spalle, appena
 girata, 96 px. La usano `Ritratto.vue` (il dialogo, il diario; e la bottega, che ora usa lo stesso ritratto) e l'icona di chi si è
-perso nelle taglie «trova chi» del diario. Finché l'immagine non è pronta resta lo sprite.
+perso nelle taglie «trova chi» del diario. Finché l'immagine non è pronta resta il ritratto di pixel (`viste/pixel.js`).
 
 ## Quanto costa
 
-Misurato con SwiftShader (390×844, `&dpr=1`, dal villaggio, sette persone in vista): 135 chiamate con gli sprite (`#persone2d`), 164
+Misurato con SwiftShader (390×844, `&dpr=1`, dal villaggio, sette persone in vista): 135 chiamate con gli sprite di allora (`#persone2d`), 164
 coi modelli (243 prima della pelle). Le soglie di `integrazione/sotterraneo-mondo` e `-mondo-meta` sono passate da 150 a 200.
 
 ## Cosa manca

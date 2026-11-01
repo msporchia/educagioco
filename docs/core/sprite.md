@@ -165,7 +165,9 @@ il test (`unita/sprite-inutilizzati`) guarda solo che giri e sia coerente — tr
   codice vivo può chiedere resta anche se nessuna scena l'ha chiesto. Il 31 ottobre 2026, per il sotterraneo, così sono uscite le fontane,
   le porte aperte, il mercante dei tre scenari, lo scheletro 0x72 e tredici pezzi d'arredo dell'inferno, e il nitido è sceso a otto pezzi.
   Da allora anche il sotterraneo ha il suo `VIVI` (le tabelle che la scena e i pannelli leggono: scenari, nicchie, relitti, gemme, roba
-  e figure, curiosità, specie, grossi, eroi, persone di sopra, Survivors; di ogni cosa tutte le pose), con lo stesso cancello.
+  e figure, curiosità, il cavaliere del castello, Survivors; di ogni cosa tutte le pose), con lo stesso cancello. Il 1° novembre 2026 sono
+  usciti mostri, grossi, eroi e persone di sopra (il modello 3D, o la sua foto: [../sotterraneo/sagome-3d.md](../sotterraneo/sagome-3d.md)),
+  con i due fogli delle persone: da 876 pezzi a 505, da 894 a 379 KB di testo.
 - **La roba del sotterraneo**: le figure di `roba.json` che nessun foglietto ritaglia e che non hanno un
   `pezzo` (le 17 «fuori» di [figure.md](../sotterraneo/figure.md)). **Le creature**: quelle del catalogo senza
   nessun gioco, e i fotogrammi che un gioco lascia fuori (`scelta`).
