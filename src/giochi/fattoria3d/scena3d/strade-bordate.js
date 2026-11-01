@@ -86,29 +86,6 @@ const FONDI = {
   },
 }
 
-/** La frangia d'erba che sfuma sul prato: fili che partono dalla linea di mezzo (il bordo della strada) e vanno da una parte e dall'altra, lunghi e corti,
-    dello stesso verde del prato; la trasparenza fa il resto. La tela si ripete in lunghezza senza cuciture. */
-function texturaErba() {
-  const W = 256, H = 96, M = H / 2, c = tela(W, H), x = c.getContext('2d'), r = dado(7)
-  for (let k = 0; k < 190; k++) {
-    const cx = r() * W, larg = 2 + r() * 3, verde = ['#5e9a38', '#79b84a', '#6aa840', '#86c455'][k & 3], dir = k % 3 === 0 ? -1 : 1     // due terzi verso la strada, uno verso il prato
-    const alt = (dir > 0 ? 8 + r() * 36 : 6 + r() * 22), piega = (r() - 0.5) * 9
-    for (const dx of [0, W, -W]) {
-      x.globalAlpha = 0.9; x.fillStyle = verde; x.beginPath(); x.moveTo(cx + dx - larg, M); x.lineTo(cx + dx + larg, M); x.lineTo(cx + dx + piega, M + dir * alt); x.closePath(); x.fill()
-    }
-  }
-  // Il colore dei pixel trasparenti sarebbe nero (la tela è premoltiplicata) e filtrando sporcherebbe i fili di scuro: lo si rimette verde a mano, in una DataTexture.
-  const d = x.getImageData(0, 0, W, H).data, buf = new Uint8Array(W * H * 4)
-  for (let riga = 0; riga < H; riga++) for (let col = 0; col < W; col++) {
-    const da = (riga * W + col) * 4, a = (H - 1 - riga) * W * 4 + col * 4             // la prima riga della DataTexture è il basso
-    const pieno = d[da + 3] > 0
-    buf[a] = pieno ? d[da] : 110; buf[a + 1] = pieno ? d[da + 1] : 172; buf[a + 2] = pieno ? d[da + 2] : 70; buf[a + 3] = d[da + 3]
-  }
-  const t = new THREE.DataTexture(buf, W, H, THREE.RGBAFormat); t.colorSpace = THREE.SRGBColorSpace
-  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearMipmapLinearFilter; t.generateMipmaps = true; t.anisotropy = 4; t.needsUpdate = true
-  return t
-}
-
 /**
  * Il disegno delle strade. `sabbia` è la texture della terra battuta (quella di sempre); `texture` è l'elenco da liberare alla chiusura.
  * `motore` dà `strada` (Map cella → 1|2) e `aspettoStrada(i, j)`; `dentroFinestra(i, j)` dice cosa ridisegnare.
@@ -128,9 +105,6 @@ export class StradeBordate {
       banco.geometry.setAttribute('aAperto', new THREE.InstancedBufferAttribute(new Float32Array(CAPACITA_STRADE.fondo * 4), 4))
       banco.geometry.setAttribute('aAngoli', new THREE.InstancedBufferAttribute(new Float32Array(CAPACITA_STRADE.fondo * 4), 4))
     }
-    const erba = texturaErba(); texture.push(erba)
-    const matErba = new THREE.MeshStandardMaterial({ map: erba, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 1 })
-    const piano = (w, h) => new THREE.PlaneGeometry(w, h).rotateX(-Math.PI / 2)
     const cordolo = new THREE.MeshStandardMaterial({ color: 0xd9d4c8, roughness: 0.9 }), legno = new THREE.MeshStandardMaterial({ color: 0x8a5a33, roughness: 0.95 })
     const tondo = (r, l) => new THREE.CylinderGeometry(r, r, l, 8).rotateZ(Math.PI / 2)                      // un cordolo arrotondato, steso lungo x
     const ciuffo = (() => {                                                                                     // un ciuffetto d'erba: tre fili storti
@@ -141,7 +115,7 @@ export class StradeBordate {
     this.bordi = {
       cordolo: { lato: this._banco(scena, tondo(0.055, 1), cordolo, CAPACITA_STRADE.lati, true), angolo: this._banco(scena, new THREE.SphereGeometry(0.058, 8, 6), cordolo, CAPACITA_STRADE.angoli, true) },
       sassi: { sasso: this._banco(scena, new THREE.IcosahedronGeometry(0.06, 1).scale(1, 0.66, 1), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95 }), CAPACITA_STRADE.sassi, true) },
-      erba: { lato: this._banco(scena, piano(1, 0.5), matErba, CAPACITA_STRADE.lati, false), angolo: this._banco(scena, piano(0.5, 0.5), matErba, CAPACITA_STRADE.angoli, false),
+      erba: {
         ciuffo: this._banco(scena, ciuffo, new THREE.MeshStandardMaterial({ color: 0x6fb044, roughness: 1 }), CAPACITA_STRADE.ciuffi, false) },
       steccato: { palo: this._banco(scena, new THREE.BoxGeometry(0.05, 0.13, 0.05), legno, CAPACITA_STRADE.pali, true), trave: this._banco(scena, new THREE.BoxGeometry(1, 0.025, 0.025), legno, CAPACITA_STRADE.pali, true) },
     }
@@ -194,10 +168,12 @@ export class StradeBordate {
       const [di, dj] = LATI[s], giro = -s * Math.PI / 2, tx = -dj, tz = di               // tx, tz: lungo il lato
       if (stile === 'cordolo') this._metti(B.lato, cx + di * 0.46, 0.05, cz + dj * 0.46, giro, 1, 1, 1, 0.92 + R(s, 0) * 0.1)
       else if (stile === 'erba') {
-        this._metti(B.lato, cx + di * 0.5, 0.036, cz + dj * 0.5, giro, 1, 1, 1, 0.92 + R(s, 1) * 0.16)
-        for (let q = 0; q < 8; q++) {                                                      // ciuffi veri, un po' dentro e un po' fuori
-          const t = -0.45 + q * 0.125 + (R(s, q + 2) - 0.5) * 0.08, p = 0.46 + (R(s, q + 12) - 0.5) * 0.2, h = 0.9 + R(s, q + 22) * 1.3
-          this._metti(B.ciuffo, cx + di * p + tx * t, 0.03, cz + dj * p + tz * t, R(s, q + 32) * 6.3, h, h, h, 0.8 + R(s, q + 42) * 0.35)
+        for (let m = 0; m < 3; m++) {                                                      // tre mazzetti per lato, in punti a caso: mai una fila
+          const t0 = -0.38 + m * 0.38 + (R(s, m + 2) - 0.5) * 0.2, p0 = 0.5 + (R(s, m + 12) - 0.5) * 0.3
+          for (let q = 0; q < 4; q++) {
+            const h = 0.8 + R(s, m * 4 + q + 22) * 1.4
+            this._metti(B.ciuffo, cx + di * (p0 + (R(s, m * 4 + q + 40) - 0.5) * 0.14) + tx * (t0 + (R(s, m * 4 + q + 60) - 0.5) * 0.16), 0.03, cz + dj * (p0 + (R(s, m * 4 + q + 40) - 0.5) * 0.14) + tz * (t0 + (R(s, m * 4 + q + 60) - 0.5) * 0.16), R(s, m * 4 + q + 80) * 6.3, h, h, h, 0.8 + R(s, m * 4 + q + 100) * 0.35)
+          }
         }
       } else if (stile === 'sassi') {
         for (let q = 0; q < 6; q++) {                                                      // una fila di ciottolini chiari, e dietro qualcuno più piccolo
@@ -217,7 +193,7 @@ export class StradeBordate {
       if (!v.angoli[c]) continue
       const [di, dj] = ANGOLI[c]
       if (stile === 'cordolo') this._metti(B.angolo, cx + di * 0.46, 0.05, cz + dj * 0.46, 0, 1, 1, 1, 0.97)
-      else if (stile === 'erba') { this._metti(B.angolo, cx + di * 0.4, 0.036, cz + dj * 0.4, c * 1.57, 1, 1, 1, 1); for (let q = 0; q < 3; q++) this._metti(B.ciuffo, cx + di * (0.38 + q * 0.04), 0.03, cz + dj * (0.38 + R(c, q) * 0.12), R(c, q + 5) * 6.3, 1.4, 1.4, 1.4, 0.9) }
+      else if (stile === 'erba') { for (let q = 0; q < 3; q++) this._metti(B.ciuffo, cx + di * (0.38 + q * 0.04), 0.03, cz + dj * (0.38 + R(c, q) * 0.12), R(c, q + 5) * 6.3, 1.4, 1.4, 1.4, 0.9) }
       else if (stile === 'sassi') this._metti(B.sasso, cx + di * 0.44, 0.035, cz + dj * 0.44, R(c, 0) * 6.3, 1.2, 1, 1.2, 0.95)
       else this._metti(B.palo, cx + di * 0.46, 0.065, cz + dj * 0.46, 0, 1, 1, 1, 1)
     }

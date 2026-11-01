@@ -70,7 +70,7 @@ di esercizio: la cella più cara, mattoni + ciottolini o steccato, costa 🪙 8,
 | tipo | 🪙 | livello | | bordo | 🪙 in più | livello |
 |---|--:|--:|---|---|--:|--:|
 | terra battuta (quella di sempre) | 1 | 1 | | nessuno | 0 | 1 |
-| ghiaia | 2 | 3 | | erba alta (una frangia che sfuma sul prato, più ciuffi) | 1 | 2 |
+| ghiaia | 2 | 3 | | ciuffi (mazzetti d'erba sparsi sul bordo, sul fondo che sfuma) | 1 | 2 |
 | ciottoli bianchi | 3 | 7 | | cordolo | 1 | 5 |
 | lastricato | 4 | 12 | | ciottolini (una fila di sassolini chiari) | 2 | 10 |
 | mattoni | 6 | 20 | | steccato (basso, di legno) | 2 | 15 |
@@ -78,7 +78,7 @@ di esercizio: la cella più cara, mattoni + ciottolini o steccato, costa 🪙 8,
 - **Il bordo si calcola dai vicini** (`dati/tessere.js`, `viciniDi`): due strade dello **stesso tipo** affiancate si **uniscono** (niente bordo fra loro,
   neanche se hanno bordi diversi); la cornice sta solo sui lati che toccano il prato, più un pezzo negli **angoli rientranti** (due lati uniti e la diagonale
   vuota). Fra **due tipi diversi** il confine è netto, senza bordo né dall'una né dall'altra (scelta: due cornici affiancate sarebbero un muretto doppio; se serve un confine, si disegna un tipo in mezzo).
-- **Il fondo sfuma nel prato** (bordo «nessuno» e «erba alta»): ogni istanza porta quali lati e angoli rientranti sono vuoti (`aAperto`, `aAngoli`, calcolati da `viciniDi`) e lo shader
+- **Il fondo sfuma nel prato** (bordo «nessuno» e «ciuffi»): ogni istanza porta quali lati e angoli rientranti sono vuoti (`aAperto`, `aAngoli`, calcolati da `viciniDi`) e lo shader
   (`sfumaIBordi` in `strade-bordate.js`) la rende trasparente lì, con un margine irregolare fatto di rumore sulla posizione nel mondo (uguale fra celle vicine: niente cuciture). Dove due
   strade si uniscono il lato è chiuso e non sfuma. Cordolo, ciottolini e steccato tengono il fondo netto: la cornice sta sul bordo. Il fondo è una lastra trasparente (non più una scatola), `depthWrite` spento.
 - **Ridipingere**: sopra una strada tua di un altro aspetto si disegna di nuovo e si paga il nuovo (il vecchio non si rimborsa). Quelle di serie non si ridipingono.
@@ -116,4 +116,4 @@ contadino corre** quando il percorso supera 9 celle (1,75×). Non c'è più una 
 
 **Nei test**: `[data-f3="barra-strade"]`, `[data-f3="strade-tipi"]` e `[data-f3="strade-bordi"]` (i tasti hanno `data-tipo` e `data-bordo`), `[data-strumento]`, `[data-f3="strade-fatto"]`; unità `unita/fattoria3d-strade`.
 
-Provati e scartati: sassi scuri e radi (sembravano bernoccoli), frangia d'erba rigida con la base scura (si staccava dal prato). Due trappole del disegno: **mai una scala negativa** sulle istanze (specchiare una frangia la rende nera: la normale si rovescia) e **mai `DoubleSide` per i fili d'erba** (lo stesso: si raddoppiano i triangoli); i pixel trasparenti di una tela sono neri e sporcano i bordi, quindi la frangia è una `DataTexture` col verde rimesso a mano.
+Provati e scartati: sassi scuri e radi (sembravano bernoccoli); una frangia d'erba a striscia con ciuffi in fila (un muro di fili dritto lungo il lato: tolta, ora i ciuffi sono mazzetti sparsi); il fondo tagliato netto sul prato (cucito sopra: ora sfuma). Due trappole del disegno: **mai una scala negativa** sulle istanze (specchiare una frangia la rende nera: la normale si rovescia) e **mai `DoubleSide` per i fili d'erba** (lo stesso: si raddoppiano i triangoli).

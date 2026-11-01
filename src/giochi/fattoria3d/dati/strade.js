@@ -12,7 +12,7 @@ export const TIPI_STRADA = {
 }
 export const BORDI_STRADA = {
   nessuno:  { nome: 'Nessuno',    prezzo: 0, liv: 1,  colore: '#c9b07c' },
-  erba:     { nome: 'Erba alta',  prezzo: 1, liv: 2,  colore: '#6fb044' },
+  erba:     { nome: 'Ciuffi',     prezzo: 1, liv: 2,  colore: '#6fb044' },
   cordolo:  { nome: 'Cordolo',    prezzo: 1, liv: 5,  colore: '#cfcac0' },
   sassi:    { nome: 'Ciottolini', prezzo: 2, liv: 10, colore: '#e4dfd2' },
   steccato: { nome: 'Steccato',   prezzo: 2, liv: 15, colore: '#8a5a33' },
