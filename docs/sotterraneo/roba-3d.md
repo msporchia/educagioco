@@ -21,16 +21,39 @@ anteprime è il modello 3D di `spada-28`, con l'alone della sua rarità. Prima t
    pergamena del portale) hanno un modello per chiave in `pozioni.js` (`crea(chiave)`, `CHIAVI`: la forma dal grado, il colore dal
    tipo). Nelle caselle, nella scelta della pozione e nella riga della torcia dello zaino.
 
-## La balestra si tiene a modo suo
+## Come si tiene un'arma
 
-Una balestra non è un arco ritto (l'utente, 31 ottobre 2026: l'elfa la teneva col fusto in su e l'arco di traverso sul corpo). Il modello,
-sia la figura `arco-07` (`bastoni.js`) sia il ripiego `balestra` della collezione, ha **l'impugnatura nel pugno, il fusto verso +z** (dove
-tira anche l'arco), la guida e il dardo sopra, l'arco di piatto lungo x coi flettenti piegati verso chi tira; `userData.tipo = 'balestra'`
-(la famiglia resta `arco`: va nella sinistra). In mano la tiene `tieniBalestra` (`poc/eroi-3d/eroi.js`), in fondo alla guardia e alla
-marcia: il braccio la porge davanti, appena sotto la spalla, e il perno annulla il giro del braccio, così il fusto va dove guarda (o
-mira) l'eroe, un poco in giù, per tutti e quattro. Provato a girare solo il modello: il perno segue il braccio, che in ogni posa sta in un
-altro modo (l'elfa lo tende in avanti, il cavaliere lo tiene basso), e il fusto finiva in su o di sbieco. I motivi dell'elemento della
-figura (fatti per le aste ritte, attorno a z = 0) stanno spostati sul davanti.
+L'utente, 31 ottobre e 1° novembre 2026 («verifica tutte le armi»): l'arco stava lungo il braccio puntato verso chi guarda, la
+balestra di traverso sul corpo. Il modello ha l'origine nel pugno (`equipaggia`: la lama inclinata in avanti, il resto col braccio);
+`poc/eroi-3d/eroi.js` decide la posa per quello che la mano tiene (`inMano`), e `tieni` corregge alla fine di guardia, marcia e colpo.
+
+- **L'arco, la balestra e il bastone non seguono il braccio**: il perno ne annulla il giro, così stanno come devono in ogni posa.
+  Provato a girare solo il modello: il perno segue il braccio, che in ogni posa sta in un altro modo, e l'arma finiva di sbieco.
+- **L'arco** (sinistra) **sta ritto con la corda verso l'eroe**, la cima appena in fuori, col braccio teso all'altezza della spalla
+  e un poco in fuori (`ARCO_DI_TRAVERSO`): di taglio, da davanti, era un bastoncino; così se ne vede la curva nel ritratto e dalla
+  telecamera. Più basso, l'arco lungo entrava nel pavimento.
+- **La balestra** (sinistra; il modello, sia `arco-07` in `bastoni.js` sia il ripiego `balestra`, ha l'impugnatura nel pugno, il fusto
+  verso +z, l'arco di piatto lungo x; `userData.tipo = 'balestra'`): il braccio la porge davanti appena sotto la spalla, il fusto dove
+  guarda l'eroe, un poco in giù. I motivi dell'elemento della figura stanno spostati sul davanti.
+- **Il bastone** (destra) **sta dritto, discosto dal fianco** (fuori dalla veste e dalla falda del cappello del mago: prima stava
+  dentro la barba), e **poggia a terra**: se la punta in basso andrebbe sotto il pavimento il modello sale e la mano scorre sull'asta
+  (`poggia`, la punta misurata una volta nel suo riferimento). Alzato nel gesto, si alza con la mano.
+- **La lama e l'ascia** (destra) vanno in avanti e in alto, anche in marcia: il braccio che regge un'arma dondola meno e resta avanti
+  (con il dondolio pieno la lama finiva in orizzontale all'altezza del ginocchio). Nel gesto del cavaliere e dell'elfa la lama sale
+  fino a dritta: girata indietro la spada lunga passava nell'elmo. Il nano la tiene più su della presa comune, ma non nel gesto.
+- **Lo scudo** (sinistra) con la faccia in fuori, davanti al fianco; in marcia resta avanti (dondolando entrava nel fianco). Col
+  testone dei chibi il bordo in alto arriva al mento.
+- **L'elfa ha due guardie**: con l'arco il braccio teso e l'altra mano alla corda; con la spada (o lo scudo) le braccia del cavaliere,
+  e nel gesto rialza la spada invece di ravviarsi l'orecchio (la lama le passava nella testa).
+
+**Aperto: gli archi lunghi entrano nel pavimento.** Un arco lungo è alto quasi quanto l'eroe (`arco-06` il 100% dell'elfa, il 94%
+del nano) e il pugno del chibi sta a un terzo dell'altezza: ritto, la punta in basso scende fino a 0,2 sotto il pavimento con l'elfa e
+0,35 col nano (unità del modello: il pugno teso sta a 0,44 e a 0,30). Le strade: accorciare gli archi in mano (non da soli nella casella), inclinarli di più (non più ritti), o lasciarli.
+
+Nei test: `unita/sotterraneo-armi-in-mano` (ogni figura che si impugna e ogni arma della collezione, in mano agli eroi che la portano,
+ferma, nel gesto e in marcia: dove punta, il pavimento, la testa, il busto; `MISURA=1` stampa la tabella, `DETTAGLIO='nano spada-01'`
+gli assi posa per posa). Per guardarle: `node strumenti/tavola-anteprime.mjs --solo armi --eroe nano --famiglia arco` (anche `--posa
+marcia`, `--giro 1.57`, `--istante 3`, `--da-sola`: [anteprime-3d.md](anteprime-3d.md#per-guardarle)).
 
 Il copricapo non passa dalle figure: ha i modelli dei copricapi per base (`COPRICAPI_3D`, [elmo.md](elmo.md)).
 
