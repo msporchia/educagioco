@@ -52,13 +52,10 @@ const s0 = popolaMondo({ mondo: m, eroe: 'cavaliere', giro: 0 })
 {
   const q = s0.lista.find(x => !x.caporale && !x.signore && m.regioni[x.regione].chiave === 'campi')
   const sig = s0.lista.find(x => x.signore)
-  const f = figuraDiSopra(q, 0), fc = figuraDiSopra(q, 0, true)
-  controlla('chi dorme respira (la posa da fermo)', f.pezzo.includes('-fermo-'), f.pezzo)
-  controlla('chi corre corre', fc.pezzo.includes('-corsa-') || fc.pezzo.includes('-fermo-'), fc.pezzo)
+  const f = figuraDiSopra(q)
+  controlla('la misura viene dal posto della specie (dati/altezze.js)', f.alto > 0.5 && f.scala > 0, JSON.stringify(f))
   const finto = { ...sig, signore: false, caporale: false }
-  uguale('il signore è più grande della sua specie', Math.round(figuraDiSopra(sig, 0).scala / figuraDiSopra(finto, 0).scala * 100) / 100, PIU_GRANDE.signore)
-  // i fotogrammi vanno col tempo: lo stesso istante, lo stesso fotogramma (a qualsiasi frequenza)
-  uguale('lo stesso istante, la stessa figura', figuraDiSopra(q, 1.234, true).pezzo, figuraDiSopra(q, 1.234, true).pezzo)
+  uguale('il signore è più grande della sua specie', Math.round(figuraDiSopra(sig).alto / figuraDiSopra(finto).alto * 100) / 100, PIU_GRANDE.signore)
   const io = { x: q.fx + 3, z: q.fy }
   const l = mostriDaDisegnare([q, sig], { x: io.x, z: io.z, t: 0 })
   uguale('il lontano non si disegna (fuori dal cerchio)', l.map(x => x.i).join(), String(q.i))

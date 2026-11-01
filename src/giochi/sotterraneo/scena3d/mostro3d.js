@@ -1,4 +1,4 @@
-// I mostri come modelli 3D (in prova, docs/sotterraneo/mostri-3d.md): al posto dello sprite, il modello che il registro
+// I mostri come modelli 3D (docs/sotterraneo/mostri-3d.md): il modello che il registro
 // (mostri3d/registro.js) dà alla specie. Una riserva di istanze per modello, riusate: a ogni fotogramma `inizia`, una `metti` per
 // mostro (lo stato di disegno di cose.js porta la sua istanza finché si vede) e `chiudi` nasconde quelle che nessuno ha preso.
 // Il lampo del colpo, la tinta degli stati e lo svanire stanno su copie dei materiali per istanza, accese solo quando servono:
@@ -10,10 +10,8 @@ import { studia, saldaTutto, osso, copiaMateriale, tipoFuso, tingiFusa, lampoFus
 import { conMosse } from './mostri3d/mosse-anim.js'
 import { ACCESI } from './costanti.js'
 import { daSola, rifai } from './matrici.js'
+import { scalaDelModello } from './sagome-pura.js'
 
-// lo stesso rapporto dell'eroe 3D (eroe3d.js): il modello è alto quanto lo sprite che sostituisce per questa frazione
-export const ALTEZZA_SPRITE = 0.72
-const LARGO_MAX = 1.5                  // celle: un modello largo (le ali, la coda) non esce dal suo posto sul palco
 const BIANCO = new Color(1, 1, 1)
 const _b = new Box3(), _w = new Vector3()
 const liscio = x => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x) }
@@ -27,7 +25,8 @@ function misura(g) {
 }
 
 const saldabili = new Map()   // id → lo studio delle mesh (salda3d.js: chi sta ferma, chi si spegne), uguale per tutte le istanze
-function nuovaIstanza(scena, id) {
+/** Il modello `id` come sta in scena (saldato, a riposo), con la sua scatola: { g, alto, largo } o null. Lo usa anche il fotografo delle sagome. */
+export function preparaModello(id) {
   const g = costruisci(id)
   if (!g) return null
   try {
@@ -35,12 +34,18 @@ function nuovaIstanza(scena, id) {
     if (ACCESI.saldatura) saldaTutto(g, saldabili.get(id), { pelle: ACCESI.pelle })
     g.userData.anima(0)
   } catch (e) { console.warn(`mostri 3D: ${id} non si salda`, e) }   // resta com'è, solo più caro
-  const b = misura(g), s = b.getSize(new Vector3())
+  const s = misura(g).getSize(new Vector3())
+  return { g, alto: Math.max(0.2, s.y), largo: Math.max(0.2, s.x, s.z) }
+}
+function nuovaIstanza(scena, id) {
+  const m = preparaModello(id)
+  if (!m) return null
+  const { g } = m
   // la radice porta dove sta, dove guarda e quanto è grande; `piega` la caduta (anima può muovere il Group del modello)
   const radice = daSola(new Group()), piega = new Group(); radice.visible = false; piega.add(g); radice.add(piega); scena.add(radice)
   const mesh = []
   g.traverse(o => { if (o.isMesh && !osso(o)) { o.castShadow = false; mesh.push({ o, orig: o.material, copia: null }) } })   // come l'eroe 3D: niente ombra del cono
-  return { id, radice, piega, g, alto: Math.max(0.2, s.y), largo: Math.max(0.2, s.x, s.z), mesh, accese: false, presa: false, chi: null, guasto: false }
+  return { id, radice, piega, g, alto: m.alto, largo: m.largo, mesh, accese: false, presa: false, chi: null, guasto: false }
 }
 
 /** Le copie dei materiali per un'istanza: si accendono quando il lampo, la tinta o lo svanire servono, coi valori vivi dell'originale. */
@@ -73,6 +78,28 @@ function tingi(ist, bianco, tinta, forzaTinta, trasparenza) {
   }
 }
 
+/**
+ * Dove guarda un mostro (il giro attorno a y), smussato nel suo stato di disegno `s`: il bersaglio (`p.verso`, l'eroe) un po' girato
+ * verso la telecamera, se no dove va (la velocità di adesso, dalle posizioni), se no di tre quarti come chi dorme. Ci si gira col tempo.
+ * Lo usano il modello e la sua sagoma (sagome.js): passando dall'uno all'altra il mostro guarda dalla stessa parte.
+ */
+export function giraIlMostro(s, p) {
+  if (s.px3d != null && p.dt > 0) {
+    const q = verso(p.dt, 8)
+    s.vx3d = (s.vx3d || 0) + ((p.x - s.px3d) / p.dt - (s.vx3d || 0)) * q
+    s.vz3d = (s.vz3d || 0) + ((p.z - s.pz3d) / p.dt - (s.vz3d || 0)) * q
+  }
+  s.px3d = p.x; s.pz3d = p.z
+  let meta
+  if (p.verso) { const dx = p.verso.x - p.x, dz = p.verso.z - p.z, l = Math.hypot(dx, dz); if (l > 0.05) meta = Math.atan2(dx, dz + l * 0.45) }
+  else if (s.vx3d != null && Math.hypot(s.vx3d, s.vz3d) > 0.2) meta = Math.atan2(s.vx3d, s.vz3d + 0.3)
+  else meta = s.specchio ? -0.9 : 0.9
+  if (meta === undefined) meta = s.yaw3d ?? 0
+  let d = meta - (s.yaw3d ?? meta); d = Math.atan2(Math.sin(d), Math.cos(d))
+  s.yaw3d = (s.yaw3d ?? meta) + d * verso(p.dt, 9)
+  return s.yaw3d
+}
+
 /** `scena`: dove si aggiungono. `quanti()`: quanti al più nello stesso fotogramma (ACCESI.mostri3d). */
 export function creaMostri3d(scena, { quanti = () => 12, ozio = 0 } = {}) {
   const riserve = new Map()      // id → [istanze]
@@ -88,7 +115,7 @@ export function creaMostri3d(scena, { quanti = () => 12, ozio = 0 } = {}) {
     let lista = riserve.get(chiave)
     if (!lista) riserve.set(chiave, lista = [])
     let ist = lista.find(i => !i.chi && !i.presa)
-    if (!ist && nuove >= api.nuovePerFotogramma) return null   // oltre il tetto resta lo sprite per un fotogramma (vedi sotto)
+    if (!ist && nuove >= api.nuovePerFotogramma) return null   // oltre il tetto resta la sagoma per un fotogramma (vedi sotto)
     if (!ist) { nuove++; ist = nuovaIstanza(scena, id); if (!ist) return null; ist.chiave = chiave; ist.mosse = chiave === id ? null : mosse; lista.push(ist) }
     ist.chi = s; ist.presa = true; s.m3d = ist
     return ist
@@ -101,16 +128,16 @@ export function creaMostri3d(scena, { quanti = () => 12, ozio = 0 } = {}) {
      * leggendari insieme erano un fotogramma lungo). L'entrata a passi (indice.js) lo mette a uno, finché non si disegna.
      */
     nuovePerFotogramma: Infinity,
-    /** Il modello che questa cosa avrebbe (null: resta lo sprite). */
+    /** Il modello che questa cosa avrebbe (null: nessuno). */
     idDi,
     inizia() { usate = 0; nuove = 0; modellati.length = 0; for (const l of riserve.values()) for (const i of l) i.presa = false },
     /** C'è posto per un altro modello in questo fotogramma? */
     get pieno() { return usate >= quanti() },
     /**
-     * Un mostro in scena. `p`: { x, z, alto (dello sprite, in celle), verso: {x, z} chi guardare (o null), t, dt, trasparenza, morente
+     * Un mostro in scena. `p`: { x, z, alto (il posto, in celle: dati/altezze.js allungato per la vista), verso: {x, z} chi guardare (o null), t, dt, trasparenza, morente
      * (secondi da quando cade, 0 in piedi), bianco (il lampo), tinta, forzaTinta, attacco (0..1 o -1), mosse (dati/mosse.js), mossa
      * ({ id, p }: la mossa che fa adesso, al posto dell'attacco), annuncio (l'id della mossa annunciata: l'anello a terra) }. Torna
-     * l'altezza vera, o -1 se il modello non c'è (e allora si disegna lo sprite).
+     * l'altezza vera, o -1 se il modello non c'è (e allora si mette la sua sagoma, sagome.js).
      */
     metti(r, s, id, p) {
       if (usate >= quanti()) return -1
@@ -121,8 +148,7 @@ export function creaMostri3d(scena, { quanti = () => 12, ozio = 0 } = {}) {
       const { radice, piega, g } = ist
       const c = liscio(p.morente / 0.6)   // quanto è già caduto
       try {
-        const k0 = (p.alto || 1) * ALTEZZA_SPRITE * (ALTEZZA[id.split('+')[0]] || 1) / ist.alto
-        const k = Math.min(k0, LARGO_MAX * Math.max(1, p.alto / 1.6) / ist.largo)
+        const k = scalaDelModello(ist.alto, ist.largo, p.alto, ALTEZZA[id.split('+')[0]] || 1)
         radice.scale.setScalar(k)
         // le animazioni delle mosse si preparano la prima volta, quando si sa quanto è grande (l'anello e il bagliore ne dipendono);
         // l'icona sopra la testa no: la scrive la vista (viste/MossaAnnunciata.vue)
@@ -130,21 +156,7 @@ export function creaMostri3d(scena, { quanti = () => 12, ozio = 0 } = {}) {
           ist.pronte = true
           try { conMosse(g, { chiave: id }, { scala: k, mosse: ist.mosse, icona: false }) } catch (e) { console.warn(`mostri 3D: ${id} senza mosse`, e) }
         }
-        // dove guarda: il bersaglio (l'eroe) un po' girato verso la telecamera, se no di lato come lo sprite; ci si gira in fretta
-        // la velocità di adesso (dalle posizioni, smussata): chi cammina guarda dove va
-        if (s.px3d != null && p.dt > 0) {
-          const q = verso(p.dt, 8)
-          s.vx3d = (s.vx3d || 0) + ((p.x - s.px3d) / p.dt - (s.vx3d || 0)) * q
-          s.vz3d = (s.vz3d || 0) + ((p.z - s.pz3d) / p.dt - (s.vz3d || 0)) * q
-        }
-        s.px3d = p.x; s.pz3d = p.z
-        let meta
-        if (p.verso) { const dx = p.verso.x - p.x, dz = p.verso.z - p.z, l = Math.hypot(dx, dz); if (l > 0.05) meta = Math.atan2(dx, dz + l * 0.45) }
-        else if (s.vx3d != null && Math.hypot(s.vx3d, s.vz3d) > 0.2) meta = Math.atan2(s.vx3d, s.vz3d + 0.3)
-        else meta = s.specchio ? -0.9 : 0.9
-        let d = meta - (s.yaw3d ?? meta); d = Math.atan2(Math.sin(d), Math.cos(d))
-        s.yaw3d = (s.yaw3d ?? meta) + d * verso(p.dt, 9)
-        radice.rotation.set(0, s.yaw3d, 0)
+        radice.rotation.set(0, giraIlMostro(s, p), 0)
         // l'idle con la sua fase; chi cade si ferma all'istante della caduta e si rovescia all'indietro, poi sprofonda un poco
         if (!p.morente) s.tCaduta = p.t
         const t = p.morente > 0 ? s.tCaduta : p.t
@@ -160,9 +172,9 @@ export function creaMostri3d(scena, { quanti = () => 12, ozio = 0 } = {}) {
         radice.visible = p.trasparenza > 0.02
         rifai(radice)
       } catch (e) {
-        // un modello che si rompe animando: via per sempre, torna lo sprite
+        // un modello che si rompe animando: via per sempre, torna la sua sagoma
         ist.guasto = true; radice.visible = false; ist.chi = null; s.m3d = null; usate--
-        console.warn(`mostri 3D: ${id} si rompe animando, resta lo sprite`, e)
+        console.warn(`mostri 3D: ${id} si rompe animando, resta la sagoma`, e)
         return -1
       }
       if (!p.morente) modellati.push([r, radice])
@@ -213,7 +225,7 @@ export function creaMostri3d(scena, { quanti = () => 12, ozio = 0 } = {}) {
       o.updateWorldMatrix(true, false)
       return o.getWorldPosition(fuori)
     },
-    /** Una mossa del modello (mostri3d/mosse-anim.js): { tipo, durata (s), arrivo (frazione) } o null (chi non ha le mosse, o lo sprite). */
+    /** Una mossa del modello (mostri3d/mosse-anim.js): { tipo, durata (s), arrivo (frazione) } o null (chi non ha le mosse, o la sagoma). */
     mossaDi(s, id) { const u = s && s.m3d && s.m3d.g.userData; return (u && u.mosse && u.mosse[id]) || null },
     /** L'attacco che il modello dichiara: { tipo, durata (s), arrivo (frazione), proiettile } o null. */
     attaccoDi(s) { const u = s && s.m3d && s.m3d.g.userData; return (u && u.attacca && u.attacco) || null },

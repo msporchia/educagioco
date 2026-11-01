@@ -26,7 +26,7 @@ export function personeFinte(n, x, z) {
   const l = []
   for (let k = 0; k < n; k++) {
     const p = posto(k, x, z, 0.25)
-    l.push({ chiave: `folla:${k}`, modello: MODELLI[k % MODELLI.length], pezzo: 'guardia-fermo-0', x: p.x, z: p.z })
+    l.push({ chiave: `folla:${k}`, modello: MODELLI[k % MODELLI.length], x: p.x, z: p.z })
   }
   return l
 }
@@ -37,8 +37,8 @@ export function mostriFinti(n, specie, x, z, t) {
   for (let k = 0; k < n; k++) {
     const p = posto(k, x, z, 0)
     const q = { i: 900000 + k, tipo: specie[k % specie.length], grado: 'comune', sveglio: true }
-    const f = figuraDiSopra(q, t, false)
-    l.push({ ...q, pezzo: f.pezzo, scala: f.scala, x: p.x, z: p.z, alfa: 1, specchio: p.x < x, caporale: false, signore: false, nome: null })
+    const f = figuraDiSopra(q)
+    l.push({ ...q, alto: f.alto, scala: f.scala, x: p.x, z: p.z, alfa: 1, specchio: p.x < x, caporale: false, signore: false, nome: null })
   }
   return l
 }

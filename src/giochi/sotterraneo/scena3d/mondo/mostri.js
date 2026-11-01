@@ -1,12 +1,10 @@
 // I mostri del mondo di sopra a schermo (docs/sotterraneo/mondo-aperto-mostri.md, «La scena»): dallo stato del motore
 // (motore/aperta.js, `mostriVicini`) la lista delle figure da posare, ancorate come le persone (persone.js). Si vede solo chi sta
-// dentro il cerchio di luce attorno all'eroe (SOPRA.vista) e dove la nebbia è già aperta; al bordo del cerchio sfuma. Chi dorme
-// respira piano, chi è sveglio corre; il caporale e il signore della regione sono più grandi. Puro, senza three: unita/sotterraneo-mostri-sopra-scena.
-import { MOSTRI } from '../../dati/mostri.js'
-import { PEZZI } from '../../dati/atlante.js'
+// dentro il cerchio di luce attorno all'eroe (SOPRA.vista) e dove la nebbia è già aperta; al bordo del cerchio sfuma. Ognuno si vede
+// col modello o con la sua sagoma (persone.js); il caporale e il signore della regione sono più grandi. Puro, senza three:
+// unita/sotterraneo-mostri-sopra-scena.
 import { haModelloPerTerra } from '../per-terra-pura.js'
-import { fotogrammaDi, quantiFotogrammi } from '../../dati/fotogrammi.js'
-import { fattoreDelMostro } from '../../viste/campo.js'
+import { ALTO_DELLA_SPECIE, GRANDEZZA_DELLA_SPECIE } from '../../dati/altezze.js'
 import { SOPRA } from '../../dati/mondo-aperto-mostri.js'
 
 export const PIU_GRANDE = { caporale: 1.15, signore: 1.4 }
@@ -19,22 +17,16 @@ export function luceDelCerchio(d, raggio = SOPRA.vista) {
   return (raggio - d) / ORLO
 }
 
-// la figura di un mostro a un istante `t` (secondi veri): il pezzo dell'atlante e la scala. `corre`: si sta muovendo adesso.
-// I fotogrammi al secondo sono quelli delle discese (scena3d/cose.js): 8 di corsa, 4 il respiro di chi è sveglio, 1,5 chi dorme
-export function figuraDiSopra(q, t, corre = false) {
-  const scheda = MOSTRI[q.tipo] || {}
-  const passi = !scheda.unaPosa && quantiFotogrammi(scheda.sprite, 'corsa') > 0
-  const posa = corre && passi ? 'corsa' : 'fermo'
-  const fr = Math.floor((t + (q.i % 7) * 0.37) * (corre ? 8 : q.sveglio ? 4 : 1.5))
-  const pezzo = fotogrammaDi(scheda.sprite, posa, fr)
-  const p = PEZZI[pezzo]
+// la misura di un mostro di sopra (dati/altezze.js): `alto` il suo posto in celle (prima dell'allungo della vista), `scala` la grandezza
+// per la macchia d'ombra; il caporale e il signore più grandi
+export function figuraDiSopra(q) {
   const piu = q.signore ? PIU_GRANDE.signore : q.caporale ? PIU_GRANDE.caporale : 1
-  return { pezzo, scala: fattoreDelMostro(q.tipo, p ? p[3] : 16, p ? p[2] : 0) * piu }
+  return { alto: (ALTO_DELLA_SPECIE[q.tipo] || 1) * piu, scala: (GRANDEZZA_DELLA_SPECIE[q.tipo] || 1) * piu }
 }
 
 // Le figure da posare: `vicini` i mostri vivi entro il cerchio (mostriVicini), (x, z) l'eroe, `visto(x, z)` la nebbia, `salta` gli
 // indici che disegna qualcun altro (chi sta nello scontro, sul palco), `memoria` una Map (indice → dove stava l'ultima volta) per
-// sapere chi corre e da che parte guarda. Torna [{ i, pezzo, scala, x, z, alfa, specchio, sveglio, caporale, signore, nome }]
+// sapere chi corre e da che parte guarda. Torna [{ i, tipo, grado, alto, scala, x, z, alfa, specchio, sveglio, caporale, signore, nome }]
 export function mostriDaDisegnare(vicini, { x, z, t, visto = () => true, salta = null, memoria = null, raggio = SOPRA.vista }) {
   const l = []
   for (const q of vicini) {
@@ -47,8 +39,8 @@ export function mostriDaDisegnare(vicini, { x, z, t, visto = () => true, salta =
     // da che parte guarda: dove va; fermo, dove guardava (sveglio: verso l'eroe)
     const specchio = Math.abs(dx) > 0.002 ? dx < 0 : prima && prima.specchio != null ? (q.sveglio ? x < q.fx : prima.specchio) : x < q.fx
     if (memoria) memoria.set(q.i, { x: q.fx, z: q.fy, specchio })
-    const f = figuraDiSopra(q, t, corre)
-    l.push({ i: q.i, tipo: q.tipo, grado: q.grado, pezzo: f.pezzo, scala: f.scala, x: q.fx, z: q.fy, alfa, specchio, sveglio: !!q.sveglio, caporale: !!q.caporale,
+    const f = figuraDiSopra(q)
+    l.push({ i: q.i, tipo: q.tipo, grado: q.grado, alto: f.alto, scala: f.scala, corre, x: q.fx, z: q.fy, alfa, specchio, sveglio: !!q.sveglio, caporale: !!q.caporale,
              signore: !!q.signore, nome: q.signore || q.caporale ? q.scheda.nome : null })
   }
   return l
