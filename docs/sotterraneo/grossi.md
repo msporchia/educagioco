@@ -8,8 +8,8 @@ migliore più il suo pezzo col nome. Richiesta dell'utente dell'8 ottobre
 
 Il codice: `dati/grossi.js` (chi sono, dove stanno, quanto sono grossi),
 `motore/livello.js` (`mostroGrosso`: lo mette al posto del guardiano),
-`motore/corsa.js` (`cade`: il bottino), `figuraDelGrosso` in `dati/grossi.js`
-(quale sprite), `scena3d/cose.js` (il grosso in scena), `viste/Grosso.vue` (la figura
+`motore/corsa.js` (`cade`: il bottino), `dati/altezze.js` (`ALTO_DEL_GROSSO`: quanto è
+grande), `scena3d/cose.js` (il grosso in scena), `viste/Grosso.vue` (la figura
 nello scontro e nella barra in cima).
 
 ## Chi sono
@@ -72,16 +72,15 @@ il serpente, il golem di magma, il golem di ghiaccio, il mietitore) stanno in [d
 ## Come si vede
 
 - **Il modello 3D della creatura che veste** ([mostri-3d.md](mostri-3d.md): ogni grosso ha il suo), con la corona 👑 sopra la testa e un
-  chiarore della sua `tinta` dietro, che distingue Re Ossuto da Carbonchio. La misura la dà lo sprite `fermo`/`corsa` di quella creatura
-  ingrandito nella sua scatola (`figuraDelGrosso` in `dati/grossi.js`: alto al più 1,9 altezze dell'eroe, largo al più 3 larghezze, a quarti,
-  `ingrandimentoDelGrosso`), che resta anche per chi è oltre il tetto dei modelli. In scena respira, cammina da sveglio se la creatura ha i
-  passi, guarda verso l'eroe, ha l'alone rosso più largo, il nome sopra la corona quando è in luce, la chiave, il sonno e la barretta come gli altri.
+  chiarore della sua `tinta` dietro, che distingue Re Ossuto da Carbonchio. La misura sta in `dati/altezze.js` (`ALTO_DEL_GROSSO`: al più
+  1,9 altezze dell'eroe, le misure dello sprite ingrandito di prima, fermate come dato il 31 ottobre 2026); oltre il tetto dei modelli c'è
+  la foto del suo modello ([sagome-3d.md](sagome-3d.md)). In scena respira (anche nella misura), guarda verso l'eroe, ha l'alone rosso più largo, il nome sopra la corona quando è in luce, la chiave, il sonno e la barretta come gli altri.
 - **La sua faccia nella barra in cima** (`viste/Grosso.vue`) è la foto del suo modello (`mostro:grosso:<chiave>`, [anteprime-3d.md](anteprime-3d.md)),
   con la stessa corona. I boss non si fanno più dipingere: la figura viene dal modello.
 - **La sua vita in cima allo schermo** (`[data-grosso]` in `Gioco.vue`): da
   quando si sveglia (si entra nella sua stanza) e mentre lo si combatte, con
   la sua faccia, il nome e la barra rossa che cala a ogni colpo. Nello
-  scontro c'è la sua figura al posto dello sprite.
+  scontro c'è il suo modello.
 - **Quando cade** non lo dice nessuna riga (la barra in cima sparisce, si
   vede: [dialoghi.md](dialoghi.md#le-scritte)); per terra intorno a lui il suo
   pezzo col nome, un pezzo raro o leggendario e, nella storia, il pezzo

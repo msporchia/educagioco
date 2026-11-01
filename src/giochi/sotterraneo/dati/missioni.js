@@ -26,10 +26,10 @@ const IL_MINATORE = { nome: 'Il vecchio minatore', chi: 'il vecchio minatore' }
 // anche l'incantatrice sta per conto suo (è una mercante, dati/mercanti.js): dà la missione del quaderno, e dopo vende le pergamene
 const L_INCANTATRICE = { nome: 'L\'incantatrice', chi: 'l\'incantatrice' }
 // chi sta nel villaggio del mondo 3D e non chiede favori: il capitano (venuto dal forte del guado, che non c'è più) racconta la quinta e
-// la sesta porta (dati/dialoghi.js). Lo sprite è quello della guardia, un poco più alto e col blu del suo mantello (`tinta`: lampo additivo,
-// scena3d/mondo/persone.js): niente figura nuova (docs/sotterraneo/mondo-3d.md, «Il capitano»)
+// la sesta porta (dati/dialoghi.js). Ha il suo modello 3D (dati/persone3d.js), un poco più alto delle altre persone; `sprite` è la
+// guardia, di cui porta il ritratto di pixel (viste/pixel.js) finché la foto non c'è (docs/sotterraneo/mondo-3d.md, «Il capitano»)
 export const CITTADINI = {
-  capitano: { nome: 'Il capitano', chi: 'il capitano della guardia', sprite: 'guardia', scala: 1.38, tinta: [0, 0.03, 0.14] },
+  capitano: { nome: 'Il capitano', chi: 'il capitano della guardia', sprite: 'guardia', scala: 1.38 },
 }
 // tutti quelli che stanno fermi sopra nel mondo 3D: chi dà favori e chi no
 export const PERSONAGGI_DI_SOPRA = { ...PERSONAGGI, ...CITTADINI }

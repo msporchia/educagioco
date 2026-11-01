@@ -5,7 +5,7 @@
     python3 strumenti/sprite/misura.py sorgenti/castello/generati/torri-2.png --figure
     python3 strumenti/sprite/misura.py sorgenti/castello/generati/terreno-bosco.png --regione=0,0,512,512 --celle
     python3 strumenti/sprite/misura.py sorgenti/castello/generati/terreno-bosco.png --griglia=0,0,64,64,64,64
-    python3 strumenti/sprite/misura.py sorgenti/sotterraneo/generati/sopra-personaggi-1.png --fondo=magenta --griglia=0,0,256,384,256,384 --piede
+    python3 strumenti/sprite/misura.py <foglio su magenta>.png --fondo=magenta --griglia=0,0,256,384,256,384 --piede
 
 ── PERCHÉ NON È UN'EURISTICA ────────────────────────────────────────
 `torri.py` indovinava la geometria a ogni giro, e sbagliava in silenzio.

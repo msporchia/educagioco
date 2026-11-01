@@ -20,6 +20,6 @@ for (let a = 0; a < tutti.length; a++) for (let b = a + 1; b < tutti.length; b++
 controlla('nello stesso gruppo nessuno sta addosso a un altro', vicini === 0, `${vicini} coppie`)
 controlla('tutti fra 2 e 10 celle dall\'eroe', tutti.every(x => { const d = Math.hypot(x.x - 10, x.z - 20); return d > 1.9 && d < 10 }))
 uguale('le specie a giro', m.slice(0, 4).map(x => x.tipo).join(), 'lupo,orco,lupo,orco')
-controlla('i mostri hanno figura e scala, sono svegli e pieni', m.every(x => x.pezzo && x.scala > 0 && x.alfa === 1 && x.sveglio && x.i >= 900000))
+controlla('i mostri hanno la misura del posto e la scala, sono svegli e pieni', m.every(x => x.alto > 0 && x.scala > 0 && x.alfa === 1 && x.sveglio && x.i >= 900000))
 
 riassunto('la folla finta delle misure')

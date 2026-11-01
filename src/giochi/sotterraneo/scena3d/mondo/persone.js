@@ -1,28 +1,32 @@
-// Le persone del mondo di sopra e l'eroe: sprite ancorati (la strada A di mondo-aperto-fasi.md). Le figure dell'atlante delle
-// discese (scena3d/figure.js) col filo scuro attorno e la luce di taglio dal lato del sole, un'ombra morbida a contatto sotto i
-// piedi (più l'ombra vera del sole), le persone a scala 1,25 dell'eroe. L'eroe è quello delle discese
-// (scena3d/eroe.js, con le armi in mano), posato sul terreno. Chi non si è visto non si disegna; entrando in vista sale dal
-// terreno come gli oggetti.
+// Le persone del mondo di sopra, i mostri e l'eroe, posati sul terreno: i più vicini col modello 3D (persona3d.js, mostro3d.js), gli
+// altri con la sagoma del modello (sagome.js, docs/sotterraneo/sagome-3d.md), con un'ombra morbida a contatto sotto i piedi (più
+// l'ombra vera del sole), le persone a scala 1,25 dell'eroe. L'eroe è quello delle discese (scena3d/eroe.js, con le armi in mano).
+// Chi non si è visto non si disegna; entrando in vista sale dal terreno come gli oggetti. Le figure dell'atlante col filo scuro
+// attorno (scena3d/figure.js) restano per la roba per terra senza modello.
 import { Group, DataTexture, RGBAFormat, Vector2, InstancedMesh, PlaneGeometry, MeshBasicMaterial, Matrix4, Quaternion, Vector3, Euler } from 'three'
 import { creaFigure } from '../figure.js'
 import { disegnaEroe } from '../eroe.js'
 import { creaEroe3d } from '../eroe3d.js'
-import { creaMostri3d } from '../mostro3d.js'
+import { creaMostri3d, giraIlMostro } from '../mostro3d.js'
 import { creaRobaPerTerra } from '../roba-per-terra.js'
-import { creaPersone3d, persone3dAccese } from '../persona3d.js'
-import { ACCESI } from '../costanti.js'
+import { creaPersone3d, persone3dAccese, giraLaPersona } from '../persona3d.js'
+import { creaSagome } from '../sagome.js'
+import { ACCESI, ALLUNGA } from '../costanti.js'
+import { idDi, ALTEZZA } from '../mostri3d/registro.js'
+import { ALTO_DELLA_PERSONA } from '../../dati/altezze.js'
 import { SALITA } from './vesti.js'
 import { leggiFolla, personeFinte, mostriFinti } from './folla-prova.js'
 import { profilo } from '../../../../store/qualita.js'
 import { segna, segnaNuovi } from '../../../../grafica/elementi3d.js'
+import { SCALA_PERSONE, RAPPORTO, scalaDelModello } from '../sagome-pura.js'
 
-export const SCALA_PERSONE = 1.25
+export { SCALA_PERSONE }
 // il mondo è già pieno di cose: i modelli 3D sono pochi, per chi è vicino (8, nella fascia bassa 6: `mostriSopra` di store/qualita.js)
 const MOSTRI_3D_SOPRA = 8
 const OMBRE_MAX = 120
 // s: un modello 3D che non si vede da tanto lascia la riserva (le specie e le persone di zone già lasciate)
 const OZIO = 30
-// le persone in 3D (docs/sotterraneo/persone-3d.md): le più vicine all'eroe, entro questa distanza in celle; le altre restano sprite
+// le persone in 3D (docs/sotterraneo/persone-3d.md): le più vicine all'eroe, entro questa distanza in celle; le altre hanno la sagoma
 const PERSONE_3D_SOPRA = 8, PERSONE_3D_VICINO = 18
 
 // le figure del mondo di sopra non hanno la maschera delle discese: una bianca, che lascia tutto com'è
@@ -35,7 +39,7 @@ export function mascheraPiena() {
 export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota, nebbia }) {
   const maschera = mascheraPiena()
   const base = { tex, norm, larga, alta, pezzi, maschera, contorno: true }
-  // gli elementi (grafica/elementi3d.js): le persone (e i mostri a sprite, che stanno nelle stesse figure), l'eroe, i mostri 3D
+  // gli elementi (grafica/elementi3d.js): le persone (e la roba per terra senza modello, nelle stesse figure), l'eroe, i mostri 3D
   const gruppo = nome => { const g = segna(new Group(), nome); scena.add(g); return g }
   const figure = segnaNuovi(scena, 'persone', () => creaFigure(scena, { ...base, max: 150 }))
   const figureEroe = segnaNuovi(scena, 'eroe', () => creaFigure(scena, { ...base, max: 8 }))
@@ -54,7 +58,7 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
   // l'eroe è il modello 3D delle discese, posato sul terreno
   const eroe3d = creaEroe3d(gruppo('eroe'))
   const quotaEroe = (x, z) => quota(x, z - 0.1)
-  // i mostri di sopra: i più vicini (al più MOSTRI_3D_SOPRA) con il modello 3D delle discese, gli altri restano sprite; lo stato di disegno
+  // i mostri di sopra: i più vicini (al più MOSTRI_3D_SOPRA) con il modello 3D delle discese, gli altri con la sagoma; lo stato di disegno
   // di ognuno (la sua istanza, dove guarda) sta qui per indice del mostro
   // `&folla=`, `&branco3d=`, `&tetto3d=`: la folla finta delle misure (folla-prova.js, docs/sotterraneo/limiti-3d.md)
   const prova = leggiFolla()
@@ -64,15 +68,16 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
   const persone3d = persone3dAccese() ? creaPersone3d(gruppo('persone'), { quanti: () => tettoPersone, ozio: OZIO }) : null
   const statiPersone = new Map()
   const robaInTerra = creaRobaPerTerra(gruppo('persone'))   // il bottino per terra col suo modello (roba-per-terra.js)
+  const sagome = segnaNuovi(scena, 'persone', () => creaSagome(scena, { maschera, max: 150 }))   // chi non ha il modello (sagome.js)
   const salita = (x, z, t) => { const k = Math.max(0, Math.min(1, (t - nebbia.quando(x, z)) / SALITA)); return k * k * (3 - 2 * k) }
 
   return {
     figure, figureEroe,
-    // `persone` [{ pezzo, x, z, specchio }], `eroe` { stato (di eroe.js), x, z, verso, sprite, mano, mancina }; `veduta`: dall'alto
+    // `persone` [{ modello, chiave, scala, x, z, saluta }], `eroe` { stato (di eroe.js), x, z, verso, sprite, mano, mancina }; `veduta`: dall'alto
     // le figure non si vedono (troppo piccole: lì parlano i nomi). `mostri` e `perTerra`: i mostri di sopra e le cose rimaste per terra
     // (mostri.js, già filtrati dal cerchio e dalla nebbia); `extra(ombra)`: chi disegna anche lui (il palco dello scontro) e vuole l'ombra
     disegna(persone, eroe, { t, dt, veduta, camera, mostri = [], perTerra = [], extra = null }) {
-      figure.inizia(); figureEroe.inizia(); nOmbre = 0
+      figure.inizia(); figureEroe.inizia(); sagome.inizia(); nOmbre = 0
       if (prova.folla) persone = [...persone, ...personeFinte(prova.folla, eroe.x, eroe.z)]
       if (prova.branco) mostri = [...mostri, ...mostriFinti(prova.branco, prova.specie, eroe.x, eroe.z, t)]
       if (eroe3d && (veduta || eroe.nascosto)) eroe3d.nascondi()
@@ -81,23 +86,23 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
       if (!veduta) {
         // i mostri: come le persone, alla loro scala; al bordo del cerchio di luce svaniscono a retino
         if (mostri3d) mostri3d.inizia()
-        const ordine = mostri3d ? [...mostri].sort((a, b) => (a.x - eroe.x) ** 2 + (a.z - eroe.z) ** 2 - (b.x - eroe.x) ** 2 - (b.z - eroe.z) ** 2) : mostri
+        const ordine = [...mostri].sort((a, b) => (a.x - eroe.x) ** 2 + (a.z - eroe.z) ** 2 - (b.x - eroe.x) ** 2 - (b.z - eroe.z) ** 2)
         for (const q of ordine) {
-          const o = figure.o(), y = quota(q.x, q.z)
+          const y = quota(q.x, q.z)
+          let s = statiMostri.get(q.i)
+          if (!s) statiMostri.set(q.i, s = { id3d: undefined })
+          const r = { tipo: q.tipo, grado: q.grado }
+          if (s.id3d === undefined) s.id3d = idDi(r)   // la specie e il grado non cambiano
+          s.specchio = q.specchio
+          const posto = q.alto * ALLUNGA, verso = q.sveglio ? { x: eroe.x, z: eroe.z } : null
           let in3d = false
-          if (mostri3d) {
-            let s = statiMostri.get(q.i)
-            if (!s) statiMostri.set(q.i, s = { id3d: undefined })
-            const r = { tipo: q.tipo, grado: q.grado }
-            if (s.id3d === undefined) s.id3d = mostri3d.idDi(r)   // la specie e il grado non cambiano
-            if (s.id3d) {
-              s.specchio = q.specchio
-              const alto = mostri3d.metti(r, s, s.id3d, { x: q.x, y, z: q.z + 0.1, alto: figure.alto(q.pezzo, q.scala), verso: q.sveglio ? { x: eroe.x, z: eroe.z } : null,
-                                                           t, dt, trasparenza: q.alfa, morente: 0, bianco: 0, attacco: -1 })
-              in3d = alto >= 0
-            }
+          if (mostri3d && s.id3d) in3d = mostri3d.metti(r, s, s.id3d, { x: q.x, y, z: q.z + 0.1, alto: posto, verso, t, dt, trasparenza: q.alfa, morente: 0, bianco: 0, attacco: -1 }) >= 0
+          // se no la sagoma del modello, dalla stessa parte e alla stessa misura
+          if (!in3d && s.id3d && sagome.ha(s.id3d)) {
+            const sc = sagome.scatola(s.id3d)
+            sagome.metti(s.id3d, { x: q.x, y, z: q.z + 0.1, k: scalaDelModello(sc.alto, sc.largo, posto, ALTEZZA[s.id3d.split('+')[0]] || 1),
+                                   yaw: giraIlMostro(s, { x: q.x, z: q.z + 0.1, verso, dt }), t: t + (s.fase3d ??= Math.random() * 7), trasparenza: q.alfa })
           }
-          if (!in3d) { o.scala = q.scala; o.specchio = q.specchio; o.trasparenza = q.alfa; figure.metti(q.pezzo, q.x, y, q.z + 0.1, o) }
           if (q.alfa > 0.5) ombra(q.x, y, q.z + 0.1, 0.9 * Math.min(1.4, q.scala))
         }
         if (mostri3d) mostri3d.chiudi()
@@ -111,26 +116,22 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
           figure.metti(c.pezzo, c.x, y, c.z, o)
         }
         robaInTerra.chiudi()
-        // le persone: le più vicine col modello 3D (persona3d.js), le altre (e chi non ha il modello) sprite
+        // le persone: le più vicine col modello 3D (persona3d.js), le altre con la sagoma del modello
         if (persone3d) persone3d.inizia()
         const d2 = q => (q.x - eroe.x) ** 2 + (q.z - eroe.z) ** 2
-        const ordinePersone = persone3d ? [...persone].sort((a, b) => d2(a) - d2(b)) : persone
+        const ordinePersone = [...persone].sort((a, b) => d2(a) - d2(b))
         for (const q of ordinePersone) {
-          if (!nebbia.visto(q.x, q.z)) continue
-          const e = salita(q.x, q.z, t), o = figure.o(), y = quota(q.x, q.z)
-          const scala = q.scala || SCALA_PERSONE
+          if (!nebbia.visto(q.x, q.z) || !q.modello) continue
+          const e = salita(q.x, q.z, t), y = quota(q.x, q.z)
+          const posto = (ALTO_DELLA_PERSONA[q.modello] || 1) * ALLUNGA * (q.scala || SCALA_PERSONE)
+          const k = q.chiave || `${q.x},${q.z}`
+          let s = statiPersone.get(k)
+          if (!s) statiPersone.set(k, s = {})
           let in3d = false
-          if (persone3d && q.modello && d2(q) < PERSONE_3D_VICINO ** 2) {
-            const k = q.chiave || `${q.x},${q.z}`
-            let s = statiPersone.get(k)
-            if (!s) statiPersone.set(k, s = {})
-            in3d = persone3d.metti(s, q.modello, { x: q.x, y: y - (1 - e) * 2.2, z: q.z, alto: figure.alto(q.fermo || q.pezzo, scala), eroe, t, dt, saluta: !!q.saluta })
-          }
-          if (!in3d) {
-            o.scala = scala; o.specchio = !!q.specchio
-            // un colore in più per chi lo vuole (il capitano: il blu del mantello, un lampo additivo piccolo sullo sprite della guardia)
-            if (q.tinta) { o.rosso = q.tinta[0]; o.verde = q.tinta[1]; o.blu = q.tinta[2] }
-            figure.metti(q.pezzo, q.x, y - (1 - e) * 2.2, q.z, o)
+          if (persone3d && d2(q) < PERSONE_3D_VICINO ** 2) in3d = persone3d.metti(s, q.modello, { x: q.x, y: y - (1 - e) * 2.2, z: q.z, alto: posto, eroe, t, dt, saluta: !!q.saluta })
+          if (!in3d && sagome.ha(q.modello)) {
+            sagome.metti(q.modello, { x: q.x, y: y - (1 - e) * 2.2, z: q.z, k: posto * RAPPORTO / sagome.scatola(q.modello).alto, persona: true,
+                                      yaw: giraLaPersona(s, { x: q.x, z: q.z, eroe, dt }), t: t + (s.fase3d ??= Math.random() * 9) })
           }
           if (e > 0.9) ombra(q.x, y, q.z, 1.05)
         }
@@ -143,13 +144,14 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
         }
       }
       if (extra && !veduta) extra(ombra)
-      figure.chiudi(); figureEroe.chiudi()
+      figure.chiudi(); figureEroe.chiudi(); sagome.chiudi()
       ombre.count = ACCESI.ombreMorbide ? nOmbre : 0; ombre.instanceMatrix.needsUpdate = true
     },
     taglio(x, y) { figure.taglio(x, y); figureEroe.taglio(x, y) },
     /** Quante persone hanno il modello 3D adesso, e quante istanze ci sono (per le prove: `grafica()`). */
     get persone3d() { return persone3d ? { visibili: persone3d.visibili, istanze: persone3d.quante } : null },
     get mostri3d() { return mostri3d ? mostri3d.visibili : 0 },
-    via() { if (eroe3d) eroe3d.toglie(); if (mostri3d) mostri3d.via(); if (persone3d) persone3d.via(); robaInTerra.via(); figure.via(); figureEroe.via(); scena.remove(ombre); geo.dispose(); mat.dispose(); ombre.dispose(); maschera.t.dispose() },
+    get sagome() { return sagome.quante },
+    via() { if (eroe3d) eroe3d.toglie(); if (mostri3d) mostri3d.via(); if (persone3d) persone3d.via(); robaInTerra.via(); sagome.via(); figure.via(); figureEroe.via(); scena.remove(ombre); geo.dispose(); mat.dispose(); ombre.dispose(); maschera.t.dispose() },
   }
 }

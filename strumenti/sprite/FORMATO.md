@@ -342,7 +342,7 @@ RGB senza alfa su fondo magenta si aggiunge `--fondo=magenta` (il pieno è
 tutto ciò che non è magenta), e con `--griglia=…` più `--piede` stampa anche
 il centro dei piedi di ogni figura: serve a ritagliare due pose dello stesso
 personaggio con **lo stesso rettangolo centrato sul piede**, così i piedi non
-si spostano se una posa ha il braccio alzato (`sopra-personaggi-1.json`).
+si spostano se una posa ha il braccio alzato (così erano i fogli delle persone di sopra, tolti il 1° novembre 2026).
 
 ## Correggere un ritaglio storto
 

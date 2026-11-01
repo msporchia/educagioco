@@ -7,16 +7,15 @@
      · l'atlante del castello porta esattamente le creature del catalogo col castello, e quello del
        sotterraneo quelle col sotterraneo (col nome di `alias` se c'è), con i loro fotogrammi
        (o quelli di `scelta`) e, per chi ha i passi dai video, la corsa di lato e quella di fronte;
-     · ogni mostro del sotterraneo (`sprite:` di dati/mostri.js) ha le sue pose nell'atlante;
+     · i mostri, gli eroi e le persone del sotterraneo non hanno sprite (il modello, o la sua sagoma:
+       docs/sotterraneo/sagome-3d.md): nell'atlante del sotterraneo restano solo le creature che
+       Survivors prende da lì (`sot:` del suo bestiario) e il cavaliere di 0x72 (il castello);
      · i passi in passi/ sono di creature del catalogo;
      · il catalogo descritto (docs/core/creature-catalogo-1.md e -2.md, uno per foglio) ha una voce per creatura. */
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 import { readFileSync, readdirSync } from 'node:fs'
 import { MOSTRI } from '../../src/giochi/sotterraneo/dati/mostri.js'
-import { MERCANTI } from '../../src/giochi/sotterraneo/dati/mercanti.js'
-import { PERSONAGGI } from '../../src/giochi/sotterraneo/dati/missioni.js'
-import { GROSSI } from '../../src/giochi/sotterraneo/dati/grossi.js'
-import { quantiFotogrammi, fotogrammaDi } from '../../src/giochi/sotterraneo/dati/fotogrammi.js'
+import { BESTIARIO } from '../../src/giochi/survivors/scena/figure.js'
 import { PEZZI as PEZZI_SOT } from '../../src/giochi/sotterraneo/dati/atlante.js'
 import { CREATURE, PEZZI as PEZZI_CAS } from '../../src/giochi/castello/dati/figure.js'
 
@@ -67,53 +66,24 @@ for (const k of dei('castello')) {
 }
 
 // ── il sotterraneo: tutte e sole ──
-const DI_0X72 = new Set(['cavaliere', 'elfa', 'mago', 'nano', 'goblin', 'orco', 'scheletro', 'mostro-grosso'])
+const DI_0X72 = new Set(['cavaliere'])   // il castello lo disegna dall'atlante del sotterraneo (components/castello/Regno.vue)
 const nomi = dei('sotterraneo').map(k => nomeIn('sotterraneo', k))
 controlla('nel sotterraneo due creature non hanno lo stesso nome', new Set(nomi).size === nomi.length)
-for (const n of nomi) controlla(`sotterraneo · «${n}» non è uno dei personaggi di 0x72`, !DI_0X72.has(n))
+for (const n of nomi) controlla(`sotterraneo · «${n}» non è il cavaliere di 0x72`, !DI_0X72.has(n))
 for (const k of dei('sotterraneo')) {
   const n = nomeIn('sotterraneo', k)
   const attesi = frames('sotterraneo', k).length
   const fermi = Object.keys(PEZZI_SOT).filter(p => new RegExp(`^${n}-fermo-\\d+$`).test(p)).length
   uguale(`sotterraneo · ${n}: i fotogrammi del respiro`, fermi, attesi)
-  if (passi.includes(k)) {
-    for (const posa of ['corsa', 'fronte']) {
-      const c = Object.keys(PEZZI_SOT).filter(p => new RegExp(`^${n}-${posa}-\\d+$`).test(p)).length
-      controlla(`sotterraneo · ${n}: ha i passi (${posa})`, c === 6, `${c}`)
-    }
-  }
 }
-// niente creature nell'atlante che il catalogo non dica: solo quelle di 0x72 e dei pezzi del gioco
+// niente creature nell'atlante che il catalogo non dica: solo quelle e il cavaliere
 const stelo = new Set(Object.keys(PEZZI_SOT).map(p => (p.match(/^(.+)-fermo-\d+$/) || [])[1]).filter(Boolean))
-// le persone della terra di sopra (minatore, mercanti, chi dà le missioni) sono dipinte nei fogli
-// `sopra-personaggi-*`, non creature del catalogo: fermo e saluta, un fotogramma l'una
-const DI_SOPRA = ['minatore', ...MERCANTI.map(m => m.sprite), ...Object.values(PERSONAGGI).map(p => p.sprite)]
-for (const n of DI_SOPRA)
-  for (const posa of ['fermo', 'saluta'])
-    controlla(`sotterraneo · «${n}» ha la posa «${posa}» (terra di sopra)`, !!PEZZI_SOT[`${n}-${posa}-0`])
-const permessi = new Set([...nomi, ...DI_0X72, ...DI_SOPRA])
-for (const s of stelo) controlla(`sotterraneo · «${s}» ha una posa «fermo» nell'atlante: è nel catalogo o di 0x72`, permessi.has(s))
-for (const [id, m] of Object.entries(MOSTRI))
-  controlla(`sotterraneo · il mostro «${id}» (${m.sprite}) ha le sue pose`, stelo.has(m.sprite) || DI_0X72.has(m.sprite), m.sprite)
-
-// ogni creatura col sotterraneo è disegnata da qualcuno: una specie di strada (`sprite`) o un mostro grosso (`figura`): se nessuno la
-// nomina si toglie `sotterraneo` dai suoi `giochi` (il file unico non si porta dietro quello che non disegna)
-{
-  const usati = new Set([...Object.values(MOSTRI).map(m => m.sprite),
-                         ...Object.values(GROSSI).map(g => (g.figura ? (MOSTRI[g.figura] || { sprite: g.figura }).sprite : MOSTRI[g.tipo].sprite))])
-  for (const n of nomi) controlla(`sotterraneo · «${n}» è disegnata da una specie o da un grosso`, usati.has(n))
-  // chi ha i passi li ha anche come specie: `unaPosa` non c'è (cammina); chi non li ha respira soltanto
-  for (const [id, m] of Object.entries(MOSTRI)) {
-    if (!passi.some(p => (cat.creature[p].alias || {}).sotterraneo === m.sprite || p === m.sprite)) continue
-    controlla(`sotterraneo · il mostro «${id}» ha i passi nell'atlante e cammina`, !m.unaPosa || id === 'troll' || DI_0X72.has(m.sprite), id)
-  }
-  // i fotogrammi si contano nell'atlante: due, tre o quattro di respiro, sei di passi (e `fotogrammaDi` non chiede mai un pezzo che non c'è)
-  for (const k of dei('sotterraneo')) {
-    const n = nomeIn('sotterraneo', k)
-    for (const fr of [0, 1, 2, 3, 4, 5, 9]) controlla(`sotterraneo · ${n}: il fotogramma ${fr} del respiro c'è`, !!PEZZI_SOT[fotogrammaDi(n, 'fermo', fr)])
-    if (passi.includes(k)) for (const fr of [0, 5, 7]) controlla(`sotterraneo · ${n}: il fotogramma ${fr} dei passi c'è`, !!PEZZI_SOT[fotogrammaDi(n, 'corsa', fr)] && quantiFotogrammi(n, 'corsa') === 6)
-  }
-}
+const permessi = new Set([...nomi, ...DI_0X72])
+for (const s of stelo) controlla(`sotterraneo · «${s}» ha una posa «fermo» nell'atlante: è nel catalogo o il cavaliere`, permessi.has(s))
+// nessun mostro, eroe o persona del sotterraneo ha più sprite: chi resta col sotterraneo serve a Survivors
+const diSurvivors = new Set(Object.values(BESTIARIO).flatMap(b => Object.values(b)).filter(n => n.startsWith('sot:')).map(n => n.slice(4)))
+stessaLista('le creature col sotterraneo sono quelle che Survivors prende da lì', [...nomi].sort(), [...diSurvivors].sort())
+nota(`mostri del sotterraneo nel bestiario: ${Object.keys(MOSTRI).length}, tutti col modello (nessuno sprite)`)
 
 // ── il catalogo descritto ──
 const md = Object.keys(cat.fogli).map(n => readFileSync(new URL(`../../docs/core/creature-catalogo-${n.slice(-1)}.md`, import.meta.url), 'utf8')).join('\n')

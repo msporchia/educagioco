@@ -13,7 +13,8 @@ import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { PERSONAGGI, PERSONAGGI_DI_SOPRA, CITTADINI, personaDi } from '../../src/giochi/sotterraneo/dati/missioni.js'
 import { DIALOGHI, FONTANA, guastiDeiDialoghi } from '../../src/giochi/sotterraneo/dati/dialoghi.js'
 import { LUOGHI_MONDO } from '../../src/giochi/sotterraneo/dati/terra.js'
-import { PEZZI } from '../../src/giochi/sotterraneo/dati/atlante.js'
+import { MODELLI_PERSONE } from '../../src/giochi/sotterraneo/dati/persone3d.js'
+import { ALTO_DELLA_PERSONA } from '../../src/giochi/sotterraneo/dati/altezze.js'
 import { apertura, scelte, risposta, stradaDelCapitano, strada, zonaPerTe, consiglioDellaZona } from '../../src/giochi/sotterraneo/motore/dialoghi.js'
 import { ZONE_DEL_MONDO } from '../../src/giochi/sotterraneo/dati/mondo-aperto.js'
 import { guastiDelleMissioni } from '../../src/giochi/sotterraneo/dati/missioni.js'
@@ -36,8 +37,8 @@ const ctxCon = finite => ({ stati: {}, tappe: CAMPAGNA.map((t, i) => ({ ...t, in
   controlla('il suo ingombro non chiude strade: la cella dei piedi è occupata, quella accanto no', !aperta.passa(q.piede.x, q.piede.y) && aperta.passa(q.accanto.x, q.accanto.y))
   controlla('è fra chi sta sopra, ma non fra chi dà favori (la mappa dipinta non lo conosce)', !!PERSONAGGI_DI_SOPRA.capitano && !PERSONAGGI.capitano)
   uguale('il suo nome', personaDi('capitano').nome, 'Il capitano')
-  controlla('lo sprite è della guardia e l\'atlante lo ha, in piedi e che saluta', !!PEZZI[`${CITTADINI.capitano.sprite}-fermo-0`] && !!PEZZI[`${CITTADINI.capitano.sprite}-saluta-0`])
-  controlla('più alto delle altre persone e con un po\' di blu', CITTADINI.capitano.scala > 1.25 && CITTADINI.capitano.tinta[2] > CITTADINI.capitano.tinta[0])
+  controlla('ha il suo modello e la sua misura (dati/persone3d.js, dati/altezze.js)', MODELLI_PERSONE.includes('capitano') && ALTO_DELLA_PERSONA.capitano > 0)
+  controlla('più alto delle altre persone', CITTADINI.capitano.scala > 1.25)
   stessaLista('i suoi dialoghi sono in regola', guastiDeiDialoghi(), [])
   stessaLista('le missioni anche', guastiDelleMissioni(), [])
 }

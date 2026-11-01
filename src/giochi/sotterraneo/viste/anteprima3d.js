@@ -32,6 +32,7 @@ export function creaFornitore(eroe) {
     leggi: k => (vale(k) ? pronta(k) || (servizio ? servizio.leggi(k) : null) : null),
     chiedi: k => (vale(k) ? ottieniFatte().then(f => { fatte = f; return f[k] ? fotoDi(k) : viva(k) }) : Promise.resolve(null)),
     viva: k => (vale(k) ? viva(k) : Promise.resolve(null)),      // sempre col renderer (`npm run anteprime`)
+    sagome: (voci, opz) => import('../scena3d/sagome-foto.js').then(m => m.fotografaSagome(voci, opz)),   // solo per `npm run anteprime`
     fatte: () => decodificate.size,                              // per le misure: quante foto fatte decodificate
     stato: () => (servizio ? servizio.stato() : null),
     programmi: () => (servizio ? servizio.programmi() : null),   // per le misure (docs/sotterraneo/prestazioni-3d.md)

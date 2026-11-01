@@ -32,7 +32,7 @@ sua chiave e la dà alla vista come la tela di prima (`Quadro3d` copia un'immagi
 | `viste/anteprima3d.js` | `creaFornitore` (le foto fatte, il servizio per il resto), `fornisciAnteprime3d` (Gioco.vue), `usaAnteprima(chiave)`: un ref null finché l'immagine non c'è |
 | `dati/anteprime-fatte.js` | GENERATO da `npm run anteprime sotterraneo`: le foto, `SENZA` (le chiavi senza modello), le due firme |
 | `viste/Quadro3d.vue` | la tela che mostra un'anteprima |
-| `viste/Icona.vue` | `tre` (la chiave) o `cosa3d` (la cosa: la chiave si ricava), `lato`; lo sprite (`sprite`, `riduci`) solo senza chiave |
+| `viste/Icona.vue` | `tre` (la chiave) o `cosa3d` (la cosa: la chiave si ricava), `lato`; lo sprite (`sprite`) solo senza chiave |
 | `viste/Armato.vue` | l'eroe vestito: `mano`, `mancina`, `corpo`, `testa` |
 | `viste/Ritratto.vue` · `viste/Grosso.vue` | la persona di sopra (`persona:`) · il grosso nella sua barra (`mostro:grosso:`), con la corona |
 
@@ -75,7 +75,7 @@ L'utente, 31 ottobre 2026: il ripiego di un disegno 3D è il disegno 2D fatto da
 - **Un modello che si rompe o un contesto perso valgono null**: il posto resta vuoto, mai uno sprite. Il sotterraneo si apre solo con
   WebGL 2 (`Entrata.vue`), quindi un ripiego per «niente WebGL» non serve.
 - **Il ritratto tiene i segni della roba** (`data-in-mano`, `data-addosso`, `data-in-braccio`) su elementi vuoti, per le prove.
-- I cheat `#icone2d`, `#sprite` ed `#eroe2d` non ci sono più; per misurare la scena senza modelli dei mostri c'è `&spegni=mostri3d`.
+- I cheat `#icone2d`, `#sprite` ed `#eroe2d` non ci sono più; per misurare la scena senza modelli dei mostri c'è `&spegni=mostri3d` (tutti in sagoma: [sagome-3d.md](sagome-3d.md)). In scena la figura piatta di un mostro o di una persona è la stessa idea: la foto del modello, fatta sul computer.
 
 ## Quanto costa
 
