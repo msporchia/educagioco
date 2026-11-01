@@ -344,9 +344,8 @@ function rispostaDialogo(i) {
 const macchina = computed(() => {
   void versione.value
   const tipo = macchinaAperta.value; if (!tipo) return null
-  const M = motore.macchina(tipo), adesso = motore.ora(), s = motore.s, E = EDIFICI[tipo]
+  const M = motore.macchina(tipo), adesso = motore.ora(), E = EDIFICI[tipo]
   const pronti = Object.entries(M.pronti).filter(([, n]) => n > 0)
-  const dispensa = Object.entries(s.prodotti).filter(([, n]) => n > 0).map(([k, n]) => ({ k, n }))
   return {
     tipo, titolo: E.emoji + ' ' + E.nome, dentro: dentroDi(tipo), prontoTesto: PRONTO_DA_RITIRARE,
     // i posti comprati (e una coda più lunga di quelli: lavora fino in fondo), poi i vani chiusi col prezzo; il prossimo si compra con un tocco
@@ -364,12 +363,10 @@ const macchina = computed(() => {
     pronti: pronti.length ? 'Pronti: ' + pronti.map(([k, n]) => emojiDi(k) + ' ×' + n).join('  ') : '',
     prontiK: pronti.map(([k, n]) => ({ k, n })),
     puoRitirare: pronti.length > 0,
-    ricette: motore.ricetteDi(tipo).map(r => ({ k: r.id, nome: r.nome, emoji: r.emoji, ms: r.ms, costo: r.costo, liv: r.liv, sbloccata: r.sbloccata,
+    ricette: motore.ricetteDi(tipo).map(r => ({ k: r.id, nome: r.nome, emoji: r.emoji, ms: r.ms, costo: r.costo, liv: r.liv, sbloccata: r.sbloccata, ha: motore.scortaDi(r.id),
       ing: Object.entries(r.ing).map(([i, serve]) => ({ k: i, emoji: emojiDi(i), ha: motore.scortaDi(i), serve })),
       manca: Object.entries(r.mancano).map(([i, n]) => `manca ${emojiDi(i)} ${n}`).join(' '),
       puoi: r.sbloccata && r.ingredienti && M.coda.length < M.posti })),
-    dispensa: dispensa.length ? 'In dispensa: ' + dispensa.map(d => emojiDi(d.k) + ' ×' + d.n).join('  ') : 'La dispensa è vuota.',
-    dispensaK: dispensa,
   }
 })
 function prepara(k) {

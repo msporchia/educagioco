@@ -1,17 +1,9 @@
-// Il conto puro del foglio di una macchina (Macchina.vue), senza DOM: quante ricette si possono fare, in che ordine stanno le carte,
+// Il conto puro del foglio di una macchina (Macchina.vue), senza DOM: in che ordine stanno le carte,
 // com'è fatto un posto della fila, dove cade il dito e che gesto è. Vedi docs/fattoria3d/file.md («Il foglio della macchina»).
 import { SCARTO_DITO, SCARTO_MOUSE } from './dito-soglie.js'
 
 /** Da quanto un dito fermo, che poi si muove, vuole trascinare in qualunque verso (ms). Sotto, un gesto verticale è uno scorrimento. */
 export const TENUTO_MS = 160
-
-/** Quante volte si può fare una ricetta con le scorte: il minimo di `ha / serve` sugli ingredienti `[{ ha, serve }]` (0 se manca qualcosa). */
-export function quanteNePuoiFare(ing) {
-  if (!ing || !ing.length) return 0
-  let n = Infinity
-  for (const i of ing) n = Math.min(n, i.serve > 0 ? Math.floor(i.ha / i.serve) : 0)
-  return Number.isFinite(n) ? n : 0
-}
 
 /** L'ordine delle carte: prima le aperte (nell'ordine dei dati, che il gioco non cambia al variare delle scorte: le carte non ballano),
  *  poi quelle ancora chiuse, dalla più vicina alla più lontana. */

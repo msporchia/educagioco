@@ -642,7 +642,8 @@ uguale('la sezione porta il nome della macchina: il pastificio ha il forno', (aw
 controlla('c\'è la pila dei pronti', await page.locator('[data-f3="pronti"]').count() === 1)
 await m3(() => { const { motore, mondo } = window.__fattoria3d; motore.s.prodotti.farina = 4; motore.s.prodotti.uova = 3; mondo.cambiato() })
 await attendi(page, 300)
-uguale('il numero sulla carta dice quante se ne fanno con le scorte (2 farine e 1 uovo a pasta: 2)', await page.locator('[data-ricetta="pasta"]').getAttribute('data-n'), '2')
+uguale('il numero sulla carta dice quanta pasta c\'è in magazzino (non quante se ne fanno)', await page.locator('[data-ricetta="pasta"]').getAttribute('data-n'), '1')
+controlla('niente riga «In dispensa» in fondo al foglio', !(await page.locator('[data-f3="macchina"]').innerText()).includes('In dispensa'))
 // un tocco vero (CDP) mette in fila
 await toccaEl('[data-ricetta="pasta"]')
 await attendi(page, 300)

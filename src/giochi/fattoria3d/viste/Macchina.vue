@@ -1,14 +1,14 @@
 <script setup>
 // Il foglio di una macchina (mulino, pastificio, panificio, caseificio, cucina, gelateria: gli id dei salvataggi sono pasticceria e conserviera),
 // come in Hay Day e come nella fattoria di sempre: l'insegna col suo colore, i POSTI della fila (libero, cuoce con la barra e il tempo, aspetta),
-// i posti che mancano come vani chiusi col prezzo (un tocco compra il prossimo), i pronti in una pila da ritirare, e le ricette come CARTE con la faccia del prodotto e il numero di quante se ne possono fare. Una carta si
+// i posti che mancano come vani chiusi col prezzo (un tocco compra il prossimo), i pronti in una pila da ritirare, e le ricette come CARTE con la faccia del prodotto e il numero di quanti se ne hanno in magazzino (se si può fare lo dicono la carta accesa e gli ingredienti). Una carta si
 // TRASCINA su un posto o sulla fila (il fantasma segue il dito, i posti liberi si accendono), o si TOCCA e va in fila da sé. Quelle non ancora
 // arrivate stanno velate col lucchetto e il livello. Il conto sta in macchina-pura.js; il motore non cambia: si emette `prepara` con la
 // chiave. Riceve una fotografia già pronta. Colori in stile.css (`[data-macchina]`), il resto in stile-macchina.css. Vedi docs/fattoria3d/file.md.
 import { computed, ref, watch } from 'vue'
 import Faccia from './Faccia.vue'
 import ConsiglioRiga from './ConsiglioRiga.vue'
-import { quanteNePuoiFare, ordinaRicette, statoDelPosto, bersaglioSotto, gestoDelDito } from './macchina-pura.js'
+import { ordinaRicette, statoDelPosto, bersaglioSotto, gestoDelDito } from './macchina-pura.js'
 import { tempoBreve } from '../dati/tempo.js'
 import '../stile-macchina.css'
 
@@ -22,9 +22,7 @@ const props = defineProps({
   pronti: { type: String, default: '' },
   prontiK: { type: Array, default: () => [] },     // [{ k, n }]: gli stessi pronti, con la faccia
   puoRitirare: { type: Boolean, default: false },
-  ricette: { type: Array, required: true },        // [{ k, nome, emoji, ms, liv, sbloccata, puoi, manca, ing: [{ k, emoji, ha, serve }] }]
-  dispensa: { type: String, default: '' },
-  dispensaK: { type: Array, default: () => [] },   // [{ k, n }]: la dispensa, con la faccia
+  ricette: { type: Array, required: true },        // [{ k, nome, emoji, ms, liv, sbloccata, ha (quanti in magazzino), puoi, manca, ing: [{ k, emoji, ha, serve }] }]
   anteprima: { type: Function, default: null },    // tipo → Promise<dataURL|null>: l'edificio 3D al posto dell'emoji dell'insegna
   anteprimaPronta: { type: Function, default: null },
   messaggio: { type: String, default: '' },        // perché una ricetta non parte (si vede qui: il fumetto del contadino sta sotto il foglio)
@@ -39,7 +37,7 @@ watch(() => props.tipo, t => {
   if (!foto.value && props.anteprima) props.anteprima(t).then(u => { if (props.tipo === t) foto.value = u }, () => {})
 }, { immediate: true })
 const occupati = computed(() => props.forno.filter(Boolean).length)
-const carte = computed(() => ordinaRicette(props.ricette).map(r => ({ ...r, n: r.sbloccata ? quanteNePuoiFare(r.ing) : 0 })))
+const carte = computed(() => ordinaRicette(props.ricette).map(r => ({ ...r, n: r.ha || 0 })))
 const tempoDi = ms => tempoBreve(ms)
 const testoPosto = p => (!p ? 'libero' : p.testo === 'in coda' ? 'aspetta' : p.testo)
 
@@ -135,7 +133,7 @@ function annulla() { dito = null; presa.value = null }
                    @pointerdown="premi($event, r)" @pointermove="muovi" @pointerup="lascia" @pointercancel="annulla" @keydown.enter.prevent="$emit('prepara', r.k)" @keydown.space.prevent="$emit('prepara', r.k)">
             <div class="fm-foto">
               <Faccia :k="r.k" :emoji="r.emoji" :lato="52" />
-              <b v-if="r.sbloccata" class="fm-n" :class="{ zero: !r.n }">{{ r.n }}</b>
+              <b v-if="r.sbloccata" class="fm-n" :class="{ zero: !r.n }" :aria-label="'ne hai ' + r.n">{{ r.n }}</b>
               <span v-else class="lucchetto" aria-hidden="true">🔒</span>
             </div>
             <b class="fm-nome">{{ r.nome }}</b>
@@ -148,7 +146,6 @@ function annulla() { dito = null; presa.value = null }
             <small v-else class="blocco">🔒 Arriva al livello {{ r.liv }}</small>
           </article>
         </div>
-        <p class="f3-nota"><template v-if="dispensaK.length">In dispensa: <span v-for="c in dispensaK" :key="c.k" class="f3-merce-n"><Faccia :k="c.k" :lato="22" /> ×{{ c.n }}</span></template><template v-else>{{ dispensa }}</template></p>
       </section>
     </div>
     <!-- il fantasma della carta in mano: segue il dito, un poco sopra -->
@@ -157,7 +154,3 @@ function annulla() { dito = null; presa.value = null }
     </div>
   </div>
 </template>
-
-<style>
-.f3-macchina .f3-merce-n { display: inline-flex; align-items: center; gap: 2px; margin: 0 6px; vertical-align: middle; }
-</style>

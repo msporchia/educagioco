@@ -1,16 +1,9 @@
-/* Il foglio di una macchina della fattoria 3D, la parte pura (viste/macchina-pura.js): quante ricette si possono fare, l'ordine delle
+/* Il foglio di una macchina della fattoria 3D, la parte pura (viste/macchina-pura.js): l'ordine delle
    carte, i posti della fila, dove cade il dito e che gesto è. Vedi docs/fattoria3d/file.md. `node test/esegui.mjs fattoria3d-macchina`
    tempo: 1 */
-import { quanteNePuoiFare, ordinaRicette, statoDelPosto, primoLibero, bersaglioSotto, gestoDelDito, TENUTO_MS } from '../../src/giochi/fattoria3d/viste/macchina-pura.js'
+import { ordinaRicette, statoDelPosto, primoLibero, bersaglioSotto, gestoDelDito, TENUTO_MS } from '../../src/giochi/fattoria3d/viste/macchina-pura.js'
 import { SCARTO_DITO, SCARTO_MOUSE } from '../../src/giochi/fattoria3d/viste/dito-soglie.js'
 import { uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
-
-// quante se ne possono fare
-uguale('niente ingredienti: zero', quanteNePuoiFare([]), 0)
-uguale('ne manca uno: zero', quanteNePuoiFare([{ ha: 5, serve: 2 }, { ha: 0, serve: 1 }]), 0)
-uguale('vale il più scarso, arrotondato per difetto', quanteNePuoiFare([{ ha: 7, serve: 2 }, { ha: 9, serve: 3 }]), 3)
-uguale('un solo ingrediente', quanteNePuoiFare([{ ha: 4, serve: 4 }]), 1)
-uguale('una quantità zero non fa una scorta infinita', quanteNePuoiFare([{ ha: 4, serve: 0 }]), 0)
 
 // l'ordine delle carte: aperte come stanno, poi le chiuse dalla più vicina
 const R = [{ k: 'a', liv: 1, sbloccata: true }, { k: 'x', liv: 30, sbloccata: false }, { k: 'b', liv: 3, sbloccata: true }, { k: 'y', liv: 8, sbloccata: false }]
