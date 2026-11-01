@@ -297,6 +297,7 @@ function prossima() {
    un ingrediente finito senza traboccare come una dose del banco. */
 const prova = ref(0)
 const bottega = ref(null)
+const bozza = ref([])               // l'ordine in preparazione: [{ i, k }]
 const animazione = ref(null)
 const messaggio = ref(null)
 const occupato = ref(false)
@@ -308,50 +309,68 @@ function avviaProva(i) {
   clearTimeout(timer); cancelAnimationFrame(barra); attesa.value = 0
   prova.value = i
   bottega.value = new Bottega(PROVE[i])
+  bozza.value = []
   giro.value++
   borsellino = borsa(CHIAVE)
   finale.value = null
   occupato.value = false
   animazione.value = null
-  const g = bottega.value.ingredienti[0]
   messaggio.value = { tipo: 'aiuto', righe: ['Componi la pozione spendendo meno gettoni che puoi.',
-    `Tocca un'ampolla: la compri e va nel misurino di ${g.nome}. Oltre la tacca d'oro trabocca, e poi c'è da pulire.`] }
+    `Scegli dal listino fino a ${bottega.value.quanteInOrdine} ampolle e ordinale: il mercante le versa nei loro misurini. Oltre la tacca d'oro trabocca, e poi c'è da pulire.`] }
   vista.value = 'mercante'
   apertaIl = performance.now()
   accieca()
 }
-const liberaB = () => bottega.value && !occupato.value && !cieco.value && attesa.value === 0
+const liberaB = () => bottega.value && !occupato.value && !cieco.value
 
-function compra(k) {
+function aggiungi(i, k) {
+  if (!liberaB() || bozza.value.length >= bottega.value.quanteInOrdine || bottega.value.fatto(i)) return
+  bozza.value = [...bozza.value, { i, k }]
+  suono.nota(520, 640, 0.06, 'triangle', 0.06)
+}
+function togliVoce(n) {
   if (!liberaB()) return
+  bozza.value = bozza.value.filter((_, j) => j !== n)
+  suono.nota(420, 300, 0.06, 'sine', 0.06)
+}
+
+/* L'ordine si paga e il mercante versa: la scena suona le ampolle una
+   dopo l'altra, già decise dal motore; il perché arriva alla fine. */
+function ordina() {
+  if (!liberaB() || attesa.value > 0 || !bozza.value.length) return
   const b = bottega.value
-  const e = b.compra(k)
-  if (!e) return
+  const prima = b.ingredienti.map(g => g.messo)    // la pergamena li segue mentre versa
+  const r = b.ordina(bozza.value)
+  if (!r) return
+  bozza.value = []
   occupato.value = true
-  annota(e.annota)
-  if (e.tipo === 'giusto') { segna('misure'); suono.nota(520, 700, 0.12, 'triangle', 0.08) }
-  else suono.no()
-  const g = b.ingredienti[e.ingrediente]
-  inCorso = e
   messaggio.value = null
-  animazione.value = { n: ++nAnim, tipo: 'versa', k, i: e.ingrediente, trabocca: e.tipo === 'trabocca', pieno: !!e.pieno,
-                       colore: g.colore, famiglia: g.famiglia,
-                       macchia: b.macchia && { i: b.macchia.ingrediente, colore: b.macchia.colore } }
+  suono.nota(300, 520, 0.12, 'triangle', 0.08)
+  for (const e of r.esiti) { annota(e.annota); if (e.tipo === 'giusto') segna('misure') }
+  inCorso = r
+  animazione.value = { n: ++nAnim, tipo: 'ordine', prima, voci: r.esiti.map(e => {
+    const g = b.ingredienti[e.ingrediente]
+    return { i: e.ingrediente, testo: e.testo, colore: g.colore, famiglia: g.famiglia, trabocca: e.tipo === 'trabocca',
+             pieno: !!e.pieno, messo: e.dopo, livello: e.dopo / g.dose, pezzi: (e.pezzi || []).map(p => p / g.dose) }
+  }) }
 }
 
 function fermo(n) {
   if (n !== nAnim) return
-  const e = inCorso
+  const r = inCorso
   inCorso = null
   if (animazione.value?.tipo === 'festa') return provaFinita()
   apertaIl = performance.now()
-  if (!e) { occupato.value = false; return }
-  messaggio.value = { tipo: e.tipo, righe: e.righe }
-  if (e.monete) { borsellino.paga(e.monete); suono.moneta() }
-  if (e.tipo === 'trabocca') leggiPrima(e.righe)
-  if (e.finita) {
+  if (!r) { occupato.value = false; return }
+  const traboccate = r.esiti.filter(e => e.tipo === 'trabocca')
+  const monete = r.esiti.reduce((s, e) => s + (e.monete || 0), 0)
+  if (monete) { borsellino.paga(monete); suono.moneta() }
+  if (traboccate.length) suono.no(); else suono.ok()
+  const righe = r.esiti.flatMap(e => e.righe)
+  messaggio.value = { tipo: traboccate.length ? 'trabocca' : 'giusto', righe }
+  if (traboccate.length) leggiPrima(righe)
+  if (r.finita) {
     animazione.value = { n: ++nAnim, tipo: 'festa', colore: mescola(bottega.value.ingredienti.map(i => i.colore)) }
-    suono.ok()
     return
   }
   occupato.value = false
@@ -371,15 +390,15 @@ function leggiPrima(righe) {
 
 function scegli(i) {
   if (!liberaB()) return
-  if (bottega.value.scegli(i)) { suono.nota(400, 480, 0.06, 'sine', 0.06); messaggio.value = null }
+  if (bottega.value.scegli(i)) suono.nota(400, 480, 0.06, 'sine', 0.06)
 }
 
 function pulisci() {
-  if (!liberaB() || !bottega.value.macchia) return
-  bottega.value.pulisci()
+  if (!liberaB() || attesa.value > 0 || !bottega.value.macchie.length) return
+  const n = bottega.value.pulisci()
   occupato.value = true
   suono.nota(300, 600, 0.25, 'sine', 0.06)
-  messaggio.value = { tipo: 'aiuto', righe: ['Pulito. La spugna costa un gettone.'] }
+  messaggio.value = { tipo: 'aiuto', righe: [n === 1 ? 'Pulito: la spugna costa un gettone.' : `Pulito: ${n} macchie, un gettone l'una.`] }
   animazione.value = { n: ++nAnim, tipo: 'pulisci' }
 }
 
@@ -400,7 +419,7 @@ function provaFinita() {
 if (typeof window !== 'undefined')
   window.__poz = { vista, tappaIdx, partita, finale, avviaTappa, allaMappa, prossima,
                    prendi, posa, metti, togli, svuota, riponi, conferma, CAMPAGNA, MONETE_A_DOSE,
-                   bottega, avviaProva, compra, scegli, pulisci, PROVE }
+                   bottega, bozza, avviaProva, aggiungi, togliVoce, ordina, scegli, pulisci, PROVE }
 </script>
 
 <template>
@@ -422,9 +441,9 @@ if (typeof window !== 'undefined')
            @prendi="prendi" @posa="posa" @metti="metti" @togli="togli"
            @svuota="svuota" @riponi="riponi" @conferma="conferma()" />
     <Mercante v-else-if="vista === 'mercante' && bottega" :key="giro"
-              :bottega="bottega" :animazione="animazione" :messaggio="messaggio" :attesa="attesa"
+              :bottega="bottega" :bozza="bozza" :animazione="animazione" :messaggio="messaggio" :attesa="attesa"
               :bloccato="occupato || cieco" :manca="PROVE[prova].manca"
-              @compra="compra" @scegli="scegli" @pulisci="pulisci" @fermo="fermo" />
+              @aggiungi="aggiungi" @togli="togliVoce" @ordina="ordina" @scegli="scegli" @pulisci="pulisci" @fermo="fermo" />
     <TastoSalta v-if="partita && vista === 'banco' && !finale" @salta="conferma(true)" />
 
     <Fine v-if="finale" v-bind="finale" @avanti="prossima" @mappa="allaMappa" />
