@@ -16,6 +16,14 @@
      node strumenti/tavola-anteprime.mjs --eroe mago --scala 2
      node strumenti/tavola-anteprime.mjs --chiavi arma:ascia-lava,busto:nano:accetta:scudo-nanico:-
      node strumenti/tavola-anteprime.mjs --chiavi eroe:elfa:-:arco-07.balestra.c.ombra:-:- --zoom 4   # da vicino: foto 4 volte più grandi
+     node strumenti/tavola-anteprime.mjs --solo armi --eroe elfa --famiglia arco --zoom 3          # ogni arma in mano a un eroe
+     node strumenti/tavola-anteprime.mjs --solo armi --eroe nano --posa marcia --giro 1.57         # a metà passo, di fianco
+
+   `--solo armi`: ogni figura che si impugna (dati/figure3d.js: lame, bastoni, scudi) e ogni arma della collezione (il ripiego),
+   in mano all'eroe di `--eroe` nel ritratto intero (`eroe:`); `--famiglia spada,arco` le filtra (il prefisso della figura o la
+   famiglia della collezione: spada, ascia, arco, bastone, scudo, bacchetta), `--posa marcia` e `--giro <radianti>` cambiano posa e verso,
+   `--istante 3` l'istante della guardia (di solito 0,6, che per il nano è dentro il gesto); `--da-sola` le stesse armi
+   nell'anteprima da sole (`arma:`, `scudo:`), come nella casella dello zaino.
 
    La tavola è tmp/scatti/<nome>.png (`--nome`, di difetto tavola-anteprime); `--aspetta 6000` i ms
    prima di chiedere (la discesa che si accende non entra nella misura).
@@ -29,6 +37,8 @@ import { ABILITA_DEI_PEZZI, UNICI } from '../src/giochi/sotterraneo/dati/pezzi.j
 import { MOSTRI } from '../src/giochi/sotterraneo/dati/mostri.js'
 import { GROSSI } from '../src/giochi/sotterraneo/dati/grossi.js'
 import { chiaveDellaCosa, chiaveDellEroe, chiaveDelMostro, EROI } from '../src/giochi/sotterraneo/scena3d/anteprime3d-pura.js'
+import { FIGURE3D } from '../src/giochi/sotterraneo/dati/figure3d.js'
+import { CATALOGO } from '../poc/armi-3d/collezione.js'
 
 const QUI = dirname(fileURLToPath(import.meta.url))
 const SCATTI = resolve(QUI, '../tmp/scatti')
@@ -75,11 +85,25 @@ else {
     for (const t of Object.keys(MOSTRI)) voci.push({ k: chiaveDelMostro({ tipo: t }), n: t })
     for (const g of Object.keys(GROSSI)) voci.push({ k: chiaveDelMostro({ grosso: g }), n: g })
   }
+  if (solo.includes('armi')) {
+    // l'arco e lo scudo nella sinistra, il resto nella destra (dotazioneDi)
+    const fam = opz('famiglia', '').split(',').filter(Boolean), tiene = f => !fam.length || fam.includes(f)
+    const inMano = args.includes('--da-sola') ? (g, sinistra) => `${sinistra && g.includes('scudo') ? 'scudo' : 'arma'}:${g}`
+      : (g, sinistra) => `eroe:${eroe}:${sinistra ? '-' : g}:${sinistra ? g : '-'}:-:-`
+    for (const [id, f] of Object.entries(FIGURE3D)) {
+      const pre = id.replace(/-\d+$/, '')
+      if (!['lame', 'bastoni', 'scudi'].includes(f.famiglia) || !tiene(pre)) continue
+      voci.push({ k: inMano(`${id}.-.c.${f.elemento || 'nessuno'}`, pre === 'arco' || pre === 'scudo'), n: `${id} ${f.cosa}` })
+    }
+    for (const a of CATALOGO) if (tiene(a.famiglia)) voci.push({ k: inMano(`-.${a.id}.c.nessuno`, a.famiglia === 'arco' || a.famiglia === 'scudo'), n: `coll. ${a.id}` })
+  }
   voci = voci.filter(v => v.k || v.sprite)
 }
 
 const browser = await apriBrowser()
-const { page, errori } = await apriGioco(browser, { viewport: { width: 390, height: 844 }, hash: `sotterraneo=1&eroe=${eroe}&dpr=1&seme=11${zoom > 1 ? `&anteprime-zoom=${zoom}` : ''}`,
+const { page, errori } = await apriGioco(browser, { viewport: { width: 390, height: 844 }, hash: `sotterraneo=1&eroe=${eroe}&dpr=1&seme=11${zoom > 1 ? `&anteprime-zoom=${zoom}` : ''}` +
+                                                       (opz('posa') ? `&anteprime-posa=${opz('posa')}` : '') + (opz('giro') ? `&anteprime-giro=${opz('giro')}` : '') +
+                                                       (opz('istante') ? `&anteprime-istante=${opz('istante')}` : ''),
                                                      attesa: null, indirizzo: `file://${dist}` })
 await page.waitForFunction(() => !!window.__anteprime3d, null, { timeout: 30000 })
 // la discesa si accende prima: la misura è quella di uno zaino aperto a scena già in piedi (`--aspetta`, ms)
