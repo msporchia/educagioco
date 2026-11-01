@@ -111,6 +111,13 @@
 .f3-strumenti button > span { font-size: 24px; line-height: 1; } .f3-strumenti button small { font: 700 10px "Emoji Gioco", system-ui, sans-serif; color: #7a5a3a; }
 .f3-strumenti button.acceso { background: #9be07a; border-color: #5fae3a; }
 .f3-strumenti button.fatto { background: #ffd36a; }
+.f3-scelte { display: flex; gap: 4px; background: rgba(255,251,240,.94); padding: 5px; border-radius: 20px; box-shadow: 0 3px 10px rgba(0,0,0,.25); max-width: 100%; overflow-x: auto; }
+.f3-scelte button { flex: 0 0 auto; min-width: 62px; height: 62px; border-radius: 16px; border: 2px solid transparent; background: transparent; color: #3a2a1a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 2px 4px; touch-action: manipulation; }
+.f3-scelte button i { width: 30px; height: 20px; border-radius: 6px; border: 2px solid rgba(0,0,0,.18); }
+.f3-scelte button i.bordo { background: #dcc796; border-width: 4px; }
+.f3-scelte button small { font: 700 10px "Emoji Gioco", system-ui, sans-serif; color: #5a3a2a; white-space: nowrap; } .f3-scelte button b { font: 700 10px "Emoji Gioco", system-ui, sans-serif; color: #7a5a3a; }
+.f3-scelte button.acceso { background: #9be07a; border-color: #5fae3a; }
+.f3-scelte button.chiuso { opacity: .55; }
 .f3-trascinato { position: fixed; left: 0; top: 0; z-index: 50; font-size: 44px; pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,.4)); }
 .f3-zonavia { border: 0; width: 100%; touch-action: manipulation; position: absolute; left: 0; right: 0; bottom: 0; z-index: 26; height: calc(96px + env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: center; background: rgba(255,247,230,.96); border-radius: 22px 22px 0 0; box-shadow: 0 -4px 16px rgba(0,0,0,.25); font: 700 15px "Emoji Gioco", system-ui, sans-serif; color: #5a3a2a; text-align: center; padding: 0 20px env(safe-area-inset-bottom); }
 .f3-ruota { position: absolute; right: 14px; bottom: calc(96px + 14px + env(safe-area-inset-bottom)); z-index: 27; width: 64px; height: 64px; border-radius: 50%; border: 3px solid #fff; background: #ffb83d; color: #5a3a2a; font: 700 34px "Emoji Gioco", system-ui, sans-serif; box-shadow: 0 3px 10px rgba(0,0,0,.35); touch-action: manipulation; user-select: none; -webkit-user-select: none; }

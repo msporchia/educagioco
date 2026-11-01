@@ -50,7 +50,7 @@ export class Mondo3d {
     this.abito = abito
     this.canvas = canvas; this.sopra = sopra; this.m = motore; this.ui = ui; this.q = qualita
     // cosa sta facendo il bambino: lo imposta la vista (barra delle azioni, pennello delle strade)
-    this.cmd = { modo: 'libero', seme: 'grano', strumento: null }
+    this.cmd = { modo: 'libero', seme: 'grano', strumento: null, pennello: null }
     this.rect = canvas.getBoundingClientRect()
 
     this.renderer = segui(new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' }))
