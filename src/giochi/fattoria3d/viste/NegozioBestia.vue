@@ -26,7 +26,7 @@ const scaffali = computed(() => AGGANCI_TUTTI.filter(d => props.vestiario.some(a
 const scaffale = ref('')
 const scelto = ref('')                                // l'id dell'addobbo in prova
 const coloreScelto = ref('')                          // l'id del colore in prova
-const gradi = ref(0)
+const gradi = ref(40)                                // si comincia di tre quarti: di faccia una bestia a quattro zampe è una macchia
 
 const suoi = computed(() => props.vestiario.filter(a => a.dove === (scaffale.value || (scaffali.value[0] || {}).id)))
 const addobbo = computed(() => props.vestiario.find(a => a.id === scelto.value) || null)
@@ -38,6 +38,23 @@ const prezzoDa = a => (a.colori.some(c => c.hai || c.addosso) ? '' : 'da ') + '�
 /** Cosa si vede sulla bestia: quello che porta, e al posto dell'aggancio in prova il colore provato. */
 const inProva = computed(() => (chiave.value ? { ...props.addosso, [addobbo.value.dove]: chiave.value } : props.addosso))
 const tipo = computed(() => `vestita:${props.id}|${gradi.value}|${Object.entries(inProva.value).map(([d, k]) => d + '=' + k).join(';')}`)
+
+// Le schede mostrano il modello dell'addobbo, non un'emoji: la foto fatta sul computer (`npm run anteprime`, tipo `addobbo:<id>:<colore>`), nel colore che
+// porta, o che hai, o il primo. Finché non arriva (o se manca) c'è l'emoji.
+const foto = ref({})
+const coloreDiScheda = a => a.addosso || (a.colori.find(c => c.hai) || a.colori[0]).id
+const fotoDi = a => foto.value[a.id + ':' + coloreDiScheda(a)] || ''
+function caricaFoto() {
+  if (!props.anteprima) return
+  for (const a of props.vestiario) {
+    const k = a.id + ':' + coloreDiScheda(a)
+    if (k in foto.value) continue
+    foto.value[k] = ''
+    Promise.resolve(props.anteprima('addobbo:' + k)).then(u => { if (u) foto.value = { ...foto.value, [k]: u } }, () => {})
+  }
+}
+watch(() => props.vestiario, caricaFoto)
+onMounted(caricaFoto)
 
 const ritratto = ref('')
 let ultimo = ''
@@ -115,7 +132,7 @@ const riga = computed(() => {
       <div class="f3-neg-schede">
         <button v-for="a in suoi" :key="a.id" type="button" class="f3-neg-scheda" :class="{ sel: scelto === a.id, chiusa: a.bloccato || (a.fuoriStagione && !a.colori.some(c => c.hai || c.addosso)) }"
                 :data-addobbo="a.id" :aria-pressed="scelto === a.id" @click="scegliAddobbo(a)">
-          <b aria-hidden="true">{{ a.emoji }}</b><span>{{ a.nome }}</span>
+          <img v-if="fotoDi(a)" class="f3-neg-foto" :src="fotoDi(a)" alt="" draggable="false"><b v-else aria-hidden="true">{{ a.emoji }}</b><span>{{ a.nome }}</span>
           <em v-if="a.addosso">✓ addosso</em><em v-else-if="a.bloccato">🔒 Livello {{ a.bloccato }}</em><em v-else>{{ prezzoDa(a) }}</em>
           <i v-if="a.stagione" class="f3-neg-festa" aria-hidden="true">{{ a.stagione === 'natale' ? '🎄' : '🎃' }}</i>
         </button>

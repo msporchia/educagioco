@@ -25,6 +25,7 @@
 .f3-neg-scheda { position: relative; min-height: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 6px 4px; border: 2px solid #e6cfa0; border-radius: 14px;
   background: #fffdf6; color: #3a2a1a; font: 800 12px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 .f3-neg-scheda b { font-size: 26px; line-height: 1; }
+.f3-neg-foto { width: 52px; height: 52px; object-fit: contain; pointer-events: none; }
 .f3-neg-scheda span { max-width: 100%; line-height: 1.1; overflow-wrap: anywhere; text-align: center; }
 .f3-neg-scheda em { font-style: normal; font-size: 11px; color: #8a5a14; }
 .f3-neg-scheda.sel { border-color: #f0a020; background: #fff3cf; transform: translateY(-2px); }

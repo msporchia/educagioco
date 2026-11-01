@@ -36,7 +36,9 @@ grande (384 px veri) in cima, e si gira col dito (o con ◀ ▶) di 30° per vol
 le schede degli addobbi (prezzo «da 🪙N», «✓ addosso», 🔒 livello, 🎄 se di Natale) e, per quello scelto, i colori con «tuo» o il prezzo. **Toccare una scheda
 o un colore lo prova sulla bestia, senza pagare**; il tasto in fondo compra e mette, mette gratis un colore che hai, oppure toglie.
 
-Il modello è una foto fatta dal renderer della scena (`anteprime.js`, tipo `vestita:<bestia>|<gradi>|<aggancio>=<chiave>;…`, `Mondo3d.modelloVestita`): un angolo per
+**Le schede mostrano il modello dell'addobbo, mai un'emoji** (l'emoji è solo il segnaposto finché la foto non arriva): una foto per ogni addobbo in ogni colore (`addobbo:<id>:<colore>`, senza disco d'ombra), fatta sul computer da `npm run anteprime fattoria` come quelle dei pezzi e delle bestie, in `dati/anteprime.js` (il budget del test sale a 1,5 MB).
+
+Il modello grande è una foto fatta dal renderer della scena (`anteprime.js`, tipo `vestita:<bestia>|<gradi>|<aggancio>=<chiave>;…`, `Mondo3d.modelloVestita`): un angolo per
 volta e in cache, nessun contesto WebGL in più. La bestia sta in una scatola invisibile e ferma, così girando l'inquadratura non balla. Fuori dal negozio la bestia
 resta piccola com'è. Provato e scartato: un canvas WebGL vivo nel foglio (un contesto in più su un telefono già in affanno).
 

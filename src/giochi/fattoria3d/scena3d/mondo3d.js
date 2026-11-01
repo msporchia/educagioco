@@ -15,7 +15,7 @@ import { Eroe } from './eroe.js'
 import { Ospite } from './ospite.js'
 import { creaContadino, posaGatto, posaCane } from './modelli-compagni.js'
 import { Compagni } from './compagni.js'
-import { vestiBestia } from './modelli-addobbi.js'
+import { vestiBestia, creaAddobbo } from './modelli-addobbi.js'
 import { creaBestia, posaPiccolo, posaBeagle } from './modelli-bestie.js'
 import { BESTIE, comeCompagno } from '../dati/bestie.js'
 import { COMPAGNI } from '../dati/compagni.js'
@@ -120,7 +120,7 @@ export class Mondo3d {
     return caricaFoto().then(f => f[tipo] || this._anteprimaViva(tipo))
   }
   _anteprimaViva(tipo) {
-    if (!this._anteprime) this._anteprime = creaAnteprime(this.renderer, t => t.startsWith('contadino:') ? this.modelloContadino(t.slice(10)) : t.startsWith('bestia:') ? this.modelloBestia(t.slice(7)) : t.startsWith('vestita:') ? this.modelloVestita(t.slice(8)) : this.pezzi.modelloAnteprima(t))
+    if (!this._anteprime) this._anteprime = creaAnteprime(this.renderer, t => t.startsWith('contadino:') ? this.modelloContadino(t.slice(10)) : t.startsWith('bestia:') ? this.modelloBestia(t.slice(7)) : t.startsWith('vestita:') ? this.modelloVestita(t.slice(8)) : t.startsWith('addobbo:') ? creaAddobbo(t.slice(8)) : this.pezzi.modelloAnteprima(t))
     return this._anteprime.chiedi(tipo)
   }
   /** Il ritratto del guardaroba: `contadino:<chiave dell'abito>` (dati/abiti.js, `chiaveAbito`), fotografato come un pezzo. */
@@ -134,14 +134,14 @@ export class Mondo3d {
     return g
   }
   /** La bestia del negozio degli addobbi (`vestita:<id>|<gradi>|<aggancio>=<chiave>;…`): il suo corpo vestito di quello che dice il tipo, girato di `gradi`.
-      Sta dentro una scatola invisibile quadrata, ferma: girando, l'inquadratura non balla. Lo mostra il negozio, grande (anteprime.js, `LATO_GRANDE`). */
+      Sta dentro una scatola invisibile quadrata, ferma (un po' più stretta dell'ingombro, se no la bestia resta piccola nel quadro): girando, l'inquadratura non balla. Lo mostra il negozio, grande (anteprime.js, `LATO_GRANDE`). */
   modelloVestita(tipo) {
     const [id, gradi, elenco] = tipo.split('|'), corpo = this.modelloBestia(id)
     if (!corpo) return null
     vestiBestia(corpo, Object.fromEntries((elenco || '').split(';').filter(Boolean).map(x => x.split('='))))
     const fuori = new THREE.Group(), dentro = new THREE.Group()
     dentro.add(corpo); dentro.rotation.y = (Number(gradi) || 0) * Math.PI / 180; fuori.add(dentro)
-    const b = new THREE.Box3().setFromObject(corpo), lato = Math.hypot(b.max.x - b.min.x, b.max.z - b.min.z)
+    const b = new THREE.Box3().setFromObject(corpo), lato = 0.75 * Math.max(b.max.x - b.min.x, b.max.z - b.min.z)
     const scatola = new THREE.Mesh(new THREE.BoxGeometry(lato, b.max.y - b.min.y, lato)); scatola.visible = false
     scatola.position.set(0, (b.max.y + b.min.y) / 2, 0); fuori.add(scatola)
     return fuori

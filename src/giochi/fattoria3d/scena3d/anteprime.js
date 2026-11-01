@@ -48,7 +48,7 @@ export function creaAnteprime(renderer, creaModello) {
     if (b.isEmpty()) b.set(new THREE.Vector3(-0.5, 0, -0.5), new THREE.Vector3(0.5, 1, 0.5))
     // l'ombra sotto, larga quanto l'orma; poi la scatola per l'inquadratura la comprende
     const r = Math.max(b.max.x - b.min.x, b.max.z - b.min.z) * 0.62
-    ombra.position.set((b.min.x + b.max.x) / 2, b.min.y + 0.01, (b.min.z + b.max.z) / 2); ombra.scale.setScalar(Math.max(0.4, r)); scena.add(ombra)
+    ombra.position.set((b.min.x + b.max.x) / 2, b.min.y + 0.01, (b.min.z + b.max.z) / 2); ombra.scale.setScalar(Math.max(0.4, r)); if (!tipo.startsWith('addobbo:')) scena.add(ombra)       // un addobbo non sta per terra: niente disco d'ombra
     const q = inquadra({ min: [b.min.x - r * 0.2, b.min.y, b.min.z - r * 0.2], max: [b.max.x + r * 0.2, b.max.y, b.max.z + r * 0.2] }, { fov: FOV })
     camera.position.set(...q.posizione); camera.near = Math.max(0.02, q.distanza / 100); camera.far = q.distanza * 6
     camera.lookAt(...q.bersaglio); camera.updateProjectionMatrix()
