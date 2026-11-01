@@ -116,8 +116,9 @@ const creaBastoni = memoModello('natale:bastoni', () => {
 })
 const creaFilaBastoni = memoModello('natale:fila-bastoni', () => {
   const g = new THREE.Group()
-  for (let i = 0; i < 6; i++) bastone(g, -0.9 + i * 0.36, 0, 0.7 + (i % 2) * 0.1, i % 2 ? Math.PI : 0)
-  filo(g, [-0.9, 0.5, 0.02], [0.9, 0.5, 0.02], 0.02, ROSSO, 4)
+  // tutti con l'uncino dallo stesso lato e a un passo largo: l'uncino misura ~0,3, a 0,36 l'uno toccava il palo del vicino e i sei sembravano tre archi
+  for (let i = 0; i < 6; i++) bastone(g, -1.0 + i * 0.4, 0, 0.75)
+  filo(g, [-1.0, 0.45, 0.0], [1.0, 0.45, 0.0], 0.02, ROSSO, 4)
   return chiudi(g, 1.0)
 })
 const creaPacchi = memoModello('natale:pacchi', () => {
