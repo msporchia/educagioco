@@ -71,6 +71,8 @@ export const NOVITA = [
     testo: '🗺️ Il sotterraneo adesso è in 3D! La tua avventura continua da dove eri.' },
   { id: 35, quando: '2026-11-01', gioco: 'survivors',
     testo: '🃏 In Survivors a ogni livello scegli fra quattro carte, e due di quelle che hai già preso tornano sempre.' },
+  { id: 36, quando: '2026-11-01', gioco: 'arena',
+    testo: '🧮 A Castle Battle i calcoli crescono con la forza degli edifici: più sono potenti, più il conto è difficile.' },
 ]
 
 export const PER_GIOCO = 4
