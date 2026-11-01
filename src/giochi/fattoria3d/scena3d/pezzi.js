@@ -16,6 +16,7 @@ import { creaStagnoAnatre, creaPorcile, creaRecintoCapre, creaPentolone, creaAna
 import { creaConigliera, creaRecintoAlpaca, creaRecintoAsini, creaApiario } from './modelli-cortile2.js'
 import { creaZucca, creaZucche, creaPupazzo } from './modelli-feste.js'
 import { DECORI_CREA } from './modelli-decori.js'
+import { NATALE_CREA } from './modelli-natale.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { RICETTE, MACCHINE, merceDi } from '../dati/ricette.js'
 import { SALITA_MS } from '../dati/mongolfiera.js'
@@ -59,6 +60,7 @@ const CREA = {
   zucca_intagliata: () => creaZucca(),
   zucche_mucchio: () => creaZucche(),
   pupazzo_neve: () => creaPupazzo(),
+  ...NATALE_CREA,                    // gli alberi grandi e le feste di Natale (modelli-natale.js)
   ...DECORI_CREA,                    // le decorazioni portate dalla 2D (giro G8): verde, recinti, raccolto, case, bestiole (modelli-decori*.js)
 }
 const CREA_EDIFICIO = {
