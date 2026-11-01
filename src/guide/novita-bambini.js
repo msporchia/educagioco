@@ -67,6 +67,10 @@ export const NOVITA = [
     testo: '⚔️ Nuovo gioco: Castle Battle! Tocca le piazzole e costruisci caserme di scheletri, mummie, negromanti e draghi, o una miniera per avere più monete. Le tue truppe partono da sole contro il castello nemico, e ogni mossa è un conto a mente: fallo in fretta, il nemico non aspetta! E in cima alla mappa c\'è la battaglia infinita.' },
   { id: 33, quando: '2026-10-31', gioco: 'fattoria3d',
     testo: '🚜 La fattoria adesso è in 3D: ritrovi tutta la tua roba nel magazzino, da rimettere dove vuoi.' },
+  { id: 34, quando: '2026-11-01', gioco: 'sotterraneo',
+    testo: '🗺️ Il sotterraneo adesso è in 3D! La tua avventura continua da dove eri.' },
+  { id: 35, quando: '2026-11-01', gioco: 'survivors',
+    testo: '🃏 In Survivors a ogni livello scegli fra quattro carte, e due di quelle che hai già preso tornano sempre.' },
 ]
 
 export const PER_GIOCO = 4
