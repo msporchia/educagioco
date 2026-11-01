@@ -68,9 +68,22 @@ Le scelte sono pure (`decidiCane`, `decidiGatto`, `scegliMeta`, tutte col `rnd` 
 
 - **Watson** segue il contadino a distanza (corre se è lontano), si siede quando lavora, ogni tanto va ad annusare un
   campo (si ferma a due celle e lo guarda), si ferma a guardarsi in giro, e dorme se il contadino sta fermo da un quarto d'ora.
-- **I gatti** girano per conto loro, si lavano, si stiracchiano e **dormono sulla panchina** se ce n'è una (salgono con un
-  salto, scendono da soli; se la panchina sparisce scendono subito). Con Watson **si salutano** (sotto). Non salgono
+- **I gatti** girano per conto loro, si lavano, si stiracchiano e **dormono sui posti da gatto** se ce n'è uno libero (sotto: salgono con un
+  salto, scendono da soli; se il pezzo sparisce scendono subito). Con Watson **si salutano** (sotto). Non salgono
   sulla bancarella: ha la merce sul bancone.
+
+## I posti
+
+`dati/posti-compagni.js` (`POSTI`, dato puro): **panchina, ceppo, cassa, sedia** per i gatti (la seduta sta a 42–50 cm, `quota`) e la **cuccia** per Watson, che
+non ci sale ma si corica nella cella di fronte (`accanto`) quando gli viene sonno. Aggiungere un posto è una riga di `POSTI` col suo tipo di pezzo. Provati e scartati:
+covone e sacco (cima a punta o tonda, il gatto scivolerebbe), tavolo e cassa grande (troppo alti).
+
+- **Un posto, un occupante.** Chi ci sta sopra (`c.sopra.id`) o ci sta andando (`c.poi.posto.id`: la prenotazione) lo tiene; chi decide dopo sceglie fra i posti
+  *liberi* della sua specie (`postiLiberi`, `scegliPosto`), e se non ce n'è nessuno gira o dorme dov'è. Niente elenco di prenotazioni da tenere in
+  pari: l'occupazione si ricava dallo stato dei compagni, quindi non resta mai un posto «bloccato». All'arrivo si ricontrolla (`postoLibero`) e se è stato
+  preso nel frattempo non si sale.
+- **La panchina arriva al livello 12** (in 2D era al 52): `LIVELLI_ANTICIPATI` in `dati/parita2d.js`, letto dai test di parità. Il prezzo è quello della 2D (14 🪙); cambia solo da
+  quando si può comprare, nessun salvataggio perde o guadagna niente.
 
 ## Quando ci premi
 
@@ -101,16 +114,16 @@ non sta fermo già al tocco, resta il vecchio «Bau!»/«Prrr…» sul posto (e 
   (si struscia e metà volte si rotola; la cosa buffa è sua), **Pepe** 40/20/30/10 (schivo: spesso si volta). *Si avvicina*: cammina (non corre)
   a ~1 cella e **si struscia** (coda dritta con la punta ripiegata, «Prrr…», cuori, ~3 s) poi va per conto suo; *fusa*: si siede lì, gira
   la testa e socchiude gli occhi; *si volta*: si stiracchia («Mrr»), siede di schiena con la coda che scatta; *buffa*: «Miao!» o si rotola.
-  Un gatto che dorme sulla panchina si sveglia stiracchiandosi e **resta** lì (poi scende da sé).
+  Un gatto che dorme su un posto si sveglia stiracchiandosi e **resta** lì (poi scende da sé).
 - **L'incontro gatto-cane** (`incontroGattoCane`): sono amici. Un gatto a ≤ 2,5 celle da Watson libero (non in sequenza, non addormentato) tira
   il dado: 35% a ogni avvicinamento, poi **25–40 s di riposo per gatto** (5 s se il dado dice no). Esito: ~90% un **saluto** (il cane resta fermo,
   il gatto gli va incontro e fanno **naso a naso**; poi *struscia* contro la zampa e il cane scodinzola, o *zampata* leggera e il gatto se ne va
   a coda alta mentre il cane scodinzola, o il cane *lecca* e il gatto infastidito si lava); ~10% la **fuga**, giocosa: scatta a pochi passi e si ferma a guardare.
-  Il carattere dei gatti non cambia (girano da soli, si lavano, dormono sulla panchina): l'incontro è un'eccezione, non un'abitudine.
+  Il carattere dei gatti non cambia (girano da soli, si lavano, dormono sui loro posti): l'incontro è un'eccezione, non un'abitudine.
 
 ## Nei test
 
-`test/unita/fattoria3d-compagni.test.mjs` (con un canvas finto): dati e livelli, la meta mai su una cella bloccata, le
+`unita/fattoria3d-compagni` ha anche la sezione dei posti: la prenotazione pura e dieci minuti col motore vero con tre gatti, quattro posti e mai due compagni sullo stesso. `test/unita/fattoria3d-compagni.test.mjs` (con un canvas finto): dati e livelli, la meta mai su una cella bloccata, le
 decisioni con un `rnd` finto, ingombro e mesh dei modelli, pose (anche quelle nuove) senza numeri sbagliati, tre minuti di scena col motore
 vero (nessun compagno su una cella bloccata, l'arrivo con l'avviso, il tocco, il raggio), le scelte di «Quando ci premi» (percentuali su un
 campione grande, mai due feste uguali, cooldown dell'incontro) e cinque minuti di tocchi su Watson lontano/vicino e sui gatti (richiamo a ≤ 2 celle, il gatto lontano chiamato per nome e quello vicino no, carezze,

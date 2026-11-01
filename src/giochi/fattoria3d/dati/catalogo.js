@@ -8,7 +8,7 @@ import { PEZZI_DEL_CORTILE, EDIFICIO_PENTOLONE } from './cortile.js'
 import { PEZZI_DEL_CORTILE_2 } from './cortile2.js'
 import { pezziDecori, SCHEDE_DECORI } from './decori.js'
 import { EDIFICI_BOTTEGHE } from './botteghe.js'
-import { prezzoDa2D, livelloDa2D, crescitaDa2D, livelloPerPrezzo, LIVELLO_PESCA } from './parita2d.js'
+import { LIVELLI_ANTICIPATI, prezzoDa2D, livelloDa2D, crescitaDa2D, livelloPerPrezzo, LIVELLO_PESCA } from './parita2d.js'
 
 /** Prezzo, livello e rincaro di un pezzo, dalla 2D. `rincaro` è il passo per copia a prezzo pieno (13 per il campo da 22); il prezzo vero della copia n è `prezzoPezzo`. */
 const da2d = (tipo, ripiego = {}) => {
@@ -28,7 +28,7 @@ export const PEZZI = {
   bancarella:      { nome: 'Bancarella',      emoji: '🍎', w: 2, d: 1, ...da2d('bancarella'), categoria: 'edifici' },   // apre il banco degli ordini, come la bacheca (motore: bancoAperto)
   bacheca:         { nome: 'Bacheca',         emoji: '📋', w: 2, d: 1, prezzo: 12, rincaro: 0, cresce: 0, categoria: 'edifici', liv: livelloDa2D('bancarella') },   // il pezzo del banco: i clienti appuntano qui gli ordini (ordini.md)
   aiuola:          { nome: 'Aiuola',          emoji: '🌷', w: 1, d: 1, ...da2d('aiuola'), categoria: 'decori' },
-  panchina:        { nome: 'Panchina',        emoji: '🪑', w: 2, d: 1, ...da2d('panchina'), categoria: 'decori' },
+  panchina:        { nome: 'Panchina',        emoji: '🪑', w: 2, d: 1, ...da2d('panchina'), liv: LIVELLI_ANTICIPATI.panchina, categoria: 'decori' },
   fontana:         { nome: 'Fontana',         emoji: '⛲', w: 2, d: 2, ...da2d('fontana'), categoria: 'decori' },
   pozzo:           { nome: 'Pozzo',           emoji: '🪣', w: 1, d: 1, ...da2d('pozzo'), categoria: 'decori' },
   spaventapasseri: { nome: 'Spaventapasseri', emoji: '🧑‍🌾', w: 1, d: 1, ...da2d('spaventapasseri'), categoria: 'decori' },

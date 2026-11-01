@@ -12,6 +12,7 @@ import { posaCane, posaGatto, impostaDettaglio } from './modelli-compagni.js'
 import { vestiBestia } from './modelli-addobbi.js'
 import { creaBestia, posaPiccolo, posaBeagle } from './modelli-bestie.js'
 import { decidiPiccolo, ePiccolo } from '../dati/bestie.js'
+import { POSTI, postoLibero, postiLiberi, scegliPosto } from '../dati/posti-compagni.js'
 import { PEZZI } from '../dati/catalogo.js'
 import { alleggeriOmbre } from './ottimizza.js'
 
@@ -19,7 +20,6 @@ const LOD_METRI = 12                              // oltre questa distanza dalla
 const CASA = [0.5, -6.5]                       // davanti alla porta della casa
 const VEL = { cane: { vaga: 2.4, segue: 3.6, corsa: 5.6 }, gatto: { vaga: 1.5, fugge: 3.8 }, coniglio: { vaga: 1.8 }, pappagallo: { vaga: 1.2 } }
 const FASE_PER_METRO = { cane: 2.6, gatto: 5, coniglio: 3.2, pappagallo: 3.2 }   // quanto avanza il passo per metro percorso
-const ALTEZZA_SEDILE = 0.45                     // la seduta della panchina (vedi modelli.js)
 const ang = (a, b, k) => { let d = b - a; d = Math.atan2(Math.sin(d), Math.cos(d)); return a + d * k }
 
 export class Compagni {
@@ -319,7 +319,7 @@ export class Compagni {
   }
   _sopraValido(c) {
     const p = c.sopra, cosa = this.m.cosa(p.id)
-    return !!cosa && cosa.tipo === 'panchina' && cosa.i === p.i && cosa.j === p.j
+    return !!cosa && cosa.tipo === p.tipo && cosa.i === p.i && cosa.j === p.j
   }
   _scendi(c) {
     const v = cellaLiberaVicina((a, b) => this.m.libera(a, b), c.x, c.z)
@@ -348,15 +348,27 @@ export class Compagni {
   _arrivato(c) {
     const poi = c.poi; c.percorso = []; c.corsa = false; c.velo = 0
     if (poi?.riprendi) { c.poi = null; c.iSeq++; return this._iniziaPasso(c) }                 // una camminata di sequenza: si passa al passo dopo
-    if (poi?.panchina) {                                         // il gatto sale sulla panchina, se c'è ancora
-      const p = poi.panchina, cosa = this.m.cosa(p.id)
-      if (cosa && cosa.tipo === 'panchina' && cosa.i === p.i && cosa.j === p.j) {
-        c.sopra = { id: p.id, i: p.i, j: p.j, y: ALTEZZA_SEDILE }; c.guarda = null
-        this._salta(c, p.x, p.z, ALTEZZA_SEDILE); c.stato = 'salta'; c.poi = { stato: 'dorme' }; c.dir = Math.PI / 2; c.tStato = 0; c.dur = 999
+    if (poi?.posto) {                                            // sale sul posto (o si corica accanto), se c'è ancora e nessun altro l'ha preso
+      const p = poi.posto, cosa = this.m.cosa(p.id), def = POSTI[p.tipo]
+      if (cosa && cosa.tipo === p.tipo && cosa.i === p.i && cosa.j === p.j && postoLibero(this.lista, p.id, c)) {
+        c.sopra = { id: p.id, tipo: p.tipo, i: p.i, j: p.j, y: def.quota }; c.guarda = null
+        if (def.accanto) { c.dir = def.dir; c.poi = null; this._stato(c, 'dorme'); return }
+        this._salta(c, p.x, p.z, def.quota); c.stato = 'salta'; c.poi = { stato: 'dorme' }; c.dir = def.dir; c.tStato = 0; c.dur = 999
         return
       }
     }
     c.poi = null; this._stato(c, poi?.stato || 'sta')
+  }
+
+  /** Va a un posto libero fra quelli della sua specie: la prenotazione è il `poi.posto` (nessun altro lo sceglie finché lo tiene). */
+  _vaiAlPosto(c, evita) {
+    const b = scegliPosto(this.lista, this.m.cose, c, this.rnd)
+    if (!b) return false
+    const dim = this.m.misureCosa(b), def = POSTI[b.tipo]                       // girata o no
+    const centro = [b.i + dim.w / 2, b.j + dim.d / 2]
+    const meta = scegliMeta({ libera: (i, j) => this.m.libera(i, j), centro, rMin: def.accanto ? 1 : 1.2, rMax: def.accanto ? 1.8 : 2.2, rnd: this.rnd, evita })
+    if (!meta) return false
+    return this._vai(c, meta, 'vaga', { poi: { stato: 'dorme', posto: { id: b.id, tipo: b.tipo, i: b.i, j: b.j, x: centro[0], z: centro[1] + 0.05 } } })
   }
 
   _decidi(c) {
@@ -387,6 +399,7 @@ export class Compagni {
         const meta = scegliMeta({ libera, centro: [e.x, e.z], rMin: 2, rMax: 6, rnd: this.rnd, evita: this._altri(c) })
         return this._vai(c, meta, 'vaga', { poi: { stato: 'sta' } })
       }
+      if (d.stato === 'dorme' && this._vaiAlPosto(c, this._altri(c))) return true            // a nanna nella cuccia, se c'è e nessuno ci sta
       return this._stato(c, d.stato)
     }
     // il gatto
@@ -397,15 +410,11 @@ export class Compagni {
       if (r.esito === 'fuga') return this._vai(c, scegliMeta({ libera, centro: [c.x, c.z], rMin: 2, rMax: 3.5, rnd: this.rnd, evita: [[cane.x, cane.z, 2], ...this._altri(c)] }), 'fugge', { poi: { stato: 'siede' }, guarda: [cane.x, cane.z] })
       if (r.esito) return this._incontra(c, cane, r.esito)
     }
-    const panchine = m.cose.filter(k => k.tipo === 'panchina')
-    const d = decidiGatto({ dormePosto: panchine.length > 0 }, this.rnd)
+    const d = decidiGatto({ dormePosto: postiLiberi(this.lista, m.cose, c).length > 0 }, this.rnd)
     const evita = cane ? [[cane.x, cane.z, 1.8], ...this._altri(c)] : this._altri(c)
     if (d.vai === 'attorno') return this._vai(c, scegliMeta({ libera, centro: [c.x, c.z], rMin: 2, rMax: 5, rnd: this.rnd, evita }), 'vaga', { poi: { stato: 'sta' } })
     if (d.vai === 'posto') {
-      const b = panchine[Math.floor(this.rnd() * panchine.length)], dim = m.misureCosa(b)          // girata o no
-      const centro = [b.i + dim.w / 2, b.j + dim.d / 2]
-      const meta = scegliMeta({ libera, centro, rMin: 1.2, rMax: 2.2, rnd: this.rnd, evita })
-      return this._vai(c, meta, 'vaga', { poi: { stato: 'dorme', panchina: { id: b.id, i: b.i, j: b.j, x: centro[0], z: centro[1] + 0.05 } } })
+      return this._vaiAlPosto(c, evita) || this._stato(c, 'dorme')
     }
     return this._stato(c, d.stato)
   }
