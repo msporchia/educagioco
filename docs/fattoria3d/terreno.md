@@ -65,15 +65,15 @@ va più in fretta** (6,6 contro 4,8) **e il percorso le preferisce** (costano il
 Una strada è un **tipo** (il fondo) più un **bordo** (la cornice); il bambino li sceglie nella barra del pennello, due file di tasti, e il
 prezzo di una cella è la somma dei due. Si apre tutto col livello (un tasto chiuso dice «🔒 N» e, toccato, «Si apre al livello N»); un livello che
 apre una strada lo dice nell'avviso («strade nuove (Ghiaia)»). I dati puri sono in `dati/strade.js`; il metro è la calibrazione (🪙 1 = dieci secondi
-di esercizio: la cella più cara, mattoni + sassi, costa 🪙 8, quattro minuti ogni tre celle, a livello 20 e oltre).
+di esercizio: la cella più cara, mattoni + ciottolini o steccato, costa 🪙 8, quattro minuti ogni tre celle, a livello 20 e oltre).
 
 | tipo | 🪙 | livello | | bordo | 🪙 in più | livello |
 |---|--:|--:|---|---|--:|--:|
 | terra battuta (quella di sempre) | 1 | 1 | | nessuno | 0 | 1 |
-| ghiaia | 2 | 3 | | erba alta (morde il bordo) | 1 | 2 |
+| ghiaia | 2 | 3 | | erba alta (una frangia che sfuma sul prato, più ciuffi) | 1 | 2 |
 | ciottoli bianchi | 3 | 7 | | cordolo | 1 | 5 |
-| lastricato | 4 | 12 | | sassi | 2 | 10 |
-| mattoni | 6 | 20 | | | | |
+| lastricato | 4 | 12 | | ciottolini (una fila di sassolini chiari) | 2 | 10 |
+| mattoni | 6 | 20 | | steccato (basso, di legno) | 2 | 15 |
 
 - **Il bordo si calcola dai vicini** (`dati/tessere.js`, `viciniDi`): due strade dello **stesso tipo** affiancate si **uniscono** (niente bordo fra loro,
   neanche se hanno bordi diversi); la cornice sta solo sui lati che toccano il prato, più un pezzo negli **angoli rientranti** (due lati uniti e la diagonale
@@ -112,3 +112,5 @@ Segue il contadino da sopra, **senza limiti** (distanza di serie 22: si vede una
 contadino corre** quando il percorso supera 9 celle (1,75×). Non c'è più una telecamera «in costruzione»: si costruisce premendo dove si vuole ([scena.md](scena.md)); col pennello delle strade due dita spostano la vista.
 
 **Nei test**: `[data-f3="barra-strade"]`, `[data-f3="strade-tipi"]` e `[data-f3="strade-bordi"]` (i tasti hanno `data-tipo` e `data-bordo`), `[data-strumento]`, `[data-f3="strade-fatto"]`; unità `unita/fattoria3d-strade`.
+
+Provati e scartati: sassi scuri e radi (sembravano bernoccoli), frangia d'erba rigida con la base scura (si staccava dal prato). Due trappole del disegno: **mai una scala negativa** sulle istanze (specchiare una frangia la rende nera: la normale si rovescia) e **mai `DoubleSide` per i fili d'erba** (lo stesso: si raddoppiano i triangoli); i pixel trasparenti di una tela sono neri e sporcano i bordi, quindi la frangia è una `DataTexture` col verde rimesso a mano.
