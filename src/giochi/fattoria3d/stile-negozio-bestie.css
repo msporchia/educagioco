@@ -1,0 +1,45 @@
+/* Il negozio degli addobbi delle bestie (viste/NegozioBestia.vue): un foglio quasi a tutto schermo, legno caldo come il foglio della bestia. Su,
+   la bestia modella (grande, si gira); poi gli scaffali, le schede, i colori. Prefisso .f3-neg; i fogli veri (.f3-foglio, .f3-colonna, .f3-chiudi,
+   .f3-corpo) vengono da stile.css. Bottoni da 44 px, per il dito. */
+.f3-neg.f3-foglio { padding: 0; overflow: hidden; color: #3a2a1a; height: 96%; max-height: 96%;
+  background: repeating-linear-gradient(90deg, #a77440 0 58px, #9a6a38 58px 60px), #a77440; border-top: 5px solid #6b4423; }
+.f3-neg-insegna { flex: none; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; margin: 10px 66px 6px 10px; padding: 4px 12px;
+  background: repeating-linear-gradient(180deg, #d7a766 0 11px, #cc9a58 11px 12px), #d7a766; border-radius: 10px; box-shadow: 0 3px 0 #6b4423, 0 5px 10px rgba(0,0,0,.28); }
+.f3-neg-insegna span { font-size: 24px; line-height: 1; }
+.f3-foglio .f3-neg-insegna h2 { margin: 0; font-size: 19px; line-height: 1.1; color: #4a2c12; text-shadow: 0 1px 0 rgba(255,255,255,.4); overflow-wrap: anywhere; }
+.f3-neg-monete { flex: none; padding: 2px 10px; border-radius: 12px; background: #fff7e4; border: 2px solid #6b4423; font-size: 14px; }
+.f3-neg-x.f3-chiudi { background: #e0402f; color: #fff; top: 14px; right: 14px; font-weight: 800; box-shadow: 0 2px 0 #8d241a; }
+.f3-neg-palco { flex: none; display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0 10px; }
+.f3-neg-modello { flex: 0 1 auto; width: min(54vw, 38vh, 300px); aspect-ratio: 1; border-radius: 18px; border: 4px solid #6b4423; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab;
+  background: radial-gradient(circle at 50% 38%, #fffaf0, #f0dcae 75%); box-shadow: inset 0 2px 10px rgba(0,0,0,.22); display: grid; place-items: center; overflow: hidden; }
+.f3-neg-modello img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.f3-neg-attesa { font-size: 64px; opacity: .5; }
+.f3-neg-gira { flex: none; width: 44px; height: 56px; border: 2px solid #6b4423; border-radius: 14px; background: #ffd36a; color: #4a2c12; font-size: 18px; box-shadow: 0 3px 0 #8d5a14; touch-action: manipulation; }
+.f3-neg-riga { flex: none; margin: 8px 10px 6px; padding: 6px 12px; min-height: 36px; box-sizing: border-box; border-radius: 12px; background: #fff7e4; border: 3px solid #6b4423; font-weight: 800; font-size: 13px; line-height: 1.25; }
+.f3-neg-scaffali { flex: none; display: flex; gap: 5px; padding: 0 10px 6px; }
+.f3-neg-scaffali button { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 3px; min-height: 44px; border: 2px solid #6b4423; border-radius: 14px; padding: 4px;
+  background: #c79a5c; color: #4a2c12; font: 800 12px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; transition: transform .15s ease, background .15s ease; }
+.f3-neg-scaffali button.acceso { background: #ffd36a; border-color: #e0a020; transform: translateY(-2px); box-shadow: 0 3px 0 #8d5a14; }
+.f3-neg .f3-neg-corpo { flex: 1 1 0; margin: 0 10px; padding: 10px 8px; border-radius: 12px; border: 4px solid #6b4423; background: #fff7e4; box-shadow: inset 0 2px 8px rgba(0,0,0,.2); }
+.f3-neg-schede { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+.f3-neg-scheda { position: relative; min-height: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 6px 4px; border: 2px solid #e6cfa0; border-radius: 14px;
+  background: #fffdf6; color: #3a2a1a; font: 800 12px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.f3-neg-scheda b { font-size: 26px; line-height: 1; }
+.f3-neg-scheda span { max-width: 100%; line-height: 1.1; overflow-wrap: anywhere; text-align: center; }
+.f3-neg-scheda em { font-style: normal; font-size: 11px; color: #8a5a14; }
+.f3-neg-scheda.sel { border-color: #f0a020; background: #fff3cf; transform: translateY(-2px); }
+.f3-neg-scheda.chiusa { opacity: .6; border-style: dashed; }
+.f3-neg-festa { position: absolute; top: 2px; right: 4px; font-style: normal; font-size: 13px; }
+.f3-neg-colori { flex: none; margin: 8px 10px calc(10px + env(safe-area-inset-bottom)); padding: 8px; border-radius: 14px; background: #fff7e4; border: 3px solid #6b4423; display: flex; flex-direction: column; gap: 8px; }
+.f3-neg-campioni { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.f3-neg-campione { width: 54px; min-height: 58px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; border: 2px solid transparent; border-radius: 14px; background: transparent; touch-action: manipulation; }
+.f3-neg-campione i { display: block; width: 32px; height: 32px; border-radius: 50%; border: 3px solid rgba(60,30,10,.55); box-shadow: inset 0 -4px 0 rgba(0,0,0,.14); }
+.f3-neg-campione small { font: 800 11px "Emoji Gioco", system-ui, sans-serif; color: #8a5a14; }
+.f3-neg-campione.tuo small { color: #2f7a3a; }
+.f3-neg-campione.sel { border-color: #f0a020; background: #fff3cf; }
+.f3-neg-tasto { min-height: 48px; border: 2px solid #6b4423; border-radius: 14px; background: #ffd36a; color: #4a2c12; font: 800 15px "Emoji Gioco", system-ui, sans-serif; box-shadow: 0 3px 0 #8d5a14; touch-action: manipulation; }
+.f3-neg-tasto.metti { background: #9fe0a0; box-shadow: 0 3px 0 #3f8a47; }
+.f3-neg-tasto.togli { background: #efe4cf; box-shadow: 0 3px 0 #a08a60; }
+.f3-neg-tasto.manca, .f3-neg-tasto.chiuso { opacity: .6; border-style: dashed; }
+@media (min-width: 700px) { .f3-neg.f3-foglio { left: 0; right: 0; margin: 0 auto; max-width: 720px; border-radius: 22px 22px 0 0; } }
+@media (prefers-reduced-motion: reduce) { .f3-neg *, .f3-neg-scaffali button { animation: none !important; transition: none !important; } }

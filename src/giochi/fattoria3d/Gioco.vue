@@ -46,9 +46,10 @@ import Livelli from './viste/Livelli.vue'
 import Inventario from './viste/Inventario.vue'
 import Guardaroba from './viste/Guardaroba.vue'
 import Bestia from './viste/Bestia.vue'
+import NegozioBestia from './viste/NegozioBestia.vue'
 import Battesimo from './viste/Battesimo.vue'
 import { dettoCura, dettoEsito, dettoCompera } from './viste/bestia-pura.js'
-import { BESTIE, CIBI as CIBI_BESTIE, COCCOLE_3D } from './dati/bestie.js'
+import { BESTIE, CIBI as CIBI_BESTIE, COCCOLE_3D, curabile } from './dati/bestie.js'
 import { personaDi, normalizzaAbito, capiDi, chiaveAbito, vesti as vestiAbito, nomeDelContadino } from './dati/abiti.js'
 import { schedeDellInventario, robaNuova, contoDi } from './viste/inventario-puro.js'
 import Bacheca from './viste/Bacheca.vue'
@@ -175,6 +176,8 @@ const inventarioAperto = ref(false)
 const guardarobaAperto = ref(false)       // il foglio dell'abito (docs/fattoria3d/guardaroba.md)
 const bestiaAperta = ref(null)             // l'id della bestia di casa di cui si vede il foglio (docs/fattoria3d/bestie-di-casa.md)
 const bestiaMsg = ref('')
+const negozioMsg = ref('')
+const negozioDi = ref(null)                // l'id della bestia di cui si vede il negozio degli addobbi (viste/NegozioBestia.vue)
 const battesimoDi = ref(null)              // l'id della bestia a cui si sta dando il nome
 const livelloNuovo = ref(false)
 const bancoAperto = ref(false)             // il foglio del banco
@@ -233,7 +236,7 @@ const ui = {
     avvisoFine = testo ? performance.now() + DURATA_AVVISO : 0
   },
   apriCostruisci(i, j) { apriCostruisci(i, j) },                           // tenere premuto su un posto libero del terreno tuo
-  fogliAperti: () => !!alberoK.value || !!dialogo.value || !!consiglio.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!battesimoDi.value || bancoAperto.value || nave.value || !!bottegaAperta.value || !!magazzinoAperto.value || mappaAperta.value || !!carretto.value || (opzioniAperte.value && !opzioniRidotte.value),
+  fogliAperti: () => !!alberoK.value || !!dialogo.value || !!consiglio.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!negozioDi.value || !!battesimoDi.value || bancoAperto.value || nave.value || !!bottegaAperta.value || !!magazzinoAperto.value || mappaAperta.value || !!carretto.value || (opzioniAperte.value && !opzioniRidotte.value),
   zonaDrop: () => (zonaVia.value || null)?.getBoundingClientRect() || null,
   trascinando(info) { trascinando.value = info },
 }
@@ -284,6 +287,12 @@ const bestiaVista = computed(() => {
   return { id, nome: motore.cura.nomeDi(id), stato: { pancia: st.pancia, pelo: st.pelo, gioco: st.gioco }, monete: motore.monete(), scorte,
            vestiario: motore.cura.vestiarioDi(id, stagione.value || '') }
 })
+const negozioVista = computed(() => {
+  void versione.value
+  const id = negozioDi.value; if (!id || !motore) return null
+  const b = curabile(id); if (!b) return null
+  return { id, nome: motore.cura.nomeDi(id), emoji: b.emoji, monete: motore.monete(), vestiario: motore.cura.vestiarioDi(id, stagione.value || ''), addosso: motore.cura.addossoA(id) }
+})
 function esitoBestia(r, id) {
   const nome = motore.cura.nomeDi(id)
   bestiaMsg.value = r.ok ? dettoEsito(r, nome) : dettoCura(r, { monete: motore.monete() })
@@ -293,18 +302,21 @@ function esitoBestia(r, id) {
 function nutriBestia(cibo) { const id = bestiaAperta.value; if (id) esitoBestia(motore.cura.nutri(id, cibo.id), id) }
 function coccolaBestia(gesto) { const id = bestiaAperta.value; if (id) esitoBestia(motore.cura.coccola(id, gesto.id), id) }
 function carezzaBestia() { const id = bestiaAperta.value; if (id) esitoBestia(motore.cura.carezza(id), id) }
-/** Un addobbo toccato nel foglio: si mette (comprandolo se non c'è nel cassetto) o si toglie; la bestia in scena si veste da sé (compagni.sync). */
-function vestiBestia(a) {
-  const id = bestiaAperta.value; if (!id) return
-  const r = motore.cura.vesti(id, a.id, { stagione: stagione.value || '' }), nome = motore.cura.nomeDi(id)
-  bestiaMsg.value = r.ok ? `${a.emoji} ${nome}: che eleganza!` : dettoCura(r, { monete: motore.monete() })
+/** Il negozio degli addobbi: si apre dal foglio della bestia (che si richiude, e torna quando si esce dal negozio). */
+function apriNegozio() { const id = bestiaAperta.value; if (!id) return; negozioMsg.value = ''; negozioDi.value = id; bestiaAperta.value = null }
+function chiudiNegozio() { bestiaAperta.value = negozioDi.value; negozioDi.value = null }
+/** Un colore comprato o rimesso dal negozio (`chiave` = `<id>:<colore>`): se non è nel cassetto si compra; la bestia in scena si veste da sé (compagni.sync). */
+function compraAddobbo(chiave) {
+  const id = negozioDi.value; if (!id) return
+  const r = motore.cura.vesti(id, chiave, { stagione: stagione.value || '' }), nome = motore.cura.nomeDi(id)
+  negozioMsg.value = r.ok ? `${r.addobbo.emoji} ${nome}: che eleganza!` : dettoCura(r, { monete: motore.monete() })
   if (r.ok) { mondo.compagni.sync(); mondo.compagni.festa(id) }
   ui.cambio()
 }
 function spogliaBestia(a) {
-  const id = bestiaAperta.value; if (!id) return
+  const id = negozioDi.value; if (!id) return
   const r = motore.cura.spoglia(id, a.dove)
-  bestiaMsg.value = r.ok ? `${a.emoji} ${a.nome}: torna nel cassetto.` : dettoCura(r, { monete: motore.monete() })
+  negozioMsg.value = r.ok ? `${a.emoji} ${a.nome}: torna nel cassetto.` : dettoCura(r, { monete: motore.monete() })
   if (r.ok) mondo.compagni.sync()
   ui.cambio()
 }
@@ -533,7 +545,7 @@ const quadroGuida = () => {
   return {
     campi: cs.length, vuoti: cs.filter(c => m.campoVuoto(c)).length, maturi: cs.filter(c => m.campoMaturo(c)).length, crescono: crescono.length,
     secondi: restanti.length ? Math.min(...restanti) : 0, modo: modo.value, semi: semiAperto.value, costruisci: !!costruisciQui.value,
-    foglio: !!(alberoK.value || dialogo.value || macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!battesimoDi.value || bancoAperto.value || nave.value || bottegaAperta.value || magazzinoAperto.value || mappaAperta.value || !!carretto.value || opzioniAperte.value || consiglio.value || strumento.value || trascinando.value),
+    foglio: !!(alberoK.value || dialogo.value || macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!negozioDi.value || !!battesimoDi.value || bancoAperto.value || nave.value || bottegaAperta.value || magazzinoAperto.value || mappaAperta.value || !!carretto.value || opzioniAperte.value || consiglio.value || strumento.value || trascinando.value),
     raccolto: Object.values(m.s.merci).some(n => n > 0), visto: guidaVisto.value,
   }
 }
@@ -770,7 +782,9 @@ onBeforeUnmount(() => {
  <Consiglio v-if="consiglio" :consiglio="consiglio" @fai="facciConsiglio" @chiudi="consiglio = null" />
         <Livelli v-if="livelliAperto" v-bind="livelli" @chiudi="livelliAperto = false" />
         <Bestia v-if="bestiaVista" :key="bestiaVista.id" v-bind="bestiaVista" :messaggio="bestiaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
-                @nutri="nutriBestia" @coccola="coccolaBestia" @carezza="carezzaBestia" @sposta="spostaBestia" @vesti="vestiBestia" @spoglia="spogliaBestia" @nome="battesimoDi = bestiaAperta; bestiaAperta = null" @chiudi="bestiaAperta = null" />
+                @nutri="nutriBestia" @coccola="coccolaBestia" @carezza="carezzaBestia" @sposta="spostaBestia" @negozio="apriNegozio" @nome="battesimoDi = bestiaAperta; bestiaAperta = null" @chiudi="bestiaAperta = null" />
+        <NegozioBestia v-if="negozioVista" :key="negozioVista.id" v-bind="negozioVista" :messaggio="negozioMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
+                       @compra="compraAddobbo" @spoglia="spogliaBestia" @chiudi="chiudiNegozio" />
         <Battesimo v-if="battesimoDi" :id="battesimoDi" :scelto="motore.cura.nomeScelto(battesimoDi)" @scegli="daiIlNome" @chiudi="battesimoDi = null" />
         <Opzioni v-if="opzioniAperte" :q="q" :stat="stat" :conta="conta" :rapporto="rapporto" @cambia="cambiaOpzioni"
                  @stress="(t, n) => { mondo.stress(t, n); ui.cambio() }" @rapporto="creaRapporto" @ridotto="v => opzioniRidotte = v"
