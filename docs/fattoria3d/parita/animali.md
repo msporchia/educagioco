@@ -52,7 +52,7 @@ salvano (`VERSIONE_STATO` intatto, ripartono davanti alla casa).
 | A6 | la ciotola | 8 cibi comprati (osso 5, bistecca 14, pesce 5, paté 14, semini 5, frutta 14, carota 5, insalata 14) + 6 del granaio (mangime, uova, pastone, fieno, formaggio, minestrone); il cibo sbagliato è rifiutato | ✅ gli stessi 14; il granaio è la scorta 3D (il fieno è l'erba medica); il rifiuto dice il perché prima di pagare | – |
 | A7 | le coccole | spazzola e gioca 🪙1; copertina (lana), festa (torta), bagnetto (sapone) | ✅ le stesse; in più la 🤚 carezza, gratis sempre | – |
 | A8 | il premio per averla rimessa a posto | ⭐ un quindicesimo del prezzo (cane 6, gatto 5, coniglio 6, pappagallo 8), una volta per ciclo (~3 ore) | ✅ `premiaSeStaBene` della 2D, esperienza mai monete | – |
-| A9 | battesimo (dare un nome) | `Battesimo.vue`, `nomiPer` | ✅ `Battesimo.vue`, gli stessi nomi da toccare; i compagni gratis hanno il nome fisso | – |
+| A9 | battesimo (dare un nome) | `Battesimo.vue`, `nomiPer` | ✅ `Battesimo.vue`, gli stessi nomi da toccare e la casella per scriverne uno; anche i compagni gratis si ribattezzano | – |
 | A10 | spostare la bestia | gratis, si salva dov'è | ✅ «📍 Sposta»: gratis, la cella è la casa della bestia e si salva | – |
 | A11 | camminata a celle | `motore/camminata.js` | ✅ sulla stessa griglia del contadino | – |
 | A12 | la veterinaria al banco | cliente che chiede i mangimi | ✅ C32: chiede mangime, pappa di mais, becchime, foraggio, verdure lesse, pastone e verdura fresca; solo lei | – |

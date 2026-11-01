@@ -3,7 +3,7 @@
 
    Si apre il menu «Costruisci» (🏗), la scheda Animali offre le quattro bestie col prezzo della 2D; una chiusa dice il livello; una a cui
    mancano le monete lo dice e non cambia niente; con le monete si prende (🪙90 il beagle), arriva in scena e si apre il battesimo: un nome si
-   TOCCA, non si scrive. Un tocco vero sulla bestia in scena apre il suo foglio (✕ in alto a destra): tre bisogni, i cibi suoi, una carezza
+   TOCCA (e sotto si può scrivere: «✎ Nome» nel foglio, una parola scritta e «Va bene» la salva). Un tocco vero sulla bestia in scena apre il suo foglio (✕ in alto a destra): tre bisogni, i cibi suoi, una carezza
    gratis che non costa; un cibo dà da mangiare e scala le monete; «Sposta» porta la bestia dove si tocca (gratis, salvato); a 360 px il foglio
    non scorre di lato e i bottoni sono alti almeno 44 px.
    Il dito è vero (`Input.dispatchTouchEvent`): un `page.click()` non porta i pointer del tocco (docs/core/il-dito.md).
@@ -78,11 +78,14 @@ controlla('la bestia è in scena', await m3(() => window.__fattoria3d.mondo.comp
 
 /* ── il tocco sulla bestia apre il suo foglio ── */
 const schermoDi = (x, z) => m3(([x, z]) => { const { mondo } = window.__fattoria3d, r = mondo.canvas.getBoundingClientRect(), [px, py] = mondo.proietta({ x, y: 0.3, z }); return [r.left + px, r.top + py] }, [x, z])
-for (let prova = 0; prova < 6 && await page.locator('[data-f3="bestia"]').count() === 0; prova++) {
-  const [x, z] = await m3(() => { const c = window.__fattoria3d.mondo.compagni.lista.find(o => o.def.id === 'beagle'); return [c.x, c.z] })
-  await tocca(...await schermoDi(x, z))
-  await attendi(page, 500)
+const apriFoglio = async () => {
+  for (let prova = 0; prova < 6 && await page.locator('[data-f3="bestia"]').count() === 0; prova++) {
+    const [x, z] = await m3(() => { const c = window.__fattoria3d.mondo.compagni.lista.find(o => o.def.id === 'beagle'); return [c.x, c.z] })
+    await tocca(...await schermoDi(x, z))
+    await attendi(page, 500)
+  }
 }
+await apriFoglio()
 controlla('un tocco vero sulla bestia apre il foglio', await page.locator('[data-f3="bestia"]').count() === 1)
 controlla('il foglio ha il suo nome', /Birba/.test(await page.locator('[data-f3="bestia-nome"]').innerText()))
 uguale('tre bisogni', await page.locator('[data-bisogno]').count(), 3)
@@ -125,6 +128,28 @@ await attendi(page, 600)
 uguale('spostare è gratis', await monete(), m2)
 uguale('la casa della bestia è lì', String(await m3(() => window.__fattoria3d.motore.cura.casaDi('beagle'))), String(cella))
 controlla('e la salva nello stato', await m3(() => JSON.stringify(window.__fattoria3d.motore.serializza().casa.beagle.i) !== undefined))
+
+/* ── un nome scritto, non della lista ── */
+await attendi(page, 800)
+await apriFoglio()
+await toccaEl('[data-azione="nome"]')
+await page.waitForSelector('[data-f3="battesimo"]', { timeout: 3000 })
+controlla('vuota, «Va bene» non si tocca', await page.locator('[data-azione="scrivi"]').isDisabled())
+await toccaEl('[data-f3="battesimo-scrivi"]')
+await page.keyboard.type(' Fulmine  Bello ')
+await scatto(page, 'fattoria3d-bestie-scrivi')
+await toccaEl('[data-azione="scrivi"]')
+uguale('il nome scritto è salvato, senza spazi in più', await m3(() => window.__fattoria3d.motore.cura.nomeDi('beagle')), 'Fulmine Bello')
+controlla('il battesimo si chiude', await page.locator('[data-f3="battesimo"]').count() === 0)
+await attendi(page, 800)
+await apriFoglio()
+controlla('il foglio dice il nome scritto', /Fulmine Bello/.test(await page.locator('[data-f3="bestia-nome"]').innerText()))
+await toccaEl('[data-azione="nome"]')
+await page.waitForSelector('[data-f3="battesimo"]', { timeout: 3000 })
+uguale('riaperto, la casella lo ripropone', await page.locator('[data-f3="battesimo-scrivi"]').inputValue(), 'Fulmine Bello')
+await page.locator('[data-f3="battesimo-scrivi"]').fill('Lampo')
+await page.keyboard.press('Enter')
+uguale('l\'invio della tastiera salva come «Va bene»', await m3(() => window.__fattoria3d.motore.cura.nomeDi('beagle')), 'Lampo')
 
 controlla('nessun errore JS', errori.length === 0, errori.join(' · '))
 await browser.close()

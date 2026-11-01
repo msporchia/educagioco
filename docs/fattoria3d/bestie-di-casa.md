@@ -79,8 +79,10 @@ quando un bisogno scende sotto `BENE` (circa tre ore); uno stato già in forma p
 
 ## Battesimo e posizione (A9, A10)
 
-- **Battesimo**: appena presa si apre `Battesimo.vue`, i nomi si **toccano** (`nomiPer`, quelli della 2D per la sua famiglia); «Lascia “Beagle”» tiene il nome della razza; «✎ Nome»
-  nel foglio lo cambia, gratis e sempre. Si salva in `stato.casa[id].nome` (16 lettere).
+- **Battesimo**: appena presa si apre `Battesimo.vue`, i nomi si **toccano** (`nomiPer`, quelli della 2D per la sua famiglia) e sotto c'è la casella per
+  **scriverne uno suo**, come nella 2D: «✔ Va bene» o l'invio della tastiera lo salva (vuota non si tocca), un nome scritto torna nella casella riaprendo. Prima la lista:
+  chi ha quattro anni non sa scrivere. «Lascia “Beagle”» tiene il nome della razza; «✎ Nome» nel foglio lo cambia, gratis e sempre, anche a Watson e ai gatti. Si salva in
+  `stato.casa[id].nome` (`pulisciNome`: spazi in fila ridotti a uno, 16 lettere, e la casella non ne accetta di più).
 - **Sposta**: dal foglio, «📍 Sposta» chiude il foglio e il prossimo tocco su una cella tua e libera porta lì la bestia (`Mondo3d.iniziaSposta`). Gratis. La cella è la **casa**
   della bestia (`stato.casa[id].i,j`): ci gira intorno (due passi, si siede, annusa, dorme; il gatto si lava), anche dopo aver chiuso il gioco. Senza posizione sta
   davanti alla porta della casa. Una bestia di casa non segue il contadino, come Watson: sta dove l'hai messa.
@@ -126,14 +128,14 @@ gli animali: pollaio») o **quante monete mancano**. Bottoni da 44 px e più, il
 
 `unita/fattoria3d-bestie` (parità con la 2D numero per numero, i bisogni mai sotto `FONDO` dopo 400 ore, il cibo sbagliato rifiutato col perché senza pagare, il premio una volta per ciclo, nome e posizione
 salvati, lo stato letto dritto, la migrazione è in `unita/fattoria3d-migra`), `unita/fattoria3d-bestie-connesse` (le parti si toccano), `unita/fattoria3d-ordini` (la veterinaria è l'unica), `integrazione/fattoria3d-bestie`
-(il dito: menu, compera, battesimo, foglio, carezza, cibo, 360 px, sposta). Bersagli: `[data-f3="bestia"]`, `[data-bisogno]`, `[data-cibo="<id>"]`, `[data-coccola="<id>"]`, `[data-azione="carezza|sposta|nome"]`,
-`[data-f3="battesimo"]`, `[data-nome="<nome>"]`, `[data-carta="bestia:<id>"]`.
+(il dito: menu, compera, battesimo, foglio, carezza, cibo, 360 px, sposta, un nome scritto). Bersagli: `[data-f3="bestia"]`, `[data-bisogno]`, `[data-cibo="<id>"]`, `[data-coccola="<id>"]`, `[data-azione="carezza|sposta|nome"]`,
+`[data-f3="battesimo"]`, `[data-nome="<nome>"]`, `[data-f3="battesimo-scrivi"]` (la casella), `[data-azione="scrivi"]`, `[data-carta="bestia:<id>"]`.
 
 ## Provato e no / da fare
 
 - Provato: il beagle con le zampe come bastoncini staccati dal corpo (come uscì dal primo tentativo): le gambe ora partono dentro il corpo; sdraiato le zampe davanti e le orecchie si riattaccano in `posaBeagle`.
 - Provato: il beagle, il coniglio e il pappagallo a palle lisce con i colori sfumati nei vertici (come i gatti): sembravano palloncini gonfiati accanto a pecora, mucca e Watson; rifatti facettati.
-- Da guardare col dito su un telefono: le bestie in scena dalla camera di serie, il foglio a 360 px dal vero.
+- Da guardare col dito su un telefono: le bestie in scena dalla camera di serie, il foglio a 360 px dal vero, la tastiera che sale sopra la casella del battesimo (il foglio sta in basso).
 - Il tocco sul gatto rosso/beagle apre il foglio (non c'è la festa lunga di Watson né le risposte dei gatti): una scelta, le bestie di casa sono cose da curare.
 - Il ritratto dei compagni nel foglio si disegna dal vivo (`Mondo3d.modelloBestia`): le foto fatte di `anteprime.js` sono delle bestie comprate.
 - Da giocare: se i bisogni di Watson e dei gatti pesano troppo sulle monete dei più piccoli (sono quattro bocche in più dal livello 1–19).
