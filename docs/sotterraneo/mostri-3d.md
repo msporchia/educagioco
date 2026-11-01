@@ -50,7 +50,7 @@ della palude, Minotto → minotauro, Carbonchio → drago di lava, Roccaverde �
 magma, Gelomagno → golem di ghiaccio, Falcenera → mietitore.
 
 **Il gioco non si rompe mai**: un id che non c'è, una `crea` che si rompe o un'`anima` che si rompe mettono quel modello da parte
-e torna lo sprite (`console.warn`). `#sprite` nell'indirizzo li spegne tutti, `#eroe2d` l'eroe.
+e torna lo sprite (`console.warn`). `&spegni=mostri3d` nell'indirizzo li spegne tutti; l'eroe non ha uno sprite di ripiego ([anteprime-3d.md](anteprime-3d.md)).
 
 ## Il contratto dei modelli
 
@@ -118,14 +118,14 @@ Misurato con SwiftShader (`&dpr=1`, 390×844, le cantine, `luce=stanza`; i ms no
 
 | | chiamate | triangoli | `banco(20)` |
 |---|---|---|---|
-| 8 mostri sprite (`#sprite`) | 101 | 72k | 48 ms |
+| 8 mostri sprite (`&spegni=mostri3d`) | 101 | 72k | 48 ms |
 | 8 mostri 3D, senza saldare | 801 | 104k | 56 ms |
 | 8 mostri 3D, saldati | 458 | 104k | 53 ms |
 | scontro con 3 mostri (6 modelli in vista) | 257 | 39k | — |
 
 Un mostro costa da 8 (il fantasma) a 141 (il drago grande) chiamate, in media una cinquantina; dal 22/10 la saldatura passa oltre
 i perni fermi (uno scheletro ~80 → ~45) e anche l'eroe 3D si salda, con le sue pose ([prestazioni-3d.md](prestazioni-3d.md)). Per questo `integrazione/sotterraneo-3d` misura i
-paesaggi con `&sprite&eroe2d` e lo scontro fino a 260 chiamate (con gli sprite stava sotto 140). `&spegni=mostri3d:6` ne tiene sei,
+paesaggi con `&spegni=mostri3d,eroe` e lo scontro fino a 260 chiamate (con gli sprite stava sotto 140). `&spegni=mostri3d:6` ne tiene sei,
 `&spegni=mostri3d` nessuno, `&spegni=effetti3d` toglie gli effetti 3D. Le copie pesano nel file unico (eroi, mostri, effetti).
 
 ## Cosa manca
@@ -139,6 +139,6 @@ paesaggi con `&sprite&eroe2d` e lo scontro fino a 260 chiamate (con gli sprite s
 Nei test: `unita/sotterraneo-mostri-3d` (il registro copre specie e grossi, nessuna chiave orfana, ogni modello si costruisce,
 si anima, attacca e si salda in Node; ogni effetto, segno, proiettile e stato del gioco ha il 3D; ogni modello è nel catalogo 3D;
 le copie uguali ai prototipi), `integrazione/sotterraneo-3d-mostri` (lo scontro coi modelli, la palla di fuoco e la cura 3D, gli
-attacchi senza errori, `#sprite`). Per le prove: `window.__sotterraneo3d.prova(chiave, i, tinta)` fa usare all'eroe l'effetto
+attacchi senza errori, `&spegni=mostri3d`). Per le prove: `window.__sotterraneo3d.prova(chiave, i, tinta)` fa usare all'eroe l'effetto
 `chiave` sul mostro `i` dello scontro, `prova('mostro', i)` fa attaccare il mostro `i` (solo il disegno, i numeri non cambiano);
 `grafica()` dice `mostri3d` (in vista), `modelli3d` (costruiti), `effetti3d` (attivi).

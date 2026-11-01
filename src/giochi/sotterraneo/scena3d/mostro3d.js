@@ -2,7 +2,7 @@
 // (mostri3d/registro.js) dà alla specie. Una riserva di istanze per modello, riusate: a ogni fotogramma `inizia`, una `metti` per
 // mostro (lo stato di disegno di cose.js porta la sua istanza finché si vede) e `chiudi` nasconde quelle che nessuno ha preso.
 // Il lampo del colpo, la tinta degli stati e lo svanire stanno su copie dei materiali per istanza, accese solo quando servono:
-// gli originali restano a chi li anima (il respiro che pulsa, gli occhi). Spento con `#sprite` nell'indirizzo.
+// gli originali restano a chi li anima (il respiro che pulsa, gli occhi). Spenti con `&spegni=mostri3d` (ACCESI).
 import { Group, Box3, Vector3, Color } from 'three'
 import { idDi, costruisci, ALTEZZA } from './mostri3d/registro.js'
 import { verso } from './tempo.js'
@@ -10,8 +10,6 @@ import { studia, saldaTutto, osso, copiaMateriale, tipoFuso, tingiFusa, lampoFus
 import { conMosse } from './mostri3d/mosse-anim.js'
 import { ACCESI } from './costanti.js'
 import { daSola, rifai } from './matrici.js'
-
-export const mostri3dAccesi = () => typeof location === 'undefined' || !/[#&?]sprite\b/.test(location.hash + location.search)
 
 // lo stesso rapporto dell'eroe 3D (eroe3d.js): il modello è alto quanto lo sprite che sostituisce per questa frazione
 export const ALTEZZA_SPRITE = 0.72

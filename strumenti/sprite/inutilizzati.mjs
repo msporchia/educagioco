@@ -240,6 +240,48 @@ export const VIVI = {
     ...(await importa('src/giochi/passo-passo/scena/tela.js')).DALL_ATLANTE,                  // Passo passo
     ...(await importa('src/giochi/fattoria3d/dati/ricette.js')).facceDelleMerci(),            // fattoria3d: viste/Faccia.vue, scena3d/facce.js
   ],
+  // il sotterraneo disegna dall'atlante solo nella scena 3D (scena3d/figure.js) e dove una cosa non ha un modello (viste/figura.js):
+  // ogni nome che le sue tabelle possono chiedere, e di ogni cosa tutte le pose (docs/core/sprite.md, «Gli inutilizzati»)
+  sotterraneo: async A => {
+    const D = f => importa(`src/giochi/sotterraneo/${f}`)
+    const { SCENARI, SOGLIE_DELLE_GEMME, pezziDelloScenario, PEZZO_DI } = await D('dati/tessere.js')
+    const { NICCHIE } = await D('dati/orpelli.js')
+    const { pezziDeiRelitti } = await D('dati/relitti.js')
+    const { COSE, chiaveDelPezzo } = await D('dati/cose.js')
+    const { haModelloPerTerra } = await D('scena3d/per-terra-pura.js')
+    const { ASPETTI } = await D('dati/aspetti.js')
+    const { SPRITE_FIGURA } = await D('dati/figure3d.js')
+    const { UNICI } = await D('dati/pezzi.js')
+    const { MOSTRI } = await D('dati/mostri.js')
+    const { GROSSI, figuraDelGrosso } = await D('dati/grossi.js')
+    const { EROI } = await D('dati/eroi.js')
+    const { CURIOSITA } = await D('dati/curiosita.js')
+    const { MERCANTI } = await D('dati/mercanti.js')
+    const { PERSONAGGI_DI_SOPRA } = await D('dati/missioni.js')
+    const { VIANDANTI } = await D('dati/missioni-modelli.js')
+    const { SCALA_SU } = await D('scena/scala-su.js')
+    const { BESTIARIO } = await importa('src/giochi/survivors/scena/figure.js')
+    const nomi = [
+      ...Object.values(SCENARI).flatMap(pezziDelloScenario),                                  // scena3d/cose.js: porte, scale, forzieri, arredo
+      ...Object.values(NICCHIE).flat(), ...pezziDeiRelitti(), SCALA_SU,                       // le nicchie, i relitti col pezzo, la scala che sale
+      ...SOGLIE_DELLE_GEMME.map(([, n]) => n), 'moneta-0',                                    // pezzoDelleGemme
+      PEZZO_DI.forziere({ aperto: true }), PEZZO_DI.forziere({}), 'forziere-oro-chiuso',      // il forziere aperto, quello dei salvataggi vecchi, il d'oro
+      ...Object.entries(COSE).filter(([k]) => !haModelloPerTerra(k)).map(([, c]) => c.sprite),   // per terra senza modello (roba-per-terra.js), nei pannelli senza chiave
+      // le figure della roba: il loro ritaglio è anche quello che dice che la figura c'è (roba.py `in_gioco`, figure3d.js `SPRITE_FIGURA`),
+      // e lo sprite resta per terra a chi non ha un modello e in pugno ai mostri a sprite (dati/varianti.js)
+      ...Object.values(ASPETTI).flat().map(a => a.sprite), ...Object.keys(SPRITE_FIGURA),
+      ...Object.entries(UNICI).map(([id, u]) => (COSE[chiaveDelPezzo(u.base, 1, u.rarita || 'leggendario', [], id)] || {}).sprite),
+      ...CURIOSITA.map(c => c.pezzo),                                                         // per terra e nel foglio che si apre (viste/Foglio.vue)
+      ...Object.values(MOSTRI).map(m => `${m.sprite}-fermo-0`),                               // i mostri oltre il tetto dei modelli, e la loro misura
+      ...Object.keys(GROSSI).map(k => `${figuraDelGrosso(k).sprite}-fermo-0`),
+      ...EROI.map(e => `${e.sprite}-fermo-0`),                                                // la misura dell'eroe (scena3d/eroe.js); il cavaliere al castello
+      ...[...MERCANTI, ...Object.values(PERSONAGGI_DI_SOPRA), ...VIANDANTI].map(p => `${p.sprite}-fermo-0`), 'minatore-fermo-0',   // le persone di sopra lontane
+      ...Object.values(BESTIARIO).flatMap(b => Object.values(b)).filter(n => n.startsWith('sot:')).map(n => `${n.slice(4)}-fermo-0`),   // Survivors
+    ].filter(Boolean)
+    // di ogni cosa tutte le pose e tutti i fotogrammi
+    const voce = new Map(A.VOCI.flatMap(v => Object.values(v.pose).flat().map(n => [n, v])))
+    return [...new Set(nomi.flatMap(n => (voce.has(n) ? Object.values(voce.get(n).pose).flat() : [n])))]
+  },
 }
 
 /* I pezzi che il codice vivo disegna (`vivi`) e i nomi vivi che l'atlante non ha (`mancano`), o null se il gioco non ha `VIVI`. */

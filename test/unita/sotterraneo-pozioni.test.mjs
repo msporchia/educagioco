@@ -6,7 +6,8 @@
 import { COSE, CURE, CURE_IN_VENDITA, IN_VENDITA } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { POZIONI_MASSIME } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { MERCANTI, mercanteDi, vendeLa } from '../../src/giochi/sotterraneo/dati/mercanti.js'
-import { PEZZI } from '../../src/giochi/sotterraneo/dati/atlante.js'
+import { CHIAVI as CHIAVI_POZIONI } from '../../src/giochi/sotterraneo/scena3d/roba3d/pozioni.js'
+import { haModelloPerTerra } from '../../src/giochi/sotterraneo/scena3d/per-terra-pura.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { Corredo, ROBA_VUOTA, curePerTipo } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { Bottega } from '../../src/giochi/sotterraneo/motore/bottega.js'
@@ -37,7 +38,8 @@ const corredo = (zaino, gemme = 0, livello = 1) =>
               `${(p.prezzo / p.cura).toFixed(2)} → ${(q.prezzo / q.cura).toFixed(2)}`)
     controlla(`${STADI[i]}: arriva sul banco dopo ${STADI[i - 1]}`, (q.dalla || 0) > (p.dalla || 0))
   }
-  for (const k of [...STADI, 'ampolla-vita']) controlla(`${k}: ha la sua figura`, !!PEZZI[COSE[k].sprite], COSE[k].sprite)
+  // la figura è il modello (roba3d/pozioni.js): nei pannelli la sua foto, per terra il modello (docs/sotterraneo/roba-3d.md)
+  for (const k of [...STADI, 'ampolla-vita']) controlla(`${k}: ha il suo modello`, CHIAVI_POZIONI.includes(k) && haModelloPerTerra(k))
   controlla('i nomi non si confondono con l\'elisir del toro', COSE['ampolla-vita'].nome !== COSE['elisir-toro'].nome &&
             !/elisir/i.test(COSE['ampolla-vita'].nome))
 }

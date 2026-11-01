@@ -19,7 +19,7 @@
    lo guarda un occhio, in `strumenti/banco/mondo.html` — ma che chi legge
    riceva quello che si aspetta di ricevere.
 */
-import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
+import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 import * as FATTORIA from '../../src/grafica/atlante-fattoria.js'
 import * as SOTTERRANEO from '../../src/giochi/sotterraneo/dati/atlante.js'
 
@@ -164,7 +164,10 @@ for (const [nome, A] of ATLANTI) {
   const { NITIDO, NITIDI, PEZZI } = SOTTERRANEO
   controlla('l\'atlante nitido è un WebP', typeof NITIDO === 'string' && NITIDO.startsWith('data:image/webp;base64,'))
   const nomi = Object.keys(NITIDI)
-  controlla('e porta la roba', nomi.length > 200 && ['spada', 'corpo-piastre', 'scudo-leone', 'zanna-del-drago'].every(n => NITIDI[n]))
+  // solo quello che un pannello mostra ancora dipinto: le cose senza modello (i tre gioielli di base, le curiosità) e l'arco degli
+  // arcieri di Castle Battle; il resto si mostra con la foto del suo modello (docs/sotterraneo/anteprime-3d.md)
+  stessaLista('e porta solo quello che un pannello mostra dipinto', [...nomi].sort(),
+              ['amuleto-rosso', 'arco-corto', 'calice', 'clessidra', 'libro', 'medaglione', 'ossa', 'sfera-cristallo'])
   const storti = nomi.filter(n => {
     const p = PEZZI[n], q = NITIDI[n]
     if (!p) return true

@@ -220,7 +220,7 @@ const s0 = popolaMondo({ mondo: m, eroe: 'cavaliere', giro: 0 })
   const d = diario({ [caccia]: 'presa', [sig]: 'presa', [tana]: 'fatta' }, [], null, { [caccia]: 4 })
   const v = id => d.inMano.find(x => x.id === id)
   stessaLista('la caccia aperta: 4 di 6', v(caccia).progresso, { fatti: 4, quanti: 6 })
-  controlla('il signore ha la faccia del suo caporale', !!v(sig).cosa.sprite && v(sig).cosa.nome.startsWith('Il signore'), JSON.stringify(v(sig).cosa))
+  controlla('il signore ha la faccia del suo caporale', !!v(sig).cosa.mostro && v(sig).cosa.nome.startsWith('Il signore'), JSON.stringify(v(sig).cosa))
   uguale('la tana fatta si consegna', v(tana).stato, 'fatta')
 }
 

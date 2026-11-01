@@ -9,6 +9,7 @@ import Armato from './Armato.vue'
 import Glifo from './Glifo.vue'
 import Medaglione from './Medaglione.vue'
 import SchedeEroe from './SchedeEroe.vue'
+import RigaTorcia from './RigaTorcia.vue'
 
 const props = defineProps({
   eroe: { type: Object, required: true },        // la scheda: nome, sprite, em
@@ -29,6 +30,7 @@ const props = defineProps({
   puntiAbilita: { type: Number, default: 0 },    // i punti dell'albero: sul tasto delle abilità
   missioni: { type: Number, default: 0 },        // le missioni da consegnare, sulla scheda (SchedeEroe.vue)
   costoRiassegnare: { type: Number, default: 0 },   // i punti dati tornano da dare, e si paga in gemme
+  torcia: { type: Object, default: null },       // le torce (`torceDi` in Gioco.vue): quella accesa e quelle alla cintura
 })
 const emit = defineEmits(['dai', 'tesori', 'cambia', 'chiudi', 'fuori', 'scheda', 'riassegna'])
 // riassegnare costa gemme: il primo tocco chiede, il secondo fa
@@ -47,7 +49,7 @@ const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: 
   <Cornice alta data-pagina-eroe @chiudi="$emit('chiudi')" @fuori="e => $emit('fuori', e)">
     <SchedeEroe attiva="eroe" :punti="punti" :punti-abilita="puntiAbilita" :missioni="missioni" @scheda="s => $emit('scheda', s)" />
     <header class="sot-eroe-testa">
-      <span class="sot-eroe-ritratto"><Armato :eroe="eroe" :mano="mano" :mancina="mancina" :corpo="corpo" :testa="testa" :scala="3" in3d /></span>
+      <span class="sot-eroe-ritratto"><Armato :eroe="eroe" :mano="mano" :mancina="mancina" :corpo="corpo" :testa="testa" :scala="3" /></span>
       <span class="sot-eroe-nome">
         <b>{{ eroe.nome }}</b>
         <i data-livello-eroe :data-livello="livello">Livello {{ livello }}</i>
@@ -69,6 +71,8 @@ const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: 
     <span v-if="tratti.length" class="sot-tratti sot-eroe-tratti em" data-tratti-eroe>
       <span v-for="t in tratti" :key="t">{{ t }}</span>
     </span>
+    <!-- le torce si cercano qui (l'utente, 31 ottobre): quante, quanta luce resta, e senza nessuna chi le vende -->
+    <RigaTorcia :torcia="torcia" sempre class="sot-eroe-torce" data-torcia-eroe />
 
     <div class="sot-punti-riga">
       <p v-if="punti" class="sot-eroe-punti" data-punti-da-dare :data-n="punti">

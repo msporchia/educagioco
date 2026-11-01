@@ -21,6 +21,17 @@ anteprime è il modello 3D di `spada-28`, con l'alone della sua rarità. Prima t
    pergamena del portale) hanno un modello per chiave in `pozioni.js` (`crea(chiave)`, `CHIAVI`: la forma dal grado, il colore dal
    tipo). Nelle caselle, nella scelta della pozione e nella riga della torcia dello zaino.
 
+## La balestra si tiene a modo suo
+
+Una balestra non è un arco ritto (l'utente, 31 ottobre 2026: l'elfa la teneva col fusto in su e l'arco di traverso sul corpo). Il modello,
+sia la figura `arco-07` (`bastoni.js`) sia il ripiego `balestra` della collezione, ha **l'impugnatura nel pugno, il fusto verso +z** (dove
+tira anche l'arco), la guida e il dardo sopra, l'arco di piatto lungo x coi flettenti piegati verso chi tira; `userData.tipo = 'balestra'`
+(la famiglia resta `arco`: va nella sinistra). In mano la tiene `tieniBalestra` (`poc/eroi-3d/eroi.js`), in fondo alla guardia e alla
+marcia: il braccio la porge davanti, appena sotto la spalla, e il perno annulla il giro del braccio, così il fusto va dove guarda (o
+mira) l'eroe, un poco in giù, per tutti e quattro. Provato a girare solo il modello: il perno segue il braccio, che in ogni posa sta in un
+altro modo (l'elfa lo tende in avanti, il cavaliere lo tiene basso), e il fusto finiva in su o di sbieco. I motivi dell'elemento della
+figura (fatti per le aste ritte, attorno a z = 0) stanno spostati sul davanti.
+
 Il copricapo non passa dalle figure: ha i modelli dei copricapi per base (`COPRICAPI_3D`, [elmo.md](elmo.md)).
 
 `scena3d/roba3d.js`: `modelloDiRoba(chiave)` → `{ figura, famiglia, modulo, ripiego, crea(), look }`; `creaPezzo(p)` costruisce e
@@ -55,15 +66,34 @@ profondità: una chiamata in più, 60–200 punti. I punti si pescano sulla supe
 
 Più, se l'elemento non è «nessuno», una velatura del suo colore e piccoli motivi suoi (fiammelle che salgono per il fuoco, fiocchi
 che scendono per il ghiaccio, saette per il fulmine, bolle per veleno e acqua, foglie per la natura, rune per l'arcano). I colori
-stanno in `poc/roba-3d/palette.js` (`ELEMENTI`). L'alone si mette **solo ai pezzi non comuni**; un comune mostra già la sua figura.
+stanno in `poc/roba-3d/palette.js` (`ELEMENTI`). **Nel gioco l'alone si mette solo ai leggendari** (l'utente, 31 ottobre 2026: il
+luccichio dice «potenziato», non va su una cosa relativamente di base): comuni, magici e rari mostrano la loro figura, che può
+avere un bagliore suo (la lama di fuoco), e quello resta. Le righe del magico e del raro le usa solo il prototipo.
 `gruppo.userData.animaAlone(t)` lo muove (l'eroe lo chiama a ogni fotogramma, le anteprime una volta a 1,3 s: l'aura gonfia);
 `userData.aloneUniformi.uIntensita` lo fa svanire col portale. In mano all'eroe i punti sono più piccoli (`scalaAlone` 0,8): a
-grandezza piena coprivano la faccia del ritratto. Fra i consumabili brillano (come un raro) solo i «rarissimi»: l'ampolla della vita
+grandezza piena coprivano la faccia del ritratto. Fra i consumabili brillano (con l'alone del raro) solo i «rarissimi»: l'ampolla della vita
 e l'elisir del toro. Provato con le sole tinte dei materiali: clonarli rompe le animazioni
 dei moduli, che tengono i loro materiali.
 
 Per guardarli: `poc/roba-3d-aloni.html` (le 50 armi × le quattro rarità con l'elemento dell'arma; `?famiglia=spada`,
 `?vista=elementi&arma=bastone-nodoso`, `?lato=`, `?pausa`, `?t=`).
+
+## Per terra
+
+La roba da raccogliere nella discesa e il bottino rimasto sul prato di sopra si vedono col modello, non con lo sprite dipinto
+(`scena3d/roba-per-terra.js`, l'utente il 31 ottobre 2026: «è corretto che queste due armi siano 2d?»).
+
+- **Sempre la versione semplice** (`appiattisci`): una mesh e una chiamata di disegno per pezzo, niente aloni né fiamme; il chiarore
+  della rarità per terra resta quello di `scena3d/cose.js`. Un modello per figura, fatto la prima volta e copiato per ogni pezzo
+  (geometria e materiale in comune): una spada per terra costa una chiamata, contro zero dello sprite nel lotto delle figure.
+- **Lungo `LATO_PER_TERRA` (0,6 celle)** dal lato più lungo, piegato all'indietro (`INCLINA`) perché dalla telecamera alta una spada
+  in piedi è una riga; ondeggia un poco, non gira.
+- **Chi non ha un modello resta sprite**: le armature (sono vesti da indossare, `vesti(eroe, figura)`, non un oggetto da posare) e i
+  tre gioielli di base. Le gemme e le monete non sono roba e non hanno un modello: restano sprite. I copricapi restano la loro
+  emoji ([elmo.md](elmo.md)): il modello c'è solo su una testa.
+- Il dito li prende col raggio come la fontana e i mostri (`modellati`, dito.js); `grafica().perTerra` dice quanti ce n'è in vista.
+- **Anche la torcia accesa in mano all'eroe è il suo modello** (`creaTorciaInMano`, alta `ALTO_TORCIA`), semplice; la fiamma e le
+  faville restano quelle della scena sulla sua punta ([luce.md](luce.md)). La torcia non ha più uno sprite.
 
 ## La tabella generata: `npm run roba3d`
 
@@ -92,7 +122,8 @@ entrano nel file unico).
 - Le armi in mano ai mostri (gli scheletri guerriero e mago) restano quelle della collezione: non sono oggetti con una chiave.
 - L'alone non c'è sulle vesti (starebbe su tutto l'eroe): la rarità della veste si vede dalla figura.
 
-Nei test: `unita/sotterraneo-roba-3d` (la tabella uguale a quella dello strumento e la firma; ogni figura ha la sua famiglia e il
+Nei test: `unita/sotterraneo-roba-per-terra` (per terra: il modello semplice, la misura, chi resta sprite, la geometria in comune),
+`unita/sotterraneo-roba-3d` (la tabella uguale a quella dello strumento e la firma; ogni figura ha la sua famiglia e il
 modulo la costruisce, o la famiglia è fra quelle che mancano; ogni oggetto da impugnare ha figura o ripiego; il ripiego senza modulo
 e con un modulo che si rompe; ogni veste addosso all'eroe; ogni consumabile, con l'alone solo ai rarissimi; le chiavi composte; gli
 aloni), `unita/sotterraneo-mostri-3d` (anche: ogni famiglia col prototipo è fra i moduli del gioco), le copie uguali ai prototipi,

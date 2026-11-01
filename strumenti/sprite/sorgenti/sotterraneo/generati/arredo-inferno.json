@@ -1,6 +1,5 @@
 {
   "__": "Il foglietto di arredo-inferno.png: 71 pezzi d'arredo dell'inferno (ChatGPT, 15 ottobre 2026, tavola su fondo magenta, nove file di pezzi, vista a tre quarti). Scala a circa 5,9 px di foglio per pixel di gioco (la scena è a 4: i pezzi del foglio sono dipinti più grandi, come il foglio della cripta). I rettangoli sono i riquadri stretti di ogni pezzo, misurati sul non-magenta; nelle file delle torce e degli stendardi le catene appese tengono unite figure che i riquadri tagliano a mano. Quali pezzi servono, e come: la voce inferno in dati/tessere.js e dati/orpelli.js. Il foglio porta anche la porta ad arco di legno, la scala in cornice di pietra, la grata, il lucchetto, la coppa di lava, le pietre e l'anello di catena: servono a strumenti/sprite/inferno.py per i pezzi derivati.",
-  "nitido": "scelti",
   "fondo": [
     255,
     0,
@@ -28,8 +27,7 @@
       "misura": [
         27,
         17
-      ],
-      "nitido": true
+      ]
     },
     "inferno-sarcofago-croce-largo": {
       "da": [
@@ -43,8 +41,7 @@
       "misura": [
         27,
         15
-      ],
-      "nitido": true
+      ]
     },
     "inferno-sarcofago-stemma": {
       "da": [
@@ -58,8 +55,7 @@
       "misura": [
         20,
         15
-      ],
-      "nitido": true
+      ]
     },
     "inferno-altare-sangue": {
       "da": [
@@ -73,8 +69,7 @@
       "misura": [
         24,
         14
-      ],
-      "nitido": true
+      ]
     },
     "inferno-altare-candele": {
       "da": [
@@ -88,8 +83,7 @@
       "misura": [
         25,
         16
-      ],
-      "nitido": true
+      ]
     },
     "inferno-gargoyle-accovacciato": {
       "da": [
@@ -103,8 +97,7 @@
       "misura": [
         19,
         26
-      ],
-      "nitido": true
+      ]
     },
     "inferno-statua-demone": {
       "da": [
@@ -118,8 +111,7 @@
       "misura": [
         19,
         26
-      ],
-      "nitido": true
+      ]
     },
     "inferno-statua-incappucciata-libro": {
       "da": [
@@ -133,8 +125,7 @@
       "misura": [
         12,
         27
-      ],
-      "nitido": true
+      ]
     },
     "inferno-statua-incappucciata-bastone": {
       "da": [
@@ -148,8 +139,7 @@
       "misura": [
         12,
         28
-      ],
-      "nitido": true
+      ]
     },
     "inferno-colonna": {
       "da": [
@@ -163,8 +153,7 @@
       "misura": [
         10,
         28
-      ],
-      "nitido": true
+      ]
     },
     "inferno-colonna-spezzata": {
       "da": [
@@ -192,8 +181,7 @@
       "misura": [
         14,
         29
-      ],
-      "nitido": true
+      ]
     },
     "inferno-gargoyle-alato": {
       "da": [
@@ -207,8 +195,7 @@
       "misura": [
         15,
         26
-      ],
-      "nitido": true
+      ]
     },
     "inferno-candelabro": {
       "da": [
@@ -306,8 +293,7 @@
       "misura": [
         16,
         27
-      ],
-      "nitido": true
+      ]
     },
     "inferno-gabbia-lunga": {
       "da": [
@@ -335,8 +321,7 @@
       "misura": [
         18,
         27
-      ],
-      "nitido": true
+      ]
     },
     "inferno-braciere": {
       "da": [
@@ -476,8 +461,7 @@
       "misura": [
         18,
         24
-      ],
-      "nitido": true
+      ]
     },
     "inferno-libreria": {
       "da": [
@@ -533,8 +517,7 @@
       "misura": [
         27,
         18
-      ],
-      "nitido": true
+      ]
     },
     "inferno-sedia": {
       "da": [
@@ -590,8 +573,7 @@
       "misura": [
         18,
         15
-      ],
-      "nitido": true
+      ]
     },
     "inferno-banco-forgia": {
       "da": [
@@ -605,8 +587,7 @@
       "misura": [
         24,
         17
-      ],
-      "nitido": true
+      ]
     },
     "inferno-carrello-carbone": {
       "da": [
@@ -622,20 +603,6 @@
         16
       ]
     },
-    "inferno-botte": {
-      "da": [
-        479,
-        940
-      ],
-      "cella": [
-        64,
-        97
-      ],
-      "misura": [
-        10,
-        15
-      ]
-    },
     "inferno-calderone": {
       "da": [
         587,
@@ -648,23 +615,7 @@
       "misura": [
         17,
         17
-      ],
-      "nitido": true
-    },
-    "inferno-coppa-lava": {
-      "da": [
-        732,
-        937
-      ],
-      "cella": [
-        87,
-        102
-      ],
-      "misura": [
-        14,
-        16
-      ],
-      "nitido": true
+      ]
     },
     "inferno-vasca-lava": {
       "da": [
@@ -678,23 +629,7 @@
       "misura": [
         21,
         20
-      ],
-      "nitido": true
-    },
-    "inferno-grata": {
-      "da": [
-        40,
-        1097
-      ],
-      "cella": [
-        95,
-        94
-      ],
-      "misura": [
-        15,
-        15
-      ],
-      "nitido": true
+      ]
     },
     "inferno-porta-semplice": {
       "da": [
@@ -708,8 +643,7 @@
       "misura": [
         17,
         23
-      ],
-      "nitido": true
+      ]
     },
     "inferno-scala-aperta": {
       "da": [
@@ -723,37 +657,7 @@
       "misura": [
         15,
         20
-      ],
-      "nitido": true
-    },
-    "inferno-feritoia": {
-      "da": [
-        490,
-        1092
-      ],
-      "cella": [
-        52,
-        96
-      ],
-      "misura": [
-        8,
-        15
       ]
-    },
-    "inferno-lucchetto": {
-      "da": [
-        596,
-        1091
-      ],
-      "cella": [
-        74,
-        90
-      ],
-      "misura": [
-        12,
-        14
-      ],
-      "nitido": true
     },
     "inferno-forno": {
       "da": [
@@ -767,8 +671,7 @@
       "misura": [
         14,
         21
-      ],
-      "nitido": true
+      ]
     },
     "inferno-fornace-pietra": {
       "da": [
@@ -782,21 +685,6 @@
       "misura": [
         14,
         19
-      ],
-      "nitido": true
-    },
-    "inferno-cassa-botte": {
-      "da": [
-        32,
-        1255
-      ],
-      "cella": [
-        96,
-        78
-      ],
-      "misura": [
-        15,
-        12
       ]
     },
     "inferno-forca-catene": {
@@ -811,21 +699,6 @@
       "misura": [
         16,
         14
-      ],
-      "nitido": true
-    },
-    "inferno-sassi": {
-      "da": [
-        373,
-        1281
-      ],
-      "cella": [
-        53,
-        48
-      ],
-      "misura": [
-        8,
-        7
       ]
     },
     "inferno-blocchi": {
@@ -856,20 +729,6 @@
         15
       ]
     },
-    "inferno-cristallo": {
-      "da": [
-        655,
-        1263
-      ],
-      "cella": [
-        54,
-        66
-      ],
-      "misura": [
-        8,
-        10
-      ]
-    },
     "inferno-argano": {
       "da": [
         734,
@@ -882,8 +741,7 @@
       "misura": [
         14,
         14
-      ],
-      "nitido": true
+      ]
     },
     "inferno-palo-gancio": {
       "da": [
@@ -925,8 +783,7 @@
       "misura": [
         15,
         21
-      ],
-      "nitido": true
+      ]
     },
     "inferno-trono-ferro": {
       "da": [
@@ -940,8 +797,7 @@
       "misura": [
         12,
         20
-      ],
-      "nitido": true
+      ]
     },
     "inferno-trono-spinato": {
       "da": [
@@ -955,8 +811,7 @@
       "misura": [
         14,
         20
-      ],
-      "nitido": true
+      ]
     },
     "inferno-gogna": {
       "da": [
@@ -970,8 +825,7 @@
       "misura": [
         14,
         14
-      ],
-      "nitido": true
+      ]
     },
     "inferno-colonna-chiodata": {
       "da": [
@@ -985,21 +839,6 @@
       "misura": [
         9,
         22
-      ],
-      "nitido": true
-    },
-    "inferno-botola-chiodi": {
-      "da": [
-        620,
-        1399
-      ],
-      "cella": [
-        98,
-        84
-      ],
-      "misura": [
-        16,
-        13
       ]
     },
     "inferno-gabbia-viola": {
@@ -1014,22 +853,11 @@
       "misura": [
         11,
         20
-      ],
-      "nitido": true
-    },
-    "inferno-portale-catene": {
-      "da": [
-        879,
-        1372
-      ],
-      "cella": [
-        107,
-        111
-      ],
-      "misura": [
-        17,
-        18
       ]
     }
+  },
+  "per_i_derivati": {
+    "inferno-grata": {"da": [40, 1097], "cella": [95, 94], "misura": [15, 15]},
+    "inferno-lucchetto": {"da": [596, 1091], "cella": [74, 90], "misura": [12, 14]}
   }
 }

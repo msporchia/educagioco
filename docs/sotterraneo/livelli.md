@@ -214,7 +214,8 @@ stanno più in cima allo schermo); «Hai 2 punti da dare» in oro, o senza punti
 l'icona, il nome, il valore, la frase corta, prima → dopo e un «+» grande
 (52 px); in fondo la porta dei Tesori ([rarita.md](rarita.md#i-leggendari-e-i-tesori)).
 Sopra, sotto i numeri, i tratti della roba addosso («💎 ×1,5», «🔦 vedi più
-lontano»), e in fondo **«Cambia eroe»**: un tasto piccolo a bordo d'oro, non
+lontano»), sopra e sotto la riga delle torce (quante, quanta luce resta, e senza nessuna chi le vende:
+[luce.md](luce.md#la-torcia-si-accende-da-sé-e-finisce)), e in fondo **«Cambia eroe»**: un tasto piccolo a bordo d'oro, non
 un altro tasto grosso, che chiude la pagina e apre la scelta delle avventure
 ([avventure.md](avventure.md)). Giù non c'è: si cambia dal velo della pausa
 ([portale-e-sosta.md](portale-e-sosta.md)).

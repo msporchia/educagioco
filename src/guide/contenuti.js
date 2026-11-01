@@ -620,8 +620,8 @@ export const AIUTI = {
         'Si bevono dallo zaino, quando vuoi tu: la 🧪 boccetta ridà 6 punti, la pozione 10, la 🍷 ampolla 18. Non scadono e non si sprecano — bevute a vita piena, la parte che avanza è persa.',
         'Il mostro ti prende qualcosa **anche quando rispondi giusto** (un graffio, metà del colpo), e per questo le pozioni servono: senza, una discesa lunga finisce con uno svenimento.',
         'Le tasche sono sei. Quando sono piene, quello che trovi resta per terra: sopra, il **mercante** compra a metà prezzo quello che non usi.',
-        '🔥 **La torcia si accende da sé** appena la prendi, e non occupa una tasca. Dura **12 stanze**: quanta luce ti resta lo dice la fiamma in basso a sinistra.',
-        'Se ne trovi un\'altra mentre una brucia, la prendi lo stesso: aspetta alla cintura e si accende da sé quando la prima si spegne.',
+        '🔥 **La torcia si accende da sé** appena la prendi, e non occupa una tasca. Dura **12 stanze**: quanta luce ti resta e quante torce hai lo dicono la pagina dell\'eroe (tocca il livello, in basso) e lo zaino.',
+        'Se ne trovi un\'altra mentre una brucia, la prendi lo stesso: aspetta alla cintura e si accende da sé quando la prima si spegne. Quelle comprate dalla **guaritrice** aspettano alla cintura, e giù se ne accende una.',
       ] },
       { titolo: 'La roba e i mercanti', righe: [
         'Quello che hai addosso, quello che hai in tasca e le gemme **te li porti dietro**: alla discesa dopo li ritrovi. Anche uscendo a metà.',

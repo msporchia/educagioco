@@ -106,25 +106,17 @@ la roba con livello e rarità: [rarita.md](rarita.md).
 - **I tratti valgono pieni anche a sinistra**: la luce di una lama è la
   stessa copia dell'oggetto.
 - **Con un'arma a due mani la casella di sinistra porta la stessa arma in
-  ombra e girata**: vuota direbbe che ci si può mettere qualcosa. In scena
-  l'arma a due mani sta **di lato, come quella a una mano** (`dati/impugna.js`):
-  in mezzo davanti al corpo copriva la faccia (l'utente, 14 ottobre, con l'arco);
-  provata la copia sbiadita dall'altro lato: si vedevano due armi.
-- **Le figure delle armi guardano tutte nello stesso verso**: in mano
-  all'eroe la lama sta in su e l'impugnatura in basso, le armi da tiro con la
-  pancia (dell'arco, dell'arco della balestra) a destra, dove guarda l'eroe;
-  `scena3d/eroe.js` le specchia soltanto quando l'eroe guarda a
-  sinistra. Una figura girata male sul foglio si raddrizza **nel foglietto**
+  ombra e girata**: vuota direbbe che ci si può mettere qualcosa.
+- **Le figure delle armi guardano tutte nello stesso verso**: la lama in su e
+  l'impugnatura in basso, le armi da tiro con la pancia (dell'arco, dell'arco
+  della balestra) a destra. Una figura girata male sul foglio si raddrizza **nel foglietto**
   (`specchia` sul pezzo: la balestra), mai con una trasformazione nel codice; e
   un vuoto chiuso (fra l'arco e la corda, l'occhio di una chiave, un anello)
   si toglie col `buchi` del pezzo (`strumenti/sprite/FORMATO.md`). Mazza e
   martello hanno la loro figura: erano il pugnale 0x72.
-- **Un arco si tiene al fianco, non davanti alla faccia** (l'utente, 14 ottobre: la balestra era «tenuta male»): `dati/impugna.js` dice
-  dove sta ogni arma in mano, una volta per il campo (`scena3d/eroe.js`) e per il ritratto (`viste/Armato.vue`). Gli archi stanno in piedi
-  accanto al corpo, con la corda appena fuori dal viso e il centro all'altezza della mano; l'arco corto è alto 17 pixel sui 28
-  dell'eroe, il lungo 24 (la `misura` nel foglietto). La balestra (`tiene: 'orizzontale'`) è girata nel foglietto, piccola (12×10) e
-  bassa, davanti al petto: più su copre gli occhi, e l'eroe è quasi tutta testa. La spada e il resto non sono cambiati. Lo scontro non
-  disegna l'arma dell'eroe. La tavola per giudicarlo: `node strumenti/sotterraneo-armi.mjs`; il test `unita/sotterraneo-impugna`.
+- **L'arma in mano la porta il modello 3D dell'eroe** (`scena3d/eroe3d.js`, [roba-3d.md](roba-3d.md)), in scena e nella foto del
+  ritratto: non c'è più un'arma dipinta posata accanto allo sprite (l'impugnatura 2D, `dati/impugna.js`, è stata tolta con lo sprite
+  dell'eroe). La tavola per guardarla: `node strumenti/sotterraneo-armi.mjs`.
 - **Dove va un'arma raccolta lo decide `postoDellArma`**, provando le
   sistemazioni. Un'arma a due mani sfratta la sinistra, e quello che c'era
   torna in tasca, o per terra se le tasche sono piene.
@@ -173,37 +165,10 @@ non è mai la più conveniente (`guastiDelleCose`). Le chiavi `pozione-piccola`,
 Il resto (il rapporto fra una spada e le pozioni, quando arrivano le grandi, l'ampolla della vita, il tetto di otto, la scelta di quale bere, il
 giocatore finto): [pozioni.md](pozioni.md).
 
-## La torcia si accende da sé, e finisce
+## La torcia
 
-- **Accenderla non è una scelta**: si accende appena presa e non entra nello
-  zaino. Brucia sulla corsa (`corsa.torciaResta`), e le altre aspettano alla
-  cintura (`corsa.torceInScorta`) e si accendono da sé. **La scorta non ha
-  tetto**: provata la torcia per tutta la discesa, e ogni altra torcia
-  diventava roba da rifiutare.
-- **Dura dodici stanze** (`STANZE_TORCIA`). **L'unità è la stanza, non il
-  tempo** (e nemmeno i passi dell'orologio del gioco, [orologio.md](orologio.md)): sotto una domanda l'orologio è fermo, e un conto che scorre farebbe
-  pagare la luce a chi legge piano. Scendere e risvegliarsi non consumano.
-  Dodici è misurato: chi tocca tutto entra in 34 stanze nel pozzo, 36 nella
-  grotta, 45 nella scala sommersa, 44 nella miniera, 83 nella botola — undici o
-  dodici per piano. Una torcia vale un piano.
-- **Costa 5 gemme**, appena sotto la boccetta: un piano di luce è una
-  comodità, non la sopravvivenza. Il prezzo è l'unica scala su cui sta tutto
-  il catalogo.
-- **Cosa fa vedere la torcia**: allunga il cono di luce davanti all'eroe
-  (6,2 celle contro 3,2) e allarga l'alone attorno; la stanza non si accende
-  tutta e dietro c'è sempre ombra; all'ultima stanza il cono si accorcia
-  ([luce.md](luce.md)).
-- **Quanta ne resta si vede** nella scena (il buio che si stringe), nello
-  zaino per esteso («ancora 7 stanze, e 1 alla cintura»), e agli sgoccioli,
-  solo senza scorta, una riga in mezzo al campo («Torcia sta per finire:
-  ancora due stanze»). Senza, il buio arriverebbe come un guasto. Nella
-  barra in basso non c'è più: il globo di destra è l'esperienza
-  ([barra.md](barra.md)).
-- **I pezzi ⏳ allungano la torcia**: una torcia nuova dura le sue dodici
-  stanze più quelle dei pezzi (`stanzeTorcia`).
-- Una sosta vecchia con `torcia: true` si riprende con una torcia piena.
-- **Comprata sopra aspetta alla cintura**, e scendendo se ne accende una:
-  sopra non c'è buio da rischiarare.
+Si accende da sé, dura dodici stanze, costa cinque gemme, aspetta alla cintura, si vede nella pagina dell'eroe e
+nello zaino, e se ne trovano: [luce.md](luce.md#la-torcia-si-accende-da-sé-e-finisce).
 
 ## I mercanti e la bottega
 

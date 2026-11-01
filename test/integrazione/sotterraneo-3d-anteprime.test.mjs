@@ -3,12 +3,12 @@
 
    Lo zaino mostra la roba coi modelli 3D (la spada,
    lo scudo, l'armatura sul manichino) e il ritratto è l'eroe 3D vestito;
-   anelli e collane hanno la loro figura 3D dove c'è (docs/sotterraneo/roba-3d.md), le pozioni restano sprite. Le caselle compaiono subito e
-   le anteprime arrivano poco dopo, tutte; i `data-` di sempre restano.
+   anelli e collane hanno la loro figura 3D dove c'è (docs/sotterraneo/roba-3d.md), e le pozioni anche. Le caselle compaiono subito e
+   le anteprime arrivano poco dopo, tutte; finché non ci sono il posto resta
+   vuoto, senza sprite sotto, e i `data-` di sempre restano.
    Nella fila dei turni l'eroe e i mostri sono 3D (anche la pianta, dal
    22 ottobre: nessuna specie resta sprite); una chiave senza modello vale
-   null, e la vista tiene lo sprite. Con `#icone2d` niente anteprime
-   (il sotterraneo in 2D, che non le aveva, è stato tolto). `--scatti`: lo zaino e la fila.
+   null. `--scatti`: lo zaino e la fila.
    `node test/esegui.mjs sotterraneo-3d-anteprime`
    tempo: 90
    ═══════════════════════════════════════════════════════════════════ */
@@ -38,7 +38,7 @@ await entra('sotterraneo=1&eroe=cavaliere&sotterraneo=roba&seme=11&dpr=1')
   const t0 = Date.now()
   await page.locator('[data-azione="zaino"]').first().click()
   await page.waitForSelector('[data-casella="mano"]', { timeout: 5000 })
-  // le caselle ci sono subito, con lo sprite; poi arrivano le anteprime
+  // le caselle ci sono subito, vuote; poi arrivano le anteprime
   await page.waitForFunction(() => document.querySelectorAll('.sot-armato[data-anteprima="3d"]').length > 0
     && document.querySelector('[data-casella="mano"] [data-anteprima="3d"]'), null, { timeout: 15000 })
   nota(`le anteprime dello zaino in ${Date.now() - t0} ms (SwiftShader)`)
@@ -47,8 +47,8 @@ await entra('sotterraneo=1&eroe=cavaliere&sotterraneo=roba&seme=11&dpr=1')
   controlla('lo scudo anche', chiavi.some(k => k.startsWith('scudo:')))
   controlla('e l\'armatura, su chi la porta', chiavi.some(k => /^armatura:\w+:\d:cavaliere:/.test(k)))
   const gioielli = await page.locator('[data-casella="dito"] [data-anteprima-chiave], [data-casella="collo"] [data-anteprima-chiave]').evaluateAll(es => es.map(e => e.dataset.anteprimaChiave))
-  controlla('anelli e collane: la figura 3D o lo sprite', gioielli.every(k => k.startsWith('gioiello:')), gioielli.join(' '))
-  controlla('il ritratto 3D lascia sotto lo sprite coi suoi segni', await conta('.sot-armato[data-anteprima="3d"] [data-in-mano]') === 1)
+  controlla('anelli e collane: la figura 3D', gioielli.every(k => k.startsWith('gioiello:')), gioielli.join(' '))
+  controlla('il ritratto 3D tiene i segni della roba in mano', await conta('.sot-armato[data-anteprima="3d"] [data-in-mano]') === 1)
   const stato = await page.evaluate(() => window.__anteprime3d.stato())
   controlla('un renderer solo', stato.renderer === 1 && !stato.rotto, JSON.stringify(stato))
   await scatto(page, 'sotterraneo-3d-anteprime-zaino')
@@ -70,17 +70,10 @@ await entra('sotterraneo=1&eroe=elfa&sotterraneo=branco&mostri=3&tipo=lupo,piant
   // la pianta ha il suo modello (poc/mostri-3d/varie.js): anche lei 3D nella fila
   await page.waitForFunction(() => [...document.querySelectorAll('[data-fila] [data-anteprima-chiave]')].some(e => e.dataset.anteprimaChiave.startsWith('mostro:pianta')), null, { timeout: 15000 })
     .then(() => controlla('la pianta ha il suo modello nella fila', true), () => controlla('la pianta ha il suo modello nella fila', false))
-  // il ripiego: una specie che non c'è non ha immagine (null), e la vista terrebbe lo sprite
+  // una specie che non c'è non ha immagine (null)
   uguale('una chiave senza modello vale null', await page.evaluate(() => window.__anteprime3d.chiedi('mostro:nessuno:comune').then(c => c)), null)
   await scatto(page, 'sotterraneo-3d-anteprime-fila')
 }
-
-/* ── #icone2d: niente anteprime ── */
-await entra('sotterraneo=1&eroe=cavaliere&sotterraneo=roba&seme=11&dpr=1&icone2d')
-await page.locator('[data-azione="zaino"]').first().click()
-await page.waitForSelector('[data-casella="mano"]', { timeout: 5000 })
-await attendi(page, 1500)
-uguale('con #icone2d nessuna anteprima', await conta('[data-anteprima]'), 0)
 
 uguale('nessun errore', errori.join(' · '), '')
 await browser.close()

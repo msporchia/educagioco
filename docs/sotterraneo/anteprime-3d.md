@@ -26,17 +26,19 @@ sua chiave e la dà alla vista come la tela di prima (`Quadro3d` copia un'immagi
 | file | cosa tiene |
 |---|---|
 | `scena3d/anteprime3d-pura.js` | senza three: `pezzo3dDi` (oggetto → figura, ripiego, rarità, elemento: [roba-3d.md](roba-3d.md)), `MODELLO_DI` (il ripiego della collezione), `dotazioneDi`, `pregioDi`, le chiavi, `leggiChiave`, la coda `creaCoda` |
-| `scena3d/roba3d.js` | la figura costruita dal modulo della sua famiglia, o il ripiego, con l'alone della rarità ([roba-3d.md](roba-3d.md)) |
+| `scena3d/roba3d.js` | la figura costruita dal modulo della sua famiglia, o il ripiego, con l'alone se è leggendaria ([roba-3d.md](roba-3d.md)) |
 | `scena3d/anteprime3d.js` | il renderer, la scena di posa, le inquadrature, `creaAnteprime3d` |
 | `scena3d/eroe3d.js` | `vestiEroe(g, roba)` e `vestiDotazione(g, d)`: l'eroe in scena e quello delle anteprime si vestono con la stessa funzione |
 | `viste/anteprima3d.js` | `creaFornitore` (le foto fatte, il servizio per il resto), `fornisciAnteprime3d` (Gioco.vue), `usaAnteprima(chiave)`: un ref null finché l'immagine non c'è |
 | `dati/anteprime-fatte.js` | GENERATO da `npm run anteprime sotterraneo`: le foto, `SENZA` (le chiavi senza modello), le due firme |
 | `viste/Quadro3d.vue` | la tela che mostra un'anteprima |
-| `viste/Icona.vue` | `tre` (la chiave) o `cosa3d` (la cosa: la chiave si ricava), `lato`, `riduci` |
-| `viste/Armato.vue` | `in3d`, `corpo`: il ritratto 3D sopra lo sprite |
+| `viste/Icona.vue` | `tre` (la chiave) o `cosa3d` (la cosa: la chiave si ricava), `lato`; lo sprite (`sprite`, `riduci`) solo senza chiave |
+| `viste/Armato.vue` | l'eroe vestito: `mano`, `mancina`, `corpo`, `testa` |
+| `viste/Ritratto.vue` · `viste/Grosso.vue` | la persona di sopra (`persona:`) · il grosso nella sua barra (`mostro:grosso:`), con la corona |
 
-Chi la usa: `Casella`, `Pannello`, `Confronto` (`cosa3d`), `Addosso`, `PaginaEroe`, `Eroi` (`in3d`), `FilaDeiTurni` (`tre`, con
-`chi`, `mano`, `mancina`, `corpo` dell'eroe che `viste/campo.js` aggiunge alla vista dello scontro).
+Chi la usa: `Casella`, `Pannello`, `Confronto`, `ScegliPozione`, `Zaino` (la torcia), `Tesori`, `Eroi` (la roba addosso), il diario (il
+regalo, il mostro o chi si è perso), gli avvisi della roba trovata e la festa del leggendario (`cosa3d`); `Addosso`, `PaginaEroe`, `Eroi`
+(`Armato`); `FilaDeiTurni` (`tre`, con `chi`, `mano`, `mancina`, `corpo` dell'eroe che `viste/campo.js` aggiunge alla vista dello scontro).
 
 ## Le chiavi e le inquadrature
 
@@ -45,9 +47,9 @@ La chiave dice la figura e l'aspetto, non l'oggetto: due spade con la stessa fig
 
 | chiave | cosa si vede | pixel |
 |---|---|---|
-| `arma:<gettone>` | l'arma (la figura, o il ripiego) in diagonale, la punta in alto a destra; l'arco girato di lato perché si veda la curva; l'alone fermo a 1,3 s | 128² |
+| `arma:<gettone>` | l'arma (la figura, o il ripiego) in diagonale, la punta in alto a destra; l'arco girato di lato perché si veda la curva; la balestra con la bocca in alto a destra, vista da sopra e un poco di fianco perché si veda la croce dell'arco di piatto ([roba-3d.md](roba-3d.md#la-balestra-si-tiene-a-modo-suo)); l'alone fermo a 1,3 s | 128² |
 | `scudo:<gettone>` · `gioiello:<gettone>` | lo scudo, la collana o l'anello di fronte, appena girato | 128² |
-| `copricapo:<modello>:<rarità>` | il copricapo da solo su una testa finta, di tre quarti, con l'alone della rarità ([elmo.md](elmo.md)) | 128² |
+| `copricapo:<modello>:<rarità>` | il copricapo da solo su una testa finta, di tre quarti, con l'alone se è leggendario ([elmo.md](elmo.md)) | 128² |
 | `consumabile:<chiave>:<rarità>` | la pozione, la torcia, la chiave o la pergamena di fronte (l'alone solo ai rarissimi) | 128² |
 | `armatura:<tipo>:<pregio>:<eroe>:<corpo>` | l'armatura su un manichino: l'eroe di adesso senza testa e senza armi (la veste della figura se il modulo `vesti` c'è); `<corpo>` = `<tipo>.<pregio>.<figura>.<rarità>.<elemento>` | 128² |
 | `eroe:<chi>:<destra>:<sinistra>:<corpo>:<collo>` (e `:<copricapo>` in coda, solo se ce l'ha) | l'eroe intero nella guardia, con le armi, l'armatura, la collana e il copricapo | 150×176 |
@@ -62,15 +64,18 @@ La chiave dice la figura e l'aspetto, non l'oggetto: due spade con la stessa fig
 - La luce è quella delle torce: un'emisferica bruna, un fuoco caldo davanti a sinistra, un filo freddo da dietro che stacca il
   contorno; tono ACES come la scena.
 
-## Lo sprite non sparisce mai
+## Una cosa con un modello si mostra solo con la sua foto
 
-- **Finché l'anteprima non è pronta si vede lo sprite**, e poi si scambia. Le caselle compaiono subito.
-- **Dove il modello non c'è resta lo sprite**: i tre gioielli di base senza figura dei fogli ([roba-3d.md](roba-3d.md)), le sei specie senza modello (pianta,
-  piranha, golem di muschio, scorpione, mostro viola, pipistrello occhio). Una chiave senza modello, un modello che si rompe, un
-  WebGL che non c'è o un contesto perso valgono null: niente riquadri vuoti.
-- **Il ritratto tiene sotto lo sprite** coi suoi `data-in-mano`/`data-addosso` (nascosto con `visibility`): i test e i `data-` di
-  sempre non cambiano. Nella fila il rimpicciolimento dello sprite (`riduci`) non tocca l'anteprima, già della misura giusta.
-- `#icone2d` nell'indirizzo le spegne tutte; `#sprite` spegne i mostri e `#eroe2d` l'eroe, come in scena.
+L'utente, 31 ottobre 2026: il ripiego di un disegno 3D è il disegno 2D fatto dal 3D, non uno dipinto a parte.
+
+- **Finché la foto non c'è il posto resta vuoto della sua misura**, senza sprite sotto (`data-anteprima="attesa"`, poi `"3d"`). Le
+  caselle compaiono subito; la foto fatta arriva al primo decodificarsi, quella viva (l'eroe vestito) dal servizio.
+- **Lo sprite dipinto resta solo dove una chiave non c'è**: oggi i tre gioielli di base senza figura (`amuleto-rosso`, `medaglione`,
+  `amuleto-osso`: [roba-3d.md](roba-3d.md)). Ogni specie, grosso e persona ha il suo modello (`SENZA` è vuoto).
+- **Un modello che si rompe o un contesto perso valgono null**: il posto resta vuoto, mai uno sprite. Il sotterraneo si apre solo con
+  WebGL 2 (`Entrata.vue`), quindi un ripiego per «niente WebGL» non serve.
+- **Il ritratto tiene i segni della roba** (`data-in-mano`, `data-addosso`, `data-in-braccio`) su elementi vuoti, per le prove.
+- I cheat `#icone2d`, `#sprite` ed `#eroe2d` non ci sono più; per misurare la scena senza modelli dei mostri c'è `&spegni=mostri3d`.
 
 ## Quanto costa
 
@@ -111,6 +116,7 @@ npm run build && node strumenti/tavola-anteprime.mjs          # tutte, in tmp/sc
 node strumenti/tavola-anteprime.mjs --solo eroi --eroe mago    # roba, eroi, mostri; l'armatura sul mago
 node strumenti/tavola-anteprime.mjs --solo rarita              # le figure e gli aloni: ogni base comune, magica, rara, e i pezzi col nome
 node strumenti/tavola-anteprime.mjs --chiavi arma:spada-28.spada-lunga.l.fuoco,busto:nano:-:-:-:-
+node strumenti/tavola-anteprime.mjs --chiavi eroe:elfa:-:arco-07.balestra.c.ombra:-:- --zoom 4   # da vicino: l'arma in mano
 node strumenti/scatta-app.mjs 'sotterraneo=1&eroe=cavaliere&sotterraneo=roba&dpr=1' --dist --aspetta 6000 --tocca '[data-azione="zaino"]'
 node strumenti/scatta-app.mjs 'sotterraneo=mondo&eroe=cavaliere&bottega=armaiolo&livello=12&roba=rara&gemme=800&dpr=1' --dist --aspetta 8000
 ```
@@ -125,6 +131,5 @@ aperto, quante in coda, e `prima`/`ultima` (il primo chiedere e l'ultima pronta)
 
 Nei test: `unita/sotterraneo-anteprime-3d` (il ripiego copre ogni arma e scudo del gioco, il pezzo 3D con la figura, le chiavi, null dove resta lo
 sprite, la lettura delle chiavi, i mostri allo stesso modello della scena, la coda), `integrazione/sotterraneo-3d-anteprime` (lo
-zaino coi modelli e gli sprite dove servono, un renderer solo, la pagina dell'eroe, la fila con l'eroe a mezzo busto e la pianta
-sprite, e `#icone2d` senza anteprime). Bersagli: `[data-anteprima="3d"]` con `[data-anteprima-chiave]` sull'icona, e
-`.sot-armato[data-anteprima="3d"]` sul ritratto.
+zaino coi modelli, un renderer solo, la pagina dell'eroe, la fila con l'eroe a mezzo busto e la pianta). Bersagli: `[data-anteprima="3d"]`
+(`"attesa"` finché la foto non c'è) con `[data-anteprima-chiave]` sull'icona, e `.sot-armato[data-anteprima="3d"]` sul ritratto.

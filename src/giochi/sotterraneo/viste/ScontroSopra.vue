@@ -32,12 +32,12 @@ defineEmits(['scegli', 'bevi', 'bevi-energia', 'scappa', 'risposto', 'risveglio'
       <small>Un punto per l'eroe e uno per le abilità</small>
     </div>
     <div v-else-if="festa && festa.che === 'leggendario'" class="sot-festa sot-festa-leggendario" data-leggendario :data-cosa="festa.cosa">
-      <Icona :sprite="festa.sprite" :em="festa.em" :scala="3" :emAlto="34" />
+      <Icona :sprite="festa.sprite" :em="festa.em" :scala="3" :emAlto="34" :cosa3d="festa.cosa ? { chiave: festa.cosa } : null" :lato="56" />
       <b>{{ festa.nome }}</b>
       <i>{{ festa.storia }}</i>
     </div>
     <p v-if="avviso" class="sot-avviso" :class="avviso.rarita ? 'sot-r-' + avviso.rarita : null">
-      <Icona v-if="avviso.cosa" :sprite="avviso.sprite" :em="avviso.em" :emAlto="20" />
+      <Icona v-if="avviso.cosa" :sprite="avviso.sprite" :em="avviso.em" :emAlto="20" :cosa3d="{ chiave: avviso.cosa }" />
       {{ avviso.testo }}
     </p>
 

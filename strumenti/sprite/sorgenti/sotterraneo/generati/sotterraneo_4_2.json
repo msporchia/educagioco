@@ -10,27 +10,21 @@
   "alone": 128,
   "cella": [1, 1],
   "famiglie": {
-    "cripta-porta": "figura",
-    "cripta-mercante": "figura"
+    "cripta-porta": "figura"
   },
   "trasforma": {
     "cripta-porta": { "giri": 1 },
     "cripta-fianco": { "giri": 1, "specchia": false },
-    "cripta-scala": { "giri": 1, "specchia": false },
-    "cripta-mercante": { "giri": 1 }
+    "cripta-scala": { "giri": 1, "specchia": false }
   },
   "sprite": {
     "cripta-porta-semplice": { "da": [30, 113], "cella": [128, 179], "misura": [16, 22] },
     "cripta-porta-ferro": { "da": [191, 113], "cella": [133, 179], "misura": [16, 22] },
     "cripta-porta-chiara": { "da": [693, 113], "cella": [134, 179], "misura": [16, 22] },
-    "cripta-porta-aperta": { "da": [859, 113], "cella": [133, 179], "misura": [16, 22] },
     "cripta-fianco-semplice": { "da": [57, 346], "cella": [70, 176], "misura": [10, 20] },
     "cripta-fianco-ferro": { "da": [223, 346], "cella": [72, 176], "misura": [10, 20] },
     "cripta-fianco-teschio": { "da": [553, 346], "cella": [71, 176], "misura": [10, 20] },
     "cripta-fianco-chiara": { "da": [722, 346], "cella": [70, 176], "misura": [10, 20] },
-    "cripta-fianco-aperta": { "da": [889, 346], "cella": [69, 176], "misura": [10, 20] },
-    "cripta-scala-chiusa": { "da": [33, 623], "cella": [162, 153], "misura": [16, 15] },
-    "cripta-mercante-0": { "da": [476, 623], "cella": [238, 179], "misura": [28, 21] },
-    "cripta-mercante-1": { "da": [760, 623], "cella": [234, 179], "misura": [28, 21] }
+    "cripta-scala-chiusa": { "da": [33, 623], "cella": [162, 153], "misura": [16, 15] }
   }
 }

@@ -1,5 +1,5 @@
 {
-  "__": "Il foglietto di sotterraneo_6_derivati.png: i pezzi dell'inferno costruiti in codice da `strumenti/sprite/inferno.py` (il PNG si rifà col comando, non si tocca): le porte chiara e aperta, i fianchi, la scala chiusa e la fontana asciutta. Dalla scena sotterraneo_6.png e dalla tavola arredo-inferno.png.",
+  "__": "Il foglietto di sotterraneo_6_derivati.png: i pezzi dell'inferno costruiti in codice da `strumenti/sprite/inferno.py` (il PNG si rifà col comando, non si tocca): la porta chiara, i fianchi e la scala chiusa. Dalla scena sotterraneo_6.png e dalla tavola arredo-inferno.png.",
   "fondo": "trasparente",
   "cella": [
     1,
@@ -8,8 +8,7 @@
   "famiglie": {
     "inferno-porta": "figura",
     "inferno-fianco": "figura",
-    "inferno-scala": "figura",
-    "inferno-fontana": "figura"
+    "inferno-scala": "figura"
   },
   "trasforma": {
     "inferno-porta": {
@@ -22,13 +21,10 @@
     "inferno-scala": {
       "giri": 1,
       "specchia": false
-    },
-    "inferno-fontana": {
-      "giri": 1
     }
   },
   "sprite": {
-    "inferno-fianco-aperta": {
+    "inferno-fianco-bella": {
       "da": [
         0,
         0
@@ -38,7 +34,7 @@
         20
       ]
     },
-    "inferno-fianco-bella": {
+    "inferno-fianco-chiara": {
       "da": [
         7,
         0
@@ -48,19 +44,9 @@
         20
       ]
     },
-    "inferno-fianco-chiara": {
-      "da": [
-        14,
-        0
-      ],
-      "cella": [
-        6,
-        20
-      ]
-    },
     "inferno-fianco-ferro": {
       "da": [
-        21,
+        14,
         0
       ],
       "cella": [
@@ -70,7 +56,7 @@
     },
     "inferno-fianco-semplice": {
       "da": [
-        28,
+        21,
         0
       ],
       "cella": [
@@ -78,29 +64,9 @@
         20
       ]
     },
-    "inferno-fontana-asciutta": {
-      "da": [
-        35,
-        0
-      ],
-      "cella": [
-        14,
-        16
-      ]
-    },
-    "inferno-porta-aperta": {
-      "da": [
-        50,
-        0
-      ],
-      "cella": [
-        17,
-        23
-      ]
-    },
     "inferno-porta-chiara": {
       "da": [
-        68,
+        28,
         0
       ],
       "cella": [
@@ -110,7 +76,7 @@
     },
     "inferno-scala-chiusa": {
       "da": [
-        86,
+        46,
         0
       ],
       "cella": [

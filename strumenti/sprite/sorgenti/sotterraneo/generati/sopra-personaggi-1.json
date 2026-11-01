@@ -5,7 +5,6 @@
     "generatore": "ChatGPT, 13 ottobre 2026",
     "testo": "una griglia di personaggi fantasy in pixel art su fondo magenta, due pose ciascuno (fermo, e mentre saluta con la mano): il fabbro (grembiule, martello), la guaritrice (cappuccio verde, boccette), il mercante (cappello viola, sacco), il mugnaio (berretto bianco, sacco di farina), l'eremita (saio grigio, bastone), la guardia (elmo col pennacchio, lancia), il pescatore (cappello di paglia, canna), il minatore (casco con la lampada, piccone). Il testo esatto non e' stato conservato (la chat non lascia un file): e' la descrizione dei prompt 4, 5 e 7 della scheda con la posa «saluta» al posto di «parla»"
   },
-  "nitido": true,
   "fondo": [
     255,
     0,

@@ -52,8 +52,8 @@ export function guastiDelleFigure() {
 }
 
 /* L'arco degli arcieri: nel foglio lo scheletro è a mani vuote, e l'arco è quello dipinto del
-   sotterraneo (`arco-corto`, il pezzo grande), in mano davanti al corpo come l'eroe là
-   (sotterraneo/dati/impugna.js): un punto fisso, non un aggancio per fotogramma. Le armi
+   sotterraneo (`arco-corto`, il pezzo grande), in mano davanti al corpo: un punto fisso,
+   non un aggancio per fotogramma. Le armi
    del foglio guardano a destra; `specchia` le gira. `tira` (0-1) è il rinculo del colpo. Finché
    l'immagine non è pronta, un arco disegnato. (x, piede) è il piede della figura, `lw`×`lh` la
    sua misura a schermo. */

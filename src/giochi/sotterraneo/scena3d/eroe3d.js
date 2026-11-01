@@ -1,6 +1,6 @@
-// L'eroe come modello 3D (in prova): al posto dello sprite, uno dei quattro personaggi di `eroi3d/` (cavaliere, elfa, mago, nano) con
+// L'eroe come modello 3D: uno dei quattro personaggi di `eroi3d/` (cavaliere, elfa, mago, nano) con
 // le armi dell'inventario in mano. `disegnaEroe` (eroe.js) gli passa lo stato (dove sta, dove guarda, se cammina, se assalta, il lampo
-// della ferita o della cura, la trasparenza del portale) e lui muove i perni. Spento con `#eroe2d` nell'indirizzo: torna lo sprite.
+// della ferita o della cura, la trasparenza del portale) e lui muove i perni. Non c'è uno sprite di ripiego (docs/sotterraneo/anteprime-3d.md).
 import { Vector3, Color, Group, Box3 } from 'three'
 import { creaEroe, posaMarcia, posaColpo, posaGuardia, CHIAVI } from './eroi3d/eroi.js'
 import { equipaggia } from './eroi3d/armi.js'
@@ -11,8 +11,6 @@ import { creaPezzo, vestiFigura, indossaGioiello } from './roba3d.js'
 import { studia, saldaTutto, osso, copiaMateriale, lampoFuso } from './salda3d.js'
 import { ACCESI } from './costanti.js'
 import { daSola, rifai } from './matrici.js'
-
-export const eroe3dAcceso = () => typeof location === 'undefined' || !/[#&?]eroe2d\b/.test(location.hash + location.search)
 
 // quanto è alto il personaggio rispetto allo sprite che sostituisce (le colonne dei sotterranei arrivano più o meno lì)
 const ALTEZZA_SPRITE = 0.72

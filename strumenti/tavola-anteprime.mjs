@@ -15,6 +15,7 @@
      node strumenti/tavola-anteprime.mjs --solo rarita        # ogni arma, scudo, gioiello e veste comune, magico, raro, i consumabili e i pezzi col nome
      node strumenti/tavola-anteprime.mjs --eroe mago --scala 2
      node strumenti/tavola-anteprime.mjs --chiavi arma:ascia-lava,busto:nano:accetta:scudo-nanico:-
+     node strumenti/tavola-anteprime.mjs --chiavi eroe:elfa:-:arco-07.balestra.c.ombra:-:- --zoom 4   # da vicino: foto 4 volte più grandi
 
    La tavola è tmp/scatti/<nome>.png (`--nome`, di difetto tavola-anteprime); `--aspetta 6000` i ms
    prima di chiedere (la discesa che si accende non entra nella misura).
@@ -37,7 +38,7 @@ const dist = resolve(QUI, '../dist/index.html')
 if (!existsSync(dist)) { console.error('manca dist/index.html: prima npm run build'); process.exit(1) }
 mkdirSync(SCATTI, { recursive: true })
 
-const eroe = opz('eroe', 'cavaliere'), solo = opz('solo', 'roba,eroi,mostri').split(','), scala = Number(opz('scala', 1))
+const eroe = opz('eroe', 'cavaliere'), solo = opz('solo', 'roba,eroi,mostri').split(','), zoom = Number(opz('zoom', 1)), scala = Number(opz('scala', zoom > 1 ? zoom * 1.5 : 1))
 const nome = opz('nome', 'tavola-anteprime')
 let voci = []
 if (opz('chiavi')) voci = opz('chiavi').split(',').map(k => ({ k, n: k }))
@@ -78,7 +79,7 @@ else {
 }
 
 const browser = await apriBrowser()
-const { page, errori } = await apriGioco(browser, { viewport: { width: 390, height: 844 }, hash: `sotterraneo=1&eroe=${eroe}&dpr=1&seme=11`,
+const { page, errori } = await apriGioco(browser, { viewport: { width: 390, height: 844 }, hash: `sotterraneo=1&eroe=${eroe}&dpr=1&seme=11${zoom > 1 ? `&anteprime-zoom=${zoom}` : ''}`,
                                                      attesa: null, indirizzo: `file://${dist}` })
 await page.waitForFunction(() => !!window.__anteprime3d, null, { timeout: 30000 })
 // la discesa si accende prima: la misura è quella di uno zaino aperto a scena già in piedi (`--aspetta`, ms)
@@ -86,7 +87,8 @@ await page.waitForTimeout(Number(opz('aspetta', 6000)))
 const chiavi = [...new Set(voci.map(v => v.k).filter(Boolean))]
 const esito = await page.evaluate(async ks => {
   const t0 = performance.now()
-  const urls = await Promise.all(ks.map(k => window.__anteprime3d.chiedi(k)))
+  // `viva`: sempre col renderer, anche le chiavi che il gioco ha già fotografate (`chiedi` darebbe la foto fatta, un'immagine e non i modelli di adesso)
+  const urls = await Promise.all(ks.map(k => window.__anteprime3d.viva(k)))
   const ms = performance.now() - t0
   // le anteprime sono tele di questa pagina: per la tavola diventano data:
   const dati = urls.map(u => (u ? u.toDataURL('image/png') : null))
@@ -96,7 +98,7 @@ const nulle = chiavi.filter(k => !esito.urls[k])
 console.log(JSON.stringify(esito.stato)); console.log(`${chiavi.length} anteprime in ${Math.round(esito.ms)} ms (${Math.round(esito.stato.ms)} ms a disegnarle, ${(esito.stato.ms / Math.max(1, esito.stato.disegnate)).toFixed(1)} ms l'una); null: ${nulle.length ? nulle.join(' ') : 'nessuna'}`)
 if (errori.length) console.log('errori: ' + errori.slice(0, 3).join(' · '))
 
-const lato = Math.round(110 * scala), colonne = 8
+const lato = Math.round(110 * scala), colonne = zoom > 1 ? 4 : 8
 const pagina = await browser.newPage({ viewport: { width: colonne * (lato + 6) + 6, height: 400 }, deviceScaleFactor: 1 })
 const html = `<html><head><meta charset="utf-8"></head><body style="margin:0;background:radial-gradient(#2d3047,#0c0e17);font:600 11px system-ui;color:#ddd">
   <div style="display:grid;grid-template-columns:repeat(${colonne},${lato}px);gap:6px;padding:6px">

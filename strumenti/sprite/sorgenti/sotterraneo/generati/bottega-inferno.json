@@ -1,6 +1,5 @@
 {
   "__": "Il foglietto di bottega-inferno.png: i pezzi usabili della «bottega infernale» (ChatGPT, 15 ottobre 2026, fondo magenta, a circa 6 px di foglio per pixel di gioco (7,6 la fucina, che a 4,6 occupava due celle)). Il foglio è una tavola di ambienti e di pezzi: qui si prendono solo i pezzi che stanno in una stanza (obelischi, torce, forche, fucina, banco, cristalli, il cerchio del pentagramma, la statua del demone, le rocce e gli alberi secchi dei relitti, le cose piccole per terra). Restano fuori gli ambienti interi (l'ingresso della caverna col teschio, il recinto, l'orto, la tenda, il ponte, la cascata di lava: sono scene, non pezzi), il cancello a spuntoni (sembra un passaggio), casse e botti (sembrano da prendere), le ossa e i teschi, il forziere pieno d'oro (il d'oro è solo delle missioni). Quali pezzi servono, e come: la voce inferno in dati/tessere.js, dati/orpelli.js e dati/relitti.js.",
-  "nitido": "scelti",
   "fondo": [
     255,
     0,
@@ -28,8 +27,7 @@
       "misura": [
         10,
         24
-      ],
-      "nitido": true
+      ]
     },
     "inferno-torcia-treppiede": {
       "da": [
@@ -43,20 +41,6 @@
       "misura": [
         6,
         18
-      ]
-    },
-    "inferno-stendardo-asta": {
-      "da": [
-        204,
-        568
-      ],
-      "cella": [
-        62,
-        145
-      ],
-      "misura": [
-        9,
-        23
       ]
     },
     "inferno-forca-spuntoni": {
@@ -85,8 +69,7 @@
       "misura": [
         12,
         22
-      ],
-      "nitido": true
+      ]
     },
     "inferno-forca-gancio": {
       "da": [
@@ -114,8 +97,7 @@
       "misura": [
         14,
         18
-      ],
-      "nitido": true
+      ]
     },
     "inferno-fornello": {
       "da": [
@@ -129,8 +111,7 @@
       "misura": [
         15,
         18
-      ],
-      "nitido": true
+      ]
     },
     "inferno-banco-attrezzi": {
       "da": [
@@ -144,8 +125,7 @@
       "misura": [
         20,
         15
-      ],
-      "nitido": true
+      ]
     },
     "inferno-incudine-ceppo": {
       "da": [
@@ -175,20 +155,6 @@
         8
       ]
     },
-    "inferno-tavolo-lungo": {
-      "da": [
-        614,
-        785
-      ],
-      "cella": [
-        148,
-        86
-      ],
-      "misura": [
-        24,
-        13
-      ]
-    },
     "inferno-cristalli-grigi": {
       "da": [
         784,
@@ -215,8 +181,7 @@
       "misura": [
         14,
         13
-      ],
-      "nitido": true
+      ]
     },
     "inferno-vasca-lava-catene": {
       "da": [
@@ -230,8 +195,7 @@
       "misura": [
         17,
         19
-      ],
-      "nitido": true
+      ]
     },
     "inferno-statua-demone-trono": {
       "da": [
@@ -245,8 +209,7 @@
       "misura": [
         10,
         23
-      ],
-      "nitido": true
+      ]
     },
     "inferno-cerchio-pentagramma": {
       "da": [
@@ -260,8 +223,7 @@
       "misura": [
         27,
         28
-      ],
-      "nitido": true
+      ]
     },
     "inferno-cristalli-roccia": {
       "da": [
@@ -275,8 +237,7 @@
       "misura": [
         15,
         17
-      ],
-      "nitido": true
+      ]
     },
     "inferno-obelisco-roccia": {
       "da": [
@@ -290,8 +251,7 @@
       "misura": [
         7,
         12
-      ],
-      "nitido": true
+      ]
     },
     "inferno-obelischi-roccia": {
       "da": [
@@ -305,8 +265,7 @@
       "misura": [
         15,
         15
-      ],
-      "nitido": true
+      ]
     },
     "inferno-albero-appeso": {
       "da": [
@@ -320,8 +279,7 @@
       "misura": [
         16,
         20
-      ],
-      "nitido": true
+      ]
     },
     "inferno-albero-secco": {
       "da": [
@@ -335,20 +293,6 @@
       "misura": [
         12,
         16
-      ]
-    },
-    "inferno-funghi-piccoli": {
-      "da": [
-        795,
-        1254
-      ],
-      "cella": [
-        79,
-        92
-      ],
-      "misura": [
-        12,
-        14
       ]
     },
     "inferno-croce-teschio": {

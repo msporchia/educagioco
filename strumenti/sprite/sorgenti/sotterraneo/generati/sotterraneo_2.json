@@ -6,7 +6,6 @@
     "generatore": "ChatGPT, 24 settembre 2026",
     "testo": "Disegna il foglio dei pezzi (uno sprite sheet) con cui si costruisce ESATTAMENTE la scena allegata: stesso scenario, stessa tavolozza, stessi muri, stessi pavimenti, stesso tetto, stessa luce piatta, stessa misura. La seconda immagine allegata è lo SCHEMA del foglio: dice dove va ogni pezzo e quanto è grande, e i suoi colori piatti non vanno copiati.\n\nIl foglio è 1536×1024 px su FONDO TRASPARENTE (PNG), con la griglia della scena: celle da 64×64 px, e ogni pixel del disegno è un quadrato pieno di 4×4 px. Ogni pezzo sta staccato dagli altri da almeno mezza cella di trasparente. Nessuna ombra sotto i pezzi, nessun bagliore attorno, nessuna cornice. NESSUNA PAROLA SCRITTA, NESSUN NUMERO.\n\nDall'alto in basso:\n\n1. I quattro fondi, ognuno un quadrato di 4×4 celle che si ripete SENZA CUCITURE — il bordo destro continua nel sinistro, quello di sotto in quello di sopra — senza bordi e senza linee di griglia: il pavimento delle stanze, quello dei corridoi, quello speciale, e il tetto com'è lontano dai bordi (senza il bordo chiaro e senza i sassi che lo accompagnano). A destra: due scale che scendono, una aperta e una chiusa da una grata di ferro col lucchetto; e due fontanelle alte una cella e mezza, una piena d'acqua e una asciutta, con la vasca vuota e crepata.\n\n2. Le facce del muro, alte una cella col loro coronamento: una fila lunga sei celle che si ripete senza cuciture; una fila lunga due celle che finisce ai due capi con uno spigolo di pietre squadrate; una faccia sola, larga una cella, con i due spigoli. Poi sei facce di una cella che si mettono in fila con le altre: con una torcia accesa nel suo sostegno, con una grata di ferro, con la pietra crepata, e le tre della riga «Sui muri» dello scenario.\n\n3. Due pezzi di sotterraneo interi, disegnati come nella scena. La stanzetta, 5×4 celle: il tetto tutto intorno, la fila di facce in alto, sotto una fila di pavimento. Il pilastro, 5×4 celle: un blocco di roccia largo tre celle in mezzo al pavimento, col tetto e il bordo chiaro sopra e ai lati, e sotto la sua fila di facce. Accanto, le porte: sei porte ad arco, ognuna una cella di faccia del muro con la porta dentro e l'arco che sale di mezza cella sopra il coronamento — semplice; rinforzata di ferro; ricca, con la cornice e le borchie d'oro; minacciosa, con un piccolo teschio sopra l'arco; chiara e accogliente; e la stessa porta aperta, che si vede aperta: l'anta girata contro lo stipite, e dentro l'arco il buio del passaggio. Sotto, le stesse sei come stanno in un muro laterale: viste da sopra, di taglio — l'anta è una tavola stretta in verticale in mezzo alla cella, trasparente attorno.\n\n4. Il mercante: un incappucciato dietro il suo banchetto, largo e alto una cella e mezza, in due pose (fermo, e che alza la mano per salutare). Poi l'arredo del posto, ogni pezzo da solo: prima quello che c'è nella scena allegata, uno per tipo, poi altri a tua scelta fino a sette pezzi; fissi, grandi da una a due celle.\n\n5. Dodici cose per terra, ognuna dentro una cella e piatta sul pavimento: due crepe, una pozzanghera, dei sassolini, una ragnatela per l'angolo in alto a sinistra e la stessa per l'angolo in alto a destra, e sei dalla riga «Per terra» dello scenario. Niente che si possa scambiare per una cosa da raccogliere.\n\nSCENARIO: LE CANTINE\nAtmosfera: la cantina sotto un vecchio castello, calda e un po' polverosa: il primo posto in cui si scende. Non fa paura, incuriosisce.\nTavolozza: mattoni bruno-rossicci, pietra grigio-beige, legno scuro, un filo di verde muschio.\nIl tetto: terra battuta bruno scura, quasi nera, con qualche sasso e qualche radice.\nLa faccia del muro: mattoni bruno-rossicci irregolari, qualcuno più chiaro o scheggiato; il coronamento è una fila di pietre grigio-beige.\nIl pavimento delle stanze: lastroni di pietra grigio-beige di misure diverse (due celle per due, una per due, una per una), con le fughe scure di un pixel.\nIl pavimento dei corridoi: mattoncini bruno chiaro a spina di pesce.\nIl pavimento speciale: un mosaico di tessere ocra e azzurre a cerchi.\nLe porte: quercia scura con le borchie di ferro.\nSui muri: il muschio che cola, un arco di mattoni murato, una mensola di legno vuota.\nPer terra: paglia, colature di cera, chiazze di muschio, schegge di mattone, polvere, una radice che spunta.\nL'arredo del posto: grandi botti coricate sul cavalletto, scaffali di legno vuoti, un tavolaccio con la panca, una pila di legna, una vecchia macina di pietra."
   },
-  "nitido": "scelti",
   "fondo": "trasparente",
   "alone": 128,
   "cella": [
@@ -14,9 +13,7 @@
     1
   ],
   "famiglie": {
-    "cantine-porta": "figura",
-    "cantine-mercante": "figura",
-    "cantine-fontana": "figura"
+    "cantine-porta": "figura"
   },
   "trasforma": {
     "cantine-porta": {
@@ -29,12 +26,6 @@
     "cantine-scala": {
       "giri": 1,
       "specchia": false
-    },
-    "cantine-fontana": {
-      "giri": 1
-    },
-    "cantine-mercante": {
-      "giri": 1
     }
   },
   "sprite": {
@@ -77,20 +68,6 @@
       ],
       "misura": [
         16,
-        24
-      ]
-    },
-    "cantine-porta-aperta": {
-      "da": [
-        935,
-        644
-      ],
-      "cella": [
-        67,
-        97
-      ],
-      "misura": [
-        18,
         24
       ]
     },
@@ -150,20 +127,6 @@
         16
       ]
     },
-    "cantine-fianco-aperta": {
-      "da": [
-        942,
-        787
-      ],
-      "cella": [
-        45,
-        81
-      ],
-      "misura": [
-        12,
-        16
-      ]
-    },
     "cantine-scala-aperta": {
       "da": [
         693,
@@ -192,62 +155,6 @@
         19
       ]
     },
-    "cantine-fontana-piena": {
-      "da": [
-        873,
-        177
-      ],
-      "cella": [
-        54,
-        85
-      ],
-      "misura": [
-        14,
-        22
-      ]
-    },
-    "cantine-fontana-asciutta": {
-      "da": [
-        952,
-        179
-      ],
-      "cella": [
-        56,
-        85
-      ],
-      "misura": [
-        14,
-        22
-      ]
-    },
-    "cantine-mercante-0": {
-      "da": [
-        18,
-        988
-      ],
-      "cella": [
-        97,
-        109
-      ],
-      "misura": [
-        24,
-        27
-      ]
-    },
-    "cantine-mercante-1": {
-      "da": [
-        138,
-        984
-      ],
-      "cella": [
-        100,
-        113
-      ],
-      "misura": [
-        25,
-        28
-      ]
-    },
     "cantine-botte": {
       "da": [
         268,
@@ -260,8 +167,7 @@
       "misura": [
         26,
         19
-      ],
-      "nitido": true
+      ]
     },
     "cantine-scaffale": {
       "da": [
@@ -275,8 +181,7 @@
       "misura": [
         15,
         17
-      ],
-      "nitido": true
+      ]
     },
     "cantine-tavolaccio": {
       "da": [
@@ -290,8 +195,7 @@
       "misura": [
         23,
         16
-      ],
-      "nitido": true
+      ]
     },
     "cantine-legna": {
       "da": [
@@ -305,8 +209,7 @@
       "misura": [
         15,
         14
-      ],
-      "nitido": true
+      ]
     },
     "cantine-macina": {
       "da": [
@@ -328,8 +231,7 @@
           46,
           48
         ]
-      ],
-      "nitido": true
+      ]
     },
     "cantine-assi": {
       "da": [
@@ -343,8 +245,7 @@
       "misura": [
         14,
         11
-      ],
-      "nitido": true
+      ]
     },
     "cantine-panca": {
       "da": [
@@ -358,8 +259,7 @@
       "misura": [
         19,
         10
-      ],
-      "nitido": true
+      ]
     },
     "cantine-panca-schienale": {
       "da": [
@@ -373,8 +273,7 @@
       "misura": [
         20,
         11
-      ],
-      "nitido": true
+      ]
     },
     "cantine-scala-a-pioli": {
       "da": [
@@ -388,8 +287,7 @@
       "misura": [
         10,
         16
-      ],
-      "nitido": true
+      ]
     },
     "cantine-sgabello": {
       "da": [
@@ -403,8 +301,7 @@
       "misura": [
         12,
         9
-      ],
-      "nitido": true
+      ]
     }
   }
 }

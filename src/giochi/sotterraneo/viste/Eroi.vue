@@ -36,7 +36,7 @@ const porta = e => (e.porta || []).map(f => FAMIGLIE[f]).filter(Boolean)
       <button v-for="e in avventure" :key="e.chiave" class="sot-eroe"
               :class="{ 'sot-scelto': e.chiave === scelto }"
               :data-eroe="e.chiave" :data-nuova="e.nuova ? 1 : 0" @click="$emit('scegli', e.chiave)">
-        <Armato :eroe="e" :mano="e.mano" :mancina="e.mancina" :corpo="e.corpo" :testa="e.testa" :scala="3" in3d />
+        <Armato :eroe="e" :mano="e.mano" :mancina="e.mancina" :corpo="e.corpo" :testa="e.testa" :scala="3" />
         <span class="sot-testo">
           <b>{{ e.nome }}</b>
           <!-- a che punto è la sua storia: prima di tutto il resto, perché è quello che si sceglie -->
@@ -46,7 +46,7 @@ const porta = e => (e.porta || []).map(f => FAMIGLIE[f]).filter(Boolean)
             <span>🏁 {{ e.discese }} di {{ e.quante }}</span>
             <span v-if="e.stelle">⭐ {{ e.stelle }}</span>
             <span v-for="r in e.addosso" :key="r.chiave" class="sot-addosso" :data-addosso="r.chiave">
-              <Icona :sprite="r.sprite" :em="r.em" :emAlto="14" :scala="1" />
+              <Icona :sprite="r.sprite" :em="r.em" :emAlto="14" :scala="1" :cosa3d="r" />
             </span>
             <span v-if="e.gemme">💎 {{ e.gemme }}</span>
             <span v-if="e.fondo" data-fondo>🕳️ {{ e.fondo }}</span>

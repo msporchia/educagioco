@@ -158,7 +158,7 @@ const dellaSpecie = (c, m) => c.livello.robe.filter(r => r.che === 'mostro' && r
   const d = diario(presa, t1, null, { topi: 3 })
   const v = d.inMano.find(x => x.id === 'topi')
   stessaLista('il diario dice 3 di 8', v.progresso, { fatti: 3, quanti: 8 })
-  controlla('senza piano e con la faccia del ratto', v.piano === null && v.cosa.tipo === 'conta' && v.cosa.sprite === 'ratto', JSON.stringify(v.cosa))
+  controlla('senza piano e con la faccia del ratto', v.piano === null && v.cosa.tipo === 'conta' && v.cosa.mostro === 'ratto', JSON.stringify(v.cosa))
   uguale('il titolo', v.titolo, '8 ratti')
   uguale('non si segue (niente freccina)', v.seguibile, false)
   uguale('prima di cominciare, 0 di 8', diario(presa, t1).inMano[0].progresso.fatti, 0)

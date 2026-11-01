@@ -1,11 +1,9 @@
-// L'eroe in 3D: la sua figura (le pose della famiglia: dati/tessere.js `pezzoAndante`), le armi in mano dove le tiene
-// (dati/impugna.js), il lampo della ferita e della cura, lo scatto dell'assalto, il giro su sé stesso, il passaggio nel portale,
-// e la sua torcia (scena3d/luci.js). Sta dove lo mette il motore; nello scontro il palco lo porta al suo posto (`meta`).
-import { COSE } from '../dati/cose.js'
-import { impugnatura } from '../dati/impugna.js'
-import { PEZZI } from '../dati/atlante.js'
+// L'eroe in 3D: il suo modello (eroe3d.js, con le armi in mano), il lampo della ferita e della cura, lo scatto dell'assalto, il giro
+// su sé stesso, il passaggio nel portale, e la sua torcia (scena3d/luci.js). Sta dove lo mette il motore; nello scontro il palco lo
+// porta al suo posto (`meta`). La misura viene dalla sua figura dell'atlante (le pose: dati/tessere.js `pezzoAndante`); la torcia in
+// mano è il suo modello (roba-per-terra.js, `creaTorciaInMano`).
 import { pezzoAndante } from '../dati/tessere.js'
-import { PIXEL_CELLA, ALLUNGA, LUCE } from './costanti.js'
+import { LUCE } from './costanti.js'
 import { muoviAssalto } from './racconto.js'
 import { barretta } from './etichette.js'
 import { verso } from './tempo.js'
@@ -21,7 +19,7 @@ export function creaEroe() {
 // un passo del disegno: `corsa` il motore, `figure` quelle senza ombra (la torcia è sua), `fuori` dove si spinge fuori dalla
 // fontana (chi beve sta sulla sua cella), `scontro` se sta sul palco con un bersaglio da guardare
 export function disegnaEroe(e, corsa, { figure, luci, etichette, camera, dt, dtScena, t, fontana = null, bersaglio = null, portale = null,
-                                         fiamma = null, aloni = null, scintille = null, modello = null, quota = null }) {
+                                         fiamma = null, aloni = null, scintille = null, modello = null, quota = null, torcia = null }) {
   if (e.px == null) { e.px = corsa.eroe.x; e.pz = corsa.eroe.y; e.x = e.px; e.z = e.pz }
   if (!e.meta) {
     // finito lo scontro torna dove lo tiene il motore camminando, non di colpo
@@ -63,36 +61,21 @@ export function disegnaEroe(e, corsa, { figure, luci, etichette, camera, dt, dtS
   const o = figure.o()
   o.rosso = e.colpito * 2; o.verde = e.cura * 0.9; o.blu = e.cura * 1.3; o.trasparenza = trasparenza; o.specchio = e.specchio; o.giro = giro
   e.alto = figure.alto(nome)
-  // in prova: al posto dello sprite il modello 3D (scena3d/eroe3d.js), che porta da sé le armi
+  // il modello 3D (scena3d/eroe3d.js), che porta da sé le armi: senza, il posto resta vuoto (niente sprite di ripiego)
   if (modello) modello.aggiorna(e, corsa, { x, z, y: quota ? quota(x, z) : 0, trasparenza, dt, alto: e.alto })
-  else figure.metti(nome, x, 0, z + 0.1, o)
-  // le armi: due si portano una per lato (la debole dietro), una a due mani di lato come nel ritratto (dati/impugna.js)
   const su = Math.sin(e.t * (e.cammina ? 0.9 : 0.6)) * (e.cammina ? 0.9 : 0.5)
   const lato = e.specchio ? -1 : 1
-  const arma = (k, verso, specchio, dz) => {
-    const cosa = COSE[k] || {}, p = cosa.sprite && PEZZI[cosa.sprite]
-    if (!p) return
-    const { dx, base } = impugnatura(cosa, p[2], p[3])
-    o.specchio = specchio
-    figure.metti(cosa.sprite, x + verso * dx / PIXEL_CELLA, Math.max(0, base - su) / PIXEL_CELLA * ALLUNGA, z + 0.1 + dz, o)
-  }
-  if (modello) { /* le armi sono nel modello */ }
-  else if (corsa.mano && (COSE[corsa.mano] || {}).mani === 2) arma(corsa.mano, lato, e.specchio, 0.03)
-  else {
-    if (corsa.mancina) arma(corsa.mancina, -lato, !e.specchio, -0.03)
-    if (corsa.mano) arma(corsa.mano, lato, e.specchio, 0.03)
-  }
   // la torcia accesa (agli sgoccioli un po' meno): in mano dalla parte della mancina, con la fiamma, le faville e un chiarore
   // caldo per terra; al buio niente fiamma, e la luce resta quella di prima (docs/sotterraneo/luce.md, «La torcia nel 3D»)
   const accesa = corsa.torciaAccesa ? (corsa.torciaAgliSgoccioli ? 0.6 : 1) : 0
   const tremo = luci.torcia(x, z, e.lx, e.lz, t, dt, accesa)
   const q = luci.q
-  // la torcia (lo sprite dello zaino, piccolo) nella mano libera, fuori dalla sagoma o il corpo la copre; la fiamma sulla punta
+  // la torcia (il suo modello) nella mano libera, fuori dalla sagoma o il corpo la copre; la fiamma sulla punta
   let mx = x - lato * 0.42, base = 0.22 + su * 0.02, mz = z + 0.28
   const mano3d = modello && modello.manoSinistra(_mano)
   if (mano3d) { mx = mano3d.x; base = Math.max(0.05, mano3d.y - 0.1); mz = mano3d.z + 0.05 }
-  const my = base + (PEZZI.torcia ? PEZZI.torcia[3] / PIXEL_CELLA * ALLUNGA * 0.5 : 0.7) - 0.08
-  if (accesa && PEZZI.torcia) { o.specchio = e.specchio; o.giro = 0; figure.metti('torcia', mx, base, mz, { ...o, scala: 0.5 }) }
+  const my = base + (torcia ? torcia.alto : 0.6) - 0.04
+  if (torcia) { if (accesa && trasparenza > 0.5) torcia.metti(mx, base, mz); else torcia.nascondi() }
   e.mano = accesa ? { x: mx, y: my, z: mz } : null
   if (fiamma) {
     fiamma.accesa(0, accesa > 0 && trasparenza > 0.5)

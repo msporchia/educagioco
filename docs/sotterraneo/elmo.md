@@ -91,7 +91,7 @@ caselle (un id sparito vale null) e la `v` della roba resta 1, come per la colla
   rarità sceglie fra quelli del suo pregio (`pregio` di `RARITA`) e la chiave ne sceglie uno, sempre lo stesso, come l'aspetto di un
   pezzo ([figure.md](figure.md)). Un elmo raro è il grande elmo o quello del re dorato, un cappello comune quello da apprendista.
 - **L'anteprima** ([anteprime-3d.md](anteprime-3d.md)): `copricapo:<modello>:<lettera della rarità>`, il copricapo da solo su una
-  testa finta, di tre quarti, con l'alone della rarità; uguale per i quattro eroi. Nella chiave dell'eroe vestito il modello va **in
+  testa finta, di tre quarti, con l'alone se è leggendario ([roba-3d.md](roba-3d.md)); uguale per i quattro eroi. Nella chiave dell'eroe vestito il modello va **in
   coda, solo se c'è** (`eroe:…:<collo>:<copricapo>`): le chiavi di chi non ne ha non cambiano.
 - Il copricapo in testa all'eroe non ha alone (come la collana: starebbe su tutto l'eroe).
 

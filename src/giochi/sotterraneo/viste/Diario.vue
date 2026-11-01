@@ -14,6 +14,7 @@ import SchedeEroe from './SchedeEroe.vue'
 import Icona from './Icona.vue'
 import Ritratto from './Ritratto.vue'
 import { MODELLI_PERSONE } from '../dati/persone3d.js'
+import { chiaveDelMostro } from '../scena3d/anteprime3d-pura.js'
 import { diario } from '../motore/missioni.js'
 import { iconaDi } from '../dati/terra.js'
 
@@ -57,9 +58,10 @@ const stato = v => (v.stato === 'fatta' ? `Fatta: torna ${v.daChi}`
   : v.stato === 'offerta' ? `${v.chi} ha un favore da chiederti`
   : 'Consegnata')
 const fatto = v => v.stato === 'fatta' || v.stato === 'consegnata'
-const nomeFigura = v => (v.cosa.sprite ? `${v.cosa.sprite}-fermo-0` : null)
-// chi si è perso (una taglia «trova chi»): la faccia del suo modello (docs/sotterraneo/persone-3d.md)
-const persona3d = v => (v.cosa.sprite && MODELLI_PERSONE.includes(v.cosa.sprite) ? `persona:${v.cosa.sprite}` : null)
+// la faccia della cosa: la foto del modello (docs/sotterraneo/anteprime-3d.md) di chi si è perso (una taglia «trova chi»: la persona,
+// docs/sotterraneo/persone-3d.md) o del mostro da battere; senza modello, l'emoji
+const faccia3d = v => (v.cosa.sprite && MODELLI_PERSONE.includes(v.cosa.sprite) ? `persona:${v.cosa.sprite}`
+  : v.cosa.grosso ? chiaveDelMostro({ grosso: v.cosa.grosso }) : v.cosa.mostro ? chiaveDelMostro({ tipo: v.cosa.mostro }) : null)
 // «vai da …» c'è per chi aspetta qualcosa da te: un favore da chiederti, o la consegna di una missione fatta
 const puoiAndare = v => !props.giu && (v.stato === 'offerta' || v.stato === 'fatta')
 const vaDa = v => emit('vai', v.vai || v.da)
@@ -103,7 +105,7 @@ const allaPietra = p => p.nome.replace(/^La /, 'alla ')
       </div>
 
       <div v-if="storia.corrente && storia.corrente.cosa" class="sot-dettaglio-riga" data-dettaglio-cosa data-tipo="sconfiggi">
-        <span class="sot-dettaglio-icona"><Icona :sprite="nomeFigura(storia.corrente)" :tre="persona3d(storia.corrente)" :em="storia.corrente.cosa.em" :scala="2" :emAlto="38" /></span>
+        <span class="sot-dettaglio-icona"><Icona :tre="faccia3d(storia.corrente)" :em="storia.corrente.cosa.em" :emAlto="38" :lato="56" /></span>
         <span class="sot-testo">
           <small>Da battere</small>
           <b>{{ storia.corrente.cosa.nome }}</b>
@@ -170,7 +172,7 @@ const allaPietra = p => p.nome.replace(/^La /, 'alla ')
 
       <!-- cosa: la cosa da trovare, o il mostro da battere -->
       <div class="sot-dettaglio-riga" data-dettaglio-cosa :data-tipo="voce.tipo">
-        <span class="sot-dettaglio-icona"><Icona :sprite="nomeFigura(voce)" :tre="persona3d(voce)" :em="voce.cosa.em" :scala="2" :emAlto="38" /></span>
+        <span class="sot-dettaglio-icona"><Icona :tre="faccia3d(voce)" :em="voce.cosa.em" :emAlto="38" :lato="56" /></span>
         <span class="sot-testo">
           <small>{{ voce.cosa.verbo ? voce.cosa.verbo[fatto(voce) ? 1 : 0] : voce.tipo === 'trova' ? (fatto(voce) ? 'Trovata' : 'Da trovare') : (fatto(voce) ? 'Battuti' : 'Da battere') }}</small>
           <b>{{ voce.cosa.nome }}</b>
@@ -187,7 +189,7 @@ const allaPietra = p => p.nome.replace(/^La /, 'alla ')
           <span class="sot-premio-pezzi">
             <span v-if="voce.gemme" class="em" data-premio-gemme>💎 {{ voce.gemme }}</span>
             <span v-if="voce.regalo" class="sot-premio-roba" data-premio-roba>
-              <Icona :sprite="voce.regalo.sprite" :em="voce.regalo.em" :emAlto="22" /> {{ voce.regalo.nome }}
+              <Icona :sprite="voce.regalo.sprite" :em="voce.regalo.em" :emAlto="22" :cosa3d="voce.regalo" :lato="36" /> {{ voce.regalo.nome }}
             </span>
             <span v-if="voce.monete" class="em" data-premio-monete>🪙 {{ voce.monete }}</span>
           </span>

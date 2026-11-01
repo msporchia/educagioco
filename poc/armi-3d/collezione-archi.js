@@ -60,9 +60,10 @@ function composito () {
   freccia(f, { zc: z(1), zb: 0.5, asta: C.LEGNO_C, punta: C.ACCIAIO, piume: C.CIANO })
   return f.chiudi()
 }
-// 4 ─ balestra: fusto di legno lungo, prodo d'acciaio, staffa, quadrello
+// 4 ─ balestra: fusto di legno lungo, prodo d'acciaio, staffa, quadrello. Non è ritta come gli archi: il fusto verso +z, il prodo di
+// piatto lungo x (i flettenti piegati verso chi tira), il quadrello sopra; si tiene col pugno sull'impugnatura (eroi-3d/eroi.js)
 function balestra () {
-  const f = new Fucina(), H = 0.34, zp = 0.4, z = t => zp - 0.1 * t * t
+  const f = new Fucina(), H = 0.34, zp = 0.4, yp = 0.06, z = t => zp - 0.1 * t * t
   f.metti(sca(0.05, 0.06, 0.62), C.LEGNO_S, 0, 0.05, 0.08, {})                       // il fusto
   f.metti(sca(0.056, 0.05, 0.1), C.CUOIO_S, 0, 0.06, -0.2, {})                        // il calcio
   f.metti(sca(0.03, 0.04, 0.2), C.FERRO_S, 0, 0.085, 0.14, {}, 'metallo')               // scanalatura
@@ -70,18 +71,20 @@ function balestra () {
   f.metti(sca(0.014, 0.07, 0.02), C.FERRO, 0, -0.045, 0.06, { rx: -0.3 }, 'metallo') // il grilletto
   for (const s of [1, -1]) for (let i = 0; i < 6; i++) {
     const t0 = i / 6, t1 = (i + 1) / 6
-    f.asta([0, s * t0 * H, z(t0)], [0, s * t1 * H, z(t1)], 0.026 - t0 * 0.012, 0.026 - t1 * 0.012, i % 2 ? C.ACCIAIO_S : C.FERRO, 'metallo', 5)
+    f.asta([s * t0 * H, yp, z(t0)], [s * t1 * H, yp, z(t1)], 0.026 - t0 * 0.012, 0.026 - t1 * 0.012, i % 2 ? C.ACCIAIO_S : C.FERRO, 'metallo', 5)
   }
-  f.metti(sca(0.07, 0.1, 0.08), C.FERRO_S, 0, 0.05, zp - 0.01, {}, 'metallo')
+  f.metti(sca(0.1, 0.07, 0.08), C.FERRO_S, 0, yp, zp - 0.01, {}, 'metallo')
   f.metti(toro(0.05, 0.01, 4, 10), C.FERRO, 0, 0.0, zp + 0.06, { rx: PIATTA, s: [0.7, 1, 1.3] }, 'metallo')   // la staffa del piede
-  const zc = z(1) - 0.005, zn = 0.1
-  f.asta([0, -H, zc], [0, 0.07, zn], 0.005, 0.005, 0xe3d8b8, 'pieno', 4)
-  f.asta([0, H, zc], [0, 0.07, zn], 0.005, 0.005, 0xe3d8b8, 'pieno', 4)
+  const zc = z(1) - 0.005, zn = 0.1, yn = 0.1
+  f.asta([-H, yp, zc], [0, yn, zn], 0.005, 0.005, 0xe3d8b8, 'pieno', 4)
+  f.asta([H, yp, zc], [0, yn, zn], 0.005, 0.005, 0xe3d8b8, 'pieno', 4)
   f.asta([0, 0.115, zn], [0, 0.115, zp + 0.18], 0.01, 0.01, C.LEGNO_C, 'pieno', 5)  // il quadrello
   f.metti(con(0.025, 0.08, 4), C.ACCIAIO_S, 0, 0.115, zp + 0.22, { rx: PIATTA }, 'metallo')
   for (const q of [-1, 1]) f.metti(sca(0.004, 0.03, 0.05), C.ROSSO, 0, 0.115 + q * 0.014, zn + 0.04, {})
-  f.metti(sfe(0.022, 5, 4), C.OTTONE, 0, H, z(1), {}, 'oro'); f.metti(sfe(0.022, 5, 4), C.OTTONE, 0, -H, z(1), {}, 'oro')
-  return f.chiudi()
+  f.metti(sfe(0.022, 5, 4), C.OTTONE, H, yp, z(1), {}, 'oro'); f.metti(sfe(0.022, 5, 4), C.OTTONE, -H, yp, z(1), {}, 'oro')
+  const g = f.chiudi()
+  g.userData.balestra = true
+  return g
 }
 // 5 ─ arco di corno: due corna d'ariete che si arricciano in avanti, pelo e cuoio
 function corno () {

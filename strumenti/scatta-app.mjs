@@ -20,7 +20,7 @@
    (`--eroe mago`, `--missioni collana:consegnata,rosicchione:presa`, `--non-parlato` se il minatore non ha ancora
    detto niente): il diario e i dialoghi si guardano senza giocare la storia. `--zaino bastone-magico,elisir-toro` mette quei
    pezzi in tasca in più (una chiave composta, `spada@7.m.fuoco`, va bene), per guardarli nel pannello o berli; `--punti 3` lascia tre
-   punti delle caratteristiche da dare, per vedere cosa cambia sotto ogni «+».
+   punti delle caratteristiche da dare, per vedere cosa cambia sotto ogni «+»; `--mano balestra@20` gli mette in pugno quell'arma.
 
    `--domanda ing-parole:2:ing:figura,tabelline:3:tab:prodotto` apre quelle domande dalla palestra dei grandi (codice 0000,
    il quadro dell'età, il ▶ della riga: `modulo:grado:chiave`, come `data-prova`) e fa uno scatto per ciascuna
@@ -128,7 +128,7 @@ if (opz('storia', null) != null) {
   await seminaIlSotterraneo(page, {
     finite: Number(opz('storia')), eroe: opz('eroe', 'cavaliere'), parlato: !args.includes('--non-parlato'),
     missioni: Object.fromEntries((opz('missioni', '') || '').split(',').filter(Boolean).map(x => x.split(':'))),
-    zaino: (opz('zaino', '') || '').split(',').filter(Boolean), punti: Number(opz('punti', 0)),
+    zaino: (opz('zaino', '') || '').split(',').filter(Boolean), punti: Number(opz('punti', 0)), mano: opz('mano', null),
   })
   // anche dopo la semina: la terra di sopra ha le sue attese (i pensieri dell'eroe da fermo, docs/sotterraneo/pensieri.md)
   await page.waitForTimeout(Number(opz('aspetta', 0)))

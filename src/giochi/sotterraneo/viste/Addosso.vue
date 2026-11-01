@@ -52,7 +52,7 @@ const ombra = dove => dove === 'mancina' && dueMani.value
                :scelta="scelto === 'testa'" :accesa="va === 'testa'"
                data-casella="testa" :data-cosa="testa ? testa.chiave : null" :aria-label="testa ? testa.nome : TESTA.dice" @click="$emit('tocca', 'testa')" />
       <Armato :eroe="eroe" :mano="mano ? mano.chiave : null" :mancina="mancina ? mancina.chiave : null" :corpo="corpo ? corpo.chiave : null"
-              :testa="testa ? testa.chiave : null" :scala="3" in3d />
+              :testa="testa ? testa.chiave : null" :scala="3" />
     </div>
     <div class="sot-intorno-lato">
       <template v-for="p in POSTI.filter(x => x.dove === 'mano' || x.dove === 'dito' || x.dove === 'dito2')" :key="p.dove">

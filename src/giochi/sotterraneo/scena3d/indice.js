@@ -19,8 +19,9 @@ import { creaPost } from './post.js'
 import { creaEtichette } from './etichette.js'
 import { creaCose } from './cose.js'
 import { creaEroe, disegnaEroe } from './eroe.js'
-import { creaEroe3d, eroe3dAcceso } from './eroe3d.js'
-import { creaMostri3d, mostri3dAccesi } from './mostro3d.js'
+import { creaEroe3d } from './eroe3d.js'
+import { creaMostri3d } from './mostro3d.js'
+import { creaRobaPerTerra, creaTorciaInMano } from './roba-per-terra.js'
 import { creaGestore, statoDi, effettiPrevisti } from './effetti3d/gestore.js'
 import { statiDel } from '../viste/campo.js'
 import { creaRacconto, assalto } from './racconto.js'
@@ -73,15 +74,17 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   const polvere = segnaNuovi(scena, 'particelle', () => (ACCESI.polvere ? creaPolvere(scena, Math.round(POLVERE * ACCESI.quantaPolvere), luci.condivise, maschera) : NIENTE))
   const etichette = creaEtichette(strato)
   const eroe = creaEroe()
-  const eroe3d = eroe3dAcceso() ? creaEroe3d(gruppo('eroe')) : null     // in prova: il personaggio in 3D al posto dello sprite (`#eroe2d` lo spegne)
+  const eroe3d = creaEroe3d(gruppo('eroe'))     // il personaggio in 3D (eroe3d.js), senza sprite di ripiego
   // in due il compagno (docs/sotterraneo/in-due.md): la stessa figura, mossa dal suo alleato; il modello solo quando c'è
   const compagno = creaEroe()
   let compagno3d = null
   // la fiamma della torcia in mano all'eroe: una sola, si sposta con lui (scena3d/eroe.js)
   const fiammaEroe = ACCESI.fiamme ? segnaNuovi(scena, 'fiamme', () => creaFiamme(scena, maschera, [{ scala: 0.85, cx: 0, cz: 0, x: 0, y: -9, z: 0 }])) : null
   if (fiammaEroe) fiammaEroe.accesa(0, false)
-  // in prova: i mostri in 3D al posto degli sprite (`#sprite` li spegne) e gli effetti 3D dello scontro (docs/sotterraneo/mostri-3d.md)
-  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(gruppo('mostri'), { quanti: () => ACCESI.mostri3d }) : null
+  // i mostri in 3D al posto degli sprite (`&spegni=mostri3d` li spegne) e gli effetti 3D dello scontro (docs/sotterraneo/mostri-3d.md)
+  const mostri3d = ACCESI.mostri3d > 0 ? creaMostri3d(gruppo('mostri'), { quanti: () => ACCESI.mostri3d }) : null
+  const perTerra = creaRobaPerTerra(gruppo('figure'))   // la roba da raccogliere col suo modello (roba-per-terra.js)
+  const torciaEroe = creaTorciaInMano(gruppo('eroe')), torciaCompagno = creaTorciaInMano(gruppo('eroe'))   // la torcia in mano, il modello
   const effetti3d = ACCESI.effetti3d ? creaGestore(gruppo('effetti3d'), { renderer, camera: cam.camera }) : null
   const S = { eroe, campo: null, scintille, luci, anelli, fermo: 0, scossa: 0, aberr: 0, rosso: 0, tBolla: 9, tempo: 0, colpoEroe: null, stato: null,
               mostri3d, effetti3d, eroe3d }
@@ -112,7 +115,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     figureEroe = segnaNuovi(scena, 'eroe', () => creaFigure(scena, { ...base, max: 8, ombra: false }))
     // una porta o un forziere che si apre: polvere o scintille d'oro, e un lampo caldo
     const oro = new Color('#ffd76a'), polvere = new Color('#c8b49a')
-    cose = creaCose({ figure, aloni, macchie, colonne, etichette, camera: cam, mostri3d, vicino: () => eroe.disegnato, apre: r => {
+    cose = creaCose({ figure, aloni, macchie, colonne, etichette, camera: cam, mostri3d, perTerra, vicino: () => eroe.disegnato, apre: r => {
       const forziere = r.che === 'forziere'
       scintille.emetti(r.x + 0.5, 0.4, r.y + 0.5, forziere ? 50 : 24, { forza: 1.6, su: forziere ? 2.4 : 1, vita: 0.8, caldo: 0.2, taglia: 0.07, tinta: forziere ? oro : polvere })
       if (forziere) { luci.lampo.color.set(0xffd27a); luci.lampo.position.set(r.x + 0.5, 0.8, r.y + 0.8); luci.lampo.intensity = 12 }
@@ -327,8 +330,8 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   function disegnaIlCompagno(corsa, o) {
     const i = corsa.persone.findIndex(p => p !== corsa.persona)
     if (i < 0) return
-    if (!compagno3d && eroe3dAcceso()) compagno3d = creaEroe3d(gruppo('eroe'))
-    corsa.come(i, () => disegnaEroe(compagno, corsa, { ...o, luci: luciDelCompagno, fiamma: null, scintille: null, modello: compagno3d }))
+    if (!compagno3d) compagno3d = creaEroe3d(gruppo('eroe'))
+    corsa.come(i, () => disegnaEroe(compagno, corsa, { ...o, luci: luciDelCompagno, fiamma: null, scintille: null, modello: compagno3d, torcia: torciaCompagno }))
     const d = compagno.disegnato, nome = corsa.persone[i].nome || ''
     if (!d || !nome) return
     const p = cam.schermo(d.x, (compagno.alto || 1.4) + 0.45, d.z)
@@ -375,7 +378,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     for (const s of piano.sorgenti) if (s.cella != null) s.vis = piano.vis.ora[s.cella] || 0
     luci.distribuisci(piano.sorgenti, eroe.x, eroe.z, t)
     disegnaEroe(eroe, corsa, { figure: figureEroe, luci, etichette, camera: cam, dt: dtVero, dtScena: dt, t, fontana: fo, portale: (passando && passando.portale) || piano.portale, bersaglio: scontro.bersaglio(corsa),
-                       fiamma: fiammaEroe, aloni, scintille: ACCESI.scintille ? scintille : null, modello: eroe3d })
+                       fiamma: fiammaEroe, aloni, scintille: ACCESI.scintille ? scintille : null, modello: eroe3d, torcia: torciaEroe })
     if (eroe.disegnato) macchie.metti(eroe.disegnato.x, eroe.disegnato.z, 0.36)
     if (corsa.persone && corsa.persone.length > 1) disegnaIlCompagno(corsa, { figure: figureEroe, etichette, camera: cam, dt: dtVero, dtScena: dt, t, bersaglio: scontro.bersaglio(corsa), aloni })
     if (corsa.persone && corsa.persone.length > 1 && compagno.disegnato) macchie.metti(compagno.disegnato.x, compagno.disegnato.z, 0.36)
@@ -507,6 +510,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       if (scontro.palco) return scontro.tocca(p, quadro.fx, { bersaglio, accorcia })
       if (corsa.foglio) return
       const modellate = mostri3d ? [...mostri3d.modellati] : []
+      modellate.push(...perTerra.modellati)
       if (piano.fontana) modellate.push([piano.fontana.roba, piano.fontana.gruppo])
       for (const p of piano.portali) modellate.push([p.roba, p.gruppo])
       const r = contorno.scegli(corsa, p, { figure, modellate })
@@ -539,7 +543,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
                figure: figure && !entrando ? figure.quante : 0, pixelSprite: Math.round(cam.pixelSprite * 100) / 100, scenario: piano ? piano.aspetto.chiave : null, palco: !!scontro.palco,
                programmi: (renderer.info.programs || []).length, memoria: { ...renderer.info.memory }, ritaglio: piano && piano.terreno.ritagliati,
                daScaldare: daFare(), entrando: !!entrando, ingresso: S.ingresso ? { picco: S.ingresso.picco, primoDisegno: S.ingresso.primoDisegno ?? null, fotogrammi: S.ingresso.fotogrammi.length } : null,
-               mostri3d: mostri3d && !entrando ? mostri3d.visibili : 0, modelli3d: mostri3d ? mostri3d.quante : 0, effetti3d: effetti3d ? effetti3d.quanti : 0 }   // gli shader compilati: se crescono a ogni colpo, il telefono si ferma a compilare
+               mostri3d: mostri3d && !entrando ? mostri3d.visibili : 0, modelli3d: mostri3d ? mostri3d.quante : 0, effetti3d: effetti3d ? effetti3d.quanti : 0, perTerra: perTerra.quante }   // gli shader compilati: se crescono a ogni colpo, il telefono si ferma a compilare
     },
     // il banco: `n` disegni della scena così com'è, ognuno aspettato (la lettura di un pixel): i ms della tela da sola, senza
     // la pagina attorno né i 60 Hz (docs/core/vecchio-telefono.md, «Lo scontro»); la mediana e il p90
@@ -574,6 +578,9 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       racconto.svuota()
       if (effetti3d) effetti3d.svuota()
       if (mostri3d) mostri3d.via()
+      perTerra.via()
+      if (torciaEroe) torciaEroe.via()
+      if (torciaCompagno) torciaCompagno.via()
       cam.ripristina()
       lasciaCantiere()
       if (piano) piano.via()

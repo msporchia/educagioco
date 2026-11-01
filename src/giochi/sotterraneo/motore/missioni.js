@@ -188,8 +188,8 @@ const nomeDiscesa = chiave => (CAMPAGNA.find(t => t.chiave === chiave) || {}).no
 // «da la ragazza» non si dice: dalla ragazza, dal mugnaio, dall'eremita
 export const daLui = chi => chi.replace(/^la /, 'dalla ').replace(/^il /, 'dal ').replace(/^l'/, 'dall\'')
 
-// la faccia di una cosa o di un mostro nel dettaglio: l'emoji e il nome del pezzo (la vista cerca `<sprite>-fermo-0`
-// per un mostro, e se l'atlante non ce l'ha ripiega sull'emoji)
+// la faccia di una cosa o di un mostro nel dettaglio: l'emoji, il nome, e chi ha un modello (`mostro`: la specie; `sprite` di chi si
+// è perso: la persona) si mostra con la sua foto (viste/Diario.vue)
 const cosaDi = m => (m.tipo === 'trovachi'
   ? { tipo: 'trovachi', nome: m.viandante.nome, em: m.em, sprite: m.viandante.sprite, verbo: m.verbo, nota: m.nota }
   : ['consegna', 'esplora', 'mappa'].includes(m.tipo)
@@ -197,11 +197,11 @@ const cosaDi = m => (m.tipo === 'trovachi'
   : m.tipo === 'trova'
   ? { tipo: 'trova', nome: m.cosa.nome, em: m.cosa.em, sprite: null }
   : m.tipo === 'conta' || m.tipo === 'cacciaAperta'
-  ? { tipo: 'conta', nome: titoloDi(m), em: MOSTRI[m.specie].em, sprite: MOSTRI[m.specie].sprite }
+  ? { tipo: 'conta', nome: titoloDi(m), em: MOSTRI[m.specie].em, mostro: m.specie }
   // le taglie dei mostri di sopra: il signore della regione (il suo caporale) e la tana da ripulire
   : m.tipo === 'signore' || m.tipo === 'tana'
-  ? { tipo: 'sconfiggi', nome: titoloDi(m), em: m.em, sprite: m.caporale && MOSTRI[m.caporale] ? MOSTRI[m.caporale].sprite : null }
-  : { tipo: 'sconfiggi', nome: m.mostro.nome, em: MOSTRI[m.mostro.tipo].em, sprite: MOSTRI[m.mostro.tipo].sprite })
+  ? { tipo: 'sconfiggi', nome: titoloDi(m), em: m.em, mostro: m.caporale && MOSTRI[m.caporale] ? m.caporale : null }
+  : { tipo: 'sconfiggi', nome: m.mostro.nome, em: MOSTRI[m.mostro.tipo].em, mostro: m.mostro.tipo })
 
 function voceDiario(m, stato, segui = null, conti = {}) {
   const p = personaDi(m.da)
@@ -218,7 +218,7 @@ function voceDiario(m, stato, segui = null, conti = {}) {
     // il dettaglio: cosa dice lui (la richiesta, e alla consegna il grazie), la cosa o il mostro, il premio per pezzi
     dice: m.dice, grazie: m.grazie, cosa: cosaDi(m),
     gemme: m.premio.gemme || 0, monete: m.premio.monete || 0,
-    regalo: r ? { nome: r.nome, em: r.em, sprite: r.sprite || null } : null,
+    regalo: r ? { nome: r.nome, em: r.em, sprite: r.sprite || null, chiave: m.premio.cosa } : null,
     seguibile: stato === PRESA && m.tipo !== 'conta', segui: stato === PRESA && segui === m.id,
     ...(stato === FATTA ? (m.taglia ? { tornaDa: daLui(personaDi(`bacheca:${m.consegnaA}`).chi), torna: m.torna }
                                     : { tornaDa: daLui(p.chi), torna: `Torna ${daLui(p.chi)}: ${m.tipo === 'trova' ? 'hai' : 'hai battuto'} ${inFrase(titoloDi(m))}` }) : {}),
@@ -237,7 +237,7 @@ export function storiaDelDiario(tappe, segui = null) {
   return {
     ...s, segui: segui === SEGUI_LA_STORIA, fine: STORIA.fine, ferma: STORIA.ferma,
     corrente: c && { ...c, luogo: luogoDi(c.chiave),
-                     cosa: g ? { tipo: 'sconfiggi', nome: g.nome, em: MOSTRI[g.tipo].em, sprite: MOSTRI[g.tipo].sprite } : null },
+                     cosa: g ? { tipo: 'sconfiggi', nome: g.nome, em: MOSTRI[g.tipo].em, grosso: GROSSO_DELLA_DISCESA[c.chiave] } : null },
   }
 }
 

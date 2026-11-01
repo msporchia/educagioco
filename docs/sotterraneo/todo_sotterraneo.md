@@ -125,7 +125,7 @@ fuori») e i branchi a 14 celle (`292a98f5`); il villaggio tondo (24×20); la sc
 | La roba 3D per figura: un modello per ognuna delle 238 figure di `roba.json` (`poc/roba-3d/`: lame, bastoni, scudi, vesti, gioielli), con aloni di rarità ed elemento (`aloni.js`) | Mostri | spade/asce e bastoni/archi fatti, scudi, gioielli e vesti in corso |
 | Collegarla al gioco: `modelloDiRoba(chiave)` (chiave → figura → modello, ripiego sul modello della base e poi sullo sprite), `npm run roba3d`, eroe in scena, zaino, botteghe, ritratto | Mostri | in corso (agente) |
 | Gli anelli sono solo 4 e si vedono nelle anteprime, non sull'eroe | Mostri | deciso |
-| La torcia mostra un cerchio di ~3 celle invece del cono da 9,5: il raggio lo decide il motore (`corsa.js:264`, `RAGGIO` 3,2 se `torciaAccesa` è falso), non la luce 3D; 3 celle è lo stato «senza torcia» (`torciaResta` 0, niente alla cintura). Da confermare con lo screenshot se la torcia era finita | Mostri | quasi chiuso, serve la conferma di Marco |
+| La torcia mostra un cerchio di ~3 celle invece del cono da 9,5: il raggio lo decide il motore (`corsa.js:264`, `RAGGIO` 3,2 se `torciaAccesa` è falso), non la luce 3D; 3 celle è lo stato «senza torcia» (`torciaResta` 0, niente alla cintura). Il 31/10 la causa: le torce comprate salendo dal portale restavano alla cintura, spente, tornando giù ([luce.md](luce.md#la-torcia-si-accende-da-sé-e-finisce)) | Mostri | corretto, da riprovare col dito |
 
 ### Da fare dopo
 

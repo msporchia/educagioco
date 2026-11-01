@@ -9,7 +9,7 @@
 import { COSE, chiaveDelPezzo, aLivello, baseDi, livelloDelPezzo, raritaDi, nomeDelPezzo, guastiDelleCose } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { RARITA, ABILITA_DEI_PEZZI, LEGGENDARI, DEI_GROSSI, UNICI, TINTE_DELLE_ABILITA } from '../../src/giochi/sotterraneo/dati/pezzi.js'
 import { ASPETTI } from '../../src/giochi/sotterraneo/dati/aspetti.js'
-import { GROSSI, GROSSO_DELLA_DISCESA, GROSSO_OGNI, grossoDi, guastiDeiGrossi, figuraDelGrosso, spriteDelGrosso, EROE, LATO_DEL_GROSSO } from '../../src/giochi/sotterraneo/dati/grossi.js'
+import { GROSSI, GROSSO_DELLA_DISCESA, GROSSO_OGNI, grossoDi, guastiDeiGrossi, figuraDelGrosso, spriteDelGrosso, EROE } from '../../src/giochi/sotterraneo/dati/grossi.js'
 import { CAMPAGNA, L_ABISSO } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { pezzoNuovo, pescaRarita, pescaAbilita, pezzoDelGrosso, guastiDelBottino, livelloDelBottino, livelloDelTrovato, VARIAZIONE_DEL_TROVATO, FUORI_LIVELLO_DEL_GROSSO }
   from '../../src/giochi/sotterraneo/motore/bottino.js'
@@ -180,15 +180,14 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   uguale('il pezzo di Grumo è la sua mazza, col nome', COSE[pezzoDelGrosso('mazza-di-grumo', 3)].nome, 'Mazza di Grumo')
   controlla('i pezzi dei grossi li porta chiunque', Object.values(DEI_GROSSI).every(u => !COSE[u.base].famiglia))
   // la figura: la creatura che veste (`figura`: il ragno di Zannaverde, il drago di lava di Carbonchio…, senza, la specie di `tipo`), del
-  // catalogo comune, ingrandita a coprire due caselle di altezza (con la corona), a meno che l'atlante abbia il suo dipinto
-  // (`grosso-<chiave>-fermo-0`), che prende il posto del ripiego da solo
+  // catalogo comune, ingrandita a coprire due caselle di altezza (con la corona): la misura del suo modello e lo sprite dei lontani
   const FIGURA = { ossuto: 'negromante', grumo: 'orco', fiammetta: 'spirito-fuoco', zannaverde: 'ragno', gorgo: 'polpo', minotto: 'bestia-cornuta', carbonchio: 'drago-lava',
                    // i sei dei dungeon nuovi del 3D (dati/dungeon-del-mondo.js)
                    barbamuschio: 'golem-muschio', piumanera: 'grifone', sibilla: 'serpente', brontolava: 'golem-magma', brinaldo: 'golem-ghiaccio', falcenera: 'mietitore' }
   for (const [k, x] of Object.entries(GROSSI)) {
     const f = figuraDelGrosso(k)
     controlla(`${k}: ha una figura`, !!f)
-    uguale(`${k}: senza dipinto, è la creatura giusta`, x.figura || x.tipo, FIGURA[k])
+    uguale(`${k}: è la creatura giusta`, x.figura || x.tipo, FIGURA[k])
     uguale(`${k}: e lo sprite è il suo`, f.sprite, (MOSTRI[FIGURA[k]] || { sprite: FIGURA[k] }).sprite)
     // la scatola: né più alto di 1,9 eroi né più largo di 3, e grande davvero (almeno un eroe e mezzo di lato più lungo)
     const [, , largo, alto] = PEZZI[`${f.sprite}-fermo-0`]
@@ -204,14 +203,6 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   controlla('Grumo (l\'orco) cammina', /-corsa-/.test(spriteDelGrosso(figuraDelGrosso('grumo'), true, 1)))
   const drago = { sprite: 'drago', unaPosa: false, fermoDaiPassi: true }
   controlla('il drago, anche fermo, usa i passi e non il suo respiro rotto', spriteDelGrosso(drago, false) === 'drago-corsa-0' && /^drago-corsa-\d$/.test(spriteDelGrosso(drago, true, 7)))
-  // il dipinto vince: una chiave `grosso-ossuto-fermo-0` nell'atlante lo prende al posto del ripiego, a misura vera e senza corona
-  PEZZI['grosso-ossuto-fermo-0'] = [0, 0, 32, 32]
-  try {
-    const d = figuraDelGrosso('ossuto')
-    controlla('con il suo dipinto nell\'atlante, ossuto usa quello', d.dipinto && d.sprite === 'grosso-ossuto' && d.k === 1, JSON.stringify(d))
-    uguale('e il fotogramma è il suo', spriteDelGrosso(d, true, 5), 'grosso-ossuto-fermo-0')
-    controlla('gli altri restano al ripiego', !figuraDelGrosso('grumo').dipinto)
-  } finally { delete PEZZI['grosso-ossuto-fermo-0'] }
 }
 
 /* ══════════ 7. i leggendari ══════════ */

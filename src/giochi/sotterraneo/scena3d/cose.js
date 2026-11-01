@@ -1,6 +1,6 @@
 // La roba del piano in 3D, a ogni fotogramma: per ogni cosa del motore (corsa.livello.robe) la sua figura dell'atlante, scelta
 // come la sceglie il gioco (dati/tessere.js `PEZZO_DI`, dati/fotogrammi.js, dati/grossi.js), il chiarore per terra di chi lo
-// chiede e i segni scritti sopra. Si vede quello che il motore dice (`luceDi`): nel ricordo la roba ferma, mai i mostri.
+// chiede e i segni scritti sopra. La roba da raccogliere che ha un modello si vede col modello (roba-per-terra.js), non con lo sprite. Si vede quello che il motore dice (`luceDi`): nel ricordo la roba ferma, mai i mostri.
 // I mostri hanno uno stato di disegno (dove stanno smussati, il lampo del colpo, lo scatto, la caduta), che il palco muove; i più
 // vicini all'eroe hanno il modello 3D al posto dello sprite, se il registro ne ha uno (mostro3d.js, docs/sotterraneo/mostri-3d.md).
 import { Color } from 'three'
@@ -31,12 +31,14 @@ const TINTE_GROSSI = Object.fromEntries(Object.entries(GROSSI).map(([k, g]) => [
 export const DA_TOCCARE = ['porta', 'forziere', 'curiosita', 'fonte', 'scala', 'scala-su', 'cosa', 'gemme', 'portale', 'mostro']
 
 // `apre(r)`: una porta o un forziere si è appena aperto (lo dice il motore): chi chiama ci mette le scintille
-// `mostri3d`: la riserva dei modelli (mostro3d.js) o null; `vicino()`: dove sta l'eroe disegnato, per scegliere chi ha il modello
-export function creaCose({ figure, aloni, macchie = null, colonne, etichette, camera, apre = null, mostri3d = null, vicino = null }) {
+// `mostri3d`: la riserva dei modelli (mostro3d.js) o null; `vicino()`: dove sta l'eroe disegnato, per scegliere chi ha il modello;
+// `perTerra`: i modelli della roba per terra (roba-per-terra.js) o null
+export function creaCose({ figure, aloni, macchie = null, colonne, etichette, camera, apre = null, mostri3d = null, vicino = null, perTerra = null }) {
   const stati = new WeakMap()
   const visibili = []   // i mostri da disegnare in questo fotogramma (riusato): prima si sceglie chi ha il modello, poi si disegna
   const punto = { x: 0, y: 0 }
   let foglio = null   // lo scontro di adesso: la mossa annunciata (foglio.minaccia) accende l'anello a terra
+  let livello = null  // il piano di adesso: cambiato, le copie della roba per terra del piano di prima si tolgono
   const annunciata = r => { const mi = foglio && foglio.minaccia && foglio.minaccia.find(x => x.chi === r); return mi && mi.mossa ? mi.mossa.id : null }
   const stato = r => {
     let s = stati.get(r)
@@ -58,7 +60,6 @@ export function creaCose({ figure, aloni, macchie = null, colonne, etichette, ca
       if (!F) return
       nome = spriteDelGrosso(F, inCampo >= 0 ? 'scontro' : r.sveglio, (t * 8) | 0)
       scala = F.k * (1 + 0.035 * Math.sin(t * (r.sveglio ? 5 : 2.2)))
-      s.dipinto = F.dipinto
     } else {
       const passi = !scheda.unaPosa && quantiFotogrammi(scheda.sprite, 'corsa') > 0
       const corre = s.corre && passi
@@ -118,7 +119,7 @@ export function creaCose({ figure, aloni, macchie = null, colonne, etichette, ca
     if (r.grosso) aloni.metti(x, z, 1.1 * scala, TINTE_GROSSI[r.grosso] || ROSSO, r.sveglio ? 0.5 : 0.3)
     if (r.caporale) aloni.metti(x, z - 0.1, 0.5, ORO, 0.5)
     // i segni sopra la testa
-    const corona = r.missione || (r.grosso && !s.dipinto)
+    const corona = r.missione || r.grosso
     const nomeSopra = (r.missione || r.grosso) && luce === 2 ? r.nome : ''
     const q = r.ossa < r.ossaMax ? Math.max(0, r.ossa / r.ossaMax) : -1
     const chiave = `m|${corona ? 1 : 0}|${nomeSopra}|${r.sveglio ? 1 : 0}|${r.caporale ? 1 : 0}|${q < 0 ? '' : Math.round(q * 20)}`
@@ -152,6 +153,7 @@ export function creaCose({ figure, aloni, macchie = null, colonne, etichette, ca
       aloni.metti(x, z, 0.36, CALDO, 0.3)
       if (AURA[c.rarita]) aloni.metti(x, z, 0.75, AURA[c.rarita], 0.5 + 0.15 * Math.sin(t * 3 + x))
       if (c.rarita === 'leggendario') colonne.metti(x, z, 0.32, 5, AURA.leggendario, 0.45 + 0.15 * Math.sin(t * 2.5))
+      if (perTerra && perTerra.metti(r, r.cosa, x, y, z, 0.35 * Math.sin(t * 1.3 + r.x + r.y))) return
       // una cosa senza sprite (i copricapi: docs/sotterraneo/elmo.md) si vede con la sua emoji, sospesa sul chiarore; il
       // dito la prende lo stesso (dito.js: la più vicina sullo schermo)
       if (!nome && c.em) sopra(x, 0.3 + y, z, `c|${c.em}`, () => `<span class="em sot3d-cosa">${esc(c.em)}</span>`, { cosa: r.cosa })
@@ -184,6 +186,7 @@ export function creaCose({ figure, aloni, macchie = null, colonne, etichette, ca
       const campo = palco ? palco.campo : null
       foglio = palco && corsa.foglio && corsa.foglio.che === 'scontro' ? corsa.foglio : null
       visibili.length = 0
+      if (perTerra) { if (liv !== livello) { perTerra.svuota(); livello = liv } perTerra.inizia() }
       for (const r of liv.robe) {
         if (r.presa) continue
         if (salta && salta(r)) continue
@@ -226,6 +229,7 @@ export function creaCose({ figure, aloni, macchie = null, colonne, etichette, ca
       const fx = palco && palco.fx
       for (const s of visibili) mostro(s.r, s, t, s.luce, s.inCampo, fx, e)
       if (mostri3d) mostri3d.chiudi()
+      if (perTerra) perTerra.chiudi()
       // i relitti con uno sprite: coi piedi in fondo alla loro ultima cella, come l'arredo
       for (const q of liv.relitti || []) {
         if (!q.pezzo) continue

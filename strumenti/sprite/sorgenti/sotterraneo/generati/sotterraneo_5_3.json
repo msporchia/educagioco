@@ -6,7 +6,6 @@
     "generatore": "ChatGPT, 2 ottobre 2026",
     "testo": "il prompt dell'arredo su magenta: calderone sulle braci, incudine sul ceppo, banco da lavoro, panca, gargoyle in due pose, pila di carbone, botte di ferro, rastrelliera di catene"
   },
-  "nitido": "scelti",
   "fondo": [
     255,
     0,
@@ -152,8 +151,7 @@
       "misura": [
         23,
         10
-      ],
-      "nitido": true
+      ]
     }
   }
 }

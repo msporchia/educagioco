@@ -6,13 +6,12 @@
     "generatore": "ChatGPT, 1 ottobre 2026",
     "testo": "il prompt delle cose per terra su fondo magenta: foglie secche, colatura di cera, schegge d'ardesia, calcinacci, lastra spaccata, sassolini chiari, le due ragnatele d'angolo"
   },
-  "nitido": "scelti",
   "fondo": "trasparente",
   "alone": 128,
   "cella": [1, 1],
   "sprite": {
-    "cripta-candela": { "da": [612, 160], "cella": [228, 196], "misura": [12, 10], "nitido": true },
-    "cripta-macerie": { "da": [608, 500], "cella": [248, 204], "misura": [17, 14], "nitido": true },
-    "cripta-rocce": { "da": [620, 864], "cella": [240, 196], "misura": [16, 13], "nitido": true }
+    "cripta-candela": { "da": [612, 160], "cella": [228, 196], "misura": [12, 10] },
+    "cripta-macerie": { "da": [608, 500], "cella": [248, 204], "misura": [17, 14] },
+    "cripta-rocce": { "da": [620, 864], "cella": [240, 196], "misura": [16, 13] }
   }
 }

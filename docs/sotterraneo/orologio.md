@@ -11,7 +11,7 @@ ogni scontro parto da 0 senza buff gli scudi hanno poco senso, perché li attivi
 
 - **Un passo è una cella percorsa** (`Corsa.passi`, e `camminati` per quelle davvero camminate: il banco le conta). Fermo, in pausa o
   sotto una domanda il tempo non scorre: un bambino che si ferma a leggere e a pensare non lo paga, ed è la ragione per cui non c'è
-  un orologio a secondi (come per la torcia, [roba.md](roba.md#la-torcia-si-accende-da-sé-e-finisce)). **La torcia resta a stanze.**
+  un orologio a secondi (come per la torcia, [luce.md](luce.md#la-torcia-si-accende-da-sé-e-finisce)). **La torcia resta a stanze.**
 - **Un turno dell'eroe nello scontro vale `PASSI_PER_TURNO` = 5 passi** (circa un secondo di cammino: `PASSO_EROE` è 5,4 celle al
   secondo), pagati dopo i colpi dei mostri, quando tocca di nuovo a lui: una protezione che dura un turno copre la risposta dei mostri
   a quel turno. Cinque perché un incantesimo preparato regga l'inizio di uno scontro e lì si consumi: quaranta passi sono otto turni.

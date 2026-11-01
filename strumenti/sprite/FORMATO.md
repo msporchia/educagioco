@@ -301,7 +301,17 @@ Sul foglio, accanto a `fondo`: oltre al pezzo ridotto alla griglia,
 `atlante.py` ritaglia lo stesso rettangolo dal foglio com'è dipinto e lo
 mette nell'atlante `NITIDO` dello stesso modulo. La misura resta quella del
 pezzo piccolo, il gioco disegna con quello grande. Il perché e i limiti:
-`docs/core/sprite.md`, «I pezzi nitidi».
+`docs/core/sprite.md`, «I pezzi nitidi». Con `"nitido": "scelti"` sul foglio
+solo i pezzi che dicono `"nitido": true`: il nitido costa, e si tiene solo per
+quello che un pannello mostra ancora dipinto (nel sotterraneo otto pezzi).
+
+### Un pezzo che serve solo a un derivato (`per_i_derivati`)
+
+Accanto a `sprite`, una tabella con le stesse righe che `atlante.py` non
+legge: i pezzi che un attrezzo dei derivati usa come materiale e che il
+gioco non disegna (la grata e il lucchetto di `arredo-inferno.json`, per la
+scala chiusa di `inferno.py`). Li legge `derivati.tessere_di(sorgente,
+'per_i_derivati')`.
 
 ### Un foglio senza griglia, senza un file di `ritagli` a parte
 

@@ -333,6 +333,13 @@ const ricordo = dallaCorsa(c => {
   const t = c.tappa
   return t && !t.abisso ? promemoria(missioni.value, t.chiave, c.piano + 1, conti.value) : []
 }, [])
+// si vede arrivando su un piano, o quando una missione cambia (fatta, il suo piano), per qualche secondo di gioco; poi restano il diario e
+// la freccina (docs/sotterraneo/missioni.md, «Il promemoria in discesa»)
+const RICORDO_SECONDI = 6
+const ricordoAcceso = ref(false)
+let ricordoDa = 0
+const firmaRicordo = dallaCorsa(c => c.piano + '|' + ricordo.value.map(r => r.id + ':' + r.dove).join(','), '')
+watch(firmaRicordo, () => { ricordoAcceso.value = ricordo.value.length > 0; ricordoDa = orologio })
 
 function scorda() {
   nellAvventura({ sosta: null }, { subito: true })
@@ -565,7 +572,7 @@ const banco = computed(() => {
 function dopoIlBanco(e) {
   const a = bottega.avvisi.pop()
   bottega.avvisi = []
-  if (a) dettoBanco.value = typeof a === 'string' ? { testo: a } : { ...(COSE[a.cosa] || {}), testo: a.testo }
+  if (a) dettoBanco.value = typeof a === 'string' ? { testo: a } : { ...(COSE[a.cosa] || {}), chiave: a.cosa, testo: a.testo }
   bottega.prepara(aperto.value)   // una linguetta che si è svuotata si rimette a metà giro
   nellAvventura({ roba: bottega.roba, botteghe: bottega.botteghe, venduti: bottega.venduti.length ? bottega.venduti : null })
   tocco.value++
@@ -630,6 +637,12 @@ function segnaIlFondo(piano) {
   segnaBest('sotFondo', piano)
 }
 
+// le torce di chi si guarda, per la riga dello zaino e della pagina dell'eroe (viste/RigaTorcia.vue): quella che brucia (le stanze
+// che restano, e quanto della sua durata), quelle alla cintura e quante in tutto; null senza nessuna
+const torceDi = c => (c.torciaAccesa || c.torceInScorta > 0
+  ? { resta: c.torciaResta, quota: Math.min(1, c.torciaResta / Math.max(1, c.stanzeTorcia)), scorta: c.torceInScorta,
+      n: (c.torciaAccesa ? 1 : 0) + c.torceInScorta }
+  : null)
 const eroe = dallaCorsa(c => {
   const q = c.vita / Math.max(1, c.vitaMax)
   return {
@@ -639,11 +652,7 @@ const eroe = dallaCorsa(c => {
     posto: c.posto,                   // nell'abisso: dove si è arrivati
     livelloPosto: c.tappa.potenza ? c.livelloQui : null,   // in una zona potenziata: il livello dei mostri (docs/sotterraneo/zone.md)
     chiave: c.chiaveDelPiano,
-    // niente quando non se ne ha nessuna; `quota` (0..1) sta qui e non nella vista, che riceve solo il numero
-    torcia: c.torciaAccesa
-      ? { resta: c.torciaResta, quota: c.torciaResta / (COSE.torcia.stanze || 1),
-          scorta: c.torceInScorta, agliSgoccioli: c.torciaResta <= 3 && !c.torceInScorta }
-      : null,
+    torcia: torceDi(c),
     pozioni: c.pozioni,               // le cure in tasca, sulla casella 🧪 della barra
     pieni: c.postiUsati(), tasche: c.capienza,
     esp: c.crescita.esp, crescita: c.crescita,
@@ -713,6 +722,7 @@ const pagina = computed(() => {
     cambia: !corsa.value, tratti: corsa.value ? [trattoDegliElisir(c.crescita)].filter(Boolean) : robaSopra.value.tratti,
     tesori: { trovati: tesoriTrovati.value.length, tutti: Object.keys(LEGGENDARI).length },
     puntiAbilita: puntiAbilita(c.crescita), costoRiassegnare: c.costoRiassegnare,
+    torcia: torceDi(c),
   }
 })
 // l'albero delle abilità (viste/PaginaAbilita.vue, docs/sotterraneo/abilita.md): i numeri li dà il Corredo
@@ -807,6 +817,7 @@ const zainoDiSopra = computed(() => {
     testa: voce(c.testa), conTesta: true,
     tasche: tascheVoci(c, voce), costoTasca: c.costoTasca, cure: { n: c.pozioniDiCura, max: POZIONI_MASSIME },
     att: c.att, dif: c.dif, gemme: c.gemme, vita: c.vitaConLaRoba, vitaMax: c.vitaConLaRoba,
+    torcia: torceDi(c),   // quelle comprate aspettano alla cintura: lo zaino lo dice anche sopra
   }
 })
 function suLaRoba(fai) {
@@ -1557,6 +1568,7 @@ function giro() {
     if (!c || c.finita || (fermo.value && !inDueOra.value) || !pittore) return
     // l'orologio si muove DOPO: contarlo anche in pausa farebbe sparire all'istante la riga lasciata a metà
     orologio += dt
+    if (ricordoAcceso.value && orologio - ricordoDa > RICORDO_SECONDI) ricordoAcceso.value = false
     if (inDueOra.value) sfida.avanza(dt)
     else if (!sopra.value) c.passo(dt)   // sul palco di sopra non si cammina: finito lo scontro si torna al mondo
     // col foglio aperto la telecamera alza l'eroe (lo scontro no: sta al centro e non chiede spazio)
@@ -2317,8 +2329,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
           <CartelloLinea v-if="inDueOra && (sfida.rotta.value || sfida.linea.value)" :rotta="sfida.rotta.value" :motivo="sfida.motivo.value"
                          :linea="sfida.linea.value" partita="la discesa" esci="🗺️ torno su" @esci="chiudi({ senzaCartello: true })" />
 
-          <!-- le missioni prese che riguardano questa discesa: una riga ciascuna, in cima (motore/missioni.js) -->
-          <ul v-if="ricordo.length" class="sot-ricordo" data-promemoria>
+          <!-- le missioni prese che riguardano questa discesa: una riga ciascuna, in cima, per qualche secondo; mai sopra uno scontro -->
+          <ul v-if="ricordo.length && ricordoAcceso && !nemico" class="sot-ricordo" data-promemoria>
             <li v-for="r in ricordo" :key="r.id" :data-missione="r.id" :data-dove="r.dove"
                 :data-segui="rotta && rotta.id === r.id ? 1 : null">
               <span class="em">{{ r.em }}</span> {{ r.testo }}
@@ -2347,13 +2359,13 @@ function ridimensiona() { if (pittore) pittore.misura() }
             <span v-else>la chiave ce l'ha qualcuno, qua sotto</span>
           </p>
           <p v-if="avviso" class="sot-avviso" :class="avviso.rarita ? 'sot-r-' + avviso.rarita : null">
-            <Icona v-if="avviso.cosa" :sprite="avviso.sprite" :em="avviso.em" :emAlto="20" />
+            <Icona v-if="avviso.cosa" :sprite="avviso.sprite" :em="avviso.em" :emAlto="20" :cosa3d="{ chiave: avviso.cosa }" />
             {{ avviso.testo }}
           </p>
 
           <!-- il mostro grosso: la sua vita in cima, da quando ci si entra nella stanza (docs/sotterraneo/grossi.md) -->
           <div v-if="grosso" class="sot-grosso-vita" data-grosso :data-chi="grosso.chiave" :data-ossa="grosso.ossa">
-            <span class="sot-grosso-faccia"><Grosso :chi="grosso.chiave" :scala="0.6" /></span>
+            <span class="sot-grosso-faccia"><Grosso :chi="grosso.chiave" :lato="38" /></span>
             <span class="sot-grosso-dati">
               <b>{{ grosso.nome }}</b>
               <span class="sot-grosso-barra"><i :style="{ width: (grosso.ossa / grosso.ossaMax) * 100 + '%' }"></i>
@@ -2368,7 +2380,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
           </div>
           <div v-else-if="festa && festa.che === 'leggendario'" class="sot-festa sot-festa-leggendario" data-leggendario
                :data-cosa="festa.cosa">
-            <Icona :sprite="festa.sprite" :em="festa.em" :scala="3" :emAlto="34" />
+            <Icona :sprite="festa.sprite" :em="festa.em" :scala="3" :emAlto="34" :cosa3d="festa.cosa ? { chiave: festa.cosa } : null" :lato="56" />
             <b>{{ festa.nome }}</b>
             <i>{{ festa.storia }}</i>
           </div>
