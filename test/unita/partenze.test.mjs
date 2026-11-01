@@ -230,7 +230,7 @@ uguale('e non spegne nessun altro gioco',
 
 /* ── la quarta ── */
 const quarta = eccezioniDi('quarta')
-uguale('«quarta» non spegne nessun sapere', Object.keys(quarta.sa).length, 0)
+uguale('«quarta» spegne solo i decimali, che a scuola arrivano a metà quarta', Object.keys(quarta.sa).join(','), 'decimali')
 for (const k of SOLO_PICCOLI) uguale(`«quarta» spegne il gioco per i piccoli ${k}`, quarta.giochi[k], false)
 for (const k of CRESCONO) controlla(`«quarta» LASCIA acceso ${k}, che comincia dai piccoli e cresce`,
   quarta.giochi[k] === undefined)

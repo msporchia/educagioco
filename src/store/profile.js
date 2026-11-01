@@ -310,7 +310,7 @@ const SAPERI_ARRIVATI = {
   piccoli: ['adattamento'],
   prima: ['adattamento'],
   terza: ['geo:rotazione', 'geo:cubetti', 'geo:sviluppo', 'geo:viste'],
-  quarta: [],
+  quarta: ['decimali'],
 }
 
 function saperiArrivatiTardi(s) {
