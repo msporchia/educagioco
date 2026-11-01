@@ -3,15 +3,10 @@
 // come dato (`largo`, `alto`, `a()`, `stanze`, `robe`) e non lo cambia. Dato puro, gira in Node: unita/sotterraneo-3d.
 // Coordinate: la cella (x, y) occupa nel mondo [x, x+1] × [y, y+1] sul piano XZ; y cresce verso sud, verso la telecamera.
 import { ROCCIA, PAVIMENTO, PORTA, RELITTO, ACQUA } from '../dati/mondo.js'
-import { ORPELLI } from '../dati/orpelli.js'
+import { torceAMuroDi, posaDi, OGNI_TORCIA } from '../motore/torce-a-muro.js'
 
-// la posa di un pezzo d'arredo (dati/orpelli.js): lo dice la lista del suo scenario
-const POSA = new Map()
-for (const lista of Object.values(ORPELLI)) for (const o of lista) if (!POSA.has(o.pezzo)) POSA.set(o.pezzo, o.posa)
-export const posaDi = pezzo => POSA.get(pezzo) || 'posato'
-
-// una torcia ogni OGNI celle sulla parete in alto di una stanza (il motore non le ha: sono luce del disegno)
-export const OGNI_TORCIA = 5
+// la posa dell'arredo e le torce a muro le sa il motore (motore/torce-a-muro.js): una ogni OGNI_TORCIA celle, e ogni tanto una si prende
+export { posaDi, OGNI_TORCIA }
 
 export function piantaDi(liv) {
   const W = liv.largo, H = liv.alto
@@ -47,21 +42,8 @@ export function piantaDi(liv) {
   const acqua = []
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (tipo[id(x, y)] === ACQUA) acqua.push({ x, y })
 
-  // l'arredo appeso sta sulla parete in alto: lì non si mette una torcia
-  const appesi = new Set()
-  for (const r of liv.robe || []) if (r.che === 'arredo' && ['appeso', 'contro'].includes(posaDi(r.pezzo))) appesi.add(id(r.x, r.y))
-  const torce = []
-  const prese = new Set()
-  for (const s of liv.stanze || []) {
-    for (let x = s.x + 1; x < s.x + s.w - 1; x += OGNI_TORCIA) {
-      const y = s.y - 1
-      // sul muro alto in cima alla stanza (sotto c'è pavimento, sopra roccia: un parapetto non regge niente)
-      if (y < 1 || !roccia(x, y) || colonna[id(x, y)] || !roccia(x, y - 1) || roccia(x, s.y) || appesi.has(id(x, s.y))) continue
-      if (prese.has(id(x, y))) continue
-      prese.add(id(x, y))
-      torce.push({ x, y })
-    }
-  }
+  // le torce del motore (con quella da prendere), o quelle di un livello che non le ha (le prove)
+  const torce = liv.torce || torceAMuroDi(liv)
   return {
     W, H, tipo, colonna, pavimento, muri, colonne, acqua, torce,
     id,
