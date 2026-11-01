@@ -92,7 +92,7 @@ const corredo = (zaino, gemme = 0, livello = 1) =>
   uguale('la nona non si compra', b.compraDa('erborista', 'pozione')?.che, 'pieno')
   uguale('e le gemme restano', b.gemme, 5000)
   controlla('e il banco dice «al massimo 8 pozioni»', b.avvisi.some(a => /al massimo 8 pozioni/.test(String(a.testo || a))), JSON.stringify(b.avvisi))
-  controlla('la torcia sì, che non è una pozione', b.compraDa('erborista', 'torcia')?.che === 'comprato')
+  controlla('la torcia sì, che non è una pozione', b.compraDa('carovaniere', 'torcia')?.che === 'comprato')
   b.zaino.pop()
   uguale('bevuta una, si può comprare di nuovo', b.compraDa('erborista', 'pozione')?.che, 'comprato')
   uguale('di nuovo otto', b.pozioniDiCura, POZIONI_MASSIME)

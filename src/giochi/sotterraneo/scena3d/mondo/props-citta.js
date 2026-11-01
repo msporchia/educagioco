@@ -25,6 +25,7 @@ const MENU = {
 const ARREDO = {
   fucina: ['ruota', 'rastrelliera', 'incudine', 'barile', 'carbone'],
   bancarella: ['sacchi', 'casse', 'barile', 'botti'],
+  torce: ['barile', 'sacchi', 'lanterna', 'casse'],
   erbe: ['scaffale', 'fiori', 'vaso', 'barile', 'fiori'],
   torretta: ['lanterna', 'barile', 'vaso', 'fiori'],
 }

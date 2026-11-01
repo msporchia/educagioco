@@ -58,6 +58,7 @@ export const MERCANTI_DETTI = {
   incantatrice: { dal: 'dall\'incantatrice' },
   erborista: { dal: 'dalla guaritrice' },
   rigattiere: { dal: 'dal mercante' },
+  carovaniere: { dal: 'dal carovaniere' },
 }
 // come si diventa dando un punto a una caratteristica (dati/livelli.js): {o} si accorda con l'eroe
 export const DIVENTARE = { forza: 'più forte', destrezza: 'più svelt{o}', intelligenza: 'più sapiente', tempra: 'più robust{o}' }
@@ -75,16 +76,16 @@ export const PENSIERI = [
     se: s => (s.torcia.accesa && s.torcia.resta <= SOGLIE.torciaCorta && !s.torcia.scorta ? {} : null),
     testi: ['La mia torcia si sta spegnendo… e un\'altra non ce l\'ho.',
             'Questa fiamma è sempre più piccola. Ne vorrei una di scorta.'] },
-  { id: 'torcia-sopra', tono: 'consiglio', dove: ['sopra'], quando: ['cammino'], icona: '🔥', segno: 'mercante:erborista',
+  { id: 'torcia-sopra', tono: 'consiglio', dove: ['sopra'], quando: ['cammino'], icona: '🔥', segno: 'mercante:carovaniere',
     se: s => {
-      if (s.torcia.scorta || s.gemme < s.prezzi.torcia || !s.mercanti.has('erborista')) return null
+      if (s.torcia.scorta || s.gemme < s.prezzi.torcia || !s.mercanti.has('carovaniere')) return null
       if (!s.torcia.accesa) return { variante: 'senza' }
       return s.torcia.resta <= SOGLIE.torciaSopra ? { variante: 'corta' } : null
     },
     testi: {
-      senza: ['Ho sentito che la guaritrice vende torce. Laggiù farebbe meno buio.',
+      senza: ['Ho sentito che il carovaniere vende torce. Laggiù farebbe meno buio.',
               'Laggiù è buio buio… mi piacerebbe tanto avere una torcia.'],
-      corta: ['La mia torcia è quasi finita. Dalla guaritrice ne ho viste di nuove.'],
+      corta: ['La mia torcia è quasi finita. Dal carovaniere ne ho viste di nuove.'],
     } },
 
   /* ── le gemme e la roba della strada ── */

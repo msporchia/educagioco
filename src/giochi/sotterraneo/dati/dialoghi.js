@@ -195,12 +195,26 @@ export const DIALOGHI = {
       gia: ['Non vedo ferite. Sei già in forze.'],
     },
     racconti: [
-      { da: 0, pagine: ['Laggiù il buio è il primo nemico: una torcia accesa vale più di una spada.',
-                        'E porta sempre una pozione. Quando la vita cala, bevila: non aspettare.'] },
+      { da: 0, pagine: ['Laggiù le ferite sono la prima cosa. Porta sempre una pozione.',
+                        'Quando la vita cala, bevila: non aspettare.'] },
       { da: 3, pagine: ['Più giù si scende, più le ferite bruciano.',
                         'Un\'ampolla costa, lo so. Ma una sola ti riporta su intero.'] },
       { da: 7, pagine: ['L\'abisso non ha una fine, e quindi nemmeno un ritorno facile.',
                         'Riempi le tasche di pozioni, prima. Sempre.'] },
+    ],
+  },
+
+  // vende le torce e chiama (come chi cura) quando ne hai poche: `torce.poche` è il numero sotto il quale chiama
+  carovaniere: {
+    domanda: 'Com\'è il buio laggiù?',
+    bottega: 'Mi servono torce',
+    torce: { poche: 3, richiamo: 'Hai poche torce! Laggiù è buio: prendine qualcuna.' },
+    racconti: [
+      { da: 0, pagine: ['Il buio, laggiù, non perdona. Una torcia accesa ti fa vedere i mostri prima che vedano te.',
+                        'Una dura poche stanze: tienine sempre una di scorta alla cintura.'] },
+      { da: 3, pagine: ['Più si scende, più il buio è fitto, e le torce finiscono prima di quanto credi.',
+                        'Io ne porto sempre di più di quelle che mi servono.'] },
+      { da: 7, pagine: ['L\'abisso è tutto buio, da cima a fondo.', 'Scendi con le tasche piene di torce, e non sprecarle.'] },
     ],
   },
 

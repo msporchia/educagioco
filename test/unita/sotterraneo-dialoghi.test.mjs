@@ -9,7 +9,7 @@ import { DIALOGHI, guastiDeiDialoghi, ARRIVEDERCI } from '../../src/giochi/sotte
 import { MISSIONI, PERSONAGGI, missioneDi } from '../../src/giochi/sotterraneo/dati/missioni.js'
 import { MERCANTI } from '../../src/giochi/sotterraneo/dati/mercanti.js'
 import { NOVITA_DI } from '../../src/giochi/sotterraneo/dati/novita.js'
-import { apertura, scelte, risposta, dopoLaPresa, dopoLaConsegna, inPagine, strada, novita, curaDi, mancaA, richiamoDi, dopoLaCura }
+import { apertura, scelte, risposta, dopoLaPresa, dopoLaConsegna, inPagine, strada, novita, curaDi, mancaA, richiamoDi, richiamoTorce, dopoLaCura }
   from '../../src/giochi/sotterraneo/motore/dialoghi.js'
 import { PRESA, FATTA, CONSEGNATA } from '../../src/giochi/sotterraneo/motore/missioni.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -24,7 +24,7 @@ const che = s => s.map(x => x.che)
   const chi = ['minatore', ...Object.keys(PERSONAGGI), ...MERCANTI.map(m => m.chiave)]
   const g = guastiDeiDialoghi(chi)
   controlla('ognuno sulla mappa ha il suo dialogo, a pagine corte e in ordine', !g.length, g.join(' · '))
-  uguale('undici che parlano: il minatore, i sei delle missioni, i quattro mercanti', chi.length, 11)
+  uguale('dodici che parlano: il minatore, i sei delle missioni, i cinque mercanti', chi.length, 12)
   for (const m of MISSIONI) controlla(`${m.id}: ha la frase del ritorno`, !!m.ritorno)
   // una frase lunga si spezza in pagine di una o due frasi, mai oltre i 120 caratteri quando si può
   const p = inPagine('Uno. Due. Tre? Quattro!')
@@ -138,7 +138,7 @@ const che = s => s.map(x => x.che)
   const intero = { vita: 40, vitaMax: 40, energia: 10, energiaMax: 10 }
   uguale('la guaritrice cura la vita', curaDi('erborista').risorsa, 'vita')
   uguale('l\'incantatrice l\'energia', curaDi('incantatrice').risorsa, 'energia')
-  controlla('gli altri non curano', ['armaiolo', 'rigattiere', 'minatore', 'ragazza'].every(c => !curaDi(c)))
+  controlla('gli altri non curano', ['armaiolo', 'rigattiere', 'carovaniere', 'minatore', 'ragazza'].every(c => !curaDi(c)))
   uguale('ferito: alla guaritrice mancano 28 punti', mancaA('erborista', ferito), 28)
   uguale('ma l\'energia non è sua', mancaA('incantatrice', ferito), 0)
   uguale('scarico: all\'incantatrice ne mancano 8', mancaA('incantatrice', scarico), 8)
@@ -162,6 +162,11 @@ const che = s => s.map(x => x.che)
   uguale('l\'incantatrice chiama per l\'energia', /ricarico/.test(richiamoDi('incantatrice', scarico)), true)
   uguale('e non per la vita', richiamoDi('incantatrice', ferito), null)
   uguale('il fabbro non chiama mai', richiamoDi('armaiolo', ferito), null)
+  // il carovaniere chiama chi ha poche torce e le gemme per una
+  controlla('poche torce: il carovaniere chiama', /torce/.test(richiamoTorce('carovaniere', { n: 1, gemme: 20, prezzo: 5 })))
+  uguale('senza gemme per comprarne tace', richiamoTorce('carovaniere', { n: 0, gemme: 2, prezzo: 5 }), null)
+  uguale('con la scorta tace', richiamoTorce('carovaniere', { n: 3, gemme: 20, prezzo: 5 }), null)
+  uguale('la guaritrice non chiama per le torce', richiamoTorce('erborista', { n: 0, gemme: 20, prezzo: 5 }), null)
 }
 
 /* ══════════ 7. «Novità?»: frasi che ruotano e reagiscono ══════════ */

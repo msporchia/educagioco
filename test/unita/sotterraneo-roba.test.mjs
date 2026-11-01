@@ -36,11 +36,11 @@ import { stileDi } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
 {
   const g = guastiDeiMercanti()
   controlla('i mercanti stanno in piedi', g.length === 0, g.join(' · '))
-  uguale('quattro mercanti', MERCANTI.length, 4)
+  uguale('cinque mercanti', MERCANTI.length, 5)
   for (const m of MERCANTI) controlla(`${m.chiave}: ha un posto nel villaggio`, VILLAGGIO.lotti.some(l => l.tipo === 'mercante' && l.chiave === m.chiave))
   uguale('uno solo compra la roba', MERCANTI.filter(m => m.compra).map(m => m.chiave).join(), 'rigattiere')
   /* il fabbro lavora il ferro, l'incantatrice la magia (docs/sotterraneo/bottega.md): bacchette e stoffa solo da lei, il resto delle armi
-     e delle armature solo da lui, l'energia da lei e le cure e la torcia dalla guaritrice */
+     e delle armature solo da lui, l'energia da lei, le cure dalla guaritrice e la torcia dal carovaniere */
   const chiVende = k => MERCANTI.filter(m => vendeLa(m, k) || m.sempre.includes(k)).map(m => m.chiave).join()
   for (const k of IN_VENDITA) {
     const f = COSE[k].famiglia
@@ -48,7 +48,8 @@ import { stileDi } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
     else if (COSE[k].dove === 'mano' || COSE[k].dove === 'mancina' || COSE[k].dove === 'corpo') uguale(`${k}: lo vende il fabbro e basta`, chiVende(k), 'armaiolo')
   }
   for (const k of ['pozione-blu', 'ampolla-blu']) uguale(`${k}: l'energia è dell'incantatrice`, chiVende(k), 'incantatrice')
-  for (const k of [...CURE_IN_VENDITA, 'torcia']) uguale(`${k}: le cure e la torcia restano alla guaritrice`, chiVende(k), 'erborista')
+  for (const k of CURE_IN_VENDITA) uguale(`${k}: le cure restano alla guaritrice`, chiVende(k), 'erborista')
+  uguale('la torcia la vende il carovaniere, non la guaritrice', chiVende('torcia'), 'carovaniere')
   uguale('a un cavaliere l\'incantatrice mostra solo l\'energia', schedeDi(mercanteDi('incantatrice'), eroeDi('cavaliere')).map(x => x.chiave).join(), 'energia')
   uguale('a un mago tutte e tre le linguette', schedeDi(mercanteDi('incantatrice'), eroeDi('mago')).map(x => x.chiave).join(), 'bacchette,vesti,energia')
   uguale('a un\'elfa le vesti e l\'energia, non le bacchette', schedeDi(mercanteDi('incantatrice'), eroeDi('elfa')).map(x => x.chiave).join(), 'vesti,energia')
@@ -225,8 +226,9 @@ import { stileDi } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
   uguale('e niente costa più del pezzo del passo', troppoCare, 0)
   nota('il passo che il banco porta al cavaliere, per discese finite:')
   righe.forEach(r => nota(r))
-  controlla('l\'erborista ha le quattro cure in vendita e la torcia', CURE_IN_VENDITA.every(k => mercanteDi('erborista').sempre.includes(k)) &&
-            mercanteDi('erborista').sempre.includes('torcia'))
+  controlla('l\'erborista ha le quattro cure in vendita e niente torce', CURE_IN_VENDITA.every(k => mercanteDi('erborista').sempre.includes(k)) &&
+            !mercanteDi('erborista').sempre.includes('torcia'))
+  controlla('le torce le ha il carovaniere', mercanteDi('carovaniere').sempre.includes('torcia'))
 }
 {
   /* il banco si pesca una volta per giro: aprirlo di nuovo non lo cambia,
@@ -245,7 +247,7 @@ import { stileDi } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
 
   /* la torcia comprata sopra va alla cintura, non in tasca */
   const tasche = b.zaino.length
-  b.compraDa('erborista', 'torcia')
+  b.compraDa('carovaniere', 'torcia')
   uguale('la torcia non prende una tasca', b.zaino.length, tasche)
   uguale('e aspetta alla cintura', b.torceInScorta, 1)
 

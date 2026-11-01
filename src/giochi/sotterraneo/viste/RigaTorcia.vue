@@ -29,7 +29,7 @@ const stanze = n => (n === 1 ? 'stanza' : 'stanze')
     </template>
     <template v-else>
       <b>nessuna torcia</b>
-      <em>la guaritrice le vende, al villaggio</em>
+      <em>il carovaniere le vende, al villaggio</em>
     </template>
   </p>
 </template>

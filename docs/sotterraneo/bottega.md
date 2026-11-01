@@ -22,7 +22,8 @@ più nessuno.
 |---|---|---|
 | ⚒️ l'armaiolo (il fabbro), sotto la tettoia a sinistra | il ferro: spade, asce, archi, scudi, corazze e giubbe di cuoio; la linguetta «Elmi» ([elmo.md](elmo.md)) | — |
 | 🔮 l'incantatrice (`incantatrice`), alla porta della casa di destra | la magia: bacchette e bastoni, vesti di stoffa; la linguetta «Cappelli» ([elmo.md](elmo.md)) | boccetta blu e ampolla delle stelle (l'energia); la pergamena del portale dopo la sua missione ([portale-e-sosta.md](portale-e-sosta.md#la-pergamena-del-portale)) |
-| 🌿 l'erborista (la guaritrice), al banco con le erbe | niente di pescato: solo quello che sta sempre in cima | le quattro cure (le grandi dopo qualche discesa finita), torcia |
+| 🌿 l'erborista (la guaritrice), al banco con le erbe | niente di pescato: solo quello che sta sempre in cima | le quattro cure (le grandi dopo qualche discesa finita) |
+| 🏮 il carovaniere, al banco rosso-arancio con le torce in fila, accanto all'incantatrice | niente di pescato | la torcia (l'utente, 1 novembre 2026: «la venditrice di torce vende anche le pozioni, io lo so ma il bambino no»). Se hai meno di tre torce (quella accesa e la scorta) e le gemme per una, **chiama con un fumetto** sopra la testa («Hai poche torce! Laggiù è buio: prendine qualcuna.»: `torce` in `DIALOGHI.carovaniere`, `richiamoTorce`, `[data-richiamo-di="torce"]`); tace mentre ci si parla |
 | 🧺 il rigattiere (il mercante), accanto al carro | anelli, collane (amuleti, medaglione), chiavi: tutti sotto la linguetta «Gioielli» | — e **compra** quello che hai in tasca, e te lo ridà (sotto) |
 
 - **Il fabbro lavora il ferro, lei la magia** (l'utente, 13 ottobre 2026): le armi
@@ -31,8 +32,8 @@ più nessuno.
   `vende.senza` in `dati/mercanti.js`, `vendeLa`). Così il mago ha una bottega per le sue
   tre strade (la spada dal fabbro, bacchetta e scudo e la pura magia da lei più il fabbro
   per lo scudo), l'elfa le sue vesti, e il fabbro non si riempie di pezzi che metà degli eroi
-  non porta. **L'energia è sua e non più della guaritrice** (le cure e la torcia restano
-  alla guaritrice): una linguetta «Energia» sempre piena, uguale per tutti.
+  non porta. **L'energia è sua e non più della guaritrice** (le cure restano alla
+  guaritrice, la torcia è del carovaniere): una linguetta «Energia» sempre piena, uguale per tutti.
 - **A chi non porta la famiglia la linguetta non si mostra** (`schedeDi`): al
   cavaliere e al nano l'incantatrice ha solo «Energia», all'elfa «Vesti» ed «Energia»,
   al mago «Bacchette e bastoni», «Vesti» ed «Energia». Un banco di bacchette a chi non le
@@ -223,7 +224,7 @@ più nessuno.
 
 Nei test: `unita/sotterraneo-pozioni` e `integrazione/sotterraneo-pozioni` (le cure per discese finite, il tetto di otto, `[data-al-tetto]`),
 `unita/sotterraneo-roba` (il fabbro e l'incantatrice si dividono la roba: bacchette e stoffa solo da
-lei, l'energia da lei, le cure e la torcia dalla guaritrice, le linguette per ogni eroe; il banco porta il passo dopo; sovrapprezzo
+lei, l'energia da lei, le cure dalla guaritrice, la torcia dal carovaniere, le linguette per ogni eroe; il banco porta il passo dopo; sovrapprezzo
 dei pezzi avanti; nessun pezzo di famiglie non portate; ogni linguetta con
 dieci pezzi che migliorano, mai un leggendario, per i quattro
 eroi a ogni discesa e a vari livelli, anche con roba rara addosso; due pezzi

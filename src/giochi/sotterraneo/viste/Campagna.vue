@@ -19,6 +19,7 @@ const props = defineProps({
   roba: { type: Object, default: null },     // quello che ci si porta dietro, già contato (schedaConLaRoba): { vita, att, dif, gemme, mano, mancina, corpo, tratti… }
   punti: { type: Number, default: 0 },          // le linguette del diario (viste/SchedeEroe.vue): i «+» delle altre schede
   puntiAbilita: { type: Number, default: 0 },
+  torce: { type: Object, default: null },    // le torce di chi sta sopra, per il fumetto del carovaniere: { n, gemme, prezzo }
   forze: { type: Object, default: null },    // vita ed energia di chi ha lasciato la discesa dal portale, o ferito sopra: { vita, vitaMax, energia, energiaMax }
   // il mondo generato, col suo salvataggio (`mondo`) e la veduta d'insieme
   mondo: { type: Object, default: null },
@@ -96,7 +97,7 @@ function comincia() {
            :mondo="mondo" :veduta="veduta" :forza="forza" :fermo="fermo || diarioAperto || !!chiede" :dungeon="dungeon" :terre="terre"
            :missioni="missioni" :azione-missione="azioneMissione" :segui="segui"
            :giaScesa="ripresa ? ripresa.tappa : null" :portale="portale"
-           :forze="forze" @cura="r => $emit('cura', r)"
+           :forze="forze" :torce="torce" @cura="r => $emit('cura', r)"
            @scendi="tocca" @davanti="t => $emit('davanti', t ? t.indice ?? t.chiave : null)" @bottega="(k, s) => $emit('bottega', k, s)"
            @mondo="v => $emit('mondo', v, di)" @risposta="r => $emit('risposta', r)" @veduta="v => $emit('veduta', v)"
            @riprendi="$emit('riprendi')" :pensiero="pensiero" @pensa="$emit('pensa')" @pensiero="p => $emit('pensiero', p)"

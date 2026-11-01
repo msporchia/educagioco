@@ -170,6 +170,21 @@ export const NOVITA_DI = {
     ],
   },
 
+  carovaniere: {
+    ruota: [
+      ['Ho girato mille strade e in tutte il buio è lo stesso: si batte con una fiamma, non con il coraggio.'],
+      ['Una torcia si spegne senza avvisare. Quella di scorta, alla cintura, ti salva la giornata.'],
+      ['Dove la luce arriva, i mostri ci pensano due volte. Dove non arriva, ti aspettano.'],
+    ],
+    reazioni: [
+      { finite: 0, pagine: ['Non sei ancora sceso? Prendi due torce: una per andare, una per tornare.'] },
+      { finite: 1, pagine: ['Dalla cripta si torna con la fiamma bassa. La prossima discesa è più lunga: porta più torce.'] },
+      { finite: [2, 6], pagine: ['Hai battuto {boss}? Ora tocca a {discesa}: lì le torce servono davvero.'] },
+      { finite: 7, pagine: ['Sette porte chiuse, e la luce è arrivata fino in fondo. Ci vuole un bel carico di torce.'] },
+      { livello: [5, 9], pagine: ['Chi sa dove mette i piedi usa meno torce. Ma ne porta sempre una in più.'] },
+    ],
+  },
+
   rigattiere: {
     ruota: [
       ['Un buon affare si riconosce da due cose: chi vende sorride, e chi compra pure.'],
