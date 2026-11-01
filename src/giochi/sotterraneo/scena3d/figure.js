@@ -41,13 +41,18 @@ const CONTORNO = /* glsl */`
   }
   diffuseColor *= sampledDiffuseColor;
 `
+// il contorno caldo dei modelli 3D nello scontro (salda3d.js), uguale sulle sagome
+const FOTO = /* glsl */`
+  outgoingLight += vec3(1.0, 0.82, 0.6) * pow(1.0 - clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0), 2.0) * uContorno * (0.35 + diffuseColor.rgb);`
 const TAGLIO = /* glsl */`
   outgoingLight += vec3(1.0, 0.92, 0.78) * pow(1.0 - clamp(abs(normal.z), 0.0, 1.0), 1.2) * max(0.0, dot(normalize(normal.xy + 1e-4), uSoleVista)) * uTaglio * diffuseColor.rgb;
 `
 
 // `pezzi`: nome → [x, y, w, h] nell'atlante (dati/atlante.js, PEZZI); `ombra`: se fanno ombra (l'eroe no: la torcia è sua);
-// `contorno`: il filo scuro attorno e la luce di taglio (le figure ancorate del mondo di sopra)
-export function creaFigure(scena, { tex, norm, larga, alta, pezzi, maschera, max, ombra = true, contorno = false }) {
+// `contorno`: il filo scuro attorno e la luce di taglio (le figure ancorate del mondo di sopra); `foto`: le sagome dei modelli
+// (sagome.js), con le normali vere: la luce della scena com'è, senza il minimo e il contorno caldo degli sprite; `foto` è l'uniform
+// del contorno dei modelli nello scontro (salda3d.js, CONTORNO_PELLE), che le sagome hanno uguale
+export function creaFigure(scena, { tex, norm, larga, alta, pezzi, maschera, max, ombra = true, contorno = false, foto = null }) {
   const geo = new PlaneGeometry(1, 1).translate(0, 0.5, 0)
   // il contorno e il minimo di luce: uniform, perché nello scontro cambiano senza ricompilare (`nitido`)
   const nitidezza = { uMinimoF: { value: LUCE.minimoFigure }, uRimF: { value: LUCE.rim } }
@@ -59,13 +64,14 @@ export function creaFigure(scena, { tex, norm, larga, alta, pezzi, maschera, max
   const mat = conMaschera(new MeshStandardMaterial({
     map: tex, normalMap: norm, alphaTest: 0.5, side: DoubleSide, roughness: 0.75, metalness: 0,
   }), maschera, {
-    spinta: 0, chiave: contorno ? 'figure-contorno' : 'figure', vertice: false,   // un quadrato per figura: la luce per vertice ne farebbe quattro angoli
+    spinta: 0, chiave: foto ? 'figure-foto' : contorno ? 'figure-contorno' : 'figure', vertice: false,   // un quadrato per figura: la luce per vertice ne farebbe quattro angoli
     // né troppo buie né bruciate: fra il minimo e 1,3 volte il loro colore (il lampo del colpo, emissivo, resta sopra)
-    prima: `
+    prima: foto ? FOTO : `
       outgoingLight = clamp(outgoingLight - totalEmissiveRadiance, diffuseColor.rgb * uMinimoF, diffuseColor.rgb * 1.3) + totalEmissiveRadiance;
       outgoingLight += vec3(1.0, 0.82, 0.6) * pow(1.0 - clamp(abs(normal.z), 0.0, 1.0), 1.5) * uRimF * (0.4 + diffuseColor.rgb);${contorno ? TAGLIO : ''}`,
     poi(sh) {
       Object.assign(sh.uniforms, nitidezza)
+      if (foto) { sh.uniforms.uContorno = foto; sh.fragmentShader = 'uniform float uContorno;\n' + sh.fragmentShader }
       sh.fragmentShader = 'uniform float uMinimoF; uniform float uRimF;\n' + sh.fragmentShader
       sh.vertexShader = ATTRIBUTI + (contorno ? 'varying vec4 vRettA;\n' : '') + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n' + VERTICE + 'vLampo = aLampo; vAlfa = aAlfa;' + (contorno ? ' vRettA = aRett;' : ''))
       if (contorno) {

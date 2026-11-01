@@ -2,8 +2,6 @@
 // scenario intero di un piano sta in una voce di SCENARI, tutte con le stesse chiavi (docs/sotterraneo/scenari.md).
 // guastiDelleTessere chiede all'atlante ogni nome: un pezzo mancante è rosso nei test, non un muro invisibile.
 
-import { EROI } from './eroi.js'
-import { MOSTRI } from './mostri.js'
 import { CAMPAGNA, TRATTI_DELL_ABISSO } from './campagna.js'
 import { ORPELLI, POSE, NICCHIE } from './orpelli.js'
 import { guastiDeiRelitti } from './relitti.js'
@@ -81,9 +79,6 @@ export const PEZZO_DI = {
   curiosita: r => r.pezzo,
 }
 
-// tre o quattro fotogrammi per posa, guardano a destra: la sinistra è la stessa specchiata
-export const pezzoAndante = (chi, posa, fr) => `${chi}-${posa}-${fr % 4}`
-
 // tutti i nomi che uno scenario chiede all'atlante, tranne `colori`
 export function pezziDelloScenario(sc) {
   const fuori = []
@@ -140,17 +135,6 @@ export function guastiDelleTessere(nomi = null) {
   g.push(...guastiDeiRelitti(nomi))   // i relitti hanno il loro scenario e i loro sprite (dati/relitti.js)
   for (const q of [1, 6, 12, 24, 48]) chiedi(pezzoDelleGemme(q, 0), `gemme da ${q}`)
   chiedi('forziere-oro-chiuso', 'forziere d\'oro')
-  if (nomi) {
-    // eroi e mostri si chiedono alle loro tabelle, non a un elenco a mano; `unaPosa` ha solo il respiro
-    const chiedeva = [
-      ...EROI.map(e => ({ sprite: e.sprite, pose: ['fermo', 'corsa'] })),
-      ...Object.values(MOSTRI).map(m => ({
-        sprite: m.sprite, pose: m.unaPosa ? ['fermo'] : ['fermo', 'corsa'],
-      })),
-    ]
-    for (const { sprite, pose } of chiedeva)
-      for (const posa of pose)
-        chiedi(`${sprite}-${posa}-0`, `${sprite} ${posa}`)   // quanti ne ha lo dice l'atlante (dati/fotogrammi.js)
-  }
+  // eroi, mostri e persone non hanno sprite: il modello 3D, o la sua sagoma (docs/sotterraneo/sagome-3d.md)
   return g
 }

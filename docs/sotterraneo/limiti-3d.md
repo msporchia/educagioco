@@ -52,7 +52,7 @@ senza gli aloni −17 chiamate e −1-4 ms (poco, dentro il rumore); senza la sa
 costa più del cavaliere (la luce della gemma esiste solo dopo il colpo della staffa: vedi le proposte).
 
 **Gli effetti, spenti uno alla volta** (`--spegni`, 3 scheletri leggendari e l'eroe leggendario, fermo; tutto acceso banco 102,
-compiti 29): i chiarori −9 di tela, gli aloni −11 di tela e −6 di filo, la nebbia −12 di tela, **i mostri sprite (`mostri3d:0`) −19 di
+compiti 29): i chiarori −9 di tela, gli aloni −11 di tela e −6 di filo, la nebbia −12 di tela, **i mostri sprite (`mostri3d:0`, oggi le sagome) −19 di
 tela e −15 di filo** (114 chiamate invece di 250). Il resto in [grafica-3d-costi.md](grafica-3d-costi.md).
 
 **Coi colpi** (un attacco ogni 3 s, 20 s): gli effetti 3D costavano ~50 ms di filo a fotogramma, per **15-19 shader ricompilati a ogni
@@ -106,7 +106,7 @@ Le vesti non si misurano da sole (si mettono addosso a un eroe: «crea non torna
 1. **Gli effetti 3D non ricompilano** (`effetti3d/gestore.js`): i materiali di un effetto finito non si buttano (`dispose` a vuoto), il
    programma resta in serbo. 15-19 shader a ogni attacco → 0-2; filo coi colpi 83-87 → 47-53 ms (imitato). Il test
    `integrazione/sotterraneo-3d` conta i `linkProgram` (il conto dei programmi vivi non lo vedeva: si liberano e si rifanno).
-2. **Nella fascia bassa 6 mostri 3D di sopra invece di 8** (`mostriSopra` in `PROFILI`, `store/qualita.js`): gli altri restano sprite
+2. **Nella fascia bassa 6 mostri 3D di sopra invece di 8** (`mostriSopra` in `PROFILI`, `store/qualita.js`): gli altri hanno la sagoma
    come già oltre l'ottavo. Branco pieno: 325 chiamate invece di 399, filo 25,0 contro 27,8 ms (tre giri alterni).
 
 ## I rimedi grossi (proposte)
@@ -122,7 +122,7 @@ Le vesti non si misurano da sole (si mettono addosso a un eroe: «crea non torna
 - **La luce della gemma del mago** (`eroi3d/eroi.js`, una `PointLight` aggiunta al primo colpo della staffa): cambia il numero di luci
   della scena, quindi ricompila tutti i materiali al primo colpo e da lì costa a ogni pixel. Nella bassa un emissivo invece della luce.
 - **L'eroe vestito ~50 chiamate**: armi, scudo, veste e copricapo saldati coi perni delle mani; e il tetto di 8 mostri 3D nello scontro
-  delle discese (oggi 12) se il telefono vero lo chiede (mescolerebbe sprite e modelli nello stesso scontro).
+  delle discese (oggi 12) se il telefono vero lo chiede (mescolerebbe sagome e modelli nello stesso scontro).
 
 ## Per rifarle
 
@@ -151,6 +151,7 @@ del test d'integrazione), non con `grafica().programmi`.
 
 - La misura coi modelli veri **dopo il rimedio 1**, a telefono freddo: il gruppo `discese` (coi colpi) e `calore`.
 - Il mondo intero (non il prato) con persone e mostri: col contatore fps nel villaggio e fra due branchi; l'imitato non lo dice.
-- Se 6 mostri 3D di sopra si vedono bene accanto agli sprite degli altri.
+- Se 6 mostri 3D di sopra si vedono bene accanto alle sagome degli altri ([sagome-3d.md](sagome-3d.md)); il primo caricamento
+  dell'atlante delle sagome.
 
 Torna a [grafica-3d-costi.md](grafica-3d-costi.md) · [prestazioni-3d.md](prestazioni-3d.md).

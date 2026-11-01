@@ -22,14 +22,14 @@ I prototipi in `poc/` restano autonomi e non si toccano per il gioco. Il gioco u
 non entrano), mette tutto in una cartella per gruppo riscrivendo gli import, premette la riga «Generato da…» e mette
 `"Emoji Gioco"` in testa ai font delle tele ([../core/emoji.md](../core/emoji.md)). **Le copie non si toccano a mano**: si cambia
 il prototipo e si rilancia. Una zona di mostri che non si importa ancora (un agente la sta finendo) resta fuori da `elenchi.js` e
-le sue specie restano sprite; entra al rilancio. `-- --controlla` non scrive ed esce con 1 se una copia è vecchia (lo fa anche
+le sue specie restano senza modello; entra al rilancio. `-- --controlla` non scrive ed esce con 1 se una copia è vecchia (lo fa anche
 `unita/sotterraneo-mostri-3d`). Scritti a mano, accanto alle copie: `mostri3d/registro.js` ed `effetti3d/gestore.js` (il
 comando cancella solo i file col suo segno).
 
 ## Il registro: specie → modello
 
 `mostri3d/registro.js`. Per ogni specie (`dati/mostri.js`) un id `zona/chiave` degli elenchi, o un elenco per grado (comune,
-magico, raro, leggendario: l'ultimo vale per i gradi più alti), o `null` = resta lo sprite. I grossi (`dati/grossi.js`) hanno il
+magico, raro, leggendario: l'ultimo vale per i gradi più alti), o `null` = nessun modello. I grossi (`dati/grossi.js`) hanno il
 loro modello; le varianti armate dello scheletro: l'arciere ha il suo modello, guerriero e mago impugnano un'arma della
 collezione più ricca col grado (`userData.impugna`). La tabella:
 
@@ -50,7 +50,8 @@ della palude, Minotto → minotauro, Carbonchio → drago di lava, Roccaverde �
 magma, Gelomagno → golem di ghiaccio, Falcenera → mietitore.
 
 **Il gioco non si rompe mai**: un id che non c'è, una `crea` che si rompe o un'`anima` che si rompe mettono quel modello da parte
-e torna lo sprite (`console.warn`). `&spegni=mostri3d` nell'indirizzo li spegne tutti; l'eroe non ha uno sprite di ripiego ([anteprime-3d.md](anteprime-3d.md)).
+e resta la sua sagoma, la foto del modello ([sagome-3d.md](sagome-3d.md), `console.warn`). `&spegni=mostri3d` nell'indirizzo li mette
+tutti in sagoma; l'eroe non ha un ripiego ([anteprime-3d.md](anteprime-3d.md)).
 
 ## Il contratto dei modelli
 
@@ -64,15 +65,15 @@ di riposo); `userData.origine` l'Object3D da cui partono i colpi a distanza.
 - **Una riserva per modello**: le istanze si riusano; lo stato di disegno del mostro (`cose.js`) tiene la sua finché si vede, a
   fotogramma finito chi non è stato preso si nasconde. Niente allocato a fotogramma oltre la prima volta.
 - **Chi ha il modello**: i mostri visibili si ordinano (lo scontro per primo, poi i più vicini all'eroe) e i primi
-  `ACCESI.mostri3d` (12) hanno il modello; gli altri restano sprite. Le regole di luce non cambiano: un mostro si vede solo nella
+  `ACCESI.mostri3d` (12) hanno il modello; gli altri la sagoma del modello ([sagome-3d.md](sagome-3d.md)). Le regole di luce non cambiano: un mostro si vede solo nella
   luce di adesso ([luce.md](luce.md)); il modello prende le luci della scena come l'eroe 3D, e non fa ombra.
-- **Misura**: alto quanto lo sprite che sostituisce × 0,72 (lo stesso rapporto dell'eroe), mai più largo di 1,5 celle (di più
-  per i grossi); `ALTEZZA` corregge chi si misura male (il drago grande). `s.alto` diventa l'altezza vera: nomi, barre e
-  galloni stanno sopra; `s.nome` resta lo sprite che sarebbe (per le prove).
+- **Misura**: alto 0,72 volte il suo posto (`dati/altezze.js`, allungato per la vista; lo stesso rapporto dell'eroe), mai più largo
+  di 1,5 celle (di più per i grossi): `scalaDelModello` di `sagome-pura.js`, uguale per la sagoma. `ALTEZZA` corregge chi si misura
+  male (il drago grande). `s.alto` diventa l'altezza vera: nomi, barre e galloni stanno sopra.
 - **Dove guarda**: l'eroe (sveglio o nello scontro), un poco girato verso la telecamera; chi cammina dove va; chi dorme di tre
-  quarti come lo sprite. Gira col tempo (`verso`), mai coi fotogrammi.
+  quarti. Gira col tempo (`verso`), mai coi fotogrammi (`giraIlMostro`, lo stesso per la sagoma).
 - **Il lampo, la tinta, lo svanire**: su copie dei materiali per istanza accese solo quando servono, coi valori vivi
-  dell'originale (così il respiro che pulsa resta). Chi cade si rovescia all'indietro, si ferma e svanisce coi tempi dello sprite.
+  dell'originale (così il respiro che pulsa resta). Chi cade si rovescia all'indietro, si ferma e svanisce in 1,9 s.
 - **Il dito**: i modelli sono «modellati» per `dito.js` (il raggio li prende); nello scontro vale il più vicino entro 44 px.
 - **I pezzi fermi saldati** (`scena3d/salda3d.js`): le mesh che non si muovono rispetto al loro perno, con lo stesso materiale,
   diventano una. Chi si muove lo dice il modello: 64 istanti d'idle e l'attacco intero, chi cambia resta a sé. Si calcola una
@@ -96,7 +97,7 @@ di riposo); `userData.origine` l'Object3D da cui partono i colpi a distanza.
   (`PROIETTILE`: freccia, spore, ragnatela, veleno, sputo, onda, masso, fuoco, fulmine, raggio, teschio, luce) dalla sua
   `origine`; il soffio dei draghi lo disegna il drago. Da vicino, sull'eroe colpito compare il segno della sua posa
   (`SEGNO_COLPO`: morso, zampata, fendente…). Prima di questo lavoro lo scatto dei mostri non si muoveva affatto
-  (`muoviAssalto` era chiamato solo per l'eroe): ora scattano anche gli sprite.
+  (`muoviAssalto` era chiamato solo per l'eroe): ora scattano anche le sagome.
 - **Gli stati addosso**: quelli che il racconto mostra (o la verità del motore, `statiDel`) diventano gli stati 3D (`statoDi`:
   veleno → avvelenato o in fiamme, debole → fiacco o gelato, fermo → stordito o gelato, sanguina, esposto → bloccato, rotto →
   senza difesa), accesi finché ci sono e spenti sfumando; la loro `tintaCorpo` tinge il modello. Le aure si compilano la prima
@@ -118,7 +119,7 @@ Misurato con SwiftShader (`&dpr=1`, 390×844, le cantine, `luce=stanza`; i ms no
 
 | | chiamate | triangoli | `banco(20)` |
 |---|---|---|---|
-| 8 mostri sprite (`&spegni=mostri3d`) | 101 | 72k | 48 ms |
+| 8 mostri sprite (`&spegni=mostri3d`, prima delle sagome) | 101 | 72k | 48 ms |
 | 8 mostri 3D, senza saldare | 801 | 104k | 56 ms |
 | 8 mostri 3D, saldati | 458 | 104k | 53 ms |
 | scontro con 3 mostri (6 modelli in vista) | 257 | 39k | — |
@@ -130,7 +131,7 @@ paesaggi con `&spegni=mostri3d,eroe` e lo scontro fino a 260 chiamate (con gli s
 
 ## Cosa manca
 
-- Nessuna specie resta allo sprite (le sei di `varie.js` sono entrate il 22 ottobre); i modelli di `varie.js` sono al primo giro: da guardare nel gioco.
+- I modelli di `varie.js` sono al primo giro: da guardare nel gioco.
 - Le pose d'attacco dell'eroe con arco e staffa.
 - Il cammino: i modelli scorrono col loro idle, non hanno passi.
 - Gli shader compilano la prima volta che un modello o un effetto compare (uno scatto al primo incontro).

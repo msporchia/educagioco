@@ -22,9 +22,9 @@ passa, `Gioco.vue` gioca lo scontro.
 - **Il cerchio di luce**: si disegnano i mostri vivi entro `SOPRA.vista` = 9,5 celle dall'eroe (`mostriVicini`), e solo dove la nebbia è
   già aperta; nell'ultima cella e mezza (`ORLO`) svaniscono a retino. Il terreno resta visto dappertutto dove si è stati: il cerchio
   vale per i mostri, come nelle terre selvagge (`RAGGIO_APERTO`).
-- **Ancorati come le persone** (`persone.js`, la stessa InstancedMesh: nessuna chiamata in più), col contorno e l'ombra a contatto,
-  alla scala delle discese (`fattoreDelMostro`). Chi dorme respira piano (la posa da fermo a 1,5 fotogrammi al secondo) col 💤 sopra;
-  sveglio respira a 4, e quando corre ha i passi a 8 e guarda dove va. I fotogrammi vanno col tempo, mai coi fotogrammi.
+- **Ancorati come le persone** (`persone.js`), col modello 3D i più vicini e la sua foto gli altri ([sagome-3d.md](sagome-3d.md)), con
+  l'ombra a contatto, alla misura delle discese (`dati/altezze.js`). Chi dorme ha il 💤 sopra; sveglio guarda l'eroe, e quando corre
+  guarda dove va. Tutto va col tempo, mai coi fotogrammi.
 - **Il signore della regione** è 1,4 volte la sua specie, con la corona e il nome sopra la testa («👑 Il signore dei campi»); **i
   caporali** 1,15 volte, coi galloni d'oro come giù. Provato il nome anche sui caporali: «Un cinghiale runico caporale» si legge male.
 - **Il bottino rimasto per terra** (`stato.perTerra`): il suo sprite, piccolo, che ondeggia sul prato.

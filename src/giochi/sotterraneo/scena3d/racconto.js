@@ -47,7 +47,7 @@ export function creaRacconto(S) {
   const altoEroe = () => (S.eroe.alto || 1.4) * 0.72   // il modello è alto così rispetto allo sprite (eroe3d.js); lo sprite si conta uguale
   const pettoEroe = out => { const d = S.eroe.disegnato || S.eroe; return out.set(d.x, altoEroe() * 0.58, d.z) }
   const piediDi = (v, out) => out.set(v.x + (v.dx || 0), 0, v.z + (v.dz || 0))
-  const altoDi = v => (v.in3d ? v.alto : (v.alto || 1) * 0.72)
+  const altoDi = v => v.alto || 0.72   // l'altezza del modello, o della sua sagoma (cose.js)
   const pettoDi = (v, out) => (S.mostri3d && v.in3d && S.mostri3d.petto(v, out)) || out.set(v.x + (v.dx || 0), Math.max(0.4, altoDi(v) * 0.55), v.z + (v.dz || 0))
   // l'effetto 3D dell'abilità dell'eroe, su tutti quelli che prende: il bersaglio per primo
   function lancia3d(k) {
@@ -164,9 +164,9 @@ export function creaRacconto(S) {
     if (!v) return
     if (mossa && mossa.id !== 'attacco' && ['scatta', 'lancia', 'cura', 'urla'].includes(tipo) && mossaDelMostro(v, tipo, mossa)) return
     if (tipo === 'scatta' || tipo === 'lancia') {
-      // col modello 3D: la sua posa d'attacco (mostro3d.js la legge da `attacco3d`), che arriva quando il racconto fa incassare
-      // l'eroe; prima dell'arrivo la carica è stretta nel passo del racconto, dopo va coi suoi tempi
-      const att = S.mostri3d && v.in3d && S.mostri3d.attaccoDi(v)
+      // col modello 3D (o la sua sagoma, che ha le stesse pose: sagome.js): la sua posa d'attacco (mostro3d.js la legge da `attacco3d`),
+      // che arriva quando il racconto fa incassare l'eroe; prima dell'arrivo la carica è stretta nel passo del racconto, dopo va coi suoi tempi
+      const att = (S.mostri3d && v.in3d && S.mostri3d.attaccoDi(v)) || (v.inSagoma && v.attaccoSagoma) || null
       if (att) {
         const picco = TEMPI.passo / 1000, dur = Math.max(TEMPI.mostro / 1000, picco + (1 - att.arrivo) * att.durata)
         const proj = att.proiettile
@@ -176,7 +176,7 @@ export function creaRacconto(S) {
         const P = proj && PROIETTILE[proj.tipo], def = P && S.effetti3d && effettoDi(P.chiave)
         if (def) {
           const su = !!P.su
-          const da = su ? piediDi(S.eroe.disegnato || e, v1) : (S.mostri3d.origine(v, v1) || pettoDi(v, v1))
+          const da = su ? piediDi(S.eroe.disegnato || e, v1) : ((S.mostri3d && S.mostri3d.origine(v, v1)) || pettoDi(v, v1))
           const a = su ? piediDi(S.eroe.disegnato || e, v2) : pettoEroe(v2)
           S.effetti3d.lancia(def, { da, a, elem: P.elem, tinta: P.tinta, scala: su ? altoEroe() : 1 })
         }

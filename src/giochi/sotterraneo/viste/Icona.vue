@@ -17,7 +17,6 @@ const props = defineProps({
   tre: { type: String, default: null },      // la chiave dell'anteprima 3D (anteprime3d-pura.js), o…
   cosa3d: { type: Object, default: null },   // …la cosa, e la chiave la si ricava qui: se c'è, lo sprite non si usa
   lato: { type: Number, default: 0 },        // il quadrato dell'anteprima, in px; 0: quanto l'emoji
-  riduci: { type: Number, default: 1 },      // solo per lo sprite (la fila dei turni): l'anteprima è già della misura giusta
 })
 
 const servizio = usaAnteprime3d()
@@ -34,7 +33,7 @@ const lato = computed(() => {
 <template>
   <span v-if="chiave" class="sot-icona sot-icona-3d" :data-anteprima="tre ? '3d' : 'attesa'" :data-anteprima-chiave="chiave"
         :style="{ width: lato + 'px', height: lato + 'px' }"><Quadro3d v-if="tre" :immagine="tre" /></span>
-  <span v-else class="sot-icona" :style="f ? { ...f.gabbia, ...(riduci < 1 ? { transform: `scale(${riduci})` } : null) } : null">
+  <span v-else class="sot-icona" :style="f ? f.gabbia : null">
     <i v-if="f" :style="f.pezzo"></i>
     <b v-else class="em" :style="{ fontSize: emAlto + 'px' }">{{ em }}</b>
   </span>

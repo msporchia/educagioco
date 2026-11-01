@@ -4,9 +4,9 @@
 
    Il gioco vero, coi suoi due giri di fotogrammi (il motore in Gioco.vue e il disegno in scena3d/indice.js): qui
    `requestAnimationFrame` e `performance.now` sono finti, e ogni «fotogramma» fa passare 1/60, 1/120 o 1/144 di secondo
-   (il tempo virtuale corre quanto la CPU disegna: SwiftShader è lento, il gioco no). In un secondo simulato si conta quante
-   volte cambia lo sprite dell'eroe e di due mostri addormentati in luce, e quanto si muove la telecamera dopo un passo:
-   deve venire uguale a 60, 120 e 144 Hz. È la prova di quello che l'utente vedeva su un monitor a 120 Hz.
+   (il tempo virtuale corre quanto la CPU disegna: SwiftShader è lento, il gioco no). In due secondi simulati si conta quante
+   volte cambia il passo dell'eroe e il respiro di due mostri addormentati in luce (la posa della loro sagoma, ogni
+   PASSO_RESPIRO: scena3d/sagome-pura.js), e quanto si muove la telecamera dopo un passo: deve venire uguale a 60, 120 e 144 Hz. È la prova di quello che l'utente vedeva su un monitor a 120 Hz.
    `node test/esegui.mjs sotterraneo-3d-tempo`
    tempo: 300
    ═══════════════════════════════════════════════════════════════════ */
@@ -38,18 +38,19 @@ async function misura(hz) {
   await page.evaluate(() => { location.hash = 'sotterraneo=2&eroe=elfa&seme=7&stanza=sala&luce=stanza&sotterraneo=branco&mostri=2&campo=1&dpr=0.6&spegni=nebbia,polvere,ombre' })
   await page.reload()
   await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 2, null, { timeout: 60000 })
-  // un secondo simulato: i cambi di sprite, e dove va la telecamera mentre l'eroe resta fermo (da subito ferma)
+  // due secondi simulati: i cambi del passo e del respiro, e dove va la telecamera mentre l'eroe resta fermo (da subito ferma)
   const r = await page.evaluate(() => new Promise(fine => {
     const s3 = window.__sotterraneo3d, c = s3.corsa
-    const mostri = c.livello.robe.filter(q => q.che === 'mostro' && !q.morto && s3.statoDi(q).nome).slice(0, 2)
+    const mostri = c.livello.robe.filter(q => q.che === 'mostro' && !q.morto && s3.statoDi(q) && s3.statoDi(q).fase3d != null).slice(0, 2)
+    const respiro = q => { const s = s3.statoDi(q); return Math.floor((s.t + s.fase3d) / 0.8) }   // PASSO_RESPIRO
     const conti = { eroe: 0, mostri: mostri.map(() => 0) }
     let prima = null, t0 = null
     window.__dopo = t => {
       if (t0 == null) t0 = t
-      const ora = { eroe: s3.eroe.nome, mostri: mostri.map(q => s3.statoDi(q).nome) }
+      const ora = { eroe: s3.eroe.passo, mostri: mostri.map(respiro) }
       if (prima) { if (ora.eroe !== prima.eroe) conti.eroe++; ora.mostri.forEach((n, i) => { if (n !== prima.mostri[i]) conti.mostri[i]++ }) }
       prima = ora
-      if (t - t0 >= 1000) { window.__dopo = null; fine({ ...conti, quanti: mostri.length, fotogrammi: window.__fotogrammi }) }
+      if (t - t0 >= 2000) { window.__dopo = null; fine({ ...conti, quanti: mostri.length, fotogrammi: window.__fotogrammi }) }
     }
   }))
   await page.close()
@@ -59,16 +60,16 @@ async function misura(hz) {
 const esiti = {}
 for (const hz of [60, 120, 144]) {
   esiti[hz] = await misura(hz)
-  nota(`${hz} Hz, un secondo: l'eroe cambia sprite ${esiti[hz].eroe} volte, i mostri ${esiti[hz].mostri.join(' e ')}`)
+  nota(`${hz} Hz, due secondi: il passo dell'eroe cambia ${esiti[hz].eroe} volte, il respiro dei mostri ${esiti[hz].mostri.join(' e ')}`)
 }
 const a = esiti[60]
 dentro('ci sono due mostri da guardare', a.quanti, 2, 2)
 for (const hz of [120, 144]) {
-  dentro(`${hz} Hz: l'eroe cambia sprite quanto a 60 Hz`, esiti[hz].eroe, a.eroe - 1, a.eroe + 1)
-  esiti[hz].mostri.forEach((n, i) => dentro(`${hz} Hz: il mostro ${i + 1} cambia sprite quanto a 60 Hz`, n, a.mostri[i] - 1, a.mostri[i] + 1))
+  dentro(`${hz} Hz: il passo dell'eroe cambia quanto a 60 Hz`, esiti[hz].eroe, a.eroe - 1, a.eroe + 1)
+  esiti[hz].mostri.forEach((n, i) => dentro(`${hz} Hz: il mostro ${i + 1} cambia respiro quanto a 60 Hz`, n, a.mostri[i] - 1, a.mostri[i] + 1))
 }
-// quanto il 2D: chi dorme respira a 4 fotogrammi al secondo (scena/tela.js)
-a.mostri.forEach((n, i) => dentro(`il mostro ${i + 1} che dorme respira come nel 2D (4 al secondo)`, n, 2, 5))
+// il respiro fotografato: in due secondi, una posa nuova ogni 0,8 s
+a.mostri.forEach((n, i) => dentro(`il mostro ${i + 1} che dorme cambia respiro ogni 0,8 s`, n, 1, 4))
 dentro('nessun errore in console', Object.values(esiti).flatMap(e => e.errori).length, 0, 0)
 await browser.close()
 riassunto('il sotterraneo 3d a ogni frequenza')

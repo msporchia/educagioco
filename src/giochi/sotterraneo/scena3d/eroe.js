@@ -1,9 +1,9 @@
 // L'eroe in 3D: il suo modello (eroe3d.js, con le armi in mano), il lampo della ferita e della cura, lo scatto dell'assalto, il giro
 // su sé stesso, il passaggio nel portale, e la sua torcia (scena3d/luci.js). Sta dove lo mette il motore; nello scontro il palco lo
-// porta al suo posto (`meta`). La misura viene dalla sua figura dell'atlante (le pose: dati/tessere.js `pezzoAndante`); la torcia in
-// mano è il suo modello (roba-per-terra.js, `creaTorciaInMano`).
-import { pezzoAndante } from '../dati/tessere.js'
-import { LUCE } from './costanti.js'
+// porta al suo posto (`meta`). La misura è quella del suo posto (dati/altezze.js); la torcia in mano è il suo modello
+// (roba-per-terra.js, `creaTorciaInMano`).
+import { ALTO_DELL_EROE } from '../dati/altezze.js'
+import { LUCE, ALLUNGA } from './costanti.js'
 import { muoviAssalto } from './racconto.js'
 import { barretta } from './etichette.js'
 import { verso } from './tempo.js'
@@ -53,14 +53,8 @@ export function disegnaEroe(e, corsa, { figure, luci, etichette, camera, dt, dtS
     if (ps.t > 1.6) { e.passaggio = null; if (ps.fatto) ps.fatto() }
   }
   if (Math.abs(e.vx) > 0.1) e.specchio = e.vx < 0
-  const chi = (corsa.io && corsa.io.sprite) || 'cavaliere'
-  const fr = (e.t | 0)
-  const nome = pezzoAndante(chi, e.cammina ? 'corsa' : 'fermo', fr)
-  e.nome = nome   // per le prove: lo sprite di adesso
-  const giro = e.gira > 0 ? (0.5 - e.gira) * Math.PI * 4 : 0
-  const o = figure.o()
-  o.rosso = e.colpito * 2; o.verde = e.cura * 0.9; o.blu = e.cura * 1.3; o.trasparenza = trasparenza; o.specchio = e.specchio; o.giro = giro
-  e.alto = figure.alto(nome)
+  e.passo = e.t | 0   // per le prove: il passo del cammino e del respiro (cresce col tempo, non coi fotogrammi)
+  e.alto = ALTO_DELL_EROE * ALLUNGA
   // il modello 3D (scena3d/eroe3d.js), che porta da sé le armi: senza, il posto resta vuoto (niente sprite di ripiego)
   if (modello) modello.aggiorna(e, corsa, { x, z, y: quota ? quota(x, z) : 0, trasparenza, dt, alto: e.alto })
   const su = Math.sin(e.t * (e.cammina ? 0.9 : 0.6)) * (e.cammina ? 0.9 : 0.5)

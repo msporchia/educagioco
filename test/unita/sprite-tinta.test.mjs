@@ -1,10 +1,9 @@
 /* La ricolorazione di un pezzo, `"tinta"` nel foglietto (strumenti/sprite/atlante.py, `ritinge_in`): la tonalità dei pixel
    verdi ruota al viola, la pelle e il grigio restano, l'alfa non si tocca. Per una figura provvisoria fatta da un'altra
-   (l'incantatrice è la guaritrice col verde ruotato, docs/sotterraneo/chi-cura.md). Lancia il vero script Python su
-   una figurina finta; senza python3 o Pillow (come in CI, che lancia solo le unità) salta e lo dice. L'ultimo pezzo guarda
-   che l'atlante del sotterraneo abbia le due pose dell'incantatrice. */
+   (l'incantatrice era la guaritrice col verde ruotato: dal 1° novembre 2026 le persone di sopra non hanno sprite e nessun
+   foglietto la usa, lo strumento resta). Lancia il vero script Python su una figurina finta; senza python3 o Pillow (come in
+   CI, che lancia solo le unità) salta e lo dice. */
 import { spawnSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const python = code => {
@@ -54,11 +53,5 @@ if (!r) {
   uguale('l\'originale non si modifica', JSON.stringify(r.originale), '[60,140,60,200]')
 }
 
-// nell'atlante vero ci sono le due pose dell'incantatrice, e il foglietto dice che la tinta è sua
-const atlante = readFileSync(new URL('../../src/giochi/sotterraneo/dati/atlante.js', import.meta.url), 'utf8')
-for (const n of ['incantatrice-fermo-0', 'incantatrice-saluta-0']) controlla(`nell'atlante c'è ${n}`, atlante.includes(`"${n}":[`))
-const foglietto = JSON.parse(readFileSync(new URL('../../strumenti/sprite/sorgenti/sotterraneo/generati/sopra-personaggi-1.json', import.meta.url), 'utf8'))
-for (const n of ['incantatrice-fermo-0', 'incantatrice-saluta-0'])
-  controlla(`${n}: dal foglietto, ricolorato`, !!(foglietto.sprite[n] && foglietto.sprite[n].tinta))
 
 riassunto('la ricolorazione dei pezzi')

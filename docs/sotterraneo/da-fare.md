@@ -126,15 +126,11 @@ coi numeri di `npm run taratura` ([giocatori-tipo.md](giocatori-tipo.md)) e con 
 
 ## Il mondo di sopra
 
-- **Il terzo foglio dei personaggi** (prompt 9 di `PROMPT-terra-di-sopra.md`, da chiedere a ChatGPT): la figura vera
-  dell'incantatrice, che ha una provvisoria (la guaritrice ruotata al viola), e nove che il gioco non ha, ognuna con un ruolo
-  da scrivere quando arriva: la sentinella dipinta per le discese rosse, il cartografo che dà la bussola, la cacciatrice, l'ortolana, il
-  bambino, la nonna e il nonno per le missioni nuove, il cantastorie e la lavandaia per il villaggio. Si ritaglia solo chi ha un ruolo
-  ([sprite.md](../core/sprite.md#gli-inutilizzati)).
-- **La bussola del mock** (il minatore che la dà, lei che punta alla prossima
-  discesa) non è fatta. La posa del minatore con la bussola in mano c'è, nel
-  primo foglio dei personaggi (`sopra-personaggi-1.png`, riquadro nel suo
-  foglietto), ma non è nell'atlante: non la nomina nessuno.
+- **Le persone nuove** (la sentinella per le discese rosse, il cartografo che dà la bussola, l'ortolana, il bambino, i nonni, il
+  cantastorie, la lavandaia): da fare come modelli 3D in `poc/persone-3d/` ([persone-3d.md](persone-3d.md)), non più come fogli
+  dipinti: le persone di sopra non hanno sprite, chi è lontano ha la foto del suo modello ([sagome-3d.md](sagome-3d.md)). Il prompt 9
+  di `PROMPT-terra-di-sopra.md` è superato.
+- **La bussola del mock** (il minatore che la dà, lei che punta alla prossima discesa) non è fatta: il gesto va nel modello del minatore.
 - **Le missioni dopo la prima volta**: diciassette in tutto (un albero, tre rami, cinque da contare),
   e consegnate non tornano. Se piacciono, ne servono altre per chi rigioca,
   altri rami più lunghi (oggi i seguiti sono di un solo passo), e una forma
