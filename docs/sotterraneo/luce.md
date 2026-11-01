@@ -3,7 +3,7 @@
 Nero = mai stato. Scuro e freddo = ricordato. Pieno e caldo = lo stai
 guardando. Un sotterraneo tutto illuminato è una piantina, e su una piantina
 non c'è niente da esplorare. La piantina c'è — la **mappina** in alto a
-destra — e mostra solo il visto più tre punti: dove sei, la scala, chi ha la
+destra — e mostra solo il visto più i punti che servono: dove sei, la scala, chi ha la
 chiave. La 🗺️ della barra in basso la apre grande ([barra.md](barra.md)).
 
 Il codice: `aggiornaLuce` in `motore/corsa.js`, le misure in `dati/mondo.js`,
@@ -64,6 +64,11 @@ il disegno in `scena3d/` ([grafica-3d.md](grafica-3d.md)).
 - **Nelle celle ricordate** si disegnano porte, forzieri, scala, fonte,
   arredo e roba per terra, mai i mostri: il ricordo non si muove. Sulla mappina
   il custode della chiave è un segno fisso, sta dov'è la sua casa.
+- **Com'è disegnata** (`scena/minimappa.js`; l'utente, 1 novembre 2026: «la mini mappa è poco leggibile»): carta scura con la cornice dorata,
+  pavimento visto chiaro e caldo con una **linea scura sul bordo dei muri** (si leggono le stanze, non una macchia), i relitti scuri e
+  l'acqua azzurra. Ogni cosa ha una **forma sua col contorno scuro**, non solo un colore: scala = triangolo, portale e chiave = rombo,
+  porta e forziere = quadrato, cosa da toccare e missione = tondo; l'eroe è un tondo bianco col cerchio d'oro attorno. **La piccola è uno zoom attorno all'eroe** (24 celle per lato, `FINESTRA`, celle fino a 8 px, ~160 px in tutto): per vedere il piano intero c'è la mappa grande della 🗺️ (l'utente, 1 novembre 2026). I segni mai sotto i 3 px di raggio. La mappina grande ha sotto la **legenda**, solo coi segni
+  che ci sono in quel piano.
 
 ## I mostri e l'ombra
 
