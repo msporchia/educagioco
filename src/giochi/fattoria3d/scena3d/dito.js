@@ -106,9 +106,9 @@ export class Dito {
 
   _fine(e) {
     if (!this.punti.has(e.pointerId)) return
+    const w = this.w, su = e.type === 'pointerup'
     if (this.punti.size === 2) w.camera.zoom = dentroLimiti(w.camera.zoom)    // il pizzico finisce: l'elastico riporta dentro
     this.punti.delete(e.pointerId)
-    const w = this.w, su = e.type === 'pointerup'
     clearTimeout(this.lungo); this.lungo = 0
     if (!su) w.costruzione.alzaDito()
     if (!su && w.costruzione.attivo && !w.costruzione.parcheggiato) w.costruzione.annullaTrascinamento()
