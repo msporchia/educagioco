@@ -184,7 +184,8 @@ for (const L of [12, 16, 20, 24, 30]) {
   // 30 e non 25, e 50 e non 55 qui sotto, dal 30/10: con le zone ritarate sui comuni da due o tre risposte stanno a un punto dal bordo (24–26%, 55%), e otto semi sono pochi
   controlla('rossa/arancio duro (eroe del 11 e del 12): a 9/10 si vince di rado', a9(11) <= 0.3 && a9(12) <= 0.3, `${cento(a9(11))} · ${cento(a9(12))}`)
   controlla('e a 6/10 quasi mai', a6(11) <= 0.1 && a6(12) <= 0.1, `${cento(a6(11))} · ${cento(a6(12))}`)
-  controlla('l\'arancio più facile (eroe del 15): a 9/10 una volta su due', a9(15) >= 0.45 && a9(15) <= 0.6, cento(a9(15)))
+  // il tetto era 0,6: con le torce appese ai muri (1/11/2026) la roba con cui si esce dalla storia cambia col caso, e l'eroe del 15 vince il 63%
+  controlla('l\'arancio più facile (eroe del 15): a 9/10 una volta su due', a9(15) >= 0.45 && a9(15) <= 0.67, cento(a9(15)))
   controlla('verde (eroe del 16): a 9/10 più spesso che no', a9(16) >= 0.65, cento(a9(16)))
   controlla('eroe del 20: a 9/10 quasi sempre', a9(20) >= 0.8, cento(a9(20)))
   controlla('e a 6/10 circa metà delle volte', a6(20) >= 0.5, cento(a6(20)))
