@@ -1,10 +1,7 @@
 // Lo scontro com'è per chi lo guarda (docs/sotterraneo/scontro.md, «La vista»): dal foglio della corsa i dati che
 // la vista dello scontro disegna, e come stanno disposti i mostri in campo. Funzioni pure, nessuno stato: la corsa non sa niente
 // di righe e di colonne, e la vista non calcola un numero.
-import { MOSTRI } from '../dati/mostri.js'
 import { ELEMENTI, STATI } from '../dati/elementi.js'
-import { pezzoAndante } from '../dati/tessere.js'
-import { fotogrammaDi, quantiFotogrammi } from '../dati/fotogrammi.js'
 import { coloreDelGrado, etichettaDi } from '../dati/varianti.js'
 import { NODI, RAMI } from '../dati/abilita.js'
 
@@ -173,12 +170,10 @@ export function vistaDelloScontro(c) {
   const segni = new Map((f.colpiti || []).map(x => [x.chi, segniDel(x)]))
   const minaccia = new Map((f.minaccia || []).map(x => [x.chi, x]))
   const mostri = f.campo.map((m, i) => {
-    const scheda = MOSTRI[m.tipo] || {}
     const mi = minaccia.get(m)
     return {
       i, nome: m.nome, tipo: m.tipo, chiave: !!m.chiave, grosso: m.grosso || null,
-      // chi ha i passi guarda l'eroe di profilo (la posa di lato, ferma); gli altri respirano (docs/sotterraneo/scontro-interfaccia.md)
-      sprite: scheda.sprite ? fotogrammaDi(scheda.sprite, !scheda.unaPosa && quantiFotogrammi(scheda.sprite, 'corsa') ? 'corsa' : 'fermo', 0) : null, em: m.em,
+      em: m.em,
       // la variante armata e il suo grado: il nome senza articolo nel colore della rarità, l'arma in pugno, l'alone
       etichetta: etichettaDi(m.nome), grado: m.grado && m.grado !== 'comune' ? m.grado : null, colore: coloreDelGrado(m.grado), arma: m.arma || null, variante: m.variante || null,
       ossa: Math.max(0, m.ossa), ossaMax: m.ossaMax, morto: !!m.morto,
@@ -195,7 +190,7 @@ export function vistaDelloScontro(c) {
     posti: disponi(mostri),
     turni: (f.turni || []).map(t => (t.chi === 'eroe' ? { chi: 'eroe', salta: false } : { chi: indice(t.chi), salta: !!t.salta })),
     apertura: { agguato: !!f.agguato, sorpresa: !!f.sorpresa, mostri: f.campo.length },
-    eroe: { sprite: c.io.sprite ? pezzoAndante(c.io.sprite, 'fermo', 0) : null, em: c.io.em, vita: c.vita, vitaMax: c.vitaMax,
+    eroe: { em: c.io.em, vita: c.vita, vitaMax: c.vitaMax,
             // chi è e cosa ha in mano e addosso: per il ritratto 3D della fila dei turni (viste/anteprima3d.js)
             chi: c.io.sprite || null, mano: c.mano || null, mancina: c.mancina || null, corpo: c.corpo || null },
     mie: statiMiei(f.io || {}, c),
@@ -203,30 +198,4 @@ export function vistaDelloScontro(c) {
   }
 }
 
-// quanto è alto un mostro dei fogli dipinti nello scontro, rispetto all'eroe: dipinti, il ratto viene alto quasi quanto il
-// cavaliere (l'utente, 12 ottobre: «grotteschi, vanno proporzionati»). Goblin, scheletro, orco e gigante vengono dallo
-// stesso set dell'eroe (0x72), già in proporzione con lui: stanno alla sua scala e qui non ci sono
-export const TAGLIA = {
-  ratto: 0.55, pipistrello: 0.5, melma: 0.6, vespa: 0.6, fungo: 0.6, granchio: 0.55, serpente: 0.55,
-  lupo: 0.7, fantasma: 0.8, golem: 1.1, troll: 1.15,
-  // il bestiario per ambientazione (docs/sotterraneo/mostri.md): un piranha piccolo, un ent e un drago più grandi dell'eroe
-  scheletro: 1.05, zombie: 1.0, 'scheletro-scudo': 1.0, mummia: 0.95, ghoul: 1.0, mietitore: 1.15,
-  diavoletto: 0.6, 'spirito-fuoco': 0.8, 'golem-magma': 1.15, 'golem-pietra': 1.15, 'golem-muschio': 1.2, 'golem-ghiaccio': 1.15, 'golem-lava': 1.25,
-  ragno: 0.5, pianta: 0.75, 'melma-rosa': 0.6, 'melma-viola': 0.6, 'mostro-verde': 1.2, 'mostro-viola': 1.0,
-  piranha: 0.55, polpo: 0.7, 'fantasma-azzurro': 0.8, tartaruga: 0.65, cinghiale: 0.65, ent: 1.4,
-  scorpione: 0.6, 'spirito-elettrico': 0.8, 'pipistrello-occhio': 0.55, ombra: 0.8, 'teschio-azzurro': 0.7,
-  draghetto: 0.7, occhio: 0.6, grifone: 1.2, drago: 1.9,
-}
-export const ALTO_EROE = 28   // i pixel dello sprite dell'eroe, la misura di tutti
-// lo stesso sul campo, dove ogni sprite sta alla scala dell'eroe: di quante volte va ingrandito o rimpicciolito perché il mostro sia alto
-// TAGLIA volte l'eroe (a quarti, fra mezzo e uno e mezzo); chi non è in TAGLIA (goblin, orco, gigante: del set dell'eroe) resta com'è.
-// Un ingrandimento non lo fa più largo di LARGO_SUL_CAMPO pixel (le caselle sono di 16: un golem di lava largo il doppio c'è già), e chi è
-// già più largo non si rimpicciolisce: il campo mostra le bestie piccole più piccole, non le grosse più piccole
-export const LARGO_SUL_CAMPO = 44
-export const fattoreDelMostro = (tipo, altoSprite, largoSprite = 0) => {
-  if (TAGLIA[tipo] == null) return 1
-  const f = Math.max(0.5, Math.min(1.5, Math.round(ALTO_EROE * TAGLIA[tipo] / Math.max(1, altoSprite) * 4) / 4))
-  if (f <= 1 || !largoSprite) return f
-  return Math.max(1, Math.floor(Math.min(f, LARGO_SUL_CAMPO / largoSprite) * 4) / 4)
-}
 

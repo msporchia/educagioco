@@ -9,7 +9,8 @@
 import { COSE, chiaveDelPezzo, aLivello, baseDi, livelloDelPezzo, raritaDi, nomeDelPezzo, guastiDelleCose } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { RARITA, ABILITA_DEI_PEZZI, LEGGENDARI, DEI_GROSSI, UNICI, TINTE_DELLE_ABILITA } from '../../src/giochi/sotterraneo/dati/pezzi.js'
 import { ASPETTI } from '../../src/giochi/sotterraneo/dati/aspetti.js'
-import { GROSSI, GROSSO_DELLA_DISCESA, GROSSO_OGNI, grossoDi, guastiDeiGrossi, figuraDelGrosso, spriteDelGrosso, EROE } from '../../src/giochi/sotterraneo/dati/grossi.js'
+import { GROSSI, GROSSO_DELLA_DISCESA, GROSSO_OGNI, grossoDi, guastiDeiGrossi } from '../../src/giochi/sotterraneo/dati/grossi.js'
+import { ALTO_DEL_GROSSO, ALTO_DELL_EROE } from '../../src/giochi/sotterraneo/dati/altezze.js'
 import { CAMPAGNA, L_ABISSO } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { pezzoNuovo, pescaRarita, pescaAbilita, pezzoDelGrosso, guastiDelBottino, livelloDelBottino, livelloDelTrovato, VARIAZIONE_DEL_TROVATO, FUORI_LIVELLO_DEL_GROSSO }
   from '../../src/giochi/sotterraneo/motore/bottino.js'
@@ -179,30 +180,17 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   }
   uguale('il pezzo di Grumo è la sua mazza, col nome', COSE[pezzoDelGrosso('mazza-di-grumo', 3)].nome, 'Mazza di Grumo')
   controlla('i pezzi dei grossi li porta chiunque', Object.values(DEI_GROSSI).every(u => !COSE[u.base].famiglia))
-  // la figura: la creatura che veste (`figura`: il ragno di Zannaverde, il drago di lava di Carbonchio…, senza, la specie di `tipo`), del
-  // catalogo comune, ingrandita a coprire due caselle di altezza (con la corona): la misura del suo modello e lo sprite dei lontani
+  // la figura: la specie che veste (`figura`: il ragno di Zannaverde, il drago di lava di Carbonchio…, senza, la specie di `tipo`), col
+  // suo modello (scena3d/mostri3d/registro.js), grande fino a 1,9 eroi (dati/altezze.js, ALTO_DEL_GROSSO): grosso ma senza debordare
   const FIGURA = { ossuto: 'negromante', grumo: 'orco', fiammetta: 'spirito-fuoco', zannaverde: 'ragno', gorgo: 'polpo', minotto: 'bestia-cornuta', carbonchio: 'drago-lava',
                    // i sei dei dungeon nuovi del 3D (dati/dungeon-del-mondo.js)
                    barbamuschio: 'golem-muschio', piumanera: 'grifone', sibilla: 'serpente', brontolava: 'golem-magma', brinaldo: 'golem-ghiaccio', falcenera: 'mietitore' }
   for (const [k, x] of Object.entries(GROSSI)) {
-    const f = figuraDelGrosso(k)
-    controlla(`${k}: ha una figura`, !!f)
     uguale(`${k}: è la creatura giusta`, x.figura || x.tipo, FIGURA[k])
-    uguale(`${k}: e lo sprite è il suo`, f.sprite, (MOSTRI[FIGURA[k]] || { sprite: FIGURA[k] }).sprite)
-    // la scatola: né più alto di 1,9 eroi né più largo di 3, e grande davvero (almeno un eroe e mezzo di lato più lungo)
-    const [, , largo, alto] = PEZZI[`${f.sprite}-fermo-0`]
-    controlla(`${k}: ingrandito dentro la sua scatola, grosso ma senza debordare`,
-              alto * f.k <= 1.9 * EROE.alto + 0.01 && largo * f.k <= 3 * EROE.largo + 0.01 && Math.max(alto * f.k, largo * f.k) >= 1.25 * EROE.alto, `${largo}×${alto} × ${f.k}`)
-    controlla(`${k}: e il suo fotogramma c'è nell'atlante, da fermo, da sveglio e nello scontro`, !!PEZZI[spriteDelGrosso(f, false)] && !!PEZZI[spriteDelGrosso(f, true, 3)] && !!PEZZI[spriteDelGrosso(f, 'scontro')])
+    const a = ALTO_DEL_GROSSO[k]
+    controlla(`${k}: grosso (almeno un eroe e un quarto) ma non più di 1,9 eroi`, a >= 1.25 * ALTO_DELL_EROE && a <= 1.9 * ALTO_DELL_EROE + 0.01, String(a))
     controlla(`${k}: la tinta è un colore`, /^#[0-9a-f]{6}$/i.test(x.tinta))
   }
-  // chi ha i passi cammina da sveglio e nello scontro sta fermo sulla posa di lato; chi non li ha respira; il drago (respiro rotto) usa i passi anche da fermo
-  controlla('Zannaverde (il ragno) cammina da sveglio e nello scontro usa la posa di lato', /-corsa-\d$/.test(spriteDelGrosso(figuraDelGrosso('zannaverde'), true, 3)) &&
-            spriteDelGrosso(figuraDelGrosso('zannaverde'), 'scontro') === 'ragno-corsa-0' && /-fermo-\d$/.test(spriteDelGrosso(figuraDelGrosso('zannaverde'), false)))
-  controlla('Gorgo (il polpo) non ha i passi: respira, anche nello scontro', /-fermo-/.test(spriteDelGrosso(figuraDelGrosso('gorgo'), true, 2)) && /-fermo-/.test(spriteDelGrosso(figuraDelGrosso('gorgo'), 'scontro')))
-  controlla('Grumo (l\'orco) cammina', /-corsa-/.test(spriteDelGrosso(figuraDelGrosso('grumo'), true, 1)))
-  const drago = { sprite: 'drago', unaPosa: false, fermoDaiPassi: true }
-  controlla('il drago, anche fermo, usa i passi e non il suo respiro rotto', spriteDelGrosso(drago, false) === 'drago-corsa-0' && /^drago-corsa-\d$/.test(spriteDelGrosso(drago, true, 7)))
 }
 
 /* ══════════ 7. i leggendari ══════════ */

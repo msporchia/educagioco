@@ -252,13 +252,7 @@ export const VIVI = {
     const { ASPETTI } = await D('dati/aspetti.js')
     const { SPRITE_FIGURA } = await D('dati/figure3d.js')
     const { UNICI } = await D('dati/pezzi.js')
-    const { MOSTRI } = await D('dati/mostri.js')
-    const { GROSSI, figuraDelGrosso } = await D('dati/grossi.js')
-    const { EROI } = await D('dati/eroi.js')
     const { CURIOSITA } = await D('dati/curiosita.js')
-    const { MERCANTI } = await D('dati/mercanti.js')
-    const { PERSONAGGI_DI_SOPRA } = await D('dati/missioni.js')
-    const { VIANDANTI } = await D('dati/missioni-modelli.js')
     const { SCALA_SU } = await D('scena/scala-su.js')
     const { BESTIARIO } = await importa('src/giochi/survivors/scena/figure.js')
     const nomi = [
@@ -272,10 +266,8 @@ export const VIVI = {
       ...Object.values(ASPETTI).flat().map(a => a.sprite), ...Object.keys(SPRITE_FIGURA),
       ...Object.entries(UNICI).map(([id, u]) => (COSE[chiaveDelPezzo(u.base, 1, u.rarita || 'leggendario', [], id)] || {}).sprite),
       ...CURIOSITA.map(c => c.pezzo),                                                         // per terra e nel foglio che si apre (viste/Foglio.vue)
-      ...Object.values(MOSTRI).map(m => `${m.sprite}-fermo-0`),                               // i mostri oltre il tetto dei modelli, e la loro misura
-      ...Object.keys(GROSSI).map(k => `${figuraDelGrosso(k).sprite}-fermo-0`),
-      ...EROI.map(e => `${e.sprite}-fermo-0`),                                                // la misura dell'eroe (scena3d/eroe.js); il cavaliere al castello
-      ...[...MERCANTI, ...Object.values(PERSONAGGI_DI_SOPRA), ...VIANDANTI].map(p => `${p.sprite}-fermo-0`), 'minatore-fermo-0',   // le persone di sopra lontane
+      // mostri, grossi, eroi e persone di sopra non hanno sprite: il modello, o la sua sagoma (docs/sotterraneo/sagome-3d.md)
+      'cavaliere-fermo-0',                                                                    // il castello (components/castello/Regno.vue)
       ...Object.values(BESTIARIO).flatMap(b => Object.values(b)).filter(n => n.startsWith('sot:')).map(n => `${n.slice(4)}-fermo-0`),   // Survivors
     ].filter(Boolean)
     // di ogni cosa tutte le pose e tutti i fotogrammi

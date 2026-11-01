@@ -3,7 +3,8 @@
    prima volta delle sette è la storia, poi è ripetibile; i sei nuovi non toccano storia né stelle, e hanno il loro mostro grosso.
    `node test/esegui.mjs rigenera --niente-build` */
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { GROSSI, GROSSO_DELLA_DISCESA, figuraDelGrosso, guastiDeiGrossi, grossoDi } from '../../src/giochi/sotterraneo/dati/grossi.js'
+import { GROSSI, GROSSO_DELLA_DISCESA, guastiDeiGrossi, grossoDi } from '../../src/giochi/sotterraneo/dati/grossi.js'
+import { ALTO_DEL_GROSSO } from '../../src/giochi/sotterraneo/dati/altezze.js'
 import { DEI_GROSSI } from '../../src/giochi/sotterraneo/dati/pezzi.js'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { PEZZI } from '../../src/giochi/sotterraneo/dati/atlante.js'
@@ -45,7 +46,7 @@ const firma = c => c.livello.robe.map(r => `${r.che}:${r.x},${r.y}:${r.tipo || '
     const g = GROSSI[GROSSO_DELLA_DISCESA[k]]
     controlla(`${k}: in fondo il suo mostro grosso`, !!g)
     controlla(`${k}: il grosso ha le sue difese`, !!(g.difese && (g.difese.resiste.length + g.difese.teme.length + g.difese.immune.length)))
-    controlla(`${k}: il grosso veste una creatura del catalogo, ingrandita`, !!g.figura && !!MOSTRI[g.figura] && !!figuraDelGrosso(GROSSO_DELLA_DISCESA[k]))
+    controlla(`${k}: il grosso veste una specie del bestiario, ingrandita`, !!g.figura && !!MOSTRI[g.figura] && ALTO_DEL_GROSSO[GROSSO_DELLA_DISCESA[k]] > 0)
     const p = DEI_GROSSI[g.pezzo]
     controlla(`${k}: il suo pezzo col nome c'è, e lo porta chiunque`, !!p && !COSE[p.base].famiglia)
     // la figura chiamata come lui, ritagliata dai fogli e tolta dagli aspetti: non la veste nessun altro pezzo (docs/sotterraneo/figure.md)

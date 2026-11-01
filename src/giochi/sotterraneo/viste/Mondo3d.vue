@@ -123,7 +123,7 @@ function preparaBersagli() {
   for (const p of postiDi(m, 'mercante')) { const me = mercanteDi(p.chiave); if (me) persona('mercante', p.chiave, p, { nome: me.nome, sprite: me.sprite }) }
   for (const p of [...m.persone, ...m.villaggio.persone]) {
     const d = PERSONAGGI_DI_SOPRA[p.chiave]
-    if (d) persona('personaggio', p.chiave, p, { nome: d.nome, sprite: d.sprite, scala: d.scala || null, tinta: d.tinta || null })
+    if (d) persona('personaggio', p.chiave, p, { nome: d.nome, sprite: d.sprite, scala: d.scala || null })
   }
   const mi = minatoreDi(m)
   if (mi) persona('minatore', 'minatore', mi, { nome: 'il vecchio minatore', sprite: 'minatore' })

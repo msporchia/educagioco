@@ -1,11 +1,11 @@
 // I mostri grossi: uno in fondo a ogni discesa della storia, uno ogni GROSSO_OGNI piani nell'abisso
 // (docs/sotterraneo/grossi.md). Il nome è suo, sta nella stanza della scala e ne porta la chiave, e quando cade
-// lascia di sicuro un pezzo raro o meglio più il suo pezzo col nome (dati/pezzi.js, DEI_GROSSI). Come si vede:
-// `figuraDelGrosso` più sotto (lo sprite della sua specie ingrandito con la corona, finché non c'è quello dipinto).
+// lascia di sicuro un pezzo raro o meglio più il suo pezzo col nome (dati/pezzi.js, DEI_GROSSI). Come si vede: il suo modello 3D
+// (scena3d/mostri3d/registro.js, MODELLO_DEL_GROSSO) con la corona, grande quanto dice dati/altezze.js (ALTO_DEL_GROSSO).
 // `tipo`: il mostro del bestiario su cui si regge (dati/mostri.js): ossa, attacco e velocità di partenza e il rincaro della
-// domanda; `ossa` moltiplica le sue ossa, `att` aggiunge al suo attacco. `figura`: la creatura che veste, ingrandita con la corona
-// (una specie del bestiario o una del catalogo comune, docs/core/creature.md); senza, quella di `tipo`: così Zannaverde è un ragno
-// e Carbonchio un drago di lava pur contando come l'orco e il gigante, e i numeri della taratura restano quelli. `tinta`: il colore
+// domanda; `ossa` moltiplica le sue ossa, `att` aggiunge al suo attacco. `figura`: la specie del bestiario che somiglia (il suo modello
+// sta nel registro dei modelli); senza, quella di `tipo`: così Zannaverde è un ragno e Carbonchio un drago di lava pur contando come
+// l'orco e il gigante, e i numeri della taratura restano quelli. `tinta`: il colore
 // del chiarore che gli sta intorno, per distinguere due grossi della stessa specie (Re Ossuto e Carbonchio).
 // `difese`: le sue resistenze, debolezze e immunità (dati/elementi.js) al posto di quelle della specie: Carbonchio, il re di
 // brace, non brucia; senza `difese` ha quelle di `tipo`.
@@ -14,8 +14,7 @@
 import { MOSTRI } from './mostri.js'
 import { guastiDelleDifese } from './elementi.js'
 import { DEI_GROSSI } from './pezzi.js'
-import { PEZZI } from './atlante.js'
-import { quantiFotogrammi } from './fotogrammi.js'
+import { ALTO_DEL_GROSSO } from './altezze.js'
 
 export const GROSSI = {
   ossuto: { nome: 'Re Ossuto', tipo: 'scheletro', figura: 'negromante', ossa: 1.15, att: 0, tinta: '#e8dcc0',
@@ -88,41 +87,6 @@ export function grossoDi(tappa, piano) {
   return piano >= tappa.piani - 1 ? GROSSO_DELLA_DISCESA[tappa.chiave] || null : null
 }
 
-// Come si misura un mostro grosso (docs/sotterraneo/grossi.md, «Come si vede»): la creatura che veste (`figura`, o la specie di `tipo`),
-// il suo sprite del catalogo ingrandito nella sua scatola (`ingrandimentoDelGrosso`: 1,9 altezze dell'eroe, 3 larghezze), con la corona.
-// Il modello 3D prende la sua misura; lo sprite resta per chi è oltre il tetto dei modelli.
-// Torna { sprite, alto, k, unaPosa, fermoDaiPassi } (`alto`: l'altezza dello sprite in pixel, `k` il suo ingrandimento) o null.
-// La scatola di un grosso ripiego, in altezze e larghezze dell'eroe (sprite di 28×16): né più alto di GROSSO_ALTO né più largo di
-// GROSSO_LARGO, a quarti di ingrandimento (docs/sotterraneo/grossi.md, «Come si vede»). Un ragno è largo e basso, un negromante alto
-// e stretto: con una misura sola uno debordava e l'altro restava un nano (l'utente, 13 ottobre: Zannaverde e la sua corona troppo grandi)
-export const EROE = { alto: 28, largo: 16 }
-export const GROSSO_ALTO = 1.9
-export const GROSSO_LARGO = 3
-export const ingrandimentoDelGrosso = (alto, largo) =>
-  Math.max(1, Math.floor(Math.min(GROSSO_ALTO * EROE.alto / alto, GROSSO_LARGO * EROE.largo / largo) * 4) / 4)
-export function figuraDelGrosso(chiave) {
-  const G = GROSSI[chiave]
-  if (!G) return null
-  const nome = G.figura || G.tipo
-  const scheda = MOSTRI[nome]
-  const sprite = scheda ? scheda.sprite : nome   // una creatura del catalogo che non è una specie di strada (il drago di lava) è solo uno sprite
-  const p = PEZZI[`${sprite}-fermo-0`]
-  if (!p) return null
-  return { sprite, alto: p[3], k: ingrandimentoDelGrosso(p[3], p[2]), unaPosa: scheda ? !!scheda.unaPosa : !PEZZI[`${sprite}-corsa-0`],
-           fermoDaiPassi: !!(scheda && scheda.fermoDaiPassi) }
-}
-
-// il nome del fotogramma da posare: da sveglio la corsa (se la sua specie ce l'ha), da addormentato il fermo; `fr` gira sui
-// fotogrammi che ci sono. Chi ha il respiro rotto (il drago) sta fermo sul primo passo. `sveglio === 'scontro'`: la posa di lato
-// ferma di chi ha i passi (nello scontro guarda l'eroe di profilo), il respiro per gli altri
-export function spriteDelGrosso(f, sveglio, fr = 0) {
-  const haPassi = !f.unaPosa && quantiFotogrammi(f.sprite, 'corsa') > 0
-  const posa = haPassi && (sveglio || f.fermoDaiPassi) ? 'corsa' : 'fermo'
-  const n = quantiFotogrammi(f.sprite, posa)
-  const k = sveglio === 'scontro' || (posa === 'corsa' && !sveglio) ? 0 : fr
-  return `${f.sprite}-${posa}-${n ? k % n : 0}`
-}
-
 export function guastiDeiGrossi(campagna = []) {
   const g = []
   for (const [k, x] of Object.entries(GROSSI)) {
@@ -131,7 +95,8 @@ export function guastiDeiGrossi(campagna = []) {
     if (!DEI_GROSSI[x.pezzo]) g.push(`${k}: il suo pezzo "${x.pezzo}" non c'è`)
     if (!(x.ossa >= 1 && x.ossa <= 3)) g.push(`${k}: ossa ×${x.ossa}, fuori da 1..3`)
     if (!/^#[0-9a-f]{6}$/i.test(x.tinta || '')) g.push(`${k}: la tinta "${x.tinta}" non è un colore #rrggbb`)
-    if (!figuraDelGrosso(k)) g.push(`${k}: lo sprite di "${x.tipo}" non è nell'atlante`)
+    if (x.figura && !MOSTRI[x.figura]) g.push(`${k}: veste "${x.figura}", che non è nel bestiario`)
+    if (!(ALTO_DEL_GROSSO[k] > 0)) g.push(`${k}: non ha la sua misura in dati/altezze.js`)
     g.push(...guastiDelleDifese(k, x.difese))
   }
   for (const t of campagna) if (!GROSSI[GROSSO_DELLA_DISCESA[t.chiave]]) g.push(`${t.chiave}: in fondo non c'è nessun mostro grosso`)
