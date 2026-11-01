@@ -1,7 +1,7 @@
 # La bottega del mercante (in prova)
 
-Il laboratorio rifatto come una bottega: si compra a gettoni contati, e il
-banco è in 3D. Per ora sono tre tappe di prova accanto alla campagna, che
+Il laboratorio rifatto come una bottega: si ordina al mercante a gettoni
+contati, e il banco è in 3D. Per ora sono tre tappe di prova accanto alla campagna, che
 resta quella di [regole.md](regole.md). Il motore sta in
 `src/giochi/pozioni/motore/bottega.js`, i numeri in `dati/bottega.js`, il
 disegno in `scena3d/`, la vista in `viste/Mercante.vue`.
@@ -12,9 +12,17 @@ disegno in `scena3d/`, la vista in `viste/Mercante.vue`.
   famiglie), e ognuno ha il suo misurino con la tacca d'oro dove arriva la
   dose. La pergamena dice per ognuno quanto c'è e quanto ne serve,
   nell'unità della ricetta.
-- **Il mercante vende ampolle a prezzo**: quattro per ingrediente, sul
-  bancone. Si tocca un'ampolla, si paga, e finisce nel suo misurino. Le
-  ampolle si ricomprano quante volte si vuole.
+- **Il listino del mercante**: quattro targhette per ingrediente, ognuna
+  con quanto c'è nell'ampolla e il prezzo. Si ricomprano quante volte si
+  vuole. **Niente figure che suggeriscano quanto**: provato con le
+  ampolle in fila sul bancone, grandi quanto la roba, e si somigliavano
+  tutte (non si capiva che erano diverse) o, più diverse, davano la
+  risposta senza leggere. Quanto c'è lo dice solo la targhetta.
+- **Si fa un ordine**: due o tre targhette (`ordine` della tappa), anche
+  di ingredienti diversi, poi «Ordina». Si paga tutto, il mercante porta
+  le ampolle sul bancone (tutte uguali, con la targhetta) e le versa una
+  alla volta, nell'ordine scritto. Ordinare più ampolle insieme vuol dire
+  fare la somma prima di vederla: è lì che si ragiona.
 - **Le grandi costano meno al chilo** (`PEZZI`, `PREZZO`): 1 kg 4 gettoni,
   5 hg 3, 1 hg 1. Così conviene sempre «la più grande che ci sta», ma per
   sapere cosa ci sta bisogna sapere a cosa corrisponde l'etichetta: è la
@@ -25,12 +33,14 @@ disegno in `scena3d/`, la vista in `viste/Mercante.vue`.
   Chi riconosce che «5 hg» e «500 g» sono la stessa cosa risparmia.
 - **Il mercante scrive come gli pare**: l'etichetta è di solito in
   un'unità diversa da quella della ricetta (`etichetta`).
-- **Oltre la tacca trabocca**: l'ampolla è pagata e persa, il misurino
-  resta dov'era, e attorno alla sua base resta una macchia. **Prima di
-  comprare ancora si pulisce**, e la spugna costa un gettone (`PULIZIA`).
-  Il perché arriva subito, coi numeri di quel momento (cosa vale
-  l'ampolla, quanto c'era, quanto faceva, quanto mancava), e la spugna si
-  può usare solo dopo la barra di lettura (la stessa attesa dei quiz).
+- **Oltre la tacca trabocca**: quell'ampolla è pagata e persa, il
+  misurino resta dov'era, e attorno alla sua base resta una macchia; le
+  altre dell'ordine si versano lo stesso. **Prima di ordinare ancora si
+  pulisce**: un gettone a macchia (`PULIZIA`), una per misurino
+  traboccato. Il perché arriva a fine consegna, coi numeri di quel
+  momento (cosa vale l'ampolla, quanto c'era, quanto faceva, quanto
+  mancava), e la spugna si può usare solo dopo la barra di lettura (la
+  stessa attesa dei quiz).
 - **Le stelle dicono quanto si è speso**, non quante volte si è sbagliato:
   tre al minimo, due fino a tre gettoni in più, una comunque
   (`stelle`). Alla fine, se si è speso di più, si dice il modo più
@@ -50,15 +60,16 @@ disegno in `scena3d/`, la vista in `viste/Mercante.vue`.
   o un altro pezzo qualunque (anche più grande della dose: un'esca vera
   solo a misurino quasi pieno).
 - `ottimo` cerca il minimo con le ampolle del banchetto (si ricompra a
-  volontà); il test lo confronta con la forza bruta.
+  volontà); il test lo confronta con la forza bruta. Il minimo non dipende
+  da come si raggruppano gli ordini.
 
 ## Le tappe di prova
 
-| tappa | ingredienti | margine | quanto manca | ricetta |
-|---|---|---|---|---|
-| Dal mercante | 2 (pesi e liquidi) | 8 | sì | in unità grande |
-| Il mercante furbo | 3 | 5 | sì | in unità grande |
-| Gettoni contati | 4 | 2 | no | anche in g, cm, ml |
+| tappa | ingredienti | margine | quanto manca | ricetta | ampolle per ordine |
+|---|---|---|---|---|---|
+| Dal mercante | 2 (pesi e liquidi) | 8 | sì | in unità grande | 2 |
+| Il mercante furbo | 3 | 5 | sì | in unità grande | 3 |
+| Gettoni contati | 4 | 2 | no | anche in g, cm, ml | 3 |
 
 All'inizio il margine è largo; «quanto manca» fa la sottrazione al posto
 del bambino, e nell'ultima la si fa da sé. Si vedono sulla mappa solo coi
@@ -76,25 +87,31 @@ conversione giusta.
 ## Il disegno
 
 **Chi gioca non disegna**: `Mercante.vue` passa a `imposta()` una scena già
-decisa (misurini col livello e i pezzi, i cartellini già scritti, la
-macchia, i colori nel calderone) e chiede le animazioni, che tornano una
-promessa. Mentre una gira, la scena nuova aspetta (`occupa`): il banchetto
-non cambia sotto un'ampolla in volo.
+decisa (misurini col livello e i pezzi, le macchie, i colori nel
+calderone) e chiede le animazioni (`ordine`, `pulisci`, `festa`), che
+tornano una promessa. Ogni voce dell'ordine dice già com'è andata (il
+motore ha deciso tutto quando si è ordinato); mentre la scena le suona la
+scena nuova aspetta (`occupa`), e **la pergamena segue il mercante**: un
+misurino cambia numero solo quando la sua ampolla è versata, se no il
+risultato si legge prima di vederlo.
 
 - **Il tavolo**: muro di mattoni con gli scaffali, calderone di ghisa sul
   fuoco (bolle, vapore, luce che trema), i misurini in fila davanti, il
-  bancone del mercante in basso, vicino al pollice.
+  bancone del mercante in basso, vuoto finché non arriva la consegna (lì
+  sopra sta il cartello dei messaggi). Sotto la tela, in HTML, il listino
+  e l'ordine, vicino al pollice.
 - **I misurini** (`vasi.js`): vetro, tacca d'oro, dentro il liquido, la
   polvere col suo mucchietto o la radice a pezzi impilati (si vedono i
   pezzi comprati). Pochi misurini stanno larghi e crescono.
-- **Le ampolle** (`ampolle.js`): fiasco, barattolo, radice coricata sui
-  pioli, più grandi quando c'è più roba (la grandezza vera si vede anche
-  senza leggere); il cartellino porta il testo e il prezzo nel gettone.
-- **Le animazioni**: l'ampolla vola ad arco, si piega e versa (la radice
-  si raddrizza e scivola nel vetro); traboccando la schiuma esce dal
-  bordo e cola, la radice sporge e cade; il misurino pieno si versa nel
-  calderone, che cambia colore; la spugna gira sulla macchia; alla fine il
-  calderone sbuffa del suo colore.
+- **La consegna** (`ampolle.js`): fiasco, barattolo, radice coricata sui
+  pioli, tutti della stessa misura; la targhetta porta il testo, e basta.
+- **Le animazioni**: le ampolle scendono sul bancone; una alla volta
+  volano ad arco, si piegano e versano (la radice si raddrizza e scivola
+  nel vetro); traboccando la schiuma esce dal bordo e cola, la radice
+  sporge e cade; a fine consegna i misurini arrivati alla tacca si versano
+  nel calderone, che cambia colore (prima no: un'ampolla di troppo deve
+  traboccare da un misurino ancora pieno); la spugna gira su ogni macchia;
+  alla fine il calderone sbuffa del suo colore.
 - **La telecamera** inquadra tutta la larghezza, e sposta la mira finché
   il bordo basso dello schermo cade sul bordo del bancone: in piedi avanza
   muro sopra, dove sta la pergamena.
@@ -102,9 +119,10 @@ non cambia sotto un'ampolla in volo.
 
 ## Il dito
 
-Un tocco fermo (sotto i 16 px) chiede alla scena cosa c'è sotto: un'ampolla
-la compra, un misurino lo sceglie (o, se ha la macchia attorno, pulisce),
-la macchia pulisce. Una riga della pergamena sceglie l'ingrediente.
+Un tocco fermo (sotto i 16 px) sulla tela chiede cosa c'è sotto: un
+misurino sceglie il suo listino (o, se ha la macchia attorno, pulisce), la
+macchia pulisce. Una riga della pergamena sceglie il listino; una
+targhetta va nell'ordine, un posto dell'ordine toccato la toglie.
 
 ## Da fare
 
@@ -114,7 +132,9 @@ la macchia pulisce. Una riga della pergamena sceglie l'ingrediente.
   che scaletta.
 
 Nei test: `unita/pozioni-bottega`; `[data-prova]` sulla mappa,
-`.pz-mercante[data-fase]` (`compra`·`macchia`·`finita`), `[data-tela]`,
-`[data-gettoni]`, `[data-voce]`, `[data-esito][data-codice]`
-(`aiuto`·`giusto`·`trabocca`), `[data-azione="pulisci"]`, `[data-righe]`
-nel cartello di fine; `window.__poz.compra(k)`, `.scegli(i)`, `.pulisci()`.
+`.pz-mercante[data-fase]` (`ordina`·`macchia`·`finita`), `[data-tela]`,
+`[data-gettoni]`, `[data-voce]`, `[data-listino]`, `[data-targhetta]`,
+`[data-ordine]`, `[data-posto]`, `[data-azione="ordina"|"pulisci"]`,
+`[data-esito][data-codice]` (`aiuto`·`giusto`·`trabocca`), `[data-righe]`
+nel cartello di fine; `window.__poz.aggiungi(i, k)`, `.togliVoce(n)`,
+`.ordina()`, `.scegli(i)`, `.pulisci()`.
