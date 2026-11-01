@@ -410,30 +410,77 @@ export function creaEroe (chiave) {
 
 // ══════════ le pose ══════════
 const smussa = x => x * x * (3 - 2 * x)
-/** Una fase di marcia (in radianti): gambe e braccia opposte, il busto che rimbalza. Non tocca le armi montate, tranne la balestra. */
+/** Cosa tiene la mano (`destra`, `sinistra`): 'spada' (anche le asce), 'staffa', 'arco', 'balestra', 'scudo', o null. */
+function inMano (u, lato) {
+  const p = u.perniArmi && u.perniArmi[lato], a = p && p.children[0]
+  return a ? (a.userData.tipo === 'balestra' ? 'balestra' : a.userData.famiglia || null) : null
+}
+/** Una fase di marcia (in radianti): gambe e braccia opposte, il busto che rimbalza. Il braccio che regge un'arma o uno scudo dondola
+    meno e resta avanti (se no la lama finiva in orizzontale all'altezza del ginocchio e lo scudo nel fianco); l'arco, la balestra e il
+    bastone li tiene `tieni`. */
 export function posaMarcia (e, fase) {
   const u = e.userData, s = Math.sin(fase), a = Math.abs(Math.cos(fase))
   u.gambe[0].rotation.x = s * 0.75; u.gambe[1].rotation.x = -s * 0.75
   u.bracci[0].rotation.set(-s * 0.55, 0, 0.06); u.bracci[1].rotation.set(s * 0.55, 0, -0.06)
+  if (inMano(u, 'destra')) u.bracci[1].rotation.set(-0.4 + s * 0.2, 0, -0.06)
+  if (inMano(u, 'sinistra') === 'scudo') u.bracci[0].rotation.set(-0.6 - s * 0.15, 0, 0.12)
   u.busto.position.y = u.altezzaBusto + a * 0.02; u.busto.rotation.y = s * 0.08
   u.busto.position.x = 0; u.busto.rotation.z = 0; for (const gm of u.gambe) gm.rotation.z = 0
   u.testa.rotation.y = -s * 0.05
-  tieniBalestra(u, 0.05 * s)
+  tieni(u, 0.05 * s, true)
 }
 /** Il colpo con il braccio destro, p da 0 (riposo) a 1 (a fondo); il busto si gira. */
 export function posaColpo (e, p) {
   const u = e.userData, k = p < 0.5 ? smussa(p / 0.5) : 1 - smussa((p - 0.5) / 0.5) * 0.0
   u.bracci[1].rotation.set(-0.35 - 1.9 * smussa(Math.min(1, p)), 0, -0.1); u.busto.rotation.y = 0.15 - 0.45 * k
+  tieni(u, 0, false, true)
 }
-// la balestra (docs/sotterraneo/roba-3d.md) non si tiene come l'arco: il braccio la porge davanti, appena sotto la spalla, e il perno
-// annulla il giro del braccio, così il fusto resta dove guarda l'eroe, un poco in giù (pronta), in guardia e in marcia
+// l'arco, la balestra e il bastone (docs/sotterraneo/roba-3d.md) non seguono il braccio: il perno ne annulla il giro, così l'arco resta
+// ritto con la corda verso l'eroe, la balestra col fusto dove guarda e il bastone dritto, in guardia, in marcia e nel colpo. Il braccio
+// li porge: l'arco teso davanti all'altezza della spalla (più basso l'arco lungo entrava nel pavimento), la balestra appena sotto, un
+// poco in giù (pronta); il bastone discosto dal fianco, fuori dalla veste e dalla falda del cappello del mago
 const PRONTA = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.22, 0, 0))
-function tieniBalestra (u, dondolo = 0) {
-  const p = u.perniArmi && u.perniArmi.sinistra, a = p && p.children[0]
-  if (!a || a.userData.tipo !== 'balestra') return
-  const b = u.bracci[0]
-  b.rotation.set(-1.2 + dondolo, 0, 0.22)
-  p.quaternion.copy(b.quaternion).invert().multiply(PRONTA)
+const _q = new THREE.Quaternion(), _e = new THREE.Euler()
+// il braccio dell'arco punta avanti e un poco in fuori, e l'arco con lui: da davanti (il ritratto, la telecamera della scena) se ne vede
+// la curva, mentre di taglio era un bastoncino
+const ARCO_DI_TRAVERSO = 0.6
+function tieni (u, dondolo = 0, marcia = false, colpo = false) {
+  const [bs, bd] = u.bracci, ps = u.perniArmi && u.perniArmi.sinistra, pd = u.perniArmi && u.perniArmi.destra
+  const s = inMano(u, 'sinistra')
+  if (s === 'balestra') {
+    bs.rotation.set(-1.2 + dondolo, 0, 0.22)
+    ps.quaternion.copy(bs.quaternion).invert().multiply(PRONTA)
+  } else if (s === 'arco') {
+    bs.quaternion.setFromEuler(_e.set(-1.6 + dondolo, -ARCO_DI_TRAVERSO, 0.06, 'YXZ'))
+    ps.quaternion.copy(bs.quaternion).invert().multiply(_q.setFromEuler(_e.set(0.4 * dondolo, -ARCO_DI_TRAVERSO, 0.2 + 0.3 * dondolo, 'YXZ')))
+    _e.order = 'XYZ'
+  }
+  if (inMano(u, 'destra') === 'staffa') {
+    if (marcia) bd.rotation.set(-0.3 + 2 * dondolo, 0, 0.9)
+    pd.quaternion.copy(bd.quaternion).invert().multiply(_q.setFromEuler(_e.set(0.06 + (colpo ? 0 : dondolo), 0, -0.1 + dondolo)))
+    poggia(u, pd)
+  }
+}
+// il bastone non scende sotto il pavimento: poggia a terra e la mano scorre sull'asta (il mago la batte, e il bastone lungo stava
+// mezzo sotto). La punta in basso del modello si misura una volta, nel suo riferimento
+const _m = new THREE.Matrix4(), _mi = new THREE.Matrix4(), _b = new THREE.Box3(), _p = new THREE.Vector3()
+function fondoDi (a) {
+  if (a.userData.fondo !== undefined) return a.userData.fondo
+  a.position.y = 0; a.updateMatrixWorld(true); _mi.copy(a.matrixWorld).invert()
+  let y = 0
+  a.traverse(o => {
+    if (!o.isMesh || !o.geometry) return
+    if (!o.geometry.boundingBox) o.geometry.computeBoundingBox()
+    _b.copy(o.geometry.boundingBox).applyMatrix4(_m.multiplyMatrices(_mi, o.matrixWorld)); y = Math.min(y, _b.min.y)
+  })
+  return (a.userData.fondo = y)
+}
+function poggia (u, p) {
+  const a = p.children[0], fondo = fondoDi(a)
+  u.busto.updateMatrix(); u.bracci[1].updateMatrix(); p.updateMatrix()
+  _m.multiplyMatrices(u.busto.matrix, u.bracci[1].matrix).multiply(p.matrix)
+  const y = _p.set(0, fondo, 0).applyMatrix4(_m).y, su = _m.elements[5]           // la punta in basso, e quanto sale l'asta per unità
+  a.position.y = y < 0 && su > 0.3 ? -y / su : 0
 }
 /** Un'arma in mano oscilla attorno alla sua posa base (memorizzata la prima volta): la punta si muove appena. */
 function oscilla (p, dx, dy, dz) {
@@ -472,15 +519,27 @@ export function posaGuardia (e, t = 0) {
         const su = k < 0.4 ? smussa(k / 0.4) : 1 - smussa((k - 0.4) / 0.6)
         const assesta = k > 0.55 ? Math.sin((k - 0.55) * 22) * (1 - k) * 0.5 : 0
         bd.rotation.x -= 0.7 * su; bd.rotation.z -= 0.12 * su; u.busto.rotation.y += 0.15 * su; u.testa.rotation.y -= 0.2 * su
-        if (sp) pa.destra.rotation.x = sp.x - 0.55 * su + 0.08 * assesta
+        if (sp) pa.destra.rotation.x = sp.x + 0.25 * su + 0.08 * assesta          // la lama sale fino a dritta: girata indietro passava nell'elmo
         tuffo = 0.01 * su
       }
       break
     }
     case 'elfa': {
+      // con l'arco: il braccio teso, l'altra mano alla corda; con la spada (e lo scudo) le braccia del cavaliere
+      if (pa.destra || inMano(u, 'sinistra') === 'scudo') {
+        bd.rotation.set(-0.55 + 0.05 * o1, 0, -0.12 + 0.03 * o2)
+        bs.rotation.set(pa.sinistra ? -0.75 + 0.04 * o2 : -0.3 + 0.04 * o2, 0, pa.sinistra ? 0.18 + 0.03 * o1 : 0.1)
+        u.busto.rotation.y = 0.1 + 0.03 * lenta
+        const sp = oscilla(pa.destra, 0.06 * o2, 0, 0.05 * o1)
+        if (k >= 0) {                                                                       // rialza la spada, come il cavaliere
+          const su = k < 0.4 ? smussa(k / 0.4) : 1 - smussa((k - 0.4) / 0.6)
+          bd.rotation.x -= 0.6 * su; u.testa.rotation.y -= 0.2 * su
+          if (sp) pa.destra.rotation.x = sp.x + 0.25 * su
+        }
+        break
+      }
       bs.rotation.set(-1.45 + 0.03 * o1, 0, 0.06); bd.rotation.set(-1.1 + 0.04 * o2, 0.45, -0.45 + 0.03 * o1)
       u.busto.rotation.y = -0.25 + 0.03 * lenta; u.testa.rotation.y += 0.15
-      oscilla(pa.sinistra, 0.04 * o2, 0, 0.03 * o1)                                          // l'arco ondeggia appena
       if (k >= 0) {
         const su = k < 0.35 ? smussa(k / 0.35) : k < 0.7 ? 1 : 1 - smussa((k - 0.7) / 0.3)
         if (ge.n % 2 === 0) {                                                               // si ravvia l'orecchio (la mano sale al lato della testa)
@@ -494,7 +553,10 @@ export function posaGuardia (e, t = 0) {
       break
     }
     case 'mago': {
-      bd.rotation.set(-0.4 + 0.05 * o1, 0, -0.1 + 0.02 * o2); bs.rotation.set(-0.85 + 0.08 * o2, 0, 0.5 + 0.04 * o1)
+      // il bastone discosto dal fianco (tieni lo tiene dritto); la spada davanti; lo scudo davanti al fianco, fuori dalla barba
+      const staffa = inMano(u, 'destra') === 'staffa'
+      bd.rotation.set((staffa ? -0.3 : -0.5) + 0.05 * o1, 0, (staffa ? 0.9 : -0.1) + 0.02 * o2)
+      if (pa.sinistra) bs.rotation.set(-0.55 + 0.04 * o2, 0, -0.1 + 0.03 * o1); else bs.rotation.set(-0.85 + 0.08 * o2, 0, 0.5 + 0.04 * o1)
       u.busto.rotation.y = 0.1 + 0.03 * lenta
       oscilla(pa.destra, 0.04 * o2, 0, 0.05 * o1)                                           // la gemma della staffa ondeggia
       if (k >= 0) {                                                                         // alza la staffa e la batte a terra
@@ -508,13 +570,16 @@ export function posaGuardia (e, t = 0) {
     case 'nano': {
       bd.rotation.set(-0.3 + 0.04 * o1, 0, 0.75 + 0.04 * o2); bs.rotation.set(-0.55 + 0.04 * o2, 0, -0.05 + 0.03 * o1)
       u.busto.rotation.y = 0.1 + 0.03 * lenta
-      oscilla(pa.destra, 0.06 * o2, 0, 0.05 * o1)
+      // la lama più su della presa comune (col braccio basso andava quasi in orizzontale), ma non nel gesto: girando e con la mano
+      // alla barba passava nell'elmo
+      const barba = k > 0.4 ? Math.sin(Math.PI * lim((k - 0.4) / 0.58, 0, 1)) ** 0.6 : 0
+      const nelGesto = k >= 0 ? smussa(Math.min(1, k / 0.15)) * (1 - smussa(lim((k - 0.85) / 0.15, 0, 1))) : 0
+      oscilla(pa.destra, -0.25 * (1 - nelGesto) + 0.06 * o2, 0, 0.05 * o1)
       const arma = pa.destra && pa.destra.children[0]
       if (arma) arma.rotation.y = 0
       if (k >= 0) {                                                                         // l'ascia fa un quarto di giro, poi la mano passa sulla barba
         const giraA = smussa(Math.min(1, k / 0.3)) * (1 - smussa(lim((k - 0.62) / 0.3, 0, 1)))
         if (arma) arma.rotation.y = Math.PI / 2 * giraA
-        const barba = k > 0.4 ? Math.sin(Math.PI * lim((k - 0.4) / 0.58, 0, 1)) ** 0.6 : 0
         bd.rotation.x = mescola(bd.rotation.x, -1.55, barba); bd.rotation.z = mescola(bd.rotation.z, -0.35, barba)
         u.testa.rotation.x += 0.1 * barba; tuffo = 0.01 * Math.sin(Math.PI * k)
       }
@@ -523,5 +588,5 @@ export function posaGuardia (e, t = 0) {
   }
   u.busto.position.y = u.altezzaBusto - (0.015 + 0.02 * bn) - tuffo + busY
   u.busto.position.x = 0.012 * peso; u.busto.rotation.z = -0.03 * peso
-  tieniBalestra(u, 0.03 * o1)
+  tieni(u, 0.03 * o1)
 }

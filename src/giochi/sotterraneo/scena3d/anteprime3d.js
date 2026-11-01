@@ -5,7 +5,7 @@
 import * as THREE from 'three'
 import { inquadra } from '../../fattoria3d/scena3d/anteprime-pura.js'
 import { creaCoda, leggiChiave, MISURE, RIPROVA } from './anteprime3d-pura.js'
-import { creaEroe, posaGuardia } from './eroi3d/eroi.js'
+import { creaEroe, posaGuardia, posaMarcia } from './eroi3d/eroi.js'
 import { equipaggia } from './eroi3d/armi.js'
 import { vesti, TIPI } from './eroi3d/armature.js'
 import { vestiDotazione } from './eroe3d.js'
@@ -21,6 +21,12 @@ import { segui, rilascia } from '../../../grafica/rilascio3d.js'
 const FOV = 24
 // `#anteprime-zoom=4` nell'indirizzo: le foto quattro volte più grandi, per guardarle da vicino (`tavola-anteprime.mjs --zoom 4`)
 const ZOOM = typeof location === 'undefined' ? 1 : Math.min(8, Math.max(1, Number((/[#&?]anteprime-zoom=(\d+)/.exec(location.hash + location.search) || [])[1]) || 1))
+// per guardare le armi in mano (`tavola-anteprime.mjs --solo armi`): `#anteprime-posa=marcia` l'eroe a metà passo, `#anteprime-giro=1.57` girato
+// (in radianti: 1.57 si vede il fianco della sinistra, -1.57 quello della destra, 3.14 la schiena), `#anteprime-istante=3` la guardia a 3 s (di
+// solito 0,6: per il nano è dentro il gesto)
+const cheat = n => (typeof location === 'undefined' ? null : (new RegExp(`[#&?]anteprime-${n}=([\\w.-]+)`).exec(location.hash + location.search) || [])[1] || null)
+const MARCIA = cheat('posa') === 'marcia', GIRO = cheat('giro') === null ? 0.35 : Number(cheat('giro')) || 0
+const ISTANTE_EROE = cheat('istante') === null ? 0.6 : Number(cheat('istante')) || 0
 const ATTESA_PROGRAMMA = 60   // ms lasciati alla compilazione di un programma nuovo, senza KHR_parallel_shader_compile (l'Adreno 512: 50-300)
 const _b = new THREE.Box3()
 
@@ -67,11 +73,12 @@ function inPosaArma(pezzo, modo) {
 function inPosaEroe(c, busto) {
   const g = creaEroe(c.eroe)
   vestiDotazione(g, c)                   // come l'eroe in scena (eroe3d.js): la chiave porta la dotazione già decisa
-  posaGuardia(g, 0.6)
-  animaTutto(g, 0.6)
+  posaGuardia(g, ISTANTE_EROE)
+  if (MARCIA) posaMarcia(g, 1.2)
+  animaTutto(g, ISTANTE_EROE)
   for (const w of g.userData.armiAnima || []) animaTutto(w, ISTANTE)
   if (g.userData.animaArmatura) g.userData.animaArmatura(0.6)
-  g.rotation.y = 0.35
+  g.rotation.y = GIRO
   if (!busto) return { obj: g, verso: [0.1, 0.16, 1] }
   // a mezzo busto: attorno alla faccia, uguale per tutti (la testa dei chibi è metà dell'eroe, e il cappello del mago o la barba del
   // nano la allungherebbero); prima il tutto, perché la faccia eredita la rotazione
