@@ -3,6 +3,7 @@
    Tutto ciò che può non riuscire torna { ok: false, motivo } e non cambia niente; quello che riesce torna { ok: true, … }.
    Gli eventi (`prendiEventi()`) dicono cosa è successo, per i contatori. L'esperienza è la spesa in monete fatta qui dentro
    (terra, pezzi, edifici, strade; non gli spostamenti, e i rimborsi non la riducono): da lei il livello, che apre le cose. Vedi docs/fattoria3d/regole.md. */
+import { TIPO_DI_BASE, BORDO_DI_BASE, tipoValido, bordoValido, prezzoStrada, livelloStrada, codiceAspetto, aspettoDaCodice, eDiBase } from '../dati/strade.js'
 import { LIM, chiave, cellaDa, lottoDaChiave, cellaDaId, idCella, dentro, lotto, lottoDi, lottoPerId, vicinoDi, VICINI_4, LOTTI_INIZIALI, FISSI, POSTI_STORICI, stradeDiSerie } from '../dati/mondo.js'
 import { PEZZI, EDIFICI, quotaDelPezzo, edificiDaCostruire } from '../dati/catalogo.js'
 import { ruotabile, misureGirate } from '../dati/rotazione.js'
@@ -24,6 +25,8 @@ import { Cura } from './cura.js'
 import { vistaDellaMongolfiera, caricaLaCassa, partiLaMongolfiera, aggiornaMongolfiera } from './mongolfiera.js'
 import { vistaDellaBottega, consegnaInBottega, rifiutaInBottega, aggiornaLeBotteghe, daConsegnareIn, daConsegnareOvunque } from './botteghe.js'
 
+const ASPETTO_DI_BASE = Object.freeze({ tipo: TIPO_DI_BASE, bordo: BORDO_DI_BASE })
+
 export class Fattoria3d {
   constructor({ stato = null, borsa, ora = Date.now, rnd = Math.random, magazzini = true } = {}) {
     this.s = normalizza(stato)
@@ -39,6 +42,11 @@ export class Fattoria3d {
     this.strada = new Map()                        // cella (chiave) → 1 disegnata, 2 di serie
     for (const k of stradeDiSerie()) this.strada.set(k, 2)
     for (const id of this.s.strade) { const c = cellaDaId(id); if (c && !this.strada.has(chiave(c[0], c[1]))) this.strada.set(chiave(c[0], c[1]), 1) }
+    this.aspettoStrade = new Map()                 // cella (chiave) → { tipo, bordo }, solo per le strade disegnate che non sono quella di base (docs/fattoria3d/terreno.md)
+    for (const [id, cod] of Object.entries(this.s.aspettoStrade)) {
+      const c = cellaDaId(+id), a = aspettoDaCodice(cod)
+      if (c && a && this.strada.get(chiave(c[0], c[1])) === 1 && !eDiBase(a)) this.aspettoStrade.set(chiave(c[0], c[1]), a)
+    }
     this.bloccoFisso = new Set()                   // fienile, casa, gli alberi in piedi e i sassi e cespugli ancora lì
     for (const f of FISSI) for (let a = 0; a < f.w; a++) for (let b = 0; b < f.d; b++) this.bloccoFisso.add(chiave(f.i + a, f.j + b))
     this.tagliati = new Set(this.s.tagliati)
@@ -196,7 +204,7 @@ export class Fattoria3d {
   _occupa(c, id) {
     const d = this.misureCosa(c)
     if (d.acqua) {          // l'acqua costruita non occupa `cellaCosa` (ci va il ponte); una strada disegnata lì sotto sparisce
-      for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) { const k = chiave(c.i + a, c.j + b); this.cellaAcqua.set(k, id); if (this.strada.get(k) === 1) this.strada.delete(k) }
+      for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) { const k = chiave(c.i + a, c.j + b); this.cellaAcqua.set(k, id); if (this.strada.get(k) === 1) { this.strada.delete(k); this.aspettoStrade.delete(k) } }
       return
     }
     for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) { const k = chiave(c.i + a, c.j + b); this.cellaCosa.set(k, id); const q = quotaDelPezzo(d, a, b); if (q > 0) this.cellaPasso.set(k, q); else this.cellaPasso.delete(k) }
@@ -205,17 +213,26 @@ export class Fattoria3d {
   percorsoVerso(da, mete) { return percorso((i, j) => this.libera(i, j), (i, j) => this.sullaStrada(i, j), da, mete) }
 
   // ── le strade ──
-  disegnaStrada(i, j, { gratis = false } = {}) {
-    if (!dentro(i, j) || this.strada.has(chiave(i, j))) return { ok: false, motivo: 'qui-no' }
-    if (this.blocca(i, j)) return { ok: false, motivo: 'occupato' }
-    if (!gratis && !this._spendi(COSTI.strada)) return { ok: false, motivo: 'poche-monete', costo: COSTI.strada }
-    this.strada.set(chiave(i, j), 1)
+  /** Com'è fatta la strada in una cella: { tipo, bordo }. Una strada di serie o vecchia è quella di base. */
+  aspettoStrada(i, j) { return this.aspettoStrade.get(chiave(i, j)) || ASPETTO_DI_BASE }
+  /** Si disegna un tipo e un bordo che il livello ha aperto; su una strada tua di un altro aspetto si ridipinge (si paga il nuovo, il vecchio non si rimborsa). */
+  disegnaStrada(i, j, { gratis = false, tipo = TIPO_DI_BASE, bordo = BORDO_DI_BASE } = {}) {
+    if (!tipoValido(tipo) || !bordoValido(bordo)) return { ok: false, motivo: 'qui-no' }
+    const k = chiave(i, j), c = this.strada.get(k)
+    if (!dentro(i, j) || c === 2) return { ok: false, motivo: 'qui-no' }
+    if (c === 1 && this.aspettoStrada(i, j).tipo === tipo && this.aspettoStrada(i, j).bordo === bordo) return { ok: false, motivo: 'qui-no' }
+    if (!gratis && this.livello() < livelloStrada(tipo, bordo)) return { ok: false, motivo: 'livello', livello: livelloStrada(tipo, bordo) }
+    if (c !== 1 && this.blocca(i, j)) return { ok: false, motivo: 'occupato' }
+    const costo = gratis ? 0 : prezzoStrada(tipo, bordo)
+    if (costo && !this._spendi(costo)) return { ok: false, motivo: 'poche-monete', costo }
+    this.strada.set(k, 1)
+    if (tipo === TIPO_DI_BASE && bordo === BORDO_DI_BASE) this.aspettoStrade.delete(k); else this.aspettoStrade.set(k, { tipo, bordo })
     this._evento('strada')
-    return { ok: true, costo: gratis ? 0 : COSTI.strada }
+    return { ok: true, costo }
   }
   togliStrada(i, j) {
     if (!dentro(i, j) || this.strada.get(chiave(i, j)) !== 1) return { ok: false, motivo: 'qui-no' }
-    this.strada.delete(chiave(i, j))
+    this.strada.delete(chiave(i, j)); this.aspettoStrade.delete(chiave(i, j))
     return { ok: true }
   }
 
@@ -1018,7 +1035,12 @@ export class Fattoria3d {
     this.tick()
     this._allungaPosti()                     // così la lettura rifà lo stesso stato (`normalizza` allunga allo stesso modo)
     s.strade = []
-    for (const [k, v] of this.strada) if (v === 1) { const c = cellaDa(k); s.strade.push(idCella(c[0], c[1])) }
+    s.aspettoStrade = {}
+    for (const [k, v] of this.strada) if (v === 1) {
+      const c = cellaDa(k), id = idCella(c[0], c[1]), a = this.aspettoStrade.get(k)
+      s.strade.push(id)
+      if (a) s.aspettoStrade[id] = codiceAspetto(a.tipo, a.bordo)
+    }
     return JSON.parse(JSON.stringify(s))
   }
 }
