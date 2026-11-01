@@ -42,7 +42,7 @@ export function creaVasi(scena, trame) {
 
   function nuovo(d, i, n) {
     // pochi misurini stanno larghi e crescono: si leggono meglio
-    const passo = Math.min(1.8, LARGO / n), scala = Math.min(1.35, passo / 1.2)
+    const passo = Math.min(1.7, LARGO / n), scala = Math.min(1.15, passo / 1.2)
     const x = (i - (n - 1) / 2) * passo
     const gruppo = new Group()
     gruppo.position.set(x, 0, POSTI.vasiZ)

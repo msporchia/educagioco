@@ -102,9 +102,9 @@ export function macchia() {
   return trama(c)
 }
 
-/* Il cartellino appeso a un'ampolla: quanto c'è dentro, scritto come
-   l'ha scritto il mercante, e il prezzo nel gettone. */
-export function cartellino(testo, prezzo) {
+/* La targhetta appesa a un'ampolla: quanto c'è dentro, scritto come
+   l'ha scritto il mercante (il prezzo sta nel listino, già pagato). */
+export function cartellino(testo) {
   const [c, g] = tela(320, 176)
   const tondo = (x, y, w, h, r) => { g.beginPath(); g.roundRect(x, y, w, h, r) }
   g.fillStyle = 'rgba(0,0,0,.35)'; tondo(8, 14, 304, 156, 26); g.fill()
@@ -115,11 +115,6 @@ export function cartellino(testo, prezzo) {
   let corpo = 92
   g.font = `900 ${corpo}px "Emoji Gioco", ${FONTE}`
   while (g.measureText(testo).width > 280 && corpo > 40) g.font = `900 ${(corpo -= 4)}px "Emoji Gioco", ${FONTE}`
-  g.fillText(testo, 156, 74)
-  // il gettone col prezzo, in basso a destra
-  g.fillStyle = '#7a4a12'; g.beginPath(); g.arc(258, 132, 34, 0, 7); g.fill()
-  g.fillStyle = '#e8a93a'; g.beginPath(); g.arc(258, 128, 32, 0, 7); g.fill()
-  g.strokeStyle = '#ffd98a'; g.lineWidth = 4; g.beginPath(); g.arc(258, 128, 24, 0, 7); g.stroke()
-  g.fillStyle = '#4a2a06'; g.font = `900 40px "Emoji Gioco", ${FONTE}`; g.fillText(String(prezzo), 258, 130)
+  g.fillText(testo, 156, 84)
   return trama(c)
 }

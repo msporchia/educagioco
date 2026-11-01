@@ -86,13 +86,22 @@ export function creaEffetti(scena, trame) {
   getto.visible = false
   scena.add(getto)
 
-  // la macchia per terra: si tocca per pulirla
-  const macchia = new Mesh(new PlaneGeometry(1.25, 1.25),
-    new MeshStandardMaterial({ color: 0xffffff, alphaMap: trame.macchia, transparent: true, roughness: 0.08, metalness: 0.1, depthWrite: false }))
-  macchia.rotation.x = -Math.PI / 2
-  macchia.visible = false
-  macchia.userData.tocca = { che: 'macchia' }
-  scena.add(macchia)
+  // le macchie per terra, una per misurino traboccato: si toccano per pulirle
+  const geoMacchia = new PlaneGeometry(1.25, 1.25)
+  const macchie = new Map()
+  function macchia(i) {
+    let m = macchie.get(i)
+    if (!m) {
+      m = new Mesh(geoMacchia, new MeshStandardMaterial({ color: 0xffffff, alphaMap: trame.macchia, transparent: true,
+                                                          roughness: 0.08, metalness: 0.1, depthWrite: false }))
+      m.rotation.x = -Math.PI / 2; m.rotation.z = i * 1.9
+      m.visible = false
+      m.userData.tocca = { che: 'macchia', i }
+      scena.add(m)
+      macchie.set(i, m)
+    }
+    return m
+  }
 
   // la spugna: gialla, col verde ruvido sotto
   const spugna = new Group()
@@ -105,6 +114,8 @@ export function creaEffetti(scena, trame) {
 
   return {
     gocce, luci, getto, macchia, spugna,
+    macchieVisibili: () => [...macchie.values()].filter(m => m.visible),
+    macchie,
     // il getto da `a` a `b`, del colore dell'ingrediente (la polvere è opaca)
     versa(a, b, colore, polvere = false) {
       getto.visible = true
@@ -117,6 +128,10 @@ export function creaEffetti(scena, trame) {
     smetti() { getto.visible = false },
     scala(s) { gocce.mat.uniforms.uScala.value = s; luci.mat.uniforms.uScala.value = s },
     aggiorna(dt) { gocce.aggiorna(dt); luci.aggiorna(dt) },
-    rilascia() { gocce.rilascia(); luci.rilascia() },
+    rilascia() {
+      gocce.rilascia(); luci.rilascia()
+      for (const m of macchie.values()) { scena.remove(m); m.material.dispose() }
+      macchie.clear()
+    },
   }
 }

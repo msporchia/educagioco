@@ -1,10 +1,10 @@
 // La bottega in 3D (three.js, WebGL 2). Vedi docs/pozioni/bottega.md.
 // Chi gioca non disegna: la view passa a `imposta(q)` la scena già decisa
-// (i misurini col loro livello, le ampolle del banchetto coi cartellini,
-// la macchia, i colori nel calderone) e chiede le animazioni (`versa`,
-// `pulisci`, `festa`), che tornano una promessa quando sono finite. Il
-// tocco del dito torna su con `tocca({ che, k | i })`. Qui non entrano
-// gettoni, prezzi da sommare né regole: il cartellino è un testo già scritto.
+// (i misurini col loro livello, le macchie, i colori nel calderone) e
+// chiede le animazioni (`ordine`, `pulisci`, `festa`), che tornano una
+// promessa quando sono finite. Il tocco del dito torna su con
+// `tocca({ che, i })`. Qui non entrano gettoni né regole: la targhetta è
+// un testo già scritto, e com'è andata ogni ampolla lo dice la voce.
 import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Raycaster, Vector2, Vector3,
          ACESFilmicToneMapping, SRGBColorSpace, Color, Fog } from 'three'
 import { segui, rilascia as rilasciaRenderer } from '../../../grafica/rilascio3d.js'
@@ -103,7 +103,7 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
     const r = canvas.getBoundingClientRect()
     punto.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1)
     raggio.setFromCamera(punto, camera)
-    const bersagli = [...ampolle.colpibili(), ...vasi.colpibili(), ...(eff.macchia.visible ? [eff.macchia] : [])]
+    const bersagli = [...vasi.colpibili(), ...eff.macchieVisibili()]
     const colpito = raggio.intersectObjects(bersagli, false)[0]
     if (colpito) tocca?.(colpito.object.userData.tocca)
   }
@@ -137,59 +137,74 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
 
   /* ── la scena decisa dalla view ──
      Mentre un'animazione gira la scena nuova si tiene da parte, e si mette
-     alla fine: il banchetto non cambia sotto un'ampolla in volo. */
+     alla fine: niente salta sotto un'ampolla in volo. */
   let ultima = null, occupata = 0
   function imposta(q) {
     ultima = q
     if (occupata) return
     vasi.imposta(q.vasi)
-    ampolle.imposta(q.ampolle, q.banchetto)
     banco.colore(q.calderone)
-    if (q.macchia && !eff.macchia.visible) mettiMacchia(q.macchia, 1)
-    if (!q.macchia && eff.macchia.visible) eff.macchia.visible = false
+    const sporchi = new Set(q.macchie.map(m => m.i))
+    for (const m of q.macchie) if (!eff.macchia(m.i).visible) mettiMacchia(m, 1)
+    for (const [i, m] of eff.macchie) if (!sporchi.has(i)) m.visible = false
   }
   const occupa = fai => async (...a) => {
     occupata++
     try { return await fai(...a) } finally { if (!--occupata && ultima) imposta(ultima) }
   }
 
-  // attorno alla base del misurino: davanti la coprirebbero i cartellini
-  let grandeMacchia = 1
-  function mettiMacchia(m, quanto) {
-    const v = vasi.vaso(m.i)
-    eff.macchia.visible = true
-    eff.macchia.material.color.set(m.colore).offsetHSL(0, 0.1, -0.08)
-    eff.macchia.position.set(v.casa.x, 0.015, v.casa.z + 0.1)
-    grandeMacchia = 1.5 * v.gruppo.scale.x
-    eff.macchia.scale.setScalar(Math.max(0.001, quanto * grandeMacchia))
+  // attorno alla base del misurino: davanti la coprirebbero le targhette
+  const grande = i => 1.5 * vasi.vaso(i).gruppo.scale.x
+  function mettiMacchia({ i, colore }, quanto) {
+    const v = vasi.vaso(i), m = eff.macchia(i)
+    m.visible = true
+    m.material.color.set(colore).offsetHSL(0, 0.1, -0.08)
+    m.position.set(v.casa.x, 0.015 + i * 0.002, v.casa.z + 0.1)
+    m.scale.setScalar(Math.max(0.001, quanto * grande(i)))
   }
 
-  /* L'ampolla k va sul misurino i e si versa. `trabocca`: sale oltre il
-     bordo, schiuma, torna dov'era e lascia la macchia. `pieno`: il
-     misurino, arrivato alla tacca, si versa nel calderone. */
-  async function versa({ k, i, trabocca = false, pieno = false, colore, famiglia, macchia }) {
-    vasi.trattieni(i, true)
+  /* L'ordine: le ampolle arrivano sul bancone con la loro targhetta, e il
+     mercante le versa una alla volta nell'ordine scritto. Ogni voce dice
+     già com'è andata (`trabocca`, il livello e i pezzi dopo). I misurini
+     arrivati alla tacca si versano nel calderone alla fine, così
+     un'ampolla di troppo trabocca da un misurino ancora pieno. */
+  async function ordine(voci, dopoOgni) {
+    const toccati = [...new Set(voci.map(v => v.i))]
+    for (const i of toccati) vasi.trattieni(i, true)
+    ampolle.consegna(voci)
+    await aspetta(0.6 + voci.length * 0.25)
+    for (let k = 0; k < voci.length; k++) {
+      await versaUna(k, voci[k])
+      dopoOgni?.(k)
+      await aspetta(0.15)
+    }
+    ampolle.sgombra()
+    for (const i of toccati) {
+      const ultimaVoce = voci.filter(v => v.i === i).at(-1)
+      if (voci.some(v => v.i === i && v.pieno)) await nelCalderone(i, ultimaVoce.colore)
+    }
+    for (const i of toccati) vasi.trattieni(i, false)
+  }
+
+  async function versaUna(k, { i, trabocca, colore, famiglia, livello, pezzi }) {
     const v = vasi.vaso(i)
     const a = ampolle.stacca(k)
     const da = a.gruppo.position.clone()
     const bocca = vasi.bocca(i)
     const radice = famiglia === 'lunghezza', polvere = famiglia === 'massa'
     const sopra = new Vector3(bocca.x - (radice ? 0 : 0.42), bocca.y + 0.85, bocca.z + 0.05)
-    const scalaA = a.gruppo.scale.x
-    // il volo, ad arco, e il cartellino che sparisce
-    await anima(0.45, f => {
+    // il volo, ad arco; la targhetta si legge fino all'ultimo
+    await anima(0.5, f => {
       const e = liscio(f)
       a.gruppo.position.lerpVectors(da, sopra, e)
       a.gruppo.position.y += Math.sin(e * Math.PI) * 0.8
-      a.cartello.material.opacity = 1 - e
+      a.cartello.material.opacity = 1 - Math.max(0, e - 0.6) / 0.4
       if (radice) a.corpo.rotation.z = e * Math.PI / 2
     })
     const prima = v.livello
-    const dopo = trabocca ? prima : vasi.vaso(i).dato.livello
     if (radice) {
       // la radice si mette in piedi e scivola giù nel vetro
-      const lungo = a.corpo.userData.lungo
-      const giuY = vasi.fondo(i).y + lungo / 2 - 0.2
+      const giuY = vasi.fondo(i).y + a.corpo.userData.lungo / 2 - 0.2
       await anima(trabocca ? 0.35 : 0.5, f => { a.gruppo.position.y = sopra.y + (giuY - sopra.y) * f * f })
       if (trabocca) {
         // sporge dal bordo: si rovescia e cade sul tavolo
@@ -199,47 +214,45 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
           a.gruppo.position.set(fermo.x + f * 0.6, fermo.y + Math.sin(f * Math.PI) * 0.4 - f * (fermo.y - 0.1), fermo.z + f * 0.5)
           a.corpo.rotation.z = Math.PI / 2 - f * Math.PI / 2
         })
-        mettiMacchia(macchia, 0.001)
-        await anima(0.35, f => { eff.macchia.scale.setScalar(Math.max(0.001, liscio(f) * grandeMacchia)); a.gruppo.scale.setScalar(Math.max(0.001, scalaA * (1 - f))) })
+        const m = eff.macchia(i), era = m.visible ? m.scale.x : 0.001
+        mettiMacchia({ i, colore }, era / grande(i))
+        await anima(0.35, f => { m.scale.setScalar(Math.max(era, liscio(f) * grande(i))); a.gruppo.scale.setScalar(Math.max(0.001, 1 - f)) })
       } else {
         a.gruppo.visible = false
-        vasi.impila(v, vasi.vaso(i).dato.pezzi)
-        v.pezzi = vasi.vaso(i).dato.pezzi.length
-        v.livello = dopo
+        vasi.impila(v, pezzi)
+        v.pezzi = pezzi.length
+        v.livello = livello
         eff.gocce.emetti(10, { da: bocca, sparpaglia: 0.25, verso: [0, 0.8, 0], caso: 0.6, colore: '#d8c8a8', vita: 0.5, misura: 0.06, gravita: 5 })
       }
     } else {
       // si piega e versa: il getto cade fino al livello, che sale
       await anima(0.18, f => { a.gruppo.rotation.z = -liscio(f) * 2.0 })
-      const bboccaMondo = () => a.gruppo.localToWorld(a.bocca.clone())
-      const fino = trabocca ? (ALTEZZA_VASO - 0.1) / TACCA : dopo   // fino all'orlo
+      const fino = trabocca ? (ALTEZZA_VASO - 0.1) / TACCA : livello   // traboccando, fino all'orlo
       await anima(0.6, f => {
-        const b = bboccaMondo()
         v.livello = prima + (fino - prima) * liscio(f)
-        eff.versa(b, vasi.fondo(i), colore, polvere)
+        eff.versa(a.gruppo.localToWorld(a.bocca.clone()), vasi.fondo(i), colore, polvere)
         if (Math.random() < 0.5) eff.gocce.emetti(1, { da: vasi.fondo(i), sparpaglia: 0.2, verso: [0, 0.6, 0], caso: 0.5, colore, vita: 0.35, misura: 0.06, gravita: 4 })
       })
       eff.smetti()
       if (trabocca) {
         // la schiuma esce dal bordo e cola sul tavolo, poi il misurino torna dov'era
-        mettiMacchia(macchia, 0.001)
-        await anima(0.9, (f, dt) => {
+        const m = eff.macchia(i), era = m.visible ? m.scale.x : 0.001
+        mettiMacchia({ i, colore }, era / grande(i))
+        const schiuma = new Color(colore).lerp(new Color(1, 1, 1), 0.5)
+        await anima(0.9, f => {
           v.onda = Math.sin(Math.min(1, f * 2) * Math.PI / 2) * 0.15
-          if (f < 0.6) eff.gocce.emetti(6, { da: bocca, sparpaglia: 0.5, verso: [0.3, 1.2, 0.5], caso: 1.4, colore: new Color(colore).lerp(new Color(1, 1, 1), 0.5), vita: 1.1, misura: 0.16, gravita: 5, allarga: 0.6 })
-          eff.macchia.scale.setScalar(Math.max(0.001, liscio(f) * grandeMacchia))
+          if (f < 0.6) eff.gocce.emetti(6, { da: bocca, sparpaglia: 0.5, verso: [0.3, 1.2, 0.5], caso: 1.4, colore: schiuma, vita: 1.1, misura: 0.16, gravita: 5, allarga: 0.6 })
+          m.scale.setScalar(Math.max(era, liscio(f) * grande(i)))
           a.gruppo.rotation.z = -2.0 * (1 - f)
-          a.gruppo.scale.setScalar(Math.max(0.001, scalaA * (1 - f)))
+          a.gruppo.scale.setScalar(Math.max(0.001, 1 - f))
         })
         await anima(0.4, f => { v.livello = fino + (prima - fino) * liscio(f); v.onda = 0.15 * (1 - f) })
         v.onda = 0
       } else {
-        await anima(0.25, f => { a.gruppo.rotation.z = -2.0 * (1 - f); a.gruppo.scale.setScalar(Math.max(0.001, scalaA * (1 - f))) })
+        await anima(0.25, f => { a.gruppo.rotation.z = -2.0 * (1 - f); a.gruppo.scale.setScalar(Math.max(0.001, 1 - f)) })
       }
     }
-    // il mercante ne mette fuori un'altra uguale
-    ampolle.rimpiazza(k)
-    if (pieno) await nelCalderone(i, colore)
-    vasi.trattieni(i, false)
+    ampolle.via(k)
   }
 
   // il misurino pieno si alza, si piega sul calderone e si svuota
@@ -258,6 +271,7 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
     })
     await anima(0.2, f => { v.gruppo.rotation.z = lato * liscio(f) * 1.9 })
     banco.ribolli(4)
+    banco.colore(new Color(banco.coloreOra()).lerp(new Color(colore), 0.5).getStyle())
     const livello = v.livello
     await anima(0.55, f => {
       const b = v.gruppo.localToWorld(new Vector3(0, ALTEZZA_VASO, 0))
@@ -273,23 +287,28 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
     v.pila.scale.y = 1
   }
 
-  // la spugna arriva, gira sulla macchia e se la porta via
+  // la spugna arriva e gira su ogni macchia, una dopo l'altra
   async function pulisci() {
-    if (!eff.macchia.visible) return
-    const m = eff.macchia.position.clone()
+    const sporche = eff.macchieVisibili()
+    if (!sporche.length) return
     const s = eff.spugna
     s.visible = true
-    const da = new Vector3(m.x + 2.5, 1.5, m.z + 1.5)
-    await anima(0.3, f => { s.position.lerpVectors(da, m, liscio(f)) })
-    await anima(0.9, f => {
-      const a = f * Math.PI * 6
-      s.position.set(m.x + Math.cos(a) * 0.6 * (1 - f * 0.4), 0.02, m.z + 0.35 + Math.sin(a) * 0.25)
-      s.rotation.y = Math.sin(a) * 0.4
-      eff.macchia.scale.setScalar(Math.max(0.001, (1 - liscio(f)) * grandeMacchia))
-      if (Math.random() < 0.3) eff.luci.emetti(1, { da: s.position, sparpaglia: 0.3, verso: [0, 0.8, 0], caso: 0.4, colore: '#cfe9ff', vita: 0.5, misura: 0.08, gravita: 0 })
-    })
-    eff.macchia.visible = false
-    await anima(0.3, f => { s.position.lerpVectors(m, da, liscio(f)) })
+    let da = new Vector3(sporche[0].position.x + 2.5, 1.5, sporche[0].position.z + 1.5)
+    const fuori = da.clone()
+    for (const m of sporche) {
+      const qui = m.position.clone(), g0 = m.scale.x
+      await anima(0.3, f => { s.position.lerpVectors(da, qui, liscio(f)) })
+      await anima(0.8, f => {
+        const a = f * Math.PI * 6
+        s.position.set(qui.x + Math.cos(a) * 0.6 * (1 - f * 0.4), 0.02, qui.z + 0.35 + Math.sin(a) * 0.25)
+        s.rotation.y = Math.sin(a) * 0.4
+        m.scale.setScalar(Math.max(0.001, (1 - liscio(f)) * g0))
+        if (Math.random() < 0.3) eff.luci.emetti(1, { da: s.position, sparpaglia: 0.3, verso: [0, 0.8, 0], caso: 0.4, colore: '#cfe9ff', vita: 0.5, misura: 0.08, gravita: 0 })
+      })
+      m.visible = false
+      da = s.position.clone()
+    }
+    await anima(0.3, f => { s.position.lerpVectors(da, fuori, liscio(f)) })
     s.visible = false
   }
 
@@ -320,6 +339,6 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
     rilasciaRenderer(renderer)
   }
 
-  return { imposta, versa: occupa(versa), pulisci: occupa(pulisci), festa: occupa(festa), rilascia, misura,
+  return { imposta, ordine: occupa(ordine), pulisci: occupa(pulisci), festa: occupa(festa), rilascia, misura,
            grafica: () => ({ fotogrammi, chiamate: renderer.info.render.calls, triangoli: renderer.info.render.triangles }) }
 }

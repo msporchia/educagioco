@@ -160,6 +160,7 @@ export function creaBanco(scena, trame) {
   return {
     aggiorna,
     colore(c) { metaBrodo.set(c) },
+    coloreOra: () => '#' + metaBrodo.getHexString(),
     ribolli(quanto = 3) { bollore = quanto },
     luceFuoco,
   }
