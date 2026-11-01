@@ -10,7 +10,7 @@
    una scala da una sosta scritta in Node. E senza WebGL lo si dice e si esce.
    Si tocca come un telefono (`Input.dispatchTouchEvent` via CDP).
    `node test/esegui.mjs sotterraneo-3d`
-   tempo: 240
+   tempo: 400
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegliAvventura, scendiNelSotterraneo, scegliAttacco, leggiProfilo }
   from '../aiuto/browser.mjs'
