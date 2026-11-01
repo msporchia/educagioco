@@ -1,12 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════════
    COME CADE UN MOSTRO
 
-   (docs/sotterraneo/scontro-interfaccia.md, «La caduta»; docs/core/creature.md, `morte`; scena3d/cose.js)
-   Chi cade nello scontro non svanisce in piedi: prende il suo pezzo a terra (`<nome>-morto-0`), un attimo dopo, se ce n'è un secondo, i
-   resti (`<nome>-morto-1`), e solo dopo svanisce. Lo zombie ha un pezzo solo, la mummia due, il grosso nessuno (svanisce com'era).
-   Nella scena 3D il nome della posa di adesso lo scrive `cose.js` nello stato del mostro (`__sotterraneo3d.statoDi(mostro).nome`, anche
-   quando si disegna il modello): un campionatore dentro la pagina lo legge a ogni giro e registra quello che compare, perché il
-   racconto dura poco e le foto sotto carico sono lente.
+   (docs/sotterraneo/scontro-interfaccia.md, «La caduta»; docs/sotterraneo/mostri-3d.md; scena3d/cose.js)
+   Chi cade nello scontro non svanisce in piedi: il modello si rovescia all'indietro (o la sua sagoma prende la foto a terra:
+   docs/sotterraneo/sagome-3d.md), e l'altezza che `cose.js` scrive nello stato del mostro scende; solo dopo svanisce. Lo stesso col
+   modello e con la sagoma (`&spegni=mostri3d`). Un campionatore dentro la pagina legge lo stato a ogni giro, perché il racconto dura
+   poco e le foto sotto carico sono lente.
    `node test/esegui.mjs sotterraneo-caduta`
    tempo: 90
    ═══════════════════════════════════════════════════════════════════ */
@@ -47,22 +46,19 @@ async function entra(hash) {
 }
 
 // attacca finché il mostro cade, e dice cosa si è visto a terra
-async function abbatti(tipo) {
-  await entra(`mostri=1&tipo=${tipo}`)
+async function abbatti(tipo, altro = '') {
+  await entra(`mostri=1&tipo=${tipo}${altro}`)
   await page.evaluate(() => {
     window.__lui = null
-    const v = window.__caduta = { aTerra: false, resti: 0, primo: false, nomi: [] }
+    const v = window.__caduta = { cade: false, alto: 0, basso: 99, sagoma: false, modello: false }
     const guarda = () => {
       const S = window.__sotterraneo3d
       // il mostro dello scontro lo dice il palco; finito lo scontro il palco non c'è più, ma il mostro caduto resta in scena
       if (S && S.palco && S.palco.campo[0]) window.__lui = S.palco.campo[0]
       const st = S && window.__lui && S.statoDi(window.__lui)
-      if (st && st.nome && /-morto-\d$/.test(st.nome)) {
-        v.aTerra = true
-        if (/-morto-0$/.test(st.nome)) v.primo = true
-        if (/-morto-1$/.test(st.nome)) v.resti = 1
-        if (!v.nomi.includes(st.nome)) v.nomi.push(st.nome)
-      }
+      if (!st) return
+      if (!st.morente) v.alto = Math.max(v.alto, st.alto || 0)
+      else if (st.morente < 1) { v.cade = true; v.basso = Math.min(v.basso, st.alto || 0); if (st.in3d) v.modello = true; if (st.inSagoma) v.sagoma = true }
     }
     window.__cadutaGiro = setInterval(guarda, 25)
   })
@@ -82,14 +78,12 @@ async function abbatti(tipo) {
 
 {
   const z = await abbatti('zombie')
-  controlla('lo zombie che cade prende il suo pezzo a terra', z.aTerra && z.primo, JSON.stringify(z))
-  uguale('e non ha i resti: ha un pezzo solo', z.resti, 0)
+  controlla('lo zombie che cade si rovescia: col modello, e la sua altezza scende', z.cade && z.modello && z.basso < z.alto * 0.6, JSON.stringify(z))
   await scatto(page, 'caduta-zombie')
 }
 {
-  const m = await abbatti('mummia')
-  controlla('la mummia che cade prende il suo pezzo a terra', m.aTerra && m.primo, JSON.stringify(m))
-  uguale('e dopo un attimo i resti', m.resti, 1)
+  const m = await abbatti('mummia', '&spegni=mostri3d')
+  controlla('la mummia senza modello cade con la sua sagoma, a terra', m.cade && m.sagoma && m.basso < m.alto * 0.6, JSON.stringify(m))
 }
 
 uguale('nessun errore in pagina', errori.length, 0)
