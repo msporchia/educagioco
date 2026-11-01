@@ -132,7 +132,8 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   // quello che si fa a fotogramma finito: chi lo chiama può buttare il 3D (il portale porta sopra), e il resto del
   // fotogramma toccherebbe un piano che non c'è più
   let aFotogrammaFinito = null
-  const ZOOM = { 2: 1.3, 3: 1, 4: 0.84, 5: 0.72 }
+  // i passi del pizzico: 2…5 come sempre, 6…8 per chi vuole la scena molto più grande (l'utente, 1 novembre 2026: «Melody vuole vedere tutto molto più grande»)
+  const ZOOM = { 2: 1.3, 3: 1, 4: 0.84, 5: 0.72, 6: 0.6, 7: 0.5, 8: 0.4 }
   const centro = new Vector3()
   const scontro = creaScontro({ S, cam, eroe, compagno, getPiano: () => piano, getCose: () => cose, getFigure: () => figure, anelli, cieca })
   const torcia = (i, su) => piano && piano.torcia(i, su)   // le torce sui muri che si abbassano nello scontro
@@ -469,7 +470,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     mappaGrande: false,
     get scala() { return scala },
     zoomA(n) {
-      const v = Math.max(2, Math.min(5, Math.round(n)))
+      const v = Math.max(2, Math.min(8, Math.round(n)))
       if (v === scala) return false
       scala = v; cam.zoom = ZOOM[v]
       return true

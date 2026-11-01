@@ -72,6 +72,8 @@
 .sot-richiamo[data-richiamo-di="vita"]::after { background: #ffe3e0 }
 .sot-richiamo[data-richiamo-di="energia"] { background: #dcecff }
 .sot-richiamo[data-richiamo-di="energia"]::after { background: #dcecff }
+.sot-richiamo[data-richiamo-di="torce"] { background: #ffecc2 }
+.sot-richiamo[data-richiamo-di="torce"]::after { background: #ffecc2 }
 /* il numero che sale sopra l'eroe curato: verde la vita, azzurro l'energia */
 .sot-cura-fiocco {
   position: absolute; left: 0; top: -64px; z-index: 3; font-size: 18px; font-weight: 800; white-space: nowrap;

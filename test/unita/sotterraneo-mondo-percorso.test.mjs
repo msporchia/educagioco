@@ -217,7 +217,7 @@ for (const z of m.posti) controlla(`${z.tipo} ${z.chiave}: ci si arriva dalla pi
     const q = m.posti.find(z => z.tipo === l.tipo && z.chiave === l.chiave && z.citta === 'villaggio')
     controlla(`${l.tipo} ${l.chiave}: dove dice la pianta`, q && q.x === v.x + l.x && q.y === v.y + l.y && q.accanto.x === v.x + l.accanto.x && q.accanto.y === v.y + l.accanto.y && (q.giro || 0) === (l.giro || 0))
   }
-  stessaLista('i quattro mercanti', v.mercanti.map(q => q.chiave).sort(), ['armaiolo', 'erborista', 'incantatrice', 'rigattiere'])
+  stessaLista('i cinque mercanti', v.mercanti.map(q => q.chiave).sort(), ['armaiolo', 'carovaniere', 'erborista', 'incantatrice', 'rigattiere'])
   stessaLista('la ragazza del pozzo e il capitano', v.persone.map(q => q.chiave).sort(), ['capitano', 'ragazza'])
   for (const t of ['minatore', 'portale', 'pietra', 'bacheca', 'cartello', 'pozzo']) controlla(`il villaggio ha ${t}`, !!v[t])
   // chi ci sta si trova senza girare: dalla partenza tutti entro la larghezza della telecamera (15 celle) e poche file più su

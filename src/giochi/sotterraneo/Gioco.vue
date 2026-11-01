@@ -499,6 +499,11 @@ watch([forzaOra, livelloOra, () => !!corsa.value], () => {
 
 // chi scende con la roba addosso (vita, braccio, difesa, tratti, gemme): la barra in basso e la pagina dell'eroe, sulla mappa
 const robaSopra = computed(() => schedaConLaRoba(eroeQui(), roba.value, crescita.value))
+// le torce che si hanno (quella accesa e quelle alla cintura) e le gemme per comprarne: il carovaniere chiama chi ne ha poche
+const torceSopra = computed(() => {
+  const r = roba.value
+  return r ? { n: (r.torcia > 0 ? 1 : 0) + (r.torce | 0), gemme: r.gemme | 0, prezzo: COSE.torcia.prezzo } : null
+})
 
 /* ═══════════ i mercanti di sopra (motore/bottega.js) ═══════════
    Il banco si pesca una volta per giro e si scrive nell'avventura (botteghe): un banco che cambiasse a ogni
@@ -2270,7 +2275,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
                   :roba="robaSopra" :mondo="mondoQui" @mondo="ricordaMondo" :dungeon="dungeonDelMondo" :terre="porta" @terre="allaTerra"
                   :veduta="vedutaSopra" @veduta="v => { vedutaSopra = v }" @risposta="rispostaSopra"
                   :punti="barra.punti" :punti-abilita="barra.puntiAbilita" @scheda="apriScheda"
-                  :forze="forze" @cura="curaDa"
+                  :forze="forze" :torce="torceSopra" @cura="curaDa"
                   :missioni="missioni" :conti="conti" :azione-missione="azioneMissione" :segui="segui" @segui="seguiMissione"
                   @gioca="i => avvia(i)" @davanti="scaldaDiscesa" @riprendi="riprendiDiscesa" @bottega="apriBottega"
                   :pensiero="pensiero" @pensa="pensaSopra" @pensiero="toccaPensiero" @pensiero-fine="pensiero = null"

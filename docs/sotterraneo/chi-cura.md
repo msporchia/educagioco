@@ -22,6 +22,9 @@ conti: i mostri picchiano, le pozioni finiscono, e chi non ha gemme non resta bl
   (l'eroe ci va e si apre il dialogo, con «Curami» come prima domanda). Resta lì finché non si è curati, senza timer né
   ripetizioni a ogni passo; tace mentre ci si parla e scompare appena la sosta è a posto. Si vede solo se lei è già stata trovata
   nella nebbia, e solo con una discesa lasciata dal portale (l'abisso risalito per stasera conta: si è portati su ammaccati).
+- **Chi vende le torce chiama chi ne ha poche** (il carovaniere, non è una cura): stesso fumetto sopra la testa, `data-richiamo-di="torce"`,
+  quando si hanno meno di tre torce (quella accesa e la scorta) e le gemme per una (`richiamoTorce` in `motore/dialoghi.js`, `torce` in
+  `Gioco.vue` → `Campagna.vue` → `Mondo3d.vue`). Non cura niente e non blocca: si tocca e si apre il dialogo.
 - **Il 🧪 di sopra** con la vita sotto il massimo dice «la guaritrice ti cura, gratis» invece di «sei già in piena forma».
 - **Ferito sopra** (nel sotterraneo, uno scontro sul prato senza la sosta del portale): le ferite stanno in `mondo.sopra.forze`, e la
   barra, i richiami, la guaritrice, l'incantatrice e la fontana le trattano come la sosta ([mondo-aperto-mostri-scena.md](mondo-aperto-mostri-scena.md#svenire-le-ferite-chi-cura)).

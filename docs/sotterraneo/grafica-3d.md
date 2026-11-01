@@ -116,7 +116,9 @@ frequenza non cambia i passi.
   pixel prima, durante e dopo la domanda di una porta, `&dpr=1` perché il
   pixel ratio che si adatta cambierebbe la scala da sé; nello scontro i
   combattenti sopra il pannello). Il pizzico e la rotella la avvicinano o la
-  allontanano (`zoomA`).
+  allontanano (`zoomA`): otto passi, da 2 (lontano) a 8, con la distanza che va da 1,3 a 0,4 volte quella di base (`ZOOM` in
+  `scena3d/indice.js`, `zoomMin` 0,4 in `costanti.js`). L'utente, 1 novembre 2026: «Melody vuole vedere tutto molto più grande,
+  facendo zoom con le dita»: prima il massimo era 0,72, ora si vede una manciata di celle attorno all'eroe.
 - **I muri con il pavimento a nord sono parapetti** (0,32): stanno fra la
   telecamera e la stanza. Colonne e spigoli alti che coprono l'eroe si
   sfaldano in un cerchio retinato (il buco). Nello scontro i muri alti alle

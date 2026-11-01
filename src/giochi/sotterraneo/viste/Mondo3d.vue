@@ -13,7 +13,7 @@ import { segnoDi, GLIFO, chiAspetta, presePer, discesaDellaStoria } from '../mot
 import { prese as presePerTipo, esploratePronte } from '../motore/taglie.js'
 import { vociDellaBacheca, segnoDellaBacheca, postoSulPrato } from '../motore/taglie-bacheca.js'
 import { apertura, scelte as scelteDi, risposta as rispostaDi, dopoLaPresa, dopoLaConsegna, novita as novitaDi,
-         curaDi, mancaA, richiamoDi, dopoLaCura, stradaDelCapitano } from '../motore/dialoghi.js'
+         curaDi, mancaA, richiamoDi, richiamoTorce, dopoLaCura, stradaDelCapitano } from '../motore/dialoghi.js'
 import { laStoria, dettoDelLivello } from '../motore/storia.js'
 import { DETTI_DEL_COLORE } from '../dati/zone.js'
 import { iconaDi } from '../dati/terra.js'
@@ -52,6 +52,7 @@ const props = defineProps({
   azioneMissione: { type: Function, default: null },
   segui: { type: String, default: null },
   forze: { type: Object, default: null },
+  torce: { type: Object, default: null },     // le torce di chi sta sopra: { n, gemme, prezzo }; il carovaniere chiama se ne ha poche (richiamoTorce)
   veduta: { type: Boolean, default: false },  // la veduta d'insieme, dalla casella «mappa grande» della barra
   pensiero: { type: Object, default: null },  // il pensiero dell'eroe sopra la testa (docs/sotterraneo/pensieri.md)
   forza: { type: Number, default: 1 },        // il livello di forza dell'eroe (motore/forza.js): il colore dell'annuncio di una regione
@@ -706,6 +707,7 @@ function parlaAlViandante(b) {
 }
 const fiocco = ref(null)
 const richiamo = chi => (dialogo.value && dialogo.value.chi === chi ? null : richiamoDi(chi, props.forze))
+const richiamoDelleTorce = chi => (dialogo.value && dialogo.value.chi === chi ? null : richiamoTorce(chi, props.torce))
 // la fontana beve tutto: vita ed energia insieme (un solo `cura`, 'tutto'); il numero sopra l'eroe dice quanto si è ripreso
 function bevi() {
   const c = curaDellaFontana(props.forze)
@@ -1310,6 +1312,7 @@ watch(giro, g => { if (mostri && g !== mostri.stato.giro) { mostri.giro(g); foto
         <b v-else-if="b.ruolo === 'minatore' && !parlato" class="sot-tre-punti">…</b>
         <b v-else-if="segnoSopra(b)" class="sot-tre-punti sot-segno-missione" :class="'sot-segno-' + segnoSopra(b)">{{ GLIFO[segnoSopra(b)] }}</b>
         <span v-if="b.ruolo === 'mercante' && trovati.has(b.chiave) && richiamo(b.k)" class="sot-richiamo" data-richiamo :data-richiamo-di="curaDi(b.k).risorsa">{{ richiamo(b.k) }}</span>
+        <span v-else-if="b.ruolo === 'mercante' && trovati.has(b.chiave) && richiamoDelleTorce(b.k)" class="sot-richiamo" data-richiamo data-richiamo-di="torce">{{ richiamoDelleTorce(b.k) }}</span>
         <span v-else-if="b.ruolo === 'fontana' && trovati.has(b.chiave) && !(aperto && aperto.chiave === b.chiave) && curaDellaFontana(forze).serve" class="sot-richiamo" data-richiamo data-richiamo-di="fontana">{{ FONTANA.richiamo }}</span>
         <!-- chi è arrivato a questa discesa: i pallini accanto all'ingresso, i nomi nel fumetto -->
         <span v-if="amiciDi(b).length" class="sot-amici-posto" data-amici-posto :data-al="nodoDi(b)">

@@ -272,10 +272,12 @@ function confrontoNumeri(sorte) {
   const numMinore = `${intero},${minore}`
   const chiediMaggiore = sorte.forse(0.5)
 
-  /* un terzo numero, chiaramente più piccolo di tutti e due — non è
-     un secondo tranello, serve solo a non far diventare la domanda una
-     scelta fra due tasti sempre uguale */
-  const terzo = sorte.fra(0, Math.max(0, intero - 1))
+  /* un terzo numero, chiaramente dalla parte opposta alla domanda (più
+     piccolo se si cerca il più grande, più grande se si cerca il più
+     piccolo): non è un secondo tranello, serve solo a non far diventare la
+     domanda una scelta fra due tasti sempre uguale. Se fosse sempre più
+     piccolo, cercando il più piccolo sarebbe lui la risposta giusta */
+  const terzo = chiediMaggiore ? sorte.fra(0, Math.max(0, intero - 1)) : sorte.fra(intero + 1, intero + 3)
   const numTerzo = `${terzo},${sorte.fra(1, 89).toString().padStart(2, '0')}`
 
   const target = chiediMaggiore ? numMaggiore : numMinore
