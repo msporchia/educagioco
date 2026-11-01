@@ -414,12 +414,15 @@ function inMano (u, lato) {
   const p = u.perniArmi && u.perniArmi[lato], a = p && p.children[0]
   return a ? (a.userData.tipo === 'balestra' ? 'balestra' : a.userData.famiglia || null) : null
 }
-/** Una fase di marcia (in radianti): gambe e braccia opposte, il busto che rimbalza. Non tocca le armi montate, tranne l'arco, la balestra
-    e il bastone (`tieni`). */
+/** Una fase di marcia (in radianti): gambe e braccia opposte, il busto che rimbalza. Il braccio che regge un'arma o uno scudo dondola
+    meno e resta avanti (se no la lama finiva in orizzontale all'altezza del ginocchio e lo scudo nel fianco); l'arco, la balestra e il
+    bastone li tiene `tieni`. */
 export function posaMarcia (e, fase) {
   const u = e.userData, s = Math.sin(fase), a = Math.abs(Math.cos(fase))
   u.gambe[0].rotation.x = s * 0.75; u.gambe[1].rotation.x = -s * 0.75
   u.bracci[0].rotation.set(-s * 0.55, 0, 0.06); u.bracci[1].rotation.set(s * 0.55, 0, -0.06)
+  if (inMano(u, 'destra')) u.bracci[1].rotation.set(-0.4 + s * 0.2, 0, -0.06)
+  if (inMano(u, 'sinistra') === 'scudo') u.bracci[0].rotation.set(-0.6 - s * 0.15, 0, 0.12)
   u.busto.position.y = u.altezzaBusto + a * 0.02; u.busto.rotation.y = s * 0.08
   u.busto.position.x = 0; u.busto.rotation.z = 0; for (const gm of u.gambe) gm.rotation.z = 0
   u.testa.rotation.y = -s * 0.05
@@ -515,15 +518,27 @@ export function posaGuardia (e, t = 0) {
         const su = k < 0.4 ? smussa(k / 0.4) : 1 - smussa((k - 0.4) / 0.6)
         const assesta = k > 0.55 ? Math.sin((k - 0.55) * 22) * (1 - k) * 0.5 : 0
         bd.rotation.x -= 0.7 * su; bd.rotation.z -= 0.12 * su; u.busto.rotation.y += 0.15 * su; u.testa.rotation.y -= 0.2 * su
-        if (sp) pa.destra.rotation.x = sp.x - 0.55 * su + 0.08 * assesta
+        if (sp) pa.destra.rotation.x = sp.x + 0.25 * su + 0.08 * assesta          // la lama sale fino a dritta: girata indietro passava nell'elmo
         tuffo = 0.01 * su
       }
       break
     }
     case 'elfa': {
+      // con l'arco: il braccio teso, l'altra mano alla corda; con la spada (e lo scudo) le braccia del cavaliere
+      if (pa.destra || inMano(u, 'sinistra') === 'scudo') {
+        bd.rotation.set(-0.55 + 0.05 * o1, 0, -0.12 + 0.03 * o2)
+        bs.rotation.set(pa.sinistra ? -0.75 + 0.04 * o2 : -0.3 + 0.04 * o2, 0, pa.sinistra ? 0.18 + 0.03 * o1 : 0.1)
+        u.busto.rotation.y = 0.1 + 0.03 * lenta
+        const sp = oscilla(pa.destra, 0.06 * o2, 0, 0.05 * o1)
+        if (k >= 0) {                                                                       // rialza la spada, come il cavaliere
+          const su = k < 0.4 ? smussa(k / 0.4) : 1 - smussa((k - 0.4) / 0.6)
+          bd.rotation.x -= 0.6 * su; u.testa.rotation.y -= 0.2 * su
+          if (sp) pa.destra.rotation.x = sp.x + 0.25 * su
+        }
+        break
+      }
       bs.rotation.set(-1.45 + 0.03 * o1, 0, 0.06); bd.rotation.set(-1.1 + 0.04 * o2, 0.45, -0.45 + 0.03 * o1)
       u.busto.rotation.y = -0.25 + 0.03 * lenta; u.testa.rotation.y += 0.15
-      oscilla(pa.sinistra, 0.04 * o2, 0, 0.03 * o1)                                          // lo scudo ondeggia appena (l'arco lo tiene ritto tieni)
       if (k >= 0) {
         const su = k < 0.35 ? smussa(k / 0.35) : k < 0.7 ? 1 : 1 - smussa((k - 0.7) / 0.3)
         if (ge.n % 2 === 0) {                                                               // si ravvia l'orecchio (la mano sale al lato della testa)
@@ -537,9 +552,10 @@ export function posaGuardia (e, t = 0) {
       break
     }
     case 'mago': {
-      // il bastone discosto dal fianco (tieni lo tiene dritto)
+      // il bastone discosto dal fianco (tieni lo tiene dritto); la spada davanti; lo scudo davanti al fianco, fuori dalla barba
       const staffa = inMano(u, 'destra') === 'staffa'
-      bd.rotation.set((staffa ? -0.3 : -0.4) + 0.05 * o1, 0, (staffa ? 0.9 : -0.1) + 0.02 * o2); bs.rotation.set(-0.85 + 0.08 * o2, 0, 0.5 + 0.04 * o1)
+      bd.rotation.set((staffa ? -0.3 : -0.5) + 0.05 * o1, 0, (staffa ? 0.9 : -0.1) + 0.02 * o2)
+      if (pa.sinistra) bs.rotation.set(-0.55 + 0.04 * o2, 0, -0.1 + 0.03 * o1); else bs.rotation.set(-0.85 + 0.08 * o2, 0, 0.5 + 0.04 * o1)
       u.busto.rotation.y = 0.1 + 0.03 * lenta
       oscilla(pa.destra, 0.04 * o2, 0, 0.05 * o1)                                           // la gemma della staffa ondeggia
       if (k >= 0) {                                                                         // alza la staffa e la batte a terra
@@ -553,13 +569,16 @@ export function posaGuardia (e, t = 0) {
     case 'nano': {
       bd.rotation.set(-0.3 + 0.04 * o1, 0, 0.75 + 0.04 * o2); bs.rotation.set(-0.55 + 0.04 * o2, 0, -0.05 + 0.03 * o1)
       u.busto.rotation.y = 0.1 + 0.03 * lenta
-      oscilla(pa.destra, 0.06 * o2, 0, 0.05 * o1)
+      // la lama più su della presa comune (col braccio basso andava quasi in orizzontale), ma non nel gesto: girando e con la mano
+      // alla barba passava nell'elmo
+      const barba = k > 0.4 ? Math.sin(Math.PI * lim((k - 0.4) / 0.58, 0, 1)) ** 0.6 : 0
+      const nelGesto = k >= 0 ? smussa(Math.min(1, k / 0.15)) * (1 - smussa(lim((k - 0.85) / 0.15, 0, 1))) : 0
+      oscilla(pa.destra, -0.25 * (1 - nelGesto) + 0.06 * o2, 0, 0.05 * o1)
       const arma = pa.destra && pa.destra.children[0]
       if (arma) arma.rotation.y = 0
       if (k >= 0) {                                                                         // l'ascia fa un quarto di giro, poi la mano passa sulla barba
         const giraA = smussa(Math.min(1, k / 0.3)) * (1 - smussa(lim((k - 0.62) / 0.3, 0, 1)))
         if (arma) arma.rotation.y = Math.PI / 2 * giraA
-        const barba = k > 0.4 ? Math.sin(Math.PI * lim((k - 0.4) / 0.58, 0, 1)) ** 0.6 : 0
         bd.rotation.x = mescola(bd.rotation.x, -1.55, barba); bd.rotation.z = mescola(bd.rotation.z, -0.35, barba)
         u.testa.rotation.x += 0.1 * barba; tuffo = 0.01 * Math.sin(Math.PI * k)
       }
