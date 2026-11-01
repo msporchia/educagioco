@@ -360,6 +360,7 @@ export class Mondo3d {
     this.camera.muovi(dt, {
       eroe: { x: eroe.x, z: eroe.z, vel: eroe.vel }, distanza: this.q.camera,
     })
+    this._nebbiaLontana()
     this.costruzione.fotogramma(dt)                               // il dito contro il bordo con un pezzo in mano: la camera scorre (costruzione.js)
     this.stagione?.aggiorna(tt, this.renderer.getPixelRatio())     // i fiocchi e il fiato: pochi uniform (scena3d/stagione.js)
     this.terreno.segui(this.camera.x, this.camera.z)              // il suolo segue la camera; se cambia il lotto al mezzo si rifà la finestra
@@ -470,6 +471,12 @@ export class Mondo3d {
     this.scena.fog.near = q.nebbia ? vicino : 1e6; this.scena.fog.far = q.nebbia ? lontano : 2e6
     this.stagione?.applica(q)
     this.fx.q = q; this.pezzi.q = q
+  }
+  /** Zoomando fuori la nebbia si allontana con la camera (se no tutto sarebbe già nebbia): le distanze di base per la scala di `camera.scalaLontano`. */
+  _nebbiaLontana() {
+    if (!this.q || !this.q.nebbia) return
+    const [vicino, lontano] = this.stagione ? this.stagione.nebbia : [38, 90], s = this.camera.scalaLontano
+    this.scena.fog.near = vicino * s; this.scena.fog.far = lontano * s
   }
   adattaSenzaRect() { if (this.rect) this.renderer.setSize(Math.max(1, Math.round(this.rect.width)), Math.max(1, Math.round(this.rect.height)), false) }
   /** Il banco: `n` disegni della scena così com'è, ognuno aspettato (una lettura di un pixel), l'ombra rifatta a disegni alterni come a

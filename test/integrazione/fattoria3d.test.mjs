@@ -1151,6 +1151,45 @@ controlla('il pollaio con le bestie non si mette via', via.ok === false && via.m
   await zuc.context().close().catch(() => {})
 }
 
+/* ── lo zoom (docs/fattoria3d/terreno.md «La telecamera»): un tocco manda l'eroe e il pizzico zooma, ai due estremi; oltre i limiti l'elastico torna dentro ── */
+{
+  await page.evaluate(() => { const m = window.__fattoria3d.mondo; m.camera.segui() })
+  for (const [nome, z] of [['minimo', 0.28], ['massimo', 2.4]]) {
+    await page.evaluate(z => { window.__fattoria3d.mondo.camera.zoom = z }, z)
+    await attendi(page, 1500)
+    const dest = await page.evaluate(() => {
+      const { mondo } = window.__fattoria3d, r = mondo.canvas.getBoundingClientRect(), e = mondo.eroe
+      for (const [dx, dz] of [[0, 2], [2, 0], [-2, 0], [0, -2], [1.5, 1.5]]) {
+        const [px, py, v] = mondo.proietta({ x: e.x + dx, y: 0, z: e.z + dz })
+        if (v && px > 40 && px < r.width - 40 && py > 150 && py < r.height - 150) return { x: r.left + px, y: r.top + py, dx, dz, ex: e.x, ez: e.z }
+      }
+      return null
+    })
+    controlla(`zoom ${nome}: c'è un punto di suolo toccabile`, !!dest)
+    if (dest) {
+      await tocca(dest.x, dest.y); await attendi(page, 1200)
+      const mosso = await page.evaluate(({ ex, ez }) => { const e = window.__fattoria3d.mondo.eroe; return Math.hypot(e.x - ex, e.z - ez) }, dest)
+      controlla(`zoom ${nome}: un tocco manda l'eroe`, mosso > 0.5, `mosso di ${mosso.toFixed(2)}`)
+    }
+    await fermo()
+  }
+  // il pizzico: due dita che si allargano molto ingrandiscono, ma il rilascio riporta dentro i limiti
+  await page.evaluate(() => { window.__fattoria3d.mondo.camera.zoom = 1 })
+  const c = await page.evaluate(() => { const r = window.__fattoria3d.mondo.canvas.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 } })
+  const due = (d) => cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: c.x - d, y: c.y }, { x: c.x + d, y: c.y }] })
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: c.x - 20, y: c.y }, { x: c.x + 20, y: c.y }] })
+  for (let d = 20; d <= 160; d += 20) await due(d)
+  for (const d of [140, 160]) await due(d)
+  const dentro = await page.evaluate(() => window.__fattoria3d.mondo.camera.zoom)
+  controlla('il pizzico che allarga ingrandisce (zoom sotto 1)', dentro < 0.5, `zoom ${dentro.toFixed(2)}`)
+  for (let d = 160; d >= 4; d -= 6) await due(d)
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  await attendi(page, 300)
+  const dopo = await page.evaluate(() => window.__fattoria3d.mondo.camera.zoom)
+  controlla('al rilascio lo zoom torna dentro i limiti (≤ 2,4)', dopo <= 2.4 + 1e-6 && dopo >= 0.28 - 1e-6, `zoom ${dopo.toFixed(2)}`)
+  await page.evaluate(() => { window.__fattoria3d.mondo.camera.zoom = 1 })
+}
+
 /* ── senza WebGL 2 si dice e si torna in home ── */
 const { page: senza } = await apriGioco(browser, { hash: 'fattoria3d&tela=niente', attesa: null })
 await senza.waitForSelector('[data-senza-3d]', { timeout: 8000 })

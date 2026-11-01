@@ -4,6 +4,7 @@
 // col pennello delle strade si disegna; col fantasma del menu parcheggiato lo si trascina o lo si tocca dove va. Soglia di 16 px fra
 // tocco e trascinamento (docs/core/il-dito.md).
 // Il dito non è un mouse: niente click, solo pointer events. Non sa le regole: chiama il mondo.
+import { zoomMorbido, dentroLimiti } from './camera.js'
 const SOGLIA = 16, SOGLIA_PREMUTO = 10, ATTESA_PREMUTO = 450
 
 export class Dito {
@@ -17,11 +18,13 @@ export class Dito {
     const c = this.canvas
     c.addEventListener('pointerdown', this.giu); c.addEventListener('pointermove', this.muovi)
     c.addEventListener('pointerup', this.su); c.addEventListener('pointercancel', this.su); c.addEventListener('contextmenu', this.fermaMenu)
+    this.rotella = e => { e.preventDefault(); const w = this.w; w.camera.zoom = dentroLimiti(w.camera.zoom * Math.exp(e.deltaY * 0.0015)) }
+    c.addEventListener('wheel', this.rotella, { passive: false })
   }
   via() {
     const c = this.canvas; clearTimeout(this.lungo)
     c.removeEventListener('pointerdown', this.giu); c.removeEventListener('pointermove', this.muovi)
-    c.removeEventListener('pointerup', this.su); c.removeEventListener('pointercancel', this.su); c.removeEventListener('contextmenu', this.fermaMenu)
+    c.removeEventListener('pointerup', this.su); c.removeEventListener('pointercancel', this.su); c.removeEventListener('contextmenu', this.fermaMenu); c.removeEventListener('wheel', this.rotella)
   }
 
   _centro() { const [a, b] = [...this.punti.values()]; return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2] }
@@ -74,7 +77,7 @@ export class Dito {
     const w = this.w, { ui } = w
     this.punti.set(e.pointerId, [e.clientX, e.clientY])
     if (this.punti.size === 2) {
-      w.camera.zoom = Math.max(0.55, Math.min(1.7, this.zoom0 * this.pinch0 / Math.max(1, this._distanza())))
+      w.camera.zoom = Math.max(0.1, Math.min(8, this.zoom0 * this.pinch0 / Math.max(1, this._distanza())))   // fuori dai limiti l'elastico (camera.js)
       if (this._pennello) {                             // col pennello il dito disegna: due dita spostano la vista
         const c = this._centro(), p0 = w.puntaSuolo(this.centroPrima[0], this.centroPrima[1]), p1 = w.puntaSuolo(c[0], c[1])
         if (p0 && p1) w.camera.trascina(p0, p1)
@@ -103,8 +106,9 @@ export class Dito {
 
   _fine(e) {
     if (!this.punti.has(e.pointerId)) return
-    this.punti.delete(e.pointerId)
     const w = this.w, su = e.type === 'pointerup'
+    if (this.punti.size === 2) w.camera.zoom = dentroLimiti(w.camera.zoom)    // il pizzico finisce: l'elastico riporta dentro
+    this.punti.delete(e.pointerId)
     clearTimeout(this.lungo); this.lungo = 0
     if (!su) w.costruzione.alzaDito()
     if (!su && w.costruzione.attivo && !w.costruzione.parcheggiato) w.costruzione.annullaTrascinamento()
