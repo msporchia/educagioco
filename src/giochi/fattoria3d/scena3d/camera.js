@@ -1,6 +1,15 @@
 // La telecamera: segue l'eroe da sopra, a distanza scelta (e zoomabile con due dita); un dito che scorre la stacca dall'eroe
 // («libera») finché non lo si manda da qualche parte. Non sa le regole: riceve cosa inquadrare.
 import * as THREE from 'three'
+import { ZOOM_MIN, ZOOM_MAX, ZOOM_ELASTICO } from '../dati/mondo.js'
+
+/** Il fattore di zoom dentro i limiti com'è; fuori, l'elastico: si allontana di poco (a un quinto) e al rilascio `ferma` lo riporta dentro. */
+export function zoomMorbido(z) {
+  if (z < ZOOM_MIN) return ZOOM_MIN * Math.pow(z / ZOOM_MIN, ZOOM_ELASTICO)
+  if (z > ZOOM_MAX) return ZOOM_MAX * Math.pow(z / ZOOM_MAX, ZOOM_ELASTICO)
+  return z
+}
+export const dentroLimiti = z => Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z))
 
 const PASSO_OMBRA = 2        // il sole si aggancia a una griglia di 2 celle: la mappa dell'ombra resta valida (e non «nuota») finché la camera non scavalca una linea
 const LONTANO = 30          // fin dove la camera trascinata si allontana dall'eroe (celle)
@@ -12,6 +21,7 @@ export class Camera {
     this.x = 0; this.z = 0; this.d = 22; this.p = 55
     this.libera = { on: false, x: 0, z: 0 }       // la camera trascinata col dito
     this.zoom = 1
+    this.scalaLontano = 1
     this.ombraCambiata = true      // il sole è scattato (o la finestra dell'ombra è cambiata) in questo fotogramma: l'ombra va rifatta
     this.inMoto = false            // la camera si è mossa (più di un millimetro) in questo fotogramma
     this._ox = NaN; this._oz = NaN; this._or = 0
@@ -44,17 +54,21 @@ export class Camera {
   /** `eroe`: { x, z, vel }; `distanza`: la base (dalle opzioni). */
   muovi(dt, { eroe, distanza }) {
     this.eroe = eroe
-    let tx = eroe.x, tz = eroe.z, td = distanza * this.zoom, tp = 55
+    let tx = eroe.x, tz = eroe.z, td = distanza * zoomMorbido(this.zoom), tp = 55
     if (this.libera.on) { tx = this.libera.x; tz = this.libera.z }
     if (this.libera.on) { tx = Math.max(eroe.x - LONTANO, Math.min(eroe.x + LONTANO, tx)); tz = Math.max(eroe.z - LONTANO, Math.min(eroe.z + LONTANO, tz)) }   // niente confini, ma la vista libera non si perde nel vuoto
     const k = 1 - Math.exp(-(eroe.vel > 7 && !this.libera.on ? 9 : 5) * dt)
     this.x += (tx - this.x) * k; this.z += (tz - this.z) * k; this.d += (td - this.d) * k; this.p += (tp - this.p) * k
     const p = this.p * Math.PI / 180
+    // near e far seguono la distanza: da vicino niente tagli sul davanti, da lontano il suolo arriva fin dove la nebbia lo nasconde
+    this.scalaLontano = Math.max(1, this.d / 22)
+    const vicino = Math.max(0.1, Math.min(0.5, this.d * 0.04)), lontano = 160 * this.scalaLontano
+    if (Math.abs(vicino - this.cam.near) > 0.02 || Math.abs(lontano - this.cam.far) > 4) { this.cam.near = vicino; this.cam.far = lontano; this.cam.updateProjectionMatrix() }
     this.inMoto = Math.abs(this.cam.position.x - this.x) + Math.abs(this.cam.position.z - (this.z + this.d * Math.cos(p))) > 1e-3
     this.cam.position.set(this.x, this.d * Math.sin(p), this.z + this.d * Math.cos(p)); this.cam.lookAt(this.x, 0.3, this.z)
     // il sole sta sulla griglia, e la finestra dell'ombra cresce a gradini di 2 (con 2 di margine per lo scarto della griglia)
     const sx = Math.round(this.x / PASSO_OMBRA) * PASSO_OMBRA, sz = Math.round(this.z / PASSO_OMBRA) * PASSO_OMBRA
-    const ombra = Math.ceil(Math.max(12, Math.min(26, this.d * 0.9)) / 2) * 2 + 2
+    const ombra = Math.ceil(Math.max(8, Math.min(26, this.d * 0.9)) / 2) * 2 + 2
     this.ombraCambiata = sx !== this._ox || sz !== this._oz || ombra !== this._or
     if (this.ombraCambiata) {
       this._ox = sx; this._oz = sz; this._or = ombra
