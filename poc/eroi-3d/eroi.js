@@ -414,8 +414,8 @@ function inMano (u, lato) {
   const p = u.perniArmi && u.perniArmi[lato], a = p && p.children[0]
   return a ? (a.userData.tipo === 'balestra' ? 'balestra' : a.userData.famiglia || null) : null
 }
-/** Una fase di marcia (in radianti): gambe e braccia opposte, il busto che rimbalza. Non tocca le armi montate, tranne l'arco e la
-    balestra (`tieni`). */
+/** Una fase di marcia (in radianti): gambe e braccia opposte, il busto che rimbalza. Non tocca le armi montate, tranne l'arco, la balestra
+    e il bastone (`tieni`). */
 export function posaMarcia (e, fase) {
   const u = e.userData, s = Math.sin(fase), a = Math.abs(Math.cos(fase))
   u.gambe[0].rotation.x = s * 0.75; u.gambe[1].rotation.x = -s * 0.75
@@ -423,23 +423,25 @@ export function posaMarcia (e, fase) {
   u.busto.position.y = u.altezzaBusto + a * 0.02; u.busto.rotation.y = s * 0.08
   u.busto.position.x = 0; u.busto.rotation.z = 0; for (const gm of u.gambe) gm.rotation.z = 0
   u.testa.rotation.y = -s * 0.05
-  tieni(u, 0.05 * s)
+  tieni(u, 0.05 * s, true)
 }
 /** Il colpo con il braccio destro, p da 0 (riposo) a 1 (a fondo); il busto si gira. */
 export function posaColpo (e, p) {
   const u = e.userData, k = p < 0.5 ? smussa(p / 0.5) : 1 - smussa((p - 0.5) / 0.5) * 0.0
   u.bracci[1].rotation.set(-0.35 - 1.9 * smussa(Math.min(1, p)), 0, -0.1); u.busto.rotation.y = 0.15 - 0.45 * k
+  tieni(u, 0, false, true)
 }
-// l'arco e la balestra (docs/sotterraneo/roba-3d.md) non seguono il braccio: il perno ne annulla il giro, così l'arco resta ritto con
-// la corda verso l'eroe e la balestra col fusto dove guarda, in guardia e in marcia. Il braccio li porge: l'arco teso davanti
-// all'altezza della spalla (più basso l'arco lungo entrava nel pavimento), la balestra appena sotto, un poco in giù (pronta)
+// l'arco, la balestra e il bastone (docs/sotterraneo/roba-3d.md) non seguono il braccio: il perno ne annulla il giro, così l'arco resta
+// ritto con la corda verso l'eroe, la balestra col fusto dove guarda e il bastone dritto, in guardia, in marcia e nel colpo. Il braccio
+// li porge: l'arco teso davanti all'altezza della spalla (più basso l'arco lungo entrava nel pavimento), la balestra appena sotto, un
+// poco in giù (pronta); il bastone discosto dal fianco, fuori dalla veste e dalla falda del cappello del mago
 const PRONTA = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.22, 0, 0))
 const _q = new THREE.Quaternion(), _e = new THREE.Euler()
 // il braccio dell'arco punta avanti e un poco in fuori, e l'arco con lui: da davanti (il ritratto, la telecamera della scena) se ne vede
 // la curva, mentre di taglio era un bastoncino
 const ARCO_DI_TRAVERSO = 0.6
-function tieni (u, dondolo = 0) {
-  const bs = u.bracci[0], ps = u.perniArmi && u.perniArmi.sinistra
+function tieni (u, dondolo = 0, marcia = false, colpo = false) {
+  const [bs, bd] = u.bracci, ps = u.perniArmi && u.perniArmi.sinistra, pd = u.perniArmi && u.perniArmi.destra
   const s = inMano(u, 'sinistra')
   if (s === 'balestra') {
     bs.rotation.set(-1.2 + dondolo, 0, 0.22)
@@ -449,6 +451,32 @@ function tieni (u, dondolo = 0) {
     ps.quaternion.copy(bs.quaternion).invert().multiply(_q.setFromEuler(_e.set(0.4 * dondolo, -ARCO_DI_TRAVERSO, 0.2 + 0.3 * dondolo, 'YXZ')))
     _e.order = 'XYZ'
   }
+  if (inMano(u, 'destra') === 'staffa') {
+    if (marcia) bd.rotation.set(-0.3 + 2 * dondolo, 0, 0.9)
+    pd.quaternion.copy(bd.quaternion).invert().multiply(_q.setFromEuler(_e.set(0.06 + (colpo ? 0 : dondolo), 0, -0.1 + dondolo)))
+    poggia(u, pd)
+  }
+}
+// il bastone non scende sotto il pavimento: poggia a terra e la mano scorre sull'asta (il mago la batte, e il bastone lungo stava
+// mezzo sotto). La punta in basso del modello si misura una volta, nel suo riferimento
+const _m = new THREE.Matrix4(), _mi = new THREE.Matrix4(), _b = new THREE.Box3(), _p = new THREE.Vector3()
+function fondoDi (a) {
+  if (a.userData.fondo !== undefined) return a.userData.fondo
+  a.position.y = 0; a.updateMatrixWorld(true); _mi.copy(a.matrixWorld).invert()
+  let y = 0
+  a.traverse(o => {
+    if (!o.isMesh || !o.geometry) return
+    if (!o.geometry.boundingBox) o.geometry.computeBoundingBox()
+    _b.copy(o.geometry.boundingBox).applyMatrix4(_m.multiplyMatrices(_mi, o.matrixWorld)); y = Math.min(y, _b.min.y)
+  })
+  return (a.userData.fondo = y)
+}
+function poggia (u, p) {
+  const a = p.children[0], fondo = fondoDi(a)
+  u.busto.updateMatrix(); u.bracci[1].updateMatrix(); p.updateMatrix()
+  _m.multiplyMatrices(u.busto.matrix, u.bracci[1].matrix).multiply(p.matrix)
+  const y = _p.set(0, fondo, 0).applyMatrix4(_m).y, su = _m.elements[5]           // la punta in basso, e quanto sale l'asta per unità
+  a.position.y = y < 0 && su > 0.3 ? -y / su : 0
 }
 /** Un'arma in mano oscilla attorno alla sua posa base (memorizzata la prima volta): la punta si muove appena. */
 function oscilla (p, dx, dy, dz) {
@@ -509,7 +537,9 @@ export function posaGuardia (e, t = 0) {
       break
     }
     case 'mago': {
-      bd.rotation.set(-0.4 + 0.05 * o1, 0, -0.1 + 0.02 * o2); bs.rotation.set(-0.85 + 0.08 * o2, 0, 0.5 + 0.04 * o1)
+      // il bastone discosto dal fianco (tieni lo tiene dritto)
+      const staffa = inMano(u, 'destra') === 'staffa'
+      bd.rotation.set((staffa ? -0.3 : -0.4) + 0.05 * o1, 0, (staffa ? 0.9 : -0.1) + 0.02 * o2); bs.rotation.set(-0.85 + 0.08 * o2, 0, 0.5 + 0.04 * o1)
       u.busto.rotation.y = 0.1 + 0.03 * lenta
       oscilla(pa.destra, 0.04 * o2, 0, 0.05 * o1)                                           // la gemma della staffa ondeggia
       if (k >= 0) {                                                                         // alza la staffa e la batte a terra
