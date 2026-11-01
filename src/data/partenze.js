@@ -110,15 +110,14 @@ export const PARTENZE = [
     che: 'Tutto acceso, tranne i giochi per i più piccoli.',
     nientePiccoli: true,
     anni: 9.5,
-    // vuota, verificato: quello che resterebbe da spegnere nasce già spento altrove; copre da 8,75 anni, anche gli undicenni
-    saperi: [],
+    // copre da 8,75 anni, anche gli undicenni. `decimali`: a scuola la virgola come numero si fa a metà quarta, non prima (Melody); chi è più avanti lo riaccende dai ritocchi
+    saperi: ['decimali'],
     tiene: {
       divisioni: 'le divisioni in colonna sono di quarta',
       misure: 'metri, litri e chili si cominciano in terza e si consolidano qui',
       conversioni: 'le equivalenze sono di quarta',
       solidi: 'viste dall\'alto e facce sono di quinta, e da 8,75 anni in su ci siamo',
       'spazio-mente': 'le rotazioni sono di quarta, lo sviluppo del cubo di quinta',
-      decimali: 'il numero con la virgola come numero — decimi, centesimi, confronto e arrotondamento — è di quarta e quinta',
       'inglese-parole': 'le parole di quarta e quinta (la città, i mestieri, i soldi) sono nelle isole giuste per l\'età',
       'inglese-frasi': 'does, -ing e was sono di quarta e quinta, e l\'età le porta solo qui',
     },
