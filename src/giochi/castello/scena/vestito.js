@@ -29,12 +29,25 @@ export function carica(nome) {
   attese[nome] = new Promise((risolvi, rifiuta) => {
     const i = new Image()
     i.onload = () => { immagini[nome] = i; risolvi(i) }
-    i.onerror = () => rifiuta(new Error(`vestito ${nome} non caricato`))
+    i.onerror = () => { delete attese[nome]; rifiuta(new Error(`vestito ${nome} non caricato`)) }   // un fallimento non si ricorda: si può riprovare
     i.src = SCENE[nome]
   })
   return attese[nome]
 }
 export const pronto = nome => !!immagini[nome]
+
+/* la carta composta è una tela: un telefono a corto di memoria può svuotarla in silenzio, e il campo resta del
+   colore di fondo. Si guarda un punto; se è trasparente la carta si butta e si rifà al prossimo `componi`. */
+export function carteVuote(nome) {
+  let vuote = false
+  for (const [chiave, cv] of fatte) {
+    if (!chiave.startsWith(nome + '\n')) continue
+    try {
+      if (cv.getContext('2d').getImageData(cv.width >> 1, cv.height >> 1, 1, 1).data[3] === 0) { fatte.delete(chiave); vuote = true }
+    } catch { /* tela non leggibile: non si giudica */ }
+  }
+  return vuote
+}
 export const immagineScena = nome => immagini[nome]
 
 // la variante per posto (la stessa cella prende sempre lo stesso pezzo): è

@@ -7,7 +7,7 @@
 // niente): in campo guardano dalla parte della loro squadra.
 import { CAMPO, TRUPPE, POSTI, EDIFICIO_DI } from '../dati/regole.js'
 import { PEZZI as DIPINTE, ATLANTE as FOGLIO_CASERME, PIAZZOLA } from '../dati/caserme-dipinte.js'
-import { carica, componi, immagineScena } from '../../castello/scena/vestito.js'
+import { carica, componi, immagineScena, carteVuote } from '../../castello/scena/vestito.js'
 import { PEZZI as SCENE } from '../../castello/dati/vestiti.js'
 import { PEZZI } from '../../castello/dati/figure.js'
 import { caricaFigure, immagineFigure } from '../../castello/scena/pittori.js'
@@ -49,8 +49,18 @@ export class Campo {
     this.caserme = null                // le caserme dipinte: { io, nem } (il nemico col blu fatto rosso)
   }
 
+  /* se un'immagine non arriva (cache che si sta rinnovando, memoria corta) si riprova: il campo non resta
+     verde per sempre */
   async prepara() {
-    await Promise.all([carica(this.vestito), caricaFigure(), this.caricaCaserme()])
+    for (let giro = 0; ; giro++) {
+      try {
+        await Promise.all([carica(this.vestito), caricaFigure(), this.caricaCaserme()])
+        break
+      } catch (e) {
+        if (giro >= 5) throw e
+        await new Promise(ok => setTimeout(ok, 800 * (giro + 1)))
+      }
+    }
     this.pronto = true
   }
 
@@ -129,6 +139,8 @@ export class Campo {
     const W = this.cv.width / this.k, H = this.cv.height / this.k
     c.clearRect(0, 0, W, H)
     c.imageSmoothingEnabled = true
+    // ogni due secondi circa: se la carta del terreno si è svuotata, `componi` la rifà
+    if (this.pronto && ora - (this.controllo || 0) > 2) { this.controllo = ora; carteVuote(this.vestito) }
     this.sfondo(c, W, H)
     if (!this.pronto) return
     this.ponte(c)

@@ -80,3 +80,11 @@ sul campo (`.ar-azioni`), col prezzo o l'attesa in un cartellino.
   scura con la ✕ rossa tonda. Il bambino sa già cosa vuole costruire: **niente nomi, note e
   titoli**, e le emoji restano solo dove portano informazione (💎 del prezzo, 💰 vendi, ⛏️ per
   la miniera, che non ha un ritratto).
+
+## Lo sfondo che resta verde
+
+Se il campo di Melody restava del colore di fondo (`#5f9a3c`) c'erano due strade: l'immagine del terreno o delle figure non
+arrivava (`carica` e `caricaFigure` ricordavano il fallimento per sempre) o la carta composta, che è una tela, si svuotava (un
+telefono a corto di memoria lo fa in silenzio). Ora `Campo.prepara` riprova fino a cinque volte e ogni due secondi `carteVuote`
+(`castello/scena/vestito.js`) controlla un punto della carta: se è trasparente la butta e `componi` la rifà. Non riprodotto
+a banco: se torna, si guarda quale delle due.

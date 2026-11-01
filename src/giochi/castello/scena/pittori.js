@@ -61,7 +61,7 @@ export function caricaFigure() {
   attesa = new Promise((risolvi, rifiuta) => {
     const i = new Image()
     i.onload = () => { img = i; risolvi(i) }
-    i.onerror = () => rifiuta(new Error('figure del castello non caricate'))
+    i.onerror = () => { attesa = null; rifiuta(new Error('figure del castello non caricate')) }   // si può riprovare
     i.src = IMMAGINE
   })
   return attesa

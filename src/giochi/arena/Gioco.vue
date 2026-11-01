@@ -429,7 +429,7 @@ function comincia(nuova, indice) {
 function prendiTela(tela) {
   if (!tela) return
   campo = new Campo(tela, { vestito: infinita.value || scalino.value.vestito })
-  campo.prepara().then(() => { campo.adatta() })
+  campo.prepara().then(() => { campo.adatta() }).catch(() => {})   // dopo i tentativi: resta il campo vuoto, senza errori in giro
   giostra.avvia()
 }
 
