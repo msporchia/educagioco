@@ -22,6 +22,7 @@ const props = defineProps({
   dito: { type: Object, default: null },
   dito2: { type: Object, default: null },
   testa: { type: Object, default: null },     // il copricapo (docs/sotterraneo/elmo.md)
+  tinte: { type: Object, default: null },     // le tinte del tintore, per chiave di pezzo
   conTesta: { type: Boolean, default: false },   // la sua casella anche vuota: il 3D
   tasche: { type: Array, required: true },    // [{ chiave, …COSE, nonPuoi, prova } | null]
   att: { type: Number, required: true },
@@ -128,7 +129,7 @@ const polso = computed(() => (props.vita / props.vitaMax > 0.6 ? '#4fce7c' : pro
             :title="`al massimo ${cure.max} pozioni`">· 🧪 <b>{{ cure.n }}/{{ cure.max }}</b></span>
     </p>
 
-    <Addosso :eroe="eroe" :mano="mano" :mancina="mancina" :corpo="corpo" :collo="collo" :dito="dito" :dito2="dito2" :testa="testa" :con-testa="conTesta"
+    <Addosso :eroe="eroe" :mano="mano" :mancina="mancina" :corpo="corpo" :collo="collo" :dito="dito" :dito2="dito2" :testa="testa" :tinte="tinte" :con-testa="conTesta"
              :scelto="scelto && scelto.dove !== 'zaino' ? scelto.dove : null" :va="prova ? prova.dove : null"
              @tocca="tocca">
       <span class="sot-polso" :style="{ '--sot-polso': polso }">

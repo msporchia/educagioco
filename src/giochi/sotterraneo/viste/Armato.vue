@@ -17,6 +17,7 @@ const props = defineProps({
   scala: { type: Number, default: 3 },           // la misura del riquadro: 24 × 28 volte questa
   corpo: { type: String, default: null },        // l'armatura
   testa: { type: String, default: null },        // il copricapo (docs/sotterraneo/elmo.md)
+  tinte: { type: Object, default: null },        // le tinte del tintore, per chiave di pezzo (dati/tinte.js)
 })
 
 const LARGO = 24   // il riquadro di sempre, in pixel di sprite: la figura (16) e un po' d'aria ai lati
@@ -24,7 +25,7 @@ const ALTO = 28
 
 const dueMani = computed(() => !!(props.mano && COSE[props.mano] && COSE[props.mano].mani === 2))
 const chi = computed(() => [props.eroe.sprite, props.eroe.chiave].find(k => daSprite(k)) || null)
-const chiave = computed(() => (chi.value ? chiaveDellEroe(chi.value, { mano: props.mano, mancina: props.mancina, corpo: props.corpo, testa: props.testa }) : null))
+const chiave = computed(() => (chi.value ? chiaveDellEroe(chi.value, { mano: props.mano, mancina: props.mancina, corpo: props.corpo, testa: props.testa, tinte: props.tinte }) : null))
 const tre = usaAnteprima(() => chiave.value)
 </script>
 

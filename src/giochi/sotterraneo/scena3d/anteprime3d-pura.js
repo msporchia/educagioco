@@ -4,6 +4,7 @@
 // modulo della sua famiglia non c'è o la figura non si costruisce.
 import { COSE, baseDi } from '../dati/cose.js'
 import { daSprite } from '../dati/eroi.js'
+import { tintaValida } from '../dati/tinte.js'
 import { rangoDellaRarita, RARITA, RARITA_DA_LETTERA } from '../dati/pezzi.js'
 import { figuraDi, lookDi, famigliaDi, eUnaCollana, gettone, daGettone } from './roba3d-pura.js'
 
@@ -94,21 +95,28 @@ export function pezzo3dDi(k) {
 export function dotazioneDi(roba = {}) {
   const mano = cosaDi(roba.mano) || {}
   const d = { destra: null, sinistra: null, corpo: null, collo: null, testa: null }
+  // le tinte del tintore (dati/tinte.js): per posto, non per chiave di oggetto, perché la chiave dell'anteprima non sa quale oggetto sia
+  const T = roba.tinte || {}, tinta = k => (k ? tintaValida(T[k]) : null)
+  const tinte = { destra: null, sinistra: null, corpo: null, testa: null }
   const p = roba.mano ? pezzo3dDi(roba.mano) : null
-  if (p) { if (mano.famiglia === 'archi') d.sinistra = p; else d.destra = p }
+  if (p) { if (mano.famiglia === 'archi') { d.sinistra = p; tinte.sinistra = tinta(roba.mano) } else { d.destra = p; tinte.destra = tinta(roba.mano) } }
   if (roba.mancina && mano.famiglia !== 'archi' && mano.mani !== 2) {
     d.sinistra = pezzo3dDi(roba.mancina) || { figura: null, id: 'rotella', rarita: 'comune', elemento: 'nessuno' }
+    tinte.sinistra = tinta(roba.mancina)
   }
   const tipo = baseDi(roba.corpo)
   if (ARMATURE.includes(tipo)) {
     const l = lookDi(roba.corpo)
     d.corpo = { tipo, pregio: pregioDi(roba.corpo), figura: figuraDi(roba.corpo), rarita: l.rarita, elemento: l.elemento }
+    tinte.corpo = tinta(roba.corpo)
   }
   // al collo solo le collane (gli anelli si vedono nelle anteprime)
   const collo = roba.collo ? pezzo3dDi(roba.collo) : null
   if (collo && collo.figura && eUnaCollana(collo.figura)) d.collo = collo
   // in testa il copricapo, senza alone come la collana (eroe3d.js, `copri`); senza, l'eroe tiene il suo di serie
   d.testa = copricapoDi(roba.testa)
+  if (d.testa) tinte.testa = tinta(roba.testa)
+  if (tinte.destra || tinte.sinistra || tinte.corpo || tinte.testa) d.tinte = tinte
   return d
 }
 
@@ -163,7 +171,14 @@ export function consumabile3dDi(k) {
 export function chiaveDellEroe(eroe, roba = {}, modo = 'figura') {
   const d = dotazioneDi(roba)
   return `${modo === 'busto' ? 'busto' : 'eroe'}:${eroeValido(eroe)}:${gettone(d.destra) || '-'}:${gettone(d.sinistra) || '-'}:${gettoneCorpo(d.corpo)}:${gettone(d.collo) || '-'}` +
-    (d.testa ? `:${d.testa.id}` : '')
+    (d.testa ? `:${d.testa.id}` : '') + gettoneTinte(d.tinte)
+}
+
+// le tinte nella chiave dell'eroe: `:@<destra>.<sinistra>.<corpo>.<testa>` (`-` dove non c'è), in coda e solo se ce n'è una
+const gettoneTinte = t => (t ? `:@${[t.destra, t.sinistra, t.corpo, t.testa].map(x => x || '-').join('.')}` : '')
+function tinteDaGettone(s) {
+  const [destra, sinistra, corpo, testa] = String(s || '').slice(1).split('.').map(x => tintaValida(x))
+  return destra || sinistra || corpo || testa ? { destra: destra || null, sinistra: sinistra || null, corpo: corpo || null, testa: testa || null } : null
 }
 
 /** Un mostro dello scontro (viste/campo.js: tipo, grado, variante, grosso): `mostro:<tipo>:<grado>:<variante>` o `mostro:grosso:<chi>`. */
@@ -189,7 +204,8 @@ export function leggiChiave(k) {
     }
     case 'eroe': case 'busto':
       return { tipo: p[0], eroe: eroeValido(p[1]), destra: daGettone(p[2]), sinistra: daGettone(p[3]), corpo: corpoDaGettone(p[4]), collo: daGettone(p[5]),
-               testa: MODELLI_TESTA.has(p[6]) ? { id: p[6], rarita: 'comune' } : null }
+               testa: MODELLI_TESTA.has(p[6]) ? { id: p[6], rarita: 'comune' } : null,
+               ...(p.slice(6).find(x => x[0] === '@') ? { tinte: tinteDaGettone(p.slice(6).find(x => x[0] === '@')) } : {}) }
     // una persona del mondo di sopra (docs/sotterraneo/persone-3d.md): la chiave del modello; una che non c'è vale null al disegno
     case 'persona': return /^[a-z]+$/.test(p[1] || '') ? { tipo: 'persona', chi: p[1] } : null
     case 'mostro':

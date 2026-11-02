@@ -37,7 +37,7 @@ const porta = e => (e.porta || []).map(f => FAMIGLIE[f]).filter(Boolean)
       <button class="sot-eroe"
               :class="{ 'sot-scelto': e.chiave === scelto }"
               :data-eroe="e.chiave" :data-nuova="e.nuova ? 1 : 0" @click="$emit('scegli', e.chiave)">
-        <Armato :eroe="e" :mano="e.mano" :mancina="e.mancina" :corpo="e.corpo" :testa="e.testa" :scala="3" />
+        <Armato :eroe="e" :mano="e.mano" :mancina="e.mancina" :corpo="e.corpo" :testa="e.testa" :tinte="e.tinte" :scala="3" />
         <span class="sot-testo">
           <b>{{ e.nome }}</b>
           <!-- a che punto è la sua storia: prima di tutto il resto, perché è quello che si sceglie -->
