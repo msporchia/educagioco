@@ -11,6 +11,9 @@ Irene quello del gatto bianco e nero). Il loro record in `stato.casa` nasce da s
 si può cambiare dal foglio e «Lascia “Watson”» lo rimette. **Non si comprano e non si spostano** (girano col contadino: `sposta` dice
 `gira-con-te`, il foglio non ha «📍 Sposta»). `cura.tue()` resta le comprate, `cura.curate()` le dice tutte.
 
+**Il disegno** di beagle, coniglio e pappagallo è liscio: ellissoidi e ossi col doppio dei lati e `flatShading: false` (`LISCIO` in `modelli-bestie.js`).
+Le facce piatte a pochi lati accanto ai gatti morbidi stonavano.
+
 ## Chi sono
 
 | id | bestia | 🪙 | livello | premio ⭐ | corpo |

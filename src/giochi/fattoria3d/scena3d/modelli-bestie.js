@@ -1,6 +1,6 @@
 // I corpi delle bestie di casa che non sono Watson né i gatti: il beagle, il coniglio, il pappagallo (il gatto rosso è un mantello di
-// `creaGatto`). Stesso linguaggio degli animali del cortile (`modelli-cortile.js`): ellissoidi e ossi facettati a pochi lati, `mat()` con
-// flatShading, colori piatti a tinta unita (le macchie sono pezzi di un altro colore che sporgono appena, mai sfumature), pezzi che si
+// `creaGatto`). Stesso linguaggio degli animali del cortile (`modelli-cortile.js`): ellissoidi e ossi a tinta unita, ma lisci (il doppio dei lati e
+// ombreggiatura morbida: accanto ai gatti le facce piatte stonavano), colori piatti a tinta unita (le macchie sono pezzi di un altro colore che sporgono appena, mai sfumature), pezzi che si
 // toccano (docs/fattoria3d/animali.md, «Le parti si toccano»). Il beagle ha gli stessi perni di Watson, quindi `posaCane` lo muove senza
 // saperlo; il coniglio e il pappagallo hanno la loro posa (`posaPiccolo`). Davanti verso +z, piedi a terra, origine al centro dell'impronta.
 // Vedi docs/fattoria3d/bestie-di-casa.md.
@@ -13,13 +13,14 @@ import { fondiPerMateriale } from './fondi.js'
 const lisc = x => { const k = Math.max(0, Math.min(1, x)); return k * k * (3 - 2 * k) }
 const BIANCO = 0xf6f3ee, FUMO = 0xb9b2a6, NOCCIOLA = 0xc98a45, CASTANO = 0x7a4a26, NERO = 0x2a241f, ROSA = 0xf0a0ac
 
-/** Un ellissoide facettato nel perno `p`: colore `hex`, centro `c`, raggi `r`, `lati` per giro. */
-const blocco = (p, hex, c, r, lati = 7) => ellisse(p, mat(hex), ...c, ...r, lati)
-/** Un tronco di cono a lati: base sul punto `a` (raggio `rb`), cima sul punto `b` (raggio `rc`). */
-const stelo = (p, hex, rb, rc, a, b, lati = 6) => osso(p, geoOsso(rb, rc, lati), mat(hex), ...a, ...b)
+const LISCIO = { flatShading: false }, piu = lati => Math.max(12, lati * 2)
+/** Un ellissoide liscio nel perno `p`: colore `hex`, centro `c`, raggi `r`, `lati` per giro (raddoppiati). */
+const blocco = (p, hex, c, r, lati = 7) => ellisse(p, mat(hex, LISCIO), ...c, ...r, piu(lati))
+/** Un tronco di cono liscio: base sul punto `a` (raggio `rb`), cima sul punto `b` (raggio `rc`). */
+const stelo = (p, hex, rb, rc, a, b, lati = 6) => osso(p, geoOsso(rb, rc, piu(lati)), mat(hex, LISCIO), ...a, ...b)
 /** Una piccola palla facettata che si può scalare (occhi, naso, lingua): il raggio sta nella geometria, la scala parte da 1. */
 const pallina = (p, hex, r, x, y, z, sx = 1, sy = 1, sz = 1) => {
-  const o = parte(p, G(`pallina${r}`, () => new THREE.SphereGeometry(r, 6, 4)), mat(hex, { roughness: 0.3 }), x, y, z); o.scale.set(sx, sy, sz); return o
+  const o = parte(p, G(`pallina${r}`, () => new THREE.SphereGeometry(r, 14, 10)), mat(hex, { roughness: 0.3, flatShading: false }), x, y, z); o.scale.set(sx, sy, sz); return o
 }
 /** Fonde i pezzi fermi di ogni perno (i figli con `userData`, cioè gli altri perni, restano fuori da soli); `escludi`: ciò che si scala o si muove. */
 const fondi = (perni, escludi = []) => { for (const p of perni) fondiPerMateriale(p, { escludi, soglia: 0 }) }
@@ -86,7 +87,7 @@ export function creaConiglio () {
   blocco(corpo, BIANCO, [0, 0, 0], [0.12, 0.12, 0.19], 8)
   blocco(corpo, FUMO, [0, 0.055, -0.03], [0.1, 0.09, 0.15], 7)                                   // la macchia grigia sul dorso
   blocco(corpo, BIANCO, [0, 0.02, -0.12], [0.13, 0.12, 0.13], 7)                                 // il posteriore tondo
-  const coda = parte(corpo, G('coniglio-coda', () => new THREE.SphereGeometry(0.05, 6, 4)), mat(BIANCO), 0, 0.02, -0.25)
+  const coda = parte(corpo, G('coniglio-coda', () => new THREE.SphereGeometry(0.05, 14, 10)), mat(BIANCO, LISCIO), 0, 0.02, -0.25)
   const testa = perno(corpo, 0, 0.05, 0.17)
   blocco(testa, BIANCO, [0, 0.03, 0.05], [0.095, 0.09, 0.1], 7)
   blocco(testa, BIANCO, [0, -0.015, 0.12], [0.065, 0.055, 0.06], 6)                              // il musetto
