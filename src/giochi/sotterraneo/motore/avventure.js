@@ -3,7 +3,7 @@
 // Il record della campagna di fuori (tappa, stelle, libera) resta quello che legge il resto dell'app, e vale il
 // massimo fra le avventure: lo scrive completa() di giochi/campagne.js, che tiene sempre il più alto.
 // Funzioni pure sul record della campagna: girano in Node, e Gioco.vue le passa a ritocca().
-import { EROI } from '../dati/eroi.js'
+import { EROI, sessoValido } from '../dati/eroi.js'
 import { rileggiRoba } from './corredo.js'
 
 // `missioni`: quelle dei personaggi, { [id]: stato } (motore/missioni.js, docs/sotterraneo/missioni.md)
@@ -23,6 +23,7 @@ export function avventuraDi(c, eroe) {
     libera: !!a.libera,
     stelle: oggetto(a.stelle) ? a.stelle : {},
     missioni: oggetto(a.missioni) ? a.missioni : {},
+    sesso: sessoValido(eroe, a.sesso),
   }
 }
 

@@ -56,7 +56,28 @@ export const EROI = [
 
 export const DI_PARTENZA = 'cavaliere'
 
-export const eroeDi = chiave => EROI.find(e => e.chiave === chiave) || EROI[0]
+// Maschio o femmina (docs/sotterraneo/personaggio.md): la classe resta quella, con le sue armi e i suoi numeri; cambia chi si vede
+// (il modello 3D, il nome, «il mago»/«la maga»). `SESSO_DI_SERIE` è quello di prima che esistesse la scelta: chi non l'ha mai
+// fatta ritrova il suo eroe com'era. Il sesso sta nell'avventura (`cfg.avventure[eroe].sesso`), mai nella chiave dell'eroe.
+export const SESSI = ['m', 'f']
+export const SESSO_DI_SERIE = { cavaliere: 'm', elfa: 'f', mago: 'm', nano: 'm' }
+export const VARIANTI = {
+  cavaliere: { m: { sprite: 'cavaliere', nome: 'Cavaliere', chi: 'il cavaliere' }, f: { sprite: 'cavaliera', nome: 'Cavaliera', chi: 'la cavaliera' } },
+  elfa: { m: { sprite: 'elfo', nome: 'Elfo', chi: 'l\'elfo' }, f: { sprite: 'elfa', nome: 'Elfa', chi: 'l\'elfa' } },
+  mago: { m: { sprite: 'mago', nome: 'Mago', chi: 'il mago' }, f: { sprite: 'maga', nome: 'Maga', chi: 'la maga' } },
+  nano: { m: { sprite: 'nano', nome: 'Nano', chi: 'il nano' }, f: { sprite: 'nana', nome: 'Nana', chi: 'la nana' } },
+}
+export const sessoValido = (chiave, sesso) => (SESSI.includes(sesso) ? sesso : SESSO_DI_SERIE[chiave] || 'm')
+// tutti i modelli 3D che un eroe può avere, per chiave: i quattro di prima e le quattro varianti
+export const MODELLI_EROI = EROI.flatMap(e => SESSI.map(x => VARIANTI[e.chiave][x].sprite))
+
+// la scheda dell'eroe, col sesso scelto se lo si dice (senza, quella di serie: tutti i chiamanti di prima restano com'erano)
+export function eroeDi(chiave, sesso = null) {
+  const e = EROI.find(x => x.chiave === chiave) || EROI[0]
+  if (!SESSI.includes(sesso)) return e
+  const v = VARIANTI[e.chiave][sesso]
+  return v.sprite === e.sprite ? e : { ...e, ...v }
+}
 
 // prende la scheda della cosa, non la sua chiave: senza famiglia se la mette chiunque
 export const portaLa = (eroe, cosa) =>
@@ -118,6 +139,9 @@ export function guastiDegliEroi() {
       if (car && Math.abs(p[car] - e.att) > 1) g.push(`${e.chiave}: ${car} ${p[car]} e braccio ${e.att} con ${f}, la pagina direbbe due cose`)
     }
     if (!(e.vitaPerLivello >= 1)) g.push(`${e.chiave}: salendo di livello non prende vita`)
+    const v = VARIANTI[e.chiave]
+    if (!v || !SESSI.every(x => v[x] && v[x].sprite && v[x].nome && v[x].chi)) g.push(`${e.chiave}: manca una variante (maschio o femmina)`)
+    else if (v[SESSO_DI_SERIE[e.chiave]].sprite !== e.sprite) g.push(`${e.chiave}: il sesso di serie non è il suo modello di sempre`)
     if (!CAR.includes(e.dote)) g.push(`${e.chiave}: la dote "${e.dote}" non è una caratteristica`)
   }
   if (!EROI.some(e => e.chiave === DI_PARTENZA))
