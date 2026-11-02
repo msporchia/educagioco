@@ -19,6 +19,10 @@ Sparisce la carta in home, i progressi restano.
   contro l'età (`fissaGioco` in `src/store/profile.js`), e la home lo
   rispetta (`giocoForzato` vince su `giocoDaVedere`). Vince sull'età, non
   sui saperi spenti.
+- **Lo spagnolo nasce spento per tutte le età** (`spentoDiBase: true` nel
+  manifesto, letto da `eccezioniDi` in `src/data/partenze.js`): in famiglia
+  c'è una madre boliviana, per gli altri è irrilevante. Il genitore lo accende
+  dalla ✎ (`{ spagnolo: true }`); chi l'ha già giocato lo vede comunque.
 - Si sceglie dalla ✎ della sua riga nel quadro ([ritocchi.md](ritocchi.md)),
   non da una fila di interruttori.
 

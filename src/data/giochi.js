@@ -15,7 +15,7 @@ function riga(g) {
            area: g.area, come: g.come, piccoli: !!g.piccoli,
            cresce: !!g.cresce, grandi: !!g.grandi, posto: !!g.posto, quiz: !!g.quiz,
            copertina: g.copertina,
-           sperimentale: !!g.sperimentale, serve: g.serve || [],
+           sperimentale: !!g.sperimentale, spentoDiBase: !!g.spentoDiBase, serve: g.serve || [],
            chiede: g.chiede || [],
            senzaFine: g.senzaFine || null,
            amici: g.amici || null }

@@ -18,6 +18,8 @@ export default {
   come: 'domande',
   copertina: { fondo: '#d8544a', disegno: '#f2c14e', scena: 'onde' },
   tappe: TAPPE.length,
+  // di partenza spento per tutte le età: lo accende il genitore (docs/genitori/interruttori.md)
+  spentoDiBase: true,
   // gli amici sulla mappa del tesoro (docs/core/amici-nei-giochi.md): la tappa da fare, le tappe vinte stanno sotto l'id e non nel cursore
   amici: { tappe: TAPPE.length, dove: 'in fondo alla mappa', tappa: p => tappaDaFare((p.campagne || {})[CHIAVE]) },
   // niente `grandi`: il primo mondo è la prima elementare (portata 25), e chi
