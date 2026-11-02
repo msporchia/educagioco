@@ -137,8 +137,10 @@ await toccaEl('[data-f3="az-libero"]')                    // col ✂️ armato i
   await attendi(page, 300)
   controlla('toccare il contadino fermo apre il guardaroba', await page.locator('[data-f3="guardaroba"]').count() === 1)
   const chi = (await page.locator('[data-f3="guardaroba-chi"]').innerText()).toLowerCase()
-  const aspetto = await page.evaluate(() => window.__fattoria3d && document.querySelector('[data-aspetto].on')?.getAttribute('data-aspetto'))
-  controlla('chi si è lo dice il profilo (bambina → contadina, bimbo → contadino)', aspetto === 'bimbo' ? /contadino/.test(chi) : /contadina/.test(chi), `${aspetto} / ${chi}`)
+  await toccaEl('[data-scheda-abito="sesso"]')
+  const lui = await page.locator('button[data-capo="sesso:contadino"][aria-pressed="true"]').count() === 1
+  controlla('«Sesso» è una scheda come le altre: due gettoni, e quello acceso è chi si è (dal profilo)', lui ? /contadino/.test(chi) : /contadina/.test(chi) && await page.locator('button[data-capo="sesso:contadina"][aria-pressed="true"]').count() === 1, chi)
+  controlla('…e non c\'è più la scelta dei personaggi in pixel', await page.locator('[data-f3="guardaroba"] [data-aspetto]').count() === 0)
   await toccaEl('[data-scheda-abito="stivali"]')
   await toccaEl('[data-f3="guardaroba"] button[data-capo="stivali:rossi"]')
   await attendi(page, 200)

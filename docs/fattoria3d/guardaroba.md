@@ -4,13 +4,13 @@ Il personaggio della fattoria 3D **non è un eroe**: è **il contadino** o **la 
 `dati/abiti.js`: «Torna al contadino», «Torna alla contadina»). Nel codice la variabile resta `eroe` (`eroe.js`, `mondo.eroe`): è un
 nome interno, **mai** una stringa che si legge. Vale per i testi a schermo, gli `aria-label` e i documenti.
 
-## Chi si è: il genere viene dal profilo
+## Chi si è: il sesso viene dal profilo
 
-Come nella fattoria 2D: il personaggio scelto dal bambino (`aspettoDi()` in `store/profile.js`, `'bambina' | 'bimbo'`; la scelta
-è `components/SceltaAspetto.vue`) decide **contadina** o **contadino** (`personaDi(aspetto)`). Non si salva niente nella fattoria 3D: si
-rilegge a ogni apertura, quindi cambiare personaggio altrove cambia anche qui. Il guardaroba ha la stessa scelta (`SceltaAspetto`, che
-chiama `scegliAspetto`): cambiare lì cambia anche la fattoria 2D. Un valore sconosciuto ripiega su `ASPETTO_ERO` (`dati/compagni.js`).
-Nota: un profilo che non ha mai scelto parte da `bambina` (è `PERSONE[0]`, vale anche per la 2D), cioè dalla contadina.
+Il personaggio scelto dal bambino (`aspettoDi()` in `store/profile.js`, `'bambina' | 'bimbo'`) decide **contadina** o **contadino** (`personaDi(aspetto)`). Non si
+salva niente nella fattoria 3D: si rilegge a ogni apertura, quindi cambiare personaggio altrove cambia anche qui. **Il sesso è una caratteristica come le altre**: la
+prima scheda del guardaroba, «Sesso», ha due gettoni con la foto 3D della testa (Femmina, Maschio) e scrive il profilo con `scegliAspetto` (cambiarlo lì lo cambia
+ovunque). Niente più la coppia di figure in pixel (`SceltaAspetto`, grande e non mostrava il personaggio): resta solo nel profilo. Un valore sconosciuto ripiega
+su `ASPETTO_ERO` (`dati/compagni.js`). Un profilo che non ha mai scelto parte da `bambina` (`PERSONE[0]`), cioè dalla contadina.
 
 ## Come si apre
 
