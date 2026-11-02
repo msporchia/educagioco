@@ -17,7 +17,7 @@ function tintaNormale(id) {
     const t = TINTA_DI[id]
     if (!t) return null
     const c = new Color(t.colore), m = Math.max(c.r, c.g, c.b) || 1
-    normalizzate.set(id, { r: c.r / m, g: c.g / m, b: c.b / m })
+    normalizzate.set(id, { r: c.r / m, g: c.g / m, b: c.b / m, luce: t.luce || 1 })
   }
   return normalizzate.get(id)
 }
@@ -31,8 +31,11 @@ export function spostaColore(r, g, b, id) {
   const k = smussa(0.08, 0.32, sat)
   const grigio = [r * (1 - VELO_SUI_GRIGI + VELO_SUI_GRIGI * T.r), g * (1 - VELO_SUI_GRIGI + VELO_SUI_GRIGI * T.g), b * (1 - VELO_SUI_GRIGI + VELO_SUI_GRIGI * T.b)]
   const w = FORZA_SUI_COLORI
-  const colore = [mx * (1 - w + w * T.r), mx * (1 - w + w * T.g), mx * (1 - w + w * T.b)]
-  return { r: grigio[0] + (colore[0] - grigio[0]) * k, g: grigio[1] + (colore[1] - grigio[1]) * k, b: grigio[2] + (colore[2] - grigio[2]) * k }
+  // `luce` (tinte.js): il bianco schiarisce, il nero e i colori scuri scuriscono; sul metallo agisce meno (resta metallo)
+  const lc = T.luce, lg = 1 + (lc - 1) * VELO_SUI_GRIGI
+  const colore = [mx * (1 - w + w * T.r) * lc, mx * (1 - w + w * T.g) * lc, mx * (1 - w + w * T.b) * lc]
+  const lim = x => Math.min(1.4, x)
+  return { r: lim((grigio[0] * lg) + (colore[0] - grigio[0] * lg) * k), g: lim((grigio[1] * lg) + (colore[1] - grigio[1] * lg) * k), b: lim((grigio[2] * lg) + (colore[2] - grigio[2] * lg) * k) }
 }
 
 const materiali = new WeakMap()   // materiale originale → Map(tinta → copia)

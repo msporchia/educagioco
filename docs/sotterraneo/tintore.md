@@ -2,7 +2,7 @@
 
 L'utente, 2 novembre 2026: *«a volte la bambina non vuole dargli quell'arma perché non è carina o il colore del mantello non va bene; un NPC che
 ti permette di personalizzare un oggetto pagando qualcosina, non esorbitante, tipo 20-30 diamantini; cose base tipo il colore dei vestiti»*.
-Nel villaggio c'è il tintore: per `COSTO` (25) 💎 ritinge un pezzo, con una **tavolozza** di otto colori (non una ruota libera). Il pezzo non
+Nel villaggio c'è il tintore: per `COSTO` (25) 💎 ritinge un pezzo, con una **tavolozza** di quindici colori standard (bianco, nero, grigio, marrone e i colori dell'arcobaleno: `src/grafica/persona/tinte.js`, in comune con la fattoria) (non una ruota libera). Il pezzo non
 cambia: numeri, nome e rarità restano, cambia il colore.
 
 ## Cosa si ritinge, e come si ricorda

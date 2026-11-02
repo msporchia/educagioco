@@ -23,10 +23,10 @@ const c2d = new Proxy({}, { get: (_, k) => (k === 'canvas' ? {} : () => ({ data:
 globalThis.document = globalThis.document || { createElement: () => ({ width: 0, height: 0, getContext: () => c2d }) }
 
 // i dati
-controlla('otto colori, tutti con nome e css', TINTE.length === 8 && TINTE.every(t => t.nome && /^#[0-9a-f]{6}$/.test(t.css)))
+controlla('quindici colori standard (bianco, nero, grigio, marrone…), tutti con nome e css', TINTE.length === 15 && ['bianco', 'nero', 'grigio', 'marrone'].every(id => TINTE.some(t => t.id === id)) && TINTE.every(t => t.nome && /^#[0-9a-f]{6}$/.test(t.css)))
 controlla('il prezzo è «qualcosina»: fra 20 e 30', COSTO >= 20 && COSTO <= 30, String(COSTO))
 controlla('si ritingono arma, scudo, armatura, cappello; non una pozione né un anello', sipuoTingere('spada-corta') && sipuoTingere('panciotto') && !sipuoTingere('pozione-piccola') && !sipuoTingere('anello-verde'))
-uguale('una tinta che non c\'è e un pezzo che non si tinge si buttano', rileggiTinte({ 'spada-corta': 'rosso', panciotto: 'marrone', 'pozione-piccola': 'blu', fantasma: 'rosa' }), { 'spada-corta': 'rosso' })
+uguale('una tinta che non c\'è e un pezzo che non si tinge si buttano', rileggiTinte({ 'spada-corta': 'rosso', panciotto: 'ocra', 'pozione-piccola': 'blu', fantasma: 'rosa' }), { 'spada-corta': 'rosso' })
 
 // la roba
 const base = { ...ROBA_VUOTA(), gemme: 100, mano: 'spada-corta', zaino: ['panciotto'] }
@@ -36,7 +36,7 @@ const c = new Corredo({ eroe: 'cavaliere', roba: base })
 uguale('la spada si ritinge: costa COSTO', tingi(c, 'spada-corta', 'rosso'), { che: 'tinto', cosa: 'spada-corta', tinta: 'rosso', gemme: 100 - COSTO })
 uguale('le gemme sono scalate', c.gemme, 100 - COSTO)
 uguale('un secondo giro con lo stesso colore non paga', tingi(c, 'spada-corta', 'rosso'), { che: 'niente', perche: 'uguale' })
-uguale('un colore che non c\'è non paga', tingi(c, 'spada-corta', 'nero').perche, 'tinta')
+uguale('un colore che non c\'è non paga', tingi(c, 'spada-corta', 'fucsia').perche, 'tinta')
 uguale('un pezzo che non si ha non si ritinge', tingi(c, 'spada', 'blu').perche, 'pezzo')
 uguale('la veste nello zaino si ritinge', tingi(c, 'panciotto', 'viola').che, 'tinto')
 uguale('senza gemme no, e non si tocca niente', (() => { const p = new Corredo({ roba: { ...base, gemme: COSTO - 1 } }); return [tingi(p, 'spada-corta', 'blu').perche, p.gemme, p.tintaDi('spada-corta')] })(), ['gemme', COSTO - 1, null])
@@ -69,6 +69,11 @@ const rosso = spostaColore(0.8, 0.1, 0.1, 'blu'), grigio = spostaColore(0.5, 0.5
 controlla('un rosso diventa blu (il canale blu è il più forte)', rosso.b > rosso.r && rosso.b > rosso.g, JSON.stringify(rosso))
 controlla('il grigio vira appena', grigio.b > grigio.r && grigio.b < 0.6 && grigio.r > 0.25, JSON.stringify(grigio))
 uguale('il nero resta nero', nero, { r: 0, g: 0, b: 0 })
+// bianco e nero hanno una luce, non una tinta: un colore medio diventa chiaro o scuro, il metallo un po'
+const chiaro = spostaColore(0.5, 0.2, 0.2, 'bianco'), scuro = spostaColore(0.5, 0.2, 0.2, 'nero'), metalloBianco = spostaColore(0.5, 0.5, 0.5, 'bianco')
+controlla('il bianco schiarisce un colore', chiaro.r > 0.85 && chiaro.g > 0.5, JSON.stringify(chiaro))
+controlla('il nero lo scurisce', scuro.r < 0.2 && scuro.g < 0.1, JSON.stringify(scuro))
+controlla('sul metallo il bianco agisce meno', metalloBianco.r > 0.5 && metalloBianco.r < chiaro.r, JSON.stringify(metalloBianco))
 
 // il 3D: la copia è tinta, l'originale no
 const g = creaEroeDa('cavaliere')
