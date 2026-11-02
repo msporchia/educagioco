@@ -17,6 +17,7 @@ const props = defineProps({
   scala: { type: Number, default: 3 },           // la misura del riquadro: 24 × 28 volte questa
   corpo: { type: String, default: null },        // l'armatura
   testa: { type: String, default: null },        // il copricapo (docs/sotterraneo/elmo.md)
+  modo: { type: String, default: 'figura' },     // 'figura' (intero) o 'busto' (la testa e le spalle, quadrato: i gettoni dei tagli e delle barbe)
   giro: { type: Number, default: 0 },            // girato di tanti scatti da 45° (0..7: l'editor del personaggio)
   tinte: { type: Object, default: null },        // le tinte del tintore, per chiave di pezzo (dati/tinte.js)
 })
@@ -26,13 +27,13 @@ const ALTO = 28
 
 const dueMani = computed(() => !!(props.mano && COSE[props.mano] && COSE[props.mano].mani === 2))
 const chi = computed(() => [props.eroe.sprite, props.eroe.chiave].find(k => daSprite(k)) || null)
-const chiave = computed(() => (chi.value ? chiaveDellEroe(chi.value, { mano: props.mano, mancina: props.mancina, corpo: props.corpo, testa: props.testa, tinte: props.tinte }, 'figura', props.giro) : null))
+const chiave = computed(() => (chi.value ? chiaveDellEroe(chi.value, { mano: props.mano, mancina: props.mancina, corpo: props.corpo, testa: props.testa, tinte: props.tinte }, props.modo === 'busto' ? 'busto' : 'figura', props.giro) : null))
 const tre = usaAnteprima(() => chiave.value)
 </script>
 
 <template>
   <span class="sot-armato" :data-anteprima="tre ? '3d' : 'attesa'"
-        :style="{ width: (LARGO * scala) + 'px', height: (ALTO * scala) + 'px' }">
+        :style="{ width: ((modo === 'busto' ? ALTO : LARGO) * scala) + 'px', height: (ALTO * scala) + 'px' }">
     <span v-if="mancina && !dueMani" class="sot-pezzo" :data-in-braccio="mancina"></span>
     <span v-if="mano" class="sot-pezzo" :data-in-mano="mano" :data-addosso="mano"></span>
     <Quadro3d v-if="tre" class="sot-armato-img" :immagine="tre" />

@@ -21,8 +21,7 @@ const scheda = ref('sesso')
 const giro = ref(0)                               // l'eroe grande in anteprima si gira a scatti da 45° (0..7)
 // a schermo mai «sesso» (è per bambini): la prima scheda dice chi si è, coi nomi dei personaggi (Mago/Maga…); `sesso` è solo la chiave interna
 const SCHEDE = [
-  { id: 'sesso', nome: 'Chi sei' }, { id: 'pelle', nome: 'Pelle', emoji: '🖐️' }, { id: 'capelli', nome: 'Colore capelli', emoji: '🎨' },
-  { id: 'taglio', nome: 'Taglio', emoji: '✂️' }, { id: 'barba', nome: 'Barba', emoji: '🧔' },
+  { id: 'sesso', nome: 'Chi sei' }, { id: 'pelle', nome: 'Pelle' }, { id: 'capelli', nome: 'Colore capelli' }, { id: 'taglio', nome: 'Taglio' }, { id: 'barba', nome: 'Barba' },
 ]
 const vedi = (sesso, a = props.aspetto) => ({ ...props.eroe, ...VARIANTI[props.eroe.chiave][sesso], sprite: spriteConAspetto(VARIANTI[props.eroe.chiave][sesso].sprite, a) })
 const grande = computed(() => vedi(props.sesso))
@@ -32,8 +31,9 @@ const voci = computed(() => {
   if (s === 'sesso') return SESSI.map(x => ({ id: x, nome: VARIANTI[props.eroe.chiave][x].nome, sel: x === props.sesso, slot: true, dati: { 'data-sesso': x } }))
   if (s === 'pelle') return PELLI.map(p => ({ id: p.id, nome: p.nome, colore: p.css, sel: a.pelle === p.id, dati: { 'data-pelle': p.id } }))
   if (s === 'capelli') return COLORI_CAPELLI.map(c => ({ id: c.id, nome: c.nome, colore: c.css, sel: a.capelli === c.id, dati: { 'data-capelli': c.id } }))
-  if (s === 'taglio') return TAGLI.map(t => ({ id: t.id, nome: t.nome, emoji: '✂️', sel: a.taglio === t.id, dati: { 'data-taglio': t.id } }))
-  return BARBE.map(b => ({ id: b.id, nome: b.nome, emoji: '🧔', sel: a.barba === b.id, dati: { 'data-barba': b.id } }))
+  // il taglio e la barba si scelgono guardandoli: ogni gettone è il busto dell'eroe con quel taglio o quella barba (foto 3D, mai un'icona)
+  if (s === 'taglio') return TAGLI.map(t => ({ id: t.id, nome: t.nome, sel: a.taglio === t.id, slot: true, busto: { taglio: t.id }, dati: { 'data-taglio': t.id } }))
+  return BARBE.map(b => ({ id: b.id, nome: b.nome, sel: a.barba === b.id, slot: true, busto: { barba: b.id }, dati: { 'data-barba': b.id } }))
 })
 const RIGA = { sesso: 'Cambia solo come lo vedi: la roba, la forza e le discese restano quelle che sono.', pelle: 'Tocca ancora quella scelta per tornare a quella di prima.',
                capelli: 'Il colore dei capelli, della barba e delle trecce.', taglio: 'Un taglio di capelli. «Calvo» li toglie.', barba: 'Una barba. «Nessuna» la toglie.' }
@@ -52,7 +52,8 @@ function scegli(sch, v) {
       <Armato :eroe="grande" :mano="eroe.mano" :mancina="eroe.mancina" :corpo="eroe.corpo" :testa="eroe.testa" :tinte="eroe.tinte" :giro="giro" :scala="7" />
     </template>
     <template #gettone="{ voce }">
-      <span class="pz-campione foto"><Armato :eroe="vedi(voce.id)" :mano="eroe.mano" :mancina="eroe.mancina" :corpo="eroe.corpo" :testa="eroe.testa" :tinte="eroe.tinte" :scala="2.2" /></span>
+      <span v-if="voce.busto" class="pz-campione foto"><Armato :eroe="vedi(props.sesso, { ...aspetto, ...voce.busto })" modo="busto" :scala="2.2" /></span>
+      <span v-else class="pz-campione foto"><Armato :eroe="vedi(voce.id)" :mano="eroe.mano" :mancina="eroe.mancina" :corpo="eroe.corpo" :testa="eroe.testa" :tinte="eroe.tinte" :scala="2.2" /></span>
     </template>
     <template #fondo>
       <button class="sot-grosso" data-azione="chiudi-personaggio" style="margin-top: 8px" @click="$emit('chiudi')">Fatto</button>
