@@ -1,11 +1,12 @@
 <script setup>
-// L'editor del personaggio (docs/sotterraneo/personaggio.md): oggi si sceglie se l'eroe è maschio o femmina, gratis e sempre
-// cambiabile. I due modelli stanno uno accanto all'altro con la roba che l'eroe ha addosso, e toccarne uno lo sceglie subito
-// (niente «conferma»: si vede già com'è). Sotto, la pelle e il colore dei capelli, gli stessi toni del contadino della fattoria
-// (src/grafica/persona/aspetto.js): toccare quello scelto lo toglie (torna il colore di serie del modello). Il sesso e l'aspetto non
-// cambiano mai i numeri, solo chi si vede; qui è la casa delle prossime scelte.
+// L'editor del personaggio (docs/sotterraneo/personaggio.md): l'interfaccia in comune con la fattoria (components/personalizza/Personalizza.vue)
+// col tema del sotterraneo. In alto l'eroe grande, vestito con la roba che ha addosso e con quello che si sta scegliendo; sotto le schede
+// (sesso, pelle, capelli, taglio, barba) e i gettoni. Toccare un gettone lo sceglie subito (si scrive nell'avventura, nessuna conferma),
+// e toccare quello scelto lo toglie (torna quello di serie del modello). I toni sono quelli in comune (src/grafica/persona/aspetto.js).
+import { ref, computed } from 'vue'
 import { VARIANTI, SESSI, spriteConAspetto } from '../dati/eroi.js'
 import { PELLI, COLORI_CAPELLI, TAGLI, BARBE } from '../../../grafica/persona/aspetto.js'
+import Personalizza from '../../../components/personalizza/Personalizza.vue'
 import Armato from './Armato.vue'
 
 const props = defineProps({
@@ -14,52 +15,45 @@ const props = defineProps({
   sesso: { type: String, required: true },
   aspetto: { type: Object, default: () => ({ pelle: null, capelli: null, taglio: null, barba: null }) },   // gli id scelti (dati/eroi.js, aspettoValido)
 })
-defineEmits(['scegli', 'aspetto', 'chiudi'])
+const emit = defineEmits(['scegli', 'aspetto', 'chiudi'])
 
-const vedi = x => ({ ...props.eroe, ...VARIANTI[props.eroe.chiave][x], sprite: spriteConAspetto(VARIANTI[props.eroe.chiave][x].sprite, props.aspetto) })
+const scheda = ref('sesso')
+const SCHEDE = [
+  { id: 'sesso', nome: 'Sesso', emoji: '⚥' }, { id: 'pelle', nome: 'Pelle', emoji: '🖐️' }, { id: 'capelli', nome: 'Colore capelli', emoji: '🎨' },
+  { id: 'taglio', nome: 'Taglio', emoji: '✂️' }, { id: 'barba', nome: 'Barba', emoji: '🧔' },
+]
+const vedi = (sesso, a = props.aspetto) => ({ ...props.eroe, ...VARIANTI[props.eroe.chiave][sesso], sprite: spriteConAspetto(VARIANTI[props.eroe.chiave][sesso].sprite, a) })
+const grande = computed(() => vedi(props.sesso))
+
+const voci = computed(() => {
+  const a = props.aspetto, s = scheda.value
+  if (s === 'sesso') return SESSI.map(x => ({ id: x, nome: VARIANTI[props.eroe.chiave][x].nome, sel: x === props.sesso, slot: true, dati: { 'data-sesso': x } }))
+  if (s === 'pelle') return PELLI.map(p => ({ id: p.id, nome: p.nome, colore: p.css, sel: a.pelle === p.id, dati: { 'data-pelle': p.id } }))
+  if (s === 'capelli') return COLORI_CAPELLI.map(c => ({ id: c.id, nome: c.nome, colore: c.css, sel: a.capelli === c.id, dati: { 'data-capelli': c.id } }))
+  if (s === 'taglio') return TAGLI.map(t => ({ id: t.id, nome: t.nome, emoji: '✂️', sel: a.taglio === t.id, dati: { 'data-taglio': t.id } }))
+  return BARBE.map(b => ({ id: b.id, nome: b.nome, emoji: '🧔', sel: a.barba === b.id, dati: { 'data-barba': b.id } }))
+})
+const RIGA = { sesso: 'Cambia solo come lo vedi: la roba, la forza e le discese restano quelle che sono.', pelle: 'Tocca ancora quella scelta per tornare a quella di prima.',
+               capelli: 'Il colore dei capelli, della barba e delle trecce.', taglio: 'Un taglio di capelli. «Calvo» li toglie.', barba: 'Una barba. «Nessuna» la toglie.' }
+
+function scegli(sch, v) {
+  if (sch === 'sesso') emit('scegli', v.id)
+  else emit('aspetto', sch, v.id)
+}
 </script>
 
 <template>
-  <div class="sot-velo" @click.self="$emit('chiudi')">
-    <div class="sot-modale sot-personaggio" data-editor-personaggio :data-eroe-editor="eroe.chiave" :data-sesso-scelto="sesso">
-      <h2><span class="em">✎</span> Come è il tuo eroe?</h2>
-      <p>Cambia solo come lo vedi: la roba, la forza e le discese restano quelle che sono. Puoi ripensarci quando vuoi.</p>
-
-      <div class="sot-sessi">
-        <button v-for="x in SESSI" :key="x" type="button" class="sot-sesso" :class="{ 'sot-scelto': x === sesso }"
-                :data-sesso="x" :aria-pressed="x === sesso" @click="$emit('scegli', x)">
-          <Armato :eroe="vedi(x)" :mano="eroe.mano" :mancina="eroe.mancina" :corpo="eroe.corpo" :testa="eroe.testa" :tinte="eroe.tinte" :scala="3" />
-          <b>{{ VARIANTI[eroe.chiave][x].nome }}</b>
-        </button>
-      </div>
-
-      <div class="sot-tinte" data-tinte="pelle">
-        <small>Pelle</small>
-        <button v-for="p in PELLI" :key="p.id" type="button" class="sot-tinta" :class="{ 'sot-scelto': aspetto.pelle === p.id }"
-                :style="{ background: p.css }" :data-pelle="p.id" :aria-label="p.nome" :aria-pressed="aspetto.pelle === p.id"
-                @click="$emit('aspetto', 'pelle', p.id)"></button>
-      </div>
-      <div class="sot-tinte" data-tinte="capelli">
-        <small>Capelli</small>
-        <button v-for="c in COLORI_CAPELLI" :key="c.id" type="button" class="sot-tinta" :class="{ 'sot-scelto': aspetto.capelli === c.id }"
-                :style="{ background: c.css }" :data-capelli="c.id" :aria-label="c.nome" :aria-pressed="aspetto.capelli === c.id"
-                @click="$emit('aspetto', 'capelli', c.id)"></button>
-      </div>
-
-      <div class="sot-tinte" data-tinte="taglio">
-        <small>Taglio di capelli</small>
-        <button v-for="t in TAGLI" :key="t.id" type="button" class="sot-scelta-breve" :class="{ 'sot-scelto': aspetto.taglio === t.id }"
-                :data-taglio="t.id" :aria-pressed="aspetto.taglio === t.id" @click="$emit('aspetto', 'taglio', t.id)">{{ t.nome }}</button>
-      </div>
-      <div class="sot-tinte" data-tinte="barba">
-        <small>Barba</small>
-        <button v-for="b in BARBE" :key="b.id" type="button" class="sot-scelta-breve" :class="{ 'sot-scelto': aspetto.barba === b.id }"
-                :data-barba="b.id" :aria-pressed="aspetto.barba === b.id" @click="$emit('aspetto', 'barba', b.id)">{{ b.nome }}</button>
-      </div>
-
-      <button class="sot-grosso" data-azione="chiudi-personaggio" @click="$emit('chiudi')">
-        Fatto
-      </button>
-    </div>
-  </div>
+  <Personalizza tema="sotterraneo" titolo="Come è il tuo eroe?" :schede="SCHEDE" :scheda="scheda" :voci="voci" :riga="RIGA[scheda]"
+                data-editor-personaggio :data-eroe-editor="eroe.chiave" :data-sesso-scelto="sesso"
+                @scheda="s => scheda = s" @scegli="scegli" @chiudi="$emit('chiudi')">
+    <template #anteprima>
+      <Armato :eroe="grande" :mano="eroe.mano" :mancina="eroe.mancina" :corpo="eroe.corpo" :testa="eroe.testa" :scala="7" />
+    </template>
+    <template #gettone="{ voce }">
+      <span class="pz-campione foto"><Armato :eroe="vedi(voce.id)" :mano="eroe.mano" :mancina="eroe.mancina" :corpo="eroe.corpo" :testa="eroe.testa" :scala="2.2" /></span>
+    </template>
+    <template #fondo>
+      <button class="sot-grosso" data-azione="chiudi-personaggio" style="margin-top: 8px" @click="$emit('chiudi')">Fatto</button>
+    </template>
+  </Personalizza>
 </template>

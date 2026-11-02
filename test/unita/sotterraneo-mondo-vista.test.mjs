@@ -30,7 +30,7 @@ controlla('due dita sullo stesso punto non dividono per zero', Number.isFinite(z
 /* ── i limiti dello zoom ── */
 {
   const l = limitiZoom(15)   // un telefono in piedi vede 15 celle a zoom 1
-  uguale('il più vicino è 0,8', l.min, VISTA.zoomMin)
+  uguale('il più vicino è 0,4', l.min, VISTA.zoomMin)
   dentro('il più lontano arriva a 28 celle in largo', 15 * l.max, 27.9, 28.1)
   uguale('uno schermo che già vede più di 28 non si allontana', limitiZoom(30).max, 1)
   uguale('sotto il minimo si ferma', zoomLimitato(0.1, 15), l.min)
@@ -98,8 +98,8 @@ controlla('due dita sullo stesso punto non dividono per zero', Number.isFinite(z
   dentro('lontano al massimo non vede più di ~28 celle', cam.celleInLargo, 20, 29)
   cam.zoom = 0.01
   for (let i = 0; i < 200; i++) cam.aggiorna(0.05, eroe, false, null)
-  dentro('vicino al minimo vede meno di prima', cam.celleInLargo, 8, 15)
-  controlla('e il minimo non è sotto 0,8', cam.zoom === VISTA.zoomMin)
+  dentro('vicino al minimo vede meno di prima', cam.celleInLargo, 5, 9)
+  controlla('e il minimo non è sotto 0,4', cam.zoom === VISTA.zoomMin)
   cam.misura(900, 500)   // il telefono girato
   cam.aggiorna(0.05, eroe, false, null)
   controlla('girando lo schermo lo zoom resta nei limiti nuovi', cam.zoom >= cam.limitiZoom.min && cam.zoom <= cam.limitiZoom.max)
