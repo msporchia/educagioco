@@ -36,11 +36,11 @@ uguale('un sesso storto vale quello di serie', sessoValido('elfa', 'x'), 'f')
 
 // nel salvataggio
 const c = {}
-uguale('un\'avventura senza sesso ha quello di serie', avventuraDi(c, 'mago').sesso ?? sessoValido('mago', undefined), 'm')
+uguale('un\'avventura senza sesso non ce l\'ha (vale quello del profilo)', avventuraDi(c, 'mago').sesso ?? null, null)
 scriviNellAvventura(c, 'mago', { sesso: 'f' })
 uguale('il sesso scritto si rilegge', avventuraDi(c, 'mago').sesso, 'f')
 scriviNellAvventura(c, 'mago', { sesso: 'zzz' })
-uguale('un sesso storto nel salvataggio torna quello di serie', avventuraDi(c, 'mago').sesso, 'm')
+uguale('un sesso storto nel salvataggio vale come non scelto', avventuraDi(c, 'mago').sesso ?? null, null)
 uguale('il corredo con il sesso ha il modello giusto', new Corredo({ eroe: 'nano', sesso: 'f' }).io.sprite, 'nana')
 
 // ogni modello si costruisce, si veste con un'arma della sua classe e si muove

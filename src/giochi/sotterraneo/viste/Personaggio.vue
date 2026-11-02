@@ -13,7 +13,6 @@ const props = defineProps({
   eroe: { type: Object, required: true },
   sesso: { type: String, required: true },
   aspetto: { type: Object, default: () => ({ pelle: null, capelli: null, taglio: null, barba: null }) },   // gli id scelti (dati/eroi.js, aspettoValido)
-  nuovo: { type: Boolean, default: false },     // la prima volta di quell'eroe: «Si parte» invece di «Fatto»
 })
 defineEmits(['scegli', 'aspetto', 'chiudi'])
 
@@ -59,7 +58,7 @@ const vedi = x => ({ ...props.eroe, ...VARIANTI[props.eroe.chiave][x], sprite: s
       </div>
 
       <button class="sot-grosso" data-azione="chiudi-personaggio" @click="$emit('chiudi')">
-        {{ nuovo ? 'Si parte' : 'Fatto' }}
+        Fatto
       </button>
     </div>
   </div>

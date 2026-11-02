@@ -110,12 +110,15 @@ const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: 
       <span class="em">🏆</span> Tesori <small>{{ tesori.trovati }} / {{ tesori.tutti }}</small>
     </button>
 
-    <button v-if="cambia" type="button" class="sot-eroe-cambia" data-azione="personaggio" @click="$emit('personaggio')">
-      ✎ Come è {{ eroe.chi }}
-    </button>
-    <!-- le quattro avventure: la scelta è un altro foglio, e questa avventura resta com'è -->
-    <button v-if="cambia" type="button" class="sot-eroe-cambia" data-azione="eroe" @click="$emit('cambia')">
-      Cambia eroe
-    </button>
+    <!-- sulla stessa riga: una riga in più toglieva spazio alla lista delle caratteristiche (il «+» della tempra finiva sotto) -->
+    <div v-if="cambia" class="sot-eroe-azioni">
+      <button type="button" class="sot-eroe-cambia" data-azione="personaggio" :aria-label="`come è ${eroe.chi}`" @click="$emit('personaggio')">
+        ✎ Aspetto
+      </button>
+      <!-- le quattro avventure: la scelta è un altro foglio, e questa avventura resta com'è -->
+      <button type="button" class="sot-eroe-cambia" data-azione="eroe" @click="$emit('cambia')">
+        Cambia eroe
+      </button>
+    </div>
   </Cornice>
 </template>

@@ -1,10 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL PERSONAGGIO, MASCHIO O FEMMINA, COL DITO — docs/sotterraneo/personaggio.md
 
-   Un eroe mai giocato apre l'editor prima di partire («Si parte»); un eroe
-   già giocato no. Dalla scelta delle avventure la ✎ lo riapre, e toccare
-   un modello scrive subito il sesso nell'avventura di quell'eroe (gratis):
-   il nome nella pagina dell'eroe cambia, i numeri no.
+   Scegliere un eroe non passa da nessun passo in più: il sesso di partenza
+   è quello della persona del profilo. L'editor si apre dalla ✎ della
+   scelta delle avventure o dalla pagina dell'eroe, e toccare un modello
+   scrive subito il sesso nell'avventura di quell'eroe (gratis): il nome
+   nella pagina dell'eroe cambia, i numeri no.
    `node test/esegui.mjs sotterraneo-personaggio`
    tempo: 120
    ═══════════════════════════════════════════════════════════════════ */
@@ -20,8 +21,8 @@ await page.waitForSelector('.sot-eroe[data-eroe]', { timeout: 30000 })
 
 await attendi(page, 1500)
 await scatto(page, 'personaggio-1-scelta')
-// 1. un eroe mai giocato passa dall'editor, che si chiude con «Si parte»
-await page.locator('.sot-eroe[data-eroe="mago"]').click()
+// 1. la ✎ apre l'editor senza scegliere l'eroe, e senza scrivere niente finché non si tocca
+await page.locator('[data-personaggio-di="mago"]').click()
 await page.waitForSelector('[data-editor-personaggio]', { timeout: 3000 })
 uguale('l\'editor è quello del mago', await page.locator('[data-editor-personaggio]').getAttribute('data-eroe-editor'), 'mago')
 // il profilo di prova ha la persona di serie (la bambina): l'editor parte dalla femmina
@@ -29,7 +30,8 @@ uguale('parte da come è la persona del profilo', await page.locator('[data-edit
 await attendi(page, 1500)
 await scatto(page, 'personaggio-2-editor-mago')
 uguale('i due modelli ci sono', await page.locator('[data-sesso]').count(), 2)
-controlla('il bottone dice «Si parte»', (await page.locator('[data-azione="chiudi-personaggio"]').innerText()).includes('Si parte'))
+let prima = await leggiProfilo(page)
+controlla('aprirlo non scrive niente', !(((prima.campagne || {}).sotterraneo || {}).cfg || {}).avventure)
 
 // 2. toccare la maga la sceglie e la scrive
 await page.locator('[data-sesso="m"]').click()
@@ -67,6 +69,8 @@ await attendi(page, 300)
 p = await leggiProfilo(page)
 uguale('toccare ancora i capelli li toglie', p.campagne.sotterraneo.cfg.avventure.mago.aspetto.capelli, null)
 await page.locator('[data-azione="chiudi-personaggio"]').click()
+// scelto l'eroe, si parte subito (niente passi in più) e la maga resta maga
+await page.locator('.sot-eroe[data-eroe="mago"]').click()
 await mondoPronto(page)
 
 // 3. la pagina dell'eroe dice «Maga» e offre l'editor
@@ -74,11 +78,10 @@ await page.locator('[data-azione="eroe-pagina"]').click()
 await page.waitForSelector('[data-pagina-eroe] [data-azione="personaggio"]', { timeout: 3000 })
 await attendi(page, 800)
 await scatto(page, 'personaggio-4-pagina-eroe')
-controlla('la pagina parla della maga', (await page.locator('[data-pagina-eroe] [data-azione="personaggio"]').innerText()).includes('la maga'))
+controlla('la pagina parla della maga', (await page.locator('[data-pagina-eroe] [data-azione="personaggio"]').getAttribute('aria-label')).includes('la maga'))
 await page.locator('[data-pagina-eroe] [data-azione="personaggio"]').click()
 await page.waitForSelector('[data-editor-personaggio]', { timeout: 3000 })
 uguale('lo stesso editor, già femmina', await page.locator('[data-editor-personaggio]').getAttribute('data-sesso-scelto'), 'f')
-controlla('già giocato o scelto: «Fatto»', (await page.locator('[data-azione="chiudi-personaggio"]').innerText()).includes('Fatto') || true)
 await page.locator('[data-sesso="m"]').click()
 await attendi(page, 300)
 p = await leggiProfilo(page)

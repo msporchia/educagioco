@@ -616,8 +616,6 @@ export async function scegliAvventura(page, eroe) {
     await page.click('[data-pagina-eroe] [data-azione="eroe"]')
   }
   await page.click(`.sot-eroe[data-eroe="${eroe}"]`)
-  // un eroe mai giocato apre prima l'editor del personaggio (docs/sotterraneo/personaggio.md): «Si parte» lo chiude
-  await page.waitForSelector('[data-editor-personaggio]', { timeout: 1500 }).then(() => page.click('[data-azione="chiudi-personaggio"]')).catch(() => {})
   await page.waitForSelector('.sot-eroe[data-eroe]', { state: 'detached', timeout: 30000 })
   await page.waitForSelector('[data-mondo3d]', { state: 'attached', timeout: 30000 })
 }

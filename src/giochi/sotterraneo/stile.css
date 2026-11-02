@@ -1124,6 +1124,7 @@
   border: 1px solid #ffd23f55; border-radius: 999px; cursor: pointer;
 }
 .sot-eroe-cambia:active { transform: translateY(1px) }
+.sot-eroe-azioni { flex: none; display: flex; justify-content: center; gap: 10px }
 
 /* le quattro schede della finestra dell'eroe (viste/SchedeEroe.vue): linguette di cuoio, quella aperta d'oro */
 .sot-schede { display: flex; gap: 5px; margin-right: 46px; flex: none }

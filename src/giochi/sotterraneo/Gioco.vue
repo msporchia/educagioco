@@ -25,7 +25,7 @@ import { CAMPAGNA, QUANTE_TAPPE, stelleDella, L_ABISSO, INDICE_ABISSO } from './
 import { inPaesaggio } from './dati/paesaggi.js'
 import { COSE, PERGAMENE_MASSIME, COPRICAPI, chiaveDelPezzo } from './dati/cose.js'
 import { CURIOSITA_DI } from './dati/curiosita.js'
-import { EROI, DI_PARTENZA, SESSI, eroeDi, sessoValido, aspettoValido, CAMPI_ASPETTO } from './dati/eroi.js'
+import { EROI, DI_PARTENZA, SESSI, eroeDi, aspettoValido, CAMPI_ASPETTO } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO, POZIONI_MASSIME } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
 import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo, tascheDello, postiDello, eCura } from './motore/corredo.js'
@@ -203,7 +203,11 @@ const scegliEroe = ref(!chiEro.value)
 // l'avventura aperta, riletta dal profilo a ogni scrittura; ci si scrive solo da qui
 const qui = computed(() => avventuraDi(progresso(CHIAVE), eroeQui()))
 // maschio o femmina (dati/eroi.js, docs/sotterraneo/personaggio.md): vale per l'avventura aperta
-const sessoQui = computed(() => qui.value.sesso)
+// Il sesso: quello scelto nell'editor, o se non l'si è mai scelto quello della persona del profilo (`aspettoDi()`, la stessa della contadina:
+// bambina → femmina, bimbo → maschio), senza un passo in più all'inizio di un'avventura
+const sessoDiDefault = () => (aspettoDi() === 'bambina' ? 'f' : 'm')
+const sessoDi = a => (SESSI.includes(a && a.sesso) ? a.sesso : sessoDiDefault())
+const sessoQui = computed(() => sessoDi(qui.value))
 const aspettoQui = computed(() => qui.value.aspetto)   // pelle e capelli, o niente (docs/sotterraneo/personaggio.md)
 const nellAvventura = (campi, opz) => ritocca(CHIAVE, c => scriviNellAvventura(c, eroeQui(), campi), opz)
 // La terra dove si è (motore/terre.js, docs/sotterraneo/terre-successive.md) e il suo mondo: `mondo` la prima, `mondi[t]` le
@@ -213,16 +217,11 @@ const mondoQui = computed(() => mondoDellaTerra(qui.value, terraOra()))
 const nelMondo3d = (mondo, opz, t = terraOra()) => nellAvventura(conMondo(qui.value, mondo, t), opz)
 
 function scegli(k) {
-  // un eroe mai giocato: prima di partire si sceglie com'è (l'editor, gratis); chi ha già giocato non ci passa
-  const nuovo = !cominciata(avventuraDi(progresso(CHIAVE), k))
   chiudiBottega()
   chiEro.value = ricorda(CHIAVE, 'eroe', k)
   scegliEroe.value = false
   suono.ok()
   nextTick(riprendiSeUscito)   // l'avventura scelta ha la discesa lasciata con la ✕? si riprende giù
-  // l'editor parte da come si è scelta la persona nel profilo (la contadina della fattoria, `aspetto`): una bambina trova la femmina
-  // già scelta (si scrive subito), e può cambiarla
-  if (nuovo) { apriEditor(k, true); sceglieSesso(aspettoDi() === 'bambina' ? 'f' : 'm') }
 }
 
 // le quattro schede della scelta: a che punto è ognuna, o «nuova avventura». I numeri sono quelli con la roba
@@ -233,7 +232,7 @@ const avventure = computed(() => EROI.map(e => {
   const n = schedaConLaRoba(e.chiave, r, a.crescita)
   const meta = dice(a.sosta, CAMPAGNA)
   return {
-    ...eroeDi(e.chiave, a.sesso, a.aspetto), sesso: sessoValido(e.chiave, a.sesso), aspettoScelto: a.aspetto, nuova: !cominciata(a), livello: n.livello,
+    ...eroeDi(e.chiave, sessoDi(a), a.aspetto), sesso: sessoDi(a), aspettoScelto: a.aspetto, nuova: !cominciata(a), livello: n.livello,
     vita: n.vita, att: n.att, dif: n.dif, tratti: n.tratti,
     mano: n.mano, mancina: n.mancina, corpo: n.corpo, testa: n.testa,
     discese: Math.min(a.tappa, QUANTE_TAPPE), quante: QUANTE_TAPPE,
@@ -790,11 +789,10 @@ function casellaAbilita({ i, id }) {
   if (sullAlbero(c => c.mettiInCasella(i, id))) suono.ok()
 }
 // «Cambia eroe», dalla pagina dell'eroe di sopra: la pagina si chiude e si apre la scelta, senza perdere niente
-// L'editor del personaggio: `editor` è l'eroe che si sta ritoccando (anche uno che non è quello aperto), `editorNuovo` se è la prima
-// volta di una avventura. Il sesso si scrive subito, gratis, nell'avventura di quell'eroe
+// L'editor del personaggio: `editor` è l'eroe che si sta ritoccando (anche uno che non è quello aperto)
+// Il sesso si scrive subito, gratis, nell'avventura di quell'eroe
 const editor = ref(null)
-const editorNuovo = ref(false)
-const apriEditor = (k, nuovo = false) => { editor.value = k; editorNuovo.value = nuovo }
+const apriEditor = k => { editor.value = k }
 const schedaEditor = computed(() => (editor.value ? avventure.value.find(e => e.chiave === editor.value) : null))
 function sceglieSesso(x) {
   const k = editor.value
@@ -2341,7 +2339,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
                   @compra="compraSopra" @vendi="vendiSopra" @riacquista="riacquistaSopra" @chiudi="chiudiBottega" @fuori="fuoriDallaBottega" />
         <Eroi v-if="scegliEroe" :avventure="avventure" :scelto="chiEro || ''" :primo="!chiEro"
               @scegli="scegli" @chiudi="chiudiLaScelta" @personaggio="k => apriEditor(k)" />
-        <Personaggio v-if="schedaEditor" :eroe="schedaEditor" :sesso="schedaEditor.sesso" :aspetto="schedaEditor.aspettoScelto" :nuovo="editorNuovo"
+        <Personaggio v-if="schedaEditor" :eroe="schedaEditor" :sesso="schedaEditor.sesso" :aspetto="schedaEditor.aspettoScelto"
                      @scegli="sceglieSesso" @aspetto="sceglieAspetto" @chiudi="editor = null" />
         <div v-if="salaAperta" class="sot-in-due" data-sot-in-due>
           <SalaSfida :fase="sfida.fase.value" :codice="sfida.codice.value" :messaggio="sfida.messaggio.value"

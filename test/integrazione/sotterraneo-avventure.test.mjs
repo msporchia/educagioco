@@ -81,8 +81,6 @@ async function apriLaScelta() {
 }
 async function scegliCol(eroe) {
   await toccaIl(`.sot-eroe[data-eroe="${eroe}"]`)
-  // un eroe mai giocato (il mago) apre prima l'editor del personaggio: «Si parte» lo chiude
-  if (await page.waitForSelector('[data-editor-personaggio]', { timeout: 1000 }).then(() => true, () => false)) await toccaIl('[data-azione="chiudi-personaggio"]')
   await page.waitForSelector('.sot-eroe[data-eroe]', { state: 'detached', timeout: 3000 })
   await mondoPronto(page)
   await attendi(page, 400)
@@ -97,7 +95,7 @@ uguale('e nemmeno la discesa a metà', sot?.sosta, undefined)
 uguale('il record di fuori resta: una discesa', sot?.tappa, 1)
 uguale('con le sue stelle', sot?.stelle?.[0], 3)
 uguale('le monete restano', p?.coins, 300)
-controlla('si riparte col cavaliere, l\'eroe di prima', (await chiScende()).includes('Cavaliere'))
+controlla('si riparte col cavaliere, l\'eroe di prima', /Cavaliere|Guerriera/.test(await chiScende()))
 uguale('senza gemme', await gemme(), 0)
 await scatto(page, 'avventure-azzerata')
 
@@ -112,7 +110,7 @@ await semina(page, {
 await scegli(page, 'sotterraneo')
 await mondoPronto(page)
 await attendi(page, 500)
-controlla('la pagina dell\'eroe è del cavaliere', (await chiScende()).includes('Cavaliere'))
+controlla('la pagina dell\'eroe è del cavaliere', /Cavaliere|Guerriera/.test(await chiScende()))
 uguale('e sul mondo non c\'è la carta di chi scende né il «cambio»',
        await page.locator('[data-chi-sopra], [data-azione="eroe"]').count(), 0)
 uguale('con le sue gemme', await gemme(), 60)
@@ -165,7 +163,7 @@ await scatto(page, 'avventure-scelta')
 
 /* ---------- 4. il mago comincia da capo ---------- */
 await scegliCol('mago')
-controlla('la pagina dell\'eroe è del mago', (await chiScende()).includes('Mago'))
+controlla('la pagina dell\'eroe è del mago', /Mag[oa]/.test(await chiScende()))
 // un eroe nuovo comincia dalla partenza del villaggio (docs/sotterraneo/avventure.md), non da dove stava l'altro
 uguale('dalla partenza del villaggio', await cella(), `${ilMondo().partenza.x},${ilMondo().partenza.y}`)
 uguale('con lo zaino vuoto', await gemme(), 0)

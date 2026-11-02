@@ -63,8 +63,9 @@ export const DI_PARTENZA = 'cavaliere'
 // fatta ritrova il suo eroe com'era. Il sesso sta nell'avventura (`cfg.avventure[eroe].sesso`), mai nella chiave dell'eroe.
 export const SESSI = ['m', 'f']
 export const SESSO_DI_SERIE = { cavaliere: 'm', elfa: 'f', mago: 'm', nano: 'm' }
+// il modello della femmina del cavaliere si chiama `cavaliera` (chiave interna), ma a schermo è «Guerriera»: «cavaliera» suonava male
 export const VARIANTI = {
-  cavaliere: { m: { sprite: 'cavaliere', nome: 'Cavaliere', chi: 'il cavaliere' }, f: { sprite: 'cavaliera', nome: 'Cavaliera', chi: 'la cavaliera' } },
+  cavaliere: { m: { sprite: 'cavaliere', nome: 'Cavaliere', chi: 'il cavaliere' }, f: { sprite: 'cavaliera', nome: 'Guerriera', chi: 'la guerriera' } },
   elfa: { m: { sprite: 'elfo', nome: 'Elfo', chi: 'l\'elfo' }, f: { sprite: 'elfa', nome: 'Elfa', chi: 'l\'elfa' } },
   mago: { m: { sprite: 'mago', nome: 'Mago', chi: 'il mago' }, f: { sprite: 'maga', nome: 'Maga', chi: 'la maga' } },
   nano: { m: { sprite: 'nano', nome: 'Nano', chi: 'il nano' }, f: { sprite: 'nana', nome: 'Nana', chi: 'la nana' } },

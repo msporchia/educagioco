@@ -53,16 +53,13 @@ uguale('al primo ingresso si sceglie chi scende',
        await page.locator('[data-eroe]').count(), 4)
 uguale('e sono quattro avventure nuove', await page.locator('.sot-eroe[data-nuova="1"]').count(), 4)
 await page.locator('[data-eroe="cavaliere"]').click()
-// la prima volta di un eroe si passa dall'editor del personaggio (docs/sotterraneo/personaggio.md)
-await page.waitForSelector('[data-editor-personaggio]', { timeout: 3000 })
-await page.locator('[data-azione="chiudi-personaggio"]').click()
 await page.waitForSelector('[data-mondo3d][data-pronto="1"]', { timeout: 30000 })
 uguale('scelto, la scelta sparisce', await page.locator('[data-eroe]').count(), 0)
 uguale('e sopra c\'è il mondo in 3D', await page.locator('[data-mondo3d]').count(), 1)
 await page.locator('[data-azione="eroe-pagina"]').click()
 await page.waitForSelector('[data-pagina-eroe]', { timeout: 3000 })
 controlla('e la pagina dell\'eroe dice con chi si scende',
-          (await page.locator('[data-pagina-eroe] .sot-eroe-nome b').textContent()).includes('Cavaliere'))
+          /Cavaliere|Guerriera/.test(await page.locator('[data-pagina-eroe] .sot-eroe-nome b').textContent()))   // il sesso parte da quello della persona del profilo
 await page.locator('[data-pagina-eroe] [data-chiudi]').click()
 await page.waitForFunction(() => !document.querySelector('[data-pagina-eroe]'), null, { timeout: 3000 })
 
