@@ -4,7 +4,7 @@
 import { figuraDiSopra } from './mostri.js'
 
 const MISTI = ['scheletro', 'goblin', 'lupo', 'orco', 'ragno', 'zombie', 'vespa', 'cinghiale']
-const MODELLI = ['guardia', 'armaiolo', 'incantatrice', 'erborista', 'minatore', 'capitano', 'ragazza', 'boscaiolo', 'pescatore', 'mugnaio', 'cacciatrice', 'carovaniere']
+const MODELLI = ['guardia', 'armaiolo', 'incantatrice', 'erborista', 'minatore', 'capitano', 'ragazza', 'boscaiolo', 'pescatore', 'mugnaio', 'cacciatrice', 'carovaniere', 'tintore']
 
 export function leggiFolla(hash = typeof location === 'undefined' ? '' : location.hash + location.search) {
   const h = new URLSearchParams(String(hash).replace(/^[#?]/, '').replace(/[#?]/g, '&'))

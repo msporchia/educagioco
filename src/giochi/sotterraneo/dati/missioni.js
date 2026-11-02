@@ -30,6 +30,8 @@ const L_INCANTATRICE = { nome: 'L\'incantatrice', chi: 'l\'incantatrice' }
 // guardia, di cui porta il ritratto di pixel (viste/pixel.js) finché la foto non c'è (docs/sotterraneo/mondo-3d.md, «Il capitano»)
 export const CITTADINI = {
   capitano: { nome: 'Il capitano', chi: 'il capitano della guardia', sprite: 'guardia', scala: 1.38 },
+  // il tintore ritinge i pezzi a pagamento (docs/sotterraneo/tintore.md): ha il suo modello 3D, lo sprite è il suo nome
+  tintore: { nome: 'Il tintore', chi: 'il tintore', sprite: 'tintore' },
 }
 // tutti quelli che stanno fermi sopra nel mondo 3D: chi dà favori e chi no
 export const PERSONAGGI_DI_SOPRA = { ...PERSONAGGI, ...CITTADINI }

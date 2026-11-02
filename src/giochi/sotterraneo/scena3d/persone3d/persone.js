@@ -9,7 +9,7 @@
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 
-export const CHIAVI = ['armaiolo', 'incantatrice', 'erborista', 'rigattiere', 'minatore', 'capitano', 'ragazza', 'eremita', 'guardia', 'boscaiolo', 'pescatore', 'mugnaio', 'cacciatrice', 'carovaniere']
+export const CHIAVI = ['armaiolo', 'incantatrice', 'erborista', 'rigattiere', 'minatore', 'capitano', 'ragazza', 'eremita', 'guardia', 'boscaiolo', 'pescatore', 'mugnaio', 'cacciatrice', 'carovaniere', 'tintore']
 
 // ── mattoncini ──
 const cacheMat = new Map()
@@ -148,6 +148,7 @@ const FACCE = {
   pescatore: { pelle: '#d49a72', iride: '#3a7a9a', occX: 44, occY: 86, rx: 9, ry: 8, palp: 0.45, ceja: '#9a9a96', cejaS: 8, bocca: 'nulla', rughe: true, barbetta: 'rgba(200,200,200,.4)', naso: 9 },
   mugnaio: { pelle: '#f2c0a0', iride: '#5a3a22', occX: 45, occY: 80, rx: 11, ry: 13, palp: 0.15, ceja: '#6a4428', cejaS: 8, bocca: 'nulla', guance: 'rgba(240,90,90,.55)', farina: true, ridendo: true },
   cacciatrice: { pelle: '#e8b894', iride: '#4a7a3a', occX: 45, occY: 84, rx: 11, ry: 12, palp: 0.42, ceja: '#8a3014', cejaS: 6, cejaOut: -24, cejaIn: -30, bocca: 'serio', boccaY: 134, ciglia: true, lentiggini: true },
+  tintore: { pelle: '#e8b890', iride: '#2a5a6a', occX: 45, occY: 82, rx: 11, ry: 12, palp: 0.18, ceja: '#8a4a22', cejaS: 9, bocca: 'sorriso', boccaY: 138, guance: 'rgba(240,110,110,.45)' },
   carovaniere: { pelle: '#c98a5e', iride: '#3a2a1a', occX: 44, occY: 84, rx: 10, ry: 11, palp: 0.3, ceja: '#1e1610', cejaS: 11, cejaOut: -30, cejaIn: -24, bocca: 'sorriso', boccaY: 138, rughe: true, naso: 11 }
 }
 
@@ -1029,7 +1030,44 @@ function carovaniere () {
   })
 }
 
-const COSTRUTTORI = { armaiolo, incantatrice, erborista, rigattiere, minatore, capitano, ragazza, eremita, guardia, boscaiolo, pescatore, mugnaio, cacciatrice, carovaniere }
+// Il tintore: allegro e macchiato di colori (le mani blu fino al gomito), la camicia verde acqua, il grembiule viola con le strisce delle
+// tinte sul davanti, il berretto rosso di traverso; sulla spalla sinistra un rotolo di stoffa rosa. Ogni tanto lo alza per mostrarlo.
+function tintore () {
+  const PELLE = 0xe8b890, CAMICIA = 0x3a8a8a, GREMB = 0x7a4a9a, BRAGHE = 0x4a4a5a, BERRETTO = 0xc83a3a, CAPELLI = 0xb8602a, STOFFA = 0xf070b0
+  const g = corpo('tintore', { legH: 0.28, legX: 0.11, legR: 0.075, tw: 0.42, th: 0.31, td: 0.3, basso: 1.05, armX: 0.27, R: 0.25, pelle: PELLE,
+    calzoni: M(BRAGHE), scarpe: M(0x4a3020), vesti: M(CAMICIA), maniche: M(CAMICIA), avambracci: M(0x3a54d0), manicaR: 0.068, bot: [0.15, 0.1, 0.22] })
+  const u = g.userData, { busto, testa, gomiti, mani, cy, R } = u
+  const grem = sway(u, perno(busto, 0, 0.04, 0), 0.03, 0.01, 1.1)
+  pezzo(grem, arcoGeo(0.25, 0.27, 0.3, 1.1), M(GREMB, DOPPIO), 0, -0.14, 0, 1, 1, 0.86)
+  // le strisce delle tinte, in fila sul grembiule
+  ;[0xd83a34, 0xf2c92c, 0x48b84c, 0x38b4e8].forEach((c, i) => scatola(grem, 0.05, 0.12, 0.012, M(c), -0.105 + i * 0.07, -0.12, 0.215))
+  for (const s of [-1, 1]) scatola(busto, 0.035, 0.03, 0.34, M(GREMB), s * 0.1, 0.3, 0)
+  for (const gm of gomiti) cil(gm, 0.075, 0.075, 0.04, M(0x2a8a8a), 0, 0.0, 0, 7)
+  sfera(testa, 0.06, M(0xe0a080), 0, cy - R * 0.1, R * 0.99, 1.1, 1.0, 1.1)
+  chioma(u, M(CAPELLI), { su: -0.1, dietro: 0.2, k: 1.0 })
+  // il berretto di lana, un po' di traverso, col pompon
+  const ber = perno(testa, 0.03, cy + R * 0.6, -0.02); ber.rotation.set(-0.1, 0, -0.25)
+  cil(ber, 0.28, 0.25, 0.1, M(BERRETTO), 0, 0, 0, 12); sfera(ber, 0.27, M(BERRETTO), 0, 0.05, 0, 1, 0.5, 1, 12); sfera(ber, 0.06, M(0xf2c92c), 0, 0.17, 0, 1, 1, 1, 6)
+  // il rotolo di stoffa sulla spalla sinistra (lo tiene la sinistra)
+  const rot = perno(busto, -0.2, 0.36, -0.02); rot.rotation.set(0, 0.2, 0.5)
+  cil(rot, 0.1, 0.1, 0.5, M(STOFFA), 0, 0.03, 0, 9).rotation.z = Math.PI / 2
+  for (const x of [-0.17, 0.17]) cil(rot, 0.105, 0.105, 0.04, M(0xf7a0cc), x, 0.03, 0, 9).rotation.z = Math.PI / 2
+  return finisci(g, {
+    fase: 3.3, P: 6.8, D: 2.2, off: 2.1, mano: 1,
+    posa (u, tt, ge) {
+      const [bs, bd] = u.bracci, [gs, gd] = u.gomiti
+      bs.rotation.set(-0.3, 0, -2.5); gs.rotation.set(0, 0, -0.9 + 0.03 * Math.sin(tt * 1.2))              // la sinistra su, a tenere il rotolo
+      bd.rotation.set(0.02, 0, 0.3); gd.rotation.set(-0.4, 0, 0)
+      if (ge.k >= 0) {                                                                                      // la destra in aria, a mostrare un colore
+        const su = smussa(lim(ge.k / 0.15)) * (1 - smussa(lim((ge.k - 0.75) / 0.2)))
+        bd.rotation.set(mescola(0.02, -0.7, su), 0, mescola(0.3, 0.2, su)); gd.rotation.set(mescola(-0.4, -1.1 + 0.12 * Math.sin(ge.k * Math.PI * 4), su), 0, 0)
+        u.testa.rotation.x += 0.1 * su; u.testa.rotation.y *= 1 - su
+      }
+    }
+  })
+}
+
+const COSTRUTTORI = { armaiolo, incantatrice, erborista, rigattiere, minatore, capitano, ragazza, eremita, guardia, boscaiolo, pescatore, mugnaio, cacciatrice, carovaniere, tintore }
 export function creaPersona (chiave) {
   const c = COSTRUTTORI[chiave]
   if (!c) throw new Error(`persona sconosciuta: ${chiave}`)

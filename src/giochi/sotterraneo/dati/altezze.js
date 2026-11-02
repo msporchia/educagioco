@@ -41,5 +41,5 @@ export const ALTO_DELL_EROE = 1.75
 // il capitano è alto quanto la guardia, cacciatrice e carovaniere (ancora senza un posto nel mondo) quanto un passante
 export const ALTO_DELLA_PERSONA = {
   armaiolo: 0.9375, incantatrice: 0.9375, erborista: 0.9375, rigattiere: 1, minatore: 0.9375, capitano: 1.125, ragazza: 1.0625,
-  eremita: 1, guardia: 1.125, boscaiolo: 1.125, pescatore: 1, mugnaio: 0.9375, cacciatrice: 1, carovaniere: 1,
+  eremita: 1, guardia: 1.125, boscaiolo: 1.125, pescatore: 1, mugnaio: 0.9375, cacciatrice: 1, carovaniere: 1, tintore: 1,
 }

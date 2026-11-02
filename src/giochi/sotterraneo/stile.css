@@ -1386,3 +1386,13 @@
 }
 .sot[data-tema~="legno"] .sot-pensiero-problema { border-color: #f3cf6b }
 .sot[data-tema~="legno"] .sot-pensiero-bolla { background: #2e1e12; border: 1.5px solid #c9963a }
+
+/* ═══════════ il tintore (viste/Tintore.vue, docs/sotterraneo/tintore.md) ═══════════ */
+.sot-tintore-gemme { margin: 0 0 8px; font-size: 13.5px; color: var(--sot-tenue) }
+.sot-tintore-corpo { display: flex; align-items: center; gap: 12px; margin: 0 0 10px }
+.sot-tintore-pezzi { flex: 1; min-width: 0; margin: 0; padding: 0; list-style: none; display: grid; gap: 6px }
+.sot-tintore-pezzi .sot-scelta-breve { display: block; width: 100%; text-align: left }
+.sot-tintore-pezzi small { display: block; font-size: 11px; color: var(--sot-tenue) }
+.sot-tintore-vuoto { font-size: 13px; color: var(--sot-tenue) }
+.sot-tintore-detto { margin: 0 0 8px; font-weight: 700; color: var(--sot-oro) }
+.sot-grosso:disabled { opacity: .5 }
