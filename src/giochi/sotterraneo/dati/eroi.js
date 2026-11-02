@@ -3,7 +3,7 @@
 // prendere: quello che non si può usare si vende come tutto il resto. L'attacco è la manopola velenosa
 // (nessuno scende sotto braccio 3, o un mostro costa troppe risposte di fila); il banco di prova lo conferma.
 
-import { pelleDi, capelliDi } from '../../../grafica/persona/aspetto.js'
+import { pelleDi, capelliDi, taglioDi, barbaDi } from '../../../grafica/persona/aspetto.js'
 
 // il vocabolario condiviso fra cose (famiglia) e classi (porta): il motore chiede al dato, mai un `if` col nome di un eroe
 // `car`: la caratteristica che dà l'attacco a quell'arma e ne fa il requisito (docs/sotterraneo/livelli.md)
@@ -77,17 +77,26 @@ export const MODELLI_EROI = EROI.flatMap(e => SESSI.map(x => VARIANTI[e.chiave][
 // è scelto (restano i colori di serie del modello). Viaggia dentro la chiave del modello, `sprite`: `maga~ambra.rossi` (un `-` per
 // il campo non scelto), così tutto quello che passa lo sprite (la corsa, il mondo di sopra, la fila dei turni, le chiavi delle
 // anteprime) porta anche i colori senza un campo in più; chi disegna lo apre con `daSprite`.
-export const aspettoValido = a => ({ pelle: a && pelleDi(a.pelle) ? a.pelle : null, capelli: a && capelliDi(a.capelli) ? a.capelli : null })
+// `taglio` e `barba` sono id di TAGLI e BARBE (aspetto.js): `calvo` e `nessuna` tolgono i capelli e la barba di serie
+export const CAMPI_ASPETTO = ['pelle', 'capelli', 'taglio', 'barba']
+export const aspettoValido = a => ({
+  pelle: a && pelleDi(a.pelle) ? a.pelle : null, capelli: a && capelliDi(a.capelli) ? a.capelli : null,
+  taglio: a && taglioDi(a.taglio) ? a.taglio : null, barba: a && barbaDi(a.barba) ? a.barba : null,
+})
 export function spriteConAspetto(sprite, a) {
   const v = aspettoValido(a)
-  return v.pelle || v.capelli ? `${sprite}~${v.pelle || '-'}.${v.capelli || '-'}` : sprite
+  if (!CAMPI_ASPETTO.some(k => v[k])) return sprite
+  // `-` per il campo non scelto; i campi in coda non scelti si tolgono (`maga~ambra.rossi`)
+  const campi = CAMPI_ASPETTO.map(k => v[k] || '-')
+  while (campi.length && campi[campi.length - 1] === '-') campi.pop()
+  return `${sprite}~${campi.join('.')}`
 }
-/** La chiave del modello con i colori, aperta: `{ modello, pelle, capelli, colori: { pelle?, capelli? } (numeri 0xRRGGBB), chiave }`, o null se il modello non c'è. */
+/** La chiave del modello con l'aspetto, aperta: `{ modello, pelle, capelli, taglio, barba (id o null), colori: { pelle?, capelli? } (numeri 0xRRGGBB), chiave }`, o null se il modello non c'è. */
 export function daSprite(s) {
   const [modello, resto = ''] = String(s || '').split('~')
   if (!MODELLI_EROI.includes(modello)) return null
-  const [p, c] = resto.split('.')
-  const a = aspettoValido({ pelle: p, capelli: c })
+  const [p, c, t, b] = resto.split('.')
+  const a = aspettoValido({ pelle: p, capelli: c, taglio: t, barba: b })
   const colori = {}
   if (a.pelle) colori.pelle = pelleDi(a.pelle).c
   if (a.capelli) colori.capelli = capelliDi(a.capelli).c
@@ -99,7 +108,7 @@ export function eroeDi(chiave, sesso = null, aspetto = null) {
   const e = EROI.find(x => x.chiave === chiave) || EROI[0]
   const v = SESSI.includes(sesso) && VARIANTI[e.chiave][sesso].sprite !== e.sprite ? { ...e, ...VARIANTI[e.chiave][sesso] } : e
   const a = aspettoValido(aspetto)
-  return a.pelle || a.capelli ? { ...v, sprite: spriteConAspetto(v.sprite, a), aspetto: a } : v
+  return CAMPI_ASPETTO.some(k => a[k]) ? { ...v, sprite: spriteConAspetto(v.sprite, a), aspetto: a } : v
 }
 
 // prende la scheda della cosa, non la sua chiave: senza famiglia se la mette chiunque

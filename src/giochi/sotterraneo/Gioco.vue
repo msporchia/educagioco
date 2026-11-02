@@ -25,7 +25,7 @@ import { CAMPAGNA, QUANTE_TAPPE, stelleDella, L_ABISSO, INDICE_ABISSO } from './
 import { inPaesaggio } from './dati/paesaggi.js'
 import { COSE, PERGAMENE_MASSIME, COPRICAPI, chiaveDelPezzo } from './dati/cose.js'
 import { CURIOSITA_DI } from './dati/curiosita.js'
-import { EROI, DI_PARTENZA, SESSI, eroeDi, sessoValido, aspettoValido } from './dati/eroi.js'
+import { EROI, DI_PARTENZA, SESSI, eroeDi, sessoValido, aspettoValido, CAMPI_ASPETTO } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO, POZIONI_MASSIME } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
 import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo, tascheDello, postiDello, eCura } from './motore/corredo.js'
@@ -802,10 +802,10 @@ function sceglieSesso(x) {
   ritocca(CHIAVE, c => scriviNellAvventura(c, k, { sesso: x }))
   suono.ok()
 }
-// pelle o capelli: `id` dal catalogo in comune (src/grafica/persona/aspetto.js); lo stesso id di prima lo toglie (torna il colore di serie)
+// pelle, colore dei capelli, taglio o barba: `id` dal catalogo in comune (src/grafica/persona/aspetto.js); lo stesso id di prima lo toglie (torna il colore di serie)
 function sceglieAspetto(campo, id) {
   const k = editor.value
-  if (!k || !['pelle', 'capelli'].includes(campo)) return
+  if (!k || !CAMPI_ASPETTO.includes(campo)) return
   const ora = avventuraDi(progresso(CHIAVE), k).aspetto
   ritocca(CHIAVE, c => scriviNellAvventura(c, k, { aspetto: aspettoValido({ ...ora, [campo]: ora[campo] === id ? null : id }) }))
   suono.ok()

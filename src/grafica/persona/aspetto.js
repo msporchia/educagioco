@@ -23,6 +23,19 @@ export const COLORI_CAPELLI = [
   con({ id: 'viola', nome: 'Viola', c: 0x8a4aa8, fantasia: true }),
 ]
 
+// i tagli di capelli e le barbe: gli id sono in comune, il disegno sta in `capelli3d.js` (che li monta su qualunque testa tonda dei due giochi).
+// Un taglio non ha il colore: quello si sceglie a parte (COLORI_CAPELLI). `calvo` e `nessuna` sono scelte vere (tolgono quello di serie).
+export const TAGLI = [
+  { id: 'corti', nome: 'Corti' }, { id: 'lunghi', nome: 'Lunghi' }, { id: 'coda', nome: 'Coda' }, { id: 'trecce', nome: 'Trecce' },
+  { id: 'caschetto', nome: 'Caschetto' }, { id: 'ricci', nome: 'Ricci' }, { id: 'calvo', nome: 'Calvo' },
+]
+export const BARBE = [
+  { id: 'nessuna', nome: 'Nessuna' }, { id: 'corta', nome: 'Corta' }, { id: 'folta', nome: 'Folta' }, { id: 'lunga', nome: 'Lunga' },
+  { id: 'baffi', nome: 'Baffi' }, { id: 'pizzetto', nome: 'Pizzetto' },
+]
+export const taglioDi = id => TAGLI.find(t => t.id === id) || null
+export const barbaDi = id => BARBE.find(b => b.id === id) || null
+
 export const pelleDi = id => PELLI.find(p => p.id === id) || null
 export const capelliDi = id => COLORI_CAPELLI.find(c => c.id === id) || null
 export const soloNaturali = () => COLORI_CAPELLI.filter(c => !c.fantasia)
@@ -35,13 +48,13 @@ export function sfuma(c, k) {
 
 export function guastiDellAspetto() {
   const g = []
-  for (const [nome, lista] of [['pelle', PELLI], ['capelli', COLORI_CAPELLI]]) {
+  for (const [nome, lista] of [['pelle', PELLI], ['capelli', COLORI_CAPELLI], ['taglio', TAGLI], ['barba', BARBE]]) {
     const viste = new Set()
     for (const o of lista) {
       if (!/^[a-z]+$/.test(o.id)) g.push(`${nome}/${o.id}: id da minuscole`)
       if (viste.has(o.id)) g.push(`${nome}: due voci "${o.id}"`)
       viste.add(o.id)
-      if (!o.nome || !Number.isInteger(o.c) || o.c < 0 || o.c > 0xffffff) g.push(`${nome}/${o.id}: nome o colore storto`)
+      if (!o.nome || (o.c !== undefined && (!Number.isInteger(o.c) || o.c < 0 || o.c > 0xffffff))) g.push(`${nome}/${o.id}: nome o colore storto`)
     }
   }
   return g

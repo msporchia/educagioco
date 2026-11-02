@@ -2,7 +2,7 @@
 // le armi dell'inventario in mano. `disegnaEroe` (eroe.js) gli passa lo stato (dove sta, dove guarda, se cammina, se assalta, il lampo
 // della ferita o della cura, la trasparenza del portale) e lui muove i perni. Non c'è uno sprite di ripiego (docs/sotterraneo/anteprime-3d.md).
 import { Vector3, Color, Group, Box3 } from 'three'
-import { creaEroe, posaMarcia, posaColpo, posaGuardia } from './eroi3d/eroi.js'
+import { posaMarcia, posaColpo, posaGuardia } from './eroi3d/eroi.js'
 import { equipaggia } from './eroi3d/armi.js'
 import { vesti, TIPI } from './eroi3d/armature.js'
 import { copri } from './eroi3d/copricapi.js'
@@ -12,6 +12,7 @@ import { studia, saldaTutto, osso, copiaMateriale, lampoFuso } from './salda3d.j
 import { ACCESI } from './costanti.js'
 import { daSola, rifai } from './matrici.js'
 import { daSprite } from '../dati/eroi.js'
+import { creaEroeDa } from './eroe-aspetto.js'
 
 // quanto è alto il personaggio rispetto allo sprite che sostituisce (le colonne dei sotterranei arrivano più o meno lì)
 const ALTEZZA_SPRITE = 0.72
@@ -117,8 +118,7 @@ export function creaEroe3d(scena) {
       if (g.userData.scheletro) g.userData.scheletro.dispose()
       for (const t of tinte) t.m.dispose()
     }
-    const sp = daSprite(chiave)   // il modello e i colori scelti (pelle, capelli): `maga~ambra.rossi`
-    g = creaEroe(sp.modello, sp.colori); radice.add(g)
+    g = creaEroeDa(chiave); radice.add(g)   // il modello con l'aspetto scelto: `maga~ambra.rossi.coda.baffi`
     vestiEroe(g, corsa, { semplici: ACCESI.armiSemplici })
     try { if (ACCESI.saldatura) saldaEroe(g, `${chiave}|${f}`, { pelle: ACCESI.pelle }) } catch (e) { console.warn('eroe 3D: non si salda', e) }   // resta com'è, solo più caro
     tinte = clonaMateriali(g)

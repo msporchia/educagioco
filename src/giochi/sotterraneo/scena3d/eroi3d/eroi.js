@@ -248,6 +248,7 @@ function cavaliere (a = {}) {
   scatola(cim, 0.045, 0.045, 0.34, oro, 0, 0.0, -0.02)
   const pinna = pezzo(cim, G('pinna', () => sagomaLaterale([[0.15, 0.03], [0.1, 0.13], [0.0, 0.2], [-0.12, 0.23], [-0.25, 0.17], [-0.34, 0.03], [-0.42, -0.14], [-0.33, -0.14], [-0.24, -0.06], [-0.1, 0.0]], 0.07)), ro, 0, 0, 0)
   const pinna2 = pezzo(cim, G('pinna2', () => sagomaLaterale([[0.08, 0.04], [0.0, 0.14], [-0.14, 0.17], [-0.26, 0.1], [-0.12, 0.0]], 0.075)), M(ROSSO_S), 0, 0.005, 0)
+  u.crini = []; u.barbe = []; u.coloreCapelli = a.capelli ?? 0x5a3a1e   // i capelli e la barba di serie: `applicaAspetto` (src/grafica/persona/capelli3d.js) li nasconde se se ne sceglie un altro
   return finisci(g)
 }
 
@@ -295,6 +296,7 @@ function elfa (a = {}) {
   const cerchietto = new THREE.Mesh(G('cerchietto', () => new THREE.TorusGeometry(1, 0.014, 5, 20)), oro)
   cerchietto.position.set(0, cy + R * 0.5, R * 0.03); cerchietto.rotation.x = Math.PI / 2 - 0.15; cerchietto.scale.set(R * 0.98, R * 0.98, R * 0.98); cop.add(cerchietto)
   pezzo(cop, G('gemma', () => new THREE.OctahedronGeometry(0.036)), luce(0x3bd186, 0.9), 0, cy + R * 0.5 + 0.0, R * 0.99, 0.9, 1.5, 0.7)
+  u.crini = [coda, treccia]; u.barbe = []; u.coloreCapelli = a.capelli ?? BIONDO   // i capelli e la barba di serie: `applicaAspetto` (src/grafica/persona/capelli3d.js) li nasconde se se ne sceglie un altro
   return finisci(g)
 }
 
@@ -336,7 +338,7 @@ function mago (a = {}) {
   const capelli = sway(u, perno(testa, 0, cy + R * 0.15, -R * 0.7), 0.1, 0.05, 1.4, 2)
   cil(capelli, R * 0.8, R * 0.6, 0.2, bi, 0, -0.08, -0.04, 10); cil(capelli, R * 0.6, R * 0.35, 0.22, bis, 0, -0.26, -0.05, 9)
   sfera(capAlto, R * 1.02, bis, 0, cy + R * 0.1, -R * 0.2, 1.05, 0.95, 0.95, 12)
-  for (const s of [-1, 1]) { sfera(testa, R * 0.2, bis, s * R * 1.0, cy - R * 0.1, R * 0.15, 0.8, 2.0, 1.0) }                                // basette
+  const basette = [-1, 1].map(s => sfera(testa, R * 0.2, bis, s * R * 1.0, cy - R * 0.1, R * 0.15, 0.8, 2.0, 1.0))                            // basette
   const barba = sway(u, perno(testa, 0, cy - R * 0.5, R * 0.62), 0.05, 0.03, 1.2)
   sfera(barba, 0.17, bi, 0, -0.02, 0.01, 1.05, 0.9, 0.62, 10)
   sfera(barba, 0.13, bi, 0, -0.18, 0.045, 1.0, 1.4, 0.55)
@@ -360,6 +362,7 @@ function mago (a = {}) {
   punta1.rotation.x = -0.5; cil(punta1, 0.015, 0.07, 0.16, vcp, 0, 0.08, 0, 8); const pp = perno(punta1, 0, 0.16, 0); pp.rotation.x = -0.6; cono(pp, 0.016, 0.1, vcp, 0, 0.04, 0, 6)
   scatola(cappello, 0.07, 0.06, 0.03, oro, 0, 0.07, 0.275)
   pezzo(cappello, G('stellaCapp', () => stella(0.07, 0.012)), luce(0xffd54a, 0.5), 0, 0.25, 0.185, 1, 1, 1).rotation.x = -0.35
+  u.crini = [capelli]; u.barbe = [barba, ...basette]; u.coloreCapelli = a.capelli ?? BIANCO   // i capelli e la barba di serie: `applicaAspetto` (src/grafica/persona/capelli3d.js) li nasconde se se ne sceglie un altro
   return finisci(g)
 }
 
@@ -416,6 +419,7 @@ function nano (a = {}) {
     const an2 = an.clone(); an2.position.y = -0.22; t.add(an2)
     return t
   })
+  u.crini = []; u.barbe = [barba, ...trecce]; u.coloreCapelli = a.capelli ?? BARBA   // i capelli e la barba di serie: `applicaAspetto` (src/grafica/persona/capelli3d.js) li nasconde se se ne sceglie un altro
   return finisci(g)
 }
 
@@ -459,6 +463,7 @@ function cavaliera (a = {}) {
   const coda = sway(u, perno(cop, 0, cy + R * 0.3, -R * 1.0), 0.14, 0.06, 1.7)
   tubo(coda, [0, 0, 0], [0, -0.12, -0.08], 0.05, 0.06, ca, 7); tubo(coda, [0, -0.12, -0.08], [0, -0.3, -0.07], 0.06, 0.04, cas, 7); tubo(coda, [0, -0.3, -0.07], [0, -0.45, -0.04], 0.04, 0.012, ca, 6)
   cil(coda, 0.058, 0.058, 0.025, ar, 0, -0.03, -0.015, 8)
+  u.crini = [coda]; u.barbe = []; u.coloreCapelli = a.capelli ?? CASTANO   // i capelli e la barba di serie: `applicaAspetto` (src/grafica/persona/capelli3d.js) li nasconde se se ne sceglie un altro
   return finisci(g)
 }
 
@@ -498,6 +503,7 @@ function elfo (a = {}) {
   const fascia = new THREE.Mesh(G('fasciaE', () => new THREE.TorusGeometry(1, 0.016, 5, 20)), cus)
   fascia.position.set(0, cy + R * 0.42, R * 0.04); fascia.rotation.x = Math.PI / 2 - 0.1; fascia.scale.set(R * 1.0, R * 1.0, R * 1.0); cop.add(fascia)
   pezzo(cop, G('foglia', () => new THREE.OctahedronGeometry(0.034)), luce(0x39d98a, 0.9), 0, cy + R * 0.42, R * 1.0, 0.7, 1.6, 0.6)
+  u.crini = [codino]; u.barbe = []; u.coloreCapelli = a.capelli ?? ARGENTO   // i capelli e la barba di serie: `applicaAspetto` (src/grafica/persona/capelli3d.js) li nasconde se se ne sceglie un altro
   return finisci(g)
 }
 
@@ -550,6 +556,7 @@ function maga (a = {}) {
   const punta1 = sway(u, perno(piega, 0, 0.18, 0), 0.08, 0.04, 1.8)
   punta1.rotation.x = -0.5; cil(punta1, 0.014, 0.06, 0.15, vcp, 0, 0.07, 0, 8); const pp = perno(punta1, 0, 0.14, 0); pp.rotation.x = -0.6; cono(pp, 0.015, 0.09, vcp, 0, 0.04, 0, 6)
   sfera(cappello, 0.04, ro, 0.1, 0.06, 0.24); sfera(cappello, 0.04, ro, 0.19, 0.06, 0.2); sfera(cappello, 0.025, oro, 0.145, 0.06, 0.225)   // il fiocco
+  u.crini = [chioma]; u.barbe = []; u.coloreCapelli = a.capelli ?? RAME   // i capelli e la barba di serie: `applicaAspetto` (src/grafica/persona/capelli3d.js) li nasconde se se ne sceglie un altro
   return finisci(g)
 }
 
@@ -593,6 +600,7 @@ function nana (a = {}) {
     for (const y of [-0.1, -0.3]) { const an = new THREE.Mesh(G('anelloN', () => new THREE.TorusGeometry(0.05, 0.013, 5, 10)), ra); an.position.set(0, y, 0.0); an.rotation.x = Math.PI / 2; an.castShadow = true; t.add(an) }
     return t
   })
+  u.crini = trecce; u.barbe = []; u.coloreCapelli = a.capelli ?? TRECCIA   // i capelli e la barba di serie: `applicaAspetto` (src/grafica/persona/capelli3d.js) li nasconde se se ne sceglie un altro
   return finisci(g)
 }
 

@@ -31,6 +31,16 @@ colore più bello) arriva in entrambi; il prezzo dei colori di fantasia resta di
 - **Il disegno**: la pelle colora la testa, le orecchie, le mani e il naso (un po' più scuro) e la faccia sulla tela; il colore dei capelli i capelli,
   la barba e le trecce (con la loro ombra) e le sopracciglia. Le facce si ricordano per modello, pelle e capelli.
 
+### Taglio di capelli e barba
+
+Anche i tagli (`TAGLI`: corti, lunghi, coda, trecce, caschetto, ricci, calvo) e le barbe (`BARBE`: nessuna, corta, folta, lunga, baffi, pizzetto) hanno gli id in
+`aspetto.js` e il disegno in `src/grafica/persona/capelli3d.js` (three, in comune): `applicaAspetto(g, { taglio, barba, colore })` monta il
+taglio su qualunque testa tonda (`userData.testa, R, cy`) e nasconde i capelli e la barba di serie del modello (`userData.crini`, `barbe`, segnati
+nel prototipo). Un campo non scelto lascia quello di serie; `calvo` e `nessuna` sono scelte vere. I capelli corti e simili stanno nel gruppo che sparisce
+sotto un elmo (`userData.capelli`), le code e le trecce restano fuori. La chiave è `modello~pelle.capelli.taglio.barba` (`-` per il non scelto,
+i campi in coda non scelti si tolgono); `scena3d/eroe-aspetto.js` (`creaEroeDa`) la apre e costruisce il modello per l'eroe in scena e le anteprime.
+Il contadino della fattoria può usare lo stesso `applicaAspetto` dando le sue misure della testa.
+
 ## L'editor (`viste/Personaggio.vue`)
 
 Un foglio coi due modelli uno accanto all'altro, vestiti con la roba che l'eroe ha addosso; toccarne uno lo sceglie subito (si scrive
@@ -40,10 +50,10 @@ Un foglio coi due modelli uno accanto all'altro, vestiti con la roba che l'eroe 
 - da solo, la prima volta che si sceglie un'avventura mai cominciata (il bottone dice «Si parte»), già scelto come la persona del profilo
   (`aspettoDi()`, la stessa della contadina nella fattoria: bambina → femmina, bimbo → maschio); si può cambiare subito.
 
-Nei test: `[data-editor-personaggio]`, `[data-pelle="<id>"]` e `[data-capelli="<id>"]` (le tavolozze), `[data-sesso="m|f"]`, `[data-azione="chiudi-personaggio"]`; `unita/sotterraneo-personaggio`.
+Nei test: `[data-editor-personaggio]`, `[data-pelle="<id>"]` `[data-capelli="<id>"]`, `[data-taglio="<id>"]` e `[data-barba="<id>"]` (le scelte), `[data-sesso="m|f"]`, `[data-azione="chiudi-personaggio"]`; `unita/sotterraneo-personaggio`.
 
 ## Cosa resta
 
-- Altre scelte nello stesso foglio (il taglio dei capelli, la barba) si aggiungono qui, sempre in `cfg.avventure[eroe]`; il taglio vorrebbe un modello per ognuno.
+- Altre scelte nello stesso foglio si aggiungono qui, sempre in `cfg.avventure[eroe]` (altre acconciature, un cappello, le sopracciglia).
 - Le frasi di chi parla all'eroe usano il nome della variante (`conNome` in `Gioco.vue`); i testi scritti a mano che dicono «il mago» o «l'elfa»
   (pensieri, missioni, `dice` della scheda) restano al maschile/di serie: si rifanno quando serve, con `chi` della variante.

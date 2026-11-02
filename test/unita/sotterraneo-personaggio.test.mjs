@@ -11,6 +11,8 @@ import { avventuraDi, scriviNellAvventura } from '../../src/giochi/sotterraneo/m
 import { Corredo } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { EROI as MODELLI_ANTEPRIME } from '../../src/giochi/sotterraneo/scena3d/anteprime3d-pura.js'
 import { creaEroe, CHIAVI, CLASSE } from '../../src/giochi/sotterraneo/scena3d/eroi3d/eroi.js'
+import { creaEroeDa } from '../../src/giochi/sotterraneo/scena3d/eroe-aspetto.js'
+import { TAGLI, BARBE } from '../../src/grafica/persona/aspetto.js'
 import { vestiEroe, posa } from '../../src/giochi/sotterraneo/scena3d/eroe3d.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
@@ -65,5 +67,16 @@ for (const k of CHIAVI) for (const a of [{ pelle: 0x6e4630 }, { capelli: 0x3d78d
   let ok = false, errore = ''
   try { const g = creaEroe(k, a); vestiEroe(g, { mano: ARMA[CLASSE[k]] }); posa(g, 3, false, null); ok = true } catch (e) { errore = e.message }
   controlla(`${k} con ${JSON.stringify(a)}: si costruisce`, ok, errore)
+}
+// taglio e barba: la chiave si apre e si richiude, e ogni combinazione costruisce un modello vestito che si muove
+uguale('taglio e barba nella chiave', spriteConAspetto('mago', { taglio: 'coda', barba: 'baffi' }), 'mago~-.-.coda.baffi')
+uguale('si riaprono', daSprite('mago~-.-.coda.baffi').barba, 'baffi')
+uguale('i campi in coda non scelti si tolgono', spriteConAspetto('mago', { pelle: 'ambra', capelli: 'blu' }), 'mago~ambra.blu')
+uguale('un taglio che non c\'è si butta', aspettoValido({ taglio: 'zzz' }).taglio, null)
+for (const k of CHIAVI) for (const t of [null, ...TAGLI.map(x => x.id)]) for (const b of [null, ...BARBE.map(x => x.id)]) {
+  if ((t && b && t !== 'coda' && b !== 'baffi') || (!t && !b)) continue   // tutte le coppie sono troppe: ogni taglio da solo, ogni barba da sola, e una coppia
+  let ok = false, errore = ''
+  try { const g = creaEroeDa(spriteConAspetto(k, { taglio: t, barba: b, capelli: 'rossi' })); vestiEroe(g, { mano: ARMA[CLASSE[k]] }); posa(g, 3, false, null); ok = true } catch (e) { errore = e.message }
+  controlla(`${k} taglio ${t} barba ${b}`, ok, errore)
 }
 riassunto('il personaggio, maschio o femmina')
