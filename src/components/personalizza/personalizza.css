@@ -1,0 +1,61 @@
+/* L'interfaccia unica per personalizzare (components/personalizza/Personalizza.vue): la forma è una, il tema cambia. I colori sono
+   variabili: un tema nuovo è un blocco `.pz-tema-<nome>` qui sotto. Un foglio a tutto schermo: ✕ in alto a destra, anteprima grande,
+   schede che scorrono, griglia che scorre. Il dito non è un mouse: niente selezione, `touch-action: manipulation`, soglie larghe. */
+.pz {
+  --pz-velo: #05070cc4; --pz-foglio: #141826; --pz-bordo: #ffffff22; --pz-testo: #e8edf7; --pz-tenue: #93a0bd; --pz-accento: #ffd23f;
+  --pz-acceso-fondo: #ffd23f22; --pz-gettone: #ffffff0d; --pz-anteprima: radial-gradient(circle at 50% 38%, #2a3350, #0f1320 75%);
+  --pz-campione-bordo: #ffffff55; --pz-tasto: #ffffff12; --pz-x-fondo: #00000066; --pz-x-testo: var(--pz-accento);
+  position: absolute; inset: 0; z-index: 30; display: flex; align-items: stretch; justify-content: center;
+  background: var(--pz-velo); color: var(--pz-testo); font-family: inherit; user-select: none; -webkit-user-select: none;
+}
+.pz-tema-sotterraneo {
+  --pz-foglio: var(--sot-carta, #141826); --pz-bordo: var(--sot-bordo, #ffffff1e); --pz-testo: var(--sot-inchiostro, #e8edf7);
+  --pz-tenue: var(--sot-tenue, #93a0bd); --pz-accento: var(--sot-oro, #ffd23f);
+}
+.pz-tema-fattoria {
+  --pz-velo: #2a1a0cb8; --pz-foglio: #a77440; --pz-bordo: #6b4423; --pz-testo: #3a2a1a; --pz-tenue: #8a5a14; --pz-accento: #f0a020;
+  --pz-acceso-fondo: #ffd36a; --pz-gettone: #fffdf6; --pz-anteprima: radial-gradient(circle at 50% 40%, #fff7e4, #f0dcae);
+  --pz-campione-bordo: rgba(60, 30, 10, .55); --pz-tasto: #c79a5c; --pz-x-fondo: #e0402f; --pz-x-testo: #fff;
+}
+.pz-foglio {
+  position: relative; display: flex; flex-direction: column; width: 100%; max-width: 560px; height: 100%; box-sizing: border-box;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: var(--pz-foglio); overflow: hidden;
+}
+.pz-tema-fattoria .pz-foglio { background: repeating-linear-gradient(90deg, #a77440 0 58px, #9a6a38 58px 60px), #a77440; }
+.pz-testa { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 46px; }
+.pz-testa h2 { margin: 0; font-size: 19px; }
+.pz-x {
+  flex: none; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--pz-bordo); background: var(--pz-x-fondo);
+  color: var(--pz-x-testo); font: 800 18px/1 inherit; touch-action: manipulation;
+}
+/* l'anteprima grande: un terzo e più dello schermo, sempre in vista mentre la griglia scorre */
+.pz-anteprima {
+  flex: 0 0 clamp(170px, 34%, 320px); display: grid; place-items: center; margin: 4px 0 8px; border-radius: 18px;
+  border: 1px solid var(--pz-bordo); background: var(--pz-anteprima); overflow: hidden;
+}
+.pz-schede { flex: none; display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.pz-schede::-webkit-scrollbar { display: none; }
+.pz-schede button {
+  flex: none; min-height: 44px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--pz-bordo); background: var(--pz-tasto);
+  color: inherit; font: 700 14px/1 inherit; touch-action: manipulation; white-space: nowrap;
+}
+.pz-schede button.acceso { border-color: var(--pz-accento); background: var(--pz-acceso-fondo); }
+.pz .pz-corpo { display: block; flex: 1 1 0; min-height: 0; overflow-y: auto; border-radius: 14px; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.pz .pz-griglia { width: 100%; box-sizing: border-box; display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; padding: 2px; }
+.pz-gettone {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px 7px; border-radius: 16px; min-height: 84px;
+  border: 2px solid var(--pz-bordo); background: var(--pz-gettone); color: inherit; font: 700 12px/1.1 inherit; touch-action: manipulation;
+}
+.pz-gettone b { max-width: 100%; overflow-wrap: anywhere; }
+.pz-gettone small { color: var(--pz-tenue); font-size: 11px; font-weight: 700; }
+.pz-gettone.sel { border-color: var(--pz-accento); background: var(--pz-acceso-fondo); }
+.pz-gettone.bloccato { opacity: .6; border-style: dashed; }
+.pz-campione { position: relative; width: 44px; height: 44px; display: grid; place-items: center; }
+.pz-campione.colore { border-radius: 50%; background: var(--col); border: 3px solid var(--pz-campione-bordo); }
+.pz-campione.foto { width: 64px; height: 64px; border-radius: 14px; background: var(--pz-anteprima); }
+.pz-campione img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.pz-campione em { font-style: normal; font-size: 24px; line-height: 1; }
+.pz-lucchetto { position: absolute; right: -8px; bottom: -6px; font-style: normal; font-size: 15px; }
+.pz-riga { flex: none; margin: 8px 0 0; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--pz-bordo); font-size: 13px; line-height: 1.35; min-height: 18px; }
+@media (min-width: 700px) { .pz-foglio { border-radius: 22px; margin: 16px 0; height: auto; max-height: calc(100% - 32px); } }
+@media (prefers-reduced-motion: reduce) { .pz * { animation: none !important; transition: none !important; } }

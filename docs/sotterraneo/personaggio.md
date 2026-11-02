@@ -52,7 +52,7 @@ Un foglio coi due modelli uno accanto all'altro, vestiti con la roba che l'eroe 
 (`aspettoDi()`, la stessa della contadina nella fattoria: bambina → femmina, bimbo → maschio, `sessoDi` in `Gioco.vue`); l'avventura non ha il
 campo (`avventuraDi` dà `null`). Toccando un modello nell'editor il sesso si scrive e vale da lì.
 
-Nei test: `[data-editor-personaggio]`, `[data-pelle="<id>"]` `[data-capelli="<id>"]`, `[data-taglio="<id>"]` e `[data-barba="<id>"]` (le scelte), `[data-sesso="m|f"]`, `[data-azione="chiudi-personaggio"]`; `unita/sotterraneo-personaggio`.
+Nei test: `[data-editor-personaggio]`, le schede `[data-pz-scheda="sesso|pelle|capelli|taglio|barba"]`, `[data-pelle="<id>"]` `[data-capelli="<id>"]`, `[data-taglio="<id>"]` e `[data-barba="<id>"]` (le scelte), `[data-sesso="m|f"]`, `[data-azione="chiudi-personaggio"]`; `unita/sotterraneo-personaggio`.
 
 ## Cosa resta
 
