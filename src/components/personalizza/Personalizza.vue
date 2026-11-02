@@ -48,7 +48,6 @@ defineEmits(['scheda', 'scegli', 'chiudi'])
             <span v-else class="pz-campione" :class="{ foto: v.foto, colore: !v.foto && v.colore }">
               <img v-if="v.foto" :src="v.foto" alt="" draggable="false">
               <em v-else-if="!v.colore && v.emoji" aria-hidden="true">{{ v.emoji }}</em>
-              <i v-if="v.bloccato" class="pz-lucchetto" aria-hidden="true">🔒</i>
             </span>
             <b>{{ v.nome }}</b>
             <small v-if="v.nota">{{ v.nota }}</small>

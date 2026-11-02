@@ -56,7 +56,6 @@
 .pz-campione.foto { width: 64px; height: 64px; border-radius: 14px; background: var(--pz-anteprima); }
 .pz-campione img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
 .pz-campione em { font-style: normal; font-size: 24px; line-height: 1; }
-.pz-lucchetto { position: absolute; right: -8px; bottom: -6px; font-style: normal; font-size: 15px; }
 .pz-riga { flex: none; margin: 8px 0 0; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--pz-bordo); font-size: 13px; line-height: 1.35; min-height: 18px; }
 @media (min-width: 700px) { .pz-foglio { border-radius: 22px; margin: 16px 0; height: auto; max-height: calc(100% - 32px); } }
 @media (prefers-reduced-motion: reduce) { .pz * { animation: none !important; transition: none !important; } }
