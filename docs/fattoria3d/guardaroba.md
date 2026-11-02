@@ -48,7 +48,7 @@ rosa, azzurri, viola; di livello: corona (14), stivali argento (18), sciarpa dor
 
 **Niente si compra con un tocco solo.** Un tocco su un pezzo **lo prova** sul ritratto (la *bozza*, `Guardaroba.vue`): se tutta la bozza è gratis o già tua
 si indossa subito (come prima); se c'è un pezzo con 🪙 resta in prova, il mondo non cambia, e sotto compaiono **«🛒 Acquista e indossa 🪙N»** (somma dei
-pezzi da pagare) e **«↩ Annulla»**. Con poche monete il tasto è spento e la riga dice quante ne mancano. L'acquisto è tutto o niente (`motore.compraAbito`:
+pezzi da pagare) e **«Annulla»**. Con poche monete il tasto è spento e la riga dice quante ne mancano. L'acquisto è tutto o niente (`motore.compraAbito`:
 `poche-monete`, `fuori-stagione`, `bloccato`, `non-esiste`); la spesa conta come esperienza, niente monete indietro. I pezzi comprati stanno in
 `stato.armadio` (`{ 'cappello:cilindro': true }`, `armadioInForma`, versione dello stato invariata) e si rimettono gratis; `sbloccato(pezzo, livello)` e
 `vesti(...)` valgono ancora per il livello. Arrivano nel foglio dei livelli come «👕 … per il guardaroba» (`roba(l).abiti`, solo quelli di livello): **non contano**

@@ -101,7 +101,7 @@ function cambia(id) { scheda.value = id; scelto.value = '' }
     </div>
     <div v-if="cambiata && da.length" class="f3-gua-compra" data-f3="guardaroba-compra">
       <button type="button" class="f3-gua-acquista" :class="{ manca: manca > 0 }" data-f3="guardaroba-acquista" :aria-disabled="manca > 0 || null" @click="compra">🛒 Acquista e indossa 🪙{{ costo }}</button>
-      <button type="button" class="f3-gua-annulla" data-f3="guardaroba-annulla" @click="annulla">↩ Annulla</button>
+      <button type="button" class="f3-gua-annulla" data-f3="guardaroba-annulla" @click="annulla">Annulla</button>
     </div>
     <p class="f3-gua-riga" data-f3="guardaroba-riga">{{ riga }}</p>
   </div>

@@ -14,7 +14,7 @@ qualcosa al collo e sulla schiena, che **si vede in scena** mentre la bestia gir
 - **Non tutti portano tutto**: la campanella è dei gatti (`per`), il pappagallo non ha la schiena (ha le ali).
 - **Il cappello da strega si compra solo a Halloween**; comprato resta, e si rimette quando si vuole.
 - **Si prova, poi si compra**: un tocco su un addobbo da comprare lo mette «in prova» (bordo verde, un secondo tocco lo lascia) e sotto compare
-  **«🛒 Acquista …🪙N»** con «↩ Annulla»: solo quel tasto paga (un tocco solo comprava per sbaglio). Quelli che hai già (nel cassetto) si mettono con un tocco. **Si compra una volta e
+  **«🛒 Acquista …🪙N»** con «Annulla»: solo quel tasto paga (un tocco solo comprava per sbaglio). Quelli che hai già (nel cassetto) si mettono con un tocco. **Si compra una volta e
   non si consuma**: toccare quello che porta lo toglie e lo rimette nel **cassetto** (`stato.addobbi`), da dove va gratis a un'altra
   bestia. **Un aggancio tiene una cosa sola**: un secondo cappello cambia il primo, che torna nel cassetto.
 - La spesa conta come esperienza, come ogni acquisto; niente monete indietro.

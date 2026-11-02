@@ -99,7 +99,7 @@ const faccia = g => g.da ? ((merceDi(g.da) || {}).emoji || g.emoji) : g.emoji
         <div v-if="inProva" class="f3-bes-compra" data-f3="addobbo-compra">
           <button type="button" class="f3-bes-az f3-bes-acquista" :class="{ manca: inProva.prezzo > monete }" data-f3="addobbo-acquista" :aria-disabled="inProva.prezzo > monete || null" @click="compraAddobbo">
             🛒 Acquista {{ inProva.emoji }} {{ inProva.nome }} <small>🪙{{ inProva.prezzo }}</small></button>
-          <button type="button" class="f3-bes-az" data-f3="addobbo-annulla" @click="prova = ''">↩ Annulla</button>
+          <button type="button" class="f3-bes-az" data-f3="addobbo-annulla" @click="prova = ''">Annulla</button>
         </div>
       </section>
     </div>
