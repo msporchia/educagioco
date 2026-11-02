@@ -218,6 +218,21 @@ export const DIALOGHI = {
     ],
   },
 
+  // il tintore (docs/sotterraneo/tintore.md): non vende niente, ritinge. `bottega` apre il suo foglio (Gioco.vue, apriBottega)
+  tintore: {
+    domanda: 'Come fai i colori?',
+    bottega: 'Vorrei cambiare colore a un pezzo',
+    saluti: [
+      { da: 0, testo: 'Spada, mantello, elmo: dimmi che colore li vuoi, e per qualche gemma sono tuoi. Il pezzo non cambia, solo il colore.' },
+    ],
+    racconti: [
+      { da: 0, pagine: ['I colori li faccio con le bacche, le radici e un po\' di pazienza.',
+                        'Una volta tinto, un pezzo resta di quel colore: anche se lo metti in tasca, anche se lo rimetti.'] },
+      { da: 3, pagine: ['Più si scende, più la gente vuole farsi notare. Un mantello rosso si vede da lontano, anche nel buio.',
+                        'Se cambi idea, torna: il colore si cambia quando vuoi, sempre allo stesso prezzo.'] },
+    ],
+  },
+
   rigattiere: {
     domanda: 'Cosa trovo laggiù?',
     bottega: 'Fammi vedere',

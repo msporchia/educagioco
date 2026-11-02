@@ -13,6 +13,7 @@ import { ACCESI } from './costanti.js'
 import { daSola, rifai } from './matrici.js'
 import { daSprite } from '../dati/eroi.js'
 import { creaEroeDa } from './eroe-aspetto.js'
+import { tingiGruppo, tingiAggiunte } from './tinge3d.js'
 
 // quanto è alto il personaggio rispetto allo sprite che sostituisce (le colonne dei sotterranei arrivano più o meno lì)
 const ALTEZZA_SPRITE = 0.72
@@ -33,10 +34,14 @@ export const vestiEroe = (g, roba = {}, opz = {}) => vestiDotazione(g, dotazione
 export function vestiDotazione(g, d, { semplici = false } = {}) {
   // in mano l'alone è più piccolo che da solo nella casella: addosso all'eroe copriva la faccia
   const destra = creaPezzo(d.destra, { scalaAlone: 0.8, semplice: semplici }), sinistra = creaPezzo(d.sinistra, { scalaAlone: 0.8, semplice: semplici })
+  // le tinte del tintore (docs/sotterraneo/tintore.md): `d.tinte` dice per posto; le armi sono gruppi, il corpo e la testa si tingono per differenza
+  const T = d.tinte || {}
+  if (T.destra) tingiGruppo(destra, T.destra)
+  if (T.sinistra) tingiGruppo(sinistra, T.sinistra)
   const togliArma = equipaggia(g, { destra, sinistra })
   // la veste della figura (il modulo vesti) o l'armatura di sempre col pregio della rarità
   const togliCorpo = !d.corpo ? null
-    : (d.corpo.figura && vestiFigura(g, d.corpo.figura)) || (TIPI.includes(d.corpo.tipo) ? vesti(g, d.corpo.tipo, d.corpo.pregio) : null)
+    : tingiAggiunte(g, T.corpo, () => (d.corpo.figura && vestiFigura(g, d.corpo.figura)) || (TIPI.includes(d.corpo.tipo) ? vesti(g, d.corpo.tipo, d.corpo.pregio) : null))
   const togliCollo = d.collo ? indossaGioiello(g, d.collo) : null
   const collana = togliCollo && togliCollo.gruppo
   // le fiamme e i bagliori delle armi vive vanno animati (da soli sono enormi), e gli aloni della rarità
@@ -45,9 +50,12 @@ export function vestiDotazione(g, d, { semplici = false } = {}) {
   const prova = (/[#&?]testa=([\w-]+)/.exec(typeof location === 'undefined' ? '' : location.hash + location.search) || [])[1]
   const idTesta = prova || (d.testa && d.testa.id) || null
   let togliTesta = null
-  try { togliTesta = idTesta ? copri(g, idTesta) : null } catch (e) { togliTesta = null }   // un modello che non c'è: resta quello di serie
+  try { togliTesta = idTesta ? tingiAggiunte(g, T.testa, () => copri(g, idTesta)) : null } catch (e) { togliTesta = null }   // un modello che non c'è: resta quello di serie
   return () => { togliArma(); g.userData.armiAnima = null; if (togliCorpo) togliCorpo(); if (togliCollo) togliCollo(); if (togliTesta) togliTesta() }
 }
+
+// le tinte di chi si disegna, per la firma di `equipa`: se cambiano si rifà (il ritratto e la scena ritingono)
+const tinteDi = corsa => { const t = dotazioneDi(corsa).tinte; return t ? [t.destra, t.sinistra, t.corpo, t.testa].map(x => x || '-').join('.') : '' }
 
 /** Ogni istanza ha i suoi materiali (il lampo cambia l'emissivo di uno solo); torna l'elenco per tingerli. */
 function clonaMateriali(radice) {
@@ -108,7 +116,7 @@ export function creaEroe3d(scena) {
   }
 
   function equipa(corsa) {
-    const f = `${corsa.mano || ''}|${corsa.mancina || ''}|${corsa.corpo || ''}|${corsa.collo || ''}|${corsa.testa || ''}|${ACCESI.armiSemplici ? 's' : ''}`
+    const f = `${corsa.mano || ''}|${corsa.mancina || ''}|${corsa.corpo || ''}|${corsa.collo || ''}|${corsa.testa || ''}|${tinteDi(corsa)}|${ACCESI.armiSemplici ? 's' : ''}`
     if (f === firma) return false
     firma = f
     // saldato, l'eroe non si sveste più pezzo per pezzo: si rifà da capo (le geometrie e i materiali di serie stanno in cache)

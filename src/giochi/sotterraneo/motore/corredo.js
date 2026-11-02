@@ -12,6 +12,7 @@ import { CARATTERISTICHE } from '../dati/livelli.js'
 import { NODI, ENERGIA, aGrado } from '../dati/abilita.js'
 import { gradoDi, impara, metti, dimentica, costoDelDimenticare } from './abilita.js'
 import { VELOCITA_BASE_EROE, VELOCITA_PER_DESTREZZA } from './turni.js'
+import { rileggiTinte, tintaValida, sipuoTingere } from '../dati/tinte.js'
 
 // la forma di `cfg.avventure[eroe].roba` nel profilo: sale se un campo cambia significato (docs/core/ripresa.md)
 export const VERSIONE_ROBA = 1
@@ -74,7 +75,17 @@ export function rileggiRoba(dato) {
   }
   // in testa solo un copricapo: un dato storto torna in tasca, non si perde
   if (roba.testa && COSE[roba.testa].dove !== 'testa') { roba.zaino.push(roba.testa); roba.testa = null }
+  // le tinte del tintore (docs/sotterraneo/tintore.md): un salvataggio di prima non ha il campo, e vuol dire nessuna tinta (la `v` resta 1)
+  const tinte = tinteDeiPezzi(rileggiTinte(dato.tinte), roba)
+  if (Object.keys(tinte).length) roba.tinte = tinte
   return sistemaIGioielli(roba)
+}
+
+// le tinte dei pezzi che si hanno ancora (addosso o in tasca): un pezzo venduto o perso si porta via la sua
+const tinteDeiPezzi = (tinte, r) => {
+  const fuori = {}
+  for (const k of Object.keys(tinte)) if ([r.mano, r.mancina, r.corpo, r.testa, ...r.zaino].includes(k)) fuori[k] = tinte[k]
+  return fuori
 }
 
 // Prima c'era un posto solo, `dito`, per anelli e amuleti insieme: un gioiello nel posto sbagliato va nel suo (un amuleto al collo, un
@@ -109,7 +120,7 @@ export function schedaConLaRoba(eroe, roba = null, crescita = null) {
   if (elisir) tratti.push(elisir)
   return {
     vita: c.vitaConLaRoba, att: c.att, dif: c.dif, gemme: c.gemme, tasche: c.postiUsati(), capienza: c.capienza,
-    mano: c.mano, mancina: c.mancina, corpo: c.corpo, collo: c.collo, dito: c.dito, dito2: c.dito2, testa: c.testa, tratti, livello: c.livelloEroe, energiaMax: c.energiaMax,
+    mano: c.mano, mancina: c.mancina, corpo: c.corpo, collo: c.collo, dito: c.dito, dito2: c.dito2, testa: c.testa, tinte: c.roba.tinte || {}, tratti, livello: c.livelloEroe, energiaMax: c.energiaMax,
   }
 }
 
@@ -131,6 +142,7 @@ export class Corredo {
     this.dito = null      // gli anelli: due posti, `dito` e `dito2`
     this.dito2 = null
     this.testa = null     // il copricapo (docs/sotterraneo/elmo.md)
+    this.tinte = {}       // { [chiaveOggetto]: idTinta }: i pezzi ritinti dal tintore (dati/tinte.js), seguono il pezzo
     // i copricapi si trovano e si comprano solo dove il gioco li accende (il sotterraneo, come le botti): spenti di difetto,
     // così il banco di prova e la taratura restano quelli di prima. Quello che si ha già si porta dappertutto
     this.copricapi = false
@@ -143,11 +155,23 @@ export class Corredo {
 
   // quello che si porta su: il resto (vita, piano, mappa) è della discesa e resta giù
   get roba() {
-    return {
+    const r = {
       v: VERSIONE_ROBA, gemme: this.gemme, zaino: [...this.zaino],
       mano: this.mano, mancina: this.mancina, corpo: this.corpo, collo: this.collo, dito: this.dito, dito2: this.dito2, testa: this.testa,
       torcia: this.torciaResta, torce: this.torceInScorta,
     }
+    // il campo c'è solo se c'è una tinta: chi non ha mai visto il tintore ha la roba di sempre
+    const tinte = tinteDeiPezzi(this.tinte, r)
+    if (Object.keys(tinte).length) r.tinte = tinte
+    return r
+  }
+
+  // la tinta di un pezzo (id), o null; `tingi` la cambia (la paga il tintore, motore/tintore.js)
+  tintaDi(k) { return k ? tintaValida(this.tinte[k]) : null }
+  tingi(k, id) {
+    if (!sipuoTingere(k)) return
+    if (id == null) delete this.tinte[k]
+    else if (tintaValida(id)) this.tinte[k] = id
   }
 
   indossa(dato) {
@@ -161,6 +185,7 @@ export class Corredo {
     this.dito = r.dito
     this.dito2 = r.dito2
     this.testa = r.testa
+    this.tinte = { ...(r.tinte || {}) }
     this.torciaResta = r.torcia
     this.torceInScorta = r.torce
   }

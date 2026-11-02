@@ -28,7 +28,7 @@ const vedi = x => ({ ...props.eroe, ...VARIANTI[props.eroe.chiave][x], sprite: s
       <div class="sot-sessi">
         <button v-for="x in SESSI" :key="x" type="button" class="sot-sesso" :class="{ 'sot-scelto': x === sesso }"
                 :data-sesso="x" :aria-pressed="x === sesso" @click="$emit('scegli', x)">
-          <Armato :eroe="vedi(x)" :mano="eroe.mano" :mancina="eroe.mancina" :corpo="eroe.corpo" :testa="eroe.testa" :scala="3" />
+          <Armato :eroe="vedi(x)" :mano="eroe.mano" :mancina="eroe.mancina" :corpo="eroe.corpo" :testa="eroe.testa" :tinte="eroe.tinte" :scala="3" />
           <b>{{ VARIANTI[eroe.chiave][x].nome }}</b>
         </button>
       </div>
