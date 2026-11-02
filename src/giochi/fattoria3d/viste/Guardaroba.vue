@@ -103,7 +103,7 @@ function cambia(id) { scheda.value = id; scelto.value = '' }
       <div class="f3-gua-griglia" :key="scheda + chi">
         <button v-for="(v, i) in voci" :key="v.id" class="f3-gua-gettone" :class="{ sel: v.sel, velata: !v.libero, vendita: v.st === 'in-vendita' }" :data-capo="scheda + ':' + v.id"
                 :aria-pressed="v.addosso" :aria-label="v.nome + (v.libero ? '' : ', livello ' + v.liv)" :style="{ '--i': i, '--col': '#' + v.c.toString(16).padStart(6, '0') }" @click="tocca(v)">
-          <span class="f3-gua-campione" :class="{ vuoto: !v.c, conFoto: foto[v.foto] }"><img v-if="foto[v.foto]" :src="foto[v.foto]" alt="" draggable="false"></span>
+          <span class="f3-gua-campione" :class="{ vuoto: !v.c && !foto[v.foto], conFoto: foto[v.foto] }"><img v-if="foto[v.foto]" :src="foto[v.foto]" alt="" draggable="false"></span>
           <b>{{ v.nome }}</b>
           <small v-if="!v.libero">Livello {{ v.liv }}</small>
           <small v-else-if="v.st === 'in-vendita'" class="f3-gua-prezzo">🪙{{ v.prezzo }}</small>

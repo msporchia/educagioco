@@ -22,11 +22,11 @@ su `ASPETTO_ERO` (`dati/compagni.js`). Un profilo che non ha mai scelto parte da
 
 ## I capi
 
-Un **abito** è un oggetto semplice `{ persona, cappello, maglia, pantalone, stivali, collo, capelli, pelle }` di chiavi stringa. La `persona`
+Un **abito** è un oggetto semplice `{ persona, cappello, maglia, pantalone, stivali, collo, taglio, capelli, barba, pelle }` di chiavi stringa. La `persona`
 non si salva: in `profile.campagne.fattoria3d.cfg.abito` (accanto a `cfg.stato` e `cfg.vicini`, scritto con `ricorda`) stanno **i soli capi**
 (`capiDi`). `normalizzaAbito(salvato, persona)` accetta qualunque cosa (`null`, un abito vecchio, un capo che non esiste per lei) e torna un
 abito intero: il capo sbagliato diventa quello di serie, i capelli cercano prima lo stesso colore. Non lancia mai e non guarda il livello.
-Cambiando personaggio i capi compatibili (cappello, pantalone, stivali, collo, pelle) restano; maglia e capelli si riportano.
+Cambiando personaggio restano tutti i capi tranne la maglia (che è di una persona sola) e il pantalone (salopette/gonna: stesso colore).
 
 | categoria | scelte | di serie (lui / lei) |
 |---|---|---|
@@ -35,8 +35,10 @@ Cambiando personaggio i capi compatibili (cappello, pantalone, stivali, collo, p
 | pantalone | blu, verde, marrone, rosso, giallo: **salopette** (lui) o **gonna** (lei) | blu |
 | stivali | marroni, gialli, rossi, verdi, neri, dorati (liv 12) | marroni |
 | collo | fazzoletto rosso / blu / giallo, sciarpa, papillon (lui, liv 9), scialle (lei, liv 9), niente | fazzoletto rosso |
-| capelli | lui: corti (castani, neri, biondi, rossi); lei: trecce (castane, bionde), coda (nera, rossa), caschetto (castano, nero) | corti castani / trecce castane |
-| pelle | cinque toni, da chiara a scura (uguali per tutti) | dorata |
+| taglio | corti, lunghi, coda, trecce, caschetto, ricci, calvo (uguali per tutti, in comune col sotterraneo: `grafica/persona/aspetto.js` `TAGLI`, il disegno in `capelli3d.js`) | corti / trecce |
+| capelli | il **colore**: castani, neri, biondi, rossi, grigi, bianchi; di fantasia 🪙10: blu, verdi, rosa, azzurri, viola (`COLORI_CAPELLI`) | castani |
+| barba | nessuna, corta, folta, lunga, baffi, pizzetto (`BARBE`, per tutti e due) | nessuna |
+| pelle | cinque toni, da chiara a scura (`PELLI`, uguali per tutti) | dorata |
 
 ### Gratis, a pagamento, di festa, di livello
 
@@ -74,6 +76,10 @@ renderer della scena (`scena3d/anteprime.js`, una per fotogramma, finché non ar
 `modelli-compagni.js`: testa per cappello, capelli e pelle; busto per la maglia; dal collo in giù per il pantalone; gambe per gli stivali; busto e testa per
 il collo) e `addobbo:<id>` per le bestie. I nodi invisibili (falce, ascia, canna) si tolgono prima della foto: `Box3` li conta e allungherebbero l'inquadratura
 (vale anche per il ritratto). Il campo `emoji` dei pezzi resta nei dati ma non si mostra.
+
+**Gli abiti di prima**: i capelli erano taglio e colore insieme (`corti-rossi`, `trecce-bionde`…). `normalizzaAbito` e `armadioInForma` li leggono ancora
+(`LEGACY_CAPELLI`): `corti-rossi` → taglio `corti` + colore `rossi`. Taglio e barba li disegna `applicaAspetto` (di `capelli3d.js`, non si tocca da qui: lo usa anche il
+sotterraneo) sulla testa tonda del contadino (`R` 0,24, centro a 0,22); il «ciuffo» di prima era una calotta ad attaccatura altissima, ora il taglio copre la fronte.
 
 ## Come si aggiunge un pezzo
 

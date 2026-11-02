@@ -7,14 +7,15 @@
    Vedi docs/fattoria3d/guardaroba.md. */
 import { sullaScalaDellaDueD } from './parita2d.js'
 import { ASPETTO_ERO } from './compagni.js'
+import { PELLI, COLORI_CAPELLI, TAGLI, BARBE } from '../../../grafica/persona/aspetto.js'
 
 export const PERSONE_ABITO = ['contadino', 'contadina']
-export const CATEGORIE = ['cappello', 'maglia', 'pantalone', 'stivali', 'collo', 'capelli', 'pelle']
+export const CATEGORIE = ['cappello', 'maglia', 'pantalone', 'stivali', 'collo', 'taglio', 'capelli', 'barba', 'pelle']
 
 /** Le etichette del foglio; il pantalone cambia nome con la persona (salopette / gonna). */
 export const ETICHETTE = {
   cappello: { emoji: '👒', nome: 'Cappello' }, maglia: { emoji: '👕', nome: 'Maglia' }, pantalone: { emoji: '👖', nome: 'Salopette', nomeLei: 'Gonna' },
-  stivali: { emoji: '🥾', nome: 'Stivali' }, collo: { emoji: '🧣', nome: 'Collo' }, capelli: { emoji: '✂️', nome: 'Capelli' }, pelle: { emoji: '🖐️', nome: 'Pelle' },
+  stivali: { emoji: '🥾', nome: 'Stivali' }, collo: { emoji: '🧣', nome: 'Collo' }, taglio: { emoji: '✂️', nome: 'Taglio' }, capelli: { emoji: '🎨', nome: 'Colore' }, barba: { emoji: '🧔', nome: 'Barba' }, pelle: { emoji: '🖐️', nome: 'Pelle' },
 }
 
 // `per`: solo di una persona (senza = di tutte e due). `liv`: il livello a cui arriva (senza = subito, gratis). `prezzo`: 🪙 per averlo, una volta sola
@@ -73,33 +74,17 @@ const CAT = {
     { id: 'scialle', nome: 'Scialle', emoji: '🧵', forma: 'scialle', c: 0xb85a8a, per: 'contadina', liv: sullaScalaDellaDueD(9) },
     { id: 'niente', nome: 'Niente', emoji: '🚫', forma: 'niente', c: 0 },
   ],
-  capelli: [
-    { id: 'corti-castani', nome: 'Corti castani', stile: 'corti', colore: 'castani', c: 0x6b4423, per: 'contadino' },
-    { id: 'corti-neri', nome: 'Corti neri', stile: 'corti', colore: 'neri', c: 0x2a2220, per: 'contadino' },
-    { id: 'corti-biondi', nome: 'Corti biondi', stile: 'corti', colore: 'biondi', c: 0xd8b050, per: 'contadino' },
-    { id: 'corti-rossi', nome: 'Corti rossi', stile: 'corti', colore: 'rossi', c: 0xb8502a, per: 'contadino' },
-    { id: 'corti-blu', nome: 'Corti blu', stile: 'corti', colore: 'blu', c: 0x3d78d8, per: 'contadino', prezzo: 10 },
-    { id: 'corti-verdi', nome: 'Corti verdi', stile: 'corti', colore: 'verdi', c: 0x4aa84a, per: 'contadino', prezzo: 10 },
-    { id: 'trecce-castane', nome: 'Trecce castane', stile: 'trecce', colore: 'castani', c: 0x7a4a26, per: 'contadina' },
-    { id: 'trecce-bionde', nome: 'Trecce bionde', stile: 'trecce', colore: 'biondi', c: 0xd8b050, per: 'contadina' },
-    { id: 'coda-nera', nome: 'Coda nera', stile: 'coda', colore: 'neri', c: 0x2a2220, per: 'contadina' },
-    { id: 'coda-rossa', nome: 'Coda rossa', stile: 'coda', colore: 'rossi', c: 0xb8502a, per: 'contadina' },
-    { id: 'caschetto-castano', nome: 'Caschetto castano', stile: 'caschetto', colore: 'castani', c: 0x7a4a26, per: 'contadina' },
-    { id: 'caschetto-nero', nome: 'Caschetto nero', stile: 'caschetto', colore: 'neri', c: 0x2a2220, per: 'contadina' },
-    { id: 'trecce-rosa', nome: 'Trecce rosa', stile: 'trecce', colore: 'rosa', c: 0xe86f9a, per: 'contadina', prezzo: 10 },
-    { id: 'coda-azzurra', nome: 'Coda azzurra', stile: 'coda', colore: 'azzurri', c: 0x4aa8d8, per: 'contadina', prezzo: 10 },
-    { id: 'caschetto-viola', nome: 'Caschetto viola', stile: 'caschetto', colore: 'viola', c: 0x8a4aa8, per: 'contadina', prezzo: 10 },
-  ],
-  pelle: [
-    { id: 'chiara', nome: 'Chiara', c: 0xf8d8bc, css: '#f8d8bc' }, { id: 'dorata', nome: 'Dorata', c: 0xf5c9a2, css: '#f5c9a2' },
-    { id: 'ambra', nome: 'Ambra', c: 0xd9a272, css: '#d9a272' }, { id: 'bruna', nome: 'Bruna', c: 0xa8754a, css: '#a8754a' },
-    { id: 'scura', nome: 'Scura', c: 0x6e4630, css: '#6e4630' },
-  ],
+  // il taglio e la barba sono in comune col sotterraneo (grafica/persona/aspetto.js, il disegno in capelli3d.js); il colore dei capelli, la pelle idem.
+  // Un taglio non ha colore: `c` è 0 e il gettone è la foto. Il colore dei capelli di fantasia si paga.
+  taglio: TAGLI.map(t => ({ id: t.id, nome: t.nome, c: 0 })),
+  capelli: COLORI_CAPELLI.map(k => ({ id: k.id, nome: k.nome, c: k.c, ...(k.fantasia ? { prezzo: 10 } : {}) })),
+  barba: BARBE.map(b => ({ id: b.id, nome: b.nome, c: 0 })),
+  pelle: PELLI.map(k => ({ id: k.id, nome: k.nome, c: k.c, css: k.css })),
 }
 
 const SERIE = {
-  contadino: { cappello: 'paglia', maglia: 'quadri', pantalone: 'blu', stivali: 'marroni', collo: 'fazzoletto-rosso', capelli: 'corti-castani', pelle: 'dorata' },
-  contadina: { cappello: 'paglia', maglia: 'camicetta', pantalone: 'blu', stivali: 'marroni', collo: 'fazzoletto-rosso', capelli: 'trecce-castane', pelle: 'dorata' },
+  contadino: { cappello: 'paglia', maglia: 'quadri', pantalone: 'blu', stivali: 'marroni', collo: 'fazzoletto-rosso', taglio: 'corti', capelli: 'castani', barba: 'nessuna', pelle: 'dorata' },
+  contadina: { cappello: 'paglia', maglia: 'camicetta', pantalone: 'blu', stivali: 'marroni', collo: 'fazzoletto-rosso', taglio: 'trecce', capelli: 'castani', barba: 'nessuna', pelle: 'dorata' },
 }
 
 const NOMI = {
@@ -131,6 +116,13 @@ export const etichettaDi = (categoria, chi) => { const e = ETICHETTE[categoria];
 /** Un pezzo è libero se non ha `liv` o se il livello l'ha raggiunto. */
 export const sbloccato = (o, livello) => !o || !o.liv || (livello | 0) >= o.liv
 
+// I capelli di prima erano taglio e colore insieme (`corti-castani`, `trecce-rosa`…): un salvataggio vecchio si legge come taglio + colore.
+const LEGACY_CAPELLI = {}
+for (const [vecchio, nuovo] of Object.entries({ 'corti-castani': 'castani', 'corti-neri': 'neri', 'corti-biondi': 'biondi', 'corti-rossi': 'rossi', 'trecce-castane': 'castani', 'trecce-bionde': 'biondi',
+  'coda-nera': 'neri', 'coda-rossa': 'rossi', 'caschetto-castano': 'castani', 'caschetto-nero': 'neri', 'trecce-rosa': 'rosa', 'coda-azzurra': 'azzurri', 'caschetto-viola': 'viola',
+  'corti-blu': 'blu', 'corti-verdi': 'verdi' })) LEGACY_CAPELLI[vecchio] = [vecchio.split('-')[0], nuovo]
+const capelliVecchio = id => LEGACY_CAPELLI[id] || null
+
 // ── i pezzi a pagamento (docs/fattoria3d/guardaroba.md): si comprano una volta, restano per sempre nell'armadio ──
 export const chiaveCapo = (categoria, id) => categoria + ':' + id
 /** L'armadio letto da un salvataggio: { 'cappello:cilindro': true }. Un pezzo che non esiste o è gratis si butta. */
@@ -138,8 +130,8 @@ export function armadioInForma(letto) {
   const fuori = {}
   if (!letto || typeof letto !== 'object' || Array.isArray(letto)) return fuori
   for (const k of Object.keys(letto)) {
-    const [c, id] = k.split(':'), o = opzione(c, id)
-    if (o && o.prezzo && letto[k]) fuori[k] = true
+    const [c, idLetto] = k.split(':'), vecchio = c === 'capelli' && capelliVecchio(idLetto), id = vecchio ? vecchio[1] : idLetto, o = opzione(c, id)
+    if (o && o.prezzo && letto[k]) fuori[chiaveCapo(c, id)] = true
   }
   return fuori
 }
@@ -179,11 +171,12 @@ export function valida(abito) {
  */
 export function normalizzaAbito(salvato, chi) {
   const p = persona(chi), serie = SERIE[p], fuori = {}
-  const s = salvato && typeof salvato === 'object' ? salvato : {}
+  let s = salvato && typeof salvato === 'object' ? salvato : {}
+  const vecchio = typeof s.capelli === 'string' && capelliVecchio(s.capelli)
+  if (vecchio) s = { ...s, taglio: typeof s.taglio === 'string' ? s.taglio : vecchio[0], capelli: vecchio[1] }          // un abito di prima: i capelli erano taglio e colore insieme
   for (const c of CATEGORIE) {
     const opz = opzioniDi(c, p), id = typeof s[c] === 'string' ? s[c] : ''
-    let o = opz.find(x => x.id === id)
-    if (!o && c === 'capelli') { const vecchio = opzione('capelli', id); if (vecchio) o = opz.find(x => x.colore === vecchio.colore) }
+    const o = opz.find(x => x.id === id)
     fuori[c] = (o || opz.find(x => x.id === serie[c])).id
   }
   return { persona: p, ...fuori }
@@ -223,13 +216,12 @@ export function guastiDegliAbiti() {
       if (!o.id || !o.nome) g.push(`${c}: un pezzo senza id o nome`)
       if (visti.has(o.id)) g.push(`${c}: «${o.id}» due volte`)
       visti.add(o.id)
-      if (typeof o.c !== 'number') g.push(`${c}/${o.id}: manca il colore`)
+      if (typeof o.c !== 'number') g.push(`${c}/${o.id}: manca il colore (0 se è solo una forma)`)
       if (o.per && !PERSONE_ABITO.includes(o.per)) g.push(`${c}/${o.id}: persona «${o.per}» sconosciuta`)
       if (o.liv !== undefined && !(Number.isInteger(o.liv) && o.liv >= 2)) g.push(`${c}/${o.id}: livello ${o.liv} (da 2 in su)`)
       if (o.prezzo !== undefined && !(Number.isInteger(o.prezzo) && o.prezzo >= 6 && o.prezzo <= 30)) g.push(`${c}/${o.id}: 🪙${o.prezzo} è fuori dalla fascia di una cosetta (6–30)`)
       if (o.prezzo && o.liv) g.push(`${c}/${o.id}: o si compra o arriva col livello, non tutti e due`)
       if (o.stagione && !o.prezzo) g.push(`${c}/${o.id}: un pezzo di festa si compra`)
-      if (c === 'capelli' && !(o.stile && o.colore && o.per)) g.push(`${c}/${o.id}: servono stile, colore e persona`)
       if (c === 'pelle' && !/^#[0-9a-f]{6}$/i.test(o.css || '')) g.push(`pelle/${o.id}: manca il colore css (la faccia)`)
     }
     for (const p of PERSONE_ABITO) {

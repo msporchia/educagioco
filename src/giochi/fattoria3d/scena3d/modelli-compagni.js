@@ -9,6 +9,7 @@ import { mat } from './modelli.js'
 import { fondiPerMateriale } from './fondi.js'
 import { memoModello } from './cache-modelli.js'
 import { abitoDiSerie, normalizzaAbito, opzione, chiaveAbito } from '../dati/abiti.js'
+import { applicaAspetto } from '../../../grafica/persona/capelli3d.js'
 
 // ── il dettaglio da lontano ──
 // Ogni pezzo di pelo (cane) e di morbido (gatto) sa rifarsi con meno facce e meno ciocche (`userData.lod`, fatto la prima volta che serve):
@@ -150,14 +151,10 @@ function costruisciContadino (arg = 'contadino') {
     new THREE.MeshStandardMaterial({ map: trammaFaccia(donna, O('pelle').css), roughness: 0.9 }))
   faccia.position.set(0, 0.22, 0); faccia.scale.set(sx, sy, 1); testa.add(faccia)
   for (const s of [-1, 1]) sfera(testa, 0.045, pelle, s * 0.25, 0.2, 0, 1, 1.2, 0.8)
-  // i capelli
-  const capelli = mat(chioma.c)
-  sfera(testa, 0.215, capelli, 0, 0.27, -0.05, sx, sy * 0.95, 0.95)
-  if (chioma.stile === 'trecce') for (const s of [-1, 1]) {
-    sfera(testa, 0.06, capelli, s * 0.2, 0.1, -0.05); sfera(testa, 0.055, capelli, s * 0.21, -0.01, -0.06); sfera(testa, 0.045, nastro, s * 0.21, -0.08, -0.06)
-  } else if (chioma.stile === 'coda') {
-    sfera(testa, 0.065, capelli, 0, 0.3, -0.22); sfera(testa, 0.06, capelli, 0, 0.2, -0.29, 1, 1.5, 1); sfera(testa, 0.05, capelli, 0, 0.08, -0.3, 1, 1.5, 1); sfera(testa, 0.035, nastro, 0, 0.3, -0.2)
-  } else if (chioma.stile === 'caschetto') sfera(testa, 0.25, capelli, 0, 0.16, -0.08, 1.1, 0.85, 0.9)
+  // i capelli e la barba: il taglio e la barba sono in comune col sotterraneo (grafica/persona/capelli3d.js), montati su questa testa tonda;
+  // `nastro` resta per i nastri della paglia. Il colore dei capelli è quello dell'abito.
+  const modelloTesta = { userData: { testa, R: 0.24, cy: 0.22, capelli: perno(testa, 0, 0, 0), crini: [], barbe: [], coloreCapelli: chioma.c, sway: [] } }
+  applicaAspetto(modelloTesta, { taglio: A.taglio, barba: A.barba, colore: chioma.c })
   // il cappello
   const cm = mat(cap.c)
   if (cap.forma === 'paglia') {
@@ -778,7 +775,7 @@ export function creaCapo (categoria, id, chi) {
   const nascosti = []; g.traverse(o => { if (!o.visible) nascosti.push(o) })
   for (const o of nascosti) o.removeFromParent()                                           // falce, ascia e canna: invisibili ma allungherebbero l'inquadratura
   const fuori = new THREE.Group()
-  if (['cappello', 'capelli', 'pelle'].includes(categoria)) { fuori.add(testa); return fuori }
+  if (['cappello', 'taglio', 'capelli', 'barba', 'pelle'].includes(categoria)) { fuori.add(testa); return fuori }
   if (categoria === 'stivali') { fuori.add(...gambe); return fuori }
   if (categoria === 'collo') { for (const p of gambe) p.removeFromParent(); return g }
   testa.removeFromParent()                                                                 // maglia e pantalone: dal collo in giù

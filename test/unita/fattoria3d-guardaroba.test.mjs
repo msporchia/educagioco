@@ -27,7 +27,7 @@ for (const p of PERSONE_ABITO) {
     controlla(`${p}/${c}: da 3 a 14 scelte (${n})`, n >= 3 && n <= 14)
   }
 }
-controlla('lei ha i capelli a trecce e la fascia, lui no', opzioniDi('capelli', 'contadina').some(o => o.stile === 'trecce') && !opzioniDi('capelli', 'contadino').some(o => o.stile === 'trecce')
+controlla('taglio e barba sono uguali per tutti e due (in comune col sotterraneo); la fascia è di lei', opzioniDi('taglio', 'contadina').length === opzioniDi('taglio', 'contadino').length && opzioniDi('barba', 'contadina').length === 6
   && opzioniDi('cappello', 'contadina').some(o => o.id === 'fascia') && !opzioniDi('cappello', 'contadino').some(o => o.id === 'fascia'))
 controlla('stivali, pantaloni e pelle sono di tutti e due', ['stivali', 'pantalone', 'pelle'].every(c => opzioniDi(c, 'contadino').length === opzioniDi(c, 'contadina').length))
 
@@ -50,14 +50,16 @@ uguale('niente / un numero / null non lanciano', [personaDi(undefined), personaD
   uguale('nessun abito: quello di serie, per lui', J(normalizzaAbito(undefined, 'contadino')), J(serieLui))
   uguale('nessun abito: quello di serie, per lei', J(normalizzaAbito(null, 'contadina')), J(serieLei))
   uguale('una persona sconosciuta ripiega sul contadino', normalizzaAbito({}, 'xx').persona, 'contadino')
-  const salvato = { cappello: 'berretto', maglia: 'maglione', pantalone: 'rosso', stivali: 'verdi', collo: 'sciarpa', capelli: 'corti-rossi', pelle: 'bruna' }
+  const salvato = { cappello: 'berretto', maglia: 'maglione', pantalone: 'rosso', stivali: 'verdi', collo: 'sciarpa', taglio: 'ricci', capelli: 'rossi', barba: 'baffi', pelle: 'bruna' }
   const lui = normalizzaAbito(salvato, 'contadino')
   uguale('un abito sano resta com\'è', J(capiDi(lui)), J(salvato))
   const lei = normalizzaAbito(salvato, 'contadina')
   uguale('cambiando persona i capi compatibili restano', [lei.cappello, lei.pantalone, lei.stivali, lei.collo, lei.pelle].join(), 'berretto,rosso,verdi,sciarpa,bruna')
   uguale('…la maglia si riporta a quella di serie', lei.maglia, serieLei.maglia)
-  uguale('…i capelli cercano lo stesso colore (rossi)', opzione('capelli', lei.capelli).colore, 'rossi')
-  uguale('un colore che lei non ha ripiega su quello di serie (biondi ce li ha, ma neri→coda o caschetto)', opzione('capelli', normalizzaAbito({ capelli: 'corti-neri' }, 'contadina').capelli).colore, 'neri')
+  uguale('…taglio, colore e barba restano (sono di tutti e due)', [lei.taglio, lei.capelli, lei.barba].join(), 'ricci,rossi,baffi')
+  uguale('un abito di prima (capelli `corti-rossi`) diventa taglio corti + colore rossi', [normalizzaAbito({ capelli: 'corti-rossi' }, 'contadino').taglio, normalizzaAbito({ capelli: 'corti-rossi' }, 'contadino').capelli].join(), 'corti,rossi')
+  uguale('…anche per lei: `coda-rossa` → coda + rossi', [normalizzaAbito({ capelli: 'coda-rossa' }, 'contadina').taglio, normalizzaAbito({ capelli: 'coda-rossa' }, 'contadina').capelli].join(), 'coda,rossi')
+  uguale('taglio e barba nuovi si leggono, uno sconosciuto torna di serie', [normalizzaAbito({ taglio: 'ricci', barba: 'folta' }, 'contadino').taglio, normalizzaAbito({ taglio: 'zzz', barba: 'zzz' }, 'contadino').barba].join(), 'ricci,nessuna')
   controlla('l\'abito normalizzato è un\'altra copia', normalizzaAbito(salvato, 'contadino') !== salvato)
   uguale('capiDi non porta la persona', Object.keys(capiDi(lui)).join(), CATEGORIE.join())
   uguale('la chiave si rilegge (abitoDaChiave)', J(abitoDaChiave(chiaveAbito(lei))), J(lei))
@@ -94,16 +96,16 @@ controlla('nessun nome dice «eroe»', PERSONE_ABITO.every(p => ['nome', 'il', '
 const PERNI = ['gambe', 'busto', 'testa', 'bracci', 'falce', 'ascia']
 const abiti = [
   abitoDiSerie('contadino'), abitoDiSerie('contadina'),
-  { persona: 'contadino', cappello: 'cowboy', maglia: 'gilet', pantalone: 'verde', stivali: 'dorati', collo: 'papillon', capelli: 'corti-rossi', pelle: 'scura' },
-  { persona: 'contadina', cappello: 'fascia', maglia: 'festa', pantalone: 'rosso', stivali: 'rossi', collo: 'scialle', capelli: 'coda-rossa', pelle: 'chiara' },
-  { persona: 'contadina', cappello: 'tesa', maglia: 'grembiule', pantalone: 'giallo', stivali: 'verdi', collo: 'sciarpa', capelli: 'caschetto-nero', pelle: 'bruna' },
-  { persona: 'contadino', cappello: 'berretto', maglia: 'maglione', pantalone: 'marrone', stivali: 'neri', collo: 'niente', capelli: 'corti-biondi', pelle: 'ambra' },
-  { persona: 'contadina', cappello: 'niente', maglia: 'pois', pantalone: 'blu', stivali: 'gialli', collo: 'niente', capelli: 'trecce-bionde', pelle: 'dorata' },
-  { persona: 'contadino', cappello: 'babbo', maglia: 'natale', pantalone: 'nero', stivali: 'bianchi', collo: 'sciarpa-natale', capelli: 'corti-blu', pelle: 'chiara' },
-  { persona: 'contadina', cappello: 'strega', maglia: 'fiori', pantalone: 'viola', stivali: 'argento', collo: 'sciarpa-oro', capelli: 'coda-azzurra', pelle: 'scura' },
-  { persona: 'contadino', cappello: 'cilindro', maglia: 'tuta', pantalone: 'rosa', stivali: 'azzurri', collo: 'sciarpa-azzurra', capelli: 'corti-verdi', pelle: 'bruna' },
-  { persona: 'contadina', cappello: 'corona', maglia: 'hawaiana', pantalone: 'nero', stivali: 'dorati', collo: 'scialle', capelli: 'caschetto-viola', pelle: 'ambra' },
-  { persona: 'contadino', cappello: 'bandana', maglia: 'hawaiana', pantalone: 'blu', stivali: 'marroni', collo: 'niente', capelli: 'corti-neri', pelle: 'dorata' },
+  { persona: 'contadino', cappello: 'cowboy', maglia: 'gilet', pantalone: 'verde', stivali: 'dorati', collo: 'papillon', taglio: 'corti', capelli: 'rossi', barba: 'corta', pelle: 'scura' },
+  { persona: 'contadina', cappello: 'fascia', maglia: 'festa', pantalone: 'rosso', stivali: 'rossi', collo: 'scialle', taglio: 'coda', capelli: 'rossi', barba: 'nessuna', pelle: 'chiara' },
+  { persona: 'contadina', cappello: 'tesa', maglia: 'grembiule', pantalone: 'giallo', stivali: 'verdi', collo: 'sciarpa', taglio: 'caschetto', capelli: 'neri', barba: 'nessuna', pelle: 'bruna' },
+  { persona: 'contadino', cappello: 'berretto', maglia: 'maglione', pantalone: 'marrone', stivali: 'neri', collo: 'niente', taglio: 'corti', capelli: 'biondi', barba: 'folta', pelle: 'ambra' },
+  { persona: 'contadina', cappello: 'niente', maglia: 'pois', pantalone: 'blu', stivali: 'gialli', collo: 'niente', taglio: 'trecce', capelli: 'biondi', barba: 'nessuna', pelle: 'dorata' },
+  { persona: 'contadino', cappello: 'babbo', maglia: 'natale', pantalone: 'nero', stivali: 'bianchi', collo: 'sciarpa-natale', taglio: 'ricci', capelli: 'blu', barba: 'baffi', pelle: 'chiara' },
+  { persona: 'contadina', cappello: 'strega', maglia: 'fiori', pantalone: 'viola', stivali: 'argento', collo: 'sciarpa-oro', taglio: 'lunghi', capelli: 'azzurri', barba: 'nessuna', pelle: 'scura' },
+  { persona: 'contadino', cappello: 'cilindro', maglia: 'tuta', pantalone: 'rosa', stivali: 'azzurri', collo: 'sciarpa-azzurra', taglio: 'calvo', capelli: 'verdi', barba: 'pizzetto', pelle: 'bruna' },
+  { persona: 'contadina', cappello: 'corona', maglia: 'hawaiana', pantalone: 'nero', stivali: 'dorati', collo: 'scialle', taglio: 'caschetto', capelli: 'viola', barba: 'lunga', pelle: 'ambra' },
+  { persona: 'contadino', cappello: 'bandana', maglia: 'hawaiana', pantalone: 'blu', stivali: 'marroni', collo: 'niente', taglio: 'corti', capelli: 'neri', barba: 'nessuna', pelle: 'dorata' },
 ]
 {
   let peggiorM = 0, peggiorT = 0
@@ -157,12 +159,12 @@ const abiti = [
     const b = { monete }, f = new Fattoria3d({ borsa: { quante: () => b.monete, paga: n => { b.monete -= n; return true } }, ora: () => 1e12, rnd: () => 0.5 })
     f.s.esperienza = Math.max(f.s.esperienza, sogliaDi(liv)); return { f, b }
   }
-  { const { f, b } = motoreCon(100), r = f.compraAbito({ ...lui, cappello: 'cilindro', capelli: 'corti-blu' })
+  { const { f, b } = motoreCon(100), r = f.compraAbito({ ...lui, cappello: 'cilindro', capelli: 'blu' })
     controlla('si compra: 18 + 10 monete, due pezzi', r.ok && r.costo === 28 && b.monete === 72 && r.comprati.length === 2, J(r))
-    controlla('…stanno nell\'armadio', f.s.armadio['cappello:cilindro'] && f.s.armadio['capelli:corti-blu'])
+    controlla('…stanno nell\'armadio', f.s.armadio['cappello:cilindro'] && f.s.armadio['capelli:blu'])
     uguale('…e la seconda volta non costa', f.compraAbito({ ...lui, cappello: 'cilindro' }).costo, 0)
     uguale('…monete intatte', b.monete, 72) }
-  { const { f, b } = motoreCon(20), r = f.compraAbito({ ...lui, cappello: 'cilindro', capelli: 'corti-blu' })
+  { const { f, b } = motoreCon(20), r = f.compraAbito({ ...lui, cappello: 'cilindro', capelli: 'blu' })
     controlla('poche monete: tutto o niente', !r.ok && r.motivo === 'poche-monete' && r.costo === 28 && b.monete === 20 && !Object.keys(f.s.armadio).length, J(r)) }
   { const { f } = motoreCon(100), r = f.compraAbito({ ...lui, cappello: 'babbo' })
     controlla('un pezzo di Natale fuori stagione si rifiuta', !r.ok && r.motivo === 'fuori-stagione', J(r))
