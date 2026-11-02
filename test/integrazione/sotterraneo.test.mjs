@@ -59,7 +59,7 @@ uguale('e sopra c\'è il mondo in 3D', await page.locator('[data-mondo3d]').coun
 await page.locator('[data-azione="eroe-pagina"]').click()
 await page.waitForSelector('[data-pagina-eroe]', { timeout: 3000 })
 controlla('e la pagina dell\'eroe dice con chi si scende',
-          (await page.locator('[data-pagina-eroe] .sot-eroe-nome b').textContent()).includes('Cavaliere'))
+          /Cavaliere|Guerriera/.test(await page.locator('[data-pagina-eroe] .sot-eroe-nome b').textContent()))   // il sesso parte da quello della persona del profilo
 await page.locator('[data-pagina-eroe] [data-chiudi]').click()
 await page.waitForFunction(() => !document.querySelector('[data-pagina-eroe]'), null, { timeout: 3000 })
 

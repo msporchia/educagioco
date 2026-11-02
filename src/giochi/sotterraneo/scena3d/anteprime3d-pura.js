@@ -3,6 +3,7 @@
 // Un oggetto si disegna con la figura dei fogli (roba3d-pura.js, docs/sotterraneo/roba-3d.md); MODELLO_DI è il ripiego quando il
 // modulo della sua famiglia non c'è o la figura non si costruisce.
 import { COSE, baseDi } from '../dati/cose.js'
+import { daSprite } from '../dati/eroi.js'
 import { rangoDellaRarita, RARITA, RARITA_DA_LETTERA } from '../dati/pezzi.js'
 import { figuraDi, lookDi, famigliaDi, eUnaCollana, gettone, daGettone } from './roba3d-pura.js'
 
@@ -20,7 +21,8 @@ export const MODELLO_DI = {
 export const PER_FAMIGLIA = { spade: 'spada-corta', asce: 'accetta', archi: 'arco-corto', bacchette: 'bacchetta-legno' }
 // le armature 3D (eroi3d/armature.js `TIPI`): la base dell'oggetto del corpo ha lo stesso nome
 export const ARMATURE = ['panciotto', 'corazza', 'manto', 'saio']
-export const EROI = ['cavaliere', 'elfa', 'mago', 'nano']
+// i modelli degli eroi: i quattro di sempre e le varianti femmina/maschio (dati/eroi.js, MODELLI_EROI)
+export const EROI = ['cavaliere', 'cavaliera', 'elfa', 'elfo', 'mago', 'maga', 'nano', 'nana']
 
 const cosaDi = k => (k ? COSE[k] || null : null)
 
@@ -119,7 +121,8 @@ function corpoDaGettone(s) {
   return { tipo: p[0], pregio: Number(p[1]) || 1, figura: g ? g.figura : null, rarita: g ? g.rarita : 'comune', elemento: g ? g.elemento : 'nessuno' }
 }
 
-const eroeValido = e => (EROI.includes(e) ? e : 'cavaliere')
+// il modello con i suoi colori (`maga~ambra.rossi`, dati/eroi.js): chi non c'è è il cavaliere
+const eroeValido = e => (daSprite(e) ? daSprite(e).chiave : 'cavaliere')
 
 /**
  * La chiave dell'anteprima di una cosa (`{ chiave, dove, … }` come la danno le viste), o null se non ha un modello 3D (pozioni,
