@@ -823,10 +823,13 @@ function casellaAbilita({ i, id }) {
 const editor = ref(null)
 const apriEditor = k => { editor.value = k }
 const schedaEditor = computed(() => (editor.value ? avventure.value.find(e => e.chiave === editor.value) : null))
+// durante una discesa il cambio si vede subito: la corsa tiene la scheda dell'eroe (`io`), e la variante ha gli stessi numeri
+const aggiornaCorsaIo = () => nextTick(() => { const c = corsa.value; if (c && editor.value === eroeQui()) c.io = eroeDi(eroeQui(), sessoQui.value, aspettoQui.value) })
 function sceglieSesso(x) {
   const k = editor.value
   if (!k || !SESSI.includes(x)) return
   ritocca(CHIAVE, c => scriviNellAvventura(c, k, { sesso: x }))
+  aggiornaCorsaIo()
   suono.ok()
 }
 // pelle, colore dei capelli, taglio o barba: `id` dal catalogo in comune (src/grafica/persona/aspetto.js); lo stesso id di prima lo toglie (torna il colore di serie)
@@ -835,6 +838,7 @@ function sceglieAspetto(campo, id) {
   if (!k || !CAMPI_ASPETTO.includes(campo)) return
   const ora = avventuraDi(progresso(CHIAVE), k).aspetto
   ritocca(CHIAVE, c => scriviNellAvventura(c, k, { aspetto: aspettoValido({ ...ora, [campo]: ora[campo] === id ? null : id }) }))
+  aggiornaCorsaIo()
   suono.ok()
 }
 function cambiaEroe() {

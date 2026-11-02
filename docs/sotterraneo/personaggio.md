@@ -49,7 +49,7 @@ Il contadino della fattoria può usare lo stesso `applicaAspetto` dando le sue m
 Un foglio coi due modelli uno accanto all'altro, vestiti con la roba che l'eroe ha addosso; toccarne uno lo sceglie subito (si scrive
 `sesso` nell'avventura, nessuna conferma). Si apre:
 - dalla ✎ sulla scheda di ogni eroe nella scelta delle avventure (`[data-personaggio-di="<eroe>"]`);
-- da «✎ Aspetto» in fondo alla pagina dell'eroe, sopra, sulla riga di «Cambia eroe» (`[data-azione="personaggio"]`; una riga a sé rubava spazio alla lista delle caratteristiche);
+- da «✎ Aspetto» in fondo alla pagina dell'eroe (anche durante una discesa: la corsa aggiorna la sua scheda e il cambio si vede subito), sulla riga di «Cambia eroe» (che c'è solo sopra) (`[data-azione="personaggio"]`; una riga a sé rubava spazio alla lista delle caratteristiche);
 
 **Nessun passo in più**: scegliere un eroe non apre l'editor. Finché non si sceglie niente il sesso è quello della persona del profilo
 (`aspettoDi()`, la stessa della contadina nella fattoria: bambina → femmina, bimbo → maschio, `sessoDi` in `Gioco.vue`); l'avventura non ha il

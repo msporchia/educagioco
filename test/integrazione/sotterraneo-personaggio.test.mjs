@@ -93,6 +93,29 @@ await page.waitForSelector('[data-pagina-eroe] [data-azione="personaggio"]', { t
 await attendi(page, 800)
 await scatto(page, 'personaggio-4-pagina-eroe')
 controlla('la pagina parla della maga', (await page.locator('[data-pagina-eroe] [data-azione="personaggio"]').getAttribute('aria-label')).includes('la maga'))
+// passando da una scheda all'altra la finestra non si chiude e non si riapre: dal tocco in poi la cornice c'è a ogni fotogramma e non si
+// rianima (niente lampeggio). Si campiona nello stesso tocco, con un tocco vero: un click di Playwright arriva dopo ~2 s e non dice niente
+await attendi(page, 800)   // l'apertura della pagina dell'eroe finisce la sua animazione
+for (const [da, a] of [['eroe', 'zaino'], ['zaino', 'abilita'], ['abilita', 'eroe']]) {
+  await page.evaluate(sel => {
+    window.__vuoti = 0; window.__info = null
+    const b = document.querySelector(sel)
+    b.addEventListener('click', () => {
+      const t0 = performance.now()
+      const f = () => {
+        const c = document.querySelector('.sot-cornice'), v = document.querySelector('.sot-sipario')
+        if (!c) { window.__vuoti++; window.__info = 'senza cornice' }
+        else if (document.getAnimations().some(x => x.playState === 'running' && x.effect && x.effect.target && x.effect.target.matches('.sot-cornice, .sot-sipario') && x.effect.getComputedTiming().activeDuration > 0)) { window.__vuoti++; window.__info = 'la cornice si rianima' }
+        if (performance.now() - t0 < 800) requestAnimationFrame(f)
+      }
+      requestAnimationFrame(f)
+    }, { once: true })
+  }, `[data-scheda="${a}"]`)
+  await page.locator(`[data-scheda="${a}"]`).click()
+  await attendi(page, 1000)
+  uguale(`da ${da} a ${a}: la finestra resta aperta e ferma a ogni fotogramma (né sparisce né si rianima)`, await page.evaluate(() => window.__vuoti), 0)
+}
+await page.waitForSelector('[data-pagina-eroe] [data-azione="personaggio"]', { timeout: 3000 })
 await page.locator('[data-pagina-eroe] [data-azione="personaggio"]').click()
 await page.waitForSelector('[data-editor-personaggio]', { timeout: 3000 })
 uguale('lo stesso editor, già femmina', await page.locator('[data-editor-personaggio]').getAttribute('data-sesso-scelto'), 'f')

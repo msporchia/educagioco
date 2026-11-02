@@ -494,7 +494,9 @@
 .sot-modale .sot-domanda { max-height: none }
 @keyframes sot-appare { from { opacity: 0 } }
 @keyframes sot-cresce { from { transform: scale(.94); opacity: 0 } }
-.sot-cambio-scheda .sot-cornice, .sot-cambio-scheda .sot-sipario { animation: none }
+/* durata zero e non `animation: none`: togliendo la classe (400 ms dopo) `none` → `sot-cresce` faceva ripartire l'animazione e la finestra
+   lampeggiava (si dissolveva e riappariva); con la stessa animazione già finita non riparte niente */
+.sot-cambio-scheda .sot-cornice, .sot-cambio-scheda .sot-sipario { animation-duration: 0s }
 /* stesso pannello messo in due posti: devono leggersi uguale */
 .sot-foglio h2, .sot-centrale h2 {
   margin: 0 0 2px; font-size: 19px; display: flex; align-items: center; gap: 8px;
