@@ -18,6 +18,7 @@ const props = defineProps({
 const emit = defineEmits(['scegli', 'aspetto', 'chiudi'])
 
 const scheda = ref('sesso')
+const giro = ref(0)                               // l'eroe grande in anteprima si gira a scatti da 45° (0..7)
 // a schermo mai «sesso» (è per bambini): la prima scheda dice chi si è, coi nomi dei personaggi (Mago/Maga…); `sesso` è solo la chiave interna
 const SCHEDE = [
   { id: 'sesso', nome: 'Chi sei' }, { id: 'pelle', nome: 'Pelle', emoji: '🖐️' }, { id: 'capelli', nome: 'Colore capelli', emoji: '🎨' },
@@ -46,12 +47,12 @@ function scegli(sch, v) {
 <template>
   <Personalizza tema="sotterraneo" titolo="Come è il tuo eroe?" :schede="SCHEDE" :scheda="scheda" :voci="voci" :riga="RIGA[scheda]"
                 data-editor-personaggio :data-eroe-editor="eroe.chiave" :data-sesso-scelto="sesso"
-                @scheda="s => scheda = s" @scegli="scegli" @chiudi="$emit('chiudi')">
+                ruotabile @giro="d => giro = (giro + d + 8) % 8" @scheda="s => scheda = s" @scegli="scegli" @chiudi="$emit('chiudi')">
     <template #anteprima>
-      <Armato :eroe="grande" :mano="eroe.mano" :mancina="eroe.mancina" :corpo="eroe.corpo" :testa="eroe.testa" :scala="7" />
+      <Armato :eroe="grande" :mano="eroe.mano" :mancina="eroe.mancina" :corpo="eroe.corpo" :testa="eroe.testa" :tinte="eroe.tinte" :giro="giro" :scala="7" />
     </template>
     <template #gettone="{ voce }">
-      <span class="pz-campione foto"><Armato :eroe="vedi(voce.id)" :mano="eroe.mano" :mancina="eroe.mancina" :corpo="eroe.corpo" :testa="eroe.testa" :scala="2.2" /></span>
+      <span class="pz-campione foto"><Armato :eroe="vedi(voce.id)" :mano="eroe.mano" :mancina="eroe.mancina" :corpo="eroe.corpo" :testa="eroe.testa" :tinte="eroe.tinte" :scala="2.2" /></span>
     </template>
     <template #fondo>
       <button class="sot-grosso" data-azione="chiudi-personaggio" style="margin-top: 8px" @click="$emit('chiudi')">Fatto</button>

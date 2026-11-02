@@ -17,8 +17,21 @@ defineProps({
   // i gettoni della scheda aperta: [{ id, nome, sel?, bloccato?, nota?, prezzo?, foto?, colore?, emoji?, dati? }]
   voci: { type: Array, default: () => [] },
   riga: { type: String, default: '' },                  // la frase sotto la griglia
+  ruotabile: { type: Boolean, default: false },         // l'anteprima si gira: due frecce ai lati e il dito che scorre; chi la usa la ridisegna
 })
-defineEmits(['scheda', 'scegli', 'chiudi'])
+const emit = defineEmits(['scheda', 'scegli', 'giro', 'chiudi'])
+
+// il giro dell'anteprima: `giro` dice `-1` o `+1` a ogni scatto (la vista a passi di 45°, a cura di chi la usa). Col dito che scorre sull'anteprima
+// uno scatto ogni `PASSO` px, e un tocco senza scorrere non gira niente
+const PASSO = 40
+let da = null
+function giu(e) { da = { x: e.clientX, fatti: 0 }; e.currentTarget.setPointerCapture?.(e.pointerId) }
+function muovi(e) {
+  if (!da) return
+  const n = Math.trunc((e.clientX - da.x) / PASSO)
+  if (n !== da.fatti) { emit('giro', n > da.fatti ? -1 : 1); da.fatti = n }   // trascinare verso destra porta avanti il lato sinistro: come girare un oggetto
+}
+const su = () => { da = null }
 </script>
 
 <template>
@@ -29,8 +42,16 @@ defineEmits(['scheda', 'scegli', 'chiudi'])
         <button type="button" class="pz-x" data-chiudi aria-label="chiudi" @click="$emit('chiudi')">✕</button>
       </header>
 
-      <div class="pz-anteprima" data-pz="anteprima"><slot name="anteprima" /></div>
-      <slot name="chi" />
+      <!-- chi si è sta sopra l'anteprima, in un angolo: una riga a sé toglieva spazio alla griglia -->
+      <div class="pz-anteprima" :class="{ ruotabile }" data-pz="anteprima" @pointerdown="ruotabile && giu($event)" @pointermove="ruotabile && muovi($event)"
+           @pointerup="su" @pointercancel="su">
+        <slot name="anteprima" />
+        <div v-if="$slots.chi" class="pz-chi" data-pz="chi"><slot name="chi" /></div>
+        <template v-if="ruotabile">
+          <button type="button" class="pz-gira pz-gira-sx" data-pz="gira-sx" aria-label="gira a sinistra" @pointerdown.stop @click="$emit('giro', -1)">‹</button>
+          <button type="button" class="pz-gira pz-gira-dx" data-pz="gira-dx" aria-label="gira a destra" @pointerdown.stop @click="$emit('giro', 1)">›</button>
+        </template>
+      </div>
 
       <nav class="pz-schede" data-pz="schede">
         <button v-for="s in schede" :key="s.id" type="button" :class="{ acceso: scheda === s.id }" :data-pz-scheda="s.id" v-bind="s.dati"

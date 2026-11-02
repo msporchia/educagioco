@@ -79,7 +79,7 @@ function inPosaEroe(c, busto) {
   animaTutto(g, ISTANTE_EROE)
   for (const w of g.userData.armiAnima || []) animaTutto(w, ISTANTE)
   if (g.userData.animaArmatura) g.userData.animaArmatura(0.6)
-  g.rotation.y = GIRO
+  g.rotation.y = GIRO + (c.giro || 0) * Math.PI / 4   // `c.giro`: gli scatti da 45° dell'editor del personaggio
   if (!busto) return { obj: g, verso: [0.1, 0.16, 1] }
   // a mezzo busto: attorno alla faccia, uguale per tutti (la testa dei chibi è metà dell'eroe, e il cappello del mago o la barba del
   // nano la allungherebbero); prima il tutto, perché la faccia eredita la rotazione

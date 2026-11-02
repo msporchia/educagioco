@@ -17,8 +17,8 @@
   --pz-acceso-fondo: #ffd36a; --pz-gettone: #fffdf6; --pz-anteprima: radial-gradient(circle at 50% 40%, #fff7e4, #f0dcae);
   --pz-campione-bordo: rgba(60, 30, 10, .55); --pz-tasto: #c79a5c; --pz-x-fondo: #e0402f; --pz-x-testo: #fff;
 }
-.pz-foglio {
-  position: relative; display: flex; flex-direction: column; width: 100%; max-width: 560px; height: 100%; box-sizing: border-box;
+.pz .pz-foglio {
+  color: var(--pz-testo); position: relative; display: flex; flex-direction: column; width: 100%; max-width: 560px; height: 100%; box-sizing: border-box;
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: var(--pz-foglio); overflow: hidden;
 }
 .pz-tema-fattoria .pz-foglio { background: repeating-linear-gradient(90deg, #a77440 0 58px, #9a6a38 58px 60px), #a77440; }
@@ -27,25 +27,31 @@
 .pz-tema-fattoria .pz-testa h2 { color: #4a2c12; text-shadow: 0 1px 0 rgba(255,255,255,.4); }           /* il titolo prendeva il blu dell'app sul legno */
 .pz-x {
   flex: none; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--pz-bordo); background: var(--pz-x-fondo);
-  color: var(--pz-x-testo); font: 800 18px/1 inherit; touch-action: manipulation;
+  color: var(--pz-x-testo); font-family: inherit; font-weight: 800; font-size: 18px; line-height: 1; touch-action: manipulation;
 }
 /* l'anteprima grande: un terzo e più dello schermo, sempre in vista mentre la griglia scorre */
 .pz-anteprima {
-  flex: 0 0 clamp(170px, 34%, 320px); display: grid; place-items: center; margin: 4px 0 8px; border-radius: 18px;
+  position: relative; touch-action: pan-y; flex: 0 0 clamp(170px, 34%, 320px); display: grid; place-items: center; margin: 4px 0 8px; border-radius: 18px;
   border: 1px solid var(--pz-bordo); background: var(--pz-anteprima); overflow: hidden;
 }
-.pz-schede { flex: none; display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-.pz-schede::-webkit-scrollbar { display: none; }
+.pz-chi { position: absolute; left: 8px; bottom: 8px; max-width: calc(100% - 100px); padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: 700; line-height: 1.2;
+  background: var(--pz-gettone); border: 1px solid var(--pz-bordo); color: var(--pz-testo); pointer-events: none; }
+.pz-chi > * { margin: 0; padding: 0; background: none; border: 0; font: inherit; }
+.pz-gira { position: absolute; top: 50%; width: 44px; height: 56px; margin-top: -28px; border-radius: 14px; border: 1px solid var(--pz-bordo); background: var(--pz-tasto);
+  color: var(--pz-testo); font-family: inherit; font-weight: 800; font-size: 28px; line-height: 1; touch-action: manipulation; }
+.pz-gira-sx { left: 8px; }
+.pz-gira-dx { right: 8px; }
+.pz-schede { flex: none; display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0 8px; }
 .pz-schede button {
-  flex: none; min-height: 44px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--pz-bordo); background: var(--pz-tasto);
-  color: inherit; font: 700 14px/1 inherit; touch-action: manipulation; white-space: nowrap;
+  flex: 1 1 auto; min-height: 44px; padding: 0 12px; border-radius: 14px; border: 1px solid var(--pz-bordo); background: var(--pz-tasto);
+  color: inherit; font-family: inherit; font-weight: 700; font-size: 14px; line-height: 1; touch-action: manipulation; white-space: nowrap;
 }
 .pz-schede button.acceso { border-color: var(--pz-accento); background: var(--pz-acceso-fondo); }
 .pz .pz-corpo { display: block; flex: 1 1 0; min-height: 0; overflow-y: auto; border-radius: 14px; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 .pz .pz-griglia { width: 100%; box-sizing: border-box; display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; padding: 2px; }
 .pz-gettone {
   display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px 7px; border-radius: 16px; min-height: 84px;
-  border: 2px solid var(--pz-bordo); background: var(--pz-gettone); color: inherit; font: 700 12px/1.1 inherit; touch-action: manipulation;
+  border: 2px solid var(--pz-bordo); background: var(--pz-gettone); color: inherit; font-family: inherit; font-weight: 700; font-size: 12px; line-height: 1.1; touch-action: manipulation;
 }
 .pz-gettone b { max-width: 100%; overflow-wrap: anywhere; }
 .pz-gettone small { color: var(--pz-tenue); font-size: 11px; font-weight: 700; }
