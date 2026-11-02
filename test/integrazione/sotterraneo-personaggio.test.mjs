@@ -33,6 +33,12 @@ uguale('i due modelli ci sono', await page.locator('[data-sesso]').count(), 2)
 let prima = await leggiProfilo(page)
 controlla('aprirlo non scrive niente', !(((prima.campagne || {}).sotterraneo || {}).cfg || {}).avventure)
 
+// l'eroe grande si gira con le frecce, e la ✕ resta in alto a destra
+await page.locator('[data-pz="gira-dx"]').click()
+await attendi(page, 600)
+await scatto(page, 'personaggio-2b-girato')
+await page.locator('[data-pz="gira-sx"]').click()
+
 // 2. toccare la maga la sceglie e la scrive
 await page.locator('[data-sesso="m"]').click()
 await attendi(page, 300)

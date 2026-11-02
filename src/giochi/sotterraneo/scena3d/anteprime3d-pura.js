@@ -168,10 +168,10 @@ export function consumabile3dDi(k) {
  * L'eroe vestito: `eroe:<chi>:<destra>:<sinistra>:<corpo>:<collo>` (gettoni, `-` dove non c'è niente), e `:<copricapo>` in coda solo se ne ha
  * uno (le chiavi di chi non l'ha restano quelle di prima); `modo` 'figura' (intero) o 'busto'.
  */
-export function chiaveDellEroe(eroe, roba = {}, modo = 'figura') {
+export function chiaveDellEroe(eroe, roba = {}, modo = 'figura', giro = 0) {
   const d = dotazioneDi(roba)
   return `${modo === 'busto' ? 'busto' : 'eroe'}:${eroeValido(eroe)}:${gettone(d.destra) || '-'}:${gettone(d.sinistra) || '-'}:${gettoneCorpo(d.corpo)}:${gettone(d.collo) || '-'}` +
-    (d.testa ? `:${d.testa.id}` : '') + gettoneTinte(d.tinte)
+    (d.testa ? `:${d.testa.id}` : '') + gettoneTinte(d.tinte) + (giro > 0 && giro < 8 ? `:r${giro | 0}` : '')   // `:r<n>`: girato di n scatti da 45° (l'editor lo fa girare)
 }
 
 // le tinte nella chiave dell'eroe: `:@<destra>.<sinistra>.<corpo>.<testa>` (`-` dove non c'è), in coda e solo se ce n'è una
@@ -205,7 +205,8 @@ export function leggiChiave(k) {
     case 'eroe': case 'busto':
       return { tipo: p[0], eroe: eroeValido(p[1]), destra: daGettone(p[2]), sinistra: daGettone(p[3]), corpo: corpoDaGettone(p[4]), collo: daGettone(p[5]),
                testa: MODELLI_TESTA.has(p[6]) ? { id: p[6], rarita: 'comune' } : null,
-               ...(p.slice(6).find(x => x[0] === '@') ? { tinte: tinteDaGettone(p.slice(6).find(x => x[0] === '@')) } : {}) }
+               ...(p.slice(6).find(x => x[0] === '@') ? { tinte: tinteDaGettone(p.slice(6).find(x => x[0] === '@')) } : {}),
+               ...(p.slice(6).some(x => /^r[1-7]$/.test(x)) ? { giro: Number(p.slice(6).find(x => /^r[1-7]$/.test(x)).slice(1)) } : {}) }
     // una persona del mondo di sopra (docs/sotterraneo/persone-3d.md): la chiave del modello; una che non c'è vale null al disegno
     case 'persona': return /^[a-z]+$/.test(p[1] || '') ? { tipo: 'persona', chi: p[1] } : null
     case 'mostro':

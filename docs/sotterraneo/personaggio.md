@@ -43,6 +43,9 @@ Il contadino della fattoria può usare lo stesso `applicaAspetto` dando le sue m
 
 ## L'editor (`viste/Personaggio.vue`)
 
+**A schermo mai la parola «sesso»** (né «maschio/femmina»: è un gioco per bambini): la prima scheda si chiama «Chi sei» e i gettoni coi nomi dei personaggi
+(Mago/Maga, Elfo/Elfa, Cavaliere/Guerriera, Nano/Nana). `sesso`, `SESSI` e `m`/`f` sono chiavi interne, mai stringhe che si leggono.
+
 Un foglio coi due modelli uno accanto all'altro, vestiti con la roba che l'eroe ha addosso; toccarne uno lo sceglie subito (si scrive
 `sesso` nell'avventura, nessuna conferma). Si apre:
 - dalla ✎ sulla scheda di ogni eroe nella scelta delle avventure (`[data-personaggio-di="<eroe>"]`);

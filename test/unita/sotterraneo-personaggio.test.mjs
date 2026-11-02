@@ -9,7 +9,7 @@
 import { EROI, SESSI, VARIANTI, MODELLI_EROI, SESSO_DI_SERIE, eroeDi, sessoValido, guastiDegliEroi, daSprite, spriteConAspetto, aspettoValido } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { avventuraDi, scriviNellAvventura } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { Corredo } from '../../src/giochi/sotterraneo/motore/corredo.js'
-import { EROI as MODELLI_ANTEPRIME } from '../../src/giochi/sotterraneo/scena3d/anteprime3d-pura.js'
+import { EROI as MODELLI_ANTEPRIME, chiaveDellEroe, leggiChiave } from '../../src/giochi/sotterraneo/scena3d/anteprime3d-pura.js'
 import { creaEroe, CHIAVI, CLASSE } from '../../src/giochi/sotterraneo/scena3d/eroi3d/eroi.js'
 import { creaEroeDa } from '../../src/giochi/sotterraneo/scena3d/eroe-aspetto.js'
 import { TAGLI, BARBE } from '../../src/grafica/persona/aspetto.js'
@@ -79,4 +79,9 @@ for (const k of CHIAVI) for (const t of [null, ...TAGLI.map(x => x.id)]) for (co
   try { const g = creaEroeDa(spriteConAspetto(k, { taglio: t, barba: b, capelli: 'rossi' })); vestiEroe(g, { mano: ARMA[CLASSE[k]] }); posa(g, 3, false, null); ok = true } catch (e) { errore = e.message }
   controlla(`${k} taglio ${t} barba ${b}`, ok, errore)
 }
+// l'anteprima si gira a scatti da 45° (`:r<n>` in coda alla chiave)
+uguale('senza giro la chiave è quella di prima', chiaveDellEroe('maga', {}), 'eroe:maga:-:-:-:-')
+uguale('girata di tre scatti', chiaveDellEroe('maga', {}, 'figura', 3), 'eroe:maga:-:-:-:-:r3')
+uguale('e si rilegge', leggiChiave(chiaveDellEroe('maga', {}, 'figura', 3)).giro, 3)
+uguale('zero o fuori misura non entrano', chiaveDellEroe('maga', {}, 'figura', 9), 'eroe:maga:-:-:-:-')
 riassunto('il personaggio, maschio o femmina')
