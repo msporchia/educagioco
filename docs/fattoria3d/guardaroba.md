@@ -4,11 +4,11 @@ Il personaggio della fattoria 3D **non è un eroe**: è **il contadino** o **la 
 `dati/abiti.js`: «Torna al contadino», «Torna alla contadina»). Nel codice la variabile resta `eroe` (`eroe.js`, `mondo.eroe`): è un
 nome interno, **mai** una stringa che si legge. Vale per i testi a schermo, gli `aria-label` e i documenti.
 
-## Chi si è: il sesso viene dal profilo
+## Chi si è: viene dal profilo
 
 Il personaggio scelto dal bambino (`aspettoDi()` in `store/profile.js`, `'bambina' | 'bimbo'`) decide **contadina** o **contadino** (`personaDi(aspetto)`). Non si
-salva niente nella fattoria 3D: si rilegge a ogni apertura, quindi cambiare personaggio altrove cambia anche qui. **Il sesso è una caratteristica come le altre**: la
-prima scheda del guardaroba, «Sesso», ha due gettoni con la foto 3D della testa (Femmina, Maschio) e scrive il profilo con `scegliAspetto` (cambiarlo lì lo cambia
+salva niente nella fattoria 3D: si rilegge a ogni apertura, quindi cambiare personaggio altrove cambia anche qui. **Chi si è è una caratteristica come le altre**: la
+prima scheda del guardaroba, «Chi sei», ha due gettoni con la foto 3D del mezzobusto (Contadina, Contadino; la parola «sesso» non si usa con i bambini) e scrive il profilo con `scegliAspetto` (cambiarlo lì lo cambia
 ovunque). Niente più la coppia di figure in pixel (`SceltaAspetto`, grande e non mostrava il personaggio): resta solo nel profilo. Un valore sconosciuto ripiega
 su `ASPETTO_ERO` (`dati/compagni.js`). Un profilo che non ha mai scelto parte da `bambina` (`PERSONE[0]`), cioè dalla contadina.
 
@@ -72,7 +72,7 @@ foto per abito, rifatta a ogni scelta (non gira da sola).
 ## L'interfaccia è quella comune
 
 `viste/Guardaroba.vue` è scritto sopra `components/personalizza/Personalizza.vue` (la stessa di sotterraneo e, dopo, animali), tema `fattoria`: ✕, ritratto grande, schede che
-scorrono, griglia di gettoni, riga di aiuto. Qui restano il ritratto 3D nello slot `anteprima`, «Sei la contadina» (`chi`) e la barra d'acquisto (`fondo`). I
+scorrono, griglia di gettoni, riga di aiuto. Qui restano il ritratto 3D nello slot `anteprima`, «Sei la contadina» (`chi`) e la barra d'acquisto (`fondo`). Il ritratto **si gira** a scatti di 45° (frecce `[data-pz="gira-sx|gira-dx"]` o il dito che scorre): una foto per angolo, `contadino:<chiave>:r<n>` (`modelloContadino` ruota il modello). I
 bersagli `data-*` passano dalle `dati` delle voci. `stile-guardaroba.css` tiene solo quelle tre cose.
 
 ## Niente icone: la foto del pezzo

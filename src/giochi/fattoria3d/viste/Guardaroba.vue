@@ -22,11 +22,12 @@ const props = defineProps({
 })
 const emit = defineEmits(['indossa', 'aspetto', 'chiudi'])
 
-const scheda = ref('cappello')                   // `sesso` è una scheda come le altre: due gettoni con la foto (contadina / contadino)
+const scheda = ref('cappello')                   // `persona` («Chi sei») è una scheda come le altre: due gettoni con la foto (contadina / contadino)
 const scelto = ref('')                            // il pezzo velato toccato, per dire a che livello arriva
 const bozza = ref({ ...props.abito })           // quello che si sta provando: il ritratto lo mostra, il mondo no finché non si indossa
 watch(() => chiaveAbito(props.abito), () => { bozza.value = { ...props.abito } })
-const tipo = computed(() => 'contadino:' + chiaveAbito(bozza.value))
+const giro = ref(0)                              // l'anteprima si gira a scatti di 45° (0..7): una foto per angolo, `contadino:<chiave>:r<n>`
+const tipo = computed(() => 'contadino:' + chiaveAbito(bozza.value) + (giro.value ? ':r' + giro.value : ''))
 const ritratto = ref('')
 let ultimo = ''
 async function disegna() {
@@ -41,10 +42,10 @@ onMounted(disegna)
 
 const chi = computed(() => props.abito.persona)
 const ctx = computed(() => ({ livello: props.livello, armadio: props.armadio, stagione: props.stagione }))
-const SESSI = { contadina: { nome: 'Femmina', aspetto: 'bambina' }, contadino: { nome: 'Maschio', aspetto: 'bimbo' } }
-const sessi = computed(() => PERSONE_ABITO.map(p => ({ id: p, nome: SESSI[p].nome, st: 'libero', libero: true, c: 1, sel: chi.value === p, addosso: chi.value === p,
+const PERSONE_SCELTA = { contadina: { nome: 'Contadina', aspetto: 'bambina' }, contadino: { nome: 'Contadino', aspetto: 'bimbo' } }
+const personeScelta = computed(() => PERSONE_ABITO.map(p => ({ id: p, nome: PERSONE_SCELTA[p].nome, st: 'libero', libero: true, c: 1, sel: chi.value === p, addosso: chi.value === p,
   foto: 'capo:collo:' + abitoDiSerie(p).collo + ':' + p })))                    // il mezzobusto di serie: si riconosce chi è
-const voci = computed(() => scheda.value === 'sesso' ? sessi.value : scelteDi(scheda.value, chi.value, ctx.value).map(o => {
+const voci = computed(() => scheda.value === 'persona' ? personeScelta.value : scelteDi(scheda.value, chi.value, ctx.value).map(o => {
   const st = statoDelPezzo(scheda.value, o, ctx.value)
   return { ...o, st, foto: ['capo', scheda.value, o.id, chi.value].join(':'), libero: st !== 'bloccato', sel: bozza.value[scheda.value] === o.id, addosso: props.abito[scheda.value] === o.id }
 }))
@@ -62,7 +63,7 @@ const da = computed(() => daComprare(bozza.value, props.armadio))               
 const costo = computed(() => da.value.reduce((n, o) => n + o.prezzo, 0))
 const cambiata = computed(() => chiaveAbito(bozza.value) !== chiaveAbito(props.abito))
 const manca = computed(() => Math.max(0, costo.value - props.monete))
-const schede = computed(() => [{ id: 'sesso', nome: 'Sesso' }, ...CATEGORIE.map(c => ({ id: c, ...etichettaDi(c, chi.value) }))])
+const schede = computed(() => [{ id: 'persona', nome: 'Chi sei' }, ...CATEGORIE.map(c => ({ id: c, ...etichettaDi(c, chi.value) }))])
 const riga = computed(() => {
   const v = voci.value.find(x => x.id === scelto.value)
   if (v && !v.libero) return `${v.nome}: si sblocca al livello ${v.liv}.`
@@ -71,7 +72,7 @@ const riga = computed(() => {
   return props.messaggio || 'Tocca un pezzo per provarlo. Quelli con 🪙 si comprano una volta sola e sono tuoi per sempre.'
 })
 function tocca(v) {
-  if (scheda.value === 'sesso') { scelto.value = ''; if (!v.sel) emit('aspetto', SESSI[v.id].aspetto); return }
+  if (scheda.value === 'persona') { scelto.value = ''; if (!v.sel) emit('aspetto', PERSONE_SCELTA[v.id].aspetto); return }
   if (!v.libero) { scelto.value = v.id; return }
   scelto.value = ''
   bozza.value = { ...bozza.value, [scheda.value]: v.id }
@@ -89,8 +90,8 @@ const vociP = computed(() => voci.value.map(v => ({
 </script>
 
 <template>
-  <Personalizza tema="fattoria" titolo="Guardaroba" :schede="schedeP" :scheda="scheda" :voci="vociP" :riga="riga" data-f3="guardaroba"
-                @scheda="cambia" @scegli="(_, v) => tocca(v.voce)" @chiudi="$emit('chiudi')">
+  <Personalizza tema="fattoria" titolo="Guardaroba" :schede="schedeP" :scheda="scheda" :voci="vociP" :riga="riga" data-f3="guardaroba" ruotabile
+                @giro="d => (giro = (giro + d + 8) % 8)" @scheda="cambia" @scegli="(_, v) => tocca(v.voce)" @chiudi="$emit('chiudi')">
     <template #anteprima>
       <div class="f3-gua-ritratto" data-f3="guardaroba-ritratto">
         <img v-if="ritratto" :src="ritratto" :alt="'Ritratto ' + nomeDelContadino(abito, 'del')" draggable="false">

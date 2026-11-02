@@ -137,9 +137,12 @@ await toccaEl('[data-f3="az-libero"]')                    // col ✂️ armato i
   await attendi(page, 300)
   controlla('toccare il contadino fermo apre il guardaroba', await page.locator('[data-f3="guardaroba"]').count() === 1)
   const chi = (await page.locator('[data-f3="guardaroba-chi"]').innerText()).toLowerCase()
-  await toccaEl('[data-scheda-abito="sesso"]')
-  const lui = await page.locator('button[data-capo="sesso:contadino"][aria-pressed="true"]').count() === 1
-  controlla('«Sesso» è una scheda come le altre: due gettoni, e quello acceso è chi si è (dal profilo)', lui ? /contadino/.test(chi) : /contadina/.test(chi) && await page.locator('button[data-capo="sesso:contadina"][aria-pressed="true"]').count() === 1, chi)
+  await toccaEl('[data-scheda-abito="persona"]')
+  const lui = await page.locator('button[data-capo="persona:contadino"][aria-pressed="true"]').count() === 1
+  controlla('«Chi sei» è una scheda come le altre: due gettoni, e quello acceso è chi si è (dal profilo)', lui ? /contadino/.test(chi) : /contadina/.test(chi) && await page.locator('button[data-capo="persona:contadina"][aria-pressed="true"]').count() === 1, chi)
+  const foto0 = await page.locator('[data-f3="guardaroba-ritratto"] img').getAttribute('src')
+  await toccaEl('[data-pz="gira-dx"]'); await attendi(page, 600)
+  controlla('le frecce girano il ritratto (un\'altra foto)', await page.locator('[data-f3="guardaroba-ritratto"] img').getAttribute('src') !== foto0)
   controlla('…e non c\'è più la scelta dei personaggi in pixel', await page.locator('[data-f3="guardaroba"] [data-aspetto]').count() === 0)
   await toccaEl('[data-scheda-abito="stivali"]')
   await toccaEl('[data-f3="guardaroba"] button[data-capo="stivali:rossi"]')
