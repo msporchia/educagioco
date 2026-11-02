@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import { inquadra } from '../../fattoria3d/scena3d/anteprime-pura.js'
 import { creaCoda, leggiChiave, MISURE, RIPROVA } from './anteprime3d-pura.js'
 import { creaEroe, posaGuardia, posaMarcia } from './eroi3d/eroi.js'
+import { daSprite } from '../dati/eroi.js'
 import { equipaggia } from './eroi3d/armi.js'
 import { vesti, TIPI } from './eroi3d/armature.js'
 import { vestiDotazione } from './eroe3d.js'
@@ -71,7 +72,8 @@ function inPosaArma(pezzo, modo) {
 
 // l'eroe nella guardia di battaglia, come lo vede il giocatore, girato un poco verso chi guarda
 function inPosaEroe(c, busto) {
-  const g = creaEroe(c.eroe)
+  const sp = daSprite(c.eroe)   // il modello con i colori scelti (dati/eroi.js)
+  const g = creaEroe(sp.modello, sp.colori)
   vestiDotazione(g, c)                   // come l'eroe in scena (eroe3d.js): la chiave porta la dotazione già decisa
   posaGuardia(g, ISTANTE_EROE)
   if (MARCIA) posaMarcia(g, 1.2)
@@ -92,7 +94,8 @@ function inPosaEroe(c, busto) {
 
 // l'armatura indossata da un manichino: l'eroe che la porterebbe, senza testa e senza armi
 function inPosaArmatura(c) {
-  const g = creaEroe(c.eroe)
+  const sp = daSprite(c.eroe)
+  const g = creaEroe(sp.modello, sp.colori)
   equipaggia(g, {})
   if (!(c.corpo.figura && vestiFigura(g, c.corpo.figura)) && TIPI.includes(c.armatura)) vesti(g, c.armatura, c.pregio)
   if (g.userData.animaArmatura) g.userData.animaArmatura(0)

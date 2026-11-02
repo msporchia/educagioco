@@ -7,7 +7,8 @@ import { computed } from 'vue'
 import { COSE } from '../dati/cose.js'
 import { usaAnteprima } from './anteprima3d.js'
 import Quadro3d from './Quadro3d.vue'
-import { chiaveDellEroe, EROI } from '../scena3d/anteprime3d-pura.js'
+import { chiaveDellEroe } from '../scena3d/anteprime3d-pura.js'
+import { daSprite } from '../dati/eroi.js'
 
 const props = defineProps({
   eroe: { type: Object, required: true },        // la scheda: sprite (o chiave), em
@@ -22,7 +23,7 @@ const LARGO = 24   // il riquadro di sempre, in pixel di sprite: la figura (16) 
 const ALTO = 28
 
 const dueMani = computed(() => !!(props.mano && COSE[props.mano] && COSE[props.mano].mani === 2))
-const chi = computed(() => [props.eroe.sprite, props.eroe.chiave].find(k => EROI.includes(k)) || null)
+const chi = computed(() => [props.eroe.sprite, props.eroe.chiave].find(k => daSprite(k)) || null)
 const chiave = computed(() => (chi.value ? chiaveDellEroe(chi.value, { mano: props.mano, mancina: props.mancina, corpo: props.corpo, testa: props.testa }) : null))
 const tre = usaAnteprima(() => chiave.value)
 </script>

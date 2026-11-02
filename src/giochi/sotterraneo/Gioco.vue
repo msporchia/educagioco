@@ -25,7 +25,7 @@ import { CAMPAGNA, QUANTE_TAPPE, stelleDella, L_ABISSO, INDICE_ABISSO } from './
 import { inPaesaggio } from './dati/paesaggi.js'
 import { COSE, PERGAMENE_MASSIME, COPRICAPI, chiaveDelPezzo } from './dati/cose.js'
 import { CURIOSITA_DI } from './dati/curiosita.js'
-import { EROI, DI_PARTENZA, SESSI, eroeDi, sessoValido } from './dati/eroi.js'
+import { EROI, DI_PARTENZA, SESSI, eroeDi, sessoValido, aspettoValido } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO, POZIONI_MASSIME } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
 import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo, tascheDello, postiDello, eCura } from './motore/corredo.js'
@@ -197,13 +197,14 @@ const chiEro = ref(scelta(CHIAVE, 'eroe', null))
 const eroeQui = () => chiEro.value || DI_PARTENZA
 // chi sta scendendo (corsa.io) comanda durante una discesa; fuori comanda la scelta (chiEro), che decide chi scenderà
 const chiScende = dallaCorsa(c => c.io || null)
-const eroeScheda = computed(() => chiScende.value || eroeDi(eroeQui(), sessoQui.value))
+const eroeScheda = computed(() => chiScende.value || eroeDi(eroeQui(), sessoQui.value, aspettoQui.value))
 const scegliEroe = ref(!chiEro.value)
 
 // l'avventura aperta, riletta dal profilo a ogni scrittura; ci si scrive solo da qui
 const qui = computed(() => avventuraDi(progresso(CHIAVE), eroeQui()))
 // maschio o femmina (dati/eroi.js, docs/sotterraneo/personaggio.md): vale per l'avventura aperta
 const sessoQui = computed(() => qui.value.sesso)
+const aspettoQui = computed(() => qui.value.aspetto)   // pelle e capelli, o niente (docs/sotterraneo/personaggio.md)
 const nellAvventura = (campi, opz) => ritocca(CHIAVE, c => scriviNellAvventura(c, eroeQui(), campi), opz)
 // La terra dove si è (motore/terre.js, docs/sotterraneo/terre-successive.md) e il suo mondo: `mondo` la prima, `mondi[t]` le
 // dopo. Tutto quello che legge o scrive il mondo di sopra passa da qui
@@ -232,7 +233,7 @@ const avventure = computed(() => EROI.map(e => {
   const n = schedaConLaRoba(e.chiave, r, a.crescita)
   const meta = dice(a.sosta, CAMPAGNA)
   return {
-    ...eroeDi(e.chiave, a.sesso), sesso: sessoValido(e.chiave, a.sesso), nuova: !cominciata(a), livello: n.livello,
+    ...eroeDi(e.chiave, a.sesso, a.aspetto), sesso: sessoValido(e.chiave, a.sesso), aspettoScelto: a.aspetto, nuova: !cominciata(a), livello: n.livello,
     vita: n.vita, att: n.att, dif: n.dif, tratti: n.tratti,
     mano: n.mano, mancina: n.mancina, corpo: n.corpo, testa: n.testa,
     discese: Math.min(a.tappa, QUANTE_TAPPE), quante: QUANTE_TAPPE,
@@ -720,7 +721,7 @@ function apriPaginaEroe(faccia = 'eroe') {
   suono.ok()
 }
 // il Corredo da guardare: la corsa giù, la roba dell'avventura sopra
-const chiGuardo = () => corsa.value || new Corredo({ eroe: eroeQui(), sesso: sessoQui.value, roba: roba.value, crescita: crescita.value })
+const chiGuardo = () => corsa.value || new Corredo({ eroe: eroeQui(), sesso: sessoQui.value, aspetto: aspettoQui.value, roba: roba.value, crescita: crescita.value })
 const pagina = computed(() => {
   tic.value
   if (!paginaEroe.value) return null
@@ -799,6 +800,14 @@ function sceglieSesso(x) {
   const k = editor.value
   if (!k || !SESSI.includes(x)) return
   ritocca(CHIAVE, c => scriviNellAvventura(c, k, { sesso: x }))
+  suono.ok()
+}
+// pelle o capelli: `id` dal catalogo in comune (src/grafica/persona/aspetto.js); lo stesso id di prima lo toglie (torna il colore di serie)
+function sceglieAspetto(campo, id) {
+  const k = editor.value
+  if (!k || !['pelle', 'capelli'].includes(campo)) return
+  const ora = avventuraDi(progresso(CHIAVE), k).aspetto
+  ritocca(CHIAVE, c => scriviNellAvventura(c, k, { aspetto: aspettoValido({ ...ora, [campo]: ora[campo] === id ? null : id }) }))
   suono.ok()
 }
 function cambiaEroe() {
@@ -1449,12 +1458,12 @@ function avvia(i, { prova = false } = {}) {
 // la discesa `i` com'è adesso: finita la storia la zona con la sua fascia, prima quella della storia; il dungeon del mondo, col
 // suo seme fisso finché non lo si ripulisce (motore/rigenera.js). Anche per scaldarla prima di scendere (scaldaDiscesa)
 // quello da cui nuovaCorsa dipende: uguale, la corsa fatta prima è la stessa
-const firmaCorsa = i => { try { return JSON.stringify([i, eroeQui(), sessoQui.value, roba.value, crescita.value, missioni.value, qui.value.conti, semeDallIndirizzo()]) } catch (e) { return String(Math.random()) } }
+const firmaCorsa = i => { try { return JSON.stringify([i, eroeQui(), sessoQui.value, aspettoQui.value, roba.value, crescita.value, missioni.value, qui.value.conti, semeDallIndirizzo()]) } catch (e) { return String(Math.random()) } }
 function nuovaCorsa(i, prova = false) {
   let t = i === INDICE_ABISSO ? L_ABISSO : nelMondo(i).tappa
   // `#scenario=ghiaccio` (solo col cheat che scende): la discesa vestita da quel paesaggio (dati/paesaggi.js), per guardarlo
   if (prova) t = inPaesaggio(t, new URLSearchParams(location.hash.slice(1)).get('scenario'))
-  const c = new Corsa(t, { seme: semeDallIndirizzo() ?? t.seme ?? null, eroe: eroeQui(), sesso: sessoQui.value, roba: roba.value,
+  const c = new Corsa(t, { seme: semeDallIndirizzo() ?? t.seme ?? null, eroe: eroeQui(), sesso: sessoQui.value, aspetto: aspettoQui.value, roba: roba.value,
                            crescita: crescita.value, missioni: presePer(missioni.value, t.chiave), conti: qui.value.conti })
   c.botti = true   // le botti da rompere (motore/botti.js), spente di difetto nel motore e nel banco
   c.copricapi = true   // e i copricapi nel bottino (docs/sotterraneo/elmo.md)
@@ -2332,8 +2341,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
                   @compra="compraSopra" @vendi="vendiSopra" @riacquista="riacquistaSopra" @chiudi="chiudiBottega" @fuori="fuoriDallaBottega" />
         <Eroi v-if="scegliEroe" :avventure="avventure" :scelto="chiEro || ''" :primo="!chiEro"
               @scegli="scegli" @chiudi="chiudiLaScelta" @personaggio="k => apriEditor(k)" />
-        <Personaggio v-if="schedaEditor" :eroe="schedaEditor" :sesso="schedaEditor.sesso" :nuovo="editorNuovo"
-                     @scegli="sceglieSesso" @chiudi="editor = null" />
+        <Personaggio v-if="schedaEditor" :eroe="schedaEditor" :sesso="schedaEditor.sesso" :aspetto="schedaEditor.aspettoScelto" :nuovo="editorNuovo"
+                     @scegli="sceglieSesso" @aspetto="sceglieAspetto" @chiudi="editor = null" />
         <div v-if="salaAperta" class="sot-in-due" data-sot-in-due>
           <SalaSfida :fase="sfida.fase.value" :codice="sfida.codice.value" :messaggio="sfida.messaggio.value"
                      :amici="sfida.amici.value" :invitato="sfida.invitato.value" :scelto="sfida.scelto.value" partita="la discesa" domanda="Dove scendete?"

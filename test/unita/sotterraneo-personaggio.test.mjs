@@ -6,7 +6,7 @@
    coerenti, ogni modello si costruisce e si veste con le armi della sua
    classe, e il sesso scritto resta nel salvataggio.
    ═══════════════════════════════════════════════════════════════════ */
-import { EROI, SESSI, VARIANTI, MODELLI_EROI, SESSO_DI_SERIE, eroeDi, sessoValido, guastiDegliEroi } from '../../src/giochi/sotterraneo/dati/eroi.js'
+import { EROI, SESSI, VARIANTI, MODELLI_EROI, SESSO_DI_SERIE, eroeDi, sessoValido, guastiDegliEroi, daSprite, spriteConAspetto, aspettoValido } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { avventuraDi, scriviNellAvventura } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { Corredo } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { EROI as MODELLI_ANTEPRIME } from '../../src/giochi/sotterraneo/scena3d/anteprime3d-pura.js'
@@ -48,5 +48,22 @@ for (const k of CHIAVI) {
   try { g = creaEroe(k); vestiEroe(g, { mano: ARMA[CLASSE[k]] }); for (const t of [0, 3, 9.5, 40]) posa(g, t, t > 5, t > 30 ? 0.5 : null) } catch (e) { errore = e.message }
   controlla(`${k}: si costruisce, si veste e si muove`, !!g && !errore, errore)
   controlla(`${k}: ha la sua classe`, g && g.userData.classe === CLASSE[k])
+}
+
+// pelle e capelli: viaggiano nella chiave del modello (`maga~ambra.rossi`)
+uguale('senza colori la chiave è quella di prima', spriteConAspetto('maga', {}), 'maga')
+uguale('con i colori', spriteConAspetto('maga', { pelle: 'ambra', capelli: 'rossi' }), 'maga~ambra.rossi')
+uguale('un solo campo', spriteConAspetto('elfo', { capelli: 'blu' }), 'elfo~-.blu')
+uguale('un id che non c\'è si butta', spriteConAspetto('elfo', { pelle: 'zzz', capelli: 'blu' }), 'elfo~-.blu')
+const ap = daSprite('nana~scura.verdi')
+controlla('si riapre in modello e colori', ap.modello === 'nana' && ap.colori.pelle === 0x6e4630 && ap.colori.capelli === 0x4aa84a)
+uguale('un modello che non c\'è non si apre', daSprite('drago~scura.verdi'), null)
+uguale('la scheda col sesso e i colori', eroeDi('mago', 'f', { pelle: 'chiara', capelli: 'neri' }).sprite, 'maga~chiara.neri')
+uguale('i numeri restano quelli', eroeDi('mago', 'f', { pelle: 'chiara' }).att, eroeDi('mago').att)
+uguale('l\'avventura rilegge un aspetto storto', avventuraDi({ cfg: { avventure: { mago: { aspetto: { pelle: 'x', capelli: 'rossi' } } } } }, 'mago').aspetto.pelle, null)
+for (const k of CHIAVI) for (const a of [{ pelle: 0x6e4630 }, { capelli: 0x3d78d8 }, { pelle: 0xf8d8bc, capelli: 0x2a2220 }]) {
+  let ok = false, errore = ''
+  try { const g = creaEroe(k, a); vestiEroe(g, { mano: ARMA[CLASSE[k]] }); posa(g, 3, false, null); ok = true } catch (e) { errore = e.message }
+  controlla(`${k} con ${JSON.stringify(a)}: si costruisce`, ok, errore)
 }
 riassunto('il personaggio, maschio o femmina')

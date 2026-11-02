@@ -1107,6 +1107,10 @@
 }
 .sot-sesso.sot-scelto { border-color: var(--sot-oro); background: #ffd23f14 }
 .sot-sesso b { font-size: 15px }
+.sot-tinte { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 10px }
+.sot-tinte small { flex: 0 0 100%; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--sot-tenue) }
+.sot-tinta { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--sot-bordo) }
+.sot-tinta.sot-scelto { border-color: var(--sot-oro); box-shadow: 0 0 0 2px #ffd23f55 }
 .sot-eroe-riga { position: relative }
 .sot-eroe-riga > .sot-ritocca {
   position: absolute; top: 6px; right: 6px; width: 40px; height: 40px; display: grid; place-items: center;
