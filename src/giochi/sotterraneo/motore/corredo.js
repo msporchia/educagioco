@@ -116,10 +116,10 @@ export function schedaConLaRoba(eroe, roba = null, crescita = null) {
 const virgola = n => String(Math.round(n * 10) / 10).replace('.', ',')
 
 export class Corredo {
-  constructor({ eroe = DI_PARTENZA, roba = null, crescita = null } = {}) {
+  constructor({ eroe = DI_PARTENZA, roba = null, crescita = null, sesso = null, aspetto = null } = {}) {
     // la scheda dice braccio e difesa di partenza; il resto non sa che esistano quattro eroi
     this.chiEro = eroe
-    this.io = eroeDi(eroe)
+    this.io = eroeDi(eroe, sesso, aspetto)   // col sesso scelto cambiano il modello e il nome, mai i numeri (docs/sotterraneo/personaggio.md)
     // l'esperienza e i punti dati (motore/crescita.js): stanno nell'avventura come la roba, e salgono con lei
     this.crescita = rileggiCrescita(crescita, this.io.chiave)
     this.gemme = 0

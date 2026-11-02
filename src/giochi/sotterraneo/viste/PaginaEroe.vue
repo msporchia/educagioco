@@ -32,7 +32,7 @@ const props = defineProps({
   costoRiassegnare: { type: Number, default: 0 },   // i punti dati tornano da dare, e si paga in gemme
   torcia: { type: Object, default: null },       // le torce (`torceDi` in Gioco.vue): quella accesa e quelle alla cintura
 })
-const emit = defineEmits(['dai', 'tesori', 'cambia', 'chiudi', 'fuori', 'scheda', 'riassegna'])
+const emit = defineEmits(['dai', 'tesori', 'cambia', 'chiudi', 'fuori', 'scheda', 'riassegna', 'personaggio'])
 // riassegnare costa gemme: il primo tocco chiede, il secondo fa
 const sicuro = ref(false)
 function riassegna() {
@@ -110,6 +110,9 @@ const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: 
       <span class="em">🏆</span> Tesori <small>{{ tesori.trovati }} / {{ tesori.tutti }}</small>
     </button>
 
+    <button v-if="cambia" type="button" class="sot-eroe-cambia" data-azione="personaggio" @click="$emit('personaggio')">
+      ✎ Come è {{ eroe.chi }}
+    </button>
     <!-- le quattro avventure: la scelta è un altro foglio, e questa avventura resta com'è -->
     <button v-if="cambia" type="button" class="sot-eroe-cambia" data-azione="eroe" @click="$emit('cambia')">
       Cambia eroe

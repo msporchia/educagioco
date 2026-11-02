@@ -81,6 +81,8 @@ async function apriLaScelta() {
 }
 async function scegliCol(eroe) {
   await toccaIl(`.sot-eroe[data-eroe="${eroe}"]`)
+  // un eroe mai giocato (il mago) apre prima l'editor del personaggio: «Si parte» lo chiude
+  if (await page.waitForSelector('[data-editor-personaggio]', { timeout: 1000 }).then(() => true, () => false)) await toccaIl('[data-azione="chiudi-personaggio"]')
   await page.waitForSelector('.sot-eroe[data-eroe]', { state: 'detached', timeout: 3000 })
   await mondoPronto(page)
   await attendi(page, 400)

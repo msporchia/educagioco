@@ -58,8 +58,8 @@ const RINCARO = { porta: -0.05, forziere: 0.25, fonte: 0, mostro: 0.05, capo: 0.
 export class Corsa extends Corredo {
   // `missioni`: quelle prese che riguardano questa discesa (motore/missioni.js, presePer)
   // `crescita`: l'esperienza e i punti dell'avventura (motore/crescita.js): l'eroe sale di livello anche giù
-  constructor(tappa, { seme = null, rnd = Math.random, eroe = DI_PARTENZA, roba = null, missioni = [], crescita = null, ricomparsa = true, botti = false, copricapi = false, conti = {} } = {}) {
-    super({ eroe, roba, crescita })
+  constructor(tappa, { seme = null, rnd = Math.random, eroe = DI_PARTENZA, sesso = null, aspetto = null, roba = null, missioni = [], crescita = null, ricomparsa = true, botti = false, copricapi = false, conti = {} } = {}) {
+    super({ eroe, roba, crescita, sesso, aspetto })
     // la pergamena del portale si trova (rara) solo dopo la missione dell'incantatrice: lo dice chi gioca (Gioco.vue)
     this.pergameneTrovabili = false
     this.ricomparsa = ricomparsa   // i mostri morti tornano (motore/ricomparsa.js); il banco la spegne: misura un passaggio solo
