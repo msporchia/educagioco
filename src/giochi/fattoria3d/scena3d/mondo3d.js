@@ -125,7 +125,8 @@ export class Mondo3d {
   }
   /** Il ritratto del guardaroba: `contadino:<chiave dell'abito>` (dati/abiti.js, `chiaveAbito`), fotografato come un pezzo. */
   modelloContadino(chiave) {
-    const g = creaContadino(abitoDaChiave(chiave)), nascosti = []
+    const [abito, r] = chiave.split(':r'), g = creaContadino(abitoDaChiave(abito)), nascosti = []
+    g.rotation.y = (+r || 0) * Math.PI / 4                                                  // il giro del ritratto: scatti di 45°
     g.traverse(o => { if (!o.visible) nascosti.push(o) })
     for (const o of nascosti) o.removeFromParent()                                          // falce, ascia e canna: invisibili ma allungano l'inquadratura
     return g

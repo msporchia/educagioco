@@ -26,7 +26,8 @@ const scheda = ref('cappello')                   // `persona` («Chi sei») è u
 const scelto = ref('')                            // il pezzo velato toccato, per dire a che livello arriva
 const bozza = ref({ ...props.abito })           // quello che si sta provando: il ritratto lo mostra, il mondo no finché non si indossa
 watch(() => chiaveAbito(props.abito), () => { bozza.value = { ...props.abito } })
-const tipo = computed(() => 'contadino:' + chiaveAbito(bozza.value))
+const giro = ref(0)                              // l'anteprima si gira a scatti di 45° (0..7): una foto per angolo, `contadino:<chiave>:r<n>`
+const tipo = computed(() => 'contadino:' + chiaveAbito(bozza.value) + (giro.value ? ':r' + giro.value : ''))
 const ritratto = ref('')
 let ultimo = ''
 async function disegna() {
@@ -89,8 +90,8 @@ const vociP = computed(() => voci.value.map(v => ({
 </script>
 
 <template>
-  <Personalizza tema="fattoria" titolo="Guardaroba" :schede="schedeP" :scheda="scheda" :voci="vociP" :riga="riga" data-f3="guardaroba"
-                @scheda="cambia" @scegli="(_, v) => tocca(v.voce)" @chiudi="$emit('chiudi')">
+  <Personalizza tema="fattoria" titolo="Guardaroba" :schede="schedeP" :scheda="scheda" :voci="vociP" :riga="riga" data-f3="guardaroba" ruotabile
+                @giro="d => (giro = (giro + d + 8) % 8)" @scheda="cambia" @scegli="(_, v) => tocca(v.voce)" @chiudi="$emit('chiudi')">
     <template #anteprima>
       <div class="f3-gua-ritratto" data-f3="guardaroba-ritratto">
         <img v-if="ritratto" :src="ritratto" :alt="'Ritratto ' + nomeDelContadino(abito, 'del')" draggable="false">

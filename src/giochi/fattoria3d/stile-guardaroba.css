@@ -2,7 +2,7 @@
    il ritratto grande nell'anteprima, «Sei la contadina» e la barra dell'acquisto. Prefisso .f3-gua. */
 .f3-gua-ritratto { width: 100%; height: 100%; display: grid; place-items: center; }
 .f3-gua-ritratto img { height: 100%; max-width: 100%; object-fit: contain; pointer-events: none; animation: f3-compari .25s both; }
-.f3-gua-nome { margin: 0 0 8px; padding: 6px 12px; align-self: flex-start; border-radius: 12px; background: #fff7e4; border: 3px solid #6b4423; font-weight: 800; font-size: 15px; color: #3a2a1a; }
+.f3-gua-nome { margin: 0; font-weight: 800; font-size: 13px; color: #3a2a1a; }          /* l'etichetta «Sei la contadina» sta dentro l'anteprima: la cornice la fa il componente */
 .f3-gua-compra { flex: none; display: flex; gap: 8px; margin: 8px 0 0; }
 .f3-gua-compra button { min-height: 48px; border-radius: 14px; border: 2px solid #6b4423; font: 800 15px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; }
 .f3-gua-acquista { flex: 1 1 auto; background: #5fb04a; color: #fff; box-shadow: 0 3px 0 #356a28; }

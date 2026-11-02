@@ -72,7 +72,7 @@ foto per abito, rifatta a ogni scelta (non gira da sola).
 ## L'interfaccia è quella comune
 
 `viste/Guardaroba.vue` è scritto sopra `components/personalizza/Personalizza.vue` (la stessa di sotterraneo e, dopo, animali), tema `fattoria`: ✕, ritratto grande, schede che
-scorrono, griglia di gettoni, riga di aiuto. Qui restano il ritratto 3D nello slot `anteprima`, «Sei la contadina» (`chi`) e la barra d'acquisto (`fondo`). I
+scorrono, griglia di gettoni, riga di aiuto. Qui restano il ritratto 3D nello slot `anteprima`, «Sei la contadina» (`chi`) e la barra d'acquisto (`fondo`). Il ritratto **si gira** a scatti di 45° (frecce `[data-pz="gira-sx|gira-dx"]` o il dito che scorre): una foto per angolo, `contadino:<chiave>:r<n>` (`modelloContadino` ruota il modello). I
 bersagli `data-*` passano dalle `dati` delle voci. `stile-guardaroba.css` tiene solo quelle tre cose.
 
 ## Niente icone: la foto del pezzo
