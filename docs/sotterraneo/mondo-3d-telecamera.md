@@ -35,7 +35,7 @@ speciale nel villaggio.
 ## I numeri dello zoom
 
 A zoom 1 la telecamera vede quello che vedeva prima fuori dal villaggio (almeno 15 celle in largo e 18 in profondo; sullo schermo
-largo al più 24 in larghezza di base, `VISTA.tetto`, prima 30). Il **più vicino** è 0,8 (un telefono in piedi vede ~12 celle),
+largo al più 24 in larghezza di base, `VISTA.tetto`, prima 30). Il **più vicino** è 0,4 (un telefono in piedi vede ~6 celle: l'eroe e le persone grandi come nella fattoria; era 0,8, ~12 celle, finché l'utente il 2 novembre non ha chiesto di poter stare «ancora più vicino, come la fattoria»),
 il **più lontano** mostra al più 28 celle in largo (`VISTA.piuLarga`, ~1,7 su un telefono in piedi; su uno schermo largo, che parte
 già a ~25, poco più di 1). Più largo di così c'è la veduta d'insieme, la casella «mappa» della barra. I limiti si ricalcolano se lo
 schermo gira.
