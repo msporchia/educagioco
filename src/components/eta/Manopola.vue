@@ -28,7 +28,6 @@ const props = defineProps({
   giochi: { type: Object, default: () => ({}) },
   sa: { type: Object, default: () => ({}) },
   ritocchi: { type: Object, default: () => ({}) }, // non visibili nel quadro, ma si perdono cambiando fascia
-  sperimentali: { type: Boolean, default: false },
   // false = primo avvio (tacca del padre, conferma con «Si gioca!»); true = bozza + «Applica» (schermata dei grandi)
   conferma: { type: Boolean, default: false },
   // la prima tacca nasce in fondo (4), non in mezzo: chi aggiunge un bambino aggiunge quasi sempre il più piccolo
@@ -68,7 +67,7 @@ const eccezioni = computed(() => props.conferma && cambiata.value
 
 const quadro = computed(() => anniVisti.value == null ? null : quadroDi(
   { eta: anniVisti.value, giochi: eccezioni.value.giochi, sa: eccezioni.value.sa,
-    sperimentali: props.sperimentali, ritocchi: eccezioni.value.ritocchi },
+    ritocchi: eccezioni.value.ritocchi },
   { classi }))
 
 // la chiave porta anche il blocco: lo stesso pezzo di scuola sta in due blocchi, e senza si aprivano due tacche insieme

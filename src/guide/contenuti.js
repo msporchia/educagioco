@@ -8,19 +8,19 @@ import { GIOCHI as INVITI } from '../amici/giochi.js'
 import { inFila } from '../amici/testi.js'
 
 // composto da data/giochi.js, non scritto a mano: un elenco a mano direbbe
-// il falso il giorno che si aggiunge un gioco. Gli sperimentali restano fuori.
+// il falso il giorno che si aggiunge un gioco. I giochi in prova (con `nota`) restano fuori.
 const perArea = () => AREE.map(a => ({
   titolo: a.emoji + ' ' + a.nome,
-  righe: GIOCHI.filter(g => g.area === a.chiave && !g.sperimentale)
+  righe: GIOCHI.filter(g => g.area === a.chiave && !g.nota)
     .map(g => '**' + g.ico + ' ' + g.nome + '** — ' + g.che
       + (MODI[g.come] ? ' · ' + MODI[g.come].emoji + ' ' + MODI[g.come].nome : '')),
 })).filter(b => b.righe.length)
 
-const quanti = GIOCHI.filter(g => !g.sperimentale).length
+const quanti = GIOCHI.filter(g => !g.nota).length
 
 // anche questi composti: i giochi dove ci si invita (amici/giochi.js) e quelli che mostrano gli amici (`amici` nella dichiarazione)
 const siInvita = inFila(Object.values(INVITI).map(g => '**' + g.nome + '**'))
-const mostranoAmici = inFila(GIOCHI.filter(g => g.amici && !g.sperimentale).map(g => g.ico + ' ' + g.nome))
+const mostranoAmici = inFila(GIOCHI.filter(g => g.amici && !g.nota).map(g => g.ico + ' ' + g.nome))
 
 export const GUIDE = [
   {

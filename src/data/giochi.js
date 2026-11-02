@@ -1,5 +1,5 @@
 /* Una carta della home per riga, con la stessa chiave di App.vue. I flag del
-   manifesto (piccoli/grandi/posto/cresce, serve/chiede, sperimentale, quiz)
+   manifesto (piccoli/grandi/posto/cresce, serve/chiede, spentoDiBase/nota, quiz)
    sono spiegati in docs/apprendimento/eta-e-portata.md e saperi.md; i giochi
    in prova in docs/genitori/interruttori.md; senzaFine in
    docs/core/primati.md. L'albo dei progressi resta fuori di proposito. */
@@ -15,7 +15,7 @@ function riga(g) {
            area: g.area, come: g.come, piccoli: !!g.piccoli,
            cresce: !!g.cresce, grandi: !!g.grandi, posto: !!g.posto, quiz: !!g.quiz,
            copertina: g.copertina,
-           sperimentale: !!g.sperimentale, spentoDiBase: !!g.spentoDiBase, serve: g.serve || [],
+           spentoDiBase: !!g.spentoDiBase, nota: g.nota || null, serve: g.serve || [],
            chiede: g.chiede || [],
            senzaFine: g.senzaFine || null,
            amici: g.amici || null }
@@ -64,7 +64,7 @@ export const GIOCHI = [
 ]
 
 export const CHIAVI_GIOCHI = GIOCHI.map(g => g.chiave)
-export const eSperimentale = chiave => GIOCHI.some(g => g.chiave === chiave && g.sperimentale)
-export const CHIAVI_SPERIMENTALI = GIOCHI.filter(g => g.sperimentale).map(g => g.chiave)
+// un gioco con `nota` è ancora a metà: spento di base, fuori dalle guide e dalle novità (docs/genitori/interruttori.md)
+export const eInProva = chiave => GIOCHI.some(g => g.chiave === chiave && g.nota)
 export const serveA = chiave => GIOCHI.find(g => g.chiave === chiave)?.serve || []
 export const chiedeA = chiave => GIOCHI.find(g => g.chiave === chiave)?.chiede || [] // il gemello più debole di serveA

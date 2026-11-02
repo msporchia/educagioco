@@ -6,7 +6,7 @@ import { scordaSessioni } from './sessioni.js'
 import { scordaIstantanee } from './istantanee.js'
 import { newItem, record as srsRecord, isMastered, strength } from './srs.js'
 import { acceso as suonoAcceso } from '../audio.js'
-import { CHIAVI_GIOCHI, eSperimentale, serveA } from '../data/giochi.js'
+import { CHIAVI_GIOCHI, serveA } from '../data/giochi.js'
 import { SAPERI } from '../data/saperi.js'
 import { nascitaValida, etaDiClasse, etaVoluta } from '../data/nascita.js'
 import { CAMPAGNE as GIORNATE_BANCARELLA } from '../data/bancarella.js'
@@ -486,14 +486,7 @@ function migraSaperi(s) {
   }
 }
 
-export const sperimentaliAccesi = () => state.profile.settings.sperimentali === true
-export function accendiSperimentali(si) {
-  state.profile.settings.sperimentali = !!si
-  persist()
-}
-
 export const giocoAcceso = chiave =>
-  (!eSperimentale(chiave) || sperimentaliAccesi()) &&
   giocoGiocabile(chiave) &&
   (state.profile.settings.giochi || {})[chiave] !== false
 

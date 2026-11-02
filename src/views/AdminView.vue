@@ -5,7 +5,7 @@
 import { computed, ref } from 'vue'
 import Barra from '../components/Barra.vue'
 import { state, selectPlayer, creaGiocatore, nomeCorrente, etaDelBambino,
-         sperimentaliAccesi, accendiSperimentali, tuttoAperto, accendiTuttoAperto }
+         tuttoAperto, accendiTuttoAperto }
   from '../store/profile.js'
 import { azzeraPin } from '../store/pin.js'
 import { saltoAcceso, accendiSalto } from '../store/salto.js'
@@ -19,7 +19,6 @@ const emit = defineEmits(['vai'])
 const VERSIONE = typeof __VERSIONE__ !== 'undefined' ? __VERSIONE__ : { etichetta: 'sviluppo', commit: '' }
 const chi = computed(() => nomeCorrente())
 const eta = computed(() => etaDelBambino())
-const prova = computed(() => sperimentaliAccesi())
 const aperto = computed(() => tuttoAperto())
 const esito = ref('')
 
@@ -144,15 +143,13 @@ const A_MANO = [
         <h2>🎮 Apri un gioco</h2>
         <div class="tasti">
           <button v-for="g in GIOCHI" :key="g.chiave" :data-apri="g.chiave"
-                  @click="$emit('vai', g.chiave)">{{ g.ico }} {{ g.nome }}{{ g.sperimentale ? ' 🧪' : '' }}</button>
+                  @click="$emit('vai', g.chiave)">{{ g.ico }} {{ g.nome }}{{ g.nota ? ' 🧪' : '' }}</button>
         </div>
         <p class="nota">Si apre anche quello che in home non c'è; 🧪 è un gioco in prova.</p>
       </section>
 
       <section class="gruppo">
         <h2>🔧 Interruttori di {{ chi }}</h2>
-        <button :class="['leva', { acceso: prova }]" data-azione="sperimentali"
-                @click="accendiSperimentali(!prova)"><span>🧪 I giochi in prova in home</span><i></i></button>
         <button :class="['leva', { acceso: aperto }]" data-azione="tutto-aperto"
                 @click="accendiTuttoAperto(!aperto)"><span>🔓 Tutte le tappe aperte</span><i></i></button>
         <!-- di questo telefono, non del bambino: vedi docs/core/comandi.md -->

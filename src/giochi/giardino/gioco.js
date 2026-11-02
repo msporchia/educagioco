@@ -14,8 +14,9 @@ export default {
   copertina: { fondo: '#2f6b3b', disegno: '#1f4d2a', scena: 'mura' },
   // le domande passano da src/quiz/ (il modulo `conti`), tagliate dall'età
   quiz: true,
-  // in prova: sta dietro l'interruttore dei giochi sperimentali dei genitori (docs/genitori/interruttori.md)
-  sperimentale: true,
+  // in prova: spento di base, lo accende il genitore dalla ✎ e legge la nota (docs/genitori/interruttori.md)
+  spentoDiBase: true,
+  nota: 'Gioco in prova: è ancora a metà e può cambiare o fermarsi. Accendilo solo se vuoi provarlo.',
   tappe: QUANTE_TAPPE,
   // gli amici sulla mappa (docs/core/amici-nei-giochi.md): il cursore della campagna; finite le tappe la mappa non ha un posto, solo la riga in cima
   amici: { tappe: QUANTE_TAPPE, dove: 'in fondo al giardino' },

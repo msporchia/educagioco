@@ -164,7 +164,7 @@ controlla('stesso seme, stessa partita', giro() === giro())
 }
 
 /* ══════════ 8. il manifesto ══════════ */
-controlla('il manifesto è in prova (sperimentale)', manifesto.sperimentale === true)
+controlla('il manifesto è in prova (spento di base, con la nota)', manifesto.spentoDiBase === true && !!manifesto.nota)
 uguale('e dice quante tappe ha', manifesto.tappe, QUANTE_TAPPE)
 const guastiAlbo = guastiDellAlbo([manifesto])
 controlla('l\'albo non ha guasti', guastiAlbo.length === 0, guastiAlbo.join(' · '))

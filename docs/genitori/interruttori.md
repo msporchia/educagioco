@@ -19,8 +19,8 @@ Sparisce la carta in home, i progressi restano.
   contro l'età (`fissaGioco` in `src/store/profile.js`), e la home lo
   rispetta (`giocoForzato` vince su `giocoDaVedere`). Vince sull'età, non
   sui saperi spenti.
-- **Lo spagnolo nasce spento per tutte le età** (`spentoDiBase: true` nel
-  manifesto, letto da `eccezioniDi` in `src/data/partenze.js`): in famiglia
+- **Un gioco può nascere spento per tutte le età** (`spentoDiBase: true` nel
+  manifesto, letto da `eccezioniDi` in `src/data/partenze.js`). Lo spagnolo: in famiglia
   c'è una madre boliviana, per gli altri è irrilevante. Il genitore lo accende
   dalla ✎ (`{ spagnolo: true }`); chi l'ha già giocato lo vede comunque.
 - Si sceglie dalla ✎ della sua riga nel quadro ([ritocchi.md](ritocchi.md)),
@@ -33,14 +33,15 @@ giochi degradano invece di sbarrare. Chi dichiara il bisogno, le due specie
 di chiavi, `chiede:` nel manifesto e il criterio per decidere cosa si spegne
 stanno in [../apprendimento/saperi.md](../apprendimento/saperi.md).
 
-## 3. I giochi in prova (`settings.sperimentali`)
+## 3. I giochi in prova (`spentoDiBase` + `nota`)
 
-Un flag solo per tutti i giochi con `sperimentale: true` nel manifesto:
-spento, quei giochi non esistono affatto (`sperimentaliAccesi`).
-
-Oggi in prova c'è **La fattoria 3D** (`fattoria3d`). Uscirne vuol dire togliere `sperimentale: true` dal suo manifesto: da quel giorno non ha
-l'interruttore, compare come la 2D (è un `posto`, l'età non la spegne) e si governa dalla stessa scheda Giochi. Piano in
-[../fattoria3d/parita/interfaccia-e-guida.md](../fattoria3d/parita/interfaccia-e-guida.md) I18.
+Non c'è un interruttore a parte (c'era `settings.sperimentali`, tolto): un
+gioco ancora a metà ha nel manifesto `spentoDiBase: true` e una `nota` che lo
+dice («è a metà, può cambiare»). Nasce spento per tutte le età come tutti i
+`spentoDiBase`, il genitore lo accende dalla ✎, e lì sopra legge la nota.
+Con `nota` resta fuori dalle guide in app; il quadro lo mostra come spento.
+Per farlo uscire basta togliere `spentoDiBase` e `nota` dal manifesto.
+Oggi in prova c'è **Il giardino**.
 
 ## Il quarto non si rifà
 
@@ -51,4 +52,4 @@ l'età o il pezzo di scuola, che valgono per tutti i giochi insieme.
 
 Nei test: `.carta.gioco[data-gioco="…"]` (per aprirla, `scegli`: vedi
 [../core/home.md](../core/home.md#nei-test)), `.carta[data-flag="…"]`
-(`sperimentali`, `tuttoAperto`, `giudizi`), `.carta[data-azione="…"]`.
+(`tuttoAperto`, `giudizi`), `.carta[data-azione="…"]`.

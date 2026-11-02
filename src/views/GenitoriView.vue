@@ -6,7 +6,6 @@ import { state, esportaTutto, resetPlayer, nomeCorrente,
          spostaLEta,
          etaDelBambino, nascitaDelBambino,
          tuttoAperto, accendiTuttoAperto,
-         sperimentaliAccesi, accendiSperimentali,
          ritocca, accendiSapere, saperiSpenti, fissaGioco, fissaSapere,
          rimettiAiDifetti,
          aspettoDi, scegliAspetto } from '../store/profile.js'
@@ -488,15 +487,6 @@ function cambiaAspetto(nome) {
   scegliAspetto(nome)
 }
 
-const inProva = computed(() => sperimentaliAccesi())
-const sperimentali = computed(() =>
-  inProva.value ? GIOCHI.filter(g => g.sperimentale) : [])
-function cambiaProva() {
-  accendiSperimentali(!inProva.value)
-  esito.value = { ok: true, testo: inProva.value
-    ? `I giochi in prova compaiono nella home di ${chi.value}. Sono a metà: aspettati che cambino.`
-    : `I giochi in prova spariscono dalla home di ${chi.value}.` }
-}
 // i reset della fattoria stanno nei Giochi › Avanzate: qui si dice com'è andata e si aggiorna il cestino
 async function fattoFattoria(testo) {
   esito.value = { ok: true, testo }
@@ -718,7 +708,7 @@ async function rimetti(v) {
         <ManopolaEta :anni="anniOra" :con-data="!!nascitaDelBambino()" :giochi="settaggi.giochi || {}"
                      :sa="settaggi.sa || {}" :ritocchi="settaggi.ritocchi || {}"
                      :risposte="state.profile?.items || {}"
-                     :sperimentali="inProva" conferma tarabile
+                     conferma tarabile
                      @scegli="applicaAnni" @prova="prova = $event"
                      @ritocca="ritoccaDalQuadro" @gioco="fissaDalQuadro"
                      @sapere="fissaSapereDalQuadro"
@@ -916,19 +906,8 @@ async function rimetti(v) {
 
       <details class="tendina sviluppo" data-sviluppo>
         <summary>🛠️ Avanzate</summary>
-        <p class="mini">Cose che di base non si toccano: i giochi ancora in prova, le tappe aperte, gli strumenti per chi sviluppa.</p>
+        <p class="mini">Cose che di base non si toccano: le tappe aperte, gli strumenti per chi sviluppa.</p>
         <div class="carte">
-
-        <button class="carta interruttore" :class="{ spento: !inProva }"
-                data-flag="sperimentali" @click="cambiaProva">
-          <span class="ico">🧪</span>
-          <b>Mostra i giochi in prova</b>
-          <i>{{ inProva ? (sperimentali.length === 1
-                            ? '1 gioco in prova, ed è nelle impostazioni dei giochi'
-                            : sperimentali.length + ' giochi in prova, e sono nelle impostazioni dei giochi')
-                        : 'Nascosti: non compaiono in home e nemmeno fra le impostazioni dei giochi' }}</i>
-          <span class="leva"><span class="pallina"></span></span>
-        </button>
 
         <button class="carta interruttore" :class="{ spento: !aperto }"
                 data-flag="tuttoAperto" @click="cambiaAperto">

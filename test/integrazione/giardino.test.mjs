@@ -24,7 +24,7 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
-await semina(page, { settings: { eta: 8, sperimentali: true } })
+await semina(page, { settings: { eta: 8, giochi: { giardino: true } } })
 
 /* ── dalla home alla prima tappa ── */
 await scegli(page, 'giardino')

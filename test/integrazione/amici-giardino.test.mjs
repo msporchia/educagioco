@@ -26,7 +26,7 @@ async function esci() {
 const pallini = al => page.locator(`[data-amici-qui][data-al="${al}"] [data-pallino-amico]`).count()
 
 /* ══════════ 1. a metà della campagna ══════════ */
-await semina(page, { settings: { eta: 9, sperimentali: true }, campagne: { giardino: { tappa: 2, libera: false, stelle: stelle(2), cfg: {} } } })
+await semina(page, { settings: { eta: 9, giochi: { giardino: true } }, campagne: { giardino: { tappa: 2, libera: false, stelle: stelle(2), cfg: {} } } })
 await seminaAmici(page, [
   amico('a', 'leonardo1', 'Leonardo', 0, 6),
   amico('b', 'melody001', 'Melody', 3, 2),
@@ -54,7 +54,7 @@ uguale('ma sulla mappa non ha un pallino', await page.locator('[data-amici-qui]'
 
 /* ══════════ 3. campagna finita ══════════ */
 await esci()
-await semina(page, { settings: { eta: 9, sperimentali: true }, campagne: { giardino: { tappa: QUANTE_TAPPE, libera: true, stelle: stelle(QUANTE_TAPPE), cfg: {} } } })
+await semina(page, { settings: { eta: 9, giochi: { giardino: true } }, campagne: { giardino: { tappa: QUANTE_TAPPE, libera: true, stelle: stelle(QUANTE_TAPPE), cfg: {} } } })
 await seminaAmici(page, [
   amico('a', 'leonardo1', 'Leonardo', 1, QUANTE_TAPPE),
   amico('b', 'melody001', 'Melody', 0, QUANTE_TAPPE - 1),

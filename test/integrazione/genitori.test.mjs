@@ -327,8 +327,8 @@ await apriBlocco('giochi')
    nuovo deve comparire nel quadro, non diventare rosso questo test.
    Quelli in prova non si contano: stanno dietro il loro cancello, e col
    cancello chiuso non c'è niente da accendere. */
-const NORMALI = GIOCHI.filter(g => !g.sperimentale)
-const IN_PROVA = GIOCHI.filter(g => g.sperimentale)
+const NORMALI = GIOCHI
+const IN_PROVA = GIOCHI.filter(g => g.nota)
 uguale('nel quadro c\'è una riga per gioco',
        await page.locator('[data-manopola] [data-apri="giochi"] .elenco li').count(),
        NORMALI.length)
@@ -406,59 +406,23 @@ controlla('rimessa su «come dice l\'età», il castello torna in home',
 
 /* ── 7b. i giochi in prova ──
    Un gioco che sto ancora scrivendo non deve arrivare ai bambini prima
-   che l'abbia deciso io. Non è la ✎ di una riga messa su «non ce
-   l'ha»: è un cancello, e col cancello chiuso quel gioco non esiste —
-   non è in home e **non è nemmeno nel quadro**, perché non c'è niente
-   da accendere. */
+   che l'abbia deciso io: ha `spentoDiBase` e una `nota` che lo dice.
+   Non c'è un cancello a parte: si accende dalla ✎ come ogni gioco. */
 if (IN_PROVA.length) {
   /* Il gioco si cerca **dal manifesto**, non da una chiave scritta a
-     mano: questo blocco è rimasto fermo finché nessun gioco era in
-     prova, e si è risvegliato col selettore di un gioco che nel
-     frattempo era stato promosso. Un test che nomina un gioco per
-     esteso scade da solo. */
+     mano: un test che nomina un gioco per esteso scade da solo. */
   const primo = IN_PROVA[0]
   const suaCarta = '.carta.gioco[data-gioco="' + primo.chiave + '"]'
-  const suaRiga = '[data-manopola] [data-riga="' + primo.chiave + '"]'
-  /* qui siamo in home, dove l'ultimo controllo ci ha lasciati */
-  controlla('col cancello chiuso, un gioco in prova non è in home',
-            !(await page.isVisible(suaCarta)))
+  controlla('di base un gioco in prova non è in home', !(await page.isVisible(suaCarta)))
 
   await vaiAiGenitori()
   await digita('0000')
-  await apriScheda('impostazioni')
-  await page.waitForSelector('.carta[data-flag="sperimentali"]', { timeout: 5000 })
-  await apriScheda('bambini')               // il quadro sta col bambino, l'interruttore con i giochi
-  await apriBlocco('giochi')
-  uguale('e non c\'è nemmeno la sua riga nel quadro',
-         await page.locator(suaRiga).count(), 0)
-
-  await apriScheda('impostazioni')
-  await page.click('.carta[data-flag="sperimentali"]')
-  await page.waitForTimeout(300)
-  await apriScheda('bambini')
-  await apriBlocco('giochi')
-  uguale('acceso il cancello, i giochi in prova entrano nel quadro',
-         await page.locator('[data-manopola] [data-apri="giochi"] .elenco li').count(),
-         NORMALI.length + IN_PROVA.length)
-  controlla('adesso in home c\'è', await inHome(suaCarta))
-
-  /* dietro il cancello vale la ✎ di sempre: un gioco in prova si spegne
-     e si riaccende come tutti gli altri */
+  await taraGioco(primo.chiave, 'si')
+  controlla('acceso dalla ✎ compare in home', await inHome(suaCarta))
   await vaiAiGenitori()
   await digita('0000')
-  await taraGioco(primo.chiave, 'no')
-  controlla('e dietro il cancello vale la tacca di sempre',
-            !(await inHome(suaCarta)))
-
-  /* e il cancello si richiude: quello che si accende si deve poter
-     rispegnere, e da chiuso non conta più cosa c'è dietro */
-  await vaiAiGenitori()
-  await digita('0000')
-  await taraGioco(primo.chiave, 'difetto')          // riacceso il singolo
-  await apriScheda('impostazioni')
-  await page.click('.carta[data-flag="sperimentali"]')
-  await page.waitForTimeout(200)
-  controlla('richiuso il cancello, sparisce di nuovo', !(await inHome(suaCarta)))
+  await taraGioco(primo.chiave, 'difetto')
+  controlla('e tornando al difetto sparisce di nuovo', !(await inHome(suaCarta)))
 }
 
 /* ── 7b-ter. gli interruttori di casa sono tre, e non quattro ──
@@ -472,7 +436,7 @@ if (IN_PROVA.length) {
   await vaiAiGenitori()
   await digita('0000')
   await apriScheda('impostazioni')
-  await page.waitForSelector('.carta[data-flag="sperimentali"]', { timeout: 5000 })
+  await page.waitForSelector('.carta[data-flag="tuttoAperto"]', { timeout: 5000 })
   uguale('non c\'è nessun interruttore per il calcolo a mente',
          await page.locator('.carta[data-flag="mente"]').count(), 0)
   /* e la fila degli asteroidi resta intera: è la stessa promessa vista
