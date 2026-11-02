@@ -29,7 +29,7 @@ const ctxCon = finite => ({ stati: {}, tappe: CAMPAGNA.map((t, i) => ({ ...t, in
 
 /* ── il capitano: chi è, dov'è ── */
 {
-  stessaLista('nella pianta del villaggio ci sono la ragazza e il capitano', VILLAGGIO.lotti.filter(l => l.tipo === 'persona').map(l => l.chiave).sort(), ['capitano', 'ragazza'])
+  stessaLista('nella pianta del villaggio ci sono la ragazza, il capitano e il tintore', VILLAGGIO.lotti.filter(l => l.tipo === 'persona').map(l => l.chiave).sort(), ['capitano', 'ragazza', 'tintore'])
   uguale('una città sola', m.citta.map(c => c.chiave), ['villaggio'])
   const q = m.villaggio.persone.find(p => p.chiave === 'capitano')
   controlla('il generatore l\'ha messo nel villaggio', !!q && q.citta === 'villaggio', JSON.stringify(q))
