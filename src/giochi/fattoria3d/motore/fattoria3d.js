@@ -21,6 +21,7 @@ import { percorso } from './percorso.js'
 import { POSTI, RIPOSO_MS, LIVELLO_BANCO, PEZZI_DEL_BANCO, clienteDi, tipoDelOrdine } from '../dati/ordini.js'
 import { nuovoOrdine } from './ordini.js'
 import { Cura } from './cura.js'
+import { CATEGORIE, opzione, opzioniDi, sbloccato, daComprare, chiaveCapo } from '../dati/abiti.js'
 import { vistaDellaMongolfiera, caricaLaCassa, partiLaMongolfiera, aggiornaMongolfiera } from './mongolfiera.js'
 import { vistaDellaBottega, consegnaInBottega, rifiutaInBottega, aggiornaLeBotteghe, daConsegnareIn, daConsegnareOvunque } from './botteghe.js'
 
@@ -71,6 +72,23 @@ export class Fattoria3d {
     if (!this._paga(n)) return false
     if (n > 0) this._guadagna(n)
     return true
+  }
+  /** Compra i pezzi a pagamento di un abito (dati/abiti.js) e li mette nell'armadio: tutto o niente. Rifiuti: `non-esiste`, `bloccato` (livello),
+      `fuori-stagione` (con `stagione`), `poche-monete` (con `costo`). I pezzi già tuoi e quelli gratis non costano. Chi lo indossa è Gioco.vue. */
+  compraAbito(abito, { stagione = '' } = {}) {
+    const da = daComprare(abito, this.s.armadio)
+    for (const c of CATEGORIE) {
+      const o = opzione(c, abito && abito[c])
+      if (!o || !opzioniDi(c, abito.persona).includes(o)) return { ok: false, motivo: 'non-esiste' }
+      if (!sbloccato(o, this.livello())) return { ok: false, motivo: 'bloccato', liv: o.liv }
+    }
+    const fuori = da.find(o => o.stagione && o.stagione !== stagione)
+    if (fuori) return { ok: false, motivo: 'fuori-stagione', stagione: fuori.stagione }
+    const costo = da.reduce((n, o) => n + o.prezzo, 0)
+    if (costo > this.monete() || !this._spendi(costo)) return { ok: false, motivo: 'poche-monete', costo }
+    for (const o of da) this.s.armadio[chiaveCapo(o.categoria, o.id)] = true
+    if (da.length) this._evento('abito-comprato', { pezzi: da.length })
+    return { ok: true, costo, comprati: da }
   }
   /** L'esperienza sale (di una spesa o di una consegna); se passa una soglia c'è l'evento `livello`. */
   _guadagna(n) {

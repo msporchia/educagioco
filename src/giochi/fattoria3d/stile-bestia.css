@@ -27,6 +27,10 @@
 .f3-bes-gesto em { font-style: normal; font-size: 11px; color: #8a5a14; }
 .f3-bes-gesto.manca { opacity: .6; border-style: dashed; }
 .f3-bes-gesto.pieno { opacity: .45; }
+.f3-bes-gesto.prova { border-color: #5fb04a; background: #effadf; box-shadow: 0 0 0 2px #5fb04a; }
+.f3-bes-compra { display: flex; gap: 8px; margin-top: 8px; }
+.f3-bes-acquista { flex: 1 1 auto; background: #5fb04a; color: #fff; }
+.f3-bes-acquista.manca { background: #b8a888; opacity: .8; }
 .f3-bes-gesto.sel { border-color: #f0a020; background: #fff3cf; }
 .f3-bes-azioni { display: flex; gap: 6px; margin-top: 6px; }
 .f3-bes-az { flex: 1 1 0; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px solid #6b4423; border-radius: 14px; background: #ffd36a; color: #4a2c12;

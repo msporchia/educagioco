@@ -1,16 +1,25 @@
-/* Gli addobbi delle bestie nella fattoria 3D (dato puro): gli stessi dodici della 2D (id, nome, prezzo, aggancio, la campanella solo ai gatti,
-   il cappello da strega solo a Halloween: src/giochi/fattoria3d/da2d/dati/addobbi.js), ma tutti in vendita. Nella 2D cinque erano sospesi perché
-   un'emoji di fiocco o di zainetto non sta su una bestia a quattro zampe; in 3D ognuno è un modello (scena3d/modelli-addobbi.js).
-   Dove cade un aggancio su ogni corpo lo dice `AGGANCI` in scena3d/modelli-addobbi.js. Vedi docs/fattoria3d/addobbi.md. */
-import { ADDOBBI as ADDOBBI_2D } from '../da2d/dati/addobbi.js'
-import { AGGANCI_TUTTI } from '../da2d/dati/animali.js'
+/* Gli addobbi delle bestie nella fattoria 3D (dato puro): dodici, ognuno un piccolo modello (scena3d/modelli-addobbi.js) che si vede in scena.
+   Il catalogo è di questo gioco, non di un altro: gli id sono le chiavi dei salvataggi (anche di quelli convertiti dalla 2D) e non si rinominano.
+   Fascia «una cosetta»: 🪙6–30. Dove cade un aggancio su ogni corpo lo dice `AGGANCI` in scena3d/modelli-addobbi.js. Vedi docs/fattoria3d/addobbi.md. */
 import { curabile } from './bestie.js'
 
-export { AGGANCI_TUTTI }
-// L'emoji della carta per quello che nella 2D era un disegno in pixel.
-const EMOJI = { cappello_strega: '🧙' }
-export const ADDOBBI = ADDOBBI_2D.map(a => ({ id: a.id, nome: a.nome, emoji: a.emoji || EMOJI[a.id], prezzo: a.prezzo, dove: a.dove,
-  ...(a.per ? { per: a.per } : {}), ...(a.stagione ? { stagione: a.stagione } : {}) }))
+/** Dove si attacca qualcosa a una bestia. */
+export const AGGANCI_TUTTI = ['testa', 'muso', 'collo', 'schiena']
+// `per`: solo di quelle famiglie (senza = di tutte). `stagione`: si compra solo in quella festa (comprato resta). Ordine: per aggancio, poi per prezzo.
+export const ADDOBBI = [
+  { id: 'fiore', nome: 'Fiorellino', emoji: '🌸', prezzo: 6, dove: 'testa' },
+  { id: 'cappellino', nome: 'Cappellino', emoji: '🧢', prezzo: 12, dove: 'testa' },
+  { id: 'cilindro', nome: 'Cilindro', emoji: '🎩', prezzo: 18, dove: 'testa' },
+  { id: 'corona', nome: 'Coroncina', emoji: '👑', prezzo: 24, dove: 'testa' },
+  { id: 'cappello_strega', nome: 'Cappello da strega', emoji: '🧙', prezzo: 8, dove: 'testa', stagione: 'halloween' },
+  { id: 'occhialini', nome: 'Occhialini', emoji: '👓', prezzo: 10, dove: 'muso' },
+  { id: 'occhiali', nome: 'Occhiali da sole', emoji: '🕶️', prezzo: 16, dove: 'muso' },
+  { id: 'fiocco', nome: 'Fiocco', emoji: '🎀', prezzo: 8, dove: 'collo' },
+  { id: 'sciarpa', nome: 'Sciarpa', emoji: '🧣', prezzo: 14, dove: 'collo' },
+  { id: 'campanella', nome: 'Campanella', emoji: '🔔', prezzo: 10, dove: 'collo', per: ['gatto'] },
+  { id: 'mantellina', nome: 'Mantellina', emoji: '🧥', prezzo: 20, dove: 'schiena' },
+  { id: 'zainetto', nome: 'Zainetto', emoji: '🎒', prezzo: 22, dove: 'schiena' },
+]
 export const PER_ID = Object.fromEntries(ADDOBBI.map(a => [a.id, a]))
 export const addobbo = id => PER_ID[id] || null
 
@@ -46,7 +55,8 @@ export function guastiDegliAddobbi3d() {
     if (!AGGANCI_TUTTI.includes(a.dove)) g.push(`${a.id}: l'aggancio «${a.dove}» non esiste`)
     if (!(a.prezzo >= 6 && a.prezzo <= 30)) g.push(`${a.id}: 🪙${a.prezzo} è fuori dalla fascia di una cosetta (6–30)`)
   }
-  if (ADDOBBI.length !== ADDOBBI_2D.length) g.push('gli addobbi non sono quelli della 2D')
+  const visti = new Set()
+  for (const a of ADDOBBI) { if (visti.has(a.id)) g.push(`${a.id}: id doppio`); visti.add(a.id); if (!a.nome) g.push(`${a.id}: senza nome`) }
   for (const dove of AGGANCI_TUTTI) if (!ADDOBBI.some(a => a.dove === dove)) g.push(`sull'aggancio «${dove}» non si mette niente`)
   return g
 }

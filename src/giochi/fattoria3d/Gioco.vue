@@ -49,7 +49,7 @@ import Bestia from './viste/Bestia.vue'
 import Battesimo from './viste/Battesimo.vue'
 import { dettoCura, dettoEsito, dettoCompera } from './viste/bestia-pura.js'
 import { BESTIE, CIBI as CIBI_BESTIE, COCCOLE_3D } from './dati/bestie.js'
-import { personaDi, normalizzaAbito, capiDi, chiaveAbito, vesti as vestiAbito, nomeDelContadino } from './dati/abiti.js'
+import { personaDi, normalizzaAbito, capiDi, chiaveAbito, nomeDelContadino } from './dati/abiti.js'
 import { schedeDellInventario, robaNuova, contoDi } from './viste/inventario-puro.js'
 import Bacheca from './viste/Bacheca.vue'
 import Mongolfiera from './viste/Mongolfiera.vue'
@@ -206,11 +206,25 @@ aspettoDi()                                                            // mette 
 const capi = ref(scelta(CHIAVE, 'abito', null))
 const persona = computed(() => personaDi(state.profile.aspetto))
 const abito = computed(() => normalizzaAbito(capi.value, persona.value))
-function vestiContadino(categoria, id) {
-  const nuovo = vestiAbito(abito.value, categoria, id, motore ? motore.livello() : 1)
+const abitoMsg = ref('')
+const guardarobaVista = computed(() => {
+  void versione.value
+  return { monete: motore ? motore.monete() : 0, armadio: motore ? motore.s.armadio : {} }
+})
+/** «Indossa» dal guardaroba: i pezzi a pagamento della bozza si comprano tutti insieme (tutto o niente), poi l'abito va addosso. */
+function indossaContadino(bozza) {
+  const nuovo = normalizzaAbito(bozza, persona.value)
   if (chiaveAbito(nuovo) === chiaveAbito(abito.value)) return
+  const r = motore.compraAbito(nuovo, { stagione: stagione.value || '' })
+  if (!r.ok) {
+    abitoMsg.value = r.motivo === 'poche-monete' ? `Ti mancano 🪙${r.costo - motore.monete()}: le monete si guadagnano negli altri giochi.`
+      : r.motivo === 'fuori-stagione' ? 'Questo si compra solo durante la festa.' : r.motivo === 'bloccato' ? 'Questo pezzo arriva più avanti.' : 'Questo pezzo non c\'è.'
+    return
+  }
+  abitoMsg.value = r.comprati.length ? `Comprato! ${r.comprati.map(o => o.emoji || '').join(' ')} È tuo per sempre.` : ''
   capi.value = capiDi(nuovo)
   ricorda(CHIAVE, 'abito', capi.value)
+  ui.cambio()
 }
 function cambiaAspetto(nome) { scegliAspetto(nome) }                 // lo stesso attributo del profilo che usa la fattoria 2D
 watch(() => chiaveAbito(abito.value), () => { if (mondo) mondo.vestiContadino(abito.value) })
@@ -764,8 +778,8 @@ onBeforeUnmount(() => {
         <Magazzino v-if="magazzino" :vista="magazzino" :messaggio="magazzinoMsg" @ingrandisci="piuPosto" @chiudi="magazzinoAperto = null" />
         <Bottega v-if="bottega" :bottega="bottega" :messaggio="bottegaMsg" :consiglio="bottegaCons" @consiglio="facciConsiglio" @consegna="consegnaBottega" @rifiuta="rifiutaBottega" @chiudi="bottegaAperta = null" />
         <Inventario v-if="inventarioAperto && inventario" :schede="inventario" :magazzini="magazzini" @magazzino="vaiAlMagazzino" @albero="apriAlbero" @chiudi="chiudiInventario" />
-        <Guardaroba v-if="guardarobaAperto" :abito="abito" :livello="foto.livello" :aspetto="state.profile.aspetto" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
-                    @vesti="vestiContadino" @aspetto="cambiaAspetto" @chiudi="guardarobaAperto = false" />
+        <Guardaroba v-if="guardarobaAperto" :abito="abito" :livello="foto.livello" v-bind="guardarobaVista" :stagione="stagione || ''" :messaggio="abitoMsg" :aspetto="state.profile.aspetto" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
+                    @indossa="indossaContadino" @aspetto="cambiaAspetto" @chiudi="guardarobaAperto = false" />
  <Albero v-if="albero" :albero="albero" @fai="facciConsiglio" @chiudi="chiudiAlbero" />
  <Consiglio v-if="consiglio" :consiglio="consiglio" @fai="facciConsiglio" @chiudi="consiglio = null" />
         <Livelli v-if="livelliAperto" v-bind="livelli" @chiudi="livelliAperto = false" />
