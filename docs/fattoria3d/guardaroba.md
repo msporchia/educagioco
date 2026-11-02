@@ -69,6 +69,12 @@ Cambiare abito **a caldo**: `Mondo3d.vestiContadino(abito)` → `Eroe.vesti` met
 Il **ritratto** è un'anteprima come quelle dei pezzi (`scena3d/anteprime.js`, tipo `contadino:<chiave>`, stesso renderer, nessun contesto in più): una
 foto per abito, rifatta a ogni scelta (non gira da sola).
 
+## L'interfaccia è quella comune
+
+`viste/Guardaroba.vue` è scritto sopra `components/personalizza/Personalizza.vue` (la stessa di sotterraneo e, dopo, animali), tema `fattoria`: ✕, ritratto grande, schede che
+scorrono, griglia di gettoni, riga di aiuto. Qui restano il ritratto 3D nello slot `anteprima`, «Sei la contadina» (`chi`) e la barra d'acquisto (`fondo`). I
+bersagli `data-*` passano dalle `dati` delle voci. `stile-guardaroba.css` tiene solo quelle tre cose.
+
 ## Niente icone: la foto del pezzo
 
 I gettoni del foglio e degli addobbi **non hanno emoji** (le emoji di sistema cambiano da un telefono all'altro): ogni gettone è la foto 3D del pezzo, fatta col

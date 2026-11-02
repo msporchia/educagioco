@@ -6,6 +6,7 @@
 // Le regole stanno in dati/abiti.js, il ritratto lo fotografa `scena3d/anteprime.js` (tipo `contadino:<chiave>`).
 import { ref, computed, watch, onMounted } from 'vue'
 import { CATEGORIE, PERSONE_ABITO, etichettaDi, scelteDi, statoDelPezzo, daComprare, chiaveAbito, abitoDiSerie, nomeDelContadino } from '../dati/abiti.js'
+import Personalizza from '../../../components/personalizza/Personalizza.vue'
 import '../stile-guardaroba.css'
 
 const props = defineProps({
@@ -79,42 +80,28 @@ function tocca(v) {
 function compra() { if (da.value.length && !manca.value) emit('indossa', { ...bozza.value }) }
 function annulla() { bozza.value = { ...props.abito } }
 function cambia(id) { scheda.value = id; scelto.value = '' }
+// i dati nella forma del componente comune (components/personalizza/Personalizza.vue): foto 3D del pezzo, colore finché non arriva, prezzo e livello come nota
+const schedeP = computed(() => schede.value.map(s => ({ id: s.id, nome: s.nome, dati: { 'data-scheda-abito': s.id } })))
+const vociP = computed(() => voci.value.map(v => ({
+  id: v.id, nome: v.nome, sel: !!v.sel, bloccato: !v.libero, foto: foto.value[v.foto] || '', colore: v.c ? '#' + v.c.toString(16).padStart(6, '0') : '',
+  nota: !v.libero ? 'Livello ' + v.liv : v.st === 'mio' ? '✓ tuo' : '', prezzo: v.st === 'in-vendita' ? '🪙' + v.prezzo : '', dati: { 'data-capo': scheda.value + ':' + v.id }, voce: v,
+})))
 </script>
 
 <template>
-  <div class="f3-foglio f3-colonna f3-gua" data-f3="guardaroba">
-    <header class="f3-gua-asse"><span aria-hidden="true">👕</span><h2>Guardaroba</h2></header>
-    <button class="f3-chiudi f3-gua-x" data-chiudi aria-label="chiudi" @click="$emit('chiudi')">✕</button>
-    <div class="f3-gua-testa">
+  <Personalizza tema="fattoria" titolo="Guardaroba" :schede="schedeP" :scheda="scheda" :voci="vociP" :riga="riga" data-f3="guardaroba"
+                @scheda="cambia" @scegli="(_, v) => tocca(v.voce)" @chiudi="$emit('chiudi')">
+    <template #anteprima>
       <div class="f3-gua-ritratto" data-f3="guardaroba-ritratto">
         <img v-if="ritratto" :src="ritratto" :alt="'Ritratto ' + nomeDelContadino(abito, 'del')" draggable="false">
-        <span v-else class="f3-gua-attesa" aria-hidden="true">👕</span>
       </div>
-      <div class="f3-gua-chi">
-        <p class="f3-gua-nome" data-f3="guardaroba-chi">Sei {{ nomeDelContadino(abito, 'il') }}</p>
+    </template>
+    <template #chi><p class="f3-gua-nome" data-f3="guardaroba-chi">Sei {{ nomeDelContadino(abito, 'il') }}</p></template>
+    <template #fondo>
+      <div v-if="cambiata && da.length" class="f3-gua-compra" data-f3="guardaroba-compra">
+        <button type="button" class="f3-gua-acquista" :class="{ manca: manca > 0 }" data-f3="guardaroba-acquista" :aria-disabled="manca > 0 || null" @click="compra">🛒 Acquista e indossa 🪙{{ costo }}</button>
+        <button type="button" class="f3-gua-annulla" data-f3="guardaroba-annulla" @click="annulla">Annulla</button>
       </div>
-    </div>
-    <nav class="f3-gua-schede">
-      <button v-for="s in schede" :key="s.id" :class="{ acceso: scheda === s.id }" :data-scheda-abito="s.id" @click="cambia(s.id)">
-        {{ s.nome }}
-      </button>
-    </nav>
-    <div class="f3-corpo">
-      <div class="f3-gua-griglia" :key="scheda + chi">
-        <button v-for="(v, i) in voci" :key="v.id" class="f3-gua-gettone" :class="{ sel: v.sel, velata: !v.libero, vendita: v.st === 'in-vendita' }" :data-capo="scheda + ':' + v.id"
-                :aria-pressed="v.addosso" :aria-label="v.nome + (v.libero ? '' : ', livello ' + v.liv)" :style="{ '--i': i, '--col': '#' + v.c.toString(16).padStart(6, '0') }" @click="tocca(v)">
-          <span class="f3-gua-campione" :class="{ vuoto: !v.c && !foto[v.foto], conFoto: foto[v.foto] }"><img v-if="foto[v.foto]" :src="foto[v.foto]" alt="" draggable="false"></span>
-          <b>{{ v.nome }}</b>
-          <small v-if="!v.libero">Livello {{ v.liv }}</small>
-          <small v-else-if="v.st === 'in-vendita'" class="f3-gua-prezzo">🪙{{ v.prezzo }}</small>
-          <small v-else-if="v.st === 'mio'">✓ tuo</small>
-        </button>
-      </div>
-    </div>
-    <div v-if="cambiata && da.length" class="f3-gua-compra" data-f3="guardaroba-compra">
-      <button type="button" class="f3-gua-acquista" :class="{ manca: manca > 0 }" data-f3="guardaroba-acquista" :aria-disabled="manca > 0 || null" @click="compra">🛒 Acquista e indossa 🪙{{ costo }}</button>
-      <button type="button" class="f3-gua-annulla" data-f3="guardaroba-annulla" @click="annulla">Annulla</button>
-    </div>
-    <p class="f3-gua-riga" data-f3="guardaroba-riga">{{ riga }}</p>
-  </div>
+    </template>
+  </Personalizza>
 </template>

@@ -24,6 +24,7 @@
 .pz-tema-fattoria .pz-foglio { background: repeating-linear-gradient(90deg, #a77440 0 58px, #9a6a38 58px 60px), #a77440; }
 .pz-testa { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 46px; }
 .pz-testa h2 { margin: 0; font-size: 19px; }
+.pz-tema-fattoria .pz-testa h2 { color: #4a2c12; text-shadow: 0 1px 0 rgba(255,255,255,.4); }           /* il titolo prendeva il blu dell'app sul legno */
 .pz-x {
   flex: none; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--pz-bordo); background: var(--pz-x-fondo);
   color: var(--pz-x-testo); font: 800 18px/1 inherit; touch-action: manipulation;
