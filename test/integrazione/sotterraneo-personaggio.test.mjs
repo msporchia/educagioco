@@ -18,12 +18,16 @@ await semina(page, { coins: 300, settings: { sperimentali: true }, campagne: { s
 await scegli(page, 'sotterraneo')
 await page.waitForSelector('.sot-eroe[data-eroe]', { timeout: 30000 })
 
+await attendi(page, 1500)
+await scatto(page, 'personaggio-1-scelta')
 // 1. un eroe mai giocato passa dall'editor, che si chiude con «Si parte»
 await page.locator('.sot-eroe[data-eroe="mago"]').click()
 await page.waitForSelector('[data-editor-personaggio]', { timeout: 3000 })
 uguale('l\'editor è quello del mago', await page.locator('[data-editor-personaggio]').getAttribute('data-eroe-editor'), 'mago')
 // il profilo di prova ha la persona di serie (la bambina): l'editor parte dalla femmina
 uguale('parte da come è la persona del profilo', await page.locator('[data-editor-personaggio]').getAttribute('data-sesso-scelto'), 'f')
+await attendi(page, 1500)
+await scatto(page, 'personaggio-2-editor-mago')
 uguale('i due modelli ci sono', await page.locator('[data-sesso]').count(), 2)
 controlla('il bottone dice «Si parte»', (await page.locator('[data-azione="chiudi-personaggio"]').innerText()).includes('Si parte'))
 
@@ -43,6 +47,8 @@ await mondoPronto(page)
 // 3. la pagina dell'eroe dice «Maga» e offre l'editor
 await page.locator('[data-azione="eroe-pagina"]').click()
 await page.waitForSelector('[data-pagina-eroe] [data-azione="personaggio"]', { timeout: 3000 })
+await attendi(page, 800)
+await scatto(page, 'personaggio-4-pagina-eroe')
 controlla('la pagina parla della maga', (await page.locator('[data-pagina-eroe] [data-azione="personaggio"]').innerText()).includes('la maga'))
 await page.locator('[data-pagina-eroe] [data-azione="personaggio"]').click()
 await page.waitForSelector('[data-editor-personaggio]', { timeout: 3000 })
