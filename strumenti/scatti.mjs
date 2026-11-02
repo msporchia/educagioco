@@ -36,6 +36,7 @@ import { tmpdir } from 'node:os'
 import { spawnSync } from 'node:child_process'
 
 import { SOSTA } from './clip/survivors.mjs'
+import { alLavoro } from './clip/fattoria.mjs'
 import { FILA_ATTUALE } from '../src/giochi/costruttore/dati/campagna.js'
 // le discese del sotterraneo stanno sulla terra di sopra: ci si va a piedi, come nelle prove
 import { scendiNelSotterraneo, giocaGiornata } from '../test/aiuto/browser.mjs'
@@ -330,8 +331,8 @@ const RICETTE = [
      cominciata (campi a stadi diversi, macchine al lavoro: `fattoria3d/motore/tipo.js`). Appena
      aperta è un prato vuoto, e lo è per scelta. Il cheat butta quella del bambino nel cestino:
      qui è il bambino finto di `PROFILO`. */
-  { file: 'fattoria-gioco', dove: 'fattoria3d-tipo=30', attesa: '[data-f3="campo"]',
-    passi: [async page => { await page.waitForTimeout(4000) }] },       // il mondo si disegna, il fumetto d'avvio se ne va
+  { file: 'fattoria-gioco', dove: 'fattoria3d-tipo=30', attesa: '[data-f3="campo"]', giorno: '2026-06-15',
+    passi: [alLavoro(2, 1500)] },       // il contadino che falcia, da vicino: un campo vuoto o la fattoria da lontano non dicevano niente
 
   /* tre domande di tre materie, per il README: una col disegno del tempo,
      una di matematica disegnata, una di ragionamento a parole. Si ritaglia
@@ -526,6 +527,12 @@ for (const r of scelte) {
   /* il roster va scritto prima che parta l'app, come nei test: senza,
      si apre l'onboarding e si fotografa quello dieci volte. `vuoto`
      è l'eccezione: è proprio l'onboarding la cosa da fotografare. */
+  /* `giorno`: la data della pagina, come se fosse quel giorno. La fattoria si veste di festa (Natale dal 1 novembre, Halloween in
+     ottobre) e una foto del README non deve dipendere da quando si rifà: il tempo scorre lo stesso, solo spostato. */
+  if (r.giorno) await page.addInitScript(g => {
+    const D = Date, scarto = new D(g + 'T12:00:00').getTime() - D.now()
+    globalThis.Date = class extends D { constructor(...a) { if (a.length) super(...a); else super(D.now() + scarto) } static now() { return D.now() + scarto } }
+  }, r.giorno)
   if (!r.vuoto) await page.addInitScript(p => {
     try {
       localStorage.setItem('giocatori', JSON.stringify([{ id: 'g1', nome: 'Anna' }]))
