@@ -67,6 +67,14 @@ Cambiare abito **a caldo**: `Mondo3d.vestiContadino(abito)` → `Eroe.vesti` met
 Il **ritratto** è un'anteprima come quelle dei pezzi (`scena3d/anteprime.js`, tipo `contadino:<chiave>`, stesso renderer, nessun contesto in più): una
 foto per abito, rifatta a ogni scelta (non gira da sola).
 
+## Niente icone: la foto del pezzo
+
+I gettoni del foglio e degli addobbi **non hanno emoji** (le emoji di sistema cambiano da un telefono all'altro): ogni gettone è la foto 3D del pezzo, fatta col
+renderer della scena (`scena3d/anteprime.js`, una per fotogramma, finché non arriva c'è il colore). Tipo `capo:<categoria>:<id>:<persona>` (`creaCapo` in
+`modelli-compagni.js`: testa per cappello, capelli e pelle; busto per la maglia; dal collo in giù per il pantalone; gambe per gli stivali; busto e testa per
+il collo) e `addobbo:<id>` per le bestie. I nodi invisibili (falce, ascia, canna) si tolgono prima della foto: `Box3` li conta e allungherebbero l'inquadratura
+(vale anche per il ritratto). Il campo `emoji` dei pezzi resta nei dati ma non si mostra.
+
 ## Come si aggiunge un pezzo
 
 Una voce in `CAT[<categoria>]` di `dati/abiti.js` (`id`, `nome`, `emoji`, `c` il colore; `per` se è di uno solo; `liv` ≥ 2 se è speciale; `prezzo` 6–30 se si compra, con `stagione` se è di festa). Se è una

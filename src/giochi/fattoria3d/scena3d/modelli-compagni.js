@@ -770,5 +770,21 @@ export const creaContadino = memoModello('contadino', costruisciContadino, {
   chiave: (arg = 'contadino') => chiaveAbito(typeof arg === 'string' ? abitoDiSerie(arg) : normalizzaAbito(arg, arg && arg.persona)),
 })
 
+/** La foto di un pezzo del guardaroba: il personaggio di serie con quel pezzo, ridotto alla parte che lo porta (testa per cappello, capelli e pelle;
+    busto per la maglia, dal collo in giù per il pantalone; gambe per gli stivali; busto e testa per il collo). Per i gettoni del foglio: niente icone, si vede il pezzo vero. */
+export function creaCapo (categoria, id, chi) {
+  const base = abitoDiSerie(chi), abito = normalizzaAbito({ ...base, cappello: 'niente', [categoria]: id }, base.persona)
+  const g = creaContadino(abito), { testa, gambe } = g.userData
+  const nascosti = []; g.traverse(o => { if (!o.visible) nascosti.push(o) })
+  for (const o of nascosti) o.removeFromParent()                                           // falce, ascia e canna: invisibili ma allungherebbero l'inquadratura
+  const fuori = new THREE.Group()
+  if (['cappello', 'capelli', 'pelle'].includes(categoria)) { fuori.add(testa); return fuori }
+  if (categoria === 'stivali') { fuori.add(...gambe); return fuori }
+  if (categoria === 'collo') { for (const p of gambe) p.removeFromParent(); return g }
+  testa.removeFromParent()                                                                 // maglia e pantalone: dal collo in giù
+  if (categoria === 'maglia') for (const p of gambe) p.removeFromParent()                  // la maglia è il busto con le maniche
+  return g
+}
+
 // i mattoncini per i corpi che stanno in un altro file (scena3d/modelli-bestie.js: beagle, coniglio, pappagallo)
 export { G, perno, zonaTocco, tingi, palla, tubo, morbido, liscio, mescola, sfera, cono, ombre }

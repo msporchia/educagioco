@@ -43,8 +43,18 @@ const chi = computed(() => props.abito.persona)
 const ctx = computed(() => ({ livello: props.livello, armadio: props.armadio, stagione: props.stagione }))
 const voci = computed(() => scelteDi(scheda.value, chi.value, ctx.value).map(o => {
   const st = statoDelPezzo(scheda.value, o, ctx.value)
-  return { ...o, st, libero: st !== 'bloccato', sel: bozza.value[scheda.value] === o.id, addosso: props.abito[scheda.value] === o.id }
+  return { ...o, st, foto: ['capo', scheda.value, o.id, chi.value].join(':'), libero: st !== 'bloccato', sel: bozza.value[scheda.value] === o.id, addosso: props.abito[scheda.value] === o.id }
 }))
+// le foto dei gettoni: il pezzo vero in 3D (scena3d/anteprime.js, tipo `capo:<categoria>:<id>:<persona>`), una per fotogramma; finché non arriva c'è il colore
+const foto = ref({})
+async function caricaFoto() {
+  for (const v of voci.value) {
+    const pronta = props.anteprimaPronta(v.foto)
+    if (pronta) { foto.value[v.foto] = pronta; continue }
+    props.anteprima(v.foto).then(url => { if (url) foto.value[v.foto] = url })
+  }
+}
+watch(voci, caricaFoto, { immediate: true })
 const da = computed(() => daComprare(bozza.value, props.armadio))                 // i pezzi della bozza ancora da pagare
 const costo = computed(() => da.value.reduce((n, o) => n + o.prezzo, 0))
 const cambiata = computed(() => chiaveAbito(bozza.value) !== chiaveAbito(props.abito))
@@ -84,14 +94,14 @@ function cambia(id) { scheda.value = id; scelto.value = '' }
     </div>
     <nav class="f3-gua-schede">
       <button v-for="s in schede" :key="s.id" :class="{ acceso: scheda === s.id }" :data-scheda-abito="s.id" @click="cambia(s.id)">
-        <span aria-hidden="true">{{ s.emoji }}</span> {{ s.nome }}
+        {{ s.nome }}
       </button>
     </nav>
     <div class="f3-corpo">
       <div class="f3-gua-griglia" :key="scheda + chi">
         <button v-for="(v, i) in voci" :key="v.id" class="f3-gua-gettone" :class="{ sel: v.sel, velata: !v.libero, vendita: v.st === 'in-vendita' }" :data-capo="scheda + ':' + v.id"
                 :aria-pressed="v.addosso" :aria-label="v.nome + (v.libero ? '' : ', livello ' + v.liv)" :style="{ '--i': i, '--col': '#' + v.c.toString(16).padStart(6, '0') }" @click="tocca(v)">
-          <span class="f3-gua-campione" :class="{ vuoto: !v.c }"><em v-if="v.emoji" aria-hidden="true">{{ v.emoji }}</em><i v-if="!v.libero" class="f3-gua-lucchetto" aria-hidden="true">🔒</i></span>
+          <span class="f3-gua-campione" :class="{ vuoto: !v.c, conFoto: foto[v.foto] }"><img v-if="foto[v.foto]" :src="foto[v.foto]" alt="" draggable="false"></span>
           <b>{{ v.nome }}</b>
           <small v-if="!v.libero">Livello {{ v.liv }}</small>
           <small v-else-if="v.st === 'in-vendita'" class="f3-gua-prezzo">🪙{{ v.prezzo }}</small>

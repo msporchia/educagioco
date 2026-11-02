@@ -20,6 +20,15 @@ const props = defineProps({
   vestiario: { type: Array, default: () => [] },     // [{ id, nome, emoji, prezzo, dove, addosso, hai }] (Cura.vestiarioDi)
 })
 const emit = defineEmits(['nutri', 'coccola', 'carezza', 'nome', 'sposta', 'vesti', 'spoglia', 'chiudi'])
+// le foto degli addobbi: il modello vero in 3D (tipo `addobbo:<id>`); finché non arriva, niente
+const fotoAddobbo = ref({})
+watch(() => props.vestiario.map(a => a.id).join(), () => {
+  for (const a of props.vestiario) {
+    const t = 'addobbo:' + a.id, pronta = props.anteprimaPronta && props.anteprimaPronta(t)
+    if (pronta) fotoAddobbo.value[a.id] = pronta
+    else if (props.anteprima) props.anteprima(t).then(url => { if (url) fotoAddobbo.value[a.id] = url })
+  }
+}, { immediate: true })
 const prezzoAddobbo = a => a.addosso ? '✓ addosso' : a.hai ? '×' + a.hai : '🪙' + a.prezzo
 const prova = ref('')                               // l'addobbo da comprare toccato: non è pagato finché non si preme «Acquista»
 const inProva = computed(() => props.vestiario.find(a => a.id === prova.value && !a.addosso && !a.hai) || null)
@@ -93,12 +102,12 @@ const faccia = g => g.da ? ((merceDi(g.da) || {}).emoji || g.emoji) : g.emoji
         <div class="f3-bes-gesti">
           <button v-for="a in vestiario" :key="a.id" type="button" class="f3-bes-gesto" :class="{ sel: a.addosso, prova: a.id === prova, manca: !a.addosso && !a.hai && a.prezzo > monete }"
                   :data-addobbo="a.id" :aria-pressed="a.addosso" :aria-selected="a.id === prova" @click="toccaAddobbo(a)">
-            <b aria-hidden="true">{{ a.emoji }}</b><span>{{ a.nome }}</span><em>{{ prezzoAddobbo(a) }}</em>
+            <b aria-hidden="true" class="f3-bes-fotina"><img v-if="fotoAddobbo[a.id]" :src="fotoAddobbo[a.id]" alt="" draggable="false"></b><span>{{ a.nome }}</span><em>{{ prezzoAddobbo(a) }}</em>
           </button>
         </div>
         <div v-if="inProva" class="f3-bes-compra" data-f3="addobbo-compra">
           <button type="button" class="f3-bes-az f3-bes-acquista" :class="{ manca: inProva.prezzo > monete }" data-f3="addobbo-acquista" :aria-disabled="inProva.prezzo > monete || null" @click="compraAddobbo">
-            🛒 Acquista {{ inProva.emoji }} {{ inProva.nome }} <small>🪙{{ inProva.prezzo }}</small></button>
+            🛒 Acquista {{ inProva.nome }} <small>🪙{{ inProva.prezzo }}</small></button>
           <button type="button" class="f3-bes-az" data-f3="addobbo-annulla" @click="prova = ''">Annulla</button>
         </div>
       </section>

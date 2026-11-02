@@ -23,6 +23,8 @@
 .f3-bes-gesti, .f3-bat-nomi { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .f3-bes-gesto { flex: 1 1 28%; min-width: 84px; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 4px 4px;
   border: 2px solid #e6cfa0; border-radius: 14px; background: #fffdf6; color: #3a2a1a; font: 800 12px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.f3-bes-fotina { width: 56px; height: 56px; display: grid; place-items: center; border-radius: 12px; background: radial-gradient(circle at 50% 40%, #fff7e4, #f0dcae); }
+.f3-bes-fotina img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
 .f3-bes-gesto b { font-size: 20px; line-height: 1; }
 .f3-bes-gesto em { font-style: normal; font-size: 11px; color: #8a5a14; }
 .f3-bes-gesto.manca { opacity: .6; border-style: dashed; }

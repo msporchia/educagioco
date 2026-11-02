@@ -221,7 +221,7 @@ function indossaContadino(bozza) {
       : r.motivo === 'fuori-stagione' ? 'Questo si compra solo durante la festa.' : r.motivo === 'bloccato' ? 'Questo pezzo arriva più avanti.' : 'Questo pezzo non c\'è.'
     return
   }
-  abitoMsg.value = r.comprati.length ? `Comprato! ${r.comprati.map(o => o.emoji || '').join(' ')} È tuo per sempre.` : ''
+  abitoMsg.value = r.comprati.length ? `Comprato: ${r.comprati.map(o => o.nome).join(', ')}. È tuo per sempre!` : ''
   capi.value = capiDi(nuovo)
   ricorda(CHIAVE, 'abito', capi.value)
   ui.cambio()
@@ -311,14 +311,14 @@ function carezzaBestia() { const id = bestiaAperta.value; if (id) esitoBestia(mo
 function vestiBestia(a) {
   const id = bestiaAperta.value; if (!id) return
   const r = motore.cura.vesti(id, a.id, { stagione: stagione.value || '' }), nome = motore.cura.nomeDi(id)
-  bestiaMsg.value = r.ok ? `${a.emoji} ${nome}: che eleganza!` : dettoCura(r, { monete: motore.monete() })
+  bestiaMsg.value = r.ok ? `${nome}: che eleganza!` : dettoCura(r, { monete: motore.monete() })
   if (r.ok) { mondo.compagni.sync(); mondo.compagni.festa(id) }
   ui.cambio()
 }
 function spogliaBestia(a) {
   const id = bestiaAperta.value; if (!id) return
   const r = motore.cura.spoglia(id, a.dove)
-  bestiaMsg.value = r.ok ? `${a.emoji} ${a.nome}: torna nel cassetto.` : dettoCura(r, { monete: motore.monete() })
+  bestiaMsg.value = r.ok ? `${a.nome}: torna nel cassetto.` : dettoCura(r, { monete: motore.monete() })
   if (r.ok) mondo.compagni.sync()
   ui.cambio()
 }
