@@ -3,8 +3,10 @@
    e la cache. `node test/esegui.mjs fattoria3d-guardaroba`
    tempo: 1 */
 import { CATEGORIE, PERSONE_ABITO, personaDi, nomeDelContadino, opzioniDi, opzione, sbloccato, abitoDiSerie, valida, normalizzaAbito, capiDi, chiaveAbito,
-  abitoDaChiave, vesti, abitiAl, guastiDegliAbiti } from '../../src/giochi/fattoria3d/dati/abiti.js'
+  abitoDaChiave, vesti, abitiAl, guastiDegliAbiti, armadioInForma, daComprare, statoDelPezzo, scelteDi, chiaveCapo } from '../../src/giochi/fattoria3d/dati/abiti.js'
 import { roba, vuoto, guastiDeiLivelli } from '../../src/giochi/fattoria3d/dati/livelli.js'
+import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
+import { sogliaDi } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const ctx = new Proxy({}, { get: (_, k) => k === 'canvas' ? {} : () => {}, set: () => true })
@@ -22,7 +24,7 @@ for (const p of PERSONE_ABITO) {
   controlla(`l'abito di serie di ${p} è valido e di quella persona`, valida(abitoDiSerie(p)) && abitoDiSerie(p).persona === p)
   for (const c of CATEGORIE) {
     const n = opzioniDi(c, p).length
-    controlla(`${p}/${c}: da 3 a 8 scelte (${n})`, n >= 3 && n <= 8)
+    controlla(`${p}/${c}: da 3 a 14 scelte (${n})`, n >= 3 && n <= 14)
   }
 }
 controlla('lei ha i capelli a trecce e la fascia, lui no', opzioniDi('capelli', 'contadina').some(o => o.stile === 'trecce') && !opzioniDi('capelli', 'contadino').some(o => o.stile === 'trecce')
@@ -74,7 +76,7 @@ uguale('niente / un numero / null non lanciano', [personaDi(undefined), personaD
   uguale('un pezzo di lei a lui non si veste', vesti(a, 'cappello', 'fascia', 99), a)
   uguale('un id sconosciuto non cambia niente', vesti(a, 'cappello', 'zzz', 99), a)
   uguale('arrivano proprio al suo livello: il cowboy', abitiAl(cow.liv, true).map(p => p.id).join(), 'cowboy')
-  controlla('fino al 46 sono tutti (e al 1 nessuno)', abitiAl(1).length === 0 && abitiAl(46).length === abitiAl(99).length && abitiAl(99).length >= 5)
+  controlla('fino al 70 sono tutti (e al 1 nessuno)', abitiAl(1).length === 0 && abitiAl(70).length === abitiAl(99).length && abitiAl(99).length >= 5)
   uguale('roba(21).abiti li raccoglie', roba(cow.liv).abiti.map(p => p.id).join(), 'cowboy')
   controlla('i pezzi del guardaroba non rendono «pieno» un livello vuoto', vuoto({ pezzi: [], edifici: [], colture: [], ricette: [], abiti: [{ id: 'x' }] }))
 }
@@ -97,6 +99,11 @@ const abiti = [
   { persona: 'contadina', cappello: 'tesa', maglia: 'grembiule', pantalone: 'giallo', stivali: 'verdi', collo: 'sciarpa', capelli: 'caschetto-nero', pelle: 'bruna' },
   { persona: 'contadino', cappello: 'berretto', maglia: 'maglione', pantalone: 'marrone', stivali: 'neri', collo: 'niente', capelli: 'corti-biondi', pelle: 'ambra' },
   { persona: 'contadina', cappello: 'niente', maglia: 'pois', pantalone: 'blu', stivali: 'gialli', collo: 'niente', capelli: 'trecce-bionde', pelle: 'dorata' },
+  { persona: 'contadino', cappello: 'babbo', maglia: 'natale', pantalone: 'nero', stivali: 'bianchi', collo: 'sciarpa-natale', capelli: 'corti-blu', pelle: 'chiara' },
+  { persona: 'contadina', cappello: 'strega', maglia: 'fiori', pantalone: 'viola', stivali: 'argento', collo: 'sciarpa-oro', capelli: 'coda-azzurra', pelle: 'scura' },
+  { persona: 'contadino', cappello: 'cilindro', maglia: 'tuta', pantalone: 'rosa', stivali: 'azzurri', collo: 'sciarpa-azzurra', capelli: 'corti-verdi', pelle: 'bruna' },
+  { persona: 'contadina', cappello: 'corona', maglia: 'hawaiana', pantalone: 'nero', stivali: 'dorati', collo: 'scialle', capelli: 'caschetto-viola', pelle: 'ambra' },
+  { persona: 'contadino', cappello: 'bandana', maglia: 'hawaiana', pantalone: 'blu', stivali: 'marroni', collo: 'niente', capelli: 'corti-neri', pelle: 'dorata' },
 ]
 {
   let peggiorM = 0, peggiorT = 0
@@ -131,5 +138,40 @@ const abiti = [
   uguale('le due persone hanno la faccia diversa (due chiavi)', creaContadino('contadina').userData.aspetto + creaContadino('contadino').userData.aspetto, 'contadinacontadino')
   const un = creaContadino(abiti[2]); un.position.set(5, 0, 5)
   controlla('toccare un clone non tocca gli altri', creaContadino(abiti[2]).position.x === 0)
+}
+/* ══════════ 8. i pezzi a pagamento ══════════ */
+{
+  const lui = abitoDiSerie('contadino'), cil = opzione('cappello', 'cilindro'), babbo = opzione('cappello', 'babbo')
+  controlla('l\'abito di serie è tutto gratis', daComprare(lui).length === 0)
+  uguale('un cilindro in testa da comprare costa 18', daComprare({ ...lui, cappello: 'cilindro' }).reduce((n, o) => n + o.prezzo, 0), 18)
+  uguale('…già nell\'armadio non costa', daComprare({ ...lui, cappello: 'cilindro' }, { [chiaveCapo('cappello', 'cilindro')]: true }).length, 0)
+  uguale('l\'armadio butta il gratis e l\'inesistente', J(armadioInForma({ 'cappello:paglia': true, 'cappello:zzz': true, 'cappello:cilindro': true, 'cappello:bandana': false, 'x': 1 })), J({ 'cappello:cilindro': true }))
+  uguale('l\'armadio di un salvataggio rotto è vuoto', J([null, [], 5, 'x'].map(armadioInForma)), J([{}, {}, {}, {}]))
+  uguale('un pezzo a pagamento è in vendita', statoDelPezzo('cappello', cil), 'in-vendita')
+  uguale('…comprato è tuo', statoDelPezzo('cappello', cil, { armadio: { 'cappello:cilindro': true } }), 'mio')
+  uguale('uno di Natale fuori stagione non si compra', statoDelPezzo('cappello', babbo, { stagione: '' }), 'fuori-stagione')
+  uguale('…a Natale sì', statoDelPezzo('cappello', babbo, { stagione: 'natale' }), 'in-vendita')
+  controlla('fuori stagione non si mostra, a Natale sì', !scelteDi('cappello', 'contadino', {}).some(o => o.id === 'babbo') && scelteDi('cappello', 'contadino', { stagione: 'natale' }).some(o => o.id === 'babbo'))
+  controlla('…comprato resta in vista tutto l\'anno', scelteDi('cappello', 'contadino', { armadio: { 'cappello:babbo': true } }).some(o => o.id === 'babbo'))
+  const motoreCon = (monete, liv = 70) => {
+    const b = { monete }, f = new Fattoria3d({ borsa: { quante: () => b.monete, paga: n => { b.monete -= n; return true } }, ora: () => 1e12, rnd: () => 0.5 })
+    f.s.esperienza = Math.max(f.s.esperienza, sogliaDi(liv)); return { f, b }
+  }
+  { const { f, b } = motoreCon(100), r = f.compraAbito({ ...lui, cappello: 'cilindro', capelli: 'corti-blu' })
+    controlla('si compra: 18 + 10 monete, due pezzi', r.ok && r.costo === 28 && b.monete === 72 && r.comprati.length === 2, J(r))
+    controlla('…stanno nell\'armadio', f.s.armadio['cappello:cilindro'] && f.s.armadio['capelli:corti-blu'])
+    uguale('…e la seconda volta non costa', f.compraAbito({ ...lui, cappello: 'cilindro' }).costo, 0)
+    uguale('…monete intatte', b.monete, 72) }
+  { const { f, b } = motoreCon(20), r = f.compraAbito({ ...lui, cappello: 'cilindro', capelli: 'corti-blu' })
+    controlla('poche monete: tutto o niente', !r.ok && r.motivo === 'poche-monete' && r.costo === 28 && b.monete === 20 && !Object.keys(f.s.armadio).length, J(r)) }
+  { const { f } = motoreCon(100), r = f.compraAbito({ ...lui, cappello: 'babbo' })
+    controlla('un pezzo di Natale fuori stagione si rifiuta', !r.ok && r.motivo === 'fuori-stagione', J(r))
+    controlla('…a Natale si compra', f.compraAbito({ ...lui, cappello: 'babbo' }, { stagione: 'natale' }).ok) }
+  { const { f } = motoreCon(100, 2), r = f.compraAbito({ ...lui, cappello: 'corona' })
+    controlla('un pezzo di livello non si compra', !r.ok && r.motivo === 'bloccato', J(r))
+    controlla('un pezzo di lei a lui si rifiuta', !f.compraAbito({ ...lui, maglia: 'fiori' }).ok) }
+  { const { f } = motoreCon(100); f.compraAbito({ ...lui, cappello: 'cilindro' })
+    const e = JSON.parse(JSON.stringify(f.s)), d = new Fattoria3d({ stato: e, borsa: { quante: () => 0, paga: () => true }, ora: () => 1e12, rnd: () => 0.5 })
+    controlla('l\'armadio sopravvive al salvataggio', d.s.armadio['cappello:cilindro'] === true) }
 }
 riassunto('fattoria3d-guardaroba')

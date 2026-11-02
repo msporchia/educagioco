@@ -13,7 +13,8 @@ import { creaAnteprime } from './anteprime.js'
 import { creaScaldo } from './scaldo-puro.js'
 import { Eroe } from './eroe.js'
 import { Ospite } from './ospite.js'
-import { creaContadino, posaGatto, posaCane } from './modelli-compagni.js'
+import { creaAddobbo } from './modelli-addobbi.js'
+import { creaContadino, creaCapo, posaGatto, posaCane } from './modelli-compagni.js'
 import { Compagni } from './compagni.js'
 import { creaBestia, posaPiccolo, posaBeagle } from './modelli-bestie.js'
 import { BESTIE, comeCompagno } from '../dati/bestie.js'
@@ -119,11 +120,18 @@ export class Mondo3d {
     return caricaFoto().then(f => f[tipo] || this._anteprimaViva(tipo))
   }
   _anteprimaViva(tipo) {
-    if (!this._anteprime) this._anteprime = creaAnteprime(this.renderer, t => t.startsWith('contadino:') ? this.modelloContadino(t.slice(10)) : t.startsWith('bestia:') ? this.modelloBestia(t.slice(7)) : this.pezzi.modelloAnteprima(t))
+    if (!this._anteprime) this._anteprime = creaAnteprime(this.renderer, t => t.startsWith('contadino:') ? this.modelloContadino(t.slice(10)) : t.startsWith('capo:') ? this.modelloCapo(t.slice(5)) : t.startsWith('addobbo:') ? creaAddobbo(t.slice(8)) : t.startsWith('bestia:') ? this.modelloBestia(t.slice(7)) : this.pezzi.modelloAnteprima(t))
     return this._anteprime.chiedi(tipo)
   }
   /** Il ritratto del guardaroba: `contadino:<chiave dell'abito>` (dati/abiti.js, `chiaveAbito`), fotografato come un pezzo. */
-  modelloContadino(chiave) { return creaContadino(abitoDaChiave(chiave)) }
+  modelloContadino(chiave) {
+    const g = creaContadino(abitoDaChiave(chiave)), nascosti = []
+    g.traverse(o => { if (!o.visible) nascosti.push(o) })
+    for (const o of nascosti) o.removeFromParent()                                          // falce, ascia e canna: invisibili ma allungano l'inquadratura
+    return g
+  }
+  /** La foto di un pezzo del guardaroba: `capo:<categoria>:<id>:<persona>` (`creaCapo`). */
+  modelloCapo(chiave) { const [c, id, p] = chiave.split(':'); return creaCapo(c, id, p) }
   /** Il ritratto di una bestia di casa o di un compagno gratis (`bestia:<id>`, dati/bestie.js): il suo corpo com'è in scena, in posa da fermo. */
   modelloBestia(id) {
     const c = COMPAGNI[id]

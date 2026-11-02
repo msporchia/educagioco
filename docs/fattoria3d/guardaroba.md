@@ -4,13 +4,13 @@ Il personaggio della fattoria 3D **non è un eroe**: è **il contadino** o **la 
 `dati/abiti.js`: «Torna al contadino», «Torna alla contadina»). Nel codice la variabile resta `eroe` (`eroe.js`, `mondo.eroe`): è un
 nome interno, **mai** una stringa che si legge. Vale per i testi a schermo, gli `aria-label` e i documenti.
 
-## Chi si è: il genere viene dal profilo
+## Chi si è: il sesso viene dal profilo
 
-Come nella fattoria 2D: il personaggio scelto dal bambino (`aspettoDi()` in `store/profile.js`, `'bambina' | 'bimbo'`; la scelta
-è `components/SceltaAspetto.vue`) decide **contadina** o **contadino** (`personaDi(aspetto)`). Non si salva niente nella fattoria 3D: si
-rilegge a ogni apertura, quindi cambiare personaggio altrove cambia anche qui. Il guardaroba ha la stessa scelta (`SceltaAspetto`, che
-chiama `scegliAspetto`): cambiare lì cambia anche la fattoria 2D. Un valore sconosciuto ripiega su `ASPETTO_ERO` (`dati/compagni.js`).
-Nota: un profilo che non ha mai scelto parte da `bambina` (è `PERSONE[0]`, vale anche per la 2D), cioè dalla contadina.
+Il personaggio scelto dal bambino (`aspettoDi()` in `store/profile.js`, `'bambina' | 'bimbo'`) decide **contadina** o **contadino** (`personaDi(aspetto)`). Non si
+salva niente nella fattoria 3D: si rilegge a ogni apertura, quindi cambiare personaggio altrove cambia anche qui. **Il sesso è una caratteristica come le altre**: la
+prima scheda del guardaroba, «Sesso», ha due gettoni con la foto 3D della testa (Femmina, Maschio) e scrive il profilo con `scegliAspetto` (cambiarlo lì lo cambia
+ovunque). Niente più la coppia di figure in pixel (`SceltaAspetto`, grande e non mostrava il personaggio): resta solo nel profilo. Un valore sconosciuto ripiega
+su `ASPETTO_ERO` (`dati/compagni.js`). Un profilo che non ha mai scelto parte da `bambina` (`PERSONE[0]`), cioè dalla contadina.
 
 ## Come si apre
 
@@ -38,9 +38,21 @@ Cambiando personaggio i capi compatibili (cappello, pantalone, stivali, collo, p
 | capelli | lui: corti (castani, neri, biondi, rossi); lei: trecce (castane, bionde), coda (nera, rossa), caschetto (castano, nero) | corti castani / trecce castane |
 | pelle | cinque toni, da chiara a scura (uguali per tutti) | dorata |
 
-Tutto è **gratis**. I pezzi con `liv` (i «speciali») sono velati col lucchetto e «Livello N» finché non arriva; toccati dicono a che livello.
-Arrivano nel foglio dei livelli come «👕 … per il guardaroba» (`roba(l).abiti`, come `compagni`): **non contano** per `vuoto()` né per le cose
-produttive, quindi nessuna soglia si sposta. `sbloccato(pezzo, livello)` e `vesti(abito, categoria, id, livello)` rifiutano un pezzo bloccato.
+### Gratis, a pagamento, di festa, di livello
+
+Ogni pezzo è di **una sola** specie: **gratis** (quelli di serie e i colori base), **a pagamento** (`prezzo`, 🪙8–18, la fascia «una cosetta» come gli addobbi),
+**di festa** (`stagione`: `natale`, `halloween`, si compra solo in quel periodo; comprato resta e si vede tutto l'anno) o **di livello** (`liv`, i «speciali»,
+col lucchetto e «Livello N»). Un pezzo non è mai a pagamento *e* di livello (un test lo tiene). Nuovi: bandana, cilindro, berretto di Natale, cappello da strega;
+tuta da lavoro, abito a fiori, camicia a fiori, maglione di Natale; pantaloni nero/viola/rosa; stivali bianchi/azzurri; sciarpa azzurra e di Natale; capelli blu, verdi,
+rosa, azzurri, viola; di livello: corona (14), stivali argento (18), sciarpa dorata (16). Le scelte per categoria vanno da 3 a 14.
+
+**Niente si compra con un tocco solo.** Un tocco su un pezzo **lo prova** sul ritratto (la *bozza*, `Guardaroba.vue`): se tutta la bozza è gratis o già tua
+si indossa subito (come prima); se c'è un pezzo con 🪙 resta in prova, il mondo non cambia, e sotto compaiono **«🛒 Acquista e indossa 🪙N»** (somma dei
+pezzi da pagare) e **«Annulla»**. Con poche monete il tasto è spento e la riga dice quante ne mancano. L'acquisto è tutto o niente (`motore.compraAbito`:
+`poche-monete`, `fuori-stagione`, `bloccato`, `non-esiste`); la spesa conta come esperienza, niente monete indietro. I pezzi comprati stanno in
+`stato.armadio` (`{ 'cappello:cilindro': true }`, `armadioInForma`, versione dello stato invariata) e si rimettono gratis; `sbloccato(pezzo, livello)` e
+`vesti(...)` valgono ancora per il livello. Arrivano nel foglio dei livelli come «👕 … per il guardaroba» (`roba(l).abiti`, solo quelli di livello): **non contano**
+per `vuoto()` né per le cose produttive, quindi nessuna soglia si sposta. Un id di pezzo non si rinomina né si toglie: è nell'armadio e nel salvataggio.
 
 ## Il disegno
 
@@ -55,14 +67,22 @@ Cambiare abito **a caldo**: `Mondo3d.vestiContadino(abito)` → `Eroe.vesti` met
 Il **ritratto** è un'anteprima come quelle dei pezzi (`scena3d/anteprime.js`, tipo `contadino:<chiave>`, stesso renderer, nessun contesto in più): una
 foto per abito, rifatta a ogni scelta (non gira da sola).
 
+## Niente icone: la foto del pezzo
+
+I gettoni del foglio e degli addobbi **non hanno emoji** (le emoji di sistema cambiano da un telefono all'altro): ogni gettone è la foto 3D del pezzo, fatta col
+renderer della scena (`scena3d/anteprime.js`, una per fotogramma, finché non arriva c'è il colore). Tipo `capo:<categoria>:<id>:<persona>` (`creaCapo` in
+`modelli-compagni.js`: testa per cappello, capelli e pelle; busto per la maglia; dal collo in giù per il pantalone; gambe per gli stivali; busto e testa per
+il collo) e `addobbo:<id>` per le bestie. I nodi invisibili (falce, ascia, canna) si tolgono prima della foto: `Box3` li conta e allungherebbero l'inquadratura
+(vale anche per il ritratto). Il campo `emoji` dei pezzi resta nei dati ma non si mostra.
+
 ## Come si aggiunge un pezzo
 
-Una voce in `CAT[<categoria>]` di `dati/abiti.js` (`id`, `nome`, `emoji`, `c` il colore; `per` se è di uno solo; `liv` ≥ 2 se è speciale). Se è una
-forma nuova (`forma` o `motivo`) un ramo in `costruisciContadino`. `guastiDegliAbiti()` controlla il resto (da 3 a 8 scelte per persona, la serie
+Una voce in `CAT[<categoria>]` di `dati/abiti.js` (`id`, `nome`, `emoji`, `c` il colore; `per` se è di uno solo; `liv` ≥ 2 se è speciale; `prezzo` 6–30 se si compra, con `stagione` se è di festa). Se è una
+forma nuova (`forma` o `motivo`) un ramo in `costruisciContadino`. `guastiDegliAbiti()` controlla il resto (da 3 a 14 scelte per persona, prezzi nella fascia, la serie
 sbloccata, niente id doppi). Un capo non si rinomina: l'id è nel salvataggio.
 
 ## Nei test
 
-`test/unita/fattoria3d-guardaroba.test.mjs` (dati, genere, normalizzazione, sblocchi, nomi, modelli con 5 abiti, cache) e
-`integrazione/fattoria3d` (il tocco sul contadino, un gettone, la ✕, «Torna al contadino/alla contadina», nessun «eroe» a schermo). Bersagli
+`test/unita/fattoria3d-guardaroba.test.mjs` (dati, genere, normalizzazione, sblocchi, nomi, modelli con 10 abiti, cache, armadio e acquisto) e
+`integrazione/fattoria3d` (il tocco sul contadino, un gettone, la ✕, la prova e l'acquisto del cilindro `[data-f3="guardaroba-acquista"]` / `guardaroba-annulla`, «Torna al contadino/alla contadina», nessun «eroe» a schermo). Bersagli
 `[data-…]` in [file.md](file.md).

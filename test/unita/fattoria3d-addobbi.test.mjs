@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    GLI ADDOBBI DELLE BESTIE NELLA FATTORIA 3D (docs/fattoria3d/addobbi.md)
 
-   Gli stessi dodici della 2D (prezzi, agganci, la campanella ai gatti,
+   Dodici addobbi (prezzi, agganci, la campanella ai gatti,
    il cappello da strega a Halloween), tutti in vendita; si comprano una
    volta e non si consumano, un aggancio tiene una cosa sola; il cassetto
    e quello che porta ogni bestia si salvano; la conversione dalla 2D li
@@ -11,7 +11,6 @@
    tempo: 1
    ═══════════════════════════════════════════════════════════════════ */
 import { ADDOBBI, PER_ID, staA, addobbiPer, guastiDegliAddobbi3d, cassettoInForma } from '../../src/giochi/fattoria3d/dati/addobbi.js'
-import { ADDOBBI as ADDOBBI_2D } from '../../src/giochi/fattoria3d/da2d/dati/addobbi.js'
 import { ADDOBBI_DISEGNATI, AGGANCI } from '../../src/giochi/fattoria3d/scena3d/modelli-addobbi.js'
 import { sogliaDi } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
@@ -28,11 +27,12 @@ const motoreCon = ({ liv = 70, monete = 1000, stato = null } = {}) => {
   return { f, b }
 }
 
-// ── i dati: quelli della 2D, tutti in vendita, ognuno disegnato ──
+// ── i dati: dodici, tutti in vendita, ognuno disegnato ──
 {
   const g = guastiDegliAddobbi3d()
   controlla('i dati degli addobbi non hanno guasti', !g.length, g.join(' · '))
-  uguale('gli stessi della 2D, con gli stessi prezzi e agganci', ADDOBBI.map(a => `${a.id}:${a.prezzo}:${a.dove}`).join(), ADDOBBI_2D.map(a => `${a.id}:${a.prezzo}:${a.dove}`).join())
+  uguale('i dodici, con prezzi e agganci (gli id sono nei salvataggi: non cambiano)', ADDOBBI.map(a => `${a.id}:${a.prezzo}:${a.dove}`).join(),
+    'fiore:6:testa,cappellino:12:testa,cilindro:18:testa,corona:24:testa,cappello_strega:8:testa,occhialini:10:muso,occhiali:16:muso,fiocco:8:collo,sciarpa:14:collo,campanella:10:collo,mantellina:20:schiena,zainetto:22:schiena')
   uguale('ognuno ha il suo modello', ADDOBBI_DISEGNATI.slice().sort().join(), ADDOBBI.map(a => a.id).sort().join())
   for (const [forma, tab] of Object.entries(AGGANCI)) {
     const attesi = forma === 'pappagallo' ? ['testa', 'muso', 'collo'] : ['testa', 'muso', 'collo', 'schiena']

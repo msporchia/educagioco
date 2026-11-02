@@ -119,7 +119,11 @@ function costruisciContadino (arg = 'contadino') {
   }
   // il motivo della maglia
   if (m.motivo === 'quadri') { scatola(busto, 0.03, 0.3, 0.225, segno, -0.1, 0.15, 0); scatola(busto, 0.03, 0.3, 0.225, segno, 0.1, 0.15, 0); scatola(busto, 0.362, 0.03, 0.225, segno, 0, 0.22, 0) }
-  else if (m.motivo === 'pois') for (const [x, y] of [[-0.09, 0.22], [0.09, 0.22], [0, 0.17], [-0.1, 0.1], [0.1, 0.1]]) sfera(busto, 0.02, segno, x, y, 0.112, 1, 1, 0.3)
+  else if (m.motivo === 'natale') {
+    const bianco = mat(0xf6f3ee), verde = mat(0x2f8a3a)
+    scatola(busto, 0.362, 0.05, 0.225, bianco, 0, 0.22, 0)
+    for (const x of [-0.1, 0, 0.1]) { cono(busto, 0.04, 0.09, verde, x, 0.12, 0.115, 5); sfera(busto, 0.012, mat(0xe0b030), x, 0.17, 0.115) }
+  } else if (m.motivo === 'pois') for (const [x, y] of [[-0.09, 0.22], [0.09, 0.22], [0, 0.17], [-0.1, 0.1], [0.1, 0.1]]) sfera(busto, 0.02, segno, x, y, 0.112, 1, 1, 0.3)
   else if (m.motivo === 'grembiule') {
     const bianco = mat(0xf6f3ee)
     scatola(busto, 0.26, 0.26, 0.03, bianco, 0, 0.12, 0.12); scatola(busto, 0.08, 0.07, 0.01, mat(0xd8d2c4), 0.05, 0.1, 0.14)
@@ -132,7 +136,10 @@ function costruisciContadino (arg = 'contadino') {
   // il collo
   const cc = mat(colloO.c)
   if (colloO.forma === 'fazzoletto') { cil(busto, 0.14, 0.12, 0.06, cc, 0, 0.31, 0); const nodo = cono(busto, 0.07, 0.1, cc, 0, 0.26, 0.12); nodo.rotation.x = Math.PI }
-  else if (colloO.forma === 'sciarpa') { cil(busto, 0.15, 0.14, 0.08, cc, 0, 0.31, 0); scatola(busto, 0.07, 0.2, 0.03, cc, 0.07, 0.2, 0.125) }
+  else if (colloO.forma === 'sciarpa') {
+    cil(busto, 0.15, 0.14, 0.08, cc, 0, 0.31, 0); scatola(busto, 0.07, 0.2, 0.03, cc, 0.07, 0.2, 0.125)
+    if (colloO.righe) { const r = mat(colloO.righe); cil(busto, 0.152, 0.142, 0.025, r, 0, 0.31, 0); scatola(busto, 0.072, 0.025, 0.032, r, 0.07, 0.17, 0.125) }       // le righe di Natale
+  }
   else if (colloO.forma === 'papillon') { scatola(busto, 0.03, 0.03, 0.03, cc, 0, 0.3, 0.12); for (const s of [-1, 1]) { const f = cono(busto, 0.045, 0.09, cc, s * 0.065, 0.3, 0.12, 4); f.rotation.z = -s * Math.PI / 2 } }
   else if (colloO.forma === 'scialle') { cil(busto, 0.2, 0.27, 0.09, cc, 0, 0.27, 0, 12); const p = cono(busto, 0.12, 0.17, cc, 0, 0.17, 0.12); p.rotation.x = Math.PI }
   // la testa
@@ -174,6 +181,27 @@ function costruisciContadino (arg = 'contadino') {
     const fiore = mat(0xfff2f6), cuore = mat(0xe8b94a), fx = 0.262 * Math.cos(2.35), fy = 0.262 * Math.sin(2.35)
     for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; sfera(arco, 0.034, fiore, fx + Math.cos(a) * 0.045, fy + Math.sin(a) * 0.045, 0.03) }
     sfera(arco, 0.028, cuore, fx, fy, 0.05)
+  } else if (cap.forma === 'bandana') {
+    pezzo(testa, cupola, cm, 0, 0.3, 0, 1.06, 0.8, 1.04)
+    sfera(testa, 0.05, cm, 0, 0.3, -0.27); for (const s of [-1, 1]) cono(testa, 0.03, 0.12, cm, s * 0.04, 0.24, -0.31, 4).rotation.x = Math.PI
+  } else if (cap.forma === 'cilindro') {
+    cil(testa, 0.3, 0.3, 0.03, cm, 0, 0.38, 0, 16)
+    cil(testa, 0.17, 0.17, 0.32, cm, 0, 0.54, 0, 14)
+    cil(testa, 0.178, 0.178, 0.06, mat(0xc23a2e), 0, 0.42, 0, 14)
+  } else if (cap.forma === 'corona') {
+    cil(testa, 0.2, 0.2, 0.07, cm, 0, 0.45, 0, 14)
+    for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; cono(testa, 0.035, 0.1, cm, Math.cos(a) * 0.2, 0.54, Math.sin(a) * 0.2, 4) }
+    sfera(testa, 0.025, mat(0xd8392e), 0, 0.45, 0.21)
+  } else if (cap.forma === 'babbo') {
+    const bianco = mat(0xf6f3ee)
+    cil(testa, 0.225, 0.23, 0.08, bianco, 0, 0.4, 0, 14)
+    const punta = cono(testa, 0.2, 0.4, cm, 0, 0.62, -0.05, 12); punta.rotation.x = -0.35
+    sfera(testa, 0.055, bianco, 0, 0.78, -0.18)
+  } else if (cap.forma === 'strega') {
+    cil(testa, 0.38, 0.38, 0.025, cm, 0, 0.38, 0, 16)
+    cono(testa, 0.2, 0.46, cm, 0, 0.63, 0, 12)
+    cil(testa, 0.202, 0.208, 0.05, mat(0xe8731c), 0, 0.41, 0, 12)
+    scatola(testa, 0.06, 0.06, 0.02, mat(0xe0b030), 0, 0.41, 0.205)
   } else if (cap.forma === 'cowboy') {
     cil(testa, 0.4, 0.4, 0.025, cm, 0, 0.38, 0, 16)
     cil(testa, 0.15, 0.2, 0.2, cm, 0, 0.49, 0, 12)
@@ -185,6 +213,7 @@ function costruisciContadino (arg = 'contadino') {
     scatola(p, 0.09, 0.24, 0.1, maniche, 0, -0.11, 0); sfera(p, 0.055, pelle, 0, -0.27, 0, 1, 1, 1)
     if (m.motivo === 'quadri') scatola(p, 0.092, 0.03, 0.102, segno, 0, -0.06, 0)
     else if (m.motivo === 'maglione') scatola(p, 0.098, 0.035, 0.108, mat(scurisci(m.c, 1.25)), 0, -0.225, 0)
+    else if (m.motivo === 'natale') scatola(p, 0.098, 0.035, 0.108, mat(0xf6f3ee), 0, -0.225, 0)
     return p
   })
   if (m.motivo === 'maglione') cil(busto, 0.15, 0.15, 0.05, mat(scurisci(m.c, 1.25)), 0, 0.3, 0)       // il collo alto
@@ -740,6 +769,22 @@ export function misure (g) {
 export const creaContadino = memoModello('contadino', costruisciContadino, {
   chiave: (arg = 'contadino') => chiaveAbito(typeof arg === 'string' ? abitoDiSerie(arg) : normalizzaAbito(arg, arg && arg.persona)),
 })
+
+/** La foto di un pezzo del guardaroba: il personaggio di serie con quel pezzo, ridotto alla parte che lo porta (testa per cappello, capelli e pelle;
+    busto per la maglia, dal collo in giù per il pantalone; gambe per gli stivali; busto e testa per il collo). Per i gettoni del foglio: niente icone, si vede il pezzo vero. */
+export function creaCapo (categoria, id, chi) {
+  const base = abitoDiSerie(chi), abito = normalizzaAbito({ ...base, cappello: 'niente', [categoria]: id }, base.persona)
+  const g = creaContadino(abito), { testa, gambe } = g.userData
+  const nascosti = []; g.traverse(o => { if (!o.visible) nascosti.push(o) })
+  for (const o of nascosti) o.removeFromParent()                                           // falce, ascia e canna: invisibili ma allungherebbero l'inquadratura
+  const fuori = new THREE.Group()
+  if (['cappello', 'capelli', 'pelle'].includes(categoria)) { fuori.add(testa); return fuori }
+  if (categoria === 'stivali') { fuori.add(...gambe); return fuori }
+  if (categoria === 'collo') { for (const p of gambe) p.removeFromParent(); return g }
+  testa.removeFromParent()                                                                 // maglia e pantalone: dal collo in giù
+  if (categoria === 'maglia') for (const p of gambe) p.removeFromParent()                  // la maglia è il busto con le maniche
+  return g
+}
 
 // i mattoncini per i corpi che stanno in un altro file (scena3d/modelli-bestie.js: beagle, coniglio, pappagallo)
 export { G, perno, zonaTocco, tingi, palla, tubo, morbido, liscio, mescola, sfera, cono, ombre }
