@@ -82,7 +82,7 @@ let daSalvare = 0
 let ora = 0
 const giostra = new Giostra(passo)
 
-const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!finale.value })
+const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!finale.value, invito: () => !inDue() })
 
 const avanza = progresso(CHIAVE)
 const tappa = computed(() => CAMPAGNA[tappaIdx.value] || CAMPAGNA[0])

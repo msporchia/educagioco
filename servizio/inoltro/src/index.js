@@ -19,7 +19,7 @@ const MAX_BYTE = 512                             // una mossa sono poche decine 
 const MAX_AL_SECONDO = 30                        // messaggi per connessione
 const ATTESA = 5 * 60 * 1000                     // una stanza in cui non entra nessuno muore dopo cinque minuti
 const DURATA = 60 * 60 * 1000                    // e comunque dopo un'ora
-const CREAZIONI_ORA = 30                         // stanze create all'ora da uno stesso indirizzo
+const CREAZIONI_ORA = 90                         // stanze create all'ora da uno stesso indirizzo: una famiglia sola dietro la stessa wifi, e un telefono che perde richieste ne rifà
 
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS', 'access-control-allow-headers': 'content-type' }
 const json = (dato, stato = 200) => new Response(JSON.stringify(dato), { status: stato, headers: { 'content-type': 'application/json', ...CORS } })

@@ -7,6 +7,7 @@ import { presento, invito, risposta, leggi } from './messaggi.js'
 import { GIOCHI, sappiamo } from './giochi.js'
 
 export const DURATA_INVITO = 30000       // ms: il cartello sparisce da solo
+const RIPRESENTA = 20000                 // ms: ci si ripresenta agli amici, se il primo «presento» si fosse perso per strada
 
 /* quello che le schermate guardano: gli amici (con chi è online) e l'invito in arrivo */
 export const stato = reactive({ acceso: false, amici: [], invito: null, risposta: null })
@@ -17,6 +18,8 @@ let io = { nome: '', gioco: null }
 let puoGiocare = () => true               // il bambino ha quel gioco in casa? (i grandi possono averlo spento)
 let opzioni = {}                         // WebSocketImpl, servizio, ritardi: per le prove
 let scadenza = 0
+let ripresenta = 0
+let trattati = new Set()                 // gli inviti già risposti o scaduti: chi li rimanda (l'invito si ripete finché si aspetta) non li rifà comparire
 let suBacheca = () => {}                 // l'amico ha riscritto la sua bacheca: la mette bacheca.js
 let suQui = () => {}                     // dove sta il contadino dell'amico nella fattoria in comune: lo mette la fattoria 3D
 
@@ -36,12 +39,17 @@ function arrivato(chiave, m) {
     impara(chiave, l.id, l.nome)
     presenti.set(chiave, { gioco: l.gioco })
   } else if (l.k === 'invito') {
-    if (!sappiamo(l.gioco) || !GIOCHI[l.gioco].valida(l.dati) || stato.invito) return      // uno alla volta; roba che non capiamo, non si mostra
-    if (!puoGiocare(l.gioco)) { ponte?.invia(chiave, risposta(false)); return }          // un gioco che i grandi hanno spento: «non può ora»
+    if (!sappiamo(l.gioco) || !GIOCHI[l.gioco].valida(l.dati)) return                    // roba che non capiamo, non si mostra
+    const sigla = `${chiave}:${l.gioco}:${l.dati.codice || ''}`
+    if (trattati.has(sigla) || stato.invito?.sigla === sigla) return                      // lo stesso invito rimandato: c'è già o è già andato
+    if (!puoGiocare(l.gioco)) { trattati.add(sigla); ponte?.invia(chiave, risposta(false)); return }   // un gioco che i grandi hanno spento: «non può ora»
+    // uno alla volta: un altro amico che invita adesso trova «occupato», non un silenzio; lo stesso amico che ne rifà uno nuovo
+    // ha chiuso il tavolo di prima, e quello vecchio non serve più
+    if (stato.invito && stato.invito.chiave !== chiave) { trattati.add(sigla); ponte?.invia(chiave, risposta(false)); return }
     const a = dati.amici.find(x => x.chiave === chiave)
-    stato.invito = { chiave, nome: a?.nome || 'Un amico', gioco: l.gioco, dati: l.dati }
+    stato.invito = { chiave, nome: a?.nome || 'Un amico', gioco: l.gioco, dati: l.dati, sigla }
     clearTimeout(scadenza)
-    scadenza = setTimeout(() => { stato.invito = null }, DURATA_INVITO)
+    scadenza = setTimeout(() => { if (stato.invito) trattati.add(stato.invito.sigla); stato.invito = null }, DURATA_INVITO)
   } else if (l.k === 'risposta') {
     stato.risposta = { chiave, ok: l.ok }
   } else if (l.k === 'bacheca') {
@@ -72,13 +80,17 @@ export function avvia({ nome = '', gioco = null, puoGiocare: puo = () => true, .
   stato.acceso = true
   ponte = new Ponte({ id: dati.id, chiavi: () => dati.amici.map(a => a.chiave), ...opzioni, alMessaggio: arrivato, alCambio: cambiato })
   ponte.avvia()
+  clearInterval(ripresenta)
+  ripresenta = setInterval(() => { for (const c of ponte?.presenti || []) presentati(c) }, RIPRESENTA)
+  ripresenta.unref?.()
   aggiorna()
 }
 
 export function ferma() {
   ponte?.chiudi()
   ponte = null; presenti = new Map(); conosciuti = new Set()
-  clearTimeout(scadenza)
+  clearTimeout(scadenza); clearInterval(ripresenta)
+  trattati = new Set()
   stato.acceso = false; stato.invito = null; stato.risposta = null
   aggiorna()
 }
@@ -106,6 +118,7 @@ export function rispondi(ok) {
   const i = stato.invito
   if (!i) return null
   clearTimeout(scadenza)
+  trattati.add(i.sigla)
   stato.invito = null
   ponte?.invia(i.chiave, risposta(ok))
   return ok ? i : null

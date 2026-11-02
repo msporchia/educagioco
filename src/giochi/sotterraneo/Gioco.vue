@@ -137,7 +137,7 @@ ritocca(CHIAVE, azzeraIlVecchio, { subito: true })
 // la pausa (giochi/pausa.js): il ⏸, il telefono posato, il foglio del `?`, e anche il cartello di un
 // traguardo (state.festa) — un mostro addosso mentre si guarda una medaglia è un colpo che nessuno vede.
 // Non salva vite (a passi, non a riflessi): serve a fermarsi volendo senza uscire.
-const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!fine.value })
+const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!fine.value, invito: () => !inDueOra.value })
 
 // unico posto in cui ⏸ e velo hanno senso: dentro una discesa, senza una domanda (già un velo) e senza il cartello di fine
 const siGioca = computed(() => !!corsa.value && !domanda.value && !fine.value)

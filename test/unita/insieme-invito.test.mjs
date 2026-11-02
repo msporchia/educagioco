@@ -82,6 +82,22 @@ controlla('chi non risponde: si aspetta', muta.invitato.value === 'Melody' && !m
 await avanti(40000)
 controlla('e dopo 45 s si lascia perdere, e lo si dice', !muta.regia.value && /Melody non risponde/.test(muta.messaggio.value), muta.messaggio.value)
 
+// chi preme a raffica: un tavolo solo, e il prossimo non prima della pausa
+let tavoli = 0
+globalThis.fetch = async () => { tavoli++; return { ok: true, status: 200, json: async () => ({ codice: CODICE }) } }
+const fretta = usaSfida({ gioco: 'arena', regola, alVia: () => {}, mostra: () => {} })
+for (let i = 0; i < 6; i++) fretta.crea({})
+await avanti(100)
+uguale('sei tocchi di fila chiedono un tavolo solo', tavoli, 1)
+fretta.chiudi()
+const dopo = usaSfida({ gioco: 'arena', regola, alVia: () => {}, mostra: () => {} })
+dopo.crea({})
+await avanti(1000)
+uguale('il tavolo dopo aspetta la pausa (e intanto si legge «Preparo la stanza»)', `${tavoli} ${dopo.fase.value}`, '1 creo')
+await avanti(4000)
+uguale('e poi parte da solo', tavoli, 2)
+dopo.chiudi()
+
 sfida.chiudi(); ferma()
 mock.timers.reset()
 riassunto('una sfida nata da un invito non si chiude da sola')

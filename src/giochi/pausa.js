@@ -1,6 +1,7 @@
 // La pausa, una sola per tutti i giochi: vedi docs/core/interfaccia.md.
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { state } from '../store/profile.js'
+import { stato as amici } from '../amici/servizio.js'
 
 // stesso numero di quiz/Domanda.vue: il click che il dito lascia dietro a ⏸
 export const CIECA = 320
@@ -39,7 +40,9 @@ export class Freno {
   }
 }
 
-export function usaPausa({ anche = null } = {}) {
+/* `invito`: se arriva un invito di un amico il gioco si ferma da sé e il cartello (InvitoAmico.vue) resta in vista; il gioco
+   in due lo spegne (`() => false`), perché l'altro non può aspettare e il cartello compare lo stesso */
+export function usaPausa({ anche = null, invito = () => true } = {}) {
   const freno = new Freno()
   const inPausa = ref(false)
   const motivo = ref('')
@@ -64,6 +67,8 @@ export function usaPausa({ anche = null } = {}) {
       rispecchia()
     }
   }
+
+  watch(() => amici.invito, i => { if (i && invito()) metti({ auto: true }) })
 
   onMounted(() => {
     document.addEventListener('visibilitychange', guarda)

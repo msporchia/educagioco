@@ -46,6 +46,12 @@ Perché regge (non è un buco di sicurezza):
   `scelto` ([insieme.md](insieme.md)).
 - **Ricevere**: **un cartello su qualunque schermata** («Leonardo ti invita a Castle Battle · Gioca / No grazie», montato una volta
   in `App.vue`, come `Avviso.vue`). «Gioca» apre il gioco già dentro la partita; sparisce da solo dopo 30 secondi.
+  **Se si sta già giocando** il gioco si mette in pausa da sé (`usaPausa` guarda `stato.invito`; resta in pausa finché non
+  si riprende) e il cartello sta sopra; in una partita in due non si ferma niente (l'altro non può aspettare), il cartello compare lo stesso.
+  **Un invito non si perde in silenzio**: chi invita lo rimanda ogni 5 s finché aspetta (se all'amico era caduto il filo, il primo
+  si perde), e chi lo riceve ne mostra uno solo per tavolo (`trattati`: uno già accettato, rifiutato o scaduto non ricompare);
+  lo stesso amico che ne rifà uno nuovo sostituisce il vecchio, un altro amico trova «non può ora» (non un silenzio di 45 s);
+  ci si ripresenta agli amici ogni 20 s, se il primo «presento» si fosse perso.
 - **Si è raggiungibili mentre l'app è aperta** (se i grandi l'hanno acceso): il telefono tiene aperto **un collegamento solo**
   (non uno per amico), con rientro a ritardo crescente se cade, e un ping ogni 15 s: senza risposta per 40 s il filo è morto in
   silenzio e se ne apre un altro (`BATTITO` in `amici/rete.js`; il ping lo risponde Cloudflare da solo). Se internet manca o il servizio è giù: nessun errore, nessun
