@@ -116,10 +116,10 @@ export const GUIDE = [
         'Niente barra del browser: i bambini non finiscono su altre pagine.',
       ] },
       { se: 'da-installare', titolo: '⚠️ Una cosa da sapere', righe: [
-        'I progressi restano **dentro questo telefono**: non c\'è nessun account e niente va su internet. Se un giorno cancelli i dati del browser, spariscono. Per questo c\'è «Salva su file» nelle impostazioni.',
+        'I progressi restano **dentro questo telefono**: non c\'è nessun account e niente va su internet, a meno che accendiate voi gli amici online (vedi la guida «Gli amici»). Se un giorno cancelli i dati del browser, spariscono. Per questo c\'è «Salva su file» nelle impostazioni.',
       ] },
       { titolo: 'Come fa a funzionare senza rete', chiuso: true, testo: [
-        'Perché non c\'è nessun server con cui parlare: il gioco **è** una pagina sola, e dentro c\'è tutto — il codice, i disegni, e anche le voci che pronunciano le parole inglesi e spagnole, che sono registrate e non chieste a un servizio. Alla prima apertura il telefono se la tiene, e da lì in poi la rete non serve più.',
+        'Perché di base non c\'è nessun server con cui parlare: il gioco **è** una pagina sola, e dentro c\'è tutto — il codice, i disegni, e anche le voci che pronunciano le parole inglesi e spagnole, che sono registrate e non chieste a un servizio. Alla prima apertura il telefono se la tiene, e da lì in poi la rete non serve più. L\'unica eccezione sono gli amici online, spenti di partenza: li accendete voi, bambino per bambino.',
         'Serve solo per prendere le versioni nuove, e succede da sé quando c\'è: in fondo alla schermata iniziale è scritto di quando è quella in uso, così due telefoni si confrontano a colpo d\'occhio. Accanto c\'è «↻ cerca aggiornamenti», per quando non si vuole aspettare.',
       ] },
     ],
@@ -335,7 +335,8 @@ export const GUIDE = [
       ] },
       { titolo: 'Cosa esce dal telefono', chiuso: true, testo: [
         'Gli amici sono l\'unica parte del gioco che parla con un altro telefono, e solo per i bambini dove l\'avete acceso. Passa da un piccolo servizio su Cloudflare, a nome mio, che fa da postino fra i due telefoni.',
-        'Il **nome** del bambino va solo al telefono dell\'amico, mai su un archivio. Sul servizio, per ogni amicizia, resta per **una settimana al massimo** a che tappa è arrivato in ogni gioco e i suoi record: numeri, con il giorno ma non l\'ora, sotto un codice a caso e senza nome. Chi non apre il gioco per una settimana non ha più niente lì sopra. Cloudflare tiene per un mese le copie di sicurezza del servizio, che può riaprire solo chi ha l\'account, apposta.',
+        'Il **nome** del bambino va solo al telefono dell\'amico, mai su un archivio. Sul servizio, per ogni amicizia, resta per **una settimana al massimo** a che tappa è arrivato in ogni gioco e i suoi record: numeri, con il giorno ma non l\'ora, sotto un codice a caso e senza nome. Chi non apre il gioco per una settimana non ha più niente lì sopra. Lo stesso vale per le mosse di una partita in due e per la fattoria in comune: restano il tempo di giocare (la fattoria in comune fino a due mesi senza che nessuno la apra), sotto lo stesso codice a caso, e poi il servizio le cancella da sé. Cloudflare tiene per un mese le copie di sicurezza del servizio, che può riaprire solo chi ha l\'account, apposta.',
+        'Il servizio non ha account, non salva cognomi, contatti o posizione, e non usa strumenti di statistica. Per frenare gli abusi vede l\'indirizzo di rete di chi lo chiama, ma lo tiene al massimo un\'ora. Spegnere gli amici online da qui, per un bambino, ferma ogni collegamento.',
         'Gli inviti e le risposte hanno una forma fissa (chi, quale gioco, sì o no): non c\'è un posto dove scrivere, quindi non c\'è niente da leggere.',
       ] },
     ],
