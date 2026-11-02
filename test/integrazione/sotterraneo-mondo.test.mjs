@@ -84,7 +84,7 @@ uguale('e non la terra dipinta', await page.locator('[data-terra]').count(), 0)
              preso: preso ? Object.entries(preso.dataset).map(([k, v]) => `${k}=${v}`).join(' ') : t && t.outerHTML.slice(0, 120),
              dove: [Math.round(r.x + r.width / 2), Math.round(r.y + r.height * 0.6)] }
   }))
-  uguale('nel villaggio ci sono i cinque mercanti, la ragazza, il capitano e il minatore', gente.map(q => q.chi).sort().join(','), ['armaiolo', 'capitano', 'carovaniere', 'erborista', 'incantatrice', 'minatore', 'ragazza', 'rigattiere'].sort().join(','))
+  uguale('nel villaggio ci sono i cinque mercanti, la ragazza, il capitano, il tintore e il minatore', gente.map(q => q.chi).sort().join(','), ['armaiolo', 'capitano', 'carovaniere', 'erborista', 'incantatrice', 'minatore', 'ragazza', 'rigattiere', 'tintore'].sort().join(','))
   controlla('tutti a schermo dalla partenza', gente.every(q => q.vis === '1'), JSON.stringify(gente.filter(q => q.vis !== '1')))
   controlla('e ognuno si tocca lui', gente.every(q => q.suo), JSON.stringify(gente.filter(q => !q.suo)))
   uguale('niente grate', await page.locator('[data-grata]').count(), 0)
