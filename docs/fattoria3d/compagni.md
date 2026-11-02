@@ -42,8 +42,9 @@ scintille e `ui.avviso` («Watson è arrivato!»). Il controllo è una volta al 
   annusa, dorme sdraiato col mento sulle zampe, fa festa (scodinzola col sedere, lingua fuori), trotta (la frangia e le
   orecchie ballano), e le pose di «Quando ci premi» (alza la testa, zampa, rotola, salta, riporta, starnuta, gira, mano, sbadiglia, incontra: sotto).
   In più un **bastoncino** (un mesh, ~20 triangoli, nascosto: lo mostra solo `riporta`). Il catalogo 3D ha una voce per posa (`npm run catalogo3d:scheda -- --gioco fattoria --q watson`).
-- **I gatti** (`creaGatto(variante)`): di cartone morbido. Testa tonda e grande con le guance piene, orecchie triangolari grandi
-  rosa dentro, occhi enormi con la fessura e il riflesso, nasino a triangolo e bocca a «w» (una **trama canvas trasparente** sul
+- **I gatti** (`creaGatto(variante)`): di cartone morbido. Testa tonda e grande con le guance piene (un volume solo con la testa: due palle
+  attaccate ai lati sembravano pezzi staccati), orecchie a guscio arrotondato **cotte nella testa** (base affondata nel cranio, stesso mantello:
+  Irene ha una nera e una arancione) con l'interno rosa; due coni sopra la testa sembravano staccati. Provato: orecchie a cono col bordo nero, non vanno, occhi enormi con la fessura e il riflesso, nasino a triangolo e bocca a «w» (una **trama canvas trasparente** sul
   davanti della testa, una per mantello, più una a occhi chiusi che si accende solo mentre dorme), sei baffi in un mesh. Il pelo è
   liscio: palle e tubi fusi in un mesh per pezzo (corpo, testa, ogni zampa, ogni segmento di coda) col mantello nei vertici:
   Sherlock (variante `bianconero`, dalla foto) nero con la striscia bianca dalla fronte al muso, bavaglino bianco, davanti
@@ -55,7 +56,7 @@ scintille e `ui.avviso` («Watson è arrivato!»). Il controllo è una volta al 
   stesso piano, resta un uncino. Gli orecchi grandi spingono l'altezza a ~75 cm in piedi e ~46 cm sdraiato (il test lo sa).
   Pose: sta, siede (coda attorno), si lava (zampa su), dorme a pagnotta, si stiracchia, fa le fusa (gli occhi si socchiudono piano), cammina basso,
   e struscia, rotola, miao, volta, incontra (con `sub`).
-- **Il costo**: Watson 17 mesh e ~6000 triangoli (il pelo; il test tiene il tetto a 8000), un gatto 15 mesh e ~5400 triangoli (lisci), il
+- **Il costo**: Watson 17 mesh e ~6000 triangoli (il pelo; il test tiene il tetto a 8000), un gatto 15 mesh e ~8000 triangoli (lisci, da lontano ~3200), il
   contadino ~38 mesh dopo la fusione (di più con certi capi, il test tiene il tetto); geometrie e materiali condivisi, nessuna luce, nessuna texture oltre alla faccia. In più una sfera **invisibile** (`userData.colpo`) fa da bersaglio del dito: il gatto è piccolo.
 - Le pose (`posaCane`, `posaGatto`) sono funzioni senza memoria: stato, velocità, fase del passo e tempo; si provano in node.
 

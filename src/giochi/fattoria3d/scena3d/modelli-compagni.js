@@ -494,11 +494,12 @@ function coloriGatto (v) {
         const c = chiazza(p), buco = liscio(0.62, 0.78, Math.sin(p.z * 21 + 0.5) * Math.sin(p.x * 38 + 2))
         mescola(k, AR, su * (1 - buco)); nera(k, su * (1 - buco) * liscio(0.1, 0.3, c)); return ombraSotto(k, p) },
       testa: (p, k) => { k.setHex(BIANCO_G); const ax = Math.abs(p.x), sx = Math.sign(p.x) || 1, davanti = liscio(0.06, 0.12, p.z), w = 0.012 + 0.07 * liscio(0.2, 0.04, p.y)
-        const bianco = Math.max(davanti * (1 - liscio(w - 0.015, w + 0.015, ax)) * (1 - liscio(0.17, 0.22, p.y)),
-          liscio(0.08, 0.13, p.z) * (1 - liscio(0.05, 0.09, p.y)) * (1 - liscio(0.1, 0.17, ax)))
+        const bianco = Math.max(davanti * (1 - liscio(w - 0.03, w + 0.03, ax)) * (1 - liscio(0.15, 0.23, p.y)),
+          liscio(0.08, 0.13, p.z) * (1 - liscio(0.04, 0.1, p.y)) * (1 - liscio(0.09, 0.2, ax)))
         mescola(k, AR, 1 - bianco)                                                                // fronte e guance arancioni
-        nera(k, (1 - bianco) * (sx < 0 ? liscio(0.1, 0.14, p.y) + 0.45 * liscio(0.1, 0.0, p.y) * liscio(0.07, 0.12, ax) : liscio(0.17, 0.21, p.y) * liscio(0.04, 0.1, ax)))   // un lato più nero, l'altro più arancione
+        nera(k, (1 - bianco) * (sx < 0 ? liscio(0.09, 0.16, p.y) + 0.4 * liscio(0.1, 0.0, p.y) * liscio(0.07, 0.15, ax) : liscio(0.16, 0.23, p.y) * liscio(0.03, 0.12, ax)))   // un lato più nero, l'altro più arancione
         return k },
+      orecchio: (p, k) => mescola(k.setHex(AR), NERO_G, liscio(0.015, -0.015, p.x)),                    // una nera e una arancione
       zampa: i => (p, k) => { k.setHex(BIANCO_G)
         if (i < 2) { mescola(k, i ? NERO_G : AR, liscio(-0.04, 0.0, p.y)); mescola(k, AR, liscio(0.25, 0.5, Math.sin(p.y * 75)) * liscio(-0.17, -0.1, p.y) * liscio(-0.03, -0.06, p.y)) }
         else { mescola(k, i === 2 ? AR : NERO_G, 1 - liscio(-0.15, -0.17, p.y)); if (i === 2) mescola(k, NERO_G, liscio(0.0, 0.05, p.y)) }
@@ -536,8 +537,8 @@ function coloriGatto (v) {
       mescola(k, BIANCO_G, (1 - liscio(-0.01, 0.04, p.y)) * liscio(0.05, 0.15, p.z) * (1 - liscio(0.06, 0.1, ax))); return ombraSotto(k, p) },
     // la testa nera con la striscia bianca dalla fronte al naso, che si apre nel muso e nelle guance bianche
     testa: (p, k) => { k.setHex(NERO_G); const ax = Math.abs(p.x), davanti = liscio(0.06, 0.12, p.z), w = 0.012 + 0.07 * liscio(0.2, 0.04, p.y)
-      const striscia = davanti * (1 - liscio(w - 0.015, w + 0.015, ax)) * (1 - liscio(0.17, 0.22, p.y))
-      const muso = liscio(0.08, 0.13, p.z) * (1 - liscio(0.05, 0.09, p.y)) * (1 - liscio(0.1, 0.17, ax))
+      const striscia = davanti * (1 - liscio(w - 0.03, w + 0.03, ax)) * (1 - liscio(0.15, 0.23, p.y))
+      const muso = liscio(0.08, 0.13, p.z) * (1 - liscio(0.04, 0.1, p.y)) * (1 - liscio(0.09, 0.2, ax))
       return mescola(k, BIANCO_G, Math.max(striscia, muso)) },
     // le zampe davanti bianche dal gomito, le dietro nere con la zampetta bianca
     zampa: i => (p, k) => { k.setHex(NERO_G); return mescola(k, BIANCO_G, i < 2 ? liscio(-0.04, -0.08, p.y) : liscio(-0.14, -0.17, p.y)) },
@@ -587,13 +588,24 @@ function facciaGatto (v, chiusi = false) {
   return t
 }
 
+// L'orecchio: un guscio liscio e schiacciato, con la punta arrotondata e la base affondata nel cranio (un'orecchia a cono sopra la testa
+// sembra staccata). Si cuoce nella testa e ne prende il mantello; l'interno rosa è un secondo guscio più piccolo, appena fuori dal davanti.
+const PROFILO_ORECCHIO = [[0, -0.05], [0.095, -0.05], [0.092, 0], [0.083, 0.04], [0.066, 0.085], [0.044, 0.125], [0.022, 0.153], [0.007, 0.167], [0, 0.17]]
+const guscioOrecchio = chiave => G(chiave + (DETTAGLIO < 1 ? ':lod' : ''), () => { const l = new THREE.LatheGeometry(PROFILO_ORECCHIO.map(([r, y]) => new THREE.Vector2(r, y)), DETTAGLIO < 1 ? 7 : 16); l.deleteAttribute('uv'); return l })
+/** Le due geometrie di un'orecchia (`s` = -1 sinistra, 1 destra) già nel perno della testa: [fuori, dentro rosa]. */
+function orecchioGatto (s) {
+  const lega = new THREE.Matrix4().compose(new THREE.Vector3(s * 0.092, 0.185, 0.03), new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.12, 0, -s * 0.3)), new THREE.Vector3(1, 1, 1))
+  const fai = (pos, sc) => guscioOrecchio('orecchio-g').clone().applyMatrix4(new THREE.Matrix4().compose(pos, new THREE.Quaternion(), sc).premultiply(lega))
+  return [fai(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.92, 1, 0.5)), fai(new THREE.Vector3(0, 0.022, 0.024), new THREE.Vector3(0.54, 0.88, 0.3))]
+}
+
 /** Un gatto di cartone morbido: corpo ovale con la schiena un po' inarcata, testa tonda con le guance piene, orecchie grandi
     rosa dentro, zampe sottili con la zampetta tonda, coda lunga in tre pezzi che ondeggia. */
 export function creaGatto (variante = 'bianconero') {
   const M = MANTELLI[variante] || MANTELLI.bianconero
   const v = MANTELLI[variante] ? variante : 'bianconero'
   const col = coloriGatto(v), g = new THREE.Group()
-  const rosa = mat(v === 'nero' ? 0xc8808c : 0xf0a0ac)
+  const rosa = mat(v === 'nero' ? 0xc8808c : 0xf0a0ac, { flatShading: false })
   const corpo = perno(g, 0, 0.2, -0.18)
   morbido(corpo, `gatto:${v}:corpo`, M.lucido, parti => {
     palla(parti, [0, 0.108, 0.17], [0.137, 0.13, 0.28], col.corpo, 24, 14)                  // il corpo ovale, un po' più alto a metà schiena
@@ -604,19 +616,18 @@ export function creaGatto (variante = 'bianconero') {
   // la testa: il perno al collo; tonda, grande, con le guance piene
   const testa = perno(corpo, 0, 0.14, 0.4)
   morbido(testa, `gatto:${v}:testa`, M.lucido, parti => {
-    palla(parti, [0, 0.1, 0.06], [0.17, 0.14, 0.145], col.testa, 24, 16)
-    for (const s of [-1, 1]) palla(parti, [s * 0.1, 0.05, 0.1], [0.08, 0.07, 0.075], col.testa, 12, 8)
+    palla(parti, [0, 0.1, 0.06], [0.17, 0.14, 0.145], col.testa, 28, 18)
+    palla(parti, [0, 0.06, 0.05], [0.164, 0.1, 0.138], col.testa, 20, 12)                    // le guance piene: un volume solo con la testa, niente palle che sporgono
+    for (const s of [-1, 1]) { const g = orecchioGatto(s)[0]; tingi(g, col.orecchio || col.testa); parti.push(g) }
   })
   const facce = [false, true].map(chiusi => {                                            // occhi aperti, e chiusi per quando dorme
     const f = new THREE.Mesh(G('faccia-gatto', () => new THREE.SphereGeometry(0.1, 20, 12, Math.PI / 2 - 1.0, 2.0, 0.95, 1.3)),
       new THREE.MeshStandardMaterial({ map: facciaGatto(v, chiusi), transparent: true, roughness: 0.9, depthWrite: false, polygonOffsetFactor: -2, polygonOffsetUnits: -2, polygonOffset: true }))
     f.position.set(0, 0.1, 0.06); f.scale.set(0.17 * 10 * 1.012, 0.14 * 10 * 1.012, 0.145 * 10 * 1.012); f.visible = !chiusi; testa.add(f); return f
   })
-  const orecchie = [-1, 1].map(s => {
-    const fuoriM = v === 'bianconero' ? mat(NERO_G) : v === 'calico' ? mat(NERO_G) : v === 'nero' ? mat(0x2a2a32) : v === 'rosso' ? mat(0xe58a2e) : mat(BIANCO_G)
-    const o = cono(testa, 0.085, 0.17, fuoriM, s * 0.105, 0.29, 0.03, 3); o.scale.z = 0.55; o.rotation.set(0, Math.PI, -s * 0.28)
-    const d = cono(testa, 0.055, 0.115, rosa, s * 0.103, 0.282, 0.03 + 0.012, 3); d.scale.z = 0.55; d.rotation.set(0, Math.PI, -s * 0.28)
-    return [o, d]
+  const orecchie = [-1, 1].map(s => {                                                     // l'interno rosa (il fuori è nella testa)
+    const d = new THREE.Mesh(G(`orecchio-rosa${s}`, () => orecchioGatto(s)[1]), rosa); d.castShadow = false; testa.add(d)
+    return d
   })
   // i baffi: sei fili sottili in un mesh solo
   const baffi = G('baffi-gatto', () => {
@@ -631,8 +642,8 @@ export function creaGatto (variante = 'bianconero') {
   const gambe = [[-0.07, 0.16], [0.07, 0.16], [-0.07, -0.16], [0.07, -0.16]].map(([x, z], i) => {
     const p = perno(g, x, 0.2, z), c = col.zampa(i)
     morbido(p, `gatto:${v}:zampa${i}`, M.lucido, parti => {
-      tubo(parti, 0.04, 0.03, 0.17, [0, -0.095, 0], c, 10); palla(parti, [0, -0.01, 0], [0.043, 0.04, 0.043], c, 10, 8)    // la spalla tonda
-      palla(parti, [0, -0.185, 0.014], [0.05, 0.03, 0.062], c, 10, 8)                              // la zampetta tonda
+      tubo(parti, 0.043, 0.031, 0.17, [0, -0.095, 0], c, 12); palla(parti, [0, -0.01, 0], [0.043, 0.04, 0.043], c, 12, 8)    // la spalla tonda
+      palla(parti, [0, -0.185, 0.014], [0.05, 0.03, 0.062], c, 12, 8)                              // la zampetta tonda
       if (i > 1) palla(parti, [0, 0.03, -0.01], [0.052, 0.085, 0.1], c, 10, 8)                     // la coscia
     })
     p.userData.base = [x, 0.2, z]; return p
@@ -641,11 +652,11 @@ export function creaGatto (variante = 'bianconero') {
   const coda1 = perno(corpo, 0, 0.14, -0.08), coda2 = perno(coda1, 0, 0.2, 0), coda3 = perno(coda2, 0, 0.18, 0)
   const code = [[coda1, 0.2, 0.052, 0.046], [coda2, 0.18, 0.046, 0.042], [coda3, 0.16, 0.042, 0.036]]
   code.forEach(([p, h, r1, r2], n) => morbido(p, `gatto:${v}:coda${n}`, M.lucido, parti => {
-    tubo(parti, r2, r1, h, [0, h / 2, 0], col.coda(n), 10); palla(parti, [0, 0, 0], [r1, r1, r1], col.coda(n), 10, 8)
+    tubo(parti, r2, r1, h, [0, h / 2, 0], col.coda(n), 12); palla(parti, [0, 0, 0], [r1, r1, r1], col.coda(n), 12, 8)
     if (n === 2) palla(parti, [0, h, 0], [r2, r2, r2], col.coda(n), 10, 8)                          // la punta tonda
   }))
   zonaTocco(g, 0.38, 0.22)
-  g.userData = { ...g.userData, corpo, testa, gambe, coda: [coda1, coda2, coda3], orecchie: orecchie.flat(), facce, tipo: 'gatto', variante: v }
+  g.userData = { ...g.userData, corpo, testa, gambe, coda: [coda1, coda2, coda3], orecchie, facce, tipo: 'gatto', variante: v }
   return g
 }
 
