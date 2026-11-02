@@ -18,8 +18,9 @@ const props = defineProps({
 const emit = defineEmits(['scegli', 'aspetto', 'chiudi'])
 
 const scheda = ref('sesso')
+// a schermo mai «sesso» (è per bambini): la prima scheda dice chi si è, coi nomi dei personaggi (Mago/Maga…); `sesso` è solo la chiave interna
 const SCHEDE = [
-  { id: 'sesso', nome: 'Sesso', emoji: '⚥' }, { id: 'pelle', nome: 'Pelle', emoji: '🖐️' }, { id: 'capelli', nome: 'Colore capelli', emoji: '🎨' },
+  { id: 'sesso', nome: 'Chi sei' }, { id: 'pelle', nome: 'Pelle', emoji: '🖐️' }, { id: 'capelli', nome: 'Colore capelli', emoji: '🎨' },
   { id: 'taglio', nome: 'Taglio', emoji: '✂️' }, { id: 'barba', nome: 'Barba', emoji: '🧔' },
 ]
 const vedi = (sesso, a = props.aspetto) => ({ ...props.eroe, ...VARIANTI[props.eroe.chiave][sesso], sprite: spriteConAspetto(VARIANTI[props.eroe.chiave][sesso].sprite, a) })
