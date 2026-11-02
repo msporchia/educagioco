@@ -102,7 +102,7 @@ function paragnatici (g, ctx) {
   const fe = met(FERRO), fl = met(FERRO_L), oro = met(ORO), ro = mat(ROSSO), ros = mat(ROSSO_S)
   cupola(g, fe, { rx: 1.12, ry: 1.05, rz: 1.1, y: 0.03, th: 1.25 })
   anello(g, 1.08, 1.07, 0.07, oro, 0.37)
-  const zd = ctx.chiave === 'elfa' ? 0.15 : -0.3                                                // i paragnatici lasciano fuori l'orecchio lungo
+  const zd = ctx.classe === 'elfa' ? 0.15 : -0.3                                                // i paragnatici lasciano fuori l'orecchio lungo
   const placca = G('placca' + zd, () => sagoma([[0.5, 0.36], [0.55, -0.05], [0.28, -0.5], [zd + 0.1, -0.5], [zd, -0.1], [zd, 0.36]], 0.08))
   for (const s of [-1, 1]) { pz(g, placca, fe, s * 1.07, 0, 0); sc(g, 0.1, 0.05, 0.5, oro, s * 1.07, -0.5, 0.2 + zd / 2 - 0.1) }
   const cresta = pz(g, G('arcoC2', () => new THREE.TorusGeometry(1, 0.05, 5, 14, PI)), fl, 0, 0.03, 0, 1.11, 1.06, 1.11); cresta.rotation.y = PI / 2
@@ -319,7 +319,7 @@ export function copri (eroe, id) {
   if (chioma) chioma.visible = !!def.capelli
   const k = def.capelli && chioma ? 1.12 : 1.0
   const g = new THREE.Group(); g.position.set(0, u.cy, 0); g.scale.set(u.R * k, u.R, u.R * k); u.testa.add(g)
-  const anima = def.fa(g, { chiave: u.chiave, R: u.R, k })
+  const anima = def.fa(g, { chiave: u.chiave, classe: u.classe || u.chiave, R: u.R, k })
   g.userData.triangoli = contaTriangoli(g)
   u.animaCopricapo = anima || null
   const togli = () => {

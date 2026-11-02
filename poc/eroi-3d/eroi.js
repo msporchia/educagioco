@@ -5,7 +5,9 @@
 // `userData = { gambe:[sx,dx], busto, testa, bracci:[sx,dx], falce, ascia, anima(t) }`. I bracci hanno il pugno a y = -0.29.
 import * as THREE from 'three'
 
-export const CHIAVI = ['cavaliere', 'elfa', 'mago', 'nano']
+export const CHIAVI = ['cavaliere', 'cavaliera', 'elfa', 'elfo', 'mago', 'maga', 'nano', 'nana']
+// ogni modello appartiene a una classe: le pose, i gesti e il rimbalzo sono della classe (stesse armi, stessa guardia), la faccia e il corpo del modello
+export const CLASSE = { cavaliere: 'cavaliere', cavaliera: 'cavaliere', elfa: 'elfa', elfo: 'elfa', mago: 'mago', maga: 'mago', nano: 'nano', nana: 'nano' }
 
 // ── mattoncini ──
 const cacheMat = new Map()
@@ -56,7 +58,12 @@ const STILI = {
   cavaliere: { pelle: '#e8b48c', guance: 'rgba(225,110,90,.28)', iride: '#2c6ea8', occX: 46, occY: 80, rx: 14, ry: 17, palp: 0.3, inclina: 0.0, cejaC: '#4a2e1a', cejaS: 8, cejaOut: -34, cejaIn: -22, bocca: 'serio', cicatrice: true },
   elfa: { pelle: '#f7d9c0', guance: 'rgba(240,130,130,.35)', iride: '#2fae6a', occX: 47, occY: 80, rx: 15, ry: 20, palp: 0.08, inclina: 0.2, cejaC: '#b99a50', cejaS: 4.5, cejaOut: -35, cejaIn: -27, bocca: 'sorriso', ciglia: true, lentiggini: true },
   mago: { pelle: '#f2cfae', guance: 'rgba(230,120,110,.3)', iride: '#4b79d8', occX: 46, occY: 82, rx: 13, ry: 16, palp: 0.34, inclina: 0.0, cejaC: '#f0eef4', cejaS: 10, cejaOut: -30, cejaIn: -26, bocca: 'nulla', rughe: true },
-  nano: { pelle: '#e39a74', guance: 'rgba(215,80,60,.4)', iride: '#6a4426', occX: 46, occY: 84, rx: 12, ry: 14, palp: 0.32, inclina: 0.0, cejaC: '#b84a1a', cejaS: 13, cejaOut: -28, cejaIn: -14, bocca: 'nulla', rughe: true }
+  nano: { pelle: '#e39a74', guance: 'rgba(215,80,60,.4)', iride: '#6a4426', occX: 46, occY: 84, rx: 12, ry: 14, palp: 0.32, inclina: 0.0, cejaC: '#b84a1a', cejaS: 13, cejaOut: -28, cejaIn: -14, bocca: 'nulla', rughe: true },
+  // le varianti: stesso gusto, un'altra faccia (ciglia e sorriso dove servono, niente rughe né cicatrici dove non stanno)
+  cavaliera: { pelle: '#ebbb96', guance: 'rgba(225,110,100,.34)', iride: '#3f7f5c', occX: 46, occY: 80, rx: 14, ry: 18, palp: 0.22, inclina: 0.06, cejaC: '#6a3a22', cejaS: 5.5, cejaOut: -34, cejaIn: -24, bocca: 'sorriso', ciglia: true },
+  elfo: { pelle: '#f3d3b6', guance: 'rgba(235,130,120,.25)', iride: '#2b9a8f', occX: 47, occY: 80, rx: 14, ry: 19, palp: 0.2, inclina: 0.2, cejaC: '#9aa0ac', cejaS: 5.5, cejaOut: -35, cejaIn: -26, bocca: 'serio' },
+  maga: { pelle: '#f4d3b4', guance: 'rgba(235,120,120,.4)', iride: '#8a4fc0', occX: 46, occY: 82, rx: 14, ry: 18, palp: 0.2, inclina: 0.05, cejaC: '#7a3b1e', cejaS: 4.5, cejaOut: -32, cejaIn: -25, bocca: 'sorriso', ciglia: true, lentiggini: true },
+  nana: { pelle: '#e7a07c', guance: 'rgba(215,80,70,.42)', iride: '#4f8a52', occX: 46, occY: 84, rx: 13, ry: 16, palp: 0.26, inclina: 0.0, cejaC: '#b84a1a', cejaS: 9, cejaOut: -29, cejaIn: -17, bocca: 'sorriso', ciglia: true, lentiggini: true }
 }
 const trame = new Map()
 function disegnaFaccia (s, chiusi) {
@@ -133,7 +140,7 @@ function scheletro (chiave, o) {
   })
   const falce = perno(bracci[1], 0, -0.29, 0); falce.visible = false          // segnaposto: l'equipaggiamento li spegne
   const ascia = perno(bracci[1], 0, -0.29, 0); ascia.visible = false
-  g.userData = { chiave, gambe, busto, testa, bracci, falce, ascia, cy, R, faccia, sway: [], altezzaBusto: legH, th }
+  g.userData = { chiave, classe: CLASSE[chiave], gambe, busto, testa, bracci, falce, ascia, cy, R, faccia, sway: [], altezzaBusto: legH, th }
   return g
 }
 
@@ -145,18 +152,18 @@ const FBALZO = { cavaliere: 1.3, elfa: 1.55, mago: 1.2, nano: 1.45 }            
 const GESTI = { cavaliere: { P: 6.4, D: 1.7, off: 2.2 }, elfa: { P: 7.1, D: 1.8, off: 3.5 }, mago: { P: 5.6, D: 1.8, off: 1.0 }, nano: { P: 7.8, D: 2.6, off: 4.0 } }
 /** Il gesto speciale: `k` da 0 a 1 mentre dura (-1 fuori), `n` il numero del ciclo. `t` è il tempo senza la fase. */
 export function gesto (u, t) {
-  const g = GESTI[u.chiave], x = t + u.fase + g.off, n = Math.floor(x / g.P), k = (x - n * g.P) / g.D
+  const g = GESTI[u.classe], x = t + u.fase + g.off, n = Math.floor(x / g.P), k = (x - n * g.P) / g.D
   return k < 1 ? { k, n } : { k: -1, n }
 }
 /** L'istante `t` (senza fase) in cui il gesto numero `n` è a `k` (per le strisce). */
-export function istanteGesto (chiave, n, k) { const g = GESTI[chiave]; return n * g.P - g.off - FASI[chiave] + k * g.D }
+export function istanteGesto (chiave, n, k) { const c = CLASSE[chiave], g = GESTI[c]; return n * g.P - g.off - FASI[c] + k * g.D }
 const mescola = (a, b, k) => a + (b - a) * k
 /** L'idle: respiro più marcato, rimbalzo, occhi che ammiccano e capelli/barba che seguono con ritardo. */
 function finisci (g) {
   const u = g.userData, testaY = u.testa.position.y
-  u.fase = FASI[u.chiave]
+  u.fase = FASI[u.classe]
   u.anima = t => {
-    const tt = t + u.fase, wb = Math.PI * 2 * FBALZO[u.chiave]
+    const tt = t + u.fase, wb = Math.PI * 2 * FBALZO[u.classe]
     const r = Math.sin(tt * 2.1), sy = 1 + 0.032 * r, sx = 1 + 0.024 * r                     // il petto sale e si allarga
     u.busto.scale.set(sx, sy, sx)
     u.testa.scale.set(1 / sx, 1 / sy, 1 / sx); for (const b of u.bracci) b.scale.set(1 / sx, 1 / sy, 1 / sx)   // la testa e le braccia (e l'arma) non si deformano
@@ -169,14 +176,14 @@ function finisci (g) {
     const ciclo = (tt * 0.9 + 1.3) % 4.6, chiuso = ciclo > 4.44 || (ciclo > 2.3 && ciclo < 2.42)
     const m = trammaFaccia(u.chiave, chiuso); if (u.faccia.material.map !== m) u.faccia.material.map = m
     const ge = gesto(u, t), pa = u.perniArmi
-    if (u.chiave === 'mago') {                                                              // il bagliore sulla gemma dopo il colpo della staffa
+    if (u.classe === 'mago') {                                                              // il bagliore sulla gemma dopo il colpo della staffa
       const arma = pa && pa.destra && pa.destra.children[0]
       if (arma && arma.userData.liberi) {
         if (!arma.userData.bagliore) { const l = new THREE.PointLight(0xc59bff, 0, 1.6, 1.5); l.position.set(0, 1.2, 0.1); arma.add(l); arma.userData.bagliore = l }
         arma.userData.bagliore.intensity = ge.k > 0.5 ? 3.2 * Math.sin(Math.PI * (ge.k - 0.5) * 2) ** 2 : 0
       }
     }
-    if (u.chiave === 'nano' && u.barba) {                                                   // la barba si sistema: uno scuotimento mentre la mano passa
+    if (u.classe === 'nano' && u.barba) {                                                   // la barba si sistema: uno scuotimento mentre la mano passa
       const q = ge.k > 0.45 ? Math.sin(Math.PI * (ge.k - 0.45) / 0.55) : 0
       u.barba.rotation.x += 0.12 * q * Math.sin(ge.k * 40); u.barba.rotation.z += 0.06 * q * Math.sin(ge.k * 31)
     }
@@ -400,7 +407,184 @@ function nano () {
   return finisci(g)
 }
 
-const COSTRUTTORI = { cavaliere, elfa, mago, nano }
+// ══════════ LE VARIANTI: la cavaliera, l'elfo, la maga, la nana ══════════
+// Stessa classe, stesso scheletro (armi e pose sono della classe): cambiano il corpo, la testa, i capelli e i colori. Il copricapo di
+// serie (`copricapo`) e i capelli sotto (`capelli`) hanno gli stessi nomi dei maschi/delle femmine di prima, che copri() nasconde.
+
+// La cavaliera: piastre azzurro-ferro come il cavaliere, ma tabarro blu notte con la croce d'argento, spalline più piccole,
+// gonnellino di lamelle, elmo aperto con la coda di cavallo castana che scende dalla nuca.
+function cavaliera () {
+  const FERRO = 0x8ea6c0, FERRO_S = 0x5d7391, FERRO_L = 0xd3e0ee, SCURO = 0x3e4a5e, BLU = 0x2f4f93, BLU_S = 0x1f3566, ARGENTO = 0xdfe6ee, CUOIO = 0x6a4426, CASTANO = 0x7a4326, CASTANO_S = 0x573019
+  const fe = metallo(FERRO), fes = metallo(FERRO_S), fel = metallo(FERRO_L), bl = M(BLU), bls = M(BLU_S), ar = metallo(ARGENTO, { metalness: 0.55, roughness: 0.3 }), ca = M(CASTANO), cas = M(CASTANO_S)
+  const g = scheletro('cavaliera', { legH: 0.34, legX: 0.105, legR: 0.07, torso: [0.36, 0.29, 0.24], armX: 0.235, R: 0.27, pelle: 0xebbb96, calzoni: fes, corpo: fe, stivale: M(SCURO, { metalness: 0.3 }), maniche: fes, guanti: fel, manicaR: 0.058, bot: [0.14, 0.13, 0.22] })
+  const u = g.userData, { busto, testa, gambe, bracci, cy, R } = u
+  for (const p of gambe) { sfera(p, 0.055, fel, 0, -0.1, 0.05, 1, 1, 0.8); scatola(p, 0.12, 0.03, 0.14, ar, 0, -0.205, 0.03) }
+  // corazza stretta in vita, tabarro blu con la croce, cintura, gonnellino di lamelle
+  sfera(busto, 0.18, fel, 0, 0.19, 0.06, 1.0, 0.75, 0.62)
+  scatola(busto, 0.15, 0.27, 0.014, bl, 0, 0.13, 0.132); scatola(busto, 0.04, 0.22, 0.02, ar, 0, 0.145, 0.14); scatola(busto, 0.13, 0.04, 0.02, ar, 0, 0.19, 0.14)
+  scatola(busto, 0.38, 0.05, 0.27, M(CUOIO), 0, 0.03, 0); scatola(busto, 0.06, 0.06, 0.03, ar, 0, 0.03, 0.14)
+  const gonna = perno(busto, 0, 0.0, 0)
+  for (let i = 0; i < 8; i++) { const a = i * Math.PI * 2 / 8 + 0.2; const l = scatola(gonna, 0.1, 0.13, 0.016, i % 2 ? fes : fe, Math.sin(a) * 0.19, -0.07, Math.cos(a) * 0.15); l.rotation.y = a; l.rotation.x = 0.12 }
+  cil(busto, 0.12, 0.14, 0.07, fel, 0, 0.31, 0, 10)
+  for (const s of [-1, 1]) {
+    const sp = perno(bracci[s < 0 ? 0 : 1], 0, 0.03, 0)
+    sfera(sp, 0.09, fel, s * 0.01, 0.0, 0, 1.1, 0.75, 1.05, 10); cil(sp, 0.08, 0.09, 0.02, ar, s * 0.01, -0.06, 0, 10)
+  }
+  for (const b of bracci) cil(b, 0.066, 0.062, 0.06, ar, 0, -0.2, 0, 8)
+  const manto = sway(u, perno(busto, 0, 0.32, -0.12), 0.05, 0.03, 1.4)
+  const mant = scatola(manto, 0.34, 0.42, 0.03, bls, 0, -0.21, -0.02); mant.rotation.x = 0.1
+  scatola(manto, 0.36, 0.035, 0.05, ar, 0, -0.01, 0.0)
+  // la testa: elmo aperto, la coda di cavallo
+  const cop = new THREE.Group(); testa.add(cop); u.copricapo = cop
+  const capAlto = new THREE.Group(); testa.add(capAlto); u.capelli = capAlto
+  const elmo = new THREE.Mesh(G('elmoF', () => new THREE.SphereGeometry(1, 16, 10, 0, Math.PI * 2, 0, 1.18)), fe)
+  elmo.position.set(0, cy + 0.01, -0.005); elmo.scale.set(R * 1.1, R * 1.04, R * 1.08); elmo.castShadow = true; cop.add(elmo)
+  cil(cop, R * 1.12, R * 1.08, 0.035, ar, 0, cy + R * 0.36, 0, 16)
+  for (const s of [-1, 1]) scatola(cop, 0.04, 0.17, 0.18, fe, s * R * 1.08, cy - 0.03, 0.0)
+  scatola(cop, 0.03, 0.15, 0.028, fel, 0, cy + R * 0.18, R * 0.98)
+  sfera(capAlto, R * 0.95, ca, 0, cy + R * 0.05, -R * 0.2, 1.05, 0.95, 0.9, 10)
+  for (const s of [-1, 1]) punta(capAlto, [s * R * 0.85, cy + R * 0.45, R * 0.5], [s * R * 0.98, cy - R * 0.35, R * 0.46], 0.06, ca, 5)   // ciocche ai lati del viso
+  const coda = sway(u, perno(cop, 0, cy + R * 0.3, -R * 1.0), 0.14, 0.06, 1.7)
+  tubo(coda, [0, 0, 0], [0, -0.12, -0.08], 0.05, 0.06, ca, 7); tubo(coda, [0, -0.12, -0.08], [0, -0.3, -0.07], 0.06, 0.04, cas, 7); tubo(coda, [0, -0.3, -0.07], [0, -0.45, -0.04], 0.04, 0.012, ca, 6)
+  cil(coda, 0.058, 0.058, 0.025, ar, 0, -0.03, -0.015, 8)
+  return finisci(g)
+}
+
+// L'elfo: svelto e scuro nel bosco, tunica verde cupo con le spalle di cuoio, mantello col cappuccio abbassato, capelli argento tirati
+// indietro con un codino, orecchie lunghissime, fascia sulla fronte con una foglia di giada.
+function elfo () {
+  const VERDE = 0x2f6f48, VERDE_S = 0x1f4a32, CUOIO = 0x7a4c28, CUOIO_S = 0x4f3019, ORO = 0xd9b25a, ARGENTO = 0xc9ced8, ARGENTO_S = 0x9aa1b0, MANT = 0x3a5a3c
+  const ve = M(VERDE), ves = M(VERDE_S), cu = M(CUOIO), cus = M(CUOIO_S), oro = metallo(ORO, { metalness: 0.5, roughness: 0.3 }), cap = M(ARGENTO), caps = M(ARGENTO_S)
+  const g = scheletro('elfo', { legH: 0.37, legX: 0.088, legR: 0.054, torso: [0.32, 0.29, 0.21], armX: 0.215, R: 0.27, pelle: 0xf3d3b6, calzoni: M(0x4a3a24), corpo: ve, stivale: cus, maniche: ve, guanti: cus, manicaR: 0.052, bot: [0.11, 0.2, 0.18], orecchie: false })
+  const u = g.userData, { busto, testa, gambe, bracci, cy, R } = u
+  for (const p of gambe) { cil(p, 0.065, 0.058, 0.07, cu, 0, -0.2, 0.0, 8); punta(p, [0, -0.33, 0.07], [0, -0.35, 0.2], 0.05, cus, 5) }
+  // tunica fino a metà coscia, spacchi, cintura con lo spadino, gilet di cuoio
+  cil(busto, 0.17, 0.2, 0.1, ve, 0, 0.01, 0, 10); scatola(busto, 0.2, 0.3, 0.02, ves, 0, 0.15, 0.112)
+  scatola(busto, 0.33, 0.045, 0.23, cus, 0, 0.04, 0); scatola(busto, 0.05, 0.05, 0.02, oro, 0, 0.04, 0.12)
+  scatola(busto, 0.09, 0.1, 0.05, cu, -0.16, 0.0, 0.08)
+  for (let i = 0; i < 5; i++) { const a = i * Math.PI * 2 / 5 + 0.5; const l = cono(busto, 0.05, 0.14, ves, Math.sin(a) * 0.2, -0.1, Math.cos(a) * 0.2, 4); l.rotation.x = Math.PI }
+  for (const s of [-1, 1]) { const sp = perno(bracci[s < 0 ? 0 : 1], 0, 0.03, 0); sfera(sp, 0.075, cu, s * 0.005, 0.0, 0, 1.15, 0.7, 1.0, 8) }
+  for (const b of bracci) { cil(b, 0.056, 0.054, 0.1, cus, 0, -0.18, 0, 8); cil(b, 0.06, 0.06, 0.016, oro, 0, -0.13, 0, 8) }
+  // il mantello lungo e il cappuccio abbassato
+  const manto = sway(u, perno(busto, 0, 0.3, -0.13), 0.05, 0.03, 1.2)
+  scatola(manto, 0.3, 0.55, 0.025, M(MANT), 0, -0.28, -0.01).rotation.x = 0.1
+  const cappuccio = perno(busto, 0, 0.3, -0.1)
+  sfera(cappuccio, 0.14, M(MANT), 0, 0.0, 0, 1.05, 0.75, 0.9)
+  // testa: orecchie lunghissime, capelli argento, fascia con la foglia
+  const pelleM = M(0xf3d3b6), rosa = M(0xeba49c)
+  for (const s of [-1, 1]) {
+    const o = punta(testa, [s * R * 0.96, cy - 0.02, -0.02], [s * (R + 0.3), cy + 0.2, -0.1], 0.05, pelleM, 4); o.scale.z = 0.5
+    const i = punta(testa, [s * R * 1.0, cy - 0.015, 0.0], [s * (R + 0.24), cy + 0.17, -0.075], 0.024, rosa, 4); i.scale.z = 0.4; i.position.z += 0.012
+  }
+  const cop = new THREE.Group(); testa.add(cop); u.copricapo = cop
+  const capAlto = new THREE.Group(); testa.add(capAlto); u.capelli = capAlto
+  sfera(capAlto, R * 1.05, caps, 0, cy + R * 0.12, -R * 0.12, 1.05, 0.98, 1.0, 12)
+  for (const s of [-1, 1]) punta(capAlto, [s * R * 0.3, cy + R * 0.98, R * 0.4], [s * R * 0.8, cy + R * 0.5, R * 0.62], 0.07, cap, 5).scale.z = 0.7
+  const codino = sway(u, perno(testa, 0, cy + R * 0.25, -R * 0.95), 0.14, 0.06, 1.7)
+  tubo(codino, [0, 0, 0], [0, -0.14, -0.04], 0.04, 0.045, cap, 7); tubo(codino, [0, -0.14, -0.04], [0, -0.34, -0.03], 0.045, 0.02, caps, 7)
+  cil(codino, 0.048, 0.048, 0.02, oro, 0, -0.04, -0.01, 8)
+  const fascia = new THREE.Mesh(G('fasciaE', () => new THREE.TorusGeometry(1, 0.016, 5, 20)), cus)
+  fascia.position.set(0, cy + R * 0.42, R * 0.04); fascia.rotation.x = Math.PI / 2 - 0.1; fascia.scale.set(R * 1.0, R * 1.0, R * 1.0); cop.add(fascia)
+  pezzo(cop, G('foglia', () => new THREE.OctahedronGeometry(0.034)), luce(0x39d98a, 0.9), 0, cy + R * 0.42, R * 1.0, 0.7, 1.6, 0.6)
+  return finisci(g)
+}
+
+// La maga: la veste a campana viola e rosa, la sciarpa di stelle, il cappello a punta con un fiocco, i capelli ramati lunghi fino
+// alla vita con due ciuffi sul davanti, niente barba; le ampolle alla cintura.
+function maga () {
+  const VIOLA = 0x7a3fb0, VIOLA_S = 0x55297f, ROSA = 0xd9569a, ORO = 0xf0c24a, RAME = 0xa8481f, RAME_S = 0x7d3314
+  const vi = M(VIOLA), vis = M(VIOLA_S), ro = M(ROSA), oro = metallo(ORO, { metalness: 0.5, roughness: 0.3 }), ra = M(RAME), ras = M(RAME_S)
+  const g = scheletro('maga', { legH: 0.3, legX: 0.085, legR: 0.05, torso: [0.29, 0.3, 0.2], armX: 0.205, R: 0.26, pelle: 0xf4d3b4, calzoni: vis, corpo: vi, stivale: M(0x4a2e22), maniche: vi, guanti: M(0xf4d3b4), manicaR: 0.05, bot: [0.11, 0.1, 0.19] })
+  const u = g.userData, { busto, testa, gambe, bracci, cy, R } = u
+  cil(busto, 0.17, 0.215, 0.32, vi, 0, 0.14, 0, 12)
+  const gonna = sway(u, perno(g, 0, 0.38, 0), 0.02, 0.025, 1.3)
+  cil(gonna, 0.215, 0.36, 0.36, vi, 0, -0.18, 0, 14)
+  cil(gonna, 0.362, 0.368, 0.04, oro, 0, -0.355, 0, 14); cil(gonna, 0.365, 0.36, 0.035, ro, 0, -0.32, 0, 14)
+  scatola(gonna, 0.08, 0.34, 0.012, ro, 0, -0.19, 0.29).rotation.x = -0.2
+  const stelle = G('stella', () => stella(0.045, 0.012)), stM = luce(0xffd54a, 0.5)
+  for (const [a, y, k] of [[0.55, 0.06, 1], [-0.5, 0.1, 1.1], [1.25, 0.2, 0.9], [-1.3, 0.22, 1], [0.0, 0.3, 0.8], [2.1, 0.12, 0.9], [-2.1, 0.16, 0.9]]) {
+    const r = 0.215 + (0.36 - 0.215) * (0.36 - y) / 0.36 + 0.004, st = pezzo(gonna, stelle, stM, Math.sin(a) * r, -0.36 + y + 0.04, Math.cos(a) * r, k, k, 1); st.rotation.y = a
+  }
+  // la cintura con le ampolle, e la sciarpa rosa sulle spalle
+  const cinta = new THREE.Group(); busto.add(cinta)
+  cil(cinta, 0.185, 0.195, 0.05, ro, 0, 0.04, 0, 12); scatola(cinta, 0.065, 0.06, 0.03, oro, 0, 0.04, 0.18)
+  ;[0xff5a7a, 0x4fe0ff, 0xa0ff6a].forEach((c, i) => {
+    const a = 0.5 + i * 0.4, x = Math.sin(a) * 0.195, z = Math.cos(a) * 0.195, fl = perno(cinta, x, 0.03, z)
+    fl.rotation.set(0, a, 0); fl.rotation.z = -0.25
+    cil(fl, 0.01, 0.01, 0.07, M(0xcfe8f0, { transparent: true, opacity: 0.55 }), 0, -0.09, 0, 6)
+    sfera(fl, 0.034, luce(c, 0.55), 0, -0.14, 0, 1, 1, 1, 7); cil(fl, 0.013, 0.013, 0.025, M(0x8a5a30), 0, -0.04, 0, 5)
+  })
+  cil(busto, 0.15, 0.18, 0.07, ro, 0, 0.31, 0, 10)
+  for (const b of bracci) { cil(b, 0.055, 0.1, 0.22, vi, 0, -0.11, 0, 9); cil(b, 0.104, 0.108, 0.026, oro, 0, -0.22, 0, 9); cil(b, 0.106, 0.106, 0.018, ro, 0, -0.19, 0, 9) }
+  // testa: i capelli lunghi, due ciuffi davanti, il cappello
+  const cop = new THREE.Group(); testa.add(cop); u.copricapo = cop
+  const capAlto = new THREE.Group(); testa.add(capAlto); u.capelli = capAlto
+  sfera(capAlto, R * 1.03, ra, 0, cy + R * 0.1, -R * 0.2, 1.06, 0.98, 0.96, 12)
+  for (const s of [-1, 1]) {
+    punta(capAlto, [s * R * 0.2, cy + R * 0.92, R * 0.5], [s * R * 0.85, cy + R * 0.45, R * 0.6], 0.07, ra, 5).scale.z = 0.7
+    punta(capAlto, [s * R * 0.9, cy + R * 0.2, R * 0.4], [s * R * 1.0, cy - R * 0.7, R * 0.4], 0.07, ra, 5)
+  }
+  const chioma = sway(u, perno(testa, 0, cy + R * 0.1, -R * 0.78), 0.1, 0.05, 1.4, 2)
+  cil(chioma, R * 0.85, R * 0.7, 0.24, ra, 0, -0.1, -0.04, 10); cil(chioma, R * 0.7, R * 0.5, 0.26, ras, 0, -0.34, -0.05, 9); cono(chioma, R * 0.5, 0.26, ra, 0, -0.6, -0.05, 8).rotation.x = Math.PI
+  for (const s of [-1, 1]) { sfera(testa, 0.034, M(0xe8b898), 0, cy - R * 0.14, R * 1.0, 1.2, 0.9, 1) }                                     // il naso
+  const cappello = perno(cop, 0, cy + R * 0.52, 0), vcp = M(0x5d2f95)
+  cappello.rotation.z = -0.05
+  cil(cappello, 0.4, 0.41, 0.028, vcp, 0, 0, 0, 18).scale.z = 1.02
+  cil(cappello, 0.25, 0.28, 0.03, ro, 0, 0.03, 0, 14)
+  cil(cappello, 0.22, 0.25, 0.13, vcp, 0, 0.08, 0, 14)
+  cil(cappello, 0.13, 0.22, 0.24, vcp, 0, 0.22, 0, 12)
+  const piega = perno(cappello, 0, 0.3, 0); piega.rotation.x = -0.2
+  cil(piega, 0.06, 0.13, 0.22, vcp, 0, 0.1, 0, 10)
+  const punta1 = sway(u, perno(piega, 0, 0.18, 0), 0.08, 0.04, 1.8)
+  punta1.rotation.x = -0.5; cil(punta1, 0.014, 0.06, 0.15, vcp, 0, 0.07, 0, 8); const pp = perno(punta1, 0, 0.14, 0); pp.rotation.x = -0.6; cono(pp, 0.015, 0.09, vcp, 0, 0.04, 0, 6)
+  sfera(cappello, 0.04, ro, 0.1, 0.06, 0.24); sfera(cappello, 0.04, ro, 0.19, 0.06, 0.2); sfera(cappello, 0.025, oro, 0.145, 0.06, 0.225)   // il fiocco
+  return finisci(g)
+}
+
+// La nana: bassa e larga come il nano, ma col pettorale lucido di rame, l'elmo con le ali al posto delle corna, le due trecce rosse
+// con gli anelli che scendono dall'elmo, il naso a patata e le lentiggini. Niente barba.
+function nana () {
+  const BRONZO = 0xb87439, RAME = 0xe0924e, MARR = 0x74492a, MARR_S = 0x45291a, AVORIO = 0xf0e6c6, TRECCIA = 0xcf5a22, TRECCIA_L = 0xe8803a, FERRO = 0x7a7774, VERDE = 0x3d7a4a
+  const br = metallo(BRONZO, { roughness: 0.38 }), ra = metallo(RAME, { roughness: 0.35 }), ma = M(MARR), mas = M(MARR_S), fe = metallo(FERRO), av = M(AVORIO), tr = M(TRECCIA), trl = M(TRECCIA_L), ve = M(VERDE)
+  const g = scheletro('nana', { legH: 0.2, legX: 0.125, legR: 0.085, torso: [0.46, 0.3, 0.32], armX: 0.295, R: 0.285, pelle: 0xe7a07c, calzoni: mas, corpo: ma, stivale: mas, maniche: ma, guanti: M(0xe7a07c), manicaR: 0.076, bot: [0.19, 0.13, 0.28], orecchie: true })
+  const u = g.userData, { busto, testa, gambe, bracci, cy, R } = u
+  for (const p of gambe) { scatola(p, 0.195, 0.045, 0.27, ra, 0, -0.178, 0.03); sfera(p, 0.06, br, 0, -0.07, 0.07, 1, 1, 0.75) }
+  // pettorale lucido, cintura verde con la fibbia, gonnellino di cuoio a lembi
+  scatola(busto, 0.37, 0.2, 0.05, ra, 0, 0.17, 0.16); sfera(busto, 0.06, br, -0.085, 0.2, 0.19, 1, 1, 0.6, 6); sfera(busto, 0.06, br, 0.085, 0.2, 0.19, 1, 1, 0.6, 6)
+  scatola(busto, 0.48, 0.07, 0.34, ve, 0, 0.03, 0); scatola(busto, 0.11, 0.09, 0.03, br, 0, 0.03, 0.175)
+  for (let i = 0; i < 6; i++) { const a = i * Math.PI * 2 / 6 + 0.25; const l = scatola(busto, 0.12, 0.12, 0.02, mas, Math.sin(a) * 0.24, -0.08, Math.cos(a) * 0.19); l.rotation.y = a }
+  for (const s of [-1, 1]) {
+    const sp = perno(bracci[s < 0 ? 0 : 1], 0, 0.03, 0)
+    sfera(sp, 0.115, ra, s * 0.015, 0.0, 0, 1.1, 0.76, 1.08, 10); cil(sp, 0.1, 0.115, 0.026, br, s * 0.015, -0.075, 0, 10)
+  }
+  for (const b of bracci) { cil(b, 0.082, 0.082, 0.09, ra, 0, -0.2, 0, 8); cil(b, 0.086, 0.086, 0.018, mas, 0, -0.15, 0, 8) }
+  sfera(testa, 0.07, M(0xe4906c), 0, cy - R * 0.1, R * 1.0, 1.1, 0.95, 1.1)                                                                  // il naso a patata
+  const cop = new THREE.Group(); testa.add(cop); u.copricapo = cop
+  const capAlto = new THREE.Group(); testa.add(capAlto); u.capelli = capAlto
+  sfera(capAlto, R * 1.04, tr, 0, cy + R * 0.12, -R * 0.1, 1.06, 0.98, 1.0, 12)
+  const elmo = new THREE.Mesh(G('elmoNana', () => new THREE.SphereGeometry(1, 14, 10, 0, Math.PI * 2, 0, 1.15)), fe)
+  elmo.position.set(0, cy + 0.015, -0.01); elmo.scale.set(R * 1.1, R * 1.05, R * 1.08); elmo.castShadow = true; cop.add(elmo)
+  cil(cop, R * 1.12, R * 1.08, 0.06, ra, 0, cy + R * 0.36, 0, 16)
+  for (const a of [-2, -1, 0, 1, 2]) { const an = a * 0.5; sfera(cop, 0.016, br, Math.sin(an) * R * 1.12, cy + R * 0.36, Math.cos(an) * R * 1.12, 1, 1, 1, 5) }
+  scatola(cop, 0.035, 0.08, 0.3, ra, 0, cy + R * 0.98, -0.02)
+  for (const s of [-1, 1]) {                                                                                                                  // le ali d'avorio ai lati dell'elmo
+    const ala = perno(cop, s * R * 1.0, cy + R * 0.5, 0)
+    ala.rotation.z = -s * 0.5
+    const pts = [[0, 0], [s * 0.14, 0.03], [s * 0.26, 0.1], [s * 0.34, 0.2]]
+    for (let i = 0; i < 3; i++) tubo(ala, [pts[i][0], pts[i][1], 0], [pts[i + 1][0], pts[i + 1][1], 0], 0.034 - i * 0.008, 0.03 - i * 0.008, av, 6)
+    for (let i = 0; i < 3; i++) punta(ala, [s * (0.07 + i * 0.08), 0.02 + i * 0.05, 0], [s * (0.1 + i * 0.1), 0.16 + i * 0.07, 0.01], 0.022, av, 4)
+  }
+  // le due trecce lunghe, con gli anelli
+  const trecce = [-1, 1].map(s => {
+    const t = sway(u, perno(testa, s * R * 0.92, cy - R * 0.1, R * 0.3), 0.08, 0.08, 1.7, s)
+    for (let i = 0; i < 5; i++) sfera(t, 0.062 - i * 0.006, i % 2 ? trl : tr, s * 0.004, -i * 0.085, 0.005 * i, 1, 1.1, 1, 7)
+    for (const y of [-0.1, -0.3]) { const an = new THREE.Mesh(G('anelloN', () => new THREE.TorusGeometry(0.05, 0.013, 5, 10)), ra); an.position.set(0, y, 0.0); an.rotation.x = Math.PI / 2; an.castShadow = true; t.add(an) }
+    return t
+  })
+  return finisci(g)
+}
+
+const COSTRUTTORI = { cavaliere, cavaliera, elfa, elfo, mago, maga, nano, nana }
 export function creaEroe (chiave) {
   const c = COSTRUTTORI[chiave]
   if (!c) throw new Error(`eroe sconosciuto: ${chiave}`)
@@ -493,7 +677,7 @@ const lim = (x, a, b) => Math.max(a, Math.min(b, x))
     il peso che passa da un piede all'altro ogni ~3,5 s, braccia e arma che dondolano, la testa che si guarda intorno,
     e ogni 5-8 s un gesto speciale. Funzione pura di `t` (e di `userData.fase`); `posaColpo` e `posaMarcia` si compongono sopra. */
 export function posaGuardia (e, t = 0) {
-  const u = e.userData, [bs, bd] = u.bracci, tt = t + (u.fase || 0), wb = Math.PI * 2 * FBALZO[u.chiave]
+  const u = e.userData, [bs, bd] = u.bracci, tt = t + (u.fase || 0), wb = Math.PI * 2 * FBALZO[u.classe]
   const bz = Math.sin(wb * tt), bn = 0.5 + 0.5 * bz                                         // 0 su, 1 giù
   const peso = lim(2.2 * Math.sin(tt * 0.9), -1, 1)                                         // -1 sul sinistro, +1 sul destro
   const o1 = Math.sin(wb * tt + 0.7), o2 = Math.sin(wb * tt + 2.1), lenta = Math.sin(tt * 1.1)
@@ -509,7 +693,7 @@ export function posaGuardia (e, t = 0) {
   // la testa: ogni tanto si guarda intorno (con un respiro che la porta su e giù)
   const giro = Math.sin(tt * 1.15) * Math.max(0, Math.sin(tt * 0.43)) ** 2
   u.testa.rotation.set(0.035 * bz + 0.03 * Math.max(0, Math.sin(tt * 0.43 + 1)), 0.4 * giro, 0.03 * peso)
-  switch (u.chiave) {
+  switch (u.classe) {
     case 'cavaliere': {
       bd.rotation.set(-0.55 + 0.05 * o1, 0, -0.12 + 0.03 * o2); bs.rotation.set(-0.75 + 0.04 * o2, 0, 0.18 + 0.03 * o1)
       u.busto.rotation.y = 0.12 + 0.04 * lenta

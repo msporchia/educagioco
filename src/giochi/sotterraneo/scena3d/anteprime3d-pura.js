@@ -20,7 +20,8 @@ export const MODELLO_DI = {
 export const PER_FAMIGLIA = { spade: 'spada-corta', asce: 'accetta', archi: 'arco-corto', bacchette: 'bacchetta-legno' }
 // le armature 3D (eroi3d/armature.js `TIPI`): la base dell'oggetto del corpo ha lo stesso nome
 export const ARMATURE = ['panciotto', 'corazza', 'manto', 'saio']
-export const EROI = ['cavaliere', 'elfa', 'mago', 'nano']
+// i modelli degli eroi: i quattro di sempre e le varianti femmina/maschio (dati/eroi.js, MODELLI_EROI)
+export const EROI = ['cavaliere', 'cavaliera', 'elfa', 'elfo', 'mago', 'maga', 'nano', 'nana']
 
 const cosaDi = k => (k ? COSE[k] || null : null)
 
