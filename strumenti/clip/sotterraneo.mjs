@@ -125,7 +125,7 @@ function cercaSemeConMostro () {
 const TROVATO = cercaSemeConMostro()
 
 export default {
-  file: 'clip-sotterraneo', dove: 'sotterraneo', attesa: '[data-terra]',
+  file: 'clip-sotterraneo', dove: 'sotterraneo', attesa: '[data-mondo3d][data-pronto="1"]',
   profilo: p => {
     /* un cavaliere che ha già giocato: livello 5, tre abilità nelle caselle,
        spada e scudo in mano. Uno nudo e senza abilità mostrava un gioco

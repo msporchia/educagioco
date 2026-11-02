@@ -294,10 +294,13 @@ const RICETTE = [
     profilo: p => { p.campagne.survivors.sosta = SOSTA; return p },
     passi: [['button[data-azione="riprendi"]', 700], ['button[data-azione="riprendi"]', 1400]] },
 
-  { file: 'sotterraneo-mappa', dove: 'sotterraneo', attesa: '[data-terra]' },
+  // il mondo di sopra in 3D (il villaggio), con l'eroe già scelto: senza, si fotograferebbe la scelta delle avventure
+  { file: 'sotterraneo-mappa', dove: 'sotterraneo', attesa: '[data-mondo3d][data-pronto="1"]',
+    profilo: p => { p.campagne.sotterraneo = { tappa: 3, libera: false, stelle: {}, cfg: { eroe: 'cavaliere' } }; return p },
+    passi: [async page => { await page.waitForTimeout(2500) }] },
   /* il campo dopo un paio di secondi: appena entrati la luce è ancora
      tutta addosso all'eroe, e lo scatto racconterebbe una stanza sola */
-  { file: 'sotterraneo-gioco', dove: 'sotterraneo', attesa: '[data-terra]',
+  { file: 'sotterraneo-gioco', dove: 'sotterraneo', attesa: '[data-mondo3d][data-pronto="1"]',
     profilo: p => { p.campagne.sotterraneo = { tappa: 3, libera: false, stelle: {}, cfg: { eroe: 'cavaliere' } }; return p },
     passi: [async page => { await scendiNelSotterraneo(page, 0); await page.waitForTimeout(2200) }] },
 
