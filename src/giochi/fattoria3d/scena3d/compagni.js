@@ -15,6 +15,16 @@ import { decidiPiccolo, ePiccolo } from '../dati/bestie.js'
 import { POSTI, postoLibero, postiLiberi, scegliPosto } from '../dati/posti-compagni.js'
 import { PEZZI } from '../dati/catalogo.js'
 import { alleggeriOmbre } from './ottimizza.js'
+import { PARTENZA } from './creta.js'
+
+/** Un animale che entra in scena nasce col dettaglio da lontano (la telecamera di serie sta a 22 m): la pelle fine della creta si fa solo se ci si avvicina. */
+function daLontano (crea) {
+  PARTENZA.lontano = true
+  let g
+  try { g = crea() } finally { PARTENZA.lontano = false }
+  impostaDettaglio(g, true)
+  return g
+}
 
 const LOD_METRI = 12                              // oltre questa distanza dalla camera un compagno si disegna con le geometrie povere (modelli-compagni.js)
 const CASA = [0.5, -6.5]                       // davanti alla porta della casa
@@ -39,7 +49,7 @@ export class Compagni {
     for (const d of [...gratis, ...(cura ? cura.compagniPresi() : [])]) {
       const dentro = this.lista.find(c => c.def.id === d.id)
       if (dentro) { dentro.def.nome = d.nome; if (cura) vestiBestia(dentro.grp, cura.addossoA(d.id)); continue }
-      const grp = creaBestia(d); alleggeriOmbre(grp); if (cura) vestiBestia(grp, cura.addossoA(d.id)); this.scena.add(segna(grp, 'animali'))
+      const grp = daLontano(() => creaBestia(d)); alleggeriOmbre(grp); if (cura) vestiBestia(grp, cura.addossoA(d.id)); this.scena.add(segna(grp, 'animali'))
       const c = { def: d, grp, tipo: d.tipo, x: CASA[0], z: CASA[1], dir: 0, stato: 'sta', tStato: 0, dur: 2, percorso: [], poi: null,
                   velo: 0, fase: Math.random() * 6, corsa: false, sopra: null, salto: null, guarda: null, controllo: 0,
                   seq: null, iSeq: 0, sub: '', evFatti: new Set(), carezze: null, prossimoIncontro: 0, altro: null, bastoneFino: 0 }

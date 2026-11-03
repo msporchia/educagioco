@@ -31,7 +31,7 @@ export const TIPI = [...Object.keys(PEZZI), ...Object.keys(EDIFICI), ...Object.k
 /** I file da cui viene la faccia di un modello: i creatori, la fusione, la cache, le istanze dei campi, le bestie e la posa delle foto. */
 const SCENA = resolve(RADICE, 'src/giochi/fattoria3d/scena3d')
 export const fileDeiModelli = () => readdirSync(SCENA)
-  .filter(f => /^(modelli.*|bestie-corpo|bestie-puro.*|fondi|cache-modelli|campi-istanze|dal-sotterraneo|anteprime|anteprime-pura)\.js$/.test(f)).sort()
+  .filter(f => /^(modelli.*|creta|bestie-corpo|bestie-puro.*|fondi|cache-modelli|campi-istanze|dal-sotterraneo|anteprime|anteprime-pura)\.js$/.test(f)).sort()
 export const firmaSorgenti = () => {
   const h = createHash('sha1')
   for (const f of fileDeiModelli()) h.update(f + '\n' + readFileSync(resolve(SCENA, f), 'utf8').replace(/\r\n/g, '\n'))

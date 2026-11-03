@@ -97,7 +97,7 @@ controlla('l\'aspetto del contadino è uno dei due', ['contadino', 'contadina'].
     const gg = creaGatto(v); posaGatto(gg, { stato: 'sta' }); const m = misure(gg)
     dentro(`gatto ${v}: piedi a terra`, m.sotto, -0.02, 0.03)
     dentro(`gatto ${v}: piccolo (orecchie grandi e coda alta: fino a 80 cm, meno di Watson)`, m.altezza, 0.3, 0.8)
-    dentro(`gatto ${v}: pochi mesh (pelo fuso per pezzo)`, m.mesh, 12, 45)
+    dentro(`gatto ${v}: pochi mesh (pelo fuso per pezzo, la coda una pelle sola)`, m.mesh, 9, 45)
   }
   const gatto = creaGatto('calico'), cane2 = creaCane()
   controlla('ogni compagno ha la zona del tocco', !!gatto.userData.colpo && !!cane2.userData.colpo && gatto.userData.colpo.visible === false)
