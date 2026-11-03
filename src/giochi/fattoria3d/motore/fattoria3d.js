@@ -16,7 +16,7 @@ import { generaLotto } from '../dati/lotti.js'
 import { biomaDiGen, acquaDelLotto, tipoAcqua } from '../dati/biomi.js'
 import { provaPesca, lanciaLenza, ritiraPesca, bancoDi, lenzeInAcqua, ripulisciPesca, riesaminaPesca, postiDiPesca } from './pesca.js'
 import { ANIMALI, CORTILE, LANA, prezzoDellaBestia } from '../dati/animali.js'
-import { normalizza, nuoveTessere } from './stato.js'
+import { normalizza, nuoveTessere, pulisciNomeFattoria } from './stato.js'
 import { percorso } from './percorso.js'
 import { POSTI, RIPOSO_MS, LIVELLO_BANCO, PEZZI_DEL_BANCO, clienteDi, tipoDelOrdine } from '../dati/ordini.js'
 import { nuovoOrdine } from './ordini.js'
@@ -82,6 +82,14 @@ export class Fattoria3d {
   _rimborsa(n) { if (n > 0) this.borsa.paga(-n) }
   _evento(tipo, extra = {}) { this.eventi.push({ ...extra, tipo }) }          // il `tipo` dell'evento vince su un campo omonimo (prima 'pezzo' diventava 'campo' e il contatore non saliva)
   prendiEventi() { const e = this.eventi; this.eventi = []; return e }
+
+  // ── il nome ──
+  /** Dà (o cambia) il nome della fattoria: gratis e sempre. '' lo toglie. */
+  rinomina(nome) {
+    this.s.nome = pulisciNomeFattoria(nome)
+    return { ok: true, nome: this.s.nome }
+  }
+  nome() { return this.s.nome || '' }
 
   // ── il livello ──
   esperienza() { return this.s.esperienza }

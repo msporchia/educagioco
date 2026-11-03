@@ -44,6 +44,10 @@ const LANA_DEL_SEGNAPOSTO = 2     // il premio della cassa del segnaposto di pri
 //    nello stesso punto del percorso (motore/scala-vecchia.js), senza scendere sotto il livello che serve a tenere ciò che si ha. `silo`: quante volte è stato
 //    ingrandito ciascun magazzino (dati/silos.js), assente = zero. Un raccolto di prima in scorta resta anche se supera lo scomparto: il tetto frena solo ciò che entra.
 export const VERSIONE_STATO = 10
+
+/* Il nome che il bambino dà alla fattoria (vuoto = «La fattoria»); anche quella in comune ha il suo. Vedi docs/fattoria3d/nome.md. */
+export const NOME_FATTORIA_MAX = 24
+export const pulisciNomeFattoria = n => String(n ?? '').replace(/[\u0000-\u001f\u007f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, NOME_FATTORIA_MAX).trim()
 export const SCALA_ATTUALE = 2
 
 const vuote = () => Object.fromEntries(CHIAVI_COLTURE.map(k => [k, 0]))
@@ -81,6 +85,7 @@ export function statoIniziale() {
     tagliati: [],              // i numeri degli alberi abbattuti
     ostacoli: [],              // gli id (le celle) dei sassi e dei cespugli tolti
     cose: [{ id: 1, tipo: PEZZO_DI_PARTENZA.tipo, i: PEZZO_DI_PARTENZA.i, j: PEZZO_DI_PARTENZA.j, tile: nuoveTessere() }],
+    nome: '',                  // il nome dato alla fattoria dal bambino; '' = nessuno (la barra dice «La fattoria»)
     prossimoId: 2,
     macchine: Object.fromEntries(TIPI_DI_MACCHINA.map(t => [t, macchinaVuota()])),
     mongolfiera: { stiva: null, via: null, riposo: null, giri: 0 },   // la nave (docs/fattoria3d/mongolfiera.md): il carico da riempire, quando è partita e quando torna, i viaggi fatti
@@ -139,6 +144,7 @@ export function normalizza(letto) {
     if (fine !== null || riposo !== null) s.pesca[id] = { i: v.i, j: v.j, fine, riposo }
   }
   for (const [k, n] of Object.entries(oggetto(letto.daRegalare)).slice(0, 400)) if (typeof k === 'string' && k.length <= 64 && numero(n) >= 1) s.daRegalare[k] = Math.min(9999, Math.floor(n))
+  s.nome = pulisciNomeFattoria(letto.nome)
   s.migrato = Number.isInteger(letto.migrato) && letto.migrato > 0 ? Math.min(99, letto.migrato) : 0
   s.strade = Array.isArray(letto.strade) ? letto.strade.filter(Number.isInteger) : []
   for (const [k, n] of Object.entries(oggetto(letto.magazzino))) if (numero(n) > 0) s.magazzino[k] = numero(n)
