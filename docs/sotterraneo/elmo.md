@@ -68,9 +68,33 @@ dappertutto.
   banco (`banco.js`, `banco-mondo.js`) non lo passa, e i suoi numeri restano quelli di prima (lo stesso patto delle discese: un pezzo su
   sette diventa un copricapo, quanti ne cadono non cambia). Per terra lassù (`stato.perTerra`) un copricapo è una cosa come un'altra.
 
+## Quello di serie
+
+L'utente, 3 novembre 2026, vedendo la maga col cappello a punta senza averne uno nello zaino: *«ha un cappello anche se teoricamente non l'ha
+comprato, e non posso personalizzarlo»*. **Il copricapo che l'eroe ha in testa dal primo giorno è un pezzo vero**, uno per eroe
+(`serie-cavaliere`, `serie-elfa`, `serie-mago`, `serie-nano`, in `dati/cose.js` con `diSerie: true`): Elmo da cavaliere, Cerchietto verde, Cappello
+viola, Elmo da nano. Vale per i due sessi della stessa classe (la maga porta `serie-mago`).
+
+- **Nessun numero, nessun prezzo**: non para e non tiene in piedi (le formule e le misure non si muovono), non si vende (`quantoVale` dà 0 senza
+  prezzo) e non è nel bottino né sui banchi (`COPRICAPI`, `PEZZI_DI_BASE` e `IN_VENDITA` lo escludono: è `DI_SERIE`). Un elmo vero che para
+  un punto lo sostituisce da sé (`confronto`), e quello di serie va in tasca: il suo posto resta suo.
+- **Chi lo dà**: `Corredo.rendiIlDiSerie`, a ogni lettura (anche un eroe nuovo, anche un salvataggio di prima). Addosso se la testa è nuda; in
+  tasca se porta già un elmo (se c'è posto: se no al prossimo caricamento); **mai un secondo**, e mai tolto un elmo che si indossa. Perché non
+  si vende, una volta dato non sparisce: chi lo toglie lo trova in tasca.
+- **Si toglie e si rimette** come ogni copricapo: testa nuda, e **i capelli e il taglio scelti restano a vista** (`nudaLaTesta` in `scena3d/eroe3d.js`).
+  Il tintore lo mostra fra i Copricapi e lo ritinge come gli altri ([tintore.md](tintore.md)).
+- **Lo disegna il modello dell'eroe** (`userData.copricapo` di `eroi3d/eroi.js`), non un modello dei copricapi: ritinto, si ritinge quel gruppo
+  (`tingiGruppo`; l'eroe si rifà da capo a ogni cambio, i materiali di serie non si toccano). Nella scheda, come foto, il suo copricapo staccato
+  dalla testa (`copricapo:serie-<eroe>:c`, `inPosaCopricapo`); per il solo cappello della maga la foto è quella del mago (stessa forma, un po' meno viola).
+- **Le chiavi dell'eroe non cambiano**: `testa` **assente** o quello di serie vuol dire il copricapo del modello (le foto di prima restano le
+  stesse); **`testa: null` è la testa nuda**, con la sua chiave (`:nuda` in coda). Chi disegna una roba vera (la corsa, `Armato` dal corredo) passa
+  `null` quando la testa è nuda; chi disegna un eroe senza roba (la scelta delle avventure, i gettoni) non passa niente e vede quello di serie
+  (`Armato` ha `testa` senza default).
+
 ## I salvataggi
 
-**Un salvataggio senza il campo `testa` non ha niente in testa**, senza conversione: `rileggiRoba` legge `testa` come le altre
+**Un salvataggio senza il campo `testa` non ha niente in testa**, senza conversione (e dal 3 novembre il corredo gli dà il suo copricapo di serie,
+[sopra](#quello-di-serie)): `rileggiRoba` legge `testa` come le altre
 caselle (un id sparito vale null) e la `v` della roba resta 1, come per la collana e il secondo anello. Una cosa che non va in testa
 (un dato storto) torna in tasca. Il copricapo addosso a chi non lo porta torna nello zaino (`sistemaIlCorredo`, come sempre).
 
@@ -85,7 +109,7 @@ caselle (un id sparito vale null) e la `v` della roba resta 1, come per la colla
 
 ## In scena
 
-- **L'eroe porta il copricapo della casella** (`vestiDotazione` in `scena3d/eroe3d.js`: `copri(eroe, id)`, che nasconde quello di serie
+- **L'eroe porta il copricapo della casella** (quello di serie lo disegna il modello, [sopra](#quello-di-serie)) (`vestiDotazione` in `scena3d/eroe3d.js`: `copri(eroe, id)`, che nasconde quello di serie
   e, con un elmo, i capelli); senza, l'eroe ha il suo di serie. `#testa=<id>` nell'indirizzo resta la prova, e vince sulla casella.
 - **Il modello** (`copricapoDi` in `anteprime3d-pura.js`): ogni base ha i suoi modelli col pregio a cui stanno (`COPRICAPI_3D`), la
   rarità sceglie fra quelli del suo pregio (`pregio` di `RARITA`) e la chiave ne sceglie uno, sempre lo stesso, come l'aspetto di un
@@ -100,7 +124,8 @@ caselle (un id sparito vale null) e la `v` della roba resta 1, come per la colla
 - Uno sprite per dove manca l'anteprima (oggi l'emoji): nessun foglio dipinto ha un elmo o un cappello (`bottino-e-arredo` lo dice), e un
   disegno in codice dei sei modelli, a quattro rarità, è un lavoro a sé: per ora restano 🪖 🎩 👑.
 
-Nei test: `unita/sotterraneo-elmo` (la casella e il catalogo, i numeri a frazione, addosso e riposto, i salvataggi di prima, il
+Nei test: `unita/sotterraneo-copricapo-di-serie` e `integrazione/sotterraneo-copricapo-di-serie` (quello di serie: i dati, il corredo, le chiavi 3D;
+toglierlo e rimetterlo col dito), `unita/sotterraneo-elmo` (la casella e il catalogo, i numeri a frazione, addosso e riposto, i salvataggi di prima, il
 bottino acceso e spento sui forzieri dell'abisso, le linguette, le chiavi 3D), `integrazione/sotterraneo-elmo` (col dito: le sette
 caselle, «Indossa», l'anteprima, il fabbro); `[data-casella="testa"]` (con `data-cosa`), `[data-scheda="elmi"]`,
 `[data-scheda="cappelli"]`.

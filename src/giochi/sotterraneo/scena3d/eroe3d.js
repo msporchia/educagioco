@@ -50,8 +50,20 @@ export function vestiDotazione(g, d, { semplici = false } = {}) {
   const prova = (/[#&?]testa=([\w-]+)/.exec(typeof location === 'undefined' ? '' : location.hash + location.search) || [])[1]
   const idTesta = prova || (d.testa && d.testa.id) || null
   let togliTesta = null
-  try { togliTesta = idTesta ? tingiAggiunte(g, T.testa, () => copri(g, idTesta)) : null } catch (e) { togliTesta = null }   // un modello che non c'è: resta quello di serie
+  try {
+    if (idTesta === 'nuda') togliTesta = nudaLaTesta(g)
+    else if (idTesta) togliTesta = tingiAggiunte(g, T.testa, () => copri(g, idTesta))
+    else if (T.testa && g.userData.copricapo) tingiGruppo(g.userData.copricapo, T.testa)   // quello di serie, ritinto (`serie-<eroe>`): il modello lo disegna già
+  } catch (e) { togliTesta = null }   // un modello che non c'è: resta quello di serie
   return () => { togliArma(); g.userData.armiAnima = null; if (togliCorpo) togliCorpo(); if (togliCollo) togliCollo(); if (togliTesta) togliTesta() }
+}
+
+/** La testa nuda (il copricapo di serie tolto): non si disegna, e i capelli restano a vista. Torna `togli()`. */
+export function nudaLaTesta(g) {
+  const u = g.userData, serie = u.copricapo, chioma = u.capelli
+  if (serie) serie.visible = false
+  if (chioma) chioma.visible = true
+  return () => { if (serie) serie.visible = true }
 }
 
 // le tinte di chi si disegna, per la firma di `equipa`: se cambiano si rifà (il ritratto e la scena ritingono)

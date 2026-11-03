@@ -41,6 +41,12 @@ sotto un elmo (`userData.capelli`), le code e le trecce restano fuori. La chiave
 i campi in coda non scelti si tolgono); `scena3d/eroe-aspetto.js` (`creaEroeDa`) la apre e costruisce il modello per l'eroe in scena e le anteprime.
 Il contadino della fattoria può usare lo stesso `applicaAspetto` dando le sue misure della testa.
 
+### Il copricapo di serie
+
+Il cappello a punta della maga, l'elmo del cavaliere e gli altri non sono più parte del modello e basta: sono un pezzo vero che l'eroe ha
+addosso dal primo giorno, si toglie e si ritinge ([elmo.md](elmo.md), «Quello di serie»). Con la testa nuda restano a vista i capelli, il taglio
+e la barba scelti qui sopra.
+
 ## L'editor (`viste/Personaggio.vue`)
 
 Sopra l'interfaccia unica ([../core/personalizza.md](../core/personalizza.md)), col tema del sotterraneo: in alto l'eroe grande

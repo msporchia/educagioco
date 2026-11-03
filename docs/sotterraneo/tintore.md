@@ -7,7 +7,7 @@ cambia: numeri, nome e rarità restano, cambia il colore.
 
 ## Cosa si ritinge, e come si ricorda
 
-- **Quali pezzi**: arma (`mano`), scudo o seconda arma (`mancina`), armatura o veste (`corpo`), copricapo (`testa`); non i gioielli né le cure
+- **Quali pezzi**: arma (`mano`), scudo o seconda arma (`mancina`), armatura o veste (`corpo`), copricapo (`testa`); non i gioielli né le cure; il copricapo con cui l'eroe parte è un pezzo come gli altri ([elmo.md](elmo.md), «Quello di serie»), quindi si ritinge anche lui
   (`sipuoTingere`, `dati/tinte.js`). Addosso o nello zaino, è lo stesso.
 - **Dove sta**: `roba.tinte = { [chiaveOggetto]: idTinta }` (`dati/tinte.js`: `TINTE`, `COSTO`, `rileggiTinte`). Il campo c'è solo se c'è una tinta: la `v`
   di roba non cambia e un salvataggio di prima si apre com'era. La tinta segue la **chiave del pezzo**: in tasca, rimesso addosso, ripreso resta
