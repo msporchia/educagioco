@@ -336,6 +336,7 @@ export class Terreno {
     for (const f of FISSI) {
       const g = creaCasa()
       g.position.set(f.i + f.w / 2, 0, f.j + f.d / 2); this.scena.add(g)
+      g.userData.casa = f; (this.case || (this.case = [])).push(g)          // si tocca per entrarci (docs/fattoria3d/casa.md)
       if (g.userData.fumo) this.fumi.push(g.position.clone().add(g.userData.fumo))      // il camino della casa
     }
   }

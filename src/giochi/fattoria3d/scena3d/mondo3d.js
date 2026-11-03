@@ -37,7 +37,6 @@ const CIELO = new THREE.Color(0xbfe0f0)
 export const ELEMENTI_FATTORIA = ['terreno', 'strade', 'alberi', 'erba', 'acqua', 'campi', 'edifici', 'pezzi', 'animali', 'eroe', 'stagione', 'sole', 'resto']
 /** Cosa dice il cartello di un lotto in vendita oltre al prezzo (il prato e il bosco non dicono niente). */
 export const NOME_BIOMA = { laghetto: '🏞️ laghetto', lago: '🏞️ lago', mare: '🌊 mare', costa: '🏖️ spiaggia' }
-const _c = new THREE.Vector3()        // il corpo del contadino per `contadinoSotto`
 const chiaveDi = abito => JSON.stringify(abito || null)
 const _v = new THREE.Vector3()        // di scorta per `proietta`: niente oggetti nuovi a ogni cartello a ogni fotogramma
 // le anteprime fotografate sul computer (`npm run anteprime`, dati/anteprime.js): il telefono le legge e non le disegna. Arrivano a parte
@@ -243,11 +242,12 @@ export class Mondo3d {
     if (sasso) return { kind: 'ostacolo', n: sasso.n }
     return null
   }
-  /** Il dito è sul contadino? Solo se sta fermo, senza semina/raccogli armati né pennello: si misura il raggio contro una sfera attorno al suo corpo (il dito è largo). */
-  contadinoSotto(rg) {
-    const e = this.eroe
-    if (!e.fermo || this.cmd.modo !== 'libero' || this.cmd.strumento || this.costruzione.attivo) return false
-    return rg.ray.distanceToPoint(_c.set(e.x, e.rialzo + 0.5, e.z)) < 0.5
+  /** La casa di scena sotto il dito (il suo posto in `FISSI`), o null. */
+  casaSotto(rg) {
+    const hit = rg.intersectObjects(this.terreno.case || [], true)[0]
+    let o = hit && hit.object
+    while (o && !o.userData.casa) o = o.parent
+    return o ? o.userData.casa : null
   }
   /** Un lotto non tuo sotto il dito, se c'è. */
   lottoSotto(cx, cy) {
@@ -292,7 +292,17 @@ export class Mondo3d {
     const rg = this._raggio(x, y)
     const amico = this.compagni.bersaglio(rg)                           // Watson e i gatti si accarezzano prima di tutto
     if (amico) return this.compagni.tocca(amico)
-    if (this.contadinoSotto(rg) && ui.apriGuardaroba) return ui.apriGuardaroba()          // un tocco sul contadino fermo apre il guardaroba
+    const casa = this.casaSotto(rg)                                     // la casa: il contadino va alla porta ed entra (docs/fattoria3d/casa.md)
+    if (casa && !eroe.az) {
+      this.svuotaCoda()
+      // la porta, o (la casa sta fuori dalla terra di partenza) le celle tue più vicine alla porta
+      const pi = casa.i + casa.w / 2, pj = casa.j + casa.d, vicine = []
+      for (let a = -10; a <= 10; a++) for (let b = 0; b <= 12; b++) if (m.libera(Math.floor(pi) + a, pj + b)) vicine.push([Math.floor(pi) + a, pj + b, Math.hypot(a + 0.5, b)])
+      const meglio = vicine.length ? Math.min(...vicine.map(c => c[2])) : 0
+      const porta = vicine.filter(c => c[2] <= meglio + 1.5).map(([i, j]) => [i, j]), dentro = new THREE.Vector3(pi, 0, casa.j)
+      if (!porta.length || !eroe.vaiA(porta, () => { eroe.faccia(dentro); ui.entraInCasa && ui.entraInCasa() }, dentro)) ui.entraInCasa && ui.entraInCasa()
+      return
+    }
     const b = this.bersaglioSotto(x, y)
     const campo = b && b.kind === 'cosa' && m.cosa(b.id) && m.cosa(b.id).tipo === 'campo' ? m.cosa(b.id) : null
     if (campo && cmd.modo !== 'libero') {                      // semina e raccogli: si toccano più campi, l'eroe li fa in fila
