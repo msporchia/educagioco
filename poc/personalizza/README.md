@@ -61,13 +61,35 @@ mai**, dall'alto:
 | anteprima | 30%, almeno 140 px | la figura che si gira; dentro, chi si è (in alto a sinistra), le frecce ai lati e otto pallini per il lato |
 | schede | 44 px, una riga | al massimo cinque |
 | griglia | quello che resta | gli oggetti del gruppo; **l'unica cosa che scorre**, dentro la sua zona |
-| pannello | 164 px, fisso | l'oggetto scelto: il nome, una riga **Forma** (foto) e una riga **Colore** (pastiglie) |
-| fondo | 64 px | «Com'era» e «Acquista e indossa · N», o una riga di aiuto |
+| pannello | 164 px, fisso | in ordine di dipendenza: l'oggetto scelto (il nome), la sua **Forma** (foto), il **Colore** di quella forma (pastiglie); nella scheda Set il tasto «Salva questo set» |
+| fondo | 68 px | «Com'era» e «Acquista e indossa · N», o una riga di aiuto |
 
-- **Il pannello c'è sempre e ha sempre la stessa altezza.** Senza oggetto
-  scelto (Chi sei, Set) dice cosa fare e mostra le due righe vuote,
-  tratteggiate; un oggetto con una forma sola o un colore solo ha quella riga
-  spenta («una sola»).
+- **Un'interazione cambia solo le zone sotto.** La gerarchia va in un verso
+  solo: scheda → oggetto → forma → colore → prezzo. Scegliere un colore non
+  ricompone gli oggetti né le forme; scegliere una forma non cambia quali
+  oggetti ci sono; cambiare scheda cambia tutto sotto e niente sopra.
+  L'anteprima mostra il risultato e non decide niente. Le zone sopra possono
+  cambiare **aspetto** (il gettone scelto evidenziato, la sua foto col colore
+  nuovo), mai numero, ordine o posto degli elementi.
+- **Le dipendenze le dichiarano i dati**, non l'ordine dei tocchi: le forme
+  sono dell'oggetto (il Berretto ha berretto e bandana, il Cilindro nessuna),
+  i colori sono della forma (il cappellino del cane e il cilindro hanno colori
+  diversi), il prezzo è oggetto + forma + colore. Quando una scelta sopra
+  rende impossibile quella sotto (un'altra forma senza quel colore), il sotto
+  torna al primo valore dichiarato (il primo colore della forma); se il colore
+  c'è anche nella forma nuova, resta.
+- **Il pannello c'è sempre e ha sempre la stessa altezza.** Un oggetto con una
+  forma sola non ha la riga Forma, e uno con un colore solo non ha la riga
+  Colore: lo spazio resta, vuoto. «Nessuno» (niente cappello) lascia il
+  pannello fermo e spento, con una riga sobria («Niente da scegliere»). Senza
+  oggetto (Chi sei) dice cosa fare.
+- **Il fondo è alto uguale** col tasto o senza.
+- `fai.mjs --scatti --misura --tocca '…'` controlla la regola dopo ogni
+  tocco: le zone non cambiano posto né altezza, un tocco nel pannello o nel
+  fondo non muove i gettoni della griglia né le schede, un colore non muove le
+  forme. Provata sui tre scenari con un oggetto a più forme (Cappello, Elmo),
+  uno senza forme (Cilindro, Corona), «Nessuno», uno bloccato (Cowboy, Corona,
+  Diadema, Martello), un acquisto e i set.
 - **Aprendo una scheda il pannello mostra già l'oggetto che si ha addosso**
   (il cappello di paglia), così cambiargli colore è un tocco.
 - **Toccare un oggetto** lo apre nel pannello e lo prova addosso; nella
@@ -105,6 +127,43 @@ contatore del mock.
 | Comprare un set intero | **3** | Set, il set, Acquista e indossa |
 | Guardarlo da dietro | **1** | un trascinamento (o 4 frecce, 45° l'una) |
 | Confrontare due cappelli | **2** | uno, l'altro |
+| Salvare quello che si ha addosso | **3** | Set, Salva questo set, Salva (col nome proposto; scriverne un altro apre la tastiera) |
+| Ricambiarsi in un set salvato | **2** | Set, il set |
+| Comprare un set del gioco e averlo addosso | **3** | Set, il set, Acquista e indossa |
+| Rimettersi un set del gioco già comprato | **2** | Set, il set |
+
+## I set
+
+La scheda Set ha due gruppi, uno sotto l'altro nella griglia:
+
+- **I miei set**: sei **posti fissi** per personaggio. Un posto pieno ha la
+  foto della figura vestita e il nome; uno vuoto è tratteggiato col numero e
+  «Libero». Toccare un set salvato lo indossa subito (un tocco) e lo apre nel
+  pannello, con «Cambia nome» e «Togli» (che chiede un secondo tocco, «Tocca
+  ancora: via»). I posti sono fissi perché salvare o togliere non deve
+  cambiare numero né ordine dei gettoni sopra il pannello.
+- **Set del gioco**: quelli da comprare, col prezzo (o «liv. N»); comprato, un
+  set resta e si rimette con un tocco.
+
+Il tasto **«Salva questo set»** sta sempre nel pannello della scheda Set.
+Salva nel posto toccato, o nel primo libero; chiede il nome dentro il
+pannello, in un campo con un nome già scritto («Il mio set 3», sedici
+lettere al massimo), e si conferma con «Salva». Coi sei posti pieni il tasto
+dice «I 6 posti sono pieni: toccane uno»: toccato un set, diventa «Salva al
+posto di «Al rodeo»». Si salva quello che si ha addosso ed è tuo: una prova
+non pagata non entra.
+
+**Indossare un set salvato non costa niente.** Se un pezzo non si può
+mettere (non è più tuo, o è di un livello che non hai) il gettone lo dice
+(«1 manca») e il resto si indossa lo stesso («Indossato, tranne 1 pezzo»).
+
+**Cosa tiene il gioco.** I set salvati sono **del personaggio** (i set della
+Contadina non sono del Contadino; ogni eroe ha i suoi) e **di quel gioco**:
+non passano dalla fattoria al sotterraneo. Per ognuno basta `{ posto, nome,
+pezzi: { posto del corpo: 'oggetto/forma/colore' } }`, nella campagna del
+gioco (`profile.campagne[<gioco>]`, come il resto: niente campi nuovi nel
+profilo). I pezzi sono chiavi, non foto: la foto la rifà il gioco, e un pezzo
+che sparisce dal catalogo si legge come «manca».
 
 ## I prezzi
 
@@ -170,7 +229,8 @@ dà i dati e il disegno dell'anteprima, e riceve le scelte.
 - **L'anteprima**: uno slot che riceve lo stato provato e l'**angolo** (0–359,
   a scatti di 45° con le frecce, continuo col dito), e lo disegna dal vivo.
 - **Eventi**: `prova(posto, valore)`, `paga(prova)` (il componente calcola il
-  conto e lo mostra; il gioco scala le monete e salva), `chi(id)`, `chiudi`.
+  conto e lo mostra; il gioco scala le monete e salva), `chi(id)`, `salvaSet({ posto, nome })`,
+  `indossaSet(posto)`, `rinominaSet`, `togliSet`, `chiudi`; e la prop `mieiSet` (sei posti).
 
 Il conto (le regole dei prezzi) sta in un file puro accanto, da provare con
 le unità; nel mock è `costo()` in `mock.sorgente.html`.

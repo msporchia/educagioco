@@ -103,7 +103,6 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .riga + .riga { height: 64px; }
 .riga > span { flex: 0 0 52px; font-size: 11px; font-weight: 700; color: var(--tenue); text-transform: uppercase; letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; }
 .riga .scelte { flex: 1; min-width: 0; display: flex; flex-wrap: nowrap; gap: 4px; align-items: center; }
-.riga.spenta i { flex: 1; height: 48px; border: 2px dashed var(--bordo); border-radius: 12px; display: grid; place-items: center; color: var(--tenue); font-style: normal; font-size: 13px; opacity: .8; }
 .forma { position: relative; flex: 0 0 auto; width: 48px; height: 48px; padding: 2px; border-radius: 12px; background: var(--gettone); border: 2px solid var(--gettone-bordo); }
 .forma .foto { display: block; width: 100%; height: 100%; border-radius: 8px; background-repeat: no-repeat; }
 .forma .foto.vuota { display: grid; place-items: center; background: repeating-linear-gradient(45deg, #ccc 0 6px, #bbb 6px 12px); color: #555; font-size: 9px; }
@@ -118,7 +117,7 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .pastiglia.chiuso { opacity: .45; box-shadow: 0 0 0 2px var(--spento); border-style: dashed; }
 
 /* il fondo: la sola cosa che costa; si paga solo da qui */
-.fondo { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; min-height: 64px; padding: 8px 10px; border-top: 2px solid var(--bordo); background: var(--foglio); }
+.fondo { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; height: 68px; overflow: hidden; padding: 8px 10px; border-top: 2px solid var(--bordo); background: var(--foglio); }
 .fondo .cosa { flex: 1; min-width: 0; font-size: 13px; line-height: 1.25; }
 .fondo .cosa b { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fondo .cosa small { color: var(--tenue); }
@@ -127,6 +126,15 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .fondo .compra { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; }
 .compra small { font-size: 11px; font-weight: 600; opacity: .85; }
 .compra[disabled] { background: var(--spento); color: var(--testo); box-shadow: none; opacity: .8; }
+.gruppo-titolo { margin: 6px 2px 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--tenue); }
+.gruppo-titolo:first-child { margin-top: 2px; }
+.gettone.vuoto { border-style: dashed; background: transparent; }
+.gettone .foto.posto { display: grid; place-items: center; font-size: 22px; font-weight: 700; color: var(--tenue); opacity: .6; }
+.gettone .prezzo.manca { background: var(--spento); color: var(--testo); }
+.riga.vuota i { flex: 1; color: var(--tenue); font-style: normal; font-size: 13px; text-align: center; }
+.riga.azioni { gap: 8px; } .riga.azioni > button { flex: 1; min-height: 48px; }
+.pannello .nome { flex: 1; height: 48px; font: inherit; font-size: 18px; padding: 0 12px; border-radius: 12px; border: 2px solid var(--bordo); background: var(--gettone); color: var(--testo); user-select: text; -webkit-user-select: text; }
+.secondario.attento { border-color: #c0392b; color: #c0392b; }
 .secondario { min-height: 48px; padding: 0 10px; border-radius: 12px; border: 2px solid var(--bordo); font-weight: 700; font-size: 13px; color: var(--testo); }
 
 /* chiuso col ✕: nel gioco si torna dov'eri */
@@ -153,7 +161,8 @@ const P = v => { const [o, f, c] = String(v || '-/-/-').split('/'); return { o, 
 const S = () => SCENARI[mock.scenario]
 function nuovoStato(s) {
   const st = { chi: s.chiDiSerie, indossato: {}, prova: {}, provaSet: null, posseduti: new Set(), saldo: s.valuta.saldo, angolo: 0,
-    scheda: s.schede[0].id, aperto: {}, ultimoPosto: null, avviso: '', chiuso: false }
+    scheda: s.schede[0].id, aperto: {}, ultimoPosto: null, avviso: '', chiuso: false,
+    mieiSet: (s.mieiSet || []).map((m, i) => ({ posto: i, nome: m.nome, chi: m.chi, pezzi: { ...s.base[m.chi], ...m.diff } })), setAperto: null, nomina: null, toglie: null }
   for (const chi of s.chi) st.indossato[chi.id] = { ...s.base[chi.id] }
   for (const [id, o] of Object.entries(s.oggetti)) if (o.posseduto) {
     st.posseduti.add(id)
@@ -255,7 +264,7 @@ function paga() {
   st.avviso = c.tot ? `Fatto! −${c.tot} ${S().valuta.simbolo}` : 'Indossato'
 }
 function comEra() { const st = T(); st.prova = {}; st.provaSet = null }
-function cambiaChi(id) { const st = T(); st.chi = id; st.prova = {}; st.provaSet = null; st.ultimoPosto = null; st.aperto = {} }
+function cambiaChi(id) { const st = T(); st.chi = id; st.prova = {}; st.provaSet = null; st.ultimoPosto = null; st.aperto = {}; st.setAperto = null; st.nomina = null; st.toglie = null }
 
 // ══════════ le foto ══════════
 const blob = new Map()
@@ -378,15 +387,16 @@ function gettoneSet(set) {
 }
 const setsDi = () => S().set.filter(x => !x.per || x.per.includes(T().chi))
 
-/** Il pannello dell'oggetto aperto, SOTTO la griglia: sempre lì e sempre alto uguale. Una riga per la forma (foto), una per il
-    colore (pastiglie); quello che l'oggetto non ha resta come riga spenta, così niente si sposta. */
+/** Il pannello dell'oggetto aperto, SOTTO la griglia: sempre lì e sempre alto uguale. In ordine di dipendenza: l'oggetto (il titolo),
+    la sua forma (foto), il colore di quella forma (pastiglie). Una riga che l'oggetto non ha resta vuota, della stessa altezza. */
+const vuota = (testo = '') => `<div class="riga vuota">${testo ? `<i>${esc(testo)}</i>` : ''}</div>`
 function pannello() {
   const s = S(), st = T(), chi = st.chi, sc = schedaDi(st.scheda)
+  if (sc.tipo === 'set') return pannelloSet()
   const oid = sc.tipo === 'oggetti' || sc.tipo === 'tratti' ? apertoDi(sc) : null, og = oid && s.oggetti[oid]
-  const spenta = (nome, testo) => `<div class="riga spenta"><span>${esc(nome)}</span><i>${esc(testo)}</i></div>`
-  if (!og) {
-    const testo = sc.tipo === 'chi' ? 'Tocca chi vuoi essere.' : sc.tipo === 'set' ? 'Un set mette più pezzi insieme, e costa meno.' : 'Tocca un oggetto qui sopra.'
-    return `<section class="pannello" data-pannello><div class="titolo"><b>${esc(testo)}</b></div>${spenta('Forma', '')}${spenta('Colore', '')}</section>`
+  if (!og || og.niente) {
+    const testo = og ? nomeDi(og, chi) : sc.tipo === 'chi' ? 'Tocca chi vuoi essere.' : 'Tocca un oggetto qui sopra.'
+    return `<section class="pannello spento" data-pannello><div class="titolo"><b>${esc(testo)}</b></div>${vuota(og ? 'Niente da scegliere: né forma né colore.' : '')}${vuota()}</section>`
   }
   const ora = addossoOra()[og.posto], suo = P(ora).o === oid, cur = suo ? P(ora) : P(valoreDi(oid, chi))
   const fs = formeDi(og, chi), cs = coloriDi(og, cur.f, chi), inProva = !og.tratto && P(st.prova[og.posto]).o === oid
@@ -397,14 +407,65 @@ function pannello() {
     const r = costo(v), sel = suo && cur.f === f.id
     const prezzo = r.righe.filter(x => !x[0].startsWith('colore')).reduce((t, x) => t + x[1], 0)
     return `<button class="forma ${sel ? (inProva ? 'prova' : 'si') : ''} ${r.liv ? 'chiuso' : ''}" data-azione="valore" data-posto="${og.posto}" data-v="${v}" aria-pressed="${sel}" aria-label="${esc(f.nome)}">${fotoHtml(fotoGettone(og.posto, v, og.taglio || og.posto))}${prezzoHtml(prezzo, r.liv)}</button>`
-  }).join('')}</div></div>` : spenta(og.nomeForme || 'Forma', 'una sola')
+  }).join('')}</div></div>` : vuota()
   const riga2 = cs.length > 1 ? `<div class="riga"><span>${esc(og.tratto && !fs.length ? og.nome : og.nomeColori || 'Colore')}</span><div class="scelte">${cs.map(c => {
     const v = `${oid}/${cur.f}/${c.id}`, r = costo(v), sel = suo && cur.c === c.id
     const fondo = c.css ? `background:${c.css}` : stileFoto(fotoGettone(og.posto, v, og.taglio || og.posto)) || 'background:#999'
     const prezzo = r.righe.filter(x => x[0].startsWith('colore')).reduce((t, x) => t + x[1], 0)
     return `<button class="pastiglia ${sel && inProva ? 'prova' : ''} ${r.liv ? 'chiuso' : ''}" style="${fondo}" data-azione="valore" data-posto="${og.posto}" data-v="${v}" aria-pressed="${sel}" aria-label="${esc(c.nome)}">${prezzoHtml(prezzo, r.liv)}</button>`
-  }).join('')}</div></div>` : spenta('Colore', 'uno solo')
+  }).join('')}</div></div>` : vuota()
   return `<section class="pannello" data-pannello><div class="titolo"><b>${esc(titolo)}</b></div>${riga1}${riga2}</section>`
+}
+
+// ══════════ i set: quelli salvati (miei, per personaggio) e quelli del gioco ══════════
+// I miei set hanno sei POSTI fissi: salvare riempie un posto e togliere lo svuota, così la griglia sopra non cambia mai numero né ordine.
+const MAX_SET = 6
+const mioIn = i => T().mieiSet.find(m => m.chi === T().chi && m.posto === i) || null
+const quantiMiei = () => T().mieiSet.filter(m => m.chi === T().chi).length
+/** I pezzi di un set salvato che oggi non si possono mettere (non più tuoi, o di un livello che non hai). */
+const mancantiDi = m => Object.values(m.pezzi).filter(v => { const r = costo(v, m.chi); return r.tot || r.liv }).length
+function gettoneMio(i) {
+  const s = S(), st = T(), m = mioIn(i), aperto = st.setAperto === i ? 'aperto' : ''
+  if (!m) return `<button class="gettone vuoto ${aperto}" data-azione="set-mio" data-id="${i}"><span class="foto posto">${i + 1}</span><b>Libero</b></button>`
+  const { posa } = posaPer(m.pezzi, m.chi, null), n = mancantiDi(m)
+  const f = posa ? { src: url(FOTO[posa.id][0]), taglio: s.tagli.tutto } : null
+  const addosso = s.posti.every(p => st.indossato[st.chi][p] === m.pezzi[p])
+  return `<button class="gettone ${addosso ? 'addosso' : ''} ${aperto}" data-azione="set-mio" data-id="${i}">${fotoHtml(f)}<b>${esc(m.nome)}</b>${n ? `<span class="prezzo manca">${n} ${n > 1 ? 'mancano' : 'manca'}</span>` : ''}</button>`
+}
+/** Indossa un set salvato: quello che è tuo e del tuo livello subito e gratis; il resto si salta, e lo si dice. */
+function indossaMio(m) {
+  const st = T(), saltati = []
+  st.prova = {}; st.provaSet = null
+  for (const [p, v] of Object.entries(m.pezzi)) { const r = costo(v); if (r.tot || r.liv) saltati.push(p); else st.indossato[st.chi][p] = v }
+  st.ultimoPosto = null
+  st.avviso = saltati.length ? `Indossato, tranne ${saltati.length} ${saltati.length > 1 ? 'pezzi' : 'pezzo'}` : 'Indossato'
+}
+/** Dove va il set salvato: il posto toccato, o il primo libero. Null se sono tutti pieni e non se n'è toccato nessuno. */
+function postoPerSalvare() {
+  const st = T()
+  if (st.setAperto != null) return st.setAperto
+  for (let i = 0; i < MAX_SET; i++) if (!mioIn(i)) return i
+  return null
+}
+/** Il pannello della scheda Set: il tasto «Salva questo set» sempre al suo posto; il nome si scrive dentro il pannello. */
+function pannelloSet() {
+  const st = T(), n = st.nomina, i = st.setAperto, mio = i != null ? mioIn(i) : null
+  if (n) {
+    const titolo = n.modo === 'rinomina' ? 'Nuovo nome' : n.vecchio ? `Al posto di «${n.vecchio}»: come si chiama?` : 'Come si chiama questo set?'
+    return `<section class="pannello" data-pannello><div class="titolo"><b>${esc(titolo)}</b></div>
+      <div class="riga"><input id="nome-set" class="nome" maxlength="16" value="${esc(n.nome)}" aria-label="nome del set" autocomplete="off"></div>
+      <div class="riga azioni"><button class="secondario" data-azione="nome-no">Lascia stare</button><button class="compra" data-azione="nome-ok">Salva</button></div></section>`
+  }
+  const dove = postoPerSalvare(), occupato = dove != null && mioIn(dove)
+  const salva = dove == null ? `<button class="compra" disabled>I ${MAX_SET} posti sono pieni: toccane uno</button>`
+    : `<button class="compra" data-azione="salva-set">${occupato ? `Salva al posto di «${esc(occupato.nome)}»` : 'Salva questo set'}</button>`
+  const sotto = mio ? `<div class="riga azioni"><button class="secondario" data-azione="rinomina">Cambia nome</button>
+      <button class="secondario ${st.toglie === i ? 'attento' : ''}" data-azione="togli-set">${st.toglie === i ? 'Tocca ancora: via' : 'Togli'}</button></div>` : vuota()
+  return `<section class="pannello" data-pannello><div class="titolo"><b>I miei set · ${quantiMiei()} su ${MAX_SET}</b></div><div class="riga azioni">${salva}</div>${sotto}</section>`
+}
+function grigliaSet() {
+  return `<h3 class="gruppo-titolo">I miei set</h3><div class="griglia">${Array.from({ length: MAX_SET }, (_, i) => gettoneMio(i)).join('')}</div>
+    <h3 class="gruppo-titolo">Set del gioco</h3><div class="griglia">${setsDi().map(gettoneSet).join('')}</div>`
 }
 
 function fondo() {
@@ -424,9 +485,9 @@ function foglio() {
   const st = T(), sc = schedaDi(st.scheda)
   let griglia
   if (sc.tipo === 'chi') griglia = S().chi.map(gettoneChi).join('')
-  else if (sc.tipo === 'set') griglia = setsDi().map(gettoneSet).join('')
-  else { const aperto = apertoDi(sc); griglia = oggettiDi(sc).map(id => gettoneOggetto(id, aperto)).join('') }
-  return `${testa()}${anteprima()}${schede()}<div class="corpo" id="corpo"><div class="griglia">${griglia}</div></div>${pannello()}${fondo()}`
+  else if (sc.tipo !== 'set') { const aperto = apertoDi(sc); griglia = oggettiDi(sc).map(id => gettoneOggetto(id, aperto)).join('') }
+  const corpo = sc.tipo === 'set' ? grigliaSet() : `<div class="griglia">${griglia}</div>`
+  return `${testa()}${anteprima()}${schede()}<div class="corpo" id="corpo">${corpo}</div>${pannello()}${fondo()}`
 }
 
 // ══════════ disegnare ══════════
@@ -474,9 +535,32 @@ document.addEventListener('click', e => {
     case 'gira': giraDi(Number(a.dataset.verso)); disegnaMock(); return
     case 'chiudi': st.chiusoProva = Object.keys(st.prova).length > 0; comEra(); st.chiuso = true; break
     case 'riapri': st.chiuso = false; mock.tocchi--; break
-    case 'scheda': st.scheda = id; break
+    case 'scheda': st.scheda = id; st.nomina = null; st.toglie = null; break
     case 'chi': cambiaChi(id); break
-    case 'set': provaSet(id); break
+    case 'set': provaSet(id); st.setAperto = null; st.toglie = null; break
+    case 'set-mio': { const i = Number(id), m = mioIn(i); if (m) indossaMio(m); st.setAperto = i; st.toglie = null; st.nomina = null; break }
+    case 'salva-set': {
+      const i = postoPerSalvare(), m = mioIn(i)
+      st.nomina = { modo: 'salva', posto: i, vecchio: m ? m.nome : '', nome: m ? m.nome : `Il mio set ${i + 1}` }
+      st.toglie = null; break
+    }
+    case 'nome-ok': {
+      // si salva quello che si ha addosso ed è tuo (una prova non pagata non entra in un set)
+      const n = st.nomina, nome = (($('nome-set') || {}).value || '').trim().slice(0, 16) || n.nome
+      if (n.modo === 'rinomina') mioIn(n.posto).nome = nome
+      else {
+        st.mieiSet = st.mieiSet.filter(m => !(m.chi === st.chi && m.posto === n.posto))
+        st.mieiSet.push({ chi: st.chi, posto: n.posto, nome, pezzi: { ...st.indossato[st.chi] } })
+        st.setAperto = n.posto
+      }
+      st.nomina = null; st.avviso = n.modo === 'rinomina' ? 'Fatto' : 'Salvato'; break
+    }
+    case 'nome-no': st.nomina = null; break
+    case 'rinomina': st.nomina = { modo: 'rinomina', posto: st.setAperto, nome: mioIn(st.setAperto).nome }; break
+    case 'togli-set':
+      if (st.toglie === st.setAperto) { st.mieiSet = st.mieiSet.filter(m => !(m.chi === st.chi && m.posto === st.setAperto)); st.toglie = null }
+      else st.toglie = st.setAperto
+      break
     case 'oggetto': {
       // toccare un oggetto lo apre nel pannello e lo prova addosso; un tratto (pelle, capelli) si apre e basta: si cambia nel pannello
       const og = s.oggetti[id]

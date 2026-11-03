@@ -94,6 +94,9 @@
   for (const t of ['lunghi', 'ricci']) varia('contadino', { capelli: `capelli/${t}/castani` })
   for (const s of fattoria.set) for (const chi of s.per) varia(chi, s.pezzi)
   fattoria.pose = posiF
+  // i set salvati con cui parte il mock (i primi posti dei «miei set»): uno tutto tuo, uno con un pezzo che non si può mettere
+  fattoria.mieiSet = [{ nome: 'Di tutti i giorni', chi: 'contadina', diff: {} },
+    { nome: 'Al rodeo', chi: 'contadina', diff: { testa: 'cappello/cowboy/naturale', gambe: 'gonna/-/rosso' } }]
 
   // ── il sotterraneo: gli eroi (i modelli di src/giochi/sotterraneo/scena3d/eroi3d, ramo develop) ──
   const TINTE_S = { '-': ['Di serie', null], rosso: ['Rosso', '#d83a34'], blu: ['Blu', '#3a54d0'], verde: ['Verde', '#48b84c'], oro: ['Oro', '#d4a62a'], viola: ['Viola', '#8c48d0'], nero: ['Nero', '#1e1e22'] }
@@ -156,6 +159,7 @@
   for (const a of ['spada', 'mazza']) posiS.push({ chi: 'mago', diff: { mano: `arma/${a}/-` } })
   for (const s of sotterraneo.set) vS(s.pezzi)
   sotterraneo.pose = posiS
+  sotterraneo.mieiSet = [{ nome: 'Di tutti i giorni', chi: 'maga', diff: {} }, { nome: "Con l'elmo", chi: 'maga', diff: { testa: 'elmo/elmo-alato/oro' } }]
 
   // ── gli animali: il beagle con gli addobbi (src/giochi/fattoria3d, ramo main: gli addobbi hanno i colori) ──
   const CA = { rosso: '#d8322b', blu: '#2f6fd0', verde: '#3f9a4a', giallo: '#f2b831', rosa: '#f58bb0', fucsia: '#e8407a', viola: '#7b3fb0', nero: '#24242a', bianco: '#f4f4ee', marrone: '#5a3a1e', oro: '#f2c230', argento: '#c9ced6', azzurro: '#4fb4e8' }
@@ -205,6 +209,7 @@
   for (const c of ['fucsia', 'rosso']) vA({ collo: `fiocco/fiocco/${c}` })
   for (const s of animali.set) vA(s.pezzi)
   animali.pose = posiA
+  animali.mieiSet = [{ nome: 'Senza niente', chi: 'beagle', diff: {} }, { nome: 'A passeggio', chi: 'beagle', diff: { collo: 'sciarpa/sciarpa/rosso' } }]
 
   // ogni posa ha un id stabile: lo scenario, chi, e i pezzi diversi dalla base
   for (const s of [fattoria, sotterraneo, animali]) {

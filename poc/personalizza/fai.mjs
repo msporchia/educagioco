@@ -109,9 +109,28 @@ if (args.includes('--scatti')) {
       const scheda = { fattoria: 'Contadina', sotterraneo: 'Eroe', animali: 'Cane' }[scenario]
       await page.click(`[data-mock="scenario"]:text-is("${scheda}")`)
       if (opz('tema', '')) await page.click(`[data-mock="tema"]:text-is("${opz('tema')}")`)
+      // `--misura`: dopo ogni tocco controlla la regola «un'interazione cambia solo le zone sotto» (README, «La struttura»): le zone
+      // non cambiano mai posto né altezza, e un tocco nel pannello o nel fondo non cambia numero, ordine e posto dei gettoni sopra
+      const firma = () => page.evaluate(() => {
+        const r = s => { const e = document.querySelector(s); if (!e) return null; const b = e.getBoundingClientRect(); return [Math.round(b.top), Math.round(b.height)] }
+        const pos = s => [...document.querySelectorAll(s)].map(e => { const b = e.getBoundingClientRect(); return `${Math.round(b.left)},${Math.round(b.top)},${Math.round(b.width)}` }).join(' ')
+        return { zone: JSON.stringify(['.testa', '.anteprima', '.schede', '#corpo', '.pannello', '.fondo'].map(r)), schede: pos('.schede button'), griglia: pos('#corpo .gettone'), forme: pos('.pannello .forma') }
+      })
+      let prima = args.includes('--misura') ? await firma() : null
       for (const t of tocchi) {
         const b = page.locator(`#foglio button:text-is("${t}"), #foglio button[aria-label="${t}"], #foglio button:has(b:text-is("${t}")), #foglio button:has-text("${t}")`).first()
-        if (await b.count()) await b.click(); else console.log(`  ✗ ${scenario}: niente da toccare «${t}»`)
+        if (!(await b.count())) { console.log(`  ✗ ${scenario}: niente da toccare «${t}»`); continue }
+        const dove = prima && await b.evaluate(e => (e.closest('.pannello') ? 'pannello' : e.closest('.fondo') ? 'fondo' : e.closest('#corpo') ? 'griglia' : e.closest('.schede') ? 'schede' : 'altro'))
+        const riga = prima && await b.evaluate(e => (e.classList.contains('pastiglia') ? 'colore' : ''))
+        await b.click()
+        if (!prima) continue
+        const ora = await firma(), guasti = []
+        if (ora.zone !== prima.zone) guasti.push('le zone si sono mosse')
+        if (dove !== 'altro' && ora.schede !== prima.schede) guasti.push('le schede sono cambiate')
+        if (['pannello', 'fondo'].includes(dove) && ora.griglia !== prima.griglia) guasti.push('la griglia è cambiata')
+        if (riga === 'colore' && ora.forme !== prima.forme) guasti.push('le forme sono cambiate')
+        console.log(`  ${guasti.length ? '✗' : '✓'} «${t}» (${dove}${riga ? ', ' + riga : ''})${guasti.length ? ': ' + guasti.join(', ') : ''}`)
+        prima = ora
       }
       const file = resolve(SCATTI, `personalizza-${scenario}${opz('tema', '') ? '-' + opz('tema') : ''}${tocchi.length ? '-' + tocchi.join('-').replace(/[^\w-]+/g, '_') : ''}.png`)
       await page.screenshot({ path: file })
