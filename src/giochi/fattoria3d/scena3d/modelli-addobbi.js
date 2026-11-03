@@ -4,6 +4,8 @@
 import * as THREE from 'three'
 import { mat } from './modelli.js'
 import { fondiPerMateriale } from './fondi.js'
+import { leggiTinta } from '../dati/addobbi.js'
+import { tingiGruppo } from '../../../grafica/persona/tinge3d.js'
 import { memoModello } from './cache-modelli.js'
 
 const mesh = (g, geo, m, x = 0, y = 0, z = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); g.add(o); return o }
@@ -99,17 +101,18 @@ const DISEGNI = {
   },
 }
 
-function costruisci (id) {
-  const d = DISEGNI[id]
+function costruisci (chiave) {
+  const { id, tinta } = leggiTinta(chiave), d = DISEGNI[id]
   if (!d) return null
   const g = new THREE.Group()
   d(g)
+  if (tinta) tingiGruppo(g, tinta)              // ritinto (grafica/persona/tinge3d.js): copie dei materiali, gli originali restano
   fondiPerMateriale(g, { soglia: 0 })
   return g
 }
-const creaAddobbo3 = memoModello('addobbo', costruisci, { chiave: id => id })
-/** Il modello di un addobbo (o null se non c'è), con l'origine dove tocca la bestia. */
-export const creaAddobbo = id => (DISEGNI[id] ? creaAddobbo3(id) : null)
+const creaAddobbo3 = memoModello('addobbo', costruisci, { chiave: k => k })
+/** Il modello di un addobbo (o null se non c'è), con l'origine dove tocca la bestia: `id`, o `id@tinta` ritinto (dati/addobbi.js, `conTinta`). */
+export const creaAddobbo = chiave => { const { id, tinta } = leggiTinta(chiave); return DISEGNI[id] ? creaAddobbo3(tinta ? `${id}@${tinta}` : id) : null }
 export const ADDOBBI_DISEGNATI = Object.keys(DISEGNI)
 
 /** Dove cade ogni aggancio su ogni corpo: [perno, x, y, z, scala, giro avanti]. Il perno è `testa` o `corpo` del modello (così l'addobbo
@@ -124,7 +127,7 @@ export const AGGANCI = {
 /** La forma di un corpo per `AGGANCI`: il beagle ha gli stessi perni di Watson ma un'altra testa. */
 export const formaDi = g => (g.userData.tipo === 'cane' && g.userData.id === 'beagle' ? 'beagle' : g.userData.tipo)
 
-/** Veste un corpo in scena: toglie quello che portava e mette `addosso` ({ aggancio: id }). Non rifà niente se non è cambiato. */
+/** Veste un corpo in scena: toglie quello che portava e mette `addosso` ({ aggancio: id o id@tinta }). Non rifà niente se non è cambiato. */
 export function vestiBestia (g, addosso = {}) {
   const firma = Object.entries(addosso).sort().join()
   if (g.userData.firmaAddobbi === firma) return

@@ -2,6 +2,25 @@
    Il catalogo è di questo gioco, non di un altro: gli id sono le chiavi dei salvataggi (anche di quelli convertiti dalla 2D) e non si rinominano.
    Fascia «una cosetta»: 🪙6–30. Dove cade un aggancio su ogni corpo lo dice `AGGANCI` in scena3d/modelli-addobbi.js. Vedi docs/fattoria3d/addobbi.md. */
 import { curabile } from './bestie.js'
+import { tintaValida } from '../../../grafica/persona/tinte.js'
+
+/** Ritingere un addobbo (la tavolozza di quindici tinte, grafica/persona/tinte.js): il primo colore di un addobbo, il suo, viene con lui;
+    un'altra tinta si compra una volta per addobbo e poi è tua per sempre. Prezzo provvisorio, da confermare (docs/fattoria3d/addobbi.md). */
+export const PREZZO_TINTA = 5
+/** Le tinte comprate, lette da un salvataggio: { id dell'addobbo: [tinte] }. Quelle che non esistono si buttano; un salvataggio di prima non ne ha. */
+export function tinteAddobbiInForma(letto) {
+  const fuori = {}
+  if (!letto || typeof letto !== 'object' || Array.isArray(letto)) return fuori
+  for (const [id, l] of Object.entries(letto)) {
+    if (!PER_ID[id] || !Array.isArray(l)) continue
+    const t = [...new Set(l.map(tintaValida).filter(Boolean))]
+    if (t.length) fuori[id] = t
+  }
+  return fuori
+}
+/** Un addobbo con la sua tinta, come lo vuole la scena (`id@tinta`, o l'id solo se è del suo colore). */
+export const conTinta = (id, tinta) => (tintaValida(tinta) ? `${id}@${tinta}` : id)
+export const leggiTinta = chiave => { const [id, t] = String(chiave || '').split('@'); return { id, tinta: tintaValida(t) } }
 
 /** Dove si attacca qualcosa a una bestia. */
 export const AGGANCI_TUTTI = ['testa', 'muso', 'collo', 'schiena']

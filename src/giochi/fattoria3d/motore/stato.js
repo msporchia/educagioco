@@ -1,6 +1,6 @@
 /* Lo stato che si salva (in profile.campagne.fattoria3d.cfg.stato) e come si rimette in forma quando si legge: un salvataggio
    di ieri non ha bisogno di migrazioni, i campi che mancano si riempiono. Dato + funzioni pure. */
-import { cassettoInForma } from '../dati/addobbi.js'
+import { cassettoInForma, tinteAddobbiInForma } from '../dati/addobbi.js'
 import { armadioInForma } from '../dati/abiti.js'
 import { LOTTI_INIZIALI, PEZZO_DI_PARTENZA, POSTI_STORICI, lottoPerId } from '../dati/mondo.js'
 import { lottoDiversoDa } from '../dati/biomi.js'
@@ -78,6 +78,7 @@ export function statoIniziale() {
     vecchi1: [],               // gli id dei lotti comprati con `geo: 1` dove ora c'è un lago naturale al posto della pozzanghera: restano com'erano (generaLotto `vecchio: 1`)
     casa: casaIniziale(),      // le bestie di casa che hai preso (docs/fattoria3d/bestie-di-casa.md): { beagle: { pancia, pelo, gioco, quando, premiato, nome?, i?, j? } }
     addobbi: {},               // il cassetto degli addobbi delle bestie: comprati e non addosso, { id: quanti } (dati/addobbi.js)
+    tinteAddobbi: {},          // le tinte comprate per gli addobbi: { id: ['rosso', …] } (dati/addobbi.js, PREZZO_TINTA)
     armadio: {},               // i pezzi a pagamento del guardaroba del contadino comprati: { 'cappello:cilindro': true } (dati/abiti.js)
     pesca: {},                 // per lotto d'acqua tuo: { i, j (dove sta il galleggiante), fine (quando abbocca, null se non c'è la lenza), riposo (quando il banco si ripopola, null) }
     strade: [],                // le celle (indice di griglia) disegnate dal bambino
@@ -139,6 +140,7 @@ export function normalizza(letto) {
     s.vecchi1 = []
   }
   s.addobbi = cassettoInForma(letto.addobbi)
+  s.tinteAddobbi = tinteAddobbiInForma(letto.tinteAddobbi)   // assente prima delle tinte, senza cambiare versione
   s.armadio = armadioInForma(letto.armadio)       // assente prima del guardaroba a pagamento, senza cambiare versione
   s.casa = casaInForma(letto.casa)       // le bestie di casa (assenti prima del giro G6, senza cambiare versione): uno stato di prima non ne ha
   for (const [id, v] of Object.entries(oggetto(letto.pesca))) {

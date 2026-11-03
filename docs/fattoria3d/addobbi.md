@@ -3,7 +3,7 @@
 Le bestie si vestono: un cappello, gli occhiali,
 qualcosa al collo e sulla schiena, che **si vede in scena** mentre la bestia gira: un vestito che si guarda solo aprendo una scheda non lo mette nessuno. Vale per le bestie comprate e per i compagni gratis
 (Watson, Sherlock, Irene, Pepe). Codice: `dati/addobbi.js` (i dati), `motore/cura.js` (`vesti`, `spoglia`, `vestiarioDi`),
-`scena3d/modelli-addobbi.js` (i modelli e gli agganci), `viste/Bestia.vue` (la sezione «🎩 Vestilo»).
+`scena3d/modelli-addobbi.js` (i modelli, ritinti, e gli agganci), `viste/Addobbi.vue` (si apre da «🎩 Vestilo» in `viste/Bestia.vue`).
 
 ## Le regole
 
@@ -13,10 +13,20 @@ qualcosa al collo e sulla schiena, che **si vede in scena** mentre la bestia gir
   zainetto sulla schiena. Sono tutti modelli 3D, tutti in vendita.
 - **Non tutti portano tutto**: la campanella è dei gatti (`per`), il pappagallo non ha la schiena (ha le ali).
 - **Il cappello da strega si compra solo a Halloween**; comprato resta, e si rimette quando si vuole.
-- **Si prova, poi si compra**: un tocco su un addobbo da comprare lo mette «in prova» (bordo verde, un secondo tocco lo lascia) e sotto compare
-  **«🛒 Acquista …🪙N»** con «Annulla»: solo quel tasto paga (un tocco solo comprava per sbaglio). Quelli che hai già (nel cassetto) si mettono con un tocco. **Si compra una volta e
-  non si consuma**: toccare quello che porta lo toglie e lo rimette nel **cassetto** (`stato.addobbi`), da dove va gratis a un'altra
-  bestia. **Un aggancio tiene una cosa sola**: un secondo cappello cambia il primo, che torna nel cassetto.
+- **Si veste nell'interfaccia unica** ([../core/personalizza.md](../core/personalizza.md), tema `animali`): «🎩 Vestilo» nel foglio della
+  bestia apre `viste/Addobbi.vue` (la ✕ torna al foglio). Una scheda per aggancio (In testa, Sul muso, Al collo, Sulla schiena) e Set; in
+  ognuna «Niente» e gli addobbi che le stanno. Il ritratto è la bestia vestita, girata a scatti (`bestia:<id>:r<n>:<aggancio>=<addobbo@tinta>`,
+  `modelloBestia`); i gettoni sono gli addobbi fotografati (`addobbo:<id>[@tinta]`).
+- **Si prova, poi si compra**: un addobbo da comprare resta in prova finché non si preme «Acquista e indossa». Quelli che hai (nel cassetto) si
+  mettono con un tocco. **Si compra una volta e non si consuma**: «Niente» lo toglie e lo rimette nel **cassetto** (`stato.addobbi`), da dove va
+  gratis a un'altra bestia. **Un aggancio tiene una cosa sola**: un secondo cappello cambia il primo, che torna nel cassetto.
+- **I colori**: un addobbo ha una forma sola e i quindici colori della tavolozza (`grafica/persona/tinte.js`, ritinti da `tinge3d.js`) più il suo.
+  Il colore che si prova comprandolo viene con lui; un'altra tinta si compra una volta per addobbo (`PREZZO_TINTA`, **5 🪙, provvisorio: da
+  confermare**) e poi è tua per tutte le bestie. Si salvano `stato.tinteAddobbi` (`{ id: [tinte] }`) e la tinta addosso,
+  `stato.casa[<bestia>].tinte` (`{ aggancio: tinta }`); un salvataggio di prima non le ha e tutto resta del suo colore. In scena l'addobbo è
+  `id@tinta` (`conTinta`, `Cura.addossoTintoA`).
+- **I set**: sei posti per bestia, `stato.casa[<bestia>].vestiti` (`[{ posto, nome, addobbi, tinte }]`, `vestitiBestiaInForma`); rimetterlo mette
+  quello che hai e salta il resto.
 - La spesa conta come esperienza, come ogni acquisto; niente monete indietro.
 - Il traguardo **«Che eleganza»** (🎩, 1/4/8 addobbi addosso, un primato come nella 2D: `fattoria3dVestiti`).
 
@@ -38,11 +48,11 @@ le stanno, se no nel cassetto); chi era stato convertito prima li riceve dal «d
 ## Nei test
 
 `unita/fattoria3d-addobbi` (i dodici con prezzi e agganci fissi, un modello per addobbo, un punto per aggancio per forma, comprare e mettere, cambiare,
-togliere, la stagione, il salvataggio, la conversione). Bersagli: `[data-f3="bestia-vestiario"]`, `[data-f3="addobbo-acquista"]`, `[data-f3="addobbo-annulla"]`, `[data-addobbo="<id>"]` (`aria-pressed`
-se lo porta).
+togliere, la stagione, il salvataggio, la conversione, le tinte e i set) e `integrazione/fattoria3d-bestie` («Vestilo», un addobbo in prova e comprato
+già tinto, un'altra tinta, un set, la ✕ che torna al foglio). Bersagli: quelli del componente più `[data-f3="bestia-vestilo"]`, `[data-f3="addobbi"]`,
+`[data-addobbo="<id>|niente-<aggancio>"]`, `[data-tinta="<id>"]`.
 
 ## Da fare
 
 - Non visti in scena dalla camera di gioco né su un telefono: a ~22 m un occhiale è pochi pixel.
-- La foto del foglio (`anteprime.js`) è la bestia senza addobbi.
 - I costumi di Natale e di Halloween dei recinti (W17, W21) sono un'altra cosa: vestono le bestie del cortile.

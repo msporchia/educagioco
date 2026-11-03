@@ -10,8 +10,8 @@
    `node test/esegui.mjs fattoria3d-addobbi --niente-build`
    tempo: 1
    ═══════════════════════════════════════════════════════════════════ */
-import { ADDOBBI, PER_ID, staA, addobbiPer, guastiDegliAddobbi3d, cassettoInForma } from '../../src/giochi/fattoria3d/dati/addobbi.js'
-import { ADDOBBI_DISEGNATI, AGGANCI } from '../../src/giochi/fattoria3d/scena3d/modelli-addobbi.js'
+import { ADDOBBI, PER_ID, staA, addobbiPer, guastiDegliAddobbi3d, cassettoInForma, PREZZO_TINTA, tinteAddobbiInForma, conTinta } from '../../src/giochi/fattoria3d/dati/addobbi.js'
+import { ADDOBBI_DISEGNATI, AGGANCI, creaAddobbo } from '../../src/giochi/fattoria3d/scena3d/modelli-addobbi.js'
 import { sogliaDi } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { statoIniziale, normalizza } from '../../src/giochi/fattoria3d/motore/stato.js'
@@ -99,4 +99,36 @@ const motoreCon = ({ liv = 70, monete = 1000, stato = null } = {}) => {
   uguale('con la conversione nuova', r.migrato, MIGRAZIONE)
 }
 
+// ── le tinte (dati/addobbi.js, PREZZO_TINTA): il suo colore viene con l'addobbo, un'altra tinta si compra una volta ──
+{
+  const { f, b } = motoreCon({ liv: 20, monete: 100 })
+  const r = f.cura.vesti('watson', 'cilindro', { tinta: 'rosso' })
+  controlla('comprato già tinto: la tinta viene con lui', r.ok && r.costo === PER_ID.cilindro.prezzo && r.tinta === 'rosso', JSON.stringify(r))
+  uguale('e la scena lo vuole tinto', f.cura.addossoTintoA('watson').testa, 'cilindro@rosso')
+  const m0 = b.monete, r2 = f.cura.vesti('watson', 'cilindro', { tinta: 'blu' })
+  controlla('un\'altra tinta dello stesso addobbo costa PREZZO_TINTA', r2.ok && r2.costo === PREZZO_TINTA && b.monete === m0 - PREZZO_TINTA, JSON.stringify(r2))
+  const r3 = f.cura.vesti('watson', 'cilindro', { tinta: 'rosso' })
+  controlla('una tinta già comprata è gratis', r3.ok && r3.costo === 0)
+  controlla('tornare al suo colore è gratis', f.cura.vesti('watson', 'cilindro', { tinta: null }).costo === 0 && f.cura.addossoTintoA('watson').testa === 'cilindro')
+  uguale('le tinte comprate si ricordano', JSON.stringify(f.cura.tinteDi('cilindro')), '["rosso","blu"]')
+  f.cura.vesti('watson', 'cilindro', { tinta: 'blu' })
+  const letto = normalizza(JSON.parse(JSON.stringify(f.s)))
+  uguale('la tinta addosso si salva', letto.casa.watson.tinte.testa, 'blu')
+  uguale('e le tinte comprate', JSON.stringify(letto.tinteAddobbi.cilindro), '["rosso","blu"]')
+  uguale('un salvataggio di prima non ha tinte: tutto del suo colore', JSON.stringify(normalizza({ ...statoIniziale(), casa: { watson: { addobbi: { testa: 'fiore' } } } }).casa.watson.tinte || {}), '{}')
+  uguale('una tinta che non esiste si butta', JSON.stringify(tinteAddobbiInForma({ cilindro: ['rosso', 'zzz'], drago: ['blu'] })), '{"cilindro":["rosso"]}')
+  f.cura.spoglia('watson', 'testa')
+  controlla('togliendolo si toglie la sua tinta', !f.cura.tinteA('watson').testa)
+  uguale('il tinto si scrive id@tinta', conTinta('fiocco', 'viola'), 'fiocco@viola')
+  controlla('e si disegna', !!creaAddobbo('fiocco@viola') && !!creaAddobbo('fiocco'))
+  // i set salvati di una bestia
+  f.cura.vesti('watson', 'fiocco', { tinta: 'verde' })
+  f.cura.salvaVestito('watson', 0, 'Festa del paese, con la banda')
+  uguale('il set salvato tiene addobbi e tinte', JSON.stringify(f.cura.vestitiDi('watson')), JSON.stringify([{ posto: 0, nome: 'Festa del paese,', addobbi: { collo: 'fiocco' }, tinte: { collo: 'verde' } }]))
+  f.cura.rinominaVestito('watson', 0, 'Banda')
+  uguale('si rinomina', f.cura.vestitiDi('watson')[0].nome, 'Banda')
+  uguale('si salva', normalizza(JSON.parse(JSON.stringify(f.s))).casa.watson.vestiti[0].nome, 'Banda')
+  f.cura.togliVestito('watson', 0)
+  uguale('si toglie', f.cura.vestitiDi('watson').length, 0)
+}
 riassunto('fattoria3d-addobbi')

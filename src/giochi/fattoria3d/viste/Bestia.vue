@@ -1,7 +1,7 @@
 <script setup>
 // Il foglio di una bestia di casa o di un compagno gratis (G6, docs/fattoria3d/bestie-di-casa.md): come sta, a blocchi (pancia, pelo, gioco), con
-// solo le cose che riempiono ogni bisogno; una carezza gratis sempre; «Sposta» (non ai compagni: girano col contadino) e «Cambia nome»; sotto, «Vestilo»:
-// gli addobbi che le stanno (dati/addobbi.js): quelli che hai si mettono o si tolgono con un tocco, quelli da comprare restano «in prova» e si pagano solo col tasto «Acquista». ✕ in alto a destra. Qui non si decide niente: ogni gesto va
+// solo le cose che riempiono ogni bisogno; una carezza gratis sempre; «Sposta» (non ai compagni: girano col contadino) e «Cambia nome»; sotto, «Vestilo»
+// apre gli addobbi nell'interfaccia unica (viste/Addobbi.vue). ✕ in alto a destra. Qui non si decide niente: ogni gesto va
 // a chi lo usa (`nutri`, `coccola`, ...), che parla col motore (motore/cura.js) e rimanda il testo. Il ritratto lo fotografa `anteprime.js` (`bestia:<id>`).
 import { ref, computed, watch, onMounted } from 'vue'
 import { BISOGNI, CHIAVI, curabile, comeSta, gestiPer, cibiPer } from '../dati/bestie.js'
@@ -19,26 +19,7 @@ const props = defineProps({
   anteprimaPronta: { type: Function, default: null },
   vestiario: { type: Array, default: () => [] },     // [{ id, nome, emoji, prezzo, dove, addosso, hai }] (Cura.vestiarioDi)
 })
-const emit = defineEmits(['nutri', 'coccola', 'carezza', 'nome', 'sposta', 'vesti', 'spoglia', 'chiudi'])
-// le foto degli addobbi: il modello vero in 3D (tipo `addobbo:<id>`); finché non arriva, niente
-const fotoAddobbo = ref({})
-watch(() => props.vestiario.map(a => a.id).join(), () => {
-  for (const a of props.vestiario) {
-    const t = 'addobbo:' + a.id, pronta = props.anteprimaPronta && props.anteprimaPronta(t)
-    if (pronta) fotoAddobbo.value[a.id] = pronta
-    else if (props.anteprima) props.anteprima(t).then(url => { if (url) fotoAddobbo.value[a.id] = url })
-  }
-}, { immediate: true })
-const prezzoAddobbo = a => a.addosso ? '✓ addosso' : a.hai ? '×' + a.hai : '🪙' + a.prezzo
-const prova = ref('')                               // l'addobbo da comprare toccato: non è pagato finché non si preme «Acquista»
-const inProva = computed(() => props.vestiario.find(a => a.id === prova.value && !a.addosso && !a.hai) || null)
-function toccaAddobbo(a) {
-  if (a.addosso) { prova.value = ''; emit('spoglia', a) }
-  else if (a.hai) { prova.value = ''; emit('vesti', a) }
-  else prova.value = prova.value === a.id ? '' : a.id        // un secondo tocco lo lascia
-}
-function compraAddobbo() { const a = inProva.value; if (a) { prova.value = ''; emit('vesti', a) } }
-
+const emit = defineEmits(['nutri', 'coccola', 'carezza', 'nome', 'sposta', 'vestilo', 'chiudi'])
 const b = computed(() => curabile(props.id))
 const pieno = k => (props.stato[k] ?? 0) > 0.93
 const ce = g => g.da ? (props.scorte[g.da] || 0) > 0 : (g.prezzo || 0) <= props.monete
@@ -97,21 +78,9 @@ const faccia = g => g.da ? ((merceDi(g.da) || {}).emoji || g.emoji) : g.emoji
         <button v-if="!b.compagno" type="button" class="f3-bes-az" data-azione="sposta" @click="emit('sposta')">📍 Sposta<small>gratis</small></button>
         <button type="button" class="f3-bes-az" data-azione="nome" @click="emit('nome')">✎ Nome</button>
       </div>
-      <section v-if="vestiario.length" class="f3-bes-blocco" data-f3="bestia-vestiario">
-        <div class="f3-bes-riga"><b>🎩 Vestilo</b><em>tocca per provare, poi acquista</em></div>
-        <div class="f3-bes-gesti">
-          <button v-for="a in vestiario" :key="a.id" type="button" class="f3-bes-gesto" :class="{ sel: a.addosso, prova: a.id === prova, manca: !a.addosso && !a.hai && a.prezzo > monete }"
-                  :data-addobbo="a.id" :aria-pressed="a.addosso" :aria-selected="a.id === prova" @click="toccaAddobbo(a)">
-            <b aria-hidden="true" class="f3-bes-fotina"><img v-if="fotoAddobbo[a.id]" :src="fotoAddobbo[a.id]" alt="" draggable="false"></b><span>{{ a.nome }}</span><em>{{ prezzoAddobbo(a) }}</em>
-          </button>
-        </div>
-        <div v-if="inProva" class="f3-bes-compra" data-f3="addobbo-compra">
-          <button type="button" class="f3-bes-az f3-bes-acquista" :class="{ manca: inProva.prezzo > monete }" data-f3="addobbo-acquista" :aria-disabled="inProva.prezzo > monete || null" @click="compraAddobbo">
-            🛒 Acquista {{ inProva.nome }} <small>🪙{{ inProva.prezzo }}</small></button>
-          <button type="button" class="f3-bes-az" data-f3="addobbo-annulla" @click="prova = ''">Annulla</button>
-        </div>
-      </section>
+      <!-- gli addobbi si scelgono nell'interfaccia unica (viste/Addobbi.vue, docs/fattoria3d/addobbi.md) -->
+      <button v-if="vestiario.length" type="button" class="f3-bes-az f3-bes-vestilo" data-f3="bestia-vestilo" @click="emit('vestilo')">🎩 Vestilo<small>addobbi e colori</small></button>
     </div>
-    <p class="f3-bes-msg" data-f3="bestia-msg">{{ inProva ? (inProva.prezzo > monete ? `Ti mancano 🪙${inProva.prezzo - monete} per ${inProva.nome}.` : `${inProva.nome} costa 🪙${inProva.prezzo}: tocca «Acquista» per comprarlo.`) : (messaggio || 'Tocca una cosa per darla a ' + nome + '.') }}</p>
+    <p class="f3-bes-msg" data-f3="bestia-msg">{{ messaggio || 'Tocca una cosa per darla a ' + nome + '.' }}</p>
   </div>
 </template>

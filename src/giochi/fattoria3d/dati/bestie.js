@@ -11,6 +11,7 @@ import { ANIMALI_2D, NOMI_2D, premioBenessere } from './parita2d.js'
 import { COMPAGNI } from './compagni.js'
 import { merceDi } from './ricette.js'
 import { PER_ID as ADDOBBO_2D } from '../da2d/dati/addobbi.js'
+import { tintaValida } from '../../../grafica/persona/tinte.js'
 
 export { BISOGNI, CHIAVI, FONDO, nuovo, foto, scendi, riarma, BENISSIMO, BENE, tuttoAPosto, premiaSeStaBene, umore, comeSta, haBisogno, COCCOLE }
 
@@ -101,7 +102,29 @@ export function bestiaInForma(letto, ora = Date.now()) {
   if (Number.isInteger(l.i) && Number.isInteger(l.j) && Math.abs(l.i) < 1e6 && Math.abs(l.j) < 1e6) { r.i = l.i; r.j = l.j }
   const addosso = Object.entries(oggetto(l.addobbi)).filter(([dove, id]) => ADDOBBO_2D[id] && ADDOBBO_2D[id].dove === dove)
   if (addosso.length) r.addobbi = Object.fromEntries(addosso)
+  // la tinta di quello che porta (un salvataggio di prima non ce l'ha: tutto del suo colore)
+  const tinte = Object.entries(oggetto(l.tinte)).filter(([dove, t]) => r.addobbi && r.addobbi[dove] && tintaValida(t))
+  if (tinte.length) r.tinte = Object.fromEntries(tinte)
+  const vestiti = vestitiBestiaInForma(l.vestiti)
+  if (vestiti.length) r.vestiti = vestiti
   return r
+}
+
+/** I set salvati di una bestia (docs/fattoria3d/addobbi.md): al più sei, in sei posti, un nome corto e quello che porta { dove: id }, con le tinte. */
+export const POSTI_VESTITI_BESTIA = 6
+export function vestitiBestiaInForma(l) {
+  if (!Array.isArray(l)) return []
+  const visti = new Set(), fuori = []
+  for (const s of l) {
+    if (!s || typeof s !== 'object' || !Number.isInteger(s.posto) || s.posto < 0 || s.posto >= POSTI_VESTITI_BESTIA || visti.has(s.posto)) continue
+    const nome = typeof s.nome === 'string' ? s.nome.trim().slice(0, 16) : ''
+    if (!nome) continue
+    visti.add(s.posto)
+    const addobbi = Object.fromEntries(Object.entries(oggetto(s.addobbi)).filter(([dove, id]) => ADDOBBO_2D[id] && ADDOBBO_2D[id].dove === dove))
+    const tinte = Object.fromEntries(Object.entries(oggetto(s.tinte)).filter(([dove, t]) => addobbi[dove] && tintaValida(t)))
+    fuori.push({ posto: s.posto, nome, addobbi, tinte })
+  }
+  return fuori.sort((x, y) => x.posto - y.posto)
 }
 
 /** Tutta la casa letta da uno stato (o niente): solo le bestie che esistono. */

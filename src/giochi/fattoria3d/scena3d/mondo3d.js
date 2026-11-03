@@ -13,7 +13,7 @@ import { creaAnteprime } from './anteprime.js'
 import { creaScaldo } from './scaldo-puro.js'
 import { Eroe } from './eroe.js'
 import { Ospite } from './ospite.js'
-import { creaAddobbo } from './modelli-addobbi.js'
+import { creaAddobbo, vestiBestia } from './modelli-addobbi.js'
 import { creaContadino, creaCapo, posaGatto, posaCane } from './modelli-compagni.js'
 import { Compagni } from './compagni.js'
 import { creaBestia, posaPiccolo, posaBeagle } from './modelli-bestie.js'
@@ -133,12 +133,18 @@ export class Mondo3d {
   }
   /** La foto di un pezzo del guardaroba: `capo:<categoria>:<id>:<persona>` (`creaCapo`). */
   modelloCapo(chiave) { const [c, id, p] = chiave.split(':'); return creaCapo(c, id, p) }
-  /** Il ritratto di una bestia di casa o di un compagno gratis (`bestia:<id>`, dati/bestie.js): il suo corpo com'è in scena, in posa da fermo. */
-  modelloBestia(id) {
-    const c = COMPAGNI[id]
-    if (c) { const g = creaBestia({ id, ...c }); (c.tipo === 'cane' ? posaCane : posaGatto)(g, { stato: 'sta', t: 0.4 }); return g }
-    const b = BESTIE[id]; if (!b) return null
-    const g = creaBestia(comeCompagno(id)); (b.tipo === 'cane' ? posaBeagle : b.tipo === 'gatto' ? posaGatto : posaPiccolo)(g, { stato: 'sta', t: 0.4 })
+  /** Il ritratto di una bestia di casa o di un compagno gratis (`bestia:<id>`, dati/bestie.js): il suo corpo com'è in scena, in posa da fermo.
+      Con `:r<n>` girato di n scatti da 45°, con `:<aggancio>=<addobbo[@tinta]>,…` vestito (il foglio degli addobbi, viste/Bestia.vue). */
+  modelloBestia(chiave) {
+    const [id, ...resto] = chiave.split(':')
+    const r = +((resto.find(x => /^r\d$/.test(x)) || 'r0').slice(1)), addosso = Object.fromEntries((resto.find(x => x.includes('=')) || '').split(',').filter(Boolean).map(x => x.split('=')))
+    let g = null
+    const c = COMPAGNI[id], b = BESTIE[id]
+    if (c) { g = creaBestia({ id, ...c }); (c.tipo === 'cane' ? posaCane : posaGatto)(g, { stato: 'sta', t: 0.4 }) }
+    else if (b) { g = creaBestia(comeCompagno(id)); (b.tipo === 'cane' ? posaBeagle : b.tipo === 'gatto' ? posaGatto : posaPiccolo)(g, { stato: 'sta', t: 0.4 }) }
+    if (!g) return null
+    if (Object.keys(addosso).length) vestiBestia(g, addosso)
+    if (r) g.rotation.y += r * Math.PI / 4
     return g
   }
   /** Il modo «sposta»: il prossimo tocco su una cella tua e libera porta lì la bestia di casa (gratis). Torna false se non è tua. */

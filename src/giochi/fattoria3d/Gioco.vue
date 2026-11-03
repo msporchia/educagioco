@@ -46,11 +46,13 @@ import Macchina from './viste/Macchina.vue'
 import Livelli from './viste/Livelli.vue'
 import Inventario from './viste/Inventario.vue'
 import Guardaroba from './viste/Guardaroba.vue'
+import Addobbi from './viste/Addobbi.vue'
 import Bestia from './viste/Bestia.vue'
 import Battesimo from './viste/Battesimo.vue'
 import { dettoCura, dettoEsito, dettoCompera } from './viste/bestia-pura.js'
 import { BESTIE, CIBI as CIBI_BESTIE, COCCOLE_3D } from './dati/bestie.js'
 import { personaDi, normalizzaAbito, capiDi, chiaveAbito, nomeDelContadino } from './dati/abiti.js'
+import { vestitiInForma } from './dati/guardaroba-voci.js'
 import { schedeDellInventario, robaNuova, contoDi } from './viste/inventario-puro.js'
 import Bacheca from './viste/Bacheca.vue'
 import Mongolfiera from './viste/Mongolfiera.vue'
@@ -211,7 +213,7 @@ const abito = computed(() => normalizzaAbito(capi.value, persona.value))
 const abitoMsg = ref('')
 const guardarobaVista = computed(() => {
   void versione.value
-  return { monete: motore ? motore.monete() : 0, armadio: motore ? motore.s.armadio : {} }
+  return { monete: motore ? motore.monete() : 0, armadio: motore ? { ...motore.s.armadio } : {} }        // una copia: comprando, l'armadio cambia dentro e il foglio deve accorgersene
 })
 /** «Indossa» dal guardaroba: i pezzi a pagamento della bozza si comprano tutti insieme (tutto o niente), poi l'abito va addosso. */
 function indossaContadino(bozza) {
@@ -228,7 +230,13 @@ function indossaContadino(bozza) {
   ricorda(CHIAVE, 'abito', capi.value)
   ui.cambio()
 }
-function cambiaAspetto(nome) { scegliAspetto(nome) }                 // lo stesso attributo del profilo che usa la fattoria 2D
+function cambiaAspetto(nome) { scegliAspetto(nome) }
+// i set salvati del guardaroba (dati/guardaroba-voci.js): sei per la contadina e sei per il contadino, in `cfg.vestiti`
+const vestiti = ref(vestitiInForma(scelta(CHIAVE, 'vestiti', [])))
+function cambiaVestiti(l) { vestiti.value = vestitiInForma(l); ricorda(CHIAVE, 'vestiti', vestiti.value) }
+const salvaVestito = ({ posto, nome, persona: p }) => cambiaVestiti([...vestiti.value.filter(s => !(s.persona === p && s.posto === posto)), { posto, nome, persona: p, capi: capiDi(abito.value) }])
+const rinominaVestito = ({ posto, nome, persona: p }) => cambiaVestiti(vestiti.value.map(s => (s.persona === p && s.posto === posto ? { ...s, nome } : s)))
+const togliVestito = ({ posto, persona: p }) => cambiaVestiti(vestiti.value.filter(s => !(s.persona === p && s.posto === posto)))                 // lo stesso attributo del profilo che usa la fattoria 2D
 watch(() => chiaveAbito(abito.value), () => { if (mondo) mondo.vestiContadino(abito.value) })
 
 // ── le porte che il mondo 3D usa verso la vista ──
@@ -309,21 +317,31 @@ function esitoBestia(r, id) {
 function nutriBestia(cibo) { const id = bestiaAperta.value; if (id) esitoBestia(motore.cura.nutri(id, cibo.id), id) }
 function coccolaBestia(gesto) { const id = bestiaAperta.value; if (id) esitoBestia(motore.cura.coccola(id, gesto.id), id) }
 function carezzaBestia() { const id = bestiaAperta.value; if (id) esitoBestia(motore.cura.carezza(id), id) }
-/** Un addobbo toccato nel foglio: si mette (comprandolo se non c'è nel cassetto) o si toglie; la bestia in scena si veste da sé (compagni.sync). */
-function vestiBestia(a) {
-  const id = bestiaAperta.value; if (!id) return
-  const r = motore.cura.vesti(id, a.id, { stagione: stagione.value || '' }), nome = motore.cura.nomeDi(id)
+// ── gli addobbi di una bestia (viste/Addobbi.vue, docs/fattoria3d/addobbi.md): si aprono da «Vestilo» e la ✕ torna al suo foglio ──
+const addobbiDi = ref(null)
+const addobbiVista = computed(() => {
+  void versione.value
+  const id = addobbiDi.value; if (!id || !motore || !motore.cura.ho(id)) return null
+  return { id, nome: motore.cura.nomeDi(id), monete: motore.monete(), vestiario: motore.cura.vestiarioDi(id, stagione.value || ''), vestiti: motore.cura.vestitiDi(id) }
+})
+function apriAddobbi() { addobbiDi.value = bestiaAperta.value; bestiaMsg.value = ''; bestiaAperta.value = null }
+function chiudiAddobbi() { bestiaAperta.value = addobbiDi.value; addobbiDi.value = null }
+/** Un addobbo messo (comprandolo se non c'è nel cassetto, con la sua tinta) o tolto; la bestia in scena si veste da sé (compagni.sync). */
+function vestiBestia({ id: aid, tinta }) {
+  const id = addobbiDi.value; if (!id) return
+  const r = motore.cura.vesti(id, aid, { stagione: stagione.value || '', tinta }), nome = motore.cura.nomeDi(id)
   bestiaMsg.value = r.ok ? `${nome}: che eleganza!` : dettoCura(r, { monete: motore.monete() })
   if (r.ok) { mondo.compagni.sync(); mondo.compagni.festa(id) }
   ui.cambio()
 }
-function spogliaBestia(a) {
-  const id = bestiaAperta.value; if (!id) return
-  const r = motore.cura.spoglia(id, a.dove)
-  bestiaMsg.value = r.ok ? `${a.nome}: torna nel cassetto.` : dettoCura(r, { monete: motore.monete() })
+function spogliaBestia(dove) {
+  const id = addobbiDi.value; if (!id) return
+  const r = motore.cura.spoglia(id, dove)
+  bestiaMsg.value = r.ok ? 'Torna nel cassetto.' : ''
   if (r.ok) mondo.compagni.sync()
   ui.cambio()
 }
+function setBestia(fai) { const id = addobbiDi.value; if (id && fai(id).ok) { bestiaMsg.value = ''; ui.cambio() } }
 function spostaBestia() { const id = bestiaAperta.value; if (id && mondo.iniziaSposta(id)) bestiaAperta.value = null }
 const predefinitoFattoria = computed(() => comune ? `Con ${nomeDellAmico(comune)}` : 'La fattoria')
 const titoloFattoria = computed(() => foto.value.nome || predefinitoFattoria.value)
@@ -788,13 +806,16 @@ onBeforeUnmount(() => {
         <Magazzino v-if="magazzino" :vista="magazzino" :messaggio="magazzinoMsg" @ingrandisci="piuPosto" @chiudi="magazzinoAperto = null" />
         <Bottega v-if="bottega" :bottega="bottega" :messaggio="bottegaMsg" :consiglio="bottegaCons" @consiglio="facciConsiglio" @consegna="consegnaBottega" @rifiuta="rifiutaBottega" @chiudi="bottegaAperta = null" />
         <Inventario v-if="inventarioAperto && inventario" :schede="inventario" :magazzini="magazzini" @magazzino="vaiAlMagazzino" @albero="apriAlbero" @chiudi="chiudiInventario" />
-        <Guardaroba v-if="guardarobaAperto" :abito="abito" :livello="foto.livello" v-bind="guardarobaVista" :stagione="stagione || ''" :messaggio="abitoMsg" :aspetto="state.profile.aspetto" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
-                    @indossa="indossaContadino" @aspetto="cambiaAspetto" @chiudi="guardarobaAperto = false" />
+        <Guardaroba v-if="guardarobaAperto" :abito="abito" :livello="foto.livello" v-bind="guardarobaVista" :stagione="stagione || ''" :messaggio="abitoMsg" :vestiti="vestiti" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
+                    @indossa="indossaContadino" @aspetto="cambiaAspetto" @salva-set="salvaVestito" @rinomina-set="rinominaVestito" @togli-set="togliVestito" @chiudi="guardarobaAperto = false" />
  <Albero v-if="albero" :albero="albero" @fai="facciConsiglio" @chiudi="chiudiAlbero" />
  <Consiglio v-if="consiglio" :consiglio="consiglio" @fai="facciConsiglio" @chiudi="consiglio = null" />
         <Livelli v-if="livelliAperto" v-bind="livelli" @chiudi="livelliAperto = false" />
         <Bestia v-if="bestiaVista" :key="bestiaVista.id" v-bind="bestiaVista" :messaggio="bestiaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
-                @nutri="nutriBestia" @coccola="coccolaBestia" @carezza="carezzaBestia" @sposta="spostaBestia" @vesti="vestiBestia" @spoglia="spogliaBestia" @nome="battesimoDi = bestiaAperta; bestiaAperta = null" @chiudi="bestiaAperta = null" />
+                @nutri="nutriBestia" @coccola="coccolaBestia" @carezza="carezzaBestia" @sposta="spostaBestia" @vestilo="apriAddobbi" @nome="battesimoDi = bestiaAperta; bestiaAperta = null" @chiudi="bestiaAperta = null" />
+        <Addobbi v-if="addobbiVista" :key="'add-' + addobbiVista.id" v-bind="addobbiVista" :messaggio="bestiaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
+                 @veste="vestiBestia" @spoglia="spogliaBestia" @salva-set="x => setBestia(id => motore.cura.salvaVestito(id, x.posto, x.nome))"
+                 @rinomina-set="x => setBestia(id => motore.cura.rinominaVestito(id, x.posto, x.nome))" @togli-set="p => setBestia(id => motore.cura.togliVestito(id, p))" @chiudi="chiudiAddobbi" />
         <NomeFattoria v-if="nomeAperto" :nome="foto.nome" :predefinito="predefinitoFattoria" @scegli="daiNomeAllaFattoria" @chiudi="nomeAperto = false" />
         <Battesimo v-if="battesimoDi" :id="battesimoDi" :scelto="motore.cura.nomeScelto(battesimoDi)" @scegli="daiIlNome" @chiudi="battesimoDi = null" />
         <Opzioni v-if="opzioniAperte" :q="q" :stat="stat" :conta="conta" :rapporto="rapporto" @cambia="cambiaOpzioni"
