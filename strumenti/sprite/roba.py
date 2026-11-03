@@ -16,7 +16,9 @@ stampa le righe da incollare nel foglietto del loro foglio, alla sua
 scala. `--gioco` porta in gioco ogni figura che ha un `pezzo`: scrive le
 sue righe in un blocco dei foglietti e la tabella `ASPETTI` in
 `src/giochi/sotterraneo/dati/aspetti.js`; poi si rilancia `atlante.py`.
-Il perché: docs/sotterraneo/figure.md.
+Il perché: docs/sotterraneo/figure.md. Una voce con `"solo3d": true` non ha
+foglio né rettangolo: è disegnata solo in codice (poc/roba-3d), conta per gli
+aspetti ma non per i ritagli.
 """
 import argparse
 import json
@@ -54,6 +56,8 @@ def in_gioco(voci):
     ids = {v['id'] for v in voci}
     fuori, fogli = {}, {}
     for v in voci:
+        if v.get('solo3d'):   # disegnata solo in 3D: nessun foglio, nessun ritaglio
+            continue
         if v['foglio'] not in fogli:
             fg = foglietto_di(v['foglio'])
             s = fg.get('scala', 1)
@@ -93,7 +97,7 @@ def nel_gioco(voci, usate):
     del gioco, che tiene anche le figure di base già in gioco."""
     per_foglio = {}
     for v in voci:
-        if v.get('pezzo') and v['id'] not in usate:
+        if v.get('pezzo') and v['id'] not in usate and not v.get('solo3d'):
             riga = riga_del_foglietto(v)
             b = buchi_di(v)
             if b is not None:
@@ -179,7 +183,8 @@ def main():
         return
     usate = in_gioco(voci)
     scelte = [v for v in voci
-              if (not o.categorie or v['id'].split('-')[0] in o.categorie or v['id'] in o.categorie)
+              if not v.get('solo3d')
+              and (not o.categorie or v['id'].split('-')[0] in o.categorie or v['id'] in o.categorie)
               and (not o.elemento or v.get('elemento') == o.elemento)
               and (not o.stile or v.get('stile') == o.stile)
               and (not o.materia or v.get('materia') == o.materia)

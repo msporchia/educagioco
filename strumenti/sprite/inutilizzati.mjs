@@ -250,7 +250,7 @@ export const VIVI = {
     const { COSE, chiaveDelPezzo } = await D('dati/cose.js')
     const { haModelloPerTerra } = await D('scena3d/per-terra-pura.js')
     const { ASPETTI } = await D('dati/aspetti.js')
-    const { SPRITE_FIGURA } = await D('dati/figure3d.js')
+    const { SPRITE_FIGURA, FIGURE3D } = await D('dati/figure3d.js')
     const { UNICI } = await D('dati/pezzi.js')
     const { CURIOSITA } = await D('dati/curiosita.js')
     const { SCALA_SU } = await D('scena/scala-su.js')
@@ -263,7 +263,7 @@ export const VIVI = {
       ...Object.entries(COSE).filter(([k]) => !haModelloPerTerra(k)).map(([, c]) => c.sprite),   // per terra senza modello (roba-per-terra.js), nei pannelli senza chiave
       // le figure della roba: il loro ritaglio è anche quello che dice che la figura c'è (roba.py `in_gioco`, figure3d.js `SPRITE_FIGURA`),
       // e lo sprite resta per terra a chi non ha un modello
-      ...Object.values(ASPETTI).flat().map(a => a.sprite), ...Object.keys(SPRITE_FIGURA),
+      ...Object.values(ASPETTI).flat().map(a => a.sprite).filter(s => !(FIGURE3D[s] && FIGURE3D[s].solo3d)), ...Object.keys(SPRITE_FIGURA),   // le figure solo 3D (le ossa) non hanno sprite
       ...Object.entries(UNICI).map(([id, u]) => (COSE[chiaveDelPezzo(u.base, 1, u.rarita || 'leggendario', [], id)] || {}).sprite),
       ...CURIOSITA.map(c => c.pezzo),                                                         // per terra e nel foglio che si apre (viste/Foglio.vue)
       // mostri, grossi, eroi e persone di sopra non hanno sprite: il modello, o la sua sagoma (docs/sotterraneo/sagome-3d.md)
@@ -324,7 +324,7 @@ export function figureDellaRoba() {
   const ids = new Set(figure.map(v => v.id))
   const tagli = {}
   for (const v of figure) {
-    if (tagli[v.foglio]) continue
+    if (v.solo3d || tagli[v.foglio]) continue
     const fg = json(path.join(dir, v.foglio.replace(/\.png$/, '.json')))
     const s = fg.scala || 1
     tagli[v.foglio] = Object.entries(fg.sprite)
@@ -334,6 +334,7 @@ export function figureDellaRoba() {
   const fuori = []
   let inGioco = 0
   for (const v of figure) {
+    if (v.solo3d) { inGioco++; continue }   // disegnata solo in 3D: c'è
     const [x, y, w, h] = v.rettangolo
     const ritagliata = tagli[v.foglio].find(([, cx, cy]) => x <= cx && cx <= x + w && y <= cy && cy <= y + h)
     if (ritagliata || v.pezzo) { inGioco++; continue }
