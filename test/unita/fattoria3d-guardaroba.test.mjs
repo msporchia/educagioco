@@ -8,6 +8,7 @@ import { roba, vuoto, guastiDeiLivelli } from '../../src/giochi/fattoria3d/dati/
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { sogliaDi } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
+import { vociDelGuardaroba, valoriDellAbito, abitoDeiValori, vestitiInForma } from '../../src/giochi/fattoria3d/dati/guardaroba-voci.js'
 
 const ctx = new Proxy({}, { get: (_, k) => k === 'canvas' ? {} : () => {}, set: () => true })
 globalThis.document = { createElement: () => ({ width: 0, height: 0, getContext: () => ctx }) }
@@ -175,5 +176,27 @@ const abiti = [
   { const { f } = motoreCon(100); f.compraAbito({ ...lui, cappello: 'cilindro' })
     const e = JSON.parse(JSON.stringify(f.s)), d = new Fattoria3d({ stato: e, borsa: { quante: () => 0, paga: () => true }, ora: () => 1e12, rnd: () => 0.5 })
     controlla('l\'armadio sopravvive al salvataggio', d.s.armadio['cappello:cilindro'] === true) }
+}
+// ── il guardaroba sopra l'interfaccia unica (dati/guardaroba-voci.js, docs/core/personalizza.md) ──
+{
+  for (const p of PERSONE_ABITO) {
+    const ab = abitoDiSerie(p)
+    uguale(`${p}: dall'abito ai valori e ritorno senza perdere niente`, chiaveAbito(abitoDeiValori(valoriDellAbito(ab), p)), chiaveAbito(ab))
+  }
+  const voci = vociDelGuardaroba('contadina', { livello: 1, armadio: {}, stagione: '' }), v = id => voci.find(x => x.id === id)
+  controlla('ogni voce ha un id solo', new Set(voci.map(x => x.id)).size === voci.length)
+  controlla('chi sei: la contadina e il contadino, mai «sesso»', v('contadina') && v('contadino') && !voci.some(x => /sesso|maschio|femmina/i.test(x.nome)))
+  controlla('i capelli: il taglio è la forma, il colore il colore', v('capelli').forme.length > 1 && v('capelli').colori.length > 1)
+  controlla('al collo il fazzoletto è un oggetto coi suoi colori', v('collo:fazzoletto') && v('collo:fazzoletto').colori.length === 3)
+  controlla('«niente al collo» non ha scelte', v('collo:niente') && v('collo:niente').niente)
+  controlla('il cilindro si paga e non è tuo', v('cappello:cilindro').prezzo > 0 && !v('cappello:cilindro').posseduto)
+  controlla('…comprato, è tuo', vociDelGuardaroba('contadina', { livello: 1, armadio: { 'cappello:cilindro': true } }).find(x => x.id === 'cappello:cilindro').posseduto)
+  controlla('il cowboy ha il suo livello', v('cappello:cowboy').liv > 1)
+  controlla('i bersagli dei test restano: data-capo', v('cappello:cilindro').dati['data-capo'] === 'cappello:cilindro' && v('stivali').colori.some(c => c.dati['data-capo'] === 'stivali:rossi'))
+  const vv = vestitiInForma([{ posto: 0, nome: 'Festa della nonna Rosa', persona: 'contadina', capi: { cappello: 'cilindro' } }, { posto: 0, nome: 'doppio', persona: 'contadina' },
+    { posto: 0, nome: 'Lui', persona: 'contadino', capi: {} }, { posto: 7, nome: 'fuori', persona: 'contadina' }, { posto: 1, nome: 'x', persona: 'zzz' }])
+  uguale('i set salvati: uno per posto e per persona, gli storti via', vv.length, 2)
+  uguale('il nome si accorcia', vv.find(x => x.persona === 'contadina').nome, 'Festa della nonn')
+  uguale('i capi si rimettono in forma', vv.find(x => x.persona === 'contadina').capi.cappello, 'cilindro')
 }
 riassunto('fattoria3d-guardaroba')

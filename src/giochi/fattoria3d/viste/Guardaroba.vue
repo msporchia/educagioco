@@ -1,11 +1,12 @@
 <script setup>
-// Il guardaroba: il ritratto 3D del contadino (o della contadina) e, sotto, le scelte a gettoni per categoria. Un tocco PROVA il pezzo sul
-// ritratto (la bozza); se tutta la bozza è gratis o già tua si indossa subito, se c'è un pezzo con 🪙 resta in prova finché non si preme «Acquista e
-// indossa»: niente si compra con un tocco solo. I pezzi speciali sono velati col lucchetto finché non arriva il loro livello. Chi si è (contadino o contadina) viene dal
-// profilo, come nella fattoria di sempre: qui si può cambiare con la stessa scelta della mappa. ✕ in alto a destra.
-// Le regole stanno in dati/abiti.js, il ritratto lo fotografa `scena3d/anteprime.js` (tipo `contadino:<chiave>`).
-import { ref, computed, watch, onMounted } from 'vue'
-import { CATEGORIE, PERSONE_ABITO, etichettaDi, scelteDi, statoDelPezzo, daComprare, chiaveAbito, abitoDiSerie, nomeDelContadino } from '../dati/abiti.js'
+// Il guardaroba del contadino (docs/fattoria3d/guardaroba.md) sopra l'interfaccia unica (components/personalizza/Personalizza.vue,
+// docs/core/personalizza.md), tema fattoria. Schede: Chi sei (Contadina, Contadino), Aspetto (pelle; capelli: taglio, poi colore; barba),
+// Cappelli, Vestiti (maglia, salopette o gonna, stivali, collo), Set (i set salvati e quelli da salvare). Quello che è tuo si mette subito;
+// un capo con 🪙 resta in prova sul ritratto finché non si preme «Acquista e indossa». Le voci e i valori stanno in dati/guardaroba-voci.js.
+// Il ritratto e le foto dei gettoni sono il contadino con quella scelta, fotografato adesso (`contadino:<chiave>[:r<giro>]`, scena3d/anteprime.js).
+import { ref, computed, reactive } from 'vue'
+import { chiaveAbito } from '../dati/abiti.js'
+import { SCHEDE_GUARDAROBA, NOMI_PERSONE, vociDelGuardaroba, valoriDellAbito, abitoDeiValori } from '../dati/guardaroba-voci.js'
 import Personalizza from '../../../components/personalizza/Personalizza.vue'
 import '../stile-guardaroba.css'
 
@@ -16,93 +17,59 @@ const props = defineProps({
   armadio: { type: Object, default: () => ({}) }, // i pezzi a pagamento comprati: { 'cappello:cilindro': true }
   stagione: { type: String, default: '' },        // la festa in corso: i pezzi di festa si comprano solo allora
   messaggio: { type: String, default: '' },       // l'esito dell'ultimo acquisto, detto da Gioco.vue
-  aspetto: { type: String, default: '' },         // il personaggio del profilo ('bambina' | 'bimbo')
+  vestiti: { type: Array, default: () => [] },    // i set salvati (dati/guardaroba-voci.js, vestitiInForma)
   anteprima: { type: Function, required: true },  // tipo → Promise<dataURL|null>
   anteprimaPronta: { type: Function, required: true },
 })
-const emit = defineEmits(['indossa', 'aspetto', 'chiudi'])
+const emit = defineEmits(['indossa', 'aspetto', 'salva-set', 'rinomina-set', 'togli-set', 'chiudi'])
 
-const scheda = ref('cappello')                   // `persona` («Chi sei») è una scheda come le altre: due gettoni con la foto (contadina / contadino)
-const scelto = ref('')                            // il pezzo velato toccato, per dire a che livello arriva
-const bozza = ref({ ...props.abito })           // quello che si sta provando: il ritratto lo mostra, il mondo no finché non si indossa
-watch(() => chiaveAbito(props.abito), () => { bozza.value = { ...props.abito } })
-const giro = ref(0)                              // l'anteprima si gira a scatti di 45° (0..7): una foto per angolo, `contadino:<chiave>:r<n>`
-const tipo = computed(() => 'contadino:' + chiaveAbito(bozza.value) + (giro.value ? ':r' + giro.value : ''))
-const ritratto = ref('')
-let ultimo = ''
-async function disegna() {
-  const t = tipo.value; ultimo = t
-  const pronta = props.anteprimaPronta(t)
-  if (pronta) { ritratto.value = pronta; return }
-  const url = await props.anteprima(t)
-  if (url && ultimo === t) ritratto.value = url             // se nel frattempo ha scelto un altro pezzo, vale l'ultimo
-}
-watch(tipo, disegna)
-onMounted(disegna)
+const persona = computed(() => props.abito.persona)
+const giro = ref(0)
+const voci = computed(() => vociDelGuardaroba(persona.value, { livello: props.livello, armadio: props.armadio, stagione: props.stagione }))
+const indossato = computed(() => valoriDellAbito(props.abito))
+const mieiSet = computed(() => props.vestiti.filter(s => s.persona === persona.value).map(s => ({ posto: s.posto, nome: s.nome, pezzi: valoriDellAbito({ persona: s.persona, ...s.capi }) })))
 
-const chi = computed(() => props.abito.persona)
-const ctx = computed(() => ({ livello: props.livello, armadio: props.armadio, stagione: props.stagione }))
-const PERSONE_SCELTA = { contadina: { nome: 'Contadina', aspetto: 'bambina' }, contadino: { nome: 'Contadino', aspetto: 'bimbo' } }
-const personeScelta = computed(() => PERSONE_ABITO.map(p => ({ id: p, nome: PERSONE_SCELTA[p].nome, st: 'libero', libero: true, c: 1, sel: chi.value === p, addosso: chi.value === p,
-  foto: 'capo:collo:' + abitoDiSerie(p).collo + ':' + p })))                    // il mezzobusto di serie: si riconosce chi è
-const voci = computed(() => scheda.value === 'persona' ? personeScelta.value : scelteDi(scheda.value, chi.value, ctx.value).map(o => {
-  const st = statoDelPezzo(scheda.value, o, ctx.value)
-  return { ...o, st, foto: ['capo', scheda.value, o.id, chi.value].join(':'), libero: st !== 'bloccato', sel: bozza.value[scheda.value] === o.id, addosso: props.abito[scheda.value] === o.id }
-}))
-// le foto dei gettoni: il pezzo vero in 3D (scena3d/anteprime.js, tipo `capo:<categoria>:<id>:<persona>`), una per fotogramma; finché non arriva c'è il colore
-const foto = ref({})
-async function caricaFoto() {
-  for (const v of voci.value) {
-    const pronta = props.anteprimaPronta(v.foto)
-    if (pronta) { foto.value[v.foto] = pronta; continue }
-    props.anteprima(v.foto).then(url => { if (url) foto.value[v.foto] = url })
-  }
+// le foto: il contadino fotografato con quell'abito (una per chiave, tenute qui finché il foglio è aperto)
+const foto = reactive({}), chiesti = new Set()
+function fotoDi(tipo) {
+  if (foto[tipo]) return foto[tipo]
+  const pronta = props.anteprimaPronta(tipo)
+  if (pronta) return pronta
+  if (!chiesti.has(tipo)) { chiesti.add(tipo); props.anteprima(tipo).then(url => { if (url) foto[tipo] = url }) }
+  return ''
 }
-watch(voci, caricaFoto, { immediate: true })
-const da = computed(() => daComprare(bozza.value, props.armadio))                 // i pezzi della bozza ancora da pagare
-const costo = computed(() => da.value.reduce((n, o) => n + o.prezzo, 0))
-const cambiata = computed(() => chiaveAbito(bozza.value) !== chiaveAbito(props.abito))
-const manca = computed(() => Math.max(0, costo.value - props.monete))
-const schede = computed(() => [{ id: 'persona', nome: 'Chi sei' }, ...CATEGORIE.map(c => ({ id: c, ...etichettaDi(c, chi.value) }))])
-const riga = computed(() => {
-  const v = voci.value.find(x => x.id === scelto.value)
-  if (v && !v.libero) return `${v.nome}: si sblocca al livello ${v.liv}.`
-  if (da.value.length) return manca.value ? `In prova: ${da.value.map(o => o.nome).join(', ')}. Costa 🪙${costo.value}: ti mancano 🪙${manca.value}.`
-    : `In prova: ${da.value.map(o => o.nome).join(', ')}. Costa 🪙${costo.value}: tocca «Acquista e indossa» per averlo.`
-  return props.messaggio || 'Tocca un pezzo per provarlo. Quelli con 🪙 si comprano una volta sola e sono tuoi per sempre.'
-})
-function tocca(v) {
-  if (scheda.value === 'persona') { scelto.value = ''; if (!v.sel) emit('aspetto', PERSONE_SCELTA[v.id].aspetto); return }
-  if (!v.libero) { scelto.value = v.id; return }
-  scelto.value = ''
-  bozza.value = { ...bozza.value, [scheda.value]: v.id }
-  if (cambiata.value && !da.value.length) emit('indossa', { ...bozza.value })            // gratis o già tuo: si indossa subito, come sempre
+const tipoDi = (stato, r = 0) => 'contadino:' + chiaveAbito(abitoDeiValori(stato, persona.value)) + (r ? ':r' + r : '')
+// il taglio della foto per zona: la testa per i cappelli e i capelli, il busto per la maglia… (la foto è il contadino intero)
+const ZONA = { pelle: 'testa', capelli: 'testa', barba: 'testa', cappello: 'testa', maglia: 'busto', collo: 'collo', pantalone: 'gambe', stivali: 'piedi' }
+
+// gratis: si mette subito; da pagare: lo paga Gioco.vue (motore.compraAbito), tutto o niente
+function scegli({ posto, oggetto, forma, colore }) {
+  if (posto === 'chi') { if (oggetto !== persona.value) emit('aspetto', oggetto === 'contadina' ? 'bambina' : 'bimbo'); return }
+  emit('indossa', abitoDeiValori({ ...indossato.value, [posto]: { oggetto, forma, colore } }, persona.value))
 }
-function compra() { if (da.value.length && !manca.value) emit('indossa', { ...bozza.value }) }
-function annulla() { bozza.value = { ...props.abito } }
-function cambia(id) { scheda.value = id; scelto.value = '' }
-// i dati nella forma del componente comune (components/personalizza/Personalizza.vue): foto 3D del pezzo, colore finché non arriva, prezzo e livello come nota
-const schedeP = computed(() => schede.value.map(s => ({ id: s.id, nome: s.nome, dati: { 'data-scheda-abito': s.id } })))
-const vociP = computed(() => voci.value.map(v => ({
-  id: v.id, nome: v.nome, sel: !!v.sel, bloccato: !v.libero, foto: foto.value[v.foto] || '', colore: v.c ? '#' + v.c.toString(16).padStart(6, '0') : '',
-  nota: !v.libero ? 'Livello ' + v.liv : v.st === 'mio' ? '✓ tuo' : '', prezzo: v.st === 'in-vendita' ? '🪙' + v.prezzo : '', dati: { 'data-capo': scheda.value + ':' + v.id }, voce: v,
-})))
+function acquista({ pezzi }) {
+  const v = { ...indossato.value }
+  for (const p of pezzi) v[p.posto] = { oggetto: p.oggetto, forma: p.forma, colore: p.colore }
+  emit('indossa', abitoDeiValori(v, persona.value))
+}
+function indossaSet({ pezzi }) { emit('indossa', abitoDeiValori({ ...indossato.value, ...pezzi }, persona.value)) }
+function salvaSet({ posto, nome }) { emit('salva-set', { posto, nome, persona: persona.value }) }
 </script>
 
 <template>
-  <Personalizza tema="fattoria" titolo="Guardaroba" :schede="schedeP" :scheda="scheda" :voci="vociP" :riga="riga" data-f3="guardaroba" ruotabile
-                @giro="d => (giro = (giro + d + 8) % 8)" @scheda="cambia" @scegli="(_, v) => tocca(v.voce)" @chiudi="$emit('chiudi')">
-    <template #anteprima>
+  <Personalizza tema="fattoria" titolo="Guardaroba" :chi="NOMI_PERSONE[persona]" valuta="🪙" :saldo="monete" :livello="livello"
+                :schede="SCHEDE_GUARDAROBA" :voci="voci" :indossato="indossato" :miei-set="mieiSet" v-model:giro="giro" :avviso="messaggio" data-f3="guardaroba"
+                @scegli="scegli" @acquista="acquista" @indossa-set="indossaSet" @salva-set="salvaSet"
+                @rinomina-set="x => emit('rinomina-set', { ...x, persona })" @togli-set="x => emit('togli-set', { posto: x, persona })" @chiudi="emit('chiudi')">
+    <template #anteprima="{ stato }">
       <div class="f3-gua-ritratto" data-f3="guardaroba-ritratto">
-        <img v-if="ritratto" :src="ritratto" :alt="'Ritratto ' + nomeDelContadino(abito, 'del')" draggable="false">
+        <img v-if="fotoDi(tipoDi(stato, giro))" :src="fotoDi(tipoDi(stato, giro))" alt="Il ritratto" draggable="false">
       </div>
     </template>
-    <template #chi><p class="f3-gua-nome" data-f3="guardaroba-chi">Sei {{ nomeDelContadino(abito, 'il') }}</p></template>
-    <template #fondo>
-      <div v-if="cambiata && da.length" class="f3-gua-compra" data-f3="guardaroba-compra">
-        <button type="button" class="f3-gua-acquista" :class="{ manca: manca > 0 }" data-f3="guardaroba-acquista" :aria-disabled="manca > 0 || null" @click="compra">🛒 Acquista e indossa 🪙{{ costo }}</button>
-        <button type="button" class="f3-gua-annulla" data-f3="guardaroba-annulla" @click="annulla">Annulla</button>
-      </div>
+    <template #foto="{ zona, voce, stato }">
+      <span class="f3-gua-foto" :class="'f3-gua-' + (zona === 'set' || (voce && voce.posto === 'chi') ? 'tutto' : ZONA[voce && voce.posto] || 'tutto')">
+        <img v-if="fotoDi(tipoDi(stato))" :src="fotoDi(tipoDi(stato))" alt="" draggable="false">
+      </span>
     </template>
   </Personalizza>
 </template>

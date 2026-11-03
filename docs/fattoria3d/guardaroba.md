@@ -71,17 +71,24 @@ foto per abito, rifatta a ogni scelta (non gira da sola).
 
 ## L'interfaccia è quella comune
 
-`viste/Guardaroba.vue` è scritto sopra `components/personalizza/Personalizza.vue` (la stessa di sotterraneo e, dopo, animali), tema `fattoria`: ✕, ritratto grande, schede che
-scorrono, griglia di gettoni, riga di aiuto. Qui restano il ritratto 3D nello slot `anteprima`, «Sei la contadina» (`chi`) e la barra d'acquisto (`fondo`). Il ritratto **si gira** a scatti di 45° (frecce `[data-pz="gira-sx|gira-dx"]` o il dito che scorre): una foto per angolo, `contadino:<chiave>:r<n>` (`modelloContadino` ruota il modello). I
-bersagli `data-*` passano dalle `dati` delle voci. `stile-guardaroba.css` tiene solo quelle tre cose.
+`viste/Guardaroba.vue` sta sopra l'interfaccia unica ([../core/personalizza.md](../core/personalizza.md)), tema `fattoria`, con la struttura
+del mock approvato (`poc/personalizza/`). Le voci e i valori li fa `dati/guardaroba-voci.js` (puro):
 
-## Niente icone: la foto del pezzo
+- **Schede**: Chi sei (Contadina, Contadino: mai «sesso»), Aspetto (la pelle; i capelli, col taglio come forma e poi il colore; la barba),
+  Cappelli (uno per voce), Vestiti (la maglia, la salopette o la gonna coi suoi colori, gli stivali coi loro colori, al collo un oggetto per
+  forma: il fazzoletto in tre colori, la sciarpa nei suoi, «Niente al collo»), Set.
+- **Prezzi**: un capo con 🪙 resta in prova sul ritratto finché non si preme «Acquista e indossa» (Gioco.vue, `motore.compraAbito`, tutto o
+  niente); comprato sta nell'armadio. Un capo di livello si vede, si prova, ma non si prende («Dal livello N»).
+- **Set**: sei posti per la contadina e sei per il contadino, in `cfg.vestiti` (`[{ posto, nome, persona, capi }]`, `vestitiInForma`).
+- **Il ritratto si gira** a scatti di 45° (frecce o dito): `contadino:<chiave>:r<n>`, `modelloContadino` ruota il modello.
 
-I gettoni del foglio e degli addobbi **non hanno emoji** (le emoji di sistema cambiano da un telefono all'altro): ogni gettone è la foto 3D del pezzo, fatta col
-renderer della scena (`scena3d/anteprime.js`, una per fotogramma, finché non arriva c'è il colore). Tipo `capo:<categoria>:<id>:<persona>` (`creaCapo` in
-`modelli-compagni.js`: testa per cappello, capelli e pelle; busto per la maglia; dal collo in giù per il pantalone; gambe per gli stivali; busto e testa per
-il collo) e `addobbo:<id>` per le bestie. I nodi invisibili (falce, ascia, canna) si tolgono prima della foto: `Box3` li conta e allungherebbero l'inquadratura
-(vale anche per il ritratto). Il campo `emoji` dei pezzi resta nei dati ma non si mostra.
+## Niente icone: le foto
+
+Nessuna emoji al posto di un capo (le emoji di sistema cambiano da un telefono all'altro). Il ritratto e ogni gettone sono il contadino
+**con quella scelta**, fotografato adesso dal renderer della scena (`scena3d/anteprime.js`, tipo `contadino:<chiave>`); il gettone lo
+ingrandisce sulla zona del capo (la testa per cappelli, capelli, pelle e barba; il busto per la maglia; il collo; le gambe; i piedi:
+`stile-guardaroba.css`). I nodi invisibili (falce, ascia, canna) si tolgono prima della foto: `Box3` li conta e allungherebbero l'inquadratura.
+Il campo `emoji` dei pezzi resta nei dati ma non si mostra; `capo:<categoria>:<id>:<persona>` (`creaCapo`) resta per chi lo vuole.
 
 **Gli abiti di prima**: i capelli erano taglio e colore insieme (`corti-rossi`, `trecce-bionde`…). `normalizzaAbito` e `armadioInForma` li leggono ancora
 (`LEGACY_CAPELLI`): `corti-rossi` → taglio `corti` + colore `rossi`. Taglio e barba li disegna `applicaAspetto` (di `capelli3d.js`, non si tocca da qui: lo usa anche il
@@ -95,6 +102,8 @@ sbloccata, niente id doppi). Un capo non si rinomina: l'id è nel salvataggio.
 
 ## Nei test
 
-`test/unita/fattoria3d-guardaroba.test.mjs` (dati, genere, normalizzazione, sblocchi, nomi, modelli con 10 abiti, cache, armadio e acquisto) e
-`integrazione/fattoria3d` (il tocco sul contadino, un gettone, la ✕, la prova e l'acquisto del cilindro `[data-f3="guardaroba-acquista"]` / `guardaroba-annulla`, «Torna al contadino/alla contadina», nessun «eroe» a schermo). Bersagli
-`[data-…]` in [file.md](file.md).
+`test/unita/fattoria3d-guardaroba.test.mjs` (dati, genere, normalizzazione, sblocchi, nomi, modelli con 10 abiti, cache, armadio e acquisto, le voci
+e i valori dell'interfaccia, i set) e `integrazione/fattoria3d` (il tocco sul contadino, chi si è, il giro del ritratto, un colore degli stivali, il cowboy
+di livello, la prova e l'acquisto del cilindro col tasto del componente, un set salvato, la ✕). Bersagli: quelli del componente
+([../core/personalizza.md](../core/personalizza.md)) più `[data-f3="guardaroba"]`, `[data-f3="guardaroba-ritratto"]`, `[data-scheda-abito="persona|aspetto|cappello|vestiti|set"]`,
+`[data-capo="<categoria>:<id>"]` (anche `persona:<chi>`) e `[data-voce="pelle|capelli|barba|pantalone|stivali|collo:<forma>"]`; in [file.md](file.md).

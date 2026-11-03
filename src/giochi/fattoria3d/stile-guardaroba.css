@@ -1,11 +1,11 @@
-/* Il guardaroba (viste/Guardaroba.vue) sta sopra l'interfaccia comune (components/personalizza/, tema `fattoria`): qui restano solo le cose sue —
-   il ritratto grande nell'anteprima, «Sei la contadina» e la barra dell'acquisto. Prefisso .f3-gua. */
+/* Il guardaroba (viste/Guardaroba.vue) sta sopra l'interfaccia unica (components/personalizza/, tema `fattoria`): qui restano solo le cose
+   sue — il ritratto grande nell'anteprima e il taglio delle foto dei gettoni (il contadino intero, ingrandito sulla zona del capo). Prefisso .f3-gua. */
 .f3-gua-ritratto { width: 100%; height: 100%; display: grid; place-items: center; }
-.f3-gua-ritratto img { height: 100%; max-width: 100%; object-fit: contain; pointer-events: none; animation: f3-compari .25s both; }
-.f3-gua-nome { margin: 0; font-weight: 800; font-size: 13px; color: #3a2a1a; }          /* l'etichetta «Sei la contadina» sta dentro l'anteprima: la cornice la fa il componente */
-.f3-gua-compra { flex: none; display: flex; gap: 8px; margin: 8px 0 0; }
-.f3-gua-compra button { min-height: 48px; border-radius: 14px; border: 2px solid #6b4423; font: 800 15px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; }
-.f3-gua-acquista { flex: 1 1 auto; background: #5fb04a; color: #fff; box-shadow: 0 3px 0 #356a28; }
-.f3-gua-acquista.manca { background: #b8a888; box-shadow: 0 3px 0 #7c6e56; opacity: .8; }
-.f3-gua-annulla { flex: none; padding: 0 14px; background: #fff7e4; color: #4a2c12; }
-@media (prefers-reduced-motion: reduce) { .f3-gua-ritratto img { animation: none !important; } }
+.f3-gua-ritratto img { height: 100%; max-width: 100%; object-fit: contain; pointer-events: none; }
+.f3-gua-foto { display: block; width: 100%; height: 100%; overflow: hidden; }
+.f3-gua-foto img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; -webkit-user-drag: none; }
+.f3-gua-testa img { transform: scale(2.1); transform-origin: 50% 20%; }
+.f3-gua-busto img { transform: scale(1.9); transform-origin: 50% 52%; }
+.f3-gua-collo img { transform: scale(2.4); transform-origin: 50% 44%; }
+.f3-gua-gambe img { transform: scale(2); transform-origin: 50% 74%; }
+.f3-gua-piedi img { transform: scale(2.6); transform-origin: 50% 90%; }
