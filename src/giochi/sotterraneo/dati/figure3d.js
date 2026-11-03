@@ -3,10 +3,10 @@
    Le figure della roba per il Sotterraneo 3D: per ogni figura dei fogli il modulo 3D che la disegna (`famiglia`) e i dati che
    servono al modello; e gli sprite dell'atlante che non si chiamano come la loro figura. Chi la legge: scena3d/roba3d.js
    (docs/sotterraneo/roba-3d.md). Dato puro, niente three.
-   firma: fad804a168e8
+   firma: 6767ae70100c
 */
 
-export const FIRMA = 'fad804a168e8'
+export const FIRMA = '6767ae70100c'
 
 export const FIGURE3D = {
   "spada-01": {"famiglia":"lame","cosa":"spada lunga","elemento":"nessuno","materia":"acciaio","stile":"guerriero","mani":1,"pregio":1,"nome":"Lama del soldato","pezzo":"spada"},
@@ -247,6 +247,12 @@ export const FIGURE3D = {
   "amuleto-34": {"famiglia":"gioielli","cosa":"anello con gemma","elemento":"ghiaccio","materia":"cristallo","stile":"mago","pregio":4,"nome":"Anello del gelo perenne"},
   "amuleto-35": {"famiglia":"gioielli","cosa":"anello con gemma","elemento":"arcano","materia":"cristallo","stile":"mago","pregio":4,"nome":"Anello dell'arcano vivo","pezzo":"anello-verde"},
   "amuleto-36": {"famiglia":"gioielli","cosa":"anello con gemma","elemento":"natura","materia":"oro","stile":"esploratore","pregio":4,"nome":"Anello della foresta antica"},
+  "amuleto-37": {"famiglia":"gioielli","cosa":"ciondolo a zanna","elemento":"nessuno","materia":"osso","stile":"chiunque","pregio":1,"nome":"Dente di lupo","pezzo":"amuleto-osso","solo3d":true},
+  "amuleto-38": {"famiglia":"gioielli","cosa":"ciondolo a ossa incrociate","elemento":"morte","materia":"osso","stile":"chiunque","pregio":2,"nome":"Ossa incrociate","pezzo":"amuleto-osso","solo3d":true},
+  "amuleto-39": {"famiglia":"gioielli","cosa":"ciondolo a vertebre","elemento":"nessuno","materia":"osso","stile":"esploratore","pregio":2,"nome":"Vertebre del cacciatore","pezzo":"amuleto-osso","solo3d":true},
+  "amuleto-40": {"famiglia":"gioielli","cosa":"amuleto a disco runico","elemento":"arcano","materia":"osso","stile":"mago","pregio":3,"nome":"Disco runico d'osso","pezzo":"amuleto-osso","solo3d":true},
+  "amuleto-41": {"famiglia":"gioielli","cosa":"ciondolo a corno","elemento":"natura","materia":"osso","stile":"esploratore","pregio":3,"nome":"Corno dell'ariete","pezzo":"amuleto-osso","solo3d":true},
+  "amuleto-42": {"famiglia":"gioielli","cosa":"amuleto a corona di zanne","elemento":"morte","materia":"osso","stile":"chiunque","pregio":4,"nome":"Corona di zanne","pezzo":"amuleto-osso","solo3d":true},
 }
 
 export const SPRITE_FIGURA = {

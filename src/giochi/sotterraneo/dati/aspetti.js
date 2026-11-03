@@ -269,4 +269,12 @@ export const ASPETTI = {
   'anello-verde': [
     { sprite: 'anello-verde', tinta: 'arcano', pregio: 4 },
   ],
+  'amuleto-osso': [
+    { sprite: 'amuleto-37', tinta: 'nessuno', pregio: 1 },
+    { sprite: 'amuleto-38', tinta: 'morte', pregio: 2 },
+    { sprite: 'amuleto-39', tinta: 'nessuno', pregio: 2 },
+    { sprite: 'amuleto-40', tinta: 'arcano', pregio: 3 },
+    { sprite: 'amuleto-41', tinta: 'natura', pregio: 3 },
+    { sprite: 'amuleto-42', tinta: 'morte', pregio: 4 },
+  ],
 }

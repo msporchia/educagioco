@@ -1,5 +1,5 @@
 // Generato da strumenti/promuovi-3d.mjs da poc/roba-3d/gioielli.js: non si tocca a mano (si cambia il prototipo e si rilancia `npm run promuovi3d`).
-// I gioielli del catalogo in 3D (le 36 figure `amuleto-*` di roba.json): un modello PER FIGURA, con il castone, il taglio e il colore della sua gemma,
+// I gioielli del catalogo in 3D (le 42 figure `amuleto-*` di roba.json: 36 dei fogli e 6 solo 3D, le ossa): un modello PER FIGURA, con il castone, il taglio e il colore della sua gemma,
 // la montatura, il metallo, la catenella, i motivi dell'elemento e la luce interna sua. Una funzione pura della figura (seme dall'id).
 // Contratto: `crea(figura)` → Group; collane: origine al centro del ciondolo, faccia verso +z, la catenella a V che esce in alto (~0.3 di larghezza);
 // anelli: origine al centro, il dito lungo +y, la gemma verso +z. `userData = { famiglia:'amuleto', tipo:'collana'|'anello', figura, triangoli, anima(t), catena }`.
@@ -68,7 +68,14 @@ const SCHEDE = {
   'amuleto-33': { f: 'anello', giri: 3, gem: ['sfacc', 0xe02a1e, 0.042], met: 'oro', rig: 'artigli' },
   'amuleto-34': { f: 'anello', giri: 2, gem: ['saetta', 0x2a54e8, 0.044], met: 'cristallo', rig: 'ghiaccio' },
   'amuleto-35': { f: 'anello', giri: 2.5, gem: ['ottagono', 0x9a34e8, 0.044], met: 'rosa', rig: 'cornice', spira: 0x40ff82 },
-  'amuleto-36': { f: 'anello', giri: 2.5, gem: ['tondo', 0x1ec85a, 0.046], met: 'rame', rig: 'foglie' }
+  'amuleto-36': { f: 'anello', giri: 2.5, gem: ['tondo', 0x1ec85a, 0.046], met: 'rame', rig: 'foglie' },
+  // l'amuleto d'ossa (figure solo 3D, `solo3d` in roba.json): niente gemma, l'osso fa da sé
+  'amuleto-37': { f: 'zanna', met: 'osso', cat: ['cordino', CUOIO] },
+  'amuleto-38': { f: 'ossa', met: 'osso', cat: ['cordino', CUOIO_S] },
+  'amuleto-39': { f: 'vertebre', met: 'osso', cat: ['perline', 0xe0d3b4] },
+  'amuleto-40': { f: 'discoRunico', met: 'osso', cat: ['maglie', 0xc3ccd6] },
+  'amuleto-41': { f: 'corno', met: 'osso', cat: ['cordino', 0x7a4f2c] },
+  'amuleto-42': { f: 'corona', met: 'osso', cat: ['grosse', 0x7c8a76] }
 }
 
 // ── le gemme ──
@@ -386,6 +393,112 @@ const MONTATURE = {
     c.m(sfe(0.01, 6, 4), 'sc', 0, 0.086, -0.002); c.m(toro(0.0125, 0.004, 4, 8), 'hi', 0, 0.097, 0)
     c.punti = []
     return 0.097 + 0.0125 * 2.3
+  },
+
+  // ── le ossa: l'amuleto d'ossa (`amuleto-osso`) ha sei figure sue, disegnate solo qui (`solo3d` in roba.json). Tutte con l'osso del fondo, il cuoio
+  // dei legacci e un anello di cuoio in cima: da lontano si legge «osso e cuoio», da vicino ognuna è una cosa diversa (una zanna, due ossa, tre vertebre…)
+  zanna (c) {
+    const M = c.M, pts = []
+    for (let i = 0; i <= 8; i++) { const u = i / 8; pts.push([0.026 * u * u - 0.004, 0.072 - u * 0.17, 0]) }
+    c.f.fila(pts, 0.024, 0.0035, M.md, 'pieno', 7)
+    c.f.fila(pts.slice(0, 7).map(p => [p[0] - 0.007, p[1], 0.009]), 0.011, 0.0025, M.hi, 'pieno', 5)        // il lato in luce
+    c.f.fila(pts.slice(1, 8).map(p => [p[0] + 0.008, p[1], -0.006]), 0.008, 0.002, M.sc, 'pieno', 5)        // il lato in ombra
+    c.p(cil(0.022, 0.026, 0.012, 8), CUOIO_S, -0.004, 0.074, 0)
+    for (const [y, R] of [[0.064, 0.0255], [0.053, 0.0245], [0.042, 0.0232]]) c.p(toro(R, 0.0058, 4, 10), CUOIO, -0.004, y, 0, { rx: PI / 2 })
+    c.p(toro(0.012, 0.0042, 4, 10), CUOIO, -0.004, 0.092, 0, { s: [0.9, 1.15, 1] })
+    c.top = 0.1; c.bot = -0.1; c.W = 0.032; c.punti = []
+    return 0.092 + 0.012 * 1.2
+  },
+  ossa (c) {
+    const M = c.M
+    for (const [sg, z] of [[1, -0.006], [-1, 0.006]]) {
+      const o = [sg * 0.7071, 0.7071], n = [-o[1], o[0]]
+      c.f.asta([-0.066 * sg, -0.066, z], [0.066 * sg, 0.066, z], 0.0105, 0.0105, M.md, 'pieno', 6)
+      c.f.asta([-0.058 * sg, -0.058, z + 0.007], [0.058 * sg, 0.058, z + 0.007], 0.0042, 0.0042, M.hi, 'pieno', 4)    // la luce sul fusto
+      for (const e of [-1, 1]) for (const k of [-1, 1]) {
+        const x = e * 0.066 * sg + e * o[0] * 0.012 + k * n[0] * 0.0125, y = e * 0.066 + e * o[1] * 0.012 + k * n[1] * 0.0125
+        c.m(sfe(0.0155, 7, 5), 'md', x, y, z)
+        c.m(sfe(0.006, 5, 4), 'hi', x - 0.004, y + 0.004, z + 0.01)
+      }
+    }
+    c.p(cil(0.021, 0.021, 0.032, 8), CUOIO, 0, 0, 0, { rx: PI / 2 })                                            // il nodo di cuoio al centro
+    for (const z of [-0.0165, 0.0165]) c.p(toro(0.021, 0.0055, 4, 10), CUOIO_S, 0, 0, z)
+    c.f.asta([0, 0.02, 0], [0, 0.098, 0], 0.0042, 0.0042, CUOIO, 'pieno', 4)
+    c.p(toro(0.012, 0.0042, 4, 10), CUOIO, 0, 0.11, 0, { s: [0.9, 1.15, 1] })
+    c.top = 0.1; c.bot = -0.1; c.W = 0.09; c.punti = []
+    return 0.11 + 0.012 * 1.2
+  },
+  vertebre (c) {
+    const M = c.M, ys = [0.062, 0, -0.062], rs = [0.026, 0.032, 0.026]
+    ys.forEach((y, i) => {
+      const r = rs[i]
+      c.m(cil(r, r * 1.06, 0.034, 8), 'md', 0, y, 0)                                                            // il corpo
+      c.m(sca(r * 2.9, 0.012, 0.016), 'md', 0, y + 0.003, -0.004)                                              // le ali
+      for (const sg of [-1, 1]) c.m(sfe(0.0095, 5, 4), 'hi', sg * r * 1.5, y + 0.003, -0.004)
+      c.m(sfe(0.013, 6, 4), 'hi', 0, y + 0.004, r * 0.9, { s: [1, 1.1, 0.8] })                                  // il nodo davanti
+      c.p(cil(0.0065, 0.0065, 0.004, 6), M.om, 0, y - 0.006, r * 0.98, { rx: PI / 2 })                          // il buco dove passa il filo
+    })
+    for (const y of [0.031, -0.031]) c.m(cil(0.02, 0.02, 0.016, 8), 'sc', 0, y, 0)                             // la cartilagine fra l'una e l'altra
+    c.p(toro(0.012, 0.0042, 4, 10), CUOIO, 0, 0.091, 0, { s: [0.9, 1.15, 1] })
+    c.top = 0.1; c.bot = -0.1; c.W = 0.055; c.punti = []
+    return 0.091 + 0.012 * 1.2
+  },
+  discoRunico (c) {
+    const M = c.M, R = 0.074, luce = c.el.colore
+    c.m(cil(R, R, 0.02, 16), 'md', 0, 0, 0, { rx: PI / 2 })                                                     // il disco
+    c.m(toro(R, 0.009, 5, 20), 'hi', 0, 0, 0.007)                                                               // il bordo in rilievo
+    c.m(toro(R * 0.64, 0.004, 4, 16), 'sc', 0, 0, 0.0105)                                                       // il solco intorno alle rune
+    for (const [x, y] of giro(8, R * 0.82)) c.p(sfe(0.004, 4, 3), M.om, x, y, 0.0105)
+    // le rune: tratti sottili che brillano da soli (un materiale loro per runa, pulsano a tempi diversi)
+    const tratto = (x1, y1, x2, y2, w = 0.0082) => {
+      const g = nuda(new THREE.BoxGeometry(Math.hypot(x2 - x1, y2 - y1), w, 0.006))
+      g.rotateZ(Math.atan2(y2 - y1, x2 - x1)); g.translate((x1 + x2) / 2, (y1 + y2) / 2, 0)
+      return g
+    }
+    const RUNE = [
+      [[0, -1, 0, 1], [0, 1, 0.6, 0.45], [0, 0.15, 0.6, -0.4]],
+      [[0, 1, 0.62, 0], [0.62, 0, 0, -1], [0, -1, -0.62, 0], [-0.62, 0, 0, 1]],
+      [[0, -1, 0, 1], [0, 0.1, -0.62, 1], [0, 0.1, 0.62, 1]]
+    ]
+    const POSTI = [[0, 0.034, 2], [-0.036, -0.026, 0], [0.036, -0.026, 1]], H = 0.021
+    for (const [x, y, k] of POSTI) {
+      const g = mergeGeometries(RUNE[k].map(([a, b, d, e]) => tratto(a * H * 0.8, b * H, d * H * 0.8, e * H)))
+      const m = c.f.libero(g, luce, x, y, 0.0125, 1.1)
+      const ph = hash(c.s + k * 9) * 6
+      c.an.push(t => { m.material.emissiveIntensity = 1.0 + 0.7 * Math.sin(t * 2.1 + ph) })
+    }
+    c.m(toro(0.014, 0.0055, 4, 10), 'hi', 0, R + 0.012, 0, { s: [0.9, 1.15, 1] })
+    c.top = R + 0.012; c.bot = -R; c.W = R + 0.01; c.punti = []
+    return R + 0.012 + 0.014 * 1.2
+  },
+  corno (c) {
+    const M = c.M, pts = []
+    for (let i = 0; i <= 20; i++) { const u = i / 20, th = PI / 2 - u * 1.25 * 2 * PI, r = 0.07 - 0.05 * u; pts.push([Math.cos(th) * r, Math.sin(th) * r, 0]) }
+    c.f.fila(pts, 0.017, 0.0035, M.md, 'pieno', 6)
+    c.f.fila(pts.slice(0, 15).map(p => [p[0], p[1], 0.008]), 0.0072, 0.0022, M.hi, 'pieno', 4)                   // la luce lungo il corno
+    for (const i of [4, 8, 12, 16]) { const p = pts[i], u = i / 20; c.m(sfe(0.015 - 0.011 * u, 6, 4), 'sc', p[0], p[1], 0, { s: [1, 1, 0.9] }) }   // gli anelli di crescita
+    c.p(cil(0.0195, 0.0215, 0.016, 8), CUOIO_S, 0.001, 0.0715, 0, { rz: PI / 2 })                              // la fascia di cuoio alla base
+    c.p(toro(0.012, 0.0042, 4, 10), CUOIO, 0, 0.097, 0, { s: [0.9, 1.15, 1] })
+    c.top = 0.1; c.bot = -0.08; c.W = 0.075; c.punti = []
+    return 0.097 + 0.012 * 1.2
+  },
+  corona (c) {
+    const M = c.M, R0 = 0.034, n = 10
+    for (let i = 0; i < n; i++) {
+      const a = PI / 2 + i * 2 * PI / n, L = i % 2 ? 0.05 : 0.066, r0 = R0 * 0.8
+      c.f.asta([Math.cos(a) * r0, Math.sin(a) * r0, 0], [Math.cos(a) * (r0 + L), Math.sin(a) * (r0 + L), 0], 0.0125, 0.0025, i % 2 ? M.md : M.hi, 'pieno', 5)
+    }
+    c.m(cil(R0, R0 * 1.05, 0.022, 12), 'md', 0, 0, 0, { rx: PI / 2 })
+    c.p(toro(R0, 0.007, 4, 14), CUOIO, 0, 0, 0.008)
+    c.p(cil(0.0205, 0.0205, 0.012, 10), M.om, 0, 0, 0.007, { rx: PI / 2 })
+    const occhio = c.f.libero(sfe(0.0155, 8, 6), c.el.colore, 0, 0, 0.0135, 1.2)
+    occhio.scale.set(1, 1, 0.7)
+    c.f.libero(sfe(0.006, 4, 3), 0xe0ffe8, 0.005, 0.005, 0.02, 1.2)
+    const ph = hash(c.s) * 6
+    c.an.push(t => { occhio.material.emissiveIntensity = 1.0 + 0.5 * Math.sin(t * 3 + ph); const k = 1 + 0.1 * Math.sin(t * 2.2 + ph); occhio.scale.set(k, k, 0.7) })
+    c.p(toro(0.012, 0.0042, 4, 10), CUOIO, 0, 0.105, 0, { s: [0.9, 1.15, 1] })
+    c.top = 0.095; c.bot = -0.095; c.W = 0.095; c.punti = []
+    return 0.105 + 0.012 * 1.2
   }
 }
 

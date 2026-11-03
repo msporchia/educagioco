@@ -48,7 +48,7 @@ La chiave dice la figura e l'aspetto, non l'oggetto: due spade con la stessa fig
 | chiave | cosa si vede | pixel |
 |---|---|---|
 | `arma:<gettone>` | l'arma (la figura, o il ripiego) in diagonale, la punta in alto a destra; l'arco girato di lato perché si veda la curva; la balestra con la bocca in alto a destra, vista da sopra e un poco di fianco perché si veda la croce dell'arco di piatto ([roba-3d.md](roba-3d.md#come-si-tiene-unarma)); l'alone fermo a 1,3 s | 128² |
-| `scudo:<gettone>` · `gioiello:<gettone>` | lo scudo, la collana o l'anello di fronte, appena girato | 128² |
+| `scudo:<gettone>` · `gioiello:<gettone>` | lo scudo, la collana o l'anello di fronte, appena girato; una collana si inquadra dal ciondolo con un palmo di catena che esce in alto (la catena intera lo faceva un puntino a 46 px) | 128² |
 | `copricapo:<modello>:<rarità>` | il copricapo da solo su una testa finta, di tre quarti, con l'alone se è leggendario ([elmo.md](elmo.md)) | 128² |
 | `consumabile:<chiave>:<rarità>` | la pozione, la torcia, la chiave o la pergamena di fronte (l'alone solo ai rarissimi) | 128² |
 | `armatura:<tipo>:<pregio>:<eroe>:<corpo>` | l'armatura su un manichino: l'eroe di adesso senza testa e senza armi (la veste della figura se il modulo `vesti` c'è); `<corpo>` = `<tipo>.<pregio>.<figura>.<rarità>.<elemento>` | 128² |

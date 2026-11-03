@@ -91,9 +91,9 @@ const BASI = {
                     luce: 2.5, prezzo: 14, dice: 'Al buio vedi molto più lontano.' },
   'anello-verde': { em: '💚', nome: 'Anello verde', sprite: 'anello-verde', dove: 'dito',
                     gemme: 0.5, prezzo: 16, dice: 'Ogni gemma che raccogli ne vale una e mezza.' },
-  'amuleto-rosso': { em: '❤️', nome: 'Amuleto rosso', sprite: 'amuleto-rosso', dove: 'collo',
+  'amuleto-rosso': { em: '❤️', nome: 'Amuleto rosso', sprite: 'amuleto-13', dove: 'collo',
                      vita: 6, prezzo: 18, dice: 'Sei punti di vita in più, finché lo porti.' },
-  medaglione: { em: '🥇', nome: 'Medaglione', sprite: 'medaglione', dove: 'collo',
+  medaglione: { em: '🥇', nome: 'Medaglione', sprite: 'amuleto-03', dove: 'collo',
                 dif: 1, prezzo: 15, dice: 'Para un pochino, come mezza corazza.' },
 
   // le armi col nome proprio stanno un gradino sopra la scala, non dentro: portano un tratto, non più braccio
@@ -164,7 +164,7 @@ const BASI = {
   'serie-nano': { em: '🪖', nome: 'Elmo da nano', dove: 'testa', copricapo: true, diSerie: true,
                   dice: 'L\'elmo con cui sei partito: non para, ma è tuo.' },
 
-  'amuleto-osso': { em: '🦴', nome: 'Amuleto d\'ossa', sprite: 'ossa', dove: 'collo',
+  'amuleto-osso': { em: '🦴', nome: 'Amuleto d\'ossa', sprite: 'amuleto-37', dove: 'collo',
                     dif: 1, vita: 4, prezzo: 24,
                     dice: 'Para un pochino, e ti tiene in piedi un po\' di più.' },
   'teschio-cercatore': { em: '💀', nome: 'Teschio del cercatore', sprite: 'amuleto-teschio',

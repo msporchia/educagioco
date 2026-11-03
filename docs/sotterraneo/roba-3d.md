@@ -66,10 +66,11 @@ le anteprime ([anteprime-3d.md](anteprime-3d.md)): la stessa funzione, lo stesso
 - **Il modulo della famiglia manca** (un agente lo sta ancora scrivendo), **la figura non è coperta** o **il modello si rompe**
   (`console.warn`, e la figura non si riprova): l'arma e lo scudo tornano al modello della base nella collezione (`MODELLO_DI` in
   `anteprime3d-pura.js`, le 50 armi di sempre); la veste torna all'armatura di `armature.js` col pregio dalla rarità.
-- **Né figura né ripiego**: null, e la vista tiene lo sprite. Sono così i gioielli di base il cui sprite non
-  viene dai fogli (`amuleto-rosso`, `medaglione`, `amuleto-osso`); i pezzi trovati di quelle basi hanno una figura dei fogli e
-  quindi il 3D. Anche le armi di base con uno sprite fuori dai fogli (`pugnale-vampiro`, `spada-del-ladro`, `bipenne-solare`)
-  restano al ripiego.
+- **Né figura né ripiego**: null, e la vista tiene lo sprite. Sono così le armi di base con uno sprite fuori dai fogli
+  (`pugnale-vampiro`, `spada-del-ladro`, `bipenne-solare`), che restano al ripiego. **Nessun gioiello resta sprite**: l'utente (3 novembre 2026, davanti
+  a un «Amuleto d'ossa runico» che si vedeva come un grumo di pixel fra i modelli 3D) li voleva tutti disegnati; le tre basi (`amuleto-rosso`, `medaglione`,
+  `amuleto-osso`) hanno come `sprite` una figura (`amuleto-13`, `amuleto-03`, `amuleto-37`) e i pezzi trovati di `amuleto-osso` sei figure sue,
+  vedi [gioielli.md](gioielli.md#lamuleto-dossa).
 - **Al collo dell'eroe in scena solo le collane**, senza alone (la catena allungata lo spargeva su tutto l'eroe); gli anelli si
   vedono nelle anteprime.
 - **Un consumabile senza il modulo `pozioni`** resta lo sprite.
@@ -111,8 +112,7 @@ La roba da raccogliere nella discesa e il bottino rimasto sul prato di sopra si 
   (geometria e materiale in comune): una spada per terra costa una chiamata, contro zero dello sprite nel lotto delle figure.
 - **Lungo `LATO_PER_TERRA` (0,6 celle)** dal lato più lungo, piegato all'indietro (`INCLINA`) perché dalla telecamera alta una spada
   in piedi è una riga; ondeggia un poco, non gira.
-- **Chi non ha un modello resta sprite**: le armature (sono vesti da indossare, `vesti(eroe, figura)`, non un oggetto da posare) e i
-  tre gioielli di base. Le gemme e le monete non sono roba e non hanno un modello: restano sprite. I copricapi restano la loro
+- **Chi non ha un modello resta sprite**: le armature (sono vesti da indossare, `vesti(eroe, figura)`, non un oggetto da posare). Le gemme e le monete non sono roba e non hanno un modello: restano sprite. I copricapi restano la loro
   emoji ([elmo.md](elmo.md)): il modello c'è solo su una testa.
 - Il dito li prende col raggio come la fontana e i mostri (`modellati`, dito.js); `grafica().perTerra` dice quanti ce n'è in vista.
 - **Anche la torcia accesa in mano all'eroe è il suo modello** (`creaTorciaInMano`, alta `ALTO_TORCIA`), semplice; la fiamma e le

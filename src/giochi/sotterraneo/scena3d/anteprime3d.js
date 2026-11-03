@@ -60,6 +60,16 @@ function inPosaArma(pezzo, modo) {
   if (!a) return null
   const perno = new THREE.Group()
   perno.add(a); animaTutto(a, ISTANTE)
+  if (modo === 'gioiello' && a.userData.tipo === 'collana' && a.userData.catena) {
+    // una collana si legge dal ciondolo: si inquadra lui con un palmo di catena che esce in alto (la catena intera lo rimpiccioliva a un puntino a 46 px)
+    perno.rotation.y = -0.35
+    const cat = a.userData.catena
+    cat.visible = false
+    const s = scatolaDi(perno)
+    cat.visible = true
+    if (s) { s.max.y += 0.075; s.min.y -= 0.012; s.min.x -= 0.012; s.max.x += 0.012; return { obj: perno, scatola: s, verso: [0.15, 0.22, 1] } }
+    return { obj: perno, verso: [0.15, 0.22, 1] }
+  }
   if (modo === 'scudo' || modo === 'gioiello' || modo === 'consumabile') { perno.rotation.y = -0.35; return { obj: perno, verso: [0.15, 0.22, 1] } }
   // l'arco è disegnato col pancione verso +z: girato di lato si vede la curva; tutto in diagonale, la punta in alto a destra.
   // La balestra (il fusto verso +z, l'arco di piatto) la bocca in alto a destra, vista da sopra e un poco di fianco: la T di una balestra

@@ -20,7 +20,7 @@ export const FILE_FIGURE3D = resolve(RADICE, 'src/giochi/sotterraneo/dati/figure
 
 // il prefisso dell'id della figura → il modulo 3D che la disegna (poc/roba-3d/<modulo>.js)
 export const FAMIGLIA_DEL_PREFISSO = { spada: 'lame', ascia: 'lame', bastone: 'bastoni', arco: 'bastoni', scudo: 'scudi', veste: 'vesti', amuleto: 'gioielli' }
-const CAMPI = ['cosa', 'elemento', 'materia', 'stile', 'mani', 'pregio', 'nome', 'pezzo']
+const CAMPI = ['cosa', 'elemento', 'materia', 'stile', 'mani', 'pregio', 'nome', 'pezzo', 'solo3d']
 
 export const firmaDi = tabelle => createHash('sha1').update(JSON.stringify(tabelle)).digest('hex').slice(0, 12)
 
@@ -39,6 +39,7 @@ export function tabelle() {
   // gli sprite ritagliati da una figura col nome loro: il centro del ritaglio sta nel rettangolo della figura
   const fogli = {}, SPRITE_FIGURA = {}
   for (const v of voci) {
+    if (v.solo3d) continue   // senza foglio: nessun ritaglio da cercare
     if (!fogli[v.foglio]) {
       const fg = JSON.parse(readFileSync(resolve(GENERATI, v.foglio.replace(/\.png$/, '.json')), 'utf8'))
       const s = fg.scala || 1
