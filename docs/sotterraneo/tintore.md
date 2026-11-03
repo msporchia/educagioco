@@ -40,11 +40,14 @@ grigi del metallo ne prendono un velo (45%), nero, bianco di contorno, emissivi 
 `firmeCompatibili`, nebbia e posto salvati restano buoni. La scelta «bottega» dice `bottega` a `Gioco.vue`, che per `tintore` apre il foglio
 `viste/Tintore.vue` (`apriTintore`, `tingiSopra`) invece di un banco; la logica è in `motore/tintore.js`.
 
-Il foglio: i pezzi (addosso, poi lo zaino), la tavolozza, l'eroe che indossa il pezzo scelto col colore provato (anche se è nello zaino), «Tingi · 25 💎»,
-la ✕ in alto a destra.
+Il foglio sta sopra l'interfaccia unica ([../core/personalizza.md](../core/personalizza.md)), tema del sotterraneo: schede per posto (Armi;
+Difese, cioè scudi e armature; Copricapi), le voci sono i pezzi (addosso, poi lo zaino) con una forma sola, i colori sono la tavolozza a
+quindici. Un colore si prova sull'eroe grande (il pezzo addosso, anche se è nello zaino; si gira a scatti), e «Acquista e indossa · 25 💎» lo
+paga (ogni tinta nuova si paga, ogni volta: il colore che ha già è acceso e gratis). Le foto dei gettoni sono l'eroe col pezzo e la tinta in
+prova (`Armato`, chiavi `:@<tinte>` e `:r<n>`). La ✕ in alto a destra.
 
-Nei test: `[data-tintore]` (`data-gemme`), `[data-pezzo="<chiave>"]`, `[data-tinta="<id>"]`, `[data-azione="tingi"]`, `[data-personaggio="tintore"]`;
-`unita/sotterraneo-tintore`, `integrazione/sotterraneo-tintore`.
+Nei test: `[data-tintore]` (`data-gemme`), `[data-pezzo="<chiave>"]` (`data-tinto`), `[data-tinta="<id>"]`, `[data-prs-scheda="armi|difese|copricapi"]`,
+`[data-prs="paga"]`, `[data-personaggio="tintore"]`; `unita/sotterraneo-tintore`, `integrazione/sotterraneo-tintore`.
 
 ## Cosa resta
 

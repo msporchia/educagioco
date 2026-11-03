@@ -1,9 +1,12 @@
 <script setup>
-// Il foglio del tintore (docs/sotterraneo/tintore.md): si sceglie un pezzo (addosso o nello zaino), poi un colore della tavolozza, e si
-// vede subito sull'eroe che lo indossa; «Tingi» paga (`costo` gemme) e il pezzo resta di quel colore. La logica è in motore/tintore.js.
-import { computed, ref, watch } from 'vue'
-import { TINTE, TINTA_DI } from '../dati/tinte.js'
-import Foglio from './Foglio.vue'
+// Il foglio del tintore (docs/sotterraneo/tintore.md) sopra l'interfaccia unica (components/personalizza/Personalizza.vue,
+// docs/core/personalizza.md), tema del sotterraneo. Schede per posto (Armi, Difese, Copricapi); le voci sono i pezzi da ritingere (addosso o
+// nello zaino), una forma sola, e i colori la tavolozza a quindici: ogni tinta nuova costa `costo` gemme, ogni volta. Un tocco su un colore
+// lo prova sull'eroe grande (il pezzo addosso, anche se è nello zaino); «Acquista e indossa» paga e il pezzo resta di quel colore.
+// La logica è in motore/tintore.js; le foto sono l'eroe disegnato adesso col pezzo e la tinta in prova (Armato, chiavi `:@<tinte>` e `:r<n>`).
+import { computed, ref } from 'vue'
+import { TINTE } from '../dati/tinte.js'
+import Personalizza from '../../../components/personalizza/Personalizza.vue'
 import Armato from './Armato.vue'
 
 const props = defineProps({
@@ -16,58 +19,47 @@ const props = defineProps({
   detto: { type: String, default: null },        // l'ultima cosa successa (un pezzo tinto, le gemme che mancano)
 })
 const emit = defineEmits(['tingi', 'chiudi'])
+const giro = ref(0)
+const scelto = ref(null)                          // il pezzo toccato per ultimo: si vede addosso all'eroe grande
 
-const scelto = ref(null)   // la chiave del pezzo
-const prova = ref(null)    // il colore provato (id)
-const pezzo = computed(() => props.pezzi.find(p => p.k === scelto.value) || null)
-// un pezzo che sparisce (non succede qui, ma la lista è di chi apre) non resta scelto
-watch(pezzo, p => { if (!p) { scelto.value = null; prova.value = null } })
+const SCHEDE = [
+  { id: 'armi', nome: 'Armi', tipo: 'oggetti', posti: ['mano'] },
+  { id: 'difese', nome: 'Difese', tipo: 'oggetti', posti: ['mancina', 'corpo'] },
+  { id: 'copricapi', nome: 'Copricapi', tipo: 'oggetti', posti: ['testa'] },
+]
+const schedaDel = dove => (SCHEDE.find(s => s.posti.includes(dove)) || SCHEDE[0]).id
+// ogni pezzo è un posto a sé (si ritinge quel pezzo, non quello che sta in mano): il valore è il suo colore
+const voci = computed(() => props.pezzi.map(p => ({
+  id: p.k, scheda: schedaDel(p.dove), posto: p.k, nome: p.nome, dati: { 'data-pezzo': p.k, 'data-tinto': p.tinta || null },
+  colori: TINTE.map(t => ({ id: t.id, nome: t.nome, css: t.css, prezzo: props.costo, posseduto: t.id === p.tinta, dati: { 'data-tinta': t.id } })),
+})))
+const indossato = computed(() => Object.fromEntries(props.pezzi.map(p => [p.k, { oggetto: p.k, forma: null, colore: p.tinta || '-' }])))
+const doveDi = k => (props.pezzi.find(p => p.k === k) || {}).dove
 
-function sceglie(p) { scelto.value = p.k; prova.value = p.tinta }
-
-// l'eroe come lo si vede: il pezzo scelto indossato (anche se è nello zaino), col colore provato
-const vestito = computed(() => {
+// l'eroe come lo si vede: il pezzo scelto indossato, con le tinte in prova
+function vestito(k) {
   const v = { mano: props.addosso.mano || null, mancina: props.addosso.mancina || null, corpo: props.addosso.corpo || null, testa: props.addosso.testa || null }
-  if (pezzo.value && v[pezzo.value.dove] !== undefined) v[pezzo.value.dove] = pezzo.value.k
+  if (k && doveDi(k)) v[doveDi(k)] = k
   return v
-})
-const tinteViste = computed(() => (pezzo.value ? { ...props.tinte, [pezzo.value.k]: prova.value || undefined } : props.tinte))
-
-const basta = computed(() => props.gemme >= props.costo)
-const uguale = computed(() => !!pezzo.value && (prova.value || null) === (pezzo.value.tinta || null))
-const puoi = computed(() => !!pezzo.value && !!prova.value && !uguale.value && basta.value)
+}
+const tinteDi = stato => {
+  const t = { ...props.tinte }
+  for (const [k, v] of Object.entries(stato || {})) if (v && v.colore && v.colore !== '-') t[k] = v.colore
+  return t
+}
+function segna({ posto }) { scelto.value = posto }
+function acquista({ pezzi }) { for (const p of pezzi) emit('tingi', p.posto, p.colore) }
 </script>
 
 <template>
-  <Foglio centro con-chiudi em="🎨" titolo="Il tintore" data-tintore :data-gemme="gemme"
-          :dice="`Scegli un pezzo e un colore: ${costo} 💎. Il pezzo resta quello che è, cambia solo il colore, e lo tiene anche in tasca.`"
-          @chiudi="emit('chiudi')">
-    <p class="sot-tintore-gemme" data-tintore-gemme>Hai <b>{{ gemme }}</b> 💎</p>
-    <div class="sot-tintore-corpo">
-      <Armato :eroe="eroe" :mano="vestito.mano" :mancina="vestito.mancina" :corpo="vestito.corpo" :testa="vestito.testa" :tinte="tinteViste" :scala="4" />
-      <ul class="sot-tintore-pezzi">
-        <li v-for="p in pezzi" :key="p.k">
-          <button type="button" class="sot-scelta-breve" :class="{ 'sot-scelto': p.k === scelto }" :data-pezzo="p.k" :data-tinto="p.tinta || null"
-                  :aria-pressed="p.k === scelto" @click="sceglie(p)">
-            <span class="em">{{ p.em }}</span> {{ p.nome }}
-            <small>{{ p.addosso ? 'addosso' : 'nello zaino' }}{{ p.tinta ? ' · ' + TINTA_DI[p.tinta].nome.toLowerCase() : '' }}</small>
-          </button>
-        </li>
-        <li v-if="!pezzi.length" class="sot-tintore-vuoto">Non hai niente da ritingere: armi, scudi, armature e cappelli.</li>
-      </ul>
-    </div>
-
-    <div v-if="pezzo" class="sot-tinte" data-tinte="pezzo">
-      <small>Colore</small>
-      <button v-for="t in TINTE" :key="t.id" type="button" class="sot-tinta" :class="{ 'sot-scelto': prova === t.id }"
-              :style="{ background: t.css }" :data-tinta="t.id" :aria-label="t.nome" :aria-pressed="prova === t.id" @click="prova = t.id"></button>
-    </div>
-
-    <p v-if="detto" class="sot-tintore-detto" data-tintore-detto>{{ detto }}</p>
-    <button v-if="pezzo" class="sot-grosso sot-compra" data-azione="tingi" :disabled="!puoi" @click="emit('tingi', pezzo.k, prova)">
-      Tingi · {{ costo }} 💎
-      <small v-if="!basta">ti mancano {{ costo - gemme }} 💎</small>
-      <small v-else-if="uguale">scegli un altro colore</small>
-    </button>
-  </Foglio>
+  <Personalizza tema="sotterraneo" titolo="Il tintore" :chi="eroe.nome || ''" valuta="💎" :saldo="gemme" :schede="SCHEDE" :voci="voci" :indossato="indossato"
+                v-model:giro="giro" :avviso="detto || ''" :aiuto="pezzi.length ? `Tocca un pezzo e un colore: lo vedi addosso. Ogni tinta costa ${costo} 💎.` : 'Non hai niente da ritingere: armi, scudi, armature e cappelli.'"
+                data-tintore :data-gemme="gemme" @scegli="segna" @prova="segna" @acquista="acquista" @chiudi="emit('chiudi')">
+    <template #anteprima="{ stato }">
+      <Armato :eroe="eroe" v-bind="vestito(scelto)" :tinte="tinteDi(stato)" :giro="giro" :scala="7" />
+    </template>
+    <template #foto="{ voce, stato }">
+      <Armato v-if="voce" :eroe="eroe" v-bind="vestito(voce.id)" :tinte="tinteDi(stato)" :scala="2.3" />
+    </template>
+  </Personalizza>
 </template>
