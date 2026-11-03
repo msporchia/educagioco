@@ -1,26 +1,27 @@
 # I compagni: Watson, i gatti e il contadino
 
-Chi vive sulla fattoria senza lavorarci: il bobtail **Watson** e tre gatti camminano per il terreno, e il contadino ha un
-aspetto nuovo. Sono **vita sulla scena**: non costano esperienza, non producono, la loro posizione non si salva e a ogni apertura
+Chi vive sulla fattoria senza lavorarci: il bobtail **Watson** e quattro gatti (Sherlock, Irene, Golia, Pepe) camminano per il terreno, e il contadino ha un
+aspetto nuovo. **Dal 3/11/2026 si adottano** ([adozioni.md](adozioni.md)): non arrivano più da soli col livello, ma chi li aveva li tiene. Sono **vita sulla scena**: non costano esperienza, non producono, la loro posizione non si salva e a ogni apertura
 ripartono davanti alla casa. Dal 31/10/2026 **si curano** come le bestie di casa (bisogni, nome, premio: [bestie-di-casa.md](bestie-di-casa.md)):
 quello sì sta nello stato, in `stato.casa`. Codice: `dati/compagni.js` (dati e
 scelte pure), `scena3d/modelli-compagni.js` (i corpi e le pose), `scena3d/compagni.js` (il comportamento).
 
-**Le bestie che si comprano e si curano** (beagle, gatto rosso, coniglio, pappagallo) sono un'altra cosa: stanno in [bestie-di-casa.md](bestie-di-casa.md) e usano la stessa scena (`scena3d/compagni.js`: `def.daCurare`) e si comprano. I compagni di questa pagina restano gratis (sono gli animali veri di casa) ma si curano come loro: **tenendo premuto** su uno si apre il suo foglio, col nome che si può cambiare. Nella 2D si comprano anche bobtail, gatto bianco e nero e gatto nero: in 3D sono Watson, Sherlock e Pepe, quindi non si comprano (`COMPAGNO_DI`).
+**Le bestie che si comprano e si curano** (beagle, gatto rosso, coniglio, pappagallo) sono un'altra cosa: stanno in [bestie-di-casa.md](bestie-di-casa.md) e usano la stessa scena (`scena3d/compagni.js`: `def.daCurare`) e si comprano. I compagni di questa pagina si adottano (prezzo e livello in `COMPAGNI`, [adozioni.md](adozioni.md)) e si curano come loro: **tenendo premuto** su uno si apre il suo foglio, col nome che si può cambiare. Nella 2D si comprano anche bobtail, gatto bianco e nero e gatto nero: in 3D sono Watson, Sherlock e Pepe (`COMPAGNO_DI`), con gli stessi prezzi e livelli.
 
-## Quando arrivano
+## Quando si possono adottare
 
-Come tutto il resto, col livello: `liv` su ogni compagno, e `roba(liv).compagni` li raccoglie (il foglio dei livelli li
-mostra con 🐕/🐈). Non contano per `vuoto()` né per le «cose produttive» di un livello, quindi non spostano nessuna soglia.
+Col livello: `liv` e `prezzo` su ogni compagno, e `roba(liv).compagni` li raccoglie (il foglio dei livelli li
+mostra con 🐕/🐈, «puoi adottarlo»). In scena compare chi è in `stato.casa` (`Cura.compagniAdottati`). Non contano per `vuoto()` né per le «cose produttive» di un livello, quindi non spostano nessuna soglia.
 
 | livello | chi | mantello |
 |--:|---|---|
-| 1 | Watson | bobtail |
-| 2 | Sherlock | gatto bianco e nero (tuxedo): il gatto vero di casa, come Watson |
-| 3 | Irene | gattina calico (bianca, arancione e nera): l'altra gatta vera di casa |
-| 13 | Pepe | gatto nero |
+| 3 | Watson (90 🪙) | bobtail |
+| 10 | Sherlock (75) | gatto bianco e nero (tuxedo): il gatto vero di casa, come Watson |
+| 11 | Irene (75) | gattina calico (bianca, arancione e nera): l'altra gatta vera di casa |
+| 14 | Golia (75) | gatto nero, tutto nero (`golia`): occhi verde-oro, niente bianco |
+| 19 | Pepe (75) | gatto nero col ciuffo bianco sul petto e occhi gialli |
 
-I tre animali veri di casa (Watson, Sherlock, Irene) arrivano per primi, perché i bambini ci tengono. I gatti sono in scala 1,15 (`SCALA_GATTO`, come `SCALA_CANE` per Watson) per riconoscersi dalla telecamera di serie. Al caricamento ci sono tutti quelli del livello, senza avviso. Salendo di livello il nuovo compare con uno sbuffo di
+(Prima del 3/11/2026 arrivavano da soli ai livelli 1, 2, 3 e 19: `LIVELLO_DI_UNA_VOLTA`, per i salvataggi di allora.) I gatti sono in scala 1,15 (`SCALA_GATTO`, come `SCALA_CANE` per Watson) per riconoscersi dalla telecamera di serie. Al caricamento ci sono tutti quelli adottati, senza avviso. Adottandone uno compare con uno sbuffo di
 scintille e `ui.avviso` («Watson è arrivato!»). Il controllo è una volta al secondo (`Compagni.sync`).
 
 ## Com'è fatto il disegno

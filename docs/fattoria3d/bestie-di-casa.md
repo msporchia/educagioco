@@ -1,13 +1,13 @@
 # Le bestie di casa (G6)
 
-Le bestie che si **comprano e si curano**, come nella fattoria 2D (i suoi dati in `da2d/dati/animali.js` e `bisogni.js`): beagle, gatto rosso, coniglio e
-pappagallo. I prezzi sono alti apposta: una bestia si desidera per giorni, e una per tipo (due beagle identici non sono due cani). Hanno i numeri **esatti della 2D** (prezzo, livello, premio: `ANIMALI_2D` dal ponte `dati/parita2d.js`), i bisogni, la ciotola, le coccole, il
+Le bestie che si **adottano e si curano**, come nella fattoria 2D (i suoi dati in `da2d/dati/animali.js` e `bisogni.js`): beagle, gatto rosso, coniglio e
+pappagallo, più le razze nuove e Watson e i gatti di casa: il catalogo e i prezzi stanno in [adozioni.md](adozioni.md). I prezzi sono alti apposta: una bestia si desidera per giorni, e una per tipo (due beagle identici non sono due cani). Hanno i numeri **esatti della 2D** (prezzo, livello, premio: `ANIMALI_2D` dal ponte `dati/parita2d.js`), i bisogni, la ciotola, le coccole, il
 premio, il nome e la posizione. Codice: `dati/bestie.js` (tabella, ciotola, stato, guasti), `motore/cura.js` (le regole), `viste/Bestia.vue` e
 `viste/Battesimo.vue` (i fogli), `scena3d/modelli-bestie.js` (i corpi), `scena3d/compagni.js` (la scena).
 
-**Si curano anche i compagni gratis** (Watson, Sherlock, Irene, Pepe: `CURATI` in `dati/bestie.js`), come nella 2D si curavano bobtail e
+**Si curano anche i compagni** (Watson, Sherlock, Irene, Golia, Pepe: `CURATI` in `dati/bestie.js`, adottati come le bestie), come nella 2D si curavano bobtail e
 gatti: stessi bisogni, ciotola, coccole e foglio; il premio è quello della bestia 2D che sostituiscono (Watson 6 come il bobtail, i gatti 5;
-Irene quello del gatto bianco e nero). Il loro record in `stato.casa` nasce da sé quando arrivano col livello (`Cura._record`); il nome vero
+Irene quello del gatto bianco e nero). Il loro record in `stato.casa` nasce con l'adozione (`Cura.compra`; per i salvataggi di prima, da `normalizza`); il nome vero
 si può cambiare dal foglio e «Lascia “Watson”» lo rimette. **Non si comprano e non si spostano** (girano col contadino: `sposta` dice
 `gira-con-te`, il foglio non ha «📍 Sposta»). `cura.tue()` resta le comprate, `cura.curate()` le dice tutte.
 
@@ -23,16 +23,17 @@ Le facce piatte a pochi lati accanto ai gatti morbidi stonavano.
 | `gatto_rosso` | gatto rosso (`gatto-giallo` in 2D) | 75 | 35 | 5 | mantello `rosso` di `creaGatto` (tigrato arancione, crema sotto) |
 | `pappagallo` | pappagallo | 120 | 49 | 8 | verde, fronte rossa, coda lunga (`creaPappagallo`) |
 
+Le sei razze nuove sono in [adozioni.md](adozioni.md).
+
 Il premio è `premioBenessere` della 2D (un quindicesimo del prezzo, almeno 1): è **esperienza, mai monete**. `guastiDelleBestie` confronta prezzo, livello e premio con
 la 2D: un numero diverso è un guasto (vale la 2D).
 
-## Compagni gratis e bestie comprabili
+## Compagni e razze
 
-**Watson, Sherlock, Irene e Pepe restano i compagni che girano gratis** ([compagni.md](compagni.md)): non hanno bisogni, non si curano, non hanno premio, il
-nome è fisso (sono gli animali veri di casa, scelta dell'utente: «tieni **e** aggiungi le bestie che si curano»). Nella 2D si compravano anche il bobtail (90/3), il gatto
-bianco e nero (75/10) e il gatto nero (75/19): **tolti perché in 3D ci sono già, gratis** (Watson, Sherlock, Pepe), quindi comprarli sarebbe pagare una cosa che si ha.
-Chi li aveva comprati nella 2D li ritrova come compagni (`COMPAGNO_DI`), senza nome scelto. Irene (calico) non ha un equivalente 2D. Le quattro bestie comprabili sono
-quelle che la 3D **non** regala.
+**Watson, Sherlock, Irene, Golia e Pepe sono i compagni che girano per la fattoria** ([compagni.md](compagni.md)); si adottano (prezzo e livello: bobtail 90/3, gatto bianco e nero 75/10,
+gatto nero 75/19 come nella 2D; Irene e Golia 75 fra quelli) e si curano come le altre bestie, col nome vero che si può cambiare. Chi li aveva già li tiene ([adozioni.md](adozioni.md)).
+Chi li aveva comprati nella 2D li ritrova come compagni (`COMPAGNO_DI`), senza nome scelto. Le razze nuove (gatto grigio, tigrato, bianco, labrador, border collie, dalmata) non hanno un
+equivalente 2D e stanno a casa dove le metti.
 
 ## I bisogni (A5)
 
@@ -139,6 +140,6 @@ salvati, lo stato letto dritto, la migrazione è in `unita/fattoria3d-migra`), `
 - Provato: il beagle con le zampe come bastoncini staccati dal corpo (come uscì dal primo tentativo): le gambe ora partono dentro il corpo; sdraiato le zampe davanti e le orecchie si riattaccano in `posaBeagle`.
 - Provato: il beagle, il coniglio e il pappagallo a palle lisce con i colori sfumati nei vertici (come i gatti): sembravano palloncini gonfiati accanto a pecora, mucca e Watson; rifatti facettati.
 - Da guardare col dito su un telefono: le bestie in scena dalla camera di serie, il foglio a 360 px dal vero, la tastiera che sale sopra la casella del battesimo (il foglio sta in basso).
-- Il tocco sul gatto rosso/beagle apre il foglio (non c'è la festa lunga di Watson né le risposte dei gatti): una scelta, le bestie di casa sono cose da curare.
+- Il tocco sulle razze (gatto rosso, beagle e le altre) apre il foglio (non c'è la festa lunga di Watson né le risposte dei gatti): una scelta, le bestie di casa sono cose da curare.
 - Il ritratto dei compagni nel foglio si disegna dal vivo (`Mondo3d.modelloBestia`): le foto fatte di `anteprime.js` sono delle bestie comprate.
 - Da giocare: se i bisogni di Watson e dei gatti pesano troppo sulle monete dei più piccoli (sono quattro bocche in più dal livello 1–19).

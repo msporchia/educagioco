@@ -15,7 +15,7 @@ import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { PEZZI, EDIFICI } from '../src/giochi/fattoria3d/dati/catalogo.js'
-import { BESTIE } from '../src/giochi/fattoria3d/dati/bestie.js'
+import { BESTIE, CURATI } from '../src/giochi/fattoria3d/dati/bestie.js'
 import { ADDOBBI } from '../src/giochi/fattoria3d/dati/addobbi.js'
 
 const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -25,7 +25,7 @@ export const PIXEL = 160           // la carta le mostra a 72 px CSS: a dpr 2,75
 const QUALITA = 0.82
 
 /** I tipi fotografati: ogni pezzo, ogni edificio, le bestie di casa (`bestia:<id>`), ogni addobbo in ogni colore (`addobbo:<id>:<colore>`, le schede del negozio). Il ritratto del contadino dipende dal bambino: resta vivo. */
-export const TIPI = [...Object.keys(PEZZI), ...Object.keys(EDIFICI), ...Object.keys(BESTIE).map(id => 'bestia:' + id),
+export const TIPI = [...Object.keys(PEZZI), ...Object.keys(EDIFICI), ...Object.keys(BESTIE).concat(Object.keys(CURATI)).map(id => 'bestia:' + id),
   ...ADDOBBI.flatMap(a => a.colori.map(c => `addobbo:${a.id}:${c.id}`))]
 
 /** I file da cui viene la faccia di un modello: i creatori, la fusione, la cache, le istanze dei campi, le bestie e la posa delle foto. */

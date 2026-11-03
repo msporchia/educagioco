@@ -26,7 +26,7 @@ dati/
   posti.js           i posti delle macchine: uno di partenza, fino a sei, 🪙20·40·80·160·320 come la fila della 2D (`PREZZI_DEI_POSTI`, `prezzoDelPosto`, `postiInForma`, `guastiDeiPosti`; regole.md «Le macchine»)
   animali.js         pollaio e stalla: bestie, tempi, capienza e prezzo di ogni bestia in più, cosa mangiano (il mangime del fienile, non i raccolti); `CORTILE` (anche il recinto) e `prezzoDellaBestia`; `uova` e `latte` (PRODOTTI_ANIMALI), i guasti
   abiti.js           il guardaroba: i capi, i livelli dei pezzi speciali, la persona dal profilo, l'abito di serie e `normalizzaAbito`, `nomeDelContadino` ([guardaroba.md](guardaroba.md))
-  compagni.js        Watson e i gatti: i dati, il livello a cui arrivano, le scelte pure (meta, cosa fare, le sequenze di «Quando ci premi»: richiamo, feste di Watson, risposte dei gatti, incontro), `ASPETTO_ERO` ([compagni.md](compagni.md))
+  compagni.js        Watson e i gatti: i dati, il livello e il prezzo a cui si adottano, le scelte pure (meta, cosa fare, le sequenze di «Quando ci premi»: richiamo, feste di Watson, risposte dei gatti, incontro), `ASPETTO_ERO` ([compagni.md](compagni.md))
   livelli.js         le soglie, `roba(liv)`, i nomi dei livelli, i guasti dei livelli
   ordini.js          il banco: i clienti, i tempi, il premio (tetto 🪙6/min), `chiedibili(livello)`, i guasti
   botteghe.js        le quattro botteghe del paese: costanti e funzioni della 2D, `BOTTEGHE`, `EDIFICI_BOTTEGHE` (foglia di `catalogo.js`), `prodotto2D`/`MERCE_3D` ([botteghe.md](botteghe.md))
