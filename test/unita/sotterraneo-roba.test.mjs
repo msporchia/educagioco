@@ -181,7 +181,7 @@ import { stileDi } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
   uguale('un profilo senza roba non ha roba da rileggere', rileggiRoba(null), null)
   uguale('e un dato storto nemmeno', rileggiRoba({ v: 99, gemme: 5 }), null)
   const c = new Corsa(CAMPAGNA[0], { seme: 4, rnd: seminato(4), roba: rileggiRoba(null) })
-  stessaLista('chi comincia scende nudo', c.roba, ROBA_VUOTA())
+  stessaLista('chi comincia scende nudo, col solo copricapo di serie (docs/sotterraneo/elmo.md)', c.roba, { ...ROBA_VUOTA(), testa: 'serie-cavaliere' })
 }
 
 /* ══════════ 7. i banchi portano il passo dopo ══════════
