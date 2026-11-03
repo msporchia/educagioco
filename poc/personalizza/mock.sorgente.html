@@ -59,14 +59,10 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .testa { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; min-height: 52px; padding: 0 4px 0 12px; background: var(--testa-fondo); color: var(--testa-testo); }
 .testa h2 { margin: 0; font-size: 18px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .testa .saldo { font-weight: 700; font-size: 15px; background: rgba(0,0,0,.22); border-radius: 99px; padding: 5px 10px; white-space: nowrap; }
-.testa .x, .testa .indietro { width: 48px; height: 48px; font-size: 22px; color: var(--testa-testo); border-radius: 12px; flex: 0 0 auto; }
-.testa .indietro { font-size: 26px; margin-left: -8px; }
-.testa .passi { display: flex; gap: 5px; }
-.testa .passi i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.3); }
-.testa .passi i.si { background: var(--testa-testo); }
+.testa .x { width: 48px; height: 48px; font-size: 22px; color: var(--testa-testo); border-radius: 12px; flex: 0 0 auto; }
 
 /* l'anteprima: si gira col dito e con le frecce; chi sei e il giro stanno DENTRO, non in righe a sé */
-.anteprima { position: relative; flex: 0 0 auto; background: var(--anteprima); touch-action: none; overflow: hidden; cursor: grab; }
+.anteprima { position: relative; flex: 0 1 30%; min-height: 140px; background: var(--anteprima); touch-action: none; overflow: hidden; cursor: grab; }
 .anteprima img { position: absolute; inset: 0; margin: auto; height: 100%; width: auto; max-width: 100%; object-fit: contain; pointer-events: none; -webkit-user-drag: none; }
 .anteprima .gira { position: absolute; top: 50%; translate: 0 -50%; width: 48px; height: 64px; font-size: 34px; line-height: 1; color: var(--testo); opacity: .65; border-radius: 12px; }
 .anteprima .gira:active { background: rgba(0,0,0,.08); }
@@ -75,7 +71,6 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .anteprima .giro { position: absolute; bottom: 7px; left: 50%; translate: -50% 0; display: flex; gap: 5px; }
 .anteprima .giro i { width: 7px; height: 7px; border-radius: 50%; background: var(--tenue); opacity: .35; }
 .anteprima .giro i.si { opacity: 1; background: var(--sel); }
-.anteprima .vicina { position: absolute; right: 10px; top: 8px; font-size: 11px; padding: 2px 7px; border-radius: 99px; background: rgba(0,0,0,.45); color: #fff; }
 .anteprima .avviso { position: absolute; left: 50%; top: 40px; translate: -50% 0; background: var(--tasto); color: var(--tasto-testo); padding: 6px 14px; border-radius: 99px; font-weight: 700; font-size: 14px; animation: sparisci 1.8s forwards; pointer-events: none; white-space: nowrap; }
 @keyframes sparisci { 0%, 70% { opacity: 1 } 100% { opacity: 0 } }
 
@@ -85,9 +80,8 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .schede button[aria-pressed="true"] { background: var(--scheda-sel); color: var(--testo); box-shadow: inset 0 3px 0 var(--sel); }
 
 /* la parte che scorre: una sola */
-.corpo { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 8px; }
-.griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; }
-.griglia.grandi { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+.corpo { flex: 1 1 0; min-height: 110px; overflow-y: auto; overscroll-behavior: contain; padding: 8px; }
+.griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; padding-top: 4px; }
 
 /* un gettone: la foto 3D, il nome, il prezzo o il livello */
 .gettone { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 4px 5px; min-height: 44px; border-radius: var(--raggio); background: var(--gettone); border: 2px solid var(--gettone-bordo); }
@@ -95,27 +89,33 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .gettone .foto.vuota { display: grid; place-items: center; background: repeating-linear-gradient(45deg, #ccc 0 6px, #bbb 6px 12px); color: #555; font-size: 11px; }
 .gettone b { font-size: 12px; font-weight: 700; line-height: 1.15; text-align: center; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .gettone .prezzo { position: absolute; top: -6px; right: -6px; background: var(--sel); color: #fff; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 99px; white-space: nowrap; }
-.gettone.addosso { border-color: var(--sel); background: var(--sel-fondo); }
-.gettone.prova { border-color: var(--prova); border-style: solid; box-shadow: 0 0 0 2px var(--prova); }
+.gettone.addosso { background: var(--sel-fondo); }
+.gettone.aperto { border-color: var(--sel); box-shadow: 0 0 0 2px var(--sel); }
+.gettone.prova, .gettone.aperto.prova { border-color: var(--prova); border-style: solid; box-shadow: 0 0 0 2px var(--prova); }
 .gettone.chiuso { border-style: dashed; }
 .gettone.chiuso .foto { filter: grayscale(.85) brightness(.9); opacity: .6; }
 .gettone.chiuso .prezzo { background: var(--spento); color: var(--testo); }
 
-/* le righe delle varianti: forma (gettoni con foto) e colore (pastiglie), sempre a capo, mai di lato */
-.righe { flex: 0 0 auto; padding: 6px 8px 4px; border-bottom: 1px solid var(--bordo); background: var(--sel-fondo); }
-.righe.libere { background: none; border: 0; padding: 0; }
-.riga { display: flex; align-items: flex-start; gap: 6px; padding: 3px 0; }
-.riga > span { flex: 0 0 52px; font-size: 11px; font-weight: 700; color: var(--tenue); text-transform: uppercase; letter-spacing: .03em; padding-top: 14px; }
-.riga .scelte { flex: 1; display: flex; flex-wrap: wrap; gap: 6px; }
-.riga .gettone { width: 62px; padding: 2px 2px 3px; }
-.riga .gettone b { font-size: 11px; }
-.pastiglia { position: relative; width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--gettone); box-shadow: 0 0 0 2px var(--gettone-bordo); background-size: cover; }
+/* il pannello dell'oggetto: sotto la griglia, sempre lì e sempre alto uguale (due righe fisse: forma e colore) */
+.pannello { flex: 0 0 auto; height: 164px; padding: 2px 8px 4px; border-top: 2px solid var(--bordo); background: var(--sel-fondo); overflow: hidden; }
+.pannello .titolo { height: 26px; display: flex; align-items: center; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.riga { display: flex; align-items: center; gap: 6px; height: 68px; }
+.riga + .riga { height: 64px; }
+.riga > span { flex: 0 0 52px; font-size: 11px; font-weight: 700; color: var(--tenue); text-transform: uppercase; letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; }
+.riga .scelte { flex: 1; min-width: 0; display: flex; flex-wrap: nowrap; gap: 4px; align-items: center; }
+.riga.spenta i { flex: 1; height: 48px; border: 2px dashed var(--bordo); border-radius: 12px; display: grid; place-items: center; color: var(--tenue); font-style: normal; font-size: 13px; opacity: .8; }
+.forma { position: relative; flex: 0 0 auto; width: 48px; height: 48px; padding: 2px; border-radius: 12px; background: var(--gettone); border: 2px solid var(--gettone-bordo); }
+.forma .foto { display: block; width: 100%; height: 100%; border-radius: 8px; background-repeat: no-repeat; }
+.forma .foto.vuota { display: grid; place-items: center; background: repeating-linear-gradient(45deg, #ccc 0 6px, #bbb 6px 12px); color: #555; font-size: 9px; }
+.forma.si { border-color: var(--sel); box-shadow: 0 0 0 2px var(--sel); }
+.forma.prova { border-color: var(--prova); box-shadow: 0 0 0 2px var(--prova); }
+.forma.chiuso { border-style: dashed; } .forma.chiuso .foto { filter: grayscale(.85); opacity: .55; }
+.forma .prezzo, .pastiglia .prezzo { position: absolute; top: -7px; right: -8px; background: var(--sel); color: #fff; font-size: 10px; font-weight: 700; padding: 0 5px; border-radius: 99px; white-space: nowrap; z-index: 1; }
+.forma.chiuso .prezzo, .pastiglia.chiuso .prezzo { background: var(--spento); color: var(--testo); }
+.pastiglia { position: relative; flex: 0 0 auto; width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--gettone); box-shadow: 0 0 0 2px var(--gettone-bordo); background-size: cover; }
 .pastiglia[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--sel); }
 .pastiglia.prova { box-shadow: 0 0 0 3px var(--prova); }
 .pastiglia.chiuso { opacity: .45; box-shadow: 0 0 0 2px var(--spento); border-style: dashed; }
-.pastiglia .prezzo { position: absolute; top: -8px; right: -10px; background: var(--sel); color: #fff; font-size: 10px; font-weight: 700; padding: 0 5px; border-radius: 99px; white-space: nowrap; }
-.pastiglia.chiuso .prezzo { background: var(--spento); color: var(--testo); }
-.grandi-righe .gettone { width: 76px; } .grandi-righe .pastiglia { width: 52px; height: 52px; }
 
 /* il fondo: la sola cosa che costa; si paga solo da qui */
 .fondo { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; min-height: 64px; padding: 8px 10px; border-top: 2px solid var(--bordo); background: var(--foglio); }
@@ -128,24 +128,6 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .compra small { font-size: 11px; font-weight: 600; opacity: .85; }
 .compra[disabled] { background: var(--spento); color: var(--testo); box-shadow: none; opacity: .8; }
 .secondario { min-height: 48px; padding: 0 10px; border-radius: 12px; border: 2px solid var(--bordo); font-weight: 700; font-size: 13px; color: var(--testo); }
-
-/* B: a passi */
-.passo-titolo { flex: 0 0 auto; padding: 8px 12px 0; font-size: 15px; font-weight: 700; }
-.scheda-cosa { display: flex; align-items: center; gap: 10px; padding: 8px 12px; }
-.scheda-cosa .cosa { flex: 1; }
-.scheda-cosa .cosa b { display: block; font-size: 17px; }
-.scheda-cosa .cosa small { color: var(--tenue); font-size: 13px; }
-.conto { margin: 4px 12px; border: 2px solid var(--bordo); border-radius: var(--raggio); padding: 8px 12px; font-size: 15px; }
-.conto div { display: flex; justify-content: space-between; padding: 3px 0; }
-.conto .tot { border-top: 1px solid var(--bordo); margin-top: 4px; padding-top: 6px; font-weight: 800; }
-
-/* C: il cassetto */
-.cassetto { flex: 0 0 auto; display: flex; flex-direction: column; min-height: 0; background: var(--cassetto); border-radius: 18px 18px 0 0; box-shadow: 0 -4px 14px rgba(0,0,0,.18); margin-top: -14px; position: relative; z-index: 1; }
-.cassetto .maniglia { flex: 0 0 auto; height: 26px; display: grid; place-items: center; touch-action: none; }
-.cassetto .maniglia i { width: 44px; height: 5px; border-radius: 3px; background: var(--tenue); opacity: .6; }
-.cassetto .torna { display: flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 10px; font-weight: 700; font-size: 15px; }
-.cassetto .torna span { font-size: 24px; line-height: 1; }
-.cassetto .schede { padding-top: 0; }
 
 /* chiuso col ✕: nel gioco si torna dov'eri */
 .velo-chiuso { position: absolute; inset: 0; background: rgba(0,0,0,.6); display: grid; place-items: center; z-index: 5; }
@@ -165,13 +147,13 @@ const { SCENARI, ANGOLI, FOTO, FOTO_OGGETTI } = window
 const $ = id => document.getElementById(id)
 
 // ══════════ lo stato del mock ══════════
-const mock = { scenario: 'fattoria', variante: 'A', tema: null, tocchi: 0, chiusoMock: false }
+const mock = { scenario: 'fattoria', tema: null, tocchi: 0, chiusoMock: false }
 const stati = {}
 const P = v => { const [o, f, c] = String(v || '-/-/-').split('/'); return { o, f, c } }
 const S = () => SCENARI[mock.scenario]
 function nuovoStato(s) {
   const st = { chi: s.chiDiSerie, indossato: {}, prova: {}, provaSet: null, posseduti: new Set(), saldo: s.valuta.saldo, angolo: 0,
-    scheda: s.schede[0].id, aperto: {}, passo: 1, cosa: null, cassetto: 'basso', livelloC: 'oggetti', ultimoPosto: null, avviso: '', chiuso: false }
+    scheda: s.schede[0].id, aperto: {}, ultimoPosto: null, avviso: '', chiuso: false }
   for (const chi of s.chi) st.indossato[chi.id] = { ...s.base[chi.id] }
   for (const [id, o] of Object.entries(s.oggetti)) if (o.posseduto) {
     st.posseduti.add(id)
@@ -215,7 +197,7 @@ function costo(v, chi = T().chi) {
   let nuovo = false
   if (!og.tratto) {
     if (og.prezzo && !st.posseduti.has(o)) { aggiungi(nomeDi(og, chi), og.prezzo); nuovo = true }
-    if (fo && fo.prezzo && !st.posseduti.has(o + '/' + f)) { aggiungi(fs.length > 1 ? `${nomeDi(og, chi)} ${fo.nome.toLowerCase()}` : nomeDi(og, chi), fo.prezzo); nuovo = true }
+    if (fo && fo.prezzo && !st.posseduti.has(o + '/' + f)) { aggiungi(fs.length > 1 ? fo.nome : nomeDi(og, chi), fo.prezzo); nuovo = true }
   }
   if (co && !st.posseduti.has(chiaveColore(o, f, c, chi))) {
     const base = co === cs[0]
@@ -273,7 +255,7 @@ function paga() {
   st.avviso = c.tot ? `Fatto! −${c.tot} ${S().valuta.simbolo}` : 'Indossato'
 }
 function comEra() { const st = T(); st.prova = {}; st.provaSet = null }
-function cambiaChi(id) { const st = T(); st.chi = id; st.prova = {}; st.provaSet = null; st.ultimoPosto = null }
+function cambiaChi(id) { const st = T(); st.chi = id; st.prova = {}; st.provaSet = null; st.ultimoPosto = null; st.aperto = {} }
 
 // ══════════ le foto ══════════
 const blob = new Map()
@@ -307,13 +289,15 @@ function fotoGettone(posto, v, zona) {
   const base = { ...s.base[st.chi], [posto]: v }
   const { posa, esatta } = posaPer(base, st.chi, posto)
   let scelta = posa && (esatta || posaStato(s, posa)[posto] === v) ? posa : null
-  // senza la foto di quel colore: la stessa forma in un altro colore, poi lo stesso oggetto
-  if (!scelta) for (const uguale of [(a, b) => a.o === b.o && a.f === b.f, (a, b) => a.o === b.o]) {
-    scelta = s.pose.find(p => p.chi === st.chi && FOTO[p.id] && uguale(P(posaStato(s, p)[posto]), P(v)))
+  // senza la foto di quel colore: la stessa forma in un altro colore, poi lo stesso oggetto; e se chi si è non l'ha mai indossato, addosso a un altro
+  const forma = (a, b) => a.o === b.o && a.f === b.f, oggetto = (a, b) => a.o === b.o
+  if (!scelta) for (const [uguale, suo] of [[forma, true], [oggetto, true], [forma, false], [oggetto, false]]) {
+    scelta = s.pose.find(p => (!suo || p.chi === st.chi) && FOTO[p.id] && uguale(P(posaStato(s, p)[posto]), P(v)))
     if (scelta) break
   }
   if (!scelta) return null
-  return { src: url(FOTO[scelta.id][0]), taglio: s.tagli[zona] || s.tagli.tutto }
+  const t = s.tagli[zona] || s.tagli.tutto          // il quarto numero del taglio: da che lato (i capelli della maga si vedono di dietro)
+  return { src: url(FOTO[scelta.id][t[3] || 0]), taglio: t }
 }
 function stileFoto(f) {
   if (!f) return null
@@ -322,32 +306,29 @@ function stileFoto(f) {
 }
 const fotoHtml = f => (f ? `<span class="foto" style="${stileFoto(f)}"></span>` : '<span class="foto vuota">foto 3D</span>')
 
-// ══════════ i pezzi dell'interfaccia (gli stessi per A, B e C) ══════════
+// ══════════ i pezzi dell'interfaccia ══════════
 const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;')
 const prezzoHtml = (tot, liv) => (liv ? `<span class="prezzo">liv. ${liv}</span>` : tot ? `<span class="prezzo">${tot} ${S().valuta.simbolo}</span>` : '')
 
-function testa({ indietro = false, passi = 0 } = {}) {
+function testa() {
   const s = S(), st = T()
   return `<header class="testa">
-    ${indietro ? '<button class="indietro" data-azione="indietro" aria-label="indietro">‹</button>' : ''}
     <h2>${esc(s.titolo)}</h2>
-    ${passi ? `<span class="passi">${[1, 2, 3, 4].map(i => `<i class="${i <= passi ? 'si' : ''}"></i>`).join('')}</span>` : ''}
     <span class="saldo">${st.saldo} ${s.valuta.simbolo}</span>
     <button class="x" data-azione="chiudi" data-chiudi aria-label="chiudi">✕</button>
   </header>`
 }
 
-function anteprima(altezza) {
+function anteprima() {
   const s = S(), st = T(), stato = { ...st.indossato[st.chi], ...st.prova }
-  const { posa, esatta } = posaPer(stato, st.chi, st.ultimoPosto)
+  const { posa } = posaPer(stato, st.chi, st.ultimoPosto)
   const chi = s.nomeChi || s.chi.find(c => c.id === st.chi).nome
   const img = posa ? `<img id="figura" src="${url(FOTO[posa.id][st.angolo])}" alt="">` : ''
   const avviso = st.avviso ? `<span class="avviso">${esc(st.avviso)}</span>` : ''
   st.avviso = ''
-  return `<div class="anteprima" data-ruota style="${altezza}">
+  return `<div class="anteprima" data-ruota>
     ${img}
     <span class="chi">${esc(chi)}</span>
-    ${esatta ? '' : '<span class="vicina" title="Il mock ha le foto di un pezzo cambiato alla volta">foto più vicina</span>'}
     <button class="gira sx" data-azione="gira" data-verso="1" aria-label="gira a sinistra">‹</button>
     <button class="gira dx" data-azione="gira" data-verso="-1" aria-label="gira a destra">›</button>
     <span class="giro" id="giro">${ANGOLI.map((_, i) => `<i class="${i === st.angolo ? 'si' : ''}"></i>`).join('')}</span>
@@ -355,68 +336,80 @@ function anteprima(altezza) {
   </div>`
 }
 
-function schede(dove = '') {
+function schede() {
   const st = T(), visibili = S().schede.filter(sc => sc.tipo !== 'chi' || S().chi.length > 1)
-  return `<nav class="schede ${dove}">${visibili.map(sc => `<button data-azione="scheda" data-id="${sc.id}" aria-pressed="${st.scheda === sc.id}">${esc(sc.nome)}</button>`).join('')}</nav>`
+  return `<nav class="schede">${visibili.map(sc => `<button data-azione="scheda" data-id="${sc.id}" aria-pressed="${st.scheda === sc.id}">${esc(sc.nome)}</button>`).join('')}</nav>`
 }
 const schedaDi = id => S().schede.find(x => x.id === id)
-/** Gli oggetti di una scheda di tipo «oggetti». */
-function oggettiDi(sc) { const chi = T().chi; return (sc.posti || [sc.posto]).flatMap(p => oggettiDelPosto(p, chi)) }
+/** Gli oggetti di una scheda: quelli dei suoi posti, o i tratti (pelle, capelli, barba) per la scheda Aspetto. */
+function oggettiDi(sc) {
+  const chi = T().chi, s = S()
+  if (sc.tipo === 'tratti') return sc.tratti.filter(t => perChi(s.oggetti[t], chi))
+  return (sc.posti || [sc.posto]).flatMap(p => oggettiDelPosto(p, chi))
+}
+const addossoOra = () => { const st = T(); return { ...st.indossato[st.chi], ...st.prova } }
+/** L'oggetto aperto nel pannello: quello toccato per ultimo in questa scheda, se no quello che si ha addosso nel primo posto. */
+function apertoDi(sc) {
+  const st = T(), ids = oggettiDi(sc)
+  if (ids.includes(st.aperto[sc.id])) return st.aperto[sc.id]
+  if (sc.tipo === 'tratti') return ids[0]
+  const ora = addossoOra()
+  return ids.find(id => P(ora[S().oggetti[id].posto]).o === id) || null
+}
 
-/** Un gettone di un oggetto nella griglia (la foto è l'oggetto nella forma e nel colore che si ha, o di base). */
-function gettoneOggetto(oid, azione = 'oggetto') {
+/** Un gettone della griglia (la foto è l'oggetto nella forma e nel colore che si ha, o di base). */
+function gettoneOggetto(oid, aperto) {
   const s = S(), st = T(), og = s.oggetti[oid], v = valoreDi(oid, st.chi)
-  const addosso = P(st.indossato[st.chi][og.posto]).o === oid, inProva = P(st.prova[og.posto]).o === oid
-  const r = costo(v), liv = r.liv && !st.posseduti.has(oid) ? r.liv : (og.liv > s.livello ? og.liv : 0)
-  const prezzo = st.posseduti.has(oid) ? 0 : (og.prezzo || (formeDi(og, st.chi)[0] || {}).prezzo || 0)
-  return `<button class="gettone ${addosso ? 'addosso' : ''} ${inProva ? 'prova' : ''} ${liv ? 'chiuso' : ''}" data-azione="${azione}" data-id="${oid}" aria-pressed="${addosso}">
+  const addosso = !og.tratto && P(st.indossato[st.chi][og.posto]).o === oid, inProva = !og.tratto && P(st.prova[og.posto]).o === oid
+  const liv = !st.posseduti.has(oid) && og.liv > s.livello ? og.liv : 0
+  const prezzo = og.tratto || st.posseduti.has(oid) ? 0 : (og.prezzo || (formeDi(og, st.chi)[0] || {}).prezzo || 0)
+  return `<button class="gettone ${addosso ? 'addosso' : ''} ${inProva ? 'prova' : ''} ${oid === aperto ? 'aperto' : ''} ${liv ? 'chiuso' : ''}" data-azione="oggetto" data-id="${oid}" aria-pressed="${oid === aperto}">
     ${fotoHtml(fotoGettone(og.posto, v, og.taglio || og.posto))}<b>${esc(nomeDi(og, st.chi))}</b>${prezzoHtml(prezzo, liv)}</button>`
 }
 function gettoneChi(c) {
   const s = S(), st = T(), { posa } = posaPer(st.indossato[c.id], c.id, null)
   const f = posa ? { src: url(FOTO[posa.id][0]), taglio: s.tagli.tutto } : null
-  return `<button class="gettone ${st.chi === c.id ? 'addosso' : ''}" data-azione="chi" data-id="${c.id}" aria-pressed="${st.chi === c.id}">${fotoHtml(f)}<b>${esc(c.nome)}</b></button>`
+  return `<button class="gettone ${st.chi === c.id ? 'addosso aperto' : ''}" data-azione="chi" data-id="${c.id}" aria-pressed="${st.chi === c.id}">${fotoHtml(f)}<b>${esc(c.nome)}</b></button>`
 }
 function gettoneSet(set) {
   const s = S(), st = T(), c = costoSet(set), p = s.pose.find(x => x.chi === st.chi && JSON.stringify(x.diff) === JSON.stringify(set.pezzi))
   const f = p && FOTO[p.id] ? { src: url(FOTO[p.id][0]), taglio: s.tagli.tutto } : null
-  return `<button class="gettone ${st.provaSet === set.id ? 'prova' : ''} ${c.liv ? 'chiuso' : ''}" data-azione="set" data-id="${set.id}">${fotoHtml(f)}<b>${esc(set.nome)}</b>${prezzoHtml(c.tot, c.liv)}</button>`
+  return `<button class="gettone ${st.provaSet === set.id ? 'prova aperto' : ''} ${c.liv ? 'chiuso' : ''}" data-azione="set" data-id="${set.id}">${fotoHtml(f)}<b>${esc(set.nome)}</b>${prezzoHtml(c.tot, c.liv)}</button>`
 }
 const setsDi = () => S().set.filter(x => !x.per || x.per.includes(T().chi))
 
-/** Le righe delle varianti di un oggetto: la forma (foto) e il colore (pastiglie). `tratto`: le caratteristiche fisiche, col loro nome. */
-function righeOggetto(oid, { titolo = false } = {}) {
-  const s = S(), st = T(), og = s.oggetti[oid], chi = st.chi
-  if (!perChi(og, chi)) return ''
-  const ora = { ...st.indossato[chi], ...st.prova }[og.posto], cur = P(ora).o === oid ? P(ora) : P(valoreDi(oid, chi))
-  const fs = formeDi(og, chi), cs = coloriDi(og, cur.f, chi), righe = []
-  const inProva = P(st.prova[og.posto])
-  if (fs.length > 1) righe.push(`<div class="riga"><span>${esc(og.nomeForme || 'Forma')}</span><div class="scelte">${fs.map(fo => {
-    const cc = coloriDi(og, fo.id, chi), col = cc.find(x => x.id === cur.c) || cc[0], v = `${oid}/${fo.id}/${col ? col.id : '-'}`
-    const r = costo(v), sel = cur.f === fo.id && P(ora).o === oid
-    return `<button class="gettone ${sel ? (inProva.o === oid ? 'prova' : 'addosso') : ''} ${r.liv ? 'chiuso' : ''}" data-azione="valore" data-posto="${og.posto}" data-v="${v}" aria-pressed="${sel}">
-      ${fotoHtml(fotoGettone(og.posto, v, og.taglio || og.posto))}<b>${esc(fo.nome)}</b>${prezzoHtml(st.posseduti.has(oid + '/' + fo.id) ? 0 : r.tot, r.liv)}</button>`
-  }).join('')}</div></div>`)
-  if (cs.length > 1) righe.push(`<div class="riga"><span>${esc(og.tratto ? og.nomeColori || og.nome : 'Colore')}</span><div class="scelte">${cs.map(co => {
-    const v = `${oid}/${cur.f}/${co.id}`, r = costo(v), sel = cur.c === co.id && P(ora).o === oid
-    const fondo = co.css ? `background:${co.css}` : stileFoto(fotoGettone(og.posto, v, og.taglio || og.posto)) || 'background:#999'
-    return `<button class="pastiglia ${sel && inProva.o === oid ? 'prova' : ''} ${r.liv ? 'chiuso' : ''}" style="${fondo}" data-azione="valore" data-posto="${og.posto}" data-v="${v}" aria-pressed="${sel}" aria-label="${esc(co.nome)}">${prezzoHtml(r.righe.filter(x => x[0].startsWith('colore')).reduce((t, x) => t + x[1], 0), r.liv)}</button>`
-  }).join('')}</div></div>`)
-  return righe.join('')
-}
-/** La scheda delle caratteristiche fisiche: una riga per tratto, sempre aperte (pelle, taglio, colore dei capelli, barba). */
-function righeTratti(sc) {
-  const s = S(), chi = T().chi
-  return sc.tratti.filter(t => perChi(s.oggetti[t], chi)).map(t => {
-    const og = s.oggetti[t]
-    // la pelle ha solo i colori: la riga si chiama «Pelle»
-    return og.forme ? righeOggetto(t) : righeOggetto(t).replace('>Colore<', `>${esc(og.nome)}<`)
-  }).join('')
+/** Il pannello dell'oggetto aperto, SOTTO la griglia: sempre lì e sempre alto uguale. Una riga per la forma (foto), una per il
+    colore (pastiglie); quello che l'oggetto non ha resta come riga spenta, così niente si sposta. */
+function pannello() {
+  const s = S(), st = T(), chi = st.chi, sc = schedaDi(st.scheda)
+  const oid = sc.tipo === 'oggetti' || sc.tipo === 'tratti' ? apertoDi(sc) : null, og = oid && s.oggetti[oid]
+  const spenta = (nome, testo) => `<div class="riga spenta"><span>${esc(nome)}</span><i>${esc(testo)}</i></div>`
+  if (!og) {
+    const testo = sc.tipo === 'chi' ? 'Tocca chi vuoi essere.' : sc.tipo === 'set' ? 'Un set mette più pezzi insieme, e costa meno.' : 'Tocca un oggetto qui sopra.'
+    return `<section class="pannello" data-pannello><div class="titolo"><b>${esc(testo)}</b></div>${spenta('Forma', '')}${spenta('Colore', '')}</section>`
+  }
+  const ora = addossoOra()[og.posto], suo = P(ora).o === oid, cur = suo ? P(ora) : P(valoreDi(oid, chi))
+  const fs = formeDi(og, chi), cs = coloriDi(og, cur.f, chi), inProva = !og.tratto && P(st.prova[og.posto]).o === oid
+  const fo = fs.find(x => x.id === cur.f), co = cs.find(x => x.id === cur.c)
+  const titolo = [nomeDi(og, chi), fs.length > 1 && fo ? fo.nome : '', cs.length > 1 && co ? co.nome.toLowerCase() : ''].filter(Boolean).join(' · ')
+  const riga1 = fs.length > 1 ? `<div class="riga"><span>${esc(og.nomeForme || 'Forma')}</span><div class="scelte">${fs.map(f => {
+    const cc = coloriDi(og, f.id, chi), col = cc.find(x => x.id === cur.c) || cc[0], v = `${oid}/${f.id}/${col ? col.id : '-'}`
+    const r = costo(v), sel = suo && cur.f === f.id
+    const prezzo = r.righe.filter(x => !x[0].startsWith('colore')).reduce((t, x) => t + x[1], 0)
+    return `<button class="forma ${sel ? (inProva ? 'prova' : 'si') : ''} ${r.liv ? 'chiuso' : ''}" data-azione="valore" data-posto="${og.posto}" data-v="${v}" aria-pressed="${sel}" aria-label="${esc(f.nome)}">${fotoHtml(fotoGettone(og.posto, v, og.taglio || og.posto))}${prezzoHtml(prezzo, r.liv)}</button>`
+  }).join('')}</div></div>` : spenta(og.nomeForme || 'Forma', 'una sola')
+  const riga2 = cs.length > 1 ? `<div class="riga"><span>${esc(og.tratto && !fs.length ? og.nome : og.nomeColori || 'Colore')}</span><div class="scelte">${cs.map(c => {
+    const v = `${oid}/${cur.f}/${c.id}`, r = costo(v), sel = suo && cur.c === c.id
+    const fondo = c.css ? `background:${c.css}` : stileFoto(fotoGettone(og.posto, v, og.taglio || og.posto)) || 'background:#999'
+    const prezzo = r.righe.filter(x => x[0].startsWith('colore')).reduce((t, x) => t + x[1], 0)
+    return `<button class="pastiglia ${sel && inProva ? 'prova' : ''} ${r.liv ? 'chiuso' : ''}" style="${fondo}" data-azione="valore" data-posto="${og.posto}" data-v="${v}" aria-pressed="${sel}" aria-label="${esc(c.nome)}">${prezzoHtml(prezzo, r.liv)}</button>`
+  }).join('')}</div></div>` : spenta('Colore', 'uno solo')
+  return `<section class="pannello" data-pannello><div class="titolo"><b>${esc(titolo)}</b></div>${riga1}${riga2}</section>`
 }
 
 function fondo() {
   const s = S(), st = T(), c = contoProva()
-  if (!c) return `<div class="fondo"><span class="muto">Tocca per provare. Quello che è tuo si mette subito; il resto si paga qui sotto.</span></div>`
+  if (!c) return `<div class="fondo"><span class="muto">Tocca per provare. Quello che è tuo si mette subito; il resto si paga qui.</span></div>`
   const dettaglio = c.righe.filter(r => r[1]).map(r => `${r[0]} ${r[1]}`).join(' + ') + (c.invece ? ` (invece di ${c.invece})` : '')
   let tasto
   if (c.liv) tasto = `<button class="compra" disabled>Dal livello ${c.liv}</button>`
@@ -425,95 +418,27 @@ function fondo() {
   return `<div class="fondo"><button class="secondario" data-azione="comera">Com'era</button>${tasto}</div>`
 }
 
-// ══════════ A · un foglio solo ══════════
-// testa · anteprima · schede · [le righe dell'oggetto aperto] · griglia che scorre · fondo che paga
-function variaA() {
+// ══════════ il foglio: le zone non si muovono mai ══════════
+// testa · anteprima · schede · griglia (scorre dentro la sua zona) · pannello dell'oggetto (forma e colore) · fondo che paga
+function foglio() {
   const st = T(), sc = schedaDi(st.scheda)
-  let righe = '', corpo
-  if (sc.tipo === 'chi') corpo = `<div class="griglia grandi">${S().chi.map(gettoneChi).join('')}</div>`
-  else if (sc.tipo === 'set') corpo = `<div class="griglia grandi">${setsDi().map(gettoneSet).join('')}</div>`
-  else if (sc.tipo === 'tratti') corpo = `<div class="righe libere">${righeTratti(sc)}</div>`
-  else {
-    const ids = oggettiDi(sc), aperto = st.aperto[sc.id] ?? ids.find(id => P(st.indossato[st.chi][S().oggetti[id].posto]).o === id)
-    if (aperto) righe = righeOggetto(aperto)
-    corpo = `<div class="griglia">${ids.map(id => gettoneOggetto(id)).join('')}</div>`
-  }
-  return `${testa()}${anteprima('flex:0 0 34%;min-height:190px')}${schede()}${righe ? `<div class="righe">${righe}</div>` : ''}<div class="corpo">${corpo}</div>${fondo()}`
-}
-
-// ══════════ B · a passi ══════════
-// 1. scegli (schede e griglia, niente anteprima) → 2. lo vedi grande e lo giri → 3. forma e colore → 4. il conto
-function variaB() {
-  const st = T(), s = S(), sc = schedaDi(st.scheda)
-  if (st.passo === 1) {
-    let corpo
-    if (sc.tipo === 'chi') corpo = s.chi.map(gettoneChi).join('')
-    else if (sc.tipo === 'set') corpo = setsDi().map(gettoneSet).join('')
-    else if (sc.tipo === 'tratti') corpo = sc.tratti.filter(t => perChi(s.oggetti[t], st.chi)).map(t => gettoneOggetto(t)).join('')
-    else corpo = oggettiDi(sc).map(id => gettoneOggetto(id)).join('')
-    return `${testa({ passi: 1 })}<div class="passo-titolo">Cosa vuoi provare?</div>${schede()}<div class="corpo"><div class="griglia grandi">${corpo}</div></div>`
-  }
-  const c = contoProva(), cosa = st.cosa
-  if (st.passo === 2) {
-    const og = cosa && cosa.oggetto && s.oggetti[cosa.oggetto]
-    const varianti = og && (formeDi(og, st.chi).length > 1 || coloriDi(og, P(valoreDi(cosa.oggetto, st.chi)).f, st.chi).length > 1)
-    const nome = cosa.chi ? s.chi.find(x => x.id === cosa.chi).nome : cosa.set ? s.set.find(x => x.id === cosa.set).nome : og.tratto ? og.nome : nomeValore({ ...st.indossato[st.chi], ...st.prova }[og.posto])
-    let tasto
-    if (cosa.chi) tasto = `<button class="compra" data-azione="b-fatto">È questo</button>`
-    else if (c && c.liv) tasto = `<button class="compra" disabled>Dal livello ${c.liv}</button>`
-    else if (c) tasto = `<button class="compra" data-azione="b-conto">Acquista e indossa · ${c.tot} ${s.valuta.simbolo}</button>`
-    else tasto = `<button class="compra" data-azione="b-fatto">Fatto</button>`
-    return `${testa({ indietro: true, passi: 2 })}${anteprima('flex:1 1 auto;min-height:220px')}
-      <div class="scheda-cosa"><span class="cosa"><b>${esc(nome)}</b><small>${c ? (c.tot ? `${c.tot} ${s.valuta.simbolo}` : '') : 'È tuo'}</small></span>
-      ${varianti ? `<button class="secondario" data-azione="b-varianti">${og.tratto ? 'Scegli' : 'Forma e colore'}</button>` : ''}</div>
-      <div class="fondo">${tasto}</div>`
-  }
-  if (st.passo === 3) {
-    return `${testa({ indietro: true, passi: 3 })}${anteprima('flex:0 0 42%;min-height:200px')}
-      <div class="corpo grandi-righe">${righeOggetto(cosa.oggetto)}</div>
-      <div class="fondo"><span class="cosa"><b>${esc(nomeValore({ ...st.indossato[st.chi], ...st.prova }[s.oggetti[cosa.oggetto].posto]))}</b><small>${c ? `${c.tot} ${s.valuta.simbolo}` : 'È tuo'}</small></span><button class="compra" data-azione="b-avanti">Fatto</button></div>`
-  }
-  // 4: il conto
-  if (!c) { st.passo = 1; return variaB() }
-  return `${testa({ indietro: true, passi: 4 })}${anteprima('flex:0 0 36%;min-height:180px')}
-    <div class="passo-titolo">${esc(c.nome)}</div>
-    <div class="conto">${c.righe.filter(r => r[1]).map(r => `<div><span>${esc(r[0])}</span><span>${r[1]} ${s.valuta.simbolo}</span></div>`).join('')}
-      ${c.invece ? `<div><small>invece di ${c.invece} ${s.valuta.simbolo}</small></div>` : ''}
-      <div class="tot"><span>Ti restano</span><span>${st.saldo - c.tot} ${s.valuta.simbolo}</span></div></div>
-    <div class="corpo"></div>
-    <div class="fondo">${c.tot > st.saldo ? `<button class="compra" disabled>Ti mancano ${c.tot - st.saldo} ${s.valuta.simbolo}</button>` : `<button class="compra" style="flex:1" data-azione="b-paga">Acquista e indossa · ${c.tot} ${s.valuta.simbolo}</button>`}</div>`
-}
-
-// ══════════ C · la figura fissa e il cassetto ══════════
-// testa · anteprima che prende tutto il resto · il cassetto (schede e griglia, oppure la pagina di un oggetto) col suo fondo che paga
-function variaC() {
-  const st = T(), s = S(), sc = schedaDi(st.scheda)
-  let dentro
-  if (st.livelloC === 'oggetto' && st.cosa && st.cosa.oggetto) {
-    const og = s.oggetti[st.cosa.oggetto]
-    dentro = `<button class="torna" data-azione="c-torna"><span>‹</span> ${esc(sc.nome)}</button>
-      <div class="corpo grandi-righe" style="padding-top:0">${righeOggetto(st.cosa.oggetto) || `<p class="muto">${esc(nomeDi(og, st.chi))}: c'è in un modo solo.</p>`}</div>`
-  } else {
-    let corpo
-    if (sc.tipo === 'chi') corpo = `<div class="griglia">${s.chi.map(gettoneChi).join('')}</div>`
-    else if (sc.tipo === 'set') corpo = `<div class="griglia grandi">${setsDi().map(gettoneSet).join('')}</div>`
-    else if (sc.tipo === 'tratti') corpo = `<div class="righe libere">${righeTratti(sc)}</div>`
-    else corpo = `<div class="griglia">${oggettiDi(sc).map(id => gettoneOggetto(id, 'c-oggetto')).join('')}</div>`
-    dentro = `${schede()}<div class="corpo">${corpo}</div>`
-  }
-  const alto = st.cassetto === 'alto' ? '68%' : '50%'
-  return `${testa()}${anteprima('flex:1 1 auto;min-height:150px')}
-    <section class="cassetto" style="height:${alto}"><div class="maniglia" data-azione="cassetto" data-maniglia><i></i></div>${dentro}${fondo()}</section>`
+  let griglia
+  if (sc.tipo === 'chi') griglia = S().chi.map(gettoneChi).join('')
+  else if (sc.tipo === 'set') griglia = setsDi().map(gettoneSet).join('')
+  else { const aperto = apertoDi(sc); griglia = oggettiDi(sc).map(id => gettoneOggetto(id, aperto)).join('') }
+  return `${testa()}${anteprima()}${schede()}<div class="corpo" id="corpo"><div class="griglia">${griglia}</div></div>${pannello()}${fondo()}`
 }
 
 // ══════════ disegnare ══════════
 function disegna() {
   const s = S(), st = T(), tema = mock.tema || s.tema
-  const f = $('foglio')
+  const f = $('foglio'), corpo = $('corpo'), giu = corpo && corpo.dataset.dove === mock.scenario + st.scheda ? corpo.scrollTop : 0
   f.className = 'foglio tema-' + tema
   $('telefono').className = 'telefono tema-' + tema
-  f.innerHTML = ({ A: variaA, B: variaB, C: variaC })[mock.variante]() +
+  f.innerHTML = foglio() +
     (st.chiuso ? `<div class="velo-chiuso"><div>Chiuso con la ✕: nel gioco si torna dov'eri.${st.chiusoProva ? '<br><br>La prova non pagata è stata tolta: resta addosso quello che è tuo.' : ''}<br><button class="compra" data-azione="riapri">Riapri</button></div></div>` : '')
+  // la griglia resta dov'era quando si sceglie: torna in cima solo cambiando scheda
+  const nuovo = $('corpo'); nuovo.dataset.dove = mock.scenario + st.scheda; nuovo.scrollTop = giu
   disegnaMock()
 }
 function disegnaMock() {
@@ -522,10 +447,8 @@ function disegnaMock() {
   m.className = 'mock' + (mock.chiusoMock ? ' chiuso' : '')
   m.innerHTML = `<button class="apri" data-mock="apri">mock: tocca per aprire la barra</button>
     ${gruppo('scenario', [['fattoria', 'Contadina'], ['sotterraneo', 'Eroe'], ['animali', 'Cane']], mock.scenario)}
-    ${gruppo('variante', [['A', 'A'], ['B', 'B'], ['C', 'C']], mock.variante)}
     ${gruppo('tema', [['', 'suo'], ['fattoria', 'legno'], ['sotterraneo', 'scuro'], ['animali', 'prato']], mock.tema || '')}
-    <span class="conta">tocchi <b>${mock.tocchi}</b><button data-mock="azzera">0</button><button data-mock="ricomincia">da capo</button><button data-mock="chiudi" aria-label="nascondi la barra del mock">▴</button></span>
-    <span class="riga-nota" hidden>${{ A: 'A · un foglio solo: tutto in vista, l\'oggetto toccato apre forma e colore sopra la griglia.', B: 'B · a passi: scegli → lo vedi grande → forma e colore → il conto.', C: 'C · la figura fissa e il cassetto: tocchi un oggetto e il cassetto diventa la sua pagina.' }[mock.variante]}</span>`
+    <span class="conta">tocchi <b>${mock.tocchi}</b><button data-mock="azzera">0</button><button data-mock="ricomincia">da capo</button><button data-mock="chiudi" aria-label="nascondi la barra del mock">▴</button></span>`
 }
 
 // ══════════ il dito ══════════
@@ -534,7 +457,6 @@ document.addEventListener('click', e => {
   if (b) {
     const k = b.dataset.mock, id = b.dataset.id
     if (k === 'scenario') mock.scenario = id
-    else if (k === 'variante') { mock.variante = id; const st = T(); st.passo = 1; st.livelloC = 'oggetti' }
     else if (k === 'tema') mock.tema = id || null
     else if (k === 'azzera') mock.tocchi = 0
     else if (k === 'ricomincia') { delete stati[mock.scenario]; mock.tocchi = 0 }
@@ -544,39 +466,30 @@ document.addEventListener('click', e => {
   }
   if (trascinato) { trascinato = false; return }
   const a = e.target.closest('[data-azione]')
-  if (!a || !$('foglio').contains(a)) return
-  mock.tocchi++
+  if (!a || !$('foglio').contains(a) || a.disabled) return
   const st = T(), s = S(), id = a.dataset.id
+  if (st.chiuso && a.dataset.azione !== 'riapri') return
+  mock.tocchi++
   switch (a.dataset.azione) {
     case 'gira': giraDi(Number(a.dataset.verso)); disegnaMock(); return
     case 'chiudi': st.chiusoProva = Object.keys(st.prova).length > 0; comEra(); st.chiuso = true; break
-    case 'riapri': st.chiuso = false; st.passo = 1; st.livelloC = 'oggetti'; mock.tocchi--; break
-    case 'scheda': st.scheda = id; st.livelloC = 'oggetti'; break
-    case 'chi': cambiaChi(id); if (mock.variante === 'B') { st.cosa = { chi: id }; st.passo = 2 } break
-    case 'set': provaSet(id); if (mock.variante === 'B') { st.cosa = { set: id }; st.passo = 2 } break
+    case 'riapri': st.chiuso = false; mock.tocchi--; break
+    case 'scheda': st.scheda = id; break
+    case 'chi': cambiaChi(id); break
+    case 'set': provaSet(id); break
     case 'oggetto': {
+      // toccare un oggetto lo apre nel pannello e lo prova addosso; un tratto (pelle, capelli) si apre e basta: si cambia nel pannello
       const og = s.oggetti[id]
       st.aperto[st.scheda] = id
       if (!og.tratto) scegli(og.posto, valoreDi(id, st.chi))
-      if (mock.variante === 'B') { st.cosa = { oggetto: id }; st.passo = og.tratto ? 3 : 2 }
       break
     }
-    case 'c-oggetto': { const og = s.oggetti[id]; scegli(og.posto, valoreDi(id, st.chi)); st.cosa = { oggetto: id }; st.livelloC = 'oggetto'; break }
-    case 'c-torna': st.livelloC = 'oggetti'; break
-    case 'cassetto': st.cassetto = st.cassetto === 'alto' ? 'basso' : 'alto'; break
     case 'valore': scegli(a.dataset.posto, a.dataset.v); break
     case 'paga': paga(); break
     case 'comera': comEra(); break
-    case 'indietro': st.passo = st.passo === 4 ? 2 : st.passo === 3 ? (s.oggetti[st.cosa.oggetto].tratto ? 1 : 2) : 1; if (st.passo === 1) comEra(); break
-    case 'b-varianti': st.passo = 3; break
-    case 'b-avanti': st.passo = contoProva() ? 2 : 2; break
-    case 'b-conto': st.passo = 4; break
-    case 'b-fatto': st.passo = 1; st.avviso = 'Indossato'; break
-    case 'b-paga': paga(); st.passo = 1; break
   }
   disegna()
 })
-
 // girare: trascinando sull'anteprima (uno scatto ogni 28 px, la pagina non scorre) o con le frecce
 let trascina = null, trascinato = false
 const PASSO = 28

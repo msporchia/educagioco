@@ -12,7 +12,7 @@
   // ── la fattoria: il contadino e la contadina (i modelli di src/giochi/fattoria3d, ramo develop) ──
   const PELLI = [['chiara', 'Chiara', '#f8d8bc'], ['dorata', 'Dorata', '#f5c9a2'], ['ambra', 'Ambra', '#d9a272'], ['bruna', 'Bruna', '#a8754a'], ['scura', 'Scura', '#6e4630']]
   const CAPELLI = [['castani', 'Castani', '#6b4423'], ['neri', 'Neri', '#2a2220'], ['biondi', 'Biondi', '#d8b050'], ['rossi', 'Rossi', '#b8502a'],
-    ['blu', 'Blu', '#3d78d8', 6], ['rosa', 'Rosa', '#e86f9a', 6], ['viola', 'Viola', '#8a4aa8', 6]]
+    ['blu', 'Blu', '#3d78d8', 6], ['viola', 'Viola', '#8a4aa8', 6]]
   const colori = l => l.map(([id, nome, css, prezzo]) => ({ id, nome, css, ...(prezzo ? { prezzo } : {}) }))
   // le tinte che il mock mette sui cappelli della fattoria (nel gioco oggi un cappello ha un colore solo)
   const TINTE_F = { naturale: ['Naturale', null], rosso: ['Rosso', '#c8402e'], blu: ['Blu', '#3d68b8'], verde: ['Verde', '#4a8a4a'], viola: ['Viola', '#7a4aa8'], nero: ['Nero', '#26262e'] }
@@ -23,7 +23,7 @@
     valuta: { simbolo: '🪙', nome: 'monete', saldo: 60 }, livello: 8,
     chi: [{ id: 'contadina', nome: 'Contadina' }, { id: 'contadino', nome: 'Contadino' }],
     chiDiSerie: 'contadina',
-    // il taglio della foto per i gettoni: [ingrandimento, centro x, centro y] (frazioni della foto di fronte)
+    // il taglio della foto per i gettoni: [ingrandimento, centro x, centro y] (frazioni della foto), e un quarto numero per un altro lato (0-7)
     tagli: { testa: [2.2, 0.5, 0.31], capelli: [2.1, 0.5, 0.4], busto: [2.2, 0.5, 0.64], gambe: [2.3, 0.5, 0.76], piedi: [2.8, 0.5, 0.88], collo: [2.8, 0.5, 0.56], tutto: [1.15, 0.5, 0.55] },
     posti: ['pelle', 'capelli', 'barba', 'testa', 'busto', 'gambe', 'piedi', 'collo'],
     base: {
@@ -76,7 +76,7 @@
   for (const chi of ['contadina', 'contadino']) varia(chi, {})
   for (const p of ['chiara', 'ambra', 'bruna', 'scura']) varia('contadina', { pelle: `pelle/-/${p}` })
   for (const t of ['corti', 'coda', 'caschetto', 'ricci']) varia('contadina', { capelli: `capelli/${t}/castani` })
-  for (const c of ['neri', 'biondi', 'rossi', 'blu', 'rosa']) varia('contadina', { capelli: `capelli/trecce/${c}` })
+  for (const c of ['neri', 'biondi', 'rossi', 'blu', 'viola']) varia('contadina', { capelli: `capelli/trecce/${c}` })
   for (const c of ['rosso', 'blu', 'verde']) varia('contadina', { testa: `cappello/paglia/${c}` })
   for (const c of ['naturale', 'rosso', 'blu']) varia('contadina', { testa: `cappello/tesa/${c}` })
   varia('contadina', { testa: 'cappello/cowboy/naturale' })
@@ -90,7 +90,8 @@
   for (const c of ['verde', 'azzurra']) varia('contadina', { collo: `sciarpa/-/${c}` })
   for (const b of ['corta', 'folta', 'baffi']) varia('contadino', { barba: `barba/${b}/-` })
   for (const f of ['blu', 'maglione', 'tuta']) varia('contadino', { busto: `maglia/${f}/-` })
-  varia('contadino', { testa: 'cappello/tesa/naturale' }); varia('contadino', { testa: 'cilindro/-/nero' }); varia('contadino', { testa: 'niente-testa/-/-' })
+  for (const t of ['cappello/tesa/naturale', 'berretto/berretto/-', 'berretto/bandana/-', 'cilindro/-/nero', 'corona/-/-', 'niente-testa/-/-']) varia('contadino', { testa: t })
+  for (const t of ['lunghi', 'ricci']) varia('contadino', { capelli: `capelli/${t}/castani` })
   for (const s of fattoria.set) for (const chi of s.per) varia(chi, s.pezzi)
   fattoria.pose = posiF
 
@@ -102,7 +103,7 @@
     valuta: { simbolo: '💎', nome: 'gemme', saldo: 140 }, livello: 6,
     chi: [['maga', 'Maga'], ['mago', 'Mago'], ['elfa', 'Elfa'], ['elfo', 'Elfo'], ['cavaliera', 'Guerriera'], ['cavaliere', 'Cavaliere'], ['nana', 'Nana'], ['nano', 'Nano']].map(([id, nome]) => ({ id, nome })),
     chiDiSerie: 'maga',
-    tagli: { testa: [2.9, 0.5, 0.42], capelli: [3.4, 0.5, 0.55], mano: [2.3, 0.6, 0.55], tutto: [1.25, 0.5, 0.58] },
+    tagli: { testa: [2.9, 0.5, 0.42], capelli: [2.4, 0.5, 0.5, 3], mano: [2.3, 0.6, 0.55], tutto: [1.25, 0.5, 0.58] },
     posti: ['pelle', 'capelli', 'barba', 'testa', 'mano'],
     base: Object.fromEntries(['maga', 'mago', 'elfa', 'elfo', 'cavaliera', 'cavaliere', 'nana', 'nano'].map(k =>
       [k, { pelle: 'pelle/-/-', capelli: 'capelli/-/-', barba: 'barba/-/-', testa: 'serie/-/-', mano: 'arma/bastone-magico/-' }])),
@@ -116,8 +117,8 @@
     oggetti: {
       pelle: { nome: 'Pelle', posto: 'pelle', tratto: true, taglio: 'testa', colori: [{ id: '-', nome: 'Di serie', css: null }, ...colori(PELLI)] },
       capelli: { nome: 'Capelli', posto: 'capelli', tratto: true, taglio: 'capelli', nomeForme: 'Taglio', nomeColori: 'Colore',
-        forme: [{ id: '-', nome: 'Di serie' }, { id: 'corti', nome: 'Corti' }, { id: 'lunghi', nome: 'Lunghi' }, { id: 'coda', nome: 'Coda' }, { id: 'trecce', nome: 'Trecce' }, { id: 'ricci', nome: 'Ricci' }, { id: 'calvo', nome: 'Calvo' }],
-        colori: [{ id: '-', nome: 'Di serie', css: null }, ...colori(CAPELLI.map(c => (c[3] ? [c[0], c[1], c[2], 20] : c)))] },
+        forme: [{ id: '-', nome: 'Di serie' }, { id: 'corti', nome: 'Corti' }, { id: 'lunghi', nome: 'Lunghi' }, { id: 'coda', nome: 'Coda' }, { id: 'trecce', nome: 'Trecce' }, { id: 'ricci', nome: 'Ricci' }],
+        colori: [{ id: '-', nome: 'Di serie', css: null }, ...colori(CAPELLI.filter(c => c[0] !== 'castani').map(c => (c[3] ? [c[0], c[1], c[2], 20] : c)))] },
       barba: { nome: 'Barba', posto: 'barba', tratto: true, taglio: 'capelli', nomeForme: 'Barba', per: ['mago', 'elfo', 'cavaliere', 'nano'],
         forme: [{ id: '-', nome: 'Di serie' }, { id: 'nessuna', nome: 'Nessuna' }, { id: 'corta', nome: 'Corta' }, { id: 'lunga', nome: 'Lunga' }, { id: 'baffi', nome: 'Baffi' }] },
       serie: { nome: 'Il suo', posto: 'testa', taglio: 'testa', posseduto: true },
@@ -134,15 +135,14 @@
         forme: [{ id: 'bastone-magico', nome: 'Bastone' }, { id: 'spada', nome: 'Spada', prezzo: 40 }, { id: 'mazza', nome: 'Mazza', prezzo: 30 }, { id: 'martello', nome: 'Martello', liv: 10 }] },
     },
     set: [
-      { id: 'arcimago', nome: "L'arcimago", prezzo: 60, pezzi: { testa: 'cappello-mago/cappello-stellato/blu', capelli: 'capelli/lunghi/bianchi', mano: 'arma/bastone-magico/-' } },
+      { id: 'arcimago', nome: "L'arcimago", prezzo: 60, pezzi: { testa: 'cappello-mago/cappello-stellato/blu', capelli: 'capelli/lunghi/biondi', mano: 'arma/bastone-magico/-' } },
     ],
   }
-  sotterraneo.oggetti.capelli.colori.push({ id: 'bianchi', nome: 'Bianchi', css: '#eeeaf2' })
   const posiS = []
   for (const c of sotterraneo.chi) posiS.push({ chi: c.id, diff: {} })
   const vS = diff => posiS.push({ chi: 'maga', diff })
   for (const p of ['chiara', 'ambra', 'scura']) vS({ pelle: `pelle/-/${p}` })
-  for (const t of ['corti', 'lunghi', 'coda', 'trecce', 'ricci', 'calvo']) vS({ capelli: `capelli/${t}/-` })
+  for (const t of ['corti', 'lunghi', 'coda', 'trecce', 'ricci']) vS({ capelli: `capelli/${t}/-` })
   for (const c of ['neri', 'biondi', 'blu', 'viola']) vS({ capelli: `capelli/-/${c}` })
   for (const f of ['cappello-apprendista', 'cappello-stellato', 'cappello-arcano']) for (const c of ['-', 'rosso', 'blu']) vS({ testa: `cappello-mago/${f}/${c}` })
   vS({ testa: 'cappello-mago/cappello-stellato/oro' }); vS({ testa: 'cappello-mago/cappello-stellato/verde' })
@@ -152,6 +152,8 @@
   vS({ testa: 'corona-foglie/-/-' }); vS({ testa: 'diadema/-/-' })
   for (const a of ['spada', 'mazza', 'martello']) vS({ mano: `arma/${a}/-` })
   for (const b of ['nessuna', 'corta', 'baffi']) posiS.push({ chi: 'mago', diff: { barba: `barba/${b}/-` } })
+  for (const t of ['cappello-mago/cappello-apprendista/-', 'cappello-mago/cappello-stellato/-', 'elmo/elmo-calotta/-', 'cappuccio/-/-', 'corona-foglie/-/-', 'diadema/-/-']) posiS.push({ chi: 'mago', diff: { testa: t } })
+  for (const a of ['spada', 'mazza']) posiS.push({ chi: 'mago', diff: { mano: `arma/${a}/-` } })
   for (const s of sotterraneo.set) vS(s.pezzi)
   sotterraneo.pose = posiS
 

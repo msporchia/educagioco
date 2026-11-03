@@ -3,7 +3,7 @@
 
      node poc/personalizza/fai.mjs              # fotografa (se manca la cache) e compone
      node poc/personalizza/fai.mjs --foto       # rifà le foto anche se ci sono
-     node poc/personalizza/fai.mjs --lato 280   # foto più grandi (240 di difetto), --qualita 0.8 (0.72)
+     node poc/personalizza/fai.mjs --foto --lato 320   # foto più grandi (280 di difetto), --qualita 0.8 (0.72)
 
    1. Le foto: serve Vite da sé e apre studio.html, che costruisce i modelli veri del gioco per ogni posa di scenari.js e li
       fotografa da otto lati. Il contadino e gli eroi vengono dal ramo `develop` (hanno «Chi sei», taglio e barba), estratto con
@@ -53,7 +53,7 @@ async function fotografa() {
     const errori = []
     page.on('pageerror', e => errori.push('errore JS: ' + e.message))
     page.on('console', m => m.type() === 'error' && errori.push('console: ' + m.text()))
-    const q = `lato=${opz('lato', 240)}&qualita=${opz('qualita', 0.72)}${opz('solo', '') ? '&solo=' + opz('solo') : ''}`
+    const q = `lato=${opz('lato', 280)}&qualita=${opz('qualita', 0.72)}${opz('solo', '') ? '&solo=' + opz('solo') : ''}`
     await page.goto(`http://localhost:${porta}/poc/personalizza/studio.html?${q}`, { waitUntil: 'load', timeout: 120000 })
     await page.waitForFunction(() => (window.__studio && window.__studio.pronto) || null, null, { timeout: 600000, polling: 1000 })
     const esito = await page.evaluate(() => window.__studio)
@@ -92,28 +92,28 @@ const dove = resolve(QUI, 'mock.html')
 writeFileSync(dove, fuori)
 console.log(`→ ${dove} (${(statSync(dove).size / 1e6).toFixed(1)} MB)`)
 
-// `--scatti`: fotografa mock.html come su un telefono (390×844) in tmp/scatti/personalizza-<scenario>-<variante>[-<tocchi>].png.
-// `--tocca 'Cappelli,Cilindro'` tocca in fila i bottoni con quel testo (o aria-label) prima dello scatto; `--solo fattoria-A` uno solo.
+// `--scatti`: fotografa mock.html come su un telefono (390×844) in tmp/scatti/personalizza-<scenario>[-<tema>][-<tocchi>].png.
+// `--tocca 'Cappelli,Cilindro'` tocca in fila i bottoni con quel testo (o aria-label) prima dello scatto; `--solo fattoria` uno solo, `--tema scuro` in un altro tema.
 if (args.includes('--scatti')) {
   const SCATTI = resolve(RADICE, 'tmp/scatti')
   mkdirSync(SCATTI, { recursive: true })
   const browser = await chromium.launch({ ...(process.env.CHROME ? { executablePath: process.env.CHROME } : {}) })
   const tocchi = (opz('tocca', '') || '').split(',').filter(Boolean)
   try {
-    for (const scenario of ['fattoria', 'sotterraneo', 'animali']) for (const variante of ['A', 'B', 'C']) {
-      if (opz('solo', '') && opz('solo') !== `${scenario}-${variante}`) continue
+    for (const scenario of ['fattoria', 'sotterraneo', 'animali']) {
+      if (opz('solo', '') && opz('solo') !== scenario) continue
       const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true })
       const errori = []
       page.on('pageerror', e => errori.push(e.message))
       await page.goto('file://' + dove)
       const scheda = { fattoria: 'Contadina', sotterraneo: 'Eroe', animali: 'Cane' }[scenario]
       await page.click(`[data-mock="scenario"]:text-is("${scheda}")`)
-      await page.click(`[data-mock="variante"]:text-is("${variante}")`)
+      if (opz('tema', '')) await page.click(`[data-mock="tema"]:text-is("${opz('tema')}")`)
       for (const t of tocchi) {
-        const b = page.locator(`#foglio button:text-is("${t}"), #foglio button[aria-label="${t}"], #foglio button:has(b:text-is("${t}"))`).first()
-        if (await b.count()) await b.click(); else console.log(`  ✗ ${scenario}-${variante}: niente da toccare «${t}»`)
+        const b = page.locator(`#foglio button:text-is("${t}"), #foglio button[aria-label="${t}"], #foglio button:has(b:text-is("${t}")), #foglio button:has-text("${t}")`).first()
+        if (await b.count()) await b.click(); else console.log(`  ✗ ${scenario}: niente da toccare «${t}»`)
       }
-      const file = resolve(SCATTI, `personalizza-${scenario}-${variante}${tocchi.length ? '-' + tocchi.join('-').replace(/[^\w-]+/g, '_') : ''}.png`)
+      const file = resolve(SCATTI, `personalizza-${scenario}${opz('tema', '') ? '-' + opz('tema') : ''}${tocchi.length ? '-' + tocchi.join('-').replace(/[^\w-]+/g, '_') : ''}.png`)
       await page.screenshot({ path: file })
       console.log(`${errori.length ? '✗ ' + errori.join('; ') + ' ' : ''}→ ${file}`)
       await page.close()
