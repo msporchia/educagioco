@@ -30,6 +30,7 @@ convertire) sta in `src/giochi/fattoria3d/da2d/`. Le monete sono quelle vere.
 - [bestie-di-casa.md](bestie-di-casa.md) — le bestie che si comprano e si curano (beagle, gatto rosso, coniglio, pappagallo): numeri della 2D, bisogni, ciotola, coccole, premio, battesimo, sposta, la veterinaria; il rapporto con i compagni gratis
 - [addobbi.md](addobbi.md) — vestire le bestie (anche Watson e i gatti): i dodici addobbi della 2D tutti in vendita, comprare è mettere, il cassetto, gli agganci su ogni corpo, «Che eleganza»
 - [compagni.md](compagni.md) — Watson e i gatti che girano per la fattoria, il contadino nuovo: quando arrivano, come sono fatti, come si muovono
+- [casa.md](casa.md) — dentro la casa: si entra toccandola, sei stanze da comprare una attaccata all'altra, i mobili da mettere, colorare (colore e trama) e spostare, pavimento e pareti, l'armadio che apre il guardaroba
 - [guardaroba.md](guardaroba.md) — cambiare abito al contadino o alla contadina: il genere dal profilo, i capi e gli sblocchi, il salvataggio, come si aggiunge un pezzo
 - [rotazione.md](rotazione.md) — ruotare i pezzi e gli edifici: `rot` 0–3 nello stato, l'ingombro e il davanti che seguono, il tasto ↻ col secondo dito
 - [decorazioni.md](decorazioni.md) — le 206 decorazioni della 2D portate in 3D (verde, fiori, recinti e cartelli, raccolto, case e lampioni, arredo, acqua, bestiole, feste e fiera): le schede nuove del menu, gli id, le eccezioni, l'acqua e la fiera, il peso misurato e cosa manca
