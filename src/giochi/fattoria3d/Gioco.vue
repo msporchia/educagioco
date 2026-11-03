@@ -51,7 +51,7 @@ import Addobbi from './viste/Addobbi.vue'
 import Bestia from './viste/Bestia.vue'
 import Battesimo from './viste/Battesimo.vue'
 import { dettoCura, dettoEsito, dettoCompera } from './viste/bestia-pura.js'
-import { BESTIE, CIBI as CIBI_BESTIE, COCCOLE_3D, curabile } from './dati/bestie.js'
+import { CIBI as CIBI_BESTIE, COCCOLE_3D, curabile } from './dati/bestie.js'
 import { personaDi, normalizzaAbito, capiDi, chiaveAbito, nomeDelContadino } from './dati/abiti.js'
 import { vestitiInForma } from './dati/guardaroba-voci.js'
 import { schedeDellInventario, robaNuova, contoDi } from './viste/inventario-puro.js'
@@ -286,7 +286,7 @@ function scegliSeme(k) {
 // ── costruire: tenere premuto su un posto libero (o il tasto 🏗️) apre il menu «Costruisci qui» ──
 const schede = computed(() => {
   void versione.value
-  return schedeDi({ stagione: stagione.value, livello: motore.livello(), prezzoPezzo: t => motore.prezzoPezzo(t), nelMagazzino: t => motore.nelMagazzino(t), posseduti: motore.s.posseduti, bestieTue: motore.cura.tue() })
+  return schedeDi({ stagione: stagione.value, livello: motore.livello(), prezzoPezzo: t => motore.prezzoPezzo(t), nelMagazzino: t => motore.nelMagazzino(t), posseduti: motore.s.posseduti, bestieTue: motore.cura.curate() })
 })
 const festa = computed(() => {
   void versione.value
@@ -356,12 +356,12 @@ function daiIlNome(nome) {
   const id = battesimoDi.value; battesimoDi.value = null
   if (id) { motore.cura.battezza(id, nome); mondo.compagni.sync(); ui.cambio() }
 }
-/** Una carta «bestia» del menu: la tua apre il foglio, quella da prendere si compra (esperienza come ogni spesa) e comincia il battesimo. */
+/** Una carta «bestia» del menu: la tua apre il foglio, quella da adottare si compra (esperienza come ogni spesa) e comincia il battesimo, dove si sceglie il nome. */
 function sceglieBestia(carta, c) {
   const id = carta.bestia
   if (motore.cura.ho(id)) { costruisciQui.value = null; bestiaMsg.value = ''; bestiaAperta.value = id; return }
   const r = motore.cura.compra(id)
-  if (!r.ok) { c.msg = dettoCompera(r, BESTIE[id].nome); return }
+  if (!r.ok) { c.msg = dettoCompera(r, curabile(id).nome); return }
   costruisciQui.value = null
   mondo.compagni.sync()
   ui.cambio()

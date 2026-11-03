@@ -2,10 +2,10 @@
    (src/giochi/fattoria3d/da2d/motore/fattoria.js: compraBestia, nutri, coccola, rinominaBestia, spostaBestia), le tabelle sono in `dati/bestie.js`.
    Lo stato sta in `stato.casa` (un record per bestia). Principi: una bestia non sta mai male e non muore (i bisogni non scendono sotto
    `FONDO`); il rifiuto viene PRIMA del pagamento (sbagliare costa solo il gesto); una coccola gratis c'è sempre; il premio è esperienza,
-   mai monete, una volta per ciclo. I compagni gratis (Watson e i gatti) si curano allo stesso modo: il loro record nasce da sé quando arrivano
-   col livello, e non si comprano né si spostano. Vedi docs/fattoria3d/bestie-di-casa.md. */
+   mai monete, una volta per ciclo. I compagni (Watson e i gatti di casa) si adottano e si curano allo stesso modo, ma non si spostano:
+   girano per la fattoria. Nessun animale è un regalo del livello: il record nasce quando lo si adotta (`compra`). Vedi docs/fattoria3d/bestie-di-casa.md. */
 import { BESTIE, IDS_BESTIE, CURATI, curabile, cibo as ciboPerId, coccola as coccolaPerId, gradisce, scendi, tuttoAPosto, premiaSeStaBene, nuovo, pulisciNome, comeCompagno, perche } from '../dati/bestie.js'
-import { compagniAl } from '../dati/compagni.js'
+import { COMPAGNI } from '../dati/compagni.js'
 import { addobbiPer, staA, leggiAddobbo, faChiave, chiaveAddobbo } from '../dati/addobbi.js'
 import { vestitiBestiaInForma } from '../dati/bestie.js'
 
@@ -16,16 +16,15 @@ export class Cura {
   constructor(m) { this.m = m }
 
   get casa() { return this.m.s.casa }
-  /** Il record di una bestia tua, o null. Un compagno gratis arrivato col livello lo riceve la prima volta che lo si guarda (bisogni di uno nuovo). */
-  _record(id) {
-    if (!this.casa[id] && CURATI[id] && CURATI[id].liv <= this.m.livello()) this.casa[id] = { ...nuovo(this.m.ora()), premiato: false }
-    return this.casa[id] || null
-  }
+  /** Il record di una bestia tua, o null. Nessun animale arriva da solo: il record c'è dall'adozione (un salvataggio di prima lo ebbe da `normalizza`, `adozioni`). */
+  _record(id) { return this.casa[id] || null }
   ho(id) { return !!this._record(id) }
-  /** Le bestie di casa comprate, nell'ordine in cui sono nel catalogo (senza i compagni gratis). */
+  /** Le bestie di casa adottate, nell'ordine in cui sono nel catalogo (senza Watson e i gatti di casa). */
   tue() { return IDS_BESTIE.filter(id => this.ho(id)) }
-  /** Tutte quelle che si curano adesso: i compagni arrivati, poi le bestie di casa. */
-  curate() { return [...compagniAl(this.m.livello()).map(c => c.id).filter(id => CURATI[id]), ...this.tue()] }
+  /** Watson e i gatti di casa che hai adottato. */
+  compagniTuoi() { return Object.keys(CURATI).filter(id => this.ho(id)) }
+  /** Tutte quelle che si curano adesso: i compagni, poi le bestie di casa. */
+  curate() { return [...this.compagniTuoi(), ...this.tue()] }
   /** La bestia com'è adesso (il calo si applica leggendo: non dipende da quanto spesso si guarda), o null se non è tua. */
   stato(id) {
     const b = this._record(id)
@@ -36,9 +35,9 @@ export class Cura {
   /** Il nome scelto dal bambino, o '' se non l'ha ancora dato. */
   nomeScelto(id) { const b = this.casa[id]; return (b && b.nome) || '' }
 
-  /** Prende una bestia: esperienza come ogni spesa, mai monete. { ok, costo } o un rifiuto (`sconosciuta`, `gia-tua`, `non-sbloccato` con `liv`, `poche-monete` con `costo`). */
+  /** Adotta un animale (una razza o uno dei compagni): esperienza come ogni spesa, mai monete. { ok, costo } o un rifiuto (`sconosciuta`, `gia-tua`, `non-sbloccato` con `liv`, `poche-monete` con `costo`). */
   compra(id) {
-    const d = BESTIE[id]
+    const d = BESTIE[id] || CURATI[id]
     if (!d) return { ok: false, motivo: 'sconosciuta' }
     if (this.ho(id)) return { ok: false, motivo: 'gia-tua' }
     const chiusa = this.m._chiusa(d.liv)
@@ -175,6 +174,8 @@ export class Cura {
   rinominaVestito(id, posto, nome) { return this._vestiti(id, l => l.map(v => (v.posto === posto ? { ...v, nome } : v))) }
   togliVestito(id, posto) { return this._vestiti(id, l => l.filter(v => v.posto !== posto)) }
 
+  /** Watson e i gatti di casa adottati, nella forma di `COMPAGNI` (per la scena); il nome è quello scelto, se no il loro. */
+  compagniAdottati() { return this.compagniTuoi().map(id => ({ id, ...COMPAGNI[id], nome: this.nomeDi(id) })) }
   /** Le bestie tue nella forma dei compagni (per la scena); il nome è quello scelto. */
   compagniPresi() { return this.tue().map(id => comeCompagno(id, this.nomeScelto(id))) }
 }

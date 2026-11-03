@@ -8,20 +8,27 @@ import { ANIMALI_2D } from './parita2d.js'
 // Il ripiego quando il profilo non dice se è contadino o contadina: di solito lo dice `personaDi(aspettoDi())` (dati/abiti.js, docs/fattoria3d/guardaroba.md).
 export const ASPETTO_ERO = 'contadino'
 
-// `liv`: il livello a cui arriva (come `liv` sui pezzi: `roba(liv)` lo raccoglie). Pepe, il gatto nero, arriva dove arriva il gatto nero della 2D (19); gli altri tre no: sono gli animali di casa e arrivano per primi. Il bobtail e il gatto bianco e nero hanno il nome vero di casa (Watson, Sherlock, Irene) e arrivano per primi (livelli 1-3).
+// I cinque animali veri di casa: girano per la fattoria (Watson segue il contadino, i gatti vanno per conto loro). Dal 3/11/2026 **non arrivano più da soli col livello**: si adottano
+// dal menu Costruisci → Animali (`dati/bestie.js`, `CURATI`) e il bambino sceglie il nome. `liv` e `prezzo` sono quelli dell'adozione: il livello da cui si può prendere e le monete.
+// Il bobtail, il gatto bianco e nero e il gatto nero costavano 90/3, 75/10 e 75/19 nella 2D; Irene e Golia (gatta calico e gatto nero, anche loro veri) stanno fra quelli.
 export const COMPAGNI = {
-  watson: { nome: 'Watson', tipo: 'cane',  variante: 'bobtail',   liv: 1,  verso: 'Bau!', arrivo: 'Watson è arrivato!' },
-  sherlock: { nome: 'Sherlock', tipo: 'gatto', variante: 'bianconero', liv: 2,  verso: 'Prrr…', arrivo: 'Sherlock, il gatto, è arrivato!' },
-  irene:   { nome: 'Irene',   tipo: 'gatto', variante: 'calico',     liv: 3,  verso: 'Prrr…', arrivo: 'Irene, la gattina, è arrivata!' },
-  pepe:    { nome: 'Pepe',    tipo: 'gatto', variante: 'nero',       liv: ANIMALI_2D['gatto-nero'].liv, verso: 'Prrr…', arrivo: 'Pepe, il gatto nero, è arrivato!' },
+  watson:   { nome: 'Watson',   tipo: 'cane',  variante: 'bobtail',    liv: 3,  prezzo: ANIMALI_2D['cane-bobtail'].prezzo, verso: 'Bau!', arrivo: 'Watson è arrivato!' },
+  sherlock: { nome: 'Sherlock', tipo: 'gatto', variante: 'bianconero', liv: 10, prezzo: ANIMALI_2D['gatto-tuxedo'].prezzo, verso: 'Prrr…', arrivo: 'Sherlock, il gatto, è arrivato!' },
+  irene:    { nome: 'Irene',    tipo: 'gatto', variante: 'calico',     liv: 11, prezzo: ANIMALI_2D['gatto-tuxedo'].prezzo, verso: 'Prrr…', arrivo: 'Irene, la gattina, è arrivata!' },
+  golia:    { nome: 'Golia',    tipo: 'gatto', variante: 'golia',      liv: 14, prezzo: ANIMALI_2D['gatto-nero'].prezzo, verso: 'Prrr…', arrivo: 'Golia, il gatto nero, è arrivato!' },
+  pepe:     { nome: 'Pepe',     tipo: 'gatto', variante: 'nero',       liv: ANIMALI_2D['gatto-nero'].liv, prezzo: ANIMALI_2D['gatto-nero'].prezzo, verso: 'Prrr…', arrivo: 'Pepe, il gatto nero, è arrivato!' },
 }
-export const VARIANTI_GATTO = ['bianconero', 'calico', 'nero', 'rosso']       // `rosso` non è un compagno gratis: è il gatto che si compra (dati/bestie.js)
+/** A che livello arrivavano da soli, quando erano un regalo (fino al 2/11/2026): serve solo a chi ha un salvataggio di allora, che li tiene (`motore/stato.js`, `adozioni`). Golia non c'era. */
+export const LIVELLO_DI_UNA_VOLTA = { watson: 1, sherlock: 2, irene: 3, pepe: ANIMALI_2D['gatto-nero'].liv }
+export const VARIANTI_GATTO = ['bianconero', 'calico', 'nero', 'golia', 'rosso', 'grigio', 'tigrato', 'bianco']       // `rosso`, `grigio`, `tigrato` e `bianco` sono razze comprabili (dati/bestie.js), non compagni
 
-/** I compagni che ci sono a questo livello (o prima), nell'ordine di arrivo. `soloQuesto`: quelli che arrivano proprio ora. */
+/** I compagni che si possono adottare a questo livello (o prima), nell'ordine di livello. `soloQuesto`: quelli che si aprono proprio ora. */
 export function compagniAl(livello, soloQuesto = false) {
   const l = Math.max(1, livello | 0)
   return Object.entries(COMPAGNI).map(([id, c]) => ({ id, ...c })).filter(c => soloQuesto ? c.liv === l : c.liv <= l).sort((a, b) => a.liv - b.liv)
 }
+/** Quelli che un salvataggio di prima di questo livello aveva già (li regalava il livello): per tenerglieli. */
+export const compagniDiUnaVolta = livello => Object.keys(LIVELLO_DI_UNA_VOLTA).filter(id => LIVELLO_DI_UNA_VOLTA[id] <= Math.max(1, livello | 0))
 
 /** Il centro di una cella e il suo contrario. */
 export const centroCella = (i, j) => [i + 0.5, j + 0.5]
@@ -142,6 +149,7 @@ export const INDOLE_GATTO = {
   bianconero: [0.60, 0.20, 0.12, 0.08],
   calico:     [0.55, 0.15, 0.10, 0.20],
   nero:       [0.40, 0.20, 0.30, 0.10],
+  golia:      [0.50, 0.25, 0.15, 0.10],     // Golia: il gatto nero grande e buono, viene volentieri e fa le fusa
 }
 const INDOLE_COMUNE = [0.55, 0.20, 0.15, 0.10]
 /** La risposta di un gatto al tocco: 'avvicina' | 'fusaQui' | 'volta' | 'buffo'. `distanza` dall'eroe: già vicino, l'avvicinarsi si fa in una cella. */

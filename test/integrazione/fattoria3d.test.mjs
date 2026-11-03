@@ -633,7 +633,7 @@ await apriMenu()
     await page.waitForFunction(() => [...document.querySelectorAll('[data-carta]')].every(c => /^(strada|gomma)$/.test(c.dataset.carta) || c.querySelector('img[data-anteprima="pronta"]')), null, { timeout: 60000 })
   }
   controlla('ogni carta di pezzo o edificio mostra l\'anteprima 3D, non l\'emoji', await page.locator('[data-carta] img[data-anteprima="pronta"]').count() > 0)
-  uguale('le schede hanno tutti i pezzi e gli edifici dei dati e i due strumenti', carte, Object.entries(PEZZI).filter(([t, d]) => !d.fiera && (!d.magazzino || daMettere[t] > 0) && (!d.stagione || d.stagione === stagioneOra)).length + Object.keys(EDIFICI).filter(t => !posseduti[t]).length + 2 + 4)          // + le quattro carte delle bestie di casa (scheda Animali, G6)
+  uguale('le schede hanno tutti i pezzi e gli edifici dei dati e i due strumenti', carte, Object.entries(PEZZI).filter(([t, d]) => !d.fiera && (!d.magazzino || daMettere[t] > 0) && (!d.stagione || d.stagione === stagioneOra)).length + Object.keys(EDIFICI).filter(t => !posseduti[t]).length + 2 + 15)          // + le carte degli animali da adottare (scheda Animali: dieci razze e cinque compagni, docs/fattoria3d/adozioni.md)
   await toccaEl('[data-scheda="animali"]'); await attendi(page, 150)
   controlla('il recinto non è arrivato: carta in grigio col livello', await page.locator('[data-carta="recinto"].bloccata').count() === 1 && /Livello 14/.test(await page.locator('[data-carta="recinto"]').innerText()))
   const schede = await page.evaluate(() => { const c = document.querySelector('.f3-schede'); return [c.scrollWidth, c.clientWidth, document.documentElement.scrollWidth, innerWidth] })
@@ -980,6 +980,7 @@ controlla('il pollaio con le bestie non si mette via', via.ok === false && via.m
 /* ── toccare Watson lontano: il contadino dice «Watson!» e lui arriva (docs/fattoria3d/compagni.md) ── */
 {
   await fermo()
+  await page.evaluate(() => { const { motore, mondo } = window.__fattoria3d; if (!motore.cura.ho('watson')) { motore.s.casa.watson = { pancia: 0.6, pelo: 0.6, gioco: 0.6, quando: Date.now(), premiato: false }; mondo.compagni.sync(true) } })      // Watson non arriva più da solo: si adotta (docs/fattoria3d/adozioni.md)
   await page.waitForFunction(() => !window.__fattoria3d.mondo.compagni.lista.find(c => c.tipo === 'cane').seq, null, { timeout: 15000 }).catch(() => {})
   await page.evaluate(() => { for (const g of window.__fattoria3d.mondo.compagni.lista) if (g.tipo === 'gatto') g.prossimoIncontro = 1e9 })      // i gatti non vengono a salutarlo proprio ora
   // Watson si mette a 5-6 celle dall'eroe, in un punto libero che sta a schermo

@@ -26,7 +26,9 @@ const motoreCon = ({ liv = 70, monete = 100000, t = { ora: ORA }, stato = null }
   const g = guastiDelleBestie()
   controlla('i dati delle bestie non hanno guasti', g.length === 0, g.join(' · '))
   controlla('i livelli reggono con le bestie', guastiDeiLivelli().length === 0, guastiDeiLivelli().join(' · '))
-  uguale('quattro bestie da comprare', IDS_BESTIE.join(), 'beagle,coniglio,gatto_rosso,pappagallo')
+  uguale('le quattro della 2D e sei razze nuove', IDS_BESTIE.join(), 'beagle,coniglio,gatto_rosso,pappagallo,gatto_grigio,labrador,gatto_tigrato,collie,gatto_bianco,dalmata')
+  uguale('quattro razze di cane (il beagle e tre) e quattro mantelli di gatto (il rosso e tre) da adottare, oltre ai compagni', [IDS_BESTIE.filter(i => BESTIE[i].famiglia === 'cane').length, IDS_BESTIE.filter(i => BESTIE[i].famiglia === 'gatto').length].join(), '4,4')
+  controlla('ogni razza nuova costa 75–120 🪙 e ha un quindicesimo di premio', IDS_BESTIE.filter(i => !BESTIE[i].chi).every(i => BESTIE[i].prezzo >= 75 && BESTIE[i].prezzo <= 120 && BESTIE[i].premio === Math.max(1, Math.round(BESTIE[i].prezzo / 15))))
   const attesi = { beagle: [90, 15], gatto_rosso: [75, 35], coniglio: [85, 12], pappagallo: [120, 49] }
   for (const [id, [prezzo, liv]] of Object.entries(attesi)) {
     uguale(`${id}: prezzo della 2D`, BESTIE[id].prezzo, prezzo)
@@ -72,8 +74,8 @@ const motoreCon = ({ liv = 70, monete = 100000, t = { ora: ORA }, stato = null }
   controlla('i nomi sono quelli della 2D', nomiPer('beagle').includes('Birba') && nomiPer('coniglio').includes('Batuffolo') && nomiPer('pappagallo').includes('Coco'))
   uguale('un nome si pulisce e si taglia a 16', pulisciNome('  Batuffolo   il   grande e bello  '), 'Batuffolo il gra')
   uguale('un nome vuoto resta vuoto', pulisciNome(null), '')
-  // compagni gratis
-  uguale('Watson, Sherlock, Irene e Pepe sono ancora compagni gratis', Object.keys(COMPAGNI).join(), 'watson,sherlock,irene,pepe')
+  // i compagni si adottano
+  uguale('Watson, Sherlock, Irene, Golia e Pepe sono i compagni di casa', Object.keys(COMPAGNI).join(), 'watson,sherlock,irene,golia,pepe')
   controlla('nessuna bestia da comprare è anche un compagno', IDS_BESTIE.every(i => !COMPAGNI[i]))
   uguale('il bobtail 2D è Watson', COMPAGNO_DI['cane-bobtail'], 'watson')
   uguale('il gatto bianco e nero 2D è Sherlock', COMPAGNO_DI['gatto-tuxedo'], 'sherlock')
@@ -85,7 +87,10 @@ const motoreCon = ({ liv = 70, monete = 100000, t = { ora: ORA }, stato = null }
 /* ══════════ 2. lo stato: rimesso in forma, mai un'eccezione ══════════ */
 {
   uguale('uno stato di prima non ha bestie di casa', Object.keys(normalizza(statoIniziale()).casa).length, 0)
-  uguale('uno stato senza il campo si legge dritto', Object.keys(normalizza({ v: 10, esperienza: 5 }).casa).length, 0)
+  uguale('uno stato senza il campo si legge dritto (e nessuna bestia da comprare)', Object.keys(normalizza({ v: 10, adozioni: 1, esperienza: 5 }).casa).length, 0)
+  uguale('uno stato di quando i compagni arrivavano da soli tiene Watson (era un regalo del livello 1)', Object.keys(normalizza({ v: 10, esperienza: 5 }).casa).join(), 'watson')
+  uguale('…e al livello 19 li tiene tutti e quattro (Golia non c\'era)', Object.keys(normalizza({ v: 10, scala: 2, esperienza: sogliaDi(19) }).casa).join(), 'watson,sherlock,irene,pepe')
+  uguale('…poi lo stato dice che le adozioni sono cominciate, e il livello non regala più niente', (() => { const n = normalizza({ v: 10, scala: 2, esperienza: sogliaDi(1) }); n.esperienza = sogliaDi(30); return Object.keys(normalizza(n).casa).join() })(), 'watson')
   let ok = true
   for (const brutto of [null, 5, 'x', [], { beagle: 3 }, { beagle: { pancia: 'x', pelo: NaN, gioco: -4, quando: 'ieri', nome: 7, i: 'a' } }, { drago: { pancia: 1 } }, { casa: 1 }]) {
     try { normalizza({ ...statoIniziale(), casa: brutto }) } catch (e) { ok = false }
@@ -260,7 +265,7 @@ const motoreCon = ({ liv = 70, monete = 100000, t = { ora: ORA }, stato = null }
   Object.assign(d.f.cura.casa.coniglio, { pancia: 0.99, pelo: 0.99, gioco: 0.99, premiato: false, quando: d.t.ora })
   controlla('già a posto prima del gesto: nessun premio', !d.f.cura.coccola('coniglio', 'gioca').premio)
   // i quattro premi
-  uguale('i premi 6, 6, 5, 8', IDS_BESTIE.map(i => BESTIE[i].premio).join(), '6,6,5,8')
+  uguale('i premi 6, 6, 5, 8 (le quattro della 2D)', IDS_BESTIE.slice(0, 4).map(i => BESTIE[i].premio).join(), '6,6,5,8')
 }
 {
   // battesimo e posizione
@@ -286,11 +291,17 @@ const motoreCon = ({ liv = 70, monete = 100000, t = { ora: ORA }, stato = null }
 
 /* ══════════ i compagni gratis si curano: Watson e i gatti hanno bisogni, nome e premio, non si comprano e non si spostano ══════════ */
 {
-  const { f, b } = motoreCon({ liv: 2 })
-  uguale('al livello 2 si curano Watson e Sherlock, non ancora Irene e Pepe', f.cura.curate().join(), 'watson,sherlock')
+  const { f, b } = motoreCon({ liv: 12, monete: 1000 })
+  uguale('nessun animale arriva da solo col livello', f.cura.curate().join(), '')
+  uguale('Sherlock si può adottare dal 10, per 75 🪙 (come il gatto bianco e nero della 2D)', [f.cura.compra('sherlock').costo, COMPAGNI.sherlock.liv].join(), '75,10')
+  uguale('Watson dal 3, per 90', f.cura.compra('watson').costo, 90)
+  uguale('Pepe no: è del 19', f.cura.compra('pepe').motivo, 'non-sbloccato')
+  uguale('una volta adottato non si ricompra', f.cura.compra('watson').motivo, 'gia-tua')
+  uguale('si curano Watson e Sherlock (nell\'ordine dei compagni), non Irene e Pepe', f.cura.curate().join(), 'watson,sherlock')
   uguale('le bestie comprate restano a parte', f.cura.tue().join(), '')
-  controlla('Watson ha i suoi bisogni da quando arriva', !!f.cura.stato('watson'))
-  uguale('Pepe non è ancora arrivato', f.cura.stato('pepe'), null)
+  controlla('Watson ha i suoi bisogni da quando lo adotti', !!f.cura.stato('watson'))
+  uguale('Pepe non è stato adottato', f.cura.stato('pepe'), null)
+  b.monete = 100000
   uguale('il nome vero', f.cura.nomeDi('watson'), 'Watson')
   uguale('al gatto niente osso', f.cura.nutri('sherlock', 'osso').motivo, 'non-gli-piace')
   f.cura.casa.watson.pancia = 0.3
@@ -299,7 +310,6 @@ const motoreCon = ({ liv = 70, monete = 100000, t = { ora: ORA }, stato = null }
   uguale('si cambia il nome', f.cura.battezza('watson', 'Bobby').nome, 'Bobby')
   uguale('vuoto = torna Watson', f.cura.battezza('watson', '').nome, 'Watson')
   uguale('non si sposta: gira col contadino', f.cura.sposta('watson', 0, 0).motivo, 'gira-con-te')
-  uguale('non si compra', f.cura.compra('watson').motivo, 'sconosciuta')
   Object.assign(f.cura.casa.watson, { pancia: 0.5, pelo: 0.99, gioco: 0.99, premiato: false })
   const xp0 = f.s.esperienza, p = f.cura.nutri('watson', 'bistecca')
   controlla('rimesso a posto dà il premio del bobtail della 2D, in esperienza', p.ok && p.premio && p.premio.xp === premioBenessere('cane-bobtail') && f.s.esperienza > xp0, JSON.stringify(p))

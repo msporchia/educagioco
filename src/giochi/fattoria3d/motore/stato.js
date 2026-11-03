@@ -16,7 +16,8 @@ import { ordineInForma } from './ordini.js'
 import { stivaInForma } from './mongolfiera.js'
 import { leggiLeBotteghe } from './botteghe.js'
 import { RIPOSO_MS } from '../dati/mongolfiera.js'
-import { casaIniziale, casaInForma } from '../dati/bestie.js'
+import { casaIniziale, casaInForma, nuovo as bisogniNuovi } from '../dati/bestie.js'
+import { compagniDiUnaVolta } from '../dati/compagni.js'
 import { POSTI_DI_PARTENZA, postiInForma } from '../dati/posti.js'
 import { TIPI_DI_SILO } from '../dati/silos.js'
 import { aspettoDaCodice } from '../dati/strade.js'
@@ -79,6 +80,7 @@ export function statoIniziale() {
     vecchi: [],                // gli id (`a_b`) dei lotti comprati prima della geografia grande dove ora cambierebbe qualcosa: si generano alla vecchia (generaLotto `vecchio: true`)
     vecchi1: [],               // gli id dei lotti comprati con `geo: 1` dove ora c'è un lago naturale al posto della pozzanghera: restano com'erano (generaLotto `vecchio: 1`)
     casa: casaIniziale(),      // le bestie di casa che hai preso (docs/fattoria3d/bestie-di-casa.md): { beagle: { pancia, pelo, gioco, quando, premiato, nome?, i?, j? } }
+    adozioni: 1,               // 1 = gli animali si adottano (docs/fattoria3d/adozioni.md); uno stato senza questo campo è di quando Watson e i gatti arrivavano da soli col livello: `normalizza` glieli scrive in `casa` e glieli lascia
     addobbi: {},               // il cassetto degli addobbi delle bestie: comprati e non addosso, { 'id:colore': quanti } (dati/addobbi.js; un id solo di prima vale il colore di base)
     armadio: {},               // i pezzi a pagamento del guardaroba del contadino comprati: { 'cappello:cilindro': true } (dati/abiti.js)
     pesca: {},                 // per lotto d'acqua tuo: { i, j (dove sta il galleggiante), fine (quando abbocca, null se non c'è la lenza), riposo (quando il banco si ripopola, null) }
@@ -189,6 +191,12 @@ export function normalizza(letto) {
   }
   // la scala: l'esperienza di uno stato di prima vale sulla scala di prima (22 livelli); la si porta sulla scala della 2D nello stesso punto del percorso
   if (letto.scala !== SCALA_ATTUALE) s.esperienza = esperienzaDaPrima(s.esperienza, livelloMinimoDi(s))
+  // gli animali di una volta: chi aveva un salvataggio di quando i compagni arrivavano da soli col livello li tiene (mai un animale perso); da ora si adottano
+  if (letto.adozioni !== 1 && Number.isInteger(letto.v)) {
+    const ora = Date.now()
+    for (const id of compagniDiUnaVolta(livelloPer(s.esperienza))) if (!s.casa[id]) s.casa[id] = { ...bisogniNuovi(ora), premiato: false }
+  }
+  s.adozioni = 1
   // le macchine: un v1 aveva solo `pasticceria` in radice. Un v6 aveva altre ricette: ogni cosa in forno o pronta diventa il suo cugino di
   // oggi (`nuovoId`); se il cugino sta in un'altra macchina (il pane, che era della pasticceria) arriva subito in dispensa, se no resta
   // dov'era. Niente si perde: ciò che non entra nei tre posti va fra i pronti, e i pronti si ritirano.
