@@ -2,10 +2,10 @@
    LE BOTTEGHE DEL PAESE DELLA FATTORIA 3D, COL DITO — docs/fattoria3d/botteghe.md
 
    Il test unitario prova le regole; questo dice che **la bottega sta in piedi nel browser**: si compra e si mette sul prato (come ogni edificio),
-   si tocca con un tocco vero (l'eroe cammina fin lì), il foglio si apre con la ✕ in alto a destra, un bancone ha un cliente per mestiere con una
-   merce sola, «Consegna» è spento finché manca roba e toccarlo dice cosa manca, con la roba dà esperienza (mai monete), accende un cuore, il
-   bancone aspetta; al quinto cuore arriva un bancone in più; il cartello sull'edificio conta i clienti pronti; il foglio sta in 360 px senza
-   scorrere di lato. In più, al livello 70, la mongolfiera ha quattro file.
+   si tocca con un tocco vero (l'eroe cammina fin lì) e si entra: dentro il cliente aspetta al tavolino col fumetto di quello che vuole, «Tutti i
+   clienti» apre il foglio con la ✕ in alto a destra, un bancone ha un cliente per mestiere con una merce sola, «Consegna» è spento finché manca roba e toccarlo dice cosa manca, con la roba dà esperienza (mai monete), accende un cuore, il
+   bancone aspetta e il cliente servito esce (il posto dice i minuti); al quinto cuore arriva un bancone in più; il fumetto si fa verde quando
+   la roba c'è; il foglio sta in 360 px senza scorrere di lato; «Esci» riporta in fattoria. In più, al livello 70, la mongolfiera ha quattro file.
    Il dito è vero (`Input.dispatchTouchEvent`): un `page.click()` non porta i pointer del tocco (docs/core/il-dito.md).
    `node test/esegui.mjs fattoria3d-botteghe --niente-build`
    tempo: 40
@@ -69,12 +69,17 @@ const cosa = await m3(id => JSON.parse(JSON.stringify(window.__fattoria3d.motore
 
 /* ── il cartello e il tocco vero ── */
 controlla('un cliente c\'è già, ma senza roba il cartello non dice niente', await m3(t => window.__fattoria3d.motore.bottegaPronta(t), TIPO) === 0)
-for (let prova = 0; prova < 4 && await page.locator('[data-f3="bottega"]').count() === 0; prova++) {
+for (let prova = 0; prova < 4 && await page.locator('[data-f3="bottega-dentro"]').count() === 0; prova++) {
   await tocca(...await schermoDi(cosa.i + 1.5, cosa.j + 1.5))
   await fermo()
 }
-await page.waitForSelector('[data-f3="bottega"]', { timeout: 12000 })
-controlla('toccare la bottega apre il suo foglio', await page.locator(`[data-f3="bottega"][data-bottega="${TIPO}"]`).count() === 1)
+await page.waitForSelector('[data-f3="bottega-dentro"]', { timeout: 12000 })
+controlla('toccare la bottega ci fa entrare', await page.locator(`[data-f3="bottega-dentro"][data-bottega="${TIPO}"]`).count() === 1)
+await page.waitForSelector('[data-f3="fumetto-cliente"]', { timeout: 12000 }).catch(() => {})
+uguale('dentro, un cliente aspetta al tavolino col suo fumetto', await page.locator('[data-f3="fumetto-cliente"]').count(), 1)
+await toccaEl('[data-f3="apri-clienti"]')
+await page.waitForSelector('[data-f3="bottega"]', { timeout: 5000 })
+controlla('«Tutti i clienti» apre il foglio della bottega', await page.locator(`[data-f3="bottega"][data-bottega="${TIPO}"]`).count() === 1)
 uguale('un bancone, un cliente', await page.locator('[data-f3="bancone"]').count(), 1)
 uguale('cinque cuori, nessuno acceso', await page.locator('[data-f3="bottega-fama"] .cuore').count() + ':' + await page.locator('[data-f3="bottega-fama"] .cuore.pieno').count(), '5:0')
 controlla('la ✕ è in alto a destra del foglio', await m3(() => { const f = document.querySelector('[data-f3="bottega"]').getBoundingClientRect(), x = document.querySelector('[data-f3="bottega"] [data-chiudi]').getBoundingClientRect(); return x.right > f.right - 80 && x.top < f.top + 60 && x.width >= 44 }))
@@ -101,9 +106,9 @@ const cliente = await m3(t => {
   window.__fattoria3d.mondo.cambiato()
   return { id: c.id, xp: c.xp }
 }, TIPO)
-await attendi(page, 700)
+await attendi(page, 900)
 uguale('con la roba il tasto si accende', await page.locator('[data-f3="bottega-consegna"]').getAttribute('aria-disabled'), 'false')
-controlla('e il cartello sull\'edificio conta un cliente pronto', await page.evaluate(() => [...document.querySelectorAll('.f3-badge')].some(e => !e.hidden && /1 pronto!/.test(e.textContent))))
+uguale('e il fumetto del cliente si fa verde', await page.locator('[data-f3="fumetto-cliente"][data-pronto="true"]').count(), 1)
 const mon0 = await monete(), xpA = await m3(() => window.__fattoria3d.motore.esperienza())
 await toccaEl('[data-f3="bottega-consegna"]')
 await attendi(page, 500)
@@ -113,6 +118,8 @@ controlla('il foglio dice a chi e quanto', /Consegnato a .+: \+\d+ ⭐/.test(awa
 uguale('un cuore è acceso', await page.locator('[data-f3="bottega-fama"] .cuore.pieno').count(), 1)
 controlla('il bancone aspetta, e dice quanti minuti', /fra \d+ min/.test(await page.locator('[data-f3="bottega-attesa"]').innerText()))
 controlla('sono 10–20 minuti', await m3(() => { const n = +document.querySelector('[data-f3="bottega-attesa"]').dataset.minuti; return n >= 10 && n <= 20 }))
+await attendi(page, 1000)
+controlla('il cliente servito se ne va: al suo posto i minuti', await page.locator('[data-f3="posto-vuoto"]').count() === 1 && await page.locator('[data-f3="fumetto-cliente"]').count() === 0)
 
 /* ── «non mi va» costa l'attesa ma non dà niente ── */
 await m3(t => { const { motore } = window.__fattoria3d; motore.s.botteghe[t].banconi[0] = null; motore.tick(); window.__fattoria3d.mondo.cambiato() }, TIPO)
@@ -143,6 +150,9 @@ uguale('il bancone nuovo ha già il suo cliente', await page.locator('[data-f3="
 await toccaEl('[data-f3="bottega"] [data-chiudi]')
 await attendi(page, 300)
 uguale('la ✕ chiude il foglio', await page.locator('[data-f3="bottega"]').count(), 0)
+await toccaEl('[data-f3="esci-bottega"]')
+await attendi(page, 600)
+controlla('«Esci» riporta in fattoria', await page.locator('[data-f3="bottega-dentro"]').count() === 0 && await page.locator('[data-f3="apri-consiglio"]').isVisible())
 await attendi(page, 2500)
 const profilo = await leggiProfilo(page)
 const salvato = profilo.campagne.fattoria3d.cfg.stato

@@ -33,6 +33,25 @@ bambini: la scuola che chiede la merenda.
   (`guastiDelleBotteghe`). Si chiede solo ciò che il livello permette di avere (`livelloDellaMerce`; uova, latte, tartufi e lana: il livello del pezzo che li fa),
   pesato come in 2D (`pesoDellaMerce`: le merci profonde e quelle appena arrivate escono di più). Non serve avere la macchina in mappa.
 
+## Dentro: i clienti sono persone (3/11/2026)
+
+Su richiesta dell'utente (l'idea del bar: «ogni persona ha una richiesta»), **toccare una bottega in mappa fa entrare**: il contadino va alla
+porta e si apre la sala (`scena3d/bottega3d.js`, sopra la base degli interni `scena3d/interno3d.js`, come la casa: [casa.md](casa.md)).
+Le regole non cambiano: quello che si vede è `vistaBottega`.
+
+- **La sala** (`dati/dentro-botteghe.js`, puro): 9×6 celle, il bancone contro la parete di fondo con la merce della bottega (torte,
+  botti, vassoi, bobine) e l'insegna, tre tavolini (uno per bancone: `POSTI`), le pareti e il pavimento di ogni bottega (`TEMI`).
+- **Un cliente è una persona**: il corpo del contadino con un abito suo (`abitoDelCliente`: lei o lui dall'articolo del mestiere, i capi
+  gratis pescati dal numero del cliente, sempre gli stessi). Entra dalla porta, va al suo tavolino e aspetta col **fumetto** di quello che
+  vuole (le facce delle merci, `ha/serve`, il premio ⭐), verde quando la roba c'è.
+- **Toccare il cliente** (o il suo fumetto): il contadino va al tavolino e consegna. Se manca roba si apre il foglio col perché e il
+  consiglio. **Servito, il cliente se ne va** dalla porta e il posto resta vuoto coi minuti del motore (10–20: l'utente voleva che il
+  prossimo non entrasse subito); quando arriva, entra camminando.
+- **«📋 Tutti i clienti»** (o un tocco sul bancone) apre il foglio di sempre (`viste/Bottega.vue`), anche per «Non mi va».
+- **«🚪 Esci»**, l'indietro o la porta riportano in fattoria. Il passo di un consiglio (seminare, una macchina) esce prima dalla sala.
+- La sala chiama `motore.tick()` ogni 0,4 s: con la fattoria ferma il prossimo cliente arriva lo stesso. Nella fattoria in comune ci si entra
+  (la consegna è già una mossa registrata).
+
 ## Dove sta cosa
 
 | file | cosa |
@@ -58,8 +77,8 @@ L'evento `bottega` (`{ bottega, cliente, xp, chiede, cresciuta }`) c'è per chi 
 
 ## Nei test
 
-`unita/fattoria3d-botteghe` (costanti e prezzi uguali alla 2D, clienti per mestiere, premio = banco ×1,25, tetto, fama, attese, stato rotto, salva e rileggi) e
-`integrazione/fattoria3d-botteghe` (compra e metti, tocco vero, foglio: `[data-f3="bottega"][data-bottega]`, `[data-f3="bancone"][data-cliente][data-pronto]`,
+`unita/fattoria3d-botteghe` (costanti e prezzi uguali alla 2D, clienti per mestiere, premio = banco ×1,25, tetto, fama, attese, stato rotto, salva e rileggi; la sala: strade, abiti dei clienti) e
+`integrazione/fattoria3d-botteghe` (compra e metti, tocco vero che fa entrare: `[data-f3="bottega-dentro"][data-bottega]`, `[data-f3="fumetto-cliente"][data-cliente][data-pronto]`, `[data-f3="posto-vuoto"][data-minuti]`, `[data-f3="apri-clienti"]`, `[data-f3="esci-bottega"]`, `[data-f3="tela-bottega"]`; foglio: `[data-f3="bottega"][data-bottega]`, `[data-f3="bancone"][data-cliente][data-pronto]`,
 `[data-f3="bottega-fama"][data-cuori]`, `[data-f3="bottega-consegna"]` con `aria-disabled`, `[data-f3="bottega-rifiuta"]`, `[data-f3="bottega-attesa"][data-minuti]`,
 `[data-f3="bottega-msg"]`; 360 px senza scorrimento laterale; il quinto cuore; la mongolfiera a quattro file al livello 66). Il catalogo 3D ha le quattro voci
 (`fattoria:bottega-*`, `npm run catalogo3d:scheda -- --gioco fattoria --q bottega`).
