@@ -66,6 +66,8 @@ import Mappa from './viste/Mappa.vue'
 import Carretto from './viste/Carretto.vue'
 import Visita from './viste/Visita.vue'
 import { usaVisite } from './visite.js'
+import Casa from './viste/Casa.vue'
+import { usaCasa } from './casa.js'
 import { DAI as DAI_CARRETTO } from './motore/carretto.js'
 import { prendiIngresso, chiediIngresso } from '../../amici/ingresso.js'
 import { apriComune, amiciPerComune, nomeDellAmico, dettoDellaMossa, TERRA } from './comune.js'
@@ -240,7 +242,7 @@ function cambiaVestiti(l) { vestiti.value = vestitiInForma(l); ricorda(CHIAVE, '
 const salvaVestito = ({ posto, nome, persona: p }) => cambiaVestiti([...vestiti.value.filter(s => !(s.persona === p && s.posto === posto)), { posto, nome, persona: p, capi: capiDi(abito.value) }])
 const rinominaVestito = ({ posto, nome, persona: p }) => cambiaVestiti(vestiti.value.map(s => (s.persona === p && s.posto === posto ? { ...s, nome } : s)))
 const togliVestito = ({ posto, persona: p }) => cambiaVestiti(vestiti.value.filter(s => !(s.persona === p && s.posto === posto)))                 // lo stesso attributo del profilo che usa la fattoria 2D
-watch(() => chiaveAbito(abito.value), () => { if (mondo) mondo.vestiContadino(abito.value) })
+watch(() => chiaveAbito(abito.value), () => { if (mondo) mondo.vestiContadino(abito.value); interni.vesti(abito.value) })
 
 // ── le porte che il mondo 3D usa verso la vista ──
 const ui = {
@@ -254,7 +256,8 @@ const ui = {
   apriMagazzino(silo) { magazzinoMsg.value = ''; magazzinoAperto.value = silo },          // un tocco su un magazzino
   apriMappa() { if (comune) ui.avviso('Dai vicini si va col trattore della tua fattoria.'); else visite.apriMappa() },
   apriBestia(id) { bestiaMsg.value = ''; bestiaAperta.value = id },             // un tocco su una bestia di casa
-  apriGuardaroba() { guardarobaAperto.value = true },             // un tocco sul contadino fermo                 // il trattore: la mappa dei villaggi (docs/fattoria3d/vicini.md)
+  apriGuardaroba() { guardarobaAperto.value = true },
+  entraInCasa() { if (comune) ui.avviso('La casa è nella tua fattoria: qui si lavora insieme.'); else interni.entra() },          // un tocco sulla casa (docs/fattoria3d/casa.md)
   avviso(testo) {
     avvisoTesto.value = testo || ''
     avvisoFine = testo ? performance.now() + DURATA_AVVISO : 0
@@ -270,6 +273,12 @@ const telaVisita = ref(null), sopraVisita = ref(null)
 const visite = usaVisite({ dammi: () => ({ motore, mondo }), tela: telaVisita, sopra: sopraVisita, q, versione, cambio: () => ui.cambio() })
 const { inVisita, mappaAperta, mappaMsg, fase: faseVisita, verso: versoVisita, scheda: schedaVisita, foglio: foglioVisita, storia: storiaVisita,
         messaggio: msgVisita, elenco: elencoVicini, chiave: chiaveTela, carretto, righeCarretto } = visite
+
+// ── dentro la casa (casa.js): stanze, mobili e l'armadio che apre il guardaroba ──
+const telaCasa = ref(null), sopraCasa = ref(null)
+const interni = usaCasa({ dammi: () => ({ motore, mondo }), tela: telaCasa, sopra: sopraCasa, q, versione, cambio: () => ui.cambio(), abito,
+                          apriGuardaroba: () => { guardarobaAperto.value = true }, avvisa: t => ui.avviso(t), altriFogli: () => guardarobaAperto.value })
+const inCasa = interni.dentro, chiaveCasa = interni.chiave
 
 // ── la barra delle azioni ──
 function impostaModo(m) {
@@ -638,6 +647,7 @@ function ritmo() {
 
 function indietro() {
   if (inVisita.value) return void visite.torna()          // in visita, «indietro» riporta a casa, non in home
+  if (inCasa.value) return void (guardarobaAperto.value ? (guardarobaAperto.value = false) : interni.esci())          // dentro casa si esce in cortile
   if (comune) return void chiediIngresso(CHIAVE, {})       // dalla fattoria in comune si torna alla propria
   salva({ subito: true }); emit('vai', 'home')
 }
@@ -738,7 +748,7 @@ onMounted(async () => {
   battito = setInterval(ritmo, 250)
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
-  window.__fattoria3d = { motore, mondo, q }
+  window.__fattoria3d = { motore, mondo, q, interni }
 })
 onBeforeUnmount(() => {
   vivo = false
@@ -749,6 +759,7 @@ onBeforeUnmount(() => {
   sessione?.chiudi()
   if (sessione) { clearInterval(timerQui); quandoQui(null); mandaA(comune, msgVia()) }
   visite.via()
+  interni.via()
   mondo?.via()
   delete window.__fattoria3d
 })
@@ -777,7 +788,7 @@ onBeforeUnmount(() => {
       <div ref="sopra" class="f3-sopra"></div>
 
       <template v-if="mondo || versione">
-        <div class="f3-casa" v-show="!inVisita">
+        <div class="f3-casa" v-show="!inVisita && !inCasa">
         <Hud v-bind="foto" :nuovo="livelloNuovo" :banco="banco" @livello="apriLivelli" @banco="apriBanco" @inventario="apriInventario" @abito="guardarobaAperto = true" />
         <div v-if="toast" class="f3-toast" data-f3="avviso-livello">⭐ {{ toast.testo }}</div>
         <button class="f3-angolo" aria-label="opzioni" data-f3="apri-opzioni" @click="opzioniAperte = !opzioniAperte">⚙</button>
@@ -811,8 +822,6 @@ onBeforeUnmount(() => {
         <Magazzino v-if="magazzino" :vista="magazzino" :messaggio="magazzinoMsg" @ingrandisci="piuPosto" @chiudi="magazzinoAperto = null" />
         <Bottega v-if="bottega" :bottega="bottega" :messaggio="bottegaMsg" :consiglio="bottegaCons" @consiglio="facciConsiglio" @consegna="consegnaBottega" @rifiuta="rifiutaBottega" @chiudi="bottegaAperta = null" />
         <Inventario v-if="inventarioAperto && inventario" :schede="inventario" :magazzini="magazzini" @magazzino="vaiAlMagazzino" @albero="apriAlbero" @chiudi="chiudiInventario" />
-        <Guardaroba v-if="guardarobaAperto" :abito="abito" :livello="foto.livello" v-bind="guardarobaVista" :stagione="stagione || ''" :messaggio="abitoMsg" :vestiti="vestiti" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
-                    @indossa="indossaContadino" @aspetto="cambiaAspetto" @salva-set="salvaVestito" @rinomina-set="rinominaVestito" @togli-set="togliVestito" @chiudi="guardarobaAperto = false" />
  <Albero v-if="albero" :albero="albero" @fai="facciConsiglio" @chiudi="chiudiAlbero" />
  <Consiglio v-if="consiglio" :consiglio="consiglio" @fai="facciConsiglio" @chiudi="consiglio = null" />
         <Livelli v-if="livelliAperto" v-bind="livelli" @chiudi="livelliAperto = false" />
@@ -831,6 +840,16 @@ onBeforeUnmount(() => {
         <Carretto v-if="carretto" :passo="carretto.passo" :dato="carretto.dato" :quanti="DAI_CARRETTO" :dai="righeCarretto.dai" :offre="righeCarretto.offre" :messaggio="carretto.msg"
                   @dai="visite.carrettoDai" @ricevi="visite.carrettoRicevi" @indietro="visite.carrettoIndietro" @chiudi="visite.chiudiCarretto" />
         </div>
+
+        <!-- dentro la casa: la sua tela e i suoi fogli, mentre la fattoria aspetta ferma (docs/fattoria3d/casa.md) -->
+        <template v-if="inCasa">
+          <canvas :key="chiaveCasa" ref="telaCasa" class="f3-int-tela" data-f3="tela-casa"></canvas>
+          <div ref="sopraCasa" class="f3-int-sopra"></div>
+          <Casa :casa="interni" :monete="guardarobaVista.monete" @guardaroba="interni.chiudi(); guardarobaAperto = true" />
+        </template>
+        <!-- il guardaroba si apre fuori (👕) e dentro casa (l'armadio) -->
+        <Guardaroba v-if="guardarobaAperto" :abito="abito" :livello="foto.livello" v-bind="guardarobaVista" :stagione="stagione || ''" :messaggio="abitoMsg" :vestiti="vestiti" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
+                    @indossa="indossaContadino" @aspetto="cambiaAspetto" @salva-set="salvaVestito" @rinomina-set="rinominaVestito" @togli-set="togliVestito" @chiudi="guardarobaAperto = false" />
 
         <!-- la visita a un vicino: la sua tela e i suoi fogli, mentre la fattoria di casa aspetta ferma -->
         <template v-if="inVisita">

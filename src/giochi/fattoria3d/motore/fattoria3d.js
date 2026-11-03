@@ -24,6 +24,7 @@ import { nuovoOrdine } from './ordini.js'
 import { Cura } from './cura.js'
 import { CATEGORIE, opzione, opzioniDi, sbloccato, daComprare, chiaveCapo } from '../dati/abiti.js'
 import { vistaDellaMongolfiera, caricaLaCassa, partiLaMongolfiera, aggiornaMongolfiera } from './mongolfiera.js'
+import { vistaDegliInterni, compraStanza, compraMobile, spostaMobile, giraMobile, tingiMobile, mettiViaMobile, rifiniStanza, puoStare, postoLibero, calpestabile } from './interni.js'
 import { vistaDellaBottega, consegnaInBottega, rifiutaInBottega, aggiornaLeBotteghe, daConsegnareIn, daConsegnareOvunque } from './botteghe.js'
 
 const ASPETTO_DI_BASE = Object.freeze({ tipo: TIPO_DI_BASE, bordo: BORDO_DI_BASE })
@@ -982,6 +983,20 @@ export class Fattoria3d {
   /** Quanti clienti di una bottega (o di tutte) hanno già la loro roba: il numero del cartello e il pallino. */
   bottegaPronta(tipo) { return daConsegnareIn(this, tipo) }
   botteghePronte() { return daConsegnareOvunque(this) }
+
+  // ── dentro la casa: stanze e mobili (motore/interni.js, docs/fattoria3d/casa.md). Comprare conta come esperienza; il resto è gratis ──
+  vistaInterni() { return vistaDegliInterni(this) }
+  compraStanza(id) { return compraStanza(this, id) }
+  compraMobile(tipo, i, j, rot, colore, trama) { return compraMobile(this, tipo, i, j, rot, colore, trama) }
+  spostaMobile(id, i, j, rot = null) { return spostaMobile(this, id, i, j, rot) }
+  giraMobile(id) { return giraMobile(this, id) }
+  tingiMobile(id, colore, trama) { return tingiMobile(this, id, colore, trama) }
+  mettiViaMobile(id) { return mettiViaMobile(this, id) }
+  rifiniStanza(id, finitura) { return rifiniStanza(this, id, finitura) }
+  /** Ci sta? (il fantasma rosso o verde) e dove ce n'è posto, e dove si cammina: per la scena della casa. */
+  mobileCiSta(tipo, i, j, rot, escluso = null) { return puoStare(this.s.interni, tipo, i, j, rot, escluso) }
+  postoPerMobile(tipo, stanza, escluso = null, i = null, j = null) { return postoLibero(this.s.interni, tipo, stanza, escluso, i, j) }
+  calpestabileInCasa(i, j) { return calpestabile(this.s.interni, i, j) }
 
   // ── la pesca: molo e porticciolo, un banco per lotto d'acqua tuo (motore/pesca.js, docs/fattoria3d/geografia-e-pesca.md) ──
   /** Cosa si farebbe toccando la cella d'acqua (i, j): { ok, azione: 'lancia' | 'ritira' | 'aspetta' | 'riposo', sta, … } o un rifiuto. Niente cambia. */

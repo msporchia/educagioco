@@ -125,8 +125,8 @@ uguale('in fondo all\'inventario c\'è il silo del raccolto, con quanto tiene', 
 }
 controlla('chiuso l\'inventario il pallino è spento', await page.locator('[data-f3="inventario-nuovo"]').count() === 0)
 
-/* ── il guardaroba (docs/fattoria3d/guardaroba.md): si apre toccando il contadino fermo e dal tasto 👕; i capi stanno in cfg.abito ── */
-await toccaEl('[data-f3="az-libero"]')                    // col ✂️ armato il contadino non si apre: si torna a mano libera
+/* ── il guardaroba (docs/fattoria3d/guardaroba.md): si apre dal tasto 👕 (e dall'armadio in casa, docs/fattoria3d/casa.md); il contadino toccato no; i capi stanno in cfg.abito ── */
+await toccaEl('[data-f3="az-libero"]')
 {
   const dove = await page.evaluate(() => {
     const m = window.__fattoria3d.mondo, r = m.canvas.getBoundingClientRect(), [x, y] = m.proietta(m.eroe.posizione, 0.5)
@@ -135,7 +135,9 @@ await toccaEl('[data-f3="az-libero"]')                    // col ✂️ armato i
   await page.waitForFunction(() => window.__fattoria3d.mondo.eroe.fermo, null, { timeout: 8000 }).catch(() => {})
   await tocca(dove.x, dove.y)
   await attendi(page, 300)
-  controlla('toccare il contadino fermo apre il guardaroba', await page.locator('[data-f3="guardaroba"]').count() === 1)
+  controlla('toccare il contadino fermo non apre più il guardaroba (lo apre l\'armadio in casa)', await page.locator('[data-f3="guardaroba"]').count() === 0)
+  await toccaEl('[data-f3="apri-guardaroba"]'); await attendi(page, 300)
+  controlla('il tasto 👕 apre il guardaroba', await page.locator('[data-f3="guardaroba"]').count() === 1)
   // l'interfaccia unica (docs/core/personalizza.md): chi si è sta dentro l'anteprima, le schede sopra, il pannello e il prezzo sotto
   const chi = (await page.locator('[data-f3="guardaroba"] [data-prs="chi"]').innerText()).toLowerCase()
   await toccaEl('[data-scheda-abito="persona"]')
@@ -236,7 +238,7 @@ const cella = (escludi = []) => page.evaluate(escludi => {
     if (pulita && v && px > 60 && px < r.width - 60 && py > 150 && py < r.height - 220) buoni.push({ i, j, d: Math.hypot(i - e.x, j - e.z) })
   }
   buoni.sort((a, b) => a.d - b.d)
-  return buoni.find(b => b.d >= 3) || buoni[0] || null          // non sotto l'eroe: un tocco sul contadino fermo apre il guardaroba
+  return buoni.find(b => b.d >= 3) || buoni[0] || null          // non sotto l'eroe
 }, escludi)
 const posto = await cella()
 controlla('c\'è una cella libera a schermo', !!posto)
@@ -249,8 +251,6 @@ const sulPosto = () => schermoDi(posto.i + 0.5, posto.j + 0.5)
   controlla('un dito che scorre prima dell\'attesa non apre il menu', await menuAperto() === 0)
   await fermo(); await tocca(...await sulPosto()); await attendi(page, 300)
   controlla('e un tocco corto nemmeno', await menuAperto() === 0)
-  // se l'eroe è già lì sotto, il tocco corto è sul contadino fermo e apre il guardaroba (giusto): si chiude con la ✕ e si prosegue
-  if (await page.locator('[data-f3="guardaroba"]').count()) await toccaEl('[data-f3="guardaroba"] [data-chiudi]')
   await fermo(); await attendi(page, 1200)        // l'eroe è andato a vedere, la telecamera lo segue: si aspetta che si fermino
 }
 // tenuto fermo: si apre, con le schede e la griglia di carte

@@ -115,7 +115,7 @@ Registrazione: `src/giochi/indice.js` (il manifesto, in coda) e `src/giochi/sche
 | `[data-f3="campo"] canvas` | il contenitore e la tela |
 | `[data-f3="az-libero|az-semina|az-raccogli|az-costruisci"]` | i tasti delle azioni (`.acceso` se armato); `.f3-n` è il numero rosso |
 | `[data-f3="apri-inventario"]`, `inventario-nuovo` (il pallino) | il tasto nell'HUD |
-| `[data-f3="apri-guardaroba"]` | il tasto «👕» nell'HUD (si apre anche toccando il contadino fermo) |
+| `[data-f3="apri-guardaroba"]` | il tasto «👕» nell'HUD (si apre anche dall'armadio dentro casa, [casa.md](casa.md)) |
 | `[data-f3="guardaroba"]`, `[data-scheda-abito="persona|aspetto|cappello|vestiti|set"]`, le scelte `button[data-capo="<categoria>:<id>"]` (`aria-pressed`), le voci `[data-voce="…"]`, `guardaroba-ritratto`, e i bersagli del componente (`[data-prs="paga|chi|…"]`, [../core/personalizza.md](../core/personalizza.md)); chi si è: `button[data-capo="persona:contadina|contadino"]` | il foglio del guardaroba |
 | `[data-azione="negozio"]` (nel foglio della bestia), `[data-f3="addobbi"]`, `[data-f3="addobbi-ritratto"]`, `[data-addobbo="<id>|niente-<aggancio>"]`, `[data-colore="<colore>"]` | il negozio degli addobbi di una bestia ([addobbi.md](addobbi.md)) |
 | `[data-f3="inventario"]`, `[data-scheda-inv="raccolti|prodotti|altro"]`, `inventario-riga`, `inventario-vuoto`; i gettoni `button[data-merce="<id>"]` con `data-n` | il foglio dell'inventario (le colture arrivate al livello, le vuote velate) |

@@ -56,7 +56,7 @@ const idCosa = await m3(([t, liv]) => {
     const [px, py, v] = mondo.proietta({ x: i + 1.5, y: 0, z: j + 1.5 })
     if (v && px > 60 && px < r0.width - 60 && py > 140 && py < r0.height - 200) buoni.push([i, j, Math.hypot(i + 1.5 - mondo.eroe.x, j + 1.5 - mondo.eroe.z)])
   }
-  const lontani = buoni.filter(b => b[2] >= 3).sort((a, b) => a[2] - b[2])          // non sotto l'eroe: un tocco sul contadino fermo apre il guardaroba
+  const lontani = buoni.filter(b => b[2] >= 3).sort((a, b) => a[2] - b[2])          // non sotto l'eroe
   const posto = lontani[0] || buoni[buoni.length - 1]
   const r = motore.compraEMetti(t, posto[0], posto[1])
   mondo.pezzi.sincronizza(); mondo.cambiato()
