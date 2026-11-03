@@ -503,6 +503,10 @@ const MANTELLI = {
   calico:     { occhi: '#a6dc7a', naso: '#f09aa6', lucido: 0.9 },
   nero:       { occhi: '#ffd23a', naso: '#c8808c', lucido: 0.5 },
   rosso:      { occhi: '#e6c84a', naso: '#e8949a', lucido: 0.9 },      // il gatto rosso comprabile (dati/bestie.js): tigrato arancione
+  golia:      { occhi: '#b6e04a', naso: '#b87a86', lucido: 0.45 },     // Golia: nero dalla punta del naso a quella della coda, occhi verde-oro
+  grigio:     { occhi: '#86d46a', naso: '#d49aa4', lucido: 0.8 },      // grigio-azzurro, a pelo corto
+  tigrato:    { occhi: '#e0b83a', naso: '#d99aa0', lucido: 0.85 },     // tigrato bruno, con la «M» sulla fronte
+  bianco:     { occhi: '#6cc4ee', naso: '#f09aa6', lucido: 0.9 },      // tutto bianco, occhi azzurri
 }
 const _c2 = new THREE.Color()
 const mescola = (k, hex, t) => { if (t > 0) k.lerp(_c2.setHex(hex), Math.min(1, t)); return k }
@@ -545,6 +549,48 @@ function coloriGatto (v) {
         mescola(k, CREMA, liscio(0.09, 0.13, p.z) * (1 - liscio(0.05, 0.09, p.y)) * (1 - liscio(0.09, 0.15, ax))); return k },     // il muso crema
       zampa: i => (p, k) => { k.setHex(AR); tigre(k, { z: p.y * 0.6 }, 90, 0.35 * liscio(-0.02, -0.06, p.y) * liscio(-0.17, -0.1, p.y)); return mescola(k, CREMA, liscio(-0.14, -0.17, p.y)) },
       coda: n => (p, k) => { k.setHex(AR); mescola(k, RIGA, liscio(0.2, 0.8, Math.sin((p.y + n * 0.2) * 48)) * 0.75); if (n === 2) mescola(k, CREMA, liscio(0.1, 0.16, p.y)); return k },
+    }
+  }
+  if (v === 'golia') {                                                                           // Golia: nero uniforme, un filo più caldo sulle punte (il pelo nero al sole)
+    const N = 0x1d1d23
+    const sole = (k, p) => mescola(k, 0x34303a, 0.5 * liscio(0.1, 0.2, p.y))
+    return {
+      corpo: (p, k) => ombraSotto(sole(k.setHex(N), p), p),
+      testa: (p, k) => k.setHex(N),
+      zampa: () => (p, k) => k.setHex(N),
+      coda: () => (p, k) => k.setHex(N),
+    }
+  }
+  if (v === 'bianco') {
+    const B = 0xf8f6f2
+    return {
+      corpo: (p, k) => ombraSotto(k.setHex(B), p), testa: (p, k) => k.setHex(B),
+      zampa: () => (p, k) => k.setHex(B), coda: () => (p, k) => k.setHex(B),
+    }
+  }
+  if (v === 'grigio') {                                                                          // grigio-azzurro, più chiaro sul petto e sul muso, zampette appena più chiare
+    const G0 = 0x8d96a4, CH = 0xc4c9d2
+    return {
+      corpo: (p, k) => { k.setHex(G0); mescola(k, CH, (1 - liscio(-0.01, 0.05, p.y)) * 0.8); mescola(k, CH, liscio(0.3, 0.34, p.z) * (1 - liscio(0.07, 0.13, Math.abs(p.x))) * 0.7); return ombraSotto(k, p) },
+      testa: (p, k) => mescola(k.setHex(G0), CH, liscio(0.09, 0.13, p.z) * (1 - liscio(0.05, 0.09, p.y)) * (1 - liscio(0.09, 0.15, Math.abs(p.x)))),
+      zampa: () => (p, k) => mescola(k.setHex(G0), CH, liscio(-0.14, -0.17, p.y) * 0.8),
+      coda: n => (p, k) => mescola(k.setHex(G0), 0x6f7886, n === 2 ? liscio(0.1, 0.16, p.y) * 0.8 : 0),
+    }
+  }
+  if (v === 'tigrato') {                                                                         // bruno-grigio con le righe scure sul dorso, sulle zampe e sulla coda, la «M» sulla fronte
+    const BR = 0x9c8566, RIGA = 0x4b3b2b, CH = 0xdcd0b8
+    const riga = (k, x, forza) => mescola(k, RIGA, liscio(0.2, 0.75, Math.sin(x)) * forza)
+    return {
+      corpo: (p, k) => { k.setHex(BR); riga(k, p.z * 46 + 0.6, 0.62 * liscio(0.03, 0.11, p.y)); riga(k, p.y * 70, 0.3 * (1 - liscio(0.0, 0.05, p.y)))
+        mescola(k, RIGA, 0.55 * (1 - liscio(0.015, 0.035, Math.abs(p.x))) * liscio(0.1, 0.14, p.y))                     // la riga lungo la schiena
+        mescola(k, CH, (1 - liscio(-0.01, 0.045, p.y)) * 0.9)
+        mescola(k, CH, liscio(0.3, 0.34, p.z) * (1 - liscio(0.04, 0.1, Math.abs(p.x))) * (1 - liscio(0.12, 0.17, p.y))); return ombraSotto(k, p) },
+      testa: (p, k) => { k.setHex(BR); const ax = Math.abs(p.x)
+        mescola(k, RIGA, liscio(0.2, 0.8, Math.sin(ax * 95 + 0.4)) * liscio(0.13, 0.17, p.y) * (1 - liscio(0.07, 0.11, p.z)) * 0.75 * (1 - liscio(0.11, 0.16, ax)))   // la «M»
+        mescola(k, RIGA, liscio(0.2, 0.7, Math.sin(p.y * 80)) * liscio(0.1, 0.14, ax) * liscio(0.02, 0.06, p.z) * 0.5)     // le righe sulle guance
+        mescola(k, CH, liscio(0.09, 0.13, p.z) * (1 - liscio(0.05, 0.09, p.y)) * (1 - liscio(0.09, 0.15, ax))); return k },
+      zampa: () => (p, k) => { k.setHex(BR); riga(k, p.y * 90, 0.5 * liscio(-0.02, -0.06, p.y) * liscio(-0.17, -0.1, p.y)); return mescola(k, CH, liscio(-0.14, -0.17, p.y) * 0.7) },
+      coda: n => (p, k) => { k.setHex(BR); riga(k, (p.y + n * 0.2) * 52, 0.85); if (n === 2) mescola(k, RIGA, liscio(0.1, 0.16, p.y)); return k },
     }
   }
   if (v === 'nero') {
@@ -592,7 +638,7 @@ function facciaGatto (v, chiusi = false) {
   const x = c.getContext('2d')
   for (const s of chiusi ? [-1, 1] : []) {                                                // a occhi chiusi: due archi in giù, con le ciglia
     const ex = 128 + s * 56, ey = 76
-    x.strokeStyle = v === 'nero' ? '#ffd23a' : '#2a2024'; x.lineWidth = 7; x.lineCap = 'round'
+    x.strokeStyle = v === 'nero' ? '#ffd23a' : v === 'golia' ? '#b6e04a' : '#2a2024'; x.lineWidth = 7; x.lineCap = 'round'
     x.beginPath(); x.arc(ex, ey - 12, 28, 0.25 * Math.PI, 0.75 * Math.PI); x.stroke()
   }
   for (const s of chiusi ? [] : [-1, 1]) {
@@ -631,7 +677,7 @@ export function creaGatto (variante = 'bianconero') {
   const M = MANTELLI[variante] || MANTELLI.bianconero
   const v = MANTELLI[variante] ? variante : 'bianconero'
   const col = coloriGatto(v), g = new THREE.Group()
-  const rosa = mat(v === 'nero' ? 0xc8808c : 0xf0a0ac, { flatShading: false })
+  const rosa = mat(v === 'nero' || v === 'golia' ? 0xc8808c : 0xf0a0ac, { flatShading: false })
   const corpo = perno(g, 0, 0.2, -0.18)
   morbido(corpo, `gatto:${v}:corpo`, M.lucido, parti => {
     palla(parti, [0, 0.108, 0.17], [0.137, 0.13, 0.28], col.corpo, 24, 14)                  // il corpo ovale, un po' più alto a metà schiena

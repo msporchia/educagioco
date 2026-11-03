@@ -4,7 +4,7 @@
 // Vedi docs/fattoria3d/compagni.md.
 import * as THREE from 'three'
 import { segna } from '../../../grafica/elementi3d.js'
-import { compagniAl, scegliMeta, scegliMetaAttorno, cellaLiberaVicina, cellaDi, decidiCane, decidiGatto, durataDi, SOGLIA_RICHIAMO, DIST_INCONTRO,
+import { scegliMeta, scegliMetaAttorno, cellaLiberaVicina, cellaDi, decidiCane, decidiGatto, durataDi, SOGLIA_RICHIAMO, DIST_INCONTRO,
   scegliInterazioneCane, sequenzaCane, sequenzaRichiamo, sequenzaSonno, sequenzaSveglia, carezzaCane, scegliRispostaGatto, sequenzaGatto,
   chiamaIlGatto, sequenzaGattoChiamato,
   sequenzaGattoSopra, incontroGattoCane, sequenzaIncontro } from '../dati/compagni.js'
@@ -31,11 +31,11 @@ export class Compagni {
     this.sync(true)
   }
 
-  /** Chi c'è a questo livello (i compagni gratis) o è una bestia di casa che hai preso (docs/fattoria3d/bestie-di-casa.md) e non è ancora in scena arriva;
+  /** Chi hai adottato (Watson e i gatti di casa, o una bestia di casa: docs/fattoria3d/bestie-di-casa.md) e non è ancora in scena arriva;
       `senzaAvviso` al caricamento (non è una novità). Il nome cambia da sé quando glielo dai (anche a Watson e ai gatti). */
   sync(senzaAvviso = false) {
     const cura = this.m.cura
-    const gratis = compagniAl(this.m.livello()).map(c => (cura ? { ...c, nome: cura.nomeDi(c.id) } : c))
+    const gratis = cura ? cura.compagniAdottati() : []
     for (const d of [...gratis, ...(cura ? cura.compagniPresi() : [])]) {
       const dentro = this.lista.find(c => c.def.id === d.id)
       if (dentro) { dentro.def.nome = d.nome; if (cura) vestiBestia(dentro.grp, cura.addossoA(d.id)); continue }
@@ -276,7 +276,7 @@ export class Compagni {
       impostaDettaglio(g, d > (g.userData.dettaglioBasso ? LOD_METRI - 1.5 : LOD_METRI))
     }
     const posa = { ...pose, vel: c.velo > 0 ? Math.max(0.3, pose.vel) : 0 }
-    if (c.tipo === 'cane') (c.def.variante === 'beagle' ? posaBeagle : posaCane)(g, posa)
+    if (c.tipo === 'cane') (c.grp.userData.scheletro === 'beagle' ? posaBeagle : posaCane)(g, posa)
     else if (c.tipo === 'gatto') posaGatto(g, posa)
     else posaPiccolo(g, posa)
   }

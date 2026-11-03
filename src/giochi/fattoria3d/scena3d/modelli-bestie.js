@@ -13,7 +13,7 @@ import { fondiPerMateriale } from './fondi.js'
 const lisc = x => { const k = Math.max(0, Math.min(1, x)); return k * k * (3 - 2 * k) }
 const BIANCO = 0xf6f3ee, FUMO = 0xb9b2a6, NOCCIOLA = 0xc98a45, CASTANO = 0x7a4a26, NERO = 0x2a241f, ROSA = 0xf0a0ac
 
-const LISCIO = { flatShading: false }, piu = lati => Math.max(12, lati * 2)
+const LISCIO = { flatShading: false }, piu = lati => Math.max(16, Math.round(lati * 2.4))
 /** Un ellissoide liscio nel perno `p`: colore `hex`, centro `c`, raggi `r`, `lati` per giro (raddoppiati). */
 const blocco = (p, hex, c, r, lati = 7) => ellisse(p, mat(hex, LISCIO), ...c, ...r, piu(lati))
 /** Un tronco di cono liscio: base sul punto `a` (raggio `rb`), cima sul punto `b` (raggio `rc`). */
@@ -31,40 +31,59 @@ const fondi = (perni, escludi = []) => { for (const p of perni) fondiPerMaterial
 const O_CORPO = [0, 0.38, -0.2], O_TESTA = [0, 0.62, 0.3]
 const dalCorpo = (x, y, z) => [x - O_CORPO[0], y - O_CORPO[1], z - O_CORPO[2]]
 const dallaTesta = (x, y, z) => [x - O_TESTA[0], y - O_TESTA[1], z - O_TESTA[2]]
-export function creaBeagle () {
+// Le razze di cane che hanno lo scheletro del beagle (stessi perni di Watson, quindi `posaBeagle` le muove): cambiano i colori, le orecchie, la coda,
+// il muso e la scala. `sella` e `macchie` sono pezzi di un altro colore che sporgono appena (mai sfumature); `coda: [altezza, inclinazione]`.
+export const RAZZE_CANE = {
+  beagle:   { tronco: NOCCIOLA, sella: NERO, petto: BIANCO, zampe: BIANCO, cosce: NOCCIOLA, orecchie: CASTANO, striscia: BIANCO, mento: BIANCO, punta: BIANCO, naso: 0x16161a, scala: 0.72,
+              orecchia: [0.028, 0.14, 0.08], muso: 1, coda: [0.8, 0.94, 0.41, 0.44], codaR: 1 },
+  labrador: { tronco: 0xe2b765, petto: 0xecd29a, zampe: 0xe8c47e, cosce: 0xe2b765, orecchie: 0xc99a4c, mento: 0xecd29a, punta: 0xe2b765, naso: 0x2a1c18, scala: 0.86,
+              orecchia: [0.03, 0.105, 0.075], muso: 1.18, coda: [0.62, 0.7, 0.5, 0.64], codaR: 1.5 },
+  collie:   { tronco: 0x26221f, petto: BIANCO, zampe: BIANCO, cosce: 0x26221f, orecchie: 0x26221f, striscia: BIANCO, mento: BIANCO, punta: BIANCO, naso: 0x111114, scala: 0.8,
+              orecchia: [0.03, 0.115, 0.07], muso: 1.12, coda: [0.62, 0.7, 0.52, 0.66], codaR: 1.7 },
+  dalmata:  { tronco: BIANCO, petto: BIANCO, zampe: BIANCO, cosce: BIANCO, orecchie: 0x2c2724, mento: BIANCO, punta: BIANCO, naso: 0x16161a, scala: 0.8,
+              orecchia: [0.03, 0.12, 0.075], muso: 1.1, coda: [0.74, 0.86, 0.46, 0.5], codaR: 1,
+              macchie: [[0.9, 0.12, 0.045], [-1.0, 0.05, 0.04], [1.6, -0.1, 0.05], [-1.9, -0.18, 0.045], [0.2, -0.05, 0.04], [-0.3, 0.2, 0.035], [2.2, 0.2, 0.035], [-2.3, -0.02, 0.04], [0.5, -0.24, 0.04], [-0.6, -0.26, 0.035], [1.2, 0.26, 0.03]] },
+}
+export function creaBeagle (razza = 'beagle') {
+  const R = RAZZE_CANE[razza] || RAZZE_CANE.beagle
   const g = new THREE.Group()
   const corpo = perno(g, ...O_CORPO)
-  blocco(corpo, NOCCIOLA, dalCorpo(0, 0.47, -0.02), [0.155, 0.16, 0.3], 8)                       // il tronco
-  blocco(corpo, NERO, dalCorpo(0, 0.525, -0.09), [0.145, 0.13, 0.22], 7)                             // la sella nera sul dorso
-  blocco(corpo, BIANCO, dalCorpo(0, 0.46, 0.2), [0.15, 0.17, 0.13], 7)                             // il petto
-  blocco(corpo, BIANCO, dalCorpo(0, 0.4, 0.02), [0.12, 0.09, 0.22], 7)                             // la pancia
-  stelo(corpo, NOCCIOLA, 0.11, 0.085, dalCorpo(0, 0.56, 0.2), dalCorpo(0, 0.7, 0.36), 7)           // il collo
+  blocco(corpo, R.tronco, dalCorpo(0, 0.47, -0.02), [0.155, 0.16, 0.3], 8)                       // il tronco
+  if (R.sella) blocco(corpo, R.sella, dalCorpo(0, 0.525, -0.09), [0.145, 0.13, 0.22], 7)             // la sella nera sul dorso
+  for (const [a, z, r] of R.macchie || []) {                                                         // le macchie (dalmata): `a` è l'angolo attorno al tronco (0 = sul dorso), sulla pelle e mezze fuori
+    const k = Math.sqrt(Math.max(0, 1 - ((z + 0.02) / 0.3) ** 2))
+    blocco(corpo, 0x2c2724, dalCorpo(Math.sin(a) * 0.158 * k, 0.47 + Math.cos(a) * 0.163 * k, z), [r, r, r], 4)
+  }
+  blocco(corpo, R.petto, dalCorpo(0, 0.46, 0.2), [0.15, 0.17, 0.13], 7)                             // il petto
+  blocco(corpo, R.petto, dalCorpo(0, 0.4, 0.02), [0.12, 0.09, 0.22], 7)                             // la pancia
+  stelo(corpo, R.tronco, 0.11, 0.085, dalCorpo(0, 0.56, 0.2), dalCorpo(0, 0.7, 0.36), 7)           // il collo
   const posteriore = perno(corpo, 0, 0, 0)
-  blocco(posteriore, NOCCIOLA, dalCorpo(0, 0.49, -0.27), [0.165, 0.17, 0.16], 8)
-  stelo(posteriore, NOCCIOLA, 0.045, 0.03, dalCorpo(0, 0.6, -0.36), dalCorpo(0, 0.8, -0.41), 5)    // la coda: dritta in su e un po' all'indietro…
-  stelo(posteriore, BIANCO, 0.032, 0.018, dalCorpo(0, 0.8, -0.41), dalCorpo(0, 0.94, -0.44), 5)    // …col puntale bianco
+  blocco(posteriore, R.tronco, dalCorpo(0, 0.49, -0.27), [0.165, 0.17, 0.16], 8)
+  const [c1, c2, z1, z2] = R.coda
+  stelo(posteriore, R.tronco, 0.045 * R.codaR, 0.03 * R.codaR, dalCorpo(0, 0.6, -0.36), dalCorpo(0, c1, -z1), 5)    // la coda: dritta in su e un po' all'indietro (labrador e collie: bassa e piena)…
+  stelo(posteriore, R.punta, 0.032 * R.codaR, 0.018 * R.codaR, dalCorpo(0, c1, -z1), dalCorpo(0, c2, -z2), 5)    // …col puntale
   const testa = perno(corpo, ...dalCorpo(...O_TESTA))
-  blocco(testa, NOCCIOLA, dallaTesta(0, 0.75, 0.45), [0.15, 0.14, 0.16], 8)                          // il cranio
-  blocco(testa, NOCCIOLA, dallaTesta(0, 0.65, 0.36), [0.1, 0.1, 0.1], 7)                             // la nuca: resta attaccata al collo anche a testa bassa
-  blocco(testa, NOCCIOLA, dallaTesta(0, 0.69, 0.6), [0.095, 0.085, 0.15], 7)                         // il muso
-  blocco(testa, BIANCO, dallaTesta(0, 0.745, 0.62), [0.03, 0.06, 0.13], 5)                           // la striscia bianca sul muso
-  blocco(testa, BIANCO, dallaTesta(0, 0.655, 0.64), [0.07, 0.035, 0.1], 6)                           // il mento
-  pallina(testa, 0x16161a, 0.04, ...dallaTesta(0, 0.72, 0.745), 1.2, 0.85, 0.9)                      // il naso
+  blocco(testa, R.tronco, dallaTesta(0, 0.75, 0.45), [0.15, 0.14, 0.16], 8)                          // il cranio
+  blocco(testa, R.tronco, dallaTesta(0, 0.65, 0.36), [0.1, 0.1, 0.1], 7)                             // la nuca: resta attaccata al collo anche a testa bassa
+  blocco(testa, R.tronco, dallaTesta(0, 0.69, 0.6 + 0.04 * (R.muso - 1) / 0.18), [0.095, 0.085, 0.15 * R.muso], 7)      // il muso (più lungo nel labrador)
+  if (R.striscia) blocco(testa, R.striscia, dallaTesta(0, 0.745, 0.62), [0.03, 0.06, 0.13 * R.muso], 5)             // la striscia bianca sul muso
+  blocco(testa, R.mento, dallaTesta(0, 0.655, 0.64), [0.07, 0.035, 0.1 * R.muso], 6)                 // il mento
+  pallina(testa, R.naso, 0.04, ...dallaTesta(0, 0.72, 0.745), 1.2, 0.85, 0.9)                      // il naso
   const occhi = [-1, 1].map(s => pallina(testa, 0x2a160a, 0.034, ...dallaTesta(s * 0.075, 0.795, 0.585)))
   const frangia = perno(testa, 0, 0.3, 0.05)                                                         // senza pelo lungo: resta un perno fermo
   const lingua = perno(testa, ...dallaTesta(0, 0.655, 0.7))
   const l = pallina(lingua, 0xe8768e, 0.04, 0, -0.012, 0.02, 1.05, 0.3, 1.3); l.rotation.x = 0.45
   const orecchie = [-1, 1].map(s => {
     const p = perno(testa, s * 0.11, 0.25, 0.06)
-    blocco(p, CASTANO, [s * 0.04, -0.1, 0], [0.028, 0.14, 0.08], 6)                                 // lunga, piatta, penzolante
+    blocco(p, R.orecchie, [s * 0.04, -0.1, 0], R.orecchia, 6)                                          // lunga, piatta, penzolante
     p.userData.giro = s * 0.12; return p
   })
   const zampe = [[-0.1, 0.32, 0.2], [0.1, 0.32, 0.2], [-0.11, 0.34, -0.29], [0.11, 0.34, -0.29]].map(([x, y, z], i) => {
     const p = perno(g, x, y, z), dietro = i > 1
-    stelo(p, BIANCO, 0.036, 0.05, [0, -0.29, 0], [0, 0.04, 0], 6)                                    // la gamba parte DENTRO il corpo: non galleggia
-    blocco(p, BIANCO, [0, -0.29, 0.025], [0.05, 0.03, 0.07], 6)                                      // il piede
-    if (dietro) blocco(p, NOCCIOLA, [0, 0.05, 0], [0.085, 0.12, 0.125], 7)                          // la coscia fulva
-    else blocco(p, BIANCO, [0, 0.05, 0], [0.075, 0.09, 0.09], 7)                                     // la spalla
+    stelo(p, R.zampe, 0.036, 0.05, [0, -0.29, 0], [0, 0.04, 0], 6)                                    // la gamba parte DENTRO il corpo: non galleggia
+    blocco(p, R.zampe, [0, -0.29, 0.025], [0.05, 0.03, 0.07], 6)                                      // il piede
+    if (dietro) blocco(p, R.cosce, [0, 0.05, 0], [0.085, 0.12, 0.125], 7)                          // la coscia fulva
+    else blocco(p, R.tronco === NOCCIOLA ? BIANCO : R.tronco, [0, 0.05, 0], [0.075, 0.09, 0.09], 7)                                     // la spalla
     return p
   })
   const bastone = new THREE.Mesh(G('beagle-bastone', () => new THREE.CylinderGeometry(0.014, 0.018, 0.4, 5)), mat(0x8a5a2b))
@@ -74,7 +93,7 @@ export function creaBeagle () {
   orecchie.forEach(o => { o.rotation.z = o.userData.giro })
   fondi([corpo, posteriore, testa, ...orecchie, ...zampe], [...occhi, lingua, bastone])
   zonaTocco(g, 0.5, 0.42)
-  g.userData = { ...g.userData, corpo, posteriore, testa, frangia, orecchie, lingua, naso: null, occhi, zampe, bastone, tipo: 'cane' }
+  g.userData = { ...g.userData, corpo, posteriore, testa, frangia, orecchie, lingua, naso: null, occhi, zampe, bastone, tipo: 'cane', scheletro: 'beagle', razza, scala: R.scala }
   return g
 }
 
@@ -235,7 +254,7 @@ function posaPappagallo (u, stato, vel, fase, t, p) {
 /** Il corpo di una bestia dai suoi dati (come `creaCompagno`, che lo fa per Watson e i gatti). `tipo` e `variante` vengono da `dati/bestie.js`. */
 export function creaBestia (c) {
   let g
-  if (c.tipo === 'cane' && c.variante === 'beagle') { g = creaBeagle(); g.scale.setScalar(SCALA.beagle) }
+  if (c.tipo === 'cane' && RAZZE_CANE[c.variante]) { g = creaBeagle(c.variante); g.scale.setScalar(RAZZE_CANE[c.variante].scala) }
   else if (c.tipo === 'coniglio') { g = creaConiglio(); g.scale.setScalar(SCALA.coniglio) }
   else if (c.tipo === 'pappagallo') { g = creaPappagallo(); g.scale.setScalar(SCALA.pappagallo) }
   else g = creaCompagno(c)

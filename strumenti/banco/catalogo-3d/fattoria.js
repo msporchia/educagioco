@@ -262,9 +262,9 @@ export const VOCI = [
     crea: () => { const g = creaGatto('calico'); posaGatto(g, { stato, t: 0.4, p: 0.5, sub }); return g },
     anima: (g, dt, t) => posaGatto(g, { stato, t, p: (t % 3) / 3, sub }),
   })),
-  ...['sherlock', 'irene', 'pepe'].map(id => ({
+  ...['sherlock', 'irene', 'golia', 'pepe'].map(id => ({
     id: `fattoria:${id}`, nome: `${COMPAGNI[id].nome} (gatto ${COMPAGNI[id].variante})`, gioco: 'fattoria', categoria: 'animale',
-    dove: `gatto che gira per il terreno, arriva al livello ${COMPAGNI[id].liv} (scena3d/compagni.js)`, file: `${MC}:creaGatto`,
+    dove: `gatto che gira per il terreno, si adotta dal livello ${COMPAGNI[id].liv} (scena3d/compagni.js)`, file: `${MC}:creaGatto`,
     crea: () => creaGatto(COMPAGNI[id].variante), anima: (g, dt, t) => posaGatto(g, { stato: 'sta', t }),
   })),
 
@@ -274,7 +274,7 @@ export const VOCI = [
     const posa = (g, stato, t, vel) => (b.tipo === 'cane' ? posaBeagle : b.tipo === 'gatto' ? posaGatto : posaPiccolo)(g, { stato, vel, fase: t * 7, t, p: (t % 3) / 3 })
     return e.map(stato => ({
       id: `fattoria:bestia-${id}${stato === 'sta' ? '' : '-' + stato}`, nome: `${b.nome}${stato === 'sta' ? '' : ' (' + stato + ')'}`, gioco: 'fattoria', categoria: 'animale',
-      dove: `bestia di casa, si prende dal livello ${b.liv} per 🪙${b.prezzo} (dati/bestie.js)${stato === 'sta' ? '' : `, posa «${stato}»`}`, file: `${MBE}:creaBestia`,
+      dove: `bestia di casa, si adotta dal livello ${b.liv} per 🪙${b.prezzo} (dati/bestie.js)${stato === 'sta' ? '' : `, posa «${stato}»`}`, file: `${MBE}:creaBestia`,
       crea: () => { const g = creaBestia(comeCompagno(id)); posa(g, stato, 0.4, stato === 'vaga' ? 0.6 : 0); return g },
       anima: (g, dt, t) => posa(g, stato, t, stato === 'vaga' ? 0.6 : 0),
     }))
