@@ -70,7 +70,12 @@ if (args.includes('--foto') || !existsSync(CACHE)) await fotografa()
 const foto = JSON.parse(readFileSync(CACHE, 'utf8'))
 
 // i gettoni degli addobbi: le anteprime che il gioco già fa
-const anteprime = readFileSync(resolve(RADICE, 'src/giochi/fattoria3d/dati/anteprime.js'), 'utf8')
+// gli addobbi coi colori ci sono su origin/main: se questo ramo non li ha ancora, si leggono da lì (`--addobbi-da <ramo>`)
+const FILE_ANTEPRIME = 'src/giochi/fattoria3d/dati/anteprime.js'
+let anteprime = readFileSync(resolve(RADICE, FILE_ANTEPRIME), 'utf8')
+if (!anteprime.includes('"addobbo:cappellino:blu"')) {
+  try { anteprime = execSync(`git show ${opz('addobbi-da', 'origin/main')}:${FILE_ANTEPRIME}`, { cwd: RADICE, maxBuffer: 64e6 }).toString() } catch (e) { console.log('  ✗ niente anteprime degli addobbi coi colori') }
+}
 const oggettiFoto = {}
 for (const s of Object.values(SCENARI)) for (const o of Object.values(s.oggetti)) {
   if (o.foto !== 'addobbo') continue

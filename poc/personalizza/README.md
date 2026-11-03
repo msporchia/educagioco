@@ -62,7 +62,7 @@ mai**, dall'alto:
 | schede | 44 px, una riga | al massimo cinque |
 | griglia | quello che resta | gli oggetti del gruppo; **l'unica cosa che scorre**, dentro la sua zona |
 | pannello | 164 px, fisso | in ordine di dipendenza: l'oggetto scelto (il nome), la sua **Forma** (foto), il **Colore** di quella forma (pastiglie); nella scheda Set il tasto «Salva questo set» |
-| fondo | 68 px | «Com'era» e «Acquista e indossa · N», o una riga di aiuto |
+| fondo | 68 px | «Acquista e indossa · N», o una riga di aiuto (niente «Com'era»: il fondo non torna indietro sulle scelte sopra di lui) |
 
 - **Un'interazione cambia solo le zone sotto.** La gerarchia va in un verso
   solo: scheda → oggetto → forma → colore → prezzo. Scegliere un colore non
@@ -189,8 +189,8 @@ Le regole che il mock segue, da confermare:
   si può provare addosso, ma il tasto dice «Dal livello 12» ed è spento.
 - **Poche monete**: il tasto dice «Ti mancano 7 🪙» ed è spento.
 - **Quello che è tuo si mette subito**, senza conferme; quello da pagare resta
-  in prova finché non si preme «Acquista e indossa». «Com'era» toglie la
-  prova; chiudendo con la ✕ la prova sparisce.
+  in prova finché non si preme «Acquista e indossa». Per toglierla si tocca
+  quello che si aveva; chiudendo con la ✕ la prova sparisce.
 
 ## I gruppi
 

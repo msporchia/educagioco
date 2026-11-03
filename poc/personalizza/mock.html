@@ -698,7 +698,7 @@ function fondo() {
   if (c.liv) tasto = `<button class="compra" disabled>Dal livello ${c.liv}</button>`
   else if (c.tot > st.saldo) tasto = `<button class="compra" disabled>Ti mancano ${c.tot - st.saldo} ${s.valuta.simbolo}</button>`
   else tasto = `<button class="compra" data-azione="paga"><span>Acquista e indossa · ${c.tot} ${s.valuta.simbolo}</span><small>${esc(dettaglio)}</small></button>`
-  return `<div class="fondo"><button class="secondario" data-azione="comera">Com'era</button>${tasto}</div>`
+  return `<div class="fondo">${tasto}</div>`
 }
 
 // ══════════ il foglio: le zone non si muovono mai ══════════
