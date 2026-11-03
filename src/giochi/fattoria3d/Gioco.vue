@@ -68,6 +68,8 @@ import Visita from './viste/Visita.vue'
 import { usaVisite } from './visite.js'
 import Casa from './viste/Casa.vue'
 import { usaCasa } from './casa.js'
+import BottegaDentro from './viste/BottegaDentro.vue'
+import { usaBottegaDentro } from './bottega-dentro.js'
 import { DAI as DAI_CARRETTO } from './motore/carretto.js'
 import { prendiIngresso, chiediIngresso } from '../../amici/ingresso.js'
 import { apriComune, amiciPerComune, nomeDellAmico, dettoDellaMossa, TERRA } from './comune.js'
@@ -242,7 +244,7 @@ function cambiaVestiti(l) { vestiti.value = vestitiInForma(l); ricorda(CHIAVE, '
 const salvaVestito = ({ posto, nome, persona: p }) => cambiaVestiti([...vestiti.value.filter(s => !(s.persona === p && s.posto === posto)), { posto, nome, persona: p, capi: capiDi(abito.value) }])
 const rinominaVestito = ({ posto, nome, persona: p }) => cambiaVestiti(vestiti.value.map(s => (s.persona === p && s.posto === posto ? { ...s, nome } : s)))
 const togliVestito = ({ posto, persona: p }) => cambiaVestiti(vestiti.value.filter(s => !(s.persona === p && s.posto === posto)))                 // lo stesso attributo del profilo che usa la fattoria 2D
-watch(() => chiaveAbito(abito.value), () => { if (mondo) mondo.vestiContadino(abito.value); interni.vesti(abito.value) })
+watch(() => chiaveAbito(abito.value), () => { if (mondo) mondo.vestiContadino(abito.value); interni.vesti(abito.value); sala.vesti(abito.value) })
 
 // ── le porte che il mondo 3D usa verso la vista ──
 const ui = {
@@ -257,6 +259,7 @@ const ui = {
   apriMappa() { if (comune) ui.avviso('Dai vicini si va col trattore della tua fattoria.'); else visite.apriMappa() },
   apriBestia(id) { bestiaMsg.value = ''; bestiaAperta.value = id },             // un tocco su una bestia di casa
   apriGuardaroba() { guardarobaAperto.value = true },
+  entraBottega(tipo) { sala.entra(tipo) },          // un tocco su una bottega del paese: si entra (docs/fattoria3d/botteghe.md, «Dentro»)
   entraInCasa() { if (comune) ui.avviso('La casa è nella tua fattoria: qui si lavora insieme.'); else interni.entra() },          // un tocco sulla casa (docs/fattoria3d/casa.md)
   avviso(testo) {
     avvisoTesto.value = testo || ''
@@ -279,6 +282,13 @@ const telaCasa = ref(null), sopraCasa = ref(null)
 const interni = usaCasa({ dammi: () => ({ motore, mondo }), tela: telaCasa, sopra: sopraCasa, q, versione, cambio: () => ui.cambio(), abito,
                           apriGuardaroba: () => { guardarobaAperto.value = true }, avvisa: t => ui.avviso(t), altriFogli: () => guardarobaAperto.value })
 const inCasa = interni.dentro, chiaveCasa = interni.chiave
+// ── dentro una bottega del paese (bottega-dentro.js): i clienti come persone, coi fumetti di cosa vogliono ──
+const telaSala = ref(null), sopraSala = ref(null)
+const sala = usaBottegaDentro({ dammi: () => ({ motore, mondo }), tela: telaSala, sopra: sopraSala, q, cambio: () => ui.cambio(), abito, avvisa: t => ui.avviso(t),
+                               consegna: (t, id) => { if (!consegnaIn(t, id).ok) bottegaAperta.value = t }, apriElenco: t => ui.apriBottega(t),
+                               altriFogli: () => !!bottegaAperta.value || guardarobaAperto.value || !!consiglio.value || !!alberoK.value })
+const tipoSala = sala.tipo, chiaveSala = sala.chiave, fumettiSala = sala.fumetti
+const vistaSala = computed(() => { void versione.value; return tipoSala.value && motore ? motore.vistaBottega(tipoSala.value) : null })
 
 // ── la barra delle azioni ──
 function impostaModo(m) {
@@ -541,15 +551,19 @@ const traguardoNave = computed(() => {
 
 // ── le botteghe del paese: un cliente per bancone, una merce sola, la fama a cuori (docs/fattoria3d/botteghe.md) ──
 const bottega = computed(() => { void versione.value; return bottegaAperta.value ? motore.vistaBottega(bottegaAperta.value) : null })
-function consegnaBottega(n) {
-  const tipo = bottegaAperta.value, r = motore.consegnaBottega(tipo, n)
+/** Consegna al cliente `n` della bottega `tipo`, dal foglio o toccando il cliente dentro la sala: il messaggio del foglio e la festa. */
+function consegnaIn(tipo, n) {
+  const r = motore.consegnaBottega(tipo, n)
   bottegaCons.value = !r.ok && r.motivo === 'mancano' && primaMancante(r) ? consiglioPer(primaMancante(r)) : null
-  if (!r.ok) return bottegaMsg.value = r.motivo === 'mancano' ? dettoDi('mancano-ingredienti', { ingredienti: r.mancano }) : dettoDi(r.motivo)
+  if (!r.ok) { bottegaMsg.value = r.motivo === 'mancano' ? dettoDi('mancano-ingredienti', { ingredienti: r.mancano }) : dettoDi(r.motivo); return r }
   bottegaMsg.value = `Consegnato a ${r.cliente.nome}: +${r.xp} ⭐.${r.cresciuta ? ' La bottega è famosa: un bancone in più!' : ''}`
   ui.cambio()
-  mondo.fx.volo('+' + r.xp + ' ⭐', mondo.pezzi.centroDi({ kind: 'edificio', tipo }), 3)
-  mondo.eroe.avvia('esulta', 0.9)
+  const dentro = tipoSala.value === tipo && sala.scena()
+  if (dentro) { dentro.festeggia(n, '+' + r.xp + ' ⭐'); if (r.cresciuta) dentro.fx.parla('Che fama! Un tavolino in più') }
+  else { mondo.fx.volo('+' + r.xp + ' ⭐', mondo.pezzi.centroDi({ kind: 'edificio', tipo }), 3); mondo.eroe.avvia('esulta', 0.9) }
+  return r
 }
+function consegnaBottega(n) { consegnaIn(bottegaAperta.value, n) }
 function rifiutaBottega(n) {
   const r = motore.rifiutaBottega(bottegaAperta.value, n)
   if (!r.ok) return bottegaMsg.value = dettoDi(r.motivo)
@@ -609,6 +623,7 @@ function chiudiLaGuida() {
 function apriConsiglio() { consiglio.value = cosaFaccioAdesso(motore) }
 /** Il tasto di un consiglio: chiude il foglio da cui si è partiti e porta dove si fa. */
 function facciConsiglio(a) {
+  if (a && tipoSala.value) sala.esci()                       // il passo si fa in fattoria: dalla bottega si esce
   if (a && a.che === 'albero') return apriAlbero(a.k)          // «Come si fa» si apre sopra il foglio, che resta dov'è
   alberoK.value = ''; if (inventarioAperto.value) chiudiInventario()
   consiglio.value = null; magazzinoAperto.value = null; macchinaAperta.value = null; bancoAperto.value = false; nave.value = false; bottegaAperta.value = null; semiAperto.value = false
@@ -648,6 +663,7 @@ function ritmo() {
 function indietro() {
   if (inVisita.value) return void visite.torna()          // in visita, «indietro» riporta a casa, non in home
   if (inCasa.value) return void (guardarobaAperto.value ? (guardarobaAperto.value = false) : interni.esci())          // dentro casa si esce in cortile
+  if (tipoSala.value) return void (bottegaAperta.value ? (bottegaAperta.value = null) : sala.esci())          // da una bottega si esce in paese
   if (comune) return void chiediIngresso(CHIAVE, {})       // dalla fattoria in comune si torna alla propria
   salva({ subito: true }); emit('vai', 'home')
 }
@@ -748,7 +764,7 @@ onMounted(async () => {
   battito = setInterval(ritmo, 250)
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
-  window.__fattoria3d = { motore, mondo, q, interni }
+  window.__fattoria3d = { motore, mondo, q, interni, sala }
 })
 onBeforeUnmount(() => {
   vivo = false
@@ -760,6 +776,7 @@ onBeforeUnmount(() => {
   if (sessione) { clearInterval(timerQui); quandoQui(null); mandaA(comune, msgVia()) }
   visite.via()
   interni.via()
+  sala.via()
   mondo?.via()
   delete window.__fattoria3d
 })
@@ -788,7 +805,7 @@ onBeforeUnmount(() => {
       <div ref="sopra" class="f3-sopra"></div>
 
       <template v-if="mondo || versione">
-        <div class="f3-casa" v-show="!inVisita && !inCasa">
+        <div class="f3-casa" v-show="!inVisita && !inCasa && !tipoSala">
         <Hud v-bind="foto" :nuovo="livelloNuovo" :banco="banco" @livello="apriLivelli" @banco="apriBanco" @inventario="apriInventario" @abito="guardarobaAperto = true" />
         <div v-if="toast" class="f3-toast" data-f3="avviso-livello">⭐ {{ toast.testo }}</div>
         <button class="f3-angolo" aria-label="opzioni" data-f3="apri-opzioni" @click="opzioniAperte = !opzioniAperte">⚙</button>
@@ -820,7 +837,6 @@ onBeforeUnmount(() => {
         <Mongolfiera v-if="nave" v-bind="{ nave: mongolfiera, traguardo: traguardoNave, livelloIngresso: LIVELLO_MONGOLFIERA }" :messaggio="naveMsg" :consiglio="naveCons" @consiglio="facciConsiglio"
                      @carica="caricaCassa" @parti="partiMongolfiera" @chiudi="nave = false" />
         <Magazzino v-if="magazzino" :vista="magazzino" :messaggio="magazzinoMsg" @ingrandisci="piuPosto" @chiudi="magazzinoAperto = null" />
-        <Bottega v-if="bottega" :bottega="bottega" :messaggio="bottegaMsg" :consiglio="bottegaCons" @consiglio="facciConsiglio" @consegna="consegnaBottega" @rifiuta="rifiutaBottega" @chiudi="bottegaAperta = null" />
         <Inventario v-if="inventarioAperto && inventario" :schede="inventario" :magazzini="magazzini" @magazzino="vaiAlMagazzino" @albero="apriAlbero" @chiudi="chiudiInventario" />
  <Albero v-if="albero" :albero="albero" @fai="facciConsiglio" @chiudi="chiudiAlbero" />
  <Consiglio v-if="consiglio" :consiglio="consiglio" @fai="facciConsiglio" @chiudi="consiglio = null" />
@@ -847,6 +863,14 @@ onBeforeUnmount(() => {
           <div ref="sopraCasa" class="f3-int-sopra"></div>
           <Casa :casa="interni" :monete="guardarobaVista.monete" @guardaroba="interni.chiudi(); guardarobaAperto = true" />
         </template>
+        <!-- dentro una bottega: la sala coi clienti (docs/fattoria3d/botteghe.md, «Dentro») -->
+        <template v-if="tipoSala">
+          <canvas :key="chiaveSala" ref="telaSala" class="f3-int-tela" data-f3="tela-bottega"></canvas>
+          <div ref="sopraSala" class="f3-int-sopra"></div>
+          <BottegaDentro :bottega="vistaSala" :fumetti="fumettiSala" @esci="sala.esci()" @elenco="ui.apriBottega(tipoSala)" @servi="sala.tocca" />
+        </template>
+        <!-- il foglio di una bottega: dal tocco fuori (prima) e dentro la sala -->
+        <Bottega v-if="bottega" :bottega="bottega" :messaggio="bottegaMsg" :consiglio="bottegaCons" @consiglio="facciConsiglio" @consegna="consegnaBottega" @rifiuta="rifiutaBottega" @chiudi="bottegaAperta = null" />
         <!-- il guardaroba si apre fuori (👕) e dentro casa (l'armadio) -->
         <Guardaroba v-if="guardarobaAperto" :abito="abito" :livello="foto.livello" v-bind="guardarobaVista" :stagione="stagione || ''" :messaggio="abitoMsg" :vestiti="vestiti" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
                     @indossa="indossaContadino" @aspetto="cambiaAspetto" @salva-set="salvaVestito" @rinomina-set="rinominaVestito" @togli-set="togliVestito" @chiudi="guardarobaAperto = false" />
