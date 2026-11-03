@@ -29,7 +29,7 @@ globalThis.document = globalThis.document || { createElement: () => ({ width: 0,
 // la tabella generata: uguale a quella che lo strumento scriverebbe adesso, e la firma torna
 controlla('dati/figure3d.js è quello di `npm run roba3d`', readFileSync(FILE_FIGURE3D, 'utf8') === testo())
 uguale('la firma del file generato torna', FIRMA, createHash('sha1').update(JSON.stringify({ FIGURE3D, SPRITE_FIGURA })).digest('hex').slice(0, 12))
-uguale('le 238 figure dei fogli', Object.keys(FIGURE3D).length, 238)
+uguale('le 244 figure: 238 dei fogli e 6 solo 3D (le ossa)', Object.keys(FIGURE3D).length, 244)
 
 // ogni figura: una famiglia conosciuta; il modulo la costruisce, o la famiglia non ha ancora un modulo (ripiego dichiarato)
 const mancano = FAMIGLIE_ROBA.filter(f => !MODULI[f])
@@ -67,13 +67,12 @@ for (const [k, c] of Object.entries(COSE)) {
 uguale('un consumabile sconosciuto al modulo', creaConsumabile('spada'), null)
 uguale('senza il modulo pozioni niente consumabile (resta lo sprite)', creaConsumabile('pozione', {}), null)
 
-// ogni oggetto da impugnare ha la figura o il ripiego della collezione; i gioielli senza figura restano sprite, e sono questi
-const SPRITE_SOLO = ['amuleto-rosso', 'medaglione', 'amuleto-osso']
+// ogni oggetto da impugnare ha la figura o il ripiego della collezione; ogni gioiello ha la sua figura 3D (nessuno resta sprite)
 for (const [k, c] of Object.entries(COSE)) {
   if (!c.dove) continue
   const m = modelloDiRoba(k)
   if (c.dove === 'mano' || c.dove === 'mancina') controlla(`${k}: figura o ripiego`, !!m && (!!m.figura || !!m.ripiego))
-  else if (c.dove === 'collo' || c.dove === 'dito') controlla(`${k}: un gioiello con la figura, o fra quelli dichiarati sprite`, (m && m.famiglia === 'gioielli') || SPRITE_SOLO.includes(k))
+  else if (c.dove === 'collo' || c.dove === 'dito') controlla(`${k}: un gioiello con la sua figura`, !!m && m.famiglia === 'gioielli')
   else if (c.dove === 'corpo') controlla(`${k}: una veste dei fogli`, !!m && m.famiglia === 'vesti')
 }
 

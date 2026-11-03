@@ -62,3 +62,17 @@ Il bravo: vinte alla prima nella scala sommersa 88 → 91, nella botola 92 → 9
   è il giocatore finto che con tre gioielli diventa più forte nelle zone. Le unità restano come prima (`unita/sotterraneo-roba`, la sola rossa, è «torre 3/6» di sempre).
 - **Una gemma vale al più il doppio** (`VALORE_GEMME_MASSIMO` in `dati/livelli.js`, come il tetto della schivata): con il teschio
   cercatore e due anelli verdi una gemma valeva il triplo, e nelle ultime due discese il curioso prendeva il 70% di gemme in più.
+
+## L'amuleto d'ossa
+
+Regola dell'utente (3 novembre 2026): gli amuleti stonavano. La causa non era il disegno dei 36 ciondoli, ma una base, `amuleto-osso`, che non aveva
+nessuna figura in `ASPETTI`: ogni suo pezzo trovato («Amuleto d'ossa runico della tartaruga») restava lo sprite dipinto `ossa`, un grumo di pixel
+in mezzo ai modelli 3D. Come in `amuleto-rosso` e `medaglione`, che per i pezzi trovati avevano le loro figure ma per la base semplice ancora lo sprite.
+- **Sei figure d'osso sue** (`solo3d`, [figure.md](figure.md)), `pezzo: amuleto-osso`: `amuleto-37` zanna di lupo (pregio 1), `38` ossa incrociate (2, morte),
+  `39` vertebre (2), `40` disco runico (3, arcano: tre rune che brillano da sole), `41` corno d'ariete (3, natura), `42` corona di zanne con l'occhio verde (4, morte).
+  Il pregio scala come per le altre basi (comune 1–2, magico 2–3, raro 3–4), quindi anche i rari hanno scelta. Osso e cuoio, un anello di cuoio in cima;
+  si disegnano in `MONTATURE` (`zanna`, `ossa`, `vertebre`, `discoRunico`, `corno`, `corona`) come le altre.
+- **Le basi semplici hanno una figura**: `amuleto-rosso` → `amuleto-13`, `medaglione` → `amuleto-03`, `amuleto-osso` → `amuleto-37` (campo `sprite` di `dati/cose.js`);
+  i due sprite dipinti che nessuno disegnava più sono usciti dal foglietto e dall'atlante.
+- **La foto di una collana** inquadra il ciondolo, non la catena ([anteprime-3d.md](anteprime-3d.md)): a 46 px un ciondolo di 0,2 su una catena di 0,5 era un puntino.
+- Nei test: `unita/sotterraneo-roba-3d` (nessun gioiello senza figura), `unita/sprite-inutilizzati`.

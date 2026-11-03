@@ -6,7 +6,9 @@ contengono **238 figure da indossare**: 36 spade e pugnali, 10 asce e aste,
 7 archi e balestre, 57 bacchette, bastoni e scettri, 39 armature e vesti,
 53 scudi, 36 amuleti e anelli. **Sono tutte in gioco**: le basi, i pezzi
 col nome e gli aspetti dei pezzi trovati. Prima di chiederne di nuove a un
-generatore si guarda qui.
+generatore si guarda qui. In più, **sei figure solo 3D** (`amuleto-37`…`amuleto-42`, le ossa: voce di `roba.json`
+con `"solo3d": true`, senza foglio né rettangolo, disegnate in `poc/roba-3d/gioielli.js`): contano per gli aspetti, non hanno uno sprite e
+non vanno nei foglietti (`roba.py` e `mappa-roba3d.mjs` le saltano; `FIGURE3D` le conta, 244 in tutto).
 
 ## Il catalogo
 
