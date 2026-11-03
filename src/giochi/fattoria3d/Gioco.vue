@@ -36,6 +36,7 @@ import { alberoDi } from './dati/albero.js'
 import { qualitaIniziale, VERSIONE_OPZIONI } from './dati/qualita.js'
 import Hud from './viste/Hud.vue'
 import BarraAzioni from './viste/BarraAzioni.vue'
+import NomeFattoria from './viste/NomeFattoria.vue'
 import CostruisciQui from './viste/CostruisciQui.vue'
 import BarraStrade from './viste/BarraStrade.vue'
 import { schedeDi, festaDaScoprire } from './dati/carte.js'
@@ -103,7 +104,7 @@ const borsa = {
 // ── cosa si vede (il motore non è reattivo: si rilegge dopo ogni cambio e ogni quarto di secondo) ──
 const versione = ref(0)
 const scorteSeme = computed(() => { void versione.value; return { ...motore.s.merci } })      // i raccolti già in scorta, per le carte del «Cosa semini?»
-const foto = ref({ robaNuova: false, daFare: { semina: 0, raccogli: 0 }, livello: 1, quanto: 0, daCostruire: 0 })
+const foto = ref({ robaNuova: false, daFare: { semina: 0, raccogli: 0 }, livello: 1, quanto: 0, daCostruire: 0, nome: '' })
 const datiLivello = () => { const a = avanzamento(motore.esperienza()); return { livello: a.livello, quanto: a.quanto } }
 let ultimaFoto = ''
 let inventarioVisto = null               // il conto di quando si è guardato l'inventario l'ultima volta (in memoria, non si salva)
@@ -111,7 +112,7 @@ const ripresa = () => {
   const s = motore.s
   if (!inventarioVisto) inventarioVisto = contoDi(s)           // il primo sguardo è la base: «nuovo» è ciò che arriva dopo
   const nuova = {
-    robaNuova: !inventarioAperto.value && robaNuova(inventarioVisto, s), daFare: motore.daFare(), daCostruire: motore.edificiDaCostruire().length, ...datiLivello(),
+    robaNuova: !inventarioAperto.value && robaNuova(inventarioVisto, s), daFare: motore.daFare(), daCostruire: motore.edificiDaCostruire().length, nome: motore.nome(), ...datiLivello(),
   }
   const firma = JSON.stringify(nuova)
   if (firma !== ultimaFoto) { ultimaFoto = firma; foto.value = nuova }      // niente nuova foto se è uguale: il HUD non si rifà ogni quarto di secondo
@@ -175,6 +176,7 @@ const inventarioAperto = ref(false)
 const guardarobaAperto = ref(false)       // il foglio dell'abito (docs/fattoria3d/guardaroba.md)
 const bestiaAperta = ref(null)             // l'id della bestia di casa di cui si vede il foglio (docs/fattoria3d/bestie-di-casa.md)
 const bestiaMsg = ref('')
+const nomeAperto = ref(false)              // il foglio del nome della fattoria (docs/fattoria3d/nome.md)
 const battesimoDi = ref(null)              // l'id della bestia a cui si sta dando il nome
 const livelloNuovo = ref(false)
 const bancoAperto = ref(false)             // il foglio del banco
@@ -323,6 +325,12 @@ function spogliaBestia(a) {
   ui.cambio()
 }
 function spostaBestia() { const id = bestiaAperta.value; if (id && mondo.iniziaSposta(id)) bestiaAperta.value = null }
+const predefinitoFattoria = computed(() => comune ? `Con ${nomeDellAmico(comune)}` : 'La fattoria')
+const titoloFattoria = computed(() => foto.value.nome || predefinitoFattoria.value)
+function daiNomeAllaFattoria(nome) {
+  nomeAperto.value = false
+  motore.rinomina(nome); ui.cambio()
+}
 function daiIlNome(nome) {
   const id = battesimoDi.value; battesimoDi.value = null
   if (id) { motore.cura.battezza(id, nome); mondo.compagni.sync(); ui.cambio() }
@@ -725,7 +733,9 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="radice" class="schermo">
-    <Barra :titolo="comune ? `Con ${nomeDellAmico(comune)}` : 'La fattoria'" guida="fattoria3d" monete @indietro="indietro" />
+    <Barra :titolo="titoloFattoria" guida="fattoria3d" monete @indietro="indietro">
+      <button v-if="versione" class="tondo" aria-label="dai un nome alla fattoria" data-f3="apri-nome" @click="nomeAperto = true">✏️</button>
+    </Barra>
 
     <div v-if="!puo" class="f3-senza" data-senza-3d>
       <p class="em">🚜</p>
@@ -785,6 +795,7 @@ onBeforeUnmount(() => {
         <Livelli v-if="livelliAperto" v-bind="livelli" @chiudi="livelliAperto = false" />
         <Bestia v-if="bestiaVista" :key="bestiaVista.id" v-bind="bestiaVista" :messaggio="bestiaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
                 @nutri="nutriBestia" @coccola="coccolaBestia" @carezza="carezzaBestia" @sposta="spostaBestia" @vesti="vestiBestia" @spoglia="spogliaBestia" @nome="battesimoDi = bestiaAperta; bestiaAperta = null" @chiudi="bestiaAperta = null" />
+        <NomeFattoria v-if="nomeAperto" :nome="foto.nome" :predefinito="predefinitoFattoria" @scegli="daiNomeAllaFattoria" @chiudi="nomeAperto = false" />
         <Battesimo v-if="battesimoDi" :id="battesimoDi" :scelto="motore.cura.nomeScelto(battesimoDi)" @scegli="daiIlNome" @chiudi="battesimoDi = null" />
         <Opzioni v-if="opzioniAperte" :q="q" :stat="stat" :conta="conta" :rapporto="rapporto" @cambia="cambiaOpzioni"
                  @stress="(t, n) => { mondo.stress(t, n); ui.cambio() }" @rapporto="creaRapporto" @ridotto="v => opzioniRidotte = v"
