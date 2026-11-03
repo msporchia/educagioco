@@ -3,7 +3,8 @@
 **Stato: prima prova** (3 novembre 2026, su richiesta dell'utente: Melody voleva entrare in casa). La casa di scena della fattoria si tocca e
 ci si entra: dentro ci sono stanze da comprare e mobili da mettere, colorare e spostare. **In casa si arreda e basta**: niente produce,
 niente si vende. Codice: `dati/interni.js`, `motore/interni.js`, `scena3d/casa3d.js`, `scena3d/mobili.js`, `scena3d/trame-pure.js`,
-`casa.js`, `viste/Casa.vue`, `stile-casa.css`.
+`casa.js`, `viste/Casa.vue`, `stile-casa.css`. La base comune agli interni (anche alle botteghe, [botteghe.md](botteghe.md) «Dentro») è
+`scena3d/interno3d.js`.
 
 ## Le regole (dell'utente)
 
@@ -46,7 +47,7 @@ i mobili che non esistono, mette via (non perde) un mobile che non sta più dov'
 
 ## La scena
 
-`Casa3d` è una scena sua su una tela sua, come la visita a un vicino ([vicini.md](vicini.md)): la fattoria si ferma (`mondo.ferma()`) e
+`Casa3d` estende `Interno3d` (`scena3d/interno3d.js`: renderer, luce, camera, contadino, pavimenti, muri con le porte, il dito): una scena sua su una tela sua, come la visita a un vicino ([vicini.md](vicini.md)): la fattoria si ferma (`mondo.ferma()`) e
 riparte uscendo. Riusa il contadino (`Eroe`, con un motore finto che presta solo la strada), la telecamera e gli effetti della fattoria.
 La camera guarda da sud un po' oltre il contadino (`AVANTI`); **i muri orizzontali fra lei e il contadino si abbassano** (come nel
 sotterraneo), il fronte di casa sempre: una stanza dietro un'altra si vede. Pavimenti e carta sono trame canvas (`trame-pure.js`, senza
@@ -63,7 +64,6 @@ mobile nuovo si paga solo posandolo. Il click che il dito si lascia dietro si in
 - Non è vista su un telefono né giocata da un bambino: guardata con `strumenti/scatta-app.mjs` a 390 px e provata nei test unitari.
 - Niente test d'integrazione (il tocco vero sulla casa, il mobile in mano col dito).
 - La casa di fuori resta la stessa comprando stanze.
-- Le botteghe con le persone dentro (l'idea del bar) sono il passo dopo.
 
 ## Nei test
 

@@ -9,6 +9,9 @@ stile-guardaroba.css il foglio del guardaroba (`.f3-gua-`)
 stile-guida.css     la riga del primo giro, il tasto «E adesso?» e il consiglio (`.f3-guida`, `.f3-adesso`, `.f3-consiglio-`)
 stile-macchina.css  il foglio di una macchina (`.fm-`): fila, pronti, carte, fantasma; i colori del tema restano in stile.css
 visite.js            il filo fra `Gioco.vue` e le visite (`usaVisite`): mappa, viaggio, la scena a richiesta, cassa e mercato
+casa.js              il filo fra `Gioco.vue` e la casa (`usaCasa`): entrare e uscire, catalogo, mobile in mano, pianta ([casa.md](casa.md))
+bottega-dentro.js    il filo fra `Gioco.vue` e la sala di una bottega (`usaBottegaDentro`): entrare, i fumetti dei clienti, servire ([botteghe.md](botteghe.md) «Dentro»)
+stile-casa.css       la casa e la sala di una bottega (`.f3-int-`, `.f3-btd-`)
 comune.js            la fattoria in comune sul telefono: aprire dal servizio, mandare e ritirare le mosse, la copia e la fotografia ([in-comune.md](in-comune.md))
 dati/
   mondo.js           le coordinate (lotti `a_b` qualunque, chiavi di cella, id salvati), i 42 lotti storici, il quadrato di partenza, i due edifici di scena, le strade di serie
@@ -29,6 +32,8 @@ dati/
   compagni.js        Watson e i gatti: i dati, il livello a cui arrivano, le scelte pure (meta, cosa fare, le sequenze di «Quando ci premi»: richiamo, feste di Watson, risposte dei gatti, incontro), `ASPETTO_ERO` ([compagni.md](compagni.md))
   livelli.js         le soglie, `roba(liv)`, i nomi dei livelli, i guasti dei livelli
   ordini.js          il banco: i clienti, i tempi, il premio (tetto 🪙6/min), `chiedibili(livello)`, i guasti
+  interni.js         la casa: le sei stanze, i mobili (`MOBILI`), colori e trame, pavimenti e pareti, `guastiDegliInterni` ([casa.md](casa.md))
+  dentro-botteghe.js la sala di una bottega: `SALA`, `POSTI`, `TEMI`, `calpestabileInSala`, `abitoDelCliente` (puro)
   botteghe.js        le quattro botteghe del paese: costanti e funzioni della 2D, `BOTTEGHE`, `EDIFICI_BOTTEGHE` (foglia di `catalogo.js`), `prodotto2D`/`MERCE_3D` ([botteghe.md](botteghe.md))
   albero.js, usi.js  «Come si fa» (`alberoDi`: la catena di una merce) e a cosa serve una merce (`usiDi`), puri ([guida.md](guida.md))
   regole.js          i costi (anche l'albero 🪙 3 e il sasso 🪙 1, il prezzo dei lotti), le pecore
@@ -61,7 +66,7 @@ motore/
   (fattoria3d.js)    i magazzini in mappa: `edificiDelSilo`, `tagliaDi`, `passoDelSilo`, `costruisciMagazzino`, `_assicuraMagazzini` ([magazzini.md](magazzini.md))
   registro.js        le mosse della fattoria in comune: `registra` le ascolta sul motore, `rifai` rifà quella dell'amico col merge permissivo ([in-comune.md](in-comune.md))
   vicini.js          i vicini: la classe `Vicini` (entra, aiuta la cassa, compra, vende), `normalizzaVicini` (lo stato a parte), `motoreDiVisita` (la scena di sola lettura da uno snapshot), `esportaLaMiaFattoria`
-scena3d/             il disegno (vedi scena.md); `facce.js` la faccia di una merce su una tela per i pezzi di HTML sopra la scena (il «+1» di `fx.volo`); `modelli-magazzini.js` i tre magazzini e come crescono ([magazzini.md](magazzini.md)); `ospite.js` il contadino dell'amico nella fattoria in comune ([in-comune.md](in-comune.md)); `visita.js` è la visita a un vicino, una sottoclasse di `Mondo3d` su un motore di sola lettura ([vicini.md](vicini.md)); `anteprime.js` e `anteprime-pura.js` le foto dei modelli per le carte (senza three: l'inquadratura e la cache; [scena.md](scena.md) «Le anteprime»); `modelli-colture.js` il campo e le sedici colture (ri-esportati da `modelli.js`); `compagni.js` e `modelli-compagni.js` per i compagni e il contadino ([compagni.md](compagni.md)); `detti.js` (senza three) traduce un rifiuto del motore in una riga, anche per la vista; `ottimizza.js` spegne l'ombra alle mesh piccole di un modello appena creato ([scena.md](scena.md) «Qualità e peso»); `fondi.js` fonde le mesh statiche di un modello per materiale; `cache-modelli.js` costruisce (e fonde) un modello una volta per tipo e poi consegna cloni che ne condividono geometrie e materiali; `bestie-puro.js` (senza three) i tre stadi di gallina, mucca e pecora come numeri (stato, progresso, profilo: [animali.md](animali.md) «I tre stadi»); `scaldo-puro.js` (senza three) è la coda del riscaldamento: i modelli che servono presto costruiti in tempo morto, un compito per fotogramma (tutto in «Qualità e peso»); `azioni.js` fa il gesto davanti a ogni cosa, pollaio e stalla compresi ([animali.md](animali.md))
+scena3d/             il disegno (vedi scena.md); `facce.js` la faccia di una merce su una tela per i pezzi di HTML sopra la scena (il «+1» di `fx.volo`); `modelli-magazzini.js` i tre magazzini e come crescono ([magazzini.md](magazzini.md)); `ospite.js` il contadino dell'amico nella fattoria in comune ([in-comune.md](in-comune.md)); `visita.js` è la visita a un vicino, una sottoclasse di `Mondo3d` su un motore di sola lettura ([vicini.md](vicini.md)); `interno3d.js` la base dei posti dove si entra (renderer, camera, contadino, muri con le porte, il dito), estesa da `casa3d.js` ([casa.md](casa.md)) e `bottega3d.js` ([botteghe.md](botteghe.md) «Dentro»); `mobili.js` i mobili della casa, `trame-pure.js` (senza three) le trame di stoffe e carta; `anteprime.js` e `anteprime-pura.js` le foto dei modelli per le carte (senza three: l'inquadratura e la cache; [scena.md](scena.md) «Le anteprime»); `modelli-colture.js` il campo e le sedici colture (ri-esportati da `modelli.js`); `compagni.js` e `modelli-compagni.js` per i compagni e il contadino ([compagni.md](compagni.md)); `detti.js` (senza three) traduce un rifiuto del motore in una riga, anche per la vista; `ottimizza.js` spegne l'ombra alle mesh piccole di un modello appena creato ([scena.md](scena.md) «Qualità e peso»); `fondi.js` fonde le mesh statiche di un modello per materiale; `cache-modelli.js` costruisce (e fonde) un modello una volta per tipo e poi consegna cloni che ne condividono geometrie e materiali; `bestie-puro.js` (senza three) i tre stadi di gallina, mucca e pecora come numeri (stato, progresso, profilo: [animali.md](animali.md) «I tre stadi»); `scaldo-puro.js` (senza three) è la coda del riscaldamento: i modelli che servono presto costruiti in tempo morto, un compito per fotogramma (tutto in «Qualità e peso»); `azioni.js` fa il gesto davanti a ogni cosa, pollaio e stalla compresi ([animali.md](animali.md))
   scena3d/modelli-passaggi.js   ponte, passerella e tavolo con le panche: presi dal sotterraneo e rifatti con i materiali della fattoria (scena.md)
   scena3d/modelli-decori*.js    le 206 decorazioni della 2D portate (giri G8 e G9): `modelli-decori-base.js` (attrezzi, motivo di ogni coltura, `decoro()`), `-verde`, `-recinti`, `-raccolto`, `-case`, `-bestiole`, `-fiori`, `-arredo`, `-acqua`, `-feste` (albero di Natale e fiera), il registro `modelli-decori.js` (`DECORI_CREA`); i dati in `dati/decori.js` ([decorazioni.md](decorazioni.md))
   scena3d/modelli-acqua.js      lo stagno (3×3) e il laghetto (5×4) costruiti dal bambino, e i materiali dell'acqua (`materialeAcqua`, `materialeMare`, `uTAcqua`) che usa anche il terreno ([laghi.md](laghi.md))
@@ -100,11 +105,13 @@ viste/
   Opzioni.vue        il pannello ⚙
   Mappa.vue          la mappa del trattore: i villaggi in fila lungo una strada, i grigi col livello, e in cima il tasto del carretto
   Carretto.vue       il carretto del vicino (C15): dai 5, prendi 1 o regali; lo scomparto pieno in oro
+  Casa.vue           dentro la casa: «Esci», Arreda e Stanze, il mobile in mano, il catalogo, il foglio di un mobile, la pianta ([casa.md](casa.md))
+  BottegaDentro.vue  dentro una bottega: l'insegna coi cuori, «Esci», i fumetti dei clienti e dei posti vuoti, «Tutti i clienti»
   Visita.vue         una visita: la testata con «Torna a casa», i tasti, la storia, i fogli della cassa e del mercato, il viaggio del trattore
 ```
 
 Registrazione: `src/giochi/indice.js` (il manifesto, in coda) e `src/giochi/schermate.js` (il `.vue`, caricato a richiesta).
-`vite.config.js` sa del file del disegno (`scena3d/mondo3d.js`) per il sito spezzato.
+`vite.config.js` sa dei file del disegno (`scena3d/mondo3d.js`, `visita.js`, `casa3d.js`, `bottega3d.js`) per il sito spezzato.
 
 ## Nei test
 
