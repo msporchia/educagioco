@@ -51,7 +51,8 @@ uguale('e rimesso in tasca anche', [d.zaino.includes('spada-corta'), d.roba.tint
 d.zaino = d.zaino.filter(k => k !== 'spada-corta')
 controlla('un pezzo venduto si porta via la sua tinta', !('spada-corta' in (d.roba.tinte || {})))
 uguale('togliere la tinta si paga come una tintura', (() => { const p = new Corredo({ roba: salvata }); const g = p.gemme; const e = togliLaTinta(p, 'spada-corta'); return [e.che, g - p.gemme, p.tintaDi('spada-corta')] })(), ['tinto', COSTO, null])
-stessaLista('i pezzi da ritingere: prima quelli addosso', pezziDaTingere(new Corredo({ eroe: 'cavaliere', roba: salvata })).map(p => `${p.k}:${p.addosso}:${p.tinta}`), ['spada-corta:true:rosso', 'panciotto:false:viola'])
+stessaLista('i pezzi da ritingere: prima quelli addosso', pezziDaTingere(new Corredo({ eroe: 'cavaliere', roba: salvata })).map(p => `${p.k}:${p.addosso}:${p.tinta}`), ['spada-corta:true:rosso', 'serie-cavaliere:true:null', 'panciotto:false:viola'])   // il copricapo di serie è un pezzo, e si ritinge
+// il copricapo di serie (docs/sotterraneo/elmo.md): un pezzo vero, anche ritinto
 
 // la chiave del ritratto
 const roba = { mano: 'spada-corta', corpo: 'panciotto', tinte: { 'spada-corta': 'rosso', panciotto: 'blu' } }

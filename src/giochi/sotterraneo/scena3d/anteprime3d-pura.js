@@ -2,7 +2,7 @@
 // quale oggetto (la stessa mappa che veste l'eroe in scena, eroe3d.js), le chiavi della cache e la coda che le disegna una per volta.
 // Un oggetto si disegna con la figura dei fogli (roba3d-pura.js, docs/sotterraneo/roba-3d.md); MODELLO_DI è il ripiego quando il
 // modulo della sua famiglia non c'è o la figura non si costruisce.
-import { COSE, baseDi } from '../dati/cose.js'
+import { COSE, DI_SERIE, baseDi } from '../dati/cose.js'
 import { daSprite } from '../dati/eroi.js'
 import { tintaValida } from '../dati/tinte.js'
 import { rangoDellaRarita, RARITA, RARITA_DA_LETTERA } from '../dati/pezzi.js'
@@ -37,11 +37,14 @@ export const COPRICAPI_3D = {
   cerchietto: [['corona-foglie', 1, 3], ['diadema', 3, 4]],
   'cappello-mago': [['cappello-apprendista', 1, 2], ['cappello-stellato', 2, 3], ['cappello-arcano', 3, 4]],
 }
-const MODELLI_TESTA = new Set(Object.values(COPRICAPI_3D).flatMap(l => l.map(m => m[0])))
+const MODELLI_TESTA = new Set([...Object.values(COPRICAPI_3D).flatMap(l => l.map(m => m[0])), ...DI_SERIE])
+// nelle chiavi dell'eroe: la testa nuda (il copricapo di serie tolto, `testa: null`); `testa` assente vuol dire quello di serie
+const TESTA_NUDA = 'nuda'
 
 /** Il copricapo 3D di un oggetto da testa (anche «elmo@9.m.vita»): { id (il modello), rarita }, o null. */
 export function copricapoDi(k) {
   const c = cosaDi(k)
+  if (c && c.diSerie) return { id: baseDi(k), rarita: 'comune' }   // quello di serie: lo disegna il modello dell'eroe (anteprime3d.js, inPosaCopricapo)
   const tutti = c && c.dove === 'testa' ? COPRICAPI_3D[baseDi(k)] : null
   if (!tutti || !tutti.length) return null
   const rarita = RARITA[c.rarita] ? c.rarita : 'comune'
@@ -114,8 +117,13 @@ export function dotazioneDi(roba = {}) {
   const collo = roba.collo ? pezzo3dDi(roba.collo) : null
   if (collo && collo.figura && eUnaCollana(collo.figura)) d.collo = collo
   // in testa il copricapo, senza alone come la collana (eroe3d.js, `copri`); senza, l'eroe tiene il suo di serie
-  d.testa = copricapoDi(roba.testa)
-  if (d.testa) tinte.testa = tinta(roba.testa)
+  // `testa: null` è la testa nuda; assente o quello di serie, il copricapo del modello (che resta, e si ritinge)
+  if (roba.testa === null) d.testa = { id: TESTA_NUDA, rarita: 'comune' }
+  else if (roba.testa) {
+    const t = copricapoDi(roba.testa)
+    d.testa = t && !(cosaDi(roba.testa) || {}).diSerie ? t : null
+    if (t) tinte.testa = tinta(roba.testa)
+  }
   if (tinte.destra || tinte.sinistra || tinte.corpo || tinte.testa) d.tinte = tinte
   return d
 }
@@ -204,7 +212,7 @@ export function leggiChiave(k) {
     }
     case 'eroe': case 'busto':
       return { tipo: p[0], eroe: eroeValido(p[1]), destra: daGettone(p[2]), sinistra: daGettone(p[3]), corpo: corpoDaGettone(p[4]), collo: daGettone(p[5]),
-               testa: MODELLI_TESTA.has(p[6]) ? { id: p[6], rarita: 'comune' } : null,
+               testa: MODELLI_TESTA.has(p[6]) || p[6] === TESTA_NUDA ? { id: p[6], rarita: 'comune' } : null,
                ...(p.slice(6).find(x => x[0] === '@') ? { tinte: tinteDaGettone(p.slice(6).find(x => x[0] === '@')) } : {}),
                ...(p.slice(6).some(x => /^r[1-7]$/.test(x)) ? { giro: Number(p.slice(6).find(x => /^r[1-7]$/.test(x)).slice(1)) } : {}) }
     // una persona del mondo di sopra (docs/sotterraneo/persone-3d.md): la chiave del modello; una che non c'è vale null al disegno

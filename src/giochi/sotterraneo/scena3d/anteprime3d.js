@@ -105,6 +105,15 @@ function inPosaArmatura(c) {
 // il copricapo da solo (docs/sotterraneo/elmo.md): montato su una testa finta, senza eroe sotto (`copri` vuole il perno `testa`, il suo
 // centro e il raggio), di tre quarti e appena dall'alto; l'alone della rarità come le altre caselle
 function inPosaCopricapo(c) {
+  // quello di serie (`serie-<eroe>`): il copricapo del modello dell'eroe, staccato dalla sua testa e centrato
+  if (/^serie-/.test(c.id)) {
+    const u = creaEroeDa(c.id.slice(6)).userData, cop = u.copricapo
+    if (!cop) return null
+    const sola = new THREE.Group()
+    cop.parent.remove(cop); cop.position.y -= u.cy; sola.add(cop)
+    sola.rotation.set(0.25, -0.5, 0)
+    return { obj: sola, verso: [0.15, 0.3, 1] }
+  }
   const finto = new THREE.Group(), testa = new THREE.Group()
   finto.add(testa)
   finto.userData = { testa, cy: 0, R: 0.3, chiave: 'cavaliere' }

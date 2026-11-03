@@ -16,7 +16,7 @@ const props = defineProps({
   mancina: { type: String, default: null },      // lo scudo, o la seconda arma
   scala: { type: Number, default: 3 },           // la misura del riquadro: 24 × 28 volte questa
   corpo: { type: String, default: null },        // l'armatura
-  testa: { type: String, default: null },        // il copricapo (docs/sotterraneo/elmo.md)
+  testa: { type: String, default: undefined },   // il copricapo (docs/sotterraneo/elmo.md): null è la testa nuda, senza (undefined) quello di serie del modello
   modo: { type: String, default: 'figura' },     // 'figura' (intero) o 'busto' (la testa e le spalle, quadrato: i gettoni dei tagli e delle barbe)
   giro: { type: Number, default: 0 },            // girato di tanti scatti da 45° (0..7: l'editor del personaggio)
   tinte: { type: Object, default: null },        // le tinte del tintore, per chiave di pezzo (dati/tinte.js)

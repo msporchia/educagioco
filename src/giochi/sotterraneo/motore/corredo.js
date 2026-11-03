@@ -4,7 +4,7 @@
 // La discesa (motore/corsa.js) e i mercanti di sopra (motore/bottega.js) la estendono; gira in Node.
 import { TASCHE, TASCHE_EXTRA_MAX, POZIONI_MASSIME, prezzoTasca } from '../dati/mondo.js'
 import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta, FAMIGLIE, requisitoDi, livelloRichiesto } from '../dati/eroi.js'
-import { COSE, STANZE_TORCIA, PERGAMENE_MASSIME, aLivello, PESO_DELLA_DIFESA, CASELLE, CASELLE_DEL_TIPO, tipoDellaCasella } from '../dati/cose.js'
+import { COSE, STANZE_TORCIA, PERGAMENE_MASSIME, aLivello, PESO_DELLA_DIFESA, CASELLE, CASELLE_DEL_TIPO, tipoDellaCasella, diSerieDi } from '../dati/cose.js'
 import { GEMME_PER_FORTUNA, VALORE_GEMME_MASSIMO, ATT_PER_PUNTO, SCHIVATA_PER_DESTREZZA, ENERGIA_PER_INTELLIGENZA } from '../dati/livelli.js'
 import { rileggiCrescita, piuDellaCrescita, caratteristica, chiTrattiene, puntiDaDare, riassegna, costoDelRiassegnare, trattoDegliElisir,
          ELISIR_MAX } from './crescita.js'
@@ -151,6 +151,7 @@ export class Corredo {
     this.torceInScorta = 0
     this.avvisi = []            // le righe da far comparire a schermo, in coda
     if (roba) this.indossa(roba)
+    this.rendiIlDiSerie()
   }
 
   // quello che si porta su: il resto (vita, piano, mappa) è della discesa e resta giù
@@ -188,6 +189,17 @@ export class Corredo {
     this.tinte = { ...(r.tinte || {}) }
     this.torciaResta = r.torcia
     this.torceInScorta = r.torce
+    this.rendiIlDiSerie()
+  }
+
+  // il copricapo di serie dell'eroe (dati/cose.js, `serie-<eroe>`; docs/sotterraneo/elmo.md): chi non ce l'ha né addosso né in tasca lo
+  // riceve, anche un salvataggio di prima. In testa se la testa è nuda; se porta un elmo vero resta in tasca (se c'è posto: se no al
+  // prossimo caricamento). Non si vende e non si trova, quindi una volta dato non sparisce
+  rendiIlDiSerie() {
+    const k = diSerieDi(this.chiEro)
+    if (!k || this.testa === k || this.zaino.includes(k)) return
+    if (!this.testa) this.testa = k
+    else if (this.cista(k)) this.zaino.push(k)
   }
 
   // una copia senza discesa intorno: serve a provare un acquisto prima di farlo (compra)
