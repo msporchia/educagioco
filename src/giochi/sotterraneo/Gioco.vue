@@ -25,7 +25,7 @@ import { CAMPAGNA, QUANTE_TAPPE, stelleDella, L_ABISSO, INDICE_ABISSO } from './
 import { inPaesaggio } from './dati/paesaggi.js'
 import { COSE, PERGAMENE_MASSIME, COPRICAPI, chiaveDelPezzo } from './dati/cose.js'
 import { CURIOSITA_DI } from './dati/curiosita.js'
-import { EROI, DI_PARTENZA, SESSI, eroeDi, aspettoValido, CAMPI_ASPETTO } from './dati/eroi.js'
+import { EROI, DI_PARTENZA, SESSI, eroeDi, aspettoValido } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO, POZIONI_MASSIME } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
 import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo, tascheDello, postiDello, eCura } from './motore/corredo.js'
@@ -51,7 +51,7 @@ import { missioneDi } from './dati/missioni.js'
 import { Bottega, alGiroNuovo, robaRaraDi } from './motore/bottega.js'
 import { tingi, pezziDaTingere, COSTO as COSTO_TINTA, nomeDellaTinta } from './motore/tintore.js'
 import { scrivi, leggi, dice, viaDi, forzeDi, PORTALE as VIA_PORTALE } from './motore/sosta.js'
-import { avventuraDi, scriviNellAvventura, vintaNellAvventura, azzeraIlVecchio, ricordaIlFondo, cominciata }
+import { avventuraDi, scriviNellAvventura, vintaNellAvventura, azzeraIlVecchio, ricordaIlFondo, cominciata, vestitiValidi }
   from './motore/avventure.js'
 import { iconaDi } from './dati/terra.js'
 import { mercanteDi, schedeDi } from './dati/mercanti.js'
@@ -234,7 +234,7 @@ const avventure = computed(() => EROI.map(e => {
   const n = schedaConLaRoba(e.chiave, r, a.crescita)
   const meta = dice(a.sosta, CAMPAGNA)
   return {
-    ...eroeDi(e.chiave, sessoDi(a), a.aspetto), sesso: sessoDi(a), aspettoScelto: a.aspetto, nuova: !cominciata(a), livello: n.livello,
+    ...eroeDi(e.chiave, sessoDi(a), a.aspetto), sesso: sessoDi(a), aspettoScelto: a.aspetto, vestiti: a.vestiti, nuova: !cominciata(a), livello: n.livello,
     vita: n.vita, att: n.att, dif: n.dif, tratti: n.tratti,
     mano: n.mano, mancina: n.mancina, corpo: n.corpo, testa: n.testa, tinte: n.tinte,
     discese: Math.min(a.tappa, QUANTE_TAPPE), quante: QUANTE_TAPPE,
@@ -832,15 +832,24 @@ function sceglieSesso(x) {
   aggiornaCorsaIo()
   suono.ok()
 }
-// pelle, colore dei capelli, taglio o barba: `id` dal catalogo in comune (src/grafica/persona/aspetto.js); lo stesso id di prima lo toglie (torna il colore di serie)
-function sceglieAspetto(campo, id) {
+// pelle, colore dei capelli, taglio e barba tutti insieme (id del catalogo in comune, src/grafica/persona/aspetto.js; null: quello di serie)
+function sceglieAspetto(aspetto) {
   const k = editor.value
-  if (!k || !CAMPI_ASPETTO.includes(campo)) return
-  const ora = avventuraDi(progresso(CHIAVE), k).aspetto
-  ritocca(CHIAVE, c => scriviNellAvventura(c, k, { aspetto: aspettoValido({ ...ora, [campo]: ora[campo] === id ? null : id }) }))
+  if (!k) return
+  ritocca(CHIAVE, c => scriviNellAvventura(c, k, { aspetto: aspettoValido(aspetto) }))
   aggiornaCorsaIo()
   suono.ok()
 }
+// i set dell'editor: si salva quello che l'eroe ha adesso (sesso e aspetto), in uno dei sei posti
+function cambiaVestiti(f) {
+  const k = editor.value
+  if (!k) return
+  ritocca(CHIAVE, c => { const a = avventuraDi(c, k); return scriviNellAvventura(c, k, { vestiti: vestitiValidi(f(a.vestiti, a)) }) })
+  suono.ok()
+}
+const salvaVestito = ({ posto, nome }) => cambiaVestiti((l, a) => [...l.filter(v => v.posto !== posto), { posto, nome, sesso: sessoDi(a), aspetto: a.aspetto }])
+const rinominaVestito = ({ posto, nome }) => cambiaVestiti(l => l.map(v => (v.posto === posto ? { ...v, nome } : v)))
+const togliVestito = posto => cambiaVestiti(l => l.filter(v => v.posto !== posto))
 function cambiaEroe() {
   paginaEroe.value = false
   tesoriAperti.value = false
@@ -2373,8 +2382,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
                   @compra="compraSopra" @vendi="vendiSopra" @riacquista="riacquistaSopra" @chiudi="chiudiBottega" @fuori="fuoriDallaBottega" />
         <Eroi v-if="scegliEroe" :avventure="avventure" :scelto="chiEro || ''" :primo="!chiEro"
               @scegli="scegli" @chiudi="chiudiLaScelta" @personaggio="k => apriEditor(k)" />
-        <Personaggio v-if="schedaEditor" :eroe="schedaEditor" :sesso="schedaEditor.sesso" :aspetto="schedaEditor.aspettoScelto"
-                     @scegli="sceglieSesso" @aspetto="sceglieAspetto" @chiudi="editor = null" />
+        <Personaggio v-if="schedaEditor" :eroe="schedaEditor" :sesso="schedaEditor.sesso" :aspetto="schedaEditor.aspettoScelto" :vestiti="schedaEditor.vestiti"
+                     @scegli="sceglieSesso" @aspetto="sceglieAspetto" @salva-set="salvaVestito" @rinomina-set="rinominaVestito" @togli-set="togliVestito" @chiudi="editor = null" />
         <div v-if="salaAperta" class="sot-in-due" data-sot-in-due>
           <SalaSfida :fase="sfida.fase.value" :codice="sfida.codice.value" :messaggio="sfida.messaggio.value"
                      :amici="sfida.amici.value" :invitato="sfida.invitato.value" :scelto="sfida.scelto.value" partita="la discesa" domanda="Dove scendete?"

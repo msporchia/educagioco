@@ -43,19 +43,38 @@ Il contadino della fattoria può usare lo stesso `applicaAspetto` dando le sue m
 
 ## L'editor (`viste/Personaggio.vue`)
 
-**A schermo mai la parola «sesso»** (né «maschio/femmina»: è un gioco per bambini): la prima scheda si chiama «Chi sei» e i gettoni coi nomi dei personaggi
-(Mago/Maga, Elfo/Elfa, Cavaliere/Guerriera, Nano/Nana). `sesso`, `SESSI` e `m`/`f` sono chiavi interne, mai stringhe che si leggono.
+Sopra l'interfaccia unica ([../core/personalizza.md](../core/personalizza.md)), col tema del sotterraneo: in alto l'eroe grande
+vestito con la sua roba (si gira a scatti di 45° con le frecce e col dito: `giro` nella chiave dell'anteprima), sotto tre schede.
 
-Un foglio coi due modelli uno accanto all'altro, vestiti con la roba che l'eroe ha addosso; toccarne uno lo sceglie subito (si scrive
-`sesso` nell'avventura, nessuna conferma). Si apre:
+- **Chi sei**: le due varianti, coi loro nomi. **A schermo mai la parola «sesso»** (né «maschio/femmina»: è un gioco per bambini);
+  `sesso`, `SESSI` e `m`/`f` sono chiavi interne.
+- **Aspetto**: nella griglia Pelle, Capelli, Barba; nel pannello sotto, in ordine di dipendenza, il taglio (la forma dei capelli) e poi il
+  colore, o la barba, o il tono della pelle. «Di serie» (`-`, nel salvataggio `null`) rimette quello del modello: il tocco che toglieva non c'è più.
+- **Set**: sei posti per i set salvati di questo eroe (sesso e aspetto insieme), un tocco per rimetterli.
+
+Tutto è gratis: ogni scelta si scrive subito nell'avventura, nessuna conferma. Le foto dei gettoni sono l'eroe disegnato adesso con quella
+scelta (`Armato`: il busto per l'aspetto, la figura per chi sei e per i set): nessuna foto fatta prima, nessuna icona.
+`viste/personaggio-valori.js` va dal sesso e dall'aspetto ai valori dei posti dell'interfaccia (`chi`, `pelle`, `capelli`, `barba`) e ritorno.
+
+Si apre:
 - dalla ✎ sulla scheda di ogni eroe nella scelta delle avventure (`[data-personaggio-di="<eroe>"]`);
-- da «✎ Aspetto» in fondo alla pagina dell'eroe (anche durante una discesa: la corsa aggiorna la sua scheda e il cambio si vede subito), sulla riga di «Cambia eroe» (che c'è solo sopra) (`[data-azione="personaggio"]`; una riga a sé rubava spazio alla lista delle caratteristiche);
+- da «✎ Aspetto» in fondo alla pagina dell'eroe (anche durante una discesa: la corsa aggiorna la sua scheda e il cambio si vede subito), sulla riga di «Cambia eroe» (che c'è solo sopra) (`[data-azione="personaggio"]`; una riga a sé rubava spazio alla lista delle caratteristiche).
+Si chiude solo con la ✕ in alto a destra (il «Fatto» in fondo non c'è più).
 
 **Nessun passo in più**: scegliere un eroe non apre l'editor. Finché non si sceglie niente il sesso è quello della persona del profilo
 (`aspettoDi()`, la stessa della contadina nella fattoria: bambina → femmina, bimbo → maschio, `sessoDi` in `Gioco.vue`); l'avventura non ha il
 campo (`avventuraDi` dà `null`). Toccando un modello nell'editor il sesso si scrive e vale da lì.
 
-Nei test: `[data-editor-personaggio]`, le schede `[data-pz-scheda="sesso|pelle|capelli|taglio|barba"]`, `[data-pelle="<id>"]` `[data-capelli="<id>"]`, `[data-taglio="<id>"]` e `[data-barba="<id>"]` (le scelte), `[data-sesso="m|f"]`, `[data-azione="chiudi-personaggio"]`; `unita/sotterraneo-personaggio`.
+### I set salvati
+
+`cfg.avventure[eroe].vestiti = [{ posto: 0..5, nome, sesso, aspetto }]` (`vestitiValidi` in `motore/avventure.js`: un posto fuori misura,
+doppio o senza nome si butta, il nome si accorcia a sedici lettere). Sono di quell'eroe: il mago non vede i set dell'elfa. Si salva quello
+che l'eroe ha adesso; rimettere un set scrive il sesso e l'aspetto suoi.
+
+Nei test: `[data-editor-personaggio]` (con `data-eroe-editor` e `data-sesso-scelto`), le schede `[data-prs-scheda="chi|aspetto|set"]`, le voci
+`[data-prs-voce="pelle|capelli|barba"]`, le scelte `[data-sesso="m|f"]`, `[data-pelle="<id>|-"]`, `[data-capelli="<id>|-"]`,
+`[data-taglio="<id>|-"]`, `[data-barba="<id>|-"]`, i set `[data-prs-set-mio="<n>"]` e gli altri bersagli del componente; `unita/sotterraneo-personaggio`
+e `integrazione/sotterraneo-personaggio`.
 
 ## Cosa resta
 

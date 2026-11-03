@@ -7,7 +7,8 @@
    classe, e il sesso scritto resta nel salvataggio.
    ═══════════════════════════════════════════════════════════════════ */
 import { EROI, SESSI, VARIANTI, MODELLI_EROI, SESSO_DI_SERIE, eroeDi, sessoValido, guastiDegliEroi, daSprite, spriteConAspetto, aspettoValido } from '../../src/giochi/sotterraneo/dati/eroi.js'
-import { avventuraDi, scriviNellAvventura } from '../../src/giochi/sotterraneo/motore/avventure.js'
+import { avventuraDi, scriviNellAvventura, POSTI_VESTITI } from '../../src/giochi/sotterraneo/motore/avventure.js'
+import { valoriDellAspetto, aspettoDeiValori } from '../../src/giochi/sotterraneo/viste/personaggio-valori.js'
 import { Corredo } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { EROI as MODELLI_ANTEPRIME, chiaveDellEroe, leggiChiave } from '../../src/giochi/sotterraneo/scena3d/anteprime3d-pura.js'
 import { creaEroe, CHIAVI, CLASSE } from '../../src/giochi/sotterraneo/scena3d/eroi3d/eroi.js'
@@ -84,4 +85,19 @@ uguale('senza giro la chiave è quella di prima', chiaveDellEroe('maga', {}), 'e
 uguale('girata di tre scatti', chiaveDellEroe('maga', {}, 'figura', 3), 'eroe:maga:-:-:-:-:r3')
 uguale('e si rilegge', leggiChiave(chiaveDellEroe('maga', {}, 'figura', 3)).giro, 3)
 uguale('zero o fuori misura non entrano', chiaveDellEroe('maga', {}, 'figura', 9), 'eroe:maga:-:-:-:-')
+
+// l'editor sopra l'interfaccia unica: il sesso e l'aspetto come valori dei posti, e ritorno (viste/personaggio-valori.js)
+const pieno = { pelle: 'ambra', capelli: 'blu', taglio: 'coda', barba: 'baffi' }
+uguale('andata e ritorno senza perdere niente', JSON.stringify(aspettoDeiValori(valoriDellAspetto('f', pieno), 'm')), JSON.stringify({ sesso: 'f', aspetto: pieno }))
+uguale('«di serie» è null nel salvataggio', JSON.stringify(aspettoDeiValori(valoriDellAspetto('m', {}), 'm').aspetto), JSON.stringify({ pelle: null, capelli: null, taglio: null, barba: null }))
+uguale('il taglio è la forma dei capelli, il colore il colore', JSON.stringify(valoriDellAspetto('m', pieno).capelli), JSON.stringify({ oggetto: 'capelli', forma: 'coda', colore: 'blu' }))
+// i set salvati stanno nell'avventura: sei posti, un nome corto, il sesso e l'aspetto
+const sv = {}
+scriviNellAvventura(sv, 'mago', { vestiti: [{ posto: 0, nome: 'La festa con un nome lunghissimo', sesso: 'f', aspetto: pieno }, { posto: 0, nome: 'doppio' }, { posto: 9, nome: 'fuori' }, { posto: 2, nome: '' }, 'zzz'] })
+const vv = avventuraDi(sv, 'mago').vestiti
+uguale('uno per posto, fuori misura e senza nome si buttano', vv.length, 1)
+uguale('il nome si accorcia a sedici lettere', vv[0].nome, 'La festa con un ')
+uguale('e tiene l\'aspetto', vv[0].aspetto.taglio, 'coda')
+uguale('un\'avventura senza set non ne ha', (avventuraDi({}, 'mago').vestiti || []).length, 0)
+uguale('i posti sono sei', POSTI_VESTITI, 6)
 riassunto('il personaggio, maschio o femmina')

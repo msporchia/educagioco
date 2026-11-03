@@ -1,62 +1,79 @@
 <script setup>
-// L'editor del personaggio (docs/sotterraneo/personaggio.md): l'interfaccia in comune con la fattoria (components/personalizza/Personalizza.vue)
-// col tema del sotterraneo. In alto l'eroe grande, vestito con la roba che ha addosso e con quello che si sta scegliendo; sotto le schede
-// (sesso, pelle, capelli, taglio, barba) e i gettoni. Toccare un gettone lo sceglie subito (si scrive nell'avventura, nessuna conferma),
-// e toccare quello scelto lo toglie (torna quello di serie del modello). I toni sono quelli in comune (src/grafica/persona/aspetto.js).
+// L'editor del personaggio (docs/sotterraneo/personaggio.md) sopra l'interfaccia unica (components/personalizza/Personalizza.vue,
+// docs/core/personalizza.md), col tema del sotterraneo. Tre schede: Chi sei (le due varianti dell'eroe), Aspetto (pelle; capelli: taglio,
+// poi colore; barba) e Set (i set salvati di questo eroe). Qui tutto è gratis: ogni scelta si scrive subito nell'avventura.
+// Le foto dei gettoni sono l'eroe disegnato dal vivo con quella scelta (Armato: il busto per l'aspetto, la figura per chi sei e i set).
 import { ref, computed } from 'vue'
 import { VARIANTI, SESSI, spriteConAspetto } from '../dati/eroi.js'
 import { PELLI, COLORI_CAPELLI, TAGLI, BARBE } from '../../../grafica/persona/aspetto.js'
 import Personalizza from '../../../components/personalizza/Personalizza.vue'
 import Armato from './Armato.vue'
+import { valoriDellAspetto, aspettoDeiValori } from './personaggio-valori.js'
 
 const props = defineProps({
-  // la scheda di Gioco.vue (`avventure`): chiave, la roba addosso (mano, mancina, corpo, testa) e il sesso scelto
+  // la scheda di Gioco.vue (`avventure`): chiave, la roba addosso (mano, mancina, corpo, testa), il sesso e l'aspetto scelti, i set salvati
   eroe: { type: Object, required: true },
   sesso: { type: String, required: true },
-  aspetto: { type: Object, default: () => ({ pelle: null, capelli: null, taglio: null, barba: null }) },   // gli id scelti (dati/eroi.js, aspettoValido)
+  aspetto: { type: Object, default: () => ({ pelle: null, capelli: null, taglio: null, barba: null }) },
+  vestiti: { type: Array, default: () => [] },     // [{ posto, nome, sesso, aspetto }] (motore/avventure.js)
 })
-const emit = defineEmits(['scegli', 'aspetto', 'chiudi'])
+const emit = defineEmits(['scegli', 'aspetto', 'salva-set', 'rinomina-set', 'togli-set', 'chiudi'])
+const giro = ref(0)
+const avviso = ref('')
 
-const scheda = ref('sesso')
-const giro = ref(0)                               // l'eroe grande in anteprima si gira a scatti da 45° (0..7)
-// a schermo mai «sesso» (è per bambini): la prima scheda dice chi si è, coi nomi dei personaggi (Mago/Maga…); `sesso` è solo la chiave interna
-const SCHEDE = [
-  { id: 'sesso', nome: 'Chi sei' }, { id: 'pelle', nome: 'Pelle' }, { id: 'capelli', nome: 'Colore capelli' }, { id: 'taglio', nome: 'Taglio' }, { id: 'barba', nome: 'Barba' },
-]
-const vedi = (sesso, a = props.aspetto) => ({ ...props.eroe, ...VARIANTI[props.eroe.chiave][sesso], sprite: spriteConAspetto(VARIANTI[props.eroe.chiave][sesso].sprite, a) })
-const grande = computed(() => vedi(props.sesso))
+// a schermo mai «sesso» (è per bambini): la scheda si chiama «Chi sei», coi nomi dei personaggi; `m`/`f` sono chiavi interne
+const SCHEDE = [{ id: 'chi', nome: 'Chi sei', tipo: 'oggetti' }, { id: 'aspetto', nome: 'Aspetto', tipo: 'oggetti' }, { id: 'set', nome: 'Set', tipo: 'set' }]
+const DI_SERIE = { id: '-', nome: 'Di serie' }
+const voci = computed(() => [
+  ...SESSI.map(x => ({ id: x, scheda: 'chi', posto: 'chi', nome: VARIANTI[props.eroe.chiave][x].nome, dati: { 'data-sesso': x } })),
+  { id: 'pelle', scheda: 'aspetto', posto: 'pelle', nome: 'Pelle', tratto: true, dati: { 'data-voce': 'pelle' },
+    colori: [{ ...DI_SERIE, css: null, dati: { 'data-pelle': '-' } }, ...PELLI.map(p => ({ id: p.id, nome: p.nome, css: p.css, dati: { 'data-pelle': p.id } }))] },
+  // il colore vale anche da calvo: colora la barba e le sopracciglia
+  { id: 'capelli', scheda: 'aspetto', posto: 'capelli', nome: 'Capelli', tratto: true, nomeForme: 'Taglio', nomeColori: 'Colore', dati: { 'data-voce': 'capelli' },
+    forme: [DI_SERIE, ...TAGLI].map(t => ({ id: t.id, nome: t.nome, dati: { 'data-taglio': t.id } })),
+    colori: [{ ...DI_SERIE, css: null, dati: { 'data-capelli': '-' } }, ...COLORI_CAPELLI.map(c => ({ id: c.id, nome: c.nome, css: c.css, dati: { 'data-capelli': c.id } }))] },
+  { id: 'barba', scheda: 'aspetto', posto: 'barba', nome: 'Barba', tratto: true, nomeForme: 'Barba', dati: { 'data-voce': 'barba' },
+    forme: [DI_SERIE, ...BARBE].map(b => ({ id: b.id, nome: b.nome, dati: { 'data-barba': b.id } })) },
+])
+const indossato = computed(() => valoriDellAspetto(props.sesso, props.aspetto))
+const mieiSet = computed(() => props.vestiti.map(v => ({ posto: v.posto, nome: v.nome, pezzi: valoriDellAspetto(v.sesso, v.aspetto) })))
 
-const voci = computed(() => {
-  const a = props.aspetto, s = scheda.value
-  if (s === 'sesso') return SESSI.map(x => ({ id: x, nome: VARIANTI[props.eroe.chiave][x].nome, sel: x === props.sesso, slot: true, dati: { 'data-sesso': x } }))
-  if (s === 'pelle') return PELLI.map(p => ({ id: p.id, nome: p.nome, colore: p.css, sel: a.pelle === p.id, dati: { 'data-pelle': p.id } }))
-  if (s === 'capelli') return COLORI_CAPELLI.map(c => ({ id: c.id, nome: c.nome, colore: c.css, sel: a.capelli === c.id, dati: { 'data-capelli': c.id } }))
-  // il taglio e la barba si scelgono guardandoli: ogni gettone è il busto dell'eroe con quel taglio o quella barba (foto 3D, mai un'icona)
-  if (s === 'taglio') return TAGLI.map(t => ({ id: t.id, nome: t.nome, sel: a.taglio === t.id, slot: true, busto: { taglio: t.id }, dati: { 'data-taglio': t.id } }))
-  return BARBE.map(b => ({ id: b.id, nome: b.nome, sel: a.barba === b.id, slot: true, busto: { barba: b.id }, dati: { 'data-barba': b.id } }))
-})
-const RIGA = { sesso: 'Cambia solo come lo vedi: la roba, la forza e le discese restano quelle che sono.', pelle: 'Tocca ancora quella scelta per tornare a quella di prima.',
-               capelli: 'Il colore dei capelli, della barba e delle trecce.', taglio: 'Un taglio di capelli. «Calvo» li toglie.', barba: 'Una barba. «Nessuna» la toglie.' }
-
-function scegli(sch, v) {
-  if (sch === 'sesso') emit('scegli', v.id)
-  else emit('aspetto', sch, v.id)
+// la scheda dell'eroe per un sesso e un aspetto (per Armato): il modello con l'aspetto nella chiave (`maga~ambra.rossi`)
+const vedi = stato => {
+  const { sesso, aspetto } = aspettoDeiValori(stato, props.sesso)
+  const v = VARIANTI[props.eroe.chiave][sesso]
+  return { ...props.eroe, ...v, sprite: spriteConAspetto(v.sprite, aspetto) }
 }
+const nomeChi = computed(() => VARIANTI[props.eroe.chiave][props.sesso].nome)
+
+// gratis: ogni scelta arriva come `scegli` e si scrive subito
+function scegli({ posto, oggetto, forma, colore }) {
+  if (posto === 'chi') { emit('scegli', oggetto); return }
+  emit('aspetto', aspettoDeiValori({ ...indossato.value, [posto]: { oggetto, forma, colore } }, props.sesso).aspetto)
+}
+function indossaSet({ pezzi, saltati }) {
+  const { sesso, aspetto } = aspettoDeiValori({ ...indossato.value, ...pezzi }, props.sesso)
+  if (sesso !== props.sesso) emit('scegli', sesso)
+  emit('aspetto', aspetto)
+  avviso.value = saltati ? `Indossato, tranne ${saltati}` : 'Indossato'
+}
+function salvaSet({ posto, nome }) { emit('salva-set', { posto, nome }); avviso.value = 'Salvato' }
+const scala = { voce: 2.3, forma: 1.45, colore: 1.4, set: 2.3 }
 </script>
 
 <template>
-  <Personalizza tema="sotterraneo" titolo="Come è il tuo eroe?" :schede="SCHEDE" :scheda="scheda" :voci="voci" :riga="RIGA[scheda]"
-                data-editor-personaggio :data-eroe-editor="eroe.chiave" :data-sesso-scelto="sesso"
-                ruotabile @giro="d => giro = (giro + d + 8) % 8" @scheda="s => scheda = s" @scegli="scegli" @chiudi="$emit('chiudi')">
-    <template #anteprima>
-      <Armato :eroe="grande" :mano="eroe.mano" :mancina="eroe.mancina" :corpo="eroe.corpo" :testa="eroe.testa" :tinte="eroe.tinte" :giro="giro" :scala="7" />
+  <Personalizza tema="sotterraneo" titolo="Come è il tuo eroe?" :chi="nomeChi" :schede="SCHEDE" :voci="voci" :indossato="indossato" :miei-set="mieiSet"
+                v-model:giro="giro" :avviso="avviso" data-editor-personaggio :data-eroe-editor="eroe.chiave" :data-sesso-scelto="sesso"
+                @scegli="scegli" @indossa-set="indossaSet" @salva-set="salvaSet" @rinomina-set="x => emit('rinomina-set', x)" @togli-set="x => emit('togli-set', x)"
+                @chiudi="emit('chiudi')">
+    <template #anteprima="{ stato }">
+      <Armato :eroe="vedi(stato)" :mano="eroe.mano" :mancina="eroe.mancina" :corpo="eroe.corpo" :testa="eroe.testa" :tinte="eroe.tinte" :giro="giro" :scala="7" />
     </template>
-    <template #gettone="{ voce }">
-      <span v-if="voce.busto" class="pz-campione foto"><Armato :eroe="vedi(props.sesso, { ...aspetto, ...voce.busto })" modo="busto" :scala="2.2" /></span>
-      <span v-else class="pz-campione foto"><Armato :eroe="vedi(voce.id)" :mano="eroe.mano" :mancina="eroe.mancina" :corpo="eroe.corpo" :testa="eroe.testa" :tinte="eroe.tinte" :scala="2.2" /></span>
-    </template>
-    <template #fondo>
-      <button class="sot-grosso" data-azione="chiudi-personaggio" style="margin-top: 8px" @click="$emit('chiudi')">Fatto</button>
+    <!-- le foto: l'eroe con quella scelta, disegnato adesso (il busto per l'aspetto, la figura per chi sei e per i set) -->
+    <template #foto="{ zona, voce, stato }">
+      <Armato v-if="zona === 'set' || (voce && voce.posto === 'chi')" :eroe="vedi(stato)" :mano="eroe.mano" :mancina="eroe.mancina" :corpo="eroe.corpo" :testa="eroe.testa"
+              :tinte="eroe.tinte" :scala="scala[zona] || 2.3" />
+      <Armato v-else :eroe="vedi(stato)" modo="busto" :scala="scala[zona] || 2.3" />
     </template>
   </Personalizza>
 </template>
