@@ -5,10 +5,8 @@
 // prezzo e «Acquista e indossa». CONTRATTO: un'interazione modifica solo le zone sotto (personalizza-pura.js, `unita/personalizza`).
 // Il componente non sa cosa sia un cappello: riceve voci, forme, colori, prezzi e set, e manda eventi; la logica sta in personalizza-pura.js.
 // Le foto le disegna chi lo usa (slot `foto`), o sono un url (`foto` della voce); senza, un riquadro grigio «foto 3D». Mai emoji.
-// Con la prop `scheda` (una stringa) è l'interfaccia di prima (PersonalizzaVecchia.vue), finché la fattoria non passa a questa.
-import { ref, computed, watch, onMounted, onBeforeUnmount, useSlots } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import './personalizza.css'
-import PersonalizzaVecchia from './PersonalizzaVecchia.vue'
 import { STATO_NUOVO, MAX_SET, tocca, zone, costo, costoSet, mancantiDi, formeDi, coloriDi, valoreDi, conForma, conColore, addossoOra, apertoDi,
   vociDi, postoPerSalvare, righeDelPannello, stessoValore } from './personalizza-pura.js'
 
@@ -27,14 +25,8 @@ const props = defineProps({
   giro: { type: Number, default: 0 },                     // l'anteprima a scatti di 45° (0..7): v-model:giro
   aiuto: { type: String, default: '' },                   // la riga del fondo quando non c'è niente da pagare
   avviso: { type: String, default: '' },                  // un avviso breve sopra la figura («Fatto!»), che chi lo usa cambia a ogni volta
-  // l'interfaccia di prima (PersonalizzaVecchia.vue): `scheda` stringa, `voci` della scheda aperta, `riga`, `ruotabile`
-  scheda: { type: String, default: null },
-  riga: { type: String, default: '' },
-  ruotabile: { type: Boolean, default: false },
 })
-const emit = defineEmits(['scegli', 'prova', 'acquista', 'annulla', 'indossa-set', 'salva-set', 'rinomina-set', 'togli-set', 'update:giro', 'scheda', 'chiudi', 'giro'])
-const slots = useSlots()
-const vecchia = computed(() => typeof props.scheda === 'string')
+const emit = defineEmits(['scegli', 'prova', 'acquista', 'annulla', 'indossa-set', 'salva-set', 'rinomina-set', 'togli-set', 'update:giro', 'chiudi'])
 
 // ── lo stato del componente: la scheda aperta, l'oggetto aperto per scheda, la prova, i set ──
 const dati = computed(() => ({ schede: props.schede, voci: props.voci, indossato: props.indossato, setGioco: props.setGioco, mieiSet: props.mieiSet, livello: props.livello, saldo: props.valuta ? props.saldo : null }))
@@ -61,7 +53,7 @@ const statoCon = (posto, valore) => ({ ...ora.value, [posto]: valore })
 
 function gettone(voce) {
   const v = valoreDi(voce, ora.value[voce.posto]), r = costo(voce, v, props.livello)
-  const liv = !voce.posseduto && voce.liv > props.livello ? voce.liv : 0
+  const liv = voce.liv > props.livello ? voce.liv : 0
   const prezzo = voce.tratto || voce.posseduto ? 0 : (voce.prezzo || (formeDi(voce)[0] || {}).prezzo || 0)
   const addosso = !voce.tratto && !!props.indossato[voce.posto] && props.indossato[voce.posto].oggetto === voce.id
   return { voce, valore: v, r, liv, prezzo, addosso, prova: !voce.tratto && inProva(voce), aperto: aperta.value === voce }
@@ -153,11 +145,7 @@ const prezzoTesto = (tot, liv) => (liv ? `liv. ${liv}` : tot ? `${tot} ${props.v
 </script>
 
 <template>
-  <PersonalizzaVecchia v-if="vecchia" :tema="tema" :titolo="titolo" :schede="schede" :scheda="scheda" :voci="voci" :riga="riga" :ruotabile="ruotabile"
-                       @scheda="x => emit('scheda', x)" @scegli="(a, b) => emit('scegli', a, b)" @giro="d => emit('giro', d)" @chiudi="emit('chiudi')">
-    <template v-for="(_, nome) in slots" #[nome]="p"><slot :name="nome" v-bind="p || {}" /></template>
-  </PersonalizzaVecchia>
-  <div v-else class="prs" :class="'prs-tema-' + tema" data-personalizza @click.self="emit('chiudi')">
+  <div class="prs" :class="'prs-tema-' + tema" data-personalizza @click.self="emit('chiudi')">
     <div class="prs-foglio" role="dialog" :aria-label="titolo">
       <header class="prs-testa">
         <h2>{{ titolo }}</h2>
@@ -175,7 +163,7 @@ const prezzoTesto = (tot, liv) => (liv ? `liv. ${liv}` : tot ? `${tot} ${props.v
       </div>
 
       <nav class="prs-schede" data-prs="schede">
-        <button v-for="s in schede" :key="s.id" type="button" :data-prs-scheda="s.id" :aria-pressed="stato.scheda === s.id" @click="fai({ tipo: 'scheda', id: s.id })">{{ s.nome }}</button>
+        <button v-for="s in schede" :key="s.id" type="button" :data-prs-scheda="s.id" v-bind="s.dati" :aria-pressed="stato.scheda === s.id" @click="fai({ tipo: 'scheda', id: s.id })">{{ s.nome }}</button>
       </nav>
 
       <div :key="stato.scheda" class="prs-corpo" data-prs="griglia">

@@ -156,9 +156,7 @@ prova; il gioco tiene il resto e lo ridà nelle props.
 4. I gestori: `scegli` e `acquista` scrivono nella campagna, i set nella
    campagna per personaggio.
 
-Chi lo usa: l'editor degli eroi del sotterraneo
-([../sotterraneo/personaggio.md](../sotterraneo/personaggio.md)). Il
-guardaroba della fattoria e gli addobbi passano ancora la prop `scheda` (una
-stringa): finché non migrano, il componente mostra per loro l'interfaccia di
-prima (`PersonalizzaVecchia.vue`, `vecchia.css`), da togliere quando nessuno
-la usa più.
+Chi lo usa: l'editor degli eroi e il tintore del sotterraneo
+([../sotterraneo/personaggio.md](../sotterraneo/personaggio.md), [../sotterraneo/tintore.md](../sotterraneo/tintore.md)), il guardaroba del
+contadino e gli addobbi delle bestie della fattoria ([../fattoria3d/guardaroba.md](../fattoria3d/guardaroba.md),
+[../fattoria3d/addobbi.md](../fattoria3d/addobbi.md)). L'interfaccia di prima non c'è più.

@@ -33,7 +33,7 @@
 
 /* la testa: il titolo, il saldo, la ✕ sempre in alto a destra */
 .prs-testa { flex: 0 0 52px; display: flex; align-items: center; gap: 8px; padding: 0 4px 0 12px; background: var(--prs-testa); color: var(--prs-testa-testo); }
-.prs-testa h2 { margin: 0; flex: 1; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prs-testa h2 { margin: 0; flex: 1; color: inherit; font-family: inherit; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .prs-saldo { font-weight: 700; font-size: 15px; background: rgba(0,0,0,.22); border-radius: 99px; padding: 5px 10px; white-space: nowrap; }
 .prs .prs-x { flex: 0 0 48px; height: 48px; font-size: 22px; color: var(--prs-testa-testo); border-radius: 12px; }
 
