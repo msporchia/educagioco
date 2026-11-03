@@ -17,18 +17,19 @@ Tutto quello che si adotta sta in `dati/bestie.js` (`adottabili()`): `BESTIE` (l
 | Pepe (gatto nero col ciuffo) | 75 | 19 | mantello `nero` — il gatto nero della 2D |
 | coniglio / beagle / gatto rosso / pappagallo | 85 / 90 / 75 / 120 | 12 / 15 / 35 / 49 | come prima, numeri della 2D |
 | gatto grigio | 75 | 18 | mantello `grigio` (grigio-azzurro, occhi verdi) |
-| labrador | 95 | 22 | `creaBeagle('labrador')`: miele, muso lungo, coda piena e bassa |
+| labrador | 95 | 22 | `creaCaneDiRazza('labrador')`: miele, testa larga, orecchie piegate, coda «a lontra» |
 | gatto tigrato | 75 | 24 | mantello `tigrato` (bruno con la «M» sulla fronte) |
-| border collie | 100 | 28 | `creaBeagle('collie')`: nero, collare, muso e zampe bianchi |
+| border collie | 100 | 28 | `creaCaneDiRazza('collie')`: nero col collare bianco attorno al collo, la fiamma, le orecchie mezze dritte, la gorgiera e la coda a pennacchio |
 | gatto bianco | 80 | 30 | mantello `bianco` (occhi azzurri) |
-| dalmata | 100 | 32 | `creaBeagle('dalmata')`: bianco a macchie nere |
+| dalmata | 100 | 32 | `creaCaneDiRazza('dalmata')`: bianco a macchie nere, orecchie nere, più alto di zampe |
 
 Le razze nuove non hanno un equivalente 2D: prezzo e livello sono nostri, nella fascia «un animale» di [calibrazione.md](../apprendimento/calibrazione.md) (75–120 🪙, un quarto d'ora di esercizio),
 il premio è un quindicesimo del prezzo come per gli altri (`PREMIO_RAZZA`). `guastiDelleBestie` lo controlla. Una razza si aggiunge con una voce di `BESTIE` (`razza(...)`), un mantello in
-`MANTELLI` + `coloriGatto` (`scena3d/modelli-compagni.js`) o una voce di `RAZZE_CANE` (`scena3d/modelli-bestie.js`), e la foto (`npm run anteprime fattoria`).
+`MANTELLI` + `coloriGatto` (`scena3d/modelli-compagni.js`) o una voce di `RAZZE_CANE` (`scena3d/modelli-cani.js`), e la foto (`npm run anteprime fattoria`).
 
-I cani nuovi hanno **lo scheletro del beagle** (stessi perni di Watson, `posaBeagle`): cambiano i colori, le orecchie, il muso, la coda e la scala. I gatti sono mantelli di `creaGatto`, come Sherlock.
-Per le bambine che ci tengono gli animali sono un po' più ricchi di poligoni (il doppio e mezzo dei lati dei cani, il pelo dei gatti con sfere da 28×18 sulla testa).
+I cani di razza hanno **lo scheletro del beagle** (stessi perni di Watson, `posaBeagle`) e sono modellati nella creta ([creta.md](creta.md)): cambiano la
+carne (petto, testa, muso, orecchie, coda, pelo lungo), il mantello, l'altezza delle zampe e la taglia ([taglie.md](taglie.md)). I gatti sono mantelli di `creaGatto`, come Sherlock.
+Le bambine ci tengono moltissimo agli animali: per questo sono fatti con cura e con più triangoli, e da lontano (in gioco) con la versione leggera.
 Le figure sono sempre il modello e la sua foto (`bestia:<id>` in `dati/anteprime.js`), mai un'emoji di ripiego; l'emoji resta solo nelle liste di testo (il foglio dei livelli).
 
 ## Chi l'aveva già

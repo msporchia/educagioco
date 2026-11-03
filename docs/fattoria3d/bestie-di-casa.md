@@ -110,14 +110,11 @@ cassetto o addosso ([addobbi.md](addobbi.md)).
 
 ## I corpi e la scena
 
-Beagle, coniglio e pappagallo hanno lo stile degli animali del cortile (`modelli-cortile.js`): ellissoidi e ossi **facettati a 5–8 lati** (`ellisse`, `osso` di `bestie-corpo.js`), `mat()` con
-flatShading, **colori piatti a tinta unita**: una macchia (sella nera, striscia sul muso, punta della coda, fronte rossa) è un pezzo di un altro colore che sporge appena, mai una sfumatura nei vertici; i
-pezzi fermi di ogni perno si fondono per materiale (`fondiPerMateriale`, soglia 0: tutto proietta ombra). Il gatto rosso è invece il mantello `rosso` di `creaGatto`: stessa tecnica di Sherlock e Irene (volumi
-morbidi, colore nei vertici), e le sfumature sulle zampe e sulla coda sono di tutta la famiglia dei gatti, non solo sue. **Le parti si toccano** (`unita/fattoria3d-bestie-connesse` le prova in sei pose per bestia): il beagle
-ha una nuca dentro il perno della testa, se no a testa bassa («annusa») si staccava dal collo; le ali del pappagallo nascono dentro il corpo, se no battendole si staccavano. Il beagle ha gli
-stessi perni di Watson in scala 0,72 (`posaBeagle` = `posaCane` più due ritocchi da sdraiato); coniglio e pappagallo hanno la loro posa (`posaPiccolo`).
-Peso (catalogo 3D): beagle 13 mesh / ~1300 triangoli, coniglio 12 / ~1000, gatto rosso 15 / ~5200, pappagallo 10 / ~900; il LOD da lontano dei compagni vale ancora per il gatto. In tutto, comprandole
-tutte, +50 mesh e ~8400 triangoli sulla scena ([scena.md](scena.md) «Draw call e triangoli»).
+I corpi sono **modellati nella creta** ([creta.md](creta.md)): i cani di razza in `scena3d/modelli-cani.js` (`creaCaneDiRazza`, gli stessi perni di Watson,
+`posaBeagle` = `posaCane` più il seduto vero e lo sdraiato), il coniglio e il pappagallo in `scena3d/modelli-bestie.js` (la loro posa, `posaPiccolo`), i gatti
+sono mantelli di `creaGatto` (testa di palle con la faccia dipinta, corpo, zampe e coda nella creta). Le taglie sono diverse come dal vero: [taglie.md](taglie.md).
+Peso: un cane ~20–25k triangoli da vicino e ~4–5k da lontano (quello che si vede in gioco), un gatto ~15k e ~3k, coniglio e pappagallo ~16k e ~3k; in scena
+nascono col dettaglio da lontano e fanno quello fine solo se la telecamera si avvicina.
 Il ritratto del foglio e delle carte è un `bestia:<id>` di `anteprime.js`.
 
 ## L'interfaccia
@@ -137,8 +134,7 @@ salvati, lo stato letto dritto, la migrazione è in `unita/fattoria3d-migra`), `
 
 ## Provato e no / da fare
 
-- Provato: il beagle con le zampe come bastoncini staccati dal corpo (come uscì dal primo tentativo): le gambe ora partono dentro il corpo; sdraiato le zampe davanti e le orecchie si riattaccano in `posaBeagle`.
-- Provato: il beagle, il coniglio e il pappagallo a palle lisce con i colori sfumati nei vertici (come i gatti): sembravano palloncini gonfiati accanto a pecora, mucca e Watson; rifatti facettati.
+- Provato: il beagle, il coniglio e il pappagallo a palle (lisce o facettate) incollate: sembravano palloncini, con le zampe a bastoncino. Ora sono nella creta ([creta.md](creta.md)).
 - Da guardare col dito su un telefono: le bestie in scena dalla camera di serie, il foglio a 360 px dal vero, la tastiera che sale sopra la casella del battesimo (il foglio sta in basso).
 - Il tocco sulle razze (gatto rosso, beagle e le altre) apre il foglio (non c'è la festa lunga di Watson né le risposte dei gatti): una scelta, le bestie di casa sono cose da curare.
 - Il ritratto dei compagni nel foglio si disegna dal vivo (`Mondo3d.modelloBestia`): le foto fatte di `anteprime.js` sono delle bestie comprate.

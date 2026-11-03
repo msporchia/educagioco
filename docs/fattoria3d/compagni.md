@@ -21,7 +21,7 @@ mostra con 🐕/🐈, «puoi adottarlo»). In scena compare chi è in `stato.cas
 | 14 | Golia (75) | gatto nero, tutto nero (`golia`): occhi verde-oro, niente bianco |
 | 19 | Pepe (75) | gatto nero col ciuffo bianco sul petto e occhi gialli |
 
-(Prima del 3/11/2026 arrivavano da soli ai livelli 1, 2, 3 e 19: `LIVELLO_DI_UNA_VOLTA`, per i salvataggi di allora.) I gatti sono in scala 1,15 (`SCALA_GATTO`, come `SCALA_CANE` per Watson) per riconoscersi dalla telecamera di serie. Al caricamento ci sono tutti quelli adottati, senza avviso. Adottandone uno compare con uno sbuffo di
+(Prima del 3/11/2026 arrivavano da soli ai livelli 1, 2, 3 e 19: `LIVELLO_DI_UNA_VOLTA`, per i salvataggi di allora.) I gatti sono in scala 0,82 (`SCALA_GATTO`; Golia un po' di più, Irene un po' di meno), più bassi di ogni cane: le taglie stanno in [taglie.md](taglie.md). Al caricamento ci sono tutti quelli adottati, senza avviso. Adottandone uno compare con uno sbuffo di
 scintille e `ui.avviso` («Watson è arrivato!»). Il controllo è una volta al secondo (`Compagni.sync`).
 
 ## Com'è fatto il disegno
@@ -57,7 +57,9 @@ scintille e `ui.avviso` («Watson è arrivato!»). Il controllo è una volta al 
   stesso piano, resta un uncino. Gli orecchi grandi spingono l'altezza a ~75 cm in piedi e ~46 cm sdraiato (il test lo sa).
   Pose: sta, siede (coda attorno), si lava (zampa su), dorme a pagnotta, si stiracchia, fa le fusa (gli occhi si socchiudono piano), cammina basso,
   e struscia, rotola, miao, volta, incontra (con `sub`).
-- **Il costo**: Watson 17 mesh e ~6000 triangoli (il pelo; il test tiene il tetto a 8000), un gatto 15 mesh e ~8000 triangoli (lisci, da lontano ~3200), il
+- **Il corpo, le zampe e la coda dei gatti sono nella creta** ([creta.md](creta.md)): il petto, le anche e le spalle fusi nel tronco, la zampa col gomito o il
+  garretto e il piede con tre dita, la coda una pelle sola su tre ossa che si curva (a riposo un punto di domanda). La testa resta di palle: la faccia è una trama che le sta sopra.
+- **Il costo**: Watson 17 mesh e ~6000 triangoli (il pelo; il test tiene il tetto a 8000), un gatto 11 mesh e ~15k triangoli (da lontano ~3k, quello che si vede in gioco), il
   contadino ~38 mesh dopo la fusione (di più con certi capi, il test tiene il tetto); geometrie e materiali condivisi, nessuna luce, nessuna texture oltre alla faccia. In più una sfera **invisibile** (`userData.colpo`) fa da bersaglio del dito: il gatto è piccolo.
 - Le pose (`posaCane`, `posaGatto`) sono funzioni senza memoria: stato, velocità, fase del passo e tempo; si provano in node.
 
