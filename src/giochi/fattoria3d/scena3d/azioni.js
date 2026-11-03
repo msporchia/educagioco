@@ -253,7 +253,7 @@ export class Azioni {
     const { ui } = this.c
     if (MACCHINE[tipo]) return ui.apriMacchina(tipo)           // il menu della SUA macchina
     if (tipo === 'mongolfiera') return ui.apriMongolfiera()   // la nave: il foglio con la stiva di casse
-    if (eBottega(tipo)) return ui.apriBottega(tipo)             // una bottega del paese: il foglio dei suoi clienti
+    if (eBottega(tipo)) return ui.entraBottega ? ui.entraBottega(tipo) : ui.apriBottega(tipo)             // una bottega del paese: si entra, dentro ci sono i clienti
   }
   /** Una riga che si vede sempre: nel fumetto dell'eroe, e nella barra del costruire se è aperta. */
   dici(testo) { this.c.fx.parla(testo); this.c.ui.avviso(testo) }
