@@ -18,7 +18,7 @@ for (const [k, uri] of Object.entries(ANTEPRIME)) {
   totale += b.length
 }
 stessaLista(`ogni foto è un WebP ${PIXEL}×${PIXEL} col fondo trasparente, sotto i 16 KB`, storte, [])
-controlla(`tutte insieme sotto 1,3 MB (${Math.round(totale / 1024)} KB)`, totale <= 1.3 * 1024 * 1024)
+controlla(`tutte insieme sotto 1,5 MB (con gli addobbi in ogni colore) (${Math.round(totale / 1024)} KB)`, totale <= 1.5 * 1024 * 1024)
 
 uguale('la firma delle foto torna (il file non si scrive a mano)', FIRMA, firmaDi(ANTEPRIME))
 uguale('i modelli sono quelli fotografati (se no: npm run anteprime)', SORGENTI, firmaSorgenti())

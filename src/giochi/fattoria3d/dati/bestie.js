@@ -11,7 +11,7 @@ import { ANIMALI_2D, NOMI_2D, premioBenessere } from './parita2d.js'
 import { COMPAGNI } from './compagni.js'
 import { merceDi } from './ricette.js'
 import { PER_ID as ADDOBBO_2D } from '../da2d/dati/addobbi.js'
-import { tintaValida } from '../../../grafica/persona/tinte.js'
+import { COLORI_2D, NATALE, chiaveDi } from './addobbi-colori.js'
 
 export { BISOGNI, CHIAVI, FONDO, nuovo, foto, scendi, riarma, BENISSIMO, BENE, tuttoAPosto, premiaSeStaBene, umore, comeSta, haBisogno, COCCOLE }
 
@@ -100,17 +100,21 @@ export function bestiaInForma(letto, ora = Date.now()) {
   const nome = pulisciNome(l.nome)
   if (nome) r.nome = nome
   if (Number.isInteger(l.i) && Number.isInteger(l.j) && Math.abs(l.i) < 1e6 && Math.abs(l.j) < 1e6) { r.i = l.i; r.j = l.j }
-  const addosso = Object.entries(oggetto(l.addobbi)).filter(([dove, id]) => ADDOBBO_2D[id] && ADDOBBO_2D[id].dove === dove)
-  if (addosso.length) r.addobbi = Object.fromEntries(addosso)
-  // la tinta di quello che porta (un salvataggio di prima non ce l'ha: tutto del suo colore)
-  const tinte = Object.entries(oggetto(l.tinte)).filter(([dove, t]) => r.addobbi && r.addobbi[dove] && tintaValida(t))
-  if (tinte.length) r.tinte = Object.fromEntries(tinte)
+  // quello che porta: { aggancio: chiave `<id>:<colore>` }; un id solo (salvataggio di prima) vale il colore di base. Non importa dati/addobbi.js (importa questo).
+  const addosso = addossoInForma(l.addobbi)
+  if (Object.keys(addosso).length) r.addobbi = addosso
   const vestiti = vestitiBestiaInForma(l.vestiti)
   if (vestiti.length) r.vestiti = vestiti
   return r
 }
+const natale = id => NATALE.find(n => n.id === id)
+/** Quello che porta (o un set): { aggancio: `<id>:<colore>` }, solo gli addobbi che esistono, sul loro aggancio. */
+function addossoInForma(letto) {
+  return Object.fromEntries(Object.entries(oggetto(letto)).map(([dove, v]) => [dove, chiaveDi(v, id => COLORI_2D[id] || (natale(id) && natale(id).colori) || null)])
+    .filter(([dove, k]) => k && ((ADDOBBO_2D[k.split(':')[0]] || natale(k.split(':')[0])).dove === dove)))
+}
 
-/** I set salvati di una bestia (docs/fattoria3d/addobbi.md): al più sei, in sei posti, un nome corto e quello che porta { dove: id }, con le tinte. */
+/** I set salvati di una bestia (docs/fattoria3d/addobbi.md, «I set»): al più sei, in sei posti, un nome corto e quello che porta { aggancio: `<id>:<colore>` }. */
 export const POSTI_VESTITI_BESTIA = 6
 export function vestitiBestiaInForma(l) {
   if (!Array.isArray(l)) return []
@@ -120,9 +124,7 @@ export function vestitiBestiaInForma(l) {
     const nome = typeof s.nome === 'string' ? s.nome.trim().slice(0, 16) : ''
     if (!nome) continue
     visti.add(s.posto)
-    const addobbi = Object.fromEntries(Object.entries(oggetto(s.addobbi)).filter(([dove, id]) => ADDOBBO_2D[id] && ADDOBBO_2D[id].dove === dove))
-    const tinte = Object.fromEntries(Object.entries(oggetto(s.tinte)).filter(([dove, t]) => addobbi[dove] && tintaValida(t)))
-    fuori.push({ posto: s.posto, nome, addobbi, tinte })
+    fuori.push({ posto: s.posto, nome, addobbi: addossoInForma(s.addobbi) })
   }
   return fuori.sort((x, y) => x.posto - y.posto)
 }

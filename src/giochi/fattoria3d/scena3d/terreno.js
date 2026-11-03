@@ -8,10 +8,11 @@ import * as THREE from 'three'
 import { segnaNuovi } from '../../../grafica/elementi3d.js'
 import { mat, FORME, creaCasa } from './modelli.js'
 import { geometriaCespuglio } from './dal-sotterraneo.js'
-import { LOTTO, FISSI, lotto, lottoDi, cellaDa } from '../dati/mondo.js'
+import { LOTTO, FISSI, lotto, lottoDi } from '../dati/mondo.js'
 import { mescola, sequenza } from '../dati/semi.js'
 import { materialeAcqua, materialeMare, uTAcqua } from './modelli-acqua.js'
 import { Pesci } from './pesci.js'
+import { StradeBordate } from './strade-bordate.js'
 import { ZONA } from '../dati/biomi.js'
 
 const ZERO = new THREE.Matrix4().makeScale(0, 0, 0)
@@ -19,7 +20,7 @@ const ZERO = new THREE.Matrix4().makeScale(0, 0, 0)
 /** La finestra di lotti attorno alla camera: a per lato, b più avanti (la camera guarda verso -z). 9×9 lotti, mai di più. */
 export const FINESTRA = { a0: -4, a1: 4, b0: -5, b1: 3 }
 /** Quante istanze al massimo per ogni cosa (il peso è questo, qualunque sia l'estensione). */
-export const CAPACITA = { alberi: 700, cespugli: 420, sassi: 420, ciuffi: 1500, strade: 4000, pali: 2400, travi: 4800, veli: 90, griglia: 90, acqua: 720, canne: 300, ninfee: 200, spiaggia: 240, terraSuMare: 40 }
+export const CAPACITA = { alberi: 700, cespugli: 420, sassi: 420, ciuffi: 1500, pali: 2400, travi: 4800, veli: 90, griglia: 90, acqua: 720, canne: 300, ninfee: 200, spiaggia: 240, terraSuMare: 40 }
 /** Il mare lontano (un piano solo, non per lotto): da qui verso ovest. È il bordo est della colonna i = −19, l'ultima di mare «sempre» (dati/biomi.js). */
 export const MARE_X = -18
 
@@ -85,21 +86,9 @@ export class Terreno {
     this.suolo = m
   }
 
-  _strade() {
-    this.stradeMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 0.03, 1), new THREE.MeshStandardMaterial({ map: this.sabbia, roughness: 1 }), CAPACITA.strade)
-    this.stradeMesh.receiveShadow = true; this.stradeMesh.frustumCulled = false; this.stradeMesh.setColorAt(0, new THREE.Color())
-    this.scena.add(this.stradeMesh)
-  }
+  _strade() { this.stradeBordate = new StradeBordate(this.scena, this.m, this.sabbia, this.texture, (i, j) => this.dentroFinestra(i, j)) }
   ridisegnaStrade() {
-    const d = new THREE.Object3D(), c = new THREE.Color(); let n = 0
-    for (const [k, v] of this.m.strada) {
-      if (!v || n >= CAPACITA.strade) continue
-      const [i, j] = cellaDa(k)
-      if (!this.dentroFinestra(i, j)) continue
-      d.position.set(i + 0.5, 0.015, j + 0.5); d.updateMatrix(); this.stradeMesh.setMatrixAt(n, d.matrix)
-      const t = 0.93 + (((i * 7 + j * 13) % 9) + 9) % 9 * 0.014; this.stradeMesh.setColorAt(n, c.setRGB(t, t * 0.99, t * 0.96)); n++
-    }
-    this.stradeMesh.count = n; this.stradeMesh.instanceMatrix.needsUpdate = true; this.stradeMesh.instanceColor.needsUpdate = true
+    this.stradeBordate.ridisegna()
     if (this.ciuffi) this._ridisegnaErba()                // un ciuffo non cresce sulla strada
   }
 

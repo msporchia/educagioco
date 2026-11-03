@@ -13,9 +13,9 @@ import { creaAnteprime } from './anteprime.js'
 import { creaScaldo } from './scaldo-puro.js'
 import { Eroe } from './eroe.js'
 import { Ospite } from './ospite.js'
-import { creaAddobbo, vestiBestia } from './modelli-addobbi.js'
 import { creaContadino, creaCapo, posaGatto, posaCane } from './modelli-compagni.js'
 import { Compagni } from './compagni.js'
+import { vestiBestia, creaAddobbo } from './modelli-addobbi.js'
 import { creaBestia, posaPiccolo, posaBeagle } from './modelli-bestie.js'
 import { BESTIE, comeCompagno } from '../dati/bestie.js'
 import { COMPAGNI } from '../dati/compagni.js'
@@ -51,7 +51,7 @@ export class Mondo3d {
     this.abito = abito
     this.canvas = canvas; this.sopra = sopra; this.m = motore; this.ui = ui; this.q = qualita
     // cosa sta facendo il bambino: lo imposta la vista (barra delle azioni, pennello delle strade)
-    this.cmd = { modo: 'libero', seme: 'grano', strumento: null }
+    this.cmd = { modo: 'libero', seme: 'grano', strumento: null, pennello: null }
     this.rect = canvas.getBoundingClientRect()
 
     this.renderer = segui(new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' }))
@@ -120,7 +120,7 @@ export class Mondo3d {
     return caricaFoto().then(f => f[tipo] || this._anteprimaViva(tipo))
   }
   _anteprimaViva(tipo) {
-    if (!this._anteprime) this._anteprime = creaAnteprime(this.renderer, t => t.startsWith('contadino:') ? this.modelloContadino(t.slice(10)) : t.startsWith('capo:') ? this.modelloCapo(t.slice(5)) : t.startsWith('addobbo:') ? creaAddobbo(t.slice(8)) : t.startsWith('bestia:') ? this.modelloBestia(t.slice(7)) : this.pezzi.modelloAnteprima(t))
+    if (!this._anteprime) this._anteprime = creaAnteprime(this.renderer, t => t.startsWith('contadino:') ? this.modelloContadino(t.slice(10)) : t.startsWith('capo:') ? this.modelloCapo(t.slice(5)) : t.startsWith('bestia:') ? this.modelloBestia(t.slice(7)) : t.startsWith('vestita:') ? this.modelloVestita(t.slice(8)) : t.startsWith('addobbo:') ? creaAddobbo(t.slice(8)) : this.pezzi.modelloAnteprima(t))
     return this._anteprime.chiedi(tipo)
   }
   /** Il ritratto del guardaroba: `contadino:<chiave dell'abito>` (dati/abiti.js, `chiaveAbito`), fotografato come un pezzo. */
@@ -133,19 +133,26 @@ export class Mondo3d {
   }
   /** La foto di un pezzo del guardaroba: `capo:<categoria>:<id>:<persona>` (`creaCapo`). */
   modelloCapo(chiave) { const [c, id, p] = chiave.split(':'); return creaCapo(c, id, p) }
-  /** Il ritratto di una bestia di casa o di un compagno gratis (`bestia:<id>`, dati/bestie.js): il suo corpo com'è in scena, in posa da fermo.
-      Con `:r<n>` girato di n scatti da 45°, con `:<aggancio>=<addobbo[@tinta]>,…` vestito (il foglio degli addobbi, viste/Bestia.vue). */
-  modelloBestia(chiave) {
-    const [id, ...resto] = chiave.split(':')
-    const r = +((resto.find(x => /^r\d$/.test(x)) || 'r0').slice(1)), addosso = Object.fromEntries((resto.find(x => x.includes('=')) || '').split(',').filter(Boolean).map(x => x.split('=')))
-    let g = null
-    const c = COMPAGNI[id], b = BESTIE[id]
-    if (c) { g = creaBestia({ id, ...c }); (c.tipo === 'cane' ? posaCane : posaGatto)(g, { stato: 'sta', t: 0.4 }) }
-    else if (b) { g = creaBestia(comeCompagno(id)); (b.tipo === 'cane' ? posaBeagle : b.tipo === 'gatto' ? posaGatto : posaPiccolo)(g, { stato: 'sta', t: 0.4 }) }
-    if (!g) return null
-    if (Object.keys(addosso).length) vestiBestia(g, addosso)
-    if (r) g.rotation.y += r * Math.PI / 4
+  /** Il ritratto di una bestia di casa o di un compagno gratis (`bestia:<id>`, dati/bestie.js): il suo corpo com'è in scena, in posa da fermo. */
+  modelloBestia(id) {
+    const c = COMPAGNI[id]
+    if (c) { const g = creaBestia({ id, ...c }); (c.tipo === 'cane' ? posaCane : posaGatto)(g, { stato: 'sta', t: 0.4 }); return g }
+    const b = BESTIE[id]; if (!b) return null
+    const g = creaBestia(comeCompagno(id)); (b.tipo === 'cane' ? posaBeagle : b.tipo === 'gatto' ? posaGatto : posaPiccolo)(g, { stato: 'sta', t: 0.4 })
     return g
+  }
+  /** La bestia degli addobbi (viste/Addobbi.vue: `vestita:<id>|<gradi>|<aggancio>=<chiave>;…`): il suo corpo vestito di quello che dice il tipo, girato di `gradi`.
+      Sta dentro una scatola invisibile quadrata, ferma (un po' più stretta dell'ingombro, se no la bestia resta piccola nel quadro): girando, l'inquadratura non balla. Lo mostra il negozio, grande (anteprime.js, `LATO_GRANDE`). */
+  modelloVestita(tipo) {
+    const [id, gradi, elenco] = tipo.split('|'), corpo = this.modelloBestia(id)
+    if (!corpo) return null
+    vestiBestia(corpo, Object.fromEntries((elenco || '').split(';').filter(Boolean).map(x => x.split('='))))
+    const fuori = new THREE.Group(), dentro = new THREE.Group()
+    dentro.add(corpo); dentro.rotation.y = (Number(gradi) || 0) * Math.PI / 180; fuori.add(dentro)
+    const b = new THREE.Box3().setFromObject(corpo), lato = 0.75 * Math.max(b.max.x - b.min.x, b.max.z - b.min.z)
+    const scatola = new THREE.Mesh(new THREE.BoxGeometry(lato, b.max.y - b.min.y, lato)); scatola.visible = false
+    scatola.position.set(0, (b.max.y + b.min.y) / 2, 0); fuori.add(scatola)
+    return fuori
   }
   /** Il modo «sposta»: il prossimo tocco su una cella tua e libera porta lì la bestia di casa (gratis). Torna false se non è tua. */
   iniziaSposta(id) { if (!this.m.cura.ho(id) || COMPAGNI[id]) return false; this.inSposta = id; this.fx.parla('Tocca dove vuoi metterla'); return true }
@@ -375,6 +382,7 @@ export class Mondo3d {
     this.camera.muovi(dt, {
       eroe: { x: eroe.x, z: eroe.z, vel: eroe.vel }, distanza: this.q.camera,
     })
+    this._nebbiaLontana()
     this.costruzione.fotogramma(dt)                               // il dito contro il bordo con un pezzo in mano: la camera scorre (costruzione.js)
     this.stagione?.aggiorna(tt, this.renderer.getPixelRatio())     // i fiocchi e il fiato: pochi uniform (scena3d/stagione.js)
     this.terreno.segui(this.camera.x, this.camera.z)              // il suolo segue la camera; se cambia il lotto al mezzo si rifà la finestra
@@ -485,6 +493,12 @@ export class Mondo3d {
     this.scena.fog.near = q.nebbia ? vicino : 1e6; this.scena.fog.far = q.nebbia ? lontano : 2e6
     this.stagione?.applica(q)
     this.fx.q = q; this.pezzi.q = q
+  }
+  /** Zoomando fuori la nebbia si allontana con la camera (se no tutto sarebbe già nebbia): le distanze di base per la scala di `camera.scalaLontano`. */
+  _nebbiaLontana() {
+    if (!this.q || !this.q.nebbia) return
+    const [vicino, lontano] = this.stagione ? this.stagione.nebbia : [38, 90], s = this.camera.scalaLontano
+    this.scena.fog.near = vicino * s; this.scena.fog.far = lontano * s
   }
   adattaSenzaRect() { if (this.rect) this.renderer.setSize(Math.max(1, Math.round(this.rect.width)), Math.max(1, Math.round(this.rect.height)), false) }
   /** Il banco: `n` disegni della scena così com'è, ognuno aspettato (una lettura di un pixel), l'ombra rifatta a disegni alterni come a

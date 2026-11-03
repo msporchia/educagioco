@@ -77,6 +77,9 @@ export function livelloPerPrezzo(prezzo) {
 
 /** Il prezzo base di un pezzo 3D (quello della voce 2D), o `ripiego` se non ha un equivalente. */
 export const prezzoDa2D = (tipo, ripiego) => (voce2d(tipo) ? voce2d(tipo).prezzo : ripiego)
+/** Pezzi che in 3D arrivano **prima** che in 2D (decisione dell'utente del 1/11/2026): i gatti la usano per dormire (docs/fattoria3d/compagni.md «I posti»).
+    I test di parità li leggono da qui; il prezzo resta quello della 2D. */
+export const LIVELLI_ANTICIPATI = { panchina: 12 }
 /** Il livello a cui arriva (quello della voce 2D), o `ripiego`. */
 export const livelloDa2D = (tipo, ripiego) => (voce2d(tipo) ? livelloDellaVoce(voce2d(tipo)) : ripiego)
 /** Di quanto rincara a ogni copia (frazione del prezzo base), 0 se non rincara. */

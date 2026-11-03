@@ -1,7 +1,7 @@
 <script setup>
 // Il foglio di una bestia di casa o di un compagno gratis (G6, docs/fattoria3d/bestie-di-casa.md): come sta, a blocchi (pancia, pelo, gioco), con
-// solo le cose che riempiono ogni bisogno; una carezza gratis sempre; «Sposta» (non ai compagni: girano col contadino) e «Cambia nome»; sotto, «Vestilo»
-// apre gli addobbi nell'interfaccia unica (viste/Addobbi.vue). ✕ in alto a destra. Qui non si decide niente: ogni gesto va
+// solo le cose che riempiono ogni bisogno; una carezza gratis sempre; «Sposta» (non ai compagni: girano col contadino), «Cambia nome» e «Negozio»:
+// gli addobbi si scelgono a parte, nell'interfaccia unica (viste/Addobbi.vue). ✕ in alto a destra. Qui non si decide niente: ogni gesto va
 // a chi lo usa (`nutri`, `coccola`, ...), che parla col motore (motore/cura.js) e rimanda il testo. Il ritratto lo fotografa `anteprime.js` (`bestia:<id>`).
 import { ref, computed, watch, onMounted } from 'vue'
 import { BISOGNI, CHIAVI, curabile, comeSta, gestiPer, cibiPer } from '../dati/bestie.js'
@@ -17,9 +17,10 @@ const props = defineProps({
   messaggio: { type: String, default: '' },
   anteprima: { type: Function, default: null },
   anteprimaPronta: { type: Function, default: null },
-  vestiario: { type: Array, default: () => [] },     // [{ id, nome, emoji, prezzo, dove, addosso, hai }] (Cura.vestiarioDi)
+  vestiario: { type: Array, default: () => [] },     // gli addobbi che le stanno (Cura.vestiarioDi): se ce n'è, c'è il tasto «Negozio»
 })
-const emit = defineEmits(['nutri', 'coccola', 'carezza', 'nome', 'sposta', 'vestilo', 'chiudi'])
+const emit = defineEmits(['nutri', 'coccola', 'carezza', 'nome', 'sposta', 'negozio', 'chiudi'])
+
 const b = computed(() => curabile(props.id))
 const pieno = k => (props.stato[k] ?? 0) > 0.93
 const ce = g => g.da ? (props.scorte[g.da] || 0) > 0 : (g.prezzo || 0) <= props.monete
@@ -77,10 +78,9 @@ const faccia = g => g.da ? ((merceDi(g.da) || {}).emoji || g.emoji) : g.emoji
         <button type="button" class="f3-bes-az" data-azione="carezza" @click="emit('carezza')">🤚 Carezza<small>gratis</small></button>
         <button v-if="!b.compagno" type="button" class="f3-bes-az" data-azione="sposta" @click="emit('sposta')">📍 Sposta<small>gratis</small></button>
         <button type="button" class="f3-bes-az" data-azione="nome" @click="emit('nome')">✎ Nome</button>
+        <button v-if="vestiario.length" type="button" class="f3-bes-az" data-azione="negozio" data-f3="bestia-vestiario" @click="emit('negozio')">🛍️ Negozio<small>vestilo</small></button>
       </div>
-      <!-- gli addobbi si scelgono nell'interfaccia unica (viste/Addobbi.vue, docs/fattoria3d/addobbi.md) -->
-      <button v-if="vestiario.length" type="button" class="f3-bes-az f3-bes-vestilo" data-f3="bestia-vestilo" @click="emit('vestilo')">🎩 Vestilo<small>addobbi e colori</small></button>
-    </div>
+</div>
     <p class="f3-bes-msg" data-f3="bestia-msg">{{ messaggio || 'Tocca una cosa per darla a ' + nome + '.' }}</p>
   </div>
 </template>

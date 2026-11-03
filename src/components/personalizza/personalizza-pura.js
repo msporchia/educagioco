@@ -15,6 +15,7 @@
 //   setGioco  [{ id, nome, prezzo, liv?, pezzi: { posto: valore } }]
 //   mieiSet   [{ posto: 0..MAX_SET-1, nome, pezzi: { posto: valore } }]     (salvati da chi gioca, per personaggio)
 //   livello   il livello di chi gioca (i pezzi con `liv` più alto si vedono e si provano, ma non si prendono)
+//   `chiuso` (una voce, una forma o un colore): non si prende per un altro motivo, detto in breve («Solo a Natale»); si prova lo stesso
 //   saldo     le monete o le gemme che ha (null: un gioco senza prezzi)
 
 export const MAX_SET = 6
@@ -45,10 +46,12 @@ export const conColore = (voce, valore, coloreId) => vale(voce.id, valore.forma 
     L'oggetto si paga una volta; chi lo compra lo prende nella forma e nel colore che prova (la forma e il colore di base vengono con
     lui); un'altra forma ha il suo prezzo; un altro colore dopo costa `prezzoColore`, o il prezzo suo (un colore speciale, sempre). */
 export function costo(voce, valore, livello = Infinity) {
-  const r = { righe: [], tot: 0, liv: 0 }
+  const r = { righe: [], tot: 0, liv: 0, chiuso: '' }
   if (!voce || !valore) return r
   const fs = formeDi(voce), fo = formaDi(voce, valore.forma), cs = coloriDi(voce, valore.forma), co = cs.find(c => c.id === valore.colore) || null
   for (const x of [voce, fo, co]) if (x && x.liv > livello) r.liv = Math.max(r.liv, x.liv)
+  // `chiuso` vale solo per quello che non hai: un colore tuo si rimette anche fuori stagione
+  for (const x of [voce, fo, co]) if (x && x.chiuso && !r.chiuso && !(x === co ? co.posseduto : x === fo ? fo.posseduta : voce.posseduto)) r.chiuso = x.chiuso
   const aggiungi = (nome, p) => { r.righe.push([nome, p]); r.tot += p }
   let nuovo = false
   if (voce.prezzo && !voce.posseduto) { aggiungi(voce.nome, voce.prezzo); nuovo = true }
@@ -83,7 +86,7 @@ export function costoSet(dati, set) {
 }
 /** I pezzi di un set salvato che oggi non si possono mettere (non più tuoi, di un livello che non hai, o spariti dal catalogo). */
 export function mancantiDi(dati, set) {
-  return Object.values(set.pezzi || {}).filter(v => { const voce = voceDi(dati, v && v.oggetto); if (!voce) return true; const r = costo(voce, v, dati.livello); return r.tot || r.liv }).length
+  return Object.values(set.pezzi || {}).filter(v => { const voce = voceDi(dati, v && v.oggetto); if (!voce) return true; const r = costo(voce, v, dati.livello); return r.tot || r.liv || r.chiuso }).length
 }
 
 /** La prova di adesso, tutta: { righe, tot, liv, nome, invece } o null. */
@@ -94,10 +97,10 @@ export function conto(dati, stato) {
     const set = (dati.setGioco || []).find(s => s.id === stato.provaSet), c = set ? costoSet(dati, set) : { tot: 0, somma: 0, liv: 0 }
     return { nome: set ? set.nome : '', righe: [['il set', c.tot]], tot: c.tot, liv: c.liv, invece: c.somma > c.tot ? c.somma : 0 }
   }
-  const out = { righe: [], tot: 0, liv: 0, nomi: [], invece: 0 }
+  const out = { righe: [], tot: 0, liv: 0, chiuso: '', nomi: [], invece: 0 }
   for (const p of posti) {
     const v = stato.prova[p], voce = voceDi(dati, v.oggetto), r = costo(voce, v, dati.livello)
-    out.righe.push(...r.righe); out.tot += r.tot; out.liv = Math.max(out.liv, r.liv)
+    out.righe.push(...r.righe); out.tot += r.tot; out.liv = Math.max(out.liv, r.liv); out.chiuso = out.chiuso || r.chiuso
     out.nomi.push(voce ? voce.nome : '')
   }
   out.nome = out.nomi.join(' e ')
@@ -130,7 +133,7 @@ export function tocca(dati, stato0, ev) {
   const metti = (voce, valore, da) => {
     const r = costo(voce, valore, dati.livello), carico = { posto: voce.posto, ...valore, da }
     stato.provaSet = null
-    if (!r.tot && !r.liv) { delete stato.prova[voce.posto]; eventi.push(['scegli', carico]) }
+    if (!r.tot && !r.liv && !r.chiuso) { delete stato.prova[voce.posto]; eventi.push(['scegli', carico]) }
     else { stato.prova[voce.posto] = valore; eventi.push(['prova', carico]) }
   }
   const aperto = () => apertoDi(dati, stato), ora = voce => addossoOra(dati, stato)[voce.posto]
@@ -147,7 +150,7 @@ export function tocca(dati, stato0, ev) {
     case 'colore': { const voce = aperto(); if (voce) metti(voce, conColore(voce, valoreDi(voce, ora(voce)), ev.id), 'colore'); break }
     case 'paga': {
       const c = conto(dati, stato)
-      if (!c || c.liv || (dati.saldo != null && c.tot > dati.saldo)) break
+      if (!c || c.liv || c.chiuso || (dati.saldo != null && c.tot > dati.saldo)) break
       eventi.push(['acquista', { pezzi: Object.entries(stato.prova).map(([posto, v]) => ({ posto, ...v })), set: stato.provaSet, totale: c.tot }])
       stato.prova = {}; stato.provaSet = null
       break
@@ -171,7 +174,7 @@ export function tocca(dati, stato0, ev) {
       let saltati = 0
       for (const [p, v] of Object.entries(set.pezzi || {})) {
         const voce = voceDi(dati, v && v.oggetto), r = voce ? costo(voce, v, dati.livello) : { tot: 1 }
-        if (r.tot || r.liv) saltati++; else pezzi[p] = v
+        if (r.tot || r.liv || r.chiuso) saltati++; else pezzi[p] = v
       }
       stato.prova = {}; stato.provaSet = null
       eventi.push(['indossa-set', { posto: ev.posto, pezzi, saltati }])

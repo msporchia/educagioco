@@ -11,7 +11,7 @@ import { segna } from '../../../grafica/elementi3d.js'
 
 /** I tipi che si adottano: pezzi fermi, uguali a ogni copia (si aggiunge un tipo qui e basta: i controlli sono in `adotta`). I fiori e l'arredo (W8, W12) si
     ripetono più di ogni altra decorazione: ogni copia di uno stesso id è una draw call sola. Quelli che si muovono (il mulinello) non entrano: `adotta` li rifiuta da sé. */
-export const STATICI = new Set(['aiuola', 'panchina', 'pozzo', 'bancarella', 'ponte', 'passerella', 'tavolo', 'molo', 'molo_v', 'trattore', 'zucca_intagliata', 'zucche_mucchio', 'pupazzo_neve',
+export const STATICI = new Set(['aiuola', 'panchina', 'pozzo', 'bancarella', 'ponte', 'passerella', 'tavolo', 'molo', 'molo_v', 'trattore', 'zucca_intagliata', 'zucche_mucchio', 'pupazzo_neve', 'bastoni_zucchero', 'bastoni_zucchero_fila', 'pacchi_regalo',
   ...Object.entries(PEZZI).filter(([, p]) => p.decoro && (p.categoria === 'fiori' || p.categoria === 'arredo')).map(([id]) => id)])
 
 const REL = new THREE.Matrix4(), W = new THREE.Matrix4(), SFERA = new THREE.Sphere(), SC = new THREE.Vector3()
@@ -45,7 +45,7 @@ export class BancoStatici {
       REL.identity()
       for (let n = o; n && n !== g; n = n.parent) { n.updateMatrix(); REL.premultiply(n.matrix) }
       const chiave = `${o.geometry.uuid}|${o.material.uuid}|${o.castShadow ? 1 : 0}${o.receiveShadow ? 1 : 0}`
-      if (!this.gruppi.has(chiave)) this.gruppi.set(chiave, { mesh: null, geo: o.geometry, materiale: o.material, cast: o.castShadow, recv: o.receiveShadow })
+      if (!this.gruppi.has(chiave)) this.gruppi.set(chiave, { mesh: null, geo: o.geometry, materiale: o.material, cast: o.castShadow, recv: o.receiveShadow, senzaNeve: !!g.userData.senzaNeve })
       voce.parti.push({ chiave, rel: REL.clone() })
       SFERA.copy(o.geometry.boundingSphere).applyMatrix4(REL)
       voce.scatola.expandByPoint(SC.copy(SFERA.center).addScalar(SFERA.radius)).expandByPoint(SC.copy(SFERA.center).addScalar(-SFERA.radius))
@@ -96,7 +96,7 @@ export class BancoStatici {
   _rifai(gr, capienza) {
     if (gr.mesh) { this.scena.remove(gr.mesh); gr.mesh.dispose() }
     const m = new THREE.InstancedMesh(gr.geo, gr.materiale, capienza)
-    m.frustumCulled = false; m.count = 0; m.visible = false; m.castShadow = gr.cast; m.receiveShadow = gr.recv; m.name = 'statici'; segna(m, 'pezzi')
+    m.frustumCulled = false; m.count = 0; m.visible = false; m.castShadow = gr.cast; m.receiveShadow = gr.recv; m.name = 'statici'; segna(m, 'pezzi'); if (gr.senzaNeve) m.userData.senzaNeve = true
     this.scena.add(m); gr.mesh = m
   }
 

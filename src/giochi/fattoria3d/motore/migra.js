@@ -19,7 +19,7 @@ import { lottiPerPiazzole } from '../dati/regole.js'
 import { LOTTI_INIZIALI, lottoPerId, VICINI_4, vicinoDi } from '../dati/mondo.js'
 import { biomaDi } from '../dati/biomi.js'
 import { BESTIE, idDa2D, COMPAGNO_DI, bestiaInForma } from '../dati/bestie.js'
-import { PER_ID as ADDOBBI_3D, staA } from '../dati/addobbi.js'
+import { PER_ID as ADDOBBI_3D, staA, chiaveAddobbo } from '../dati/addobbi.js'
 import { POSTI_MASSIMI } from '../dati/posti.js'
 import { SILOS, TIPI_DI_SILO, PASSI_PER_EDIFICIO, EDIFICI_PER_SILO } from '../dati/silos.js'
 import { statoIniziale, normalizza } from './stato.js'
@@ -192,7 +192,7 @@ export function statoDa2D(dato, { ora = Date.now() } = {}) {
     }
 
     // 3. gli addobbi (il guardaroba della 2D è il cassetto della 3D) e le bestie di casa
-    const nelCassetto = (id, n) => { if (ADDOBBI_3D[id]) aggiungi(s.addobbi, id, n); else aggiungi(daRegalare, 'addobbo:' + id, n) }
+    const nelCassetto = (id, n) => { if (ADDOBBI_3D[id]) aggiungi(s.addobbi, chiaveAddobbo(id), n); else aggiungi(daRegalare, 'addobbo:' + id, n) }
     for (const [id, n] of Object.entries(f.guardaroba)) nelCassetto(id, intero(n))
     // Le bestie di casa (G6, docs/fattoria3d/bestie-di-casa.md): chi aveva preso beagle, coniglio, pappagallo o gatto rosso li ritrova, col nome e con i bisogni a metà
     // (niente monete, niente premio già preso); il bobtail, il gatto bianco e nero e il gatto nero sono i compagni gratis (Watson, Sherlock, Pepe): portano il nome che avevano.
@@ -202,9 +202,9 @@ export function statoDa2D(dato, { ora = Date.now() } = {}) {
       const bid = idDa2D(b.chi) || COMPAGNO_DI[b.chi] || null
       const addosso = Object.values(b.addobbi || {})
       if (!bid) { aggiungi(daRegalare, 'bestia:' + b.chi, 1); for (const id of addosso) nelCassetto(id, 1); continue }
-      const su = Object.fromEntries(addosso.filter(id => staA(id, bid)).map(id => [ADDOBBI_3D[id].dove, id]))
+      const su = Object.fromEntries(addosso.filter(id => staA(id, bid)).map(id => [ADDOBBI_3D[id].dove, chiaveAddobbo(id)]))
       s.casa[bid] = bestiaInForma({ nome: b.nome, pancia: 0.5, pelo: 0.5, gioco: 0.5, premiato: false, addobbi: su }, ora)
-      for (const id of addosso) if (!Object.values(su).includes(id)) nelCassetto(id, 1)
+      for (const id of addosso) if (!Object.values(su).includes(chiaveAddobbo(id))) nelCassetto(id, 1)
       if (BESTIE[bid]) bestieDa2D.push(bid)
     }
 
@@ -264,7 +264,7 @@ function consegnaIlDovuto(s, ora) {
       if (m && m.dove === 'lana') { s.lana = Math.min(TETTO, s.lana + resta); resta = 0 }
       else if (m) { aggiungi(s[m.dove], m.id, resta); resta = 0 }
     } else if (genere === 'addobbo') {
-      if (ADDOBBI_3D[id]) { s.addobbi[id] = Math.min(99, (s.addobbi[id] || 0) + resta); resta = 0 }
+      if (ADDOBBI_3D[id]) { const k = chiaveAddobbo(id); s.addobbi[k] = Math.min(99, (s.addobbi[k] || 0) + resta); resta = 0 }
     } else if (genere === 'bestia') {
       const bid = idDa2D(id)
       if (bid && !s.casa[bid]) { s.casa[bid] = bestiaInForma({ nome: '', pancia: 0.5, pelo: 0.5, gioco: 0.5, premiato: false }, ora); resta-- }

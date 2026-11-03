@@ -1,6 +1,6 @@
 /* Lo stato che si salva (in profile.campagne.fattoria3d.cfg.stato) e come si rimette in forma quando si legge: un salvataggio
    di ieri non ha bisogno di migrazioni, i campi che mancano si riempiono. Dato + funzioni pure. */
-import { cassettoInForma, tinteAddobbiInForma } from '../dati/addobbi.js'
+import { cassettoInForma } from '../dati/addobbi.js'
 import { armadioInForma } from '../dati/abiti.js'
 import { LOTTI_INIZIALI, PEZZO_DI_PARTENZA, POSTI_STORICI, lottoPerId } from '../dati/mondo.js'
 import { lottoDiversoDa } from '../dati/biomi.js'
@@ -19,6 +19,7 @@ import { RIPOSO_MS } from '../dati/mongolfiera.js'
 import { casaIniziale, casaInForma } from '../dati/bestie.js'
 import { POSTI_DI_PARTENZA, postiInForma } from '../dati/posti.js'
 import { TIPI_DI_SILO } from '../dati/silos.js'
+import { aspettoDaCodice } from '../dati/strade.js'
 import { esperienzaDaPrima, livelloMinimoDi } from './scala-vecchia.js'
 
 const LANA_DEL_SEGNAPOSTO = 2     // il premio della cassa del segnaposto di prima (v7)
@@ -44,6 +45,7 @@ const LANA_DEL_SEGNAPOSTO = 2     // il premio della cassa del segnaposto di pri
 //    nuova (70 livelli, prezzi, tempi in minuti e silos della 2D); uno stato senza `scala` ha l'esperienza sulla scala di prima (22 livelli) e `normalizza` la porta
 //    nello stesso punto del percorso (motore/scala-vecchia.js), senza scendere sotto il livello che serve a tenere ciò che si ha. `silo`: quante volte è stato
 //    ingrandito ciascun magazzino (dati/silos.js), assente = zero. Un raccolto di prima in scorta resta anche se supera lo scomparto: il tetto frena solo ciò che entra.
+//    Senza cambiare versione: `aspettoStrade` (tipo e bordo delle strade, docs/fattoria3d/terreno.md «Le strade: tipi e bordi»); assente = ogni strada è terra senza bordo, come prima.
 export const VERSIONE_STATO = 10
 
 /* Il nome che il bambino dà alla fattoria (vuoto = «La fattoria»); anche quella in comune ha il suo. Vedi docs/fattoria3d/nome.md. */
@@ -77,11 +79,11 @@ export function statoIniziale() {
     vecchi: [],                // gli id (`a_b`) dei lotti comprati prima della geografia grande dove ora cambierebbe qualcosa: si generano alla vecchia (generaLotto `vecchio: true`)
     vecchi1: [],               // gli id dei lotti comprati con `geo: 1` dove ora c'è un lago naturale al posto della pozzanghera: restano com'erano (generaLotto `vecchio: 1`)
     casa: casaIniziale(),      // le bestie di casa che hai preso (docs/fattoria3d/bestie-di-casa.md): { beagle: { pancia, pelo, gioco, quando, premiato, nome?, i?, j? } }
-    addobbi: {},               // il cassetto degli addobbi delle bestie: comprati e non addosso, { id: quanti } (dati/addobbi.js)
-    tinteAddobbi: {},          // le tinte comprate per gli addobbi: { id: ['rosso', …] } (dati/addobbi.js, PREZZO_TINTA)
+    addobbi: {},               // il cassetto degli addobbi delle bestie: comprati e non addosso, { 'id:colore': quanti } (dati/addobbi.js; un id solo di prima vale il colore di base)
     armadio: {},               // i pezzi a pagamento del guardaroba del contadino comprati: { 'cappello:cilindro': true } (dati/abiti.js)
     pesca: {},                 // per lotto d'acqua tuo: { i, j (dove sta il galleggiante), fine (quando abbocca, null se non c'è la lenza), riposo (quando il banco si ripopola, null) }
     strade: [],                // le celle (indice di griglia) disegnate dal bambino
+    aspettoStrade: {},         // per le strade che non sono quella di base: { idCella: 'ghiaia.cordolo' } (tipo.bordo, dati/strade.js); le altre sono terra senza bordo
     daRegalare: {},            // ciò che la fattoria 2D aveva e la 3D non ha ancora ({ 'cosa:ovile': 1, 'scorta:miele': 4, 'terra': 2 }): solo un conto, mai monete (motore/migra.js)
     migrato: 0,                // >0 se lo stato viene dalla fattoria 2D: il numero della conversione che l'ha fatto (motore/migra.js, MIGRAZIONE)
     magazzino: {},             // pezzi pagati e non ancora messi: { campo: 1 }
@@ -140,7 +142,6 @@ export function normalizza(letto) {
     s.vecchi1 = []
   }
   s.addobbi = cassettoInForma(letto.addobbi)
-  s.tinteAddobbi = tinteAddobbiInForma(letto.tinteAddobbi)   // assente prima delle tinte, senza cambiare versione
   s.armadio = armadioInForma(letto.armadio)       // assente prima del guardaroba a pagamento, senza cambiare versione
   s.casa = casaInForma(letto.casa)       // le bestie di casa (assenti prima del giro G6, senza cambiare versione): uno stato di prima non ne ha
   for (const [id, v] of Object.entries(oggetto(letto.pesca))) {
@@ -152,6 +153,8 @@ export function normalizza(letto) {
   s.nome = pulisciNomeFattoria(letto.nome)
   s.migrato = Number.isInteger(letto.migrato) && letto.migrato > 0 ? Math.min(99, letto.migrato) : 0
   s.strade = Array.isArray(letto.strade) ? letto.strade.filter(Number.isInteger) : []
+  const sonoStrade = new Set(s.strade)
+  for (const [id, cod] of Object.entries(oggetto(letto.aspettoStrade)).slice(0, 20000)) if (aspettoDaCodice(cod) && sonoStrade.has(+id)) s.aspettoStrade[id] = cod     // un tipo che non c'è più, o una cella non più strada: torna quella di base
   for (const [k, n] of Object.entries(oggetto(letto.magazzino))) if (numero(n) > 0) s.magazzino[k] = numero(n)
   s.tagliati = Array.isArray(letto.tagliati) ? letto.tagliati.filter(Number.isInteger) : []
   s.ostacoli = Array.isArray(letto.ostacoli) ? [...new Set(letto.ostacoli.filter(Number.isInteger))] : []

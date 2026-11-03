@@ -17,10 +17,10 @@ cosa va su un edificio); il *come* si vede è della 3D. `#stagione=natale|hallow
 | cielo, nebbia, luci | grigio-azzurro (`ASPETTI.natale`), nebbia più corta | tramonto arancio, luce calda (`ASPETTI.halloween`) |
 | particelle | ~420 fiocchi che cadono; il **fiato**: una nuvoletta ogni 2 s circa dalla bocca del contadino, del cane e dei gatti | ~70 lucciole arancioni che salgono e brillano |
 | a terra | il **prato innevato** (sotto); dalla neve spunta l'erba (chiazze verdi, una cella su 7, fino a 160, scelte dal caso del giorno) | – |
-| sulle cose | la **neve su ogni faccia rivolta al cielo** (sotto): tetti di edifici e magazzini, chiome del bosco, sassi, cespugli, recinti | – |
+| sulle cose | la **neve su ogni faccia rivolta al cielo** (sotto): tetti di edifici e magazzini, chiome del bosco, sassi, cespugli, recinti; **non** sui pezzi di Natale comprati (`userData.senzaNeve`: l'albero, i regali, le renne restano verdi e colorati) | – |
 | sugli edifici | ⭐ o 🔔 sul tetto (la scelta è quella della 2D), lucine rosse e gialle sotto la gronda coi **ghiaccioli** in mezzo, un alberello innevato accanto | – |
 | sull'acqua | il **ghiaccio ai bordi** dei laghetti del terreno e degli stagni costruiti; il mare e il centro dei laghi restano aperti (la pesca non cambia) | – |
-| da comprare | **Albero con le lucine** 🪙24 e **Pupazzo di neve** ⛄ 🪙8 (scheda «Feste», `stagione: 'natale'`, [decorazioni.md](decorazioni.md); il pupazzo è solo 3D) | **Zucca intagliata** 🪙6 e **Due zucche** 🪙10 (decori, `stagione: 'halloween'` in `dati/catalogo.js`) |
+| da comprare | **Albero con le lucine** 🪙24, tre alberi più grandi, bastoni di zucchero, pacchi, ghirlanda, renna, slitta e **Pupazzo di neve** ⛄ 🪙8 (scheda «Feste», `stagione: 'natale'`, [natale.md](natale.md), [decorazioni.md](decorazioni.md); tutti solo 3D tranne l'albero piccolo) | **Zucca intagliata** 🪙6 e **Due zucche** 🪙10 (decori, `stagione: 'halloween'` in `dati/catalogo.js`) |
 
 Gli addobbi di Natale sono **effimeri**: non si salvano, non occupano niente (le bestie, i compagni e il contadino ci passano attraverso),
 si rifanno quando la mappa cambia o la telecamera cambia quadrato (6 celle). Le zucche e il pupazzo sono pezzi veri: si comprano solo nella
@@ -84,4 +84,4 @@ i ghiaccioli, le zucche e il pupazzo nel menu solo in stagione, la scena che si 
 col basso, niente che resti dopo), `integrazione/fattoria3d` (blocco «le stagioni»: Natale con chiazze, fiocchi, neve sulla casa, ciuffi
 spenti, fiato, il contadino e i compagni senza neve, ≤ 8 draw call in più, nessun errore; Halloween con le zucche nel menu). Nel codice:
 `dati/stagioni3d.js`, `scena3d/stagione.js` (la classe `Stagione`), `scena3d/neve.js`, `scena3d/fiato.js`, `scena3d/modelli-feste.js`
-(le zucche e il pupazzo).
+(le zucche e il pupazzo), `scena3d/modelli-natale.js` ([natale.md](natale.md)). Provato: l'albero innevato come ogni cosa non si riconosceva (tutto bianco): ora i pezzi di Natale saltano la neve.

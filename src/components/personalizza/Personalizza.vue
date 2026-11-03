@@ -54,9 +54,10 @@ const statoCon = (posto, valore) => ({ ...ora.value, [posto]: valore })
 function gettone(voce) {
   const v = valoreDi(voce, ora.value[voce.posto]), r = costo(voce, v, props.livello)
   const liv = voce.liv > props.livello ? voce.liv : 0
-  const prezzo = voce.tratto || voce.posseduto ? 0 : (voce.prezzo || (formeDi(voce)[0] || {}).prezzo || 0)
+  // `prezzoDa`: «da 🪙N», quando ogni colore si paga (gli addobbi delle bestie) e non se n'ha nessuno
+  const prezzo = voce.tratto || voce.posseduto ? 0 : (voce.prezzo || voce.prezzoDa || (formeDi(voce)[0] || {}).prezzo || 0)
   const addosso = !voce.tratto && !!props.indossato[voce.posto] && props.indossato[voce.posto].oggetto === voce.id
-  return { voce, valore: v, r, liv, prezzo, addosso, prova: !voce.tratto && inProva(voce), aperto: aperta.value === voce }
+  return { voce, valore: v, r, liv, chiuso: !voce.posseduto && voce.chiuso ? voce.chiuso : '', prezzo, addosso, prova: !voce.tratto && inProva(voce), aperto: aperta.value === voce }
 }
 const gettoni = computed(() => vociQui.value.map(gettone))
 const forme = computed(() => {
@@ -64,7 +65,7 @@ const forme = computed(() => {
   if (!voce || voce.niente || formeDi(voce).length < 2) return []
   return formeDi(voce).map(f => {
     const valore = conForma(voce, curAperta.value, f.id), r = costo(voce, valore, props.livello)
-    return { f, valore, liv: r.liv, prezzo: r.righe.filter(x => !x[0].startsWith('colore')).reduce((t, x) => t + x[1], 0), sel: suaAperta.value && curAperta.value.forma === f.id }
+    return { f, valore, liv: r.liv, chiuso: r.chiuso, prezzo: r.righe.filter(x => !x[0].startsWith('colore')).reduce((t, x) => t + x[1], 0), sel: suaAperta.value && curAperta.value.forma === f.id }
   })
 })
 const colori = computed(() => {
@@ -74,7 +75,7 @@ const colori = computed(() => {
   if (cs.length < 2) return []
   return cs.map(c => {
     const valore = conColore(voce, curAperta.value, c.id), r = costo(voce, valore, props.livello)
-    return { c, valore, liv: r.liv, prezzo: r.righe.filter(x => x[0].startsWith('colore')).reduce((t, x) => t + x[1], 0), sel: suaAperta.value && curAperta.value.colore === c.id }
+    return { c, valore, liv: r.liv, chiuso: r.chiuso, prezzo: r.righe.filter(x => x[0].startsWith('colore')).reduce((t, x) => t + x[1], 0), sel: suaAperta.value && curAperta.value.colore === c.id }
   })
 })
 const titoloPannello = computed(() => {
@@ -141,7 +142,7 @@ const su = () => { da = null }
 const chiaveAvviso = ref(0)
 watch(() => props.avviso, () => { chiaveAvviso.value++ })
 const fotoUrl = x => (x && typeof x.foto === 'string' ? x.foto : null)
-const prezzoTesto = (tot, liv) => (liv ? `liv. ${liv}` : tot ? `${tot} ${props.valuta}` : '')
+const prezzoTesto = (tot, liv, chiuso = '') => (liv ? `liv. ${liv}` : chiuso || (tot ? `${tot} ${props.valuta}` : ''))
 </script>
 
 <template>
@@ -193,11 +194,11 @@ const prezzoTesto = (tot, liv) => (liv ? `liv. ${liv}` : tot ? `${tot} ${props.v
           </template>
         </template>
         <div v-else class="prs-griglia">
-          <button v-for="g in gettoni" :key="g.voce.id" type="button" class="prs-gettone" :class="{ addosso: g.addosso, aperto: g.aperto, prova: g.prova, chiuso: g.liv }"
+          <button v-for="g in gettoni" :key="g.voce.id" type="button" class="prs-gettone" :class="{ addosso: g.addosso, aperto: g.aperto, prova: g.prova, chiuso: g.liv || g.chiuso }"
                   :data-prs-voce="g.voce.id" :aria-pressed="g.aperto" v-bind="g.voce.dati" @click="fai({ tipo: 'voce', id: g.voce.id })">
             <span class="prs-foto"><img v-if="fotoUrl(g.voce)" :src="g.voce.foto" alt="" draggable="false"><slot v-else name="foto" zona="voce" :voce="g.voce" :valore="g.valore" :stato="statoCon(g.voce.posto, g.valore)"><span class="prs-foto vuota">foto 3D</span></slot></span>
             <b>{{ g.voce.nome }}</b>
-            <span v-if="prezzoTesto(g.prezzo, g.liv)" class="prs-prezzo">{{ prezzoTesto(g.prezzo, g.liv) }}</span>
+            <span v-if="prezzoTesto(g.prezzo, g.liv, g.chiuso)" class="prs-prezzo">{{ (g.voce.prezzoDa && !g.liv && !g.chiuso ? 'da ' : '') + prezzoTesto(g.prezzo, g.liv, g.chiuso) }}</span>
           </button>
         </div>
       </div>
@@ -232,10 +233,10 @@ const prezzoTesto = (tot, liv) => (liv ? `liv. ${liv}` : tot ? `${tot} ${props.v
           <div class="prs-riga" :class="{ vuota: !forme.length }" data-prs="forme" :style="{ height: righe.forme * RIGA_FORME + 6 + 'px' }">
             <template v-if="forme.length">
               <div class="prs-scelte">
-                <button v-for="x in forme" :key="x.f.id" type="button" class="prs-forma" :class="{ si: x.sel && !inProva(aperta), prova: x.sel && inProva(aperta), chiuso: x.liv }"
+                <button v-for="x in forme" :key="x.f.id" type="button" class="prs-forma" :class="{ si: x.sel && !inProva(aperta), prova: x.sel && inProva(aperta), chiuso: x.liv || x.chiuso }"
                         :data-prs-forma="x.f.id" :aria-pressed="x.sel" :aria-label="x.f.nome" v-bind="x.f.dati" @click="fai({ tipo: 'forma', id: x.f.id })">
                   <span class="prs-foto"><img v-if="fotoUrl(x.f)" :src="x.f.foto" alt="" draggable="false"><slot v-else name="foto" zona="forma" :voce="aperta" :forma="x.f" :valore="x.valore" :stato="statoCon(aperta.posto, x.valore)"><span class="prs-foto vuota">foto 3D</span></slot></span>
-                  <span v-if="prezzoTesto(x.prezzo, x.liv)" class="prs-prezzo">{{ prezzoTesto(x.prezzo, x.liv) }}</span>
+                  <span v-if="prezzoTesto(x.prezzo, x.liv, x.chiuso)" class="prs-prezzo">{{ prezzoTesto(x.prezzo, x.liv, x.chiuso) }}</span>
                 </button>
               </div>
             </template>
@@ -245,10 +246,10 @@ const prezzoTesto = (tot, liv) => (liv ? `liv. ${liv}` : tot ? `${tot} ${props.v
           <div class="prs-riga" :class="{ vuota: !colori.length }" data-prs="colori" :style="{ height: righe.colori * RIGA_COLORI + 6 + 'px' }">
             <template v-if="colori.length">
               <div class="prs-scelte">
-                <button v-for="x in colori" :key="x.c.id" type="button" class="prs-colore" :class="{ prova: x.sel && inProva(aperta), chiuso: x.liv }"
+                <button v-for="x in colori" :key="x.c.id" type="button" class="prs-colore" :class="{ prova: x.sel && inProva(aperta), chiuso: x.liv || x.chiuso }"
                         :style="x.c.css ? { background: x.c.css } : null" :data-prs-colore="x.c.id" :aria-pressed="x.sel" :aria-label="x.c.nome" v-bind="x.c.dati" @click="fai({ tipo: 'colore', id: x.c.id })">
                   <span v-if="!x.c.css" class="prs-foto"><slot name="foto" zona="colore" :voce="aperta" :colore="x.c" :valore="x.valore" :stato="statoCon(aperta.posto, x.valore)"><span class="prs-foto vuota">foto</span></slot></span>
-                  <span v-if="prezzoTesto(x.prezzo, x.liv)" class="prs-prezzo">{{ prezzoTesto(x.prezzo, x.liv) }}</span>
+                  <span v-if="prezzoTesto(x.prezzo, x.liv, x.chiuso)" class="prs-prezzo">{{ prezzoTesto(x.prezzo, x.liv, x.chiuso) }}</span>
                 </button>
               </div>
             </template>
@@ -260,6 +261,7 @@ const prezzoTesto = (tot, liv) => (liv ? `liv. ${liv}` : tot ? `${tot} ${props.v
         <template v-if="c">
           <!-- niente «Com'era» qui: il fondo non cambia mai le scelte sopra di lui; una prova si toglie toccando quello che si aveva, o con la ✕ -->
           <button v-if="c.liv" type="button" class="prs-compra" disabled data-prs="paga">Dal livello {{ c.liv }}</button>
+          <button v-else-if="c.chiuso" type="button" class="prs-compra" disabled data-prs="paga">{{ c.chiuso }}</button>
           <button v-else-if="valuta && saldo != null && c.tot > saldo" type="button" class="prs-compra" disabled data-prs="paga">Ti mancano {{ c.tot - saldo }} {{ valuta }}</button>
           <button v-else type="button" class="prs-compra" data-prs="paga" @click="fai({ tipo: 'paga' })"><span>Acquista e indossa · {{ c.tot }} {{ valuta }}</span><small>{{ dettaglio }}</small></button>
         </template>

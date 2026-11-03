@@ -238,9 +238,10 @@ export class Costruzione {
     for (const [i, j] of lineaDiCelle(da, cella)) {
       if (!dentro(i, j)) continue
       if (gesto === 'strada') {
-        const r = this.m.disegnaStrada(i, j)
+        const r = this.m.disegnaStrada(i, j, this.c.cmd.pennello || {})
         if (r.ok) { this.tratto.celle.push({ i, j, aggiunta: true }); this.tratto.costo += r.costo; cambiato = true }
         else if (r.motivo === 'poche-monete') { this.c.ui.avviso('Hai finito le monete: niente altra strada'); break }
+        else if (r.motivo === 'livello') { this.c.ui.avviso(`Questa strada si apre al livello ${r.livello}`); break }
       } else if (this.m.togliStrada(i, j).ok) { this.tratto.celle.push({ i, j, aggiunta: false }); cambiato = true }
     }
     if (cambiato) { this.c.terreno.ridisegnaStrade(); this.c.ui.cambio() }

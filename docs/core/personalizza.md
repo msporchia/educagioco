@@ -66,6 +66,9 @@ non dà `valuta` e ogni scelta si mette subito.
 - Un'altra forma ha il suo `prezzo` (finché non è `posseduta`); un altro
   colore dopo costa `prezzoColore` della voce, o il `prezzo` suo (un colore
   speciale, che si paga anche al primo acquisto).
+- **Quando ogni colore si compra** (gli addobbi delle bestie: un altro colore si paga come l'addobbo, [../fattoria3d/addobbi.md](../fattoria3d/addobbi.md)):
+  ogni colore ha il suo `prezzo` e il suo `posseduto`, la voce niente prezzo e `prezzoDa` per il gettone («da 🪙12»).
+- `chiuso` (un testo breve, «Solo a Natale»): quello che non hai non si prende per un altro motivo; si prova, e il tasto lo dice. Quello che hai si mette sempre.
 - `liv` più alto di `livello`: si vede, si prova addosso, ma il tasto dice
   «Dal livello N» ed è spento. Senza abbastanza saldo: «Ti mancano N».
 - Un set del gioco costa il minimo fra il suo prezzo e la somma dei pezzi che
@@ -105,7 +108,7 @@ import Personalizza from '../../components/personalizza/Personalizza.vue'
 | `valuta`, `saldo` | string, number | il simbolo (🪙, 💎) e quanto se ne ha; senza valuta niente prezzi |
 | `livello` | number | i pezzi con `liv` più alto si provano ma non si prendono |
 | `schede` | `[{ id, nome, tipo: 'oggetti' \| 'set' }]` | i gruppi |
-| `voci` | `[{ id, scheda, posto, nome, foto?, prezzo?, liv?, posseduto?, prezzoColore?, tratto?, niente?, forme?, colori?, dati? }]` | gli oggetti; `forme: [{ id, nome, foto?, prezzo?, liv?, posseduta?, colori?, dati? }]`, `colori: [{ id, nome, css?, prezzo?, liv?, posseduto?, dati? }]` |
+| `voci` | `[{ id, scheda, posto, nome, foto?, prezzo?, prezzoDa?, liv?, chiuso?, posseduto?, prezzoColore?, tratto?, niente?, forme?, colori?, dati? }]` | gli oggetti; `forme: [{ id, nome, foto?, prezzo?, liv?, chiuso?, posseduta?, colori?, dati? }]`, `colori: [{ id, nome, css?, prezzo?, liv?, chiuso?, posseduto?, dati? }]` |
 | `indossato` | `{ posto: { oggetto, forma, colore } }` | quello che si ha addosso |
 | `setGioco` | `[{ id, nome, prezzo, liv?, foto?, pezzi }]` | i set da comprare |
 | `mieiSet` | `[{ posto: 0..5, nome, pezzi }]` | i set salvati |

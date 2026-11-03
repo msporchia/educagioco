@@ -39,6 +39,7 @@ import BarraAzioni from './viste/BarraAzioni.vue'
 import NomeFattoria from './viste/NomeFattoria.vue'
 import CostruisciQui from './viste/CostruisciQui.vue'
 import BarraStrade from './viste/BarraStrade.vue'
+import { TIPO_DI_BASE, BORDO_DI_BASE, TIPI_STRADA, BORDI_STRADA, stradeAl } from './dati/strade.js'
 import { schedeDi, festaDaScoprire } from './dati/carte.js'
 import { stagioneAttiva } from './dati/stagioni3d.js'
 import SceltaSeme from './viste/SceltaSeme.vue'
@@ -50,7 +51,7 @@ import Addobbi from './viste/Addobbi.vue'
 import Bestia from './viste/Bestia.vue'
 import Battesimo from './viste/Battesimo.vue'
 import { dettoCura, dettoEsito, dettoCompera } from './viste/bestia-pura.js'
-import { BESTIE, CIBI as CIBI_BESTIE, COCCOLE_3D } from './dati/bestie.js'
+import { BESTIE, CIBI as CIBI_BESTIE, COCCOLE_3D, curabile } from './dati/bestie.js'
 import { personaDi, normalizzaAbito, capiDi, chiaveAbito, nomeDelContadino } from './dati/abiti.js'
 import { vestitiInForma } from './dati/guardaroba-voci.js'
 import { schedeDellInventario, robaNuova, contoDi } from './viste/inventario-puro.js'
@@ -124,7 +125,8 @@ const EVENTI = { terra: 'fattoria3dTerre', pezzo: 'fattoria3dPezzi', raccolto: '
 /** Un livello nuovo: un avviso che passa da sé e un pallino sul gettone finché non si apre il foglio. */
 function salito(livello) {
   const nome = nomeDi(livello), vuoto = /^Livello \d+$/.test(nome)           // un livello che non apre niente (la 3D ha meno cose della 2D) lo dice
-  const testo = `Livello ${livello}: ${avvisoEdificiNuovi(livello) || (vuoto ? 'niente di nuovo, ma sei più in alto!' : nome)}`      // se si apre un edificio lo nomina: il «!» sul tasto Costruisci resta finché non c'è
+  const strade = stradeAl(livello), nuoveStrade = [...strade.tipi.map(t => TIPI_STRADA[t].nome), ...strade.bordi.map(b => `bordo ${BORDI_STRADA[b].nome.toLowerCase()}`)]
+  const testo = `Livello ${livello}: ${avvisoEdificiNuovi(livello) || (nuoveStrade.length ? `strade nuove (${nuoveStrade.join(', ')})` : vuoto ? 'niente di nuovo, ma sei più in alto!' : nome)}`      // se si apre un edificio lo nomina: il «!» sul tasto Costruisci resta finché non c'è
   ui.avviso(testo)
   toast.value = { testo, fine: performance.now() + DURATA_TOAST }
   livelloNuovo.value = true
@@ -166,6 +168,7 @@ function seSparisce(e) { if (e?.type === 'pagehide' || document.visibilityState 
 const modo = ref('libero')               // libero | semina | raccogli
 const seme = ref('grano')
 const strumento = ref(null)              // il pennello delle strade: null | 'strada' | 'gomma'
+const pennello = ref({ tipo: TIPO_DI_BASE, bordo: BORDO_DI_BASE })      // com'è la strada che si disegna (dati/strade.js): lo sceglie il bambino nella barra
 const costruisciQui = ref(null)          // { i, j, msg }: il menu «Costruisci qui», con la cella premuta
 const avvisoTesto = ref('')
 const stagione = ref(stagioneAttiva(new Date(), typeof location !== 'undefined' ? location.hash : ''))          // la festa in corso (dati/stagioni3d.js): Natale, Halloween o niente
@@ -257,7 +260,7 @@ const ui = {
     avvisoFine = testo ? performance.now() + DURATA_AVVISO : 0
   },
   apriCostruisci(i, j) { apriCostruisci(i, j) },                           // tenere premuto su un posto libero del terreno tuo
-  fogliAperti: () => !!alberoK.value || !!dialogo.value || !!consiglio.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!battesimoDi.value || bancoAperto.value || nave.value || !!bottegaAperta.value || !!magazzinoAperto.value || mappaAperta.value || !!carretto.value || (opzioniAperte.value && !opzioniRidotte.value),
+  fogliAperti: () => !!alberoK.value || !!dialogo.value || !!consiglio.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!addobbiDi.value || !!battesimoDi.value || bancoAperto.value || nave.value || !!bottegaAperta.value || !!magazzinoAperto.value || mappaAperta.value || !!carretto.value || (opzioniAperte.value && !opzioniRidotte.value),
   zonaDrop: () => (zonaVia.value || null)?.getBoundingClientRect() || null,
   trascinando(info) { trascinando.value = info },
 }
@@ -317,19 +320,19 @@ function esitoBestia(r, id) {
 function nutriBestia(cibo) { const id = bestiaAperta.value; if (id) esitoBestia(motore.cura.nutri(id, cibo.id), id) }
 function coccolaBestia(gesto) { const id = bestiaAperta.value; if (id) esitoBestia(motore.cura.coccola(id, gesto.id), id) }
 function carezzaBestia() { const id = bestiaAperta.value; if (id) esitoBestia(motore.cura.carezza(id), id) }
-// ── gli addobbi di una bestia (viste/Addobbi.vue, docs/fattoria3d/addobbi.md): si aprono da «Vestilo» e la ✕ torna al suo foglio ──
+// ── gli addobbi di una bestia (viste/Addobbi.vue, docs/fattoria3d/addobbi.md): si aprono dal tasto nel foglio della bestia, la ✕ torna al foglio ──
 const addobbiDi = ref(null)
 const addobbiVista = computed(() => {
   void versione.value
-  const id = addobbiDi.value; if (!id || !motore || !motore.cura.ho(id)) return null
-  return { id, nome: motore.cura.nomeDi(id), monete: motore.monete(), vestiario: motore.cura.vestiarioDi(id, stagione.value || ''), vestiti: motore.cura.vestitiDi(id) }
+  const id = addobbiDi.value; if (!id || !motore || !motore.cura.ho(id) || !curabile(id)) return null
+  return { id, nome: motore.cura.nomeDi(id), monete: motore.monete(), livello: motore.livello(), vestiario: motore.cura.vestiarioDi(id, stagione.value || ''), addosso: { ...motore.cura.addossoA(id) }, vestiti: motore.cura.vestitiDi(id) }
 })
 function apriAddobbi() { addobbiDi.value = bestiaAperta.value; bestiaMsg.value = ''; bestiaAperta.value = null }
 function chiudiAddobbi() { bestiaAperta.value = addobbiDi.value; addobbiDi.value = null }
-/** Un addobbo messo (comprandolo se non c'è nel cassetto, con la sua tinta) o tolto; la bestia in scena si veste da sé (compagni.sync). */
-function vestiBestia({ id: aid, tinta }) {
+/** Un colore di un addobbo messo (`chiave` = `<id>:<colore>`): se non è nel cassetto si compra; la bestia in scena si veste da sé (compagni.sync). */
+function vestiBestia(chiave) {
   const id = addobbiDi.value; if (!id) return
-  const r = motore.cura.vesti(id, aid, { stagione: stagione.value || '', tinta }), nome = motore.cura.nomeDi(id)
+  const r = motore.cura.vesti(id, chiave, { stagione: stagione.value || '' }), nome = motore.cura.nomeDi(id)
   bestiaMsg.value = r.ok ? `${nome}: che eleganza!` : dettoCura(r, { monete: motore.monete() })
   if (r.ok) { mondo.compagni.sync(); mondo.compagni.festa(id) }
   ui.cambio()
@@ -337,7 +340,7 @@ function vestiBestia({ id: aid, tinta }) {
 function spogliaBestia(dove) {
   const id = addobbiDi.value; if (!id) return
   const r = motore.cura.spoglia(id, dove)
-  bestiaMsg.value = r.ok ? 'Torna nel cassetto.' : ''
+  bestiaMsg.value = r.ok ? 'Torna nel cassetto.' : dettoCura(r, { monete: motore.monete() })
   if (r.ok) mondo.compagni.sync()
   ui.cambio()
 }
@@ -373,7 +376,9 @@ function sceglieCarta(carta) {
   if (r.esito === 'rifiuto') c.msg = dettoDi(r.motivo, { costo: r.costo, liv: r.liv })
   else costruisciQui.value = null                    // 'messo', o 'fantasma' (il fantasma resta sulla mappa)
 }
-function scegliStrumento(id) { strumento.value = id; mondo.imposta({ strumento: id }); avvisoTesto.value = '' }
+function scegliStrumento(id) { strumento.value = id; mondo.imposta({ strumento: id, pennello: pennello.value }); avvisoTesto.value = '' }
+function scegliPennello(p) { pennello.value = { ...pennello.value, ...p }; mondo.imposta({ pennello: pennello.value }); avvisoTesto.value = '' }
+function stradaChiusa(liv) { ui.avviso(`Si apre al livello ${liv}`) }
 function finisciStrumento() { strumento.value = null; mondo.imposta({ strumento: null }); avvisoTesto.value = '' }
 function rispostaDialogo(i) {
   const d = dialogo.value; dialogo.value = null
@@ -573,7 +578,7 @@ const quadroGuida = () => {
   return {
     campi: cs.length, vuoti: cs.filter(c => m.campoVuoto(c)).length, maturi: cs.filter(c => m.campoMaturo(c)).length, crescono: crescono.length,
     secondi: restanti.length ? Math.min(...restanti) : 0, modo: modo.value, semi: semiAperto.value, costruisci: !!costruisciQui.value,
-    foglio: !!(alberoK.value || dialogo.value || macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!battesimoDi.value || bancoAperto.value || nave.value || bottegaAperta.value || magazzinoAperto.value || mappaAperta.value || !!carretto.value || opzioniAperte.value || consiglio.value || strumento.value || trascinando.value),
+    foglio: !!(alberoK.value || dialogo.value || macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!addobbiDi.value || !!battesimoDi.value || bancoAperto.value || nave.value || bottegaAperta.value || magazzinoAperto.value || mappaAperta.value || !!carretto.value || opzioniAperte.value || consiglio.value || strumento.value || trascinando.value),
     raccolto: Object.values(m.s.merci).some(n => n > 0), visto: guidaVisto.value,
   }
 }
@@ -784,7 +789,7 @@ onBeforeUnmount(() => {
 
         <BarraAzioni v-if="!strumento && !trascinando" :modo="modo" :seme="COLTURE[seme].emoji" :da-fare="foto.daFare"
                      @modo="impostaModo" @semina="apriSemina" @costruisci="apriCostruisci()" :da-costruire="foto.daCostruire" :festa="festa ? festa.icona : ''" />
-        <BarraStrade v-if="strumento" :strumento="strumento" :testo="avvisoTesto" @strumento="scegliStrumento" @fatto="finisciStrumento" />
+        <BarraStrade v-if="strumento" :strumento="strumento" :testo="avvisoTesto" :pennello="pennello" :livello="foto.livello" @strumento="scegliStrumento" @pennello="scegliPennello" @chiusa="stradaChiusa" @fatto="finisciStrumento" />
 
         <!-- un pezzo sollevato tenendo premuto, o il fantasma del menu che aspetta un posto: si rilascia sulla mappa o su questa fascia -->
         <button v-if="trascinando" ref="zonaVia" class="f3-zonavia" :class="{ bersaglio: trascinando.perMettereVia || trascinando.perAnnullare }" data-f3="zona-via"
@@ -812,7 +817,7 @@ onBeforeUnmount(() => {
  <Consiglio v-if="consiglio" :consiglio="consiglio" @fai="facciConsiglio" @chiudi="consiglio = null" />
         <Livelli v-if="livelliAperto" v-bind="livelli" @chiudi="livelliAperto = false" />
         <Bestia v-if="bestiaVista" :key="bestiaVista.id" v-bind="bestiaVista" :messaggio="bestiaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
-                @nutri="nutriBestia" @coccola="coccolaBestia" @carezza="carezzaBestia" @sposta="spostaBestia" @vestilo="apriAddobbi" @nome="battesimoDi = bestiaAperta; bestiaAperta = null" @chiudi="bestiaAperta = null" />
+                @nutri="nutriBestia" @coccola="coccolaBestia" @carezza="carezzaBestia" @sposta="spostaBestia" @negozio="apriAddobbi" @nome="battesimoDi = bestiaAperta; bestiaAperta = null" @chiudi="bestiaAperta = null" />
         <Addobbi v-if="addobbiVista" :key="'add-' + addobbiVista.id" v-bind="addobbiVista" :messaggio="bestiaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
                  @veste="vestiBestia" @spoglia="spogliaBestia" @salva-set="x => setBestia(id => motore.cura.salvaVestito(id, x.posto, x.nome))"
                  @rinomina-set="x => setBestia(id => motore.cura.rinominaVestito(id, x.posto, x.nome))" @togli-set="p => setBestia(id => motore.cura.togliVestito(id, p))" @chiudi="chiudiAddobbi" />

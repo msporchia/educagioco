@@ -8,7 +8,7 @@ import { PEZZI_DEL_CORTILE, EDIFICIO_PENTOLONE } from './cortile.js'
 import { PEZZI_DEL_CORTILE_2 } from './cortile2.js'
 import { pezziDecori, SCHEDE_DECORI } from './decori.js'
 import { EDIFICI_BOTTEGHE } from './botteghe.js'
-import { prezzoDa2D, livelloDa2D, crescitaDa2D, livelloPerPrezzo, LIVELLO_PESCA } from './parita2d.js'
+import { LIVELLI_ANTICIPATI, prezzoDa2D, livelloDa2D, crescitaDa2D, livelloPerPrezzo, LIVELLO_PESCA } from './parita2d.js'
 
 /** Prezzo, livello e rincaro di un pezzo, dalla 2D. `rincaro` è il passo per copia a prezzo pieno (13 per il campo da 22); il prezzo vero della copia n è `prezzoPezzo`. */
 const da2d = (tipo, ripiego = {}) => {
@@ -19,6 +19,8 @@ const da2d = (tipo, ripiego = {}) => {
 const edificio2d = tipo => ({ prezzo: prezzoDa2D(tipo), liv: livelloDa2D(tipo) })
 /** Una decorazione solo 3D: il suo prezzo, e il livello che la 2D le darebbe (la fila delle decorazioni è ordinata per prezzo). */
 const decoroSolo3D = prezzo => ({ prezzo, rincaro: 0, cresce: 0, liv: livelloPerPrezzo(prezzo) })
+/** Una festa solo 3D col livello scelto a mano (docs/fattoria3d/natale.md): le feste durano due mesi, quindi non seguono la fila dei prezzi dei decori, che metterebbe una ghirlanda da 14 monete al livello 50. */
+const festaSolo3D = (prezzo, liv) => ({ prezzo, rincaro: 0, cresce: 0, liv })
 
 export const PEZZI = {
   campo:           { nome: 'Campo',           emoji: '🌾', w: 2, d: 2, ...da2d('campo'), categoria: 'campi', produttivo: true },
@@ -28,7 +30,7 @@ export const PEZZI = {
   bancarella:      { nome: 'Bancarella',      emoji: '🍎', w: 2, d: 1, ...da2d('bancarella'), categoria: 'edifici' },   // apre il banco degli ordini, come la bacheca (motore: bancoAperto)
   bacheca:         { nome: 'Bacheca',         emoji: '📋', w: 2, d: 1, prezzo: 12, rincaro: 0, cresce: 0, categoria: 'edifici', liv: livelloDa2D('bancarella') },   // il pezzo del banco: i clienti appuntano qui gli ordini (ordini.md)
   aiuola:          { nome: 'Aiuola',          emoji: '🌷', w: 1, d: 1, ...da2d('aiuola'), categoria: 'decori' },
-  panchina:        { nome: 'Panchina',        emoji: '🪑', w: 2, d: 1, ...da2d('panchina'), categoria: 'decori' },
+  panchina:        { nome: 'Panchina',        emoji: '🪑', w: 2, d: 1, ...da2d('panchina'), liv: LIVELLI_ANTICIPATI.panchina, categoria: 'decori' },
   fontana:         { nome: 'Fontana',         emoji: '⛲', w: 2, d: 2, ...da2d('fontana'), categoria: 'decori' },
   pozzo:           { nome: 'Pozzo',           emoji: '🪣', w: 1, d: 1, ...da2d('pozzo'), categoria: 'decori' },
   spaventapasseri: { nome: 'Spaventapasseri', emoji: '🧑‍🌾', w: 1, d: 1, ...da2d('spaventapasseri'), categoria: 'decori' },
@@ -44,6 +46,16 @@ export const PEZZI = {
   zucca_intagliata: { nome: 'Zucca intagliata', emoji: '🎃', w: 1, d: 1, ...da2d('zucca_intagliata'), categoria: 'decori', stagione: 'halloween' },
   zucche_mucchio:  { nome: 'Due zucche',       emoji: '🎃', w: 2, d: 1, ...da2d('zucche_mucchio'), categoria: 'decori', stagione: 'halloween' },
   pupazzo_neve:    { nome: 'Pupazzo di neve',  emoji: '⛄', w: 1, d: 1, ...decoroSolo3D(8), categoria: 'feste', stagione: 'natale' },      // solo 3D: la 2D non l'ha
+  // il Natale in più (docs/fattoria3d/natale.md): tre alberi grandi per i livelli alti, e le decorazioni di mappa; solo 3D, come il pupazzo
+  albero_natale_alto:    { nome: 'Albero di Natale alto',    emoji: '🎄', w: 2, d: 2, ...festaSolo3D(45, 20), categoria: 'feste', stagione: 'natale' },
+  albero_natale_grande:  { nome: 'Albero di Natale grande',  emoji: '🎄', w: 3, d: 3, ...festaSolo3D(90, 35), categoria: 'feste', stagione: 'natale' },
+  albero_natale_gigante: { nome: 'Albero di Natale gigante', emoji: '🎄', w: 4, d: 4, ...festaSolo3D(180, 50), categoria: 'feste', stagione: 'natale' },
+  bastoni_zucchero:      { nome: 'Bastoni di zucchero',      emoji: '🍭', w: 1, d: 1, ...festaSolo3D(6, 4), categoria: 'feste', stagione: 'natale' },
+  bastoni_zucchero_fila: { nome: 'Fila di bastoni di zucchero', emoji: '🍭', w: 2, d: 1, ...festaSolo3D(12, 9), categoria: 'feste', stagione: 'natale' },
+  pacchi_regalo:         { nome: 'Pacchi regalo',            emoji: '🎁', w: 1, d: 1, ...festaSolo3D(10, 7), categoria: 'feste', stagione: 'natale' },
+  ghirlanda_natale:      { nome: 'Ghirlanda di Natale',      emoji: '🎀', w: 2, d: 1, ...festaSolo3D(14, 12), categoria: 'feste', stagione: 'natale' },
+  renna_natale:          { nome: 'Renna',                    emoji: '🦌', w: 1, d: 1, ...festaSolo3D(18, 16), categoria: 'feste', stagione: 'natale' },
+  slitta_natale:         { nome: 'Slitta con le renne',      emoji: '🛷', w: 1, d: 3, ...festaSolo3D(40, 28), categoria: 'feste', stagione: 'natale' },
   // i magazzini (docs/fattoria3d/magazzini.md): non si comprano dal menu, arrivano da soli al livello del silo e il secondo si costruisce dal loro
   // foglio, e si mettono dal menu (la carta c'è solo se ce n'è uno da mettere); `magazzino` è il silo di cui sono l'edificio. Il prezzo vero è quello dell'ingrandimento (dati/silos.js): questo serve solo ai controlli
   silo:            { nome: 'Silo del raccolto', emoji: '🌾', art: 'il', w: 2, d: 2, prezzo: 40, rincaro: 0, cresce: 0, liv: 1, categoria: 'edifici', magazzino: 'terra' },

@@ -16,7 +16,7 @@ import { RICETTE } from '../../src/giochi/fattoria3d/dati/ricette.js'
 import { ANIMALI, LANA, PRODOTTI_ANIMALI } from '../../src/giochi/fattoria3d/dati/animali.js'
 import { PECORE, TERRA, COSTI, prezzoDelLotto, lottiPerPiazzole } from '../../src/giochi/fattoria3d/dati/regole.js'
 import { ULTIMO, sogliaDi, livelloPer, roba, costoDelLivello, SCARTO_DELLA_PESCA, guastiDeiLivelli } from '../../src/giochi/fattoria3d/dati/livelli.js'
-import { VOCE, COLTURA, sullaScalaDellaDueD, LIVELLO_PESCA } from '../../src/giochi/fattoria3d/dati/parita2d.js'
+import { VOCE, COLTURA, sullaScalaDellaDueD, LIVELLO_PESCA, LIVELLI_ANTICIPATI } from '../../src/giochi/fattoria3d/dati/parita2d.js'
 import { SILOS, TIPI_DI_SILO, siloDi, merciDelSilo, postiPerMerce, prezzoDelPasso, guastiDeiSilos } from '../../src/giochi/fattoria3d/dati/silos.js'
 import { RIPOSO_MS as RIPOSO_BANCO, premioDi, premioDelPezzo } from '../../src/giochi/fattoria3d/dati/ordini.js'
 import { RIPOSO_MS as RIPOSO_NAVE, premioDellaCassa } from '../../src/giochi/fattoria3d/dati/mongolfiera.js'
@@ -57,7 +57,7 @@ const maturo = (f, t, c) => { t.ora += COLTURE[c.coltura || 'grano'].ms + 1 }
     const c = PEZZI[tipo] || EDIFICI[tipo], v = D.PER_ID[v2]
     if (!c) { controlla(`${tipo}: esiste`, false); continue }
     uguale(`${tipo}: stesso prezzo della voce 2D «${v2}»`, c.prezzo, v.prezzo)
-    uguale(`${tipo}: stesso livello`, c.liv, livelloDellaVoce(v))
+    uguale(`${tipo}: stesso livello${LIVELLI_ANTICIPATI[tipo] ? ' (anticipato di proposito)' : ''}`, c.liv, LIVELLI_ANTICIPATI[tipo] ?? livelloDellaVoce(v))
     if (PEZZI[tipo]) uguale(`${tipo}: stesso rincaro per copia (${v.cresce || 0})`, c.cresce || 0, v.cresce || 0)
   }
   for (const [k, c] of Object.entries(COLTURE)) {

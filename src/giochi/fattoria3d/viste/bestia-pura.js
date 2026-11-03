@@ -25,7 +25,8 @@ export function dettoCura(r, { monete = 0 } = {}) {
     case 'poche-monete': { const n = Math.max(1, (r.costo || 1) - monete); return `Ti ${n === 1 ? 'manca' : 'mancano'} 🪙${n}: gli esercizi negli altri giochi te le danno.` }
     case 'non-e-tua': return 'Non è tua.'
     case 'non-gli-sta': return r.dove === 'schiena' ? 'Il pappagallo ha le ali: sulla schiena non porta niente.' : 'Questo non gli sta.'
-    case 'fuori-stagione': return r.stagione === 'halloween' ? 'Il cappello da strega si compra solo a Halloween.' : 'Si compra solo nei giorni di festa.'
+    case 'fuori-stagione': return r.stagione === 'halloween' ? 'Il cappello da strega si compra solo a Halloween.' : r.stagione === 'natale' ? 'Gli addobbi di Natale si comprano solo a Natale.' : 'Si compra solo nei giorni di festa.'
+    case 'troppo-presto': return `Ci arrivi al livello ${r.liv}.`
     default: return 'Non si può, adesso.'
   }
 }
