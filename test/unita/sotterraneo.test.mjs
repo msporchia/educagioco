@@ -22,6 +22,7 @@ import { CURIOSITA, guastiDelleCuriosita } from '../../src/giochi/sotterraneo/da
 import { EROI, portaLa, nonLaPorta, guastiDegliEroi } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { guastiDelleTessere } from '../../src/giochi/sotterraneo/dati/tessere.js'
 import { PEZZI, TESSERA } from '../../src/giochi/sotterraneo/dati/atlante.js'
+import { FIGURE3D } from '../../src/giochi/sotterraneo/dati/figure3d.js'
 import { occhio } from '../../src/giochi/sotterraneo/viste/occhio.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
@@ -38,7 +39,8 @@ import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mj
 for (const [cosa, guasti] of [
   ['il mondo', guastiDelMondo()],
   ['i mostri', guastiDeiMostri()],
-  ['le cose', guastiDelleCose(Object.keys(PEZZI))],
+  // le figure solo 3D (`solo3d`, docs/sotterraneo/gioielli.md) non hanno un foglio ma sono figure vere
+  ['le cose', guastiDelleCose([...Object.keys(PEZZI), ...Object.keys(FIGURE3D).filter(k => FIGURE3D[k].solo3d)])],
   ['gli eroi', guastiDegliEroi()],
   ['la campagna', guastiDellaCampagna()],
   ['il blocco albo del manifesto', guastiDellAlbo([manifesto])],
