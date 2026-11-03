@@ -1,0 +1,111 @@
+/* L'interfaccia unica per personalizzare (Personalizza.vue, docs/core/personalizza.md): la struttura è una, il tema cambia. Un tema è un
+   blocco `.prs-tema-<nome>` di variabili. Le zone hanno altezze ferme: testa, anteprima, schede, griglia (l'unica che scorre), pannello
+   (alto uguale per tutta la scheda), fondo. Il dito non è un mouse: niente selezione, bersagli da 44 px, `touch-action` dove serve. */
+.prs {
+  --prs-velo: #05070cc4; --prs-foglio: #1b1720; --prs-testa: linear-gradient(#2a2330, #1f1a25); --prs-testa-testo: #f1dfb0;
+  --prs-testo: #eee3cc; --prs-tenue: #a8987a; --prs-bordo: #4a3e2c; --prs-gettone: #26202c; --prs-gettone-bordo: #4c4030;
+  --prs-sel: #e0b44c; --prs-sel-fondo: #3a2f1c; --prs-prova: #6ab0ff; --prs-tasto: #c8992e; --prs-tasto-testo: #1b1408; --prs-tasto-ombra: #7a5a12;
+  --prs-spento: #4a4250; --prs-scheda: #2a2330; --prs-scheda-testo: #c9b48a; --prs-scheda-sel: #3a2f1c; --prs-raggio: 10px;
+  --prs-anteprima: radial-gradient(ellipse at 50% 88%, rgba(224,180,76,.28) 0 22%, transparent 23%), radial-gradient(circle at 50% 40%, #3a3044, #17131c 70%);
+  position: absolute; inset: 0; z-index: 30; display: flex; justify-content: center; background: var(--prs-velo);
+  user-select: none; -webkit-user-select: none;
+}
+.prs-tema-sotterraneo { --prs-foglio: var(--sot-carta, #1b1720); --prs-testo: var(--sot-inchiostro, #eee3cc); --prs-sel: var(--sot-oro, #e0b44c); font-family: "Emoji Gioco", Georgia, 'Times New Roman', serif; }
+.prs-tema-fattoria {
+  --prs-velo: #2a1a0cb8; --prs-foglio: #f7ecd6; --prs-testa: linear-gradient(#9a6a3c, #7a4f2a); --prs-testa-testo: #fff6e4;
+  --prs-testo: #3b2614; --prs-tenue: #8a6a4a; --prs-bordo: #d9bf94; --prs-gettone: #fffaf0; --prs-gettone-bordo: #e2cba2;
+  --prs-sel: #d9822b; --prs-sel-fondo: #fde7c4; --prs-prova: #3f8fd0; --prs-tasto: #4f8a3a; --prs-tasto-testo: #fff; --prs-tasto-ombra: #2f5a22;
+  --prs-spento: #c9b89a; --prs-scheda: #ead6b0; --prs-scheda-testo: #6a4a2a; --prs-scheda-sel: #fffaf0; --prs-raggio: 14px;
+  --prs-anteprima: radial-gradient(ellipse at 50% 88%, #e9d2a6 0 22%, transparent 23%), linear-gradient(#fbf3e2, #f0dfbd);
+  font-family: "Emoji Gioco", 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
+}
+.prs-tema-animali {
+  --prs-velo: #1e3a26b8; --prs-foglio: #fbfaf3; --prs-testa: linear-gradient(#7cc28a, #5aa86c); --prs-testa-testo: #fff;
+  --prs-testo: #2f3a2f; --prs-tenue: #7a8a78; --prs-bordo: #cfe3c6; --prs-gettone: #fff; --prs-gettone-bordo: #d7e8cf;
+  --prs-sel: #f07a5a; --prs-sel-fondo: #ffe6dc; --prs-prova: #3f8fd0; --prs-tasto: #f07a5a; --prs-tasto-testo: #fff; --prs-tasto-ombra: #b84a30;
+  --prs-spento: #cdd6c8; --prs-scheda: #e6f2df; --prs-scheda-testo: #4a6a4a; --prs-scheda-sel: #fff; --prs-raggio: 18px;
+  --prs-anteprima: radial-gradient(ellipse at 50% 90%, #a8d88a 0 24%, transparent 25%), linear-gradient(#e8f6ff, #d6f0c8);
+  font-family: "Emoji Gioco", Verdana, 'Segoe UI', system-ui, sans-serif;
+}
+.prs button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; touch-action: manipulation; }
+.prs-foglio { position: relative; width: 100%; max-width: 560px; height: 100%; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--prs-foglio); color: var(--prs-testo); padding-bottom: env(safe-area-inset-bottom); box-sizing: border-box; }
+
+/* la testa: il titolo, il saldo, la ✕ sempre in alto a destra */
+.prs-testa { flex: 0 0 52px; display: flex; align-items: center; gap: 8px; padding: 0 4px 0 12px; background: var(--prs-testa); color: var(--prs-testa-testo); }
+.prs-testa h2 { margin: 0; flex: 1; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prs-saldo { font-weight: 700; font-size: 15px; background: rgba(0,0,0,.22); border-radius: 99px; padding: 5px 10px; white-space: nowrap; }
+.prs .prs-x { flex: 0 0 48px; height: 48px; font-size: 22px; color: var(--prs-testa-testo); border-radius: 12px; }
+
+/* l'anteprima: si gira col dito (la pagina non scorre) e con le frecce; chi si è e il giro stanno DENTRO */
+.prs-anteprima { position: relative; flex: 0 1 30%; min-height: 140px; background: var(--prs-anteprima); touch-action: none; overflow: hidden; display: grid; place-items: center; }
+.prs-chi { position: absolute; left: 10px; top: 8px; font-size: 13px; font-weight: 700; padding: 3px 9px; border-radius: 99px; background: var(--prs-gettone); border: 1px solid var(--prs-gettone-bordo); pointer-events: none; }
+.prs .prs-gira { position: absolute; top: 50%; margin-top: -32px; width: 48px; height: 64px; font-size: 34px; line-height: 1; color: var(--prs-testo); opacity: .7; border-radius: 12px; }
+.prs-gira-sx { left: 2px; } .prs-gira-dx { right: 2px; }
+.prs-giro { position: absolute; bottom: 7px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; pointer-events: none; }
+.prs-giro i { width: 7px; height: 7px; border-radius: 50%; background: var(--prs-tenue); opacity: .35; }
+.prs-giro i.si { opacity: 1; background: var(--prs-sel); }
+.prs-avviso { position: absolute; left: 50%; top: 40px; transform: translateX(-50%); background: var(--prs-tasto); color: var(--prs-tasto-testo); padding: 6px 14px; border-radius: 99px;
+  font-weight: 700; font-size: 14px; white-space: nowrap; pointer-events: none; animation: prs-via 1.8s forwards; }
+@keyframes prs-via { 0%, 70% { opacity: 1 } 100% { opacity: 0 } }
+
+/* le schede: tutte in vista, scritte senza icone */
+.prs-schede { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 8px 0; border-bottom: 2px solid var(--prs-bordo); }
+.prs .prs-schede button { flex: 1 1 auto; min-height: 44px; padding: 0 8px; border-radius: 10px 10px 0 0; background: var(--prs-scheda); color: var(--prs-scheda-testo); font-weight: 700; font-size: 14px; }
+.prs .prs-schede button[aria-pressed="true"] { background: var(--prs-scheda-sel); color: var(--prs-testo); box-shadow: inset 0 3px 0 var(--prs-sel); }
+
+/* la griglia: l'unica cosa che scorre, dentro la sua zona */
+.prs-corpo { flex: 1 1 0; min-height: 96px; overflow-y: auto; overscroll-behavior: contain; padding: 8px; -webkit-overflow-scrolling: touch; }
+.prs-griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; padding-top: 4px; }
+.prs-gruppo { margin: 6px 2px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--prs-tenue); font-weight: 700; }
+.prs-gruppo:first-child { margin-top: 2px; }
+.prs .prs-gettone { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 4px 5px; min-height: 44px;
+  border-radius: var(--prs-raggio); background: var(--prs-gettone); border: 2px solid var(--prs-gettone-bordo); }
+.prs-foto { position: relative; display: grid; place-items: center; width: 100%; aspect-ratio: 1; border-radius: calc(var(--prs-raggio) - 4px); overflow: hidden; }
+.prs-foto > img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; -webkit-user-drag: none; }
+.prs-foto.vuota { background: repeating-linear-gradient(45deg, #ccc 0 6px, #bbb 6px 12px); color: #555; font-size: 11px; }
+.prs-gettone b { font-size: 12px; font-weight: 700; line-height: 1.15; text-align: center; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.prs-prezzo { position: absolute; top: -6px; right: -6px; z-index: 1; background: var(--prs-sel); color: #fff; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 99px; white-space: nowrap; }
+.prs .prs-gettone.addosso { background: var(--prs-sel-fondo); }
+.prs .prs-gettone.aperto { border-color: var(--prs-sel); box-shadow: 0 0 0 2px var(--prs-sel); }
+.prs .prs-gettone.prova { border-color: var(--prs-prova); box-shadow: 0 0 0 2px var(--prs-prova); }
+.prs .prs-gettone.chiuso { border-style: dashed; } .prs-gettone.chiuso .prs-foto { filter: grayscale(.85); opacity: .6; }
+.prs-gettone.chiuso .prs-prezzo, .prs-prezzo.manca { background: var(--prs-spento); color: var(--prs-testo); }
+.prs .prs-gettone.libero { border-style: dashed; background: transparent; }
+.prs-foto.posto { font-size: 22px; font-weight: 700; color: var(--prs-tenue); opacity: .6; }
+
+/* il pannello dell'oggetto scelto, SOTTO la griglia: l'oggetto (il titolo), la sua forma, il colore di quella forma. Alto uguale per tutta
+   la scheda (l'altezza la mette Personalizza.vue); una riga che l'oggetto non ha resta vuota */
+.prs-pannello { flex: 0 0 auto; box-sizing: border-box; padding: 2px 8px 4px; border-top: 2px solid var(--prs-bordo); background: var(--prs-sel-fondo); overflow: hidden; }
+.prs-titolo { height: 26px; display: flex; align-items: center; font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prs-riga { display: flex; align-items: flex-start; gap: 6px; box-sizing: border-box; padding-top: 6px; }
+.prs-riga > span { flex: 0 0 52px; padding-top: 16px; font-size: 11px; font-weight: 700; color: var(--prs-tenue); text-transform: uppercase; letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; }
+.prs-scelte { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 6px 4px; align-content: flex-start; }
+.prs-riga.vuota { align-items: center; justify-content: center; }
+.prs-riga.vuota i { color: var(--prs-tenue); font-style: normal; font-size: 13px; }
+.prs-riga.azioni { gap: 8px; align-items: center; } .prs-riga.azioni > button { flex: 1; min-height: 48px; }
+.prs .prs-forma { position: relative; flex: 0 0 48px; height: 48px; padding: 2px; border-radius: 12px; background: var(--prs-gettone); border: 2px solid var(--prs-gettone-bordo); box-sizing: border-box; }
+.prs-forma .prs-foto { height: 100%; aspect-ratio: auto; border-radius: 8px; }
+.prs .prs-forma.si { border-color: var(--prs-sel); box-shadow: 0 0 0 2px var(--prs-sel); }
+.prs .prs-forma.prova { border-color: var(--prs-prova); box-shadow: 0 0 0 2px var(--prs-prova); }
+.prs .prs-forma.chiuso { border-style: dashed; } .prs-forma.chiuso .prs-foto { filter: grayscale(.85); opacity: .55; }
+.prs .prs-colore { position: relative; flex: 0 0 44px; height: 44px; margin: 0 3px; border-radius: 50%; border: 3px solid var(--prs-gettone); box-shadow: 0 0 0 2px var(--prs-gettone-bordo); box-sizing: border-box; overflow: visible; }
+.prs-colore .prs-foto { border-radius: 50%; height: 100%; }
+.prs .prs-colore[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--prs-sel); }
+.prs .prs-colore.prova { box-shadow: 0 0 0 3px var(--prs-prova); }
+.prs .prs-colore.chiuso { opacity: .45; border-style: dashed; }
+.prs-forma .prs-prezzo, .prs-colore .prs-prezzo { top: -7px; right: -9px; font-size: 10px; padding: 0 5px; }
+.prs-nome { flex: 1; height: 48px; font: inherit; font-size: 18px; padding: 0 12px; border-radius: 12px; border: 2px solid var(--prs-bordo); background: var(--prs-gettone); color: var(--prs-testo);
+  user-select: text; -webkit-user-select: text; box-sizing: border-box; }
+
+/* il fondo: la sola cosa che costa, sotto tutto; alto uguale col tasto o senza */
+.prs-fondo { flex: 0 0 68px; display: flex; align-items: center; gap: 8px; padding: 8px 10px; box-sizing: border-box; border-top: 2px solid var(--prs-bordo); background: var(--prs-foglio); overflow: hidden; }
+.prs-muto { color: var(--prs-tenue); font-size: 13px; line-height: 1.3; }
+.prs .prs-compra { flex: 1; min-height: 48px; padding: 0 14px; border-radius: 12px; background: var(--prs-tasto); color: var(--prs-tasto-testo); font-weight: 800; font-size: 15px;
+  box-shadow: 0 3px 0 var(--prs-tasto-ombra); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; }
+.prs-compra small { font-size: 11px; font-weight: 600; opacity: .85; }
+.prs .prs-compra[disabled] { background: var(--prs-spento); color: var(--prs-testo); box-shadow: none; opacity: .8; }
+.prs .prs-secondario { min-height: 48px; padding: 0 10px; border-radius: 12px; border: 2px solid var(--prs-bordo); font-weight: 700; font-size: 13px; color: var(--prs-testo); }
+.prs .prs-secondario.attento { border-color: #c0392b; color: #c0392b; }
+@media (min-width: 700px) { .prs-foglio { border-radius: 22px; margin: 16px 0; height: calc(100% - 32px); } }
+@media (prefers-reduced-motion: reduce) { .prs * { animation: none !important; } }

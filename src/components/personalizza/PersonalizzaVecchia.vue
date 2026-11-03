@@ -7,7 +7,7 @@
 // Chi la usa dà le schede e i gettoni della scheda aperta e riceve le scelte: non sa niente di cosa sia un taglio o un colore.
 // Un gettone mostra, in quest'ordine, la `foto` (un'immagine, per esempio la foto 3D del pezzo), il `colore` (un campione) o l'`emoji`;
 // con `slot: true` il campione lo disegna lo slot `gettone` (un ritratto 3D, per esempio). `dati`: attributi in più (per i test: `{ 'data-pelle': 'ambra' }`).
-import './personalizza.css'
+import './vecchia.css'
 
 defineProps({
   tema: { type: String, default: 'sotterraneo' },       // 'sotterraneo' | 'fattoria'
