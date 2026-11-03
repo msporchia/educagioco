@@ -13,6 +13,9 @@
      npm run catalogo3d:scheda -- --gioco fattoria --senzacache --senzafondi   # …e nemmeno fusi: i modelli sciolti (confronto con le mesh fuse)
      npm run catalogo3d:scheda -- --q watson --angolo 90 --alto 10 --vicino 1.5 --pixel 2
                                    # da vicino e di fianco: catalogo-3d-<gioco>-<q>-a90.png
+     npm run catalogo3d:scheda -- --q "=fattoria:watson|=fattoria:golia" --nome animali
+     npm run catalogo3d:scheda -- --gioco fattoria --q watson --lontano   # col dettaglio da lontano (userData.lod), come in gioco oltre i 12 m
+                                   # più voci (`|`), ognuna per id intero (`=`), in catalogo-3d-<gioco>-animali.png
 
    Il browser: `CHROME=…` lo forza (come per i test), altrimenti quello di
    Playwright. Vedi docs/core/catalogo-3d.md.
@@ -29,9 +32,9 @@ const args = process.argv.slice(2)
 const opz = (nome, difetto) => { const i = args.indexOf('--' + nome); return i >= 0 ? args[i + 1] : difetto }
 const larghezza = Number(opz('larghezza', 1100)), pixel = Number(opz('pixel', 1))
 const gruppi = opz('gioco', null) ? [opz('gioco')] : ['tutti', 'fattoria', 'sotterraneo']
-const senzaCache = (args.includes('--senzacache') ? '&senzacache=1' : '') + (args.includes('--senzafondi') ? '&senzafondi=1' : '')
+const senzaCache = (args.includes('--senzacache') ? '&senzacache=1' : '') + (args.includes('--senzafondi') ? '&senzafondi=1' : '') + (args.includes('--lontano') ? '&lontano=1' : '')
 const q = opz('q', ''), vista = ['angolo', 'alto', 'vicino'].filter(k => opz(k, null) != null).map(k => `&${k}=${opz(k)}`).join('')
-const coda = (args.includes('--senzacache') ? '-senzacache' : '') + (args.includes('--senzafondi') ? '-senzafondi' : '') + (q ? '-' + q.replace(/[^\w-]+/g, '_') : '') + (opz('angolo', null) != null ? '-a' + opz('angolo') : '')
+const coda = (args.includes('--senzacache') ? '-senzacache' : '') + (args.includes('--senzafondi') ? '-senzafondi' : '') + (opz('nome', null) ? '-' + opz('nome').replace(/[^\w-]+/g, '_') : q ? '-' + q.replace(/[^\w-]+/g, '_').slice(0, 80) : '') + (opz('angolo', null) != null ? '-a' + opz('angolo') : '') + (args.includes('--lontano') ? '-lontano' : '')
 mkdirSync(SCATTI, { recursive: true })
 
 const server = await createServer({ root: RADICE, server: { port: 0, strictPort: false, open: false }, logLevel: 'error' })
@@ -52,7 +55,7 @@ try {
     await page.waitForFunction(() => window.__catalogo3d && window.__catalogo3d.pronto, null, { timeout: 180000 })
     const { n, falliti, pesi } = await page.evaluate(() => {
       const viste = window.__catalogo3d.voci.filter(v => !document.querySelector(`[data-id="${CSS.escape(v.id)}"]`).hidden)
-      return { n: viste.length, falliti: window.__catalogo3d.errori, pesi: viste.map(v => `${v.nome}: ${v.mesh} mesh, ${v.tri} triangoli`) }
+      return { n: viste.length, falliti: window.__catalogo3d.errori, pesi: viste.map(v => `${v.nome}: ${v.mesh} mesh, ${v.tri} triangoli` + (v.taglia ? `, alto ${v.taglia.alto.toFixed(2)} m, lungo ${v.taglia.lungo.toFixed(2)} m` : '')) }
     })
     const file = resolve(SCATTI, `catalogo-3d-${gioco}${coda}.png`)
     if (q) {                                     // poche voci: schede grandi, solo la griglia (niente coppie)

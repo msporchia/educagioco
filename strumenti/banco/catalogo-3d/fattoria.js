@@ -18,7 +18,7 @@ import { creaStagnoAnatre, creaPorcile, creaRecintoCapre, creaPentolone, creaAna
 import { galleggiante } from '../../../src/giochi/fattoria3d/scena3d/pesca3d.js'
 import { Pesci } from '../../../src/giochi/fattoria3d/scena3d/pesci.js'
 import { materialeAcqua, materialeMare } from '../../../src/giochi/fattoria3d/scena3d/modelli-acqua.js'
-import { creaContadino, creaCane, posaCane, creaGatto, posaGatto } from '../../../src/giochi/fattoria3d/scena3d/modelli-compagni.js'
+import { creaContadino, creaCane, posaCane, creaGatto, posaGatto, creaCompagno } from '../../../src/giochi/fattoria3d/scena3d/modelli-compagni.js'
 import { creaBestia, posaPiccolo, posaBeagle } from '../../../src/giochi/fattoria3d/scena3d/modelli-bestie.js'
 import { BESTIE as BESTIE_DI_CASA, comeCompagno } from '../../../src/giochi/fattoria3d/dati/bestie.js'
 import { creaAddobbo, vestiBestia, ADDOBBI_DISEGNATI } from '../../../src/giochi/fattoria3d/scena3d/modelli-addobbi.js'
@@ -238,8 +238,8 @@ export const VOCI = [
     crea: () => creaContadino(capi ? { persona, ...capi } : persona) })),
   { id: 'fattoria:contadino-canna', nome: 'Contadino che pesca', gioco: 'fattoria', categoria: 'personaggio', dove: 'sul molo o accanto al porticciolo dopo il lancio (eroe.js, `pescando`): la canna alzata, il braccio che dondola', file: `${MC}:creaContadino`,
     crea: () => { const g = creaContadino('contadino'); g.userData.canna.visible = true; g.userData.bracci[1].rotation.x = -2; g.userData.bracci[0].rotation.x = -0.3; g.userData.busto.rotation.x = 0.1; return g } },
-  { id: 'fattoria:watson', nome: `${COMPAGNI.watson.nome} (bobtail)`, gioco: 'fattoria', categoria: 'animale', dove: `il cane di casa, arriva al livello ${COMPAGNI.watson.liv} (scena3d/compagni.js)`, file: `${MC}:creaCane`,
-    crea: () => creaCane(), anima: (g, dt, t) => posaCane(g, { stato: 'sta', t }) },
+  { id: 'fattoria:watson', nome: `${COMPAGNI.watson.nome} (bobtail)`, gioco: 'fattoria', categoria: 'animale', dove: `il cane di casa, si adotta dal livello ${COMPAGNI.watson.liv} (scena3d/compagni.js)`, file: `${MC}:creaCane`,
+    crea: () => { const g = creaCompagno({ id: 'watson', ...COMPAGNI.watson }); posaCane(g, { stato: 'sta', t: 0.4 }); return g }, anima: (g, dt, t) => posaCane(g, { stato: 'sta', t }) },      // con la scala di scena: la taglia si confronta
   // le pose di Watson, ferme nell'anteprima e mosse nella vista grande: per giudicarle senza giocare (posaCane)
   ...[['seduto', 'siede', 0, 'quando il contadino lavora, o dopo averlo raggiunto'], ['sdraiato', 'dorme', 0, 'dorme se il contadino sta fermo da un quarto d\'ora'],
     ['che cammina', 'vaga', 0.5, 'segue il contadino, va ai campi'], ['che corre', 'vaga', 1, 'corre dal contadino quando è lontano'],
@@ -265,7 +265,7 @@ export const VOCI = [
   ...['sherlock', 'irene', 'golia', 'pepe'].map(id => ({
     id: `fattoria:${id}`, nome: `${COMPAGNI[id].nome} (gatto ${COMPAGNI[id].variante})`, gioco: 'fattoria', categoria: 'animale',
     dove: `gatto che gira per il terreno, si adotta dal livello ${COMPAGNI[id].liv} (scena3d/compagni.js)`, file: `${MC}:creaGatto`,
-    crea: () => creaGatto(COMPAGNI[id].variante), anima: (g, dt, t) => posaGatto(g, { stato: 'sta', t }),
+    crea: () => { const g = creaCompagno({ id, ...COMPAGNI[id] }); posaGatto(g, { stato: 'sta', t: 0.4 }); return g }, anima: (g, dt, t) => posaGatto(g, { stato: 'sta', t }),
   })),
 
   // le bestie di casa che si comprano (G6, docs/fattoria3d/bestie-di-casa.md): il corpo com'è in scena (creaBestia) e le sue pose, ferme nell'anteprima e mosse nella vista grande
