@@ -1,5 +1,5 @@
 <script setup>
-// I record degli amici sotto il proprio (docs/core/amici-bacheca.md): dal più alto, già in parole («Leonardo: 3:10»). Colore e
+// I record degli amici sotto il proprio (docs/core/amici-bacheca.md): dal più alto, già in parole («Lorenzo: 3:10»). Colore e
 // misura del testo li dà il gioco intorno.
 import PallinoAmico from './PallinoAmico.vue'
 

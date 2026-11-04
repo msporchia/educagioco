@@ -405,7 +405,7 @@ const FRASI = [
 ]
 // i nomi propri vogliono la maiuscola perché indicano proprio uno, non un tipo qualunque
 const NOMI_PROPRI = ['Marco', 'Sara', 'Luca', 'Anna', 'Giulia', 'Paolo', 'Francesca', 'Matteo', 'Chiara', 'Sofia', 'Elena', 'Davide', 'Roma', 'Milano', 'Napoli', 'Torino', 'Venezia', 'Italia',
-  'Giovanni', 'Alessandro', 'Federico', 'Lorenzo', 'Riccardo', 'Simone', 'Andrea', 'Valentina', 'Alice', 'Beatrice', 'Martina', 'Gaia', 'Aurora', 'Emma', 'Leonardo', 'Tommaso',
+  'Giovanni', 'Alessandro', 'Federico', 'Lorenzo', 'Riccardo', 'Simone', 'Andrea', 'Valentina', 'Alice', 'Beatrice', 'Martina', 'Gaia', 'Aurora', 'Emma', 'Giacomo', 'Tommaso',
   'Firenze', 'Bologna', 'Genova', 'Palermo', 'Verona', 'Sicilia', 'Toscana']
 const NOMI_COMUNI = ['bambino', 'cane', 'gatto', 'scuola', 'città', 'fiume', 'montagna', 'maestra', 'pizza', 'gelato', 'albero', 'fiore', 'libro', 'sole', 'mare', 'casa',
   'quaderno', 'penna', 'matita', 'zaino', 'finestra', 'porta', 'sedia', 'tavolo', 'giardino', 'parco', 'spiaggia', 'collina', 'nuvola', 'pioggia', 'vento', 'stella',

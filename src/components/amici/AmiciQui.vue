@@ -1,6 +1,6 @@
 <script setup>
-// Chi è arrivato qui (docs/core/amici-bacheca.md): i pallini e «Leonardo e Melody sono qui». `righe`: uno per riga, con da quando
-// («Leonardo è qui · ieri»). Colore e misura del testo li dà il gioco intorno.
+// Chi è arrivato qui (docs/core/amici-bacheca.md): i pallini e «Lorenzo e Marta sono qui». `righe`: uno per riga, con da quando
+// («Lorenzo è qui · ieri»). Colore e misura del testo li dà il gioco intorno.
 import PallinoAmico from './PallinoAmico.vue'
 import { quiInParole } from '../../amici/istantanea.js'
 

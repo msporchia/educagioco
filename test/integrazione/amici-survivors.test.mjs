@@ -22,15 +22,15 @@ async function allaMappa() {
 /* ══════════ 1. a metà della campagna ══════════ */
 await semina(page, { settings: { eta: 9 }, campagne: { survivors: { tappa: 2, libera: false, stelle: { 0: 1, 1: 1 }, cfg: {} } } })
 await seminaAmici(page, [
-  amico('a', 'leonardo1', 'Leonardo', 0, 5, 0),
-  amico('b', 'melody001', 'Melody', 3, 2, 0),
+  amico('a', 'lorenzo01', 'Lorenzo', 0, 5, 0),
+  amico('b', 'marta0001', 'Marta', 3, 2, 0),
   amico('d', 'ugo000001', 'Ugo', 1, 5, 0),
   amico('c', null, '', 0, 7, 0),                            // mai incontrato online: senza nome non si vede
 ])
 await allaMappa()
-uguale('in cima chi è da raggiungere', await testo('[data-amico-davanti]'), 'Leonardo è 3 tappe più avanti di te.')
-uguale('sulla tappa 5 tutti e due, col nome', await testo('[data-amici-qui][data-al="5"]'), 'LULeonardo e Ugo sono qui')
-uguale('sulla mia, Melody', await testo('[data-amici-qui][data-al="2"]'), 'MMelody è qui')
+uguale('in cima chi è da raggiungere', await testo('[data-amico-davanti]'), 'Lorenzo è 3 tappe più avanti di te.')
+uguale('sulla tappa 5 tutti e due, col nome', await testo('[data-amici-qui][data-al="5"]'), 'LULorenzo e Ugo sono qui')
+uguale('sulla mia, Marta', await testo('[data-amici-qui][data-al="2"]'), 'MMarta è qui')
 uguale('un pallino per amico col nome, non per quello senza', await page.locator('[data-amici-qui] [data-pallino-amico]').count(), 3)
 uguale('e nessuno alla sopravvivenza', await page.locator('[data-record-amico]').count(), 0)
 await page.locator('[data-amici-qui][data-al="5"]').scrollIntoViewIfNeeded()
@@ -42,15 +42,15 @@ await page.waitForSelector('.carte')
 await semina(page, { settings: { eta: 9 }, campagne: { survivors: { tappa: QUANTE_TAPPE, libera: true, stelle: {}, cfg: {},
   primato: { best: 125, quando: 1, partite: 3, ultime: [] } } } })
 await seminaAmici(page, [
-  amico('a', 'leonardo1', 'Leonardo', 1, QUANTE_TAPPE, 190),
-  amico('b', 'melody001', 'Melody', 0, QUANTE_TAPPE, 0),
+  amico('a', 'lorenzo01', 'Lorenzo', 1, QUANTE_TAPPE, 190),
+  amico('b', 'marta0001', 'Marta', 0, QUANTE_TAPPE, 0),
   amico('d', 'ugo000001', 'Ugo', 2, QUANTE_TAPPE, 95),
 ])
 await allaMappa()
 uguale('nessuno è più avanti di chi è alla sopravvivenza', await page.locator('[data-amico-davanti]').count(), 0)
 const righe = await page.$$eval('[data-record-amico]', l => l.map(e => e.textContent.replace(/\s+/g, ' ').trim()))
-uguale('sotto la sopravvivenza i record degli amici, dal più alto', righe.join(' | '), 'LLeonardo: 3:10 | UUgo: 1:35')
-uguale('e chi c\'è senza record', await testo('[data-amici-qui][data-al="libero"]'), 'MMelody è qui')
+uguale('sotto la sopravvivenza i record degli amici, dal più alto', righe.join(' | '), 'LLorenzo: 3:10 | UUgo: 1:35')
+uguale('e chi c\'è senza record', await testo('[data-amici-qui][data-al="libero"]'), 'MMarta è qui')
 controlla('il mio record resta sul tasto', /primato 2:05/.test(await testo('[data-tappa="libero"]')))
 await page.locator('[data-record-amico]').first().scrollIntoViewIfNeeded()
 await scatto(page, 'amici-survivors-libero')

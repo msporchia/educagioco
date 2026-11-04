@@ -18,7 +18,7 @@ Si arriva dal tasto **⚙︎ Impostazioni** in fondo alla schermata iniziale.
 ## Tre schede, e si tara in una sola
 
 **Bambini** dice chi gioca su questo telefono — nome, faccia, progressi — e
-dell'età mostra solo una riga: *«Leonardo ha 10 anni · modifica ›»*.
+dell'età mostra solo una riga: *«Lorenzo ha 10 anni · modifica ›»*.
 **Giochi e domande** è dove si tara, ed è l'unico posto: l'età in cima, e
 sotto **il quadro di quell'età**.
 

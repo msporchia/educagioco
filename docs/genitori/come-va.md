@@ -87,7 +87,7 @@ giorni. Eliminare un bambino porta via le sue (`scordaIstantanee`).
 
 ### La settimana (`quiz/Settimana.vue`)
 
-«La settimana di Melody»: i **minuti** giocati negli ultimi sette giorni (le
+«La settimana di Marta»: i **minuti** giocati negli ultimi sette giorni (le
 sessioni, lo stesso confine di mezzanotte di `TempoDiGioco.vue`), **quante
 sono migliorate** e **quante difficili**, e i due elenchi corti.
 

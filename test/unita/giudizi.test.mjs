@@ -23,7 +23,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto }
 
 const voce = (id, verdetto = 'difficile', extra = {}) => ({
   id, verdetto, quando: '2026-08-15T18:22:00.000Z',
-  chi: 'Melody', gioco: 'sotterraneo', modulo: 'ortografia', grado: 3,
+  chi: 'Marta', gioco: 'sotterraneo', modulo: 'ortografia', grado: 3,
   chiave: 'orto:gn', tempo: 12.4, esito: 'sbagliata',
   testo: 'Quale parola si scrive con GN?', ...extra,
 })
@@ -101,7 +101,7 @@ controlla('ed è scritto in testa', tagliato.testo.split('\n')[0].includes('piu 
    limite — si sta larghi e si lascia il resto in archivio. */
 const pieno = pacco(Array.from({ length: TETTO_INVIO }, (_, i) => voce('n' + i, 'difficile', {
   /* la riga più cattiva possibile: nomi lunghi e testo che arriva al taglio */
-  chi: 'Melody', gioco: 'survivors', modulo: 'coniugazione', chiave: 'verbi:congiuntivo',
+  chi: 'Marta', gioco: 'survivors', modulo: 'coniugazione', chiave: 'verbi:congiuntivo',
   testo: 'Come si coniuga il verbo andare alla prima persona plurale del congiuntivo?',
 })))
 /* misurato come lo compone la schermata dei grandi — `URLSearchParams`,

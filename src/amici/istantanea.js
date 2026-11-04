@@ -133,7 +133,7 @@ function davantiPer(sua, mia, tipo) {
 }
 export const davantiIn = (sua, mia, gioco, tipo) => davantiPer(sua?.giochi?.[gioco], mia?.giochi?.[gioco], tipo).length > 0
 
-/* «Melody ti ha superato» (docs/core/amici-nei-giochi.md): i giochi dove l'amico, fra la sua istantanea di `prima` e quella di
+/* «Marta ti ha superato» (docs/core/amici-nei-giochi.md): i giochi dove l'amico, fra la sua istantanea di `prima` e quella di
    `dopo`, è passato davanti a dove sono io adesso (`mia`). Al massimo uno per gioco, la tappa prima del record. La prima
    istantanea di un amico non supera nessuno: era già lì. */
 export function sorpassi(prima, dopo, mia) {
@@ -152,7 +152,7 @@ export function sorpassi(prima, dopo, mia) {
 /* in parole, per la riga in home */
 export const sorpassoInParole = (nome, tipo) => tipo === 'record' ? `${nome} ha battuto il tuo record` : `${nome} ti ha superato`
 
-/* «Leonardo è qui», «Leonardo e Melody sono qui» */
+/* «Lorenzo è qui», «Lorenzo e Marta sono qui» */
 export const quiInParole = amici => (!amici || !amici.length ? '' : amici.length === 1 ? `${amici[0].nome} è qui`
   : `${amici.slice(0, -1).map(a => a.nome).join(', ')} e ${amici[amici.length - 1].nome} sono qui`)
 

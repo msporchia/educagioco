@@ -8,21 +8,21 @@ cose. Non legge la bacheca, non confronta, non scrive frasi.
 
 - **Sulla mappa, un pallino per amico** sulla tappa a cui è arrivato: l'iniziale nel suo colore (uno per posto nella lista,
   `COLORI`: due amici non ne hanno mai uno uguale). Niente emoji, che cambiano da un telefono all'altro. Accanto, dove c'è
-  posto, il nome: «Leonardo è qui», «Leonardo e Ugo sono qui».
-- **In cima alla mappa, chi è da raggiungere**: il più vicino fra quelli più avanti («Leonardo è 2 tappe più avanti di te.»,
+  posto, il nome: «Lorenzo è qui», «Lorenzo e Ugo sono qui».
+- **In cima alla mappa, chi è da raggiungere**: il più vicino fra quelli più avanti («Lorenzo è 2 tappe più avanti di te.»,
   «Ugo è già alla sopravvivenza.»). Chi è dietro non si dice: sulla mappa basta il pallino, nessuno legge «sei ultimo».
-- **Sotto la sfida senza fine, i record degli amici** sotto il proprio, dal più alto («Leonardo: 3:10»), e chi c'è senza un
+- **Sotto la sfida senza fine, i record degli amici** sotto il proprio, dal più alto («Lorenzo: 3:10»), e chi c'è senza un
   record. **La classifica vera è solo sui record**, dove il confronto è giusto a ogni età.
-- **A fine partita senza fine, la notizia porta la misura**: «Hai superato Leonardo (3:10)!», oppure «Per Leonardo (3:10) ti
+- **A fine partita senza fine, la notizia porta la misura**: «Hai superato Lorenzo (3:10)!», oppure «Per Lorenzo (3:10) ti
   sono mancati 25s». Un pareggio non supera nessuno; chi era già sotto il proprio record non è una notizia.
 - Un amico mai incontrato online (senza nome) non si vede; un amico che in quel gioco non ha fatto niente nemmeno.
 
-## «Leonardo ti ha superato», in home
+## «Lorenzo ti ha superato», in home
 
 Quando arriva la bacheca di un amico, `sorpassi` (in `src/amici/istantanea.js`, pura) la confronta con quella di prima e con dove
 sono io adesso: se in un gioco è **passato davanti** (sulla mappa più avanti di me, o un record più alto del mio, e prima no), il
 sorpasso si segna (`dati.sorpassi` in `store/amici.js`, salvato con gli amici). In home, sotto la riga degli amici, una riga per
-ognuno dei due più recenti: il pallino, «Leonardo ti ha superato» o «Leonardo ha battuto il tuo record», e il gioco. Toccarla
+ognuno dei due più recenti: il pallino, «Lorenzo ti ha superato» o «Lorenzo ha battuto il tuo record», e il gioco. Toccarla
 apre il gioco; aprire il gioco (`usaAmici`) dice tutti i suoi sorpassi, che spariscono.
 - **La prima bacheca di un amico non supera nessuno**: era già lì, e dire «ti ha superato» a tutti gli amici appena abbinati è falso.
 - **Solo dove io ci sono già** (un posto, un record): in un gioco mai giocato nessuno mi ha superato.

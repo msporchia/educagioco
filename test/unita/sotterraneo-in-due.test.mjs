@@ -18,7 +18,7 @@ const cella = e => `${Math.floor(e.x)},${Math.floor(e.y)}`
 const nuova = (seme = 11) => {
   const c = new Corsa(CAMPAGNA[1], { seme, rnd: seminato(seme), eroe: 'cavaliere' })
   c.persona.nome = 'Leo'
-  c.aggiungiAlleato({ eroe: 'mago', nome: 'Melody' })
+  c.aggiungiAlleato({ eroe: 'mago', nome: 'Marta' })
   return c
 }
 const avanti = (c, n) => { for (let i = 0; i < n; i++) c.passo(FETTA) }

@@ -8,7 +8,7 @@ telefoni aggiornati non trova il tavolo. Il pezzo comune per due telefoni che gi
 ## Perché esiste
 
 Prima la sfida stava tutta dentro Castle Battle e **finiva alla prima caduta del filo**: un WebSocket che si chiude (il telefono
-cambia rete, la wifi singhiozza, quello di Melody perde una richiesta su quattro) era «il collegamento è caduto» per uno e «l'altro
+cambia rete, la wifi singhiozza, un telefono perde una richiesta su quattro) era «il collegamento è caduto» per uno e «l'altro
 se n'è andato» per l'altro. Non c'era rientro, e nessuno si accorgeva di un filo morto in silenzio. Il servizio pubblicato regge:
 dieci minuti di prova dal computer di casa senza una caduta, 77 ms a messaggio, punte di mezzo secondo (28/10). Le cadute vengono
 dai telefoni, quindi la sfida deve sopravviverci.
@@ -155,11 +155,11 @@ costano poco. Una via più semplice (solo canale e incontro) si fa quando arriva
 
 ### Tarare la tolleranza: `node strumenti/banco-rete.mjs`
 
-Partite intere fra due telefoni finti di un gioco (`--gioco arena`, quelli di `test/aiuto/sfide/`), per scenario (`calma`, `casa`, `melody`, `pessima`: latenza e guasti al minuto in
+Partite intere fra due telefoni finti di un gioco (`--gioco arena`, quelli di `test/aiuto/sfide/`), per scenario (`calma`, `casa`, `agitata`, `pessima`: latenza e guasti al minuto in
 `SCENARI`), con il seme; `--partite`, `--seme`, `--minuti`, `--scenario`, `--tempi grazia=60000,sordo=4000` per provare altri
 tempi. Una riga per scenario: quante arrivano in fondo, quante si rompono e perché, quanto si vede il cartello della linea, quanto si
 resta fermi, cadute, rimandati, riallineamenti, fili chiusi dal servizio. Il 28/10, 12 partite: `casa` (mezzo guasto al minuto)
-nessuna rotta, cartello in media 0,2 s; `melody` (tre guasti al minuto, reti spente fino a 30 s) una rotta su 12, perché chi entrava
+nessuna rotta, cartello in media 0,2 s; `agitata` (tre guasti al minuto, reti spente fino a 30 s) una rotta su 12, perché chi entrava
 non aveva rete nei primi 30 s; `pessima` quasi tutte finite con «se n'è andato», com'è giusto. Gli scenari sono stime: da
 rimisurare quando si sa com'è davvero la rete di casa.
 
