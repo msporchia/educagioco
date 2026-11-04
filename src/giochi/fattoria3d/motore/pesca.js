@@ -2,7 +2,6 @@
    d'acqua di un lotto tuo, da un molo (le sue celle) o dal porticciolo (le celle libere attorno), entro `PESCA.raggio` celle e nello stesso
    specchio d'acqua; il mare vuole il porticciolo. Ogni lotto d'acqua tuo è un banco: lancia → aspetta `PESCA.ms` → ritira → il banco si ripopola
    per `PESCA.riposoMs`. Tutto a tempo assoluto (`f.ora()`), quindi anche a pagina chiusa. Il perché e i numeri: docs/fattoria3d/geografia-e-pesca.md. */
-import { PEZZI } from '../dati/catalogo.js'
 import { PESCA, resaDellaPesca } from '../dati/pesca.js'
 import { tipoAcqua } from '../dati/biomi.js'
 import { chiave, lottoDi } from '../dati/mondo.js'
@@ -13,7 +12,7 @@ const QUATTRO = [[1, 0], [-1, 0], [0, 1], [0, -1]]
 export function postiDiPesca(f) {
   const out = []
   for (const c of f.s.cose) {
-    const d = PEZZI[c.tipo]
+    const d = f.misureCosa(c)
     if (!d || !(d.molo || c.tipo === 'porticciolo')) continue
     const ingombro = []
     for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) ingombro.push([c.i + a, c.j + b])

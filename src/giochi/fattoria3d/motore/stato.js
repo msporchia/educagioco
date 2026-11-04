@@ -74,6 +74,7 @@ export function statoIniziale() {
     merci: vuote(), prodotti: {}, lana: 0,
     esperienza: 0,             // monete spese in questo gioco; non scende mai (dati/livelli.js ne ricava il livello)
     scala: SCALA_ATTUALE,      // 2 = la scala dei livelli della 2D; uno stato senza `scala` ha l'esperienza sulla scala di prima e `normalizza` la porta qui
+    portoVoltato: false,                         // il porticciolo di prima si è già girato verso l'acqua (docs/fattoria3d/rotazione.md)
     silo: Object.fromEntries(TIPI_DI_SILO.map(t => [t, 0])),      // quante volte è stato ingrandito ogni magazzino (+2 pezzi per scomparto, dati/silos.js)
     posseduti: Object.fromEntries(TIPI_DI_EDIFICIO.map(t => [t, false])),
     lotti: { ...LOTTI_INIZIALI },
@@ -137,6 +138,7 @@ export function normalizza(letto) {
   // `geo: 1` ha già la sua lista; i suoi lotti comprati dove ora c'è un lago naturale (o altro che cambia) restano com'erano (`vecchi1`). `geo: 2` ha tutte e due le liste.
   const lista = (v, tieni) => Array.isArray(v) ? [...new Set(v.filter(id => typeof id === 'string' && lottoPerId(id) && s.lotti[id] && tieni(id)))] : []
   const diverso = (gen, id) => { const l = lottoPerId(id); return l && lottoDiversoDa(l, gen) }
+  s.portoVoltato = letto.portoVoltato === true
   if (letto.geo === 1 || letto.geo === 2) {
     s.vecchi = lista(letto.vecchi, () => true)
     s.vecchi1 = letto.geo === 2 ? lista(letto.vecchi1, id => !s.vecchi.includes(id))

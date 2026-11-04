@@ -16,6 +16,7 @@ import { livelloDelPezzo, livelloDellaRicetta, sogliaDi } from '../../src/giochi
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { chiedibili } from '../../src/giochi/fattoria3d/dati/ordini.js'
 import { ordineInForma } from '../../src/giochi/fattoria3d/motore/ordini.js'
+import { postiDiPesca } from '../../src/giochi/fattoria3d/motore/pesca.js'
 import { statoIniziale, normalizza } from '../../src/giochi/fattoria3d/motore/stato.js'
 import { dettoDi } from '../../src/giochi/fattoria3d/scena3d/detti.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -326,6 +327,37 @@ const celleDi = l => { const o = []; for (let y = 0; y < l.d; y++) for (let x = 
     const a = f.lanciaLenza(-3, 5), b = f.lanciaLenza(4, 6)
     return a.ok && b.ok && f.lenze().length === 2 && a.lotto !== b.lotto
   })())
+}
+
+/* ── il porticciolo guarda l'acqua ── */
+{
+  const f = new Fattoria3d({ borsa: { quante: () => 1e6, paga: () => true } })
+  f.s.esperienza = sogliaDi(70)
+  const acqua = new Set(), su = (i, j) => acqua.add(i + ',' + j)
+  for (let i = -30; i < 30; i++) for (let j = -9; j < -5; j++) su(i, j)                 // un lago a nord, in celle finte
+  const era = f.acqua.bind(f), tuo = f.cellaPropria.bind(f)
+  f.acqua = (i, j, ig) => acqua.has(i + ',' + j) || era(i, j, ig)
+  f.cellaPropria = () => true; f._bloccaSenzaAcqua = () => false
+  uguale('col lago a nord la banchina guarda a nord', f.versoAcqua('porticciolo', 2, -3.5).rot, 2)
+  acqua.clear()
+  for (let j = -20; j < 20; j++) for (let i = 8; i < 12; i++) su(i, j)                  // a est
+  uguale('col lago a est guarda a est', f.versoAcqua('porticciolo', 6, 0).rot, 1)
+  acqua.clear()
+  uguale('lontano dall\'acqua non ci sta in nessun verso', f.versoAcqua('porticciolo', 40, 40), null)
+  f.cellaPropria = tuo
+}
+{
+  const f = new Fattoria3d({ borsa: { quante: () => 1e6, paga: () => true } })
+  const c = { id: 900, tipo: 'porticciolo', i: 2, j: 2, rot: 1 }
+  f.s.cose.push(c)
+  uguale('girato, il posto da cui si lancia segue l\'ingombro: 3×4', postiDiPesca(f).find(p => p.id === 900).ingombro.length, 12)
+  controlla('girato di un quarto è largo 3', postiDiPesca(f).find(p => p.id === 900).ingombro.every(([i]) => i < 5))
+}
+{
+  const vecchio = statoIniziale(); delete vecchio.portoVoltato
+  uguale('uno stato di prima non è ancora voltato', normalizza(vecchio).portoVoltato, false)
+  const f = new Fattoria3d({ borsa: { quante: () => 1e6, paga: () => true } })
+  uguale('si volta una volta sola', f.s.portoVoltato, true)
 }
 
 riassunto('Fattoria 3D — geografia grande e pesca')

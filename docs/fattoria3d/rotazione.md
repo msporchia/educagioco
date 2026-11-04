@@ -9,8 +9,9 @@ Un pezzo o un edificio si gira di **un quarto di giro alla volta** (90°), attor
   non ha la chiave e si legge dritto. `normalizza` (`motore/stato.js`) tiene `rot` solo se è un intero e il tipo si gira
   (`rotLetta`: 9 → 1, `'2'`/NaN/oggetti → 0, mai un'eccezione); un campo con `rot` nello stato lo butta.
 - **Cosa si gira** (`ruotabile` in `dati/rotazione.js`): tutto tranne il campo (quadrato, non ha un davanti), l'acqua (stagno,
-  laghetto), i pezzi calpestabili (ponte, passerella, molo, molo girato: hanno già la versione girata, e la quota di chi ci cammina
-  dipende dal lato lungo) e il porticciolo (sta sulla riva).
+  laghetto) e i pezzi calpestabili (ponte, passerella, molo, molo girato: hanno già la versione girata, e la quota di chi ci cammina
+  dipende dal lato lungo).
+- **Il porticciolo guarda l'acqua da solo** (`versoAcqua`): trascinandolo si gira verso il lato con più acqua, finché non lo gira il bambino con ↻. Quelli messi prima si sono voltati una volta sola, gratis (`portoVoltato` nello stato).
 - **L'ingombro segue.** `motore.misure(tipo, rot)` scambia `w` e `d` se `rot` è dispari (`misureGirate`, in cache); `misureCosa(c)` lo
   fa per una cosa in mappa. `puoMettere`, `puoCompraEMettere`, `compraEMetti`, `mettiPezzo` e `spostaPezzo` hanno un `rot`;
   `_occupa`/`_libera` e chi misura una cosa (compagni.js per la panchina, `postoLibero` dei vicini, `celleDiServizio`) leggono `misureCosa`.

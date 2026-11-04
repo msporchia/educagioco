@@ -60,7 +60,7 @@ spiaggia» (e l'offerta: «Qui c'è il mare: con un molo e il porticciolo ci si 
 ## Pescare: le regole
 
 - **Serve un molo** (🪙12, livello 10: `molo` 3×1, `molo_v` «molo girato» 1×3; nella scheda Strade con ponte e passerella: calpestabili, `suAcqua`, partono dalla riva) **o il porticciolo**
-  (🪙90, livello 10, uno solo, 4×3, scheda Edifici: `riva: true`, si mette solo su un posto che tocca l'acqua; «Il porticciolo si mette sulla riva»). Non sono produttivi: non spostano la
+  (🪙90, livello 10, uno solo, 4×3, scheda Edifici: `riva: true`, si mette solo su un posto che tocca l'acqua; «Il porticciolo si mette sulla riva»; la banchina guarda l'acqua: [rotazione.md](rotazione.md)). Non sono produttivi: non spostano la
   scaletta.
 - **Il gesto**: si tocca **una cella d'acqua tua** (o la punta del molo). Il contadino cammina fino alla cella da cui si lancia (una cella del molo, o una libera attorno al porticciolo),
   **lancia** (la canna indietro e avanti, il galleggiante in acqua) e **resta lì con la canna alzata**. Il tocco su un'acqua di un lotto non tuo apre l'acquisto del lotto.

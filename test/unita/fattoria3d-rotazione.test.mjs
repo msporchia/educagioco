@@ -37,7 +37,7 @@ const posto = (f, tipo, rot = 0, margine = 1) => {
 const celleDi = (f, id) => { const out = []; for (let i = -6; i < 12; i++) for (let j = -6; j < 16; j++) if (f.cellaCosa.get(chiave(i, j)) === id) out.push([i, j]); return out }
 
 /* ══════════ 1. cosa si gira ══════════ */
-controlla('un campo, l\'acqua, i ponti, i moli e il porticciolo non si girano', ['campo', 'stagno', 'laghetto', 'ponte', 'passerella', 'molo', 'molo_v', 'porticciolo'].every(t => !ruotabile(t)))
+controlla('un campo, l\'acqua, i ponti e i moli non si girano', ['campo', 'stagno', 'laghetto', 'ponte', 'passerella', 'molo', 'molo_v'].every(t => !ruotabile(t)))
 controlla('la panchina, il pollaio, la stalla, il tavolo e ogni edificio si girano', ['panchina', 'pollaio', 'stalla', 'tavolo', 'bacheca', ...Object.keys(EDIFICI)].every(ruotabile))
 controlla('un tipo che non esiste non si gira', !ruotabile('niente'))
 {

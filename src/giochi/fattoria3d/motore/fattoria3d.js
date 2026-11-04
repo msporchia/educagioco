@@ -6,7 +6,7 @@
 import { TIPO_DI_BASE, BORDO_DI_BASE, tipoValido, bordoValido, prezzoStrada, livelloStrada, codiceAspetto, aspettoDaCodice, eDiBase } from '../dati/strade.js'
 import { LIM, chiave, cellaDa, lottoDaChiave, cellaDaId, idCella, dentro, lotto, lottoDi, lottoPerId, vicinoDi, VICINI_4, LOTTI_INIZIALI, FISSI, POSTI_STORICI, stradeDiSerie } from '../dati/mondo.js'
 import { PEZZI, EDIFICI, quotaDelPezzo, edificiDaCostruire } from '../dati/catalogo.js'
-import { ruotabile, misureGirate } from '../dati/rotazione.js'
+import { ruotabile, misureGirate, DAVANTI } from '../dati/rotazione.js'
 import { COLTURE, TESSERE } from '../dati/colture.js'
 import { RICETTE, MACCHINE, TIPI_DI_MACCHINA } from '../dati/ricette.js'
 import { POSTI_MASSIMI, postiInForma, prezzoDelPosto } from '../dati/posti.js'
@@ -72,6 +72,7 @@ export class Fattoria3d {
     for (const k of this.propri) this._apriAnello(lottoDaChiave(k))
     this.tick()
     if (magazzini) this.cura.sistema()             // chi aveva già gli animali trova ciotole e tinozza (non nella fattoria di un vicino)
+    if (magazzini) this._voltaIlPorticciolo()
   }
 
   // ── la borsa ──
@@ -309,6 +310,36 @@ export class Fattoria3d {
       if (this._bloccaSenzaAcqua(i + a, j + b, ignora) || (d.acqua && this.strada.get(chiave(i + a, j + b)) === 2)) return { ok: false, motivo: 'occupato' }
     }
     return { ok: true }
+  }
+  /** Quanta acqua ha davanti un pezzo girato di `rot`: l'ultima fila della sua impronta e le tre oltre il lato del davanti. */
+  _acquaDavanti(d, i, j, rot) {
+    const [dx, dz] = DAVANTI[rot]
+    let n = 0
+    for (let a = 0; a < (dx ? 4 : d.w); a++) for (let b = 0; b < (dz ? 4 : d.d); b++) {
+      const x = dx > 0 ? i + d.w - 1 + a : dx < 0 ? i - a : i + a, y = dz > 0 ? j + d.d - 1 + b : dz < 0 ? j - b : j + b
+      if (this.acqua(x, y)) n++
+    }
+    return n
+  }
+  /** Il verso di un pezzo di riva col centro in (cx, cz): fra i quattro che ci stanno quello con più acqua davanti. { rot, i, j } o null. */
+  versoAcqua(tipo, cx, cz, ignora) {
+    let meglio = null
+    for (let rot = 0; rot < 4; rot++) {
+      const d = this.misure(tipo, rot), i = Math.round(cx - d.w / 2), j = Math.round(cz - d.d / 2)
+      if (!this.puoMettere(tipo, i, j, ignora, rot).ok) continue
+      const n = this._acquaDavanti(d, i, j, rot)
+      if (!meglio || n > meglio.n) meglio = { rot, i, j, n }
+    }
+    return meglio
+  }
+  /** Il porticciolo messo quando guardava sempre a sud: una volta sola si gira verso l'acqua, gratis. */
+  _voltaIlPorticciolo() {
+    if (this.s.portoVoltato) return
+    this.s.portoVoltato = true
+    const c = this.s.cose.find(x => x.tipo === 'porticciolo')
+    if (!c) return
+    const d = this.misureCosa(c), v = this.versoAcqua(c.tipo, c.i + d.w / 2, c.j + d.d / 2, c.id)
+    if (v && v.rot !== (c.rot || 0)) this.spostaPezzo(c.id, v.i, v.j, { gratis: true, rot: v.rot })
   }
   /** L'impronta ha una cella d'acqua, o ne tocca una di lato: il porticciolo si mette sulla riva. */
   _toccaAcqua(d, i, j) {
