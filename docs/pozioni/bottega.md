@@ -72,9 +72,9 @@ disegno in `scena3d/`, la vista in `viste/Mercante.vue`.
 | Gettoni contati | 4 | 2 | no | anche in g, cm, ml | 3 |
 
 All'inizio il margine è largo; «quanto manca» fa la sottrazione al posto
-del bambino, e nell'ultima la si fa da sé. Si vedono sulla mappa solo coi
-giochi in prova accesi; il trucco `#pozioni=mercante&prova=2` le apre
-comunque. Non stanno nella campagna: niente sosta, niente stelle sulla
+del bambino, e nell'ultima la si fa da sé. Si vedono sulla mappa solo con «Tutte le
+tappe aperte» acceso in `#admin`; il trucco `#pozioni=mercante&prova=2` le
+apre comunque. Non stanno nella campagna: niente sosta, niente stelle sulla
 mappa.
 
 ## Cosa va al motore di apprendimento

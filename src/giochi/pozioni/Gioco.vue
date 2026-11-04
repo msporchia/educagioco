@@ -8,7 +8,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import Barra from '../../components/Barra.vue'
 import TastoSalta from '../../components/TastoSalta.vue'
 import { suono } from '../../audio.js'
-import { segna, answer, sperimentaliAccesi } from '../../store/profile.js'
+import { segna, answer, tuttoAperto } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'
 import { progresso, aperta, adesso, stelleDi, completa,
          sosta, salvaSosta, buttaSosta } from '../campagne.js'
@@ -137,7 +137,7 @@ function seSparisce(e) {
 onMounted(() => {
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
-  // `#pozioni=mercante&prova=2`: la bottega in prova, anche coi giochi in prova spenti
+  // `#pozioni=mercante&prova=2`: la bottega in prova, anche senza «tutte le tappe aperte»
   const h = new URLSearchParams((location.hash || '').slice(1))
   if (h.get('pozioni') === 'mercante') avviaProva(Math.max(0, Math.min(PROVE.length - 1, (Number(h.get('prova')) || 1) - 1)))
 })
@@ -301,7 +301,7 @@ const bozza = ref([])               // l'ordine in preparazione: [{ i, k }]
 const animazione = ref(null)
 const messaggio = ref(null)
 const occupato = ref(false)
-const prove = computed(() => (sperimentaliAccesi() ? PROVE : []))
+const prove = computed(() => (tuttoAperto() ? PROVE : []))   // solo per chi prova, da #admin
 const giro = ref(0)                 // una pozione nuova è una tela nuova
 let nAnim = 0, inCorso = null
 
