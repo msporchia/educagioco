@@ -37,7 +37,7 @@ controlla('i posti non scendono mai e il massimo è quello della tabella', Array
 controlla('i biglietti hanno tre colori: rosa coi prodotti, giallo una cosa sola, verde più raccolti', tipoDelOrdine({ pane: 1 }) === 'rosa' && tipoDelOrdine({ grano: 1, pane: 1 }) === 'rosa'
   && tipoDelOrdine({ grano: 2 }) === 'giallo' && tipoDelOrdine({ grano: 2, mais: 1 }) === 'verde')
 controlla('al livello del banco si chiedono solo raccolti', chiedibili(LIVELLO_BANCO).prodotti.length === 0 && chiedibili(LIVELLO_BANCO).raccolti.length >= 1)
-controlla('i prodotti arrivano con le macchine', chiedibili(ULTIMO).prodotti.length === Object.values(RICETTE).filter(r => !r.mangime).length && chiedibili(17).prodotti.length > 0)
+controlla('i prodotti arrivano con le macchine, e il pesce crudo con la pesca', chiedibili(ULTIMO).prodotti.length === Object.values(RICETTE).filter(r => !r.mangime).length + 1 && chiedibili(17).prodotti.length > 0)
 controlla('il mangime (erba medica, becchime, foraggio) non si chiede mai', ['erba', 'becchime', 'foraggio', 'foraggio_carote'].every(k => !chiedibili(ULTIMO).raccolti.includes(k) && !chiedibili(ULTIMO).prodotti.includes(k)))
 
 /* ══════════ 2. ordini mai impossibili, premio dentro il tetto ══════════ */
@@ -49,7 +49,7 @@ controlla('il mangime (erba medica, becchime, foraggio) non si chiede mai', ['er
     const chiavi = Object.keys(o.chiede)
     if (!chiavi.length || chiavi.length > 3) male.push(`liv ${liv}: ${chiavi.length} cose`)
     for (const k of chiavi) {
-      if (!(COLTURE[k] || RICETTE[k])) male.push(`${k} non esiste`)
+      if (!(COLTURE[k] || RICETTE[k] || k === 'pesce')) male.push(`${k} non esiste`)
       else if (livelloDi(k) > liv) male.push(`liv ${liv} chiede ${k}, che arriva al ${livelloDi(k)}`)
       if (liv === LIVELLO_BANCO && RICETTE[k]) male.push(`liv ${liv} chiede il prodotto ${k}`)
       if (RICETTE[k]) conProdotti++
