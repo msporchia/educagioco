@@ -52,20 +52,23 @@ export const INGREDIENTI = [
   { nome: 'stelo dorato', tipo: 'radice', colore: '#e0c25a' },
 ].map(i => ({ ...i, famiglia: FAMIGLIE.find(f => f.tipo === i.tipo).chiave }))
 
+// `effetto`: cosa fa a chi la beve, a schermo e all'orecchio (scena3d/cliente.js, suoni.js)
 export const POZIONI = [
-  { nome: 'Pozione del Coraggio',       emoji: '🦁', colore: '#e2603a' },
-  { nome: 'Pozione dell\'Invisibilità', emoji: '👻', colore: '#9fb8d4' },
-  { nome: 'Elisir di Volo',             emoji: '🪶', colore: '#6ec6ff' },
-  { nome: 'Filtro della Risata',        emoji: '😂', colore: '#f2c33d' },
-  { nome: 'Pozione della Forza',        emoji: '💪', colore: '#c0453f' },
-  { nome: 'Sciroppo dei Sogni',         emoji: '🌜', colore: '#8b7ed8' },
-  { nome: 'Elisir di Velocità',         emoji: '⚡', colore: '#ffd400' },
-  { nome: 'Pozione Parlante',           emoji: '🗣️', colore: '#4bb37b' },
-  { nome: 'Filtro Antipuzza',           emoji: '🌸', colore: '#e58fb8' },
-  { nome: 'Pozione del Gigante',        emoji: '🗿', colore: '#8d9aa5' },
+  { nome: 'Pozione del Coraggio',       emoji: '🦁', colore: '#e2603a', effetto: 'ruggisce' },
+  { nome: 'Pozione dell\'Invisibilità', emoji: '👻', colore: '#9fb8d4', effetto: 'sparisce' },
+  { nome: 'Elisir di Volo',             emoji: '🪶', colore: '#6ec6ff', effetto: 'vola' },
+  { nome: 'Filtro della Risata',        emoji: '😂', colore: '#f2c33d', effetto: 'ride' },
+  { nome: 'Pozione della Forza',        emoji: '💪', colore: '#c0453f', effetto: 'forza' },
+  { nome: 'Sciroppo dei Sogni',         emoji: '🌜', colore: '#8b7ed8', effetto: 'dorme' },
+  { nome: 'Elisir di Velocità',         emoji: '⚡', colore: '#ffd400', effetto: 'corre' },
+  { nome: 'Pozione Parlante',           emoji: '🗣️', colore: '#4bb37b', effetto: 'parla' },
+  { nome: 'Filtro Antipuzza',           emoji: '🌸', colore: '#e58fb8', effetto: 'profuma' },
+  { nome: 'Pozione del Gigante',        emoji: '🗿', colore: '#8d9aa5', effetto: 'gigante' },
 ]
 
-export const CLIENTI = ['🧙', '🧝', '🧚', '🧛', '🧜', '🦉', '🐈‍⬛', '🐸', '🦇', '🧌', '👽', '🤖']
+// chi viene a bere: figure della creta, fotografate (scena3d/personaggi3d.js)
+export const CLIENTI = ['maga', 'rana', 'gufo', 'gatto', 'robot', 'folletto']
+export const PERSONAGGI = ['mercante', 'mercante-porge', ...CLIENTI]
 
 // media geometrica dei canali: giallo e blu fanno verde, l'aritmetica farebbe grigio
 export function mescola(colori, vuoto = '#4b3f7d') {

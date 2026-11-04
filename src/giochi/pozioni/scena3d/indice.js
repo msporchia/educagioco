@@ -1,4 +1,4 @@
-// La bottega in 3D (three.js, WebGL 2). Vedi docs/pozioni/bottega.md.
+// La bottega in 3D (three.js, WebGL 2). Vedi docs/pozioni/regole.md.
 // Chi gioca non disegna: la view passa a `imposta(q)` la scena già decisa
 // (i misurini col loro livello, le macchie, i colori nel calderone) e
 // chiede le animazioni (`ordine`, `pulisci`, `festa`), che tornano una
@@ -12,6 +12,9 @@ import { creaBanco, POSTI } from './banco.js'
 import { creaVasi, ALTEZZA_VASO, TACCA } from './vasi.js'
 import { creaAmpolle } from './ampolle.js'
 import { creaEffetti } from './effetti.js'
+import { creaMercante } from './mercante.js'
+import { creaCliente } from './cliente.js'
+import { suoni } from '../suoni.js'
 import * as T from './trame.js'
 
 const FOV = 46
@@ -20,7 +23,8 @@ const LARGO = 6.9, PROFONDO = 7.4
 const DAVANTI = 3.2            // il bordo del bancone: in fondo allo schermo, mai più su
 const VERSO = new Vector3(0, 0.6, 0.8).normalize()
 
-export function creaBottega3d(canvas, { tocca, perso, dpr } = {}) {
+// `foto`: le foto dei personaggi, per nome (dati/anteprime.js)
+export function creaBottega3d(canvas, { tocca, perso, dpr, foto } = {}) {
   let gl = null, renderer
   try {
     gl = canvas.getContext('webgl2', { alpha: false, antialias: true, depth: true, stencil: false, powerPreference: 'high-performance' })
@@ -28,7 +32,7 @@ export function creaBottega3d(canvas, { tocca, perso, dpr } = {}) {
   if (!gl || gl.isContextLost()) return null
   try { renderer = segui(new WebGLRenderer({ canvas, context: gl, antialias: true })) } catch (e) { return null }
   let tutto
-  try { tutto = costruisci(renderer, canvas, { tocca, dpr }) } catch (e) {
+  try { tutto = costruisci(renderer, canvas, { tocca, dpr, foto }) } catch (e) {
     console.warn('pozioni 3D: niente disegno', e)
     try { renderer.dispose() } catch (x) { /* pazienza */ }
     return null
@@ -40,7 +44,7 @@ export function creaBottega3d(canvas, { tocca, perso, dpr } = {}) {
   return tutto
 }
 
-function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
+function costruisci(renderer, canvas, { tocca, dpr: fisso, foto }) {
   renderer.outputColorSpace = SRGBColorSpace
   renderer.toneMapping = ACESFilmicToneMapping
   renderer.toneMappingExposure = 1.1
@@ -64,6 +68,8 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
   const anima = (durata, passo) => new Promise(fine => attive.push({ t: 0, durata, passo, fine }))
   const aspetta = s => anima(s, () => {})
   const liscio = x => x * x * (3 - 2 * x)
+  const mercante = creaMercante(scena, trame, { foto, anima })
+  const cliente = creaCliente(scena, trame, eff, { foto, anima, aspetta })
 
   /* ── la telecamera: tutto il banco dentro, in piedi o coricato ── */
   let W = 1, H = 1, dpr = fisso || Math.min(2, window.devicePixelRatio || 1)
@@ -113,7 +119,7 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
   canvas.addEventListener('pointercancel', lascia)
 
   /* ── il ciclo ── */
-  let ultimo = performance.now(), giro = 0, vivo = true, fotogrammi = 0
+  let ultimo = performance.now(), giro = 0, vivo = true, fotogrammi = 0, bolla = 2
   function ciclo(ora) {
     if (!vivo) return
     giro = requestAnimationFrame(ciclo)
@@ -129,6 +135,9 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
     banco.aggiorna(dt, t)
     vasi.aggiorna(dt, t)
     ampolle.aggiorna(dt, t)
+    mercante.aggiorna(dt, t)
+    // il calderone sobbolle piano, solo se c'è dentro qualcosa
+    if ((bolla -= dt) < 0) { bolla = 1.4 + Math.random() * 2.6; if (ultima?.riempito > 0) suoni.bolla() }
     eff.aggiorna(dt)
     renderer.render(scena, camera)
     fotogrammi++
@@ -173,6 +182,8 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
     const toccati = [...new Set(voci.map(v => v.i))]
     for (const i of toccati) vasi.trattieni(i, true)
     ampolle.consegna(voci.map(v => ({ ...v, lungo: v.misura * TACCA * vasi.scala(v.i) })))
+    mercante.porge(0.3 + voci.length * 0.25)
+    suoni.ampolle(voci.length)
     await aspetta(0.6 + voci.length * 0.25)
     for (let k = 0; k < voci.length; k++) {
       await versaUna(k, voci[k])
@@ -207,7 +218,10 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
       // la radice si mette in piedi e scivola giù nel vetro
       const giuY = vasi.fondo(f).y + a.corpo.userData.lungo / 2
       await anima(trabocca ? 0.35 : 0.5, t => { a.gruppo.position.y = sopra.y + (giuY - sopra.y) * t * t })
+      suoni.radice()
       if (trabocca) {
+        suoni.trabocca()
+        mercante.scuote()
         // sporge dal bordo: si rovescia e cade sul tavolo
         const fermo = a.gruppo.position.clone()
         eff.gocce.emetti(18, { da: bocca, sparpaglia: 0.3, verso: [0.6, 1.4, 0.6], caso: 1.2, colore, vita: 0.9, misura: 0.09, gravita: 6 })
@@ -228,6 +242,7 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
       // si piega e versa: il getto cade fino al livello, che sale
       await anima(0.18, t => { a.gruppo.rotation.z = -liscio(t) * 2.0 })
       const fino = trabocca ? (ALTEZZA_VASO - 0.1) / TACCA : livello   // traboccando, fino all'orlo
+      if (polvere) suoni.polvere(0.6); else suoni.liquido(0.6)
       await anima(0.6, t => {
         v.livello = prima + (fino - prima) * liscio(t)
         eff.versa(a.gruppo.localToWorld(a.bocca.clone()), vasi.fondo(f), colore, polvere)
@@ -236,6 +251,8 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
       eff.smetti()
       if (trabocca) {
         // la schiuma esce dal bordo e cola sul tavolo, poi il misurino torna dov'era
+        suoni.trabocca()
+        mercante.scuote()
         const m = eff.macchia(f), era = m.visible ? m.scale.x : 0.001
         mettiMacchia({ i: f, colore }, era / grande(f))
         const schiuma = new Color(colore).lerp(new Color(1, 1, 1), 0.5)
@@ -273,6 +290,7 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
     })
     await anima(0.2, f => { t.rotation.z = lato * liscio(f) * 1.9 })
     banco.ribolli(4)
+    suoni.tuffo()
     banco.colore(colore)
     banco.riempi(riempitoDopo)
     const livello = v.livello
@@ -302,6 +320,7 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
     for (const m of sporche) {
       const qui = m.position.clone(), g0 = m.scale.x
       await anima(0.3, f => { s.position.lerpVectors(da, qui, liscio(f)) })
+      suoni.spugna()
       await anima(0.8, f => {
         const a = f * Math.PI * 6
         s.position.set(qui.x + Math.cos(a) * 0.6 * (1 - f * 0.4), 0.02, qui.z + 0.35 + Math.sin(a) * 0.25)
@@ -316,9 +335,11 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
     s.visible = false
   }
 
-  // la pozione è pronta: il calderone sbuffa del suo colore, con le scintille
-  async function festa(colore) {
+  // la pozione è pronta: il calderone sbuffa del suo colore, con le scintille, e chi l'ha chiesta viene a berla
+  async function festa({ colore, cliente: chi, effetto }) {
     banco.ribolli(6)
+    suoni.sbuffo()
+    mercante.esulta()
     const C = POSTI.calderone
     const su = new Vector3(C.x, banco.quotaBrodo() + 0.1, C.z)
     await anima(1.4, f => {
@@ -327,6 +348,7 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
         eff.luci.emetti(4, { da: su, sparpaglia: 1, verso: [0, 3, 0], caso: 2.5, colore: '#fff2b0', vita: 1, misura: 0.12, gravita: 2 })
       }
     })
+    await cliente.viene({ chi, colore, effetto, partenza: su })
   }
 
   function rilascia() {
@@ -337,7 +359,7 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
     canvas.removeEventListener('pointerup', alza)
     canvas.removeEventListener('pointercancel', lascia)
     attive = []        // le promesse restano aperte: chi aspettava si ferma lì, su una scena che non c'è più
-    vasi.rilascia(); ampolle.rilascia(); eff.rilascia()
+    vasi.rilascia(); ampolle.rilascia(); eff.rilascia(); mercante.rilascia(); cliente.rilascia()
     for (const t of Object.values(trame)) t.dispose()
     rilasciaRenderer(renderer)
   }

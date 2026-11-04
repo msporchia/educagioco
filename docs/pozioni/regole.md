@@ -8,9 +8,18 @@ scaletta, gli sbagli e cosa va al motore di apprendimento. Il gioco sta in
 
 ## Il gioco
 
-- **Una tappa è una pozione con tanti ingredienti** (da due a quattro),
+- **Una tappa è una fila di due o tre pozioni** (`pozioni`, `Fila`): due dove il
+  conto è scritto, tre dove lo si fa da soli e nelle finali. Con una sola non
+  sembrava di aver fatto una tappa. Fra una pozione e l'altra c'è il cartello in
+  mezzo (`Fine.vue` con `mezzo`): le sue stelle, quanto è costata, il modo più
+  economico. Nella fila non tornano la stessa pozione e lo stesso cliente, e gli
+  ingredienti cambiano finché ce ne sono.
+- **Una pozione ha tanti ingredienti** (da due a quattro),
   e ognuno ha il suo strumento col segno d'oro dove arriva la dose. La
-  pergamena dice quanto c'è e quanto ne serve, nell'unità della ricetta.
+  pergamena dice quanto c'è e quanto ne serve, nell'unità della ricetta, e
+  a che pozione si è.
+- **A pozione finita arriva il cliente e la beve**: è la festa di averla fatta
+  giusta ([personaggi.md](personaggi.md)).
 - **Il listino del mercante** è un rotolo che si apre con «Dal mercante»:
   tutti gli ingredienti della ricetta insieme, quattro targhette a testa
   (quantità e prezzo). Le ampolle si ricomprano quante volte si vuole.
@@ -48,11 +57,13 @@ scaletta, gli sbagli e cosa va al motore di apprendimento. Il gioco sta in
   i cuori e la mancia del cliente esigente: con una barra che calava sopra
   un cartello da leggere, si imparava a non leggere.
 - **Le stelle dicono quanto si è speso**, non quante volte si è sbagliato:
-  tre al minimo, due fino a tre gettoni in più, una comunque (`stelle`).
-  Alla fine, se si è speso di più, si dice il modo più economico
+  tre al minimo, due fino a tre gettoni in più, una comunque (`stelle`). Quelle
+  della tappa sono su tutta la fila, tre gettoni di tolleranza a pozione.
+  Sul cartello, se si è speso di più, si dice il modo più economico
   ingrediente per ingrediente (`piuEconomico`).
 - **I gettoni sono della pozione**, non le monete del bambino: il bilancio è
-  il minimo più il `margine` della tappa, largo all'inizio e stretto in fondo.
+  il minimo più il `margine` della tappa, largo all'inizio e stretto in fondo, e
+  a ogni pozione riparte da zero.
 - **Tre monete per ingrediente finito senza traboccare** (`MONETE_A_DOSE`):
   una dose è una domanda vera, e tante ampolle piccole non rendono di più.
   Si pagano quando si ordina, così uscire mentre il mercante versa non perde
@@ -65,20 +76,21 @@ Nove gradini scritti una volta sola e ripetuti per le tre famiglie
 che dice in che unità la ricetta li scrive. **Le chiavi e l'ordine delle
 ventinove tappe non cambiano**: sono quelle dei progressi e delle stelle.
 
-| | gradino | la ricetta | il listino | aiuto | margine |
-|---|---|---|---|---|---|
-| 1 | `banco` | «500 g» | in grammi: niente da convertire | `gioco` | 8 |
-| 2 | `grande` | «1 kg» | in grammi | `svolto` | 8 |
-| 3 | `grandi` | 2 kg, 5 kg | grammi e chili | `regola` | 6 |
-| 4 | `virgola` | 0,5 kg, 1,5 kg | grammi e chili | `svolto` | 6 |
-| 5 | `virgole` | le stesse, e 1,2 kg | grammi e chili | niente | 4 |
-| 6 | `media` | 8 kg, 12 kg | arrivano gli etti | `svolto` | 6 |
-| 7 | `miste` | in tre unità | in tre unità | `regola` | 4 |
-| 8 | `inversa` | «6000 g» | chili ed etti: si sale | `svolto` | 5 |
-| 9 | `inverse` | su e giù | in tre unità | niente | 3 |
+| | gradino | la ricetta | il listino | aiuto | margine | pozioni |
+|---|---|---|---|---|---|---|
+| 1 | `banco` | «500 g» | in grammi: niente da convertire | `gioco` | 8 | 2 |
+| 2 | `grande` | «1 kg» | in grammi | `svolto` | 8 | 2 |
+| 3 | `grandi` | 2 kg, 5 kg | grammi e chili | `regola` | 6 | 3 |
+| 4 | `virgola` | 0,5 kg, 1,5 kg | grammi e chili | `svolto` | 6 | 2 |
+| 5 | `virgole` | le stesse, e 1,2 kg | grammi e chili | niente | 4 | 3 |
+| 6 | `media` | 8 kg, 12 kg | arrivano gli etti | `svolto` | 6 | 2 |
+| 7 | `miste` | in tre unità | in tre unità | `regola` | 4 | 3 |
+| 8 | `inversa` | «6000 g» | chili ed etti: si sale | `svolto` | 5 | 2 |
+| 9 | `inverse` | su e giù | in tre unità | niente | 3 | 3 |
 
-- Poi due tappe finali (`FINALI`): **il grande calderone** (le tre famiglie
-  nella stessa pozione) e **maestro alchimista**, con le dosi da magazzino.
+- Poi due tappe finali (`FINALI`), da tre pozioni: **il grande calderone** (le
+  tre famiglie nella stessa pozione) e **maestro alchimista**, con le dosi da
+  magazzino.
 - **Quanto si dice lo decide la tappa** (`aiuto`): `gioco` il cartello dice
   come si gioca, `svolto` sotto ogni targhetta c'è quanto vale nell'unità
   della ricetta, `regola` accanto all'ingrediente c'è l'uguaglianza («1 kg =
@@ -204,5 +216,6 @@ Nei test: `unita/pozioni`, `unita/pozioni-sosta`, `integrazione/pozioni`,
 `[data-ordine]`, `[data-posto]`, `[data-azione="mercante"|"ordina"|"pulisci"]`,
 `[data-esito][data-codice]` (`aiuto`·`giusto`·`trabocca`), `[data-fine="tappa"]`,
 `[data-righe]`, `[data-stelle]`, `[data-monete]`, `[data-nota-monete]`,
-`[data-azione="avanti"|"mappa"]`; `window.__poz` (`aggiungi(i, k)`,
-`togliVoce(n)`, `ordina()`, `pulisci()`, `salta()`, `bottega`).
+`[data-azione="avanti"|"mappa"]`, `[data-pozione]`, `[data-fine="pozione"]`,
+`[data-fila]`; `window.__poz` (`aggiungi(i, k)`,
+`togliVoce(n)`, `ordina()`, `pulisci()`, `salta()`, `bottega`, `fila`).

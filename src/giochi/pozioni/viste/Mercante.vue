@@ -14,6 +14,8 @@ import { creaBottega3d } from '../scena3d/indice.js'
 
 const props = defineProps({
   bottega: { type: Object, required: true },
+  numero: { type: Number, default: 1 },          // la pozione in scena, nella fila della tappa
+  quante: { type: Number, default: 1 },
   bozza: { type: Array, default: () => [] },     // l'ordine in preparazione: [{ i, k }]
   animazione: { type: Object, default: null },   // { n, tipo: ordine | pulisci | festa, … }
   messaggio: { type: Object, default: null },    // { tipo: aiuto | giusto | trabocca, righe }
@@ -67,7 +69,7 @@ function tocca(t) {
 }
 function accendi() {
   scena?.rilascia()
-  scena = creaBottega3d(tela.value, { tocca, perso: () => { senza3d.value = true } })
+  scena = creaBottega3d(tela.value, { tocca, foto: ANTEPRIME, perso: () => { senza3d.value = true } })
   senza3d.value = !scena
   if (scena) scena.imposta(quadro.value)
 }
@@ -85,7 +87,7 @@ watch(() => props.animazione, async a => {
       await scena.ordine(a.voci, k => { mostrati.value[a.voci[k].i] = a.voci[k].messo })
       mostrati.value = null
     } else if (a.tipo === 'pulisci') await scena.pulisci()
-    else if (a.tipo === 'festa') await scena.festa(a.colore)
+    else if (a.tipo === 'festa') await scena.festa(a)
   }
   emit('fermo', a.n)
 }, { flush: 'sync' })
@@ -105,7 +107,8 @@ if (typeof window !== 'undefined') window.__bottega3d = { grafica: () => scena?.
 
       <div class="pz-strati">
         <div class="pz-pergamena" data-pergamena>
-          <h3><span class="em">{{ b.pozione.emoji }}</span> {{ b.pozione.nome }}</h3>
+          <h3><span class="em">{{ b.pozione.emoji }}</span> {{ b.pozione.nome }}
+            <small class="pz-numero" data-pozione>{{ numero }} di {{ quante }}</small></h3>
           <div v-for="(g, i) in b.ingredienti" :key="g.nome" class="pz-riga" :class="{ 'pz-fatto': pieno(g, i) }" :data-voce="g.nome">
             <span v-if="pieno(g, i)" class="em">✅</span>
             <img v-else class="pz-foto" :src="ANTEPRIME[g.nome]" alt="">
@@ -121,7 +124,7 @@ if (typeof window !== 'undefined') window.__bottega3d = { grafica: () => scena?.
         <!-- il rotolo del mercante: targhette, nessuna figura che suggerisca quanto -->
         <div v-if="aperto" class="pz-rotolo" data-listino>
           <div class="pz-testa-rotolo">
-            <h3>Il listino del mercante</h3>
+            <h3><img class="pz-faccia-mercante" :src="ANTEPRIME.mercante" alt=""> Il listino del mercante</h3>
             <button class="pz-chiudi" aria-label="chiudi" data-chiudi @click="aperto = false">✕</button>
           </div>
           <div class="pz-elenco">
