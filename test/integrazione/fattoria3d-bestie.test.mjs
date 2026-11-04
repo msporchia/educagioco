@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE BESTIE DI CASA DELLA FATTORIA 3D, COL DITO — docs/fattoria3d/bestie-di-casa.md
 
-   Si apre il menu «Costruisci» (🏗), la scheda Animali offre le quattro bestie col prezzo della 2D; una chiusa dice il livello; una a cui
+   Si apre il menu «Costruisci» (🏗), la scheda Animali offre tutti gli animali da adottare (razze e compagni); una chiusa dice il livello; una a cui
    mancano le monete lo dice e non cambia niente; con le monete si prende (🪙90 il beagle), arriva in scena e si apre il battesimo: un nome si
    TOCCA (e sotto si può scrivere: «✎ Nome» nel foglio, una parola scritta e «Va bene» la salva). Un tocco vero sulla bestia in scena apre il suo foglio (✕ in alto a destra): tre bisogni, i cibi suoi, una carezza
    gratis che non costa; un cibo dà da mangiare e scala le monete; «Sposta» porta la bestia dove si tocca (gratis, salvato); a 360 px il foglio
@@ -38,6 +38,8 @@ const livello = liv => m3(e => { const { motore, mondo } = window.__fattoria3d; 
 const apriAnimali = async () => {
   await toccaEl('[data-f3="az-costruisci"]')
   await page.waitForSelector('[data-f3="costruisci-qui"]', { timeout: 3000 })
+  await toccaEl('[data-f3="costruisci-qui"] [data-gruppo="fattoria"]')
+  await attendi(page, 100)
   await toccaEl('[data-f3="costruisci-qui"] [data-scheda="animali"]')
   await attendi(page, 200)
 }
@@ -45,7 +47,7 @@ const apriAnimali = async () => {
 /* ── la scheda Animali offre le bestie, chiuse sotto il livello ── */
 await livello(3)
 await apriAnimali()
-controlla('le quattro bestie sono nella scheda Animali', await page.locator('[data-carta^="bestia:"]').count() === 4)
+controlla('tutti gli animali da adottare sono nella scheda Animali (le razze e i cinque compagni)', await page.locator('[data-carta^="bestia:"]').count() === 15)
 await toccaEl('[data-carta="bestia:beagle"]')
 controlla('chiuso: dice il livello 15', /livello 15/i.test(await page.locator('[data-f3="costruisci-msg"]').innerText()))
 uguale('niente monete spese', await monete(), 500)
@@ -77,35 +79,68 @@ uguale('il nome scelto è salvato', await m3(() => window.__fattoria3d.motore.cu
 await attendi(page, 1500)
 controlla('la bestia è in scena', await m3(() => window.__fattoria3d.mondo.compagni.lista.some(c => c.def.id === 'beagle' && c.def.nome === 'Birba')))
 
-/* ── il tocco sulla bestia apre il suo foglio ── */
-const schermoDi = (x, z) => m3(([x, z]) => { const { mondo } = window.__fattoria3d, r = mondo.canvas.getBoundingClientRect(), [px, py] = mondo.proietta({ x, y: 0.3, z }); return [r.left + px, r.top + py] }, [x, z])
+/* ── il foglio dice come sta e serve per nome e vestiti: la cura si fa sul prato ── */
+const schermoDi = (x, z) => m3(([x, z]) => { const { mondo } = window.__fattoria3d, r = mondo.canvas.getBoundingClientRect(), [px, py] = mondo.proietta({ x, y: 0.15, z }); return [r.left + px, r.top + py] }, [x, z])
 const apriFoglio = async () => {
-  for (let prova = 0; prova < 6 && await page.locator('[data-f3="bestia"]').count() === 0; prova++) {
-    const [x, z] = await m3(() => { const c = window.__fattoria3d.mondo.compagni.lista.find(o => o.def.id === 'beagle'); return [c.x, c.z] })
-    await tocca(...await schermoDi(x, z))
-    await attendi(page, 500)
-  }
+  await apriAnimali()
+  await toccaEl('[data-carta="bestia:beagle"]')
+  await page.waitForSelector('[data-f3="bestia"]', { timeout: 3000 })
 }
 await apriFoglio()
-controlla('un tocco vero sulla bestia apre il foglio', await page.locator('[data-f3="bestia"]').count() === 1)
+controlla('la carta di una bestia tua apre il foglio', await page.locator('[data-f3="bestia"]').count() === 1)
 controlla('il foglio ha il suo nome', /Birba/.test(await page.locator('[data-f3="bestia-nome"]').innerText()))
 uguale('tre bisogni', await page.locator('[data-bisogno]').count(), 3)
-controlla('i cibi sono solo i suoi (cane: osso e bistecca, non carota)', await page.locator('[data-cibo="osso"]').count() === 1 && await page.locator('[data-cibo="carota"]').count() === 0)
+uguale('niente gesti nel foglio', await page.locator('[data-f3="bestia"] [data-cibo], [data-f3="bestia"] [data-coccola], [data-azione="carezza"]').count(), 0)
 await scatto(page, 'fattoria3d-bestie-foglio')
+await toccaEl('[data-f3="bestia"] [data-chiudi]')
 
-/* ── carezza gratis, cibo a pagamento, coccola ── */
-await m3(() => { const { motore } = window.__fattoria3d; motore.borsa.paga(motore.monete() - 0) })
-const m0 = await monete()
-await toccaEl('[data-azione="carezza"]')
-uguale('la carezza è gratis', await monete(), m0)
-controlla('e lo dice', /contento/.test(await page.locator('[data-f3="bestia-msg"]').innerText()))
+/* ── la ciotola: nata con lui, ha fame e chiede, un tocco vero sul prato la apre ── */
+const pezzoSulPrato = async (trova, selettore) => {
+  const [x, z] = await m3(trova)
+  await m3(([x, z]) => { const c = window.__fattoria3d.mondo.camera; c.libera.on = true; c.libera.x = x; c.libera.z = z; c.x = x; c.z = z }, [x, z])
+  await attendi(page, 400)
+  for (let prova = 0; prova < 8 && await page.locator(selettore).count() === 0; prova++) {
+    await tocca(...await schermoDi(x, z))
+    await attendi(page, 300)
+    await page.waitForFunction(() => { const e = window.__fattoria3d.mondo.eroe; return !e.percorso.length && !e.az }, null, { timeout: 15000 })      // la camera lo segue: un secondo tocco, da fermo
+    await attendi(page, 300)
+  }
+}
 await m3(() => { const { motore } = window.__fattoria3d; motore.cura.casa.beagle.pancia = 0.2; motore.borsa.paga(-50) })
-await attendi(page, 400)
+await attendi(page, 900)
+controlla('sulla ciotola c\'è quello che chiede', await page.locator('.f3-badge.fame[data-ciotola="beagle"]').count() === 1)
+await pezzoSulPrato(() => { const k = window.__fattoria3d.motore.cura.ciotolaDi('beagle'); return [k.i + 0.5, k.j + 0.5] }, '[data-f3="ciotola"]')
+controlla('un tocco sulla ciotola la apre', await page.locator('[data-f3="ciotola"]').count() === 1)
+controlla('porta il suo nome', /Birba/.test(await page.locator('[data-f3="ciotola-nome"]').innerText()))
+controlla('i cibi sono solo i suoi (cane: osso e bistecca, non carota)', await page.locator('[data-cibo="osso"]').count() === 1 && await page.locator('[data-cibo="carota"]').count() === 0)
+uguale('un gettone è quello che chiede', await page.locator('[data-f3="ciotola"] [data-vuole]').count(), 1)
+await scatto(page, 'fattoria3d-bestie-ciotola')
 const m1 = await monete()
 await toccaEl('[data-cibo="osso"]')
 uguale('l\'osso costa 5', m1 - await monete(), 5)
-await toccaEl('[data-coccola="spazzola"]')
-controlla('la spazzola costa 🪙1 o dice che non serve', [1, 0].includes(m1 - 5 - await monete()))
+uguale('la ciotola si chiude', await page.locator('[data-f3="ciotola"]').count(), 0)
+await attendi(page, 700)
+controlla('corre a mangiare', await m3(() => { const c = window.__fattoria3d.mondo.compagni.lista.find(o => o.def.id === 'beagle'); return !!c.seq }))
+
+/* ── la tinozza: si sceglie, si strofina col dito, si paga alla fine ── */
+await m3(() => { const { motore } = window.__fattoria3d; motore.cura.casa.beagle.pelo = 0.3; motore.cura.casa.beagle.pancia = 0.9 })
+await pezzoSulPrato(() => { const k = window.__fattoria3d.motore.cura.tinozza(); return [k.i + 1, k.j + 1] }, '[data-f3="tinozza"]')
+controlla('un tocco sulla tinozza dice chi è sporco', await page.locator('[data-sporca="beagle"]').count() === 1)
+await scatto(page, 'fattoria3d-bestie-tinozza')
+const mBagno = await monete()
+await toccaEl('[data-lava="spazzola"]')
+await attendi(page, 300)
+await page.waitForSelector('[data-f3="bagno"]', { timeout: 3000 })
+await page.waitForFunction(() => window.__fattoria3d.mondo.compagni.lista.find(o => o.def.id === 'beagle').inBagno?.dentro, null, { timeout: 15000 })
+uguale('si paga solo alla fine', mBagno - await monete(), 0)
+await page.mouse.move(180, 400); await page.mouse.down()
+for (let k = 0; k < 40 && await page.locator('[data-f3="bagno"]').count(); k++) { await page.mouse.move(k % 2 ? 120 : 260, 400 + (k % 3) * 20, { steps: 2 }); await attendi(page, 30) }
+await page.mouse.up()
+uguale('il bagno è finito', await page.locator('[data-f3="bagno"]').count(), 0)
+uguale('🪙1', mBagno - await monete(), 1)
+controlla('è pulito del tutto', await m3(() => window.__fattoria3d.motore.cura.casa.beagle.pelo) === 1)
+await m3(() => { const c = window.__fattoria3d.mondo.camera; c.segui() })
+await apriFoglio()
 
 /* ── gli addobbi (viste/Addobbi.vue, l'interfaccia unica: docs/core/personalizza.md, docs/fattoria3d/addobbi.md): la bestia grande che gira, si prova
    prima di comprare, ogni colore si paga, un colore tuo si rimette gratis, un set si salva ── */

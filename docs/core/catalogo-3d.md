@@ -13,7 +13,7 @@ npm run catalogo3d:scheda -- --gioco fattoria --q watson --angolo 90 --alto 10 -
 ```
 
 La scheda (`strumenti/catalogo-3d-scheda.mjs`) serve Vite da sé, non vuole la
-build, e dice le voci che non si creano; con `--q` scrive anche mesh e triangoli
+build, e dice le voci che non si creano; con `--q` scrive anche mesh, triangoli e la taglia (alto e lungo, in metri come in scena: per confrontare le bestie fra loro e col contadino) (`--q` prende più testi separati da `|`, e `=id` vuole l'id intero: `--q "=fattoria:watson|=fattoria:golia"` sono due voci senza le loro pose)
 di ogni voce (quelli che si disegnano: una mesh spenta non conta). `CHROME=…` forza il browser.
 
 ## Com'è fatta

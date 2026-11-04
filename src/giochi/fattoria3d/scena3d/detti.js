@@ -65,6 +65,7 @@ export function dettoDi(motivo, extra = {}) {
     case 'ha-le-bestie': return 'Ci sono le bestie: spostalo, non si mette via'
     case 'macchina-al-lavoro': return 'Finisci prima il lavoro: poi la metti via (spostarla si può)'
     case 'magazzino': return 'Un magazzino non si mette via: lì c\'è la tua roba (spostarlo si può)'
+    case 'dono': return 'Questa resta sul prato: si può solo spostare, gratis'
     case 'silo-al-massimo': return 'È grande al massimo'
     case 'niente-posto': return 'Non c\'è posto vicino: compra un po\' di terra lì accanto'
     case 'non-serve': return 'Prima ingrandisci quello che hai'

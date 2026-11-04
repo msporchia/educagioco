@@ -189,6 +189,7 @@
 .f3-badge { position: absolute; left: 0; top: 0; background: rgba(255,251,240,.95); color: #3a2a1a; font: 800 14px "Emoji Gioco", system-ui, sans-serif; padding: 3px 9px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,.22); white-space: nowrap; }
 .f3-badge.pronto { background: #ffe27a; animation: f3-salta .9s ease-in-out infinite; }
 .f3-badge.vendita { background: #ffd36a; }
+.f3-badge.fame { background: #fff; font-size: 22px; line-height: 1; padding: 6px 8px; border-radius: 16px 16px 16px 4px; animation: f3-salta .9s ease-in-out infinite; }
 .f3-badge.chiuso { background: #dcd6c8; color: #6a5a4a; }
 @keyframes f3-salta { 50% { margin-top: -8px; } }
 .f3-badge[hidden], .f3-fumetto[hidden], .f3-ospite[hidden] { display: none; }

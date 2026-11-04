@@ -33,6 +33,8 @@ export const PEZZI = {
   panchina:        { nome: 'Panchina',        emoji: '🪑', w: 2, d: 1, ...da2d('panchina'), liv: LIVELLI_ANTICIPATI.panchina, categoria: 'decori' },
   fontana:         { nome: 'Fontana',         emoji: '⛲', w: 2, d: 2, ...da2d('fontana'), categoria: 'decori' },
   pozzo:           { nome: 'Pozzo',           emoji: '🪣', w: 1, d: 1, ...da2d('pozzo'), categoria: 'decori' },
+  ciotola_bestia:  { nome: 'Ciotola',         emoji: '🥣', w: 1, d: 1, prezzo: 0, rincaro: 0, cresce: 0, liv: 1, categoria: 'animali', dono: true },      // arriva con l'animale, porta il suo nome: si sposta gratis, non si compra e non si mette via (docs/fattoria3d/cura-sul-prato.md)
+  tinozza:         { nome: 'Tinozza',         emoji: '🛁', w: 2, d: 2, prezzo: 0, rincaro: 0, cresce: 0, liv: 1, categoria: 'animali', dono: true, unico: true },      // arriva col primo animale: qui si lavano
   spaventapasseri: { nome: 'Spaventapasseri', emoji: '🧑‍🌾', w: 1, d: 1, ...da2d('spaventapasseri'), categoria: 'decori' },
   passerella:      { nome: 'Passerella',      emoji: '🪵', w: 1, d: 3, ...decoroSolo3D(8), categoria: 'passaggi', calpestabile: true, suAcqua: true, alzato: 0.18 },   // calpestabili: non fermano il passo, contano come strada (regole.md)
   ponte:           { nome: 'Ponte',           emoji: '🌉', w: 3, d: 1, ...da2d('ponte'), categoria: 'passaggi', calpestabile: true, suAcqua: true, alzato: [0.25, 0.36, 0.25] },   // la gobba: una quota per cella lungo il lato lungo
@@ -138,7 +140,7 @@ export function guastiDelCatalogo() {
     if (!d.nome || !d.emoji) g.push(`${tipo}: manca nome o emoji`)
     if (EDIFICI[tipo] && !['il', 'lo', 'la'].includes(d.art)) g.push(`${tipo}: manca l'articolo (art)`)
     if (!(d.w >= 1 && d.d >= 1)) g.push(`${tipo}: misure impossibili`)
-    if (!(d.prezzo > 0)) g.push(`${tipo}: prezzo non positivo`)
+    if (!(d.prezzo > 0) && !d.dono) g.push(`${tipo}: prezzo non positivo`)
     if (!(Number.isInteger(d.liv) && d.liv >= 1)) g.push(`${tipo}: manca il livello`)
     if (!CATEGORIE[d.categoria]) g.push(`${tipo}: categoria sconosciuta (${d.categoria})`)
     if (d.calpestabile) {

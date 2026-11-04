@@ -3,11 +3,13 @@
 // contadino, una trama canvas). Davanti verso +z, piedi a terra (y = 0), origine al centro dell'impronta.
 // Le pose sono funzioni a parte (`posaCane`, `posaGatto`): ricevono lo stato e il tempo e muovono i perni, senza memoria.
 // Vedi docs/fattoria3d/compagni.md.
+import { sporcaGeometria } from './sporco.js'
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { mat } from './modelli.js'
 import { fondiPerMateriale } from './fondi.js'
 import { memoModello } from './cache-modelli.js'
+import { palla as pallaC, osso as ossoC, fila, unione, dentro, sopra, pelle, fra, PARTENZA } from './creta.js'
 import { abitoDiSerie, normalizzaAbito, opzione, chiaveAbito } from '../dati/abiti.js'
 import { applicaAspetto } from '../../../grafica/persona/capelli3d.js'
 
@@ -26,7 +28,7 @@ function daLontano (fai) {
 export function impostaDettaglio (g, basso) {
   if (!!g.userData.dettaglioBasso === !!basso) return
   g.userData.dettaglioBasso = !!basso
-  g.traverse(o => { const l = o.userData.lod; if (l) o.geometry = basso ? l.bassa() : l.alta })
+  g.traverse(o => { const l = o.userData.lod; if (l) { o.geometry = basso ? l.bassa() : typeof l.alta === 'function' ? l.alta() : l.alta; sporcaGeometria(o) } })      // le pelli della creta fanno quella fine solo adesso
 }
 /** Triangoli di un gruppo come sono adesso (per i controlli e per le misure). */
 export function triangoliDi (g) {
@@ -503,6 +505,10 @@ const MANTELLI = {
   calico:     { occhi: '#a6dc7a', naso: '#f09aa6', lucido: 0.9 },
   nero:       { occhi: '#ffd23a', naso: '#c8808c', lucido: 0.5 },
   rosso:      { occhi: '#e6c84a', naso: '#e8949a', lucido: 0.9 },      // il gatto rosso comprabile (dati/bestie.js): tigrato arancione
+  golia:      { occhi: '#b6e04a', naso: '#b87a86', lucido: 0.45 },     // Golia: nero dalla punta del naso a quella della coda, occhi verde-oro
+  grigio:     { occhi: '#86d46a', naso: '#d49aa4', lucido: 0.8 },      // grigio-azzurro, a pelo corto
+  tigrato:    { occhi: '#e0b83a', naso: '#d99aa0', lucido: 0.85 },     // tigrato bruno, con la «M» sulla fronte
+  bianco:     { occhi: '#6cc4ee', naso: '#f09aa6', lucido: 0.9 },      // tutto bianco, occhi azzurri
 }
 const _c2 = new THREE.Color()
 const mescola = (k, hex, t) => { if (t > 0) k.lerp(_c2.setHex(hex), Math.min(1, t)); return k }
@@ -545,6 +551,48 @@ function coloriGatto (v) {
         mescola(k, CREMA, liscio(0.09, 0.13, p.z) * (1 - liscio(0.05, 0.09, p.y)) * (1 - liscio(0.09, 0.15, ax))); return k },     // il muso crema
       zampa: i => (p, k) => { k.setHex(AR); tigre(k, { z: p.y * 0.6 }, 90, 0.35 * liscio(-0.02, -0.06, p.y) * liscio(-0.17, -0.1, p.y)); return mescola(k, CREMA, liscio(-0.14, -0.17, p.y)) },
       coda: n => (p, k) => { k.setHex(AR); mescola(k, RIGA, liscio(0.2, 0.8, Math.sin((p.y + n * 0.2) * 48)) * 0.75); if (n === 2) mescola(k, CREMA, liscio(0.1, 0.16, p.y)); return k },
+    }
+  }
+  if (v === 'golia') {                                                                           // Golia: nero uniforme, un filo più caldo sulle punte (il pelo nero al sole)
+    const N = 0x1d1d23
+    const sole = (k, p) => mescola(k, 0x34303a, 0.5 * liscio(0.1, 0.2, p.y))
+    return {
+      corpo: (p, k) => ombraSotto(sole(k.setHex(N), p), p),
+      testa: (p, k) => k.setHex(N),
+      zampa: () => (p, k) => k.setHex(N),
+      coda: () => (p, k) => k.setHex(N),
+    }
+  }
+  if (v === 'bianco') {
+    const B = 0xf8f6f2
+    return {
+      corpo: (p, k) => ombraSotto(k.setHex(B), p), testa: (p, k) => k.setHex(B),
+      zampa: () => (p, k) => k.setHex(B), coda: () => (p, k) => k.setHex(B),
+    }
+  }
+  if (v === 'grigio') {                                                                          // grigio-azzurro, più chiaro sul petto e sul muso, zampette appena più chiare
+    const G0 = 0x8d96a4, CH = 0xc4c9d2
+    return {
+      corpo: (p, k) => { k.setHex(G0); mescola(k, CH, (1 - liscio(-0.01, 0.05, p.y)) * 0.8); mescola(k, CH, liscio(0.3, 0.34, p.z) * (1 - liscio(0.07, 0.13, Math.abs(p.x))) * 0.7); return ombraSotto(k, p) },
+      testa: (p, k) => mescola(k.setHex(G0), CH, liscio(0.09, 0.13, p.z) * (1 - liscio(0.05, 0.09, p.y)) * (1 - liscio(0.09, 0.15, Math.abs(p.x)))),
+      zampa: () => (p, k) => mescola(k.setHex(G0), CH, liscio(-0.14, -0.17, p.y) * 0.8),
+      coda: n => (p, k) => mescola(k.setHex(G0), 0x6f7886, n === 2 ? liscio(0.1, 0.16, p.y) * 0.8 : 0),
+    }
+  }
+  if (v === 'tigrato') {                                                                         // bruno-grigio con le righe scure sul dorso, sulle zampe e sulla coda, la «M» sulla fronte
+    const BR = 0x9c8566, RIGA = 0x4b3b2b, CH = 0xdcd0b8
+    const riga = (k, x, forza) => mescola(k, RIGA, liscio(0.2, 0.75, Math.sin(x)) * forza)
+    return {
+      corpo: (p, k) => { k.setHex(BR); riga(k, p.z * 46 + 0.6, 0.62 * liscio(0.03, 0.11, p.y)); riga(k, p.y * 70, 0.3 * (1 - liscio(0.0, 0.05, p.y)))
+        mescola(k, RIGA, 0.55 * (1 - liscio(0.015, 0.035, Math.abs(p.x))) * liscio(0.1, 0.14, p.y))                     // la riga lungo la schiena
+        mescola(k, CH, (1 - liscio(-0.01, 0.045, p.y)) * 0.9)
+        mescola(k, CH, liscio(0.3, 0.34, p.z) * (1 - liscio(0.04, 0.1, Math.abs(p.x))) * (1 - liscio(0.12, 0.17, p.y))); return ombraSotto(k, p) },
+      testa: (p, k) => { k.setHex(BR); const ax = Math.abs(p.x)
+        mescola(k, RIGA, liscio(0.2, 0.8, Math.sin(ax * 95 + 0.4)) * liscio(0.13, 0.17, p.y) * (1 - liscio(0.07, 0.11, p.z)) * 0.75 * (1 - liscio(0.11, 0.16, ax)))   // la «M»
+        mescola(k, RIGA, liscio(0.2, 0.7, Math.sin(p.y * 80)) * liscio(0.1, 0.14, ax) * liscio(0.02, 0.06, p.z) * 0.5)     // le righe sulle guance
+        mescola(k, CH, liscio(0.09, 0.13, p.z) * (1 - liscio(0.05, 0.09, p.y)) * (1 - liscio(0.09, 0.15, ax))); return k },
+      zampa: () => (p, k) => { k.setHex(BR); riga(k, p.y * 90, 0.5 * liscio(-0.02, -0.06, p.y) * liscio(-0.17, -0.1, p.y)); return mescola(k, CH, liscio(-0.14, -0.17, p.y) * 0.7) },
+      coda: n => (p, k) => { k.setHex(BR); riga(k, (p.y + n * 0.2) * 52, 0.85); if (n === 2) mescola(k, RIGA, liscio(0.1, 0.16, p.y)); return k },
     }
   }
   if (v === 'nero') {
@@ -592,7 +640,7 @@ function facciaGatto (v, chiusi = false) {
   const x = c.getContext('2d')
   for (const s of chiusi ? [-1, 1] : []) {                                                // a occhi chiusi: due archi in giù, con le ciglia
     const ex = 128 + s * 56, ey = 76
-    x.strokeStyle = v === 'nero' ? '#ffd23a' : '#2a2024'; x.lineWidth = 7; x.lineCap = 'round'
+    x.strokeStyle = v === 'nero' ? '#ffd23a' : v === 'golia' ? '#b6e04a' : '#2a2024'; x.lineWidth = 7; x.lineCap = 'round'
     x.beginPath(); x.arc(ex, ey - 12, 28, 0.25 * Math.PI, 0.75 * Math.PI); x.stroke()
   }
   for (const s of chiusi ? [] : [-1, 1]) {
@@ -625,20 +673,77 @@ function orecchioGatto (s) {
   return [fai(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.92, 1, 0.5)), fai(new THREE.Vector3(0, 0.022, 0.024), new THREE.Vector3(0.54, 0.88, 0.3))]
 }
 
+// Il corpo, le zampe e la coda dei gatti sono nella creta (`creta.js`, docs/fattoria3d/creta.md): il petto, le anche e le spalle si fondono nel
+// tronco, la zampa ha il gomito (o il garretto), il piede tondo e le dita; la testa resta di palle, perché la faccia è una trama che le sta sopra.
+const PASSO_GATTO = { corpo: 0.019, zampa: 0.014, coda: 0.015 }
+const CORPO_GATTO = unione([
+  ossoC([0, 0.115, 0.29], [0, 0.12, 0.05], 0.13, 0.124),                                        // il tronco, pieno
+  pallaC([0, 0.09, 0.335], [0.12, 0.125, 0.11]),                                                // il petto
+  ...[-1, 1].map(s => pallaC([s * 0.06, 0.085, 0.01], [0.075, 0.11, 0.105])),                   // le anche
+  ...[-1, 1].map(s => pallaC([s * 0.064, 0.07, 0.33], [0.055, 0.09, 0.068])),                   // le spalle
+  pallaC([0, 0.045, 0.16], [0.105, 0.08, 0.16]),                                                // la pancia morbida
+  ossoC([0, 0.14, 0.36], [0, 0.2, 0.41], 0.085, 0.075),                                         // il collo
+  pallaC([0, 0.13, -0.075], [0.05, 0.05, 0.05]),                                                // l'attacco della coda
+], 0.06)
+/** La zampa davanti [0] e dietro [1], nel suo perno (terra a y = -0.2): la spalla o la coscia, il gomito o il garretto, il piede con tre dita. */
+const ZAMPA_GATTO = [false, true].map(dietro => {
+  const pezzi = dietro ? [
+    pallaC([0, 0.02, -0.01], [0.05, 0.088, 0.095]),                                             // la coscia
+    fila([[0, -0.02, 0.0], [0, -0.09, 0.03], [0, -0.14, -0.035], [0, -0.178, -0.02]], [0.042, 0.033, 0.025, 0.024], 0.02),
+    pallaC([0, -0.184, 0.005], [0.04, 0.024, 0.052]),
+  ] : [
+    pallaC([0, -0.005, 0], [0.044, 0.05, 0.048]),                                               // la spalla
+    fila([[0, 0, 0], [0, -0.09, -0.012], [0, -0.165, 0.004]], [0.042, 0.032, 0.026], 0.02),
+    pallaC([0, -0.184, 0.018], [0.04, 0.024, 0.048]),
+  ]
+  const zp = dietro ? 0.005 : 0.018
+  for (const dx of [-0.019, 0, 0.019]) pezzi.push({ ...pallaC([dx, -0.187, zp + 0.04 - Math.abs(dx) * 0.4], [0.016, 0.017, 0.016]), k: 0.012 })   // le dita
+  return dentro(unione(pezzi, 0.025), sopra(-0.199), 0.005)
+})
+const _pv = new THREE.Vector3()
+/** Un pezzo di gatto nella creta: la pelle di `forma` (nel sistema del perno) coi colori del mantello, e la versione da lontano. */
+function cretaGatto (pernoP, chiave, lucido, forma, scatola, passo, colore) {
+  const fai = k => G(chiave + (k > 1 ? ':lod' : ''), () => pelle(forma, { ...scatola, passo: passo * k, colore: (x, y, z, c) => colore(_pv.set(x, y, z), c) }))
+  const alta = () => fai(1), bassa = () => fai(2.4)
+  const m = new THREE.Mesh(PARTENZA.lontano ? bassa() : alta(), mat(0xffffff, { vertexColors: true, flatShading: false, roughness: lucido })); m.castShadow = m.receiveShadow = true; pernoP.add(m)
+  m.userData.lod = { alta, bassa }
+  return m
+}
+
+/** La coda del gatto: una pelle sola, a riposo dritta in su dall'attacco (nel sistema del corpo), pesata sulle tre ossa con un passaggio morbido a ogni
+    giuntura (`fra`): piegando le ossa si curva come una coda vera. I colori sono quelli di `col.coda(n)`, nel sistema di ogni osso come prima. */
+const CODA_GATTO = { base: [0, 0.14, -0.08], giunture: [0.2, 0.38], forma: fila([[0, 0.128, -0.08], [0, 0.34, -0.08], [0, 0.52, -0.08], [0, 0.668, -0.08]], [0.05, 0.045, 0.039, 0.026], 0) }
+function codaGatto (corpo, chiave, lucido, coloreCoda) {
+  const [b0, b1] = CODA_GATTO.giunture, [x0, y0, z0] = CODA_GATTO.base
+  const fai = k => G(chiave + (k > 1 ? ':lod' : ''), () => {
+    const geo = pelle(CODA_GATTO.forma, { min: [-0.07, 0.06, -0.15], max: [0.07, 0.72, -0.01], passo: PASSO_GATTO.coda * k, colore: (x, y, z, c) => {
+      const t = y - y0, n = t < b0 ? 0 : t < b1 ? 1 : 2
+      return coloreCoda(n)(_pv.set(x - x0, t - (n === 0 ? 0 : n === 1 ? b0 : b1), z - z0), c)
+    } })
+    const pos = geo.attributes.position, nv = pos.count, ind = new Uint16Array(nv * 4), pes = new Float32Array(nv * 4)
+    for (let i = 0; i < nv; i++) {
+      const t = pos.getY(i) - y0, s1 = fra(b0 - 0.06, b0 + 0.06, t), s2 = fra(b1 - 0.06, b1 + 0.06, t)
+      ind.set([0, 1, 2, 0], i * 4); pes.set([1 - s1, s1 - s2, s2, 0], i * 4)
+    }
+    geo.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(ind, 4)); geo.setAttribute('skinWeight', new THREE.Float32BufferAttribute(pes, 4))
+    return geo
+  })
+  const alta = () => fai(1), bassa = () => fai(2.4)
+  const m = new THREE.SkinnedMesh(PARTENZA.lontano ? bassa() : alta(), mat(0xffffff, { vertexColors: true, flatShading: false, roughness: lucido }))
+  m.castShadow = m.receiveShadow = true; m.frustumCulled = false; corpo.add(m)          // piegata esce dalla sfera di riposo: niente tagli ai bordi dello schermo
+  m.userData.lod = { alta, bassa }
+  return m
+}
+
 /** Un gatto di cartone morbido: corpo ovale con la schiena un po' inarcata, testa tonda con le guance piene, orecchie grandi
     rosa dentro, zampe sottili con la zampetta tonda, coda lunga in tre pezzi che ondeggia. */
 export function creaGatto (variante = 'bianconero') {
   const M = MANTELLI[variante] || MANTELLI.bianconero
   const v = MANTELLI[variante] ? variante : 'bianconero'
   const col = coloriGatto(v), g = new THREE.Group()
-  const rosa = mat(v === 'nero' ? 0xc8808c : 0xf0a0ac, { flatShading: false })
+  const rosa = mat(v === 'nero' || v === 'golia' ? 0xc8808c : 0xf0a0ac, { flatShading: false })
   const corpo = perno(g, 0, 0.2, -0.18)
-  morbido(corpo, `gatto:${v}:corpo`, M.lucido, parti => {
-    palla(parti, [0, 0.108, 0.17], [0.137, 0.13, 0.28], col.corpo, 24, 14)                  // il corpo ovale, un po' più alto a metà schiena
-    palla(parti, [0, 0.09, 0.0], [0.122, 0.115, 0.125], col.corpo, 14, 10)                   // il dietro tondo
-    palla(parti, [0, 0.075, 0.35], [0.115, 0.125, 0.11], col.corpo, 14, 10)                  // il petto
-    palla(parti, [0, 0.18, 0.37], [0.095, 0.09, 0.09], col.corpo, 12, 8)                     // il collo
-  })
+  cretaGatto(corpo, `gatto:${v}:corpo`, M.lucido, CORPO_GATTO, { min: [-0.18, -0.1, -0.15], max: [0.18, 0.3, 0.5] }, PASSO_GATTO.corpo, col.corpo)
   // la testa: il perno al collo; tonda, grande, con le guance piene
   const testa = perno(corpo, 0, 0.14, 0.4)
   morbido(testa, `gatto:${v}:testa`, M.lucido, parti => {
@@ -667,21 +772,15 @@ export function creaGatto (variante = 'bianconero') {
   const bf = new THREE.Mesh(baffi, mat(0xf2eee6)); bf.castShadow = false; testa.add(bf)
   const gambe = [[-0.07, 0.16], [0.07, 0.16], [-0.07, -0.16], [0.07, -0.16]].map(([x, z], i) => {
     const p = perno(g, x, 0.2, z), c = col.zampa(i)
-    morbido(p, `gatto:${v}:zampa${i}`, M.lucido, parti => {
-      tubo(parti, 0.043, 0.031, 0.17, [0, -0.095, 0], c, 12); palla(parti, [0, -0.01, 0], [0.043, 0.04, 0.043], c, 12, 8)    // la spalla tonda
-      palla(parti, [0, -0.185, 0.014], [0.05, 0.03, 0.062], c, 12, 8)                              // la zampetta tonda
-      if (i > 1) palla(parti, [0, 0.03, -0.01], [0.052, 0.085, 0.1], c, 10, 8)                     // la coscia
-    })
+    cretaGatto(p, `gatto:${v}:zampa${i}`, M.lucido, ZAMPA_GATTO[i > 1 ? 1 : 0], { min: [-0.08, -0.21, -0.13], max: [0.08, 0.13, 0.12] }, PASSO_GATTO.zampa, c)
     p.userData.base = [x, 0.2, z]; return p
   })
-  // la coda lunga e morbida, in tre pezzi
-  const coda1 = perno(corpo, 0, 0.14, -0.08), coda2 = perno(coda1, 0, 0.2, 0), coda3 = perno(coda2, 0, 0.18, 0)
-  const code = [[coda1, 0.2, 0.052, 0.046], [coda2, 0.18, 0.046, 0.042], [coda3, 0.16, 0.042, 0.036]]
-  code.forEach(([p, h, r1, r2], n) => morbido(p, `gatto:${v}:coda${n}`, M.lucido, parti => {
-    tubo(parti, r2, r1, h, [0, h / 2, 0], col.coda(n), 12); palla(parti, [0, 0, 0], [r1, r1, r1], col.coda(n), 12, 8)
-    if (n === 2) palla(parti, [0, h, 0], [r2, r2, r2], col.coda(n), 10, 8)                          // la punta tonda
-  }))
+  // la coda lunga e morbida: una pelle sola su tre ossa (i perni che la posa piega), che si curva senza gomiti
+  const osso3 = (p, x, y, z) => { const b = new THREE.Bone(); b.position.set(x, y, z); p.add(b); return b }
+  const coda1 = osso3(corpo, 0, 0.14, -0.08), coda2 = osso3(coda1, 0, 0.2, 0), coda3 = osso3(coda2, 0, 0.18, 0)
+  const coda = codaGatto(corpo, `gatto:${v}:coda`, M.lucido, col.coda)
   zonaTocco(g, 0.38, 0.22)
+  g.updateMatrixWorld(true); coda.bind(new THREE.Skeleton([coda1, coda2, coda3]))           // le ossa a riposo (dritte in su): da qui la posa le piega
   g.userData = { ...g.userData, corpo, testa, gambe, coda: [coda1, coda2, coda3], orecchie, facce, tipo: 'gatto', variante: v }
   return g
 }
@@ -694,13 +793,13 @@ export function posaGatto (g, { stato = 'sta', vel = 0, fase = 0, t = 0, p = 0, 
   u.corpo.rotation.set(0, 0, 0); u.corpo.position.set(0, 0.2, -0.18); u.corpo.scale.set(1, 1, 1)
   u.testa.rotation.set(0, 0, 0); u.testa.position.set(0, 0.14, 0.4); const chiusi = stato === 'dorme' || ((stato === 'fusa' || stato === 'struscia' || (stato === 'incontra' && sub === 'struscia')) && Math.sin(t * 1.1) > 0.45)   // con le fusa gli occhi si socchiudono piano
   u.facce[0].visible = !chiusi; u.facce[1].visible = chiusi
-  c1.rotation.set(-1.3, 0, 0); c2.rotation.set(0.4, 0, 0); c3.rotation.set(0.3, 0, 0)
+  c1.rotation.set(-1.25, 0, 0); c2.rotation.set(0.85, 0, 0); c3.rotation.set(0.85, 0, 0)          // in piedi: su dal sedere, la punta piegata in avanti (un punto di domanda)
   const resp = Math.sin(t * 2.6)
   if (vel > 0.05) {                                                    // il passo felino: basso, la coda alta che ondeggia
     const amp = 0.5 * Math.min(1, 0.6 + vel), s = Math.sin(fase)
     fl.rotation.x = br.rotation.x = s * amp; fr.rotation.x = bl.rotation.x = -s * amp
     u.corpo.position.y += Math.abs(Math.cos(fase)) * 0.012; u.corpo.position.y -= 0.02; u.corpo.rotation.y = s * 0.06
-    c1.rotation.x = -0.85; c2.rotation.x = 0.25; c3.rotation.x = 0.15
+    c1.rotation.x = -0.85; c2.rotation.x = 0.35; c3.rotation.x = 0.55
     c2.rotation.z = Math.sin(fase * 0.5) * 0.35; c3.rotation.z = Math.sin(fase * 0.5 - 0.8) * 0.45
     u.testa.rotation.x = 0.1
     return
@@ -741,6 +840,8 @@ export function posaGatto (g, { stato = 'sta', vel = 0, fase = 0, t = 0, p = 0, 
   } else if (stato === 'miao') {                                       // seduto, il muso in su che miagola
     seduto(); const b = Math.sin(Math.min(1, p) * Math.PI)
     u.testa.rotation.x = 1.0 - 0.6 * b; u.testa.position.y += 0.015 * b; u.corpo.scale.y = 1 + 0.02 * b; c3.rotation.z = Math.sin(t * 1.4) * 0.3
+  } else if (stato === 'mangia') {                                     // il muso nella ciotola
+    u.corpo.rotation.x = 0.22; u.testa.rotation.x = 0.85 + Math.sin(t * 9) * 0.06; u.testa.position.y -= 0.1; u.testa.position.z += 0.05
   } else if (stato === 'volta') {                                      // seduto di schiena (Compagni lo gira), la coda che scatta
     seduto(); u.testa.rotation.y = 0.25; c3.rotation.z = 1.6 + Math.sin(t * 15) * 0.5; c2.rotation.z = 1.4 + Math.sin(t * 15 - 0.6) * 0.2
   } else if (stato === 'incontra') {                                   // con Watson: naso a naso, una zampata leggera, la faccia seccata
@@ -753,13 +854,15 @@ export function posaGatto (g, { stato = 'sta', vel = 0, fase = 0, t = 0, p = 0, 
   } else { u.corpo.scale.y = 1 + resp * 0.012; u.testa.rotation.y = Math.sin(t * 0.7) * 0.3; onda(1, 0.35) }
 }
 
-const SCALA_GATTO = 1.15        // i gatti di casa devono leggersi dalla telecamera di serie
+// Le taglie in scena (docs/fattoria3d/taglie.md): quelle vere, compresse perché i piccoli si leggano dalla telecamera di serie. Un gatto sta al garrese
+// a ~0,41 m, due terzi di un cane grande (Watson, il labrador, il dalmata, ~0,62); Golia è un gattone, Irene una gattina.
+const SCALA_GATTO = 0.82, TAGLIA_GATTO = { golia: 1.03, calico: 0.9 }
 const SCALA_CANE = 0.8          // Watson è un cane grande, ma in scena doveva stare più piccolo del contadino
 
 /** Il modello di un compagno dai dati (`dati/compagni.js`). */
 export function creaCompagno (c) {
   const g = c.tipo === 'cane' ? creaCane() : creaGatto(c.variante)
-  g.scale.setScalar(c.tipo === 'cane' ? SCALA_CANE : SCALA_GATTO)
+  g.scale.setScalar(c.tipo === 'cane' ? SCALA_CANE : SCALA_GATTO * (TAGLIA_GATTO[c.variante] || 1))
   g.userData.id = c.id
   return g
 }
@@ -768,7 +871,7 @@ export function creaCompagno (c) {
 export function misure (g) {
   g.updateMatrixWorld(true)
   let mesh = 0, triangoli = 0; const b = new THREE.Box3(), t = new THREE.Box3()
-  g.traverseVisible(o => { if (o.isMesh) { mesh++; triangoli += (o.geometry.index || o.geometry.attributes.position).count / 3; t.setFromObject(o, false); b.union(t) } })
+  g.traverseVisible(o => { if (o.isMesh) { mesh++; triangoli += (o.geometry.index || o.geometry.attributes.position).count / 3; if (o.isSkinnedMesh) o.computeBoundingBox(); t.setFromObject(o, false); b.union(t) } })      // la coda (pelle sulle ossa) va rimisurata nella posa: three tiene l'ingombro della prima volta
   const s = new THREE.Vector3(); b.getSize(s)
   return { mesh, triangoli, larghezza: s.x, altezza: s.y, lunghezza: s.z, sotto: b.min.y }
 }

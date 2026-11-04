@@ -1037,7 +1037,7 @@ function livelloDelPezzoDi(t) { return PEZZI[t].liv }
   controlla('ogni pezzo e ogni edificio ha una categoria valida', [...Object.values(PEZZI), ...Object.values(EDIFICI)].every(d => !!CATEGORIE[d.categoria]))
   controlla('ogni scheda ha almeno una carta (la scheda Feste solo in stagione o con un regalo della fiera: la linguetta si nasconde)', Object.keys(CATEGORIE).every(c => c === 'feste' || schedeDi(statoMenu({ livello: 99 }))[c].length > 0) && schedeDi(statoMenu({ livello: 99, stagione: 'natale' })).feste.length > 0)
   const tutte = Object.values(schedeDi(statoMenu({ livello: 99 }))).flat().filter(c => c.genere !== 'strumento' && c.genere !== 'bestia')
-  uguale('ogni pezzo e ogni edificio unico sta in una scheda sola', tutte.length, Object.values(PEZZI).filter(d => !d.stagione && !d.fiera && !d.magazzino).length + Object.keys(EDIFICI).length)          // le feste si offrono solo in stagione, la fiera solo a chi l'ha vinta, i magazzini mai
+  uguale('ogni pezzo e ogni edificio unico sta in una scheda sola', tutte.length, Object.values(PEZZI).filter(d => !d.stagione && !d.fiera && !d.magazzino && !d.dono).length + Object.keys(EDIFICI).length)          // le feste si offrono solo in stagione, la fiera solo a chi l'ha vinta, i magazzini mai
   controlla('le carte di una scheda stanno in ordine di livello, prima quelle col «!»', Object.keys(CATEGORIE).every(c => {
     const carte = carteDi(c, statoMenu({ livello: 99 })).filter(x => x.genere !== 'strumento')
     const inOrdine = sg => { const l = carte.filter(x => !!x.segnala === sg).map(x => x.liv); return l.every((v, k) => !k || v >= l[k - 1]) }

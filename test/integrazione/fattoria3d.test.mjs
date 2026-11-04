@@ -18,7 +18,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli, leggiProfilo } from '../aiuto/browser.mjs'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
-import { PEZZI, EDIFICI, CATEGORIE } from '../../src/giochi/fattoria3d/dati/catalogo.js'
+import { PEZZI, EDIFICI, CATEGORIE, gruppoDi } from '../../src/giochi/fattoria3d/dati/catalogo.js'
 import { ANIMALI } from '../../src/giochi/fattoria3d/dati/animali.js'
 import { COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { RICETTE } from '../../src/giochi/fattoria3d/dati/ricette.js'
@@ -36,6 +36,7 @@ const muovi = (x, y) => cdp.send('Input.dispatchTouchEvent', { type: 'touchMove'
 const su = () => cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
 const tocca = async (x, y) => { await giu(x, y); await attendi(page, 60); await su() }
 const toccaEl = async sel => { await page.locator(sel).scrollIntoViewIfNeeded().catch(() => {}); const r = await page.locator(sel).boundingBox(); await tocca(r.x + r.width / 2, r.y + r.height / 2) }
+const vaiScheda = async k => { await toccaEl(`[data-gruppo="${gruppoDi(k)}"]`); await attendi(page, 100); await toccaEl(`[data-scheda="${k}"]`); await attendi(page, 150) }      // prima la linguetta del taccuino, poi la scheda
 async function trascina(da, a) {
   await giu(da[0], da[1])
   for (let k = 1; k <= 10; k++) { await muovi(da[0] + (a[0] - da[0]) * k / 10, da[1] + (a[1] - da[1]) * k / 10); await attendi(page, 30) }
@@ -255,7 +256,7 @@ const sulPosto = () => schermoDi(posto.i + 0.5, posto.j + 0.5)
 }
 // tenuto fermo: si apre, con le schede e la griglia di carte
 await premiEApri(sulPosto)
-controlla('tenuto premuto su un posto libero si apre «Costruisci qui»', await menuAperto() === 1 && /Cosa costruiamo/.test(await page.locator('[data-f3="costruisci-qui"] h2').innerText()))
+controlla('tenuto premuto su un posto libero si apre «Costruisci qui»', await menuAperto() === 1 && /Cosa compriamo/.test(await page.locator('[data-f3="costruisci-qui"] h2').innerText()))
 controlla('la prima scheda è quella dei campi e ha la carta del campo', await page.locator('[data-scheda="campi"].acceso').count() === 1 && await page.locator('[data-carta="campo"]').count() === 1)
 controlla('non esiste più la barra del costruire', await page.locator('[data-f3="vassoio"]').count() === 0)
 const largo = await page.evaluate(() => [document.documentElement.scrollWidth, innerWidth, document.querySelector('.f3-corpo').scrollHeight >= document.querySelector('.f3-corpo').clientHeight])
@@ -283,7 +284,7 @@ await attendi(page, 300)
 await toccaEl('[data-f3="az-costruisci"]')
 await apriMenu()
 controlla('il tasto 🏗️ apre lo stesso menu', await menuAperto() === 1)
-await toccaEl('[data-scheda="animali"]')
+await vaiScheda('animali')
 await attendi(page, 200)
 controlla('la scheda degli animali ha il recinto chiuso, col lucchetto e il livello', await page.locator('[data-carta="recinto"].bloccata').count() === 1 && /Livello 14/.test(await page.locator('[data-carta="recinto"]').innerText()))
 await toccaEl('[data-carta="recinto"]')
@@ -369,8 +370,7 @@ await attendi(page, 300)
   controlla('c\'è una cella libera a schermo per lo stagno', !!pStagno)
   await page.evaluate(() => { const m = window.__fattoria3d.motore; m.s.esperienza = 1e6; m.borsa.paga(-500) })     // il livello e le monete bastano; `riposo` rimette tutto
   await premiEApri(() => schermoDi(pStagno.i + 0.5, pStagno.j + 0.5))
-  await page.locator('[data-scheda="decori"]').evaluate(e => e.scrollIntoView({ inline: 'center', block: 'nearest' })); await attendi(page, 150)
-  await toccaEl('[data-scheda="decori"]'); await attendi(page, 200)
+  await vaiScheda('decori'); await attendi(page, 200)
   uguale('nella scheda dei decori ci sono lo stagno e il laghetto, aperti', await page.locator('[data-carta="stagno"]:not(.bloccata), [data-carta="laghetto"]:not(.bloccata)').count(), 2)
   controlla('la carta dello stagno dice il prezzo dei dati', new RegExp('🪙 ' + PEZZI.stagno.prezzo).test(await page.locator('[data-carta="stagno"]').innerText()))
   await page.waitForFunction(() => document.querySelector('[data-carta="stagno"] img[data-anteprima="pronta"]'), null, { timeout: 30000 })
@@ -465,9 +465,8 @@ await attendi(page, 300)
 // il pennello delle strade: la scheda «Strade» ha la strada e la gomma; scegliendo la strada il menu si chiude e compare la sua barra
 await toccaEl('[data-f3="az-costruisci"]')
 await apriMenu()
-await page.locator('[data-scheda="passaggi"]').evaluate(e => e.scrollIntoView({ inline: 'center', block: 'nearest' }))   // la quinta scheda sta fuori vista
 await attendi(page, 200)
-await toccaEl('[data-scheda="passaggi"]')
+await vaiScheda('passaggi')
 await attendi(page, 300)
 controlla('la scheda delle strade ha la strada e la gomma', await page.locator('[data-carta="strada"]').count() === 1 && await page.locator('[data-carta="gomma"]').count() === 1)
 await toccaEl('[data-carta="strada"]')
@@ -622,23 +621,22 @@ await apriMenu()
   const stagioneOra = await page.evaluate(() => { const st = window.__fattoria3d.mondo.stagione; return st && st.nome || null })
   const visibili = Object.keys(CATEGORIE).filter(k => k !== 'feste' || stagioneOra === 'natale')          // «Feste» è nascosta senza carte: la fiera si vince e l'albero è di Natale
   for (const k of visibili) {
-    await page.locator(`[data-scheda="${k}"]`).evaluate(e => e.scrollIntoView({ inline: 'center', block: 'nearest' })); await attendi(page, 100)
-    await toccaEl(`[data-scheda="${k}"]`); await attendi(page, 150)
+    await vaiScheda(k)
     carte += await page.locator('[data-carta]').count()
   }
   // le anteprime 3D: ogni carta che non è uno strumento mostra il suo modello (si aspetta l'evento, non un tempo)
   await page.waitForFunction(() => [...document.querySelectorAll('[data-carta]')].length > 0, null, { timeout: 5000 })
   for (const k of visibili) {
-    await toccaEl(`[data-scheda="${k}"]`)
+    await vaiScheda(k)
     await page.waitForFunction(() => [...document.querySelectorAll('[data-carta]')].every(c => /^(strada|gomma)$/.test(c.dataset.carta) || c.querySelector('img[data-anteprima="pronta"]')), null, { timeout: 60000 })
   }
   controlla('ogni carta di pezzo o edificio mostra l\'anteprima 3D, non l\'emoji', await page.locator('[data-carta] img[data-anteprima="pronta"]').count() > 0)
-  uguale('le schede hanno tutti i pezzi e gli edifici dei dati e i due strumenti', carte, Object.entries(PEZZI).filter(([t, d]) => !d.fiera && (!d.magazzino || daMettere[t] > 0) && (!d.stagione || d.stagione === stagioneOra)).length + Object.keys(EDIFICI).filter(t => !posseduti[t]).length + 2 + 4)          // + le quattro carte delle bestie di casa (scheda Animali, G6)
-  await toccaEl('[data-scheda="animali"]'); await attendi(page, 150)
+  uguale('le schede hanno tutti i pezzi e gli edifici dei dati e i due strumenti', carte, Object.entries(PEZZI).filter(([t, d]) => !d.fiera && !d.dono && (!d.magazzino || daMettere[t] > 0) && (!d.stagione || d.stagione === stagioneOra)).length + Object.keys(EDIFICI).filter(t => !posseduti[t]).length + 2 + 15)          // + le carte degli animali da adottare (scheda Animali: dieci razze e cinque compagni, docs/fattoria3d/adozioni.md)
+  await vaiScheda('animali')
   controlla('il recinto non è arrivato: carta in grigio col livello', await page.locator('[data-carta="recinto"].bloccata').count() === 1 && /Livello 14/.test(await page.locator('[data-carta="recinto"]').innerText()))
   const schede = await page.evaluate(() => { const c = document.querySelector('.f3-schede'); return [c.scrollWidth, c.clientWidth, document.documentElement.scrollWidth, innerWidth] })
   controlla('le schede non escono dallo schermo di lato', schede[2] <= schede[3], JSON.stringify(schede))
-  await toccaEl('[data-scheda="edifici"]'); await attendi(page, 150)
+  await vaiScheda('edifici')
   await toccaEl('[data-carta="mulino"]')
   await attendi(page, 300)
   controlla('un edificio unico chiuso dice il livello e non apre l\'offerta', await page.locator('[data-f3="dialogo"]').count() === 0 && /livello 4/.test(await page.locator('[data-f3="costruisci-msg"]').innerText()))
@@ -732,7 +730,7 @@ await page.waitForFunction(() => !window.__fattoria3d.mondo.eroe.az, null, { tim
 controlla('un edificio non costruito non è in scena: né fantasma né cartello', await m3(() => !window.__fattoria3d.mondo.pezzi.voci.has('gelateria') && ![...window.__fattoria3d.mondo.pezzi.voci.values()].some(v => v.tipo === 'gelateria')))
 controlla('a livello 1 niente «!» sul tasto Costruisci', await page.locator('[data-f3="costruisci-esclama"]').count() === 0)
 await toccaEl('[data-f3="az-costruisci"]'); await apriMenu()
-await toccaEl('[data-scheda="edifici"]'); await attendi(page, 150)
+await vaiScheda('edifici')
 await toccaEl('[data-carta="gelateria"]'); await attendi(page, 200)
 controlla('un edificio chiuso dice il livello dalla sua carta', /livello 34/.test(await page.locator('[data-f3="costruisci-msg"]').innerText()) && await page.locator('[data-carta="gelateria"].bloccata').count() === 1 && await page.locator('[data-f3="dialogo"]').count() === 0)
 await chiudiFoglio()
@@ -740,13 +738,13 @@ await m3(() => { window.__fattoria3d.motore.s.esperienza = 1e6; window.__fattori
 await attendi(page, 600)
 controlla('aperto dal livello e non costruito: il «!» pulsa sul tasto Costruisci', await page.locator('[data-f3="az-costruisci"] [data-f3="costruisci-esclama"]').count() === 1)
 await toccaEl('[data-f3="az-costruisci"]'); await apriMenu()
-await toccaEl('[data-scheda="edifici"]'); await attendi(page, 150)
+await vaiScheda('edifici')
 controlla('e sulla scheda Edifici, e sulle carte da costruire', await page.locator('[data-scheda="edifici"] [data-f3="scheda-esclama"]').count() === 1 && await page.locator('[data-carta="gelateria"] [data-f3="carta-esclama"]').count() === 1 && await page.locator('[data-scheda="campi"] [data-f3="scheda-esclama"]').count() === 0)
-await toccaEl('[data-scheda="edifici"]'); await attendi(page, 150)
+await vaiScheda('edifici')
 controlla('nella scheda Edifici le carte col «!» stanno in cima', await page.evaluate(() => { const c = [...document.querySelectorAll('[data-carta]')]; const k = c.findIndex(x => !x.querySelector('[data-f3="carta-esclama"]')); return k < 0 || c.slice(k).every(x => !x.querySelector('[data-f3="carta-esclama"]')) }))
-await toccaEl('[data-scheda="decori"]'); await attendi(page, 150)
+await vaiScheda('decori')
 controlla('le decorazioni non hanno mai il «!»', await page.locator('[data-carta]').count() > 0 && await page.locator('[data-carta] [data-f3="carta-esclama"]').count() === 0)
-await toccaEl('[data-scheda="edifici"]'); await attendi(page, 150)
+await vaiScheda('edifici')
 const prima = await stato(), monPrima = await mon()
 await toccaEl('[data-carta="gelateria"]'); await attendi(page, 600)
 const dopoGel = await stato(), gel = dopoGel.cose.find(c => c.tipo === 'gelateria')
@@ -980,6 +978,7 @@ controlla('il pollaio con le bestie non si mette via', via.ok === false && via.m
 /* ── toccare Watson lontano: il contadino dice «Watson!» e lui arriva (docs/fattoria3d/compagni.md) ── */
 {
   await fermo()
+  await page.evaluate(() => { const { motore, mondo } = window.__fattoria3d; if (!motore.cura.ho('watson')) { motore.s.casa.watson = { pancia: 0.6, pelo: 0.6, gioco: 0.6, quando: Date.now(), premiato: false }; mondo.compagni.sync(true) } })      // Watson non arriva più da solo: si adotta (docs/fattoria3d/adozioni.md)
   await page.waitForFunction(() => !window.__fattoria3d.mondo.compagni.lista.find(c => c.tipo === 'cane').seq, null, { timeout: 15000 }).catch(() => {})
   await page.evaluate(() => { for (const g of window.__fattoria3d.mondo.compagni.lista) if (g.tipo === 'gatto') g.prossimoIncontro = 1e9 })      // i gatti non vengono a salutarlo proprio ora
   // Watson si mette a 5-6 celle dall'eroe, in un punto libero che sta a schermo
@@ -1171,8 +1170,7 @@ controlla('il pollaio con le bestie non si mette via', via.ok === false && via.m
   controlla('a Halloween il tasto Costruisci porta il 🎃 finché non hai una zucca', await zuc.locator('[data-f3="costruisci-festa"]').count() === 1)
   await zuc.locator('[data-f3="az-costruisci"]').click()
   await attendi(zuc, 500)
-  await zuc.locator('[data-scheda="decori"]').evaluate(e => e.scrollIntoView({ inline: 'center', block: 'nearest' })); await attendi(zuc, 100)
-  await zuc.locator('[data-scheda="decori"]').click(); await attendi(zuc, 300)
+  await zuc.locator('[data-gruppo="decori"]').click(); await attendi(zuc, 300)
   controlla('e la scheda dei decori e le sue zucche pure', await zuc.locator('[data-scheda="decori"] [data-f3="scheda-festa"]').count() === 1 && await zuc.locator('[data-carta="zucca_intagliata"] [data-f3="carta-festa"]').count() === 1)
   await zuc.locator('[data-f3="costruisci-qui"] [data-chiudi]').click()
   await attendi(zuc, 300)
@@ -1183,7 +1181,7 @@ controlla('il pollaio con le bestie non si mette via', via.ok === false && via.m
   controlla('comprata la zucca il 🎃 se ne va', await zuc.locator('[data-f3="costruisci-festa"]').count() === 0)
   await zuc.locator('[data-f3="az-costruisci"]').click()
   await attendi(zuc, 600)
-  await zuc.locator('[data-scheda="decori"]').click().catch(() => {})
+  await zuc.locator('[data-gruppo="decori"]').click().catch(() => {})
   await attendi(zuc, 300)
   controlla('e nel menu dei decori ci sono le zucche', await zuc.locator('[data-carta="zucca_intagliata"]').count() === 1 && await zuc.locator('[data-carta="zucche_mucchio"]').count() === 1)
   await scatto(zuc, 'fattoria3d-halloween-menu')

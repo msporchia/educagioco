@@ -11,10 +11,11 @@
    «turno» (`conRenderer`): le anteprime aspettano che si chiuda.
 
    Indirizzo: `?gioco=fattoria|sotterraneo|entrambi`, `&cat=prop`, `&q=testo`,
-   `&angolo=`, `&alto=`, `&vicino=`, `&lato=` (la telecamera delle anteprime),
+   `&angolo=`, `&alto=`, `&vicino=`, `&lato=` (la telecamera delle anteprime), `&lontano=1` (il dettaglio da lontano), `&sporco=0.7` (un animale sporco),
    `&scheda=1` (senza controlli, per la scheda contatto: `window.__catalogo3d.pronto`
    diventa true a fine lavoro).
    ═══════════════════════════════════════════════════════════════════ */
+import { preparaSporco, impostaSporco } from '../../src/giochi/fattoria3d/scena3d/sporco.js'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
@@ -29,6 +30,10 @@ const VERSO = parametri.has('angolo') || parametri.has('alto')
   ? new THREE.Vector3().setFromSphericalCoords(1, THREE.MathUtils.degToRad(90 - Number(parametri.get('alto') ?? 26)), THREE.MathUtils.degToRad(Number(parametri.get('angolo') ?? 38)))
   : new THREE.Vector3(0.78, 0.62, 1).normalize()
 const VICINO = Number(parametri.get('vicino')) || 1
+// `&lontano=1`: i modelli col dettaglio da lontano (le geometrie povere di `userData.lod`, come li vede il gioco oltre i 12 m)
+// `&sporco=0.7`: un animale della fattoria sporco a quel punto (docs/fattoria3d/cura-sul-prato.md)
+const sporco = obj => { const v = parseFloat(parametri.get('sporco')); if (v >= 0 && obj && obj.traverse) { preparaSporco(obj); impostaSporco(obj, v) } return obj }
+const daLontano = obj => { sporco(obj); if (parametri.get('lontano') && obj && obj.traverse) obj.traverse(o => { if (o.userData && o.userData.lod) o.geometry = o.userData.lod.bassa() }); return obj }
 const LATO = Number(parametri.get('lato')) || 400     // lato dell'anteprima, in pixel veri
 
 // ══════════ le voci ══════════
@@ -91,13 +96,18 @@ function metti(obj) {
 /** Quante Mesh e quanti triangoli si disegnano: un'istanza vale il numero delle sue istanze, una mesh spenta non conta. */
 function conta(obj) {
   let mesh = 0, tri = 0
+  const box = new THREE.Box3(), b = new THREE.Box3(), s = new THREE.Vector3()
+  obj.updateMatrixWorld(true)
   obj.traverseVisible(o => {
     if (!o.isMesh) return
     mesh++
+    if (o.isSkinnedMesh) o.computeBoundingBox()                 // piegata dalla posa: l'ingombro della prima volta non vale più
+    if (!o.isInstancedMesh) box.union(b.setFromObject(o, false))
     const g = o.geometry, n = g && (g.index ? g.index.count : g.attributes.position ? g.attributes.position.count : 0) / 3
     tri += (n || 0) * (o.isInstancedMesh ? o.count : 1)
   })
-  return { mesh, tri: Math.round(tri) }
+  box.getSize(s)
+  return { mesh, tri: Math.round(tri), taglia: box.isEmpty() ? null : { alto: s.y, lungo: s.z, largo: s.x } }      // `taglia` in metri, come in scena
 }
 
 // il turno del renderer: le anteprime una alla volta, e la vista grande tiene il turno finché è aperta
@@ -114,10 +124,10 @@ function chiudiOggetto(obj) { scena.remove(obj) }
 async function anteprima(v) {
   v.copie = v.copie || []
   try {
-    const obj = await v.crea()
+    const obj = daLontano(await v.crea())
     if (!obj || !obj.isObject3D) throw new Error('crea() non ha restituito un Object3D')
     const c = conta(obj)
-    v.mesh = v.mesh != null ? v.mesh : c.mesh; v.tri = c.tri
+    v.mesh = v.mesh != null ? v.mesh : c.mesh; v.tri = c.tri; v.taglia = c.taglia
     renderer.setPixelRatio(1); renderer.setSize(LATO, LATO, false); camera.aspect = 1
     metti(obj)
     renderer.render(scena, camera)
@@ -171,11 +181,13 @@ function aggiornaCard(v) {
 // ══════════ i filtri ══════════
 const stato = { gioco: GIOCHI.includes(parametri.get('gioco')) ? parametri.get('gioco') : 'tutti', cat: parametri.get('cat') || '', q: parametri.get('q') || '' }
 function applicaFiltri(voci) {
-  const q = stato.q.trim().toLowerCase()
+  // `q`: un testo da cercare, o più testi separati da «|» (basta uno); un testo che comincia con «=» è un id intero (`=fattoria:watson` non prende le pose)
+  const termini = stato.q.trim().toLowerCase().split('|').map(t => t.trim()).filter(Boolean)
+  const trova = v => termini.some(t => t[0] === '=' ? v.id.toLowerCase() === t.slice(1) : [v.nome, v.dove, v.file, v.categoria, v.id].join(' ').toLowerCase().includes(t))
   let visibili = 0
   for (const v of voci) {
     const ok = (stato.gioco === 'tutti' || v.gioco === stato.gioco) && (!stato.cat || v.categoria === stato.cat)
-      && (!q || [v.nome, v.dove, v.file, v.categoria, v.id].join(' ').toLowerCase().includes(q))
+      && (!termini.length || trova(v))
     v.elScheda.hidden = !ok; if (ok) visibili++
   }
   $('vuoto').hidden = visibili > 0
@@ -253,7 +265,7 @@ function apriGrande(v) {
       camera.aspect = w / h; camera.updateProjectionMatrix()
     }
     try {
-      obj = await v.crea()
+      obj = daLontano(await v.crea())
       if (!obj || !obj.isObject3D) throw new Error('crea() non ha restituito un Object3D')
       const c = conta(obj); v.tri = c.tri; v.mesh = v.mesh != null ? v.mesh : c.mesh
       conti.textContent = [v.misure && `misura ${v.misure}`, `${v.mesh} mesh`, `${c.tri.toLocaleString('it')} triangoli`].filter(Boolean).join(' · ')

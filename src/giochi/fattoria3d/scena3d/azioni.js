@@ -34,6 +34,8 @@ export class Azioni {
       case 'conigliera': case 'alpaca': case 'asini': case 'arnie': return this.curaBestie(cosa)      // il secondo cortile (giro G5)
       case 'bacheca': case 'bancarella': pezzi.salta(cosa.id); return this.c.ui.apriBanco()      // il foglio degli ordini
       case 'fontana': pezzi.salta(cosa.id); fx.parla('Che bella!'); return
+      case 'ciotola_bestia': pezzi.salta(cosa.id); return this.c.ui.apriCiotola && this.c.ui.apriCiotola(cosa.bestia)      // docs/fattoria3d/cura-sul-prato.md
+      case 'tinozza': pezzi.salta(cosa.id); if (!this.m.cura.sporche().length) return fx.parla('Sono tutti puliti!'); return this.c.ui.apriTinozza && this.c.ui.apriTinozza()
       case 'molo': case 'molo_v': return this.pescaDalMolo(cosa)         // toccare il molo: si lancia in punta
       case 'stagno': case 'laghetto': return this.pescaSu(Math.floor(this.centro(cosa).x), Math.floor(this.centro(cosa).z))      // l'acqua costruita: la pesca (se il tocco non l'ha già fatto)
       case 'trattore': pezzi.salta(cosa.id); return this.c.ui.apriMappa && this.c.ui.apriMappa()      // porta ai vicini (docs/fattoria3d/vicini.md)

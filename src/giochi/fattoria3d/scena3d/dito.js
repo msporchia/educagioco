@@ -40,6 +40,7 @@ export class Dito {
     }
     this.inizio = { x: e.clientX, y: e.clientY }; this.trascina = false
     clearTimeout(this.lungo)
+    if (w.bagno.attivo) { this.inizio.bagno = true; return }          // nel bagno il dito strofina
     if (ui.fogliAperti()) return
     if (w.costruzione.parcheggiato) { this.inizio.parcheggio = true; w.costruzione.prendi(e.clientX, e.clientY); return }          // il fantasma del menu: lo si trascina o si tocca dove va
     if (this._pennello) { w.costruzione.pennello(e.clientX, e.clientY, this._pennello); return }
@@ -86,6 +87,11 @@ export class Dito {
       return
     }
     if (!this.inizio) return
+    if (this.inizio.bagno) {
+      const u = this.inizio.u || this.inizio
+      this.inizio.u = { x: e.clientX, y: e.clientY }
+      return w.bagno.strofina(Math.hypot(e.clientX - u.x, e.clientY - u.y))
+    }
     if (w.costruzione.attivo && this.inizio.lungo) return w.costruzione.muovi(e.clientX, e.clientY)
     const d = Math.hypot(e.clientX - this.inizio.x, e.clientY - this.inizio.y)
     if (this.lungo && d > SOGLIA_PREMUTO) { clearTimeout(this.lungo); this.lungo = 0 }
@@ -110,6 +116,7 @@ export class Dito {
     if (this.punti.size === 2) w.camera.zoom = dentroLimiti(w.camera.zoom)    // il pizzico finisce: l'elastico riporta dentro
     this.punti.delete(e.pointerId)
     clearTimeout(this.lungo); this.lungo = 0
+    if (this.inizio && this.inizio.bagno) { this.inizio = null; return }
     if (!su) w.costruzione.alzaDito()
     if (!su && w.costruzione.attivo && !w.costruzione.parcheggiato) w.costruzione.annullaTrascinamento()
     if (this.inizio && this.inizio.parcheggio) {                                 // il fantasma del menu: trascinato si rilascia dove si è, toccato va dove si tocca
