@@ -5,7 +5,7 @@ let ultimo = null      // { chi, protagonista, mondo, al, dove, verso }: `al` e 
 
 <script setup>
 /* La mappa della campagna: un selettore sceglie il protagonista, il
-   coniglio o il cane, e ognuno ha la sua strada, con le sue caselle
+   coniglio, il cane o il guerriero, e ognuno ha la sua strada, con le sue caselle
    numerate da 1. La strada passa per due valli dipinte, la valle dei
    piccoli e le isole delle carte, tutte e due con viste/Valle.vue; si passa
    dall'una all'altra da una tana. Qui si decide chi gioca, in che valle
@@ -33,6 +33,7 @@ const emit = defineEmits(['gioca', 'senza-fine'])
 const PROTAGONISTI = [
   { chiave: 'coniglio', nome: 'Coniglio', icona: '🐇' },
   { chiave: 'cane', nome: 'Cane', icona: '🐕' },
+  { chiave: 'guerriero', nome: 'Guerriero', icona: '⚔️' },
 ]
 // in che valle sta ogni posto, per protagonista (gli id dei nodi non si ripetono fra le due valli)
 const MONDO_DI = {}
@@ -42,13 +43,13 @@ for (const p of PROTAGONISTI) {
 }
 const tappeDi = (p, mondo) => STRADE.isole.filter(s => s.animale === p && mondoDellIsola(s.chiave) === mondo).flatMap(s => s.tappe)
 
-// la strada del cane è aperta se lo è la sua prima tappa; chiusa, il selettore dice cosa manca
-const caneAperto = computed(() => !!props.voci[STRADE.cane[0]] && props.voci[STRADE.cane[0]].stato !== 'chiusa')
-const protagonista = ref(ultimo && ultimo.chi === props.chi && (ultimo.protagonista !== 'cane' || caneAperto.value)
+// la strada del cane e quella del guerriero sono aperte se lo è la loro prima tappa; chiuse, il selettore dice cosa manca
+const aperto = p => p === 'coniglio' || (!!props.voci[STRADE[p][0]] && props.voci[STRADE[p][0]].stato !== 'chiusa')
+const protagonista = ref(ultimo && ultimo.chi === props.chi && aperto(ultimo.protagonista)
   ? ultimo.protagonista : props.primo)
 const doveOra = computed(() => props.dove[protagonista.value])
 // gli amici di ogni strada dalla loro bacheca (docs/core/amici-nei-giochi.md): la mappa mostra quelli del protagonista che si guarda
-const amiciDi = { coniglio: usaAmici('passo', { percorso: 'coniglio' }), cane: usaAmici('passo', { percorso: 'cane' }) }
+const amiciDi = Object.fromEntries(PROTAGONISTI.map(p => [p.chiave, usaAmici('passo', { percorso: p.chiave })]))
 const amici = computed(() => amiciDi[protagonista.value])
 const mondoDi = id => MONDO_DI[protagonista.value].get(id) ?? 'valle'
 
@@ -79,7 +80,7 @@ const passaggio = computed(() => {
 // si gioca lì: una casella aperta, o un posto della strada (non una tana)
 const giocabile = id => {
   if (id === 'senza-fine') return !!props.sentieri.coniglio.aperto
-  if (id === SENTIERO_CANE) return !!props.sentieri.cane.aperto
+  if (id === SENTIERO_CANE) return !!props.sentieri.cane.aperto && protagonista.value === 'cane'
   if (typeof id === 'number') return !!props.voci[id] && props.voci[id].stato !== 'chiusa'
   return MONDO_DI[protagonista.value].has(id) && !String(id).startsWith('tana:')
 }
@@ -120,37 +121,37 @@ function passa() {
   ultimi[protagonista.value] = ultimo
 }
 
-/* il selettore: cambia chi gioca, e la mappa con lui. Il cane chiuso dice cosa manca */
-const caneSpiega = ref(false)
+/* il selettore: cambia chi gioca, e la mappa con lui. Chi è chiuso dice cosa manca */
+const spiega = ref(null)
 function scegli(p) {
-  if (p === 'cane' && !caneAperto.value) { caneSpiega.value = !caneSpiega.value; return }
-  caneSpiega.value = false
+  if (!aperto(p)) { spiega.value = spiega.value === p ? null : p; return }
+  spiega.value = null
   if (p === protagonista.value) return
   protagonista.value = p
   ultimo = ultimi[p] || (ultimo && ultimo.protagonista === p ? ultimo : null)
   stato.value = { ...apertura(), entrata: false, n: stato.value.n + 1 }
 }
-const caneServe = computed(() => (props.voci[STRADE.cane[0]] || {}).serve || '')
+const serve = computed(() => (spiega.value ? (props.voci[STRADE[spiega.value][0]] || {}).serve || '' : ''))
 </script>
 
 <template>
   <div class="pp-mappa" data-mappa :data-mondo="stato.mondo" :data-protagonista="protagonista">
     <!-- in cima e ferma: chi gioca, e la partita lasciata a metà (docs/passo-passo/sosta.md) -->
     <div class="pp-mappa-cima">
-      <!-- chi gioca: il coniglio o il cane, ognuno con la sua strada -->
+      <!-- chi gioca: ognuno con la sua strada -->
       <div class="pp-protagonisti" role="radiogroup" aria-label="Chi gioca">
         <button v-for="p in PROTAGONISTI" :key="p.chiave" type="button" class="pp-protagonista"
                 role="radio" :aria-checked="protagonista === p.chiave ? 'true' : 'false'"
-                :class="{ 'pp-scelto': protagonista === p.chiave, 'pp-chiuso': p.chiave === 'cane' && !caneAperto }"
+                :class="{ 'pp-scelto': protagonista === p.chiave, 'pp-chiuso': !aperto(p.chiave) }"
                 :data-scegli="p.chiave" @click="scegli(p.chiave)">
           <span class="pp-em">{{ p.icona }}</span> {{ p.nome }}
-          <svg v-if="p.chiave === 'cane' && !caneAperto" class="pp-lucchetto-piccolo" viewBox="0 0 24 24" aria-hidden="true">
+          <svg v-if="!aperto(p.chiave)" class="pp-lucchetto-piccolo" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M7.5 10.5V8a4.5 4.5 0 0 1 9 0v2.5" fill="none" stroke="currentColor" stroke-width="3" />
             <rect x="4.5" y="10" width="15" height="11" rx="3" fill="currentColor" />
           </svg>
         </button>
-        <p v-if="caneSpiega && !caneAperto" class="pp-protagonista-serve" data-serve-cane @click="caneSpiega = false">
-          <span class="pp-em">🔒</span> {{ caneServe }}</p>
+        <p v-if="spiega && !aperto(spiega)" class="pp-protagonista-serve" v-bind="{ [`data-serve-${spiega}`]: '' }" @click="spiega = null">
+          <span class="pp-em">🔒</span> {{ serve }}</p>
       </div>
       <slot />
       <p v-if="amici.davanti" class="pp-davanti" data-amico-davanti>{{ amici.davanti }}</p>

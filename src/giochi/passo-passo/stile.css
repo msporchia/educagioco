@@ -47,10 +47,10 @@
 /* chi gioca: in cima, fuori dalla valle, così non copre una casella; il cane chiuso col lucchetto */
 .pp-protagonisti { position: relative; z-index: 6; display: flex; gap: 4px; margin: 8px 0 6px; padding: 4px;
                    border-radius: 999px; background: var(--is-casella); box-shadow: 0 3px 0 var(--is-spessore) }
-.pp-protagonista { position: relative; display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 18px;
+.pp-protagonista { position: relative; display: flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 10px;
                    border: 0; border-radius: 999px; background: none; color: var(--is-scuro);
-                   font: inherit; font-size: 16px; font-weight: 800; cursor: pointer }
-.pp-protagonista .pp-em { font-size: 24px; line-height: 1 }
+                   font: inherit; font-size: 15px; font-weight: 800; cursor: pointer }
+.pp-protagonista .pp-em { font-size: 22px; line-height: 1 }
 .pp-protagonista.pp-scelto { background: var(--is-oro); box-shadow: inset 0 -3px 0 rgba(107, 49, 12, .25) }
 .pp-protagonista.pp-chiuso { opacity: .55 }
 .pp-protagonista .pp-lucchetto-piccolo { position: static; width: 14px; height: 14px }

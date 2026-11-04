@@ -69,7 +69,7 @@ quale file.
 | `docs/lingue/` | English ed Español: vocaboli, campagne, la pronuncia incisa (`npm run voci`) |
 | `docs/bancarella/` | La bancarella: regole e difficoltà |
 | `docs/pozioni/` | Il laboratorio delle pozioni: regole e tappe |
-| `docs/passo-passo/` | Passo passo: regole del mondo, cane pastore, zaino e carte, stelle, sentiero, come si scrive un livello |
+| `docs/passo-passo/` | Passo passo: regole del mondo, cane pastore, guerriero (grate, nemici, spada), zaino e carte, stelle, sentiero, come si scrive un livello |
 | `docs/costruttore/` | Il Robot (era «Il costruttore»: chiave e cartelle restano `costruttore`): linguaggio, progetti e attrezzi, il porto, gli algoritmi, la campagna, la scheda e il robot disegnato |
 | `docs/sotterraneo/` | Il sotterraneo: la grande storia (le discese in fila e la roba attesa), le missioni, regole, roba, scenari, i pensieri dell'eroe (`pensieri.md`), l'abisso com'è e il suo progetto, il disegno in 3D (`grafica-3d.md`, prima di toccare `scena3d/`; i mostri e gli effetti in `mostri-3d.md`; il mondo di sopra in `mondo-3d.md`) |
 | `docs/survivors/` | Survivors, con le sue regole |

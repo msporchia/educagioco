@@ -13,9 +13,10 @@ export const MONDI = Object.keys(DATI)
 
 /* Dove sta sul fondale ogni isola delle strade (la chiave di motore/strade.js):
    quella del coniglio ha la chiave dell'isola dipinta, quella del cane sta nel
-   `cane` dell'isola dipinta che la porta. Per mondo: isola delle strade → isola dipinta */
+   `cane` dell'isola dipinta che la porta, e così quella del guerriero. Per mondo: isola delle strade → isola dipinta */
+const ALTRI = ['cane', 'guerriero']
 const DOVE = Object.fromEntries(MONDI.map(m => [m, new Map(Object.entries(DATI[m].ISOLE).flatMap(([k, d]) =>
-  [...(d.caselle ? [[k, k]] : []), ...(d.cane ? [[d.cane.isola, k]] : [])]))]))
+  [...(d.caselle ? [[k, k]] : []), ...ALTRI.filter(a => d[a]).map(a => [d[a].isola, k])]))]))
 // in che mondo sta un'isola delle strade: 'valle', 'zaino' o null
 export const mondoDellIsola = chiave => MONDI.find(m => DOVE[m].has(chiave)) ?? null
 export const nellaValle = chiave => mondoDellIsola(chiave) === 'valle'
@@ -44,7 +45,7 @@ export function quadroValle(S, { mondo = 'valle', dati = DATI[mondo], protagonis
   const strada = new Map()
   for (const [k, d] of Object.entries(dati.ISOLE)) {
     if (d.caselle && sue.has(k)) strada.set(k, k)
-    else if (d.cane && sue.has(d.cane.isola)) strada.set(k, d.cane.isola)
+    else for (const a of ALTRI) if (d[a] && sue.has(d[a].isola)) strada.set(k, d[a].isola)
   }
   const altroMondo = MONDI.find(m => m !== mondo)
   const diLa = [...sue.keys()].some(k => DOVE[altroMondo] && DOVE[altroMondo].has(k))
@@ -76,7 +77,7 @@ export function quadroValle(S, { mondo = 'valle', dati = DATI[mondo], protagonis
   archi = archi.map(e => ({ ...e, a: nuovo.get(e.a), b: nuovo.get(e.b), lungo: lunghezza(e.punti) }))
   // i cartelli: uno per isola dipinta dove chi gioca ha caselle, col nome della sua isola delle strade
   const isole = Object.fromEntries([...strada].map(([k, chiave]) => {
-    const d = dati.ISOLE[k], suo = protagonista === 'cane' ? d.cane || {} : d
+    const d = dati.ISOLE[k], suo = ALTRI.includes(protagonista) ? d[protagonista] || {} : d
     return [chiave, { cartello: suo.cartello || d.cartello, stemma: !!suo.stemma, isola: k }]
   }))
   const libere = [...(dati.LIBERE || []), ...Object.keys(dati.ISOLE).filter(k => !strada.has(k))]

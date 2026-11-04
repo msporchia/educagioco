@@ -7,6 +7,9 @@ import { CARTE, carteDi, guastiDellaFila, programma, ripeti, se } from './carte.
 
 /* una tappa con le pecore nella mappa è del cane (vedi motore/strade.js) */
 export const delCane = t => t.mappa.some(r => [...r].some(ch => !!(LEGENDA[ch] || {}).pecora))
+/* e una con la principessa del guerriero */
+export const delGuerriero = t => t.mappa.some(r => [...r].some(ch => !!(LEGENDA[ch] || {}).principessa))
+const delConiglio = t => !delCane(t) && !delGuerriero(t)
 
 /* le cose che una tappa chiede di sapere, come chiavi di SCALINI (la loro
    `dritta` le spiega): le regole del mondo che ci sono, le pecore e le carte.
@@ -15,6 +18,8 @@ export function concettiDi(t) {
   const d = t.mappa.join('').split('').map(ch => LEGENDA[ch] || {})
   return [t.salti && 'salto', d.some(x => x.terreno === 'ghiaccio') && 'ghiaccio', d.some(x => x.masso) && 'massi',
           d.some(x => x.coppia) && 'buche', d.some(x => x.pecora) && 'pecore',
+          d.some(x => x.grata) && 'grate', d.some(x => x.nemico) && 'nemici',
+          d.filter(x => x.nemico).length > 1 && 'due',
           ...['ripeti', 'fino', 'se'].filter(c => (t.carte || []).includes(c))].filter(Boolean)
 }
 
@@ -40,10 +45,19 @@ export const SCALINI = [
     dritta: 'Il coniglio guarda cosa ha sotto i piedi, e decide: la scatola ❓ si fa solo sul colore giusto.' },
   { chiave: 'mondo', nome: 'Tutto il mondo', icona: '🌍', carta: 'ripeti',
     dritta: 'Il ghiaccio, i massi, i salti e i segnali, con tutte le scatole in mano.' },
+  /* la strada del guerriero (vedi docs/passo-passo/guerriero.md) */
+  { chiave: 'grate', nome: 'Le grate', icona: '🔑', regola: 'grate',
+    dritta: 'Una grata si apre col pulsante del suo colore: il guerriero ci mette il piede, e resta aperta.' },
+  { chiave: 'nemici', nome: 'La spada', icona: '🗡️', regola: 'nemici',
+    dritta: 'Chi si ferma nelle caselle attorno a un nemico viene colpito, anche di traverso: bisogna passare alla larga, o prendere la spada e batterlo.' },
+  { chiave: 'due', nome: 'Due alla volta', icona: '⚔️', regola: 'due',
+    dritta: 'Contro due nemici insieme non vince nemmeno la spada: si prendono uno alla volta, da dove l\'altro non arriva.' },
+  { chiave: 'castello', nome: 'Il castello', icona: '🏰', regola: null,
+    dritta: 'Il ghiaccio, i massi, i salti e le buche, con le grate e i nemici in mezzo. Un masso sul pulsante lo preme.' },
 ]
 
 /* i temi sono solo vestito: le regole restano le stesse in ogni stagione */
-export const TEMI = ['primavera', 'estate', 'inverno', 'autunno']
+export const TEMI = ['primavera', 'estate', 'inverno', 'autunno', 'castello']
 
 export const CAMPAGNA = [
   /* ── gradino 1: primi passi ── */
@@ -1092,6 +1106,298 @@ export const CAMPAGNA = [
                 programma(ripeti(3, ripeti('rosso', 'su'), 'salto-destra'))],
     fragili: [programma(ripeti('casa', ripeti(2, 'su'), 'salto-destra')),
               programma(ripeti('casa', ripeti(3, 'su'), 'salto-destra'))] },
+  /* ── la strada del guerriero, in coda: vedi docs/passo-passo/guerriero.md ── */
+  { chiave: 'prima-grata', nome: 'La prima grata', icona: '🔑', scalino: 'grate',
+    portata: 44, premio: 10, tema: 'castello',
+    racconto: 'La principessa è dietro una grata, e dritti si sbatte. Il pulsante rosso sta di lato: ci si mette il piede, e la grata rossa si apre.',
+    mappa: [
+      '...WW..Q.',
+      '...WW....',
+      '..4WWWRWW',
+      '.........',
+      '..P..c...',
+      'WWW...WWW',
+      '.........',
+      'AA.B..~~~',
+      'AA...~~~~',
+    ] },
+  { chiave: 'colore-giusto', nome: 'Il colore giusto', icona: '🔑', scalino: 'grate',
+    portata: 44, premio: 10, tema: 'castello',
+    racconto: 'Due grate di fila, e il pulsante blu sta dietro la grata rossa: prima si apre una, poi si va a prendere l\'altra.',
+    mappa: [
+      '..P.W5...',
+      '.WW.W.WWW',
+      '.W4.R...c',
+      '.WWWWWUWW',
+      '.W...W.WW',
+      '.W.~~WQ..',
+      '...~~W...',
+      'AA.~~WWWW',
+      'AAA~~~~~~',
+    ] },
+  { chiave: 'due-porte', nome: 'Due porte, un pulsante', icona: '🚪', scalino: 'grate',
+    portata: 46, premio: 10, tema: 'castello',
+    racconto: 'Un pulsante rosso, e due grate rosse: si aprono tutte e due insieme. Da una parte la corona, dall\'altra la principessa.',
+    mappa: [
+      'A......~~',
+      'AA...WWWW',
+      'A.....R.Q',
+      '...B..WWW',
+      'P..4..WWW',
+      '...B..WWW',
+      'A.....R.c',
+      'AA...WWWW',
+      'A......~~',
+    ] },
+  { chiave: 'tre-colori', nome: 'Tre colori', icona: '🎨', scalino: 'grate',
+    portata: 46, premio: 11, tema: 'castello',
+    racconto: 'Ogni pulsante sta dietro la grata di un altro: bisogna seguire i colori, da quale si comincia?',
+    mappa: [
+      'WWW.5.WWW',
+      'WWW...WWW',
+      'WWWWRWWWW',
+      'c6.U..G.Q',
+      '...WP.W..',
+      '...W..W..',
+      'WWWW4.WWW',
+      'WWWW..WWW',
+      '~~~~~~~~~',
+    ] },
+  { chiave: 'torretta', nome: 'La torretta', icona: '🗼', scalino: 'grate',
+    portata: 48, premio: 11, tema: 'castello',
+    racconto: 'Tre pulsanti in tre angoli: chi prova a caso torna indietro tante volte. Prima di partire, guarda dove porta ogni grata.',
+    mappa: [
+      'P.W56WWWW',
+      '.WW.WWWWW',
+      '.4.R.Uc.W',
+      '.WWGWWWWW',
+      '.WW.WWWWW',
+      '.WW..Q...',
+      '..W......',
+      '..W.....~',
+      'AAW..~~~~',
+    ] },
+
+  { chiave: 'alla-larga', nome: 'Alla larga', icona: '👹', scalino: 'nemici',
+    portata: 48, premio: 12, tema: 'estate',
+    racconto: 'Il nemico vede tutto attorno a sé, anche di traverso, e colpisce chi si ferma lì. Senza spada si passa alla larga.',
+    mappa: [
+      'AA.....AA',
+      'A...c...A',
+      '.........',
+      '......B..',
+      'P...n...Q',
+      '..B......',
+      '.........',
+      'AA.....AA',
+    ],
+    trappole: [['destra', 'destra', 'destra']] },
+  { chiave: 'la-spada', nome: 'La spada', icona: '🗡️', scalino: 'nemici',
+    portata: 50, premio: 12, tema: 'castello',
+    racconto: 'Il nemico sta sulla porta della principessa, e di lì non si gira attorno. Però nella stanza di sopra c\'è una spada: chi ce l\'ha in mano lo batte.',
+    mappa: [
+      '...WWW.Q.',
+      '.s.WWW...',
+      'W.WWWWWnW',
+      '.........',
+      'P.....c..',
+      'WWW...WWW',
+      '.........',
+      '~~.....AA',
+      '~~~...AAA',
+    ],
+    trappole: [['su', 'destra', 'destra', 'destra', 'destra', 'destra', 'destra']] },
+  { chiave: 'dietro-la-grata', nome: 'Dietro la grata', icona: '🗡️', scalino: 'nemici',
+    portata: 50, premio: 13, tema: 'castello',
+    racconto: 'La strada di sotto arriva dritta alla principessa, ma passa accanto al nemico. La spada è chiusa dietro la grata rossa.',
+    mappa: [
+      'AA...~~~~',
+      '.....~~~~',
+      '.4...WWWW',
+      '.....WWWW',
+      'P...R.s.c',
+      'WWW.WWWnW',
+      'WWW.....Q',
+      '~~~~~~~~~',
+    ],
+    trappole: [['destra', 'destra', 'destra', 'giu', 'giu', 'destra', 'destra', 'destra']] },
+  { chiave: 'guardia-al-pulsante', nome: 'La guardia al pulsante', icona: '🛡️', scalino: 'nemici',
+    portata: 52, premio: 13, tema: 'castello',
+    racconto: 'Il pulsante blu ha un nemico accanto: chi ci mette il piede a mani vuote cade. La strada di sopra è libera, ma porta dritti da lui.',
+    mappa: [
+      '.......WW',
+      '.WWWWW.WW',
+      'P...n5.UQ',
+      '.WWWWWWWW',
+      '.........',
+      's.c...WWW',
+      '......WWW',
+      'AA.....~~',
+      '~~~~~~~~~',
+    ],
+    trappole: [['su', 'su', 'destra', 'destra', 'destra', 'destra', 'destra', 'destra', 'giu', 'giu', 'sinistra']] },
+  { chiave: 'tre-guardie', nome: 'Tre guardie', icona: '🏟️', scalino: 'nemici',
+    portata: 52, premio: 14, tema: 'castello',
+    racconto: 'Il cortile è grande, e le guardie sono lontane una dall\'altra. La principessa si raggiunge da una casella sola: sai già chi devi battere?',
+    mappa: [
+      '...n....c',
+      '.........',
+      '.........',
+      'P.....n..',
+      '.........',
+      's........',
+      '.......n.',
+      'WWWWWWWW.',
+      'WWWWWWWWQ',
+    ],
+    trappole: [['destra', 'destra', 'destra', 'destra', 'destra']] },
+
+  { chiave: 'due-guardie', nome: 'Due guardie', icona: '⚔️', scalino: 'due',
+    portata: 54, premio: 14, tema: 'castello',
+    racconto: 'Passando in mezzo te ne trovi due addosso, e contro due non vince nemmeno la spada. Prima ne prendi una da parte, poi l\'altra.',
+    mappa: [
+      'AA...W.AA',
+      '.....W...',
+      '.....W..c',
+      '....nW...',
+      'Ps.....Q.',
+      '....nW...',
+      '.....W...',
+      '.....W...',
+      'AA...W.AA',
+    ],
+    trappole: [['destra', 'destra', 'destra']] },
+  { chiave: 'il-giro', nome: 'Il giro', icona: '🔀', scalino: 'due',
+    portata: 54, premio: 14, tema: 'castello',
+    racconto: 'Nel corridoio due guardie si guardano in faccia, e chi passa in mezzo le ha addosso tutte e due. Ma di sopra c\'è un giro che porta a una sola.',
+    mappa: [
+      '~~~~~~~~~',
+      'AA...WW..',
+      'W....WW..',
+      'W.WWnWW..',
+      'Ps......Q',
+      'WWWWnWWc.',
+      'WWWWWWW..',
+      'WWWWWWW..',
+      '~~~~~~~~~',
+    ],
+    trappole: [['destra', 'destra', 'destra']] },
+  { chiave: 'la-fila', nome: 'La fila', icona: '🛡️', scalino: 'due',
+    portata: 56, premio: 15, tema: 'castello',
+    racconto: 'Tre guardie in fila davanti alla principessa, e la porta di fronte a lei dà proprio fra due. Quella più lontana sta di fronte a una sola: si comincia da lì.',
+    mappa: [
+      'AA.....AA',
+      '.........',
+      'Ps.......',
+      '.........',
+      'WWW.WW.WW',
+      'WWn.n.ncW',
+      'WWW.WWWWW',
+      'W...Q...W',
+      'W.......W',
+    ],
+    trappole: [['destra', 'destra', 'destra', 'giu', 'giu']] },
+  { chiave: 'due-coppie', nome: 'Due coppie', icona: '👥', scalino: 'due',
+    portata: 56, premio: 15, tema: 'castello',
+    racconto: 'Due coppie di guardie sullo stesso corridoio: per ognuna si esce di lato, se ne batte una, e si torna in mezzo.',
+    mappa: [
+      'AAAAAAAAA',
+      '~~~~~~~~~',
+      '...n..n.W',
+      'Ps......Q',
+      '...n..ncW',
+      '~~~~~~~~~',
+      'AAAAAAAAA',
+    ],
+    trappole: [['destra', 'destra']] },
+  { chiave: 'sala-del-trono', nome: 'La sala del trono', icona: '👑', scalino: 'due',
+    portata: 58, premio: 16, tema: 'castello',
+    racconto: 'Le due guardie della sala si guardano in faccia. Il giro per arrivare a una sola è chiuso da una grata, e il suo pulsante sta da un\'altra parte.',
+    mappa: [
+      'AAAAAW...',
+      'W.R..W..Q',
+      'W.WWnW...',
+      'Ps.......',
+      'WW4WnW.c.',
+      'WWWWWW...',
+      'WWWWWW...',
+      'WWWWWW.AA',
+      '~~~~~~~~~',
+    ],
+    trappole: [['destra', 'destra', 'destra']] },
+
+  { chiave: 'il-fossato', nome: 'Il fossato', icona: '🏰', scalino: 'castello',
+    portata: 58, premio: 16, tema: 'primavera', salti: true, regole: ['salto'],
+    racconto: 'Il fossato si salta, e il pulsante sta su un\'isoletta: saltandoci sopra non si preme, bisogna atterrarci. Dietro la grata c\'è una guardia.',
+    mappa: [
+      'AA~~~~WWW',
+      's.~c~.WWW',
+      'P.~4~.RnQ',
+      '..~.~.WWW',
+      'B.~~~.WWW',
+      'A.~~~~~~~',
+      '..~~~~~~~',
+      'AA~~~~~~~',
+    ],
+    trappole: [['destra', 'salto-destra', 'salto-destra', 'destra']] },
+  { chiave: 'masso-sul-pulsante', nome: 'Il masso sul pulsante', icona: '🪨', scalino: 'castello',
+    portata: 60, premio: 16, tema: 'castello', regole: ['spinta'],
+    racconto: 'Il pulsante sta fra due guardie, e chi ci mette il piede cade. Ma un pulsante si preme anche da lontano: basta farci arrivare sopra il masso.',
+    mappa: [
+      'WWWWWnWWW',
+      'Pm..4.WWW',
+      'WWRWWnc.W',
+      '...s.....',
+      '.......Q.',
+      '.........',
+      'AA....AAA',
+      '~~~~~~~~~',
+    ],
+    trappole: [['destra', 'destra', 'destra', 'destra']] },
+  { chiave: 'scivolare-via', nome: 'Scivolare via', icona: '⛸️', scalino: 'castello',
+    portata: 60, premio: 17, tema: 'inverno', regole: ['ghiaccio'],
+    racconto: 'Le guardie colpiscono chi si ferma, e sul ghiaccio non ci si ferma: una freccia sola, e si passa sotto il loro naso.',
+    mappa: [
+      'WWnWnWWWW',
+      'P******OW',
+      '.WWWWW*WW',
+      '.WWWWn*nW',
+      '.c.WWW*WW',
+      '...WWW*WW',
+      '...n..Q..',
+      'WWWW.....',
+      '~~~~~~~~~',
+    ],
+    trappole: [['giu', 'giu', 'giu', 'giu', 'giu', 'destra', 'destra']] },
+  { chiave: 'la-buca', nome: 'La buca segreta', icona: '🕳️', scalino: 'castello',
+    portata: 62, premio: 17, tema: 'castello', regole: ['buche'],
+    racconto: 'Fra una stanza e l\'altra non ci sono porte, solo buche: la spada sta nella stanza di mezzo, e nell\'ultima una guardia tiene d\'occhio il pulsante.',
+    mappa: [
+      'P..1W1..2',
+      '....W..sW',
+      'WWWWWWWWW',
+      '2....WQ..',
+      '.c...R...',
+      '...n4W...',
+      '.....W..A',
+      'AA...W.AA',
+    ],
+    trappole: [['destra', 'destra', 'destra', 'destra', 'destra', 'destra', 'giu', 'destra', 'destra']] },
+  { chiave: 'la-torre', nome: 'La torre', icona: '👸', scalino: 'castello',
+    portata: 62, premio: 18, tema: 'castello', regole: ['spinta', 'ghiaccio'],
+    racconto: 'L\'ultima torre: il fossato, due guardie al passaggio, il pulsante giallo, e sotto un corridoio di ghiaccio. Di là c\'è la principessa.',
+    mappa: [
+      'AAA~~~~~~',
+      'AA~~~WWWW',
+      'A.~..WWWW',
+      '..~s.n.Wc',
+      'Pm~......',
+      '..~..n.W6',
+      'WnWnWWGWW',
+      'Q*******W',
+      'WWWWWWWWW',
+    ],
+    trappole: [['destra', 'destra', 'destra', 'destra']] },
 ]
 
 export const QUANTE_TAPPE = CAMPAGNA.length
@@ -1099,7 +1405,7 @@ export const QUANTE_TAPPE = CAMPAGNA.length
 export const TAPPE_PICCOLE = CAMPAGNA.findIndex(t => t.zaino)
 /* la fine della strada del coniglio: dopo vengono solo le tappe del cane
    in coda. Il cursore `tappa` si ferma qui, e qui la campagna è finita */
-export const FINE_STRADA = CAMPAGNA.findLastIndex(t => !delCane(t)) + 1
+export const FINE_STRADA = CAMPAGNA.findLastIndex(delConiglio) + 1
 export const TAPPE_ZAINO = FINE_STRADA - TAPPE_PICCOLE
 /* dove una tappa vinta porta il cursore (`posto` di `completa`): le tappe
    in coda non lo muovono */
@@ -1155,8 +1461,8 @@ export function riordina(av, vecchia, nuova = CAMPAGNA.map(t => t.chiave)) {
     : nuova.indexOf(vecchia[vecchia.length - 1]) + 1
   const tappa = qui >= 0 ? qui : fatte
   // finita vuol dire finita la strada del coniglio: le tappe del cane in coda non contano
-  const delConiglio = c => { const t = CAMPAGNA.find(x => x.chiave === c); return !t || !delCane(t) }
-  return { stelle, tappa, libera: tappa >= nuova.findLastIndex(delConiglio) + 1 }
+  const conigliesca = c => { const t = CAMPAGNA.find(x => x.chiave === c); return !t || delConiglio(t) }
+  return { stelle, tappa, libera: tappa >= nuova.findLastIndex(conigliesca) + 1 }
 }
 
 /* lo zaino, le carte e le soluzioni scritte, senza giocarle: se una
@@ -1207,17 +1513,17 @@ export function guastiDellaCampagna(campagna = CAMPAGNA) {
      lungo la strada del cane (le sue tappe in coda vanno nella loro isola) */
   const ordine = SCALINI.map(s => s.chiave)
   const posto = i => ordine.indexOf(campagna[i].scalino)
-  const fine = campagna.findLastIndex(t => !delCane(t)) + 1
-  const delCaneInFila = campagna.map((_, i) => i).filter(i => delCane(campagna[i]))
+  const fine = campagna.findLastIndex(delConiglio) + 1
+  const inFila = di => campagna.map((_, i) => i).filter(i => di(campagna[i]))
     .sort((a, b) => posto(a) - posto(b) || a - b)
-  const file = [campagna.slice(0, fine).map((_, i) => i), delCaneInFila]
+  const file = [campagna.slice(0, fine).map((_, i) => i), inFila(delCane), inFila(delGuerriero)]
   if (file[0].some((i, k) => k > 0 && posto(i) < posto(file[0][k - 1])))
     guasti.push('gli scalini non sono in fila: una tappa di un gradino viene dopo una del gradino dopo')
   for (const s of SCALINI)
     if (!campagna.some(t => t.scalino === s.chiave)) guasti.push(`lo scalino «${s.chiave}» non ha nemmeno una tappa`)
   /* lo zaino arriva una volta e resta: dopo il primo livello che ce l'ha, ce l'hanno tutti */
   const primo = campagna.findIndex(t => t.zaino)
-  if (primo >= 0 && campagna.slice(primo).some(t => !t.zaino))
+  if (primo >= 0 && campagna.slice(primo).some(t => !t.zaino && !delGuerriero(t)))
     guasti.push('dopo il primo livello con lo zaino, un livello senza')
   for (const [i, t] of campagna.entries()) {
     const s = SCALINI.find(x => x.chiave === t.scalino)

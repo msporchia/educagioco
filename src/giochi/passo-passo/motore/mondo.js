@@ -16,9 +16,10 @@ export const SBATTE = 'sbatte'
 export const SPLASH = 'splash'
 export const STANCO = 'stanco'
 export const PERSA = 'persa'
+export const CADUTO = 'caduto'
 export const FINITA = 'finita'
 /* un errore ferma la fila; la tana (o il recinto pieno) la chiude vincendo */
-export const eErrore = esito => esito === SBATTE || esito === SPLASH || esito === STANCO || esito === PERSA
+export const eErrore = esito => esito === SBATTE || esito === SPLASH || esito === STANCO || esito === PERSA || esito === CADUTO
 
 /* oltre questi passi al coniglio gira la testa, come contro un sasso
    (vedi docs/passo-passo/zaino.md) */
@@ -26,7 +27,11 @@ export const PASSI_MAX = 90
 
 /* le regole che si possono spegnere col `senza` di `Mondo` (e le
    chiavi che i gradini della campagna dichiarano in `regola`) */
-export const REGOLE = ['salto', 'ghiaccio', 'spinta', 'buche', 'pecore']
+export const REGOLE = ['salto', 'ghiaccio', 'spinta', 'buche', 'pecore', 'grate', 'nemici', 'due']
+
+/* le grate aperte stanno in un numero solo, un bit per colore: il
+   risolutore ne fa una chiave a ogni mossa */
+const BIT = { rosso: 1, blu: 2, giallo: 4 }
 
 export class Mondo {
   constructor(liv, { senza = null, eventi = true } = {}) {
@@ -39,6 +44,9 @@ export class Mondo {
     /* le pecore ancora fuori dal recinto: quelle dentro non contano più,
        non occupano un posto e non si muovono */
     this.pecore = liv.pecore.slice()
+    this.aperte = 0
+    this.spada = false
+    this.nemici = liv.nemici.slice()
     this.traccia = eventi ? [] : null
   }
 
@@ -51,6 +59,9 @@ export class Mondo {
     m.massi = this.massi.slice()
     m.ponti = this.ponti.slice()
     m.pecore = this.pecore.slice()
+    m.aperte = this.aperte
+    m.spada = this.spada
+    m.nemici = this.nemici.slice()
     m.traccia = null
     return m
   }
@@ -62,6 +73,7 @@ export class Mondo {
   chiave() {
     const ordina = v => (v.length > 1 ? v.slice().sort((a, b) => a - b) : v)
     const k = `${this.p}|${this.presa ? 1 : 0}|${ordina(this.massi).join(',')}|${ordina(this.ponti).join(',')}`
+    if (this.liv.guerriero) return `${k}|${this.aperte}|${this.spada ? 1 : 0}|${this.nemici.join(',')}`
     return this.liv.cane ? `${k}|${ordina(this.pecore).join(',')}` : k
   }
 
@@ -81,6 +93,11 @@ export class Mondo {
   masso(i) { return this.massi.indexOf(i) }
   pecora(i) { return this.pecore.indexOf(i) }
   ostacolo(i) { return this.liv.ostacolo[i] }
+  nemico(i) { return this.nemici.indexOf(i) }
+  /* una grata chiusa è un muro: alta, non si scavalca. Aperta è prato */
+  eChiusa(i) { const c = this.liv.grata[i]; return !!c && !(this.aperte & BIT[c]) }
+  /* chi è fermo qui non può entrare: una grata chiusa o un nemico */
+  sbarrata(i) { return this.eChiusa(i) || this.nemico(i) >= 0 }
 
   /* dove può andare a finire un masso: dappertutto dove c'è terra o
      acqua libera. Non copre la tana, la carota, una buca o una lastra —
@@ -90,7 +107,8 @@ export class Mondo {
     return i >= 0 && !this.ostacolo(i) && this.masso(i) < 0 &&
            !this.eTana(i) && !this.haCarota(i) && !this.eBuca(i) &&
            !(this.liv.lastra && this.liv.lastra[i]) &&
-           this.pecora(i) < 0 && !this.liv.eRecinto(i)
+           this.pecora(i) < 0 && !this.liv.eRecinto(i) &&
+           !this.sbarrata(i) && (this.spada || i !== this.liv.spada)
   }
 
   /* dove può scappare una pecora: dove si cammina e nel recinto. Non
@@ -112,7 +130,8 @@ export class Mondo {
     const d = MOSSE[m]
     if (!d) throw new Error(`mossa sconosciuta: ${m}`)
     const esito = d.salto ? this.salta(d.dx, d.dy) : this.cammina(d.dx, d.dy)
-    return esito || !this.liv.cane ? esito : this.spaventa()
+    if (esito) return esito
+    return this.liv.cane ? this.spaventa() : this.liv.guerriero ? this.affronta() : null
   }
 
   cammina(dx, dy) {
@@ -122,6 +141,8 @@ export class Mondo {
     if (this.ostacolo(q)) return this.sbatte(p, this.xy(q), this.ostacolo(q))
     if (this.pecora(q) >= 0) return this.sbatte(p, this.xy(q), 'pecora')
     if (this.liv.eRecinto(q)) return this.sbatte(p, this.xy(q), 'recinto')
+    if (this.eChiusa(q)) return this.sbatte(p, this.xy(q), 'grata')
+    if (this.nemico(q) >= 0) return this.sbatte(p, this.xy(q), 'nemico')
     const k = this.masso(q)
     if (k >= 0) {
       if (this.senza === 'spinta' || !this.spingi(k, p, dx, dy))
@@ -142,12 +163,16 @@ export class Mondo {
     if (this.liv.alto(m)) return this.sbatte(p, this.xy(m), this.ostacolo(m), true)
     if (this.masso(m) >= 0) return this.sbatte(p, this.xy(m), 'masso', true)
     if (this.pecora(m) >= 0) return this.sbatte(p, this.xy(m), 'pecora', true)
+    if (this.eChiusa(m)) return this.sbatte(p, this.xy(m), 'grata', true)
+    if (this.nemico(m) >= 0) return this.sbatte(p, this.xy(m), 'nemico', true)
     const q = this.liv.vicino(m, dx, dy)
     if (q < 0) return this.sbatte(p, this.oltre(m, dx, dy), 'bordo', true)
     if (this.ostacolo(q)) return this.sbatte(p, this.xy(q), this.ostacolo(q), true)
     if (this.masso(q) >= 0) return this.sbatte(p, this.xy(q), 'masso', true)
     if (this.pecora(q) >= 0) return this.sbatte(p, this.xy(q), 'pecora', true)
     if (this.liv.eRecinto(q)) return this.sbatte(p, this.xy(q), 'recinto', true)
+    if (this.eChiusa(q)) return this.sbatte(p, this.xy(q), 'grata', true)
+    if (this.nemico(q) >= 0) return this.sbatte(p, this.xy(q), 'nemico', true)
     if (this.eAcqua(q)) return this.tuffo(p, q, 'salto')
     this.segna({ che: 'salto', da: this.xy(p), a: this.xy(q) })
     this.p = q
@@ -173,6 +198,7 @@ export class Mondo {
   massoArriva(k, dx, dy) {
     let r = this.massi[k]
     for (;;) {
+      this.premi(r)
       if (this.eAcqua(r)) {
         this.massi.splice(k, 1)
         this.ponti.push(r)
@@ -200,6 +226,11 @@ export class Mondo {
         this.presa = true
         this.segna({ che: 'carota', dove: this.xy(c) })
       }
+      if (c === this.liv.spada && !this.spada) {
+        this.spada = true
+        this.segna({ che: 'spada', dove: this.xy(c) })
+      }
+      this.premi(c)
       if (this.eTana(c)) {
         this.segna({ che: 'tana', dove: this.xy(c) })
         return TANA
@@ -212,7 +243,7 @@ export class Mondo {
       }
       if (!this.eGhiaccio(c)) return null
       const n = this.liv.vicino(c, dx, dy)
-      if (n < 0 || this.ostacolo(n) || this.masso(n) >= 0 || this.pecora(n) >= 0 || this.liv.eRecinto(n)) {
+      if (n < 0 || this.ostacolo(n) || this.masso(n) >= 0 || this.pecora(n) >= 0 || this.liv.eRecinto(n) || this.sbarrata(n)) {
         this.segna({ che: 'frena', dove: this.xy(c), verso: this.oltre(c, dx, dy) })
         return null
       }
@@ -221,6 +252,37 @@ export class Mondo {
       this.p = n
       c = n
     }
+  }
+
+  /* un pulsante premuto apre per sempre le grate del suo colore: lo preme
+     chi ci mette il piede e il masso che ci finisce sopra. Chi lo scavalca
+     col salto no, come la carota */
+  premi(i) {
+    const colore = this.liv.pulsante[i]
+    if (!colore || this.senza === 'grate' || this.aperte & BIT[colore]) return
+    this.aperte |= BIT[colore]
+    this.segna({ che: 'pulsante', dove: this.xy(i), colore })
+  }
+
+  /* il guerriero si è fermato: i nemici che lo vedono, nelle otto celle
+     attorno a loro, lo affrontano. Uno solo, con la spada, se ne va; senza
+     spada, o in due alla volta, la fila finisce lì. Chi scivola o salta
+     davanti a un nemico non si è fermato: conta solo dove finisce. */
+  affronta() {
+    if (this.senza === 'nemici') return null
+    const p = this.p
+    const vicini = this.nemici.filter(n => this.liv.vede(n, p, i => this.eChiusa(i)))
+    if (!vicini.length) return null
+    const troppi = vicini.length > 1 && this.senza !== 'due'
+    if (troppi || !this.spada) {
+      this.segna({ che: 'colpito', da: this.xy(p), nemici: vicini.map(i => this.xy(i)) })
+      return CADUTO
+    }
+    for (const i of vicini) {
+      this.nemici.splice(this.nemico(i), 1)
+      this.segna({ che: 'duello', da: this.xy(p), nemico: this.xy(i) })
+    }
+    return null
   }
 
   /* il cane si è fermato: chi lo vede scappa dalla parte opposta. Ogni

@@ -3,7 +3,7 @@
 // coda a V appesa a un'asta con due pomelli, e lo scudo pinzato a sinistra.
 // Puro, gira in Node: la stoffa si allarga quanto il nome, che sta sopra come
 // testo vero (leggibile, e lo legge anche chi non vede). Il disegno è nei
-// colori del suo animale: rosso per il coniglio, viola per il cane.
+// colori del suo animale: rosso per il coniglio, viola per il cane, verde per il guerriero.
 // Vedi docs/passo-passo/mappa.md, «Gli stendardi».
 import { rettangoli } from './pixel.js'
 
@@ -17,6 +17,7 @@ export const stimaNome = nome => Math.ceil(nome.length * (CORPO * 0.6 + SPAZIATU
 const STOFFE = {
   coniglio: { R: '#b8322a', r: '#8f241f', L: '#d4503f' },
   cane: { R: '#5a46a8', r: '#40307f', L: '#7a66c8' },
+  guerriero: { R: '#2f6f6a', r: '#20504c', L: '#4a9a92' },
 }
 const COMUNI = { k: '#2e1a10', y: '#f2c14e', Y: '#fff0a8', f: '#fff4de', S: '#c08850', s: '#8a5a30' }
 

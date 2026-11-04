@@ -9,7 +9,7 @@
    docs/passo-passo/sentiero.md e sentiero-finale.md.
    `node test/esegui.mjs passo-passo-sentiero --niente-build`
    tempo: 300 */
-import { SCALINI } from '../../src/giochi/passo-passo/dati/campagna.js'
+import { SCALINI, delGuerriero } from '../../src/giochi/passo-passo/dati/campagna.js'
 import { guastiDellaMappa } from '../../src/giochi/passo-passo/dati/mondo.js'
 import { carteDi, guastiDellaFila } from '../../src/giochi/passo-passo/dati/carte.js'
 import { Livello } from '../../src/giochi/passo-passo/motore/livello.js'
@@ -40,10 +40,13 @@ const NOME_REGOLA = { salto: 'salto', ghiaccio: 'ghiaccio', massi: 'spinta', buc
 const sciolta = liv => (vaBene(liv) ? risolviSvelto(liv, { carota: false, limite: 200000 })
   : risolvi(liv, { carota: false, limite: 200000 }))
 
+// il guerriero un sentiero non ce l'ha
+const MIEI = SCALINI.filter(s => CAMPAGNA.some(t => t.scalino === s.chiave && !delGuerriero(t)))
+
 /* ══════════ 1. le famiglie: ognuno le sue ══════════ */
 {
   controlla('ogni gradino dopo i primi passi porta un ingrediente, tranne l\'ultimo',
-            SCALINI.slice(1, -1).every(s => INGREDIENTI[s.chiave]) && !INGREDIENTI[SCALINI.at(-1).chiave])
+            MIEI.slice(1, -1).every(s => INGREDIENTI[s.chiave]) && !INGREDIENTI[MIEI.at(-1).chiave])
   controlla('lo zaino paga più di un prato', premioDi({ zaino: 3 }) > premioDi({ mappa: [] }))
   uguale('i sentieri sono due', Object.keys(SENTIERI).join(), 'coniglio,cane')
   const famiglie = (sbl, strada, n = 400, prima = null) => {
