@@ -121,7 +121,7 @@ Il ritratto del foglio e delle carte è un `bestia:<id>` di `anteprime.js`.
 
 ## L'interfaccia
 
-Le bestie si prendono dal menu 🏗 «Costruisci», scheda **Animali** (carte `🪙 prezzo`, il lucchetto dice il livello; in vendita dicono la razza, non un nome: [adozioni.md](adozioni.md); una già tua dice come si chiama e «🐾 è tua», e apre il foglio).
+Le bestie si prendono dal menu 🛒 «Compra», scheda **Animali** (carte `🪙 prezzo`, il lucchetto dice il livello; in vendita dicono la razza, non un nome: [adozioni.md](adozioni.md); una già tua dice come si chiama e «🐾 è tua», e apre il foglio).
 **Tenendo premuto** su una bestia in scena (anche Watson e i gatti) si apre il suo foglio (`scena3d/dito.js`, dopo 0,45 s come gli altri «tieni
 premuto»); il tocco breve è giocare ([cura-sul-prato.md](cura-sul-prato.md)). Il foglio (`Bestia.vue`): ✕ in
 alto a destra, ritratto, la frase «come sta», le tre barre, 📍 Sposta / ✎ Nome / 🛍️ Negozio e una riga che dice dove si cura. Quando manca roba la ciotola dice **dove si fa** («Non hai 🥚 uova: lo fanno

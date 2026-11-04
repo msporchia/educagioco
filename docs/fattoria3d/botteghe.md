@@ -1,7 +1,7 @@
 # Le botteghe del paese
 
 Pasticceria, osteria, mensa e merceria (giro G7 della [parità](parita/commercio.md), righe M10–M14). Sono **edifici unici** come le
-macchine ([edifici-liberi.md](edifici-liberi.md): si costruiscono dal menu «Costruisci qui», uno per tipo, dove si vuole) ma **non
+macchine ([edifici-liberi.md](edifici-liberi.md): si costruiscono dal menu «Compra», uno per tipo, dove si vuole) ma **non
 lavorano: chiedono**. Ogni bottega ha il suo elenco chiuso di merci e i suoi clienti per mestiere; consegnare rende esperienza ⭐, mai monete.
 Sono le sorelle di quelle della fattoria 2D (da Hay Day, sono i visitatori: qualcuno che vuole una cosa sua) e **ne leggono i numeri** (`da2d/dati/botteghe.js`): la 3D non ne scrive
 nessuno (decisione D del 22/10/2026: [parita/decisioni.md](parita/decisioni.md), «Regola generale»).

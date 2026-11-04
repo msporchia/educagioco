@@ -3,7 +3,7 @@
 
    Il test unitario prova le regole; questo dice che **il gioco vero sta in
    piedi nel browser**: la carta è in home, si apre sul
-   prato in WebGL, tenendo premuto su un posto libero si apre «Costruisci qui» e la
+   prato in WebGL, tenendo premuto su un posto libero si apre «Compra» e la
    carta scelta va sulla cella premuta e si paga (senza conferme; se la cella non
    basta resta il fantasma da sistemare, e un tocco su un posto che non va non
    perde niente), il pennello disegna le strade, si semina e si raccoglie armando l'azione, un
@@ -207,7 +207,7 @@ const apriGuardaroba = async () => { await page.evaluate(() => window.__fattoria
   controlla('nessuna stringa visibile dice «eroe»', !testi.some(t => /\beroe\b/i.test(t)), testi.map(t => (t.match(/.{0,20}\beroe\b.{0,20}/i) || [''])[0]).join(' | '))
 }
 
-/* ── costruire: tenere premuto su un posto libero apre «Costruisci qui»; la carta va sulla cella premuta ──
+/* ── costruire: tenere premuto su un posto libero apre «Compra»; la carta va sulla cella premuta ──
    Il dito è vero e la pressione lunga ha la sua attesa (450 ms in `dito.js`). Le monete e l'esperienza si rimettono com'erano dopo
    ogni acquisto: i fogli che seguono partono dal livello di prima. */
 const premuto = async (x, y, ms = 750) => { await giu(x, y); await attendi(page, ms); await su() }
@@ -257,7 +257,7 @@ const sulPosto = () => schermoDi(posto.i + 0.5, posto.j + 0.5)
 }
 // tenuto fermo: si apre, con le schede e la griglia di carte
 await premiEApri(sulPosto)
-controlla('tenuto premuto su un posto libero si apre «Costruisci qui»', await menuAperto() === 1 && /Cosa compriamo/.test(await page.locator('[data-f3="costruisci-qui"] h2').innerText()))
+controlla('tenuto premuto su un posto libero si apre «Compra»', await menuAperto() === 1 && /Cosa compriamo/.test(await page.locator('[data-f3="costruisci-qui"] h2').innerText()))
 controlla('la prima scheda è quella dei campi e ha la carta del campo', await page.locator('[data-scheda="campi"].acceso').count() === 1 && await page.locator('[data-carta="campo"]').count() === 1)
 controlla('non esiste più la barra del costruire', await page.locator('[data-f3="vassoio"]').count() === 0)
 const largo = await page.evaluate(() => [document.documentElement.scrollWidth, innerWidth, document.querySelector('.f3-corpo').scrollHeight >= document.querySelector('.f3-corpo').clientHeight])
@@ -281,10 +281,10 @@ controlla('il menu si è chiuso e nessuna conferma d\'acquisto', await menuApert
 await scatto(page, 'fattoria3d-costruito')
 await riposo()
 await attendi(page, 300)
-// una carta non ancora arrivata: il tasto 🏗️ apre lo stesso menu, la carta trema e dice il livello
+// una carta non ancora arrivata: il tasto 🛒 apre lo stesso menu, la carta trema e dice il livello
 await toccaEl('[data-f3="az-costruisci"]')
 await apriMenu()
-controlla('il tasto 🏗️ apre lo stesso menu', await menuAperto() === 1)
+controlla('il tasto 🛒 apre lo stesso menu', await menuAperto() === 1)
 await vaiScheda('animali')
 await attendi(page, 200)
 controlla('la scheda degli animali ha il recinto chiuso, col lucchetto e il livello', await page.locator('[data-carta="recinto"].bloccata').count() === 1 && /Livello 14/.test(await page.locator('[data-carta="recinto"]').innerText()))
@@ -1162,7 +1162,7 @@ controlla('il pollaio con le bestie non si mette via', via.ok === false && via.m
   await attendi(zuc, 1200)
   const h = await zuc.evaluate(() => { const { mondo } = window.__fattoria3d; return { nome: mondo.stagione && mondo.stagione.nome, cielo: mondo.scena.background.getHex() } })
   uguale('a Halloween la scena lo sa', h.nome, 'halloween')
-  // W20: finché non si ha una zucca, il tasto 🏗 e la scheda dei decori portano il 🎃 (come il baule della 2D)
+  // W20: finché non si ha una zucca, il tasto 🛒 e la scheda dei decori portano il 🎃 (come il baule della 2D)
   await zuc.evaluate(() => { const { motore, mondo } = window.__fattoria3d; motore.s.esperienza = 1e6; mondo.cambiato() })
   await attendi(zuc, 600)
   controlla('a Halloween il tasto Compra porta il 🎃 finché non hai una zucca', await zuc.locator('[data-f3="costruisci-festa"]').count() === 1)

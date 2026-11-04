@@ -22,8 +22,8 @@ export function vistaDelMagazzino(m, silo) {
     tasto = `Ingrandisci · 🪙 ${prezzo}`
   } else if (passo === 'nuovo') {
     titolo = `🏗 ${quanti > 1 ? 'Sono grandi' : 'È grande'} al massimo`
-    testo = `Costruisci ${un} ${S.nome.toLowerCase()} accanto: ogni ${S.cosa} avrà posto per 2 in più, da ${posti} a ${dopo}.`
-    tasto = `Costruisci ${un} · 🪙 ${prezzo}`
+    testo = `Compra ${un} ${S.nome.toLowerCase()} accanto: ogni ${S.cosa} avrà posto per 2 in più, da ${posti} a ${dopo}.`
+    tasto = `Compra ${un} · 🪙 ${prezzo}`
   } else {
     titolo = '🏆 Più grande di così non si può'
     testo = `Hai ${EDIFICI_PER_SILO} ${S.edificio === 'dispensa' ? 'dispense' : 'silos'} grandi al massimo: ogni ${S.cosa} ha posto per ${posti}.`

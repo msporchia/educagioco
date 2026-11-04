@@ -152,7 +152,7 @@ Per le fattorie già salvate **ciò che si possiede resta**: il gating vale solo
 
 Il gettone «⭐ N» con la barra sottile sta nel HUD e apre `viste/Livelli.vue`: una **scala** col livello di adesso in cima (la scatola già aperta con ciò che è arrivato, o «Niente
 di nuovo qui»), sotto il gradino successivo con la scatola ancora chiusa. Salendo compare un avviso («Livello N: nome») e un pallino sul gettone finché non si apre il foglio; se
-il livello apre un edificio l'avviso lo nomina e un «!» sul tasto Costruisci resta finché non c'è ([edifici-liberi.md](edifici-liberi.md)). Ciò che non è arrivato resta visibile ma
+il livello apre un edificio l'avviso lo nomina e un «!» sul tasto Compra resta finché non c'è ([edifici-liberi.md](edifici-liberi.md)). Ciò che non è arrivato resta visibile ma
 in grigio, con «Livello N». I tempi si dicono in minuti (`dati/tempo.js` `tempoBreve`: «45 s», «5 min», «1 h 20 min»); la carta di una ricetta dice anche il costo («⏱️ 7 min · 🪙 1»).
 
 Nei test: `unita/fattoria3d-parita` (la parità voce per voce, i gesti, gli scomparti, la terra, i salvataggi di prima), `unita/fattoria3d-taratura`, `unita/fattoria3d`

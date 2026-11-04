@@ -12,7 +12,7 @@ Legenda in [README.md](README.md). 2D: i dati in `da2d/dati/` (`catalogo.js`, `s
 | W2 | confini | mondo che cresce con 2 piazzole di margine | ✳ senza confini (`a_b` qualunque), finestra 9×9 attorno alla camera | tieni (D10) |
 | W3 | prezzo | `45·1,38ⁿ` | 🟡 `40+20n` poi quadratico | P2 |
 | W4 | il bosco | sgomberare costa, non rende | ✅ albero 🪙3, sasso 🪙1, niente legna | – |
-| W5 | gli edifici dove si vuole | sì (baule, tenere premuto) | ✅ «Costruisci qui» e trascinare; ✳ scorrimento ai bordi | – |
+| W5 | gli edifici dove si vuole | sì (baule, tenere premuto) | ✅ «Compra» e trascinare; ✳ scorrimento ai bordi | – |
 | W6 | ruotare / rovesciare | ↻ ⇄ 📦 sul pezzo tenuto | ✅ ↻ a quarti di giro (`rot` 0–3) su ogni pezzo e edificio tranne campo, acqua, ponti e moli, porticciolo; col pezzo in mano un secondo dito sul tasto; l'ingombro e il davanti seguono ([../rotazione.md](../rotazione.md)). ⇄ no: un giro di 180° basta | – |
 
 ## Decorazioni e giardino (217 voci: 11 dei primi giri + 130 del G8 + 76 del G9, tutte portate)
@@ -47,7 +47,7 @@ riusando le forme già nel catalogo 3D (`strumenti/banco/catalogo-3d/`).
 | W17 | Halloween (1–31 ott) | recinti in costume (sprite `*_halloween`), zucca 🪙6 e due zucche 🪙10, cappello da strega 🪙8 | 🟡 cielo al tramonto, lucciole, le due zucche nei decori solo in stagione ([../stagioni.md](../stagioni.md)); il cappello da strega c'è ([../addobbi.md](../addobbi.md)); mancano i recinti in costume (W21) | P2 |
 | W18 | Natale (1 nov–6 gen) | neve, lucine, tetti innevati, albero 🪙24 | ✅ cielo, fiocchi, prato innevato con l'erba che spunta, neve sui tetti e su tutto ciò che guarda in alto (bosco, sassi, recinti), ghiaccio ai bordi dei laghi, ⭐/🔔, lucine coi ghiaccioli e alberelli sugli edifici, il fiato; da comprare l'albero (W15) e il pupazzo di neve, solo 3D ([../stagioni.md](../stagioni.md)) | P2 |
 | W19 | `#stagione=` per guardarle fuori stagione | sì | ✅ stessa sintassi (`stagioneAttiva`) | – |
-| W20 | il fumetto «lo vorrei» / segnalino 🎃 | il fumetto è delle bestie col cappello (W21), il segnalino 🎃/🎄 è quello del baule («Decorazioni») | 🟡 il segnalino sì: 🎃/🎄 sul tasto 🏗, sulla scheda e sulle carte della festa, finché non ne hai una (`festaDaScoprire`, [../stagioni.md](../stagioni.md)); **tolto perché** il fumetto «lo vorrei» in 3D non c'è: il cappello da strega si compra dal foglio della bestia ([../addobbi.md](../addobbi.md)), nessuna lo chiede col fumetto | P2 |
+| W20 | il fumetto «lo vorrei» / segnalino 🎃 | il fumetto è delle bestie col cappello (W21), il segnalino 🎃/🎄 è quello del baule («Decorazioni») | 🟡 il segnalino sì: 🎃/🎄 sul tasto 🛒, sulla scheda e sulle carte della festa, finché non ne hai una (`festaDaScoprire`, [../stagioni.md](../stagioni.md)); **tolto perché** il fumetto «lo vorrei» in 3D non c'è: il cappello da strega si compra dal foglio della bestia ([../addobbi.md](../addobbi.md)), nessuna lo chiede col fumetto | P2 |
 | W21 | i recinti in costume a Halloween | uno sprite vestito per ogni recinto (alcuni da rifare) | ❌ le bestie del cortile non si travestono ([../da-fare.md](../da-fare.md)) | P2 |
 
 Le stagioni sono **un dato puro** (`dati/stagioni.js`: `stagioneDi(data)`, `addobbiStagionali`) che la 3D importa così com'è

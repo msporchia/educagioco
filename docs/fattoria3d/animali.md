@@ -140,7 +140,7 @@ Nel catalogo 3D (`strumenti/banco/catalogo-3d/fattoria.js`) c'è una voce per st
   (`manca-mangime` con `servono` e `mangia`: «Serve 🌰 becchime (2 a testa): lo fa il fienile»). Niente più dialogo: comprare non passa di qui.
 - **Il pulsante «＋ 🪙 N» del cartello** (`azioni.compraBestia(id)`): compra subito, senza conferma e senza camminare fino
   all'edificio; compare la bestia, scintille e «+1 🐄». Se mancano monete dice quante (`Ti mancano 🪙 N`) e il pulsante è
-  grigio (`aria-disabled`, ma risponde). Pieno, il pulsante sparisce e il conto diventa verde. Ignorato in Costruisci e con un
+  grigio (`aria-disabled`, ma risponde). Pieno, il pulsante sparisce e il conto diventa verde. Ignorato in Compra e con un
   foglio aperto. Il cartello prende il dito solo col pulsante (`pointer-events`), il resto lascia passare il tocco alla tela.
 - **La vista** (`Gioco.vue`): uova e latte stanno in `prodotti` e nel HUD (`emojiDi`, non `RICETTE`); gli eventi `uovo` e
   `latte` muovono i contatori `fattoria3dUova` e `fattoria3dLatte`, che insieme fanno il traguardo `f3d-cortile`. Niente

@@ -91,7 +91,7 @@ covone e sacco (cima a punta o tonda, il gatto scivolerebbe), tavolo e cassa gra
 
 ## Quando ci premi
 
-`Mondo3d.tocca` chiede prima a `compagni.bersaglio(raggio)`; poi `Compagni.tocca(c)`. Col foglio «Costruisci qui» aperto non si
+`Mondo3d.tocca` chiede prima a `compagni.bersaglio(raggio)`; poi `Compagni.tocca(c)`. Col foglio «Compra» aperto non si
 accarezzano. Ogni tocco è anche giocare, e vale per tutti i cani e i gatti, non solo per i compagni: [cura-sul-prato.md](cura-sul-prato.md). Ogni risposta è una **sequenza di passi a tempo** (`{ stato, dur, sub?, guarda?, ev? }` o `{ va }`, tutte pure in
 `dati/compagni.js` col `rnd` da fuori) che `Compagni` esegue: gli eventi `ev` fanno i versi (`fx.volo`) e i cuoricini. Un tocco su chi è
 già in sequenza **non la riavvia** (tranne Watson che dorme: si sveglia con uno sbadiglio). Se **il contadino comincia a muoversi o a

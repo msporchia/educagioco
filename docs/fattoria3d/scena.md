@@ -12,7 +12,7 @@ gli Asteroidi e il sotterraneo: il 3D non si scrive a mano.
 | `terreno.js` | erba, strade, griglia, lotti non comprati, recinto, alberi, sassi, laghetti, i due edifici di scena: a istanze, per una finestra di 9×9 lotti attorno alla camera ([mondo-infinito.md](mondo-infinito.md)) |
 | `pezzi.js` | un gruppo per ogni cosa del motore, edifici compresi (sono pezzi liberi, non ci sono fantasmi: [edifici-liberi.md](edifici-liberi.md)); li tiene allineati (`sincronizza`) e li anima (grano che cresce, pecore, galline e mucche, fontana, fumo, il pallone che parte e torna: [mongolfiera.md](mongolfiera.md)); i cartelli sugli edifici: «🎈 N casse pronte!» o «🎈 in viaggio · m:ss» sulla mongolfiera, prezzo o «🔒 Livello N» sul fantasma, pronti o cottura su ogni macchina, uova o latte pronti sul pollaio e sulla stalla, e su recinto, pollaio e stalla il cartello col pulsante «＋ 🪙 N» che compra una bestia (niente conto «n/max»; «ha fame» se c'è una bestia o una pecora tosata da nutrire) ([animali.md](animali.md)); le bestie hanno tre stadi (fame, al lavoro, pronta) che si leggono a colpo d'occhio, con una transizione morbida (`muoviBestie`, `muoviPecore`, profilo in `bestie-puro.js`: «I tre stadi»); il cartello si nasconde col pezzo sollevato |
 | `eroe.js` | il movimento (a piedi, o di corsa), il percorso, la posa del gesto (semina, falcia, abbatte, pesca, ritira, esulta; `pescando`: la canna resta alzata finché sta fermo) |
-| `azioni.js` | cosa fa il contadino davanti a ogni cosa: anima il gesto e **a metà gesto chiede al motore di farlo davvero**; un edificio in mappa è una cosa e apre il menu della sua macchina (comprarlo e piazzarlo è del menu «Costruisci qui») |
+| `azioni.js` | cosa fa il contadino davanti a ogni cosa: anima il gesto e **a metà gesto chiede al motore di farlo davvero**; un edificio in mappa è una cosa e apre il menu della sua macchina (comprarlo e piazzarlo è del menu «Compra») |
 | `detti.js` | `dettoDi` / `dettoDiRifiuto`: un rifiuto del motore in una riga che dice cosa fare. Senza three: lo usa anche `Gioco.vue` |
 | `costruzione.js` | cosa fa una carta del menu sulla cella premuta (`daMenu`), il fantasma (anche «parcheggiato», che aspetta un posto), riprendere e spostare un pezzo, le strade a pennello; al rilascio compra e mette in un gesto |
 | `dito.js` | i pointer sulla tela: tocco, mappa che scorre, pizzico, tenere premuto (su un pezzo lo riprende, su un posto libero apre il menu «Compra»), il fantasma parcheggiato, il pennello delle strade |
@@ -91,7 +91,7 @@ toccano. Il cespuglio ha i vertici in grigio (luce e ombra) e il verde lo mette 
 Il tasto si chiama 🛒 Compra e il foglio «Cosa compriamo?»: nel codice restano `costruisci`, `CostruisciQui.vue` e i bersagli `az-costruisci`, `costruisci-qui`. **È un taccuino** (decisione dell'utente del 4/11/2026: «c'è troppa roba»): quattro linguette a sinistra (`GRUPPI` di `dati/catalogo.js`: Fattoria, Giardino, Paese, Decori, `[data-gruppo]`), in alto le schede del gruppo aperto, sotto le carte. Una linguetta si accende se una sua scheda ha il «!» o la festa.
 
 **Si tiene premuto** (~0,45 s, vibra) **su un posto libero del proprio terreno** e si apre il foglio «Cosa compriamo?»
-(`viste/CostruisciQui.vue`, `dito.js` ricorda la cella premuta); il tasto 🏗️ della barra apre lo stesso foglio per la cella
+(`viste/CostruisciQui.vue`, `dito.js` ricorda la cella premuta); il tasto 🛒 della barra apre lo stesso foglio per la cella
 davanti al contadino (`cellaDavanti`). Un dito che scorre prima della soglia non lo apre (il dito non è un mouse); un lotto non tuo si
 compra toccandolo; tenuto premuto su un pezzo lo riprende, come prima.
 - **Le schede** (`CATEGORIE` in `dati/catalogo.js`: 🌾 Campi, 🐑 Animali, 🏠 Edifici, 🌷 Decori, 🛣️ Strade) e sotto **le carte**, tre
@@ -105,7 +105,7 @@ compra toccandolo; tenuto premuto su un pezzo lo riprende, come prima.
   resta lì**, verde o rosso: lo si **trascina** (il fantasma sta sopra il dito come sotto) e al rilascio in un posto buono paga e mette; un
   rilascio che non va lo lascia dov'è, un **tocco** su un posto buono costruisce lì e **su uno che non va annulla** (senza perdere
   niente), come la fascia «✖️ … per annullare» in basso (si tocca, o ci si rilascia sopra).
-- **Gli edifici unici** (mulino, ecc.) hanno la loro carta nella scheda Edifici e si posano come ogni pezzo, con il «!» sulla linguetta, sulla carta e sul tasto 🏗️ finché il livello li ha aperti e non ci sono ([edifici-liberi.md](edifici-liberi.md)). **La
+- **Gli edifici unici** (mulino, ecc.) hanno la loro carta nella scheda Edifici e si posano come ogni pezzo, con il «!» sulla linguetta, sulla carta e sul tasto 🛒 finché il livello li ha aperti e non ci sono ([edifici-liberi.md](edifici-liberi.md)). **La
   strada e la gomma** attivano il pennello: il foglio si chiude e compare `viste/BarraStrade.vue` (strada, gomma, «Fatto»); il dito
   sulla mappa disegna e due dita la spostano.
 - **Il prezzo e il rincaro** sono quelli di sempre (`prezzoPezzo`, `puoCompraEMettere`). Un pezzo già messo si riprende **tenendolo
@@ -135,7 +135,7 @@ compra toccandolo; tenuto premuto su un pezzo lo riprende, come prima.
 Una carta mostra il modello vero che poi si vede in scena, non un'icona. **Le foto si fanno sul computer**: `npm run anteprime fattoria`
 (`strumenti/anteprime-fattoria3d.mjs`) apre il file costruito, fotografa ogni pezzo, edificio e bestia di casa con `anteprima(tipo, { viva: true })`
 e le scrive in `dati/anteprime.js` (generato, WebP 160×160, ~1,4 MB), che il gioco carica a parte appena parte. Fatte sul Note 7 erano
-~250 render, letture dalla GPU e PNG di fila, una per fotogramma, appena si apriva «Costruisci»: gli fps crollavano e la coda andava avanti
+~250 render, letture dalla GPU e PNG di fila, una per fotogramma, appena si apriva «Compra»: gli fps crollavano e la coda andava avanti
 anche a foglio chiuso. Il test `unita/fattoria3d-anteprime-fatte` vuole una foto per tipo e ricalcola la firma dei sorgenti dei modelli
 (`scena3d/modelli*.js`, la fusione, la cache, le bestie, la posa): un modello cambiato senza `npm run anteprime` è rosso.
 `Mondo3d.anteprima(tipo)` → `Promise<dataURL|null>` (e `anteprimaPronta(tipo)` subito, se c'è) dà la foto fatta; solo se non c'è (il ritratto del

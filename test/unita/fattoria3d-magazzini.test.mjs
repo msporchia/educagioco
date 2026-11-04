@@ -1,5 +1,5 @@
 /* I magazzini della fattoria 3D come edifici, senza browser: il primo silo del raccolto si mette da solo accanto a casa, gli altri arrivano al
-   livello del loro silo nel magazzino dei pezzi (col «!» su Costruisci) e li mette il bambino; crescono a ogni ingrandimento fino a un massimo,
+   livello del loro silo nel magazzino dei pezzi (col «!» su Compra) e li mette il bambino; crescono a ogni ingrandimento fino a un massimo,
    poi se ne compra un altro (al prezzo del passo dopo), fino a tre; non si mettono via, non si comprano dal menu; una fattoria di prima ritrova
    i suoi ingrandimenti con gli edifici che servono; la fattoria di un vicino non ne ha.
    Docs: docs/fattoria3d/magazzini.md.
@@ -42,7 +42,7 @@ stessaLista('quanti edifici servono', [0, 6, 7, 12, 13].map(edificiPerPassi), [1
   controlla('arrivare da soli non conta come pezzo messo', !f.prendiEventi().some(e => e.tipo === 'pezzo'))
   f.s.esperienza = sogliaDi(4); f.tick()
   controlla('al livello 4 arriva il silo della stalla, da mettere: non in mappa, nel magazzino dei pezzi', !tipi(f).includes('silo_bianco') && f.nelMagazzino('silo_bianco') === 1)
-  controlla('e il tasto Costruisci ha il «!»', f.edificiDaCostruire().includes('silo_bianco'))
+  controlla('e il tasto Compra ha il «!»', f.edificiDaCostruire().includes('silo_bianco'))
   const menuF = () => carteDi('edifici', { livello: f.livello(), prezzoPezzo: t => f.prezzoPezzo(t), nelMagazzino: t => f.nelMagazzino(t), posseduti: f.s.posseduti, stagione: null })
   controlla('nel menu la sua carta dice 📦 ×1 e ha il «!»', menuF().some(c => c.id === 'silo_bianco' && c.etichetta === '📦 ×1' && c.segnala))
   controlla('il bambino lo mette dove vuole', f.mettiPezzo('silo_bianco', ...(p => [p.i, p.j])(f._postoVicino('silo_bianco', 0, 3))).ok && f.edificiDelSilo('stalla').length === 1)

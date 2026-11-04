@@ -123,7 +123,7 @@ const EVENTI = { terra: 'fattoria3dTerre', pezzo: 'fattoria3dPezzi', raccolto: '
 function salito(livello) {
   const nome = nomeDi(livello), vuoto = /^Livello \d+$/.test(nome)           // un livello che non apre niente (la 3D ha meno cose della 2D) lo dice
   const strade = stradeAl(livello), nuoveStrade = [...strade.tipi.map(t => TIPI_STRADA[t].nome), ...strade.bordi.map(b => `bordo ${BORDI_STRADA[b].nome.toLowerCase()}`)]
-  const testo = `Livello ${livello}: ${avvisoEdificiNuovi(livello) || (nuoveStrade.length ? `strade nuove (${nuoveStrade.join(', ')})` : vuoto ? 'niente di nuovo, ma sei più in alto!' : nome)}`      // se si apre un edificio lo nomina: il «!» sul tasto Costruisci resta finché non c'è
+  const testo = `Livello ${livello}: ${avvisoEdificiNuovi(livello) || (nuoveStrade.length ? `strade nuove (${nuoveStrade.join(', ')})` : vuoto ? 'niente di nuovo, ma sei più in alto!' : nome)}`      // se si apre un edificio lo nomina: il «!» sul tasto Compra resta finché non c'è
   ui.avviso(testo)
   toast.value = { testo, fine: performance.now() + DURATA_TOAST }
   livelloNuovo.value = true
@@ -165,7 +165,7 @@ function seSparisce(e) { if (e?.type === 'pagehide' || document.visibilityState 
 const attrezzi = ref(null)                // { tipo, x, y, … }: l'attrezzo accanto al campo toccato (viste/Attrezzi.vue)
 const strumento = ref(null)              // il pennello delle strade: null | 'strada' | 'gomma'
 const pennello = ref({ tipo: TIPO_DI_BASE, bordo: BORDO_DI_BASE })      // com'è la strada che si disegna (dati/strade.js): lo sceglie il bambino nella barra
-const costruisciQui = ref(null)          // { i, j, msg }: il menu «Costruisci qui», con la cella premuta
+const costruisciQui = ref(null)          // { i, j, msg }: il menu «Compra», con la cella premuta
 const avvisoTesto = ref('')
 const stagione = ref(stagioneAttiva(new Date(), typeof location !== 'undefined' ? location.hash : ''))          // la festa in corso (dati/stagioni3d.js): Natale, Halloween o niente
 const trascinando = ref(null)            // { emoji, x, y, su, perMettereVia, perAnnullare, nuovo, parcheggiato } mentre si trascina un pezzo (o ne aspetta uno il fantasma)
@@ -282,7 +282,7 @@ const vistaSala = computed(() => { void versione.value; return tipoSala.value &&
 
 // ── la barra delle azioni ──
 
-// ── costruire: tenere premuto su un posto libero (o il tasto 🏗️) apre il menu «Costruisci qui» ──
+// ── costruire: tenere premuto su un posto libero (o il tasto 🛒) apre il menu «Compra» ──
 const schede = computed(() => {
   void versione.value
   return schedeDi({ stagione: stagione.value, livello: motore.livello(), prezzoPezzo: t => motore.prezzoPezzo(t), nelMagazzino: t => motore.nelMagazzino(t), posseduti: motore.s.posseduti, bestieTue: motore.cura.curate(), nomeBestia: id => motore.cura.nomeDi(id), serveBacheca: motore.serveBacheca() })
@@ -293,7 +293,7 @@ const festa = computed(() => {
 })
 function apriCostruisci(i, j) {
   if (mondo.eroe.az || strumento.value) return
-  if (i === undefined) [i, j] = mondo.cellaDavanti()      // il tasto 🏗️: la cella davanti all'eroe
+  if (i === undefined) [i, j] = mondo.cellaDavanti()      // il tasto 🛒: la cella davanti all'eroe
   mondo.annullaTrascinamento()
   guidaVisto.value = true
   costruisciQui.value = { i, j, msg: '' }
@@ -552,7 +552,7 @@ function rifiutaBottega(n) {
 // ── la guida del primo giro e il consiglio (docs/fattoria3d/guida.md) ──
 const radice = ref(null)
 const guidaAttiva = ref(false)           // si decide una volta sola, all'apertura: chi ha già giocato non la vede mai
-const guidaVisto = ref(false)            // ha già aperto il menu «Costruisci qui» durante il primo giro
+const guidaVisto = ref(false)            // ha già aperto il menu «Compra» durante il primo giro
 const consiglio = ref(null)              // il foglio «E adesso?»: { testo, azione, etichetta }
 const macchinaCons = ref(null), bancoCons = ref(null), naveCons = ref(null), bottegaCons = ref(null)      // il passo per avere ciò che manca, sotto il messaggio di ogni foglio
 const quadroGuida = () => {

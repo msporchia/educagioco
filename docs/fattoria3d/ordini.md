@@ -10,7 +10,7 @@ la nave. Tutti pagano esperienza e mai monete ([regole.md](regole.md)).
 - **Il banco lavora se c'è una bacheca o una bancarella**: il livello è almeno 2 (`LIVELLO_BANCO`, quello dei due pezzi) **e**
   una `cosa` di tipo `bacheca` o `bancarella` è messa sulla mappa (`PEZZI_DEL_BANCO` in `dati/ordini.js`, letto da `bancoAperto()`).
   La **bacheca** (2×1, 🪙 12, livello 2, 📋) è il pezzo vero del banco: i foglietti appuntati sono gli ordini aperti e sul suo
-  cartello compare «🧺 N pronti!» come per le macchine. La **bancarella** resta nel menu «Costruisci qui» (scheda Edifici) come arredo e apre lo stesso banco: chi
+  cartello compare «🧺 N pronti!» come per le macchine. La **bancarella** resta nel menu «Compra» (scheda Edifici) come arredo e apre lo stesso banco: chi
   l'aveva già messa non perde niente. Perché: dà un senso al pezzo, che prima era una decorazione, e un bambino che non l'ha
   comprato non vede un'interfaccia che non ha chiesto. Messi via tutti e due il banco si chiude (`ordini()` torna `[]`) ma gli
   ordini restano salvati e tornano rimettendone uno.

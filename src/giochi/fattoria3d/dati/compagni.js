@@ -9,7 +9,7 @@ import { ANIMALI_2D } from './parita2d.js'
 export const ASPETTO_ERO = 'contadino'
 
 // I cinque animali veri di casa: girano per la fattoria (Watson segue il contadino, i gatti vanno per conto loro). Dal 3/11/2026 **non arrivano più da soli col livello**: si adottano
-// dal menu Costruisci → Animali (`dati/bestie.js`, `CURATI`) e il bambino sceglie il nome. `liv` e `prezzo` sono quelli dell'adozione: il livello da cui si può prendere e le monete.
+// dal menu Compra → Animali (`dati/bestie.js`, `CURATI`) e il bambino sceglie il nome. `liv` e `prezzo` sono quelli dell'adozione: il livello da cui si può prendere e le monete.
 // Il bobtail, il gatto bianco e nero e il gatto nero costavano 90/3, 75/10 e 75/19 nella 2D; Irene e Golia (gatta calico e gatto nero, anche loro veri) stanno fra quelli.
 // `razza`: come si chiama finché è in vendita; `nome`: quello che porta se il bambino non gliene sceglie uno (docs/fattoria3d/adozioni.md).
 export const COMPAGNI = {
