@@ -27,7 +27,12 @@ pasticcio. Il motore è `motore/procedimento.js`.
   sul calderone mescola, il fiammifero accende il fuoco, la brocca diluisce
   (`MOSSE` in `procedimento.js`). Le cose entrano una alla volta, in qualunque
   ordine; provato coi bottoni: troppi, e non sembrava di fare niente.
-- **Il fuoco parte spento**: scaldare vuol dire accenderlo.
+- **Lasciato sul tavolo, resta lì**: se un attrezzo dà fastidio lo si sposta, come
+  su un banco vero (`posa`). Non si salva: rientrando ognuno è al suo posto.
+- **Il fuoco parte spento**: scaldare vuol dire accenderlo, e a fuoco spento il
+  brodo non bolle e non fuma.
+- **Finché non si mescola nel calderone c'è un arcobaleno che gira**; mescolando
+  sparisce in un colore solo, e con tutto dentro è quello della pozione (`brodo`).
 - **Il pasticcio**: una mossa che non fa avanzare il prossimo passo, o con la cosa
   sbagliata, non cambia niente, il calderone sbuffa, costa un gettone (`PASTICCIO`) e il
   cartello dice cosa diceva la ricetta. Si legge con la barra, come dopo un trabocco.
@@ -58,8 +63,10 @@ li usa: capire cosa serve è parte del gioco.
 
 - **Gli attrezzi** (`scena3d/attrezzi.js`) compaiono a spesa fatta, con una presa
   invisibile più grande di loro, se no il dito non li prende. Si portano su un
-  piano in aria (`inAria`), e `bersaglio(x, y)` dice su cosa si è lasciato, col
-  calderone e il mortaio più larghi di come si vedono. A fine mossa tornano a posto.
+  piano in aria (`inAria`), e `bersaglio(x, y)` dice su cosa si è lasciato, guardando
+  sullo schermo, col calderone e il mortaio più larghi di come si vedono. Provato su
+  quel piano: per quello che sta basso sul tavolo il dito cadeva lontano, e sul
+  mortaio non succedeva niente. A fine mossa tornano a posto.
 - `passo(a)` suona le mosse: la view dice solo com'è andata.
 - **I suoni** stanno in `suoni.js`, sopra `nota` e `rumore` di `src/audio.js`: le
   ampolle, il liquido che gorgoglia salendo, la polvere, la radice, il trabocco, il

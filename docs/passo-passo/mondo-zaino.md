@@ -31,9 +31,10 @@ caselle e stesso segnalino della valle dei piccoli: cambiano i dati.
   all'ingresso di tutto il mondo, dove arriva anche il ponte del ripeti.
   Provato senza: dopo l'ultimo «se» il coniglio ripassava da tutto il fino a
   e dal ripeti. Chiusa (tutto il mondo ancora chiuso) la bocca ha il masso.
-- **Le altre isolette sono decoro**: le stalle a sinistra, il fienile in
-  basso, il lago gelato e quella di sotto a destra, coi loro ponti dipinti
-  che non si camminano.
+- **Le altre isolette sono decoro**: le stalle a sinistra e quella di sotto a
+  destra, coi loro ponti dipinti che non si camminano. Il lago gelato e il
+  fienile lo sono per il coniglio: ci cammina solo il guerriero
+  ([guerriero.md](guerriero.md#la-strada)).
 - **Il sentiero senza fine del coniglio sta in fondo alla spirale di «Tutto
   il mondo»**: la fine della sua strada.
 - **Da dove si parte**: dalla tappa di adesso, se è nello zaino; la vista

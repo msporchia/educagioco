@@ -62,7 +62,6 @@ const leRegole = g => (aiuto.value !== 'regola' ? [] : [...new Set(g.offerte.map
 /* la scena, già decisa: la tela la traduce e basta */
 const quadro = computed(() => {
   const q = b.value
-  const dentro = q.dentro.map(i => q.ingredienti[i].colore)
   const macchie = q.macchie.map(i => ({ i, colore: q.ingredienti[i].colore }))
   // davanti solo gli strumenti che servono: a ingrediente finito si mettono via (uno sporco resta finché non si pulisce)
   const vasi = q.ingredienti.flatMap((x, i) => (fatto(x) && !q.macchie.includes(i) ? [] : [{
@@ -70,8 +69,9 @@ const quadro = computed(() => {
   }]))
   return {
     vasi, macchie,
-    calderone: mescola(dentro),
-    riempito: dentro.length / q.ingredienti.length,
+    calderone: q.brodo,
+    riempito: q.dentro.length / q.ingredienti.length,
+    arcobaleno: q.dentro.length > 0 && !q.mescolato,
     fuoco: q.scaldato ? 1 : 0,
     attrezzi: { visibili: q.pronta && !q.macchie.length, quali: q.tappa.azioni.flatMap(a => ATTREZZI[a] || []), quanti: q.ingredienti.length,
                 roba: q.ingredienti.flatMap((x, i) => (q.dentro.includes(i) || q.mortaio.includes(i) ? [] : [{ i, posto: i, nome: x.nome, foto: ANTEPRIME[x.nome] }])),

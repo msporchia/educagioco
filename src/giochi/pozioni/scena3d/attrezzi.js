@@ -15,7 +15,7 @@ const GRANDE_ROBA = 1.25
 
 export function creaAttrezzi(scena) {
   const pietra = new MeshStandardMaterial({ color: 0x8d8a92, roughness: 0.85, side: DoubleSide })
-  const legno = new MeshStandardMaterial({ color: 0x9a6a3a, roughness: 0.7 })
+  const metallo = new MeshStandardMaterial({ color: 0xc2c8d2, roughness: 0.35, metalness: 0.6, side: DoubleSide })
   const coccio = new MeshStandardMaterial({ color: 0xc87a4a, roughness: 0.6, side: DoubleSide })
   const pesto = new MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 })
   const capocchia = new MeshStandardMaterial({ color: 0xd8342a, roughness: 0.6 })
@@ -44,21 +44,25 @@ export function creaAttrezzi(scena) {
   mortaio.add(dentro)
   attrezzo('mortaio', mortaio, -1.75, 0, 0)
 
+  // il pestello: una clava corta di pietra, posato dritto verso destra
   const pestello = new Group()
   const asta = new Mesh(new CylinderGeometry(0.075, 0.13, 0.95, 12), pietra)
   asta.position.y = 0.48
   const punta = new Mesh(new SphereGeometry(0.15, 14, 10), pietra)
   punta.position.y = 0.06
   pestello.add(asta, punta)
-  attrezzo('pestello', pestello, -0.55, 0.15, 1.45, -0.25)
+  attrezzo('pestello', pestello, -0.75, 0.15, -1.45, -0.45)
 
+  // il mestolo: una coppa di metallo fonda in cima a un manico lungo e sottile, col gancio
   const mestolo = new Group()
-  const manico = new Mesh(new CylinderGeometry(0.045, 0.055, 1.5, 10), legno)
-  manico.position.y = 0.75
-  const paletta = new Mesh(new SphereGeometry(0.17, 12, 8), legno)
-  paletta.scale.set(1, 0.5, 1)
-  mestolo.add(manico, paletta)
-  attrezzo('mestolo', mestolo, 0.75, 0.1, 1.5, -0.25)
+  const coppa = new LatheGeometry(giro([[0, 0], [0.13, 0.015], [0.22, 0.08], [0.27, 0.18], [0.28, 0.27]]), 22)
+  coppa.rotateZ(-Math.PI / 2)
+  const manico = new Mesh(new CylinderGeometry(0.028, 0.028, 1.5, 8), metallo)
+  manico.position.set(0.22, 1.0, 0)
+  const gancio = new Mesh(new TorusGeometry(0.07, 0.024, 8, 16, Math.PI * 1.3), metallo)
+  gancio.position.set(0.22, 1.8, 0.0)
+  mestolo.add(new Mesh(coppa, metallo), manico, gancio)
+  attrezzo('mestolo', mestolo, 1.4, 0.3, 1.5, 0.55)
 
   // il fiammifero: si posa spento e si accende sotto il calderone
   const fiammifero = new Group()
@@ -67,14 +71,14 @@ export function creaAttrezzi(scena) {
   const testa = new Mesh(new SphereGeometry(0.085, 10, 8), capocchia)
   testa.position.y = 0.98
   fiammifero.add(stecco, testa)
-  attrezzo('fiammifero', fiammifero, 0.45, 0.08, -1.5, 0.2)
+  attrezzo('fiammifero', fiammifero, 0.35, 0.08, -1.5, -0.45)
 
   const brocca = new Group()
   brocca.add(new Mesh(new LatheGeometry(giro([[0, 0], [0.3, 0.01], [0.38, 0.3], [0.3, 0.68], [0.24, 0.82], [0.32, 0.92], [0.27, 0.92], [0.2, 0.8], [0.25, 0.66], [0, 0.6]]), 24), coccio))
   const ansa = new Mesh(new TorusGeometry(0.2, 0.04, 8, 16, Math.PI), coccio)
   ansa.position.set(0.34, 0.5, 0); ansa.rotation.z = -Math.PI / 2
   brocca.add(ansa)
-  attrezzo('brocca', brocca, 1.85, 0, 0)
+  attrezzo('brocca', brocca, 2.05, 0, 0, -0.3)
 
   // la ciotola: compare sul calderone per versare quello che arriva dal fondo dello schermo
   const ciotola = new Group()
@@ -123,7 +127,7 @@ export function creaAttrezzi(scena) {
       for (const a of [...Object.values(tutti), ciotola]) { a.traverse(o => { if (o.geometry !== presaGeo) o.geometry?.dispose() }); scena.remove(a) }
       presaGeo.dispose()
       for (const t of trame) t.dispose()
-      for (const m of [pietra, legno, coccio, pesto, capocchia, niente, sopra.material, stecco.material]) m.dispose()
+      for (const m of [pietra, metallo, coccio, pesto, capocchia, niente, sopra.material, stecco.material]) m.dispose()
     },
   }
 }

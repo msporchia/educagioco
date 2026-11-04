@@ -4,7 +4,7 @@
 // nasce e sale con gli ingredienti.
 import { Mesh, Group, BoxGeometry, PlaneGeometry, CylinderGeometry, CircleGeometry, SphereGeometry, TorusGeometry,
          LatheGeometry, Vector2, Vector3, Color, MeshStandardMaterial, Sprite, SpriteMaterial,
-         InstancedMesh, Object3D, PointLight, AdditiveBlending, DoubleSide } from 'three'
+         InstancedMesh, Object3D, PointLight, AdditiveBlending, DoubleSide, MeshBasicMaterial } from 'three'
 
 // dove stanno le cose (il tavolo è a y = 0)
 export const POSTI = {
@@ -102,6 +102,13 @@ export function creaBanco(scena, trame) {
   brodo.position.set(C.x, POSTI.brodo + 0.22, C.z)
   brodo.visible = false
   g.add(brodo)
+  // finché non si mescola la roba resta a strisce: un arcobaleno che gira, che mescolando sparisce nel colore
+  const arcobaleno = new Mesh(new CircleGeometry(0.97, 40), new MeshBasicMaterial({ map: trame.arcobaleno, transparent: true, opacity: 0, depthWrite: false }))
+  arcobaleno.rotation.x = -Math.PI / 2
+  arcobaleno.position.set(C.x, POSTI.brodo + 0.22, C.z)
+  arcobaleno.visible = false
+  g.add(arcobaleno)
+  let arco = 0, metaArco = 0, giri = 0
   // parte vuoto: il brodo nasce col primo ingrediente e sale con gli altri
   let pieno = 0, metaPieno = 0
   const quotaBrodo = () => 0.6 + (POSTI.brodo + 0.22 - 0.6) * pieno
@@ -144,6 +151,13 @@ export function creaBanco(scena, trame) {
     brodo.position.y = quotaBrodo()
     brodo.scale.setScalar(0.8 + 0.2 * pieno)
     brodo.material.emissive.copy(coloreBrodo).multiplyScalar(0.45)
+    arco += (metaArco - arco) * Math.min(1, dt * 2)
+    giri = Math.max(0, giri - dt * 0.9)
+    arcobaleno.visible = brodo.visible && arco > 0.02
+    arcobaleno.material.opacity = arco * 0.92
+    arcobaleno.position.y = brodo.position.y + 0.006
+    arcobaleno.scale.setScalar(brodo.scale.x)
+    arcobaleno.rotation.z -= dt * (0.3 + giri * 5)
     bollore += (1 - bollore) * Math.min(1, dt * 0.8)
     fuoco += (metaFuoco - fuoco) * Math.min(1, dt * 2.5)
     for (const f of fiamme) {
@@ -156,7 +170,8 @@ export function creaBanco(scena, trame) {
     datiBolle.forEach((b, i) => {
       b.fase += dt * b.vel * bollore
       if (b.fase >= 1) { b.fase -= 1; nuovoPosto(b) }
-      const s = brodo.visible ? Math.sin(b.fase * Math.PI) * (0.6 + bollore * 0.25) : 0
+      // a fuoco spento il brodo sta fermo
+      const s = brodo.visible && fuoco > 0.2 ? Math.sin(b.fase * Math.PI) * (0.6 + bollore * 0.25) : 0
       finto.position.set(C.x + (b.x - C.x) * brodo.scale.x, brodo.position.y, C.z + (b.z - C.z) * brodo.scale.x)
       finto.scale.setScalar(Math.max(0.001, s)); finto.updateMatrix()
       bolle.setMatrixAt(i, finto.matrix)
@@ -167,7 +182,7 @@ export function creaBanco(scena, trame) {
       const f = (t * 0.12 * (0.8 + bollore * 0.3) + v.userData.fase) % 1
       v.position.set(C.x + Math.sin(f * 6 + v.userData.fase * 9) * 0.4, POSTI.brodo + 0.3 + f * 2.4, C.z + Math.cos(v.userData.fase * 7) * 0.3)
       v.scale.setScalar(0.5 + f * 1.4)
-      v.material.opacity = brodo.visible ? Math.sin(f * Math.PI) * 0.16 * (0.7 + bollore * 0.3) : 0
+      v.material.opacity = brodo.visible ? Math.sin(f * Math.PI) * 0.16 * (0.7 + bollore * 0.3) * fuoco : 0
       v.material.color.copy(coloreBrodo).lerp(BIANCO, 0.65)
     }
   }
@@ -179,6 +194,8 @@ export function creaBanco(scena, trame) {
     quotaBrodo,
     ribolli(quanto = 3) { bollore = quanto },
     fuoco(k) { metaFuoco = k },
+    // `gira`: quanto vortica mentre lo si mescola
+    arcobaleno(si, gira = 0) { metaArco = si ? 1 : 0; giri = Math.max(giri, gira) },
     luceFuoco,
   }
 }

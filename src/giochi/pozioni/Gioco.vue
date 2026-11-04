@@ -240,7 +240,7 @@ function fermo(n) {
 }
 
 function festa() {
-  animazione.value = { n: ++nAnim, tipo: 'festa', colore: mescola(bottega.value.ingredienti.map(i => i.colore)) }
+  animazione.value = { n: ++nAnim, tipo: 'festa', colore: bottega.value.pozione.colore }
 }
 
 /* Il procedimento: anche qui il motore decide subito e la scena suona dopo. */
@@ -263,7 +263,7 @@ function fai(azione, cosa = [], attrezzo = null) {
   animazione.value = { n: ++nAnim, tipo: 'passo', azione, attrezzo, giusto: r.giusto, mortaio: (r.cosa || []).includes(MORTAIO),
                        colore: r.cosa?.includes(MORTAIO) ? pestato : azione === 'metti' ? mescola(colori(b.mortaio)) : fatti.length ? mescola(colori(fatti)) : null,
                        polvere: fatti.some(i => b.ingredienti[i].famiglia !== 'capacita'),
-                       brodo: mescola(colori(b.dentro)), riempito: b.dentro.length / b.ingredienti.length }
+                       brodo: b.brodo, arcobaleno: !b.mescolato, riempito: b.dentro.length / b.ingredienti.length }
 }
 
 function fermoPasso(r) {

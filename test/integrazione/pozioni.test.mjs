@@ -170,6 +170,38 @@ await attendi(page, 500)
   }
 }
 
+/* ---------- 4. il mortaio: la roba, il pestello, poi il mortaio nel calderone, tutto col dito ---------- */
+await page.evaluate(() => { const Z = window.__poz; Z.allaMappa(); Z.avviaTappa(4) })
+await page.waitForSelector('.pz-mercante')
+await attendi(page, 900)
+for (let i = 0; i < 3; i++) { await page.evaluate(() => window.__poz.salta()); await attendi(page, 500) }
+await page.waitForSelector('[data-fase="procedimento"]', { timeout: 25000 })
+await attendi(page, 1200)
+{
+  const passo = () => page.evaluate(() => window.__poz.bottega.value.passo)
+  /* quello che dà fastidio si sposta, e resta lì */
+  const prima = await dove('fiammifero')
+  await trascina(prima, { x: prima.x + 60, y: prima.y + 45 })
+  await attendi(page, 900)
+  const dopo = await dove('fiammifero')
+  controlla('lasciato sul tavolo resta dove lo si è messo', Math.hypot(dopo.x - prima.x, dopo.y - prima.y) > 30, JSON.stringify([prima, dopo]))
+  uguale('e spostare non è un pasticcio', await page.evaluate(() => window.__poz.bottega.value.pasticci), 0)
+  const sulMortaio = await page.evaluate(() => [...window.__poz.bottega.value.passi[0].cosa])
+  uguale('la ricetta comincia dal mortaio', await page.evaluate(() => window.__poz.bottega.value.passi[0].azione), 'pesta')
+  for (const i of sulMortaio) {
+    await trascina(await dove(`roba:${i}`), await dove('mortaio'))
+    await attendi(page, 700)
+  }
+  uguale('la roba trascinata sul mortaio ci entra', await page.evaluate(() => window.__poz.bottega.value.mortaio.length), 2)
+  await trascina(await dove('pestello'), await dove('mortaio'))
+  await page.waitForFunction(() => window.__poz.bottega.value.passo === 1, null, { timeout: 25000 })
+  await attendi(page, 3500)
+  await trascina(await dove('mortaio'), await dove('calderone'))
+  await page.waitForFunction(() => window.__poz.bottega.value.passo === 2, null, { timeout: 25000 })
+  uguale('il pestato è nel calderone', await page.evaluate(() => window.__poz.bottega.value.dentro.length), 2)
+  nota(`passo ${await passo()}`)
+}
+
 uguale('nessun errore in console', errori.join(' · '), '')
 await browser.close()
 riassunto('il laboratorio delle pozioni, nel browser')

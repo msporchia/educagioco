@@ -23,6 +23,8 @@ export const suoni = {
     rumore(dur, 0.06, 9000, 3000)
     ripeti(8, dur * 1000 / 8, () => { const f = fra(2800, 5200); nota(f, f, 0.02, 'triangle', 0.018) })
   },
+  // il tappo salta, il panno si sfila
+  stappa(panno) { if (panno) rumore(0.12, 0.05, 2600, 900); else { nota(520, 1400, 0.05, 'sine', 0.13); rumore(0.04, 0.05, 4000, 1500) } },
   radice() { nota(240, 120, 0.09, 'triangle', 0.14); nota(170, 85, 0.13, 'sine', 0.12, 80); rumore(0.06, 0.05, 1600, 500) },
   trabocca() {
     rumore(0.75, 0.13, 2400, 300)

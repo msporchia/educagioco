@@ -4,7 +4,7 @@
 // oltre la tacca d'oro trabocca, e prima di ordinare ancora si pulisce.
 // Fatta la spesa si segue il procedimento (motore/procedimento.js).
 // Puro: il caso arriva da fuori (`rnd`). Le regole in docs/pozioni/regole.md.
-import { FAMIGLIA, INGREDIENTI, VALE, scrivi } from '../dati/misure.js'
+import { FAMIGLIA, INGREDIENTI, VALE, scrivi, mescola } from '../dati/misure.js'
 import { PEZZI, PREZZI, PULIZIA, PASTICCIO } from '../dati/bottega.js'
 import { MONETE_A_DOSE, MONETE_A_PASSO } from '../dati/campagna.js'
 import { chiaveDi } from './misura.js'
@@ -144,6 +144,7 @@ export class Bottega {
     this.pestato = false         // ed è già stato pestato
     this.dentro = []             // quello che è nel calderone
     this.scaldato = false
+    this.mescolato = false       // dall'ultima versata: se no nel calderone c'è l'arcobaleno
     this.pasticci = 0
     this.pasticciato = false     // il passo in corso ha già avuto uno sbaglio: non paga
     this.minimo = this.ingredienti.reduce((s, i) => s + i.ottimo.costo, 0)
@@ -162,6 +163,11 @@ export class Bottega {
   // le stelle dicono quanto si è speso, non quante volte si è sbagliato
   get stelle() { return this.saltate ? 1 : this.extra <= 0 ? 3 : this.extra <= 3 ? 2 : 1 }
   get perfetta() { return !this.traboccate && !this.pasticci && !this.saltate }
+  // il colore del calderone: dentro tutto e mescolato, è quello della pozione
+  get brodo() {
+    if (this.mescolato && this.dentro.length === this.ingredienti.length) return this.pozione.colore
+    return mescola(this.dentro.map(i => this.ingredienti[i].colore))
+  }
   // la spesa è fatta: tutti gli strumenti sono all'oro
   get pronta() { return this.ingredienti.every((_, j) => this.fatto(j)) }
   get quanteInOrdine() { return this.tappa.ordine }
@@ -201,7 +207,7 @@ export class Bottega {
       return { giusto: false, azione, righe: [`Pasticcio! ${qui}.`, `La ricetta dice: ${frase(atteso, this.ingredienti)}. Il pasticcio costa un gettone.`] }
     }
     if (azione === 'metti') { this.mortaio = [...this.mortaio, ...cosa]; return { giusto: true, azione, cosa, versati: cosa, monete: 0, finita: false } }
-    if (azione === 'versa' && cosa.length < manca.length) { this.dentro = [...this.dentro, ...cosa]; return { giusto: true, azione, cosa, versati: cosa, monete: 0, finita: false } }
+    if (azione === 'versa' && cosa.length < manca.length) { this.dentro = [...this.dentro, ...cosa]; this.mescolato = false; return { giusto: true, azione, cosa, versati: cosa, monete: 0, finita: false } }
     const r = this.faiPasso(atteso)
     const monete = this.pasticciato ? 0 : MONETE_A_PASSO
     this.monete += monete
@@ -220,8 +226,10 @@ export class Bottega {
     if (p.azione === 'pesta') { this.mortaio = [...p.cosa]; this.pestato = true }
     if (p.azione === 'versa') {
       this.dentro = [...this.dentro, ...versati]
+      this.mescolato = false
       if (p.cosa.includes(MORTAIO)) { this.mortaio = []; this.pestato = false }
     }
+    if (p.azione === 'mescola') this.mescolato = true
     if (p.azione === 'scalda') this.scaldato = true
     this.passo++
     this.finita = this.passo >= this.passi.length

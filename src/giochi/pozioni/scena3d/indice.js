@@ -55,7 +55,7 @@ function costruisci(renderer, canvas, { tocca, lascia, dpr: fisso }) {
   const dietro = new DirectionalLight(0x7f8cff, 0.9); dietro.position.set(-4, 5, -6); scena.add(dietro)
 
   const trame = { legno: T.legno(), mattoni: T.mattoni(), polvere: T.grana('polvere'), radice: T.grana('radice'),
-                  morbido: T.morbido(), macchia: T.macchia(), quadrante: T.quadrante(), metro: T.metro() }
+                  morbido: T.morbido(), arcobaleno: T.arcobaleno(), macchia: T.macchia(), quadrante: T.quadrante(), metro: T.metro() }
   const banco = creaBanco(scena, trame)
   const vasi = creaVasi(scena, trame)
   const ampolle = creaAmpolle(scena, trame)
@@ -103,18 +103,34 @@ function costruisci(renderer, canvas, { tocca, lascia, dpr: fisso }) {
     punto.set((x - r.left) / r.width * 2 - 1, -((y - r.top) / r.height) * 2 + 1)
     raggio.setFromCamera(punto, camera)
   }
-  // dove si può lasciare qualcosa: il calderone e il mortaio, con un po' di largo
+  // dove si può lasciare qualcosa: si guarda sullo schermo, con un po' di largo.
+  // Provato su un piano in aria: per quello che sta basso sul tavolo il dito cade lontano
   const inAria = new Plane(new Vector3(0, 1, 0), -1.1), qui = new Vector3()
-  const ZONE = { calderone: [POSTI.calderone, 1.5], mortaio: [null, 0.95] }
+  const schermo = v => { const r = canvas.getBoundingClientRect(), p = v.clone().project(camera); return { x: r.left + (p.x + 1) / 2 * r.width, y: r.top + (1 - p.y) / 2 * r.height } }
+  const ZONE = {
+    calderone: { dove: () => POSTI.calderone.clone().setY(1), largo: 1.6 },
+    mortaio: { dove: () => attrezzi.mortaio.userData.casa.clone().setY(0.4), largo: 1 },
+  }
   function bersaglio(x, y, tolto) {
-    mira(x, y)
-    if (!raggio.ray.intersectPlane(inAria, qui)) return null
-    for (const [nome, [c, largo]] of Object.entries(ZONE)) {
-      const dove = c || attrezzi.mortaio.userData.casa
+    let meglio = null, vicino = Infinity
+    for (const [nome, z] of Object.entries(ZONE)) {
       if (nome === tolto || (nome === 'mortaio' && !attrezzi.mortaio.visible)) continue
-      if (Math.hypot(qui.x - dove.x, qui.z - dove.z) < largo * 1.15) return nome
+      const c = z.dove(), a = schermo(c), b = schermo(c.clone().setX(c.x + z.largo))
+      const d = Math.hypot(x - a.x, y - a.y) / Math.hypot(b.x - a.x, b.y - a.y)
+      if (d < 1 && d < vicino) { vicino = d; meglio = nome }
     }
-    return null
+    return meglio
+  }
+
+  // lasciato sul tavolo resta lì: si fa posto come su un banco vero
+  const piano = new Plane(new Vector3(0, 1, 0), 0)
+  function posa(cosa, x, y) {
+    const casa = cosa.userData.casa
+    piano.constant = -casa.y
+    mira(x, y)
+    if (!raggio.ray.intersectPlane(piano, qui)) return
+    casa.x = Math.max(-2.7, Math.min(2.7, qui.x))
+    casa.z = Math.max(-0.9, Math.min(2.5, qui.z))
   }
 
   let giu = null, presa = null
@@ -138,7 +154,8 @@ function costruisci(renderer, canvas, { tocca, lascia, dpr: fisso }) {
       const p = presa; presa = null
       const su = bersaglio(e.clientX, e.clientY, p.userData.id)
       if (su) lascia?.({ attrezzo: p.userData.id, su })
-      if (!occupata) aCasa(p)                  // non è successo niente: torna al suo posto
+      else if (g && Math.hypot(e.clientX - g.x, e.clientY - g.y) > SOGLIA) posa(p, e.clientX, e.clientY)
+      if (!occupata) aCasa(p)                  // niente mossa: va al suo posto, che può essere quello nuovo
       return
     }
     if (!g || g.id !== e.pointerId || Math.hypot(e.clientX - g.x, e.clientY - g.y) > SOGLIA) return
@@ -170,8 +187,8 @@ function costruisci(renderer, canvas, { tocca, lascia, dpr: fisso }) {
     banco.aggiorna(dt, t)
     vasi.aggiorna(dt, t)
     ampolle.aggiorna(dt, t)
-    // il calderone sobbolle piano, solo se c'è dentro qualcosa
-    if ((bolla -= dt) < 0) { bolla = 1.4 + Math.random() * 2.6; if (ultima?.riempito > 0) suoni.bolla() }
+    // il calderone sobbolle piano, solo se c'è dentro qualcosa e il fuoco è acceso
+    if ((bolla -= dt) < 0) { bolla = 1.4 + Math.random() * 2.6; if (ultima?.riempito > 0 && ultima?.fuoco > 0) suoni.bolla() }
     eff.aggiorna(dt)
     renderer.render(scena, camera)
     fotogrammi++
@@ -189,6 +206,7 @@ function costruisci(renderer, canvas, { tocca, lascia, dpr: fisso }) {
     banco.colore(q.calderone)
     banco.riempi(q.riempito)
     banco.fuoco(q.fuoco)
+    banco.arcobaleno(q.arcobaleno)
     attrezzi.imposta(q.attrezzi)
     const sporchi = new Set(q.macchie.map(m => m.i))
     for (const m of q.macchie) mettiMacchia(m, 1)
@@ -268,6 +286,15 @@ function costruisci(renderer, canvas, { tocca, lascia, dpr: fisso }) {
         eff.gocce.emetti(10, { da: bocca, sparpaglia: 0.25, verso: [0, 0.8, 0], caso: 0.6, colore: '#d8c8a8', vita: 0.5, misura: 0.06, gravita: 5 })
       }
     } else {
+      // via il tappo, o il panno col suo spago, e vola via di lato
+      suoni.stappa(polvere)
+      const da = a.chiuso.map(m => m.position.clone())
+      await anima(0.3, t => a.chiuso.forEach((m, n) => {
+        m.position.set(da[n].x + t * 0.5, da[n].y + Math.sin(t * Math.PI) * 0.35 + t * 0.1, da[n].z)
+        m.rotation.z = -t * 2
+        m.scale.setScalar(Math.max(0.001, 1 - t * t))
+      }))
+      for (const m of a.chiuso) m.visible = false
       // si piega e versa: il getto cade fino al livello, che sale
       await anima(0.18, t => { a.gruppo.rotation.z = -liscio(t) * 2.0 })
       const fino = trabocca ? (ALTEZZA_VASO - 0.1) / TACCA : livello   // traboccando, fino all'orlo
@@ -349,7 +376,7 @@ function costruisci(renderer, canvas, { tocca, lascia, dpr: fisso }) {
       await aCasa(p)
     },
     async versa(a) {
-      const finire = () => { banco.colore(a.brodo); banco.riempi(a.riempito) }
+      const finire = () => { banco.colore(a.brodo); banco.riempi(a.riempito); banco.arcobaleno(true) }
       if (a.mortaio) {
         const m = attrezzi.mortaio
         await vola(m, sulCalderone(-1))
@@ -368,14 +395,14 @@ function costruisci(renderer, canvas, { tocca, lascia, dpr: fisso }) {
       const m = attrezzi.mestolo, C = POSTI.calderone
       await vola(m, new Vector3(C.x + 0.5, banco.quotaBrodo(), C.z))
       suoni.mescola()
-      banco.ribolli(3)
+      banco.colore(a.brodo)
+      banco.arcobaleno(a.arcobaleno, 1.2)
       await anima(1.3, f => {
         const g = f * Math.PI * 6
         m.position.set(C.x + Math.cos(g) * 0.5, banco.quotaBrodo() - 0.05, C.z + Math.sin(g) * 0.42)
         m.rotation.set(Math.sin(g) * 0.25, 0, -Math.cos(g) * 0.25)
       })
       m.rotation.x = 0
-      banco.colore(a.brodo)
       await aCasa(m)
     },
     async scalda() {
@@ -446,6 +473,8 @@ function costruisci(renderer, canvas, { tocca, lascia, dpr: fisso }) {
   // la pozione è pronta: il calderone sbuffa del suo colore, con le scintille
   async function festa(colore) {
     banco.ribolli(6)
+    banco.colore(colore)
+    banco.arcobaleno(false)
     suoni.sbuffo()
     const C = POSTI.calderone
     const su = new Vector3(C.x, banco.quotaBrodo() + 0.1, C.z)
@@ -475,8 +504,7 @@ function costruisci(renderer, canvas, { tocca, lascia, dpr: fisso }) {
            // per i test: dove sta una cosa sullo schermo
            dove(id) {
              const c = id === 'calderone' ? POSTI.calderone.clone().setY(1.1) : attrezzi.cosa(id).position.clone().setY(id === 'mortaio' ? 0.4 : 0.3)
-             const r = canvas.getBoundingClientRect(), p = c.project(camera)
-             return { x: r.left + (p.x + 1) / 2 * r.width, y: r.top + (1 - p.y) / 2 * r.height }
+             return schermo(c)
            }, rilascia, misura,
            grafica: () => ({ fotogrammi, chiamate: renderer.info.render.calls, triangoli: renderer.info.render.triangles }) }
 }
