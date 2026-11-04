@@ -126,7 +126,7 @@ nel modulo: [foglietto.md](foglietto.md).
 ## Due protagonisti
 
 Il terzo, il guerriero, sta tutto nel mondo dello zaino, con le sue caselle
-sulle quattro isole del coniglio: [guerriero.md](guerriero.md#la-strada).
+sulle quattro isole del coniglio e due isole solo sue: [guerriero.md](guerriero.md#la-strada).
 
 - **Un selettore in cima sceglie chi gioca**, 🐇 coniglio o 🐕 cane, e la
   mappa cambia con lui (`Mappa.vue`). È in una fascia sua sopra la valle:

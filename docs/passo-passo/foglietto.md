@@ -41,6 +41,8 @@ della mappa sta in [mappa.md](mappa.md).
   aperte, senza caselle (la riva da cui si arriva dalla valle); `"prefisso": "z-"` si mette
   davanti agli id dei punti senza nome (`z-incrocio:3`), perché i due mondi non
   ne abbiano uno uguale (la mappa sa in che mondo sta un posto dal suo id).
+  `"solo": true` su un'isola la toglie dal quadro di chi non ci ha caselle,
+  con la tana che ci porta: per lui è decoro, e non ci va a finire toccando.
   `"stemma": true` su un'isola le dà lo scudo e non lo stendardo (per
   un'isola piccola, dove il nome non ci sta).
   `blocco: [a, b]` di un ponte sposta la sbarra dai suoi capi (px dal capo).

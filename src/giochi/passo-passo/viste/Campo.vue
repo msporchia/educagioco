@@ -8,6 +8,8 @@ import Fila from './Fila.vue'
 import { computed } from 'vue'
 import Icona from './Icona.vue'
 import Lastra from './Lastra.vue'
+import Figura from './Figura.vue'
+import Scritta from './Scritta.vue'
 import { nomeDellaMossa, LASTRE, VERSI, CHIAVI_VERSI } from '../dati/mondo.js'
 import { VOLTE, CASA } from '../dati/carte.js'
 
@@ -40,7 +42,7 @@ const props = defineProps({
   consiglioTesta: { type: Number, default: null }, // la scatola a cui l'aiuto cambia la testa
   scossa: { type: Number, default: 0 },          // ▶ fermato da una N: la scelta sobbalza
 })
-const emit = defineEmits(['freccia', 'cancella', 'via', 'ferma', 'aiuto', 'cursore', 'scatola', 'testa-scelta', 'testa',
+const emit = defineEmits(['freccia', 'cancella', 'via', 'ferma', 'aiuto', 'cursore', 'sposta', 'scatola', 'testa-scelta', 'testa',
                           'chiudi-pensiero'])
 const ICONA_PENSIERO = { pensa: '🧠', dove: '🔎', pezzo: '🧩', svela: '✅' }
 
@@ -53,6 +55,11 @@ const numeri = computed(() => (props.sceltaTipo === 'ripeti' && props.carte.incl
 const altri = computed(() => {
   if (props.sceltaTipo === 'se') return [...props.colori, ...(props.carte.includes('varco') ? CHIAVI_VERSI : [])]
   return [...(props.carte.includes('fino') ? props.colori : []), ...(props.carte.includes('casa') ? [CASA] : [])]
+})
+/* senza numeri i tasti sono una riga sola: sopra, cosa si sta scegliendo */
+const domanda = computed(() => {
+  if (props.sceltaTipo !== 'se') return 'Ripeti…'
+  return altri.value.every(v => VERSI[v]) ? 'Se di là si passa…' : 'Se…'
 })
 const inParole = v => (v === CASA ? 'fino a casa' : VERSI[v] ? `se ${VERSI[v].nome} si passa`
   : `${props.sceltaTipo === 'se' ? 'se' : 'fino a'} ${(LASTRE[v] || {}).nome || v}`)
@@ -80,7 +87,7 @@ defineExpose({ tela })
     <Fila :fila="fila" :cursore="cursore" :corrente="corrente" :guasto="guasto"
           :in-corsa="inCorsa" :sospette="sospette" :consiglio="consiglio" :piena="piena"
           :zaino="zaino" :giri="giri" :scelta="scelta" :consiglio-testa="consiglioTesta"
-          @cursore="i => emit('cursore', i)" @freccia="m => emit('freccia', m)"
+          @cursore="i => emit('cursore', i)" @sposta="s => emit('sposta', s)" @freccia="m => emit('freccia', m)"
           @testa="i => emit('testa', i)" />
 
     <div class="pp-tasti">
@@ -104,11 +111,11 @@ defineExpose({ tela })
         <div v-if="conRipeti || conSe" class="pp-riga pp-carte" :class="{ 'pp-due': conRipeti && conSe }">
           <button v-if="conRipeti" class="pp-tasto pp-ripeti" :class="{ 'pp-brilla': brilla === 'ripeti' }"
                   data-carta="ripeti" aria-label="ripeti" :disabled="inCorsa || piena" @click="emit('scatola', 'ripeti')">
-            <span class="pp-em" aria-hidden="true">🔁</span><span class="pp-parola">ripeti</span>
+            <Figura nome="ripeti" /><Scritta testo="ripeti" />
           </button>
           <button v-if="conSe" class="pp-tasto pp-ripeti pp-tasto-se" :class="{ 'pp-brilla': brilla === 'se' }"
                   data-carta="se" aria-label="se" :disabled="inCorsa || piena" @click="emit('scatola', 'se')">
-            <span class="pp-em" aria-hidden="true">❓</span><span class="pp-parola">se</span>
+            <Figura nome="se" /><Scritta testo="se" />
           </button>
         </div>
         <!-- la testa: copre le frecce finché non si sceglie, e non le
@@ -116,14 +123,16 @@ defineExpose({ tela })
              I numeri su una riga sola quando sotto ci sono anche i colori -->
         <div v-if="scelta != null && !inCorsa" :key="scossa" class="pp-scelta-volte"
              :class="{ 'pp-scossa': scossa > 0, 'pp-con-colori': numeri.length && altri.length,
-                       'pp-solo-colori': !numeri.length, 'pp-scelta-se': sceltaTipo === 'se' }" data-scelta-volte>
+                       'pp-solo-colori': !numeri.length, 'pp-scelta-se': sceltaTipo === 'se' }"
+             :style="{ '--pp-quanti': Math.min(4, altri.length) }" data-scelta-volte>
+          <p v-if="!numeri.length" class="pp-scelta-domanda"><Scritta :testo="domanda" /></p>
           <button v-for="n in numeri" :key="n" class="pp-tasto pp-volte"
                   :class="{ 'pp-brilla': consiglioValore === n, 'pp-ora': valoreOra === n }"
-                  :data-volte-scegli="n" :aria-label="`${n} volte`" @click="emit('testa-scelta', n)">{{ n }}</button>
+                  :data-volte-scegli="n" :aria-label="`${n} volte`" @click="emit('testa-scelta', n)"><Scritta :testo="n" /></button>
           <button v-for="c in altri" :key="c" class="pp-tasto pp-volte pp-colore"
                   :class="{ 'pp-brilla': consiglioValore === c, 'pp-ora': valoreOra === c }"
                   :data-volte-scegli="c" :aria-label="inParole(c)" @click="emit('testa-scelta', c)">
-            <span v-if="sceltaTipo !== 'se'" class="pp-fino">fino a</span><Lastra :colore="c" />
+            <Scritta v-if="sceltaTipo !== 'se'" class="pp-fino" testo="fino a" /><Lastra :colore="c" />
           </button>
         </div>
       </div>
@@ -131,28 +140,21 @@ defineExpose({ tela })
         <button class="pp-tasto pp-cancella" :class="{ 'pp-brilla': brilla === 'cancella' }"
                 data-azione="cancella" aria-label="togli la freccia"
                 :disabled="inCorsa || cursore === 0" @click="emit('cancella')">
-          <svg viewBox="-20 -20 40 40" aria-hidden="true">
-            <path class="pp-icona-pieno" d="M-6 -12 H15 Q17 -12 17 -10 V10 Q17 12 15 12 H-6 L-17 0 Z" />
-            <path class="pp-icona-segno" d="M-1 -5 L9 5 M9 -5 L-1 5" />
-          </svg>
+          <Figura nome="cancella" />
         </button>
         <button v-if="!inCorsa" class="pp-tasto pp-via" :class="{ 'pp-brilla': brilla === 'via' }"
                 data-azione="via" aria-label="via" @click="emit('via')">
-          <svg viewBox="-20 -20 40 40" aria-hidden="true">
-            <path class="pp-icona-pieno" d="M-9 -14 L15 0 L-9 14 Z" />
-          </svg>
+          <Figura nome="via" />
         </button>
         <button v-else class="pp-tasto pp-ferma" data-azione="ferma" aria-label="ferma" @click="emit('ferma')">
-          <svg viewBox="-20 -20 40 40" aria-hidden="true">
-            <rect class="pp-icona-pieno" x="-11" y="-11" width="22" height="22" rx="3" />
-          </svg>
+          <Figura nome="ferma" />
         </button>
         <!-- `suggerimento` e non `aiuto`: quello è il ? della barra, che c'è in tutti i giochi.
              Non si spegne mai, nemmeno mentre il coniglio corre: lì si prenota -->
         <button class="pp-tasto pp-aiuto" :class="{ 'pp-in-coda': inCoda, 'pp-armato': armato }"
                 data-azione="suggerimento" aria-label="suggerimento" :data-in-coda="inCoda ? '' : null"
                 :data-armato="armato ? '' : null" @click="emit('aiuto')">
-          <span :key="colpo" class="pp-em" :class="{ 'pp-sobbalza': colpo > 0 }">💡</span>
+          <span :key="colpo" class="pp-lampadina" :class="{ 'pp-sobbalza': colpo > 0 }"><Figura nome="lampadina" /></span>
           <!-- il prezzo, prima: una moneta col suo numero. Sui gradini
                gratis non c'è niente da dire, e il bollino non c'è -->
           <span v-if="prezzo" :key="'p' + poveroScossa" class="pp-costo"

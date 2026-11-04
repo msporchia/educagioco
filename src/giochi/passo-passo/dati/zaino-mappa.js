@@ -26,7 +26,7 @@
 
 export const LARGO = 1536, ALTO = 1024
 export const LATO = 48
-export const FIRMA = 'eaa7f9880a91'
+export const FIRMA = '94511dffc9d3'
 export const LIBERE = ["riva","casetta"]
 
 export const ISOLE = {
@@ -34,6 +34,8 @@ export const ISOLE = {
   "fino": {"caselle":4,"cartello":[250,82],"guerriero":{"isola":"nemici-guerriero","caselle":5}},
   "se": {"caselle":2,"cartello":[880,100],"guerriero":{"isola":"due-guerriero","caselle":7,"cartello":[1400,150]}},
   "mondo": {"caselle":4,"cartello":[990,755],"guerriero":{"isola":"castello-guerriero","caselle":7}},
+  "lago": {"solo":true,"guerriero":{"isola":"lago-guerriero","caselle":5,"cartello":[1420,440]}},
+  "fienile": {"solo":true,"guerriero":{"isola":"mastio-guerriero","caselle":5,"cartello":[690,850]}},
 }
 
 export const NODI = [
@@ -79,6 +81,16 @@ export const NODI = [
   {"id":"castello-guerriero:4","tipo":"casella","isola":"mondo","x":1153.9,"y":605.3,"k":4,"di":"castello-guerriero","guerriero":true},
   {"id":"castello-guerriero:5","tipo":"casella","isola":"mondo","x":1126.0,"y":672.6,"k":5,"di":"castello-guerriero","guerriero":true},
   {"id":"castello-guerriero:6","tipo":"casella","isola":"mondo","x":1057.9,"y":678.0,"k":6,"di":"castello-guerriero","guerriero":true},
+  {"id":"lago-guerriero:0","tipo":"casella","isola":"lago","x":1444.0,"y":642.0,"k":0,"di":"lago-guerriero","guerriero":true},
+  {"id":"lago-guerriero:1","tipo":"casella","isola":"lago","x":1387.6,"y":632.5,"k":1,"di":"lago-guerriero","guerriero":true},
+  {"id":"lago-guerriero:2","tipo":"casella","isola":"lago","x":1371.7,"y":576.1,"k":2,"di":"lago-guerriero","guerriero":true},
+  {"id":"lago-guerriero:3","tipo":"casella","isola":"lago","x":1428.1,"y":566.8,"k":3,"di":"lago-guerriero","guerriero":true},
+  {"id":"lago-guerriero:4","tipo":"casella","isola":"lago","x":1484.7,"y":577.9,"k":4,"di":"lago-guerriero","guerriero":true},
+  {"id":"mastio-guerriero:0","tipo":"casella","isola":"fienile","x":800.0,"y":816.2,"k":0,"di":"mastio-guerriero","guerriero":true},
+  {"id":"mastio-guerriero:1","tipo":"casella","isola":"fienile","x":798.2,"y":874.1,"k":1,"di":"mastio-guerriero","guerriero":true},
+  {"id":"mastio-guerriero:2","tipo":"casella","isola":"fienile","x":856.2,"y":898.3,"k":2,"di":"mastio-guerriero","guerriero":true},
+  {"id":"mastio-guerriero:3","tipo":"casella","isola":"fienile","x":913.9,"y":890.1,"k":3,"di":"mastio-guerriero","guerriero":true},
+  {"id":"mastio-guerriero:4","tipo":"casella","isola":"fienile","x":971.8,"y":880.0,"k":4,"di":"mastio-guerriero","guerriero":true},
   {"id":"senza-fine","tipo":"sentiero","isola":"mondo","x":1020.0,"y":664.0,"etichetta":[1150,712]},
   {"id":"z-incrocio:1","tipo":"incrocio","isola":"fino","x":721.8,"y":197.0},
   {"id":"z-incrocio:2","tipo":"incrocio","isola":"riva","x":335.0,"y":942.0},
@@ -96,8 +108,14 @@ export const NODI = [
   {"id":"tana:casetta:da","tipo":"tana","isola":"mondo","x":864,"y":664,"nuvola":true},
   {"id":"tana:casetta:a","tipo":"tana","isola":"casetta","x":1463,"y":328},
   {"id":"z-incrocio:14","tipo":"incrocio","isola":"casetta","x":1463.0,"y":318.0},
+  {"id":"tana:lago:da","tipo":"tana","isola":"mondo","x":1020,"y":664,"nuvola":true},
+  {"id":"tana:lago:a","tipo":"tana","isola":"lago","x":1468,"y":678},
+  {"id":"tana:fienile:da","tipo":"tana","isola":"lago","x":1497,"y":618,"nuvola":true},
+  {"id":"z-incrocio:15","tipo":"incrocio","isola":"lago","x":1497.0,"y":618.0},
+  {"id":"tana:fienile:a","tipo":"tana","isola":"fienile","x":825,"y":938},
+  {"id":"z-incrocio:16","tipo":"incrocio","isola":"fienile","x":818.0,"y":926.0},
   {"id":"tana:valle","tipo":"passaggio","isola":"riva","x":90,"y":925,"freccia":[92,907],"scosta":45},
-  {"id":"z-incrocio:15","tipo":"incrocio","isola":"riva","x":92.0,"y":938.0},
+  {"id":"z-incrocio:17","tipo":"incrocio","isola":"riva","x":92.0,"y":938.0},
   {"id":"z-capo:1","tipo":"capo","isola":"ripeti","x":262,"y":598},
   {"id":"z-sosta:1","tipo":"sosta","isola":"riva","x":210.4,"y":963.7},
   {"id":"z-sosta:2","tipo":"sosta","isola":"ripeti","x":420.1,"y":672.0},
@@ -106,10 +124,11 @@ export const NODI = [
   {"id":"z-sosta:5","tipo":"sosta","isola":"fino","x":304.9,"y":173.6},
   {"id":"z-sosta:6","tipo":"sosta","isola":"fino","x":664.6,"y":142.9},
   {"id":"z-sosta:7","tipo":"sosta","isola":"casetta","x":1427.5,"y":230.1},
+  {"id":"z-sosta:8","tipo":"sosta","isola":"fienile","x":770.0,"y":872.3},
 ]
 
 export const ARCHI = [
-  {"a":"z-incrocio:15","b":"z-sosta:1","tipo":"terra","punti":[[92.0,938.0],[100,952],[140,960],[200,964],[210.4,963.7]]},
+  {"a":"z-incrocio:17","b":"z-sosta:1","tipo":"terra","punti":[[92.0,938.0],[100,952],[140,960],[200,964],[210.4,963.7]]},
   {"a":"z-sosta:1","b":"z-incrocio:2","tipo":"terra","punti":[[210.4,963.7],[260,962],[310,952],[335.0,942.0]]},
   {"a":"z-incrocio:3","b":"grate-guerriero:0","tipo":"terra","punti":[[414.0,870.0],[440,854],[445.2,840.5]]},
   {"a":"grate-guerriero:0","b":"ripeti:0","tipo":"terra","punti":[[445.2,840.5],[445.2,840.5]]},
@@ -168,6 +187,17 @@ export const ARCHI = [
   {"a":"castello-guerriero:5","b":"mondo:3","tipo":"terra","punti":[[1126.0,672.6],[1106.9,675.5]]},
   {"a":"mondo:3","b":"castello-guerriero:6","tipo":"terra","punti":[[1106.9,675.5],[1090,678],[1057.9,678.0]]},
   {"a":"castello-guerriero:6","b":"senza-fine","tipo":"terra","punti":[[1057.9,678.0],[1050,678],[1020.0,664.0]]},
+  {"a":"lago-guerriero:0","b":"lago-guerriero:1","tipo":"terra","punti":[[1444.0,642.0],[1405,640],[1387.6,632.5]]},
+  {"a":"lago-guerriero:1","b":"lago-guerriero:2","tipo":"terra","punti":[[1387.6,632.5],[1370,625],[1342,600],[1365,578],[1371.7,576.1]]},
+  {"a":"lago-guerriero:2","b":"lago-guerriero:3","tipo":"terra","punti":[[1371.7,576.1],[1400,568],[1428.1,566.8]]},
+  {"a":"lago-guerriero:3","b":"lago-guerriero:4","tipo":"terra","punti":[[1428.1,566.8],[1445,566],[1478,570],[1484.7,577.9]]},
+  {"a":"lago-guerriero:4","b":"z-incrocio:15","tipo":"terra","punti":[[1484.7,577.9],[1495,590],[1497.0,618.0]]},
+  {"a":"mastio-guerriero:0","b":"mastio-guerriero:1","tipo":"terra","punti":[[800.0,816.2],[795,850],[795,872],[798.2,874.1]]},
+  {"a":"mastio-guerriero:1","b":"mastio-guerriero:2","tipo":"terra","punti":[[798.2,874.1],[830,895],[856.2,898.3]]},
+  {"a":"mastio-guerriero:2","b":"mastio-guerriero:3","tipo":"terra","punti":[[856.2,898.3],[870,900],[905,893],[913.9,890.1]]},
+  {"a":"mastio-guerriero:3","b":"mastio-guerriero:4","tipo":"terra","punti":[[913.9,890.1],[945,880],[971.8,880.0]]},
+  {"a":"z-incrocio:16","b":"z-sosta:8","tipo":"erba","punti":[[818.0,926.0],[775,895],[770.0,872.3]]},
+  {"a":"z-sosta:8","b":"mastio-guerriero:0","tipo":"erba","punti":[[770.0,872.3],[765,850],[775,825],[800.0,816.2]]},
   {"a":"z-incrocio:2","b":"z-incrocio:3","tipo":"ponte","ponte":"riva-ripeti","punti":[[335.0,942.0],[372,908],[414.0,870.0]]},
   {"a":"z-incrocio:4","b":"z-incrocio:5","tipo":"ponte","ponte":"ripeti-fino","punti":[[513.0,455.0],[507,412],[500.0,372.0]]},
   {"a":"z-incrocio:6","b":"z-incrocio:7","tipo":"ponte","ponte":"fino-nel-passaggio","punti":[[522.0,150.0],[555,152],[588.0,142.0]]},
@@ -177,7 +207,13 @@ export const ARCHI = [
   {"a":"z-incrocio:13","b":"tana:casetta:da","tipo":"terra","punti":[[864.0,664.0],[864,664]]},
   {"a":"z-incrocio:14","b":"tana:casetta:a","tipo":"terra","punti":[[1463.0,318.0],[1463,328]]},
   {"a":"tana:casetta:da","b":"tana:casetta:a","tipo":"tunnel","punti":[[864,664],[1463,328]]},
-  {"a":"z-incrocio:15","b":"tana:valle","tipo":"terra","punti":[[92.0,938.0],[90,925]]},
+  {"a":"senza-fine","b":"tana:lago:da","tipo":"terra","punti":[[1020.0,664.0],[1020,664]]},
+  {"a":"lago-guerriero:0","b":"tana:lago:a","tipo":"terra","punti":[[1444.0,642.0],[1468,678]]},
+  {"a":"tana:lago:da","b":"tana:lago:a","tipo":"tunnel","punti":[[1020,664],[1468,678]]},
+  {"a":"z-incrocio:15","b":"tana:fienile:da","tipo":"terra","punti":[[1497.0,618.0],[1497,618]]},
+  {"a":"z-incrocio:16","b":"tana:fienile:a","tipo":"terra","punti":[[818.0,926.0],[825,938]]},
+  {"a":"tana:fienile:da","b":"tana:fienile:a","tipo":"tunnel","punti":[[1497,618],[825,938]]},
+  {"a":"z-incrocio:17","b":"tana:valle","tipo":"terra","punti":[[92.0,938.0],[90,925]]},
 ]
 
 export const PONTI = {

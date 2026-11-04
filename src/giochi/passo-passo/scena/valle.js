@@ -49,7 +49,10 @@ export function quadroValle(S, { mondo = 'valle', dati = DATI[mondo], protagonis
   }
   const altroMondo = MONDI.find(m => m !== mondo)
   const diLa = [...sue.keys()].some(k => DOVE[altroMondo] && DOVE[altroMondo].has(k))
-  const via = new Set(dati.NODI.filter(n => n.tipo === 'passaggio' && !diLa).map(n => n.id))
+  // un'isola `solo` è di chi ci ha le caselle: per gli altri resta decoro, con la tana che ci porta
+  const fuori = n => dati.ISOLE[n.isola]?.solo && !strada.has(n.isola)
+  const chiuse = dati.NODI.filter(n => n.tipo === 'tana' && fuori(n)).map(n => n.id.replace(/:a$/, ':da'))
+  const via = new Set(dati.NODI.filter(n => (n.tipo === 'passaggio' && !diLa) || fuori(n) || chiuse.includes(n.id)).map(n => n.id))
   let archi = dati.ARCHI.filter(e => !via.has(e.a) && !via.has(e.b))
   const nuovo = new Map()
   const nodi = dati.NODI.filter(n => !via.has(n.id)).map(n => {
@@ -272,7 +275,7 @@ export function viaggio(q, da, a, bloccati = new Set()) {
   })
   // un viaggio lungo non dura di più: i salti si fanno più svelti
   const tempo = passi.reduce((s, p) => s + (p.che === 'salto' ? p.dur : 0), 0)
-  if (tempo > TEMPO_MAX) for (const p of passi) if (p.che === 'salto') p.dur = Math.max(0.12, p.dur * TEMPO_MAX / tempo)
+  if (tempo > TEMPO_MAX) for (const p of passi) if (p.che === 'salto') p.dur = Math.max(0.1, p.dur * TEMPO_MAX / tempo)
   return passi
 }
 

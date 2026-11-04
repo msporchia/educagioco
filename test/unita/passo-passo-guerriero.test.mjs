@@ -1,5 +1,5 @@
 /* Il guerriero di Passo passo: le regole di grate, nemici e spada su mappe
-   piccole, e le venti tappe della sua strada. Vedi docs/passo-passo/guerriero.md. */
+   piccole, e le trentaquattro tappe della sua strada. Vedi docs/passo-passo/guerriero.md. */
 import { CAMPAGNA, SCALINI, delGuerriero, FINE_STRADA, guastiDellaCampagna } from '../../src/giochi/passo-passo/dati/campagna.js'
 import { guastiDellaMappa } from '../../src/giochi/passo-passo/dati/mondo.js'
 import { Livello } from '../../src/giochi/passo-passo/motore/livello.js'
@@ -94,9 +94,9 @@ const eventi = r => r.passi.flatMap(p => p.eventi.map(e => e.che))
   const g = guastiDellaCampagna()
   controlla('la campagna non ha guasti', g.length === 0, g.join(' · '))
   const sua = CAMPAGNA.map((t, i) => i).filter(i => delGuerriero(CAMPAGNA[i]))
-  uguale('ventiquattro tappe', STRADE.guerriero.length, 24)
-  uguale('quattro isole', STRADE.isole.filter(s => s.animale === 'guerriero').map(s => `${s.scalino}:${s.tappe.length}`).join(' '),
-         'grate:5 nemici:5 due:7 castello:7')
+  uguale('trentaquattro tappe', STRADE.guerriero.length, 34)
+  uguale('sei isole', STRADE.isole.filter(s => s.animale === 'guerriero').map(s => `${s.scalino}:${s.tappe.length}`).join(' '),
+         'grate:5 nemici:5 due:7 castello:7 lago:5 mastio:5')
   const carte = STRADE.guerriero.map(i => CAMPAGNA[i].carte || [])
   controlla('a metà strada arrivano le carte, e da lì restano', carte.findIndex(c => c.length) <= 14 && carte.slice(14).every(c => c.length))
   for (const c of ['ripeti', 'fino', 'casa', 'se', 'varco'])
