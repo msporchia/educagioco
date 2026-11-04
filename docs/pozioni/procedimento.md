@@ -12,7 +12,7 @@ pasticcio. Il motore è `motore/procedimento.js`.
   polvere di luna e stelle tritate», «Versa il pestato nel calderone e accendi il
   fuoco». **Ogni tanto due azioni stanno nello stesso punto** (`INSIEME`): bisogna
   leggere fino in fondo. **Si legge come parlerebbe una persona**: al contrario si
-  dicono solo le mosse sul calderone («accendi il fuoco, ma prima mescola bene»), e
+  dicono solo le mosse sul calderone («accendi il fuoco dopo aver mescolato bene»), e
   pestare e versare diventano «versa nel calderone X e Y pestati insieme». Provato
   a girare una coppia a caso: «versa il pestato, ma prima pesta» non si leggeva. La si legge già durante la spesa, tranne col rotolo
   aperto, dove sul telefono non ci sta. Fatta la spesa resta solo lei, e i punti
@@ -56,7 +56,7 @@ li usa: capire cosa serve è parte del gioco.
 | 2 | versa tutto; mescola e accendi il fuoco in ordine a caso | `grande` |
 | 3 | pesta due cose e versa, poi il resto | `grandi`, `virgola`, `virgole` |
 | 4 | come il 3, e si diluisce | `media`, `miste`, `inversa` |
-| 5 | come il 4, e una coppia di passi detta al contrario («accendi il fuoco, ma prima mescola bene») | `inverse`, le finali |
+| 5 | come il 4, e una coppia di passi detta al contrario («accendi il fuoco dopo aver mescolato bene») | `inverse`, le finali |
 
 - **L'ordine cambia di ricetta in ricetta**: se fosse sempre lo stesso si
   imparerebbe a memoria e il testo non si leggerebbe.

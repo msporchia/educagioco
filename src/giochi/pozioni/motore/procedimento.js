@@ -64,10 +64,11 @@ const Maiuscola = t => t[0].toUpperCase() + t.slice(1)
 // Ogni tanto due passi stanno nello stesso punto («versa e scalda»), e bisogna
 // leggere fino in fondo. Si legge come parlerebbe una persona: provato a girare
 // una coppia a caso, «versa il pestato, ma prima pesta» non si poteva leggere.
-// Al contrario si dicono solo le mosse sul calderone («accendi il fuoco, ma
-// prima mescola bene»), e pesta e versa diventano «versa X e Y pestati insieme».
+// Al contrario si dicono solo le mosse sul calderone («accendi il fuoco dopo
+// aver mescolato bene»), e pesta e versa diventano «versa X e Y pestati insieme».
 const INSIEME = 0.4, GIRATA = 0.6
 const SUL_CALDERONE = ['mescola', 'scalda', 'diluisci']
+const FATTO = { mescola: 'mescolato bene', scalda: 'acceso il fuoco', diluisci: 'diluito con l\'acqua' }
 export function testo(rnd, passi, ingredienti, intrecciato) {
   const girabili = passi.slice(1).flatMap((p, k) => (SUL_CALDERONE.includes(p.azione) && SUL_CALDERONE.includes(passi[k].azione) ? [k] : []))
   const girata = intrecciato && girabili.length && rnd() < GIRATA ? girabili[Math.floor(rnd() * girabili.length)] : -1
@@ -75,7 +76,7 @@ export function testo(rnd, passi, ingredienti, intrecciato) {
   const pestaEVersa = k => passi[k].azione === 'pesta' && passi[k].cosa.length === 2 && passi[k + 1]?.cosa.includes(MORTAIO)
   const righe = []
   for (let k = 0; k < passi.length; k++) {
-    if (k === girata) righe.push({ testo: `${Maiuscola(detto(k + 1))}, ma prima ${detto(k)}.`, passi: [k, ++k] })
+    if (k === girata) righe.push({ testo: `${Maiuscola(detto(k + 1))} dopo aver ${FATTO[passi[k].azione]}.`, passi: [k, ++k] })
     else if (intrecciato && pestaEVersa(k)) {
       const cose = passi[k].cosa.map(i => ingredienti[i])
       righe.push({ testo: `Versa nel calderone ${elenco(cose.map(g => g.nome))} ${cose.every(g => g.f) ? 'pestate' : 'pestati'} insieme.`, passi: [k, ++k] })
