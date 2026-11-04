@@ -138,7 +138,9 @@ function costruisci(renderer, canvas, { tocca, lascia, dpr: fisso }) {
     giu = { x: e.clientX, y: e.clientY, id: e.pointerId }
     if (occupata) return
     mira(e.clientX, e.clientY)
-    const c = raggio.intersectObjects(attrezzi.colpibili(), false)[0]
+    // fra le prese che si sovrappongono vince quella col centro più vicino al dito, non la prima
+    const lontano = c => raggio.ray.distanceToPoint(c.object.getWorldPosition(qui))
+    const c = raggio.intersectObjects(attrezzi.colpibili(), false).sort((a, b) => lontano(a) - lontano(b))[0]
     if (c) { presa = attrezzi.cosa(c.object.userData.attrezzo); canvas.setPointerCapture?.(e.pointerId) }
   }
   const muovi = e => {
@@ -152,9 +154,11 @@ function costruisci(renderer, canvas, { tocca, lascia, dpr: fisso }) {
     const g = giu; giu = null
     if (presa) {
       const p = presa; presa = null
-      const su = bersaglio(e.clientX, e.clientY, p.userData.id)
+      // un tocco fermo non è una mossa: il fiammifero sta vicino al calderone
+      const mosso = g && Math.hypot(e.clientX - g.x, e.clientY - g.y) > SOGLIA
+      const su = mosso && bersaglio(e.clientX, e.clientY, p.userData.id)
       if (su) lascia?.({ attrezzo: p.userData.id, su })
-      else if (g && Math.hypot(e.clientX - g.x, e.clientY - g.y) > SOGLIA) posa(p, e.clientX, e.clientY)
+      else if (mosso) posa(p, e.clientX, e.clientY)
       if (!occupata) aCasa(p)                  // niente mossa: va al suo posto, che può essere quello nuovo
       return
     }

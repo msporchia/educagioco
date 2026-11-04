@@ -153,8 +153,9 @@ function avviaTappa(i) {
        'Scegli le ampolle e ordinale: le verserà il mercante. Oltre il segno d\'oro trabocca, e poi c\'è da pulire.']
     : [t.dritta] }
   const b = new Bottega(t)
-  const inCasa = b.ingredienti.find(g => g.casa)
+  const inCasa = b.comprati.find(g => g.casa), secche = b.ingredienti.filter(g => g.dispensa).map(g => g.nome)
   if (inCasa) messaggio.value.righe.push(`In casa hai già ${scriviMisura(inCasa.casa, inCasa.unita)} di ${inCasa.nome}.`)
+  if (secche.length) messaggio.value.righe.push(`In dispensa hai ${secche.join(' e ')}: non serve comprarli.`)
   entra(i, b)
 }
 

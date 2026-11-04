@@ -36,9 +36,9 @@ for (const t of CAMPAGNA) {
   let rotte = 0, sotto = 0, goloso = 0, gemelli = 0, troppe = 0, fuori = 0, doppie = 0, moneteSbagliate = 0
   for (let s = 1; s <= SEMI; s++) {
     const b = new Bottega(t, { rnd: caso(s) })
-    if (b.ingredienti.length !== t.ingredienti) rotte++
-    if (new Set(b.ingredienti.map(g => `${g.famiglia}:${g.dose}`)).size < b.ingredienti.length && t.dosi.length >= t.ingredienti * 3) doppie++
-    for (const g of b.ingredienti) {
+    if (b.comprati.length !== t.ingredienti) rotte++
+    if (new Set(b.comprati.map(g => `${g.famiglia}:${g.dose}`)).size < b.comprati.length && t.dosi.length >= t.ingredienti * 3) doppie++
+    for (const g of b.comprati) {
       if (!g.ottimo || g.offerte.length !== 4) rotte++
       if (new Set(g.offerte.map(o => `${o.base} ${o.unita}`)).size !== 4) rotte++
       if (new Set(g.offerte.map(o => o.base)).size < 4) gemelli++
@@ -74,7 +74,7 @@ for (const t of CAMPAGNA) {
       uguale('il banco: la ricetta in grammi', g.unita, 'g')
       controlla('e il listino anche, niente da convertire', g.offerte.every(o => o.unita === 'g'), JSON.stringify(g.offerte))
     }
-    for (const g of new Bottega(tappa('capacita-inversa'), { rnd: caso(s) }).ingredienti) {
+    for (const g of new Bottega(tappa('capacita-inversa'), { rnd: caso(s) }).comprati) {
       uguale('al contrario: la ricetta in ml', g.unita, 'ml')
       controlla('e il mercante vende in unità più grandi', g.offerte.every(o => VALE[o.unita] > 1), JSON.stringify(g.offerte))
     }
@@ -205,12 +205,13 @@ for (const t of CAMPAGNA) {
     ordini.add(azioni.join())
     giocaBene(b)
     if (b.monete !== t.ingredienti * MONETE_A_DOSE + b.passi.length * MONETE_A_PASSO || !b.finita || b.pasticci) rotte++
-    if (b.ingredienti.filter(g => g.casa).length > (t.casa ? 1 : 0)) rotte++
+    if (b.comprati.filter(g => g.casa).length > (t.casa ? 1 : 0)) rotte++
   }
   uguale(`${t.chiave}: il procedimento si fa con le azioni della tappa, ogni cosa una volta`, rotte, 0)
   uguale(`${t.chiave}: si comincia mettendo qualcosa`, senzaOrdine, 0)
   uguale(`${t.chiave}: la ricetta dice tutti i passi`, ricetteBrutte, 0)
   if (t.procedimento >= 2) controlla(`${t.chiave}: l'ordine cambia, se no non si legge`, ordini.size > 1, [...ordini].join(' | '))
+  if (t.procedimento >= 3) controlla(`${t.chiave}: col mortaio sul tavolo si pesta sempre`, [...ordini].every(o => o.startsWith('pesta')), [...ordini].join(' | '))
 }
 {
   const b = new Bottega(tappa('massa-miste'), { rnd: caso(3) })
@@ -271,6 +272,18 @@ for (const t of CAMPAGNA) {
   uguale('in fondo alla scaletta si legge davvero', girate, 30)
   const b = new Bottega(tappa('massa-banco'), { rnd: caso(1) })
   uguale('all\'inizio due passi', b.passi.map(p => p.azione).join(), 'versa,mescola')
+}
+
+/* ---------- i liquidi non si pestano: il secco sta in dispensa ---------- */
+{
+  const b = new Bottega(tappa('capacita-inversa'), { rnd: caso(4) })
+  uguale('la dispensa non si compra', b.comprati.length, tappa('capacita-inversa').ingredienti)
+  uguale('e ha due cose secche', b.ingredienti.filter(g => g.dispensa && g.famiglia === 'massa').length, 2)
+  uguale('che costano zero', b.minimo, b.comprati.reduce((n, g) => n + g.ottimo.costo, 0))
+  controlla('e sono già pronte', b.ingredienti.filter(g => g.dispensa).every(g => g.messo >= g.dose))
+  uguale('il pestello serve', b.passi[0].azione, 'pesta')
+  giocaBene(b)
+  controlla('e la pozione si finisce', b.finita && b.stelle === 3)
 }
 
 /* ---------- quello che c'è già in casa ---------- */

@@ -23,7 +23,7 @@ export function dice(dato) {
   const t = tappaDi(dato)
   if (!t || !Array.isArray(dato.ingredienti)) return null
   return { nome: t.tappa.nome, emoji: t.tappa.emoji, indice: t.indice,
-           fatti: dato.ingredienti.filter(i => i.messo >= i.dose).length, quanti: dato.ingredienti.length,
+           fatti: dato.ingredienti.filter(i => !i.dispensa && i.messo >= i.dose).length, quanti: dato.ingredienti.filter(i => !i.dispensa).length,
            traboccate: dato.traboccate || 0 }
 }
 
@@ -36,7 +36,7 @@ export function scrivi(b, indice, extra = {}) {
     passi: b.passi.map(p => ({ azione: p.azione, cosa: [...p.cosa] })), righe: b.righe.map(r => ({ testo: r.testo, passi: [...r.passi] })),
     passo: b.passo, mortaio: [...b.mortaio], pestato: b.pestato, dentro: [...b.dentro], scaldato: b.scaldato, mescolato: b.mescolato, pasticci: b.pasticci, pasticciato: b.pasticciato,
     ingredienti: b.ingredienti.map(g => ({
-      nome: g.nome, unita: g.unita, dose: g.dose, messo: g.messo, casa: g.casa, traboccate: g.traboccate, pezzi: [...g.pezzi],
+      nome: g.nome, unita: g.unita, dose: g.dose, messo: g.messo, casa: g.casa, dispensa: !!g.dispensa, traboccate: g.traboccate, pezzi: [...g.pezzi],
       offerte: g.offerte.map(o => ({ base: o.base, prezzo: o.prezzo, unita: o.unita })),
     })),
     gettoni: b.gettoni, speso: b.speso, macchie: [...b.macchie],
@@ -79,7 +79,7 @@ function leggiRighe(lista, quanti) {
 
 function rimetti(dato, rnd) {
   const t = tappaDi(dato)
-  if (!t || !Array.isArray(dato.ingredienti) || dato.ingredienti.length !== t.tappa.ingredienti) return null
+  if (!t || !Array.isArray(dato.ingredienti) || dato.ingredienti.filter(i => !i.dispensa).length !== t.tappa.ingredienti) return null
   for (const k of ['gettoni', 'speso', 'traboccate', 'pulizie', 'rese', 'saltate', 'passo', 'pasticci'])
     if (!intero(dato[k], 0, 100000)) return null
   const ingredienti = dato.ingredienti.map(s => {
@@ -87,12 +87,12 @@ function rimetti(dato, rnd) {
     if (!i || !(s.unita in VALE) || !intero(s.dose, 1, 1e7) || !intero(s.messo, 0, s.dose) || !intero(s.traboccate, 0, 100000))
       throw new Error('ingrediente')
     if (!Array.isArray(s.pezzi) || s.pezzi.reduce((n, x) => n + x, 0) > s.dose) throw new Error('pezzi')
-    const offerte = leggiOfferte(s.offerte)
+    const offerte = s.dispensa ? [] : leggiOfferte(s.offerte)
     if (!intero(s.casa, 0, s.dose)) throw new Error('casa')
-    const migliore = ottimo(s.dose - s.casa, offerte)
+    const migliore = s.dispensa ? { costo: 0, pezzi: [] } : ottimo(s.dose - s.casa, offerte)
     if (!migliore) throw new Error('ottimo')
     return { nome: i.nome, colore: i.colore, famiglia: i.famiglia, unita: s.unita, dose: s.dose,
-             messo: s.messo, casa: s.casa, offerte, ottimo: migliore, traboccate: s.traboccate, pezzi: [...s.pezzi] }
+             messo: s.messo, casa: s.casa, dispensa: !!s.dispensa, offerte, ottimo: migliore, traboccate: s.traboccate, pezzi: [...s.pezzi] }
   })
   if (!Array.isArray(dato.macchie) || dato.macchie.some(i => !intero(i, 0, ingredienti.length - 1))) return null
 

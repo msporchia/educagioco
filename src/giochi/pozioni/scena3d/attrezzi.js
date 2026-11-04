@@ -51,7 +51,8 @@ export function creaAttrezzi(scena) {
   const punta = new Mesh(new SphereGeometry(0.15, 14, 10), pietra)
   punta.position.y = 0.06
   pestello.add(asta, punta)
-  attrezzo('pestello', pestello, -0.75, 0.15, -1.45, -0.45)
+  attrezzo('pestello', pestello, -0.6, 0.15, -1.45, -0.6)
+  pestello.userData.presa.position.y = 0.5
 
   // il mestolo: una coppa di metallo fonda in cima a un manico lungo e sottile, col gancio
   const mestolo = new Group()
@@ -62,7 +63,8 @@ export function creaAttrezzi(scena) {
   const gancio = new Mesh(new TorusGeometry(0.07, 0.024, 8, 16, Math.PI * 1.3), metallo)
   gancio.position.set(0.22, 1.8, 0.0)
   mestolo.add(new Mesh(coppa, metallo), manico, gancio)
-  attrezzo('mestolo', mestolo, 1.4, 0.3, 1.5, 0.55)
+  attrezzo('mestolo', mestolo, 1.3, 0.3, 1.5, 0.6)
+  mestolo.userData.presa.position.y = 0.7
 
   // il fiammifero: si posa spento e si accende sotto il calderone
   const fiammifero = new Group()
@@ -71,14 +73,15 @@ export function creaAttrezzi(scena) {
   const testa = new Mesh(new SphereGeometry(0.085, 10, 8), capocchia)
   testa.position.y = 0.98
   fiammifero.add(stecco, testa)
-  attrezzo('fiammifero', fiammifero, 0.35, 0.08, -1.5, -0.45)
+  attrezzo('fiammifero', fiammifero, 1.55, 0.08, -1.5, -2)
+  fiammifero.userData.presa.position.y = 0.5
 
   const brocca = new Group()
   brocca.add(new Mesh(new LatheGeometry(giro([[0, 0], [0.3, 0.01], [0.38, 0.3], [0.3, 0.68], [0.24, 0.82], [0.32, 0.92], [0.27, 0.92], [0.2, 0.8], [0.25, 0.66], [0, 0.6]]), 24), coccio))
   const ansa = new Mesh(new TorusGeometry(0.2, 0.04, 8, 16, Math.PI), coccio)
   ansa.position.set(0.34, 0.5, 0); ansa.rotation.z = -Math.PI / 2
   brocca.add(ansa)
-  attrezzo('brocca', brocca, 2.05, 0, 0, -0.3)
+  attrezzo('brocca', brocca, 2.05, 0, 0, -0.4)
 
   // la ciotola: compare sul calderone per versare quello che arriva dal fondo dello schermo
   const ciotola = new Group()
@@ -104,7 +107,7 @@ export function creaAttrezzi(scena) {
     targa.scale.set(1.3, 0.42, 1); targa.position.set(0, 0.2, 0.42)
     g.add(figura, targa)
     trame.push(t, nomeT)
-    return attrezzo(`roba:${i}`, g, (posto - (quanti - 1) / 2) * PASSO_ROBA, POSTI.bancoY, 0, POSTI.bancoZ - 0.55)
+    return attrezzo(`roba:${i}`, g, (posto - (quanti - 1) / 2) * Math.min(PASSO_ROBA, 5.6 / (quanti - 1 || 1)), POSTI.bancoY, 0, POSTI.bancoZ - 0.55)
   }
 
   return {

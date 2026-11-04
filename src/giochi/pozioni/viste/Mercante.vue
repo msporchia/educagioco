@@ -36,6 +36,7 @@ const ripulisci = computed(() => {
 const mostrati = ref(null)
 const aperto = ref(b.value.speso === 0)          // il rotolo del mercante: si comincia da lì
 const listino = computed(() => aperto.value && !b.value.pronta)
+const daComprare = computed(() => b.value.ingredienti.map((g, i) => ({ g, i })).filter(x => !x.g.dispensa))
 // la spesa è finita quando si è vista finire, non quando il motore l'ha decisa
 const pronta = computed(() => b.value.pronta && !mostrati.value)
 
@@ -130,7 +131,7 @@ if (typeof window !== 'undefined') window.__bottega3d = { grafica: () => scena?.
       <div class="pz-strati">
         <div class="pz-pergamena" data-pergamena>
           <h3><span class="em">{{ b.pozione.emoji }}</span> {{ b.pozione.nome }}</h3>
-          <div v-for="(g, i) in (pronta ? [] : b.ingredienti)" :key="g.nome" class="pz-riga" :class="{ 'pz-fatto': pieno(g, i) }" :data-voce="g.nome">
+          <div v-for="{ g, i } in (pronta ? [] : daComprare)" :key="g.nome" class="pz-riga" :class="{ 'pz-fatto': pieno(g, i) }" :data-voce="g.nome">
             <span v-if="pieno(g, i)" class="em">✅</span>
             <img v-else class="pz-foto" :src="ANTEPRIME[g.nome]" alt="">
             <span class="pz-nome">{{ g.nome }}</span>
@@ -154,7 +155,7 @@ if (typeof window !== 'undefined') window.__bottega3d = { grafica: () => scena?.
           </div>
           <p v-if="messaggio && messaggio.tipo === 'aiuto'" class="pz-dice" data-esito data-codice="aiuto">{{ messaggio.righe.join(' ') }}</p>
           <div class="pz-elenco">
-            <section v-for="(g, i) in b.ingredienti" :key="g.nome" class="pz-merce" :class="{ 'pz-fatto': fatto(g) }" :data-merce="g.nome">
+            <section v-for="{ g, i } in daComprare" :key="g.nome" class="pz-merce" :class="{ 'pz-fatto': fatto(g) }" :data-merce="g.nome">
               <h4><img class="pz-foto" :src="ANTEPRIME[g.nome]" alt=""> {{ g.nome }}
                 <i v-for="r in leRegole(g)" :key="r" class="pz-regola" data-regola>{{ r }}</i>
               </h4>
