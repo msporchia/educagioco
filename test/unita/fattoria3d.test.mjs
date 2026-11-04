@@ -5,7 +5,7 @@
    `node test/esegui.mjs fattoria3d`
    tempo: 1 */
 import { guastiDelMondo, LOTTI_STORICI, LOTTI_INIZIALI, POSTI_STORICI, lottoPerId, PARTENZA } from '../../src/giochi/fattoria3d/dati/mondo.js'
-import { guastiDelCatalogo, PEZZI, EDIFICI, CATEGORIE, edificiDaCostruire, avvisoEdificiNuovi } from '../../src/giochi/fattoria3d/dati/catalogo.js'
+import { guastiDelCatalogo, PEZZI, EDIFICI, CATEGORIE, GRUPPI, edificiDaCostruire, avvisoEdificiNuovi } from '../../src/giochi/fattoria3d/dati/catalogo.js'
 import { carteDi, schedeDi, schedeSegnalate, STRUMENTI } from '../../src/giochi/fattoria3d/dati/carte.js'
 import { guastiDelleColture, COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { guastiDeiPosti, POSTI_DI_PARTENZA, POSTI_MASSIMI, PREZZI_DEI_POSTI, TOTALE_DEI_POSTI, prezzoDelPosto, postiInForma } from '../../src/giochi/fattoria3d/dati/posti.js'
@@ -559,8 +559,9 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   controlla('le decorazioni non lo accendono mai', carteDi('decori', { livello: 99, prezzoPezzo: t => PEZZI[t].prezzo, nelMagazzino: () => 0, posseduti: {} }).every(c => !c.segnala))
   const carte = carteDi('edifici', { livello: EDIFICI.panificio.liv, prezzoPezzo: t => PEZZI[t].prezzo, nelMagazzino: () => 0, posseduti: {} })
   stessaLista('nella scheda Edifici i segnalati stanno in cima, i chiusi senza «!»', [carte.slice(0, 3).map(c => c.id).join(), carte.filter(c => c.bloccata).every(c => !c.segnala)], ['mulino,fienile,telaio', true])
+  stessaLista('ogni scheda sta in un gruppo solo del taccuino', Object.values(GRUPPI).flatMap(g => g.schede).sort(), Object.keys(CATEGORIE).sort())
   stessaLista('le schede segnalate: solo Edifici', schedeSegnalate(schedeDi({ livello: EDIFICI.panificio.liv, prezzoPezzo: t => PEZZI[t].prezzo, nelMagazzino: () => 0, posseduti: {} })), ['edifici'])
-  stessaLista('l\'avviso del livello nomina l\'edificio', [avvisoEdificiNuovi(EDIFICI.panificio.liv), avvisoEdificiNuovi(EDIFICI.zuccherificio.liv), avvisoEdificiNuovi(EDIFICI.fienile.liv), avvisoEdificiNuovi(2)], ['il Panificio! Costruiscilo', 'lo Zuccherificio! Costruiscilo', 'il Fienile! Costruiscilo', ''])
+  stessaLista('l\'avviso del livello nomina l\'edificio', [avvisoEdificiNuovi(EDIFICI.panificio.liv), avvisoEdificiNuovi(EDIFICI.zuccherificio.liv), avvisoEdificiNuovi(EDIFICI.fienile.liv), avvisoEdificiNuovi(2)], ['il Panificio! Compralo', 'lo Zuccherificio! Compralo', 'il Fienile! Compralo', ''])
   // un ordine che chiede il prodotto di una macchina che non c'è lo dice
   const g = mondo({ monete: 0 }).f
   alLivello(g, EDIFICI.panificio.liv); g.s.cose.push({ id: 90, tipo: 'bacheca', i: -4, j: 5 })
@@ -1036,7 +1037,7 @@ function livelloDelPezzoDi(t) { return PEZZI[t].liv }
   controlla('ogni pezzo e ogni edificio ha una categoria valida', [...Object.values(PEZZI), ...Object.values(EDIFICI)].every(d => !!CATEGORIE[d.categoria]))
   controlla('ogni scheda ha almeno una carta (la scheda Feste solo in stagione o con un regalo della fiera: la linguetta si nasconde)', Object.keys(CATEGORIE).every(c => c === 'feste' || schedeDi(statoMenu({ livello: 99 }))[c].length > 0) && schedeDi(statoMenu({ livello: 99, stagione: 'natale' })).feste.length > 0)
   const tutte = Object.values(schedeDi(statoMenu({ livello: 99 }))).flat().filter(c => c.genere !== 'strumento' && c.genere !== 'bestia')
-  uguale('ogni pezzo e ogni edificio unico sta in una scheda sola', tutte.length, Object.values(PEZZI).filter(d => !d.stagione && !d.fiera && !d.magazzino).length + Object.keys(EDIFICI).length)          // le feste si offrono solo in stagione, la fiera solo a chi l'ha vinta, i magazzini mai
+  uguale('ogni pezzo e ogni edificio unico sta in una scheda sola', tutte.length, Object.values(PEZZI).filter(d => !d.stagione && !d.fiera && !d.magazzino && !d.dono).length + Object.keys(EDIFICI).length)          // le feste si offrono solo in stagione, la fiera solo a chi l'ha vinta, i magazzini mai
   controlla('le carte di una scheda stanno in ordine di livello, prima quelle col «!»', Object.keys(CATEGORIE).every(c => {
     const carte = carteDi(c, statoMenu({ livello: 99 })).filter(x => x.genere !== 'strumento')
     const inOrdine = sg => { const l = carte.filter(x => !!x.segnala === sg).map(x => x.liv); return l.every((v, k) => !k || v >= l[k - 1]) }

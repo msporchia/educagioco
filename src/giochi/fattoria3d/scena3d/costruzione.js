@@ -80,7 +80,7 @@ export class Costruzione {
     if (!su) this._suDito(x, y)
     ui.trascinando({ emoji: misureDi(D.tipo).emoji, ruotabile: ruotabile(D.tipo), rot: D.rot, x, y, su, perMettereVia: su && !!D.spostando, perAnnullare: su && !D.spostando, nuovo: !D.spostando, parcheggiato: D.parcheggiato })
     const prezzo = !D.spostando && D.costo ? ` (🪙 ${D.costo})` : ''
-    ui.avviso(su ? (D.spostando ? 'Rilascia qui per mettere via (🪙 1)' : 'Portalo sulla mappa e rilascia')
+    ui.avviso(su ? (D.spostando && !misureDi(D.tipo).dono ? 'Rilascia qui per mettere via (🪙 1)' : 'Portalo sulla mappa e rilascia')
                  : (D.ok ? 'Rilascia per costruire qui' + prezzo : dettoDi(D.motivo, { costo: D.costo, liv: D.liv })))
   }
   /** Il dito si stacca: se ci sta si costruisce o si sposta, sulla barra si rimette via, altrimenti niente cambia. */
@@ -99,7 +99,7 @@ export class Costruzione {
       if (su) {
         const r = m.mettiVia(c0.id)
         if (!r.ok) return this._dice(dettoDi(r.motivo, { mancano: 1 }))
-        this.c.cambiato(); return ui.avviso(misureDi(tipo).nome + ' messo via: lo ritrovi nel menu Costruisci')
+        this.c.cambiato(); return ui.avviso(misureDi(tipo).nome + ' messo via: lo ritrovi nel menu Compra')
       }
       if (!ok) return this._dice(dettoDi(motivo))
       const r = m.spostaPezzo(c0.id, i, j, { rot })

@@ -494,14 +494,14 @@ export const AIUTI = {
       'Qui non si vince: è il posto dove si spendono le monete guadagnate negli altri giochi. Il contadino cammina da solo fino alle cose e le fa, e la fattoria resta com\'era lasciata.',
       { titolo: 'I tocchi', righe: [
         '**Un tocco** su una cosa: il contadino ci va e la fa — raccoglie, dà da mangiare, apre la macchina.',
-        '**Tocca 🌱 Semina**, scegli cosa far crescere, poi **tocca i campi vuoti**. Lo stesso con **✂️ Raccogli** sui campi pronti: puoi anche passare il dito su più campi.',
-        '**Tieni il dito premuto** su un posto libero del tuo terreno: si apre «Costruisci qui». Anche il tasto 🏗 fa lo stesso.',
+        '**Tocca un campo**: se è vuoto compaiono i semi, se è pronto il falcetto. **Trascinali sui campi**, uno o tanti: il campo cambia sotto il dito.',
+        '**Tieni il dito premuto** su un posto libero del tuo terreno: si apre il menu «Compra». Anche il tasto 🛒 fa lo stesso.',
         '**Tieni premuto** su una cosa già messa per **spostarla**: la porti dove vuoi, oppure sulla scritta in basso per metterla via nel magazzino (rimetterla fuori è gratis).',
         '**Un tocco** su Watson o su un gatto: fa la festa. **Tieni premuto** sopra di lui: vedi come sta, cosa gli serve e puoi cambiargli il nome.',
       ] },
       { titolo: 'Le prime cose da fare', righe: [
         'Semina il grano, aspetta qualche secondo, raccoglilo. Niente marcisce mai: se ti dimentichi un campo, lo trovi lì.',
-        'Con le monete tocca 🏗 Costruisci: campi, recinti, edifici. Il terreno si compra a pezzi, e il mondo non finisce mai.',
+        'Con le monete tocca 🛒 Compra: campi, recinti, edifici. Il terreno si compra a pezzi, e il mondo non finisce mai.',
         'Non sai cosa fare? Tocca **🧭 E adesso?** e il gioco ti dice la cosa più utile, con il tasto per farla.',
       ] },
       { titolo: 'Cosa serve e dove si fa', righe: [
@@ -556,6 +556,7 @@ export const AIUTI = {
         'Finito «Tutto insieme» si apre anche il **guerriero**, con la sua strada: deve arrivare alla **principessa**, e la corona è la sua carota.',
         'Una **grata** si apre col **pulsante del suo colore** e resta aperta: basta metterci il piede, o farci finire sopra un masso. Saltandolo non si preme.',
         'Un **nemico** colpisce chi si ferma nelle caselle attorno a lui, anche di traverso (quelle rosse per terra): chi scivola o salta non si è fermato. Con la **spada** lo si batte, ma contro **due insieme** non vince nemmeno lei: si prendono uno alla volta.',
+        'A metà strada arrivano le scatole: 🔁 ripete, 🚩 ripete fino a un pulsante, e ❓ con una freccia vuol dire **«se di là si passa»**: il guerriero guarda da solo dove andare.',
       ] },
       { titolo: 'Lo zaino e il ripeti', righe: [
         'Dopo le buche la fila ha lo **zaino**: tiene poche carte, e la strada scritta freccia per freccia non ci sta.',

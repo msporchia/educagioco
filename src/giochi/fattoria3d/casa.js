@@ -1,8 +1,9 @@
 /* Dentro la casa, la parte di Gioco.vue (docs/fattoria3d/casa.md): entrare e uscire, la scena della casa (scena3d/casa3d.js) su una tela
-   sua mentre la fattoria aspetta ferma, e i fogli (il catalogo dei mobili, un mobile, la pianta con le stanze). Come visite.js: la vista
-   dice cosa si vuole, le regole sono del motore. Niente in comune con un amico: la casa è della propria fattoria. */
+   sua mentre la fattoria aspetta ferma, i fogli (il catalogo dei mobili, un mobile), la striscia di pavimento e pareti e la stanza nuova, che
+   si compra come un lotto. Come visite.js: la vista dice cosa si vuole, le regole sono del motore. Niente in comune con un amico: la casa è
+   della propria fattoria. */
 import { ref, computed, nextTick } from 'vue'
-import { MOBILI, SCHEDE_MOBILI, ARMADIO } from './dati/interni.js'
+import { MOBILI, SCHEDE_MOBILI, ARMADIO, prezzoFinitura } from './dati/interni.js'
 
 const MOTIVI = {
   fuori: 'Lì non ci sta: deve stare tutto dentro una stanza tua.',
@@ -16,20 +17,22 @@ export const dettoInCasa = (r, monete = 0) => r.motivo === 'poche-monete'
   ? `Ti mancano 🪙${r.costo - monete}: le monete si guadagnano negli altri giochi.`
   : MOTIVI[r.motivo] || 'Non si può.'
 
-/** `dammi()` → { motore, mondo }; `tela`, `sopra`: i ref della tela della casa; `cambio()`: dopo ogni mossa (salva e rilegge). */
-export function usaCasa({ dammi, tela, sopra, q, versione, cambio, abito, apriGuardaroba, avvisa, altriFogli = () => false }) {
+/** `dammi()` → { motore, mondo }; `tela`, `sopra`: i ref della tela della casa; `cambio()`: dopo ogni mossa (salva e rilegge); `chiedi`: la
+    domanda con due scelte, quella del terreno. */
+export function usaCasa({ dammi, tela, sopra, q, versione, cambio, abito, apriGuardaroba, avvisa, chiedi, altriFogli = () => false }) {
   const dentro = ref(false)
   const chiave = ref(0)                    // una tela nuova a ogni ingresso: un contesto WebGL non si riusa
-  const foglio = ref(null)                 // null | 'catalogo' | 'mobile' | 'pianta'
+  const foglio = ref(null)                 // null | 'catalogo' | 'mobile'
   const scheda = ref(SCHEDE_MOBILI[0].id)  // la scheda del catalogo
   const mobileAperto = ref(null)           // l'id del mobile di cui si vede il foglio
-  const stanzaScelta = ref(0)              // nella pianta: la stanza di cui si cambiano pavimento e pareti
-  const mano = ref(null)                   // { tipo, nuovo, ok, gira, prezzo } mentre un mobile è in mano
+  const tinte = ref(null)                  // { stanza, parte, prova } mentre si provano pavimento e pareti
+  const mano = ref(null)                   // { tipo, nuovo, ok, motivo, gira, prezzo } mentre un mobile è in mano
   const messaggio = ref('')
   const rev = ref(0)
   let casa = null, vivo = true
 
   const toc = () => { rev.value++; cambio() }
+  const dici = testo => casa?.fx.parla(testo)        // nel fumetto del contadino: l'avviso della fattoria sta nelle sue barre, che qui non ci sono
   const vista = computed(() => { void versione.value; void rev.value; const { motore } = dammi(); return motore && dentro.value ? motore.vistaInterni() : null })
   const mobile = computed(() => {
     void versione.value; void rev.value
@@ -40,18 +43,22 @@ export function usaCasa({ dammi, tela, sopra, q, versione, cambio, abito, apriGu
 
   const ui = {
     cambio() { toc() },
-    fogliAperti: () => !!foglio.value || altriFogli(),
+    fogliAperti: () => !!foglio.value || !!tinte.value || altriFogli(),
     apriMobile(id) { messaggio.value = ''; mobileAperto.value = id; foglio.value = 'mobile' },
     apriGuardaroba() { apriGuardaroba() },
     esci() { esci() },
-    offriStanza(id) { messaggio.value = ''; stanzaScelta.value = id; foglio.value = 'pianta' },
+    offriStanza(id) {
+      const st = dammi().motore.vistaInterni().stanze.find(s => s.id === id)
+      chiedi('Stanza nuova', 'Allarga la casa: una stanza in più, attaccata a quelle che hai, con la sua porta.',
+        [{ t: `Compra · 🪙 ${st.prezzo}`, fn: () => compraStanza(id) }, { t: 'Non ora', quieto: true }])
+    },
     mano(info) { mano.value = info; if (info) messaggio.value = '' },
   }
 
   async function entra() {
     if (dentro.value) return
     const { motore, mondo } = dammi(); if (!motore || !mondo) return
-    dentro.value = true; foglio.value = null; mano.value = null; messaggio.value = ''; chiave.value++
+    dentro.value = true; foglio.value = null; tinte.value = null; mano.value = null; messaggio.value = ''; chiave.value++
     mondo.ferma()                                                    // la fattoria aspetta ferma, com'è
     try {
       await nextTick()
@@ -68,7 +75,7 @@ export function usaCasa({ dammi, tela, sopra, q, versione, cambio, abito, apriGu
     if (!dentro.value) return
     const { mondo } = dammi()
     casa?.via(); casa = null
-    dentro.value = false; foglio.value = null; mano.value = null
+    dentro.value = false; foglio.value = null; tinte.value = null; mano.value = null
     mondo?.avvia()
     toc()
   }
@@ -104,19 +111,38 @@ export function usaCasa({ dammi, tela, sopra, q, versione, cambio, abito, apriGu
     const r = dammi().motore.mettiViaMobile(mobileAperto.value)
     if (!r.ok) return void (messaggio.value = dettoInCasa(r))
     foglio.value = null; mobileAperto.value = null; casa?.cambiato(); toc()
-    avvisa('Messo via: lo ritrovi nel catalogo, in «Messi via».')
+    dici('Messo via: lo ritrovi nel catalogo, in «Messi via».')
   }
   const eArmadio = computed(() => mobile.value?.tipo === ARMADIO)
 
-  // ── la pianta: comprare una stanza, pavimento e pareti ──
-  function apriPianta() { messaggio.value = ''; foglio.value = 'pianta' }
+  // ── una stanza nuova: la risposta alla domanda di `offriStanza` ──
   function compraStanza(id) {
     const { motore } = dammi(), r = motore.compraStanza(id)
-    if (!r.ok) return void (messaggio.value = dettoInCasa(r, motore.monete()))
-    messaggio.value = `Stanza nuova! L'hai pagata 🪙${r.costo}.`; stanzaScelta.value = id
-    casa?.cambiato(); toc()
+    if (!r.ok) return dici(dettoInCasa(r, motore.monete()))
+    casa?.stanzaComprata(id); toc()
+    if (r.spostati.length) dici(`Per la porta nuova ho spostato: ${r.spostati.map(t => MOBILI[t].nome).join(', ')}.`)
   }
-  function rifinisci(finitura) { const r = dammi().motore.rifiniStanza(stanzaScelta.value, finitura); if (r.ok) { casa?.cambiato(); toc() } }
+
+  // ── pavimento e pareti della stanza dove sta il contadino: si provano dal vivo, si paga solo se piace ──
+  const prezzoTinte = computed(() => {
+    void versione.value; void rev.value
+    const t = tinte.value, { motore } = dammi()
+    return t && motore ? prezzoFinitura(motore.s.interni.finiture[t.stanza], t.prova) : 0
+  })
+  function apriTinte() {
+    if (!casa) return
+    const stanza = casa.stanzaQui()
+    messaggio.value = ''; tinte.value = { stanza, parte: 'pavimento', prova: { ...dammi().motore.s.interni.finiture[stanza] } }
+    casa.provaFinitura(stanza, tinte.value.prova); casa.guardaStanza(stanza)
+  }
+  function provaTinta(parte, id) { const t = tinte.value; t.prova = { ...t.prova, [parte]: id }; messaggio.value = ''; casa?.provaFinitura(t.stanza, t.prova) }
+  function pagaTinte() {
+    if (!prezzoTinte.value) return
+    const { motore } = dammi(), t = tinte.value, r = motore.rifiniStanza(t.stanza, t.prova)
+    if (!r.ok) return void (messaggio.value = dettoInCasa(r, motore.monete()))
+    lasciaTinte(); toc()
+  }
+  function lasciaTinte() { tinte.value = null; messaggio.value = ''; casa?.provaFinitura(null); casa?.tornaAllEroe() }
 
   function chiudi() { foglio.value = null; mobileAperto.value = null; messaggio.value = '' }
   const anteprima = k => casa ? casa.anteprima(k) : Promise.resolve(null)
@@ -127,8 +153,8 @@ export function usaCasa({ dammi, tela, sopra, q, versione, cambio, abito, apriGu
   function via() { vivo = false; casa?.via(); casa = null }
 
   return {
-    dentro, chiave, foglio, scheda, mobile, mobileAperto, stanzaScelta, mano, messaggio, vista, voci, eArmadio,
-    entra, esci, apriCatalogo, scegli, posa, gira, lascia, tingi, giraMobile, sposta, mettiVia, apriPianta, compraStanza, rifinisci, chiudi,
+    dentro, chiave, foglio, scheda, mobile, mobileAperto, tinte, prezzoTinte, mano, messaggio, vista, voci, eArmadio,
+    entra, esci, apriCatalogo, scegli, posa, gira, lascia, tingi, giraMobile, sposta, mettiVia, apriTinte, provaTinta, pagaTinte, lasciaTinte, chiudi,
     anteprima, anteprimaPronta, vesti, cameraLibera, tornaAllEroe, via,
     scena: () => casa,                     // per le prove e gli scatti (window.__fattoria3d.interni)
   }

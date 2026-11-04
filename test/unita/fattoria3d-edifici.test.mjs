@@ -76,7 +76,7 @@ p.sincronizza()
 
 /* ══════════ 5. le parole ══════════ */
 controlla('il rifiuto di mettere via una macchina che lavora è chiaro, e non dice di spostarla', /Finisci prima/.test(dettoDi('macchina-al-lavoro')))
-controlla('«ce n\'è già uno» e «costruisci prima» ci sono', /già/.test(dettoDi('gia-tuo')) && /Costruisci prima/.test(dettoDi('non-tua')))
+controlla('«ce n\'è già uno» e «costruisci prima» ci sono', /già/.test(dettoDi('gia-tuo')) && /Prima compra/.test(dettoDi('non-tua')))
 controlla('non esiste più il motivo del lotto', dettoDi('lotto-non-tuo') === 'Non si può')
 
 riassunto('Fattoria 3D — gli edifici liberi nella scena')

@@ -299,18 +299,34 @@ export class Tela {
     }
   }
 
-  /* Il muro: la cima, e sotto la faccia a mattoni se davanti non c'è altro
-     muro. Sta tutto dentro la sua cella: uscendo in su coprirebbe i piedi di
-     chi gli passa dietro, e il bambino deve vedere dove sta. */
+  /* Il muro: la cima a conci, chiara, col bordo scuro dove finisce (se no
+     un muro verticale, tutto cima, sparisce sul pavimento), e sotto la faccia
+     a mattoni se davanti non c'è altro muro. Sta tutto dentro la sua cella:
+     uscendo in su coprirebbe i piedi di chi gli passa dietro. */
   muro(x, y) {
     const ctx = this.ctx, liv = this.liv
-    const x0 = LATO + x * T, fy = TESTA + (y + 1) * T
-    const sotto = liv.vicino(liv.indice(x, y), 0, 1)
-    const faccia = sotto < 0 || liv.ostacolo[sotto] !== 'muro'
-    ctx.fillStyle = '#c9c4ba'
-    ctx.fillRect(x0, fy - T, T, T)
-    ctx.fillStyle = '#dcd8d0'
-    ctx.fillRect(x0, fy - T, T, 1)
+    const x0 = LATO + x * T, y0 = TESTA + y * T, fy = y0 + T
+    const muro = (dx, dy) => {
+      const i = liv.vicino(liv.indice(x, y), dx, dy)
+      return i >= 0 && liv.ostacolo[i] === 'muro'
+    }
+    const faccia = !muro(0, 1)
+    const cima = faccia ? T - 9 : T
+    ctx.fillStyle = '#e6dcc4'
+    ctx.fillRect(x0, y0, T, cima)
+    /* i conci: due file sfalsate, e la fila dipende dalla cella così si
+       legge una muratura e non una piastrella ripetuta */
+    ctx.fillStyle = '#b9ad94'
+    const pari = (x + y) % 2
+    for (let r = 7; r < cima; r += 8) ctx.fillRect(x0, y0 + r, T, 1)
+    for (let r = 0; r * 8 < cima; r++) {
+      const h = Math.min(7, cima - r * 8)
+      ctx.fillRect(x0 + ((r + pari) % 2 ? 4 : 11), y0 + r * 8, 1, h)
+    }
+    ctx.fillStyle = '#4e4a44'
+    if (!muro(0, -1)) ctx.fillRect(x0, y0, T, 1)
+    if (!muro(-1, 0)) ctx.fillRect(x0, y0, 2, T)
+    if (!muro(1, 0)) ctx.fillRect(x0 + T - 2, y0, 2, T)
     if (!faccia) return
     ctx.fillStyle = '#7f7a72'
     ctx.fillRect(x0, fy - 9, T, 9)
@@ -321,6 +337,9 @@ export class Tela {
     ctx.fillRect(x0 + 4, fy - 9, 1, 4)
     ctx.fillRect(x0 + 12, fy - 9, 1, 4)
     ctx.fillRect(x0 + 8, fy - 5, 1, 4)
+    ctx.fillStyle = '#4e4a44'
+    if (!muro(-1, 0)) ctx.fillRect(x0, fy - 9, 2, 9)
+    if (!muro(1, 0)) ctx.fillRect(x0 + T - 2, fy - 9, 2, 9)
   }
 
   /* ═══════════ le cose del guerriero ═══════════ */
@@ -941,6 +960,15 @@ function dipingiFondo(liv, tema) {
       const px = x0 + 1 + Math.floor(hash(x, y, 80 + k) * 13), py = y0 + 1 + Math.floor(hash(x, y, 90 + k) * 14)
       g.fillRect(px, py, 2, 1)
     }
+  }
+
+  /* l'ombra dei muri per terra, a destra e sotto: li stacca dal pavimento */
+  g.fillStyle = 'rgba(0,0,0,.22)'
+  for (let y = 0; y < liv.righe; y++) for (let x = 0; x < liv.colonne; x++) {
+    if (liv.ostacolo[liv.indice(x, y)] !== 'muro') continue
+    const libera = (dx, dy) => liv.dentro(x + dx, y + dy) && liv.ostacolo[liv.indice(x + dx, y + dy)] !== 'muro'
+    if (libera(1, 0)) g.fillRect(LATO + (x + 1) * T, TESTA + y * T, 3, T)
+    if (libera(0, 1)) g.fillRect(LATO + x * T, TESTA + (y + 1) * T, T, 2)
   }
 
   /* le lastre: posate sul prato, e ferme per sempre — si dipingono col

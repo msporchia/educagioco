@@ -71,6 +71,7 @@ export class Fattoria3d {
     this.vecchi1 = new Set(this.s.vecchi1)         // i lotti comprati con i laghetti-pozzanghera, dove ora c'è un lago naturale: restano pozzanghere (generazione 1; docs/fattoria3d/laghi.md)
     for (const k of this.propri) this._apriAnello(lottoDaChiave(k))
     this.tick()
+    if (magazzini) this.cura.sistema()             // chi aveva già gli animali trova ciotole e tinozza (non nella fattoria di un vicino)
   }
 
   // ── la borsa ──
@@ -280,6 +281,7 @@ export class Fattoria3d {
     if (!PEZZI[tipo] && !EDIFICI[tipo]) return { ok: false, motivo: 'sconosciuto' }
     if (EDIFICI[tipo] && (this.s.posseduti[tipo] || this.nelMagazzino(tipo) > 0)) return { ok: false, motivo: 'gia-tuo' }       // uno per tipo
     if (PEZZI[tipo] && PEZZI[tipo].unico && (this.nelMagazzino(tipo) > 0 || this.s.cose.some(c => c.tipo === tipo))) return { ok: false, motivo: 'gia-tuo' }       // il porticciolo è uno solo
+    if (PEZZI[tipo] && PEZZI[tipo].dono) return { ok: false, motivo: 'non-in-vendita' }        // ciotola e tinozza arrivano con gli animali
     if (PEZZI[tipo] && PEZZI[tipo].fiera) return { ok: false, motivo: 'non-in-vendita' }       // la fiera si vince dalla mongolfiera (fattoria3d/mongolfiera.md)
     const chiuso = this._chiusa(livelloDelPezzo(tipo))
     if (chiuso) return chiuso
@@ -376,7 +378,7 @@ export class Fattoria3d {
     if (c.i === i && c.j === j && r1 === (c.rot || 0)) return { ok: true, costo: 0 }
     const p = this.puoMettere(c.tipo, i, j, id, r1)
     if (!p.ok) return p
-    const costo = gratis || c.prova ? 0 : COSTI.spostare
+    const costo = gratis || c.prova || PEZZI[c.tipo]?.dono ? 0 : COSTI.spostare
     if (!this._paga(costo)) return { ok: false, motivo: 'poche-monete', costo }
     this._libera(c); c.i = i; c.j = j
     if (r1) c.rot = r1; else delete c.rot
@@ -414,6 +416,7 @@ export class Fattoria3d {
     if (!forza && c.bestie) return { ok: false, motivo: 'ha-le-bestie' }
     if (!forza && this._ponteSopra(c)) return { ok: false, motivo: 'ponte-sopra' }
     if (!forza && EDIFICI[c.tipo] && this.edificioAlLavoro(c.tipo)) return { ok: false, motivo: 'macchina-al-lavoro' }
+    if (!forza && PEZZI[c.tipo]?.dono) return { ok: false, motivo: 'dono' }                // la ciotola e la tinozza si spostano, non si mettono via
     if (!forza && siloDelPezzo(c.tipo)) return { ok: false, motivo: 'magazzino' }          // un magazzino si sposta, non si mette via: è lì che sta la roba
     const costo = gratis ? 0 : COSTI.spostare
     if (!this._paga(costo)) return { ok: false, motivo: 'poche-monete', costo }
@@ -441,6 +444,8 @@ export class Fattoria3d {
   }
   /** Gli edifici che il livello ha aperto e non sono in mappa: il «!» (solo macchine e mongolfiera; mai una decorazione). */
   /** Gli edifici aperti dal livello e non ancora in mappa (il «!» su Costruisci), più i magazzini che aspettano nel magazzino dei pezzi. */
+  /** Da livello 2 il banco chiede una bacheca: finché non c'è, la sua carta ha il «!», perché nessun altro la indica. */
+  serveBacheca() { return this.livello() >= LIVELLO_BANCO && !this.bancoAperto() }
   edificiDaCostruire() { return [...edificiDaCostruire(this.livello(), this.s.posseduti), ...TIPI_DI_SILO.map(t => SILOS[t].edificio).filter(t => this.nelMagazzino(t) > 0 && PEZZI[t].liv <= this.livello())] }
   /** Un posto dove ci sta: quello di prima se è libero, se no il primo libero nel terreno tuo (per i banchi di prova e i comandi; il gioco lo sceglie il bambino). */
   postoPer(tipo) {

@@ -19,7 +19,7 @@ defineEmits(['consegna', 'rifiuta', 'chiudi', 'consiglio'])
 const dice = computed(() => p.bottega.fama.piena
   ? `Famosa: ${BANCONI_MAX} banconi`
   : `${p.bottega.fama.banconi} ${p.bottega.fama.banconi === 1 ? 'bancone' : 'banconi'} · a ${CUORI} cuori ne arriva un altro`)
-const chiusa = computed(() => `Costruisci ${p.bottega.nome.toLowerCase()} dal menu «Costruisci»: costa 🪙 ${p.bottega.prezzo}, arriva al livello ${p.bottega.liv}.`)
+const chiusa = computed(() => `Compra ${p.bottega.nome.toLowerCase()} dal menu 🛒: costa 🪙 ${p.bottega.prezzo}, arriva al livello ${p.bottega.liv}.`)
 </script>
 
 <template>

@@ -9,7 +9,9 @@ import { schedeDellInventario } from './inventario-puro.js'
 export function vistaDelMagazzino(m, silo) {
   const S = SILOS[silo], n = m.livelloDelSilo(silo), posti = postiPerMerce(n), dopo = postiPerMerce(n + 1)
   const sch = schedeDellInventario(m.s, m.livello(), k => m.capienzaDi(k))
-  const merci = [...sch.raccolti, ...sch.prodotti, ...sch.altro].filter(v => siloDi(v.k) === silo)
+  // finché un magazzino non è in mappa la sua roba si guarda nel silo del raccolto: nel gioco non c'è un altro posto dove vederla
+  const qui = k => siloDi(k) === silo || (silo === 'terra' && !m.edificiDelSilo(siloDi(k)).length)
+  const merci = [...sch.raccolti, ...sch.prodotti, ...sch.altro].filter(v => qui(v.k))
   const passo = m.passoDelSilo(silo), prezzo = passo === 'basta' ? null : m.prezzoIngrandimento(silo), monete = m.monete()
   const ed = m.edificiDelSilo(silo), il = `${S.art} ${S.nome.toLowerCase()}`, un = S.art === 'la' ? 'un\'altra' : 'un altro'
   const quanti = Math.max(1, m.quantiMagazzini(silo))

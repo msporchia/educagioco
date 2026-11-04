@@ -1,0 +1,11 @@
+/* L'attrezzo accanto al campo (viste/Attrezzi.vue): i gettoni ad arco, le pagine, la riga e la figura che segue il dito. */
+.f3-attrezzi { position: absolute; inset: 0; z-index: 26; pointer-events: none; }
+.f3-attrezzi .gettone { position: absolute; width: 64px; height: 64px; margin: -32px 0 0 -32px; display: grid; place-items: center; padding: 0; border: 3px solid #fff; border-radius: 50%; background: #ffe9a8; box-shadow: 0 3px 10px rgba(0,0,0,.35); pointer-events: auto; touch-action: none; animation: f3-attrezzo .16s ease-out; }
+.f3-attrezzi .gettone svg { width: 46px; height: 46px; }
+.f3-attrezzi.inMano .gettone, .f3-attrezzi.inMano .pagina { opacity: 0; }
+.f3-attrezzi .pagina { position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; padding: 0; border: 0; border-radius: 22px; background: rgba(255,251,240,.95); color: #3a2a1a; font: 800 20px "Emoji Gioco", system-ui, sans-serif; box-shadow: 0 2px 6px rgba(0,0,0,.3); pointer-events: auto; touch-action: manipulation; }
+.f3-attrezzi .riga { position: absolute; transform: translateX(-50%); max-width: 240px; margin: 0; padding: 6px 12px; border-radius: 14px; background: rgba(255,251,240,.96); color: #3a2a1a; font: 700 14px/1.25 "Emoji Gioco", system-ui, sans-serif; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+.f3-attrezzi .in-mano { position: fixed; width: 64px; height: 64px; margin: -84px 0 0 -32px; display: grid; place-items: center; z-index: 60; filter: drop-shadow(0 4px 6px rgba(0,0,0,.4)); }
+.f3-attrezzi .in-mano svg { width: 60px; height: 60px; }
+@keyframes f3-attrezzo { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .f3-attrezzi .gettone { animation: none; } }

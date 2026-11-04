@@ -52,7 +52,7 @@ function corri(nodi, w, conto) {
       continue
     }
     if (nodo.che === 'se') {
-      if (w.lastra() === nodo.colore) {
+      if (w.vale(nodo.colore)) {
         const e = corri(nodo.corpo, w, conto)
         if (e) return e
       }

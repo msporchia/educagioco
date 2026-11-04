@@ -75,7 +75,7 @@ Lo dicono le cose stesse: `liv` sul pezzo, sull'edificio, sulla coltura e sulla 
 - **Nessun livello è vuoto** (da 1 a 70 apre sempre almeno una cosa): dopo i giri G5, G6, G8 e G9 le decorazioni della 2D ci sono tutte (206 più le 11 dei primi giri), con gli stessi livelli; i livelli vuoti erano 18 prima del G9 (3, 7, 10, 12, 15, 19, 32, 35, 41, 47, 49, 59, 65–70) e li hanno riempiti fiori, arredo, acqua e arrivi simili. Se un giorno si toglie una decorazione, il foglio dice «Niente di nuovo qui» e l'avviso «Livello 3: niente di nuovo, ma sei più in alto!». Il primo livello non è mai vuoto (guasto). Le feste e la fiera non contano come roba di un livello (`roba()` le salta).
 - **I nomi stanno sulla cosa** (`NOMI`), l'ordine è la precedenza quando due cose arrivano insieme.
 - **Compagni, abiti, villaggi, posti del banco** erano scritti sulla scala vecchia (finiva al 18): stanno nello stesso punto del percorso
-  (`sullaScalaDellaDueD(l)` = `1 + (l-1)·69/17`: il 6 vecchio è il 21, il 13 è il 50). Eccezione: **Watson, Sherlock e Irene** restano ai livelli 1–3 (gli animali
+  (`sullaScalaDellaDueD(l)` = `1 + (l-1)·69/17`: il 6 vecchio è il 21, il 13 è il 50). Eccezione (fino al 2/11/2026; ora si adottano a 3, 10, 11: [adozioni.md](adozioni.md)): **Watson, Sherlock e Irene** restavano ai livelli 1–3 (gli animali
   di casa arrivano per primi) e **Pepe**, il gatto nero, arriva dove arriva il gatto nero della 2D (19). I villaggi (25, 33, 44, 50) non chiedono mai ciò che non si fa
   ancora al loro livello. Il banco apre 4 ordini al 17, 5 al 29, 6 al 42, 8 al 54. Le casse della mongolfiera chiedono fino a 3 pezzi da subito (come in 2D).
 

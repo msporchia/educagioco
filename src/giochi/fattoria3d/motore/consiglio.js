@@ -13,7 +13,7 @@ import { tempoBreve } from '../dati/tempo.js'
 import { SILOS, siloDi } from '../dati/silos.js'
 
 /** Le azioni che il consiglio sa chiedere alla vista: `che` e i campi che servono. */
-export const FORME = ['semina', 'raccogli', 'macchina', 'costruisci', 'banco', 'livelli', 'home', 'inventario']
+export const FORME = ['semina', 'raccogli', 'macchina', 'costruisci', 'banco', 'livelli', 'home']
 
 const GIRI = 6
 const nomeDi = k => ((merceDi(k) || {}).nome || k).toLowerCase()
@@ -27,7 +27,7 @@ const il = t => {
 
 const ETICHETTE = {
   semina: () => '🌱 Semina', raccogli: () => '✂️ Raccogli', banco: () => '🧺 Apri il banco', livelli: () => '⭐ I livelli', home: () => '🎮 Vai ai giochi',
-  macchina: a => `${dove(a.tipo).emoji} Apri ${il(a.tipo)}`, costruisci: () => '🏗 Costruisci', inventario: () => '🎒 Apri la dispensa',
+  macchina: a => `${dove(a.tipo).emoji} Apri ${il(a.tipo)}`, costruisci: () => '🛒 Compra',
   magazzino: a => `${SILOS[a.silo].emoji} Apri ${SILOS[a.silo].art} ${SILOS[a.silo].nome.toLowerCase()}`,
 }
 const dai = (testo, azione = null) => ({ testo, azione, etichetta: azione ? ETICHETTE[azione.che](azione) : '' })

@@ -31,7 +31,7 @@ ancora aperte stanno in [../da-fare.md](../da-fare.md).
 | ricette | 57 | 49 in `RICETTE` (46 della 2D e i tre piatti di pancetta, solo 3D), più le 9 dei mangimi in `dati/mangime.js` |
 | macchine | 14 | 18 (le 14 macchine e le 4 botteghe, che in 3D sono edifici) |
 | recinti del cortile | 11 | 10 (pecore, galline, mucche, anatre, maiali, capre, conigli, alpaca, asini, arnie; la peschiera è la pesca) |
-| bestie di casa (si comprano, hanno bisogni) | 7 | 4 (beagle, gatto rosso, coniglio, pappagallo; bobtail, gatto bianco e nero e gatto nero sono i compagni gratis Watson, Sherlock e Pepe) |
+| bestie di casa (si comprano, hanno bisogni) | 7 | tutte, più sei razze nuove (beagle, gatto rosso, coniglio, pappagallo; bobtail, gatto bianco e nero e gatto nero sono Watson, Sherlock e Pepe, e c'è Golia): tutte si adottano, [../adozioni.md](../adozioni.md) |
 | addobbi per le bestie | 12 (7 in vendita) | 12, tutti in vendita, anche su Watson e i gatti |
 | botteghe del paese | 4 | 4 (G7: [../botteghe.md](../botteghe.md)) |
 | clienti del banco | 16 (per mestiere) | 10 (per tutti) |

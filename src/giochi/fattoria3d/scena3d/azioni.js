@@ -34,6 +34,8 @@ export class Azioni {
       case 'conigliera': case 'alpaca': case 'asini': case 'arnie': return this.curaBestie(cosa)      // il secondo cortile (giro G5)
       case 'bacheca': case 'bancarella': pezzi.salta(cosa.id); return this.c.ui.apriBanco()      // il foglio degli ordini
       case 'fontana': pezzi.salta(cosa.id); fx.parla('Che bella!'); return
+      case 'ciotola_bestia': pezzi.salta(cosa.id); return this.c.ui.apriCiotola && this.c.ui.apriCiotola(cosa.bestia)      // docs/fattoria3d/cura-sul-prato.md
+      case 'tinozza': pezzi.salta(cosa.id); if (!this.m.cura.sporche().length) return fx.parla('Sono tutti puliti!'); return this.c.ui.apriTinozza && this.c.ui.apriTinozza()
       case 'molo': case 'molo_v': return this.pescaDalMolo(cosa)         // toccare il molo: si lancia in punta
       case 'stagno': case 'laghetto': return this.pescaSu(Math.floor(this.centro(cosa).x), Math.floor(this.centro(cosa).z))      // l'acqua costruita: la pesca (se il tocco non l'ha già fatto)
       case 'trattore': pezzi.salta(cosa.id); return this.c.ui.apriMappa && this.c.ui.apriMappa()      // porta ai vicini (docs/fattoria3d/vicini.md)
@@ -42,44 +44,28 @@ export class Azioni {
     }
   }
 
-  // ── i campi ──
-  campo(c) {
-    const m = this.m
-    if (m.campoMaturo(c)) return this.raccogli(c)
-    if (m.campoVuoto(c)) return this.c.ui.scegliSeme(k => this.semina(c, k))
-    this.c.fx.parla(`Sta crescendo… ${tempoBreve(m.restoSecondi(c) * 1000)}`)
-  }
+  // ── i campi: un tocco porta l'attrezzo (attrezzi.js), qui c'è solo quello che fa il dito che passa. Tornano false se non si è potuto ──
+  campo(c) { this.c.fx.parla(`Sta crescendo… ${tempoBreve(this.m.restoSecondi(c) * 1000)}`) }
   semina(c, coltura) {
-    const { eroe, fx, ui } = this.c, p = this.centro(c)
-    eroe.faccia(p)
-    eroe.avvia('semina', 1.1, t => {
-      if (t > 0.5 && !eroe.az.fatto.has('s')) {
-        eroe.az.fatto.add('s'); this.m.semina(c.id, coltura)
-        fx.scoppietta(p.clone().setY(0.4), 0x8a6a3a, 14, 1.2, 1.4); ui.cambio()
-      }
-    })
+    const { fx, ui } = this.c, r = this.m.semina(c.id, coltura)
+    if (!r.ok) { this.dici(dettoDiRifiuto(r, { per: 'seminare' })); return false }
+    fx.scoppietta(this.centro(c).setY(0.4), 0x8a6a3a, 14, 1.2, 1.4); ui.cambio()
+    return true
   }
   // raccogliere un campo costa il gesto della 2D (🪙1–2) e lo scomparto del raccolto ha un tetto: si guarda prima, così il campo non resta a metà
-  // (anche dalla coda di ✂️ armato: falciare senza guardare staccava tre tessere e l'ultima, che consegna, era rifiutata)
   raccogli(c) {
     const pr = this.m.provaRaccolta(c.id)
-    if (!pr.ok) return this.dici(dettoDiRifiuto(pr, { per: 'raccogliere' }))
-    this.falcia(c)
-  }
-  falcia(c) {
-    const { eroe, fx, ui } = this.c, p = this.centro(c)
-    eroe.avvia('falcia', 1.7, t => {
-      c.tile.forEach((tt, k) => {
-        const quando = 0.12 + k * 0.2                  // t è la frazione 0..1 del gesto
-        if (tt === null || t <= quando || eroe.az.fatto.has(k)) return
-        const r = this.m.raccogliTessera(c.id, k); if (!r.ok) return
-        eroe.az.fatto.add(k)
-        const q = new THREE.Vector3(p.x + (k % 2 ? 0.5 : -0.5), 0.3, p.z + (k < 2 ? -0.5 : 0.5)), col = COLTURE[r.coltura]
-        fx.scoppietta(q, this.c.colore(r.coltura), 10, 1.8, 2.6)
-        if (r.consegnato) fx.volo((col.pezzo ? '+1' : '+1 ' + col.emoji) + (r.costo ? ` · −🪙 ${r.costo}` : ''), q, 1.0, r.coltura)         // il campo intero rende uno: l'ultima tessera lo consegna e paga il gesto
-        ui.cambio()
-      })
+    if (!pr.ok) { this.dici(dettoDiRifiuto(pr, { per: 'raccogliere' })); return false }
+    const { fx, ui } = this.c, p = this.centro(c)
+    ;[...c.tile].forEach((tt, k) => {
+      if (tt === null) return
+      const r = this.m.raccogliTessera(c.id, k); if (!r.ok) return
+      const q = new THREE.Vector3(p.x + (k % 2 ? 0.5 : -0.5), 0.3, p.z + (k < 2 ? -0.5 : 0.5)), col = COLTURE[r.coltura]
+      fx.scoppietta(q, this.c.colore(r.coltura), 10, 1.8, 2.6)
+      if (r.consegnato) fx.volo((col.pezzo ? '+1' : '+1 ' + col.emoji) + (r.costo ? ` · −🪙 ${r.costo}` : ''), q, 1.0, r.coltura)         // il campo intero rende uno: l'ultima tessera lo consegna e paga il gesto
     })
+    ui.cambio()
+    return true
   }
 
   // ── le pecore: prima si tosa, poi si nutre ──

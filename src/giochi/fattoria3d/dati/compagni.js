@@ -8,20 +8,27 @@ import { ANIMALI_2D } from './parita2d.js'
 // Il ripiego quando il profilo non dice se è contadino o contadina: di solito lo dice `personaDi(aspettoDi())` (dati/abiti.js, docs/fattoria3d/guardaroba.md).
 export const ASPETTO_ERO = 'contadino'
 
-// `liv`: il livello a cui arriva (come `liv` sui pezzi: `roba(liv)` lo raccoglie). Pepe, il gatto nero, arriva dove arriva il gatto nero della 2D (19); gli altri tre no: sono gli animali di casa e arrivano per primi. Il bobtail e il gatto bianco e nero hanno il nome vero di casa (Watson, Sherlock, Irene) e arrivano per primi (livelli 1-3).
+// I cinque animali veri di casa: girano per la fattoria (Watson segue il contadino, i gatti vanno per conto loro). Dal 3/11/2026 **non arrivano più da soli col livello**: si adottano
+// dal menu Costruisci → Animali (`dati/bestie.js`, `CURATI`) e il bambino sceglie il nome. `liv` e `prezzo` sono quelli dell'adozione: il livello da cui si può prendere e le monete.
+// Il bobtail, il gatto bianco e nero e il gatto nero costavano 90/3, 75/10 e 75/19 nella 2D; Irene e Golia (gatta calico e gatto nero, anche loro veri) stanno fra quelli.
 export const COMPAGNI = {
-  watson: { nome: 'Watson', tipo: 'cane',  variante: 'bobtail',   liv: 1,  verso: 'Bau!', arrivo: 'Watson è arrivato!' },
-  sherlock: { nome: 'Sherlock', tipo: 'gatto', variante: 'bianconero', liv: 2,  verso: 'Prrr…', arrivo: 'Sherlock, il gatto, è arrivato!' },
-  irene:   { nome: 'Irene',   tipo: 'gatto', variante: 'calico',     liv: 3,  verso: 'Prrr…', arrivo: 'Irene, la gattina, è arrivata!' },
-  pepe:    { nome: 'Pepe',    tipo: 'gatto', variante: 'nero',       liv: ANIMALI_2D['gatto-nero'].liv, verso: 'Prrr…', arrivo: 'Pepe, il gatto nero, è arrivato!' },
+  watson:   { nome: 'Watson',   tipo: 'cane',  variante: 'bobtail',    liv: 3,  prezzo: ANIMALI_2D['cane-bobtail'].prezzo, verso: 'Bau!', arrivo: 'Watson è arrivato!' },
+  sherlock: { nome: 'Sherlock', tipo: 'gatto', variante: 'bianconero', liv: 10, prezzo: ANIMALI_2D['gatto-tuxedo'].prezzo, verso: 'Prrr…', arrivo: 'Sherlock, il gatto, è arrivato!' },
+  irene:    { nome: 'Irene',    tipo: 'gatto', variante: 'calico',     liv: 11, prezzo: ANIMALI_2D['gatto-tuxedo'].prezzo, verso: 'Prrr…', arrivo: 'Irene, la gattina, è arrivata!' },
+  golia:    { nome: 'Golia',    tipo: 'gatto', variante: 'golia',      liv: 14, prezzo: ANIMALI_2D['gatto-nero'].prezzo, verso: 'Prrr…', arrivo: 'Golia, il gatto nero, è arrivato!' },
+  pepe:     { nome: 'Pepe',     tipo: 'gatto', variante: 'nero',       liv: ANIMALI_2D['gatto-nero'].liv, prezzo: ANIMALI_2D['gatto-nero'].prezzo, verso: 'Prrr…', arrivo: 'Pepe, il gatto nero, è arrivato!' },
 }
-export const VARIANTI_GATTO = ['bianconero', 'calico', 'nero', 'rosso']       // `rosso` non è un compagno gratis: è il gatto che si compra (dati/bestie.js)
+/** A che livello arrivavano da soli, quando erano un regalo (fino al 2/11/2026): serve solo a chi ha un salvataggio di allora, che li tiene (`motore/stato.js`, `adozioni`). Golia non c'era. */
+export const LIVELLO_DI_UNA_VOLTA = { watson: 1, sherlock: 2, irene: 3, pepe: ANIMALI_2D['gatto-nero'].liv }
+export const VARIANTI_GATTO = ['bianconero', 'calico', 'nero', 'golia', 'rosso', 'grigio', 'tigrato', 'bianco']       // `rosso`, `grigio`, `tigrato` e `bianco` sono razze comprabili (dati/bestie.js), non compagni
 
-/** I compagni che ci sono a questo livello (o prima), nell'ordine di arrivo. `soloQuesto`: quelli che arrivano proprio ora. */
+/** I compagni che si possono adottare a questo livello (o prima), nell'ordine di livello. `soloQuesto`: quelli che si aprono proprio ora. */
 export function compagniAl(livello, soloQuesto = false) {
   const l = Math.max(1, livello | 0)
   return Object.entries(COMPAGNI).map(([id, c]) => ({ id, ...c })).filter(c => soloQuesto ? c.liv === l : c.liv <= l).sort((a, b) => a.liv - b.liv)
 }
+/** Quelli che un salvataggio di prima di questo livello aveva già (li regalava il livello): per tenerglieli. */
+export const compagniDiUnaVolta = livello => Object.keys(LIVELLO_DI_UNA_VOLTA).filter(id => LIVELLO_DI_UNA_VOLTA[id] <= Math.max(1, livello | 0))
 
 /** Il centro di una cella e il suo contrario. */
 export const centroCella = (i, j) => [i + 0.5, j + 0.5]
@@ -98,6 +105,46 @@ export function decidiGatto(s, rnd = Math.random) {
 // ── quando ci premi (docs/fattoria3d/compagni.md): sequenze di passi, scelte pure ──
 // Un passo: { stato, dur, sub?, guarda?: 'eroe'|'altro'|'via', ev?: [[secondi, nome]] } oppure { va: { r: [min, max], corsa?, verso?: 'cane'|'lontano' } }.
 // I nomi degli eventi li esegue `Compagni._evento`: bau bau2 bauP cuori raffica hrr ciu zzz prrr miao mrr posa.
+/* ══════════ la fame e la noia (docs/fattoria3d/cura-sul-prato.md): sequenze come quelle di «Quando ci premi»; `ostinata` non si ferma se il contadino cammina ══════════ */
+const ostinata = passi => { passi.ostinata = true; return passi }
+/** Ha fame: viene a chiamarti e torna alla ciotola. */
+export const sequenzaFame = cane => ostinata([
+  { va: { verso: 'eroe', r: [1, 1.8], corsa: cane } },
+  { stato: cane ? 'festa' : 'miao', dur: 1.6, guarda: 'eroe', ev: [[0.1, 'fame']] },
+  { va: { verso: 'ciotola', r: [1, 1.5] } },
+  { stato: 'siede', dur: 2.5, guarda: 'ciotola' },
+])
+/** Hai riempito la ciotola: corre, mangia, è contento. `finito` toglie il cibo. */
+export const sequenzaPasto = (cane, gatto) => ostinata([
+  { va: { verso: 'ciotola', r: [1, 1.3], corsa: true } },
+  { stato: 'mangia', dur: 3, guarda: 'ciotola', accosta: true, ev: [[2.9, 'finito']] },
+  { stato: cane ? 'festa' : gatto ? 'fusa' : 'sta', dur: 1.4, guarda: 'eroe', ev: [[0.1, 'cuori']] },
+])
+/** Si annoia: cosa combina, secondo chi è. Il coniglio e il pappagallo non portano niente. */
+export function scegliNoia (tipo, rnd = Math.random) {
+  const r = rnd()
+  if (tipo === 'cane') return r < 0.5 ? 'porta' : r < 0.75 ? 'corre' : 'scava'
+  if (tipo === 'gatto') return r < 0.6 ? 'porta' : 'corre'
+  return tipo === 'coniglio' && r < 0.4 ? 'scava' : 'corre'
+}
+export function sequenzaNoia (quale, tipo) {
+  const cane = tipo === 'cane'
+  if (quale === 'porta') return ostinata([
+    { stato: cane ? 'annusa' : 'sta', dur: 0.8, ev: [[0.1, 'prendi']] },
+    { va: { verso: 'eroe', r: [1.1, 1.6] } },
+    { stato: 'sta', dur: 0.4, guarda: 'eroe', ev: [[0.1, 'posaGioco']] },
+    { stato: cane ? 'festa' : 'siede', dur: 8, guarda: 'eroe', ev: [[0.2, 'verso']] },
+  ])
+  if (quale === 'scava') return [
+    { stato: 'mangia', dur: 2.4, ev: [[0.2, 'buca'], [1, 'zolle'], [1.8, 'zolle']] },
+    { stato: 'sta', dur: 0.8, guarda: 'eroe', ev: [[0.1, 'verso']] },
+  ]
+  return [
+    { va: { verso: 'giro', r: [2.5, 4.5], corsa: true } }, { va: { verso: 'giro', r: [2.5, 4.5], corsa: true } }, { va: { verso: 'giro', r: [2.5, 4.5], corsa: true } },
+    { stato: cane ? 'festa' : 'sta', dur: 1.2, guarda: 'eroe', ev: [[0.1, 'verso']] },
+  ]
+}
+export const DAVANTI_CASA = [0.5, -6.5]            // davanti alla porta: da qui partono i compagni, qui vicino nascono ciotole e tinozza
 export const SOGLIA_RICHIAMO = 2.5                 // celle: oltre, il contadino chiama Watson
 export const INTERAZIONI_CANE = ['festa', 'zampa', 'rotola', 'salta', 'riporta', 'starnuta', 'gira', 'sbadiglia']
 export const CAREZZE_PER_SONNO = 6, FINESTRA_CAREZZE = 10
@@ -114,7 +161,7 @@ export function sequenzaCane(id) {
   const g = 'eroe'
   switch (id) {
     case 'zampa': return [APERTURA(0.9), { stato: 'zampa', dur: 2.6, guarda: g, ev: [[0.7, 'bauP'], [0.9, 'cuori']] }]
-    case 'rotola': return [APERTURA(0.9), { stato: 'rotola', dur: 3.1, guarda: g, ev: [[0.9, 'cuori'], [1.5, 'raffica'], [2.1, 'hrr']] }]
+    case 'rotola': return [APERTURA(0.9), { stato: 'rotola', dur: 3.1, guarda: g, ev: [[0.9, 'cuori'], [1.5, 'raffica'], [2.1, 'hrr'], [2.6, 'fango']] }]
     case 'salta': return [APERTURA(0.8), { stato: 'salta', dur: 2.4, guarda: g, ev: [[0.2, 'bau2'], [1.5, 'cuori']] }]
     case 'riporta': return [APERTURA(0.8), { stato: 'riporta', dur: 3.0, guarda: g, ev: [[1.5, 'posa'], [1.7, 'bau'], [1.9, 'cuori']] }]
     case 'starnuta': return [APERTURA(0.8), { stato: 'starnuta', dur: 2.6, guarda: g, ev: [[0.9, 'ciu'], [1.9, 'bau']] }]
@@ -142,6 +189,7 @@ export const INDOLE_GATTO = {
   bianconero: [0.60, 0.20, 0.12, 0.08],
   calico:     [0.55, 0.15, 0.10, 0.20],
   nero:       [0.40, 0.20, 0.30, 0.10],
+  golia:      [0.50, 0.25, 0.15, 0.10],     // Golia: il gatto nero grande e buono, viene volentieri e fa le fusa
 }
 const INDOLE_COMUNE = [0.55, 0.20, 0.15, 0.10]
 /** La risposta di un gatto al tocco: 'avvicina' | 'fusaQui' | 'volta' | 'buffo'. `distanza` dall'eroe: già vicino, l'avvicinarsi si fa in una cella. */
@@ -162,13 +210,13 @@ export function sequenzaGatto(risposta, variante, vicino, rnd = Math.random) {
     if (composto) passi.push({ stato: 'siede', dur: 3.0, guarda: g, ev: [[0.4, 'prrr'], [0.9, 'cuori']] })
     else {
       passi.push({ stato: 'struscia', dur: 3.0, guarda: g, ev: [[0.2, 'prrr'], [0.7, 'cuori'], [1.8, 'cuori']] })
-      if (variante === 'calico' && rnd() < 0.5) passi.push({ stato: 'rotola', dur: 2.2, guarda: g, ev: [[0.7, 'cuori']] })
+      if (variante === 'calico' && rnd() < 0.5) passi.push({ stato: 'rotola', dur: 2.2, guarda: g, ev: [[0.7, 'cuori'], [1.8, 'fango']] })
     }
     return passi
   }
   if (risposta === 'fusaQui') return [{ stato: 'fusa', dur: 3.2, guarda: g, ev: [[0.3, 'prrr'], [1.0, 'cuori']] }]
   if (risposta === 'volta') return [{ stato: 'stiracchia', dur: 2.4, guarda: g, ev: [[1.0, 'mrr']] }, { stato: 'volta', dur: 1.6, guarda: 'via' }]
-  return rnd() < 0.5 ? [{ stato: 'miao', dur: 2.2, guarda: g, ev: [[0.5, 'miao']] }] : [{ stato: 'rotola', dur: 2.6, guarda: g, ev: [[0.8, 'cuori']] }]
+  return rnd() < 0.5 ? [{ stato: 'miao', dur: 2.2, guarda: g, ev: [[0.5, 'miao']] }] : [{ stato: 'rotola', dur: 2.6, guarda: g, ev: [[0.8, 'cuori'], [2, 'fango']] }]
 }
 /** Il contadino chiama il gatto per nome? Solo se sta fermo e il gatto è oltre la soglia del richiamo (come per Watson); altrimenti il gatto risponde e basta. */
 export const chiamaIlGatto = (distanza, eroeFermo) => !!eroeFermo && distanza > SOGLIA_RICHIAMO

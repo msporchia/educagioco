@@ -8,7 +8,7 @@
 import { computed, inject } from 'vue'
 import Icona from './Icona.vue'
 import Lastra from './Lastra.vue'
-import { nomeDellaMossa, LASTRE } from '../dati/mondo.js'
+import { nomeDellaMossa, LASTRE, VERSI } from '../dati/mondo.js'
 import { eApri, eSe, valoreDi } from '../dati/carte.js'
 
 defineOptions({ name: 'Carte' })
@@ -43,6 +43,7 @@ const valoreNodo = n => (n.che === 'se' ? n.colore : n.volte ?? n.fino)
 function testaInParole(n) {
   const v = valoreNodo(n)
   const colore = c => (c === 'casa' ? 'a casa' : `alla lastra ${(LASTRE[c] || {}).nome || c}`)
+  if (n.che === 'se' && VERSI[v]) return `se ${VERSI[v].nome} si passa`
   if (n.che === 'se') return v == null ? 'se: che colore?' : `se sei sulla lastra ${(LASTRE[v] || {}).nome || v}`
   if (v == null) return 'ripeti: quante volte?'
   return typeof v === 'number' ? `ripeti ${v} volte` : `ripeti fino ${colore(v)}`

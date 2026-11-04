@@ -1,15 +1,29 @@
 // Dentro la casa (docs/fattoria3d/casa.md), sopra la base degli interni (interno3d.js): le stanze comprate col loro pavimento e le pareti,
-// i muri con le porte, i mobili e il mobile in mano. Le regole sono del motore (`motore.compraMobile`, `spostaMobile`…), le finestre della
-// vista (`ui`).
+// i muri con le porte, le stanze in vendita col loro cartello, i mobili e il mobile in mano. Le regole sono del motore (`motore.compraMobile`,
+// `spostaMobile`…), le finestre della vista (`ui`).
 //
 // `ui`: cambio(), fogliAperti(), apriMobile(id), apriGuardaroba(), esci(), offriStanza(id), mano(info | null).
 import * as THREE from 'three'
-import { Interno3d, pavimentoDi, muroDi, muroEsterno } from './interno3d.js'
+import { Interno3d, pavimentoDi, muroDi, muroEsterno, materiale } from './interno3d.js'
 import { creaAnteprime } from './anteprime.js'
 import { fantasma, buttaFantasma, tingi } from './modelli.js'
 import { creaMobile } from './mobili.js'
 import { STANZE, STANZA, MOBILI, ARMADIO, PAVIMENTI, PORTA_DI_CASA, INGRESSO, LARGHEZZA, PROFONDITA,
          origine, stanzaDi, confinano, portaFra, misureMobile, ruotabileMobile } from '../dati/interni.js'
+
+const CARTELLO_ALTO = 1.25, DITO_LARGO = 14
+const SOPRA_LA_STRISCIA = 1.8                                  // quanto la camera si sposta verso il basso, perché la stanza stia sopra la striscia dei colori
+const BORDO_LATI = 56, BORDO_SU = 84, BORDO_GIU = 100          // un cartello fuori schermo resta sul bordo, sotto la testata e sopra i tasti
+
+/** Il pavimento accennato di una stanza in vendita: un tratteggio sul buio, come un lotto da comprare fuori. */
+const pavimentoInVendita = () => materiale('in-vendita', () => {
+  const n = 32, c = document.createElement('canvas'); c.width = STANZA.w * n; c.height = STANZA.d * n
+  const x = c.getContext('2d')
+  x.fillStyle = 'rgba(255,211,106,.14)'; x.fillRect(0, 0, c.width, c.height)
+  x.strokeStyle = '#ffd36a'; x.lineWidth = 5; x.setLineDash([18, 12]); x.strokeRect(6, 6, c.width - 12, c.height - 12)
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace
+  return new THREE.MeshBasicMaterial({ map: t, transparent: true })
+})
 
 export class Casa3d extends Interno3d {
   constructor({ canvas, sopra, motore, ui, qualita, abito = null }) {
@@ -19,13 +33,15 @@ export class Casa3d extends Interno3d {
     this.mobili = new Map()              // id → { grp, firma }
     this.badge = new Map()               // stanza da comprare → cartello
     this.mano = null                     // il mobile in mano: { tipo, id, i, j, rot, colore, trama, grp, ok }
+    this.prova = null                    // pavimento e pareti in prova: { stanza, finitura }, finché non si pagano
+    this._qui = 0                        // la stanza dove sta il contadino (sulle porte, l'ultima)
     this._firmaStanze = ''
     this.sincronizza()
   }
 
   // ── cosa si vede: stanze e muri (rifatti quando cambiano le stanze o le loro finiture), mobili (uno per uno) ──
   sincronizza() {
-    const I = this.m.s.interni, firma = JSON.stringify([I.stanze, I.finiture])
+    const I = this.m.s.interni, firma = JSON.stringify([I.stanze, I.finiture, this.prova])
     if (firma !== this._firmaStanze) { this._firmaStanze = firma; this._rifaiStanze(I) }
     const visti = new Set()
     for (const o of I.mobili) {
@@ -46,9 +62,9 @@ export class Casa3d extends Interno3d {
   }
   _rifaiStanze(I) {
     this.svuotaStanze()
-    const tua = id => I.stanze.includes(id)
+    const tua = id => I.stanze.includes(id), fin = id => this.prova?.stanza === id ? this.prova.finitura : I.finiture[id]
     for (const id of I.stanze) {                                          // i pavimenti: fino a metà del muro, così fra muro e stanza non c'è il buio
-      const { i0, j0 } = origine(STANZE[id]), p = PAVIMENTI.find(x => x.id === I.finiture[id].pavimento) || PAVIMENTI[0]
+      const { i0, j0 } = origine(STANZE[id]), p = PAVIMENTI.find(x => x.id === fin(id).pavimento) || PAVIMENTI[0]
       this.pavimento(i0 - 0.5, j0 - 0.5, STANZA.w + 1, STANZA.d + 1, pavimentoDi(p))
     }
     // i muri: per ogni lato di una stanza tua; se dall'altra parte c'è un'altra stanza tua il muro è uno solo, con la porta in mezzo
@@ -61,18 +77,23 @@ export class Casa3d extends Interno3d {
         lati.push({ s, v: v && tua(v.id) ? v : null, dc, dr })
       }
     }
-    for (const l of lati) this._muro(l, I)
-    // le stanze da comprare: un cartello con il prezzo (il foglio della pianta dice il resto)
-    const vista = this.m.vistaInterni()
-    for (const st of vista.stanze) {
+    for (const l of lati) this._muro(l, fin)
+    // le stanze da comprare: il pavimento accennato e un cartello col prezzo
+    for (const st of this.m.vistaInterni().stanze) {
       const b = this.badge.get(st.id)
       if (st.apribile) {
-        const bb = b || this.fx.nuovoBadge(); bb.imposta(`＋ 🪙 ${st.prezzo}`, 'vendita'); this.badge.set(st.id, bb)
-      } else if (b) { b.imposta('', ''); this.badge.delete(st.id) }
+        this.badge.set(st.id, b || this.fx.nuovoBadge()); this._prezzoStanza = st.prezzo
+        this._inVendita(STANZE[st.id])
+      } else if (b) { b.togli(); this.badge.delete(st.id) }
     }
   }
+  _inVendita(s) {
+    const { i0, j0 } = origine(s), geo = new THREE.PlaneGeometry(STANZA.w, STANZA.d); geo.rotateX(-Math.PI / 2)
+    const pav = new THREE.Mesh(geo, pavimentoInVendita()); pav.position.set(i0 + STANZA.w / 2, 0.01, j0 + STANZA.d / 2)
+    this.stanze.add(pav)
+  }
   /** Un muro lungo un lato di `s`: dritto o con la porta. Ogni faccia col colore della sua stanza; fuori, i tronchi della casa. */
-  _muro({ s, v, dc, dr }, I) {
+  _muro({ s, v, dc, dr }, fin) {
     const { i0, j0 } = origine(s), W = STANZA.w, D = STANZA.d, orizzontale = dr !== 0
     let buco = null
     if (v) { const p = portaFra(s, v); buco = orizzontale ? p.i : p.j }
@@ -81,7 +102,7 @@ export class Casa3d extends Interno3d {
       orizzontale, buco, verso: orizzontale ? dr : dc,
       linea: orizzontale ? (dr < 0 ? j0 - 0.5 : j0 + D + 0.5) : (dc < 0 ? i0 - 0.5 : i0 + W + 0.5),        // il centro della riga di muro
       da: orizzontale ? i0 - 1 : j0 - 1, a: orizzontale ? i0 + W + 1 : j0 + D + 1,                         // anche gli angoli
-      dentro: muroDi(I.finiture[s.id]), fuori: v ? muroDi(I.finiture[v.id]) : muroEsterno(),
+      dentro: muroDi(fin(s.id)), fuori: v ? muroDi(fin(v.id)) : muroEsterno(),
     })
   }
 
@@ -103,9 +124,20 @@ export class Casa3d extends Interno3d {
     for (let a = -1; a <= x.w; a++) for (let b = -1; b <= x.d; b++) if (a < 0 || a >= x.w || b < 0 || b >= x.d) out.push([o.i + a, o.j + b])
     return out.filter(([i, j]) => this.m.calpestabileInCasa(i, j))
   }
+  /** Il cartello sotto il dito: sta sul muro, sopra un pavimento che è tuo, quindi non basta guardare la cella. */
+  _cartelloSotto(cx, cy) {
+    for (const [id, b] of this.badge) {
+      if (!b.visto) continue
+      const r = b.el.getBoundingClientRect()
+      if (cx > r.left - DITO_LARGO && cx < r.right + DITO_LARGO && cy > r.top - DITO_LARGO && cy < r.bottom + DITO_LARGO) return id
+    }
+    return null
+  }
   tocca(x, y) {
     const { ui, eroe } = this
     if (this.mano) return this.portaInMano(x, y)
+    const cartello = this._cartelloSotto(x, y)
+    if (cartello !== null) return ui.offriStanza(cartello)
     const id = this.mobileSotto(x, y)
     if (id !== null) {
       const o = this.m.s.interni.mobili.find(m => m.id === id)
@@ -152,9 +184,9 @@ export class Casa3d extends Interno3d {
   _aggiornaMano() {
     const h = this.mano; if (!h) return
     this._posa(h.grp, h.tipo, h.i, h.j, h.rot)
-    h.ok = this.m.mobileCiSta(h.tipo, h.i, h.j, h.rot, h.id).ok
+    const r = this.m.mobileCiSta(h.tipo, h.i, h.j, h.rot, h.id); h.ok = r.ok
     tingi(h.grp, h.ok)
-    this.ui.mano({ tipo: h.tipo, nuovo: h.id === null, ok: h.ok, gira: ruotabileMobile(h.tipo), prezzo: h.id === null ? MOBILI[h.tipo].prezzo : 0 })
+    this.ui.mano({ tipo: h.tipo, nuovo: h.id === null, ok: h.ok, motivo: r.motivo || null, gira: ruotabileMobile(h.tipo), prezzo: h.id === null ? MOBILI[h.tipo].prezzo : 0 })
   }
   /** Il dito porta il mobile in mano: il centro del mobile sotto il dito. */
   portaInMano(x, y) {
@@ -180,8 +212,20 @@ export class Casa3d extends Interno3d {
     if (avvisa) this.ui.mano(null)
   }
 
-  /** Dopo che il motore ha cambiato qualcosa (un colore, una stanza, un mobile messo via). */
+  /** Dopo che il motore ha cambiato qualcosa (un colore, un mobile messo via). */
   cambiato() { this.sincronizza() }
+  /** Una stanza comprata: la festa dove prima c'era il tratteggio. */
+  stanzaComprata(id) {
+    this.sincronizza()
+    const { i0, j0 } = origine(STANZE[id])
+    this.fx.scoppietta(new THREE.Vector3(i0 + STANZA.w / 2, 0.8, j0 + STANZA.d / 2), 0xffd24a, 28, 4, 4)
+  }
+  /** La stanza dove sta il contadino. */
+  stanzaQui() { return this._qui }
+  /** La camera sulla stanza di cui si scelgono i colori; la riporta sul contadino `tornaAllEroe`. */
+  guardaStanza(id) { const { i0, j0 } = origine(STANZE[id]); Object.assign(this.camera.libera, { on: true, x: i0 + STANZA.w / 2, z: j0 + STANZA.d / 2 + SOPRA_LA_STRISCIA }) }
+  /** Mostra una stanza con pavimento e pareti in prova (`finitura`), o com'è davvero (`stanza` null). */
+  provaFinitura(stanza, finitura = null) { this.prova = stanza === null ? null : { stanza, finitura }; this.sincronizza() }
   /** L'anteprima di un mobile col suo colore (`mobile:<tipo>:<colore>:<trama>`), fotografata col renderer di qui. */
   anteprima(chiave) {
     if (!this._anteprime) this._anteprime = creaAnteprime(this.renderer, k => { const [, t, c, tr] = k.split(':'); return creaMobile(t, c, tr === 'null' ? null : tr) })
@@ -189,11 +233,22 @@ export class Casa3d extends Interno3d {
   }
   anteprimaPronta(chiave) { return this._anteprime ? this._anteprime.leggi(chiave) : null }
 
-  /** I cartelli delle stanze da comprare, sopra il loro centro. */
+  /** Dove si aprirebbe la stanza `id`: il punto del muro della sua porta più vicina al contadino. */
+  _portaVerso(id) {
+    const e = this.eroe, porte = this.m.s.interni.stanze.filter(t => confinano(STANZE[t], STANZE[id])).map(t => portaFra(STANZE[t], STANZE[id]))
+    const lontano = p => Math.hypot(p.i + 0.5 - e.x, p.j + 0.5 - e.z)
+    return porte.reduce((a, b) => lontano(b) < lontano(a) ? b : a)
+  }
+  /** I cartelli delle stanze da comprare, sul muro dove si aprirebbe la porta: se è fuori schermo restano sul bordo con la freccia, perché si
+      compra solo da lì. Con un mobile in mano o un colore in prova non si vedono. */
   aggiorna() {
+    const qui = stanzaDi(Math.floor(this.eroe.x), Math.floor(this.eroe.z)), { width: W, height: H } = this.rect
+    if (qui && this.m.s.interni.stanze.includes(qui.id)) this._qui = qui.id
     for (const [id, b] of this.badge) {
-      const { i0, j0 } = origine(STANZE[id]), [x, y, visto] = this.proietta(new THREE.Vector3(i0 + STANZA.w / 2, 0, j0 + STANZA.d / 2), 0.4)
-      b.metti(x, y, visto && x > 20 && x < this.rect.width - 20 && y > 20 && y < this.rect.height - 60, true)
+      const p = this._portaVerso(id), [x, y] = this.proietta(new THREE.Vector3(p.i + 0.5, 0, p.j + 0.5), CARTELLO_ALTO)
+      const cx = Math.max(BORDO_LATI, Math.min(W - BORDO_LATI, x)), cy = Math.max(BORDO_SU, Math.min(H - BORDO_GIU, y))
+      b.imposta(`${x < cx ? '← ' : x > cx ? '→ ' : y < cy ? '↑ ' : y > cy ? '↓ ' : ''}＋ 🪙 ${this._prezzoStanza}`, 'vendita')
+      b.metti(cx, cy, !this.mano && !this.prova, true)
     }
   }
   via() {

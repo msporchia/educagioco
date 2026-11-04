@@ -114,8 +114,7 @@ La **bacheca in scena** (`pezzi.js`, `dal-sotterraneo.js`) mostra tanti fogliett
 banco chiuso senza bacheca né bancarella o al livello 1, aperto con una sola delle due, la bacheca che si compra e si mette, consegna e `mancano`, salto di livello consegnando, rifiuto con ritardo,
 salvataggio e migrazione dal v2.
 
-`integrazione/fattoria3d` (sezione «il banco»; non eseguita dopo il passaggio alla bacheca: serve la build), bersagli: `[data-f3="apri-banco"]` (tasto
-nell'Hud, assente al livello 1), `[data-f3="banco-pronti"]` (il pallino), `[data-f3="banco"]` (il foglio), `[data-f3="banco-chiuso"]`
+`integrazione/fattoria3d` (sezione «il banco»; non eseguita dopo il passaggio alla bacheca: serve la build), bersagli: `[data-f3="banco"]` (il foglio: si apre toccando la bacheca in scena, il tasto dell'HUD è stato tolto il 4/11/2026; finché la bacheca non c'è la sua carta ha il «!», `serveBacheca`), `[data-f3="banco-chiuso"]`
 (la spiegazione), `[data-f3="biglietto"]` e `[data-ordine="<idx>"]` (con `data-pronto`, `data-sel`) per i biglietti, `[data-f3="ordine-attesa"]`
 dentro il biglietto di un posto che riposa, `[data-f3="ordini-conta"]` (l'indicatore delle consegne); nel dettaglio `[data-dettaglio="<idx>"]`
 con `[data-chiede="<chiave>"]`, `[data-f3="premio"]`, `[data-f3="consegna"]` (`data-puoi`), `[data-f3="cambia"]` (il cestino) e `[data-f3="banco-msg"]`.

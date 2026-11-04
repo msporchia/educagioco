@@ -32,10 +32,11 @@ export const PORTA_DI_CASA = (() => { const { i0, j0 } = origine(STANZE[0]); ret
 /** Dove compare il contadino entrando: la prima cella dentro la porta. */
 export const INGRESSO = { i: PORTA_DI_CASA.i, j: PORTA_DI_CASA.j - 1 }
 
-/** Le celle davanti a ogni porta possibile di una stanza (anche verso una stanza non ancora tua): restano libere, se no non si passa. */
-export function soglieDi(s) {
+/** Le celle davanti alle porte che ci sono davvero in `s` (verso le stanze tue, e la porta di casa): restano libere, se no non si passa. Verso
+    una stanza non ancora tua la porta non c'è, e lì si arreda: comprandola, chi sta davanti si sposta (`compraStanza`). */
+export function soglieDi(s, stanze) {
   const out = []
-  for (const t of STANZE) if (t !== s && confinano(s, t)) {
+  for (const t of STANZE) if (t !== s && stanze.includes(t.id) && confinano(s, t)) {
     const p = portaFra(s, t), { i0, j0 } = origine(s)
     out.push([Math.min(Math.max(p.i, i0), i0 + STANZA.w - 1), Math.min(Math.max(p.j, j0), j0 + STANZA.d - 1)])
   }
@@ -85,6 +86,9 @@ export const PARETI = [
 /** La carta da parati: le stesse trame dei tessuti, tranne i quadri (su un muro sembrano piastrelle). */
 export const CARTE = TRAME.filter(t => t.id !== 'quadri')
 export const FINITURA_DI_SERIE = Object.freeze({ pavimento: 'parquet', pareti: 'crema', carta: 'unita' })
+/** Cambiare una finitura costa («una cosetta», docs/apprendimento/calibrazione.md): si paga solo quello che cambia. */
+export const PREZZI_FINITURE = Object.freeze({ pavimento: 20, pareti: 12, carta: 12 })
+export const prezzoFinitura = (prima, dopo) => Object.keys(PREZZI_FINITURE).reduce((n, k) => n + (dopo[k] !== prima[k] ? PREZZI_FINITURE[k] : 0), 0)
 
 // ── i mobili ──
 // `strato`: `pavimento` (occupa le celle), `tappeto` (sta sotto i mobili, ma un tappeto non va su un altro), `muro` (appeso alla parete di
@@ -125,6 +129,9 @@ export const MOBILI = Object.fromEntries([
   M('tappetino', 'Tappetino', 'tappeti', 2, 1, 6, 'stoffa', { strato: 'tappeto', colore: 'verde' }),
   M('quadro', 'Quadro', 'muro', 1, 1, 10, 'legno', { strato: 'muro', colore: 'miele' }),
   M('finestra', 'Finestra', 'muro', 1, 1, 14, 'stoffa', { strato: 'muro', colore: 'rosa', trame: true }),
+  M('finestra-larga', 'Finestra grande', 'muro', 2, 1, 22, 'stoffa', { strato: 'muro', colore: 'azzurro', trame: true }),
+  M('finestra-tonda', 'Finestra tonda', 'muro', 1, 1, 16, 'legno', { strato: 'muro', colore: 'miele' }),
+  M('finestra-fiori', 'Finestra coi fiori', 'muro', 1, 1, 18, 'vernice', { strato: 'muro', colore: 'verde' }),
   M('orologio', 'Orologio', 'muro', 1, 1, 9, 'vernice', { strato: 'muro', colore: 'rosso' }),
   M('specchio', 'Specchio', 'muro', 1, 1, 12, 'legno', { strato: 'muro', colore: 'bianco' }),
   M('mensola', 'Mensola', 'muro', 2, 1, 8, 'legno', { strato: 'muro', colore: 'noce' }),
@@ -164,6 +171,7 @@ export function guastiDegliInterni() {
     if (m.strato === 'muro' && m.d !== 1) g.push(`${m.id}: una cosa appesa è profonda una cella`)
     if (Math.max(m.w, m.d) > Math.min(STANZA.w, STANZA.d)) g.push(`${m.id}: non entra in una stanza`)
   }
+  for (const [k, p] of Object.entries(PREZZI_FINITURE)) if (!(p >= 6 && p <= 30)) g.push(`${k}: il prezzo ${p} è fuori dalla fascia 6–30`)
   for (let n = 1; n < PREZZI_STANZE.length; n++) if (!(PREZZI_STANZE[n] > PREZZI_STANZE[n - 1])) g.push(`la stanza ${n + 1} non costa più della ${n}`)
   if (PREZZI_STANZE.length !== MAX_STANZE) g.push('un prezzo per ogni stanza')
   if (PREZZI_STANZE[MAX_STANZE - 1] > 360) g.push('l\'ultima stanza sopra la fascia di una struttura')
