@@ -151,7 +151,7 @@ const sceltaTipo = computed(() => (scelta.value != null && eSe(fila.value[scelta
    testa offre solo quelli, un colore che non c'è non si può aspettare */
 const colori = computed(() => {
   const qui = new Set(((tappa.value && tappa.value.mappa) || []).join('').split('')
-    .map(ch => (LEGENDA[ch] || {}).lastra).filter(Boolean))
+    .map(ch => (LEGENDA[ch] || {}).lastra || (LEGENDA[ch] || {}).pulsante).filter(Boolean))
   return COLORI.filter(c => qui.has(c))
 })
 // l'ultima tappa di un gradino sulla strada del coniglio (per il cane: la fine del pascolo)

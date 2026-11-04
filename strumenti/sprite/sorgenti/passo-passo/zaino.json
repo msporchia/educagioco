@@ -7,8 +7,8 @@
   "isole": {
     "ripeti": { "caselle": 8, "cartello": [335, 492], "guerriero": { "isola": "grate-guerriero", "caselle": 5 } },
     "fino": { "caselle": 4, "cartello": [250, 82], "guerriero": { "isola": "nemici-guerriero", "caselle": 5 } },
-    "se": { "caselle": 2, "cartello": [880, 100], "guerriero": { "isola": "due-guerriero", "caselle": 5, "cartello": [1400, 150] } },
-    "mondo": { "caselle": 4, "cartello": [990, 755], "guerriero": { "isola": "castello-guerriero", "caselle": 5 } }
+    "se": { "caselle": 2, "cartello": [880, 100], "guerriero": { "isola": "due-guerriero", "caselle": 7, "cartello": [1400, 150] } },
+    "mondo": { "caselle": 4, "cartello": [990, 755], "guerriero": { "isola": "castello-guerriero", "caselle": 7 } }
   },
   "sentieri": [
     { "isola": "riva", "punti": [[92, 938], [100, 952], [140, 960], [200, 964], [260, 962], [310, 952], [335, 942]] },
@@ -26,12 +26,12 @@
     { "isola": "fino", "punti": [[588, 142], [630, 132], [665, 143], [695, 165], [715, 190], [720, 204]] },
     { "isola": "fino", "erba": true, "punti": [[718, 196], [745, 203], [770, 216]] },
 
-    { "isola": "se", "caselle": 2, "margini": [60, 60], "guerriero": 5, "margini-guerriero": [60, 60],
+    { "isola": "se", "caselle": 2, "margini": [60, 60], "guerriero": 7, "margini-guerriero": [60, 60],
       "punti": [[815, 216], [870, 212], [925, 205], [940, 170], [965, 140], [1000, 125], [1050, 124], [1100, 138],
                 [1150, 160], [1200, 190], [1225, 225], [1245, 250], [1265, 252]] },
     { "isola": "casetta", "punti": [[1335, 248], [1367, 240], [1425, 226], [1462, 288], [1463, 318]] },
 
-    { "isola": "mondo", "caselle": 4, "margini": [50, 90], "guerriero": 5, "margini-guerriero": [50, 40],
+    { "isola": "mondo", "caselle": 4, "margini": [50, 90], "guerriero": 7, "margini-guerriero": [50, 40],
       "punti": [[864, 664], [900, 660], [935, 660], [940, 625], [950, 590], [972, 568], [1000, 558], [1050, 572],
                 [1092, 577], [1130, 587], [1160, 610], [1172, 640], [1165, 655], [1130, 672], [1090, 678], [1050, 678],
                 [1020, 664]] }
