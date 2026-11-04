@@ -1,10 +1,11 @@
 /* Dentro la casa della fattoria 3D, senza browser: i dati (mobili, colori, trame, prezzi nella fascia), le stanze che si comprano una
-   attaccata all'altra fino a sei, i mobili che stanno solo dentro una stanza tua, senza coprire le porte né un altro mobile (il tappeto sotto
-   sì, le cose appese solo sulla parete di fondo), l'armadio che c'è sempre e non si mette via, i gesti gratis (spostare, girare, colorare,
-   pavimento e pareti), la spesa che conta come esperienza, e lo stato rotto o di prima che si rimette in forma.
+   attaccata all'altra fino a sei, i mobili che stanno solo dentro una stanza tua, senza coprire le porte che ci sono né un altro mobile (il
+   tappeto sotto sì, le cose appese solo sulla parete di fondo), le porte nuove che fanno spostare chi sta davanti, l'armadio che c'è sempre e
+   non si mette via, i gesti gratis (spostare, girare, colorare), pavimento e pareti che si pagano, la spesa che conta come esperienza, e lo
+   stato rotto o di prima che si rimette in forma.
    `node test/esegui.mjs fattoria3d-casa`
    tempo: 1 */
-import { MOBILI, STANZE, MAX_STANZE, PREZZI_STANZE, ARMADIO, INGRESSO, PORTA_DI_CASA, origine, soglieDi, portaFra, guastiDegliInterni } from '../../src/giochi/fattoria3d/dati/interni.js'
+import { MOBILI, STANZE, MAX_STANZE, PREZZI_STANZE, PREZZI_FINITURE, ARMADIO, INGRESSO, PORTA_DI_CASA, origine, stanzaDi, soglieDi, portaFra, guastiDegliInterni } from '../../src/giochi/fattoria3d/dati/interni.js'
 import { interniInForma, interniIniziali } from '../../src/giochi/fattoria3d/motore/interni.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { normalizza } from '../../src/giochi/fattoria3d/motore/stato.js'
@@ -59,15 +60,36 @@ controlla('l\'armadio è di serie e non costa', MOBILI[ARMADIO].diSerie && MOBIL
   uguale('un tappeto sopra un tappeto no', f.compraMobile('tappetino', i0 + 1, j0 + 2).motivo, 'occupato')
   uguale('fuori dalla casa no', f.compraMobile('sedia', -5, -5).motivo, 'fuori')
   uguale('in una stanza non tua no', f.compraMobile('sedia', origine(STANZE[1]).i0, origine(STANZE[1]).j0 + 1).motivo, 'fuori')
-  const [si, sj] = soglieDi(STANZE[0])[0]
-  uguale('davanti a una porta no', f.compraMobile('sedia', si, sj).motivo, 'porta')
+  uguale('davanti alla porta di casa no', f.compraMobile('sedia', INGRESSO.i, INGRESSO.j).motivo, 'porta')
   uguale('un quadro va sulla parete di fondo', f.compraMobile('quadro', i0 + 3, j0 + 2).motivo, 'muro')
   controlla('sulla parete di fondo sì, anche sopra un mobile', f.compraMobile('quadro', i0, j0).ok)
   uguale('l\'armadio non si compra', f.compraMobile(ARMADIO, i0 + 4, j0 + 4).motivo, 'di-serie')
   controlla('un mobile per terra non si cammina', !f.calpestabileInCasa(i0 + 1, j0 + 3))
 }
 
-/* ══════════ 5. i gesti gratis: spostare, girare, colorare, metti via e rimetti, pavimento e pareti ══════════ */
+/* ══════════ 5. le porte: tiene libero solo quella che c'è; quella nuova fa spostare chi sta davanti ══════════ */
+{
+  const { f } = nuova()
+  const { i0, j0 } = origine(STANZE[0]), ovest = portaFra(STANZE[0], STANZE[1])
+  uguale('una stanza sola ha una soglia sola, la porta di casa', soglieDi(STANZE[0], [0]), [[INGRESSO.i, INGRESSO.j]])
+  const divano = f.compraMobile('divano', i0, j0 + 1, 1)
+  controlla('il divano girato sta lungo il muro, dove un giorno ci sarà una porta', divano.ok)
+  const quadro = f.compraMobile('quadro', i0 + 3, j0)
+  controlla('un quadro sta sulla parete di fondo dove la porta ancora non c\'è', quadro.ok)
+  const r = f.compraStanza(1), d = f.s.interni.mobili.find(m => m.id === divano.id)
+  uguale('comprando la stanza accanto il divano si sposta e lo si dice', r.spostati, ['divano'])
+  controlla('resta girato com\'era e nella sua stanza', d.rot === 1 && stanzaDi(d.i, d.j) === STANZE[0])
+  controlla('si passa dalla porta nuova', !!percorso((i, j) => f.calpestabileInCasa(i, j), () => false, [INGRESSO.i, INGRESSO.j], [[ovest.i - 1, ovest.j]]))
+  uguale('adesso lì davanti non ci sta', f.spostaMobile(d.id, i0, j0 + 1, 1).motivo, 'porta')
+  uguale('comprando la stanza dietro il quadro si sposta', f.compraStanza(3).spostati, ['quadro'])
+  uguale('sulla porta di fondo non si appende niente', f.compraMobile('quadro', i0 + 3, j0).motivo, 'porta')
+  const piena = nuova().f
+  const lungo = piena.compraMobile('divano', i0, j0 + 1, 1)
+  for (let p; (p = piena.postoPerMobile('sedia', 0)) && stanzaDi(p.i, p.j) === STANZE[0];) piena.compraMobile('sedia', p.i, p.j, p.rot)
+  uguale('in una stanza piena il mobile finisce in quella nuova', [piena.compraStanza(1).spostati, stanzaDi(piena.s.interni.mobili.find(m => m.id === lungo.id).i, piena.s.interni.mobili.find(m => m.id === lungo.id).j).id], [['divano'], 1])
+}
+
+/* ══════════ 6. i gesti gratis: spostare, girare, colorare, metti via e rimetti ══════════ */
 {
   const { f, b } = nuova()
   const { i0, j0 } = origine(STANZE[0])
@@ -78,14 +100,26 @@ controlla('l\'armadio è di serie e non costa', MOBILI[ARMADIO].diSerie && MOBIL
   controlla('si colora', f.tingiMobile(id, 'verde', 'stelle').ok)
   controlla('si mette via', f.mettiViaMobile(id).ok && f.s.interni.mobili.find(m => m.id === id).i === null)
   controlla('si rimette', f.spostaMobile(id, i0 + 1, j0 + 1, 0).ok)
-  controlla('pavimento e pareti', f.rifiniStanza(0, { pavimento: 'scacchi', pareti: 'rosa', carta: 'cuori' }).ok)
   uguale('niente di tutto questo costa né dà esperienza', [b.monete, f.esperienza()], [prima, xp])
   const arm = f.s.interni.mobili.find(m => m.tipo === ARMADIO)
   uguale('l\'armadio non si mette via', f.mettiViaMobile(arm.id).motivo, 'di-serie')
   uguale('un colore che non c\'è torna quello di serie', (f.tingiMobile(id, 'oro'), f.s.interni.mobili.find(m => m.id === id).colore), MOBILI.letto.colore)
 }
 
-/* ══════════ 6. lo stato: si salva e si rilegge, quello di prima nasce, quello rotto si rimette in forma ══════════ */
+/* ══════════ 7. pavimento e pareti si pagano: solo quello che cambia, ed è esperienza ══════════ */
+{
+  const { f, b } = nuova()
+  const xp = f.esperienza(), r = f.rifiniStanza(0, { pavimento: 'scacchi' })
+  controlla('il pavimento costa e conta come esperienza', r.ok && r.costo === PREZZI_FINITURE.pavimento && b.monete === 5000 - r.costo && f.esperienza() === xp + r.costo)
+  uguale('si paga solo quello che cambia', f.rifiniStanza(0, { pavimento: 'scacchi', pareti: 'rosa', carta: 'cuori' }).costo, PREZZI_FINITURE.pareti + PREZZI_FINITURE.carta)
+  uguale('lo stesso colore non costa', f.rifiniStanza(0, { pareti: 'rosa' }).costo, 0)
+  uguale('la finitura è cambiata', f.s.interni.finiture[0], { pavimento: 'scacchi', pareti: 'rosa', carta: 'cuori' })
+  uguale('una stanza non tua no', f.rifiniStanza(3, { pareti: 'rosa' }).motivo, 'non-esiste')
+  const povera = nuova(5).f
+  uguale('senza monete no, e niente cambia', [povera.rifiniStanza(0, { pareti: 'rosa' }).motivo, povera.s.interni.finiture[0].pareti], ['poche-monete', 'crema'])
+}
+
+/* ══════════ 8. lo stato: si salva e si rilegge, quello di prima nasce, quello rotto si rimette in forma ══════════ */
 {
   const { f } = nuova()
   f.compraStanza(1); f.compraMobile('divano', 9, 10, 0, 'blu', 'righe')

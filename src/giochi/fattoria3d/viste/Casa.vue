@@ -1,9 +1,10 @@
 <script setup>
-// Dentro la casa, la parte che si tocca (docs/fattoria3d/casa.md): la testata con «Esci», i due tasti (Arreda, Stanze), la barra del mobile
-// in mano (gira, compra o metti qui, lascia) e i tre fogli: il catalogo dei mobili, il foglio di un mobile (colore, trama, gira, sposta,
-// metti via; l'armadio apre anche il guardaroba) e la pianta (le stanze da comprare, pavimento e pareti). Riceve l'oggetto di casa.js.
+// Dentro la casa, la parte che si tocca (docs/fattoria3d/casa.md): la testata con «Esci», i due tasti (Arreda, Colori), la barra del mobile
+// in mano (gira, compra o metti qui, lascia), la striscia di pavimento e pareti (si provano sulla stanza, si pagano qui) e i due fogli: il
+// catalogo dei mobili e il foglio di un mobile (colore, trama, gira, sposta, metti via; l'armadio apre anche il guardaroba). Riceve l'oggetto di casa.js.
 import { reactive } from 'vue'
-import { MOBILI, SCHEDE_MOBILI, COLORI, TRAME, PAVIMENTI, PARETI, CARTE, PREZZI_STANZE, MAX_STANZE } from '../dati/interni.js'
+import { SCHEDE_MOBILI, COLORI, TRAME, PAVIMENTI, PARETI, CARTE, PREZZI_FINITURE } from '../dati/interni.js'
+import { dettoInCasa } from '../casa.js'
 import { disegnaTrama } from '../scena3d/trame-pure.js'
 import '../stile-casa.css'
 
@@ -12,10 +13,11 @@ const p = defineProps({
   monete: { type: Number, default: 0 },
 })
 defineEmits(['guardaroba'])
-const { foglio, scheda, mobile, stanzaScelta, mano, messaggio, vista, voci, eArmadio } = p.casa
+const { foglio, scheda, mobile, tinte, prezzoTinte, mano, messaggio, vista, voci, eArmadio } = p.casa
 const c = p.casa
 const vaiScheda = id => { scheda.value = id }
-const scegliStanza = id => { stanzaScelta.value = id; messaggio.value = '' }
+const PARTI = [{ id: 'pavimento', nome: 'Pavimento' }, { id: 'pareti', nome: 'Pareti' }, { id: 'carta', nome: 'Carta' }]
+const vaiParte = id => { tinte.value.parte = id }
 
 // le foto dei mobili: quella pronta se c'è, se no si chiede e arriva
 const foto = reactive({})
@@ -40,8 +42,7 @@ function campione(colore, trama) {
   return campioni[k]
 }
 const coloreHex = (materiale, id) => (COLORI[materiale].find(x => x.id === id) || COLORI[materiale][0]).c
-const finitura = () => vista.value?.stanze.find(s => s.id === stanzaScelta.value)
-const prossimoPrezzo = () => { const n = vista.value ? vista.value.stanze.filter(s => s.tua).length : 1; return n < MAX_STANZE ? PREZZI_STANZE[n] : null }
+const colorePareti = () => (PARETI.find(x => x.id === tinte.value.prova.pareti) || PARETI[0]).c
 </script>
 
 <template>
@@ -51,21 +52,45 @@ const prossimoPrezzo = () => { const n = vista.value ? vista.value.stanze.filter
       <button class="f3-int-esci" data-f3="esci-casa" @click="c.esci()">🚪 Esci</button>
     </header>
 
-    <!-- i tasti: arredare e le stanze -->
-    <div v-if="!foglio && !mano" class="f3-int-azioni">
+    <!-- i tasti: arredare e dipingere (le stanze nuove si comprano toccandole) -->
+    <div v-if="!foglio && !mano && !tinte" class="f3-int-azioni">
       <button data-f3="apri-arreda" @click="c.apriCatalogo()">🛋️ Arreda</button>
-      <button data-f3="apri-pianta" @click="c.apriPianta()">🗺️ Stanze</button>
+      <button data-f3="apri-tinte" @click="c.apriTinte()">🎨 Colori</button>
     </div>
 
     <!-- il mobile in mano: si trascina o si tocca dove va -->
     <div v-if="mano" class="f3-int-mano" data-f3="mano" :data-ok="mano.ok">
-      <p class="riga">{{ messaggio || (mano.ok ? 'Trascinalo dove vuoi' : 'Lì non ci sta: spostalo') }}</p>
+      <p class="riga" data-f3="mano-riga">{{ messaggio || (mano.ok ? 'Trascinalo dove vuoi' : dettoInCasa(mano)) }}</p>
       <div class="tasti">
         <button v-if="mano.gira" class="tondo" data-f3="mano-gira" aria-label="gira" @click="c.gira()">↻</button>
         <button class="si" :class="{ spenta: !mano.ok || (mano.nuovo && mano.prezzo > monete) }" data-f3="mano-posa" @click="c.posa()">
           {{ mano.nuovo ? `🛒 Compra 🪙${mano.prezzo}` : '✓ Metti qui' }}
         </button>
         <button class="no" data-f3="mano-lascia" @click="c.lascia()">✖️</button>
+      </div>
+    </div>
+
+    <!-- pavimento e pareti: si provano sulla stanza, si pagano qui -->
+    <div v-if="tinte" class="f3-int-tinte" data-f3="tinte" :data-stanza="tinte.stanza">
+      <nav class="f3-int-schede">
+        <button v-for="s in PARTI" :key="s.id" :class="{ su: tinte.parte === s.id }" :data-parte="s.id" @click="vaiParte(s.id)">{{ s.nome }} 🪙{{ PREZZI_FINITURE[s.id] }}</button>
+      </nav>
+      <div v-if="tinte.parte === 'pavimento'" class="f3-int-campioni">
+        <button v-for="pv in PAVIMENTI" :key="pv.id" class="campione largo" :class="{ su: tinte.prova.pavimento === pv.id, [pv.motivo]: true }" :style="{ backgroundColor: pv.c }"
+                :aria-label="pv.nome" :data-pavimento="pv.id" @click="c.provaTinta('pavimento', pv.id)"></button>
+      </div>
+      <div v-else-if="tinte.parte === 'pareti'" class="f3-int-campioni">
+        <button v-for="pr in PARETI" :key="pr.id" class="campione" :class="{ su: tinte.prova.pareti === pr.id }" :style="{ background: pr.c }"
+                :aria-label="pr.nome" :data-pareti="pr.id" @click="c.provaTinta('pareti', pr.id)"></button>
+      </div>
+      <div v-else class="f3-int-campioni">
+        <button v-for="ct in CARTE" :key="ct.id" class="campione" :class="{ su: tinte.prova.carta === ct.id }" :aria-label="ct.nome" :data-carta="ct.id"
+                :style="{ backgroundImage: `url(${campione(colorePareti(), ct.id)})` }" @click="c.provaTinta('carta', ct.id)"></button>
+      </div>
+      <p class="riga" data-f3="tinte-riga">{{ messaggio || (prezzoTinte ? 'Ti piace così?' : 'Tocca un colore: lo vedi subito, lo paghi solo se ti piace.') }}</p>
+      <div class="tasti">
+        <button class="si" :class="{ spenta: !prezzoTinte || prezzoTinte > monete }" data-f3="tinte-compra" @click="c.pagaTinte()">🛒 Compra 🪙{{ prezzoTinte }}</button>
+        <button class="no" data-f3="tinte-lascia" aria-label="lascia com'era" @click="c.lasciaTinte()">✖️</button>
       </div>
     </div>
 
@@ -118,49 +143,6 @@ const prossimoPrezzo = () => { const n = vista.value ? vista.value.stanze.filter
           <button v-if="!eArmadio" data-f3="mobile-via" @click="c.mettiVia()">📦 Metti via</button>
         </div>
         <p class="f3-nota">Colore, trama, girare e spostare non costano niente.</p>
-      </div>
-    </div>
-
-    <!-- la pianta -->
-    <div v-if="foglio === 'pianta' && vista" class="f3-foglio f3-colonna f3-int-pianta" data-f3="pianta">
-      <h2>🗺️ Le stanze</h2>
-      <button class="f3-chiudi" data-chiudi aria-label="chiudi" @click="c.chiudi()">✕</button>
-      <div class="f3-corpo">
-        <div class="f3-int-mappa">
-          <button v-for="s in vista.stanze" :key="s.id" class="stanza" :class="{ tua: s.tua, apribile: s.apribile, su: stanzaScelta === s.id }"
-                  :style="{ gridColumn: s.c + 1, gridRow: s.r + 1 }" :data-stanza="s.id" :data-tua="s.tua" @click="scegliStanza(s.id)">
-            <template v-if="s.tua">{{ s.id === 0 ? '🚪' : '' }} {{ s.mobili }} {{ s.mobili === 1 ? 'mobile' : 'mobili' }}</template>
-            <template v-else-if="s.apribile">＋ 🪙 {{ s.prezzo }}</template>
-            <template v-else>🔒</template>
-          </button>
-        </div>
-        <p v-if="messaggio" class="f3-messaggio" data-f3="pianta-msg">{{ messaggio }}</p>
-        <template v-if="finitura() && !finitura().tua">
-          <p v-if="finitura().apribile" class="f3-nota">Una stanza nuova, attaccata a quelle che hai: dentro ci metti quello che vuoi.</p>
-          <p v-else class="f3-nota">Prima compra una stanza vicina: le stanze si aggiungono una attaccata all'altra.</p>
-          <button v-if="finitura().apribile" class="f3-int-grande" :class="{ spenta: finitura().prezzo > monete }" data-f3="compra-stanza" @click="c.compraStanza(stanzaScelta)">
-            🛒 Compra la stanza 🪙{{ finitura().prezzo }}
-          </button>
-        </template>
-        <template v-else-if="finitura()">
-          <h3>Pavimento</h3>
-          <div class="f3-int-campioni">
-            <button v-for="pv in PAVIMENTI" :key="pv.id" class="campione largo" :class="{ su: finitura().finitura.pavimento === pv.id, [pv.motivo]: true }" :style="{ backgroundColor: pv.c }"
-                    :aria-label="pv.nome" :data-pavimento="pv.id" @click="c.rifinisci({ pavimento: pv.id })"></button>
-          </div>
-          <h3>Pareti</h3>
-          <div class="f3-int-campioni">
-            <button v-for="pr in PARETI" :key="pr.id" class="campione" :class="{ su: finitura().finitura.pareti === pr.id }" :style="{ background: pr.c }"
-                    :aria-label="pr.nome" :data-pareti="pr.id" @click="c.rifinisci({ pareti: pr.id })"></button>
-          </div>
-          <h3>Carta da parati</h3>
-          <div class="f3-int-campioni">
-            <button v-for="ct in CARTE" :key="ct.id" class="campione" :class="{ su: finitura().finitura.carta === ct.id }" :aria-label="ct.nome" :data-carta="ct.id"
-                    :style="{ backgroundImage: `url(${campione((PARETI.find(x => x.id === finitura().finitura.pareti) || PARETI[0]).c, ct.id)})` }" @click="c.rifinisci({ carta: ct.id })"></button>
-          </div>
-        </template>
-        <p class="f3-nota" v-if="prossimoPrezzo()">Le stanze sono al massimo {{ MAX_STANZE }}. Pavimento e pareti si cambiano gratis.</p>
-        <p class="f3-nota" v-else>Hai tutte le stanze! Pavimento e pareti si cambiano gratis.</p>
       </div>
     </div>
   </div>

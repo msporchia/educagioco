@@ -9,7 +9,7 @@ stile-guardaroba.css il foglio del guardaroba (`.f3-gua-`)
 stile-guida.css     la riga del primo giro, il tasto «E adesso?» e il consiglio (`.f3-guida`, `.f3-adesso`, `.f3-consiglio-`)
 stile-macchina.css  il foglio di una macchina (`.fm-`): fila, pronti, carte, fantasma; i colori del tema restano in stile.css
 visite.js            il filo fra `Gioco.vue` e le visite (`usaVisite`): mappa, viaggio, la scena a richiesta, cassa e mercato
-casa.js              il filo fra `Gioco.vue` e la casa (`usaCasa`): entrare e uscire, catalogo, mobile in mano, pianta ([casa.md](casa.md))
+casa.js              il filo fra `Gioco.vue` e la casa (`usaCasa`): entrare e uscire, catalogo, mobile in mano, stanza nuova, pavimento e pareti ([casa.md](casa.md))
 bottega-dentro.js    il filo fra `Gioco.vue` e la sala di una bottega (`usaBottegaDentro`): entrare, i fumetti dei clienti, servire ([botteghe.md](botteghe.md) «Dentro»)
 stile-casa.css       la casa e la sala di una bottega (`.f3-int-`, `.f3-btd-`)
 comune.js            la fattoria in comune sul telefono: aprire dal servizio, mandare e ritirare le mosse, la copia e la fotografia ([in-comune.md](in-comune.md))
@@ -108,7 +108,7 @@ viste/
   Consiglio.vue      il foglio «E adesso?»; `ConsiglioRiga.vue` il passo col tasto, anche sotto i «mancano» di macchina, banco e mongolfiera
   Mappa.vue          la mappa del trattore: i villaggi in fila lungo una strada, i grigi col livello, e in cima il tasto del carretto
   Carretto.vue       il carretto del vicino (C15): dai 5, prendi 1 o regali; lo scomparto pieno in oro
-  Casa.vue           dentro la casa: «Esci», Arreda e Stanze, il mobile in mano, il catalogo, il foglio di un mobile, la pianta ([casa.md](casa.md))
+  Casa.vue           dentro la casa: «Esci», Arreda e Colori, il mobile in mano, la striscia dei colori, il catalogo, il foglio di un mobile ([casa.md](casa.md))
   BottegaDentro.vue  dentro una bottega: l'insegna coi cuori, «Esci», i fumetti dei clienti e dei posti vuoti, «Tutti i clienti»
   Visita.vue         una visita: la testata con «Torna a casa», i tasti, la storia, i fogli della cassa e del mercato, il viaggio del trattore
 ```

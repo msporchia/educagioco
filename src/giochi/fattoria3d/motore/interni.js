@@ -1,10 +1,10 @@
 /* Dentro la casa (docs/fattoria3d/casa.md): le regole delle stanze e dei mobili, sulla `Fattoria3d` (i metodi sottili sono in fattoria3d.js).
-   In casa si arreda e basta: niente produce, niente si vende. Comprare (una stanza, un mobile) costa monete e conta come esperienza;
-   spostare, girare, colorare, cambiare pavimento e pareti, mettere via e rimettere sono gratis. Tutto ciò che non riesce torna
+   In casa si arreda e basta: niente produce, niente si vende. Comprare (una stanza, un mobile) e cambiare pavimento e pareti costa monete e
+   conta come esperienza; spostare, girare, colorare un mobile, mettere via e rimettere sono gratis. Tutto ciò che non riesce torna
    { ok: false, motivo } e non cambia niente. Lo stato è `stato.interni`: { stanze: [id], mobili: [{ id, tipo, i, j, rot, colore, trama }],
    finiture: { [stanza]: { pavimento, pareti, carta } }, prossimoId }; un mobile messo via ha `i` e `j` a null. */
-import { STANZE, STANZA, MOBILI, ARMADIO, POSTO_ARMADIO, MAX_STANZE, PAVIMENTI, PARETI, CARTE, FINITURA_DI_SERIE,
-         origine, stanzaDi, confinano, portaFra, PORTA_DI_CASA, soglieDi, misureMobile, ruotabileMobile, tintaInForma, prezzoDellaStanza } from '../dati/interni.js'
+import { STANZE, STANZA, MOBILI, ARMADIO, POSTO_ARMADIO, PAVIMENTI, PARETI, CARTE, FINITURA_DI_SERIE,
+         origine, stanzaDi, confinano, portaFra, PORTA_DI_CASA, soglieDi, misureMobile, ruotabileMobile, tintaInForma, prezzoDellaStanza, prezzoFinitura } from '../dati/interni.js'
 
 export const interniIniziali = () => ({
   stanze: [0],
@@ -58,14 +58,15 @@ function celle(tipo, i, j, rot) {
   return out
 }
 /** `tipo` ci sta in (i, j) girato di `rot`? `escluso`: l'id del mobile che si sta spostando (non si scontra con sé). → { ok } | { ok: false, motivo }:
-    `fuori` (fuori da una stanza tua o a cavallo di due), `occupato`, `porta` (copre il passaggio davanti a una porta), `muro` (una cosa appesa va sulla parete di fondo). */
+    `fuori` (fuori da una stanza tua o a cavallo di due), `occupato`, `porta` (copre una porta che c'è: il passaggio davanti, o la porta stessa
+    per una cosa appesa sulla parete di fondo), `muro` (una cosa appesa va sulla parete di fondo). */
 export function puoStare(int, tipo, i, j, rot = 0, escluso = null) {
   const m = MOBILI[tipo]; if (!m) return { ok: false, motivo: 'non-esiste' }
   const cs = celle(tipo, i, j, rot), s = stanzaDi(i, j)
   if (!s || !int.stanze.includes(s.id) || cs.some(([a, b]) => stanzaDi(a, b) !== s)) return { ok: false, motivo: 'fuori' }
-  if (m.strato === 'muro') {
-    if (j !== origine(s).j0) return { ok: false, motivo: 'muro' }
-  } else if (cs.some(([a, b]) => soglieDi(s).some(([x, y]) => x === a && y === b))) return { ok: false, motivo: 'porta' }
+  if (m.strato === 'muro' && j !== origine(s).j0) return { ok: false, motivo: 'muro' }
+  const soglie = soglieDi(s, int.stanze)
+  if (cs.some(([a, b]) => soglie.some(([x, y]) => x === a && y === b))) return { ok: false, motivo: 'porta' }
   for (const o of int.mobili) {
     if (o.id === escluso || o.i === null) continue
     const om = MOBILI[o.tipo]
@@ -75,13 +76,15 @@ export function puoStare(int, tipo, i, j, rot = 0, escluso = null) {
   }
   return { ok: true }
 }
-/** Il primo posto dove `tipo` ci sta, cercando dalla stanza `stanza` (poi nelle altre tue), vicino a (ci, cj) se c'è. */
-export function postoLibero(int, tipo, stanza = 0, escluso = null, ci = null, cj = null) {
+/** Il primo posto dove `tipo` ci sta, cercando dalla stanza `stanza` (poi nelle altre tue), vicino a (ci, cj) se c'è. Con `verso` preferisce
+    un posto dove il mobile resta girato com'è, anche se un po' più lontano. */
+export function postoLibero(int, tipo, stanza = 0, escluso = null, ci = null, cj = null, verso = null) {
   const ordine = [stanza, ...int.stanze.filter(x => x !== stanza)].filter(x => int.stanze.includes(x))
   for (const id of ordine) {
     const { i0, j0 } = origine(STANZE[id]), posti = []
-    for (const rot of ruotabileMobile(tipo) ? [0, 1] : [0]) for (let j = j0; j < j0 + STANZA.d; j++) for (let i = i0; i < i0 + STANZA.w; i++) posti.push({ i, j, rot })
-    if (ci !== null) posti.sort((a, b) => Math.hypot(a.i - ci, a.j - cj) - Math.hypot(b.i - ci, b.j - cj))
+    for (const rot of !ruotabileMobile(tipo) ? [0] : verso === null ? [0, 1] : [verso, verso ^ 1]) for (let j = j0; j < j0 + STANZA.d; j++) for (let i = i0; i < i0 + STANZA.w; i++) posti.push({ i, j, rot })
+    const lontano = p => Math.hypot(p.i - ci, p.j - cj) + (verso !== null && p.rot !== verso ? 4 : 0)
+    if (ci !== null) posti.sort((a, b) => lontano(a) - lontano(b))
     const p = posti.find(p => puoStare(int, tipo, p.i, p.j, p.rot, escluso).ok)
     if (p) return p
   }
@@ -105,7 +108,19 @@ export function calpestabile(int, i, j) {
 const int = f => f.s.interni
 const mobile = (f, id) => int(f).mobili.find(m => m.id === id) || null
 
-/** Compra una stanza che confina con una tua. Rifiuti: `non-esiste`, `gia-tua`, `non-confina`, `poche-monete` (con `costo`). */
+/** Le porte nuove vogliono la cella davanti libera: chi ci sta si sposta nel posto libero più vicino. Un posto c'è sempre: al peggio nella stanza
+    appena comprata, che è vuota. → i tipi spostati */
+function liberaLePorte(I) {
+  const spostati = []
+  for (const o of I.mobili) {
+    if (o.i === null || puoStare(I, o.tipo, o.i, o.j, o.rot, o.id).motivo !== 'porta') continue
+    const p = postoLibero(I, o.tipo, stanzaDi(o.i, o.j).id, o.id, o.i, o.j, o.rot)
+    if (p) { o.i = p.i; o.j = p.j; o.rot = p.rot; spostati.push(o.tipo) }
+  }
+  return spostati
+}
+/** Compra una stanza che confina con una tua; `spostati`: i mobili che erano davanti alle porte nuove. Rifiuti: `non-esiste`, `gia-tua`,
+    `non-confina`, `poche-monete` (con `costo`). */
 export function compraStanza(f, id) {
   const s = STANZE.find(x => x.id === id), I = int(f)
   if (!s) return { ok: false, motivo: 'non-esiste' }
@@ -115,8 +130,9 @@ export function compraStanza(f, id) {
   if (costo > f.monete() || !f._spendi(costo)) return { ok: false, motivo: 'poche-monete', costo }
   I.stanze = [...I.stanze, id].sort((a, b) => a - b)
   I.finiture[id] = { ...FINITURA_DI_SERIE }
+  const spostati = liberaLePorte(I)
   f._evento('stanza', { stanza: id, costo })
-  return { ok: true, costo }
+  return { ok: true, costo, spostati }
 }
 /** Compra un mobile e lo mette lì, col colore e la trama scelti (gratis: il prezzo è quello del mobile). Rifiuti: quelli di `puoStare`,
     `di-serie` (l'armadio non si compra), `poche-monete` (con `costo`). */
@@ -163,24 +179,23 @@ export function mettiViaMobile(f, id) {
   o.i = o.j = null
   return { ok: true }
 }
-/** Il pavimento, il colore e la carta delle pareti di una stanza tua: gratis. */
+/** Il pavimento, il colore e la carta delle pareti di una stanza tua: si paga solo quello che cambia. Rifiuti: `non-esiste`, `poche-monete` (con `costo`). */
 export function rifiniStanza(f, id, finitura) {
   const I = int(f); if (!I.stanze.includes(id)) return { ok: false, motivo: 'non-esiste' }
-  I.finiture[id] = finituraInForma({ ...I.finiture[id], ...finitura })
-  return { ok: true }
+  const nuova = finituraInForma({ ...I.finiture[id], ...finitura }), costo = prezzoFinitura(I.finiture[id], nuova)
+  if (costo > f.monete() || !f._spendi(costo)) return { ok: false, motivo: 'poche-monete', costo }
+  I.finiture[id] = nuova
+  return { ok: true, costo }
 }
 
-/** Il quadro per il foglio: le stanze (tue, da comprare col prezzo, chiuse), i mobili messi e quelli via. */
+/** Il quadro per la scena e i fogli: le stanze (tue, da comprare col prezzo, chiuse) e i mobili messi via. */
 export function vistaDegliInterni(f) {
-  const I = int(f), prezzo = prezzoDellaStanza(I.stanze.length), tutte = I.stanze.length >= MAX_STANZE
+  const I = int(f), prezzo = prezzoDellaStanza(I.stanze.length)
   return {
-    monete: f.monete(),
     stanze: STANZE.map(s => {
       const tua = I.stanze.includes(s.id), apribile = !tua && I.stanze.some(t => confinano(STANZE[t], s))
-      return { id: s.id, c: s.c, r: s.r, tua, apribile, prezzo: apribile ? prezzo : null, finitura: tua ? { ...I.finiture[s.id] } : null,
-               mobili: tua ? I.mobili.filter(m => m.i !== null && stanzaDi(m.i, m.j) === s).length : 0 }
+      return { id: s.id, tua, apribile, prezzo: apribile ? prezzo : null, finitura: tua ? { ...I.finiture[s.id] } : null }
     }),
-    tutte,
     via: I.mobili.filter(m => m.i === null).map(m => ({ ...m })),
   }
 }
