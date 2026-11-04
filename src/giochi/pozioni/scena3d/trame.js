@@ -163,3 +163,24 @@ export function cartellino(testo) {
   g.fillText(testo, 156, 84)
   return trama(c)
 }
+
+// l'arcobaleno del brodo: strisce a spirale, da far girare
+export function arcobaleno() {
+  const L = 128, c = document.createElement('canvas')
+  c.width = c.height = L
+  const g = c.getContext('2d'), img = g.createImageData(L, L)
+  const banda = (h, n) => Math.max(0, Math.min(1, Math.abs(((h + n / 12) % 1) * 6 - 3) - 1))
+  for (let y = 0; y < L; y++) for (let x = 0; x < L; x++) {
+    const dx = x / L - 0.5, dy = y / L - 0.5, r = Math.hypot(dx, dy) * 2
+    const h = ((Math.atan2(dy, dx) / (Math.PI * 2) + 1) * 3 + r * 2.4) % 1
+    const k = (y * L + x) * 4
+    img.data[k] = 255 * (0.25 + 0.75 * banda(h, 0))
+    img.data[k + 1] = 255 * (0.25 + 0.75 * banda(h, 8))
+    img.data[k + 2] = 255 * (0.25 + 0.75 * banda(h, 4))
+    img.data[k + 3] = 255
+  }
+  g.putImageData(img, 0, 0)
+  const t = new CanvasTexture(c)
+  t.colorSpace = SRGBColorSpace
+  return t
+}

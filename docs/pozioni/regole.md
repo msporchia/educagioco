@@ -160,8 +160,9 @@ versata, se no il risultato si legge prima di vederlo.
   piedi con la barretta d'oro per le radici (i pezzi comprati salgono uno
   sull'altro).
 - **Il calderone parte vuoto** (`banco.js`): il brodo nasce con la prima cosa
-  versata, sale e cambia colore (**media geometrica dei canali**,
-  `mescola`, perché giallo e blu devono fare verde).
+  versata e sale (i colori in **media geometrica dei canali**, `mescola`,
+  perché giallo e blu devono fare verde; l'arcobaleno è in
+  [procedimento.md](procedimento.md)).
 - **La consegna** (`ampolle.js`): fiasco, barattolo, radice sui pioli, a misura
   reale (la radice lunga quanto sarà sul metro), con la targhetta. Una alla volta
   volano, perdono il tappo o il panno, si piegano e versano.
