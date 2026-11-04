@@ -50,7 +50,7 @@ const blank = () => ({
   calc: { tappa: 0, libera: false },// specchio delle stazioni a mente
   eng: { tappa: 0, libera: false }, // e per la campagna di English
   esp: { tappa: 0, libera: false }, // e per quella di Spagnolo
-  mercato: { tappa: 0, libera: false, stelle: {}, v: 2 },   // `v`: vedi `migraMercato`; `stelle`: per id di giornata
+  mercato: { tappa: 0, libera: false, stelle: {}, v: 3 },   // `v`: vedi `migraMercato`; `stelle`: per id di giornata
   // `ordini`/`stelle`/`aiuti` per livello (chiave = id, non posizione): vedi `migraGenerale`
   gen: { tappa: 0, libera: false, ordini: {}, stelle: {}, aiuti: {}, v: 2 },
   // i giochi di src/giochi/ stanno tutti qui: 'codice' -> { tappa, libera, stelle:{}, cfg:{} }
@@ -1001,16 +1001,21 @@ export const mercatoProgresso = () => state.profile.mercato
 
 // Rimappa le sei giornate di ieri sulle sedici di oggi, nessuno torna
 // indietro: vedi docs/bancarella/regole.md ("Il salvataggio segue la fila").
-export const MERCATO_VERSIONE = 2
+export const MERCATO_VERSIONE = 3
 const MERCATO_DA_SEI = [0, 1, 2, 6, 14, 14, 16]
+// la v3 ha messo «Tutte quelle che riesce» prima della cassa rotta: chi la cassa rotta l'ha finita resta in fondo
+const MERCATO_FINE_V2 = 16
 
 export function migraMercato(vuoto, salvato) {
   const dati = salvato && typeof salvato === 'object' ? salvato : {}
   const m = { ...vuoto, ...dati }
   if (dati.v !== MERCATO_VERSIONE) {
-    const vecchia = Math.max(0, Math.min(MERCATO_DA_SEI.length - 1, Math.round(m.tappa || 0)))
-    m.tappa = Math.max(m.tappa || 0, MERCATO_DA_SEI[vecchia])
-    m.libera = !!m.libera
+    if (dati.v !== 2) {
+      const vecchia = Math.max(0, Math.min(MERCATO_DA_SEI.length - 1, Math.round(m.tappa || 0)))
+      m.tappa = Math.max(m.tappa || 0, MERCATO_DA_SEI[vecchia])
+      m.libera = !!m.libera
+    }
+    if (m.tappa >= MERCATO_FINE_V2) m.tappa = MERCATO_FINE_V2 + 1
     m.v = MERCATO_VERSIONE
   }
   m.stelle = stelleDelMercato(m.stelle, m.tappa)

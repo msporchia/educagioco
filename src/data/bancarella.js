@@ -1,9 +1,9 @@
 /* LA BANCARELLA — il mercato, i banchi, i clienti, il resto.
    Vedi docs/bancarella/presentazione.md e regole.md.
 
-   La tabella della progressione: sedici giornate, quindici passaggi, una
+   La tabella della progressione: diciassette giornate, sedici passaggi, una
    leva sola per passaggio (`conto`, `banchi`, `articoli`, `copie`, `passo`,
-   `paga`). `test/unita/bancarella` la ricontrolla a ogni giro: se qualcuno
+   `paga`, `riesce`). `test/unita/bancarella` la ricontrolla a ogni giro: se qualcuno
    aggiunge due cose insieme, diventa rossa.
 
     #  giornata              conto  banchi art copie passo  paga   LA COSA NUOVA
@@ -22,7 +22,8 @@
    13  I cinque centesimi    resto    4     3    0    5c    20 €   i cinque centesimi
    14  Il mercato coperto    resto    4     3    0    1c    20 €   i centesimi: 0,89 €, 1,39 €
    15  Due cose uguali       resto    4     3    1    1c    20 €   «due angurie, per favore»
-   16  La cassa rotta        tutto    4     3    1    5c    20 €   TUTTI E DUE I CONTI INSIEME */
+   16  Tutte quelle che riesce resto  4     3    1    1c    20 €   «ho 5 €: me ne dia più che può»
+   17  La cassa rotta        tutto    4     3    1    5c    20 €   TUTTI E DUE I CONTI INSIEME */
 
 export const TAGLI = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000]  // centesimi
 export const euro = c => (c / 100).toFixed(2).replace('.', ',') + ' €'
@@ -115,7 +116,9 @@ export const chiedeIlResto = c => c === 'resto' || c === 'tutto'
    e docs/apprendimento/calibrazione.md. Un cliente che se ne va non paga
    niente. */
 export const MONETE_CLIENTE = { niente: 2, totale: 3, resto: 3, tutto: 4 }
-export const premioCliente = camp => MONETE_CLIENTE[(camp && camp.conto) || 'niente']
+// chi chiede «tutte quelle che riesce» vuole un conto in più: paga come la cassa rotta
+export const premioCliente = (camp, c) =>
+  MONETE_CLIENTE[c && c.riesce ? 'tutto' : (camp && camp.conto) || 'niente']
 
 /* Un numero solo che pesa le sei leve: serve a ordinare la fila e a
    ricavarne la `portata` (vedi docs/bancarella/regole.md). I pesi non sono
@@ -131,9 +134,10 @@ export function fatica (g) {
   return PESO_CONTO[g.conto || 'niente'] + (PESO_PASSO[g.passo] ?? 7)
        + (PESO_PAGA[pagaMassima(g)] ?? 7)
        + 2 * (g.articoli[1] - 1) + 3 * (g.copie || 0) + 1.5 * (g.tappe.length - 3)
+       + (g.riesce ? 2 : 0)
 }
 
-/* le sei leve, lette da una giornata: servono al test che controlla che da
+/* le sette leve, lette da una giornata: servono al test che controlla che da
    una giornata all'altra ne salga **una sola**. `passo` si gira di segno
    perché più il passo è piccolo più il gioco è difficile. */
 export const leve = g => ({
@@ -143,6 +147,7 @@ export const leve = g => ({
   copie: g.copie || 0,
   passo: -g.passo,
   paga: pagaMassima(g),
+  riesce: g.riesce ? 1 : 0,
 })
 
 /* Una campagna è una giornata: un giro di banchi, tre clienti per banco.
@@ -275,6 +280,16 @@ const SCALETTA = [
     tempo: [85, 72], copie: 1,
     monete: [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000] },
 
+  /* `riesce`: quanti clienti su cento dicono quanto hanno e vogliono tutte
+     quelle che ci stanno; `riesceSubito`: il primo della giornata è uno di loro */
+  { id: 'tutte', nome: 'Tutte quelle che riesce', emoji: '👛', conto: 'resto',
+    nuovo: '«ho 5 €: me ne dia più che può»',
+    dritta: 'Certi clienti ti mostrano i soldi e vogliono tutte quelle che ci stanno: tocca la cesta tante volte quante ne bastano, poi dai il resto.',
+    tappe: ['verdura', 'frutta', 'dolci', 'forno'],
+    passo: 1, articoli: [2, 3], tetto: 1900, paga: [1000, 2000],
+    tempo: [85, 72], copie: 1, riesce: 0.3, riesceSubito: true,
+    monete: [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000] },
+
   /* ── fase 4: la cassa rotta, che adesso arriva in cima a una scala ──
      Non calcola più niente: né la somma né il resto. Per questo il tempo
      torna largo e i prezzi tornano a scatti di cinque centesimi — due
@@ -324,10 +339,10 @@ export function perLaProssima(stelle) {
 
 /* La giornata libera: vedi docs/bancarella/regole.md. */
 export const LIBERA = {
-  id: 'libera', nome: 'Giornata libera', emoji: '♾️', conto: 'tutto',
+  id: 'libera', nome: 'Il mercato senza fine', emoji: '♾️', conto: 'tutto',
   dritta: 'Il mercato non chiude: si va avanti finché reggi.',
   tappe: ['frutta', 'verdura', 'forno', 'frigo', 'dolci'],
-  passo: 1, articoli: [3, 4], tempo: [70, 45], pezzi: [3, 5], copie: 2, libera: true,
+  passo: 1, articoli: [3, 4], tempo: [70, 45], pezzi: [3, 5], copie: 2, riesce: 0.2, libera: true,
   monete: [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000],
 }
 
@@ -345,6 +360,7 @@ export function tappaDi(camp, n) {
   return { n, i, banco: camp.tappe[i], camp, tempo,
            passo: camp.passo, articoli: camp.articoli, monete: camp.monete,
            pezzi: camp.pezzi, copie: camp.copie, tetto: camp.tetto, paga: camp.paga,
+           riesce: camp.riesce || 0, riesceSubito: !!camp.riesceSubito,
            conto: camp.conto || 'niente',
            chiediTotale: chiedeIlTotale(camp.conto), chiediResto: chiedeIlResto(camp.conto) }
 }
@@ -368,10 +384,16 @@ export function scaffale(passo) {
 export const merceDi = (passo, banco) => scaffale(passo).filter(a => a.banco === banco)
 
 /* Quello che si vede sul banco a questa tappa: fino a otto ceste, pescate
-   fra la merce del banco. Meno di così non ci sta il gioco (i clienti
-   chiedono fino a cinque cose), più di così non ci sta lo schermo. */
-export function esposizione(t) {
-  return mescola(merceDi(t.passo, t.banco)).slice(0, MAX_CESTE)
+   fra la merce del banco. Più di così non ci sta lo schermo. `merce` e `ceste`
+   sono il banco del bambino (data/bancarella-banco.js): coi cartellini del
+   passo della giornata prima, o una giornata dei centesimi resterebbe tonda. */
+const PASSI = [100, 50, 10, 5, 1]
+export function esposizione(t, { merce = null, ceste = MAX_CESTE } = {}) {
+  const roba = mescola(merceDi(t.passo, t.banco)).filter(p => !merce || merce.has(p.emoji))
+  const largo = PASSI[PASSI.indexOf(t.passo) - 1]
+  const fini = largo ? roba.filter(p => p.prezzo % largo) : []
+  const primi = fini.slice(0, Math.ceil(ceste / 2))
+  return mescola([...primi, ...roba.filter(p => !primi.includes(p))].slice(0, ceste))
 }
 
 /* Che cosa si sta imparando: vedi docs/bancarella/regole.md. L'elemento non
@@ -437,8 +459,63 @@ function spesaDi(t, esposti) {
   return presi
 }
 
-/* Un cliente della tappa: prende solo roba esposta sul banco. */
-export function generaCliente(t, esposti = esposizione(t)) {
+/* Il pugno di monete in mano al cliente: dove la giornata dichiara la
+   banconota è quella, altrove più il passo è fine più pezzi tira fuori. */
+const SPEZZA = { 5000: [2000, 2000, 1000], 2000: [1000, 1000], 1000: [500, 500], 500: [200, 200, 100],
+                 200: [100, 100], 100: [50, 50], 50: [20, 20, 10] }
+export const pezziInMano = passo => (passo >= 100 ? 3 : passo >= 50 ? 4 : 5)
+
+function manciata(paga, t) {
+  const pezzi = scomponi(paga, TAGLI)
+  if (t.paga && t.paga.length === 1) return pezzi
+  const tetto = pezziInMano(t.passo)
+  const voglia = caso(Math.min(pezzi.length, tetto), tetto)
+  while (pezzi.length < voglia) {
+    const buoni = pezzi.filter(p => SPEZZA[p] && pezzi.length - 1 + SPEZZA[p].length <= tetto)
+    if (!buoni.length) break
+    const p = scegli(buoni)
+    pezzi.splice(pezzi.indexOf(p), 1, ...SPEZZA[p])
+  }
+  return pezzi.sort((a, b) => b - a)
+}
+
+/* «Ho questi: tutte quelle che riesce»: conti base, quindi prezzi alle decine
+   di centesimi e da due a cinque pezzi, e un resto che non sia zero. */
+const SOLDI_DI_CHI_RIESCE = [200, 300, 500, 1000]
+
+export function clienteRiesce(t, esposti) {
+  const modi = []
+  for (const m of esposti) {
+    if (m.prezzo % 10) continue
+    for (const paga of SOLDI_DI_CHI_RIESCE) {
+      const quanti = Math.floor(paga / m.prezzo)
+      const resto = paga - quanti * m.prezzo
+      if (quanti < 2 || quanti > 5 || !resto) continue
+      if (scomponi(resto, t.monete).reduce((s, v) => s + v, 0) === resto) modi.push({ m, paga, quanti })
+    }
+  }
+  if (!modi.length) return null
+  const { m, paga, quanti } = scegli(modi)
+  const totale = m.prezzo * quanti
+  const resto = paga - totale
+  return { faccia: scegli(FACCE), vestito: scegli(VESTITI), riesce: true,
+           articoli: [{ ...m, quanti }], pezzi: quanti, totale, paga, resto,
+           conto: t.conto || 'niente',
+           chiediTotale: !!t.chiediTotale, chiediResto: !!t.chiediResto,
+           pagaCon: manciata(paga, t),
+           banco: t.banco, pazienza: t.tempo + 8 * (quanti - 3) + PIU_TEMPO_A_CHI_RIESCE, monete: t.monete,
+           chiave: chiaveResto(resto),
+           minimo: scomponi(resto, t.monete).length }
+}
+export const PIU_TEMPO_A_CHI_RIESCE = 15
+
+/* Un cliente della tappa: prende solo roba esposta sul banco. `riesce`
+   chiede per forza uno di quelli di `clienteRiesce`. */
+export function generaCliente(t, esposti = esposizione(t), { riesce = false } = {}) {
+  if (riesce || (t.riesce && Math.random() < t.riesce)) {
+    const c = clienteRiesce(t, esposti)
+    if (c) return c
+  }
   const presi = spesaDi(t, esposti)
   const pezzi = presi.reduce((s, a) => s + a.quanti, 0)
   const totale = presi.reduce((s, a) => s + a.prezzo * a.quanti, 0)
@@ -462,7 +539,7 @@ export function generaCliente(t, esposti = esposizione(t)) {
            articoli: presi, pezzi, totale, paga, resto,
            conto: t.conto || 'niente',
            chiediTotale: !!t.chiediTotale, chiediResto: !!t.chiediResto,
-           pagaCon: scomponi(paga, TAGLI),
+           pagaCon: manciata(paga, t),
            banco: t.banco, pazienza, monete: t.monete,
            chiave: chiaveResto(resto),
            minimo: scomponi(resto, t.monete).length }

@@ -5,10 +5,11 @@
 // errori; gli intoppi già fatti, che decidono le stelle). Prezzi, resti e
 // tempi si rifanno dal listino e dalla giornata.
 import { CAMPAGNE, LIBERA, BANCHI, TAGLI, campagnaDi, tappaDi, merceDi, scomponi,
-         chiaveResto } from '../../data/bancarella.js'
+         chiaveResto, PIU_TEMPO_A_CHI_RIESCE } from '../../data/bancarella.js'
 
 export const VERSIONE = 1
 
+export const TETTO_PRESE = 9
 const intero = (n, min = 0) => Number.isInteger(n) && n >= min
 const numero = n => typeof n === 'number' && Number.isFinite(n)
 const tondo = n => Math.round(n * 1000) / 1000
@@ -32,6 +33,7 @@ export function scrivi(g) {
     intoppi: g.hud.intoppi || 0,
     esposti: g.esposti.map(p => p.emoji),
     fila: g.coda.map(c => ({ articoli: c.articoli.map(a => [a.emoji, a.quanti]), paga: c.paga,
+                             pagaCon: [...c.pagaCon], riesce: !!c.riesce, pazienza: c.pazienza,
                              faccia: c.faccia, vestito: c.vestito, resta: tondo(c.restaPazienza) })),
     cartello: !!g.cartello,
     monete: { chiesto: g.monete?.chiesto || 0, dato: g.monete?.dato || 0 },
@@ -51,7 +53,7 @@ function cliente(t, esposti, f) {
   const articoli = []
   for (const [emoji, quanti] of f.articoli) {
     const m = esposti.find(p => p.emoji === emoji)
-    if (!m || !intero(quanti, 1) || quanti > 3 || articoli.some(a => a.emoji === emoji)) return null
+    if (!m || !intero(quanti, 1) || quanti > (f.riesce ? 5 : 3) || articoli.some(a => a.emoji === emoji)) return null
     articoli.push({ ...m, quanti })
   }
   const pezzi = articoli.reduce((s, a) => s + a.quanti, 0)
@@ -59,11 +61,15 @@ function cliente(t, esposti, f) {
   const resto = f.paga - totale
   const pezziResto = scomponi(resto, t.monete)
   if (resto <= 0 || pezziResto.reduce((s, v) => s + v, 0) !== resto) return null
-  const pazienza = t.tempo + 8 * (pezzi - 3)
-  return { faccia: String(f.faccia || '🧑'), vestito: String(f.vestito || '#e2725b'),
+  // la tenda allunga la pazienza: un salvataggio di ieri non ha la sua, e vale quella del listino
+  const pazienza = Math.max(t.tempo + 8 * (pezzi - 3) + (f.riesce ? PIU_TEMPO_A_CHI_RIESCE : 0),
+                            numero(f.pazienza) ? f.pazienza : 0)
+  const inMano = Array.isArray(f.pagaCon) && f.pagaCon.every(v => TAGLI.includes(v)) &&
+                 f.pagaCon.reduce((s, v) => s + v, 0) === f.paga ? [...f.pagaCon] : scomponi(f.paga, TAGLI)
+  return { faccia: String(f.faccia || '🧑'), vestito: String(f.vestito || '#e2725b'), riesce: !!f.riesce,
            articoli, pezzi, totale, paga: f.paga, resto,
            conto: t.conto, chiediTotale: !!t.chiediTotale, chiediResto: !!t.chiediResto,
-           pagaCon: scomponi(f.paga, TAGLI), banco: t.banco, pazienza, monete: t.monete,
+           pagaCon: inMano, banco: t.banco, pazienza, monete: t.monete,
            chiave: chiaveResto(resto), minimo: pezziResto.length,
            restaPazienza: Math.min(pazienza, f.resta) }
 }
@@ -75,9 +81,11 @@ function alBanco(c, b) {
       !intero(b.rifiuti) || !numero(b.trascorso)) return null
   const quanti = e => b.presi.filter(x => x === e).length
   if (b.presi.some(e => !c.articoli.some(a => a.emoji === e))) return null
-  if (c.articoli.some(a => quanti(a.emoji) > a.quanti)) return null
+  // chi vuole «tutte quelle che riesce» può averne di troppo, finché non si conferma
+  if (!c.riesce && c.articoli.some(a => quanti(a.emoji) > a.quanti)) return null
+  if (b.presi.length > TETTO_PRESE) return null
   const tutto = c.articoli.every(a => quanti(a.emoji) === a.quanti)
-  if ((b.momento === 'cassa') !== tutto) return null
+  if (b.momento === 'cassa' ? !tutto : tutto && !c.riesce) return null
   if (b.momento === 'raccolta' && b.piatto.length) return null
   if (b.piatto.some(v => !c.monete.includes(v))) return null
   const posato = b.piatto.reduce((s, v) => s + v, 0)

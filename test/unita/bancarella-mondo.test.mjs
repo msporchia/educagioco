@@ -49,7 +49,7 @@ uguale('a profilo vuoto: la prima città tocca a te, le altre chiuse', stati(0),
 uguale('finite le prime due giornate: Bologna è fatta, Roma tocca a te', stati(2),
        'fatta ora chiusa chiusa chiusa chiusa chiusa')
 uguale('a metà di Roma: tocca ancora a Roma', stati(4).split(' ')[1], 'ora')
-uguale('finita tutta la fila: tutte fatte e la libera aperta', stati(16),
+uguale('finita tutta la fila: tutte fatte e la libera aperta', stati(17),
        'fatta fatta fatta fatta fatta fatta aperta')
 const aTutto = () => true
 uguale('con tutto aperto (i grandi): la prima giornata resta quella da fare', stati.length && CITTA.map(c => statoCitta(c, 0, aTutto)).join(' '),
@@ -58,10 +58,10 @@ uguale('una giornata fatta, da fare, aperta dai grandi, chiusa',
        ['banchetto', 'paese', 'resto-dieci'].map(id => statoGiornata(id, 1, aperta(1))).join(),
        'fatta,ora,chiusa')
 uguale('la libera è chiusa finché la fila non è finita', statoGiornata('libera', 15, aperta(15)), 'chiusa')
-uguale('e dopo è aperta', statoGiornata('libera', 16, aperta(16)), 'aperta')
+uguale('e dopo è aperta', statoGiornata('libera', 17, aperta(17)), 'aperta')
 uguale('la città da fare è la prima col lavoro da fare', [0, 1, 2, 5, 6, 9, 11, 14, 15].map(f => CITTA[cittaCorrente(f, aperta(f))].id).join(),
        'bologna,bologna,roma,roma,parigi,new-york,rio,tokyo,tokyo')
-uguale('finita la fila, la città da fare è la libera', CITTA[cittaCorrente(16, aperta(16))].id, 'cairo')
+uguale('finita la fila, la città da fare è la libera', CITTA[cittaCorrente(17, aperta(17))].id, 'cairo')
 uguale('di Roma a metà ne risultano due finite', fatteIn(CITTA[1], 4), 2)
 uguale('e nessuna prima del tempo', fatteIn(CITTA[1], 2), 0)
 

@@ -12,7 +12,7 @@ import { CAMPAGNE, LIBERA, stelleDiGiornata, perLaProssima, INTOPPI_PER_DUE }
   from '../../src/data/bancarella.js'
 import { CITTA, stelleGiornata, stelleCitta, stelleMassime }
   from '../../src/data/bancarella-mondo.js'
-import { state, init, selectPlayer, migraMercato, mercatoCompleta, mercatoProgresso, persist }
+import { state, init, selectPlayer, migraMercato, mercatoCompleta, MERCATO_VERSIONE, mercatoProgresso, persist }
   from '../../src/store/profile.js'
 import { save, load, remove, chiavi, flush } from '../../src/store/storage.js'
 import { scrivi, leggi } from '../../src/motore/bancarella/sosta.js'
@@ -70,7 +70,7 @@ stessaLista('le tre giornate fatte hanno una stella',
 controlla('e ognuna una sola', Object.values(m.stelle).every(n => n === 1))
 uguale('la tappa è quella di prima', m.tappa, 3)
 uguale('la libera pure', m.libera, false)
-uguale('la versione pure', m.v, 2)
+uguale('la versione pure', m.v, MERCATO_VERSIONE)
 uguale('le monete e i clienti non si sono mossi', state.profile.coins + ':' + state.profile.totals.clienti, '40:7')
 
 /* un profilo senza il campo e senza giornate fatte: niente stelle inventate */

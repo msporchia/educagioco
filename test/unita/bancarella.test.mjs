@@ -23,7 +23,7 @@
    `node test/esegui.mjs bancarella --niente-build` */
 import { generaCliente, esposizione, tappaDi, campagnaDi,
          merceDi, scaffale, scomponi, euro, chiaveResto, fasciaDi,
-         fatica, leve, premioCliente, pagaMassima, centesimiScritti, scriviCifra,
+         fatica, leve, premioCliente, pagaMassima, centesimiScritti, scriviCifra, pezziInMano, clienteRiesce,
          LISTINO, BANCHI, CAMPAGNE, LIBERA, FASCE, TAGLI, CONTI, SALTO,
          PORTATA_DA, PORTATA_A, MAX_CESTE, CLIENTI_PER_TAPPA } from '../../src/data/bancarella.js'
 import { migraMercato, MERCATO_VERSIONE } from '../../src/store/profile.js'
@@ -36,6 +36,21 @@ const spese = new Set()
 const fasceViste = {}
 const pezziResto = {}       // giornata -> quante monete ci sono volute, per cliente
 let clienti = 0, monetePerResto = 0, conCopie = 0
+const giornateChiRiesce = new Set()
+
+/* «Tutte quelle che riesce»: conti base, una risposta sola, e il resto non è zero */
+function guardaChiRiesce(c, camp, esposti) {
+  giornateChiRiesce.add(camp.id)
+  const [a] = c.articoli
+  if (c.articoli.length !== 1) guasti.add(`${camp.id}: chi riesce vuole una cosa sola`)
+  if (!esposti.some(p => p.emoji === a.emoji)) guasti.add(`${camp.id}: chi riesce chiede roba che non c'è`)
+  if (a.prezzo % 10) guasti.add(`${camp.id}: chi riesce con un prezzo al centesimo (${a.prezzo})`)
+  if (a.quanti < 2 || a.quanti > 5) guasti.add(`${camp.id}: chi riesce ne vuole ${a.quanti}`)
+  if (a.quanti !== Math.floor(c.paga / a.prezzo)) guasti.add(`${camp.id}: chi riesce non ne vuole quante ci stanno`)
+  if (c.resto !== c.paga - a.prezzo * a.quanti || c.resto <= 0) guasti.add(`${camp.id}: chi riesce ha il resto sbagliato`)
+  if (c.pagaCon.reduce((s, p) => s + p, 0) !== c.paga) guasti.add('chi riesce: pagamento incoerente')
+  if (scomponi(c.resto, c.monete).reduce((s, v) => s + v, 0) !== c.resto) guasti.add('chi riesce: resto non componibile')
+}
 
 for (const camp of [...CAMPAGNE, LIBERA]) {
   fasceViste[camp.id] = new Set()
@@ -56,6 +71,7 @@ for (const camp of [...CAMPAGNE, LIBERA]) {
     for (let g = 0; g < GIRI; g++) {
       const c = generaCliente(t, esposti)
       clienti++
+      if (c.riesce) { guardaChiRiesce(c, camp, esposti); continue }
       spese.add(c.articoli.map(a => a.emoji).sort().join(''))
       fasceViste[camp.id].add(fasciaDi(c.resto).id)
 
@@ -117,7 +133,11 @@ for (const camp of [...CAMPAGNE, LIBERA]) {
 
       /* --- con cosa paga: roba che si tira fuori dal portafoglio --- */
       if (c.pagaCon.reduce((a, b) => a + b, 0) !== c.paga) guasti.add('pagamento incoerente')
-      if (c.pagaCon.length > 3) guasti.add(`paga con ${c.pagaCon.length} pezzi`)
+      if (c.pagaCon.length > Math.max(pezziInMano(camp.passo), scomponi(c.paga).length))
+        guasti.add(`${camp.id}: paga con ${c.pagaCon.length} pezzi`)
+      if (camp.paga && camp.paga.length === 1 && c.pagaCon.length !== scomponi(c.paga).length)
+        guasti.add(`${camp.id}: la banconota dichiarata è stata spezzata`)
+      if (c.pagaCon.some(p => !TAGLI.includes(p))) guasti.add('un pezzo che non esiste in mano al cliente')
 
       /* --- chi fa i conti: quello che dice la giornata, non altro --- */
       if (c.chiediTotale !== (camp.conto === 'totale' || camp.conto === 'tutto'))
@@ -134,6 +154,13 @@ for (const camp of [...CAMPAGNE, LIBERA]) {
 }
 
 controlla('nessuna spesa impossibile', guasti.size === 0, [...guasti].slice(0, 6).join(' · '))
+uguale('chi vuole «tutte quelle che riesce» sta in fondo alla fila e al Cairo',
+       [...giornateChiRiesce].sort().join(' '), 'libera tutte')
+uguale('e il primo di «Tutte quelle che riesce» è uno di loro, se si chiede',
+       generaCliente(tappaDi(CAMPAGNE.find(c => c.id === 'tutte'), 0), undefined, { riesce: true }).riesce, true)
+uguale('un banco senza prezzi adatti non lo fa esplodere: si serve un cliente normale',
+       clienteRiesce(tappaDi(CAMPAGNE.find(c => c.id === 'tutte'), 0), [{ emoji: '🍊', nome: 'arance', prezzo: 89, banco: 'frutta' }]), null)
+controlla('chi riesce paga come la cassa rotta', premioCliente(CAMPAGNE[0], { riesce: true }) === 4)
 nota(`${clienti} clienti generati · ${spese.size} spese diverse · ` +
      `${(monetePerResto / clienti).toFixed(1)} monete a resto in media`)
 
@@ -262,6 +289,10 @@ uguale('chi aveva finito il mercato coperto ce l\'ha ancora dietro le spalle',
        dopoMigra(4) > dove('coperto'), true)
 uguale('chi aveva finito la fiera pure', dopoMigra(5) > dove('fiera'), true)
 uguale('e chi aveva finito tutto trova tutto aperto', dopoMigra(6), CAMPAGNE.length)
+uguale('chi aveva finito la cassa rotta sulla fila da sedici la ritrova finita',
+       migraMercato({ tappa: 0, libera: false, v: MERCATO_VERSIONE }, { tappa: 16, libera: true, v: 2 }).tappa, CAMPAGNE.length)
+uguale('chi era alla cassa rotta passa prima dalla giornata nuova',
+       migraMercato({ tappa: 0, libera: false, v: MERCATO_VERSIONE }, { tappa: 15, libera: false, v: 2 }).tappa, dove('tutte'))
 controlla('nessuno torna indietro',
           [0, 1, 2, 3, 4, 5, 6].every((k, i, v) => i === 0 || dopoMigra(k) >= dopoMigra(v[i - 1])),
           [0, 1, 2, 3, 4, 5, 6].map(dopoMigra).join(' · '))

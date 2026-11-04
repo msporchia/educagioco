@@ -6,7 +6,7 @@
 import { GIOCHI_NUOVI, gioco } from '../giochi/indice.js'
 import { LIBERE_RACCONTO, RACCONTO } from './campagne-castello.js' // le quattro partite libere del castello, e le sue venti tappe
 import { SCALETTA, filaDi, posizioneOra } from './asteroidi.js'
-import { CAMPAGNE as GIORNATE } from './bancarella.js' // le sedici giornate della bancarella
+import { CAMPAGNE as GIORNATE } from './bancarella.js' // le giornate della bancarella
 
 // un gioco nuovo che ha preso la carta di uno vecchio sta al suo posto, non in coda
 const AL_POSTO_DI_UNO_VECCHIO = ['inglese', 'spagnolo']
@@ -57,6 +57,9 @@ export const GIOCHI = [
   { chiave: 'bancarella', ico: '🛒', nome: 'La bancarella',
     che: 'euro, centesimi e resto', area: 'numeri', come: 'fare',
     copertina: { fondo: '#ffd36b', disegno: '#e8553f', scena: 'tenda' },
+    // il record del Cairo (docs/bancarella/regole.md, «Il mercato senza fine»)
+    senzaFine: { nome: 'Il mercato senza fine', icona: '♾️', misura: 'quanti', che: 'quanti clienti servi',
+                 dettagli: d => [`${(d.incasso / 100).toFixed(2).replace('.', ',')} € incassati`, `${d.banchi} banchi`] },
     // gli amici sul giro del mondo (docs/core/amici-nei-giochi.md): la giornata da fare sta in `profile.mercato`; dopo l'ultima, la libera del Cairo
     amici: { tappe: GIORNATE.length, dove: 'al mercato del Cairo', tappa: p => (p.mercato || {}).tappa } },
   // i giochi di src/giochi/ si aggiungono da soli dal loro manifesto: ripeterli qui sarebbe tenerli allineati a mano
