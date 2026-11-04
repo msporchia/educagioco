@@ -9,8 +9,9 @@ import { ATLANTE, PEZZI, TESSERA } from '../../../grafica/atlante-fattoria.js'
 import { creaFoglio, netto } from '../../../grafica/atlante.js'
 import { pezzo, COLORI, STAGIONI, CAROTA, ALBERO, ALBERO_NEVE, ALBERO_AUTUNNO, TANA, MASSO,
          CESPUGLIO, TAVOLOZZA_BACCHE, TAVOLOZZA_FIORI, PALO, FUMETTO, CUORE, STELLINA,
-         LASTRE_DISEGNI, PECORA, PECORA_BRUCA, OSSO, RECINTO } from './pixel.js'
-import { COPPIE } from '../dati/mondo.js'
+         LASTRE_DISEGNI, PECORA, PECORA_BRUCA, OSSO, RECINTO,
+         GUERRIERO, SPADA, SPADA_IN_MANO, NEMICO, PRINCIPESSA, CORONA } from './pixel.js'
+import { COPPIE, LASTRE } from '../dati/mondo.js'
 
 /* il colore dell'anello di una buca: lo dice il vocabolario del mondo,
    perché «la coppia viola» è un fatto e non un disegno */
@@ -116,6 +117,9 @@ export class Tela {
     /* per terra: le buche, i ponti, e la cella dove qualcosa è andato storto */
     this.buche(orologio)
     for (const p of f.ponti) this.ponte(p)
+    for (const p of f.pulsanti || []) this.pulsante(p)
+    for (const g of f.grate || []) if (g.su >= 1) this.sogliaGrata(g)
+    this.tiroDeiNemici(f, orologio)
     if (f.guasto) this.segnaGuasto(f.guasto, orologio)
 
     /* in piedi, in ordine di dove toccano terra */
@@ -129,9 +133,17 @@ export class Tela {
     }
     if (liv.tana >= 0) {
       const tana = liv.xy(liv.tana)
-      figure.push({ piede: (tana.y + 1) * T - 0.5, disegna: () => this.tana(tana.x, tana.y, f) })
+      figure.push({ piede: (tana.y + 1) * T - 0.5, disegna: () => (liv.guerriero ? this.principessa(tana.x, tana.y, f, orologio) : this.tana(tana.x, tana.y, f)) })
     }
     if (liv.cane) this.figureDelRecinto(figure, f, orologio)
+    for (const g of f.grate || [])
+      if (g.su < 1) figure.push({ piede: (g.y + 1) * T - 1, disegna: () => this.grata(g) })
+    if (f.spada && !f.spada.presa)
+      figure.push({ piede: (f.spada.y + 1) * T - 1.5, disegna: () => this.spadaPerTerra(f.spada, orologio) })
+    for (const [k, n] of (f.nemici || []).entries()) {
+      if (n.alfa <= 0) continue
+      figure.push({ piede: (n.y + 1) * T - 0.8, disegna: () => this.nemico(n, orologio, k) })
+    }
     for (const m of f.massi) {
       if (m.alfa <= 0) continue
       figure.push({ piede: (m.y + 1) * T - 1, disegna: () => this.masso(m) })
@@ -151,7 +163,7 @@ export class Tela {
 
     for (const e of f.effetti) this.effetto(e, f.t)
     if (f.fumetto) this.fumetto(c, f.t - f.fumetto.t0)
-    if (f.scenetta === 'sbatte' || f.scenetta === 'stanco') this.stelleInTesta(c, orologio)
+    if (f.scenetta === 'sbatte' || f.scenetta === 'stanco' || f.scenetta === 'caduto') this.stelleInTesta(c, orologio)
   }
 
   /* da cella a pixel dello sprite: il centro della cella, e il fondo */
@@ -282,7 +294,138 @@ export class Tela {
       this.foglio.posa(ctx, TRONCO, cx, fy - 3)
     } else if (o === 'staccionata') {
       this.staccionata(x, y)
+    } else if (o === 'muro') {
+      this.muro(x, y)
     }
+  }
+
+  /* Il muro: la cima, e sotto la faccia a mattoni se davanti non c'è altro
+     muro. Sta tutto dentro la sua cella: uscendo in su coprirebbe i piedi di
+     chi gli passa dietro, e il bambino deve vedere dove sta. */
+  muro(x, y) {
+    const ctx = this.ctx, liv = this.liv
+    const x0 = LATO + x * T, fy = TESTA + (y + 1) * T
+    const sotto = liv.vicino(liv.indice(x, y), 0, 1)
+    const faccia = sotto < 0 || liv.ostacolo[sotto] !== 'muro'
+    ctx.fillStyle = '#c9c4ba'
+    ctx.fillRect(x0, fy - T, T, T)
+    ctx.fillStyle = '#dcd8d0'
+    ctx.fillRect(x0, fy - T, T, 1)
+    if (!faccia) return
+    ctx.fillStyle = '#7f7a72'
+    ctx.fillRect(x0, fy - 9, T, 9)
+    ctx.fillStyle = '#5f5b54'
+    ctx.fillRect(x0, fy - 9, T, 1)
+    ctx.fillRect(x0, fy - 5, T, 1)
+    ctx.fillRect(x0, fy - 1, T, 1)
+    ctx.fillRect(x0 + 4, fy - 9, 1, 4)
+    ctx.fillRect(x0 + 12, fy - 9, 1, 4)
+    ctx.fillRect(x0 + 8, fy - 5, 1, 4)
+  }
+
+  /* ═══════════ le cose del guerriero ═══════════ */
+  /* il pulsante: una base di pietra e un disco del suo colore, con la forma
+     delle lastre per chi i colori non li distingue. Premuto si abbassa */
+  pulsante(p) {
+    const ctx = this.ctx
+    const x0 = LATO + p.x * T, y0 = TESTA + p.y * T
+    const c = LASTRE[p.colore]
+    ellisse(ctx, x0 + 1, y0 + 3, 14, 11, '#4e4a44')
+    ellisse(ctx, x0 + 2, y0 + (p.giu ? 5 : 2), 12, 9, c.scuro)
+    ellisse(ctx, x0 + 2, y0 + (p.giu ? 4 : 1), 12, 9, p.giu ? c.scuro : c.colore)
+    this.forma(c.forma, x0 + 8, y0 + (p.giu ? 8 : 5), p.giu ? '#d8d4cc' : '#ffffff')
+  }
+
+  forma(forma, cx, cy, colore) {
+    const ctx = this.ctx
+    ctx.fillStyle = colore
+    if (forma === 'quadrato') ctx.fillRect(cx - 2, cy - 2, 4, 4)
+    else if (forma === 'cerchio') {
+      ctx.fillRect(cx - 1, cy - 2, 2, 4)
+      ctx.fillRect(cx - 2, cy - 1, 4, 2)
+    } else for (let r = 0; r < 4; r++) ctx.fillRect(cx - 1 - (r >> 1), cy - 2 + r, 2 + 2 * (r >> 1), 1)
+  }
+
+  /* la grata: sbarre di ferro in una cornice del suo colore, con la forma in
+     cima. Salendo le sbarre spariscono in alto */
+  grata(g) {
+    const ctx = this.ctx
+    const x0 = LATO + g.x * T, fy = TESTA + (g.y + 1) * T
+    const c = LASTRE[g.colore]
+    const alto = 20, su = Math.round(g.su * (alto - 5))
+    ctx.fillStyle = '#2f3038'
+    for (const px of [3, 6, 9, 12]) ctx.fillRect(x0 + px, fy - alto + 4, 1, alto - 5 - su)
+    ctx.fillStyle = '#6a6c78'
+    for (const px of [2, 5, 8, 11]) ctx.fillRect(x0 + px, fy - alto + 4, 1, alto - 5 - su)
+    if (alto - 7 - su > 0) {
+      ctx.fillStyle = '#44464f'
+      ctx.fillRect(x0 + 1, fy - 7 - su, T - 2, 2)
+    }
+    ctx.fillStyle = c.scuro
+    ctx.fillRect(x0, fy - alto, 2, alto)
+    ctx.fillRect(x0 + T - 2, fy - alto, 2, alto)
+    ctx.fillRect(x0, fy - alto, T, 7)
+    ctx.fillStyle = c.colore
+    ctx.fillRect(x0 + 1, fy - alto + 1, T - 2, 5)
+    this.forma(c.forma, x0 + 8, fy - alto + 3, '#ffffff')
+  }
+
+  // una grata aperta è prato, ma resta la soglia del suo colore: si vede dove stava
+  sogliaGrata(g) {
+    const ctx = this.ctx
+    const x0 = LATO + g.x * T, y0 = TESTA + g.y * T
+    ctx.fillStyle = LASTRE[g.colore].scuro
+    ctx.fillRect(x0, y0 + 13, 2, 3)
+    ctx.fillRect(x0 + T - 2, y0 + 13, 2, 3)
+    ctx.fillStyle = '#4e4a44'
+    ctx.fillRect(x0 + 2, y0 + 14, T - 4, 1)
+  }
+
+  /* dove colpisce un nemico: le quattro celle attorno a lui, tinte per terra.
+     È la regola detta col disegno: chi non legge vede dove non fermarsi */
+  tiroDeiNemici(f, t) {
+    const ctx = this.ctx, liv = this.liv
+    const vivi = (f.nemici || []).filter(n => n.alfa >= 1)
+    if (!vivi.length) return
+    ctx.globalAlpha = 0.26 + 0.06 * Math.sin(t * 3)
+    ctx.fillStyle = '#e0483a'
+    for (const n of vivi) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const x = Math.round(n.x) + dx, y = Math.round(n.y) + dy
+      if (!liv.dentro(x, y)) continue
+      const i = liv.indice(x, y)
+      if (liv.ostacolo[i] || liv.terreno[i] === 'acqua') continue
+      ctx.fillRect(LATO + x * T + 1, TESTA + y * T + 1, T - 2, T - 2)
+    }
+    ctx.globalAlpha = 1
+  }
+
+  spadaPerTerra(s, t) {
+    const ctx = this.ctx
+    const d = pezzo('spada', SPADA)
+    const cx = this.cx(s.x), fy = this.fy(s.y)
+    ombra(ctx, cx, fy - 2, 8)
+    ctx.drawImage(d, Math.round(cx - d.width / 2), fy - d.height - 1 + Math.round(Math.sin(t * 3.2)))
+  }
+
+  nemico(n, t, k) {
+    const ctx = this.ctx
+    const d = pezzo('nemico', NEMICO)
+    const cx = this.cx(n.x), fy = this.fy(n.y)
+    const respiro = Math.sin(t * 2.4 + k * 1.3) > 0.5 ? 1 : 0
+    ctx.globalAlpha = n.alfa
+    ombra(ctx, cx, fy - 1, 12)
+    specchiato(ctx, d, Math.round(cx - d.width / 2), fy - d.height - respiro, n.verso === 'sinistra')
+    ctx.globalAlpha = 1
+  }
+
+  principessa(x, y, f, t) {
+    const ctx = this.ctx
+    const d = pezzo('principessa', PRINCIPESSA)
+    const cx = this.cx(x + (f.principessa || 0)), fy = this.fy(y)
+    // chiama aiuto saltellando, e dopo fa festa
+    const su = f.festa ? Math.abs(Math.sin(t * 8)) * 2 : Math.sin(t * 3) > 0.7 ? 1 : 0
+    ombra(ctx, cx, fy - 1, 12)
+    ctx.drawImage(d, Math.round(cx - d.width / 2), Math.round(fy - d.height - su))
   }
 
   /* La staccionata si compone con le vicine, come una strada: le
@@ -434,8 +577,14 @@ export class Tela {
     const ctx = this.ctx
     const cx = this.cx(c.x), fy = this.fy(c.y)
     /* la carota respira: dice «prendimi» a chi guarda la mappa. Per il
-       cane è un osso, posato per terra */
+       cane è un osso, posato per terra; per il guerriero la corona */
     const su = Math.round(Math.sin(t * 3.2) * 1)
+    if (this.liv.guerriero) {
+      const d = pezzo('corona', CORONA)
+      ombra(ctx, cx, fy - 2, 10)
+      ctx.drawImage(d, Math.round(cx - d.width / 2), fy - 11 + su)
+      return
+    }
     if (this.liv.cane) {
       const d = pezzo('osso', OSSO)
       ombra(ctx, cx, fy - 2, 11)
@@ -453,16 +602,18 @@ export class Tela {
   coniglio(c, f, t) {
     if (c.alfa <= 0) return
     const ctx = this.ctx
-    const img = this.foglio.immagine
     const specchia = c.verso === 'sinistra'
     const verso = c.verso === 'destra' || c.verso === 'sinistra' ? 'lato' : c.verso
     let fr = 0
     if (c.posa === 'cammina') fr = 1 + (Math.floor(c.fase * 6) % 3)
     else if (c.posa === 'spinge') fr = 1 + (Math.floor(c.fase * 4) % 3)
     else if (c.posa === 'salta') fr = 2
-    const chi = CORRIDORI[this.liv.cane ? 'cane' : 'coniglio']
+    /* il guerriero non sta nell'atlante: è disegnato in codice */
+    const mano = this.liv.guerriero ? pezzo(`guerriero-${verso}${fr}`, GUERRIERO(verso)(fr)) : null
+    const chi = mano ? { vuote: 0, lato: 0 } : CORRIDORI[this.liv.cane ? 'cane' : 'coniglio']
+    const img = mano || this.foglio.immagine
     const nome = `${chi.nome}_${verso}${fr}`
-    const p = PEZZI[nome] || PEZZI[`${chi.nome}_${verso}0`]
+    const p = mano ? [0, 0, mano.width, mano.height] : PEZZI[nome] || PEZZI[`${chi.nome}_${verso}0`]
     const cx = this.cx(c.x) + (verso === 'lato' ? (specchia ? -chi.lato : chi.lato) : 0)
     const fy = this.fy(c.y) + 1
     let dx = 0
@@ -493,6 +644,12 @@ export class Tela {
       ctx.restore()
     } else {
       ctx.drawImage(img, sx, sy, w, vis, x, y, w, vis)
+    }
+    /* la spada si vede in mano: è così che si sa di averla */
+    if (f.armato && !c.immerso) {
+      const s = pezzo('spada-in-mano', SPADA_IN_MANO)
+      const avanti = verso === 'lato' ? (specchia ? -1 : 10) : verso === 'su' ? -1 : 10
+      ctx.drawImage(s, x + avanti, y + (c.posa === 'spinge' ? 4 : 2))
     }
     ctx.globalAlpha = 1
     /* nell'acqua fino al collo: il pelo dell'acqua gli passa davanti, e
@@ -576,11 +733,32 @@ export class Tela {
         ctx.globalAlpha = 1
         return
       }
+      case 'lampo': {
+        if (eta > 0.6) return
+        const k = eta / 0.6
+        const stella = pezzo('stellina', STELLINA)
+        ctx.globalAlpha = 1 - k
+        for (let i = 0; i < 4; i++) {
+          const a = i * Math.PI / 2 + k * 2
+          ctx.drawImage(stella, Math.round(cx - 2 + Math.cos(a) * (5 + k * 8)), Math.round(fy - 14 + Math.sin(a) * (4 + k * 6)))
+        }
+        ctx.globalAlpha = 1
+        return
+      }
+      case 'polvere': {
+        if (eta > 0.6) return
+        ctx.globalAlpha = 0.7 * (1 - eta / 0.6)
+        ctx.fillStyle = '#d8d4cc'
+        for (let i = 0; i < 4; i++) ctx.fillRect(Math.round(cx - 6 + i * 4), Math.round(fy - 3 - eta * 8 - (i % 2) * 2), 2, 2)
+        ctx.globalAlpha = 1
+        return
+      }
       case 'carota': {
         if (eta > 0.7) return
         const k = eta / 0.7
+        const preso = this.liv.guerriero ? pezzo('corona', CORONA) : pezzo('carota', CAROTA)
         ctx.globalAlpha = 1 - k
-        ctx.drawImage(pezzo('carota', CAROTA), Math.round(cx - 4.5), Math.round(fy - 14 - k * 16))
+        ctx.drawImage(preso, Math.round(cx - preso.width / 2), Math.round(fy - 14 - k * 16))
         const stella = pezzo('stellina', STELLINA)
         ctx.drawImage(stella, Math.round(cx - 8 - k * 4), Math.round(fy - 12 - k * 10))
         ctx.drawImage(stella, Math.round(cx + 4 + k * 4), Math.round(fy - 16 - k * 8))
