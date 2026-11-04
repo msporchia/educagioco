@@ -87,7 +87,7 @@ patatine 22, maki 39. Le eccezioni stanno in `dati/parita2d.js` (`LIVELLI_ANTICI
 
 **Le soglie non si muovono**: lo scarto di −258 resta dopo il 57 (`LIVELLO_PESCHIERA`), dove la 2D paga la peschiera. Spostarlo avrebbe fatto salire di colpo chi sta fra il 10 e il 57.
 
-**Un banco dà un pesce ogni 15 minuti, come la ricetta `pesce` della peschiera**: 5 minuti ad aspettare che abbocchi (`PESCA.ms`) e 10 a ripopolarsi (`riposoMs`); il porticciolo e il mare danno più pesci per lancio (1, 2, 3: il premio per
+**Un banco dà un pesce ogni 15 minuti, come la ricetta `pesce` della peschiera**: il pesce c'è già e abbocca in pochi secondi (`PESCA.ms`), poi ci mette il resto del ciclo a tornare (`riposoMs`): «ha più senso che i pesci siano già pronti», scelta dell'utente; il porticciolo e il mare danno più pesci per lancio (1, 2, 3: il premio per
 averli). Per i conti dei tempi un pesce costa un ciclo (15 min). Il pesce crudo è l'unico prodotto degli animali che il banco chiede ([ordini.md](ordini.md)): serve a venderlo prima di avere le due macchine.
 
 ## La terra: la stessa, cella per cella

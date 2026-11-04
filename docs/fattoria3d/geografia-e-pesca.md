@@ -41,7 +41,7 @@ oggi non portano ancora `geo`, quindi la fattoria di un amico si vede con la geo
 **Si compra come ogni lotto**: `prezzoDelLotto`, 40 + 20 per ogni lotto già comprato (l'acqua si paga come la terra). Il cartello dice «🪙 N · 🌊 mare», «🏞️ lago» o «🏖️
 spiaggia» (e l'offerta: «Qui c'è il mare: con un molo e il porticciolo ci si pesca»).
 
-**Dal 4/11/2026 la pesca è al livello 10**: molo, molo girato, porticciolo, stagno e laghetto; sushi bar e riso 15, friggitoria 19 ([livelli.md](livelli.md)). I numeri più vecchi di questa pagina sono storia. Un banco dà un pesce ogni 15 minuti (5 di attesa + 10 di riposo, come la ricetta `pesce` della peschiera). Le soglie dal 58 restano spostate di −258 ([livelli.md](livelli.md)).
+**Dal 4/11/2026 la pesca è al livello 10**: molo, molo girato, porticciolo, stagno e laghetto; sushi bar e riso 15, friggitoria 19 ([livelli.md](livelli.md)). I numeri più vecchi di questa pagina sono storia. Un banco dà un pesce ogni 15 minuti, come la ricetta `pesce` della peschiera: il pesce c'è già e abbocca in pochi secondi, il resto del ciclo serve a farlo tornare. Le soglie dal 58 restano spostate di −258 ([livelli.md](livelli.md)).
 
 ## Come si vede
 
@@ -68,7 +68,7 @@ spiaggia» (e l'offerta: «Qui c'è il mare: con un molo e il porticciolo ci si 
   entro 8 celle: due laghi vicini, o un lago e un laghetto, non sono lo stesso specchio: «L'acqua è troppo lontana dal molo»). Senza moli: «Per pescare serve un molo vicino all'acqua».
 - **Il mare vuole il porticciolo** («Per pescare in mare serve il porticciolo»); un molo lungo dal porticciolo allunga il raggio.
 - **Il banco**: **ogni lotto d'acqua tuo è un banco** (`stato.pesca[lottoId] = { i, j, fine, riposo }`, `i, j` dov'è il galleggiante): più lotti, più lenze in parallelo, una per banco.
-  `lancia → aspetta PESCA.ms = 5 min → ritira → riposo PESCA.riposoMs = 10 min → di nuovo calmo`. Il tempo è assoluto (`ora()`): vale anche a pagina chiusa, come un campo. Il banco **non
+  `lancia → aspetta PESCA.ms = 4 s → ritira → riposo PESCA.riposoMs = 14 min 56 s → di nuovo calmo`: i pesci ci sono già, è tornare che chiede tempo. Il tempo è assoluto (`ora()`): vale anche a pagina chiusa, come un campo. Il banco **non
   si esaurisce mai per sempre**: si ripopola.
 - **Tre stadi a colpo d'occhio** (come le bestie): **acqua calma** (niente) → **il galleggiante dondola piano** con un anello lento (in attesa) → **si immerge a scatti, gli anelli si
   allargano e compare «🐟 Abbocca!»** (tocca per ritirare). Se il contadino è ancora lì quando abbocca, **ritira da sé** (lo strappo, lo spruzzo, il «+1» col pesce, l'esultanza); se se n'è

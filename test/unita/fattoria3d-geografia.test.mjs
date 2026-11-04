@@ -202,7 +202,7 @@ const celleDi = l => { const o = []; for (let y = 0; y < l.d; y++) for (let x = 
   uguale('un lancio rende 1 (molo, acqua dolce)', resaDellaPesca({}), 1)
   uguale('col porticciolo 2', resaDellaPesca({ porticciolo: true }), 2)
   uguale('nel mare (col porticciolo) 3', resaDellaPesca({ porticciolo: true, mare: true }), 3)
-  controlla('l\'attesa è fra 3 e 10 minuti, e il ciclo del banco quindici (come la peschiera)', PESCA.ms >= 180000 && PESCA.ms <= 600000 && PESCA.ms + PESCA.riposoMs === 900000)
+  controlla('il pesce abbocca in pochi secondi, e il ciclo del banco è quindici minuti (come la peschiera)', PESCA.ms >= 2000 && PESCA.ms <= 10000 && PESCA.ms + PESCA.riposoMs === 900000)
 }
 
 /* ══════════ 5. la pesca: lago a est, mare a ovest ══════════ */
