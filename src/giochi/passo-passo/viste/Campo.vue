@@ -8,7 +8,7 @@ import Fila from './Fila.vue'
 import { computed } from 'vue'
 import Icona from './Icona.vue'
 import Lastra from './Lastra.vue'
-import { nomeDellaMossa, LASTRE } from '../dati/mondo.js'
+import { nomeDellaMossa, LASTRE, VERSI, CHIAVI_VERSI } from '../dati/mondo.js'
 import { VOLTE, CASA } from '../dati/carte.js'
 
 const props = defineProps({
@@ -51,10 +51,11 @@ const conSe = computed(() => props.carte.includes('se'))
 /* cosa si può scegliere per la testa di questa scatola */
 const numeri = computed(() => (props.sceltaTipo === 'ripeti' && props.carte.includes('ripeti') ? VOLTE : []))
 const altri = computed(() => {
-  if (props.sceltaTipo === 'se') return props.colori
+  if (props.sceltaTipo === 'se') return [...props.colori, ...(props.carte.includes('varco') ? CHIAVI_VERSI : [])]
   return [...(props.carte.includes('fino') ? props.colori : []), ...(props.carte.includes('casa') ? [CASA] : [])]
 })
-const inParole = v => (v === CASA ? 'fino a casa' : `${props.sceltaTipo === 'se' ? 'se' : 'fino a'} ${(LASTRE[v] || {}).nome || v}`)
+const inParole = v => (v === CASA ? 'fino a casa' : VERSI[v] ? `se ${VERSI[v].nome} si passa`
+  : `${props.sceltaTipo === 'se' ? 'se' : 'fino a'} ${(LASTRE[v] || {}).nome || v}`)
 
 /* l'ordine dei tasti: sinistra, su, giù, destra — le due frecce verticali
    in mezzo, come sulla tastiera di un computer */
