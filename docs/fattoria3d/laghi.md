@@ -98,8 +98,8 @@ produttive, non spostano la scaletta (`tara:fattoria3d` resta verde). Un pezzo d
 ## La pesca (fatta: [geografia-e-pesca.md](geografia-e-pesca.md))
 
 Tutta l'acqua, dei laghetti, dei laghi grandi, del mare e degli stagni costruiti, si pesca da un **molo** (🪙12, 3×1 o 1×3) o dal **porticciolo** (🪙90), tutti e due dal livello 10:
-si tocca una cella d'acqua tua entro 6 celle dal molo e nello stesso specchio, il contadino lancia, aspetta 5 minuti e ritira un pesce (uno per lotto d'acqua alla volta: ogni lotto è un
-banco che si ripopola in dieci minuti). Il posto candidato `generaLotto(..).molo` resta nei dati ma non guida più niente: il molo lo mette il bambino dove vuole. La peschiera della 2D
+si tocca una cella d'acqua tua entro 6 celle dal molo e nello stesso specchio, il contadino lancia e in pochi secondi ritira un pesce (uno per lotto d'acqua alla volta: ogni lotto è un
+banco che si ripopola in un quarto d'ora). Il posto candidato `generaLotto(..).molo` resta nei dati ma non guida più niente: il molo lo mette il bambino dove vuole. La peschiera della 2D
 (il recinto dei pesci, che mangiano il mangime del mulino) **non c'è ancora**: [da-fare.md](da-fare.md).
 
 ## Nei test
