@@ -198,7 +198,7 @@ Viste le piante del prototipo, l'utente ha deciso (dove contrasta, vale questo e
    45–50 s a piedi.
 2. **Si genera a blocchi**: lo scheletro di tutto il mondo e le zone una per una (quella dove si è e le accanto), le lontane si
    buttano. Il contratto: [mondo-aperto-generatore.md](mondo-aperto-generatore.md).
-3. **Una città sola, il villaggio**: niente forte né rifugio, quindi niente avamposti. Nel villaggio i quattro mercanti, la ragazza,
+3. **Una città sola, il villaggio**: niente forte né rifugio, quindi niente avamposti. Nel villaggio i cinque mercanti, la ragazza,
    il minatore, la bacheca, il capitano (venuto dal forte), il portale gemello, la pietra. Le pietre di zona portano al villaggio e
    alle altre accese. Le taglie salvate col forte o il rifugio si rileggono sul villaggio (`cittaDiOggi`). La domanda 4 è chiusa.
 4. **Nessuna grata**: le zone si attraversano sempre (era già il progetto).

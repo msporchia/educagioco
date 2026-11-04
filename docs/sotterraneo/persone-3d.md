@@ -1,7 +1,7 @@
 # Le persone del mondo di sopra in 3D
 
 Nel sotterraneo ([grafica-3d.md](grafica-3d.md)) l'eroe e i mostri sono modelli ([mostri-3d.md](mostri-3d.md)); dal 22 ottobre
-anche chi sta sul mondo di sopra: i quattro mercanti, i personaggi delle missioni, il capitano, il minatore, i viandanti da
+anche chi sta sul mondo di sopra: i cinque mercanti, i personaggi delle missioni, il capitano, il minatore, i viandanti da
 cercare e le sentinelle delle discese rosse. Le bancarelle e le botteghe restano quelle di prima.
 
 ## I quattordici modelli
