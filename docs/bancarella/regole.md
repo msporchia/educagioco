@@ -12,7 +12,8 @@ rende un cliente. I dati e la tabella della scaletta stanno in testa a
   nome e il tempo, e la fila si presenta. La giornata finita apre la dopo.
 - **Cinque banchi** (`BANCHI`): 🍎 il fruttivendolo, 🥬 l'orto, 🥖 il forno,
   🧀 il frigo, 🍬 i dolciumi. **Quello che si vende è tutto lì davanti**,
-  fino a otto ceste (`MAX_CESTE`, `esposizione`): niente reparti da aprire,
+  da quattro a otto ceste secondo il carretto ([banco.md](banco.md),
+  `MAX_CESTE`, `esposizione`): niente reparti da aprire,
   il tempo si passa a contare i soldi e non a cercare il pane. Il cliente
   chiede solo roba esposta.
 - **Le categorie devono essere ovvie**, se no il gioco diventa indovinare:
@@ -65,10 +66,10 @@ La spina dorsale del gioco (`CONTI`, `chiedeIlTotale`, `chiedeIlResto`):
 
 ## La scaletta: una leva per giornata
 
-Sedici giornate, e **ogni giornata cambia una leva sola rispetto a quella
-prima**, sempre in salita. Le leve sono sei (`leve`): `conto`, `banchi`,
+Diciassette giornate, e **ogni giornata cambia una leva sola rispetto a quella
+prima**, sempre in salita. Le leve sono sette (`leve`): `conto`, `banchi`,
 `articoli`, `copie`, `passo` (1 € · 50c · 10c · 5c · 1c), `paga` (la
-banconota più grossa). La tabella sta in testa a `src/data/bancarella.js`,
+banconota più grossa), `riesce` ([banco.md](banco.md)). La tabella sta in testa a `src/data/bancarella.js`,
 e `unita/bancarella` la ricontrolla leva per leva. Il campo `nuovo` dice la
 cosa che la giornata aggiunge, e il test lo pretende da tutte tranne la
 prima.
@@ -114,8 +115,8 @@ mestieri per un bambino di otto anni (`generaCliente`, `comePuoPagare`).
 - **`paga` con più voci**: fra i modi possibili il cliente sceglie quello
   che lascia un resto da tanti pezzi quanti ne vuole la giornata (`pezzi`).
 - **Il ripiego**: la banconota che ha in tasca o una cifra tonda poco sopra
-  la spesa, comunque mai più di tre pezzi in mano. Un cliente senza soldi
-  bloccherebbe la fila.
+  la spesa. Un cliente senza soldi bloccherebbe la fila. Quanti pezzi tira
+  fuori lo dice [banco.md](banco.md#i-soldi-si-guardano).
 - **La spesa si tira a sorte e si riprova** sotto il `tetto`, invece di
   scegliere i prodotti uno per uno guardando quanto resta: quella strada
   finirebbe per prendere sempre i più economici. Mai più di tre uguali.
@@ -129,8 +130,8 @@ mestieri per un bambino di otto anni (`generaCliente`, `comePuoPagare`).
   **torna largo quando entra un conto nuovo** (`tappaDi`).
 - **Chi compra di più aspetta di più**: +8 secondi per ogni pezzo oltre i
   tre.
-- **La giornata libera** (`LIBERA`) si apre a campagna finita e non chiude
-  mai: cinque banchi, prezzi al centesimo, cassa rotta (tornare a farsi
+- **Il mercato senza fine** (`LIBERA`, il suo record sta in [banco.md](banco.md))
+  si apre a campagna finita e non chiude mai: cinque banchi, prezzi al centesimo, cassa rotta (tornare a farsi
   dire il resto sarebbe un passo indietro), il tempo che scende di due
   secondi a tappa fino a 45 e poi si ferma — una sfida, non una condanna.
 - **Fermarsi**: il ⏸, il telefono posato e il foglio del `?` fermano la
@@ -226,7 +227,7 @@ bersagli della carta sono quelli comuni di [../core/ripresa.md](../core/ripresa.
 
 - **Un cliente vale da 🪙2 a 🪙4** secondo il lavoro (`MONETE_CLIENTE`:
   `niente` 2 · `totale` 3 · `resto` 3 · `tutto` 4, cioè ~20-40 secondi di
-  esercizio), **pagate nel momento in cui è servito** — prima arrivavano a
+  esercizio; chi vuole «tutte quelle che riesce» 4), **pagate nel momento in cui è servito** — prima arrivavano a
   gruppi di tre clienti, e gli ultimi due di una giornata finita a metà non
   pagavano. Una giornata va da 🪙18 a 🪙48, e a fine giornata il cartello
   dice il totale (`[data-monete-prese]`) e il salvadanaio stanco

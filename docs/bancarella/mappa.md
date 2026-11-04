@@ -28,7 +28,7 @@ mondo le raggruppa e basta, e le tre stazioni sono mondo → città → banco.
 | 3 | Parigi | 7-9 | il resto lo conti tu, con 10, 20 e 50 euro |
 | 4 | New York | 10-11 | i mezzi euro, e la borsa più piena |
 | 5 | Rio de Janeiro | 12-14 | i centesimi: le decine, i cinque, quelli veri |
-| 6 | Tokyo | 15-16 | due cose uguali, e la cassa rotta |
+| 6 | Tokyo | 15-17 | due cose uguali, tutte quelle che riesce, e la cassa rotta |
 | ∞ | Il Cairo | la libera | il mercato che non chiude mai |
 
 - **Un gradino per città**: i gruppi seguono i salti della scaletta, non il
@@ -122,7 +122,8 @@ e il ← porta al mondo.
   il banco grigio con la serranda giù e il lucchetto. La merce sul banco ha i
   colori dei banchi della giornata, nessun disegno: il racconto è nel
   fumetto.
-- **Il carretto è il segnalino della piazza**: parte dal cartello e va al
+- **Il carretto è il segnalino della piazza**, ed è il banco comprato dal
+  bambino ([banco.md](banco.md)), col suo gradino e la sua tenda: parte dal cartello e va al
   banco da fare (o all'ultimo aperto, a città finita); toccato un banco aperto
   ci va, mentre il fumetto si apre subito. Si muove solo lungo il viale e
   per un tratto verso il banco, quindi non passa mai in mezzo a un altro

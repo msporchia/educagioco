@@ -15,8 +15,8 @@ l'orto, il forno, il frigo, i dolciumi — con tre clienti da servire.
 Le giornate si scelgono in **un giro del mondo**: si parte da Bologna e si
 vola in aereo a Roma, Parigi, New York, Rio e Tokyo, e ogni città è un gruppo
 di giornate. Dentro una città c'è la sua piazza, coi banchi: un banco, una
-giornata, con le sue stelline accanto a quelle già fatte. A fine giro si apre la
-giornata libera, al Cairo. ([la mappa](mappa.md))
+giornata, con le sue stelline accanto a quelle già fatte. A fine giro si apre il
+mercato senza fine, al Cairo. ([la mappa](mappa.md))
 
 Ogni giornata finita vale **da una a tre stelle**: tre se i conti vanno tutti
 giusti al primo colpo, due se un conto o un cliente va storto una o due volte,
@@ -48,7 +48,7 @@ improvviso.
 
 ## La scaletta, giornata per giornata
 
-Sedici giornate, e ognuna aggiunge **una cosa sola** rispetto a quella
+Diciassette giornate, e ognuna aggiunge **una cosa sola** rispetto a quella
 prima: o un prodotto in più, o una banconota più grande, o i centesimi —
 mai due insieme. Quando entra un conto nuovo le altre cose **tornano
 indietro**: la fatica si sposta sulla testa, e non si può chiedere tutto
@@ -71,10 +71,12 @@ insieme.
 | 13 | 🖐️ I cinque centesimi | il resto | i cinque centesimi |
 | 14 | 🏬 Il mercato coperto | il resto | i centesimi veri: 0,89 €, 1,39 € |
 | 15 | ♊ Due cose uguali | il resto | «due angurie, per favore» |
-| 16 | 🧠 La cassa rotta | **tutti e due** | il totale e il resto insieme |
+| 16 | 👛 Tutte quelle che riesce | il resto | «ho 5 €: me ne dia più che può» |
+| 17 | 🧠 La cassa rotta | **tutti e due** | il totale e il resto insieme |
 
-Poi c'è la **giornata libera**, che non chiude mai: cinque banchi, prezzi
-al centesimo, cassa rotta, e il tempo che si stringe finché reggi.
+Poi c'è **il mercato senza fine**, al Cairo: cinque banchi, prezzi al
+centesimo, cassa rotta, il tempo che si stringe finché reggi, e il record
+dei clienti serviti da battere.
 
 La tabella non è una promessa scritta a mano: una prova automatica la
 ricontrolla a ogni giro, e se qualcuno aggiunge due cose insieme diventa
@@ -89,6 +91,13 @@ da 20 e tre da 10 è tutt'altro esercizio. Per questo, dove la giornata
 lascia scegliere, **il cliente sceglie apposta con che cosa pagare**. Dove
 la banconota è dichiarata — «paga con 20 €» — quella è, perché lì la
 sottrazione deve partire da un numero conosciuto.
+
+## Il banco tuo
+
+L'incasso resta in cassa e si spende: una tenda più bella fa aspettare i
+clienti, il carretto che diventa bottega porta più ceste, e la merce nuova si
+compra un prodotto alla volta. Si comincia con quattro ceste e il telo.
+([il banco](banco.md))
 
 ## Quanto rende
 

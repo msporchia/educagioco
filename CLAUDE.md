@@ -67,7 +67,7 @@ quale file.
 | `docs/arena/` | Castle Battle (`src/giochi/arena/`): regole, calcoli, campagna, taratura (`npm run tara:arena`), sosta, grafica — prima di toccare `giochi/arena/dati/`, il motore o un prezzo |
 | `docs/giardino/` | Il giardino (`src/giochi/giardino/`, in prova): regole, calcoli, campagna, taratura — prima di toccare `giochi/giardino/dati/`, il motore o un prezzo |
 | `docs/lingue/` | English ed Español: vocaboli, campagne, la pronuncia incisa (`npm run voci`) |
-| `docs/bancarella/` | La bancarella: regole e difficoltà |
+| `docs/bancarella/` | La bancarella: regole e difficoltà, il giro del mondo, il banco da comprare (`banco.md`) — prima di toccare `data/bancarella*.js` o un prezzo |
 | `docs/pozioni/` | Il laboratorio delle pozioni: regole e tappe |
 | `docs/passo-passo/` | Passo passo: regole del mondo, cane pastore, zaino e carte, stelle, sentiero, come si scrive un livello |
 | `docs/costruttore/` | Il Robot (era «Il costruttore»: chiave e cartelle restano `costruttore`): linguaggio, progetti e attrezzi, il porto, gli algoritmi, la campagna, la scheda e il robot disegnato |
