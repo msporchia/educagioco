@@ -25,13 +25,12 @@ await page.addInitScript(() => {
 })
 await azzera(page)
 
-/* ---------- 1. in home la carta nasce spenta, e la accende il genitore (docs/genitori/interruttori.md) ---------- */
-uguale('su un profilo nuovo la carta dello spagnolo non c’è', await page.locator('.carta.gioco[data-gioco="spagnolo"]').count(), 0)
+/* ---------- 1. in home la carta c'è, accanto a quella inglese ---------- */
+uguale('su un profilo nuovo la carta dello spagnolo c’è', await page.locator('.carta.gioco[data-gioco="spagnolo"]').count(), 1)
 uguale('e quella inglese è rimasta al suo posto', await page.locator('.carta.gioco[data-gioco="inglese"]').count(), 1)
 
 /* ---------- 2. senza la campagna vecchia finita, niente ---------- */
-await semina(page, { esp: { tappa: 4, libera: false }, settings: { giochi: { spagnolo: true } } })
-uguale('acceso dal genitore, la carta c’è', await page.locator('.carta.gioco[data-gioco="spagnolo"]').count(), 1)
+await semina(page, { esp: { tappa: 4, libera: false } })
 await scegli(page, 'spagnolo')
 await page.waitForSelector('[data-mappa-inglese] [data-tappa]', { timeout: 5000 })
 uguale('a campagna vecchia a metà il gioco di prima non c’è', await page.locator('[data-prima]').count(), 0)
