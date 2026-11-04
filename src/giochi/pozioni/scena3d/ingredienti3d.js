@@ -1,15 +1,14 @@
 // Gli ingredienti come oggetti: modellati nella creta (forme che si fondono,
 // una pelle sola, i colori nei vertici), come gli animali della fattoria.
-// Una prova su nove dei diciotto: vedi docs/pozioni/regole.md.
-import { Group, Mesh, MeshStandardMaterial, Color } from 'three'
+// Un liquido si mostra con da dove viene: la bava col drago, il succo con la
+// rapa. Nel gioco non si costruiscono: si fotografano sul computer (`npm run
+// anteprime pozioni`). Vedi docs/pozioni/regole.md.
+import { Group, Mesh, MeshStandardMaterial } from 'three'
 import { palla, osso, fila, girata, unione, meno, dentro, sopra, pelle, scatolaDi, fra, verso, mosso } from '../../fattoria3d/scena3d/creta.js'
 
 const materiale = (lucido = 0.75) => new MeshStandardMaterial({ vertexColors: true, roughness: lucido, metalness: 0 })
 
-function pezzo(forma, passo, colore, lucido) {
-  const m = new Mesh(pelle(forma, { ...scatolaDi(forma, 0.05), passo, colore }), materiale(lucido))
-  return m
-}
+const pezzo = (forma, passo, colore, lucido) => new Mesh(pelle(forma, { ...scatolaDi(forma, 0.05), passo, colore }), materiale(lucido))
 const tutto = (...pezzi) => { const g = new Group(); g.add(...pezzi); return g }
 
 function fungo(cx, cz, s, gira = 0) {
@@ -138,8 +137,134 @@ function stella() {
   return tutto(pezzo(forma, 0.012, (x, y, z, c) => { c.setHex(0xffd85e); verso(c, 0xe89a1e, fra(0.1, 0.5, Math.hypot(x, y - 0.52))) }, 0.3))
 }
 
+function drago() {
+  const lato = s => [
+    fila([[s * 0.17, 0.74, -0.14], [s * 0.26, 0.92, -0.34], [s * 0.26, 1.08, -0.52]], [0.075, 0.045, 0.012], 0.03),
+    girata(palla([s * 0.34, 0.66, -0.14], [0.05, 0.13, 0.09]), [0, 0, -s * 0.7]),
+    palla([s * 0.15, 0.68, 0.14], 0.085),
+    palla([s * 0.08, 0.52, 0.54], 0.045),
+  ]
+  const testa = unione([
+    palla([0, 0.54, -0.04], [0.3, 0.27, 0.32]),
+    osso([0, 0.48, 0.14], [0, 0.44, 0.56], 0.21, 0.135),
+    osso([0, 0.36, -0.14], [0, 0, -0.34], 0.2, 0.3),
+    ...[0, 1, 2].map(n => osso([0, 0.74 - n * 0.2, -0.2 - n * 0.09], [0, 0.88 - n * 0.2, -0.36 - n * 0.09], 0.05, 0.008)),
+    ...lato(1), ...lato(-1),
+    fila([[0, 0.32, 0.5], [0.01, 0.2, 0.52], [0, 0.12, 0.52]], [0.022, 0.016, 0.045], 0.02),
+  ], 0.05)
+  const forma = dentro(testa, sopra(0))
+  const occhio = (x, y, z) => Math.hypot(Math.abs(x) - 0.17, y - 0.7, z - 0.21)
+  return tutto(pezzo(forma, 0.014, (x, y, z, c, nx, ny) => {
+    c.setHex(0x4fa84a); verso(c, 0x2a7238, fra(0, 0.7, ny) * 0.6); verso(c, 0xc8d878, fra(0.05, -0.6, ny) * 0.8)
+    if (y > 0.62 && z < -0.12 && Math.abs(x) < 0.07 || (Math.abs(x) > 0.15 && y > 0.8)) c.setHex(0xe8dcae)
+    verso(c, 0xf2c83a, fra(0.06, 0.04, occhio(x, y, z))); verso(c, 0x141414, fra(0.035, 0.022, occhio(x, y, z)))
+    if (y < 0.3 && z > 0.42 && Math.abs(x) < 0.06) c.setHex(0x9ae86a)      // la bava
+  }, 0.45))
+}
+
+function sirena() {
+  const coda = fila([[0, 0.02, -0.1], [0, 0.32, -0.16], [0.04, 0.6, -0.06], [0.06, 0.78, 0.06]], [0.21, 0.17, 0.1, 0.05], 0.06)
+  const pinna = s => girata(palla([s * 0.26, 0.92, 0.08], [0.26, 0.1, 0.035]), [0.2, 0, s * 0.5], [0.06, 0.8, 0.06])
+  const forma = dentro(unione([coda, pinna(1), pinna(-1)], 0.06), sopra(0))
+  return tutto(pezzo(forma, 0.012, (x, y, z, c) => {
+    c.setHex(0x3aa8c8); verso(c, 0x1f6fa8, fra(0.75, 0.1, y) * 0.5)
+    const riga = Math.floor(y * 16), sq = Math.sin(Math.atan2(z + 0.1, x) * 9 + riga * 1.57) * Math.sin(y * 50)
+    if (y < 0.8) verso(c, 0x9ae8e0, fra(0.2, 0.7, sq) * 0.75)
+    else { verso(c, 0x6ad8d0, 0.6); verso(c, 0xeafcff, fra(0.5, 1, Math.abs(Math.sin(Math.atan2(y - 0.8, x - 0.06) * 12))) * 0.5) }
+  }, 0.3))
+}
+
+function gufo() {
+  const ala = s => girata(palla([s * 0.3, 0.42, -0.02], [0.08, 0.3, 0.2]), [0, 0, s * 0.12])
+  const piede = s => palla([s * 0.12, 0.05, 0.16], [0.09, 0.05, 0.1])
+  const corpo = unione([palla([0, 0.45, 0], [0.31, 0.43, 0.28]), palla([0, 0.86, 0.02], [0.29, 0.25, 0.26]),
+    osso([0.19, 1.0, 0], [0.24, 1.2, -0.02], 0.08, 0.01), osso([-0.19, 1.0, 0], [-0.24, 1.2, -0.02], 0.08, 0.01),
+    ala(1), ala(-1), piede(1), piede(-1), osso([0, 0.82, 0.24], [0, 0.72, 0.31], 0.045, 0.012)], 0.05)
+  const forma = dentro(corpo, sopra(0))
+  const occhio = (x, y, z) => Math.hypot(Math.abs(x) - 0.12, y - 0.88, (z - 0.25) * 0.5)
+  return tutto(pezzo(forma, 0.013, (x, y, z, c) => {
+    c.setHex(0x8a6238); verso(c, 0x5e3f22, mosso(x, y, z, 26) * 0.4 + 0.2)
+    // il petto chiaro a scaglie
+    if (y < 0.72 && z > 0.08 && Math.abs(x) < 0.22) { c.setHex(0xe8d8b4); verso(c, 0x8a6238, fra(0.3, 0.9, Math.sin(y * 44 + Math.abs(Math.sin(x * 20)) * 2))) }
+    verso(c, 0xf0e4c8, fra(0.15, 0.1, occhio(x, y, z)))
+    verso(c, 0xf2a71e, fra(0.1, 0.08, occhio(x, y, z))); verso(c, 0x141414, fra(0.06, 0.045, occhio(x, y, z)))
+    if (z > 0.24 && y < 0.83 && y > 0.68 && Math.abs(x) < 0.05) c.setHex(0xe0a020)
+    if (y < 0.1) c.setHex(0xe0a020)
+  }, 0.6))
+}
+
+function rapa() {
+  const corpo = unione([palla([0, 0.36, 0], [0.34, 0.31, 0.34]), fila([[0, 0.14, 0], [0.03, 0.02, 0.02]], [0.12, 0.02], 0.08)], 0.14)
+  const foglie = unione([-1.05, -0.35, 0.3, 0.95].map((a, n) => girata(palla([0, 1.0, 0], [0.11, 0.28, 0.035]), [0.12 * n, n * 1.5, a * 0.5], [0, 0.66, 0])), 0.05)
+  return tutto(
+    pezzo(corpo, 0.012, (x, y, z, c) => { c.setHex(0xf2e8dc); verso(c, 0xb0305e, fra(0.26, 0.5, y + mosso(x, y, z, 12) * 0.04)); verso(c, 0xc0a890, fra(0.3, 0.46, Math.abs(Math.sin(y * 30)) * 0.5) * 0.12) }, 0.4),
+    pezzo(foglie, 0.012, (x, y, z, c) => { c.setHex(0x5fae4a); verso(c, 0x2f7a38, fra(1.2, 0.8, y) * 0.7); verso(c, 0xb0305e, fra(0.74, 0.64, y) * 0.8) }, 0.55),
+  )
+}
+
+function nuvola() {
+  const forma = dentro(unione([palla([-0.36, 0.3, 0], [0.3, 0.27, 0.27]), palla([0.02, 0.44, 0], [0.36, 0.38, 0.33]), palla([0.4, 0.3, 0.02], [0.28, 0.25, 0.25]),
+    palla([-0.12, 0.26, 0.2], 0.24), palla([0.2, 0.24, 0.18], 0.22), palla([0.1, 0.3, -0.2], 0.26)], 0.09), sopra(0.08), 0.04)
+  return tutto(pezzo(forma, 0.016, (x, y, z, c, nx, ny) => { c.setHex(0xf6faff); verso(c, 0xa8c4e8, fra(0.2, -0.7, ny) * 0.9) }, 0.85))
+}
+
+function grappolo() {
+  const chicchi = []
+  for (const [y, n, r] of [[0.74, 5, 0.27], [0.56, 5, 0.22], [0.38, 4, 0.16], [0.22, 2, 0.07], [0.1, 1, 0]])
+    for (let i = 0; i < n; i++) { const a = i / n * 6.283 + y * 7; chicchi.push(palla([Math.cos(a) * r, y, Math.sin(a) * r], 0.115)) }
+  const forma = unione(chicchi, 0.012)
+  const gambo = unione([fila([[0, 0.72, 0], [0.02, 0.92, 0], [0.08, 1.02, 0]], [0.04, 0.03, 0.03], 0.02), girata(palla([0.26, 0.92, 0], [0.2, 0.025, 0.15]), [0, 0, 0.35])], 0.03)
+  return tutto(
+    pezzo(forma, 0.011, (x, y, z, c, nx, ny, nz) => { c.setHex(0x6a3f9e); verso(c, 0x3f2268, fra(0.2, -0.6, ny) * 0.8); verso(c, 0xa98ae0, fra(0.55, 0.9, nz * 0.6 + ny * 0.5) * 0.6) }, 0.28),
+    pezzo(gambo, 0.011, (x, y, z, c) => { c.setHex(0x6e5230); if (x > 0.09) { c.setHex(0x5fa04a); verso(c, 0x3a7a38, mosso(x, y, z, 22) * 0.4 + 0.2) } }, 0.6),
+  )
+}
+
+function cometa() {
+  // la testa di roccia, e tre code che si aprono dietro di lei
+  const coda = (dy, dz, r) => fila([[0.34, 0.3, 0], [-0.02, 0.5 + dy * 0.4, dz * 0.4], [-0.34, 0.72 + dy, dz], [-0.64, 0.92 + dy * 1.6, dz * 1.5]], [r, r * 0.7, r * 0.38, 0.008], 0.05)
+  const roccia = [[0.5, 0.2, 0.17], [0.34, 0.1, 0.17], [0.54, 0.36, 0.08]].reduce((f, c) => meno(f, palla(c, 0.05), 0.025),
+    unione([palla([0.38, 0.27, 0], [0.24, 0.22, 0.22]), palla([0.48, 0.38, 0.08], 0.09), palla([0.3, 0.14, -0.08], 0.1)], 0.05))
+  const code = unione([coda(0, 0, 0.17), coda(0.14, 0.14, 0.1), coda(-0.14, -0.12, 0.1)], 0.06)
+  return tutto(
+    pezzo(roccia, 0.011, (x, y, z, c) => { c.setHex(0x8a8078); verso(c, 0x4e4640, mosso(x, y, z, 26) * 0.55 + 0.3) }, 0.85),
+    pezzo(code, 0.014, (x, y, z, c) => { c.setHex(0xfff0c0); verso(c, 0x8ad0f8, fra(0.3, -0.1, x)); verso(c, 0x4a78e0, fra(-0.1, -0.55, x)) }, 0.35),
+  )
+}
+
+function verme() {
+  const punti = [], raggi = []
+  for (let n = 0; n <= 16; n++) {
+    const t = n / 16, su = fra(0.7, 1, t)
+    punti.push([-0.66 + t * 1.14, 0.09 + su * 0.34, Math.sin(t * 7.4) * 0.17 * (1 - su) + su * 0.12])
+    raggi.push(0.04 + 0.06 * Math.min(1, t * 5))
+  }
+  const forma = fila(punti, raggi, 0.02), H = punti.at(-1)
+  return tutto(pezzo(forma, 0.012, (x, y, z, c) => {
+    c.setHex(0xe89ab0); verso(c, 0xc0607e, fra(0.2, 0.85, Math.sin((x * 0.9 + y * 0.8) * 62) * 0.5 + 0.5) * 0.7)
+    const occhio = Math.min(Math.hypot(x - H[0] - 0.05, y - H[1] - 0.03, z - H[2] - 0.07), Math.hypot(x - H[0] + 0.05, y - H[1] - 0.03, z - H[2] - 0.07))
+    verso(c, 0x141414, fra(0.028, 0.018, occhio))
+  }, 0.4))
+}
+
+function stelo() {
+  const asse = fila([[0, 0, 0], [0.03, 0.42, 0], [0.1, 0.72, 0], [0.2, 1.02, 0]], [0.022, 0.02, 0.018, 0.012], 0.01)
+  // i chicchi a coppie, staccati l'uno dall'altro come in una spiga vera
+  const chicchi = []
+  for (let n = 0; n < 7; n++) for (const s of [-1, 1]) {
+    const t = n / 6, cx = 0.1 + t * 0.1, cy = 0.68 + t * 0.34
+    chicchi.push(girata(palla([cx + s * 0.05, cy + 0.03, 0], [0.03, 0.05, 0.03]), [0, 0, -s * 0.55 - 0.3], [cx, cy, 0]))
+  }
+  const baffi = chicchi.filter((_, n) => n % 2 === 0).map((_, n) => osso([0.1 + n / 6 * 0.1 - 0.05, 0.74 + n / 6 * 0.34, 0], [0.02 + n / 6 * 0.1 - 0.12, 0.92 + n / 6 * 0.34, 0], 0.005, 0.002))
+  const forma = unione([asse, ...chicchi, ...baffi], 0.004)
+  return tutto(pezzo(forma, 0.006, (x, y, z, c) => { c.setHex(0xe8c44a); verso(c, 0xb88a24, fra(0.7, 0.1, y) * 0.5); verso(c, 0xfff0a0, mosso(x, y, z, 40) * 0.4 + 0.1) }, 0.45))
+}
+
 // il nome dell'ingrediente → il modello, in piedi sull'origine
 export const MODELLI = {
-  'funghi secchi': funghi, 'ghiande macinate': ghianda, 'conchiglia pestata': conchiglia, 'radice di mandragora': mandragora,
-  'osso di troll': ossoDiTroll, 'ramo di quercia': ramo, 'essenza di rana': rana, 'polvere di luna': luna, 'stelle tritate': stella,
+  'bava di drago': drago, 'essenza di rana': rana, 'acqua di sirena': sirena, 'sciroppo di gufo': gufo, 'succo di rapa': rapa,
+  'schiuma di nuvola': nuvola, 'mosto di strega': grappolo,
+  'polvere di luna': luna, 'stelle tritate': stella, 'funghi secchi': funghi, 'conchiglia pestata': conchiglia,
+  'cenere di cometa': cometa, 'ghiande macinate': ghianda,
+  'radice di mandragora': mandragora, 'ramo di quercia': ramo, 'osso di troll': ossoDiTroll, 'verme di palude': verme, 'stelo dorato': stelo,
 }

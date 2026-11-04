@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="it">
+<head><meta charset="utf-8"><title>Le foto degli ingredienti</title></head>
+<body>
+<!-- La pagina che fotografa i modelli degli ingredienti delle pozioni per `npm run anteprime pozioni`
+     (strumenti/anteprime-pozioni.mjs): `window.__foto` a fine lavoro. Vuole il server di Vite. -->
+<script type="module">
+import * as THREE from 'three'
+import { MODELLI } from '/src/giochi/pozioni/scena3d/ingredienti3d.js'
+
+const LATO = Number(new URLSearchParams(location.search).get('lato')) || 160, GRANDE = LATO * 3
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true })
+renderer.setPixelRatio(1); renderer.setSize(GRANDE, GRANDE, false); renderer.setClearColor(0, 0)
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15
+const scena = new THREE.Scene()
+scena.add(new THREE.HemisphereLight(0xfff4e0, 0x8a7a70, 1.5))
+const sole = new THREE.DirectionalLight(0xfff0d8, 2.6); sole.position.set(2, 3, 3); scena.add(sole)
+const camera = new THREE.PerspectiveCamera(30, 1, 0.05, 100)
+const verso = new THREE.Vector3(0.45, 0.42, 1).normalize()
+
+// si disegna grande e si riduce: i bordi del fondo trasparente vengono puliti
+const piccola = Object.assign(document.createElement('canvas'), { width: LATO, height: LATO })
+const c2 = piccola.getContext('2d')
+const foto = {}
+for (const [nome, crea] of Object.entries(MODELLI)) {
+  const g = crea()
+  scena.add(g)
+  g.updateMatrixWorld(true)
+  const sfera = new THREE.Box3().setFromObject(g).getBoundingSphere(new THREE.Sphere())
+  camera.position.copy(sfera.center).addScaledVector(verso, sfera.radius / Math.sin(THREE.MathUtils.degToRad(15)) * 1.02)
+  camera.lookAt(sfera.center)
+  renderer.render(scena, camera)
+  c2.clearRect(0, 0, LATO, LATO)
+  c2.imageSmoothingQuality = 'high'
+  c2.drawImage(renderer.domElement, 0, 0, LATO, LATO)
+  foto[nome] = piccola.toDataURL('image/webp', 0.85)
+  scena.remove(g)
+  g.traverse(o => { if (o.geometry) { o.geometry.dispose(); o.material.dispose() } })
+}
+window.__foto = foto
+</script>
+</body>
+</html>

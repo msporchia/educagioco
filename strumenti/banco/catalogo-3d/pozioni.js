@@ -3,5 +3,5 @@ import { MODELLI } from '../../../src/giochi/pozioni/scena3d/ingredienti3d.js'
 
 export const VOCI = Object.entries(MODELLI).map(([nome, crea]) => ({
   id: `poz:${nome.replace(/ /g, '-')}`, nome, gioco: 'pozioni', categoria: 'prop',
-  dove: 'il laboratorio delle pozioni', file: 'src/giochi/pozioni/scena3d/ingredienti3d.js', crea,
+  dove: 'il laboratorio delle pozioni: fotografato, sul rotolo e sul banco', file: `src/giochi/pozioni/scena3d/ingredienti3d.js:${crea.name}`, crea,
 }))
