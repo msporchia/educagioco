@@ -11,7 +11,7 @@ import { COSTI, PECORE, TERRA, prezzoDelLotto } from '../dati/regole.js'
 import { PESCA } from '../dati/pesca.js'
 import { MONETE_AL_MINUTO, premioDi, tettoDi } from '../dati/ordini.js'
 import { attesaDelMangime } from '../dati/mangime.js'
-import { coltura2d, ricetta2d, voce2d, bestia2d, livelloRicetta, msDaMinuti, sogliaDi2D, ULTIMO_2D, LIVELLO_PESCA, SCOMPARTO_BASE, SCOMPARTO_PIU, costoIngrandimento } from '../dati/parita2d.js'
+import { coltura2d, ricetta2d, voce2d, bestia2d, livelloRicetta, msDaMinuti, sogliaDi2D, ULTIMO_2D, LIVELLO_PESCA, LIVELLO_PESCHIERA, COLTURE_ANTICIPATE, RICETTE_ANTICIPATE, SCOMPARTO_BASE, SCOMPARTO_PIU, costoIngrandimento } from '../dati/parita2d.js'
 import { postiPerMerce, prezzoDelPasso } from '../dati/silos.js'
 
 // Le promesse di scala (minuti di esercizio, ms di attesa): quelle della 2D
@@ -71,7 +71,7 @@ export function guastiDiParita() {
     const d = coltura2d(k)
     if (!d) { g.push(`${k}: nella 2D non c'è (dati/parita2d.js COLTURA)`); continue }
     if (c.ms !== msDaMinuti(d.minuti)) g.push(`${k}: matura in ${c.ms / 60000} min e in 2D in ${d.minuti}`)
-    if (c.liv !== (d.liv || 1)) g.push(`${k}: arriva al ${c.liv} e in 2D al ${d.liv || 1}`)
+    if (c.liv !== (COLTURE_ANTICIPATE[k] ?? (d.liv || 1))) g.push(`${k}: arriva al ${c.liv} e in 2D al ${d.liv || 1}`)
     if (c.raccolta !== (d.raccolta || 0)) g.push(`${k}: raccoglierla costa ${c.raccolta} e in 2D ${d.raccolta || 0}`)
   }
   for (const [id, r] of Object.entries(RICETTE)) {
@@ -79,7 +79,7 @@ export function guastiDiParita() {
     const d = ricetta2d(id)
     if (!d) { g.push(`${id}: nella 2D non c'è`); continue }
     if (r.ms !== msDaMinuti(d.minuti)) g.push(`${id}: ci mette ${r.ms / 60000} min e in 2D ${d.minuti}`)
-    if (r.liv !== livelloRicetta(id)) g.push(`${id}: arriva al ${r.liv} e in 2D al ${livelloRicetta(id)}`)
+    if (r.liv !== (RICETTE_ANTICIPATE[id] ?? livelloRicetta(id))) g.push(`${id}: arriva al ${r.liv} e in 2D al ${livelloRicetta(id)}`)
     if ((r.costo || 0) !== (d.costo || 0)) g.push(`${id}: costa ${r.costo || 0} e in 2D ${d.costo || 0}`)
   }
   for (const [tipo, c] of [...Object.entries(PEZZI), ...Object.entries(EDIFICI)]) {
@@ -95,7 +95,7 @@ export function guastiDiParita() {
   const lana = bestia2d('recinto')
   if (PECORE.laneMs !== msDaMinuti(lana.minuti) || PECORE.costo !== lana.costo) g.push('le pecore non fanno la lana come l\'ovile della 2D')
   if (ULTIMO !== ULTIMO_2D) g.push(`i livelli sono ${ULTIMO} e in 2D ${ULTIMO_2D}`)
-  for (let l = 1; l <= ULTIMO + 2; l++) if (sogliaDi(l) !== sogliaDi2D(l) + (l > LIVELLO_PESCA ? SCARTO_DELLA_PESCA : 0)) g.push(`la soglia del livello ${l} non è quella della 2D`)
+  for (let l = 1; l <= ULTIMO + 2; l++) if (sogliaDi(l) !== sogliaDi2D(l) + (l > LIVELLO_PESCHIERA ? SCARTO_DELLA_PESCA : 0)) g.push(`la soglia del livello ${l} non è quella della 2D`)
   if (SCOMPARTO_BASE !== 8 || SCOMPARTO_PIU !== 2) g.push('gli scomparti non sono quelli della 2D')
   for (let n = 0; n < 8; n++) if (prezzoDelPasso(n) !== costoIngrandimento(n) || postiPerMerce(n) !== 8 + 2 * n) g.push(`l'ingrandimento ${n + 1} non è quello della 2D`)
   return g
@@ -118,8 +118,8 @@ export function guastiDellaScala() {
   if (prezzoDelLotto(99) / MONETE_AL_MINUTO < SETTIMANA_MIN) g.push(`il centesimo lotto costa solo ${Math.round(prezzoDelLotto(99) / MONETE_AL_MINUTO)} minuti di esercizio (almeno ${SETTIMANA_MIN})`)
   if (COSTI.lottoEsperienzaMax > sogliaDi(ULTIMO) * TETTO_ESPERIENZA_LOTTO) g.push(`un lotto dà ${COSTI.lottoEsperienzaMax} di esperienza, più di un terzo della scala (${sogliaDi(ULTIMO)})`)
   for (const k of Object.keys(RICETTE)) if (premioDi({ [k]: 1 }) > tettoDi({ [k]: 1 }) + 1e-9) g.push(`${k}: il premio supera il tetto`)
-  // la pesca prende il posto della peschiera: stesso livello, e un banco dà un pesce ogni quindici minuti come lei
-  for (const k of ['molo', 'molo_v', 'porticciolo']) if (PEZZI[k].liv !== LIVELLO_PESCA) g.push(`${k}: la pesca arriva al ${PEZZI[k].liv} e la peschiera della 2D al ${LIVELLO_PESCA}`)
+  // la pesca prende il posto della peschiera, prima di lei: un banco dà un pesce ogni quindici minuti come lei
+  for (const k of ['molo', 'molo_v', 'porticciolo']) if (PEZZI[k].liv !== LIVELLO_PESCA) g.push(`${k}: arriva al ${PEZZI[k].liv} e la pesca al ${LIVELLO_PESCA}`)
   if (PESCA.ms + PESCA.riposoMs !== msDaMinuti(ricetta2d('pesce').minuti)) g.push('un banco non dà un pesce ogni quindici minuti come la peschiera della 2D')
   if (livelloDellaRicetta('fritto') < LIVELLO_PESCA || livelloDellaRicetta('sushi') < LIVELLO_PESCA) g.push('una ricetta col pesce arriva prima della pesca')
   g.push(...guastiDiParita())

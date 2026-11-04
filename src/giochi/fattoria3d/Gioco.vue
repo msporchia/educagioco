@@ -48,10 +48,8 @@ import Guardaroba from './viste/Guardaroba.vue'
 import Addobbi from './viste/Addobbi.vue'
 import Bestia from './viste/Bestia.vue'
 import Battesimo from './viste/Battesimo.vue'
-import Ciotola from './viste/Ciotola.vue'
-import Tinozza from './viste/Tinozza.vue'
 import { dettoCura, dettoEsito, dettoCompera } from './viste/bestia-pura.js'
-import { curabile, FAME, nuovo } from './dati/bestie.js'
+import { curabile, nuovo } from './dati/bestie.js'
 import { personaDi, normalizzaAbito, capiDi, chiaveAbito, nomeDelContadino } from './dati/abiti.js'
 import { vestitiInForma } from './dati/guardaroba-voci.js'
 import Bacheca from './viste/Bacheca.vue'
@@ -177,8 +175,6 @@ const livelliAperto = ref(false)
 const guardarobaAperto = ref(false)       // il foglio dell'abito (docs/fattoria3d/guardaroba.md)
 const bestiaAperta = ref(null)             // l'id della bestia di casa di cui si vede il foglio (docs/fattoria3d/bestie-di-casa.md)
 const bestiaMsg = ref('')
-const ciotolaDi = ref(null), ciotolaMsg = ref('')       // la ciotola aperta (docs/fattoria3d/cura-sul-prato.md)
-const tinozzaAperta = ref(false), tinozzaMsg = ref('')
 const bagno = ref(null)                    // il bagno in corso: { id, fatto } (scena3d/bagno.js)
 const nomeAperto = ref(false)              // il foglio del nome della fattoria (docs/fattoria3d/nome.md)
 const battesimoDi = ref(null)              // l'id della bestia a cui si sta dando il nome
@@ -248,8 +244,8 @@ const ui = {
   apriMagazzino(silo) { magazzinoMsg.value = ''; magazzinoAperto.value = silo },          // un tocco su un magazzino
   apriMappa() { if (comune) ui.avviso('Dai vicini si va col trattore della tua fattoria.'); else visite.apriMappa() },
   apriBestia(id) { bestiaMsg.value = ''; bestiaAperta.value = id },             // tenere premuto su un animale
-  apriCiotola(id) { ciotolaMsg.value = ''; ciotolaDi.value = id },
-  apriTinozza() { tinozzaMsg.value = ''; tinozzaAperta.value = true },
+  riempi: riempiCiotola,
+  lava,
   bagno(info) { bagno.value = info },
   apriGuardaroba() { guardarobaAperto.value = true },
   entraBottega(tipo) { sala.entra(tipo) },          // un tocco su una bottega del paese: si entra (docs/fattoria3d/botteghe.md, «Dentro»)
@@ -259,7 +255,7 @@ const ui = {
     avvisoFine = testo ? performance.now() + DURATA_AVVISO : 0
   },
   apriCostruisci(i, j) { apriCostruisci(i, j) },                           // tenere premuto su un posto libero del terreno tuo
-  fogliAperti: () => !!alberoK.value || !!dialogo.value || !!consiglio.value || !!costruisciQui.value || !!macchinaAperta.value || livelliAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!ciotolaDi.value || tinozzaAperta.value || !!addobbiDi.value || !!battesimoDi.value || bancoAperto.value || nave.value || !!bottegaAperta.value || !!magazzinoAperto.value || mappaAperta.value || !!carretto.value,
+  fogliAperti: () => !!alberoK.value || !!dialogo.value || !!consiglio.value || !!costruisciQui.value || !!macchinaAperta.value || livelliAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!addobbiDi.value || !!battesimoDi.value || bancoAperto.value || nave.value || !!bottegaAperta.value || !!magazzinoAperto.value || mappaAperta.value || !!carretto.value,
   zonaDrop: () => (zonaVia.value || null)?.getBoundingClientRect() || null,
   trascinando(info) { trascinando.value = info },
 }
@@ -289,7 +285,7 @@ const vistaSala = computed(() => { void versione.value; return tipoSala.value &&
 // ── costruire: tenere premuto su un posto libero (o il tasto 🏗️) apre il menu «Costruisci qui» ──
 const schede = computed(() => {
   void versione.value
-  return schedeDi({ stagione: stagione.value, livello: motore.livello(), prezzoPezzo: t => motore.prezzoPezzo(t), nelMagazzino: t => motore.nelMagazzino(t), posseduti: motore.s.posseduti, bestieTue: motore.cura.curate(), serveBacheca: motore.serveBacheca() })
+  return schedeDi({ stagione: stagione.value, livello: motore.livello(), prezzoPezzo: t => motore.prezzoPezzo(t), nelMagazzino: t => motore.nelMagazzino(t), posseduti: motore.s.posseduti, bestieTue: motore.cura.curate(), nomeBestia: id => motore.cura.nomeDi(id), serveBacheca: motore.serveBacheca() })
 })
 const festa = computed(() => {
   void versione.value
@@ -311,32 +307,19 @@ const bestiaVista = computed(() => {
   const st = motore.cura.stato(id); if (!st) return null
   return { id, nome: motore.cura.nomeDi(id), stato: { pancia: st.pancia, pelo: st.pelo, gioco: st.gioco }, vestiario: motore.cura.vestiarioDi(id, stagione.value || '') }
 })
-// ── la cura sul prato: la ciotola e la tinozza si aprono toccandole (scena3d/azioni.js) ──
-const ciotolaVista = computed(() => {
-  void versione.value
-  const id = ciotolaDi.value; if (!id || !motore) return null
-  const st = motore.cura.stato(id); if (!st) return null
-  return { id, nome: motore.cura.nomeDi(id), fame: st.pancia < FAME, gettoni: motore.cura.perLaCiotola(id) }
-})
-function riempiCiotola(k) {
-  const id = ciotolaDi.value; if (!id) return
+// ── la cura sul prato: quello che si trascina nella ciotola e nella tinozza arriva qui (scena3d/attrezzi.js); tornano false se resta aperto ──
+function riempiCiotola(id, k) {
   const r = motore.cura.riempi(id, k)
-  if (!r.ok) { ciotolaMsg.value = dettoCura(r, { monete: motore.monete() }); return ui.cambio() }
-  ciotolaDi.value = null
+  if (!r.ok) { ui.avviso(dettoCura(r, { monete: motore.monete() })); ui.cambio(); return false }
   mondo.mangia(id)
   if (r.premio) ui.avviso(dettoEsito(r, motore.cura.nomeDi(id)))
   ui.cambio()
+  return true
 }
-const tinozzaVista = computed(() => {
-  void versione.value
-  if (!tinozzaAperta.value || !motore) return null
-  return { sporche: motore.cura.sporche().map(id => ({ id, nome: motore.cura.nomeDi(id) })), modi: motore.cura.modiDiLavare() }
-})
-function lava(id, gesto) {
-  const no = motore.cura.rifiutoBagno(id, gesto)
-  if (no) { tinozzaMsg.value = dettoCura(no, { monete: motore.monete() }); return }
-  tinozzaAperta.value = false
-  mondo.bagno.inizia(id, gesto)
+function lava(id) {
+  const no = motore.cura.rifiutoBagno(id)
+  if (no) { ui.avviso(dettoCura(no, { monete: motore.monete() })); return false }
+  return mondo.bagno.inizia(id)
 }
 function lasciaBagno() { mondo.bagno.annulla() }
 // ── gli addobbi di una bestia (viste/Addobbi.vue, docs/fattoria3d/addobbi.md): si aprono dal tasto nel foglio della bestia, la ✕ torna al foglio ──
@@ -380,7 +363,7 @@ function sceglieBestia(carta, c) {
   const id = carta.bestia
   if (motore.cura.ho(id)) { costruisciQui.value = null; bestiaMsg.value = ''; bestiaAperta.value = id; return }
   const r = motore.cura.compra(id)
-  if (!r.ok) { c.msg = dettoCompera(r, curabile(id).nome); return }
+  if (!r.ok) { c.msg = dettoCompera(r, carta.nome); return }
   costruisciQui.value = null
   mondo.compagni.sync()
   mondo.pezzi.sincronizza()                // la sua ciotola, e la tinozza col primo animale
@@ -578,7 +561,7 @@ const quadroGuida = () => {
   return {
     campi: cs.length, vuoti: cs.filter(c => m.campoVuoto(c)).length, maturi: cs.filter(c => m.campoMaturo(c)).length, crescono: crescono.length,
     secondi: restanti.length ? Math.min(...restanti) : 0, attrezzo: attrezzi.value ? attrezzi.value.tipo : null, costruisci: !!costruisciQui.value,
-    foglio: !!(alberoK.value || dialogo.value || macchinaAperta.value || livelliAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!ciotolaDi.value || tinozzaAperta.value || !!bagno.value || !!addobbiDi.value || !!battesimoDi.value || bancoAperto.value || nave.value || bottegaAperta.value || magazzinoAperto.value || mappaAperta.value || !!carretto.value || consiglio.value || strumento.value || trascinando.value),
+    foglio: !!(alberoK.value || dialogo.value || macchinaAperta.value || livelliAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!bagno.value || !!addobbiDi.value || !!battesimoDi.value || bancoAperto.value || nave.value || bottegaAperta.value || magazzinoAperto.value || mappaAperta.value || !!carretto.value || consiglio.value || strumento.value || trascinando.value),
     raccolto: Object.values(m.s.merci).some(n => n > 0), visto: guidaVisto.value,
   }
 }
@@ -813,7 +796,8 @@ onBeforeUnmount(() => {
         <div v-if="trascinando && trascinando.su" class="f3-trascinato" :style="{ transform: `translate(${trascinando.x}px, ${trascinando.y - 56}px) translate(-50%, -50%)` }">{{ trascinando.emoji }}</div>
 
         <CostruisciQui v-if="costruisciQui" :schede="schede" :messaggio="costruisciQui.msg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta" :festa="festa" @scegli="sceglieCarta" @chiudi="chiudiCostruisci" />
-        <Attrezzi v-if="attrezzi" v-bind="attrezzi" :livello="foto.livello" @prendi="k => mondo.attrezzi.prendi(k)" @passa="(x, y) => mondo.attrezzi.passa(x, y)" @lascia="mondo.attrezzi.lascia()" />
+        <Attrezzi v-if="attrezzi" :key="attrezzi.tipo + attrezzi.id" v-bind="attrezzi" :livello="foto.livello" :scorta="k => motore.scortaDi(k)" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
+                  @prendi="k => mondo.attrezzi.prendi(k)" @passa="(x, y) => mondo.attrezzi.passa(x, y)" @lascia="mondo.attrezzi.lascia()" @metti="k => mondo.attrezzi.metti(k)" />
         <Macchina v-if="macchina" :key="macchina.tipo" v-bind="macchina" :messaggio="macchinaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta" @prepara="prepara" @compra="compraPosto" @ritira="ritira" @chiudi="macchinaAperta = null"
                   :consiglio="macchinaCons" @consiglio="facciConsiglio" />
         <Bacheca v-if="bancoAperto" v-bind="{ aperto: banco.aperto, perche: banco.perche, ordini: banco.ordini, traguardo: traguardoOrdini }" :messaggio="bancoMsg" :consiglio="bancoCons" @consiglio="facciConsiglio"
@@ -830,8 +814,6 @@ onBeforeUnmount(() => {
                  @veste="vestiBestia" @spoglia="spogliaBestia" @salva-set="x => setBestia(id => motore.cura.salvaVestito(id, x.posto, x.nome))"
                  @rinomina-set="x => setBestia(id => motore.cura.rinominaVestito(id, x.posto, x.nome))" @togli-set="p => setBestia(id => motore.cura.togliVestito(id, p))" @chiudi="chiudiAddobbi" />
         <NomeFattoria v-if="nomeAperto" :nome="foto.nome" :predefinito="predefinitoFattoria" @scegli="daiNomeAllaFattoria" @chiudi="nomeAperto = false" />
-        <Ciotola v-if="ciotolaVista" :key="'ciot-' + ciotolaVista.id" v-bind="ciotolaVista" :messaggio="ciotolaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta" @riempi="riempiCiotola" @chiudi="ciotolaDi = null" />
-        <Tinozza v-if="tinozzaVista" v-bind="tinozzaVista" :messaggio="tinozzaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta" @lava="lava" @chiudi="tinozzaAperta = false" />
         <div v-if="bagno" class="f3-bagno" data-f3="bagno" :data-fatto="Math.round(bagno.fatto * 100)">Strofina!<i><u :style="{ width: Math.round(bagno.fatto * 100) + '%' }"></u></i><button type="button" data-chiudi aria-label="lascia stare" @click="lasciaBagno">✕</button></div>
         <Battesimo v-if="battesimoDi" :id="battesimoDi" :scelto="motore.cura.nomeScelto(battesimoDi)" @scegli="daiIlNome" @chiudi="battesimoDi = null" />
         <Mappa v-if="mappaAperta" :elenco="elencoVicini" :messaggio="mappaMsg" @vai="visite.vai" @carretto="visite.apriCarretto" @chiudi="mappaAperta = false" />

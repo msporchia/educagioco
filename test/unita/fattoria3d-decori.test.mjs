@@ -21,7 +21,7 @@ const NON_DECORAZIONI = {
   silo: 'i silos non sono decorazioni: sono i magazzini, edifici che crescono (docs/fattoria3d/magazzini.md)',
   silo_bianco: 'idem: il magazzino della stalla',
   dispensa: 'idem: il magazzino della bottega',
-  peschiera: 'la pesca della 3D (molo, porticciolo) ne prende il posto, allo stesso livello (dati/parita2d.js LIVELLO_PESCA)',
+  peschiera: 'la pesca della 3D (molo, porticciolo) ne prende il posto, prima di lei (dati/parita2d.js LIVELLO_PESCA)',
 }
 /** Le voci della 2D che in 3D c'erano già come pezzi dei primi giri, col loro id 3D (sotto «Decori» o «Strade»). */
 const GIA_C_ERANO = { spaventapasseri: 'spaventapasseri', boccio: 'aiuola', panchina: 'panchina', tavolo: 'tavolo', fontana: 'fontana', pozzo: 'pozzo', stagno: 'stagno', laghetto: 'laghetto', ponte: 'ponte', zucca_intagliata: 'zucca_intagliata', zucche_mucchio: 'zucche_mucchio' }

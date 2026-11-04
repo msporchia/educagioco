@@ -20,11 +20,11 @@ export { BISOGNI, CHIAVI, FONDO, nuovo, foto, scendi, riarma, BENISSIMO, BENE, t
 // il corpo (`scena3d/modelli-bestie.js`). `premio`: l'esperienza (mai monete) quando è rimessa a posto, un quindicesimo del prezzo come in 2D.
 const voce = (chi, resto) => {
   const a = ANIMALI_2D[chi]
-  return { chi, nome: a.nome, prezzo: a.prezzo, liv: a.liv, premio: premioBenessere(chi), ...resto }
+  return { chi, nome: a.nome, razza: a.nome, prezzo: a.prezzo, liv: a.liv, premio: premioBenessere(chi), ...resto }
 }
 /** Una razza che la 2D non aveva: prezzo e livello sono nostri (un animale costa 75–120 🪙, docs/apprendimento/calibrazione.md), il premio è lo stesso quindicesimo. */
 export const PREMIO_RAZZA = prezzo => Math.max(1, Math.round(prezzo / 15))
-const razza = (nome, prezzo, liv, resto) => ({ chi: null, nome, prezzo, liv, premio: PREMIO_RAZZA(prezzo), ...resto })
+const razza = (nome, prezzo, liv, resto) => ({ chi: null, nome, razza: nome, prezzo, liv, premio: PREMIO_RAZZA(prezzo), ...resto })
 export const BESTIE = {
   beagle:      voce('cane-beagle',  { famiglia: 'cane',       tipo: 'cane',       variante: 'beagle',  emoji: '🐶', verso: 'Bau!',  arrivo: 'Un beagle è arrivato!' }),
   coniglio:    voce('coniglio',     { famiglia: 'coniglio',   tipo: 'coniglio',   variante: 'bianco',  emoji: '🐰', verso: 'Fiuu…', arrivo: 'Un coniglio è arrivato!' }),
@@ -44,7 +44,7 @@ export const bestia = id => BESTIE[id] || null
 /** I compagni (`dati/compagni.js`: Watson e i gatti di casa) si adottano e si curano come le bestie di casa: hanno la famiglia dei cibi, il premio di benessere della bestia 2D
     che sostituiscono (Irene, che nella 2D non c'è, quello del gatto bianco e nero) e un nome vero che il bambino può cambiare. Non si comprano,
     non si spostano: girano col contadino. */
-const curato = (id, chi, famiglia, emoji) => ({ chi, nome: COMPAGNI[id].nome, famiglia, emoji, premio: premioBenessere(chi), liv: COMPAGNI[id].liv, prezzo: COMPAGNI[id].prezzo, compagno: true })
+const curato = (id, chi, famiglia, emoji) => ({ chi, nome: COMPAGNI[id].nome, razza: COMPAGNI[id].razza, famiglia, emoji, premio: premioBenessere(chi), liv: COMPAGNI[id].liv, prezzo: COMPAGNI[id].prezzo, compagno: true })
 export const CURATI = {
   watson:   curato('watson', 'cane-bobtail', 'cane', '🐶'),
   sherlock: curato('sherlock', 'gatto-tuxedo', 'gatto', '🐈'),
@@ -52,8 +52,8 @@ export const CURATI = {
   golia:    curato('golia', 'gatto-nero', 'gatto', '🐈'),
   pepe:     curato('pepe', 'gatto-nero', 'gatto', '🐈'),
 }
-/** Tutto quello che si adotta, nell'ordine in cui si mostra: livello, poi prezzo. Ognuno ha `id`, `nome`, `prezzo`, `liv`, `famiglia`, `emoji`. */
-export const adottabili = () => [...Object.entries(BESTIE), ...Object.entries(CURATI)].map(([id, b]) => ({ id, ...b })).sort((a, b) => a.liv - b.liv || a.prezzo - b.prezzo || a.nome.localeCompare(b.nome, 'it'))
+/** Tutto quello che si adotta, nell'ordine in cui si mostra: livello, poi prezzo. Ognuno ha `id`, `nome`, `razza` (come si chiama in vendita), `prezzo`, `liv`, `famiglia`, `emoji`. */
+export const adottabili = () => [...Object.entries(BESTIE), ...Object.entries(CURATI)].map(([id, b]) => ({ id, ...b })).sort((a, b) => a.liv - b.liv || a.prezzo - b.prezzo || a.razza.localeCompare(b.razza, 'it'))
 export const IDS_ADOTTABILI = Object.keys(BESTIE).concat(Object.keys(CURATI))
 /** Una bestia che si cura: una di casa (`BESTIE`) o un compagno (`CURATI`), o null. */
 export const curabile = id => BESTIE[id] || CURATI[id] || null
@@ -70,7 +70,11 @@ export const inVendita = () => IDS_BESTIE.map(id => ({ id, ...BESTIE[id] })).sor
 export const bestieAl = (livello, soloQuesto = false) => inVendita().filter(b => (soloQuesto ? b.liv === livello : b.liv <= livello))
 
 /* ══════════ i nomi (da toccare, non da scrivere) ══════════ */
-export const nomiPer = id => (curabile(id) && NOMI_2D[curabile(id).famiglia]) || [...new Set(Object.values(NOMI_2D).flat())]
+/** Quelli della sua famiglia; un compagno ha in testa il nome che porta di suo. */
+export const nomiPer = id => {
+  const b = curabile(id), nomi = (b && NOMI_2D[b.famiglia]) || [...new Set(Object.values(NOMI_2D).flat())]
+  return b && b.compagno ? [...new Set([b.nome, ...nomi])] : nomi
+}
 export const NOME_MAX = 16
 export const pulisciNome = n => String(n ?? '').replace(/\s+/g, ' ').trim().slice(0, NOME_MAX)
 
@@ -238,6 +242,7 @@ export function guastiDelleBestie() {
     if (!(c.prezzo >= 75 && c.prezzo <= 120)) g.push(`${id}: un animale costa 75–120 🪙, qui ${c.prezzo}`)
     if (!NOMI_2D[c.famiglia]) g.push(`${id}: nessun nome da toccare per la famiglia ${c.famiglia}`)
     if (pulisciNome(c.nome) !== c.nome) g.push(`${id}: il nome vero non sta in ${NOME_MAX} lettere`)
+    if (!nomiPer(id).includes(c.nome)) g.push(`${id}: il suo nome non è fra quelli da toccare`)
     if (BESTIE[id]) g.push(`${id}: è anche una bestia da comprare`)
   }
   return g

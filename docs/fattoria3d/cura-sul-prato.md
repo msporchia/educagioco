@@ -2,7 +2,7 @@
 
 Dal 4/11/2026 gli animali si curano **sul prato, non da un foglio**: la ciotola, la tinozza, un tocco per giocare. Il foglio che si apre tenendo premuto dice come stanno e serve per nome, vestiti e Sposta.
 Codice: `motore/cura.js` (le regole), `dati/bestie.js` (soglie, `ciboChiesto`), `dati/compagni.js` (le sequenze pure), `scena3d/compagni.js` (il comportamento), `scena3d/modelli-cura.js`
-(ciotola e tinozza), `scena3d/bagno.js`, `scena3d/sporco.js`, `viste/Ciotola.vue`, `viste/Tinozza.vue`.
+(ciotola e tinozza), `scena3d/bagno.js`, `scena3d/sporco.js`, `scena3d/attrezzi.js`, `viste/Attrezzi.vue`.
 
 ## La ciotola
 
@@ -10,7 +10,9 @@ Ogni animale **nasce con la sua ciotola**, compresa nel prezzo: del suo colore (
 «tieni premuto», **gratis e dove vuoi**, non si compra e non si mette via (`dono` nel catalogo; `ciotola` è una decorazione della 2D, un'altra cosa). Nasce vicino al posto dell'animale, o davanti a casa
 (`Cura.sistema`, che la rifà a chi non ce l'ha all'apertura: chi aveva già gli animali la trova). Una ciotola senza padrone, o la seconda, `normalizza` la butta.
 
-Un tocco: il contadino ci va e si apre `Ciotola.vue`. **Un gettone si trascina nella ciotola, o si tocca** (chi ha quattro anni trascina male). Riempita, il cibo si vede, l'animale corre, si accosta con un saltello e mangia.
+**Come i campi** ([campi.md](campi.md)): un tocco porta accanto i cibi ad arco, senza aspettare il contadino. **Un gettone si trascina nella ciotola, o si tocca** (chi ha quattro anni trascina male). Riempita, il cibo si vede, l'animale corre, si accosta con un saltello e mangia.
+
+**Senza fame non si mangia**: sopra `FAME` la ciotola non si apre e il contadino dice «Birba non ha fame»; il motore rifiuta anche la torta (`non-ha-fame`).
 
 ## Cosa chiede, e la scappatoia
 
@@ -30,8 +32,13 @@ Come il terreno: **ogni animale che hai fa costare il prossimo 🪙20 di più** 
 
 Il pelo cala col tempo e si vede sul corpo sotto `SPORCO` (0,8): macchie di fango, **prima le zampe, poi la pancia, poi il dorso** (`scena3d/sporco.js`: una soglia per vertice, fissata dal corpo fermo, e un numero per animale). Rotolarsi e scavare sporcano un po' di più.
 
-La **tinozza** (`tinozza`, un `dono` come la ciotola, una sola) arriva col primo animale. Un tocco: si apre `Tinozza.vue`, col più sporco già scelto e i modi: 🪙1, il sapone, la copertina di lana. L'animale salta dentro, la camera si avvicina e **si strofina col dito**:
+La **tinozza** (`tinozza`, un `dono` come la ciotola, una sola) arriva col primo animale. Un tocco: chi è sporco compare in **vignetta** sopra la tinozza, dal più sporco; si trascina dentro (o si tocca). Il modo è uno solo, 🪙1: sapone e copertina facevano lo stesso bagno e cambiavano solo cosa si pagava. L'animale salta dentro, la camera si avvicina e **si strofina col dito**:
 lo sporco se ne va sotto gli occhi (`scena3d/bagno.js`, `STROFINATA`). Si paga alla fine e lascia pulito del tutto; lasciato a metà con la ✕ non si paga niente.
+
+## I recinti
+
+Pollaio, stalla, recinto e gli altri: chi ha fame **chiede**. Il contadino ci va e sopra compare **la nuvoletta col mangime** e quanto ne hai (`Fattoria3d.mangimeDi`); si trascina dentro, o si tocca, e lui lo dà. Prima bastava un tocco e non si sapeva cosa si stava dando («lo so che è un click in più»: scelta dell'utente).
+Senza mangime la nuvoletta c'è lo stesso, col gettone spento, e la riga dice cosa manca. Raccogliere e tosare restano un tocco.
 
 ## Il gioco
 
@@ -51,5 +58,5 @@ Il coniglio e il pappagallo non portano niente. Niente che rovini la fattoria: s
 ## Nei test
 
 `unita/fattoria3d-cura-prato` (ciotole e tinozza, salvataggi di prima, prezzo, fame, scappatoia, gioco, lavare, sporco, sequenze e scena), `integrazione/fattoria3d-bestie` (un tocco vero sulla ciotola e sulla tinozza, il cibo, la strofinata). Bersagli:
-`[data-f3="ciotola"]`, `[data-f3="ciotola-nome"]`, `[data-f3="ciotola-dentro"]`, `[data-f3="ciotola-msg"]`, `[data-cibo="<id>"]`, `[data-vuole]`, `.f3-badge.fame[data-ciotola="<id>"]`, `[data-f3="tinozza"]`, `[data-sporca="<id>"]`, `[data-lava="<id>"]`, `[data-f3="bagno"]`.
+`[data-f3="attrezzi"][data-tipo="ciotola|tinozza|recinto"]`, `[data-f3="attrezzi-riga"]`, `[data-f3="gettone-conto"]`, `[data-cibo="<id>"]`, `[data-vuole]`, `.f3-badge.fame[data-ciotola="<id>"]`, `[data-sporca="<id>"]`, `[data-f3="bagno"]`.
 Per guardare: `#animali=watson,beagle&bisogni=fame,sporco,noia` ([comandi](../core/comandi.md)), `npm run catalogo3d:scheda -- --gioco fattoria --q labrador --sporco 0.7`.

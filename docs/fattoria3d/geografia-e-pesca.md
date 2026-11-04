@@ -41,7 +41,7 @@ oggi non portano ancora `geo`, quindi la fattoria di un amico si vede con la geo
 **Si compra come ogni lotto**: `prezzoDelLotto`, 40 + 20 per ogni lotto già comprato (l'acqua si paga come la terra). Il cartello dice «🪙 N · 🌊 mare», «🏞️ lago» o «🏖️
 spiaggia» (e l'offerta: «Qui c'è il mare: con un molo e il porticciolo ci si pesca»).
 
-**Dal 22/10/2026 (G3) la pesca è al livello 57**, dove la 2D ha la peschiera: molo, molo girato e porticciolo al 57; friggitoria 58, sushi bar 62 (i 17/18 di questa pagina sono storia). Un banco dà un pesce ogni 15 minuti (5 di attesa + 10 di riposo, come la ricetta `pesce` della peschiera). Le soglie dal 58 si spostano di −258 ([livelli.md](livelli.md)).
+**Dal 4/11/2026 la pesca è al livello 10**: molo, molo girato, porticciolo, stagno e laghetto; sushi bar e riso 15, friggitoria 19 ([livelli.md](livelli.md)). I numeri più vecchi di questa pagina sono storia. Un banco dà un pesce ogni 15 minuti (5 di attesa + 10 di riposo, come la ricetta `pesce` della peschiera). Le soglie dal 58 restano spostate di −258 ([livelli.md](livelli.md)).
 
 ## Come si vede
 
@@ -59,8 +59,8 @@ spiaggia» (e l'offerta: «Qui c'è il mare: con un molo e il porticciolo ci si 
 
 ## Pescare: le regole
 
-- **Serve un molo** (🪙12, livello 4: `molo` 3×1, `molo_v` «molo girato» 1×3; nella scheda Strade con ponte e passerella: calpestabili, `suAcqua`, partono dalla riva) **o il porticciolo**
-  (🪙90, livello 9, uno solo, 4×3, scheda Edifici: `riva: true`, si mette solo su un posto che tocca l'acqua; «Il porticciolo si mette sulla riva»). Non sono produttivi: non spostano la
+- **Serve un molo** (🪙12, livello 10: `molo` 3×1, `molo_v` «molo girato» 1×3; nella scheda Strade con ponte e passerella: calpestabili, `suAcqua`, partono dalla riva) **o il porticciolo**
+  (🪙90, livello 10, uno solo, 4×3, scheda Edifici: `riva: true`, si mette solo su un posto che tocca l'acqua; «Il porticciolo si mette sulla riva»). Non sono produttivi: non spostano la
   scaletta.
 - **Il gesto**: si tocca **una cella d'acqua tua** (o la punta del molo). Il contadino cammina fino alla cella da cui si lancia (una cella del molo, o una libera attorno al porticciolo),
   **lancia** (la canna indietro e avanti, il galleggiante in acqua) e **resta lì con la canna alzata**. Il tocco su un'acqua di un lotto non tuo apre l'acquisto del lotto.
@@ -68,7 +68,7 @@ spiaggia» (e l'offerta: «Qui c'è il mare: con un molo e il porticciolo ci si 
   entro 8 celle: due laghi vicini, o un lago e un laghetto, non sono lo stesso specchio: «L'acqua è troppo lontana dal molo»). Senza moli: «Per pescare serve un molo vicino all'acqua».
 - **Il mare vuole il porticciolo** («Per pescare in mare serve il porticciolo»); un molo lungo dal porticciolo allunga il raggio.
 - **Il banco**: **ogni lotto d'acqua tuo è un banco** (`stato.pesca[lottoId] = { i, j, fine, riposo }`, `i, j` dov'è il galleggiante): più lotti, più lenze in parallelo, una per banco.
-  `lancia → aspetta PESCA.ms = 12 s → ritira → riposo PESCA.riposoMs = 60 s → di nuovo calmo`. Il tempo è assoluto (`ora()`): vale anche a pagina chiusa, come un campo. Il banco **non
+  `lancia → aspetta PESCA.ms = 5 min → ritira → riposo PESCA.riposoMs = 10 min → di nuovo calmo`. Il tempo è assoluto (`ora()`): vale anche a pagina chiusa, come un campo. Il banco **non
   si esaurisce mai per sempre**: si ripopola.
 - **Tre stadi a colpo d'occhio** (come le bestie): **acqua calma** (niente) → **il galleggiante dondola piano** con un anello lento (in attesa) → **si immerge a scatti, gli anelli si
   allargano e compare «🐟 Abbocca!»** (tocca per ritirare). Se il contadino è ancora lì quando abbocca, **ritira da sé** (lo strappo, lo spruzzo, il «+1» col pesce, l'esultanza); se se n'è
@@ -81,24 +81,20 @@ spiaggia» (e l'offerta: «Qui c'è il mare: con un molo e il porticciolo ci si 
 
 ## Il pesce e le ricette (identiche alla 2D, tempi in scala 3D)
 
-`pesce` sta in `stato.prodotti` come le uova (ha `dove: 'molo'`: da quel pezzo il livello 4; dati/pesca.js `PESCI`, dentro `PRODOTTI_ANIMALI` con un `ms` suo). Le macchine
+`pesce` sta in `stato.prodotti` come le uova (ha `dove: 'molo'`: da quel pezzo il livello 10; dati/pesca.js `PESCI`, dentro `PRODOTTI_ANIMALI` con un `ms` suo). Le macchine
 sono edifici liberi come gli altri: `posseduti[tipo]` = in mappa, un posto di coda di partenza e fino a sei comprandoli, come ogni macchina ([regole.md](regole.md)); **non hanno un posto «storico»** da migrare
 (nessun salvataggio le ha mai avute: i posti di `POSTI_STORICI` con `nuovo: true` servono solo ai controlli).
 
 | macchina (id) | livello | 🪙 | ricette (ingredienti → 1) |
 |---|---|---|---|
-| Friggitoria (`friggitoria`) | 17 | 170 | patatine (patata 2, 5 s), **pesce fritto** (`fritto`: pesce 1, farina 1, 7 s), arancini (riso 2, formaggio 1, 9 s) |
-| Sushi bar (`sushi_bar`) | 18 | 180 | **sushi** (riso 1, pesce 1, 8 s), maki (riso 1, carota 1, peperone 1, 6 s) |
+| Friggitoria (`friggitoria`) | 19 | 170 | patatine (patata 2, 5 s), **pesce fritto** (`fritto`: pesce 1, farina 1, 7 s), arancini (riso 2, formaggio 1, 9 s) |
+| Sushi bar (`sushi_bar`) | 15 | 180 | **sushi** (riso 1, pesce 1, 8 s), maki (riso 1, carota 1, peperone 1, 6 s) |
 
 Id, ingredienti, quantità e tempi (minuti → secondi) sono quelli della 2D (`unita/fattoria3d-merci` li confronta uno per uno); le facce sono quelle dell'atlante (`merce_patatine`, `merce_fritto`,
 `merce_arancini`, `merce_sushi`, `merce_maki`, `merce_pesce`). **Il sushi è un prodotto finito visibile**: sta in inventario, negli ordini
-del banco (`chiedibili`: da livello 18), nelle casse della mongolfiera e nel mercato dei vicini come ogni ricetta.
+del banco (`chiedibili`: dal 15), nelle casse della mongolfiera e nel mercato dei vicini come ogni ricetta.
 
-**I livelli**: la scaletta ha **una cosa produttiva per livello** e tutti e sedici i livelli ne avevano una, quindi le due macchine aprono due livelli in coda: **17 e 18**.
-Le soglie dei livelli di prima non si muovono (la soglia di un livello somma solo i costi dei livelli sotto); `ULTIMO` passa da 16 a 18 e **l'ultimo livello costa ~495 minuti di
-esercizio (8 ore e un quarto)**, quindi il tetto della taratura passa da 7 a **8 ore e mezza** (`TETTO_ULTIMO_MIN` 510): ~45 minuti per livello come i vicini. Provato: il sushi bar a 🪙190 era
-oltre i due terzi del salto del suo livello (190 su 290); 🪙180 sta dentro, e la friggitoria sta a 🪙170. `npm run tara:fattoria3d` e `unita/fattoria3d-taratura` restano verdi.
-**Il pesce si pesca dal livello 4 ma serve dal 17**: fino ad allora si accumula (non marcisce) e basta; è il compromesso della scaletta, non un'idea.
+**Il pesce crudo si vende al banco da quando si pesca**, prima delle due macchine: `chiedibili` lo aggiunge ai prodotti.
 
 ## Il peso
 

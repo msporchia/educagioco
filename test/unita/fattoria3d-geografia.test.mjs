@@ -14,6 +14,8 @@ import { PESCA, PESCI, resaDellaPesca, guastiDellaPesca } from '../../src/giochi
 import { PRODOTTI_ANIMALI } from '../../src/giochi/fattoria3d/dati/animali.js'
 import { livelloDelPezzo, livelloDellaRicetta, sogliaDi } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
+import { chiedibili } from '../../src/giochi/fattoria3d/dati/ordini.js'
+import { ordineInForma } from '../../src/giochi/fattoria3d/motore/ordini.js'
 import { statoIniziale, normalizza } from '../../src/giochi/fattoria3d/motore/stato.js'
 import { dettoDi } from '../../src/giochi/fattoria3d/scena3d/detti.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -187,14 +189,16 @@ const celleDi = l => { const o = []; for (let y = 0; y < l.d; y++) for (let x = 
 {
   const molo = PEZZI.molo, girato = PEZZI.molo_v, port = PEZZI.porticciolo
   controlla('il molo è 3×1, il molo girato 1×3: calpestabili, sull\'acqua, decorazioni', molo.w === 3 && molo.d === 1 && girato.w === 1 && girato.d === 3 && molo.calpestabile && girato.calpestabile && molo.suAcqua && girato.suAcqua && !molo.produttivo)
-  controlla('prezzi e livelli: molo 🪙12 e porticciolo 🪙90, tutti e due al 57 (dove la 2D ha la peschiera)', molo.prezzo === 12 && molo.liv === 57 && girato.prezzo === 12 && girato.liv === 57 && port.prezzo === 90 && port.liv === 57)
+  controlla('prezzi e livelli: molo 🪙12 e porticciolo 🪙90, tutti e due al 10', molo.prezzo === 12 && molo.liv === 10 && girato.prezzo === 12 && girato.liv === 10 && port.prezzo === 90 && port.liv === 10)
   controlla('il porticciolo è uno solo, sull\'acqua, alla riva', port.unico && port.suAcqua && port.riva && !port.calpestabile)
-  controlla('friggitoria e sushi bar sono edifici (3×3) dove li mette la 2D (58 e 62)', EDIFICI.friggitoria.liv === 58 && EDIFICI.sushi_bar.liv === 62 && EDIFICI.friggitoria.w === 3 && EDIFICI.sushi_bar.d === 3)
+  controlla('friggitoria e sushi bar sono edifici (3×3) e arrivano poco dopo la pesca (19 e 15)', EDIFICI.friggitoria.liv === 19 && EDIFICI.sushi_bar.liv === 15 && EDIFICI.friggitoria.w === 3 && EDIFICI.sushi_bar.d === 3)
   controlla('le macchine del pesce hanno le ricette della 2D', Object.keys(MACCHINE.friggitoria.ricette).join() === 'patatine,fritto,arancini' && Object.keys(MACCHINE.sushi_bar.ricette).join() === 'sushi,maki')
   uguale('sushi: riso 1 e pesce 1', JSON.stringify(RICETTE.sushi.ing), JSON.stringify({ riso: 1, pesce: 1 }))
   uguale('pesce fritto: pesce 1 e farina 1', JSON.stringify(RICETTE.fritto.ing), JSON.stringify({ pesce: 1, farina: 1 }))
-  uguale('il sushi bar apre al 62 e il sushi si fa dal 62', [livelloDelPezzo('sushi_bar'), livelloDellaRicetta('sushi')].join(), '62,62')
-  uguale('il pesce è uno dei prodotti e sta al livello del molo (57)', [!!PRODOTTI_ANIMALI.pesce, livelloDelPezzo(PESCI.pesce.dove)].join(), 'true,57')
+  uguale('il sushi bar apre al 15 e il sushi si fa dal 15', [livelloDelPezzo('sushi_bar'), livelloDellaRicetta('sushi')].join(), '15,15')
+  uguale('il pesce è uno dei prodotti e sta al livello del molo (10)', [!!PRODOTTI_ANIMALI.pesce, livelloDelPezzo(PESCI.pesce.dove)].join(), 'true,10')
+  uguale('il banco chiede il pesce crudo da quando si pesca', [chiedibili(9).prodotti.includes('pesce'), chiedibili(10).prodotti.includes('pesce')].join(), 'false,true')
+  uguale('un ordine col pesce si rilegge da un salvataggio', ordineInForma({ id: 1, cliente: 'sushi', chiede: { pesce: 2 } }).chiede.pesce, 2)
   uguale('un lancio rende 1 (molo, acqua dolce)', resaDellaPesca({}), 1)
   uguale('col porticciolo 2', resaDellaPesca({ porticciolo: true }), 2)
   uguale('nel mare (col porticciolo) 3', resaDellaPesca({ porticciolo: true, mare: true }), 3)

@@ -11,12 +11,13 @@ export const ASPETTO_ERO = 'contadino'
 // I cinque animali veri di casa: girano per la fattoria (Watson segue il contadino, i gatti vanno per conto loro). Dal 3/11/2026 **non arrivano più da soli col livello**: si adottano
 // dal menu Costruisci → Animali (`dati/bestie.js`, `CURATI`) e il bambino sceglie il nome. `liv` e `prezzo` sono quelli dell'adozione: il livello da cui si può prendere e le monete.
 // Il bobtail, il gatto bianco e nero e il gatto nero costavano 90/3, 75/10 e 75/19 nella 2D; Irene e Golia (gatta calico e gatto nero, anche loro veri) stanno fra quelli.
+// `razza`: come si chiama finché è in vendita; `nome`: quello che porta se il bambino non gliene sceglie uno (docs/fattoria3d/adozioni.md).
 export const COMPAGNI = {
-  watson:   { nome: 'Watson',   tipo: 'cane',  variante: 'bobtail',    liv: 3,  prezzo: ANIMALI_2D['cane-bobtail'].prezzo, verso: 'Bau!', arrivo: 'Watson è arrivato!' },
-  sherlock: { nome: 'Sherlock', tipo: 'gatto', variante: 'bianconero', liv: 10, prezzo: ANIMALI_2D['gatto-tuxedo'].prezzo, verso: 'Prrr…', arrivo: 'Sherlock, il gatto, è arrivato!' },
-  irene:    { nome: 'Irene',    tipo: 'gatto', variante: 'calico',     liv: 11, prezzo: ANIMALI_2D['gatto-tuxedo'].prezzo, verso: 'Prrr…', arrivo: 'Irene, la gattina, è arrivata!' },
-  golia:    { nome: 'Golia',    tipo: 'gatto', variante: 'golia',      liv: 14, prezzo: ANIMALI_2D['gatto-nero'].prezzo, verso: 'Prrr…', arrivo: 'Golia, il gatto nero, è arrivato!' },
-  pepe:     { nome: 'Pepe',     tipo: 'gatto', variante: 'nero',       liv: ANIMALI_2D['gatto-nero'].liv, prezzo: ANIMALI_2D['gatto-nero'].prezzo, verso: 'Prrr…', arrivo: 'Pepe, il gatto nero, è arrivato!' },
+  watson:   { nome: 'Watson',   razza: 'Bobtail', tipo: 'cane',  variante: 'bobtail',    liv: 3,  prezzo: ANIMALI_2D['cane-bobtail'].prezzo, verso: 'Bau!', arrivo: 'Un bobtail è arrivato!' },
+  sherlock: { nome: 'Sherlock', razza: 'Gatto bianconero', tipo: 'gatto', variante: 'bianconero', liv: 10, prezzo: ANIMALI_2D['gatto-tuxedo'].prezzo, verso: 'Prrr…', arrivo: 'Un gatto bianconero è arrivato!' },
+  irene:    { nome: 'Irene',    razza: 'Gatto calico', tipo: 'gatto', variante: 'calico',     liv: 11, prezzo: ANIMALI_2D['gatto-tuxedo'].prezzo, verso: 'Prrr…', arrivo: 'Un gatto calico è arrivato!' },
+  golia:    { nome: 'Golia',    razza: 'Gatto nero', tipo: 'gatto', variante: 'golia',      liv: 14, prezzo: ANIMALI_2D['gatto-nero'].prezzo, verso: 'Prrr…', arrivo: 'Un gatto nero è arrivato!' },
+  pepe:     { nome: 'Pepe',     razza: 'Gatto nero col ciuffo', tipo: 'gatto', variante: 'nero',       liv: ANIMALI_2D['gatto-nero'].liv, prezzo: ANIMALI_2D['gatto-nero'].prezzo, verso: 'Prrr…', arrivo: 'Un gatto nero col ciuffo è arrivato!' },
 }
 /** A che livello arrivavano da soli, quando erano un regalo (fino al 2/11/2026): serve solo a chi ha un salvataggio di allora, che li tiene (`motore/stato.js`, `adozioni`). Golia non c'era. */
 export const LIVELLO_DI_UNA_VOLTA = { watson: 1, sherlock: 2, irene: 3, pepe: ANIMALI_2D['gatto-nero'].liv }
@@ -263,7 +264,7 @@ export function guastiDeiCompagni() {
   const g = []
   const liv = new Set()
   for (const [id, c] of Object.entries(COMPAGNI)) {
-    if (!c.nome || !c.verso || !c.arrivo) g.push(`${id}: manca nome, verso o arrivo`)
+    if (!c.nome || !c.razza || !c.verso || !c.arrivo) g.push(`${id}: manca nome, razza, verso o arrivo`)
     if (!['cane', 'gatto'].includes(c.tipo)) g.push(`${id}: tipo sconosciuto «${c.tipo}»`)
     if (c.tipo === 'gatto' && !VARIANTI_GATTO.includes(c.variante)) g.push(`${id}: variante «${c.variante}» sconosciuta`)
     if (c.tipo === 'cane' && c.variante !== 'bobtail') g.push(`${id}: l'unico cane è il bobtail`)

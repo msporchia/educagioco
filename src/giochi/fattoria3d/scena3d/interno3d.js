@@ -11,12 +11,13 @@ import { disegnaTrama } from './trame-pure.js'
 import { percorso } from '../motore/percorso.js'
 import { scalaPer } from '../dati/degrado.js'
 import { PARETI } from '../dati/interni.js'
+import { zittisciIlFantasma } from '../viste/dito-soglie.js'
 
 export const ALTO = 2.3, SPESSORE = 0.24                         // i muri: alti e spessi
 const BASSO = 0.32                                              // quanto resta di un muro abbassato
 const FONDO = new THREE.Color(0x2a2219)                         // fuori: buio caldo
 const ESTERNO = 0xa8784a                                        // il lato di fuori dei muri: i tronchi della casa
-const SOGLIA = 16, ATTESA_PREMUTO = 450, FANTASMA_MS = 450, FANTASMA_PX = 40
+const SOGLIA = 16, ATTESA_PREMUTO = 450
 const VICINO = 0.55                                             // dentro la camera sta più vicina che fuori
 const AVANTI = 2.4                                              // e guarda un po' oltre il contadino: la stanza è davanti a lui
 
@@ -263,14 +264,4 @@ class DitoInterno {
     if (e.pointerType !== 'mouse') zittisciIlFantasma(e.clientX, e.clientY)          // il click che il dito si lascia dietro non deve premere il foglio appena aperto
     if (!ini.trascina && !ini.fatto && !ini.mano && !c.ui.fogliAperti()) c.tocca(e.clientX, e.clientY)
   }
-}
-function zittisciIlFantasma(x, y) {
-  const t0 = performance.now(), smetti = () => removeEventListener('click', zitto, true)
-  const zitto = ev => {
-    if (performance.now() - t0 > FANTASMA_MS) return smetti()
-    if (Math.hypot(ev.clientX - x, ev.clientY - y) > FANTASMA_PX) return
-    ev.stopPropagation(); ev.preventDefault(); smetti()
-  }
-  addEventListener('click', zitto, true)
-  setTimeout(smetti, FANTASMA_MS + 20)
 }

@@ -8,7 +8,7 @@ import { COLTURE } from './colture.js'
 import { RICETTE } from './ricette.js'
 import { PRODOTTI_ANIMALI, LANA, msDelProdotto } from './animali.js'
 import { livelloDellaColtura, livelloDellaRicetta } from './livelli.js'
-import { sullaScalaDellaDueD, RIPOSO_MIN, msDaMinuti, coltura2d } from './parita2d.js'
+import { sullaScalaDellaDueD, RIPOSO_MIN, msDaMinuti, coltura2d, LIVELLO_PESCA } from './parita2d.js'
 import { premioPer as premioPer2D, premioDelPezzo as premioDelPezzo2D } from '../da2d/dati/mercato.js'
 
 // Il paese: chi passa al banco. Nessuno chiede una cosa sola per mestiere: il banco è per tutti.
@@ -52,7 +52,7 @@ export function msDi(k, giri = 5) {
   if (!r || giri <= 0) return Infinity
   return r.ms + Object.entries(r.ing).reduce((n, [i, q]) => n + q * msDi(i, giri - 1), 0)
 }
-export const livelloDi = k => COLTURE[k] ? livelloDellaColtura(k) : livelloDellaRicetta(k)
+export const livelloDi = k => COLTURE[k] ? livelloDellaColtura(k) : k === 'pesce' ? LIVELLO_PESCA : livelloDellaRicetta(k)
 export const eProdotto = k => !!RICETTE[k] && !COLTURE[k]
 
 export const minutiDi = chiede => Object.entries(chiede).reduce((n, [k, q]) => n + q * msDi(k), 0) / 60000
@@ -84,7 +84,7 @@ export const mangimiPerLaVeterinaria = livello => VETERINARIA_VUOLE.filter(k => 
 export function chiedibili(livello) {
   const ok = k => Number.isFinite(livelloDi(k)) && livelloDi(k) <= livello
   /* il mangime (erba medica, becchime, foraggio: `mangime: true`) lo mangiano le bestie: lo chiede solo la veterinaria (`mangimiPerLaVeterinaria`), mai gli altri clienti né la mongolfiera */
-  return { raccolti: Object.keys(COLTURE).filter(k => ok(k) && !COLTURE[k].mangime), prodotti: Object.keys(RICETTE).filter(k => ok(k) && !RICETTE[k].mangime) }
+  return { raccolti: Object.keys(COLTURE).filter(k => ok(k) && !COLTURE[k].mangime), prodotti: [...Object.keys(RICETTE).filter(k => ok(k) && !RICETTE[k].mangime), ...['pesce'].filter(ok)] }      // il pesce crudo si vende appena si pesca, prima di friggitoria e sushi bar
 }
 
 export function guastiDegliOrdini() {

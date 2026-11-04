@@ -11,7 +11,7 @@ import { guastiDelleColture, COLTURE } from '../../src/giochi/fattoria3d/dati/co
 import { guastiDeiPosti, POSTI_DI_PARTENZA, POSTI_MASSIMI, PREZZI_DEI_POSTI, TOTALE_DEI_POSTI, prezzoDelPosto, postiInForma } from '../../src/giochi/fattoria3d/dati/posti.js'
 import { POSTI_DI_PARTENZA as POSTI_DI_PARTENZA_2D, POSTI_MASSIMI as POSTI_MASSIMI_2D, PREZZI_DELLA_FILA } from '../../src/giochi/fattoria3d/da2d/dati/coda.js'
 import { guastiDelleRicette, RICETTE, MACCHINE, FORNO_POSTI, LAVORAZIONE, dentroDi, PRONTO_DA_RITIRARE, TIPI_DI_MACCHINA, emojiDi, nuovoId, MERCI_VECCHIE } from '../../src/giochi/fattoria3d/dati/ricette.js'
-import { guastiDeiLivelli, sogliaDi, livelloPer, roba, nomeDi, ULTIMO, costoDelLivello, livelloDellaRicetta, livelloDelMangime, vuoto, SCARTO_DELLA_PESCA } from '../../src/giochi/fattoria3d/dati/livelli.js'
+import { guastiDeiLivelli, sogliaDi, livelloPer, roba, nomeDi, ULTIMO, costoDelLivello, livelloDellaRicetta, livelloDelMangime, vuoto, SCARTO_DELLA_PESCA, COSTO_DELLA_PESCA } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { sogliaDi as sogliaDi2D, ULTIMO as ULTIMO_2D, livelloPer as livelloPer2D } from '../../src/giochi/fattoria3d/da2d/dati/livelli.js'
 import { msDi } from '../../src/giochi/fattoria3d/dati/ordini.js'
 import { ANIMALI, CORTILE, PRODOTTI_ANIMALI, LANA, guastiDegliAnimali, prezzoDellaBestia, msDelProdotto } from '../../src/giochi/fattoria3d/dati/animali.js'
@@ -432,7 +432,7 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   uguale('sedici colture', Object.keys(COLTURE).length, 16)
   stessaLista('le sedici chiavi', Object.keys(COLTURE).sort(), ['aglio', 'barbabietola', 'carota', 'cavolfiore', 'cipolla', 'erba', 'fragola', 'grano', 'lavanda', 'mais', 'melanzana', 'patata', 'peperone', 'pomodoro', 'riso', 'zucca'])
   // le cinque colture portate dalla 2D: arrivano dove le fa arrivare la 2D, e un vecchio stato (senza di loro) le apre a zero
-  stessaLista('cavolfiore, aglio, barbabietola, peperone e riso arrivano agli stessi livelli della 2D (22, 44, 30, 39, 60)', ['cavolfiore', 'aglio', 'barbabietola', 'peperone', 'riso'].map(k => COLTURE[k].liv), [22, 44, 30, 39, 60])
+  stessaLista('cavolfiore, aglio, barbabietola e peperone arrivano agli stessi livelli della 2D (22, 44, 30, 39), il riso col sushi bar (15)', ['cavolfiore', 'aglio', 'barbabietola', 'peperone', 'riso'].map(k => COLTURE[k].liv), [22, 44, 30, 39, 15])
   {
     const n = normalizza({ v: 7, merci: { grano: 3, carota: 1 } })
     controlla('un vecchio stato apre le colture nuove a zero e tiene le vecchie', ['cavolfiore', 'aglio', 'barbabietola', 'peperone', 'riso'].every(k => n.merci[k] === 0) && n.merci.grano === 3 && n.merci.carota === 1)
@@ -548,9 +548,9 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   alLivello(f, EDIFICI.mulino.liv)
   stessaLista('al 4 il mulino', f.edificiDaCostruire(), ['mulino'])
   alLivello(f, EDIFICI.panificio.liv)
-  stessaLista('al 17 anche il fienile (6), il telaio (16) e il panificio (17), in ordine di livello', f.edificiDaCostruire(), ['mulino', 'fienile', 'telaio', 'panificio'])
+  stessaLista('al 17 anche il fienile (6), il sushi bar (15), il telaio (16) e il panificio (17), in ordine di livello', f.edificiDaCostruire(), ['mulino', 'fienile', 'sushi_bar', 'telaio', 'panificio'])
   f.compraEdificio('panificio')
-  stessaLista('costruito, il «!» sparisce', f.edificiDaCostruire(), ['mulino', 'fienile', 'telaio'])
+  stessaLista('costruito, il «!» sparisce', f.edificiDaCostruire(), ['mulino', 'fienile', 'sushi_bar', 'telaio'])
   alLivello(f, 99)
   controlla('a livello alto sono tutti gli edifici mancanti, e solo edifici (mai una decorazione)', f.edificiDaCostruire().length === Object.keys(EDIFICI).length - 1 && f.edificiDaCostruire().every(t => !!EDIFICI[t] && !PEZZI[t]))
   for (const id of ['1_2', '1_3', '1_4', '5_2', '5_3', '5_4', '2_1', '3_1', '4_1', '2_5']) f.compraLotto(id)               // diciassette edifici da 3×3 (con le quattro botteghe) non stanno nei nove lotti di partenza: un po' di terra in più
@@ -558,7 +558,7 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   uguale('tutti costruiti: nessun «!»', f.edificiDaCostruire().length, 0)
   controlla('le decorazioni non lo accendono mai', carteDi('decori', { livello: 99, prezzoPezzo: t => PEZZI[t].prezzo, nelMagazzino: () => 0, posseduti: {} }).every(c => !c.segnala))
   const carte = carteDi('edifici', { livello: EDIFICI.panificio.liv, prezzoPezzo: t => PEZZI[t].prezzo, nelMagazzino: () => 0, posseduti: {} })
-  stessaLista('nella scheda Edifici i segnalati stanno in cima, i chiusi senza «!»', [carte.slice(0, 3).map(c => c.id).join(), carte.filter(c => c.bloccata).every(c => !c.segnala)], ['mulino,fienile,telaio', true])
+  stessaLista('nella scheda Edifici i segnalati stanno in cima, i chiusi senza «!»', [carte.slice(0, 3).map(c => c.id).join(), carte.filter(c => c.bloccata).every(c => !c.segnala)], ['mulino,fienile,sushi_bar', true])
   stessaLista('ogni scheda sta in un gruppo solo del taccuino', Object.values(GRUPPI).flatMap(g => g.schede).sort(), Object.keys(CATEGORIE).sort())
   stessaLista('le schede segnalate: solo Edifici', schedeSegnalate(schedeDi({ livello: EDIFICI.panificio.liv, prezzoPezzo: t => PEZZI[t].prezzo, nelMagazzino: () => 0, posseduti: {} })), ['edifici'])
   stessaLista('l\'avviso del livello nomina l\'edificio', [avvisoEdificiNuovi(EDIFICI.panificio.liv), avvisoEdificiNuovi(EDIFICI.zuccherificio.liv), avvisoEdificiNuovi(EDIFICI.fienile.liv), avvisoEdificiNuovi(2)], ['il Panificio! Compralo', 'lo Zuccherificio! Compralo', 'il Fienile! Compralo', ''])
@@ -968,8 +968,8 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
 {
   const st = PEZZI.stagno, lg = PEZZI.laghetto
   stessaLista('stagno 3×3 e laghetto 5×4: decori d\'acqua, non produttivi, non calpestabili', [st, lg].map(x => [x.w, x.d, x.categoria, !x.produttivo, !x.calpestabile, !!x.acqua].join()), ['3,3,decori,true,true,true', '5,4,decori,true,true,true'])
-  controlla('stagno e laghetto stanno dove li mette la 2D (stagno 60, laghetto 58) e costano come là (30 e 26)', [st.liv, lg.liv, st.prezzo, lg.prezzo].join() === '60,58,30,26' && livelloDelPezzoDi('stagno') === st.liv)
-  controlla('i due pezzi non toccano la scala dei livelli (non sono produttivi)', costoDelLivello(st.liv) === [...Object.values(PEZZI).filter(p => p.produttivo && p.liv === st.liv), ...Object.values(EDIFICI).filter(e => e.liv === st.liv)].reduce((n, c) => n + c.prezzo, 0))
+  controlla('stagno e laghetto arrivano con la pesca (10) e costano come in 2D (30 e 26)', [st.liv, lg.liv, st.prezzo, lg.prezzo].join() === '10,10,30,26' && livelloDelPezzoDi('stagno') === st.liv)
+  controlla('i due pezzi non toccano la scala dei livelli (non sono produttivi)', costoDelLivello(st.liv) === COSTO_DELLA_PESCA + [...Object.values(PEZZI).filter(p => p.produttivo && p.liv === st.liv), ...Object.values(EDIFICI).filter(e => e.liv === st.liv)].reduce((n, c) => n + c.prezzo, 0))
   controlla('stanno nella scheda dei decori', carteDi('decori', { livello: 99, prezzoPezzo: t => PEZZI[t].prezzo, nelMagazzino: () => 0, posseduti: {} }).filter(c => c.id === 'stagno' || c.id === 'laghetto').length === 2)
   const { f } = mondo({ monete: 1000 }); alLivello(f, st.liv)
   const [si, sj] = postoPer(f, 'stagno')

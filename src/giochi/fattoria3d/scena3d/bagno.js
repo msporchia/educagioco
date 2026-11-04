@@ -13,15 +13,15 @@ export class Bagno {
   constructor (mondo) { this.w = mondo; this.c = null }
   get attivo () { return !!this.c }
 
-  /** Comincia, se la tinozza c'è e l'animale ci può arrivare. `gesto`: come si pagherà, alla fine. */
-  inizia (id, gesto) {
+  /** Comincia, se la tinozza c'è e l'animale ci può arrivare. */
+  inizia (id) {
     const w = this.w, t = w.m.cura.tinozza()
     if (!t || this.c) return false
     const d = w.m.misureCosa(t), x = t.i + d.w / 2, z = t.j + d.d / 2
     const amico = w.compagni.alBagno(id, { id: t.id, tipo: t.tipo, i: t.i, j: t.j, x, z })
     if (!amico) return false
     const cam = w.camera
-    this.c = { id, gesto, amico, t, fatto: 0, resto: 0, sporco0: sporcoDi(w.m.cura.stato(id).pelo), prima: { zoom: cam.zoom, libera: { ...cam.libera } } }
+    this.c = { id, amico, t, fatto: 0, resto: 0, sporco0: sporcoDi(w.m.cura.stato(id).pelo), prima: { zoom: cam.zoom, libera: { ...cam.libera } } }
     cam.libera.on = true; cam.libera.x = x; cam.libera.z = z; cam.zoom = Math.max(ZOOM_MIN, ZOOM_BAGNO)
     w.ui.bagno?.({ id, fatto: 0 })
     return true
@@ -40,7 +40,7 @@ export class Bagno {
     if (c.fatto >= 1) this._fine()
   }
   _fine () {
-    const c = this.c, w = this.w, r = w.m.cura.lava(c.id, c.gesto)
+    const c = this.c, w = this.w, r = w.m.cura.lava(c.id)
     this._chiudi()
     w.compagni.esceDalBagno(c.id, true)
     if (r.ok) { if (r.premio) w.fx.volo(`+${r.premio.xp} ⭐`, c.amico.grp.position, 1.6); w.ui.cambio() } else w.ui.avviso?.('Il bagno non è riuscito: riprova')

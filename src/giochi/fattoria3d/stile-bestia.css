@@ -52,23 +52,6 @@
 @media (prefers-reduced-motion: reduce) { .f3-bes *, .f3-bes-barra i { animation: none !important; transition: none !important; } }
 
 /* la ciotola e la tinozza (docs/fattoria3d/cura-sul-prato.md) */
-.f3-ciot-dentro { display: flex; align-items: center; gap: 10px; margin: 4px 0 10px; padding: 8px 12px; min-height: 96px; border: 3px dashed #d9b36a; border-radius: 18px; background: #fff8e6; }
-.f3-ciot-dentro.sopra { border-color: #5fb04a; background: #effadf; }
-.f3-ciot-dentro img { width: 84px; height: 84px; object-fit: contain; flex: none; }
-.f3-ciot-dentro p { margin: 0; font-size: 15px; line-height: 1.3; }
-.f3-ciot-gettoni { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
-.f3-ciot-g { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 92px; padding: 6px 4px; border: 2px solid #e6cf9c; border-radius: 14px; background: #fffdf6; font: inherit; color: inherit; touch-action: none; user-select: none; -webkit-user-select: none; }
-.f3-ciot-g span { font-size: 13px; line-height: 1.1; text-align: center; }
-.f3-ciot-g em { font-style: normal; font-size: 12px; color: #8a5a14; }
-.f3-ciot-g.vuole { border-color: #f0a020; background: #fff3cf; box-shadow: 0 0 0 2px #f0a020; }
-.f3-ciot-g.manca { opacity: .55; border-style: dashed; }
-.f3-ciot-g.inmano { opacity: .35; }
-.f3-ciot-fantasma { position: absolute; left: 0; top: 0; z-index: 5; pointer-events: none; }
-.f3-tin-chi { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 10px; }
-.f3-tin-b { flex: none; width: 84px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px; border: 2px solid #e6cf9c; border-radius: 14px; background: #fffdf6; font: inherit; color: inherit; }
-.f3-tin-b.sel { border-color: #f0a020; background: #fff3cf; }
-.f3-tin-b img { width: 64px; height: 64px; object-fit: contain; }
-.f3-tin-b span { font-size: 12px; line-height: 1.1; text-align: center; overflow-wrap: anywhere; }
 .f3-bagno { position: absolute; left: 50%; bottom: calc(112px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 10px; width: min(330px, calc(100% - 32px)); box-sizing: border-box; padding: 8px 8px 8px 16px; border-radius: 22px; background: rgba(255, 251, 240, .96); box-shadow: 0 3px 10px rgba(0, 0, 0, .25); font-weight: 700; }
 .f3-bagno i { flex: 1; height: 12px; border-radius: 6px; background: #e4dcc8; overflow: hidden; }
 .f3-bagno u { display: block; height: 100%; background: #7cc4e8; }

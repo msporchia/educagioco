@@ -136,7 +136,7 @@ Nel catalogo 3D (`strumenti/banco/catalogo-3d/fattoria.js`) c'è una voce per st
 ## Il collegamento alla scena
 
 - **Il tocco sull'edificio** (`scena3d/azioni.js`, `curaBestie`): se c'è un prodotto pronto si raccoglie (gesto di semina, testo che
-  vola «+2 🥚»), altrimenti si nutre («🍽️ ×N»); se lavorano dice quanto manca; senza mangime dice cosa serve e dove si fa
+  vola «+2 🥚»), altrimenti compare la nuvoletta col mangime da trascinare dentro ([cura-sul-prato.md](cura-sul-prato.md)); se lavorano dice quanto manca; senza mangime la riga della nuvoletta dice cosa serve e dove si fa
   (`manca-mangime` con `servono` e `mangia`: «Serve 🌰 becchime (2 a testa): lo fa il fienile»). Niente più dialogo: comprare non passa di qui.
 - **Il pulsante «＋ 🪙 N» del cartello** (`azioni.compraBestia(id)`): compra subito, senza conferma e senza camminare fino
   all'edificio; compare la bestia, scintille e «+1 🐄». Se mancano monete dice quante (`Ti mancano 🪙 N`) e il pulsante è

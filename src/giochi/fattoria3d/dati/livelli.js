@@ -1,5 +1,5 @@
 /* Il livello della fattoria 3D: le soglie sono quelle della fattoria di sempre (70 livelli, ~200 ore di esercizio contando solo la spesa),
-   con un solo ritocco nella parte medio-alta: la pesca (molo e porticciolo, solo 3D) prende il posto della peschiera della 2D, allo stesso livello.
+   con un solo ritocco nella parte alta: la pesca (molo e porticciolo, solo 3D) prende il posto della peschiera della 2D, e costa meno.
    Cosa arriva a ogni livello lo dicono le cose stesse (`liv` su pezzo, edificio, coltura, ricetta: tutti letti dalla 2D, dati/parita2d.js):
    `roba(liv)` le raccoglie girando i dati veri, così un elenco non si scrive due volte e non si scosta.
    Vedi docs/fattoria3d/livelli.md. */
@@ -12,7 +12,7 @@ import { ricetteDelMangime } from './mangime.js'
 import { compagniAl } from './compagni.js'
 import { bestieAl } from './bestie.js'
 import { abitiAl } from './abiti.js'
-import { sogliaDi2D, ULTIMO_2D, SOGLIA_A, SOGLIA_B, ALLUNGA, LIVELLO_PESCA, PESCHIERA_2D } from './parita2d.js'
+import { sogliaDi2D, ULTIMO_2D, SOGLIA_A, SOGLIA_B, ALLUNGA, LIVELLO_PESCA, LIVELLO_PESCHIERA, PESCHIERA_2D } from './parita2d.js'
 
 // La formula del passo è quella della 2D (`8·(n-1)² + 200·(n-1)`, allungata di un quarto): i livelli non finiscono mai.
 export { SOGLIA_A, SOGLIA_B, ALLUNGA, LIVELLO_PESCA }
@@ -47,10 +47,10 @@ export const costoDelLivello = livello =>
 // Fin dove arriva la roba dichiarata: l'ultimo livello della 2D; oltre si continua a salire ma senza niente di nuovo da aprire.
 export const ULTIMO = ULTIMO_2D
 
-/** Quanta esperienza (monete spese qui dentro) serve in tutto per un livello: quella della 2D, più lo scarto della pesca dal livello dopo il suo. */
+/** Quanta esperienza (monete spese qui dentro) serve in tutto per un livello: quella della 2D, più lo scarto della pesca dal livello dopo la peschiera. */
 export function sogliaDi(livello) {
   const l = Math.max(1, livello | 0)
-  return sogliaDi2D(l) + (l > LIVELLO_PESCA ? SCARTO_DELLA_PESCA : 0)
+  return sogliaDi2D(l) + (l > LIVELLO_PESCHIERA ? SCARTO_DELLA_PESCA : 0)
 }
 
 export function livelloPer(esperienza = 0) {
@@ -178,7 +178,7 @@ export function guastiDeiLivelli() {
     const prod = r.edifici.length + r.pezzi.filter(p => p.produttivo).length
     if (l > 1 && prod > 1) g.push(`al livello ${l} arrivano ${prod} cose produttive: una sola`)
   }
-  // niente arriva oltre l'ultimo livello, e la pesca sta dove la 2D ha la peschiera
+  // niente arriva oltre l'ultimo livello, e molo e porticciolo arrivano insieme
   for (const [t, p] of [...Object.entries(PEZZI), ...Object.entries(EDIFICI)]) if (p.liv > ULTIMO) g.push(`${t}: arriva al livello ${p.liv}, che non esiste`)
   for (const t of ['molo', 'molo_v', 'porticciolo']) if (PEZZI[t].liv !== LIVELLO_PESCA) g.push(`${t}: la pesca arriva al ${LIVELLO_PESCA}, non al ${PEZZI[t].liv}`)
   // uova e latte nascono dove il livello li apre: il pezzo che li fa
