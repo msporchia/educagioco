@@ -25,6 +25,7 @@ import { Azioni } from './azioni.js'
 import { Pesca3d } from './pesca3d.js'
 import { Costruzione } from './costruzione.js'
 import { Dito } from './dito.js'
+import { Bagno } from './bagno.js'
 import { Stagione } from './stagione.js'
 import { ASPETTO, fantasma } from './modelli.js'
 import { PEZZI, EDIFICI } from '../dati/catalogo.js'
@@ -99,6 +100,8 @@ export class Mondo3d {
     this.pesca3d.sulAbbocca = lotto => this.azioni.ritira(lotto)
     this.costruzione = new Costruzione(this.ctx)
     this.pezzi.sulCompraBestia = id => this.azioni.compraBestia(id)
+    this.bagno = new Bagno(this)
+    this.compagni.cibo = (id, si) => this.pezzi.cibo(id, si)
     this.dito = new Dito(this)
     this.inSposta = null           // l'id della bestia di casa che si sta spostando (il prossimo tocco su una cella libera la porta lì)
     this.coda = []                 // gli id dei campi che l'eroe farà uno dopo l'altro (semina o raccogli armati)
@@ -164,6 +167,8 @@ export class Mondo3d {
     if (!r.ok) return this.fx.parla('Qui non ci sta')
     this.inSposta = null; this.compagni.portaA(id, Math.floor(p.x), Math.floor(p.z)); this.ui.cambio()
   }
+  /** La ciotola è stata riempita: il cibo si vede e l'animale corre a mangiarlo. */
+  mangia(id) { this.pezzi.cibo(id, true); this.compagni.mangia(id) }
   /** Il contadino cambia abito, senza ricrearlo: stesso posto, stessa direzione, stesso gesto. */
   vestiContadino(abito) { this.abito = abito; this.eroe.vesti(abito) }
   /** Il contadino dell'amico nella fattoria in comune (scena3d/ospite.js): nasce al primo segno di vita e sparisce se tace.

@@ -3,6 +3,7 @@
 // contadino, una trama canvas). Davanti verso +z, piedi a terra (y = 0), origine al centro dell'impronta.
 // Le pose sono funzioni a parte (`posaCane`, `posaGatto`): ricevono lo stato e il tempo e muovono i perni, senza memoria.
 // Vedi docs/fattoria3d/compagni.md.
+import { sporcaGeometria } from './sporco.js'
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { mat } from './modelli.js'
@@ -27,7 +28,7 @@ function daLontano (fai) {
 export function impostaDettaglio (g, basso) {
   if (!!g.userData.dettaglioBasso === !!basso) return
   g.userData.dettaglioBasso = !!basso
-  g.traverse(o => { const l = o.userData.lod; if (l) o.geometry = basso ? l.bassa() : typeof l.alta === 'function' ? l.alta() : l.alta })      // le pelli della creta fanno quella fine solo adesso
+  g.traverse(o => { const l = o.userData.lod; if (l) { o.geometry = basso ? l.bassa() : typeof l.alta === 'function' ? l.alta() : l.alta; sporcaGeometria(o) } })      // le pelli della creta fanno quella fine solo adesso
 }
 /** Triangoli di un gruppo come sono adesso (per i controlli e per le misure). */
 export function triangoliDi (g) {
@@ -839,6 +840,8 @@ export function posaGatto (g, { stato = 'sta', vel = 0, fase = 0, t = 0, p = 0, 
   } else if (stato === 'miao') {                                       // seduto, il muso in su che miagola
     seduto(); const b = Math.sin(Math.min(1, p) * Math.PI)
     u.testa.rotation.x = 1.0 - 0.6 * b; u.testa.position.y += 0.015 * b; u.corpo.scale.y = 1 + 0.02 * b; c3.rotation.z = Math.sin(t * 1.4) * 0.3
+  } else if (stato === 'mangia') {                                     // il muso nella ciotola
+    u.corpo.rotation.x = 0.22; u.testa.rotation.x = 0.85 + Math.sin(t * 9) * 0.06; u.testa.position.y -= 0.1; u.testa.position.z += 0.05
   } else if (stato === 'volta') {                                      // seduto di schiena (Compagni lo gira), la coda che scatta
     seduto(); u.testa.rotation.y = 0.25; c3.rotation.z = 1.6 + Math.sin(t * 15) * 0.5; c2.rotation.z = 1.4 + Math.sin(t * 15 - 0.6) * 0.2
   } else if (stato === 'incontra') {                                   // con Watson: naso a naso, una zampata leggera, la faccia seccata

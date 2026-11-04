@@ -4,18 +4,20 @@
 // Vedi docs/fattoria3d/compagni.md.
 import * as THREE from 'three'
 import { segna } from '../../../grafica/elementi3d.js'
-import { scegliMeta, scegliMetaAttorno, cellaLiberaVicina, cellaDi, decidiCane, decidiGatto, durataDi, SOGLIA_RICHIAMO, DIST_INCONTRO,
+import { scegliMeta, scegliMetaAttorno, cellaLiberaVicina, cellaDi, decidiCane, decidiGatto, durataDi, SOGLIA_RICHIAMO, DIST_INCONTRO, DAVANTI_CASA,
   scegliInterazioneCane, sequenzaCane, sequenzaRichiamo, sequenzaSonno, sequenzaSveglia, carezzaCane, scegliRispostaGatto, sequenzaGatto,
-  chiamaIlGatto, sequenzaGattoChiamato,
+  chiamaIlGatto, sequenzaGattoChiamato, sequenzaFame, sequenzaPasto, scegliNoia, sequenzaNoia,
   sequenzaGattoSopra, incontroGattoCane, sequenzaIncontro } from '../dati/compagni.js'
 import { posaCane, posaGatto, impostaDettaglio } from './modelli-compagni.js'
 import { vestiBestia } from './modelli-addobbi.js'
 import { creaBestia, posaPiccolo, posaBeagle } from './modelli-bestie.js'
-import { decidiPiccolo, ePiccolo } from '../dati/bestie.js'
+import { decidiPiccolo, ePiccolo, NOIA, sporcoDi } from '../dati/bestie.js'
 import { POSTI, postoLibero, postiLiberi, scegliPosto } from '../dati/posti-compagni.js'
 import { PEZZI } from '../dati/catalogo.js'
 import { alleggeriOmbre } from './ottimizza.js'
 import { PARTENZA } from './creta.js'
+import { preparaSporco, impostaSporco } from './sporco.js'
+import { QUOTA_TINOZZA } from './modelli-cura.js'
 
 /** Un animale che entra in scena nasce col dettaglio da lontano (la telecamera di serie sta a 22 m): la pelle fine della creta si fa solo se ci si avvicina. */
 function daLontano (crea) {
@@ -26,11 +28,15 @@ function daLontano (crea) {
   return g
 }
 
+const ACCOSTO = 0.62                              // a quanto dal centro della ciotola sta chi mangia
 const LOD_METRI = 12                              // oltre questa distanza dalla camera un compagno si disegna con le geometrie povere (modelli-compagni.js)
-const CASA = [0.5, -6.5]                       // davanti alla porta della casa
+const CASA = DAVANTI_CASA
 const VEL = { cane: { vaga: 2.4, segue: 3.6, corsa: 5.6 }, gatto: { vaga: 1.5, fugge: 3.8 }, coniglio: { vaga: 1.8 }, pappagallo: { vaga: 1.2 } }
 const FASE_PER_METRO = { cane: 2.6, gatto: 5, coniglio: 3.2, pappagallo: 3.2 }   // quanto avanza il passo per metro percorso
 const ang = (a, b, k) => { let d = b - a; d = Math.atan2(Math.sin(d), Math.cos(d)); return a + d * k }
+const GEO_PALLINA = new THREE.SphereGeometry(0.1, 12, 8), MAT_PALLINA = new THREE.MeshStandardMaterial({ color: 0xd8e24a, roughness: 0.6 })
+const GEO_GOMITOLO = new THREE.SphereGeometry(0.11, 10, 8), MAT_GOMITOLO = new THREE.MeshStandardMaterial({ color: 0xd9486e, roughness: 0.9, flatShading: true })
+const GEO_BUCA = new THREE.SphereGeometry(0.34, 10, 6), MAT_BUCA = new THREE.MeshStandardMaterial({ color: 0x6b4c2c, roughness: 1, flatShading: true })
 
 export class Compagni {
   constructor(scena, motore, eroe, fx, ui, rnd = Math.random) {
@@ -38,6 +44,8 @@ export class Compagni {
     this.camera = null          // la camera di three (la mette il mondo): oltre `LOD_METRI` i compagni usano le geometrie povere
     this.lista = []; this.t = 0; this.inattivo = 0; this.tSync = 0
     this.ultimaCane = null; this.incontri = 0          // l'ultima festa di Watson (mai due uguali di fila); gli incontri gatto-cane fatti
+    this.prossimaChiamata = 0; this.prossimaNoia = 20; this.buche = []      // uno alla volta viene a chiamarti e uno alla volta combina qualcosa: quindici insieme sarebbero un assedio
+    this.cibo = null           // chi toglie il cibo dalla ciotola quando ha finito (lo mette il mondo)
     this.sync(true)
   }
 
@@ -49,7 +57,7 @@ export class Compagni {
     for (const d of [...gratis, ...(cura ? cura.compagniPresi() : [])]) {
       const dentro = this.lista.find(c => c.def.id === d.id)
       if (dentro) { dentro.def.nome = d.nome; if (cura) vestiBestia(dentro.grp, cura.addossoA(d.id)); continue }
-      const grp = daLontano(() => creaBestia(d)); alleggeriOmbre(grp); if (cura) vestiBestia(grp, cura.addossoA(d.id)); this.scena.add(segna(grp, 'animali'))
+      const grp = daLontano(() => creaBestia(d)); preparaSporco(grp); alleggeriOmbre(grp); if (cura) vestiBestia(grp, cura.addossoA(d.id)); this.scena.add(segna(grp, 'animali'))
       const c = { def: d, grp, tipo: d.tipo, x: CASA[0], z: CASA[1], dir: 0, stato: 'sta', tStato: 0, dur: 2, percorso: [], poi: null,
                   velo: 0, fase: Math.random() * 6, corsa: false, sopra: null, salto: null, guarda: null, controllo: 0,
                   seq: null, iSeq: 0, sub: '', evFatti: new Set(), carezze: null, prossimoIncontro: 0, altro: null, bastoneFino: 0 }
@@ -62,6 +70,16 @@ export class Compagni {
       c.dir = this.rnd() * Math.PI * 2
       grp.position.set(c.x, 0, c.z); grp.rotation.y = c.dir
       if (!senzaAvviso) { this.fx.scoppietta(grp.position, 0xffe27a, 10, 1.4, 2.2); this.ui.avviso(d.arrivo) }
+    }
+    this._bisogni()
+  }
+  /** Come sta ognuno, una volta al secondo: ha fame e insiste, si annoia, quanto è sporco (mentre fa il bagno lo sporco lo muove il dito). */
+  _bisogni() {
+    const cura = this.m.cura; if (!cura) return
+    for (const c of this.lista) {
+      const b = cura.stato(c.def.id); if (!b) continue
+      c.fame = cura.insiste(c.def.id); c.noia = b.gioco < NOIA
+      if (!c.inBagno) impostaSporco(c.grp, sporcoDi(b.pelo))
     }
   }
 
@@ -96,14 +114,13 @@ export class Compagni {
     const h = raggio.intersectObjects(zone, false)[0]
     return h ? this.lista.find(c => c.grp.userData.colpo === h.object) : null
   }
-  /** Si fa toccare. Watson: lontano lo chiama il contadino e arriva di corsa, poi fa una festa (sempre diversa); i gatti, se lontani, li chiama per nome e rispondono a modo
+  /** Si fa toccare, ed è giocare (`_gioca`). Un cane: lontano lo chiama il contadino e arriva di corsa, poi fa una festa (sempre diversa); i gatti, se lontani, li chiama per nome e rispondono a modo
       loro (si avvicinano, restano lì, si voltano, fanno una cosa buffa). Se l'eroe non sta fermo, il vecchio «Bau!» o «Prrr…» sul posto. */
   tocca(c) {
-    if (c.def.daCurare) {                                                    // una bestia di casa: il suo verso e i cuoricini, e si apre il suo foglio (viste/Bestia.vue)
-      this._toccaSemplice(c)
-      if (this.ui.apriBestia) this.ui.apriBestia(c.def.id)
-      return
-    }
+    if (c.inBagno) return
+    this._gioca(c)
+    if (c.giocattolo && c.giocattolo.modo === 'posato') { this._viaGioco(c); c.seq = null; this._stato(c, 'sta') }      // ti aveva portato il gioco: lo prendi, e si gioca
+    if (c.tipo !== 'cane' && c.tipo !== 'gatto') { if (!c.seq && !c.salto) this._toccaSemplice(c); return }                // il coniglio e il pappagallo: il loro verso e i cuoricini
     if (c.salto || (c.seq && !(c.tipo === 'cane' && c.stato === 'dorme' && !c.seq.incontro))) return        // già occupato: un tocco non lo riavvia
     const e = this.eroe, dist = Math.hypot(e.x - c.x, e.z - c.z)
     if (c.tipo === 'cane') {
@@ -114,12 +131,11 @@ export class Compagni {
       }
       if (dist > SOGLIA_RICHIAMO) {
         e.faccia({ x: c.x, z: c.z }); this.fx.parla(this._nome(c) + '!'); e.avvia('chiama', 0.9)
-        const id = this.ultimaCane = scegliInterazioneCane(this.ultimaCane, this.rnd)
-        return this._avviaSeq(c, [...sequenzaRichiamo(), ...sequenzaCane(id)])
+        return this._avviaSeq(c, [...sequenzaRichiamo(), ...sequenzaCane(this._festaDi(c))])
       }
       const car = c.carezze = carezzaCane(c.carezze, this.t)
       if (car.dorme) return this._avviaSeq(c, sequenzaSonno(this.rnd))
-      return this._avviaSeq(c, sequenzaCane(this.ultimaCane = scegliInterazioneCane(this.ultimaCane, this.rnd)))
+      return this._avviaSeq(c, sequenzaCane(this._festaDi(c)))
     }
     if (c.sopra) return this._avviaSeq(c, sequenzaGattoSopra())            // si sveglia stiracchiandosi e resta dov'è
     if (!e.fermo) return this._toccaSemplice(c)
@@ -129,6 +145,22 @@ export class Compagni {
       return this._avviaSeq(c, sequenzaGattoChiamato(r, c.def.variante, this.rnd))
     }
     this._avviaSeq(c, sequenzaGatto(r, c.def.variante, dist <= 1.3, this.rnd))
+  }
+  /** La festa del cane, mai la stessa due volte di fila; solo Watson ha il bastoncino da riportare. */
+  _festaDi(c) {
+    let id = this.ultimaCane = scegliInterazioneCane(this.ultimaCane, this.rnd)
+    if (id === 'riporta' && !c.grp.userData.bastone) id = this.ultimaCane = 'festa'
+    return id
+  }
+  /** Un tocco è giocare: gratis e sempre, ma riempie solo chi non è già felice (`Cura.gioca`). */
+  _gioca(c) {
+    const r = this.m.cura && this.m.cura.gioca(c.def.id)
+    if (!r || !r.ok || r.felice) return
+    c.noia = false
+    const p = c.grp.position, cane = c.tipo === 'cane'
+    this.fx.scoppietta(new THREE.Vector3(p.x, p.y + (cane ? 0.9 : 0.4), p.z), 0xff7a9a, 12, 1.2, 2)
+    if (r.premio) this.fx.volo(`+${r.premio.xp} ⭐`, p, cane ? 1.6 : 1)
+    this.ui.cambio && this.ui.cambio()
   }
   _toccaSemplice(c) {
     const p = c.grp.position
@@ -141,7 +173,7 @@ export class Compagni {
   // ── le sequenze: una fila di passi a tempo (dati/compagni.js), con eventi (versi, cuori) e, se serve, una camminata ──
   _avviaSeq(c, passi) {
     c.percorso = []; c.poi = null; c.corsa = false
-    passi.eroeFermoAlVia = this.eroe.fermo
+    passi.eroeFermoAlVia = this.eroe.fermo && !passi.ostinata
     c.seq = passi; c.iSeq = 0
     this._iniziaPasso(c); this._eventi(c)
   }
@@ -152,6 +184,7 @@ export class Compagni {
     if (s.va) return this._vaSeq(c, s.va)
     c.stato = s.stato; c.sub = s.sub || ''; c.tStato = 0; c.dur = s.dur; c.guarda = this._mira(c, s.guarda)
     if (s.cane) this._passoCane(c, s.cane)
+    if (s.accosta) this._accosta(c)
   }
   _passoSeq(c) {
     const s = c.seq[c.iSeq]
@@ -178,6 +211,7 @@ export class Compagni {
     if (tipo === 'eroe') return [e.x, e.z]
     if (tipo === 'altro') return c.altro ? [c.altro.x, c.altro.z] : null
     if (tipo === 'via') return [2 * c.x - e.x, 2 * c.z - e.z]
+    if (tipo === 'ciotola') return this._ciotola(c)
     return null
   }
   /** Un passo che cammina: verso l'eroe (a r celle), verso il cane o lontano da lui; arrivato, la sequenza riprende. */
@@ -186,9 +220,12 @@ export class Compagni {
     let centro = [e.x, e.z], evita = this._altri(c)
     if (va.verso === 'cane' && cane) { centro = [cane.x, cane.z]; evita = evita.filter(([x, z]) => x !== cane.x || z !== cane.z) }
     else if (va.verso === 'lontano') { centro = [c.x, c.z]; if (cane) evita = [[cane.x, cane.z, 2], ...evita] }
+    else if (va.verso === 'giro') centro = [c.x, c.z]
+    else if (va.verso === 'ciotola') centro = this._ciotola(c) || centro
     const meta = scegliMetaAttorno({ libera, centro, rMin: va.r[0], rMax: va.r[1], rnd: this.rnd, evita })
     c.sub = ''; c.guarda = null
-    if (!this._vai(c, meta, c.tipo === 'cane' ? 'segue' : 'vaga', { corsa: !!va.corsa, poi: { riprendi: true } })) { c.seq = null; this._stato(c, 'sta') }
+    const stato = c.tipo === 'cane' ? 'segue' : c.tipo === 'gatto' && va.corsa ? 'fugge' : 'vaga'
+    if (!this._vai(c, meta, stato, { corsa: !!va.corsa, poi: { riprendi: true } })) { c.seq = null; this._stato(c, 'sta') }
   }
   /** Il passo del gatto dice cosa fa il cane nell'incontro. */
   _passoCane(gatto, spec) {
@@ -223,6 +260,15 @@ export class Compagni {
       case 'miao': return volo('Miao!')
       case 'mrr': return volo('Mrr')
       case 'posa': return this._posaBastone(c)
+      case 'verso': return volo(c.def.verso)
+      case 'fame': volo(c.def.verso); return this.fx.volo('🥣', p, cane ? 2 : 1.4)
+      case 'finito': return this.cibo && this.cibo(c.def.id, false)
+      case 'prendi': return this._prendiGioco(c)
+      case 'posaGioco': if (c.giocattolo) c.giocattolo.modo = 'posato'; return
+      case 'buca': this._buca(c); this.m.cura && this.m.cura.sporca(c.def.id, 0.05); return this._zolle(c)
+      case 'zolle': return this._zolle(c)
+      case 'fango': this.m.cura && this.m.cura.sporca(c.def.id, 0.06); return
+      case 'gocce': return this.fx.scoppietta(new THREE.Vector3(p.x, p.y + 0.5, p.z), 0x8fd0f0, 18, 2.6, 2.2)
     }
   }
   /** Il bastoncino lascia la bocca di Watson e resta ai piedi dell'eroe per un paio di secondi. */
@@ -239,6 +285,102 @@ export class Compagni {
     b.removeFromParent(); c.grp.userData.testa.add(b); b.position.copy(base.p); b.rotation.copy(base.r); b.visible = false; c.bastoneFino = 0
   }
 
+  // ── la fame ──
+  /** Il centro della sua ciotola, o null. */
+  _ciotola(c) { const k = this.m.cura && this.m.cura.ciotolaDi(c.def.id); return k ? [k.i + 0.5, k.j + 0.5] : null }
+  /** Ha fame: va alla ciotola, la guarda, e uno alla volta viene a chiamarti. Falso se non ha una ciotola. */
+  _vaiAllaCiotola(c) {
+    const centro = this._ciotola(c)
+    if (!centro) return false
+    if (Math.hypot(c.x - centro[0], c.z - centro[1]) > 1.7) {
+      const meta = scegliMetaAttorno({ libera: (i, j) => this.m.libera(i, j), centro, rMin: 1, rMax: 1.5, rnd: this.rnd, evita: this._altri(c) })
+      return this._vai(c, meta, c.tipo === 'cane' ? 'segue' : 'vaga', { poi: { stato: 'siede' }, guarda: centro })
+    }
+    if (this.t >= this.prossimaChiamata) {
+      this.prossimaChiamata = this.t + 10 + this.rnd() * 8
+      this._avviaSeq(c, sequenzaFame(c.tipo === 'cane'))
+      return true
+    }
+    this._stato(c, 'siede'); c.guarda = centro
+    return true
+  }
+  /** Le mete stanno al centro delle celle, cioè a un metro dalla ciotola: un saltello lo porta col muso dentro, sempre di fronte a un lato (mai dentro la cella della ciotola). */
+  _accosta(c) {
+    const k = this._ciotola(c); if (!k) return
+    const dx = c.x - k[0], dz = c.z - k[1], asseX = Math.abs(dx) >= Math.abs(dz), d = c.tipo === 'cane' ? ACCOSTO + 0.14 : ACCOSTO
+    const x = asseX ? k[0] + Math.sign(dx) * d : k[0], z = asseX ? k[1] : k[1] + Math.sign(dz) * d
+    if (this.m.libera(...cellaDi(x, z))) this._salta(c, x, z, c.grp.position.y, 0.3)
+  }
+  /** Hai riempito la sua ciotola: corre e mangia. */
+  mangia(id) {
+    const c = this.lista.find(o => o.def.id === id)
+    if (!c) return false
+    if (c.sopra && !c.inBagno) this._scendi(c)
+    c.fame = false
+    this._avviaSeq(c, sequenzaPasto(c.tipo === 'cane', c.tipo === 'gatto'))
+    return true
+  }
+
+  // ── la noia ──
+  _annoiato(c) {
+    this.prossimaNoia = this.t + 25 + this.rnd() * 30
+    const quale = scegliNoia(c.tipo, this.rnd)
+    if (quale === 'porta' && Math.hypot(this.eroe.x - c.x, this.eroe.z - c.z) > 14) return this._stato(c, 'sta')      // troppo lontano: non lo vedresti arrivare
+    this._avviaSeq(c, sequenzaNoia(quale, c.tipo))
+  }
+  /** La pallina del cane (in bocca) o il gomitolo del gatto (lo spinge col naso): un mesh solo, che sta in scena finché non lo prendi. */
+  _prendiGioco(c) {
+    const cane = c.tipo === 'cane'
+    const m = new THREE.Mesh(cane ? GEO_PALLINA : GEO_GOMITOLO, cane ? MAT_PALLINA : MAT_GOMITOLO)
+    m.castShadow = true; this.scena.add(m)
+    c.giocattolo = { m, modo: cane ? 'bocca' : 'spinge', fino: this.t + 16 }
+  }
+  _viaGioco(c) { if (c.giocattolo) { this.scena.remove(c.giocattolo.m); c.giocattolo = null } }
+  _muoviGioco(c, dt) {
+    const k = c.giocattolo, s = Math.sin(c.dir), o = Math.cos(c.dir)
+    if (this.t >= k.fino) return this._viaGioco(c)
+    if (k.modo === 'bocca') {
+      const t = c.grp.userData.testa
+      if (t) t.getWorldPosition(k.m.position)
+      k.m.position.x += s * 0.28; k.m.position.z += o * 0.28; k.m.position.y -= 0.06
+    } else if (k.modo === 'spinge') {
+      k.m.position.set(c.x + s * 0.5, 0.11, c.z + o * 0.5); k.m.rotation.x += c.velo * dt * 4
+    } else k.m.position.y = 0.11
+  }
+  /** La buca: un mucchietto di terra che si richiude da solo. */
+  _buca(c) {
+    const m = new THREE.Mesh(GEO_BUCA, MAT_BUCA), s = Math.sin(c.dir), o = Math.cos(c.dir)
+    m.position.set(c.x + s * 0.5, 0.02, c.z + o * 0.5); m.scale.set(1, 0.45, 1); m.receiveShadow = true
+    this.scena.add(m); this.buche.push({ m, vita: 9 })
+  }
+  _zolle(c) { this.fx.scoppietta(new THREE.Vector3(c.x + Math.sin(c.dir) * 0.45, 0.15, c.z + Math.cos(c.dir) * 0.45), 0x7a5a36, 7, 1.6, 2) }
+
+  // ── il bagno (scena3d/bagno.js) ──
+  /** Va alla tinozza e ci salta dentro; se non c'è strada ci arriva in una nuvola. Torna il compagno, o null. */
+  alBagno(id, t) {
+    const c = this.lista.find(o => o.def.id === id)
+    if (!c) return null
+    c.seq = null; c.sub = ''; c.guarda = null; this._viaGioco(c)
+    if (c.sopra) { c.sopra = null; c.grp.position.y = 0 }
+    c.inBagno = { ...t, dentro: false }
+    const libera = (i, j) => this.m.libera(i, j)
+    const meta = scegliMetaAttorno({ libera, centro: [t.x, t.z], rMin: 1.5, rMax: 2.4, rnd: this.rnd, evita: this._altri(c) }) || cellaLiberaVicina(libera, t.x, t.z)
+    if (meta && !this._vai(c, meta, c.tipo === 'cane' ? 'segue' : c.tipo === 'gatto' ? 'fugge' : 'vaga', { corsa: true, poi: { bagno: true } })) {
+      this.fx.scoppietta(new THREE.Vector3(c.x, 0.3, c.z), 0xffffff, 6, 0.9, 1.6); c.x = meta[0] + 0.5; c.z = meta[1] + 0.5; c.poi = { bagno: true }; this._arrivato(c)
+    }
+    return c
+  }
+  /** Esce dalla tinozza; pulito si scrolla e fa festa. */
+  esceDalBagno(id, pulito) {
+    const c = this.lista.find(o => o.def.id === id)
+    if (!c) return
+    const eraDentro = c.inBagno && c.inBagno.dentro
+    c.inBagno = null; c.percorso = []; c.poi = null
+    if (eraDentro) this._scendi(c); else c.sopra = null
+    this._bisogni()
+    if (pulito) this._avviaSeq(c, [{ stato: 'scrolla', dur: 1.2, ev: [[0, 'gocce'], [0.5, 'gocce']] }, { stato: c.tipo === 'cane' ? 'festa' : 'sta', dur: 1.2, guarda: 'eroe', ev: [[0.1, 'cuori']] }])
+  }
+
   // ── il battito ──
   aggiorna(dt, tt) {
     this.t = tt
@@ -246,7 +388,9 @@ export class Compagni {
     this.inattivo = e.az || e.percorso.length ? 0 : this.inattivo + dt
     this.tSync += dt
     if (this.tSync > 1) { this.tSync = 0; this.sync() }
-    for (const c of this.lista) { this._uno(c, dt); if (c.bastoneFino && this.t >= c.bastoneFino) this._rimettiBastone(c) }
+    for (const c of this.lista) { this._uno(c, dt); if (c.bastoneFino && this.t >= c.bastoneFino) this._rimettiBastone(c); if (c.giocattolo) this._muoviGioco(c, dt) }
+    for (const b of this.buche) { b.vita -= dt; if (b.vita < 2) b.m.scale.setScalar(Math.max(0.01, b.vita / 2)) }
+    if (this.buche.some(b => b.vita <= 0)) this.buche = this.buche.filter(b => { if (b.vita > 0) return true; this.scena.remove(b.m); return false })
   }
 
   _uno(c, dt) {
@@ -281,6 +425,9 @@ export class Compagni {
     const vmax = c.tipo === 'cane' ? VEL.cane.corsa : c.tipo === 'gatto' ? VEL.gatto.fugge : VEL[c.tipo].vaga
     const pose = { stato: c.stato, vel: c.velo / vmax, fase: c.fase, t: this.t, p: Math.min(1, c.tStato / (c.dur || 1)), sub: c.sub }
     if (c.velo > 0) pose.stato = 'vaga'
+    else if (c.stato === 'mangia' && c.tipo !== 'gatto') pose.stato = 'annusa'
+    else if (c.stato === 'scrolla') pose.stato = 'sta'
+    g.rotation.z = c.stato === 'scrolla' ? Math.sin(this.t * 38) * 0.24 * (1 - Math.min(1, c.tStato / (c.dur || 1))) : 0
     if (this.camera) {                                           // il dettaglio dalla distanza (con isteresi: niente andirivieni sulla soglia)
       const d = this.camera.position.distanceTo(g.position)
       impostaDettaglio(g, d > (g.userData.dettaglioBasso ? LOD_METRI - 1.5 : LOD_METRI))
@@ -294,7 +441,7 @@ export class Compagni {
   _stato(c, stato) { c.stato = stato; c.tStato = 0; c.dur = durataDi(stato, this.rnd) }
 
   _interrotto(c) {
-    if (c.def.daCurare) return false
+    if (c.def.daCurare || c.fame || c.inBagno) return false
     const e = this.eroe, d = Math.hypot(e.x - c.x, e.z - c.z)
     if (c.tipo === 'cane') {
       if (c.stato === 'festa' || c.tStato < 0.6) return false
@@ -325,7 +472,7 @@ export class Compagni {
     c.x = s.da[0] + (s.a[0] - s.da[0]) * e; c.z = s.da[1] + (s.a[1] - s.da[1]) * e
     c.grp.position.y = s.da[2] + (s.a[2] - s.da[2]) * e + Math.sin(k * Math.PI) * 0.25
     c.dir = ang(c.dir, Math.atan2(s.a[0] - s.da[0], s.a[1] - s.da[1]), Math.min(1, dt * 12))
-    if (k >= 1) { c.salto = null; if (c.stato === 'salta') this._stato(c, c.poi?.stato || 'dorme') ; c.poi = null }
+    if (k >= 1) { c.salto = null; if (c.inBagno) c.inBagno.dentro = true; if (c.stato === 'salta') this._stato(c, c.poi?.stato || 'dorme') ; c.poi = null }
   }
   _sopraValido(c) {
     const p = c.sopra, cosa = this.m.cosa(p.id)
@@ -358,6 +505,12 @@ export class Compagni {
   _arrivato(c) {
     const poi = c.poi; c.percorso = []; c.corsa = false; c.velo = 0
     if (poi?.riprendi) { c.poi = null; c.iSeq++; return this._iniziaPasso(c) }                 // una camminata di sequenza: si passa al passo dopo
+    if (poi?.bagno && c.inBagno) {                                                             // nella tinozza con un salto
+      const t = c.inBagno
+      c.sopra = { id: t.id, tipo: t.tipo, i: t.i, j: t.j, y: QUOTA_TINOZZA }
+      this._salta(c, t.x, t.z, QUOTA_TINOZZA); c.stato = 'salta'; c.poi = { stato: 'siede' }; c.tStato = 0; c.dur = 999
+      return
+    }
     if (poi?.posto) {                                            // sale sul posto (o si corica accanto), se c'è ancora e nessun altro l'ha preso
       const p = poi.posto, cosa = this.m.cosa(p.id), def = POSTI[p.tipo]
       if (cosa && cosa.tipo === p.tipo && cosa.i === p.i && cosa.j === p.j && postoLibero(this.lista, p.id, c)) {
@@ -384,7 +537,10 @@ export class Compagni {
   _decidi(c) {
     const m = this.m, e = this.eroe, libera = (i, j) => m.libera(i, j)
     c.guarda = null; c.seq = null; c.sub = ''
+    if (c.inBagno) { if (c.inBagno.dentro) { this._stato(c, 'siede'); c.guarda = [e.x, e.z] } return }
     if (c.sopra) return this._scendi(c)                          // se stava su una panchina, dopo il sonno scende
+    if (c.fame && this._vaiAllaCiotola(c)) return true           // ha fame: insiste finché non mangia
+    if (c.noia && this.t >= this.prossimaNoia) return this._annoiato(c)
     if (c.def.daCurare) {                                        // una bestia di casa sta vicino a casa sua: due passi, poi si siede, annusa, dorme (il gatto si lava)
       const d = decidiPiccolo({}, this.rnd), casa = this._casa(c)
       if (d.vai === 'attorno') return this._vai(c, scegliMeta({ libera, centro: casa, rMin: 1, rMax: 3.5, rnd: this.rnd, evita: this._altri(c) }), 'vaga', { poi: { stato: 'sta' } })
@@ -430,7 +586,9 @@ export class Compagni {
   }
 
   via() {
-    for (const c of this.lista) this.scena.remove(c.grp)
+    for (const c of this.lista) { this.scena.remove(c.grp); this._viaGioco(c) }
+    for (const b of this.buche) this.scena.remove(b.m)
+    this.buche = []
     this.lista = []
   }
 }
