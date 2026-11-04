@@ -11,7 +11,7 @@ niente si vende. Codice: `dati/interni.js`, `motore/interni.js`, `scena3d/casa3d
 - **Si entra toccando la casa.** Il contadino va alla porta (o alla cella sua più vicina: la casa sta fuori dalla terra di partenza) ed
   entra. Si esce con «🚪 Esci», con l'indietro della barra, o camminando fuori dalla porta di casa.
 - **L'armadio cambia l'aspetto.** È un mobile di serie, c'è sempre (si sposta e si colora, non si mette via): toccarlo porta il contadino
-  davanti e apre il guardaroba ([guardaroba.md](guardaroba.md)). Il tocco sul contadino fermo non apre più niente; il 👕 del HUD resta.
+  davanti e apre il guardaroba ([guardaroba.md](guardaroba.md)). È l'unica strada: il 👕 del HUD non c'è più.
 - **Le stanze si comprano**, una attaccata all'altra, fino a **sei** (due file da tre). Prezzi in `PREZZI_STANZE`: 60, 120, 180, 260, 360
   («una cosa vera» e «una struttura» della [calibrazione](../apprendimento/calibrazione.md)).
 - **Comprare conta come esperienza** (`_spendi`), come ogni spesa della fattoria; **spostare, girare, colorare, cambiare pavimento e

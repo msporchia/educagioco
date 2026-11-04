@@ -30,7 +30,7 @@ export function carteDi(categoria, stato) {
     if (p.fiera && !mag) continue                                              // la fiera non si compra: si vince dalla mongolfiera, e la carta c'è solo se ce l'hai
     if (p.stagione && p.stagione !== stato.stagione && !mag) continue          // una festa: si offre solo in stagione (ciò che è nel magazzino si rimette sempre)
     carte.push({ id, genere: 'pezzo', nome: p.nome, emoji: p.emoji,
-      etichetta: mag ? '📦 ×' + mag : '🪙 ' + stato.prezzoPezzo(id), liv, bloccata: liv > stato.livello, segnala: !!(p.magazzino && mag) })      // un magazzino da mettere ha il «!»
+      etichetta: mag ? '📦 ×' + mag : '🪙 ' + stato.prezzoPezzo(id), liv, bloccata: liv > stato.livello, segnala: !!(p.magazzino && mag) || (id === 'bacheca' && !!stato.serveBacheca) })      // un magazzino da mettere ha il «!», e la bacheca finché non c'è
   }
   for (const [id, e] of Object.entries(EDIFICI)) {
     if (e.categoria !== categoria || stato.posseduti[id]) continue

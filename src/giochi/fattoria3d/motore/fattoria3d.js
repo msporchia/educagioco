@@ -444,6 +444,8 @@ export class Fattoria3d {
   }
   /** Gli edifici che il livello ha aperto e non sono in mappa: il «!» (solo macchine e mongolfiera; mai una decorazione). */
   /** Gli edifici aperti dal livello e non ancora in mappa (il «!» su Costruisci), più i magazzini che aspettano nel magazzino dei pezzi. */
+  /** Da livello 2 il banco chiede una bacheca: finché non c'è, la sua carta ha il «!», perché nessun altro la indica. */
+  serveBacheca() { return this.livello() >= LIVELLO_BANCO && !this.bancoAperto() }
   edificiDaCostruire() { return [...edificiDaCostruire(this.livello(), this.s.posseduti), ...TIPI_DI_SILO.map(t => SILOS[t].edificio).filter(t => this.nelMagazzino(t) > 0 && PEZZI[t].liv <= this.livello())] }
   /** Un posto dove ci sta: quello di prima se è libero, se no il primo libero nel terreno tuo (per i banchi di prova e i comandi; il gioco lo sceglie il bambino). */
   postoPer(tipo) {

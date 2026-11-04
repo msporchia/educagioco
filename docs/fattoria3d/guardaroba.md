@@ -16,7 +16,7 @@ su `ASPETTO_ERO` (`dati/compagni.js`). Un profilo che non ha mai scelto parte da
 
 - **Toccando l'armadio dentro casa** ([casa.md](casa.md)): il contadino ci va davanti e lo apre. Il tocco sul contadino fermo, che lo
   apriva prima, è tolto (3/11/2026): l'armadio lo sostituisce, su richiesta dell'utente.
-- **Il tasto «👕»** nell'HUD, accanto al banco e all'inventario (solo l'icona: a 360 px non c'è posto per la parola).
+- **L'armadio di casa** è la porta: il tasto «👕» dell'HUD è stato tolto il 4/11/2026 ([casa.md](casa.md)).
 - Il foglio (`viste/Guardaroba.vue`, stile `stile-guardaroba.css`) si chiude con la ✕ in alto a destra. Conta in `fogliAperti`: finché è aperto
   un tocco sulla scena non fa camminare nessuno.
 
