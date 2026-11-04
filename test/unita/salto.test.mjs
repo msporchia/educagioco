@@ -25,7 +25,7 @@ import { Sessione as SessioneEs } from '../../src/giochi/spagnolo/motore/session
 import { TAPPE as TAPPE_ES } from '../../src/giochi/spagnolo/dati/mondi.js'
 import { rispostaGiusta as libroEs, eGiusta as eGiustaEs } from '../../src/giochi/spagnolo/motore/libro.js'
 
-import { CAMPAGNA as POZIONI, MONETE_A_DOSE } from '../../src/giochi/pozioni/dati/campagna.js'
+import { CAMPAGNA as POZIONI, MONETE_A_DOSE, MONETE_A_PASSO } from '../../src/giochi/pozioni/dati/campagna.js'
 import { Bottega as BottegaPozioni, caso as casoPozioni } from '../../src/giochi/pozioni/motore/bottega.js'
 
 import { CAMPAGNA as PRIMA_DOPO } from '../../src/giochi/prima-dopo/dati/campagna.js'
@@ -126,10 +126,10 @@ for (const [nome, Sessione, TAPPE, libro, eGiusta] of [
   while (!b.finita && giri++ < 50) {
     const e = b.salta()
     if (!e) break
-    uguale('l\'esito vale le monete di una dose', e.monete, MONETE_A_DOSE)
+    controlla('l\'esito vale le monete di una dose o di un passo', [MONETE_A_DOSE, MONETE_A_PASSO].includes(e.monete))
   }
   controlla('saltando si arriva in fondo alla tappa', b.finita, `giri ${giri}`)
-  uguale('ogni ingrediente saltato vale MONETE_A_DOSE, come uno fatto senza traboccare', b.monete, t.ingredienti * MONETE_A_DOSE)
+  uguale('ogni ingrediente e ogni passo saltato valgono come uno fatto bene', b.monete, t.ingredienti * MONETE_A_DOSE + b.passi.length * MONETE_A_PASSO)
   uguale('niente gettoni spesi', b.speso, 0)
   uguale('una pozione saltata non è perfetta', b.perfetta, false)
   uguale('e vale una stella sola', b.stelle, 1)

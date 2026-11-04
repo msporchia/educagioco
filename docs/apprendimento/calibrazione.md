@@ -74,7 +74,7 @@ Il giorno del cambio (settembre 2026), per una tappa tipica giocata bene:
 | Survivors, il prato · la tana | 3–9 · 10–30 | ~15 · ~45 |
 | spagnolo, tappa 1 · tappa 7 (livello 5) | 10 · 25 | 12 · 24 |
 | inglese a mondi, una tappa da diciotto risposte | ~25 + 5 (🏁 +10) | ~25 |
-| pozioni, una tappa da tre pozioni di tre ingredienti | 90, un terzo rifatta | 27 |
+| pozioni, una pozione da tre ingredienti e cinque passi | 45, un terzo rifatta | 14 |
 | Conta, Prima e dopo, bancarella | già a risposta | uguale, e la bancarella non perde più gli ultimi clienti |
 
 Il castello sale tanto perché prima era un deserto: pagava

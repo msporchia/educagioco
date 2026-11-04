@@ -131,6 +131,8 @@ export function creaBanco(scena, trame) {
     g.add(l)
   }
   for (let i = 0; i < 7; i++) fiamma(C.x + (i - 3) * 0.17, 0.32, C.z + 0.35 + Math.sin(i) * 0.12, 1.6 + (i % 3) * 0.3)
+  const fiammeSotto = fiamme.slice(-7)
+  let fuoco = 0.35, metaFuoco = 0.35                 // basso finché non si scalda
   const luceFuoco = new PointLight(0xff8a3a, 6, 7, 1.6)
   luceFuoco.position.set(C.x, 0.8, C.z + 0.9)
   g.add(luceFuoco)
@@ -143,11 +145,13 @@ export function creaBanco(scena, trame) {
     brodo.scale.setScalar(0.8 + 0.2 * pieno)
     brodo.material.emissive.copy(coloreBrodo).multiplyScalar(0.45)
     bollore += (1 - bollore) * Math.min(1, dt * 0.8)
+    fuoco += (metaFuoco - fuoco) * Math.min(1, dt * 2.5)
     for (const f of fiamme) {
       const k = 0.85 + Math.sin(t * 13 + f.userData.fase) * 0.08 + Math.sin(t * 7.3 + f.userData.fase * 2) * 0.07
-      f.scale.set(f.userData.base.x * k, f.userData.base.y * (0.9 + (k - 0.85) * 2), 1)
+      const alto = fiammeSotto.includes(f) ? fuoco * 1.5 : 1
+      f.scale.set(f.userData.base.x * k * Math.min(1, alto + 0.3), f.userData.base.y * (0.9 + (k - 0.85) * 2) * alto, 1)
     }
-    luceFuoco.intensity = 5.5 + Math.sin(t * 11) * 0.6 + Math.sin(t * 17.3) * 0.4
+    luceFuoco.intensity = (5.5 + Math.sin(t * 11) * 0.6 + Math.sin(t * 17.3) * 0.4) * (0.35 + fuoco * 0.9)
     datiBolle.forEach((b, i) => {
       b.fase += dt * b.vel * bollore
       if (b.fase >= 1) { b.fase -= 1; nuovoPosto(b) }
@@ -173,6 +177,7 @@ export function creaBanco(scena, trame) {
     riempi(f) { metaPieno = f },
     quotaBrodo,
     ribolli(quanto = 3) { bollore = quanto },
+    fuoco(k) { metaFuoco = k },
     luceFuoco,
   }
 }
