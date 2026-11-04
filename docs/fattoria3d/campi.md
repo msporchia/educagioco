@@ -9,7 +9,7 @@ sempre pronto». I tasti Libero, Semina e Raccogli non ci sono più, e con loro 
 - **Un tocco su un campo porta l'attrezzo accanto**: vuoto i semi, pronto il falcetto. Su un campo che cresce il contadino dice quanto manca.
 - **Si trascina l'attrezzo sui campi**, uno o tanti. Il campo cambia sotto il dito, senza aspettare il contadino, che non si muove.
 - **Ogni campo si fa una volta per passata**; i semi vanno solo sui vuoti, il falcetto solo sui pronti: gli altri si attraversano senza dire niente.
-- **Un tocco su un gettone non fa niente**: dice cos'è (nome, tempo). Il gesto è trascinare ([memoria di ottobre sull'interfaccia alla Hay Day](regole.md)).
+- **Un tocco su un gettone non fa niente**: dice cos'è (nome, tempo). Il gesto è trascinare.
 - **I semi stanno ad arco**, cinque per pagina, solo quelli arrivati al livello; «» sotto l'arco sfogliano. L'arco si riapre sulla pagina dell'ultimo seme usato.
 - **Raccogliere costa sempre il gesto (🪙1–2)** e guarda lo scomparto prima di cominciare: un rifiuto lo dice e ferma la passata, l'attrezzo resta lì.
 - **L'attrezzo si posa** dopo una passata riuscita, con un tocco altrove, spostando la vista o sollevando un pezzo.

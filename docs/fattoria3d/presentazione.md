@@ -28,8 +28,9 @@ alberi, dà da mangiare alle bestie.
 
 ## Come si tocca
 
-Un tocco manda il contadino: sul prato ci va, su una cosa ci va e la fa. Un dito che scorre sposta la mappa, due dita zoomano;
-tenere premuto apre «Costruisci qui». Quando una cosa non si può fare il gioco non dice solo «no»: dice cosa fare adesso, e dove
+Un tocco manda il contadino: sul prato ci va, su una cosa ci va e la fa. Un tocco su un campo porta accanto i semi o il falcetto, da
+trascinare sui campi. Un dito che scorre sposta la mappa, due dita zoomano;
+tenere premuto apre il menu «Compra». Quando una cosa non si può fare il gioco non dice solo «no»: dice cosa fare adesso, e dove
 può porta il tasto per farlo.
 
 ## Cosa allena

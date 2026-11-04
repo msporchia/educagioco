@@ -230,10 +230,10 @@ const riposo = () => page.evaluate(([e, m]) => {
   motore.s.magazzino = {}; motore.s.esperienza = e; motore.eventi = []; motore.borsa.paga(motore.monete() - m); mondo.cambiato()
 }, [E0, M0])
 // una cella libera e propria, con attorno (5×5) solo prato, a schermo fra la barra in alto e le azioni: un campo 2×2 ci sta con l'angolo lì
-const cella = (escludi = []) => page.evaluate(escludi => {
+const cella = (escludi = [], tipo = 'campo') => page.evaluate(([escludi, tipo]) => {
   const { motore, mondo } = window.__fattoria3d, e = mondo.eroe, r = mondo.canvas.getBoundingClientRect(), buoni = []
   for (let i = -14; i < 13; i++) for (let j = -12; j < 11; j++) {
-    if (!motore.puoMettere('campo', i, j).ok || escludi.some(([a, b]) => Math.abs(a - i) < 5 && Math.abs(b - j) < 5)) continue
+    if (!motore.puoMettere(tipo, i, j).ok || escludi.some(([a, b]) => Math.abs(a - i) < 5 && Math.abs(b - j) < 5)) continue
     let pulita = true
     for (let a = -2; a <= 2; a++) for (let b = -2; b <= 2; b++) if (motore.blocca(i + a, j + b)) pulita = false
     const [px, py, v] = mondo.proietta({ x: i + 0.5, y: 0, z: j + 0.5 })
@@ -241,7 +241,7 @@ const cella = (escludi = []) => page.evaluate(escludi => {
   }
   buoni.sort((a, b) => a.d - b.d)
   return buoni.find(b => b.d >= 3) || buoni[0] || null          // non sotto l'eroe
-}, escludi)
+}, [escludi, tipo])
 const posto = await cella()
 controlla('c\'è una cella libera a schermo', !!posto)
 const sulPosto = () => schermoDi(posto.i + 0.5, posto.j + 0.5)
@@ -367,7 +367,7 @@ await attendi(page, 300)
 // lo stagno: acqua che si costruisce dalla scheda dei decori, e un ponte che ci sta sopra (docs/fattoria3d/laghi.md)
 {
   await page.evaluate(() => window.__fattoria3d.mondo.costruzione.annullaTrascinamento())          // un fantasma rimasto dal giro di prima non deve coprire la pressione
-  const pStagno = await cella()
+  const pStagno = await cella([], 'stagno')
   controlla('c\'è una cella libera a schermo per lo stagno', !!pStagno)
   await page.evaluate(() => { const m = window.__fattoria3d.motore; m.s.esperienza = 1e6; m.borsa.paga(-500) })     // il livello e le monete bastano; `riposo` rimette tutto
   await premiEApri(() => schermoDi(pStagno.i + 0.5, pStagno.j + 0.5))
@@ -482,7 +482,7 @@ controlla('scegliere la strada chiude il menu e porta la sua barra', await menuA
 }
 await toccaEl('[data-f3="strade-fatto"]')
 await attendi(page, 300)
-controlla('«Fatto» rimette la barra delle azioni', await page.locator('[data-f3="barra-strade"]').count() === 0 && await page.locator('[data-f3^="az-"]').count() === 4)
+controlla('«Fatto» rimette la barra delle azioni', await page.locator('[data-f3="barra-strade"]').count() === 0 && await page.locator('[data-f3^="az-"]').count() === 1)
 await page.evaluate(() => { const { motore, mondo } = window.__fattoria3d; for (const [k, v] of [...motore.strada]) if (v === 1) motore.strada.delete(k); mondo.terreno.ridisegnaStrade() })       // le strade di prova se ne vanno
 await riposo()
 
