@@ -11,7 +11,7 @@
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, FINE_STRADA, TAPPE_PRIME, TAPPE_PICCOLE, riordina, FILE,
          postoNelCursore, concettiDi }
   from '../../src/giochi/passo-passo/dati/campagna.js'
-import { STRADE, delCane, aperture, prossima, seguente, tappaDiAdesso, cosaManca, stradeDi, ereditaDi }
+import { STRADE, delCane, delGuerriero, aperture, prossima, seguente, tappaDiAdesso, cosaManca, stradeDi, ereditaDi }
   from '../../src/giochi/passo-passo/motore/strade.js'
 import { Livello } from '../../src/giochi/passo-passo/motore/livello.js'
 import manifesto, { CHIAVE } from '../../src/giochi/passo-passo/gioco.js'
@@ -38,8 +38,8 @@ const nome = i => CAMPAGNA[i].chiave
             rami.map(r => `${r.chiave}:${r.tappe.length}`).join(' '))
   /* le tappe in coda: dopo l'ultima del coniglio, solo cane, ognuna nella
      sua isola dopo quelle che c'erano */
-  controlla('dopo l\'ultima tappa del coniglio vengono solo tappe del cane',
-            S.coniglio.at(-1) === FINE_STRADA - 1 && CAMPAGNA.slice(FINE_STRADA).every(delCane))
+  controlla('dopo l\'ultima tappa del coniglio vengono solo tappe del cane e del guerriero',
+            S.coniglio.at(-1) === FINE_STRADA - 1 && CAMPAGNA.slice(FINE_STRADA).every(t => delCane(t) || delGuerriero(t)))
   uguale('le tappe in coda stanno nell\'isola del loro scalino, dopo quelle che c\'erano',
          rami.slice(1).map(r => r.tappe.slice(0, 3).map(nome).join('+')).join(' '),
          'stalle+cortile+pettine stalle-gradini+pettine-storto+vicoli nicchie+sentiero-gregge+nicchie-fonde ' +
