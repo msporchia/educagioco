@@ -8,11 +8,11 @@ con gli amici il codice sparisce. Servono il servizio su Cloudflare e internet: 
 ## Un'amicizia è fra due persone
 
 Ogni amicizia ha **una chiave sua** (32 lettere e cifre casuali, 128 bit), che hanno solo quei due telefoni. Niente gruppi: abbinare
-Marta a Lorenzo non fa vedere Marta a nessun altro, e un codice finito in mani sbagliate fa entrare uno sconosciuto **solo** in
+due bambini non fa vedere nessuno dei due a nessun altro, e un codice finito in mani sbagliate fa entrare uno sconosciuto **solo** in
 quell'amicizia (compare come «in attesa» senza nome, e un grande la toglie).
 L'amicizia si salva sul telefono per bambino (`store/amici.js`, chiave `amici:<profilo>`, fuori dai profili, un oggetto):
 `{ id (casuale, del bambino), attivo (bool, falso), online (bool), amici: [{ id, nome, chiave, visto }] }`. **Il nome dell'amico si impara la prima volta che si
-incontrano e si tiene**: anche offline la lista dice «Marta» (in grigio), non un codice. Se l'amico cambia nome, si aggiorna.
+incontrano e si tiene**: anche offline la lista dice il nome (in grigio), non un codice. Se l'amico cambia nome, si aggiorna.
 
 ## Come ci si abbina: un codice breve che scade
 
@@ -44,7 +44,7 @@ Perché regge (non è un buco di sicurezza):
   grandi hanno lasciato accesi; toccato il gioco, si apre la sua sala già su «Sfidi …» con quell'amico, e restano da fare solo le
   scelte della partita. Passa da `ingresso.js` con `{ amico }` al posto dell'invito: `daInvito` lo riconosce e la sala lo riceve in
   `scelto` ([insieme.md](insieme.md)).
-- **Ricevere**: **un cartello su qualunque schermata** («Lorenzo ti invita a Castle Battle · Gioca / No grazie», montato una volta
+- **Ricevere**: **un cartello su qualunque schermata** («*nome* ti invita a Castle Battle · Gioca / No grazie», montato una volta
   in `App.vue`, come `Avviso.vue`). «Gioca» apre il gioco già dentro la partita; sparisce da solo dopo 30 secondi.
   **Se si sta già giocando** il gioco si mette in pausa da sé (`usaPausa` guarda `stato.invito`; resta in pausa finché non
   si riprende) e il cartello sta sopra; in una partita in due non si ferma niente (l'altro non può aspettare), il cartello compare lo stesso.
