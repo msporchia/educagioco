@@ -4,9 +4,8 @@
    La prova unitaria dice che il motore è giusto; questa dice che il
    gioco che il bambino tocca è quel motore lì. La prima tappa si gioca
    **dallo schermo**: si legge la ricetta sulla pergamena, si apre il
-   rotolo del mercante, si toccano le targhette e si ordina. Poi un
-   trabocco e la spugna, l'intruso, la fine della tappa e quello che
-   resta nel profilo.
+   rotolo del mercante, si toccano le targhette e si ordina. Poi la fine
+   della tappa, quello che resta nel profilo, un trabocco e la spugna.
    `node test/esegui.mjs pozioni`
    tempo: 90
    ═══════════════════════════════════════════════════════════════════ */
@@ -46,13 +45,13 @@ await scatto(page, 'pozioni-gioco')
 
 await page.locator('[data-azione="mercante"]').click()
 await page.waitForSelector('[data-listino]')
-uguale('il rotolo ha tutti gli ingredienti, e un intruso', await page.locator('[data-merce]').count(), CAMPAGNA[0].ingredienti + 1)
-uguale('quattro targhette a ingrediente', await page.locator('[data-targhetta]').count(), (CAMPAGNA[0].ingredienti + 1) * 4)
+uguale('il rotolo ha tutti gli ingredienti della ricetta, e solo quelli', await page.locator('[data-merce]').count(), CAMPAGNA[0].ingredienti)
+uguale('quattro targhette a ingrediente', await page.locator('[data-targhetta]').count(), CAMPAGNA[0].ingredienti * 4)
 await scatto(page, 'pozioni-listino')
 
 const stato = () => page.evaluate(() => {
   const b = window.__poz.bottega.value
-  return { speso: b.speso, finita: b.finita, macchie: b.macchie.length, traboccate: b.traboccate, sprechi: b.sprechi,
+  return { speso: b.speso, finita: b.finita, macchie: b.macchie.length, traboccate: b.traboccate,
            messi: b.ingredienti.map(g => g.messo), voci: b.ingredienti.map(g => g.nome) }
 })
 /* la più grande che ci sta per il primo ingrediente non finito, come farebbe chi sa */
@@ -82,21 +81,6 @@ uguale('e dall\'ordine si toglie', await page.locator('[data-posto]:not(.pz-libe
 await page.locator('[data-chiudi]').click()
 uguale('la ✕ chiude il rotolo', await page.locator('[data-listino]').count(), 0)
 
-/* l'intruso: si paga, trema sul bancone e il mercante se lo riprende */
-{
-  const prima = await stato()
-  const intruso = await page.evaluate(() => window.__poz.bottega.value.ingredienti.length)
-  await ordinaUna(`${intruso}:0`)
-  await attendi(page, 300)
-  uguale('il rotolo si richiude', await page.locator('[data-listino]').count(), 0)
-  await fermo()
-  const dopo = await stato()
-  controlla('i gettoni se ne vanno', dopo.speso > prima.speso, `${prima.speso} → ${dopo.speso}`)
-  uguale('i misurini no', dopo.messi.join(), prima.messi.join())
-  controlla('il cartello dice che non era nella ricetta', /non è nella ricetta/.test(await page.locator('[data-esito]').innerText()))
-  uguale('e conta come spreco', dopo.sprechi, 1)
-}
-
 /* si fanno le dosi, con le targhette vere */
 for (let g = 0; g < 40 && !(await page.locator('[data-fine="tappa"]').count()); g++) {
   await ordinaUna(await laGiusta())
@@ -104,7 +88,6 @@ for (let g = 0; g < 40 && !(await page.locator('[data-fine="tappa"]').count()); 
 }
 uguale('la tappa finisce', await page.locator('[data-fine="tappa"]').count(), 1)
 controlla('il cartello di fine dice quanto si è speso', /Hai speso \d+ gettoni: il minimo era \d+/.test(await page.locator('[data-righe]').innerText()))
-uguale('l\'intruso toglie la stella del minimo', (await page.locator('[data-stelle]').innerText()).trim().length < 3 * 2, true)
 uguale('le monete: tre a ingrediente', (await page.locator('[data-monete]').innerText()).trim(), `+${CAMPAGNA[0].ingredienti * MONETE_A_DOSE} 🪙`)
 await scatto(page, 'pozioni-fine')
 await page.locator('[data-fine] [data-azione="mappa"]').click()
@@ -113,7 +96,7 @@ await attendi(page, 500)
 const p1 = await leggiProfilo(page)
 uguale('la tappa è segnata', p1.campagne.pozioni.stelle[0] > 0, true)
 uguale('la pozione è contata', p1.totals.pozioni, 1)
-uguale('una pozione con un intruso non è perfetta', p1.totals.pozioniPerfette || 0, 0)
+uguale('senza traboccare è perfetta', p1.totals.pozioniPerfette, 1)
 controlla('le dosi sono contate', p1.totals.misure >= CAMPAGNA[0].ingredienti, `${p1.totals.misure}`)
 
 /* ---------- 3. un trabocco, la barra di lettura e la spugna ---------- */

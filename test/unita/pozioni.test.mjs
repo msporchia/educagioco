@@ -5,8 +5,8 @@
    `node test/esegui.mjs unita/pozioni --niente-build` */
 import { CAMPAGNA, BLOCCHI, QUANTE_TAPPE, MONETE_A_DOSE, guastiDellaCampagna } from '../../src/giochi/pozioni/dati/campagna.js'
 import { FAMIGLIA, VALE, mescola, guastiDelleMisure } from '../../src/giochi/pozioni/dati/misure.js'
-import { PULIZIA } from '../../src/giochi/pozioni/dati/bottega.js'
-import { Bottega, banchetto, ottimo, giocaBene, giocaGoloso, caso, unitaBuone } from '../../src/giochi/pozioni/motore/bottega.js'
+import { PULIZIA, PEZZI, PREZZI } from '../../src/giochi/pozioni/dati/bottega.js'
+import { Bottega, banchetto, ottimo, giocaBene, giocaGoloso, caso, unitaBuone, scalaDi } from '../../src/giochi/pozioni/motore/bottega.js'
 import { regola, chiaveDi } from '../../src/giochi/pozioni/motore/misura.js'
 import { CONVERSIONI } from '../../src/giochi/pozioni/gioco.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -32,12 +32,10 @@ controlla('ogni chiave possibile è fra le conversioni seguite', CONVERSIONI.inc
 /* ---------- ogni tappa: si compone, il listino segue la scaletta, chi fa il minimo prende tre stelle ---------- */
 for (const t of CAMPAGNA) {
   const ammesse = fam => t.etichette.map(k => FAMIGLIA[fam].unita[k])
-  let rotte = 0, sotto = 0, goloso = 0, gemelli = 0, troppe = 0, fuori = 0, doppie = 0, intrusi = 0, moneteSbagliate = 0
+  let rotte = 0, sotto = 0, goloso = 0, gemelli = 0, troppe = 0, fuori = 0, doppie = 0, moneteSbagliate = 0
   for (let s = 1; s <= SEMI; s++) {
     const b = new Bottega(t, { rnd: caso(s) })
     if (b.ingredienti.length !== t.ingredienti) rotte++
-    if (b.estranei.length !== t.estranei || b.listino.length !== t.ingredienti + t.estranei) intrusi++
-    if (b.estranei.some(e => b.ingredienti.some(g => g.nome === e.nome))) intrusi++
     if (new Set(b.ingredienti.map(g => `${g.famiglia}:${g.dose}`)).size < b.ingredienti.length && t.dosi.length >= t.ingredienti * 3) doppie++
     for (const g of b.ingredienti) {
       if (!g.ottimo || g.offerte.length !== 4) rotte++
@@ -58,7 +56,6 @@ for (const t of CAMPAGNA) {
   }
   const qui = `${t.chiave}:`
   uguale(`${qui} quattro ampolle diverse, e la dose si compone`, rotte, 0)
-  uguale(`${qui} l'intruso c'è, e non è nella ricetta`, intrusi, 0)
   uguale(`${qui} due ingredienti non hanno la stessa dose`, doppie, 0)
   uguale(`${qui} chi ordina il minimo ha tre stelle e il margine intatto`, sotto, 0)
   uguale(`${qui} tre monete a ingrediente`, moneteSbagliate, 0)
@@ -83,6 +80,25 @@ for (const t of CAMPAGNA) {
   }
   const finale = new Bottega(tappa('calderone'), { rnd: caso(5) })
   uguale('il calderone mescola le famiglie', new Set(finale.ingredienti.map(g => g.famiglia)).size, 3)
+}
+
+/* ---------- il listino ha sempre un'ampolla sensata: da 1 m a 1,2 m non resta solo il 5 cm ---------- */
+{
+  let brutte = 0, esempio = ''
+  for (const t of CAMPAGNA) for (const d of t.dosi) for (let s = 1; s <= 12; s++) {
+    const o = banchetto(caso(s), d.base, d.famiglia, d.unita, t)
+    const usate = ottimo(d.base, o).pezzi.length
+    const meglio = ottimo(d.base, PEZZI.map((p, i) => ({ base: Math.round(p * scalaDi(d.base, d.famiglia) * VALE[FAMIGLIA[d.famiglia].unita.G]), prezzo: PREZZI[i] }))).pezzi.length
+    if (usate > meglio + 1) { brutte++; esempio = `${d.testo}: ${o.map(x => x.base).join()}` }
+  }
+  uguale('il listino fa la dose con le ampolle che servono', brutte, 0)
+  if (esempio) nota(esempio)
+  const metro = { ...tappa('lunghezza-virgole') }
+  for (let s = 1; s <= 40; s++) {
+    const o = banchetto(caso(s), 1200, 'lunghezza', 'm', metro)
+    controlla('per 1,2 m c\'è il metro', o.some(x => x.base === 1000))
+    controlla('e il pezzo da 20 cm', o.some(x => x.base === 200))
+  }
 }
 
 /* ---------- il minimo è il minimo: contro la forza bruta ---------- */
@@ -138,28 +154,11 @@ for (const t of CAMPAGNA) {
 {
   // due strumenti traboccati: due macchie, due gettoni
   const c = new Bottega(tappa('massa-miste'), { rnd: caso(9) })
-  const piu = i => { const h = c.ingredienti[i]; return { i, k: h.offerte.reduce((m, o, n) => (o.base > h.offerte[m].base ? n : m), 0) } }
-  for (const i of [0, 1]) {
-    const h = c.ingredienti[i]
-    h.messo = h.dose - h.offerte.reduce((m, o) => Math.min(m, o.base), Infinity)
-  }
-  c.ordina([piu(0), piu(1)])
+  c.ingredienti.forEach(h => { h.messo = h.dose - 1 })
+  c.ordina([{ i: 0, k: 0 }, { i: 1, k: 0 }])
   uguale('due strumenti traboccati fanno due macchie', c.macchie.length, 2)
   uguale('e la spugna ne pulisce due', c.pulisci(), 2)
 }
-{
-  // l'intruso: si paga, non entra, e nessuno dice che era una conversione
-  const b = new Bottega(tappa('massa-miste'), { rnd: caso(3) })
-  const i = b.ingredienti.length, o = b.riga(i).offerte[0]
-  const r = b.ordina([{ i, k: 0 }])
-  uguale('l\'intruso è un esito suo', r.esiti[0].tipo, 'estraneo')
-  uguale('e si paga', b.speso, o.prezzo)
-  uguale('niente per il motore', r.esiti[0].annota, null)
-  controlla('dice che non è nella ricetta', r.esiti[0].righe[0].includes('non è nella ricetta'))
-  uguale('nessuna macchia', b.macchie.length, 0)
-  controlla('e la pozione non è più perfetta', !b.perfetta)
-}
-
 /* ---------- cosa va al motore di apprendimento ---------- */
 {
   const annotate = chiave => {

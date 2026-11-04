@@ -12,17 +12,19 @@ scaletta, gli sbagli e cosa va al motore di apprendimento. Il gioco sta in
   e ognuno ha il suo strumento col segno d'oro dove arriva la dose. La
   pergamena dice quanto c'è e quanto ne serve, nell'unità della ricetta.
 - **Il listino del mercante** è un rotolo che si apre con «Dal mercante»:
-  tutti gli ingredienti insieme, quattro targhette a testa (quantità e
-  prezzo), e **un intruso** che la ricetta non chiede: le righe sono
-  mescolate, e la prima cosa da fare è leggere. Le ampolle si ricomprano
-  quante volte si vuole.
-- **Niente figure che suggeriscano quanto**: provato con le ampolle in fila
-  sul bancone, grandi quanto la roba: uguali non si capiva che erano
-  diverse, diverse davano la risposta senza leggere. Quanto c'è lo dice
-  solo la targhetta.
+  tutti gli ingredienti della ricetta insieme, quattro targhette a testa
+  (quantità e prezzo). Le ampolle si ricomprano quante volte si vuole.
+- **Sul listino c'è solo quello che serve**: provato con un ingrediente
+  intruso da riconoscere, faceva solo confusione. La scelta è fra le ampolle,
+  non fra gli ingredienti.
+- **Sul listino niente figure che suggeriscano quanto**: provato con le
+  ampolle in fila sul bancone: uguali non si capiva che erano diverse, diverse
+  davano la risposta senza leggere. Lì quanto c'è lo dice solo la targhetta.
+  **Una volta comprate si vedono a misura reale**: è il momento di capire cosa
+  si è ordinato, e cosa si è sbagliato.
 - **Si fa un ordine**: due o tre targhette (`ordine`), anche di ingredienti
   diversi, poi «Ordina». Si paga tutto, il mercante porta le ampolle sul
-  bancone (tutte uguali) e le versa una alla volta, nell'ordine scritto.
+  bancone e le versa una alla volta, nell'ordine scritto.
   Più ampolle insieme vuol dire fare la somma prima di vederla.
 - **Le grandi costano meno al chilo** (`PEZZI`, `PREZZI`): 1 kg 4 gettoni,
   5 hg 3, 1 hg 1. Conviene sempre «la più grande che ci sta», ma per sapere
@@ -35,8 +37,6 @@ scaletta, gli sbagli e cosa va al motore di apprendimento. Il gioco sta in
   strumento resta dov'era, attorno alla sua base resta una macchia, e le
   altre dell'ordine si versano lo stesso. **Prima di ordinare ancora si
   pulisce**: un gettone a macchia (`PULIZIA`), una per strumento traboccato.
-- **L'intruso** si paga, trema sul bancone e il mercante se lo riprende: i
-  gettoni restano a lui (`sprechi`).
 - **La borsa si vede sempre**: «Hai speso 7 su 23», con la barra e il pezzo
   a strisce dell'ordine in preparazione.
 
@@ -82,8 +82,7 @@ ventinove tappe non cambiano**: sono quelle dei progressi e delle stelle.
 - **Quanto si dice lo decide la tappa** (`aiuto`): `gioco` il cartello dice
   come si gioca, `svolto` sotto ogni targhetta c'è quanto vale nell'unità
   della ricetta, `regola` accanto all'ingrediente c'è l'uguaglianza («1 kg =
-  1000 g»), `''` niente. Il conto compare anche sull'intruso, se no si
-  riconoscerebbe da quello.
+  1000 g»), `''` niente.
 - **`manca`**: la pergamena dice quanto manca (la sottrazione la fa il
   gioco). Solo in `inverse` e nelle finali la si fa da sé.
 - **La portata sale lungo la fila**: `PORTATA_DA` 44 i pesi (sette anni e
@@ -98,12 +97,13 @@ ventinove tappe non cambiano**: sono quelle dei progressi e delle stelle.
   scalini, fra metro e centimetro due. Il motore conta gli scalini invece
   di darli per scontati (`scalini`).
 - **Tutto è in unità base, come intero**: la virgola compare solo a schermo.
+- **Il listino parte dai pezzi che fanno davvero la dose** (per 1,2 m: 1 m e
+  20 cm; `ottimo` su tutti i pezzi, e a parità di gettoni meno ampolle). Pescati
+  a caso una dose chiedeva trentasei ampolle, e da 1 m a 1,2 m restava solo il
+  5 cm quattro volte.
 - **Il pezzo piccolo divide la dose e tutti gli altri pezzi**: è quello che
   rende ogni dose componibile da qualunque punto. Provato senza (0,1 e 0,25
   sullo stesso banco): resta un avanzo che nessuna ampolla copre.
-- **Il più grande che ci sta c'è sempre**, se no una dose chiederebbe decine
-  di ampolle (è successo: trentasei). Le altre sono il piccolo, uno in mezzo e
-  il gemello.
 - **Per le dosi grandi tutto il listino sale di dieci o di cento** (`scalaDi`)
   e i prezzi restano quelli: la fatica sta nelle unità, non nei soldi. Se no
   diventa una bancarella.
@@ -145,6 +145,10 @@ com'è andata; mentre la scena le suona la scena nuova aspetta (`occupa`), e
 **la pergamena segue il mercante**: un numero cambia solo quando l'ampolla è
 versata, se no il risultato si legge prima di vederlo.
 
+- **Uno strumento per ingrediente, col nome sotto**, e a ingrediente finito
+  viene messo via: davanti resta solo quello che serve (uno sporco resta finché
+  non si pulisce). Provato uno solo per tipo: due polveri non si misurano sulla
+  stessa bilancia.
 - **Un'unità non si misura come un'altra** (`vasi.js`): il cilindro graduato
   per i liquidi, la bilancia col quadrante e il piatto per le polveri (il
   mucchio cresce, il piatto cala, la lancetta gira verso l'oro), il metro in
@@ -153,8 +157,8 @@ versata, se no il risultato si legge prima di vederlo.
 - **Il calderone parte vuoto** (`banco.js`): il brodo nasce col primo
   ingrediente, sale e cambia colore (**media geometrica dei canali**,
   `mescola`, perché giallo e blu devono fare verde).
-- **La consegna** (`ampolle.js`): fiasco, barattolo, radice sui pioli, tutti
-  della stessa misura, con la targhetta. Una alla volta volano, si piegano e
+- **La consegna** (`ampolle.js`): fiasco, barattolo, radice sui pioli, a misura
+  reale (la radice lunga quanto sarà sul metro), con la targhetta. Una alla volta volano, si piegano e
   versano; a fine consegna gli strumenti arrivati all'oro si versano nel
   calderone (prima no: un'ampolla di troppo deve traboccare da uno strumento
   ancora pieno).

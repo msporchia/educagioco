@@ -1,14 +1,16 @@
 // La consegna del mercante: le ampolle ordinate compaiono sul bancone, in
-// fila, ognuna con la sua targhetta. Sono tutte uguali per famiglia (il
-// fiasco, il barattolo, il pezzo di radice): quanto c'è dentro lo dice
-// solo la targhetta, la figura non deve suggerirlo (docs/pozioni/bottega.md).
+// fila, con la targhetta. Sul listino la figura non c'è, per non suggerire;
+// qui sono già comprate e si vedono a misura reale, così si capisce cosa si
+// è ordinato: il fiasco e il barattolo grandi quanto la roba, la radice
+// lunga quanto sarà sul metro (docs/pozioni/regole.md).
 import { Group, Mesh, Sprite, SpriteMaterial, LatheGeometry, CylinderGeometry, TorusGeometry, BoxGeometry, CircleGeometry,
          Vector2, Vector3, Color, MeshStandardMaterial, DoubleSide } from 'three'
 import { POSTI } from './banco.js'
 import { cartellino } from './trame.js'
 
 const PASSO = 1.5
-const LUNGA = 0.75              // la radice: sempre la stessa, qualunque cosa dica la targhetta
+const LUNGA = 0.75              // la radice di partenza: la scala la porta alla misura vera
+const PIU_LUNGA = 1.45          // sul bancone oltre non ci sta
 const v2 = a => a.map(([x, y]) => new Vector2(x, y))
 
 // una radice un po' storta e bitorzoluta
@@ -48,6 +50,8 @@ export function creaAmpolle(scena, trame) {
 
   function costruisci(d, k, n) {
     const corpo = new Group(), tinta = new Color(d.colore)
+    // `misura`: quanto dose è questa ampolla. Il volume cresce col cubo, quindi la scala con la radice cubica
+    const s = 0.45 + 0.7 * Math.cbrt(Math.min(1.5, d.misura))
     const mat = []
     let alto, bocca
     if (d.famiglia === 'capacita') {
@@ -67,12 +71,14 @@ export function creaAmpolle(scena, trame) {
     } else {
       const scorza = new MeshStandardMaterial({ color: tinta, roughness: 0.85, map: trame.radice })
       mat.push(scorza)
-      const r = new Mesh(geo.radice, scorza); r.rotation.z = Math.PI / 2; r.position.y = 0.2
-      for (const x of [-LUNGA * 0.3, LUNGA * 0.3]) { const pp = new Mesh(geo.piolo, legno); pp.position.set(x, 0.06, 0); corpo.add(pp) }
+      const lungo = Math.max(0.1, Math.min(PIU_LUNGA, d.lungo))
+      const r = new Mesh(geo.radice, scorza); r.rotation.z = Math.PI / 2; r.position.y = 0.2; r.scale.y = lungo / LUNGA
+      for (const x of [-lungo * 0.3, lungo * 0.3]) { const pp = new Mesh(geo.piolo, legno); pp.position.set(x, 0.06, 0); corpo.add(pp) }
       corpo.add(r)
-      alto = 0.3; bocca = new Vector3(LUNGA / 2, 0.2, 0)
-      corpo.userData.lungo = LUNGA
+      alto = 0.3; bocca = new Vector3(lungo / 2, 0.2, 0)
+      corpo.userData.lungo = lungo
     }
+    if (d.famiglia !== 'lunghezza') { corpo.scale.setScalar(s); alto *= s; bocca.multiplyScalar(s) }
     const cartello = new Sprite(new SpriteMaterial({ map: cartellino(d.testo), transparent: true, depthWrite: false }))
     cartello.scale.set(1.12, 0.62, 1)
     cartello.position.y = alto + 0.5

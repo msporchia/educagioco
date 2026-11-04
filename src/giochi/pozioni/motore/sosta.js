@@ -1,5 +1,5 @@
 // La tappa lasciata a metà (docs/pozioni/sosta.md). Si scrive la pozione
-// aperta com'è: il listino di ogni ingrediente, quanto c'è nei misurini, i
+// aperta com'è: il listino di ogni ingrediente, quanto c'è negli strumenti, i
 // gettoni, le macchie e l'ordine in preparazione. Le tappe e gli
 // ingredienti si rifanno dal codice. Una sosta del banco vecchio (v 1) non
 // si legge: la tappa ricomincia.
@@ -37,10 +37,8 @@ export function scrivi(b, indice, extra = {}) {
       nome: g.nome, unita: g.unita, dose: g.dose, messo: g.messo, traboccate: g.traboccate, pezzi: [...g.pezzi],
       offerte: g.offerte.map(o => ({ base: o.base, prezzo: o.prezzo, unita: o.unita })),
     })),
-    estranei: b.estranei.map(g => ({ nome: g.nome, unita: g.unita, offerte: g.offerte.map(o => ({ base: o.base, prezzo: o.prezzo, unita: o.unita })) })),
-    listino: [...b.listino],
     gettoni: b.gettoni, speso: b.speso, macchie: [...b.macchie],
-    traboccate: b.traboccate, pulizie: b.pulizie, rese: b.monete, saltate: b.saltate, sprechi: b.sprechi,
+    traboccate: b.traboccate, pulizie: b.pulizie, rese: b.monete, saltate: b.saltate,
     ...extra,
   }
 }
@@ -67,7 +65,7 @@ function rimetti(dato, rnd) {
   if (!t || !Array.isArray(dato.ingredienti) || dato.ingredienti.length !== t.tappa.ingredienti) return null
   const p = POZIONI.find(x => x.nome === dato.pozione)
   if (!p || !CLIENTI.includes(dato.cliente)) return null
-  for (const k of ['gettoni', 'speso', 'traboccate', 'pulizie', 'rese', 'saltate', 'sprechi'])
+  for (const k of ['gettoni', 'speso', 'traboccate', 'pulizie', 'rese', 'saltate'])
     if (!intero(dato[k], 0, 100000)) return null
   const ingredienti = dato.ingredienti.map(s => {
     const i = INGREDIENTI.find(x => x.nome === s.nome)
@@ -80,26 +78,14 @@ function rimetti(dato, rnd) {
     return { nome: i.nome, emoji: i.emoji, colore: i.colore, famiglia: i.famiglia, unita: s.unita, dose: s.dose,
              messo: s.messo, offerte, ottimo: migliore, traboccate: s.traboccate, pezzi: [...s.pezzi] }
   })
-  if (!Array.isArray(dato.estranei)) return null
-  const estranei = dato.estranei.map(s => {
-    const i = INGREDIENTI.find(x => x.nome === s.nome)
-    if (!i || !(s.unita in VALE)) throw new Error('estraneo')
-    return { nome: i.nome, emoji: i.emoji, colore: i.colore, famiglia: i.famiglia, unita: s.unita, estraneo: true,
-             offerte: leggiOfferte(s.offerte) }
-  })
-  const righe = ingredienti.length + estranei.length
-  if (!Array.isArray(dato.listino) || dato.listino.length !== righe || new Set(dato.listino).size !== righe
-      || dato.listino.some(i => !intero(i, 0, righe - 1))) return null
   if (!Array.isArray(dato.macchie) || dato.macchie.some(i => !intero(i, 0, ingredienti.length - 1))) return null
 
   const b = new Bottega(t.tappa, { rnd })
   b.ingredienti = ingredienti
-  b.estranei = estranei
-  b.listino = [...dato.listino]
   b.pozione = { nome: p.nome, emoji: p.emoji, colore: p.colore, cliente: dato.cliente }
   b.minimo = ingredienti.reduce((n, g) => n + g.ottimo.costo, 0)
   b.gettoni = dato.gettoni; b.speso = dato.speso
   b.macchie = [...dato.macchie]; b.traboccate = dato.traboccate; b.pulizie = dato.pulizie
-  b.monete = dato.rese; b.saltate = dato.saltate; b.sprechi = dato.sprechi
+  b.monete = dato.rese; b.saltate = dato.saltate
   return b
 }

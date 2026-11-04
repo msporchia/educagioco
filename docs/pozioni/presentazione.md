@@ -22,9 +22,8 @@ Tre famiglie di misure, ognuna con le sue unità e il suo strumento:
 loro dose, «1,5 kg di polvere di luna», e sul banco uno strumento per ognuno
 col segno d'oro dove arrivare. Il calderone parte vuoto.
 
-**Dal mercante.** Il suo rotolo elenca tutti gli ingredienti, più uno che non
-serve, con quattro targhette a testa: quanto c'è nell'ampolla e il prezzo in
-gettoni. Le ampolle grandi costano meno al chilo, quindi conviene sempre la più
+**Dal mercante.** Il suo rotolo elenca gli ingredienti della ricetta, con
+quattro targhette a testa: quanto c'è nell'ampolla e il prezzo in gettoni. Le ampolle grandi costano meno al chilo, quindi conviene sempre la più
 grande che ci sta. Ma per sapere cosa ci sta bisogna sapere a cosa corrisponde
 quello che c'è scritto: il mercante scrive «5 hg», «0,2 kg», «300 g» come gli
 pare. **La conversione non è il compito, è quello che serve per scegliere**,
@@ -77,8 +76,7 @@ fine tappa non c'è un premio in più.
 ## Cosa allena
 
 Le unità di misura e le conversioni fra multipli e sottomultipli, nei due
-versi, confrontare quantità scritte in modo diverso, e leggere prima di
-spendere.
+versi, e confrontare quantità scritte in modo diverso.
 
 ## Note per i genitori
 

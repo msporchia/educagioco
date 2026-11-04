@@ -133,6 +133,20 @@ export function metro() {
   return trama(c)
 }
 
+// il nome sotto uno strumento, su due righe se serve
+export function nomeSulBanco(nome) {
+  const [c, g] = tela(320, 112)
+  g.fillStyle = '#efdcb0'; g.beginPath(); g.roundRect(3, 3, 314, 106, 14); g.fill()
+  g.strokeStyle = '#8a5a26'; g.lineWidth = 4; g.beginPath(); g.roundRect(5, 5, 310, 102, 12); g.stroke()
+  g.fillStyle = '#4a3216'; g.textAlign = 'center'; g.textBaseline = 'middle'
+  const parole = nome.split(' ')
+  const a = parole.slice(0, Math.ceil(parole.length / 2)).join(' '), b = parole.slice(Math.ceil(parole.length / 2)).join(' ')
+  g.font = `800 40px "Emoji Gioco", ${FONTE}`
+  if (g.measureText(nome).width < 290) g.fillText(nome, 160, 58)
+  else { g.fillText(a, 160, 37); g.fillText(b, 160, 79) }
+  return trama(c)
+}
+
 /* La targhetta appesa a un'ampolla: quanto c'è dentro, scritto come
    l'ha scritto il mercante (il prezzo sta nel listino, già pagato). */
 export function cartellino(testo) {

@@ -86,7 +86,7 @@ export function creaEffetti(scena, trame) {
   getto.visible = false
   scena.add(getto)
 
-  // le macchie per terra, una per misurino traboccato: si toccano per pulirle
+  // le macchie per terra, una per strumento traboccato: si toccano per pulirle
   const geoMacchia = new PlaneGeometry(1.25, 1.25)
   const macchie = new Map()
   function macchia(i) {
@@ -94,9 +94,9 @@ export function creaEffetti(scena, trame) {
     if (!m) {
       m = new Mesh(geoMacchia, new MeshStandardMaterial({ color: 0xffffff, alphaMap: trame.macchia, transparent: true,
                                                           roughness: 0.08, metalness: 0.1, depthWrite: false }))
-      m.rotation.x = -Math.PI / 2; m.rotation.z = i * 1.9
+      m.rotation.x = -Math.PI / 2; m.rotation.z = macchie.size * 1.9
       m.visible = false
-      m.userData.tocca = { che: 'macchia', i }
+      m.userData.tocca = { che: 'macchia' }
       scena.add(m)
       macchie.set(i, m)
     }

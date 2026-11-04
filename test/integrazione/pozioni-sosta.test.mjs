@@ -45,7 +45,7 @@ const stato = () => page.evaluate(() => {
   return b && {
     vista: window.__poz.vista.value, pozione: b.pozione.nome, speso: b.speso, gettoni: b.gettoni,
     voci: b.ingredienti.map(g => `${g.nome} ${g.messo}/${g.dose} ${g.offerte.map(o => o.base + o.unita).join()}`),
-    listino: [...b.listino], macchie: [...b.macchie],
+    macchie: [...b.macchie],
   }
 })
 

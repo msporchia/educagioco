@@ -5,9 +5,8 @@ Si esce con ← anche a pozione a metà, e rientrando la mappa offre in cima
 [../core/ripresa.md](../core/ripresa.md); qui quello che è delle pozioni.
 
 - **Si scrive la domanda aperta com'è** (`src/giochi/pozioni/motore/sosta.js`):
-  la pozione, il listino di ogni ingrediente con l'intruso e l'ordine delle
-  righe, quanto c'è in ogni strumento e i pezzi comprati, i gettoni spesi, le
-  macchie, le traboccate. Rifare il listino avrebbe lasciato scegliere una
+  la pozione, il listino di ogni ingrediente, quanto c'è in ogni strumento e
+  i pezzi comprati, i gettoni spesi, le macchie, le traboccate. Rifare il listino avrebbe lasciato scegliere una
   pozione più facile: uscire sarebbe diventata una mossa.
 - **Si ritrova per nome, non per posizione**: gli ingredienti e la pozione per
   nome, la tappa per chiave. Se uno non c'è più il salvataggio non torna, si

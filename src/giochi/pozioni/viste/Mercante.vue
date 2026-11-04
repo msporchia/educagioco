@@ -1,7 +1,7 @@
 <script setup>
 // Il laboratorio: la tela 3D col banco, sopra la pergamena con la ricetta,
 // sotto la borsa dei gettoni. «Dal mercante» srotola il listino con tutti
-// gli ingredienti (anche quelli che non servono). Questa vista non decide
+// gli ingredienti della ricetta. Questa vista non decide
 // niente: riceve la bottega e l'ordine in preparazione, traduce in scena
 // quello che c'è, suona le animazioni che il coordinatore chiede e dice
 // cosa il dito ha toccato. Vedi docs/pozioni/regole.md.
@@ -32,22 +32,24 @@ const mostrati = ref(null)
 const messo = (g, i) => (mostrati.value ? mostrati.value[i] : g.messo)
 const pieno = (g, i) => messo(g, i) >= g.dose
 
-const righe = computed(() => b.value.listino.map(i => ({ i, g: b.value.riga(i) })))
-const voce = v => { const g = b.value.riga(v.i), o = g.offerte[v.k]; return { g, o, testo: scrivi(o.base, o.unita) } }
+const voce = v => { const g = b.value.ingredienti[v.i], o = g.offerte[v.k]; return { g, o, testo: scrivi(o.base, o.unita) } }
 const piena = computed(() => props.bozza.length >= b.value.quanteInOrdine)
 const totale = computed(() => props.bozza.reduce((s, v) => s + voce(v).o.prezzo, 0))
 const percento = n => Math.min(100, n / b.value.gettoni * 100) + '%'
-// il conto scritto sotto la targhetta, solo dove la tappa lo dà; anche per l'intruso, se no si riconoscerebbe da quello
+// il conto scritto sotto la targhetta, solo dove la tappa lo dà
 const vale = (g, o) => (aiuto.value === 'svolto' && o.unita !== g.unita ? `= ${scrivi(o.base, g.unita)}` : '')
 const leRegole = g => (aiuto.value !== 'regola' ? [] : [...new Set(g.offerte.map(o => regola(g.unita, o.unita)).filter(Boolean))])
 
 /* la scena, già decisa: la tela la traduce e basta */
 const quadro = computed(() => {
   const q = b.value, finiti = q.ingredienti.filter(fatto)
+  const macchie = q.macchie.map(i => ({ i, colore: q.ingredienti[i].colore }))
+  // davanti solo gli strumenti che servono: a ingrediente finito si mettono via (uno sporco resta finché non si pulisce)
+  const vasi = q.ingredienti.flatMap((x, i) => (fatto(x) && !q.macchie.includes(i) ? [] : [{
+    i, nome: x.nome, famiglia: x.famiglia, colore: x.colore, livello: fatto(x) ? 0 : x.messo / x.dose, pezzi: fatto(x) ? [] : x.pezzi.map(p => p / x.dose),
+  }]))
   return {
-    vasi: q.ingredienti.map(x => ({ famiglia: x.famiglia, colore: x.colore, livello: x.messo / x.dose, fatto: fatto(x),
-                                    pezzi: x.pezzi.map(p => p / x.dose) })),
-    macchie: q.macchie.map(i => ({ i, colore: q.ingredienti[i].colore })),
+    vasi, macchie,
     calderone: mescola(finiti.map(x => x.colore)),
     riempito: finiti.length / q.ingredienti.length, passoRiempito: 1 / q.ingredienti.length,
   }
@@ -79,7 +81,7 @@ watch(() => props.animazione, async a => {
   if (scena) {
     if (a.tipo === 'ordine') {
       mostrati.value = [...a.prima]
-      await scena.ordine(a.voci, k => { const v = a.voci[k]; if (!v.estraneo) mostrati.value[v.i] = v.messo })
+      await scena.ordine(a.voci, k => { mostrati.value[a.voci[k].i] = a.voci[k].messo })
       mostrati.value = null
     } else if (a.tipo === 'pulisci') await scena.pulisci()
     else if (a.tipo === 'festa') await scena.festa(a.colore)
@@ -121,13 +123,13 @@ if (typeof window !== 'undefined') window.__bottega3d = { grafica: () => scena?.
             <button class="pz-chiudi" aria-label="chiudi" data-chiudi @click="aperto = false">✕</button>
           </div>
           <div class="pz-elenco">
-            <section v-for="{ i, g } in righe" :key="g.nome" class="pz-merce" :class="{ 'pz-fatto': !g.estraneo && fatto(g) }" :data-merce="g.nome">
+            <section v-for="(g, i) in b.ingredienti" :key="g.nome" class="pz-merce" :class="{ 'pz-fatto': fatto(g) }" :data-merce="g.nome">
               <h4><span class="em">{{ g.emoji }}</span> {{ g.nome }}
                 <i v-for="r in leRegole(g)" :key="r" class="pz-regola" data-regola>{{ r }}</i>
               </h4>
               <div class="pz-targhette">
                 <button v-for="(o, k) in g.offerte" :key="k" class="pz-targhetta" :data-targhetta="`${i}:${k}`"
-                        :disabled="bloccato || piena || (!g.estraneo && fatto(g))" @click="$emit('aggiungi', i, k)">
+                        :disabled="bloccato || piena || fatto(g)" @click="$emit('aggiungi', i, k)">
                   <b>{{ scrivi(o.base, o.unita) }}</b>
                   <em v-if="vale(g, o)" data-vale>{{ vale(g, o) }}</em>
                   <span><i class="pz-gettone" aria-hidden="true"></i>{{ o.prezzo }}</span>
