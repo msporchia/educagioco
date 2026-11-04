@@ -36,7 +36,7 @@ const ordina = (piccola = false) => page.evaluate(async piccola => {
   Z.aggiungi(i, k); Z.ordina()
 }, piccola)
 const fermo = () => page.waitForFunction(() => {
-  const el = document.querySelector('[data-azione="mercante"], [data-tavolo], [data-fine]')
+  const el = document.querySelector('[data-azione="mercante"], [data-fase="procedimento"], [data-fine]')
   return el && !el.disabled
 }, null, { timeout: 25000 })
 
@@ -99,7 +99,7 @@ uguale('uscendo a metà consegna l\'ordine resta fatto', JSON.stringify((await s
 await attendi(page, 500)
 
 /* il resto della tappa: le monete dicono il totale, anche quelle prima dell'uscita */
-for (let g = 0; g < 30 && await page.locator('[data-tavolo]').count() === 0; g++) {
+for (let g = 0; g < 30 && await page.locator('[data-fase="procedimento"]').count() === 0; g++) {
   await ordina()
   await fermo()
 }
@@ -107,21 +107,23 @@ for (let g = 0; g < 30 && await page.locator('[data-tavolo]').count() === 0; g++
 {
   const unPasso = () => page.evaluate(async () => {
     const Z = window.__poz, b = Z.bottega.value, p = b.passi[b.passo]
+    if (!p) return                                     // è finita: il calderone sta facendo festa
     await new Promise(r => setTimeout(r, 420))
-    Z.fai(p.azione, [...p.cosa])
+    if (p.azione === 'pesta') Z.fai('metti', [...p.cosa]), await new Promise(r => setTimeout(r, 1500))
+    Z.fai(p.azione, p.azione === 'pesta' ? [] : [...p.cosa])
   })
   await unPasso()
-  await page.waitForFunction(() => !document.querySelector('[data-fai="mescola"]')?.disabled, null, { timeout: 25000 })
+  await attendi(page, 4000)
   await indietro()
   await page.waitForSelector('[data-ripresa]')
   await attendi(page, 500)
   await page.click('[data-ripresa] [data-azione="riprendi"]')
-  await page.waitForSelector('[data-tavolo]', { timeout: 5000 })
+  await page.waitForSelector('[data-fase="procedimento"]', { timeout: 5000 })
   uguale('si riparte dal passo dov\'era', await page.evaluate(() => window.__poz.bottega.value.passo), 1)
   await attendi(page, 500)
   for (let g = 0; g < 10 && await page.locator('[data-fine]').count() === 0; g++) {
     await unPasso()
-    await page.waitForFunction(() => { const el = document.querySelector('[data-fine], [data-fai="mescola"]'); return el && !el.disabled }, null, { timeout: 25000 })
+    await attendi(page, 3500)
   }
 }
 uguale('la tappa finisce', await page.locator('[data-fine="tappa"]').count(), 1)

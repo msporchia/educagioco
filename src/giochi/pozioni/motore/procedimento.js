@@ -5,12 +5,26 @@
 
 export const MORTAIO = -1       // nel `cosa` di una versata: quello che è stato pestato
 
+// le azioni, e come si dicono sul cartello del pasticcio
 export const AZIONI = {
-  pesta: { nome: 'Pesta', emoji: '🪨', fare: 'Pestare', vuole: true },
-  versa: { nome: 'Nel calderone', emoji: '🫗', fare: 'Versare', vuole: true },
-  mescola: { nome: 'Mescola', emoji: '🥄', fare: 'Mescolare', vuole: false },
-  scalda: { nome: 'Scalda', emoji: '🔥', fare: 'Scaldare', vuole: false },
-  diluisci: { nome: 'Diluisci', emoji: '💧', fare: 'Diluire', vuole: false },
+  metti: { fare: 'Metterlo nel mortaio' },
+  pesta: { fare: 'Pestare' },
+  versa: { fare: 'Versare' },
+  mescola: { fare: 'Mescolare' },
+  scalda: { fare: 'Accendere il fuoco' },
+  diluisci: { fare: 'Diluire' },
+}
+
+// gli attrezzi sul tavolo, per le azioni di una tappa
+export const ATTREZZI = { pesta: ['mortaio', 'pestello'], mescola: ['mestolo'], scalda: ['fiammifero'], diluisci: ['brocca'] }
+
+// cosa vuol dire lasciare un attrezzo su un altro: «attrezzo:dove»
+export const MOSSE = {
+  'pestello:mortaio': ['pesta', []],
+  'mortaio:calderone': ['versa', [MORTAIO]],
+  'mestolo:calderone': ['mescola', []],
+  'fiammifero:calderone': ['scalda', []],
+  'brocca:calderone': ['diluisci', []],
 }
 
 const inFila = (rnd, lista) => lista.map(x => [rnd(), x]).sort((a, b) => a[0] - b[0]).map(x => x[1])
@@ -45,7 +59,7 @@ export function frase(p, ingredienti) {
   const nomi = p.cosa.filter(i => i !== MORTAIO).map(i => ingredienti[i].nome)
   if (p.azione === 'pesta') return nomi.length > 1 ? `pesta insieme ${elenco(nomi)}` : `pesta ${nomi[0]}`
   if (p.azione === 'versa') return p.cosa.includes(MORTAIO) ? 'versa il pestato nel calderone' : `versa ${elenco(nomi)} nel calderone`
-  return { mescola: 'mescola bene', scalda: 'scalda sul fuoco', diluisci: 'diluisci con l\'acqua' }[p.azione]
+  return { mescola: 'mescola bene', scalda: 'accendi il fuoco', diluisci: 'diluisci con l\'acqua' }[p.azione]
 }
 
 const Maiuscola = t => t[0].toUpperCase() + t.slice(1)

@@ -3,7 +3,7 @@
    macchie. Vedi docs/pozioni/sosta.md.
    `node test/esegui.mjs pozioni-sosta --niente-build` */
 import { CAMPAGNA } from '../../src/giochi/pozioni/dati/campagna.js'
-import { Bottega, caso, giocaBene, seguiLaRicetta } from '../../src/giochi/pozioni/motore/bottega.js'
+import { Bottega, caso, giocaBene, seguiLaRicetta, prossimoPasso } from '../../src/giochi/pozioni/motore/bottega.js'
 import { scrivi, leggi, dice, tappaDi, VERSIONE } from '../../src/giochi/pozioni/motore/sosta.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
@@ -51,11 +51,10 @@ for (const t of [CAMPAGNA[0], CAMPAGNA[9], CAMPAGNA[26], CAMPAGNA.at(-1)]) {
   const t = CAMPAGNA.find(x => x.chiave === 'massa-virgole')
   const b = new Bottega(t, { rnd: caso(5) })
   for (const [i, g] of b.ingredienti.entries()) for (const k of g.ottimo.pezzi) b.ordina([{ i, k }])
-  const p = b.passi[0]
-  b.fai('diluisci'); b.fai(p.azione, p.cosa)
+  b.fai('diluisci'); prossimoPasso(b)
   const q = leggi(via(b))
   uguale('la ricetta è la stessa', JSON.stringify([q.passi, q.righe]), JSON.stringify([b.passi, b.righe]))
-  uguale('il passo e quello che c\'è', JSON.stringify([q.passo, q.mortaio, q.dentro, q.pasticci]), JSON.stringify([b.passo, b.mortaio, b.dentro, b.pasticci]))
+  uguale('il passo e quello che c\'è', JSON.stringify([q.passo, q.mortaio, q.pestato, q.dentro, q.pasticci]), JSON.stringify([b.passo, b.mortaio, b.pestato, b.dentro, b.pasticci]))
   uguale('quello che è in casa resta', q.ingredienti.map(g => g.casa).join(), b.ingredienti.map(g => g.casa).join())
   uguale('il minimo pure', q.minimo, b.minimo)
   seguiLaRicetta(q)

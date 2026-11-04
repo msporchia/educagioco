@@ -8,7 +8,7 @@ import { FAMIGLIA, INGREDIENTI, VALE, scrivi } from '../dati/misure.js'
 import { PEZZI, PREZZI, PULIZIA, PASTICCIO } from '../dati/bottega.js'
 import { MONETE_A_DOSE, MONETE_A_PASSO } from '../dati/campagna.js'
 import { chiaveDi } from './misura.js'
-import { AZIONI, MORTAIO, ricetta, testo, frase, stesse } from './procedimento.js'
+import { AZIONI, MORTAIO, ricetta, testo, frase } from './procedimento.js'
 
 export function caso(seme = 1) {
   let s = seme >>> 0 || 1
@@ -140,7 +140,8 @@ export class Bottega {
     this.passi = ricetta(rnd, this.ingredienti, tappa.procedimento)
     this.righe = testo(rnd, this.passi, this.ingredienti, tappa.procedimento >= 5)
     this.passo = 0               // il prossimo da fare
-    this.mortaio = []            // quello che è stato pestato, in attesa di versarlo
+    this.mortaio = []            // quello che è nel mortaio
+    this.pestato = false         // ed è già stato pestato
     this.dentro = []             // quello che è nel calderone
     this.scaldato = false
     this.pasticci = 0
@@ -179,19 +180,28 @@ export class Bottega {
     return { costo, esiti, pronta: this.pronta }
   }
 
-  /* Un'azione del procedimento. Giusta se è il prossimo passo, con le cose
-     che il passo vuole: si fa. Se no è un pasticcio: non cambia niente, costa
-     un gettone, e il cartello dice cosa diceva la ricetta. */
+  /* Un'azione del procedimento. Giusta se fa avanzare il prossimo passo: le
+     cose entrano una alla volta, nel mortaio (`metti`) o nel calderone. Se no è
+     un pasticcio: non cambia niente, costa un gettone, e il cartello dice cosa
+     diceva la ricetta. */
   fai(azione, cosa = []) {
     if (!this.pronta || this.finita || this.macchie.length || !AZIONI[azione]) return null
     const atteso = this.passi[this.passo]
-    if (azione !== atteso.azione || !stesse(cosa, atteso.cosa)) {
+    const manca = this.mancaAl(atteso)
+    const fra = cosa.length && cosa.every(i => manca.includes(i))
+    const giusto = azione === 'metti' ? atteso.azione === 'pesta' && fra
+      : azione === 'pesta' ? atteso.azione === 'pesta' && !manca.length
+      : azione === 'versa' ? atteso.azione === 'versa' && fra && (!cosa.includes(MORTAIO) || this.pestato)
+      : azione === atteso.azione
+    if (!giusto) {
       this.speso += PASTICCIO
       this.pasticci++
       this.pasticciato = true
-      const qui = azione === atteso.azione ? 'Non sono quelle le cose' : `${AZIONI[azione].fare} adesso non va`
+      const qui = azione === atteso.azione ? 'Non è quella la cosa' : `${AZIONI[azione].fare} adesso non va`
       return { giusto: false, azione, righe: [`Pasticcio! ${qui}.`, `La ricetta dice: ${frase(atteso, this.ingredienti)}. Il pasticcio costa un gettone.`] }
     }
+    if (azione === 'metti') { this.mortaio = [...this.mortaio, ...cosa]; return { giusto: true, azione, cosa, versati: cosa, monete: 0, finita: false } }
+    if (azione === 'versa' && cosa.length < manca.length) { this.dentro = [...this.dentro, ...cosa]; return { giusto: true, azione, cosa, versati: cosa, monete: 0, finita: false } }
     const r = this.faiPasso(atteso)
     const monete = this.pasticciato ? 0 : MONETE_A_PASSO
     this.monete += monete
@@ -199,10 +209,19 @@ export class Bottega {
     return { ...r, giusto: true, monete }
   }
 
+  // quello che il passo aspetta ancora
+  mancaAl(p) {
+    const gia = p.azione === 'pesta' ? this.mortaio : this.dentro
+    return p.cosa.filter(i => !gia.includes(i))
+  }
+
   faiPasso(p) {
-    const versati = p.cosa.includes(MORTAIO) ? this.mortaio : p.cosa
-    if (p.azione === 'pesta') this.mortaio = [...p.cosa]
-    if (p.azione === 'versa') { this.dentro = [...this.dentro, ...versati]; if (p.cosa.includes(MORTAIO)) this.mortaio = [] }
+    const versati = p.cosa.includes(MORTAIO) ? this.mortaio : this.mancaAl(p)
+    if (p.azione === 'pesta') { this.mortaio = [...p.cosa]; this.pestato = true }
+    if (p.azione === 'versa') {
+      this.dentro = [...this.dentro, ...versati]
+      if (p.cosa.includes(MORTAIO)) { this.mortaio = []; this.pestato = false }
+    }
     if (p.azione === 'scalda') this.scaldato = true
     this.passo++
     this.finita = this.passo >= this.passi.length
@@ -222,9 +241,9 @@ export class Bottega {
       this.traboccate++; g.traboccate++
       if (!this.macchie.includes(i)) this.macchie.push(i)
       return { ...base, tipo: 'trabocca', dopo: g.messo, pezzi: [...g.pezzi], annota: chiave && { chiave, giusto: false },
-               righe: [`Trabocca! ${vale} di ${g.nome}.`,
+               righe: [`${g.famiglia === 'lunghezza' ? 'Troppo lungo!' : 'Trabocca!'} ${vale} di ${g.nome}.`,
                        g.messo === g.dose
-                         ? `Il misurino era già pieno: ${scrivi(g.dose, u)}.`
+                         ? `Era già arrivato al segno: ${scrivi(g.dose, u)}.`
                          : `C'erano ${scrivi(g.messo, u)}: ${scrivi(g.messo, u)} + ${scrivi(o.base, u)} = ${scrivi(g.messo + o.base, u)}, oltre la tacca di ${scrivi(g.dose, u)}. Ne mancavano ${scrivi(g.dose - g.messo, u)}.`] }
     }
     g.messo += o.base
@@ -280,9 +299,15 @@ export function giocaBene(b) {
   for (let n = 0; n < voci.length; n += b.quanteInOrdine) b.ordina(voci.slice(n, n + b.quanteInOrdine))
   return seguiLaRicetta(b)
 }
-// il procedimento, passo per passo come dice la ricetta
+// un passo come dice la ricetta, con tutti i gesti che vuole
+export function prossimoPasso(b) {
+  const p = b.passi[b.passo]
+  if (p.azione !== 'pesta') return b.fai(p.azione, p.cosa)
+  b.fai('metti', b.mancaAl(p))
+  return b.fai('pesta')
+}
 export function seguiLaRicetta(b) {
-  while (!b.finita && b.pronta) { const p = b.passi[b.passo]; b.fai(p.azione, p.cosa) }
+  while (!b.finita && b.pronta) prossimoPasso(b)
   return b
 }
 export function giocaGoloso(b) {

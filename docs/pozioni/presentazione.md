@@ -21,8 +21,9 @@ Tre famiglie di misure, ognuna con le sue unità e il suo strumento:
 **Una tappa è una pozione, col suo nome.** Sulla pergamena ci sono gli
 ingredienti con la loro dose, «1,5 kg di polvere di luna», e sul banco uno
 strumento per ognuno col segno d'oro dove arrivare. Qualcosa, a volte, c'è già in
-casa. Sotto, la ricetta in parole dice cosa fare con la roba comprata: pesta,
-versa, mescola, scalda, diluisci. Scaldare prima del tempo fa un pasticcio.
+casa. Sotto, la ricetta a punti dice cosa fare con la roba comprata: si trascina nel
+calderone o nel mortaio, e si pesta,
+si mescola, si accende il fuoco, si diluisce. Una mossa fuori tempo fa un pasticcio.
 
 **Dal mercante.** Il suo rotolo elenca gli ingredienti della ricetta, con
 quattro targhette a testa: quanto c'è nell'ampolla e il prezzo in gettoni. Le ampolle grandi costano meno al chilo, quindi conviene sempre la più
