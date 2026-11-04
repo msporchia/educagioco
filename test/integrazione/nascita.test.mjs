@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA DATA DI NASCITA — L'ETÀ SI TIENE AGGIORNATA, MA SENZA CAMBIARE I GIOCHI DA SOLA
 
-   Nel modulo del bambino nuovo c'è mese e anno (facoltativi); nelle impostazioni c'è «Quando è nato». Se la data dice un'età diversa da
+   Nel modulo del bambino nuovo c'è mese e anno (obbligatori: l'età esce da lì); nelle impostazioni c'è «Quando è nato». Se la data dice un'età diversa da
    quella su cui il gioco è tarato: nella stessa fascia si aggiorna in silenzio, se cambia la fascia c'è un avviso nella posta dei grandi
    e la scelta (passare o tenerla) si fa dalle impostazioni, con l'anteprima. Docs: docs/genitori/riordino.md.
    `node test/esegui.mjs nascita --niente-build`
@@ -31,12 +31,11 @@ async function daiGrandi(page, scheda = 'giochi') {
   await page.fill('.benvenuto .nome', 'Prova')
   await page.click('.benvenuto .via')
   await page.waitForSelector('[data-nascita-domanda]', { timeout: 5000 })
-  controlla('la data è facoltativa: senza, la frase lo dice', /Senza/.test(await page.locator('[data-nascita-domanda]').innerText()))
+  uguale('senza la data non si entra', await page.isDisabled('[data-azione="si-gioca"]'), true)
   await page.selectOption('[data-nascita-mese]', String(nato(7).m))
   await page.selectOption('[data-nascita-anno]', String(nato(7).a))
   await page.waitForSelector('[data-nascita-eta]', { timeout: 3000 })
   controlla('con la data dice in che classe è', /seconda elementare/.test(await page.locator('[data-nascita-eta]').innerText()))
-  uguale('e la manopola si mette lì', (await page.locator('[data-eta-ora]').innerText()).trim(), '7 anni')
   await page.click('[data-azione="si-gioca"]')
   await page.waitForSelector('.carte', { timeout: 8000 })
   await attendi(page, 700)

@@ -33,9 +33,8 @@ giocando).
   ognuno (vedi [saperi.md](saperi.md) e
   [saperi-per-fascia.md](saperi-per-fascia.md)). Le materie di `saperi.js`
   raggruppano la schermata, non dicono in che anno si imparano.
-- Si chiede al primo avvio e a ogni bambino aggiunto (`components/Benvenuto.vue`);
-  la manopola nasce sui **quattro anni**, perché premere senza leggere
-  deve sbagliare dalla parte prudente.
+- Al primo avvio e a ogni bambino aggiunto si chiedono mese e anno di nascita
+  (`components/Benvenuto.vue`), e l'età esce da lì; la manopola sta nelle impostazioni.
 
 ### Le quattro dichiarazioni del manifesto
 

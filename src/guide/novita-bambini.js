@@ -73,6 +73,8 @@ export const NOVITA = [
     testo: '🃏 In Survivors a ogni livello scegli fra quattro carte, e due di quelle che hai già preso tornano sempre.' },
   { id: 36, quando: '2026-11-01', gioco: 'arena',
     testo: '🧮 A Castle Battle i calcoli crescono con la forza degli edifici: più sono potenti, più il conto è difficile.' },
+  { id: 37, quando: '2026-11-04', gioco: 'pozioni',
+    testo: '⚗️ Il laboratorio delle pozioni è tutto nuovo! Ogni tappa è una pozione col suo nome: compri gli ingredienti dal mercante coi gettoni contati (occhio al suo trucco, la stessa cosa può costare meno!), poi leggi la ricetta e pesti, versi, mescoli e accendi il fuoco. E in fondo alla mappa c\'è il calderone senza fondo: quante pozioni di fila riesci a fare?' },
 ]
 
 export const PER_GIOCO = 4

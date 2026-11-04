@@ -133,28 +133,6 @@ async function costruisciEChiama (page) {
   await page.waitForTimeout(500)
 }
 
-/* ── la manopola dell'età ──
-   Si fotografa **dal primo avvio**, non dalle impostazioni: lì è la
-   schermata intera invece di un riquadro in mezzo a venti carte, ed è
-   anche il momento in cui la si incontra davvero. Vuole un archivio
-   vuoto (`vuoto: true`), se no si entra col profilo di prova già fatto
-   e l'onboarding non parte. */
-async function manopolaEta (page) {
-  await page.fill('input.nome', 'Anna')
-  await page.click('button.via')
-  await page.waitForSelector('.manopola-posto', { timeout: 6000 })
-  /* la manopola nasce sui quattro anni: otto passi da mezzo anno la
-     portano a otto, che è l'età in cui la casa è più piena e il quadro
-     sotto ha più da dire */
-  for (let i = 0; i < 8; i++) {
-    await page.click('button[aria-label="mezzo anno in più"]')
-    await page.waitForTimeout(100)
-  }
-  await page.evaluate(() => document.querySelector('.manopola-posto')
-    ?.scrollIntoView({ block: 'start' }))
-  await page.waitForTimeout(500)
-}
-
 /* le quattro cifre del codice, che di partenza è 0000 */
 const PIN = [['.tasto >> text="0"', 120], ['.tasto >> text="0"', 120],
              ['.tasto >> text="0"', 120], ['.tasto >> text="0"', 900]]
@@ -348,7 +326,6 @@ const RICETTE = [
     passi: [...PIN, unaDomanda('log:ordine')] },
 
   { file: 'albo', dove: 'albo', attesa: '.testata' },
-  { file: 'eta', dove: '', vuoto: true, attesa: '.benvenuto', passi: [manopolaEta] },
   { file: 'genitori', dove: 'genitori', attesa: '.tastierino', passi: [...PIN] },
   { file: 'genitori-giochi', dove: 'genitori', attesa: '.tastierino',
     passi: [...PIN, ['.schede button[data-scheda="giochi"]', 800]] },
