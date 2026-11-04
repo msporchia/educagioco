@@ -680,6 +680,10 @@ export class Fattoria3d {
   curaNecessaria(c) {
     return this.lanaPronta(c).length > 0 || this.pecoreAffamate(c).length > 0 || this._pastoAlRecinto(c)
   }
+  /** I gettoni del mangime di un recinto, la nuvoletta che si trascina dentro: cosa mangia e quanto ne hai. */
+  mangimeDi(c) {
+    return (c.pecore ? PECORE.mangia : ANIMALI[c.tipo].mangia).map(k => { const r = RICETTE[k] || COLTURE[k], n = this.scortaMangime([k]); return { id: k, nome: r.nome, emoji: r.emoji, n, ok: n > 0 } })
+  }
   /** Cosa si farebbe toccando il recinto: prima si tosa, poi si nutre (le affamate, poi l'agnello o la nascita, se c'è un raccolto). Niente cambia. */
   provaCura(id) {
     const c = this.cosa(id)

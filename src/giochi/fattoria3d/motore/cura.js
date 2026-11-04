@@ -12,7 +12,6 @@ import { vestitiBestiaInForma } from '../dati/bestie.js'
 
 const PIENO = 0.93          // sopra, un bisogno è «a posto» e il gesto non serve (come in 2D)
 const PANCIA_TORTA = 0.5    // la torta nella ciotola: fa festa e riempie anche la pancia
-const NOME_BAGNO = { spazzola: 'Acqua e schiuma', bagnetto: 'Col sapone', copertina: 'Con la copertina' }
 
 export class Cura {
   /** `m`: la Fattoria3d (monete, esperienza, scorte, terreno). */
@@ -94,8 +93,9 @@ export class Cura {
     if (m.scortaDi(t.da) > 0) fila.push({ ...voce(t, 'festa'), nome: 'Torta' })
     return fila.sort((a, b) => b.vuole - a.vuole || b.ok - a.ok || a.prezzo - b.prezzo)
   }
-  /** Mette nella ciotola: un cibo (`nutri`), o la torta (`festa`), che riempie la pancia e fa festa. Conta il pasto: la prossima volta chiederà un'altra cosa. */
+  /** Mette nella ciotola, se ha fame: un cibo (`nutri`), o la torta (`festa`), che riempie la pancia e fa festa. Conta il pasto: la prossima volta chiederà un'altra cosa. */
   riempi(id, k) {
+    if (this.stato(id) && !this.haFame(id)) return { ok: false, motivo: 'non-ha-fame' }
     const r = k === 'festa' ? this._torta(id) : this.nutri(id, k)
     if (r.ok) this.casa[id].pasti = (this.casa[id].pasti || 0) + 1
     return r
@@ -103,7 +103,6 @@ export class Cura {
   _torta(id) {
     const b = this.stato(id), g = coccolaPerId('festa')
     if (!b) return { ok: false, motivo: 'non-e-tua' }
-    if (b.pancia > PIENO && b.gioco > PIENO) return { ok: false, motivo: 'non-ha-fame' }
     const r = this._dai(id, b, g, 'gioco')
     if (r.ok) b.pancia = Math.min(1, b.pancia + PANCIA_TORTA)
     return r
@@ -114,26 +113,18 @@ export class Cura {
   sporche() { return this.curate().filter(id => this.stato(id).pelo < SPORCO).sort((a, b) => this.casa[a].pelo - this.casa[b].pelo) }
   /** Si sporca un po' (si è rotolata, ha scavato): mai sotto il fondo. */
   sporca(id, quanto) { const b = this.stato(id); if (b) b.pelo = Math.max(FONDO, b.pelo - quanto) }
-  /** I modi di lavare, per la tinozza: 🪙1, il sapone, la copertina di lana. */
-  modiDiLavare() {
-    const m = this.m
-    return ['spazzola', 'bagnetto', 'copertina'].map(k => coccolaPerId(k)).map(g => ({ id: g.id, nome: NOME_BAGNO[g.id], emoji: g.emoji, prezzo: g.prezzo || 0, da: g.da || null, n: g.da ? m.scortaDi(g.da) : null, ok: g.da ? m.scortaDi(g.da) > 0 : g.prezzo <= m.monete() }))
-  }
   /** Si può cominciare il bagno? Il rifiuto viene prima di strofinare: null se va bene, se no quello che direbbe `lava`. */
-  rifiutoBagno(id, gesto) {
-    const b = this.stato(id), g = coccolaPerId(gesto), m = this.m
+  rifiutoBagno(id) {
+    const b = this.stato(id), g = coccolaPerId('spazzola')
     if (!b) return { ok: false, motivo: 'non-e-tua' }
-    if (!g) return { ok: false, motivo: 'sconosciuta' }
     if (b.pelo > PIENO) return { ok: false, motivo: 'non-serve' }
-    if (g.da && m.scortaDi(g.da) < 1) return { ok: false, motivo: 'manca-roba', prodotto: g.da }
-    if (!g.da && g.prezzo > m.monete()) return { ok: false, motivo: 'poche-monete', costo: g.prezzo }
+    if (g.prezzo > this.m.monete()) return { ok: false, motivo: 'poche-monete', costo: g.prezzo }
     return null
   }
-  /** Il bagno finito: qualunque modo la lascia pulita. `gesto`: `spazzola` (🪙1), `bagnetto` (sapone), `copertina` (lana). Rifiuti: quelli di `coccola`. */
-  lava(id, gesto = 'spazzola') {
-    const b = this.stato(id), g = coccolaPerId(gesto)
+  /** Il bagno finito: 🪙1, e la lascia pulita del tutto. Rifiuti: quelli di `coccola`. */
+  lava(id) {
+    const b = this.stato(id), g = coccolaPerId('spazzola')
     if (!b) return { ok: false, motivo: 'non-e-tua' }
-    if (!g || g.bisogno !== 'pelo') return { ok: false, motivo: 'sconosciuta' }
     if (b.pelo > PIENO) return { ok: false, motivo: 'non-serve' }
     return this._dai(id, b, { ...g, quanto: 1 }, 'pelo')
   }

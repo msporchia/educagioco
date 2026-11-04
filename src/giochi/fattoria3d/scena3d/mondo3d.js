@@ -2,7 +2,7 @@
 // sa di three come renderer. Le regole le dice il motore (`motore`), le finestre le apre la vista (`ui`): qui si disegna, si
 // raggiunge una cosa e si fa il suo gesto. Vedi docs/fattoria3d/scena.md.
 //
-// `ui` (le porte verso Gioco.vue): cambio(), chiedi(titolo, testo, bottoni), attrezzi(info | null), apriMacchina(tipo),
+// `ui` (le porte verso Gioco.vue): cambio(), chiedi(titolo, testo, bottoni), attrezzi(info | null), riempi(bestia, cibo), lava(bestia), apriMacchina(tipo),
 //   avviso(testo), chiudiCostruzione(), fogliAperti(), zonaDrop() → DOMRect|null, trascinando(info|null).
 import * as THREE from 'three'
 import { segui, rilascia } from '../../../grafica/rilascio3d.js'
@@ -101,7 +101,7 @@ export class Mondo3d {
     this.costruzione = new Costruzione(this.ctx)
     this.pezzi.sulCompraBestia = id => this.azioni.compraBestia(id)
     this.bagno = new Bagno(this)
-    this.attrezzi = new Attrezzi(this)
+    this.attrezzi = this.ctx.attrezzi = new Attrezzi(this)
     this.compagni.cibo = (id, si) => this.pezzi.cibo(id, si)
     this.dito = new Dito(this)
     this.inSposta = null           // l'id della bestia di casa che si sta spostando (il prossimo tocco su una cella libera la porta lì)
@@ -310,8 +310,10 @@ export class Mondo3d {
       return
     }
     const b = this.bersaglioSotto(x, y)
-    const campo = b && b.kind === 'cosa' && m.cosa(b.id) && m.cosa(b.id).tipo === 'campo' ? m.cosa(b.id) : null
-    if (campo) return this.attrezzi.tocco(campo)                       // i campi non aspettano il contadino: si fanno col dito (attrezzi.js)
+    const cosa = b && b.kind === 'cosa' ? m.cosa(b.id) : null
+    if (cosa && cosa.tipo === 'campo') return this.attrezzi.tocco(cosa)           // i campi, le ciotole e la tinozza non aspettano il contadino: si fanno col dito (attrezzi.js)
+    if (cosa && cosa.tipo === 'ciotola_bestia') return this.attrezzi.ciotola(cosa)
+    if (cosa && cosa.tipo === 'tinozza') return this.attrezzi.tinozza(cosa)
     if (eroe.az) return
     if (b && b.kind === 'albero') {
       const a = m.albero(b.n), l = lottoDi(a.i, a.j)

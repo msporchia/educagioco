@@ -99,6 +99,11 @@ const motore = ({ liv = 70, monete = 1000, t = { ora: ORA }, stato = null } = {}
   controlla('l\'osso costa 5', r.ok && b.monete === 0, JSON.stringify(r))
   controlla('dopo il cibo piccolo non insiste più: basta poco', !f.cura.insiste('beagle') || f.cura.stato('beagle').pancia >= FAME - 0.2)
   uguale('il pasto si conta', f.cura.casa.beagle.pasti, 1)
+  f.cura.casa.beagle.pancia = 0.9
+  uguale('senza fame non si mangia', f.cura.riempi('beagle', 'osso').motivo, 'non-ha-fame')
+  f.s.prodotti.torta = 1
+  uguale('nemmeno la torta', [f.cura.riempi('beagle', 'festa').motivo, f.s.prodotti.torta].join(), 'non-ha-fame,1')
+  f.cura.casa.beagle.pancia = 0.2
   uguale('il cibo di un altro non va', f.cura.riempi('beagle', 'pesce').motivo, 'non-gli-piace')
 }
 {
@@ -148,12 +153,10 @@ const motore = ({ liv = 70, monete = 1000, t = { ora: ORA }, stato = null } = {}
   const prima = b.monete, r = f.cura.lava('beagle')
   controlla('🪙1 e torna pulito del tutto', r.ok && prima - b.monete === 1 && f.cura.casa.beagle.pelo === 1, JSON.stringify(r))
   uguale('pulito non serve', f.cura.lava('beagle').motivo, 'non-serve')
-  uguale('il sapone che non hai', f.cura.rifiutoBagno('coniglio', 'bagnetto').motivo, 'manca-roba')
   b.monete = 0
-  uguale('senza monete non si comincia', f.cura.rifiutoBagno('coniglio', 'spazzola').motivo, 'poche-monete')
+  uguale('senza monete non si comincia', f.cura.rifiutoBagno('coniglio').motivo, 'poche-monete')
   f.cura.sporca('coniglio', 5)
   uguale('non si scende sotto il fondo', f.cura.casa.coniglio.pelo, FONDO)
-  controlla('tre modi di lavare', f.cura.modiDiLavare().map(m => m.id).join() === 'spazzola,bagnetto,copertina')
 }
 {
   const g = creaBestia({ id: 'beagle', ...BESTIE.beagle, daCurare: true })

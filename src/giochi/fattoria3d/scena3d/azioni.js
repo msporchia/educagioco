@@ -34,8 +34,6 @@ export class Azioni {
       case 'conigliera': case 'alpaca': case 'asini': case 'arnie': return this.curaBestie(cosa)      // il secondo cortile (giro G5)
       case 'bacheca': case 'bancarella': pezzi.salta(cosa.id); return this.c.ui.apriBanco()      // il foglio degli ordini
       case 'fontana': pezzi.salta(cosa.id); fx.parla('Che bella!'); return
-      case 'ciotola_bestia': pezzi.salta(cosa.id); return this.c.ui.apriCiotola && this.c.ui.apriCiotola(cosa.bestia)      // docs/fattoria3d/cura-sul-prato.md
-      case 'tinozza': pezzi.salta(cosa.id); if (!this.m.cura.sporche().length) return fx.parla('Sono tutti puliti!'); return this.c.ui.apriTinozza && this.c.ui.apriTinozza()
       case 'molo': case 'molo_v': return this.pescaDalMolo(cosa)         // toccare il molo: si lancia in punta
       case 'stagno': case 'laghetto': return this.pescaSu(Math.floor(this.centro(cosa).x), Math.floor(this.centro(cosa).z))      // l'acqua costruita: la pesca (se il tocco non l'ha già fatto)
       case 'trattore': pezzi.salta(cosa.id); return this.c.ui.apriMappa && this.c.ui.apriMappa()      // porta ai vicini (docs/fattoria3d/vicini.md)
@@ -70,7 +68,7 @@ export class Azioni {
 
   // ── le pecore: prima si tosa, poi si nutre ──
   cura(c) {
-    const { eroe, fx, ui, pezzi } = this.c, p = this.centro(c), pr = this.m.provaCura(c.id)
+    const { eroe, fx, ui } = this.c, p = this.centro(c), pr = this.m.provaCura(c.id)
     if (pr.azione === 'tosa') {
       return eroe.avvia('semina', 1.2, t => {
         if (t <= 0.5 || eroe.az.fatto.has('t')) return
@@ -79,22 +77,33 @@ export class Azioni {
         else fx.parla(dettoDiRifiuto(r))
       })
     }
-    if (pr.azione === 'nutri') {
-      return eroe.avvia('semina', 1.0, t => {
-        if (t <= 0.5 || eroe.az.fatto.has('n')) return
-        eroe.az.fatto.add('n')
-        const r = this.m.nutri(c.id)
-        if (!r.ok) return fx.parla(dettoDiRifiuto(r, { per: 'nutrirle' }))
-        pezzi.richiama(c.id, { x: eroe.x - p.x, z: eroe.z - p.z })
-        pezzi.sincronizza()
-        const testo = { cresciuta: '🐑 è cresciuta!', nata: '🐣 è nata una pecorella!', pasto: '🍼 +1', cuore: '❤️', lana: '🍽️ ×' + r.n + (r.costo ? ` · −🪙 ${r.costo}` : '') }[r.evento]
-        fx.volo(testo, p, 1.8)
-        if (r.evento === 'cresciuta') fx.scoppietta(p.clone().setY(0.8), 0xffd24a, 12, 1.6, 2.4)
-        if (r.evento === 'nata') fx.scoppietta(p.clone().setY(0.8), 0xff9ab8, 14, 1.6, 2.4)
-        ui.cambio()
-      })
-    }
-    fx.parla(dettoDiRifiuto(pr, { per: 'nutrirle' }))
+    this._nuvoletta(c, pr)
+  }
+  /** Chi ha fame chiede: la nuvoletta col mangime da trascinare (attrezzi.js), anche se non ne hai, così si vede cosa serve. */
+  _nuvoletta(c, pr) {
+    if (pr.azione === 'nutri' || pr.motivo === 'manca-mangime') return this.c.attrezzi.recinto(c, pr.azione ? '' : dettoDiRifiuto(pr, { per: 'nutrirle' }))
+    this.c.fx.parla(dettoDiRifiuto(pr, { per: 'nutrirle' }))
+  }
+  /** Il mangime è arrivato nel recinto: il contadino lo dà. */
+  nutriRecinto(c) {
+    if (c.pecore) this._nutriPecore(c); else this._nutriBestie(c)
+    return true
+  }
+  _nutriPecore(c) {
+    const { eroe, fx, ui, pezzi } = this.c, p = this.centro(c)
+    eroe.avvia('semina', 1.0, t => {
+      if (t <= 0.5 || eroe.az.fatto.has('n')) return
+      eroe.az.fatto.add('n')
+      const r = this.m.nutri(c.id)
+      if (!r.ok) return fx.parla(dettoDiRifiuto(r, { per: 'nutrirle' }))
+      pezzi.richiama(c.id, { x: eroe.x - p.x, z: eroe.z - p.z })
+      pezzi.sincronizza()
+      const testo = { cresciuta: '🐑 è cresciuta!', nata: '🐣 è nata una pecorella!', pasto: '🍼 +1', cuore: '❤️', lana: '🍽️ ×' + r.n + (r.costo ? ` · −🪙 ${r.costo}` : '') }[r.evento]
+      fx.volo(testo, p, 1.8)
+      if (r.evento === 'cresciuta') fx.scoppietta(p.clone().setY(0.8), 0xffd24a, 12, 1.6, 2.4)
+      if (r.evento === 'nata') fx.scoppietta(p.clone().setY(0.8), 0xff9ab8, 14, 1.6, 2.4)
+      ui.cambio()
+    })
   }
 
   // ── il pollaio e la stalla: prima si raccoglie, poi si nutre; se non c'è altro, si dice perché. Le bestie si comprano dal cartello ──
@@ -109,17 +118,18 @@ export class Azioni {
         fx.volo('+' + r.n + (prodottoDelleBestie(r.prodotto).pezzo ? '' : ' ' + prodottoDelleBestie(r.prodotto).emoji), p, 1.8, r.prodotto); fx.scoppietta(p.clone().setY(0.7), 0xfff2c4, 10, 1.4, 2.0); ui.cambio()
       })
     }
-    if (pr.azione === 'nutri') {
-      return eroe.avvia('semina', 1.0, t => {
-        if (t <= 0.5 || eroe.az.fatto.has('n')) return
-        eroe.az.fatto.add('n')
-        const r = this.m.nutriBestie(c.id)
-        if (!r.ok) return fx.parla(dettoDiRifiuto(r, { per: 'nutrirle' }))
-        pezzi.sincronizza()
-        fx.volo('🍽️ ×' + r.n + (r.costo ? ` · −🪙 ${r.costo}` : ''), p, 1.8); ui.cambio()
-      })
-    }
-    fx.parla(dettoDiRifiuto(pr, { per: 'nutrirle' }))
+    this._nuvoletta(c, pr)
+  }
+  _nutriBestie(c) {
+    const { eroe, fx, ui, pezzi } = this.c, p = this.centro(c)
+    eroe.avvia('semina', 1.0, t => {
+      if (t <= 0.5 || eroe.az.fatto.has('n')) return
+      eroe.az.fatto.add('n')
+      const r = this.m.nutriBestie(c.id)
+      if (!r.ok) return fx.parla(dettoDiRifiuto(r, { per: 'nutrirle' }))
+      pezzi.sincronizza()
+      fx.volo('🍽️ ×' + r.n + (r.costo ? ` · −🪙 ${r.costo}` : ''), p, 1.8); ui.cambio()
+    })
   }
   /** Il pulsante «＋ 🪙 N» del cartello su un recinto, un pollaio o una stalla: compra una bestia subito, senza conferma (non
       cammina fino all'edificio). Se mancano monete dice quante. */
