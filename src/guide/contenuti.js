@@ -697,20 +697,24 @@ export const AIUTI = {
   pozioni: {
     emoji: '🧪', titolo: 'Le pozioni',
     blocchi: [
-      'La ricetta chiede «1,5 kg di polvere di luna». Sullo scaffale ci sono più ingredienti: prendi quello giusto e **trascinalo sull\'attrezzo** — oppure toccalo, e poi tocca l\'attrezzo.',
-      { titolo: 'Ogni attrezzo conta in una unità, e arriva fin lì', righe: [
-        'Sul cartellino c\'è scritto **in che unità conta** (la bilancia da cucina in grammi, quella del mercato in etti) e **fino a quanto arriva**. Otto chili sulla bilancia dei grammi non ci stanno: si sale a quella degli etti.',
-        'Sull\'attrezzo si mettono i pezzi — i pesi, i misurini, i pezzi di nastro — finché il numero fa la dose. Poi «nel calderone».',
-        'Qualunque attrezzo su cui la dose ci sta va bene: un chilo sono mille grammi sulla bilancia da cucina e dieci etti su quella del mercato.',
+      'La pergamena chiede «1,5 kg di polvere di luna» e altri ingredienti, e il calderone è vuoto. Vai **dal mercante**, scegli le ampolle e ordinale: le verserà lui.',
+      { titolo: 'Il listino e i gettoni', righe: [
+        'Il rotolo del mercante ha tutti gli ingredienti, e **anche uno che non serve**: leggi la ricetta prima di ordinare. Ogni targhetta dice quanto c\'è nell\'ampolla e quanti gettoni costa.',
+        'Il mercante scrive come gli pare: «5 hg», «0,2 kg», «300 g». Le ampolle grandi costano meno, quindi conviene **la più grande che ci sta**, ma per sapere cosa ci sta devi fare il conto.',
+        'Spesso la stessa quantità compare due volte, scritta in due modi, e una costa di più: è il **trucco del mercante**.',
+        'In fondo vedi sempre quanti gettoni hai speso, e a fine tappa le stelle dicono quanto ti sei avvicinato al minimo.',
+      ] },
+      { titolo: 'Se trabocca', righe: [
+        'Ogni ingrediente ha il suo strumento col segno d\'oro: la bilancia, il metro, il cilindro. Oltre il segno trabocca: l\'ampolla è persa, e prima di ordinare ancora c\'è da **pulire**, un gettone a macchia.',
+        'Il cartello dice **perché e come si fa**, coi numeri di quel momento. Non c\'è fretta e non ci sono cuori: la tappa si finisce sempre, anche coi gettoni in rosso.',
       ] },
       { titolo: 'Una cosa nuova per volta', righe: [
-        'Prima si impara il gesto, senza conversioni. Poi arriva il chilo, col conto scritto per intero: «da kg a g sono 3 scalini in giù, aggiungi 3 zeri». Poi lo stesso senza il risultato, poi la virgola, poi la bilancia degli etti, poi le conversioni al contrario.',
-        'Le lunghezze e i liquidi rifanno la stessa scaletta. Nelle ultime due tappe arriva di tutto, e solo nell\'ultima ci sono tre attrezzi per famiglia.',
-        'Se sbagli, il cartello dice **perché e come si fa**, per intero, anche nelle tappe senza aiuti. Non c\'è fretta e non ci sono cuori: la tappa si finisce sempre, e a cambiare sono le stelle.',
+        'Prima si impara il gesto, senza conversioni. Poi arriva il chilo, col conto scritto sotto ogni targhetta. Poi lo stesso senza il conto, poi la virgola, poi gli etti, poi le conversioni al contrario.',
+        'Le lunghezze e i liquidi rifanno la stessa scaletta. Nelle ultime due tappe arriva di tutto nella stessa pozione.',
       ] },
       { titolo: 'Cosa allena', righe: [
         'Le misure e le unità: chili, etti e grammi; metri, decimetri e centimetri; litri, decilitri e millilitri — e passare dall\'una all\'altra, in tutti e due i versi.',
-        'Scegliere l\'attrezzo giusto per la quantità: leggere un cartellino è metà del mestiere.',
+        'Confrontare quantità scritte in modo diverso, e leggere prima di spendere.',
       ] },
     ],
   },

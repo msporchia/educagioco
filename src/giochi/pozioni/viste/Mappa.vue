@@ -10,9 +10,8 @@ defineProps({
   ripresa: { type: Object, default: null },   // { emoji, nome, dettaglio }
   chiede: { type: String, default: '' },      // la tappa che si sta per cominciare
   davanti: { type: String, default: '' },     // l'amico da raggiungere, in parole (docs/core/amici-nei-giochi.md)
-  prove: { type: Array, default: () => [] },  // la bottega del mercante, in prova (docs/pozioni/bottega.md)
 })
-defineEmits(['gioca', 'riprendi', 'scorda', 'comincia', 'annulla', 'prova'])
+defineEmits(['gioca', 'riprendi', 'scorda', 'comincia', 'annulla'])
 </script>
 
 <template>
@@ -21,18 +20,8 @@ defineEmits(['gioca', 'riprendi', 'scorda', 'comincia', 'annulla', 'prova'])
              @riprendi="$emit('riprendi')" @scorda="$emit('scorda')"
              @comincia="$emit('comincia')" @annulla="$emit('annulla')" />
     <p v-if="davanti" class="pz-davanti" data-amico-davanti>{{ davanti }}</p>
-    <p class="pz-intro">La ricetta parla di chili, metri e litri. Ogni attrezzo conta nella
-      sua unità e arriva fin dove arriva: sta a te scegliere quello giusto, e tradurre.</p>
-    <section v-if="prove.length" class="pz-blocco pz-prova" data-blocco="mercante">
-      <h3><span class="em">🧪</span><b>In prova: il mercante</b><i>gettoni contati</i></h3>
-      <div class="pz-tappe">
-        <button v-for="(t, i) in prove" :key="t.chiave" class="pz-tappa" :data-prova="i + 1" @click="$emit('prova', i)">
-          <span class="pz-numero">{{ i + 1 }}</span>
-          <span class="pz-testo"><b>{{ t.nome }}</b><i>{{ t.dritta }}</i></span>
-          <span class="pz-stelle em">▶</span>
-        </button>
-      </div>
-    </section>
+    <p class="pz-intro">La ricetta parla di chili, metri e litri, e il mercante scrive come gli
+      pare: leggi bene, ordina le ampolle giuste e spendi meno gettoni che puoi.</p>
     <section v-for="b in blocchi" :key="b.chiave" class="pz-blocco" :data-blocco="b.chiave">
       <h3>
         <span class="em">{{ b.emoji }}</span>

@@ -53,7 +53,7 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
   const dietro = new DirectionalLight(0x7f8cff, 0.9); dietro.position.set(-4, 5, -6); scena.add(dietro)
 
   const trame = { legno: T.legno(), mattoni: T.mattoni(), polvere: T.grana('polvere'), radice: T.grana('radice'),
-                  morbido: T.morbido(), macchia: T.macchia() }
+                  morbido: T.morbido(), macchia: T.macchia(), quadrante: T.quadrante(), metro: T.metro() }
   const banco = creaBanco(scena, trame)
   const vasi = creaVasi(scena, trame)
   const ampolle = creaAmpolle(scena, trame)
@@ -144,6 +144,7 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
     if (occupata) return
     vasi.imposta(q.vasi)
     banco.colore(q.calderone)
+    banco.riempi(q.riempito)
     const sporchi = new Set(q.macchie.map(m => m.i))
     for (const m of q.macchie) if (!eff.macchia(m.i).visible) mettiMacchia(m, 1)
     for (const [i, m] of eff.macchie) if (!sporchi.has(i)) m.visible = false
@@ -169,7 +170,7 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
      arrivati alla tacca si versano nel calderone alla fine, così
      un'ampolla di troppo trabocca da un misurino ancora pieno. */
   async function ordine(voci, dopoOgni) {
-    const toccati = [...new Set(voci.map(v => v.i))]
+    const toccati = [...new Set(voci.filter(v => !v.estraneo).map(v => v.i))]
     for (const i of toccati) vasi.trattieni(i, true)
     ampolle.consegna(voci)
     await aspetta(0.6 + voci.length * 0.25)
@@ -179,20 +180,30 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
       await aspetta(0.15)
     }
     ampolle.sgombra()
-    for (const i of toccati) {
-      const ultimaVoce = voci.filter(v => v.i === i).at(-1)
-      if (voci.some(v => v.i === i && v.pieno)) await nelCalderone(i, ultimaVoce.colore)
-    }
+    // uno alla volta, e il brodo sale a ognuno
+    const pieni = toccati.filter(i => voci.some(v => v.i === i && v.pieno))
+    const finale = ultima ? ultima.riempito : 1, passo = ultima ? ultima.passoRiempito : 0
+    for (const [n, i] of pieni.entries())
+      await nelCalderone(i, voci.find(v => v.i === i).colore, finale - passo * (pieni.length - 1 - n))
     for (const i of toccati) vasi.trattieni(i, false)
   }
 
-  async function versaUna(k, { i, trabocca, colore, famiglia, livello, pezzi }) {
-    const v = vasi.vaso(i)
+  async function versaUna(k, { i, trabocca, estraneo, colore, famiglia, livello, pezzi }) {
     const a = ampolle.stacca(k)
+    if (estraneo) {
+      // non è nella ricetta: resta sul bancone, trema, e il mercante se la riprende in uno sbuffo
+      const fermo = a.gruppo.position.clone()
+      await anima(0.5, f => { a.gruppo.position.x = fermo.x + Math.sin(f * 40) * 0.05 * (1 - f) })
+      eff.gocce.emetti(26, { da: fermo.clone().setY(fermo.y + 0.4), sparpaglia: 0.5, verso: [0, 1.2, 0], caso: 0.9, colore: '#9a93a8', vita: 0.8, misura: 0.3, gravita: -0.3, allarga: 1.5 })
+      await anima(0.3, f => { a.gruppo.scale.setScalar(Math.max(0.001, 1 - f)) })
+      ampolle.via(k)
+      return
+    }
+    const v = vasi.vaso(i)
     const da = a.gruppo.position.clone()
     const bocca = vasi.bocca(i)
     const radice = famiglia === 'lunghezza', polvere = famiglia === 'massa'
-    const sopra = new Vector3(bocca.x - (radice ? 0 : 0.42), bocca.y + 0.85, bocca.z + 0.05)
+    const sopra = new Vector3(bocca.x - (radice ? 0 : 0.42), bocca.y + 0.85, bocca.z + (radice ? 0.02 : 0.05))
     // il volo, ad arco; la targhetta si legge fino all'ultimo
     await anima(0.5, f => {
       const e = liscio(f)
@@ -204,7 +215,7 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
     const prima = v.livello
     if (radice) {
       // la radice si mette in piedi e scivola giù nel vetro
-      const giuY = vasi.fondo(i).y + a.corpo.userData.lungo / 2 - 0.2
+      const giuY = vasi.fondo(i).y + a.corpo.userData.lungo / 2
       await anima(trabocca ? 0.35 : 0.5, f => { a.gruppo.position.y = sopra.y + (giuY - sopra.y) * f * f })
       if (trabocca) {
         // sporge dal bordo: si rovescia e cade sul tavolo
@@ -256,35 +267,39 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
   }
 
   // il misurino pieno si alza, si piega sul calderone e si svuota
-  async function nelCalderone(i, colore) {
+  async function nelCalderone(i, colore, riempitoDopo) {
     const v = vasi.vaso(i)
     await aspetta(0.15)
     eff.luci.emetti(16, { da: vasi.bocca(i).setY(1.3), sparpaglia: 0.5, verso: [0, 1, 0], caso: 1, colore: '#ffe08a', vita: 0.6, misura: 0.12, gravita: 0 })
-    const casa = v.casa.clone()
+    // si muove quello che porta la roba: il cilindro, il piatto, la pila di radici
+    const t = v.trasporto, casa = v.casaT.clone()
     const C = POSTI.calderone
-    const sopra = new Vector3(C.x + (casa.x > C.x ? 0.75 : -0.75), 1.9, C.z + 0.6)
-    const lato = casa.x > C.x ? 1 : -1
+    const lato = v.casa.x > C.x ? 1 : -1
+    const sopra = v.gruppo.worldToLocal(new Vector3(C.x + lato * 0.75, 2.3, C.z + 0.6))
+    v.piattoFermo = true
     await anima(0.5, f => {
       const e = liscio(f)
-      v.gruppo.position.lerpVectors(casa, sopra, e)
-      v.gruppo.position.y += Math.sin(e * Math.PI) * 0.6
+      t.position.lerpVectors(casa, sopra, e)
+      t.position.y += Math.sin(e * Math.PI) * 0.5
     })
-    await anima(0.2, f => { v.gruppo.rotation.z = lato * liscio(f) * 1.9 })
+    await anima(0.2, f => { t.rotation.z = lato * liscio(f) * 1.9 })
     banco.ribolli(4)
-    banco.colore(new Color(banco.coloreOra()).lerp(new Color(colore), 0.5).getStyle())
+    banco.colore(colore)
+    banco.riempi(riempitoDopo)
     const livello = v.livello
     await anima(0.55, f => {
-      const b = v.gruppo.localToWorld(new Vector3(0, ALTEZZA_VASO, 0))
-      eff.versa(b, new Vector3(b.x, POSTI.brodo + 0.22, b.z), colore, v.famiglia === 'massa')
-      if (v.famiglia === 'lunghezza') v.pila.scale.y = Math.max(0.001, 1 - f)
+      const b = t.localToWorld(v.boccaT.clone())
+      eff.versa(b, new Vector3(b.x, banco.quotaBrodo(), b.z), colore, v.famiglia === 'massa')
+      if (v.famiglia === 'lunghezza') t.scale.y = Math.max(0.001, 1 - f)
       else v.livello = livello * (1 - f)
-      if (Math.random() < 0.6) eff.gocce.emetti(2, { da: new Vector3(C.x + lato * 0.3, POSTI.brodo + 0.25, C.z + 0.3), sparpaglia: 0.4, verso: [0, 1.6, 0], caso: 1, colore, vita: 0.6, misura: 0.1, gravita: 6 })
+      if (Math.random() < 0.6) eff.gocce.emetti(2, { da: new Vector3(C.x + lato * 0.3, banco.quotaBrodo() + 0.03, C.z + 0.3), sparpaglia: 0.4, verso: [0, 1.6, 0], caso: 1, colore, vita: 0.6, misura: 0.1, gravita: 6 })
     })
     eff.smetti()
     v.livello = 0
-    await anima(0.2, f => { v.gruppo.rotation.z = lato * 1.9 * (1 - liscio(f)) })
-    await anima(0.45, f => { v.gruppo.position.lerpVectors(sopra, casa, liscio(f)) })
-    v.pila.scale.y = 1
+    await anima(0.2, f => { t.rotation.z = lato * 1.9 * (1 - liscio(f)) })
+    await anima(0.45, f => { t.position.lerpVectors(sopra, casa, liscio(f)) })
+    t.scale.y = 1
+    v.piattoFermo = false
   }
 
   // la spugna arriva e gira su ogni macchia, una dopo l'altra
@@ -316,7 +331,7 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
   async function festa(colore) {
     banco.ribolli(6)
     const C = POSTI.calderone
-    const su = new Vector3(C.x, POSTI.brodo + 0.3, C.z)
+    const su = new Vector3(C.x, banco.quotaBrodo() + 0.1, C.z)
     await anima(1.4, f => {
       if (f < 0.7) {
         eff.gocce.emetti(5, { da: su, sparpaglia: 1.2, verso: [0, 2.2, 0], caso: 1.2, colore: new Color(colore).lerp(new Color(1, 1, 1), 0.3), vita: 1.6, misura: 0.5, gravita: -0.4, allarga: 2 })
@@ -332,8 +347,7 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
     canvas.removeEventListener('pointerdown', premi)
     canvas.removeEventListener('pointerup', alza)
     canvas.removeEventListener('pointercancel', lascia)
-    for (const a of attive) a.fine()
-    attive = []
+    attive = []        // le promesse restano aperte: chi aspettava si ferma lì, su una scena che non c'è più
     vasi.rilascia(); ampolle.rilascia(); eff.rilascia()
     for (const t of Object.values(trame)) t.dispose()
     rilasciaRenderer(renderer)

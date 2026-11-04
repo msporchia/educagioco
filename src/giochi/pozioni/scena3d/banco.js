@@ -1,9 +1,10 @@
 // Il laboratorio fermo: il tavolo, il muro con gli scaffali, il calderone
 // sul fuoco col vapore e le bolle, e il bancone del mercante davanti. Si
-// muove da sé (fuoco, bolle, vapore) e cambia solo il colore del brodo.
+// muove da sé (fuoco, bolle, vapore); il calderone parte vuoto, e il brodo
+// nasce e sale con gli ingredienti.
 import { Mesh, Group, BoxGeometry, PlaneGeometry, CylinderGeometry, CircleGeometry, SphereGeometry, TorusGeometry,
-         LatheGeometry, Vector2, Vector3, Color, MeshStandardMaterial, MeshBasicMaterial, Sprite, SpriteMaterial,
-         InstancedMesh, Object3D, PointLight, AdditiveBlending } from 'three'
+         LatheGeometry, Vector2, Vector3, Color, MeshStandardMaterial, Sprite, SpriteMaterial,
+         InstancedMesh, Object3D, PointLight, AdditiveBlending, DoubleSide } from 'three'
 
 // dove stanno le cose (il tavolo è a y = 0)
 export const POSTI = {
@@ -76,8 +77,8 @@ export function creaBanco(scena, trame) {
   // il calderone: ghisa tornita, tre piedi, due maniglie
   const C = POSTI.calderone
   const profilo = [[0, 0.12], [0.5, 0.14], [0.9, 0.34], [1.1, 0.68], [1.07, 0.98], [0.99, 1.13], [1.1, 1.2], [1.13, 1.28],
-                   [1.0, 1.3], [0.93, 1.18], [0.95, 0.98]].map(([x, y]) => new Vector2(x, y))
-  const ghisa = new MeshStandardMaterial({ color: 0x2b2733, metalness: 0.65, roughness: 0.5 })
+                   [1.0, 1.3], [0.93, 1.18], [0.95, 0.98], [0.86, 0.6], [0.55, 0.34], [0, 0.3]].map(([x, y]) => new Vector2(x, y))
+  const ghisa = new MeshStandardMaterial({ color: 0x2b2733, metalness: 0.65, roughness: 0.5, side: DoubleSide })
   const pentola = new Mesh(new LatheGeometry(profilo, 40), ghisa)
   pentola.position.copy(C); pentola.position.y = 0.22
   g.add(pentola)
@@ -99,7 +100,11 @@ export function creaBanco(scena, trame) {
     new MeshStandardMaterial({ color: coloreBrodo, emissive: coloreBrodo.clone().multiplyScalar(0.45), roughness: 0.15, metalness: 0.1 }))
   brodo.rotation.x = -Math.PI / 2
   brodo.position.set(C.x, POSTI.brodo + 0.22, C.z)
+  brodo.visible = false
   g.add(brodo)
+  // parte vuoto: il brodo nasce col primo ingrediente e sale con gli altri
+  let pieno = 0, metaPieno = 0
+  const quotaBrodo = () => 0.6 + (POSTI.brodo + 0.22 - 0.6) * pieno
 
   // le bolle: affiorano, si gonfiano e scoppiano
   const NB = 14
@@ -132,6 +137,10 @@ export function creaBanco(scena, trame) {
 
   function aggiorna(dt, t) {
     coloreBrodo.lerp(metaBrodo, Math.min(1, dt * 2.5))
+    pieno += (metaPieno - pieno) * Math.min(1, dt * 2)
+    brodo.visible = pieno > 0.01
+    brodo.position.y = quotaBrodo()
+    brodo.scale.setScalar(0.8 + 0.2 * pieno)
     brodo.material.emissive.copy(coloreBrodo).multiplyScalar(0.45)
     bollore += (1 - bollore) * Math.min(1, dt * 0.8)
     for (const f of fiamme) {
@@ -142,8 +151,9 @@ export function creaBanco(scena, trame) {
     datiBolle.forEach((b, i) => {
       b.fase += dt * b.vel * bollore
       if (b.fase >= 1) { b.fase -= 1; nuovoPosto(b) }
-      const s = Math.sin(b.fase * Math.PI) * (0.6 + bollore * 0.25)
-      finto.position.set(b.x, POSTI.brodo + 0.22, b.z); finto.scale.setScalar(Math.max(0.001, s)); finto.updateMatrix()
+      const s = brodo.visible ? Math.sin(b.fase * Math.PI) * (0.6 + bollore * 0.25) : 0
+      finto.position.set(C.x + (b.x - C.x) * brodo.scale.x, brodo.position.y, C.z + (b.z - C.z) * brodo.scale.x)
+      finto.scale.setScalar(Math.max(0.001, s)); finto.updateMatrix()
       bolle.setMatrixAt(i, finto.matrix)
     })
     bolle.instanceMatrix.needsUpdate = true
@@ -152,15 +162,16 @@ export function creaBanco(scena, trame) {
       const f = (t * 0.12 * (0.8 + bollore * 0.3) + v.userData.fase) % 1
       v.position.set(C.x + Math.sin(f * 6 + v.userData.fase * 9) * 0.4, POSTI.brodo + 0.3 + f * 2.4, C.z + Math.cos(v.userData.fase * 7) * 0.3)
       v.scale.setScalar(0.5 + f * 1.4)
-      v.material.opacity = Math.sin(f * Math.PI) * 0.16 * (0.7 + bollore * 0.3)
+      v.material.opacity = brodo.visible ? Math.sin(f * Math.PI) * 0.16 * (0.7 + bollore * 0.3) : 0
       v.material.color.copy(coloreBrodo).lerp(BIANCO, 0.65)
     }
   }
 
   return {
     aggiorna,
-    colore(c) { metaBrodo.set(c) },
-    coloreOra: () => '#' + metaBrodo.getHexString(),
+    colore(c) { metaBrodo.set(c); if (pieno < 0.01) coloreBrodo.set(c) },
+    riempi(f) { metaPieno = f },
+    quotaBrodo,
     ribolli(quanto = 3) { bollore = quanto },
     luceFuoco,
   }

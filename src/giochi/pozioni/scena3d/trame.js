@@ -102,6 +102,37 @@ export function macchia() {
   return trama(c)
 }
 
+// il quadrante della bilancia: le tacche senza numeri e l'oro in cima, dove la lancetta deve fermarsi
+export function quadrante() {
+  const [c, g] = tela(256, 256)
+  g.fillStyle = '#f4ead2'; g.beginPath(); g.arc(128, 128, 126, 0, 7); g.fill()
+  g.strokeStyle = '#6b4a20'; g.lineWidth = 8; g.beginPath(); g.arc(128, 128, 120, 0, 7); g.stroke()
+  g.strokeStyle = '#3a2a14'
+  for (let n = -12; n <= 12; n++) {
+    const a = -Math.PI / 2 + n * 0.21, l = n % 3 ? 12 : 22
+    g.lineWidth = n % 3 ? 3 : 5
+    g.beginPath(); g.moveTo(128 + Math.cos(a) * 108, 128 + Math.sin(a) * 108)
+    g.lineTo(128 + Math.cos(a) * (108 - l), 128 + Math.sin(a) * (108 - l)); g.stroke()
+  }
+  g.strokeStyle = '#d9a21e'; g.lineWidth = 16
+  g.beginPath(); g.arc(128, 128, 92, -Math.PI / 2 - 0.12, -Math.PI / 2 + 0.12); g.stroke()
+  return trama(c)
+}
+
+// l'asta del metro: legno chiaro con le tacche
+export function metro() {
+  const [c, g] = tela(128, 512), r = caso(13)
+  g.fillStyle = '#d9b477'; g.fillRect(0, 0, 128, 512)
+  for (let v = 0; v < 14; v++) {
+    g.strokeStyle = `rgba(120,80,30,${0.12 + r() * 0.18})`; g.lineWidth = 1 + r() * 2
+    const x = r() * 128
+    g.beginPath(); g.moveTo(x, 0); g.bezierCurveTo(x + 10, 170, x - 10, 340, x + 4, 512); g.stroke()
+  }
+  g.fillStyle = '#3a2a14'
+  for (let n = 0; n <= 40; n++) g.fillRect(0, n * 12.8, n % 5 ? 26 : 52, n % 5 ? 3 : 5)
+  return trama(c)
+}
+
 /* La targhetta appesa a un'ampolla: quanto c'è dentro, scritto come
    l'ha scritto il mercante (il prezzo sta nel listino, già pagato). */
 export function cartellino(testo) {
