@@ -6,7 +6,7 @@
 import { TIPO_DI_BASE, BORDO_DI_BASE, tipoValido, bordoValido, prezzoStrada, livelloStrada, codiceAspetto, aspettoDaCodice, eDiBase } from '../dati/strade.js'
 import { LIM, chiave, cellaDa, lottoDaChiave, cellaDaId, idCella, dentro, lotto, lottoDi, lottoPerId, vicinoDi, VICINI_4, LOTTI_INIZIALI, FISSI, POSTI_STORICI, stradeDiSerie } from '../dati/mondo.js'
 import { PEZZI, EDIFICI, quotaDelPezzo, edificiDaCostruire } from '../dati/catalogo.js'
-import { ruotabile, misureGirate } from '../dati/rotazione.js'
+import { ruotabile, misureGirate, DAVANTI } from '../dati/rotazione.js'
 import { COLTURE, TESSERE } from '../dati/colture.js'
 import { RICETTE, MACCHINE, TIPI_DI_MACCHINA } from '../dati/ricette.js'
 import { POSTI_MASSIMI, postiInForma, prezzoDelPosto } from '../dati/posti.js'
@@ -16,7 +16,7 @@ import { SILOS, TIPI_DI_SILO, siloDi, postiPerMerce, prezzoDelPasso, siloDelPezz
 import { generaLotto } from '../dati/lotti.js'
 import { biomaDiGen, acquaDelLotto, tipoAcqua } from '../dati/biomi.js'
 import { provaPesca, lanciaLenza, ritiraPesca, bancoDi, lenzeInAcqua, ripulisciPesca, riesaminaPesca, postiDiPesca } from './pesca.js'
-import { ANIMALI, CORTILE, LANA, prezzoDellaBestia } from '../dati/animali.js'
+import { ANIMALI, CORTILE, LANA, prezzoDellaBestia, PRODOTTI_ANIMALI } from '../dati/animali.js'
 import { normalizza, nuoveTessere, pulisciNomeFattoria } from './stato.js'
 import { percorso } from './percorso.js'
 import { POSTI, RIPOSO_MS, LIVELLO_BANCO, PEZZI_DEL_BANCO, clienteDi, tipoDelOrdine } from '../dati/ordini.js'
@@ -24,6 +24,7 @@ import { nuovoOrdine } from './ordini.js'
 import { Cura } from './cura.js'
 import { CATEGORIE, opzione, opzioniDi, sbloccato, daComprare, chiaveCapo } from '../dati/abiti.js'
 import { vistaDellaMongolfiera, caricaLaCassa, partiLaMongolfiera, aggiornaMongolfiera } from './mongolfiera.js'
+import { vistaDegliInterni, compraStanza, compraMobile, spostaMobile, giraMobile, tingiMobile, mettiViaMobile, rifiniStanza, puoStare, postoLibero, calpestabile } from './interni.js'
 import { vistaDellaBottega, consegnaInBottega, rifiutaInBottega, aggiornaLeBotteghe, daConsegnareIn, daConsegnareOvunque } from './botteghe.js'
 
 const ASPETTO_DI_BASE = Object.freeze({ tipo: TIPO_DI_BASE, bordo: BORDO_DI_BASE })
@@ -70,6 +71,8 @@ export class Fattoria3d {
     this.vecchi1 = new Set(this.s.vecchi1)         // i lotti comprati con i laghetti-pozzanghera, dove ora c'è un lago naturale: restano pozzanghere (generazione 1; docs/fattoria3d/laghi.md)
     for (const k of this.propri) this._apriAnello(lottoDaChiave(k))
     this.tick()
+    if (magazzini) this.cura.sistema()             // chi aveva già gli animali trova ciotole e tinozza (non nella fattoria di un vicino)
+    if (magazzini) this._voltaIlPorticciolo()
   }
 
   // ── la borsa ──
@@ -279,6 +282,7 @@ export class Fattoria3d {
     if (!PEZZI[tipo] && !EDIFICI[tipo]) return { ok: false, motivo: 'sconosciuto' }
     if (EDIFICI[tipo] && (this.s.posseduti[tipo] || this.nelMagazzino(tipo) > 0)) return { ok: false, motivo: 'gia-tuo' }       // uno per tipo
     if (PEZZI[tipo] && PEZZI[tipo].unico && (this.nelMagazzino(tipo) > 0 || this.s.cose.some(c => c.tipo === tipo))) return { ok: false, motivo: 'gia-tuo' }       // il porticciolo è uno solo
+    if (PEZZI[tipo] && PEZZI[tipo].dono) return { ok: false, motivo: 'non-in-vendita' }        // ciotola e tinozza arrivano con gli animali
     if (PEZZI[tipo] && PEZZI[tipo].fiera) return { ok: false, motivo: 'non-in-vendita' }       // la fiera si vince dalla mongolfiera (fattoria3d/mongolfiera.md)
     const chiuso = this._chiusa(livelloDelPezzo(tipo))
     if (chiuso) return chiuso
@@ -306,6 +310,36 @@ export class Fattoria3d {
       if (this._bloccaSenzaAcqua(i + a, j + b, ignora) || (d.acqua && this.strada.get(chiave(i + a, j + b)) === 2)) return { ok: false, motivo: 'occupato' }
     }
     return { ok: true }
+  }
+  /** Quanta acqua ha davanti un pezzo girato di `rot`: l'ultima fila della sua impronta e le tre oltre il lato del davanti. */
+  _acquaDavanti(d, i, j, rot) {
+    const [dx, dz] = DAVANTI[rot]
+    let n = 0
+    for (let a = 0; a < (dx ? 4 : d.w); a++) for (let b = 0; b < (dz ? 4 : d.d); b++) {
+      const x = dx > 0 ? i + d.w - 1 + a : dx < 0 ? i - a : i + a, y = dz > 0 ? j + d.d - 1 + b : dz < 0 ? j - b : j + b
+      if (this.acqua(x, y)) n++
+    }
+    return n
+  }
+  /** Il verso di un pezzo di riva col centro in (cx, cz): fra i quattro che ci stanno quello con più acqua davanti. { rot, i, j } o null. */
+  versoAcqua(tipo, cx, cz, ignora) {
+    let meglio = null
+    for (let rot = 0; rot < 4; rot++) {
+      const d = this.misure(tipo, rot), i = Math.round(cx - d.w / 2), j = Math.round(cz - d.d / 2)
+      if (!this.puoMettere(tipo, i, j, ignora, rot).ok) continue
+      const n = this._acquaDavanti(d, i, j, rot)
+      if (!meglio || n > meglio.n) meglio = { rot, i, j, n }
+    }
+    return meglio
+  }
+  /** Il porticciolo messo quando guardava sempre a sud: una volta sola si gira verso l'acqua, gratis. */
+  _voltaIlPorticciolo() {
+    if (this.s.portoVoltato) return
+    this.s.portoVoltato = true
+    const c = this.s.cose.find(x => x.tipo === 'porticciolo')
+    if (!c) return
+    const d = this.misureCosa(c), v = this.versoAcqua(c.tipo, c.i + d.w / 2, c.j + d.d / 2, c.id)
+    if (v && v.rot !== (c.rot || 0)) this.spostaPezzo(c.id, v.i, v.j, { gratis: true, rot: v.rot })
   }
   /** L'impronta ha una cella d'acqua, o ne tocca una di lato: il porticciolo si mette sulla riva. */
   _toccaAcqua(d, i, j) {
@@ -375,7 +409,7 @@ export class Fattoria3d {
     if (c.i === i && c.j === j && r1 === (c.rot || 0)) return { ok: true, costo: 0 }
     const p = this.puoMettere(c.tipo, i, j, id, r1)
     if (!p.ok) return p
-    const costo = gratis || c.prova ? 0 : COSTI.spostare
+    const costo = gratis || c.prova || PEZZI[c.tipo]?.dono ? 0 : COSTI.spostare
     if (!this._paga(costo)) return { ok: false, motivo: 'poche-monete', costo }
     this._libera(c); c.i = i; c.j = j
     if (r1) c.rot = r1; else delete c.rot
@@ -413,6 +447,7 @@ export class Fattoria3d {
     if (!forza && c.bestie) return { ok: false, motivo: 'ha-le-bestie' }
     if (!forza && this._ponteSopra(c)) return { ok: false, motivo: 'ponte-sopra' }
     if (!forza && EDIFICI[c.tipo] && this.edificioAlLavoro(c.tipo)) return { ok: false, motivo: 'macchina-al-lavoro' }
+    if (!forza && PEZZI[c.tipo]?.dono) return { ok: false, motivo: 'dono' }                // la ciotola e la tinozza si spostano, non si mettono via
     if (!forza && siloDelPezzo(c.tipo)) return { ok: false, motivo: 'magazzino' }          // un magazzino si sposta, non si mette via: è lì che sta la roba
     const costo = gratis ? 0 : COSTI.spostare
     if (!this._paga(costo)) return { ok: false, motivo: 'poche-monete', costo }
@@ -439,7 +474,9 @@ export class Fattoria3d {
     return !!Q && (Q.coda.length > 0 || Object.keys(Q.pronti).length > 0)
   }
   /** Gli edifici che il livello ha aperto e non sono in mappa: il «!» (solo macchine e mongolfiera; mai una decorazione). */
-  /** Gli edifici aperti dal livello e non ancora in mappa (il «!» su Costruisci), più i magazzini che aspettano nel magazzino dei pezzi. */
+  /** Gli edifici aperti dal livello e non ancora in mappa (il «!» su Compra), più i magazzini che aspettano nel magazzino dei pezzi. */
+  /** Da livello 2 il banco chiede una bacheca: finché non c'è, la sua carta ha il «!», perché nessun altro la indica. */
+  serveBacheca() { return this.livello() >= LIVELLO_BANCO && !this.bancoAperto() }
   edificiDaCostruire() { return [...edificiDaCostruire(this.livello(), this.s.posseduti), ...TIPI_DI_SILO.map(t => SILOS[t].edificio).filter(t => this.nelMagazzino(t) > 0 && PEZZI[t].liv <= this.livello())] }
   /** Un posto dove ci sta: quello di prima se è libero, se no il primo libero nel terreno tuo (per i banchi di prova e i comandi; il gioco lo sceglie il bambino). */
   postoPer(tipo) {
@@ -673,6 +710,10 @@ export class Fattoria3d {
   _pastoAlRecinto(c) { return c.pecore.some(p => p.eta === 'agnello') || (this._adulte(c) >= 2 && c.pecore.length < PECORE.max) }
   curaNecessaria(c) {
     return this.lanaPronta(c).length > 0 || this.pecoreAffamate(c).length > 0 || this._pastoAlRecinto(c)
+  }
+  /** I gettoni del mangime di un recinto, la nuvoletta che si trascina dentro: cosa mangia e quanto ne hai. */
+  mangimeDi(c) {
+    return (c.pecore ? PECORE.mangia : ANIMALI[c.tipo].mangia).map(k => { const r = RICETTE[k] || COLTURE[k], n = this.scortaMangime([k]); return { id: k, nome: r.nome, emoji: r.emoji, n, ok: n > 0 } })
   }
   /** Cosa si farebbe toccando il recinto: prima si tosa, poi si nutre (le affamate, poi l'agnello o la nascita, se c'è un raccolto). Niente cambia. */
   provaCura(id) {
@@ -933,7 +974,7 @@ export class Fattoria3d {
     return this.s.ordini.aperti.map((o, idx) => {
       if (!o) return { idx, attesa: true, restoMs: Math.max(0, (this.s.ordini.riprende[idx] || t) - t) }
       const chiede = Object.entries(o.chiede).map(([k, n]) => {
-        const r = COLTURE[k] || RICETTE[k], ha = this.scortaDi(k)
+        const r = COLTURE[k] || RICETTE[k] || PRODOTTI_ANIMALI[k], ha = this.scortaDi(k)
         return { k, n, nome: r.nome, emoji: r.emoji, ha: Math.min(ha, n), manca: Math.max(0, n - ha), prodotto: !COLTURE[k] }
       })
       // le macchine che l'ordine vuole e che non hai ancora messo in mappa: il biglietto dice «Serve il Panificio» col «!»
@@ -982,6 +1023,20 @@ export class Fattoria3d {
   /** Quanti clienti di una bottega (o di tutte) hanno già la loro roba: il numero del cartello e il pallino. */
   bottegaPronta(tipo) { return daConsegnareIn(this, tipo) }
   botteghePronte() { return daConsegnareOvunque(this) }
+
+  // ── dentro la casa: stanze e mobili (motore/interni.js, docs/fattoria3d/casa.md). Comprare conta come esperienza; il resto è gratis ──
+  vistaInterni() { return vistaDegliInterni(this) }
+  compraStanza(id) { return compraStanza(this, id) }
+  compraMobile(tipo, i, j, rot, colore, trama) { return compraMobile(this, tipo, i, j, rot, colore, trama) }
+  spostaMobile(id, i, j, rot = null) { return spostaMobile(this, id, i, j, rot) }
+  giraMobile(id) { return giraMobile(this, id) }
+  tingiMobile(id, colore, trama) { return tingiMobile(this, id, colore, trama) }
+  mettiViaMobile(id) { return mettiViaMobile(this, id) }
+  rifiniStanza(id, finitura) { return rifiniStanza(this, id, finitura) }
+  /** Ci sta? (il fantasma rosso o verde) e dove ce n'è posto, e dove si cammina: per la scena della casa. */
+  mobileCiSta(tipo, i, j, rot, escluso = null) { return puoStare(this.s.interni, tipo, i, j, rot, escluso) }
+  postoPerMobile(tipo, stanza, escluso = null, i = null, j = null) { return postoLibero(this.s.interni, tipo, stanza, escluso, i, j) }
+  calpestabileInCasa(i, j) { return calpestabile(this.s.interni, i, j) }
 
   // ── la pesca: molo e porticciolo, un banco per lotto d'acqua tuo (motore/pesca.js, docs/fattoria3d/geografia-e-pesca.md) ──
   /** Cosa si farebbe toccando la cella d'acqua (i, j): { ok, azione: 'lancia' | 'ritira' | 'aspetta' | 'riposo', sta, … } o un rifiuto. Niente cambia. */

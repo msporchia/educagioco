@@ -49,7 +49,7 @@ tutto    = Σ casse + 25% per fila + 50% di tutte le casse
 
 Nella 2D è una delle otto decorazioni della fiera, che non si compra. Nella 3D è **un regalo: un pezzo decorativo gratis nel magazzino**, uno degli otto con `fiera: true`
 (bandierine, giostrina, zucchero filato, lanterne, tiro al barattolo, girasole di legno, spaventapasseri in festa, palco: `SORPRESE`, scheda «Feste» del menu, [decorazioni.md](decorazioni.md)). Si mette dal menu
-«Costruisci qui» come uno comprato (la carta c'è solo se ne hai uno; `compraPezzo` risponde `non-in-vendita`). Si sceglie **preferendo quelli che si
+«Compra» come uno comprato (la carta c'è solo se ne hai uno; `compraPezzo` risponde `non-in-vendita`). Si sceglie **preferendo quelli che si
 hanno di meno** (cose in mappa più magazzino) e a parità decide `rnd`: così ruotano e non esce sempre la stessa; i regali non sono una moneta travestita, non si rivendono. Evento `fiera` con il `pezzo`.
 (Fino al giro G9 il regalo era un decoro qualunque del catalogo, perché la fiera non c'era.)
 

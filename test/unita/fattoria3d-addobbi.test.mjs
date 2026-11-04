@@ -18,6 +18,7 @@ import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { statoIniziale, normalizza } from '../../src/giochi/fattoria3d/motore/stato.js'
 import { statoDa2D, ritoccaLaConversione, MIGRAZIONE } from '../../src/giochi/fattoria3d/motore/migra.js'
 import { Fattoria } from '../../src/giochi/fattoria3d/da2d/motore/fattoria.js'
+import { adottaCompagni } from '../aiuto/adozioni.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const ORA = 1_000_000_000_000
@@ -25,6 +26,7 @@ const motoreCon = ({ liv = 70, monete = 1000, stato = null } = {}) => {
   const b = { monete }
   const f = new Fattoria3d({ stato, borsa: { quante: () => b.monete, paga: n => { b.monete -= n; return true } }, ora: () => ORA, rnd: () => 0.5 })
   f.s.esperienza = Math.max(f.s.esperienza, sogliaDi(liv))
+  adottaCompagni(f)
   return { f, b }
 }
 

@@ -38,7 +38,7 @@ controlla('un eroe che non esiste, no', accettaParte({ eroe: 'drago', roba: null
 // la rete cattiva di Castle Battle (unita/arena-sfida): «pessima» tiene la rete spenta fino a un minuto otto volte al minuto, oltre i due
 // minuti di posto vuoto che il tavolo concede
 const RETE_CATTIVA = { min: 30, max: 350, alMinuto: 1.5, spenta: [2000, 42000], ferma: [1000, 9000] }
-const ESEMPIO = { calma: SCENARI.calma, casa: SCENARI.casa, melody: SCENARI.melody, cattiva: RETE_CATTIVA }
+const ESEMPIO = { calma: SCENARI.calma, casa: SCENARI.casa, agitata: SCENARI.agitata, cattiva: RETE_CATTIVA }
 let prima = null
 for (const [nome, scenario] of Object.entries(ESEMPIO)) for (const seme of [3, 8]) {
   const { host, ospite, guasti, durata } = partitaInDue({ gioco: sotterraneo, seme, scenario, minuti: 30 })
@@ -53,8 +53,8 @@ for (const [nome, scenario] of Object.entries(ESEMPIO)) for (const seme of [3, 8
 }
 {
   const { ch, co } = prima
-  uguale("l'host ha l'eroe dell'ospite", ch.persone.map(p => `${p.nome} ${p.chiEro}`).join(', '), 'Leo cavaliere, Melody mago')
-  uguale("e l'ospite quello dell'host", co.persone.map(p => `${p.nome} ${p.chiEro}`).join(', '), 'Leo cavaliere, Melody mago')
+  uguale("l'host ha l'eroe dell'ospite", ch.persone.map(p => `${p.nome} ${p.chiEro}`).join(', '), 'Leo cavaliere, Marta mago')
+  uguale("e l'ospite quello dell'host", co.persone.map(p => `${p.nome} ${p.chiEro}`).join(', '), 'Leo cavaliere, Marta mago')
 }
 {
   const { host, ospite } = partitaInDue({ gioco: sotterraneo, seme: 4, scenario: SCENARI.calma, minuti: 2, firme: ['A', 'B'] })

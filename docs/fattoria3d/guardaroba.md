@@ -14,9 +14,9 @@ su `ASPETTO_ERO` (`dati/compagni.js`). Un profilo che non ha mai scelto parte da
 
 ## Come si apre
 
-- **Toccando il contadino che sta fermo** (`Mondo3d.contadinoSotto`: il raggio del dito contro una sfera attorno al corpo; non con semina o
-  raccogli armati, col pennello delle strade o con un pezzo in mano). Watson e i gatti hanno la precedenza, come sempre.
-- **Il tasto «👕»** nell'HUD, accanto al banco e all'inventario (solo l'icona: a 360 px non c'è posto per la parola).
+- **Toccando l'armadio dentro casa** ([casa.md](casa.md)): il contadino ci va davanti e lo apre. Il tocco sul contadino fermo, che lo
+  apriva prima, è tolto (3/11/2026): l'armadio lo sostituisce, su richiesta dell'utente.
+- **L'armadio di casa** è la porta: il tasto «👕» dell'HUD è stato tolto il 4/11/2026 ([casa.md](casa.md)).
 - Il foglio (`viste/Guardaroba.vue`, stile `stile-guardaroba.css`) si chiude con la ✕ in alto a destra. Conta in `fogliAperti`: finché è aperto
   un tocco sulla scena non fa camminare nessuno.
 

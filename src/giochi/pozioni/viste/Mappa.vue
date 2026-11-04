@@ -7,6 +7,7 @@ import AmiciQui from '../../../components/amici/AmiciQui.vue'
 
 defineProps({
   blocchi: { type: Array, required: true },   // [{ chiave, nome, emoji, dritta, tappe: [] }]
+  infinita: { type: Object, required: true }, // il calderone senza fondo: { nome, emoji, dritta, aperta, record }
   ripresa: { type: Object, default: null },   // { emoji, nome, dettaglio }
   chiede: { type: String, default: '' },      // la tappa che si sta per cominciare
   davanti: { type: String, default: '' },     // l'amico da raggiungere, in parole (docs/core/amici-nei-giochi.md)
@@ -20,8 +21,8 @@ defineEmits(['gioca', 'riprendi', 'scorda', 'comincia', 'annulla'])
              @riprendi="$emit('riprendi')" @scorda="$emit('scorda')"
              @comincia="$emit('comincia')" @annulla="$emit('annulla')" />
     <p v-if="davanti" class="pz-davanti" data-amico-davanti>{{ davanti }}</p>
-    <p class="pz-intro">La ricetta parla di chili, metri e litri. Ogni attrezzo conta nella
-      sua unità e arriva fin dove arriva: sta a te scegliere quello giusto, e tradurre.</p>
+    <p class="pz-intro">La ricetta parla di chili, metri e litri, e il mercante scrive come gli
+      pare: leggi bene, ordina le ampolle giuste e spendi meno gettoni che puoi.</p>
     <section v-for="b in blocchi" :key="b.chiave" class="pz-blocco" :data-blocco="b.chiave">
       <h3>
         <span class="em">{{ b.emoji }}</span>
@@ -42,5 +43,13 @@ defineEmits(['gioca', 'riprendi', 'scorda', 'comincia', 'annulla'])
         </button>
       </div>
     </section>
+    <button class="pz-tappa pz-infinita" :class="{ 'pz-chiusa': !infinita.aperta }" data-tappa="infinita" :disabled="!infinita.aperta" @click="$emit('gioca', -1)">
+      <span class="pz-numero em">{{ infinita.emoji }}</span>
+      <span class="pz-testo">
+        <b>{{ infinita.nome }}</b>
+        <i>{{ infinita.record ? `Il tuo record: ${infinita.record}` : infinita.dritta }}</i>
+      </span>
+      <span class="pz-stelle em">{{ infinita.aperta ? '▶' : '🔒' }}</span>
+    </button>
   </div>
 </template>

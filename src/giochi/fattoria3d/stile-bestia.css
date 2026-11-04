@@ -50,3 +50,9 @@
 .f3-bat-scrivi .f3-bes-az:disabled { opacity: .45; }
 @media (min-width: 700px) { .f3-bes.f3-foglio { left: 0; right: 0; margin: 0 auto; max-width: 720px; border-radius: 22px 22px 0 0; } }
 @media (prefers-reduced-motion: reduce) { .f3-bes *, .f3-bes-barra i { animation: none !important; transition: none !important; } }
+
+/* la ciotola e la tinozza (docs/fattoria3d/cura-sul-prato.md) */
+.f3-bagno { position: absolute; left: 50%; bottom: calc(112px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 10px; width: min(330px, calc(100% - 32px)); box-sizing: border-box; padding: 8px 8px 8px 16px; border-radius: 22px; background: rgba(255, 251, 240, .96); box-shadow: 0 3px 10px rgba(0, 0, 0, .25); font-weight: 700; }
+.f3-bagno i { flex: 1; height: 12px; border-radius: 6px; background: #e4dcc8; overflow: hidden; }
+.f3-bagno u { display: block; height: 100%; background: #7cc4e8; }
+.f3-bagno button { flex: none; width: 44px; height: 44px; border: 0; border-radius: 50%; background: #e0554a; color: #fff; font: inherit; font-size: 18px; }

@@ -1,13 +1,14 @@
 /* La tappa delle pozioni lasciata a metà, nel browser: si esce con ←, si
-   rientra, la mappa offre in cima «torno da dove ero» e il banco è com'era
-   (cliente, sbagli, attrezzo e pezzi). Anche dopo aver ricaricato la
-   pagina, anche con la dose già nel calderone, e mai in silenzio: una tappa
-   nuova chiede prima di buttarla. Vedi docs/pozioni/sosta.md.
+   rientra, la mappa offre in cima «torno da dove ero» e la pozione è com'era
+   (misurini, gettoni, listino, macchie). Anche dopo aver ricaricato la
+   pagina, anche uscendo mentre il mercante versa, e mai in silenzio: una
+   tappa nuova chiede prima di buttarla. Vedi docs/pozioni/sosta.md.
    `node test/esegui.mjs pozioni-sosta`
    tempo: 60 */
 import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi, scegli }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
+import { MONETE_A_DOSE, CAMPAGNA } from '../../src/giochi/pozioni/dati/campagna.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -22,67 +23,46 @@ async function entra() {
 }
 const indietro = () => page.click('button[aria-label="indietro"]')
 
-/* i gesti passano dalla porta del gioco (`window.__poz`), uno alla volta come
-   li farebbe un dito: la dose si compone coi pezzi più grandi che ci stanno */
-const dosa = fino => page.evaluate(async fino => {
+/* i gesti passano dalla porta del gioco (`window.__poz`), come li farebbe un
+   dito: la più grande che ci sta per il primo ingrediente non finito, o la
+   più piccola quando la pozione non deve finire sotto gli occhi della prova */
+const ordina = (piccola = false) => page.evaluate(async piccola => {
   const attesa = ms => new Promise(r => setTimeout(r, ms))
-  const Z = window.__poz, p = Z.partita.value
+  const Z = window.__poz, b = Z.bottega.value
   await attesa(420)                                    // la finestra cieca
-  const ing = p.daFare[0]
-  if (!p.strumento) {
-    Z.prendi(ing.nome); await attesa(30)
-    Z.posa(p.consigliato().chiave); await attesa(30)
-  }
-  let resto = ing.dose.base - p.messo
-  const pezzi = [...p.strumento.pezzi].sort((a, b) => b - a)
-  const tuttiI = []
-  for (const pz of pezzi) while (resto >= pz) { tuttiI.push(pz); resto -= pz }
-  for (const pz of fino === 'pezzo' ? tuttiI.slice(0, 1) : tuttiI) { Z.metti(pz); await attesa(30) }
-  if (fino === 'tutto') Z.conferma()
-}, fino)
+  const i = b.ingredienti.findIndex(g => g.messo < g.dose), g = b.ingredienti[i]
+  const k = g.offerte.map((o, n) => n).filter(n => g.messo + g.offerte[n].base <= g.dose)
+    .sort((x, y) => (piccola ? -1 : 1) * (g.offerte[y].base - g.offerte[x].base) || g.offerte[x].prezzo - g.offerte[y].prezzo)[0]
+  Z.aggiungi(i, k); Z.ordina()
+}, piccola)
+const fermo = () => page.waitForFunction(() => {
+  const el = document.querySelector('[data-azione="mercante"], [data-fase="procedimento"], [data-fine]')
+  return el && !el.disabled
+}, null, { timeout: 25000 })
 
 const stato = () => page.evaluate(() => {
-  const p = window.__poz.partita.value
-  return p && {
-    vista: window.__poz.vista.value, n: p.n, sbagli: p.sbagli, sbagliQui: p.sbagliQui,
-    corrente: p.corrente, strumento: p.strumento && p.strumento.chiave, messi: [...p.messi],
-    pozione: p.ricetta.nome, cliente: p.ricetta.cliente,
-    voci: p.ricetta.ingredienti.map(i => `${i.nome} ${i.dose.testo} ${i.fatto}`),
-    scaffale: p.ricetta.scaffale.map(s => s.nome), dosi: p.dosi.length,
+  const b = window.__poz.bottega.value
+  return b && {
+    vista: window.__poz.vista.value, pozione: b.pozione.nome, speso: b.speso, gettoni: b.gettoni,
+    voci: b.ingredienti.map(g => `${g.nome} ${g.messo}/${g.dose} ${g.offerte.map(o => o.base + o.unita).join()}`),
+    macchie: [...b.macchie],
   }
 })
 
 await entra()
 await page.click('.pz-tappa[data-tappa="1"]')
-await page.waitForSelector('.pz-banco')
+await page.waitForSelector('.pz-mercante')
 uguale('senza una sosta la tappa comincia subito', await page.locator('[data-chiede]').count(), 0)
 
-/* il primo cliente servito, il secondo con uno sbaglio e una dose a metà */
-await dosa('tutto')
-await page.waitForFunction(() => window.__poz.partita.value.n === 1, null, { timeout: 5000 })
-await attendi(page, 500)
-{
-  const altro = await page.evaluate(() => {
-    const p = window.__poz.partita.value
-    return p.ricetta.scaffale.find(s => !p.ricetta.ingredienti.some(i => i.nome === s.nome)).nome
-  })
-  await attendi(page, 400)
-  await page.evaluate(nome => window.__poz.prendi(nome), altro)
-  await page.waitForSelector('[data-esito][data-codice="ingrediente"]')
-  await page.waitForSelector('[data-esito]', { state: 'detached', timeout: 15000 })
-}
-await dosa('pezzo')
+await ordina(true)
+await fermo()
 const lasciata = await stato()
-controlla('la prova parte da un cliente a metà',
-          lasciata.n === 1 && lasciata.sbagli === 1 && lasciata.messi.length === 1 && !!lasciata.strumento,
-          JSON.stringify(lasciata))
+controlla('la prova parte da una pozione a metà', lasciata.speso > 0, JSON.stringify(lasciata))
 
 /* ← dal banco porta alla mappa, e la carta c'è */
 await indietro()
 await page.waitForSelector('[data-ripresa]')
-controlla('la carta dice a che cliente si era',
-          /cliente 2 di 4/.test(await page.locator('[data-ripresa]').textContent()))
-controlla('e dello sbaglio', /1 sbaglio/.test(await page.locator('[data-ripresa]').textContent()))
+controlla('la carta dice a che punto si era', /ingredienti su 2/.test(await page.locator('[data-ripresa]').textContent()))
 await scatto(page, 'pozioni-ripresa')
 await attendi(page, 500)
 const profilo0 = await leggiProfilo(page)
@@ -101,40 +81,54 @@ uguale('anche dopo aver ricaricato la pagina', await page.locator('[data-ripresa
 await page.click('.pz-tappa[data-tappa="0"]')
 uguale('una tappa nuova chiede prima', await page.locator('[data-chiede]').count(), 1)
 await page.click('[data-chiede] [data-azione="riprendi-invece"]')
-await page.waitForSelector('.pz-banco')
-uguale('«no, torno a quella di prima» riprende la partita',
+await page.waitForSelector('.pz-mercante')
+uguale('«no, torno a quella di prima» riprende la pozione',
        JSON.stringify(await stato()), JSON.stringify(lasciata))
-uguale('con attrezzo e pezzi com\'erano', await page.locator('[data-dosa]').count(), 1)
-uguale('e il conto svolto dopo lo sbaglio',
-       await page.locator('[data-aiuto][data-livello="svolto"]').count(), 1)
 
-/* la dose finita e subito ←: è già nel calderone, pagata e imparata */
-await dosa('tutto')
-await page.waitForSelector('[data-esito][data-codice="giusto"]')
+/* si esce mentre il mercante versa: quello che è deciso è già scritto */
+await ordina(true)
+await attendi(page, 200)
+const inVolo = await stato()
+controlla('l\'ordine è già scritto mentre vola', inVolo.speso > lasciata.speso)
 await indietro()
 await page.waitForSelector('[data-ripresa]')
 await attendi(page, 500)
-const aMeta = await leggiProfilo(page)
-uguale('le dosi dette al motore sono due', aMeta.totals.misure, 2)
 await page.click('[data-ripresa] [data-azione="riprendi"]')
-await page.waitForSelector('.pz-banco')
-await page.waitForFunction(() => window.__poz.partita.value.n === 2, null, { timeout: 5000 })
-await attendi(page, 600)
-const dopo = await leggiProfilo(page)
-uguale('la pozione si conta una volta sola', dopo.totals.pozioni, 2)
-uguale('e la perfetta è solo la prima', dopo.totals.pozioniPerfette, 1)
-uguale('e la dose non si conta due volte', dopo.totals.misure, 2)
+await page.waitForSelector('.pz-mercante', { timeout: 5000 })
+uguale('uscendo a metà consegna l\'ordine resta fatto', JSON.stringify((await stato()).voci), JSON.stringify(inVolo.voci))
+await attendi(page, 500)
 
-/* il resto della tappa, e le monete dicono il totale: quelle prima dell'uscita restano nel conto */
-for (let g = 0; g < 8 && await page.locator('[data-fine]').count() === 0; g++) {
-  await dosa('tutto')
-  await attendi(page, 1300)
+/* il resto della tappa: le monete dicono il totale, anche quelle prima dell'uscita */
+for (let g = 0; g < 30 && await page.locator('[data-fase="procedimento"]').count() === 0; g++) {
+  await ordina()
+  await fermo()
+}
+/* a metà procedimento si esce e si rientra: il passo fatto resta */
+{
+  const unPasso = () => page.evaluate(async () => {
+    const Z = window.__poz, b = Z.bottega.value, p = b.passi[b.passo]
+    if (!p) return                                     // è finita: il calderone sta facendo festa
+    await new Promise(r => setTimeout(r, 420))
+    if (p.azione === 'pesta') Z.fai('metti', [...p.cosa]), await new Promise(r => setTimeout(r, 1500))
+    Z.fai(p.azione, p.azione === 'pesta' ? [] : [...p.cosa])
+  })
+  await unPasso()
+  await attendi(page, 4000)
+  await indietro()
+  await page.waitForSelector('[data-ripresa]')
+  await attendi(page, 500)
+  await page.click('[data-ripresa] [data-azione="riprendi"]')
+  await page.waitForSelector('[data-fase="procedimento"]', { timeout: 5000 })
+  uguale('si riparte dal passo dov\'era', await page.evaluate(() => window.__poz.bottega.value.passo), 1)
+  await attendi(page, 500)
+  for (let g = 0; g < 10 && await page.locator('[data-fine]').count() === 0; g++) {
+    await unPasso()
+    await attendi(page, 3500)
+  }
 }
 uguale('la tappa finisce', await page.locator('[data-fine="tappa"]').count(), 1)
 uguale('le monete sono quelle di tutta la tappa, anche prima dell\'uscita',
-       (await page.locator('[data-monete]').innerText()).trim(),
-       `+${await page.evaluate(() => window.__poz.partita.value.monete)} 🪙`)
-uguale('con una stella in meno per lo sbaglio', (await page.locator('[data-stelle]').innerText()).trim(), '⭐⭐')
+       (await page.locator('[data-monete]').innerText()).trim(), `+${CAMPAGNA[1].ingredienti * MONETE_A_DOSE + 3} 🪙`)
 await page.click('[data-fine] [data-azione="mappa"]')
 await attendi(page, 500)
 uguale('finita la tappa la carta non c\'è', await page.locator('[data-ripresa]').count(), 0)
@@ -142,19 +136,22 @@ uguale('e la sosta nemmeno', (await leggiProfilo(page)).campagne.pozioni.sosta, 
 
 /* una tappa nuova a metà, poi un'altra: chiede, e scegliendola la vecchia si butta */
 await page.click('.pz-tappa[data-tappa="0"]')
-await page.waitForSelector('.pz-banco')
-await dosa('pezzo')
+await page.waitForSelector('.pz-mercante')
+await ordina(true)
+await fermo()
 await indietro()
 await page.waitForSelector('[data-ripresa]')
 await page.click('.pz-tappa[data-tappa="1"]')
 uguale('chiede anche dalla tappa a metà', await page.locator('[data-chiede]').count(), 1)
 await page.click('[data-chiede] [data-azione="comincia"]')
-await page.waitForSelector('.pz-banco')
-uguale('e scelta la nuova si comincia da capo', (await stato()).n, 0)
+await page.waitForSelector('.pz-mercante')
+uguale('e scelta la nuova si comincia da capo', (await stato()).speso, 0)
+await ordina(true)
+await fermo()
 await indietro()
 await page.waitForSelector('[data-ripresa]')
 controlla('la carta è quella della tappa nuova',
-          /Arriva il chilo/.test(await page.locator('[data-ripresa]').textContent()))
+          new RegExp(CAMPAGNA[1].nome).test(await page.locator('[data-ripresa]').textContent()))
 /* dalla home «riprendi da qui» non passa dalla carta: la partita riparte e basta
    (docs/core/ripresa.md, «Dalla home») */
 await indietro()
@@ -162,11 +159,11 @@ await page.waitForSelector('.carte')
 uguale('in home «riprendi da qui» è il laboratorio',
        await page.locator('[data-riprendi]').getAttribute('data-riprendi'), 'pozioni')
 await page.click('[data-riprendi]')
-await page.waitForSelector('.pz-banco', { timeout: 5000 })
-uguale('«riprendi» riapre il banco della partita a metà', (await stato()).pozione !== undefined, true)
+await page.waitForSelector('.pz-mercante', { timeout: 5000 })
+uguale('«riprendi» riapre la pozione a metà', (await stato()).pozione !== undefined, true)
 await indietro()
 await page.waitForSelector('[data-ripresa]')
-uguale('tornati alla mappa non riparte da sola', await page.locator('.pz-banco').count(), 0)
+uguale('tornati alla mappa non riparte da sola', await page.locator('.pz-mercante').count(), 0)
 await page.click('[data-ripresa] [data-azione="scorda"]')
 uguale('«lascio perdere» toglie la carta', await page.locator('[data-ripresa]').count(), 0)
 await attendi(page, 500)

@@ -29,28 +29,28 @@ const centro = async sel => { const b = await page.locator(sel).first().bounding
 /* ══════════ 1. a metà della campagna ══════════ */
 await semina(page, { settings: { eta: 10 }, td: { tappa: 5, libera: false, v: 2 } })
 await seminaAmici(page, [
-  amico('a', 'leonardo1', 'Leonardo', 0, 9),
-  amico('b', 'melody001', 'Melody', 3, 5),
+  amico('a', 'lorenzo01', 'Lorenzo', 0, 9),
+  amico('b', 'marta0001', 'Marta', 3, 5),
   amico('d', 'ugo000001', 'Ugo', 1, 9),
   amico('c', null, '', 0, 12),                              // mai incontrato online: senza nome non si vede
 ])
 await alRegno()
 uguale('il cavaliere sta sulla tappa da fare', await page.locator('[data-eroe]').getAttribute('data-dove'), '5')
-uguale('in cima chi è da raggiungere', await testo('[data-amico-davanti]'), 'Leonardo è 4 tappe più avanti di te.')
+uguale('in cima chi è da raggiungere', await testo('[data-amico-davanti]'), 'Lorenzo è 4 tappe più avanti di te.')
 controlla('la riga sta fuori dalla parte che si trascina', await page.locator('.banco [data-amico-davanti]').count() === 0)
 uguale('sullo scudo 9 due pallini', await page.locator('[data-amici-scudo][data-al="9"] [data-pallino-amico]').count(), 2)
-uguale('sotto il mio, Melody: lo stesso nodo del cavaliere', await page.locator('[data-amici-scudo][data-al="5"] [data-pallino-amico]').count(), 1)
+uguale('sotto il mio, Marta: lo stesso nodo del cavaliere', await page.locator('[data-amici-scudo][data-al="5"] [data-pallino-amico]').count(), 1)
 uguale('un pallino per amico col nome, non per quello senza', await page.locator('[data-amici-scudo] [data-pallino-amico]').count(), 3)
 const scudo = await centro('.tap[data-tappa="5"]'), sotto = await centro('[data-amici-scudo][data-al="5"]')
 controlla('il pallino sta sotto il suo scudo', Math.abs(sotto.x - scudo.x) < 3 && sotto.y > scudo.y + 15 && sotto.y < scudo.y + 45, JSON.stringify({ scudo, sotto }))
 uguale('nessuno è al centro', await page.locator('[data-amici-scudo][data-al="libere"]').count(), 0)
 uguale('nessun record: le libere sono chiuse e nessuno ne ha', await page.locator('[data-record-amico]').count(), 0)
 await apriFumetto('9')
-uguale('il nome nel fumetto dello scudo 9', await testo('[data-fumetto] [data-amici-qui]'), 'LULeonardo e Ugo sono qui')
+uguale('il nome nel fumetto dello scudo 9', await testo('[data-fumetto] [data-amici-qui]'), 'LULorenzo e Ugo sono qui')
 await scatto(page, 'amici-castello-scudo')
 await page.locator('[data-tappa="5"]').click()
 await attendi(page, 300)
-uguale('e su quello dove c\'è Melody', await testo('[data-fumetto] [data-amici-qui]'), 'MMelody è qui')
+uguale('e su quello dove c\'è Marta', await testo('[data-fumetto] [data-amici-qui]'), 'MMarta è qui')
 await page.locator('[data-tappa="2"]').click()
 await attendi(page, 300)
 uguale('uno scudo senza amici non ha la riga', await page.locator('[data-fumetto] [data-amici-qui]').count(), 0)
@@ -60,16 +60,16 @@ await page.click('button[aria-label="indietro"]')
 await page.waitForSelector('.carte')
 await semina(page, { settings: { eta: 10 }, td: { tappa: N, libera: true, v: 2 } })
 await seminaAmici(page, [
-  amico('a', 'leonardo1', 'Leonardo', 0, N, { 'libera-bosco': 30, 'libera-mura': 12 }),
-  amico('b', 'melody001', 'Melody', 0, N),                  // alle libere, ma non ha ancora un record
+  amico('a', 'lorenzo01', 'Lorenzo', 0, N, { 'libera-bosco': 30, 'libera-mura': 12 }),
+  amico('b', 'marta0001', 'Marta', 0, N),                  // alle libere, ma non ha ancora un record
   amico('d', 'ugo000001', 'Ugo', 1, N - 1),                 // sull'ultimo scudo
   amico('e', 'zeno00001', 'Zeno', 2, 0),                    // non ha fatto niente: non c'è
 ])
 await alRegno()
 uguale('nessuno è più avanti di chi ha finito', await page.locator('[data-amico-davanti]').count(), 0)
-uguale('Melody è al centro, una volta sola', await page.locator('[data-amici-scudo][data-al="libere"] [data-pallino-amico]').count(), 1)
+uguale('Marta è al centro, una volta sola', await page.locator('[data-amici-scudo][data-al="libere"] [data-pallino-amico]').count(), 1)
 uguale('Ugo è sul suo scudo', await page.locator(`[data-amici-scudo][data-al="${N - 1}"] [data-pallino-amico]`).count(), 1)
-uguale('Leonardo è sui torrioni dove ha un record, non al centro', await page.locator('[data-amici-scudo][data-al^="libera-"] [data-pallino-amico]').count(), 2)
+uguale('Lorenzo è sui torrioni dove ha un record, non al centro', await page.locator('[data-amici-scudo][data-al^="libera-"] [data-pallino-amico]').count(), 2)
 uguale('quattro gruppi in tutto: lo scudo di Ugo, i due torrioni e il centro', await page.locator('[data-amici-scudo]').count(), 4)
 await page.locator('[data-amici-scudo][data-al="libere"]').scrollIntoViewIfNeeded()
 await attendi(page, 300)
@@ -82,10 +82,10 @@ for (const q of ['libera-bosco', 'libera-sotterraneo', 'libera-mura', 'libera-pa
   await page.locator(`[data-tappa="${q}"]`).click()
   await attendi(page, 200)
 }
-controlla('il bosco dice il record di Leonardo', /Leonardo: 30/.test(record[0].record.join(' ')), JSON.stringify(record[0]))
-controlla('e chi è alle libere senza un record lì', /Melody/.test(record[0].qui.join(' ')) && !/Leonardo/.test(record[0].qui.join(' ')), JSON.stringify(record[0]))
-controlla('il sotterraneo non ha record, ma chi c\'è', record[1].record.length === 0 && /Leonardo.*Melody/.test(record[1].qui.join(' ')), JSON.stringify(record[1]))
-controlla('le mura dicono il record di Leonardo', /Leonardo: 12/.test(record[2].record.join(' ')), JSON.stringify(record[2]))
+controlla('il bosco dice il record di Lorenzo', /Lorenzo: 30/.test(record[0].record.join(' ')), JSON.stringify(record[0]))
+controlla('e chi è alle libere senza un record lì', /Marta/.test(record[0].qui.join(' ')) && !/Lorenzo/.test(record[0].qui.join(' ')), JSON.stringify(record[0]))
+controlla('il sotterraneo non ha record, ma chi c\'è', record[1].record.length === 0 && /Lorenzo.*Marta/.test(record[1].qui.join(' ')), JSON.stringify(record[1]))
+controlla('le mura dicono il record di Lorenzo', /Lorenzo: 12/.test(record[2].record.join(' ')), JSON.stringify(record[2]))
 uguale('Ugo, sull\'ultimo scudo, non è alle libere', record.filter(r => /Ugo/.test(r.qui.join(' '))).length, 0)
 await apriFumetto('libera-bosco')
 await scatto(page, 'amici-castello-libera')
@@ -111,7 +111,7 @@ await difendi(page, '[data-tappa="libera-mura"]')
 await attendi(page, 300)
 uguale('si cade', await perdi(20), 'fine')
 const frase = await testo('[data-contro-amici]')
-controlla('il cartello dice che Leonardo è stato superato (12 ondate)', /Hai superato Leonardo \(12 ondate\)/.test(frase), frase)
+controlla('il cartello dice che Lorenzo è stato superato (12 ondate)', /Hai superato Lorenzo \(12 ondate\)/.test(frase), frase)
 await scatto(page, 'amici-castello-fine')
 controlla('e il record di prima c\'è ancora una frase sola', await page.locator('[data-contro-amici]').count() === 1)
 

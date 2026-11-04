@@ -9,6 +9,7 @@ Dove la 2D ha un valore (livelli, prezzi, tempi in minuti, silos con scomparti, 
 in `src/giochi/fattoria3d/da2d/dati/` (il ponte è `dati/parita2d.js`, [../livelli.md](../livelli.md)). Chiude D2, D9, D11, D13.
 Le eccezioni:
 
+- **La pesca e la sua catena**: molto prima della peschiera, decisione dell'utente del 4/11/2026 ([../livelli.md](../livelli.md)).
 - **Terra**: lotti 4×4 senza confini contro piazzole 6×6; si pareggia **la quantità di terra**, e nel dubbio se ne regala un po'.
 - **Campi** (D12): le quattro tessere restano (si leggono meglio), ma il campo intero rende come uno della 2D: un pezzo.
 - **Pesca** (D4): un'attività medio-alta, al livello della peschiera (57) e col suo ritmo; si è ritarata solo la parte alta della scala.

@@ -12,10 +12,10 @@ gli Asteroidi e il sotterraneo: il 3D non si scrive a mano.
 | `terreno.js` | erba, strade, griglia, lotti non comprati, recinto, alberi, sassi, laghetti, i due edifici di scena: a istanze, per una finestra di 9×9 lotti attorno alla camera ([mondo-infinito.md](mondo-infinito.md)) |
 | `pezzi.js` | un gruppo per ogni cosa del motore, edifici compresi (sono pezzi liberi, non ci sono fantasmi: [edifici-liberi.md](edifici-liberi.md)); li tiene allineati (`sincronizza`) e li anima (grano che cresce, pecore, galline e mucche, fontana, fumo, il pallone che parte e torna: [mongolfiera.md](mongolfiera.md)); i cartelli sugli edifici: «🎈 N casse pronte!» o «🎈 in viaggio · m:ss» sulla mongolfiera, prezzo o «🔒 Livello N» sul fantasma, pronti o cottura su ogni macchina, uova o latte pronti sul pollaio e sulla stalla, e su recinto, pollaio e stalla il cartello col pulsante «＋ 🪙 N» che compra una bestia (niente conto «n/max»; «ha fame» se c'è una bestia o una pecora tosata da nutrire) ([animali.md](animali.md)); le bestie hanno tre stadi (fame, al lavoro, pronta) che si leggono a colpo d'occhio, con una transizione morbida (`muoviBestie`, `muoviPecore`, profilo in `bestie-puro.js`: «I tre stadi»); il cartello si nasconde col pezzo sollevato |
 | `eroe.js` | il movimento (a piedi, o di corsa), il percorso, la posa del gesto (semina, falcia, abbatte, pesca, ritira, esulta; `pescando`: la canna resta alzata finché sta fermo) |
-| `azioni.js` | cosa fa il contadino davanti a ogni cosa: anima il gesto e **a metà gesto chiede al motore di farlo davvero**; un edificio in mappa è una cosa e apre il menu della sua macchina (comprarlo e piazzarlo è del menu «Costruisci qui») |
+| `azioni.js` | cosa fa il contadino davanti a ogni cosa: anima il gesto e **a metà gesto chiede al motore di farlo davvero**; un edificio in mappa è una cosa e apre il menu della sua macchina (comprarlo e piazzarlo è del menu «Compra») |
 | `detti.js` | `dettoDi` / `dettoDiRifiuto`: un rifiuto del motore in una riga che dice cosa fare. Senza three: lo usa anche `Gioco.vue` |
 | `costruzione.js` | cosa fa una carta del menu sulla cella premuta (`daMenu`), il fantasma (anche «parcheggiato», che aspetta un posto), riprendere e spostare un pezzo, le strade a pennello; al rilascio compra e mette in un gesto |
-| `dito.js` | i pointer sulla tela: tocco, mappa che scorre, pizzico, tenere premuto (su un pezzo lo riprende, su un posto libero apre «Costruisci qui»), il fantasma parcheggiato, il pennello delle strade |
+| `dito.js` | i pointer sulla tela: tocco, mappa che scorre, pizzico, tenere premuto (su un pezzo lo riprende, su un posto libero apre il menu «Compra»), il fantasma parcheggiato, il pennello delle strade |
 | `camera.js` | la telecamera: segue il contadino, o libera se un dito la sposta (`trascina`) o se un pezzo tenuto contro il bordo la fa scorrere (`scorri`); mai oltre 30 celle dal contadino |
 | `trascinamento-puro.js` | il conto del pezzo al dito, senza three: `cellaSottoIlDito` (il centro del pezzo sul punto del dito), lo scarto della presa, `velocitaBordo` e le costanti dello scorrimento ai bordi (`unita/fattoria3d-trascinamento`) |
 | `effetti.js` | scintille e fumo, i testi che volano, il fumetto del contadino, i cartelli (`nuovoBadge`; `nuovoCartello` per le bestie, con un pulsante vero), l'albero che cade |
@@ -86,10 +86,12 @@ toccano. Il cespuglio ha i vertici in grigio (luce e ombra) e il verde lo mette 
 - **La bacheca** ha i foglietti a parte (`userData.mostraFogli(n, colori)`, fino a sei, due mesh l'uno con una geometria e tre materiali condivisi): `pezzi.js` ne accende tanti quanti gli ordini aperti
   (ogni mezzo secondo, al massimo sei) e li colora come i biglietti del foglio (`tipo` dell'ordine: verde, rosa, giallo) e scrive sul cartello «🧺 N pronti!» quando ce ne sono di consegnabili.
 
-## Costruire: «Costruisci qui»
+## Comprare: il menu «Compra»
 
-**Si tiene premuto** (~0,45 s, vibra) **su un posto libero del proprio terreno** e si apre il foglio «Cosa costruiamo?»
-(`viste/CostruisciQui.vue`, `dito.js` ricorda la cella premuta); il tasto 🏗️ della barra apre lo stesso foglio per la cella
+Il tasto si chiama 🛒 Compra e il foglio «Cosa compriamo?»: nel codice restano `costruisci`, `CostruisciQui.vue` e i bersagli `az-costruisci`, `costruisci-qui`. **È un taccuino** (decisione dell'utente del 4/11/2026: «c'è troppa roba»): quattro linguette a sinistra (`GRUPPI` di `dati/catalogo.js`: Fattoria, Giardino, Paese, Decori, `[data-gruppo]`), in alto le schede del gruppo aperto, sotto le carte. Una linguetta si accende se una sua scheda ha il «!» o la festa.
+
+**Si tiene premuto** (~0,45 s, vibra) **su un posto libero del proprio terreno** e si apre il foglio «Cosa compriamo?»
+(`viste/CostruisciQui.vue`, `dito.js` ricorda la cella premuta); il tasto 🛒 della barra apre lo stesso foglio per la cella
 davanti al contadino (`cellaDavanti`). Un dito che scorre prima della soglia non lo apre (il dito non è un mouse); un lotto non tuo si
 compra toccandolo; tenuto premuto su un pezzo lo riprende, come prima.
 - **Le schede** (`CATEGORIE` in `dati/catalogo.js`: 🌾 Campi, 🐑 Animali, 🏠 Edifici, 🌷 Decori, 🛣️ Strade) e sotto **le carte**, tre
@@ -103,7 +105,7 @@ compra toccandolo; tenuto premuto su un pezzo lo riprende, come prima.
   resta lì**, verde o rosso: lo si **trascina** (il fantasma sta sopra il dito come sotto) e al rilascio in un posto buono paga e mette; un
   rilascio che non va lo lascia dov'è, un **tocco** su un posto buono costruisce lì e **su uno che non va annulla** (senza perdere
   niente), come la fascia «✖️ … per annullare» in basso (si tocca, o ci si rilascia sopra).
-- **Gli edifici unici** (mulino, ecc.) hanno la loro carta nella scheda Edifici e si posano come ogni pezzo, con il «!» sulla linguetta, sulla carta e sul tasto 🏗️ finché il livello li ha aperti e non ci sono ([edifici-liberi.md](edifici-liberi.md)). **La
+- **Gli edifici unici** (mulino, ecc.) hanno la loro carta nella scheda Edifici e si posano come ogni pezzo, con il «!» sulla linguetta, sulla carta e sul tasto 🛒 finché il livello li ha aperti e non ci sono ([edifici-liberi.md](edifici-liberi.md)). **La
   strada e la gomma** attivano il pennello: il foglio si chiude e compare `viste/BarraStrade.vue` (strada, gomma, «Fatto»); il dito
   sulla mappa disegna e due dita la spostano.
 - **Il prezzo e il rincaro** sono quelli di sempre (`prezzoPezzo`, `puoCompraEMettere`). Un pezzo già messo si riprende **tenendolo
@@ -133,7 +135,7 @@ compra toccandolo; tenuto premuto su un pezzo lo riprende, come prima.
 Una carta mostra il modello vero che poi si vede in scena, non un'icona. **Le foto si fanno sul computer**: `npm run anteprime fattoria`
 (`strumenti/anteprime-fattoria3d.mjs`) apre il file costruito, fotografa ogni pezzo, edificio e bestia di casa con `anteprima(tipo, { viva: true })`
 e le scrive in `dati/anteprime.js` (generato, WebP 160×160, ~1,4 MB), che il gioco carica a parte appena parte. Fatte sul Note 7 erano
-~250 render, letture dalla GPU e PNG di fila, una per fotogramma, appena si apriva «Costruisci»: gli fps crollavano e la coda andava avanti
+~250 render, letture dalla GPU e PNG di fila, una per fotogramma, appena si apriva «Compra»: gli fps crollavano e la coda andava avanti
 anche a foglio chiuso. Il test `unita/fattoria3d-anteprime-fatte` vuole una foto per tipo e ricalcola la firma dei sorgenti dei modelli
 (`scena3d/modelli*.js`, la fusione, la cache, le bestie, la posa): un modello cambiato senza `npm run anteprime` è rosso.
 `Mondo3d.anteprima(tipo)` → `Promise<dataURL|null>` (e `anteprimaPronta(tipo)` subito, se c'è) dà la foto fatta; solo se non c'è (il ritratto del
@@ -154,11 +156,7 @@ contadino nel guardaroba, che dipende dal bambino) la disegna `scena3d/anteprime
 
 ## Qualità e peso
 
-Il pannello ⚙ (`viste/Opzioni.vue`, dati in `dati/qualita.js`) ha tre preset (basso / medio / alto), gli interruttori che
-pesano (risoluzione 0,75×…nativa, ombre e loro qualità, vento, scintille, alberi, ciuffi, nebbia), la
-distanza della telecamera, le prove di stress (+10 campi, +3 recinti, non si salvano) e le statistiche vive: fps, il
-fotogramma peggiore degli ultimi due secondi, il lavoro del JS (non la GPU: quella si deduce dal peggiore), draw call,
-triangoli, geometrie, texture. «Mostra il rapporto» scrive dispositivo, GPU, fps e impostazioni da incollare.
+Il pannello ⚙ è stato tolto il 4/11/2026 (l'utente: «rimangono valide quelle che sono impostate nel gioco»): i preset di `dati/qualita.js` restano e valgono da soli.
 **Il punto di partenza lo dà la fascia grafica del telefono** (`fasciaAttiva()` di `store/qualita.js`: bassa → basso,
 media e alta → medio); le scelte si ricordano in `store/storage.js` (`fattoria3d-opz`, con una versione: `VERSIONE_OPZIONI`
 in `dati/qualita.js`, che si alza quando cambiano i valori di partenza, così chi aveva salvato un preset vuoto riparte da quello nuovo).
@@ -192,9 +190,8 @@ Prima di questo non si vedeva niente: i ciuffi solo fuori dal mondo (sottili e d
   1170 draw call (−38% sull'inizio), livello 3 = 1100, livello 5 = 1070**; se gli fps medi di 2 s stanno sotto 30 scende di un livello (prima l'ombra
   più rada, poi un po' di risoluzione: ×0,8 a gradino, mai sotto 0,75×, e **solo se la strozzatura non è la CPU**: se il JS riempie il fotogramma i
   pixel non servono), sale dopo 10 s tutti a 55+ e ogni ricaduta raddoppia l'attesa (tetto 80 s); `q.scala` e `q.ombre` salvati non si toccano, il
-  livello vive in memoria e lo dicono le opzioni. I cartelli non riscrivono più lo stile se non si sono mossi, `proietta` non alloca, la foto del HUD
-  non si rifà se è uguale. Il pannello ⚙ e «Mostra il rapporto» ora dicono anche: JS di logica e di disegno e il resto del fotogramma, programmi,
-  quante cose per tipo, mesh e chi proietta ombra, pixel ratio scelto e usato, livello del degrado.
+  livello vive in memoria. I cartelli non riscrivono più lo stile se non si sono mossi, `proietta` non alloca, la foto del HUD
+  non si rifà se è uguale.
   **Le mesh fuse (21/10).** `scena3d/fondi.js` (`fondiPerMateriale(gruppo, { escludi })`, chiamata alla fine di ogni costruttore, **una volta per tipo**: vedi «La cache dei modelli») fonde le mesh
   statiche in una per tipo di materiale: i colori passano nei vertici (materiale `vertexColors` condiviso per firma: ruvidità, metallo, luce propria,
   lato), il disegno è identico. Restano sciolti ciò che si muove (pale, fumo, dolce, cono, pallone e fiamma, manichino, ago, ruota, vasche, panni,

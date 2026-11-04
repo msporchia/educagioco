@@ -2,7 +2,7 @@
    I MERCANTI DI SOPRA, COL DITO VERO
 
    La roba resta fra una discesa e l'altra, e il mercante è uscito dalle
-   discese: quattro botteghe nel villaggio del mondo di sopra (docs/sotterraneo/
+   discese: cinque botteghe nel villaggio del mondo di sopra (docs/sotterraneo/
    mondo-3d.md). Qui il giro intero col dito: toccare un mercante, parlargli
    e vedere il banco aprirsi, comprare, vendere al rigattiere, scendere con la roba
    comprata, risalire e ritrovarla, e alla discesa dopo ritrovarla nello zaino.
@@ -66,15 +66,15 @@ async function chiudiBanco() {
 }
 
 /* ---------- 1. i mercanti stanno nel villaggio ---------- */
-uguale('nel villaggio ci sono quattro mercanti', await page.locator('[data-mercante][data-citta="villaggio"]').count(), 4)
+uguale('nel villaggio ci sono cinque mercanti', await page.locator('[data-mercante][data-citta="villaggio"]').count(), 5)
 controlla('e la barra di chi scende dice le gemme', (await gemme()) === GEMME, String(await gemme()))
 await scatto(page, 'mercanti-mondo-casa')
 
 /* ---------- 2. l'erborista: ci si va, si guarda, e si compra ---------- */
 await alBanco('erborista')
 uguale('la bottega si apre', await page.locator('[data-bottega]').count(), 1)
-uguale('con le sue linguette: pozioni e torce', await page.locator('[data-bottega] [data-scheda]').count(), 2)
-uguale('e la prima è quella delle pozioni', await page.locator('[data-scheda="pozioni"][aria-selected="true"]').count(), 1)
+uguale('con una linguetta sola', await page.locator('[data-bottega] [data-scheda]').count(), 1)
+uguale('quella delle pozioni', await page.locator('[data-scheda="pozioni"][aria-selected="true"]').count(), 1)
 controlla('in griglia la pozione', await page.locator('[data-casella-pezzo="pozione"]').count() === 1)
 uguale('l\'energia non è sua: la boccetta blu sta dall\'incantatrice', await page.locator('[data-casella-pezzo="pozione-blu"]').count(), 0)
 uguale('e le gemme dell\'eroe in vista', await gemmeBottega(), GEMME)
@@ -98,13 +98,17 @@ await toccaIl('[data-casella-pezzo="pozione-piccola"]')
 await attendi(page, 300)
 uguale('un secondo tocco sulla boccetta la compra', await gemmeBottega(),
        GEMME - COSE.pozione.prezzo - COSE['pozione-piccola'].prezzo)
-await toccaIl('[data-scheda="torce"]')
-await attendi(page, 200)
-uguale('sotto «Torce» la torcia', await page.locator('[data-casella-pezzo="torcia"]').count(), 1)
+uguale('la torcia non è sua: sta dal carovaniere', await page.locator('[data-casella-pezzo="torcia"]').count(), 0)
 await scatto(page, 'mercanti-banco-erborista')
 await chiudiBanco()
 let spese = COSE.pozione.prezzo + COSE['pozione-piccola'].prezzo
 uguale('e la carta di sopra ha le gemme di adesso', await gemme(), GEMME - spese)
+
+/* ---------- 2a. il carovaniere: le torce ---------- */
+await alBanco('carovaniere')
+uguale('la sua linguetta è «Torce»', await page.locator('[data-scheda="torce"][aria-selected="true"]').count(), 1)
+uguale('e sotto la torcia', await page.locator('[data-casella-pezzo="torcia"]').count(), 1)
+await chiudiBanco()
 
 /* ---------- 2b. l'incantatrice: a un cavaliere solo l'energia (le bacchette e la stoffa non le porta) ---------- */
 await alBanco('incantatrice')

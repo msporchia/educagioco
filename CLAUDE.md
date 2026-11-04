@@ -68,13 +68,13 @@ quale file.
 | `docs/giardino/` | Il giardino (`src/giochi/giardino/`, in prova): regole, calcoli, campagna, taratura — prima di toccare `giochi/giardino/dati/`, il motore o un prezzo |
 | `docs/lingue/` | English ed Español: vocaboli, campagne, la pronuncia incisa (`npm run voci`) |
 | `docs/bancarella/` | La bancarella: regole e difficoltà, il giro del mondo, il banco da comprare (`banco.md`) — prima di toccare `data/bancarella*.js` o un prezzo |
-| `docs/pozioni/` | Il laboratorio delle pozioni: regole e tappe |
-| `docs/passo-passo/` | Passo passo: regole del mondo, cane pastore, zaino e carte, stelle, sentiero, come si scrive un livello |
+| `docs/pozioni/` | Il laboratorio delle pozioni: il mercante, l'ordine a gettoni, le tappe, il banco in 3D (`scena3d/`), la ricetta da seguire e i suoni (`procedimento.md`) |
+| `docs/passo-passo/` | Passo passo: regole del mondo, cane pastore, guerriero (grate, nemici, spada), zaino e carte, stelle, sentiero, come si scrive un livello |
 | `docs/costruttore/` | Il Robot (era «Il costruttore»: chiave e cartelle restano `costruttore`): linguaggio, progetti e attrezzi, il porto, gli algoritmi, la campagna, la scheda e il robot disegnato |
 | `docs/sotterraneo/` | Il sotterraneo: la grande storia (le discese in fila e la roba attesa), le missioni, regole, roba, scenari, i pensieri dell'eroe (`pensieri.md`), l'abisso com'è e il suo progetto, il disegno in 3D (`grafica-3d.md`, prima di toccare `scena3d/`; i mostri e gli effetti in `mostri-3d.md`; il mondo di sopra in `mondo-3d.md`) |
 | `docs/survivors/` | Survivors, con le sue regole |
 | `docs/codice-segreto/`, `docs/conta/`, `docs/prima-dopo/` | un gioco ciascuna; in `prima-dopo/disegni.md` la regola delle icone disegnate |
-| `docs/fattoria3d/` | La fattoria (`src/giochi/fattoria3d/`: dal 31/10/2026 l'unica, in 3D; la chiave resta `fattoria3d`, i dati presi dalla 2D tolta stanno in `da2d/`): regole e catena, monete vere, i lotti da comprare dentro un recinto, il mare a ovest, i laghi a est e la pesca, alberi, strade, costruire trascinando, i magazzini che crescono, la scena three.js e il suo peso, la fattoria in comune fra due amici, la conversione dei salvataggi 2D (`parita/migrazione.md`) — prima di toccare `giochi/fattoria3d/` |
+| `docs/fattoria3d/` | La fattoria (`src/giochi/fattoria3d/`: dal 31/10/2026 l'unica, in 3D; la chiave resta `fattoria3d`, i dati presi dalla 2D tolta stanno in `da2d/`): regole e catena, monete vere, i lotti da comprare dentro un recinto, il mare a ovest, i laghi a est e la pesca, alberi, strade, costruire trascinando, i magazzini che crescono, la scena three.js e il suo peso, la casa dove si entra (stanze e mobili, `casa.md`), gli animali di casa modellati nella creta (`creta.md`), le loro taglie e la cura sul prato (`cura-sul-prato.md`: ciotola, tinozza, gioco), la fattoria in comune fra due amici, la conversione dei salvataggi 2D (`parita/migrazione.md`) — prima di toccare `giochi/fattoria3d/` |
 | `docs/img/` | le immagini del README (le rifà `npm run scatti`) |
 
 L'indice di tutto è `docs/README.md`. In ogni cartella di gioco `presentazione.md` è la pagina per chi arriva da
@@ -89,7 +89,7 @@ Altri documenti vivono accanto al codice che descrivono: `test/README.md`
 - **I fine riga sono LF** (`.gitattributes`). Uno script che riscrive un file
   (Python lo fa senza chiedere) non deve cambiarli, se no il diff annega.
 - **Niente dipendenze a runtime oltre a Vue**, con un'eccezione: three.js
-  per gli Asteroidi, il sotterraneo e la fattoria (tutti e tre solo in 3D) (~640 KB, accettati dall'utente: il
+  per gli Asteroidi, il sotterraneo, la fattoria e le pozioni (tutti solo in 3D) (~640 KB, accettati dall'utente: il
   3D non si scrive a mano). Suoni sintetizzati,
   icone emoji o disegnate, nessun file esterno: il build resta un HTML
   unico. → `docs/asteroidi/grafica-3d.md`
@@ -153,7 +153,7 @@ Una riga ciascuna; il perché sta nel documento indicato.
   (`npm run quiz:parole-sillabe`), `src/giochi/arena/dati/taratura.js`
   (`npm run tara:arena`, un test confronta la firma), `src/data/voci*.js`
   (`npm run voci`, e se dice «non incise» si rilancia), `src/giochi/sotterraneo/dati/icone-mondo.js`
-  (`npm run scatti icone-mondo`, la firma sta nel file e un test la ricalcola), `src/giochi/fattoria3d/dati/anteprime.js` e
+  (`npm run scatti icone-mondo`, la firma sta nel file e un test la ricalcola), `src/giochi/fattoria3d/dati/anteprime.js`, `src/giochi/pozioni/dati/anteprime.js` e
   `src/giochi/sotterraneo/dati/anteprime-fatte.js` e `sagome-fatte.js` (`npm run anteprime`, rifatti anche quando cambia un modello: un test lo dice), le copie dei prototipi in `scena3d/eroi3d|mostri3d|effetti3d/`
   (`npm run promuovi3d`). → `docs/core/comandi.md`
 - **Un'emoji nuova vuole `npm run emoji`**: il gioco disegna le emoji col suo font

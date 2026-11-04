@@ -14,8 +14,8 @@ alberi, dà da mangiare alle bestie.
 - **Si allarga e si costruisce.** I terreni si comprano a lotti dentro un recinto basso; i pezzi si trascinano dal menu, si pagano
   quando li lasci sulla mappa (niente conferme), si spostano tenendoli premuti, le strade si disegnano col dito; alberi, sassi e
   cespugli si tolgono toccandoli, per poche monete. Più di duecento decorazioni, da mettere dove si vuole.
-- **Si coltiva.** Sedici colture, dal grano al riso, che crescono **col tempo vero** (minuti): si semina e si raccoglie armando
-  l'azione e passando sui campi. Il raccolto va nei silos, e da lì nelle macchine.
+- **Si coltiva.** Sedici colture, dal grano al riso, che crescono **col tempo vero** (minuti): si tocca un campo e si trascinano
+  i semi o il falcetto su uno o tanti. Il raccolto va nei silos, e da lì nelle macchine.
 - **Le macchine in catena.** Il mulino fa la farina, il fienile il mangime delle bestie, il panificio il pane e la torta, il
   caseificio burro e formaggio, il telaio la stoffa, la sartoria il maglione… Ogni ricetta prende qualche pezzo e ne dà uno solo.
 - **Gli animali.** Pecore, galline, mucche, anatre, maiali, capre, conigli, alpaca, asini e api mangiano il mangime giusto e danno
@@ -28,8 +28,9 @@ alberi, dà da mangiare alle bestie.
 
 ## Come si tocca
 
-Un tocco manda il contadino: sul prato ci va, su una cosa ci va e la fa. Un dito che scorre sposta la mappa, due dita zoomano;
-tenere premuto apre «Costruisci qui». Quando una cosa non si può fare il gioco non dice solo «no»: dice cosa fare adesso, e dove
+Un tocco manda il contadino: sul prato ci va, su una cosa ci va e la fa. Un tocco su un campo porta accanto i semi o il falcetto, da
+trascinare sui campi. Un dito che scorre sposta la mappa, due dita zoomano;
+tenere premuto apre il menu «Compra». Quando una cosa non si può fare il gioco non dice solo «no»: dice cosa fare adesso, e dove
 può porta il tasto per farlo.
 
 ## Cosa allena
@@ -53,6 +54,6 @@ veri, e la fattoria si organizza per lavorare da sola mentre si fa altro.
   roba, bestie col loro nome; i pezzi aspettano nel magazzino, da rimettere gratis dove si vuole.
 - **Si spegne tutta o niente**, dalla schermata dei grandi come ogni gioco ([la pagina dei genitori](../genitori/README.md)).
 - A Halloween e a Natale la fattoria cambia faccia da sola; zucche, albero e pupazzo di neve si comprano.
-- Sui telefoni vecchi può essere lenta: c'è un pannello ⚙ con la qualità. Senza WebGL 2 il gioco lo dice e si torna in home.
+- Sui telefoni vecchi può essere lenta: la qualità parte dal telefono e scende da sola. Senza WebGL 2 il gioco lo dice e si torna in home.
 
 Il resto (le regole, i numeri, i perché) sta nei file di questa cartella: [README.md](README.md).

@@ -19,7 +19,7 @@ const STELLA = 'M12 2.6l2.85 5.95 6.55.85-4.8 4.55 1.2 6.5L12 17.3l-5.8 3.15 1.2
 const intestazione = n => (n.tipo === 'sentiero' ? `In fondo alla strada ${n.strada === 'cane' ? 'del cane' : 'del coniglio'}`
   : n.tipo === 'blocco' ? 'Il ponte è chiuso'
   : n.tipo === 'zaino' ? 'La tana'
-  : `${n.scalino.icona} ${n.scalino.nome}${n.animale === 'cane' ? ' · col cane' : ''}`)
+  : `${n.scalino.icona} ${n.scalino.nome}${n.animale === 'cane' ? ' · col cane' : n.animale === 'guerriero' ? ' · col guerriero' : ''}`)
 </script>
 
 <template>

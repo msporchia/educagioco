@@ -18,14 +18,14 @@ export const POSTO = { host: 'hhhhhhhhhhhhhhhhhhhh', ospite: 'oooooooooooooooooo
 export const SCENARI = {
   calma:   { min: 30, max: 120, alMinuto: 0, spenta: [0, 0], ferma: [0, 0] },
   casa:    { min: 30, max: 200, alMinuto: 0.5, spenta: [1000, 5000], ferma: [500, 3000] },
-  melody:  { min: 40, max: 400, alMinuto: 3, spenta: [2000, 30000], ferma: [1000, 8000] },
+  agitata:  { min: 40, max: 400, alMinuto: 3, spenta: [2000, 30000], ferma: [1000, 8000] },
   pessima: { min: 60, max: 900, alMinuto: 8, spenta: [5000, 60000], ferma: [2000, 15000] },
 }
 const fra = (r, [a, b]) => a + r() * (b - a)
 
 /* una partita: fino alla fine, o a `minuti` di tempo vero. `gioco`: sfide/<gioco>.mjs; `tempi` cambia i tempi del canale
    (rete.js TEMPI), per tararli; `firme` diverse fanno due versioni che non si accordano. */
-export function partitaInDue({ gioco, seme = 1, scenario = SCENARI.melody, minuti = 30, tempi = {}, firme = ['F', 'F'] }) {
+export function partitaInDue({ gioco, seme = 1, scenario = SCENARI.agitata, minuti = 30, tempi = {}, firme = ['F', 'F'] }) {
   const orologio = orologioFinto()
   const rete = reteFinta({ orologio, rnd: caso(seme), min: scenario.min, max: scenario.max })
   const codice = rete.nuovo(POSTO.host)

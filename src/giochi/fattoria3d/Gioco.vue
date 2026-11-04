@@ -7,7 +7,7 @@ import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { state, addCoins, segna, flushNow, persist, aspettoDi, scegliAspetto, cestinaOra, segnaBest } from '../../store/profile.js'
 import { fasciaAttiva } from '../../store/qualita.js'
-import { load, save } from '../../store/storage.js'
+import { load } from '../../store/storage.js'
 import { scelta, ricorda } from '../campagne.js'
 import { Fattoria3d } from './motore/fattoria3d.js'
 import { fattoriaTipo } from './motore/tipo.js'
@@ -15,12 +15,11 @@ import { statoDaCaricare, statoRifattoDa2D } from './motore/migra.js'
 import { haWebGL2 } from './scena3d/webgl.js'
 import { dettoDi, dettoDiRifiuto } from './scena3d/detti.js'
 import { EDIFICI, avvisoEdificiNuovi } from './dati/catalogo.js'
-import { COLTURE } from './dati/colture.js'
 import { RICETTE, emojiDi, dentroDi, PRONTO_DA_RITIRARE } from './dati/ricette.js'
 import { POSTI_MASSIMI, prezzoDelPosto } from './dati/posti.js'
 import { avanzamento, roba, nomeDi, sogliaDi } from './dati/livelli.js'
 import { tempoBreve } from './dati/tempo.js'
-import { SILOS, TIPI_DI_SILO, siloDelPezzo } from './dati/silos.js'
+import { SILOS, siloDelPezzo } from './dati/silos.js'
 import { clienteDi, LIVELLO_BANCO } from './dati/ordini.js'
 import { PEZZI } from './dati/catalogo.js'
 import { LIVELLO_MONGOLFIERA } from './dati/mongolfiera.js'
@@ -42,30 +41,31 @@ import BarraStrade from './viste/BarraStrade.vue'
 import { TIPO_DI_BASE, BORDO_DI_BASE, TIPI_STRADA, BORDI_STRADA, stradeAl } from './dati/strade.js'
 import { schedeDi, festaDaScoprire } from './dati/carte.js'
 import { stagioneAttiva } from './dati/stagioni3d.js'
-import SceltaSeme from './viste/SceltaSeme.vue'
+import Attrezzi from './viste/Attrezzi.vue'
 import Macchina from './viste/Macchina.vue'
 import Livelli from './viste/Livelli.vue'
-import Inventario from './viste/Inventario.vue'
 import Guardaroba from './viste/Guardaroba.vue'
 import Addobbi from './viste/Addobbi.vue'
 import Bestia from './viste/Bestia.vue'
 import Battesimo from './viste/Battesimo.vue'
 import { dettoCura, dettoEsito, dettoCompera } from './viste/bestia-pura.js'
-import { BESTIE, CIBI as CIBI_BESTIE, COCCOLE_3D, curabile } from './dati/bestie.js'
+import { curabile, nuovo } from './dati/bestie.js'
 import { personaDi, normalizzaAbito, capiDi, chiaveAbito, nomeDelContadino } from './dati/abiti.js'
 import { vestitiInForma } from './dati/guardaroba-voci.js'
-import { schedeDellInventario, robaNuova, contoDi } from './viste/inventario-puro.js'
 import Bacheca from './viste/Bacheca.vue'
 import Mongolfiera from './viste/Mongolfiera.vue'
 import Magazzino from './viste/Magazzino.vue'
 import { vistaDelMagazzino } from './viste/magazzino-puro.js'
 import Bottega from './viste/Bottega.vue'
 import Dialogo from './viste/Dialogo.vue'
-import Opzioni from './viste/Opzioni.vue'
 import Mappa from './viste/Mappa.vue'
 import Carretto from './viste/Carretto.vue'
 import Visita from './viste/Visita.vue'
 import { usaVisite } from './visite.js'
+import Casa from './viste/Casa.vue'
+import { usaCasa } from './casa.js'
+import BottegaDentro from './viste/BottegaDentro.vue'
+import { usaBottegaDentro } from './bottega-dentro.js'
 import { DAI as DAI_CARRETTO } from './motore/carretto.js'
 import { prendiIngresso, chiediIngresso } from '../../amici/ingresso.js'
 import { apriComune, amiciPerComune, nomeDellAmico, dettoDellaMossa, TERRA } from './comune.js'
@@ -106,16 +106,13 @@ const borsa = {
 
 // ── cosa si vede (il motore non è reattivo: si rilegge dopo ogni cambio e ogni quarto di secondo) ──
 const versione = ref(0)
-const scorteSeme = computed(() => { void versione.value; return { ...motore.s.merci } })      // i raccolti già in scorta, per le carte del «Cosa semini?»
-const foto = ref({ robaNuova: false, daFare: { semina: 0, raccogli: 0 }, livello: 1, quanto: 0, daCostruire: 0, nome: '' })
+const foto = ref({ livello: 1, quanto: 0, daCostruire: 0, nome: '' })
 const datiLivello = () => { const a = avanzamento(motore.esperienza()); return { livello: a.livello, quanto: a.quanto } }
 let ultimaFoto = ''
-let inventarioVisto = null               // il conto di quando si è guardato l'inventario l'ultima volta (in memoria, non si salva)
 const ripresa = () => {
   const s = motore.s
-  if (!inventarioVisto) inventarioVisto = contoDi(s)           // il primo sguardo è la base: «nuovo» è ciò che arriva dopo
   const nuova = {
-    robaNuova: !inventarioAperto.value && robaNuova(inventarioVisto, s), daFare: motore.daFare(), daCostruire: motore.edificiDaCostruire().length, nome: motore.nome(), ...datiLivello(),
+    daCostruire: motore.edificiDaCostruire().length + (motore.serveBacheca() ? 1 : 0), nome: motore.nome(), ...datiLivello(),
   }
   const firma = JSON.stringify(nuova)
   if (firma !== ultimaFoto) { ultimaFoto = firma; foto.value = nuova }      // niente nuova foto se è uguale: il HUD non si rifà ogni quarto di secondo
@@ -126,7 +123,7 @@ const EVENTI = { terra: 'fattoria3dTerre', pezzo: 'fattoria3dPezzi', raccolto: '
 function salito(livello) {
   const nome = nomeDi(livello), vuoto = /^Livello \d+$/.test(nome)           // un livello che non apre niente (la 3D ha meno cose della 2D) lo dice
   const strade = stradeAl(livello), nuoveStrade = [...strade.tipi.map(t => TIPI_STRADA[t].nome), ...strade.bordi.map(b => `bordo ${BORDI_STRADA[b].nome.toLowerCase()}`)]
-  const testo = `Livello ${livello}: ${avvisoEdificiNuovi(livello) || (nuoveStrade.length ? `strade nuove (${nuoveStrade.join(', ')})` : vuoto ? 'niente di nuovo, ma sei più in alto!' : nome)}`      // se si apre un edificio lo nomina: il «!» sul tasto Costruisci resta finché non c'è
+  const testo = `Livello ${livello}: ${avvisoEdificiNuovi(livello) || (nuoveStrade.length ? `strade nuove (${nuoveStrade.join(', ')})` : vuoto ? 'niente di nuovo, ma sei più in alto!' : nome)}`      // se si apre un edificio lo nomina: il «!» sul tasto Compra resta finché non c'è
   ui.avviso(testo)
   toast.value = { testo, fine: performance.now() + DURATA_TOAST }
   livelloNuovo.value = true
@@ -165,22 +162,20 @@ function salva({ subito = false } = {}) {
 function seSparisce(e) { if (e?.type === 'pagehide' || document.visibilityState === 'hidden') salva({ subito: true }) }
 
 // ── lo stato della vista ──
-const modo = ref('libero')               // libero | semina | raccogli
-const seme = ref('grano')
+const attrezzi = ref(null)                // { tipo, x, y, … }: l'attrezzo accanto al campo toccato (viste/Attrezzi.vue)
 const strumento = ref(null)              // il pennello delle strade: null | 'strada' | 'gomma'
 const pennello = ref({ tipo: TIPO_DI_BASE, bordo: BORDO_DI_BASE })      // com'è la strada che si disegna (dati/strade.js): lo sceglie il bambino nella barra
-const costruisciQui = ref(null)          // { i, j, msg }: il menu «Costruisci qui», con la cella premuta
+const costruisciQui = ref(null)          // { i, j, msg }: il menu «Compra», con la cella premuta
 const avvisoTesto = ref('')
 const stagione = ref(stagioneAttiva(new Date(), typeof location !== 'undefined' ? location.hash : ''))          // la festa in corso (dati/stagioni3d.js): Natale, Halloween o niente
 const trascinando = ref(null)            // { emoji, x, y, su, perMettereVia, perAnnullare, nuovo, parcheggiato } mentre si trascina un pezzo (o ne aspetta uno il fantasma)
-const semiAperto = ref(false)
 const macchinaAperta = ref(null)         // il tipo della macchina di cui si vede il menu
 const macchinaMsg = ref('')
 const livelliAperto = ref(false)
-const inventarioAperto = ref(false)
 const guardarobaAperto = ref(false)       // il foglio dell'abito (docs/fattoria3d/guardaroba.md)
 const bestiaAperta = ref(null)             // l'id della bestia di casa di cui si vede il foglio (docs/fattoria3d/bestie-di-casa.md)
 const bestiaMsg = ref('')
+const bagno = ref(null)                    // il bagno in corso: { id, fatto } (scena3d/bagno.js)
 const nomeAperto = ref(false)              // il foglio del nome della fattoria (docs/fattoria3d/nome.md)
 const battesimoDi = ref(null)              // l'id della bestia a cui si sta dando il nome
 const livelloNuovo = ref(false)
@@ -195,14 +190,9 @@ const magazzinoMsg = ref('')
 const toast = ref(null)                  // { testo, fine }: l'avviso del livello, sopra la scena
 const DURATA_TOAST = 4500, DURATA_AVVISO = 6000
 let avvisoFine = 0
-const opzioniAperte = ref(false)
-const opzioniRidotte = ref(false)
 const dialogo = ref(null)                // { titolo, testo, bottoni: [{ t, fn, quieto }] }
 const cameraLibera = ref(false)
-const stat = ref({ fps: 0, peggiore: 0, p1: 0, cpu: 0, logica: 0, disegno: 0, fuori: 0, calls: 0, triangoli: 0, geometrie: 0, texture: 0, programmi: 0, dpr: 1, scalaViva: 1, livello: 0, ombraOgni: 1, degrado: '', grafico: [], campi: 0, edifici: 0, altri: 0, compagni: 0, cartelli: 0, mesh: 0, ombre: 0, istanze: 0 })
 const q = reactive(qualitaIniziale(fasciaAttiva()))
-const rapporto = ref('')
-let quandoSeme = null
 
 // le anteprime 3D dei pezzi per le carte (il file del 3D arriva a richiesta: la vista non importa three)
 const anteprima = tipo => (mondo ? mondo.anteprima(tipo) : Promise.resolve(null))
@@ -240,27 +230,32 @@ function cambiaVestiti(l) { vestiti.value = vestitiInForma(l); ricorda(CHIAVE, '
 const salvaVestito = ({ posto, nome, persona: p }) => cambiaVestiti([...vestiti.value.filter(s => !(s.persona === p && s.posto === posto)), { posto, nome, persona: p, capi: capiDi(abito.value) }])
 const rinominaVestito = ({ posto, nome, persona: p }) => cambiaVestiti(vestiti.value.map(s => (s.persona === p && s.posto === posto ? { ...s, nome } : s)))
 const togliVestito = ({ posto, persona: p }) => cambiaVestiti(vestiti.value.filter(s => !(s.persona === p && s.posto === posto)))                 // lo stesso attributo del profilo che usa la fattoria 2D
-watch(() => chiaveAbito(abito.value), () => { if (mondo) mondo.vestiContadino(abito.value) })
+watch(() => chiaveAbito(abito.value), () => { if (mondo) mondo.vestiContadino(abito.value); interni.vesti(abito.value); sala.vesti(abito.value) })
 
 // ── le porte che il mondo 3D usa verso la vista ──
 const ui = {
   cambio() { sporco = true; contaEventi(); ripresa() },
   chiedi(titolo, testo, bottoni) { dialogo.value = { titolo, testo, bottoni } },
-  scegliSeme(cb) { quandoSeme = cb; semiAperto.value = true },
+  attrezzi(info) { attrezzi.value = info },
   apriMacchina(tipo) { macchinaMsg.value = ''; macchinaCons.value = null; macchinaAperta.value = tipo },
   apriBanco() { apriBanco() },
   apriMongolfiera() { naveMsg.value = ''; naveCons.value = null; nave.value = true },
   apriBottega(tipo) { bottegaMsg.value = ''; bottegaCons.value = null; bottegaAperta.value = tipo },
   apriMagazzino(silo) { magazzinoMsg.value = ''; magazzinoAperto.value = silo },          // un tocco su un magazzino
   apriMappa() { if (comune) ui.avviso('Dai vicini si va col trattore della tua fattoria.'); else visite.apriMappa() },
-  apriBestia(id) { bestiaMsg.value = ''; bestiaAperta.value = id },             // un tocco su una bestia di casa
-  apriGuardaroba() { guardarobaAperto.value = true },             // un tocco sul contadino fermo                 // il trattore: la mappa dei villaggi (docs/fattoria3d/vicini.md)
+  apriBestia(id) { bestiaMsg.value = ''; bestiaAperta.value = id },             // tenere premuto su un animale
+  riempi: riempiCiotola,
+  lava,
+  bagno(info) { bagno.value = info },
+  apriGuardaroba() { guardarobaAperto.value = true },
+  entraBottega(tipo) { sala.entra(tipo) },          // un tocco su una bottega del paese: si entra (docs/fattoria3d/botteghe.md, «Dentro»)
+  entraInCasa() { if (comune) ui.avviso('La casa è nella tua fattoria: qui si lavora insieme.'); else interni.entra() },          // un tocco sulla casa (docs/fattoria3d/casa.md)
   avviso(testo) {
     avvisoTesto.value = testo || ''
     avvisoFine = testo ? performance.now() + DURATA_AVVISO : 0
   },
   apriCostruisci(i, j) { apriCostruisci(i, j) },                           // tenere premuto su un posto libero del terreno tuo
-  fogliAperti: () => !!alberoK.value || !!dialogo.value || !!consiglio.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!addobbiDi.value || !!battesimoDi.value || bancoAperto.value || nave.value || !!bottegaAperta.value || !!magazzinoAperto.value || mappaAperta.value || !!carretto.value || (opzioniAperte.value && !opzioniRidotte.value),
+  fogliAperti: () => !!alberoK.value || !!dialogo.value || !!consiglio.value || !!costruisciQui.value || !!macchinaAperta.value || livelliAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!addobbiDi.value || !!battesimoDi.value || bancoAperto.value || nave.value || !!bottegaAperta.value || !!magazzinoAperto.value || mappaAperta.value || !!carretto.value,
   zonaDrop: () => (zonaVia.value || null)?.getBoundingClientRect() || null,
   trascinando(info) { trascinando.value = info },
 }
@@ -271,22 +266,26 @@ const visite = usaVisite({ dammi: () => ({ motore, mondo }), tela: telaVisita, s
 const { inVisita, mappaAperta, mappaMsg, fase: faseVisita, verso: versoVisita, scheda: schedaVisita, foglio: foglioVisita, storia: storiaVisita,
         messaggio: msgVisita, elenco: elencoVicini, chiave: chiaveTela, carretto, righeCarretto } = visite
 
-// ── la barra delle azioni ──
-function impostaModo(m) {
-  modo.value = m; mondo.imposta({ modo: m })
-  if (m === 'semina') mondo.fx.parla('Tocca i campi da seminare')
-  else if (m === 'raccogli') mondo.fx.parla('Tocca i campi pronti da tagliare')
-}
-function apriSemina() { quandoSeme = k => impostaModo('semina'); semiAperto.value = true }
-function scegliSeme(k) {
-  semiAperto.value = false; seme.value = k; mondo.imposta({ seme: k })
-  const f = quandoSeme; quandoSeme = null; f && f(k)
-}
+// ── dentro la casa (casa.js): stanze, mobili e l'armadio che apre il guardaroba ──
+const telaCasa = ref(null), sopraCasa = ref(null)
+const interni = usaCasa({ dammi: () => ({ motore, mondo }), tela: telaCasa, sopra: sopraCasa, q, versione, cambio: () => ui.cambio(), abito,
+                          apriGuardaroba: () => { guardarobaAperto.value = true }, avvisa: t => ui.avviso(t), chiedi: ui.chiedi,
+                          altriFogli: () => guardarobaAperto.value || !!dialogo.value })
+const inCasa = interni.dentro, chiaveCasa = interni.chiave
+// ── dentro una bottega del paese (bottega-dentro.js): i clienti come persone, coi fumetti di cosa vogliono ──
+const telaSala = ref(null), sopraSala = ref(null)
+const sala = usaBottegaDentro({ dammi: () => ({ motore, mondo }), tela: telaSala, sopra: sopraSala, q, cambio: () => ui.cambio(), abito, avvisa: t => ui.avviso(t),
+                               consegna: (t, id) => { if (!consegnaIn(t, id).ok) bottegaAperta.value = t }, apriElenco: t => ui.apriBottega(t),
+                               altriFogli: () => !!bottegaAperta.value || guardarobaAperto.value || !!consiglio.value || !!alberoK.value })
+const tipoSala = sala.tipo, chiaveSala = sala.chiave, fumettiSala = sala.fumetti
+const vistaSala = computed(() => { void versione.value; return tipoSala.value && motore ? motore.vistaBottega(tipoSala.value) : null })
 
-// ── costruire: tenere premuto su un posto libero (o il tasto 🏗️) apre il menu «Costruisci qui» ──
+// ── la barra delle azioni ──
+
+// ── costruire: tenere premuto su un posto libero (o il tasto 🛒) apre il menu «Compra» ──
 const schede = computed(() => {
   void versione.value
-  return schedeDi({ stagione: stagione.value, livello: motore.livello(), prezzoPezzo: t => motore.prezzoPezzo(t), nelMagazzino: t => motore.nelMagazzino(t), posseduti: motore.s.posseduti, bestieTue: motore.cura.tue() })
+  return schedeDi({ stagione: stagione.value, livello: motore.livello(), prezzoPezzo: t => motore.prezzoPezzo(t), nelMagazzino: t => motore.nelMagazzino(t), posseduti: motore.s.posseduti, bestieTue: motore.cura.curate(), nomeBestia: id => motore.cura.nomeDi(id), serveBacheca: motore.serveBacheca() })
 })
 const festa = computed(() => {
   void versione.value
@@ -294,7 +293,7 @@ const festa = computed(() => {
 })
 function apriCostruisci(i, j) {
   if (mondo.eroe.az || strumento.value) return
-  if (i === undefined) [i, j] = mondo.cellaDavanti()      // il tasto 🏗️: la cella davanti all'eroe
+  if (i === undefined) [i, j] = mondo.cellaDavanti()      // il tasto 🛒: la cella davanti all'eroe
   mondo.annullaTrascinamento()
   guidaVisto.value = true
   costruisciQui.value = { i, j, msg: '' }
@@ -306,20 +305,23 @@ const bestiaVista = computed(() => {
   void versione.value
   const id = bestiaAperta.value; if (!id || !motore) return null
   const st = motore.cura.stato(id); if (!st) return null
-  const scorte = {}
-  for (const g of [...CIBI_BESTIE, ...COCCOLE_3D]) if (g.da) scorte[g.da] = motore.scortaDi(g.da)
-  return { id, nome: motore.cura.nomeDi(id), stato: { pancia: st.pancia, pelo: st.pelo, gioco: st.gioco }, monete: motore.monete(), scorte,
-           vestiario: motore.cura.vestiarioDi(id, stagione.value || '') }
+  return { id, nome: motore.cura.nomeDi(id), stato: { pancia: st.pancia, pelo: st.pelo, gioco: st.gioco }, vestiario: motore.cura.vestiarioDi(id, stagione.value || '') }
 })
-function esitoBestia(r, id) {
-  const nome = motore.cura.nomeDi(id)
-  bestiaMsg.value = r.ok ? dettoEsito(r, nome) : dettoCura(r, { monete: motore.monete() })
-  if (r.ok) mondo.compagni.festa(id)
+// ── la cura sul prato: quello che si trascina nella ciotola e nella tinozza arriva qui (scena3d/attrezzi.js); tornano false se resta aperto ──
+function riempiCiotola(id, k) {
+  const r = motore.cura.riempi(id, k)
+  if (!r.ok) { ui.avviso(dettoCura(r, { monete: motore.monete() })); ui.cambio(); return false }
+  mondo.mangia(id)
+  if (r.premio) ui.avviso(dettoEsito(r, motore.cura.nomeDi(id)))
   ui.cambio()
+  return true
 }
-function nutriBestia(cibo) { const id = bestiaAperta.value; if (id) esitoBestia(motore.cura.nutri(id, cibo.id), id) }
-function coccolaBestia(gesto) { const id = bestiaAperta.value; if (id) esitoBestia(motore.cura.coccola(id, gesto.id), id) }
-function carezzaBestia() { const id = bestiaAperta.value; if (id) esitoBestia(motore.cura.carezza(id), id) }
+function lava(id) {
+  const no = motore.cura.rifiutoBagno(id)
+  if (no) { ui.avviso(dettoCura(no, { monete: motore.monete() })); return false }
+  return mondo.bagno.inizia(id)
+}
+function lasciaBagno() { mondo.bagno.annulla() }
 // ── gli addobbi di una bestia (viste/Addobbi.vue, docs/fattoria3d/addobbi.md): si aprono dal tasto nel foglio della bestia, la ✕ torna al foglio ──
 const addobbiDi = ref(null)
 const addobbiVista = computed(() => {
@@ -356,14 +358,16 @@ function daiIlNome(nome) {
   const id = battesimoDi.value; battesimoDi.value = null
   if (id) { motore.cura.battezza(id, nome); mondo.compagni.sync(); ui.cambio() }
 }
-/** Una carta «bestia» del menu: la tua apre il foglio, quella da prendere si compra (esperienza come ogni spesa) e comincia il battesimo. */
+/** Una carta «bestia» del menu: la tua apre il foglio, quella da adottare si compra (esperienza come ogni spesa) e comincia il battesimo, dove si sceglie il nome. */
 function sceglieBestia(carta, c) {
   const id = carta.bestia
   if (motore.cura.ho(id)) { costruisciQui.value = null; bestiaMsg.value = ''; bestiaAperta.value = id; return }
   const r = motore.cura.compra(id)
-  if (!r.ok) { c.msg = dettoCompera(r, BESTIE[id].nome); return }
+  if (!r.ok) { c.msg = dettoCompera(r, carta.nome); return }
   costruisciQui.value = null
   mondo.compagni.sync()
+  mondo.pezzi.sincronizza()                // la sua ciotola, e la tinozza col primo animale
+  const k = motore.cura.ciotolaDi(id); if (k) mondo.pezzi.fanNascere(k.id)
   ui.cambio()
   battesimoDi.value = id
 }
@@ -439,12 +443,6 @@ function ritira() {
   mondo.eroe.avvia('esulta', 0.9)
 }
 
-// ── l'inventario: le scorte a schede (si calcola solo a foglio aperto) ──
-const inventario = computed(() => { void versione.value; return inventarioAperto.value ? schedeDellInventario(motore.s, motore.livello(), k => motore.capienzaDi(k)) : null })
-/** I magazzini già in mappa, per le scorciatoie in fondo all'inventario: quanto tiene ognuno, e un tocco apre il suo foglio. */
-const magazzini = computed(() => { void versione.value; return inventarioAperto.value ? TIPI_DI_SILO.filter(silo => motore.edificiDelSilo(silo).length).map(silo => ({ silo, nome: SILOS[silo].nome, emoji: SILOS[silo].emoji, posti: motore.postiDelSilo(silo) })) : [] })
-function vaiAlMagazzino(silo) { chiudiInventario(); ui.apriMagazzino(silo) }
-
 // ── il foglio di un magazzino: le sue merci e il posto in più (docs/fattoria3d/magazzini.md) ──
 const magazzino = computed(() => { void versione.value; return magazzinoAperto.value ? vistaDelMagazzino(motore, magazzinoAperto.value) : null })
 function piuPosto() {
@@ -456,15 +454,13 @@ function piuPosto() {
   if (v.passo === 'nuovo') {                 // quello nuovo è nel magazzino dei pezzi: si mette come dal menu, davanti al contadino o col fantasma da trascinare
     magazzinoAperto.value = null; ui.cambio(); mondo.cambiato()
     const [i, j] = mondo.cellaDavanti(), q = mondo.costruisciQui(r.tipo, i, j)
-    return void ui.avviso(q.esito === 'messo' ? `${SILOS[silo].emoji} Eccolo! Ogni ${SILOS[silo].cosa} ha posto per ${r.posti}.` : `${SILOS[silo].emoji} Mettilo dove vuoi: è nel menu Costruisci.`)
+    return void ui.avviso(q.esito === 'messo' ? `${SILOS[silo].emoji} Eccolo! Ogni ${SILOS[silo].cosa} ha posto per ${r.posti}.` : `${SILOS[silo].emoji} Mettilo dove vuoi: è nel menu Compra.`)
   }
   magazzinoMsg.value = `Fatto! Adesso ogni ${SILOS[silo].cosa} ha posto per ${r.posti}.`
   ui.cambio(); mondo.cambiato()
   for (const c of motore.edificiDelSilo(silo)) mondo.pezzi.salta(c.id)
   mondo.eroe.avvia('esulta', 0.9)
 }
-function apriInventario() { inventarioVisto = contoDi(motore.s); inventarioAperto.value = true; ripresa() }
-function chiudiInventario() { inventarioVisto = contoDi(motore.s); inventarioAperto.value = false; ripresa() }
 
 // ── il foglio dei livelli ──
 const livelli = computed(() => {
@@ -479,7 +475,7 @@ const banco = computed(() => {
   void versione.value                        // `ordini()` riempie da sé i posti il cui riposo è finito; il conto alla rovescia vive col battito
   const aperto = motore.bancoAperto(), ordini = motore.ordini()
   const perche = aperto ? '' : motore.livello() < LIVELLO_BANCO ? `Il banco arriva al livello ${LIVELLO_BANCO}.` : 'Metti una bacheca (o una bancarella) sulla mappa: i clienti si fermano lì a chiedere.'
-  return { aperto, perche, ordini, pronti: ordini.filter(o => o.pronto).length, visibile: motore.livello() >= LIVELLO_BANCO }
+  return { aperto, perche, ordini }
 })
 /** Le consegne fatte verso la prossima soglia del traguardo «Ordini al banco» (gioco.js): l'indicatore in cima alla bacheca. Niente premi nuovi. */
 const traguardoOrdini = computed(() => {
@@ -532,15 +528,19 @@ const traguardoNave = computed(() => {
 
 // ── le botteghe del paese: un cliente per bancone, una merce sola, la fama a cuori (docs/fattoria3d/botteghe.md) ──
 const bottega = computed(() => { void versione.value; return bottegaAperta.value ? motore.vistaBottega(bottegaAperta.value) : null })
-function consegnaBottega(n) {
-  const tipo = bottegaAperta.value, r = motore.consegnaBottega(tipo, n)
+/** Consegna al cliente `n` della bottega `tipo`, dal foglio o toccando il cliente dentro la sala: il messaggio del foglio e la festa. */
+function consegnaIn(tipo, n) {
+  const r = motore.consegnaBottega(tipo, n)
   bottegaCons.value = !r.ok && r.motivo === 'mancano' && primaMancante(r) ? consiglioPer(primaMancante(r)) : null
-  if (!r.ok) return bottegaMsg.value = r.motivo === 'mancano' ? dettoDi('mancano-ingredienti', { ingredienti: r.mancano }) : dettoDi(r.motivo)
+  if (!r.ok) { bottegaMsg.value = r.motivo === 'mancano' ? dettoDi('mancano-ingredienti', { ingredienti: r.mancano }) : dettoDi(r.motivo); return r }
   bottegaMsg.value = `Consegnato a ${r.cliente.nome}: +${r.xp} ⭐.${r.cresciuta ? ' La bottega è famosa: un bancone in più!' : ''}`
   ui.cambio()
-  mondo.fx.volo('+' + r.xp + ' ⭐', mondo.pezzi.centroDi({ kind: 'edificio', tipo }), 3)
-  mondo.eroe.avvia('esulta', 0.9)
+  const dentro = tipoSala.value === tipo && sala.scena()
+  if (dentro) { dentro.festeggia(n, '+' + r.xp + ' ⭐'); if (r.cresciuta) dentro.fx.parla('Che fama! Un tavolino in più') }
+  else { mondo.fx.volo('+' + r.xp + ' ⭐', mondo.pezzi.centroDi({ kind: 'edificio', tipo }), 3); mondo.eroe.avvia('esulta', 0.9) }
+  return r
 }
+function consegnaBottega(n) { consegnaIn(bottegaAperta.value, n) }
 function rifiutaBottega(n) {
   const r = motore.rifiutaBottega(bottegaAperta.value, n)
   if (!r.ok) return bottegaMsg.value = dettoDi(r.motivo)
@@ -548,28 +548,11 @@ function rifiutaBottega(n) {
 }
 
 // ── le opzioni di qualità ──
-function cambiaOpzioni() { mondo.applica(q); save(CHIAVE_OPZIONI, { v: VERSIONE_OPZIONI, q: { ...q } }) }
-function creaRapporto() {
-  const st = mondo.statistiche(), cn = mondo.conteggi()
-  rapporto.value = [
-    `Fattoria 3D — ${new Date().toISOString().slice(0, 16)}`,
-    `Dispositivo: ${navigator.userAgent}`,
-    `Schermo: ${innerWidth}×${innerHeight} @${devicePixelRatio} · pixel ratio scelto ${q.scala} · usato ${st.dpr.toFixed(2)} (degrado: livello ${st.livello}, ombre ogni ${st.ombraOgni})`,
-    `GPU: ${mondo.gpu()}`,
-    `Preset: ${q.preset} · ombre ${q.ombre ? q.ombraRes : 'spente'}`,
-    `fps ${st.fps.toFixed(0)} · peggiore ${st.peggiore.toFixed(0)} ms · 1% ${st.p1.toFixed(0)} ms`,
-    `JS per fotogramma: scena ${st.cpu.toFixed(1)} ms (logica ${st.logica.toFixed(1)} + disegno ${st.disegno.toFixed(1)}) · il resto del fotogramma (GPU, pagina, Vue) ${st.fuori.toFixed(1)} ms`,
-    `draw call ${st.calls} · triangoli ${st.triangoli} · geometrie ${st.geometrie} · texture ${st.texture} · programmi ${st.programmi}`,
-    `In scena: ${cn.campi} campi, ${cn.edifici} edifici, ${cn.altri} altri pezzi, ${cn.compagni} compagni, ${cn.cartelli} cartelli · ${cn.mesh} mesh (${cn.ombre} proiettano ombra, ${cn.istanze} a istanze) · ${st.cose} cose del motore (di prova ${st.prove})`,
-    `Impostazioni: ${JSON.stringify(q)}`,
-  ].join('\n')
-}
-const conta = computed(() => { void versione.value; return { cose: motore.cose.length, prove: motore.prove.length } })
 
 // ── la guida del primo giro e il consiglio (docs/fattoria3d/guida.md) ──
 const radice = ref(null)
 const guidaAttiva = ref(false)           // si decide una volta sola, all'apertura: chi ha già giocato non la vede mai
-const guidaVisto = ref(false)            // ha già aperto il menu «Costruisci qui» durante il primo giro
+const guidaVisto = ref(false)            // ha già aperto il menu «Compra» durante il primo giro
 const consiglio = ref(null)              // il foglio «E adesso?»: { testo, azione, etichetta }
 const macchinaCons = ref(null), bancoCons = ref(null), naveCons = ref(null), bottegaCons = ref(null)      // il passo per avere ciò che manca, sotto il messaggio di ogni foglio
 const quadroGuida = () => {
@@ -577,8 +560,8 @@ const quadroGuida = () => {
   const crescono = cs.filter(c => !m.campoVuoto(c) && !m.campoMaturo(c)), restanti = crescono.map(c => m.restoSecondi(c))
   return {
     campi: cs.length, vuoti: cs.filter(c => m.campoVuoto(c)).length, maturi: cs.filter(c => m.campoMaturo(c)).length, crescono: crescono.length,
-    secondi: restanti.length ? Math.min(...restanti) : 0, modo: modo.value, semi: semiAperto.value, costruisci: !!costruisciQui.value,
-    foglio: !!(alberoK.value || dialogo.value || macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!addobbiDi.value || !!battesimoDi.value || bancoAperto.value || nave.value || bottegaAperta.value || magazzinoAperto.value || mappaAperta.value || !!carretto.value || opzioniAperte.value || consiglio.value || strumento.value || trascinando.value),
+    secondi: restanti.length ? Math.min(...restanti) : 0, attrezzo: attrezzi.value ? attrezzi.value.tipo : null, costruisci: !!costruisciQui.value,
+    foglio: !!(alberoK.value || dialogo.value || macchinaAperta.value || livelliAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!bagno.value || !!addobbiDi.value || !!battesimoDi.value || bancoAperto.value || nave.value || bottegaAperta.value || magazzinoAperto.value || mappaAperta.value || !!carretto.value || consiglio.value || strumento.value || trascinando.value),
     raccolto: Object.values(m.s.merci).some(n => n > 0), visto: guidaVisto.value,
   }
 }
@@ -588,7 +571,7 @@ const passoGuida = computed(() => {
   return guidaDelPrimoGiro(quadroGuida())
 })
 usaGuida(radice, passoGuida)
-const guidaInAlto = computed(() => semiAperto.value || !!costruisciQui.value)       // con un foglio aperto la riga sta in alto, se no finirebbe sotto
+const guidaInAlto = computed(() => !!attrezzi.value || !!costruisciQui.value)       // con un foglio aperto la riga sta in alto, se no finirebbe sotto
 function chiudiLaGuida() {
   if (!guidaAttiva.value || !motore) return
   if (primoGiroFinito({ raccolto: quadroGuida().raccolto, visto: guidaVisto.value, esperienza: motore.esperienza() })) {
@@ -600,23 +583,22 @@ function chiudiLaGuida() {
 function apriConsiglio() { consiglio.value = cosaFaccioAdesso(motore) }
 /** Il tasto di un consiglio: chiude il foglio da cui si è partiti e porta dove si fa. */
 function facciConsiglio(a) {
+  if (a && tipoSala.value) sala.esci()                       // il passo si fa in fattoria: dalla bottega si esce
   if (a && a.che === 'albero') return apriAlbero(a.k)          // «Come si fa» si apre sopra il foglio, che resta dov'è
-  alberoK.value = ''; if (inventarioAperto.value) chiudiInventario()
-  consiglio.value = null; magazzinoAperto.value = null; macchinaAperta.value = null; bancoAperto.value = false; nave.value = false; bottegaAperta.value = null; semiAperto.value = false
+  alberoK.value = ''
+  consiglio.value = null; magazzinoAperto.value = null; macchinaAperta.value = null; bancoAperto.value = false; nave.value = false; bottegaAperta.value = null
   if (!a) return
-  if (a.che === 'semina') { seme.value = a.seme || seme.value; mondo.imposta({ seme: seme.value }); impostaModo('semina') }
-  else if (a.che === 'raccogli') impostaModo('raccogli')
+  if (a.che === 'semina' || a.che === 'raccogli') mondo.attrezzi.vaiAlCampo(a.che, a.seme)
   else if (a.che === 'macchina') ui.apriMacchina(a.tipo)
   else if (a.che === 'costruisci') apriCostruisci()
   else if (a.che === 'banco') apriBanco()
   else if (a.che === 'livelli') apriLivelli()
-  else if (a.che === 'inventario') apriInventario()
   else if (a.che === 'magazzino') ui.apriMagazzino(a.silo)
   else if (a.che === 'home') indietro()
 }
 /** Il consiglio per avere ciò che manca, col tasto «🌳 Come si fa» per la stessa merce (docs/fattoria3d/guida.md). */
 const consiglioPer = k => ({ ...comeAvere(motore, k), albero: k })
-// ── «Come si fa»: la strada di una merce (dati/albero.js), a figure; si apre dall'inventario e dal passo sotto un «non si può» ──
+// ── «Come si fa»: la strada di una merce (dati/albero.js), a figure; si apre dal foglio di un magazzino e dal passo sotto un «non si può» ──
 const alberoK = ref('')
 const albero = computed(() => { void versione.value; return alberoK.value ? alberoDi(motore, alberoK.value, k => comeAvere(motore, k)) : null })
 function apriAlbero(k) { alberoK.value = k; ripresa() }
@@ -632,14 +614,25 @@ function ritmo() {
   if (toast.value && t >= toast.value.fine) toast.value = null
   if (avvisoFine && t >= avvisoFine) { avvisoFine = 0; avvisoTesto.value = '' }
   cameraLibera.value = mondo.cameraLibera
-  if (opzioniAperte.value) stat.value = { ...mondo.statistiche(), ...mondo.conteggi() }
   if (sporco) salva()
 }
 
 function indietro() {
   if (inVisita.value) return void visite.torna()          // in visita, «indietro» riporta a casa, non in home
+  if (inCasa.value) return void (guardarobaAperto.value ? (guardarobaAperto.value = false) : interni.esci())          // dentro casa si esce in cortile
+  if (tipoSala.value) return void (bottegaAperta.value ? (bottegaAperta.value = null) : sala.esci())          // da una bottega si esce in paese
   if (comune) return void chiediIngresso(CHIAVE, {})       // dalla fattoria in comune si torna alla propria
   salva({ subito: true }); emit('vai', 'home')
+}
+
+/** `#animali=watson,beagle` li adotta gratis, `&bisogni=fame,sporco,noia` li porta lì tutti: per guardare la cura sul prato senza aspettare ore. */
+function animaliDiProva(ids, bisogni) {
+  const cura = motore.cura
+  for (const id of ids) if (curabile(id) && !cura.ho(id)) cura.casa[id] = { ...nuovo(motore.ora()), premiato: false }
+  cura.sistema()
+  const voce = { fame: 'pancia', sporco: 'pelo', noia: 'gioco' }
+  for (const id of cura.curate()) for (const k of bisogni) if (voce[k]) cura.casa[id][voce[k]] = 0.2
+  return `🧪 Animali: ${cura.curate().length}.`
 }
 
 /** #fattoria3d-tipo=N mette una fattoria già giocata di quel livello (quella del bambino va nel cestino); #fattoria3d=N alza il livello
@@ -649,7 +642,8 @@ function cheatDellIndirizzo() {
   const tipo = /(?:^#?|&)fattoria3d-tipo=(\d{1,2})(?=&|$)/i.exec(frammento)
   const livello = /(?:^#?|&)fattoria3d=(\d{1,2})(?=&|$)/i.exec(frammento)
   const da2d = /(?:^#?|&)fattoria3d-da2d(?=&|$)/i.test(frammento)
-  if (!tipo && !livello && !da2d) return
+  const animali = /(?:^#?|&)animali=([a-z_,]+)(?=&|$)/i.exec(frammento), bisogni = /(?:^#?|&)bisogni=([a-z,]+)(?=&|$)/i.exec(frammento)
+  if (!tipo && !livello && !da2d && !animali && !bisogni) return
   try { location.hash = '' } catch (e) { /* pazienza */ }
   let testo
   if (da2d) {
@@ -665,11 +659,12 @@ function cheatDellIndirizzo() {
     motore = fattoriaTipo(parseInt(tipo[1], 10))
     motore.borsa = borsa
     testo = `🧪 Fattoria di prova al livello ${motore.livello()}: quella di prima è nel cestino.`
-  } else {
+  } else if (livello) {
     const meta = parseInt(livello[1], 10)
     if (motore.esperienza() < sogliaDi(meta)) motore.s.esperienza = sogliaDi(meta)
     testo = `🧪 Livello ${motore.livello()}.`
   }
+  if (animali || bisogni) testo = animaliDiProva(animali ? animali[1].split(',') : [], bisogni ? bisogni[1].split(',') : [])
   salva({ subito: true })
   toast.value = { testo, fine: performance.now() + DURATA_TOAST }
 }
@@ -738,7 +733,7 @@ onMounted(async () => {
   battito = setInterval(ritmo, 250)
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
-  window.__fattoria3d = { motore, mondo, q }
+  window.__fattoria3d = { motore, mondo, q, interni, sala }
 })
 onBeforeUnmount(() => {
   vivo = false
@@ -749,6 +744,8 @@ onBeforeUnmount(() => {
   sessione?.chiudi()
   if (sessione) { clearInterval(timerQui); quandoQui(null); mandaA(comune, msgVia()) }
   visite.via()
+  interni.via()
+  sala.via()
   mondo?.via()
   delete window.__fattoria3d
 })
@@ -777,18 +774,16 @@ onBeforeUnmount(() => {
       <div ref="sopra" class="f3-sopra"></div>
 
       <template v-if="mondo || versione">
-        <div class="f3-casa" v-show="!inVisita">
-        <Hud v-bind="foto" :nuovo="livelloNuovo" :banco="banco" @livello="apriLivelli" @banco="apriBanco" @inventario="apriInventario" @abito="guardarobaAperto = true" />
+        <div class="f3-casa" v-show="!inVisita && !inCasa && !tipoSala">
+        <Hud v-bind="foto" :nuovo="livelloNuovo" @livello="apriLivelli" />
         <div v-if="toast" class="f3-toast" data-f3="avviso-livello">⭐ {{ toast.testo }}</div>
-        <button class="f3-angolo" aria-label="opzioni" data-f3="apri-opzioni" @click="opzioniAperte = !opzioniAperte">⚙</button>
         <button v-if="!comune && amiciComune.length" class="f3-angolo f3-insieme" aria-label="la fattoria in comune" data-f3="apri-comune" @click="apriInsieme">🤝</button>
         <button v-if="comune" class="f3-angolo f3-insieme" aria-label="torna alla tua fattoria" data-f3="torna-mia" @click="indietro">🏠</button>
         <button class="f3-adesso" aria-label="cosa faccio adesso" data-f3="apri-consiglio" @click="apriConsiglio">🧭 E adesso?</button>
         <div v-if="passoGuida" class="f3-guida" :class="{ su: guidaInAlto }"><Guida :passo="passoGuida" /></div>
         <button v-if="cameraLibera" class="f3-centra" data-f3="centra" @click="mondo.tornaAllEroe()">⌖ Torna {{ nomeDelContadino(abito, 'al') }}</button>
 
-        <BarraAzioni v-if="!strumento && !trascinando" :modo="modo" :seme="COLTURE[seme].emoji" :da-fare="foto.daFare"
-                     @modo="impostaModo" @semina="apriSemina" @costruisci="apriCostruisci()" :da-costruire="foto.daCostruire" :festa="festa ? festa.icona : ''" />
+        <BarraAzioni v-if="!strumento && !trascinando" @costruisci="apriCostruisci()" :da-costruire="foto.daCostruire" :festa="festa ? festa.icona : ''" />
         <BarraStrade v-if="strumento" :strumento="strumento" :testo="avvisoTesto" :pennello="pennello" :livello="foto.livello" @strumento="scegliStrumento" @pennello="scegliPennello" @chiusa="stradaChiusa" @fatto="finisciStrumento" />
 
         <!-- un pezzo sollevato tenendo premuto, o il fantasma del menu che aspetta un posto: si rilascia sulla mappa o su questa fascia -->
@@ -801,36 +796,51 @@ onBeforeUnmount(() => {
         <div v-if="trascinando && trascinando.su" class="f3-trascinato" :style="{ transform: `translate(${trascinando.x}px, ${trascinando.y - 56}px) translate(-50%, -50%)` }">{{ trascinando.emoji }}</div>
 
         <CostruisciQui v-if="costruisciQui" :schede="schede" :messaggio="costruisciQui.msg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta" :festa="festa" @scegli="sceglieCarta" @chiudi="chiudiCostruisci" />
-        <SceltaSeme v-if="semiAperto" :seme="seme" :livello="foto.livello" :scorte="scorteSeme" @scegli="scegliSeme" @chiudi="semiAperto = false" />
+        <Attrezzi v-if="attrezzi" :key="attrezzi.tipo + attrezzi.id" v-bind="attrezzi" :livello="foto.livello" :scorta="k => motore.scortaDi(k)" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
+                  @prendi="k => mondo.attrezzi.prendi(k)" @passa="(x, y) => mondo.attrezzi.passa(x, y)" @lascia="mondo.attrezzi.lascia()" @metti="k => mondo.attrezzi.metti(k)" />
         <Macchina v-if="macchina" :key="macchina.tipo" v-bind="macchina" :messaggio="macchinaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta" @prepara="prepara" @compra="compraPosto" @ritira="ritira" @chiudi="macchinaAperta = null"
                   :consiglio="macchinaCons" @consiglio="facciConsiglio" />
         <Bacheca v-if="bancoAperto" v-bind="{ aperto: banco.aperto, perche: banco.perche, ordini: banco.ordini, traguardo: traguardoOrdini }" :messaggio="bancoMsg" :consiglio="bancoCons" @consiglio="facciConsiglio"
                @consegna="consegna" @cambia="cambiaOrdine" @chiudi="bancoAperto = false" />
         <Mongolfiera v-if="nave" v-bind="{ nave: mongolfiera, traguardo: traguardoNave, livelloIngresso: LIVELLO_MONGOLFIERA }" :messaggio="naveMsg" :consiglio="naveCons" @consiglio="facciConsiglio"
                      @carica="caricaCassa" @parti="partiMongolfiera" @chiudi="nave = false" />
-        <Magazzino v-if="magazzino" :vista="magazzino" :messaggio="magazzinoMsg" @ingrandisci="piuPosto" @chiudi="magazzinoAperto = null" />
-        <Bottega v-if="bottega" :bottega="bottega" :messaggio="bottegaMsg" :consiglio="bottegaCons" @consiglio="facciConsiglio" @consegna="consegnaBottega" @rifiuta="rifiutaBottega" @chiudi="bottegaAperta = null" />
-        <Inventario v-if="inventarioAperto && inventario" :schede="inventario" :magazzini="magazzini" @magazzino="vaiAlMagazzino" @albero="apriAlbero" @chiudi="chiudiInventario" />
-        <Guardaroba v-if="guardarobaAperto" :abito="abito" :livello="foto.livello" v-bind="guardarobaVista" :stagione="stagione || ''" :messaggio="abitoMsg" :vestiti="vestiti" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
-                    @indossa="indossaContadino" @aspetto="cambiaAspetto" @salva-set="salvaVestito" @rinomina-set="rinominaVestito" @togli-set="togliVestito" @chiudi="guardarobaAperto = false" />
+        <Magazzino v-if="magazzino" :vista="magazzino" :messaggio="magazzinoMsg" @ingrandisci="piuPosto" @albero="apriAlbero" @chiudi="magazzinoAperto = null" />
  <Albero v-if="albero" :albero="albero" @fai="facciConsiglio" @chiudi="chiudiAlbero" />
  <Consiglio v-if="consiglio" :consiglio="consiglio" @fai="facciConsiglio" @chiudi="consiglio = null" />
         <Livelli v-if="livelliAperto" v-bind="livelli" @chiudi="livelliAperto = false" />
         <Bestia v-if="bestiaVista" :key="bestiaVista.id" v-bind="bestiaVista" :messaggio="bestiaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
-                @nutri="nutriBestia" @coccola="coccolaBestia" @carezza="carezzaBestia" @sposta="spostaBestia" @negozio="apriAddobbi" @nome="battesimoDi = bestiaAperta; bestiaAperta = null" @chiudi="bestiaAperta = null" />
+                @sposta="spostaBestia" @negozio="apriAddobbi" @nome="battesimoDi = bestiaAperta; bestiaAperta = null" @chiudi="bestiaAperta = null" />
         <Addobbi v-if="addobbiVista" :key="'add-' + addobbiVista.id" v-bind="addobbiVista" :messaggio="bestiaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
                  @veste="vestiBestia" @spoglia="spogliaBestia" @salva-set="x => setBestia(id => motore.cura.salvaVestito(id, x.posto, x.nome))"
                  @rinomina-set="x => setBestia(id => motore.cura.rinominaVestito(id, x.posto, x.nome))" @togli-set="p => setBestia(id => motore.cura.togliVestito(id, p))" @chiudi="chiudiAddobbi" />
         <NomeFattoria v-if="nomeAperto" :nome="foto.nome" :predefinito="predefinitoFattoria" @scegli="daiNomeAllaFattoria" @chiudi="nomeAperto = false" />
+        <div v-if="bagno" class="f3-bagno" data-f3="bagno" :data-fatto="Math.round(bagno.fatto * 100)">Strofina!<i><u :style="{ width: Math.round(bagno.fatto * 100) + '%' }"></u></i><button type="button" data-chiudi aria-label="lascia stare" @click="lasciaBagno">✕</button></div>
         <Battesimo v-if="battesimoDi" :id="battesimoDi" :scelto="motore.cura.nomeScelto(battesimoDi)" @scegli="daiIlNome" @chiudi="battesimoDi = null" />
-        <Opzioni v-if="opzioniAperte" :q="q" :stat="stat" :conta="conta" :rapporto="rapporto" @cambia="cambiaOpzioni"
-                 @stress="(t, n) => { mondo.stress(t, n); ui.cambio() }" @rapporto="creaRapporto" @ridotto="v => opzioniRidotte = v"
-                 @chiudi="opzioniAperte = false; opzioniRidotte = false" />
-        <Dialogo v-if="dialogo" v-bind="{ titolo: dialogo.titolo, testo: dialogo.testo, bottoni: dialogo.bottoni }" @scelta="rispostaDialogo" />
         <Mappa v-if="mappaAperta" :elenco="elencoVicini" :messaggio="mappaMsg" @vai="visite.vai" @carretto="visite.apriCarretto" @chiudi="mappaAperta = false" />
         <Carretto v-if="carretto" :passo="carretto.passo" :dato="carretto.dato" :quanti="DAI_CARRETTO" :dai="righeCarretto.dai" :offre="righeCarretto.offre" :messaggio="carretto.msg"
                   @dai="visite.carrettoDai" @ricevi="visite.carrettoRicevi" @indietro="visite.carrettoIndietro" @chiudi="visite.chiudiCarretto" />
         </div>
+
+        <!-- fuori dal HUD: la stessa domanda serve anche dentro casa, per una stanza nuova -->
+        <Dialogo v-if="dialogo" v-bind="{ titolo: dialogo.titolo, testo: dialogo.testo, bottoni: dialogo.bottoni }" @scelta="rispostaDialogo" />
+
+        <!-- dentro la casa: la sua tela e i suoi fogli, mentre la fattoria aspetta ferma (docs/fattoria3d/casa.md) -->
+        <template v-if="inCasa">
+          <canvas :key="chiaveCasa" ref="telaCasa" class="f3-int-tela" data-f3="tela-casa"></canvas>
+          <div ref="sopraCasa" class="f3-int-sopra"></div>
+          <Casa :casa="interni" :monete="guardarobaVista.monete" @guardaroba="interni.chiudi(); guardarobaAperto = true" />
+        </template>
+        <!-- dentro una bottega: la sala coi clienti (docs/fattoria3d/botteghe.md, «Dentro») -->
+        <template v-if="tipoSala">
+          <canvas :key="chiaveSala" ref="telaSala" class="f3-int-tela" data-f3="tela-bottega"></canvas>
+          <div ref="sopraSala" class="f3-int-sopra"></div>
+          <BottegaDentro :bottega="vistaSala" :fumetti="fumettiSala" @esci="sala.esci()" @elenco="ui.apriBottega(tipoSala)" @servi="sala.tocca" />
+        </template>
+        <!-- il foglio di una bottega: dal tocco fuori (prima) e dentro la sala -->
+        <Bottega v-if="bottega" :bottega="bottega" :messaggio="bottegaMsg" :consiglio="bottegaCons" @consiglio="facciConsiglio" @consegna="consegnaBottega" @rifiuta="rifiutaBottega" @chiudi="bottegaAperta = null" />
+        <!-- il guardaroba si apre fuori (👕) e dentro casa (l'armadio) -->
+        <Guardaroba v-if="guardarobaAperto" :abito="abito" :livello="foto.livello" v-bind="guardarobaVista" :stagione="stagione || ''" :messaggio="abitoMsg" :vestiti="vestiti" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
+                    @indossa="indossaContadino" @aspetto="cambiaAspetto" @salva-set="salvaVestito" @rinomina-set="rinominaVestito" @togli-set="togliVestito" @chiudi="guardarobaAperto = false" />
 
         <!-- la visita a un vicino: la sua tela e i suoi fogli, mentre la fattoria di casa aspetta ferma -->
         <template v-if="inVisita">

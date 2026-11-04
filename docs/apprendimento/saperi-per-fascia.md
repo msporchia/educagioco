@@ -105,7 +105,7 @@ mazzo, e `classiAmmesse` riapre tutto se l'elenco si svuota.
 ## `quarta` (9,5 anni, «quarta o quinta»)
 
 Spegne `decimali`: la virgola come numero (confronto, valore delle cifre,
-ordine, arrotondamento) si fa a scuola a metà quarta, non prima (Melody, 11/2026:
+ordine, arrotondamento) si fa a scuola a metà quarta, non prima (11/2026:
 una domanda su un concetto mai visto è muta). Per il resto è verificato: a 9,5
 anni la finestra arriva a 94, e quello che sta a 95 (tempi composti, passato
 remoto, condizionale, congiuntivo, imperativo) nasce già spento

@@ -67,10 +67,10 @@ Si chiede **al primo avvio e a ogni bambino aggiunto**: `src/components/Benvenut
 è un wizard solo per i due casi, e finisce **entrando in partita col bambino
 nuovo**. Al primo avvio non si chiede il codice: nessuno l'ha ancora scelto.
 
-**La manopola nasce sui quattro anni**, in fondo alla scala: chi aggiunge un
-bambino aggiunge quasi sempre il più piccolo di casa, e premere senza leggere
-sbaglia **dalla parte giusta** — la casa più piccola e la taratura più
-prudente. Un valore di partenza a metà scala sbagliava nell'altro verso.
+**Lì la manopola non c'è**: si chiedono mese e anno di nascita, obbligatori, e
+l'età ne esce da sola (`etaDiClasse`), con la riga degli amici sotto. Il quadro
+coi giochi che si accendono e si spengono a quel punto era troppo; la manopola
+resta nelle impostazioni, per tarare sopra o sotto la classe.
 
 Nei test: `[data-manopola]`, `[data-eta="su"|"giu"]`, `[data-eta-ora]`,
 `[data-conferma="eta"]` col suo `[data-perde]`,

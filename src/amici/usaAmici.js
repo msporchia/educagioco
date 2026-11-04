@@ -30,7 +30,7 @@ export function usaAmici(chiave, { percorso = '' } = {}) {
     amici,
     tappe,                                    // il nodo della sfida senza fine (0: il gioco, o il percorso, ha solo record)
     qui,
-    // «Leonardo è 2 tappe più avanti di te.»: il più vicino fra quelli avanti; chi è dietro non si dice
+    // «nome è 2 tappe più avanti di te.»: il più vicino fra quelli avanti; chi è dietro non si dice
     davanti: computed(() => (tappe ? davantiInParole(amici.value, qui.value, { ultimo: tappe, dove }) : '')),
     // chi è arrivato a quel nodo della mappa
     sullaTappa: nodo => amici.value.filter(a => a.tappa === nodo),
@@ -38,7 +38,7 @@ export function usaAmici(chiave, { percorso = '' } = {}) {
     allaFine: (sfida = null) => (tappe ? conRecord(sfida).filter(a => a.tappa >= tappe && !a.record) : []),
     // i record degli amici in quella sfida, dal più alto, in parole
     record: (sfida = null) => recordDegliAmici(conRecord(sfida), misura(sfida)),
-    // a fine partita: «Hai superato Leonardo (3:10)!» o quanto è mancato al prossimo; `prima` è il record di prima
+    // a fine partita: «Hai superato nome (3:10)!» o quanto è mancato al prossimo; `prima` è il record di prima
     contro: (valore, prima, sfida = null) => controAmiciInParole(controAmici(valore, prima, conRecord(sfida)), misura(sfida)),
   })
 }

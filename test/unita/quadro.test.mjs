@@ -612,7 +612,7 @@ for (const eta of [6, 8, 10]) {
      a otto anni la partenza spegne le divisioni, e la riga di contesto
      del castello lo deve dire lì dov'è — «senza le divisioni» — anche se
      la riga da toccare sta in fondo, fra quelle tolte. Il guaio di
-     Leonardo non era non poterle cambiare: era non sapere che erano
+     Lorenzo non era non poterle cambiare: era non sapere che erano
      spente. */
   const torri = quadroDi({ eta: 8, ...eccezioniPerEta(8) }, { classi })
     .giochi.find(g => g.chiave === 'torri')

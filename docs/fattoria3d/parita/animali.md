@@ -35,15 +35,15 @@ zucca e la patata un'uscita. Livelli, prezzi e tempi sono provvisori (D2, D9) e 
 
 | id | bestia | 2D (🪙 / liv) | 3D | pri |
 |---|---|---|---|---|
-| A4a | bobtail | 90/3 | 🟡 **tolto perché in 3D c'è già Watson, gratis, dal livello 1** (chi lo aveva lo ritrova) | – |
+| A4a | bobtail | 90/3 | ✅ **è Watson**, adottato 90/3 come il bobtail (chi lo aveva lo ritrova; [../adozioni.md](../adozioni.md)) | – |
 | A4b | beagle | 90/15 | ✅ `beagle` 90/15, premio 6 ([../bestie-di-casa.md](../bestie-di-casa.md)) | – |
-| A4c | gatto bianco e nero | 75/10 | 🟡 **tolto perché in 3D c'è già Sherlock, gratis, livello 2** | – |
-| A4d | gatto nero | 75/19 | 🟡 **tolto perché in 3D c'è già Pepe, gratis** (livello 19, quello della 2D) | – |
+| A4c | gatto bianco e nero | 75/10 | ✅ **è Sherlock**, adottato 75/10 | – |
+| A4d | gatto nero | 75/19 | ✅ **è Pepe**, adottato 75/19 (e Golia, un altro gatto nero, 75/14) | – |
 | A4e | gatto rosso (`gatto-giallo`) | 75/35 | ✅ `gatto_rosso` 75/35, premio 5, mantello `rosso` (Irene è una calico, un'altra bestia) | – |
 | A4f | coniglio | 85/12 | ✅ `coniglio` 85/12, premio 6 | – |
 | A4g | pappagallo | 120/49 | ✅ `pappagallo` 120/49, premio 8 | – |
 
-La 2D comprava le bestie (🪙635 in tutto, il «money pit» piccolo) e le **curava**; la 3D ha le stesse quattro che non regala (🪙370, stessi prezzi e livelli) e le cura allo stesso modo; **Watson, Sherlock, Irene e Pepe restano gratis ma si curano anche loro** (bisogni, nome, premio del bobtail e dei gatti della 2D; si tiene premuto su di loro: [../bestie-di-casa.md](../bestie-di-casa.md)). ✳ i compagni 3D (richiamo, feste di Watson, carezze, incontro cane-gatto) sono più ricchi, ma non spendono monete e non si
+La 2D comprava le bestie (🪙635 in tutto, il «money pit» piccolo) e le **curava**; la 3D ha le stesse quattro che non regala (🪙370, stessi prezzi e livelli) e le cura allo stesso modo; **Watson, Sherlock, Irene, Golia e Pepe non sono più un regalo (3/11/2026: si adottano, [../adozioni.md](../adozioni.md)) e si curano anche loro** (bisogni, nome, premio del bobtail e dei gatti della 2D; si tiene premuto su di loro: [../bestie-di-casa.md](../bestie-di-casa.md)). ✳ i compagni 3D (richiamo, feste di Watson, carezze, incontro cane-gatto) sono più ricchi, ma non spendono monete e non si
 salvano (`VERSIONE_STATO` intatto, ripartono davanti alla casa).
 
 | id | cosa | 2D | 3D | pri |

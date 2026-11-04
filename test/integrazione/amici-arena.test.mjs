@@ -27,17 +27,17 @@ const pallini = al => page.locator(`[data-amici-qui][data-al="${al}"] [data-pall
 /* ══════════ 1. a metà della campagna ══════════ */
 await semina(page, { settings: { eta: 9, sperimentali: true }, campagne: { arena: { tappa: 2, libera: false, stelle: stelle(2), cfg: {} } } })
 await seminaAmici(page, [
-  amico('a', 'leonardo1', 'Leonardo', 0, 6),
-  amico('b', 'melody001', 'Melody', 3, 2),
+  amico('a', 'lorenzo01', 'Lorenzo', 0, 6),
+  amico('b', 'marta0001', 'Marta', 3, 2),
   amico('d', 'ugo000001', 'Ugo', 1, 6),
   amico('c', null, '', 0, 8),                               // mai incontrato online: senza nome non si vede
 ])
 await allaMappa()
 uguale('il segno del bambino è sulla tappa da fare', await page.locator('.ar-tappa.ar-adesso').getAttribute('data-tappa'), '2')
-uguale('in cima chi è da raggiungere', await testo('[data-amico-davanti]'), 'Leonardo è 4 tappe più avanti di te.')
+uguale('in cima chi è da raggiungere', await testo('[data-amico-davanti]'), 'Lorenzo è 4 tappe più avanti di te.')
 uguale('sulla tappa 6 due pallini', await pallini(6), 2)
-uguale('sul nome: Leonardo e Ugo', await testo('[data-amici-qui][data-al="6"]'), 'LULeonardo e Ugo sono qui')
-uguale('sulla tappa del bambino, Melody', await testo('[data-amici-qui][data-al="2"]'), 'MMelody è qui')
+uguale('sul nome: Lorenzo e Ugo', await testo('[data-amici-qui][data-al="6"]'), 'LULorenzo e Ugo sono qui')
+uguale('sulla tappa del bambino, Marta', await testo('[data-amici-qui][data-al="2"]'), 'MMarta è qui')
 uguale('tre pallini in tutto, non quello senza nome', await page.locator('[data-amici-qui] [data-pallino-amico]').count(), 3)
 uguale('le altre tappe non hanno la riga', await page.locator('[data-amici-qui]').count(), 2)
 uguale('nessun record: la battaglia infinita non ne ha', await page.locator('[data-record-amico], [data-record-amici]').count(), 0)
@@ -46,11 +46,11 @@ await scatto(page, 'amici-arena-mappa')
 
 /* ══════════ 2. uno è già alla battaglia infinita, chi non l'ha aperta ancora ci vede il pallino ══════════ */
 await esci()
-await seminaAmici(page, [amico('a', 'leonardo1', 'Leonardo', 0, QUANTE_TAPPE)])
+await seminaAmici(page, [amico('a', 'lorenzo01', 'Lorenzo', 0, QUANTE_TAPPE)])
 await allaMappa()
-uguale('in cima chi è alla battaglia infinita', await testo('[data-amico-davanti]'), 'Leonardo è già alla battaglia infinita.')
+uguale('in cima chi è alla battaglia infinita', await testo('[data-amico-davanti]'), 'Lorenzo è già alla battaglia infinita.')
 uguale('e ha il pallino sulla battaglia infinita', await pallini('infinita'), 1)
-uguale('e il nome', await testo('[data-infinita] [data-amici-qui]'), 'LLeonardo è qui')
+uguale('e il nome', await testo('[data-infinita] [data-amici-qui]'), 'LLorenzo è qui')
 uguale('sulle tappe non c\'è nessuno', await page.locator('[data-tappa] [data-amici-qui]').count(), 0)
 await scatto(page, 'amici-arena-infinita')
 
@@ -58,15 +58,15 @@ await scatto(page, 'amici-arena-infinita')
 await esci()
 await semina(page, { settings: { eta: 9, sperimentali: true }, campagne: { arena: { tappa: QUANTE_TAPPE, libera: true, stelle: stelle(QUANTE_TAPPE), cfg: {} } } })
 await seminaAmici(page, [
-  amico('a', 'leonardo1', 'Leonardo', 1, QUANTE_TAPPE),
-  amico('b', 'melody001', 'Melody', 0, QUANTE_TAPPE - 1),
+  amico('a', 'lorenzo01', 'Lorenzo', 1, QUANTE_TAPPE),
+  amico('b', 'marta0001', 'Marta', 0, QUANTE_TAPPE - 1),
   amico('d', 'ugo000001', 'Ugo', 2, 0),                     // non ha fatto niente: non c'è
 ])
 await allaMappa()
 uguale('nessuno è più avanti di chi ha finito', await page.locator('[data-amico-davanti]').count(), 0)
 uguale('il segno del bambino è sulla battaglia infinita, aperta', await page.locator('[data-infinita]:not([disabled])').count(), 1)
-uguale('Leonardo è con lui sulla battaglia infinita', await testo('[data-infinita] [data-amici-qui]'), 'LLeonardo è qui')
-uguale('Melody è sull\'ultima tappa', await pallini(QUANTE_TAPPE - 1), 1)
+uguale('Lorenzo è con lui sulla battaglia infinita', await testo('[data-infinita] [data-amici-qui]'), 'LLorenzo è qui')
+uguale('Marta è sull\'ultima tappa', await pallini(QUANTE_TAPPE - 1), 1)
 uguale('due pallini in tutto', await page.locator('[data-amici-qui] [data-pallino-amico]').count(), 2)
 
 controlla('nessun errore, anche col servizio irraggiungibile', veri().length === 0, veri().join(' | '))

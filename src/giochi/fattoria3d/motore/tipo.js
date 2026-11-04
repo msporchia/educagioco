@@ -7,6 +7,7 @@ import { COLTURE } from '../dati/colture.js'
 import { RICETTE, TIPI_DI_MACCHINA } from '../dati/ricette.js'
 import { lottoDaChiave } from '../dati/mondo.js'
 import { sogliaDi, livelloDelPezzo, livelloDellaColtura, livelloDellaRicetta } from '../dati/livelli.js'
+import { LIVELLO_PESCHIERA } from '../dati/parita2d.js'
 
 export const LIVELLI_TIPO = [3, 10, 20, 30, 50, 70]          // gli stessi della 2D (docs/fattoria3d/livelli.md)
 export const LIVELLO_MAX = 99
@@ -66,6 +67,7 @@ export function fattoriaTipo(livello, { ora = Date.now() } = {}) {
   }
   for (const tipo of ['bancarella', 'bacheca', 'trattore', 'porticciolo', ...DECORI, 'stagno', 'laghetto']) {
     if (!PEZZI[tipo] || livelloDelPezzo(tipo) > liv) continue
+    if (['porticciolo', 'stagno', 'laghetto'].includes(tipo) && liv < LIVELLO_PESCHIERA) continue      // la riva è lontana e l'acqua è grande: per farci posto comprerebbe mezzo mondo
     for (let k = 0; k < quanti(tipo, liv); k++) metti(tipo)
   }
 
@@ -93,6 +95,7 @@ export function fattoriaTipo(livello, { ora = Date.now() } = {}) {
   f.tick()
 
   f.s.esperienza = sogliaDi(liv)           // costruire ha speso, e speso fa salire: il livello resta quello chiesto
+  for (const k of Object.keys(f.s.magazzino)) if (livelloDelPezzo(k) > liv) delete f.s.magazzino[k]      // e il magazzino di un livello dopo, arrivato da solo, se ne va
   f.eventi = []
   f.ora = Date.now
   f.borsa = null                           // la borsa vera la mette il chiamante

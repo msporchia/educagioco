@@ -139,12 +139,12 @@ await attendi(page, 700)
   controlla('pozioni: il banco ha il suo tasto', await salta.isVisible())
   await salta.click()
   await attendi(page, 300)
-  uguale('pozioni: la dose è fatta', await page.evaluate(() => window.__poz.partita.value.dosi.length), 1)
-  controlla('pozioni: la dose vale monete', await page.evaluate(() => window.__poz.partita.value.monete) > 0)
+  uguale('pozioni: l\'ingrediente è fatto', await page.evaluate(() => window.__poz.bottega.value.saltate), 1)
+  controlla('pozioni: la dose vale monete', await page.evaluate(() => window.__poz.bottega.value.monete) > 0)
   uguale('pozioni: ripasso e contatori intatti', await foto(), prima)
   controlla('pozioni: le monete sono salite', await soldi() > soldiPrima)
   // saltando tutto la tappa si chiude
-  for (let i = 0; i < 60 && !(await page.locator('[data-fine="tappa"]').count()); i++) {
+  for (let i = 0; i < 120 && !(await page.locator('[data-fine="tappa"]').count()); i++) {
     await attendi(page, 500)
     if (await salta.count()) await salta.click().catch(() => {})
   }

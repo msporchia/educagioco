@@ -37,6 +37,7 @@ export default {
   amici: { percorsi: {
     coniglio: { tappe: STRADE.coniglio.length, dove: 'al sentiero del coniglio', tappa: p => postoSullaStrada(avanzamento(p), 'coniglio') },
     cane: { tappe: STRADE.cane.length, dove: 'al sentiero del cane', tappa: p => postoSullaStrada(avanzamento(p), 'cane') },
+    guerriero: { tappe: STRADE.guerriero.length, dove: 'dalla principessa', tappa: p => postoSullaStrada(avanzamento(p), 'guerriero') },
   } },
 
   piccoli: true,
@@ -57,7 +58,7 @@ export default {
     const sentiero = record ? ` · sentiero ${record}` : ''  // vedi docs/passo-passo/sentiero.md
     // il numero sulla sua strada, come sulla mappa
     const di = STRADE.animale[i]
-    return `tappa ${STRADE.numero[i]} di ${STRADE[di].length}${di === 'cane' ? ' col cane' : ''} · ${CAMPAGNA[i].nome}${sentiero}${coda}`
+    return `tappa ${STRADE.numero[i]} di ${STRADE[di].length}${di === 'cane' ? ' col cane' : di === 'guerriero' ? ' col guerriero' : ''} · ${CAMPAGNA[i].nome}${sentiero}${coda}`
   },
 
   /* i traguardi «di prima» contano solo i primi cinque gradini (fino alle

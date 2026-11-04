@@ -1,11 +1,11 @@
-/* Le carte del menu «Costruisci qui» (viste/CostruisciQui.vue): cosa si offre in ogni scheda, ordinato per livello, tutto dai dati
+/* Le carte del menu «Compra» (viste/CostruisciQui.vue): cosa si offre in ogni scheda, ordinato per livello, tutto dai dati
    (`PEZZI` e `EDIFICI` di catalogo.js, ognuno con la sua `categoria`). Puro: niente Vue, niente disegno; la vista le mostra, il
    coordinatore dice cosa farne. Il disegno di una carta è il modello 3D fotografato (scena3d/anteprime.js); finché non c'è resta
    l'emoji, su una piastrella del colore della scheda. Vedi docs/fattoria3d/scena.md. */
 import { PEZZI, EDIFICI, CATEGORIE } from './catalogo.js'
 import { livelloDelPezzo } from './livelli.js'
 import { COSTI } from './regole.js'
-import { BESTIE } from './bestie.js'
+import { adottabili, prezzoAdozione } from './bestie.js'
 import { FINESTRE } from './stagioni3d.js'
 
 /** Gli strumenti del pennello, nella scheda delle strade: non sono pezzi, scegliendoli si disegna col dito. */
@@ -17,6 +17,7 @@ export const STRUMENTI = {
 /**
  * Le carte di una scheda. `stato`: { livello, prezzoPezzo(tipo), nelMagazzino(tipo), posseduti: { edificio: true } }.
  * `stato.stagione`: la festa in corso (dati/stagioni3d.js) o niente: le carte con `stagione` si vedono solo allora.
+ * `stato.nomeBestia(id)`: come si chiama un animale tuo; quello in vendita dice la razza (docs/fattoria3d/adozioni.md).
  * Ogni carta: { id, genere: 'pezzo' | 'edificio' | 'strumento' | 'bestia', nome, emoji, etichetta, liv, bloccata, segnala }. Un edificio già
  * in mappa non si offre (uno per tipo); i pezzi e gli edifici già nel magazzino sì (`📦 ×N`, si mettono senza pagare). `segnala` è il
  * «!»: un edificio che il livello ha aperto e non è ancora in mappa (mai per un pezzo, mai per una carta chiusa).
@@ -24,13 +25,13 @@ export const STRUMENTI = {
 export function carteDi(categoria, stato) {
   const carte = []
   for (const [id, p] of Object.entries(PEZZI)) {
-    if (p.categoria !== categoria) continue
+    if (p.categoria !== categoria || p.dono) continue                          // ciotola e tinozza arrivano con gli animali: non si comprano
     const mag = stato.nelMagazzino(id), liv = livelloDelPezzo(id)
     if (p.magazzino && !mag) continue                                          // un magazzino non si compra dal menu: c'è solo se ne resta uno da mettere
     if (p.fiera && !mag) continue                                              // la fiera non si compra: si vince dalla mongolfiera, e la carta c'è solo se ce l'hai
     if (p.stagione && p.stagione !== stato.stagione && !mag) continue          // una festa: si offre solo in stagione (ciò che è nel magazzino si rimette sempre)
     carte.push({ id, genere: 'pezzo', nome: p.nome, emoji: p.emoji,
-      etichetta: mag ? '📦 ×' + mag : '🪙 ' + stato.prezzoPezzo(id), liv, bloccata: liv > stato.livello, segnala: !!(p.magazzino && mag) })      // un magazzino da mettere ha il «!»
+      etichetta: mag ? '📦 ×' + mag : '🪙 ' + stato.prezzoPezzo(id), liv, bloccata: liv > stato.livello, segnala: !!(p.magazzino && mag) || (id === 'bacheca' && !!stato.serveBacheca) })      // un magazzino da mettere ha il «!», e la bacheca finché non c'è
   }
   for (const [id, e] of Object.entries(EDIFICI)) {
     if (e.categoria !== categoria || stato.posseduti[id]) continue
@@ -38,10 +39,10 @@ export function carteDi(categoria, stato) {
     carte.push({ id, genere: 'edificio', nome: e.nome, emoji: e.emoji,
       etichetta: mag ? '📦 ×' + mag : '🪙 ' + e.prezzo, liv: e.liv, bloccata: e.liv > stato.livello, segnala: e.liv <= stato.livello })
   }
-  if (categoria === 'animali') {           // le bestie di casa (G6): si prendono qui, non si mettono (docs/fattoria3d/bestie-di-casa.md); `stato.bestieTue`: gli id di quelle che hai
-    for (const [id, b] of Object.entries(BESTIE)) {
-      const mia = (stato.bestieTue || []).includes(id)
-      carte.push({ id: 'bestia:' + id, genere: 'bestia', bestia: id, nome: b.nome, emoji: b.emoji, etichetta: mia ? '🐾 è tua' : '🪙 ' + b.prezzo, liv: b.liv, bloccata: !mia && b.liv > stato.livello, segnala: false })
+  if (categoria === 'animali') {           // gli animali di casa: si adottano qui, non si mettono (docs/fattoria3d/adozioni.md); `stato.bestieTue`: gli id di quelli che hai
+    for (const b of adottabili()) {
+      const id = b.id, mia = (stato.bestieTue || []).includes(id)
+      carte.push({ id: 'bestia:' + id, genere: 'bestia', bestia: id, nome: (mia && stato.nomeBestia && stato.nomeBestia(id)) || b.razza, emoji: b.emoji, etichetta: mia ? '🐾 è tua' : '🪙 ' + prezzoAdozione(b.prezzo, (stato.bestieTue || []).length), liv: b.liv, bloccata: !mia && b.liv > stato.livello, segnala: false })
     }
   }
   carte.sort((a, b) => (b.segnala ? 1 : 0) - (a.segnala ? 1 : 0) || a.liv - b.liv || a.nome.localeCompare(b.nome, 'it'))      // chi ha il «!» sta in cima
@@ -67,7 +68,7 @@ export function festaDaScoprire(stato) {
   return { stagione: stato.stagione, icona: f.icona, scheda: PEZZI[aperti[0]].categoria, ids }
 }
 
-/** Le schede che hanno una carta con il «!» (una scheda sola per ora: Edifici), per il pallino sulla linguetta e sul tasto 🏗️. */
+/** Le schede che hanno una carta con il «!» (una scheda sola per ora: Edifici), per il pallino sulla linguetta e sul tasto 🛒. */
 export const schedeSegnalate = schede => Object.keys(schede).filter(c => schede[c].some(x => x.segnala))
 
 /** Tutte le schede, nell'ordine di `CATEGORIE`: { campi: [carte], … }. */

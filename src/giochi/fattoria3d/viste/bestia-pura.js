@@ -31,6 +31,14 @@ export function dettoCura(r, { monete = 0 } = {}) {
   }
 }
 
+/** Dove si cura, secondo cosa gli manca: il foglio non ha i gesti, stanno sul prato. */
+export function cosaFare(b, nome) {
+  if (b.pancia < 0.5) return `${nome} ha fame: la sua ciotola è sul prato.`
+  if (b.pelo < 0.8) return `${nome} è sporco: portalo alla tinozza.`
+  if (b.gioco < 0.55) return `${nome} vuole giocare: toccalo sul prato.`
+  return `${nome} è a posto. Per giocarci, toccalo sul prato.`
+}
+
 /** Cosa dice un gesto riuscito: il premio, se c'è, è esperienza. */
 export const dettoEsito = (r, nome) => r && r.premio ? `${nome} sta benissimo! +${r.premio.xp} ⭐` : `${nome} è contento!`
 

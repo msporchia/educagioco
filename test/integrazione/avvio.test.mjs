@@ -83,75 +83,32 @@ uguale('il tasto è spento finché non si scrive niente',
 await nuovo.fill('.nome', 'Pippo')
 await nuovo.click('.via')
 
-/* ── il secondo passo: quanti anni ha ──
+/* ── il secondo passo: mese e anno di nascita ──
    Non è una domanda per il bambino ma per il grande che gli sta
-   installando il gioco, ed è quella che prima non si faceva a nessuno:
-   il primo profilo nasceva con tutto acceso, divisioni in colonna
-   comprese, anche a cinque anni. Si controlla che non si possa saltare —
-   la manopola nasce senza valore e il tasto è spento finché non si
-   muove — e soprattutto che la scelta MORDA: un'età che non spegne
-   niente è indistinguibile da nessuna scelta, e non se ne accorgerebbe
-   nessuno fino al primo bambino davanti alla carta sbagliata.
+   installando il gioco, e non si salta: l'età esce da lì. Si controlla
+   che la scelta MORDA: un'età che non spegne niente è indistinguibile da
+   nessuna scelta, e non se ne accorgerebbe nessuno fino al primo bambino
+   davanti alla carta sbagliata. */
+await nuovo.waitForSelector('[data-nascita-domanda]', { timeout: 8000 })
+uguale('il modulo non mostra più la manopola', await nuovo.locator('[data-manopola]').count(), 0)
+uguale('senza la data non si entra', await nuovo.isDisabled('[data-azione="si-gioca"]'), true)
 
-   E che la manopola **dica cosa fa**: il riassunto compare solo dopo
-   averla mossa, ed è tutto il motivo per cui ha preso il posto delle
-   quattro carte. Un riassunto che non arriva è la manopola muta di
-   prima, senza che niente sembri rotto. */
-await nuovo.waitForSelector('[data-manopola]', { timeout: 8000 })
-controlla('poi chiede quanti anni ha', await nuovo.isVisible('[data-manopola]'))
-/* ── SI PARTE DA QUATTRO ANNI ──
-   Non da vuoto e non da un valore in mezzo: chi apre questa schermata
-   sta quasi sempre aggiungendo il più piccolo di casa. Premere «Si
-   gioca!» senza toccare niente sbaglia così **dalla parte giusta** —
-   la casa più piccola e la taratura più prudente — mentre un valore in
-   mezzo darebbe a un bambino di quattro anni la home di una terza. */
-uguale('la manopola nasce sui quattro anni',
-  await nuovo.evaluate(() => document.querySelector('[data-eta-ora]').textContent.trim()),
-  '4 anni')
-controlla('e il quadro di quell\'età si vede già',
-  await nuovo.isVisible('[data-manopola] .quadro'))
-uguale('più in giù non si va', await nuovo.isDisabled('[data-eta="giu"]'), true)
-
-/* ── IL ▶ DI UN PEZZO DI SCUOLA RESTA NEL SUO FILONE ──
-   Un blocco si apre sui pezzi di scuola, un pezzo sulle sue domande, e
-   il ▶ del pezzo le scorre **tutte e sole quelle** — il contatore «1 di
-   4» è la prova che si sta scorrendo un giro e non pescando a caso.
-
-   Serve un test di browser perché il difetto che ripara non si vedeva
-   da nessun'altra parte: `Benvenuto.vue` non inoltrava `giro` a
-   `Prova.vue`, e il pannello ripiegava sul modo «pesca come in
-   partita». Nessun errore, nessuna riga in console: si partiva da «i
-   numeri e le quantità» e la domanda dopo era di logica. Un ripiego che
-   funziona è il modo più caro di rompersi. */
-for (let i = 0; i < 8; i++) await nuovo.click('[data-eta="su"]')
-await nuovo.click('[data-apri="medie"]')
-await nuovo.waitForSelector('[data-prova]', { timeout: 5000 })
-const pezzo = await nuovo.evaluate(() =>
-  document.querySelector('[data-apri="medie"] [data-prova]')?.dataset.prova)
-controlla('un blocco di domande si apre sui pezzi di scuola', !!pezzo, String(pezzo))
-await nuovo.click(`[data-prova="${pezzo}"]`)
-await nuovo.waitForSelector('.prova-palco', { timeout: 5000 })
-const conta = await nuovo.evaluate(() =>
-  document.querySelector('[data-conta]')?.textContent.trim() || '')
-controlla('il ▶ di un pezzo scorre le sue domande, col contatore',
-          /^\d+ di \d+$/.test(conta), conta || 'nessun contatore: sta pescando a caso')
-/* e scorrendo si resta dentro: il modulo in testa non cambia */
-const dove = async () => (await nuovo.evaluate(() =>
-  document.querySelector('.prova-testa')?.innerText || '')).split('\n')[1] || ''
-const primo = (await dove()).split('·')[0]
-await nuovo.click('.prova-altra')
-await nuovo.waitForTimeout(300)
-uguale('e la domanda dopo è dello stesso filone',
-       (await dove()).split('·')[0], primo)
-await nuovo.click('.prova-x')
-await nuovo.waitForTimeout(200)
-
-/* Si torna a 6,5, cioè «prima o seconda». */
-for (let i = 0; i < 3; i++) await nuovo.click('[data-eta="giu"]')
-uguale('la manopola dice gli anni a parole',
-  await nuovo.evaluate(() => document.querySelector('[data-eta-ora]').textContent.trim()),
-  '6 anni e mezzo')
-await nuovo.click('.via')
+const adesso = new Date()
+/* una data che deve ancora arrivare non fa partire nessuno, e lo dice */
+if (adesso.getMonth() < 11) {
+  await nuovo.selectOption('[data-nascita-mese]', '11')
+  await nuovo.selectOption('[data-nascita-anno]', String(adesso.getFullYear()))
+  await nuovo.waitForSelector('[data-nascita-futura]', { timeout: 3000 })
+  uguale('una data nel futuro non vale', await nuovo.isDisabled('[data-azione="si-gioca"]'), true)
+}
+/* sei anni di classe: si passa a settembre, quindi conta l'anno scolastico */
+const annoScolastico = adesso.getMonth() >= 8 ? adesso.getFullYear() : adesso.getFullYear() - 1
+await nuovo.selectOption('[data-nascita-mese]', String(adesso.getMonth()))
+await nuovo.selectOption('[data-nascita-anno]', String(annoScolastico - 6))
+await nuovo.waitForSelector('[data-nascita-eta]', { timeout: 3000 })
+controlla('con la data dice in che classe è', /prima elementare/.test(await nuovo.locator('[data-nascita-eta]').innerText()))
+await scatto(nuovo, 'benvenuto-data')
+await nuovo.click('[data-azione="si-gioca"]')
 await nuovo.waitForSelector('.carte', { timeout: 8000 })
 controlla('scritto il nome si entra nel gioco', await nuovo.isVisible('.carte'))
 
@@ -166,6 +123,8 @@ controlla('l\'età scelta spegne i giochi da grandi',
   !carteNuovo.includes('torri'), carteNuovo.join(','))
 controlla('e lascia quelli per i piccoli',
   carteNuovo.includes('conta'), carteNuovo.join(','))
+controlla('e lo spagnolo c\'è, come gli altri',
+  carteNuovo.includes('spagnolo'), carteNuovo.join(','))
 controlla('e l\'onboarding non torna più', !(await nuovo.isVisible('.benvenuto')))
 
 /* Il nome, non l'id. Chi si iscrive da oggi ha un id opaco (`g1`), e

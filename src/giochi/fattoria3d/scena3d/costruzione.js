@@ -1,4 +1,4 @@
-// Costruire: dal menu «Costruisci qui» un pezzo va sulla cella premuta (se ci sta si compra e si mette in un gesto; se no resta lì il
+// Costruire: dal menu «Compra» un pezzo va sulla cella premuta (se ci sta si compra e si mette in un gesto; se no resta lì il
 // fantasma, «parcheggiato», e il dito lo sistema); un pezzo già messo si riprende tenendolo premuto e si trascina. Al rilascio si
 // costruisce (e, se il pezzo non è ancora pagato, paga: un solo gesto); il fantasma mostra dove va, verde se ci sta e se bastano le
 // monete. E le strade a pennello. Le regole di cosa ci sta sono del motore (`puoCompraEMettere`): qui si guida il fantasma, si chiede
@@ -53,8 +53,15 @@ export class Costruzione {
     const d = this._misure(); D.fant.position.set(D.i + d.w / 2, 0, D.j + d.d / 2); D.fant.rotation.y = D.rot * Math.PI / 2
     const p = this._valido(); D.ok = p.ok; D.motivo = p.motivo; D.costo = p.costo; D.liv = p.liv; tingi(D.fant, p.ok)
   }
+  /** Un pezzo di riva guarda l'acqua da solo, finché il bambino non lo gira con ↻. */
+  _giraVersoAcqua(p) {
+    const D = this.D; if (D.girato || !misureDi(D.tipo).riva) return
+    const o = D.presa.off, v = this.m.versoAcqua(D.tipo, p.x + (o ? o.x : 0), p.z + (o ? o.z : 0), D.spostando ? D.spostando.id : undefined)
+    if (v) D.rot = v.rot
+  }
   _suDito(x, y) {
     const D = this.D, p = this.c.puntaSuolo(x, y - D.presa.px); if (!p) return
+    this._giraVersoAcqua(p)
     const d = this._misure(), a = cellaSottoIlDito(p, d.w, d.d, D.presa.off)
     D.i = a.i; D.j = a.j; this._aggiorna()
   }
@@ -63,7 +70,7 @@ export class Costruzione {
   /** Comincia a trascinare una cosa già messa (`daSpostare`: tenuta premuta) o un pezzo nuovo. */
   inizia(tipo, daSpostare, x, y) {
     const D = this.D
-    Object.assign(D, { attivo: true, tipo, spostando: daSpostare || null, parcheggiato: false, rot: (daSpostare && daSpostare.rot) || 0, presa: PRESA_NUOVO, dentro: false, dito: null })
+    Object.assign(D, { attivo: true, tipo, spostando: daSpostare || null, parcheggiato: false, rot: (daSpostare && daSpostare.rot) || 0, girato: false, presa: PRESA_NUOVO, dentro: false, dito: null })
     if (daSpostare) {                                                   // si vede il fantasma, non il pezzo, e il dito tiene il punto che ha preso
       const d = this._misure(), p = this.c.puntaSuolo(x, y)
       if (p) D.presa = { px: 0, off: scartoDellaPresa(p, daSpostare.i, daSpostare.j, d.w, d.d) }
@@ -80,7 +87,7 @@ export class Costruzione {
     if (!su) this._suDito(x, y)
     ui.trascinando({ emoji: misureDi(D.tipo).emoji, ruotabile: ruotabile(D.tipo), rot: D.rot, x, y, su, perMettereVia: su && !!D.spostando, perAnnullare: su && !D.spostando, nuovo: !D.spostando, parcheggiato: D.parcheggiato })
     const prezzo = !D.spostando && D.costo ? ` (🪙 ${D.costo})` : ''
-    ui.avviso(su ? (D.spostando ? 'Rilascia qui per mettere via (🪙 1)' : 'Portalo sulla mappa e rilascia')
+    ui.avviso(su ? (D.spostando && !misureDi(D.tipo).dono ? 'Rilascia qui per mettere via (🪙 1)' : 'Portalo sulla mappa e rilascia')
                  : (D.ok ? 'Rilascia per costruire qui' + prezzo : dettoDi(D.motivo, { costo: D.costo, liv: D.liv })))
   }
   /** Il dito si stacca: se ci sta si costruisce o si sposta, sulla barra si rimette via, altrimenti niente cambia. */
@@ -99,7 +106,7 @@ export class Costruzione {
       if (su) {
         const r = m.mettiVia(c0.id)
         if (!r.ok) return this._dice(dettoDi(r.motivo, { mancano: 1 }))
-        this.c.cambiato(); return ui.avviso(misureDi(tipo).nome + ' messo via: lo ritrovi nel menu Costruisci')
+        this.c.cambiato(); return ui.avviso(misureDi(tipo).nome + ' messo via: lo ritrovi nel menu Compra')
       }
       if (!ok) return this._dice(dettoDi(motivo))
       const r = m.spostaPezzo(c0.id, i, j, { rot })
@@ -120,7 +127,7 @@ export class Costruzione {
     return r
   }
 
-  // ── dal menu «Costruisci qui» ──
+  // ── dal menu «Compra» ──
   /**
    * Il pezzo scelto va sulla cella (i, j) premuta. Fra i modi di posarlo che la coprono sceglie quello più centrato che ci sta: se uno
    * c'è, compra e mette subito → { esito: 'messo' }; se c'è ma mancano le monete → { esito: 'rifiuto', motivo, costo, liv } e non cambia
@@ -143,14 +150,15 @@ export class Costruzione {
     }
     const p = m.puoCompraEMettere(tipo, scelto[0], scelto[1])
     if (!p.ok) return { esito: 'rifiuto', motivo: p.motivo, costo: p.costo, liv: p.liv }
-    const r = this._compraEMetti(tipo, scelto[0], scelto[1])
+    const v = d.riva && m.versoAcqua(tipo, scelto[0] + d.w / 2, scelto[1] + d.d / 2)
+    const r = v ? this._compraEMetti(tipo, v.i, v.j, v.rot) : this._compraEMetti(tipo, scelto[0], scelto[1])
     return r.ok ? { esito: 'messo' } : { esito: 'rifiuto', motivo: r.motivo, costo: r.costo, liv: r.liv }
   }
   /** Il fantasma di un pezzo nuovo sta fermo in (i, j), verde o rosso, e aspetta: lo si trascina, o lo si tocca dove si vuole. */
   parcheggia(tipo, i, j) {
     if (this.D.attivo) this._fine()
     const D = this.D
-    Object.assign(D, { attivo: true, tipo, spostando: null, parcheggiato: true, rot: 0, i, j, presa: PRESA_NUOVO, dentro: false, dito: null })
+    Object.assign(D, { attivo: true, tipo, spostando: null, parcheggiato: true, rot: 0, girato: false, i, j, presa: PRESA_NUOVO, dentro: false, dito: null })
     D.fant = this.c.creaFantasma(tipo, null); this.c.scena.add(D.fant)
     this.c.terreno.mostraGriglia(true)
     this._aggiorna()
@@ -168,7 +176,7 @@ export class Costruzione {
   tocco(x, y) {
     const D = this.D; if (!D.attivo || !D.parcheggiato) return
     const p = this.c.puntaSuolo(x, y), { ui } = this.c
-    if (p && !D.dentro) { const d = this._misure(), a = cellaSottoIlDito(p, d.w, d.d); D.i = a.i; D.j = a.j; this._aggiorna() }
+    if (p && !D.dentro) { this._giraVersoAcqua(p); const d = this._misure(), a = cellaSottoIlDito(p, d.w, d.d); D.i = a.i; D.j = a.j; this._aggiorna() }
     const ok = D.ok, motivo = D.motivo, costo = D.costo, liv = D.liv, tipo = D.tipo, i = D.i, j = D.j, rot = D.rot
     this._fine()
     if (!p || !ok) return p ? this._dice(dettoDi(motivo, { costo, liv })) : ui.avviso('')
@@ -178,7 +186,7 @@ export class Costruzione {
   ruota() {
     const D = this.D; if (!D.attivo || !ruotabile(D.tipo)) return false
     const prima = this._misure(), cx = D.i + prima.w / 2, cz = D.j + prima.d / 2
-    D.rot = (D.rot + 1) % 4
+    D.rot = (D.rot + 1) % 4; D.girato = true
     const d = this._misure(); D.i = Math.round(cx - d.w / 2); D.j = Math.round(cz - d.d / 2)
     this._aggiorna()
     if (D.dito) this.muovi(D.dito.x, D.dito.y)          // col dito giù il fantasma torna sotto il dito (stesso centro, misure nuove)

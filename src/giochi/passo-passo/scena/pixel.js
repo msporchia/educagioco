@@ -21,6 +21,8 @@ export const STAGIONI = {
   estate:    { erba: ['#44ad3f', '#3ca339'], ciuffo: '#2f8a30', fiori: ['#ffe066', '#ffffff'], foglie: null, neve: false },
   autunno:   { erba: ['#6fa83c', '#679e37'], ciuffo: '#55862c', fiori: null, foglie: ['#e0832a', '#c95f1f', '#e8b43a'], neve: false },
   inverno:   { erba: ['#4f9f6c', '#489566'], ciuffo: '#3c8058', fiori: null, foglie: null, neve: true },
+  // non una stagione: il pavimento di pietra del guerriero
+  castello:  { erba: ['#a8a39a', '#9d988f'], ciuffo: '#8b867e', fiori: null, foglie: null, neve: false },
 }
 
 const TAVOLOZZA = {
@@ -298,6 +300,81 @@ export const OSSO = { tavolozza: { o: '#6a5a4a', W: '#fbf6ea', D: '#d9cdb4' }, r
   'oWWDoooooWDDo',
   'oWDo.....oDDo',
   '.oo.......oo.',
+] }
+
+/* ── il guerriero (vedi docs/passo-passo/guerriero.md) ──
+   Disegnato in codice finché non piace: l'elmo, la tunica verde, e sotto le
+   gambe, che cambiano col passo. Tre versi, la sinistra è la destra allo
+   specchio. La spada non è nel disegno: si posa sopra quando ce l'ha. */
+const TAV_GUERRIERO = { o: '#2a2730', S: '#aab4c4', L: '#e2e8f2', D: '#7a8496', p: '#f2c8a0', e: '#2a2730',
+                        T: '#2f8f84', t: '#20645e', Y: '#f2c14e', B: '#6a4a30', K: '#3a2a20' }
+const GAMBE = [
+  ['...oBBBBo...', '...oBooBo...', '...oKooKo...', '...oo..oo...'],
+  ['...oBBBBo...', '...oBooBo...', '...oKooo....', '...oo.......'],
+  ['...oBBBBo...', '...oBooBo...', '....oooKo...', '.......oo...'],
+]
+const CORPI = {
+  giu: ['....oooo....', '...oLSSSo...', '..oLSSSSDo..', '..oSSSSSDo..', '..oppppppo..', '..opeppepo..', '...oppppo...',
+        '..oTTYYTTo..', '.opTTYYTTpo.', '.opTTTTTTpo.', '..ooTTTTo...'],
+  lato: ['....oooo....', '...oLSSSo...', '..oLSSSSSo..', '..oSSSSSDo..', '..oDSppppo..', '..oDSppepo..', '...oDpppo...',
+         '...oTTTTo...', '..oTTTpTTo..', '..oTTTpTTo..', '...oTTTTo...'],
+  su: ['....oooo....', '...oLSSSo...', '..oLSSSSDo..', '..oSSSSSDo..', '..oSSSSSDo..', '..oSSSSSDo..', '...oDDDDo...',
+       '..oTTTTTTo..', '.opTTTTTTpo.', '.opTTttTTpo.', '..ooTTTTo...'],
+}
+// i quattro fotogrammi di un verso: 0 fermo, 1-3 il passo (come i corridori dell'atlante)
+export const GUERRIERO = verso => fr => ({ tavolozza: TAV_GUERRIERO, righe: [...CORPI[verso], ...GAMBE[[0, 1, 0, 2][fr] ?? 0]] })
+
+const TAV_SPADA = { o: '#2a2730', W: '#f4f8ff', S: '#b8c4d6', Y: '#f2c14e', B: '#6a4a30' }
+// quella in mano, e quella piantata per terra da prendere
+export const SPADA_IN_MANO = { tavolozza: TAV_SPADA, righe: ['.W.', 'WSo', 'WSo', 'WSo', 'WSo', 'WSo', 'YYY', '.B.'] }
+export const SPADA = { tavolozza: TAV_SPADA, righe: [
+  '..YY...', 'YYYYYY.', '.oBBo..', '..WSo..', '..WSo..', '..WSo..', '..WSo..', '..WSo..', '..WSo..', '...o...',
+] }
+
+export const NEMICO = { tavolozza: { o: '#23301c', N: '#6aa84a', n: '#4f8638', y: '#ffe27a', w: '#f7f4ea', D: '#7a3b2e', d: '#5a2a20', C: '#8a6238', c: '#5e4024' }, righe: [
+  '.oo........oo.',
+  '.oNo.oooo.oNo.',
+  '..oNoNNNNoNo..',
+  '...oNNNNNNo...',
+  '..oNyyNNyyNo..',
+  '..oNnoNNonNo..',
+  '..oNNNNNNNNo.C',
+  '...owNNNNwo.CC',
+  '...oDDDDDDocCc',
+  '..oNDDDDDDNoc.',
+  '..oNoDddDoNoc.',
+  '...o.oDDo.oo..',
+  '....oDDDDo....',
+  '....oNooNo....',
+  '...ooo..ooo...',
+] }
+
+export const PRINCIPESSA = { tavolozza: { o: '#5a2a4a', y: '#ffd65a', Y: '#f2a93a', h: '#f2b83e', H: '#c98a24', p: '#f8d4b4', e: '#2a2730', r: '#ee7a9a', P: '#f58ab4', D: '#d65f92', F: '#fff0f6' }, righe: [
+  '...Y.y.Y....',
+  '...yyyyy....',
+  '..hhhhhhh...',
+  '.hhpppppHh..',
+  '.hpepppepH..',
+  '.hhpprppHh..',
+  '.Hhhppphh...',
+  '.H.oPPPo.H..',
+  '..oPPFPPo...',
+  '.pPPPFPPPp..',
+  '..oPPPPPo...',
+  '..oPDPDPPo..',
+  '.oPPDPDPPPo.',
+  '.oPDPPDPPDo.',
+  'oPPDPPPDPPPo',
+  'oooooooooooo',
+] }
+
+export const CORONA = { tavolozza: { k: '#8a5a10', y: '#ffd65a', Y: '#fff0a8', d: '#d89a20', r: '#e0483a', u: '#3a78de' }, righe: [
+  'k...k...k',
+  'yk.kYk.ky',
+  'yYkyYykYy',
+  'yyyyyyyyd',
+  'yrydyuydr',
+  'ddddddddd',
 ] }
 
 /* il recinto: paglia per terra, e i colori della sua staccionata (la

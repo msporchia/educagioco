@@ -1,0 +1,67 @@
+/* Dentro la casa (docs/fattoria3d/casa.md): la testata, i tasti, la barra del mobile in mano, la striscia di pavimento e pareti, il catalogo
+   e il foglio di un mobile. Prefisso .f3-int- (gli interni): .f3-casa è già il contenitore del HUD della fattoria. I fogli veri vengono da stile.css. */
+/* il contenitore copre la tela ma lascia passare il dito: tocca solo ciò che ci sta sopra */
+.f3-int { position: absolute; inset: 0; z-index: 20; pointer-events: none; }
+.f3-int > * { pointer-events: auto; }
+.f3-int-tela { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; z-index: 12; }
+.f3-int-sopra { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 14; }
+.f3-int-testa { position: absolute; left: 8px; right: 8px; top: 8px; z-index: 22; display: flex; align-items: center; justify-content: space-between; gap: 8px; pointer-events: none; }
+.f3-int-titolo { pointer-events: auto; min-height: 44px; display: flex; align-items: center; padding: 0 16px; border-radius: 22px; background: rgba(255,251,240,.94); color: #3a2a1a; font: 800 16px "Emoji Gioco", system-ui, sans-serif; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+.f3-int-esci { pointer-events: auto; min-height: 44px; border: 0; border-radius: 22px; padding: 0 16px; background: #ffd36a; color: #3a2a1a; font: 800 15px "Emoji Gioco", system-ui, sans-serif; box-shadow: 0 3px 10px rgba(0,0,0,.3); touch-action: manipulation; white-space: nowrap; }
+.f3-int-azioni { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 30; display: flex; gap: 8px; }
+.f3-int-azioni button { white-space: nowrap; min-height: 52px; border: 0; border-radius: 26px; padding: 0 18px; background: rgba(255,251,240,.95); color: #3a2a1a; font: 800 15px "Emoji Gioco", system-ui, sans-serif; box-shadow: 0 3px 10px rgba(0,0,0,.3); touch-action: manipulation; }
+
+.f3-int-mano { position: absolute; left: 8px; right: 8px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 30; display: flex; flex-direction: column; gap: 6px; align-items: center; pointer-events: none; }
+.f3-int-mano .riga { margin: 0; padding: 6px 14px; border-radius: 16px; background: rgba(255,251,240,.95); color: #3a2a1a; font: 700 14px "Emoji Gioco", system-ui, sans-serif; box-shadow: 0 2px 6px rgba(0,0,0,.2); text-align: center; }
+.f3-int-mano[data-ok="false"] .riga { background: #ffd8cc; }
+.f3-int-mano .tasti { display: flex; gap: 8px; pointer-events: auto; }
+.f3-int-mano button { min-height: 52px; min-width: 52px; border: 0; border-radius: 26px; padding: 0 16px; font: 800 16px "Emoji Gioco", system-ui, sans-serif; box-shadow: 0 3px 10px rgba(0,0,0,.3); touch-action: manipulation; background: rgba(255,251,240,.95); color: #3a2a1a; white-space: nowrap; }
+.f3-int-mano .si { background: #7ccf56; color: #123; }
+.f3-int-mano .spenta, .f3-int-grande.spenta { opacity: .5; }
+
+.f3-int-tinte { position: absolute; left: 8px; right: 8px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 30; max-width: 520px; margin: 0 auto; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 20px; background: rgba(255,251,240,.97); box-shadow: 0 3px 12px rgba(0,0,0,.3); }
+.f3-int-tinte .f3-int-schede { padding: 0; }
+.f3-int-tinte .riga { margin: 0; color: #3a2a1a; font: 700 14px "Emoji Gioco", system-ui, sans-serif; text-align: center; }
+.f3-int-tinte .tasti { display: flex; justify-content: center; gap: 8px; }
+.f3-int-tinte .tasti button { min-height: 52px; min-width: 52px; border: 0; border-radius: 26px; padding: 0 16px; font: 800 16px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; }
+.f3-int-tinte .si { flex: 1; background: #7ccf56; color: #123; }
+.f3-int-tinte .no { background: #efe4cf; }
+.f3-int-tinte .spenta { opacity: .5; }
+
+.f3-int-schede { flex: none; display: flex; gap: 6px; overflow-x: auto; padding: 0 2px 8px; touch-action: pan-x; }
+.f3-int-schede button { flex: none; min-height: 40px; border: 0; border-radius: 20px; padding: 0 14px; background: #efe4cf; color: #5a3a2a; font: 800 14px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; }
+.f3-int-schede button.su { background: #ffd36a; color: #3a2a1a; }
+.f3-int-carte { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.f3-int-carta { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px 8px; border: 0; border-radius: 16px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.15); color: #3a2a1a; font: 700 13px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; }
+.f3-int-carta img, .f3-int-carta .attesa { width: 72px; height: 72px; object-fit: contain; }
+.f3-int-carta .attesa { border-radius: 12px; background: #f3ead8; }
+.f3-int-carta small { color: #7a5a3a; font-weight: 800; }
+.f3-int-carta.cara small { color: #b0442a; }
+
+.f3-int-ritratto { display: flex; justify-content: center; min-height: 120px; }
+.f3-int-ritratto img { width: 140px; height: 140px; object-fit: contain; }
+.f3-int-campioni { display: flex; flex-wrap: wrap; gap: 8px; }
+.f3-int-campioni .campione { width: 42px; height: 42px; border-radius: 21px; border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.25); background-size: cover; touch-action: manipulation; }
+.f3-int-campioni .campione.largo { border-radius: 12px; width: 52px; }
+.f3-int-campioni .campione.su { border-color: #3a2a1a; transform: scale(1.08); }
+.f3-int-campioni .assi { background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 2px, transparent 2px 12px); }
+.f3-int-campioni .piastrelle { background-image: linear-gradient(rgba(0,0,0,.18) 2px, transparent 2px), linear-gradient(90deg, rgba(0,0,0,.18) 2px, transparent 2px); background-size: 20px 20px; }
+.f3-int-campioni .scacchi { background-image: conic-gradient(#3b3b40 25%, transparent 0 50%, #3b3b40 0 75%, transparent 0); background-size: 20px 20px; }
+.f3-int-fila { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.f3-int-fila button, .f3-int-grande { min-height: 48px; border: 0; border-radius: 24px; padding: 0 16px; background: #efe4cf; color: #3a2a1a; font: 800 15px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; }
+.f3-int-grande { display: block; width: 100%; margin: 10px 0 4px; background: #7ccf56; color: #123; }
+
+/* dentro una bottega: i fumetti dei clienti (la scena li mette sopra la testa) */
+.f3-btd .cuori { margin-left: 8px; font-size: 12px; letter-spacing: -1px; }
+.f3-btd-fumetti { position: absolute; inset: 0; z-index: 20; pointer-events: none; overflow: hidden; }
+.f3-btd-fumetto { position: absolute; left: 0; top: 0; pointer-events: auto; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 8px; border: 3px solid #fff; border-radius: 16px; background: rgba(255,251,240,.97); color: #3a2a1a; font: 800 13px "Emoji Gioco", system-ui, sans-serif; box-shadow: 0 3px 10px rgba(0,0,0,.3); touch-action: manipulation; }
+.f3-btd-fumetto::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border: 7px solid transparent; border-top-color: #fff; }
+.f3-btd-fumetto.pronto { border-color: #7ccf56; background: #f0fae6; }
+.f3-btd-fumetto.pronto::after { border-top-color: #7ccf56; }
+.f3-btd-fumetto .merci { display: flex; gap: 6px; }
+.f3-btd-fumetto .merce { display: flex; flex-direction: column; align-items: center; }
+.f3-btd-fumetto .merce b { font-size: 12px; } .f3-btd-fumetto .manca { color: #b0442a; } .f3-btd-fumetto .ok { color: #2a7a1a; }
+.f3-btd-fumetto small { font-size: 11px; color: #7a5a3a; }
+.f3-btd-fumetto.vuoto { pointer-events: none; padding: 4px 10px; border-width: 2px; background: rgba(255,251,240,.8); color: #7a5a3a; font-size: 12px; }
+.f3-int-azioni .f3-n { position: absolute; right: -4px; top: -6px; min-width: 20px; height: 20px; padding: 0 5px; box-sizing: border-box; border-radius: 10px; background: #e8472b; color: #fff; font: 800 12px/20px "Emoji Gioco", system-ui, sans-serif; font-style: normal; text-align: center; border: 2px solid #fff; }
+.f3-int-azioni button { position: relative; }

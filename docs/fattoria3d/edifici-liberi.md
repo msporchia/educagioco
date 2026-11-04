@@ -1,7 +1,7 @@
 # Gli edifici sono pezzi liberi
 
 Mulino, panificio, pastificio (id `pasticceria`), cucina (id `conserviera`), gelateria, caseificio, telaio, zuccherificio, sartoria,
-tintoria, friggitoria, sushi bar ([geografia-e-pesca.md](geografia-e-pesca.md): nati dopo, con un posto storico `nuovo: true` come il fienile) la mongolfiera e le quattro botteghe del paese ([botteghe.md](botteghe.md): `bottega_*`, non lavorano) **non hanno più un posto fisso**: si costruiscono dal menu «Costruisci qui» (scheda 🏠 Edifici) e si
+tintoria, friggitoria, sushi bar ([geografia-e-pesca.md](geografia-e-pesca.md): nati dopo, con un posto storico `nuovo: true` come il fienile) la mongolfiera e le quattro botteghe del paese ([botteghe.md](botteghe.md): `bottega_*`, non lavorano) **non hanno più un posto fisso**: si costruiscono dal menu «Compra» (scheda 🏠 Edifici) e si
 mettono dove il bambino vuole nel suo terreno, come un campo o una fontana. Il bambino li dispone come gli pare; il gioco gli
 ricorda solo, con un «!», quelli che il livello ha aperto e che non ha ancora costruito. La casa di scena (`FISSI` in `dati/mondo.js`) resta fissa (il fienile di scena è tolto dal 22/10/2026: ce n'è uno solo, quello che si costruisce), e il **fienile che si costruisce** (`fienile`, il mangime: [mangime-e-catena.md](mangime-e-catena.md)) è un'altra cosa, un edificio come gli altri (3×3, livello 2; il suo posto storico ha `nuovo: true` e non tocca alberi e sassi dei lotti storici).
 Il perché: un posto obbligato costringeva a comprare un lotto lontano e a vedere dieci fantasmi sul prato, e toglieva al bambino la
@@ -50,13 +50,13 @@ trattore, non lo accendono mai). Si vede, senza parole, come un pallino rosso co
 
 | dove | cosa |
 |---|---|
-| tasto 🏗️ Costruisci | se c'è almeno un edificio da costruire (`BarraAzioni`, `foto.daCostruire`) |
+| tasto 🛒 Compra | se c'è almeno un edificio da costruire (`BarraAzioni`, `foto.daCostruire`) |
 | linguetta Edifici | se una carta della scheda ha `segnala` (`schedeSegnalate`) |
 | la carta dell'edificio | `segnala`: aperta dal livello e non costruita; le carte col «!» stanno **in cima** alla scheda |
 | un biglietto del banco | `ordini()[i].senzaMacchina`: l'ordine chiede un prodotto di una macchina che non hai; il dettaglio dice «Serve il Panificio» col «!» |
 
-E **un avviso al salire di livello** che nomina l'edificio: «Livello 7: il Panificio! Costruiscilo» (`avvisoEdificiNuovi`, con l'`art` di ogni
-edificio; se se ne aprono due «lo Zuccherificio e …! Costruiscili»). Niente cartelli sul prato: un fumetto «Da costruire» in scena sarebbe rumore.
+E **un avviso al salire di livello** che nomina l'edificio: «Livello 7: il Panificio! Compralo» (`avvisoEdificiNuovi`, con l'`art` di ogni
+edificio; se se ne aprono due «lo Zuccherificio e …! Comprali»). Niente cartelli sul prato: un fumetto «Da costruire» in scena sarebbe rumore.
 
 ## Nei test
 

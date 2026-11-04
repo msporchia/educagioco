@@ -16,7 +16,7 @@
    `node test/esegui.mjs passo-passo --niente-build` */
 import { LEGENDA, MOSSE, MASSIMO_FILA, COLONNE_MAX, RIGHE_MAX, VISTA, guastiDelMondo, guastiDellaMappa }
   from '../../src/giochi/passo-passo/dati/mondo.js'
-import { CAMPAGNA, SCALINI, QUANTE_TAPPE, TAPPE_PICCOLE, TAPPE_ZAINO, TAPPE_PRIME, TEMI, guastiDellaCampagna,
+import { CAMPAGNA, SCALINI, QUANTE_TAPPE, TAPPE_PICCOLE, TAPPE_ZAINO, TAPPE_PRIME, TEMI, guastiDellaCampagna, delGuerriero,
          FILE, FILA_ATTUALE, riordina }
   from '../../src/giochi/passo-passo/dati/campagna.js'
 import { CARTE, albero, carteDi, conCicli, daScegliere, guastiDellaFila, programma, ripeti, se, apri,
@@ -57,13 +57,16 @@ const dove = (r) => r.mondo.pos
   controlla('la sfida senza fine è dichiarata bene', g4.length === 0, g4.join(' · '))
 
   uguale('otto mosse: quattro passi e quattro salti', Object.keys(MOSSE).length, 8)
-  const REGOLA = SCALINI.filter(s => !s.carta), CARTA = SCALINI.filter(s => s.carta)
+  // i gradini del guerriero vengono in coda, e hanno il loro test (unita/passo-passo-guerriero)
+  const delSuo = new Set(CAMPAGNA.filter(delGuerriero).map(t => t.scalino))
+  const SENZA = SCALINI.filter(s => !delSuo.has(s.chiave))
+  const REGOLA = SENZA.filter(s => !s.carta), CARTA = SENZA.filter(s => s.carta)
   uguale('sei gradini di regole del mondo: i cinque del coniglio e il cane pastore', REGOLA.length, 6)
   controlla('ogni gradino dopo il primo porta una regola che il motore sa spegnere',
             REGOLA.slice(1).every(s => REGOLE.includes(s.regola)) && !REGOLA[0].regola)
   controlla('e dopo, i gradini delle carte: ognuno porta una carta che esiste',
             CARTA.length >= 1 && CARTA.every(s => CARTE[s.carta] && !s.regola) &&
-            SCALINI.findIndex(s => s.carta) === REGOLA.length)
+            SENZA.findIndex(s => s.carta) === REGOLA.length)
   dentro('circa ventiquattro livelli fino ai massi', TAPPE_PRIME, 22, 26)
   dentro('e fra i massi e lo zaino, il cane pastore', TAPPE_PICCOLE - TAPPE_PRIME, 4, 12)
   controlla('le tappe del cane stanno tutte fra i massi e lo zaino',
@@ -83,7 +86,7 @@ const dove = (r) => r.mondo.pos
      bambino di sei anni arriva a 44, vedi il commento in testa alla
      campagna), e a sette e mezzo deve cominciare */
   controlla('le tappe dello zaino stanno fra i sette anni e mezzo e i dieci',
-            CAMPAGNA.slice(TAPPE_PICCOLE).every(t => t.portata > 44 && t.portata <= 75),
+            CAMPAGNA.slice(TAPPE_PICCOLE).filter(t => !delGuerriero(t)).every(t => t.portata > 44 && t.portata <= 75),
             CAMPAGNA.slice(TAPPE_PICCOLE).map(t => t.portata).join(' '))
   controlla('nessuna tappa dichiara un pezzo di scuola', CAMPAGNA.every(t => !t.scuola))
   controlla(`ogni mappa sta in ${COLONNE_MAX} per ${RIGHE_MAX}`, CAMPAGNA.every(t =>
@@ -551,6 +554,8 @@ for (const [i, t] of CAMPAGNA.entries()) {
   if (s.chiave === 'passi') {
     dentro(`${qui}: nei primi passi la strada va da 2 a 8 frecce`, m.lunga, 2, 8)
     controlla(`${qui}: nei primi passi non ci sono salti`, !t.salti)
+  } else if (delGuerriero(t)) {
+    /* le sue regole e le sue trappole: unita/passo-passo-guerriero */
   } else if (s.chiave === 'pecore') {
     controlla(`${qui}: ha bisogno della sua regola («pecore»)`, serveLaRegola(liv, 'pecore'))
     /* le false piste: la mossa ingenua di ogni posto non vince, e chi la
@@ -571,9 +576,9 @@ for (const [i, t] of CAMPAGNA.entries()) {
      che non servono è una fila di tasti da provare a caso */
   if (t.salti) controlla(`${qui}: accende i salti, e la strada giusta salta`,
                          m.conCarota.some(x => x.startsWith('salto-')))
-  /* col cane la strada si pensa più di quanto si tracci: può essere
-     più lunga, ed è l'unico gradino dei piccoli che lo fa */
-  dentro(`${qui}: la strada sta nella fila senza scorrere troppo`, m.lunga, 2, s.chiave === 'pecore' ? 24 : 16)
+  /* col cane e col guerriero la strada si pensa più di quanto si tracci:
+     può essere più lunga */
+  if (!t.zaino) dentro(`${qui}: la strada sta nella fila senza scorrere troppo`, m.lunga, 2, s.chiave === 'pecore' || delGuerriero(t) ? 24 : 16)
   nota(`${String(i + 1).padStart(2)}. ${t.nome.padEnd(26)} ${String(m.lunga).padStart(3)}  ${String(m.corta).padStart(8)}      ` +
        `${s.regola || '—'}   ${inFrecce(m.conCarota)}`)
 }

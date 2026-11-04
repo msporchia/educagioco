@@ -1,13 +1,14 @@
 <script setup>
-// «Cosa costruiamo?»: il foglio che si apre tenendo premuto su un posto libero del proprio terreno. Schede per categoria in alto
-// (scorrono di lato se non ci stanno) e sotto una griglia di carte, tre per riga; il corpo scorre in verticale. Una carta ha il
-// anteprima 3D del pezzo o dell'edificio (il modello vero, fotografato dalla scena: `anteprima(tipo)`, scena3d/anteprime.js) e,
-// finché non è pronta o per gli strumenti, l'emoji su una piastrella del colore della scheda. Una carta non ancora arrivata è velata col lucchetto: toccarla la fa tremare e dice il livello qui sotto. Il resto
-// lo decide chi la usa (`scegli`): qui non si compra niente. Vedi docs/fattoria3d/scena.md.
-import { ref, reactive, watch, onMounted, onBeforeUnmount } from 'vue'
-import { CATEGORIE } from '../dati/catalogo.js'
+// «Cosa compriamo?»: il foglio che si apre col tasto 🛒 o tenendo premuto su un posto libero del proprio terreno. A sinistra il taccuino
+// con quattro linguette (i gruppi), in alto le schede del gruppo aperto, sotto la griglia di carte; il corpo scorre in verticale. Una carta ha
+// l'anteprima 3D del pezzo o dell'edificio (il modello vero, fotografato dalla scena: `anteprima(tipo)`, scena3d/anteprime.js) e, finché non
+// è pronta o per gli strumenti, l'emoji su una piastrella del colore della scheda. Una carta non ancora arrivata è velata col lucchetto:
+// toccarla la fa tremare e dice il livello qui sotto. Il resto lo decide chi la usa (`scegli`): qui non si compra niente. Vedi docs/fattoria3d/scena.md.
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { CATEGORIE, GRUPPI, gruppoDi } from '../dati/catalogo.js'
 
 let ultimaScheda = 'campi'                 // il foglio si riapre dove s'era lasciato (finché la pagina vive)
+const ultimaDel = {}                       // e ogni linguetta sulla sua ultima scheda
 
 const props = defineProps({
   schede: { type: Object, required: true },           // { campi: [carta…], … } (dati/carte.js)
@@ -27,8 +28,13 @@ let tremaFine = 0
 watch(() => props.messaggio, m => { msg.value = m })
 
 const visibile = k => !!CATEGORIE[k].strumenti || (props.schede[k] || []).length > 0          // «Feste» sparisce quando non ha carte (fuori stagione, senza regali della fiera)
-const segnalata = k => (props.schede[k] || []).some(c => c.segnala)       // una carta con il «!» accende la sua linguetta
-function vai(c) { scheda.value = ultimaScheda = c; msg.value = ''; chiedi(c) }
+const segnalata = k => (props.schede[k] || []).some(c => c.segnala)       // una carta con il «!» accende la sua scheda e la sua linguetta
+const gruppo = computed(() => gruppoDi(scheda.value))
+const schedeDelGruppo = g => GRUPPI[g].schede.filter(visibile)
+const gruppoSegnalato = g => GRUPPI[g].schede.some(segnalata)
+const gruppoInFesta = g => GRUPPI[g].schede.some(festaScheda)
+function vai(c) { scheda.value = ultimaScheda = ultimaDel[gruppoDi(c)] = c; msg.value = ''; chiedi(c) }
+function vaiGruppo(g) { const v = schedeDelGruppo(g); vai(v.includes(ultimaDel[g]) ? ultimaDel[g] : v[0]) }
 
 // le anteprime: dalla scheda aperta e poi le altre; ognuna entra in `img` quando è pronta ('' = non ce n'è: resta l'emoji)
 const img = reactive({}), viste = reactive({})
@@ -59,31 +65,40 @@ function tocca(carta) {
 <template>
   <div class="f3-velo" data-f3="costruisci-velo" @click.self="emit('chiudi')">
     <div class="f3-foglio f3-colonna f3-costruisci" data-f3="costruisci-qui">
-      <h2>Cosa costruiamo?</h2>
+      <h2>Cosa compriamo?</h2>
       <button class="f3-chiudi" data-chiudi aria-label="chiudi" @click="emit('chiudi')">✕</button>
-      <div class="f3-schede" role="tablist">
-        <button v-for="(c, k) in CATEGORIE" v-show="visibile(k)" :key="k" role="tab" :class="{ acceso: scheda === k }" :aria-selected="scheda === k" :data-scheda="k" :data-cat="k" @click="vai(k)">
-          <span class="em">{{ c.emoji }}</span>{{ c.nome }}<i v-if="segnalata(k)" class="f3-esclama" data-f3="scheda-esclama" aria-label="c'è un edificio da costruire">!</i><i v-if="festaScheda(k)" class="f3-festa" data-f3="scheda-festa" :aria-label="'c\'è la festa: ' + festa.icona">{{ festa.icona }}</i>
-        </button>
-      </div>
-      <div class="f3-corpo">
-        <div class="f3-griglia-carte" :key="scheda">
-          <!-- aria-disabled e non disabled: toccare una carta chiusa deve dire il livello -->
-          <button v-for="c in schede[scheda]" :key="c.id" class="carta" :class="{ bloccata: c.bloccata, trema: trema === c.id, daCostruire: c.segnala, magazzino: c.etichetta.startsWith('📦') }"
-                  :data-carta="c.id" :data-cat="scheda" :aria-disabled="c.bloccata || null" @click="tocca(c)">
-            <span class="disegno">
-              <span v-if="!viste[c.id]" class="em" :class="{ attesa: c.genere !== 'strumento' && img[c.id] !== '' }">{{ c.emoji }}</span>
-              <img v-if="img[c.id]" class="anteprima" :class="{ vista: viste[c.id] }" :src="img[c.id]" :alt="c.nome" width="72" height="72" draggable="false"
-                   :data-anteprima="viste[c.id] ? 'pronta' : null" @load="viste[c.id] = true">
-            </span>
-            <i v-if="c.segnala" class="f3-esclama" data-f3="carta-esclama" aria-label="da costruire">!</i>
-            <i v-else-if="festaCarta(c.id) && !c.bloccata" class="f3-festa" data-f3="carta-festa" aria-label="di stagione">{{ festa.icona }}</i>
-            <b>{{ c.nome }}</b>
-            <small v-if="c.bloccata">🔒 Livello {{ c.liv }}</small>
-            <small v-else class="prezzo">{{ c.etichetta }}</small>
+      <div class="f3-taccuino">
+        <nav class="f3-linguette" role="tablist">
+          <button v-for="(g, k) in GRUPPI" :key="k" role="tab" :class="{ acceso: gruppo === k }" :aria-selected="gruppo === k" :data-gruppo="k" @click="vaiGruppo(k)">
+            <span class="em">{{ g.emoji }}</span>{{ g.nome }}<i v-if="gruppoSegnalato(k)" class="f3-esclama" data-f3="gruppo-esclama" aria-label="c'è un edificio da costruire">!</i><i v-else-if="gruppoInFesta(k)" class="f3-festa" data-f3="gruppo-festa" :aria-label="'c\'è la festa: ' + festa.icona">{{ festa.icona }}</i>
           </button>
+        </nav>
+        <div class="f3-pagina">
+          <div class="f3-schede" role="tablist">
+            <button v-for="k in schedeDelGruppo(gruppo)" :key="k" role="tab" :class="{ acceso: scheda === k }" :aria-selected="scheda === k" :data-scheda="k" :data-cat="k" @click="vai(k)">
+              <span class="em">{{ CATEGORIE[k].emoji }}</span>{{ CATEGORIE[k].nome }}<i v-if="segnalata(k)" class="f3-esclama" data-f3="scheda-esclama" aria-label="c'è un edificio da costruire">!</i><i v-if="festaScheda(k)" class="f3-festa" data-f3="scheda-festa" :aria-label="'c\'è la festa: ' + festa.icona">{{ festa.icona }}</i>
+            </button>
+          </div>
+          <div class="f3-corpo">
+            <div class="f3-griglia-carte" :key="scheda">
+              <!-- aria-disabled e non disabled: toccare una carta chiusa deve dire il livello -->
+              <button v-for="c in schede[scheda]" :key="c.id" class="carta" :class="{ bloccata: c.bloccata, trema: trema === c.id, daCostruire: c.segnala, magazzino: c.etichetta.startsWith('📦') }"
+                      :data-carta="c.id" :data-cat="scheda" :aria-disabled="c.bloccata || null" @click="tocca(c)">
+                <span class="disegno">
+                  <span v-if="!viste[c.id]" class="em" :class="{ attesa: c.genere !== 'strumento' && img[c.id] !== '' }">{{ c.emoji }}</span>
+                  <img v-if="img[c.id]" class="anteprima" :class="{ vista: viste[c.id] }" :src="img[c.id]" :alt="c.nome" width="72" height="72" draggable="false"
+                       :data-anteprima="viste[c.id] ? 'pronta' : null" @load="viste[c.id] = true">
+                </span>
+                <i v-if="c.segnala" class="f3-esclama" data-f3="carta-esclama" aria-label="da costruire">!</i>
+                <i v-else-if="festaCarta(c.id) && !c.bloccata" class="f3-festa" data-f3="carta-festa" aria-label="di stagione">{{ festa.icona }}</i>
+                <b>{{ c.nome }}</b>
+                <small v-if="c.bloccata">🔒 Livello {{ c.liv }}</small>
+                <small v-else class="prezzo">{{ c.etichetta }}</small>
+              </button>
+            </div>
+            <p v-if="msg" class="f3-messaggio" data-f3="costruisci-msg">{{ msg }}</p>
+          </div>
         </div>
-        <p v-if="msg" class="f3-messaggio" data-f3="costruisci-msg">{{ msg }}</p>
       </div>
     </div>
   </div>

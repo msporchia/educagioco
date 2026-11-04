@@ -27,7 +27,7 @@ voce**: se un numero di `da2d/dati/` cambia, il test dice quale.
 
 - **Quelle della 2D**: `1,25 · (8·(n-1)² + 200·(n-1))` più il costo di ciò che ogni livello apre (`sogliaDi2D`). Il livello 2 sta a 260 monete (43 minuti
   di esercizio), il 10 a 3867, il 70 a ~72500 (**~202 ore**, contando solo la spesa).
-- **Un solo ritocco, la pesca** ([sotto](#la-pesca-al-posto-della-peschiera)): `sogliaDi(l) = sogliaDi2D(l) + (l > 57 ? SCARTO_DELLA_PESCA : 0)`, con
+- **Un solo ritocco, la pesca** ([sotto](#la-pesca-prima-della-peschiera)): `sogliaDi(l) = sogliaDi2D(l) + (l > LIVELLO_PESCHIERA ? SCARTO_DELLA_PESCA : 0)` (il 57), con
   `SCARTO_DELLA_PESCA` = molo + porticciolo (102) − peschiera (360) = **−258**. Si ritara solo la parte alta della scala, di meno del 2%.
 - **Il passo è una formula, non una tabella**, così i livelli non finiscono mai: chi ha giocato per mesi ha ancora un gradino davanti.
 - **La roba di un livello non paga il livello dopo**: un guasto verifica che il resto di ogni salto sia almeno `SOGLIA_B` (200) dopo aver comprato la
@@ -50,13 +50,13 @@ parallelo, una macchina alla volta.
 | 4 | 970 | 2,7 | mulino |
 | 6 | 1900 | 5,3 | fienile |
 | 9 | 3317 | 9,2 | pollaio |
+| 10 | 3867 | 10,7 | **la pesca** (molo, porticciolo, stagno, laghetto) |
 | 14 | 5907 | 16,4 | recinto (pecore) |
+| 15 | 6617 | 18,4 | sushi bar, riso |
 | 17 | 8097 | 22,5 | panificio |
 | 23 | 12732 | 35,4 | pentolone |
 | 31 | 20222 | 56,2 | zuccherificio |
 | 42 | 32067 | 89,1 | sartoria |
-| 57 | 52262 | 145,2 | **la pesca** (molo, porticciolo) |
-| 62 | 59764 | 166,0 | sushi bar |
 | 70 | 72504 | 201,4 | – |
 
 ## Cosa arriva quando
@@ -66,25 +66,29 @@ Lo dicono le cose stesse: `liv` sul pezzo, sull'edificio, sulla coltura e sulla 
 - **Una cosa produttiva per livello al massimo** (pezzo o edificio), più le decorazioni: un livello che dà tre cose da costruire si paga da sé, e uno
   che ne porta una è più divertente di un regalo enorme ogni tanto. Fra due cose che lavorano non passano più di cinque o sei livelli, se no chi ha
   imparato la catena riceve solo decorazioni. Con i livelli della 2D resta vero: bancarella 2, mulino 4, fienile 6,
-  trattore 8, pollaio 9, recinto 14, telaio 16, panificio 17, stalla 18, caseificio 20, pentolone 23, anatre 24, cucina 25, mongolfiera 26, porcile 28,
-  zuccherificio 31, gelateria 34, pastificio 37, capre 40, sartoria 42, tintoria 55, pesca 57, friggitoria 58, sushi bar 62.
+  trattore 8, pollaio 9, pesca 10, recinto 14, sushi bar 15, telaio 16, panificio 17, stalla 18, friggitoria 19, caseificio 20, pentolone 23, anatre 24, cucina 25, mongolfiera 26, porcile 28,
+  zuccherificio 31, gelateria 34, pastificio 37, capre 40, sartoria 42, tintoria 55.
 - **Le colture** arrivano dove la 2D le apre: grano 1, carote 5, mais 11, erba medica 13, patate/cavolfiori 22, zucche 27, barbabietola 30, pomodori 33,
-  melanzane/peperoni 39, cipolle/aglio 44, fragole 50, lavanda 54, riso 60.
+  melanzane/peperoni 39, cipolle/aglio 44, fragole 50, lavanda 54. Il riso arriva al 15, col sushi bar.
 - **Una ricetta dichiara il livello vero**: il più tardo fra il suo, quello della sua macchina e quello dei suoi ingredienti (`livelloDellaRicetta`, uguale a
   quello della 2D). Se non coincide col `liv` scritto è un guasto.
 - **Nessun livello è vuoto** (da 1 a 70 apre sempre almeno una cosa): dopo i giri G5, G6, G8 e G9 le decorazioni della 2D ci sono tutte (206 più le 11 dei primi giri), con gli stessi livelli; i livelli vuoti erano 18 prima del G9 (3, 7, 10, 12, 15, 19, 32, 35, 41, 47, 49, 59, 65–70) e li hanno riempiti fiori, arredo, acqua e arrivi simili. Se un giorno si toglie una decorazione, il foglio dice «Niente di nuovo qui» e l'avviso «Livello 3: niente di nuovo, ma sei più in alto!». Il primo livello non è mai vuoto (guasto). Le feste e la fiera non contano come roba di un livello (`roba()` le salta).
 - **I nomi stanno sulla cosa** (`NOMI`), l'ordine è la precedenza quando due cose arrivano insieme.
 - **Compagni, abiti, villaggi, posti del banco** erano scritti sulla scala vecchia (finiva al 18): stanno nello stesso punto del percorso
-  (`sullaScalaDellaDueD(l)` = `1 + (l-1)·69/17`: il 6 vecchio è il 21, il 13 è il 50). Eccezione: **Watson, Sherlock e Irene** restano ai livelli 1–3 (gli animali
+  (`sullaScalaDellaDueD(l)` = `1 + (l-1)·69/17`: il 6 vecchio è il 21, il 13 è il 50). Eccezione (fino al 2/11/2026; ora si adottano a 3, 10, 11: [adozioni.md](adozioni.md)): **Watson, Sherlock e Irene** restavano ai livelli 1–3 (gli animali
   di casa arrivano per primi) e **Pepe**, il gatto nero, arriva dove arriva il gatto nero della 2D (19). I villaggi (25, 33, 44, 50) non chiedono mai ciò che non si fa
   ancora al loro livello. Il banco apre 4 ordini al 17, 5 al 29, 6 al 42, 8 al 54. Le casse della mongolfiera chiedono fino a 3 pezzi da subito (come in 2D).
 
-## La pesca al posto della peschiera
+## La pesca prima della peschiera
 
-Nessun equivalente 2D (la peschiera è un recinto): la pesca entra **dove la 2D ha la peschiera, il 57** (`LIVELLO_PESCA`), perché il pesce serve alla friggitoria (58) e
-al sushi bar (62). Molo, molo girato e porticciolo sono al 57. **Un banco dà un pesce ogni 15 minuti, come la ricetta `pesce` della peschiera**: 5 minuti ad aspettare
-che abbocchi (`PESCA.ms`) e 10 a ripopolarsi (`riposoMs`); il porticciolo e il mare danno più pesci per lancio (1, 2, 3: il premio per averli). Per i conti dei tempi un
-pesce costa un ciclo (15 min). Le soglie dal 58 in poi si spostano di −258 (vedi sopra). Prima del 57 il pesce non c'è: friggitoria e sushi bar arrivano dopo.
+**Decisione dell'utente del 4/11/2026**: al 57 era «uno spreco non poterlo fare prima». Si pesca dal **10** (`LIVELLO_PESCA`): molo, molo girato, porticciolo, e con loro stagno e laghetto, così si pesca
+anche senza un lago vicino. Il sushi bar e il riso arrivano al **15**, la friggitoria al **19** (non prima: il pesce fritto vuole la farina, che arriva al 17). Le ricette stanno al loro livello vero: sushi 15, fritto 19, arancini 20,
+patatine 22, maki 39. Le eccezioni stanno in `dati/parita2d.js` (`LIVELLI_ANTICIPATI`, `COLTURE_ANTICIPATE`, `RICETTE_ANTICIPATE`), e i test di parità le leggono da lì.
+
+**Le soglie non si muovono**: lo scarto di −258 resta dopo il 57 (`LIVELLO_PESCHIERA`), dove la 2D paga la peschiera. Spostarlo avrebbe fatto salire di colpo chi sta fra il 10 e il 57.
+
+**Un banco dà un pesce ogni 15 minuti, come la ricetta `pesce` della peschiera**: il pesce c'è già e abbocca in pochi secondi (`PESCA.ms`), poi ci mette il resto del ciclo a tornare (`riposoMs`): «ha più senso che i pesci siano già pronti», scelta dell'utente; il porticciolo e il mare danno più pesci per lancio (1, 2, 3: il premio per
+averli). Per i conti dei tempi un pesce costa un ciclo (15 min). Il pesce crudo è l'unico prodotto degli animali che il banco chiede ([ordini.md](ordini.md)): serve a venderlo prima di avere le due macchine.
 
 ## La terra: la stessa, cella per cella
 
@@ -148,7 +152,7 @@ Per le fattorie già salvate **ciò che si possiede resta**: il gating vale solo
 
 Il gettone «⭐ N» con la barra sottile sta nel HUD e apre `viste/Livelli.vue`: una **scala** col livello di adesso in cima (la scatola già aperta con ciò che è arrivato, o «Niente
 di nuovo qui»), sotto il gradino successivo con la scatola ancora chiusa. Salendo compare un avviso («Livello N: nome») e un pallino sul gettone finché non si apre il foglio; se
-il livello apre un edificio l'avviso lo nomina e un «!» sul tasto Costruisci resta finché non c'è ([edifici-liberi.md](edifici-liberi.md)). Ciò che non è arrivato resta visibile ma
+il livello apre un edificio l'avviso lo nomina e un «!» sul tasto Compra resta finché non c'è ([edifici-liberi.md](edifici-liberi.md)). Ciò che non è arrivato resta visibile ma
 in grigio, con «Livello N». I tempi si dicono in minuti (`dati/tempo.js` `tempoBreve`: «45 s», «5 min», «1 h 20 min»); la carta di una ricetta dice anche il costo («⏱️ 7 min · 🪙 1»).
 
 Nei test: `unita/fattoria3d-parita` (la parità voce per voce, i gesti, gli scomparti, la terra, i salvataggi di prima), `unita/fattoria3d-taratura`, `unita/fattoria3d`

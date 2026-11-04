@@ -1,6 +1,6 @@
 # Il personaggio: maschio o femmina
 
-L'utente, 2 novembre 2026: *«Melody lamenta che non si può scegliere se il mago è maschio o femmina (e anche il guerriero, l'elfo, il nano…)»*.
+L'utente, 2 novembre 2026: una bambina lamenta che non si può scegliere se il mago è maschio o femmina (e anche il guerriero, l'elfo, il nano…).
 Ogni eroe ha un sesso scelto da chi gioca, **gratis e sempre cambiabile**. La classe è la stessa: armi, numeri, abilità, discese
 e roba non cambiano. Cambia chi si vede (il modello 3D) e come si chiama (Mago/Maga, Elfo/Elfa, Cavaliere/Guerriera, Nano/Nana).
 

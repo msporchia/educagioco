@@ -8,7 +8,7 @@ import { newItem, record as srsRecord, isMastered, strength } from './srs.js'
 import { acceso as suonoAcceso } from '../audio.js'
 import { CHIAVI_GIOCHI, serveA } from '../data/giochi.js'
 import { SAPERI } from '../data/saperi.js'
-import { nascitaValida, etaDiClasse, etaVoluta } from '../data/nascita.js'
+import { nascitaValida, etaDiClasse, etaVoluta, dentroGliEstremi } from '../data/nascita.js'
 import { CAMPAGNE as GIORNATE_BANCARELLA } from '../data/bancarella.js'
 import { eccezioniDi, eccezioniPerEta, spostandoLEta,
          rimettendoLEta, partenzaPerEta } from '../data/partenze.js'
@@ -149,11 +149,11 @@ export async function creaGiocatore(nome, entra = true, partenza = null, aspetto
     fresco.settings = { ...fresco.settings, giochi, sa }
     if (eta) fresco.settings.eta = eta
   }
-  // la data di nascita (facoltativa): l'età si terrà aggiornata da sola; lo scarto è quanto si è tarato sopra o sotto la sua classe
+  // con la data l'età si terrà aggiornata da sola; lo scarto è quanto si è tarato sopra o sotto la sua classe, dentro gli estremi: un bambino di due anni non è «uno sopra»
   if (nascitaValida(nascita)) {
     fresco.settings.nascita = { m: nascita.m, a: nascita.a }
     const e = etaDiClasse(nascita)
-    fresco.settings.scarto = fresco.settings.eta && e != null ? Math.max(-3, Math.min(3, fresco.settings.eta - e)) : 0
+    fresco.settings.scarto = fresco.settings.eta && e != null ? Math.max(-3, Math.min(3, fresco.settings.eta - dentroGliEstremi(e))) : 0
   }
   // un nome che PERSONE non ha (mai dovrebbe capitare, da un tasto che
   // mostra solo quelli) si ignora invece di scriverlo: meglio ricadere

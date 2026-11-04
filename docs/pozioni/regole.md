@@ -1,180 +1,212 @@
 # Le regole del laboratorio
 
-Come è fatto il laboratorio delle pozioni: gli attrezzi, la scaletta, gli
-aiuti, gli sbagli e cosa va al motore di apprendimento. Il gioco sta in
+Come è fatto il laboratorio delle pozioni: il mercante, gli strumenti, la
+scaletta, gli sbagli e cosa va al motore di apprendimento. Il gioco sta in
 `src/giochi/pozioni/`, secondo la convenzione dei giochi nuovi
-([../core/convenzione-giochi.md](../core/convenzione-giochi.md)).
+([../core/convenzione-giochi.md](../core/convenzione-giochi.md)). Il motore
+è `motore/bottega.js`, i numeri `dati/bottega.js` e `dati/campagna.js`.
 
-## Gli attrezzi: la scelta è il gioco
+## Il gioco
 
-- **Un attrezzo conta in una unità sola, e arriva fin lì**
-  (`src/giochi/pozioni/dati/misure.js`). La ricetta parla come le pare
-  («1,5 kg», «35 hg», «6000 g»): si legge l'unità, si sceglie un attrezzo
-  su cui la dose ci sta, e si traduce nell'unità in cui quell'attrezzo
-  conta. Qualunque attrezzo su cui la dose si compone va bene.
-- **Tre famiglie con la stessa forma**: un'unità grande (G), una di mezzo
-  (M), una piccola (P), e un attrezzo per taglia (`TAGLIE`):
-
-| taglia | conta nella | arriva a | pesi · lunghezze · liquidi |
-|---|---|---|---|
-| P | piccola | 5 grandi | bilancia da cucina (g) · metro a nastro (cm) · caraffa graduata (ml) |
-| M | media | 20 grandi | bilancia del mercato (hg) · corda a spanne (dm) · brocca a bicchieri (dl) |
-| G | grande | 100 grandi | bilancia del magazzino (kg) · rotella da cantiere (m) · botte (l) |
-
-  Non sono la stessa scala: fra chilo e grammo tre scalini, fra metro e
-  centimetro due — il centimetro è quello del righello. Il motore conta
-  gli scalini invece di darli per scontati (`scalini` in
-  `src/giochi/pozioni/motore/misura.js`).
-- **I limiti sono il motivo di scegliere**: otto chili sulla bilancia dei
-  grammi non ci stanno, e la tappa in cui arriva la bilancia degli etti
-  esiste per far capire che quando i chili sono tanti si sale di unità.
-- **Il pezzo più piccolo divide tutti gli altri**, ed è intero nell'unità
-  dell'attrezzo (`guastiDelleMisure`): è la condizione perché «prendi
-  sempre il pezzo più grande» componga ogni dose che ci sta (`scomponi`) e
-  perché «ci sta» voglia dire solo «nel limite e multiplo del pezzo
-  piccolo» (`componibile`). Un peso da mezzo etto su una bilancia che conta
-  in etti è un attrezzo che non si legge.
-- **Fra uno scalino e l'altro c'è sempre un ×10**, se no «conta gli
-  scalini» è una bugia.
-- **Tutto è in unità base, come intero**: la virgola compare solo a
-  schermo (`inUnita`, `scrivi`).
-- **Niente disegnini che accoppiano**: nessun ingrediente è un recipiente
-  (erano 🧪 e 🍯, uguali agli attrezzi, e l'attrezzo si sceglieva
-  accoppiando le figure), e «quanto è grande» si dice a parole con una cosa
-  che si ha in mano (`QUANTO_E`: un pacco di zucchero, una spanna, un
-  bicchiere), non con un'icona.
-- **Il tipo dell'ingrediente dice il gesto**: la polvere si pesa, il
-  liquido si versa, la radice si taglia — ed è la prima cosa da sapere.
-
-## La ricetta e lo scaffale
-
-- **Sullo scaffale ci sono ingredienti che non c'entrano** (`scelta` ≥
-  ingredienti + 1): la prima cosa da fare è leggere, come alla bancarella.
-- **Due ingredienti della stessa ricetta non hanno mai la stessa dose**, e
-  la dose non è mai quella della ricetta di prima: la stessa cifra due
-  volte di fila sembra un gioco rotto (`generaRicetta`, `evita`).
-- Il caso arriva da fuori (`rnd`), così una ricetta si rifà identica nei test.
-
-## La scaletta: una cosa nuova per volta
-
-Nove gradini scritti una volta sola e ripetuti per le tre famiglie
-(`GRADINI` in `src/giochi/pozioni/dati/campagna.js`), in multipli
-dell'unità grande e con `in` che dice in che unità la ricetta li scrive:
-
-| | gradino | cosa chiede | aiuto |
-|---|---|---|---|
-| 1 | `banco` | «500 g»: scegli, posa, componi | `gioco` (come si gioca) |
-| 2 | `grande` | «1 kg» sulla bilancia dei grammi | `svolto` |
-| 3 | `grandi` | 2 kg, 5 kg | `regola` |
-| 4 | `virgola` | 0,5 kg, 1,5 kg | `svolto` |
-| 5 | `virgole` | le stesse, e 1,2 kg | niente |
-| 6 | `media` | 8 kg, 12 kg: sulla bilancia dei grammi non ci stanno | `svolto`, e «usa la bilancia del mercato» |
-| 7 | `miste` | la ricetta parla in tre unità | `regola` |
-| 8 | `inversa` | «6000 g», e si sale agli etti | `svolto` |
-| 9 | `inverse` | su e giù per la scala | niente |
-
-- Poi due tappe finali (`FINALI`): **il grande calderone** (le tre famiglie
-  nella stessa pozione) e **maestro alchimista**, l'unica con **tre
-  attrezzi per famiglia** e le dosi da magazzino — nove attrezzi sul banco
-  vanno bene a chi è esperto, non prima. Ventinove tappe in tutto
-  (`CAMPAGNA`, `BLOCCHI` per la mappa).
-- **Mai due attrezzi nuovi nella stessa tappa**, e fino alla penultima mai
-  più di due per famiglia.
-- **Ogni «senza aiuti» viene dopo il suo «svolto»**, e al sesto gradino
-  l'attrezzo piccolo non ci arriva davvero.
-- **La portata sale lungo la fila**: `PORTATA_DA` 44 i pesi (sette anni e
-  mezzo, quando le misure entrano a scuola), 56 le lunghezze, 68 i liquidi,
-  e un punto e mezzo a gradino (`PASSO_PORTATA`); 82 e 85 le finali.
-- `guastiDellaCampagna` controlla che ogni dose si componga con gli
-  attrezzi della sua tappa, e che ogni famiglia in scena abbia dosi.
-
-## Gli aiuti, e lo sbaglio
-
-- **Quanto si dice lo decide la tappa** (`aiuto`): `gioco` (come si
-  gioca), `svolto` (il conto intero col risultato), `regola` (solo
-  l'uguaglianza), `''` niente. Prima di prendere si parla della prossima
-  dose della ricetta, così il cartello si legge guardando la pergamena
-  (`aiuto` in `src/giochi/pozioni/motore/partita.js`).
-- **Il conto svolto dice il gesto, sulla dose che si ha in mano**
-  (`spiegazione`): l'uguaglianza sempre dalla grande alla piccola («1 kg =
-  1000 g»), gli scalini, il verso e la catena («1,5 → 15 → 150 → 1500 g»).
-  Sugli interi «aggiungi 3 zeri», perché a chi legge «2 kg» la virgola non
-  si vede; al contrario si tolgono gli zeri se ci sono tutti, se no la
-  virgola va a sinistra.
-- **Dove l'attrezzo piccolo non ci arriva il cartello lo dice prima di
-  posare** (`consigliato`, `consiglia`: «usa la bilancia del mercato, che
-  conta in hg»).
-- **Uno sbaglio riporta il conto svolto per intero**, a qualunque gradino:
-  si dice il perché *e* come si fa. Ogni sbaglio ha le sue parole
-  (`perche`): l'ingrediente che non è nella ricetta, la polvere nella
-  caraffa («la polvere si pesa, non si versa»), l'attrezzo troppo piccolo
-  («arriva fino a 5 kg»), la dose che non cade sul segno, troppo o poco.
-- **Dopo un esito si sta fermi a leggere**, con la barra che dice quanto
-  manca: la stessa attesa dei quiz (`attesaDellEsito`, `PONDERA` in
-  `src/quiz/nucleo/domanda.js`).
-- **Troppo o poco** svuota l'attrezzo e lo lascia lì; un attrezzo sbagliato
-  rimette l'ingrediente in mano.
+- **Una tappa è una pozione col suo nome** («Elisir di Volo»), e si fa in due
+  metà: la spesa, qui, e il procedimento ([procedimento.md](procedimento.md)).
+- **Una pozione ha tanti ingredienti** (da due a quattro), e ognuno ha il suo
+  strumento col segno d'oro dove arriva la dose. La pergamena dice quanto c'è e
+  quanto ne serve, nell'unità della ricetta.
+- **Il listino del mercante** è un rotolo aperto fin dall'inizio, che dopo un
+  ordine si riapre con «Dal mercante»:
+  tutti gli ingredienti della ricetta insieme, quattro targhette a testa
+  (quantità e prezzo). Le ampolle si ricomprano quante volte si vuole.
+- **Sul listino c'è solo quello che serve**: provato con un ingrediente
+  intruso da riconoscere, faceva solo confusione. La scelta è fra le ampolle,
+  non fra gli ingredienti.
+- **Sul listino niente figure che suggeriscano quanto**: provato con le
+  ampolle in fila sul bancone: uguali non si capiva che erano diverse, diverse
+  davano la risposta senza leggere. Lì quanto c'è lo dice solo la targhetta.
+  **Una volta comprate si vedono a misura reale**: è il momento di capire cosa
+  si è ordinato, e cosa si è sbagliato.
+- **Si fa un ordine**: due o tre targhette (`ordine`), anche di ingredienti
+  diversi, poi «Ordina». Si paga tutto, il mercante porta le ampolle sul
+  bancone e le versa una alla volta, nell'ordine scritto.
+  Più ampolle insieme vuol dire fare la somma prima di vederla.
+- **Le grandi costano meno al chilo** (`PEZZI`, `PREZZI`): 1 kg 4 gettoni,
+  5 hg 3, 1 hg 1. Conviene sempre «la più grande che ci sta», ma per sapere
+  cosa ci sta bisogna sapere a cosa corrisponde l'etichetta, come quando si
+  sommano monete diverse.
+- **Il trucco del mercante** (`gemelli`): spesso la stessa quantità sta sul
+  listino due volte, in due unità, e una costa un gettone in più. Chi
+  riconosce che «5 hg» e «500 g» sono la stessa cosa risparmia.
+- **Oltre il segno d'oro trabocca**: quell'ampolla è pagata e persa, lo
+  strumento resta dov'era, e le altre dell'ordine si versano lo stesso. **Quello
+  che resta sul tavolo dipende dalla roba**: il liquido fa una pozza, la polvere un
+  mucchio opaco, la radice cade intera (una radice non fa acqua, e sul cartello è
+  «Troppo lungo!»). **Prima di ordinare ancora si mette a posto**: «Pulisci»,
+  «Spazza» o «Togli», un gettone a strumento (`PULIZIA`).
+- **La borsa si vede sempre**: «Hai speso 7 su 23», con la barra e il pezzo
+  a strisce dell'ordine in preparazione.
 
 ## Senza fretta e senza cuori
 
 - **Il tempo non è un avversario**: niente pazienza del cliente, niente
-  cuori, niente ⏸ (un ⏸ dove non scorre niente è un tasto che non fa
-  niente). **La tappa si finisce sempre**, e a cambiare sono le stelle:
-  tre senza sbagli, due con uno sbaglio ogni quattro dosi al massimo, una
-  comunque (`stellePer`). Provato: la pazienza che scende, i cuori e la
-  mancia 👑 del cliente esigente — con una barra che calava sopra un
-  cartello da leggere, si imparava a non leggere.
-- **Tre monete per dose azzeccata al primo colpo** (`MONETE_A_DOSE`),
-  **pagate quando la dose va nel calderone**: una dose è una domanda vera,
-  letta e ragionata. Una dose sbagliata non paga, e a fine tappa non
-  arriva niente di più — nemmeno un terzo per le tappe rifatte, che c'era
-  e pagava a fine tappa (vedi
-  [../apprendimento/calibrazione.md](../apprendimento/calibrazione.md)).
-  Le monete le sa solo `Gioco.vue`; `partita.monete` dice quanto ha reso
-  la tappa, e serve ai test.
+  cuori, niente ⏸. **La tappa si finisce sempre**: se i gettoni finiscono si
+  va in rosso, e la pozione si fa lo stesso. Provato: la pazienza che scende,
+  i cuori e la mancia del cliente esigente: con una barra che calava sopra
+  un cartello da leggere, si imparava a non leggere.
+- **Le stelle dicono quanto si è speso**, non quante volte si è sbagliato:
+  tre al minimo, due fino a tre gettoni in più, una comunque (`stelle`).
+  Alla fine, se si è speso di più, si dice il modo più economico
+  ingrediente per ingrediente (`piuEconomico`).
+- **I gettoni sono della pozione**, non le monete del bambino: il bilancio è
+  il minimo più il `margine` della tappa, largo all'inizio e stretto in fondo.
+- **Tre monete per ingrediente finito senza traboccare** (`MONETE_A_DOSE`):
+  una dose è una domanda vera, e tante ampolle piccole non rendono di più.
+  Si pagano quando si ordina, così uscire mentre il mercante versa non perde
+  niente (vedi [../apprendimento/calibrazione.md](../apprendimento/calibrazione.md)).
+
+## La scaletta: una cosa nuova per volta
+
+Nove gradini scritti una volta sola e ripetuti per le tre famiglie
+(`GRADINI` in `dati/campagna.js`), in multipli dell'unità grande e con `in`
+che dice in che unità la ricetta li scrive. **Le chiavi e l'ordine delle
+ventinove tappe non cambiano**: sono quelle dei progressi e delle stelle.
+
+| | gradino | la ricetta | il listino | aiuto | margine |
+|---|---|---|---|---|---|
+| 1 | `banco` | «500 g» | in grammi: niente da convertire | `gioco` | 8 |
+| 2 | `grande` | «1 kg» | in grammi | `svolto` | 8 |
+| 3 | `grandi` | 2 kg, 5 kg | grammi e chili | `regola` | 6 |
+| 4 | `virgola` | 0,5 kg, 1,5 kg | grammi e chili | `svolto` | 6 |
+| 5 | `virgole` | le stesse, e 1,2 kg | grammi e chili | niente | 4 |
+| 6 | `media` | 8 kg, 12 kg | arrivano gli etti | `svolto` | 6 |
+| 7 | `miste` | in tre unità | in tre unità | `regola` | 4 |
+| 8 | `inversa` | «6000 g» | chili ed etti: si sale | `svolto` | 5 |
+| 9 | `inverse` | su e giù | in tre unità | niente | 3 |
+
+- Poi due tappe finali (`FINALI`): **l'Elisir del Calderone** (le tre famiglie
+  nella stessa pozione) e **la Pozione del Maestro**, con le dosi da magazzino.
+- **Quanto si dice lo decide la tappa** (`aiuto`): `gioco` il cartello dice
+  come si gioca, `svolto` sotto ogni targhetta c'è quanto vale nell'unità
+  della ricetta, `regola` accanto all'ingrediente c'è l'uguaglianza («1 kg =
+  1000 g»), `''` niente.
+- **`manca`**: la pergamena dice quanto manca (la sottrazione la fa il
+  gioco). Solo in `inverse` e nelle finali la si fa da sé.
+- **La portata sale lungo la fila**: `PORTATA_DA` 44 i pesi (sette anni e
+  mezzo, quando le misure entrano a scuola), 56 le lunghezze, 68 i liquidi,
+  e un punto e mezzo a gradino (`PASSO_PORTATA`); 82 e 85 le finali.
+- `guastiDellaCampagna` controlla che ogni dose si componga.
+
+## Il listino
+
+- **Tre famiglie con la stessa forma**: un'unità grande (G), una di mezzo
+  (M), una piccola (P). Non sono la stessa scala: fra chilo e grammo tre
+  scalini, fra metro e centimetro due. Il motore conta gli scalini invece
+  di darli per scontati (`scalini`).
+- **Tutto è in unità base, come intero**: la virgola compare solo a schermo.
+- **Il listino parte dai pezzi che fanno davvero la dose** (per 1,2 m: 1 m e
+  20 cm; `ottimo` su tutti i pezzi, e a parità di gettoni meno ampolle). Pescati
+  a caso una dose chiedeva trentasei ampolle, e da 1 m a 1,2 m restava solo il
+  5 cm quattro volte.
+- **Il pezzo piccolo divide la dose e tutti gli altri pezzi**: è quello che
+  rende ogni dose componibile da qualunque punto. Provato senza (0,1 e 0,25
+  sullo stesso banco): resta un avanzo che nessuna ampolla copre.
+- **Per le dosi grandi tutto il listino sale di dieci o di cento** (`scalaDi`)
+  e i prezzi restano quelli: la fatica sta nelle unità, non nei soldi. Se no
+  diventa una bancarella.
+- **Il mercante scrive come gli pare**, dentro le unità della tappa
+  (`etichette`), di solito non in quella della ricetta (`etichetta`).
+- **Due ingredienti della stessa pozione non hanno la stessa quantità**, anche
+  scritta in unità diverse.
+- `ottimo` cerca il minimo con le ampolle del listino; il test lo confronta
+  con la forza bruta. Il minimo non dipende da come si raggruppano gli ordini.
+- Il caso arriva da fuori (`rnd`), così una pozione si rifà identica nei test.
+
+## Lo sbaglio
+
+- **Uno sbaglio riporta il conto per intero**, a qualunque gradino: si dice il
+  perché *e* come si fa, coi numeri di quel momento (`righe`): cosa vale
+  l'ampolla, quanto c'era, quanto faceva, quanto mancava.
+- **Dopo un trabocco si sta fermi a leggere**, con la barra che dice quanto
+  manca prima della spugna: la stessa attesa dei quiz (`attesaDellEsito`,
+  `PONDERA` in `src/quiz/nucleo/domanda.js`).
 
 ## Cosa va al motore di apprendimento
 
-- **Conta il primo tentativo** di ogni dose che chiede una conversione,
-  sotto la chiave della coppia di unità **nel verso** in cui la si è fatta
-  (`chiaveDi`: `pozioni:kg-g` e `pozioni:g-kg` sono due cose diverse da
-  sapere). Le coppie possibili sono `CONVERSIONI` in
-  `src/giochi/pozioni/gioco.js`.
-- **Le dosi col conto svolto non si segnano**: il risultato era scritto.
-  Dopo il primo sbaglio su una dose non si annota più niente, e la dose
-  giusta arrivata dopo gli sbagli non si segna come saputa.
+- **Ogni ampolla con l'etichetta in un'unità diversa da quella della ricetta
+  è una conversione**, sotto la chiave della coppia **nel verso** in cui la si
+  è fatta (`chiaveDi`: `pozioni:kg-g` e `pozioni:g-kg` sono due cose diverse da
+  sapere): giusta se ci stava, sbagliata se è traboccata. Una scelta che ci
+  sta ma costa di più resta una conversione giusta. Le coppie possibili sono
+  `CONVERSIONI` in `gioco.js`.
+- **Col conto scritto (`svolto`, `gioco`) non si segna niente**: il risultato
+  era scritto. Dopo un trabocco su un ingrediente, quell'ingrediente non si
+  annota più.
 
-## Il calderone
+## Il disegno
 
-Ogni dose azzeccata ci finisce dentro, gli ingredienti restano a galla a
-dire cosa è già fatto, e il brodo prende il colore mescolato: **media
-geometrica dei canali** (`mescola`), perché giallo e blu devono fare verde
-e la media aritmetica farebbe grigio. Non conta niente: serve a far vedere
-che quella dose è servita a qualcosa.
+Il 3D sta in `scena3d/` (three.js). **Chi gioca non disegna**: `Mercante.vue`
+passa a `imposta()` una scena già decisa e chiede le animazioni (`ordine`,
+`pulisci`, `festa`), che tornano una promessa. Ogni voce dell'ordine dice già
+com'è andata; mentre la scena le suona la scena nuova aspetta (`occupa`), e
+**la pergamena segue il mercante**: un numero cambia solo quando l'ampolla è
+versata, se no il risultato si legge prima di vederlo.
+
+- **Uno strumento per ingrediente, col nome sotto**, e a ingrediente finito
+  viene messo via: davanti resta solo quello che serve (uno sporco resta finché
+  non si pulisce). Provato uno solo per tipo: due polveri non si misurano sulla
+  stessa bilancia.
+- **Un'unità non si misura come un'altra** (`vasi.js`): il cilindro graduato
+  per i liquidi, la bilancia col quadrante e il piatto per le polveri (il
+  mucchio cresce, il piatto cala, la lancetta gira verso l'oro), il metro in
+  piedi con la barretta d'oro per le radici (i pezzi comprati salgono uno
+  sull'altro).
+- **Il calderone parte vuoto** (`banco.js`): il brodo nasce con la prima cosa
+  versata e sale (i colori in **media geometrica dei canali**, `mescola`,
+  perché giallo e blu devono fare verde; l'arcobaleno è in
+  [procedimento.md](procedimento.md)).
+- **La consegna** (`ampolle.js`): fiasco, barattolo, radice sui pioli, a misura
+  reale (la radice lunga quanto sarà sul metro), con la targhetta. Una alla volta
+  volano, perdono il tappo o il panno, si piegano e versano.
+- **Gli ingredienti sono modelli veri, fotografati** (`scena3d/ingredienti3d.js`,
+  nella creta della fattoria): il liquido si mostra con da dove viene (la bava
+  col drago, il succo con la rapa). Il gioco non li costruisce: legge
+  `dati/anteprime.js`, generato da `npm run anteprime pozioni` (un test confronta
+  le firme), sulla pergamena, sul rotolo, nell'ordine e sopra il nome di ogni
+  strumento. Provato con una versione leggera in scena: 170 ms a modello sul
+  computer, fino a 576, quindi secondi sul telefono vecchio; a camera ferma la
+  foto si vede uguale. Li guarda il catalogo 3D (`npm run catalogo3d:scheda --
+  --gioco pozioni`).
+- **Lo sporco sta attorno alla base**: davanti lo coprirebbero le targhette.
+- **La telecamera** inquadra tutta la larghezza, e sposta la mira finché il
+  bordo basso cade sul bordo del bancone: in piedi avanza muro sopra, dove sta
+  la pergamena.
+- **Pergamena e rotolo** sono carta vecchia in CSS coi due rulli di legno,
+  le targhette cartoncini col buco per lo spago (`stile.css`). Prima in codice:
+  dipingerli viene dopo.
+- Senza WebGL la vista lo dice e offre «riprova».
 
 ## Il manifesto
 
-- **La chiave resta `pozioni`**: è quella con cui i genitori l'hanno
-  acceso o spento, e quella dei saperi. L'avanzamento sta in
-  `profile.campagne.pozioni` e riparte da capo sulla campagna nuova.
+- **La chiave resta `pozioni`**: è quella con cui i genitori l'hanno acceso o
+  spento, e quella dei saperi. L'avanzamento sta in `profile.campagne.pozioni`.
 - **I contatori hanno i nomi di sempre** (`misure`, `pozioni`,
   `pozioniPerfette`), così l'albo non torna a zero.
-- **`serve: ['misure', 'conversioni']`**: senza, il gioco non è difficile
-  ma impossibile, quindi la carta si spegne. `grandi: true`.
+- **`serve: ['misure', 'conversioni']`**: senza, il gioco non è difficile ma
+  impossibile, quindi la carta si spegne. `grandi: true`.
 
 ## Il dito
 
-L'ingrediente si trascina dallo scaffale all'attrezzo; se il dito si stacca
-senza essersi mosso è un tocco, l'ingrediente resta in mano e si posa
-toccando l'attrezzo. Il click fantasma dopo un trascinamento si ingoia (vedi
-[../core/il-dito.md](../core/il-dito.md)).
+Sul rotolo si tocca: una targhetta va nell'ordine, un posto dell'ordine toccato
+la toglie, il rotolo si chiude con la ✕. Sulla tela un tocco fermo (sotto i
+16 px) su una macchia, o sul suo strumento, pulisce.
 
-Nei test: `unita/pozioni` (gioca tutte le tappe), `integrazione/pozioni`
-(un trascinamento vero, `touchStart`·`touchMove`·`touchEnd` via CDP);
-`.carta.gioco[data-gioco="pozioni"]`, `.pz-tappa[data-tappa]`,
-`.pz-banco[data-fase]` (`scaffale`·`inMano`·`dosa`), `[data-voce]`,
-`[data-dose]`, `.pz-ingrediente[data-ingrediente]`, `[data-strumento]`,
-`[data-pezzo]`, `[data-lettura]`, `[data-azione="conferma"|"togli"|"svuota"|"riponi"]`,
-`[data-esito][data-codice]`, `[data-spiegazione]`, `[data-aiuto][data-livello]`,
-`[data-consiglio]`, `[data-procedimento]`, `[data-fine="tappa"]`,
-`[data-stelle]`, `[data-monete]`, `[data-nota-monete]`, `[data-azione="avanti"|"mappa"]`.
+Nei test: `unita/pozioni`, `unita/pozioni-sosta`, `integrazione/pozioni`,
+`integrazione/pozioni-sosta`; `.carta.gioco[data-gioco="pozioni"]`,
+`.pz-tappa[data-tappa]`, `.pz-mercante[data-fase]`
+(`banco`·`listino`·`macchia`·`procedimento`·`finita`), `[data-tela]`, `[data-pergamena]`,
+`[data-voce]`, `[data-dose]`, `[data-gettoni]`, `[data-listino]`, `[data-merce]`,
+`[data-targhetta="i:k"]`, `[data-vale]`, `[data-regola]`, `[data-chiudi]`,
+`[data-ordine]`, `[data-posto]`, `[data-azione="mercante"|"ordina"|"pulisci"]`,
+`[data-esito][data-codice]` (`aiuto`·`giusto`·`trabocca`), `[data-fine="tappa"]`,
+`[data-righe]`, `[data-stelle]`, `[data-monete]`, `[data-nota-monete]`,
+`[data-azione="avanti"|"mappa"]`; `window.__poz` (`aggiungi(i, k)`,
+`togliVoce(n)`, `ordina()`, `pulisci()`, `salta()`, `bottega`).

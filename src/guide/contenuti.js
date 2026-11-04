@@ -324,7 +324,7 @@ export const GUIDE = [
       ] },
       { titolo: 'Vedere dove sono arrivati', righe: [
         'Sulla mappa di un gioco l\'amico è **un pallino con la sua iniziale** sulla tappa a cui è arrivato, e in cima c\'è scritto chi è più avanti e di quante tappe. Nei giochi senza fine c\'è la classifica dei record, e a fine partita il gioco dice chi si è appena superato.',
-        'Quando un amico gli passa davanti, nella home compare «Leonardo ti ha superato»: toccandolo si va a riprenderlo.',
+        'Quando un amico gli passa davanti, nella home compare una riga col suo nome («ti ha superato»): toccandola si va a riprenderlo.',
         'L\'amico **non deve essere online**: basta che apra il gioco ogni tanto. Accanto c\'è da quando è il dato («oggi», «ieri», «3 giorni fa»).',
         'Succede in ' + mostranoAmici + '.',
       ] },
@@ -494,14 +494,14 @@ export const AIUTI = {
       'Qui non si vince: è il posto dove si spendono le monete guadagnate negli altri giochi. Il contadino cammina da solo fino alle cose e le fa, e la fattoria resta com\'era lasciata.',
       { titolo: 'I tocchi', righe: [
         '**Un tocco** su una cosa: il contadino ci va e la fa — raccoglie, dà da mangiare, apre la macchina.',
-        '**Tocca 🌱 Semina**, scegli cosa far crescere, poi **tocca i campi vuoti**. Lo stesso con **✂️ Raccogli** sui campi pronti: puoi anche passare il dito su più campi.',
-        '**Tieni il dito premuto** su un posto libero del tuo terreno: si apre «Costruisci qui». Anche il tasto 🏗 fa lo stesso.',
+        '**Tocca un campo**: se è vuoto compaiono i semi, se è pronto il falcetto. **Trascinali sui campi**, uno o tanti: il campo cambia sotto il dito.',
+        '**Tieni il dito premuto** su un posto libero del tuo terreno: si apre il menu «Compra». Anche il tasto 🛒 fa lo stesso.',
         '**Tieni premuto** su una cosa già messa per **spostarla**: la porti dove vuoi, oppure sulla scritta in basso per metterla via nel magazzino (rimetterla fuori è gratis).',
         '**Un tocco** su Watson o su un gatto: fa la festa. **Tieni premuto** sopra di lui: vedi come sta, cosa gli serve e puoi cambiargli il nome.',
       ] },
       { titolo: 'Le prime cose da fare', righe: [
         'Semina il grano, aspetta qualche secondo, raccoglilo. Niente marcisce mai: se ti dimentichi un campo, lo trovi lì.',
-        'Con le monete tocca 🏗 Costruisci: campi, recinti, edifici. Il terreno si compra a pezzi, e il mondo non finisce mai.',
+        'Con le monete tocca 🛒 Compra: campi, recinti, edifici. Il terreno si compra a pezzi, e il mondo non finisce mai.',
         'Non sai cosa fare? Tocca **🧭 E adesso?** e il gioco ti dice la cosa più utile, con il tasto per farla.',
       ] },
       { titolo: 'Cosa serve e dove si fa', righe: [
@@ -552,10 +552,17 @@ export const AIUTI = {
         'Il cane non tocca le pecore: quando si ferma sulla riga o sulla colonna di una pecora, **a una o due caselle**, lei si scansa di un passo dall\'altra parte. Per mandarla a destra il cane le va a sinistra; per girarle attorno passa in diagonale. Dietro a un albero, o a un\'altra pecora, il cane non si vede. E una pecora che scappa **spinge quella che ha davanti**: si spostano insieme, a pezzetti di gregge.',
         'Una pecora spinta in un angolo, o contro il bordo, non si recupera più: la fila si ferma lì, lampeggia la freccia che ce l\'ha mandata, e si riprova. L\'osso vale la seconda stella, come la carota.',
       ] },
+      { titolo: 'Il guerriero', righe: [
+        'Finito «Tutto insieme» si apre anche il **guerriero**, con la sua strada: deve arrivare alla **principessa**, e la corona è la sua carota.',
+        'Una **grata** si apre col **pulsante del suo colore** e resta aperta: basta metterci il piede, o farci finire sopra un masso. Saltandolo non si preme.',
+        'Un **nemico** vede le caselle attorno a lui, anche di traverso (quelle rosse per terra): chi scivola o salta non si è fermato. Chi si ferma lì deve subito toccare **⚔️ attacca**, con la spada in mano, se no viene colpito. Contro **due insieme** non basta: si prendono uno alla volta.',
+        'A metà strada arrivano le scatole: 🔁 ripete, 🚩 ripete fino a un pulsante, e ❓ con una freccia vuol dire **«se di là si passa»**: il guerriero guarda da solo dove andare.',
+      ] },
       { titolo: 'Lo zaino e il ripeti', righe: [
         'Dopo le buche la fila ha lo **zaino**: tiene poche carte, e la strada scritta freccia per freccia non ci sta.',
         '🔁 mette una **scatola**: le frecce che ha dentro si ripetono tante volte quante dice il suo numero. Il numero si sceglie, e finché è N ▶ non parte.',
-        'Toccando il bordo in fondo alla scatola si esce; toccando la testa si cambia il numero. Mentre il coniglio corre la testa dice a che giro è.',
+        'Il **+** in fondo a una scatola fa entrare lì la prossima carta; il + dopo la scatola la lascia fuori. Il posto arancione dice dove va. Toccando la testa si cambia il numero; mentre il coniglio corre dice a che giro è.',
+        'Le carte **si trascinano** col dito, dentro e fuori dalle scatole; presa dalla testa, una scatola si porta dietro tutto quello che ha dentro.',
         'Più avanti la testa può essere un **colore**: «fino al rosso» ripete finché il coniglio non arriva sulla lastra rossa. E la scatola ❓ **se** fa quello che ha dentro solo quando il coniglio sta sul colore giusto.',
       ] },
       { titolo: 'Il 💡', righe: [
@@ -696,20 +703,25 @@ export const AIUTI = {
   pozioni: {
     emoji: '🧪', titolo: 'Le pozioni',
     blocchi: [
-      'La ricetta chiede «1,5 kg di polvere di luna». Sullo scaffale ci sono più ingredienti: prendi quello giusto e **trascinalo sull\'attrezzo** — oppure toccalo, e poi tocca l\'attrezzo.',
-      { titolo: 'Ogni attrezzo conta in una unità, e arriva fin lì', righe: [
-        'Sul cartellino c\'è scritto **in che unità conta** (la bilancia da cucina in grammi, quella del mercato in etti) e **fino a quanto arriva**. Otto chili sulla bilancia dei grammi non ci stanno: si sale a quella degli etti.',
-        'Sull\'attrezzo si mettono i pezzi — i pesi, i misurini, i pezzi di nastro — finché il numero fa la dose. Poi «nel calderone».',
-        'Qualunque attrezzo su cui la dose ci sta va bene: un chilo sono mille grammi sulla bilancia da cucina e dieci etti su quella del mercato.',
+      'La pergamena chiede «1,5 kg di polvere di luna» e altri ingredienti, e il calderone è vuoto. Dal **listino del mercante** scegli le ampolle e ordinale: le verserà lui.',
+      { titolo: 'Il listino e i gettoni', righe: [
+        'Il rotolo del mercante ha tutti gli ingredienti della ricetta. Ogni targhetta dice quanto c\'è nell\'ampolla e quanti gettoni costa.',
+        'Il mercante scrive come gli pare: «5 hg», «0,2 kg», «300 g». Le ampolle grandi costano meno, quindi conviene **la più grande che ci sta**, ma per sapere cosa ci sta devi fare il conto.',
+        'Spesso la stessa quantità compare due volte, scritta in due modi, e una costa di più: è il **trucco del mercante**.',
+        'In fondo vedi sempre quanti gettoni hai speso, e le stelle dicono quanto ti sei avvicinato al minimo.',
+        'Fatta la spesa, la pergamena dice **cosa fare**. La roba e gli attrezzi **si trascinano**: la roba nel calderone o nel mortaio, il pestello sul mortaio, il mestolo e il fiammifero sul calderone. Una mossa fuori tempo fa un pasticcio e costa un gettone.',
+      ] },
+      { titolo: 'Se trabocca', righe: [
+        'Ogni ingrediente ha il suo strumento col segno d\'oro: la bilancia, il metro, il cilindro. Oltre il segno trabocca: l\'ampolla è persa, e prima di ordinare ancora c\'è da **pulire**, un gettone a macchia.',
+        'Il cartello dice **perché e come si fa**, coi numeri di quel momento. Non c\'è fretta e non ci sono cuori: la tappa si finisce sempre, anche coi gettoni in rosso.',
       ] },
       { titolo: 'Una cosa nuova per volta', righe: [
-        'Prima si impara il gesto, senza conversioni. Poi arriva il chilo, col conto scritto per intero: «da kg a g sono 3 scalini in giù, aggiungi 3 zeri». Poi lo stesso senza il risultato, poi la virgola, poi la bilancia degli etti, poi le conversioni al contrario.',
-        'Le lunghezze e i liquidi rifanno la stessa scaletta. Nelle ultime due tappe arriva di tutto, e solo nell\'ultima ci sono tre attrezzi per famiglia.',
-        'Se sbagli, il cartello dice **perché e come si fa**, per intero, anche nelle tappe senza aiuti. Non c\'è fretta e non ci sono cuori: la tappa si finisce sempre, e a cambiare sono le stelle.',
+        'Prima si impara il gesto, senza conversioni. Poi arriva il chilo, col conto scritto sotto ogni targhetta. Poi lo stesso senza il conto, poi la virgola, poi gli etti, poi le conversioni al contrario.',
+        'Le lunghezze e i liquidi rifanno la stessa scaletta. Nelle ultime due tappe arriva di tutto nella stessa pozione.',
       ] },
       { titolo: 'Cosa allena', righe: [
         'Le misure e le unità: chili, etti e grammi; metri, decimetri e centimetri; litri, decilitri e millilitri — e passare dall\'una all\'altra, in tutti e due i versi.',
-        'Scegliere l\'attrezzo giusto per la quantità: leggere un cartellino è metà del mestiere.',
+        'Confrontare quantità scritte in modo diverso.',
       ] },
     ],
   },

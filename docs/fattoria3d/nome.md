@@ -1,6 +1,6 @@
 # Il nome della fattoria
 
-Il bambino può dare un nome alla fattoria (su richiesta di Melody: «La fattoria» non le basta), e lo stesso vale per ogni fattoria in
+Il bambino può dare un nome alla fattoria (su richiesta di una bambina: «La fattoria» non le basta), e lo stesso vale per ogni fattoria in
 comune con un amico ([in-comune.md](in-comune.md)).
 
 - **Dove sta**: `stato.nome` dentro lo stato di ogni fattoria, quindi la propria ha il suo e la fattoria in comune di ogni amicizia il

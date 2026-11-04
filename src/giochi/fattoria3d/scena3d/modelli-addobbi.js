@@ -177,7 +177,7 @@ export const AGGANCI = {
   pappagallo: { testa: ['testa', 0, 0.09, 0.0, 0.48, 0], muso: ['testa', 0, 0.035, 0.075, 0.9, 0], collo: ['corpo', 0, 0.12, 0.01, 0.55, 0] },
 }
 /** La forma di un corpo per `AGGANCI`: il beagle ha gli stessi perni di Watson ma un'altra testa. */
-export const formaDi = g => (g.userData.tipo === 'cane' && g.userData.id === 'beagle' ? 'beagle' : g.userData.tipo)
+export const formaDi = g => (g.userData.tipo === 'cane' && g.userData.scheletro === 'beagle' ? 'beagle' : g.userData.tipo)
 
 /** Veste un corpo in scena: toglie quello che portava e mette `addosso` ({ aggancio: `<id>:<colore>` }). Non rifà niente se non è cambiato. */
 export function vestiBestia (g, addosso = {}) {

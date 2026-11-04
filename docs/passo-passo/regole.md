@@ -13,10 +13,11 @@ legenda delle celle sta in `dati/mondo.js`, le regole in `motore/mondo.js`.
 - **▶ riparte sempre dalla partenza, e la fila resta.** È un programma, non
   un telecomando; mentre corre si accende la freccia che sta facendo — sapere
   a che punto del programma si è è la cosa che il gioco insegna.
-- **Si compone toccando, mai trascinando.** Ogni tasto mette la freccia dove
-  sta il cursore (di partenza in fondo); toccare una tessera sposta il cursore
-  subito dopo, toccarla di nuovo subito prima. ⌫ toglie la freccia prima del
-  cursore.
+- **Si scrive toccando, si sposta trascinando.** Ogni tasto mette la freccia
+  dove sta il cursore (di partenza in fondo); toccare una tessera sposta il
+  cursore subito dopo, toccarla di nuovo subito prima. ⌫ toglie la freccia prima
+  del cursore. Una tessera già scritta si trascina in un altro posto
+  ([zaino.md](zaino.md#la-scatola-)).
 - **Uno sbaglio si vede dov'è.** Se il coniglio sbatte o va in acqua la
   tessera colpevole lampeggia, lui fa la sua scenetta e torna alla partenza;
   il cursore si mette subito dopo la tessera sbagliata.

@@ -59,16 +59,16 @@ async function aiPiedi(al) {
 
 /* ══════════ 1. a metà delle discese ══════════ */
 await alMondo(2, false, [
-  amico('a', 'leonardo1', 'Leonardo', 0, 4),
-  amico('b', 'melody001', 'Melody', 3, 1),
+  amico('a', 'lorenzo01', 'Lorenzo', 0, 4),
+  amico('b', 'marta0001', 'Marta', 3, 1),
   amico('d', 'ugo000001', 'Ugo', 1, 4),
   amico('e', 'dario0001', 'Dario', 2, QUANTE_TAPPE),
   amico('c', null, '', 0, 3),                               // mai incontrato online: senza nome non si vede
 ])
-uguale('in cima chi è da raggiungere', await testo('[data-amico-davanti]'), 'Leonardo è 2 tappe più avanti di te.')
+uguale('in cima chi è da raggiungere', await testo('[data-amico-davanti]'), 'Lorenzo è 2 tappe più avanti di te.')
 uguale('la riga in cima sta fuori dal mondo, con le carte di sopra', await page.locator('.sot-terra-sopra [data-amico-davanti]').count(), 1)
 uguale('sulla discesa 4 due pallini', await pallini(4), 2)
-uguale('sulla discesa che si è già fatta, Melody', await pallini(1), 1)
+uguale('sulla discesa che si è già fatta, Marta', await pallini(1), 1)
 uguale('sull\'abisso, Dario', await pallini(QUANTE_TAPPE), 1)
 uguale('quattro pallini in tutto, non quello senza nome', await page.locator('[data-amici-posto] [data-pallino-amico]').count(), 4)
 uguale('le altre discese non ne hanno', await page.locator('[data-amici-posto]').count(), 3)
@@ -77,28 +77,28 @@ uguale('nessun record: il gioco non ha una sfida senza fine', await page.locator
 await aiPiedi(1)
 await scatto(page, 'amici-sotterraneo-mondo')
 await apriIlFumetto(1)
-uguale('nel fumetto della discesa, il nome', await testo('[data-fumetto] [data-amici-qui][data-al="1"]'), 'MMelody è qui')
+uguale('nel fumetto della discesa, il nome', await testo('[data-fumetto] [data-amici-qui][data-al="1"]'), 'MMarta è qui')
 await apriIlFumetto(4)
-uguale('anche su una discesa ancora chiusa', await testo('[data-fumetto] [data-amici-qui][data-al="4"]'), 'LULeonardo e Ugo sono qui')
+uguale('anche su una discesa ancora chiusa', await testo('[data-fumetto] [data-amici-qui][data-al="4"]'), 'LULorenzo e Ugo sono qui')
 await apriIlFumetto(0)
 uguale('un ingresso senza amici non ha la riga', await page.locator('[data-fumetto] [data-amici-qui]').count(), 0)
 
 /* ══════════ 2. finite le sette discese: l'abisso ══════════ */
 await alMondo(QUANTE_TAPPE, true, [
-  amico('a', 'leonardo1', 'Leonardo', 0, QUANTE_TAPPE),
-  amico('b', 'melody001', 'Melody', 1, QUANTE_TAPPE - 1),
+  amico('a', 'lorenzo01', 'Lorenzo', 0, QUANTE_TAPPE),
+  amico('b', 'marta0001', 'Marta', 1, QUANTE_TAPPE - 1),
 ])
 uguale('nessuno è più avanti di chi ha finito', await page.locator('[data-amico-davanti]').count(), 0)
-uguale('Melody è sulla sua discesa', await pallini(QUANTE_TAPPE - 1), 1)
-uguale('Leonardo è sull\'abisso', await pallini(QUANTE_TAPPE), 1)
+uguale('Marta è sulla sua discesa', await pallini(QUANTE_TAPPE - 1), 1)
+uguale('Lorenzo è sull\'abisso', await pallini(QUANTE_TAPPE), 1)
 await aiPiedi(QUANTE_TAPPE)
 await apriIlFumetto(QUANTE_TAPPE)
-uguale('nel fumetto dell\'abisso, il nome', await testo(`[data-fumetto] [data-amici-qui][data-al="${QUANTE_TAPPE}"]`), 'LLeonardo è qui')
+uguale('nel fumetto dell\'abisso, il nome', await testo(`[data-fumetto] [data-amici-qui][data-al="${QUANTE_TAPPE}"]`), 'LLorenzo è qui')
 await scatto(page, 'amici-sotterraneo-abisso')
 
 /* ══════════ 3. uno è già all'abisso, e chi guarda no ══════════ */
-await alMondo(2, false, [amico('a', 'leonardo1', 'Leonardo', 0, QUANTE_TAPPE)])
-uguale('in cima chi è all\'abisso', await testo('[data-amico-davanti]'), 'Leonardo è già all\'abisso.')
+await alMondo(2, false, [amico('a', 'lorenzo01', 'Lorenzo', 0, QUANTE_TAPPE)])
+uguale('in cima chi è all\'abisso', await testo('[data-amico-davanti]'), 'Lorenzo è già all\'abisso.')
 
 controlla('nessun errore, anche col servizio irraggiungibile', veri().length === 0, veri().join(' | '))
 await browser.close()

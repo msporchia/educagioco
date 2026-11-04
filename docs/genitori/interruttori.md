@@ -20,9 +20,10 @@ Sparisce la carta in home, i progressi restano.
   rispetta (`giocoForzato` vince su `giocoDaVedere`). Vince sull'età, non
   sui saperi spenti.
 - **Un gioco può nascere spento per tutte le età** (`spentoDiBase: true` nel
-  manifesto, letto da `eccezioniDi` in `src/data/partenze.js`). Lo spagnolo: in famiglia
-  c'è una madre boliviana, per gli altri è irrilevante. Il genitore lo accende
-  dalla ✎ (`{ spagnolo: true }`); chi l'ha già giocato lo vede comunque.
+  manifesto, letto da `eccezioniDi` in `src/data/partenze.js`): oggi solo i
+  giochi in prova, qui sotto. Il genitore lo accende dalla ✎; chi l'ha già
+  giocato lo vede comunque. Provato con lo spagnolo: tolto, resta acceso come
+  gli altri e chi non lo vuole lo spegne.
 - Si sceglie dalla ✎ della sua riga nel quadro ([ritocchi.md](ritocchi.md)),
   non da una fila di interruttori.
 

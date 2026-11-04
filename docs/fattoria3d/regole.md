@@ -56,7 +56,7 @@ tempo o un rifiuto.
 | recinto / bancarella / bacheca / fontana | 45 / 15 / 12 / 30 | fissi; nel recinto una pecora, le altre si comprano (40, 60, 80) |
 | aiuola / panchina / pozzo / spaventapasseri | 6 / 10 / 18 / 12 | decorazioni, fissi |
 | passerella / ponte / tavolo | 8 / 14 / 18 | decorazioni (liv 3 / 5 / 4), fisse |
-| stagno / laghetto | 35 / 110 | decorazioni d'acqua (liv 5 / 11), fisse; non produttive: non spostano la scaletta ([laghi.md](laghi.md)) |
+| stagno / laghetto | 30 / 26 | decorazioni d'acqua (liv 10, con la pesca), fisse; non produttive: non spostano la scaletta ([laghi.md](laghi.md)) |
 | molo / molo girato / porticciolo | 12 / 12 / 90 | la pesca (liv 4 / 4 / 9), fissi; il porticciolo è uno solo e sta sulla riva; non produttivi ([geografia-e-pesca.md](geografia-e-pesca.md)) |
 | friggitoria / sushi bar | 170 / 180 | edifici unici come gli altri (liv 17 / 18: i due livelli in coda alla scaletta), le ricette della 2D col pesce ([geografia-e-pesca.md](geografia-e-pesca.md)) |
 | pollaio / stalla | 55 / 90 | liberi nel terreno come il recinto; una bestia nel prezzo, le altre una per volta, sempre più care ([animali.md](animali.md)) |

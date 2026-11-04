@@ -2,7 +2,7 @@
    LE PERSONE 3D DEL MONDO DI SOPRA — docs/sotterraneo/persone-3d.md
 
    Chi sta sulla terra di sopra (le persone fuori dalle città, quelle
-   nuove, i quattro mercanti, i personaggi delle missioni, i viandanti,
+   nuove, i cinque mercanti, i personaggi delle missioni, i viandanti,
    il minatore, la sentinella) ha un modello in scena3d/persone3d/; la
    lista senza three delle viste (dati/persone3d.js) è quella dei
    modelli; ogni modello si costruisce in Node, sta sotto i 2500

@@ -29,7 +29,7 @@
 import { apriBrowser, apriGioco, azzera, scatto, semina, attendi, leggiProfilo, TELEFONO, scegli,
          giocaSullIsola, statoSullIsola } from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
-import { CAMPAGNA, TAPPE_PICCOLE, TAPPE_PRIME, FILA_ATTUALE } from '../../src/giochi/passo-passo/dati/campagna.js'
+import { CAMPAGNA, TAPPE_PICCOLE, TAPPE_PRIME, FILA_ATTUALE, delGuerriero } from '../../src/giochi/passo-passo/dati/campagna.js'
 import { Livello } from '../../src/giochi/passo-passo/motore/livello.js'
 import { risolvi } from '../../src/giochi/passo-passo/motore/risolutore.js'
 
@@ -292,7 +292,7 @@ await page.waitForSelector('.pp-mappa')
 await semina(page, { settings: { eta: 8, tuttoAperto: true } })
 await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
-await entraNellaTappa(CAMPAGNA.length - 1)
+await entraNellaTappa(CAMPAGNA.findLastIndex(t => !delGuerriero(t)))
 {
   const tela = await page.locator('.pp-tela').boundingBox()
   const sotto = await page.locator('[data-azione="via"]').boundingBox()

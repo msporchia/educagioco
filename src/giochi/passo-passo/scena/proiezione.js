@@ -25,6 +25,11 @@ export const DURATE = {
   tana: 0.6,
   gregge: 0.7,
   incastrata: 0.25,
+  pulsante: 0.55,
+  spada: 0.2,
+  duello: 0.7,
+  fendente: 0.3,
+  colpito: 0.55,
 }
 /* la fuga di una pecora: un saltello, poi la scivolata (una cella alla
    volta, come il masso), e se è entrata nel recinto la camminata fino
@@ -78,7 +83,7 @@ export class Proiezione {
        `persa` è una pecora incastrata: la scenetta è sua, non del cane —
        trema nel suo angolo e dice «bee», e la sua cella pulsa */
     this.errore = this.esito === 'sbatte' || this.esito === 'splash' || this.esito === 'stanco' ||
-                  this.esito === 'persa'
+                  this.esito === 'persa' || this.esito === 'caduto'
     const ultima = this.battute.at(-1)
     this.incastrata = this.esito === 'persa' && ultima && ultima.e.che === 'incastrata' ? ultima.e.dove : null
     if (this.errore) {
@@ -116,7 +121,7 @@ export class Proiezione {
     if (this.errore) {
       if (t < this.tRitorno) {
         f.scenetta = this.esito
-        if (this.esito === 'sbatte' || this.esito === 'stanco') {
+        if (this.esito === 'sbatte' || this.esito === 'stanco' || this.esito === 'caduto') {
           f.coniglio.posa = 'stordito'
         } else if (this.esito === 'persa') {
           f.coniglio.posa = 'fermo'
@@ -156,8 +161,9 @@ export class Proiezione {
     }
     if (this.esito === 'tana') {
       /* il coniglio è entrato nella tana; il cane resta fuori a fare la
-         guardia al recinto, e scodinzola */
-      if (!this.liv.cane) f.coniglio.alfa = 0
+         guardia al recinto, e scodinzola; il guerriero salta di gioia
+         accanto alla principessa */
+      if (!this.liv.cane && !this.liv.guerriero) f.coniglio.alfa = 0
       else f.coniglio.su = Math.abs(Math.sin((t - this.fineMosse) * 9)) * 2
       f.festa = true
       return f
@@ -186,6 +192,14 @@ export function fotogrammaIniziale(liv) {
       return { x, y, verso: (x + y) % 2 ? 'destra' : 'sinistra', su: 0, alfa: 1, trema: 0 }
     }),
     recinto: [],
+    /* il guerriero: chi è ancora in piedi, la spada, le grate, e la
+       principessa che si scansa quando lui arriva */
+    nemici: (liv.nemici || []).map((i, k) => ({ ...liv.xy(i), alfa: 1, verso: k % 2 ? 'sinistra' : 'destra' })),
+    spada: liv.spada >= 0 ? { ...liv.xy(liv.spada), presa: false } : null,
+    armato: false,
+    grate: celleDi(liv, liv.grata).map(g => ({ ...g, su: 0 })),
+    pulsanti: celleDi(liv, liv.pulsante).map(p => ({ ...p, giu: false })),
+    principessa: 0,
     effetti: [],
     corrente: -1,
     passo: -1,
@@ -197,6 +211,14 @@ export function fotogrammaIniziale(liv) {
     tornato: false,
   }
 }
+
+// le celle che hanno un colore in una tabella del livello (le grate, i pulsanti)
+function celleDi(liv, tabella) {
+  const fuori = []
+  ;(tabella || []).forEach((colore, i) => { if (colore) fuori.push({ ...liv.xy(i), colore }) })
+  return fuori
+}
+const cercaNemico = (f, p) => f.nemici.find(n => n.alfa > 0 && Math.round(n.x) === p.x && Math.round(n.y) === p.y)
 
 const cercaMasso = (f, p) =>
   f.massi.find(m => m.alfa > 0 && Math.round(m.x) === p.x && Math.round(m.y) === p.y)
@@ -407,7 +429,68 @@ function applica(f, b, k, liv) {
       c.posa = 'fermo'
       break
     }
+    case 'pulsante': {
+      /* il pulsante scende subito, e le grate del suo colore salgono piano */
+      for (const p of f.pulsanti) if (p.x === e.dove.x && p.y === e.dove.y) p.giu = true
+      for (const g of f.grate) if (g.colore === e.colore) {
+        g.su = morbido(k)
+        if (k < 1) f.effetti.push({ che: 'polvere', x: g.x, y: g.y, t0: b.t0 })
+      }
+      c.posa = 'fermo'
+      break
+    }
+    case 'spada': {
+      if (f.spada) f.spada.presa = true
+      f.armato = true
+      f.effetti.push({ che: 'lampo', x: e.dove.x, y: e.dove.y, t0: b.t0 })
+      break
+    }
+    case 'duello': {
+      /* un affondo verso il nemico, che sparisce in uno sbuffo: un pericolo
+         tolto di mezzo non resta in scena */
+      const n = cercaNemico(f, e.nemico)
+      const v = { x: e.nemico.x - e.da.x, y: e.nemico.y - e.da.y }
+      const s = Math.sin(Math.PI * k) * 0.38
+      c.verso = verso(e.da, e.nemico)
+      c.x = e.da.x + v.x * s
+      c.y = e.da.y + v.y * s
+      c.posa = k >= 1 ? 'fermo' : 'spinge'
+      c.fase = k
+      if (k >= 0.4) f.effetti.push({ che: 'botta', x: e.nemico.x, y: e.nemico.y, t0: b.t0 + dur * 0.4 })
+      if (n) n.alfa = k >= 1 ? 0 : k < 0.5 ? 1 : 1 - (k - 0.5) * 2
+      if (k >= 1) f.effetti.push({ che: 'sbuffo', x: e.nemico.x, y: e.nemico.y, t0: b.t1 })
+      break
+    }
+    case 'fendente': {
+      /* ⚔️ a vuoto: un colpo all'aria, e niente altro */
+      c.posa = k >= 1 ? 'fermo' : 'spinge'
+      c.fase = k
+      break
+    }
+    case 'colpito': {
+      /* chi gli sta accanto gli va addosso e torna al suo posto */
+      const s = Math.sin(Math.PI * k) * 0.42
+      for (const p of e.nemici) {
+        const n = cercaNemico(f, p)
+        if (n) { n.x = p.x + (e.da.x - p.x) * s; n.y = p.y + (e.da.y - p.y) * s }
+      }
+      c.verso = verso(e.da, e.nemici[0])
+      c.posa = k < 0.45 ? 'fermo' : 'stordito'
+      c.fase = k
+      if (k >= 0.45) f.effetti.push({ che: 'botta', x: e.da.x, y: e.da.y, t0: b.t0 + dur * 0.45 })
+      f.guasto = { x: e.nemici[0].x, y: e.nemici[0].y, fuori: false }
+      break
+    }
     case 'tana': {
+      if (liv.guerriero) {
+        /* la principessa si scansa, e lui le si mette accanto */
+        c.x = e.dove.x - 0.3 * morbido(k); c.y = e.dove.y
+        c.verso = 'destra'
+        c.posa = 'fermo'
+        f.principessa = 0.34 * morbido(k)
+        if (k >= 0.6) f.effetti.push({ che: 'cuori', x: e.dove.x, y: e.dove.y, t0: b.t0 + dur * 0.6 })
+        break
+      }
       /* dentro la porta: si scende piano, e dalla tana escono i cuori */
       c.x = e.dove.x; c.y = e.dove.y - 0.12 * k
       c.immerso = morbido(k) * 0.9

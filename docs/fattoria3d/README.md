@@ -16,6 +16,7 @@ convertire) sta in `src/giochi/fattoria3d/da2d/`. Le monete sono quelle vere.
 - [cortile-e-pentolone.md](cortile-e-pentolone.md) — il pentolone (le 4 ricette del mangime) e le bestie che mangiano da lui: anatre, maiali, capre; i numeri provvisori in `dati/cortile.js`
 - [cortile-2.md](cortile-2.md) — il secondo cortile: conigliera (lana d'angora), alpaca (lana d'alpaca), asini (concime), arnie (fiori → miele), merenda e caramelle, e perché la peschiera non c'è; i numeri sono della 2D (`dati/cortile2.js`)
 - [animali.md](animali.md) — pollaio e stalla: galline e mucche, uova e latte, i posti coi livelli, il caseificio e le ricette nuove
+- [campi.md](campi.md) — i campi col dito: il tocco porta l'attrezzo, si trascina sui campi
 - [ordini.md](ordini.md) — il banco della bancarella: chi chiede raccolti e prodotti, il premio in esperienza (mai monete), rifiutare, lo stato v3
 - [botteghe.md](botteghe.md) — le quattro botteghe del paese (pasticceria, osteria, mensa, merceria): edifici che chiedono, clienti per mestiere, la fama a cuori, i numeri della 2D
 - [mongolfiera.md](mongolfiera.md) — la nave: tre file di casse (quattro dal livello 66) da riempire un po' alla volta, i bonus, la sorpresa della fiera, il viaggio e il ritorno, il segnaposto di prima che si chiude
@@ -27,9 +28,14 @@ convertire) sta in `src/giochi/fattoria3d/da2d/`. Le monete sono quelle vere.
 - [mondo-infinito.md](mondo-infinito.md) — il mondo senza confini: lotti `a_b` qualunque, generazione per lotto, gli id salvati, la finestra della scena, il prezzo che si auto-limita
 - [laghi.md](laghi.md) — i laghetti (biomi), gli stagni e i laghetti che costruisce il bambino, l'acqua, i ponti, il disegno, e dove la pesca si aggancia
 - [geografia-e-pesca.md](geografia-e-pesca.md) — il mare a ovest e i laghi grandi a est (forme continue fra lotti), i salvataggi di prima che tengono i loro lotti, il molo, il porticciolo, i banchi di pesce, i pesciolini a istanze, il pesce, friggitoria e sushi bar, i livelli 17 e 18
+- [adozioni.md](adozioni.md) — niente animali in regalo: il catalogo delle razze (cani e gatti, mantelli, prezzi), Watson e i gatti di casa (anche Golia) che si adottano, e chi li aveva già li tiene
 - [bestie-di-casa.md](bestie-di-casa.md) — le bestie che si comprano e si curano (beagle, gatto rosso, coniglio, pappagallo): numeri della 2D, bisogni, ciotola, coccole, premio, battesimo, sposta, la veterinaria; il rapporto con i compagni gratis
 - [addobbi.md](addobbi.md) — vestire le bestie (anche Watson e i gatti): i dodici addobbi della 2D tutti in vendita, comprare è mettere, il cassetto, gli agganci su ogni corpo, «Che eleganza»
+- [creta.md](creta.md) — gli animali di casa modellati nella creta (forme che si fondono, una pelle sola, colori nei vertici, la coda del gatto sulle ossa), il peso, la versione da lontano, cosa non ha funzionato
+- [taglie.md](taglie.md) — quanto è grande ogni animale in scena: le taglie vere compresse, le zampe più alte o più basse per razza, il test che tiene l'ordine
+- [cura-sul-prato.md](cura-sul-prato.md) — la ciotola col nome, cosa chiede e la scappatoia a monete, la fame che insiste, il prezzo che sale, lo sporco e la tinozza, giocare col tocco, chi si annoia
 - [compagni.md](compagni.md) — Watson e i gatti che girano per la fattoria, il contadino nuovo: quando arrivano, come sono fatti, come si muovono
+- [casa.md](casa.md) — dentro la casa: si entra toccandola, sei stanze da comprare una attaccata all'altra, i mobili da mettere, colorare (colore e trama) e spostare, pavimento e pareti, l'armadio che apre il guardaroba
 - [guardaroba.md](guardaroba.md) — cambiare abito al contadino o alla contadina: il genere dal profilo, i capi e gli sblocchi, il salvataggio, come si aggiunge un pezzo
 - [rotazione.md](rotazione.md) — ruotare i pezzi e gli edifici: `rot` 0–3 nello stato, l'ingombro e il davanti che seguono, il tasto ↻ col secondo dito
 - [decorazioni.md](decorazioni.md) — le 206 decorazioni della 2D portate in 3D (verde, fiori, recinti e cartelli, raccolto, case e lampioni, arredo, acqua, bestiole, feste e fiera): le schede nuove del menu, gli id, le eccezioni, l'acqua e la fiera, il peso misurato e cosa manca

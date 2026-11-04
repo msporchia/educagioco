@@ -8,11 +8,11 @@ con gli amici il codice sparisce. Servono il servizio su Cloudflare e internet: 
 ## Un'amicizia è fra due persone
 
 Ogni amicizia ha **una chiave sua** (32 lettere e cifre casuali, 128 bit), che hanno solo quei due telefoni. Niente gruppi: abbinare
-Melody a Leonardo non fa vedere Melody a nessun altro, e un codice finito in mani sbagliate fa entrare uno sconosciuto **solo** in
+due bambini non fa vedere nessuno dei due a nessun altro, e un codice finito in mani sbagliate fa entrare uno sconosciuto **solo** in
 quell'amicizia (compare come «in attesa» senza nome, e un grande la toglie).
 L'amicizia si salva sul telefono per bambino (`store/amici.js`, chiave `amici:<profilo>`, fuori dai profili, un oggetto):
 `{ id (casuale, del bambino), attivo (bool, falso), online (bool), amici: [{ id, nome, chiave, visto }] }`. **Il nome dell'amico si impara la prima volta che si
-incontrano e si tiene**: anche offline la lista dice «Melody» (in grigio), non un codice. Se l'amico cambia nome, si aggiorna.
+incontrano e si tiene**: anche offline la lista dice il nome (in grigio), non un codice. Se l'amico cambia nome, si aggiorna.
 
 ## Come ci si abbina: un codice breve che scade
 
@@ -44,7 +44,7 @@ Perché regge (non è un buco di sicurezza):
   grandi hanno lasciato accesi; toccato il gioco, si apre la sua sala già su «Sfidi …» con quell'amico, e restano da fare solo le
   scelte della partita. Passa da `ingresso.js` con `{ amico }` al posto dell'invito: `daInvito` lo riconosce e la sala lo riceve in
   `scelto` ([insieme.md](insieme.md)).
-- **Ricevere**: **un cartello su qualunque schermata** («Leonardo ti invita a Castle Battle · Gioca / No grazie», montato una volta
+- **Ricevere**: **un cartello su qualunque schermata** («*nome* ti invita a Castle Battle · Gioca / No grazie», montato una volta
   in `App.vue`, come `Avviso.vue`). «Gioca» apre il gioco già dentro la partita; sparisce da solo dopo 30 secondi.
   **Se si sta già giocando** il gioco si mette in pausa da sé (`usaPausa` guarda `stato.invito`; resta in pausa finché non
   si riprende) e il cartello sta sopra; in una partita in due non si ferma niente (l'altro non può aspettare), il cartello compare lo stesso.
@@ -68,18 +68,18 @@ Le funzioni online sono **una cosa da chiedere ai genitori**, come l'età. Due l
 Una chat non c'è e non ci sarà (inviti e risposte sono di forma fissa): l'unica cosa da zittire sono gli inviti.
 
 **Si chiede nel modulo del bambino nuovo** (`Benvenuto.vue`, che si fa al primo avvio e a ogni bambino aggiunto, ed è per i
-genitori: «Lo possono cambiare mamma e papà»): una riga nel passo dell'età (non un passo a parte: ogni prova che crea un bambino
+genitori: «Lo possono cambiare mamma e papà»): una riga nel passo della data di nascita (non un passo a parte: ogni prova che crea un bambino
 preme «Si gioca!»), «Giocare con gli amici» — due righe che dicono cos'è, «Leggi tutto» per il testo intero, e due tasti, *Attiva* e
 *Più tardi*. Il profilo non esiste ancora quando si risponde: la risposta aspetta in `ricordaScelta` e la prende il primo `carica`
-di quel profilo. **Il tasto già scelto è «Più tardi»** (la
-regola della manopola: premere senza leggere sbaglia dalla parte prudente); il valore di partenza sta in una costante sola
+di quel profilo. **Il tasto già scelto è «Più tardi»** (premere senza leggere
+sbaglia dalla parte prudente); il valore di partenza sta in una costante sola
 (`AMICI_DI_BASE`), e quando si vorrà che di base sia attivo basta cambiare quella. Attivare non espone nessuno: un amico c'è solo
 dopo che un grande ha fatto l'abbinamento col codice.
 
 **Cosa dice il passo** (parole per i grandi, in `src/amici/testi.js` insieme all'avviso della posta, così si cambiano in un posto):
 
 > **Giocare con gli amici** — Si può giocare insieme a un amico, ognuno sul suo telefono. Vedrà solo gli amici con cui voi
-> grandi vi scambiate un codice, e funziona solo in alcuni giochi (per ora Castle Battle — l'elenco viene da `amici/giochi.js`). Si gioca insieme soltanto quando
+> grandi vi scambiate un codice, e funziona solo in alcuni giochi. Si gioca insieme soltanto quando
 > lo decide lui: arriva un invito e dice sì o no. In alcuni giochi vede anche fin dove sono arrivati i suoi amici e i loro
 > record, e loro vedono i suoi. Non ci sono chat e non può parlare con nessuno. È un divertimento in più,
 > il resto del gioco non cambia. Lo potete cambiare quando volete, dalle impostazioni.
