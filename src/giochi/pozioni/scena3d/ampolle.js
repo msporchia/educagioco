@@ -53,13 +53,13 @@ export function creaAmpolle(scena, trame) {
     // `misura`: quanto dose è questa ampolla. Il volume cresce col cubo, quindi la scala con la radice cubica
     const s = 0.45 + 0.7 * Math.cbrt(Math.min(1.5, d.misura))
     const mat = []
-    let alto, bocca
+    let alto, bocca, chiuso = []            // quello che si toglie prima di versare
     if (d.famiglia === 'capacita') {
       const succo = new MeshStandardMaterial({ color: tinta, emissive: tinta.clone().multiplyScalar(0.3), roughness: 0.2, transparent: true, opacity: 0.9 })
       mat.push(succo)
       const t = new Mesh(geo.tappo, sughero); t.position.y = 0.73
       corpo.add(new Mesh(geo.succo, succo), new Mesh(geo.fiasco, vetro), t)
-      alto = 0.8; bocca = new Vector3(0, 0.7, 0)
+      alto = 0.8; bocca = new Vector3(0, 0.7, 0); chiuso = [t]
     } else if (d.famiglia === 'massa') {
       const polvere = new MeshStandardMaterial({ color: tinta, roughness: 0.95, map: trame.polvere })
       const panno = new MeshStandardMaterial({ color: tinta.clone().offsetHSL(0.05, -0.2, -0.25), roughness: 1 })
@@ -67,7 +67,7 @@ export function creaAmpolle(scena, trame) {
       const p = new Mesh(geo.panno, panno); p.position.y = 0.58
       const sp = new Mesh(geo.spago, sughero); sp.rotation.x = Math.PI / 2; sp.position.y = 0.52
       corpo.add(new Mesh(geo.polvere, polvere), new Mesh(geo.vaso, vetro), new Mesh(geo.fondoVaso, vetro), p, sp)
-      alto = 0.62; bocca = new Vector3(0, 0.6, 0)
+      alto = 0.62; bocca = new Vector3(0, 0.6, 0); chiuso = [p, sp]
     } else {
       const scorza = new MeshStandardMaterial({ color: tinta, roughness: 0.85, map: trame.radice })
       mat.push(scorza)
@@ -88,7 +88,7 @@ export function creaAmpolle(scena, trame) {
     gruppo.position.copy(casa)
     gruppo.scale.setScalar(0.001)
     g.add(gruppo)
-    return { gruppo, corpo, cartello, mat, casa, famiglia: d.famiglia, bocca, entra: -0.25 * k, fase: k * 1.3 }
+    return { gruppo, corpo, cartello, mat, casa, chiuso, famiglia: d.famiglia, bocca, entra: -0.25 * k, fase: k * 1.3 }
   }
 
   function butta(a) {

@@ -163,8 +163,8 @@ versata, se no il risultato si legge prima di vederlo.
   versata, sale e cambia colore (**media geometrica dei canali**,
   `mescola`, perché giallo e blu devono fare verde).
 - **La consegna** (`ampolle.js`): fiasco, barattolo, radice sui pioli, a misura
-  reale (la radice lunga quanto sarà sul metro), con la targhetta. Una alla volta volano, si piegano e
-  versano.
+  reale (la radice lunga quanto sarà sul metro), con la targhetta. Una alla volta
+  volano, perdono il tappo o il panno, si piegano e versano.
 - **Gli ingredienti sono modelli veri, fotografati** (`scena3d/ingredienti3d.js`,
   nella creta della fattoria): il liquido si mostra con da dove viene (la bava
   col drago, il succo con la rapa). Il gioco non li costruisce: legge
