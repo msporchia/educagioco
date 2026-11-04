@@ -171,6 +171,8 @@ export function serveLaCarta(liv) {
        al masso è un livello del prato con un sasso in più. Le pecore
        stanno con loro: senza la loro regola non scappano, e nel recinto
        non ci va nessuno;
+     · le grate stanno con loro: senza pulsanti non si apre niente, e il
+       livello che si vince lo stesso non ha bisogno della grata;
      · il ghiaccio e le buche: la strada giusta, giocata in un mondo dove
        il ghiaccio è prato (o la buca è una buca qualsiasi), **non
        vince**. Col ghiaccio spento si arriva quasi sempre, ma per
@@ -178,8 +180,16 @@ export function serveLaCarta(liv) {
 export function serveLaRegola(liv, regola) {
   const vera = risolvi(liv, { carota: true })
   if (!vera) return false
-  if (regola === 'salto' || regola === 'spinta' || regola === 'pecore')
+  if (regola === 'salto' || regola === 'spinta' || regola === 'pecore' || regola === 'grate')
     return !risolvi(liv, { carota: false, senza: regola })
+  /* i nemici: senza di loro (o senza la regola dei due alla volta) la strada
+     sarebbe più corta, o non ci sarebbe proprio: il nemico la cambia. E serve
+     anche se la strada giusta ne batte uno */
+  if (regola === 'nemici' || regola === 'due') {
+    const libera = risolvi(liv, { carota: false, senza: regola })
+    if (!libera || libera.length < risolvi(liv, { carota: false }).length) return true
+    return regola === 'nemici' && esegui(liv, vera).passi.some(p => p.eventi.some(e => e.che === 'duello'))
+  }
   const r = esegui(liv, vera, { senza: regola, eventi: false })
   return !(r.esito === TANA && r.carota)
 }
@@ -193,7 +203,7 @@ export function serveLaRegola(liv, regola) {
 export function misura(liv, { limite = LIMITE } = {}) {
   const conCarota = risolvi(liv, { carota: true, limite })
   const senzaCarota = conCarota ? risolvi(liv, { carota: false, limite }) : null
-  const usa = { scivola: 0, salto: 0, spinta: 0, affonda: 0, masso: 0, buca: 0, passo: 0, fugge: 0 }
+  const usa = { scivola: 0, salto: 0, spinta: 0, affonda: 0, masso: 0, buca: 0, passo: 0, fugge: 0, pulsante: 0, duello: 0 }
   if (conCarota) {
     const r = esegui(liv, conCarota)
     for (const p of r.passi) for (const e of p.eventi) if (e.che in usa) usa[e.che]++

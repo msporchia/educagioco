@@ -19,7 +19,7 @@ import { STRADE, aperture, cosaManca, prossima, seguente, tappaDiAdesso, eredita
 import { MASSIMO_FILA, LEGENDA } from './dati/mondo.js'
 import { apri, apriSe, carteDi, conCicli, daScegliere, eApri, eSe, valoreDi, COLORI } from './dati/carte.js'
 import { Livello } from './motore/livello.js'
-import { esegui, stelleDellaVittoria, eCorta, TANA, SBATTE, SPLASH, PERSA, eErrore } from './motore/mondo.js'
+import { esegui, stelleDellaVittoria, eCorta, TANA, SBATTE, SPLASH, PERSA, CADUTO, eErrore } from './motore/mondo.js'
 import { mettiCarta, mettiScatola, togliPrima, scegliTesta } from './motore/fila.js'
 import { suggerisci, minimoDi, carteUsate } from './motore/risolutore.js'
 import { scalaDi, pensieroDi, dove, pezzoDiStrada } from './motore/aiuti.js'
@@ -122,8 +122,8 @@ const daFuori = i => tappaApertaQui(CHIAVE, i, -1)
 const strade = aperture(STRADE, { fatta, daFuori, eredita: ereditaDi(avanza) })
 const aperta = i => strade.aperta(i)
 const prossimaDopo = i => prossima(STRADE, i, aperta)
-// in fondo a una strada ▶ porta al sentiero del suo animale, se è aperto
-const sentieroDopo = i => seguente(STRADE, i) === null
+// in fondo a una strada ▶ porta al sentiero del suo animale, se è aperto; il guerriero un sentiero non ce l'ha
+const sentieroDopo = i => seguente(STRADE, i) === null && STRADE.animale[i] !== 'guerriero'
 const stradaDopo = i => STRADE.animale[i]
 
 /* ═══════════ la partita lasciata a metà ═══════════
@@ -178,7 +178,7 @@ const adessoDi = strada => tappaDiAdesso(STRADE, {
   ultima: Number.isInteger(avanza.cfg.ultima) ? avanza.cfg.ultima : null,
   cursore: avanza.tappa || 0, aperta, fatta, strada,
 })
-const adesso = computed(() => ({ coniglio: adessoDi('coniglio'), cane: adessoDi('cane') }))
+const adesso = computed(() => ({ coniglio: adessoDi('coniglio'), cane: adessoDi('cane'), guerriero: adessoDi('guerriero') }))
 /* le cose che una tappa chiede e che il bambino non ha ancora visto su
    nessuna delle due strade: il fumetto le spiega (docs/passo-passo/mappa.md) */
 const viste = computed(() => new Set(CAMPAGNA.flatMap((t, i) => (fatta(i) ? concettiDi(t) : []))))
@@ -198,17 +198,17 @@ const voci = computed(() => CAMPAGNA.map((t, i) => {
    restando niente, il suo sentiero, o l'ultima giocata, o la prima */
 const doveDi = strada => {
   if (adesso.value[strada] !== null) return adesso.value[strada]
-  if (sentieroAperto(strada)) return idDelSentiero(strada)
+  if (strada !== 'guerriero' && sentieroAperto(strada)) return idDelSentiero(strada)
   const u = avanza.cfg.ultima
   return Number.isInteger(u) && STRADE.animale[u] === strada && aperta(u) ? u : STRADE[strada][0]
 }
-const doveSegnalino = computed(() => ({ coniglio: doveDi('coniglio'), cane: doveDi('cane') }))
+const doveSegnalino = computed(() => ({ coniglio: doveDi('coniglio'), cane: doveDi('cane'), guerriero: doveDi('guerriero') }))
 /* con chi si apre la mappa: chi ha il sentiero lasciato a metà, se no chi
    ha giocato l'ultima tappa; il cane solo se la sua strada è aperta */
 const primoProtagonista = computed(() => {
   const r = ripresa.value, u = avanza.cfg.ultima
   const chi = r ? r.strada : Number.isInteger(u) ? STRADE.animale[u] : 'coniglio'
-  return chi === 'cane' && !aperta(STRADE.cane[0]) ? 'coniglio' : chi
+  return chi !== 'coniglio' && !aperta(STRADE[chi][0]) ? 'coniglio' : chi
 })
 
 /* i due sentieri sulla mappa: aperto, il record, cosa manca da chiuso */
@@ -326,6 +326,9 @@ function seSparisce(e) {
 onMounted(() => {
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
+  // `#passo=la-torre` apre quella tappa anche chiusa, per guardarla (docs/core/comandi.md)
+  const i = CAMPAGNA.findIndex(t => t.chiave === new URLSearchParams((location.hash || '').slice(1)).get('passo'))
+  if (i >= 0) avviaTappa(i)
 })
 onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', seSparisce)
@@ -548,7 +551,7 @@ function fineGiro() {
   if (!esito) return aiutoPrenotato()
   const errore = eErrore(esito.esito)
   // riusciti: tutti i passi tranne quello che ha sbattuto o fatto splash
-  const cattivo = esito.esito === SBATTE || esito.esito === SPLASH || esito.esito === PERSA ? 1 : 0
+  const cattivo = esito.esito === SBATTE || esito.esito === SPLASH || esito.esito === PERSA || esito.esito === CADUTO ? 1 : 0
   ultimoGiro = { passi: passiDi(esito), riusciti: esito.passi.length - cattivo }
   corrente.value = -1
   if (esito.esito === TANA) {
@@ -759,7 +762,7 @@ function scriviVittoria(esito) {
   contaLaVittoria(esito)
   return {
     che: 'tappa', titolo: CAMPAGNA[i].nome, stelle,
-    carota: esito.carota, cane: !!(liv && liv.cane), svelato: svelato.value, monete,
+    carota: esito.carota, cane: !!(liv && liv.cane), guerriero: !!(liv && liv.guerriero), svelato: svelato.value, monete,
     ...strada, zaino: !!liv.zaino,
     racconto: CAMPAGNA[i].racconto,
     // ▶ va avanti sulla strada che si sta facendo; in fondo può portare al sentiero senza fine

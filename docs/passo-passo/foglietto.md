@@ -9,7 +9,8 @@ della mappa sta in [mappa.md](mappa.md).
 - **I sentieri sono spezzate in pixel del fondale**, una o più per isola.
   Uno con `"caselle": N` ne porta N del coniglio, distribuite dallo strumento
   fra i due `margini`; con `"cane": N` (e `margini-cane`, e `rovescio-cane`
-  se si contano dall'altro capo) quelle del cane, a parte: ognuno vede solo
+  se si contano dall'altro capo) quelle del cane, a parte, e allo stesso modo
+  con `"guerriero": N` quelle del guerriero: ognuno vede solo
   le sue, e si controlla che non si tocchino solo fra le sue. Le caselle di
   un'isola si contano nell'ordine del foglietto, e la k-esima è la k-esima
   tappa della sua isola in `motore/strade.js`: per il coniglio quella con la

@@ -7,10 +7,10 @@
    MAPPA   il fondale (1536×1024), WebP in base64 (675 KB): senza perdita,
            colori a passo 12 (strumenti/sprite/codifica.py)
    ISOLE   per isola del fondale: quante caselle del coniglio (la chiave è la sua isola in
-           motore/strade.js), dove sta il cartello, e `cane` (l'isola del cane che ci sta sopra,
-           quante caselle, il suo cartello)
+           motore/strade.js), dove sta il cartello, e `cane` e `guerriero` (la loro isola che ci
+           sta sopra, quante caselle, il suo cartello)
    NODI    { id, tipo, isola, x, y }: `casella` (con `k`, l'ordine sull'isola; quelle del cane
-           con `di`, la sua isola in motore/strade.js, e `cane`), `incrocio`, `capo`
+           e del guerriero con `di`, la loro isola in motore/strade.js, e `cane` o `guerriero`), `incrocio`, `capo`
            (un sentiero che finisce), `sosta` (a metà di un arco lungo: su un ponte
            non è di un'isola), `tana` (con `nuvola` se sul fondale non c'è il buco: l'animale
            cambia in una nuvoletta), `passaggio` (la tana che porta all'altro mondo, con

@@ -3,9 +3,9 @@
    avanti da sola; le stelle restano sotto l'indice della campagna: qui si
    decide solo chi viene dopo chi e cosa apre cosa. Puro, gira in Node.
    Vedi «Le due strade» in docs/passo-passo/livelli.md. */
-import { CAMPAGNA, SCALINI, delCane } from '../dati/campagna.js'
+import { CAMPAGNA, SCALINI, delCane, delGuerriero } from '../dati/campagna.js'
 
-export { delCane }
+export { delCane, delGuerriero }
 
 /* Le isole delle due strade: per ogni scalino quella del coniglio (la
    chiave è lo scalino) e quella del cane (`<scalino>-cane`). Dove stanno
@@ -13,34 +13,36 @@ export { delCane }
    le due strade possono passare sulla stessa isola dipinta, ognuna con le
    sue caselle. */
 export function disegnaStrade(campagna = CAMPAGNA, scalini = SCALINI) {
-  const animale = campagna.map(t => (delCane(t) ? 'cane' : 'coniglio'))
+  const animale = campagna.map(t => (delCane(t) ? 'cane' : delGuerriero(t) ? 'guerriero' : 'coniglio'))
   const coniglio = animale.map((a, i) => i).filter(i => animale[i] === 'coniglio')
 
-  const perScalino = new Map(scalini.map(s => [s.chiave, { coniglio: [], cane: [] }]))
+  const perScalino = new Map(scalini.map(s => [s.chiave, { coniglio: [], cane: [], guerriero: [] }]))
   campagna.forEach((t, i) => perScalino.get(t.scalino)?.[animale[i]].push(i))
-  const conigli = [], rami = []
+  const conigli = [], rami = [], guerrieri = []
   for (const s of scalini) {
-    const { coniglio: c, cane: d } = perScalino.get(s.chiave)
+    const { coniglio: c, cane: d, guerriero: g } = perScalino.get(s.chiave)
     if (c.length) conigli.push({ chiave: s.chiave, scalino: s.chiave, animale: 'coniglio', tappe: c })
     if (d.length) rami.push({ chiave: `${s.chiave}-cane`, scalino: s.chiave, animale: 'cane', tappe: d })
+    if (g.length) guerrieri.push({ chiave: `${s.chiave}-guerriero`, scalino: s.chiave, animale: 'guerriero', tappe: g })
   }
   /* la strada del cane va di isola in isola, nell'ordine degli scalini: una
      tappa aggiunta in coda alla campagna viene dopo quelle della sua isola */
   const cane = rami.flatMap(r => r.tappe)
-  const isole = [...conigli, ...rami]
+  const guerriero = guerrieri.flatMap(r => r.tappe)
+  const isole = [...conigli, ...rami, ...guerrieri]
 
   const isolaDi = []
   isole.forEach((s, k) => s.tappe.forEach(i => { isolaDi[i] = k }))
   // chi viene prima sulla propria strada
   const prima = [], dopo = []
-  for (const strada of [coniglio, cane])
+  for (const strada of [coniglio, cane, guerriero])
     strada.forEach((i, k) => { prima[i] = k ? strada[k - 1] : null; dopo[i] = strada[k + 1] ?? null })
   /* il numero sulla casella: il posto sulla sua strada, da 1 */
   const numero = []
-  for (const strada of [coniglio, cane]) strada.forEach((i, k) => { numero[i] = k + 1 })
-  // la strada del cane comincia quando il coniglio arriva qui (la fine dei piccoli)
+  for (const strada of [coniglio, cane, guerriero]) strada.forEach((i, k) => { numero[i] = k + 1 })
+  // la strada del cane e quella del guerriero cominciano quando il coniglio arriva qui (la fine dei piccoli)
   const apreIlCane = cane.length ? (coniglio.filter(i => i < cane[0]).at(-1) ?? null) : null
-  return { animale, coniglio, cane, isole, isolaDi, prima, dopo, numero, apreIlCane, quante: campagna.length }
+  return { animale, coniglio, cane, guerriero, isole, isolaDi, prima, dopo, numero, apreIlCane, quante: campagna.length }
 }
 
 export const STRADE = disegnaStrade()
@@ -50,8 +52,8 @@ export const STRADE = disegnaStrade()
    il cursore di prima delle due strade: quello che era aperto resta
    aperto.
    - su ogni strada: fatta la tappa prima;
-   - la prima del coniglio è aperta sempre, la prima del cane quando il
-     coniglio ha fatto `apreIlCane`;
+   - la prima del coniglio è aperta sempre, la prima del cane e quella del
+     guerriero quando il coniglio ha fatto `apreIlCane`;
    - e una tappa fatta resta aperta. */
 export function aperture(S, { fatta, daFuori = () => false, eredita = 0 }) {
   const caneAperto = () => S.apreIlCane === null || fatta(S.apreIlCane)
@@ -76,8 +78,8 @@ export function cosaManca(S, i, { fatta, aperta }, campagna = CAMPAGNA) {
   while (S.prima[k] !== null && !fatta(S.prima[k])) { k = S.prima[k]; altre++ }
   if (k !== i && aperta(k)) return `Prima tocca a «${campagna[k].nome}»` +
     (altre === 2 ? ', poi a un\'altra tappa.' : altre > 2 ? `, poi ad altre ${altre - 1} tappe.` : '.')
-  if (S.animale[k] === 'cane' && S.prima[k] === null && S.apreIlCane !== null)
-    return `Il cane comincia quando il coniglio finisce «${campagna[S.apreIlCane].nome}».`
+  if (S.animale[k] !== 'coniglio' && S.prima[k] === null && S.apreIlCane !== null)
+    return `${S.animale[k] === 'cane' ? 'Il cane' : 'Il guerriero'} comincia quando il coniglio finisce «${campagna[S.apreIlCane].nome}».`
   return 'Questa tappa per ora è chiusa.'
 }
 
@@ -108,7 +110,7 @@ export function tappaDiAdesso(S, { ultima = null, cursore = 0, aperta, fatta, st
   }
   if (libera(cursore)) return cursore
   if (strada !== null) return S[strada].find(libera) ?? null
-  return S.coniglio.find(libera) ?? S.cane.find(libera) ?? null
+  return S.coniglio.find(libera) ?? S.cane.find(libera) ?? S.guerriero.find(libera) ?? null
 }
 
 /* Il cursore di prima delle due strade, come lo legge chi non ha ancora
