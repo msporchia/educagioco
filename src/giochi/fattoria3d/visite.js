@@ -93,7 +93,7 @@ export function usaVisite({ dammi, tela, sopra, q, versione, cambio }) {
     if (!r.ok) return void (mappaMsg.value = dettoVicino(r))
     mappaAperta.value = false
     const f = r.fattoria
-    fase.value = 'andata'; id.value = quale; verso.value = f.nome; foglio.value = null; messaggio.value = ''
+    fase.value = 'andata'; id.value = quale; verso.value = f.proprietario.nome === f.nome ? 'a ' + f.nome : 'da ' + f.proprietario.nome; foglio.value = null; messaggio.value = ''
     chiave.value++
     cambio()
     const { mondo } = dammi()
