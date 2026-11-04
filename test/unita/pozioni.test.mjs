@@ -268,11 +268,11 @@ for (const t of CAMPAGNA) {
 {
   /* il testo intrecciato dice una coppia al contrario */
   let girate = 0
-  for (let s = 1; s <= 30; s++) girate += new Bottega(tappa('massa-inverse'), { rnd: caso(s) }).righe.some(r => r.testo.includes('ma prima'))
+  for (let s = 1; s <= 30; s++) girate += new Bottega(tappa('massa-inverse'), { rnd: caso(s) }).righe.some(r => r.testo.includes('dopo aver'))
   controlla('in fondo alla scaletta capita di leggere al contrario', girate > 8, `${girate}`)
   let brutte = 0
   for (const t of CAMPAGNA) for (let s = 1; s <= 30; s++)
-    for (const r of new Bottega(t, { rnd: caso(s) }).righe) if (/^Versa.*ma prima|^Pesta.*ma prima|pestato.*ma prima/.test(r.testo)) brutte++
+    for (const r of new Bottega(t, { rnd: caso(s) }).righe) if (/ma prima|^Versa.*dopo aver|^Pesta.*dopo aver/.test(r.testo)) brutte++
   uguale('mai «versa, ma prima pesta»', brutte, 0)
   const b = new Bottega(tappa('massa-banco'), { rnd: caso(1) })
   uguale('all\'inizio due passi', b.passi.map(p => p.azione).join(), 'versa,mescola')
