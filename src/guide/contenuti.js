@@ -561,7 +561,8 @@ export const AIUTI = {
       { titolo: 'Lo zaino e il ripeti', righe: [
         'Dopo le buche la fila ha lo **zaino**: tiene poche carte, e la strada scritta freccia per freccia non ci sta.',
         '🔁 mette una **scatola**: le frecce che ha dentro si ripetono tante volte quante dice il suo numero. Il numero si sceglie, e finché è N ▶ non parte.',
-        'Toccando il bordo in fondo alla scatola si esce; toccando la testa si cambia il numero. Mentre il coniglio corre la testa dice a che giro è.',
+        'Il **+** in fondo a una scatola fa entrare lì la prossima carta; il + dopo la scatola la lascia fuori. Il posto arancione dice dove va. Toccando la testa si cambia il numero; mentre il coniglio corre dice a che giro è.',
+        'Le carte **si trascinano** col dito, dentro e fuori dalle scatole; presa dalla testa, una scatola si porta dietro tutto quello che ha dentro.',
         'Più avanti la testa può essere un **colore**: «fino al rosso» ripete finché il coniglio non arriva sulla lastra rossa. E la scatola ❓ **se** fa quello che ha dentro solo quando il coniglio sta sul colore giusto.',
       ] },
       { titolo: 'Il 💡', righe: [
