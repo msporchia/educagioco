@@ -698,13 +698,13 @@ export const AIUTI = {
   pozioni: {
     emoji: '🧪', titolo: 'Le pozioni',
     blocchi: [
-      'La pergamena chiede «1,5 kg di polvere di luna» e altri ingredienti, e il calderone è vuoto. Vai **dal mercante**, scegli le ampolle e ordinale: le verserà lui.',
+      'La pergamena chiede «1,5 kg di polvere di luna» e altri ingredienti, e il calderone è vuoto. Dal **listino del mercante** scegli le ampolle e ordinale: le verserà lui.',
       { titolo: 'Il listino e i gettoni', righe: [
         'Il rotolo del mercante ha tutti gli ingredienti della ricetta. Ogni targhetta dice quanto c\'è nell\'ampolla e quanti gettoni costa.',
         'Il mercante scrive come gli pare: «5 hg», «0,2 kg», «300 g». Le ampolle grandi costano meno, quindi conviene **la più grande che ci sta**, ma per sapere cosa ci sta devi fare il conto.',
         'Spesso la stessa quantità compare due volte, scritta in due modi, e una costa di più: è il **trucco del mercante**.',
         'In fondo vedi sempre quanti gettoni hai speso, e le stelle dicono quanto ti sei avvicinato al minimo.',
-        'Una tappa sono **due o tre pozioni** in fila. Quando una è pronta arriva chi l\'ha chiesta, la beve, e si vede cosa fa.',
+        'Fatta la spesa, la pergamena dice **cosa fare**: pesta, versa, mescola, scalda, diluisci. Tocca la roba, poi l\'azione. Un\'azione fuori tempo fa un pasticcio e costa un gettone.',
       ] },
       { titolo: 'Se trabocca', righe: [
         'Ogni ingrediente ha il suo strumento col segno d\'oro: la bilancia, il metro, il cilindro. Oltre il segno trabocca: l\'ampolla è persa, e prima di ordinare ancora c\'è da **pulire**, un gettone a macchia.',

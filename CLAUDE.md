@@ -68,7 +68,7 @@ quale file.
 | `docs/giardino/` | Il giardino (`src/giochi/giardino/`, in prova): regole, calcoli, campagna, taratura — prima di toccare `giochi/giardino/dati/`, il motore o un prezzo |
 | `docs/lingue/` | English ed Español: vocaboli, campagne, la pronuncia incisa (`npm run voci`) |
 | `docs/bancarella/` | La bancarella: regole e difficoltà |
-| `docs/pozioni/` | Il laboratorio delle pozioni: il mercante, l'ordine a gettoni, le tappe in fila, il banco in 3D (`scena3d/`), il cliente che beve e i suoni (`personaggi.md`) |
+| `docs/pozioni/` | Il laboratorio delle pozioni: il mercante, l'ordine a gettoni, le tappe, il banco in 3D (`scena3d/`), la ricetta da seguire e i suoni (`procedimento.md`) |
 | `docs/passo-passo/` | Passo passo: regole del mondo, cane pastore, guerriero (grate, nemici, spada), zaino e carte, stelle, sentiero, come si scrive un livello |
 | `docs/costruttore/` | Il Robot (era «Il costruttore»: chiave e cartelle restano `costruttore`): linguaggio, progetti e attrezzi, il porto, gli algoritmi, la campagna, la scheda e il robot disegnato |
 | `docs/sotterraneo/` | Il sotterraneo: la grande storia (le discese in fila e la roba attesa), le missioni, regole, roba, scenari, i pensieri dell'eroe (`pensieri.md`), l'abisso com'è e il suo progetto, il disegno in 3D (`grafica-3d.md`, prima di toccare `scena3d/`; i mostri e gli effetti in `mostri-3d.md`; il mondo di sopra in `mondo-3d.md`) |

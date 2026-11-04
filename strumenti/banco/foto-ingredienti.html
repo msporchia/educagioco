@@ -7,7 +7,6 @@
 <script type="module">
 import * as THREE from 'three'
 import { MODELLI } from '/src/giochi/pozioni/scena3d/ingredienti3d.js'
-import { MODELLI as PERSONAGGI } from '/src/giochi/pozioni/scena3d/personaggi3d.js'
 
 const LATO = Number(new URLSearchParams(location.search).get('lato')) || 160, GRANDE = LATO * 3
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true })
@@ -34,24 +33,6 @@ for (const [nome, crea] of Object.entries(MODELLI)) {
   c2.clearRect(0, 0, LATO, LATO)
   c2.imageSmoothingQuality = 'high'
   c2.drawImage(renderer.domElement, 0, 0, LATO, LATO)
-  foto[nome] = piccola.toDataURL('image/webp', 0.85)
-  scena.remove(g)
-  g.traverse(o => { if (o.geometry) { o.geometry.dispose(); o.material.dispose() } })
-}
-
-// i personaggi: più grandi, tutti nella stessa inquadratura (piedi allo stesso punto, così `figura.js` li posa sul tavolo)
-const lato2 = LATO * 2, grande2 = lato2 * 2
-renderer.setSize(grande2, grande2, false)
-Object.assign(piccola, { width: lato2, height: lato2 })
-const ferma = new THREE.OrthographicCamera(-0.7, 0.7, 0.7, -0.7, 0.1, 20)
-ferma.position.set(0, 0.95, 6); ferma.lookAt(0, 0.65, 0)
-for (const [nome, crea] of Object.entries(PERSONAGGI)) {
-  const g = crea()
-  scena.add(g)
-  renderer.render(scena, ferma)
-  c2.clearRect(0, 0, lato2, lato2)
-  c2.imageSmoothingQuality = 'high'
-  c2.drawImage(renderer.domElement, 0, 0, lato2, lato2)
   foto[nome] = piccola.toDataURL('image/webp', 0.85)
   scena.remove(g)
   g.traverse(o => { if (o.geometry) { o.geometry.dispose(); o.material.dispose() } })

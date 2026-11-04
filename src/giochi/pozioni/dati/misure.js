@@ -52,23 +52,24 @@ export const INGREDIENTI = [
   { nome: 'stelo dorato', tipo: 'radice', colore: '#e0c25a' },
 ].map(i => ({ ...i, famiglia: FAMIGLIE.find(f => f.tipo === i.tipo).chiave }))
 
-// `effetto`: cosa fa a chi la beve, a schermo e all'orecchio (scena3d/cliente.js, suoni.js)
-export const POZIONI = [
-  { nome: 'Pozione del Coraggio',       emoji: '🦁', colore: '#e2603a', effetto: 'ruggisce' },
-  { nome: 'Pozione dell\'Invisibilità', emoji: '👻', colore: '#9fb8d4', effetto: 'sparisce' },
-  { nome: 'Elisir di Volo',             emoji: '🪶', colore: '#6ec6ff', effetto: 'vola' },
-  { nome: 'Filtro della Risata',        emoji: '😂', colore: '#f2c33d', effetto: 'ride' },
-  { nome: 'Pozione della Forza',        emoji: '💪', colore: '#c0453f', effetto: 'forza' },
-  { nome: 'Sciroppo dei Sogni',         emoji: '🌜', colore: '#8b7ed8', effetto: 'dorme' },
-  { nome: 'Elisir di Velocità',         emoji: '⚡', colore: '#ffd400', effetto: 'corre' },
-  { nome: 'Pozione Parlante',           emoji: '🗣️', colore: '#4bb37b', effetto: 'parla' },
-  { nome: 'Filtro Antipuzza',           emoji: '🌸', colore: '#e58fb8', effetto: 'profuma' },
-  { nome: 'Pozione del Gigante',        emoji: '🗿', colore: '#8d9aa5', effetto: 'gigante' },
-]
-
-// chi viene a bere: figure della creta, fotografate (scena3d/personaggi3d.js)
-export const CLIENTI = ['maga', 'rana', 'gufo', 'gatto', 'robot', 'folletto']
-export const PERSONAGGI = ['mercante', 'mercante-porge', ...CLIENTI]
+// una pozione per tappa, nell'ordine dei gradini: la tappa si chiama come lei
+export const POZIONI = {
+  massa: [
+    ['Polvere Starnutina', '🤧', '#e8c86a'], ['Pozione del Coraggio', '🦁', '#e2603a'], ['Polvere di Fata', '🧚', '#e8a0e0'],
+    ['Filtro della Risata', '😂', '#f2c33d'], ['Pozione della Forza', '💪', '#c0453f'], ['Pozione del Gigante', '🗿', '#8d9aa5'],
+    ['Unguento di Ferro', '🛡️', '#7f8ca0'], ['Sale del Contrario', '🙃', '#7fd4c1'], ['Polvere dei Tuoni', '🌩️', '#6a78c8'],
+  ],
+  lunghezza: [
+    ['Decotto del Salto', '🐸', '#6cc04a'], ['Elisir di Volo', '🪶', '#6ec6ff'], ['Sciroppo dei Sogni', '🌜', '#8b7ed8'],
+    ['Filtro Antipuzza', '🌸', '#e58fb8'], ['Elisir di Velocità', '⚡', '#ffd400'], ['Infuso della Memoria', '🧠', '#d88fa8'],
+    ['Pozione Parlante', '🗣️', '#4bb37b'], ['Filtro del Gambero', '🦐', '#f08a5a'], ['Pozione del Labirinto', '🧭', '#b08a50'],
+  ],
+  capacita: [
+    ['Pozione dell\'Invisibilità', '👻', '#9fb8d4'], ['Bevanda dei Pesci', '🐟', '#4aa3ff'], ['Acqua del Ghiaccio', '❄️', '#bfe8ff'],
+    ['Sciroppo Arcobaleno', '🌈', '#e87ac0'], ['Elisir del Fuoco', '🔥', '#ff7a2a'], ['Pozione delle Bolle', '🫧', '#9fe8e0'],
+    ['Filtro delle Stelle', '🌟', '#f2d35e'], ['Pozione della Marea', '🌊', '#3a8ad0'], ['Elisir del Tempo', '⏳', '#c8a060'],
+  ],
+}
 
 // media geometrica dei canali: giallo e blu fanno verde, l'aritmetica farebbe grigio
 export function mescola(colori, vuoto = '#4b3f7d') {

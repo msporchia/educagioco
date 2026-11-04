@@ -4,7 +4,7 @@
 // `viste/`. Niente pausa: non c'è un orologio, il tempo non è un
 // avversario. Vedi docs/pozioni/regole.md; la tappa lasciata a metà,
 // docs/pozioni/sosta.md.
-import { ref, shallowRef, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import Barra from '../../components/Barra.vue'
 import TastoSalta from '../../components/TastoSalta.vue'
 import { suono } from '../../audio.js'
@@ -16,8 +16,9 @@ import { usaAmici } from '../../amici/usaAmici.js'
 import { attesaDellEsito, PONDERA, TEMPO_MAX } from '../../quiz/nucleo/domanda.js'
 
 import { CAMPAGNA, BLOCCHI, QUANTE_TAPPE, MONETE_A_DOSE } from './dati/campagna.js'
-import { mescola } from './dati/misure.js'
-import { Fila } from './motore/bottega.js'
+import { mescola, scrivi as scriviMisura } from './dati/misure.js'
+import { Bottega } from './motore/bottega.js'
+import { MORTAIO } from './motore/procedimento.js'
 import { scrivi, leggi, dice, tappaDi } from './motore/sosta.js'
 import Mappa from './viste/Mappa.vue'
 import Mercante from './viste/Mercante.vue'
@@ -33,8 +34,7 @@ const CIECO = 320           // una schermata appena comparsa non si tocca subito
 // dove siamo
 const vista = ref('mappa')          // mappa | banco
 const tappaIdx = ref(0)
-const fila = shallowRef(null)       // la tappa: le pozioni in fila
-const bottega = ref(null)           // la pozione in scena (finita, resta lì fino al tasto del cartello)
+const bottega = ref(null)
 const bozza = ref([])               // l'ordine in preparazione: [{ i, k }]
 const animazione = ref(null)
 const messaggio = ref(null)
@@ -47,7 +47,6 @@ const avanza = progresso(CHIAVE)
 
 const tappa = computed(() => CAMPAGNA[tappaIdx.value])
 const titolo = computed(() => (vista.value === 'banco' ? tappa.value.nome : 'Le pozioni'))
-const numero = ref(1)               // la pozione in scena, nella fila
 
 // gli amici dalla loro bacheca (docs/core/amici-nei-giochi.md): la tappa da fare di ognuno
 const amici = usaAmici(CHIAVE)
@@ -76,14 +75,14 @@ const laRipresa = () => {
   const d = dice(sosta(CHIAVE))
   if (!d || !aperta(CHIAVE, d.indice)) return null
   const sbagli = d.traboccate ? ` · 💥 ${d.traboccate}` : ''
-  return { emoji: d.emoji, nome: d.nome, dettaglio: `Pozione ${d.numero} di ${d.pozioni} · 🧪 ${d.fatti} ingredienti su ${d.quanti}${sbagli}` }
+  return { emoji: d.emoji, nome: d.nome, dettaglio: `🧪 ${d.fatti} ingredienti su ${d.quanti}${sbagli}` }
 }
 const ripresa = ref(laRipresa())
 const chiede = ref(null)            // { nome, i }: la tappa nuova che butterebbe quella a metà
 
 function salva({ subito = false } = {}) {
-  if (vista.value !== 'banco' || !fila.value || fila.value.finita) return
-  salvaSosta(CHIAVE, scrivi(fila.value, tappaIdx.value,
+  if (vista.value !== 'banco' || !bottega.value || bottega.value.finita) return
+  salvaSosta(CHIAVE, scrivi(bottega.value, tappaIdx.value,
     { monete: { chiesto: borsellino.chiesto, dato: borsellino.dato } }), { subito })
 }
 
@@ -100,12 +99,10 @@ function vuoleIniziare(i) {
 }
 function comincia() { avviaTappa(chiede.value.i) }
 
-function entra(i, f) {
+function entra(i, b) {
   cancelAnimationFrame(barra); attesa.value = 0
   tappaIdx.value = i
-  fila.value = f
-  bottega.value = f.attuale
-  numero.value = f.numero
+  bottega.value = b
   bozza.value = []
   giro.value++
   finale.value = null
@@ -121,13 +118,13 @@ function entra(i, f) {
 function riprendiPartita() {
   const dato = sosta(CHIAVE)
   const t = tappaDi(dato)
-  const f = t && aperta(CHIAVE, t.indice) ? leggi(dato) : null
-  if (!f) return scorda()
+  const b = t && aperta(CHIAVE, t.indice) ? leggi(dato) : null
+  if (!b) return scorda()
   borsellino = borsa(CHIAVE, dato.monete)
   ripresa.value = null
   chiede.value = null
   messaggio.value = null
-  entra(t.indice, f)
+  entra(t.indice, b)
 }
 
 // su un telefono l'app non si chiude, sparisce: è l'ultimo momento per scrivere
@@ -153,22 +150,18 @@ function avviaTappa(i) {
   const t = CAMPAGNA[i]
   messaggio.value = { tipo: 'aiuto', righe: t.aiuto === 'gioco'
     ? ['Fai le dosi spendendo meno gettoni che puoi.',
-       'Vai dal mercante, scegli le ampolle e ordinale: le verserà lui. Oltre il segno d\'oro trabocca, e poi c\'è da pulire.']
+       'Scegli le ampolle e ordinale: le verserà il mercante. Oltre il segno d\'oro trabocca, e poi c\'è da pulire.']
     : [t.dritta] }
-  entra(i, new Fila(t))
-}
-
-// dal cartello in mezzo si torna alla mappa come col ←: la tappa resta lì
-function vaiAllaMappa() {
-  if (finale.value?.mezzo) return indietro()
-  allaMappa()
+  const b = new Bottega(t)
+  const inCasa = b.ingredienti.find(g => g.casa)
+  if (inCasa) messaggio.value.righe.push(`In casa hai già ${scriviMisura(inCasa.casa, inCasa.unita)} di ${inCasa.nome}.`)
+  entra(i, b)
 }
 
 function allaMappa() {
   cancelAnimationFrame(barra); attesa.value = 0
   finale.value = null
   bottega.value = null
-  fila.value = null
   vista.value = 'mappa'
 }
 
@@ -218,8 +211,7 @@ function ordina() {
     if (e.tipo === 'giusto') segna('misure')
     if (e.monete) borsellino.paga(e.monete)
   }
-  if (r.finita) chiudiPozione()
-  else salva({ subito: true })
+  salva({ subito: true })
   inCorso = r
   animazione.value = { n: ++nAnim, tipo: 'ordine', prima, voci: r.esiti.map(e => {
     const g = b.ingredienti[e.ingrediente]
@@ -236,24 +228,56 @@ function fermo(n) {
   if (animazione.value?.tipo === 'festa') { occupato.value = false; finale.value = chiusa; suono.livello(); return }
   apertaIl = performance.now()
   if (!r) { occupato.value = false; salva({ subito: true }); return }
+  if (r.azione) return fermoPasso(r)
   const trabocco = r.esiti.some(e => e.tipo === 'trabocca')
   if (r.esiti.some(e => e.monete)) suono.moneta()
   if (trabocco) suono.no(); else suono.ok()
   const righe = r.esiti.flatMap(e => e.righe)
   messaggio.value = { tipo: trabocco ? 'trabocca' : 'giusto', righe }
   if (trabocco) leggiPrima(righe)
-  if (r.finita) {
-    if (!trabocco) messaggio.value = null          // la scena è del cliente
-    return festa()
-  }
+  if (r.pronta && !trabocco) messaggio.value = ALLA_RICETTA
   occupato.value = false
 }
 
-// il calderone sbuffa, poi arriva il cliente e beve
 function festa() {
+  animazione.value = { n: ++nAnim, tipo: 'festa', colore: mescola(bottega.value.ingredienti.map(i => i.colore)) }
+}
+
+/* Il procedimento: anche qui il motore decide subito e la scena suona dopo. */
+const ALLA_RICETTA = { tipo: 'aiuto', righe: ['Hai tutto! Adesso leggi la ricetta e fai quello che dice.'] }
+const colori = lista => lista.map(i => bottega.value.ingredienti[i].colore)
+
+function fai(azione, cosa) {
+  if (!libero() || attesa.value > 0) return
   const b = bottega.value
-  animazione.value = { n: ++nAnim, tipo: 'festa', colore: mescola(b.ingredienti.map(i => i.colore)),
-                       cliente: b.pozione.cliente, effetto: b.pozione.effetto }
+  const pestato = b.mortaio.length ? mescola(colori(b.mortaio)) : null
+  const r = b.fai(azione, cosa)
+  if (!r) return
+  occupato.value = true
+  messaggio.value = null
+  if (r.monete) borsellino.paga(r.monete)
+  if (r.finita) chiudiTappa()
+  else salva({ subito: true })
+  inCorso = r
+  const fatti = r.giusto ? (r.versati || []) : []
+  animazione.value = { n: ++nAnim, tipo: 'passo', azione, giusto: r.giusto, mortaio: (r.cosa || []).includes(MORTAIO),
+                       colore: r.cosa?.includes(MORTAIO) ? pestato : fatti.length ? mescola(colori(fatti)) : null,
+                       polvere: fatti.some(i => b.ingredienti[i].famiglia !== 'capacita'),
+                       brodo: mescola(colori(b.dentro)), riempito: b.dentro.length / b.ingredienti.length }
+}
+
+function fermoPasso(r) {
+  if (r.monete) suono.moneta()
+  if (r.giusto) {
+    suono.ok()
+    if (r.finita) return festa()
+  } else {
+    suono.no()
+    messaggio.value = { tipo: 'trabocca', righe: r.righe }
+    leggiPrima(r.righe)
+  }
+  occupato.value = false
+  salva({ subito: true })
 }
 
 // dopo il trabocco si legge il perché, con la barra, prima di pulire (docs/apprendimento/la-domanda.md)
@@ -284,7 +308,7 @@ function salta() {
   if (!e) return
   borsellino.paga(e.monete)
   suono.moneta()
-  if (e.finita) { occupato.value = true; chiudiPozione(); festa() }
+  if (e.finita) { occupato.value = true; chiudiTappa(); festa() }
   else salva({ subito: true })
 }
 
@@ -294,54 +318,32 @@ function annota(a) {
   answer(a.chiave, { correct: a.giusto, ms })
 }
 
-const traboccò = n => `${n === 1 ? 'Un\'ampolla è traboccata' : `${n} ampolle sono traboccate`}: si paga l'ampolla, e un gettone la spugna.`
-const piuEconomico = q => (q.extra > 0 ? q.piuEconomico().map(x => `${x.nome}: ${x.pezzi.join(' + ')} (${x.costo})`) : [])
-
-/* Il motore decide subito, come per le dosi: uscire mentre il cliente beve
-   non perde niente, e la pozione dopo è già pronta nella sosta. */
 let chiusa = null
-function chiudiPozione() {
-  const q = bottega.value, f = fila.value
+function chiudiTappa() {
+  const q = bottega.value
+  const giaFatta = avanza.tappa > tappaIdx.value
   if (!q.saltate) segna('pozioni')
   if (q.perfetta) segna('pozioniPerfette')
-  f.chiudi()
-  if (f.finita) return chiudiTappa()
-  salva({ subito: true })
-  const righe = [`Hai speso ${q.speso} gettoni: il minimo era ${q.minimo}.`]
-  if (q.traboccate) righe.push(traboccò(q.traboccate))
-  chiusa = { mezzo: true, titolo: q.pozione.nome, numero: f.fatte.length, quante: f.quante, stelle: q.stelle,
-             righe: [...righe, ...piuEconomico(q)] }
-}
-
-function chiudiTappa() {
-  const q = bottega.value, f = fila.value
-  const giaFatta = avanza.tappa > tappaIdx.value
-  completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle: f.stelle })
+  completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle: q.stelle })
   scorda()
   const ultima = tappaIdx.value === QUANTE_TAPPE - 1
-  const righe = [`Hai speso ${f.speso} gettoni: il minimo era ${f.minimo}.`]
-  if (f.traboccate) righe.push(traboccò(f.traboccate))
-  chiusa = { titolo: tappa.value.nome, stelle: f.stelle, monete: borsellino.dato, notaMonete: borsellino.nota(),
-             maestro: ultima && !giaFatta, ultima, righe: [...righe, ...piuEconomico(q)] }
-}
-
-// dal cartello in mezzo: la pozione dopo è già pronta
-function pozioneDopo() {
-  const f = fila.value
-  messaggio.value = { tipo: 'aiuto', righe: [`Pozione ${f.numero} di ${f.quante}: ${f.attuale.pozione.nome}.`] }
-  entra(tappaIdx.value, f)
+  const righe = [`Hai speso ${q.speso} gettoni: il minimo era ${q.minimo}.`]
+  if (q.traboccate) righe.push(`${q.traboccate === 1 ? 'Un\'ampolla è traboccata' : `${q.traboccate} ampolle sono traboccate`}: si paga l'ampolla, e un gettone la spugna.`)
+  if (q.pasticci) righe.push(`${q.pasticci === 1 ? 'Un pasticcio' : `${q.pasticci} pasticci`} col procedimento: un gettone l'uno.`)
+  if (q.extra > 0) for (const x of q.piuEconomico()) righe.push(`${x.nome}: ${x.pezzi.join(' + ')} (${x.costo})`)
+  chiusa = { titolo: tappa.value.nome, stelle: q.stelle, monete: borsellino.dato, notaMonete: borsellino.nota(),
+             maestro: ultima && !giaFatta, ultima, righe }
 }
 
 function prossima() {
-  if (finale.value?.mezzo) return pozioneDopo()
   if (tappaIdx.value >= QUANTE_TAPPE - 1) return allaMappa()
   avviaTappa(tappaIdx.value + 1)
 }
 
 /* per i test e per lo strumento delle foto: la stessa porta del gioco */
 if (typeof window !== 'undefined')
-  window.__poz = { vista, tappaIdx, fila, bottega, bozza, finale, avviaTappa, allaMappa, prossima,
-                   aggiungi, togliVoce, ordina, pulisci, salta, CAMPAGNA, MONETE_A_DOSE }
+  window.__poz = { vista, tappaIdx, bottega, bozza, finale, avviaTappa, allaMappa, prossima,
+                   aggiungi, togliVoce, ordina, fai, pulisci, salta, CAMPAGNA, MONETE_A_DOSE }
 </script>
 
 <template>
@@ -353,11 +355,11 @@ if (typeof window !== 'undefined')
            @riprendi="riprendiPartita" @scorda="scorda"
            @comincia="comincia" @annulla="chiede = null" />
 
-    <Mercante v-else-if="bottega" :key="giro" :bottega="bottega" :numero="numero" :quante="fila.quante" :bozza="bozza" :animazione="animazione"
+    <Mercante v-else-if="bottega" :key="giro" :bottega="bottega" :bozza="bozza" :animazione="animazione"
               :messaggio="messaggio" :attesa="attesa" :bloccato="occupato || cieco"
-              @aggiungi="aggiungi" @togli="togliVoce" @ordina="ordina" @pulisci="pulisci" @fermo="fermo" />
+              @aggiungi="aggiungi" @togli="togliVoce" @ordina="ordina" @fai="fai" @pulisci="pulisci" @fermo="fermo" />
     <TastoSalta v-if="bottega && vista === 'banco' && !finale" @salta="salta" />
 
-    <Fine v-if="finale" v-bind="finale" @avanti="prossima" @mappa="vaiAllaMappa" />
+    <Fine v-if="finale" v-bind="finale" @avanti="prossima" @mappa="allaMappa" />
   </div>
 </template>
