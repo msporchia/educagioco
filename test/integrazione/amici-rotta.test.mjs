@@ -24,16 +24,16 @@ const pallini = () => page.$$eval('[data-amico-in-rotta]', l => l.map(e => ({ al
 /* ══════════ 1. a metà della fila: chi è avanti, chi è con me ══════════ */
 await semina(page, { mate: { tappa: 0, fila: 3, libera: false }, settings: { eta: 9 } })
 await conAmici([
-  amico('a', 'leonardo1', 'Leonardo', 0, 5, 0),
-  amico('b', 'melody001', 'Melody', 2, 3, 0),
+  amico('a', 'lorenzo01', 'Lorenzo', 0, 5, 0),
+  amico('b', 'marta0001', 'Marta', 2, 3, 0),
   amico('c', null, '', 0, 8, 0),                         // abbinato ma mai incontrato: senza nome
 ])
 await allaRotta()
 const p1 = await pallini()
 uguale('un pallino per amico col nome, non per quello senza', p1.length, 2)
-controlla('Leonardo sotto la tappa 5, con la sua iniziale', p1.some(p => p.al === '5' && p.testo === 'L'), JSON.stringify(p1))
-controlla('Melody sotto la mia, la 3', p1.some(p => p.al === '3' && p.testo === 'M'), JSON.stringify(p1))
-uguale('in cima chi è da raggiungere', (await page.textContent('[data-amico-davanti]')).trim(), 'Leonardo è 2 tappe più avanti di te.')
+controlla('Lorenzo sotto la tappa 5, con la sua iniziale', p1.some(p => p.al === '5' && p.testo === 'L'), JSON.stringify(p1))
+controlla('Marta sotto la mia, la 3', p1.some(p => p.al === '3' && p.testo === 'M'), JSON.stringify(p1))
+uguale('in cima chi è da raggiungere', (await page.textContent('[data-amico-davanti]')).trim(), 'Lorenzo è 2 tappe più avanti di te.')
 const colori = await page.$$eval('[data-amico-in-rotta]', l => l.map(e => getComputedStyle(e).backgroundColor))
 controlla('due amici, due colori', colori[0] !== colori[1], colori.join(' / '))
 
@@ -48,25 +48,25 @@ uguale('i pallini non coprono nomi e stelle', sovrapposti, 0)
 
 await page.click('[data-tappa="5"]')
 await page.waitForSelector('[data-fumetto] [data-amici-qui]')
-uguale('nel fumetto chi c\'è e da quando', (await page.textContent('[data-fumetto] [data-amici-qui]')).replace(/\s+/g, ' ').trim(), 'LLeonardo è qui · oggi')
+uguale('nel fumetto chi c\'è e da quando', (await page.textContent('[data-fumetto] [data-amici-qui]')).replace(/\s+/g, ' ').trim(), 'LLorenzo è qui · oggi')
 await attendi(page, 300)
 await scatto(page, 'amici-rotta-tappa')
 await page.click('[data-tappa="3"]')
 await attendi(page, 300)
-controlla('e Melody dice da quanti giorni', /Melody è qui · 2 giorni fa/.test(await page.textContent('[data-fumetto]')))
+controlla('e Marta dice da quanti giorni', /Marta è qui · 2 giorni fa/.test(await page.textContent('[data-fumetto]')))
 
 /* ══════════ 2. fila finita: i record del volo e la notizia a fine partita ══════════ */
 await page.click('button[aria-label="indietro"]')
 await page.waitForSelector('.carte')
 await semina(page, { mate: { tappa: 10, fila: SCALETTA.length, libera: true }, settings: { eta: 9 } })
-await conAmici([amico('a', 'leonardo1', 'Leonardo', 1, SCALETTA.length, 3400), amico('b', 'melody001', 'Melody', 0, 4, 1)])
+await conAmici([amico('a', 'lorenzo01', 'Lorenzo', 1, SCALETTA.length, 3400), amico('b', 'marta0001', 'Marta', 0, 4, 1)])
 await allaRotta()
 uguale('nessuno è più avanti di chi è al volo: in cima non si dice niente', await page.locator('[data-amico-davanti]').count(), 0)
 uguale('il suo pallino sta al volo', (await pallini()).find(p => p.testo === 'L')?.al, String(SCALETTA.length))
 await page.click('[data-volo]')
 await page.waitForSelector('[data-fumetto] [data-record-amici]')
 const righe = await page.$$eval('[data-fumetto] [data-record-amico]', l => l.map(e => e.textContent.replace(/\s+/g, ' ').trim()))
-uguale('nel volo i record degli amici, dal più alto', righe.join(' | '), 'LLeonardo: 3400 punti | MMelody: 1 punto')
+uguale('nel volo i record degli amici, dal più alto', righe.join(' | '), 'LLorenzo: 3400 punti | MMarta: 1 punto')
 uguale('chi ha un record non si ripete come «è qui»', await page.locator('[data-fumetto] [data-amici-qui]').count(), 0)
 await attendi(page, 300)
 await scatto(page, 'amici-rotta-volo')
@@ -91,7 +91,7 @@ uguale('la partita finisce', fine.fase, 'fine')
 await page.evaluate(() => document.querySelectorAll('.velo').forEach(v => v.querySelector('.occhiello') && v.click()))
 await attendi(page, 400)
 await scatto(page, 'amici-rotta-fine')
-controlla('a fine volo: superata Melody, con la misura', /^Hai superato Melody \(1 punto\)!$/.test(fine.frase), `${fine.punti} punti: «${fine.frase}»`)
+controlla('a fine volo: superata Marta, con la misura', /^Hai superato Marta \(1 punto\)!$/.test(fine.frase), `${fine.punti} punti: «${fine.frase}»`)
 
 controlla('nessun errore, anche col servizio irraggiungibile', veri().length === 0, veri().join(' | '))
 await browser.close()

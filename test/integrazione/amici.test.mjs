@@ -56,7 +56,7 @@ const inHome = async p => { await p.click('button[aria-label="indietro"]'); awai
   await V.page.close()
 }
 
-const A = await telefono('leonardo'), B = await telefono('melody')
+const A = await telefono('lorenzo'), B = await telefono('marta')
 const a = A.page, b = B.page
 
 /* ── di base spento ── */
@@ -87,7 +87,7 @@ controlla('lo stesso codice non vale due volte', /non c'è|scaduto/.test(await b
 
 /* ── tornati in home, si vedono online col nome ── */
 await inHome(a); await inHome(b)
-for (const [nome, p] of [['leonardo', a], ['melody', b]]) {
+for (const [nome, p] of [['lorenzo', a], ['marta', b]]) {
   await p.waitForSelector('[data-azione="amici"]', { timeout: 5000 })
   controlla(`${nome}: ora in home c'è la riga degli amici`, await p.locator('[data-azione="amici"]').isVisible())
 }
@@ -95,7 +95,7 @@ await a.waitForFunction(() => /1 online/.test(document.querySelector('[data-azio
 await b.waitForFunction(() => /1 online/.test(document.querySelector('[data-azione="amici"]')?.innerText || ''), null, { timeout: 15000 })
 await a.click('[data-azione="amici"]')
 await a.waitForSelector('[data-amici] [data-amico]', { timeout: 5000 })
-controlla('nella lista c\'è il nome dell\'amico, online', /melody/i.test(await a.locator('[data-amici]').innerText()))
+controlla('nella lista c\'è il nome dell\'amico, online', /marta/i.test(await a.locator('[data-amici]').innerText()))
 
 /* ── «Aggiungi un amico» dalla lista: prima il codice dei grandi, poi la pagina del codice breve ── */
 await a.click('[data-azione="amici-aggiungi"]')
@@ -116,16 +116,16 @@ await a.waitForSelector('[data-amici] [data-amico-gioca]', { timeout: 15000 })
 await a.click('[data-amici] [data-amico-gioca]')
 await a.click('[data-amici] [data-amico-gioco="arena"]')
 await a.waitForSelector('[data-sfida] [data-terreno]', { timeout: 8000 })
-controlla('si apre la sala di Castle Battle già sull\'amico da sfidare', /Sfidi melody/i.test(await a.locator('[data-sfida]').innerText()) &&
-  /Invita melody/i.test(await a.locator('[data-sfida-vai]').innerText()))
+controlla('si apre la sala di Castle Battle già sull\'amico da sfidare', /Sfidi marta/i.test(await a.locator('[data-sfida]').innerText()) &&
+  /Invita marta/i.test(await a.locator('[data-sfida-vai]').innerText()))
 await a.locator('[data-terreno="palude"]').click()
 await a.locator('[data-sfida-vai]').click()
 await a.waitForSelector('[data-sfida-invitato]', { timeout: 15000 })
-controlla('chi invita aspetta, senza codice da dire', /melody/i.test(await a.locator('[data-sfida]').innerText()) && await a.locator('[data-codice]').count() === 0)
+controlla('chi invita aspetta, senza codice da dire', /marta/i.test(await a.locator('[data-sfida]').innerText()) && await a.locator('[data-codice]').count() === 0)
 
 await b.waitForSelector('[data-invito]', { timeout: 15000 })
 const cartello = await b.locator('[data-invito]').innerText()
-controlla('all\'altro compare il cartello, con chi lo invita e a cosa', /leonardo/i.test(cartello) && /Castle Battle/.test(cartello), cartello)
+controlla('all\'altro compare il cartello, con chi lo invita e a cosa', /lorenzo/i.test(cartello) && /Castle Battle/.test(cartello), cartello)
 await b.click('[data-invito-gioca]')
 for (const [nome, p] of [['chi invita', a], ['chi accetta', b]]) {
   await p.waitForSelector('[data-piazzola="0"]', { timeout: 25000 })
@@ -135,7 +135,7 @@ for (const [nome, p] of [['chi invita', a], ['chi accetta', b]]) {
 /* ── la bacheca (docs/core/amici-bacheca.md): uno va avanti negli asteroidi, l'altro lo vede sulla rotta, passando dal servizio ── */
 if (!conBacheca) console.log(`⚠️  salto la bacheca: il servizio su ${SERVIZIO} non ce l'ha ancora (npx wrangler deploy)`)
 else {
-await semina(a, { mate: { tappa: 0, fila: 4, libera: false } }, 'leonardo')     // ricarica: all'avvio la bacheca si scrive
+await semina(a, { mate: { tappa: 0, fila: 4, libera: false } }, 'lorenzo')     // ricarica: all'avvio la bacheca si scrive
 await attendi(a, 4500)
 await b.reload(); await b.waitForSelector('.carte', { timeout: 10000 })
 await scegli(b, 'mate')

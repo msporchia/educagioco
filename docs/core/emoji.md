@@ -5,8 +5,8 @@ Il gioco disegna le emoji con un suo font, non con quello del telefono.
 ## Perché
 
 Ogni dispositivo ha le sue emoji (Apple, Google, Samsung, Microsoft), e lo
-stesso gioco cambia faccia da un telefono all'altro: la bambina ha detto
-«ma Leonardo ha i disegni più belli». Non ci si basa mai sulle icone del
+stesso gioco cambia faccia da un telefono all'altro: una bambina ha notato
+che su un altro telefono i disegni erano più belli. Non ci si basa mai sulle icone del
 telefono. Il set è **Twemoji** (il disegno di Twitter/X), nel font a colori
 **Twemoji Mozilla** v0.7.0 (COLR, Emoji 14.0): stesse emoji su ogni
 dispositivo, anche offline, dentro il file unico.

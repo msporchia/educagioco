@@ -1,6 +1,6 @@
 # Dentro la casa
 
-**Stato: prima prova** (3 novembre 2026, su richiesta dell'utente: Melody voleva entrare in casa). La casa di scena della fattoria si tocca e
+**Stato: prima prova** (3 novembre 2026, su richiesta dell'utente: una bambina voleva entrare in casa). La casa di scena della fattoria si tocca e
 ci si entra: dentro ci sono stanze da comprare e mobili da mettere, colorare e spostare. **In casa si arreda e basta**: niente produce,
 niente si vende. Codice: `dati/interni.js`, `motore/interni.js`, `scena3d/casa3d.js`, `scena3d/mobili.js`, `scena3d/trame-pure.js`,
 `casa.js`, `viste/Casa.vue`, `stile-casa.css`. La base comune agli interni (anche alle botteghe, [botteghe.md](botteghe.md) «Dentro») è

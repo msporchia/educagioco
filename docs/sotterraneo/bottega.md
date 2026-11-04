@@ -1,6 +1,6 @@
 # I mercanti e la bottega
 
-Le quattro botteghe sul mondo di sopra, cosa portano, i pezzi delle righe dopo
+Le cinque botteghe sul mondo di sopra, cosa portano, i pezzi delle righe dopo
 a sovrapprezzo, quanta scelta c'è sul banco e come cambia da un giro all'altro
 (il tetto di rarità, i dieci pezzi, i salti e i sogni, il banco che ruota e si
 rinnova, comprare senza le caratteristiche, il riacquisto). La finestra da gioco di ruolo dove si compra e
@@ -13,7 +13,7 @@ codice: `dati/mercanti.js`, `motore/bottega.js`, `motore/storia.js`
 
 ## I mercanti di sopra
 
-Quattro botteghe sul mondo di sopra, vicino alle case e al carro
+Cinque botteghe sul mondo di sopra, vicino alle case e al carro
 (`MERCANTI` in `dati/mercanti.js`; dove stanno:
 [mondo-3d.md](mondo-3d.md#chi-sta-dove)). Nelle discese non vende
 più nessuno.
