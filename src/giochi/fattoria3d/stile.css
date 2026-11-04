@@ -68,8 +68,8 @@
 .f3-linguette .f3-esclama, .f3-linguette .f3-festa { right: 2px; top: 2px; }
 .f3-pagina { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; padding: 8px 8px 0; border: 2px solid #e6cfa0; border-radius: 16px; background: #fffdf6; }
 .f3-schede { flex: none; display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 8px; }
-.f3-schede button { flex: none; display: flex; align-items: center; gap: 5px; border: 2px solid transparent; border-radius: 18px; padding: 8px 9px; background: #efe4cf; color: #5a3a2a; font: 800 13px "Emoji Gioco", system-ui, sans-serif; touch-action: pan-x; min-height: 40px; }
-.f3-schede button .em { font-size: 16px; line-height: 1; }
+.f3-schede button { flex: none; display: flex; align-items: center; gap: 3px; border: 2px solid transparent; border-radius: 18px; padding: 7px 6px; background: #efe4cf; color: #5a3a2a; font: 800 12px "Emoji Gioco", system-ui, sans-serif; touch-action: pan-x; min-height: 40px; }
+.f3-schede button .em { font-size: 15px; line-height: 1; }
 .f3-schede button.acceso { background: #ffd36a; border-color: #e0a020; color: #3a2a1a; }
 .f3-griglia-carte { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; padding-bottom: 8px; animation: f3-velo .15s ease-out; }
 .f3-griglia-carte .carta { display: flex; flex-direction: column; align-items: center; gap: 3px; border: 2px solid #e6cfa0; background: #fffdf6; border-radius: 16px; padding: 8px 4px 9px; color: #3a2a1a; touch-action: manipulation; min-width: 0; }
