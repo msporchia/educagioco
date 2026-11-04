@@ -5,13 +5,13 @@ Le regole del «no» stanno in [regole.md](regole.md) «Come si dice di no»; i 
 
 ## Il `?`
 
-`<Barra guida="fattoria3d">` e la voce `AIUTI.fattoria3d` di `src/guide/contenuti.js`: i tocchi (tocca, 🌱/✂️ armati, tenere premuto per costruire e spostare), le prime cose, cosa serve e dove si fa, banco e mongolfiera, «Cosa allena». Non si apre mai da solo.
+`<Barra guida="fattoria3d">` e la voce `AIUTI.fattoria3d` di `src/guide/contenuti.js`: i tocchi (tocca, l'attrezzo da trascinare sui campi, tenere premuto per costruire e spostare), le prime cose, cosa serve e dove si fa, banco e mongolfiera, «Cosa allena». Non si apre mai da solo.
 La chiave deve essere il nome della schermata (`schermate.js`: `fattoria3d`); un test (`unita/guide`) lo controlla.
 
 ## Il primo giro
 
 `motore/guida.js`, pura: dal quadro di quello che c'è (campi vuoti/maturi/che crescono, modo, foglio aperto, primo raccolto fatto) dice `{ testo, dove, mano }` o null. Si legge lo schermo, non un copione.
-La riga è `giochi/Guida.vue`, l'anello e la manina li accende `usaGuida` (comune). I passi: 🌱 Semina → il grano nel foglio dei semi → tocca il campo → «il grano cresce» → ✂️ Raccogli → tocca il campo → 🏗 Costruisci (il primo raccolto è il traguardo: il campo tornato vuoto può aspettare).
+La riga è `giochi/Guida.vue`, l'anello e la manina li accende `usaGuida` (comune). I passi: tocca il campo → trascina il grano → «il grano cresce» → tocca il campo pronto → trascina il falcetto →  🏗 Costruisci (il primo raccolto è il traguardo: il campo tornato vuoto può aspettare).
 
 - **Serve solo a chi non ha fatto niente** (`servePrimoGiro`: nessuna spesa, nessun raccolto o prodotto in scorta), si decide una volta all'apertura. Se si esce a metà e la scorta è ancora vuota, ricomincia dal passo giusto.
 - **Finisce** al primo raccolto più un'occhiata al menu «Costruisci qui», o alla prima spesa (`primoGiroFinito`), e lo ricorda in `profile.campagne.fattoria3d.cfg.guida = { finita: true }`: «Ricomincia la fattoria» azzera la campagna e la guida torna.
@@ -38,7 +38,7 @@ La riga è `giochi/Guida.vue`, l'anello e la manina li accende `usaGuida` (comun
 - **`servono` si moltiplica scendendo** (due stoffe vogliono due giri, ognuno due lane) e la scorta si spartisce fra i rami in ordine di lettura: due rami che vogliono grano non dicono tutti e due «ne hai 3».
 - **Le bestie hanno il loro mangime come ramo** (un uovo vuole becchime, il becchime vuole grano); il pesce no: si pesca dal molo.
 - **Solo quello che è aperto**: se l'unica strada arriva dopo, la riga dice «arriva al livello N» e si ferma.
-- **Dove si apre**: dall'inventario (tasto sotto la merce scelta) e dal passo sotto un «non si può» (macchina, banco, mongolfiera: `ConsiglioRiga` ha il tasto `🌳 Come si fa` per la merce che manca). Si apre SOPRA il foglio da cui si parte, che resta dov'è; la ✕ lo chiude. I tasti ambra sulle righe che mancano portano dov'è il passo (le stesse azioni del consiglio, `facciConsiglio`) e chiudono tutti i fogli.
+- **Dove si apre**: dal foglio di un magazzino (tasto sotto la merce scelta) e dal passo sotto un «non si può» (macchina, banco, mongolfiera: `ConsiglioRiga` ha il tasto `🌳 Come si fa` per la merce che manca). Si apre SOPRA il foglio da cui si parte, che resta dov'è; la ✕ lo chiude. I tasti ambra sulle righe che mancano portano dov'è il passo (le stesse azioni del consiglio, `facciConsiglio`) e chiudono tutti i fogli.
 - Non dal `?` né dalla bacheca: serve una merce già scelta.
 
 ## Nei test

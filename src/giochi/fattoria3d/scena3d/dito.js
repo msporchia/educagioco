@@ -1,5 +1,5 @@
 // Il dito sulla tela: un tocco fa la cosa (l'eroe ci va), un dito che scorre sposta la mappa, due dita zoomano. Tenere premuto su un
-// pezzo lo solleva per spostarlo o metterlo via; tenere premuto su un posto libero del proprio terreno apre il menu «Costruisci qui»; tenere
+// pezzo lo solleva per spostarlo o metterlo via; tenere premuto su un posto libero del proprio terreno apre il menu «Compra»; tenere
 // premuto su Watson, un gatto o una bestia di casa apre il suo foglio (il tocco breve resta la sua festa);
 // col pennello delle strade si disegna; col fantasma del menu parcheggiato lo si trascina o lo si tocca dove va. Soglia di 16 px fra
 // tocco e trascinamento (docs/core/il-dito.md).
@@ -59,7 +59,7 @@ export class Dito {
       this.lungo = setTimeout(() => {
         if (this.inizio !== ini || this.trascina || this.punti.size !== 1 || w.costruzione.attivo) return
         try { navigator.vibrate && navigator.vibrate(30) } catch (x) { /* niente vibrazione */ }
-        ini.lungo = true; w.svuotaCoda(); w.costruzione.inizia(c.tipo, c, ini.x, ini.y)
+        ini.lungo = true; w.attrezzi.chiudi(); w.costruzione.inizia(c.tipo, c, ini.x, ini.y)
       }, ATTESA_PREMUTO)
     } else if (!b) {                                    // tenere premuto su un posto libero del terreno tuo: il menu «Costruisci qui»
       const p = w.puntaSuolo(e.clientX, e.clientY); if (!p) return
@@ -68,7 +68,7 @@ export class Dito {
       this.lungo = setTimeout(() => {
         if (this.inizio !== ini || this.trascina || this.punti.size !== 1 || w.costruzione.attivo || ui.fogliAperti()) return
         try { navigator.vibrate && navigator.vibrate(30) } catch (x) { /* niente vibrazione */ }
-        ini.menu = true; w.svuotaCoda(); w.puntoMenu = { i, j, x: p.x, z: p.z }; ui.apriCostruisci(i, j)
+        ini.menu = true; w.attrezzi.chiudi(); w.puntoMenu = { i, j, x: p.x, z: p.z }; ui.apriCostruisci(i, j)
       }, ATTESA_PREMUTO)
     }
   }
@@ -99,6 +99,7 @@ export class Dito {
     if (this.inizio.parcheggio) { if (this.trascina) w.costruzione.muovi(e.clientX, e.clientY); return }
     if (this._pennello) { if (!ui.fogliAperti()) w.costruzione.pennello(e.clientX, e.clientY, this._pennello); return }
     if (!this.trascina || ui.fogliAperti()) return
+    w.attrezzi.chiudi()                                 // l'attrezzo sta accanto al campo: se la vista si sposta si posa
     this._mappa(e)                                      // un dito che scorre sposta la mappa: per andare lontano si tocca poi la meta
   }
 

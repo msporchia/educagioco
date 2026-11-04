@@ -87,15 +87,14 @@ scena3d/             il disegno (vedi scena.md); `facce.js` la faccia di una mer
   scena3d/pesca3d.js            il galleggiante (tre stadi: calma, attesa, «Abbocca!»), il filo dalla canna, il ritiro da sé se il contadino è lì
 viste/
   Faccia.vue         la faccia di una merce (`k` la chiave, `n` il numerino): il pezzo dell'atlante (`src/grafica/atlante-fattoria.js`) con `Provino.vue` (la figura in scala, venuta dalla 2D), l'emoji come ripiego; la usano inventario, banco, macchina, semi, livelli, visita
-  Hud.vue            il gettone del livello (⭐ N con la barra sottile, apre i livelli), il tasto «🎒 Inventario» (pallino se è entrata roba dall'ultima apertura) e, da livello 2, «🧺 Banco» col pallino degli ordini consegnabili. Niente liste di scorte sul prato
-  Albero.vue         «🌳 Come si fa»: la strada di una merce a figure con le rotaie (dati/albero.js); si apre da inventario e da sotto un «non si può» ([guida.md](guida.md); stile: `stile-albero.css`)
-  Inventario.vue     il foglio delle scorte a schede (🌾 raccolti, 🧺 prodotti, 🧶 lana e altro): gettoni con faccia e numero, un tocco dice nome e a cosa serve; solo lettura, niente vendere. Il conto sta in `inventario-puro.js` (stile: `stile-inventario.css`)
+  Hud.vue            il gettone del livello (⭐ N con la barra sottile, apre i livelli) e basta: ordini, scorte e vestiti stanno nella fattoria
+  Albero.vue         «🌳 Come si fa»: la strada di una merce a figure con le rotaie (dati/albero.js); si apre dal foglio di un magazzino e da sotto un «non si può» ([guida.md](guida.md); stile: `stile-albero.css`)
   Guardaroba.vue     il foglio dell'abito ([guardaroba.md](guardaroba.md)): il ritratto 3D (anteprima `contadino:<abito>`), chi si è (la scelta del profilo, `SceltaAspetto`), le schede dei capi e i gettoni col lucchetto
 
-  BarraAzioni.vue    libero / semina / raccogli / costruisci, i numeri
-  CostruisciQui.vue  il foglio «Cosa costruiamo?» (si apre tenendo premuto su un posto libero): le schede per categoria e la griglia di carte con l'anteprima 3D del modello (`anteprima(tipo)`, emoji come segnaposto), il prezzo o «📦 ×N», le chiuse col lucchetto che tremano e dicono il livello ([scena.md](scena.md))
+  BarraAzioni.vue    il tasto 🛒 Compra col suo «!»
+  Attrezzi.vue       i semi ad arco o il falcetto accanto al campo toccato, da trascinare ([campi.md](campi.md))
+  CostruisciQui.vue  il foglio «Cosa compriamo?» (il tasto 🛒, o tenendo premuto su un posto libero): il taccuino con le linguette, le schede e la griglia di carte con l'anteprima 3D del modello (`anteprima(tipo)`, emoji come segnaposto), il prezzo o «📦 ×N», le chiuse col lucchetto che tremano e dicono il livello ([scena.md](scena.md))
   BarraStrade.vue    il pennello delle strade: strada, gomma, «Fatto»
-  SceltaSeme.vue     «Cosa semini?»: le sedici colture dai dati (la griglia scorre), quelle non arrivate in grigio col livello
   Macchina.vue       il foglio di una macchina (la sua, qualunque sia), come in Hay Day e nella 2D: l'insegna col suo colore (`[data-macchina]` in stile.css), i **posti della fila** col nome della macchina (`dentro`: «Nel forno», «Al telaio»…: libero, cuoce con barra e tempo, aspetta) seguiti dai **vani chiusi col prezzo** da comprare (`bloccati`, evento `compra`), la **pila dei pronti** con «Ritira tutto», le ricette come **carte** con la faccia del prodotto e il numero di quante se ne fanno con le scorte (ingredienti con ✓/✗ e `ha/serve`); le chiuse velate col lucchetto e il livello. Una carta si **trascina** su un posto o sulla fila, o si **tocca** e va in fila (vedi sotto). Stile in `stile-macchina.css`
   macchina-pura.js   il conto del foglio senza DOM: `ordinaRicette`, `statoDelPosto`, `bersaglioSotto`, `gestoDelDito` (`unita/fattoria3d-macchina`)
   Bacheca.vue        il foglio «Gli ordini» a bacheca ([ordini.md](ordini.md)): i biglietti colorati sulla tavola (3–8, uno per posto), il dettaglio di quello scelto con le merci, il cestino e «Consegna», l'indicatore delle consegne; stile in `stile-bacheca.css`
@@ -107,7 +106,6 @@ viste/
   Livelli.vue        il foglio «Livello N»: la scala, con la scatola aperta di ciò che è arrivato e quella chiusa (in grigio, col lucchetto) di ciò che arriva dopo, quanto manca
   Dialogo.vue        la conferma d'acquisto (non più per le bestie)
   Consiglio.vue      il foglio «E adesso?»; `ConsiglioRiga.vue` il passo col tasto, anche sotto i «mancano» di macchina, banco e mongolfiera
-  Opzioni.vue        il pannello ⚙
   Mappa.vue          la mappa del trattore: i villaggi in fila lungo una strada, i grigi col livello, e in cima il tasto del carretto
   Carretto.vue       il carretto del vicino (C15): dai 5, prendi 1 o regali; lo scomparto pieno in oro
   Casa.vue           dentro la casa: «Esci», Arreda e Stanze, il mobile in mano, il catalogo, il foglio di un mobile, la pianta ([casa.md](casa.md))
@@ -125,13 +123,10 @@ Registrazione: `src/giochi/indice.js` (il manifesto, in coda) e `src/giochi/sche
 | bersaglio | cosa |
 |---|---|
 | `[data-f3="campo"] canvas` | il contenitore e la tela |
-| `[data-f3="az-libero|az-semina|az-raccogli|az-costruisci"]` | i tasti delle azioni (`.acceso` se armato); `.f3-n` è il numero rosso |
-| `[data-f3="apri-inventario"]`, `inventario-nuovo` (il pallino) | il tasto nell'HUD |
-| `[data-f3="apri-guardaroba"]` | il tasto «👕» nell'HUD (si apre anche dall'armadio dentro casa, [casa.md](casa.md)) |
+| `[data-f3="az-costruisci"]` | il tasto 🛒 Compra |
 | `[data-f3="guardaroba"]`, `[data-scheda-abito="persona|aspetto|cappello|vestiti|set"]`, le scelte `button[data-capo="<categoria>:<id>"]` (`aria-pressed`), le voci `[data-voce="…"]`, `guardaroba-ritratto`, e i bersagli del componente (`[data-prs="paga|chi|…"]`, [../core/personalizza.md](../core/personalizza.md)); chi si è: `button[data-capo="persona:contadina|contadino"]` | il foglio del guardaroba |
 | `[data-azione="negozio"]` (nel foglio della bestia), `[data-f3="addobbi"]`, `[data-f3="addobbi-ritratto"]`, `[data-addobbo="<id>|niente-<aggancio>"]`, `[data-colore="<colore>"]` | il negozio degli addobbi di una bestia ([addobbi.md](addobbi.md)) |
-| `[data-f3="inventario"]`, `[data-scheda-inv="raccolti|prodotti|altro"]`, `inventario-riga`, `inventario-vuoto`; i gettoni `button[data-merce="<id>"]` con `data-n` | il foglio dell'inventario (le colture arrivate al livello, le vuote velate) |
-| `[data-f3="semi"]`, `[data-seme="carota"]` | la scelta del seme |
+| `[data-f3="attrezzi"]`, `[data-seme="carota"]`, `[data-f3="falce"]` | l'attrezzo accanto al campo ([campi.md](campi.md)) |
 | `[data-f3="costruisci-qui"]`, `[data-f3="costruisci-velo"]`, `[data-scheda="campi"]`, `[data-carta="campo"]` | il foglio «Costruisci qui» (si apre con `premuto` ~0,45 s su un posto libero, o col tasto 🏗️), il velo che si tocca per chiuderlo, una scheda (`campi`, `animali`, `edifici`, `decori`, `passaggi`; `.acceso`) e una carta (anche `strada` e `gomma`; `data-cat` la scheda) |
 | `[data-f3="costruisci-msg"]`, `[data-carta].trema` | la riga sotto le carte (livello che manca, «Servono 🪙 N») e la carta chiusa che trema |
 | `[data-f3="ruota"]` (con `data-rot`) | il tasto ↻ mentre un pezzo ruotabile è in mano: gira di un quarto ([rotazione.md](rotazione.md)) |
@@ -146,11 +141,10 @@ Registrazione: `src/giochi/indice.js` (il manifesto, in coda) e `src/giochi/sche
 | `[data-f3="pasticceria"]` | il corpo del menu, solo se la macchina è la pasticceria (il Pastificio; un elemento ha un solo `data-f3`) |
 | `[data-f3="mongolfiera"]` (`data-stato`), `[data-f3="mongolfiera-cassa"]` (`data-fila`, `data-cassa`, `data-piena`, `data-pronta`), `[data-f3="mongolfiera-carica"]` (`data-puoi`), `[data-f3="mongolfiera-parti"]`, `-piene`, `-tutto`, `-fila-bonus`, `-msg`, `-viaggio`, `-chiusa` | il foglio della mongolfiera ([mongolfiera.md](mongolfiera.md)) |
 | `window.__fattoria3d.motore.provaPesca(i, j)`, `.lenze()`, `.bancoDi(lotto)`, `mondo.azioni.pescaSu(i, j)`, `mondo.pesca3d`, `mondo.terreno.pesci.mesh` | la pesca senza dito: cosa succederebbe, le lenze in acqua, lo stato di un banco, il gesto, i galleggianti, i pesciolini; il tempo si sposta con `motore.ora = () => Date.now() + N` |
-| `[data-merce="<id>"]` | la faccia di una merce (`viste/Faccia.vue`; anche il gettone dell'inventario ha lo stesso attributo: per il gettone `button[data-merce]`): inventario, banco, macchina, scelta del seme, livelli, cassa e mercato; il volo «+1» sopra la scena |
+| `[data-merce="<id>"]` | la faccia di una merce (`viste/Faccia.vue`; anche il gettone del magazzino ha lo stesso attributo: per il gettone `button[data-merce]`): inventario, banco, macchina, scelta del seme, livelli, cassa e mercato; il volo «+1» sopra la scena |
 | `[data-f3="livello"]`, `[data-f3="livello-nuovo"]`, `[data-f3="livelli"]`, `[data-f3="avviso-livello"]` | il gettone, il suo pallino, il foglio dei livelli, l'avviso che compare a ogni salita |
-| `[data-carta].bloccata`, `[data-seme].bloccato`, `[data-f3="semi-msg"]` | una carta o una coltura non ancora arrivata, e la riga che dice il livello (la scelta dei semi) |
+| `[data-carta].bloccata` | una carta non ancora arrivata, e la riga che dice il livello |
 | `[data-f3="apri-consiglio"]`, `[data-f3="consiglio"]`, `[data-f3="consiglio-riga"]`, `consiglio-testo`, `consiglio-fai`; `[data-guida-riga]`, `[data-indicato]` | «E adesso?», il passo col suo tasto (anche sotto i messaggi dei fogli) e la guida del primo giro: [guida.md](guida.md) |
-| `[data-f3="apri-opzioni"]`, `[data-f3="opzioni"]`, `[data-preset="basso"]` | le opzioni |
 | `[data-f3="centra"]` | «⌖ Torna al contadino» |
 | `[data-chiudi]` | la ✕ di ogni foglio |
 | `[data-senza-3d]`, `[data-azione="esci-3d"]` | il messaggio senza WebGL e il suo tasto |

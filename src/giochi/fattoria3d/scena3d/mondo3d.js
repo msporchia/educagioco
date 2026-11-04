@@ -2,7 +2,7 @@
 // sa di three come renderer. Le regole le dice il motore (`motore`), le finestre le apre la vista (`ui`): qui si disegna, si
 // raggiunge una cosa e si fa il suo gesto. Vedi docs/fattoria3d/scena.md.
 //
-// `ui` (le porte verso Gioco.vue): cambio(), chiedi(titolo, testo, bottoni), scegliSeme(cb), apriMacchina(tipo),
+// `ui` (le porte verso Gioco.vue): cambio(), chiedi(titolo, testo, bottoni), attrezzi(info | null), apriMacchina(tipo),
 //   avviso(testo), chiudiCostruzione(), fogliAperti(), zonaDrop() → DOMRect|null, trascinando(info|null).
 import * as THREE from 'three'
 import { segui, rilascia } from '../../../grafica/rilascio3d.js'
@@ -26,6 +26,7 @@ import { Pesca3d } from './pesca3d.js'
 import { Costruzione } from './costruzione.js'
 import { Dito } from './dito.js'
 import { Bagno } from './bagno.js'
+import { Attrezzi } from './attrezzi.js'
 import { Stagione } from './stagione.js'
 import { ASPETTO, fantasma } from './modelli.js'
 import { PEZZI, EDIFICI } from '../dati/catalogo.js'
@@ -51,7 +52,7 @@ export class Mondo3d {
     this.abito = abito
     this.canvas = canvas; this.sopra = sopra; this.m = motore; this.ui = ui; this.q = qualita
     // cosa sta facendo il bambino: lo imposta la vista (barra delle azioni, pennello delle strade)
-    this.cmd = { modo: 'libero', seme: 'grano', strumento: null, pennello: null }
+    this.cmd = { strumento: null, pennello: null }
     this.rect = canvas.getBoundingClientRect()
 
     this.renderer = segui(new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' }))
@@ -100,10 +101,10 @@ export class Mondo3d {
     this.costruzione = new Costruzione(this.ctx)
     this.pezzi.sulCompraBestia = id => this.azioni.compraBestia(id)
     this.bagno = new Bagno(this)
+    this.attrezzi = new Attrezzi(this)
     this.compagni.cibo = (id, si) => this.pezzi.cibo(id, si)
     this.dito = new Dito(this)
     this.inSposta = null           // l'id della bestia di casa che si sta spostando (il prossimo tocco su una cella libera la porta lì)
-    this.coda = []                 // gli id dei campi che l'eroe farà uno dopo l'altro (semina o raccogli armati)
     this.badgeLotti = {}
 
     this.stat = { dts: new Float32Array(120), cpus: new Float32Array(120), logiche: new Float32Array(120), n: 0, info: { calls: 0, triangoli: 0, geometrie: 0, texture: 0, dpr: 1 }, fps: 0, nF: 0, tF: 0 }
@@ -291,15 +292,15 @@ export class Mondo3d {
 
   // ── toccare ──
   tocca(x, y) {
-    const { cmd, ui, m, eroe } = this
+    const { ui, m, eroe } = this
     if (ui.fogliAperti()) return
+    this.attrezzi.chiudi()                                              // un tocco altrove lo posa
     if (this.inSposta) return this._sposta(x, y)
     const rg = this._raggio(x, y)
     const amico = this.compagni.bersaglio(rg)                           // Watson e i gatti si accarezzano prima di tutto
     if (amico) return this.compagni.tocca(amico)
     const casa = this.casaSotto(rg)                                     // la casa: il contadino va alla porta ed entra (docs/fattoria3d/casa.md)
     if (casa && !eroe.az) {
-      this.svuotaCoda()
       // la porta, o (la casa sta fuori dalla terra di partenza) le celle tue più vicine alla porta
       const pi = casa.i + casa.w / 2, pj = casa.j + casa.d, vicine = []
       for (let a = -10; a <= 10; a++) for (let b = 0; b <= 12; b++) if (m.libera(Math.floor(pi) + a, pj + b)) vicine.push([Math.floor(pi) + a, pj + b, Math.hypot(a + 0.5, b)])
@@ -310,12 +311,8 @@ export class Mondo3d {
     }
     const b = this.bersaglioSotto(x, y)
     const campo = b && b.kind === 'cosa' && m.cosa(b.id) && m.cosa(b.id).tipo === 'campo' ? m.cosa(b.id) : null
-    if (campo && cmd.modo !== 'libero') {                      // semina e raccogli: si toccano più campi, l'eroe li fa in fila
-      if (!this.applicabile(campo)) return this.fx.parla(cmd.modo === 'semina' ? 'Qui è già seminato' : 'Non è ancora pronto')
-      return this._accoda(campo.id)
-    }
+    if (campo) return this.attrezzi.tocco(campo)                       // i campi non aspettano il contadino: si fanno col dito (attrezzi.js)
     if (eroe.az) return
-    this.svuotaCoda()
     if (b && b.kind === 'albero') {
       const a = m.albero(b.n), l = lottoDi(a.i, a.j)
       if (!m.posseduto(l)) return this.azioni.offriLotto(l)               // ciò che sta in un terreno non tuo si compra
@@ -339,18 +336,6 @@ export class Mondo3d {
     cand.sort((u, v) => u[2] - v[2])
     if (cand.length) eroe.vaiA([[cand[0][0], cand[0][1]]], null, null)
   }
-  // ── semina e raccogli armati: la coda ──
-  applicabile(c) { return c.tipo === 'campo' && (this.cmd.modo === 'semina' ? this.m.campoVuoto(c) : this.cmd.modo === 'raccogli' ? this.m.campoMaturo(c) : false) }
-  _accoda(id) { if (!this.coda.includes(id)) { this.coda.push(id); this.pezzi.segnaCoda(id, true) } }
-  svuotaCoda() { for (const id of this.coda) this.pezzi.segnaCoda(id, false); this.coda.length = 0 }
-  _eseguiInCoda(id) {
-    const c = this.m.cosa(id); const { eroe } = this
-    if (!c || eroe.az || !this.applicabile(c)) return
-    eroe.faccia(this.pezzi.centroDi({ kind: 'cosa', id }))
-    if (this.cmd.modo === 'semina') this.azioni.semina(c, this.cmd.seme)
-    else this.azioni.raccogli(c)
-  }
-
   /** Dopo che il motore ha cambiato qualcosa che si vede: i gruppi, il terreno, i cartelli. */
   cambiato() { this.pezzi.sincronizza(); this.terreno.ridisegnaStrade(); this.terreno.pesci.ridisegna(this.terreno.lottiInFinestra()); this.stagione?.sporca(); this.ombraSporca = true; this.ui.cambio() }
 
@@ -358,9 +343,8 @@ export class Mondo3d {
   imposta(nuovo) {
     const c = this.cmd
     Object.assign(c, nuovo)
-    if (nuovo.modo) { this.svuotaCoda(); this.costruzione.annullaTrascinamento() }
     if ('strumento' in nuovo) {                                 // il pennello delle strade: la griglia c'è finché si disegna
-      if (c.strumento) { this.svuotaCoda(); this.costruzione.annullaTrascinamento() }
+      if (c.strumento) this.costruzione.annullaTrascinamento()
       this.terreno.mostraGriglia(!!c.strumento || this.costruzione.attivo)
     }
   }
@@ -385,11 +369,6 @@ export class Mondo3d {
     this.ospite?.aggiorna(dt, tt)
     this.compagni.aggiorna(dt, tt)
     this.pesca3d.aggiorna(dt, tt)
-    if (this.coda.length && eroe.fermo && !eroe.dopo && !ui.fogliAperti()) {          // il prossimo della coda
-      const id = this.coda.shift(); this.pezzi.segnaCoda(id, false)
-      const c = m.cosa(id)
-      if (c && this.applicabile(c)) eroe.vaiA(this.celleDiServizio({ kind: 'cosa', id }), () => this._eseguiInCoda(id), this.pezzi.centroDi({ kind: 'cosa', id }))
-    }
     this.pezzi.aggiorna(dt, tt)
     this.terreno.muovi(dt, this.fx)
     this.fx.aggiorna(dt, eroe.posizione)

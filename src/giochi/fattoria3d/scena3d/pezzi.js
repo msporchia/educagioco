@@ -120,12 +120,11 @@ export class Pezzi {
     if (this.usaBanchi && STATICI.has(c.tipo)) this.statici.adotta(grp)
     const badge = edificio || c.tipo === 'bacheca' || c.tipo === 'ciotola_bestia' ? this.fx.nuovoBadge() : c.bestie || c.pecore ? this.fx.nuovoCartello(() => this.sulCompraBestia && this.sulCompraBestia(c.id), c.tipo) : null
     if (c.tipo === 'ciotola_bestia') badge.el.dataset.ciotola = c.bestia
-    this.voci.set(c.id, { id: c.id, kind: 'cosa', edificio, tipo: c.tipo, c, d, rot: c.rot || 0, grp, badge, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
+    this.voci.set(c.id, { id: c.id, kind: 'cosa', edificio, tipo: c.tipo, c, d, rot: c.rot || 0, grp, badge, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
   }
   _togli(id) {
     const v = this.voci.get(id); if (!v) return
     this.scena.remove(v.grp); v.badge?.togli(); this.banco.lascia(v.grp); this.statici.lascia(v.grp)
-    if (v.anello) this.scena.remove(v.anello)
     this.voci.delete(id)
   }
 
@@ -167,17 +166,6 @@ export class Pezzi {
   centroDi(bersaglio) {
     const c = bersaglio.kind === 'cosa' ? this.voci.get(bersaglio.id).c : this.m.cosaDi(bersaglio.tipo)      // `{ kind: 'edificio', tipo }`: l'edificio di quel tipo
     return centroDi(c, this.m.misureCosa(c))
-  }
-
-  /** L'anello giallo attorno a ciò che è in coda: sta sul terreno, non gira per lo schermo. */
-  segnaCoda(id, si) {
-    const v = this.voci.get(id); if (!v) return
-    if (si && !v.anello) {
-      const r = Math.max(v.d.w, v.d.d) * 0.62
-      v.anello = new THREE.Mesh(new THREE.RingGeometry(r, r + 0.12, 28), new THREE.MeshBasicMaterial({ color: 0xffc830, side: THREE.DoubleSide, transparent: true, opacity: 0.9 }))
-      v.anello.rotation.x = -Math.PI / 2; v.anello.position.y = 0.2; v.grp.add(v.anello)
-    }
-    if (v.anello) v.anello.visible = !!si
   }
 
   aggiorna(dt, tt) {
