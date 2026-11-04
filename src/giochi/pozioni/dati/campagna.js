@@ -18,15 +18,15 @@ const GRADINI = [
     dritta: () => 'Ordina dal listino le ampolle che fanno la dose.',
     dosi: [{ in: 'P', valori: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1, 1.5, 2] }] },
 
-  { id: 'grande', aiuto: 'svolto', ingredienti: 2, procedimento: 1, ordine: 2, margine: 8, manca: true, etichette: ['P'],
+  { id: 'grande', aiuto: 'svolto', ingredienti: 2, procedimento: 2, ordine: 2, margine: 8, manca: true, etichette: ['P'],
     dritta: f => `Un ${f.parole.G[0]} sono ${VALE[f.unita.G] / VALE[f.unita.P]} ${f.parole.P[1]}: sotto ogni targhetta c'è quanto vale.`,
     dosi: [{ in: 'G', valori: [1, 2, 3] }] },
 
-  { id: 'grandi', aiuto: 'regola', ingredienti: 3, procedimento: 2, ordine: 3, margine: 6, manca: true, etichette: ['P', 'G'],
+  { id: 'grandi', aiuto: 'regola', ingredienti: 3, procedimento: 3, ordine: 3, margine: 6, manca: true, etichette: ['P', 'G'],
     dritta: () => 'Stessi numeri, ma il conto adesso lo fai tu.',
     dosi: [{ in: 'G', valori: [1, 2, 3, 4, 5] }] },
 
-  { id: 'virgola', aiuto: 'svolto', ingredienti: 3, procedimento: 2, ordine: 3, margine: 6, manca: true, etichette: ['P', 'G'],
+  { id: 'virgola', aiuto: 'svolto', ingredienti: 3, procedimento: 3, ordine: 3, margine: 6, manca: true, etichette: ['P', 'G'],
     dritta: f => `Mezzo ${f.parole.G[0]}, un ${f.parole.G[0]} e mezzo: sotto ogni targhetta c'è quanto vale.`,
     dosi: [{ in: 'G', valori: [0.5, 1.5, 2.5, 3.5, 4.5] }] },
 
@@ -34,7 +34,7 @@ const GRADINI = [
     dritta: () => 'Adesso la virgola la sposti da solo.',
     dosi: [{ in: 'G', valori: [0.5, 1.5, 2.5, 4.5, 0.2, 0.4, 1.2, 3.6] }] },
 
-  { id: 'media', aiuto: 'svolto', ingredienti: 3, procedimento: 3, ordine: 3, margine: 6, manca: true, etichette: ['M', 'P', 'G'],
+  { id: 'media', aiuto: 'svolto', ingredienti: 3, procedimento: 4, ordine: 3, margine: 6, manca: true, etichette: ['M', 'P', 'G'],
     dritta: f => `Tanti ${f.parole.G[1]}: il mercante li vende anche a ${f.parole.M[1]}.`,
     dosi: [{ in: 'G', valori: [6, 8, 10, 12, 15, 20] }] },
 

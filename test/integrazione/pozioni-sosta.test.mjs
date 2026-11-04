@@ -128,7 +128,7 @@ for (let g = 0; g < 30 && await page.locator('[data-fase="procedimento"]').count
 }
 uguale('la tappa finisce', await page.locator('[data-fine="tappa"]').count(), 1)
 uguale('le monete sono quelle di tutta la tappa, anche prima dell\'uscita',
-       (await page.locator('[data-monete]').innerText()).trim(), `+${CAMPAGNA[1].ingredienti * MONETE_A_DOSE + 2} 🪙`)
+       (await page.locator('[data-monete]').innerText()).trim(), `+${CAMPAGNA[1].ingredienti * MONETE_A_DOSE + 3} 🪙`)
 await page.click('[data-fine] [data-azione="mappa"]')
 await attendi(page, 500)
 uguale('finita la tappa la carta non c\'è', await page.locator('[data-ripresa]').count(), 0)

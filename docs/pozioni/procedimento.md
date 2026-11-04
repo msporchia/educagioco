@@ -49,15 +49,18 @@ li usa: capire cosa serve è parte del gioco.
 
 | | passi | gradini |
 |---|---|---|
-| 1 | versa tutto, mescola | `banco`, `grande` |
-| 2 | versa tutto; mescola e accendi il fuoco in ordine a caso | `grandi`, `virgola` |
-| 3 | pesta due cose e versa, poi il resto (i liquidi: versa, mescola o accendi, versa il resto) | `virgole`, `media` |
-| 4 | come il 3, e si diluisce | `miste`, `inversa` |
+| 1 | versa tutto, mescola | `banco` |
+| 2 | versa tutto; mescola e accendi il fuoco in ordine a caso | `grande` |
+| 3 | pesta due cose e versa, poi il resto | `grandi`, `virgola`, `virgole` |
+| 4 | come il 3, e si diluisce | `media`, `miste`, `inversa` |
 | 5 | come il 4, e una coppia di passi detta al contrario («accendi il fuoco, ma prima mescola bene») | `inverse`, le finali |
 
 - **L'ordine cambia di ricetta in ricetta**: se fosse sempre lo stesso si
   imparerebbe a memoria e il testo non si leggerebbe.
-- I liquidi non si pestano: la ricetta non lo chiede, e tentarlo è un pasticcio.
+- **I liquidi non si pestano**, e tentarlo è un pasticcio. Una pozione di soli
+  liquidi lascerebbe il mortaio sul tavolo per niente: per quelle in dispensa c'è
+  qualcosa di secco (`dispensa`), una cosa al livello 3 e due dopo, che non si
+  compra, non sta sul listino e aspetta sul bancone.
 
 ## Il disegno e i suoni
 

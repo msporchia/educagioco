@@ -136,6 +136,11 @@ export class Bottega {
       g.pezzi = [g.casa]
       g.ottimo = ottimo(g.dose - g.casa, g.offerte)
     }
+    // i liquidi non si pestano: per il mortaio c'è qualcosa di secco in dispensa, che non si compra
+    const secche = tappa.famiglie.length === 1 && tappa.famiglie[0] === 'capacita' && tappa.procedimento >= 3 ? (tappa.procedimento >= 4 ? 2 : 1) : 0
+    for (const i of mescolata(rnd, INGREDIENTI.filter(x => x.famiglia === 'massa')).slice(0, secche))
+      this.ingredienti.push({ nome: i.nome, colore: i.colore, famiglia: i.famiglia, unita: 'g', dose: 1, messo: 1, casa: 1, dispensa: true,
+                              offerte: [], ottimo: { costo: 0, pezzi: [] }, traboccate: 0, pezzi: [] })
     this.pozione = { nome: tappa.nome, emoji: tappa.emoji, colore: tappa.colore }
     this.passi = ricetta(rnd, this.ingredienti, tappa.procedimento)
     this.righe = testo(rnd, this.passi, this.ingredienti, tappa.procedimento >= 5)
@@ -159,6 +164,7 @@ export class Bottega {
   }
 
   get resto() { return this.gettoni - this.speso }
+  get comprati() { return this.ingredienti.filter(g => !g.dispensa) }
   get extra() { return this.speso - this.minimo }
   // le stelle dicono quanto si è speso, non quante volte si è sbagliato
   get stelle() { return this.saltate ? 1 : this.extra <= 0 ? 3 : this.extra <= 3 ? 2 : 1 }
@@ -293,7 +299,7 @@ export class Bottega {
 
   // il modo più economico, ingrediente per ingrediente, da dire alla fine
   piuEconomico() {
-    return this.ingredienti.map(g => ({
+    return this.comprati.map(g => ({
       nome: g.nome, costo: g.ottimo.costo,
       pezzi: g.ottimo.pezzi.map(k => scrivi(g.offerte[k].base, g.offerte[k].unita)),
     }))

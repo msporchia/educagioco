@@ -180,10 +180,10 @@ await attendi(page, 1200)
 {
   const passo = () => page.evaluate(() => window.__poz.bottega.value.passo)
   /* quello che dà fastidio si sposta, e resta lì */
-  const prima = await dove('fiammifero')
-  await trascina(prima, { x: prima.x + 60, y: prima.y + 45 })
+  const prima = await dove('mestolo')
+  await trascina(prima, { x: prima.x - 40, y: prima.y + 70 })
   await attendi(page, 900)
-  const dopo = await dove('fiammifero')
+  const dopo = await dove('mestolo')
   controlla('lasciato sul tavolo resta dove lo si è messo', Math.hypot(dopo.x - prima.x, dopo.y - prima.y) > 30, JSON.stringify([prima, dopo]))
   uguale('e spostare non è un pasticcio', await page.evaluate(() => window.__poz.bottega.value.pasticci), 0)
   const sulMortaio = await page.evaluate(() => [...window.__poz.bottega.value.passi[0].cosa])
