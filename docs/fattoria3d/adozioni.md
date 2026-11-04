@@ -32,6 +32,8 @@ carne (petto, testa, muso, orecchie, coda, pelo lungo), il mantello, l'altezza d
 Le bambine ci tengono moltissimo agli animali: per questo sono fatti con cura e con più triangoli, e da lontano (in gioco) con la versione leggera.
 Le figure sono sempre il modello e la sua foto (`bestia:<id>` in `dati/anteprime.js`), mai un'emoji di ripiego; l'emoji resta solo nelle liste di testo (il foglio dei livelli).
 
+**Il prezzo sale** come quello del terreno: ogni animale che hai fa costare il prossimo 🪙20 di più (`prezzoAdozione`); la tabella dice il prezzo di base, la carta quello di adesso. Con l'animale arriva la sua ciotola, col primo la tinozza: [cura-sul-prato.md](cura-sul-prato.md).
+
 ## Chi l'aveva già
 
 `stato.adozioni: 1` dice che lo stato è del nuovo corso. Uno stato **senza** il campo è di quando Watson e i gatti arrivavano da soli (livelli 1, 2, 3 e 19):

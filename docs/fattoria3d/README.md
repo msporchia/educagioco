@@ -32,6 +32,7 @@ convertire) sta in `src/giochi/fattoria3d/da2d/`. Le monete sono quelle vere.
 - [addobbi.md](addobbi.md) — vestire le bestie (anche Watson e i gatti): i dodici addobbi della 2D tutti in vendita, comprare è mettere, il cassetto, gli agganci su ogni corpo, «Che eleganza»
 - [creta.md](creta.md) — gli animali di casa modellati nella creta (forme che si fondono, una pelle sola, colori nei vertici, la coda del gatto sulle ossa), il peso, la versione da lontano, cosa non ha funzionato
 - [taglie.md](taglie.md) — quanto è grande ogni animale in scena: le taglie vere compresse, le zampe più alte o più basse per razza, il test che tiene l'ordine
+- [cura-sul-prato.md](cura-sul-prato.md) — la ciotola col nome, cosa chiede e la scappatoia a monete, la fame che insiste, il prezzo che sale, lo sporco e la tinozza, giocare col tocco, chi si annoia
 - [compagni.md](compagni.md) — Watson e i gatti che girano per la fattoria, il contadino nuovo: quando arrivano, come sono fatti, come si muovono
 - [guardaroba.md](guardaroba.md) — cambiare abito al contadino o alla contadina: il genere dal profilo, i capi e gli sblocchi, il salvataggio, come si aggiunge un pezzo
 - [rotazione.md](rotazione.md) — ruotare i pezzi e gli edifici: `rot` 0–3 nello stato, l'ingombro e il davanti che seguono, il tasto ↻ col secondo dito

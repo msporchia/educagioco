@@ -35,6 +35,8 @@ gatto nero 75/19 come nella 2D; Irene e Golia 75 fra quelli) e si curano come le
 Chi li aveva comprati nella 2D li ritrova come compagni (`COMPAGNO_DI`), senza nome scelto. Le razze nuove (gatto grigio, tigrato, bianco, labrador, border collie, dalmata) non hanno un
 equivalente 2D e stanno a casa dove le metti.
 
+**Dal 4/11/2026 si curano sul prato**: ciotola, tinozza, un tocco per giocare: [cura-sul-prato.md](cura-sul-prato.md). Le tabelle qui sotto (cibi, coccole, premio) restano quelle; dove si fanno i gesti sta lì.
+
 ## I bisogni (A5)
 
 `dati/bisogni.js` della 2D, riusato: **pancia** (cala in 14 ore), **pelo** (30), **gioco** (20); `FONDO` 0,15: **non stanno mai male e non muoiono**; soglie `BENE` 0,55 e
@@ -121,21 +123,20 @@ Il ritratto del foglio e delle carte è un `bestia:<id>` di `anteprime.js`.
 
 Le bestie si prendono dal menu 🏗 «Costruisci», scheda **Animali** (carte `🪙 prezzo`, il lucchetto dice il livello; una già tua dice «🐾 è tua» e apre il foglio).
 **Tenendo premuto** su una bestia in scena (anche Watson e i gatti) si apre il suo foglio (`scena3d/dito.js`, dopo 0,45 s come gli altri «tieni
-premuto»); il tocco breve resta la festa dei compagni, e sulle bestie comprate apre il foglio come prima. Il foglio (`Bestia.vue`): ✕ in
-alto a destra, ritratto, la frase «come sta», tre blocchi (barra, gesti), 🤚 Carezza / 📍 Sposta / ✎ Nome, una riga che dice cosa è successo e, quando manca roba, **dove si fa** («Non hai 🥚 uova: lo fanno
+premuto»); il tocco breve è giocare ([cura-sul-prato.md](cura-sul-prato.md)). Il foglio (`Bestia.vue`): ✕ in
+alto a destra, ritratto, la frase «come sta», le tre barre, 📍 Sposta / ✎ Nome / 🛍️ Negozio e una riga che dice dove si cura. Quando manca roba la ciotola dice **dove si fa** («Non hai 🥚 uova: lo fanno
 gli animali: pollaio») o **quante monete mancano**. Bottoni da 44 px e più, il dito non è un mouse.
 
 ## Nei test
 
 `unita/fattoria3d-bestie` (parità con la 2D numero per numero, i bisogni mai sotto `FONDO` dopo 400 ore, il cibo sbagliato rifiutato col perché senza pagare, il premio una volta per ciclo, nome e posizione
 salvati, lo stato letto dritto, la migrazione è in `unita/fattoria3d-migra`), `unita/fattoria3d-bestie-connesse` (le parti si toccano), `unita/fattoria3d-ordini` (la veterinaria è l'unica), `integrazione/fattoria3d-bestie`
-(il dito: menu, compera, battesimo, foglio, carezza, cibo, 360 px, sposta, un nome scritto). Bersagli: `[data-f3="bestia"]`, `[data-bisogno]`, `[data-cibo="<id>"]`, `[data-coccola="<id>"]`, `[data-azione="carezza|sposta|nome"]`,
+(il dito: menu, compera, battesimo, foglio, ciotola, bagno, 360 px, sposta, un nome scritto). Bersagli: `[data-f3="bestia"]`, `[data-bisogno]`, `[data-azione="sposta|nome"]`,
 `[data-f3="battesimo"]`, `[data-nome="<nome>"]`, `[data-f3="battesimo-scrivi"]` (la casella), `[data-azione="scrivi"]`, `[data-carta="bestia:<id>"]`.
 
 ## Provato e no / da fare
 
 - Provato: il beagle, il coniglio e il pappagallo a palle (lisce o facettate) incollate: sembravano palloncini, con le zampe a bastoncino. Ora sono nella creta ([creta.md](creta.md)).
 - Da guardare col dito su un telefono: le bestie in scena dalla camera di serie, il foglio a 360 px dal vero, la tastiera che sale sopra la casella del battesimo (il foglio sta in basso).
-- Il tocco sulle razze (gatto rosso, beagle e le altre) apre il foglio (non c'è la festa lunga di Watson né le risposte dei gatti): una scelta, le bestie di casa sono cose da curare.
 - Il ritratto dei compagni nel foglio si disegna dal vivo (`Mondo3d.modelloBestia`): le foto fatte di `anteprime.js` sono delle bestie comprate.
 - Da giocare: se i bisogni di Watson e dei gatti pesano troppo sulle monete dei più piccoli (sono quattro bocche in più dal livello 1–19).
