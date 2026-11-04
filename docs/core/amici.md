@@ -68,18 +68,18 @@ Le funzioni online sono **una cosa da chiedere ai genitori**, come l'età. Due l
 Una chat non c'è e non ci sarà (inviti e risposte sono di forma fissa): l'unica cosa da zittire sono gli inviti.
 
 **Si chiede nel modulo del bambino nuovo** (`Benvenuto.vue`, che si fa al primo avvio e a ogni bambino aggiunto, ed è per i
-genitori: «Lo possono cambiare mamma e papà»): una riga nel passo dell'età (non un passo a parte: ogni prova che crea un bambino
+genitori: «Lo possono cambiare mamma e papà»): una riga nel passo della data di nascita (non un passo a parte: ogni prova che crea un bambino
 preme «Si gioca!»), «Giocare con gli amici» — due righe che dicono cos'è, «Leggi tutto» per il testo intero, e due tasti, *Attiva* e
 *Più tardi*. Il profilo non esiste ancora quando si risponde: la risposta aspetta in `ricordaScelta` e la prende il primo `carica`
-di quel profilo. **Il tasto già scelto è «Più tardi»** (la
-regola della manopola: premere senza leggere sbaglia dalla parte prudente); il valore di partenza sta in una costante sola
+di quel profilo. **Il tasto già scelto è «Più tardi»** (premere senza leggere
+sbaglia dalla parte prudente); il valore di partenza sta in una costante sola
 (`AMICI_DI_BASE`), e quando si vorrà che di base sia attivo basta cambiare quella. Attivare non espone nessuno: un amico c'è solo
 dopo che un grande ha fatto l'abbinamento col codice.
 
 **Cosa dice il passo** (parole per i grandi, in `src/amici/testi.js` insieme all'avviso della posta, così si cambiano in un posto):
 
 > **Giocare con gli amici** — Si può giocare insieme a un amico, ognuno sul suo telefono. Vedrà solo gli amici con cui voi
-> grandi vi scambiate un codice, e funziona solo in alcuni giochi (per ora Castle Battle — l'elenco viene da `amici/giochi.js`). Si gioca insieme soltanto quando
+> grandi vi scambiate un codice, e funziona solo in alcuni giochi. Si gioca insieme soltanto quando
 > lo decide lui: arriva un invito e dice sì o no. In alcuni giochi vede anche fin dove sono arrivati i suoi amici e i loro
 > record, e loro vedono i suoi. Non ci sono chat e non può parlare con nessuno. È un divertimento in più,
 > il resto del gioco non cambia. Lo potete cambiare quando volete, dalle impostazioni.
