@@ -58,6 +58,13 @@ il castello e non le lastre.
 Con lo zaino valgono le regole di [zaino.md](zaino.md): la strada in frecce non ci
 sta, le `soluzioni` e le `fragili` si scrivono, e chi sbaglia fa almeno due passi.
 
+**Una tappa con le carte non è una del coniglio travestita**: la soluzione scritta
+affronta tutte le guardie della mappa, e un test lo pretende. Una guardia murata, o
+messa solo dove non si deve andare, è un muro che morde: sta **sulla strada**, davanti
+a un pulsante o accanto a una sosta. Il mondo che cambia è il bello: la guardia battuta
+libera il ❓, e in «Le soste» la grata aperta fa cambiare strada allo stesso programma.
+`strumenti/passo-passo/guerriero.mjs` dice cosa tocca ogni soluzione.
+
 ## La strada
 
 - **Comincia quando comincia il cane**, finito «Tutto insieme» (`apreIlCane`),
@@ -110,27 +117,27 @@ dove finiscono trappole, soluzioni e mosse ingenue.
 | 12. Il giro | la strada di sopra porta a una sola | 14 |
 | 13. La fila | si entra di fronte a una sola | 17 |
 | 14. Il masso sul pulsante | premerlo da lontano | 14 |
-| 15. La scalinata | 🔁 un gradino solo, ripetuto | zaino 5 |
+| 15. La scalinata | 🔁 una rampa e la sua guardia, ma prima la spada | zaino 7 |
 | 16. La galleria | 🔁 come si passa una coppia | zaino 7 |
 | 17. Il fossato | 🔁 salto e passo, sulle isolette | zaino 4 |
 | **🏰 Il castello** | *il programma fa la strada* | |
 | 18. Le stanze chiuse | 🔁 dentro 🔁, di buca in buca | zaino 3 |
-| 19. I camminamenti | 🚩 fino al pulsante giallo | zaino 6 |
+| 19. I camminamenti | 🚩 fino al giallo, guardie sulla strada e spada alle spalle | zaino 7 |
 | 20. Le rampe | 🚩 avanti al rosso, indietro al blu | zaino 9 |
-| 21. Il corridoio storto | ❓ se di là si passa | zaino 5 |
+| 21. Il corridoio storto | ❓ se di là si passa: la guardia battuta libera la strada | zaino 5 |
 | 22. Le nicchie | ❓ a ogni gradino si guarda a sinistra | zaino 5 |
-| 23. Scivolare via | 🔁 sul ghiaccio, sotto il naso delle guardie | zaino 5 |
+| 23. Scivolare via | 🔁 sul ghiaccio contano le soste, e a ogni sosta una guardia | zaino 7 |
 | 24. La torre | ❓ un programma solo, e la spada dietro di te | zaino 6 |
 | **❄️ Il lago** | *il programma guarda dove mette i piedi* | |
-| 25. La pista | 🔁 due frecce, gradini lunghi diversi | zaino 3 |
-| 26. Le soste | ❓ destra e giù non si danno il turno, e conta quale si chiede prima | zaino 5 |
+| 25. La pista | 🔁 due frecce, la spada alla prima sosta, guardie alle altre | zaino 3 |
+| 26. Le soste | ❓ la grata aperta fa cambiare strada allo stesso programma | zaino 7 |
 | 27. Il ponte rotto | ❓ un passo se c'è il ponte, poi sempre un salto | zaino 4 |
-| 28. Le tre chiavi | 🔁 dentro 🔁: si va al pulsante e si torna | zaino 8 |
-| 29. Il pavimento | ❓ col colore sotto i piedi, tre colori tre versi | zaino 9 |
+| 28. Le tre chiavi | 🔁 dentro 🔁: ogni pulsante ha la sua guardia davanti | zaino 10 |
+| 29. Il pavimento | ❓ col colore sotto i piedi, e prima la spada | zaino 11 |
 | **👑 Il mastio** | *scatole dentro scatole, e tutte le carte* | |
 | 30. I pozzi | 🔁 dentro il ❓: se sei sul rosso, tre volte giù | zaino 5 |
-| 31. I denti del mastio | 🚩 due «fino a» in una scatola, e i denti cambiano | zaino 7 |
-| 32. La chiocciola | 🚩 quattro «fino a» in una scatola | zaino 9 |
+| 31. I denti del mastio | 🚩 due «fino a» in una scatola, una guardia per dente | zaino 9 |
+| 32. La chiocciola | 🚩 quattro «fino a» in una scatola, e tre guardie nei corridoi | zaino 9 |
 | 33. I due corridoi | 🚩 e ❓: una scatola si ferma sul giallo, l'altra arriva | zaino 10 |
 | 34. Il trono | tutte le carte: la spada, le rampe, il corridoio | zaino 11 |
 
