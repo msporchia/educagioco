@@ -100,11 +100,14 @@ export const MOSSE = Object.fromEntries([
   ...CHIAVI_VERSI.map(v => [v, { verso: v, salto: false, ...VERSI[v] }]),
   ...CHIAVI_VERSI.map(v => ['salto-' + v, { verso: v, salto: true, ...VERSI[v] }]),
 ])
+/* la mossa del guerriero: non è una freccia e sta fuori da MOSSE, che le frecce le contano tutti */
+export const ATTACCA = 'attacca'
 export const PASSI = CHIAVI_VERSI.slice()
 export const SALTI = CHIAVI_VERSI.map(v => 'salto-' + v)
 
 /* come si dice una mossa a chi non vede lo schermo (e ai test) */
 export const nomeDellaMossa = m => {
+  if (m === ATTACCA) return 'attacca'
   const d = MOSSE[m]
   if (!d) return ''
   return (d.salto ? 'salto ' : 'passo ') + d.nome

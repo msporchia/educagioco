@@ -553,6 +553,9 @@ function ferma() {
   aiutoPrenotato()
 }
 
+/* la fila è finita con la guardia davanti: ⚔️ va in fondo, dopo l'ultima carta */
+const finiva = esito => esito.dove === fila.value.length - 1 && esito.passi.at(-1)?.mossa === 'attacca'
+
 function fineGiro() {
   const esito = esitoInCorsa
   esitoInCorsa = null
@@ -577,7 +580,8 @@ function fineGiro() {
        subito dopo: un ⌫ toglie proprio lei, e la freccia giusta entra
        al suo posto */
     guasto.value = esito.dove
-    cursore.value = esito.dove + 1
+    /* colpito: la carta che manca è ⚔️, e va prima di questa */
+    cursore.value = esito.dove + (esito.esito === CADUTO && !finiva(esito) ? 0 : 1)
     /* dentro una scatola il giro dove si è fermata resta scritto sulla
        sua testa: «al terzo giro» è mezza soluzione */
     const ultimo = esito.passi.at(-1)
@@ -953,7 +957,7 @@ function indietro() {
 
       <Campo v-else ref="campo"
              :fila="fila" :cursore="cursore" :corrente="corrente" :guasto="guasto"
-             :in-corsa="inCorsa" :salti="!!(tappa && tappa.salti)" :brilla="brilla"
+             :in-corsa="inCorsa" :salti="!!(tappa && tappa.salti)" :attacca="!!(tappa && tappa.mappa.some(r => r.includes('n')))" :brilla="brilla"
              :prezzo="prezzoDelProssimo" :povero="povero" :armato="armato" :povero-scossa="poveroScossa"
              :pensiero="pensiero" :sospette="sospette" :piena="piena"
              :consiglio="consiglio" :colpo="colpo" :in-coda="aiutoInCoda"

@@ -5,7 +5,7 @@
    resto (la mappa, la scala, cosa vale) si rifà dal codice; il posto del
    sentiero no, perché è fatto a caso con quello che si sapeva allora.
    Puro: gira in Node e si prova in `unita/passo-passo-sosta`. */
-import { PASSI, SALTI, MASSIMO_FILA, LEGENDA } from '../dati/mondo.js'
+import { PASSI, SALTI, MASSIMO_FILA, LEGENDA, ATTACCA } from '../dati/mondo.js'
 import { eApri, eSe, eFine, valoreDi, valoreBuono, carteDi } from '../dati/carte.js'
 import { CAMPAGNA } from '../dati/campagna.js'
 import { scalaDi } from './aiuti.js'
@@ -36,7 +36,7 @@ export function filaBuona(fila, tappa) {
       d++
     } else if (eFine(t)) {
       if (--d < 0) return false
-    } else if (!PASSI.includes(t) && !(tappa.salti && SALTI.includes(t))) return false
+    } else if (!PASSI.includes(t) && !(tappa.salti && SALTI.includes(t)) && t !== ATTACCA) return false
   }
   return d === 0
 }

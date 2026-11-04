@@ -11,7 +11,7 @@
    colore) in testa si sceglie alla fine dei giri; quello che sta dentro un
    «se» si scrive la prima volta che il se scatta. In cima alla fila due
    strade che arrivano allo stesso punto con più carte si buttano. */
-import { MOSSE } from '../dati/mondo.js'
+import { MOSSE, ATTACCA } from '../dati/mondo.js'
 import { apri, apriSe, carteDi, FINE, VOLTE, CASA } from '../dati/carte.js'
 import { mosseDi } from './risolutore.js'
 import { esegui, TANA, eErrore, PASSI_MAX, Mondo } from './mondo.js'
@@ -28,7 +28,7 @@ const MAX_VOLTE = VOLTE.at(-1)
 export function cercaProgramma(liv, { carte = liv.carte, tetto = 12, carota = false, scadenza = Infinity,
                                       limite = Infinity, scatolePrima = false } = {}) {
   const frecce = mosseDi(liv)
-  for (const m of frecce) if (!MOSSE[m]) throw new Error(`mossa sconosciuta: ${m}`)
+  for (const m of frecce) if (!MOSSE[m] && m !== ATTACCA) throw new Error(`mossa sconosciuta: ${m}`)
   const colori = [...new Set(liv.lastra.filter(Boolean))]
   const numeri = carte.includes('ripeti')
   const fino = carte.includes('fino') ? colori : []

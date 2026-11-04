@@ -28,6 +28,7 @@ export const DURATE = {
   pulsante: 0.55,
   spada: 0.2,
   duello: 0.7,
+  fendente: 0.3,
   colpito: 0.55,
 }
 /* la fuga di una pecora: un saltello, poi la scivolata (una cella alla
@@ -458,6 +459,12 @@ function applica(f, b, k, liv) {
       if (k >= 0.4) f.effetti.push({ che: 'botta', x: e.nemico.x, y: e.nemico.y, t0: b.t0 + dur * 0.4 })
       if (n) n.alfa = k >= 1 ? 0 : k < 0.5 ? 1 : 1 - (k - 0.5) * 2
       if (k >= 1) f.effetti.push({ che: 'sbuffo', x: e.nemico.x, y: e.nemico.y, t0: b.t1 })
+      break
+    }
+    case 'fendente': {
+      /* ⚔️ a vuoto: un colpo all'aria, e niente altro */
+      c.posa = k >= 1 ? 'fermo' : 'spinge'
+      c.fase = k
       break
     }
     case 'colpito': {

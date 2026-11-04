@@ -71,6 +71,19 @@ const SE = [
   '.....##....',
   '...........',
 ]
+const SPADA = [
+  '.........##',
+  '........###',
+  '.......###.',
+  '......###..',
+  '.#...###...',
+  '.##.###....',
+  '..####.....',
+  '...##......',
+  '..####.....',
+  '.##..##....',
+  '##.........',
+]
 const LAMPADINA = [
   '...YYYYY...',
   '..YwwYYYY..',
@@ -107,7 +120,7 @@ export const FIGURE = {
   'salto-destra': figura(SALTO), 'salto-giu': figura(volte(SALTO, 1)),
   'salto-sinistra': figura(volte(SALTO, 2)), 'salto-su': figura(volte(SALTO, 3)),
   via: figura(VIA), ferma: figura(FERMA), piu: { righe: PIU, tavolozza: CHIARO },
-  cancella: figura(CANCELLA), ripeti: figura(RIPETI), se: figura(SE),
+  cancella: figura(CANCELLA), ripeti: figura(RIPETI), se: figura(SE), attacca: figura(SPADA),
   lampadina: figura(LAMPADINA, { Y: '#ffd65a', y: '#f2a93a', w: '#fff7cc', g: '#c3cad2', G: '#8b949e', o: ORLO }),
   casa: { righe: conOrlo(CASA), tavolozza: { r: '#a52a20', R: '#e0483a', w: '#fbf4e4', d: '#8f5a2a', o: '#fff' } },
   rosso: lastra(TONDO, '#e0483a'), blu: lastra(QUADRO, '#3a78de'), giallo: lastra(PUNTA, '#f4c430'),
