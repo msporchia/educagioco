@@ -8,7 +8,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import Barra from '../../components/Barra.vue'
 import TastoSalta from '../../components/TastoSalta.vue'
 import { suono } from '../../audio.js'
-import { segna, answer } from '../../store/profile.js'
+import { segna, answer, sperimentaliAccesi } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'
 import { progresso, aperta, adesso, stelleDi, completa,
          sosta, salvaSosta, buttaSosta } from '../campagne.js'
@@ -17,11 +17,14 @@ import { attesaDellEsito, PONDERA, TEMPO_MAX } from '../../quiz/nucleo/domanda.j
 
 import { CAMPAGNA, BLOCCHI, QUANTE_TAPPE, MONETE_A_DOSE } from './dati/campagna.js'
 import { STRUMENTO, mescola } from './dati/misure.js'
+import { PROVE } from './dati/bottega.js'
 import { Partita } from './motore/partita.js'
+import { Bottega } from './motore/bottega.js'
 import { scrivi, leggi, dice, tappaDi } from './motore/sosta.js'
 import Mappa from './viste/Mappa.vue'
 import Banco from './viste/Banco.vue'
 import Fine from './viste/Fine.vue'
+import Mercante from './viste/Mercante.vue'
 import './stile.css'
 
 defineOptions({ name: 'Pozioni' })
@@ -32,7 +35,7 @@ const CIECO = 320           // una schermata appena comparsa non si tocca subito
 const TUFFO = 900           // quanto si guarda l'ingrediente andare nel calderone
 
 // dove siamo
-const vista = ref('mappa')          // mappa | banco
+const vista = ref('mappa')          // mappa | banco | mercante
 const tappaIdx = ref(0)
 const partita = ref(null)
 const finale = ref(null)
@@ -42,7 +45,8 @@ const nelCalderone = ref([])        // gli ingredienti già tuffati, per il colo
 const avanza = progresso(CHIAVE)
 
 const tappa = computed(() => CAMPAGNA[tappaIdx.value])
-const titolo = computed(() => (vista.value === 'banco' ? tappa.value.nome : 'Le pozioni'))
+const titolo = computed(() => (vista.value === 'banco' ? tappa.value.nome
+  : vista.value === 'mercante' ? PROVE[prova.value].nome : 'Le pozioni'))
 
 // gli amici dalla loro bacheca (docs/core/amici-nei-giochi.md): la tappa da fare di ognuno
 const amici = usaAmici(CHIAVE)
@@ -133,6 +137,9 @@ function seSparisce(e) {
 onMounted(() => {
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
+  // `#pozioni=mercante&prova=2`: la bottega in prova, anche coi giochi in prova spenti
+  const h = new URLSearchParams((location.hash || '').slice(1))
+  if (h.get('pozioni') === 'mercante') avviaProva(Math.max(0, Math.min(PROVE.length - 1, (Number(h.get('prova')) || 1) - 1)))
 })
 // prima che i figli se ne vadano (onUnmounted sarebbe tardi)
 onBeforeUnmount(() => {
@@ -160,12 +167,14 @@ function allaMappa() {
   clearTimeout(timer); cancelAnimationFrame(barra)
   finale.value = null
   partita.value = null
+  bottega.value = null
   vista.value = 'mappa'
 }
 
 // dal banco il ← porta alla mappa, e la tappa a metà resta lì in cima
 function indietro() {
   if (vista.value === 'mappa') return emit('vai', 'home')
+  if (vista.value === 'mercante') return allaMappa()   // in prova: niente sosta
   salva({ subito: true })
   ripresa.value = laRipresa()
   allaMappa()
@@ -278,14 +287,139 @@ function tappaFinita() {
 }
 
 function prossima() {
+  if (vista.value === 'mercante') return prova.value < PROVE.length - 1 ? avviaProva(prova.value + 1) : allaMappa()
   if (tappaIdx.value >= QUANTE_TAPPE - 1) return allaMappa()
   avviaTappa(tappaIdx.value + 1)
+}
+
+/* ── la bottega del mercante, in prova (docs/pozioni/bottega.md) ──
+   Non è nella campagna: niente sosta né stelle sulla mappa. Le monete sì,
+   un ingrediente finito senza traboccare come una dose del banco. */
+const prova = ref(0)
+const bottega = ref(null)
+const bozza = ref([])               // l'ordine in preparazione: [{ i, k }]
+const animazione = ref(null)
+const messaggio = ref(null)
+const occupato = ref(false)
+const prove = computed(() => (sperimentaliAccesi() ? PROVE : []))
+const giro = ref(0)                 // una pozione nuova è una tela nuova
+let nAnim = 0, inCorso = null
+
+function avviaProva(i) {
+  clearTimeout(timer); cancelAnimationFrame(barra); attesa.value = 0
+  prova.value = i
+  bottega.value = new Bottega(PROVE[i])
+  bozza.value = []
+  giro.value++
+  borsellino = borsa(CHIAVE)
+  finale.value = null
+  occupato.value = false
+  animazione.value = null
+  messaggio.value = { tipo: 'aiuto', righe: ['Componi la pozione spendendo meno gettoni che puoi.',
+    `Scegli dal listino fino a ${bottega.value.quanteInOrdine} ampolle e ordinale: il mercante le versa nei loro misurini. Oltre la tacca d'oro trabocca, e poi c'è da pulire.`] }
+  vista.value = 'mercante'
+  apertaIl = performance.now()
+  accieca()
+}
+const liberaB = () => bottega.value && !occupato.value && !cieco.value
+
+function aggiungi(i, k) {
+  if (!liberaB() || bozza.value.length >= bottega.value.quanteInOrdine || bottega.value.fatto(i)) return
+  bozza.value = [...bozza.value, { i, k }]
+  suono.nota(520, 640, 0.06, 'triangle', 0.06)
+}
+function togliVoce(n) {
+  if (!liberaB()) return
+  bozza.value = bozza.value.filter((_, j) => j !== n)
+  suono.nota(420, 300, 0.06, 'sine', 0.06)
+}
+
+/* L'ordine si paga e il mercante versa: la scena suona le ampolle una
+   dopo l'altra, già decise dal motore; il perché arriva alla fine. */
+function ordina() {
+  if (!liberaB() || attesa.value > 0 || !bozza.value.length) return
+  const b = bottega.value
+  const prima = b.ingredienti.map(g => g.messo)    // la pergamena li segue mentre versa
+  const r = b.ordina(bozza.value)
+  if (!r) return
+  bozza.value = []
+  occupato.value = true
+  messaggio.value = null
+  suono.nota(300, 520, 0.12, 'triangle', 0.08)
+  for (const e of r.esiti) { annota(e.annota); if (e.tipo === 'giusto') segna('misure') }
+  inCorso = r
+  animazione.value = { n: ++nAnim, tipo: 'ordine', prima, voci: r.esiti.map(e => {
+    const g = b.ingredienti[e.ingrediente]
+    return { i: e.ingrediente, testo: e.testo, colore: g.colore, famiglia: g.famiglia, trabocca: e.tipo === 'trabocca',
+             pieno: !!e.pieno, messo: e.dopo, livello: e.dopo / g.dose, pezzi: (e.pezzi || []).map(p => p / g.dose) }
+  }) }
+}
+
+function fermo(n) {
+  if (n !== nAnim) return
+  const r = inCorso
+  inCorso = null
+  if (animazione.value?.tipo === 'festa') return provaFinita()
+  apertaIl = performance.now()
+  if (!r) { occupato.value = false; return }
+  const traboccate = r.esiti.filter(e => e.tipo === 'trabocca')
+  const monete = r.esiti.reduce((s, e) => s + (e.monete || 0), 0)
+  if (monete) { borsellino.paga(monete); suono.moneta() }
+  if (traboccate.length) suono.no(); else suono.ok()
+  const righe = r.esiti.flatMap(e => e.righe)
+  messaggio.value = { tipo: traboccate.length ? 'trabocca' : 'giusto', righe }
+  if (traboccate.length) leggiPrima(righe)
+  if (r.finita) {
+    animazione.value = { n: ++nAnim, tipo: 'festa', colore: mescola(bottega.value.ingredienti.map(i => i.colore)) }
+    return
+  }
+  occupato.value = false
+}
+
+// dopo il trabocco si legge il perché, con la barra, prima di pulire (docs/apprendimento/la-domanda.md)
+function leggiPrima(righe) {
+  const ms = attesaDellEsito({ righe, pavimento: PONDERA })
+  const t0 = performance.now()
+  attesa.value = 1
+  const tick = () => {
+    attesa.value = Math.max(0, 1 - (performance.now() - t0) / ms)
+    if (attesa.value > 0) barra = requestAnimationFrame(tick)
+  }
+  barra = requestAnimationFrame(tick)
+}
+
+function scegli(i) {
+  if (!liberaB()) return
+  if (bottega.value.scegli(i)) suono.nota(400, 480, 0.06, 'sine', 0.06)
+}
+
+function pulisci() {
+  if (!liberaB() || attesa.value > 0 || !bottega.value.macchie.length) return
+  const n = bottega.value.pulisci()
+  occupato.value = true
+  suono.nota(300, 600, 0.25, 'sine', 0.06)
+  messaggio.value = { tipo: 'aiuto', righe: [n === 1 ? 'Pulito: la spugna costa un gettone.' : `Pulito: ${n} macchie, un gettone l'una.`] }
+  animazione.value = { n: ++nAnim, tipo: 'pulisci' }
+}
+
+function provaFinita() {
+  const b = bottega.value
+  segna('pozioni')
+  if (!b.traboccate) segna('pozioniPerfette')
+  const righe = [`Hai speso ${b.speso} gettoni: il minimo era ${b.minimo}.`]
+  if (b.traboccate) righe.push(`${b.traboccate === 1 ? 'Un\'ampolla è traboccata' : `${b.traboccate} ampolle sono traboccate`}: si paga l'ampolla, e un gettone la spugna.`)
+  if (b.extra > 0) for (const x of b.piuEconomico()) righe.push(`${x.nome}: ${x.pezzi.join(' + ')} (${x.costo})`)
+  finale.value = { titolo: b.pozione.nome, stelle: b.stelle, monete: borsellino.dato, notaMonete: borsellino.nota(),
+                   pozioni: 1, perfette: b.traboccate ? 0 : 1, ultima: prova.value === PROVE.length - 1, righe }
+  occupato.value = false
+  suono.livello()
 }
 
 /* per i test e per lo strumento delle foto: la stessa porta del gioco */
 if (typeof window !== 'undefined')
   window.__poz = { vista, tappaIdx, partita, finale, avviaTappa, allaMappa, prossima,
-                   prendi, posa, metti, togli, svuota, riponi, conferma, CAMPAGNA, MONETE_A_DOSE }
+                   prendi, posa, metti, togli, svuota, riponi, conferma, CAMPAGNA, MONETE_A_DOSE,
+                   bottega, bozza, avviaProva, aggiungi, togliVoce, ordina, scegli, pulisci, PROVE }
 </script>
 
 <template>
@@ -297,14 +431,19 @@ if (typeof window !== 'undefined')
     </Barra>
 
     <Mappa v-if="vista === 'mappa'" :blocchi="blocchi" :ripresa="ripresa"
-           :chiede="chiede ? chiede.nome : ''" :davanti="amici.davanti" @gioca="vuoleIniziare"
+           :chiede="chiede ? chiede.nome : ''" :davanti="amici.davanti" :prove="prove"
+           @gioca="vuoleIniziare" @prova="avviaProva"
            @riprendi="riprendiPartita" @scorda="scorda"
            @comincia="comincia" @annulla="chiede = null" />
 
-    <Banco v-else-if="partita" :partita="partita" :bloccato="cieco" :attesa="attesa"
+    <Banco v-else-if="vista === 'banco' && partita" :partita="partita" :bloccato="cieco" :attesa="attesa"
            :calderone="calderone" :strumenti-tutti="strumentiTutti"
            @prendi="prendi" @posa="posa" @metti="metti" @togli="togli"
            @svuota="svuota" @riponi="riponi" @conferma="conferma()" />
+    <Mercante v-else-if="vista === 'mercante' && bottega" :key="giro"
+              :bottega="bottega" :bozza="bozza" :animazione="animazione" :messaggio="messaggio" :attesa="attesa"
+              :bloccato="occupato || cieco" :manca="PROVE[prova].manca"
+              @aggiungi="aggiungi" @togli="togliVoce" @ordina="ordina" @scegli="scegli" @pulisci="pulisci" @fermo="fermo" />
     <TastoSalta v-if="partita && vista === 'banco' && !finale" @salta="conferma(true)" />
 
     <Fine v-if="finale" v-bind="finale" @avanti="prossima" @mappa="allaMappa" />

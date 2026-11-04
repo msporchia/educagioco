@@ -206,3 +206,64 @@
   .pz-figura { height: 48px }
   .pz-attrezzo { min-height: 90px }
 }
+
+/* la bottega del mercante (in prova): la tela 3D sotto, la pergamena sopra */
+.pz-mercante { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; width: 100% }
+.pz-scena { flex: 1; min-height: 0; position: relative; display: flex }
+.pz-tela { flex: 1; min-height: 0; width: 100%; display: block; touch-action: none }
+.pz-senza { position: absolute; inset: 40% 20px auto; text-align: center; display: flex; flex-direction: column;
+            gap: 10px; align-items: center; font-size: 14px }
+.pz-sopra-tela { position: absolute; top: 6px; left: 0; right: 0; margin: 0 auto; width: calc(100% - 20px);
+                 max-width: 500px; display: flex; flex-direction: column; gap: 6px; pointer-events: none }
+.pz-sopra-tela > * { pointer-events: auto }
+.pz-sotto-tela { position: absolute; bottom: 6px; left: 0; right: 0; margin: 0 auto; width: calc(100% - 20px);
+                 max-width: 500px; pointer-events: none }
+.pz-sotto-tela > * { pointer-events: auto }
+.pz-ricetta { padding: 7px 9px; opacity: .97 }
+.pz-testa-ricetta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 3px }
+.pz-testa-ricetta b { font-size: 14px }
+.pz-borsa { display: inline-flex; align-items: center; gap: 5px; font-weight: 900; font-size: 18px;
+            padding: 2px 10px 2px 4px; border-radius: 999px; background: #f6ead0 }
+.pz-borsa.pz-rosso { color: var(--pz-rosso) }
+.pz-gettone { display: inline-block; width: 1em; height: 1em; border-radius: 50%; vertical-align: -.15em;
+              background: radial-gradient(circle at 50% 45%, #ffd98a 0 30%, #e8a93a 32% 62%, #7a4a12 64%) }
+.pz-riga { display: flex; width: 100%; align-items: center; gap: 6px; padding: 4px 6px; border-radius: 8px;
+           font-size: 13px; text-align: left; background: none; color: inherit; line-height: 1.15 }
+.pz-riga .pz-pallino { flex: none; width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 0 1.5px #0003 }
+.pz-riga .pz-nome { flex: 1; min-width: 0 }
+.pz-riga .pz-quanto { flex: none; text-align: right; font-size: 12.5px; color: var(--pz-inchiostro) }
+.pz-riga .pz-quanto b { font-size: 15px }
+.pz-riga .pz-manca { display: block; font-style: normal; font-size: 11px; color: var(--pz-tenue) }
+.pz-riga.pz-scelta { background: #f3e8ff; box-shadow: inset 0 0 0 2px var(--pz-viola) }
+.pz-riga.pz-fatto { opacity: .6 }
+.pz-riga:disabled { cursor: default }
+.pz-cartello.pz-trabocca { border-left-color: var(--pz-rosso) }
+.pz-cartello.pz-aiuto { border-left-color: var(--pz-ambra) }
+.pz-riga-esito { font-size: 13px }
+/* sotto la tela: il listino a targhette e l'ordine, vicino al pollice */
+.pz-bottega { flex: none; display: flex; flex-direction: column; gap: 7px; width: 100%; max-width: 520px;
+              margin: 0 auto; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)) }
+.pz-bottega.pz-bloccato { pointer-events: none }
+.pz-listino { background: #ffffff12; border-radius: 14px; padding: 6px 8px 8px; box-shadow: inset 0 2px 0 #00000033 }
+.pz-di { display: block; font-size: 12px; color: #d9cdf5; margin: 0 2px 5px }
+.pz-di b { color: #fff }
+.pz-targhette { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px }
+.pz-targhetta { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 2px 5px;
+                border-radius: 10px; background: var(--pz-carta); color: var(--pz-inchiostro);
+                box-shadow: 0 3px 0 #00000055, inset 0 0 0 2px #d6b98a }
+.pz-targhetta b { font-size: 18px; font-weight: 900; white-space: nowrap }
+.pz-targhetta span { font-size: 13px; font-weight: 800; color: #7a4a12 }
+.pz-targhetta:active { transform: translateY(2px); box-shadow: 0 1px 0 #00000055, inset 0 0 0 2px #d6b98a }
+.pz-targhetta:disabled { opacity: .45 }
+.pz-ordine { display: flex; gap: 6px; align-items: stretch }
+.pz-posto { flex: 1 1 0; min-width: 0; min-height: 44px; display: flex; align-items: center; justify-content: center;
+            gap: 4px; padding: 4px; border-radius: 10px; background: #fff4dc; color: var(--pz-inchiostro);
+            box-shadow: 0 2px 0 #00000055; position: relative }
+.pz-posto b { font-size: 14px; font-weight: 900; white-space: nowrap }
+.pz-posto .pz-pallino { flex: none; width: 9px; height: 9px; border-radius: 50% }
+.pz-posto .pz-via { font-style: normal; font-size: 10px; color: var(--pz-tenue); position: absolute; top: 2px; right: 5px }
+.pz-posto.pz-vuoto { background: none; box-shadow: inset 0 0 0 2px #ffffff30 }
+.pz-ordine .pz-grosso { flex: none; padding: 10px 14px; white-space: nowrap }
+.pz-pulisci { background: var(--pz-rosso); box-shadow: 0 4px 0 #8a2c28 }
+.pz-blocco.pz-prova > h3 b { color: var(--pz-ambra) }
+.pz-fine-righe { font-size: 13px; color: #5e5378; display: flex; flex-direction: column; gap: 3px }

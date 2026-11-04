@@ -10,6 +10,7 @@ defineProps({
   perfette: { type: Number, default: 0 },
   maestro: { type: Boolean, default: false },
   ultima: { type: Boolean, default: false },
+  righe: { type: Array, default: () => [] },   // la bottega dice cosa si è speso (docs/pozioni/bottega.md)
 })
 defineEmits(['avanti', 'mappa'])
 </script>
@@ -22,6 +23,9 @@ defineEmits(['avanti', 'mappa'])
       <h2 v-else>{{ titolo }}</h2>
       <div class="pz-punteggio em" data-stelle>{{ '⭐'.repeat(stelle) }}</div>
       <p v-if="maestro">Pesi, lunghezze e liquidi: tutte le conversioni, in tutti e due i versi.</p>
+      <div v-else-if="righe.length" class="pz-fine-righe" data-righe>
+        <span v-for="(r, n) in righe" :key="n">{{ r }}</span>
+      </div>
       <p v-else>{{ pozioni }} pozioni consegnate, {{ perfette }} senza uno sbaglio.</p>
       <p v-if="monete" class="pz-monete" data-monete data-monete-prese>+{{ monete }} 🪙</p>
       <p v-if="notaMonete" data-nota-monete>{{ notaMonete }}</p>

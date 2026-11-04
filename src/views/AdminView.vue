@@ -62,6 +62,7 @@ const A_MANO = [
   ['#sotterraneo=roba', 'si scende equipaggiati'],
   ['#abisso=12', 'l\'abisso dal piano 12'],
   ['#seme=812', 'il sotterraneo con quel seme, per rivedere una discesa'],
+  ['#pozioni=mercante&prova=1', 'pozioni: la bottega del mercante in prova, dalla tappa di prova 1–3'],
   ['#mate=5&livello=7&vite=1', 'asteroidi: la tappa 5 della fila (o volo), con livello e vite; &madre=1 la nave madre, &tela=2d il disegno di riserva, &nave=scafo:oro,ali:rosso,disegno:fiamme,stemma:stella una vernice da guardare'],
   ['#sotterraneo&tema=legno', 'i pannelli del sotterraneo in prova (legno, rilievo, attuale): il telefono se lo ricorda'],
   ['#pin=1234', 'il codice dei grandi rimesso a quello'],
