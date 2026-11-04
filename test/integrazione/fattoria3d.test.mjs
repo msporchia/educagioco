@@ -24,6 +24,7 @@ import { COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { RICETTE } from '../../src/giochi/fattoria3d/dati/ricette.js'
 import { POSTI } from '../../src/giochi/fattoria3d/dati/ordini.js'
 import { ULTIMO, livelloDellaColtura } from '../../src/giochi/fattoria3d/dati/livelli.js'
+import { FASCIA_PX, SOPRA_UI_PX } from '../../src/giochi/fattoria3d/scena3d/trascinamento-puro.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -329,16 +330,17 @@ controlla('e non cambia niente: né pezzi né monete', mie(await stato()).length
 await premiEApri(sulBuco)
 await toccaEl('[data-carta="campo"]')
 await attendi(page, 400)
-const libero = await page.evaluate(() => {
-  const { motore, mondo } = window.__fattoria3d, r = mondo.canvas.getBoundingClientRect(), top = document.querySelector('[data-f3="zona-via"]').getBoundingClientRect().top, buoni = []
+// fuori dalla fascia che scorre: lì la mappa va da sola e il fantasma cambia cella anche a dito fermo (il pezzo va dove si vede, ma la cella letta prima è vecchia)
+const libero = await page.evaluate(([fascia, sopra]) => {
+  const { motore, mondo } = window.__fattoria3d, r = mondo.canvas.getBoundingClientRect(), top = document.querySelector('[data-f3="zona-via"]').getBoundingClientRect().top, buoni = [], m = fascia + 30
   for (let i = -14; i < 13; i++) for (let j = -12; j < 11; j++) {
     if (!motore.puoMettere('campo', i, j).ok) continue
     const [px, py, v] = mondo.proietta({ x: i + 1, y: 0, z: j + 1 })        // il centro del fantasma
-    if (v && px > 60 && px < r.width - 60 && py > 150 && r.top + py < top - 50) buoni.push({ i, j, d: Math.hypot(i + 1 - mondo.eroe.x, j + 1 - mondo.eroe.z) })
+    if (v && px > m && px < r.width - m && py > sopra + m && r.top + py < top - m) buoni.push({ i, j, d: Math.hypot(i + 1 - mondo.eroe.x, j + 1 - mondo.eroe.z) })
   }
   buoni.sort((a, b) => b.d - a.d)
   return buoni[0] || null
-})
+}, [FASCIA_PX, SOPRA_UI_PX])
 controlla('c\'è un posto libero a schermo dove portare il fantasma', !!libero)
 const prezzoOra = await page.evaluate(() => window.__fattoria3d.motore.prezzoPezzo('campo'))
 // il dito preme sul fantasma (dito in buco+0,5) e lo porta con sé tenendo il punto preso (lo scarto fra il centro e il dito, che con
@@ -356,7 +358,7 @@ const prezzoOra = await page.evaluate(() => window.__fattoria3d.motore.prezzoPez
   stessaLista('portato sul posto scelto il fantasma è verde nella cella voluta', [vistoFant.i, vistoFant.j, vistoFant.ok], [libero.i, libero.j, true])
   await su(); await attendi(page, 500)
   const messoQui = (await stato()).cose.find(c => c.tipo === 'campo' && c.id !== 1 && c.i === vistoFant.i && c.j === vistoFant.j)
-  controlla('e il pezzo messo è nella cella del fantasma', !!messoQui, JSON.stringify((await stato()).cose.map(c => [c.tipo, c.i, c.j])))
+  controlla('e il pezzo messo è nella cella del fantasma', !!messoQui, JSON.stringify({ vistoFant, dito: a, campi: (await stato()).cose.filter(c => c.tipo === 'campo').map(c => [c.id, c.i, c.j]) }))
 }
 const messo = await stato()
 controlla('rilasciato in un posto buono il campo si costruisce e si paga', mie(messo).length === 6 && M0 - await mon() === prezzoOra, `${mie(messo).length} cose, da ${M0} a ${await mon()}`)
