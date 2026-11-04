@@ -34,12 +34,31 @@ Casi decisi apposta:
 - il pulsante accanto a un nemico si preme col piede solo avendo la spada: è
   il modo di far contare l'ordine.
 
+## Le carte
+
+Le stesse scatole del coniglio ([zaino.md](zaino.md)), ma le condizioni guardano
+il castello e non le lastre.
+
+- **🔁 ripeti N**, anche una scatola dentro l'altra.
+- **🚩 fino a 🔴**: il colore è quello del **pulsante** che si ha sotto i piedi
+  (`Mondo.lastra`). I camminamenti sono lunghi diversi e finiscono su un pulsante:
+  contare non serve.
+- **🔁 fino a 🏠** vuol dire fino alla principessa.
+- **❓ con una freccia, «se di là si passa»** (la carta `varco`, che accende i
+  quattro versi nella scelta del ❓; `Mondo.vale`): non si passa contro un muro,
+  una grata chiusa, un nemico, un masso, l'acqua e il bordo. È la condizione che
+  guarda il mondo: 🔁🏠( ❓→(→) ❓↓(↓) ) segue un corridoio che non si conosce, e
+  la grata aperta da poco diventa strada da sola.
+
+Con lo zaino valgono le regole di [zaino.md](zaino.md): la strada in frecce non ci
+sta, le `soluzioni` e le `fragili` si scrivono, e chi sbaglia fa almeno due passi.
+
 ## La strada
 
 - **Comincia quando comincia il cane**, finito «Tutto insieme» (`apreIlCane`),
   e da lì va avanti da sola come le altre due. La portata parte da 44.
 - **Sta tutta nel mondo dello zaino**, con le sue caselle sulle quattro isole
-  del coniglio (`guerriero` nel foglietto `zaino.json`), cinque per isola: le
+  del coniglio (`guerriero` nel foglietto `zaino.json`), cinque, cinque, sette e sette: le
   grate sul ripeti, la spada sul fino a, due alla volta sul se, il castello su
   tutto il mondo. Il fondale è quello di prima: un fondale suo si dipinge solo
   se la strada piace.
@@ -47,8 +66,10 @@ Casi decisi apposta:
 - **Il disegno è in codice**, come vuole la regola: il guerriero, il nemico, la
   principessa, la corona, la spada, le grate, il muro. Il tema `castello` è il
   pavimento di pietra.
-- **Niente carte, per ora**: la strada è di sole frecce, e arriva a 23 (il tetto
-  è 24 come per il cane, la strada si pensa più di quanto si tracci).
+- **Le carte arrivano a metà strada**, dalla quindicesima tappa, e da lì restano:
+  prima la strada è di sole frecce, fino a 23 (il tetto è 24 come per il cane).
+  Una strada lunga scritta in frecce è una lista, non un programma: provato, e
+  arrivati alla tappa 19 non c'era altro.
 - **Una tappa è un posto largo nove celle**, non la stanza del trucco: cortili,
   fossati, stanze e strade che non portano da nessuna parte. Strette attorno alla
   soluzione uscivano minuscole, e non si capiva dove si stava.
@@ -57,7 +78,7 @@ Casi decisi apposta:
 
 La colonna dice la strada più corta con la corona, misurata da
 `node strumenti/passo-passo/guerriero.mjs`, che dice anche se la regola serve e
-dove finiscono le trappole.
+dove finiscono trappole, soluzioni e mosse ingenue.
 
 | | | frecce |
 |:--|:--|:--:|
@@ -73,23 +94,27 @@ dove finiscono le trappole.
 | 8. Dietro la grata | la spada è chiusa dietro il rosso | 16 |
 | 9. La guardia al pulsante | prima la spada, poi il pulsante | 18 |
 | 10. Tre guardie | chi va battuto, e chi no | 23 |
-| **⚔️ Due alla volta** | *contro due non vince nessuno* | |
+| **⚔️ Due alla volta** | *contro due non vince nessuno; poi il 🔁* | |
 | 11. Due guardie | se ne prende una da parte | 15 |
 | 12. Il giro | la strada di sopra porta a una sola | 14 |
 | 13. La fila | si entra di fronte a una sola | 17 |
-| 14. Due coppie | due volte di fila, sul ponte | 10 |
-| 15. La sala del trono | il giro chiuso da una grata | 20 |
-| **🏰 Il castello** | *tutto insieme* | |
-| 16. Il fossato | il pulsante sull'isola: bisogna atterrarci | 7 |
-| 17. Il masso sul pulsante | premerlo da lontano | 14 |
-| 18. Scivolare via | sul ghiaccio non ci si ferma | 10 |
-| 19. La buca segreta | le stanze unite dalle buche | 18 |
-| 20. La torre | il fossato, le guardie, il ghiaccio | 20 |
+| 14. Il masso sul pulsante | premerlo da lontano | 14 |
+| 15. La scalinata | 🔁 un gradino solo, ripetuto | zaino 5 |
+| 16. La galleria | 🔁 come si passa una coppia | zaino 7 |
+| 17. Il fossato | 🔁 salto e passo, sulle isolette | zaino 4 |
+| **🏰 Il castello** | *il programma fa la strada* | |
+| 18. Le stanze chiuse | 🔁 dentro 🔁, di buca in buca | zaino 3 |
+| 19. I camminamenti | 🚩 fino al pulsante giallo | zaino 6 |
+| 20. Le rampe | 🚩 avanti al rosso, indietro al blu | zaino 9 |
+| 21. Il corridoio storto | ❓ se di là si passa | zaino 5 |
+| 22. Le nicchie | ❓ a ogni gradino si guarda a sinistra | zaino 5 |
+| 23. Scivolare via | 🔁 sul ghiaccio, sotto il naso delle guardie | zaino 5 |
+| 24. La torre | ❓ un programma solo, e la spada dietro di te | zaino 6 |
 
-**Ogni tappa con i nemici dichiara le sue `trappole`**: la mossa ingenua, che fa
+**Ogni tappa di frecce con i nemici dichiara le sue `trappole`**: la mossa ingenua, che fa
 almeno due passi e poi si ferma male. Nel gradino dei due, `serveLaRegola` guarda
 che la strada vera sia più lunga di quella che si farebbe se due nemici valessero
-uno; nel castello ogni tappa dichiara le `regole` del mondo che le servono.
+uno; le `regole` di una tappa prendono il posto di quella del gradino.
 
 Nei test: `unita/passo-passo-guerriero` (le regole su mappe piccole, la scena, la
 strada, ogni tappa con le sue regole, le trappole e chi segue gli aiuti),

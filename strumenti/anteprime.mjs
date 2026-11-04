@@ -5,6 +5,7 @@
      npm run anteprime fattoria              solo la fattoria (strumenti/anteprime-fattoria3d.mjs)
      npm run anteprime sotterraneo           solo il sotterraneo (strumenti/anteprime-sotterraneo3d.mjs), sagome comprese
      npm run anteprime sagome                solo le sagome del sotterraneo (strumenti/sagome-sotterraneo3d.mjs)
+     npm run anteprime pozioni               solo gli ingredienti delle pozioni (strumenti/anteprime-pozioni.mjs)
      npm run anteprime -- --niente-build     con il dist/ che c'è (solo se è di questo codice)
      ANTEPRIME_DEBUG=1 npm run anteprime     e lascia i WebP in tmp/scatti/anteprime-fattoria3d/ e -sotterraneo/
 
@@ -16,6 +17,7 @@ import { fileURLToPath } from 'node:url'
 import { fotografaFattoria, scriviAnteprime } from './anteprime-fattoria3d.mjs'
 import { fotografaSotterraneo, scriviFatte } from './anteprime-sotterraneo3d.mjs'
 import { fotografaSagome, scriviSagome } from './sagome-sotterraneo3d.mjs'
+import { fotografaPozioni, scriviPozioni } from './anteprime-pozioni.mjs'
 
 const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const args = process.argv.slice(2)
@@ -45,6 +47,11 @@ if (fa('sagome')) {
   scriviSagome(s)
   console.log(`sagome: ${Object.keys(s.sagome).length} modelli, atlante ${s.largo}×${s.alto}, ${Math.round(s.immagine.length / 1024)} KB di testo; senza: ${s.senza.length ? s.senza.join(' ') : 'nessuno'}`)
   if (s.senza.length) esito = 1
+}
+if (fa('pozioni')) {
+  const { foto, mancano } = await fotografaPozioni(browser)
+  if (mancano.length) { console.error(`pozioni, senza foto: ${mancano.join(', ')}`); esito = 1 }
+  else { scriviPozioni(foto); console.log(`pozioni: ${Object.keys(foto).length} anteprime, ${kb(foto)} KB di testo`) }
 }
 await browser.close()
 process.exit(esito)

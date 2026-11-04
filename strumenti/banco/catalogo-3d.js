@@ -19,8 +19,8 @@ import { preparaSporco, impostaSporco } from '../../src/giochi/fattoria3d/scena3
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
-const GIOCHI = ['tutti', 'fattoria', 'sotterraneo', 'entrambi']
-const NOME_GIOCO = { fattoria: 'Fattoria', sotterraneo: 'Sotterraneo', entrambi: 'Entrambi' }
+const GIOCHI = ['tutti', 'fattoria', 'sotterraneo', 'pozioni', 'entrambi']
+const NOME_GIOCO = { fattoria: 'Fattoria', sotterraneo: 'Sotterraneo', pozioni: 'Pozioni', entrambi: 'Entrambi' }
 const $ = id => document.getElementById(id)
 const el = (tag, cls, testo) => { const e = document.createElement(tag); if (cls) e.className = cls; if (testo != null) e.textContent = testo; return e }
 const pausa = () => new Promise(r => setTimeout(r))
@@ -41,7 +41,7 @@ async function caricaVoci() {
   const voci = [], note = []
   // `import.meta.glob`, non due `import()` con il nome scritto: se il file di un gioco non c'è ancora, Vite non si rompe
   const trovati = import.meta.glob('./catalogo-3d/*.js')
-  for (const nome of ['fattoria', 'fattoria-cortile2', 'sotterraneo']) {          // `fattoria-cortile2`: le voci del secondo cortile, in un file a parte
+  for (const nome of ['fattoria', 'fattoria-cortile2', 'sotterraneo', 'pozioni']) {          // `fattoria-cortile2`: le voci del secondo cortile, in un file a parte
     const carica = trovati[`./catalogo-3d/${nome}.js`]
     if (!carica) {
       note.push(nome === 'sotterraneo'

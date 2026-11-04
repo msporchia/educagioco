@@ -75,7 +75,7 @@ function rimetti(dato, rnd) {
     const offerte = leggiOfferte(s.offerte)
     const migliore = ottimo(s.dose, offerte)
     if (!migliore) throw new Error('ottimo')
-    return { nome: i.nome, emoji: i.emoji, colore: i.colore, famiglia: i.famiglia, unita: s.unita, dose: s.dose,
+    return { nome: i.nome, colore: i.colore, famiglia: i.famiglia, unita: s.unita, dose: s.dose,
              messo: s.messo, offerte, ottimo: migliore, traboccate: s.traboccate, pezzi: [...s.pezzi] }
   })
   if (!Array.isArray(dato.macchie) || dato.macchie.some(i => !intero(i, 0, ingredienti.length - 1))) return null

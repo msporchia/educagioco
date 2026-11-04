@@ -37,7 +37,11 @@ export function pensieroDi(liv) {
     const prima = quante && quante > liv.zaino
       ? `Lo zaino tiene ${liv.zaino} carte, e la strada, freccia per freccia, ne vuole ${quante}: scritta così non ci sta.`
       : `Lo zaino tiene ${liv.zaino} carte: la strada, scritta freccia per freccia, non ci sta.`
-    const seconda = carte.includes('se')
+    const seconda = carte.includes('varco')
+      ? 'Guarda la strada: dove deve girare? Il ❓ con la freccia chiede «di là si passa?», e il guerriero sceglie da solo a ogni passo.'
+      : liv.guerriero
+        ? 'Guarda la strada: cosa si ripete uguale? Se i pezzi sono lunghi diversi, dove finiscono? Su un pulsante?'
+        : carte.includes('se')
       ? 'Guarda la strada: cosa si ripete uguale? E dove il coniglio deve fare una cosa diversa, c\'è una lastra colorata che lo dice?'
       : carte.includes('fino') || carte.includes('casa')
         ? 'Guarda la strada: cosa si ripete uguale, e fino a quando? Quante volte, o fino a quale lastra?'

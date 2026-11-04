@@ -9,7 +9,7 @@ import { controlla, riassunto } from '../aiuto/verifica.mjs'
 
 const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const DIR = resolve(RADICE, 'strumenti/banco/catalogo-3d')
-const GIOCHI = ['sotterraneo', 'fattoria', 'entrambi']
+const GIOCHI = ['sotterraneo', 'fattoria', 'pozioni', 'entrambi']
 const CATEGORIE = ['edificio', 'prop', 'pianta', 'personaggio', 'animale', 'effetto', 'altro']
 
 for (const f of readdirSync(DIR).filter(x => x.endsWith('.js'))) {

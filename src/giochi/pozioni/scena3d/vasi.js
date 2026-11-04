@@ -5,7 +5,7 @@
 // misurano; a ingrediente finito vengono messi via. Il livello va verso
 // quello detto da `imposta`, tranne mentre un'animazione lo tiene.
 import { Group, Mesh, Sprite, SpriteMaterial, CylinderGeometry, TorusGeometry, ConeGeometry, CircleGeometry, BoxGeometry, LatheGeometry,
-         Color, Vector2, Vector3, MeshStandardMaterial, MeshBasicMaterial, DoubleSide } from 'three'
+         Color, Vector2, Vector3, MeshStandardMaterial, MeshBasicMaterial, DoubleSide, TextureLoader, SRGBColorSpace } from 'three'
 import { POSTI } from './banco.js'
 import { nomeSulBanco } from './trame.js'
 
@@ -53,6 +53,8 @@ export function creaVasi(scena, trame) {
     barretta: new BoxGeometry(0.56, 0.05, 0.1),
     colpo: new CylinderGeometry(0.6, 0.6, 2.2, 8).translate(0, 1.1, 0),
   }
+
+  const fotoDi = uri => { const t = new TextureLoader().load(uri); t.colorSpace = SRGBColorSpace; return t }
 
   function materiale(famiglia, colore) {
     const c = new Color(colore)
@@ -138,9 +140,12 @@ export function creaVasi(scena, trame) {
     const colpo = new Mesh(geo.colpo, invisibile); colpo.userData.tocca = { che: 'vaso', i: d.i }
     const targa = new Sprite(new SpriteMaterial({ map: nomeSulBanco(d.nome), transparent: true, depthWrite: false }))
     targa.scale.set(1.1, 0.385, 1); targa.position.set(0, 0.24, 0.72)
-    gruppo.add(colpo, targa)
+    // la foto del modello, non il modello: la camera è ferma e si vede uguale, e costruirlo sul telefono costerebbe secondi
+    const figura = new Sprite(new SpriteMaterial({ map: fotoDi(d.foto), transparent: true, depthWrite: false, toneMapped: false }))
+    figura.scale.set(0.5, 0.5, 1); figura.position.set(-0.42, 0.68, 0.74)
+    gruppo.add(colpo, targa, figura)
     g.add(gruppo)
-    const v = { i: d.i, gruppo, colpo, targa, mat, famiglia: d.famiglia, colore: d.colore, casa: gruppo.position.clone(), materiali: [], scala: 1,
+    const v = { i: d.i, gruppo, colpo, targa, figura, mat, famiglia: d.famiglia, colore: d.colore, casa: gruppo.position.clone(), materiali: [], scala: 1,
                 livello: 0, meta: 0, onda: 0, trattenuto: false, dato: d, pezzi: -1, esce: false, nuovo: true }
     if (d.famiglia === 'capacita') cilindro(v, mat)
     else if (d.famiglia === 'massa') bilancia(v, mat)
@@ -157,6 +162,7 @@ export function creaVasi(scena, trame) {
     g.remove(v.gruppo)
     v.mat.dispose()
     v.targa.material.map.dispose(); v.targa.material.dispose()
+    v.figura.material.map.dispose(); v.figura.material.dispose()
     for (const m of v.materiali) m.dispose()
     if (v.segno.material !== quadrante) v.segno.material.dispose()
     svuotaPila(v)
