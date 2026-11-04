@@ -3,13 +3,14 @@
 
    Cinque stadi (docs/sotterraneo/roba.md, «Le pozioni»): la guaritrice ha sul banco le quattro che si comprano (dopo cinque discese
    ci sono tutte), con la cura vera sul pannello; al più otto in tasca, e la nona non si compra: il banco lo dice e il tasto resta
-   spento; lo zaino dice quante se ne portano (`[data-cure-zaino]`); l'ampolla della vita non si compra e dice «tutta la vita».
+   spento, mentre la torcia del carovaniere si compra lo stesso; lo zaino dice quante se ne portano (`[data-cure-zaino]`); l'ampolla
+   della vita non si compra e dice «tutta la vita».
    Con più stadi in tasca, bere apre la scelta (`[data-scegli-pozione]`): una riga per stadio, la ✕ in alto a destra, e nello
    scontro dice che poi tocca ancora a te (bere non costa il turno); con un solo stadio si beve e basta (lo prova `integrazione/sotterraneo-barra`).
    `node test/esegui.mjs sotterraneo-pozioni`
-   tempo: 150
+   tempo: 300
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, finestraFerma, scegliAttacco }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, finestraFerma, scegliAttacco, alBancoDi }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { COSE, CURE_IN_VENDITA } from '../../src/giochi/sotterraneo/dati/cose.js'
@@ -33,8 +34,9 @@ await semina(page, {
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: FINITE, libera: false, stelle: STELLE, missioni: {}, roba, crescita,
       mondo: { parlato: true } } } } } },
 })
-// la guaritrice si apre dall'indirizzo (docs/core/comandi.md: `#bottega=`), con le sole cose in tasca scritte lì
-await page.evaluate(z => { location.hash = `bottega=erborista&gemme=2000&zaino=${z}`; location.reload() }, ZAINO.join(','))
+// la guaritrice si apre dall'indirizzo (docs/core/comandi.md: `#bottega=`), con le sole cose in tasca scritte lì; senza pensieri, che il fumetto
+// prenderebbe il tocco sul carovaniere
+await page.evaluate(z => { location.hash = `pensieri=no&bottega=erborista&gemme=2000&zaino=${z}`; location.reload() }, ZAINO.join(','))
 await page.waitForSelector('.carte', { timeout: 10000 })
 await scegli(page, 'sotterraneo')
 await page.waitForSelector('[data-bottega]', { timeout: 8000 })
@@ -86,9 +88,11 @@ await page.locator('[data-azione="compra"]').click({ force: true }).catch(() => 
 await attendi(page, 300)
 uguale('un tocco non compra la nona', await gemmeBottega(), 2000 - 2 * COSE['ampolla-maggiore'].prezzo)
 await scatto(page, 'pozioni-tetto')
-// la torcia non è una pozione: passa
-await toccaIl('[data-scheda="torce"]')
-await attendi(page, 200)
+// la torcia non è una pozione: passa. Sta al banco del carovaniere (docs/sotterraneo/bottega.md), non qui
+uguale('la guaritrice non ha torce', await page.locator('[data-casella-pezzo="torcia"]').count(), 0)
+await toccaIl('[data-bottega] [data-chiudi]')
+await page.waitForSelector('[data-bottega]', { state: 'detached', timeout: 3000 })
+await alBancoDi(page, 'carovaniere', { tocca, toccaIl })
 await toccaIl('[data-casella-pezzo="torcia"]')
 await attendi(page, 200)
 uguale('e la torcia si compra anche col tetto', await page.locator('[data-azione="compra"]').isDisabled(), false)
