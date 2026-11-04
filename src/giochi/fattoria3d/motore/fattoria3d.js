@@ -16,7 +16,7 @@ import { SILOS, TIPI_DI_SILO, siloDi, postiPerMerce, prezzoDelPasso, siloDelPezz
 import { generaLotto } from '../dati/lotti.js'
 import { biomaDiGen, acquaDelLotto, tipoAcqua } from '../dati/biomi.js'
 import { provaPesca, lanciaLenza, ritiraPesca, bancoDi, lenzeInAcqua, ripulisciPesca, riesaminaPesca, postiDiPesca } from './pesca.js'
-import { ANIMALI, CORTILE, LANA, prezzoDellaBestia } from '../dati/animali.js'
+import { ANIMALI, CORTILE, LANA, prezzoDellaBestia, PRODOTTI_ANIMALI } from '../dati/animali.js'
 import { normalizza, nuoveTessere, pulisciNomeFattoria } from './stato.js'
 import { percorso } from './percorso.js'
 import { POSTI, RIPOSO_MS, LIVELLO_BANCO, PEZZI_DEL_BANCO, clienteDi, tipoDelOrdine } from '../dati/ordini.js'
@@ -939,7 +939,7 @@ export class Fattoria3d {
     return this.s.ordini.aperti.map((o, idx) => {
       if (!o) return { idx, attesa: true, restoMs: Math.max(0, (this.s.ordini.riprende[idx] || t) - t) }
       const chiede = Object.entries(o.chiede).map(([k, n]) => {
-        const r = COLTURE[k] || RICETTE[k], ha = this.scortaDi(k)
+        const r = COLTURE[k] || RICETTE[k] || PRODOTTI_ANIMALI[k], ha = this.scortaDi(k)
         return { k, n, nome: r.nome, emoji: r.emoji, ha: Math.min(ha, n), manca: Math.max(0, n - ha), prodotto: !COLTURE[k] }
       })
       // le macchine che l'ordine vuole e che non hai ancora messo in mappa: il biglietto dice «Serve il Panificio» col «!»

@@ -207,7 +207,7 @@ stessaLista('quattro botteghe: pasticceria, osteria, mensa, merceria', TIPI_DI_B
     controlla(`${tipo}: appena aperta ha almeno tre merci già chiedibili, tutte già fattibili`, merciDellaBottega(f, tipo).length >= 3 && merciDellaBottega(f, tipo).every(k => livelloDellaMerce(k) <= EDIFICI[tipo].liv))
   }
   const alto = mondo({ liv: ULTIMO, tipo: 'bottega_osteria' }).f, basso = mondo({ liv: 29, tipo: 'bottega_osteria' }).f
-  controlla('più sale il livello più merci chiede (il sushi non è per il livello 29)', merciDellaBottega(alto, 'bottega_osteria').length > merciDellaBottega(basso, 'bottega_osteria').length && !merciDellaBottega(basso, 'bottega_osteria').includes('sushi'))
+  controlla('più sale il livello più merci chiede (le lasagne non sono per il livello 29)', merciDellaBottega(alto, 'bottega_osteria').length > merciDellaBottega(basso, 'bottega_osteria').length && !merciDellaBottega(basso, 'bottega_osteria').includes('lasagne'))
   controlla('uova, latte, pancetta e lana contano col livello del pezzo che li fa', Number.isFinite(livelloDellaMerce('uova')) && Number.isFinite(livelloDellaMerce('latte')) && Number.isFinite(livelloDellaMerce('lana')) && Number.isFinite(livelloDellaMerce('pancetta')))
 }
 

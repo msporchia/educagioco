@@ -56,9 +56,11 @@ export const RICETTA_DELLA_BESTIA = {
   conigliera: 'lana_angora', alpaca: 'lana_alpaca', asini: 'concime', arnie: 'miele',      // giro G5
 }
 
-/** La peschiera della 2D: il pesce arriva da lì. La pesca della 3D (molo, porticciolo) ne prende il posto, allo stesso livello. */
+/** La peschiera della 2D: al suo livello resta lo scarto delle soglie (dati/livelli.js), così spostare la pesca non cambia il livello di nessuno. */
 export const PESCHIERA_2D = VOCI_2D.peschiera
-export const LIVELLO_PESCA = livelloDellaVoce(PESCHIERA_2D)
+export const LIVELLO_PESCHIERA = livelloDellaVoce(PESCHIERA_2D)
+/** Da che livello si pesca (molo, molo girato, porticciolo): molto prima della peschiera, decisione dell'utente del 4/11/2026 (docs/fattoria3d/livelli.md). */
+export const LIVELLO_PESCA = 10
 
 export const voce2d = tipo => VOCI_2D[VOCE[tipo]] || null
 export const coltura2d = k => COLTURE_2D[COLTURA[k]] || null
@@ -79,9 +81,12 @@ export function livelloPerPrezzo(prezzo) {
 export const prezzoDa2D = (tipo, ripiego) => (voce2d(tipo) ? voce2d(tipo).prezzo : ripiego)
 /** Pezzi che in 3D arrivano **prima** che in 2D (decisione dell'utente del 1/11/2026): i gatti la usano per dormire (docs/fattoria3d/compagni.md «I posti»).
     I test di parità li leggono da qui; il prezzo resta quello della 2D. */
-export const LIVELLI_ANTICIPATI = { panchina: 12 }
+export const LIVELLI_ANTICIPATI = { panchina: 12, stagno: LIVELLO_PESCA, laghetto: LIVELLO_PESCA, sushi_bar: 15, friggitoria: 19 }
+/** La catena del pesce viene con la pesca: il riso per il sushi, e le ricette di friggitoria e sushi bar al livello vero, il più tardo fra macchina e ingredienti. */
+export const COLTURE_ANTICIPATE = { riso: 15 }
+export const RICETTE_ANTICIPATE = { sushi: 15, fritto: 19, arancini: 20, patatine: 22, maki: 39 }
 /** Il livello a cui arriva (quello della voce 2D), o `ripiego`. */
-export const livelloDa2D = (tipo, ripiego) => (voce2d(tipo) ? livelloDellaVoce(voce2d(tipo)) : ripiego)
+export const livelloDa2D = (tipo, ripiego) => LIVELLI_ANTICIPATI[tipo] ?? (voce2d(tipo) ? livelloDellaVoce(voce2d(tipo)) : ripiego)
 /** Di quanto rincara a ogni copia (frazione del prezzo base), 0 se non rincara. */
 export const crescitaDa2D = tipo => (voce2d(tipo) && voce2d(tipo).cresce) || 0
 /** Il prezzo della copia numero `quante` (le già avute, in mappa e nel magazzino): la formula della 2D. */
@@ -94,7 +99,7 @@ export const livelloRicetta = id => (RICETTE_2D[id] ? livelloRicetta2D(RICETTE_2
 export function numeriRicetta(id) {
   const r = RICETTE_2D[id]
   if (!r) throw new Error(`parita2d: la ricetta «${id}» non esiste nella 2D`)
-  return { ms: msDaMinuti(r.minuti), liv: livelloRicetta2D(r), costo: r.costo || 0 }
+  return { ms: msDaMinuti(r.minuti), liv: RICETTE_ANTICIPATE[id] ?? livelloRicetta2D(r), costo: r.costo || 0 }
 }
 
 /** Un tempo della 2D in millisecondi. */

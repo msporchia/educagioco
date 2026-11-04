@@ -40,7 +40,7 @@ export function ordineInForma(o) {
   const chiede = {}
   for (const [vecchio, n] of Object.entries(o.chiede)) {
     const k = nuovoId(vecchio)           // un ordine di prima della 2D chiede il cugino di oggi (stesso mestiere, un pezzo per un pezzo)
-    if ((COLTURE[k] || RICETTE[k]) && Number.isInteger(n) && n >= 1 && n <= 20) chiede[k] = Math.min(20, (chiede[k] || 0) + n)
+    if ((COLTURE[k] || RICETTE[k] || k === 'pesce') && Number.isInteger(n) && n >= 1 && n <= 20) chiede[k] = Math.min(20, (chiede[k] || 0) + n)
   }
   if (!Object.keys(chiede).length) return null
   const cliente = typeof o.cliente === 'string' ? clienteDi(o.cliente).id : CLIENTI[0].id

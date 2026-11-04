@@ -93,6 +93,7 @@ export function fattoriaTipo(livello, { ora = Date.now() } = {}) {
   f.tick()
 
   f.s.esperienza = sogliaDi(liv)           // costruire ha speso, e speso fa salire: il livello resta quello chiesto
+  for (const k of Object.keys(f.s.magazzino)) if (livelloDelPezzo(k) > liv) delete f.s.magazzino[k]      // e il magazzino di un livello dopo, arrivato da solo, se ne va
   f.eventi = []
   f.ora = Date.now
   f.borsa = null                           // la borsa vera la mette il chiamante

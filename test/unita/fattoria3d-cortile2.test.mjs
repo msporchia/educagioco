@@ -57,7 +57,7 @@ const COME_2D = { conigliera: 'conigliera', alpaca: 'recinto_alpaca', asini: 're
     controlla(`${t}: è un animale produttivo che sta tra gli animali`, P.categoria === 'animali' && P.produttivo === true && P.w === 4 && P.d === 3)
     controlla(`${t}: i numeri provvisori non ci sono più (livello e prezzo sono letti dalla 2D)`, NUMERI_DEL_CORTILE_2[t].liv === P.liv && NUMERI_DEL_CORTILE_2[t].prezzo === P.prezzo)
   }
-  controlla('la peschiera non c\'è: la pesca ne prende il posto', !PEZZI.peschiera && PEZZI.molo.liv === VOCI_2D.peschiera.liv)
+  controlla('la peschiera non c\'è: la pesca ne prende il posto, prima di lei', !PEZZI.peschiera && PEZZI.molo.liv < VOCI_2D.peschiera.liv)
   controlla('i conigli e le api sono tra i cartelli dei piccoli recinti: capienze e prezzi delle bestie sensati', Object.values(ANIMALI).every(a => a.posti >= 2 && a.prezzoBestia > 0))
 }
 
