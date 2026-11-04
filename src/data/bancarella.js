@@ -346,7 +346,19 @@ export const LIBERA = {
   monete: [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000],
 }
 
-export const campagnaDi = i => (i >= 0 && i < CAMPAGNE.length ? CAMPAGNE[i] : LIBERA)
+/* La cucina, in prova: fuori dalla fila, si apre da `#bancarella=cucina`.
+   Vedi docs/bancarella/cucina.md. */
+export const CUCINA_IDX = -2
+export const CUCINA_BANCO = { nome: 'La cucina', icona: '🍝', colore: '#b5472f', tenda: '#f0a58f', legno: '#a9713c' }
+export const CUCINA = {
+  id: 'cucina', nome: 'La cucina', emoji: '🍝', conto: 'resto', cucina: true,
+  dritta: 'Cuoci, condisci e servi: mentre la pasta bolle prepara il piatto del prossimo cliente. Poi il resto, a fornello fermo.',
+  tappe: ['cucina', 'cucina', 'cucina'],
+  passo: 50, articoli: [1, 1], tetto: 1000, paga: [1000], tempo: [75, 60], copie: 0,
+  monete: [50, 100, 200, 500],
+}
+
+export const campagnaDi = i => (i === CUCINA_IDX ? CUCINA : i >= 0 && i < CAMPAGNE.length ? CAMPAGNE[i] : LIBERA)
 
 /* Che cosa tocca alla tappa numero `n` di una giornata: quale banco, e con
    quanto tempo. Nella giornata libera `n` non si ferma mai e il giro dei

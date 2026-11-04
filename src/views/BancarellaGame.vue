@@ -6,7 +6,8 @@ import { state, answer, segna, segnaBest,
          mercatoProgresso, mercatoCompleta, tappaAperta } from '../store/profile.js'
 import { generaCliente, esposizione, tappaDi, campagnaDi, scomponi, euro,
          centesimiScritti, scriviCifra, premioCliente, stelleDiGiornata, perLaProssima,
-         BANCHI, CAMPAGNE, LIBERA, CLIENTI_PER_TAPPA } from '../data/bancarella.js'
+         BANCHI, CAMPAGNE, LIBERA, CLIENTI_PER_TAPPA, CUCINA_IDX, CUCINA_BANCO } from '../data/bancarella.js'
+import { PIATTI, cucinaNuova, avanza, tocca, servi } from '../motore/bancarella/cucina.js'
 import { bancoPulito, merceMia, cesteDi, pazienzaDi, compra, puoiComprare } from '../data/bancarella-banco.js'
 import { CITTA, statoCitta, statoGiornata, cittaCorrente, fatteIn, indiceDi, giornataDi,
          cittaDelleGiornata, stelleGiornata, stelleCitta, stelleMassime } from '../data/bancarella-mondo.js'
@@ -18,6 +19,7 @@ import TastoSalta from '../components/TastoSalta.vue'
 import Mondo from '../components/bancarella/Mondo.vue'
 import Piazza from '../components/bancarella/Piazza.vue'
 import IlMioBanco from '../components/bancarella/IlMioBanco.vue'
+import Cucina from '../components/bancarella/Cucina.vue'
 import Soldo from '../components/Soldo.vue'
 import { usaPausa } from '../giochi/pausa.js'
 import VeloPausa from '../giochi/VeloPausa.vue'
@@ -29,6 +31,7 @@ import { scrivi, leggi, dice, TETTO_PRESE } from '../motore/bancarella/sosta.js'
 const emit = defineEmits(['vai'])
 
 const CUORI = 3
+const BANCHI_QUI = { ...BANCHI, cucina: CUCINA_BANCO }
 // le monete di questa giornata: un cliente servito paga subito (docs/bancarella/regole.md)
 let borsellino = borsa('bancarella')
 const guadagno = reactive({ monete: 0, nota: '' })
@@ -57,6 +60,7 @@ const cambio = ref(null)            // il cartello del cambio banco
 const esito = ref('')               // vinta | persa
 const voto = ref(null)              // a giornata vinta: { stelle, migliore } (le stelle di questa volta e le migliori)
 const volo = ref(null)              // la roba che vola dalla cesta al cliente
+const cucina = ref(cucinaNuova())   // la pentola e i piatti: docs/bancarella/cucina.md
 const frasePrimato = ref('')        // a fine mercato senza fine: com'è andata col record
 
 /* Il banco del bambino: l'incasso resta e compra (docs/bancarella/banco.md). */
@@ -85,7 +89,7 @@ const amici = usaAmici('bancarella')
 const amiciDi = id => amici.sullaTappa(id === LIBERA.id ? CAMPAGNE.length : indiceDi(id))
 const sbloccata = i => tappaAperta(i, prog.value.tappa)
 /* si può giocare: una giornata della fila se è aperta; la libera quando la fila è finita */
-const puoGiocare = i => (i >= 0 ? sbloccata(i) : tappaAperta(CAMPAGNE.length, prog.value.tappa))
+const puoGiocare = i => (i === CUCINA_IDX || (i >= 0 ? sbloccata(i) : tappaAperta(CAMPAGNE.length, prog.value.tappa)))
 
 /* Il giro del mondo e la piazza (docs/bancarella/mappa.md): quello che si
    vede si ricava da quante giornate sono finite e da cosa è aperto. */
@@ -125,12 +129,13 @@ function indietro() {
 /* finita la giornata si torna alla piazza; se ha aperto una città nuova si torna
    sul mondo, dove l'aereo ci vola */
 function tornaAlleGiornate() {
+  if (camp.value.cucina) { fase.value = 'mondo'; return }
   citta.value = Math.max(0, cittaDelleGiornata(camp.value.id))
   fase.value = cittaCorr.value !== cittaPrima ? 'mondo' : 'piazza'
 }
 const camp = computed(() => campagnaDi(idx.value))
 const T = computed(() => tappaDi(camp.value, nTappa.value))
-const B = computed(() => BANCHI[T.value.banco])
+const B = computed(() => BANCHI_QUI[T.value.banco])
 const cliente = computed(() => coda.value[0] || null)
 const dato = computed(() => piatto.value.reduce((s, c) => s + c, 0))
 const manca = computed(() => (cliente.value ? cliente.value.resto - dato.value : 0))
@@ -196,7 +201,9 @@ const UFFA     = ['Me ne vado!', 'Troppo lento!', 'Uffa…']
 /* la giornata */
 function inizia(i = idx.value) {
   if (!puoGiocare(i)) return
-  scorda()
+  // la cucina è una prova fuori dalla fila: non si salva, e una giornata lasciata a metà resta dov'è
+  if (i !== CUCINA_IDX) scorda()
+  cucina.value = cucinaNuova()
   cittaPrima = cittaCorr.value
   const k = cittaDelleGiornata(campagnaDi(i).id)
   if (k >= 0) citta.value = k
@@ -221,7 +228,8 @@ function inizia(i = idx.value) {
    perdere secondi mentre legge dov'è arrivato. */
 function apriTappa() {
   const t = T.value
-  esposti.value = esposizione(t, { merce: merceMia(mioBanco.value), ceste: cesteDi(mioBanco.value) })
+  esposti.value = t.camp.cucina ? PIATTI
+    : esposizione(t, { merce: merceMia(mioBanco.value), ceste: cesteDi(mioBanco.value) })
   coda.value = []
   for (let i = 0; i < CLIENTI_PER_TAPPA; i++) {
     const c = generaCliente(t, esposti.value, { riesce: t.riesceSubito && t.n === 0 && i === 0 })
@@ -300,6 +308,30 @@ function passa(a) {
   volo.value = { emoji: a.emoji, k: ++nVolo }
   setTimeout(() => { if (volo.value && volo.value.k === nVolo) volo.value = null }, 520)
   suono.nota(720, 980, 0.07, 'triangle', 0.1)
+}
+
+/* ---------- la cucina ----------
+   Il piatto servito porta alla cassa di sempre; mentre si conta il fornello è
+   fermo (`ciclo`). Vedi docs/bancarella/cucina.md. */
+function inCucina(cosa) {
+  if (occupato || cambio.value || !cliente.value || momento.value !== 'raccolta') return
+  if (tocca(cucina.value, cosa)) suono.nota(720, 980, 0.07, 'triangle', 0.1)
+  else suono.no()
+}
+
+function serviPiatto(i) {
+  const c = cliente.value
+  if (occupato || cambio.value || !c || momento.value !== 'raccolta') return
+  const piatto = cucina.value.piatti[i]
+  if (!piatto || !piatto.pronto) return
+  if (!servi(cucina.value, i, c.articoli[0].emoji)) {
+    battuta.value = pick(SBAGLIO)
+    suono.no()
+    c.restaPazienza = Math.max(2, c.restaPazienza - 2)
+    return
+  }
+  passa(c.articoli[0])
+  allaCassa()
 }
 
 function allaCassa() {
@@ -441,6 +473,7 @@ function ciclo(ts) {
     const c = coda.value[0]
     if (c && !dettoFretta && barra(c) < 30) { dettoFretta = true; battuta.value = pick(FRETTA) }
     if (c && c.restaPazienza <= 0) scaduto()
+    if (camp.value.cucina && momento.value === 'raccolta') avanza(cucina.value, dt)
   }
   raf = requestAnimationFrame(ciclo)
 }
@@ -456,7 +489,7 @@ function scaduto() {
 }
 
 function chiudi(come) {
-  scorda()
+  if (!camp.value.cucina) scorda()
   esito.value = come
   guadagno.nota = borsellino.nota()
   fase.value = 'fine'
@@ -479,6 +512,7 @@ function chiudi(come) {
 
 /* la prossima giornata, se c'è e se è aperta */
 const dopo = computed(() => {
+  if (camp.value.cucina) return null
   if (idx.value < 0) return -1
   const p = idx.value + 1
   return p < CAMPAGNE.length ? p : (prog.value.libera ? -1 : null)
@@ -541,7 +575,7 @@ onMounted(() => {
                     cliente, dato, manca, battuta, scomponi, momento, presi, aMente,
                     daPrendere, esposti, tappa: nTappa, camp, T, cambio, esito,
                     batti, confermaTotale, digitato, contoFatto, chiediTotale, TASTI,
-                    CAMPAGNE, BANCHI, prog, guadagno, inPausa, citta, CITTA, cittaCorr, chiudi, voto }
+                    CAMPAGNE, BANCHI, prog, cucina, guadagno, inPausa, citta, CITTA, cittaCorr, chiudi, voto }
 })
 onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
 
@@ -568,7 +602,7 @@ const foto = () => ({
 })
 
 function salva({ subito = false } = {}) {
-  if (fase.value !== 'gioco') return
+  if (fase.value !== 'gioco' || camp.value.cucina) return
   // il cliente appena servito ha già pagato: il suo giro si chiude prima di scrivere
   if (occupato && faPoi === prossimo) {
     spegniOrologio(); prossimo()
@@ -642,6 +676,7 @@ function seSparisce(e) {
   if (e?.type === 'pagehide' || document.visibilityState === 'hidden') salva({ subito: true })
 }
 onMounted(() => {
+  if (/(?:^|[#&])bancarella=cucina/.test(location.hash)) inizia(CUCINA_IDX)
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
 })
@@ -694,7 +729,7 @@ onBeforeUnmount(() => {
       <div class="percorso">
         <div v-for="(b, i) in camp.tappe" :key="i" class="fermata" :data-banco="b"
              :class="{ qui: i === T.i, fatta: i < T.i }"
-             :style="{ '--c': BANCHI[b].colore }">{{ BANCHI[b].icona }}</div>
+             :style="{ '--c': BANCHI_QUI[b].colore }">{{ BANCHI_QUI[b].icona }}</div>
         <span class="quale">{{ camp.libera ? 'giro ' + (Math.floor(nTappa / camp.tappe.length) + 1)
                                            : (T.i + 1) + '/' + camp.tappe.length }}</span>
       </div>
@@ -728,6 +763,7 @@ onBeforeUnmount(() => {
 
         <div class="fila">
           <div v-for="(c, i) in coda.slice(1)" :key="i" class="attesa">
+            <span v-if="camp.cucina" class="vuole" data-vuole>{{ c.articoli[0].emoji }}</span>
             <div class="persona" :style="{ '--v': c.vestito }">
               <span class="testa">{{ c.faccia }}</span><span class="corpo"></span>
             </div>
@@ -744,7 +780,9 @@ onBeforeUnmount(() => {
 
         <!-- niente `:key` sui due rami: in produzione, con una key esplicita su
              uno solo dei due, il patch del DOM va in confusione al cambio tappa -->
-        <div v-if="momento === 'raccolta'" class="ceste" :style="{ '--r': righe.length }">
+        <Cucina v-if="momento === 'raccolta' && camp.cucina" :stato="cucina" @tocca="inCucina" @servi="serviPiatto" />
+
+        <div v-else-if="momento === 'raccolta'" class="ceste" :style="{ '--r': righe.length }">
           <div v-for="(riga, r) in righe" :key="r" class="rigacesta"
                :style="{ transform: 'translateX(' + (r % 2 ? 2.5 : -2) + '%)', '--n': riga.length }">
             <button v-for="p in riga" :key="p.emoji" class="cesta" :data-em="p.emoji"
@@ -847,9 +885,9 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- il cartello del cambio banco: finché è su, il tempo è fermo -->
-      <div v-if="cambio" class="cartello-tappa" :style="{ '--c': BANCHI[cambio.banco].colore }">
-        <span class="ico">{{ BANCHI[cambio.banco].icona }}</span>
-        <b>{{ BANCHI[cambio.banco].nome }}</b>
+      <div v-if="cambio" class="cartello-tappa" :style="{ '--c': BANCHI_QUI[cambio.banco].colore }">
+        <span class="ico">{{ BANCHI_QUI[cambio.banco].icona }}</span>
+        <b>{{ BANCHI_QUI[cambio.banco].nome }}</b>
         <span class="mini">tappa {{ cambio.n + 1 }}{{ camp.libera ? '' : ' di ' + camp.tappe.length }}
           · {{ T.tempo }}s a cliente</span>
       </div>
@@ -973,6 +1011,7 @@ onBeforeUnmount(() => {
 .conferma.nonTorna { animation:sussulto .4s }
 .fila { display:flex; align-items:flex-end; gap:7px; padding-bottom:2px }
 .attesa { display:flex; flex-direction:column; align-items:center; gap:3px }
+.vuole { font-size:20px; line-height:1; padding:2px 4px; border-radius:9px; background:#fffdf7; box-shadow:0 2px 3px #0003 }
 .quanti { align-self:center; font-size:10.5px; font-weight:900; color:#8a6a45;
           background:#ffffffaa; border-radius:8px; padding:2px 6px }
 @keyframes dice { from { transform:scale(.5) translateY(6px); opacity:0 } to { transform:none; opacity:1 } }
