@@ -11,10 +11,11 @@
    «turno» (`conRenderer`): le anteprime aspettano che si chiuda.
 
    Indirizzo: `?gioco=fattoria|sotterraneo|entrambi`, `&cat=prop`, `&q=testo`,
-   `&angolo=`, `&alto=`, `&vicino=`, `&lato=` (la telecamera delle anteprime), `&lontano=1` (il dettaglio da lontano),
+   `&angolo=`, `&alto=`, `&vicino=`, `&lato=` (la telecamera delle anteprime), `&lontano=1` (il dettaglio da lontano), `&sporco=0.7` (un animale sporco),
    `&scheda=1` (senza controlli, per la scheda contatto: `window.__catalogo3d.pronto`
    diventa true a fine lavoro).
    ═══════════════════════════════════════════════════════════════════ */
+import { preparaSporco, impostaSporco } from '../../src/giochi/fattoria3d/scena3d/sporco.js'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
@@ -30,7 +31,9 @@ const VERSO = parametri.has('angolo') || parametri.has('alto')
   : new THREE.Vector3(0.78, 0.62, 1).normalize()
 const VICINO = Number(parametri.get('vicino')) || 1
 // `&lontano=1`: i modelli col dettaglio da lontano (le geometrie povere di `userData.lod`, come li vede il gioco oltre i 12 m)
-const daLontano = obj => { if (parametri.get('lontano') && obj && obj.traverse) obj.traverse(o => { if (o.userData && o.userData.lod) o.geometry = o.userData.lod.bassa() }); return obj }
+// `&sporco=0.7`: un animale della fattoria sporco a quel punto (docs/fattoria3d/cura-sul-prato.md)
+const sporco = obj => { const v = parseFloat(parametri.get('sporco')); if (v >= 0 && obj && obj.traverse) { preparaSporco(obj); impostaSporco(obj, v) } return obj }
+const daLontano = obj => { sporco(obj); if (parametri.get('lontano') && obj && obj.traverse) obj.traverse(o => { if (o.userData && o.userData.lod) o.geometry = o.userData.lod.bassa() }); return obj }
 const LATO = Number(parametri.get('lato')) || 400     // lato dell'anteprima, in pixel veri
 
 // ══════════ le voci ══════════

@@ -15,6 +15,7 @@
                                    # da vicino e di fianco: catalogo-3d-<gioco>-<q>-a90.png
      npm run catalogo3d:scheda -- --q "=fattoria:watson|=fattoria:golia" --nome animali
      npm run catalogo3d:scheda -- --gioco fattoria --q watson --lontano   # col dettaglio da lontano (userData.lod), come in gioco oltre i 12 m
+     npm run catalogo3d:scheda -- --gioco fattoria --q labrador --sporco 0.7   # un animale sporco a quel punto (da 0 a 1)
                                    # più voci (`|`), ognuna per id intero (`=`), in catalogo-3d-<gioco>-animali.png
 
    Il browser: `CHROME=…` lo forza (come per i test), altrimenti quello di
@@ -32,7 +33,7 @@ const args = process.argv.slice(2)
 const opz = (nome, difetto) => { const i = args.indexOf('--' + nome); return i >= 0 ? args[i + 1] : difetto }
 const larghezza = Number(opz('larghezza', 1100)), pixel = Number(opz('pixel', 1))
 const gruppi = opz('gioco', null) ? [opz('gioco')] : ['tutti', 'fattoria', 'sotterraneo']
-const senzaCache = (args.includes('--senzacache') ? '&senzacache=1' : '') + (args.includes('--senzafondi') ? '&senzafondi=1' : '') + (args.includes('--lontano') ? '&lontano=1' : '')
+const senzaCache = (opz('sporco', null) ? '&sporco=' + opz('sporco') : '') + (args.includes('--senzacache') ? '&senzacache=1' : '') + (args.includes('--senzafondi') ? '&senzafondi=1' : '') + (args.includes('--lontano') ? '&lontano=1' : '')
 const q = opz('q', ''), vista = ['angolo', 'alto', 'vicino'].filter(k => opz(k, null) != null).map(k => `&${k}=${opz(k)}`).join('')
 const coda = (args.includes('--senzacache') ? '-senzacache' : '') + (args.includes('--senzafondi') ? '-senzafondi' : '') + (opz('nome', null) ? '-' + opz('nome').replace(/[^\w-]+/g, '_') : q ? '-' + q.replace(/[^\w-]+/g, '_').slice(0, 80) : '') + (opz('angolo', null) != null ? '-a' + opz('angolo') : '') + (args.includes('--lontano') ? '-lontano' : '')
 mkdirSync(SCATTI, { recursive: true })
