@@ -30,11 +30,11 @@ a metà anno» (`inClasse`), mai «8 anni come in terza». Basta mese e anno, no
   compleanni successivi si mantiene («lo tari un anno più indietro dei suoi anni»).
 - **I profili che c'erano già** non hanno la data: restano con l'età di adesso, e la carta la chiede. Mettere la data non sposta niente: lo scarto
   si calcola per lasciare l'età com'è, e se non combacia con gli anni veri compare lo stesso avviso con le due scelte.
-- **Il modulo del bambino nuovo** (`Benvenuto.vue`) ha mese e anno **facoltativi**; con la data la manopola si mette sull'età che ne esce; la manopola
-  si può ancora spostare (e fa lo scarto). Senza data, tutto com'era.
+- **Il modulo del bambino nuovo** (`Benvenuto.vue`) chiede mese e anno, **obbligatori**: l'età è quella che ne esce, dentro gli estremi (`dentroGliEstremi`),
+  senza manopola né scarto. Una data che deve ancora arrivare non fa entrare, e lo dice. Tararlo sopra o sotto si fa dopo, dalle impostazioni.
 
 Nei test: `[data-nascita]`, `[data-nascita-mese]`, `[data-nascita-anno]`, `[data-nascita-eta]`, `[data-nascita-scarto]`, `[data-nascita-avviso]`,
-`[data-azione="nascita-salva"|"nascita-passa"|"nascita-tieni"|"nascita-cambia"|"nascita-togli"]`; nel modulo `[data-nascita-domanda]`.
+`[data-azione="nascita-salva"|"nascita-passa"|"nascita-tieni"|"nascita-cambia"|"nascita-togli"]`; nel modulo `[data-nascita-domanda]`, `[data-nascita-futura]`.
 `unita/nascita`, `integrazione/nascita`.
 
 ## Ordine del lavoro

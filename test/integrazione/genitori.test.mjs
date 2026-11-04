@@ -874,25 +874,21 @@ uguale('col campo vuoto non si va avanti', await page.isDisabled('.via'), true)
 
 await page.fill('.benvenuto .nome', 'Federica')
 await page.click('.benvenuto .via')
-await page.waitForSelector('[data-manopola]', { timeout: 5000 })
+await page.waitForSelector('[data-nascita-domanda]', { timeout: 5000 })
 
-/* ── quanti anni ha ──
-   Col solo nome non si aggiunge: l'età decide cosa il bambino si
-   troverà in home la prima volta, e una risposta preselezionata si
-   preme senza leggerla. Il tasto spento è il modo di chiederlo senza
-   scriverlo. */
-/* La manopola nasce sui quattro anni: chi aggiunge un bambino sta
-   quasi sempre aggiungendo il più piccolo di casa, e da lì si sale
-   finché l'elenco di quello che si dà per scontato non comincia a dire
-   cose che non sa. Otto tocchi per arrivare a otto anni. */
-uguale('la manopola nasce sui quattro anni',
-  (await page.locator('[data-eta-ora]').innerText()).trim(), '4 anni')
-for (let i = 0; i < 8; i++) await page.click('[data-eta="su"]')
-await page.waitForTimeout(250)
-uguale('la manopola dice a che età si è fermata',
-  (await page.locator('[data-eta-ora]').innerText()).trim(), '8 anni')
-controlla('e il quadro dice cosa sta per succedere',
-  await page.isVisible('[data-manopola] .quadro'))
+/* ── quando è nato ──
+   Col solo nome non si aggiunge: l'età esce dalla data e decide cosa il
+   bambino si troverà in home la prima volta. Il tasto spento è il modo
+   di chiederlo senza scriverlo. */
+uguale('senza la data non si entra', await page.isDisabled('[data-azione="si-gioca"]'), true)
+{
+  const oggi = new Date()
+  const annoScol = oggi.getMonth() >= 8 ? oggi.getFullYear() : oggi.getFullYear() - 1
+  await page.selectOption('[data-nascita-mese]', String(oggi.getMonth()))
+  await page.selectOption('[data-nascita-anno]', String(annoScol - 8))
+}
+await page.waitForSelector('[data-nascita-eta]', { timeout: 3000 })
+controlla('e la data dice in che classe è', /terza elementare/.test(await page.locator('[data-nascita-eta]').innerText()))
 
 await page.click('[data-azione="si-gioca"]')
 await page.waitForSelector('.carte', { timeout: 8000 })
