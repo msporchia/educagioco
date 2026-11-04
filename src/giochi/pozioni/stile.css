@@ -174,10 +174,10 @@
 .pz-fine-righe { font-size: 13px; color: #5e5378; display: flex; flex-direction: column; gap: 3px }
 
 /* la ricetta in parole, e il tavolo del procedimento */
-.pz-procedimento { margin-top: 5px; padding-top: 5px; border-top: 1px dashed #b8925a; font-size: 13px; line-height: 1.3; color: #5a3a1a }
-.pz-procedimento span + span::before { content: ' ' }
+.pz-procedimento { margin: 5px 0 0; padding: 5px 0 0 18px; border-top: 1px dashed #b8925a; font-size: 13px; line-height: 1.3; color: #5a3a1a }
 .pz-procedimento .pz-fatto { opacity: .5; text-decoration: line-through }
 .pz-procedimento.pz-letto { margin-top: 2px; padding-top: 0; border: 0; font-size: 15.5px; line-height: 1.35 }
+.pz-procedimento.pz-letto li + li { margin-top: 3px }
 .pz-dice { margin: 0 0 4px; padding: 0 6px; font-size: 13px; line-height: 1.3; color: #5a3a1a; text-align: center }
 .pz-tavolo { display: flex; flex-direction: column; gap: 6px }
 .pz-cose { display: flex; flex-wrap: wrap; gap: 5px; min-height: 40px }

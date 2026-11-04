@@ -50,18 +50,22 @@ export function frase(p, ingredienti) {
 
 const Maiuscola = t => t[0].toUpperCase() + t.slice(1)
 
-// Il testo della pergamena: [{ testo, passi: [indici] }]. Intrecciato, una
-// coppia di passi si dice al contrario («scalda, ma prima mescola»).
+// Il testo della pergamena, un punto per riga: [{ testo, passi: [indici] }].
+// Ogni tanto due passi stanno nello stesso punto («versa e scalda»), e bisogna
+// leggere fino in fondo. Intrecciato, una coppia si dice al contrario («scalda,
+// ma prima mescola»).
+const INSIEME = 0.4
 export function testo(rnd, passi, ingredienti, intrecciato) {
-  const girata = intrecciato && passi.length > 2 ? 1 + Math.floor(rnd() * (passi.length - 2)) : -1
+  // due versate di fila al contrario suonerebbero «versa, ma prima versa»
+  const girabili = passi.slice(1).flatMap((p, k) => (p.azione !== passi[k].azione ? [k] : []))
+  const girata = intrecciato && girabili.length ? girabili[Math.floor(rnd() * girabili.length)] : -1
+  const detto = k => frase(passi[k], ingredienti)
   const righe = []
   for (let k = 0; k < passi.length; k++) {
-    const ultima = k === passi.length - 1 || (k === girata && k + 1 === passi.length - 1)
-    const attacco = k === 0 ? '' : ultima ? 'Infine ' : 'Poi '
-    if (k === girata) {
-      righe.push({ testo: `${attacco}${(attacco ? (x => x) : Maiuscola)(frase(passi[k + 1], ingredienti))}, ma prima ${frase(passi[k], ingredienti)}.`, passi: [k, k + 1] })
-      k++
-    } else righe.push({ testo: `${attacco}${(attacco ? (x => x) : Maiuscola)(frase(passi[k], ingredienti))}.`, passi: [k] })
+    if (k === girata) righe.push({ testo: `${Maiuscola(detto(k + 1))}, ma prima ${detto(k)}.`, passi: [k, ++k] })
+    else if (k + 1 < passi.length && k + 1 !== girata && passi.length > 2 && rnd() < INSIEME)
+      righe.push({ testo: `${Maiuscola(detto(k))} e ${detto(k + 1)}.`, passi: [k, ++k] })
+    else righe.push({ testo: `${Maiuscola(detto(k))}.`, passi: [k] })
   }
   return righe
 }

@@ -8,10 +8,12 @@ pasticcio. Il motore è `motore/procedimento.js`.
 
 ## Le regole
 
-- **La pergamena ha la ricetta in parole** (`righe`): «Pesta insieme polvere di
-  luna e stelle tritate. Poi versa il pestato nel calderone.» La si legge già
-  durante la spesa, tranne col rotolo aperto, dove sul telefono non ci sta.
-  Fatta la spesa resta solo lei, e le frasi fatte si cancellano.
+- **La pergamena ha la ricetta a elenco puntato** (`righe`): «Pesta insieme
+  polvere di luna e stelle tritate», «Versa il pestato nel calderone e scalda sul
+  fuoco». **Ogni tanto due azioni stanno nello stesso punto** (`INSIEME`): bisogna
+  leggere fino in fondo. La si legge già durante la spesa, tranne col rotolo
+  aperto, dove sul telefono non ci sta. Fatta la spesa resta solo lei, e i punti
+  fatti si cancellano.
 - **Si comincia col listino aperto**: il primo passo è comprare, guardare il banco
   prima non serviva.
 - **Con la spesa nel calderone non va niente**: gli strumenti arrivati all'oro si

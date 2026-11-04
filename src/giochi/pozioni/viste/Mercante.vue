@@ -138,9 +138,9 @@ if (typeof window !== 'undefined') window.__bottega3d = { grafica: () => scena?.
             </span>
           </div>
           <!-- col rotolo aperto basta la lista: sul telefono non ci starebbe -->
-          <div v-if="!listino" class="pz-procedimento" :class="{ 'pz-letto': pronta }" data-ricetta>
-            <span v-for="(r, n) in b.righe" :key="n" :class="{ 'pz-fatto': rigaFatta(r) }" data-riga>{{ r.testo }}</span>
-          </div>
+          <ul v-if="!listino" class="pz-procedimento" :class="{ 'pz-letto': pronta }" data-ricetta>
+            <li v-for="(r, n) in b.righe" :key="n" :class="{ 'pz-fatto': rigaFatta(r) }" data-riga>{{ r.testo }}</li>
+          </ul>
         </div>
 
         <!-- il rotolo del mercante: targhette, nessuna figura che suggerisca quanto -->
