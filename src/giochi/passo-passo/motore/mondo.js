@@ -264,15 +264,14 @@ export class Mondo {
     this.segna({ che: 'pulsante', dove: this.xy(i), colore })
   }
 
-  /* il guerriero si è fermato: i nemici accanto a lui (non in diagonale)
-     lo affrontano. Uno solo, con la spada, se ne va; senza spada, o in due
-     alla volta, la fila finisce lì. Chi scivola o salta davanti a un nemico
-     non si è fermato: conta solo dove finisce. */
+  /* il guerriero si è fermato: i nemici che lo vedono, nelle otto celle
+     attorno a loro, lo affrontano. Uno solo, con la spada, se ne va; senza
+     spada, o in due alla volta, la fila finisce lì. Chi scivola o salta
+     davanti a un nemico non si è fermato: conta solo dove finisce. */
   affronta() {
     if (this.senza === 'nemici') return null
     const p = this.p
-    const vicini = CHIAVI_VERSI.map(v => this.liv.vicino(p, VERSI[v].dx, VERSI[v].dy))
-      .filter(i => i >= 0 && this.nemico(i) >= 0)
+    const vicini = this.nemici.filter(n => this.liv.vede(n, p, i => this.eChiusa(i)))
     if (!vicini.length) return null
     const troppi = vicini.length > 1 && this.senza !== 'due'
     if (troppi || !this.spada) {

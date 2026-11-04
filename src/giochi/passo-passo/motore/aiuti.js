@@ -47,7 +47,7 @@ export function pensieroDi(liv) {
   if (liv.guerriero) {
     const corona = liv.carota >= 0 ? ' E la corona 👑: portala alla principessa.' : ''
     if (liv.nemici.length)
-      return ['I nemici colpiscono chi si ferma accanto a loro, sopra, sotto o di lato. Con la spada ne batti uno; contro due insieme non vince nessuno.',
+      return ['I nemici vedono tutto attorno a sé, anche di traverso, e colpiscono chi si ferma lì. Con la spada ne batti uno; contro due insieme non vince nessuno.',
               'Dov\'è la spada? E da quale casella puoi prendere un nemico alla volta, senza fermarti accanto a un altro?' + corona]
     return ['Una grata si apre col pulsante del suo colore: il guerriero ci mette il piede, e la grata resta aperta.',
             'Quale grata sbarra la strada alla principessa 👸? Dov\'è il suo pulsante, e come ci arrivi?' + corona]

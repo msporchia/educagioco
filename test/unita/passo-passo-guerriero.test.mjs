@@ -44,8 +44,8 @@ const eventi = r => r.passi.flatMap(p => p.eventi.map(e => e.che))
   controlla('è un errore come sbattere', eErrore(CADUTO))
   const lontano = gioca(N, ['destra', 'destra'])
   controlla('a due caselle non succede niente', !eErrore(lontano.esito))
-  const D = ['P.n', '...', 'Qc.']
-  controlla('in diagonale non ti vede', !eErrore(gioca(D, ['giu', 'destra']).esito))
+  uguale('ti vede anche di traverso', gioca(['P.n', '...', 'Qc.'], ['giu', 'destra']).esito, CADUTO)
+  controlla('ma non dietro un angolo di muro', !eErrore(gioca(['P.W.', '.Wn.', '...c', 'Q...'], ['destra']).esito))
   const S = ['Ps..n.Q', 'WWWcWWW']
   const r = gioca(S, ['destra', 'destra', 'destra', 'destra', 'destra', 'destra'])
   uguale('con la spada il nemico si batte', r.esito, TANA)

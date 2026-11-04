@@ -86,6 +86,17 @@ export class Livello {
 
   eRecinto(i) { return this.terreno[i] === 'recinto' }
 
+  /* se il nemico in `n` vede la cella `p`: le otto attorno a lui. Di traverso
+     non vede solo dietro un angolo, con tutte e due le celle in mezzo sbarrate;
+     `chiusa` dice se una cella è una grata chiusa */
+  vede(n, p, chiusa = () => false) {
+    const dx = this.x(p) - this.x(n), dy = this.y(p) - this.y(n)
+    if (Math.abs(dx) > 1 || Math.abs(dy) > 1 || (!dx && !dy)) return false
+    if (!dx || !dy) return true
+    const sbarra = i => this.alto(i) || chiusa(i)
+    return !(sbarra(this.vicino(n, dx, 0)) && sbarra(this.vicino(n, 0, dy)))
+  }
+
   /* un ostacolo alto non si scavalca col salto; uno basso sì */
   alto(i) {
     const o = this.ostacolo[i]

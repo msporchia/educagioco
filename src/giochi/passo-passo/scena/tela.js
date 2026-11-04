@@ -381,7 +381,7 @@ export class Tela {
     ctx.fillRect(x0 + 2, y0 + 14, T - 4, 1)
   }
 
-  /* dove colpisce un nemico: le quattro celle attorno a lui, tinte per terra.
+  /* dove colpisce un nemico: le celle attorno a lui, tinte per terra.
      È la regola detta col disegno: chi non legge vede dove non fermarsi */
   tiroDeiNemici(f, t) {
     const ctx = this.ctx, liv = this.liv
@@ -389,13 +389,18 @@ export class Tela {
     if (!vivi.length) return
     ctx.globalAlpha = 0.26 + 0.06 * Math.sin(t * 3)
     ctx.fillStyle = '#e0483a'
-    for (const n of vivi) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    const chiusa = i => (f.grate || []).some(g => g.su < 1 && liv.indice(g.x, g.y) === i)
+    const tinte = new Set()
+    for (const n of vivi) for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
       const x = Math.round(n.x) + dx, y = Math.round(n.y) + dy
       if (!liv.dentro(x, y)) continue
       const i = liv.indice(x, y)
-      if (liv.ostacolo[i] || liv.terreno[i] === 'acqua') continue
-      ctx.fillRect(LATO + x * T + 1, TESTA + y * T + 1, T - 2, T - 2)
+      if (!liv.vede(liv.indice(Math.round(n.x), Math.round(n.y)), i, chiusa)) continue
+      if (liv.ostacolo[i] || liv.terreno[i] === 'acqua' || chiusa(i)) continue
+      tinte.add(i)
     }
+    // una cella sola tinta una volta: due nemici non la fanno più scura
+    for (const i of tinte) ctx.fillRect(LATO + liv.x(i) * T + 1, TESTA + liv.y(i) * T + 1, T - 2, T - 2)
     ctx.globalAlpha = 1
   }
 
