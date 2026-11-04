@@ -2,7 +2,7 @@
    ripresa è la stessa pozione — il listino, i misurini, i gettoni e le
    macchie. Vedi docs/pozioni/sosta.md.
    `node test/esegui.mjs pozioni-sosta --niente-build` */
-import { CAMPAGNA } from '../../src/giochi/pozioni/dati/campagna.js'
+import { CAMPAGNA, INFINITA, giroInfinito } from '../../src/giochi/pozioni/dati/campagna.js'
 import { Bottega, caso, giocaBene, seguiLaRicetta, prossimoPasso } from '../../src/giochi/pozioni/motore/bottega.js'
 import { scrivi, leggi, dice, tappaDi, VERSIONE } from '../../src/giochi/pozioni/motore/sosta.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
@@ -59,6 +59,16 @@ for (const t of [CAMPAGNA[0], CAMPAGNA[9], CAMPAGNA[26], CAMPAGNA.at(-1)]) {
   uguale('il minimo pure', q.minimo, b.minimo)
   seguiLaRicetta(q)
   controlla('e la pozione si finisce', q.finita)
+}
+
+/* il calderone senza fondo */
+{
+  const b = new Bottega(giroInfinito(4, ['Elisir di Volo', '🪶', '#6ec6ff']), { rnd: caso(5), scorta: 3 })
+  const dato = JSON.parse(JSON.stringify(scrivi(b, -1, { monete: { chiesto: 3, dato: 3 } })))
+  const q = leggi(dato)
+  uguale('si rilegge', firma(q), firma(b))
+  uguale('a che giro era', q.tappa.giro, 4)
+  uguale('la mappa dice il suo nome', dice(dato).nome, INFINITA.nome)
 }
 
 /* quello che non torna non si legge */

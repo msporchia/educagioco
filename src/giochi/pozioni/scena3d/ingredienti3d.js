@@ -9,6 +9,7 @@ import { palla, osso, fila, girata, unione, meno, dentro, sopra, pelle, scatolaD
 const materiale = (lucido = 0.75) => new MeshStandardMaterial({ vertexColors: true, roughness: lucido, metalness: 0 })
 
 const pezzo = (forma, passo, colore, lucido) => new Mesh(pelle(forma, { ...scatolaDi(forma, 0.05), passo, colore }), materiale(lucido))
+const tinta = hex => (x, y, z, c) => c.setHex(hex)
 const tutto = (...pezzi) => { const g = new Group(); g.add(...pezzi); return g }
 
 function fungo(cx, cz, s, gira = 0) {
@@ -162,16 +163,21 @@ function drago() {
   }, 0.45))
 }
 
-function sirena() {
-  const coda = fila([[0, 0.02, -0.1], [0, 0.32, -0.16], [0.04, 0.6, -0.06], [0.06, 0.78, 0.06]], [0.21, 0.17, 0.1, 0.05], 0.06)
-  const pinna = s => girata(palla([s * 0.26, 0.92, 0.08], [0.26, 0.1, 0.035]), [0.2, 0, s * 0.5], [0.06, 0.8, 0.06])
-  const forma = dentro(unione([coda, pinna(1), pinna(-1)], 0.06), sopra(0))
-  return tutto(pezzo(forma, 0.012, (x, y, z, c) => {
-    c.setHex(0x3aa8c8); verso(c, 0x1f6fa8, fra(0.75, 0.1, y) * 0.5)
-    const riga = Math.floor(y * 16), sq = Math.sin(Math.atan2(z + 0.1, x) * 9 + riga * 1.57) * Math.sin(y * 50)
-    if (y < 0.8) verso(c, 0x9ae8e0, fra(0.2, 0.7, sq) * 0.75)
-    else { verso(c, 0x6ad8d0, 0.6); verso(c, 0xeafcff, fra(0.5, 1, Math.abs(Math.sin(Math.atan2(y - 0.8, x - 0.06) * 12))) * 0.5) }
-  }, 0.3))
+// una boccetta di vetro con la coda di sirena disegnata sull'etichetta, e due lacrime cadute
+function lacrime() {
+  const vetro = unione([palla([0, 0.34, 0], [0.3, 0.34, 0.2]), osso([0, 0.6, 0], [0, 0.82, 0], 0.1, 0.085), palla([0, 0.84, 0], [0.12, 0.03, 0.12])], 0.05)
+  const tappo = osso([0, 0.84, 0], [0, 0.98, 0], 0.075, 0.09)
+  const disegno = (x, y) => {
+    const fianco = Math.max(0.012, 0.05 * fra(0.26, 0.5, y))
+    const pinna = ((Math.abs(x) - 0.065) / 0.075) ** 2 + ((y - 0.215) / 0.04) ** 2 < 1
+    return pinna || (y > 0.235 && y < 0.5 && Math.abs(x - Math.sin(y * 11) * 0.025) < fianco)
+  }
+  const goccia = (x, z, s) => unione([palla([x, 0.08 * s, z], 0.08 * s), osso([x, 0.1 * s, z], [x, 0.22 * s, z], 0.05 * s, 0.006)], 0.03)
+  return tutto(pezzo(vetro, 0.008, (x, y, z, c) => {
+    c.setHex(0x8fdcf0); verso(c, 0x3a9ad0, fra(0.5, 0.05, y) * 0.75); verso(c, 0xeafcff, fra(0.75, 0.95, y) * 0.6)
+    if (z > 0.02 && Math.abs(x) < 0.17 && y > 0.14 && y < 0.54) { c.setHex(0xf6ecd2); if (disegno(x, y)) c.setHex(0x1f8a9a) }
+  }, 0.12), pezzo(tappo, 0.01, tinta(0xb8875a)),
+  pezzo(unione([goccia(0.38, 0.12, 1), goccia(-0.36, 0.16, 0.8)], 0), 0.008, (x, y, z, c) => { c.setHex(0x7fd8f4); verso(c, 0xeafcff, fra(0.1, 0.2, y) * 0.5) }, 0.08))
 }
 
 function gufo() {
@@ -262,9 +268,9 @@ function stelo() {
 
 // il nome dell'ingrediente → il modello, in piedi sull'origine
 export const MODELLI = {
-  'bava di drago': drago, 'essenza di rana': rana, 'acqua di sirena': sirena, 'sciroppo di gufo': gufo, 'succo di rapa': rapa,
+  'bava di drago': drago, 'essenza di rana': rana, 'lacrime di sirena': lacrime, 'sciroppo di gufo': gufo, 'succo di rapa': rapa,
   'schiuma di nuvola': nuvola, 'mosto di strega': grappolo,
-  'polvere di luna': luna, 'stelle tritate': stella, 'funghi secchi': funghi, 'conchiglia pestata': conchiglia,
-  'cenere di cometa': cometa, 'ghiande macinate': ghianda,
+  'polvere di luna': luna, 'stelle cadenti': stella, 'funghi secchi': funghi, 'conchiglia': conchiglia,
+  'cenere di cometa': cometa, 'ghiande': ghianda,
   'radice di mandragora': mandragora, 'ramo di quercia': ramo, 'osso di troll': ossoDiTroll, 'verme di palude': verme, 'stelo dorato': stelo,
 }
