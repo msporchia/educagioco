@@ -328,6 +328,13 @@ for (const mondo of MONDI) {
          'ripeti-fino>fino ripeti-mondo>mondo se-casetta>se')
   controlla('il ponte fra il fino a e la sua isoletta di passaggio non ha mai il blocco',
             !chiusure(Q, () => false).blocchi.some(b => b.ponte === 'fino-nel-passaggio'))
+  // le isole solo del guerriero: per il coniglio decoro, per lui ci si arriva sotto terra
+  controlla('col coniglio il lago e il fienile sono decoro, tane comprese',
+            !Q.nodi.some(n => ['lago', 'fienile'].includes(n.isola) || /^tana:(lago|fienile):/.test(n.id)))
+  const G = qDi.zaino.guerriero, inFondo = S.isole.find(s => s.chiave === 'castello-guerriero').tappe.at(-1)
+  uguale('dalla fine del castello il guerriero va al lago per la tana',
+         viaggio(G, inFondo, S.isole.find(s => s.chiave === 'lago-guerriero').tappe[0], chiusure(G, () => true).bloccati)
+           .filter(p => p.che !== 'salto').map(p => p.che).join(' '), 'entra esce')
 }
 
 riassunto('passo passo — le due valli')

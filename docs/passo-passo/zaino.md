@@ -23,9 +23,28 @@ massi cresce **la lingua**, non il mondo. Le carte sono in
 - **Il numero nasce N**, da scegliere fra 2 e 9: un valore già scritto si
   leggerebbe come l'unico possibile. ▶ con una N dentro non parte, e riapre la
   scelta che manca.
-- **Dentro e fuori.** 🔁 mette la scatola dove sta il cursore, col cursore
-  dentro; il bordo in fondo, toccato, mette il cursore subito fuori; la testa
-  riapre la scelta del numero.
+- **La scatola si vede dentro e fuori.** Il ripeti è di legno scuro, come una
+  cassa, e il se di legno chiaro; la testa dice a parole cosa fa («3 volte», «fino
+  a», «se»). I colori sono pochi: il blu cammina, il verde parte, il legno è tutto
+  il resto (il salto resta arancione). **Tasti e carte sono a pixel come la mappa**:
+  colore pieno, bande di luce e ombra, spigoli a scalino (l'orlo è l'ombra dei
+  quattro lati, `--u` il pixel del tasto e i tre colori `--t-*` in `stile.css`), mai
+  raggi né gradienti. Figure e lettere stanno in `viste/figure.js` (`Figura`,
+  `Scritta`, `--pp-pix` il loro pixel). Spento un tasto perde colore senza sparire,
+  e la scelta si ferma a 54 px per riga: non fa tasti alti come la pulsantiera. 🔁 la mette dove sta il
+  cursore, col cursore dentro; la testa riapre la scelta del numero.
+- **Il + dice dove si aggiunge.** In fondo a ogni scatola c'è sempre un + del
+  suo colore, e il primo posto libero dello zaino ne ha uno suo: toccato uno,
+  la prossima carta entra lì. Il posto dove entra è arancione, e la scatola che
+  lo contiene si accende; fra due carte resta la sbarra, con la punta in cima.
+  Provato: la sola sbarra e un bordo invisibile da toccare per uscire, un
+  bambino non capiva come tornare in una scatola già fatta.
+- **Le carte si trascinano.** Una tessera, o la testa con tutta la sua scatola,
+  va in un altro posto: dentro una scatola, fuori, in un'altra. Al dito c'è una
+  copia, la vera resta sbiadita, e il posto arancione dice dove cade; lasciata
+  fuori dalla fila torna indietro. Fermo è un tocco, di lato si trascina, su e giù
+  scorre solo se la fila è più lunga di quello che si vede (`viste/trascina.js`,
+  [../core/il-dito.md](../core/il-dito.md)); `spostaCarta` in `motore/fila.js`.
 - **⌫ subito dopo una scatola la toglie intera; in cima al suo corpo toglie il
   🔁** e lascia le frecce che aveva dentro. Le modifiche sono pure
   (`motore/fila.js`).
@@ -87,3 +106,7 @@ sono tre scatole in fila, e devono stare su due righe.
   che manca ci sta sciolto, dice quello e non lo rimanda indietro.
 
 Stelle, prezzi e la strada più corta con lo zaino: [stelle-e-aiuti.md](stelle-e-aiuti.md).
+
+Nei test: `[data-bocca="<fine>"]` il + di una scatola, `[data-libero]` i posti in
+fondo, `[data-cursore]` il segno di dove entra la carta, `[data-pupazzo]` la
+copia al dito, `[data-coda]` il bordo della scatola (`integrazione/passo-passo-fila`).
