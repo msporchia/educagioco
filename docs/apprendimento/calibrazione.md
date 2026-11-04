@@ -13,7 +13,7 @@ perché scelti guardando il proprio gioco.
 | una domanda del sotterraneo | 🪙1 | lì la domanda è la mossa: una ogni 5–15 secondi |
 | una storia di Prima e dopo rimessa in ordine | 🪙2 | |
 | una domanda vera che ferma il gioco (la carta di Survivors) | 🪙3 | leggere una consegna e scegliere fra quattro: mezzo minuto |
-| un'operazione in colonna senza errori (castello), una dose giusta (pozioni) | 🪙3 | un conto a più passi |
+| un'operazione in colonna senza errori (castello), un ingrediente finito senza traboccare (pozioni) | 🪙3 | un conto a più passi |
 | un cliente servito (bancarella) | 🪙2–4 | secondo quanto lavoro chiede la giornata |
 | un minuto di esercizi | 🪙6 | |
 | **un'ora di esercizi** | **🪙360** | il numero da tenere in testa scrivendo un prezzo |
@@ -74,7 +74,7 @@ Il giorno del cambio (settembre 2026), per una tappa tipica giocata bene:
 | Survivors, il prato · la tana | 3–9 · 10–30 | ~15 · ~45 |
 | spagnolo, tappa 1 · tappa 7 (livello 5) | 10 · 25 | 12 · 24 |
 | inglese a mondi, una tappa da diciotto risposte | ~25 + 5 (🏁 +10) | ~25 |
-| pozioni, una tappa da dieci dosi | 30, un terzo rifatta | 30 |
+| pozioni, una pozione da tre ingredienti | 30, un terzo rifatta | 9 |
 | Conta, Prima e dopo, bancarella | già a risposta | uguale, e la bancarella non perde più gli ultimi clienti |
 
 Il castello sale tanto perché prima era un deserto: pagava
