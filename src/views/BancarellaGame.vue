@@ -7,6 +7,7 @@ import { state, answer, segna, segnaBest,
 import { generaCliente, esposizione, tappaDi, campagnaDi, scomponi, euro,
          centesimiScritti, scriviCifra, premioCliente, stelleDiGiornata, perLaProssima,
          BANCHI, CAMPAGNE, LIBERA, CLIENTI_PER_TAPPA } from '../data/bancarella.js'
+import { bancoPulito, merceMia, cesteDi, pazienzaDi, compra, puoiComprare } from '../data/bancarella-banco.js'
 import { CITTA, statoCitta, statoGiornata, cittaCorrente, fatteIn, indiceDi, giornataDi,
          cittaDelleGiornata, stelleGiornata, stelleCitta, stelleMassime } from '../data/bancarella-mondo.js'
 import { suono } from '../audio.js'
@@ -16,12 +17,14 @@ import Barra from '../components/Barra.vue'
 import TastoSalta from '../components/TastoSalta.vue'
 import Mondo from '../components/bancarella/Mondo.vue'
 import Piazza from '../components/bancarella/Piazza.vue'
+import IlMioBanco from '../components/bancarella/IlMioBanco.vue'
 import Soldo from '../components/Soldo.vue'
 import { usaPausa } from '../giochi/pausa.js'
 import VeloPausa from '../giochi/VeloPausa.vue'
 import Ripresa from '../giochi/Ripresa.vue'
-import { sosta, salvaSosta, buttaSosta } from '../giochi/campagne.js'
-import { scrivi, leggi, dice } from '../motore/bancarella/sosta.js'
+import { sosta, salvaSosta, buttaSosta, ritocca, segnaPrimato, primatoDi } from '../giochi/campagne.js'
+import { fraseDiFine, inParole } from '../giochi/primati.js'
+import { scrivi, leggi, dice, TETTO_PRESE } from '../motore/bancarella/sosta.js'
 
 const emit = defineEmits(['vai'])
 
@@ -33,7 +36,7 @@ const guadagno = reactive({ monete: 0, nota: '' })
    cifre, la virgola e il cancelletto. Il ✓ sta a parte perché è l'unico
    che manda qualcosa — gli altri scrivono e basta. */
 const TASTI = ['1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '0', '⌫']
-const fase = ref('mondo')           // mondo | piazza | gioco | fine
+const fase = ref('mondo')           // mondo | piazza | gioco | fine | banco
 const citta = ref(0)                // la piazza aperta: l'indice in CITTA
 const idx = ref(0)                  // quale giornata (-1 = giornata libera)
 const nTappa = ref(0)               // a che tappa del giro siamo
@@ -54,6 +57,24 @@ const cambio = ref(null)            // il cartello del cambio banco
 const esito = ref('')               // vinta | persa
 const voto = ref(null)              // a giornata vinta: { stelle, migliore } (le stelle di questa volta e le migliori)
 const volo = ref(null)              // la roba che vola dalla cesta al cliente
+const frasePrimato = ref('')        // a fine mercato senza fine: com'è andata col record
+
+/* Il banco del bambino: l'incasso resta e compra (docs/bancarella/banco.md). */
+const mioBanco = ref(bancoPulito((state.profile.campagne || {}).bancarella?.banco, state.profile.totals.incasso))
+const scriviBanco = (b, opzioni) => {
+  mioBanco.value = b
+  ritocca('bancarella', c => { c.banco = b }, opzioni)
+}
+const incassa = cent => scriviBanco({ ...mioBanco.value, cassa: mioBanco.value.cassa + cent })
+function compraPerBanco(voce) {
+  const dopo = compra(mioBanco.value, voce)
+  if (!dopo) return suono.no()
+  suono.moneta()
+  scriviBanco(dopo, { subito: true })
+}
+const puoComprare = computed(() => puoiComprare(mioBanco.value))
+let daDoveBanco = 'mondo'
+function apriBanco() { daDoveBanco = fase.value; fase.value = 'banco' }
 let raf = 0, ultimo = 0, apertoIl = 0, occupato = false, rifiuti = 0
 let dettoFretta = false, nVolo = 0
 
@@ -84,6 +105,8 @@ const banchiPiazza = computed(() => CITTA[citta.value].giornate.map(id => ({
   stelle: stelleGiornata(id, prog.value.tappa, prog.value.stelle),
   serve: prog.value.tappa < CAMPAGNE.length ? `Prima tocca a «${CAMPAGNE[prog.value.tappa].nome}».`
                                             : 'Si apre quando hai finito tutte le giornate.',
+  record: id === LIBERA.id && primatoDi('bancarella').best > 0
+    ? `${inParole(primatoDi('bancarella').best, 'quanti')} clienti, il tuo record` : '',
 })))
 const stellePiazza = computed(() => {
   const c = CITTA[citta.value]
@@ -95,7 +118,8 @@ const stellePiazza = computed(() => {
 let cittaPrima = 0                  // la città da fare quando è cominciata la giornata
 function entraInCitta(k) { citta.value = k; fase.value = 'piazza' }
 function indietro() {
-  if (fase.value === 'piazza') fase.value = 'mondo'
+  if (fase.value === 'banco') fase.value = daDoveBanco
+  else if (fase.value === 'piazza') fase.value = 'mondo'
   else esci()
 }
 /* finita la giornata si torna alla piazza; se ha aperto una città nuova si torna
@@ -160,6 +184,7 @@ watch(() => inPausa.value || aiutoAperto.value, giu => {
 const pick = a => a[Math.floor(Math.random() * a.length)]
 const SALUTI   = ['Ciao! 👋', 'Buongiorno!', 'Salve!', 'Buondì!']
 const CHIEDE   = ['Vorrei…', 'Mi dà…', 'Per favore…', 'Prendo…']
+const cosaChiede = c => (c.riesce ? 'Tutte quelle che riesce!' : pick(CHIEDE))
 const OFFERTE  = ['Ecco a lei!', 'Tenga pure', 'Le do questa']
 const SBAGLIO  = ['No, non quello!', 'Non è questo…', 'Ehm, no']
 const ESATTO   = ['Esatto!', 'Proprio così', 'Giusto!']
@@ -196,11 +221,12 @@ function inizia(i = idx.value) {
    perdere secondi mentre legge dov'è arrivato. */
 function apriTappa() {
   const t = T.value
-  esposti.value = esposizione(t)
+  esposti.value = esposizione(t, { merce: merceMia(mioBanco.value), ceste: cesteDi(mioBanco.value) })
   coda.value = []
   for (let i = 0; i < CLIENTI_PER_TAPPA; i++) {
-    const c = generaCliente(t, esposti.value)
-    coda.value.push({ ...c, restaPazienza: c.pazienza })
+    const c = generaCliente(t, esposti.value, { riesce: t.riesceSubito && t.n === 0 && i === 0 })
+    const pazienza = c.pazienza + pazienzaDi(mioBanco.value)
+    coda.value.push({ ...c, pazienza, restaPazienza: pazienza })
   }
   momento.value = 'raccolta'
   presi.value = []
@@ -218,7 +244,7 @@ function alBanco() {
   battuta.value = pick(SALUTI)
   apertoIl = performance.now()
   setTimeout(() => { if (cliente.value && !occupato && momento.value === 'raccolta')
-                       battuta.value = pick(CHIEDE) }, 1100)
+                       battuta.value = cosaChiede(cliente.value) }, 1100)
 }
 
 /* servito o scappato, il cliente lascia il posto: se il banco resta vuoto la
@@ -251,6 +277,10 @@ function prendi(a) {
   const c = cliente.value
   if (!c || occupato || cambio.value || momento.value !== 'raccolta') return
   const suo = c.articoli.find(x => x.emoji === a.emoji)
+  if (c.riesce && suo) {
+    if (presi.value.length < TETTO_PRESE) passa(a)
+    return
+  }
   if (suo && restano(suo) <= 0) return               // già data tutta: non è un errore
   if (!daPrendere.value.some(x => x.emoji === a.emoji)) {
     // roba che non ha chiesto: la rifiuta, e costa due secondi
@@ -261,16 +291,38 @@ function prendi(a) {
     c.restaPazienza = Math.max(2, c.restaPazienza - 2)
     return
   }
+  passa(a)
+  if (!daPrendere.value.length) allaCassa()
+}
+
+function passa(a) {
   presi.value.push(a.emoji)
   volo.value = { emoji: a.emoji, k: ++nVolo }
   setTimeout(() => { if (volo.value && volo.value.k === nVolo) volo.value = null }, 520)
   suono.nota(720, 980, 0.07, 'triangle', 0.1)
-  if (!daPrendere.value.length) {
-    momento.value = 'cassa'
-    battuta.value = pick(OFFERTE)
-    apertoIl = performance.now()
-  }
 }
+
+function allaCassa() {
+  momento.value = 'cassa'
+  battuta.value = pick(OFFERTE)
+  apertoIl = performance.now()
+}
+
+/* «Tutte quelle che riesce»: il bambino decide quante e conferma. Dire solo
+   troppe o poche, come la cassa col resto (docs/bancarella/regole.md). */
+function basta() {
+  const c = cliente.value
+  if (occupato || !c || !c.riesce || momento.value !== 'raccolta' || !presi.value.length) return
+  const giuste = c.articoli[0].quanti
+  if (presi.value.length === giuste) return allaCassa()
+  rifiuti++
+  sbagliato.value = 'quante'
+  setTimeout(() => { if (sbagliato.value === 'quante') sbagliato.value = '' }, 600)
+  battuta.value = presi.value.length > giuste ? 'Non mi bastano i soldi!' : 'Me ne stanno ancora!'
+  suono.no()
+  c.restaPazienza = Math.max(2, c.restaPazienza - 3)
+}
+const unaDiMeno = () => { if (!occupato && momento.value === 'raccolta') presi.value.pop() }
 
 /* ---------- fase 2: la cassa ----------
    `chiediTotale`/`aMente` sono `conto` (vedi data/bancarella.js) scomposto
@@ -352,7 +404,8 @@ function salta() {
   occupato = true
   battuta.value = pick(GRAZIE)
   suono.moneta()
-  const preso = borsellino.paga(premioCliente(camp.value))
+  incassa(c.totale)
+  const preso = borsellino.paga(premioCliente(camp.value, c))
   guadagno.monete = borsellino.dato
   if (preso) { moneta.value = preso; setTimeout(() => (moneta.value = 0), 1100) }
   programma(prossimo, 600)
@@ -364,13 +417,14 @@ function consegna() {
   const perfetto = piatto.value.length === c.minimo
   answer(c.chiave, { correct: rifiuti === 0, ms: performance.now() - apertoIl })
   hud.serviti++; hud.incasso += c.totale
+  incassa(c.totale)
   if (rifiuti > 0) hud.intoppi++      // un conto da rifare: costa una stella (stelleDiGiornata)
   segna('clienti'); segna('incasso', c.totale)
   if (perfetto) { hud.perfetti++; bonus.value = true; segna('restiPerfetti') }
   battuta.value = pick(perfetto ? PERFETTI : GRAZIE)
   suono.moneta()
   // quanto vale lo dice la giornata (MONETE_CLIENTE in data/bancarella.js), non il livello
-  const preso = borsellino.paga(premioCliente(camp.value))
+  const preso = borsellino.paga(premioCliente(camp.value, c))
   guadagno.monete = borsellino.dato
   if (preso) { moneta.value = preso; setTimeout(() => (moneta.value = 0), 1100) }
   programma(prossimo, 900)
@@ -411,6 +465,9 @@ function chiudi(come) {
   cambio.value = null
   segnaBest('clienti', hud.serviti)
   voto.value = null
+  frasePrimato.value = camp.value.libera
+    ? fraseDiFine(segnaPrimato(CHIAVE, hud.serviti, Date.now(), { incasso: hud.incasso, banchi: nTappa.value }), 'quanti')
+    : ''
   if (come === 'vinta' && idx.value >= 0) {
     const stelle = stelleDiGiornata(hud.intoppi)
     const prima = (prog.value.stelle || {})[camp.value.id] || 0
@@ -470,16 +527,17 @@ const posa = (p, k) => {
 
 /* quello che il cliente ha chiesto di questa cesta, e quanto ne manca */
 const chiesto = e => (cliente.value ? cliente.value.articoli.find(a => a.emoji === e) : null)
-const cestaFinita = p => { const a = chiesto(p.emoji); return !!a && restano(a) <= 0 }
+const cestaFinita = p => { const a = chiesto(p.emoji); return !!a && !cliente.value.riesce && restano(a) <= 0 }
 const ancora = p => {
   const a = chiesto(p.emoji)
+  if (a && cliente.value.riesce) return prese(p.emoji)    // quante ne ha già date: decide lui
   return a && prese(p.emoji) > 0 ? Math.max(restano(a), 0) : 0
 }
 
 const barra = c => Math.max(0, Math.min(100, c.restaPazienza / c.pazienza * 100))
 
 onMounted(() => {
-  window.__shop = { fase, coda, piatto, hud, inizia, metti, togli, prendi, proponi,
+  window.__shop = { fase, coda, piatto, hud, inizia, metti, togli, prendi, proponi, mioBanco,
                     cliente, dato, manca, battuta, scomponi, momento, presi, aMente,
                     daPrendere, esposti, tappa: nTappa, camp, T, cambio, esito,
                     batti, confermaTotale, digitato, contoFatto, chiediTotale, TASTI,
@@ -567,7 +625,7 @@ function riprendiPartita() {
     rifiuti = b.rifiuti
     apertoIl = performance.now() - b.trascorso
     dettoFretta = barra(cliente.value) < 30
-    battuta.value = pick(b.momento === 'cassa' ? OFFERTE : CHIEDE)
+    battuta.value = b.momento === 'cassa' ? pick(OFFERTE) : cosaChiede(cliente.value)
   }
   ultimo = 0
   cancelAnimationFrame(raf)
@@ -599,7 +657,7 @@ onBeforeUnmount(() => {
   <div class="schermo negozio">
     <!-- niente salvadanaio in barra: qui si maneggiano euro, e lo spazio serve ai cuori -->
     <!-- il ⏸ c'è solo dove la fila si spazientisce -->
-    <Barra :titolo="fase === 'piazza' ? CITTA[citta].nome : 'Bancarella'" guida="bancarella"
+    <Barra :titolo="fase === 'banco' ? 'Il tuo banco' : fase === 'piazza' ? CITTA[citta].nome : 'Bancarella'" guida="bancarella"
            :monete="fase !== 'gioco'"
            :pausa="fase === 'gioco' && !state.festa.length" @pausa="mettiInPausa()"
            @aiuto="leggeLaGuida" @indietro="indietro">
@@ -621,9 +679,15 @@ onBeforeUnmount(() => {
       <p v-if="amici.davanti" class="davanti" data-amico-davanti>{{ amici.davanti }}</p>
       <Mondo v-if="fase === 'mondo'" :voci="vociMondo" :corrente="cittaCorr"
              :chi="state.player || ''" @entra="entraInCitta" />
-      <Piazza v-else :key="citta" :citta="CITTA[citta]" :banchi="banchiPiazza" :stelle="stellePiazza"
+      <Piazza v-else :key="citta" :citta="CITTA[citta]" :banchi="banchiPiazza" :stelle="stellePiazza" :mio="mioBanco"
               :chi="state.player || ''" @gioca="id => vuoleIniziare(indiceDi(id))" @mondo="fase = 'mondo'" />
+      <button type="button" class="al-banco" data-azione="il-banco" @click="apriBanco">
+        <span>Il tuo banco</span><b data-in-cassa>{{ euro(mioBanco.cassa) }}</b>
+        <i v-if="puoComprare" class="pallino" data-si-compra></i>
+      </button>
     </div>
+
+    <IlMioBanco v-else-if="fase === 'banco'" :banco="mioBanco" @compra="compraPerBanco" />
 
     <template v-else-if="fase === 'gioco'">
       <!-- il percorso della giornata: dove sei e quanti banchi mancano -->
@@ -636,20 +700,23 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- la gente davanti al banco -->
-      <div class="strada" v-if="cliente">
+      <div class="strada" :class="{ alta: cliente && cliente.riesce }" v-if="cliente">
         <div class="cliente">
           <div class="fumetto" :key="battuta + presi.length + momento">
             <span class="dice">{{ battuta }}</span>
             <div v-if="momento === 'raccolta'" class="lista">
-              <span v-for="a in cliente.articoli" :key="a.emoji" class="cosa"
-                    :class="{ fatto: restano(a) <= 0 }">{{ a.emoji }}<i
-                    v-if="a.quanti > 1">×{{ Math.max(restano(a), 0) || '✓' }}</i></span>
+              <template v-if="cliente.riesce">
+                <span class="cosa" data-riesce>{{ cliente.articoli[0].emoji }}<i>×{{ presi.length || '?' }}</i></span>
+              </template>
+              <template v-else>
+                <span v-for="a in cliente.articoli" :key="a.emoji" class="cosa"
+                      :class="{ fatto: restano(a) <= 0 }">{{ a.emoji }}<i
+                      v-if="a.quanti > 1">×{{ Math.max(restano(a), 0) || '✓' }}</i></span>
+              </template>
             </div>
-            <!-- il cliente porge quello che ha in mano: una banconota, o una
-                 banconota e una moneta se paga una cifra tonda -->
-            <div v-else class="porge">
+            <!-- il cliente mostra i soldi e non dice quanti sono: si contano -->
+            <div v-if="momento !== 'raccolta' || cliente.riesce" class="porge" data-porge>
               <Soldo v-for="(m, i) in cliente.pagaCon" :key="i" :cents="m" mini />
-              <b>{{ euro(cliente.paga) }}</b>
             </div>
           </div>
           <div class="persona grande" :style="{ '--v': cliente.vestito }">
@@ -672,7 +739,7 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="banco" :style="{ '--c': B.colore, '--t': B.tenda, '--l': B.legno }">
-        <div class="tenda"></div>
+        <div class="tenda" :class="'liv' + mioBanco.tenda" :data-tenda="mioBanco.tenda"></div>
         <div class="insegna">{{ B.icona }} {{ B.nome }}</div>
 
         <!-- niente `:key` sui due rami: in produzione, con una key esplicita su
@@ -702,7 +769,8 @@ onBeforeUnmount(() => {
               <div class="voci">
                 <span v-for="a in cliente.articoli" :key="a.emoji">
                   <i>{{ a.emoji }}</i><em v-if="a.quanti > 1">×{{ a.quanti }}</em>
-                  <b>{{ euro(a.prezzo * a.quanti) }}</b>
+                  <!-- col totale da battere il prezzo è di un pezzo solo: la moltiplicazione è sua -->
+                  <b>{{ euro(chiediTotale ? a.prezzo : a.prezzo * a.quanti) }}</b>
                 </span>
               </div>
               <div class="somma" :class="{ daFare: chiediTotale }">
@@ -717,9 +785,9 @@ onBeforeUnmount(() => {
                 <span>BATTI IL TOTALE</span>
               </div>
               <div class="display" v-else>
-                <span>PAGA {{ euro(cliente.paga) }}</span>
+                <span>IL RESTO</span>
                 <b>{{ aMente ? '? ? ?' : euro(cliente.resto) }}</b>
-                <span>DI RESTO</span>
+                <span>{{ aMente ? 'CONTALO TU' : 'DA DARE' }}</span>
               </div>
               <div class="tastiera"><i v-for="n in 12" :key="n"></i></div>
             </div>
@@ -755,7 +823,7 @@ onBeforeUnmount(() => {
 
           <!-- il cassetto estratto, con gli scomparti -->
           <div v-if="!chiediTotale" class="cassetto">
-            <div class="vaschette">
+            <div class="vaschette" :class="{ poche: monetine.length < 3 }" :style="{ '--colonne': Math.min(3, monetine.length) }">
               <button v-for="v in monetine" :key="v" class="scomparto" :data-v="v" @click="metti(v)">
                 <Soldo :cents="v" :class="{ rifiutata: rifiutata === v }" />
               </button>
@@ -767,6 +835,14 @@ onBeforeUnmount(() => {
               </button>
             </div>
           </div>
+        </div>
+
+        <!-- il tasto di chi vuole «tutte quelle che riesce»: quante è una scelta, si conferma -->
+        <div v-if="momento === 'raccolta' && cliente && cliente.riesce" class="conferma"
+             :class="{ nonTorna: sbagliato === 'quante' }">
+          <button type="button" class="annulla" data-azione="una-di-meno" :disabled="!presi.length" @click="unaDiMeno">↶</button>
+          <button type="button" class="eccolo" data-azione="basta" :disabled="!presi.length" @click="basta">
+            ✓ ecco, {{ presi.length }} {{ cliente.articoli[0].emoji }}</button>
         </div>
       </div>
 
@@ -789,6 +865,7 @@ onBeforeUnmount(() => {
         resti perfetti: <b>{{ hud.perfetti }}</b><br>Incasso: <b>{{ euro(hud.incasso) }}</b><template
           v-if="guadagno.monete"> · <b data-monete-prese>+{{ guadagno.monete }} 🪙</b></template></p>
       <p v-if="guadagno.nota" class="mini" data-nota-monete>{{ guadagno.nota }}</p>
+      <p v-if="frasePrimato" class="testo" data-primato>{{ frasePrimato }}</p>
       <p v-if="esito === 'vinta' && idx >= 0" class="mini">{{ camp.nome }} · giornata superata</p>
       <div v-if="voto" class="voto" data-voto :data-stelle="voto.stelle">
         <div class="stelline" aria-hidden="true">
@@ -806,10 +883,11 @@ onBeforeUnmount(() => {
       </div>
       <div class="riga">
         <button v-if="esito === 'vinta' && dopo !== null" class="bottone" @click="inizia(dopo)">
-          {{ dopo < 0 ? 'Giornata libera ▶' : 'Prossima giornata ▶' }}
+          {{ dopo < 0 ? LIBERA.nome + ' ▶' : 'Prossima giornata ▶' }}
         </button>
         <button v-else class="bottone" @click="inizia(idx)">Riprova ▶</button>
         <button class="bottone chiaro" data-azione="le-giornate" @click="tornaAlleGiornate">Le giornate</button>
+        <button class="bottone chiaro" data-azione="il-banco" @click="apriBanco">Il tuo banco · {{ euro(mioBanco.cassa) }}</button>
       </div>
     </div>
 
@@ -832,7 +910,15 @@ onBeforeUnmount(() => {
 .stelline .piena { color:#f0a800; text-shadow:0 2px 0 #c97b12 }
 
 /* ---------- il giro del mondo ---------- */
-.giro { flex:1; min-height:0; display:flex; flex-direction:column }
+.giro { flex:1; min-height:0; display:flex; flex-direction:column; position:relative }
+.al-banco { position:absolute; left:12px; bottom:calc(12px + env(safe-area-inset-bottom)); z-index:5;
+            display:flex; flex-direction:column; align-items:flex-start; padding:6px 14px 7px; border:0;
+            border-radius:14px; background:#fffdf7; box-shadow:0 4px 0 #c97b12, 0 6px 12px #0003;
+            font-size:12px; font-weight:800; color:#8a6a45 }
+.al-banco b { font-size:18px; font-weight:900; color:#1c7a45 }
+.al-banco:active { transform:translateY(2px); box-shadow:0 2px 0 #c97b12 }
+.al-banco .pallino { position:absolute; right:-4px; top:-4px; width:16px; height:16px; border-radius:50%;
+                     background:#e8553f; box-shadow:0 0 0 3px #fffdf7 }
 .in-cima { flex:none; display:flex; justify-content:center; padding:0 12px }
 .in-cima:empty { display:none }
 .davanti { flex:none; margin:0; padding:6px 12px 2px; text-align:center; font-size:14px; font-weight:800; color:#3a2a1a }
@@ -852,7 +938,8 @@ onBeforeUnmount(() => {
    La fila si deve vedere: una faccia da 28px con sopra un corpo colorato è
    una persona, tre emoji al 40% di opacità erano una macchia. */
 .strada { display:flex; align-items:flex-end; justify-content:space-between; gap:8px;
-          padding:18px 12px 0; min-height:106px }
+          padding:30px 12px 0; min-height:118px }
+.strada.alta { padding-top:62px }
 .cliente { display:flex; flex-direction:column; align-items:center; gap:3px; position:relative }
 .persona { display:flex; flex-direction:column; align-items:center; line-height:1 }
 .persona .testa { font-size:30px }
@@ -878,8 +965,12 @@ onBeforeUnmount(() => {
                  padding:0 4px; box-shadow:0 1px 2px #0004 }
 .lista .fatto { opacity:.32; filter:grayscale(1); transform:scale(.82) }
 .lista .fatto i { background:#38c172 }
-.porge { display:flex; align-items:center; gap:6px; margin-top:3px }
-.porge b { font-size:14px; font-weight:900; color:#1c7a45 }
+.porge { display:flex; align-items:center; gap:5px; margin-top:3px }
+.conferma { flex:none; display:flex; justify-content:center; align-items:center; gap:10px;
+            padding:6px 10px calc(8px + env(safe-area-inset-bottom)); background:var(--l) }
+.conferma .eccolo { margin:0; padding:10px 22px; font-size:17px }
+.conferma .eccolo:disabled, .conferma .annulla:disabled { opacity:.45 }
+.conferma.nonTorna { animation:sussulto .4s }
 .fila { display:flex; align-items:flex-end; gap:7px; padding-bottom:2px }
 .attesa { display:flex; flex-direction:column; align-items:center; gap:3px }
 .quanti { align-self:center; font-size:10.5px; font-weight:900; color:#8a6a45;
@@ -892,10 +983,16 @@ onBeforeUnmount(() => {
          box-shadow:0 -3px 14px #00000026 }
 .tenda { height:26px; flex:none;
          background:repeating-linear-gradient(90deg,var(--t) 0 16px,#fffdf7 16px 32px);
-         -webkit-mask-image:radial-gradient(circle at 8px 26px, transparent 7.5px, #000 8px);
-         mask-image:radial-gradient(circle at 8px 26px, transparent 7.5px, #000 8px);
+         -webkit-mask-image:radial-gradient(circle at 8px 100%, transparent 7.5px, #000 8px);
+         mask-image:radial-gradient(circle at 8px 100%, transparent 7.5px, #000 8px);
          -webkit-mask-size:16px 100%; mask-size:16px 100%;
          -webkit-mask-repeat:repeat-x; mask-repeat:repeat-x }
+/* la tenda comprata (data/bancarella-banco.js): il telo liscio, le righe, poi sempre più ricca */
+.tenda.liv0 { background:var(--t); opacity:.8 }
+.tenda.liv2, .tenda.liv3, .tenda.liv4 { height:34px }
+.tenda.liv3 { filter:drop-shadow(0 3px 0 #e9a91c) }
+.tenda.liv4 { filter:drop-shadow(0 3px 0 #b87a10);
+              background:repeating-linear-gradient(90deg,#e9a91c 0 16px,#fff1bd 16px 32px) }
 .insegna { flex:none; align-self:center; margin-top:-1px; z-index:3; font-size:13.5px;
            font-weight:900; color:#fff; background:var(--c); border-radius:0 0 10px 10px;
            padding:3px 14px 4px; box-shadow:0 3px 6px #00000038 }
@@ -1027,13 +1124,17 @@ onBeforeUnmount(() => {
             border-radius:8px 8px 12px 12px; padding:6px;
             background:linear-gradient(180deg,#5d4a3a,#7a6350);
             box-shadow:inset 0 8px 14px #00000066, 0 -3px 0 #46372b }
-.vaschette { flex:1; min-height:0; display:grid; grid-template-columns:repeat(3,1fr);
+.vaschette { flex:1; min-height:0; display:grid; grid-template-columns:repeat(var(--colonne,3),1fr);
              grid-auto-rows:1fr; gap:5px }
 .vaschette.larghe { flex:none; height:23%; grid-template-columns:repeat(2,1fr) }
 .scomparto { display:flex; align-items:center; justify-content:center; padding:3px;
              border-radius:7px; background:#00000038; border:0;
              box-shadow:inset 0 3px 6px #00000059, inset 0 -1px 0 #ffffff1a }
 .scomparto:active { transform:translateY(2px) }
+.vaschette.poche .soldo { max-width:112px; font-size:36px }
+/* nel cassetto c'è una pila, non una moneta sola */
+.scomparto .soldo:not(.carta) { box-shadow:0 3px 0 #0000006b, 0 6px 0 #00000052, 0 9px 0 #00000038, 0 12px 8px #00000038 }
+.scomparto .soldo.carta { box-shadow:2px 3px 0 #00000052, 4px 6px 0 #00000038, inset 0 0 0 2px #ffffff66, inset 0 0 0 3px #00000014 }
 @media (min-width:700px) { .vaschette { grid-template-columns:repeat(4,1fr) } }
 
 /* ---------- il cartello del cambio banco ---------- */

@@ -282,7 +282,7 @@ uguale('il cartello dice le stelle prese', await page.locator('[data-voto]').get
 uguale('e il profilo le tiene sotto l\'id della giornata', p.mercato.stelle[CAMPAGNE[0].id], stelleAttese)
 
 /* la giornata dopo adesso è aperta */
-await page.locator('.bottone.chiaro').click()
+await page.locator('[data-azione="le-giornate"]').click()
 await page.waitForSelector('[data-piazza]', { timeout: 3000 })
 const dopo = await page.evaluate(() => ({
   chiuse: document.querySelectorAll('[data-camp][data-stato="chiusa"]').length,
@@ -433,7 +433,7 @@ nota(`totale battuto: ${conto.scritto} € su ${conto.totale}c`)
 /* ---------- 7. una giornata avanzata: «due angurie» e resti da più monete ----------
    Le prime giornate non hanno copie né monete piccole per scelta: quello che
    cresce si vede solo più avanti, e va provato lì. */
-await semina(page, { mercato: { tappa: 14, libera: false, v: 2 } })
+await semina(page, { mercato: { tappa: 14, libera: false, v: 3 } })
 await scegli(page, 'bancarella')
 await page.waitForSelector('[data-mondo]', { timeout: 5000 })
 await apriGiornata('resto-copie')
@@ -495,7 +495,7 @@ nota(`due cose uguali: pezzi per articolo [${fiera.quanti.join(',')}] · ` +
    Qui sparisce anche l'ultimo aiuto: prima si batte il totale, poi il
    display non dice il resto, le monete si posano tutte (anche troppe) e
    la risposta la dà il bambino col tasto ✓. */
-await semina(page, { mercato: { tappa: 15, libera: false, v: 2 } })
+await semina(page, { mercato: { tappa: 16, libera: false, v: 3 } })
 await scegli(page, 'bancarella')
 await page.waitForSelector('[data-mondo]', { timeout: 5000 })
 await apriGiornata('mente')

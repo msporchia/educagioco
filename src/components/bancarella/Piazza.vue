@@ -15,7 +15,7 @@ import PallinoAmico from '../amici/PallinoAmico.vue'
 import { fondalePiazza } from '../../data/bancarella-fondali.js'
 import { BANCHI, perLaProssima } from '../../data/bancarella.js'
 import { disponiPiazza, stradaCarretto, lungo, lunghezza, durataCarretto } from '../../motore/bancarella/mondo.js'
-import { disegnaPiazza, disegnaBanco, viale, CARRETTO, CARTELLO, COLORI_PIAZZA } from '../../grafica/bancarella-mondo.js'
+import { disegnaPiazza, disegnaBanco, viale, disegnaMioBanco, LATO_BANCO, CARTELLO, COLORI_PIAZZA } from '../../grafica/bancarella-mondo.js'
 
 const props = defineProps({
   citta: { type: Object, required: true },        // la città: id, nome, monumento, accento…
@@ -23,6 +23,7 @@ const props = defineProps({
   banchi: { type: Array, required: true },
   stelle: { type: String, default: '' },          // «2 di 4 giornate»
   chi: { type: String, default: '' },
+  mio: { type: Object, default: () => ({ carretto: 0, tenda: 0 }) },   // il banco comprato: il carretto è lui
 })
 const emit = defineEmits(['gioca', 'mondo'])
 
@@ -47,7 +48,8 @@ const sfondo = computed(() => {
 })
 const disegni = computed(() => props.banchi.map(b =>
   disegnaBanco(props.citta.accento, b.stato, b.giornata.tappe.map(t => BANCHI[t].colore))))
-const CARRETTO_SVG = CARRETTO(), CARTELLO_SVG = CARTELLO()
+const CARRETTO_SVG = computed(() => disegnaMioBanco(props.mio.carretto, props.mio.tenda))
+const CARTELLO_SVG = CARTELLO()
 // sopra il cielo della scena, se la scena è più bassa dello schermo, continua lo stesso colore
 const cielo = computed(() => (COLORI_PIAZZA[props.citta.id] || COLORI_PIAZZA.roma).cielo)
 
@@ -240,7 +242,7 @@ const racconto = b => `${b.nome}: ${b.stato === 'chiusa' ? 'chiusa' : b.stato ==
       <!-- il carretto: parte dal cartello e va dove si tocca -->
       <div ref="carretto" class="carretto" data-carretto :data-al="posato" :class="{ cammina: viaggio }"
            :data-in-viaggio="viaggio ? '1' : '0'">
-        <svg viewBox="0 0 40 40" aria-hidden="true" v-html="CARRETTO_SVG"></svg>
+        <svg :viewBox="LATO_BANCO" aria-hidden="true" v-html="CARRETTO_SVG"></svg>
       </div>
 
       <Fumetto v-if="banco" :key="banco.id" :x="P.banchi[aperto].x" :y="P.banchi[aperto].y + 4" :limite="P.W"
@@ -249,6 +251,7 @@ const racconto = b => `${b.nome}: ${b.stato === 'chiusa' ? 'chiusa' : b.stato ==
         <b>{{ banco.giornata.emoji }} {{ banco.giornata.nome }}</b>
         <span class="che">{{ banco.giornata.nuovo || banco.giornata.dritta }}</span>
         <AmiciQui :amici="banco.amici" :lato="16" class="amici-fumetto" :data-al="banco.id" />
+        <span v-if="banco.record" class="banchini" data-record>🏆 {{ banco.record }}</span>
         <span class="banchini">{{ icone(banco.giornata) }}<template v-if="!banco.giornata.libera"> · {{ banco.giornata.tappe.length }} banchi</template></span>
         <span v-if="banco.stato === 'chiusa'" class="serve" data-serve>🔒 {{ banco.serve }}</span>
         <template v-else>
@@ -313,7 +316,7 @@ const racconto = b => `${b.nome}: ${b.stato === 'chiusa' ? 'chiusa' : b.stato ==
 
 .carretto { position:absolute; left:0; top:0; width:40px; height:40px; pointer-events:none; z-index:2;
             will-change:transform }
-.carretto svg { display:block; width:40px; height:40px; overflow:visible }
+.carretto svg { display:block; width:58px; height:49px; margin:-9px 0 0 -9px; overflow:visible }
 .carretto.cammina svg { animation:balla .3s ease-in-out infinite }
 @keyframes balla { 0%, 100% { transform:translateY(0) rotate(0) } 50% { transform:translateY(-2.5px) rotate(1.2deg) } }
 

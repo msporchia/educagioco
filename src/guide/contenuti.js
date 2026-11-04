@@ -681,6 +681,10 @@ export const AIUTI = {
         'Poi tocca al resto: il totale resta scritto, il cliente paga con 10 €, e la sottrazione la fa lui.',
         'Nell\'ultima giornata la cassa non calcola più niente. **Ogni giornata aggiunge una cosa sola**: un prodotto in più, o una banconota più grossa, o i centesimi — mai due insieme.',
       ] },
+      { titolo: 'Il banco tuo', righe: [
+        'Quello che si incassa resta in cassa e si spende dal tasto **Il tuo banco**: la tenda fa aspettare di più i clienti, il carretto porta più ceste, e la merce nuova si compra un prodotto alla volta.',
+        'Il cliente **mostra i soldi e non dice quanti sono**: si contano. Verso la fine qualcuno vuole «tutte quelle che riesce»: si decide quante dargliene e si conferma.',
+      ] },
       { titolo: 'Cosa allena', righe: [
         'I soldi veri: euro e centesimi, comporre una cifra coi tagli che si hanno, e **il resto**.',
         'La somma e la sottrazione dove servono davvero: alla cassa, con la roba sul banco.',

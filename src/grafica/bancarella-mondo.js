@@ -264,15 +264,52 @@ export function disegnaBanco(accento, stato, colori = []) {
   return s
 }
 
-/* ═══════════ il carretto ═══════════
+/* ═══════════ il banco del bambino ═══════════
    Di fronte, simmetrico: non ha un verso, e quando si muove balla un poco
-   (lo fa la vista). Largo 40, alto 38, i piedi a y=38. */
-export const CARRETTO = () =>
-  Li('M20 4V20', '#8a6a46', 2.5) + Pg('4,10 36,10 20,0', TENDA) + Pg('12,10 28,10 20,0', CREMA) +
-  Pg('2,12 38,12 36,10 4,10', TENDA) +
-  R(3, 20, 34, 12, '#b9844f', ' rx="2"') + R(3, 20, 34, 3.5, '#d7a56b', ' rx="1.5"') +
-  Ci(12, 22, 3.2, '#e2523e') + Ci(19, 21, 3.2, '#5fae4a') + Ci(26, 22, 3.2, '#f2c14e') + Ci(32, 21.5, 3, '#e2523e') +
-  Ci(11, 35, 4.6, '#3e3226') + Ci(11, 35, 1.6, '#c9b99a') + Ci(29, 35, 4.6, '#3e3226') + Ci(29, 35, 1.6, '#c9b99a')
+   (lo fa la vista). Lo stesso disegno nella piazza, piccolo, e nel banco,
+   grande: scatola 200×170, i piedi a y=166. `carretto` e `tenda` sono i
+   gradini comprati (data/bancarella-banco.js). */
+export const LATO_BANCO = '0 0 200 170'
+const COLORI_TENDA = [['#d8c7a4', '#d8c7a4'], [TENDA, CREMA], [TENDA, CREMA], ['#2f8f83', CREMA], ['#e9a91c', '#fff1bd']]
+const MERCE_DIPINTA = ['#e2523e', '#5fae4a', '#f2c14e', '#e2523e', '#9a6fbf', '#f08a3c', '#5fae4a', '#f2c14e']
+
+function tendone(cx, y, largo, alto, liv) {
+  const [a, b] = COLORI_TENDA[liv]
+  const n = liv >= 2 ? 8 : 6, sotto = largo / n, sopra = sotto * 0.82
+  let g = ''
+  for (let i = 0; i < n; i++) {
+    const su = cx - sopra * n / 2 + i * sopra, giu = cx - largo / 2 + i * sotto
+    const colore = i % 2 ? b : a
+    g += Pg(`${su},${y} ${su + sopra},${y} ${giu + sotto},${y + alto} ${giu},${y + alto}`, colore)
+    if (liv >= 2) g += `<path d="M${giu} ${y + alto}a${sotto / 2} ${sotto / 2} 0 0 0 ${sotto} 0z" fill="${colore}"/>`
+    if (liv >= 3) g += Li(`M${giu + sotto / 2} ${y + alto + sotto / 2}v7`, liv === 4 ? '#b87a10' : '#e9a91c', 2.6)
+  }
+  return g + Li(`M${cx - sopra * n / 2} ${y}H${cx + sopra * n / 2}`, liv === 4 ? '#b87a10' : '#00000033', 3)
+}
+const ruota = x => Ci(x, 146, 20, '#3e3226') + Ci(x, 146, 13, '#c9b99a') + Ci(x, 146, 5, '#3e3226') +
+                   Li(`M${x - 13} 146H${x + 13}M${x} 133V159`, '#3e3226', 3)
+const merce = (x, y, largo, ceste) => Array.from({ length: ceste }, (_, i) =>
+  Ci(x + (i + 0.5) * largo / ceste, y - (i % 2) * 3, Math.min(11, largo / ceste / 2 + 1), MERCE_DIPINTA[i])).join('')
+const palo = (x, su, giu) => R(x - 3, su, 6, giu - su, '#8a6a46', ' rx="2"')
+const cassone = (x, y, w, h) => R(x, y, w, h, LEGNO, ' rx="5"') + R(x, y, w, 9, '#d7a56b', ' rx="4"') +
+  Li(`M${x + w / 3} ${y + 12}V${y + h - 3}M${x + w * 2 / 3} ${y + 12}V${y + h - 3}`, '#00000022', 2.5)
+
+export function disegnaMioBanco(carretto = 0, tenda = 0) {
+  const ceste = carretto + 4
+  if (carretto === 0) return palo(100, 36, 100) + tendone(100, 24, 130, 40, tenda) +
+    merce(46, 96, 108, ceste) + cassone(40, 96, 120, 40) + ruota(62) + ruota(138)
+  if (carretto === 1) return palo(30, 34, 100) + palo(170, 34, 100) + tendone(100, 22, 176, 42, tenda) +
+    merce(22, 96, 156, ceste) + cassone(14, 96, 172, 42) + ruota(48) + ruota(152)
+  if (carretto === 2) return palo(16, 30, 166) + palo(184, 30, 166) + palo(60, 124, 166) + palo(140, 124, 166) +
+    tendone(100, 18, 196, 46, tenda) + merce(14, 96, 172, ceste) + cassone(6, 96, 188, 32)
+  const muro = carretto === 3 ? '#e7cfa5' : '#c9694a'
+  if (carretto === 3) return R(10, 50, 180, 116, muro, ' rx="4"') + R(26, 70, 148, 50, '#5d4a3a', ' rx="3"') +
+    tendone(100, 16, 198, 48, tenda) + merce(26, 112, 148, ceste) + cassone(16, 112, 168, 54)
+  return R(8, 22, 184, 144, muro, ' rx="4"') + Pg('0,24 100,0 200,24', '#8f3f2c') +
+    R(26, 90, 74, 52, '#5d4a3a', ' rx="3"') + R(122, 84, 50, 82, '#7a4a2e', ' rx="4"') + Ci(162, 128, 3.5, '#f2c14e') +
+    R(52, 28, 96, 18, CREMA, ' rx="5"') + tendone(100, 50, 196, 34, tenda) +
+    merce(30, 134, 66, ceste) + cassone(22, 134, 82, 32)
+}
 
 /* il cartello che riporta al mondo: un palo, l'asse con un aereo e una freccia */
 export const CARTELLO = () =>
