@@ -10,7 +10,7 @@ import Faccia from './Faccia.vue'
 import { zittisciIlFantasma } from './dito-soglie.js'
 import '../stile-attrezzi.css'
 
-const PER_PAGINA = 5, RAGGIO = 96, SOGLIA = 16
+const PER_PAGINA = 5, RAGGIO = 126, SOGLIA = 16      // cinque gettoni da 64 px non si coprono: si legge il numerino di ognuno
 let ultimoSeme = 'grano'                    // l'arco si riapre sulla pagina dell'ultimo seme usato
 
 const p = defineProps({
