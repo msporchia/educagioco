@@ -11,12 +11,12 @@ La chiave deve essere il nome della schermata (`schermate.js`: `fattoria3d`); un
 ## Il primo giro
 
 `motore/guida.js`, pura: dal quadro di quello che c'è (campi vuoti/maturi/che crescono, modo, foglio aperto, primo raccolto fatto) dice `{ testo, dove, mano }` o null. Si legge lo schermo, non un copione.
-La riga è `giochi/Guida.vue`, l'anello e la manina li accende `usaGuida` (comune). I passi: tocca il campo → trascina il grano → «il grano cresce» → tocca il campo pronto → trascina il falcetto →  🏗 Costruisci (il primo raccolto è il traguardo: il campo tornato vuoto può aspettare).
+La riga è `giochi/Guida.vue`, l'anello e la manina li accende `usaGuida` (comune). I passi: tocca il campo → trascina il grano → «il grano cresce» → tocca il campo pronto → trascina il falcetto →  🛒 Compra (il primo raccolto è il traguardo: il campo tornato vuoto può aspettare).
 
 - **Serve solo a chi non ha fatto niente** (`servePrimoGiro`: nessuna spesa, nessun raccolto o prodotto in scorta), si decide una volta all'apertura. Se si esce a metà e la scorta è ancora vuota, ricomincia dal passo giusto.
-- **Finisce** al primo raccolto più un'occhiata al menu «Costruisci qui», o alla prima spesa (`primoGiroFinito`), e lo ricorda in `profile.campagne.fattoria3d.cfg.guida = { finita: true }`: «Ricomincia la fattoria» azzera la campagna e la guida torna.
+- **Finisce** al primo raccolto più un'occhiata al menu «Compra», o alla prima spesa (`primoGiroFinito`), e lo ricorda in `profile.campagne.fattoria3d.cfg.guida = { finita: true }`: «Ricomincia la fattoria» azzera la campagna e la guida torna.
 - **Il banco di prova la salta** (`saltaLeSpiegazioni`): `apriGioco(browser, { spiegazioni: true })` la rimette.
-- **Dove sta la riga**: sopra la barra delle azioni; con un foglio aperto che la coprirebbe (semi, «Costruisci qui») sta in alto (`.f3-guida.su`). Con un foglio che la guida non conosce (macchina, banco…) tace.
+- **Dove sta la riga**: sopra la barra delle azioni; con un foglio aperto che la coprirebbe (semi, «Compra») sta in alto (`.f3-guida.su`). Con un foglio che la guida non conosce (macchina, banco…) tace.
 - Provato: la riga come tutorial a più passi numerati — non regge a chi fa le cose in un altro ordine (docs/core/guida.md).
 
 ## «E adesso?» e il consiglio
@@ -26,7 +26,7 @@ La riga è `giochi/Guida.vue`, l'anello e la manina li accende `usaGuida` (comun
 - **`cosaFaccioAdesso(motore)`** il tasto 🧭 in alto a destra: campo maturo → roba pronta in una macchina → ordine consegnabile → prodotti delle bestie → campo vuoto → edificio aperto e pagabile → secondo campo → ricetta possibile → «si aspetta, fra N secondi» → «le monete si guadagnano negli altri giochi» (porta in home).
 - **`comeAvere(motore, merce)`** risale la catena da sola: un raccolto → campo/semina/aspetta; un prodotto delle bestie → il pezzo, il mangime che manca; una ricetta → la macchina (da costruire, o da aprire), poi gli ingredienti che mancano, ricorsivamente (6 giri). Non ancora aperto: dice il livello e porta ai livelli.
 - **Sotto un «non si può»**: macchina, banco e mongolfiera, quando manca roba, mostrano il passo e il tasto sotto il messaggio (`ConsiglioRiga.vue`, prop `consiglio`, evento `consiglio`); `Gioco.vue` (`facciConsiglio`) chiude il foglio e porta dov'è. Gli altri rifiuti (monete, livello, posto) dicono ancora solo il perché (`scena3d/detti.js`).
-- Il tasto «Costruisci» non evidenzia ancora la carta giusta nel menu: il testo nomina l'edificio.
+- Il tasto «Compra» non evidenzia ancora la carta giusta nel menu: il testo nomina l'edificio.
 - Nessun suono: la guida è tutta testo e anello.
 
 ## «🌳 Come si fa»

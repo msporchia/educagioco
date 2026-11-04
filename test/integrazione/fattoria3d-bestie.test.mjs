@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE BESTIE DI CASA DELLA FATTORIA 3D, COL DITO — docs/fattoria3d/bestie-di-casa.md
 
-   Si apre il menu «Costruisci» (🏗), la scheda Animali offre tutti gli animali da adottare (razze e compagni); una chiusa dice il livello; una a cui
+   Si apre il menu «Compra» (🛒), la scheda Animali offre tutti gli animali da adottare (razze e compagni); una chiusa dice il livello; una a cui
    mancano le monete lo dice e non cambia niente; con le monete si prende (🪙90 il beagle), arriva in scena e si apre il battesimo: un nome si
    TOCCA (e sotto si può scrivere: «✎ Nome» nel foglio, una parola scritta e «Va bene» la salva). Un tocco vero sulla bestia in scena apre il suo foglio (✕ in alto a destra): tre bisogni, i cibi suoi, una carezza
    gratis che non costa; un cibo dà da mangiare e scala le monete; «Sposta» porta la bestia dove si tocca (gratis, salvato); a 360 px il foglio

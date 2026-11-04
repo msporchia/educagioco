@@ -1,4 +1,4 @@
-/* Le carte del menu «Costruisci qui» (viste/CostruisciQui.vue): cosa si offre in ogni scheda, ordinato per livello, tutto dai dati
+/* Le carte del menu «Compra» (viste/CostruisciQui.vue): cosa si offre in ogni scheda, ordinato per livello, tutto dai dati
    (`PEZZI` e `EDIFICI` di catalogo.js, ognuno con la sua `categoria`). Puro: niente Vue, niente disegno; la vista le mostra, il
    coordinatore dice cosa farne. Il disegno di una carta è il modello 3D fotografato (scena3d/anteprime.js); finché non c'è resta
    l'emoji, su una piastrella del colore della scheda. Vedi docs/fattoria3d/scena.md. */
@@ -68,7 +68,7 @@ export function festaDaScoprire(stato) {
   return { stagione: stato.stagione, icona: f.icona, scheda: PEZZI[aperti[0]].categoria, ids }
 }
 
-/** Le schede che hanno una carta con il «!» (una scheda sola per ora: Edifici), per il pallino sulla linguetta e sul tasto 🏗️. */
+/** Le schede che hanno una carta con il «!» (una scheda sola per ora: Edifici), per il pallino sulla linguetta e sul tasto 🛒. */
 export const schedeSegnalate = schede => Object.keys(schede).filter(c => schede[c].some(x => x.segnala))
 
 /** Tutte le schede, nell'ordine di `CATEGORIE`: { campi: [carte], … }. */

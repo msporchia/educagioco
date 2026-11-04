@@ -244,7 +244,7 @@ export class Azioni {
     }, () => { if (!eroe.az) eroe.avvia('esulta', 0.9) })
   }
 
-  // ── gli edifici unici: una volta messi in mappa si toccano e si apre la loro finestra (comprarli e piazzarli è del menu «Costruisci qui») ──
+  // ── gli edifici unici: una volta messi in mappa si toccano e si apre la loro finestra (comprarli e piazzarli è del menu «Compra») ──
   edificio(tipo) {
     const { ui } = this.c
     if (MACCHINE[tipo]) return ui.apriMacchina(tipo)           // il menu della SUA macchina

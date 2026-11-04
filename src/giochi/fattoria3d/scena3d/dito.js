@@ -61,7 +61,7 @@ export class Dito {
         try { navigator.vibrate && navigator.vibrate(30) } catch (x) { /* niente vibrazione */ }
         ini.lungo = true; w.attrezzi.chiudi(); w.costruzione.inizia(c.tipo, c, ini.x, ini.y)
       }, ATTESA_PREMUTO)
-    } else if (!b) {                                    // tenere premuto su un posto libero del terreno tuo: il menu «Costruisci qui»
+    } else if (!b) {                                    // tenere premuto su un posto libero del terreno tuo: il menu «Compra»
       const p = w.puntaSuolo(e.clientX, e.clientY); if (!p) return
       const i = Math.floor(p.x), j = Math.floor(p.z)
       if (!w.m.cellaPropria(i, j) || w.m.blocca(i, j) || w.compagni.bersaglio(w._raggio(e.clientX, e.clientY))) return

@@ -50,7 +50,7 @@ rimetterli gratis; quelli in mappa restano dove sono). Non sono «roba» di un l
 ## Il segnalino della festa (W20)
 
 Come il 🎃/🎄 sul baule della 2D (le decorazioni sono una scelta della bambina, e la festa è l'eccezione perché dura poco): in stagione, finché non possiedi **nessun** pezzo della festa (né in
-mappa né nel magazzino), il tasto 🏗 Costruisci porta l'icona della festa (angolo in alto a sinistra, il «!» resta a destra), e nel menu la
+mappa né nel magazzino), il tasto 🛒 Compra porta l'icona della festa (angolo in alto a sinistra, il «!» resta a destra), e nel menu la
 portano la linguetta della scheda (Decori a Halloween, Feste a Natale) e le carte di stagione aperte dal livello. Posato o comprato il primo
 pezzo se ne va. Non apre il menu da sé (si apre sempre sui Campi) e non cambia prezzi: è solo un dito puntato. Logica pura: `festaDaScoprire`
 in `dati/carte.js`; l'icona è `FINESTRE[stagione].icona`. Bersagli: `[data-f3="costruisci-festa"]`, `[data-f3="scheda-festa"]`, `[data-f3="carta-festa"]`.

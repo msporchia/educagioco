@@ -1032,7 +1032,7 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
 }
 function livelloDelPezzoDi(t) { return PEZZI[t].liv }
 
-/* ══════════ il menu «Costruisci qui»: le carte dai dati (docs/fattoria3d/scena.md) ══════════ */
+/* ══════════ il menu «Compra»: le carte dai dati (docs/fattoria3d/scena.md) ══════════ */
 {
   controlla('ogni pezzo e ogni edificio ha una categoria valida', [...Object.values(PEZZI), ...Object.values(EDIFICI)].every(d => !!CATEGORIE[d.categoria]))
   controlla('ogni scheda ha almeno una carta (la scheda Feste solo in stagione o con un regalo della fiera: la linguetta si nasconde)', Object.keys(CATEGORIE).every(c => c === 'feste' || schedeDi(statoMenu({ livello: 99 }))[c].length > 0) && schedeDi(statoMenu({ livello: 99, stagione: 'natale' })).feste.length > 0)

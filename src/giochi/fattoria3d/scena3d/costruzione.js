@@ -1,4 +1,4 @@
-// Costruire: dal menu «Costruisci qui» un pezzo va sulla cella premuta (se ci sta si compra e si mette in un gesto; se no resta lì il
+// Costruire: dal menu «Compra» un pezzo va sulla cella premuta (se ci sta si compra e si mette in un gesto; se no resta lì il
 // fantasma, «parcheggiato», e il dito lo sistema); un pezzo già messo si riprende tenendolo premuto e si trascina. Al rilascio si
 // costruisce (e, se il pezzo non è ancora pagato, paga: un solo gesto); il fantasma mostra dove va, verde se ci sta e se bastano le
 // monete. E le strade a pennello. Le regole di cosa ci sta sono del motore (`puoCompraEMettere`): qui si guida il fantasma, si chiede
@@ -120,7 +120,7 @@ export class Costruzione {
     return r
   }
 
-  // ── dal menu «Costruisci qui» ──
+  // ── dal menu «Compra» ──
   /**
    * Il pezzo scelto va sulla cella (i, j) premuta. Fra i modi di posarlo che la coprono sceglie quello più centrato che ci sta: se uno
    * c'è, compra e mette subito → { esito: 'messo' }; se c'è ma mancano le monete → { esito: 'rifiuto', motivo, costo, liv } e non cambia

@@ -1,6 +1,6 @@
 # Adottare un animale
 
-Dal 3/11/2026 **nessun animale è un regalo del livello**: Watson, i gatti di casa e le razze si adottano dal menu 🏗 «Costruisci», scheda **Animali**,
+Dal 3/11/2026 **nessun animale è un regalo del livello**: Watson, i gatti di casa e le razze si adottano dal menu 🛒 «Compra», scheda **Animali**,
 con monete vere. Il bambino sceglie la razza (la carta) e poi il nome (il battesimo, [bestie-di-casa.md](bestie-di-casa.md)): in vendita un animale **non ha un nome**. Una bestia sola per carta: l'id è la
 razza, quindi due cani uguali non ci sono, ma un labrador, un collie e un beagle sì.
 

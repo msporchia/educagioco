@@ -513,8 +513,8 @@ export class Mondo3d {
   }
   stress(tipo, n) { if (tipo) this.m.aggiungiProve(tipo, n); else this.m.togliProve(); this.pezzi.sincronizza() }
 
-  // ── costruire: il menu «Costruisci qui» (viste/CostruisciQui.vue) e il fantasma che resta se la cella non basta ──
-  /** La cella dove il tasto 🏗️ costruisce: davanti all'eroe, o la più vicina libera nel terreno tuo. */
+  // ── costruire: il menu «Compra» (viste/CostruisciQui.vue) e il fantasma che resta se la cella non basta ──
+  /** La cella dove il tasto 🛒 costruisce: davanti all'eroe, o la più vicina libera nel terreno tuo. */
   cellaDavanti() {
     const e = this.eroe, m = this.m
     const i0 = Math.floor(e.x + Math.sin(e.dir) * 1.6), j0 = Math.floor(e.z + Math.cos(e.dir) * 1.6)

@@ -127,7 +127,7 @@ export function edificiDaCostruire(livello, posseduti = {}) {
   return Object.entries(EDIFICI).filter(([t, e]) => e.liv <= livello && !posseduti[t]).sort((a, b) => a[1].liv - b[1].liv).map(([t]) => t)
 }
 
-/** Cosa dice l'avviso quando si sale di livello e si apre un edificio: «il Panificio! Costruiscilo» (vuoto se non se ne apre nessuno). */
+/** Cosa dice l'avviso quando si sale di livello e si apre un edificio: «il Panificio! Compralo» (vuoto se non se ne apre nessuno). */
 export function avvisoEdificiNuovi(livello) {
   const nuovi = [...Object.values(EDIFICI), ...Object.values(PEZZI).filter(p => p.magazzino && p.liv > 1)].filter(e => e.liv === livello)      // anche un magazzino che arriva (il primo silo c'è da subito)
   if (!nuovi.length) return ''

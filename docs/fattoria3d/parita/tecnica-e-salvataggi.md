@@ -52,7 +52,7 @@ Com'è fatta e cosa converte: [migrazione.md](migrazione.md).
 
 ## Voci aperte tecniche (restano in [../da-fare.md](../da-fare.md))
 
-Non visti col dito né su un telefono: la bacheca, i tre stadi delle bestie, gli edifici liberi, il pezzo al dito e lo scorrimento ai bordi, «Costruisci qui»,
+Non visti col dito né su un telefono: la bacheca, i tre stadi delle bestie, gli edifici liberi, il pezzo al dito e lo scorrimento ai bordi, «Compra»,
 le anteprime 3D, la pesca e il mare, il mondo senza confini, il foglio della macchina, la mongolfiera, i quattro edifici nuovi, il
 fienile (due fienili in vista), «Quando ci premi», i vicini. Da giocare: i prezzi delle bestie, la lana a 25 s, i riposi. Da ridisegnare: i
 modelli di pastificio e cucina. Ognuna passa a ✅ solo con una prova eseguita sulla build e un dito su un telefono.
