@@ -17,10 +17,10 @@ const giro = computed(() => ({
 <template>
   <svg class="pp-icona" viewBox="-20 -20 40 40" aria-hidden="true">
     <g :transform="giro">
-      <path v-if="!salto" class="pp-icona-pieno" d="M-15 -5.5 H0 V-14 L16 0 L0 14 V5.5 H-15 Z" />
+      <path v-if="!salto" class="pp-icona-pieno pp-punta" d="M-14 -6 H-2 V-13 L14 0 L-2 13 V6 H-14 Z" />
       <template v-else>
-        <path class="pp-icona-pieno" d="M-17 -13 L-1 0 L-17 13 Z" />
-        <path class="pp-icona-pieno" d="M0 -13 L16 0 L0 13 Z" />
+        <path class="pp-icona-pieno pp-punta" d="M-16 -12 L-2 0 L-16 12 Z" />
+        <path class="pp-icona-pieno pp-punta" d="M1 -12 L15 0 L1 12 Z" />
       </template>
     </g>
   </svg>

@@ -40,7 +40,7 @@ const props = defineProps({
   consiglioTesta: { type: Number, default: null }, // la scatola a cui l'aiuto cambia la testa
   scossa: { type: Number, default: 0 },          // ▶ fermato da una N: la scelta sobbalza
 })
-const emit = defineEmits(['freccia', 'cancella', 'via', 'ferma', 'aiuto', 'cursore', 'scatola', 'testa-scelta', 'testa',
+const emit = defineEmits(['freccia', 'cancella', 'via', 'ferma', 'aiuto', 'cursore', 'sposta', 'scatola', 'testa-scelta', 'testa',
                           'chiudi-pensiero'])
 const ICONA_PENSIERO = { pensa: '🧠', dove: '🔎', pezzo: '🧩', svela: '✅' }
 
@@ -80,7 +80,7 @@ defineExpose({ tela })
     <Fila :fila="fila" :cursore="cursore" :corrente="corrente" :guasto="guasto"
           :in-corsa="inCorsa" :sospette="sospette" :consiglio="consiglio" :piena="piena"
           :zaino="zaino" :giri="giri" :scelta="scelta" :consiglio-testa="consiglioTesta"
-          @cursore="i => emit('cursore', i)" @freccia="m => emit('freccia', m)"
+          @cursore="i => emit('cursore', i)" @sposta="s => emit('sposta', s)" @freccia="m => emit('freccia', m)"
           @testa="i => emit('testa', i)" />
 
     <div class="pp-tasti">

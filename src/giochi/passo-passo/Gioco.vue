@@ -20,7 +20,7 @@ import { MASSIMO_FILA, LEGENDA } from './dati/mondo.js'
 import { apri, apriSe, carteDi, conCicli, daScegliere, eApri, eSe, valoreDi, COLORI } from './dati/carte.js'
 import { Livello } from './motore/livello.js'
 import { esegui, stelleDellaVittoria, eCorta, TANA, SBATTE, SPLASH, PERSA, CADUTO, eErrore } from './motore/mondo.js'
-import { mettiCarta, mettiScatola, togliPrima, scegliTesta } from './motore/fila.js'
+import { mettiCarta, mettiScatola, togliPrima, scegliTesta, spostaCarta } from './motore/fila.js'
 import { suggerisci, minimoDi, carteUsate } from './motore/risolutore.js'
 import { scalaDi, pensieroDi, dove, pezzoDiStrada } from './motore/aiuti.js'
 import { mancano, chiedeConferma, SVELA } from '../aiuti.js'
@@ -455,6 +455,15 @@ function cancella() {
   scelta.value = null
   cambiata()
   suono.nota(330, 300, 0.07, 'sine', 0.05)
+}
+
+/* una carta trascinata in un altro posto: entra anche in una scatola che c'è già */
+function spostaPezzo({ da, posto }) {
+  if (inCorsa.value || cieco || finale.value) return
+  metti(spostaCarta(fila.value, da, posto))
+  scelta.value = null
+  cambiata()
+  suono.nota(523, 659, 0.07, 'triangle', 0.05)
 }
 
 function spostaCursore(i) {
@@ -953,7 +962,7 @@ function indietro() {
              :consiglio-valore="consiglioValore" :consiglio-testa="consiglioTesta" :scossa="scossa"
              :colori="colori"
              @freccia="freccia" @cancella="cancella" @via="via" @ferma="ferma"
-             @aiuto="aiuto" @cursore="spostaCursore" @scatola="t => scatola(t)" @testa-scelta="sceltaTesta"
+             @aiuto="aiuto" @cursore="spostaCursore" @sposta="spostaPezzo" @scatola="t => scatola(t)" @testa-scelta="sceltaTesta"
              @testa="testa" @chiudi-pensiero="pensiero = null" />
 
       <Finale v-if="finale" v-bind="finale"

@@ -45,6 +45,21 @@ export function togliPrima(fila, cursore) {
   return { fila: f, cursore: c - 1 }
 }
 
+/* una carta presa e posata in un altro posto della fila di adesso: una
+   scatola si porta dietro quello che ha dentro, e dentro sé stessa non si
+   posa. Il cursore finisce subito dopo la carta posata */
+export function spostaCarta(fila, da, posto) {
+  const fine = eApri(fila[da]) ? chiusuraDi(fila, da) : da
+  if (fila[da] == null || eFine(fila[da]) || fine < 0) return { fila: fila.slice(), cursore: dentro(fila, posto) }
+  const p = dentro(fila, posto)
+  if (p >= da && p <= fine + 1) return { fila: fila.slice(), cursore: fine + 1 }
+  const f = fila.slice()
+  const pezzo = f.splice(da, fine + 1 - da)
+  const dove = p > fine ? p - pezzo.length : p
+  f.splice(dove, 0, ...pezzo)
+  return { fila: f, cursore: dove + pezzo.length }
+}
+
 /* il valore di una testa: il numero, il colore, la casa */
 export function scegliTesta(fila, i, valore) {
   if (!eApri(fila[i])) return fila.slice()

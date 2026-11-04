@@ -257,7 +257,8 @@
 
 .pp-tessera { width: var(--pp-tessera); height: var(--pp-tessera); flex: none; border-radius: 10px;
               background: var(--pp-passo); color: #fff; display: grid; place-items: center;
-              box-shadow: 0 2px 0 var(--pp-passo-scuro); transition: transform .12s, opacity .2s }
+              box-shadow: 0 2px 0 var(--pp-passo-scuro); transition: transform .12s, opacity .2s;
+              touch-action: none; cursor: grab }
 .pp-tessera.pp-salto { background: var(--pp-salto); box-shadow: 0 2px 0 var(--pp-salto-scuro) }
 .pp-tessera .pp-icona { width: 26px; height: 26px }
 /* la tessera che sta girando: è la cosa più importante dello schermo */
@@ -274,33 +275,59 @@
    riga, si prendeva una riga intera e faceva scorrere la fila */
 .pp-cursore { width: 0; height: calc(var(--pp-tessera) + 4px); flex: none; position: relative;
               margin-right: calc(-1 * var(--pp-spazio));
-              animation: pp-cursore 1.1s steps(2, jump-none) infinite }
-.pp-cursore::before { content: ''; position: absolute; top: 0; bottom: 0; width: 5px;
-                      left: calc(var(--pp-spazio) / -2 - 2.5px); border-radius: 3px; background: #ff8a00 }
-@keyframes pp-cursore { 0% { opacity: 1 } 100% { opacity: .25 } }
+              animation: pp-cursore 1.1s ease-in-out infinite alternate }
+.pp-cursore::before { content: ''; position: absolute; top: 0; bottom: 0; width: 6px;
+                      left: calc(var(--pp-spazio) / -2 - 3px); border-radius: 3px; background: #ff8a00 }
+/* la punta in cima: una sbarretta sola, fra due carte, non si vedeva */
+.pp-cursore::after { content: ''; position: absolute; top: -3px; left: calc(var(--pp-spazio) / -2 - 7px);
+                     border: 7px solid transparent; border-top: 9px solid #ff8a00; border-bottom: 0 }
+@keyframes pp-cursore { from { opacity: 1 } to { opacity: .6 } }
 .pp-posto { width: var(--pp-tessera); height: var(--pp-tessera); flex: none; border-radius: 10px;
-            border: 2px dashed #c7d6b8; background: none; padding: 0 }
+            border: 2px dashed #c7d6b8; background: none; padding: 0;
+            color: #93a783; font-size: 22px; font-weight: 900; line-height: 1 }
+/* il posto dove entra la prossima carta: lo stesso arancione della sbarra */
+.pp-posto.pp-qui, .pp-bocca.pp-qui { border: 2.5px solid #ff8a00; background: #ffe9c7; color: #d96a00;
+                                     animation: pp-qui 1.1s ease-in-out infinite alternate }
+@keyframes pp-qui { to { box-shadow: 0 0 0 3px rgba(255,138,0,.3) } }
+
+/* la carta al dito: la vera resta sbiadita al suo posto finché non cade */
+.pp-presa { opacity: .3 }
+.pp-pupazzo { position: fixed; left: 0; top: 0; z-index: 40; pointer-events: none }
+.pp-pupazzo > * { transform: scale(1.12) rotate(-3deg); opacity: .95; filter: drop-shadow(0 6px 6px rgba(0,0,0,.3)) }
+.pp-pupazzo .pp-scatola { background: var(--pp-carta); max-width: 300px }
 
 /* ═══════════ lo zaino e le scatole ═══════════
-   Una scatola è una **cornice**: il bordo del suo colore racchiude la testa
-   e le carte che ha dentro, senza nessun fondo — si vede la fila, come
-   fuori. Una scatola dentro un'altra ha il bordo più chiaro, e le due si
-   distinguono senza contare le parentesi. */
-.pp-scatola { --pp-piccola: calc(var(--pp-tessera) - 6px);
+   Una scatola è un **contenitore**: il bordo e il fondo del suo colore
+   tengono la testa e le carte che ha dentro, e in fondo c'è sempre il suo +.
+   Quella dove entra la prossima carta si accende. Una dentro l'altra ha il
+   bordo più chiaro, e le due si distinguono senza contare le parentesi. */
+.pp-scatola { --pp-piccola: calc(var(--pp-tessera) - 2px); --pp-fondo: rgba(138,92,214,.13);
+              --pp-fondo-qui: rgba(138,92,214,.27); --pp-orlo: var(--pp-ciclo);
               display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px;
-              max-width: 100%; padding: 3px 3px 3px 3px; border-radius: 12px;
-              border: 2.5px solid var(--pp-ciclo); background: none;
-              transition: opacity .2s }
-.pp-scatola .pp-scatola { border-color: var(--pp-ciclo-chiaro) }
+              max-width: 100%; padding: 3px; border-radius: 12px;
+              border: 2.5px solid var(--pp-orlo); background: var(--pp-fondo);
+              transition: opacity .2s, background .15s }
+.pp-scatola .pp-scatola { --pp-orlo: var(--pp-ciclo-chiaro) }
+.pp-scatola.pp-qui { background: var(--pp-fondo-qui); box-shadow: 0 0 0 2px var(--pp-orlo) }
+.pp-scatola.pp-presa { opacity: .3 }
 .pp-scatola .pp-tessera { width: var(--pp-piccola); height: var(--pp-piccola); border-radius: 8px }
-.pp-scatola .pp-tessera .pp-icona { width: 18px; height: 18px }
+.pp-scatola .pp-tessera .pp-icona { width: 21px; height: 21px }
 .pp-scatola.pp-sospetta { opacity: .45 }
-.pp-testa { width: var(--pp-piccola); height: var(--pp-piccola); flex: none; border-radius: 8px;
-            background: var(--pp-ciclo); color: #fff; padding: 0;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            line-height: 1; box-shadow: 0 2px 0 var(--pp-ciclo-scuro); transition: transform .12s }
-.pp-testa .pp-ciclo-icona { font-size: 10px }
-.pp-testa b { font-size: 15px; font-weight: 900 }
+/* il + della scatola: dice che lì dentro si può aggiungere */
+.pp-bocca { width: var(--pp-piccola); height: var(--pp-piccola); flex: none; border-radius: 8px; padding: 0;
+            border: 2px dashed var(--pp-orlo); background: rgba(255,255,255,.6); color: var(--pp-orlo);
+            font-size: 22px; font-weight: 900; line-height: 1; display: grid; place-items: center }
+.pp-in-corsa .pp-bocca { opacity: .35 }
+.pp-testa { height: var(--pp-piccola); flex: none; border-radius: 8px; min-width: 50px;
+            background: var(--pp-ciclo); color: #fff; padding: 0 5px;
+            display: flex; align-items: center; justify-content: center; gap: 3px;
+            line-height: 1; box-shadow: 0 2px 0 var(--pp-ciclo-scuro); transition: transform .12s;
+            touch-action: none; cursor: grab }
+.pp-testa .pp-ciclo-icona { font-size: 14px }
+.pp-testa-dice { display: flex; flex-direction: column; align-items: center; gap: 1px }
+.pp-testa-dice.pp-prima { flex-direction: column-reverse }
+.pp-testa small { font-size: 9px; font-weight: 800; letter-spacing: -.1px }
+.pp-testa b { font-size: 15px; font-weight: 900; line-height: .95 }
 /* la N ancora da scegliere: gialla e tratteggiata, come un posto vuoto */
 .pp-testa.pp-manca { outline: 2px dashed var(--pp-luce); outline-offset: -4px }
 .pp-testa.pp-manca b { color: #ffe27a }
@@ -310,17 +337,17 @@
 .pp-testa.pp-gira b { font-size: 14px }
 /* fermata male dentro la scatola: il giro resta scritto, arancione */
 .pp-testa.pp-fermo { transform: none; background: #ff8a00; box-shadow: 0 2px 0 #b35f00 }
-/* il bordo in fondo: si vede la cornice, e al dito basta toccarla */
+/* il bordo in fondo: toccarlo porta fuori, ma chi guarda si affida al + dopo la scatola */
 .pp-coda { width: 6px; align-self: stretch; flex: none; padding: 0; background: none; position: relative }
 .pp-coda::after { content: ''; position: absolute; inset: -6px -12px -6px -6px }
 .pp-in-corsa .pp-scatola { opacity: 1 }
 
 /* la scatola ❓: stessa cornice, un altro colore */
-.pp-scatola.pp-se { border-color: var(--pp-se) }
-.pp-scatola .pp-scatola.pp-se { border-color: var(--pp-se-chiaro) }
+.pp-scatola.pp-se { --pp-orlo: var(--pp-se); --pp-fondo: rgba(23,153,138,.13); --pp-fondo-qui: rgba(23,153,138,.27) }
+.pp-scatola .pp-scatola.pp-se { --pp-orlo: var(--pp-se-chiaro) }
 .pp-scatola.pp-se > .pp-testa { background: var(--pp-se); box-shadow: 0 2px 0 var(--pp-se-scuro) }
 .pp-scatola.pp-se > .pp-testa.pp-gira { box-shadow: 0 0 0 3px var(--pp-luce), 0 3px 8px rgba(0,0,0,.25) }
-.pp-testa .pp-lastra { width: 14px; height: 14px; margin-top: 1px }
+.pp-testa .pp-lastra { width: 16px; height: 16px }
 
 /* una lastra in piccolo (vedi docs/passo-passo/regole.md): l'alone bianco
    la stacca dal viola della testa e dei tasti */
@@ -352,17 +379,21 @@
 .pp-tasto:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 0 0 transparent }
 .pp-tasto:disabled { opacity: .45 }
 .pp-tasto svg { width: 36px; height: 36px }
-.pp-tasto.pp-salto { height: 52px; background: var(--pp-salto); box-shadow: 0 4px 0 var(--pp-salto-scuro) }
+/* le frecce: piene e tonde, un riflesso in alto e l'ombra sotto la punta */
+.pp-tasto.pp-passo, .pp-tasto.pp-salto { box-shadow: inset 0 2px 0 rgba(255,255,255,.3), 0 4px 0 var(--pp-tasto-scuro) }
+.pp-tasto.pp-passo { --pp-tasto-scuro: var(--pp-passo-scuro) }
+.pp-tasto.pp-passo svg, .pp-tasto.pp-salto svg { width: 44px; height: 44px; filter: drop-shadow(0 2px 0 rgba(0,0,0,.22)) }
+.pp-tasto.pp-salto { --pp-tasto-scuro: var(--pp-salto-scuro); height: 52px; background: var(--pp-salto) }
 .pp-riga.pp-azioni { grid-template-columns: 1fr 2fr 1fr }
 .pp-riga.pp-carte { grid-template-columns: 1fr }
 .pp-riga.pp-carte.pp-due { grid-template-columns: 1fr 1fr }
-.pp-tasto.pp-tasto-se { background: var(--pp-se); box-shadow: 0 4px 0 var(--pp-se-scuro) }
 .pp-tasto.pp-ripeti { height: 52px; background: var(--pp-ciclo); box-shadow: 0 4px 0 var(--pp-ciclo-scuro);
                       display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 24px }
 .pp-parola { font-size: 19px; font-weight: 800; letter-spacing: .02em }
 .pp-scelta-volte { position: absolute; inset: 0; z-index: 2; display: grid; gap: 8px;
                    grid-template-columns: repeat(4, 1fr); grid-auto-rows: 1fr;
                    background: var(--pp-carta); border-radius: 16px }
+.pp-tasto.pp-ripeti.pp-tasto-se { background: var(--pp-se); box-shadow: 0 4px 0 var(--pp-se-scuro) }
 .pp-tasto.pp-volte { height: auto; background: var(--pp-ciclo); box-shadow: 0 4px 0 var(--pp-ciclo-scuro);
                      font-size: 26px; font-weight: 900; color: #fff }
 /* numeri e colori insieme: i numeri stanno su una riga sola, i colori
@@ -429,6 +460,7 @@
 /* le icone disegnate, piene del colore del tasto */
 .pp-icona { display: block; overflow: visible }
 .pp-icona-pieno { fill: currentColor }
+.pp-punta { stroke: currentColor; stroke-width: 4; stroke-linejoin: round }
 .pp-tasto .pp-icona-segno { fill: none; stroke: #e7edf3; stroke-width: 3.6; stroke-linecap: round }
 
 /* ═══════════ il cartello di fine ═══════════ */
