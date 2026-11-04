@@ -552,6 +552,11 @@ export const AIUTI = {
         'Il cane non tocca le pecore: quando si ferma sulla riga o sulla colonna di una pecora, **a una o due caselle**, lei si scansa di un passo dall\'altra parte. Per mandarla a destra il cane le va a sinistra; per girarle attorno passa in diagonale. Dietro a un albero, o a un\'altra pecora, il cane non si vede. E una pecora che scappa **spinge quella che ha davanti**: si spostano insieme, a pezzetti di gregge.',
         'Una pecora spinta in un angolo, o contro il bordo, non si recupera più: la fila si ferma lì, lampeggia la freccia che ce l\'ha mandata, e si riprova. L\'osso vale la seconda stella, come la carota.',
       ] },
+      { titolo: 'Il guerriero', righe: [
+        'Finito «Tutto insieme» si apre anche il **guerriero**, con la sua strada: deve arrivare alla **principessa**, e la corona è la sua carota.',
+        'Una **grata** si apre col **pulsante del suo colore** e resta aperta: basta metterci il piede, o farci finire sopra un masso. Saltandolo non si preme.',
+        'Un **nemico** colpisce chi si ferma accanto a lui, sopra, sotto o di lato (le caselle rosse per terra): chi scivola o salta non si è fermato. Con la **spada** lo si batte, ma contro **due insieme** non vince nemmeno lei: si prendono uno alla volta.',
+      ] },
       { titolo: 'Lo zaino e il ripeti', righe: [
         'Dopo le buche la fila ha lo **zaino**: tiene poche carte, e la strada scritta freccia per freccia non ci sta.',
         '🔁 mette una **scatola**: le frecce che ha dentro si ripetono tante volte quante dice il suo numero. Il numero si sceglie, e finché è N ▶ non parte.',

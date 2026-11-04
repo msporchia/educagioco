@@ -46,7 +46,7 @@ export const INSEGNA = {
   passo: {
     titolo: 'Cosa si impara',
     testo: 'Il primo gradino della programmazione, anche per chi non sa ancora leggere: si scrive una fila di frecce e il coniglio la fa alla lettera, '
-      + 'sempre dall\'inizio. Se va storto si cerca quale freccia era sbagliata. Per i più grandi ci sono il cane pastore e i cicli.',
+      + 'sempre dall\'inizio. Se va storto si cerca quale freccia era sbagliata. Per i più grandi ci sono il cane pastore, il guerriero con le grate e i nemici, e i cicli.',
   },
   costruttore: {
     titolo: 'Cosa si impara',

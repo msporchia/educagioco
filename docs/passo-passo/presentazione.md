@@ -27,6 +27,15 @@ toglie, e quella giusta entra al suo posto.
 Non c'è tempo che stringe, non ci sono vite, non si perde mai: sbagliare fa
 riprovare.
 
+## Il guerriero
+
+Per chi vuole un gradino in più, finiti i posti dei piccoli si apre una terza
+strada: un guerriero che deve arrivare alla principessa, in un castello dove le
+cose reagiscono. Un pulsante apre la grata del suo colore; un nemico colpisce
+chi si ferma accanto a lui, a meno di avere la spada; contro due insieme non
+basta nemmeno lei. Il programma resta una fila di frecce, ma adesso l'ordine
+conta: prima la spada, poi la guardia; prima una guardia, poi l'altra.
+
 ## I gradini
 
 Le regole del mondo arrivano una alla volta e da lì in poi valgono sempre:

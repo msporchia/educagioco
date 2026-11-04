@@ -16,6 +16,9 @@ Un elenco di righe, un carattere per cella (legenda in `dati/mondo.js`):
     1 2 3  le buche, a coppie
     r u g  le lastre (rossa, blu, gialla)
     p  una pecora   #  il recinto   (un livello con le pecore non ha la tana)
+    Q  la principessa (al posto della tana: il livello è del guerriero)
+    4 5 6  i pulsanti   R U G  le grate   (rosso, blu, giallo)
+    n  un nemico   s  la spada   W  il muro (alto)
 
 - **La carota e il masso hanno due lettere, un albero una sola**: sotto
   la carota o il masso il terreno conta per le regole (si scivola o no),
@@ -44,8 +47,11 @@ Un elenco di righe, un carattere per cella (legenda in `dati/mondo.js`):
   [stelle-e-aiuti.md](stelle-e-aiuti.md)).
 - **`salti: true`** — accende la seconda fila di frecce. Solo dove serve:
   una fila di tasti inutili è una fila di tasti da provare a caso.
-- **`trappole`** — solo nei livelli del cane: le mosse ingenue, che non devono
-  vincere e devono fare un pezzo di strada prima di fermarsi.
+- **`trappole`** — nei livelli del cane e in quelli del guerriero con i nemici:
+  le mosse ingenue, che non devono vincere e devono fare un pezzo di strada
+  prima di fermarsi.
+- **`regole`** — solo nell'isola del castello del guerriero, che non ha una
+  regola sua: quelle del mondo che ogni tappa deve usare (`spinta`, `ghiaccio`…).
 - **stagione** — solo il vestito.
 - **Con lo zaino**: `carte` (i tasti oltre alle frecce, es. `['ripeti']`),
   `zaino` (quante carte tiene la fila), `soluzioni` scritte con
@@ -122,7 +128,8 @@ si sarebbero aperte già fatte.
 ## Le due strade
 
 La campagna resta una fila sola (le stelle sotto l'indice), ma le strade
-sono due, una per protagonista, e sulla mappa si sceglie chi gioca
+sono tre, una per protagonista (il guerriero sta in [guerriero.md](guerriero.md)),
+e sulla mappa si sceglie chi gioca
 ([mappa.md](mappa.md#due-protagonisti)). Le ricava `motore/strade.js` dai
 dati, senza elenchi scritti a mano:
 
