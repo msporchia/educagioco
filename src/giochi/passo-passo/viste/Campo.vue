@@ -8,6 +8,7 @@ import Fila from './Fila.vue'
 import { computed } from 'vue'
 import Icona from './Icona.vue'
 import Lastra from './Lastra.vue'
+import Segno from './Segno.vue'
 import { nomeDellaMossa, LASTRE, VERSI, CHIAVI_VERSI } from '../dati/mondo.js'
 import { VOLTE, CASA } from '../dati/carte.js'
 
@@ -53,6 +54,11 @@ const numeri = computed(() => (props.sceltaTipo === 'ripeti' && props.carte.incl
 const altri = computed(() => {
   if (props.sceltaTipo === 'se') return [...props.colori, ...(props.carte.includes('varco') ? CHIAVI_VERSI : [])]
   return [...(props.carte.includes('fino') ? props.colori : []), ...(props.carte.includes('casa') ? [CASA] : [])]
+})
+/* senza numeri i tasti sono una riga sola: sopra, cosa si sta scegliendo */
+const domanda = computed(() => {
+  if (props.sceltaTipo !== 'se') return 'Ripeti…'
+  return altri.value.every(v => VERSI[v]) ? 'Se di là si passa…' : 'Se…'
 })
 const inParole = v => (v === CASA ? 'fino a casa' : VERSI[v] ? `se ${VERSI[v].nome} si passa`
   : `${props.sceltaTipo === 'se' ? 'se' : 'fino a'} ${(LASTRE[v] || {}).nome || v}`)
@@ -104,11 +110,11 @@ defineExpose({ tela })
         <div v-if="conRipeti || conSe" class="pp-riga pp-carte" :class="{ 'pp-due': conRipeti && conSe }">
           <button v-if="conRipeti" class="pp-tasto pp-ripeti" :class="{ 'pp-brilla': brilla === 'ripeti' }"
                   data-carta="ripeti" aria-label="ripeti" :disabled="inCorsa || piena" @click="emit('scatola', 'ripeti')">
-            <span class="pp-em" aria-hidden="true">🔁</span><span class="pp-parola">ripeti</span>
+            <Segno tipo="ripeti" /><span class="pp-parola">ripeti</span>
           </button>
           <button v-if="conSe" class="pp-tasto pp-ripeti pp-tasto-se" :class="{ 'pp-brilla': brilla === 'se' }"
                   data-carta="se" aria-label="se" :disabled="inCorsa || piena" @click="emit('scatola', 'se')">
-            <span class="pp-em" aria-hidden="true">❓</span><span class="pp-parola">se</span>
+            <Segno tipo="se" /><span class="pp-parola">se</span>
           </button>
         </div>
         <!-- la testa: copre le frecce finché non si sceglie, e non le
@@ -116,7 +122,9 @@ defineExpose({ tela })
              I numeri su una riga sola quando sotto ci sono anche i colori -->
         <div v-if="scelta != null && !inCorsa" :key="scossa" class="pp-scelta-volte"
              :class="{ 'pp-scossa': scossa > 0, 'pp-con-colori': numeri.length && altri.length,
-                       'pp-solo-colori': !numeri.length, 'pp-scelta-se': sceltaTipo === 'se' }" data-scelta-volte>
+                       'pp-solo-colori': !numeri.length, 'pp-scelta-se': sceltaTipo === 'se' }"
+             :style="{ '--pp-quanti': Math.min(4, altri.length) }" data-scelta-volte>
+          <p v-if="!numeri.length" class="pp-scelta-domanda">{{ domanda }}</p>
           <button v-for="n in numeri" :key="n" class="pp-tasto pp-volte"
                   :class="{ 'pp-brilla': consiglioValore === n, 'pp-ora': valoreOra === n }"
                   :data-volte-scegli="n" :aria-label="`${n} volte`" @click="emit('testa-scelta', n)">{{ n }}</button>

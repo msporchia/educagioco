@@ -23,8 +23,12 @@ massi cresce **la lingua**, non il mondo. Le carte sono in
 - **Il numero nasce N**, da scegliere fra 2 e 9: un valore già scritto si
   leggerebbe come l'unico possibile. ▶ con una N dentro non parte, e riapre la
   scelta che manca.
-- **La scatola si vede dentro e fuori.** Ha un fondo del suo colore, e la testa
-  dice a parole cosa fa («3 volte», «fino a», «se»). 🔁 la mette dove sta il
+- **La scatola si vede dentro e fuori.** Il ripeti è di legno scuro, come una
+  cassa, e il se di legno chiaro; la testa dice a parole cosa fa («3 volte», «fino
+  a», «se»). I colori sono pochi: il blu cammina, il verde parte, il legno è tutto
+  il resto (il salto resta arancione). Un tasto ha orlo scuro, luce in alto e
+  spessore (i tre colori `--t-*` in `stile.css`), spento perde colore senza
+  sparire, e non è mai più alto degli altri: la scelta si ferma a 58 px per riga. 🔁 la mette dove sta il
   cursore, col cursore dentro; la testa riapre la scelta del numero.
 - **Il + dice dove si aggiunge.** In fondo a ogni scatola c'è sempre un + del
   suo colore, e il primo posto libero dello zaino ne ha uno suo: toccato uno,

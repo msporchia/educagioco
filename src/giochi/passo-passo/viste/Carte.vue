@@ -8,6 +8,7 @@
 import { computed, inject } from 'vue'
 import Icona from './Icona.vue'
 import Lastra from './Lastra.vue'
+import Segno from './Segno.vue'
 import { nomeDellaMossa, LASTRE, VERSI } from '../dati/mondo.js'
 import { eApri, eSe, valoreDi } from '../dati/carte.js'
 
@@ -79,7 +80,7 @@ const parolaDi = n => {
               :aria-label="`metti qui: ${eCiclo(f.s.value.consiglio) ? 'una scatola' : nomeDellaMossa(f.s.value.consiglio)}`"
               @click="f.metti(f.s.value.consiglio)">
         <template v-if="eCiclo(f.s.value.consiglio)">
-          <span class="pp-em pp-ciclo-icona">{{ eSe(f.s.value.consiglio) ? '❓' : '🔁' }}</span>
+          <Segno :tipo="eSe(f.s.value.consiglio) ? 'se' : 'ripeti'" />
           <b v-if="numero(f.s.value.consiglio)">{{ valoreDi(f.s.value.consiglio) }}</b>
           <Lastra v-else :colore="valoreDi(f.s.value.consiglio)" />
         </template>
@@ -114,7 +115,7 @@ const parolaDi = n => {
               :data-testa="x.nodo.i" :data-volte="valoreNodo(x.nodo) ?? 'N'" :data-giro="giroDi(x.nodo.i)"
               :aria-label="testaInParole(x.nodo)"
               @pointerdown="e => f.prendi(e, x.nodo.i)" @click="f.testa(x.nodo.i)">
-        <span class="pp-em pp-ciclo-icona" aria-hidden="true">{{ x.nodo.che === 'se' ? '❓' : '🔁' }}</span>
+        <Segno :tipo="x.nodo.che === 'se' ? 'se' : 'ripeti'" />
         <span class="pp-testa-dice" :class="{ 'pp-prima': parolaDi(x.nodo) !== 'volte' }">
           <b v-if="giroDi(x.nodo.i) || typeof valoreNodo(x.nodo) !== 'string'">
             {{ giroDi(x.nodo.i) || (valoreNodo(x.nodo) ?? 'N') }}</b>
