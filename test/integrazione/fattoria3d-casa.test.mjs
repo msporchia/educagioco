@@ -33,7 +33,10 @@ const punto = (x, z) => m3(([x, z]) => { const c = window.__fattoria3d.interni.s
 const toccaPavimento = async (x, z) => { const [px, py] = await punto(x, z); await tocca(px, py); await attendi(page, 150) }
 const fermo = async () => { await page.waitForFunction(() => window.__fattoria3d.interni.scena().eroe.fermo, null, { timeout: 8000 }); await attendi(page, 500) }
 const cartelli = () => m3(() => [...window.__fattoria3d.interni.scena().badge].map(([id, b]) => { const r = b.el.getBoundingClientRect(); return { id, testo: b.el.textContent, visto: b.visto, x: r.left + r.width / 2, y: r.top + r.height / 2, sx: r.left, dx: r.right } }))
-const toccaCartello = async id => { const c = (await cartelli()).find(x => x.id === id); await tocca(c.x, c.y); await attendi(page, 200) }
+const toccaCartello = async id => {
+  await page.waitForFunction(i => { const c = window.__fattoria3d.interni.scena(); return c.badge.get(i)?.visto && !c.camera.inMoto }, id, { timeout: 8000 })          // la camera può star tornando sul contadino
+  const c = (await cartelli()).find(x => x.id === id); await tocca(c.x, c.y); await attendi(page, 200)
+}
 
 await scegli(page, 'fattoria3d')
 await page.waitForSelector('[data-f3="campo"] canvas', { timeout: 10000 })
