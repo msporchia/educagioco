@@ -30,7 +30,7 @@ const pallini = al => page.locator(`[data-amici-qui][data-al="${al}"] [data-pall
 const centro = sel => page.locator(sel).first().evaluate(e => { const r = e.getBoundingClientRect(); return r.left + r.width / 2 })
 
 /* ══════════ 1. a metà della mappa ══════════ */
-await semina(page, { settings: { eta: 6.5 }, campagne: { spagnolo: vinte(3) } })
+await semina(page, { settings: { eta: 6.5, giochi: { spagnolo: true } }, campagne: { spagnolo: vinte(3) } })
 await seminaAmici(page, [
   amico('a', 'lorenzo01', 'Lorenzo', 0, 7),
   amico('b', 'marta0001', 'Marta', 3, 3),
@@ -62,7 +62,7 @@ uguale('ma sulla mappa non ha un pallino', await page.locator('[data-amici-qui]'
 
 /* ══════════ 3. mappa finita ══════════ */
 await esci()
-await semina(page, { settings: { eta: 6.5 }, campagne: { spagnolo: vinte(TAPPE.length) } })
+await semina(page, { settings: { eta: 6.5, giochi: { spagnolo: true } }, campagne: { spagnolo: vinte(TAPPE.length) } })
 await seminaAmici(page, [
   amico('a', 'lorenzo01', 'Lorenzo', 1, TAPPE.length),
   amico('b', 'marta0001', 'Marta', 0, TAPPE.length - 1),
