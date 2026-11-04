@@ -22,7 +22,7 @@ defineEmits(['modo', 'semina', 'costruisci'])
       <button :class="{ acceso: modo === 'raccogli' }" data-f3="az-raccogli" @click="$emit('modo', modo === 'raccogli' ? 'libero' : 'raccogli')">
         <span>✂️</span><small>Raccogli</small><em v-if="daFare.raccogli" class="f3-n">{{ daFare.raccogli }}</em>
       </button>
-      <button data-f3="az-costruisci" :data-da-costruire="daCostruire || null" @click="$emit('costruisci')"><span>🏗</span><small>Costruisci</small><i v-if="daCostruire" class="f3-esclama" data-f3="costruisci-esclama" aria-label="c'è un edificio da costruire">!</i><i v-if="festa" class="f3-festa a-sinistra" data-f3="costruisci-festa" aria-label="c'è la festa">{{ festa }}</i></button>
+      <button data-f3="az-costruisci" :data-da-costruire="daCostruire || null" @click="$emit('costruisci')"><span>🛒</span><small>Compra</small><i v-if="daCostruire" class="f3-esclama" data-f3="costruisci-esclama" aria-label="c'è un edificio da costruire">!</i><i v-if="festa" class="f3-festa a-sinistra" data-f3="costruisci-festa" aria-label="c'è la festa">{{ festa }}</i></button>
     </div>
   </div>
 </template>

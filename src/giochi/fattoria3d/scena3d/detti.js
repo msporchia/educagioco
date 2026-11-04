@@ -31,7 +31,7 @@ export function dettoDi(motivo, extra = {}) {
     }
     case 'sazie': return 'Sono tutte sazie'
     case 'forno-pieno': return extra.compra ? 'Tutti i posti sono occupati: puoi comprarne un altro' : 'Tutti i posti sono occupati'
-    case 'non-posseduta': return 'Costruisci prima questa macchina'
+    case 'non-posseduta': return 'Prima compra questa macchina'
     case 'mancano-ingredienti': {
       const manca = Object.entries(extra.ingredienti || {}).map(([k, n]) => `${emojiDi(k, COLTURE)} ${n}`).join('  ')
       return manca ? `Ti mancano: ${manca}` : 'Mancano degli ingredienti'
@@ -39,7 +39,7 @@ export function dettoDi(motivo, extra = {}) {
     case 'banco-chiuso': return 'Il banco è chiuso: serve una bacheca'
     case 'sconosciuto': return 'Questo ordine non c\'è più'
     case 'non-sbloccato': return extra.liv ? `Arriva al livello ${extra.liv}` : 'Non è ancora arrivato'
-    case 'non-tua': return 'Costruisci prima questo edificio'
+    case 'non-tua': return 'Prima compra questo edificio'
     case 'non-in-vendita': return 'Questa non si compra: arriva dalla mongolfiera'
     case 'gia-tuo': return 'Ce n\'è già uno: puoi spostarlo'
     case 'niente-bottega': return 'Metti prima la bottega nella fattoria'

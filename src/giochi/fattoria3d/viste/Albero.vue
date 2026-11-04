@@ -30,7 +30,7 @@ function diceVia(v) {
     case 'compra': return `🛒 non ce l'hai · 🪙${v.prezzo}`
     case 'magazzino': return '📦 ce l\'hai nel magazzino: mettilo in mappa'
     case 'arriva': return `arriva al livello ${v.arriva}`
-    case 'nessuno': return '🏗 costruisci un campo'
+    case 'nessuno': return '🛒 compra un campo'
     case 'libero': return 'si semina in un campo vuoto'
     case 'occupati': return 'i campi sono tutti pieni'
     default: return '✓ ce l\'hai'

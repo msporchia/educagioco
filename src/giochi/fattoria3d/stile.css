@@ -65,17 +65,23 @@
 .f3-seme-n { position: absolute; right: -14px; bottom: -6px; min-width: 24px; height: 24px; padding: 0 6px; box-sizing: border-box; border-radius: 12px; background: #3a2a1a; color: #fff; border: 2px solid #fff; font: 800 13px/20px "Emoji Gioco", system-ui, sans-serif; text-align: center; font-style: normal; }
 .f3-seme-n.zero { background: #b9a98e; } .f3-semi b { font-size: 14px; } .f3-semi small { font-size: 12px; color: #7a5a3a; }
 
-/* il menu «Costruisci qui»: un velo che si tocca per chiudere e il foglio con le schede e la griglia di carte */
+/* il menu «Compra»: un velo che si tocca per chiudere e il foglio col taccuino (le linguette a sinistra), le schede e la griglia di carte */
 .f3-velo { position: absolute; inset: 0; z-index: 34; background: rgba(40,28,12,.38); animation: f3-velo .18s ease-out; }
 .f3-costruisci { min-height: 56%; max-height: 78%; transform-origin: 50% 100%; animation: f3-sale .2s ease-out; }
 @keyframes f3-velo { from { opacity: 0; } to { opacity: 1; } }
 @keyframes f3-sale { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
-.f3-schede { flex: none; display: flex; gap: 4px; overflow-x: auto; touch-action: pan-x; margin: 0 -14px 10px; padding: 2px 14px 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-.f3-schede::-webkit-scrollbar { display: none; }
+.f3-taccuino { flex: 1 1 auto; min-height: 0; display: flex; margin: 0 -6px 0 -14px; }
+.f3-linguette { flex: none; width: 72px; display: flex; flex-direction: column; gap: 6px; padding: 8px 0; }
+.f3-linguette button { position: relative; flex: 0 1 68px; min-height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; margin-right: 6px; border: 0; border-radius: 0 0 0 0; border-top-right-radius: 16px; border-bottom-right-radius: 16px; background: #efe4cf; color: #5a3a2a; font: 800 12px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; }
+.f3-linguette button .em { font-size: 24px; line-height: 1; }
+.f3-linguette button.acceso { margin-right: -2px; z-index: 1; border-radius: 16px 0 0 16px; margin-left: 6px; background: #fffdf6; border: 2px solid #e6cfa0; border-right: 0; color: #3a2a1a; }
+.f3-linguette .f3-esclama, .f3-linguette .f3-festa { right: 2px; top: 2px; }
+.f3-pagina { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; padding: 8px 8px 0; border: 2px solid #e6cfa0; border-radius: 16px; background: #fffdf6; }
+.f3-schede { flex: none; display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 8px; }
 .f3-schede button { flex: none; display: flex; align-items: center; gap: 5px; border: 2px solid transparent; border-radius: 18px; padding: 8px 9px; background: #efe4cf; color: #5a3a2a; font: 800 13px "Emoji Gioco", system-ui, sans-serif; touch-action: pan-x; min-height: 40px; }
 .f3-schede button .em { font-size: 16px; line-height: 1; }
 .f3-schede button.acceso { background: #ffd36a; border-color: #e0a020; color: #3a2a1a; }
-.f3-griglia-carte { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding-bottom: 4px; animation: f3-velo .15s ease-out; }
+.f3-griglia-carte { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; padding-bottom: 8px; animation: f3-velo .15s ease-out; }
 .f3-griglia-carte .carta { display: flex; flex-direction: column; align-items: center; gap: 3px; border: 2px solid #e6cfa0; background: #fffdf6; border-radius: 16px; padding: 8px 4px 9px; color: #3a2a1a; touch-action: manipulation; min-width: 0; }
 .f3-griglia-carte .carta:active { transform: scale(.97); }
 .f3-griglia-carte .carta.magazzino { border-color: #5fae3a; background: #eefae3; }

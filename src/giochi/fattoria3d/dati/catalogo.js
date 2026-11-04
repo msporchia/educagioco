@@ -74,7 +74,7 @@ export function quotaDelPezzo(d, a, b) {
 }
 export const TIPI_DI_PEZZO = Object.keys(PEZZI)
 
-/** Le schede del menu «Costruisci qui», nell'ordine in cui si vedono (la `categoria` di ogni pezzo e di ogni edificio unico è una di queste).
+/** Le schede del menu «Compra», nell'ordine in cui si vedono (la `categoria` di ogni pezzo e di ogni edificio unico è una di queste).
     `strumenti`: la scheda delle strade ha anche la strada e la gomma, che non sono pezzi. Vedi docs/fattoria3d/scena.md. */
 export const CATEGORIE = {
   campi:    { nome: 'Campi',    emoji: '🌾' },
@@ -84,6 +84,14 @@ export const CATEGORIE = {
   ...SCHEDE_DECORI,        // verde, recinti, raccolto, case, bestiole: schede nuove, una per famiglia della 2D (dati/decori.js)
   passaggi: { nome: 'Strade',   emoji: '🛣️', strumenti: true },
 }
+/** Il taccuino del menu: le linguette a sinistra, ognuna con le sue schede. Ogni scheda di `CATEGORIE` sta in un gruppo solo (un test lo guarda). */
+export const GRUPPI = {
+  fattoria: { nome: 'Fattoria', emoji: '🚜', schede: ['campi', 'animali', 'edifici'] },
+  giardino: { nome: 'Giardino', emoji: '🌳', schede: ['verde', 'fiori', 'acqua', 'bestiole'] },
+  paese:    { nome: 'Paese',    emoji: '🏘️', schede: ['case', 'recinti', 'passaggi'] },
+  decori:   { nome: 'Decori',   emoji: '🎀', schede: ['decori', 'arredo', 'raccolto', 'feste'] },
+}
+export const gruppoDi = scheda => Object.keys(GRUPPI).find(g => GRUPPI[g].schede.includes(scheda)) || 'fattoria'
 
 // Unici: uno per tipo, si costruiscono dal menu e si mettono dove si vuole nel terreno proprio (docs/fattoria3d/edifici-liberi.md). Niente
 // `slot`: i posti di prima stanno in `POSTI_STORICI` di dati/mondo.js (servono solo a leggere un salvataggio vecchio). Pastificio (id
@@ -121,7 +129,7 @@ export function edificiDaCostruire(livello, posseduti = {}) {
 export function avvisoEdificiNuovi(livello) {
   const nuovi = [...Object.values(EDIFICI), ...Object.values(PEZZI).filter(p => p.magazzino && p.liv > 1)].filter(e => e.liv === livello)      // anche un magazzino che arriva (il primo silo c'è da subito)
   if (!nuovi.length) return ''
-  return nuovi.map(e => `${e.art} ${e.nome}`).join(' e ') + '! ' + (nuovi.length > 1 ? 'Costruiscili' : 'Costruiscilo')
+  return nuovi.map(e => `${e.art} ${e.nome}`).join(' e ') + '! ' + (nuovi.length > 1 ? 'Comprali' : 'Compralo')
 }
 
 export function guastiDelCatalogo() {

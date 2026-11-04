@@ -27,7 +27,7 @@ const il = t => {
 
 const ETICHETTE = {
   semina: () => '🌱 Semina', raccogli: () => '✂️ Raccogli', banco: () => '🧺 Apri il banco', livelli: () => '⭐ I livelli', home: () => '🎮 Vai ai giochi',
-  macchina: a => `${dove(a.tipo).emoji} Apri ${il(a.tipo)}`, costruisci: () => '🏗 Costruisci', inventario: () => '🎒 Apri la dispensa',
+  macchina: a => `${dove(a.tipo).emoji} Apri ${il(a.tipo)}`, costruisci: () => '🛒 Compra', inventario: () => '🎒 Apri la dispensa',
   magazzino: a => `${SILOS[a.silo].emoji} Apri ${SILOS[a.silo].art} ${SILOS[a.silo].nome.toLowerCase()}`,
 }
 const dai = (testo, azione = null) => ({ testo, azione, etichetta: azione ? ETICHETTE[azione.che](azione) : '' })

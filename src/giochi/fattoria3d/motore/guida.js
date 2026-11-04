@@ -37,11 +37,11 @@ export function guidaDelPrimoGiro(q = {}) {
     if (!campi) return { dove: BERSAGLI.carta, mano: true, testo: 'Tocca il campo: ci crescono i raccolti.' }
     return null
   }
-  if (!campi) return { dove: BERSAGLI.costruisci, mano: true, testo: 'Serve un campo: tocca 🏗 Costruisci.' }
+  if (!campi) return { dove: BERSAGLI.costruisci, mano: true, testo: 'Serve un campo: tocca 🛒 Compra.' }
   if (maturi && modo !== 'raccogli') return { dove: BERSAGLI.raccogli, mano: true, testo: 'È pronto! Tocca ✂️ Raccogli.' }
   if (maturi && modo === 'raccogli') return { dove: null, testo: 'Tocca il campo pronto: il contadino lo taglia.' }
   /* il primo raccolto è il traguardo: il campo tornato vuoto può aspettare, il passo è spendere */
-  if (raccolto && !visto) return { dove: BERSAGLI.costruisci, mano: true, testo: 'Bravo! Ora tocca 🏗 Costruisci e fai crescere la fattoria.' }
+  if (raccolto && !visto) return { dove: BERSAGLI.costruisci, mano: true, testo: 'Bravo! Ora tocca 🛒 Compra e fai crescere la fattoria.' }
   if (vuoti && modo !== 'semina') return { dove: BERSAGLI.semina, mano: true, testo: 'Tocca 🌱 Semina e scegli cosa far crescere.' }
   if (vuoti && modo === 'semina') return { dove: null, testo: 'Tocca il campo vuoto: il contadino ci semina.' }
   if (crescono) return { dove: null, testo: `Il grano cresce${secondi ? `: ancora ${tempoBreve(secondi * 1000)}` : ''}.` }

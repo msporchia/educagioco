@@ -99,7 +99,7 @@ export class Costruzione {
       if (su) {
         const r = m.mettiVia(c0.id)
         if (!r.ok) return this._dice(dettoDi(r.motivo, { mancano: 1 }))
-        this.c.cambiato(); return ui.avviso(misureDi(tipo).nome + ' messo via: lo ritrovi nel menu Costruisci')
+        this.c.cambiato(); return ui.avviso(misureDi(tipo).nome + ' messo via: lo ritrovi nel menu Compra')
       }
       if (!ok) return this._dice(dettoDi(motivo))
       const r = m.spostaPezzo(c0.id, i, j, { rot })

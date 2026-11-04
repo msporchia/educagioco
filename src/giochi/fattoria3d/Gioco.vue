@@ -475,7 +475,7 @@ function piuPosto() {
   if (v.passo === 'nuovo') {                 // quello nuovo è nel magazzino dei pezzi: si mette come dal menu, davanti al contadino o col fantasma da trascinare
     magazzinoAperto.value = null; ui.cambio(); mondo.cambiato()
     const [i, j] = mondo.cellaDavanti(), q = mondo.costruisciQui(r.tipo, i, j)
-    return void ui.avviso(q.esito === 'messo' ? `${SILOS[silo].emoji} Eccolo! Ogni ${SILOS[silo].cosa} ha posto per ${r.posti}.` : `${SILOS[silo].emoji} Mettilo dove vuoi: è nel menu Costruisci.`)
+    return void ui.avviso(q.esito === 'messo' ? `${SILOS[silo].emoji} Eccolo! Ogni ${SILOS[silo].cosa} ha posto per ${r.posti}.` : `${SILOS[silo].emoji} Mettilo dove vuoi: è nel menu Compra.`)
   }
   magazzinoMsg.value = `Fatto! Adesso ogni ${SILOS[silo].cosa} ha posto per ${r.posti}.`
   ui.cambio(); mondo.cambiato()
