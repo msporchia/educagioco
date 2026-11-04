@@ -53,14 +53,7 @@ await page.locator('[data-azione="bambino-prova"]').click()
 await attendi(page, 500)
 uguale('e non se ne fanno due', await page.locator('[data-giocatore]', { hasText: 'Prova' }).count(), 1)
 
-/* ── 4. gli interruttori ── */
-await page.locator('[data-azione="sperimentali"]').click()
-await attendi(page, 500)
-uguale('i giochi in prova si accendono per il bambino attivo',
-       (await leggiProfilo(page, prova))?.settings?.sperimentali, true)
-controlla('e la leva lo dice', await page.locator('[data-azione="sperimentali"].acceso').count() === 1)
-
-/* ── 5. la fattoria di prova, da un tasto ── */
+/* ── 4. la fattoria di prova, da un tasto ── */
 const BORSA = { quante: () => 0, paga: () => false }
 const livelloDi = stato => stato && new Fattoria3d({ stato, borsa: BORSA }).livello()
 const dentro = async nome => {

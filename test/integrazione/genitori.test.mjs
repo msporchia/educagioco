@@ -616,6 +616,8 @@ const quanteAmbra = async () => {
   return page.locator('[data-manopola] .voce-riga.ritoccata').count()
 }
 
+/* il bambino di prova è in «quarta» coi decimali accesi a mano: quella riga è ambra già da prima */
+const ambraPrima = await quanteAmbra()
 await apriBlocco('medie')
 controlla('una riga del quadro ha due tasti soli: la ✎ e il ▶',
   (await page.locator('[data-manopola] [data-apri="medie"] .matita').count()) > 0)
@@ -639,7 +641,7 @@ uguale('confermando finisce nel profilo, sotto la chiave di quella riga',
 uguale('e uno scatto verso destra vuol dire «per lui è più difficile»',
   ritocchi[tarata], -1, `${dettoPrima} → ${JSON.stringify(ritocchi)}`)
 controlla('la riga spostata resta ambra, anche a tacca chiusa',
-  (await quanteAmbra()) > 0)
+  (await quanteAmbra()) > ambraPrima)
 uguale('e la tacca si chiude da sé',
   await page.locator('[data-taratura]').count(), 0)
 
@@ -653,7 +655,7 @@ await page.click('[data-tara="rimetti"]')
 await page.waitForTimeout(500)
 uguale('e «rimettila com\'era» non lascia nemmeno uno zero',
   Object.keys(await ritocchiScritti()).length, 0)
-uguale('e la riga torna com\'era', await quanteAmbra(), 0)
+uguale('e la riga torna com\'era', await quanteAmbra(), ambraPrima)
 
 /* ── E IL TASTO CHE RIMETTE TUTTO ──
    Le correzioni sono tante e piccole, e dopo un po' nessuno ricorda
@@ -721,8 +723,9 @@ await taraSapere('conversioni', 'via')
 const dopoSpento = await leggiProfilo(page)
 uguale('l\'ultimo scatto spegne il pezzo di scuola, nel profilo',
        dopoSpento.settings.sa.conversioni, false)
+/* i decimali li ha spenti «rimetti com'era»: la fascia «quarta» li spegne da sé */
 uguale('e solo quello: acceso resta l\'assenza',
-       Object.keys(dopoSpento.settings.sa).length, 1)
+       Object.keys(dopoSpento.settings.sa).sort().join(' '), 'conversioni decimali')
 await apriBlocco('spenta')
 controlla('e le sue domande finiscono nel blocco di quello che hai tolto',
   (await page.locator('[data-manopola] [data-apri="spenta"] [data-riga="conversioni"]').count()) > 0)
