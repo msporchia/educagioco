@@ -126,6 +126,11 @@ for (const t of CAMPAGNA.filter(delGuerriero)) {
       const r = esegui(liv, sol, { eventi: false })
       controlla(`${t.chiave}: la soluzione vince con la corona`, r.esito === TANA && r.carota, r.esito)
       controlla(`${t.chiave}: e sta nello zaino, con dentro un ciclo`, carteDi(sol) <= t.zaino && conCicli(sol))
+      /* una tappa del guerriero non è una del coniglio travestita: ogni guardia sulla
+         mappa si affronta, una guardia che punisce solo chi sbaglia strada è un muro */
+      const fatti = esegui(liv, sol).passi.flatMap(p => p.eventi.map(e => e.che))
+      uguale(`${t.chiave}: il programma affronta tutte le guardie`, fatti.filter(e => e === 'duello').length, liv.nemici.length)
+      controlla(`${t.chiave}: e usa qualcosa del guerriero`, fatti.some(e => e === 'duello' || e === 'pulsante'))
     }
     controlla(`${t.chiave}: ha le sue mosse ingenue`, (t.fragili || []).length > 0)
     for (const fr of t.fragili || []) {
