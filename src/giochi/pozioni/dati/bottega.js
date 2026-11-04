@@ -10,3 +10,4 @@ export const PEZZI = [0.05, 0.1, 0.2, 0.25, 0.5, 1]
 export const PREZZI = [1, 1, 2, 2, 3, 4]
 
 export const PULIZIA = 1            // gettoni per pulire una macchia (una per misurino traboccato)
+export const PASTICCIO = 1          // gettoni per un'azione sbagliata del procedimento

@@ -99,7 +99,7 @@ coi pezzi comuni `Cornice.vue`, `Addosso.vue`, `Casella.vue`, `Pannello.vue`,
   addosso «Togli». Si chiude con la ✕ o toccando il campo fuori dalla cornice (e l'eroe ci va). Le regole dello zaino sono quelle di
   prima.
 
-Nei test: `[data-bottega]` (con `data-mercante-aperto`: `armaiolo`, `incantatrice`, `erborista`, `rigattiere`),
+Nei test: `[data-bottega]` (con `data-mercante-aperto`: `armaiolo`, `incantatrice`, `erborista`, `carovaniere`, `rigattiere`),
 `[data-scheda="<linguetta>"]` (con `aria-selected`),
 `[data-casella-pezzo="<cosa>"]` (con `data-posso`, `data-rarita` e
 `data-avanti`: le righe avanti, dove il prezzo è alto), `[data-vendo="<cosa>"]`, `[data-pannello]` (con

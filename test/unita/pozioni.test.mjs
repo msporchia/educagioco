@@ -3,15 +3,14 @@
    listino segue la scaletta, l'ordine si paga tutto e si versa in fila, e
    traboccare costa l'ampolla e la pulizia. Vedi docs/pozioni/regole.md.
    `node test/esegui.mjs unita/pozioni --niente-build` */
-import { CAMPAGNA, BLOCCHI, QUANTE_TAPPE, MONETE_A_DOSE, guastiDellaCampagna } from '../../src/giochi/pozioni/dati/campagna.js'
-import { FAMIGLIA, VALE, INGREDIENTI, POZIONI, CLIENTI, mescola, guastiDelleMisure } from '../../src/giochi/pozioni/dati/misure.js'
-import { PULIZIA, PEZZI, PREZZI } from '../../src/giochi/pozioni/dati/bottega.js'
-import { Bottega, Fila, banchetto, ottimo, giocaBene, giocaGoloso, giocaFila, caso, unitaBuone, scalaDi } from '../../src/giochi/pozioni/motore/bottega.js'
-import { EFFETTI } from '../../src/giochi/pozioni/scena3d/cliente.js'
-import { VERSI_DEI_CLIENTI, SUONI_DEGLI_EFFETTI } from '../../src/giochi/pozioni/suoni.js'
+import { CAMPAGNA, BLOCCHI, QUANTE_TAPPE, MONETE_A_DOSE, MONETE_A_PASSO, guastiDellaCampagna } from '../../src/giochi/pozioni/dati/campagna.js'
+import { FAMIGLIA, VALE, mescola, guastiDelleMisure } from '../../src/giochi/pozioni/dati/misure.js'
+import { PULIZIA, PASTICCIO, PEZZI, PREZZI } from '../../src/giochi/pozioni/dati/bottega.js'
+import { Bottega, banchetto, ottimo, giocaBene, giocaGoloso, seguiLaRicetta, caso, unitaBuone, scalaDi } from '../../src/giochi/pozioni/motore/bottega.js'
+import { MORTAIO } from '../../src/giochi/pozioni/motore/procedimento.js'
 import { regola, chiaveDi } from '../../src/giochi/pozioni/motore/misura.js'
 import { CONVERSIONI } from '../../src/giochi/pozioni/gioco.js'
-import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
+import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const SEMI = 120
 const tappa = chiave => CAMPAGNA.find(t => t.chiave === chiave)
@@ -51,7 +50,7 @@ for (const t of CAMPAGNA) {
     }
     giocaBene(b)
     if (!b.finita || b.stelle !== 3 || b.resto !== t.margine || b.traboccate) sotto++
-    if (b.monete !== t.ingredienti * MONETE_A_DOSE) moneteSbagliate++
+    if (b.monete !== t.ingredienti * MONETE_A_DOSE + b.passi.length * MONETE_A_PASSO) moneteSbagliate++
     const c = giocaGoloso(new Bottega(t, { rnd: caso(s) }))
     if (!c.finita) rotte++
     if (c.extra > 2) goloso++
@@ -60,7 +59,7 @@ for (const t of CAMPAGNA) {
   uguale(`${qui} quattro ampolle diverse, e la dose si compone`, rotte, 0)
   uguale(`${qui} due ingredienti non hanno la stessa dose`, doppie, 0)
   uguale(`${qui} chi ordina il minimo ha tre stelle e il margine intatto`, sotto, 0)
-  uguale(`${qui} tre monete a ingrediente`, moneteSbagliate, 0)
+  uguale(`${qui} tre monete a ingrediente e una a passo`, moneteSbagliate, 0)
   uguale(`${qui} «la più grande che ci sta» resta vicina al minimo`, goloso, 0)
   uguale(`${qui} nessuna dose chiede più di nove ampolle`, troppe, 0)
   uguale(`${qui} etichette che si leggono e prezzi piccoli`, fuori, 0)
@@ -149,7 +148,7 @@ for (const t of CAMPAGNA) {
         if (e.pieno) pagate.push(e.monete)
       }
     uguale('l\'ingrediente traboccato non paga, gli altri sì', pagate.filter(m => m === MONETE_A_DOSE).length, b.ingredienti.length - 1)
-    controlla('la pozione è finita', b.finita)
+    controlla('la spesa è finita', b.pronta)
     controlla('e non è perfetta', !b.perfetta)
   } else nota('il seme riempie giusto: nessun trabocco da provare')
 }
@@ -185,51 +184,80 @@ for (const t of CAMPAGNA) {
   controlla('oltre il bilancio si va in rosso, e la pozione si finisce lo stesso', (b.speso = b.gettoni + 3, b.resto < 0))
 }
 
-/* ---------- la tappa è una fila di due o tre pozioni ---------- */
+/* ---------- una pozione per tappa, col suo nome ---------- */
+uguale('ventinove nomi diversi', new Set(CAMPAGNA.map(t => t.nome)).size, QUANTE_TAPPE)
+controlla('ogni tappa ha la sua emoji e il suo colore', CAMPAGNA.every(t => t.emoji && /^#[0-9a-f]{6}$/.test(t.colore)))
+
+/* ---------- il procedimento ---------- */
 for (const t of CAMPAGNA) {
-  let doppie = 0, ripetuti = 0, sotto = 0
-  const abbastanza = t.famiglie.length === 1 && INGREDIENTI.filter(i => i.famiglia === t.famiglie[0]).length >= t.ingredienti * 2
-  for (let s = 1; s <= 40; s++) {
-    const f = new Fila(t, { rnd: caso(s) })
-    const viste = []
-    while (!f.finita) {
-      const b = f.attuale, prima = f.fatte.at(-1)
-      if (viste.includes(b.pozione.nome) || f.fatte.some(x => x.cliente === b.pozione.cliente)) doppie++
-      // le radici sono cinque: su tre ingredienti a pozione una per forza torna
-      if (prima && abbastanza && b.ingredienti.some(g => prima.ingredienti.includes(g.nome))) ripetuti++
-      viste.push(b.pozione.nome)
-      giocaBene(b); f.chiudi()
-    }
-    if (viste.length !== t.pozioni || f.stelle !== 3 || f.speso !== f.minimo) sotto++
+  let rotte = 0, senzaOrdine = 0, ricetteBrutte = 0
+  const ordini = new Set()
+  for (let s = 1; s <= 60; s++) {
+    const b = new Bottega(t, { rnd: caso(s) })
+    const azioni = b.passi.map(p => p.azione)
+    if (azioni.some(a => !t.azioni.includes(a))) rotte++
+    // ogni ingrediente finisce nel calderone una volta sola, e si scalda e si mescola sempre dopo che c'è qualcosa dentro
+    const versati = b.passi.flatMap(p => (p.azione === 'versa' ? p.cosa.filter(i => i !== MORTAIO) : p.azione === 'pesta' ? p.cosa : []))
+    if (versati.length !== b.ingredienti.length || new Set(versati).size !== versati.length) rotte++
+    if (b.passi[0].azione !== 'pesta' && b.passi[0].azione !== 'versa') senzaOrdine++
+    const lette = b.righe.flatMap(r => r.passi)
+    if (lette.join() !== b.passi.map((_, k) => k).join() || b.righe.some(r => !/^[A-Z].*\.$/.test(r.testo))) ricetteBrutte++
+    ordini.add(azioni.join())
+    giocaBene(b)
+    if (b.monete !== t.ingredienti * MONETE_A_DOSE + b.passi.length * MONETE_A_PASSO || !b.finita || b.pasticci) rotte++
+    if (b.ingredienti.filter(g => g.casa).length > (t.casa ? 1 : 0)) rotte++
   }
-  uguale(`${t.chiave}: nella fila niente pozione né cliente due volte`, doppie, 0)
-  uguale(`${t.chiave}: la pozione dopo cambia ingredienti`, ripetuti, 0)
-  uguale(`${t.chiave}: tutte le pozioni al minimo fanno tre stelle`, sotto, 0)
+  uguale(`${t.chiave}: il procedimento si fa con le azioni della tappa, ogni cosa una volta`, rotte, 0)
+  uguale(`${t.chiave}: si comincia mettendo qualcosa`, senzaOrdine, 0)
+  uguale(`${t.chiave}: la ricetta dice tutti i passi`, ricetteBrutte, 0)
+  if (t.procedimento >= 2) controlla(`${t.chiave}: l'ordine cambia, se no non si legge`, ordini.size > 1, [...ordini].join(' | '))
 }
 {
-  const t = tappa('massa-miste')
-  uguale('le tappe da soli sono da tre', t.pozioni, 3)
-  uguale('quelle col conto scritto da due', tappa('massa-virgola').pozioni, 2)
-  const f = new Fila(t, { rnd: caso(8) })
-  uguale('si comincia dalla prima', `${f.numero}/${f.quante}`, '1/3')
-  const prima = f.attuale
-  giocaBene(prima); f.chiudi()
-  uguale('chiusa una, la dopo è già pronta', f.numero, 2)
-  controlla('ed è un\'altra', f.attuale !== prima && !f.attuale.finita)
-  uguale('i gettoni ripartono', f.attuale.speso, 0)
-  const tutta = giocaFila(new Fila(t, { rnd: caso(8) }))
-  tutta.fatte[0].speso += 8
-  uguale('la tolleranza è di tre gettoni a pozione', tutta.stelle, 2)
-  tutta.fatte[0].speso += 2
-  uguale('oltre, una stella', tutta.stelle, 1)
-  tutta.fatte[0].speso -= 10
-  tutta.fatte[1].saltate = 1
-  uguale('una pozione saltata vale una stella alla tappa', tutta.stelle, 1)
+  const b = new Bottega(tappa('massa-miste'), { rnd: caso(3) })
+  uguale('prima della spesa niente azioni', b.fai('mescola'), null)
+  for (const [i, g] of b.ingredienti.entries()) for (const k of g.ottimo.pezzi) b.ordina([{ i, k }])
+  controlla('fatta la spesa la pozione non è finita', b.pronta && !b.finita)
+  uguale('il calderone è ancora vuoto', b.dentro.length, 0)
+  uguale('niente più ordini', b.ordina([{ i: 0, k: 0 }]), null)
+  const speso = b.speso, primo = b.passi[0]
+  const sbaglio = b.fai('scalda')
+  uguale('fuori ordine è un pasticcio', sbaglio.giusto, false)
+  uguale('costa un gettone', b.speso, speso + PASTICCIO)
+  uguale('e non cambia niente', b.passo, 0)
+  controlla('il cartello dice cosa diceva la ricetta', sbaglio.righe[1].includes('La ricetta dice'), sbaglio.righe.join(' | '))
+  uguale('le cose sbagliate sono un pasticcio anche loro', b.fai(primo.azione, [...primo.cosa, 9]).giusto, false)
+  const giusto = b.fai(primo.azione, [...primo.cosa].reverse())
+  controlla('l\'ordine in cui si scelgono le cose non conta', giusto.giusto)
+  uguale('un passo sbagliato prima non paga', giusto.monete, 0)
+  const p = b.passi[b.passo]
+  uguale('quello dopo sì', b.fai(p.azione, p.cosa).monete, MONETE_A_PASSO)
+  seguiLaRicetta(b)
+  controlla('e la pozione si finisce', b.finita)
+  controlla('non è perfetta', !b.perfetta)
+  uguale('ma le stelle dicono i gettoni', b.stelle, 2)
+}
+{
+  /* il testo intrecciato dice una coppia al contrario */
+  let girate = 0
+  for (let s = 1; s <= 30; s++) girate += new Bottega(tappa('massa-inverse'), { rnd: caso(s) }).righe.some(r => r.testo.includes('ma prima'))
+  uguale('in fondo alla scaletta si legge davvero', girate, 30)
+  const b = new Bottega(tappa('massa-banco'), { rnd: caso(1) })
+  uguale('all\'inizio due passi', b.passi.map(p => p.azione).join(), 'versa,mescola')
 }
 
-/* ---------- chi beve: ogni pozione ha il suo effetto, a schermo e all'orecchio ---------- */
-stessaLista('ogni pozione fa una cosa che la scena sa fare', [...new Set(POZIONI.map(p => p.effetto))].sort(), Object.keys(EFFETTI).sort())
-stessaLista('e che si sente', Object.keys(EFFETTI).sort(), [...SUONI_DEGLI_EFFETTI].sort())
-stessaLista('ogni cliente ha la sua voce', [...CLIENTI].sort(), [...VERSI_DEI_CLIENTI].sort())
+/* ---------- quello che c'è già in casa ---------- */
+{
+  let con = 0
+  for (let s = 1; s <= 60; s++) {
+    const b = new Bottega(tappa('massa-virgole'), { rnd: caso(s) })
+    const g = b.ingredienti.find(x => x.casa)
+    if (!g) continue
+    con++
+    uguale('lo strumento parte da lì', g.messo, g.casa)
+    uguale('il minimo è solo quello che manca', g.ottimo.pezzi.reduce((n, k) => n + g.offerte[k].base, 0), g.dose - g.casa)
+  }
+  controlla('nelle tappe con la casa capita', con > 20, `${con}`)
+  uguale('nelle altre no', new Bottega(tappa('massa-grande'), { rnd: caso(2) }).ingredienti.some(g => g.casa), false)
+}
 
 riassunto('pozioni')
