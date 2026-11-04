@@ -11,9 +11,9 @@ const nuova = () => new Fattoria3d({ stato: null, borsa: { quante: () => 0, paga
 
 const f = nuova()
 uguale('una fattoria nuova non ha nome', f.nome(), '')
-controlla('rinominare riesce, gratis', f.rinomina('Il Regno di Melody').ok)
-uguale('il nome sta', f.nome(), 'Il Regno di Melody')
-uguale('sopravvive al salvataggio', new Fattoria3d({ stato: JSON.parse(JSON.stringify(f.serializza())), borsa: { quante: () => 0, paga: () => true } }).nome(), 'Il Regno di Melody')
+controlla('rinominare riesce, gratis', f.rinomina('Il Regno di Marta').ok)
+uguale('il nome sta', f.nome(), 'Il Regno di Marta')
+uguale('sopravvive al salvataggio', new Fattoria3d({ stato: JSON.parse(JSON.stringify(f.serializza())), borsa: { quante: () => 0, paga: () => true } }).nome(), 'Il Regno di Marta')
 f.rinomina('')
 uguale('vuoto lo toglie', f.nome(), '')
 

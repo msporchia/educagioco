@@ -18,8 +18,8 @@ uguale('e senza un segno non c\'è stata nessuna settimana di aiuto', persiste(m
 const viste = [...buone(9), m]
 const a = chiAvvisare({ viste, difficili: [m], alleggerite: { m: segnoVecchio }, items, now: ORA })
 uguale('una domanda ostinata dopo l\'aiuto: si avvisa', a?.motivo, 'persistono')
-controlla('e il testo dice quale, e cosa fare', /Mettere un numero al suo posto/.test(testoAvviso('Leonardo', a)) && /Come va/.test(testoAvviso('Leonardo', a)))
-controlla('senza dare un giudizio sul bambino', !/(non ci arriva|è indietro|sbaglia sempre)/i.test(testoAvviso('Leonardo', a)))
+controlla('e il testo dice quale, e cosa fare', /Mettere un numero al suo posto/.test(testoAvviso('Lorenzo', a)) && /Come va/.test(testoAvviso('Lorenzo', a)))
+controlla('senza dare un giudizio sul bambino', !/(non ci arriva|è indietro|sbaglia sempre)/i.test(testoAvviso('Lorenzo', a)))
 
 uguale('la prima volta che va male no: prima c\'è la settimana di aiuto', chiAvvisare({ viste, difficili: [m], alleggerite: {}, items, now: ORA }), null)
 uguale('una domanda un passo avanti non conta', chiAvvisare({ viste, difficili: [riga('m', 14, 'toste')], alleggerite: { m: segnoVecchio }, items, now: ORA }), null)
@@ -32,6 +32,6 @@ const molte = Array.from({ length: 6 }, (_, i) => riga('x' + i, 14, 'medie', 'X'
 const t = chiAvvisare({ viste: [...buone(8), ...molte], difficili: molte, alleggerite: {}, items: {}, now: ORA })
 uguale('parecchie insieme: si avvisa anche senza la settimana', t?.motivo, 'tante')
 uguale('in un solo messaggio, con le prime due e quante altre', `${t.quali.length}+${t.altre}`, '2+4')
-controlla('e non spaventa', /un po' troppo avanti/.test(testoAvviso('Leonardo', t)))
+controlla('e non spaventa', /un po' troppo avanti/.test(testoAvviso('Lorenzo', t)))
 uguale('senza nome dice «Il bambino»', testoAvviso('', t).startsWith('Il bambino'), true)
 riassunto('quando si avvisa un grande')

@@ -42,7 +42,7 @@ Come Castle Battle ([../arena/multigiocatore.md](../arena/multigiocatore.md)), *
 - I bambini finti in `test/aiuto/sfide/sotterraneo.mjs`: decidono sulla loro copia con le mete di `motore/banco-in-due.js` e
   mandano una mossa alla volta. `unita/sotterraneo-sfida`: partite intere su quattro reti, mai separate; la fotografia presa a
   scontro aperto e rimessa va avanti uguale, campo per campo. `node strumenti/banco-rete.mjs --gioco sotterraneo`: in fondo il
-  100% con la rete calma, il 92% con quella di casa e di Melody; con «pessima» (spenta fino a un minuto, otto volte al minuto) si
+  100% con la rete calma, il 92% con quella di casa e con quella agitata; con «pessima» (spenta fino a un minuto, otto volte al minuto) si
   rompono tutte, come vuole il tavolo che tiene un posto vuoto due minuti.
 
 ## La vista (fatto)

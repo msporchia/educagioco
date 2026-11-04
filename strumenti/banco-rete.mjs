@@ -3,7 +3,7 @@
 // stessi argomenti, stessa tabella. Una riga per scenario: quante partite arrivano in fondo, quante si rompono e perché, quanto
 // si resta fermi. I giochi che sanno giocare da soli stanno in test/aiuto/sfide/.
 //   node strumenti/banco-rete.mjs                        tutti gli scenari, 12 partite ciascuno
-//   node strumenti/banco-rete.mjs --gioco arena --scenario melody --partite 40 --seme 7
+//   node strumenti/banco-rete.mjs --gioco arena --scenario agitata --partite 40 --seme 7
 //   node strumenti/banco-rete.mjs --tempi grazia=60000,sordo=4000     i tempi del canale da provare (src/insieme/rete.js TEMPI)
 import { partitaInDue, SCENARI } from '../test/aiuto/sfida-finta.mjs'
 import { GIOCHI_IN_DUE } from '../test/aiuto/sfide/index.mjs'

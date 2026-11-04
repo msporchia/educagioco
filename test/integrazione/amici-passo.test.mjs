@@ -27,20 +27,20 @@ const segnalinoAl = () => page.locator('[data-segnalino]').getAttribute('data-al
 /* ══════════ 1. il coniglio a metà della strada ══════════ */
 await semina(page, { settings: { eta: 9 }, campagne: { passo: { tappa: 4, stelle: {}, cfg: { fila: FILA_ATTUALE } } } })
 await seminaAmici(page, [
-  amico('a', 'leonardo1', 'Leonardo', 0, { coniglio: 7 }, {}),
-  amico('b', 'melody001', 'Melody', 3, { coniglio: 4 }, {}),
+  amico('a', 'lorenzo01', 'Lorenzo', 0, { coniglio: 7 }, {}),
+  amico('b', 'marta0001', 'Marta', 3, { coniglio: 4 }, {}),
   amico('d', 'ugo000001', 'Ugo', 1, { coniglio: 7 }, {}),
   amico('c', null, '', 0, { coniglio: 9 }, {}),                // mai incontrato online: senza nome non si vede
 ])
 await allaMappa()
 uguale('il segnalino del coniglio sta sul suo posto 4', await segnalinoAl(), String(coniglio[4]))
-uguale('in cima chi è da raggiungere', await testo('[data-amico-davanti]'), 'Leonardo è 3 tappe più avanti di te.')
+uguale('in cima chi è da raggiungere', await testo('[data-amico-davanti]'), 'Lorenzo è 3 tappe più avanti di te.')
 uguale('sulla tappa 7 due pallini', await page.locator('[data-amici-casella][data-al="7"] [data-pallino-amico]').count(), 2)
-uguale('sulla mia, Melody', await page.locator('[data-amici-casella][data-al="4"] [data-pallino-amico]').count(), 1)
+uguale('sulla mia, Marta', await page.locator('[data-amici-casella][data-al="4"] [data-pallino-amico]').count(), 1)
 uguale('un pallino per amico col nome, non per quello senza', await page.locator('[data-amici-casella] [data-pallino-amico]').count(), 3)
 await page.locator(casellaDi(coniglio, 7)).click()
 await page.waitForSelector('[data-fumetto]')
-uguale('toccando la tappa il nome nel fumetto', await testo('[data-fumetto] [data-amici-qui]'), 'LULeonardo e Ugo sono qui')
+uguale('toccando la tappa il nome nel fumetto', await testo('[data-fumetto] [data-amici-qui]'), 'LULorenzo e Ugo sono qui')
 await page.locator('[data-fumetto]').scrollIntoViewIfNeeded()
 await scatto(page, 'amici-passo-coniglio')
 
@@ -51,8 +51,8 @@ const piccoli = coniglio.filter(i => i < cane[0])          // le tappe del conig
 const stelle = Object.fromEntries([...piccoli, ...cane.slice(0, 2)].map(i => [i, 1]))
 await semina(page, { settings: { eta: 9 }, campagne: { passo: { tappa: 0, stelle, cfg: { fila: FILA_ATTUALE, ultima: cane[1] } } } })
 await seminaAmici(page, [
-  amico('a', 'leonardo1', 'Leonardo', 0, { cane: 5, coniglio: piccoli.length + 2 }, {}),
-  amico('b', 'melody001', 'Melody', 3, { coniglio: coniglio.length }, { coniglio: 12 }),
+  amico('a', 'lorenzo01', 'Lorenzo', 0, { cane: 5, coniglio: piccoli.length + 2 }, {}),
+  amico('b', 'marta0001', 'Marta', 3, { coniglio: coniglio.length }, { coniglio: 12 }),
   amico('d', 'ugo000001', 'Ugo', 1, { cane: cane.length }, { cane: 8 }),
   amico('e', 'sara000001', 'Sara', 1, { cane: cane.length, coniglio: coniglio.length }, {}),
   amico('f', 'dario00001', 'Dario', 2, {}, { cane: 4 }),    // un record e nessun posto
@@ -60,7 +60,7 @@ await seminaAmici(page, [
 await allaMappa()
 uguale('si apre sul cane, che ha giocato per ultimo', await page.locator('[data-mappa]').getAttribute('data-protagonista'), 'cane')
 uguale('il segnalino del cane sta sul suo posto 2', await segnalinoAl(), String(cane[2]))
-uguale('in cima chi è da raggiungere sulla sua strada', await testo('[data-amico-davanti]'), 'Leonardo è 3 tappe più avanti di te.')
+uguale('in cima chi è da raggiungere sulla sua strada', await testo('[data-amico-davanti]'), 'Lorenzo è 3 tappe più avanti di te.')
 uguale('un pallino solo: gli altri sono al sentiero o sull\'altra strada', await page.locator('[data-amici-casella] [data-pallino-amico]').count(), 1)
 uguale('sulla tappa 5 del cane', await page.locator('[data-amici-casella][data-al="5"] [data-pallino-amico]').count(), 1)
 uguale('i record del sentiero del cane, dal più alto', (await testi('.pp-sentiero-nome [data-record-amico]')).join(' | '), 'UUgo: 8 di fila | DDario: 4 di fila')
@@ -73,9 +73,9 @@ await page.click('[data-scegli="coniglio"]')
 await page.waitForSelector('[data-mappa][data-protagonista="coniglio"] [data-tappa]', { timeout: 8000 })
 await attendi(page, 500)
 uguale('il segnalino del coniglio sta sulla prima tappa dopo i piccoli', await segnalinoAl(), String(coniglio[piccoli.length]))
-uguale('in cima chi è da raggiungere sulla strada del coniglio', await testo('[data-amico-davanti]'), 'Leonardo è 2 tappe più avanti di te.')
+uguale('in cima chi è da raggiungere sulla strada del coniglio', await testo('[data-amico-davanti]'), 'Lorenzo è 2 tappe più avanti di te.')
 uguale('un pallino sulla sua tappa', await page.locator(`[data-amici-casella][data-al="${piccoli.length + 2}"] [data-pallino-amico]`).count(), 1)
-uguale('i record del sentiero del coniglio', (await testi('.pp-sentiero-nome [data-record-amico]')).join(' | '), 'MMelody: 12 di fila')
+uguale('i record del sentiero del coniglio', (await testi('.pp-sentiero-nome [data-record-amico]')).join(' | '), 'MMarta: 12 di fila')
 uguale('e chi c\'è senza record', await testo('.pp-sentiero-nome [data-amici-qui]'), 'SSara è qui')
 await page.locator('.pp-sentiero-nome').scrollIntoViewIfNeeded()
 await scatto(page, 'amici-passo-coniglio-sentiero')

@@ -110,7 +110,7 @@ export const PARTENZE = [
     che: 'Tutto acceso, tranne i giochi per i più piccoli.',
     nientePiccoli: true,
     anni: 9.5,
-    // copre da 8,75 anni, anche gli undicenni. `decimali`: a scuola la virgola come numero si fa a metà quarta, non prima (Melody); chi è più avanti lo riaccende dai ritocchi
+    // copre da 8,75 anni, anche gli undicenni. `decimali`: a scuola la virgola come numero si fa a metà quarta, non prima; chi è più avanti lo riaccende dai ritocchi
     saperi: ['decimali'],
     tiene: {
       divisioni: 'le divisioni in colonna sono di quarta',

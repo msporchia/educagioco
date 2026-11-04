@@ -172,7 +172,7 @@ nello zaino, e se ne trovano: [luce.md](luce.md#la-torcia-si-accende-da-sé-e-fi
 
 ## I mercanti e la bottega
 
-Le quattro botteghe del mondo di sopra (il fabbro lavora il ferro, l'incantatrice la magia), cosa vendono, i pezzi avanti a
+Le cinque botteghe del mondo di sopra (il fabbro lavora il ferro, l'incantatrice la magia), cosa vendono, i pezzi avanti a
 sovrapprezzo, il banco che cambia a ogni giro ([bottega.md](bottega.md)), la finestra
 da gioco di ruolo con le caselle e il confronto affiancato, lo zaino nella stessa
 finestra: [bottega-finestra.md](bottega-finestra.md). La

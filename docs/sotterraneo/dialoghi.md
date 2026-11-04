@@ -1,7 +1,7 @@
 # I dialoghi, e le scritte del gioco
 
 Chi sta fermo sul mondo di sopra si **parla**: il vecchio minatore, i sei
-che danno le missioni, i quattro mercanti. Prima c'era un fumetto con tutto
+che danno le missioni, i cinque mercanti. Prima c'era un fumetto con tutto
 dentro e i tasti sotto; l'utente, l'8 ottobre 2026: *«dà un tocco di… sto
 controllando il gioco invece di seguirlo»*. Il dialogo fa seguire: chi parla
 ha una faccia, dice una cosa alla volta, e le domande da fargli portano alle

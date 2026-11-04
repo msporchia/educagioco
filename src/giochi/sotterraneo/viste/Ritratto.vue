@@ -1,5 +1,5 @@
 <script setup>
-// Il ritratto di chi sta sulla terra di sopra (il minatore, i sei delle missioni, il capitano, i quattro mercanti): la faccia del suo
+// Il ritratto di chi sta sulla terra di sopra (il minatore, i sei delle missioni, il capitano, i cinque mercanti): la faccia del suo
 // modello 3D (`persona:<modello>`, docs/sotterraneo/persone-3d.md); finché la foto non c'è il posto resta vuoto (docs/sotterraneo/anteprime-3d.md).
 // La figura di pixel.js solo per chi un modello non ce l'ha.
 import { computed } from 'vue'
