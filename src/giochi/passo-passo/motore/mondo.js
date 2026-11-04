@@ -8,7 +8,7 @@
    dieci volte più svelto. `senza` spegne una regola per chiedersi se un
    livello ne ha davvero bisogno (`serveLaRegola`); nel gioco non si usa
    mai. */
-import { MOSSE, VERSI, CHIAVI_VERSI, VISTA } from '../dati/mondo.js'
+import { MOSSE, VERSI, CHIAVI_VERSI, VISTA, ATTACCA } from '../dati/mondo.js'
 import { albero, conCicli, eFine, CASA } from '../dati/carte.js'
 
 export const TANA = 'tana'
@@ -134,11 +134,13 @@ export class Mondo {
      Torna l'esito: `null` se la fila può andare avanti, altrimenti
      TANA, SBATTE o SPLASH. */
   mossa(m) {
+    if (m === ATTACCA) return this.attacca()
     const d = MOSSE[m]
     if (!d) throw new Error(`mossa sconosciuta: ${m}`)
+    if (this.liv.guerriero && this.colpisce()) return CADUTO
     const esito = d.salto ? this.salta(d.dx, d.dy) : this.cammina(d.dx, d.dy)
     if (esito) return esito
-    return this.liv.cane ? this.spaventa() : this.liv.guerriero ? this.affronta() : null
+    return this.liv.cane ? this.spaventa() : null
   }
 
   cammina(dx, dy) {
@@ -271,23 +273,31 @@ export class Mondo {
     this.segna({ che: 'pulsante', dove: this.xy(i), colore })
   }
 
-  /* il guerriero si è fermato: i nemici che lo vedono, nelle otto celle
-     attorno a loro, lo affrontano. Uno solo, con la spada, se ne va; senza
-     spada, o in due alla volta, la fila finisce lì. Chi scivola o salta
-     davanti a un nemico non si è fermato: conta solo dove finisce. */
-  affronta() {
-    if (this.senza === 'nemici') return null
-    const p = this.p
-    const vicini = this.nemici.filter(n => this.liv.vede(n, p, i => this.eChiusa(i)))
-    if (!vicini.length) return null
-    const troppi = vicini.length > 1 && this.senza !== 'due'
-    if (troppi || !this.spada) {
-      this.segna({ che: 'colpito', da: this.xy(p), nemici: vicini.map(i => this.xy(i)) })
-      return CADUTO
-    }
+  /* i nemici che vedono il guerriero dove sta, nelle otto celle attorno a loro.
+     Chi scivola o salta davanti a un nemico non si è fermato: conta dove finisce */
+  chiVede() {
+    if (this.senza === 'nemici') return []
+    return this.nemici.filter(n => this.liv.vede(n, this.p, i => this.eChiusa(i)))
+  }
+  colpito(vicini) {
+    this.segna({ che: 'colpito', da: this.xy(this.p), nemici: vicini.map(i => this.xy(i)) })
+    return CADUTO
+  }
+
+  /* chi è visto e fa altro che attaccare viene colpito: vedi docs/passo-passo/guerriero.md */
+  colpisce() {
+    const vicini = this.chiVede()
+    return vicini.length ? this.colpito(vicini) : null
+  }
+
+  /* ⚔️: con la spada batte chi lo vede, se è uno solo. A vuoto non fa niente */
+  attacca() {
+    const vicini = this.chiVede()
+    if (!vicini.length) { this.segna({ che: 'fendente', da: this.xy(this.p) }); return null }
+    if (!this.spada || (vicini.length > 1 && this.senza !== 'due')) return this.colpito(vicini)
     for (const i of vicini) {
       this.nemici.splice(this.nemico(i), 1)
-      this.segna({ che: 'duello', da: this.xy(p), nemico: this.xy(i) })
+      this.segna({ che: 'duello', da: this.xy(this.p), nemico: this.xy(i) })
     }
     return null
   }
@@ -376,10 +386,20 @@ export class Mondo {
    ciclo aperto). */
 const NESSUN_GIRO = Object.freeze([])
 
-export function esegui(liv, fila, { senza = null, eventi = true } = {}) {
+export function esegui(liv, fila, { senza = null, eventi = true, aperta = false } = {}) {
   const w = new Mondo(liv, { senza, eventi })
   const passi = []
   const esce = (esito, dove) => ({ esito, dove, carota: w.presa, passi, mondo: w })
+  /* la fila è finita, ma la guardia che ti ha visto non aspetta */
+  const finita = dove => {
+    if (eventi) w.traccia = []
+    if (liv.guerriero && !aperta && w.chiVede().length) {
+      w.colpisce()
+      passi.push({ i: dove, mossa: ATTACCA, eventi: w.traccia || [], giri: NESSUN_GIRO })
+      return esce(CADUTO, dove)
+    }
+    return esce(FINITA, dove)
+  }
 
   /* la fila di sempre, senza cicli: la strada svelta, perché il
      risolutore degli aiuti ci passa migliaia di volte */
@@ -392,8 +412,7 @@ export function esegui(liv, fila, { senza = null, eventi = true } = {}) {
       passi.push({ i, mossa: fila[i], eventi: w.traccia || [], giri: NESSUN_GIRO })
       if (esito) return esce(esito, i)
     }
-    if (eventi) w.traccia = []
-    return esce(FINITA, fila.length - 1)
+    return finita(fila.length - 1)
   }
 
   /* coi cicli si cammina l'albero (vedi docs/passo-passo/zaino.md per
@@ -434,8 +453,7 @@ export function esegui(liv, fila, { senza = null, eventi = true } = {}) {
     return false
   }
   if (corri(albero(fila))) return fine
-  if (eventi) w.traccia = []
-  return esce(FINITA, passi.length ? passi.at(-1).i : -1)
+  return finita(passi.length ? passi.at(-1).i : -1)
 }
 
 /* le quattro stelle di una tappa vinta (vedi docs/passo-passo/stelle-e-aiuti.md) */

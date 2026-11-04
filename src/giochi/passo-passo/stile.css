@@ -379,14 +379,15 @@
 .pp-tasto:disabled { filter: saturate(.3) brightness(1.1) }
 .pp-tasto.pp-salto { --t-chiaro: var(--pp-salto-chiaro); --t-base: var(--pp-salto); --t-orlo: var(--pp-salto-scuro); height: 48px }
 .pp-riga.pp-azioni { grid-template-columns: 1fr 2fr 1fr }
-.pp-riga.pp-carte { grid-template-columns: 1fr }
-.pp-riga.pp-carte.pp-due { grid-template-columns: 1fr 1fr }
+.pp-riga.pp-carte { grid-template-columns: repeat(var(--pp-quante), 1fr) }
 .pp-tasto.pp-ripeti { --t-chiaro: var(--pp-ciclo-chiaro); --t-base: var(--pp-ciclo); --t-orlo: var(--pp-ciclo-scuro);
                       height: 48px; display: flex; align-items: center; justify-content: center; gap: 10px }
 .pp-scelta-volte { position: absolute; inset: -4px -4px -6px; padding: 8px 8px 12px; z-index: 2; display: grid; gap: 11px 10px;
                    grid-template-columns: repeat(4, 1fr); grid-auto-rows: minmax(0, 54px); align-content: center;
                    background: var(--pp-carta);
                    box-shadow: 0 -3px 0 var(--pp-ciclo), 0 3px 0 var(--pp-ciclo), -3px 0 0 var(--pp-ciclo), 3px 0 0 var(--pp-ciclo) }
+.pp-tasto.pp-ripeti.pp-attacca { --t-chiaro: var(--pp-salto-chiaro); --t-base: var(--pp-salto); --t-orlo: var(--pp-salto-scuro) }
+.pp-tasto.pp-attacca .pp-pix:last-child { --pp-pix: 2px }
 .pp-tasto.pp-ripeti.pp-tasto-se { --t-chiaro: var(--pp-se-chiaro); --t-base: var(--pp-se); --t-orlo: var(--pp-se-scuro) }
 .pp-tasto.pp-volte { --t-chiaro: var(--pp-ciclo-chiaro); --t-base: var(--pp-ciclo); --t-orlo: var(--pp-ciclo-scuro);
                      height: auto }

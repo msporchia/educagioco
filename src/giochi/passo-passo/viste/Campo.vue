@@ -20,6 +20,7 @@ const props = defineProps({
   guasto: { type: Number, default: null },
   inCorsa: { type: Boolean, default: false },
   salti: { type: Boolean, default: false },
+  attacca: { type: Boolean, default: false },    // sulla mappa ci sono guardie
   brilla: { type: String, default: null },       // la freccia (o 'via') che l'aiuto accende
   prezzo: { type: Number, default: null },       // il prossimo gradino del 💡: 0 gratis, null finita
   povero: { type: Boolean, default: false },     // le monete non bastano
@@ -108,7 +109,12 @@ defineExpose({ tela })
             <Icona :mossa="'salto-' + v" />
           </button>
         </div>
-        <div v-if="conRipeti || conSe" class="pp-riga pp-carte" :class="{ 'pp-due': conRipeti && conSe }">
+        <div v-if="conRipeti || conSe || attacca" class="pp-riga pp-carte"
+             :style="{ '--pp-quante': [conRipeti, conSe, attacca].filter(Boolean).length }">
+          <button v-if="attacca" class="pp-tasto pp-ripeti pp-attacca" :class="{ 'pp-brilla': brilla === 'attacca', 'pp-stretta': conRipeti && conSe }"
+                  data-freccia="attacca" aria-label="attacca" :disabled="inCorsa || piena" @click="emit('freccia', 'attacca')">
+            <Figura nome="attacca" /><Scritta v-if="!(conRipeti && conSe)" testo="attacca" />
+          </button>
           <button v-if="conRipeti" class="pp-tasto pp-ripeti" :class="{ 'pp-brilla': brilla === 'ripeti' }"
                   data-carta="ripeti" aria-label="ripeti" :disabled="inCorsa || piena" @click="emit('scatola', 'ripeti')">
             <Figura nome="ripeti" /><Scritta testo="ripeti" />

@@ -74,7 +74,7 @@ const parolaDi = n => {
             aria-hidden="true"></span>
       <!-- il consiglio del 💡: la carta giusta in trasparenza, dove va -->
       <button v-if="f.s.value.cursore === x.p && f.s.value.fantasma" class="pp-tessera pp-fantasma"
-              :class="{ 'pp-salto': f.s.value.consiglio.startsWith('salto-'),
+              :class="{ 'pp-salto': f.s.value.consiglio.startsWith('salto-') || f.s.value.consiglio === 'attacca',
                         'pp-fantasma-ciclo': eCiclo(f.s.value.consiglio),
                         'pp-fantasma-se': eSe(f.s.value.consiglio) }"
               :data-consiglio="f.s.value.consiglio"
@@ -90,7 +90,7 @@ const parolaDi = n => {
     </template>
 
     <button v-else-if="x.che === 'mossa'" class="pp-tessera"
-            :class="{ 'pp-salto': x.nodo.m.startsWith('salto-'),
+            :class="{ 'pp-salto': x.nodo.m.startsWith('salto-') || x.nodo.m === 'attacca',
                       'pp-corrente': f.s.value.corrente === x.nodo.i,
                       'pp-fatta': f.s.value.piatta && f.s.value.inCorsa && f.s.value.corrente > x.nodo.i,
                       'pp-guasto': f.s.value.guasto === x.nodo.i,

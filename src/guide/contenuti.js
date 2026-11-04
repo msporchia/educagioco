@@ -555,7 +555,7 @@ export const AIUTI = {
       { titolo: 'Il guerriero', righe: [
         'Finito «Tutto insieme» si apre anche il **guerriero**, con la sua strada: deve arrivare alla **principessa**, e la corona è la sua carota.',
         'Una **grata** si apre col **pulsante del suo colore** e resta aperta: basta metterci il piede, o farci finire sopra un masso. Saltandolo non si preme.',
-        'Un **nemico** colpisce chi si ferma nelle caselle attorno a lui, anche di traverso (quelle rosse per terra): chi scivola o salta non si è fermato. Con la **spada** lo si batte, ma contro **due insieme** non vince nemmeno lei: si prendono uno alla volta.',
+        'Un **nemico** vede le caselle attorno a lui, anche di traverso (quelle rosse per terra): chi scivola o salta non si è fermato. Chi si ferma lì deve subito toccare **⚔️ attacca**, con la spada in mano, se no viene colpito. Contro **due insieme** non basta: si prendono uno alla volta.',
         'A metà strada arrivano le scatole: 🔁 ripete, 🚩 ripete fino a un pulsante, e ❓ con una freccia vuol dire **«se di là si passa»**: il guerriero guarda da solo dove andare.',
       ] },
       { titolo: 'Lo zaino e il ripeti', righe: [

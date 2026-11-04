@@ -14,9 +14,10 @@ Regole in `motore/mondo.js` (`premi`, `affronta`), tappe in coda a
 | **la corona** | la sua carota: la seconda stella |
 | **il pulsante** | `4 5 6`, rosso, blu e giallo, con la forma delle lastre per chi i colori non li distingue. Lo preme chi ci mette il piede, anche scivolando, e il masso che ci finisce sopra. Saltandoci sopra non si preme, come la carota |
 | **la grata** | `R U G`: chiusa è un muro alto, non si scavalca e ferma chi scivola. Si apre col pulsante del suo colore, tutte quelle del colore insieme, e **resta aperta** |
-| **il nemico** | `n`: vede le **otto celle** attorno a sé, anche di traverso, e colpisce chi ci si ferma. Non vede solo dietro un angolo, con tutte e due le celle in mezzo sbarrate (`Livello.vede`). Chi scivola o salta conta solo dove finisce. Per terra le celle che vede sono tinte di rosso: la regola detta col disegno, per chi non legge |
-| **la spada** | `s`: si prende passandoci sopra, si vede in mano, e resta. Con lei il nemico accanto sparisce in uno sbuffo |
-| **due insieme** | fermarsi dove ti vedono in due è la fine **anche con la spada**: si prendono uno alla volta, da una casella che ne vede uno solo |
+| **il nemico** | `n`: vede le **otto celle** attorno a sé, anche di traverso. Non vede solo dietro un angolo, con tutte e due le celle in mezzo sbarrate (`Livello.vede`). Chi scivola o salta conta solo dove finisce. Per terra le celle che vede sono tinte di rosso: la regola detta col disegno, per chi non legge |
+| **⚔ attacca** | una carta come le frecce (`ATTACCA`, fuori da `MOSSE`), col tasto dove sulla mappa ci sono guardie. Chi si ferma dove lo vedono **deve attaccare con la carta dopo**: se fa altro, o la fila finisce lì, viene colpito (`Mondo.colpisce`). A vuoto non fa niente, e si può tenere in una scatola |
+| **la spada** | `s`: si prende passandoci sopra, si vede in mano, e resta. Con lei ⚔ fa sparire il nemico in uno sbuffo; senza, ⚔ non serve e ti colpisce lo stesso |
+| **due insieme** | fermarsi dove ti vedono in due è la fine **anche con la spada**: ⚔ non basta, si prendono uno alla volta da una casella che ne vede uno solo |
 | **il muro** | `W`: alto, come l'albero |
 
 Cadere (`CADUTO`) è uno sbaglio come sbattere: la freccia colpevole lampeggia,
@@ -31,8 +32,8 @@ Casi decisi apposta:
   chiedere prima;
 - un masso non copre la spada e non entra in una grata chiusa; sul pulsante sì,
   e lo preme per sempre;
-- il pulsante accanto a un nemico si preme col piede solo avendo la spada: è
-  il modo di far contare l'ordine.
+- il pulsante accanto a un nemico si preme col piede, ma poi si attacca: senza
+  spada non si riparte, ed è il modo di far contare l'ordine.
 
 ## Le carte
 
@@ -59,7 +60,7 @@ Con lo zaino valgono le regole di [zaino.md](zaino.md): la strada in frecce non 
 sta, le `soluzioni` e le `fragili` si scrivono, e chi sbaglia fa almeno due passi.
 
 **Una tappa con le carte non è una del coniglio travestita**: la soluzione scritta
-affronta tutte le guardie della mappa, e un test lo pretende. Una guardia murata, o
+affronta con ⚔ tutte le guardie della mappa, e un test lo pretende. Una guardia murata, o
 messa solo dove non si deve andare, è un muro che morde: sta **sulla strada**, davanti
 a un pulsante o accanto a una sosta. Il mondo che cambia è il bello: la guardia battuta
 libera il ❓, e in «Le soste» la grata aperta fa cambiare strada allo stesso programma.
@@ -117,29 +118,29 @@ dove finiscono trappole, soluzioni e mosse ingenue.
 | 12. Il giro | la strada di sopra porta a una sola | 14 |
 | 13. La fila | si entra di fronte a una sola | 17 |
 | 14. Il masso sul pulsante | premerlo da lontano | 14 |
-| 15. La scalinata | 🔁 una rampa e la sua guardia, ma prima la spada | zaino 7 |
-| 16. La galleria | 🔁 come si passa una coppia | zaino 7 |
+| 15. La scalinata | 🔁 una rampa col suo ⚔, ma prima la spada | zaino 8 |
+| 16. La galleria | 🔁 come si passa una coppia | zaino 9 |
 | 17. Il fossato | 🔁 salto e passo, sulle isolette | zaino 4 |
 | **🏰 Il castello** | *il programma fa la strada* | |
-| 18. Le stanze chiuse | 🔁 dentro 🔁, di buca in buca | zaino 3 |
-| 19. I camminamenti | 🚩 fino al giallo, guardie sulla strada e spada alle spalle | zaino 7 |
-| 20. Le rampe | 🚩 avanti al rosso, indietro al blu | zaino 9 |
-| 21. Il corridoio storto | ❓ se di là si passa: la guardia battuta libera la strada | zaino 5 |
+| 18. Le stanze chiuse | 🔁 dentro 🔁, di buca in buca | zaino 4 |
+| 19. I camminamenti | 🚩 fino al giallo, guardie sulla strada e spada alle spalle | zaino 8 |
+| 20. Le rampe | 🚩 avanti al rosso, indietro al blu | zaino 11 |
+| 21. Il corridoio storto | ❓ se di là si passa: ⚔ a ogni giro libera la strada | zaino 6 |
 | 22. Le nicchie | ❓ a ogni gradino si guarda a sinistra | zaino 5 |
-| 23. Scivolare via | 🔁 sul ghiaccio contano le soste, e a ogni sosta una guardia | zaino 7 |
-| 24. La torre | ❓ un programma solo, e la spada dietro di te | zaino 6 |
+| 23. Scivolare via | 🔁 sul ghiaccio contano le soste: due sono sotto una guardia | zaino 9 |
+| 24. La torre | ❓ un programma solo, e la spada dietro di te | zaino 8 |
 | **❄️ Il lago** | *il programma guarda dove mette i piedi* | |
-| 25. La pista | 🔁 due frecce, la spada alla prima sosta, guardie alle altre | zaino 3 |
-| 26. Le soste | ❓ la grata aperta fa cambiare strada allo stesso programma | zaino 7 |
+| 25. La pista | 🔁 due frecce e ⚔ dopo ognuna | zaino 5 |
+| 26. Le soste | ❓ la grata aperta fa cambiare strada allo stesso programma | zaino 8 |
 | 27. Il ponte rotto | ❓ un passo se c'è il ponte, poi sempre un salto | zaino 4 |
-| 28. Le tre chiavi | 🔁 dentro 🔁: ogni pulsante ha la sua guardia davanti | zaino 10 |
-| 29. Il pavimento | ❓ col colore sotto i piedi, e prima la spada | zaino 11 |
+| 28. Le tre chiavi | 🔁 dentro 🔁: ogni pulsante ha la sua guardia davanti | zaino 11 |
+| 29. Il pavimento | ❓ col colore sotto i piedi, e prima la spada | zaino 12 |
 | **👑 Il mastio** | *scatole dentro scatole, e tutte le carte* | |
-| 30. I pozzi | 🔁 dentro il ❓: se sei sul rosso, tre volte giù | zaino 5 |
-| 31. I denti del mastio | 🚩 due «fino a» in una scatola, una guardia per dente | zaino 9 |
-| 32. La chiocciola | 🚩 quattro «fino a» in una scatola, e tre guardie nei corridoi | zaino 9 |
-| 33. I due corridoi | 🚩 e ❓: una scatola si ferma sul giallo, l'altra arriva | zaino 10 |
-| 34. Il trono | tutte le carte: la spada, le rampe, il corridoio | zaino 11 |
+| 30. I pozzi | 🔁 dentro il ❓: se sei sul rosso, tre volte giù | zaino 6 |
+| 31. I denti del mastio | 🚩 due «fino a» in una scatola, una guardia per dente | zaino 11 |
+| 32. La chiocciola | 🚩 quattro «fino a» in una scatola, ⚔ solo scendendo | zaino 10 |
+| 33. I due corridoi | 🚩 e ❓: una scatola si ferma sul giallo, l'altra arriva | zaino 11 |
+| 34. Il trono | tutte le carte: la spada, le rampe, il corridoio | zaino 12 |
 
 **Ogni tappa di frecce con i nemici dichiara le sue `trappole`**: la mossa ingenua, che fa
 almeno due passi e poi si ferma male. Nel gradino dei due, `serveLaRegola` guarda
