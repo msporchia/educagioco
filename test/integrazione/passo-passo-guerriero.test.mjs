@@ -6,6 +6,8 @@ import { apriBrowser, apriGioco, azzera, attendi, semina, scegli, parti, scatto 
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA, FILA_ATTUALE } from '../../src/giochi/passo-passo/dati/campagna.js'
 import { STRADE } from '../../src/giochi/passo-passo/motore/strade.js'
+import { Livello } from '../../src/giochi/passo-passo/motore/livello.js'
+import { risolvi } from '../../src/giochi/passo-passo/motore/risolutore.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -47,13 +49,13 @@ await page.waitForSelector('[data-segnalino][data-in-viaggio="0"]', { timeout: 8
 await parti(page, `[data-tappa="${prima}"]`)
 await page.waitForSelector('.pp-campo', { timeout: 5000 })
 await attendi(page, 450)
-await componi(['destra', 'destra', 'destra', 'destra'])
+const sbagliata = ['su', 'destra', 'destra', 'destra', 'destra', 'su']
+await componi(sbagliata)
 await page.locator('[data-azione="via"]').click()
-await attendi(page, 4500)
+await attendi(page, 6000)
 uguale('senza il pulsante la grata ferma, e si riprova', await page.locator('[data-fine]').count(), 0)
-await page.locator('[data-azione="cancella"]').click()
-await page.locator('[data-azione="cancella"]').click()
-await componi(['su', 'giu', 'giu', 'su', 'destra', 'destra', 'destra'])
+for (const _ of sbagliata) await page.locator('[data-azione="cancella"]').click()
+await componi(risolvi(Livello.da(CAMPAGNA[prima])))
 await page.locator('[data-azione="via"]').click()
 await page.waitForSelector('[data-fine="tappa"]', { timeout: 15000 })
 uguale('dalla principessa, con la corona', await page.locator('[data-stelle-prese]').getAttribute('data-quante'), '4')
@@ -65,12 +67,12 @@ controlla('e ▶ porta avanti sulla sua strada', await page.locator('[data-azion
 await page.evaluate(() => { location.hash = 'passo=la-spada'; location.reload() })
 await page.waitForSelector('.pp-campo', { timeout: 8000 })
 await attendi(page, 450)
-await componi(['destra', 'destra', 'destra', 'destra'])
+await componi(['su', 'destra', 'destra', 'destra', 'destra', 'destra', 'destra'])
 await page.locator('[data-azione="via"]').click()
-await attendi(page, 2200)
+await attendi(page, 3400)
 await scatto(page, 'passo-guerriero-caduto')
 await attendi(page, 2500)
-uguale('la fila si ferma sulla freccia colpevole', await page.locator('[data-tessera="3"][data-guasto]').count(), 1)
+uguale('la fila si ferma sulla freccia colpevole', await page.locator('[data-tessera="6"][data-guasto]').count(), 1)
 uguale('e la partita non è finita', await page.locator('[data-fine]').count(), 0)
 
 controlla('nessun errore in console', errori.length === 0, errori.join(' · '))
