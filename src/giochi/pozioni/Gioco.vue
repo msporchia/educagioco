@@ -244,10 +244,10 @@ function festa() {
 }
 
 /* Il procedimento: anche qui il motore decide subito e la scena suona dopo. */
-const ALLA_RICETTA = { tipo: 'aiuto', righe: ['Hai tutto! Adesso leggi la ricetta e fai quello che dice.'] }
+const ALLA_RICETTA = { tipo: 'aiuto', righe: ['Hai tutto! Leggi la ricetta e trascina la roba e gli attrezzi dove serve.'] }
 const colori = lista => lista.map(i => bottega.value.ingredienti[i].colore)
 
-function fai(azione, cosa) {
+function fai(azione, cosa = [], attrezzo = null) {
   if (!libero() || attesa.value > 0) return
   const b = bottega.value
   const pestato = b.mortaio.length ? mescola(colori(b.mortaio)) : null
@@ -260,8 +260,8 @@ function fai(azione, cosa) {
   else salva({ subito: true })
   inCorso = r
   const fatti = r.giusto ? (r.versati || []) : []
-  animazione.value = { n: ++nAnim, tipo: 'passo', azione, giusto: r.giusto, mortaio: (r.cosa || []).includes(MORTAIO),
-                       colore: r.cosa?.includes(MORTAIO) ? pestato : fatti.length ? mescola(colori(fatti)) : null,
+  animazione.value = { n: ++nAnim, tipo: 'passo', azione, attrezzo, giusto: r.giusto, mortaio: (r.cosa || []).includes(MORTAIO),
+                       colore: r.cosa?.includes(MORTAIO) ? pestato : azione === 'metti' ? mescola(colori(b.mortaio)) : fatti.length ? mescola(colori(fatti)) : null,
                        polvere: fatti.some(i => b.ingredienti[i].famiglia !== 'capacita'),
                        brodo: mescola(colori(b.dentro)), riempito: b.dentro.length / b.ingredienti.length }
 }
@@ -269,7 +269,7 @@ function fai(azione, cosa) {
 function fermoPasso(r) {
   if (r.monete) suono.moneta()
   if (r.giusto) {
-    suono.ok()
+    if (r.monete || r.finita) suono.ok()
     if (r.finita) return festa()
   } else {
     suono.no()
@@ -297,7 +297,7 @@ function pulisci() {
   const n = bottega.value.pulisci()
   occupato.value = true
   suono.nota(300, 600, 0.25, 'sine', 0.06)
-  messaggio.value = { tipo: 'aiuto', righe: [n === 1 ? 'Pulito: la spugna costa un gettone.' : `Pulito: ${n} macchie, un gettone l'una.`] }
+  messaggio.value = { tipo: 'aiuto', righe: [n === 1 ? 'A posto: costa un gettone.' : `A posto: ${n} gettoni, uno a strumento.`] }
   animazione.value = { n: ++nAnim, tipo: 'pulisci' }
 }
 

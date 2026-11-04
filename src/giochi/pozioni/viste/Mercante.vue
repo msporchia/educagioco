@@ -10,7 +10,7 @@ import { scrivi, mescola } from '../dati/misure.js'
 import { PULIZIA } from '../dati/bottega.js'
 import { ANTEPRIME } from '../dati/anteprime.js'
 import { regola } from '../motore/misura.js'
-import { AZIONI, MORTAIO } from '../motore/procedimento.js'
+import { ATTREZZI, MOSSE } from '../motore/procedimento.js'
 import { creaBottega3d } from '../scena3d/indice.js'
 
 const props = defineProps({
@@ -27,6 +27,11 @@ const b = computed(() => props.bottega)
 const aiuto = computed(() => b.value.tappa.aiuto)
 const fatto = g => g.messo >= g.dose
 const sporco = computed(() => b.value.macchie.length > 0)
+// la parola giusta per quello che c'è sul tavolo: una radice non si pulisce, si toglie
+const ripulisci = computed(() => {
+  const f = new Set(b.value.macchie.map(i => b.value.ingredienti[i].famiglia))
+  return f.size > 1 ? 'Metti a posto' : f.has('lunghezza') ? 'Togli' : f.has('massa') ? 'Spazza' : 'Pulisci'
+})
 // mentre il mercante versa, la pergamena dice quello che si è già visto, non il risultato
 const mostrati = ref(null)
 const aperto = ref(b.value.speso === 0)          // il rotolo del mercante: si comincia da lì
@@ -34,15 +39,11 @@ const listino = computed(() => aperto.value && !b.value.pronta)
 // la spesa è finita quando si è vista finire, non quando il motore l'ha decisa
 const pronta = computed(() => b.value.pronta && !mostrati.value)
 
-/* il procedimento: la roba sul tavolo, da scegliere prima di pestare o versare */
-const scelti = ref([])
-const inMano = computed(() => b.value.ingredienti.map((g, i) => ({ g, i }))
-  .filter(({ i }) => !b.value.dentro.includes(i) && !b.value.mortaio.includes(i)))
-const azioni = computed(() => b.value.tappa.azioni.map(id => ({ id, ...AZIONI[id] })))
-const scegli = i => { scelti.value = scelti.value.includes(i) ? scelti.value.filter(x => x !== i) : [...scelti.value, i] }
-function fai(a) {
-  emit('fai', a.id, a.vuole ? [...scelti.value] : [])
-  scelti.value = []
+/* il procedimento: niente bottoni, sulla tela si trascina tutto */
+function lascia({ attrezzo, su }) {
+  if (attrezzo.startsWith('roba:')) return emit('fai', su === 'mortaio' ? 'metti' : 'versa', [Number(attrezzo.slice(5))], attrezzo)
+  const m = MOSSE[`${attrezzo}:${su}`]
+  if (m) emit('fai', m[0], m[1], attrezzo)
 }
 // la riga è fatta quando tutti i suoi passi sono fatti
 const rigaFatta = r => r.passi.every(k => k < b.value.passo)
@@ -71,8 +72,10 @@ const quadro = computed(() => {
     vasi, macchie,
     calderone: mescola(dentro),
     riempito: dentro.length / q.ingredienti.length,
-    fuoco: q.scaldato ? 1 : 0.35,
-    attrezzi: { visibili: q.pronta && !q.macchie.length, pestato: q.mortaio.length ? mescola(q.mortaio.map(i => q.ingredienti[i].colore)) : null },
+    fuoco: q.scaldato ? 1 : 0,
+    attrezzi: { visibili: q.pronta && !q.macchie.length, quali: q.tappa.azioni.flatMap(a => ATTREZZI[a] || []), quanti: q.ingredienti.length,
+                roba: q.ingredienti.flatMap((x, i) => (q.dentro.includes(i) || q.mortaio.includes(i) ? [] : [{ i, posto: i, nome: x.nome, foto: ANTEPRIME[x.nome] }])),
+                pestato: q.mortaio.length ? mescola(q.mortaio.map(i => q.ingredienti[i].colore)) : null },
   }
 })
 
@@ -82,12 +85,12 @@ let scena = null
 
 function tocca(t) {
   if (!t || props.bloccato) return
-  // la macchia sta attorno al suo strumento: toccarlo, o lei, vuol dire pulire
+  // lo sporco sta attorno al suo strumento: toccarlo, o lui, vuol dire toglierlo
   if (t.che === 'macchia' || (t.che === 'vaso' && b.value.macchie.includes(t.i))) emit('pulisci')
 }
 function accendi() {
   scena?.rilascia()
-  scena = creaBottega3d(tela.value, { tocca, perso: () => { senza3d.value = true } })
+  scena = creaBottega3d(tela.value, { tocca, lascia, perso: () => { senza3d.value = true } })
   senza3d.value = !scena
   if (scena) scena.imposta(quadro.value)
 }
@@ -112,7 +115,7 @@ watch(() => props.animazione, async a => {
 }, { flush: 'sync' })
 
 /* per lo strumento delle foto: quanto costa un fotogramma */
-if (typeof window !== 'undefined') window.__bottega3d = { grafica: () => scena?.grafica() }
+if (typeof window !== 'undefined') window.__bottega3d = { grafica: () => scena?.grafica(), dove: id => scena?.dove(id) }
 </script>
 
 <template>
@@ -200,29 +203,11 @@ if (typeof window !== 'undefined') window.__bottega3d = { grafica: () => scena?.
           Ordina
         </button>
       </div>
-      <div v-else-if="pronta && !sporco" class="pz-tavolo" data-tavolo>
-        <div class="pz-cose">
-          <button v-for="{ g, i } in inMano" :key="i" class="pz-cosa" :class="{ 'pz-scelta': scelti.includes(i) }"
-                  :data-cosa="i" :disabled="bloccato" @click="scegli(i)">
-            <img class="pz-foto" :src="ANTEPRIME[g.nome]" alt=""> {{ g.nome }}
-          </button>
-          <button v-if="b.mortaio.length" class="pz-cosa" :class="{ 'pz-scelta': scelti.includes(MORTAIO) }"
-                  :data-cosa="MORTAIO" :disabled="bloccato" @click="scegli(MORTAIO)">
-            <span class="em">🪨</span> il pestato
-          </button>
-        </div>
-        <div class="pz-azioni">
-          <button v-for="a in azioni" :key="a.id" class="pz-azione" :data-fai="a.id"
-                  :disabled="bloccato || attesa > 0 || (a.vuole && !scelti.length)" @click="fai(a)">
-            <span class="em">{{ a.emoji }}</span> {{ a.nome }}
-          </button>
-        </div>
-      </div>
       <button v-else-if="sporco" class="pz-grosso pz-pulisci" data-azione="pulisci"
               :disabled="bloccato || attesa > 0" @click="$emit('pulisci')">
-        Pulisci · <i class="pz-gettone" aria-hidden="true"></i>{{ PULIZIA * b.macchie.length }}
+        {{ ripulisci }} · <i class="pz-gettone" aria-hidden="true"></i>{{ PULIZIA * b.macchie.length }}
       </button>
-      <button v-else class="pz-grosso pz-al-mercante" data-azione="mercante" :disabled="bloccato" @click="aperto = true">
+      <button v-else-if="!pronta" class="pz-grosso pz-al-mercante" data-azione="mercante" :disabled="bloccato" @click="aperto = true">
         Dal mercante
       </button>
     </div>

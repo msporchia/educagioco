@@ -34,8 +34,9 @@ export const suoni = {
   bolla: () => blop(0.42),
   spugna: () => ripeti(4, 190, i => { nota(760 + i * 40, 1220, 0.1, 'sine', 0.05); rumore(0.09, 0.025, 4200, 1800) }),
   sbuffo() { rumore(1.2, 0.11, 3200, 400); [392, 523, 659, 784, 1047].forEach((f, i) => nota(f, f * 1.02, 0.2, 'triangle', 0.07, 200 + i * 110)) },
-  // un colpo di pestello: pietra su pietra
-  pesta() { nota(fra(190, 230), 90, 0.09, 'square', 0.1); rumore(0.07, 0.09, 3200, 700) },
+  // i colpi del pestello: pietra su pietra
+  colpi: (n, ogni) => ripeti(n, ogni, () => { nota(fra(190, 230), 90, 0.09, 'square', 0.1); rumore(0.07, 0.09, 3200, 700) }),
+  tonfo() { nota(300, 150, 0.08, 'triangle', 0.09); rumore(0.05, 0.04, 1800, 600) },
   mescola: () => ripeti(5, 230, () => { rumore(0.2, 0.05, 1100, 500); blop(0.8) }),
   scalda() { rumore(1.1, 0.07, 500, 2600); ripeti(6, 170, () => rumore(0.05, 0.04, 5000, 2000)) },
   pasticcio() { nota(160, 60, 0.5, 'sawtooth', 0.12); rumore(0.5, 0.12, 900, 150); ripeti(3, 130, () => blop(1.5)) },

@@ -37,9 +37,11 @@ scaletta, gli sbagli e cosa va al motore di apprendimento. Il gioco sta in
   listino due volte, in due unità, e una costa un gettone in più. Chi
   riconosce che «5 hg» e «500 g» sono la stessa cosa risparmia.
 - **Oltre il segno d'oro trabocca**: quell'ampolla è pagata e persa, lo
-  strumento resta dov'era, attorno alla sua base resta una macchia, e le
-  altre dell'ordine si versano lo stesso. **Prima di ordinare ancora si
-  pulisce**: un gettone a macchia (`PULIZIA`), una per strumento traboccato.
+  strumento resta dov'era, e le altre dell'ordine si versano lo stesso. **Quello
+  che resta sul tavolo dipende dalla roba**: il liquido fa una pozza, la polvere un
+  mucchio opaco, la radice cade intera (una radice non fa acqua, e sul cartello è
+  «Troppo lungo!»). **Prima di ordinare ancora si mette a posto**: «Pulisci»,
+  «Spazza» o «Togli», un gettone a strumento (`PULIZIA`).
 - **La borsa si vede sempre**: «Hai speso 7 su 23», con la barra e il pezzo
   a strisce dell'ordine in preparazione.
 
@@ -172,7 +174,7 @@ versata, se no il risultato si legge prima di vederlo.
   computer, fino a 576, quindi secondi sul telefono vecchio; a camera ferma la
   foto si vede uguale. Li guarda il catalogo 3D (`npm run catalogo3d:scheda --
   --gioco pozioni`).
-- **La macchia sta attorno alla base**: davanti la coprirebbero le targhette.
+- **Lo sporco sta attorno alla base**: davanti lo coprirebbero le targhette.
 - **La telecamera** inquadra tutta la larghezza, e sposta la mira finché il
   bordo basso cade sul bordo del bancone: in piedi avanza muro sopra, dove sta
   la pergamena.

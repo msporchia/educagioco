@@ -1,15 +1,40 @@
-// Gli attrezzi del procedimento: il mortaio col pestello, la ciotola che porta
-// la roba al calderone, il mestolo, la brocca dell'acqua. Stanno sul tavolo
-// quando la spesa è fatta; le mosse le fa indice.js.
-import { Group, Mesh, LatheGeometry, CylinderGeometry, SphereGeometry, CircleGeometry, TorusGeometry, Vector2, MeshStandardMaterial, DoubleSide } from 'three'
+// Gli attrezzi del procedimento, sul tavolo a spesa fatta: il mortaio, il
+// pestello, il mestolo, il fiammifero, la brocca; e sul bancone la roba comprata,
+// con la foto del suo modello. Tutto si trascina (indice.js): ognuno ha una presa
+// invisibile più grande di lui, se no il dito non lo prende.
+import { Group, Mesh, Sprite, SpriteMaterial, LatheGeometry, CylinderGeometry, SphereGeometry, CircleGeometry, TorusGeometry, Vector2, Vector3,
+         MeshStandardMaterial, MeshBasicMaterial, DoubleSide, TextureLoader, SRGBColorSpace } from 'three'
+import { POSTI } from './banco.js'
+import { nomeSulBanco } from './trame.js'
 
 const giro = punti => punti.map(([x, y]) => new Vector2(x, y))
+const FILA = 0.1                // la z della fila sul tavolo
+const COSTRUITI = ['mortaio', 'pestello', 'mestolo', 'fiammifero', 'brocca']
+const PASSO_ROBA = 1.6          // quanto stanno distanti sul bancone
+const GRANDE_ROBA = 1.25
 
 export function creaAttrezzi(scena) {
   const pietra = new MeshStandardMaterial({ color: 0x8d8a92, roughness: 0.85, side: DoubleSide })
   const legno = new MeshStandardMaterial({ color: 0x9a6a3a, roughness: 0.7 })
   const coccio = new MeshStandardMaterial({ color: 0xc87a4a, roughness: 0.6, side: DoubleSide })
   const pesto = new MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 })
+  const capocchia = new MeshStandardMaterial({ color: 0xd8342a, roughness: 0.6 })
+  const niente = new MeshBasicMaterial({ visible: false })
+  const presaGeo = new SphereGeometry(0.72, 8, 6)
+
+  // `x`, `y`, `z`: dove riposa; `giu`: com'è posato (in mano sta dritto)
+  const attrezzo = (id, gruppo, x, y, giu, z = FILA) => {
+    const presa = new Mesh(presaGeo, niente)
+    presa.position.y = 0.3
+    presa.userData.attrezzo = id
+    gruppo.add(presa)
+    gruppo.userData = { id, presa, casa: new Vector3(x, y, z), giu }
+    gruppo.position.copy(gruppo.userData.casa)
+    gruppo.rotation.z = giu
+    gruppo.visible = false
+    scena.add(gruppo)
+    return gruppo
+  }
 
   // il mortaio, col pestato dentro
   const mortaio = new Group()
@@ -17,61 +42,88 @@ export function creaAttrezzi(scena) {
   const dentro = new Mesh(new CircleGeometry(0.48, 24), pesto)
   dentro.rotation.x = -Math.PI / 2; dentro.position.y = 0.4; dentro.visible = false
   mortaio.add(dentro)
+  attrezzo('mortaio', mortaio, -1.75, 0, 0)
+
   const pestello = new Group()
   const asta = new Mesh(new CylinderGeometry(0.075, 0.13, 0.95, 12), pietra)
   asta.position.y = 0.48
   const punta = new Mesh(new SphereGeometry(0.15, 14, 10), pietra)
   punta.position.y = 0.06
   pestello.add(asta, punta)
-  pestello.position.set(0.1, 0.34, 0); pestello.rotation.z = -0.3
-  mortaio.add(pestello)
-  mortaio.position.set(-1.65, 0, 0.7)
-  mortaio.userData.casa = mortaio.position.clone()
+  attrezzo('pestello', pestello, -0.55, 0.15, 1.45, -0.25)
 
-  // la ciotola: porta nel calderone quello che non si pesta
-  const ciotola = new Group()
-  ciotola.add(new Mesh(new LatheGeometry(giro([[0, 0], [0.3, 0.01], [0.46, 0.18], [0.5, 0.34], [0.45, 0.34], [0.38, 0.2], [0, 0.1]]), 24), coccio))
-  const sopra = new Mesh(new CircleGeometry(0.42, 20), new MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 }))
-  sopra.rotation.x = -Math.PI / 2; sopra.position.y = 0.27; sopra.visible = false
-  ciotola.add(sopra)
-  ciotola.position.set(0, 0, 0.9)
-  ciotola.userData.casa = ciotola.position.clone()
-
-  // il mestolo: si vede solo mentre gira
   const mestolo = new Group()
-  const manico = new Mesh(new CylinderGeometry(0.045, 0.055, 2.3, 10), legno)
-  manico.position.y = 1.1
-  const paletta = new Mesh(new SphereGeometry(0.16, 12, 8), legno)
+  const manico = new Mesh(new CylinderGeometry(0.045, 0.055, 1.5, 10), legno)
+  manico.position.y = 0.75
+  const paletta = new Mesh(new SphereGeometry(0.17, 12, 8), legno)
   paletta.scale.set(1, 0.5, 1)
   mestolo.add(manico, paletta)
-  mestolo.visible = false
+  attrezzo('mestolo', mestolo, 0.75, 0.1, 1.5, -0.25)
 
-  // la brocca dell'acqua
+  // il fiammifero: si posa spento e si accende sotto il calderone
+  const fiammifero = new Group()
+  const stecco = new Mesh(new CylinderGeometry(0.04, 0.04, 0.95, 8), new MeshStandardMaterial({ color: 0xe6c88a, roughness: 0.8 }))
+  stecco.position.y = 0.48
+  const testa = new Mesh(new SphereGeometry(0.085, 10, 8), capocchia)
+  testa.position.y = 0.98
+  fiammifero.add(stecco, testa)
+  attrezzo('fiammifero', fiammifero, 0.45, 0.08, -1.5, 0.2)
+
   const brocca = new Group()
   brocca.add(new Mesh(new LatheGeometry(giro([[0, 0], [0.3, 0.01], [0.38, 0.3], [0.3, 0.68], [0.24, 0.82], [0.32, 0.92], [0.27, 0.92], [0.2, 0.8], [0.25, 0.66], [0, 0.6]]), 24), coccio))
   const ansa = new Mesh(new TorusGeometry(0.2, 0.04, 8, 16, Math.PI), coccio)
   ansa.position.set(0.34, 0.5, 0); ansa.rotation.z = -Math.PI / 2
   brocca.add(ansa)
-  brocca.position.set(1.65, 0, 0.7)
-  brocca.userData.casa = brocca.position.clone()
+  attrezzo('brocca', brocca, 1.85, 0, 0)
 
-  const sulTavolo = [mortaio, ciotola, brocca]
-  for (const a of sulTavolo) { a.visible = false; scena.add(a) }
-  scena.add(mestolo)
+  // la ciotola: compare sul calderone per versare quello che arriva dal fondo dello schermo
+  const ciotola = new Group()
+  ciotola.add(new Mesh(new LatheGeometry(giro([[0, 0], [0.3, 0.01], [0.46, 0.18], [0.5, 0.34], [0.45, 0.34], [0.38, 0.2], [0, 0.1]]), 24), coccio))
+  const sopra = new Mesh(new CircleGeometry(0.42, 20), new MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 }))
+  sopra.rotation.x = -Math.PI / 2; sopra.position.y = 0.27
+  ciotola.add(sopra)
+  ciotola.visible = false
+  scena.add(ciotola)
+
+  const tutti = { mortaio, pestello, mestolo, fiammifero, brocca }
+  let quali = []
+
+  // la roba sul bancone: la foto, col nome davanti. Ognuna ha il suo posto, che non cambia
+  const trame = []
+  function nuovaRoba({ i, nome, foto }, posto, quanti) {
+    const g = new Group()
+    const t = new TextureLoader().load(foto); t.colorSpace = SRGBColorSpace
+    const figura = new Sprite(new SpriteMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false }))
+    figura.scale.setScalar(GRANDE_ROBA); figura.center.set(0.5, 0.05)
+    const nomeT = nomeSulBanco(nome)
+    const targa = new Sprite(new SpriteMaterial({ map: nomeT, transparent: true, depthWrite: false, depthTest: false, toneMapped: false }))
+    targa.scale.set(1.3, 0.42, 1); targa.position.set(0, 0.2, 0.42)
+    g.add(figura, targa)
+    trame.push(t, nomeT)
+    return attrezzo(`roba:${i}`, g, (posto - (quanti - 1) / 2) * PASSO_ROBA, POSTI.bancoY, 0, POSTI.bancoZ - 0.55)
+  }
 
   return {
-    mortaio, pestello, ciotola, mestolo, brocca,
-    // `q`: { visibili, pestato: colore o null }
+    ...tutti, ciotola,
+    cosa: id => tutti[id],
+    // `q`: { visibili, quali: gli attrezzi di questa tappa, pestato: colore o null, roba: [{ i, nome, foto, posto }], quanti }
     imposta(q) {
-      for (const a of sulTavolo) a.visible = q.visibili
+      quali = q.visibili ? q.quali : []
+      for (const id of COSTRUITI) tutti[id].visible = quali.includes(id)
+      const sulBanco = q.visibili ? q.roba : []
+      for (const d of sulBanco) tutti[`roba:${d.i}`] ||= nuovaRoba(d, d.posto, q.quanti)
+      for (const id of Object.keys(tutti).filter(k => k.startsWith('roba:'))) tutti[id].visible = false
+      for (const d of sulBanco) { tutti[`roba:${d.i}`].visible = true; quali = [...quali, `roba:${d.i}`] }
       dentro.visible = !!q.pestato
       if (q.pestato) pesto.color.set(q.pestato)
-      ciotola.scale.setScalar(1)
     },
-    riempiCiotola(colore) { sopra.visible = !!colore; if (colore) sopra.material.color.set(colore) },
+    colpibili: () => quali.map(id => tutti[id].userData.presa),
+    tintaCiotola(colore) { sopra.material.color.set(colore) },
     rilascia() {
-      for (const a of [...sulTavolo, mestolo]) { a.traverse(o => o.geometry?.dispose()); scena.remove(a) }
-      for (const m of [pietra, legno, coccio, pesto, sopra.material]) m.dispose()
+      for (const a of [...Object.values(tutti), ciotola]) { a.traverse(o => { if (o.geometry !== presaGeo) o.geometry?.dispose() }); scena.remove(a) }
+      presaGeo.dispose()
+      for (const t of trame) t.dispose()
+      for (const m of [pietra, legno, coccio, pesto, capocchia, niente, sopra.material, stecco.material]) m.dispose()
     },
   }
 }

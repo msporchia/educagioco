@@ -5,7 +5,7 @@
 // promessa quando sono finite. Il tocco del dito torna su con
 // `tocca({ che, i })`. Qui non entrano gettoni né regole: la targhetta è
 // un testo già scritto, e com'è andata ogni ampolla lo dice la voce.
-import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Raycaster, Vector2, Vector3,
+import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Raycaster, Plane, Vector2, Vector3,
          ACESFilmicToneMapping, SRGBColorSpace, Color, Fog } from 'three'
 import { segui, rilascia as rilasciaRenderer } from '../../../grafica/rilascio3d.js'
 import { creaBanco, POSTI } from './banco.js'
@@ -22,7 +22,7 @@ const LARGO = 6.9, PROFONDO = 7.4
 const DAVANTI = 3.2            // il bordo del bancone: in fondo allo schermo, mai più su
 const VERSO = new Vector3(0, 0.6, 0.8).normalize()
 
-export function creaBottega3d(canvas, { tocca, perso, dpr } = {}) {
+export function creaBottega3d(canvas, { tocca, lascia, perso, dpr } = {}) {
   let gl = null, renderer
   try {
     gl = canvas.getContext('webgl2', { alpha: false, antialias: true, depth: true, stencil: false, powerPreference: 'high-performance' })
@@ -30,7 +30,7 @@ export function creaBottega3d(canvas, { tocca, perso, dpr } = {}) {
   if (!gl || gl.isContextLost()) return null
   try { renderer = segui(new WebGLRenderer({ canvas, context: gl, antialias: true })) } catch (e) { return null }
   let tutto
-  try { tutto = costruisci(renderer, canvas, { tocca, dpr }) } catch (e) {
+  try { tutto = costruisci(renderer, canvas, { tocca, lascia, dpr }) } catch (e) {
     console.warn('pozioni 3D: niente disegno', e)
     try { renderer.dispose() } catch (x) { /* pazienza */ }
     return null
@@ -42,7 +42,7 @@ export function creaBottega3d(canvas, { tocca, perso, dpr } = {}) {
   return tutto
 }
 
-function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
+function costruisci(renderer, canvas, { tocca, lascia, dpr: fisso }) {
   renderer.outputColorSpace = SRGBColorSpace
   renderer.toneMapping = ACESFilmicToneMapping
   renderer.toneMappingExposure = 1.1
@@ -98,22 +98,60 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
 
   /* ── il dito: un tocco fermo (sotto la soglia) chiede cosa c'è sotto ── */
   const raggio = new Raycaster(), punto = new Vector2()
-  let giu = null
-  const premi = e => { giu = { x: e.clientX, y: e.clientY, id: e.pointerId } }
+  const mira = (x, y) => {
+    const r = canvas.getBoundingClientRect()
+    punto.set((x - r.left) / r.width * 2 - 1, -((y - r.top) / r.height) * 2 + 1)
+    raggio.setFromCamera(punto, camera)
+  }
+  // dove si può lasciare qualcosa: il calderone e il mortaio, con un po' di largo
+  const inAria = new Plane(new Vector3(0, 1, 0), -1.1), qui = new Vector3()
+  const ZONE = { calderone: [POSTI.calderone, 1.5], mortaio: [null, 0.95] }
+  function bersaglio(x, y, tolto) {
+    mira(x, y)
+    if (!raggio.ray.intersectPlane(inAria, qui)) return null
+    for (const [nome, [c, largo]] of Object.entries(ZONE)) {
+      const dove = c || attrezzi.mortaio.userData.casa
+      if (nome === tolto || (nome === 'mortaio' && !attrezzi.mortaio.visible)) continue
+      if (Math.hypot(qui.x - dove.x, qui.z - dove.z) < largo * 1.15) return nome
+    }
+    return null
+  }
+
+  let giu = null, presa = null
+  const premi = e => {
+    giu = { x: e.clientX, y: e.clientY, id: e.pointerId }
+    if (occupata) return
+    mira(e.clientX, e.clientY)
+    const c = raggio.intersectObjects(attrezzi.colpibili(), false)[0]
+    if (c) { presa = attrezzi.cosa(c.object.userData.attrezzo); canvas.setPointerCapture?.(e.pointerId) }
+  }
+  const muovi = e => {
+    if (!presa || !giu || giu.id !== e.pointerId) return
+    mira(e.clientX, e.clientY)
+    if (!raggio.ray.intersectPlane(inAria, qui)) return
+    presa.position.copy(qui)
+    presa.rotation.z = 0
+  }
   const alza = e => {
     const g = giu; giu = null
+    if (presa) {
+      const p = presa; presa = null
+      const su = bersaglio(e.clientX, e.clientY, p.userData.id)
+      if (su) lascia?.({ attrezzo: p.userData.id, su })
+      if (!occupata) aCasa(p)                  // non è successo niente: torna al suo posto
+      return
+    }
     if (!g || g.id !== e.pointerId || Math.hypot(e.clientX - g.x, e.clientY - g.y) > SOGLIA) return
-    const r = canvas.getBoundingClientRect()
-    punto.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1)
-    raggio.setFromCamera(punto, camera)
+    mira(e.clientX, e.clientY)
     const bersagli = [...vasi.colpibili(), ...eff.macchieVisibili()]
     const colpito = raggio.intersectObjects(bersagli, false)[0]
     if (colpito) tocca?.(colpito.object.userData.tocca)
   }
-  const lascia = () => { giu = null }
+  const annulla = () => { giu = null; if (presa) { aCasa(presa); presa = null } }
   canvas.addEventListener('pointerdown', premi)
+  canvas.addEventListener('pointermove', muovi)
   canvas.addEventListener('pointerup', alza)
-  canvas.addEventListener('pointercancel', lascia)
+  canvas.addEventListener('pointercancel', annulla)
 
   /* ── il ciclo ── */
   let ultimo = performance.now(), giro = 0, vivo = true, fotogrammi = 0, bolla = 2
@@ -164,10 +202,10 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
   // attorno alla base dello strumento: davanti la coprirebbero le targhette
   const grande = i => 1.5 * vasi.scala(i)
   function mettiMacchia({ i, colore }, quanto) {
-    const v = vasi.vaso(i), m = eff.macchia(i)
+    const v = vasi.vaso(i), m = eff.macchia(i, v.famiglia)
     m.visible = true
     m.material.color.set(colore).offsetHSL(0, 0.1, -0.08)
-    m.position.set(v.casa.x, 0.015, v.casa.z + 0.1)
+    m.position.set(v.casa.x, m.userData.caduta ? 0.1 : 0.015, v.casa.z + (m.userData.caduta ? 0.75 : 0.1))
     m.scale.setScalar(Math.max(0.001, quanto * grande(i)))
   }
 
@@ -263,15 +301,10 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
   }
 
   /* Un'azione del procedimento. `a` dice già com'è andata: giusta si vede
-     farla, sbagliata il calderone sbuffa e non cambia niente. */
+     farla, sbagliata il calderone sbuffa e non cambia niente. Un attrezzo lasciato
+     parte da dov'è, e a fine mossa torna al suo posto (`aCasa`). */
   const sulCalderone = lato => new Vector3(POSTI.calderone.x + lato * 0.55, 2.35, POSTI.calderone.z + 0.5)
-  async function portaEVersa(cosa, lato, colore, polvere, finire) {
-    const casa = cosa.userData.casa, sopra = sulCalderone(lato)
-    await anima(0.5, f => {
-      const e = liscio(f)
-      cosa.position.lerpVectors(casa, sopra, e)
-      cosa.position.y += Math.sin(e * Math.PI) * 0.4
-    })
+  async function versaDa(cosa, lato, colore, polvere, finire) {
     await anima(0.2, f => { cosa.rotation.z = lato * liscio(f) * 1.9 })
     if (polvere) suoni.polvere(0.55); else suoni.liquido(0.55)
     await anima(0.55, () => {
@@ -283,31 +316,57 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
     banco.ribolli(4)
     suoni.tuffo()
     await anima(0.2, f => { cosa.rotation.z = lato * 1.9 * (1 - liscio(f)) })
-    await anima(0.4, f => { cosa.position.lerpVectors(sopra, casa, liscio(f)) })
+  }
+  async function vola(cosa, a) {
+    const da = cosa.position.clone()
+    await anima(0.35, f => { cosa.position.lerpVectors(da, a, liscio(f)) })
+  }
+  async function aCasa(cosa) {
+    const { casa, giu } = cosa.userData, da = cosa.position.clone(), r = cosa.rotation.z
+    await anima(0.3, f => { cosa.position.lerpVectors(da, casa, liscio(f)); cosa.rotation.z = r + (giu - r) * liscio(f) })
+    cosa.rotation.set(0, 0, giu)
   }
 
   const MOSSE = {
+    async metti(a) {
+      const m = attrezzi.mortaio.position
+      if (a.attrezzo) attrezzi.cosa(a.attrezzo).visible = false
+      suoni.tonfo()
+      eff.gocce.emetti(8, { da: new Vector3(m.x, 0.7, m.z), sparpaglia: 0.25, verso: [0, 1, 0], caso: 0.6, colore: a.colore, vita: 0.4, misura: 0.09, gravita: 5 })
+      attrezzi.imposta({ ...ultima.attrezzi, pestato: a.colore })
+      await aspetta(0.25)
+    },
     async pesta(a) {
-      attrezzi.imposta({ visibili: true, pestato: a.colore })
-      const p = attrezzi.pestello, da = attrezzi.mortaio.position
+      const p = attrezzi.pestello, m = attrezzi.mortaio.position
+      await vola(p, new Vector3(m.x + 0.05, 0.7, m.z))
+      p.rotation.z = -0.2
+      suoni.colpi(5, 260)
       await anima(1.3, f => {
         const c = Math.abs(Math.sin(f * Math.PI * 5))
-        p.position.y = 0.2 + c * 0.42
-        if (Math.random() < 0.3) eff.gocce.emetti(1, { da: new Vector3(da.x, 0.6, da.z), sparpaglia: 0.3, verso: [0, 1, 0], caso: 0.8, colore: a.colore, vita: 0.5, misura: 0.08, gravita: 5 })
+        p.position.y = 0.3 + c * 0.45
+        if (Math.floor(f * 10) % 2 === 0 && Math.random() < 0.3) eff.gocce.emetti(1, { da: new Vector3(m.x, 0.6, m.z), sparpaglia: 0.3, verso: [0, 1, 0], caso: 0.8, colore: a.colore, vita: 0.5, misura: 0.08, gravita: 5 })
       })
-      p.position.y = 0.34
+      await aCasa(p)
     },
     async versa(a) {
-      const cosa = a.mortaio ? attrezzi.mortaio : attrezzi.ciotola
-      if (!a.mortaio) attrezzi.riempiCiotola(a.colore)
-      await portaEVersa(cosa, a.mortaio ? -1 : 1, a.colore, a.polvere, () => {
-        banco.colore(a.brodo); banco.riempi(a.riempito)
-        if (a.mortaio) attrezzi.imposta({ visibili: true, pestato: null }); else attrezzi.riempiCiotola(null)
-      })
+      const finire = () => { banco.colore(a.brodo); banco.riempi(a.riempito) }
+      if (a.mortaio) {
+        const m = attrezzi.mortaio
+        await vola(m, sulCalderone(-1))
+        await versaDa(m, -1, a.colore, a.polvere, () => { finire(); attrezzi.imposta({ ...ultima.attrezzi, pestato: null }) })
+        await aCasa(m)
+      } else {
+        const c = attrezzi.ciotola
+        if (a.attrezzo) attrezzi.cosa(a.attrezzo).visible = false
+        attrezzi.tintaCiotola(a.colore)
+        c.position.copy(sulCalderone(1)); c.rotation.set(0, 0, 0); c.visible = true
+        await versaDa(c, 1, a.colore, a.polvere, finire)
+        c.visible = false
+      }
     },
     async mescola(a) {
       const m = attrezzi.mestolo, C = POSTI.calderone
-      m.visible = true
+      await vola(m, new Vector3(C.x + 0.5, banco.quotaBrodo(), C.z))
       suoni.mescola()
       banco.ribolli(3)
       await anima(1.3, f => {
@@ -315,24 +374,32 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
         m.position.set(C.x + Math.cos(g) * 0.5, banco.quotaBrodo() - 0.05, C.z + Math.sin(g) * 0.42)
         m.rotation.set(Math.sin(g) * 0.25, 0, -Math.cos(g) * 0.25)
       })
-      m.visible = false
+      m.rotation.x = 0
       banco.colore(a.brodo)
+      await aCasa(m)
     },
     async scalda() {
+      const f = attrezzi.fiammifero, C = POSTI.calderone
+      await vola(f, new Vector3(C.x + 0.5, 0.35, C.z + 0.9))
       banco.fuoco(1)
       suoni.scalda()
       banco.ribolli(6)
-      const su = new Vector3(POSTI.calderone.x, 0.5, POSTI.calderone.z + 0.4)
+      const su = new Vector3(C.x, 0.5, C.z + 0.4)
       await anima(1.2, () => { eff.luci.emetti(2, { da: su, sparpaglia: 0.6, verso: [0, 2, 0], caso: 1, colore: '#ffb34a', vita: 0.6, misura: 0.1, gravita: 0 }) })
+      await aCasa(f)
     },
     async diluisci(a) {
-      await portaEVersa(attrezzi.brocca, 1, '#bfe4ff', false, () => { banco.colore(a.brodo) })
+      const b = attrezzi.brocca
+      await vola(b, sulCalderone(1))
+      await versaDa(b, 1, '#bfe4ff', false, () => { banco.colore(a.brodo) })
+      await aCasa(b)
     },
   }
 
   async function passo(a) {
     if (a.giusto) return MOSSE[a.azione](a)
     // il pasticcio: il calderone rutta, e la roba resta dov'era
+    if (a.attrezzo) aCasa(attrezzi.cosa(a.attrezzo))
     suoni.pasticcio()
     banco.ribolli(8)
     const su = new Vector3(POSTI.calderone.x, banco.quotaBrodo() + 0.1, POSTI.calderone.z)
@@ -345,11 +412,20 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
   async function pulisci() {
     const sporche = eff.macchieVisibili()
     if (!sporche.length) return
+    // quello che è caduto si porta via intero: la spugna è per chi lascia lo sporco
+    for (const m of sporche.filter(x => x.userData.caduta)) {
+      const g0 = m.scale.x, y0 = m.position.y
+      suoni.radice()
+      await anima(0.45, f => { m.position.y = y0 + f * 1.6; m.scale.setScalar(Math.max(0.001, g0 * (1 - f))) })
+      m.visible = false; m.position.y = y0
+    }
+    const pozze = sporche.filter(x => !x.userData.caduta)
+    if (!pozze.length) return
     const s = eff.spugna
     s.visible = true
-    let da = new Vector3(sporche[0].position.x + 2.5, 1.5, sporche[0].position.z + 1.5)
+    let da = new Vector3(pozze[0].position.x + 2.5, 1.5, pozze[0].position.z + 1.5)
     const fuori = da.clone()
-    for (const m of sporche) {
+    for (const m of pozze) {
       const qui = m.position.clone(), g0 = m.scale.x
       await anima(0.3, f => { s.position.lerpVectors(da, qui, liscio(f)) })
       suoni.spugna()
@@ -386,14 +462,21 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
     cancelAnimationFrame(giro)
     osserva.disconnect()
     canvas.removeEventListener('pointerdown', premi)
+    canvas.removeEventListener('pointermove', muovi)
     canvas.removeEventListener('pointerup', alza)
-    canvas.removeEventListener('pointercancel', lascia)
+    canvas.removeEventListener('pointercancel', annulla)
     attive = []        // le promesse restano aperte: chi aspettava si ferma lì, su una scena che non c'è più
     vasi.rilascia(); ampolle.rilascia(); eff.rilascia(); attrezzi.rilascia()
     for (const t of Object.values(trame)) t.dispose()
     rilasciaRenderer(renderer)
   }
 
-  return { imposta, ordine: occupa(ordine), passo: occupa(passo), pulisci: occupa(pulisci), festa: occupa(festa), rilascia, misura,
+  return { imposta, ordine: occupa(ordine), passo: occupa(passo), pulisci: occupa(pulisci), festa: occupa(festa), bersaglio,
+           // per i test: dove sta una cosa sullo schermo
+           dove(id) {
+             const c = id === 'calderone' ? POSTI.calderone.clone().setY(1.1) : attrezzi.cosa(id).position.clone().setY(id === 'mortaio' ? 0.4 : 0.3)
+             const r = canvas.getBoundingClientRect(), p = c.project(camera)
+             return { x: r.left + (p.x + 1) / 2 * r.width, y: r.top + (1 - p.y) / 2 * r.height }
+           }, rilascia, misura,
            grafica: () => ({ fotogrammi, chiamate: renderer.info.render.calls, triangoli: renderer.info.render.triangles }) }
 }
