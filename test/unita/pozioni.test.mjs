@@ -6,7 +6,7 @@
 import { CAMPAGNA, BLOCCHI, QUANTE_TAPPE, MONETE_A_DOSE, MONETE_A_PASSO, guastiDellaCampagna } from '../../src/giochi/pozioni/dati/campagna.js'
 import { FAMIGLIA, VALE, mescola, guastiDelleMisure } from '../../src/giochi/pozioni/dati/misure.js'
 import { PULIZIA, PASTICCIO, PEZZI, PREZZI } from '../../src/giochi/pozioni/dati/bottega.js'
-import { Bottega, banchetto, ottimo, giocaBene, giocaGoloso, seguiLaRicetta, caso, unitaBuone, scalaDi } from '../../src/giochi/pozioni/motore/bottega.js'
+import { Bottega, banchetto, ottimo, giocaBene, giocaGoloso, seguiLaRicetta, prossimoPasso, caso, unitaBuone, scalaDi } from '../../src/giochi/pozioni/motore/bottega.js'
 import { MORTAIO } from '../../src/giochi/pozioni/motore/procedimento.js'
 import { regola, chiaveDi } from '../../src/giochi/pozioni/motore/misura.js'
 import { CONVERSIONI } from '../../src/giochi/pozioni/gioco.js'
@@ -225,16 +225,44 @@ for (const t of CAMPAGNA) {
   uguale('costa un gettone', b.speso, speso + PASTICCIO)
   uguale('e non cambia niente', b.passo, 0)
   controlla('il cartello dice cosa diceva la ricetta', sbaglio.righe[1].includes('La ricetta dice'), sbaglio.righe.join(' | '))
-  uguale('le cose sbagliate sono un pasticcio anche loro', b.fai(primo.azione, [...primo.cosa, 9]).giusto, false)
-  const giusto = b.fai(primo.azione, [...primo.cosa].reverse())
-  controlla('l\'ordine in cui si scelgono le cose non conta', giusto.giusto)
-  uguale('un passo sbagliato prima non paga', giusto.monete, 0)
-  const p = b.passi[b.passo]
-  uguale('quello dopo sì', b.fai(p.azione, p.cosa).monete, MONETE_A_PASSO)
+  uguale('una cosa che non c\'entra è un pasticcio anche lei', b.fai('versa', [9]).giusto, false)
+  uguale('un passo sbagliato prima non paga', prossimoPasso(b).monete, 0)
+  uguale('quello dopo sì', prossimoPasso(b).monete, MONETE_A_PASSO)
   seguiLaRicetta(b)
   controlla('e la pozione si finisce', b.finita)
   controlla('non è perfetta', !b.perfetta)
   uguale('ma le stelle dicono i gettoni', b.stelle, 2)
+}
+{
+  /* le cose entrano una alla volta, nel mortaio e nel calderone */
+  const b = new Bottega(tappa('massa-virgole'), { rnd: caso(3) })
+  for (const [i, g] of b.ingredienti.entries()) for (const k of g.ottimo.pezzi) b.ordina([{ i, k }])
+  const [a, c] = b.passi[0].cosa, altro = b.ingredienti.findIndex((_, i) => i !== a && i !== c)
+  uguale('il mortaio non si pesta vuoto', b.fai('pesta').giusto, false)
+  uguale('quello che la ricetta non dice non ci va', b.fai('metti', [altro]).giusto, false)
+  uguale('una cosa nel mortaio', b.fai('metti', [a]).giusto, true)
+  uguale('non basta ancora', b.fai('pesta').giusto, false)
+  uguale('il passo non si muove', b.passo, 0)
+  uguale('il mortaio non si versa prima di pestare', b.fai('versa', [MORTAIO]).giusto, false)
+  uguale('l\'altra', b.fai('metti', [c]).giusto, true)
+  const pestato = b.fai('pesta')
+  controlla('adesso si pesta', pestato.giusto && b.passo === 1)
+  uguale('il pestato si versa intero', b.fai('versa', [MORTAIO]).versati.length, 2)
+  uguale('e il mortaio è vuoto', b.mortaio.length, 0)
+}
+{
+  const b = new Bottega(tappa('massa-banco'), { rnd: caso(1) })
+  for (const [i, g] of b.ingredienti.entries()) for (const k of g.ottimo.pezzi) b.ordina([{ i, k }])
+  uguale('una versata a metà non fa passo', (b.fai('versa', [0]), b.passo), 0)
+  uguale('due volte la stessa cosa è un pasticcio', b.fai('versa', [0]).giusto, false)
+  uguale('la seconda chiude il passo', (b.fai('versa', [1]), b.passo), 1)
+}
+{
+  const b = new Bottega(tappa('lunghezza-miste'), { rnd: caso(9) })
+  const g = b.ingredienti[0]
+  g.messo = g.dose - 1
+  const e = b.ordina([{ i: 0, k: 0 }]).esiti[0]
+  controlla('una radice non trabocca: è troppo lunga', e.righe[0].startsWith('Troppo lungo!'), e.righe[0])
 }
 {
   /* il testo intrecciato dice una coppia al contrario */

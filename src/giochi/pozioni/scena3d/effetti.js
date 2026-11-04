@@ -86,15 +86,20 @@ export function creaEffetti(scena, trame) {
   getto.visible = false
   scena.add(getto)
 
-  // le macchie per terra, una per strumento traboccato: si toccano per pulirle
+  // quello che resta sul tavolo, uno per strumento: si tocca per toglierlo. Il
+  // liquido fa la pozza, la polvere un mucchio opaco, la radice cade intera
   const geoMacchia = new PlaneGeometry(1.25, 1.25)
+  const geoCaduta = new CylinderGeometry(0.07, 0.1, 0.8, 10)
   const macchie = new Map()
-  function macchia(i) {
+  function macchia(i, famiglia) {
     let m = macchie.get(i)
     if (!m) {
-      m = new Mesh(geoMacchia, new MeshStandardMaterial({ color: 0xffffff, alphaMap: trame.macchia, transparent: true,
-                                                          roughness: 0.08, metalness: 0.1, depthWrite: false }))
-      m.rotation.x = -Math.PI / 2; m.rotation.z = macchie.size * 1.9
+      const caduta = famiglia === 'lunghezza'
+      m = caduta ? new Mesh(geoCaduta, new MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 }))
+        : new Mesh(geoMacchia, new MeshStandardMaterial({ color: 0xffffff, alphaMap: trame.macchia, transparent: true,
+                                                          roughness: famiglia === 'massa' ? 1 : 0.08, metalness: famiglia === 'massa' ? 0 : 0.1, depthWrite: false }))
+      m.userData.caduta = caduta
+      m.rotation.x = -Math.PI / 2; m.rotation.z = caduta ? 1.2 + macchie.size * 0.5 : macchie.size * 1.9
       m.visible = false
       m.userData.tocca = { che: 'macchia' }
       scena.add(m)

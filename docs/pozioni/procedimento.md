@@ -9,7 +9,7 @@ pasticcio. Il motore è `motore/procedimento.js`.
 ## Le regole
 
 - **La pergamena ha la ricetta a elenco puntato** (`righe`): «Pesta insieme
-  polvere di luna e stelle tritate», «Versa il pestato nel calderone e scalda sul
+  polvere di luna e stelle tritate», «Versa il pestato nel calderone e accendi il
   fuoco». **Ogni tanto due azioni stanno nello stesso punto** (`INSIEME`): bisogna
   leggere fino in fondo. La si legge già durante la spesa, tranne col rotolo
   aperto, dove sul telefono non ci sta. Fatta la spesa resta solo lei, e i punti
@@ -21,10 +21,15 @@ pasticcio. Il motore è `motore/procedimento.js`.
 - **In casa c'è già qualcosa** (`casa`, su `virgole`, `inverse` e le finali): un
   ingrediente parte col pezzo più grande già nello strumento, e il rotolo lo dice.
   Si compra solo quello che manca, cioè una sottrazione fra unità diverse.
-- **Si tocca la roba, poi l'azione**: pestare e versare vogliono le cose scelte,
-  mescolare, scaldare e diluire no. Non conta in che ordine si toccano le cose.
-- **Il pasticcio**: un'azione che non è il prossimo passo, o con le cose sbagliate,
-  non cambia niente, il calderone sbuffa, costa un gettone (`PASTICCIO`) e il
+- **Niente bottoni: tutto si trascina.** La roba sta sul bancone, con la foto del
+  suo modello e il nome, gli attrezzi sul tavolo. La roba sul calderone si versa, sul mortaio ci va; il
+  pestello sul mortaio pesta; il mortaio sul calderone versa il pestato; il mestolo
+  sul calderone mescola, il fiammifero accende il fuoco, la brocca diluisce
+  (`MOSSE` in `procedimento.js`). Le cose entrano una alla volta, in qualunque
+  ordine; provato coi bottoni: troppi, e non sembrava di fare niente.
+- **Il fuoco parte spento**: scaldare vuol dire accenderlo.
+- **Il pasticcio**: una mossa che non fa avanzare il prossimo passo, o con la cosa
+  sbagliata, non cambia niente, il calderone sbuffa, costa un gettone (`PASTICCIO`) e il
   cartello dice cosa diceva la ricetta. Si legge con la barra, come dopo un trabocco.
 - **Le stelle restano sui gettoni**: i pasticci pesano lì, non c'è un secondo conto.
 - **Un passo giusto al primo colpo vale una moneta** (`MONETE_A_PASSO`): è una
@@ -33,17 +38,17 @@ pasticcio. Il motore è `motore/procedimento.js`.
 
 ## La scaletta
 
-`procedimento` in `dati/campagna.js` dice quanto è ricco; le azioni sul tavolo
-(`AZIONI_DEL`) sono tutte quelle del livello, anche se la ricetta non le usa:
-capire cosa serve è parte del gioco.
+`procedimento` in `dati/campagna.js` dice quanto è ricco; gli attrezzi sul tavolo
+(`AZIONI_DEL`, `ATTREZZI`) sono tutti quelli del livello, anche se la ricetta non
+li usa: capire cosa serve è parte del gioco.
 
 | | passi | gradini |
 |---|---|---|
 | 1 | versa tutto, mescola | `banco`, `grande` |
-| 2 | versa tutto; mescola e scalda in ordine a caso | `grandi`, `virgola` |
-| 3 | pesta due cose e versa, poi il resto (i liquidi: versa, mescola o scalda, versa il resto) | `virgole`, `media` |
+| 2 | versa tutto; mescola e accendi il fuoco in ordine a caso | `grandi`, `virgola` |
+| 3 | pesta due cose e versa, poi il resto (i liquidi: versa, mescola o accendi, versa il resto) | `virgole`, `media` |
 | 4 | come il 3, e si diluisce | `miste`, `inversa` |
-| 5 | come il 4, e una coppia di passi detta al contrario («scalda, ma prima mescola») | `inverse`, le finali |
+| 5 | come il 4, e una coppia di passi detta al contrario («accendi il fuoco, ma prima mescola bene») | `inverse`, le finali |
 
 - **L'ordine cambia di ricetta in ricetta**: se fosse sempre lo stesso si
   imparerebbe a memoria e il testo non si leggerebbe.
@@ -51,10 +56,11 @@ capire cosa serve è parte del gioco.
 
 ## Il disegno e i suoni
 
-- **Gli attrezzi** (`scena3d/attrezzi.js`) compaiono a spesa fatta: il mortaio, la
-  ciotola che porta la roba, la brocca, il mestolo. Le mosse sono `MOSSE` in
-  `indice.js`, e `passo(a)` le suona: la view dice solo com'è andata.
-- **Il fuoco è basso** finché non si scalda (`banco.fuoco`).
+- **Gli attrezzi** (`scena3d/attrezzi.js`) compaiono a spesa fatta, con una presa
+  invisibile più grande di loro, se no il dito non li prende. Si portano su un
+  piano in aria (`inAria`), e `bersaglio(x, y)` dice su cosa si è lasciato, col
+  calderone e il mortaio più larghi di come si vedono. A fine mossa tornano a posto.
+- `passo(a)` suona le mosse: la view dice solo com'è andata.
 - **I suoni** stanno in `suoni.js`, sopra `nota` e `rumore` di `src/audio.js`: le
   ampolle, il liquido che gorgoglia salendo, la polvere, la radice, il trabocco, il
   tuffo, il pestello, il mestolo, il fuoco, il pasticcio, una bolla ogni tanto.
@@ -66,6 +72,6 @@ una pozione più ricca che tante uguali.
 
 Nei test: `unita/pozioni`, `unita/pozioni-sosta`, `integrazione/pozioni`,
 `integrazione/pozioni-sosta`; `.pz-mercante[data-fase="procedimento"]`,
-`[data-ricetta]`, `[data-riga]`, `[data-tavolo]`, `[data-cosa="i"]` (`-1` il
-pestato), `[data-fai="pesta"|"versa"|"mescola"|"scalda"|"diluisci"]`;
-`window.__poz.fai(azione, cosa)`.
+`[data-ricetta]`, `[data-riga]`; `window.__poz.fai(azione, cosa)`,
+`window.__bottega3d.dove('calderone'|'mestolo'|'roba:0'|…)`
+(dove sta sullo schermo, per trascinare).
