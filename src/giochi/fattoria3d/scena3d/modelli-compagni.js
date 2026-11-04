@@ -223,7 +223,7 @@ function costruisciContadino (arg = 'contadino') {
   lama.rotation.set(Math.PI / 2, 0, Math.PI * 0.15); lama.position.set(0, -0.94, 0); falce.add(lama)
   const ascia = perno(bracci[1], 0, -0.29, 0); ascia.visible = false
   cil(ascia, 0.022, 0.022, 0.7, mat(0x9a6a36), 0, -0.25, 0, 5)
-  scatola(ascia, 0.05, 0.16, 0.2, mat(0xcfd6dc, { metalness: 0.5, roughness: 0.4 }), 0, -0.56, 0.1)
+  scatola(ascia, 0.05, 0.16, 0.2, mat(0xcfd6dc, { metalness: 0.5, roughness: 0.4 }), 0, -0.56, -0.1)   // la lama sporge verso -z del pugno: è il lato in cui il braccio scende (a +z il filo guardava dietro al colpo)
   // la canna da pesca nel pugno destro, solo quando si pesca: un'asta lunga che punta avanti e in alto quando il braccio è alzato
   const canna = perno(bracci[1], 0, -0.29, 0); canna.visible = false
   cil(canna, 0.014, 0.022, 1.15, mat(0x8a5a2b), 0, -0.5, 0, 5)
