@@ -27,6 +27,8 @@ function stoffa(hex, trama) {
 // ── i mattoncini dei mobili ──
 const METALLO = mat(0x9aa0a6, { roughness: 0.5, metalness: 0.4 })
 const BIANCO = mat(0xf4f2ec), NERO = mat(0x2b2b30), VETRO = mat(0x9fd3ef, { roughness: 0.2, metalness: 0.1 })
+/** Quello che si vede da una finestra: il cielo e, in basso, il prato. */
+const fuori = (g, w, h, y) => { scatola(g, w, h, 0.02, VETRO, 0, y, PARETE + 0.03); scatola(g, w, h * 0.3, 0.02, mat(0x7cc46a), 0, y - h * 0.35, PARETE + 0.035) }
 const gambe = (g, w, d, h, m, r = 0.04) => { for (const sx of [-1, 1]) for (const sz of [-1, 1]) cilindro(g, r, r, h, m, sx * (w / 2 - r * 1.5), h / 2, sz * (d / 2 - r * 1.5), 6) }
 
 /** Il disegno di ogni mobile: (gruppo, colore hex, materiale del colore). */
@@ -127,10 +129,29 @@ const DISEGNI = {
     scatola(g, 0.66, 0.18, 0.02, mat(0x6fbf73), 0, 1.2, PARETE + 0.045); sfera(g, 0.07, mat(0xf6d36b), 0.18, 1.48, PARETE + 0.05, 1, 1, 0.3, 8)
   },
   finestra(g, c, m) {
-    scatola(g, 0.78, 0.82, 0.05, BIANCO, 0, 1.3, PARETE); scatola(g, 0.64, 0.68, 0.02, VETRO, 0, 1.3, PARETE + 0.03)
+    scatola(g, 0.78, 0.82, 0.05, BIANCO, 0, 1.3, PARETE); fuori(g, 0.64, 0.68, 1.3)
     scatola(g, 0.04, 0.68, 0.03, BIANCO, 0, 1.3, PARETE + 0.045); scatola(g, 0.64, 0.04, 0.03, BIANCO, 0, 1.3, PARETE + 0.045)
     for (const x of [-0.42, 0.42]) scatola(g, 0.22, 0.95, 0.04, m, x, 1.28, PARETE + 0.08)
     scatola(g, 1.0, 0.05, 0.05, mat(0x8a5a33), 0, 1.78, PARETE + 0.1)
+  },
+  'finestra-larga'(g, c, m) {
+    scatola(g, 1.68, 0.82, 0.05, BIANCO, 0, 1.3, PARETE); fuori(g, 1.54, 0.68, 1.3)
+    for (const x of [-0.385, 0, 0.385]) scatola(g, 0.04, 0.68, 0.03, BIANCO, x, 1.3, PARETE + 0.045)
+    scatola(g, 1.54, 0.04, 0.03, BIANCO, 0, 1.3, PARETE + 0.045)
+    for (const x of [-0.86, 0.86]) scatola(g, 0.26, 0.95, 0.04, m, x, 1.28, PARETE + 0.08)
+    scatola(g, 1.96, 0.05, 0.05, mat(0x8a5a33), 0, 1.78, PARETE + 0.1)
+  },
+  'finestra-tonda'(g, c, m) {
+    cilindro(g, 0.42, 0.42, 0.06, m, 0, 1.35, PARETE, 24).rotation.x = Math.PI / 2; cilindro(g, 0.34, 0.34, 0.02, VETRO, 0, 1.35, PARETE + 0.04, 24).rotation.x = Math.PI / 2
+    scatola(g, 0.04, 0.68, 0.03, m, 0, 1.35, PARETE + 0.05); scatola(g, 0.68, 0.04, 0.03, m, 0, 1.35, PARETE + 0.05)
+  },
+  'finestra-fiori'(g, c, m) {
+    scatola(g, 0.6, 0.72, 0.05, BIANCO, 0, 1.38, PARETE); fuori(g, 0.48, 0.6, 1.38)
+    scatola(g, 0.04, 0.6, 0.03, BIANCO, 0, 1.38, PARETE + 0.045)
+    for (const x of [-0.4, 0.4]) scatola(g, 0.2, 0.72, 0.04, m, x, 1.38, PARETE + 0.04)
+    scatola(g, 0.8, 0.14, 0.18, mat(0x8a5a33), 0, 0.96, PARETE + 0.1)
+    for (const x of [-0.27, -0.09, 0.09, 0.27]) sfera(g, 0.1, mat(0x4c9a4a), x, 1.06, PARETE + 0.1, 1, 0.8, 1, 6)
+    for (const [x, col] of [[-0.27, 0xd9534f], [-0.09, 0xf2c94c], [0.09, 0xf29ac0], [0.27, 0xd9534f]]) sfera(g, 0.07, mat(col), x, 1.14, PARETE + 0.12, 1, 1, 1, 6)
   },
   orologio(g, c, m) { cilindro(g, 0.28, 0.28, 0.06, m, 0, 1.45, PARETE + 0.02, 18).rotation.x = Math.PI / 2; cilindro(g, 0.23, 0.23, 0.02, BIANCO, 0, 1.45, PARETE + 0.06, 18).rotation.x = Math.PI / 2; scatola(g, 0.03, 0.17, 0.02, NERO, 0, 1.51, PARETE + 0.08); scatola(g, 0.12, 0.03, 0.02, NERO, 0.05, 1.45, PARETE + 0.08) },
   specchio(g, c, m) { scatola(g, 0.62, 0.9, 0.05, m, 0, 1.3, PARETE); scatola(g, 0.5, 0.78, 0.02, mat(0xcfe8f4, { roughness: 0.15 }), 0, 1.3, PARETE + 0.035) },

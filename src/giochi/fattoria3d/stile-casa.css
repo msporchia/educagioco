@@ -1,5 +1,5 @@
-/* Dentro la casa (docs/fattoria3d/casa.md): la testata, i tasti, la barra del mobile in mano, il catalogo, il foglio di un mobile e la
-   pianta. Prefisso .f3-int- (gli interni): .f3-casa è già il contenitore del HUD della fattoria. I fogli veri vengono da stile.css. */
+/* Dentro la casa (docs/fattoria3d/casa.md): la testata, i tasti, la barra del mobile in mano, la striscia di pavimento e pareti, il catalogo
+   e il foglio di un mobile. Prefisso .f3-int- (gli interni): .f3-casa è già il contenitore del HUD della fattoria. I fogli veri vengono da stile.css. */
 /* il contenitore copre la tela ma lascia passare il dito: tocca solo ciò che ci sta sopra */
 .f3-int { position: absolute; inset: 0; z-index: 20; pointer-events: none; }
 .f3-int > * { pointer-events: auto; }
@@ -18,6 +18,15 @@
 .f3-int-mano button { min-height: 52px; min-width: 52px; border: 0; border-radius: 26px; padding: 0 16px; font: 800 16px "Emoji Gioco", system-ui, sans-serif; box-shadow: 0 3px 10px rgba(0,0,0,.3); touch-action: manipulation; background: rgba(255,251,240,.95); color: #3a2a1a; white-space: nowrap; }
 .f3-int-mano .si { background: #7ccf56; color: #123; }
 .f3-int-mano .spenta, .f3-int-grande.spenta { opacity: .5; }
+
+.f3-int-tinte { position: absolute; left: 8px; right: 8px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 30; max-width: 520px; margin: 0 auto; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 20px; background: rgba(255,251,240,.97); box-shadow: 0 3px 12px rgba(0,0,0,.3); }
+.f3-int-tinte .f3-int-schede { padding: 0; }
+.f3-int-tinte .riga { margin: 0; color: #3a2a1a; font: 700 14px "Emoji Gioco", system-ui, sans-serif; text-align: center; }
+.f3-int-tinte .tasti { display: flex; justify-content: center; gap: 8px; }
+.f3-int-tinte .tasti button { min-height: 52px; min-width: 52px; border: 0; border-radius: 26px; padding: 0 16px; font: 800 16px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; }
+.f3-int-tinte .si { flex: 1; background: #7ccf56; color: #123; }
+.f3-int-tinte .no { background: #efe4cf; }
+.f3-int-tinte .spenta { opacity: .5; }
 
 .f3-int-schede { flex: none; display: flex; gap: 6px; overflow-x: auto; padding: 0 2px 8px; touch-action: pan-x; }
 .f3-int-schede button { flex: none; min-height: 40px; border: 0; border-radius: 20px; padding: 0 14px; background: #efe4cf; color: #5a3a2a; font: 800 14px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; }
@@ -41,12 +50,6 @@
 .f3-int-fila { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
 .f3-int-fila button, .f3-int-grande { min-height: 48px; border: 0; border-radius: 24px; padding: 0 16px; background: #efe4cf; color: #3a2a1a; font: 800 15px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; }
 .f3-int-grande { display: block; width: 100%; margin: 10px 0 4px; background: #7ccf56; color: #123; }
-
-.f3-int-mappa { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 64px); gap: 6px; margin: 4px 0 8px; }
-.f3-int-mappa .stanza { border: 2px dashed #c9b48c; border-radius: 12px; background: transparent; color: #9a8a6a; font: 800 13px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; }
-.f3-int-mappa .stanza.tua { border: 2px solid #b98a4a; background: #f6e2bc; color: #3a2a1a; }
-.f3-int-mappa .stanza.apribile { border-color: #7ccf56; color: #2a6a1a; background: #eef8e4; }
-.f3-int-mappa .stanza.su { box-shadow: 0 0 0 3px #3a2a1a; }
 
 /* dentro una bottega: i fumetti dei clienti (la scena li mette sopra la testa) */
 .f3-btd .cuori { margin-left: 8px; font-size: 12px; letter-spacing: -1px; }

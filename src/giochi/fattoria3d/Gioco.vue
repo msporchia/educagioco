@@ -280,7 +280,8 @@ const { inVisita, mappaAperta, mappaMsg, fase: faseVisita, verso: versoVisita, s
 // ── dentro la casa (casa.js): stanze, mobili e l'armadio che apre il guardaroba ──
 const telaCasa = ref(null), sopraCasa = ref(null)
 const interni = usaCasa({ dammi: () => ({ motore, mondo }), tela: telaCasa, sopra: sopraCasa, q, versione, cambio: () => ui.cambio(), abito,
-                          apriGuardaroba: () => { guardarobaAperto.value = true }, avvisa: t => ui.avviso(t), altriFogli: () => guardarobaAperto.value })
+                          apriGuardaroba: () => { guardarobaAperto.value = true }, avvisa: t => ui.avviso(t), chiedi: ui.chiedi,
+                          altriFogli: () => guardarobaAperto.value || !!dialogo.value })
 const inCasa = interni.dentro, chiaveCasa = interni.chiave
 // ── dentro una bottega del paese (bottega-dentro.js): i clienti come persone, coi fumetti di cosa vogliono ──
 const telaSala = ref(null), sopraSala = ref(null)
@@ -851,11 +852,13 @@ onBeforeUnmount(() => {
         <Opzioni v-if="opzioniAperte" :q="q" :stat="stat" :conta="conta" :rapporto="rapporto" @cambia="cambiaOpzioni"
                  @stress="(t, n) => { mondo.stress(t, n); ui.cambio() }" @rapporto="creaRapporto" @ridotto="v => opzioniRidotte = v"
                  @chiudi="opzioniAperte = false; opzioniRidotte = false" />
-        <Dialogo v-if="dialogo" v-bind="{ titolo: dialogo.titolo, testo: dialogo.testo, bottoni: dialogo.bottoni }" @scelta="rispostaDialogo" />
         <Mappa v-if="mappaAperta" :elenco="elencoVicini" :messaggio="mappaMsg" @vai="visite.vai" @carretto="visite.apriCarretto" @chiudi="mappaAperta = false" />
         <Carretto v-if="carretto" :passo="carretto.passo" :dato="carretto.dato" :quanti="DAI_CARRETTO" :dai="righeCarretto.dai" :offre="righeCarretto.offre" :messaggio="carretto.msg"
                   @dai="visite.carrettoDai" @ricevi="visite.carrettoRicevi" @indietro="visite.carrettoIndietro" @chiudi="visite.chiudiCarretto" />
         </div>
+
+        <!-- fuori dal HUD: la stessa domanda serve anche dentro casa, per una stanza nuova -->
+        <Dialogo v-if="dialogo" v-bind="{ titolo: dialogo.titolo, testo: dialogo.testo, bottoni: dialogo.bottoni }" @scelta="rispostaDialogo" />
 
         <!-- dentro la casa: la sua tela e i suoi fogli, mentre la fattoria aspetta ferma (docs/fattoria3d/casa.md) -->
         <template v-if="inCasa">
