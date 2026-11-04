@@ -9,7 +9,7 @@
    guardavano dentro ai giochi, e nessuno guardava la porta d'ingresso.
    Se questo è rosso, gli altri non vanno nemmeno letti.
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, semina, scatto, TELEFONO, TABLET, SCRIVANIA } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, scatto, TELEFONO, TABLET, SCRIVANIA } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -123,9 +123,8 @@ controlla('l\'età scelta spegne i giochi da grandi',
   !carteNuovo.includes('torri'), carteNuovo.join(','))
 controlla('e lascia quelli per i piccoli',
   carteNuovo.includes('conta'), carteNuovo.join(','))
-/* spagnolo: nasce spento per tutte le età, lo accende il genitore (docs/genitori/interruttori.md) */
-controlla('lo spagnolo nasce spento',
-  !carteNuovo.includes('spagnolo'), carteNuovo.join(','))
+controlla('e lo spagnolo c\'è, come gli altri',
+  carteNuovo.includes('spagnolo'), carteNuovo.join(','))
 controlla('e l\'onboarding non torna più', !(await nuovo.isVisible('.benvenuto')))
 
 /* Il nome, non l'id. Chi si iscrive da oggi ha un id opaco (`g1`), e
@@ -156,18 +155,5 @@ await scatto(nuovo, 'primo-avvio')
 await nuovo.close()
 
 await page.close()
-/* ── chi lo spagnolo l'ha già giocato se lo tiene ──
-   «Un gioco cominciato non sparisce mai» (`giocoDaVedere`): la carta manca solo a chi non l'ha mai aperto. */
-{
-  const carte = p => p.evaluate(() => [...document.querySelectorAll('.carta.gioco[data-gioco]')].map(c => c.dataset.gioco))
-  const { page: chi } = await apriGioco(browser)
-  await chi.waitForSelector('.carta.gioco[data-gioco]', { timeout: 8000 })
-  controlla('un profilo che non l\'ha mai aperto non ha lo spagnolo', !(await carte(chi)).includes('spagnolo'))
-  await semina(chi, { totals: { es: 3 } })
-  await chi.waitForSelector('.carta.gioco[data-gioco]', { timeout: 8000 })
-  controlla('e chi ci ha già giocato sì', (await carte(chi)).includes('spagnolo'))
-  await chi.close()
-}
-
 await browser.close()
 riassunto("l'app si apre")
