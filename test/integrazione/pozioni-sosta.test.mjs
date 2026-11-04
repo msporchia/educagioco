@@ -36,9 +36,9 @@ const ordina = (piccola = false) => page.evaluate(async piccola => {
   Z.aggiungi(i, k); Z.ordina()
 }, piccola)
 const fermo = () => page.waitForFunction(() => {
-  const el = document.querySelector('[data-azione="mercante"], [data-fine="tappa"]')
+  const el = document.querySelector('[data-azione="mercante"], [data-fine]')
   return el && !el.disabled
-}, null, { timeout: 15000 })
+}, null, { timeout: 45000 })                        // il cliente beve: senza scheda video va piano
 
 const stato = () => page.evaluate(() => {
   const b = window.__poz.bottega.value
@@ -98,6 +98,21 @@ await page.waitForSelector('.pz-mercante', { timeout: 5000 })
 uguale('uscendo a metà consegna l\'ordine resta fatto', JSON.stringify((await stato()).voci), JSON.stringify(inVolo.voci))
 await attendi(page, 500)
 
+/* la prima pozione finita: si esce sul cartello in mezzo, e si ritrova la dopo */
+for (let g = 0; g < 30 && await page.locator('[data-fine]').count() === 0; g++) {
+  await ordina()
+  await fermo()
+}
+uguale('finita una pozione c\'è il cartello in mezzo', await page.locator('[data-fine="pozione"]').count(), 1)
+await page.click('[data-fine] [data-azione="mappa"]')
+await page.waitForSelector('[data-ripresa]')
+controlla('la carta dice che si è alla seconda', /Pozione 2 di 2/.test(await page.locator('[data-ripresa]').textContent()))
+await attendi(page, 500)
+await page.click('[data-ripresa] [data-azione="riprendi"]')
+await page.waitForSelector('.pz-mercante', { timeout: 5000 })
+uguale('e si riparte da quella', (await page.locator('[data-pozione]').innerText()).trim(), '2 di 2')
+await attendi(page, 500)
+
 /* il resto della tappa: le monete dicono il totale, anche quelle prima dell'uscita */
 for (let g = 0; g < 30 && await page.locator('[data-fine]').count() === 0; g++) {
   await ordina()
@@ -105,7 +120,7 @@ for (let g = 0; g < 30 && await page.locator('[data-fine]').count() === 0; g++) 
 }
 uguale('la tappa finisce', await page.locator('[data-fine="tappa"]').count(), 1)
 uguale('le monete sono quelle di tutta la tappa, anche prima dell\'uscita',
-       (await page.locator('[data-monete]').innerText()).trim(), `+${CAMPAGNA[1].ingredienti * MONETE_A_DOSE} 🪙`)
+       (await page.locator('[data-monete]').innerText()).trim(), `+${CAMPAGNA[1].ingredienti * CAMPAGNA[1].pozioni * MONETE_A_DOSE} 🪙`)
 await page.click('[data-fine] [data-azione="mappa"]')
 await attendi(page, 500)
 uguale('finita la tappa la carta non c\'è', await page.locator('[data-ripresa]').count(), 0)

@@ -144,9 +144,10 @@ await attendi(page, 700)
   uguale('pozioni: ripasso e contatori intatti', await foto(), prima)
   controlla('pozioni: le monete sono salite', await soldi() > soldiPrima)
   // saltando tutto la tappa si chiude
-  for (let i = 0; i < 60 && !(await page.locator('[data-fine="tappa"]').count()); i++) {
+  for (let i = 0; i < 120 && !(await page.locator('[data-fine="tappa"]').count()); i++) {
     await attendi(page, 500)
-    if (await salta.count()) await salta.click().catch(() => {})
+    if (await page.locator('[data-fine="pozione"]').count()) await page.locator('[data-fine] [data-azione="avanti"]').click()
+    else if (await salta.count()) await salta.click().catch(() => {})
   }
   controlla('pozioni: saltando tutte le dosi la tappa finisce', await page.locator('[data-fine="tappa"]').count() === 1)
 }

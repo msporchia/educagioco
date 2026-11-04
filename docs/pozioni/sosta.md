@@ -6,11 +6,15 @@ Si esce con ← anche a pozione a metà, e rientrando la mappa offre in cima
 
 - **Si scrive la domanda aperta com'è** (`src/giochi/pozioni/motore/sosta.js`):
   la pozione, il listino di ogni ingrediente, quanto c'è in ogni strumento e
-  i pezzi comprati, i gettoni spesi, le macchie, le traboccate. Rifare il listino avrebbe lasciato scegliere una
+  i pezzi comprati, i gettoni spesi, le macchie, le traboccate, e cosa resta di
+  quelle già fatte (`fatte`). Rifare il listino avrebbe lasciato scegliere una
   pozione più facile: uscire sarebbe diventata una mossa.
+- **Fra una pozione e l'altra la dopo è già pronta**: `Fila.chiudi()` la prepara
+  appena la pozione finisce, quindi uscendo mentre il cliente beve, o dal cartello
+  in mezzo, si ritrova quella. La carta dice «Pozione 2 di 3».
 - **Si ritrova per nome, non per posizione**: gli ingredienti e la pozione per
   nome, la tappa per chiave. Se uno non c'è più il salvataggio non torna, si
-  butta e la tappa ricomincia. Una sosta del banco vecchio (`v: 1`) non si
+  butta e la tappa ricomincia. Una sosta di prima della fila (`v: 1` e `2`) non si
   legge: la tappa ricomincia, e progressi e stelle restano.
 - **L'ordine si scrive quando si ordina, non quando finisce di versarsi**: il
   motore ha già deciso tutto, e monete, `answer()` e fine della tappa partono

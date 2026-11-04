@@ -1,6 +1,7 @@
 <script setup>
-// Il cartello di fine tappa: la tappa si finisce sempre, qui si dice
-// com'è andata. Quando è l'ultima, e la prima volta, è quello del maestro.
+// Il cartello di fine: la tappa si finisce sempre, qui si dice com'è
+// andata. Quando è l'ultima, e la prima volta, è quello del maestro. Con
+// `mezzo` è quello fra una pozione e l'altra della fila.
 defineProps({
   titolo: { type: String, required: true },
   stelle: { type: Number, default: 0 },
@@ -9,16 +10,20 @@ defineProps({
   maestro: { type: Boolean, default: false },
   ultima: { type: Boolean, default: false },
   righe: { type: Array, default: () => [] },   // quanto si è speso, e il modo più economico
+  mezzo: { type: Boolean, default: false },
+  numero: { type: Number, default: 0 },        // quante pozioni sono fatte
+  quante: { type: Number, default: 0 },
 })
 defineEmits(['avanti', 'mappa'])
 </script>
 
 <template>
-  <div class="pz-velo" data-fine="tappa">
+  <div class="pz-velo" :data-fine="mezzo ? 'pozione' : 'tappa'">
     <div class="pz-cartello-fine">
       <div class="pz-faccia em">{{ maestro ? '🏆' : '✨' }}</div>
       <h2 v-if="maestro">Maestro alchimista</h2>
       <h2 v-else>{{ titolo }}</h2>
+      <p v-if="mezzo" class="pz-fila" data-fila>Pozione {{ numero }} di {{ quante }}</p>
       <div class="pz-punteggio em" data-stelle>{{ '⭐'.repeat(stelle) }}</div>
       <p v-if="maestro">Pesi, lunghezze e liquidi: tutte le conversioni, in tutti e due i versi.</p>
       <div class="pz-fine-righe" data-righe>
@@ -27,7 +32,7 @@ defineEmits(['avanti', 'mappa'])
       <p v-if="monete" class="pz-monete" data-monete data-monete-prese>+{{ monete }} 🪙</p>
       <p v-if="notaMonete" data-nota-monete>{{ notaMonete }}</p>
       <button v-if="!ultima" class="pz-grosso" data-azione="avanti" @click="$emit('avanti')">
-        Tappa dopo ▶
+        {{ mezzo ? 'Pozione dopo' : 'Tappa dopo' }} ▶
       </button>
       <button class="pz-grosso pz-chiaro" data-azione="mappa" @click="$emit('mappa')">
         <span class="em">🗺️</span> Le tappe
