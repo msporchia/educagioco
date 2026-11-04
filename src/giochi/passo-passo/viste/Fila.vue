@@ -9,6 +9,7 @@
    (docs/passo-passo/zaino.md). */
 import { ref, computed, watch, nextTick, provide, onBeforeUnmount } from 'vue'
 import Carte from './Carte.vue'
+import Figura from './Figura.vue'
 import { albero, carteDi, conCicli, eApri, chiusuraDi } from '../dati/carte.js'
 import { gestoDelDito, postoSotto, puntiDellaFila, scatolaDi } from './trascina.js'
 
@@ -172,7 +173,7 @@ const tocca = i => { if (!props.inCorsa) emit('cursore', i) }
         <button v-for="n in liberi" :key="'z' + n" class="pp-posto" :data-libero="fila.length"
                 :class="{ 'pp-qui': n === 1 && segno === fila.length && (!inCorsa || presa) }"
                 :data-cursore="n === 1 && segno === fila.length ? '' : null"
-                :aria-label="n === 1 ? 'in fondo alla fila' : null" @click="tocca(fila.length)">{{ n === 1 ? '+' : '' }}</button>
+                :aria-label="n === 1 ? 'in fondo alla fila' : null" @click="tocca(fila.length)"><Figura v-if="n === 1" nome="piu" /></button>
       </template>
       <span v-else-if="!fila.length && !fantasma" class="pp-posto" aria-hidden="true"></span>
     </div>

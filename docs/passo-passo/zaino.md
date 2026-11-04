@@ -26,9 +26,12 @@ massi cresce **la lingua**, non il mondo. Le carte sono in
 - **La scatola si vede dentro e fuori.** Il ripeti è di legno scuro, come una
   cassa, e il se di legno chiaro; la testa dice a parole cosa fa («3 volte», «fino
   a», «se»). I colori sono pochi: il blu cammina, il verde parte, il legno è tutto
-  il resto (il salto resta arancione). Un tasto ha orlo scuro, luce in alto e
-  spessore (i tre colori `--t-*` in `stile.css`), spento perde colore senza
-  sparire, e non è mai più alto degli altri: la scelta si ferma a 58 px per riga. 🔁 la mette dove sta il
+  il resto (il salto resta arancione). **Tasti e carte sono a pixel come la mappa**:
+  colore pieno, bande di luce e ombra, spigoli a scalino (l'orlo è l'ombra dei
+  quattro lati, `--u` il pixel del tasto e i tre colori `--t-*` in `stile.css`), mai
+  raggi né gradienti. Figure e lettere stanno in `viste/figure.js` (`Figura`,
+  `Scritta`, `--pp-pix` il loro pixel). Spento un tasto perde colore senza sparire,
+  e la scelta si ferma a 54 px per riga: non fa tasti alti come la pulsantiera. 🔁 la mette dove sta il
   cursore, col cursore dentro; la testa riapre la scelta del numero.
 - **Il + dice dove si aggiunge.** In fondo a ogni scatola c'è sempre un + del
   suo colore, e il primo posto libero dello zaino ne ha uno suo: toccato uno,

@@ -41,8 +41,7 @@ export function puntiDellaFila(radice) {
     metti(i, r.left, t)
     metti(i + 1, t.right, t)
     if (coda) {
-      const c = coda.getBoundingClientRect()
-      metti(Number(coda.dataset.coda) + 1, r.right, c)
+      metti(Number(coda.dataset.coda) + 1, r.right, { top: r.bottom - 44, height: 44 })
     }
   }
   for (const el of radice.querySelectorAll('[data-bocca]')) {

@@ -3,6 +3,8 @@
 import { spostaCarta } from '../../src/giochi/passo-passo/motore/fila.js'
 import { gestoDelDito, postoSotto, scatolaDi, TENUTO_MS } from '../../src/giochi/passo-passo/viste/trascina.js'
 import { albero, carteDi, programma, ripeti, se } from '../../src/giochi/passo-passo/dati/carte.js'
+import { FIGURE, scritta } from '../../src/giochi/passo-passo/viste/figure.js'
+import { CHIAVI_VERSI } from '../../src/giochi/passo-passo/dati/mondo.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
 /* ══════════ spostare ══════════ */
@@ -63,6 +65,21 @@ import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs
   uguale('una riga sotto conta più di una carta accanto', postoSotto(52, 60, scatola, punti, 9, 9), 3)
   uguale('dentro la carta presa non cade', postoSotto(45, 20, scatola, punti, 0, 1), 0)
   uguale('fuori dalla fila torna indietro', postoSotto(50, 300, scatola, punti, 9, 9), null)
+}
+
+/* ══════════ figure e lettere ══════════ */
+{
+  for (const [nome, f] of Object.entries(FIGURE)) {
+    controlla(`${nome}: le righe sono tutte larghe uguali`, new Set(f.righe.map(r => r.length)).size === 1)
+  }
+  for (const m of [...CHIAVI_VERSI, ...CHIAVI_VERSI.map(v => 'salto-' + v), 'rosso', 'blu', 'giallo', 'casa']) {
+    controlla(`c'è il disegno di ${m}`, !!FIGURE[m])
+  }
+  for (const t of ['ripeti', 'se', 'fino a', 'Se…', 'Ripeti…', 'Se di là si passa…', 'N', '3/5', 1234567890]) {
+    controlla(`«${t}» si scrive`, scritta(t).d.length > 0)
+  }
+  for (const t of ['volte', 'fino a', 'se']) controlla(`«${t}» si scrive in piccolo`, scritta(t, true).d.length > 0)
+  uguale('una freccia ruota sullo stesso disegno', FIGURE.su.righe.length, FIGURE.destra.righe.length)
 }
 
 riassunto('passo passo, la fila')

@@ -8,7 +8,8 @@
 import { computed, inject } from 'vue'
 import Icona from './Icona.vue'
 import Lastra from './Lastra.vue'
-import Segno from './Segno.vue'
+import Figura from './Figura.vue'
+import Scritta from './Scritta.vue'
 import { nomeDellaMossa, LASTRE, VERSI } from '../dati/mondo.js'
 import { eApri, eSe, valoreDi } from '../dati/carte.js'
 
@@ -80,8 +81,8 @@ const parolaDi = n => {
               :aria-label="`metti qui: ${eCiclo(f.s.value.consiglio) ? 'una scatola' : nomeDellaMossa(f.s.value.consiglio)}`"
               @click="f.metti(f.s.value.consiglio)">
         <template v-if="eCiclo(f.s.value.consiglio)">
-          <Segno :tipo="eSe(f.s.value.consiglio) ? 'se' : 'ripeti'" />
-          <b v-if="numero(f.s.value.consiglio)">{{ valoreDi(f.s.value.consiglio) }}</b>
+          <Figura :nome="eSe(f.s.value.consiglio) ? 'se' : 'ripeti'" />
+          <Scritta v-if="numero(f.s.value.consiglio)" :testo="valoreDi(f.s.value.consiglio)" />
           <Lastra v-else :colore="valoreDi(f.s.value.consiglio)" />
         </template>
         <Icona v-else :mossa="f.s.value.consiglio" />
@@ -115,12 +116,12 @@ const parolaDi = n => {
               :data-testa="x.nodo.i" :data-volte="valoreNodo(x.nodo) ?? 'N'" :data-giro="giroDi(x.nodo.i)"
               :aria-label="testaInParole(x.nodo)"
               @pointerdown="e => f.prendi(e, x.nodo.i)" @click="f.testa(x.nodo.i)">
-        <Segno :tipo="x.nodo.che === 'se' ? 'se' : 'ripeti'" />
+        <Figura class="pp-testa-segno" :nome="x.nodo.che === 'se' ? 'se' : 'ripeti'" />
         <span class="pp-testa-dice" :class="{ 'pp-prima': parolaDi(x.nodo) !== 'volte' }">
-          <b v-if="giroDi(x.nodo.i) || typeof valoreNodo(x.nodo) !== 'string'">
-            {{ giroDi(x.nodo.i) || (valoreNodo(x.nodo) ?? 'N') }}</b>
+          <Scritta v-if="giroDi(x.nodo.i) || typeof valoreNodo(x.nodo) !== 'string'" class="pp-testa-valore"
+                   :testo="giroDi(x.nodo.i) || (valoreNodo(x.nodo) ?? 'N')" />
           <Lastra v-else :colore="valoreNodo(x.nodo)" />
-          <small aria-hidden="true">{{ parolaDi(x.nodo) }}</small>
+          <Scritta class="pp-testa-parola" :testo="parolaDi(x.nodo)" minuta />
         </span>
       </button>
       <Carte :nodi="x.nodo.corpo" :fine="x.nodo.fine" bocca />
@@ -132,5 +133,5 @@ const parolaDi = n => {
   <!-- il + della scatola: sempre a vista, si tocca e la prossima carta entra lì -->
   <button v-if="bocca" class="pp-bocca" :class="{ 'pp-qui': segnato(fine) }" :data-bocca="fine"
           :data-cursore="segnato(fine) ? '' : null" aria-label="aggiungi dentro la scatola"
-          @click="f.tocca(fine)">+</button>
+          @click="f.tocca(fine)"><Figura nome="piu" /></button>
 </template>
