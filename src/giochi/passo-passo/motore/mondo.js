@@ -86,9 +86,16 @@ export class Mondo {
      `guastiDellaMappa`) resta una buca in cui non si cade */
   eBuca(i) { return this.senza !== 'buche' && this.liv.terreno[i] === 'buca' && this.liv.gemella[i] >= 0 }
   eTana(i) { return i === this.liv.tana }
-  /* la lastra che il coniglio ha sotto i piedi, se ce n'è una: è tutto
-     quello che il «fino a» e il «se» guardano */
-  lastra() { return this.liv.lastra ? this.liv.lastra[this.p] : null }
+  /* il colore che ha sotto i piedi, una lastra o un pulsante del guerriero:
+     è quello che il «fino a» e il «se» guardano */
+  lastra() { return (this.liv.lastra && this.liv.lastra[this.p]) || this.liv.pulsante[this.p] || null }
+  /* la testa di un ❓: un colore da avere sotto i piedi, o un verso da cui si
+     passa camminando (vedi docs/passo-passo/guerriero.md) */
+  vale(v) {
+    if (!VERSI[v]) return this.lastra() === v
+    const q = this.liv.vicino(this.p, VERSI[v].dx, VERSI[v].dy)
+    return q >= 0 && !this.ostacolo(q) && !this.sbarrata(q) && this.masso(q) < 0 && !this.eAcqua(q)
+  }
   haCarota(i) { return !this.presa && i === this.liv.carota }
   masso(i) { return this.massi.indexOf(i) }
   pecora(i) { return this.pecore.indexOf(i) }
@@ -415,7 +422,7 @@ export function esegui(liv, fila, { senza = null, eventi = true } = {}) {
         continue
       }
       if (nodo.che === 'se') {
-        if (nodo.colore && w.lastra() === nodo.colore && corri(nodo.corpo)) return true
+        if (nodo.colore && w.vale(nodo.colore) && corri(nodo.corpo)) return true
         continue
       }
       if (passi.length >= PASSI_MAX) { fine = esce(STANCO, nodo.i); return true }

@@ -4,7 +4,8 @@ import { CAMPAGNA, SCALINI, delGuerriero, FINE_STRADA, guastiDellaCampagna } fro
 import { guastiDellaMappa } from '../../src/giochi/passo-passo/dati/mondo.js'
 import { Livello } from '../../src/giochi/passo-passo/motore/livello.js'
 import { esegui, Mondo, TANA, SBATTE, CADUTO, eErrore } from '../../src/giochi/passo-passo/motore/mondo.js'
-import { risolvi, misura, serveLaRegola, suggerisci } from '../../src/giochi/passo-passo/motore/risolutore.js'
+import { risolvi, misura, serveLaRegola, serveLaCarta, suggerisci } from '../../src/giochi/passo-passo/motore/risolutore.js'
+import { carteDi, conCicli, programma, ripeti, se } from '../../src/giochi/passo-passo/dati/carte.js'
 import { pensieroDi } from '../../src/giochi/passo-passo/motore/aiuti.js'
 import { seguiConsiglio } from '../../src/giochi/passo-passo/motore/fila.js'
 import { STRADE, aperture, cosaManca } from '../../src/giochi/passo-passo/motore/strade.js'
@@ -59,6 +60,16 @@ const eventi = r => r.passi.flatMap(p => p.eventi.map(e => e.che))
   uguale('la principessa vince anche con un nemico accanto', gioca(['P.Qn', 'WcWW'], ['destra', 'destra']).esito, TANA)
 }
 
+/* ══════════ le condizioni del guerriero ══════════ */
+{
+  const C = ['P..W', 'WW..', 'WWc.', 'WWWQ']
+  const giro = programma(ripeti('casa', se('destra', 'destra'), se('giu', 'giu')))
+  uguale('❓ con una freccia: il guerriero segue il corridoio da solo', gioca(C, giro).esito, TANA)
+  uguale('una grata chiusa non si passa', esegui(L(['PRcQ', 'W4WW']), programma(ripeti('casa', se('destra', 'destra')))).esito, 'stanco')
+  const fino = programma(ripeti('rosso', 'destra'), 'giu', 'giu')
+  uguale('🚩 fino al pulsante: si ferma sul rosso', gioca(['P.4.c', 'WW.WW', 'WWQWW'], fino).esito, TANA)
+}
+
 /* ══════════ la scena ══════════ */
 {
   const S = L(['Ps..n.Q', 'WWWcWWW'])
@@ -83,9 +94,13 @@ const eventi = r => r.passi.flatMap(p => p.eventi.map(e => e.che))
   const g = guastiDellaCampagna()
   controlla('la campagna non ha guasti', g.length === 0, g.join(' · '))
   const sua = CAMPAGNA.map((t, i) => i).filter(i => delGuerriero(CAMPAGNA[i]))
-  uguale('venti tappe, cinque per isola', STRADE.guerriero.length, 20)
+  uguale('ventiquattro tappe', STRADE.guerriero.length, 24)
   uguale('quattro isole', STRADE.isole.filter(s => s.animale === 'guerriero').map(s => `${s.scalino}:${s.tappe.length}`).join(' '),
-         'grate:5 nemici:5 due:5 castello:5')
+         'grate:5 nemici:5 due:7 castello:7')
+  const carte = STRADE.guerriero.map(i => CAMPAGNA[i].carte || [])
+  controlla('a metà strada arrivano le carte, e da lì restano', carte.findIndex(c => c.length) <= 14 && carte.slice(14).every(c => c.length))
+  for (const c of ['ripeti', 'fino', 'casa', 'se', 'varco'])
+    controlla(`la carta «${c}» c'è`, carte.some(l => l.includes(c)))
   controlla('stanno in coda: nessuna muove la fine della strada del coniglio', sua.every(i => i >= FINE_STRADA))
   const finitiIPiccoli = i => i <= STRADE.apreIlCane
   uguale('comincia quando comincia il cane', aperture(STRADE, { fatta: finitiIPiccoli }).aperta(STRADE.guerriero[0]), true)
@@ -102,21 +117,35 @@ for (const t of CAMPAGNA.filter(delGuerriero)) {
   const m = misura(liv)
   controlla(`${t.chiave}: si vince con la corona`, !!m.conCarota)
   if (!m.conCarota) continue
-  const regole = [s.regola, ...(t.regole || [])].filter(Boolean)
-  controlla(`${t.chiave}: dichiara almeno una regola`, regole.length > 0)
+  const regole = t.zaino ? [] : t.regole || [s.regola]
   for (const r of regole) controlla(`${t.chiave}: ha bisogno della regola «${r}»`, serveLaRegola(liv, r))
+  /* con lo zaino: scritta in frecce non ci sta, la soluzione sì, e con un ciclo */
+  if (t.zaino) {
+    controlla(`${t.chiave}: in frecce non sta nello zaino`, serveLaCarta(liv), `${m.corta} contro ${t.zaino}`)
+    for (const sol of t.soluzioni) {
+      const r = esegui(liv, sol, { eventi: false })
+      controlla(`${t.chiave}: la soluzione vince con la corona`, r.esito === TANA && r.carota, r.esito)
+      controlla(`${t.chiave}: e sta nello zaino, con dentro un ciclo`, carteDi(sol) <= t.zaino && conCicli(sol))
+    }
+    controlla(`${t.chiave}: ha le sue mosse ingenue`, (t.fragili || []).length > 0)
+    for (const fr of t.fragili || []) {
+      const r = esegui(liv, fr, { eventi: false })
+      controlla(`${t.chiave}: la mossa ingenua non vince con la corona, dopo almeno due passi`,
+                !(r.esito === TANA && r.carota) && r.passi.length >= 2, `${r.esito} dopo ${r.passi.length}`)
+    }
+  }
   // nessuno parte con un nemico addosso
   controlla(`${t.chiave}: la partenza non sta accanto a un nemico`, liv.nemici.every(n => {
     const a = liv.xy(n), b = liv.xy(liv.partenza)
     return Math.abs(a.x - b.x) + Math.abs(a.y - b.y) > 1
   }))
   /* le false piste: la mossa ingenua fa un pezzo di strada e poi si ferma male */
-  if (liv.nemici.length) controlla(`${t.chiave}: dichiara le sue trappole`, (t.trappole || []).length > 0)
+  if (liv.nemici.length && !t.zaino) controlla(`${t.chiave}: dichiara le sue trappole`, (t.trappole || []).length > 0)
   for (const tr of t.trappole || []) {
     const r = esegui(liv, tr)
     controlla(`${t.chiave}: la trappola non vince, dopo almeno due passi`, eErrore(r.esito) && r.passi.length >= 2, `${r.esito} dopo ${r.passi.length}`)
   }
-  // chi segue soltanto gli aiuti arriva dalla principessa
+  // chi segue soltanto gli aiuti arriva dalla principessa (con lo zaino, nello zaino)
   let fila = [], cursore = 0
   for (let k = 0; k < 60; k++) {
     const c = suggerisci(liv, fila)

@@ -43,6 +43,7 @@ coniglio ci pensano i sassi.
 ## Le condizioni guardano per terra
 
 Tutte e due leggono le lastre colorate (`r u g`, vedi [regole.md](regole.md)).
+Col guerriero guardano i pulsanti e la strada libera: [guerriero.md](guerriero.md#le-carte).
 
 - **🔁 fino a 🔴.** La testa è un colore: un giro, e alla fine di ogni giro
   si guarda sotto i piedi. Almeno un giro sempre: già sul rosso, «fino al

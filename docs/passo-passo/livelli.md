@@ -50,8 +50,9 @@ Un elenco di righe, un carattere per cella (legenda in `dati/mondo.js`):
 - **`trappole`** — nei livelli del cane e in quelli del guerriero con i nemici:
   le mosse ingenue, che non devono vincere e devono fare un pezzo di strada
   prima di fermarsi.
-- **`regole`** — solo nell'isola del castello del guerriero, che non ha una
-  regola sua: quelle del mondo che ogni tappa deve usare (`spinta`, `ghiaccio`…).
+- **`regole`** — solo col guerriero: quelle del mondo che una tappa deve usare
+  (`spinta`…), al posto della regola del gradino. Lì un gradino può avere tappe
+  con lo zaino e senza.
 - **stagione** — solo il vestito.
 - **Con lo zaino**: `carte` (i tasti oltre alle frecce, es. `['ripeti']`),
   `zaino` (quante carte tiene la fila), `soluzioni` scritte con

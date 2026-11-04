@@ -123,7 +123,7 @@ export class Bottega {
       const d = pesca(rnd, libere.length ? libere : sue)
       dosi.push(d)
       const offerte = banchetto(rnd, d.base, famiglia, d.unita, tappa)
-      return { nome: i.nome, emoji: i.emoji, colore: i.colore, famiglia, unita: d.unita, dose: d.base, messo: 0,
+      return { nome: i.nome, colore: i.colore, famiglia, unita: d.unita, dose: d.base, messo: 0,
                offerte, ottimo: ottimo(d.base, offerte), traboccate: 0, pezzi: [] }
     })
     const p = pesca(rnd, POZIONI)

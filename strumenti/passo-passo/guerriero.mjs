@@ -8,6 +8,7 @@ import { CAMPAGNA, SCALINI, delGuerriero } from '../../src/giochi/passo-passo/da
 import { Livello } from '../../src/giochi/passo-passo/motore/livello.js'
 import { esegui } from '../../src/giochi/passo-passo/motore/mondo.js'
 import { misura, serveLaRegola } from '../../src/giochi/passo-passo/motore/risolutore.js'
+import { carteDi } from '../../src/giochi/passo-passo/dati/carte.js'
 
 const FRECCE = { su: '↑', giu: '↓', sinistra: '←', destra: '→',
                  'salto-su': '⇑', 'salto-giu': '⇓', 'salto-sinistra': '⇐', 'salto-destra': '⇒' }
@@ -18,9 +19,13 @@ for (const t of CAMPAGNA.filter(delGuerriero)) {
   const m = misura(liv)
   const s = SCALINI.find(x => x.chiave === t.scalino)
   const usa = Object.entries(m.usa).filter(([k, n]) => n && k !== 'passo').map(([k, n]) => `${k} ${n}`).join(', ')
-  const regole = [s.regola, ...(t.regole || [])].filter(Boolean).map(r => `${r} ${serveLaRegola(liv, r) ? 'serve' : 'NON SERVE'}`).join(', ')
+  const regole = t.zaino ? [] : t.regole || [s.regola].map(r => `${r} ${serveLaRegola(liv, r) ? 'serve' : 'NON SERVE'}`).join(', ')
   console.log(`${t.chiave}: ${m.lunga ?? 'NON SI VINCE'} frecce (senza corona ${m.corta}), ${usa || 'niente'}; ${regole}`)
   if (m.conCarota) console.log('   ' + m.conCarota.map(x => FRECCE[x]).join(' '))
+  for (const [nome, l] of [['soluzione', t.soluzioni || []], ['fragile', t.fragili || []]]) for (const f of l) {
+    const r = esegui(liv, f, { eventi: false })
+    console.log(`   ${nome} (${carteDi(f)} carte, zaino ${t.zaino}): ${r.esito}${r.carota ? ' con la corona' : ''} dopo ${r.passi.length} passi`)
+  }
   for (const f of t.trappole || []) {
     const r = esegui(liv, f, { eventi: false })
     console.log(`   trappola ${f.map(x => FRECCE[x]).join(' ')}: ${r.esito} al passo ${r.passi.length}`)
