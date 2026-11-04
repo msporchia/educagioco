@@ -44,6 +44,11 @@ il castello e non le lastre.
   (`Mondo.lastra`). I camminamenti sono lunghi diversi e finiscono su un pulsante:
   contare non serve.
 - **🔁 fino a 🏠** vuol dire fino alla principessa.
+- **❓ col colore** guarda il pulsante o la lastra sotto i piedi, come col coniglio
+  (senza la carta `varco`). Una cella senza colore su quella strada non fa scattare
+  nessun ❓: niente grate né corona lungo il pavimento, se no la fila si ferma stanca.
+- **❓ con una freccia non ha l'«altrimenti»**, e dopo un passo le domande continuano:
+  dentro un 🔁 🏠 si chiedono solo versi che non tornano indietro, due alla volta.
 - **❓ con una freccia, «se di là si passa»** (la carta `varco`, che accende i
   quattro versi nella scelta del ❓; `Mondo.vale`): non si passa contro un muro,
   una grata chiusa, un nemico, un masso, l'acqua e il bordo. È la condizione che
@@ -62,10 +67,16 @@ sta, le `soluzioni` e le `fragili` si scrivono, e chi sbaglia fa almeno due pass
   grate sul ripeti, la spada sul fino a, due alla volta sul se, il castello su
   tutto il mondo. Il fondale è quello di prima: un fondale suo si dipinge solo
   se la strada piace.
+- **Poi due isole solo sue**, cinque e cinque: il lago sul lago gelato, il mastio
+  sul fienile (`"solo": true` nel foglietto). Ci si arriva sotto terra: dalla fine
+  della spirale si sbuca dalla tana del lago, e da lì da quella del fienile. Per il
+  coniglio restano decoro, tane comprese (`quadroValle`).
 - **Non ha un sentiero senza fine**, e il segnalino resta lì in fondo.
 - **Il disegno è in codice**, come vuole la regola: il guerriero, il nemico, la
   principessa, la corona, la spada, le grate, il muro. Il tema `castello` è il
   pavimento di pietra.
+- **Il premio si ferma a 20**, il tetto di `guastiDellaCampagna`: dalla torre in poi
+  non sale più.
 - **Le carte arrivano a metà strada**, dalla quindicesima tappa, e da lì restano:
   prima la strada è di sole frecce, fino a 23 (il tetto è 24 come per il cane).
   Una strada lunga scritta in frecce è una lista, non un programma: provato, e
@@ -110,6 +121,18 @@ dove finiscono trappole, soluzioni e mosse ingenue.
 | 22. Le nicchie | ❓ a ogni gradino si guarda a sinistra | zaino 5 |
 | 23. Scivolare via | 🔁 sul ghiaccio, sotto il naso delle guardie | zaino 5 |
 | 24. La torre | ❓ un programma solo, e la spada dietro di te | zaino 6 |
+| **❄️ Il lago** | *il programma guarda dove mette i piedi* | |
+| 25. La pista | 🔁 due frecce, gradini lunghi diversi | zaino 3 |
+| 26. Le soste | ❓ destra e giù non si danno il turno, e conta quale si chiede prima | zaino 5 |
+| 27. Il ponte rotto | ❓ un passo se c'è il ponte, poi sempre un salto | zaino 4 |
+| 28. Le tre chiavi | 🔁 dentro 🔁: si va al pulsante e si torna | zaino 8 |
+| 29. Il pavimento | ❓ col colore sotto i piedi, tre colori tre versi | zaino 9 |
+| **👑 Il mastio** | *scatole dentro scatole, e tutte le carte* | |
+| 30. I pozzi | 🔁 dentro il ❓: se sei sul rosso, tre volte giù | zaino 5 |
+| 31. I denti del mastio | 🚩 due «fino a» in una scatola, e i denti cambiano | zaino 7 |
+| 32. La chiocciola | 🚩 quattro «fino a» in una scatola | zaino 9 |
+| 33. I due corridoi | 🚩 e ❓: una scatola si ferma sul giallo, l'altra arriva | zaino 10 |
+| 34. Il trono | tutte le carte: la spada, le rampe, il corridoio | zaino 11 |
 
 **Ogni tappa di frecce con i nemici dichiara le sue `trappole`**: la mossa ingenua, che fa
 almeno due passi e poi si ferma male. Nel gradino dei due, `serveLaRegola` guarda

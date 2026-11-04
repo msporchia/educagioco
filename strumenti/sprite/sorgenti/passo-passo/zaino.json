@@ -8,7 +8,9 @@
     "ripeti": { "caselle": 8, "cartello": [335, 492], "guerriero": { "isola": "grate-guerriero", "caselle": 5 } },
     "fino": { "caselle": 4, "cartello": [250, 82], "guerriero": { "isola": "nemici-guerriero", "caselle": 5 } },
     "se": { "caselle": 2, "cartello": [880, 100], "guerriero": { "isola": "due-guerriero", "caselle": 7, "cartello": [1400, 150] } },
-    "mondo": { "caselle": 4, "cartello": [990, 755], "guerriero": { "isola": "castello-guerriero", "caselle": 7 } }
+    "mondo": { "caselle": 4, "cartello": [990, 755], "guerriero": { "isola": "castello-guerriero", "caselle": 7 } },
+    "lago": { "solo": true, "guerriero": { "isola": "lago-guerriero", "caselle": 5, "cartello": [1420, 440] } },
+    "fienile": { "solo": true, "guerriero": { "isola": "mastio-guerriero", "caselle": 5, "cartello": [690, 850] } }
   },
   "sentieri": [
     { "isola": "riva", "punti": [[92, 938], [100, 952], [140, 960], [200, 964], [260, 962], [310, 952], [335, 942]] },
@@ -34,7 +36,14 @@
     { "isola": "mondo", "caselle": 4, "margini": [50, 90], "guerriero": 7, "margini-guerriero": [50, 40],
       "punti": [[864, 664], [900, 660], [935, 660], [940, 625], [950, 590], [972, 568], [1000, 558], [1050, 572],
                 [1092, 577], [1130, 587], [1160, 610], [1172, 640], [1165, 655], [1130, 672], [1090, 678], [1050, 678],
-                [1020, 664]] }
+                [1020, 664]] },
+
+    { "isola": "lago", "guerriero": 5, "margini-guerriero": [0, 44],
+      "punti": [[1444, 642], [1405, 640], [1370, 625], [1342, 600], [1365, 578], [1400, 568], [1445, 566], [1478, 570], [1495, 590], [1497, 618]] },
+
+    { "isola": "fienile", "guerriero": 5, "margini-guerriero": [0, 0],
+      "punti": [[800, 816], [795, 850], [795, 872], [830, 895], [870, 900], [905, 893], [945, 880], [972, 880]] },
+    { "isola": "fienile", "erba": true, "punti": [[818, 926], [775, 895], [765, 850], [775, 825], [800, 816]] }
   ],
   "ponti": [
     { "nome": "riva-ripeti", "isole": ["riva", "ripeti"], "punti": [[336, 942], [372, 908], [414, 870]], "blocco": [24, 70] },
@@ -46,6 +55,8 @@
   ],
   "tane": {
     "casetta": { "da": "mondo", "a": "casetta", "punti": [[864, 664], [1463, 328]], "nuvola": true },
+    "lago": { "da": "mondo", "a": "lago", "punti": [[1020, 664], [1468, 678]], "nuvola": true },
+    "fienile": { "da": "lago", "a": "fienile", "punti": [[1497, 618], [825, 938]], "nuvola": true },
     "valle": { "isola": "riva", "punto": [90, 925], "freccia": [92, 907], "scosta": 45 }
   },
   "speciali": {
