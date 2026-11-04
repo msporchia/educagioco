@@ -26,8 +26,7 @@ import { TAPPE as TAPPE_ES } from '../../src/giochi/spagnolo/dati/mondi.js'
 import { rispostaGiusta as libroEs, eGiusta as eGiustaEs } from '../../src/giochi/spagnolo/motore/libro.js'
 
 import { CAMPAGNA as POZIONI, MONETE_A_DOSE } from '../../src/giochi/pozioni/dati/campagna.js'
-import { Partita as PartitaPozioni } from '../../src/giochi/pozioni/motore/partita.js'
-import { caso as casoPozioni } from '../../src/giochi/pozioni/motore/banco.js'
+import { Bottega as BottegaPozioni, caso as casoPozioni } from '../../src/giochi/pozioni/motore/bottega.js'
 
 import { CAMPAGNA as PRIMA_DOPO } from '../../src/giochi/prima-dopo/dati/campagna.js'
 import { VERBI, CHIAVI_VERBI } from '../../src/giochi/prima-dopo/dati/verbi.js'
@@ -119,33 +118,29 @@ for (const [nome, Sessione, TAPPE, libro, eGiusta] of [
               eGiusta(dom, libro(dom)))
 }
 
-/* ══════════ 4. le pozioni: la dose è fatta e vale le monete, ma non le stelle né il ripasso ══════════ */
+/* ══════════ 4. le pozioni: l'ingrediente è fatto e vale le monete, ma non le stelle né il ripasso ══════════ */
 {
   const t = POZIONI[1]
-  const p = new PartitaPozioni(t, { rnd: casoPozioni(3) })
-  let annotate = 0, giri = 0
-  while (!p.finita && giri++ < 200) {
-    const e = p.salta()
+  const b = new BottegaPozioni(t, { rnd: casoPozioni(3) })
+  let giri = 0
+  while (!b.finita && giri++ < 50) {
+    const e = b.salta()
     if (!e) break
-    if (e.annota) annotate++
-    uguale('l\'esito è una dose giusta', e.tipo, 'giusto')
-    p.riprendi()
+    uguale('l\'esito vale le monete di una dose', e.monete, MONETE_A_DOSE)
   }
-  controlla('saltando si arriva in fondo alla tappa', p.finita, `giri ${giri}`)
-  uguale('niente da annotare', annotate, 0)
-  controlla('ogni dose saltata vale MONETE_A_DOSE, come una giusta al primo colpo',
-            p.dosi.length > 0 && p.monete === p.dosi.length * MONETE_A_DOSE, `${p.monete}/${p.dosi.length}`)
-  uguale('nessuno sbaglio', p.sbagli, 0)
-  uguale('una pozione saltata non è perfetta', p.perfette, 0)
-  controlla('le pozioni vanno avanti comunque', p.pozioni === t.clienti, `${p.pozioni}/${t.clienti}`)
-  controlla('ogni dose ha una riga, e nessuna con una chiave per il ripasso',
-            p.dosi.length > 0 && p.dosi.every(d => d.chiave === null && !d.chiesta))
+  controlla('saltando si arriva in fondo alla tappa', b.finita, `giri ${giri}`)
+  uguale('ogni ingrediente saltato vale MONETE_A_DOSE, come uno fatto senza traboccare', b.monete, t.ingredienti * MONETE_A_DOSE)
+  uguale('niente gettoni spesi', b.speso, 0)
+  uguale('una pozione saltata non è perfetta', b.perfetta, false)
+  uguale('e vale una stella sola', b.stelle, 1)
 }
 {
-  const t = POZIONI[1]
-  const p = new PartitaPozioni(t, { rnd: casoPozioni(4) })
-  uguale('un salto e un tentativo vero non si mischiano: dopo un esito il salto non fa nulla',
-         (p.prendi(p.ricetta.scaffale.find(s => !p.ricetta.ingredienti.some(i => i.nome === s.nome)).nome), p.salta()), null)
+  const t = POZIONI.find(x => x.chiave === 'massa-miste')
+  const b = new BottegaPozioni(t, { rnd: casoPozioni(4) })
+  const g = b.ingredienti[0]
+  g.messo = g.dose - 1
+  b.ordina([{ i: 0, k: 0 }])
+  uguale('un salto e un tentativo vero non si mischiano: con la macchia il salto non fa nulla', b.salta(), null)
 }
 
 /* ══════════ 5. prima e dopo: ogni forma di quesito si risolve da sola ══════════ */
