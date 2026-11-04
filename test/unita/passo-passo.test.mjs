@@ -578,7 +578,7 @@ for (const [i, t] of CAMPAGNA.entries()) {
                          m.conCarota.some(x => x.startsWith('salto-')))
   /* col cane e col guerriero la strada si pensa più di quanto si tracci:
      può essere più lunga */
-  dentro(`${qui}: la strada sta nella fila senza scorrere troppo`, m.lunga, 2, s.chiave === 'pecore' || delGuerriero(t) ? 24 : 16)
+  if (!t.zaino) dentro(`${qui}: la strada sta nella fila senza scorrere troppo`, m.lunga, 2, s.chiave === 'pecore' || delGuerriero(t) ? 24 : 16)
   nota(`${String(i + 1).padStart(2)}. ${t.nome.padEnd(26)} ${String(m.lunga).padStart(3)}  ${String(m.corta).padStart(8)}      ` +
        `${s.regola || '—'}   ${inFrecce(m.conCarota)}`)
 }
