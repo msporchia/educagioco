@@ -1,13 +1,14 @@
-// La bottega del mercante: una pozione ha tanti ingredienti, un listino di
-// ampolle a prezzo per ognuno, e i gettoni contati; una tappa è una fila di
-// due o tre pozioni (`Fila`). Si
+// La bottega del mercante: una tappa è una pozione con tanti ingredienti,
+// un listino di ampolle a prezzo per ognuno, e i gettoni contati. Si
 // ordinano due o tre ampolle e il mercante le versa nei loro misurini;
 // oltre la tacca d'oro trabocca, e prima di ordinare ancora si pulisce.
+// Fatta la spesa si segue il procedimento (motore/procedimento.js).
 // Puro: il caso arriva da fuori (`rnd`). Le regole in docs/pozioni/regole.md.
-import { FAMIGLIA, INGREDIENTI, POZIONI, CLIENTI, VALE, scrivi } from '../dati/misure.js'
-import { PEZZI, PREZZI, PULIZIA } from '../dati/bottega.js'
-import { MONETE_A_DOSE } from '../dati/campagna.js'
+import { FAMIGLIA, INGREDIENTI, VALE, scrivi } from '../dati/misure.js'
+import { PEZZI, PREZZI, PULIZIA, PASTICCIO } from '../dati/bottega.js'
+import { MONETE_A_DOSE, MONETE_A_PASSO } from '../dati/campagna.js'
 import { chiaveDi } from './misura.js'
+import { AZIONI, MORTAIO, ricetta, testo, frase, stesse } from './procedimento.js'
 
 export function caso(seme = 1) {
   let s = seme >>> 0 || 1
@@ -108,20 +109,15 @@ export function ottimo(dose, offerte) {
   return { costo: pezzi.reduce((s, k) => s + offerte[k].prezzo, 0), pezzi: pezzi.sort((a, b) => offerte[b].base - offerte[a].base) }
 }
 
-// le stelle dicono quanto si è speso, non quante volte si è sbagliato
-const stelle = (extra, saltate, pozioni) => (saltate ? 1 : extra <= 0 ? 3 : extra <= 3 * pozioni ? 2 : 1)
-
 export class Bottega {
-  // `evita`: quello che la pozione prima ha già usato, finché ce n'è un altro
-  constructor(tappa, { rnd = Math.random, evita = {} } = {}) {
+  constructor(tappa, { rnd = Math.random } = {}) {
     this.tappa = tappa
-    const non = (lista, via = []) => { const l = lista.filter(x => !via.includes(x.nome ?? x)); return l.length ? l : lista }
     // ogni famiglia della tappa almeno una volta, poi a caso
     const famiglie = mescolata(rnd, [...mescolata(rnd, tappa.famiglie),
       ...Array.from({ length: tappa.ingredienti }, () => pesca(rnd, tappa.famiglie))].slice(0, tappa.ingredienti))
     const usati = new Set(), dosi = []
     this.ingredienti = famiglie.map(famiglia => {
-      const i = pesca(rnd, non(INGREDIENTI.filter(x => x.famiglia === famiglia && !usati.has(x.nome)), evita.ingredienti))
+      const i = pesca(rnd, INGREDIENTI.filter(x => x.famiglia === famiglia && !usati.has(x.nome)))
       usati.add(i.nome)
       // due ingredienti della stessa pozione non hanno la stessa dose, finché ce n'è un'altra
       const sue = tappa.dosi.filter(d => d.famiglia === famiglia)
@@ -130,10 +126,25 @@ export class Bottega {
       dosi.push(d)
       const offerte = banchetto(rnd, d.base, famiglia, d.unita, tappa)
       return { nome: i.nome, colore: i.colore, famiglia, unita: d.unita, dose: d.base, messo: 0,
-               offerte, ottimo: ottimo(d.base, offerte), traboccate: 0, pezzi: [] }
+               offerte, ottimo: ottimo(d.base, offerte), traboccate: 0, pezzi: [], casa: 0 }
     })
-    const p = pesca(rnd, non(POZIONI, evita.pozioni))
-    this.pozione = { nome: p.nome, emoji: p.emoji, colore: p.colore, effetto: p.effetto, cliente: pesca(rnd, non(CLIENTI, evita.clienti)) }
+    // in casa c'è già un pezzo di un ingrediente: si compra solo quello che manca
+    const sfusi = this.ingredienti.filter(g => g.ottimo.pezzi.length > 1)
+    if (tappa.casa && sfusi.length) {
+      const g = pesca(rnd, sfusi)
+      g.casa = g.messo = g.offerte[g.ottimo.pezzi[0]].base
+      g.pezzi = [g.casa]
+      g.ottimo = ottimo(g.dose - g.casa, g.offerte)
+    }
+    this.pozione = { nome: tappa.nome, emoji: tappa.emoji, colore: tappa.colore }
+    this.passi = ricetta(rnd, this.ingredienti, tappa.procedimento)
+    this.righe = testo(rnd, this.passi, this.ingredienti, tappa.procedimento >= 5)
+    this.passo = 0               // il prossimo da fare
+    this.mortaio = []            // quello che è stato pestato, in attesa di versarlo
+    this.dentro = []             // quello che è nel calderone
+    this.scaldato = false
+    this.pasticci = 0
+    this.pasticciato = false     // il passo in corso ha già avuto uno sbaglio: non paga
     this.minimo = this.ingredienti.reduce((s, i) => s + i.ottimo.costo, 0)
     this.gettoni = this.minimo + tappa.margine
     this.speso = 0
@@ -147,8 +158,11 @@ export class Bottega {
 
   get resto() { return this.gettoni - this.speso }
   get extra() { return this.speso - this.minimo }
-  get stelle() { return stelle(this.extra, this.saltate, 1) }
-  get perfetta() { return !this.traboccate && !this.saltate }
+  // le stelle dicono quanto si è speso, non quante volte si è sbagliato
+  get stelle() { return this.saltate ? 1 : this.extra <= 0 ? 3 : this.extra <= 3 ? 2 : 1 }
+  get perfetta() { return !this.traboccate && !this.pasticci && !this.saltate }
+  // la spesa è fatta: tutti gli strumenti sono all'oro
+  get pronta() { return this.ingredienti.every((_, j) => this.fatto(j)) }
   get quanteInOrdine() { return this.tappa.ordine }
   fatto(i) { const g = this.ingredienti[i]; return g.messo >= g.dose }
 
@@ -157,13 +171,42 @@ export class Bottega {
      ci sta o trabocca da sola, nell'ordine scritto. Torna gli esiti, uno
      per ampolla, già decisi: la scena li suona uno dopo l'altro. */
   ordina(voci) {
-    if (this.finita || this.macchie.length || !voci || !voci.length || voci.length > this.quanteInOrdine) return null
+    if (this.pronta || this.macchie.length || !voci || !voci.length || voci.length > this.quanteInOrdine) return null
     if (voci.some(v => !this.ingredienti[v.i] || !this.ingredienti[v.i].offerte[v.k])) return null
     const costo = voci.reduce((s, v) => s + this.ingredienti[v.i].offerte[v.k].prezzo, 0)
     this.speso += costo
     const esiti = voci.map(v => this.versaUna(v.i, v.k))
-    this.finita = this.ingredienti.every((_, j) => this.fatto(j))
-    return { costo, esiti, finita: this.finita }
+    return { costo, esiti, pronta: this.pronta }
+  }
+
+  /* Un'azione del procedimento. Giusta se è il prossimo passo, con le cose
+     che il passo vuole: si fa. Se no è un pasticcio: non cambia niente, costa
+     un gettone, e il cartello dice cosa diceva la ricetta. */
+  fai(azione, cosa = []) {
+    if (!this.pronta || this.finita || this.macchie.length || !AZIONI[azione]) return null
+    const atteso = this.passi[this.passo]
+    if (azione !== atteso.azione || !stesse(cosa, atteso.cosa)) {
+      this.speso += PASTICCIO
+      this.pasticci++
+      this.pasticciato = true
+      const qui = azione === atteso.azione ? 'Non sono quelle le cose' : `${AZIONI[azione].fare} adesso non va`
+      return { giusto: false, azione, righe: [`Pasticcio! ${qui}.`, `La ricetta dice: ${frase(atteso, this.ingredienti)}. Il pasticcio costa un gettone.`] }
+    }
+    const r = this.faiPasso(atteso)
+    const monete = this.pasticciato ? 0 : MONETE_A_PASSO
+    this.monete += monete
+    this.pasticciato = false
+    return { ...r, giusto: true, monete }
+  }
+
+  faiPasso(p) {
+    const versati = p.cosa.includes(MORTAIO) ? this.mortaio : p.cosa
+    if (p.azione === 'pesta') this.mortaio = [...p.cosa]
+    if (p.azione === 'versa') { this.dentro = [...this.dentro, ...versati]; if (p.cosa.includes(MORTAIO)) this.mortaio = [] }
+    if (p.azione === 'scalda') this.scaldato = true
+    this.passo++
+    this.finita = this.passo >= this.passi.length
+    return { azione: p.azione, cosa: [...p.cosa], versati: [...versati], finita: this.finita }
   }
 
   versaUna(i, k) {
@@ -194,16 +237,21 @@ export class Bottega {
              righe: [`${vale}: ${g.nome} arriva a ${scrivi(g.messo, u)}${pieno ? ', sulla tacca d\'oro' : ''}.`] }
   }
 
-  // il tasto dei grandi (docs/core/comandi.md): l'ingrediente in corso è
-  // fatto e vale le sue monete, ma nessuno ha misurato
+  // il tasto dei grandi (docs/core/comandi.md): l'ingrediente o il passo in
+  // corso è fatto e vale le sue monete, ma nessuno l'ha fatto
   salta() {
     if (this.finita || this.macchie.length) return null
+    if (this.pronta) {
+      this.saltate++
+      this.monete += MONETE_A_PASSO
+      this.pasticciato = false
+      return { ...this.faiPasso(this.passi[this.passo]), monete: MONETE_A_PASSO }
+    }
     const i = this.ingredienti.findIndex((_, j) => !this.fatto(j)), g = this.ingredienti[i]
     g.pezzi = [g.dose]; g.messo = g.dose
     this.saltate++
     this.monete += MONETE_A_DOSE
-    this.finita = this.ingredienti.every((_, j) => this.fatto(j))
-    return { ingrediente: i, monete: MONETE_A_DOSE, finita: this.finita }
+    return { ingrediente: i, monete: MONETE_A_DOSE, finita: false }
   }
 
   // tutte le macchie in una volta, un gettone l'una
@@ -225,56 +273,25 @@ export class Bottega {
   }
 }
 
-/* La tappa: le pozioni in fila. `attuale` è quella da fare; `chiudi()` mette
-   da parte una pozione finita e prepara subito la prossima, così chi esce
-   sul cartello in mezzo la ritrova già lì. */
-export class Fila {
-  constructor(tappa, { rnd = Math.random, attuale = null, fatte = [] } = {}) {
-    this.tappa = tappa
-    this.rnd = rnd
-    this.fatte = fatte           // quello che resta di ogni pozione chiusa
-    this.attuale = attuale || new Bottega(tappa, { rnd })
-  }
-
-  get quante() { return this.tappa.pozioni }
-  get numero() { return Math.min(this.fatte.length + 1, this.quante) }
-  get finita() { return this.fatte.length >= this.quante }
-  conta(k) { return this.fatte.reduce((n, f) => n + f[k], 0) }
-  get speso() { return this.conta('speso') }
-  get minimo() { return this.conta('minimo') }
-  get traboccate() { return this.conta('traboccate') }
-  // stessa misura per ogni pozione: tre gettoni di tolleranza a testa
-  get stelle() { return stelle(this.speso - this.minimo, this.conta('saltate'), this.quante) }
-
-  chiudi() {
-    const b = this.attuale
-    this.fatte.push({ nome: b.pozione.nome, cliente: b.pozione.cliente, ingredienti: b.ingredienti.map(g => g.nome),
-                      speso: b.speso, minimo: b.minimo, traboccate: b.traboccate, saltate: b.saltate })
-    if (this.finita) return
-    this.attuale = new Bottega(this.tappa, { rnd: this.rnd, evita: {
-      pozioni: this.fatte.map(f => f.nome), clienti: this.fatte.map(f => f.cliente), ingredienti: this.fatte.at(-1).ingredienti } })
-  }
-}
-
 // Due giocatori finti, per i test e per tarare: chi ordina sempre il
 // minimo, e il goloso che ordina ogni volta l'ampolla più grande che ci sta.
 export function giocaBene(b) {
   const voci = b.ingredienti.flatMap((g, i) => g.ottimo.pezzi.map(k => ({ i, k })))
   for (let n = 0; n < voci.length; n += b.quanteInOrdine) b.ordina(voci.slice(n, n + b.quanteInOrdine))
+  return seguiLaRicetta(b)
+}
+// il procedimento, passo per passo come dice la ricetta
+export function seguiLaRicetta(b) {
+  while (!b.finita && b.pronta) { const p = b.passi[b.passo]; b.fai(p.azione, p.cosa) }
   return b
 }
-// tutta la tappa con lo stesso giocatore
-export function giocaFila(f, gioca = giocaBene) {
-  while (!f.finita) { gioca(f.attuale); f.chiudi() }
-  return f
-}
 export function giocaGoloso(b) {
-  for (let giri = 0; !b.finita && giri < 500; giri++) {
+  for (let giri = 0; !b.pronta && giri < 500; giri++) {
     const i = b.ingredienti.findIndex((_, j) => !b.fatto(j)), g = b.ingredienti[i]
     const k = g.offerte.map((o, k) => k).filter(k => g.messo + g.offerte[k].base <= g.dose)
       .sort((a, c) => g.offerte[c].base - g.offerte[a].base || g.offerte[a].prezzo - g.offerte[c].prezzo)[0]
     if (k == null) break
     b.ordina([{ i, k }])
   }
-  return b
+  return seguiLaRicetta(b)
 }

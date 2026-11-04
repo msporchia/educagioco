@@ -12,8 +12,7 @@ import { creaBanco, POSTI } from './banco.js'
 import { creaVasi, ALTEZZA_VASO, TACCA } from './vasi.js'
 import { creaAmpolle } from './ampolle.js'
 import { creaEffetti } from './effetti.js'
-import { creaMercante } from './mercante.js'
-import { creaCliente } from './cliente.js'
+import { creaAttrezzi } from './attrezzi.js'
 import { suoni } from '../suoni.js'
 import * as T from './trame.js'
 
@@ -23,8 +22,7 @@ const LARGO = 6.9, PROFONDO = 7.4
 const DAVANTI = 3.2            // il bordo del bancone: in fondo allo schermo, mai più su
 const VERSO = new Vector3(0, 0.6, 0.8).normalize()
 
-// `foto`: le foto dei personaggi, per nome (dati/anteprime.js)
-export function creaBottega3d(canvas, { tocca, perso, dpr, foto } = {}) {
+export function creaBottega3d(canvas, { tocca, perso, dpr } = {}) {
   let gl = null, renderer
   try {
     gl = canvas.getContext('webgl2', { alpha: false, antialias: true, depth: true, stencil: false, powerPreference: 'high-performance' })
@@ -32,7 +30,7 @@ export function creaBottega3d(canvas, { tocca, perso, dpr, foto } = {}) {
   if (!gl || gl.isContextLost()) return null
   try { renderer = segui(new WebGLRenderer({ canvas, context: gl, antialias: true })) } catch (e) { return null }
   let tutto
-  try { tutto = costruisci(renderer, canvas, { tocca, dpr, foto }) } catch (e) {
+  try { tutto = costruisci(renderer, canvas, { tocca, dpr }) } catch (e) {
     console.warn('pozioni 3D: niente disegno', e)
     try { renderer.dispose() } catch (x) { /* pazienza */ }
     return null
@@ -44,7 +42,7 @@ export function creaBottega3d(canvas, { tocca, perso, dpr, foto } = {}) {
   return tutto
 }
 
-function costruisci(renderer, canvas, { tocca, dpr: fisso, foto }) {
+function costruisci(renderer, canvas, { tocca, dpr: fisso }) {
   renderer.outputColorSpace = SRGBColorSpace
   renderer.toneMapping = ACESFilmicToneMapping
   renderer.toneMappingExposure = 1.1
@@ -62,14 +60,13 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso, foto }) {
   const vasi = creaVasi(scena, trame)
   const ampolle = creaAmpolle(scena, trame)
   const eff = creaEffetti(scena, trame)
+  const attrezzi = creaAttrezzi(scena)
 
   /* ── le animazioni: col tempo, mai coi fotogrammi (docs/core/interfaccia.md) ── */
   let attive = []
   const anima = (durata, passo) => new Promise(fine => attive.push({ t: 0, durata, passo, fine }))
   const aspetta = s => anima(s, () => {})
   const liscio = x => x * x * (3 - 2 * x)
-  const mercante = creaMercante(scena, trame, { foto, anima })
-  const cliente = creaCliente(scena, trame, eff, { foto, anima, aspetta })
 
   /* ── la telecamera: tutto il banco dentro, in piedi o coricato ── */
   let W = 1, H = 1, dpr = fisso || Math.min(2, window.devicePixelRatio || 1)
@@ -135,7 +132,6 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso, foto }) {
     banco.aggiorna(dt, t)
     vasi.aggiorna(dt, t)
     ampolle.aggiorna(dt, t)
-    mercante.aggiorna(dt, t)
     // il calderone sobbolle piano, solo se c'è dentro qualcosa
     if ((bolla -= dt) < 0) { bolla = 1.4 + Math.random() * 2.6; if (ultima?.riempito > 0) suoni.bolla() }
     eff.aggiorna(dt)
@@ -154,6 +150,8 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso, foto }) {
     vasi.imposta(q.vasi)
     banco.colore(q.calderone)
     banco.riempi(q.riempito)
+    banco.fuoco(q.fuoco)
+    attrezzi.imposta(q.attrezzi)
     const sporchi = new Set(q.macchie.map(m => m.i))
     for (const m of q.macchie) mettiMacchia(m, 1)
     for (const [i, m] of eff.macchie) if (!sporchi.has(i)) m.visible = false
@@ -175,14 +173,12 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso, foto }) {
 
   /* L'ordine: le ampolle arrivano sul bancone a misura reale (la radice
      lunga quanto sarà sul metro), e il mercante le versa una alla volta
-     nell'ordine scritto. Ogni voce dice già com'è andata. Gli strumenti
-     arrivati all'oro si versano nel calderone a fine consegna, così
-     un'ampolla di troppo trabocca da uno strumento ancora pieno. */
+     nell'ordine scritto. Ogni voce dice già com'è andata. Nel calderone non
+     va niente: quello lo fa il procedimento. */
   async function ordine(voci, dopoOgni) {
     const toccati = [...new Set(voci.map(v => v.i))]
     for (const i of toccati) vasi.trattieni(i, true)
     ampolle.consegna(voci.map(v => ({ ...v, lungo: v.misura * TACCA * vasi.scala(v.i) })))
-    mercante.porge(0.3 + voci.length * 0.25)
     suoni.ampolle(voci.length)
     await aspetta(0.6 + voci.length * 0.25)
     for (let k = 0; k < voci.length; k++) {
@@ -191,10 +187,6 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso, foto }) {
       await aspetta(0.15)
     }
     ampolle.sgombra()
-    // uno alla volta, e il brodo sale a ognuno
-    const pieni = toccati.filter(i => voci.some(v => v.i === i && v.pieno))
-    for (const [n, i] of pieni.entries())
-      await nelCalderone(i, voci.find(v => v.i === i).colore, ultima.riempito - ultima.passoRiempito * (pieni.length - 1 - n))
     for (const i of toccati) vasi.trattieni(i, false)
   }
 
@@ -221,7 +213,6 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso, foto }) {
       suoni.radice()
       if (trabocca) {
         suoni.trabocca()
-        mercante.scuote()
         // sporge dal bordo: si rovescia e cade sul tavolo
         const fermo = a.gruppo.position.clone()
         eff.gocce.emetti(18, { da: bocca, sparpaglia: 0.3, verso: [0.6, 1.4, 0.6], caso: 1.2, colore, vita: 0.9, misura: 0.09, gravita: 6 })
@@ -252,7 +243,6 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso, foto }) {
       if (trabocca) {
         // la schiuma esce dal bordo e cola sul tavolo, poi il misurino torna dov'era
         suoni.trabocca()
-        mercante.scuote()
         const m = eff.macchia(f), era = m.visible ? m.scale.x : 0.001
         mettiMacchia({ i: f, colore }, era / grande(f))
         const schiuma = new Color(colore).lerp(new Color(1, 1, 1), 0.5)
@@ -272,41 +262,83 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso, foto }) {
     ampolle.via(k)
   }
 
-  // il misurino pieno si alza, si piega sul calderone e si svuota
-  async function nelCalderone(i, colore, riempitoDopo) {
-    const v = vasi.vaso(i)
-    await aspetta(0.15)
-    eff.luci.emetti(16, { da: vasi.bocca(i).setY(1.3), sparpaglia: 0.5, verso: [0, 1, 0], caso: 1, colore: '#ffe08a', vita: 0.6, misura: 0.12, gravita: 0 })
-    // si muove quello che porta la roba: il cilindro, il piatto, la pila di radici
-    const t = v.trasporto, casa = v.casaT.clone()
-    const C = POSTI.calderone
-    const lato = v.casa.x > C.x ? 1 : -1
-    const sopra = v.gruppo.worldToLocal(new Vector3(C.x + lato * 0.75, 2.3, C.z + 0.6))
-    v.piattoFermo = true
+  /* Un'azione del procedimento. `a` dice già com'è andata: giusta si vede
+     farla, sbagliata il calderone sbuffa e non cambia niente. */
+  const sulCalderone = lato => new Vector3(POSTI.calderone.x + lato * 0.55, 2.35, POSTI.calderone.z + 0.5)
+  async function portaEVersa(cosa, lato, colore, polvere, finire) {
+    const casa = cosa.userData.casa, sopra = sulCalderone(lato)
     await anima(0.5, f => {
       const e = liscio(f)
-      t.position.lerpVectors(casa, sopra, e)
-      t.position.y += Math.sin(e * Math.PI) * 0.5
+      cosa.position.lerpVectors(casa, sopra, e)
+      cosa.position.y += Math.sin(e * Math.PI) * 0.4
     })
-    await anima(0.2, f => { t.rotation.z = lato * liscio(f) * 1.9 })
-    banco.ribolli(4)
-    suoni.tuffo()
-    banco.colore(colore)
-    banco.riempi(riempitoDopo)
-    const livello = v.livello
-    await anima(0.55, f => {
-      const b = t.localToWorld(v.boccaT.clone())
-      eff.versa(b, new Vector3(b.x, banco.quotaBrodo(), b.z), colore, v.famiglia === 'massa')
-      if (v.famiglia === 'lunghezza') t.scale.y = Math.max(0.001, 1 - f)
-      else v.livello = livello * (1 - f)
-      if (Math.random() < 0.6) eff.gocce.emetti(2, { da: new Vector3(C.x + lato * 0.3, banco.quotaBrodo() + 0.03, C.z + 0.3), sparpaglia: 0.4, verso: [0, 1.6, 0], caso: 1, colore, vita: 0.6, misura: 0.1, gravita: 6 })
+    await anima(0.2, f => { cosa.rotation.z = lato * liscio(f) * 1.9 })
+    if (polvere) suoni.polvere(0.55); else suoni.liquido(0.55)
+    await anima(0.55, () => {
+      const b = cosa.localToWorld(new Vector3(-lato * 0.45, 0.4, 0))
+      eff.versa(b, new Vector3(b.x, banco.quotaBrodo(), b.z), colore, polvere)
     })
     eff.smetti()
-    v.livello = 0
-    await anima(0.2, f => { t.rotation.z = lato * 1.9 * (1 - liscio(f)) })
-    await anima(0.45, f => { t.position.lerpVectors(sopra, casa, liscio(f)) })
-    t.scale.y = 1
-    v.piattoFermo = false
+    finire()
+    banco.ribolli(4)
+    suoni.tuffo()
+    await anima(0.2, f => { cosa.rotation.z = lato * 1.9 * (1 - liscio(f)) })
+    await anima(0.4, f => { cosa.position.lerpVectors(sopra, casa, liscio(f)) })
+  }
+
+  const MOSSE = {
+    async pesta(a) {
+      attrezzi.imposta({ visibili: true, pestato: a.colore })
+      const p = attrezzi.pestello, da = attrezzi.mortaio.position
+      await anima(1.3, f => {
+        const c = Math.abs(Math.sin(f * Math.PI * 5))
+        p.position.y = 0.2 + c * 0.42
+        if (Math.random() < 0.3) eff.gocce.emetti(1, { da: new Vector3(da.x, 0.6, da.z), sparpaglia: 0.3, verso: [0, 1, 0], caso: 0.8, colore: a.colore, vita: 0.5, misura: 0.08, gravita: 5 })
+      })
+      p.position.y = 0.34
+    },
+    async versa(a) {
+      const cosa = a.mortaio ? attrezzi.mortaio : attrezzi.ciotola
+      if (!a.mortaio) attrezzi.riempiCiotola(a.colore)
+      await portaEVersa(cosa, a.mortaio ? -1 : 1, a.colore, a.polvere, () => {
+        banco.colore(a.brodo); banco.riempi(a.riempito)
+        if (a.mortaio) attrezzi.imposta({ visibili: true, pestato: null }); else attrezzi.riempiCiotola(null)
+      })
+    },
+    async mescola(a) {
+      const m = attrezzi.mestolo, C = POSTI.calderone
+      m.visible = true
+      suoni.mescola()
+      banco.ribolli(3)
+      await anima(1.3, f => {
+        const g = f * Math.PI * 6
+        m.position.set(C.x + Math.cos(g) * 0.5, banco.quotaBrodo() - 0.05, C.z + Math.sin(g) * 0.42)
+        m.rotation.set(Math.sin(g) * 0.25, 0, -Math.cos(g) * 0.25)
+      })
+      m.visible = false
+      banco.colore(a.brodo)
+    },
+    async scalda() {
+      banco.fuoco(1)
+      suoni.scalda()
+      banco.ribolli(6)
+      const su = new Vector3(POSTI.calderone.x, 0.5, POSTI.calderone.z + 0.4)
+      await anima(1.2, () => { eff.luci.emetti(2, { da: su, sparpaglia: 0.6, verso: [0, 2, 0], caso: 1, colore: '#ffb34a', vita: 0.6, misura: 0.1, gravita: 0 }) })
+    },
+    async diluisci(a) {
+      await portaEVersa(attrezzi.brocca, 1, '#bfe4ff', false, () => { banco.colore(a.brodo) })
+    },
+  }
+
+  async function passo(a) {
+    if (a.giusto) return MOSSE[a.azione](a)
+    // il pasticcio: il calderone rutta, e la roba resta dov'era
+    suoni.pasticcio()
+    banco.ribolli(8)
+    const su = new Vector3(POSTI.calderone.x, banco.quotaBrodo() + 0.1, POSTI.calderone.z)
+    await anima(0.9, f => {
+      if (f < 0.6) eff.gocce.emetti(5, { da: su, sparpaglia: 0.7, verso: [0, 2, 0], caso: 1.3, colore: '#4a4238', vita: 1.1, misura: 0.4, gravita: -0.3, allarga: 1.6 })
+    })
   }
 
   // la spugna arriva e gira su ogni macchia, una dopo l'altra
@@ -335,11 +367,10 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso, foto }) {
     s.visible = false
   }
 
-  // la pozione è pronta: il calderone sbuffa del suo colore, con le scintille, e chi l'ha chiesta viene a berla
-  async function festa({ colore, cliente: chi, effetto }) {
+  // la pozione è pronta: il calderone sbuffa del suo colore, con le scintille
+  async function festa(colore) {
     banco.ribolli(6)
     suoni.sbuffo()
-    mercante.esulta()
     const C = POSTI.calderone
     const su = new Vector3(C.x, banco.quotaBrodo() + 0.1, C.z)
     await anima(1.4, f => {
@@ -348,7 +379,6 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso, foto }) {
         eff.luci.emetti(4, { da: su, sparpaglia: 1, verso: [0, 3, 0], caso: 2.5, colore: '#fff2b0', vita: 1, misura: 0.12, gravita: 2 })
       }
     })
-    await cliente.viene({ chi, colore, effetto, partenza: su })
   }
 
   function rilascia() {
@@ -359,11 +389,11 @@ function costruisci(renderer, canvas, { tocca, dpr: fisso, foto }) {
     canvas.removeEventListener('pointerup', alza)
     canvas.removeEventListener('pointercancel', lascia)
     attive = []        // le promesse restano aperte: chi aspettava si ferma lì, su una scena che non c'è più
-    vasi.rilascia(); ampolle.rilascia(); eff.rilascia(); mercante.rilascia(); cliente.rilascia()
+    vasi.rilascia(); ampolle.rilascia(); eff.rilascia(); attrezzi.rilascia()
     for (const t of Object.values(trame)) t.dispose()
     rilasciaRenderer(renderer)
   }
 
-  return { imposta, ordine: occupa(ordine), pulisci: occupa(pulisci), festa: occupa(festa), rilascia, misura,
+  return { imposta, ordine: occupa(ordine), passo: occupa(passo), pulisci: occupa(pulisci), festa: occupa(festa), rilascia, misura,
            grafica: () => ({ fotogrammi, chiamate: renderer.info.render.calls, triangoli: renderer.info.render.triangles }) }
 }

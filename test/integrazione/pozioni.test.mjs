@@ -3,11 +3,11 @@
 
    La prova unitaria dice che il motore è giusto; questa dice che il
    gioco che il bambino tocca è quel motore lì. La prima tappa si gioca
-   **dallo schermo**: si legge la ricetta sulla pergamena, si apre il
-   rotolo del mercante, si toccano le targhette e si ordina. Poi la fine
+   **dallo schermo**: il rotolo del mercante è già aperto, si toccano le
+   targhette e si ordina, poi si segue la ricetta. Poi la fine
    della tappa, quello che resta nel profilo, un trabocco e la spugna.
    `node test/esegui.mjs pozioni`
-   tempo: 180
+   tempo: 120
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi, scegli }
   from '../aiuto/browser.mjs'
@@ -37,13 +37,12 @@ await scatto(page, 'pozioni-mappa')
 await page.locator('.pz-tappa[data-tappa="0"]').click()
 await page.waitForSelector('.pz-mercante', { timeout: 5000 })
 await attendi(page, 500)
-uguale('si comincia al banco', await page.locator('.pz-mercante').getAttribute('data-fase'), 'banco')
+uguale('si comincia dal listino', await page.locator('.pz-mercante').getAttribute('data-fase'), 'listino')
 uguale('la pergamena ha gli ingredienti della ricetta', await page.locator('[data-pergamena] [data-voce]').count(), CAMPAGNA[0].ingredienti)
-controlla('il cartello dice come si gioca', /mercante/.test(await page.locator('[data-esito]').innerText()))
+controlla('il rotolo dice come si gioca', /mercante/.test(await page.locator('[data-esito]').innerText()))
 controlla('la borsa dice quanto si è speso, su quanto', /Hai speso 0 su \d+/.test(await page.locator('[data-gettoni]').innerText()))
 await scatto(page, 'pozioni-gioco')
 
-await page.locator('[data-azione="mercante"]').click()
 await page.waitForSelector('[data-listino]')
 uguale('il rotolo ha tutti gli ingredienti della ricetta, e solo quelli', await page.locator('[data-merce]').count(), CAMPAGNA[0].ingredienti)
 uguale('quattro targhette a ingrediente', await page.locator('[data-targhetta]').count(), CAMPAGNA[0].ingredienti * 4)
@@ -68,9 +67,9 @@ async function ordinaUna(targhetta) {
   await page.locator('[data-azione="ordina"]').click()
 }
 const fermo = () => page.waitForFunction(() => {
-  const el = document.querySelector('[data-azione="mercante"], [data-azione="pulisci"], [data-fine]')
+  const el = document.querySelector('[data-azione="mercante"], [data-azione="pulisci"], [data-tavolo], [data-fine]')
   return el && !el.disabled
-}, null, { timeout: 45000 })                        // il cliente beve: senza scheda video va piano
+}, null, { timeout: 25000 })
 
 /* un posto dell'ordine toccato si toglie */
 await page.locator(`[data-targhetta="${await laGiusta()}"]`).click()
@@ -82,35 +81,45 @@ await page.locator('[data-chiudi]').click()
 uguale('la ✕ chiude il rotolo', await page.locator('[data-listino]').count(), 0)
 
 /* si fanno le dosi, con le targhette vere */
-for (let g = 0; g < 80 && !(await page.locator('[data-fine="tappa"]').count()); g++) {
+for (let g = 0; g < 40 && !(await page.locator('[data-tavolo]').count()); g++) {
+  await page.waitForFunction(() => document.querySelector('[data-azione="mercante"]')?.disabled === false || document.querySelector('[data-listino]'), null, { timeout: 15000 })
   await ordinaUna(await laGiusta())
   await fermo()
-  if (await page.locator('[data-fine="pozione"]').count()) {
-    /* fra una pozione e l'altra, il cartello in mezzo */
-    uguale('il cartello dice a che punto è la fila', await page.locator('[data-fila]').innerText(), `Pozione 1 di ${CAMPAGNA[0].pozioni}`)
-    controlla('e quanto è costata questa', /Hai speso \d+ gettoni: il minimo era \d+/.test(await page.locator('[data-righe]').innerText()))
-    uguale('le monete aspettano la fine', await page.locator('[data-monete]').count(), 0)
-    await scatto(page, 'pozioni-mezzo')
-    const prima = await page.evaluate(() => window.__poz.bottega.value.pozione.nome)
-    await page.locator('[data-fine] [data-azione="avanti"]').click()
-    await page.waitForSelector('[data-azione="mercante"]')
-    await attendi(page, 500)
-    uguale('la pergamena dice la seconda', (await page.locator('[data-pozione]').innerText()).trim(), `2 di ${CAMPAGNA[0].pozioni}`)
-    controlla('ed è un\'altra pozione', prima !== await page.evaluate(() => window.__poz.bottega.value.pozione.nome))
-    uguale('i gettoni ripartono', (await stato()).speso, 0)
-  }
+}
+uguale('fatta la spesa si passa al procedimento', await page.locator('.pz-mercante').getAttribute('data-fase'), 'procedimento')
+controlla('la pergamena dice cosa fare', (await page.locator('[data-ricetta]').innerText()).length > 10)
+uguale('la roba è sul tavolo', await page.locator('[data-cosa]').count(), CAMPAGNA[0].ingredienti)
+await scatto(page, 'pozioni-procedimento')
+
+/* un pasticcio: mescolare a calderone vuoto, prima di versare */
+{
+  const prima = (await stato()).speso
+  await page.locator('[data-fai="mescola"]').click()
+  await page.waitForSelector('[data-esito][data-codice="trabocca"]', { timeout: 45000 })
+  controlla('il cartello dice cosa diceva la ricetta', /La ricetta dice/.test(await page.locator('[data-esito]').innerText()))
+  uguale('il pasticcio costa un gettone', (await stato()).speso, prima + 1)
+  await page.waitForFunction(() => !document.querySelector('[data-fai="mescola"]').disabled, null, { timeout: 15000 })
+}
+
+/* il procedimento, come dice la ricetta: si tocca la roba, poi l'azione */
+const prossimo = () => page.evaluate(() => { const b = window.__poz.bottega.value, p = b.passi[b.passo]; return p && { azione: p.azione, cosa: [...p.cosa] } })
+for (let g = 0; g < 12 && !(await page.locator('[data-fine="tappa"]').count()); g++) {
+  const p = await prossimo()
+  for (const i of p.cosa) await page.locator(`[data-cosa="${i}"]`).click()
+  await page.locator(`[data-fai="${p.azione}"]`).click()
+  await page.waitForFunction(() => { const el = document.querySelector('[data-fine], [data-fai="mescola"]'); return el && !el.disabled }, null, { timeout: 45000 })
 }
 uguale('la tappa finisce', await page.locator('[data-fine="tappa"]').count(), 1)
 controlla('il cartello di fine dice quanto si è speso', /Hai speso \d+ gettoni: il minimo era \d+/.test(await page.locator('[data-righe]').innerText()))
-uguale('le monete: tre a ingrediente, di tutta la fila', (await page.locator('[data-monete]').innerText()).trim(), `+${CAMPAGNA[0].ingredienti * CAMPAGNA[0].pozioni * MONETE_A_DOSE} 🪙`)
+controlla('le monete: tre a ingrediente, e il passo del pasticcio non paga', (await page.locator('[data-monete]').innerText()).trim() === `+${CAMPAGNA[0].ingredienti * MONETE_A_DOSE + 1} 🪙`, await page.locator('[data-monete]').innerText())
 await scatto(page, 'pozioni-fine')
 await page.locator('[data-fine] [data-azione="mappa"]').click()
 await page.waitForSelector('.pz-mappa')
 await attendi(page, 500)
 const p1 = await leggiProfilo(page)
 uguale('la tappa è segnata', p1.campagne.pozioni.stelle[0] > 0, true)
-uguale('ogni pozione è contata', p1.totals.pozioni, CAMPAGNA[0].pozioni)
-uguale('senza traboccare sono perfette', p1.totals.pozioniPerfette, CAMPAGNA[0].pozioni)
+uguale('la pozione è contata', p1.totals.pozioni, 1)
+uguale('con un pasticcio non è perfetta', p1.totals.pozioniPerfette || 0, 0)
 controlla('le dosi sono contate', p1.totals.misure >= CAMPAGNA[0].ingredienti, `${p1.totals.misure}`)
 
 /* ---------- 3. un trabocco, la barra di lettura e la spugna ---------- */
