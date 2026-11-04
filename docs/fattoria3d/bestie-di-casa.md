@@ -68,7 +68,7 @@ gatto, niente carne al coniglio). Il foglio mostra solo i cibi giusti per quella
 
 ## Le coccole (A7)
 
-Come in 2D: **spazzola** (pelo +0,5) e **gioca** (gioco +0,55) costano 🪙1 e ci sono sempre; **copertina** (lana, pelo +0,95), **festa** (torta, gioco +1), **bagnetto**
+Come in 2D (ma nella tinozza c'è un modo solo, [cura-sul-prato.md](cura-sul-prato.md)): **spazzola** (pelo +0,5) e **gioca** (gioco +0,55) costano 🪙1 e ci sono sempre; **copertina** (lana, pelo +0,95), **festa** (torta, gioco +1), **bagnetto**
 (sapone, pelo +1). **Una carezza gratis c'è sempre**: `Cura.carezza` (🤚 nel foglio, e il tocco sulla bestia in scena) non costa nulla, nemmeno a zero monete, e non
 riempie niente. Nessun gesto paga una risposta sbagliata, le monete vengono solo dagli esercizi.
 

@@ -66,10 +66,9 @@ Il cartello di un lotto comprabile con un lago naturale dice «🪙 N · 🏞️
 
 ## Lo stagno e il laghetto che si costruiscono
 
-Oltre ai laghi dei lotti il bambino compra due pezzi dalla scheda **Decori** di «Costruisci qui» e li mette dove
-vuole nel suo terreno: lo **stagno** (3×3, 🪙 35, livello 5) e il **laghetto** (5×4, 🪙 110, livello 11). Sono decorazioni: non
-produttive, non spostano la scaletta (`tara:fattoria3d` resta verde). Scheda scelta: **Decori**, non una scheda nuova: il menu ha già
-cinque schede che scorrono di lato, e un pezzo d'acqua è una decorazione come la fontana. `acqua: true` in `dati/catalogo.js` (nessun
+Oltre ai laghi dei lotti il bambino compra due pezzi dalla scheda **Decori** di «Compra» e li mette dove
+vuole nel suo terreno: lo **stagno** (3×3, 🪙 30) e il **laghetto** (5×4, 🪙 26), tutti e due dal livello 10, con la pesca ([livelli.md](livelli.md)). Sono decorazioni: non
+produttive, non spostano la scaletta (`tara:fattoria3d` resta verde). Un pezzo d'acqua è una decorazione come la fontana. `acqua: true` in `dati/catalogo.js` (nessun
 `suAcqua`, nessun `calpestabile`).
 
 - **Tutte le celle dell'impronta sono acqua**: `acqua(i, j)` risponde vero sia per i lotti-laghetto sia per i pezzi d'acqua; `blocca`,
@@ -98,9 +97,9 @@ cinque schede che scorrono di lato, e un pezzo d'acqua è una decorazione come l
 
 ## La pesca (fatta: [geografia-e-pesca.md](geografia-e-pesca.md))
 
-Tutta l'acqua, dei laghetti, dei laghi grandi, del mare e degli stagni costruiti, si pesca da un **molo** (🪙12, livello 4, 3×1 o 1×3) o dal **porticciolo** (🪙90, livello 9):
-si tocca una cella d'acqua tua entro 6 celle dal molo e nello stesso specchio, il contadino lancia, aspetta 12 s e ritira un pesce (uno per lotto d'acqua alla volta: ogni lotto è un
-banco che si ripopola in un minuto). Il posto candidato `generaLotto(..).molo` resta nei dati ma non guida più niente: il molo lo mette il bambino dove vuole. La peschiera della 2D
+Tutta l'acqua, dei laghetti, dei laghi grandi, del mare e degli stagni costruiti, si pesca da un **molo** (🪙12, 3×1 o 1×3) o dal **porticciolo** (🪙90), tutti e due dal livello 10:
+si tocca una cella d'acqua tua entro 6 celle dal molo e nello stesso specchio, il contadino lancia, aspetta 5 minuti e ritira un pesce (uno per lotto d'acqua alla volta: ogni lotto è un
+banco che si ripopola in dieci minuti). Il posto candidato `generaLotto(..).molo` resta nei dati ma non guida più niente: il molo lo mette il bambino dove vuole. La peschiera della 2D
 (il recinto dei pesci, che mangiano il mangime del mulino) **non c'è ancora**: [da-fare.md](da-fare.md).
 
 ## Nei test

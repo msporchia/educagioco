@@ -1,6 +1,6 @@
 # Gli ordini: il banco della fattoria 3D
 
-Chi chiede i raccolti e i prodotti delle macchine. Dati in `dati/ordini.js`, regole pure in `motore/ordini.js`, il banco
+Chi chiede i raccolti, i prodotti delle macchine e il pesce crudo. Dati in `dati/ordini.js`, regole pure in `motore/ordini.js`, il banco
 (i posti, `consegna`, `rifiuta`) nella `Fattoria3d`. Il modello è il mercato della fattoria 2D, da
 Hay Day: il banco è il camion (tanti ordini piccoli, sempre), le [botteghe](botteghe.md) i visitatori, la [mongolfiera](mongolfiera.md)
 la nave. Tutti pagano esperienza e mai monete ([regole.md](regole.md)).

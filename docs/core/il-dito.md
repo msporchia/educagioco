@@ -8,7 +8,9 @@ come si provano.
   momento*: il velo appena aperto, che si chiude da sé (`@click.self`), o
   un tasto del foglio, che si preme da solo. Col mouse il bersaglio si
   decide alla pressione. Rimedio: `zittisciIlFantasma` in
-  `src/giochi/sotterraneo/Gioco.vue` (e in `pozioni/viste/Banco.vue`). Prova:
+  `src/giochi/sotterraneo/Gioco.vue` (e in `pozioni/viste/Banco.vue`,
+  `fattoria3d/viste/dito-soglie.js`). Vale anche per un gettone che sparisce
+  sotto il dito: nella fattoria il click andava sul cartello e comprava una bestia. Prova:
   un tocco vero, `Input.dispatchTouchEvent` via CDP come in
   `integrazione/fattoria3d` — un `page.click()` non porta nessun fantasma.
 - **La soglia si misura sul dito, ~16 px** (`SCARTO_DITO`, contro
