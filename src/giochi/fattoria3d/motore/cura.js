@@ -200,7 +200,7 @@ export class Cura {
     return { xp }
   }
 
-  /** Dà (o cambia) il nome: gratis e sempre. '' lo toglie (torna il nome della razza). */
+  /** Dà (o cambia) il nome: gratis e sempre. '' lo toglie (torna quello di catalogo: «Beagle», «Watson»). */
   battezza(id, nome) {
     const b = this._record(id)
     if (!b) return { ok: false, motivo: 'non-e-tua' }

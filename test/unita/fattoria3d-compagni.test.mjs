@@ -178,7 +178,7 @@ controlla('l\'aspetto del contadino è uno dei due', ['contadino', 'contadina'].
   uguale('adottarlo costa le sue monete, più lo scatto per Watson', f2.cura.compra('sherlock').costo, COMPAGNI.sherlock.prezzo + 20)
   c2.aggiorna(0.05, 2); c2.aggiorna(0.05, 2); for (let n = 0; n < 30; n++) c2.aggiorna(0.05, 2 + n * 0.05)
   uguale('adottato, arriva Sherlock', c2.lista.map(k => k.def.id).join(), 'watson,sherlock')
-  uguale('…con il suo avviso', av2.join('|'), 'Sherlock, il gatto, è arrivato!')
+  uguale('…con il suo avviso, che dice la razza: il nome glielo dà il bambino', av2.join('|'), 'Un gatto bianconero è arrivato!')
   // il tocco semplice (l'eroe non sta fermo): il vecchio «Bau!»
   const volati = []; c2.fx = { ...fx, volo: t => volati.push(t) }
   eroe.az = { tipo: 'semina' }; eroe.percorso = []; { const w = c2.lista[0]; w.x = eroe.x + 2; w.z = eroe.z - 1; w.seq = null }

@@ -289,7 +289,7 @@ const vistaSala = computed(() => { void versione.value; return tipoSala.value &&
 // ── costruire: tenere premuto su un posto libero (o il tasto 🏗️) apre il menu «Costruisci qui» ──
 const schede = computed(() => {
   void versione.value
-  return schedeDi({ stagione: stagione.value, livello: motore.livello(), prezzoPezzo: t => motore.prezzoPezzo(t), nelMagazzino: t => motore.nelMagazzino(t), posseduti: motore.s.posseduti, bestieTue: motore.cura.curate(), serveBacheca: motore.serveBacheca() })
+  return schedeDi({ stagione: stagione.value, livello: motore.livello(), prezzoPezzo: t => motore.prezzoPezzo(t), nelMagazzino: t => motore.nelMagazzino(t), posseduti: motore.s.posseduti, bestieTue: motore.cura.curate(), nomeBestia: id => motore.cura.nomeDi(id), serveBacheca: motore.serveBacheca() })
 })
 const festa = computed(() => {
   void versione.value
@@ -380,7 +380,7 @@ function sceglieBestia(carta, c) {
   const id = carta.bestia
   if (motore.cura.ho(id)) { costruisciQui.value = null; bestiaMsg.value = ''; bestiaAperta.value = id; return }
   const r = motore.cura.compra(id)
-  if (!r.ok) { c.msg = dettoCompera(r, curabile(id).nome); return }
+  if (!r.ok) { c.msg = dettoCompera(r, carta.nome); return }
   costruisciQui.value = null
   mondo.compagni.sync()
   mondo.pezzi.sincronizza()                // la sua ciotola, e la tinozza col primo animale

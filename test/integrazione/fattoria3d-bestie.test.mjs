@@ -48,6 +48,9 @@ const apriAnimali = async () => {
 await livello(3)
 await apriAnimali()
 controlla('tutti gli animali da adottare sono nella scheda Animali (le razze e i cinque compagni)', await page.locator('[data-carta^="bestia:"]').count() === 15)
+controlla('in vendita dice com\'è fatto, non un nome', /Gatto nero/.test(await page.locator('[data-carta="bestia:golia"]').innerText()) && !/Golia/.test(await page.locator('[data-carta="bestia:golia"]').innerText()))
+await toccaEl('[data-carta="bestia:golia"]')
+uguale('anche il lucchetto', await page.locator('[data-f3="costruisci-msg"]').innerText(), 'Gatto nero: arriva al livello 14')
 await toccaEl('[data-carta="bestia:beagle"]')
 controlla('chiuso: dice il livello 15', /livello 15/i.test(await page.locator('[data-f3="costruisci-msg"]').innerText()))
 uguale('niente monete spese', await monete(), 500)
@@ -233,6 +236,16 @@ uguale('riaperto, la casella lo ripropone', await page.locator('[data-f3="battes
 await page.locator('[data-f3="battesimo-scrivi"]').fill('Lampo')
 await page.keyboard.press('Enter')
 uguale('l\'invio della tastiera salva come «Va bene»', await m3(() => window.__fattoria3d.motore.cura.nomeDi('beagle')), 'Lampo')
+
+/* ── il gatto nero: il nome che portava da sempre sta fra quelli da toccare, e dopo la carta dice quello ── */
+await apriAnimali()
+await toccaEl('[data-carta="bestia:golia"]')
+await page.waitForSelector('[data-f3="battesimo"]', { timeout: 3000 })
+await toccaEl('[data-f3="battesimo"] [data-nome="Golia"]')
+uguale('Golia si trova fra i nomi', await m3(() => window.__fattoria3d.motore.cura.nomeDi('golia')), 'Golia')
+await apriAnimali()
+controlla('la carta di uno tuo dice come si chiama', /Golia/.test(await page.locator('[data-carta="bestia:golia"]').innerText()))
+await toccaEl('[data-f3="costruisci-qui"] [data-chiudi]')
 
 controlla('nessun errore JS', errori.length === 0, errori.join(' · '))
 await browser.close()

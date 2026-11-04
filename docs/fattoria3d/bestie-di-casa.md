@@ -85,9 +85,9 @@ quando un bisogno scende sotto `BENE` (circa tre ore); uno stato già in forma p
 
 ## Battesimo e posizione (A9, A10)
 
-- **Battesimo**: appena presa si apre `Battesimo.vue`, i nomi si **toccano** (`nomiPer`, quelli della 2D per la sua famiglia) e sotto c'è la casella per
+- **Battesimo**: appena presa si apre `Battesimo.vue`, i nomi si **toccano** (`nomiPer`, quelli della 2D per la sua famiglia, e un compagno ha in testa il suo: Golia si trova) e sotto c'è la casella per
   **scriverne uno suo**, come nella 2D: «✔ Va bene» o l'invio della tastiera lo salva (vuota non si tocca), un nome scritto torna nella casella riaprendo. Prima la lista:
-  chi ha quattro anni non sa scrivere. «Lascia “Beagle”» tiene il nome della razza; «✎ Nome» nel foglio lo cambia, gratis e sempre, anche a Watson e ai gatti. Si salva in
+  chi ha quattro anni non sa scrivere. «Lascia “Beagle”» tiene il nome della razza, «Lascia “Golia”» quello del compagno, e così resta chiudendo con la ✕; «✎ Nome» nel foglio lo cambia, gratis e sempre, anche a Watson e ai gatti. Si salva in
   `stato.casa[id].nome` (`pulisciNome`: spazi in fila ridotti a uno, 16 lettere, e la casella non ne accetta di più).
 - **Sposta**: dal foglio, «📍 Sposta» chiude il foglio e il prossimo tocco su una cella tua e libera porta lì la bestia (`Mondo3d.iniziaSposta`). Gratis. La cella è la **casa**
   della bestia (`stato.casa[id].i,j`): ci gira intorno (due passi, si siede, annusa, dorme; il gatto si lava), anche dopo aver chiuso il gioco. Senza posizione sta
@@ -121,7 +121,7 @@ Il ritratto del foglio e delle carte è un `bestia:<id>` di `anteprime.js`.
 
 ## L'interfaccia
 
-Le bestie si prendono dal menu 🏗 «Costruisci», scheda **Animali** (carte `🪙 prezzo`, il lucchetto dice il livello; una già tua dice «🐾 è tua» e apre il foglio).
+Le bestie si prendono dal menu 🏗 «Costruisci», scheda **Animali** (carte `🪙 prezzo`, il lucchetto dice il livello; in vendita dicono la razza, non un nome: [adozioni.md](adozioni.md); una già tua dice come si chiama e «🐾 è tua», e apre il foglio).
 **Tenendo premuto** su una bestia in scena (anche Watson e i gatti) si apre il suo foglio (`scena3d/dito.js`, dopo 0,45 s come gli altri «tieni
 premuto»); il tocco breve è giocare ([cura-sul-prato.md](cura-sul-prato.md)). Il foglio (`Bestia.vue`): ✕ in
 alto a destra, ritratto, la frase «come sta», le tre barre, 📍 Sposta / ✎ Nome / 🛍️ Negozio e una riga che dice dove si cura. Quando manca roba la ciotola dice **dove si fa** («Non hai 🥚 uova: lo fanno

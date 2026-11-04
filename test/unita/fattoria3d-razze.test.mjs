@@ -17,7 +17,7 @@ controlla('i dati delle bestie non hanno guasti', !g.length, g.join(' · '))
 const cani = Object.entries(BESTIE).filter(([, b]) => b.tipo === 'cane'), gatti = Object.entries(BESTIE).filter(([, b]) => b.tipo === 'gatto')
 controlla('ogni razza di cane ha il suo corpo (RAZZE_CANE)', cani.every(([, b]) => RAZZE_CANE[b.variante]))
 controlla('ogni mantello di gatto è conosciuto da creaGatto', gatti.every(([, b]) => VARIANTI_GATTO.includes(b.variante)))
-controlla('non ci sono due animali con lo stesso nome di razza', new Set(adottabili().map(a => a.nome)).size === adottabili().length)
+controlla('non ci sono due animali con lo stesso nome di razza', new Set(adottabili().map(a => a.razza)).size === adottabili().length)
 
 // un'impronta dei colori: la somma dei colori nei vertici o del colore del materiale, per pezzo
 const impronta = g => {
