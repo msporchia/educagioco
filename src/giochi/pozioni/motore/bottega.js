@@ -110,7 +110,8 @@ export function ottimo(dose, offerte) {
 }
 
 export class Bottega {
-  constructor(tappa, { rnd = Math.random } = {}) {
+  // `scorta`: i gettoni che il calderone senza fondo si porta dalla pozione prima
+  constructor(tappa, { rnd = Math.random, scorta = 0 } = {}) {
     this.tappa = tappa
     // ogni famiglia della tappa almeno una volta, poi a caso
     const famiglie = mescolata(rnd, [...mescolata(rnd, tappa.famiglie),
@@ -125,7 +126,7 @@ export class Bottega {
       const d = pesca(rnd, libere.length ? libere : sue)
       dosi.push(d)
       const offerte = banchetto(rnd, d.base, famiglia, d.unita, tappa)
-      return { nome: i.nome, colore: i.colore, famiglia, unita: d.unita, dose: d.base, messo: 0,
+      return { nome: i.nome, f: !!i.f, colore: i.colore, famiglia, unita: d.unita, dose: d.base, messo: 0,
                offerte, ottimo: ottimo(d.base, offerte), traboccate: 0, pezzi: [], casa: 0 }
     })
     // in casa c'è già un pezzo di un ingrediente: si compra solo quello che manca
@@ -139,7 +140,7 @@ export class Bottega {
     // i liquidi non si pestano: per il mortaio c'è qualcosa di secco in dispensa, che non si compra
     const secche = tappa.famiglie.length === 1 && tappa.famiglie[0] === 'capacita' && tappa.procedimento >= 3 ? (tappa.procedimento >= 4 ? 2 : 1) : 0
     for (const i of mescolata(rnd, INGREDIENTI.filter(x => x.famiglia === 'massa')).slice(0, secche))
-      this.ingredienti.push({ nome: i.nome, colore: i.colore, famiglia: i.famiglia, unita: 'g', dose: 1, messo: 1, casa: 1, dispensa: true,
+      this.ingredienti.push({ nome: i.nome, f: !!i.f, colore: i.colore, famiglia: i.famiglia, unita: 'g', dose: 1, messo: 1, casa: 1, dispensa: true,
                               offerte: [], ottimo: { costo: 0, pezzi: [] }, traboccate: 0, pezzi: [] })
     this.pozione = { nome: tappa.nome, emoji: tappa.emoji, colore: tappa.colore }
     this.passi = ricetta(rnd, this.ingredienti, tappa.procedimento)
@@ -153,7 +154,7 @@ export class Bottega {
     this.pasticci = 0
     this.pasticciato = false     // il passo in corso ha già avuto uno sbaglio: non paga
     this.minimo = this.ingredienti.reduce((s, i) => s + i.ottimo.costo, 0)
-    this.gettoni = this.minimo + tappa.margine
+    this.gettoni = this.minimo + tappa.margine + scorta
     this.speso = 0
     this.macchie = []            // gli strumenti con la macchia attorno, da pulire prima del prossimo ordine
     this.traboccate = 0

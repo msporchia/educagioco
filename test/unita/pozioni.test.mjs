@@ -3,7 +3,7 @@
    listino segue la scaletta, l'ordine si paga tutto e si versa in fila, e
    traboccare costa l'ampolla e la pulizia. Vedi docs/pozioni/regole.md.
    `node test/esegui.mjs unita/pozioni --niente-build` */
-import { CAMPAGNA, BLOCCHI, QUANTE_TAPPE, MONETE_A_DOSE, MONETE_A_PASSO, guastiDellaCampagna } from '../../src/giochi/pozioni/dati/campagna.js'
+import { CAMPAGNA, BLOCCHI, QUANTE_TAPPE, MONETE_A_DOSE, MONETE_A_PASSO, INFINITA, giroInfinito, guastiDellaCampagna } from '../../src/giochi/pozioni/dati/campagna.js'
 import { FAMIGLIA, VALE, mescola, guastiDelleMisure } from '../../src/giochi/pozioni/dati/misure.js'
 import { PULIZIA, PASTICCIO, PEZZI, PREZZI } from '../../src/giochi/pozioni/dati/bottega.js'
 import { Bottega, banchetto, ottimo, giocaBene, giocaGoloso, seguiLaRicetta, prossimoPasso, caso, unitaBuone, scalaDi } from '../../src/giochi/pozioni/motore/bottega.js'
@@ -269,7 +269,11 @@ for (const t of CAMPAGNA) {
   /* il testo intrecciato dice una coppia al contrario */
   let girate = 0
   for (let s = 1; s <= 30; s++) girate += new Bottega(tappa('massa-inverse'), { rnd: caso(s) }).righe.some(r => r.testo.includes('ma prima'))
-  uguale('in fondo alla scaletta si legge davvero', girate, 30)
+  controlla('in fondo alla scaletta capita di leggere al contrario', girate > 8, `${girate}`)
+  let brutte = 0
+  for (const t of CAMPAGNA) for (let s = 1; s <= 30; s++)
+    for (const r of new Bottega(t, { rnd: caso(s) }).righe) if (/^Versa.*ma prima|^Pesta.*ma prima|pestato.*ma prima/.test(r.testo)) brutte++
+  uguale('mai «versa, ma prima pesta»', brutte, 0)
   const b = new Bottega(tappa('massa-banco'), { rnd: caso(1) })
   uguale('all\'inizio due passi', b.passi.map(p => p.azione).join(), 'versa,mescola')
 }
@@ -284,6 +288,23 @@ for (const t of CAMPAGNA) {
   uguale('il pestello serve', b.passi[0].azione, 'pesta')
   giocaBene(b)
   controlla('e la pozione si finisce', b.finita && b.stelle === 3)
+}
+
+/* ---------- il calderone senza fondo ---------- */
+{
+  let scorta = INFINITA.scorta
+  for (let n = 0; n < 40; n++) {
+    const t = giroInfinito(n, null, caso(n + 1))
+    const b = new Bottega(t, { rnd: caso(n + 3), scorta })
+    uguale(`giro ${n}: la scorta passa`, b.gettoni, b.minimo + scorta)
+    giocaBene(b)
+    if (!b.finita) nota(`giro ${n} non finisce`)
+    uguale(`giro ${n}: al minimo non si perde niente`, b.resto, scorta)
+    scorta = b.resto
+  }
+  uguale('cresce: quattro ingredienti', giroInfinito(5).ingredienti, 4)
+  uguale('e il procedimento arriva in fondo', giroInfinito(9).procedimento, 5)
+  uguale('la pozione di una sosta resta quella', giroInfinito(2, ['X', '🧪', '#123456']).nome, 'X')
 }
 
 /* ---------- quello che c'è già in casa ---------- */

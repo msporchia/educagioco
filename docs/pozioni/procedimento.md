@@ -11,7 +11,10 @@ pasticcio. Il motore è `motore/procedimento.js`.
 - **La pergamena ha la ricetta a elenco puntato** (`righe`): «Pesta insieme
   polvere di luna e stelle tritate», «Versa il pestato nel calderone e accendi il
   fuoco». **Ogni tanto due azioni stanno nello stesso punto** (`INSIEME`): bisogna
-  leggere fino in fondo. La si legge già durante la spesa, tranne col rotolo
+  leggere fino in fondo. **Si legge come parlerebbe una persona**: al contrario si
+  dicono solo le mosse sul calderone («accendi il fuoco, ma prima mescola bene»), e
+  pestare e versare diventano «versa nel calderone X e Y pestati insieme». Provato
+  a girare una coppia a caso: «versa il pestato, ma prima pesta» non si leggeva. La si legge già durante la spesa, tranne col rotolo
   aperto, dove sul telefono non ci sta. Fatta la spesa resta solo lei, e i punti
   fatti si cancellano.
 - **Si comincia col listino aperto**: il primo passo è comprare, guardare il banco
@@ -61,6 +64,19 @@ li usa: capire cosa serve è parte del gioco.
   liquidi lascerebbe il mortaio sul tavolo per niente: per quelle in dispensa c'è
   qualcosa di secco (`dispensa`), una cosa al livello 3 e due dopo, che non si
   compra, non sta sul listino e aspetta sul bancone.
+
+## Il calderone senza fondo
+
+Sta in fondo alla mappa, si apre con l'ultima tappa e non conta fra le ventinove
+(`INFINITA`, `giroInfinito`, indice -1). Una pozione dopo l'altra sulle dosi delle
+finali: dalla quarta quattro ingredienti, e il procedimento sale fino in fondo.
+
+- **I gettoni avanzati passano alla pozione dopo**: si parte con una scorta di sei,
+  e chi spende il minimo non perde niente. **Si smette finendo una pozione in rosso.**
+- **Il record è quante di fila** (`senzaFine` nel manifesto, misura `fila`,
+  [../core/primati.md](../core/primati.md)), e si legge sul tasto.
+- Paga come le tappe: tre monete a dose, una a passo. La sosta tiene il giro e la
+  pozione (`giro`), e la dopo è già pronta mentre il calderone fa festa.
 
 ## Il disegno e i suoni
 

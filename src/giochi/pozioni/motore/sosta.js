@@ -5,15 +5,18 @@
 // (v 1, 2 e 3) non si legge: la tappa ricomincia.
 import { Bottega, ottimo } from './bottega.js'
 import { AZIONI, MORTAIO } from './procedimento.js'
-import { CAMPAGNA } from '../dati/campagna.js'
+import { CAMPAGNA, INFINITA, giroInfinito } from '../dati/campagna.js'
 import { INGREDIENTI, VALE } from '../dati/misure.js'
 
 export const VERSIONE = 4
+
+const intero = (n, da, a) => Number.isInteger(n) && n >= da && n <= a
 
 // la tappa del salvataggio, se c'è ancora: si cerca per chiave, perché
 // l'indice da solo resterebbe buono anche con una tappa nuova in mezzo
 export function tappaDi(dato) {
   if (!dato || dato.v !== VERSIONE) return null
+  if (dato.chiave === INFINITA.chiave) return Array.isArray(dato.giro?.pozione) && intero(dato.giro.n, 0, 100000) ? { indice: -1, tappa: giroInfinito(dato.giro.n, dato.giro.pozione) } : null
   const indice = CAMPAGNA.findIndex(t => t.chiave === dato.chiave)
   return indice < 0 ? null : { indice, tappa: CAMPAGNA[indice] }
 }
@@ -22,7 +25,7 @@ export function tappaDi(dato) {
 export function dice(dato) {
   const t = tappaDi(dato)
   if (!t || !Array.isArray(dato.ingredienti)) return null
-  return { nome: t.tappa.nome, emoji: t.tappa.emoji, indice: t.indice,
+  return { nome: t.indice < 0 ? INFINITA.nome : t.tappa.nome, emoji: t.indice < 0 ? INFINITA.emoji : t.tappa.emoji, indice: t.indice,
            fatti: dato.ingredienti.filter(i => !i.dispensa && i.messo >= i.dose).length, quanti: dato.ingredienti.filter(i => !i.dispensa).length,
            traboccate: dato.traboccate || 0 }
 }
@@ -33,10 +36,11 @@ export function scrivi(b, indice, extra = {}) {
   if (!b || b.finita) return null
   return {
     v: VERSIONE, tappa: indice, chiave: b.tappa.chiave,
+    ...(indice < 0 ? { giro: { n: b.tappa.giro, pozione: [b.pozione.nome, b.pozione.emoji, b.pozione.colore] } } : {}),
     passi: b.passi.map(p => ({ azione: p.azione, cosa: [...p.cosa] })), righe: b.righe.map(r => ({ testo: r.testo, passi: [...r.passi] })),
     passo: b.passo, mortaio: [...b.mortaio], pestato: b.pestato, dentro: [...b.dentro], scaldato: b.scaldato, mescolato: b.mescolato, pasticci: b.pasticci, pasticciato: b.pasticciato,
     ingredienti: b.ingredienti.map(g => ({
-      nome: g.nome, unita: g.unita, dose: g.dose, messo: g.messo, casa: g.casa, dispensa: !!g.dispensa, traboccate: g.traboccate, pezzi: [...g.pezzi],
+      nome: g.nome, unita: g.unita, dose: g.dose, messo: g.messo, casa: g.casa, f: !!g.f, dispensa: !!g.dispensa, traboccate: g.traboccate, pezzi: [...g.pezzi],
       offerte: g.offerte.map(o => ({ base: o.base, prezzo: o.prezzo, unita: o.unita })),
     })),
     gettoni: b.gettoni, speso: b.speso, macchie: [...b.macchie],
@@ -44,8 +48,6 @@ export function scrivi(b, indice, extra = {}) {
     ...extra,
   }
 }
-
-const intero = (n, da, a) => Number.isInteger(n) && n >= da && n <= a
 
 // Rimette la pozione com'era. `null` se il salvataggio non torna
 // (versione, tappa cambiata, ingrediente sparito): chi chiama butta la

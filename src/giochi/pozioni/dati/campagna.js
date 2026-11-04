@@ -117,6 +117,22 @@ export const CAMPAGNA = [
 ]
 
 export const QUANTE_TAPPE = CAMPAGNA.length
+
+/* Il calderone senza fondo: non è una tappa, sta in fondo alla mappa. Una pozione
+   dopo l'altra sui dosaggi delle finali, che crescono; i gettoni avanzati passano
+   alla pozione dopo, e si smette andando in rosso. Vedi docs/pozioni/procedimento.md. */
+export const INFINITA = { chiave: 'infinita', nome: 'Il calderone senza fondo', emoji: '♾️', scorta: 6,
+                          dritta: 'Una pozione dopo l\'altra, finché bastano i gettoni: quelli che avanzano passano alla prossima.' }
+const TUTTE_LE_POZIONI = Object.values(POZIONI).flat()
+
+// `n`: quante ne sono già state fatte. `pozione`: [nome, emoji, colore], per rimettere quella di una sosta
+export function giroInfinito(n, pozione = null, rnd = Math.random) {
+  const base = CAMPAGNA.at(n < 6 ? -2 : -1)
+  const [nome, emoji, colore] = pozione || TUTTE_LE_POZIONI[Math.floor(rnd() * TUTTE_LE_POZIONI.length)]
+  const procedimento = Math.min(5, 3 + Math.floor(n / 2))
+  return { ...base, chiave: INFINITA.chiave, nome, emoji, colore, giro: n, margine: 0, ingredienti: n < 3 ? 3 : 4,
+           procedimento, azioni: AZIONI_DEL[procedimento], casa: n % 2 === 1 }
+}
 export const GRADINI_PER_FAMIGLIA = GRADINI.length
 export const ID_GRADINI = GRADINI.map(g => g.id)
 

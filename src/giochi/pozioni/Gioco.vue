@@ -10,12 +10,14 @@ import TastoSalta from '../../components/TastoSalta.vue'
 import { suono } from '../../audio.js'
 import { segna, answer } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'
-import { progresso, aperta, adesso, stelleDi, completa,
+import { progresso, aperta, adesso, stelleDi, completa, primatoDi, segnaPrimato,
          sosta, salvaSosta, buttaSosta } from '../campagne.js'
 import { usaAmici } from '../../amici/usaAmici.js'
 import { attesaDellEsito, PONDERA, TEMPO_MAX } from '../../quiz/nucleo/domanda.js'
 
-import { CAMPAGNA, BLOCCHI, QUANTE_TAPPE, MONETE_A_DOSE } from './dati/campagna.js'
+import { CAMPAGNA, BLOCCHI, QUANTE_TAPPE, MONETE_A_DOSE, INFINITA, giroInfinito } from './dati/campagna.js'
+import { SENZA_FINE } from './gioco.js'
+import { fraseDiFine, primatoInParole } from '../primati.js'
 import { mescola, scrivi as scriviMisura } from './dati/misure.js'
 import { Bottega } from './motore/bottega.js'
 import { MORTAIO } from './motore/procedimento.js'
@@ -45,7 +47,11 @@ const attesa = ref(0)               // 0..1 della barra sotto un trabocco
 const giro = ref(0)                 // una pozione nuova è una tela nuova
 const avanza = progresso(CHIAVE)
 
-const tappa = computed(() => CAMPAGNA[tappaIdx.value])
+const tappa = computed(() => (tappaIdx.value < 0 ? INFINITA : CAMPAGNA[tappaIdx.value]))
+// il calderone senza fondo sta dietro l'ultima tappa: si apre con lei. Indice -1
+const apertaQui = i => aperta(CHIAVE, i < 0 ? QUANTE_TAPPE - 1 : i)
+const serie = ref(0)                // le pozioni fatte nel calderone senza fondo
+let prossimo = null                 // quella dopo, già pronta: chi esce mentre fa festa la ritrova
 const titolo = computed(() => (vista.value === 'banco' ? tappa.value.nome : 'Le pozioni'))
 
 // gli amici dalla loro bacheca (docs/core/amici-nei-giochi.md): la tappa da fare di ognuno
@@ -63,6 +69,11 @@ const blocchi = computed(() => BLOCCHI.map(b => ({
   })),
 })))
 
+const infinita = computed(() => {
+  const record = primatoInParole(primatoDi(CHIAVE), SENZA_FINE.misura)
+  return { ...INFINITA, aperta: apertaQui(-1), record }
+})
+
 // giocare
 let barra = 0, apertaIl = 0, nAnim = 0, inCorso = null
 // un ingrediente finito senza traboccare paga, anche in una tappa rifatta (docs/pozioni/regole.md)
@@ -73,7 +84,7 @@ let borsellino = borsa(CHIAVE)
    mappa la offre in cima. Vedi docs/pozioni/sosta.md. */
 const laRipresa = () => {
   const d = dice(sosta(CHIAVE))
-  if (!d || !aperta(CHIAVE, d.indice)) return null
+  if (!d || !apertaQui(d.indice)) return null
   const sbagli = d.traboccate ? ` · 💥 ${d.traboccate}` : ''
   return { emoji: d.emoji, nome: d.nome, dettaglio: `🧪 ${d.fatti} ingredienti su ${d.quanti}${sbagli}` }
 }
@@ -81,8 +92,9 @@ const ripresa = ref(laRipresa())
 const chiede = ref(null)            // { nome, i }: la tappa nuova che butterebbe quella a metà
 
 function salva({ subito = false } = {}) {
-  if (vista.value !== 'banco' || !bottega.value || bottega.value.finita) return
-  salvaSosta(CHIAVE, scrivi(bottega.value, tappaIdx.value,
+  const b = prossimo || bottega.value
+  if (vista.value !== 'banco' || !b || b.finita) return
+  salvaSosta(CHIAVE, scrivi(b, tappaIdx.value,
     { monete: { chiesto: borsellino.chiesto, dato: borsellino.dato } }), { subito })
 }
 
@@ -93,9 +105,9 @@ function scorda() {
 }
 
 function vuoleIniziare(i) {
-  if (!aperta(CHIAVE, i)) return
+  if (!apertaQui(i)) return
   if (!ripresa.value) return avviaTappa(i)
-  chiede.value = { nome: CAMPAGNA[i].nome, i }
+  chiede.value = { nome: i < 0 ? INFINITA.nome : CAMPAGNA[i].nome, i }
 }
 function comincia() { avviaTappa(chiede.value.i) }
 
@@ -118,8 +130,9 @@ function entra(i, b) {
 function riprendiPartita() {
   const dato = sosta(CHIAVE)
   const t = tappaDi(dato)
-  const b = t && aperta(CHIAVE, t.indice) ? leggi(dato) : null
+  const b = t && apertaQui(t.indice) ? leggi(dato) : null
   if (!b) return scorda()
+  serie.value = dato.giro?.n || 0
   borsellino = borsa(CHIAVE, dato.monete)
   ripresa.value = null
   chiede.value = null
@@ -143,8 +156,17 @@ onBeforeUnmount(() => {
   removeEventListener('pagehide', seSparisce)
 })
 
+function avviaInfinita() {
+  scorda()
+  borsellino = borsa(CHIAVE)
+  serie.value = 0
+  messaggio.value = { tipo: 'aiuto', righe: [INFINITA.dritta] }
+  entra(-1, new Bottega(giroInfinito(0), { scorta: INFINITA.scorta }))
+}
+
 function avviaTappa(i) {
-  if (!aperta(CHIAVE, i)) return
+  if (!apertaQui(i)) return
+  if (i < 0) return avviaInfinita()
   scorda()
   borsellino = borsa(CHIAVE)
   const t = CAMPAGNA[i]
@@ -163,6 +185,7 @@ function allaMappa() {
   cancelAnimationFrame(barra); attesa.value = 0
   finale.value = null
   bottega.value = null
+  prossimo = null
   vista.value = 'mappa'
 }
 
@@ -226,7 +249,13 @@ function fermo(n) {
   if (n !== nAnim) return
   const r = inCorso
   inCorso = null
-  if (animazione.value?.tipo === 'festa') { occupato.value = false; finale.value = chiusa; suono.livello(); return }
+  if (animazione.value?.tipo === 'festa') {
+    occupato.value = false
+    suono.livello()
+    if (prossimo) return pozioneDopo()
+    finale.value = chiusa
+    return
+  }
   apertaIl = performance.now()
   if (!r) { occupato.value = false; salva({ subito: true }); return }
   if (r.azione) return fermoPasso(r)
@@ -322,9 +351,10 @@ function annota(a) {
 let chiusa = null
 function chiudiTappa() {
   const q = bottega.value
-  const giaFatta = avanza.tappa > tappaIdx.value
   if (!q.saltate) segna('pozioni')
   if (q.perfetta) segna('pozioniPerfette')
+  if (tappaIdx.value < 0) return chiudiGiro(q)
+  const giaFatta = avanza.tappa > tappaIdx.value
   completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle: q.stelle })
   scorda()
   const ultima = tappaIdx.value === QUANTE_TAPPE - 1
@@ -336,14 +366,36 @@ function chiudiTappa() {
              maestro: ultima && !giaFatta, ultima, righe }
 }
 
+// una pozione del calderone senza fondo è finita: si va avanti finché non si è in rosso
+function chiudiGiro(q) {
+  serie.value++
+  if (q.resto >= 0) {
+    prossimo = new Bottega(giroInfinito(serie.value), { scorta: q.resto })
+    salva({ subito: true })
+    return
+  }
+  scorda()
+  const esito = segnaPrimato(CHIAVE, serie.value)
+  chiusa = { titolo: INFINITA.nome, stelle: 0, monete: borsellino.dato, notaMonete: borsellino.nota(), ancora: true,
+             righe: [`${serie.value === 1 ? 'Una pozione' : `${serie.value} pozioni`} di fila, poi i gettoni sono finiti.`, fraseDiFine(esito, SENZA_FINE.misura)] }
+}
+
+function pozioneDopo() {
+  const b = prossimo
+  prossimo = null
+  messaggio.value = { tipo: 'aiuto', righe: [`Pozione ${serie.value + 1}: ${b.pozione.nome}.`, `Ti restano ${b.gettoni - b.minimo} gettoni di scorta.`] }
+  entra(-1, b)
+}
+
 function prossima() {
+  if (tappaIdx.value < 0) return avviaInfinita()
   if (tappaIdx.value >= QUANTE_TAPPE - 1) return allaMappa()
   avviaTappa(tappaIdx.value + 1)
 }
 
 /* per i test e per lo strumento delle foto: la stessa porta del gioco */
 if (typeof window !== 'undefined')
-  window.__poz = { vista, tappaIdx, bottega, bozza, finale, avviaTappa, allaMappa, prossima,
+  window.__poz = { vista, tappaIdx, serie, avviaInfinita, bottega, bozza, finale, avviaTappa, allaMappa, prossima,
                    aggiungi, togliVoce, ordina, fai, pulisci, salta, CAMPAGNA, MONETE_A_DOSE }
 </script>
 
@@ -351,7 +403,7 @@ if (typeof window !== 'undefined')
   <div class="schermo pz" :data-vista="vista">
     <Barra :titolo="titolo" guida="pozioni" scura :monete="vista === 'mappa'" @indietro="indietro" />
 
-    <Mappa v-if="vista === 'mappa'" :blocchi="blocchi" :ripresa="ripresa"
+    <Mappa v-if="vista === 'mappa'" :blocchi="blocchi" :infinita="infinita" :ripresa="ripresa"
            :chiede="chiede ? chiede.nome : ''" :davanti="amici.davanti" @gioca="vuoleIniziare"
            @riprendi="riprendiPartita" @scorda="scorda"
            @comincia="comincia" @annulla="chiede = null" />

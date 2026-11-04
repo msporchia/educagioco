@@ -183,3 +183,4 @@
 .pz-mercante[data-fase="procedimento"] .pz-pergamena { order: 0 }
 .pz-mercante[data-fase="procedimento"] .pz-cartello { order: 1 }
 .pz-mercante[data-fase="procedimento"] .pz-vuoto-tela { order: 2 }
+.pz-infinita { margin-top: 12px; width: 100% }

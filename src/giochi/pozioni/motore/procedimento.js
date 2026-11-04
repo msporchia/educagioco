@@ -62,18 +62,24 @@ const Maiuscola = t => t[0].toUpperCase() + t.slice(1)
 
 // Il testo della pergamena, un punto per riga: [{ testo, passi: [indici] }].
 // Ogni tanto due passi stanno nello stesso punto («versa e scalda»), e bisogna
-// leggere fino in fondo. Intrecciato, una coppia si dice al contrario («scalda,
-// ma prima mescola»).
-const INSIEME = 0.4
+// leggere fino in fondo. Si legge come parlerebbe una persona: provato a girare
+// una coppia a caso, «versa il pestato, ma prima pesta» non si poteva leggere.
+// Al contrario si dicono solo le mosse sul calderone («accendi il fuoco, ma
+// prima mescola bene»), e pesta e versa diventano «versa X e Y pestati insieme».
+const INSIEME = 0.4, GIRATA = 0.6
+const SUL_CALDERONE = ['mescola', 'scalda', 'diluisci']
 export function testo(rnd, passi, ingredienti, intrecciato) {
-  // due versate di fila al contrario suonerebbero «versa, ma prima versa»
-  const girabili = passi.slice(1).flatMap((p, k) => (p.azione !== passi[k].azione ? [k] : []))
-  const girata = intrecciato && girabili.length ? girabili[Math.floor(rnd() * girabili.length)] : -1
+  const girabili = passi.slice(1).flatMap((p, k) => (SUL_CALDERONE.includes(p.azione) && SUL_CALDERONE.includes(passi[k].azione) ? [k] : []))
+  const girata = intrecciato && girabili.length && rnd() < GIRATA ? girabili[Math.floor(rnd() * girabili.length)] : -1
   const detto = k => frase(passi[k], ingredienti)
+  const pestaEVersa = k => passi[k].azione === 'pesta' && passi[k].cosa.length === 2 && passi[k + 1]?.cosa.includes(MORTAIO)
   const righe = []
   for (let k = 0; k < passi.length; k++) {
     if (k === girata) righe.push({ testo: `${Maiuscola(detto(k + 1))}, ma prima ${detto(k)}.`, passi: [k, ++k] })
-    else if (k + 1 < passi.length && k + 1 !== girata && passi.length > 2 && rnd() < INSIEME)
+    else if (intrecciato && pestaEVersa(k)) {
+      const cose = passi[k].cosa.map(i => ingredienti[i])
+      righe.push({ testo: `Versa nel calderone ${elenco(cose.map(g => g.nome))} ${cose.every(g => g.f) ? 'pestate' : 'pestati'} insieme.`, passi: [k, ++k] })
+    } else if (k + 1 < passi.length && k + 1 !== girata && passi.length > 2 && rnd() < INSIEME)
       righe.push({ testo: `${Maiuscola(detto(k))} e ${detto(k + 1)}.`, passi: [k, ++k] })
     else righe.push({ testo: `${Maiuscola(detto(k))}.`, passi: [k] })
   }
