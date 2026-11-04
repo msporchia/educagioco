@@ -190,9 +190,8 @@ Prima di questo non si vedeva niente: i ciuffi solo fuori dal mondo (sottili e d
   1170 draw call (−38% sull'inizio), livello 3 = 1100, livello 5 = 1070**; se gli fps medi di 2 s stanno sotto 30 scende di un livello (prima l'ombra
   più rada, poi un po' di risoluzione: ×0,8 a gradino, mai sotto 0,75×, e **solo se la strozzatura non è la CPU**: se il JS riempie il fotogramma i
   pixel non servono), sale dopo 10 s tutti a 55+ e ogni ricaduta raddoppia l'attesa (tetto 80 s); `q.scala` e `q.ombre` salvati non si toccano, il
-  livello vive in memoria e lo dicono le opzioni. I cartelli non riscrivono più lo stile se non si sono mossi, `proietta` non alloca, la foto del HUD
-  non si rifà se è uguale. Il pannello ⚙ e «Mostra il rapporto» ora dicono anche: JS di logica e di disegno e il resto del fotogramma, programmi,
-  quante cose per tipo, mesh e chi proietta ombra, pixel ratio scelto e usato, livello del degrado.
+  livello vive in memoria. I cartelli non riscrivono più lo stile se non si sono mossi, `proietta` non alloca, la foto del HUD
+  non si rifà se è uguale.
   **Le mesh fuse (21/10).** `scena3d/fondi.js` (`fondiPerMateriale(gruppo, { escludi })`, chiamata alla fine di ogni costruttore, **una volta per tipo**: vedi «La cache dei modelli») fonde le mesh
   statiche in una per tipo di materiale: i colori passano nei vertici (materiale `vertexColors` condiviso per firma: ruvidità, metallo, luce propria,
   lato), il disegno è identico. Restano sciolti ciò che si muove (pale, fumo, dolce, cono, pallone e fiamma, manichino, ago, ruota, vasche, panni,
