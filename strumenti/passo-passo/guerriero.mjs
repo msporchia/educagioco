@@ -12,6 +12,8 @@ import { carteDi } from '../../src/giochi/passo-passo/dati/carte.js'
 
 const FRECCE = { su: '↑', giu: '↓', sinistra: '←', destra: '→',
                  'salto-su': '⇑', 'salto-giu': '⇓', 'salto-sinistra': '⇐', 'salto-destra': '⇒' }
+/* quello che fa di una tappa una tappa del guerriero: se la soluzione non ne tocca nessuno, è un'altra strada travestita */
+const CONTANO = ['spada', 'duello', 'colpito', 'pulsante']
 const filtri = process.argv.slice(2)
 for (const t of CAMPAGNA.filter(delGuerriero)) {
   if (filtri.length && !filtri.some(f => t.chiave.includes(f))) continue
@@ -23,8 +25,11 @@ for (const t of CAMPAGNA.filter(delGuerriero)) {
   console.log(`${t.chiave}: ${m.lunga ?? 'NON SI VINCE'} frecce (senza corona ${m.corta}), ${usa || 'niente'}; ${regole}`)
   if (m.conCarota) console.log('   ' + m.conCarota.map(x => FRECCE[x]).join(' '))
   for (const [nome, l] of [['soluzione', t.soluzioni || []], ['fragile', t.fragili || []]]) for (const f of l) {
-    const r = esegui(liv, f, { eventi: false })
-    console.log(`   ${nome} (${carteDi(f)} carte, zaino ${t.zaino}): ${r.esito}${r.carota ? ' con la corona' : ''} dopo ${r.passi.length} passi`)
+    const r = esegui(liv, f)
+    const conta = {}
+    for (const e of r.passi.flatMap(p => p.eventi || [])) if (CONTANO.includes(e.che)) conta[e.che] = (conta[e.che] || 0) + 1
+    const fatti = Object.entries(conta).map(([k, n]) => `${k} ${n}`).join(', ') || 'NIENTE del guerriero'
+    console.log(`   ${nome} (${carteDi(f)} carte, zaino ${t.zaino}): ${r.esito}${r.carota ? ' con la corona' : ''} dopo ${r.passi.length} passi; ${fatti}`)
   }
   for (const f of t.trappole || []) {
     const r = esegui(liv, f, { eventi: false })
