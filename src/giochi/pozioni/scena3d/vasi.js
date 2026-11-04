@@ -1,22 +1,24 @@
-// Gli strumenti di misura, uno per ingrediente e diversi per famiglia: il
+// Gli strumenti di misura, uno per ingrediente e solo finché serve: il
 // cilindro graduato per i liquidi, la bilancia col quadrante e il piatto
 // per le polveri, il metro in piedi con la barretta d'oro per le radici.
-// Tutti segnano in oro dove arriva la dose. Il livello va verso quello
-// detto da `imposta`, tranne mentre un'animazione lo tiene (`trattieni`).
-import { Group, Mesh, CylinderGeometry, TorusGeometry, ConeGeometry, CircleGeometry, BoxGeometry, LatheGeometry,
+// Tutti segnano in oro dove arriva la dose e hanno sotto il nome di cosa
+// misurano; a ingrediente finito vengono messi via. Il livello va verso
+// quello detto da `imposta`, tranne mentre un'animazione lo tiene.
+import { Group, Mesh, Sprite, SpriteMaterial, CylinderGeometry, TorusGeometry, ConeGeometry, CircleGeometry, BoxGeometry, LatheGeometry,
          Color, Vector2, Vector3, MeshStandardMaterial, MeshBasicMaterial, DoubleSide } from 'three'
 import { POSTI } from './banco.js'
+import { nomeSulBanco } from './trame.js'
 
 export const TACCA = 1.15        // l'altezza dell'oro sopra il fondo
 const ALTO = 1.6, R = 0.34, FONDO = 0.1, LARGO = 4.7
 const PIATTO_Y = 0.78            // la bilancia: dov'è il piatto a vuoto
 
-const VERDE = new Color(0x58e08a), ORO = new Color(0xf2c14e)
+const ORO = new Color(0xf2c14e)
 
 export function creaVasi(scena, trame) {
   const g = new Group()
   scena.add(g)
-  let vasi = []
+  const vasi = new Map()         // indice dell'ingrediente → strumento
 
   const vetro = new MeshStandardMaterial({ color: 0xdff0ff, transparent: true, opacity: 0.2, roughness: 0.05,
                                            metalness: 0, depthWrite: false, side: DoubleSide })
@@ -128,19 +130,18 @@ export function creaVasi(scena, trame) {
     v.quota = l => FONDO + l
   }
 
-  function nuovo(d, i, n) {
-    // pochi strumenti stanno larghi e crescono: si leggono meglio
-    const passo = Math.min(1.7, LARGO / n), scala = Math.min(1.15, passo / 1.2)
-    const x = (i - (n - 1) / 2) * passo
+  function nuovo(d) {
     const gruppo = new Group()
-    gruppo.position.set(x, 0, POSTI.vasiZ)
-    gruppo.scale.setScalar(scala)
+    gruppo.position.set(0, 0, POSTI.vasiZ)
+    gruppo.scale.setScalar(0.001)
     const mat = materiale(d.famiglia, d.colore)
-    const colpo = new Mesh(geo.colpo, invisibile); colpo.userData.tocca = { che: 'vaso', i }
-    gruppo.add(colpo)
+    const colpo = new Mesh(geo.colpo, invisibile); colpo.userData.tocca = { che: 'vaso', i: d.i }
+    const targa = new Sprite(new SpriteMaterial({ map: nomeSulBanco(d.nome), transparent: true, depthWrite: false }))
+    targa.scale.set(1.1, 0.385, 1); targa.position.set(0, 0.24, 0.72)
+    gruppo.add(colpo, targa)
     g.add(gruppo)
-    const v = { gruppo, colpo, mat, famiglia: d.famiglia, colore: d.colore, casa: gruppo.position.clone(), materiali: [],
-                livello: 0, meta: 0, onda: 0, trattenuto: false, dato: d, pezzi: -1, fatto: false }
+    const v = { i: d.i, gruppo, colpo, targa, mat, famiglia: d.famiglia, colore: d.colore, casa: gruppo.position.clone(), materiali: [], scala: 1,
+                livello: 0, meta: 0, onda: 0, trattenuto: false, dato: d, pezzi: -1, esce: false, nuovo: true }
     if (d.famiglia === 'capacita') cilindro(v, mat)
     else if (d.famiglia === 'massa') bilancia(v, mat)
     else metro(v)
@@ -152,15 +153,13 @@ export function creaVasi(scena, trame) {
     if (!v.pila) return
     for (const s of [...v.pila.children]) { v.pila.remove(s); s.material.dispose() }
   }
-  function butta() {
-    for (const v of vasi) {
-      g.remove(v.gruppo)
-      v.mat.dispose()
-      for (const m of v.materiali) m.dispose()
-      if (v.segno.material !== quadrante) v.segno.material.dispose()
-      svuotaPila(v)
-    }
-    vasi = []
+  function butta(v) {
+    g.remove(v.gruppo)
+    v.mat.dispose()
+    v.targa.material.map.dispose(); v.targa.material.dispose()
+    for (const m of v.materiali) m.dispose()
+    if (v.segno.material !== quadrante) v.segno.material.dispose()
+    svuotaPila(v)
   }
 
   // la radice: un pezzo per ogni ampolla comprata, alto quanto vale
@@ -176,49 +175,61 @@ export function creaVasi(scena, trame) {
       v.pila.add(s)
       y += h
     })
+    v.pezzi = pezzi.length
   }
 
   function applica(v) {
     const d = v.dato
-    v.fatto = !!d.fatto
-    v.meta = d.fatto ? 0 : d.livello
-    if (v.segno.material !== quadrante) {
-      v.segno.material.color.copy(d.fatto ? VERDE : ORO)
-      v.segno.material.emissive.copy(d.fatto ? VERDE : ORO).multiplyScalar(d.fatto ? 0.6 : 0.12)
-    }
-    if (v.famiglia === 'lunghezza') {
-      const pezzi = d.fatto ? [] : d.pezzi || []
-      if (pezzi.length !== v.pezzi) { impila(v, pezzi); v.pezzi = pezzi.length }
-    }
+    v.meta = d.livello
+    if (v.pila && (d.pezzi || []).length !== v.pezzi) impila(v, d.pezzi || [])
   }
 
+  function disponi() {
+    const qui = [...vasi.values()].filter(v => !v.esce), n = qui.length
+    // pochi strumenti stanno larghi e crescono: si leggono meglio
+    const passo = Math.min(1.7, LARGO / Math.max(1, n)), scala = Math.min(1.2, passo / 1.2)
+    qui.forEach((v, i) => {
+      v.casa.x = (i - (n - 1) / 2) * passo
+      v.scala = scala
+      if (v.nuovo) { v.gruppo.position.x = v.casa.x; v.nuovo = false }
+    })
+  }
+
+  // davanti c'è solo quello che serve: chi non è in lista viene messo via
   function imposta(lista) {
-    const firma = lista.map(d => `${d.famiglia}:${d.colore}`).join('|')
-    if (firma !== vasi.map(v => `${v.famiglia}:${v.colore}`).join('|')) {
-      butta()
-      vasi = lista.map((d, i) => nuovo(d, i, lista.length))
+    const vogliono = new Set(lista.map(d => d.i))
+    for (const v of vasi.values()) v.esce = !vogliono.has(v.i)
+    for (const d of lista) {
+      if (!vasi.has(d.i)) vasi.set(d.i, nuovo(d))
+      const v = vasi.get(d.i)
+      v.dato = d
+      if (!v.trattenuto) applica(v)
     }
-    lista.forEach((d, i) => { vasi[i].dato = d; if (!vasi[i].trattenuto) applica(vasi[i]) })
+    disponi()
   }
 
-  function aggiorna(dt, t) {
-    for (const v of vasi) {
+  function aggiorna(dt) {
+    for (const v of [...vasi.values()]) {
       if (!v.trattenuto) v.livello += (v.meta - v.livello) * Math.min(1, dt * 7)
       v.disegna(v.livello * TACCA + v.onda, v.trattenuto)
-      if (v.fatto && v.segno.material !== quadrante) v.segno.material.emissiveIntensity = 1 + Math.sin(t * 4) * 0.3
+      const s = v.gruppo.scale.x + ((v.esce ? 0 : v.scala) - v.gruppo.scale.x) * Math.min(1, dt * 7)
+      v.gruppo.scale.setScalar(Math.max(0.001, s))
+      v.gruppo.position.x += (v.casa.x - v.gruppo.position.x) * Math.min(1, dt * 6)
+      if (v.esce && s < 0.03) { butta(v); vasi.delete(v.i) }
     }
   }
 
   return {
     imposta, aggiorna,
-    vaso: i => vasi[i],
-    colpibili: () => vasi.map(x => x.colpo),
-    trattieni(i, si) { const x = vasi[i]; if (!x) return; x.trattenuto = si; if (!si) applica(x) },
+    vaso: i => vasi.get(i),
+    colpibili: () => [...vasi.values()].map(x => x.colpo),
+    trattieni(i, si) { const x = vasi.get(i); if (!x) return; x.trattenuto = si; if (!si) applica(x) },
     // dove cade quello che si versa, in coordinate del mondo
-    bocca: i => vasi[i].trasporto.localToWorld(vasi[i].boccaT.clone()).add(new Vector3(0, vasi[i].famiglia === 'massa' ? 0.75 : 0, 0)),
-    fondo: i => vasi[i].gruppo.localToWorld(new Vector3(0, vasi[i].quota(Math.max(0, vasi[i].livello * TACCA)), vasi[i].famiglia === 'lunghezza' ? 0.14 : 0)),
+    bocca: i => { const v = vasi.get(i); return v.trasporto.localToWorld(v.boccaT.clone()).add(new Vector3(0, v.famiglia === 'massa' ? 0.75 : 0, 0)) },
+    fondo: i => { const v = vasi.get(i); return v.gruppo.localToWorld(new Vector3(0, v.quota(Math.max(0, v.livello * TACCA)), v.famiglia === 'lunghezza' ? 0.14 : 0)) },
+    scala: i => vasi.get(i).scala,
     impila,
-    rilascia: butta,
+    rilascia() { for (const v of vasi.values()) butta(v); vasi.clear() },
   }
 }
 

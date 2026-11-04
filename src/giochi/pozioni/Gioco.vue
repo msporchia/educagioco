@@ -211,10 +211,10 @@ function ordina() {
   else salva({ subito: true })
   inCorso = r
   animazione.value = { n: ++nAnim, tipo: 'ordine', prima, voci: r.esiti.map(e => {
-    const g = b.riga(e.ingrediente)
-    return { i: e.ingrediente, testo: e.testo, colore: g.colore, famiglia: g.famiglia, estraneo: e.tipo === 'estraneo',
-             trabocca: e.tipo === 'trabocca', pieno: !!e.pieno, messo: e.dopo, livello: g.dose ? e.dopo / g.dose : 0,
-             pezzi: (e.pezzi || []).map(p => p / g.dose) }
+    const g = b.ingredienti[e.ingrediente]
+    return { i: e.ingrediente, testo: e.testo, colore: g.colore, famiglia: g.famiglia, misura: e.base / g.dose,
+             trabocca: e.tipo === 'trabocca', pieno: !!e.pieno, messo: e.dopo, livello: e.dopo / g.dose,
+             pezzi: e.pezzi.map(p => p / g.dose) }
   }) }
 }
 
@@ -225,12 +225,12 @@ function fermo(n) {
   if (animazione.value?.tipo === 'festa') { occupato.value = false; finale.value = chiusa; suono.livello(); return }
   apertaIl = performance.now()
   if (!r) { occupato.value = false; salva({ subito: true }); return }
-  const male = r.esiti.filter(e => e.tipo !== 'giusto')
+  const trabocco = r.esiti.some(e => e.tipo === 'trabocca')
   if (r.esiti.some(e => e.monete)) suono.moneta()
-  if (male.length) suono.no(); else suono.ok()
+  if (trabocco) suono.no(); else suono.ok()
   const righe = r.esiti.flatMap(e => e.righe)
-  messaggio.value = { tipo: male.length ? 'trabocca' : 'giusto', righe }
-  if (r.esiti.some(e => e.tipo === 'trabocca')) leggiPrima(righe)
+  messaggio.value = { tipo: trabocco ? 'trabocca' : 'giusto', righe }
+  if (trabocco) leggiPrima(righe)
   if (r.finita) return festa()
   occupato.value = false
 }
@@ -288,7 +288,6 @@ function chiudiTappa() {
   const ultima = tappaIdx.value === QUANTE_TAPPE - 1
   const righe = [`Hai speso ${q.speso} gettoni: il minimo era ${q.minimo}.`]
   if (q.traboccate) righe.push(`${q.traboccate === 1 ? 'Un\'ampolla è traboccata' : `${q.traboccate} ampolle sono traboccate`}: si paga l'ampolla, e un gettone la spugna.`)
-  if (q.sprechi) righe.push(`${q.sprechi === 1 ? 'Un\'ampolla non era' : `${q.sprechi} ampolle non erano`} nella ricetta.`)
   if (q.extra > 0) for (const x of q.piuEconomico()) righe.push(`${x.nome}: ${x.pezzi.join(' + ')} (${x.costo})`)
   chiusa = { titolo: tappa.value.nome, stelle: q.stelle, monete: borsellino.dato, notaMonete: borsellino.nota(),
              maestro: ultima && !giaFatta, ultima, righe }

@@ -53,34 +53,33 @@ export function scalaDi(dose, famiglia) {
   return [100, 10].find(k => dose >= 0.25 * k * G && dose % Math.round(PEZZI[0] * k * G) === 0) || 1
 }
 
-/* Il listino di un ingrediente: quattro ampolle. Un pezzo piccolo che
-   divide la dose e gli altri pezzi (così si compone sempre), il più grande
-   che ci sta e uno in mezzo, e il trucco del mercante — la stessa quantità di
-   una delle tre scritta in un'altra unità, a un altro prezzo — o un altro
-   pezzo qualunque. */
+/* Il listino di un ingrediente: quattro ampolle. Si parte dai pezzi che
+   fanno davvero la dose (per 1,2 m: 1 m e 20 cm), così a ogni punto c'è
+   un'ampolla sensata; poi il pezzo piccolo che divide tutti, così un
+   avanzo non resta mai senza ampolla (0,1 e 0,25 insieme lo lasciavano);
+   poi il trucco del mercante — la stessa quantità in un'altra unità, a un
+   altro prezzo — e, se avanza un posto, un altro pezzo. */
 export function banchetto(rnd, dose, famiglia, unita, tappa) {
   const f = FAMIGLIA[famiglia], k = scalaDi(dose, famiglia), G = grande(famiglia)
   const ammesse = (tappa.etichette || ['G', 'M', 'P']).map(t => f.unita[t])
   const tutti = PEZZI.map((p, i) => ({ base: Math.round(p * k * G), prezzo: PREZZI[i] }))
-  // sotto il quarto, se il piccolo fosse il secondo pezzo resterebbe da solo
-  const piccoli = tutti.slice(0, 2).filter(p => dose % p.base === 0)
-  const piccolo = dose < tutti[3].base ? piccoli[0] : pesca(rnd, piccoli)
-  // il piccolo divide tutti gli altri, se no un avanzo resta senza ampolla (0,1 e 0,25)
+  const servono = [...new Set(ottimo(dose, tutti).pezzi)].map(n => tutti[n])
+  const passo = servono.reduce((g, p) => mcd(g, p.base), dose)
+  // sempre uno dei due più piccoli: una dose da un pezzo solo non resta con un listino di un'ampolla
+  const piccolo = tutti.slice(0, 2).filter(p => passo % p.base === 0).at(-1)
   const buoni = tutti.filter(p => p.base % piccolo.base === 0)
-  // il più grande che ci sta c'è sempre, se no una dose chiederebbe decine di ampolle
-  const sopra = buoni.filter(p => p.base > piccolo.base && p.base <= dose)
-  const altri = sopra.length ? [sopra.at(-1), ...mescolata(rnd, sopra.slice(0, -1)).slice(0, 1)] : []
-  const o = [piccolo, ...altri].map(p => ({ ...p, unita: etichetta(rnd, p.base, famiglia, ammesse, unita) }))
+  const o = [...new Set([...servono, piccolo])].map(p => ({ ...p, unita: etichetta(rnd, p.base, famiglia, ammesse, unita) }))
   const altreDi = p => unitaBuone(p.base, famiglia).filter(u => u !== p.unita && ammesse.includes(u))
   const doppiabili = o.filter(p => altreDi(p).length)
-  if (tappa.gemelli && doppiabili.length && rnd() < 0.75) {
+  if (tappa.gemelli && o.length < 4 && doppiabili.length && rnd() < 0.75) {
     const a = pesca(rnd, doppiabili)
     const gemello = { base: a.base, prezzo: a.prezzo, unita: pesca(rnd, altreDi(a)) }
     // una delle due costa un gettone in più: quale, lo decide il caso
     if (rnd() < 0.5) gemello.prezzo += 1; else a.prezzo += 1
     o.push(gemello)
   }
-  for (const p of mescolata(rnd, buoni)) {
+  // se avanza un posto, prima un pezzo che ci sta
+  for (const p of [...mescolata(rnd, buoni.filter(x => x.base <= dose)), ...buoni.filter(x => x.base > dose)]) {
     if (o.length >= 4) break
     if (!o.some(x => x.base === p.base)) o.push({ ...p, unita: etichetta(rnd, p.base, famiglia, ammesse, unita) })
   }
@@ -90,21 +89,22 @@ export function banchetto(rnd, dose, famiglia, unita, tappa) {
 const mcd = (a, b) => (b ? mcd(b, a % b) : a)
 
 // il modo più economico di fare la dose con quelle ampolle (si ricompra
-// quante volte si vuole): { costo, pezzi: [indici], o null se non si fa
+// quante volte si vuole), a parità di gettoni con meno ampolle:
+// { costo, pezzi: [indici] }, o null se non si fa
 export function ottimo(dose, offerte) {
   const passo = offerte.reduce((g, o) => mcd(g, o.base), dose)
-  const n = dose / passo
+  const n = dose / passo, AMPOLLA = 1 / 1024     // pesa meno di un gettone, e si somma senza errori
   const costo = new Array(n + 1).fill(Infinity), scelto = new Array(n + 1).fill(-1)
   costo[0] = 0
   for (let x = 1; x <= n; x++)
     offerte.forEach((o, k) => {
-      const q = o.base / passo
-      if (q <= x && costo[x - q] + o.prezzo < costo[x]) { costo[x] = costo[x - q] + o.prezzo; scelto[x] = k }
+      const q = o.base / passo, c = q <= x ? costo[x - q] + o.prezzo + AMPOLLA : Infinity
+      if (c < costo[x]) { costo[x] = c; scelto[x] = k }
     })
   if (!isFinite(costo[n])) return null
   const pezzi = []
   for (let x = n; x > 0; x -= offerte[scelto[x]].base / passo) pezzi.push(scelto[x])
-  return { costo: costo[n], pezzi: pezzi.sort((a, b) => offerte[b].base - offerte[a].base) }
+  return { costo: pezzi.reduce((s, k) => s + offerte[k].prezzo, 0), pezzi: pezzi.sort((a, b) => offerte[b].base - offerte[a].base) }
 }
 
 export class Bottega {
@@ -126,26 +126,16 @@ export class Bottega {
       return { nome: i.nome, emoji: i.emoji, colore: i.colore, famiglia, unita: d.unita, dose: d.base, messo: 0,
                offerte, ottimo: ottimo(d.base, offerte), traboccate: 0, pezzi: [] }
     })
-    // gli intrusi: il mercante vende anche quello che la ricetta non chiede
-    this.estranei = mescolata(rnd, INGREDIENTI.filter(x => tappa.famiglie.includes(x.famiglia) && !usati.has(x.nome)))
-      .slice(0, tappa.estranei || 0).map(i => {
-        const d = pesca(rnd, tappa.dosi.filter(x => x.famiglia === i.famiglia))
-        return { nome: i.nome, emoji: i.emoji, colore: i.colore, famiglia: i.famiglia, unita: d.unita, estraneo: true,
-                 offerte: banchetto(rnd, d.base, i.famiglia, d.unita, tappa) }
-      })
-    // sul listino le righe stanno mescolate: l'ordine non dice cosa serve
-    this.listino = mescolata(rnd, [...this.ingredienti, ...this.estranei].map((_, i) => i))
     const p = pesca(rnd, POZIONI)
     this.pozione = { nome: p.nome, emoji: p.emoji, colore: p.colore, cliente: pesca(rnd, CLIENTI) }
     this.minimo = this.ingredienti.reduce((s, i) => s + i.ottimo.costo, 0)
     this.gettoni = this.minimo + tappa.margine
     this.speso = 0
-    this.macchie = []            // i misurini con la macchia attorno, da pulire prima del prossimo ordine
+    this.macchie = []            // gli strumenti con la macchia attorno, da pulire prima del prossimo ordine
     this.traboccate = 0
     this.pulizie = 0
     this.monete = 0              // quante ne ha rese la pozione (le paga Gioco.vue)
     this.saltate = 0             // dosi date per fatte dal tasto dei grandi
-    this.sprechi = 0             // ampolle comprate di quello che la ricetta non chiede
     this.finita = false
   }
 
@@ -153,11 +143,9 @@ export class Bottega {
   get extra() { return this.speso - this.minimo }
   // le stelle dicono quanto si è speso, non quante volte si è sbagliato
   get stelle() { return this.saltate ? 1 : this.extra <= 0 ? 3 : this.extra <= 3 ? 2 : 1 }
-  get perfetta() { return !this.traboccate && !this.saltate && !this.sprechi }
+  get perfetta() { return !this.traboccate && !this.saltate }
   get quanteInOrdine() { return this.tappa.ordine }
-  // le righe del listino: gli ingredienti della ricetta, poi gli intrusi (`i` nelle voci dell'ordine)
-  riga(i) { return this.ingredienti[i] || this.estranei[i - this.ingredienti.length] }
-  fatto(i) { const g = this.ingredienti[i]; return !!g && g.messo >= g.dose }
+  fatto(i) { const g = this.ingredienti[i]; return g.messo >= g.dose }
 
   /* L'ordine al mercante: due o tre ampolle (`voci`: { i, k }, anche di
      ingredienti diversi), pagate tutte insieme e versate in fila. Ognuna
@@ -165,8 +153,8 @@ export class Bottega {
      per ampolla, già decisi: la scena li suona uno dopo l'altro. */
   ordina(voci) {
     if (this.finita || this.macchie.length || !voci || !voci.length || voci.length > this.quanteInOrdine) return null
-    if (voci.some(v => !this.riga(v.i) || !this.riga(v.i).offerte[v.k])) return null
-    const costo = voci.reduce((s, v) => s + this.riga(v.i).offerte[v.k].prezzo, 0)
+    if (voci.some(v => !this.ingredienti[v.i] || !this.ingredienti[v.i].offerte[v.k])) return null
+    const costo = voci.reduce((s, v) => s + this.ingredienti[v.i].offerte[v.k].prezzo, 0)
     this.speso += costo
     const esiti = voci.map(v => this.versaUna(v.i, v.k))
     this.finita = this.ingredienti.every((_, j) => this.fatto(j))
@@ -174,23 +162,18 @@ export class Bottega {
   }
 
   versaUna(i, k) {
-    const g = this.riga(i), o = g.offerte[k]
-    if (g.estraneo) {
-      this.sprechi++
-      return { ingrediente: i, ampolla: k, testo: scrivi(o.base, o.unita), tipo: 'estraneo', prima: 0, dopo: 0, annota: null,
-               righe: [`${g.nome[0].toUpperCase() + g.nome.slice(1)} non è nella ricetta: il mercante se la riprende, e i gettoni restano a lui.`] }
-    }
+    const g = this.ingredienti[i], o = g.offerte[k]
     const u = g.unita, letto = scrivi(o.base, o.unita)
     const vale = o.unita === u ? letto : `${letto} = ${scrivi(o.base, u)}`
     // col conto scritto sotto la targhetta non si è saputo niente, e dopo un
     // trabocco su questo ingrediente nemmeno (docs/pozioni/regole.md)
     const scritto = ['gioco', 'svolto'].includes(this.tappa.aiuto)
     const chiave = !scritto && !g.traboccate ? chiaveDi(o.unita, u) : null
-    const base = { ingrediente: i, ampolla: k, testo: letto, prima: g.messo }
+    const base = { ingrediente: i, ampolla: k, testo: letto, base: o.base, prima: g.messo }
     if (g.messo + o.base > g.dose) {
       this.traboccate++; g.traboccate++
       if (!this.macchie.includes(i)) this.macchie.push(i)
-      return { ...base, tipo: 'trabocca', dopo: g.messo, annota: chiave && { chiave, giusto: false },
+      return { ...base, tipo: 'trabocca', dopo: g.messo, pezzi: [...g.pezzi], annota: chiave && { chiave, giusto: false },
                righe: [`Trabocca! ${vale} di ${g.nome}.`,
                        g.messo === g.dose
                          ? `Il misurino era già pieno: ${scrivi(g.dose, u)}.`

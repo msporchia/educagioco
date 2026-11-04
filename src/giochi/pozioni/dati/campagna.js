@@ -91,8 +91,7 @@ const unaDose = (f, spec, v) => {
 
 const dosiDi = (f, specs) => specs.flatMap(s => s.valori.map(v => unaDose(f, s, v)))
 
-// un intruso sul listino in ogni tappa: la prima cosa da fare è leggere la ricetta
-const comune = t => ({ aiuto: t.aiuto, ingredienti: t.ingredienti, estranei: 1, ordine: t.ordine, margine: t.margine,
+const comune = t => ({ aiuto: t.aiuto, ingredienti: t.ingredienti, ordine: t.ordine, margine: t.margine,
                        manca: t.manca, etichette: t.etichette, gemelli: t.etichette.length > 1 })
 
 function tappaDelGradino(f, g, n) {

@@ -11,8 +11,8 @@ import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 const via = b => JSON.parse(JSON.stringify(scrivi(b, CAMPAGNA.indexOf(b.tappa), { monete: { chiesto: 3, dato: 3 } })))
 const firma = b => JSON.stringify({
   pozione: b.pozione, ingredienti: b.ingredienti.map(g => [g.nome, g.dose, g.unita, g.messo, g.pezzi, g.traboccate, g.offerte, g.ottimo.costo]),
-  estranei: b.estranei.map(g => [g.nome, g.offerte]), listino: b.listino, gettoni: b.gettoni, speso: b.speso, minimo: b.minimo,
-  macchie: b.macchie, traboccate: b.traboccate, pulizie: b.pulizie, monete: b.monete, saltate: b.saltate, sprechi: b.sprechi,
+  gettoni: b.gettoni, speso: b.speso, minimo: b.minimo,
+  macchie: b.macchie, traboccate: b.traboccate, pulizie: b.pulizie, monete: b.monete, saltate: b.saltate,
 })
 const finisci = b => { b.pulisci(); for (const [i, g] of b.ingredienti.entries())
   while (g.messo < g.dose) b.ordina([{ i, k: g.offerte.map((o, n) => n).filter(n => g.messo + g.offerte[n].base <= g.dose).sort((a, c) => g.offerte[c].base - g.offerte[a].base)[0] }])
@@ -54,7 +54,7 @@ for (const t of [CAMPAGNA[0], CAMPAGNA[9], CAMPAGNA[26], CAMPAGNA.at(-1)]) {
   uguale('una tappa sparita non si legge', tappaDi({ ...buono, chiave: 'sparita' }), null)
   uguale('un ingrediente sparito non si legge', leggi({ ...buono, ingredienti: buono.ingredienti.map((g, i) => (i ? g : { ...g, nome: 'niente' })) }), null)
   uguale('un misurino oltre la dose non si legge', leggi({ ...buono, ingredienti: buono.ingredienti.map((g, i) => (i ? g : { ...g, messo: g.dose + 1 })) }), null)
-  uguale('un listino bucato non si legge', leggi({ ...buono, listino: [0] }), null)
+  uguale('un listino bucato non si legge', leggi({ ...buono, ingredienti: buono.ingredienti.map((g, i) => (i ? g : { ...g, offerte: [] })) }), null)
   uguale('i gettoni negativi non si leggono', leggi({ ...buono, speso: -1 }), null)
   uguale('il numero di versione è quello nuovo', buono.v, VERSIONE)
   uguale('una pozione finita non si scrive', scrivi(giocaBene(new Bottega(CAMPAGNA[1], { rnd: caso(2) })), 1), null)
