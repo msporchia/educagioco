@@ -18,7 +18,9 @@ Tre famiglie di misure, ognuna con le sue unità e il suo strumento:
 | 📏 | le lunghezze | m · dm · cm | il metro in piedi |
 | 🫗 | i liquidi | l · dl · ml | il cilindro graduato |
 
-**Una tappa è una pozione.** Sulla pergamena ci sono gli ingredienti con la
+**Una tappa sono due o tre pozioni in fila.** Quando una è pronta arriva chi
+l'ha chiesta, la beve, e si vede cosa fa: chi vola, chi sparisce, chi diventa
+gigante. Sulla pergamena ci sono gli ingredienti con la
 loro dose, «1,5 kg di polvere di luna», e sul banco uno strumento per ognuno
 col segno d'oro dove arrivare. Il calderone parte vuoto.
 

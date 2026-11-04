@@ -12,13 +12,14 @@ import { createHash } from 'node:crypto'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { INGREDIENTI } from '../src/giochi/pozioni/dati/misure.js'
+import { INGREDIENTI, PERSONAGGI } from '../src/giochi/pozioni/dati/misure.js'
 
 const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const FILE = resolve(RADICE, 'src/giochi/pozioni/dati/anteprime.js')
-const SORGENTI = ['src/giochi/pozioni/scena3d/ingredienti3d.js', 'src/giochi/fattoria3d/scena3d/creta.js', 'strumenti/banco/foto-ingredienti.html']
+const SORGENTI = ['src/giochi/pozioni/scena3d/ingredienti3d.js', 'src/giochi/pozioni/scena3d/personaggi3d.js', 'src/giochi/fattoria3d/scena3d/creta.js', 'strumenti/banco/foto-ingredienti.html']
 export const PIXEL = 160           // sul banco stanno a ~70 px CSS, a dpr 2 sono 140
-export const NOMI = INGREDIENTI.map(i => i.nome)
+export const NOMI = [...INGREDIENTI.map(i => i.nome), ...PERSONAGGI]
+export const PIXEL_FIGURE = PIXEL * 2   // il mercante e i clienti stanno grandi sul banco
 
 export const firmaSorgenti = () => {
   const h = createHash('sha1')
@@ -31,7 +32,7 @@ export function scriviPozioni(foto) {
   const righe = Object.entries(foto).map(([k, v]) => `  ${JSON.stringify(k)}: '${v}',`)
   writeFileSync(FILE, `/* GENERATO da strumenti/anteprime-pozioni.mjs (\`npm run anteprime pozioni\`) — non si scrive a mano.
 
-   Gli ingredienti delle pozioni: il modello vero fotografato sul computer, ${PIXEL}×${PIXEL} in WebP, ${Object.keys(foto).length} in tutto.
+   Gli ingredienti e i personaggi delle pozioni: il modello vero fotografato sul computer, in WebP, ${Object.keys(foto).length} in tutto.
    Vedi docs/pozioni/regole.md.
 */
 

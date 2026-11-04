@@ -1,13 +1,13 @@
 // La tappa lasciata a metà (docs/pozioni/sosta.md). Si scrive la pozione
 // aperta com'è: il listino di ogni ingrediente, quanto c'è negli strumenti, i
-// gettoni, le macchie e l'ordine in preparazione. Le tappe e gli
-// ingredienti si rifanno dal codice. Una sosta del banco vecchio (v 1) non
-// si legge: la tappa ricomincia.
-import { Bottega, ottimo } from './bottega.js'
+// gettoni, le macchie, e cosa resta di quelle già fatte. Le tappe e gli
+// ingredienti si rifanno dal codice. Una sosta di prima della fila (v 1 e 2)
+// non si legge: la tappa ricomincia.
+import { Bottega, Fila, ottimo } from './bottega.js'
 import { CAMPAGNA } from '../dati/campagna.js'
 import { INGREDIENTI, POZIONI, CLIENTI, VALE } from '../dati/misure.js'
 
-export const VERSIONE = 2
+export const VERSIONE = 3
 
 // la tappa del salvataggio, se c'è ancora: si cerca per chiave, perché
 // l'indice da solo resterebbe buono anche con una tappa nuova in mezzo
@@ -23,15 +23,17 @@ export function dice(dato) {
   if (!t || !Array.isArray(dato.ingredienti)) return null
   return { nome: t.tappa.nome, emoji: t.tappa.emoji, indice: t.indice,
            fatti: dato.ingredienti.filter(i => i.messo >= i.dose).length, quanti: dato.ingredienti.length,
-           traboccate: dato.traboccate || 0 }
+           numero: (dato.fatte?.length || 0) + 1, pozioni: t.tappa.pozioni,
+           traboccate: (dato.traboccate || 0) + (dato.fatte || []).reduce((n, f) => n + f.traboccate, 0) }
 }
 
-// `indice`: dove sta la tappa nella campagna. Una pozione finita non si
+// `indice`: dove sta la tappa nella campagna. Una tappa finita non si
 // scrive: torna null e la sosta si toglie.
-export function scrivi(b, indice, extra = {}) {
-  if (!b || b.finita) return null
+export function scrivi(fila, indice, extra = {}) {
+  if (!fila || fila.finita) return null
+  const b = fila.attuale
   return {
-    v: VERSIONE, tappa: indice, chiave: b.tappa.chiave,
+    v: VERSIONE, tappa: indice, chiave: b.tappa.chiave, fatte: fila.fatte.map(f => ({ ...f, ingredienti: [...f.ingredienti] })),
     pozione: b.pozione.nome, cliente: b.pozione.cliente,
     ingredienti: b.ingredienti.map(g => ({
       nome: g.nome, unita: g.unita, dose: g.dose, messo: g.messo, traboccate: g.traboccate, pezzi: [...g.pezzi],
@@ -60,6 +62,15 @@ function leggiOfferte(lista) {
   })
 }
 
+function leggiFatte(lista, tappa) {
+  if (!Array.isArray(lista) || lista.length >= tappa.pozioni) throw new Error('fatte')
+  return lista.map(f => {
+    if (!POZIONI.some(p => p.nome === f.nome) || !CLIENTI.includes(f.cliente) || !Array.isArray(f.ingredienti)) throw new Error('fatta')
+    if (!['speso', 'minimo', 'traboccate', 'saltate'].every(k => intero(f[k], 0, 100000))) throw new Error('fatta')
+    return { ...f, ingredienti: [...f.ingredienti] }
+  })
+}
+
 function rimetti(dato, rnd) {
   const t = tappaDi(dato)
   if (!t || !Array.isArray(dato.ingredienti) || dato.ingredienti.length !== t.tappa.ingredienti) return null
@@ -82,10 +93,10 @@ function rimetti(dato, rnd) {
 
   const b = new Bottega(t.tappa, { rnd })
   b.ingredienti = ingredienti
-  b.pozione = { nome: p.nome, emoji: p.emoji, colore: p.colore, cliente: dato.cliente }
+  b.pozione = { nome: p.nome, emoji: p.emoji, colore: p.colore, effetto: p.effetto, cliente: dato.cliente }
   b.minimo = ingredienti.reduce((n, g) => n + g.ottimo.costo, 0)
   b.gettoni = dato.gettoni; b.speso = dato.speso
   b.macchie = [...dato.macchie]; b.traboccate = dato.traboccate; b.pulizie = dato.pulizie
   b.monete = dato.rese; b.saltate = dato.saltate
-  return b
+  return new Fila(t.tappa, { rnd, attuale: b, fatte: leggiFatte(dato.fatte, t.tappa) })
 }

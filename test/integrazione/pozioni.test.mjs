@@ -7,7 +7,7 @@
    rotolo del mercante, si toccano le targhette e si ordina. Poi la fine
    della tappa, quello che resta nel profilo, un trabocco e la spugna.
    `node test/esegui.mjs pozioni`
-   tempo: 90
+   tempo: 180
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi, scegli }
   from '../aiuto/browser.mjs'
@@ -68,9 +68,9 @@ async function ordinaUna(targhetta) {
   await page.locator('[data-azione="ordina"]').click()
 }
 const fermo = () => page.waitForFunction(() => {
-  const el = document.querySelector('[data-azione="mercante"], [data-azione="pulisci"], [data-fine="tappa"]')
+  const el = document.querySelector('[data-azione="mercante"], [data-azione="pulisci"], [data-fine]')
   return el && !el.disabled
-}, null, { timeout: 15000 })
+}, null, { timeout: 45000 })                        // il cliente beve: senza scheda video va piano
 
 /* un posto dell'ordine toccato si toglie */
 await page.locator(`[data-targhetta="${await laGiusta()}"]`).click()
@@ -82,21 +82,35 @@ await page.locator('[data-chiudi]').click()
 uguale('la ✕ chiude il rotolo', await page.locator('[data-listino]').count(), 0)
 
 /* si fanno le dosi, con le targhette vere */
-for (let g = 0; g < 40 && !(await page.locator('[data-fine="tappa"]').count()); g++) {
+for (let g = 0; g < 80 && !(await page.locator('[data-fine="tappa"]').count()); g++) {
   await ordinaUna(await laGiusta())
   await fermo()
+  if (await page.locator('[data-fine="pozione"]').count()) {
+    /* fra una pozione e l'altra, il cartello in mezzo */
+    uguale('il cartello dice a che punto è la fila', await page.locator('[data-fila]').innerText(), `Pozione 1 di ${CAMPAGNA[0].pozioni}`)
+    controlla('e quanto è costata questa', /Hai speso \d+ gettoni: il minimo era \d+/.test(await page.locator('[data-righe]').innerText()))
+    uguale('le monete aspettano la fine', await page.locator('[data-monete]').count(), 0)
+    await scatto(page, 'pozioni-mezzo')
+    const prima = await page.evaluate(() => window.__poz.bottega.value.pozione.nome)
+    await page.locator('[data-fine] [data-azione="avanti"]').click()
+    await page.waitForSelector('[data-azione="mercante"]')
+    await attendi(page, 500)
+    uguale('la pergamena dice la seconda', (await page.locator('[data-pozione]').innerText()).trim(), `2 di ${CAMPAGNA[0].pozioni}`)
+    controlla('ed è un\'altra pozione', prima !== await page.evaluate(() => window.__poz.bottega.value.pozione.nome))
+    uguale('i gettoni ripartono', (await stato()).speso, 0)
+  }
 }
 uguale('la tappa finisce', await page.locator('[data-fine="tappa"]').count(), 1)
 controlla('il cartello di fine dice quanto si è speso', /Hai speso \d+ gettoni: il minimo era \d+/.test(await page.locator('[data-righe]').innerText()))
-uguale('le monete: tre a ingrediente', (await page.locator('[data-monete]').innerText()).trim(), `+${CAMPAGNA[0].ingredienti * MONETE_A_DOSE} 🪙`)
+uguale('le monete: tre a ingrediente, di tutta la fila', (await page.locator('[data-monete]').innerText()).trim(), `+${CAMPAGNA[0].ingredienti * CAMPAGNA[0].pozioni * MONETE_A_DOSE} 🪙`)
 await scatto(page, 'pozioni-fine')
 await page.locator('[data-fine] [data-azione="mappa"]').click()
 await page.waitForSelector('.pz-mappa')
 await attendi(page, 500)
 const p1 = await leggiProfilo(page)
 uguale('la tappa è segnata', p1.campagne.pozioni.stelle[0] > 0, true)
-uguale('la pozione è contata', p1.totals.pozioni, 1)
-uguale('senza traboccare è perfetta', p1.totals.pozioniPerfette, 1)
+uguale('ogni pozione è contata', p1.totals.pozioni, CAMPAGNA[0].pozioni)
+uguale('senza traboccare sono perfette', p1.totals.pozioniPerfette, CAMPAGNA[0].pozioni)
 controlla('le dosi sono contate', p1.totals.misure >= CAMPAGNA[0].ingredienti, `${p1.totals.misure}`)
 
 /* ---------- 3. un trabocco, la barra di lettura e la spugna ---------- */

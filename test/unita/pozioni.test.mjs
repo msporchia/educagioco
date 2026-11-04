@@ -4,12 +4,14 @@
    traboccare costa l'ampolla e la pulizia. Vedi docs/pozioni/regole.md.
    `node test/esegui.mjs unita/pozioni --niente-build` */
 import { CAMPAGNA, BLOCCHI, QUANTE_TAPPE, MONETE_A_DOSE, guastiDellaCampagna } from '../../src/giochi/pozioni/dati/campagna.js'
-import { FAMIGLIA, VALE, mescola, guastiDelleMisure } from '../../src/giochi/pozioni/dati/misure.js'
+import { FAMIGLIA, VALE, INGREDIENTI, POZIONI, CLIENTI, mescola, guastiDelleMisure } from '../../src/giochi/pozioni/dati/misure.js'
 import { PULIZIA, PEZZI, PREZZI } from '../../src/giochi/pozioni/dati/bottega.js'
-import { Bottega, banchetto, ottimo, giocaBene, giocaGoloso, caso, unitaBuone, scalaDi } from '../../src/giochi/pozioni/motore/bottega.js'
+import { Bottega, Fila, banchetto, ottimo, giocaBene, giocaGoloso, giocaFila, caso, unitaBuone, scalaDi } from '../../src/giochi/pozioni/motore/bottega.js'
+import { EFFETTI } from '../../src/giochi/pozioni/scena3d/cliente.js'
+import { VERSI_DEI_CLIENTI, SUONI_DEGLI_EFFETTI } from '../../src/giochi/pozioni/suoni.js'
 import { regola, chiaveDi } from '../../src/giochi/pozioni/motore/misura.js'
 import { CONVERSIONI } from '../../src/giochi/pozioni/gioco.js'
-import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
+import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const SEMI = 120
 const tappa = chiave => CAMPAGNA.find(t => t.chiave === chiave)
@@ -182,5 +184,52 @@ for (const t of CAMPAGNA) {
   b.speso += 5; uguale('tanto di più una', b.stelle, 1)
   controlla('oltre il bilancio si va in rosso, e la pozione si finisce lo stesso', (b.speso = b.gettoni + 3, b.resto < 0))
 }
+
+/* ---------- la tappa è una fila di due o tre pozioni ---------- */
+for (const t of CAMPAGNA) {
+  let doppie = 0, ripetuti = 0, sotto = 0
+  const abbastanza = t.famiglie.length === 1 && INGREDIENTI.filter(i => i.famiglia === t.famiglie[0]).length >= t.ingredienti * 2
+  for (let s = 1; s <= 40; s++) {
+    const f = new Fila(t, { rnd: caso(s) })
+    const viste = []
+    while (!f.finita) {
+      const b = f.attuale, prima = f.fatte.at(-1)
+      if (viste.includes(b.pozione.nome) || f.fatte.some(x => x.cliente === b.pozione.cliente)) doppie++
+      // le radici sono cinque: su tre ingredienti a pozione una per forza torna
+      if (prima && abbastanza && b.ingredienti.some(g => prima.ingredienti.includes(g.nome))) ripetuti++
+      viste.push(b.pozione.nome)
+      giocaBene(b); f.chiudi()
+    }
+    if (viste.length !== t.pozioni || f.stelle !== 3 || f.speso !== f.minimo) sotto++
+  }
+  uguale(`${t.chiave}: nella fila niente pozione né cliente due volte`, doppie, 0)
+  uguale(`${t.chiave}: la pozione dopo cambia ingredienti`, ripetuti, 0)
+  uguale(`${t.chiave}: tutte le pozioni al minimo fanno tre stelle`, sotto, 0)
+}
+{
+  const t = tappa('massa-miste')
+  uguale('le tappe da soli sono da tre', t.pozioni, 3)
+  uguale('quelle col conto scritto da due', tappa('massa-virgola').pozioni, 2)
+  const f = new Fila(t, { rnd: caso(8) })
+  uguale('si comincia dalla prima', `${f.numero}/${f.quante}`, '1/3')
+  const prima = f.attuale
+  giocaBene(prima); f.chiudi()
+  uguale('chiusa una, la dopo è già pronta', f.numero, 2)
+  controlla('ed è un\'altra', f.attuale !== prima && !f.attuale.finita)
+  uguale('i gettoni ripartono', f.attuale.speso, 0)
+  const tutta = giocaFila(new Fila(t, { rnd: caso(8) }))
+  tutta.fatte[0].speso += 8
+  uguale('la tolleranza è di tre gettoni a pozione', tutta.stelle, 2)
+  tutta.fatte[0].speso += 2
+  uguale('oltre, una stella', tutta.stelle, 1)
+  tutta.fatte[0].speso -= 10
+  tutta.fatte[1].saltate = 1
+  uguale('una pozione saltata vale una stella alla tappa', tutta.stelle, 1)
+}
+
+/* ---------- chi beve: ogni pozione ha il suo effetto, a schermo e all'orecchio ---------- */
+stessaLista('ogni pozione fa una cosa che la scena sa fare', [...new Set(POZIONI.map(p => p.effetto))].sort(), Object.keys(EFFETTI).sort())
+stessaLista('e che si sente', Object.keys(EFFETTI).sort(), [...SUONI_DEGLI_EFFETTI].sort())
+stessaLista('ogni cliente ha la sua voce', [...CLIENTI].sort(), [...VERSI_DEI_CLIENTI].sort())
 
 riassunto('pozioni')
