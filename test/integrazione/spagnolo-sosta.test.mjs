@@ -15,7 +15,7 @@ const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
 // la prima tappa vinta: la seconda è aperta, e si può cominciare l'una o l'altra
-await semina(page, { coins: 50, campagne: { spagnolo: { tappa: 1, libera: false, stelle: {}, cfg: {},
+await semina(page, { coins: 50, settings: { giochi: { spagnolo: true } }, campagne: { spagnolo: { tappa: 1, libera: false, stelle: {}, cfg: {},
                                                         vinte: { [PRIMA]: Date.now() - 86400000 } } } })
 
 async function entra() {
