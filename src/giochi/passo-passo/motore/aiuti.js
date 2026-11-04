@@ -44,6 +44,14 @@ export function pensieroDi(liv) {
         : 'Guarda la strada: c\'è un pezzo che si ripete uguale? Quel pezzo si scrive una volta sola, dentro una scatola 🔁 — e quante volte?'
     return [prima, seconda]
   }
+  if (liv.guerriero) {
+    const corona = liv.carota >= 0 ? ' E la corona 👑: portala alla principessa.' : ''
+    if (liv.nemici.length)
+      return ['I nemici colpiscono chi si ferma accanto a loro, sopra, sotto o di lato. Con la spada ne batti uno; contro due insieme non vince nessuno.',
+              'Dov\'è la spada? E da quale casella puoi prendere un nemico alla volta, senza fermarti accanto a un altro?' + corona]
+    return ['Una grata si apre col pulsante del suo colore: il guerriero ci mette il piede, e la grata resta aperta.',
+            'Quale grata sbarra la strada alla principessa 👸? Dov\'è il suo pulsante, e come ci arrivi?' + corona]
+  }
   if (liv.cane) {
     const osso = liv.carota >= 0 ? ' E l\'osso 🦴: prendilo senza spaventarle.' : ''
     return ['Le pecore 🐑 scappano dal cane: se si ferma sulla loro riga o colonna, a una o due caselle, fanno un passo dall\'altra parte, e spingono quella che hanno davanti. Portale tutte nel recinto.',

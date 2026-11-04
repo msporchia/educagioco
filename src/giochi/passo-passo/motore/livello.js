@@ -34,6 +34,11 @@ export class Livello {
     this.carota = -1
     this.massi = []
     this.pecore = []
+    this.guerriero = false
+    this.pulsante = new Array(n).fill(null)
+    this.grata = new Array(n).fill(null)
+    this.nemici = []
+    this.spada = -1
 
     const buche = {}
     for (let y = 0; y < this.righe; y++) for (let x = 0; x < this.colonne; x++) {
@@ -48,6 +53,11 @@ export class Livello {
       if (d.masso) this.massi.push(i)
       if (d.pecora) this.pecore.push(i)
       if (d.lastra) this.lastra[i] = d.lastra
+      if (d.pulsante) this.pulsante[i] = d.pulsante
+      if (d.grata) this.grata[i] = d.grata
+      if (d.nemico) this.nemici.push(i)
+      if (d.spada) this.spada = i
+      if (d.principessa) this.guerriero = true
       if (d.coppia) {
         this.coppia[i] = d.coppia
         ;(buche[d.coppia] = buche[d.coppia] || []).push(i)
