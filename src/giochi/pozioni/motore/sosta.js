@@ -34,7 +34,7 @@ export function scrivi(b, indice, extra = {}) {
   return {
     v: VERSIONE, tappa: indice, chiave: b.tappa.chiave,
     passi: b.passi.map(p => ({ azione: p.azione, cosa: [...p.cosa] })), righe: b.righe.map(r => ({ testo: r.testo, passi: [...r.passi] })),
-    passo: b.passo, mortaio: [...b.mortaio], pestato: b.pestato, dentro: [...b.dentro], scaldato: b.scaldato, pasticci: b.pasticci, pasticciato: b.pasticciato,
+    passo: b.passo, mortaio: [...b.mortaio], pestato: b.pestato, dentro: [...b.dentro], scaldato: b.scaldato, mescolato: b.mescolato, pasticci: b.pasticci, pasticciato: b.pasticciato,
     ingredienti: b.ingredienti.map(g => ({
       nome: g.nome, unita: g.unita, dose: g.dose, messo: g.messo, casa: g.casa, traboccate: g.traboccate, pezzi: [...g.pezzi],
       offerte: g.offerte.map(o => ({ base: o.base, prezzo: o.prezzo, unita: o.unita })),
@@ -106,6 +106,6 @@ function rimetti(dato, rnd) {
   b.righe = leggiRighe(dato.righe, b.passi.length)
   if (dato.passo >= b.passi.length || !Array.isArray(dato.mortaio) || !Array.isArray(dato.dentro)) return null
   b.passo = dato.passo; b.mortaio = [...dato.mortaio]; b.dentro = [...dato.dentro]
-  b.pestato = !!dato.pestato; b.scaldato = !!dato.scaldato; b.pasticci = dato.pasticci; b.pasticciato = !!dato.pasticciato
+  b.pestato = !!dato.pestato; b.scaldato = !!dato.scaldato; b.mescolato = !!dato.mescolato; b.pasticci = dato.pasticci; b.pasticciato = !!dato.pasticciato
   return b
 }
