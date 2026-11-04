@@ -105,6 +105,46 @@ export function decidiGatto(s, rnd = Math.random) {
 // ── quando ci premi (docs/fattoria3d/compagni.md): sequenze di passi, scelte pure ──
 // Un passo: { stato, dur, sub?, guarda?: 'eroe'|'altro'|'via', ev?: [[secondi, nome]] } oppure { va: { r: [min, max], corsa?, verso?: 'cane'|'lontano' } }.
 // I nomi degli eventi li esegue `Compagni._evento`: bau bau2 bauP cuori raffica hrr ciu zzz prrr miao mrr posa.
+/* ══════════ la fame e la noia (docs/fattoria3d/cura-sul-prato.md): sequenze come quelle di «Quando ci premi»; `ostinata` non si ferma se il contadino cammina ══════════ */
+const ostinata = passi => { passi.ostinata = true; return passi }
+/** Ha fame: viene a chiamarti e torna alla ciotola. */
+export const sequenzaFame = cane => ostinata([
+  { va: { verso: 'eroe', r: [1, 1.8], corsa: cane } },
+  { stato: cane ? 'festa' : 'miao', dur: 1.6, guarda: 'eroe', ev: [[0.1, 'fame']] },
+  { va: { verso: 'ciotola', r: [1, 1.5] } },
+  { stato: 'siede', dur: 2.5, guarda: 'ciotola' },
+])
+/** Hai riempito la ciotola: corre, mangia, è contento. `finito` toglie il cibo. */
+export const sequenzaPasto = (cane, gatto) => ostinata([
+  { va: { verso: 'ciotola', r: [1, 1.3], corsa: true } },
+  { stato: 'mangia', dur: 3, guarda: 'ciotola', accosta: true, ev: [[2.9, 'finito']] },
+  { stato: cane ? 'festa' : gatto ? 'fusa' : 'sta', dur: 1.4, guarda: 'eroe', ev: [[0.1, 'cuori']] },
+])
+/** Si annoia: cosa combina, secondo chi è. Il coniglio e il pappagallo non portano niente. */
+export function scegliNoia (tipo, rnd = Math.random) {
+  const r = rnd()
+  if (tipo === 'cane') return r < 0.5 ? 'porta' : r < 0.75 ? 'corre' : 'scava'
+  if (tipo === 'gatto') return r < 0.6 ? 'porta' : 'corre'
+  return tipo === 'coniglio' && r < 0.4 ? 'scava' : 'corre'
+}
+export function sequenzaNoia (quale, tipo) {
+  const cane = tipo === 'cane'
+  if (quale === 'porta') return ostinata([
+    { stato: cane ? 'annusa' : 'sta', dur: 0.8, ev: [[0.1, 'prendi']] },
+    { va: { verso: 'eroe', r: [1.1, 1.6] } },
+    { stato: 'sta', dur: 0.4, guarda: 'eroe', ev: [[0.1, 'posaGioco']] },
+    { stato: cane ? 'festa' : 'siede', dur: 8, guarda: 'eroe', ev: [[0.2, 'verso']] },
+  ])
+  if (quale === 'scava') return [
+    { stato: 'mangia', dur: 2.4, ev: [[0.2, 'buca'], [1, 'zolle'], [1.8, 'zolle']] },
+    { stato: 'sta', dur: 0.8, guarda: 'eroe', ev: [[0.1, 'verso']] },
+  ]
+  return [
+    { va: { verso: 'giro', r: [2.5, 4.5], corsa: true } }, { va: { verso: 'giro', r: [2.5, 4.5], corsa: true } }, { va: { verso: 'giro', r: [2.5, 4.5], corsa: true } },
+    { stato: cane ? 'festa' : 'sta', dur: 1.2, guarda: 'eroe', ev: [[0.1, 'verso']] },
+  ]
+}
+export const DAVANTI_CASA = [0.5, -6.5]            // davanti alla porta: da qui partono i compagni, qui vicino nascono ciotole e tinozza
 export const SOGLIA_RICHIAMO = 2.5                 // celle: oltre, il contadino chiama Watson
 export const INTERAZIONI_CANE = ['festa', 'zampa', 'rotola', 'salta', 'riporta', 'starnuta', 'gira', 'sbadiglia']
 export const CAREZZE_PER_SONNO = 6, FINESTRA_CAREZZE = 10
@@ -121,7 +161,7 @@ export function sequenzaCane(id) {
   const g = 'eroe'
   switch (id) {
     case 'zampa': return [APERTURA(0.9), { stato: 'zampa', dur: 2.6, guarda: g, ev: [[0.7, 'bauP'], [0.9, 'cuori']] }]
-    case 'rotola': return [APERTURA(0.9), { stato: 'rotola', dur: 3.1, guarda: g, ev: [[0.9, 'cuori'], [1.5, 'raffica'], [2.1, 'hrr']] }]
+    case 'rotola': return [APERTURA(0.9), { stato: 'rotola', dur: 3.1, guarda: g, ev: [[0.9, 'cuori'], [1.5, 'raffica'], [2.1, 'hrr'], [2.6, 'fango']] }]
     case 'salta': return [APERTURA(0.8), { stato: 'salta', dur: 2.4, guarda: g, ev: [[0.2, 'bau2'], [1.5, 'cuori']] }]
     case 'riporta': return [APERTURA(0.8), { stato: 'riporta', dur: 3.0, guarda: g, ev: [[1.5, 'posa'], [1.7, 'bau'], [1.9, 'cuori']] }]
     case 'starnuta': return [APERTURA(0.8), { stato: 'starnuta', dur: 2.6, guarda: g, ev: [[0.9, 'ciu'], [1.9, 'bau']] }]
@@ -170,13 +210,13 @@ export function sequenzaGatto(risposta, variante, vicino, rnd = Math.random) {
     if (composto) passi.push({ stato: 'siede', dur: 3.0, guarda: g, ev: [[0.4, 'prrr'], [0.9, 'cuori']] })
     else {
       passi.push({ stato: 'struscia', dur: 3.0, guarda: g, ev: [[0.2, 'prrr'], [0.7, 'cuori'], [1.8, 'cuori']] })
-      if (variante === 'calico' && rnd() < 0.5) passi.push({ stato: 'rotola', dur: 2.2, guarda: g, ev: [[0.7, 'cuori']] })
+      if (variante === 'calico' && rnd() < 0.5) passi.push({ stato: 'rotola', dur: 2.2, guarda: g, ev: [[0.7, 'cuori'], [1.8, 'fango']] })
     }
     return passi
   }
   if (risposta === 'fusaQui') return [{ stato: 'fusa', dur: 3.2, guarda: g, ev: [[0.3, 'prrr'], [1.0, 'cuori']] }]
   if (risposta === 'volta') return [{ stato: 'stiracchia', dur: 2.4, guarda: g, ev: [[1.0, 'mrr']] }, { stato: 'volta', dur: 1.6, guarda: 'via' }]
-  return rnd() < 0.5 ? [{ stato: 'miao', dur: 2.2, guarda: g, ev: [[0.5, 'miao']] }] : [{ stato: 'rotola', dur: 2.6, guarda: g, ev: [[0.8, 'cuori']] }]
+  return rnd() < 0.5 ? [{ stato: 'miao', dur: 2.2, guarda: g, ev: [[0.5, 'miao']] }] : [{ stato: 'rotola', dur: 2.6, guarda: g, ev: [[0.8, 'cuori'], [2, 'fango']] }]
 }
 /** Il contadino chiama il gatto per nome? Solo se sta fermo e il gatto è oltre la soglia del richiamo (come per Watson); altrimenti il gatto risponde e basta. */
 export const chiamaIlGatto = (distanza, eroeFermo) => !!eroeFermo && distanza > SOGLIA_RICHIAMO

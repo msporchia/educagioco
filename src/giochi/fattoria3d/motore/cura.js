@@ -4,12 +4,15 @@
    `FONDO`); il rifiuto viene PRIMA del pagamento (sbagliare costa solo il gesto); una coccola gratis c'è sempre; il premio è esperienza,
    mai monete, una volta per ciclo. I compagni (Watson e i gatti di casa) si adottano e si curano allo stesso modo, ma non si spostano:
    girano per la fattoria. Nessun animale è un regalo del livello: il record nasce quando lo si adotta (`compra`). Vedi docs/fattoria3d/bestie-di-casa.md. */
-import { BESTIE, IDS_BESTIE, CURATI, curabile, cibo as ciboPerId, coccola as coccolaPerId, gradisce, scendi, tuttoAPosto, premiaSeStaBene, nuovo, pulisciNome, comeCompagno, perche } from '../dati/bestie.js'
-import { COMPAGNI } from '../dati/compagni.js'
+import { BESTIE, IDS_BESTIE, CURATI, curabile, cibo as ciboPerId, coccola as coccolaPerId, gradisce, scendi, tuttoAPosto, premiaSeStaBene, nuovo, pulisciNome, comeCompagno, perche,
+  prezzoAdozione, FAME, FELICE, SPORCO, FONDO, cibiPer, ciboChiesto } from '../dati/bestie.js'
+import { COMPAGNI, DAVANTI_CASA } from '../dati/compagni.js'
 import { addobbiPer, staA, leggiAddobbo, faChiave, chiaveAddobbo } from '../dati/addobbi.js'
 import { vestitiBestiaInForma } from '../dati/bestie.js'
 
 const PIENO = 0.93          // sopra, un bisogno è «a posto» e il gesto non serve (come in 2D)
+const PANCIA_TORTA = 0.5    // la torta nella ciotola: fa festa e riempie anche la pancia
+const NOME_BAGNO = { spazzola: 'Acqua e schiuma', bagnetto: 'Col sapone', copertina: 'Con la copertina' }
 
 export class Cura {
   /** `m`: la Fattoria3d (monete, esperienza, scorte, terreno). */
@@ -42,10 +45,109 @@ export class Cura {
     if (this.ho(id)) return { ok: false, motivo: 'gia-tua' }
     const chiusa = this.m._chiusa(d.liv)
     if (chiusa) return chiusa
-    if (!this.m._spendi(d.prezzo)) return { ok: false, motivo: 'poche-monete', costo: d.prezzo }
+    const costo = this.prezzoDi(id)
+    if (!this.m._spendi(costo)) return { ok: false, motivo: 'poche-monete', costo }
     this.casa[id] = { ...nuovo(this.m.ora()), premiato: false }
+    this.sistema()
     this.m._evento('bestiaDiCasa', { bestia: id })
-    return { ok: true, costo: d.prezzo }
+    return { ok: true, costo }
+  }
+  /** Quanto costa adottarlo adesso: il suo prezzo, più lo scatto per ogni animale che hai già. */
+  prezzoDi(id) { const d = BESTIE[id] || CURATI[id]; return d ? prezzoAdozione(d.prezzo, this.curate().length) : 0 }
+
+  // ── la ciotola e la tinozza: pezzi veri, che arrivano con gli animali (docs/fattoria3d/cura-sul-prato.md) ──
+  ciotolaDi(id) { return this.m.s.cose.find(c => c.tipo === 'ciotola_bestia' && c.bestia === id) || null }
+  tinozza() { return this.m.s.cose.find(c => c.tipo === 'tinozza') || null }
+  /** Mette la ciotola a chi non ce l'ha, e la tinozza col primo animale: all'adozione e all'apertura (chi aveva già gli animali le trova sul prato). */
+  sistema() {
+    for (const id of this.curate()) if (!this.ciotolaDi(id)) { const k = this.casaDi(id); this._dono('ciotola_bestia', k ? [k[0] + 0.5, k[1] + 0.5] : DAVANTI_CASA, { bestia: id }) }
+    if (this.curate().length && !this.tinozza()) this._dono('tinozza', [DAVANTI_CASA[0] + 4, DAVANTI_CASA[1] + 1])
+  }
+  /** Un pezzo regalato nel posto libero più vicino al punto (mai sul punto: davanti alla porta si passa). Niente posto: niente pezzo, ci riprova alla prossima apertura. */
+  _dono(tipo, [x, z], resto = {}) {
+    const m = this.m, fila = []
+    for (let a = -9; a <= 9; a++) for (let b = -9; b <= 9; b++) {
+      const i = Math.floor(x) + a, j = Math.floor(z) + b, d = Math.hypot(a, b)
+      if (d >= 1.5) fila.push([d, i, j])
+    }
+    fila.sort((u, v) => u[0] - v[0] || u[1] - v[1] || u[2] - v[2])
+    const p = fila.find(([, i, j]) => m.puoMettere(tipo, i, j).ok)
+    if (!p) return null
+    const c = { id: m.s.prossimoId++, tipo, i: p[1], j: p[2], ...resto }
+    m.s.cose.push(c); m._occupa(c, c.id)
+    return c
+  }
+
+  // ── la fame ──
+  haFame(id) { const b = this.stato(id); return !!b && b.pancia < FAME }
+  /** C'è almeno una cosa che le si può dare, con le scorte o con le monete? */
+  puoNutrire(id) { const d = curabile(id); return !!d && cibiPer(d.famiglia).some(c => (c.da ? this.m.scortaDi(c.da) > 0 : c.prezzo <= this.m.monete())) }
+  /** Insiste finché non mangia; se non hai niente da darle si mette tranquilla: non è una colpa. */
+  insiste(id) { return this.haFame(id) && this.puoNutrire(id) }
+  /** Cosa chiede la ciotola. */
+  vuole(id) { const d = curabile(id), b = this.casa[id]; return d && b ? ciboChiesto(d.famiglia, b.pasti, k => this.m.scortaDi(k)) : null }
+  /** I gettoni della ciotola: cosa chiede, poi quello che puoi dare, poi il resto. La torta c'è solo se ce l'hai. */
+  perLaCiotola(id) {
+    const d = curabile(id), m = this.m, chiesto = this.vuole(id)
+    const voce = (c, k = c.id) => ({ id: k, nome: c.nome, emoji: c.emoji, k: c.da || null, prezzo: c.prezzo || 0, n: c.da ? m.scortaDi(c.da) : null, ok: c.da ? m.scortaDi(c.da) > 0 : c.prezzo <= m.monete(), vuole: !!chiesto && c.id === chiesto.id })
+    const fila = cibiPer(d.famiglia).map(c => voce(c)), t = coccolaPerId('festa')
+    if (m.scortaDi(t.da) > 0) fila.push({ ...voce(t, 'festa'), nome: 'Torta' })
+    return fila.sort((a, b) => b.vuole - a.vuole || b.ok - a.ok || a.prezzo - b.prezzo)
+  }
+  /** Mette nella ciotola: un cibo (`nutri`), o la torta (`festa`), che riempie la pancia e fa festa. Conta il pasto: la prossima volta chiederà un'altra cosa. */
+  riempi(id, k) {
+    const r = k === 'festa' ? this._torta(id) : this.nutri(id, k)
+    if (r.ok) this.casa[id].pasti = (this.casa[id].pasti || 0) + 1
+    return r
+  }
+  _torta(id) {
+    const b = this.stato(id), g = coccolaPerId('festa')
+    if (!b) return { ok: false, motivo: 'non-e-tua' }
+    if (b.pancia > PIENO && b.gioco > PIENO) return { ok: false, motivo: 'non-ha-fame' }
+    const r = this._dai(id, b, g, 'gioco')
+    if (r.ok) b.pancia = Math.min(1, b.pancia + PANCIA_TORTA)
+    return r
+  }
+
+  // ── lo sporco e la tinozza ──
+  /** Chi si vede sporco, dal più sporco. */
+  sporche() { return this.curate().filter(id => this.stato(id).pelo < SPORCO).sort((a, b) => this.casa[a].pelo - this.casa[b].pelo) }
+  /** Si sporca un po' (si è rotolata, ha scavato): mai sotto il fondo. */
+  sporca(id, quanto) { const b = this.stato(id); if (b) b.pelo = Math.max(FONDO, b.pelo - quanto) }
+  /** I modi di lavare, per la tinozza: 🪙1, il sapone, la copertina di lana. */
+  modiDiLavare() {
+    const m = this.m
+    return ['spazzola', 'bagnetto', 'copertina'].map(k => coccolaPerId(k)).map(g => ({ id: g.id, nome: NOME_BAGNO[g.id], emoji: g.emoji, prezzo: g.prezzo || 0, da: g.da || null, n: g.da ? m.scortaDi(g.da) : null, ok: g.da ? m.scortaDi(g.da) > 0 : g.prezzo <= m.monete() }))
+  }
+  /** Si può cominciare il bagno? Il rifiuto viene prima di strofinare: null se va bene, se no quello che direbbe `lava`. */
+  rifiutoBagno(id, gesto) {
+    const b = this.stato(id), g = coccolaPerId(gesto), m = this.m
+    if (!b) return { ok: false, motivo: 'non-e-tua' }
+    if (!g) return { ok: false, motivo: 'sconosciuta' }
+    if (b.pelo > PIENO) return { ok: false, motivo: 'non-serve' }
+    if (g.da && m.scortaDi(g.da) < 1) return { ok: false, motivo: 'manca-roba', prodotto: g.da }
+    if (!g.da && g.prezzo > m.monete()) return { ok: false, motivo: 'poche-monete', costo: g.prezzo }
+    return null
+  }
+  /** Il bagno finito: qualunque modo la lascia pulita. `gesto`: `spazzola` (🪙1), `bagnetto` (sapone), `copertina` (lana). Rifiuti: quelli di `coccola`. */
+  lava(id, gesto = 'spazzola') {
+    const b = this.stato(id), g = coccolaPerId(gesto)
+    if (!b) return { ok: false, motivo: 'non-e-tua' }
+    if (!g || g.bisogno !== 'pelo') return { ok: false, motivo: 'sconosciuta' }
+    if (b.pelo > PIENO) return { ok: false, motivo: 'non-serve' }
+    return this._dai(id, b, { ...g, quanto: 1 }, 'pelo')
+  }
+
+  // ── il gioco: un tocco sull'animale ──
+  /** Gratis, sempre. Riempie e può dare il premio solo se non è già felice: da felice ci giochi quanto vuoi, ma non ne viene niente. */
+  gioca(id) {
+    const b = this.stato(id)
+    if (!b) return { ok: false, motivo: 'non-e-tua' }
+    if (b.gioco >= FELICE) return { ok: true, costo: 0, felice: true }
+    const eraAPosto = tuttoAPosto(b)
+    b.gioco = 1; b.quando = this.m.ora()
+    this.m._evento('coccola', { bestia: id })
+    return { ok: true, costo: 0, premio: this._premia(id, b, eraAPosto) }
   }
 
   /** Dà da mangiare. `cibo`: l'oggetto o l'id. Rifiuti: `non-e-tua`, `non-gli-piace` (con `perche`), `non-ha-fame`, `manca-roba` (con `prodotto`), `poche-monete` (con `costo`). */

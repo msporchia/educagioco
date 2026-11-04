@@ -163,8 +163,10 @@ export function normalizza(letto) {
   if (Array.isArray(letto.cose)) {
     let id = 1
     const edificiVisti = new Set()                 // un edificio è uno per tipo: il secondo si butta
+    const ciotoleViste = new Set()                 // una ciotola per animale: senza padrone, o la seconda, si butta (`Cura.sistema` rifà quella che manca)
     s.cose = letto.cose.filter(c => c && (PEZZI[c.tipo] || EDIFICI[c.tipo]) && Number.isInteger(c.i) && Number.isInteger(c.j)
-      && !(EDIFICI[c.tipo] && (edificiVisti.has(c.tipo) || !edificiVisti.add(c.tipo)))).map(c => {
+      && !(EDIFICI[c.tipo] && (edificiVisti.has(c.tipo) || !edificiVisti.add(c.tipo)))
+      && !(c.tipo === 'ciotola_bestia' && (!s.casa[c.bestia] || ciotoleViste.has(c.bestia) || !ciotoleViste.add(c.bestia)))).map(c => {
       const x = { id: Number.isInteger(c.id) && c.id >= id ? c.id : id, tipo: c.tipo, i: c.i, j: c.j }
       id = x.id + 1
       if (c.tipo === 'campo') {
@@ -176,6 +178,7 @@ export function normalizza(letto) {
         x.cibo = numero(c.cibo)
       }
       if (ANIMALI[c.tipo]) x.bestie = bestieInForma(c.tipo, c.bestie)
+      if (c.tipo === 'ciotola_bestia') x.bestia = c.bestia
       if (ruotabile(c.tipo) && rotLetta(c.rot)) x.rot = rotLetta(c.rot)          // un quarto di giro: assente = 0 (dati/rotazione.js)
       return x
     })

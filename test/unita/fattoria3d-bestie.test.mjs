@@ -4,7 +4,7 @@
    `node test/esegui.mjs fattoria3d-bestie`
    tempo: 1 */
 import { BESTIE, IDS_BESTIE, guastiDelleBestie, CIBI, COCCOLE_3D, cibiPer, gestiPer, nomiPer, pulisciNome, casaInForma, bestiaInForma, COMPAGNO_DI, idDa2D, perche,
-  bestieAl, FONDO, BENISSIMO, BENE, scortaDi3D } from '../../src/giochi/fattoria3d/dati/bestie.js'
+  bestieAl, FONDO, BENISSIMO, BENE, scortaDi3D, RINCARO_ADOZIONE } from '../../src/giochi/fattoria3d/dati/bestie.js'
 import { ANIMALI_2D, premioBenessere } from '../../src/giochi/fattoria3d/dati/parita2d.js'
 import { CIBI as CIBI_2D, COCCOLE as COCCOLE_2D, BISOGNI } from '../../src/giochi/fattoria3d/da2d/dati/bisogni.js'
 import { COMPAGNI } from '../../src/giochi/fattoria3d/dati/compagni.js'
@@ -294,7 +294,7 @@ const motoreCon = ({ liv = 70, monete = 100000, t = { ora: ORA }, stato = null }
   const { f, b } = motoreCon({ liv: 12, monete: 1000 })
   uguale('nessun animale arriva da solo col livello', f.cura.curate().join(), '')
   uguale('Sherlock si può adottare dal 10, per 75 🪙 (come il gatto bianco e nero della 2D)', [f.cura.compra('sherlock').costo, COMPAGNI.sherlock.liv].join(), '75,10')
-  uguale('Watson dal 3, per 90', f.cura.compra('watson').costo, 90)
+  uguale('Watson dal 3, per 90: più lo scatto per Sherlock che hai già', f.cura.compra('watson').costo, 90 + RINCARO_ADOZIONE)
   uguale('Pepe no: è del 19', f.cura.compra('pepe').motivo, 'non-sbloccato')
   uguale('una volta adottato non si ricompra', f.cura.compra('watson').motivo, 'gia-tua')
   uguale('si curano Watson e Sherlock (nell\'ordine dei compagni), non Irene e Pepe', f.cura.curate().join(), 'watson,sherlock')

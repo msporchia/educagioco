@@ -175,7 +175,7 @@ controlla('l\'aspetto del contadino è uno dei due', ['contadino', 'contadina'].
   const c2 = new Compagni(new THREE.Scene(), f2, eroe, fx, { avviso: t => av2.push(t) }, rnd)
   uguale('chi c\'è è solo chi è stato adottato (Watson), senza avviso', c2.lista.map(k => k.def.id).join() + av2.length, 'watson0')
   uguale('Sherlock non arriva da solo', (c2.aggiorna(0.05, 1), c2.lista.length), 1)
-  uguale('adottarlo costa le sue monete', f2.cura.compra('sherlock').costo, COMPAGNI.sherlock.prezzo)
+  uguale('adottarlo costa le sue monete, più lo scatto per Watson', f2.cura.compra('sherlock').costo, COMPAGNI.sherlock.prezzo + 20)
   c2.aggiorna(0.05, 2); c2.aggiorna(0.05, 2); for (let n = 0; n < 30; n++) c2.aggiorna(0.05, 2 + n * 0.05)
   uguale('adottato, arriva Sherlock', c2.lista.map(k => k.def.id).join(), 'watson,sherlock')
   uguale('…con il suo avviso', av2.join('|'), 'Sherlock, il gatto, è arrivato!')

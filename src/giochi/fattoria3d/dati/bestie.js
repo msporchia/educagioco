@@ -97,8 +97,23 @@ export function gestiPer(bisogno, famiglia) {
   return COCCOLE_3D.filter(c => c.bisogno === bisogno).map(c => ({ che: 'coccola', ...c }))
 }
 
+/* ══════════ la cura sul prato (docs/fattoria3d/cura-sul-prato.md) ══════════ */
+export const RINCARO_ADOZIONE = 20                                   // come il terreno: ogni animale che hai fa costare di più il prossimo
+export const prezzoAdozione = (base, quanti) => base + RINCARO_ADOZIONE * quanti
+export const FAME = 0.5                                              // sotto, ha fame: va alla ciotola e ti chiama
+export const NOIA = 0.35                                             // sotto, si annoia: ti porta il gioco, fa le pazzie
+export const FELICE = BENE                                           // da qui in su giocarci non riempie niente: ci giochi quanto vuoi, e basta
+export const SPORCO = 0.8                                            // sotto, il pelo si vede sporco e la tinozza lo chiama
+/** Quanto si vede sporco, da 0 a 1 (`scena3d/sporco.js`). */
+export const sporcoDi = pelo => Math.max(0, Math.min(1, (SPORCO - pelo) / (SPORCO - FONDO)))
+/** Cosa chiede la ciotola: un cibo della scorta, che cambia a ogni pasto (`pasti`); fra quelli della famiglia prima quelli che hai (`quanti`: id della scorta → quanti). Senza scorte per quella famiglia, il cibo piccolo a monete. */
+export function ciboChiesto(famiglia, pasti, quanti) {
+  const tutti = cibiPer(famiglia).filter(c => c.da), hai = tutti.filter(c => quanti(c.da) > 0), fila = hai.length ? hai : tutti
+  return fila.length ? fila[(pasti || 0) % fila.length] : cibiComprati(famiglia)[0]
+}
+
 /* ══════════ lo stato che si salva: stato.casa ══════════ */
-// { <id>: { pancia, pelo, gioco, quando, premiato, nome?, i?, j?, addobbi? } } (`addobbi`: { aggancio: id }, dati/addobbi.js) — il record c'è se la bestia è tua (un compagno gratis l'ha da quando arriva). `i, j`: la cella dove l'hai messa
+// { <id>: { pancia, pelo, gioco, quando, premiato, nome?, i?, j?, addobbi?, pasti? } } (`addobbi`: { aggancio: id }, dati/addobbi.js; `pasti`: quanti, fa cambiare cosa chiede) — il record c'è se la bestia è tua (un compagno gratis l'ha da quando arriva). `i, j`: la cella dove l'hai messa
 // (casa sua: ci gira intorno); senza, sta davanti alla casa.
 export const casaIniziale = () => ({})
 
@@ -113,6 +128,7 @@ export function bestiaInForma(letto, ora = Date.now()) {
               quando: Number.isFinite(l.quando) && l.quando > 0 ? l.quando : ora, premiato: !!l.premiato }
   const nome = pulisciNome(l.nome)
   if (nome) r.nome = nome
+  if (Number.isInteger(l.pasti) && l.pasti > 0) r.pasti = l.pasti
   if (Number.isInteger(l.i) && Number.isInteger(l.j) && Math.abs(l.i) < 1e6 && Math.abs(l.j) < 1e6) { r.i = l.i; r.j = l.j }
   // quello che porta: { aggancio: chiave `<id>:<colore>` }; un id solo (salvataggio di prima) vale il colore di base. Non importa dati/addobbi.js (importa questo).
   const addosso = addossoInForma(l.addobbi)

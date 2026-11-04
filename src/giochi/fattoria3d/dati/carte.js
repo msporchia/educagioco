@@ -5,7 +5,7 @@
 import { PEZZI, EDIFICI, CATEGORIE } from './catalogo.js'
 import { livelloDelPezzo } from './livelli.js'
 import { COSTI } from './regole.js'
-import { adottabili } from './bestie.js'
+import { adottabili, prezzoAdozione } from './bestie.js'
 import { FINESTRE } from './stagioni3d.js'
 
 /** Gli strumenti del pennello, nella scheda delle strade: non sono pezzi, scegliendoli si disegna col dito. */
@@ -24,7 +24,7 @@ export const STRUMENTI = {
 export function carteDi(categoria, stato) {
   const carte = []
   for (const [id, p] of Object.entries(PEZZI)) {
-    if (p.categoria !== categoria) continue
+    if (p.categoria !== categoria || p.dono) continue                          // ciotola e tinozza arrivano con gli animali: non si comprano
     const mag = stato.nelMagazzino(id), liv = livelloDelPezzo(id)
     if (p.magazzino && !mag) continue                                          // un magazzino non si compra dal menu: c'è solo se ne resta uno da mettere
     if (p.fiera && !mag) continue                                              // la fiera non si compra: si vince dalla mongolfiera, e la carta c'è solo se ce l'hai
@@ -41,7 +41,7 @@ export function carteDi(categoria, stato) {
   if (categoria === 'animali') {           // gli animali di casa: si adottano qui, non si mettono (docs/fattoria3d/adozioni.md); `stato.bestieTue`: gli id di quelli che hai
     for (const b of adottabili()) {
       const id = b.id, mia = (stato.bestieTue || []).includes(id)
-      carte.push({ id: 'bestia:' + id, genere: 'bestia', bestia: id, nome: b.nome, emoji: b.emoji, etichetta: mia ? '🐾 è tua' : '🪙 ' + b.prezzo, liv: b.liv, bloccata: !mia && b.liv > stato.livello, segnala: false })
+      carte.push({ id: 'bestia:' + id, genere: 'bestia', bestia: id, nome: b.nome, emoji: b.emoji, etichetta: mia ? '🐾 è tua' : '🪙 ' + prezzoAdozione(b.prezzo, (stato.bestieTue || []).length), liv: b.liv, bloccata: !mia && b.liv > stato.livello, segnala: false })
     }
   }
   carte.sort((a, b) => (b.segnala ? 1 : 0) - (a.segnala ? 1 : 0) || a.liv - b.liv || a.nome.localeCompare(b.nome, 'it'))      // chi ha il «!» sta in cima
