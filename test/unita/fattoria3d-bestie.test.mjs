@@ -3,11 +3,12 @@
    il nome e la posizione si salvano, la migrazione dalla 2D, il vecchio stato letto dritto, la veterinaria al banco (C32).
    `node test/esegui.mjs fattoria3d-bestie`
    tempo: 1 */
-import { BESTIE, IDS_BESTIE, guastiDelleBestie, CIBI, COCCOLE_3D, cibiPer, gestiPer, nomiPer, pulisciNome, casaInForma, bestiaInForma, COMPAGNO_DI, idDa2D, perche,
+import { BESTIE, IDS_BESTIE, adottabili, guastiDelleBestie, CIBI, COCCOLE_3D, cibiPer, gestiPer, nomiPer, pulisciNome, casaInForma, bestiaInForma, COMPAGNO_DI, idDa2D, perche,
   bestieAl, FONDO, BENISSIMO, BENE, scortaDi3D, RINCARO_ADOZIONE } from '../../src/giochi/fattoria3d/dati/bestie.js'
 import { ANIMALI_2D, premioBenessere } from '../../src/giochi/fattoria3d/dati/parita2d.js'
 import { CIBI as CIBI_2D, COCCOLE as COCCOLE_2D, BISOGNI } from '../../src/giochi/fattoria3d/da2d/dati/bisogni.js'
-import { COMPAGNI } from '../../src/giochi/fattoria3d/dati/compagni.js'
+import { COMPAGNI, compagniAl } from '../../src/giochi/fattoria3d/dati/compagni.js'
+import { schedeDi } from '../../src/giochi/fattoria3d/dati/carte.js'
 import { sogliaDi, guastiDeiLivelli, roba } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { statoIniziale, normalizza } from '../../src/giochi/fattoria3d/motore/stato.js'
@@ -315,7 +316,35 @@ const motoreCon = ({ liv = 70, monete = 100000, t = { ora: ORA }, stato = null }
   controlla('rimesso a posto dà il premio del bobtail della 2D, in esperienza', p.ok && p.premio && p.premio.xp === premioBenessere('cane-bobtail') && f.s.esperienza > xp0, JSON.stringify(p))
   const letto = new Fattoria3d({ stato: normalizza(JSON.parse(JSON.stringify(f.s))), borsa: { quante: () => 0, paga: () => false } })
   controlla('i bisogni e il nome di Watson si salvano', letto.s.casa.watson && letto.s.casa.watson.pancia > 0.5)
-  uguale('nomiPer dà i nomi della sua famiglia', nomiPer('sherlock').join(), nomiPer('gatto_rosso').join())
+  uguale('nomiPer dà i nomi della sua famiglia, col suo in testa', nomiPer('sherlock').join(), ['Sherlock', ...nomiPer('gatto_rosso')].join())
+}
+
+/* ══════════ in vendita ha una razza, il nome lo dà il bambino (docs/fattoria3d/adozioni.md) ══════════ */
+{
+  const animali = (bestieTue = [], nomeBestia) => schedeDi({ stagione: '', livello: 99, prezzoPezzo: () => 1, nelMagazzino: () => 0, posseduti: {}, bestieTue, nomeBestia }).animali
+  const sulla = (carte, id) => carte.find(c => c.id === 'bestia:' + id).nome
+  const inVetrina = animali()
+  uguale('la carta dei compagni dice com\'è fatto', Object.keys(COMPAGNI).map(id => sulla(inVetrina, id)).join(), 'Bobtail,Gatto bianconero,Gatto calico,Gatto nero,Gatto nero col ciuffo')
+  uguale('le altre la loro razza', sulla(inVetrina, 'labrador') + sulla(inVetrina, 'gatto_rosso'), 'LabradorGatto rosso')
+  controlla('nessuna carta in vendita dice un nome proprio', Object.values(COMPAGNI).every(c => !inVetrina.some(k => k.nome === c.nome)))
+  controlla('il foglio dei livelli nemmeno', compagniAl(99).every(c => c.razza && c.razza !== c.nome))
+  uguale('il catalogo ha una razza per tutti', adottabili().filter(a => !a.razza).length, 0)
+  for (const id of Object.keys(COMPAGNI)) uguale(`il nome di ${id} è il primo di quelli da toccare`, nomiPer(id)[0], COMPAGNI[id].nome)
+  uguale('Pepe compare una volta sola', nomiPer('pepe').filter(n => n === 'Pepe').length, 1)
+  uguale('Watson stava già fra quelli del cane', nomiPer('watson').filter(n => n === 'Watson').length, 1)
+  uguale('una razza non si propone come nome', nomiPer('beagle').includes('Beagle'), false)
+
+  // chi ce l'ha già: niente di suo cambia
+  const { f } = motoreCon({ monete: 100000 })
+  f.cura.compra('golia'); f.cura.compra('watson'); f.cura.compra('beagle')
+  uguale('senza nome scelto Golia resta Golia', f.cura.nomeDi('golia'), 'Golia')
+  uguale('…e non è stato scritto niente nel salvataggio', f.cura.casa.golia.nome, undefined)
+  f.cura.battezza('watson', 'Bobby')
+  const tue = animali(f.cura.curate(), id => f.cura.nomeDi(id))
+  uguale('la carta di uno tuo dice come si chiama', ['golia', 'watson', 'beagle'].map(id => sulla(tue, id)).join(), 'Golia,Bobby,Beagle')
+  uguale('quella di uno da prendere resta la razza', sulla(tue, 'pepe'), 'Gatto nero col ciuffo')
+  const riletto = new Fattoria3d({ stato: normalizza({ ...statoIniziale(), casa: { golia: { pancia: 0.6, nome: 'Birba' }, sherlock: { pancia: 0.6 } } }), borsa: { quante: () => 0, paga: () => false } })
+  uguale('un salvataggio tiene i nomi che ha', [riletto.cura.nomeDi('golia'), riletto.cura.nomeDi('sherlock')].join(), 'Birba,Sherlock')
 }
 
 riassunto('Fattoria 3D — le bestie di casa (dati, stato, motore)')

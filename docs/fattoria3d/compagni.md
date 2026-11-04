@@ -22,7 +22,7 @@ mostra con 🐕/🐈, «puoi adottarlo»). In scena compare chi è in `stato.cas
 | 19 | Pepe (75) | gatto nero col ciuffo bianco sul petto e occhi gialli |
 
 (Prima del 3/11/2026 arrivavano da soli ai livelli 1, 2, 3 e 19: `LIVELLO_DI_UNA_VOLTA`, per i salvataggi di allora.) I gatti sono in scala 0,82 (`SCALA_GATTO`; Golia un po' di più, Irene un po' di meno), più bassi di ogni cane: le taglie stanno in [taglie.md](taglie.md). Al caricamento ci sono tutti quelli adottati, senza avviso. Adottandone uno compare con uno sbuffo di
-scintille e `ui.avviso` («Watson è arrivato!»). Il controllo è una volta al secondo (`Compagni.sync`).
+scintille e `ui.avviso` («Un bobtail è arrivato!»: il nome glielo dà il bambino subito dopo). Il controllo è una volta al secondo (`Compagni.sync`).
 
 ## Com'è fatto il disegno
 

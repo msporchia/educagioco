@@ -18,7 +18,7 @@ const voci = r => [
   ...r.edifici.map(c => ({ k: 'e' + c.id, emoji: c.emoji, nome: c.nome, cosa: 'edificio' })),
   ...r.colture.map(c => ({ k: 'c' + c.id, merce: c.id, emoji: c.emoji, nome: c.nome, cosa: 'da seminare' })),
   ...r.ricette.map(c => ({ k: 'r' + c.id, merce: c.id, emoji: c.emoji, nome: c.nome, cosa: 'ricetta' })),
-  ...(r.compagni || []).map(c => ({ k: 'a' + c.id, emoji: c.tipo === 'cane' ? '🐕' : '🐈', nome: c.nome, cosa: 'puoi adottarlo (🐾)' })),
+  ...(r.compagni || []).map(c => ({ k: 'a' + c.id, emoji: c.tipo === 'cane' ? '🐕' : '🐈', nome: c.razza, cosa: 'puoi adottarlo (🐾)' })),
   ...(r.bestie || []).map(b => ({ k: 'b' + b.id, emoji: b.emoji, nome: b.nome, cosa: 'puoi adottarlo (🐾)' })),
   ...(r.abiti || []).map(c => ({ k: 'v' + c.categoria + c.id, emoji: '👕', nome: c.nome, cosa: 'per il guardaroba' })),
 ]
