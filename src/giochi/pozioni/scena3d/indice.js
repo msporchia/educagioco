@@ -268,6 +268,15 @@ function costruisci(renderer, canvas, { tocca, lascia, dpr: fisso }) {
         eff.gocce.emetti(10, { da: bocca, sparpaglia: 0.25, verso: [0, 0.8, 0], caso: 0.6, colore: '#d8c8a8', vita: 0.5, misura: 0.06, gravita: 5 })
       }
     } else {
+      // via il tappo, o il panno col suo spago, e vola via di lato
+      suoni.stappa(polvere)
+      const da = a.chiuso.map(m => m.position.clone())
+      await anima(0.3, t => a.chiuso.forEach((m, n) => {
+        m.position.set(da[n].x + t * 0.5, da[n].y + Math.sin(t * Math.PI) * 0.35 + t * 0.1, da[n].z)
+        m.rotation.z = -t * 2
+        m.scale.setScalar(Math.max(0.001, 1 - t * t))
+      }))
+      for (const m of a.chiuso) m.visible = false
       // si piega e versa: il getto cade fino al livello, che sale
       await anima(0.18, t => { a.gruppo.rotation.z = -liscio(t) * 2.0 })
       const fino = trabocca ? (ALTEZZA_VASO - 0.1) / TACCA : livello   // traboccando, fino all'orlo
