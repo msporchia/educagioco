@@ -8,6 +8,7 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { scrivi, mescola } from '../dati/misure.js'
 import { PULIZIA } from '../dati/bottega.js'
+import { ANTEPRIME } from '../dati/anteprime.js'
 import { regola } from '../motore/misura.js'
 import { creaBottega3d } from '../scena3d/indice.js'
 
@@ -46,7 +47,7 @@ const quadro = computed(() => {
   const macchie = q.macchie.map(i => ({ i, colore: q.ingredienti[i].colore }))
   // davanti solo gli strumenti che servono: a ingrediente finito si mettono via (uno sporco resta finché non si pulisce)
   const vasi = q.ingredienti.flatMap((x, i) => (fatto(x) && !q.macchie.includes(i) ? [] : [{
-    i, nome: x.nome, famiglia: x.famiglia, colore: x.colore, livello: fatto(x) ? 0 : x.messo / x.dose, pezzi: fatto(x) ? [] : x.pezzi.map(p => p / x.dose),
+    i, nome: x.nome, foto: ANTEPRIME[x.nome], famiglia: x.famiglia, colore: x.colore, livello: fatto(x) ? 0 : x.messo / x.dose, pezzi: fatto(x) ? [] : x.pezzi.map(p => p / x.dose),
   }]))
   return {
     vasi, macchie,
@@ -106,7 +107,8 @@ if (typeof window !== 'undefined') window.__bottega3d = { grafica: () => scena?.
         <div class="pz-pergamena" data-pergamena>
           <h3><span class="em">{{ b.pozione.emoji }}</span> {{ b.pozione.nome }}</h3>
           <div v-for="(g, i) in b.ingredienti" :key="g.nome" class="pz-riga" :class="{ 'pz-fatto': pieno(g, i) }" :data-voce="g.nome">
-            <span class="em">{{ pieno(g, i) ? '✅' : g.emoji }}</span>
+            <span v-if="pieno(g, i)" class="em">✅</span>
+            <img v-else class="pz-foto" :src="ANTEPRIME[g.nome]" alt="">
             <span class="pz-nome">{{ g.nome }}</span>
             <i class="pz-puntini" aria-hidden="true"></i>
             <span class="pz-quanto" data-dose>
@@ -124,7 +126,7 @@ if (typeof window !== 'undefined') window.__bottega3d = { grafica: () => scena?.
           </div>
           <div class="pz-elenco">
             <section v-for="(g, i) in b.ingredienti" :key="g.nome" class="pz-merce" :class="{ 'pz-fatto': fatto(g) }" :data-merce="g.nome">
-              <h4><span class="em">{{ g.emoji }}</span> {{ g.nome }}
+              <h4><img class="pz-foto" :src="ANTEPRIME[g.nome]" alt=""> {{ g.nome }}
                 <i v-for="r in leRegole(g)" :key="r" class="pz-regola" data-regola>{{ r }}</i>
               </h4>
               <div class="pz-targhette">
@@ -163,7 +165,7 @@ if (typeof window !== 'undefined') window.__bottega3d = { grafica: () => scena?.
         <button v-for="n in b.quanteInOrdine" :key="n" class="pz-posto" :class="{ 'pz-libero': !bozza[n - 1] }"
                 :data-posto="n - 1" :disabled="!bozza[n - 1] || bloccato" @click="$emit('togli', n - 1)">
           <template v-if="bozza[n - 1]">
-            <span class="em">{{ voce(bozza[n - 1]).g.emoji }}</span>
+            <img class="pz-foto" :src="ANTEPRIME[voce(bozza[n - 1]).g.nome]" alt="">
             <b>{{ voce(bozza[n - 1]).testo }}</b>
             <i class="pz-via" aria-hidden="true">✕</i>
           </template>

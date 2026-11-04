@@ -162,6 +162,15 @@ versata, se no il risultato si legge prima di vederlo.
   versano; a fine consegna gli strumenti arrivati all'oro si versano nel
   calderone (prima no: un'ampolla di troppo deve traboccare da uno strumento
   ancora pieno).
+- **Gli ingredienti sono modelli veri, fotografati** (`scena3d/ingredienti3d.js`,
+  nella creta della fattoria): il liquido si mostra con da dove viene (la bava
+  col drago, il succo con la rapa). Il gioco non li costruisce: legge
+  `dati/anteprime.js`, generato da `npm run anteprime pozioni` (un test confronta
+  le firme), sulla pergamena, sul rotolo, nell'ordine e sopra il nome di ogni
+  strumento. Provato con una versione leggera in scena: 170 ms a modello sul
+  computer, fino a 576, quindi secondi sul telefono vecchio; a camera ferma la
+  foto si vede uguale. Li guarda il catalogo 3D (`npm run catalogo3d:scheda --
+  --gioco pozioni`).
 - **La macchia sta attorno alla base**: davanti la coprirebbero le targhette.
 - **La telecamera** inquadra tutta la larghezza, e sposta la mira finché il
   bordo basso cade sul bordo del bancone: in piedi avanza muro sopra, dove sta
