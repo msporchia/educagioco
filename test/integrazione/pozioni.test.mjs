@@ -119,13 +119,14 @@ const porta = async (da, a) => {
 const giro = async c => { for (let n = 0; n <= 56; n++) await page.mouse.move(c.x + Math.cos(n / 24 * Math.PI * 2) * 36, c.y + Math.sin(n / 24 * Math.PI * 2) * 30) }
 const avanti = (asse, volte) => async c => { for (let n = 0; n < volte; n++) for (const v of [-34, 34]) await page.mouse.move(c.x + (asse === 'x' ? v : 0), c.y + (asse === 'y' ? v : 0), { steps: 4 }) }
 /* versa finché è piegato: quanto dura lo dice l'orologio dei fotogrammi, che su una macchina carica è lento */
-const inclina = async c => {
+const inclina = (foto, lato = 75) => async c => {
   const n = await page.evaluate(() => window.__poz.bottega.value.passo)
-  await page.mouse.move(c.x + 75, c.y, { steps: 5 })
+  await page.mouse.move(c.x + lato, c.y, { steps: 5 })
+  if (foto) await scatto(page, foto)
   await page.waitForFunction(n => window.__poz.bottega.value.passo > n, n, { timeout: 25000 })
 }
 const GESTO = { mestolo: giro, pestello: avanti('y', 6), coltello: avanti('y', 6), mantice: avanti('y', 4), roba: avanti('y', 6), fiammifero: avanti('x', 4),
-                bacchetta: avanti('x', 5), brocca: inclina, mortaio: inclina, tagliere: inclina }
+                bacchetta: avanti('x', 5), sale: avanti('y', 4), pepe: avanti('y', 4), brocca: inclina(), mortaio: inclina(), tagliere: inclina(), fiala: inclina('pozioni-fiala', -160) }
 const conGesto = async (id, su) => {
   const a = await dove(su)
   await porta(await dove(id), a)
@@ -133,6 +134,21 @@ const conGesto = async (id, su) => {
   await GESTO[id.split(':')[0]](a)
   await attendi(page, 150)
   await page.mouse.up()
+}
+const prossimo = () => page.evaluate(() => { const b = window.__poz.bottega.value, p = b.passi[b.passo]; return p ? { p: { azione: p.azione, cosa: [...p.cosa] }, manca: b.mancaAl(p) } : null })
+async function giocaRicetta(viste) {
+  for (let g = 0; g < 30; g++) {
+    const q = await prossimo()
+    if (!q || await page.evaluate(() => window.__poz.bottega.value.finita)) return
+    const { da, su } = prossimaMossa(q.p, q.manca)
+    viste.add(q.p.azione)
+    const prima = await page.evaluate(() => { const b = window.__poz.bottega.value; return b.passo + b.mortaio.length + b.tagliere.length + b.dentro.length })
+    if (da.startsWith('roba:') && su !== 'grattugia') await trascina(await dove(da), await dove(su))
+    else await conGesto(da, su)
+    await page.waitForFunction(n => { const b = window.__poz.bottega.value; return b.finita || b.passo + b.mortaio.length + b.tagliere.length + b.dentro.length > n }, prima, { timeout: 15000 })
+      .catch(() => controlla(`la mossa ${da} → ${su} va`, false, q.p.azione))
+    await attendi(page, 1100)
+  }
 }
 const libero = () => page.waitForFunction(() => window.__poz.finale.value || !document.querySelector('.pz-attesa'), null, { timeout: 25000 })
 await attendi(page, 500)
@@ -162,11 +178,19 @@ for (let i = 0; i < CAMPAGNA[0].ingredienti; i++) {
   await fermaLaScena()   // un gesto a scena occupata non conta: quanto dura lo decide la macchina
 }
 uguale('il calderone si è riempito', await page.evaluate(() => window.__poz.bottega.value.dentro.length), CAMPAGNA[0].ingredienti)
+await scatto(page, 'pozioni-sale-e-pepe')
 await conGesto('mestolo', 'calderone')
+{
+  /* già la prima tappa ha il fuoco, la bacchetta, un pizzico e la fiala */
+  const viste = new Set()
+  await giocaRicetta(viste)
+  for (const a of ['scalda', 'agita', 'imbottiglia']) controlla(`alla prima tappa col dito si fa «${a}»`, viste.has(a), [...viste].join())
+  controlla('e un pizzico', viste.has('sale') || viste.has('pepe'), [...viste].join())
+}
 await page.waitForSelector('[data-fine="tappa"]', { timeout: 30000 })
 uguale('la tappa finisce', await page.locator('[data-fine="tappa"]').count(), 1)
 controlla('il cartello di fine dice quanto si è speso', /Hai speso \d+ gettoni: il minimo era \d+/.test(await page.locator('[data-righe]').innerText()))
-controlla('le monete: tre a ingrediente, e il passo del pasticcio non paga', (await page.locator('[data-monete]').innerText()).trim() === `+${CAMPAGNA[0].ingredienti * MONETE_A_DOSE + 1} 🪙`, await page.locator('[data-monete]').innerText())
+controlla('le monete: tre a ingrediente, e il passo del pasticcio non paga', (await page.locator('[data-monete]').innerText()).trim() === `+${CAMPAGNA[0].ingredienti * MONETE_A_DOSE + await page.evaluate(() => window.__poz.bottega.value.passi.length) - 1} 🪙`, await page.locator('[data-monete]').innerText())
 await scatto(page, 'pozioni-fine')
 await page.locator('[data-fine] [data-azione="mappa"]').click()
 await page.waitForSelector('.pz-mappa')
@@ -268,21 +292,6 @@ const apri = async (chiave, servono) => {
   await page.evaluate(async () => { const Z = window.__poz; while (!Z.bottega.value.pronta) Z.bottega.value.salta() })
   await page.waitForSelector('[data-fase="procedimento"]', { timeout: 25000 })
   await attendi(page, 900)
-}
-const prossimo = () => page.evaluate(() => { const b = window.__poz.bottega.value, p = b.passi[b.passo]; return p ? { p: { azione: p.azione, cosa: [...p.cosa] }, manca: b.mancaAl(p) } : null })
-async function giocaRicetta(viste) {
-  for (let g = 0; g < 30; g++) {
-    const q = await prossimo()
-    if (!q || await page.evaluate(() => window.__poz.bottega.value.finita)) return
-    const { da, su } = prossimaMossa(q.p, q.manca)
-    viste.add(q.p.azione)
-    const prima = await page.evaluate(() => { const b = window.__poz.bottega.value; return b.passo + b.mortaio.length + b.tagliere.length + b.dentro.length })
-    if (da.startsWith('roba:') && su !== 'grattugia') await trascina(await dove(da), await dove(su))
-    else await conGesto(da, su)
-    await page.waitForFunction(n => { const b = window.__poz.bottega.value; return b.finita || b.passo + b.mortaio.length + b.tagliere.length + b.dentro.length > n }, prima, { timeout: 15000 })
-      .catch(() => controlla(`la mossa ${da} → ${su} va`, false, q.p.azione))
-    await attendi(page, 1100)
-  }
 }
 {
   const viste = new Set()

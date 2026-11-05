@@ -16,7 +16,9 @@ punti in pixel), la figura è `scena3d/mani.js`, il suggerimento `scena3d/frecce
 | mantice | legna | su e giù | tre soffi |
 | la roba dura | grattugia | su e giù | cinque passate |
 | bacchetta | calderone | scuote | sei scosse |
+| sale, pepe | calderone | su e giù, capovolto | tre scosse |
 | brocca, mortaio, tagliere | calderone | di lato si piega, e piegato versa | 0,9 s |
+| fiala | calderone | di lato si piega, e piegata si riempie | 0,9 s |
 
 - **La roba si lascia cadere**: nel calderone, nel mortaio, sul tagliere. L'unico
   gesto è sulla grattugia, dove si sfrega.
@@ -37,6 +39,8 @@ punti in pixel), la figura è `scena3d/mani.js`, il suggerimento `scena3d/frecce
   non dice niente che non si veda.
 - **Dopo il gesto resta solo il risultato** (`MOSSE` in `indice.js`): niente
   animazione doppia. `window.__poz.fai` passa di lì, senza dito.
+- **La fiala si riempie mentre è piegata** e si tappa da sola, a gesto finito. Fuori tempo
+  si svuota. Finita la pozione resta sul tavolo, del colore del brodo.
 - **La grattugia sta appesa al calderone**, non si trascina: quello che si gratta cade
   dentro, quindi è un passo solo.
 

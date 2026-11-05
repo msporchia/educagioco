@@ -81,6 +81,7 @@ const quadro = computed(() => {
                 roba: q.ingredienti.flatMap((x, i) => (q.dentro.includes(i) || q.mortaio.includes(i) || q.tagliere.includes(i) ? [] : [{ i, posto: i, nome: x.nome, foto: ANTEPRIME[x.nome], colore: x.colore, gratta: x.lavoro === 'gratta' }])),
                 pestato: q.mortaio.length ? mescola(q.mortaio.map(i => q.ingredienti[i].colore)) : null, macinato: q.pestato,
                 tagliere: q.tagliere.length ? mescola(q.tagliere.map(i => q.ingredienti[i].colore)) : null, tagliato: q.tagliato,
+                fiala: q.finita ? q.brodo : null,
                 prossimo: q.finita ? null : prossimaMossa(q.passi[q.passo], q.mancaAl(q.passi[q.passo])) },
   }
 })

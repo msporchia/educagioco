@@ -527,6 +527,18 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
       suoni.tuffo()
       await aCasa(attrezzi.brocca)
     },
+    sale: () => pizzico(attrezzi.sale),
+    pepe: () => pizzico(attrezzi.pepe),
+    async imbottiglia(a) {
+      attrezzi.riempi(1, a.brodo)
+      await anima(0.3, f => attrezzi.tappa(liscio(f)))
+      suoni.tappo()
+      await aCasa(attrezzi.fiala)
+    },
+  }
+  async function pizzico(cosa) {
+    banco.ribolli(3)
+    await aCasa(cosa)
   }
 
   async function passo(a) {
@@ -534,6 +546,7 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
     // il pasticcio: il calderone rutta, e la roba resta dov'era
     banco.sfuma(1)
     attrezzi.fiammella(false)
+    attrezzi.riempi(0)
     if (a.attrezzo) aCasa(attrezzi.cosa(a.attrezzo))
     suoni.pasticcio()
     banco.ribolli(8)
