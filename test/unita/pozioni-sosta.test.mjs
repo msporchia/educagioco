@@ -3,6 +3,7 @@
    macchie. Vedi docs/pozioni/sosta.md.
    `node test/esegui.mjs pozioni-sosta --niente-build` */
 import { CAMPAGNA, INFINITA, giroInfinito } from '../../src/giochi/pozioni/dati/campagna.js'
+import { TAGLIERE } from '../../src/giochi/pozioni/motore/procedimento.js'
 import { Bottega, caso, giocaBene, seguiLaRicetta, prossimoPasso } from '../../src/giochi/pozioni/motore/bottega.js'
 import { scrivi, leggi, dice, tappaDi, VERSIONE } from '../../src/giochi/pozioni/motore/sosta.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
@@ -59,6 +60,26 @@ for (const t of [CAMPAGNA[0], CAMPAGNA[9], CAMPAGNA[26], CAMPAGNA.at(-1)]) {
   uguale('il minimo pure', q.minimo, b.minimo)
   seguiLaRicetta(q)
   controlla('e la pozione si finisce', q.finita)
+}
+
+/* il tagliere a metà: la roba appoggiata e il mantice restano; una sosta di prima del tagliere si legge lo stesso */
+{
+  let b = null
+  for (let s = 1; s < 80 && !b; s++) {
+    const x = new Bottega(CAMPAGNA.find(t => t.chiave === 'lunghezza-virgole'), { rnd: caso(s) })
+    if (x.passi.some(p => p.azione === 'sminuzza')) b = x
+  }
+  for (const [i, g] of b.ingredienti.entries()) for (const k of g.ottimo.pezzi) b.ordina([{ i, k }])
+  prossimoPasso(b); prossimoPasso(b)
+  const [r] = b.passi[b.passo].cosa
+  b.fai('appoggia', [r])
+  const dato = JSON.parse(JSON.stringify(scrivi(b, 0)))
+  const q = leggi(dato)
+  uguale('la roba sul tagliere resta', q.tagliere.join(), String(r))
+  uguale('e la si sminuzza', q.fai('sminuzza').giusto, true)
+  uguale('il tritato si versa ancora', q.fai('versa', [TAGLIERE]).giusto, true)
+  const { tagliere, tagliato, soffiato, incantato, ...vecchia } = dato
+  uguale('senza quei campi è un tagliere vuoto', leggi(vecchia).tagliere.length, 0)
 }
 
 /* il calderone senza fondo */

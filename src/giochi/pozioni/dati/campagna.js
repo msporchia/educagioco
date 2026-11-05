@@ -6,6 +6,14 @@ import { FAMIGLIE, POZIONI, VALE, scrivi } from './misure.js'
 // quali azioni ci sono sul tavolo, a quel `procedimento`: una in più per volta
 const AZIONI_DEL = { 1: ['versa', 'mescola'], 2: ['versa', 'mescola', 'scalda'], 3: ['pesta', 'versa', 'mescola', 'scalda'],
                      4: ['pesta', 'versa', 'mescola', 'scalda', 'diluisci'], 5: ['pesta', 'versa', 'mescola', 'scalda', 'diluisci'] }
+// e quelle che si aggiungono da un gradino in poi: i bambini si divertono a farle, quindi presto
+const AZIONI_DA = { agita: 'grande', soffia: 'virgola', sminuzza: 'virgole', gratta: 'virgole' }
+// senza gradino, cioè nelle finali e nel calderone senza fondo, ci sono tutte
+const azioniDi = (procedimento, gradino) => {
+  const posto = id => GRADINI.findIndex(g => g.id === id)
+  const qui = posto(gradino) < 0 ? Infinity : posto(gradino)
+  return [...AZIONI_DEL[procedimento], ...Object.keys(AZIONI_DA).filter(x => qui >= posto(AZIONI_DA[x]))]
+}
 
 // `dosi`: `in` è dove la ricetta le scrive, i numeri sono multipli della
 // grande. `etichette`: in che unità il mercante scrive il listino.
@@ -85,7 +93,7 @@ const unaDose = (f, spec, v) => {
 
 const dosiDi = (f, specs) => specs.flatMap(s => s.valori.map(v => unaDose(f, s, v)))
 
-const comune = t => ({ aiuto: t.aiuto, ingredienti: t.ingredienti, ordine: t.ordine, procedimento: t.procedimento, casa: !!t.casa, azioni: AZIONI_DEL[t.procedimento], margine: t.margine,
+const comune = t => ({ aiuto: t.aiuto, ingredienti: t.ingredienti, ordine: t.ordine, procedimento: t.procedimento, casa: !!t.casa, azioni: azioniDi(t.procedimento, t.id), margine: t.margine,
                        manca: t.manca, etichette: t.etichette, gemelli: t.etichette.length > 1 })
 
 function tappaDelGradino(f, g, n) {
@@ -131,7 +139,7 @@ export function giroInfinito(n, pozione = null, rnd = Math.random) {
   const [nome, emoji, colore] = pozione || TUTTE_LE_POZIONI[Math.floor(rnd() * TUTTE_LE_POZIONI.length)]
   const procedimento = Math.min(5, 3 + Math.floor(n / 2))
   return { ...base, chiave: INFINITA.chiave, nome, emoji, colore, giro: n, margine: 0, ingredienti: n < 3 ? 3 : 4,
-           procedimento, azioni: AZIONI_DEL[procedimento], casa: n % 2 === 1 }
+           procedimento, azioni: azioniDi(procedimento), casa: n % 2 === 1 }
 }
 export const GRADINI_PER_FAMIGLIA = GRADINI.length
 export const ID_GRADINI = GRADINI.map(g => g.id)
