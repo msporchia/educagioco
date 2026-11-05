@@ -31,20 +31,22 @@ function pianta(c, quanteIsole) {
   const largo = c.puliti !== null || quanteIsole ? 5 : 4
   const fondo = (() => {
     const roba = sinistra.length + destra.length + dispensa.length
-    let f = Math.max(MINIMO, sinistra.length + 1, destra.length + 1, quanteIsole ? RIGHE_ISOLE[quanteIsole - 1] + 3 : 0)
-    while (f < MASSIMO && roba + LIBERI > 2 * (f - 1) + largo - 1) f++
+    let f = Math.min(MASSIMO, Math.max(MINIMO, sinistra.length + 2, destra.length + 2, quanteIsole ? RIGHE_ISOLE[quanteIsole - 1] + 3 : 0))
+    while (f < MASSIMO && roba + LIBERI > 2 * (f - 2) + largo - 2) f++
     return f
   })()
-  // quello che davanti non ci sta va in fondo alla colonna più corta
-  const davanti = dispensa.slice(0, largo - 1)
-  for (const k of dispensa.slice(largo - 1)) (sinistra.length <= destra.length ? sinistra : destra).push(k)
+  /* Negli angoli si arriva solo di sbieco: niente attrezzi, e cassette solo se non ci stanno altrove.
+     Le liste cominciano dagli attrezzi, quindi quello che avanza è sempre una cassetta. */
+  const posti = fondo - 2
+  const davanti = dispensa.splice(0, largo - 2)
+  for (const k of dispensa.splice(0)) (sinistra.length <= destra.length ? sinistra : destra).push(k)
+  const angoli = [...sinistra.splice(posti), ...destra.splice(posti)]
   const inFondo = largo === 5 ? [c.puliti !== null ? 'lavello' : '', 'piatti', 'consegna'] : ['piatti', 'consegna']
   const isole = RIGHE_ISOLE.slice(0, quanteIsole).map(z => `2,${z}`)
   const cosaC = (x, z) => {
-    if (z === fondo - 1) return x === largo - 1 ? 'bidone' : davanti[x]
-    if (x === 0) return sinistra[z]
-    if (x === largo - 1) return destra[z]
-    return z === 0 ? inFondo[x - 1] : undefined
+    if (z === fondo - 1) return x === largo - 1 ? 'bidone' : x === 0 ? angoli[0] : davanti[x - 1]
+    if (z === 0) return x === 0 ? angoli[1] : x === largo - 1 ? angoli[2] : inFondo[x - 1]
+    return x === 0 ? sinistra[z - 1] : x === largo - 1 ? destra[z - 1] : undefined
   }
   const celle = []
   for (let z = 0; z < fondo; z++) for (let x = 0; x < largo; x++) {

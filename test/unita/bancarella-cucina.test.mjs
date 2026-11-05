@@ -50,11 +50,17 @@ test('la stanza cresce con quello che c\'è dentro', () => {
   assert.ok(ultima.fondo > prima.fondo && ultima.largo > prima.largo)
   assert.ok(tutto.fondo >= ultima.fondo)
   assert.ok(tutto.fondo <= 10)
-  for (const c of CUCINE) { const k = cucinaNuova(c); assert.ok(k.celle.filter(q => q.tipo === 'banco').length >= 2, `${c.nome}: dove posare`); }
+  for (const c of CUCINE) {
+    const k = cucinaNuova(c)
+    assert.ok(k.celle.filter(q => q.tipo === 'banco').length >= 2, `${c.nome}: dove posare`)
+    assert.ok(!k.celle.some(q => (q.x === 0 || q.x === k.largo - 1) && (q.z === 0 || q.z === k.fondo - 1) && q.tipo === 'stazione'), `${c.nome}: negli angoli niente attrezzi`)
+  }
   for (const [c, att] of [[CUCINE.at(-1), { pentola: 1, padella: 1, forno: 1, tagliere: 3, isola: 4 }], [CUCINE[0], { tagliere: 3 }]]) {
     const k = cucinaNuova(c, att)
     for (const n of Object.keys(k.stazioni)) assert.ok(k.celle.some(q => q.nome === n), `${n} ha il suo posto`)
     for (const cosa of new Set(k.ricette.flatMap(r => r.passi))) assert.ok(k.celle.some(q => q.cosa === cosa), `la cassetta di ${cosa}`)
+    const angolo = q => (q.x === 0 || q.x === k.largo - 1) && (q.z === 0 || q.z === k.fondo - 1)
+    assert.ok(!k.celle.some(q => angolo(q) && q.tipo === 'stazione'), 'negli angoli niente attrezzi')
     for (const q of k.celle) { const v = cucinaNuova(c, att); v.cuoco.x = 1.5; tocca(v, q.id); for (let t = 0; t < 8 && !v.arrivato; t += 0.05) passo(v, 0.05); assert.equal(v.arrivato, q.id, `si arriva a ${q.id}`) }
   }
 })
