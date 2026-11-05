@@ -22,9 +22,6 @@ const ZOOM = 0.5
 const LARGO_MINIMO = 276
 // in partita non si disegna niente che si possa preparare (docs/arena/grafica.md): gli atlanti si caricano e si ricolorano una volta sola
 const atlanti = {}
-// caserme che il foglio dipinto non ha ancora e che per ora prendono il pezzo di un'altra (docs/arena/grafica.md):
-// la tana delle bestie cornute, per neve e lava, ha la capanna dei lupi, che là non ci sono
-const IN_PRESTITO = { 'tana:bestie:1': 'tana:lupi:1', 'tana:bestie:2': 'tana:lupi:2' }
 const ZT = ZOOM * 1.2                    // le truppe: un po' più grandi del terreno
 const ZE = 0.75                          // castello ed edifici: più grandi delle truppe
 const IO = '#3d8bff', NEM = '#ff5a4d'
@@ -85,7 +82,7 @@ export class Campo {
     return this.opere && OPERE[n] ? [this.opere, OPERE[n]] : [null, null]
   }
 
-  /* il blu della squadra diventa rosso (e il rosso blu): castello e caserme del nemico */
+  /* il blu della squadra diventa rosso: tutto quello del nemico. Il rosso del foglio resta dov'è: è il fuoco, e il drago */
   ricolora(img, sx = 0, sy = 0, w = img.width, h = img.height) {
     const cv = document.createElement('canvas'); cv.width = w; cv.height = h
     const x = cv.getContext('2d'); x.drawImage(img, sx, sy, w, h, 0, 0, w, h)
@@ -93,7 +90,6 @@ export class Campo {
     for (let i = 0; i < a.length; i += 4) {
       const r = a[i], g = a[i + 1], b = a[i + 2]
       if (b > r + 70 && b > g + 30) { a[i] = b; a[i + 1] = Math.round(g * 0.55); a[i + 2] = Math.round(r * 0.7) }
-      else if (r > g + 60 && r > b + 60) { a[i] = Math.round(b * 0.8); a[i + 1] = Math.round(g * 1.1); a[i + 2] = r }
     }
     x.putImageData(d, 0, 0)
     return cv
@@ -102,7 +98,7 @@ export class Campo {
   /* un pezzo delle caserme dipinte, con la piazzola larga `larga` e centrata in (x, piede);
      torna l'altezza a schermo, o 0 se non c'è (e allora si disegna in codice) */
   dipinta(c, nome, x, piede, larga, lato, k = 1) {
-    const dipinto = DIPINTE[nome] || DIPINTE[IN_PRESTITO[nome]]
+    const dipinto = DIPINTE[nome]
     const p = dipinto || OPERE[nome], foglio = dipinto ? this.caserme : this.opere
     if (!p || !foglio) return 0
     const [sx, sy, w, h, cx, pd] = p, sc = larga / PIAZZOLA * k

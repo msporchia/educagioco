@@ -67,10 +67,10 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
   **Provati e tolti**: una muraglia attorno all'accampamento, un muro davanti al castello,
   e un lastricato alla Heroes con gli edifici attaccati al castello (vedi
   [regole.md](regole.md)).
-- **Le caserme sono dipinte** (`dati/caserme-dipinte.js`, generato da
-  `strumenti/sprite/caserme-arena.py` dal foglio di ChatGPT, voce 7b di
-  `strumenti/sprite/DA-GENERARE.md`; il foglio di adesso è provvisorio): ogni edificio con le
-  sue due truppe, appena costruito e dal livello 5, **il rudere** e **la piazzola vuota**,
+- **Le caserme e la miniera sono dipinte** (`dati/caserme-dipinte.js`, generato da
+  `strumenti/sprite/caserme-arena.py` dal foglio di ChatGPT, voce 7c di
+  `strumenti/sprite/DA-GENERARE.md`): ogni edificio con le
+  sue truppe, appena costruito e dal livello 5, **il rudere** e **la piazzola vuota**,
   tutti sulla stessa piazzola. Un posto mai usato mostra la piazzola vuota; dove una caserma
   è crollata resta il suo rudere finché non se ne costruisce un'altra (la scena lo ricorda
   dall'evento del crollo, che porta il posto). Le piazzole del foglio non sono tutte della
@@ -78,7 +78,8 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
   il centro della piazzola in basso. Finché l'atlante non c'è, o se manca un pezzo, gli
   edifici si disegnano in codice (`scena/edifici.js`, con lo scudo della truppa davanti).
 - **Il nemico ha le stesse immagini col blu fatto rosso** (`ricolora()`, una volta per
-  atlante): per questo il prompt vuole il colore della squadra di un blu solo.
+  atlante): per questo il prompt vuole il colore della squadra di un blu solo. Il rosso del foglio
+  non si tocca: è il fuoco e il drago, che anche dal nemico restano rossi.
 - **Il castello è uno solo, del colore della sua squadra** (a monte: blu anche negli stendardi, e il nemico è lo stesso col blu fatto rosso), e
   il prato dipinto ai suoi piedi prende il colore del posto. Viene dal vestito `bosco` del castello a torri finché non arrivano i castelli del posto (voce 9).
   Prima ogni terreno aveva il suo, e nella lava i colori delle squadre erano rovesciati.
@@ -99,9 +100,6 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
   di lato (6 fotogrammi); le altre il respiro (4) e uno scatto in avanti quando
   colpiscono, un saltello quando camminano. Guardano di lato (di schiena non esiste
   niente): ciascuna dalla parte della sua squadra.
-- **La tana delle bestie cornute** non ha ancora il suo pezzo nel foglio dipinto: per ora prende la
-  capanna dei lupi (`IN_PRESTITO` in `scena/campo.js`; la figura della truppa davanti dice chi abita), e
-  quando il foglio avrà `tana:bestie:1/2` basta metterli in `sorgenti/arena/caserme.json`.
 - **Una caserma nuova spunta** dalla sua piazzola con un rimbalzo e uno sbuffo di polvere.
 - **La vita dei castelli sta SOPRA i castelli**, in una targa di ferro orlata d'oro, grande e sempre
   accesa, col numero. Il livello è uno scudetto. **Le altre barre si vedono solo sul ferito** (caserme, porta, truppe).
@@ -112,12 +110,12 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
 - **La miniera** (`disegnaMiniera()` in `arena-disegni/opere.js`) è un monte di roccia con le
   vene d'oro, l'imbocco armato di travi con la lanterna, le rotaie, il carrello d'oro e lo stendardo; dal livello
   5 la torre col verricello. La roccia è uguale in tutti i posti (`ROCCIA`), se no sul terreno
-  scuro spariva. Crollata resta il suo rudere. Il foglio 7c ha gli stessi tre pezzi, e `dipinta()` li preferisce.
+  scuro spariva. Crollata resta il suo rudere. Il foglio 7c ha gli stessi tre pezzi, e `dipinta()` li preferisce: quello disegnato resta solo di riserva.
 - **Il ponte e la porta** (`arena-disegni/opere.js`) prendono legno e pietra dal posto. Il ponte ha le assi fra due travi
   con le spalle di pietra; la porta due torri merlate con lo stendardo e il portone, che si crepa sotto i due terzi e
   sotto un terzo della vita; crollata, resta il cumulo. Il foglio 9 ha castello, porta (intera, rotta,
   crollata) e ponte per ogni posto (`strumenti/sprite/fortezze-arena.py`, `dati/fortezze-dipinte.js`).
-- **Mancano**: i fogli 7c, 8, 9, 10 e 11, e le pose di attacco e di morte delle truppe.
+- **Mancano**: i fogli 8, 9, 10 e 11, e le pose di attacco e di morte delle truppe.
 
 ## Il quadro e i comandi
 

@@ -527,7 +527,7 @@ COSA TI CHIEDO: un foglio con tutte le caserme. Inventa tu che forma hanno: devo
 LE REGOLE TECNICHE, queste sì precise, perché il foglio poi si taglia a pezzi: tutte le figure stanno SULLA STESSA PIAZZOLA della seconda immagine, vista dall'alto a tre quarti, della stessa misura in tutte e ventiquattro, e l'edificio non esce dalla piazzola di lato; il foglio è ORIZZONTALE, 1536×1024 px, su FONDO TRASPARENTE; ogni figura dentro una cella invisibile, con la piazzola sulla stessa linea delle altre della riga e almeno 30 px di trasparente fra una figura e l'altra; nessuna ombra sotto, nessun prato, nessun bagliore, nessuna cornice; NESSUNA PAROLA SCRITTA, NESSUN NUMERO; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px. Tetti, bandiere e stendardi di tutte le caserme sono di UN SOLO BLU SATURO E UNIFORME (come #2a5cff), nessun altro blu, e niente rosso tranne il fuoco: il gioco ridipinge quel blu di rosso per le caserme del nemico.
 ```
 
-### 7c — Le caserme definitive, con la miniera · 1 immagine · da fare
+### 7c — Le caserme definitive, con la miniera · 1 immagine · ✅ 5 novembre 2026
 
 **Perché**: il foglio della 7b è provvisorio ed è nato quando le truppe erano altre. Adesso sono fissate: la tana ha le mummie
 (prima lupi) e le bestie cornute, che oggi prendono in prestito la capanna, e la miniera non c'è. Un foglio solo, ventisei figure.
@@ -562,8 +562,9 @@ LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: foglio
 un'immagine già pronta, oggi disegnata a monte da `npm run disegni:arena`: ha già la forma giusta, il dipinto la rifà e non la inventa, e al
 gioco non costa niente di più. Si comincia dalle colline, che dicono se lo stile regge.
 
-**Come si manda**: ChatGPT, una chat nuova per ogni posto. Si allega `sorgenti/arena/schemi/terreno-<chiave>.png` (lo rifà
-`npm run disegni:arena`). Dal secondo posto in poi si allega per secondo il terreno già riuscito, «solo stile».
+**Come si manda**: ChatGPT, **nella chat delle caserme**: proseguire o modificare un'immagine costa meno che ripartire da zero e tiene
+tutto omogeneo (l'utente, 5/11). Si allega solo `sorgenti/arena/schemi/terreno-<chiave>.png` (lo rifà `npm run disegni:arena`). Se
+un'immagine ha un difetto si chiede di correggerla, non di rifarla.
 
 **Si salva in** `strumenti/sprite/sorgenti/arena/terreno-<chiave>.png` (`bosco`, `palude`, `neve`, `lava`). **Comando**:
 `python3 strumenti/sprite/terreni-arena.py`. Lo strumento si ferma se l'immagine non è 3:2: non si stira mai. Il ponte, la porta e il castello
@@ -573,49 +574,49 @@ cammina dov'è il disegno.
 **Le colline d'oro** (`terreno-bosco.png`):
 
 ```text
-Ridipingi questa immagine. È il terreno di un gioco di battaglia per bambini, Castle Battle, visto dall'alto a tre quarti, e l'ho disegnato con un programma: la forma è giusta, il disegno è povero. Voglio un dipinto ricco ed epico, in pixel art, con esattamente la stessa disposizione.
+Ora, nello stesso identico stile, con la stessa grana e gli stessi colori pieni, mi serve il terreno su cui stanno queste caserme. Questa volta non è un foglio di figure: è una scena unica a fondo pieno, senza trasparenza, vista dall'alto a tre quarti. Ridipingi l'immagine allegata: l'ho disegnata con un programma, la forma è giusta ma il disegno è povero. Tieni esattamente la stessa disposizione.
 
 IL POSTO: le colline d'oro, un tramonto d'autunno. Erba secca dorata, campi di grano, boschi di querce rosse e arancioni, muretti di pietra, un fiume color verde scuro con i riflessi del sole basso. Luce calda e radente da in alto a sinistra, ombre lunghe.
 
 LA DISPOSIZIONE, da rispettare al millimetro, perché il gioco ci cammina sopra: il fiume attraversa tutta l'immagine in orizzontale, alto il 9% dell'immagine al centro, esattamente a metà altezza, e più largo verso i bordi. La strada è dritta in verticale al centro esatto, larga il 4% dell'immagine, da sopra a sotto, e si interrompe al fiume: IL PONTE NON C'È, lo aggiunge il gioco. La fascia centrale, dal 33% al 67% della larghezza, deve restare bassa e libera: solo terreno e piccoli dettagli a terra, niente alberi, niente rocce alte, niente che sembri una cosa da toccare. Le dodici chiazze di terra battuta restano dove sono, vuote. Il decoro alto sta solo fuori da quella fascia.
 
-LE REGOLE TECNICHE: immagine ORIZZONTALE 1536×1024 px che riempie tutto il quadro; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; NESSUN CASTELLO, NESSUN EDIFICIO, NESSUN PONTE, NESSUN PERSONAGGIO, NESSUNA PAROLA SCRITTA, nessuna cornice. Ai quattro bordi il disegno continua specchiato, quindi niente di grande tagliato a metà sul bordo.
+LE REGOLE TECNICHE: immagine ORIZZONTALE 1536×1024 px che riempie tutto il quadro; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; NESSUNA CASERMA, NESSUN CASTELLO, NESSUN EDIFICIO, NESSUN PONTE, NESSUN PERSONAGGIO, NESSUNA PAROLA SCRITTA, nessuna cornice. Ai quattro bordi il disegno continua specchiato, quindi niente di grande tagliato a metà sul bordo.
 ```
 
 **Il deserto delle tombe** (`terreno-palude.png`):
 
 ```text
-Ridipingi questa immagine. È il terreno di un gioco di battaglia per bambini, Castle Battle, visto dall'alto a tre quarti, e l'ho disegnato con un programma: la forma è giusta, il disegno è povero. Voglio un dipinto ricco ed epico, in pixel art, con esattamente la stessa disposizione.
+Ora, nello stesso identico stile, con la stessa grana e gli stessi colori pieni, mi serve il terreno su cui stanno queste caserme. Questa volta non è un foglio di figure: è una scena unica a fondo pieno, senza trasparenza, vista dall'alto a tre quarti. Ridipingi l'immagine allegata: l'ho disegnata con un programma, la forma è giusta ma il disegno è povero. Tieni esattamente la stessa disposizione.
 
 IL POSTO: il deserto delle tombe. Dune di sabbia dorata con le creste al vento, obelischi e colonne spezzate mezzi sepolti, blocchi di tempio, e un fiume d'oasi turchese con le rive verdi e le palme solo vicino all'acqua. Sole alto e abbagliante, ombre nette.
 
 LA DISPOSIZIONE, da rispettare al millimetro, perché il gioco ci cammina sopra: il fiume attraversa tutta l'immagine in orizzontale, alto il 9% dell'immagine al centro, esattamente a metà altezza, e più largo verso i bordi. La strada è un selciato antico, dritto in verticale al centro esatto, largo il 4% dell'immagine, da sopra a sotto, e si interrompe al fiume: IL PONTE NON C'È, lo aggiunge il gioco. La fascia centrale, dal 33% al 67% della larghezza, deve restare bassa e libera: solo sabbia e piccoli dettagli a terra, niente palme, niente colonne, niente che sembri una cosa da toccare. Le dodici chiazze di terra battuta restano dove sono, vuote. Il decoro alto sta solo fuori da quella fascia.
 
-LE REGOLE TECNICHE: immagine ORIZZONTALE 1536×1024 px che riempie tutto il quadro; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; NESSUN CASTELLO, NESSUN EDIFICIO, NESSUN PONTE, NESSUN PERSONAGGIO, NESSUNA PAROLA SCRITTA, nessuna cornice. Ai quattro bordi il disegno continua specchiato, quindi niente di grande tagliato a metà sul bordo.
+LE REGOLE TECNICHE: immagine ORIZZONTALE 1536×1024 px che riempie tutto il quadro; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; NESSUNA CASERMA, NESSUN CASTELLO, NESSUN EDIFICIO, NESSUN PONTE, NESSUN PERSONAGGIO, NESSUNA PAROLA SCRITTA, nessuna cornice. Ai quattro bordi il disegno continua specchiato, quindi niente di grande tagliato a metà sul bordo.
 ```
 
 **Il canyon di cristallo** (`terreno-neve.png`):
 
 ```text
-Ridipingi questa immagine. È il terreno di un gioco di battaglia per bambini, Castle Battle, visto dall'alto a tre quarti, e l'ho disegnato con un programma: la forma è giusta, il disegno è povero. Voglio un dipinto ricco ed epico, in pixel art, con esattamente la stessa disposizione.
+Ora, nello stesso identico stile, con la stessa grana e gli stessi colori pieni, mi serve il terreno su cui stanno queste caserme. Questa volta non è un foglio di figure: è una scena unica a fondo pieno, senza trasparenza, vista dall'alto a tre quarti. Ridipingi l'immagine allegata: l'ho disegnata con un programma, la forma è giusta ma il disegno è povero. Tieni esattamente la stessa disposizione.
 
 IL POSTO: il canyon di cristallo. Roccia scura blu violetta a lastre, percorsa da vene che brillano, grandi grappoli di cristalli viola, azzurri e rosa, guglie di pietra. Al posto del fiume c'è un baratro senza fondo con la nebbia viola che sale dal buio. Luce fredda che viene dai cristalli.
 
 LA DISPOSIZIONE, da rispettare al millimetro, perché il gioco ci cammina sopra: il baratro attraversa tutta l'immagine in orizzontale, alto il 9% dell'immagine al centro, esattamente a metà altezza, e più largo verso i bordi. La strada è un selciato dritto in verticale al centro esatto, largo il 4% dell'immagine, da sopra a sotto, e si interrompe al baratro: IL PONTE NON C'È, lo aggiunge il gioco. La fascia centrale, dal 33% al 67% della larghezza, deve restare bassa e libera: solo roccia e piccoli dettagli a terra, niente cristalli alti, niente guglie, niente che sembri una cosa da toccare. Le dodici chiazze di terra battuta restano dove sono, vuote. Il decoro alto sta solo fuori da quella fascia.
 
-LE REGOLE TECNICHE: immagine ORIZZONTALE 1536×1024 px che riempie tutto il quadro; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; NESSUN CASTELLO, NESSUN EDIFICIO, NESSUN PONTE, NESSUN PERSONAGGIO, NESSUNA PAROLA SCRITTA, nessuna cornice. Ai quattro bordi il disegno continua specchiato, quindi niente di grande tagliato a metà sul bordo.
+LE REGOLE TECNICHE: immagine ORIZZONTALE 1536×1024 px che riempie tutto il quadro; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; NESSUNA CASERMA, NESSUN CASTELLO, NESSUN EDIFICIO, NESSUN PONTE, NESSUN PERSONAGGIO, NESSUNA PAROLA SCRITTA, nessuna cornice. Ai quattro bordi il disegno continua specchiato, quindi niente di grande tagliato a metà sul bordo.
 ```
 
 **Le terre di cenere** (`terreno-lava.png`):
 
 ```text
-Ridipingi questa immagine. È il terreno di un gioco di battaglia per bambini, Castle Battle, visto dall'alto a tre quarti, e l'ho disegnato con un programma: la forma è giusta, il disegno è povero. Voglio un dipinto ricco ed epico, in pixel art, con esattamente la stessa disposizione.
+Ora, nello stesso identico stile, con la stessa grana e gli stessi colori pieni, mi serve il terreno su cui stanno queste caserme. Questa volta non è un foglio di figure: è una scena unica a fondo pieno, senza trasparenza, vista dall'alto a tre quarti. Ridipingi l'immagine allegata: l'ho disegnata con un programma, la forma è giusta ma il disegno è povero. Tieni esattamente la stessa disposizione.
 
 IL POSTO: le terre di cenere, una notte rossa dopo una grande guerra. Terra nera e grigia di cenere con le crepe di brace, alberi morti, spuntoni di roccia, vecchie spade piantate nel terreno, stendardi strappati, bracieri. Al posto del fiume c'è un fossato di brace che pulsa sotto una crosta nera. Tono cupo ma adatto ai bambini: niente sangue, niente teschi in primo piano. Luce rossa dal basso.
 
 LA DISPOSIZIONE, da rispettare al millimetro, perché il gioco ci cammina sopra: il fossato attraversa tutta l'immagine in orizzontale, alto il 9% dell'immagine al centro, esattamente a metà altezza, e più largo verso i bordi. La strada è un selciato rotto, dritto in verticale al centro esatto, largo il 4% dell'immagine, da sopra a sotto, e si interrompe al fossato: IL PONTE NON C'È, lo aggiunge il gioco. La fascia centrale, dal 33% al 67% della larghezza, deve restare bassa e libera: solo terreno e piccoli dettagli a terra, niente alberi, niente spuntoni, niente che sembri una cosa da toccare. Le dodici chiazze di terra battuta restano dove sono, vuote. Il decoro alto sta solo fuori da quella fascia.
 
-LE REGOLE TECNICHE: immagine ORIZZONTALE 1536×1024 px che riempie tutto il quadro; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; NESSUN CASTELLO, NESSUN EDIFICIO, NESSUN PONTE, NESSUN PERSONAGGIO, NESSUNA PAROLA SCRITTA, nessuna cornice. Ai quattro bordi il disegno continua specchiato, quindi niente di grande tagliato a metà sul bordo.
+LE REGOLE TECNICHE: immagine ORIZZONTALE 1536×1024 px che riempie tutto il quadro; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; NESSUNA CASERMA, NESSUN CASTELLO, NESSUN EDIFICIO, NESSUN PONTE, NESSUN PERSONAGGIO, NESSUNA PAROLA SCRITTA, nessuna cornice. Ai quattro bordi il disegno continua specchiato, quindi niente di grande tagliato a metà sul bordo.
 ```
 
 ### 9 — Le fortezze dei quattro posti · 1 immagine · da fare
@@ -695,7 +696,7 @@ LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: foglio
 | 6 | gli eroi | 1 | `mostri-1`, una scena | — | l'addio a 0x72 |
 | 7 ✗ | la cittadella di Castle Battle a fogli (ChatGPT, 13/10: niente di buono) | 2 | `torri-2`, `td_1` | — | — |
 | 7b ✅ | le caserme di Castle Battle sulle piazzole (ChatGPT, il gioco raccontato; provvisorio) | 1 | uno screen del gioco, `terreno-bosco` | `arena/caserme.webp` | caserme dipinte, rudere e piazzola vuota |
-| 7c | le caserme definitive di Castle Battle, con mummie, bestie cornute e miniera (ChatGPT) | 1 | `arena/caserme.webp`, `schemi/partita` | `arena/caserme-2.png` | caserme e miniera dipinte |
+| 7c ✅ | le caserme definitive di Castle Battle, con mummie, bestie cornute e miniera (ChatGPT) | 1 | `arena/caserme.webp`, `schemi/partita` | `arena/caserme-2.png` | caserme e miniera dipinte |
 | 8 | i quattro terreni di Castle Battle (ChatGPT, si ridipinge il disegno in codice) | 4 | `schemi/terreno-<chiave>` | `arena/terreno-<chiave>.png` | il terreno dipinto |
 | 9 | castello, porta e ponte dei quattro posti (ChatGPT) | 1 | `schemi/partita` | `arena/fortezze.png` | i castelli di Castle Battle |
 | 10 | la copertina di Castle Battle (ChatGPT) | 1 | `schemi/partita` | `home/copertina-arena.png` | la home e il frontone della mappa |
