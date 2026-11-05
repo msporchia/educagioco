@@ -8,7 +8,7 @@ Per ogni chiave (bosco, palude, neve, lava: le chiavi storiche, i posti sono que
 (lo fa `npm run disegni:arena`). Un terreno è il pezzo di mondo `PEZZO_DI_MONDO`, largo 3:2, col campo in mezzo, e non si
 stira: se l'immagine non è 3:2 lo strumento si ferma. La copertina è `sorgenti/home/copertina-arena.*`, che vale anche per la home:
 dopo si lancia `copertine.py`. Scrive `src/giochi/arena/dati/terreni-pronti.js`.
-Un terreno dipinto ha il suo ponte (`PONTE_DIPINTO`), e il gioco non ci mette il suo.
+I dipinti valgono quando ci sono tutti e quattro: uno solo in mezzo ai disegni stona. Un terreno dipinto ha il suo ponte (`PONTE_DIPINTO`), e il gioco non ci mette il suo.
 Perché e come: docs/arena/grafica.md, voci 8 e 10 di DA-GENERARE.md.
 """
 import base64
@@ -55,8 +55,9 @@ def scorcio(im):
 
 def main():
     voci, panorami, dipinti = {}, {}, []
+    tutti = all(trova(SORGENTI, f'terreno-{chiave}') for chiave in CHIAVI)
     for chiave in CHIAVI:
-        p = trova(SORGENTI, f'terreno-{chiave}') or trova(SORGENTI / 'schemi', f'terreno-{chiave}')
+        p = (tutti and trova(SORGENTI, f'terreno-{chiave}')) or trova(SORGENTI / 'schemi', f'terreno-{chiave}')
         if not p:
             sys.exit(f'manca il terreno {chiave}: npm run disegni:arena')
         im = Image.open(p).convert('RGB')

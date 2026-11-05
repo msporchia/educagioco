@@ -575,7 +575,7 @@ tutto omogeneo (l'utente, 5/11). Si allega solo `sorgenti/arena/schemi/terreno-<
 un'immagine ha un difetto si chiede di correggerla, non di rifarla.
 
 **Si salva in** `strumenti/sprite/sorgenti/arena/terreno-<chiave>.png` (`bosco`, `palude`, `neve`, `lava`). **Comando**:
-`python3 strumenti/sprite/terreni-arena.py`. Lo strumento si ferma se l'immagine non è 3:2: non si stira mai. Il ponte è del dipinto, perché ChatGPT lo fa
+`python3 strumenti/sprite/terreni-arena.py`. Lo strumento si ferma se l'immagine non è 3:2: non si stira mai, e i dipinti entrano in gioco solo quando ci sono tutti e quattro. Il ponte è del dipinto, perché ChatGPT lo fa
 meglio del disegno in codice; la porta, il castello e la base degli edifici li mette il gioco, quindi nel dipinto non ci devono essere. Se il fiume esce storto o la strada si sposta, si scarta: il motore
 cammina dov'è il disegno.
 
