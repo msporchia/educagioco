@@ -68,11 +68,8 @@ l'albero dei processi, Chrome compresi.
   `test/esegui.mjs`: un file senza niente da verificare con un codice
   d'uscita non è un test.
 
-## Due rossi che non dipendono dal carico
+## Un rosso che non dipende dal carico
 
-- `integrazione/bancarella` può cadere su «in fondo alla campagna qualcuno
-  vuole due o tre cose uguali»: i clienti si pescano a caso, e può capitare
-  che nessuno dei dieci ne voglia più di una.
 - `integrazione/sotterraneo` cade circa una volta su cinquanta su «dopo un
   tocco l'eroe si è mosso»: tocca a 70 px dall'eroe nei quattro versi, e
   la mappa a caso può chiuderne tre su quattro. Non è il carico: un tocco

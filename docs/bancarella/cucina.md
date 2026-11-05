@@ -1,13 +1,12 @@
 # La cucina
 
-La parte avanzata della bancarella: una stanza in 3D dove si cammina e si cucina. Si
-tocca un posto, il cuoco ci va e fa quello che lì è ovvio; le ordinazioni stanno in
-cima, si fanno in qualsiasi ordine e scadono; ogni piatto finito si fa pagare col
-resto di sempre. In prova: si apre da `#bancarella=cucina` (c'è anche il tasto in
-`#admin`), `&livello=28` porta dritto a quel livello, `&aperte=1` apre tutti i livelli.
+Il gioco: una stanza in 3D dove si cammina e si cucina. Si tocca un posto, il cuoco ci va e
+fa quello che lì è ovvio; le ordinazioni stanno in cima, si fanno in qualsiasi ordine e
+scadono; ognuna finita si fa pagare col resto. `#bancarella=cucina&livello=28` porta dritto
+a quel livello, `&aperte=1` apre tutti i livelli.
 
 Il motore è `src/motore/bancarella/cucina.js`, i dati `src/data/bancarella-cucine.js`
-(ingredienti, ricette, livelli, attrezzi), la schermata `components/bancarella/Cucina.vue`
+(ingredienti, ricette, livelli, attrezzi) e `src/data/bancarella.js` (i soldi e le ordinazioni), la schermata `components/bancarella/Cucina.vue`
 con `Ordini.vue`, `Ricetta.vue`, `LeCucine.vue`; la scena `src/grafica/cucina3d/`
 (`indice.js`, `sala.js` stanza e banconi, `omino.js` il cuoco, `cibo.js` e `pezzi.js`).
 
@@ -97,20 +96,20 @@ una pizza bruciata, torna nel lavello: i piatti non si perdono mai.
 ## I livelli e gli attrezzi
 
 Ventotto livelli (`CUCINE`), ognuno con qualcosa in più; si aprono vincendo quello prima
-(`banco.cucina.fatte`). Gli attrezzi di un livello si leggono dalle sue ricette.
+(`banco.cucina.fatte`, in `profile.campagne.bancarella`). Gli attrezzi di un livello si leggono
+dalle sue ricette. La `portata` va dritta da 32 a 72 lungo la fila (`FILA`).
 
 | livelli | cosa cambia |
 |---|---|
-| 1–5 | **a crudo**, con tempo da vendere: si impara a muoversi senza fretta. Panini, insalate, sushi |
+| 1–5 | **a crudo**, con tempo da vendere e il resto detto dalla cassa: si impara a muoversi senza fretta. Panini, insalate, sushi |
 | 6 | il lavello |
-| 7–8 | la pentola |
+| 7–8 | la pentola, e il resto si conta a mente |
 | 9–15 | la padella: uova, carne, hamburger, ragù |
 | 16–19 | il forno |
 | 20–24 | due piatti a ordinazione: il totale si batte, si paga coi 20 € |
 | 25–28 | le ordinazioni scadono prima |
 
-Nella scelta dei livelli si comprano gli attrezzi con l'incasso, lo stesso del banco
-([banco.md](banco.md)): un tagliere in più 25 € (fino a tre), la seconda pentola 30 €, la seconda padella
+Nella scelta dei livelli si comprano gli attrezzi con l'incasso: un tagliere in più 25 € (fino a tre), la seconda pentola 30 €, la seconda padella
 40 €, il secondo forno 70 €, un piatto in più 15 € (fino a quattro). Si vedono dal livello
 dove servono, stanno in `banco.cucina` e compaiono nella stanza su celle fisse (`:2`, `:3`…).
 
@@ -139,10 +138,12 @@ un'ombra finta e la testa inclinata verso la telecamera; le ombre vere si rifann
 cambia cosa c'è sui banchi. I banconi sono tre geometrie unite. Senza WebGL lo dice e offre
 «riprova».
 
-## Quello che manca
+## Lasciare a metà
 
-La cucina non sta ancora nella fila delle giornate, e uscendo a metà il livello si perde:
-la sosta non c'è ([../core/ripresa.md](../core/ripresa.md)).
+Uscire non butta il livello: `motore/bancarella/sosta.js` scrive tutto, stanza compresa, e la
+carta in cima ai livelli lo offre ([../core/ripresa.md](../core/ripresa.md)). Le soste del
+mercato di prima non si leggono, e al primo avvio spariscono. I dati di quel mercato
+(`profile.mercato`, stelle e giornate) non si caricano più; l'incasso resta in cassa.
 
 ## Nei test
 

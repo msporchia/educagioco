@@ -14,7 +14,7 @@ perché scelti guardando il proprio gioco.
 | una storia di Prima e dopo rimessa in ordine | 🪙2 | |
 | una domanda vera che ferma il gioco (la carta di Survivors) | 🪙3 | leggere una consegna e scegliere fra quattro: mezzo minuto |
 | un'operazione in colonna senza errori (castello), un ingrediente finito senza traboccare (pozioni) | 🪙3 | un conto a più passi |
-| un cliente servito (bancarella) | 🪙2–4 | secondo quanto lavoro chiede la giornata |
+| un'ordinazione pagata (la cucina) | 🪙2–4 | secondo quanto lavoro chiede il conto del livello |
 | un minuto di esercizi | 🪙6 | |
 | **un'ora di esercizi** | **🪙360** | il numero da tenere in testa scrivendo un prezzo |
 

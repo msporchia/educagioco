@@ -174,7 +174,7 @@ posto della home e `.carte` non arriva.
 |---|---|
 | `#admin` | la pagina dei trucchi (`views/AdminView.vue`) |
 | `#monete=500` | monete al bambino attivo, anche a gioco già aperto; `#monete=-100` le toglie, mai sotto zero |
-| `#bancarella=cucina` | la cucina della bancarella, in prova; `&livello=28` dritto a quello, `&aperte=1` tutti aperti ([../bancarella/cucina.md](../bancarella/cucina.md)) |
+| `#bancarella=cucina` | la cucina; `&livello=28` dritto a quello, `&aperte=1` tutti aperti ([../bancarella/cucina.md](../bancarella/cucina.md)) |
 | `#pin=1234` | rimette il codice dei grandi |
 | `#arena=lava&battaglia=40` | Castle Battle su quel terreno (`bosco`, `palude`, `neve`, `lava`), le sei piazzole piene da tutte e due le parti dopo quei secondi di scontro (`motore/prova.js`); `&vuota` senza edifici. Butta la partita lasciata a metà del bambino attivo |
 | `#fattoria-tipo=30` | un bambino che arriva dalla 2D: scrive in `campagne.fattoria` la fattoria 2D di quel livello (1–99, `giochi/fattoria3d/da2d/motore/tipo.js`) e apre la fattoria, che la converte; è `dallIndirizzo` (`src/App.vue`) a scriverla e a passare il testimone a `#fattoria3d-da2d`, quindi **butta la fattoria del bambino attivo** nel cestino: si usa con un bambino di prova |
@@ -242,8 +242,7 @@ testo per i genitori: se ci si dimentica acceso, basta spegnerlo da `#admin`.
   segreto, English ed Español (la domanda di tappa e quelle del libro) e il
   gioco di prima delle lingue. **Dove non c'è**: i giochi dove non c'è una
   risposta da dare ma un piano da costruire (il Generale, Passo passo, Il
-  Robot, la fattoria), e la raccolta della bancarella (prendere la merce non
-  si sbaglia, si perde solo pazienza).
+  Robot, la fattoria), e i fornelli della cucina.
 - Nei test: `[data-azione="tasto-salta"]` in `#admin`, `[data-azione="salta"]`
   nelle domande; `unita/salto`, `integrazione/salto`, `salto-giochi`,
   `salto-sotterraneo`.
