@@ -116,9 +116,21 @@ La cassa sale a gradini (`SCALA_CASSA`), come nel vecchio mercato: chi fa i cont
 indietro, e quando entra un conto nuovo i prezzi tornano più facili. Il prezzo di un piatto è
 quello del menù arrotondato o col suo di più in centesimi (`prezzoDi`).
 
-Nella scelta dei livelli si comprano gli attrezzi con l'incasso: un tagliere in più 25 € (fino a tre), la seconda pentola 30 €, la seconda padella
-40 €, il secondo forno 70 €, un piatto in più 15 € (fino a quattro). Si vedono dal livello
-dove servono, stanno in `banco.cucina` e compaiono nella stanza su celle fisse (`:2`, `:3`…).
+Nella scelta dei livelli si comprano gli attrezzi con l'incasso, a uno a uno:
+
+| attrezzo | prezzi |
+|---|---|
+| un tagliere in più, fino a tre | 80, 160, 240 € |
+| un piatto in più, fino a quattro | 60, 90, 120, 150 € |
+| la seconda pentola | 250 € |
+| la seconda padella | 300 € |
+| il secondo forno | 600 € |
+
+Un livello incassa una trentina di euro all'inizio e un centinaio alla fine: il primo tagliere
+costa un paio di livelli, il forno sei o sette degli ultimi. Tutto insieme fa 2.050 €, più
+dei circa 1.750 € che si incassano finendo la fila una volta: qualcosa si sceglie, o si rigioca. Si vedono
+dal livello dove servono, stanno in `banco.cucina` e compaiono nella stanza su celle fisse
+(`:2`, `:3`…).
 
 ## La ricetta
 
