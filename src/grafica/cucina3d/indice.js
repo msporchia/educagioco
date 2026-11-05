@@ -2,21 +2,23 @@
 // Chi gioca non disegna: la scena legge lo stato che riceve con `imposta`, e ogni gesto del dito torna su
 // con `azione(mossa)`, che dice se è riuscita. Qui non entrano regole né prezzi.
 import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Raycaster, Plane, Vector2, Vector3,
-         ACESFilmicToneMapping, SRGBColorSpace, Color, Mesh, SphereGeometry, MeshBasicMaterial, Group } from 'three'
+         ACESFilmicToneMapping, SRGBColorSpace, Color, Mesh, SphereGeometry, MeshBasicMaterial, Group, PMREMGenerator, PCFSoftShadowMap } from 'three'
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { segui, rilascia as rilasciaRenderer } from '../rilascio3d.js'
 import { creaStanza, creaPentola, creaPadella, creaTagliere, creaColtello, creaForno, creaBidone, creaPiatto, riempiPiatto,
-         creaBarra, creaEtichetta, confezione, cibo, ombra } from './modelli.js'
+         creaBarra, creaEtichetta, ombra } from './pezzi.js'
+import { confezione, cibo } from './cibo.js'
 
 const FOV = 34
 const SOGLIA = 16                // sotto, un dito è ancora fermo (docs/core/il-dito.md)
 const LARGO = 8.6
 const VERSO = new Vector3(0, 0.88, 0.48).normalize()
 const MIRA = new Vector3(0, 0.3, 2.4)
-const FILA = -2.5, PIATTI = 0.15, DISPENSA = [2.45, 4.05]
+const FILA = -2.5, PIATTI = 0.45, DISPENSA = [2.75, 4.9]
 const X_STAZIONI = { 1: [0], 2: [-1.5, 1.5], 3: [-2.5, 0, 2.5], 4: [-3, -1, 1, 3] }
-const X_PIATTI = { 2: [-1.9, 0.05], 3: [-2.6, -0.8, 1] }
+const X_PIATTI = { 2: [-1.9, 0.05], 3: [-2.85, -0.9, 1.05] }
 const X_DISPENSA = [-2.7, -0.9, 0.9, 2.7]
-const SCALA_DISPENSA = 1.35
+const SCALA_DISPENSA = 1.08
 const COSTRUISCI = { pentola: creaPentola, padella: creaPadella, tagliere: creaTagliere, forno: creaForno }
 const RAGGIO = { pentola: 1, padella: 1, tagliere: 1.05, forno: 1.15 }
 const ACQUA = { vuota: 0xa9d6ee, cuoce: 0x9fd0ea, pronta: 0xf1dd9a, scotta: 0xa9743c }
@@ -48,8 +50,21 @@ function costruisci(renderer, canvas, { azione, aiuto, presa: avvisaPresa, dpr: 
   const scena = new Scene()
   scena.background = new Color(0xe9dfc9)
   const camera = new PerspectiveCamera(FOV, 1, 0.1, 80)
-  scena.add(new HemisphereLight(0xfff6e6, 0x8a6f52, 1.7))
-  const chiave = new DirectionalLight(0xfff0d8, 2); chiave.position.set(3, 9, 5); scena.add(chiave)
+  // i metalli riflettono una stanza finta: senza, l'acciaio è grigio piatto
+  const stanzaFinta = new PMREMGenerator(renderer)
+  scena.environment = stanzaFinta.fromScene(new RoomEnvironment(), 0.04).texture
+  scena.environmentIntensity = 0.5
+  stanzaFinta.dispose()
+  scena.add(new HemisphereLight(0xfff6e6, 0x8a6f52, 0.95))
+  const chiave = new DirectionalLight(0xfff0d8, 2.1); chiave.position.set(-3.5, 10, 3.5); chiave.target.position.set(0, 0, 1)
+  chiave.castShadow = true
+  chiave.shadow.mapSize.set(1024, 1024)
+  chiave.shadow.camera.left = -6.5; chiave.shadow.camera.right = 6.5; chiave.shadow.camera.top = 7; chiave.shadow.camera.bottom = -7
+  chiave.shadow.camera.far = 22; chiave.shadow.bias = -0.0006; chiave.shadow.normalBias = 0.02
+  scena.add(chiave, chiave.target)
+  renderer.shadowMap.enabled = true
+  renderer.shadowMap.type = PCFSoftShadowMap
+  renderer.shadowMap.autoUpdate = false    // le ombre si rifanno solo se qualcosa si muove: è metà del costo di un fotogramma
   creaStanza(scena)
 
   /* ── le animazioni: col tempo, mai coi fotogrammi (docs/core/interfaccia.md) ── */
@@ -86,8 +101,8 @@ function costruisci(renderer, canvas, { azione, aiuto, presa: avvisaPresa, dpr: 
     nomi.forEach((nome, k) => {
       const g = COSTRUISCI[nome]()
       g.position.set(xs[k], 0, FILA)
-      const barra = creaBarra(); barra.position.set(xs[k], nome === 'forno' ? 1.75 : 1.2, FILA + 1.05)
-      const fumo = new Group(); fumo.position.set(xs[k], nome === 'forno' ? 1.6 : 0.9, FILA)
+      const barra = creaBarra(); barra.position.set(xs[k], nome === 'forno' ? 0.4 : 0.3, FILA + 1.25)
+      const fumo = new Group(); fumo.position.set(nome === 'forno' ? xs[k] + 0.5 : xs[k], nome === 'forno' ? 1.75 : 1.1, nome === 'forno' ? FILA - 0.65 : FILA)
       for (let i = 0; i < 5; i++) {
         const p = new Mesh(new SphereGeometry(0.16, 8, 6), new MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false }))
         fumo.add(p)
@@ -98,7 +113,7 @@ function costruisci(renderer, canvas, { azione, aiuto, presa: avvisaPresa, dpr: 
     })
     if (stazioni.tagliere) {
       coltello = creaColtello()
-      coltello.userData.casa = stazioni.tagliere.casa.clone().add(new Vector3(0.68, 0.17, 0.05))
+      coltello.userData.casa = stazioni.tagliere.casa.clone().add(new Vector3(0.58, 0.19, 0.22))
       coltello.position.copy(coltello.userData.casa)
       scena.add(coltello)
     }
@@ -107,7 +122,7 @@ function costruisci(renderer, canvas, { azione, aiuto, presa: avvisaPresa, dpr: 
       const g = creaPiatto(); g.position.set(xp[i], 0, PIATTI); g.userData.casa = g.position.clone()
       scena.add(g); piatti.push(g)
     })
-    bidone = creaBidone(); bidone.position.set(2.85, 0, PIATTI)
+    bidone = creaBidone(); bidone.position.set(3, 0.06, PIATTI)
     const scritta = creaEtichetta('bidone'); scritta.position.set(0, 0.03, 0.75); bidone.add(scritta)
     scena.add(bidone)
     const cose = s.dispensa, una = cose.length <= 4
@@ -115,11 +130,12 @@ function costruisci(renderer, canvas, { azione, aiuto, presa: avvisaPresa, dpr: 
       const g = new Group()
       const figura = confezione(d.k); figura.scale.setScalar(SCALA_DISPENSA)
       g.add(ombra(0.8), figura)
-      g.position.set(X_DISPENSA[i % 4], 0, una ? 3 : DISPENSA[Math.floor(i / 4)])
-      const e = creaEtichetta(d.nome); e.position.set(0, 0.03, 0.72); g.add(e)
+      g.position.set(X_DISPENSA[i % 4], 0, una ? 3.6 : DISPENSA[Math.floor(i / 4)])
+      const e = creaEtichetta(d.nome); e.position.set(0, 0.03, 0.92); g.add(e)
       scena.add(g)
       dispensa[d.k] = g
     })
+    scena.traverse(o => { if (o.isMesh && !o.material.transparent && !o.material.isMeshBasicMaterial) o.castShadow = true })
   }
 
   /* ── il dito ── */
@@ -306,7 +322,15 @@ function costruisci(renderer, canvas, { azione, aiuto, presa: avvisaPresa, dpr: 
       u.fiamme.children.forEach((f, i) => { f.scale.y = 0.8 + 0.35 * Math.sin(t * 16 + i * 1.7) })
     }
     if (u.acqua) u.acqua.material.color.setHex(ACQUA[s.fase])
-    if (u.brace) u.brace.material.color.setHex(acceso ? 0xff8a2b : s.fase === 'scotta' ? 0x2b1a12 : 0x3a3029)
+    if (u.bolle) {
+      u.bolle.visible = acceso
+      if (acceso) u.bolle.children.forEach((b, i) => {
+        const f = (t * (0.9 + (i % 4) * 0.25) + i * 0.37) % 1, a = i * 2.4
+        b.position.set(Math.cos(a) * 0.5 * ((i * 7) % 10) / 10, 0.02, Math.sin(a) * 0.5 * ((i * 3) % 10) / 10)
+        b.scale.setScalar(Math.sin(f * Math.PI))
+      })
+    }
+    if (u.brace) u.brace.material.color.setHex(acceso ? 0xff7a1f : s.fase === 'scotta' ? 0x2b1a12 : 0x8a3a18)
     const firma = `${s.fase === 'scotta'}|${s.cosa}|${s.colpi}|${s.fase === 'taglia'}|${s.fase === 'cuoce'}`
     if (u.firma !== firma) {
       u.firma = firma
@@ -314,10 +338,11 @@ function costruisci(renderer, canvas, { azione, aiuto, presa: avvisaPresa, dpr: 
       if (s.cosa) {
         if (nome === 'tagliere') {
           if (s.fase === 'taglia') {
-            const testa = confezione('insalata'); testa.scale.setScalar(1 - s.colpi * 0.24); u.dentro.add(testa)
-            if (s.colpi) { const f = cibo('insalata'); f.position.set(0.3, 0, 0); f.scale.setScalar(0.45 + s.colpi * 0.15); u.dentro.add(f) }
+            const testa = confezione('insalata'); testa.scale.setScalar(0.72 - s.colpi * 0.17); u.dentro.add(testa)
+            if (s.colpi) { const f = cibo('insalata'); f.position.set(0.32, 0, 0); f.scale.setScalar(0.42 + s.colpi * 0.14); u.dentro.add(f) }
           } else u.dentro.add(cibo('insalata'))
         } else u.dentro.add(cibo(s.cosa, { bruciato: s.fase === 'scotta', crudo: s.fase === 'cuoce' }))
+        u.dentro.traverse(o => { if (o.isMesh) o.castShadow = true })
       }
     }
     // la barra
@@ -343,7 +368,7 @@ function costruisci(renderer, canvas, { azione, aiuto, presa: avvisaPresa, dpr: 
     })
   }
 
-  let ultimo = performance.now(), giro = 0, vivo = true, fotogrammi = 0
+  let ultimo = performance.now(), giro = 0, vivo = true, fotogrammi = 0, firmaOmbre = ''
   function ciclo(ora) {
     if (!vivo) return
     giro = requestAnimationFrame(ciclo)
@@ -360,6 +385,8 @@ function costruisci(renderer, canvas, { azione, aiuto, presa: avvisaPresa, dpr: 
       for (const n of Object.keys(stazioni)) aggiornaStazione(n, t)
       q.piatti.forEach((p, i) => riempiPiatto(piatti[i], p))
       if (coltello) coltello.visible = q.stazioni.tagliere.fase === 'taglia'
+      const firma = JSON.stringify([q.piatti, Object.values(q.stazioni).map(s => [s.fase, s.colpi])])
+      if (firma !== firmaOmbre || tenuto || attive.length) { firmaOmbre = firma; renderer.shadowMap.needsUpdate = true }
     }
     renderer.render(scena, camera)
     fotogrammi++

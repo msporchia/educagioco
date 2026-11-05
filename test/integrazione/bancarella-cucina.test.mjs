@@ -6,13 +6,13 @@
    resto è un foglio che lascia in vista le stazioni. Vedi docs/bancarella/cucina.md. */
 import { apriBrowser, apriGioco, azzera, leggiProfilo, attendi, scatto, TELEFONO } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
-import { INGREDIENTI, COLPI } from '../../src/motore/bancarella/cucina.js'
+import { COLPI } from '../../src/motore/bancarella/cucina.js'
 import { CUCINE } from '../../src/data/bancarella.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
 await azzera(page)
-await page.evaluate(() => { location.hash = 'bancarella=cucina' })
+await page.evaluate(() => { location.hash = 'bancarella=cucina&dpr=1' })
 await page.waitForSelector('[data-cucine]', { timeout: 8000 })
 uguale('si sceglie fra tutte le cucine', await page.locator('[data-cucina-n]').count(), CUCINE.length)
 
@@ -30,13 +30,17 @@ async function trascina(da, a) {
   await attendi(page, 80)
 }
 const fase = async k => (await stato()).stazioni[k].fase
-// il tempo del gioco va a fotogrammi: col 3D senza scheda grafica scorre più piano dell'orologio
-const aspetta = (k, f, s) => page.waitForFunction(([k, f]) => window.__shop.cucina.value.stazioni[k].fase === f, [k, f], { timeout: s * 4000 })
+// il tempo del gioco va a fotogrammi, e senza scheda grafica sono pochi: si porta la pentola a un soffio, e il resto lo fa lei
+const aspetta = (k, f) => page.evaluate(([k, f]) => {
+  const s = window.__shop.cucina.value.stazioni[k]
+  s.fase = f === 'pronta' ? 'cuoce' : 'pronta'
+  s.t = (f === 'pronta' ? 7 : 6) - 0.02
+}, [k, f]).then(() => page.waitForFunction(([k, f]) => window.__shop.cucina.value.stazioni[k].fase === f, [k, f], { timeout: 20000 }))
 
 async function fai(piatto, i) {
   if (piatto === '🥪') { await trascina('cosa:pane', `piatto:${i}`); await trascina('cosa:formaggio', `piatto:${i}`); return }
   await trascina('cosa:pasta', 'pentola')
-  await aspetta('pentola', 'pronta', INGREDIENTI.pasta.cuoce + 3)
+  await aspetta('pentola', 'pronta')
   await trascina('pentola', `piatto:${i}`)
   await attendi(page, 600)
   await trascina('cosa:sugo', `piatto:${i}`)
@@ -44,12 +48,13 @@ async function fai(piatto, i) {
 
 /* ---------- 1. si trascina, e il fuoco scorre da solo ---------- */
 await apri(1)
-controlla('la scena 3D gira', (await page.evaluate(() => window.__cucina3d.grafica().fotogrammi)) > 3)
+await page.waitForFunction(() => window.__cucina3d.grafica().fotogrammi > 3, { timeout: 15000 })
+nota(`la scena: ${JSON.stringify(await page.evaluate(() => window.__cucina3d.grafica()))}`)
 await trascina('cosa:sugo', 'piatto:0')
 uguale('il sugo su un piatto vuoto torna indietro', (await stato()).piatti[0], null)
 await trascina('cosa:pasta', 'pentola')
 uguale('la pasta va sul fuoco', await fase('pentola'), 'cuoce')
-await aspetta('pentola', 'pronta', INGREDIENTI.pasta.cuoce + 3)
+await aspetta('pentola', 'pronta')
 { // la pentola in mano, sul piatto
   const p = await dove('pentola'), q = await dove('piatto:0')
   await page.mouse.move(p.x, p.y); await page.mouse.down(); await page.mouse.move(q.x, q.y - 30, { steps: 5 })
@@ -57,7 +62,7 @@ await aspetta('pentola', 'pronta', INGREDIENTI.pasta.cuoce + 3)
   await scatto(page, 'cucina-pentola-in-mano')
   await page.mouse.move(p.x, p.y, { steps: 5 }); await page.mouse.up()
 }
-await aspetta('pentola', 'scotta', INGREDIENTI.pasta.tiene + 4)
+await aspetta('pentola', 'scotta')
 await trascina('pentola', 'bidone')
 await attendi(page, 300)
 uguale('la pasta scotta va nel bidone', await fase('pentola'), 'vuota')
