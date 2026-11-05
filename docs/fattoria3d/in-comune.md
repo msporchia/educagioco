@@ -54,7 +54,34 @@ Se l'amico è dentro anche lui, il suo contadino cammina nella scena col suo abi
 ogni telefono manda `{ k: 'qui', x, z, d, r?, g?, a? }` (dove sta, verso dove guarda, se corre, il gesto, ogni due secondi l'abito)
 cinque volte al secondo se cambia qualcosa e ogni due secondi comunque, e `{ k: 'via' }` uscendo ([../core/amici.md](../core/amici.md)).
 Dall'altra parte il contadino ospite cammina verso l'ultimo punto arrivato, salta se è più indietro di cinque celle, fa i gesti, e
-sparisce dopo sei secondi senza notizie. Le mosse restano quelle della fila: il contadino ospite non tocca la fattoria.
+sparisce dopo dieci secondi senza notizie. Le mosse restano quelle della fila: il contadino ospite non tocca la fattoria.
+
+### La linea del contadino
+
+Mosse e contadino viaggiano separati: le mosse sono richieste che si aprono ogni volta, il contadino sta su un filo che resta aperto.
+Se il filo muore in silenzio (il telefono cambia rete, la wifi singhiozza) le mosse passano e il contadino no: i bambini vedevano le
+cose spostarsi senza vedere chi le spostava, e dopo un po' il contadino tornava. Il filo era tarato per gli inviti, dove aspettare non
+costa niente, e tre cose tenevano il contadino lontano:
+
+- **Il filo morto si scopriva tardi**: un ping ogni 15 s e 40 s di silenzio prima di lasciarlo. Con due browser veri: 36–50 s senza contadino.
+- **La rete piantata faceva chiudere il filo**: cinque posizioni al secondo restavano in coda e arrivavano tutte insieme, oltre le 20 al
+  secondo del servizio (`1008 troppi messaggi`).
+- **Riaprire poteva costare un minuto**, coi ritardi crescenti di quando non si gioca.
+
+Così adesso, tutto sul telefono (il servizio non cambia): finché la fattoria in comune è aperta `quandoQui` mette il `Ponte` in gioco
+(`inGioco`, `BATTITO_GIOCO` in `amici/rete.js`). Il ping lo risponde Cloudflare: non costa e non conta nelle 20 al secondo.
+
+| | | perché |
+|---|---|---|
+| `ogni` / `sordo` | 1 s / 3,5 s | un filo morto si scopre in 4,5 s al massimo |
+| `fermo` | 1,8 s | filo zitto da tanto: una posizione invecchia, non si mette in coda (`mandaFresco`). Riparte da sola, e la spedizione (`contadino-amico.js`) la riprova al giro dopo |
+| `ritardi` | 1 s, poi 2 s | per riaprire. Provato 0,2 s: lo stesso bambino su due telefoni (stesso id) si caccia dal servizio cinque volte al secondo |
+| `SPARISCE` | 10 s | deve superare il caso peggiore: l'ultima notizia da fermo (2 s), scoprire (4,5 s), riaprire (1 s e la rete) |
+
+Un guasto così adesso si vede come un contadino che si ferma qualche secondo e riparte. Una rete spenta davvero per più di dieci
+secondi lo fa ancora sparire, ma lì non arrivano nemmeno le mosse. `node strumenti/banco-contadino.mjs`, 12 partite da 30 minuti, per
+quanto sparisce il contadino in un'ora di gioco (`--lento`: com'era): `casa` da 450 s a 0, `agitata` da 1675 s a 438 s, e nessun filo
+chiuso dal servizio (erano 36 in `agitata`). Provato con due browser e il proxy cattivo, non su due telefoni veri.
 
 **Con più amici, più fattorie in comune**: una per amicizia, e il 🤝 ha un tasto per ognuno.
 
@@ -69,7 +96,9 @@ sparisce dopo sei secondi senza notizie. Le mosse restano quelle della fila: il 
 ## Nei test
 
 `unita/fattoria3d-registro` (due telefoni finti a mano: la stessa fattoria, il doppio raccolto, il doppio pezzo, le monete,
-gli id, le mosse storte), `unita/amici-servizio` (la fila e la fotografia), `integrazione/fattoria3d-comune` (due pagine e il
+gli id, le mosse storte), `unita/amici-servizio` (la fila e la fotografia), `unita/amici-contadino` (la linea del contadino: due `Ponte`
+veri sulla presenza finta, `test/aiuto/contadini-finti.mjs`), `integrazione/fattoria3d-comune-contadino` (due pagine col proxy cattivo: filo
+morto, rete piantata, filo tagliato, mentre le mosse arrivano; solo con `SERVIZIO=http://localhost:8787`, se no salta), `integrazione/fattoria3d-comune` (due pagine e il
 servizio: entra, costruisce, l'altro trova, un lotto arriva mentre si gioca, il contadino dell'altro cammina col suo nome e sparisce quando esce, la propria fattoria intatta, senza rete; **serve il
 servizio con la v6**, in locale `cd servizio/inoltro && npx wrangler dev` e `SERVIZIO=http://localhost:8787`, se no salta).
 

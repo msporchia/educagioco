@@ -54,7 +54,8 @@ Perché regge (non è un buco di sicurezza):
   ci si ripresenta agli amici ogni 20 s, se il primo «presento» si fosse perso.
 - **Si è raggiungibili mentre l'app è aperta** (se i grandi l'hanno acceso): il telefono tiene aperto **un collegamento solo**
   (non uno per amico), con rientro a ritardo crescente se cade, e un ping ogni 15 s: senza risposta per 40 s il filo è morto in
-  silenzio e se ne apre un altro (`BATTITO` in `amici/rete.js`; il ping lo risponde Cloudflare da solo). Se internet manca o il servizio è giù: nessun errore, nessun
+  silenzio e se ne apre un altro (`BATTITO` in `amici/rete.js`; il ping lo risponde Cloudflare da solo). Nella fattoria in comune, dove sul filo
+  cammina il contadino, batte molto più svelto ([../fattoria3d/in-comune.md](../fattoria3d/in-comune.md), «La linea del contadino»). Se internet manca o il servizio è giù: nessun errore, nessun
   cartello, la lista in grigio.
 
 ## Chi lo accende: i grandi, e di base è spento
