@@ -14,7 +14,7 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
   `strumenti/sprite/DA-GENERARE.md`). Il disegno a monte è la forma, ed è anche l'allegato del prompt.
 - **Il terreno si compone una volta sola alla misura vera dello schermo**, col ponte e i bordi scuri dentro (`scena/terreno.js`): a
   fotogramma è un disegno senza scala. **Provato** a disegnare in partita, punto per punto: bello ma lavoro buttato a ogni battaglia.
-- **Ogni truppa è già pronta** (`figura()` in `scena/campo.js`): alla misura dello schermo, col contorno della squadra, l'arco in mano e
+- **Ogni truppa è già pronta** (`figura()` in `scena/campo.js`): alla misura dello schermo, con la casacca della squadra, l'arco in mano e
   girata dalla sua parte, tutte le pose prima che la battaglia cominci. Un disegno a fotogramma invece di cinque ingranditi dal foglio. Il prezzo:
   l'arco non rincula più. Sul telefono lento finto (`vecchio-telefono.mjs`, CPU ×6, ultima misura 5/11) il lavoro del filo principale a
   fotogramma è sceso da 23 a 16,6 ms, con le figure più grandi di prima.
@@ -84,10 +84,12 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
   il prato dipinto ai suoi piedi prende il colore del posto. Viene dal vestito `bosco` del castello a torri finché non arrivano i castelli del posto (voce 9).
   Prima ogni terreno aveva il suo, e nella lava i colori delle squadre erano rovesciati.
   **Provato** il filtro `hue-rotate`: tetti verdi e neve rosa.
-- **Di che squadra è una truppa** si vede da un contorno del suo colore (la figura tinta in
-  `figura()`, spostata di un pelo ai quattro lati) e da un disco pieno sotto i piedi: con
-  il solo cerchietto, vicine, non si distinguevano. Il contorno è un filo (0,75 px, un blu e
-  un rosso spenti, 80%): a 1,3 px e con colori accesi sembrava un alone al neon.
+- **Di che squadra è una truppa** si vede dalla casacca (`casacca()` in `scena/figure.js`: il
+  busto tinto col metodo `color`, che tiene le ombre del dipinto, fra le quote di `CASACCA`) e da
+  un disco pieno sotto i piedi. Si tinge quando la figura si prepara: in partita non costa niente, e non
+  vuole punti d'aggancio per posa. Il solo cerchietto, con le truppe vicine, non bastava.
+  **Provato** un contorno del colore della squadra: sembra un alone al neon anche sottile.
+  **Provata** una fascia di traverso a tinta piena: sembra nastro adesivo sopra il disegno.
 - **Gli arcieri hanno in mano l'arco del sotterraneo** (`arco()` in `scena/figure.js`, il
   pezzo grande `arco-corto` di `sotterraneo/dati/atlante.js`): nel foglio lo scheletro è a
   mani vuote. Come l'arma dell'eroe là, sta a un punto fisso davanti al corpo, non a un

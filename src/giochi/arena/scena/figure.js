@@ -18,6 +18,12 @@ export const SCALA = {
   pipistrelli: 0.45, bestie: 0.36, negromante: 0.36, golem: 0.5, drago: 0.42,
 }
 
+// fin dove arriva la casacca della squadra: da quanto in alto a quanto in basso, in altezza della figura da terra
+const CASACCA = {
+  scheletri: [0.62, 0.34], guardiano: [0.6, 0.32], lupi: [0.6, 0.15], diavoletto: [0.6, 0.24],
+  pipistrelli: [0.62, 0.3], bestie: [0.72, 0.3], negromante: [0.56, 0], golem: [0.72, 0.32], drago: [0.6, 0.2],
+}
+
 // le pose dai nomi dei pezzi (meno `NON_SUE`): mostro:<chi>:<n> è il respiro, mostro:<chi>:lato:<n> i passi
 // pose del foglio che la truppa non fa: la fiammata della bestia cornuta (le bestie colpiscono da vicino)
 const NON_SUE = new Set(['mostro:bestia-cornuta:2'])
@@ -52,6 +58,20 @@ export function guastiDelleFigure() {
     if (!(SCALA[id] > 0)) g.push(`${id}: manca la scala`)
   }
   return g
+}
+
+/* La casacca: il busto tinto del colore della squadra, con le ombre del dipinto, così segue ogni posa senza punti d'aggancio.
+   Si tinge una volta quando la figura si prepara; `piede` è in pixel della tela. */
+export function casacca(cv, id, piede, lh, colore) {
+  const [alto, basso] = CASACCA[id], t = document.createElement('canvas')
+  t.width = cv.width; t.height = cv.height
+  const c = t.getContext('2d')
+  c.drawImage(cv, 0, 0)
+  c.globalCompositeOperation = 'color'; c.fillStyle = colore
+  c.fillRect(0, piede - lh * alto, cv.width, lh * (alto - basso))
+  c.globalCompositeOperation = 'destination-in'; c.drawImage(cv, 0, 0)
+  const q = cv.getContext('2d')
+  q.save(); q.setTransform(1, 0, 0, 1, 0, 0); q.drawImage(t, 0, 0); q.restore()
 }
 
 /* L'arco degli arcieri: nel foglio lo scheletro è a mani vuote, e l'arco è quello dipinto del
