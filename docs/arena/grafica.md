@@ -33,7 +33,8 @@ sua voce in `strumenti/sprite/DA-GENERARE.md` (7c, 8, 9 e 10).
   nessuna parte. Quello alto sta fuori dalla diagonale delle piazzole (`libero()`), davanti non copre nessuno;
   sul campo solo cose basse che non si confondono con quello che si tocca.
 - **L'aria del posto** (`scena/atmosfera.js`) sta sopra il terreno e costa poche decine di tocchi a fotogramma: ombre
-  di nuvole, riflessi, foglie, sabbia, scintille, braci e bordi scuri. Va col tempo, e non sa niente della partita.
+  di nuvole, riflessi, foglie, sabbia, scintille e braci. Va col tempo, e non sa niente della partita. I bordi scuri stanno
+  nella tela del terreno: una velatura a tutto schermo a ogni fotogramma costava troppo.
 - **Il dipinto prende il posto del disegno senza toccare il gioco**: `terreni-arena.py` scrive
   `dati/terreni-dipinti.js`, e `Terreno` usa l'immagine di quel posto per il pezzo di mondo `DIPINTO` (810 × 540, il
   campo in mezzo), specchiandola oltre i bordi. Gli allegati sono il disegno stesso (`strumenti/sprite/schemi-arena.mjs`, cheat

@@ -199,6 +199,14 @@ function luce(c, a, W, H) {
   const g = c.createLinearGradient(0, 0, W, H)
   a.luce.forEach((col, i) => g.addColorStop(i / (a.luce.length - 1), col))
   c.fillStyle = g; c.fillRect(0, 0, W, H)
+  bordi(c, W, H)
+}
+
+/* i bordi scuri tengono l'occhio sul campo; stanno nella tela perché a fotogramma una velatura intera costerebbe troppo */
+function bordi(c, W, H) {
+  const g = c.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.46, W / 2, H / 2, Math.hypot(W, H) * 0.56)
+  g.addColorStop(0, 'rgba(6,3,14,0)'); g.addColorStop(1, 'rgba(6,3,14,.5)')
+  c.fillStyle = g; c.fillRect(0, 0, W, H)
 }
 
 /* il terreno dipinto, se c'è: il suo pezzo di mondo è DIPINTO, e fuori si continua specchiato */
@@ -213,6 +221,8 @@ function dalDipinto(img, { x, y, w, h }) {
       c.drawImage(img, 0, 0, D.w, D.h); c.restore()
     }
   }
+  c.setTransform(1, 0, 0, 1, 0, 0)
+  bordi(c, cv.width, cv.height)
   return cv
 }
 

@@ -223,7 +223,7 @@
 .ar-x:active { transform: scale(.92) }
 .ar-intesta { display: flex; align-items: center; gap: 12px; padding-right: 44px }
 .ar-intesta h2 { margin: 0; font: 800 21px/1.15 var(--ar-epica); color: var(--ar-oro-chiaro) }
-.ar-livello { margin: 2px 0 0; font-size: 13px; color: #93a0bd }
+.ar-intesta .ar-livello { flex: none; min-height: 0; padding: 0; border: 0; background: none; margin: 2px 0 0; font-size: 13px; color: #93a0bd }
 .ar-grande { font-size: 44px }
 .ar-ruolo { margin: 0; padding-left: 18px; font-size: 12.5px; color: #93a0bd; line-height: 1.5 }
 .ar-due { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }

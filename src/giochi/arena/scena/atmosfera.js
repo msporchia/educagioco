@@ -1,5 +1,5 @@
-// L'aria del posto, sopra il terreno dipinto: le ombre delle nuvole, i riflessi dell'acqua, foglie, sabbia, scintille e braci, e
-// i bordi scuri. Costa poco (poche decine di tocchi a fotogramma) e va col tempo, non coi fotogrammi. Non sa niente della partita.
+// L'aria del posto, sopra il terreno dipinto: le ombre delle nuvole, i riflessi dell'acqua, foglie, sabbia, scintille e braci.
+// Costa poco (poche decine di tocchi a fotogramma) e va col tempo, non coi fotogrammi. Non sa niente della partita.
 import { CAMPO } from '../dati/regole.js'
 
 const MEZZO = (CAMPO.fiume.alto + CAMPO.fiume.basso) / 2
@@ -16,8 +16,6 @@ export class Atmosfera {
   constructor(a) {
     this.a = a
     this.nuvola = null
-    this.bordi = null
-    this.misura = ''
     // ogni granello è un numero fisso: dove sta si calcola dal tempo, quindi niente da aggiornare
     this.granelli = Array.from({ length: a.particelle.n }, (_, i) => ({ u: (i * 0.618) % 1, v: (i * 0.371 + 0.2) % 1, f: (i * 0.137) % 1, colore: a.particelle.colori[i % a.particelle.colori.length] }))
     this.riflessi = Array.from({ length: 44 }, (_, i) => ({ u: (i * 0.618) % 1, v: (i * 0.757) % 1, f: i * 0.9 }))
@@ -26,7 +24,7 @@ export class Atmosfera {
   /* sotto gli edifici: le nuvole passano sul campo e l'acqua luccica */
   sotto(c, W, H, s, X, Y, ora) {
     this.nuvola ||= chiazza(this.a.nuvole)
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       const larga = (240 + i * 70) * s, giro = W + larga * 2
       const x = ((ora * (5 + i * 2) * s + i * giro * 0.37) % giro) - larga, y = H * (0.2 + i * 0.3) + Math.sin(ora * 0.05 + i) * 30 * s
       c.drawImage(this.nuvola, x, y - larga * 0.3, larga * 1.6, larga * 0.7)
@@ -47,7 +45,7 @@ export class Atmosfera {
     }
   }
 
-  /* sopra tutto: quello che vola, e i bordi scuri che tengono l'occhio sul campo */
+  /* sopra tutto: quello che vola */
   sopra(c, W, H, s, ora) {
     const tipo = this.a.particelle.tipo
     for (const g of this.granelli) {
@@ -70,17 +68,5 @@ export class Atmosfera {
       }
     }
     c.globalAlpha = 1
-    const chiave = `${W}x${H}`
-    if (this.misura !== chiave) { this.misura = chiave; this.bordi = creaBordi(W, H) }
-    c.drawImage(this.bordi, 0, 0, W, H)
   }
-}
-
-function creaBordi(W, H) {
-  const cv = document.createElement('canvas'); cv.width = Math.ceil(W / 2); cv.height = Math.ceil(H / 2)
-  const c = cv.getContext('2d'), w = cv.width, h = cv.height
-  const g = c.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.46, w / 2, h / 2, Math.hypot(w, h) * 0.56)
-  g.addColorStop(0, 'rgba(6,3,14,0)'); g.addColorStop(1, 'rgba(6,3,14,.5)')
-  c.fillStyle = g; c.fillRect(0, 0, w, h)
-  return cv
 }
