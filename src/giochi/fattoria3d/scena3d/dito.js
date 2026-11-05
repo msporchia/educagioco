@@ -97,7 +97,10 @@ export class Dito {
     if (this.lungo && d > SOGLIA_PREMUTO) { clearTimeout(this.lungo); this.lungo = 0 }
     if (!this.trascina && d > SOGLIA) this.trascina = true
     if (this.inizio.parcheggio) { if (this.trascina) w.costruzione.muovi(e.clientX, e.clientY); return }
-    if (this._pennello) { if (!ui.fogliAperti()) w.costruzione.pennello(e.clientX, e.clientY, this._pennello); return }
+    if (this._pennello) {                               // il dito rimasto dopo due dita riprende a disegnare solo se si muove davvero: chi finisce un pizzico non paga una strada
+      if ((!this.inizio.ripreso || this.trascina) && !ui.fogliAperti()) w.costruzione.pennello(e.clientX, e.clientY, this._pennello)
+      return
+    }
     if (!this.trascina || ui.fogliAperti()) return
     w.attrezzi.chiudi()                                 // l'attrezzo sta accanto al campo: se la vista si sposta si posa
     this._mappa(e)                                      // un dito che scorre sposta la mappa: per andare lontano si tocca poi la meta
@@ -113,10 +116,14 @@ export class Dito {
 
   _fine(e) {
     if (!this.punti.has(e.pointerId)) return
-    const w = this.w, su = e.type === 'pointerup'
-    if (this.punti.size === 2) w.camera.zoom = dentroLimiti(w.camera.zoom)    // il pizzico finisce: l'elastico riporta dentro
+    const w = this.w, su = e.type === 'pointerup', dueDita = this.punti.size === 2
+    if (dueDita) w.camera.zoom = dentroLimiti(w.camera.zoom)    // il pizzico finisce: l'elastico riporta dentro
     this.punti.delete(e.pointerId)
     clearTimeout(this.lungo); this.lungo = 0
+    if (dueDita && this._pennello) {                    // col pennello il dito rimasto continua: se no passa sulle strade e non succede niente
+      const [x, y] = [...this.punti.values()][0]
+      this.inizio = { x, y, ripreso: true }; this.trascina = false; return
+    }
     if (this.inizio && this.inizio.bagno) { this.inizio = null; return }
     if (!su) w.costruzione.alzaDito()
     if (!su && w.costruzione.attivo && !w.costruzione.parcheggiato) w.costruzione.annullaTrascinamento()
