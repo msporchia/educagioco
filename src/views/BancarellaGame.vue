@@ -19,7 +19,8 @@ import Soldo from '../components/Soldo.vue'
 import { usaPausa } from '../giochi/pausa.js'
 import VeloPausa from '../giochi/VeloPausa.vue'
 import Ripresa from '../giochi/Ripresa.vue'
-import { sosta, salvaSosta, buttaSosta, ritocca } from '../giochi/campagne.js'
+import { sosta, salvaSosta, buttaSosta, ritocca, segnaPrimato } from '../giochi/campagne.js'
+import { fraseDiFine } from '../giochi/primati.js'
 import { scrivi, leggi, dice } from '../motore/bancarella/sosta.js'
 
 const emit = defineEmits(['vai'])
@@ -53,6 +54,7 @@ const cucina = ref(cucinaNuova())   // la stanza, il cuoco, i piatti
 const cucineAperte = /[#&](aperte|livello)=/.test(location.hash)   // la prova dei grandi
 const ricettaAperta = ref('')       // il piatto di cui si legge la ricetta: intanto il tempo si ferma
 const dettoCuoco = ref(null)        // il perché di un tocco a vuoto
+const frasePrimato = ref('')        // alla fine della cucina senza fine: com'è andata col record
 
 /* L'incasso resta, e compra gli attrezzi. */
 const mioBanco = ref(bancoPulito((state.profile.campagne || {}).bancarella?.banco, state.profile.totals.incasso))
@@ -338,6 +340,8 @@ function chiudi(come) {
   spegniOrologio()
   cambio.value = null
   segnaBest('clienti', hud.serviti)
+  frasePrimato.value = camp.value.infinita
+    ? fraseDiFine(segnaPrimato(CHIAVE, hud.serviti, Date.now(), { incasso: hud.incasso, banchi: nTappa.value }), 'quanti') : ''
   if (come === 'vinta') {
     segna('mercati')
     const b = mioBanco.value
@@ -483,7 +487,7 @@ onBeforeUnmount(() => {
     </template>
 
     <template v-else-if="fase === 'gioco'">
-      <Ordini :ordini="ordini" :tappa="(T.i + 1) + '/' + camp.tappe" @ricetta="e => (ricettaAperta = e)" />
+      <Ordini :ordini="ordini" :tappa="camp.infinita ? 'giro ' + (T.i + 1) : (T.i + 1) + '/' + camp.tappe" @ricetta="e => (ricettaAperta = e)" />
 
       <div class="banco">
         <Ricetta v-if="ricettaAperta" :ricetta="cucina.ricette.find(r => r.emoji === ricettaAperta)" @chiudi="ricettaAperta = ''" />
@@ -571,17 +575,18 @@ onBeforeUnmount(() => {
       <!-- il cartello fra un giro e l'altro: finché è su, il tempo è fermo -->
       <div v-if="cambio" class="cartello-tappa">
         <b>{{ camp.nome }}</b>
-        <span class="mini">ordinazioni {{ cambio.n + 1 }} di {{ camp.tappe }}</span>
+        <span class="mini">{{ camp.infinita ? 'giro ' + (cambio.n + 1) : 'ordinazioni ' + (cambio.n + 1) + ' di ' + camp.tappe }}</span>
       </div>
     </template>
 
     <div v-else class="centro">
-      <h1 style="font-size:30px">{{ esito === 'vinta' ? 'Servizio finito!' : 'La cucina ha chiuso' }}</h1>
+      <h1 style="font-size:30px">{{ esito === 'vinta' || camp.infinita ? 'Servizio finito!' : 'La cucina ha chiuso' }}</h1>
       <div class="vetrina">{{ esito === 'vinta' ? '🎉' : hud.serviti >= 5 ? '😊' : '😅' }}</div>
       <p class="testo">Ordinazioni servite: <b>{{ hud.serviti }}</b> ·
         resti perfetti: <b>{{ hud.perfetti }}</b><br>Incasso: <b>{{ euro(hud.incasso) }}</b><template
           v-if="guadagno.monete"> · <b data-monete-prese>+{{ guadagno.monete }} 🪙</b></template></p>
       <p v-if="guadagno.nota" class="mini" data-nota-monete>{{ guadagno.nota }}</p>
+      <p v-if="frasePrimato" class="testo" data-primato>{{ frasePrimato }}</p>
       <div class="riga">
         <button v-if="esito === 'vinta' && dopo !== null" class="bottone" @click="inizia(dopo)">Prossima cucina ▶</button>
         <button v-else class="bottone" @click="inizia(livello)">Riprova ▶</button>

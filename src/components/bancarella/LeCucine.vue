@@ -36,7 +36,7 @@ const finito = a => prezzo(a) === undefined
     <button v-for="(c, k) in CUCINE" :key="c.id" type="button" class="livello" :class="{ chiusa: chiusa(k), fatta: k < fatte }" :data-cucina-n="k + 1"
             :disabled="chiusa(k)" @click="emit('scegli', k)">
       <img :src="FOTO['piatto:' + c.foto]" alt="">
-      <span class="testo"><b>{{ k + 1 }} · {{ c.nome }}</b><small>{{ c.nuovo }}</small></span>
+      <span class="testo"><b>{{ c.infinita ? '∞' : k + 1 }} · {{ c.nome }}</b><small>{{ c.nuovo }}</small></span>
     </button>
   </div>
 </template>

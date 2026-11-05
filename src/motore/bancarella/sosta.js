@@ -14,6 +14,7 @@ export function leggi(s) {
 /* Quello che dice la carta in cima ai livelli. */
 export function dice(s) {
   const g = leggi(s)
-  return g && { nome: CUCINE[g.livello].nome, tappa: `ordinazioni ${g.nTappa + 1} di ${CUCINE[g.livello].tappe}`,
+  const c = g && CUCINE[g.livello]
+  return g && { nome: c.nome, tappa: c.infinita ? `giro ${g.nTappa + 1}` : `ordinazioni ${g.nTappa + 1} di ${c.tappe}`,
                 cuori: g.hud.cuori, serviti: g.hud.serviti }
 }

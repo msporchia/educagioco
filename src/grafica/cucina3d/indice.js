@@ -12,7 +12,6 @@ import { creaCuoco } from './omino.js'
 
 const FOV = 20     // stretto: da vicino la fila davanti si allargava fuori dallo schermo
 const VERSO = new Vector3(0, 0.9, 0.46).normalize()
-const LARGO = 5.3, FONDO = 10.9
 const SCALA_ROBA = 0.5      // i pezzi di cucina sono fatti per il banco col dito: qui stanno in una cella
 const COSTRUISCI = { pentola: creaPentola, padella: creaPadella, tagliere: creaTagliere, forno: creaForno }
 // quanto sporge dal piano quello che si tocca: il forno e la finestra si toccano anche in alto
@@ -103,8 +102,8 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
   renderer.shadowMap.autoUpdate = false    // il cuoco ha un'ombra finta: quelle vere si rifanno solo se cambia cosa c'è sui banchi
 
   /* ── la telecamera: tutta la stanza dentro, in piedi o coricato ── */
-  let W = 1, H = 1, q = null, largo = 0, fondo = 0
-  const MIRA = new Vector3(2.5, 0.2, 4.6)
+  let W = 1, H = 1, q = null, largo = 5, fondo = 10
+  const MIRA = new Vector3()
   const dpr = fisso || Math.min(2, window.devicePixelRatio || 1)
   function misura() {
     const r = canvas.getBoundingClientRect()
@@ -113,13 +112,15 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
     renderer.setSize(W, H, false)
     camera.aspect = W / H
     const t = Math.tan(FOV * Math.PI / 360)
-    camera.position.copy(MIRA).addScaledVector(VERSO, Math.max(LARGO / 2 / (t * camera.aspect), FONDO / 2 / t))
+    // la stanza cambia da una cucina all'altra: si inquadra quella che c'è
+    MIRA.set(largo / 2, 0.2, fondo * 0.46)
+    camera.position.copy(MIRA).addScaledVector(VERSO, Math.max((largo + 0.3) / 2 / (t * camera.aspect), (fondo + 0.9) / 2 / t))
     camera.lookAt(MIRA)
     camera.clearViewOffset()
     camera.updateMatrixWorld()
     camera.updateProjectionMatrix()
     // sullo schermo lungo avanza spazio: la stanza scende in fondo, e sopra resta il muro
-    const giu = new Vector3(2.5, 0, fondo || 10).project(camera), avanza = H * (0.5 + giu.y / 2) - 6
+    const giu = new Vector3(largo / 2, 0, fondo).project(camera), avanza = H * (0.5 + giu.y / 2) - 6
     if (avanza > 0) camera.setViewOffset(W, H, 0, -avanza, W, H)
     camera.updateProjectionMatrix()
   }
@@ -133,7 +134,7 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
   const scatole = [], coltelli = {}
   let tagliereInUso = ''
   function monta(s) {
-    largo = Math.max(...s.celle.map(c => c.x)) + 1; fondo = Math.max(...s.celle.map(c => c.z)) + 1
+    largo = s.largo; fondo = s.fondo
     creaSala(scena, s.celle, largo, fondo)
     for (const c of s.celle) {
       const cx = c.x + 0.5, cz = c.z + 0.5

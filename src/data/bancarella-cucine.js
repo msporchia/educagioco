@@ -74,7 +74,7 @@ const SCALA_CASSA = [
   [4, 'resto', 10, [1000, 2000]],
   [3, 'tutto', 50, [2000]],
   [3, 'tutto', 10, [2000]],
-  [3, 'tutto', 5, [2000, 5000]],
+  [4, 'tutto', 5, [2000, 5000]],
 ]
 const MONETE_DEL_PASSO = { 100: [100, 200, 500], 50: [50, 100, 200, 500], 10: [10, 20, 50, 100, 200, 500], 5: [5, 10, 20, 50, 100, 200, 500] }
 const cassaDi = k => {
@@ -130,6 +130,8 @@ export const CUCINE = [
   L('L\'ora di punta', '🍝🥩', 'più carne sul fuoco', ['🍔', '🍝🥩', '🥩🥗', '🍕'], { ...FRETTA, piatti: 5 }),
   L('La sala piena', '🍔🧀', 'il formaggio dappertutto', ['🍔🧀', '🍝🧀', '🍕', '🍱', '🥗'], { ...FRETTA, piatti: 4 }),
   L('Il gran servizio', '🍕🥩', 'tutti i piatti', RICETTE.map(r => r.emoji), { ...FRETTA, tempo: [90, 75], piatti: 4 }),
+  // l'ultima non finisce: si va avanti finché i cuori reggono, e conta il record (`senzaFine` in data/giochi.js)
+  L('La cucina senza fine', '🍕🥩', 'non finisce mai: quante ordinazioni servi?', RICETTE.map(r => r.emoji), { ...FRETTA, infinita: true, tappe: Infinity, tempo: [100, 60], piatti: 5 }),
 ].map((c, k, tutte) => ({ ...c, ...cassaDi(k), id: 'cucina-' + (k + 1), scuola: 'numeri',
                          portata: Math.round(PORTATA_DA + k / (tutte.length - 1) * (PORTATA_A - PORTATA_DA)) }))
 

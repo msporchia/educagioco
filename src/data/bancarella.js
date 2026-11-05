@@ -32,7 +32,8 @@ export const premioCliente = camp => MONETE_CLIENTE[(camp && camp.conto) || 'nie
 /* Che cosa tocca al giro `n` di un livello: il tempo si stringe da un giro all'altro. */
 export function tappaDi(camp, n) {
   const [primo, ultimo] = camp.tempo
-  const tempo = Math.round(primo + (ultimo - primo) * (camp.tappe > 1 ? n / (camp.tappe - 1) : 1))
+  const tempo = camp.infinita ? Math.max(ultimo, primo - n * 3)
+    : Math.round(primo + (ultimo - primo) * (camp.tappe > 1 ? n / (camp.tappe - 1) : 1))
   return { n, i: n, camp, tempo, passo: camp.passo, articoli: camp.articoli, monete: camp.monete, tetto: camp.tetto, paga: camp.paga,
            conto: camp.conto, chiediTotale: chiedeIlTotale(camp.conto), chiediResto: chiedeIlResto(camp.conto) }
 }

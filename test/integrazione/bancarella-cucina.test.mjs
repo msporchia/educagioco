@@ -39,12 +39,15 @@ const fermo = () => page.waitForFunction(() => {
 }, undefined, { timeout: 30000 })
 
 // il tocco è vero; la camminata no, se non si prova quella: senza scheda grafica i fotogrammi sono pochi
-const PANE = '1,9', SUGO = '2,9', FORMAGGIO = '0,6', INSALATA = '0,5', PIATTI = '2,0', TAGLIERE = '0,1', CONSEGNA = '3,0', LAVELLO = '1,0'
-const PAVIMENTO = { [PANE]: [1, 8], [SUGO]: [2, 8], [FORMAGGIO]: [1, 6], [INSALATA]: [1, 5], [PIATTI]: [2, 1], [TAGLIERE]: [1, 1], [CONSEGNA]: [3, 1], [LAVELLO]: [1, 1] }
-async function premi(id) {
-  const [x, z] = PAVIMENTO[id]
-  await page.evaluate(([x, z]) => Object.assign(window.__shop.cucina.value.cuoco, { x: x + 0.5, z: z + 0.5 }), [x, z])
-  await tocco(await dove(id))
+const PANE = 'pane', SUGO = 'sugo', FORMAGGIO = 'formaggio', INSALATA = 'insalata', PIATTI = 'piatti', TAGLIERE = 'tagliere', CONSEGNA = 'consegna', LAVELLO = 'lavello'
+const cella = nome => page.evaluate(n => { const k = window.__shop.cucina.value.celle.find(q => q.cosa === n || q.nome === n || q.tipo === n); return { ...k } }, nome)
+async function premi(nome) {
+  const k = await cella(nome)
+  await page.evaluate(([x, z]) => {
+    const c = window.__shop.cucina.value
+    Object.assign(c.cuoco, { x: Math.max(1, Math.min(c.largo - 2, x)) + 0.5, z: Math.max(1, Math.min(c.fondo - 2, z)) + 0.5 })
+  }, [k.x, k.z])
+  await tocco(await dove(k.id))
   await fermo()
   await attendi(page, 40)
 }
@@ -70,14 +73,14 @@ uguale('niente persone', await page.locator('[data-cliente]').count(), 0)
 uguale('e niente ceste del mercato', await page.locator('.ceste').count(), 0)
 uguale('tre ordinazioni in lista', await page.locator('[data-ordine]').count(), 3)
 controlla('e sono foto, non icone', (await page.locator('[data-ordinato] img').first().getAttribute('src')).startsWith('data:image/webp'))
-await tocco(await dove('3,7'))
+await tocco(await dove('1,3'))
 await fermo()
 const k = (await stato()).cuoco
-uguale('toccando il pavimento il cuoco va lì', `${k.x},${k.z}`, '3.5,7.5')
-await page.evaluate(() => Object.assign(window.__shop.cucina.value.cuoco, { x: 3.5, z: 7.5 }))
-await tocco(await dove(PANE))
-await tocco(await dove(TAGLIERE))
-uguale('l\'ultimo tocco comanda', (await stato()).fila.join(' '), TAGLIERE)
+uguale('toccando il pavimento il cuoco va lì', `${k.x},${k.z}`, '1.5,3.5')
+await page.evaluate(() => Object.assign(window.__shop.cucina.value.cuoco, { x: 2.5, z: 3.5 }))
+await tocco(await dove((await cella(PANE)).id))
+await tocco(await dove((await cella(TAGLIERE)).id))
+uguale('l\'ultimo tocco comanda', (await stato()).fila.join(' '), (await cella(TAGLIERE)).id)
 await fermo()
 await page.evaluate(() => { window.__shop.cucina.value.cuoco.mano = null })
 await premi(PANE)

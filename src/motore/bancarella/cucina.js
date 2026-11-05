@@ -7,18 +7,17 @@ const COLPO = 0.3                  // i secondi di un colpo: il cuoco taglia da 
 const LAVATA = 1.4                 // i secondi per lavare un piatto
 const RITORNO = 6                  // quanto ci mette un piatto a tornare sporco
 const PIZZA = { cuoce: 8, tiene: 45 }  // nel forno
-export const LARGA = 5, FONDA = 10 // la stanza, in celle: stretta e alta, come un telefono
 const VELOCITA = 4.2
 
-/* La pianta, a zone: in fondo si finisce (lavello, piatti, consegna), a sinistra si taglia,
-   a destra si cuoce, davanti la dispensa. `:2` è l'attrezzo comprato. */
-const FISSE = {
-  '0,0': 'pomodoro', '1,0': { tipo: 'lavello' }, '2,0': { tipo: 'piatti' }, '3,0': { tipo: 'consegna' }, '4,0': 'pasta',
-  '0,1': 'tagliere', '0,2': 'tagliere:2', '0,3': 'tagliere:3', '0,4': 'tagliere:4', '0,5': 'insalata', '0,6': 'formaggio', '0,7': 'pesce', '0,8': 'uovo',
-  '4,1': 'pentola', '4,2': 'pentola:2', '4,3': 'padella', '4,4': 'padella:2', '4,5': 'forno', '4,6': 'forno:2', '4,7': 'carne', '4,8': 'impasto',
-  '0,9': 'alga', '1,9': 'pane', '2,9': 'sugo', '3,9': 'riso', '4,9': { tipo: 'bidone' },
-}
-const ISOLE = ['2,3', '2,4', '2,6', '2,7']     // gli appoggi in più, nell'ordine in cui si comprano
+/* La pianta, a zone: in fondo si finisce (lavello, piatti, consegna), a sinistra si taglia, a destra
+   si cuoce, davanti la dispensa. La stanza è grande quanto serve: chi ha poche cose non corre.
+   `:2` è l'attrezzo comprato. */
+const A_SINISTRA = ['tagliere', 'tagliere:2', 'tagliere:3', 'tagliere:4', 'pomodoro', 'insalata', 'formaggio', 'pesce']
+const A_DESTRA = ['pentola', 'pentola:2', 'padella', 'padella:2', 'forno', 'forno:2', 'pasta', 'carne', 'uovo']
+const DAVANTI = ['pane', 'sugo', 'riso', 'alga', 'impasto']
+const RIGHE_ISOLE = [2, 3, 5, 6]   // gli appoggi in più, nella colonna di mezzo
+const LIBERI = 3                   // i banconi vuoti che si cerca di lasciare
+const MINIMO = 5, MASSIMO = 10     // quanto è fonda
 
 export const tipoDi = nome => nome.split(':')[0]
 const libera = () => ({ fase: 'vuota', t: 0, cosa: '', colpi: 0 })
@@ -26,19 +25,38 @@ const libera = () => ({ fase: 'vuota', t: 0, cosa: '', colpi: 0 })
 /* Gli ingredienti che servono alle ricette della cucina: le cassette. */
 export const dispensaDi = c => [...new Set(c.ricette.flatMap(r => r.passi))]
 
-function pianta(c) {
-  const celle = [], cose = dispensaDi(c)
-  for (let z = 0; z < FONDA; z++) for (let x = 0; x < LARGA; x++) {
+function pianta(c, quanteIsole) {
+  const cose = dispensaDi(c), servono = l => l.filter(k => c.stazioni[k] || cose.includes(k))
+  const sinistra = servono(A_SINISTRA), destra = servono(A_DESTRA), dispensa = servono(DAVANTI)
+  const largo = c.puliti !== null || quanteIsole ? 5 : 4
+  const fondo = (() => {
+    const roba = sinistra.length + destra.length + dispensa.length
+    let f = Math.max(MINIMO, sinistra.length + 1, destra.length + 1, quanteIsole ? RIGHE_ISOLE[quanteIsole - 1] + 3 : 0)
+    while (f < MASSIMO && roba + LIBERI > 2 * (f - 1) + largo - 1) f++
+    return f
+  })()
+  // quello che davanti non ci sta va in fondo alla colonna più corta
+  const davanti = dispensa.slice(0, largo - 1)
+  for (const k of dispensa.slice(largo - 1)) (sinistra.length <= destra.length ? sinistra : destra).push(k)
+  const inFondo = largo === 5 ? [c.puliti !== null ? 'lavello' : '', 'piatti', 'consegna'] : ['piatti', 'consegna']
+  const isole = RIGHE_ISOLE.slice(0, quanteIsole).map(z => `2,${z}`)
+  const cosaC = (x, z) => {
+    if (z === fondo - 1) return x === largo - 1 ? 'bidone' : davanti[x]
+    if (x === 0) return sinistra[z]
+    if (x === largo - 1) return destra[z]
+    return z === 0 ? inFondo[x - 1] : undefined
+  }
+  const celle = []
+  for (let z = 0; z < fondo; z++) for (let x = 0; x < largo; x++) {
     const id = `${x},${z}`
-    if (x && z && x < LARGA - 1 && z < FONDA - 1 && !c.isole.includes(id)) continue
-    const f = FISSE[id]
-    const cella = { id, x, z, tipo: 'banco' }
-    if (f?.tipo && (f.tipo !== 'lavello' || c.puliti !== null)) cella.tipo = f.tipo
+    if (x && z && x < largo - 1 && z < fondo - 1 && !isole.includes(id)) continue
+    const f = cosaC(x, z), cella = { id, x, z, tipo: 'banco' }
+    if (['lavello', 'piatti', 'consegna', 'bidone'].includes(f)) cella.tipo = f
     else if (c.stazioni[f]) { cella.tipo = 'stazione'; cella.nome = f }
-    else if (cose.includes(f)) { cella.tipo = 'cassetta'; cella.cosa = f }
+    else if (f) { cella.tipo = 'cassetta'; cella.cosa = f }
     celle.push(cella)
   }
-  return celle
+  return { celle, largo, fondo }
 }
 
 /* `camp` è una delle CUCINE, `attrezzi` quello che il bambino ha comprato.
@@ -49,9 +67,10 @@ function pianta(c) {
 export function cucinaNuova(camp = CUCINE[0], attrezzi = {}) {
   const nomi = attrezziDi(camp).flatMap(t => [t, ...Array.from({ length: attrezzi[t] || 0 }, (_, i) => `${t}:${i + 2}`)])
   const c = { stazioni: Object.fromEntries(nomi.map(n => [n, libera()])), ricette: ricetteDi(camp.ricette),
-              isole: ISOLE.slice(0, attrezzi.isola || 0), puliti: camp.piatti ? camp.piatti + (attrezzi.piatti || 0) : null, sporchi: 0, ritorni: [] }
-  return { ...c, celle: pianta(c), sopra: {}, fila: [], strada: [], arrivato: '', perche: '', tagliando: '', colpo: 0, lavando: false, lavata: 0,
-           cuoco: { x: 2.5, z: 5.5, verso: 0, mano: null, cammina: false } }
+              puliti: camp.piatti ? camp.piatti + (attrezzi.piatti || 0) : null, sporchi: 0, ritorni: [] }
+  const stanza = pianta(c, attrezzi.isola || 0)
+  return { ...c, ...stanza, sopra: {}, fila: [], strada: [], arrivato: '', perche: '', tagliando: '', colpo: 0, lavando: false, lavata: 0,
+           cuoco: { x: 1.5, z: stanza.fondo - 1.5, verso: 0, mano: null, cammina: false } }
 }
 
 const tempiDi = s => (s.cosa === 'pizza' ? PIZZA : INGREDIENTI[s.cosa])
@@ -87,8 +106,8 @@ export const quantoLavato = c => c.lavata / LAVATA
 
 /* ── camminare ── */
 const cellaDi = (c, id) => c.celle.find(k => k.id === id)
-const pieni = c => new Set(c.celle.map(k => k.id))
-const pavimento = (occupate, x, z) => x >= 0 && z >= 0 && x < LARGA && z < FONDA && !occupate.has(`${x},${z}`)
+const pieni = c => Object.assign(new Set(c.celle.map(k => k.id)), { largo: c.largo, fondo: c.fondo })
+const pavimento = (occupate, x, z) => x >= 0 && z >= 0 && x < occupate.largo && z < occupate.fondo && !occupate.has(`${x},${z}`)
 
 /* La via più corta di casella in casella, fino a una delle `mete`. In diagonale
    solo se i due lati sono liberi: se no si taglierebbe lo spigolo di un bancone. */
