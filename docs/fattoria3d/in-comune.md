@@ -57,7 +57,7 @@ spariva per 36-50 s (misurato con due browser). Mosse e contadino sono due infor
 - **Una mossa persa si rimanda**, una **posizione no**: il giro dopo ne porta una più nuova.
 - Ogni giro porta `{ k: 'qui', p, d, r?, g?, a? }`: `p` la strada fatta dall'ultimo giro (un punto ogni 0,4 s, al massimo 10), verso dove
   guarda, se ha corso, l'ultimo gesto, ogni quattro giri l'abito. Uscendo, `{ k: 'via' }`.
-- **Chi riceve tiene solo l'ultima** e ne segue la strada: il contadino cammina, ma **circa tre secondi indietro** rispetto all'amico. Se è
+- **Chi riceve tiene solo l'ultima** e ne segue la strada: il contadino cammina, ma **da tre a sei secondi indietro** rispetto all'amico (la strada di un giro, più l'attesa del giro di chi guarda). Se è
   più lontano di cinque celle dall'inizio della strada ci salta; sparisce dopo 15 s senza notizie (un giro perso ne costa sei).
 - Il contadino ospite non tocca la fattoria.
 
