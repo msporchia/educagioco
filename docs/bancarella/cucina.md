@@ -60,8 +60,8 @@ che resta si ingoia, se no preme una moneta ([../core/il-dito.md](../core/il-dit
   vogliono un piatto. Il bruciato si prende a mani libere, per buttarlo.
 - **Crudo non va sul piatto**: pasta, carne e uovo passano dal fuoco; insalata, formaggio
   e pesce dal tagliere: un tocco e il cuoco taglia da sé fino alla fine, un secondo e
-  mezzo (`TAGLI`, `COLPO`). Il pavimento lo porta via, e un tocco lo fa riprendere. Il pane è già tagliato: nella cassetta c'è il panino aperto, una
-  pagnotta intera chiederebbe il tagliere.
+  mezzo (`TAGLI`, `COLPO`). Il pavimento lo porta via, e un tocco lo fa riprendere. Il pane è già a fette, tipo toast: una pagnotta intera chiederebbe il
+  tagliere, e un panino tondo sembrava una pizzetta. Il pane tondo resta all'hamburger.
 - **La pizza entra in forno col piatto** ed esce pronta, a mani libere.
 - **A bruciare ci si deve impegnare**: una cosa resta buona 45 secondi dopo la cottura
   (`tiene`). Il bruciato si prende a mani libere e va nel bidone.
