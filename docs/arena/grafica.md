@@ -84,9 +84,10 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
   il prato dipinto ai suoi piedi prende il colore del posto. Viene dal vestito `bosco` del castello a torri finché non arrivano i castelli del posto (voce 9).
   Prima ogni terreno aveva il suo, e nella lava i colori delle squadre erano rovesciati.
   **Provato** il filtro `hue-rotate`: tetti verdi e neve rosa.
-- **Di che squadra è una truppa** si vede da un contorno del suo colore (la figura tinta,
-  `tinta()`, spostata di un pelo ai quattro lati) e da un disco pieno sotto i piedi: con
-  il solo cerchietto, vicine, non si distinguevano.
+- **Di che squadra è una truppa** si vede da un contorno del suo colore (la figura tinta in
+  `figura()`, spostata di un pelo ai quattro lati) e da un disco pieno sotto i piedi: con
+  il solo cerchietto, vicine, non si distinguevano. Il contorno è un filo (0,75 px, un blu e
+  un rosso spenti, 80%): a 1,3 px e con colori accesi sembrava un alone al neon.
 - **Gli arcieri hanno in mano l'arco del sotterraneo** (`arco()` in `scena/figure.js`, il
   pezzo grande `arco-corto` di `sotterraneo/dati/atlante.js`): nel foglio lo scheletro è a
   mani vuote. Come l'arma dell'eroe là, sta a un punto fisso davanti al corpo, non a un

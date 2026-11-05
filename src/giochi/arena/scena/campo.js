@@ -201,7 +201,7 @@ export class Campo {
     const chiave = `${lato}:${fg}:${id}`
     let f = this.figure.get(chiave)
     if (f) return f
-    const [sx, sy, w, h] = PEZZI[fg], k = this.k, sc = SCALA[id] * this.s / 0.85 * ZT * k, d = 1.3 * k
+    const [sx, sy, w, h] = PEZZI[fg], k = this.k, sc = SCALA[id] * this.s / 0.85 * ZT * k, d = 0.75 * k
     const lw = w * sc, lh = h * sc, specchia = lato === 'nem', bordo = Math.ceil(d) + 1
     const extra = id === 'scheletri' ? lh * 0.5 : 0                       // l'arco esce dalla figura
     const mezzo = Math.ceil(lw / 2 + extra + bordo), cv = document.createElement('canvas')
@@ -218,9 +218,11 @@ export class Campo {
     const tinta = document.createElement('canvas'); tinta.width = cv.width; tinta.height = cv.height
     const t = tinta.getContext('2d')
     t.drawImage(corpo, 0, 0)
-    t.globalCompositeOperation = 'source-in'; t.fillStyle = lato === 'io' ? '#4f9dff' : '#ff4a3d'; t.fillRect(0, 0, cv.width, cv.height)
+    t.globalCompositeOperation = 'source-in'; t.fillStyle = lato === 'io' ? '#2f7fe6' : '#dc3a2e'; t.fillRect(0, 0, cv.width, cv.height)
     const c = cv.getContext('2d')
+    c.globalAlpha = 0.8
     for (const [dx, dy] of [[-d, 0], [d, 0], [0, -d], [0, d]]) c.drawImage(tinta, dx, dy)
+    c.globalAlpha = 1
     c.drawImage(corpo, 0, 0)
     f = { cv, piede: piede / k, alto: lh / k }
     this.figure.set(chiave, f)
