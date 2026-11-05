@@ -5,6 +5,7 @@ import { palla, osso, unione, dentro, sopra, pelle, scatolaDi, fra, verso, mosso
 import { ombra, creaColtello } from './pezzi.js'
 
 const SCALA = 0.72
+const ALTO_MANI = 0.78      // sopra il piano dei banconi: passando accanto, quello che porta non ci entra dentro
 const PELLE = 0xf2c6a0, GIACCA = 0xfbf7ee, GREMBIULE = 0x2f6f8f, FAZZOLETTO = 0xd2402e, CAPELLI = 0x5a3a22, SCARPE = 0x3a2a22
 const opaco = lucido => new MeshStandardMaterial({ vertexColors: true, roughness: lucido, metalness: 0 })
 const pezzo = (forma, passo, colore, lucido = 0.62) => new Mesh(pelle(forma, { ...scatolaDi(forma, 0.04), passo, colore }), opaco(lucido))
@@ -127,7 +128,7 @@ export function creaCuoco() {
   braccia[0].add(coltello)
   figura.add(sopraVita, ...gambe, ...braccia)
   figura.scale.setScalar(SCALA)
-  const mano = new Group(); mano.position.set(0, 0.5, 0.5); mano.scale.setScalar(0.8)
+  const mano = new Group(); mano.position.set(0, ALTO_MANI, 0.46); mano.scale.setScalar(0.8)
 
   const g = new Group()
   g.add(ombra(0.5), figura, mano)
@@ -146,11 +147,11 @@ export function creaCuoco() {
     gambe[1].rotation.x = -passo * 0.75
     sopraVita.position.y = cammina ? Math.abs(Math.cos(fase)) * 0.035 : 0
     sopraVita.rotation.z = passo * 0.05
-    mano.position.y = 0.5 + sopraVita.position.y * SCALA
+    mano.position.y = ALTO_MANI + sopraVita.position.y * SCALA
     colpo = Math.max(0, colpo - dt / 0.22)
-    const su = porta ? -1.45 : passo * 0.6
+    const su = porta ? -1.8 : passo * 0.6
     braccia[0].rotation.x = colpo ? -1.9 + Math.sin(colpo * Math.PI) * 1.1 : su
-    braccia[1].rotation.x = porta ? -1.45 : -passo * 0.6
+    braccia[1].rotation.x = porta ? -1.8 : -passo * 0.6
     braccia[0].rotation.z = porta ? 0.28 : 0.08
     braccia[1].rotation.z = porta ? -0.28 : -0.08
     coltello.visible = colpo > 0

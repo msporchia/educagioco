@@ -5,7 +5,7 @@ import { state, answer, segna, segnaBest, tappaAperta } from '../store/profile.j
 import { nuovoOrdine, tappaDi, scomponi, euro, centesimiScritti, scriviCifra, premioCliente, ORDINI_PER_TAPPA } from '../data/bancarella.js'
 import { CUCINE, ricetteDi, compraAttrezzo, bancoPulito } from '../data/bancarella-cucine.js'
 import { FOTO } from '../data/bancarella-foto.js'
-import { cucinaNuova, passo as passoCucina, usa, tocca, vaiA, arriva, consegna as daiPiatto, SERVE_PIATTO } from '../motore/bancarella/cucina.js'
+import { cucinaNuova, passo as passoCucina, usa, tocca, vaiA, arriva, consegna as daiPiatto, cheManca } from '../motore/bancarella/cucina.js'
 import { suono } from '../audio.js'
 import { usaAmici } from '../amici/usaAmici.js'
 import { borsa } from '../store/varieta.js'
@@ -53,7 +53,6 @@ const cucina = ref(cucinaNuova())   // la stanza, il cuoco, i piatti
 const cucineAperte = /[#&](aperte|livello)=/.test(location.hash)   // la prova dei grandi
 const ricettaAperta = ref('')       // il piatto di cui si legge la ricetta: intanto il tempo si ferma
 const dettoCuoco = ref(null)        // il perché di un tocco a vuoto
-const cassaAperta = ref(true)       // il resto è un foglio, e si può mettere da parte
 
 /* L'incasso resta, e compra gli attrezzi. */
 const mioBanco = ref(bancoPulito((state.profile.campagne || {}).bancarella?.banco, state.profile.totals.incasso))
@@ -191,13 +190,11 @@ function agisciCuoco() {
 }
 
 function serviDalleMani() {
-  const k = cucina.value, emoji = k.cuoco.mano?.pronto
-  k.perche = ''
-  if (momento.value !== 'cucina') k.perche = 'Prima dai il resto'
-  else if (!emoji) k.perche = 'Qui si porta il piatto finito'
-  else if (k.cuoco.mano.nudo) k.perche = SERVE_PIATTO
-  const o = coda.value.find(c => mancaA(c).includes(emoji))
-  if (!k.perche && !o) k.perche = 'Questo non l\'ha ordinato nessuno'
+  const k = cucina.value, m = k.cuoco.mano, emoji = m?.nudo ? '' : m?.pronto
+  const o = emoji && coda.value.find(c => mancaA(c).includes(emoji))
+  k.perche = momento.value !== 'cucina' ? 'Prima dai il resto'
+    : !m ? 'Qui si porta il piatto finito'
+    : !o ? cheManca(k, m, coda.value.flatMap(mancaA)) : ''
   if (k.perche) return false
   daiPiatto(k, [emoji])
   o.fatti.push(emoji)
@@ -214,14 +211,13 @@ function ordineScaduto(o) {
   if (!coda.value.length) tappaFinita()
 }
 
-/* Col foglio aperto si conta da fermi, sempre: la fretta sta nel muoversi. */
+/* Alla cassa si conta da fermi, sempre: la fretta sta nel muoversi. */
 function tempoCucina(dt) {
-  if (momento.value === 'cassa' && cassaAperta.value) return
-  const pagata = momento.value === 'cassa' ? coda.value[0] : null
-  for (const o of coda.value) if (o !== pagata) o.restaPazienza -= dt
+  if (momento.value === 'cassa') return
+  for (const o of coda.value) o.restaPazienza -= dt
   passoCucina(cucina.value, dt)
   if (cucina.value.arrivato) agisciCuoco()
-  const via = coda.value.find(o => o !== pagata && o.restaPazienza <= 0)
+  const via = coda.value.find(o => o.restaPazienza <= 0)
   if (via) ordineScaduto(via)
 }
 
@@ -235,7 +231,6 @@ const ordini = computed(() => coda.value.map(o => ({
    domande. Finché il totale non è indovinato il cassetto non si apre nemmeno. */
 function allaCassa() {
   momento.value = 'cassa'
-  cassaAperta.value = true
   apertoIl = performance.now()
 }
 
@@ -374,7 +369,7 @@ const chiede = ref(null)           // { nome, k }: il livello nuovo che buttereb
 
 const foto = () => ({
   livello: livello.value, nTappa: nTappa.value, hud, coda: coda.value, cucina: cucina.value, momento: momento.value,
-  piatto: piatto.value, digitato: digitato.value, contoFatto: contoFatto.value, rifiuti, cassaAperta: cassaAperta.value,
+  piatto: piatto.value, digitato: digitato.value, contoFatto: contoFatto.value, rifiuti,
   cartello: !!cambio.value, monete: { chiesto: borsellino.chiesto, dato: borsellino.dato },
 })
 
@@ -424,7 +419,6 @@ function riprendiPartita() {
   piatto.value = g.piatto
   digitato.value = g.digitato
   contoFatto.value = g.contoFatto
-  cassaAperta.value = g.cassaAperta
   rifiuti = g.rifiuti
   apertoIl = performance.now()
   if (g.cartello) {
@@ -446,7 +440,7 @@ function seSparisce(e) {
 onMounted(() => {
   window.__shop = { fase, coda, piatto, hud, inizia, metti, togli, proponi, mioBanco, cliente, dato, manca, scomponi, momento,
                     tappa: nTappa, camp, T, cambio, esito, batti, confermaTotale, digitato, contoFatto, chiediTotale, aMente,
-                    TASTI, cucina, cassaAperta, guadagno, inPausa, chiudi, livello }
+                    TASTI, cucina, guadagno, inPausa, chiudi, livello }
   // la sosta del mercato che non c'è più non si legge: via
   if (sosta(CHIAVE) && !leggi(sosta(CHIAVE))) scorda()
   const n = Number((location.hash.match(/livello=(\d+)/) || [])[1])
@@ -494,12 +488,8 @@ onBeforeUnmount(() => {
         <Ricetta v-if="ricettaAperta" :ricetta="cucina.ricette.find(r => r.emoji === ricettaAperta)" @chiudi="ricettaAperta = ''" />
         <Cucina :stato="cucina" :detto="dettoCuoco" @tocca="toccaStanza" />
 
-        <!-- il resto non chiude i fornelli: sta in un foglio, e la ✕ lo mette da parte -->
-        <button v-if="momento === 'cassa' && !cassaAperta" type="button" class="al-resto"
-                data-azione="al-resto" @click="cassaAperta = true">🧾 dai il resto</button>
-        <div v-if="momento === 'cassa' && cassaAperta" class="cassa">
-          <button type="button" class="chiudi-foglio" data-chiudi aria-label="torna ai fornelli"
-                  @click="cassaAperta = false">✕</button>
+        <!-- il resto non chiude i fornelli: sta in un foglio, e finché non è dato non si va avanti -->
+        <div v-if="momento === 'cassa'" class="cassa">
           <!-- i soldi si mostrano e non si dicono: si contano -->
           <div class="porge" data-porge>
             <small>Ti danno</small><Soldo v-for="(m, i) in cliente.pagaCon" :key="i" :cents="m" mini />
@@ -621,14 +611,10 @@ onBeforeUnmount(() => {
          background-color:#a9713c; background-image:repeating-linear-gradient(179deg,#ffffff0f 0 2px,#00000000 2px 34px,#00000026 34px 36px);
          box-shadow:0 -6px 16px #0000004d; animation:apre .2s }
 @keyframes apre { from { transform:translateY(10px); opacity:0 } to { transform:none; opacity:1 } }
-.porge { display:flex; align-items:center; gap:6px; margin:0 40px 6px 4px }
+.porge { display:flex; align-items:center; gap:6px; margin:0 4px 6px }
 .porge small { font-size:13px; font-weight:800; color:#fff3dc }
 .foto-voce { width:34px; height:34px; vertical-align:middle }
 .vaschette .soldo { max-width:64px; font-size:21px }
-.chiudi-foglio { position:absolute; right:6px; top:-14px; z-index:2; width:34px; height:34px; border:0; border-radius:50%; font-size:16px; font-weight:900;
-                 color:#fff; background:#c8442f; box-shadow:0 2px 4px #0005 }
-.al-resto { position:absolute; left:50%; bottom:calc(14px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:20; padding:12px 24px; border:0;
-            border-radius:14px; font-size:17px; font-weight:900; color:#5a3200; background:linear-gradient(180deg,#ffd257,#ffa62b); box-shadow:0 4px 0 #c97b12, 0 6px 12px #0004 }
 
 /* il registratore disegnato: scontrino e display verde, e sotto il cassetto estratto con gli scomparti */
 .macchina { flex:none; display:flex; align-items:stretch; gap:8px; padding:0 2px }
