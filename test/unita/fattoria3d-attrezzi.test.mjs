@@ -16,19 +16,20 @@ function mondo() {
     throw new Error('nessun posto per il campo')
   }
   const uno = metti(), due = metti()
-  const detti = [], aperti = [], fatti = []
+  const detti = [], aperti = [], fatti = [], rifiuti = []
   const w = {
     m, rect: { width: 390, height: 700 }, proietta: () => [100, 200, true], pezzi: { centroDi: () => ({}), salta: () => {} }, puntaSuolo: (x, y) => ({ x, z: y }),
     fx: { parla: t => detti.push(t) },
-    ui: { attrezzi: x => aperti.push(x), riempi: (id, k) => { fatti.push(['riempi', id, k]); return k !== 'no' }, lava: id => { fatti.push(['lava', id]); return true } },
+    ui: { rifiuto: t => rifiuti.push(t), attrezzi: x => aperti.push(x), riempi: (id, k) => { fatti.push(['riempi', id, k]); return k !== 'no' }, lava: id => { fatti.push(['lava', id]); return true } },
     azioni: {
       campo: () => detti.push('cresce'),
+      dici: t => detti.push(t),
       nutriRecinto: c => { fatti.push(['nutri', c.id]); return true },
       semina: (c, k) => m.semina(c.id, k).ok,
       raccogli: c => { if (!m.provaRaccolta(c.id).ok) return false; c.tile.forEach((_, k) => m.raccogliTessera(c.id, k)); return true },
     },
   }
-  return { w, b, m, t, uno, due, detti, aperti, fatti, a: new Attrezzi(w) }
+  return { w, b, m, t, uno, due, detti, aperti, fatti, rifiuti, a: new Attrezzi(w) }
 }
 const su = c => [c.i + 0.5, c.j + 0.5]
 
@@ -72,6 +73,24 @@ const su = c => [c.i + 0.5, c.j + 0.5]
   m.s.merci.grano = 0; a.prendi('falce'); a.passa(...su(uno)); a.lascia()
   controlla('liberato lo scomparto si riprova', m.campoVuoto(uno) && a.aperto === null)
 }
+/* una passata che non serve a niente lo dice */
+{
+  const { a, m, uno, due, detti, t } = mondo()
+  m.semina(uno.id, 'grano'); a.tocco(due); a.prendi('grano'); a.passa(...su(uno)); a.lascia()
+  uguale('i semi su un campo che cresce: lo dice e l\'attrezzo resta', [detti.at(-1), a.aperto?.tipo], ['cresce', 'semi'])
+  a.chiudi(); detti.length = 0
+  m.semina(due.id, 'grano'); t.ora += 6 * 60000; a.aperto = { tipo: 'semi' }; a.prendi('grano'); a.passa(...su(due)); a.lascia()
+  uguale('i semi su un campo pronto: dice di usare il falcetto', detti, ['È già pronto: raccoglilo col falcetto'])
+}
+{
+  const { a, uno, due, m, detti } = mondo()
+  m.semina(uno.id, 'grano'); a.tocco(uno); controlla('un campo che cresce non porta attrezzo', a.aperto === null)
+  m.semina(due.id, 'grano'); m.s.merci.grano = 0
+  a.aperto = { tipo: 'falce' }; a.prendi('falce'); a.passa(...su(due)); a.lascia()
+  uguale('il falcetto su un campo che cresce non fa finta di niente', detti.at(-1), 'cresce')
+  const v = m.cosa(due.id); v.tile.fill(null); a.aperto = { tipo: 'falce' }; a.prendi('falce'); a.passa(...su(due)); a.lascia()
+  uguale('il falcetto su un campo vuoto dice di seminare', detti.at(-1), 'È vuoto: prima semina qualcosa')
+}
 /* fuori dai campi */
 {
   const { a, uno, m } = mondo()
@@ -80,12 +99,13 @@ const su = c => [c.i + 0.5, c.j + 0.5]
 }
 /* la ciotola: i cibi solo a chi ha fame, e va dentro solo se la lasci sopra */
 {
-  const { a, m, b, aperti, fatti, detti } = mondo()
+  const { a, m, b, aperti, fatti, detti, rifiuti } = mondo()
   b.monete = 5000; m.s.esperienza = 1e6; m.cura.compra('beagle')
   const k = m.cura.ciotolaDi('beagle')
   m.cura.casa.beagle.pancia = 0.9
   a.ciotola(k)
-  uguale('senza fame non si apre: lo dice', [a.aperto, detti.at(-1)], [null, `${m.cura.nomeDi('beagle')} non ha fame`])
+  uguale('e lo dice anche in cima alla scena', rifiuti.at(-1), detti.at(-1))
+  uguale('senza fame non si apre: lo dice', [a.aperto, detti.at(-1)], [null, `${m.cura.nomeDi('beagle')} non ha fame: quando ne avrà, ti chiamerà dalla sua ciotola`])
   m.cura.casa.beagle.pancia = 0.2
   a.ciotola(k)
   uguale('con la fame porta i cibi', [a.aperto.tipo, a.aperto.bestia, a.aperto.voci.some(v => v.id === 'osso')], ['ciotola', 'beagle', true])
@@ -104,11 +124,12 @@ const su = c => [c.i + 0.5, c.j + 0.5]
 }
 /* la tinozza: gli sporchi in vignetta, uno portato dentro comincia il bagno */
 {
-  const { a, m, b, fatti, detti } = mondo()
+  const { a, m, b, fatti, detti, rifiuti } = mondo()
   b.monete = 5000; m.s.esperienza = 1e6; m.cura.compra('beagle'); m.cura.compra('coniglio')
   const t = m.cura.tinozza()
   a.tinozza(t)
-  uguale('tutti puliti: lo dice', [a.aperto, detti.at(-1)], [null, 'Sono tutti puliti!'])
+  uguale('e lo dice anche in cima alla scena', rifiuti.at(-1), detti.at(-1))
+  uguale('tutti puliti: lo dice', [a.aperto, detti.at(-1)], [null, 'Sono tutti puliti: la tinozza serve quando qualcuno si sporca'])
   m.cura.casa.beagle.pelo = 0.2
   a.tinozza(t)
   uguale('in vignetta solo chi è sporco', a.aperto.voci.map(v => v.id), ['beagle'])

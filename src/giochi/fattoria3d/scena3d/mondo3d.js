@@ -318,11 +318,15 @@ export class Mondo3d {
     if (b && b.kind === 'albero') {
       const a = m.albero(b.n), l = lottoDi(a.i, a.j)
       if (!m.posseduto(l)) return this.azioni.offriLotto(l)               // ciò che sta in un terreno non tuo si compra
+      const no = this.azioni.noAbbatti(a)                                 // senza monete non si cammina fin lì per sentirselo dire
+      if (no) return this.azioni.dici(no)
       return eroe.vaiA(this.celleDiServizio(b), () => this.azioni.abbatti(a), this.centroDi(b))
     }
     if (b && b.kind === 'ostacolo') {
       const o = m.ostacolo(b.n), l = lottoDi(o.i, o.j)
       if (!m.posseduto(l)) return this.azioni.offriLotto(l)
+      const no = this.azioni.noTogliere(o)
+      if (no) return this.azioni.dici(no)
       return eroe.vaiA(this.celleDiServizio(b), () => this.azioni.togli(o), this.centroDi(b))
     }
     if (b && b.kind === 'cosa' && PEZZI[m.cosa(b.id)?.tipo]?.acqua) {            // l'acqua costruita (stagno, laghetto): si pesca nella cella toccata
