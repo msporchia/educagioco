@@ -676,27 +676,24 @@ export const AIUTI = {
   },
 
   bancarella: {
-    emoji: '🍎', titolo: 'Al mercato',
+    emoji: '🍳', titolo: 'In cucina',
     blocchi: [
-      'Un banco per volta, tre clienti a banco: si legge il cartellino, si conta quello che chiedono e si dà il resto giusto.',
+      'Una cucina da girare col cuoco: si tocca dove andare e lui fa quello che lì è ovvio. In cima ci sono le ordinazioni, che si fanno in qualsiasi ordine e scadono.',
       { titolo: 'La cosa da sapere', righe: [
-        'I clienti **hanno una loro pazienza**: se ci si mette troppo si lamentano, e la giornata si può chiudere male.',
-        'Tappa dopo tappa il tempo si stringe: è lì che il gioco diventa difficile, non nei numeri più grandi.',
+        'Toccando un piatto ordinato si legge la sua **ricetta**, e intanto il tempo si ferma.',
+        'Il cotto e il tagliato si prendono **col piatto**, e senza piatto non si serve. I piatti sporchi si lavano al lavello, uno per tocco.',
       ] },
-      { titolo: 'La cassa fa sempre meno conti', chiuso: true, righe: [
-        'Le prime giornate la cassa somma la spesa e dice quanto resto dare: il lavoro è comporlo con le monete del cassetto.',
-        'Poi il totale sparisce e si batte sulla tastiera — somme in euro tondi, entro il dieci.',
-        'Poi tocca al resto: il totale resta scritto, il cliente paga con 10 €, e la sottrazione la fa lui.',
-        'Nell\'ultima giornata la cassa non calcola più niente. **Ogni giornata aggiunge una cosa sola**: un prodotto in più, o una banconota più grossa, o i centesimi — mai due insieme.',
+      { titolo: 'La cassa', chiuso: true, righe: [
+        'Ogni ordinazione finita **si fa pagare**: si danno i soldi e si conta il resto. Mentre si conta è tutto fermo: la fretta sta nel muoversi, mai nei conti.',
+        'Nei primi livelli la cassa dice il resto e lo si compone coi soldi del cassetto; poi lo si conta a mente; alla fine si batte anche il totale di due piatti.',
       ] },
-      { titolo: 'Il banco tuo', righe: [
-        'Quello che si incassa resta in cassa e si spende dal tasto **Il tuo banco**: la tenda fa aspettare di più i clienti, il carretto porta più ceste, e la merce nuova si compra un prodotto alla volta.',
-        'Il cliente **mostra i soldi e non dice quanti sono**: si contano. Verso la fine qualcuno vuole «tutte quelle che riesce»: si decide quante dargliene e si conferma.',
+      { titolo: 'I livelli', righe: [
+        'I primi sono **a crudo**, con tempo da vendere: panini, insalate, sushi. Poi la pentola, la padella, il forno.',
+        'Con l\'incasso si comprano taglieri, pentole, padelle, forni e piatti in più.',
       ] },
       { titolo: 'Cosa allena', righe: [
         'I soldi veri: euro e centesimi, comporre una cifra coi tagli che si hanno, e **il resto**.',
-        'La somma e la sottrazione dove servono davvero: alla cassa, con la roba sul banco.',
-        'Contare avendo un po\' di fretta addosso — che è come si conta alla cassa vera.',
+        'Tenere a mente più cose e decidere in che ordine farle.',
       ] },
     ],
   },

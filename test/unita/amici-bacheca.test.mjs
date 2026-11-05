@@ -13,7 +13,7 @@ import { QUANTE_TAPPE as TAPPE_SOTTERRANEO } from '../../src/giochi/sotterraneo/
 import { TAPPE as TAPPE_INGLESE } from '../../src/giochi/inglese/dati/mondi.js'
 import { TAPPE as TAPPE_SPAGNOLO } from '../../src/giochi/spagnolo/dati/mondi.js'
 import { RACCONTO as TAPPE_CASTELLO } from '../../src/data/campagne-castello.js'
-import { CAMPAGNE as GIORNATE_BANCARELLA } from '../../src/data/bancarella.js'
+import { CUCINE } from '../../src/data/bancarella-cucine.js'
 import { STRADE } from '../../src/giochi/passo-passo/motore/strade.js'
 import { sincronizza, amiciNelGioco, avviaBacheca, fermaBacheca, COLORI, sorpassiDaDire } from '../../src/amici/bacheca.js'
 import { dati, carica, accendi, mettiOnline, aggiungi, impara, ricorda, togli, levaSorpassi } from '../../src/store/amici.js'
@@ -99,13 +99,11 @@ const ORA = new Date(2026, 9, 29, 17, 42).getTime()
   ugualeJ('Il castello: un record per partita libera, sotto la chiave della sfida',
     castello({ tappa: TAPPE_CASTELLO.length, libera: true }, { primati: { 'libera-bosco': { best: 30 }, 'libera-mura': { best: 12 } } }),
     { posti: { '': TAPPE_CASTELLO.length }, primati: { 'libera-bosco': 30, 'libera-mura': 12 } })
-  // La bancarella: la giornata da fare sta in `profile.mercato` (non nelle campagne); finite le sedici, la libera del Cairo; niente record
-  const bancarella = (mercato, campagne = {}) => istantanea({ mercato, campagne: { bancarella: campagne } }, ORA).giochi.bancarella
-  ugualeJ('La bancarella: la giornata da fare, e nessun record', bancarella({ tappa: 7, libera: false, stelle: { banchetto: 3 } }), { posti: { '': 7 }, primati: {} })
-  uguale('La bancarella: a campagna finita si è alla libera, dopo l\'ultima giornata', bancarella({ tappa: GIORNATE_BANCARELLA.length, libera: true }).posti[''], GIORNATE_BANCARELLA.length)
-  uguale('La bancarella: la tappa non va oltre la libera', bancarella({ tappa: 99, libera: true }).posti[''], GIORNATE_BANCARELLA.length)
-  uguale('La bancarella: i campagne.bancarella non contano per la tappa', bancarella({ tappa: 2 }, { tappa: 9, libera: true }).posti[''], 2)
-  controlla('La bancarella: chi non ha finito niente non ha un posto', bancarella({ tappa: 0, libera: false }) === undefined)
+  // La cucina: quanti livelli ha vinto sta nel banco
+  const bancarella = fatte => istantanea({ campagne: { bancarella: { banco: { cucina: { fatte } } } } }, ORA).giochi.bancarella
+  uguale('La cucina: i livelli vinti', bancarella(7).posti[''], 7)
+  uguale('La cucina: la tappa non va oltre l\'ultimo', bancarella(999).posti[''], CUCINE.length)
+  controlla('La cucina: chi non ha finito niente non ha un posto', !bancarella(0))
   // Passo passo: un posto per strada, la tappa di adesso di quel protagonista (come la mappa), in fondo il sentiero
   const passo = c => istantanea({ campagne: { passo: c } }, ORA).giochi.passo
   const { coniglio, cane } = STRADE

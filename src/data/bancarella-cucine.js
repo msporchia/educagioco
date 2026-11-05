@@ -11,8 +11,9 @@ export const INGREDIENTI = {
   insalata:  { emoji: '🥬', nome: 'insalata', va: 'tagliere' },
   formaggio: { emoji: '🧀', nome: 'formaggio', va: 'tagliere' },
   pesce:     { emoji: '🐟', nome: 'pesce', va: 'tagliere' },
+  pomodoro:  { emoji: '🍅', nome: 'pomodoro', va: 'tagliere' },
   pane:      { emoji: '🍞', nome: 'pane' },
-  sugo:      { emoji: '🍅', nome: 'sugo' },
+  sugo:      { emoji: '🥫', nome: 'sugo' },
   riso:      { emoji: '🍚', nome: 'riso' },
   alga:      { emoji: '🌿', nome: 'alga' },
   impasto:   { emoji: '🫓', nome: 'impasto' },
@@ -20,9 +21,9 @@ export const INGREDIENTI = {
 
 /* `emoji` è la chiave del piatto, a schermo si vede la sua foto. Una ricetta può
    contenerne un'altra: il piatto è pronto, e se gli si aggiunge qualcosa cresce. */
-const R = (emoji, nome, prezzo, passi, forno) => ({ emoji, nome, prezzo, banco: 'cucina', passi, ...(forno ? { forno } : {}) })
+const R = (emoji, nome, prezzo, passi, forno) => ({ emoji, nome, prezzo, passi, ...(forno ? { forno } : {}) })
 export const RICETTE = [
-  R('🥖', 'bruschetta', 300, ['pane', 'sugo']),
+  R('🥖', 'bruschetta', 300, ['pane', 'pomodoro']),
   R('🥪', 'panino al formaggio', 350, ['pane', 'formaggio']),
   R('🍙', 'riso con l\'alga', 350, ['riso', 'alga']),
   R('🥗', 'insalata col formaggio', 400, ['insalata', 'formaggio']),
@@ -52,15 +53,16 @@ export function attrezziDi(camp) {
   return ['pentola', 'padella', 'tagliere', 'forno'].filter(t => tipi.has(t))
 }
 
-export const CUCINA_BANCO = { nome: 'La cucina', icona: '🍝', colore: '#b5472f', tenda: '#f0a58f', legno: '#a9713c' }
-const BASE = { conto: 'resto', cucina: true, tappe: ['cucina', 'cucina', 'cucina'], passo: 50, articoli: [1, 1],
-               tetto: 1000, paga: [1000], copie: 0, monete: [50, 100, 200, 500], tempo: [78, 62] }
-// i primi livelli sono a crudo, e con tempo da vendere: si impara a muoversi senza fretta
-const CALMA = { tempo: [120, 100] }
+const BASE = { conto: 'resto', tappe: 3, passo: 50, articoli: [1, 1], tetto: 1000, paga: [1000], monete: [50, 100, 200, 500], tempo: [78, 62] }
+// i primi livelli sono a crudo, con tempo da vendere, e il resto lo dice la cassa: si impara a muoversi senza fretta
+const CALMA = { conto: 'niente', tempo: [120, 100] }
 // due piatti a cliente: il totale si batte, si paga coi 20 €
 const DUE = { conto: 'tutto', articoli: [1, 2], tetto: 1900, paga: [2000], monete: [50, 100, 200, 500, 1000], tempo: [95, 75] }
 // gli ultimi: le ordinazioni scadono prima. La fretta sta nel muoversi: i conti si fanno sempre da fermi
 const FRETTA = { ...DUE, tempo: [80, 65] }
+
+const PORTATA_DA = 32        // sei anni e mezzo: sotto, il gioco non si offre
+const PORTATA_A = 72         // nove anni e tre quarti
 
 /* `piatti`: quanti ce ne sono, e da lì tornano sporchi. Senza, la pila non finisce.
    `foto`: il piatto che si vede nella scelta. */
@@ -94,9 +96,11 @@ export const CUCINE = [
   L('L\'ora di punta', '🍝🥩', 'più carne sul fuoco', ['🍔', '🍝🥩', '🥩🥗', '🍕'], { ...FRETTA, piatti: 5 }),
   L('La sala piena', '🍔🧀', 'il formaggio dappertutto', ['🍔🧀', '🍝🧀', '🍕', '🍱', '🥗'], { ...FRETTA, piatti: 4 }),
   L('Il gran servizio', '🍕🥩', 'tutti i piatti', RICETTE.map(r => r.emoji), { ...FRETTA, tempo: [90, 75], piatti: 4 }),
-].map((c, k) => ({ ...c, id: 'cucina-' + (k + 1) }))
-export const cucinaIdx = k => -2 - k
-export const eCucina = i => i <= -2
+].map((c, k, tutte) => ({ ...c, id: 'cucina-' + (k + 1), scuola: 'numeri',
+                         portata: Math.round(PORTATA_DA + k / (tutte.length - 1) * (PORTATA_A - PORTATA_DA)) }))
+
+/* la fila che `data/portata.js` si aspetta di ricevere */
+export const FILA = CUCINE.map(c => ({ campagna: c.id, portata: c.portata, scuola: c.scuola }))
 
 /* Gli attrezzi da comprare: uno in più di ognuno, i taglieri e i piatti a uno a uno. `da`: il
    primo livello dove servono, prima non si vedono. */
@@ -114,6 +118,13 @@ const intero = (n, max) => (Number.isInteger(n) && n >= 0 ? Math.min(n, max) : 0
 export function cucinaPulita(s) {
   const o = s && typeof s === 'object' ? s : {}
   return { fatte: intero(o.fatte, CUCINE.length), ...Object.fromEntries(ATTREZZI.map(a => [a.che, intero(o[a.che], a.quanti)])) }
+}
+
+/* Il banco salvato, messo a posto: l'incasso resta, chi giocava prima lo ritrova in cassa. */
+export function bancoPulito(salvato, incassato = 0) {
+  const s = salvato && typeof salvato === 'object' ? salvato : null
+  return { cassa: s && Number.isInteger(s.cassa) && s.cassa >= 0 ? s.cassa : Math.max(0, Math.round(incassato) || 0),
+           cucina: cucinaPulita(s && s.cucina) }
 }
 
 /* Il banco dopo l'acquisto, o `null` se non si può. */

@@ -16,7 +16,7 @@ const FISSE = {
   '1,0': { tipo: 'lavello' }, '2,0': { tipo: 'piatti' }, '3,0': { tipo: 'consegna' }, '5,0': { tipo: 'bidone' },
   '0,1': 'tagliere', '0,2': 'tagliere:2', '0,3': 'tagliere:3', '0,4': 'tagliere:4', '0,5': 'insalata', '0,6': 'formaggio', '0,7': 'pesce', '0,8': 'alga',
   '6,1': 'pentola', '6,2': 'pentola:2', '6,3': 'padella', '6,4': 'padella:2', '6,5': 'forno', '6,6': 'forno:2',
-  '1,8': 'pane', '2,8': 'sugo', '3,8': 'riso', '4,8': 'uovo', '5,8': 'carne', '6,8': 'pasta', '6,7': 'impasto',
+  '0,0': 'pomodoro', '1,8': 'pane', '2,8': 'sugo', '3,8': 'riso', '4,8': 'uovo', '5,8': 'carne', '6,8': 'pasta', '6,7': 'impasto',
 }
 const ISOLA = ['2,3', '3,3', '4,3', '2,5', '3,5', '4,5']
 
@@ -211,7 +211,7 @@ const usaPiatto = c => { if (c.puliti !== null) c.puliti-- }
 const sporcaPiatto = c => { if (c.puliti !== null) c.sporchi++ }
 
 // sul piatto si posa in qualunque ordine; così si dispone, perché il disegno ci conta
-const ORDINE = ['impasto', 'pasta', 'riso', 'uovo', 'pane', 'carne', 'pesce', 'alga', 'insalata', 'sugo', 'formaggio']
+const ORDINE = ['impasto', 'pasta', 'riso', 'uovo', 'pane', 'carne', 'pesce', 'alga', 'insalata', 'pomodoro', 'sugo', 'formaggio']
 const prendeIl = (c, p, cosa) => !p.cose.includes(cosa) && c.ricette.some(r => [...p.cose, cosa].every(x => r.passi.includes(x)))
 
 function sulPiatto(c, p, cosa) {

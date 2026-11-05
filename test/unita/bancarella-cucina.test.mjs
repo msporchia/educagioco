@@ -1,9 +1,9 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { CUCINE } from '../../src/data/bancarella.js'
 import { cucinaNuova, passo, usa, tocca, vaiA, arriva, consegna, passiRicetta, TAGLI, SERVE_PIATTO } from '../../src/motore/bancarella/cucina.js'
-import { RICETTE, INGREDIENTI, ATTREZZI, attrezziDi, cucinaPulita, compraAttrezzo } from '../../src/data/bancarella-cucine.js'
-import { bancoPulito } from '../../src/data/bancarella-banco.js'
+import { CUCINE, RICETTE, INGREDIENTI, ATTREZZI, attrezziDi, cucinaPulita, compraAttrezzo, bancoPulito, ricetteDi } from '../../src/data/bancarella-cucine.js'
+import { nuovoOrdine, tappaDi, scomponi, premioCliente, chiaveResto } from '../../src/data/bancarella.js'
+import { scrivi, leggi, dice } from '../../src/motore/bancarella/sosta.js'
 
 /* Tocca un posto, lascia camminare il cuoco e fa la mossa, come fa la vista. */
 function vai(c, id) {
@@ -264,8 +264,8 @@ test('il cotto, il tagliato, il sugo e il riso vogliono il piatto', () => {
 
 test('senza piatto non si serve', () => {
   const c = cucina()
-  fa(c, cassetta(c, 'pane'))
-  assert.ok(fa(c, cassetta(c, 'sugo')), 'pane e pomodoro si uniscono')
+  c.cuoco.mano = { cosa: 'pomodoro', fatta: true, bruciata: false }
+  assert.ok(fa(c, cassetta(c, 'pane')), 'pane e pomodoro si uniscono')
   assert.equal(c.cuoco.mano.pronto, '🥖')
   assert.ok(c.cuoco.mano.nudo)
   assert.equal(consegna(c, ['🥖']), false, 'ma senza piatto no')
@@ -275,7 +275,8 @@ test('senza piatto non si serve', () => {
 
   const b = cucina()                  // sul piatto già posato
   fa(b, '2,0'); fa(b, '3,3')
-  fa(b, cassetta(b, 'pane')); fa(b, cassetta(b, 'sugo'))
+  b.cuoco.mano = { cosa: 'pomodoro', fatta: true, bruciata: false }
+  fa(b, cassetta(b, 'pane'))
   assert.ok(fa(b, '3,3'))
   assert.equal(b.cuoco.mano, null)
   assert.equal(b.sopra['3,3'].pronto, '🥖')
@@ -338,6 +339,33 @@ test('i livelli: tanti, a crudo i primi, ogni ricetta ha i suoi attrezzi', () =>
   const usati = new Set(CUCINE.flatMap(c => c.ricette))
   for (const r of RICETTE) assert.ok(usati.has(r.emoji), `${r.nome} sta in qualche cucina`)
   assert.ok(Object.values(INGREDIENTI).every(i => !i.cuoce || i.tiene >= 40))
+})
+
+test('le ordinazioni: i conti tornano in ogni livello', () => {
+  for (const camp of CUCINE) for (let i = 0; i < 40; i++) {
+    const t = tappaDi(camp, i % camp.tappe), o = nuovoOrdine(t, ricetteDi(camp.ricette))
+    assert.equal(o.totale, o.articoli.reduce((s, a) => s + a.prezzo, 0))
+    assert.ok(o.resto > 0, `${camp.nome}: c'è sempre un resto`)
+    assert.equal(o.pagaCon.reduce((s, v) => s + v, 0), o.paga, 'i soldi mostrati sono quelli pagati')
+    assert.equal(scomponi(o.resto, t.monete).reduce((s, v) => s + v, 0), o.resto, `${camp.nome}: il resto si compone col cassetto`)
+    assert.equal(o.chiave, chiaveResto(o.resto))
+    assert.equal(new Set(o.articoli.map(a => a.emoji)).size, o.articoli.length, 'due piatti diversi')
+  }
+  assert.ok(premioCliente(CUCINE[0]) > 0)
+  assert.equal(CUCINE[0].conto, 'niente', 'all\'inizio il resto lo dice la cassa')
+  assert.equal(CUCINE.at(-1).conto, 'tutto')
+})
+
+test('la sosta riporta la stanza com\'era', () => {
+  const c = cucina()
+  fa(c, cassetta(c, 'pasta')); fa(c, '6,1')
+  const f = { livello: 27, nTappa: 1, hud: { cuori: 2, serviti: 3, perfetti: 1, incasso: 900 }, coda: [{ id: 1, articoli: [], fatti: [] }], cucina: c,
+              momento: 'cucina', piatto: [], digitato: '', contoFatto: false, rifiuti: 0, cassaAperta: true, cartello: false, monete: { chiesto: 0, dato: 0 } }
+  const g = leggi(scrivi(f))
+  assert.equal(g.cucina.stazioni.pentola.fase, 'cuoce')
+  assert.equal(dice(scrivi(f)).cuori, 2)
+  assert.equal(leggi({ idx: 3, coda: [] }), null, 'la sosta del mercato non si legge')
+  assert.equal(leggi({ ...scrivi(f), livello: 99 }), null)
 })
 
 test('ogni ricetta di ogni cucina si può finire', () => {

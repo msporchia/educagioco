@@ -6,7 +6,7 @@
 import { GIOCHI_NUOVI, gioco } from '../giochi/indice.js'
 import { LIBERE_RACCONTO, RACCONTO } from './campagne-castello.js' // le quattro partite libere del castello, e le sue venti tappe
 import { SCALETTA, filaDi, posizioneOra } from './asteroidi.js'
-import { CAMPAGNE as GIORNATE } from './bancarella.js' // le giornate della bancarella
+import { CUCINE } from './bancarella-cucine.js'
 
 // un gioco nuovo che ha preso la carta di uno vecchio sta al suo posto, non in coda
 const AL_POSTO_DI_UNO_VECCHIO = ['inglese', 'spagnolo']
@@ -54,14 +54,11 @@ export const GIOCHI = [
     amici: { tappe: RACCONTO.length, dove: 'alle partite libere',
              tappa: p => { const td = p.td || {}; return td.libera ? RACCONTO.length : Math.floor(Number(td.tappa) || 0) } } },
   // senza `grandi`: la prima giornata è tarata sui 6,5 anni (portata: 32), contare monete non chiede di saper leggere
-  { chiave: 'bancarella', ico: '🛒', nome: 'La bancarella',
-    che: 'euro, centesimi e resto', area: 'numeri', come: 'fare',
+  { chiave: 'bancarella', ico: '🍳', nome: 'La cucina',
+    che: 'cucinare, euro e resto', area: 'numeri', come: 'fare',
     copertina: { fondo: '#ffd36b', disegno: '#e8553f', scena: 'tenda' },
-    // il record del Cairo (docs/bancarella/regole.md, «Il mercato senza fine»)
-    senzaFine: { nome: 'Il mercato senza fine', icona: '♾️', misura: 'quanti', che: 'quanti clienti servi',
-                 dettagli: d => [`${(d.incasso / 100).toFixed(2).replace('.', ',')} € incassati`, `${d.banchi} banchi`] },
-    // gli amici sul giro del mondo (docs/core/amici-nei-giochi.md): la giornata da fare sta in `profile.mercato`; dopo l'ultima, la libera del Cairo
-    amici: { tappe: GIORNATE.length, dove: 'al mercato del Cairo', tappa: p => (p.mercato || {}).tappa } },
+    // gli amici sui livelli (docs/core/amici-nei-giochi.md): quanti ne ha vinti sta nel banco
+    amici: { tappe: CUCINE.length, dove: 'al gran servizio', tappa: p => p.campagne?.bancarella?.banco?.cucina?.fatte } },
   // i giochi di src/giochi/ si aggiungono da soli dal loro manifesto: ripeterli qui sarebbe tenerli allineati a mano
   ...GIOCHI_NUOVI.filter(g => !AL_POSTO_DI_UNO_VECCHIO.includes(g.chiave)).map(riga),
 ]

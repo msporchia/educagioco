@@ -9,7 +9,6 @@ import { acceso as suonoAcceso } from '../audio.js'
 import { CHIAVI_GIOCHI, serveA } from '../data/giochi.js'
 import { SAPERI } from '../data/saperi.js'
 import { nascitaValida, etaDiClasse, etaVoluta, dentroGliEstremi } from '../data/nascita.js'
-import { CAMPAGNE as GIORNATE_BANCARELLA } from '../data/bancarella.js'
 import { eccezioniDi, eccezioniPerEta, spostandoLEta,
          rimettendoLEta, partenzaPerEta } from '../data/partenze.js'
 import { finestraDi } from '../quiz/nucleo/classi.js'
@@ -50,7 +49,6 @@ const blank = () => ({
   calc: { tappa: 0, libera: false },// specchio delle stazioni a mente
   eng: { tappa: 0, libera: false }, // e per la campagna di English
   esp: { tappa: 0, libera: false }, // e per quella di Spagnolo
-  mercato: { tappa: 0, libera: false, stelle: {}, v: 3 },   // `v`: vedi `migraMercato`; `stelle`: per id di giornata
   // `ordini`/`stelle`/`aiuti` per livello (chiave = id, non posizione): vedi `migraGenerale`
   gen: { tappa: 0, libera: false, ordini: {}, stelle: {}, aiuti: {}, v: 2 },
   // i giochi di src/giochi/ stanno tutti qui: 'codice' -> { tappa, libera, stelle:{}, cfg:{} }
@@ -381,7 +379,6 @@ export async function selectPlayer(id) {
   p.calc = { ...vuoto.calc, ...(p.calc || {}) }
   p.eng = { ...vuoto.eng, ...(p.eng || {}) }
   p.esp = { ...vuoto.esp, ...(p.esp || {}) }
-  p.mercato = migraMercato(vuoto.mercato, raw && raw.mercato)
   delete p.lab   // pozioni rifatta, vive in campagne.pozioni; nessuno legge più `lab`
   if (p.settings) delete p.settings.misureNuove
   p.gen = migraGenerale(vuoto.gen, raw && raw.gen)
@@ -991,70 +988,6 @@ export function linguaCompleta(campo, indice, quanteTappe) {
   persist()
   flush()          // una tappa si vince di rado: non deve perdersi
   return c
-}
-
-/* ═══════════ campagna della bancarella ═══════════
-   Le giornate di mercato: `tappa` è quante giornate sono state finite ed è
-   l'indice della prossima da aprire. Finita l'ultima si apre la giornata
-   libera, che non chiude mai. */
-export const mercatoProgresso = () => state.profile.mercato
-
-// Rimappa le sei giornate di ieri sulle sedici di oggi, nessuno torna
-// indietro: vedi docs/bancarella/regole.md ("Il salvataggio segue la fila").
-export const MERCATO_VERSIONE = 3
-const MERCATO_DA_SEI = [0, 1, 2, 6, 14, 14, 16]
-// la v3 ha messo «Tutte quelle che riesce» prima della cassa rotta: chi la cassa rotta l'ha finita resta in fondo
-const MERCATO_FINE_V2 = 16
-
-export function migraMercato(vuoto, salvato) {
-  const dati = salvato && typeof salvato === 'object' ? salvato : {}
-  const m = { ...vuoto, ...dati }
-  if (dati.v !== MERCATO_VERSIONE) {
-    if (dati.v !== 2) {
-      const vecchia = Math.max(0, Math.min(MERCATO_DA_SEI.length - 1, Math.round(m.tappa || 0)))
-      m.tappa = Math.max(m.tappa || 0, MERCATO_DA_SEI[vecchia])
-      m.libera = !!m.libera
-    }
-    if (m.tappa >= MERCATO_FINE_V2) m.tappa = MERCATO_FINE_V2 + 1
-    m.v = MERCATO_VERSIONE
-  }
-  m.stelle = stelleDelMercato(m.stelle, m.tappa)
-  return m
-}
-
-/* Le stelle per giornata, sotto l'id (come nel Generale: la fila si può
-   riordinare, l'id no). Si rimette a posto a ogni caricamento: voti fuori
-   scala si riportano a 1-3, e una giornata già fatta senza voto parte con 1
-   stella (chi giocava prima delle stelle non perde niente e ha qualcosa da
-   migliorare). Gli id sconosciuti restano dove sono. */
-function stelleDelMercato(salvate, tappa) {
-  const out = {}
-  if (salvate && typeof salvate === 'object' && !Array.isArray(salvate)) {
-    for (const id in salvate) {
-      const n = Math.round(Number(salvate[id]))
-      if (n >= 1) out[id] = Math.min(3, n)
-    }
-  }
-  GIORNATE_BANCARELLA.forEach((g, i) => { if (i < tappa && !out[g.id]) out[g.id] = 1 })
-  return out
-}
-
-/* `stelle`: quelle di questa volta (1-3). Si tiene la migliore: rigiocare
-   peggio non toglie niente. */
-export function mercatoCompleta(indice, quanteGiornate, stelle = 1) {
-  const m = state.profile.mercato
-  m.tappa = Math.max(m.tappa || 0, indice + 1)
-  const g = GIORNATE_BANCARELLA[indice]
-  if (g) {
-    if (!m.stelle || typeof m.stelle !== 'object') m.stelle = {}
-    m.stelle[g.id] = Math.max(m.stelle[g.id] || 0, Math.min(3, Math.max(1, Math.round(stelle))))
-  }
-  if (m.tappa >= quanteGiornate) m.libera = true
-  state.profile.totals.mercati = (state.profile.totals.mercati || 0) + 1
-  controllaTraguardi()
-  persist()
-  flush()          // una giornata si finisce di rado: non deve perdersi
-  return m
 }
 
 // Il Generale (tolto il 29/10/2026: i suoi dati restano nel profilo, il livello li legge): le stelle stavano sotto la POSIZIONE del livello nella fila

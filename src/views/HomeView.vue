@@ -1,12 +1,12 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { state, level, countMastered, nomeCorrente, livelloOra,
-         mateProgresso, mercatoProgresso,
+         mateProgresso,
          tabellineIntere,
          quantiGiochiAccesi } from '../store/profile.js'
 import { daLeggere, difficoltaDaDire } from '../store/posta.js'
 import { SCALETTA, posizioneOra, filaDi } from '../data/asteroidi.js'
-import { CAMPAGNE as GIORNATE } from '../data/bancarella.js'
+import { CUCINE } from '../data/bancarella-cucine.js'
 import { gioco as giocoNuovo } from '../giochi/indice.js'
 import { progresso as progressoDi, primatoDi } from '../giochi/campagne.js'
 import { recordPiuRecente, recordInParole, sfidaDi } from '../giochi/primati.js'
@@ -57,11 +57,7 @@ const fatteMate = doveMate
 
 const clienti = computed(() => state.profile.totals.clienti || 0)
 const restiPerfetti = computed(() => state.profile.totals.restiPerfetti || 0)
-const mercato = computed(() => mercatoProgresso())
-const QUANTE_GIORNATE = GIORNATE.length
-// le stelle della bancarella: la somma dei voti migliori, una riga in più e niente tolto a nessuno
-const stelleBanco = computed(() => Object.values(mercato.value.stelle || {}).reduce((n, s) => n + s, 0))
-const codaBanco = computed(() => (stelleBanco.value ? ` · ⭐ ${stelleBanco.value}` : ''))
+const cucineFatte = computed(() => state.profile.campagne?.bancarella?.banco?.cucina?.fatte || 0)
 
 const salita = computed(() => livelloOra())
 
@@ -107,11 +103,7 @@ const dove = computed(() => {
     inglese: `${giocoNuovo('inglese').riassunto(progressoDi('inglese'))} · 🎯 ${imparateEn.value} sicure`,
     spagnolo: `${giocoNuovo('spagnolo').riassunto(progressoDi('spagnolo'))} · 🎯 ${imparateEs.value} sicure`,
     torri: recordTorri.value ? `♾️ ${recordTorri.value}` : '',
-    bancarella: mercato.value.libera
-      ? `♾️ mercato libero · ✨ ${restiPerfetti.value} resti precisi${codaBanco.value}`
-      : clienti.value
-        ? `🧺 giornata ${mercato.value.tappa + 1} di ${QUANTE_GIORNATE} · ✨ ${restiPerfetti.value} resti precisi${codaBanco.value}`
-        : '',
+    bancarella: clienti.value ? `🍳 livello ${Math.min(cucineFatte.value + 1, CUCINE.length)} di ${CUCINE.length} · ✨ ${restiPerfetti.value} resti precisi` : '',
   }
 })
 
