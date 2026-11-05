@@ -560,8 +560,8 @@ LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: foglio
 
 **Perché**: il terreno è più grande del campo e si adatta allo schermo senza stirarsi (`docs/arena/grafica.md`). In partita è
 un'immagine già pronta, oggi disegnata a monte da `npm run disegni:arena`: ha già la forma giusta, il dipinto la rifà e non la inventa, e al
-gioco non costa niente di più. Le colline hanno detto che lo stile regge. Nel loro dipinto ChatGPT ha aggiunto dodici riquadri di terra che
-non stanno sotto le piazzole: negli altri si chiede di non farne.
+gioco non costa niente di più. Le colline hanno detto che lo stile regge. La base degli edifici sta nel foglio delle caserme, quindi nel terreno non ci va: i dodici
+riquadri che ChatGPT ha messo nelle colline li copre `terreno-bosco.json` (lo legge `terreni-arena.py`).
 
 **Come si manda**: ChatGPT, **nella chat delle caserme**: proseguire o modificare un'immagine costa meno che ripartire da zero e tiene
 tutto omogeneo (l'utente, 5/11). Si allega solo `sorgenti/arena/schemi/terreno-<chiave>.png` (lo rifà `npm run disegni:arena`). Se
