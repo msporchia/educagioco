@@ -89,11 +89,11 @@ ventinove tappe non cambiano**: sono quelle dei progressi e delle stelle.
 | 2 | `grande` | «1 kg» | in grammi | `svolto` | 8 |
 | 3 | `grandi` | 2 kg, 5 kg | grammi e chili | `regola` | 6 |
 | 4 | `virgola` | «1500 g»; coi liquidi 0,5 l, 1,5 l | grammi e chili | `svolto` | 6 |
-| 5 | `virgole` | le stesse, e «3500 g»; coi liquidi 1,2 l | grammi e chili | niente | 4 |
+| 5 | `virgole` | le stesse, e «3500 g»; coi liquidi 1,2 l | grammi e chili | `regola` | 4 |
 | 6 | `media` | 8 kg, 12 kg | arrivano gli etti | `svolto` | 6 |
 | 7 | `miste` | in tre unità | in tre unità | `regola` | 4 |
 | 8 | `inversa` | «6000 g» | chili ed etti: si sale | `svolto` | 5 |
-| 9 | `inverse` | su e giù | in tre unità | niente | 3 |
+| 9 | `inverse` | su e giù | in tre unità | `regola` | 3 |
 
 - **La virgola arriva coi liquidi, alla tappa 22** (`capacita-virgola`). A scuola
   la virgola come numero si fa a metà quarta (`data/partenze.js`), cioè 68,75 sulla
@@ -109,8 +109,10 @@ ventinove tappe non cambiano**: sono quelle dei progressi e delle stelle.
   nella stessa pozione) e **la Pozione del Maestro**, con le dosi da magazzino.
 - **Quanto si dice lo decide la tappa** (`aiuto`): `gioco` il cartello dice
   come si gioca, `svolto` sotto ogni targhetta c'è quanto vale nell'unità
-  della ricetta, `regola` accanto all'ingrediente c'è l'uguaglianza («1 kg =
-  1000 g»), `''` niente.
+  della ricetta, `regola` il conto lo si fa da sé.
+- **L'uguaglianza resta sempre scritta** accanto all'ingrediente («1 kg = 1000 g»),
+  in tutte le ventinove tappe: si impara a usarla, non a ricordarla. A memoria si va
+  solo nel calderone senza fondo (`aiuto: ''`).
 - **`manca`**: la pergamena dice quanto manca (la sottrazione la fa il
   gioco). Solo in `inverse` e nelle finali la si fa da sé.
 - **La portata sale lungo la fila**: `PORTATA_DA` 44 i pesi (sette anni e

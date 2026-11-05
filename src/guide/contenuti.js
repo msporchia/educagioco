@@ -716,6 +716,7 @@ export const AIUTI = {
       { titolo: 'Una cosa nuova per volta', righe: [
         'Prima si impara il gesto, senza conversioni. Poi arriva il chilo, col conto scritto sotto ogni targhetta. Poi lo stesso senza il conto, poi chili e grammi insieme, poi gli etti, poi le conversioni al contrario.',
         'Le lunghezze rifanno la stessa scaletta, sempre con numeri interi. La virgola arriva solo coi liquidi. Nelle ultime due tappe arriva di tutto nella stessa pozione.',
+        'Accanto a ogni ingrediente resta sempre scritto quanto vale un\'unità nell\'altra, «1 kg = 1000 g». Solo nel calderone senza fondo si va a memoria.',
       ] },
       { titolo: 'Cosa allena', righe: [
         'Le misure e le unità: chili, etti e grammi; metri, decimetri e centimetri; litri, decilitri e millilitri — e passare dall\'una all\'altra, in tutti e due i versi.',

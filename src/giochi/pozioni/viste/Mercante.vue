@@ -58,7 +58,8 @@ const totale = computed(() => (props.bozza.length ? props.bozza.reduce((s, v) =>
 const percento = n => Math.min(100, n / b.value.gettoni * 100) + '%'
 // il conto scritto sotto la targhetta, solo dove la tappa lo dà
 const vale = (g, o) => (aiuto.value === 'svolto' && o.unita !== g.unita ? `= ${scrivi(o.base, g.unita)}` : '')
-const leRegole = g => (aiuto.value !== 'regola' ? [] : [...new Set(g.offerte.map(o => regola(g.unita, o.unita)).filter(Boolean))])
+// l'uguaglianza resta scritta in tutte le tappe: a memoria si va solo nel calderone senza fondo
+const leRegole = g => (aiuto.value === '' ? [] : [...new Set(g.offerte.map(o => regola(g.unita, o.unita)).filter(Boolean))])
 
 /* la scena, già decisa: la tela la traduce e basta */
 const quadro = computed(() => {

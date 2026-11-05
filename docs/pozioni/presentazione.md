@@ -49,20 +49,21 @@ quel momento: «C'erano 1000 g: 1000 g + 1000 g = 2000 g, oltre la tacca di
 ## La scaletta: una cosa nuova per volta
 
 **Prima si impara il gesto, poi una cosa nuova per volta, e ogni cosa nuova si
-spiega finché serve e poi si toglie.** Nove gradini, gli stessi per le tre
+spiega finché serve. L'uguaglianza fra le unità resta scritta in tutte le tappe:
+a memoria si va solo nel calderone senza fondo.** Nove gradini, gli stessi per le tre
 famiglie:
 
 | | gradino | cosa chiede | aiuto |
 |---|---|---|---|
 | 1 | il banco | «500 g», e il listino in grammi | come si gioca |
 | 2 | arriva il chilo | «1 kg», e il listino in grammi | il conto sotto ogni targhetta |
-| 3 | chili interi | 2 kg, 5 kg | solo la regola: 1 kg = 1000 g |
+| 3 | chili interi | 2 kg, 5 kg | la regola: 1 kg = 1000 g |
 | 4 | chili e grammi insieme | «1500 g», cioè 1 kg e 500 g | il conto sotto ogni targhetta |
-| 5 | chili e grammi senza aiuti | le stesse, e «3500 g» | niente |
+| 5 | chili e grammi da soli | le stesse, e «3500 g» | la regola |
 | 6 | etti sul listino | 8 kg, 12 kg, e arrivano gli etti | il conto sotto ogni targhetta |
 | 7 | chili, etti e grammi | la ricetta parla in tre unità | la regola |
 | 8 | al contrario | «6000 g», e il mercante vende a chili | il conto sotto ogni targhetta |
-| 9 | su e giù per la scala | tutto insieme | niente |
+| 9 | su e giù per la scala | tutto insieme | la regola |
 
 Le lunghezze rifanno la scaletta con metri, decimetri e centimetri, sempre in
 numeri interi: si pensa alla conversione, non ai conti. I liquidi la rifanno con

@@ -193,6 +193,10 @@ for (const t of CAMPAGNA) {
   uguale('due strumenti traboccati fanno due macchie', c.macchie.length, 2)
   uguale('e la spugna ne pulisce due', c.pulisci(), 2)
 }
+/* ---------- le uguaglianze restano scritte: a memoria solo nel calderone senza fondo ---------- */
+uguale('in tutte le ventinove tappe c\'è un aiuto', CAMPAGNA.filter(t => !t.aiuto).length, 0)
+uguale('nel calderone senza fondo no', [0, 5, 9].map(n => giroInfinito(n).aiuto).join(''), '')
+
 /* ---------- la spedizione: una a ordine, e il minimo la conta ---------- */
 {
   const t = tappa('massa-miste')

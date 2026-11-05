@@ -31,7 +31,7 @@ const GRADINI = [
     dritta: f => `Mezzo ${f.parole.G[0]}, un ${f.parole.G[0]} e mezzo: sotto ogni targhetta c'è quanto vale.`,
     dosi: [{ in: 'G', valori: [0.5, 1.5, 2.5, 3.5, 4.5] }] },
 
-  { id: 'virgole', aiuto: '', ingredienti: 3, procedimento: 3, margine: 4, manca: true, etichette: ['P', 'G'],
+  { id: 'virgole', aiuto: 'regola', ingredienti: 3, procedimento: 3, margine: 4, manca: true, etichette: ['P', 'G'],
     dritta: () => 'Adesso la virgola la sposti da solo.',
     dosi: [{ in: 'G', valori: [0.5, 1.5, 2.5, 4.5, 0.2, 0.4, 1.2, 3.6] }] },
 
@@ -49,7 +49,7 @@ const GRADINI = [
     dritta: f => `${VALE[f.unita.G] / VALE[f.unita.P] * 6} ${f.parole.P[1]} sulla ricetta, e il mercante vende a ${f.parole.G[1]}: si sale.`,
     dosi: [{ in: 'P', valori: [6, 8, 10, 12, 15, 20] }] },
 
-  { id: 'inverse', aiuto: '', ingredienti: 3, procedimento: 5, margine: 3, manca: false, etichette: ['G', 'M', 'P'],
+  { id: 'inverse', aiuto: 'regola', ingredienti: 3, procedimento: 5, margine: 3, manca: false, etichette: ['G', 'M', 'P'],
     dritta: () => 'Salire o scendere lo decidi tu, e quanto manca lo conti tu.',
     dosi: [{ in: 'P', valori: [6, 7, 9, 12, 18] },
            { in: 'M', valori: [2.5, 7, 15] },
@@ -82,11 +82,11 @@ const SENZA_VIRGOLA = {
 const FINALI = [
   { id: 'calderone', nome: 'Elisir del Calderone', emoji: '🔮', colore: '#8b5cc4',
     dritta: 'Pesi, lunghezze e liquidi nella stessa pozione.',
-    aiuto: '', ingredienti: 4, margine: 3, procedimento: 5, manca: false, etichette: ['G', 'M', 'P'],
+    aiuto: 'regola', ingredienti: 4, margine: 3, procedimento: 5, manca: false, etichette: ['G', 'M', 'P'],
     da: ['grandi', 'virgole', 'miste', 'inverse'], portata: 82 },
   { id: 'maestro', nome: 'Pozione del Maestro', emoji: '🏆', colore: '#e6b53c',
     dritta: 'Dosi da magazzino, e gettoni contati.',
-    aiuto: '', ingredienti: 4, margine: 2, procedimento: 5, manca: false, etichette: ['G', 'M', 'P'],
+    aiuto: 'regola', ingredienti: 4, margine: 2, procedimento: 5, manca: false, etichette: ['G', 'M', 'P'],
     da: ['virgole', 'miste', 'inverse'], portata: 85,
     dosi: [{ in: 'G', valori: [30, 40, 50, 75] },
            { in: 'M', valori: [25, 35, 50] },
@@ -153,7 +153,7 @@ export function giroInfinito(n, pozione = null, rnd = Math.random) {
   const base = CAMPAGNA.at(n < 6 ? -2 : -1)
   const [nome, emoji, colore] = pozione || TUTTE_LE_POZIONI[Math.floor(rnd() * TUTTE_LE_POZIONI.length)]
   const procedimento = Math.min(5, 3 + Math.floor(n / 2))
-  return { ...base, chiave: INFINITA.chiave, nome, emoji, colore, giro: n, margine: 0, ingredienti: n < 3 ? 3 : 4,
+  return { ...base, chiave: INFINITA.chiave, nome, emoji, colore, giro: n, aiuto: '', margine: 0, ingredienti: n < 3 ? 3 : 4,
            procedimento, azioni: AZIONI_DEL[procedimento] }
 }
 export const GRADINI_PER_FAMIGLIA = GRADINI.length
