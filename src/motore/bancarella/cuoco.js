@@ -151,6 +151,17 @@ function sulPiatto(c, p, cosa) {
 }
 
 const nonPronta = o => (INGREDIENTI[o.cosa].va === 'tagliere' ? 'Prima va tagliata' : 'Prima va cotta')
+
+/* Due cose senza piatto: se stanno nella stessa ricetta si uniscono, e il piatto ce lo mette il cuoco. */
+function unisci(c, a, b, dopo) {
+  if (a.bruciata || b.bruciata) return { perche: 'Quello è bruciato: va nel bidone' }
+  const cruda = [a, b].find(o => !o.fatta)
+  if (cruda) return { perche: nonPronta(cruda) }
+  const p = nuovoPiatto()
+  sulPiatto(c, p, a.cosa)
+  if (!prendeIl(c, p, b.cosa)) return { perche: 'Questi due non vanno insieme' }
+  return { fai: () => { sulPiatto(c, p, b.cosa); dopo(p) } }
+}
 const libera = () => ({ fase: 'vuota', t: 0, cosa: '', colpi: 0 })
 
 /* Quello che è ovvio fare in un posto: { fai } se si può, { perche } se no. */
@@ -170,8 +181,11 @@ function decidi(c, t) {
 function dallaCassetta(c, t, m) {
   const k = c.cuoco
   if (!m) return { fai: () => { k.mano = crudo(t.cosa) } }
-  if (!ePiatto(m)) return m.cosa === t.cosa && !m.bruciata && m.fatta === crudo(t.cosa).fatta ? { fai: () => { k.mano = null } } : { perche: 'Le mani sono piene' }
   const o = crudo(t.cosa)
+  if (!ePiatto(m)) {
+    if (m.cosa === t.cosa && !m.bruciata && m.fatta === o.fatta) return { fai: () => { k.mano = null } }
+    return unisci(c, m, o, p => { k.mano = p })
+  }
   if (!o.fatta) return { perche: nonPronta(o) }
   return prendeIl(c, m, t.cosa) ? { fai: () => sulPiatto(c, m, t.cosa) } : { perche: 'Su questo piatto non va' }
 }
@@ -181,8 +195,9 @@ function sulBanco(c, t, m) {
   if (!o && !m) return { perche: 'Qui non c\'è niente' }
   if (!o) return { fai: () => { c.sopra[t.id] = m; k.mano = null } }
   if (!m) return { fai: () => { k.mano = o; delete c.sopra[t.id] } }
+  if (!ePiatto(o) && !ePiatto(m)) return unisci(c, o, m, p => { c.sopra[t.id] = p; k.mano = null })
   const [p, cosa] = ePiatto(o) ? [o, m] : [m, o]
-  if (!ePiatto(p) || ePiatto(cosa)) return { perche: 'Le mani sono piene' }
+  if (ePiatto(cosa)) return { perche: 'Le mani sono piene' }
   if (cosa.bruciata) return { perche: 'Quello è bruciato: va nel bidone' }
   if (!cosa.fatta) return { perche: nonPronta(cosa) }
   if (!prendeIl(c, p, cosa.cosa)) return { perche: 'Su questo piatto non va' }
@@ -224,7 +239,8 @@ function allaStazione(c, nome, m) {
   }
   if (!m) return { fai: () => { k.mano = { cosa: s.cosa, fatta: true, bruciata: false }; svuota() } }
   if (ePiatto(m) && prendeIl(c, m, s.cosa)) return { fai: () => { sulPiatto(c, m, s.cosa); svuota() } }
-  return { perche: ePiatto(m) ? 'Su questo piatto non va' : 'Le mani sono piene' }
+  if (!ePiatto(m)) return unisci(c, m, { cosa: s.cosa, fatta: true }, p => { k.mano = p; svuota() })
+  return { perche: 'Su questo piatto non va' }
 }
 
 /* La mossa nel posto `t`. Torna `true` se è successa; se no `perche` dice cosa manca. */

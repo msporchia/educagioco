@@ -77,7 +77,7 @@ uguale('niente levetta né tasti', await page.locator('[data-leva], [data-usa], 
   await premi(SUGO)
   await premi(FORMAGGIO)
   await page.waitForSelector('[data-detto]', { timeout: 1500 })
-  uguale('con le mani piene lo dice', await page.locator('[data-detto]').innerText(), 'Le mani sono piene')
+  uguale('quello che non si unisce lo dice', await page.locator('[data-detto]').innerText(), 'Questi due non vanno insieme')
   await page.evaluate(() => {
     const c = window.__shop.cucina.value
     c.stazioni.pentola = { fase: 'vuota', t: 0, cosa: '', colpi: 0 }

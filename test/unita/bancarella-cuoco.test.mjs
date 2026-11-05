@@ -93,6 +93,39 @@ test('sul piatto si deposita, a mani vuote si prende', () => {
   assert.equal(c.sopra['3,3'], undefined)
 })
 
+test('due cose della stessa ricetta si uniscono anche senza piatto', () => {
+  const c = cucina(3)
+  fa(c, cassetta(c, 'impasto'))
+  assert.ok(fa(c, cassetta(c, 'sugo')), 'con l\'impasto in mano, sul sugo')
+  assert.ok(c.cuoco.mano.piatto)
+  assert.deepEqual(c.cuoco.mano.cose, ['impasto', 'sugo'])
+  assert.ok(fa(c, cassetta(c, 'formaggio')))
+  assert.ok(c.cuoco.mano.daInfornare)
+  assert.ok(fa(c, '4,0'), 'e va in forno')
+
+  const b = cucina(3)                 // sul bancone: il piatto resta lì
+  fa(b, cassetta(b, 'pane')); fa(b, '3,3')
+  fa(b, cassetta(b, 'insalata'))
+  assert.equal(fa(b, '3,3'), false); assert.equal(b.perche, 'Prima va tagliata')
+  b.cuoco.mano = { cosa: 'insalata', fatta: true, bruciata: false }
+  assert.ok(fa(b, '3,3'))
+  assert.equal(b.cuoco.mano, null)
+  assert.deepEqual(b.sopra['3,3'].cose, ['pane', 'insalata'])
+
+  const s = cucina(3)                 // dal fuoco: la carne pronta va col pane in mano
+  fa(s, cassetta(s, 'carne')); fa(s, '2,0'); aspetta(s, 5.1)
+  fa(s, cassetta(s, 'pane'))
+  assert.ok(fa(s, '2,0'))
+  assert.deepEqual(s.cuoco.mano.cose, ['pane', 'carne'])
+  assert.equal(s.stazioni.padella.fase, 'vuota')
+
+  const n = cucina(3)                 // quello che non sta in nessuna ricetta resta in mano
+  fa(n, cassetta(n, 'sugo'))
+  assert.equal(fa(n, cassetta(n, 'pane')), false)
+  assert.equal(n.perche, 'Questi due non vanno insieme')
+  assert.equal(n.cuoco.mano.cosa, 'sugo')
+})
+
 test('il tagliere: si posa, si taglia a tocchi, poi si prende', () => {
   const c = cucina(1)
   fa(c, cassetta(c, 'insalata'))
