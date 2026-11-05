@@ -10,7 +10,7 @@ import { dettoDi } from './detti.js'
 const VICINO = 70, MANO = 52             // a quanti pixel dal bersaglio il dito conta come «dentro», e di quanto la figura in mano sta sopra il dito: vale anche lei
 
 export class Attrezzi {
-  constructor(mondo) { this.w = mondo; this.aperto = null; this.fatti = null; this.presa = null; this.sopra = false }
+  constructor(mondo) { this.w = mondo; this.aperto = null; this.fatti = null; this.presa = null; this.sopra = false; this.estraneo = null }
 
   /** Un tocco su un campo: l'attrezzo se c'è qualcosa da fare, se no quanto manca. */
   tocco(c) {
@@ -22,17 +22,17 @@ export class Attrezzi {
   apri(c, seme = null) { this._accanto(c, { tipo: this.w.m.campoVuoto(c) ? 'semi' : 'falce', seme }) }
   /** Un tocco su una ciotola: i cibi, solo se ha fame. */
   ciotola(c) {
-    const { m, fx, pezzi } = this.w, id = c.bestia, nome = m.cura.nomeDi(id)
+    const { m, pezzi } = this.w, id = c.bestia, nome = m.cura.nomeDi(id)
     pezzi.salta(c.id)
-    if (!m.cura.haFame(id)) return fx.parla(`${nome} non ha fame`)
+    if (!m.cura.haFame(id)) return this._no(`${nome} non ha fame: quando ne avrà, ti chiamerà dalla sua ciotola`)
     const voci = m.cura.perLaCiotola(id), chiesto = voci.find(g => g.vuole)
     this._accanto(c, { tipo: 'ciotola', bestia: id, voci, riga: chiesto ? `${nome} vorrebbe ${chiesto.emoji} ${chiesto.nome.toLowerCase()}` : `${nome} ha fame!` })
   }
   /** Un tocco sulla tinozza: chi è sporco, in vignetta. */
   tinozza(c) {
-    const { m, fx, pezzi } = this.w, sporche = m.cura.sporche()
+    const { m, pezzi } = this.w, sporche = m.cura.sporche()
     pezzi.salta(c.id)
-    if (!sporche.length) return fx.parla('Sono tutti puliti!')
+    if (!sporche.length) return this._no('Sono tutti puliti: la tinozza serve quando qualcuno si sporca')
     this._accanto(c, { tipo: 'tinozza', voci: sporche.map(id => ({ id, nome: m.cura.nomeDi(id), emoji: '🐾' })), riga: 'Trascinalo nella tinozza: 🪙 1' })
   }
   /** La nuvoletta sopra un recinto: il mangime che chiede. `riga`: quello che manca, se non ne hai. */
@@ -78,6 +78,8 @@ export class Attrezzi {
     if (!r.ok) return w.azioni.dici(dettoDi(r.motivo, { mancano: COSTI.spostare }))
     w.cambiato(); w.pezzi.salta(id)
   }
+  /** Un gesto che non fa niente lo dice: nel fumetto del contadino e in cima alla scena (lui può essere lontano). */
+  _no(testo) { this.w.fx.parla(testo); this.w.ui.cartello?.(testo) }
   _accanto(c, info) {
     const w = this.w, [x, y] = w.proietta(w.pezzi.centroDi({ kind: 'cosa', id: c.id }), 0.3)
     this.aperto = { ...info, opzioni: this._opzioniDi(c), id: c.id, x, y, larghezza: w.rect.width, altezza: w.rect.height }
@@ -85,7 +87,7 @@ export class Attrezzi {
   }
   chiudi() {
     if (!this.aperto) return
-    this.aperto = null; this.fatti = null; this.presa = null; this.sopra = false
+    this.aperto = null; this.fatti = null; this.presa = null; this.sopra = false; this.estraneo = null
     this.w.ui.attrezzi(null)
   }
   /** Il contadino va al primo campo che ne ha bisogno e lì compare l'attrezzo (il tasto di «E adesso?»). */
@@ -101,7 +103,7 @@ export class Attrezzi {
 
   // ── il dito con l'attrezzo in mano ──
   get _suiCampi() { return this.aperto && (this.aperto.tipo === 'semi' || this.aperto.tipo === 'falce') }
-  prendi(k) { this.fatti = new Set(); this.presa = k }
+  prendi(k) { this.fatti = new Set(); this.presa = k; this.estraneo = null }
   /** Il dito è passato su (x, y). Sui campi ognuno si fa una volta sola, e un rifiuto (lo scomparto pieno, poche monete) lo dice e ferma il giro; altrove si guarda solo se è sopra il bersaglio. */
   passa(x, y) {
     if (!this.fatti || !this.aperto) return
@@ -113,9 +115,15 @@ export class Attrezzi {
     const { m, azioni } = this.w, p = this.w.puntaSuolo(x, y), c = p && m.cosaSu(Math.floor(p.x), Math.floor(p.z))
     if (!c || c.tipo !== 'campo' || this.fatti.has(c.id)) return
     const semi = this.aperto.tipo === 'semi'
-    if (!(semi ? m.campoVuoto(c) : m.campoMaturo(c))) return
+    if (!(semi ? m.campoVuoto(c) : m.campoMaturo(c))) { this.estraneo = this.estraneo || c; return }      // il primo campo su cui l'attrezzo non serve: se la passata non fa altro, si dice perché
     this.fatti.add(c.id)
     if (!(semi ? azioni.semina(c, this.presa) : azioni.raccogli(c))) this.fatti = null
+  }
+  /** Il dito è passato su un campo dove l'attrezzo non serve e non ha fatto altro: dice cos'ha quel campo e cosa farci. */
+  _nonServe(c) {
+    const { m, azioni } = this.w
+    if (this.aperto.tipo === 'semi') return m.campoMaturo(c) ? azioni.dici('È già pronto: raccoglilo col falcetto') : azioni.campo(c)
+    return m.campoVuoto(c) ? azioni.dici('È vuoto: prima semina qualcosa') : azioni.campo(c)
   }
   _dentro(x, y) {
     const { m, rect } = this.w, a = this.aperto, p = this.w.puntaSuolo(x, y), c = p && m.cosaSu(Math.floor(p.x), Math.floor(p.z))
@@ -125,9 +133,13 @@ export class Attrezzi {
   }
   /** Il dito si alza: sui campi fatto qualcosa si chiude, se no l'attrezzo resta lì e si riprova; altrove va dentro solo se è sopra il bersaglio. */
   lascia() {
-    const fatto = this.fatti && this.fatti.size > 0, sopra = this.sopra
-    this.fatti = null; this.sopra = false
-    if (this._suiCampi) { if (fatto) this.chiudi(); return }
+    const fatto = this.fatti && this.fatti.size > 0, sopra = this.sopra, estraneo = this.estraneo
+    this.fatti = null; this.sopra = false; this.estraneo = null
+    if (this._suiCampi) {
+      if (fatto) this.chiudi()
+      else if (estraneo) this._nonServe(estraneo)           // una passata che non ha fatto niente non fa finta di niente
+      return
+    }
     if (!this.aperto) return
     if (sopra) this.metti(this.presa)
     else this.w.ui.attrezzi(this.aperto)

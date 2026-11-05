@@ -12,7 +12,7 @@ Ogni animale **nasce con la sua ciotola**, compresa nel prezzo: del suo colore (
 
 **Come i campi** ([campi.md](campi.md)): un tocco porta accanto i cibi ad arco, senza aspettare il contadino. **Un gettone si trascina nella ciotola, o si tocca** (chi ha quattro anni trascina male). Riempita, il cibo si vede, l'animale corre, si accosta con un saltello e mangia.
 
-**Senza fame non si mangia**: sopra `FAME` la ciotola non si apre e il contadino dice «Birba non ha fame»; il motore rifiuta anche la torta (`non-ha-fame`).
+**Senza fame non si mangia**: sopra `FAME` la ciotola non si apre e il cartello dice «Birba non ha fame: quando ne avrà, ti chiamerà dalla sua ciotola»; il motore rifiuta anche la torta (`non-ha-fame`). Lo stesso se tocchi la tinozza e sono tutti puliti, o se porti uno nella tinozza senza 🪙1 («Ti manca 🪙1: gli esercizi negli altri giochi te le danno»): vedi [regole.md](regole.md#come-si-dice-di-no).
 
 ## Cosa chiede, e la scappatoia
 
@@ -31,6 +31,7 @@ Come il terreno: **ogni animale che hai fa costare il prossimo 🪙20 di più** 
 ## Lo sporco e la tinozza
 
 Il pelo cala col tempo e si vede sul corpo sotto `SPORCO` (0,8): macchie di fango, **prima le zampe, poi la pancia, poi il dorso** (`scena3d/sporco.js`: una soglia per vertice, fissata dal corpo fermo, e un numero per animale). Rotolarsi e scavare sporcano un po' di più.
+**Il fango segue il colore sotto**: sul pelo chiaro è bruno scuro, su quello scuro è una polvere bruna più chiara (`FANGO_CHIARO`/`FANGO_SCURO` in `sporco.js`, scelti nel vertice dalla luminosità). Così Sherlock, Golia e Pepe si vedono sporchi; la soglia sale con l'altezza (1,2) perché la testa e il dorso restino a macchie anche al massimo e il bianco di Sherlock si riconosca.
 
 La **tinozza** (`tinozza`, un `dono` come la ciotola, una sola) arriva col primo animale. Un tocco: chi è sporco compare in **vignetta** sopra la tinozza, dal più sporco; si trascina dentro (o si tocca). Il modo è uno solo, 🪙1: sapone e copertina facevano lo stesso bagno e cambiavano solo cosa si pagava. L'animale salta dentro, la camera si avvicina e **si strofina col dito**:
 lo sporco se ne va sotto gli occhi (`scena3d/bagno.js`, `STROFINATA`). Si paga alla fine e lascia pulito del tutto; lasciato a metà con la ✕ non si paga niente.
@@ -53,10 +54,11 @@ Il coniglio e il pappagallo non portano niente. Niente che rovini la fattoria: s
 ## Provato e no
 
 - **Il cane che ruba il cappello**: il contadino è fuso in pochi mesh (`fondi.js`), il cappello non si stacca. Servirebbe un cappello a parte: per ora si rincorre la coda e scava.
+- **Il fango scuro su un gatto nero**: lo scuriva e basta, non si vedeva (un nero più nero non è un cambiamento). Un fango chiaro uguale per tutti (0,34, 0,22, 0,10) faceva sembrare Golia un gatto rosso: il bruno dev'essere smorzato (0,2, 0,135, 0,08) e a macchie.
 - **Lo sporco a tinta unita**: sembrava un altro mantello. Va a macchie (rumore a due scale) e scuro: i colori nei vertici sono lineari, un fango «giusto» a occhio viene chiaro.
 
 ## Nei test
 
-`unita/fattoria3d-cura-prato` (ciotole e tinozza, salvataggi di prima, prezzo, fame, scappatoia, gioco, lavare, sporco, sequenze e scena), `integrazione/fattoria3d-bestie` (un tocco vero sulla ciotola e sulla tinozza, il cibo, la strofinata). Bersagli:
-`[data-f3="attrezzi"][data-tipo="ciotola|tinozza|recinto"]`, `[data-f3="attrezzi-riga"]`, `[data-f3="gettone-conto"]`, `[data-cibo="<id>"]`, `[data-vuole]`, `.f3-badge.fame[data-ciotola="<id>"]`, `[data-sporca="<id>"]`, `[data-f3="bagno"]`.
-Per guardare: `#animali=watson,beagle&bisogni=fame,sporco,noia` ([comandi](../core/comandi.md)), `npm run catalogo3d:scheda -- --gioco fattoria --q labrador --sporco 0.7`.
+`unita/fattoria3d-cura-prato` (ciotole e tinozza, salvataggi di prima, prezzo, fame, scappatoia, gioco, lavare, sporco, sequenze e scena), `unita/fattoria3d-attrezzi` (i rifiuti detti in cima alla scena), `integrazione/fattoria3d-bestie` (un tocco vero sulla ciotola e sulla tinozza, il cibo, la strofinata). Bersagli:
+`[data-f3="attrezzi"][data-tipo="ciotola|tinozza|recinto"]`, `[data-f3="attrezzi-riga"]`, `[data-f3="gettone-conto"]`, `[data-cibo="<id>"]`, `[data-vuole]`, `.f3-badge.fame[data-ciotola="<id>"]`, `[data-sporca="<id>"]`, `[data-f3="bagno"]`, `[data-f3="cartello"]` (il cartello: i «no» e le notizie).
+Per guardare: `#animali=watson,beagle&bisogni=fame,sporco,noia` ([comandi](../core/comandi.md)), `npm run catalogo3d:scheda -- --gioco fattoria --q labrador --sporco 0.7` (anche `--q "=fattoria:sherlock|=fattoria:golia|=fattoria:pepe"`: i tre scuri).

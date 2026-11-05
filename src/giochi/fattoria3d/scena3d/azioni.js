@@ -48,7 +48,7 @@ export class Azioni {
   }
 
   // ── i campi: un tocco porta l'attrezzo (attrezzi.js), qui c'è solo quello che fa il dito che passa. Tornano false se non si è potuto ──
-  campo(c) { this.c.fx.parla(`Sta crescendo… ${tempoBreve(this.m.restoSecondi(c) * 1000)}`) }
+  campo(c) { this.dici(`Sta crescendo… ${tempoBreve(this.m.restoSecondi(c) * 1000)}`) }
   semina(c, coltura) {
     const { fx, ui } = this.c, r = this.m.semina(c.id, coltura)
     if (!r.ok) { this.dici(dettoDiRifiuto(r, { per: 'seminare' })); return false }
@@ -79,7 +79,7 @@ export class Azioni {
         if (t <= 0.5 || eroe.az.fatto.has('t')) return
         eroe.az.fatto.add('t'); const r = this.m.tosa(c.id)
         if (r.ok) { fx.volo('+' + r.n + ' 🧶', p, 1.6); fx.scoppietta(p.clone().setY(0.6), 0xffffff, 12, 1.6, 2.2); ui.cambio() }
-        else fx.parla(dettoDiRifiuto(r))
+        else this.dici(dettoDiRifiuto(r))
       })
     }
     this._nuvoletta(c, pr)
@@ -87,7 +87,7 @@ export class Azioni {
   /** Chi ha fame chiede: la nuvoletta col mangime da trascinare (attrezzi.js), anche se non ne hai, così si vede cosa serve. */
   _nuvoletta(c, pr) {
     if (pr.azione === 'nutri' || pr.motivo === 'manca-mangime') return this.c.attrezzi.recinto(c, pr.azione ? '' : dettoDiRifiuto(pr, { per: 'nutrirle' }))
-    this.c.fx.parla(dettoDiRifiuto(pr, { per: 'nutrirle' }))
+    this.dici(dettoDiRifiuto(pr, { per: 'nutrirle' }))
   }
   /** Il mangime è arrivato nel recinto: il contadino lo dà. */
   nutriRecinto(c) {
@@ -100,7 +100,7 @@ export class Azioni {
       if (t <= 0.5 || eroe.az.fatto.has('n')) return
       eroe.az.fatto.add('n')
       const r = this.m.nutri(c.id)
-      if (!r.ok) return fx.parla(dettoDiRifiuto(r, { per: 'nutrirle' }))
+      if (!r.ok) return this.dici(dettoDiRifiuto(r, { per: 'nutrirle' }))
       pezzi.richiama(c.id, { x: eroe.x - p.x, z: eroe.z - p.z })
       pezzi.sincronizza()
       const testo = { cresciuta: '🐑 è cresciuta!', nata: '🐣 è nata una pecorella!', pasto: '🍼 +1', cuore: '❤️', lana: '🍽️ ×' + r.n + (r.costo ? ` · −🪙 ${r.costo}` : '') }[r.evento]
@@ -118,7 +118,7 @@ export class Azioni {
       return eroe.avvia('semina', 1.2, t => {
         if (t <= 0.5 || eroe.az.fatto.has('r')) return
         eroe.az.fatto.add('r'); const r = this.m.raccogliProdotti(c.id)
-        if (!r.ok) return fx.parla(dettoDiRifiuto(r))
+        if (!r.ok) return this.dici(dettoDiRifiuto(r))
         pezzi.sincronizza()
         fx.volo('+' + r.n + (prodottoDelleBestie(r.prodotto).pezzo ? '' : ' ' + prodottoDelleBestie(r.prodotto).emoji), p, 1.8, r.prodotto); fx.scoppietta(p.clone().setY(0.7), 0xfff2c4, 10, 1.4, 2.0); ui.cambio()
       })
@@ -131,7 +131,7 @@ export class Azioni {
       if (t <= 0.5 || eroe.az.fatto.has('n')) return
       eroe.az.fatto.add('n')
       const r = this.m.nutriBestie(c.id)
-      if (!r.ok) return fx.parla(dettoDiRifiuto(r, { per: 'nutrirle' }))
+      if (!r.ok) return this.dici(dettoDiRifiuto(r, { per: 'nutrirle' }))
       pezzi.sincronizza()
       fx.volo('🍽️ ×' + r.n + (r.costo ? ` · −🪙 ${r.costo}` : ''), p, 1.8); ui.cambio()
     })
@@ -151,19 +151,29 @@ export class Azioni {
   }
 
   // ── gli alberi ──
+  /** Perché un albero non si taglia adesso (la riga da dire), o '' se si può. Si guarda al tocco, prima che il contadino si metta in cammino. */
+  noAbbatti(a) {
+    const p = this.m.puoAbbattere(a.n)
+    if (!p.ok) return dettoDiRifiuto(p)
+    return this.m.monete() < COSTI.albero ? dettoDi('poche-monete', { costo: COSTI.albero, per: 'tagliare un albero' }) : ''
+  }
+  noTogliere(o) {
+    const p = this.m.puoTogliere(o.n)
+    if (!p.ok) return dettoDiRifiuto(p)
+    return this.m.monete() < COSTI.ostacolo ? dettoDi('poche-monete', { costo: COSTI.ostacolo, per: o.tipo === 'sasso' ? 'togliere il sasso' : 'togliere il cespuglio' }) : ''
+  }
   /** Tagliare un albero costa monete (`COSTI.albero`) e non dà niente: libera la cella. Senza monete l'eroe lo dice e non alza l'ascia. */
   abbatti(a) {
     const { eroe, fx, ui, terreno } = this.c
     if (!a || eroe.az) return
-    const p = this.m.puoAbbattere(a.n)
-    if (!p.ok) return
-    if (this.m.monete() < COSTI.albero) return this.dici(dettoDi('poche-monete', { costo: COSTI.albero, per: 'tagliare un albero' }))
+    const no = this.noAbbatti(a)
+    if (no) return this.dici(no)
     eroe.faccia(new THREE.Vector3(a.i + 0.5, 0, a.j + 0.5))
     eroe.avvia('abbatti', 1.7, t => {
       if (t <= 0.62 || eroe.az.fatto.has('c')) return
       eroe.az.fatto.add('c')
       const r = this.m.abbatti(a.n)
-      if (!r.ok) return
+      if (!r.ok) return this.dici(dettoDiRifiuto(r, { per: 'tagliare un albero' }))
       terreno.togliAlbero(a.n); fx.cade(a, { x: eroe.x, z: eroe.z })
       fx.volo('−🪙 ' + r.costo, new THREE.Vector3(a.i + 0.5, 0, a.j + 0.5), 1.8); ui.cambio()
     })
@@ -173,16 +183,15 @@ export class Azioni {
   togli(o) {
     const { eroe, fx, ui, terreno } = this.c
     if (!o || eroe.az) return
-    const p = this.m.puoTogliere(o.n)
-    if (!p.ok) return
-    if (this.m.monete() < COSTI.ostacolo) return this.dici(dettoDi('poche-monete', { costo: COSTI.ostacolo, per: o.tipo === 'sasso' ? 'togliere il sasso' : 'togliere il cespuglio' }))
+    const no = this.noTogliere(o)
+    if (no) return this.dici(no)
     const centro = new THREE.Vector3(o.i + 0.5, 0, o.j + 0.5)
     eroe.faccia(centro)
     eroe.avvia('semina', 0.9, t => {
       if (t <= 0.5 || eroe.az.fatto.has('o')) return
       eroe.az.fatto.add('o')
       const r = this.m.togliOstacolo(o.n)
-      if (!r.ok) return fx.parla(dettoDiRifiuto(r, { costo: r.costo, per: 'togliere questo' }))
+      if (!r.ok) return this.dici(dettoDiRifiuto(r, { costo: r.costo, per: o.tipo === 'sasso' ? 'togliere il sasso' : 'togliere il cespuglio' }))
       terreno.togliOstacolo(o.n); terreno.ridisegnaErba()
       fx.scoppietta(centro.clone().setY(0.3), o.tipo === 'sasso' ? 0xb8b6ae : 0x5f9a3a, 10, 1.6, 2)
       fx.volo('−🪙 ' + r.costo, centro, 1.2); ui.cambio()
@@ -256,8 +265,8 @@ export class Azioni {
     if (tipo === 'mongolfiera') return ui.apriMongolfiera()   // la nave: il foglio con la stiva di casse
     if (eBottega(tipo)) return ui.entraBottega ? ui.entraBottega(tipo) : ui.apriBottega(tipo)             // una bottega del paese: si entra, dentro ci sono i clienti
   }
-  /** Una riga che si vede sempre: nel fumetto dell'eroe, e nella barra del costruire se è aperta. */
-  dici(testo) { this.c.fx.parla(testo); this.c.ui.avviso(testo) }
+  /** Una riga che si vede sempre: nel fumetto dell'eroe, in cima alla scena (il contadino può essere lontano) e nella barra del costruire se è aperta. */
+  dici(testo) { this.c.fx.parla(testo); this.c.ui.avviso(testo); this.c.ui.cartello?.(testo) }
 
   // ── il terreno ──
   offriLotto(l) {
