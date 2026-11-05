@@ -22,8 +22,10 @@ Tre famiglie di misure, ognuna con le sue unità e il suo strumento:
 ingredienti con la loro dose, «1,5 kg di polvere di luna», e sul banco uno
 strumento per ognuno col segno d'oro dove arrivare. Qualcosa, a volte, c'è già in
 casa. Sotto, la ricetta a punti dice cosa fare con la roba comprata: si trascina nel
-calderone o nel mortaio, e si pesta,
-si mescola, si accende il fuoco, si diluisce. Una mossa fuori tempo fa un pasticcio.
+calderone, nel mortaio o sul tagliere, e col dito si pesta, si sminuzza, si gratta, si
+mescola, si sfrega il fiammifero sulla legna, si soffia col mantice, si fa l'incantesimo
+con la bacchetta. Chi resta fermo vede una freccia col gesto. Una mossa fuori tempo fa
+un pasticcio. Ogni pozione ribolle a modo suo.
 
 **Dal mercante.** Il suo rotolo elenca gli ingredienti della ricetta, con
 quattro targhette a testa: quanto c'è nell'ampolla e il prezzo in gettoni. Le ampolle grandi costano meno al chilo, quindi conviene sempre la più
