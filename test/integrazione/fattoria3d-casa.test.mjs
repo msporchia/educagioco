@@ -5,7 +5,8 @@
    porta o sul bordo con la freccia se è fuori schermo. Il divano girato sta lungo il muro dove la porta ancora non c'è; toccando il cartello si
    apre la domanda del terreno, «Non ora» non costa, «Compra» allarga la casa e il divano si sposta, e lo dice il contadino. Il tasto 🎨 apre la
    striscia della stanza dove si sta: un colore si vede subito e non costa, ✖️ lo toglie, «Compra» paga solo quello che è cambiato. Le finestre
-   nuove stanno nel catalogo, con la foto, e si appendono. Senza monete si dice quante ne mancano e niente cambia.
+   nuove stanno nel catalogo, con la foto, e si appendono. Tenere premuto è spostare: il mobile segue il dito e si posa staccandolo; dove non ci sta
+   torna dov'era. Il tocco apre le opzioni, anche dell'armadio, che così si colora. Senza monete si dice quante ne mancano e niente cambia.
    Il dito è vero (`Input.dispatchTouchEvent`): un `page.click()` non porta i pointer del tocco (docs/core/il-dito.md).
    `node test/esegui.mjs fattoria3d-casa`
    tempo: 25
@@ -146,6 +147,56 @@ const porta = await m3(() => { const c = window.__fattoria3d.interni.scena(); c.
 uguale('sopra l\'armadio no', porta, false)
 controlla('e la riga dice il motivo', /già qualcos/.test(await page.locator('[data-f3="mano-riga"]').innerText()))
 await toccaEl('[data-f3="mano-lascia"]')
+
+/* ── il tocco apre le opzioni, anche dell'armadio: il colore, il guardaroba ── */
+const armadio = async () => (await interni()).mobili.find(m => m.tipo === 'armadio')
+const sulMobile = o => punto(o.i + 1, o.j + 0.5)
+const mobileFermo = () => page.waitForFunction(() => !window.__fattoria3d.interni.scena().camera.inMoto, null, { timeout: 8000 })
+await mobileFermo()
+await tocca(...await sulMobile(await armadio()))
+await page.waitForSelector('[data-f3="mobile"][data-tipo="armadio"]', { timeout: 3000 })
+controlla('il tocco sull\'armadio apre le sue opzioni', await page.locator('[data-f3="apri-armadio"]').count() === 1 && await page.locator('[data-f3="mobile-gira"]').count() === 1)
+uguale('l\'armadio non si mette via', await page.locator('[data-f3="mobile-via"]').count(), 0)
+uguale('e spostarlo non è un tasto', await page.locator('[data-f3="mobile-sposta"]').count(), 0)
+const moneteArmadio = await monete()
+await toccaEl('[data-f3="mobile"] [data-colore="azzurro"]')
+uguale('l\'armadio cambia colore, gratis', [(await armadio()).colore, await monete()].join(), ['azzurro', moneteArmadio].join())
+await attendi(page, 500)
+await scatto(page, 'fattoria3d-casa-armadio')
+await toccaEl('[data-f3="apri-armadio"]')
+await page.waitForSelector('[data-f3="guardaroba"]', { timeout: 8000 })
+controlla('«Apri l\'armadio» apre il guardaroba', await page.locator('[data-f3="mobile"]').count() === 0)
+await toccaEl('[data-f3="guardaroba"] [data-chiudi]')
+await attendi(page, 300)
+
+/* ── tenere premuto è spostare: il mobile segue il dito, si posa staccandolo ── */
+const conDito = async (da, a, staccaAlla = true) => {
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: da[0], y: da[1] }] }); await attendi(page, 700)
+  const preso = await page.locator('[data-f3="mano"]').count() === 1
+  for (let k = 1; k <= 8; k++) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: da[0] + (a[0] - da[0]) * k / 8, y: da[1] + (a[1] - da[1]) * k / 8 }] }); await attendi(page, 30) }
+  await attendi(page, 150)
+  const tasti = await page.locator('[data-f3="mano-posa"], [data-f3="mano-lascia"]').count()
+  if (staccaAlla) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await attendi(page, 300) }
+  return { preso, tasti }
+}
+await fermo(); await mobileFermo()
+const dove = await m3(() => { const { motore } = window.__fattoria3d, a = motore.s.interni.mobili.find(m => m.tipo === 'armadio')
+  for (let j = a.j; j < a.j + 5; j++) for (let i = a.i; i < a.i + 5; i++) if ((i !== a.i || j !== a.j) && motore.mobileCiSta('armadio', i, j, 0, a.id).ok && Math.abs(i - a.i) + Math.abs(j - a.j) >= 2) return [i, j]
+  return null })
+controlla('c\'è un posto per l\'armadio', !!dove)
+const a0 = await armadio(), moneteTieni = await monete(), gesto = await conDito(await sulMobile(a0), await sulMobile({ i: dove[0], j: dove[1] }))
+controlla('tenuto premuto si solleva', gesto.preso)
+uguale('al dito non ci sono tasti da premere', gesto.tasti, 0)
+const a1 = await armadio()
+uguale('staccando il dito sta dove l\'hai portato', [a1.i, a1.j].join(), dove.join())
+uguale('spostare è gratis', await monete(), moneteTieni)
+uguale('e niente resta in mano', await page.locator('[data-f3="mano"]').count(), 0)
+uguale('e nessun foglio si apre', await page.locator('[data-f3="mobile"]').count(), 0)
+const sulDivano = (await interni()).mobili.find(m => m.tipo === 'divano')
+await conDito(await sulMobile(a1), await punto(sulDivano.i + 0.5, sulDivano.j + 0.5))
+const a2 = await armadio()
+uguale('dove non ci sta torna dov\'era', [a2.i, a2.j].join(), [a1.i, a1.j].join())
+controlla('e il contadino dice perché', /già qualcos/.test(await page.locator('.f3-fumetto').innerText()))
 
 /* ── senza monete si dice quante ne mancano, e niente cambia ── */
 await m3(() => { const { motore } = window.__fattoria3d; motore.borsa.paga(motore.monete() - 3) })

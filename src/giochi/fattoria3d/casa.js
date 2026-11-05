@@ -53,6 +53,7 @@ export function usaCasa({ dammi, tela, sopra, q, versione, cambio, abito, apriGu
         [{ t: `Compra · 🪙 ${st.prezzo}`, fn: () => compraStanza(id) }, { t: 'Non ora', quieto: true }])
     },
     mano(info) { mano.value = info; if (info) messaggio.value = '' },
+    rifiuto(r) { dici(dettoInCasa(r)) },
   }
 
   async function entra() {
@@ -103,10 +104,10 @@ export function usaCasa({ dammi, tela, sopra, q, versione, cambio, abito, apriGu
   function gira() { casa?.giraInMano() }
   function lascia() { casa?.lasciaMano(); messaggio.value = '' }
 
-  // ── il foglio di un mobile: colore, trama, gira, sposta, metti via ──
+  // ── il foglio di un mobile: colore, trama, gira, metti via (spostare è tenerlo premuto) ──
   function tingi(colore, trama) { const r = dammi().motore.tingiMobile(mobileAperto.value, colore, trama); if (r.ok) { casa?.cambiato(); toc() } }
   function giraMobile() { const r = dammi().motore.giraMobile(mobileAperto.value); if (!r.ok) messaggio.value = 'Girato non ci sta: spostalo prima in un posto più largo.'; else { casa?.cambiato(); toc() } }
-  function sposta() { const id = mobileAperto.value; foglio.value = null; mobileAperto.value = null; casa?.prendi(id) }
+  function apriArmadio() { const o = mobile.value; chiudi(); if (o) casa?.apriArmadio(o) }
   function mettiVia() {
     const r = dammi().motore.mettiViaMobile(mobileAperto.value)
     if (!r.ok) return void (messaggio.value = dettoInCasa(r))
@@ -154,7 +155,7 @@ export function usaCasa({ dammi, tela, sopra, q, versione, cambio, abito, apriGu
 
   return {
     dentro, chiave, foglio, scheda, mobile, mobileAperto, tinte, prezzoTinte, mano, messaggio, vista, voci, eArmadio,
-    entra, esci, apriCatalogo, scegli, posa, gira, lascia, tingi, giraMobile, sposta, mettiVia, apriTinte, provaTinta, pagaTinte, lasciaTinte, chiudi,
+    entra, esci, apriCatalogo, scegli, posa, gira, lascia, tingi, giraMobile, apriArmadio, mettiVia, apriTinte, provaTinta, pagaTinte, lasciaTinte, chiudi,
     anteprima, anteprimaPronta, vesti, cameraLibera, tornaAllEroe, via,
     scena: () => casa,                     // per le prove e gli scatti (window.__fattoria3d.interni)
   }

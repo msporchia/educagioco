@@ -10,8 +10,8 @@ niente si vende. Codice: `dati/interni.js`, `motore/interni.js`, `scena3d/casa3d
 
 - **Si entra toccando la casa.** Il contadino va alla porta (o alla cella sua più vicina: la casa sta fuori dalla terra di partenza) ed
   entra. Si esce con «🚪 Esci», con l'indietro della barra, o camminando fuori dalla porta di casa.
-- **L'armadio cambia l'aspetto.** È un mobile di serie, c'è sempre (si sposta e si colora, non si mette via): toccarlo porta il contadino
-  davanti e apre il guardaroba ([guardaroba.md](guardaroba.md)). È l'unica strada: il 👕 del HUD non c'è più.
+- **L'armadio cambia l'aspetto.** È un mobile di serie, c'è sempre (si sposta, si gira e si colora, non si mette via). Un tocco apre le sue opzioni come per ogni
+  mobile: «👕 Apri l'armadio» porta il contadino davanti e apre il guardaroba ([guardaroba.md](guardaroba.md)). È l'unica strada: il 👕 del HUD non c'è più.
 - **Le stanze si comprano come i lotti**, in scena e senza fogli: un tocco sul cartello o sulla stanza in vendita apre la domanda del terreno
   («Compra · 🪙 N», «Non ora»). Una attaccata all'altra, fino a **sei** (due file da tre). Prezzi in `PREZZI_STANZE`: 60, 120, 180, 260, 360
   («una cosa vera» e «una struttura» della [calibrazione](../apprendimento/calibrazione.md)).
@@ -69,9 +69,9 @@ dice il contadino nel suo fumetto (`fx.parla`), perché l'avviso della fattoria 
 (`guardaStanza`), un colore tocca solo la scena (`provaFinitura`, nella firma di `sincronizza`) e il motore lo sente a «🛒 Compra 🪙N»; ✖️ torna
 com'era e non costa.
 
-**Il dito**: un tocco sul pavimento fa camminare; su una stanza in vendita o sul suo cartello chiede se comprarla; sull'armadio apre il
-guardaroba; su un altro mobile apre il suo foglio (colore, trama, ✋ sposta, ↻ gira, 📦 metti via); tenere premuto un mobile apre il suo foglio
-(anche l'armadio). **Il mobile in mano** (dal catalogo o da «Sposta») è un fantasma verde o rosso che va dove si tocca o si trascina; la riga
+**Il dito** ([gesti.md](gesti.md)): un tocco sul pavimento fa camminare; su una stanza in vendita o sul suo cartello chiede se comprarla; su un mobile apre il suo foglio
+(colore, trama, ↻ gira, 📦 metti via; l'armadio ha anche «👕 Apri l'armadio» e non ha 📦); **tenere premuto un mobile lo sposta**: segue il dito, si posa staccandolo, dove non ci sta torna
+dov'era e lo dice il contadino. **Il mobile in mano** (dal catalogo o da «Messi via») è un fantasma verde o rosso che va dove si tocca o si trascina; la riga
 sopra dice perché lì non ci sta; sotto, «🛒 Compra 🪙N» (o «✓ Metti qui»), ↻ e ✖️. Un mobile nuovo si paga solo posandolo. Il click che il dito
 si lascia dietro si ingoia (`zittisciIlFantasma`, [../core/il-dito.md](../core/il-dito.md)).
 
@@ -87,10 +87,10 @@ si lascia dietro si ingoia (`zittisciIlFantasma`, [../core/il-dito.md](../core/i
 
 `unita/fattoria3d-casa` (dati, stanze attaccate e prezzi, dove sta un mobile, le porte che ci sono e quelle nuove, i gesti gratis, le finiture
 che si pagano, l'armadio, lo stato rotto e di prima); `integrazione/fattoria3d-casa` (col dito: il cartello, il divano lungo il muro, la stanza
-comprata, la striscia, le finestre, il motivo del fantasma, senza monete). `node test/esegui.mjs fattoria3d-casa` li lancia tutti e due.
+comprata, la striscia, le finestre, il motivo del fantasma, le opzioni e il colore dell'armadio, un mobile tenuto al dito, senza monete). `node test/esegui.mjs fattoria3d-casa` li lancia tutti e due.
 Bersagli: `[data-f3="casa-dentro"]`, `[data-f3="tela-casa"]`, `[data-f3="esci-casa"]`, `[data-f3="apri-arreda"]`, `[data-f3="apri-tinte"]`,
 `[data-f3="catalogo-casa"]` con `[data-scheda-casa]` e `[data-mobile-carta]`, `[data-f3="mobile"][data-tipo]` con `[data-colore]`,
-`[data-trama]`, `[data-f3="mobile-sposta|mobile-gira|mobile-via|apri-armadio"]`, `[data-f3="mano"][data-ok]` con
+`[data-trama]`, `[data-f3="mobile-gira|mobile-via|apri-armadio"]`, `[data-f3="mano"][data-ok]` con
 `[data-f3="mano-riga|mano-gira|mano-posa|mano-lascia"]`, `[data-f3="tinte"][data-stanza]` con `[data-parte]`, `[data-pavimento]`, `[data-pareti]`,
 `[data-carta]` e `[data-f3="tinte-riga|tinte-compra|tinte-lascia"]`, `[data-f3="dialogo"]` con `[data-scelta]`.
 Da una prova: `window.__fattoria3d.interni` (`entra()`, `scena()`, e di lei `badge`, `prova`, `proietta`).

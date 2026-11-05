@@ -2,13 +2,14 @@
 // i muri con le porte, le stanze in vendita col loro cartello, i mobili e il mobile in mano. Le regole sono del motore (`motore.compraMobile`,
 // `spostaMobile`…), le finestre della vista (`ui`).
 //
-// `ui`: cambio(), fogliAperti(), apriMobile(id), apriGuardaroba(), esci(), offriStanza(id), mano(info | null).
+// `ui`: cambio(), fogliAperti(), apriMobile(id), apriGuardaroba(), esci(), offriStanza(id), mano(info | null), rifiuto({ motivo }).
 import * as THREE from 'three'
 import { Interno3d, pavimentoDi, muroDi, muroEsterno, materiale } from './interno3d.js'
 import { creaAnteprime } from './anteprime.js'
 import { fantasma, buttaFantasma, tingi } from './modelli.js'
+import { cellaSottoIlDito, scartoDellaPresa, velocitaBordo } from './trascinamento-puro.js'
 import { creaMobile } from './mobili.js'
-import { STANZE, STANZA, MOBILI, ARMADIO, PAVIMENTI, PORTA_DI_CASA, INGRESSO, LARGHEZZA, PROFONDITA,
+import { STANZE, STANZA, MOBILI, PAVIMENTI, PORTA_DI_CASA, INGRESSO, LARGHEZZA, PROFONDITA,
          origine, stanzaDi, confinano, portaFra, misureMobile, ruotabileMobile } from '../dati/interni.js'
 
 const CARTELLO_ALTO = 1.25, DITO_LARGO = 14
@@ -139,15 +140,7 @@ export class Casa3d extends Interno3d {
     const cartello = this._cartelloSotto(x, y)
     if (cartello !== null) return ui.offriStanza(cartello)
     const id = this.mobileSotto(x, y)
-    if (id !== null) {
-      const o = this.m.s.interni.mobili.find(m => m.id === id)
-      if (o.tipo === ARMADIO) {                                            // l'armadio: il contadino ci va davanti e lo apre
-        const x0 = misureMobile(o.tipo, o.rot), centro = new THREE.Vector3(o.i + x0.w / 2, 0, o.j + x0.d / 2)
-        if (!eroe.vaiA(this.celleAttorno(o), () => { eroe.faccia(centro); ui.apriGuardaroba() }, centro)) ui.apriGuardaroba()       // murato: si apre lo stesso
-        return
-      }
-      return ui.apriMobile(id)
-    }
+    if (id !== null) return ui.apriMobile(id)                             // il tocco apre le sue opzioni, anche per l'armadio; tenere premuto lo solleva (`daTenere`)
     const p = this.puntaSuolo(x, y); if (!p) return
     const i = Math.floor(p.x), j = Math.floor(p.z), s = stanzaDi(i, j), I = this.m.s.interni
     if ((i === PORTA_DI_CASA.i && j >= PORTA_DI_CASA.j) || (j > PORTA_DI_CASA.j && Math.abs(i - PORTA_DI_CASA.i) <= 2)) {       // la porta di casa, o fuori davanti: si esce
@@ -156,7 +149,12 @@ export class Casa3d extends Interno3d {
     if (s && !I.stanze.includes(s.id)) { if (I.stanze.some(t => confinano(STANZE[t], s))) ui.offriStanza(s.id); return }
     this.vaiVicino(i, j)
   }
-  daTenere(x, y) { const id = this.mobileSotto(x, y); return id === null ? null : () => this.ui.apriMobile(id) }
+  /** «Apri l'armadio»: il contadino ci va davanti e lo apre. */
+  apriArmadio(o) {
+    const { ui, eroe } = this, x0 = misureMobile(o.tipo, o.rot), centro = new THREE.Vector3(o.i + x0.w / 2, 0, o.j + x0.d / 2)
+    if (!eroe.vaiA(this.celleAttorno(o), () => { eroe.faccia(centro); ui.apriGuardaroba() }, centro)) ui.apriGuardaroba()       // murato: si apre lo stesso
+  }
+  daTenere(x, y) { const id = this.mobileSotto(x, y); return id === null ? null : () => this.solleva(id, x, y) }
   get inMano() { return !!this.mano }
 
   // ── il mobile in mano: uno nuovo dal catalogo (si compra a «Compra») o uno tuo da spostare ──
@@ -175,6 +173,21 @@ export class Casa3d extends Interno3d {
     this._inMano({ tipo: o.tipo, id, i, j, rot, colore: o.colore, trama: o.trama })
     this.sincronizza()                                                      // il mobile vero sparisce mentre è in mano
   }
+  /** Tenuto premuto: il mobile si stacca e segue il dito, tenendo il punto che ha preso (docs/core/il-dito.md). */
+  solleva(id, x, y) {
+    this.prendi(id)
+    const h = this.mano, p = this.puntaSuolo(x, y), d = misureMobile(h.tipo, h.rot)
+    h.tenuto = true; h.presa = p ? scartoDellaPresa(p, h.i, h.j, d.w, d.d) : null
+    this._aggiornaMano()
+  }
+  /** Il dito si stacca: se ci sta è già posato; se no torna dov'era e il contadino dice perché. `su` falso: il tocco è stato annullato. */
+  lasciaDalDito(su = true) {
+    const h = this.mano; if (!h || !h.tenuto) return
+    const motivo = h.motivo
+    if (su && h.ok && this.posaMano().ok) return
+    this.lasciaMano()
+    if (su) this.ui.rifiuto({ motivo })
+  }
   _inMano(h) {
     this.lasciaMano(false)
     const grp = creaMobile(h.tipo, h.colore, h.trama); fantasma(grp); this.scena.add(grp)
@@ -184,14 +197,15 @@ export class Casa3d extends Interno3d {
   _aggiornaMano() {
     const h = this.mano; if (!h) return
     this._posa(h.grp, h.tipo, h.i, h.j, h.rot)
-    const r = this.m.mobileCiSta(h.tipo, h.i, h.j, h.rot, h.id); h.ok = r.ok
+    const r = this.m.mobileCiSta(h.tipo, h.i, h.j, h.rot, h.id); h.ok = r.ok; h.motivo = r.motivo || null
     tingi(h.grp, h.ok)
-    this.ui.mano({ tipo: h.tipo, nuovo: h.id === null, ok: h.ok, motivo: r.motivo || null, gira: ruotabileMobile(h.tipo), prezzo: h.id === null ? MOBILI[h.tipo].prezzo : 0 })
+    this.ui.mano({ tipo: h.tipo, nuovo: h.id === null, ok: h.ok, motivo: h.motivo, gira: ruotabileMobile(h.tipo), prezzo: h.id === null ? MOBILI[h.tipo].prezzo : 0, tenuto: !!h.tenuto })
   }
   /** Il dito porta il mobile in mano: il centro del mobile sotto il dito. */
   portaInMano(x, y) {
     const h = this.mano, p = this.puntaSuolo(x, y); if (!h || !p) return
-    const d = misureMobile(h.tipo, h.rot), i = Math.round(p.x - d.w / 2), j = Math.round(p.z - d.d / 2)
+    if (h.tenuto) h.dito = { x, y }
+    const d = misureMobile(h.tipo, h.rot), { i, j } = cellaSottoIlDito(p, d.w, d.d, h.presa)
     if (i === h.i && j === h.j) return
     h.i = i; h.j = j
     if (MOBILI[h.tipo].strato === 'muro') { const s = stanzaDi(i, j); if (s) h.j = origine(s).j0 }      // le cose appese scivolano sulla parete di fondo
@@ -241,7 +255,8 @@ export class Casa3d extends Interno3d {
   }
   /** I cartelli delle stanze da comprare, sul muro dove si aprirebbe la porta: se è fuori schermo restano sul bordo con la freccia, perché si
       compra solo da lì. Con un mobile in mano o un colore in prova non si vedono. */
-  aggiorna() {
+  aggiorna(dt) {
+    this._scorriColMobile(dt)
     const qui = stanzaDi(Math.floor(this.eroe.x), Math.floor(this.eroe.z)), { width: W, height: H } = this.rect
     if (qui && this.m.s.interni.stanze.includes(qui.id)) this._qui = qui.id
     for (const [id, b] of this.badge) {
@@ -250,6 +265,14 @@ export class Casa3d extends Interno3d {
       b.imposta(`${x < cx ? '← ' : x > cx ? '→ ' : y < cy ? '↑ ' : y > cy ? '↓ ' : ''}＋ 🪙 ${this._prezzoStanza}`, 'vendita')
       b.metti(cx, cy, !this.mano && !this.prova, true)
     }
+  }
+  /** Col mobile tenuto al dito contro il bordo la vista scorre, e il mobile resta sotto il dito. */
+  _scorriColMobile(dt) {
+    const t = this.mano?.dito; if (!t || !this.mano.tenuto) return
+    const r = this.rect, v = velocitaBordo(t.x, t.y, { sinistra: r.left, destra: r.right, alto: r.top + BORDO_SU, basso: r.bottom - BORDO_GIU })
+    if (!v.x && !v.z) return
+    this.camera.scorri(v.x * dt, v.z * dt); this.camera.cam.updateMatrixWorld()
+    this.portaInMano(t.x, t.y)
   }
   via() {
     for (const b of this.badge.values()) b.el.remove()

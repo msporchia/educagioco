@@ -1,7 +1,8 @@
 <script setup>
 // Dentro la casa, la parte che si tocca (docs/fattoria3d/casa.md): la testata con «Esci», i due tasti (Arreda, Colori), la barra del mobile
 // in mano (gira, compra o metti qui, lascia), la striscia di pavimento e pareti (si provano sulla stanza, si pagano qui) e i due fogli: il
-// catalogo dei mobili e il foglio di un mobile (colore, trama, gira, sposta, metti via; l'armadio apre anche il guardaroba). Riceve l'oggetto di casa.js.
+// catalogo dei mobili e il foglio di un mobile, che si apre col tocco (colore, trama, gira, metti via; l'armadio apre anche il guardaroba).
+// Spostare è tenerlo premuto (scena3d/casa3d.js). Riceve l'oggetto di casa.js.
 import { reactive } from 'vue'
 import { SCHEDE_MOBILI, COLORI, TRAME, PAVIMENTI, PARETI, CARTE, PREZZI_FINITURE } from '../dati/interni.js'
 import { dettoInCasa } from '../casa.js'
@@ -12,7 +13,6 @@ const p = defineProps({
   casa: { type: Object, required: true },          // usaCasa() di casa.js
   monete: { type: Number, default: 0 },
 })
-defineEmits(['guardaroba'])
 const { foglio, scheda, mobile, tinte, prezzoTinte, mano, messaggio, vista, voci, eArmadio } = p.casa
 const c = p.casa
 const vaiScheda = id => { scheda.value = id }
@@ -58,15 +58,15 @@ const colorePareti = () => (PARETI.find(x => x.id === tinte.value.prova.pareti) 
       <button data-f3="apri-tinte" @click="c.apriTinte()">🎨 Colori</button>
     </div>
 
-    <!-- il mobile in mano: si trascina o si tocca dove va -->
+    <!-- il mobile in mano: dal catalogo si trascina o si tocca dove va; tenuto al dito si posa staccando il dito, e il ↻ si preme con un altro dito -->
     <div v-if="mano" class="f3-int-mano" data-f3="mano" :data-ok="mano.ok">
-      <p class="riga" data-f3="mano-riga">{{ messaggio || (mano.ok ? 'Trascinalo dove vuoi' : dettoInCasa(mano)) }}</p>
+      <p class="riga" data-f3="mano-riga">{{ messaggio || (!mano.ok ? dettoInCasa(mano) : mano.tenuto ? 'Lascialo dove vuoi' : 'Trascinalo dove vuoi') }}</p>
       <div class="tasti">
-        <button v-if="mano.gira" class="tondo" data-f3="mano-gira" aria-label="gira" @click="c.gira()">↻</button>
-        <button class="si" :class="{ spenta: !mano.ok || (mano.nuovo && mano.prezzo > monete) }" data-f3="mano-posa" @click="c.posa()">
+        <button v-if="mano.gira" class="tondo" data-f3="mano-gira" aria-label="gira" @pointerdown.prevent="c.gira()" @keydown.enter.prevent="c.gira()">↻</button>
+        <button v-if="!mano.tenuto" class="si" :class="{ spenta: !mano.ok || (mano.nuovo && mano.prezzo > monete) }" data-f3="mano-posa" @click="c.posa()">
           {{ mano.nuovo ? `🛒 Compra 🪙${mano.prezzo}` : '✓ Metti qui' }}
         </button>
-        <button class="no" data-f3="mano-lascia" @click="c.lascia()">✖️</button>
+        <button v-if="!mano.tenuto" class="no" data-f3="mano-lascia" @click="c.lascia()">✖️</button>
       </div>
     </div>
 
@@ -124,7 +124,7 @@ const colorePareti = () => (PARETI.find(x => x.id === tinte.value.prova.pareti) 
           <img v-if="fotoDi(mobile.tipo, mobile.colore, mobile.trama)" :src="fotoDi(mobile.tipo, mobile.colore, mobile.trama)" alt="" />
         </div>
         <p v-if="messaggio" class="f3-messaggio" data-f3="mobile-msg">{{ messaggio }}</p>
-        <button v-if="eArmadio" class="f3-int-grande" data-f3="apri-armadio" @click="$emit('guardaroba')">👕 Apri l'armadio</button>
+        <button v-if="eArmadio" class="f3-int-grande" data-f3="apri-armadio" @click="c.apriArmadio()">👕 Apri l'armadio</button>
         <h3>Colore</h3>
         <div class="f3-int-campioni">
           <button v-for="col in COLORI[mobile.voce.tinte]" :key="col.id" class="campione" :class="{ su: mobile.colore === col.id }" :style="{ background: col.c }"
@@ -138,11 +138,10 @@ const colorePareti = () => (PARETI.find(x => x.id === tinte.value.prova.pareti) 
           </div>
         </template>
         <div class="f3-int-fila">
-          <button data-f3="mobile-sposta" @click="c.sposta()">✋ Sposta</button>
           <button v-if="mobile.voce.strato !== 'muro'" data-f3="mobile-gira" @click="c.giraMobile()">↻ Gira</button>
           <button v-if="!eArmadio" data-f3="mobile-via" @click="c.mettiVia()">📦 Metti via</button>
         </div>
-        <p class="f3-nota">Colore, trama, girare e spostare non costano niente.</p>
+        <p class="f3-nota">Tieni premuto un mobile per spostarlo. Colore, trama, girare e spostare non costano niente.</p>
       </div>
     </div>
   </div>
