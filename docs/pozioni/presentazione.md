@@ -20,8 +20,7 @@ Tre famiglie di misure, ognuna con le sue unità e il suo strumento:
 
 **Una tappa è una pozione, col suo nome.** Sulla pergamena ci sono gli
 ingredienti con la loro dose, «1,5 kg di polvere di luna», e sul banco uno
-strumento per ognuno col segno d'oro dove arrivare. Qualcosa, a volte, c'è già in
-casa. Sotto, la ricetta a punti dice cosa fare con la roba comprata: si trascina nel
+strumento per ognuno col segno d'oro dove arrivare. Sotto, la ricetta a punti dice cosa fare con la roba comprata: si trascina nel
 calderone o nel mortaio, e si pesta,
 si mescola, si accende il fuoco, si diluisce. Una mossa fuori tempo fa un pasticcio.
 

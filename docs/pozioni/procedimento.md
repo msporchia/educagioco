@@ -21,9 +21,9 @@ pasticcio. Il motore è `motore/procedimento.js`.
   prima non serviva.
 - **Con la spesa nel calderone non va niente**: gli strumenti arrivati all'oro si
   mettono via, e dentro si versa solo col procedimento.
-- **In casa c'è già qualcosa** (`casa`, su `virgole`, `inverse` e le finali): un
-  ingrediente parte col pezzo più grande già nello strumento, e il rotolo lo dice.
-  Si compra solo quello che manca, cioè una sottrazione fra unità diverse.
+- **Si parte sempre da zero**: ogni strumento comincia vuoto, e tutta la dose si
+  compra dal mercante. Provato con un pezzo già in casa: confondeva, e la
+  sottrazione fra unità diverse rubava la scena alla conversione.
 - **Niente bottoni: tutto si trascina.** La roba sta sul bancone, con la foto del
   suo modello e il nome, gli attrezzi sul tavolo. La roba sul calderone si versa, sul mortaio ci va; il
   pestello sul mortaio pesta; il mortaio sul calderone versa il pestato; il mestolo

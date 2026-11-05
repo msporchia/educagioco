@@ -55,7 +55,6 @@ for (const t of [CAMPAGNA[0], CAMPAGNA[9], CAMPAGNA[26], CAMPAGNA.at(-1)]) {
   const q = leggi(via(b))
   uguale('la ricetta è la stessa', JSON.stringify([q.passi, q.righe]), JSON.stringify([b.passi, b.righe]))
   uguale('il passo e quello che c\'è', JSON.stringify([q.passo, q.mortaio, q.pestato, q.dentro, q.pasticci]), JSON.stringify([b.passo, b.mortaio, b.pestato, b.dentro, b.pasticci]))
-  uguale('quello che è in casa resta', q.ingredienti.map(g => g.casa).join(), b.ingredienti.map(g => g.casa).join())
   uguale('il minimo pure', q.minimo, b.minimo)
   seguiLaRicetta(q)
   controlla('e la pozione si finisce', q.finita)
@@ -69,6 +68,27 @@ for (const t of [CAMPAGNA[0], CAMPAGNA[9], CAMPAGNA[26], CAMPAGNA.at(-1)]) {
   uguale('si rilegge', firma(q), firma(b))
   uguale('a che giro era', q.tappa.giro, 4)
   uguale('la mappa dice il suo nome', dice(dato).nome, INFINITA.nome)
+}
+
+/* una sosta di quando si partiva con qualcosa in casa: si carica e si finisce com'era */
+{
+  const t = CAMPAGNA.find(x => x.chiave === 'capacita-inverse')
+  const b = new Bottega(t, { rnd: caso(8) })
+  const vecchia = via(b)
+  const i = b.ingredienti.findIndex(g => !g.dispensa && g.ottimo.pezzi.length > 1)
+  const g = b.ingredienti[i], casa = g.offerte[g.ottimo.pezzi[0]].base
+  const dispensa = vecchia.ingredienti.findIndex(x => x.dispensa)
+  vecchia.ingredienti = vecchia.ingredienti.map((x, n) => (n === i ? { ...x, casa, messo: casa, pezzi: [casa] } : n === dispensa ? { ...x, casa: 1 } : { ...x, casa: 0 }))
+  const q = leggi(vecchia)
+  controlla('si carica', !!q)
+  uguale('lo strumento è dove era', q.ingredienti[i].messo, casa)
+  uguale('il minimo è solo quello che mancava', q.ingredienti[i].ottimo.pezzi.reduce((n, k) => n + q.ingredienti[i].offerte[k].base, 0), g.dose - casa)
+  const r = leggi(via(q))
+  uguale('e riscrivendola non cambia', r.minimo, q.minimo)
+  controlla('il resto delle dosi non ne sa niente', q.ingredienti.filter((_, n) => n !== i).every(x => !('casa' in x)))
+  giocaBene(q)
+  controlla('e la pozione si finisce con tre stelle', q.finita && q.stelle === 3)
+  uguale('una scorta oltre la dose non si legge', leggi({ ...vecchia, ingredienti: vecchia.ingredienti.map((x, n) => (n === i ? { ...x, casa: x.dose + 1 } : x)) }), null)
 }
 
 /* quello che non torna non si legge */

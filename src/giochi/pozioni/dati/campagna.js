@@ -10,7 +10,7 @@ const AZIONI_DEL = { 1: ['versa', 'mescola'], 2: ['versa', 'mescola', 'scalda'],
 // `dosi`: `in` è dove la ricetta le scrive, i numeri sono multipli della
 // grande. `etichette`: in che unità il mercante scrive il listino.
 // `margine`: i gettoni oltre il minimo. `procedimento`: quanto è ricco il
-// passo dopo la spesa (motore/procedimento.js). `casa`: qualcosa c'è già. `manca`: la pergamena fa la
+// passo dopo la spesa (motore/procedimento.js). `manca`: la pergamena fa la
 // sottrazione. `ordine`: quante ampolle si chiedono in una volta.
 const GRADINI = [
   { id: 'banco', aiuto: 'gioco', ingredienti: 2, procedimento: 1, ordine: 2, margine: 8, manca: true, etichette: ['P'],
@@ -30,7 +30,7 @@ const GRADINI = [
     dritta: f => `Mezzo ${f.parole.G[0]}, un ${f.parole.G[0]} e mezzo: sotto ogni targhetta c'è quanto vale.`,
     dosi: [{ in: 'G', valori: [0.5, 1.5, 2.5, 3.5, 4.5] }] },
 
-  { id: 'virgole', aiuto: '', ingredienti: 3, procedimento: 3, casa: true, ordine: 3, margine: 4, manca: true, etichette: ['P', 'G'],
+  { id: 'virgole', aiuto: '', ingredienti: 3, procedimento: 3, ordine: 3, margine: 4, manca: true, etichette: ['P', 'G'],
     dritta: () => 'Adesso la virgola la sposti da solo.',
     dosi: [{ in: 'G', valori: [0.5, 1.5, 2.5, 4.5, 0.2, 0.4, 1.2, 3.6] }] },
 
@@ -48,7 +48,7 @@ const GRADINI = [
     dritta: f => `${VALE[f.unita.G] / VALE[f.unita.P] * 6} ${f.parole.P[1]} sulla ricetta, e il mercante vende a ${f.parole.G[1]}: si sale.`,
     dosi: [{ in: 'P', valori: [6, 8, 10, 12, 15, 20] }] },
 
-  { id: 'inverse', aiuto: '', ingredienti: 3, procedimento: 5, casa: true, ordine: 3, margine: 3, manca: false, etichette: ['G', 'M', 'P'],
+  { id: 'inverse', aiuto: '', ingredienti: 3, procedimento: 5, ordine: 3, margine: 3, manca: false, etichette: ['G', 'M', 'P'],
     dritta: () => 'Salire o scendere lo decidi tu, e quanto manca lo conti tu.',
     dosi: [{ in: 'P', valori: [6, 7, 9, 12, 18] },
            { in: 'M', valori: [2.5, 7, 15] },
@@ -60,11 +60,11 @@ const GRADINI = [
 const FINALI = [
   { id: 'calderone', nome: 'Elisir del Calderone', emoji: '🔮', colore: '#8b5cc4',
     dritta: 'Pesi, lunghezze e liquidi nella stessa pozione.',
-    aiuto: '', ingredienti: 4, ordine: 3, margine: 3, procedimento: 5, casa: true, manca: false, etichette: ['G', 'M', 'P'],
+    aiuto: '', ingredienti: 4, ordine: 3, margine: 3, procedimento: 5, manca: false, etichette: ['G', 'M', 'P'],
     da: ['grandi', 'virgole', 'miste', 'inverse'], portata: 82 },
   { id: 'maestro', nome: 'Pozione del Maestro', emoji: '🏆', colore: '#e6b53c',
     dritta: 'Dosi da magazzino, e gettoni contati.',
-    aiuto: '', ingredienti: 4, ordine: 3, margine: 2, procedimento: 5, casa: true, manca: false, etichette: ['G', 'M', 'P'],
+    aiuto: '', ingredienti: 4, ordine: 3, margine: 2, procedimento: 5, manca: false, etichette: ['G', 'M', 'P'],
     da: ['virgole', 'miste', 'inverse'], portata: 85,
     dosi: [{ in: 'G', valori: [30, 40, 50, 75] },
            { in: 'M', valori: [25, 35, 50] },
@@ -85,7 +85,7 @@ const unaDose = (f, spec, v) => {
 
 const dosiDi = (f, specs) => specs.flatMap(s => s.valori.map(v => unaDose(f, s, v)))
 
-const comune = t => ({ aiuto: t.aiuto, ingredienti: t.ingredienti, ordine: t.ordine, procedimento: t.procedimento, casa: !!t.casa, azioni: AZIONI_DEL[t.procedimento], margine: t.margine,
+const comune = t => ({ aiuto: t.aiuto, ingredienti: t.ingredienti, ordine: t.ordine, procedimento: t.procedimento, azioni: AZIONI_DEL[t.procedimento], margine: t.margine,
                        manca: t.manca, etichette: t.etichette, gemelli: t.etichette.length > 1 })
 
 function tappaDelGradino(f, g, n) {
@@ -131,7 +131,7 @@ export function giroInfinito(n, pozione = null, rnd = Math.random) {
   const [nome, emoji, colore] = pozione || TUTTE_LE_POZIONI[Math.floor(rnd() * TUTTE_LE_POZIONI.length)]
   const procedimento = Math.min(5, 3 + Math.floor(n / 2))
   return { ...base, chiave: INFINITA.chiave, nome, emoji, colore, giro: n, margine: 0, ingredienti: n < 3 ? 3 : 4,
-           procedimento, azioni: AZIONI_DEL[procedimento], casa: n % 2 === 1 }
+           procedimento, azioni: AZIONI_DEL[procedimento] }
 }
 export const GRADINI_PER_FAMIGLIA = GRADINI.length
 export const ID_GRADINI = GRADINI.map(g => g.id)

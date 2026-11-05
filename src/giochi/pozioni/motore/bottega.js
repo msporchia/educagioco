@@ -127,20 +127,12 @@ export class Bottega {
       dosi.push(d)
       const offerte = banchetto(rnd, d.base, famiglia, d.unita, tappa)
       return { nome: i.nome, f: !!i.f, colore: i.colore, famiglia, unita: d.unita, dose: d.base, messo: 0,
-               offerte, ottimo: ottimo(d.base, offerte), traboccate: 0, pezzi: [], casa: 0 }
+               offerte, ottimo: ottimo(d.base, offerte), traboccate: 0, pezzi: [] }
     })
-    // in casa c'è già un pezzo di un ingrediente: si compra solo quello che manca
-    const sfusi = this.ingredienti.filter(g => g.ottimo.pezzi.length > 1)
-    if (tappa.casa && sfusi.length) {
-      const g = pesca(rnd, sfusi)
-      g.casa = g.messo = g.offerte[g.ottimo.pezzi[0]].base
-      g.pezzi = [g.casa]
-      g.ottimo = ottimo(g.dose - g.casa, g.offerte)
-    }
     // i liquidi non si pestano: per il mortaio c'è qualcosa di secco in dispensa, che non si compra
     const secche = tappa.famiglie.length === 1 && tappa.famiglie[0] === 'capacita' && tappa.procedimento >= 3 ? (tappa.procedimento >= 4 ? 2 : 1) : 0
     for (const i of mescolata(rnd, INGREDIENTI.filter(x => x.famiglia === 'massa')).slice(0, secche))
-      this.ingredienti.push({ nome: i.nome, f: !!i.f, colore: i.colore, famiglia: i.famiglia, unita: 'g', dose: 1, messo: 1, casa: 1, dispensa: true,
+      this.ingredienti.push({ nome: i.nome, f: !!i.f, colore: i.colore, famiglia: i.famiglia, unita: 'g', dose: 1, messo: 1, dispensa: true,
                               offerte: [], ottimo: { costo: 0, pezzi: [] }, traboccate: 0, pezzi: [] })
     this.pozione = { nome: tappa.nome, emoji: tappa.emoji, colore: tappa.colore }
     this.passi = ricetta(rnd, this.ingredienti, tappa.procedimento)

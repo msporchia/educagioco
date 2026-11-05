@@ -205,7 +205,6 @@ for (const t of CAMPAGNA) {
     ordini.add(azioni.join())
     giocaBene(b)
     if (b.monete !== t.ingredienti * MONETE_A_DOSE + b.passi.length * MONETE_A_PASSO || !b.finita || b.pasticci) rotte++
-    if (b.comprati.filter(g => g.casa).length > (t.casa ? 1 : 0)) rotte++
   }
   uguale(`${t.chiave}: il procedimento si fa con le azioni della tappa, ogni cosa una volta`, rotte, 0)
   uguale(`${t.chiave}: si comincia mettendo qualcosa`, senzaOrdine, 0)
@@ -307,19 +306,13 @@ for (const t of CAMPAGNA) {
   uguale('la pozione di una sosta resta quella', giroInfinito(2, ['X', '🧪', '#123456']).nome, 'X')
 }
 
-/* ---------- quello che c'è già in casa ---------- */
+/* ---------- si parte sempre da zero: niente è già in casa ---------- */
 {
-  let con = 0
-  for (let s = 1; s <= 60; s++) {
-    const b = new Bottega(tappa('massa-virgole'), { rnd: caso(s) })
-    const g = b.ingredienti.find(x => x.casa)
-    if (!g) continue
-    con++
-    uguale('lo strumento parte da lì', g.messo, g.casa)
-    uguale('il minimo è solo quello che manca', g.ottimo.pezzi.reduce((n, k) => n + g.offerte[k].base, 0), g.dose - g.casa)
-  }
-  controlla('nelle tappe con la casa capita', con > 20, `${con}`)
-  uguale('nelle altre no', new Bottega(tappa('massa-grande'), { rnd: caso(2) }).ingredienti.some(g => g.casa), false)
+  let gia = 0
+  for (const t of [...CAMPAGNA, giroInfinito(1), giroInfinito(3)]) for (let s = 1; s <= 30; s++)
+    for (const g of new Bottega(t, { rnd: caso(s) }).comprati) if (g.messo || g.pezzi.length || 'casa' in g) gia++
+  uguale('ogni strumento parte vuoto, in ogni tappa', gia, 0)
+  controlla('e nessuna tappa ha la scorta in casa', CAMPAGNA.every(t => !('casa' in t)))
 }
 
 riassunto('pozioni')
