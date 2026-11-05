@@ -47,6 +47,11 @@ await scatto(page, 'pozioni-gioco')
 await page.waitForSelector('[data-listino]')
 uguale('il rotolo ha tutti gli ingredienti della ricetta, e solo quelli', await page.locator('[data-merce]').count(), CAMPAGNA[0].ingredienti)
 uguale('quattro targhette a ingrediente', await page.locator('[data-targhetta]').count(), CAMPAGNA[0].ingredienti * 4)
+controlla('il gettone non è una moneta: a sei lati, sul listino e nella borsa', await page.evaluate(() => {
+  const tutti = [...document.querySelectorAll('[data-listino] .pz-gettone, [data-gettoni] .pz-gettone')]
+  return tutti.length > 4 && tutti.every(g => { const s = getComputedStyle(g); return s.clipPath.startsWith('polygon') && s.borderRadius === '0px' })
+}))
+controlla('e sul banco di monete non ce ne sono', !/🪙|monet/i.test(await page.locator('[data-listino]').innerText() + await page.locator('[data-gettoni]').innerText()) || /non le tue monete/.test(await page.locator('[data-esito]').innerText()))
 await scatto(page, 'pozioni-listino')
 
 const stato = () => page.evaluate(() => {
