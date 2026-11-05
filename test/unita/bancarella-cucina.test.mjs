@@ -1,7 +1,7 @@
 /* Le cucine della bancarella, in prova: stazioni e ricette, senza browser.
    Vedi docs/bancarella/cucina.md.
    `node test/esegui.mjs bancarella-cucina --niente-build` */
-import { INGREDIENTI, RICETTE, COLPI, ricetteDi, cucinaNuova, avanza, tocca, servi, inforna, dispensaDi, quantoStazione }
+import { INGREDIENTI, RICETTE, COLPI, ricetteDi, cucinaNuova, avanza, metti, svuota, taglia, inforna, butta, buttaPiatto, servi, dispensaDi, quantoStazione }
   from '../../src/motore/bancarella/cucina.js'
 import { CUCINE, cucinaIdx, campagnaDi, tappaDi, generaCliente, scomponi } from '../../src/data/bancarella.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
@@ -12,74 +12,71 @@ const { cuoce: PASTA, tiene: TIENE } = INGREDIENTI.pasta
 /* ── la pentola ── */
 {
   const c = cucinaNuova(prima)
-  uguale('la pentola vuota non si scola', tocca(c, 'pentola'), false)
-  uguale('il sugo senza pasta non va da nessuna parte', tocca(c, 'sugo'), false)
-  uguale('la pasta va in pentola', tocca(c, 'pasta'), true)
-  uguale('e non ci sta due volte', tocca(c, 'pasta'), false)
+  uguale('la pentola vuota non si svuota', svuota(c, 'pentola', 0), false)
+  uguale('il sugo senza pasta non va su un piatto', metti(c, 'sugo', 0), false)
+  uguale('la pasta cruda non va sul piatto', metti(c, 'pasta', 0), false)
+  uguale('la pasta va in pentola', metti(c, 'pasta', 'pentola'), true)
+  uguale('e non ci sta due volte', metti(c, 'pasta', 'pentola'), false)
   avanza(c, PASTA - 1)
-  uguale('prima del tempo non si scola', tocca(c, 'pentola'), false)
+  uguale('prima del tempo non si scola', svuota(c, 'pentola', 0), false)
   avanza(c, 1)
   uguale('al tempo giusto è pronta', c.stazioni.pentola.fase, 'pronta')
   avanza(c, TIENE)
   uguale('lasciata lì scuoce', c.stazioni.pentola.fase, 'scotta')
-  uguale('si butta', tocca(c, 'pentola'), true)
-  uguale('senza finire sul piatto', c.piatti.filter(Boolean).length, 0)
+  uguale('scotta non va sul piatto', svuota(c, 'pentola', 0), false)
+  uguale('va nel bidone', butta(c, 'pentola'), true)
+  uguale('e la pentola è libera', c.stazioni.pentola.fase, 'vuota')
 }
 
 /* ── i piatti ── */
 {
   const c = cucinaNuova(prima)
-  tocca(c, 'pasta'); avanza(c, PASTA)
-  tocca(c, 'pane'); tocca(c, 'formaggio')
+  metti(c, 'pasta', 'pentola'); avanza(c, PASTA)
+  metti(c, 'pane', 0); metti(c, 'formaggio', 0)
   uguale('mentre cuoce si fa il panino', c.piatti[0].pronto, '🥪')
-  uguale('la pasta va sul piatto libero', tocca(c, 'pentola'), true)
-  uguale('coi piatti pieni il pane non ci sta', tocca(c, 'pane'), false)
-  tocca(c, 'sugo')
+  uguale('un piatto finito non prende altro', svuota(c, 'pentola', 0), false)
+  uguale('la pasta va sul piatto libero', svuota(c, 'pentola', 1), true)
+  uguale('il pane sulla pasta no', metti(c, 'pane', 1), false)
+  metti(c, 'sugo', 1)
   uguale('col sugo è pronta', c.piatti[1].pronto, '🍝')
   uguale('il piatto sbagliato non si serve', servi(c, 0, ['🍝']), false)
   uguale('quello giusto sì', servi(c, 1, ['🍝']), true)
   uguale('e il posto si libera', c.piatti[1], null)
+  uguale('un piatto si può buttare', buttaPiatto(c, 0), true)
+  uguale('ed è vuoto', c.piatti[0], null)
 }
 
 /* ── il tagliere e la padella ── */
 {
   const c = cucinaNuova(terza)
-  tocca(c, 'pane')
-  tocca(c, 'carne'); avanza(c, INGREDIENTI.carne.cuoce)
-  tocca(c, 'padella')
+  metti(c, 'pane', 0)
+  metti(c, 'carne', 'padella'); avanza(c, INGREDIENTI.carne.cuoce)
+  svuota(c, 'padella', 0)
   uguale('la carne cotta va sul pane', c.piatti[0].cose.join(), 'pane,carne')
-  tocca(c, 'insalata')
-  for (let i = 0; i < COLPI - 1; i++) tocca(c, 'tagliere')
-  uguale('l\'insalata va tagliata tutta', c.piatti[0].pronto, '')
-  tocca(c, 'tagliere')
-  uguale('al terzo tocco è un hamburger', c.piatti[0].pronto, '🍔')
-  uguale('e il tagliere è libero', c.stazioni.tagliere.fase, 'vuota')
+  uguale('l\'insalata va sul tagliere', metti(c, 'insalata', 'tagliere'), true)
+  uguale('intera non si posa', svuota(c, 'tagliere', 0), false)
+  for (let i = 0; i < COLPI; i++) taglia(c)
+  uguale('tagliata è pronta', c.stazioni.tagliere.fase, 'pronta')
+  svuota(c, 'tagliere', 0)
+  uguale('sul piatto è un hamburger', c.piatti[0].pronto, '🍔')
+  uguale('il tagliere è libero', c.stazioni.tagliere.fase, 'vuota')
   const d = cucinaNuova(terza)
-  tocca(d, 'carne'); avanza(d, INGREDIENTI.carne.cuoce)
-  uguale('la carne senza pane non si posa', tocca(d, 'padella'), false)
+  metti(d, 'carne', 'padella'); avanza(d, INGREDIENTI.carne.cuoce)
+  uguale('la carne senza pane non si posa', svuota(d, 'padella', 0), false)
   uguale('e intanto resta sul fuoco', d.stazioni.padella.fase, 'pronta')
-  const u = cucinaNuova(terza)
-  tocca(u, 'uovo'); avanza(u, INGREDIENTI.uovo.cuoce); tocca(u, 'padella')
-  tocca(u, 'pane')
-  uguale('il pane va sull\'uovo che lo aspetta, non su un piatto nuovo', u.piatti[0].pronto, '🍳')
 }
 
 /* ── il forno ── */
 {
   const c = cucinaNuova(quarta)
-  tocca(c, 'impasto'); tocca(c, 'sugo'); tocca(c, 'formaggio')
+  metti(c, 'impasto', 0); metti(c, 'sugo', 0); metti(c, 'formaggio', 0)
   uguale('la pizza condita è cruda', c.piatti[0].daInfornare, true)
   uguale('e non si serve', servi(c, 0, ['🍕']), false)
   uguale('dal piatto va in forno', inforna(c, 0), true)
   uguale('il piatto si libera', c.piatti[0], null)
   avanza(c, 8)
-  uguale('sfornata va sul piatto', tocca(c, 'forno'), true)
+  uguale('sfornata va su un piatto vuoto', svuota(c, 'forno', 0), true)
   uguale('ed è pronta', c.piatti[0].pronto, '🍕')
-  const d = cucinaNuova(quarta)
-  tocca(d, 'impasto'); tocca(d, 'sugo'); tocca(d, 'formaggio')
-  uguale('si inforna anche toccando il forno', tocca(d, 'forno'), true)
-  avanza(d, 30)
-  uguale('e dimenticata brucia', d.stazioni.forno.fase, 'scotta')
 }
 uguale('la barra sale mentre cuoce', quantoStazione({ fase: 'cuoce', t: PASTA / 2, cosa: 'pasta' }), 0.5)
 

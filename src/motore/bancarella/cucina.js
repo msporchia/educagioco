@@ -63,18 +63,18 @@ export function quantoStazione(s) {
 const iniziaCon = (r, cose) => cose.every((x, i) => r.passi[i] === x)
 const cercaRicetta = (c, cose) => c.ricette.find(r => r.passi.length === cose.length && iniziaCon(r, cose))
 
-/* Dove va una cosa: sul piatto che la aspetta, se no su uno libero, se può
-   cominciare una ricetta. `-1` se non ha posto. */
-function dovePosare(c, cosa) {
-  const i = c.piatti.findIndex(p => p && !p.pronto && !p.daInfornare &&
-    c.ricette.some(r => iniziaCon(r, p.cose) && r.passi[p.cose.length] === cosa))
-  if (i >= 0) return i
-  return c.ricette.some(r => r.passi[0] === cosa) ? c.piatti.findIndex(p => !p) : -1
+/* Il piatto `i` prende questa cosa? Un piatto vuoto, se comincia una ricetta;
+   uno cominciato, se è il passo dopo. */
+function accetta(c, i, cosa) {
+  const p = c.piatti[i]
+  if (i < 0 || i >= c.piatti.length) return false
+  if (!p) return c.ricette.some(r => r.passi[0] === cosa)
+  if (p.pronto || p.daInfornare) return false
+  return c.ricette.some(r => iniziaCon(r, p.cose) && r.passi[p.cose.length] === cosa)
 }
 
-function posa(c, cosa) {
-  const i = dovePosare(c, cosa)
-  if (i < 0) return false
+function posaSu(c, i, cosa) {
+  if (!accetta(c, i, cosa)) return false
   const p = c.piatti[i] || (c.piatti[i] = { cose: [], pronto: '', daInfornare: false })
   p.cose.push(cosa)
   const r = cercaRicetta(c, p.cose)
@@ -83,18 +83,41 @@ function posa(c, cosa) {
   return true
 }
 
-function sfornaOScola(c, nome) {
+/* Le mosse: ognuna è un gesto del dito, e torna `true` se è successa. Una mossa
+   che non si può fare non cambia niente. */
+
+// un ingrediente preso dalla dispensa e lasciato su una stazione (per nome) o su un piatto (per indice)
+export function metti(c, cosa, dove) {
+  const ing = INGREDIENTI[cosa]
+  if (!ing) return false
+  if (typeof dove === 'number') return !ing.va && posaSu(c, dove, cosa)
+  const s = c.stazioni[dove]
+  if (ing.va !== dove || !s || s.fase !== 'vuota') return false
+  c.stazioni[dove] = { ...libera(), fase: dove === 'tagliere' ? 'taglia' : 'cuoce', cosa }
+  return true
+}
+
+// quello che è pronto su una stazione, rovesciato sul piatto `i`
+export function svuota(c, nome, i) {
   const s = c.stazioni[nome]
+  if (!s || s.fase !== 'pronta') return false
   if (s.cosa === 'pizza') {
-    const i = c.piatti.findIndex(p => !p)
-    if (i < 0) return false
+    if (c.piatti[i] || i < 0 || i >= c.piatti.length) return false
     c.piatti[i] = { cose: ['pizza'], pronto: '🍕', daInfornare: false }
-  } else if (!posa(c, s.cosa)) return false
+  } else if (!posaSu(c, i, s.cosa)) return false
   c.stazioni[nome] = libera()
   return true
 }
 
-/* La pizza cruda va in forno, dal piatto. */
+// una passata di coltello
+export function taglia(c) {
+  const s = c.stazioni.tagliere
+  if (!s || s.fase !== 'taglia') return false
+  if (++s.colpi >= COLPI) s.fase = 'pronta'
+  return true
+}
+
+// la pizza cruda, dal piatto al forno
 export function inforna(c, i) {
   const p = c.piatti[i], f = c.stazioni.forno
   if (!p || !p.daInfornare || !f || f.fase !== 'vuota') return false
@@ -103,32 +126,16 @@ export function inforna(c, i) {
   return true
 }
 
-function toccaStazione(c, nome) {
+// nel bidone: quello che è sulla stazione, o un piatto intero
+export function butta(c, nome) {
   const s = c.stazioni[nome]
-  if (s.fase === 'scotta') { c.stazioni[nome] = libera(); return true }
-  if (s.fase === 'pronta') return sfornaOScola(c, nome)
-  if (s.fase === 'taglia') {
-    s.colpi++
-    if (s.colpi >= COLPI) { s.fase = 'pronta'; sfornaOScola(c, nome) }
-    return true
-  }
-  if (nome === 'forno') {
-    const i = c.piatti.findIndex(p => p && p.daInfornare)
-    return i >= 0 && inforna(c, i)
-  }
-  return false
+  if (!s || s.fase === 'vuota') return false
+  c.stazioni[nome] = libera()
+  return true
 }
-
-/* Un tocco su un ingrediente o su una stazione. Torna `true` se è successo
-   qualcosa: una mossa che non si può fare non cambia niente. */
-export function tocca(c, cosa) {
-  if (c.stazioni[cosa]) return toccaStazione(c, cosa)
-  const ing = INGREDIENTI[cosa]
-  if (!ing) return false
-  if (!ing.va) return posa(c, cosa)
-  const s = c.stazioni[ing.va]
-  if (!s || s.fase !== 'vuota') return false
-  c.stazioni[ing.va] = { ...libera(), fase: ing.va === 'tagliere' ? 'taglia' : 'cuoce', cosa }
+export function buttaPiatto(c, i) {
+  if (!c.piatti[i]) return false
+  c.piatti[i] = null
   return true
 }
 

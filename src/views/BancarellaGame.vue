@@ -7,7 +7,7 @@ import { state, answer, segna, segnaBest,
 import { generaCliente, esposizione, tappaDi, campagnaDi, scomponi, euro,
          centesimiScritti, scriviCifra, premioCliente, stelleDiGiornata, perLaProssima,
          BANCHI, CAMPAGNE, LIBERA, CLIENTI_PER_TAPPA, CUCINE, CUCINA_BANCO, cucinaIdx, eCucina } from '../data/bancarella.js'
-import { ricetteDi, cucinaNuova, avanza, tocca, servi, inforna } from '../motore/bancarella/cucina.js'
+import { ricetteDi, cucinaNuova, avanza, metti as mettiInCucina, svuota, taglia, inforna, butta, buttaPiatto, servi } from '../motore/bancarella/cucina.js'
 import { bancoPulito, merceMia, cesteDi, pazienzaDi, compra, puoiComprare } from '../data/bancarella-banco.js'
 import { CITTA, statoCitta, statoGiornata, cittaCorrente, fatteIn, indiceDi, giornataDi,
          cittaDelleGiornata, stelleGiornata, stelleCitta, stelleMassime } from '../data/bancarella-mondo.js'
@@ -61,6 +61,7 @@ const esito = ref('')               // vinta | persa
 const voto = ref(null)              // a giornata vinta: { stelle, migliore } (le stelle di questa volta e le migliori)
 const volo = ref(null)              // la roba che vola dalla cesta al cliente
 const cucina = ref(cucinaNuova())   // le stazioni e i piatti: docs/bancarella/cucina.md
+const portaPiatto = ref(false)      // ha in mano un piatto pronto: il cliente lo aspetta
 const cassaAperta = ref(true)       // in cucina il resto è un foglio, e si può mettere da parte
 const frasePrimato = ref('')        // a fine mercato senza fine: com'è andata col record
 
@@ -321,33 +322,34 @@ function passa(a) {
 /* ---------- la cucina ----------
    Il piatto servito porta alla cassa di sempre; mentre si conta il fornello è
    fermo (`ciclo`). Vedi docs/bancarella/cucina.md. */
-function inCucina(cosa) {
-  if (occupato || cambio.value || !cliente.value) return
-  if (tocca(cucina.value, cosa)) suono.nota(720, 980, 0.07, 'triangle', 0.1)
-  else suono.no()
+const MOSSE = {
+  metti: a => mettiInCucina(cucina.value, a.cosa, a.dove), svuota: a => svuota(cucina.value, a.nome, a.i),
+  taglia: () => taglia(cucina.value), inforna: a => inforna(cucina.value, a.i),
+  butta: a => butta(cucina.value, a.nome), buttaPiatto: a => buttaPiatto(cucina.value, a.i), servi: a => serviPiatto(a.i),
+}
+/* Un gesto della tela: torna `true` se è riuscito, e la tela sa cosa fare del pezzo in mano. */
+function inCucina(a) {
+  if (occupato || cambio.value || !cliente.value) return false
+  const fatta = MOSSE[a.che](a)
+  if (fatta) suono.nota(720, 980, 0.07, 'triangle', 0.1)
+  else if (a.che !== 'servi') suono.no()
+  return fatta
 }
 
-function suPiatto(i) {
+function serviPiatto(i) {
   const c = cliente.value
-  if (occupato || cambio.value || !c) return
   const piatto = cucina.value.piatti[i]
-  if (!piatto) return
-  if (piatto.daInfornare) {
-    if (inforna(cucina.value, i)) suono.nota(720, 980, 0.07, 'triangle', 0.1)
-    else suono.no()
-    return
-  }
-  if (!piatto.pronto || momento.value !== 'raccolta') return
-  const vuole = daPrendere.value.map(a => a.emoji)
+  if (!piatto || !piatto.pronto || momento.value !== 'raccolta') return false
   const emoji = piatto.pronto
-  if (!servi(cucina.value, i, vuole)) {
+  if (!servi(cucina.value, i, daPrendere.value.map(a => a.emoji))) {
     battuta.value = pick(SBAGLIO)
     suono.no()
     c.restaPazienza = Math.max(2, c.restaPazienza - 2)
-    return
+    return false
   }
   passa(c.articoli.find(a => a.emoji === emoji))
   if (!daPrendere.value.length) allaCassa()
+  return true
 }
 
 function allaCassa() {
@@ -766,7 +768,7 @@ onBeforeUnmount(() => {
 
       <!-- la gente davanti al banco -->
       <div class="strada" :class="{ alta: cliente && cliente.riesce }" v-if="cliente">
-        <div class="cliente">
+        <div class="cliente" :class="{ aspetta: portaPiatto }" data-cliente>
           <div class="fumetto" :key="battuta + presi.length + momento">
             <span class="dice">{{ battuta }}</span>
             <div v-if="momento === 'raccolta'" class="lista">
@@ -810,7 +812,7 @@ onBeforeUnmount(() => {
 
         <!-- niente `:key` sui due rami: in produzione, con una key esplicita su
              uno solo dei due, il patch del DOM va in confusione al cambio tappa -->
-        <Cucina v-if="camp.cucina" :stato="cucina" @tocca="inCucina" @piatto="suPiatto" />
+        <Cucina v-if="camp.cucina" :stato="cucina" :azione="inCucina" @presa="v => (portaPiatto = v)" />
 
         <div v-else-if="momento === 'raccolta'" class="ceste" :style="{ '--r': righe.length }">
           <div v-for="(riga, r) in righe" :key="r" class="rigacesta"
@@ -1067,6 +1069,8 @@ onBeforeUnmount(() => {
 .testo-cucina b { font-size:16px; font-weight:900; color:#a8301f }
 .testo-cucina small { font-size:12.5px; font-weight:700; color:#6d5a44 }
 .testo-cucina i { font-style:normal; font-size:18px; letter-spacing:2px }
+.cliente.aspetta .persona { animation:chiama-cliente .5s ease-in-out infinite alternate }
+@keyframes chiama-cliente { to { transform:translateY(-5px) scale(1.06) } }
 .vuole { font-size:20px; line-height:1; padding:2px 4px; border-radius:9px; background:#fffdf7; box-shadow:0 2px 3px #0003 }
 .quanti { align-self:center; font-size:10.5px; font-weight:900; color:#8a6a45;
           background:#ffffffaa; border-radius:8px; padding:2px 6px }
