@@ -203,19 +203,3 @@ export function creaMira() {
   o.renderOrder = 3
   return o
 }
-
-/** Il libretto delle ricette: copertina rossa, pagine, il segnalibro. */
-export function creaLibro() {
-  const g = new Group()
-  const copertina = new RoundedBoxGeometry(1.1, 0.06, 1.4, 2, 0.025)
-  const rosso = pieno(0xc8442f, 0.5)
-  const sotto = m(copertina, rosso, 0, 0.03, 0), sopra = m(copertina, rosso, 0, 0.27, 0)
-  const pagine = m(new BoxGeometry(1.02, 0.2, 1.32), pieno(0xfbf6e8, 0.8), 0.03, 0.15, 0)
-  const dorso = m(new RoundedBoxGeometry(0.1, 0.3, 1.4, 2, 0.04), pieno(0x9d2a1f, 0.5), -0.53, 0.15, 0)
-  const nastro = m(new BoxGeometry(0.1, 0.01, 0.5), pieno(0xf0c94a, 0.4), 0.2, 0.305, 0.5)
-  const riquadro = m(new BoxGeometry(0.6, 0.01, 0.34), pieno(0xfbf0d0, 0.5), 0.02, 0.305, -0.2)
-  const cucchiaio = m(new SphereGeometry(0.13, 16, 10), pieno(0xf0c94a, 0.35, 0.6), 0, 0.31, 0.22); cucchiaio.scale.y = 0.2
-  const manico = m(new BoxGeometry(0.05, 0.01, 0.3), pieno(0xf0c94a, 0.35, 0.6), 0, 0.31, 0.45)
-  g.add(sotto, pagine, sopra, dorso, nastro, riquadro, cucchiaio, manico)
-  return g
-}

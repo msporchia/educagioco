@@ -442,8 +442,10 @@ export function impiatta(p) {
     }
   }
   else if (cose[0] === 'uovo') {
-    metti('uovo', -0.2, 0.02, -0.06)
-    if (cose.includes('pane')) { metti('pane', 0.42, 0.02, 0.26, 0.3); g.children.at(-1).scale.setScalar(0.62) }
+    if (cose.includes('pane')) {
+      metti('pane'); metti('uovo', 0, 0.17)
+      if (pronto) metti('pane-sopra', 0, 0.26, 0, 0.4)
+    } else metti('uovo', -0.2, 0.02, -0.06)
     if (cose.includes('insalata')) { metti('insalata', 0.3, 0.02, 0.2); g.children.at(-1).scale.setScalar(0.62) }
     if (cose.includes('formaggio')) metti('formaggio-cubetti', -0.2, 0.1, -0.06)
   }

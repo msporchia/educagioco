@@ -52,7 +52,10 @@ function creaPosto() {
     if (f === firma) return false
     firma = f
     piatto.visible = !!o?.piatto
+    // senza piatto si vede solo quello che c'è sopra
+    piatto.children.forEach(x => { x.visible = !o?.nudo || x === piatto.userData.sopra })
     if (o?.piatto) riempiPiatto(piatto, o)
+    if (o?.nudo) piatto.userData.anello.visible = false
     cosa.clear()
     if (o && !o.piatto) cosa.add(figura(o))
     g.traverse(x => { if (x.isMesh && !x.material.transparent && !x.material.isMeshBasicMaterial) x.castShadow = true })
@@ -125,8 +128,8 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
 
   /* ── le cose in scena: si mettono al primo `imposta`, secondo la cucina ── */
   const stazioni = {}, posti = {}
-  let omino = null, inMano = null, pila = null, lavello = null, barraLavello = null
-  const mire = [], scatole = [], coltelli = []
+  let omino = null, inMano = null, pila = null, lavello = null, barraLavello = null, mira = null
+  const scatole = [], coltelli = []
   function monta(s) {
     largo = Math.max(...s.celle.map(c => c.x)) + 1; fondo = Math.max(...s.celle.map(c => c.z)) + 1
     creaSala(scena, s.celle, largo, fondo)
@@ -138,7 +141,7 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
         const g = COSTRUISCI[tipo]()
         g.scale.setScalar(SCALA_ROBA)
         g.position.set(cx, ALTO, cz)
-        if (tipo === 'padella' && c.z === 0) g.rotation.y = -Math.PI / 2      // il manico verso chi cucina, non sul vicino
+        if (tipo === 'padella') g.rotation.y = Math.PI                        // il manico verso chi cucina, non sul vicino
         if (tipo === 'forno' && c.x === 6) g.rotation.y = -Math.PI / 2        // la bocca verso la stanza
         const barra = creaBarra(); barra.scale.setScalar(0.62); barra.position.set(cx, ALTO + (tipo === 'forno' ? 1.05 : 0.8), cz)
         const fumo = new Group(); fumo.position.set(cx, ALTO + (tipo === 'forno' ? 0.85 : 0.55), cz)
@@ -174,7 +177,7 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
     scena.add(omino.g)
     inMano = creaPosto()
     omino.mano.add(inMano.g)
-    for (let i = 0; i < 6; i++) { const m = creaMira(); m.visible = false; scena.add(m); mire.push(m) }
+    mira = creaMira(); mira.visible = false; scena.add(mira)
     renderer.shadowMap.needsUpdate = true
     misura()
   }
@@ -286,18 +289,13 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
           p.scale.x = f; p.position.x = -0.57 * (1 - f); p.material.color.setHex(0x4fa8e0)
         }
       }
-      // dove sta andando: i posti toccati, o il punto del pavimento
-      const mete = [...new Set(q.fila)].map(id => q.celle.find(c => c.id === id))
-      mire.forEach((m, i) => {
-        const b = mete[i]
-        const pav = !mete.length && i === 0 ? q.strada.at(-1) : null
-        m.visible = !!(b || pav)
-        if (!m.visible) return
-        if (b) m.position.set(b.x + 0.5, (b.tipo === 'bidone' ? 0.72 : ALTO) + 0.02, b.z + 0.5)
-        else m.position.set(pav.x, 0.02, pav.z)
-        m.material.opacity = 0.72 + 0.28 * Math.sin(t * 7)
-        m.scale.setScalar(pav ? 0.6 : 0.96 + 0.02 * Math.sin(t * 7))
-      })
+      // dove sta andando: il posto toccato, o il punto del pavimento
+      const meta = q.celle.find(c => c.id === q.fila[0]), pav = meta ? null : q.strada.at(-1)
+      mira.visible = !!(meta || pav)
+      if (meta) mira.position.set(meta.x + 0.5, (meta.tipo === 'bidone' ? 0.72 : ALTO) + 0.02, meta.z + 0.5)
+      else if (pav) mira.position.set(pav.x, 0.02, pav.z)
+      mira.material.opacity = 0.72 + 0.28 * Math.sin(t * 7)
+      mira.scale.setScalar(pav ? 0.6 : 0.96 + 0.02 * Math.sin(t * 7))
     }
     renderer.render(scena, camera)
     fotogrammi++

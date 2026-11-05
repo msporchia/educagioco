@@ -4,22 +4,17 @@
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { zittisciIlFantasma } from '../../giochi/fattoria3d/viste/dito-soglie.js'
 import { dispensaDi, quanto, quantoLavato, tipoDi } from '../../motore/bancarella/cucina.js'
-import { FOTO } from '../../data/bancarella-foto.js'
-import Ricettario from './Ricettario.vue'
 
 const props = defineProps({
   stato: { type: Object, required: true },
   detto: { type: Object, default: null },     // { testo }: un oggetto nuovo a ogni cosa da dire, anche se è la stessa
-  ordinati: { type: Array, default: () => [] },
 })
-const emit = defineEmits(['tocca', 'ricettario'])
+const emit = defineEmits(['tocca'])
 
 const tela = ref(null)
 const senza3d = ref(false)
 const apre = ref(false)
 const fumetto = ref('')
-const ricettario = ref(false)
-watch(ricettario, v => emit('ricettario', v))
 let scena = null, spento = false, voce = 0
 
 watch(() => props.detto, d => {
@@ -46,7 +41,7 @@ async function accendi() {
   scena?.imposta(props.stato)
 }
 onMounted(accendi)
-onBeforeUnmount(() => { spento = true; emit('ricettario', false); scena?.rilascia(); scena = null })
+onBeforeUnmount(() => { spento = true; scena?.rilascia(); scena = null })
 
 /* Il tocco vale alla pressione. Il foglio del resto può aprirsi proprio sotto il dito:
    il click che resta premerebbe una moneta (docs/core/il-dito.md). */
@@ -63,9 +58,6 @@ if (typeof window !== 'undefined') window.__cucina3d = { grafica: () => scena?.g
   <div class="cucina" data-cucina>
     <canvas ref="tela" class="tela" data-tela @pointerdown.prevent="premi" @pointerup="alzato"></canvas>
     <p v-if="fumetto" class="detto" data-detto>{{ fumetto }}</p>
-    <button v-if="!apre && !senza3d" type="button" class="apri-ricettario" data-apri-ricettario aria-label="il ricettario" @click="ricettario = true">
-      <img :src="FOTO.ricettario" alt=""></button>
-    <Ricettario v-if="ricettario" :ricette="stato.ricette" :ordinati="ordinati" @chiudi="ricettario = false" />
     <p v-if="apre" class="apre">Si accendono i fornelli…</p>
     <div v-if="senza3d" class="senza">
       Qui la cucina non si riesce a disegnare.
@@ -83,7 +75,4 @@ if (typeof window !== 'undefined') window.__cucina3d = { grafica: () => scena?.g
 .senza { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:24px; text-align:center;
          font-weight:800; color:#f1e6cf }
 .senza button { padding:9px 18px; border:0; border-radius:12px; font-weight:900; color:#5a3200; background:#ffd257 }
-.apri-ricettario { position:absolute; right:10px; top:10px; z-index:3; width:56px; height:56px; padding:3px; border:0; border-radius:16px; background:#fffdf7; box-shadow:0 3px 0 #0000003d }
-.apri-ricettario:active { transform:translateY(2px); box-shadow:0 1px 0 #0000003d }
-.apri-ricettario img { display:block; width:100%; height:100% }
 </style>

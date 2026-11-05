@@ -9,7 +9,7 @@ import { generaCliente, esposizione, tappaDi, campagnaDi, scomponi, euro,
          BANCHI, CAMPAGNE, LIBERA, CLIENTI_PER_TAPPA, CUCINE, CUCINA_BANCO, cucinaIdx, eCucina } from '../data/bancarella.js'
 import { ricetteDi, compraAttrezzo } from '../data/bancarella-cucine.js'
 import { FOTO } from '../data/bancarella-foto.js'
-import { cucinaNuova, passo as passoCucina, usa, tocca, vaiA, arriva, consegna as daiPiatto } from '../motore/bancarella/cucina.js'
+import { cucinaNuova, passo as passoCucina, usa, tocca, vaiA, arriva, consegna as daiPiatto, SERVE_PIATTO } from '../motore/bancarella/cucina.js'
 import { bancoPulito, merceMia, cesteDi, pazienzaDi, compra, puoiComprare } from '../data/bancarella-banco.js'
 import { CITTA, statoCitta, statoGiornata, cittaCorrente, fatteIn, indiceDi, giornataDi,
          cittaDelleGiornata, stelleGiornata, stelleCitta, stelleMassime } from '../data/bancarella-mondo.js'
@@ -24,6 +24,7 @@ import IlMioBanco from '../components/bancarella/IlMioBanco.vue'
 import Cucina from '../components/bancarella/Cucina.vue'
 import Ordini from '../components/bancarella/Ordini.vue'
 import LeCucine from '../components/bancarella/LeCucine.vue'
+import Ricetta from '../components/bancarella/Ricetta.vue'
 import Soldo from '../components/Soldo.vue'
 import { usaPausa } from '../giochi/pausa.js'
 import VeloPausa from '../giochi/VeloPausa.vue'
@@ -66,7 +67,7 @@ const voto = ref(null)              // a giornata vinta: { stelle, migliore } (l
 const volo = ref(null)              // la roba che vola dalla cesta al cliente
 const cucina = ref(cucinaNuova())   // la stanza, il cuoco, i piatti: docs/bancarella/cucina.md
 const cucineAperte = /[#&](aperte|livello)=/.test(location.hash)   // la prova dei grandi
-const ricettarioAperto = ref(false) // col ricettario aperto il tempo si ferma: si legge senza fretta
+const ricettaAperta = ref('')       // il piatto di cui si legge la ricetta: intanto il tempo si ferma
 const dettoCuoco = ref(null)        // il perché di un tocco a vuoto
 const cassaAperta = ref(true)       // in cucina il resto è un foglio, e si può mettere da parte
 const frasePrimato = ref('')        // a fine mercato senza fine: com'è andata col record
@@ -220,6 +221,7 @@ function inizia(i = idx.value) {
   // la cucina sta fuori dalla fila: una giornata lasciata a metà resta dov'è
   if (eCucina(i)) cucina.value = cucinaNuova(campagnaDi(i), mioBanco.value.cucina)
   else scorda()
+  ricettaAperta.value = ''
   cittaPrima = cittaCorr.value
   const k = cittaDelleGiornata(campagnaDi(i).id)
   if (k >= 0) citta.value = k
@@ -349,6 +351,7 @@ function serviDalleMani() {
   k.perche = ''
   if (momento.value !== 'raccolta') k.perche = 'Prima dai il resto'
   else if (!emoji) k.perche = 'Qui si porta il piatto finito'
+  else if (k.cuoco.mano.nudo) k.perche = SERVE_PIATTO
   const o = coda.value.find(c => mancaA(c).includes(emoji))
   if (!k.perche && !o) k.perche = 'Questo non l\'ha ordinato nessuno'
   if (k.perche) return false
@@ -368,9 +371,9 @@ function ordineScaduto(o) {
   if (!coda.value.length) tappaFinita()
 }
 
-/* Col foglio aperto si conta da fermi; nelle ultime cucine (`fuocoAcceso`) no. */
+/* Col foglio aperto si conta da fermi, sempre: la fretta sta nel muoversi. */
 function tempoCucina(dt) {
-  if (momento.value === 'cassa' && cassaAperta.value && !camp.value.fuocoAcceso) return
+  if (momento.value === 'cassa' && cassaAperta.value) return
   const pagata = momento.value === 'cassa' ? coda.value[0] : null
   for (const o of coda.value) if (o !== pagata) o.restaPazienza -= dt
   passoCucina(cucina.value, dt)
@@ -379,8 +382,6 @@ function tempoCucina(dt) {
   if (via) ordineScaduto(via)
 }
 
-// per il ricettario e per la lista: quello che manca, in ordine di scadenza
-const ordinati = computed(() => coda.value.flatMap(mancaA))
 const ordini = computed(() => coda.value.map(o => ({
   id: o.id, quanto: barra(o), pagando: momento.value === 'cassa' && o === coda.value[0],
   piatti: o.articoli.map(a => ({ emoji: a.emoji, nome: a.nome, fatto: o.fatti.includes(a.emoji) })),
@@ -526,7 +527,7 @@ function consegna() {
    quindi non passano da `fermo`. */
 function ciclo(ts) {
   const dt = Math.min(0.05, (ts - ultimo) / 1000 || 0); ultimo = ts
-  if (!fermo.value && !cambio.value && !occupato && !ricettarioAperto.value) {
+  if (!fermo.value && !cambio.value && !occupato && !ricettaAperta.value) {
     if (camp.value.cucina) tempoCucina(dt)
     else {
       // chi è in fila si spazientisce molto più piano di chi è al banco
@@ -796,7 +797,7 @@ onBeforeUnmount(() => {
     <LeCucine v-else-if="fase === 'cucine'" :banco="mioBanco" :aperte="cucineAperte" @scegli="k => inizia(cucinaIdx(k))" @compra="compraPerCucina" />
 
     <template v-else-if="fase === 'gioco'">
-      <Ordini v-if="camp.cucina" :ordini="ordini" :tappa="(T.i + 1) + '/' + camp.tappe.length" />
+      <Ordini v-if="camp.cucina" :ordini="ordini" :tappa="(T.i + 1) + '/' + camp.tappe.length" @ricetta="e => (ricettaAperta = e)" />
 
       <!-- il percorso della giornata: dove sei e quanti banchi mancano -->
       <div v-else class="percorso">
@@ -854,8 +855,8 @@ onBeforeUnmount(() => {
 
         <!-- niente `:key` sui due rami: in produzione, con una key esplicita su
              uno solo dei due, il patch del DOM va in confusione al cambio tappa -->
-        <Cucina v-if="camp.cucina" :stato="cucina" :detto="dettoCuoco" :ordinati="ordinati" @tocca="toccaStanza"
-                @ricettario="v => (ricettarioAperto = v)" />
+        <Ricetta v-if="ricettaAperta" :ricetta="cucina.ricette.find(r => r.emoji === ricettaAperta)" @chiudi="ricettaAperta = ''" />
+        <Cucina v-if="camp.cucina" :stato="cucina" :detto="dettoCuoco" @tocca="toccaStanza" />
 
         <div v-else-if="momento === 'raccolta'" class="ceste" :style="{ '--r': righe.length }">
           <div v-for="(riga, r) in righe" :key="r" class="rigacesta"
@@ -1010,7 +1011,7 @@ onBeforeUnmount(() => {
         </button>
         <button v-else class="bottone" @click="inizia(idx)">Riprova ▶</button>
         <button class="bottone chiaro" data-azione="le-giornate" @click="tornaAlleGiornate">{{ camp.cucina ? 'Le cucine' : 'Le giornate' }}</button>
-        <button class="bottone chiaro" data-azione="il-banco" @click="apriBanco">Il tuo banco · {{ euro(mioBanco.cassa) }}</button>
+        <button v-if="!camp.cucina" class="bottone chiaro" data-azione="il-banco" @click="apriBanco">Il tuo banco · {{ euro(mioBanco.cassa) }}</button>
       </div>
     </div>
 
