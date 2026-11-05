@@ -31,9 +31,9 @@ giocatore, poi solo il pensare e la furbizia). Le promesse sono in `LIVELLI` di 
 
 | livello | il bambino (90% di conti giusti) vince | chi non sbaglia mai vince al massimo |
 |---|---|---|
-| facile | 95% → 60% | niente tetto |
-| medio | 80% → 30% | 80% → 40% dalla tappa 2 |
-| difficile | 70% → 15% | 70% → 20% dalla tappa 3 |
+| facile | 80% → 30% | 80% → 40% dalla tappa 2 |
+| medio | 70% → 15% | 70% → 20% dalla tappa 3 |
+| difficile | 55% → 12% | 60% → 30% dalla tappa 3 |
 
 Vale la più dura; anche il rush (+10 punti) ha il suo tetto (se non si riesce a rispettarlo, il log dice
 `IL RUSH NON SI FERMA` e quel tetto non conta). Il risultato è in `dati/taratura.js` con una firma
@@ -54,6 +54,15 @@ I giocatori finti (`PILOTI` in `motore/banco.js`):
 
 `npm run tara:arena -- --misura` gioca tutti contro la taratura scritta; `--draghi` aggiunge chi
 costruisce solo draghi; `--ricco <k>` un nemico con monete e forza moltiplicate.
+
+## Tutto un livello più su (1 novembre)
+
+L'utente: «il bambino dice che va molto meglio, ma vince ancora troppo spesso: fai scalare il tutto di 1 livello e crea un
+livello più tosto sopra, ma che non sia impossibile da vincere». Le promesse sono scalate: il Facile è il vecchio Medio,
+il Medio (quello delle dodici tappe) il vecchio Difficile, e il Difficile è nuovo; il vecchio Facile non c'è più. Provato: un
+Difficile 55% → 8% con tetto di chi non sbaglia 55% → 12%: in fondo il tetto contro il rush spingeva il nemico così in alto che alla
+fucina e al trono anche chi non sbaglia mai vinceva lo 0-4%, cioè mai. Scelto 55% → 12% e tetto 60% → 30%: al trono il bambino
+vince il 10% e chi non sbaglia il 24%.
 
 ## Misurato il 19 ottobre
 

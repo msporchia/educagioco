@@ -1,0 +1,75 @@
+// Le ambientazioni di Castle Battle: solo colori e cosa c'è in giro, niente regole (docs/arena/grafica.md). Le chiavi sono
+// quelle storiche dei terreni (`bosco`, `palude`, `neve`, `lava`: stanno nei salvataggi e nelle sfide), i posti no: il gioco
+// non riusa più i vestiti del castello a torri. Ogni rampa va dallo scuro al chiaro.
+export const AMBIENTI = {
+  // le colline d'oro: un tramonto d'autunno, erba secca e alberi rossi
+  bosco: {
+    tinta: '#7c7a2a', suolo: 'colline', fiume: 'acqua', selciato: 'terra',
+    terra: ['#3f4a1e', '#5a6224', '#7c7a2a', '#a0902f', '#c4a63a', '#dcc050'],
+    macchia: ['#5a3a1c', '#7c4a1e', '#a0602a', '#c47e34'],
+    strada: ['#5e4630', '#7c5f40', '#9c7c54', '#bb9a6c', '#d2b486'],
+    riva: ['#6a5a30', '#a8935a', '#d6c48a'],
+    acqua: ['#0e2f40', '#15475a', '#1e6470', '#2f8a8a', '#58b0a0'],
+    riflesso: '#ffcf7a',
+    luce: ['rgba(255,170,70,.20)', 'rgba(255,120,50,.04)', 'rgba(50,16,70,.30)'],
+    alti: ['albero', 'albero', 'albero', 'cespuglio', 'masso'], bassi: ['ciuffo', 'ciuffo', 'foglie', 'sassi'],
+    tronco: '#4a2f1c', chioma: [['#7a2a18', '#b8481c', '#e88a2c'], ['#7c4a12', '#c47e1a', '#f0b83c'], ['#5c2a2a', '#9a3a2a', '#d0602e']],
+    ciuffo: '#e8cf6a', sasso: ['#5e5448', '#8a7c68', '#b0a288'],
+    ponte: { assi: ['#8a5c34', '#a8713f'], trave: '#4a2f18', pietra: ['#6e6658', '#9c9486', '#c7bfb0'] },
+    particelle: { tipo: 'foglie', n: 22, colori: ['#e88a2c', '#f0b83c', '#b8481c'] },
+    nuvole: 'rgba(40,16,30,.13)',
+  },
+  // il deserto delle tombe: dune, un'oasi al posto del fiume, obelischi mezzi sepolti
+  palude: {
+    tinta: '#c48f4a', suolo: 'dune', fiume: 'acqua', selciato: 'lastre',
+    terra: ['#8a5a2c', '#a8743a', '#c48f4a', '#dcab60', '#ecc47a', '#f6dc9c'],
+    macchia: ['#7c5a2e', '#96703a', '#b08a4a', '#c8a460'],
+    strada: ['#6e5c48', '#8c7860', '#a8947a', '#c4b094', '#d8c8ac'],
+    riva: ['#3f5f26', '#6f8f38', '#a8b45a'],
+    acqua: ['#0b4a5a', '#0f6a78', '#1a8f94', '#3bb4a8', '#7ad8c0'],
+    riflesso: '#fff2b8',
+    luce: ['rgba(255,226,150,.16)', 'rgba(255,200,120,.03)', 'rgba(120,50,20,.22)'],
+    alti: ['colonna', 'blocchi', 'obelisco', 'blocchi', 'masso'], vicinoAcqua: ['palma', 'palma', 'palma', 'cespuglio'], bassi: ['sassi', 'ciuffo', 'ossa', 'sassi'],
+    tronco: '#6e4a28', chioma: [['#1f5a2a', '#2f8a34', '#6fbf48']],
+    ciuffo: '#8f9a40', sasso: ['#8a6a44', '#b4946a', '#dcc090'],
+    ponte: { assi: ['#a8947a', '#c4b094'], trave: '#6e5c48', pietra: ['#8c7860', '#c4b094', '#e8d8b8'] },
+    particelle: { tipo: 'sabbia', n: 34, colori: ['#f6dc9c', '#ecc47a'] },
+    nuvole: 'rgba(90,40,10,.09)',
+  },
+  // il canyon di cristallo: roccia scura, cristalli viola e un baratro al posto del fiume
+  neve: {
+    tinta: '#3a3558', suolo: 'roccia', fiume: 'baratro', selciato: 'lastre',
+    terra: ['#1d1a30', '#2a2644', '#3a3558', '#4d476c', '#625c82', '#7c76a0'],
+    macchia: ['#5b2f9c', '#8a4fd8', '#b98aff', '#e2c8ff'],
+    strada: ['#2f2c44', '#454162', '#5f5a80', '#7d789e', '#9c98bc'],
+    riva: ['#0f0c20', '#1d1a30', '#3a3558'],
+    acqua: ['#05030d', '#0b0720', '#160d38', '#2a1760', '#4a28a0'],
+    riflesso: '#c79aff',
+    luce: ['rgba(150,100,255,.14)', 'rgba(70,40,160,.03)', 'rgba(4,2,24,.40)'],
+    alti: ['cristalli', 'cristalli', 'guglia', 'cristalli', 'guglia'], bassi: ['schegge', 'sassi', 'schegge', 'sassi'],
+    tronco: '#2a2644', chioma: [['#2a1760', '#4a28a0', '#8a4fd8']],
+    ciuffo: '#b98aff', sasso: ['#1d1a30', '#3a3558', '#625c82'],
+    cristallo: [['#3f1f86', '#7a3fd0', '#d8b8ff'], ['#1c5a8a', '#2f9ad0', '#b8f0ff'], ['#7a2a90', '#c04fd0', '#ffc8f8']],
+    ponte: { assi: ['#454162', '#5f5a80'], trave: '#1d1a30', pietra: ['#2f2c44', '#5f5a80', '#9c98bc'] },
+    particelle: { tipo: 'scintille', n: 26, colori: ['#c79aff', '#8fe8ff', '#ffc8f8'] },
+    nuvole: 'rgba(6,2,26,.16)',
+  },
+  // le terre di cenere: notte rossa, alberi morti e un fossato di brace
+  lava: {
+    tinta: '#332b30', suolo: 'cenere', fiume: 'brace', selciato: 'lastre',
+    terra: ['#15121a', '#221d24', '#332b30', '#463b3c', '#5c4e4a', '#746460'],
+    macchia: ['#6a1a10', '#b8340f', '#ff7a1e', '#ffc04a'],
+    strada: ['#2a2326', '#403638', '#5a4c4a', '#746460', '#8c7a72'],
+    riva: ['#120e10', '#2b2022', '#5a2a1c'],
+    acqua: ['#2a0a08', '#5a120a', '#a32410', '#e0501a', '#ffa030'],
+    riflesso: '#ffd070',
+    luce: ['rgba(255,70,24,.15)', 'rgba(150,20,10,.04)', 'rgba(0,0,0,.42)'],
+    alti: ['morto', 'morto', 'spuntone', 'stendardo', 'braciere'], bassi: ['sassi', 'ossa', 'sassi', 'spada'],
+    tronco: '#0f0b0e', chioma: [['#201518', '#2e2024', '#4a3234']],
+    ciuffo: '#5c4e4a', sasso: ['#15121a', '#332b30', '#5c4e4a'],
+    ponte: { assi: ['#3a2c2a', '#4e3c36'], trave: '#120e10', pietra: ['#221d24', '#463b3c', '#746460'] },
+    particelle: { tipo: 'braci', n: 34, colori: ['#ff7a1e', '#ffc04a', '#ff4a1e'] },
+    nuvole: 'rgba(0,0,0,.18)',
+  },
+}
+export const ambiente = chiave => AMBIENTI[chiave] || AMBIENTI.bosco

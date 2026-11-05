@@ -6,7 +6,7 @@ import '../stile-vicini.css'
 import Faccia from './Faccia.vue'
 defineProps({
   fase: { type: String, default: 'visita' },        // andata | visita | ritorno
-  verso: { type: String, default: '' },             // dove si va, scritto sul cartello del viaggio
+  verso: { type: String, default: '' },             // dove si va, scritto sul cartello del viaggio: «da Nonna Rita», «a Villa Dolce»
   scheda: { type: Object, default: null },
   foglio: { type: String, default: null },          // null | 'cassa' | 'mercato'
   storia: { type: Boolean, default: false },
@@ -101,7 +101,7 @@ const dati = c => c.righe.reduce((n, r) => n + r.dato, 0), tutti = c => c.righe.
     <!-- il trattore che parte o che torna -->
     <div v-if="fase !== 'visita'" class="f3-vic-viaggio" :class="{ ritorno: fase === 'ritorno' }" data-f3="viaggio">
       <span class="trattore" aria-hidden="true">🚜</span>
-      <b>{{ fase === 'ritorno' ? 'Si torna a casa…' : 'Si va da ' + verso + '…' }}</b>
+      <b>{{ fase === 'ritorno' ? 'Si torna a casa…' : 'Si va ' + verso + '…' }}</b>
     </div>
   </div>
 </template>

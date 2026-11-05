@@ -7,7 +7,7 @@
 import { PerspectiveCamera, Vector3, Vector2, MathUtils } from 'three'
 import { CAMERA, impostaInclinazione } from '../costanti.js'
 
-export const VISTA = { inclinazione: 52, fov: 34, largo: 15, fondo: 18, guarda: 0.5, zoomMin: 0.8, scontro: 9.5, tetto: 24, piuLarga: 28 }
+export const VISTA = { inclinazione: 52, fov: 34, largo: 15, fondo: 18, guarda: 0.5, zoomMin: 0.4, scontro: 9.5, tetto: 24, piuLarga: 28 }
 // la vista libera: quante celle dall'eroe al massimo (due zone si toccano, non tutto il mondo), e il margine dal bordo del mondo
 export const LONTANO = 40, MARGINE = 3
 export const VEDUTA = { inclinazione: 64, largo: 220 }

@@ -8,7 +8,7 @@ Legenda in [README.md](README.md). 2D: il gioco è tolto, le sue regole del «no
 | id | cosa | 2D | 3D | pri |
 |---|---|---|---|---|
 | I1 | il `?` della barra | `guida="fattoria"` in `src/guide/contenuti.js` (tocchi, terra, animali, livelli, catena) | ✅ `guida="fattoria3d"` ([../guida.md](../guida.md)); da leggere con un bambino | – |
-| I2 | il primo giro | guida del primo giro ([../../core/guida.md](../../core/guida.md)) | ✅ `motore/guida.js`: 🌱 → grano → aspetta → ✂️ → 🏗, con la manina; non provato con un bambino piccolo ([../guida.md](../guida.md)) | – |
+| I2 | il primo giro | guida del primo giro ([../../core/guida.md](../../core/guida.md)) | ✅ `motore/guida.js`: 🌱 → grano → aspetta → ✂️ → 🛒, con la manina; non provato con un bambino piccolo ([../guida.md](../guida.md)) | – |
 | I3 | «🌳 Come si fa» (l'albero delle ricette: `alberoDi`, `dati/albero.js`) | si apre da silo, mercato, fogli | ✅ `dati/albero.js` (`alberoDi`, strada sola per riga, scorta spartita, il mangime delle bestie come ramo) e `viste/Albero.vue`; si apre dall'inventario (🌳 sotto la merce scelta) e dal passo sotto un «non si può» di macchina, banco e mongolfiera, sulla merce che manca ([../guida.md](../guida.md)). Non c'è «tutto l'albero»; manca la riga «o nel pollaio» delle strade alternative | – |
 | I4 | il consiglio: ogni «non si può» porta con sé il passo e il tasto per farlo (`motore/consiglio.js`, risale la catena) | sì, 4 forme di azione | ✅ `motore/consiglio.js` (`comeAvere` risale la catena, `cosaFaccioAdesso`): 🧭 «E adesso?» e il passo col tasto sotto i «mancano» di macchina, banco e mongolfiera; gli altri «no» dicono ancora solo il perché | – |
 | I5 | «a cosa serve una roba» | silo + `dati/usi.js` | ✅ inventario, una frase (`dati/usi.js`: ricette, bestie, banco, mongolfiera) | – |
@@ -19,9 +19,9 @@ Legenda in [README.md](README.md). 2D: il gioco è tolto, le sue regole del «no
 
 | id | cosa | 2D | 3D | pri |
 |---|---|---|---|---|
-| I8 | gesto base | tocca la cosa → gettoni sul prato; tieni premuto sposta; tieni premuto sul prato apre il baule | 🟡 tocca → il contadino cammina e lo fa; tieni premuto apre «Costruisci qui» | – |
+| I8 | gesto base | tocca la cosa → gettoni sul prato; tieni premuto sposta; tieni premuto sul prato apre il baule | 🟡 tocca → il contadino cammina e lo fa; tieni premuto apre «Compra» | – |
 | I9 | semina/raccolta a strisciata | seme e cesto trascinati su più campi | ✅ armare e passare sui campi | – |
-| I10 | il baule in tre metà e lo scaffale che scorre | sì | 🟡 «Costruisci qui» a 5 schede con anteprime 3D | – |
+| I10 | il baule in tre metà e lo scaffale che scorre | sì | 🟡 «Compra» a 5 schede con anteprime 3D | – |
 | I11 | il magazzino (pezzi messi via) | baule | ✅ `magazzino`, gratis rimetterli | – |
 | I12 | soglie del dito (16 px, click fantasma, 420 ms) | `scena/dito.js` (le soglie ora in `viste/dito-soglie.js`) | ✅ in `scena3d/dito.js`; **non provato su un telefono** | P1 |
 | I13 | fogli con la ✕ in alto a destra | sì | ✅ | – |

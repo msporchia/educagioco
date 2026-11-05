@@ -99,7 +99,7 @@ export class Neve {
   _innevaSotto(radice) {
     const salta = new Set([...(radice.userData.bestie || []), ...(radice.userData.pecore || [])])
     const giu = o => {
-      if (salta.has(o)) return
+      if (salta.has(o) || o.userData.senzaNeve) return          // i modelli di Natale (alberi, regali, renne) restano com'erano: sotto la neve non si riconoscono
       if (o.isMesh && o.visible) this._innevaMesh(o)          // le mesh nascoste di un pezzo istanziato disegnano dal banco, che si inneva da sé
       for (const f of o.children) giu(f)
     }

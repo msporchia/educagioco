@@ -4,6 +4,9 @@ import { FAMIGLIE } from './dati/misure.js'
 
 export const CHIAVE = 'pozioni'
 
+// il calderone senza fondo: vedi docs/core/primati.md
+export const SENZA_FINE = { nome: 'Il calderone senza fondo', icona: '♾️', misura: 'fila', che: 'quante pozioni di fila' }
+
 // Le coppie di unità che il gioco può chiedere, nei due versi: sono
 // quello che segue il motore di apprendimento (`pozioni:kg-g`).
 export const CONVERSIONI = FAMIGLIE.flatMap(f => {
@@ -20,6 +23,7 @@ export default {
   come: 'fare',
   copertina: { fondo: '#7d5bb5', disegno: '#9e80d1', scena: 'bolle' },
   tappe: QUANTE_TAPPE,
+  senzaFine: SENZA_FINE,
   grandi: true,
   serve: ['misure', 'conversioni'],
   // gli amici sulla mappa (docs/core/amici-nei-giochi.md): il cursore della campagna; finite le tappe la mappa non ha un posto, solo la riga in cima

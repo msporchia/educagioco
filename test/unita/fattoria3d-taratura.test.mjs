@@ -12,7 +12,7 @@ import { PEZZI } from '../../src/giochi/fattoria3d/dati/catalogo.js'
 import { PESCA } from '../../src/giochi/fattoria3d/dati/pesca.js'
 import { MONETE_AL_MINUTO } from '../../src/giochi/fattoria3d/dati/ordini.js'
 import { TERRA, prezzoDelLotto } from '../../src/giochi/fattoria3d/dati/regole.js'
-import { LIVELLO_PESCA } from '../../src/giochi/fattoria3d/dati/parita2d.js'
+import { LIVELLO_PESCA, LIVELLO_PESCHIERA } from '../../src/giochi/fattoria3d/dati/parita2d.js'
 import { postiPerMerce, prezzoDelPasso } from '../../src/giochi/fattoria3d/dati/silos.js'
 import { catenaMs, tabellaLivelli, tabellaLotti, guastiDellaScala, guastiDiParita, TETTO_LIVELLO_2_MIN, TETTO_ULTIMO_MIN, TETTO_ATTESA_MS } from '../../src/giochi/fattoria3d/motore/taratura.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
@@ -37,8 +37,8 @@ const pari = guastiDiParita()
 controlla('la 3D non ha numeri suoi dove la 2D ne ha uno', pari.length === 0, pari.join(' · '))
 stessaLista('il livello 2 e il 70 sono quelli della 2D (il 70 con lo scarto della pesca)', [sogliaDi(2), sogliaDi(70)], [sogliaDi2D(2), sogliaDi2D(70) + SCARTO_DELLA_PESCA])
 uguale('i livelli sono 70', ULTIMO, 70)
-controlla('la pesca sposta le soglie di poco (meno del 2%) e solo dopo il suo livello', Math.abs(SCARTO_DELLA_PESCA) < sogliaDi(70) * 0.02 && sogliaDi(LIVELLO_PESCA) === sogliaDi2D(LIVELLO_PESCA) && sogliaDi(LIVELLO_PESCA + 1) === sogliaDi2D(LIVELLO_PESCA + 1) + SCARTO_DELLA_PESCA)
-stessaLista('la pesca sta dove la peschiera della 2D: molo, molo girato, porticciolo', ['molo', 'molo_v', 'porticciolo'].map(k => PEZZI[k].liv), [LIVELLO_PESCA, LIVELLO_PESCA, LIVELLO_PESCA])
+controlla('la pesca sposta le soglie di poco (meno del 2%) e solo dopo il livello della peschiera', Math.abs(SCARTO_DELLA_PESCA) < sogliaDi(70) * 0.02 && sogliaDi(LIVELLO_PESCHIERA) === sogliaDi2D(LIVELLO_PESCHIERA) && sogliaDi(LIVELLO_PESCHIERA + 1) === sogliaDi2D(LIVELLO_PESCHIERA + 1) + SCARTO_DELLA_PESCA)
+stessaLista('molo, molo girato e porticciolo arrivano insieme', ['molo', 'molo_v', 'porticciolo'].map(k => PEZZI[k].liv), [LIVELLO_PESCA, LIVELLO_PESCA, LIVELLO_PESCA])
 uguale('un banco dà un pesce ogni quindici minuti come la peschiera', (PESCA.ms + PESCA.riposoMs) / 60000, 15)
 controlla('i costi dei gesti sono quelli della 2D: 🪙1 il grano, 🪙2 il mais, 🪙1 il pane, 🪙2 la torta', [COLTURE.grano.raccolta, COLTURE.mais.raccolta, RICETTE.pane.costo, RICETTE.torta.costo].join() === '1,2,1,2')
 

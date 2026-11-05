@@ -34,7 +34,7 @@ class Finto extends EventTarget {
     const m = JSON.parse(testo)
     if (m.t === 'ping') return this.arriva({ t: 'pong' })
     if (this.presenza) {
-      if (m.k === 'dichiaro') { this.arriva({ t: 'ciao', presenti: [K] }); this.arriva({ t: 'da', chiave: K, m: { k: 'presento', id: 'melody0001', nome: 'Melody', gioco: null } }) }
+      if (m.k === 'dichiaro') { this.arriva({ t: 'ciao', presenti: [K] }); this.arriva({ t: 'da', chiave: K, m: { k: 'presento', id: 'marta00001', nome: 'Marta', gioco: null } }) }
       if (m.k === 'a' && m.m?.k === 'invito') { this.arriva({ t: 'da', chiave: K, m: { k: 'risposta', ok: true } }); setTimeout(() => { tavolo.amico = true; tavolo.arriva({ t: 'su' }) }, 500) }
       return
     }
@@ -53,8 +53,8 @@ const motore = { passo: 0.05, partita: {}, avanza () {}, applica () {}, valida: 
   foto: () => ({}), rimetti () {}, fine: () => null, finisci () {} }
 const regola = () => ({ versione: 'prova', proponi: s => ({ ...s }), accetta: () => null, crea: () => motore })
 
-Object.assign(dati, { giocatore: 'GIOCATORE', id: 'leonardo01', deciso: true, attivo: true, online: true, amici: [{ id: 'melody0001', nome: 'Melody', chiave: K }] })
-avvia({ nome: 'Leonardo', WebSocketImpl: Finto, servizio: 'https://finto' })
+Object.assign(dati, { giocatore: 'GIOCATORE', id: 'lorenzo001', deciso: true, attivo: true, online: true, amici: [{ id: 'marta00001', nome: 'Marta', chiave: K }] })
+avvia({ nome: 'Lorenzo', WebSocketImpl: Finto, servizio: 'https://finto' })
 await avanti(500)
 controlla('l\'amico è online', amiciStato.amici.some(a => a.chiave === K && a.online), JSON.stringify(amiciStato.amici))
 
@@ -78,9 +78,25 @@ Finto.prototype.send = function (testo) { if (this.presenza && JSON.parse(testo)
 mandati.length = 0
 muta.invita(K, {}, { terreno: TERRENI[0], secondi: 10 })
 await avanti(10000)
-controlla('chi non risponde: si aspetta', muta.invitato.value === 'Melody' && !mandati.some(m => m.t === 'addio'))
+controlla('chi non risponde: si aspetta', muta.invitato.value === 'Marta' && !mandati.some(m => m.t === 'addio'))
 await avanti(40000)
-controlla('e dopo 45 s si lascia perdere, e lo si dice', !muta.regia.value && /Melody non risponde/.test(muta.messaggio.value), muta.messaggio.value)
+controlla('e dopo 45 s si lascia perdere, e lo si dice', !muta.regia.value && /Marta non risponde/.test(muta.messaggio.value), muta.messaggio.value)
+
+// chi preme a raffica: un tavolo solo, e il prossimo non prima della pausa
+let tavoli = 0
+globalThis.fetch = async () => { tavoli++; return { ok: true, status: 200, json: async () => ({ codice: CODICE }) } }
+const fretta = usaSfida({ gioco: 'arena', regola, alVia: () => {}, mostra: () => {} })
+for (let i = 0; i < 6; i++) fretta.crea({})
+await avanti(100)
+uguale('sei tocchi di fila chiedono un tavolo solo', tavoli, 1)
+fretta.chiudi()
+const dopo = usaSfida({ gioco: 'arena', regola, alVia: () => {}, mostra: () => {} })
+dopo.crea({})
+await avanti(1000)
+uguale('il tavolo dopo aspetta la pausa (e intanto si legge «Preparo la stanza»)', `${tavoli} ${dopo.fase.value}`, '1 creo')
+await avanti(4000)
+uguale('e poi parte da solo', tavoli, 2)
+dopo.chiudi()
 
 sfida.chiudi(); ferma()
 mock.timers.reset()

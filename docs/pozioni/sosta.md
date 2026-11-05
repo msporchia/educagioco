@@ -1,40 +1,44 @@
 # La tappa lasciata a metà
 
-Si esce con ← anche in mezzo a un cliente, e rientrando la mappa offre in
-cima «torno da dove ero». La regola comune è in
+Si esce con ← anche a pozione a metà, e rientrando la mappa offre in cima
+«torno da dove ero». La regola comune è in
 [../core/ripresa.md](../core/ripresa.md); qui quello che è delle pozioni.
 
 - **Si scrive la domanda aperta com'è** (`src/giochi/pozioni/motore/sosta.js`):
-  il cliente in corso con la sua pozione e le sue dosi, lo scaffale, quali
-  ingredienti sono già nel calderone, cosa c'è sul banco (l'ingrediente in
-  mano, l'attrezzo scelto, i pezzi posati), i clienti serviti, le perfette,
-  gli sbagli della tappa, della ricetta e della dose, e le dosi già dette al
-  motore di apprendimento. Rifare la ricetta avrebbe lasciato scegliere una
+  la pozione, il listino di ogni ingrediente, quanto c'è in ogni strumento e
+  i pezzi comprati, i gettoni spesi, le macchie, le traboccate, e il procedimento:
+  la ricetta, a che passo si è, cosa c'è nel mortaio e nel calderone. Rifare il listino avrebbe lasciato scegliere una
   pozione più facile: uscire sarebbe diventata una mossa.
-- **Si ritrova per ingrediente e dose, non per posizione**: ingredienti e
-  pozione per nome, la dose per base e unità fra quelle della tappa, la
-  tappa per chiave. Se uno non c'è più il salvataggio non torna, si butta e
-  la tappa ricomincia.
-- **Le stelle non tornano indietro**: gli sbagli già fatti restano, e dopo
-  uno sbaglio sulla dose il cartello resta quello svolto. Le monete a dose
-  sono già pagate e `answer()` ha già scritto, quindi la ripresa non
-  ripaga né riscrive; `borsa('pozioni', dato.monete)` riparte da quanto era
-  stato incassato e il cartello di fine dice il totale.
-- **Un esito aperto non si perde**: dopo una dose giusta la sosta tiene
-  l'esito, e rientrando il calderone mostra gli ingredienti e si va avanti
-  (contatori `pozioni` e `pozioniPerfette`, cliente nuovo, tappa che
-  finisce) come se non si fosse mai usciti. Uno sbaglio è già annotato:
-  rientrando si è già al «riprova», senza ripetere l'attesa.
-- **Si salva a ogni gesto** (un tocco sul banco costa poco; le dosi e gli
-  sbagli scrivono subito), col ← (che dal banco porta alla mappa), a pagina
-  nascosta, su `pagehide` e prima di smontare. Non c'è un orologio, quindi
-  nessuna pausa: la tappa riprende com'era.
+- **Si ritrova per nome, non per posizione**: gli ingredienti e la pozione per
+  nome, la tappa per chiave. Se uno non c'è più il salvataggio non torna, si
+  butta e la tappa ricomincia. Una sosta di prima del procedimento (`v` sotto il 4) non si
+  legge: la tappa ricomincia, e progressi e stelle restano.
+- **Una sosta di quando si partiva con qualcosa in casa si legge lo stesso**:
+  nel gioco la scorta non c'è più, ma quel salvataggio ha lo strumento già
+  avviato e il minimo fatto su quello che mancava. `leggi` tiene il suo `casa`
+  e `scrivi` lo riscrive finché quella pozione non è finita. Nessuna pozione
+  nuova ce l'ha.
+- **Una sosta di quando i liquidi avevano la roba secca in dispensa si legge lo
+  stesso**: la sua ricetta pesta, quindi per quella pozione mortaio e pestello tornano
+  sul tavolo (`dispensa` negli ingredienti di `leggi`).
+- **Una sosta di prima della spedizione** ha i gettoni contati senza: si legge, e
+  da lì la spedizione si paga, quindi il margine di quella pozione è un po' più stretto.
+- **L'ordine si scrive quando si ordina, non quando finisce di versarsi**: il
+  motore ha già deciso tutto, e monete, `answer()` e fine della tappa partono
+  subito. Uscire mentre il mercante versa non perde niente e non ripaga niente;
+  rientrando gli strumenti sono già al loro livello.
+- **Una macchia resta**: rientrando c'è ancora, e prima di ordinare si pulisce.
+- **`borsa('pozioni', dato.monete)`** riparte da quanto era stato incassato, e
+  il cartello di fine dice il totale.
+- **Si salva a ogni ordine**, col ← (che dal banco porta alla mappa), a pagina
+  nascosta, su `pagehide` e prima di smontare. L'ordine in preparazione non si
+  scrive: non è ancora successo niente. Non c'è un orologio, quindi nessuna
+  pausa: la tappa riprende com'era.
 - **A tappa finita** la sosta si toglie; cominciare un'altra tappa la butta,
   dopo aver chiesto. Una tappa che a quell'età non è più aperta non offre la
   ripresa.
 
-Nei test: `unita/pozioni-sosta` (la stessa partita dopo JSON in ogni punto
-della dose, dopo gli sbagli, con l'esito giusto aperto, e quello che non si
-legge), `integrazione/pozioni-sosta` (←, rientro, ricarica della pagina,
-l'avviso della tappa nuova). I bersagli sono quelli comuni di
-[../core/ripresa.md](../core/ripresa.md).
+Nei test: `unita/pozioni-sosta` (la stessa pozione dopo JSON, con la macchia, e
+quello che non si legge), `integrazione/pozioni-sosta` (←, rientro, ricarica
+della pagina, l'uscita mentre versa, l'avviso della tappa nuova). I bersagli
+sono quelli comuni di [../core/ripresa.md](../core/ripresa.md).

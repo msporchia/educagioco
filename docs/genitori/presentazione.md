@@ -18,7 +18,7 @@ Si arriva dal tasto **⚙︎ Impostazioni** in fondo alla schermata iniziale.
 ## Tre schede, e si tara in una sola
 
 **Bambini** dice chi gioca su questo telefono — nome, faccia, progressi — e
-dell'età mostra solo una riga: *«Leonardo ha 10 anni · modifica ›»*.
+dell'età mostra solo una riga: il nome, gli anni e *«modifica ›»*.
 **Giochi e domande** è dove si tara, ed è l'unico posto: l'età in cima, e
 sotto **il quadro di quell'età**.
 
@@ -167,12 +167,12 @@ Ognuno ha i suoi progressi, completamente separati. Cambiare nome tocca solo
 l'etichetta.
 
 **Aggiungere un bambino** apre la stessa schermata del primo avvio: nome,
-faccia, e quanti anni ha. Alla fine tocca a lui giocare.
+faccia, mese e anno di nascita. Alla fine tocca a lui giocare.
 
 ### Quanti anni ha
 
-È **la taratura, non un'anagrafe**: nessuno chiede una data di nascita, e il
-numero non si vede mentre si gioca. Decide due cose, in continuo:
+È **la taratura, non un'anagrafe**: esce da mese e anno di nascita, si può
+spostare dalle impostazioni, e il numero non si vede mentre si gioca. Decide due cose, in continuo:
 
 - **quali giochi trova in home** — la bancarella non compare prima dei sei
   anni, il laboratorio delle pozioni prima dei sette e mezzo, e i due giochi

@@ -2,15 +2,20 @@
 // Il foglio di un magazzino (il silo del raccolto, quello della stalla, la dispensa): si apre toccandolo nella fattoria. Sopra quello che
 // tiene, ogni merce col suo `n/max`; sotto il riquadro per avere più posto, detto in parole: cosa cambia («da 12 a 14 per tipo»), che
 // l'edificio cresce, e una fila di tacche per quanto è già cresciuto ognuno. Quando sono tutti grandi al massimo propone di costruirne un
-// altro accanto. Riceve una fotografia già pronta (viste/magazzino-puro.js). Vedi docs/fattoria3d/magazzini.md.
+// altro accanto. Un tocco su una merce dice a cosa serve e porta a «Come si fa». Riceve una fotografia già pronta (viste/magazzino-puro.js).
+// Vedi docs/fattoria3d/magazzini.md.
+import { ref } from 'vue'
 import Faccia from './Faccia.vue'
+import { dettaglioDi } from './inventario-puro.js'
 import '../stile-inventario.css'
 
-defineProps({
+const p = defineProps({
   vista: { type: Object, required: true },        // vistaDelMagazzino()
   messaggio: { type: String, default: '' },
 })
-defineEmits(['ingrandisci', 'chiudi'])
+defineEmits(['ingrandisci', 'albero', 'chiudi'])
+const scelta = ref('')
+const nomeScelta = () => (p.vista.merci.find(v => v.k === scelta.value) || {}).nome || ''
 </script>
 
 <template>
@@ -20,11 +25,15 @@ defineEmits(['ingrandisci', 'chiudi'])
     <div class="f3-corpo">
       <p v-if="!vista.merci.length" class="f3-inv-vuoto">Ancora vuoto.</p>
       <div class="f3-inv-griglia">
-        <div v-for="(v, i) in vista.merci" :key="v.k" class="f3-inv-gettone" :class="{ velata: v.velata }" :data-merce="v.k" :data-n="v.n" :style="{ '--i': i }">
+        <button v-for="(v, i) in vista.merci" :key="v.k" class="f3-inv-gettone" :class="{ velata: v.velata, sel: v.k === scelta }" :data-merce="v.k" :data-n="v.n" :style="{ '--i': i }" @click="scelta = v.k === scelta ? '' : v.k">
           <span class="f3-inv-faccia"><Faccia :k="v.k" :emoji="v.emoji" :lato="46" /><em class="f3-inv-n" :class="{ pieno: v.pieno }">{{ v.n }}/{{ v.max }}</em></span>
           <b>{{ v.nome }}</b>
-        </div>
+        </button>
       </div>
+    </div>
+    <div v-if="scelta" class="f3-inv-riga" data-f3="magazzino-riga">
+      <p><b>{{ nomeScelta() }}.</b> {{ dettaglioDi(scelta) }}</p>
+      <button type="button" class="f3-inv-albero" data-f3="magazzino-albero" :data-albero-di="scelta" @click="$emit('albero', scelta)">🌳 Come si fa</button>
     </div>
     <section class="f3-mag-piu" data-f3="magazzino-piu">
       <h3>{{ vista.titolo }}</h3>

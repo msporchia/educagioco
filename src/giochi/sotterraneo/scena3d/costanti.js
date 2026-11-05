@@ -10,7 +10,7 @@ export const CAMERA = {
   celle: 15,             // quante celle si vedono almeno, in largo e in profondo
   celleScontro: 7,       // nello scontro la telecamera si avvicina (a 9,5 un mostro era alto ~30 px sul telefono)
   guarda: 0.35,          // il punto guardato: poco sopra il pavimento
-  zoomMin: 0.7, zoomMax: 1.4,   // il pizzico e la rotella
+  zoomMin: 0.4, zoomMax: 1.4,   // il pizzico e la rotella
   // la distanza si arrotonda perché un pixel dello sprite stia su un numero intero di pixel dello schermo (nitido, uguale per
   // tutti); `pixelMassimo`: mai più di tanti pixel dello schermo per pixel dello sprite (più vicino sono macchie)
   pixelMassimo: 5,

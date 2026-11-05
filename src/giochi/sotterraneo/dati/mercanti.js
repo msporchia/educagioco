@@ -40,10 +40,17 @@ export const MERCANTI = [
     passo: ['mano', 'corpo'], altre: 1 },
 
   { chiave: 'erborista', nome: 'La guaritrice', em: '🌿', sprite: 'erborista',
-    dice: 'Pozioni per chi sanguina, torce per chi ha paura del buio. Laggiù servono tutte e due.',
-    schede: [{ chiave: 'pozioni', nome: 'Pozioni', em: '🧪', usa: ['cura', 'cresci'] },
-             { chiave: 'torce', nome: 'Torce', em: '🔥', usa: ['luce'] }],
-    vende: { chiavi: [] }, sempre: [...CURE_IN_VENDITA, 'torcia'],
+    dice: 'Pozioni per chi sanguina, e per le ferite ci sono qui io. Laggiù servono.',
+    schede: [{ chiave: 'pozioni', nome: 'Pozioni', em: '🧪', usa: ['cura', 'cresci'] }],
+    vende: { chiavi: [] }, sempre: [...CURE_IN_VENDITA],
+    righe: [0, 0, 0, 0, 0, 0, 0, 0] },
+
+  // le torce hanno un venditore loro (l'utente, 1 novembre 2026: «la venditrice di torce vende sia pozioni che torce, io lo so ma il bambino no»):
+  // il carovaniere, che il buio lo conosce. Se ne hai poche te lo dice con un fumetto (dati/dialoghi.js, `torce`)
+  { chiave: 'carovaniere', nome: 'Il carovaniere', em: '🏮', sprite: 'carovaniere',
+    dice: 'Torce per chi va giù. Il buio è lungo, e una torcia dura poche stanze: prendine di scorta.',
+    schede: [{ chiave: 'torce', nome: 'Torce', em: '🔥', usa: ['luce'] }],
+    vende: { chiavi: [] }, sempre: ['torcia'],
     righe: [0, 0, 0, 0, 0, 0, 0, 0] },
 
   // l'unico che compra: tre botteghe che comprano farebbero di ogni banco un posto dove svuotare le tasche

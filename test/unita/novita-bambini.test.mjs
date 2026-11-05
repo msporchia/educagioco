@@ -15,7 +15,7 @@
    memoria, che qui è un archivio come un altro.
    ═══════════════════════════════════════════════════════════════════ */
 import { NOVITA, ULTIMA, PER_GIOCO, daLeggere } from '../../src/guide/novita-bambini.js'
-import { CHIAVI_GIOCHI, eSperimentale } from '../../src/data/giochi.js'
+import { CHIAVI_GIOCHI, eInProva } from '../../src/data/giochi.js'
 import { state, init, creaGiocatore, selectPlayer, resetPlayer,
          novitaLette, segnaNovitaLette } from '../../src/store/profile.js'
 import { save, load, remove, chiavi, flush } from '../../src/store/storage.js'
@@ -80,7 +80,7 @@ for (const n of NOVITA) {
      prova, e il suo «Letto» la salta per sempre — il segno è l'id
      più alto, non l'elenco delle righe viste */
   controlla(`${chi} non parla di un gioco ancora in prova`,
-            n.gioco == null || !eSperimentale(n.gioco), n.gioco)
+            n.gioco == null || !eInProva(n.gioco), n.gioco)
   controlla(`${chi} dice qualcosa`, typeof n.testo === 'string' && n.testo.length > 0)
   controlla(`${chi} è testo semplice: niente HTML e niente **`, !/[<>]|\*\*/.test(n.testo))
 }

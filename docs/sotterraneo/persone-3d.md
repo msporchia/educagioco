@@ -1,7 +1,7 @@
 # Le persone del mondo di sopra in 3D
 
 Nel sotterraneo ([grafica-3d.md](grafica-3d.md)) l'eroe e i mostri sono modelli ([mostri-3d.md](mostri-3d.md)); dal 22 ottobre
-anche chi sta sul mondo di sopra: i quattro mercanti, i personaggi delle missioni, il capitano, il minatore, i viandanti da
+anche chi sta sul mondo di sopra: i cinque mercanti, i personaggi delle missioni, il capitano, il minatore, i viandanti da
 cercare e le sentinelle delle discese rosse. Le bancarelle e le botteghe restano quelle di prima.
 
 ## I quattordici modelli
@@ -25,6 +25,7 @@ non si toccano a mano. Ognuno si riconosce dalla sagoma e dai colori, e non somi
 | mugnaio | il mugnaio, il raccoglitore | basco, baffi, grembiule infarinato, sacco in spalla | sbuffo di farina |
 | cacciatrice | (nessuno ancora) | pelle di lupo sul capo col muso e le orecchie, treccia rossa, giubba verde con le frange, arco corto, faretra | la mano sopra gli occhi, scruta lontano |
 | carovaniere | (nessuno ancora) | turbante ocra col lembo, barba nera, spolverino rosso mattone, fascia gialla con la frusta, bastone col lume | apre la carta delle strade e la legge |
+| tintore | il tintore, nel villaggio ([tintore.md](tintore.md)) | berretto di lana rosso col pompon, camicia verde acqua, grembiule viola con le strisce delle tinte, mani blu, rotolo di stoffa rosa in spalla | alza la destra a mostrare un colore |
 
 La cacciatrice e il carovaniere sono le persone nuove delle città del progetto ([mondo-aperto-quest.md](mondo-aperto-quest.md#chi-le-dà)):
 il modello c'è, nel mondo ancora no.

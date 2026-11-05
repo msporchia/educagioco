@@ -10,6 +10,6 @@
   non ha `piccoli: true` e i conti sono quelli dell'età.
 - **Il premio in monete** è una moneta per conto giusto (`PAGA.mossa`): da rivedere
   con `docs/apprendimento/calibrazione.md` guardando quanto dura una tappa.
-- **Provarlo coi bambini**: è `sperimentale` finché non lo si è fatto.
+- **Provarlo coi bambini**: è in prova (`spentoDiBase`) finché non lo si è fatto.
 - **La bravura vive nell'arena** (`giochi/arena/bravura.js`): se un terzo gioco
   la usa, va portata in `src/quiz/`.

@@ -27,7 +27,7 @@ const S = STRADE
 const FOGLIETTI = { valle: 'isole.json', zaino: 'zaino.json' }
 const foglietto = mondo => new URL(`../../strumenti/sprite/sorgenti/passo-passo/${FOGLIETTI[mondo]}`, import.meta.url)
 const fgDi = Object.fromEntries(MONDI.map(m => [m, JSON.parse(readFileSync(foglietto(m), 'utf8'))]))
-const PROTAGONISTI = ['coniglio', 'cane']
+const PROTAGONISTI = ['coniglio', 'cane', 'guerriero']
 const qDi = Object.fromEntries(MONDI.map(m => [m, Object.fromEntries(PROTAGONISTI.map(p => [p, quadroValle(S, { mondo: m, protagonista: p })]))]))
 const q = qDi.valle.coniglio
 const per = new Map(q.nodi.map(n => [n.id, n]))
@@ -82,9 +82,9 @@ for (const mondo of MONDI) {
 
     /* ── una casella per tappa ── */
     for (const s of isole) {
-      const [k, d] = Object.entries(D.ISOLE).find(([k, d]) => (p === 'cane' ? d.cane && d.cane.isola === s.chiave : k === s.chiave))
+      const [k, d] = Object.entries(D.ISOLE).find(([k, d]) => (p !== 'coniglio' ? d[p] && d[p].isola === s.chiave : k === s.chiave))
       uguale(nome(`${s.chiave} (sull'isola ${k}): tante caselle quante tappe (se no si corregge il foglietto)`),
-             p === 'cane' ? d.cane.caselle : d.caselle, s.tappe.length)
+             p !== 'coniglio' ? d[p].caselle : d.caselle, s.tappe.length)
     }
     const tappe = isole.flatMap(s => s.tappe)
     uguale(nome('una casella per ogni sua tappa di questo mondo'), caselle.map(n => n.id).sort((a, b) => a - b).join(','),
@@ -157,7 +157,7 @@ for (const mondo of MONDI) {
     const punti = [...new Set([0, ...isole.flatMap(s => [s.tappe[0], s.tappe[1], s.tappe.at(-1)].map(i => sua.indexOf(i))), sua.length])]
     for (const fatte of punti) {
       // fatte le prime `fatte` della sua strada (e per il cane tutto il coniglio fino alla fine dei piccoli)
-      const fatta = i => (S.animale[i] === p ? sua.indexOf(i) < fatte : p === 'cane' && i <= S.apreIlCane)
+      const fatta = i => (S.animale[i] === p ? sua.indexOf(i) < fatte : p !== 'coniglio' && i <= S.apreIlCane)
       const { aperta } = aperture(S, { fatta })
       const c = chiusure(Q, aperta)
       const aperteQui = caselle.filter(n => aperta(n.id))
@@ -210,7 +210,7 @@ for (const mondo of MONDI) {
     const qui = sua.filter(i => caselle.some(n => n.id === i))
     for (let k = 1; k < qui.length; k++) {
       const a = qui[k - 1], b = qui[k]
-      const fatta = i => (S.animale[i] === p ? S.numero[i] <= S.numero[a] : p === 'cane' && i <= S.apreIlCane)
+      const fatta = i => (S.animale[i] === p ? S.numero[i] <= S.numero[a] : p !== 'coniglio' && i <= S.apreIlCane)
       const c = chiusure(Q, aperture(S, { fatta }).aperta)
       const via = (percorso(Q, a, b, c.bloccati) || []).map(t => t.verso).filter(id => typeof id === 'number' && id !== b)
       if (via.length) tornano.push(`${S.numero[a]}>${S.numero[b]} per ${via.map(i => S.numero[i]).join(',')}`)
@@ -222,7 +222,8 @@ for (const mondo of MONDI) {
 /* ══════════ il sentiero senza fine: uno per animale, in fondo alla sua strada ══════════ */
 {
   const atteso = { coniglio: 'zaino:senza-fine@mondo', cane: `valle:${SENTIERO_CANE}@passi` }
-  for (const p of PROTAGONISTI) {
+  uguale('col guerriero nessun sentiero', MONDI.flatMap(m => qDi[m].guerriero.nodi.filter(n => n.tipo === 'sentiero')).length, 0)
+  for (const p of Object.keys(atteso)) {
     const tutti = MONDI.flatMap(m => qDi[m][p].nodi.filter(n => n.tipo === 'sentiero').map(n => `${m}:${n.id}@${n.isola}`))
     uguale(`col ${p} un sentiero solo, il suo`, tutti.join(' '), atteso[p])
     const [m, id] = [atteso[p].split(':')[0], atteso[p].split(':')[1].split('@')[0]]
@@ -327,6 +328,13 @@ for (const mondo of MONDI) {
          'ripeti-fino>fino ripeti-mondo>mondo se-casetta>se')
   controlla('il ponte fra il fino a e la sua isoletta di passaggio non ha mai il blocco',
             !chiusure(Q, () => false).blocchi.some(b => b.ponte === 'fino-nel-passaggio'))
+  // le isole solo del guerriero: per il coniglio decoro, per lui ci si arriva sotto terra
+  controlla('col coniglio il lago e il fienile sono decoro, tane comprese',
+            !Q.nodi.some(n => ['lago', 'fienile'].includes(n.isola) || /^tana:(lago|fienile):/.test(n.id)))
+  const G = qDi.zaino.guerriero, inFondo = S.isole.find(s => s.chiave === 'castello-guerriero').tappe.at(-1)
+  uguale('dalla fine del castello il guerriero va al lago per la tana',
+         viaggio(G, inFondo, S.isole.find(s => s.chiave === 'lago-guerriero').tappe[0], chiusure(G, () => true).bloccati)
+           .filter(p => p.che !== 'salto').map(p => p.che).join(' '), 'entra esce')
 }
 
 riassunto('passo passo — le due valli')

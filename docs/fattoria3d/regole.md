@@ -39,6 +39,12 @@ tempo o un rifiuto.
 - **Un «non si può» porta con sé cosa fare adesso**, e dove si può il tasto per farlo (`dettoDi` in `scena3d/azioni.js`, il consiglio di
   [guida.md](guida.md)): «Serve foraggio: lo fa il fienile», «Compra prima un terreno che confina con questo», non un «no» nudo. Un
   bambino di sei anni davanti a un no non ricostruisce una catena a ritroso: chiude il gioco.
+- **Un «no» si vede dove si guarda**: il fumetto del contadino sta sopra la sua testa, e chi tocca un campo, la ciotola o la tinozza non ha il
+  contadino accanto (a volte è fuori dallo schermo). Ogni rifiuto passa da `Azioni.dici` (o `Attrezzi._no`), che oltre al fumetto accende il **cartello in
+  basso `[data-f3="cartello"]`** (`ui.cartello`, ~3,4 s, cornice arancione: `.f3-cartello`). `ui.avviso` invece si vede solo nella barra del costruire e nella
+  fascia del trascinamento: un rifiuto detto solo lì, in gioco normale, è muto. Lo stesso cartello porta le poche notizie che prima restavano mute (l'arrivo di un
+  animale, «Eccolo!» dei silos, «sta benissimo!» dopo un pasto, i messaggi della fattoria in comune): chi scrive una riga nuova per il bambino usa `ui.cartello`. Un albero o un sasso senza monete lo dice **al tocco**, prima che il contadino
+  cammini fin là (`noAbbatti`, `noTogliere`).
 - **L'ordine delle risposte è quello in cui sono utili**: prima quello che si fa adesso e gratis, poi quello che c'è solo da aspettare,
   poi la spesa.
 - **Un rifiuto nomina la ragione vera** (`motivo`: `non-sbloccato`, `gia-tuo`, `poche-monete`, `scomparto-pieno`…). Provato nella 2D:
@@ -56,7 +62,7 @@ tempo o un rifiuto.
 | recinto / bancarella / bacheca / fontana | 45 / 15 / 12 / 30 | fissi; nel recinto una pecora, le altre si comprano (40, 60, 80) |
 | aiuola / panchina / pozzo / spaventapasseri | 6 / 10 / 18 / 12 | decorazioni, fissi |
 | passerella / ponte / tavolo | 8 / 14 / 18 | decorazioni (liv 3 / 5 / 4), fisse |
-| stagno / laghetto | 35 / 110 | decorazioni d'acqua (liv 5 / 11), fisse; non produttive: non spostano la scaletta ([laghi.md](laghi.md)) |
+| stagno / laghetto | 30 / 26 | decorazioni d'acqua (liv 10, con la pesca), fisse; non produttive: non spostano la scaletta ([laghi.md](laghi.md)) |
 | molo / molo girato / porticciolo | 12 / 12 / 90 | la pesca (liv 4 / 4 / 9), fissi; il porticciolo è uno solo e sta sulla riva; non produttivi ([geografia-e-pesca.md](geografia-e-pesca.md)) |
 | friggitoria / sushi bar | 170 / 180 | edifici unici come gli altri (liv 17 / 18: i due livelli in coda alla scaletta), le ricette della 2D col pesce ([geografia-e-pesca.md](geografia-e-pesca.md)) |
 | pollaio / stalla | 55 / 90 | liberi nel terreno come il recinto; una bestia nel prezzo, le altre una per volta, sempre più care ([animali.md](animali.md)) |

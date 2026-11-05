@@ -9,7 +9,7 @@ const props = defineProps({ strumento: { type: String, default: 'strada' }, test
 defineEmits(['strumento', 'pennello', 'chiusa', 'fatto'])
 const prezzo = computed(() => prezzoStrada(props.pennello.tipo, props.pennello.bordo))
 const suggerimento = computed(() => ({
-  gomma: 'Trascina su una staccionata o una strada tua per toglierla.',
+  gomma: 'Trascina su una staccionata o una strada per toglierla.',
   cancello: `Tocca un pezzo di staccionata per farne un cancello (🪙 ${PREZZO_CANCELLO}): ci passi tu, il resto no.`,
   staccionata: `Trascina il dito per fare la staccionata (🪙 ${TIPI_STACCIONATA[props.pennello.staccionata]?.prezzo ?? 2} a pezzo). Se chiude il passo, l'ultimo pezzo è un cancello.`,
 }[props.strumento] || `Trascina il dito sulla mappa per disegnare la strada (🪙 ${prezzo.value} a pezzo).`))

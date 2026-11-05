@@ -3,11 +3,11 @@
    Vedi docs/fattoria3d/rotazione.md. */
 import { PEZZI, EDIFICI } from './catalogo.js'
 
-/** Si gira tutto tranne ciò che ha una direzione che conta per le regole (acqua, ponti e moli, porticciolo: hanno già le loro
-    versioni «girate») e il campo (quadrato, non ha un davanti). */
+/** Si gira tutto tranne ciò che ha una direzione che conta per le regole (acqua, ponti e moli: hanno già le loro versioni «girate») e il campo
+    (quadrato, non ha un davanti). Il porticciolo si gira: la sua banchina guarda l'acqua (`Fattoria3d.versoAcqua`). */
 export function ruotabile(tipo) {
   const d = PEZZI[tipo] || EDIFICI[tipo]
-  return !!d && tipo !== 'campo' && !d.acqua && !d.calpestabile && !d.riva
+  return !!d && tipo !== 'campo' && !d.acqua && !d.calpestabile
 }
 
 const girate = new Map()

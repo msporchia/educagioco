@@ -15,7 +15,7 @@ const props = defineProps({
   scelto: { type: String, default: '' },
   primo: { type: Boolean, default: false },  // la prima volta non si può annullare
 })
-defineEmits(['scegli', 'chiudi'])
+defineEmits(['scegli', 'chiudi', 'personaggio'])
 
 // il fondo scala è l'eroe più forte in quella colonna (con la sua roba), non un massimo inventato: nessuna barra sborda
 const piuVita = Math.max(...props.avventure.map(e => e.vita))
@@ -33,10 +33,11 @@ const porta = e => (e.porta || []).map(f => FAMIGLIE[f]).filter(Boolean)
                  : 'Ognuno ha la sua avventura: la ritrovi dove l\'hai lasciata, con la sua roba.' }}
       </p>
 
-      <button v-for="e in avventure" :key="e.chiave" class="sot-eroe"
+      <div v-for="e in avventure" :key="e.chiave" class="sot-eroe-riga">
+      <button class="sot-eroe"
               :class="{ 'sot-scelto': e.chiave === scelto }"
               :data-eroe="e.chiave" :data-nuova="e.nuova ? 1 : 0" @click="$emit('scegli', e.chiave)">
-        <Armato :eroe="e" :mano="e.mano" :mancina="e.mancina" :corpo="e.corpo" :testa="e.testa" :scala="3" />
+        <Armato :eroe="e" :mano="e.mano" :mancina="e.mancina" :corpo="e.corpo" :testa="e.testa" :tinte="e.tinte" :scala="3" />
         <span class="sot-testo">
           <b>{{ e.nome }}</b>
           <!-- a che punto è la sua storia: prima di tutto il resto, perché è quello che si sceglie -->
@@ -76,6 +77,10 @@ const porta = e => (e.porta || []).map(f => FAMIGLIE[f]).filter(Boolean)
           </span>
         </span>
       </button>
+      <!-- il personaggio (maschio o femmina): un foglio a parte, la scheda resta quella -->
+      <button type="button" class="sot-ritocca" :data-personaggio-di="e.chiave" :aria-label="`come è ${e.chi}`"
+              @click="$emit('personaggio', e.chiave)">✎</button>
+      </div>
 
       <button v-if="!primo" class="sot-grosso sot-chiaro" data-azione="chiudi-eroi"
               @click="$emit('chiudi')">

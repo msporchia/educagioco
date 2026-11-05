@@ -57,8 +57,8 @@ for (const [nome, p] of [['chi crea', a], ['chi entra', b]]) {
   await p.waitForSelector('[data-piazzola="0"]', { timeout: 20000 })
   controlla(`${nome}: la battaglia è partita, sei piazzole libere e il castello`,
             await p.locator('[data-piazzola]:not([data-variante])').count() === 6 && await p.locator('[data-castello]').count() === 1)
-  controlla(`${nome}: l'orologio conta quanto si resiste (♾️), e non c'è il tasto pausa`,
-            /♾️/.test(await p.locator('.ar-hud').innerText()) && await p.locator('button[aria-label="pausa"]').count() === 0)
+  controlla(`${nome}: l'orologio conta quanto si resiste, e non c'è il tasto pausa`,
+            await p.locator('[data-orologio="infinita"]').count() === 1 && await p.locator('button[aria-label="pausa"]').count() === 0)
 }
 /* ── in due c'è tutto il terreno scelto, non la prima tappa della campagna ── */
 const offerte = async p => (await p.locator('.ar-nuvola [data-variante]').evaluateAll(x => x.map(e => e.dataset.variante))).sort()

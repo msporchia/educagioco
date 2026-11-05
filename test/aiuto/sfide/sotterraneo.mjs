@@ -36,7 +36,7 @@ function decidi(c, r) {
 export default {
   regola: ({ firma, ruolo = 'host' }) => regolaSotterraneo({
     firma,
-    eroe: () => ({ eroe: EROE[ruolo], roba: robaPer(TAPPA, { eroe: EROE[ruolo] }), crescita: crescitaPer(TAPPA, { eroe: EROE[ruolo] }), nome: ruolo === 'host' ? 'Leo' : 'Melody' }),
+    eroe: () => ({ eroe: EROE[ruolo], roba: robaPer(TAPPA, { eroe: EROE[ruolo] }), crescita: crescitaPer(TAPPA, { eroe: EROE[ruolo] }), nome: ruolo === 'host' ? 'Leo' : 'Marta' }),
   }),
   scelte: seme => ({ chiave: 'cantine', difficolta: 'facile', seme: seme * 13 }),
   /* un passo da 16 ms di uno dei due: `inc.scegli(mossa)` se gli va */

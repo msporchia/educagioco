@@ -8,27 +8,27 @@ cose. Non legge la bacheca, non confronta, non scrive frasi.
 
 - **Sulla mappa, un pallino per amico** sulla tappa a cui è arrivato: l'iniziale nel suo colore (uno per posto nella lista,
   `COLORI`: due amici non ne hanno mai uno uguale). Niente emoji, che cambiano da un telefono all'altro. Accanto, dove c'è
-  posto, il nome: «Leonardo è qui», «Leonardo e Ugo sono qui».
-- **In cima alla mappa, chi è da raggiungere**: il più vicino fra quelli più avanti («Leonardo è 2 tappe più avanti di te.»,
-  «Ugo è già alla sopravvivenza.»). Chi è dietro non si dice: sulla mappa basta il pallino, nessuno legge «sei ultimo».
-- **Sotto la sfida senza fine, i record degli amici** sotto il proprio, dal più alto («Leonardo: 3:10»), e chi c'è senza un
+  posto, il nome: «*nome* è qui», «*nome* e *nome* sono qui».
+- **In cima alla mappa, chi è da raggiungere**: il più vicino fra quelli più avanti («*nome* è 2 tappe più avanti di te.»,
+  «*nome* è già alla sopravvivenza.»). Chi è dietro non si dice: sulla mappa basta il pallino, nessuno legge «sei ultimo».
+- **Sotto la sfida senza fine, i record degli amici** sotto il proprio, dal più alto («*nome*: 3:10»), e chi c'è senza un
   record. **La classifica vera è solo sui record**, dove il confronto è giusto a ogni età.
-- **A fine partita senza fine, la notizia porta la misura**: «Hai superato Leonardo (3:10)!», oppure «Per Leonardo (3:10) ti
+- **A fine partita senza fine, la notizia porta la misura**: «Hai superato *nome* (3:10)!», oppure «Per *nome* (3:10) ti
   sono mancati 25s». Un pareggio non supera nessuno; chi era già sotto il proprio record non è una notizia.
 - Un amico mai incontrato online (senza nome) non si vede; un amico che in quel gioco non ha fatto niente nemmeno.
 
-## «Leonardo ti ha superato», in home
+## «Ti ha superato», in home
 
 Quando arriva la bacheca di un amico, `sorpassi` (in `src/amici/istantanea.js`, pura) la confronta con quella di prima e con dove
 sono io adesso: se in un gioco è **passato davanti** (sulla mappa più avanti di me, o un record più alto del mio, e prima no), il
 sorpasso si segna (`dati.sorpassi` in `store/amici.js`, salvato con gli amici). In home, sotto la riga degli amici, una riga per
-ognuno dei due più recenti: il pallino, «Leonardo ti ha superato» o «Leonardo ha battuto il tuo record», e il gioco. Toccarla
+ognuno dei due più recenti: il pallino, «*nome* ti ha superato» o «*nome* ha battuto il tuo record», e il gioco. Toccarla
 apre il gioco; aprire il gioco (`usaAmici`) dice tutti i suoi sorpassi, che spariscono.
 - **La prima bacheca di un amico non supera nessuno**: era già lì, e dire «ti ha superato» a tutti gli amici appena abbinati è falso.
 - **Solo dove io ci sono già** (un posto, un record): in un gioco mai giocato nessuno mi ha superato.
 - **Uno per gioco** (la tappa prima del record), il più recente per amico e gioco; al massimo `SORPASSI_MAX` in archivio.
 - **Si dice solo se è ancora vero** (`sorpassiDaDire`): chi l'ho già ripreso non ha riga; nemmeno un amico senza nome o un gioco
-  che il bambino non vede (spento o sperimentale).
+  che il bambino non vede (spento o in prova).
 
 ## Come si aggiunge un gioco
 
@@ -94,7 +94,7 @@ che dichiarano `amici` si allarga, e se il gioco ha una `tappa` sua, un controll
 | Conta gli animali (`conta`) | fatto | sulla mappa a carte un pallino e il nome sotto la tappa di ognuno (`tappa` di serie: la tappa da fare, quella con `adesso`); in cima `data-amico-davanti`. Niente record né frase di fine. Finite le dodici tappe la mappa non ha un posto per la fine: chi c'è arrivato non ha un pallino, solo la riga in cima («è già in fondo alle tappe») |
 | Prima e dopo (`prima`) | fatto | come Conta: sulla carta della tappa di ognuno (`tappa` di serie, quella con `adesso`) un pallino e il nome, in cima `data-amico-davanti`. Niente record né frase di fine. Finite le dieci tappe la mappa non ha un posto per la fine: chi c'è arrivato non ha un pallino, solo la riga in cima («è già in fondo alle storie») |
 | Il laboratorio delle pozioni (`pozioni`) | fatto | come Conta: sulla tappa di ognuno (`tappa` di serie, quella con `adesso`) un pallino e il nome, in cima `data-amico-davanti`. Niente record né frase di fine. Finite le ventinove tappe la mappa non ha un posto per la fine: chi c'è arrivato non ha un pallino, solo la riga in cima («è già in fondo al laboratorio») |
-| Il giardino (`giardino`) | fatto | come Conta, sperimentale (dietro l'interruttore dei genitori): sulla tappa di ognuno (`tappa` di serie, quella con `adesso`) un pallino e il nome, in cima `data-amico-davanti`. Niente record né frase di fine. Finite le nove tappe la mappa non ha un posto per la fine: chi c'è arrivato non ha un pallino, solo la riga in cima («è già in fondo al giardino») |
+| Il giardino (`giardino`) | fatto | come Conta, in prova (spento di base): sulla tappa di ognuno (`tappa` di serie, quella con `adesso`) un pallino e il nome, in cima `data-amico-davanti`. Niente record né frase di fine. Finite le nove tappe la mappa non ha un posto per la fine: chi c'è arrivato non ha un pallino, solo la riga in cima («è già in fondo al giardino») |
 | Castle Battle (`arena`) | fatto | come Conta: sulla carta della tappa di ognuno (`tappa` di serie, quella con `adesso`) un pallino e il nome, in cima `data-amico-davanti`. Chi ha finito le dodici tappe sta alla battaglia infinita (`data-al="infinita"`, dentro `[data-infinita]`): pallino e nome sulla sua carta. Niente record né frase di fine: la battaglia infinita non ha un tempo da battere. La sala delle sfide a due non c'entra |
 | La bancarella (`bancarella`) | fatto | sul giro del mondo, nei due livelli: `tappa` è la giornata da fare di `profile.mercato` (la stessa dove si posa l'aereo e il carretto), le sedici, e a giro finito la libera del Cairo (`tappe` = 16, il banco `∞`). Sul mondo un pallino sotto il nome della città di ognuno, nel fumetto della città i nomi; nella piazza un pallino sotto il banco della sua giornata, il nome nel fumetto del banco. In cima, fuori dal mondo e dalla piazza (che scorrono), `data-amico-davanti`. Una città chiusa non si apre: chi c'è dentro si vede sul mondo, non sul banco (si vede quando la città è aperta). Niente record né frase di fine: il gioco non ha una sfida senza fine |
 | Il sotterraneo (`sotterraneo`) | fatto | nel mondo di sopra in 3D (`viste/Mondo3d.vue`): `tappa` è il cursore di serie di `campagne.sotterraneo`, cioè il massimo fra gli eroi (non la discesa dell'eroe aperto: `avventure.md`), le sette discese e poi l'abisso (`tappe` = 7, «all'abisso»). Un pallino accanto all'ingresso della discesa di ognuno, in basso a destra (sotto cadrebbe sui piedi dell'eroe che ci sta davanti; per chi ha finito le sette, accanto al pozzo dell'abisso), dentro il bersaglio dell'ingresso che la vista posa a ogni fotogramma: si vede quando l'ingresso è trovato. Il nome nel fumetto dell'ingresso (`FumettoMondo.vue`), aperto o chiuso che sia; in cima, con le carte di sopra (fuori dal mondo, che segue l'eroe), `data-amico-davanti`. I sei dungeon nuovi non sono tappe: lì nessuno. Niente record né frase di fine: il gioco non ha una sfida senza fine |

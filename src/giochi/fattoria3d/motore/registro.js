@@ -9,7 +9,7 @@ export const MOSSE = [
   'compraLotto', 'disegnaStrada', 'togliStrada', 'compraPezzo', 'mettiPezzo', 'compraEMetti', 'spostaPezzo', 'ruotaPezzo', 'mettiVia',
   'compraEdificio', 'semina', 'raccogliTessera', 'ingrandisciSilo', 'costruisciMagazzino', 'abbatti', 'togliOstacolo', 'tosa', 'nutri', 'nutriBestie',
   'raccogliProdotti', 'compraBestia', 'compraPosto', 'avviaRicettaIn', 'ritiraDa', 'caricaCassa', 'partiMongolfiera', 'consegna',
-  'rifiuta', 'consegnaBottega', 'rifiutaBottega', 'lanciaLenza', 'ritiraPesca',
+  'rinomina', 'rifiuta', 'consegnaBottega', 'rifiutaBottega', 'lanciaLenza', 'ritiraPesca',
   'cura.compra', 'cura.nutri', 'cura.coccola', 'cura.carezza', 'cura.battezza', 'cura.sposta', 'cura.vesti', 'cura.spoglia',
 ]
 const NOTE = new Set(MOSSE)

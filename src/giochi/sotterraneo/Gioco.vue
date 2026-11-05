@@ -8,7 +8,7 @@
 import { ref, shallowRef, computed, onMounted, onBeforeUnmount, onUnmounted, watch, nextTick } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { state, segna, segnaBest, nomeCorrente, flushNow } from '../../store/profile.js'
+import { state, segna, segnaBest, nomeCorrente, flushNow, aspettoDi } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'
 import { PAGA } from '../../data/paghe.js'
 import { progresso, aperta, adesso, completa, scelta, ricorda, ritocca } from '../campagne.js'
@@ -25,7 +25,7 @@ import { CAMPAGNA, QUANTE_TAPPE, stelleDella, L_ABISSO, INDICE_ABISSO } from './
 import { inPaesaggio } from './dati/paesaggi.js'
 import { COSE, PERGAMENE_MASSIME, COPRICAPI, chiaveDelPezzo } from './dati/cose.js'
 import { CURIOSITA_DI } from './dati/curiosita.js'
-import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
+import { EROI, DI_PARTENZA, SESSI, eroeDi, aspettoValido } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO, POZIONI_MASSIME } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
 import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo, tascheDello, postiDello, eCura } from './motore/corredo.js'
@@ -49,8 +49,9 @@ import { ultimoPostoSicuro } from './motore/posto-sicuro.js'
 import { forzeDiSopra, curaDiSopra, allaCitta } from './motore/forze-sopra.js'
 import { missioneDi } from './dati/missioni.js'
 import { Bottega, alGiroNuovo, robaRaraDi } from './motore/bottega.js'
+import { tingi, pezziDaTingere, COSTO as COSTO_TINTA, nomeDellaTinta } from './motore/tintore.js'
 import { scrivi, leggi, dice, viaDi, forzeDi, PORTALE as VIA_PORTALE } from './motore/sosta.js'
-import { avventuraDi, scriviNellAvventura, vintaNellAvventura, azzeraIlVecchio, ricordaIlFondo, cominciata }
+import { avventuraDi, scriviNellAvventura, vintaNellAvventura, azzeraIlVecchio, ricordaIlFondo, cominciata, vestitiValidi }
   from './motore/avventure.js'
 import { iconaDi } from './dati/terra.js'
 import { mercanteDi, schedeDi } from './dati/mercanti.js'
@@ -60,6 +61,7 @@ import { usaGuida } from '../guida.js'
 
 import Campagna from './viste/Campagna.vue'
 import Eroi from './viste/Eroi.vue'
+import Personaggio from './viste/Personaggio.vue'
 import Foglio from './viste/Foglio.vue'
 import Icona from './viste/Icona.vue'
 import { occhio } from './viste/occhio.js'
@@ -80,6 +82,7 @@ import Medaglione from './viste/Medaglione.vue'
 import Tesori from './viste/Tesori.vue'
 import Grosso from './viste/Grosso.vue'
 import LaBottega from './viste/Bottega.vue'   // la bottega dei mercanti di sopra
+import LaTintoria from './viste/Tintore.vue'   // il foglio del tintore (docs/sotterraneo/tintore.md)
 import Fine from './viste/Fine.vue'
 import LascioPerdere from './viste/LascioPerdere.vue'   // la frase chiara prima di buttare una discesa
 import SceltaInDue from './viste/SceltaInDue.vue'
@@ -137,7 +140,7 @@ ritocca(CHIAVE, azzeraIlVecchio, { subito: true })
 // la pausa (giochi/pausa.js): il ⏸, il telefono posato, il foglio del `?`, e anche il cartello di un
 // traguardo (state.festa) — un mostro addosso mentre si guarda una medaglia è un colpo che nessuno vede.
 // Non salva vite (a passi, non a riflessi): serve a fermarsi volendo senza uscire.
-const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!fine.value })
+const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!fine.value, invito: () => !inDueOra.value })
 
 // unico posto in cui ⏸ e velo hanno senso: dentro una discesa, senza una domanda (già un velo) e senza il cartello di fine
 const siGioca = computed(() => !!corsa.value && !domanda.value && !fine.value)
@@ -196,11 +199,18 @@ const chiEro = ref(scelta(CHIAVE, 'eroe', null))
 const eroeQui = () => chiEro.value || DI_PARTENZA
 // chi sta scendendo (corsa.io) comanda durante una discesa; fuori comanda la scelta (chiEro), che decide chi scenderà
 const chiScende = dallaCorsa(c => c.io || null)
-const eroeScheda = computed(() => chiScende.value || eroeDi(eroeQui()))
+const eroeScheda = computed(() => chiScende.value || eroeDi(eroeQui(), sessoQui.value, aspettoQui.value))
 const scegliEroe = ref(!chiEro.value)
 
 // l'avventura aperta, riletta dal profilo a ogni scrittura; ci si scrive solo da qui
 const qui = computed(() => avventuraDi(progresso(CHIAVE), eroeQui()))
+// maschio o femmina (dati/eroi.js, docs/sotterraneo/personaggio.md): vale per l'avventura aperta
+// Il sesso: quello scelto nell'editor, o se non l'si è mai scelto quello della persona del profilo (`aspettoDi()`, la stessa della contadina:
+// bambina → femmina, bimbo → maschio), senza un passo in più all'inizio di un'avventura
+const sessoDiDefault = () => (aspettoDi() === 'bambina' ? 'f' : 'm')
+const sessoDi = a => (SESSI.includes(a && a.sesso) ? a.sesso : sessoDiDefault())
+const sessoQui = computed(() => sessoDi(qui.value))
+const aspettoQui = computed(() => qui.value.aspetto)   // pelle e capelli, o niente (docs/sotterraneo/personaggio.md)
 const nellAvventura = (campi, opz) => ritocca(CHIAVE, c => scriviNellAvventura(c, eroeQui(), campi), opz)
 // La terra dove si è (motore/terre.js, docs/sotterraneo/terre-successive.md) e il suo mondo: `mondo` la prima, `mondi[t]` le
 // dopo. Tutto quello che legge o scrive il mondo di sopra passa da qui
@@ -224,9 +234,9 @@ const avventure = computed(() => EROI.map(e => {
   const n = schedaConLaRoba(e.chiave, r, a.crescita)
   const meta = dice(a.sosta, CAMPAGNA)
   return {
-    ...e, nuova: !cominciata(a), livello: n.livello,
+    ...eroeDi(e.chiave, sessoDi(a), a.aspetto), sesso: sessoDi(a), aspettoScelto: a.aspetto, vestiti: a.vestiti, nuova: !cominciata(a), livello: n.livello,
     vita: n.vita, att: n.att, dif: n.dif, tratti: n.tratti,
-    mano: n.mano, mancina: n.mancina, corpo: n.corpo, testa: n.testa,
+    mano: n.mano, mancina: n.mancina, corpo: n.corpo, testa: n.testa, tinte: n.tinte,
     discese: Math.min(a.tappa, QUANTE_TAPPE), quante: QUANTE_TAPPE,
     stelle: Object.values(a.stelle).reduce((n, s) => n + (Number(s) || 0), 0),
     // il resto della roba che si vede: l'arma e lo scudo sono già nelle mani del ritratto
@@ -251,7 +261,7 @@ const conITrovati = c => {
 
 // la carta "riprendi" dice la sosta dell'avventura aperta (motore/sosta.js). Le gemme sono quelle della roba:
 // sopra si può essere passati da un mercante
-const conNome = d => (d ? { ...d, chi: d.eroe ? eroeDi(d.eroe).nome : '', gemme: roba.value.gemme,
+const conNome = d => (d ? { ...d, chi: d.eroe ? eroeDi(d.eroe, d.eroe === eroeQui() ? sessoQui.value : null).nome : '', gemme: roba.value.gemme,
                               immagine: iconaDi(d.chiave) } : null)
 const ripresa = computed(() => conNome(dice(qui.value.sosta, CAMPAGNA)))
 let ultimoSalvato = 0
@@ -499,6 +509,11 @@ watch([forzaOra, livelloOra, () => !!corsa.value], () => {
 
 // chi scende con la roba addosso (vita, braccio, difesa, tratti, gemme): la barra in basso e la pagina dell'eroe, sulla mappa
 const robaSopra = computed(() => schedaConLaRoba(eroeQui(), roba.value, crescita.value))
+// le torce che si hanno (quella accesa e quelle alla cintura) e le gemme per comprarne: il carovaniere chiama chi ne ha poche
+const torceSopra = computed(() => {
+  const r = roba.value
+  return r ? { n: (r.torcia > 0 ? 1 : 0) + (r.torce | 0), gemme: r.gemme | 0, prezzo: COSE.torcia.prezzo } : null
+})
 
 /* ═══════════ i mercanti di sopra (motore/bottega.js) ═══════════
    Il banco si pesca una volta per giro e si scrive nell'avventura (botteghe): un banco che cambiasse a ogni
@@ -513,6 +528,7 @@ const schedaBanco = ref(null)     // la linguetta da cui si apre: «ho roba da v
 let bottega = null
 
 function apriBottega(k, scheda = null) {
+  if (k === 'tintore') return apriTintore()   // non ha un banco: ritinge (viste/Tintore.vue)
   if (!mercanteDi(k)) return
   bottega = new Bottega({ eroe: eroeQui(), roba: roba.value, finite: qui.value.tappa, crescita: crescita.value,
                           ...(qui.value.botteghe || {}), venduti: qui.value.venduti, missioni: missioni.value, copricapi: true })
@@ -524,7 +540,33 @@ function apriBottega(k, scheda = null) {
   tocco.value++
   suono.ok()
 }
-function chiudiBottega() { aperto.value = null; bottega = null }
+function chiudiBottega() { aperto.value = null; bottega = null; tintoreAperto.value = false }
+
+/* ═══════════ il tintore (motore/tintore.js, viste/Tintore.vue) ═══════════
+   Non ha un banco: paga `COSTO_TINTA` gemme e il pezzo ritinto resta di quel colore (roba.tinte, nell'avventura) */
+const tintoreAperto = ref(false)
+const dettoTintore = ref(null)
+function apriTintore() {
+  dettoTintore.value = null
+  tintoreAperto.value = true
+  tocco.value++
+  suono.ok()
+}
+const tintoreVista = computed(() => {
+  tic.value
+  if (!tintoreAperto.value) return null
+  const c = new Corredo({ eroe: eroeQui(), roba: roba.value, crescita: crescita.value })
+  return {
+    pezzi: pezziDaTingere(c).map(p => ({ ...p, nome: COSE[p.k].nome, em: COSE[p.k].em })),
+    addosso: { mano: c.mano, mancina: c.mancina, corpo: c.corpo, testa: c.testa },
+    tinte: c.roba.tinte || {}, gemme: c.gemme, costo: COSTO_TINTA,
+  }
+})
+function tingiSopra(k, id) {
+  const e = suLaRoba(c => tingi(c, k, id))
+  if (e.che === 'tinto') { dettoTintore.value = `${COSE[k].nome}: ${nomeDellaTinta(id).toLowerCase()}`; suono.compra() }
+  else { dettoTintore.value = e.perche === 'gemme' ? `Ti mancano le gemme: ne servono ${COSTO_TINTA}` : null; suono.no() }
+}
 
 const banco = computed(() => {
   tocco.value
@@ -707,14 +749,14 @@ function apriPaginaEroe(faccia = 'eroe') {
   suono.ok()
 }
 // il Corredo da guardare: la corsa giù, la roba dell'avventura sopra
-const chiGuardo = () => corsa.value || new Corredo({ eroe: eroeQui(), roba: roba.value, crescita: crescita.value })
+const chiGuardo = () => corsa.value || new Corredo({ eroe: eroeQui(), sesso: sessoQui.value, aspetto: aspettoQui.value, roba: roba.value, crescita: crescita.value })
 const pagina = computed(() => {
   tic.value
   if (!paginaEroe.value) return null
   const c = chiGuardo()
   const q = quotaDi(c.crescita.esp)
   return {
-    eroe: c.io, mano: c.mano, mancina: c.mancina, corpo: c.corpo, testa: c.testa,
+    eroe: c.io, mano: c.mano, mancina: c.mancina, corpo: c.corpo, testa: c.testa, tinte: c.roba.tinte || null,
     livello: q.livello, fatto: q.fatto, serve: q.serve, punti: puntiDaDare(c.crescita), forza: forzaDelCorredo(c),
     numeri: { vita: c.vita ?? c.vitaConLaRoba, vitaMax: c.vitaMax ?? c.vitaConLaRoba, att: c.att, dif: c.dif,
               gemme: c.gemme },
@@ -776,6 +818,38 @@ function casellaAbilita({ i, id }) {
   if (sullAlbero(c => c.mettiInCasella(i, id))) suono.ok()
 }
 // «Cambia eroe», dalla pagina dell'eroe di sopra: la pagina si chiude e si apre la scelta, senza perdere niente
+// L'editor del personaggio: `editor` è l'eroe che si sta ritoccando (anche uno che non è quello aperto)
+// Il sesso si scrive subito, gratis, nell'avventura di quell'eroe
+const editor = ref(null)
+const apriEditor = k => { editor.value = k }
+const schedaEditor = computed(() => (editor.value ? avventure.value.find(e => e.chiave === editor.value) : null))
+// durante una discesa il cambio si vede subito: la corsa tiene la scheda dell'eroe (`io`), e la variante ha gli stessi numeri
+const aggiornaCorsaIo = () => nextTick(() => { const c = corsa.value; if (c && editor.value === eroeQui()) c.io = eroeDi(eroeQui(), sessoQui.value, aspettoQui.value) })
+function sceglieSesso(x) {
+  const k = editor.value
+  if (!k || !SESSI.includes(x)) return
+  ritocca(CHIAVE, c => scriviNellAvventura(c, k, { sesso: x }))
+  aggiornaCorsaIo()
+  suono.ok()
+}
+// pelle, colore dei capelli, taglio e barba tutti insieme (id del catalogo in comune, src/grafica/persona/aspetto.js; null: quello di serie)
+function sceglieAspetto(aspetto) {
+  const k = editor.value
+  if (!k) return
+  ritocca(CHIAVE, c => scriviNellAvventura(c, k, { aspetto: aspettoValido(aspetto) }))
+  aggiornaCorsaIo()
+  suono.ok()
+}
+// i set dell'editor: si salva quello che l'eroe ha adesso (sesso e aspetto), in uno dei sei posti
+function cambiaVestiti(f) {
+  const k = editor.value
+  if (!k) return
+  ritocca(CHIAVE, c => { const a = avventuraDi(c, k); return scriviNellAvventura(c, k, { vestiti: vestitiValidi(f(a.vestiti, a)) }) })
+  suono.ok()
+}
+const salvaVestito = ({ posto, nome }) => cambiaVestiti((l, a) => [...l.filter(v => v.posto !== posto), { posto, nome, sesso: sessoDi(a), aspetto: a.aspetto }])
+const rinominaVestito = ({ posto, nome }) => cambiaVestiti(l => l.map(v => (v.posto === posto ? { ...v, nome } : v)))
+const togliVestito = posto => cambiaVestiti(l => l.filter(v => v.posto !== posto))
 function cambiaEroe() {
   paginaEroe.value = false
   tesoriAperti.value = false
@@ -814,7 +888,7 @@ const zainoDiSopra = computed(() => {
   const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), ancora: c.porta(k) && !c.posso(k), prova: c.seLoMetto(k, { ancora: true }), ...((COSE[k].cura || COSE[k].tutta) ? { cura: c.curaDi(k) } : {}) } : null)
   return {
     mano: voce(c.mano), mancina: voce(c.mancina), corpo: voce(c.corpo), collo: voce(c.collo), dito: voce(c.dito), dito2: voce(c.dito2),
-    testa: voce(c.testa), conTesta: true,
+    testa: voce(c.testa), conTesta: true, tinte: c.roba.tinte || null,
     tasche: tascheVoci(c, voce), costoTasca: c.costoTasca, cure: { n: c.pozioniDiCura, max: POZIONI_MASSIME },
     att: c.att, dif: c.dif, gemme: c.gemme, vita: c.vitaConLaRoba, vitaMax: c.vitaConLaRoba,
     torcia: torceDi(c),   // quelle comprate aspettano alla cintura: lo zaino lo dice anche sopra
@@ -1142,7 +1216,7 @@ const zaino = dallaCorsa(c => {
   return {
     mano: voce(c.mano), mancina: voce(c.mancina),
     corpo: voce(c.corpo), collo: voce(c.collo), dito: voce(c.dito), dito2: voce(c.dito2),
-    testa: voce(c.testa), conTesta: true,   // il copricapo (docs/sotterraneo/elmo.md)
+    testa: voce(c.testa), conTesta: true, tinte: c.roba.tinte || null,   // il copricapo (docs/sotterraneo/elmo.md)
     tasche: tascheVoci(c, voce), costoTasca: c.costoTasca, cure: { n: c.pozioniDiCura, max: POZIONI_MASSIME },
   }
 })
@@ -1424,12 +1498,12 @@ function avvia(i, { prova = false } = {}) {
 // la discesa `i` com'è adesso: finita la storia la zona con la sua fascia, prima quella della storia; il dungeon del mondo, col
 // suo seme fisso finché non lo si ripulisce (motore/rigenera.js). Anche per scaldarla prima di scendere (scaldaDiscesa)
 // quello da cui nuovaCorsa dipende: uguale, la corsa fatta prima è la stessa
-const firmaCorsa = i => { try { return JSON.stringify([i, eroeQui(), roba.value, crescita.value, missioni.value, qui.value.conti, semeDallIndirizzo()]) } catch (e) { return String(Math.random()) } }
+const firmaCorsa = i => { try { return JSON.stringify([i, eroeQui(), sessoQui.value, aspettoQui.value, roba.value, crescita.value, missioni.value, qui.value.conti, semeDallIndirizzo()]) } catch (e) { return String(Math.random()) } }
 function nuovaCorsa(i, prova = false) {
   let t = i === INDICE_ABISSO ? L_ABISSO : nelMondo(i).tappa
   // `#scenario=ghiaccio` (solo col cheat che scende): la discesa vestita da quel paesaggio (dati/paesaggi.js), per guardarlo
   if (prova) t = inPaesaggio(t, new URLSearchParams(location.hash.slice(1)).get('scenario'))
-  const c = new Corsa(t, { seme: semeDallIndirizzo() ?? t.seme ?? null, eroe: eroeQui(), roba: roba.value,
+  const c = new Corsa(t, { seme: semeDallIndirizzo() ?? t.seme ?? null, eroe: eroeQui(), sesso: sessoQui.value, aspetto: aspettoQui.value, roba: roba.value,
                            crescita: crescita.value, missioni: presePer(missioni.value, t.chiave), conti: qui.value.conti })
   c.botti = true   // le botti da rompere (motore/botti.js), spente di difetto nel motore e nel banco
   c.copricapi = true   // e i copricapi nel bottino (docs/sotterraneo/elmo.md)
@@ -2078,7 +2152,7 @@ function posaIlPensiero(c) {
 }
 // sopra: la terra chiede quando l'eroe è fermo da un po' (viste/Mondo3d.vue, `pensa`); i numeri sono quelli della roba di sopra
 function pensaSopra() {
-  if (pensieriSpenti || pensiero.value || corsa.value || banco.value || zainoSopra.value || paginaEroe.value || preparatiAperti.value ||
+  if (pensieriSpenti || pensiero.value || corsa.value || banco.value || tintoreAperto.value || zainoSopra.value || paginaEroe.value || preparatiAperti.value ||
       scegliEroe.value || state.festa.length) return
   const c = new Corredo({ eroe: eroeQui(), roba: roba.value, crescita: crescita.value })
   const f = forze.value
@@ -2098,7 +2172,7 @@ function toccaPensiero(p = pensiero.value) {
   suoni.passo()
 }
 // la casella o il mercante toccati davvero: il segno ha fatto il suo
-watch([zainoAperto, paginaEroe, preparatiAperti, banco, zainoSopra], v => { if (v.some(Boolean)) segnoAcceso.value = null })
+watch([zainoAperto, paginaEroe, preparatiAperti, banco, tintoreAperto, zainoSopra], v => { if (v.some(Boolean)) segnoAcceso.value = null })
 
 /* ═══════════ il dito ═══════════ */
 const dita = new Map()
@@ -2270,12 +2344,12 @@ function ridimensiona() { if (pittore) pittore.misura() }
                   :roba="robaSopra" :mondo="mondoQui" @mondo="ricordaMondo" :dungeon="dungeonDelMondo" :terre="porta" @terre="allaTerra"
                   :veduta="vedutaSopra" @veduta="v => { vedutaSopra = v }" @risposta="rispostaSopra"
                   :punti="barra.punti" :punti-abilita="barra.puntiAbilita" @scheda="apriScheda"
-                  :forze="forze" @cura="curaDa"
+                  :forze="forze" :torce="torceSopra" @cura="curaDa"
                   :missioni="missioni" :conti="conti" :azione-missione="azioneMissione" :segui="segui" @segui="seguiMissione"
                   @gioca="i => avvia(i)" @davanti="scaldaDiscesa" @riprendi="riprendiDiscesa" @bottega="apriBottega"
                   :pensiero="pensiero" @pensa="pensaSopra" @pensiero="toccaPensiero" @pensiero-fine="pensiero = null"
                   @trovati="v => (mercantiTrovati = v)"
-                  :forza="forzaOra" :fermo="!!banco || zainoSopra || paginaEroe || preparatiAperti || scegliEroe || !!state.festa.length"
+                  :forza="forzaOra" :fermo="!!banco || tintoreAperto || zainoSopra || paginaEroe || preparatiAperti || scegliEroe || !!state.festa.length"
                   @scontro="scontroSopra" @raccogli="raccogliSopra">
           <template #scontro><Scontro3d v-if="sopra && nemico" v-bind="nemico" :fx="racconto.fx" :aggancia="aggancia" /></template>
         </Campagna>
@@ -2302,11 +2376,14 @@ function ridimensiona() { if (pittore) pittore.misura() }
                    @albero="apriPaginaEroe('abilita')" @chiudi="preparatiAperti = false" @fuori="e => { preparatiAperti = false; fuoriDallaBottega(e) }" />
         <!-- la bottega di un mercante di sopra: quasi a tutto schermo, la ✕ in alto a destra, niente domande.
              La chiave è il mercante: le linguette e la scelta ripartono da capo cambiando bottega -->
+        <LaTintoria v-if="tintoreVista" v-bind="tintoreVista" :eroe="eroeScheda" :detto="dettoTintore" @tingi="tingiSopra" @chiudi="chiudiBottega" />
         <LaBottega v-if="banco" :key="banco.chi.chiave" v-bind="banco" :eroe="eroeScheda" :detto="dettoBanco" :scheda="schedaBanco"
                   chi-compra="al mercante, vicino al carro"
                   @compra="compraSopra" @vendi="vendiSopra" @riacquista="riacquistaSopra" @chiudi="chiudiBottega" @fuori="fuoriDallaBottega" />
         <Eroi v-if="scegliEroe" :avventure="avventure" :scelto="chiEro || ''" :primo="!chiEro"
-              @scegli="scegli" @chiudi="chiudiLaScelta" />
+              @scegli="scegli" @chiudi="chiudiLaScelta" @personaggio="k => apriEditor(k)" />
+        <Personaggio v-if="schedaEditor" :eroe="schedaEditor" :sesso="schedaEditor.sesso" :aspetto="schedaEditor.aspettoScelto" :vestiti="schedaEditor.vestiti"
+                     @scegli="sceglieSesso" @aspetto="sceglieAspetto" @salva-set="salvaVestito" @rinomina-set="rinominaVestito" @togli-set="togliVestito" @chiudi="editor = null" />
         <div v-if="salaAperta" class="sot-in-due" data-sot-in-due>
           <SalaSfida :fase="sfida.fase.value" :codice="sfida.codice.value" :messaggio="sfida.messaggio.value"
                      :amici="sfida.amici.value" :invitato="sfida.invitato.value" :scelto="sfida.scelto.value" partita="la discesa" domanda="Dove scendete?"
@@ -2587,7 +2664,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
                      @impara="imparaAbilita" @casella="casellaAbilita" @dimentica="dimenticaAlbero" @scheda="apriScheda" @chiudi="paginaEroe = false"
                      @fuori="e => { paginaEroe = false; corsa ? toccoFuori(e) : fuoriDallaBottega(e) }" />
       <PaginaEroe v-else-if="pagina && facciaEroe === 'eroe' && !tesoriAperti && !(corsa && foglio && foglio.che === 'scontro')" v-bind="pagina" :missioni="barra.missioniPronte"
-                  @dai="daiUnPunto" @tesori="tesoriAperti = true" @cambia="cambiaEroe" @chiudi="paginaEroe = false"
+                  @dai="daiUnPunto" @tesori="tesoriAperti = true" @cambia="cambiaEroe" @personaggio="apriEditor(eroeQui())" @chiudi="paginaEroe = false"
                   @scheda="apriScheda" @riassegna="riassegnaPunti"
                   @fuori="e => { paginaEroe = false; corsa ? toccoFuori(e) : fuoriDallaBottega(e) }" />
       <Tesori v-if="paginaEroe && tesoriAperti" :trovati="tesoriTrovati" @indietro="tesoriAperti = false"

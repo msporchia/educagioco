@@ -6,7 +6,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import Carosello from '../home/Carosello.vue'
 import { GIOCHI, serveA } from '../../data/giochi.js'
 import { state, nomeCorrente, etaDelBambino, giocoAcceso, fissaGioco, sapereAcceso, accendiSapere, saperiCheMancano,
-         sperimentaliAccesi, ritoccoSapere, ritocca, cestinaOra } from '../../store/profile.js'
+         ritoccoSapere, ritocca, cestinaOra } from '../../store/profile.js'
 import { azzeraCampagna, haGiocato } from '../../giochi/campagne.js'
 import { inCasa } from '../../data/portata-giochi.js'
 import { giochiDiUnEta, PASSATO } from '../../data/quadro.js'
@@ -42,13 +42,12 @@ const esito = computed(() => {
   const m = modo(k)
   const eta = etaDelBambino()
   if (g_serve(k).length) return `Non compare in home: gli serve ${g_serve(k).join(', ')}, che è spento.`
-  if (!sperimentaliAccesi() && gioco.value?.sperimentale) return 'È un gioco in prova: compare solo se li accendi in Impostazioni › Avanzate.'
   if (m === 'spento') return `Non compare in home. I progressi di ${chi.value} restano.`
   if (m === 'acceso') return spentoDallEta(k) ? `Compare in home anche se a ${eta} anni non sarebbe adatto.` : 'Compare sempre in home.'
   if (inCasa(k)) return `A ${eta} anni è adatto, quindi compare in home. Se l'età cambia, cambia da solo.`
   // fuori dalla home per l'età: o è già troppo facile (i giochi per i piccoli) o è per più avanti
   const { [k]: _, ...altri } = state.profile.settings.giochi || {}
-  const stato = giochiDiUnEta({ eta, giochi: altri, sa: state.profile.settings.sa || {}, sperimentali: sperimentaliAccesi() }).find(g => g.chiave === k)?.stato
+  const stato = giochiDiUnEta({ eta, giochi: altri, sa: state.profile.settings.sa || {} }).find(g => g.chiave === k)?.stato
   return stato === PASSATO ? `A ${eta} anni è troppo facile, quindi non compare in home. Si può accendere a mano.`
     : `È per più grandi: a ${eta} anni non compare ancora, e arriva in home quando cresce.`
 })
@@ -115,6 +114,7 @@ const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
     <div v-if="gioco" class="pannello" :data-pannello-gioco="gioco.chiave">
       <h3><span aria-hidden="true">{{ gioco.ico }}</span> {{ gioco.nome }}</h3>
       <p class="mini che">{{ gioco.che }}</p>
+      <p v-if="gioco.nota" class="mini nota" data-nota>🧪 {{ gioco.nota }}</p>
 
       <div class="blocco">
         <b>Nella home di {{ chi }}</b>

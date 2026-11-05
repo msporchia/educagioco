@@ -9,6 +9,13 @@
   --ar-bordo: #d8e0d0;
   --ar-accento: #4d6fd1;
   --ar-notte: #101a34;
+  /* il ferro e l'oro dell'interfaccia di battaglia */
+  --ar-ferro: #1a1420;
+  --ar-ferro-chiaro: #2d2534;
+  --ar-oro: #e9b949;
+  --ar-oro-chiaro: #ffe9a0;
+  --ar-oro-scuro: #8a5a14;
+  --ar-epica: Georgia, "Times New Roman", "Noto Serif", serif;
 
   flex: 1; min-height: 0;
   display: flex; flex-direction: column;
@@ -20,85 +27,109 @@
 .ar .em { font-family: "Emoji Gioco", system-ui, "Noto Color Emoji", "Apple Color Emoji",
                        "Segoe UI Emoji", "Twemoji Mozilla", sans-serif; line-height: 1 }
 
-/* la mappa della campagna */
-.ar-mappa { flex: 1; min-height: 0; overflow-y: auto; display: flex;
-            flex-direction: column; gap: 14px; padding: 8px 10px 20px }
-.ar-scalino > h3 { display: flex; align-items: center; gap: 7px;
-                   font-size: 15px; color: var(--ar-tenue); margin-bottom: 6px }
-.ar-scalino > h3 b { color: var(--ar-inchiostro); font-size: 16px }
-.ar-scalino > h3 i { font-style: normal; font-size: 12px; flex: 1; text-align: right;
-                     overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+/* la mappa della campagna: una sala di guerra, ferro e oro, con uno scorcio di ogni posto */
+.ar-mappa { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; padding: 0 0 22px;
+            background: radial-gradient(120% 60% at 50% 0, #352a3e, #171220 70%); color: #efe4cf }
+.ar:has(.ar-mappa) { max-width: none }
+.ar-mappa > * { width: 100%; max-width: 520px; margin-inline: auto; padding-inline: 10px }
+.ar-frontone { position: relative; max-width: none; padding: 0; flex: none; height: 148px; overflow: hidden; border-bottom: 3px solid var(--ar-oro);
+               box-shadow: 0 6px 20px #000a; background: #2d2534 }
+.ar-frontone .ar-panorama { position: absolute; inset: 0; height: 100%; border: 0; border-radius: 0; filter: saturate(1.1) brightness(.85) }
+.ar-frontone::after { content: ''; position: absolute; inset: 0; background: linear-gradient(#0000 40%, #171220e6) }
+.ar-insegna { position: absolute; z-index: 1; left: 0; right: 0; bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 10px }
+.ar-insegna .ar-spade { width: 46px; height: 46px; filter: drop-shadow(0 3px 3px #000a) }
+.ar-insegna h2 { margin: 0; font: 900 31px/1 var(--ar-epica); letter-spacing: .5px; color: var(--ar-oro-chiaro); text-shadow: 0 2px 0 var(--ar-oro-scuro), 0 4px 10px #000 }
+.ar-panorama { display: block; width: 100%; height: 84px; object-fit: cover; image-rendering: pixelated; background: #2d2534 }
+.ar-scalino > h3 { position: relative; margin: 0 0 8px; overflow: hidden; border-radius: 12px; border: 2px solid var(--ar-oro); box-shadow: 0 0 0 2px #0007, 0 5px 12px #0008;
+                   font-weight: 400 }
+.ar-scalino > h3::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, #0d0a14e0, #0d0a1466 62%, #0000) }
+.ar-regno { position: absolute; z-index: 1; left: 12px; top: 12px; right: 10px; font-size: 19px }
+.ar-regno b { font: 800 19px/1.1 var(--ar-epica); color: var(--ar-oro-chiaro); text-shadow: 0 2px 3px #000 }
+.ar-scalino > h3 i { position: absolute; z-index: 1; left: 12px; right: 12px; bottom: 9px; font-style: normal; font-size: 12px; color: #ece3d2;
+                     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 2px #000 }
 .ar-tappe { display: flex; flex-direction: column; gap: 8px }
-.ar-tappa { display: flex; align-items: center; gap: 10px; text-align: left;
-            background: var(--ar-carta); border-radius: 14px; padding: 10px 12px;
-            box-shadow: 0 2px 0 var(--ar-bordo); border-left: 6px solid var(--ar-accento);
+.ar-tappa { display: flex; align-items: center; gap: 10px; text-align: left; color: #f3ead8;
+            background: linear-gradient(180deg, var(--ar-ferro-chiaro), var(--ar-ferro)); border-radius: 12px; padding: 10px 12px;
+            border: 1px solid #5a4a3a; box-shadow: 0 2px 0 #000a, inset 0 1px 0 #ffffff14; border-left: 5px solid var(--ar-oro);
             transition: transform .12s }
 .ar-tappa:active { transform: scale(.98) }
 .ar-tappa .ar-faccia { font-size: 30px; flex: none }
 .ar-tappa .ar-testo { flex: 1; min-width: 0 }
-.ar-tappa b { display: block; font-size: 16px }
-.ar-tappa i { display: block; font-style: normal; font-size: 12.5px; color: var(--ar-tenue);
+.ar-tappa b { display: block; font: 700 16px/1.2 var(--ar-epica); color: var(--ar-oro-chiaro) }
+.ar-tappa i { display: block; font-style: normal; font-size: 12.5px; color: #c9bda8;
               overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
-.ar-tappa .ar-stelle { font-size: 13px; letter-spacing: 1px; flex: none; color: var(--ar-tenue); font-weight: 800 }
-.ar-tappa.ar-chiusa { opacity: .5; border-left-color: #c8cfc0; box-shadow: none }
-.ar-tappa.ar-adesso { box-shadow: 0 3px 0 var(--ar-accento) }
-.ar-tappa.ar-infinita { border-left-color: #7a5cf0 }
-.ar-infinita .ar-stelle { letter-spacing: 0; color: #5b3fc8 }
-.ar-tappa .ar-qui { margin-top: 3px; font-size: 12.5px; color: var(--ar-inchiostro) }
-.ar-davanti { margin: 0; text-align: center; font-size: 14px; font-weight: 700; color: var(--ar-inchiostro) }
+.ar-tappa .ar-stelle { font-size: 13px; letter-spacing: 1px; flex: none; color: #d9ccb2; font-weight: 800 }
+.ar-tappa.ar-chiusa { opacity: .5; border-left-color: #5a4a3a; box-shadow: none; filter: grayscale(.6) }
+.ar-tappa.ar-adesso { border-color: var(--ar-oro); box-shadow: 0 0 0 1px var(--ar-oro), 0 0 16px #e9b94966, inset 0 1px 0 #ffffff1c; animation: ar-chiama 2.2s ease-in-out infinite }
+@keyframes ar-chiama { 50% { box-shadow: 0 0 0 1px var(--ar-oro-chiaro), 0 0 26px #e9b949aa, inset 0 1px 0 #ffffff1c } }
+.ar-tappa.ar-infinita { border-left-color: #a78bff }
+.ar-infinita .ar-stelle { letter-spacing: 0; color: #d3c6ff }
+.ar-tappa .ar-qui { margin-top: 3px; font-size: 12.5px; color: #efe4cf }
+.ar-davanti { margin: 0; text-align: center; font-size: 14px; font-weight: 700; color: var(--ar-oro-chiaro) }
 
 /* la difficoltà: tre pulsanti in cima alla mappa, quello scelto pieno */
 .ar-livelli { display: flex; gap: 8px; margin: 0 0 10px }
-.ar-livello { flex: 1; min-height: 44px; padding: 8px 6px; border: 2px solid #c9c2b0; border-radius: 12px; background: #fff; color: #3c3a33; font: inherit; font-weight: 700; touch-action: manipulation }
-.ar-livello-su { border-color: #7a5cf0; background: #7a5cf0; color: #fff }
+.ar-livello { flex: 1; min-height: 44px; padding: 8px 6px; border: 2px solid #5a4a3a; border-radius: 12px; background: var(--ar-ferro-chiaro); color: #efe4cf; font: inherit; font-weight: 700; touch-action: manipulation }
+.ar-livello-su { border-color: var(--ar-oro-chiaro); background: linear-gradient(#ffe36e, #e0a020); color: #3a2400 }
 
-/* il campo: il quadro (3:2, sempre intero) e il pannello sotto */
-.ar-campo { flex: 1; min-height: 0; display: flex; flex-direction: column; background: #16203a; color: #fff }
-.ar-hud { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 8px }
-.ar-gettone { background: #0006; border-radius: 999px; padding: 4px 10px; font-size: 14px;
-              display: inline-flex; align-items: center; gap: 4px; white-space: nowrap }
+/* in battaglia si prende tutto lo schermo, anche su un monitor largo */
+.ar.ar-largo { max-width: none }
+.ar-campo { flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--ar-ferro); color: #fff }
+/* la targa di ferro sopra il campo: orologio e diamanti in due castoni d'oro */
+.ar-hud { position: relative; z-index: 4; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 6px 8px 7px;
+          background: linear-gradient(180deg, var(--ar-ferro-chiaro), var(--ar-ferro)); border-bottom: 2px solid var(--ar-oro);
+          box-shadow: 0 2px 0 var(--ar-oro-scuro), 0 6px 14px #000a }
+.ar-gettone { background: linear-gradient(180deg, #0b0810, #241c2a); border: 1.5px solid var(--ar-oro); border-radius: 10px; padding: 4px 11px; font-size: 14px;
+              box-shadow: inset 0 1px 3px #000, 0 0 0 1px #0008;
+              display: inline-flex; align-items: center; gap: 5px; white-space: nowrap }
+.ar-gettone b { color: var(--ar-oro-chiaro); font-variant-numeric: tabular-nums; font-size: 16px }
 /* i diamanti di battaglia, accanto all'orologio */
 .ar-borsa b { font-size: 16px }
 .ar-borsa i { font-style: normal; font-size: 12px; font-weight: 700; color: #ffe98a }
-/* il quadro è alto quanto lasciano la barra e l'orologio (si gioca toccandolo) e largo 2:3 */
-.ar-quadro { position: relative; height: calc(100dvh - 104px); min-height: 280px; aspect-ratio: 2 / 3; max-width: 100%; margin: 0 auto; touch-action: none }
+/* il quadro prende tutto quello che la barra e l'orologio lasciano: il terreno è più grande di lui e non si stira (scena/campo.js) */
+.ar-quadro { position: relative; flex: 1; min-height: 0; width: 100%; overflow: hidden; touch-action: none }
 /* i bersagli sopra piazzole e castello: trasparenti, grandi quanto l'edificio */
 .ar-bersaglio { position: absolute; background: transparent; border: 0; padding: 0; border-radius: 14px; z-index: 3;
                 display: grid; place-items: center }
 .ar-bersaglio.ar-scelto { box-shadow: 0 0 0 3px #ffe98a, 0 0 18px #ffe98a88 }
-.ar-piu { font-size: 22px; font-weight: 900; color: #ffe98a; text-shadow: 0 1px 3px #000; opacity: .85 }
+.ar-piu { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; font-size: 20px; font-weight: 900; color: var(--ar-oro-chiaro);
+          background: #1a1420b8; border: 2px solid var(--ar-oro); text-shadow: 0 1px 3px #000; animation: ar-respira 1.8s ease-in-out infinite }
+@keyframes ar-respira { 50% { box-shadow: 0 0 14px 3px #ffd97acc; transform: scale(1.09) } }
 /* l'anello: pochi pulsanti cremosi come quelli della fattoria, sopra l'edificio toccato; il «?» è piccolo */
 .ar-anello { position: absolute; z-index: 6; transform: translate(-50%, -100%); display: flex; align-items: flex-end; gap: 6px; pointer-events: none }
-.ar-voce { pointer-events: auto; width: 68px; min-height: 60px; padding: 5px 4px 6px; border-radius: 18px;
-           background: #fdf3d7; color: #4a2c12; border: 3px solid #f5bb3c;
-           box-shadow: 0 3px 0 #c47f12, 0 6px 14px #0008; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px }
+.ar-voce { pointer-events: auto; width: 68px; height: 68px; padding: 5px 2px; border-radius: 12px;
+           background: linear-gradient(180deg, #fff3cf, #e8cf98); color: #4a2c12; border: 3px solid var(--ar-oro-scuro);
+           box-shadow: 0 0 0 1.5px var(--ar-oro-chiaro), 0 3px 0 #5a3a10, 0 7px 16px #000a; display: flex; flex-direction: column; align-items: center; justify-content: space-between }
 .ar-voce:active { transform: translateY(2px) }
-.ar-voce.ar-no { opacity: .55 }
-.ar-voce.ar-sicuro { background: #ffe0d6; border-color: #e0644f; box-shadow: 0 3px 0 #9b2f1c, 0 6px 14px #0008 }
-.ar-voce.ar-piccola { width: 44px; min-height: 44px; padding: 0; border-radius: 50%; font-size: 18px; font-weight: 900 }
-.ar-voce-icona { font-size: 22px; line-height: 1; display: grid; place-items: center }
-.ar-freccia { width: 34px; height: 34px; filter: drop-shadow(0 2px 0 #1d6b2a66) }
-.ar-voce-testo { font-size: 11.5px; font-weight: 800; white-space: nowrap }
-/* ripara e bomba: icone tonde in basso a destra sul campo (il dito: almeno 56 px) */
-.ar-azioni { position: absolute; right: 8px; bottom: 10px; z-index: 5; display: flex; flex-direction: column; gap: 10px }
-.ar-azione-tonda { position: relative; width: 58px; height: 58px; border-radius: 50%; display: flex; flex-direction: column;
+.ar-voce.ar-no { filter: grayscale(.7); opacity: .8 }
+.ar-voce.ar-sicuro { background: linear-gradient(180deg, #ffe0d6, #e8a890); border-color: #9b2f1c }
+.ar-voce > .ar-ic { width: 34px; height: 34px }
+.ar-voce-testo { display: flex; align-items: center; gap: 2px; height: 15px; font-size: 12.5px; font-weight: 800; white-space: nowrap }
+/* le icone dei comandi (viste/Icona.vue): una famiglia sola, la misura la dà chi le ospita */
+.ar-ic { display: inline-block; width: 1.1em; height: 1.1em; flex: none; vertical-align: -.16em; background-repeat: no-repeat; overflow: visible }
+/* ripara e bomba: due scudi tondi nei due angoli di sotto, ai lati del castello e sotto le piazzole (il dito: almeno 56 px).
+   Su uno schermo largo stanno agli angoli del campo, non a quelli del quadro */
+.ar-quadro { container-type: size }
+.ar-azioni { position: absolute; left: 8px; right: 8px; bottom: 12px; z-index: 5; display: flex; justify-content: space-between; pointer-events: none }
+@supports (width: 1cqh) { .ar-azioni { left: max(8px, calc(50cqw - 35cqh)); right: max(8px, calc(50cqw - 35cqh)) } }
+.ar-azione-tonda { position: relative; width: 58px; height: 58px; border-radius: 50%; display: flex; flex-direction: column; pointer-events: auto;
                    align-items: center; justify-content: center; color: #fff;
-                   background: radial-gradient(circle at 35% 30%, #4a4380, #1d1b3a); border: 3px solid #8b7ad0;
-                   box-shadow: 0 4px 12px #000a }
+                   background: radial-gradient(circle at 35% 30%, #fbecc4, #bb8f52); border: 3px solid var(--ar-oro);
+                   box-shadow: 0 0 0 2px #0009, 0 0 0 3.5px var(--ar-oro-scuro), 0 5px 12px #000b }
 .ar-azione-tonda:active { transform: scale(.94) }
-.ar-azione-tonda.ar-no { opacity: .55 }
-.ar-azione-tonda .ar-icona { font-size: 28px; height: 32px }
-.ar-azione-tonda .ar-prezzo { position: absolute; bottom: -9px; padding: 2px 7px; border-radius: 999px; background: #101a44; border: 1.5px solid #ffe98a88;
+.ar-azione-tonda.ar-no { filter: grayscale(.75) brightness(.8) }
+.ar-azione-tonda .ar-icona { width: 34px; height: 34px }
+.ar-azione-tonda .ar-prezzo { position: absolute; bottom: -9px; padding: 2px 7px; border-radius: 6px; background: var(--ar-ferro); border: 1.5px solid var(--ar-oro);
                               font-size: 11px; color: #fff; white-space: nowrap }
 .ar-azione-tonda .ar-info { top: -10px; left: auto; right: -6px }
 /* la nuvoletta di una piazzola libera: crema con l'orlo giallo, la coda in giù verso la piazzola */
 .ar-nuvola { position: absolute; z-index: 7; transform: translate(-50%, -100%); display: flex; flex-wrap: wrap; justify-content: center; gap: 18px 8px; padding: 10px 10px 12px;
-             background: #fdf3d7; border: 4px solid #f5bb3c; border-radius: 22px;
-             box-shadow: 0 0 0 2px #c47f12, inset 0 0 0 2px #fff6dc, 0 12px 28px #0009;
+             background: linear-gradient(180deg, #fff3cf, #e8cf98); border: 4px solid var(--ar-oro-scuro); border-radius: 14px;
+             box-shadow: 0 0 0 2px var(--ar-oro-chiaro), inset 0 0 0 2px #fff6dc, 0 12px 28px #000b;
              animation: ar-spunta .16s ease-out; transform-origin: 50% 100% }
 .ar-nuvola::after { content: ''; position: absolute; left: calc(50% + var(--coda, 0px)); bottom: -15px; width: 20px; height: 20px;
-                    margin-left: -10px; transform: rotate(45deg); background: #fdf3d7;
-                    border-right: 4px solid #f5bb3c; border-bottom: 4px solid #f5bb3c; box-shadow: 3px 3px 0 #c47f12 }
+                    margin-left: -10px; transform: rotate(45deg); background: #e8cf98;
+                    border-right: 4px solid var(--ar-oro-scuro); border-bottom: 4px solid var(--ar-oro-scuro); box-shadow: 3px 3px 0 var(--ar-oro-chiaro) }
 @keyframes ar-spunta { from { transform: translate(-50%, -96%) scale(.85); opacity: 0 } }
 .ar-opzione { position: relative; width: 68px; display: flex; flex-direction: column; align-items: center; gap: 6px }
 .ar-opzione.ar-no { opacity: .55 }
@@ -106,7 +137,7 @@
               box-shadow: 0 3px 0 #c9a46a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 0 }
 .ar-costo { font-size: 14px; font-weight: 800; color: #5a3410; white-space: nowrap }
 .ar-disegno:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #c9a46a }
-.ar-pico { font-size: 38px }
+.ar-pico { width: 42px; height: 42px }
 /* il «?» dei numeri: un cerchietto nell'angolo, dentro un'area più larga che il dito prende */
 .ar-punto { position: absolute; top: -9px; right: -9px; width: 36px; height: 36px; z-index: 2; display: grid; place-items: center;
             font-size: 13px; font-weight: 900; color: #6b4a26; background: none; padding: 0 }
@@ -114,10 +145,20 @@
                     background: #fffaf0; border: 2px solid #d3b47d }
 .ar-punto { isolation: isolate }
 .ar-tela { display: block; width: 100%; height: 100% }
-.ar-dritta, .ar-avviso { position: absolute; left: 50%; top: 12%; transform: translateX(-50%);
-            white-space: nowrap; font-weight: 800; font-size: 14px; padding: 7px 14px; border-radius: 999px;
-            background: #ffd24a; color: #3a2400; box-shadow: 0 4px 14px #0007; pointer-events: none }
-.ar-avviso { background: #101a44e8; color: #fff; border: 2px solid #ffe98a }
+.ar-dritta, .ar-avviso { position: absolute; left: 50%; top: 12%; transform: translateX(-50%); z-index: 5;
+            white-space: nowrap; font-weight: 800; font-size: 14px; padding: 7px 14px; border-radius: 8px;
+            background: linear-gradient(180deg, #fff3cf, #e8cf98); color: #3a2400; border: 2px solid var(--ar-oro-scuro);
+            box-shadow: 0 0 0 1px var(--ar-oro-chiaro), 0 4px 14px #0009; pointer-events: none }
+.ar-avviso { background: linear-gradient(180deg, var(--ar-ferro-chiaro), var(--ar-ferro)); color: #fff; border-color: var(--ar-oro) }
+/* l'annuncio della battaglia: passa sopra il campo e sparisce, e non ferma le dita */
+.ar-annuncio { position: absolute; left: 0; right: 0; top: 34%; z-index: 8; padding: 12px 18px 14px; pointer-events: none; text-align: center;
+               display: flex; flex-direction: column; align-items: center; gap: 2px;
+               background: linear-gradient(90deg, #0000, #120d18ee 16%, #120d18ee 84%, #0000); border-block: 2px solid var(--ar-oro);
+               animation: ar-annuncia 2.2s ease-in-out both }
+@keyframes ar-annuncia { 0% { opacity: 0; transform: scaleY(.3) } 12% { opacity: 1; transform: scaleY(1.04) } 18% { transform: none } 78% { opacity: 1 } 100% { opacity: 0; transform: translateY(-14px) } }
+.ar-annuncio .ar-spade { width: 52px; height: 52px; margin-top: -40px; filter: drop-shadow(0 3px 4px #000) }
+.ar-annuncio b { font: 800 25px/1.15 var(--ar-epica); color: var(--ar-oro-chiaro); text-shadow: 0 2px 0 var(--ar-oro-scuro), 0 3px 8px #000 }
+.ar-annuncio i { font: italic 15px/1 var(--ar-epica); letter-spacing: 1px; color: #efe4cf }
 
 .ar-pannello { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 6px; padding: 10px 8px 14px;
                overflow-y: auto; align-content: start }
@@ -146,22 +187,33 @@
 .ar-info { isolation: isolate }
 
 /* i veli: il cartello di fine */
-.ar-velo { position: absolute; inset: 0; z-index: 30; padding: 16px 14px; background: rgba(9, 14, 32, .88);
+.ar-velo { position: absolute; inset: 0; z-index: 30; padding: 16px 14px; overflow: hidden; background: radial-gradient(90% 60% at 50% 42%, #2a1f30ee, #0b0810f5);
            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 11px; overflow-y: auto }
-.ar-cartello { width: 100%; max-width: 340px; text-align: center; color: #fff; display: flex; flex-direction: column; gap: 10px; align-items: center }
-.ar-esito { font-size: 56px }
-.ar-cartello h2 { font-size: 22px; margin: 0; color: #ffe98a }
+.ar-cartello { position: relative; z-index: 1; width: 100%; max-width: 340px; text-align: center; color: #fff; display: flex; flex-direction: column; gap: 10px; align-items: center;
+                animation: ar-cresce .4s ease-out }
+/* i raggi dietro una vittoria: girano piano */
+.ar-raggi { position: absolute; left: 50%; top: 40%; width: 170vmax; height: 170vmax; margin: -85vmax 0 0 -85vmax; pointer-events: none;
+            background: repeating-conic-gradient(#ffd97a24 0 11deg, #0000 11deg 26deg); animation: ar-gira 26s linear infinite;
+            mask-image: radial-gradient(closest-side, #000, #0000 72%); -webkit-mask-image: radial-gradient(closest-side, #000, #0000 72%) }
+@keyframes ar-gira { to { transform: rotate(360deg) } }
+.ar-stemma { position: relative; width: 112px; height: 112px; display: grid; place-items: center }
+.ar-stemma .ar-spade { position: absolute; inset: 0; filter: drop-shadow(0 4px 6px #000) }
+.ar-stemma .ar-esito { position: relative; display: grid; place-items: center; width: 62px; height: 62px; border-radius: 50%; font-size: 34px;
+                       background: radial-gradient(circle at 35% 30%, #4d4258, #1a1420); border: 3px solid var(--ar-oro); box-shadow: 0 0 0 2px #000a }
+.ar-stemma-vinto .ar-esito { box-shadow: 0 0 24px 6px #ffd97a88 }
+.ar-cartello h2 { margin: 0; font: 800 25px/1.15 var(--ar-epica); color: var(--ar-oro-chiaro); text-shadow: 0 2px 0 var(--ar-oro-scuro), 0 3px 8px #000 }
 .ar-stelle-grandi { font-size: 34px }
 .ar-tempo, .ar-nota { margin: 0; color: #cbd5ff; font-size: 14px }
-.ar-grosso { width: 100%; padding: 14px 18px; border-radius: 16px; font-size: 18px; font-weight: 800;
-             background: linear-gradient(180deg, #ffd24a, #f0a21a); color: #3a2400; display: flex; gap: 8px; justify-content: center }
-.ar-grosso.ar-chiaro { background: rgba(255, 255, 255, .12); color: #fff }
+.ar-grosso { width: 100%; padding: 14px 18px; border-radius: 12px; font-size: 18px; font-weight: 800;
+             background: linear-gradient(180deg, #ffe36e, #e0a020); color: #3a2400; display: flex; gap: 8px; justify-content: center;
+             border: 2px solid var(--ar-oro-scuro); box-shadow: 0 0 0 1px var(--ar-oro-chiaro), 0 3px 0 #5a3a10 }
+.ar-grosso.ar-chiaro { background: #ffffff14; color: #fff; border-color: #ffffff30; box-shadow: none }
 
 /* i dettagli («i numeri»): una scheda scura come lo zaino del sotterraneo, con la ✕ rossa tonda della fattoria; il campo sta fermo */
 .ar-dettagli { z-index: 35; align-items: stretch; justify-content: flex-start; padding: 12px 10px; gap: 0 }
 .ar-scheda { position: relative; width: 100%; max-width: 380px; margin: auto; padding: 16px 14px 14px;
-             border-radius: 22px; color: #eaf0ff; background: #141826;
-             border: 1px solid #ffffff22; box-shadow: 0 18px 60px #000c; display: flex; flex-direction: column; gap: 10px;
+             border-radius: 14px; color: #eaf0ff; background: linear-gradient(180deg, var(--ar-ferro-chiaro), var(--ar-ferro));
+             border: 2px solid var(--ar-oro); box-shadow: 0 0 0 2px #0009, 0 18px 60px #000c; display: flex; flex-direction: column; gap: 10px;
              animation: ar-cresce .16s ease-out }
 @keyframes ar-cresce { from { transform: scale(.94); opacity: 0 } }
 .ar-x { position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; border-radius: 50%; z-index: 2;
@@ -169,8 +221,8 @@
         box-shadow: 0 3px 0 #8a1f14, 0 4px 8px #0004; color: #fff; font-size: 16px; font-weight: 900; padding: 0 }
 .ar-x:active { transform: scale(.92) }
 .ar-intesta { display: flex; align-items: center; gap: 12px; padding-right: 44px }
-.ar-intesta h2 { margin: 0; font-size: 21px; color: #ffd23f }
-.ar-livello { margin: 2px 0 0; font-size: 13px; color: #93a0bd }
+.ar-intesta h2 { margin: 0; font: 800 21px/1.15 var(--ar-epica); color: var(--ar-oro-chiaro) }
+.ar-intesta .ar-livello { flex: none; min-height: 0; padding: 0; border: 0; background: none; margin: 2px 0 0; font-size: 13px; color: #93a0bd }
 .ar-grande { font-size: 44px }
 .ar-ruolo { margin: 0; padding-left: 18px; font-size: 12.5px; color: #93a0bd; line-height: 1.5 }
 .ar-due { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }

@@ -68,11 +68,12 @@ al doppio click e a `./pubblica.sh`. La CI pubblica `dist-sito/` con accanto
 - **«Cerca aggiornamenti» controlla un `<meta name="versione">`** nella pagina: nel sito
   spezzato la pagina pesa 4 KB e l'id non sta più nel JS, e senza il meta il controllo
   falliva e il nastro tornava a ogni tentativo.
-- **Il service worker scarica tutto** (`scaricaTutto` nel `sw.js` generato): sei
-  file alla volta, copia dalle cache delle versioni precedenti quello che ha lo
-  stesso nome (hash uguale = file uguale), e fallisce l'installazione se ne manca
-  uno. I progressi vanno sul canale `educagioco-scarico`; li mostra
-  `components/Scarico.vue`, la striscia in cima.
+- **Il service worker scarica in due tempi** (`scaricaBase` all'installazione,
+  `scaricaGiochi` quando la pagina lo chiede): quattro file alla volta, copia dalle
+  cache delle versioni precedenti quello che ha lo stesso nome (hash uguale = file
+  uguale), e fallisce l'installazione se manca un file della base. I progressi vanno
+  sul canale `educagioco-scarico`; li mostra `components/Scarico.vue`, una riga in
+  fondo alla home. Come riparte quando si ferma: [aggiornamento.md](aggiornamento.md).
 - **«Cerca aggiornamenti»** aspetta il service worker nuovo fino a 3 minuti
   invece di 8 secondi (`__SPEZZATO__`), perché prima deve finire di scaricare.
 - **Provarlo:** `node strumenti/prova-sito.mjs` (`--rete KB/s`, `--lento N`,
@@ -104,10 +105,6 @@ campo di distanza su ~35 000 celle per isola, e non cambiano mai per la stessa l
 
 ## Da fare
 
-- **L'installazione è tutto o niente**: se la rete cade a metà riparte da capo
-  (i file già in cassa si ricopiano, ma c'è da riscaricare). Il passo dopo è lo
-  scarico a due tempi: prima il minimo per giocare, poi un gioco alla volta con
-  la lista nel build, e un gioco non ancora scaricato che dice «in download».
 - **La prima apertura di una mappa** calcola ancora: si può fare nel sottofondo dopo lo scarico, isola per isola.
 - **Il banco di memoria per gioco** (sopra) non entra in partita: misura solo
   l'ingresso.

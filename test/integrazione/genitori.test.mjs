@@ -327,8 +327,8 @@ await apriBlocco('giochi')
    nuovo deve comparire nel quadro, non diventare rosso questo test.
    Quelli in prova non si contano: stanno dietro il loro cancello, e col
    cancello chiuso non c'è niente da accendere. */
-const NORMALI = GIOCHI.filter(g => !g.sperimentale)
-const IN_PROVA = GIOCHI.filter(g => g.sperimentale)
+const NORMALI = GIOCHI
+const IN_PROVA = GIOCHI.filter(g => g.nota)
 uguale('nel quadro c\'è una riga per gioco',
        await page.locator('[data-manopola] [data-apri="giochi"] .elenco li').count(),
        NORMALI.length)
@@ -406,59 +406,23 @@ controlla('rimessa su «come dice l\'età», il castello torna in home',
 
 /* ── 7b. i giochi in prova ──
    Un gioco che sto ancora scrivendo non deve arrivare ai bambini prima
-   che l'abbia deciso io. Non è la ✎ di una riga messa su «non ce
-   l'ha»: è un cancello, e col cancello chiuso quel gioco non esiste —
-   non è in home e **non è nemmeno nel quadro**, perché non c'è niente
-   da accendere. */
+   che l'abbia deciso io: ha `spentoDiBase` e una `nota` che lo dice.
+   Non c'è un cancello a parte: si accende dalla ✎ come ogni gioco. */
 if (IN_PROVA.length) {
   /* Il gioco si cerca **dal manifesto**, non da una chiave scritta a
-     mano: questo blocco è rimasto fermo finché nessun gioco era in
-     prova, e si è risvegliato col selettore di un gioco che nel
-     frattempo era stato promosso. Un test che nomina un gioco per
-     esteso scade da solo. */
+     mano: un test che nomina un gioco per esteso scade da solo. */
   const primo = IN_PROVA[0]
   const suaCarta = '.carta.gioco[data-gioco="' + primo.chiave + '"]'
-  const suaRiga = '[data-manopola] [data-riga="' + primo.chiave + '"]'
-  /* qui siamo in home, dove l'ultimo controllo ci ha lasciati */
-  controlla('col cancello chiuso, un gioco in prova non è in home',
-            !(await page.isVisible(suaCarta)))
+  controlla('di base un gioco in prova non è in home', !(await page.isVisible(suaCarta)))
 
   await vaiAiGenitori()
   await digita('0000')
-  await apriScheda('impostazioni')
-  await page.waitForSelector('.carta[data-flag="sperimentali"]', { timeout: 5000 })
-  await apriScheda('bambini')               // il quadro sta col bambino, l'interruttore con i giochi
-  await apriBlocco('giochi')
-  uguale('e non c\'è nemmeno la sua riga nel quadro',
-         await page.locator(suaRiga).count(), 0)
-
-  await apriScheda('impostazioni')
-  await page.click('.carta[data-flag="sperimentali"]')
-  await page.waitForTimeout(300)
-  await apriScheda('bambini')
-  await apriBlocco('giochi')
-  uguale('acceso il cancello, i giochi in prova entrano nel quadro',
-         await page.locator('[data-manopola] [data-apri="giochi"] .elenco li').count(),
-         NORMALI.length + IN_PROVA.length)
-  controlla('adesso in home c\'è', await inHome(suaCarta))
-
-  /* dietro il cancello vale la ✎ di sempre: un gioco in prova si spegne
-     e si riaccende come tutti gli altri */
+  await taraGioco(primo.chiave, 'si')
+  controlla('acceso dalla ✎ compare in home', await inHome(suaCarta))
   await vaiAiGenitori()
   await digita('0000')
-  await taraGioco(primo.chiave, 'no')
-  controlla('e dietro il cancello vale la tacca di sempre',
-            !(await inHome(suaCarta)))
-
-  /* e il cancello si richiude: quello che si accende si deve poter
-     rispegnere, e da chiuso non conta più cosa c'è dietro */
-  await vaiAiGenitori()
-  await digita('0000')
-  await taraGioco(primo.chiave, 'difetto')          // riacceso il singolo
-  await apriScheda('impostazioni')
-  await page.click('.carta[data-flag="sperimentali"]')
-  await page.waitForTimeout(200)
-  controlla('richiuso il cancello, sparisce di nuovo', !(await inHome(suaCarta)))
+  await taraGioco(primo.chiave, 'difetto')
+  controlla('e tornando al difetto sparisce di nuovo', !(await inHome(suaCarta)))
 }
 
 /* ── 7b-ter. gli interruttori di casa sono tre, e non quattro ──
@@ -472,7 +436,7 @@ if (IN_PROVA.length) {
   await vaiAiGenitori()
   await digita('0000')
   await apriScheda('impostazioni')
-  await page.waitForSelector('.carta[data-flag="sperimentali"]', { timeout: 5000 })
+  await page.waitForSelector('.carta[data-flag="tuttoAperto"]', { timeout: 5000 })
   uguale('non c\'è nessun interruttore per il calcolo a mente',
          await page.locator('.carta[data-flag="mente"]').count(), 0)
   /* e la fila degli asteroidi resta intera: è la stessa promessa vista
@@ -652,6 +616,8 @@ const quanteAmbra = async () => {
   return page.locator('[data-manopola] .voce-riga.ritoccata').count()
 }
 
+/* il bambino di prova è in «quarta» coi decimali accesi a mano: quella riga è ambra già da prima */
+const ambraPrima = await quanteAmbra()
 await apriBlocco('medie')
 controlla('una riga del quadro ha due tasti soli: la ✎ e il ▶',
   (await page.locator('[data-manopola] [data-apri="medie"] .matita').count()) > 0)
@@ -675,7 +641,7 @@ uguale('confermando finisce nel profilo, sotto la chiave di quella riga',
 uguale('e uno scatto verso destra vuol dire «per lui è più difficile»',
   ritocchi[tarata], -1, `${dettoPrima} → ${JSON.stringify(ritocchi)}`)
 controlla('la riga spostata resta ambra, anche a tacca chiusa',
-  (await quanteAmbra()) > 0)
+  (await quanteAmbra()) > ambraPrima)
 uguale('e la tacca si chiude da sé',
   await page.locator('[data-taratura]').count(), 0)
 
@@ -689,7 +655,7 @@ await page.click('[data-tara="rimetti"]')
 await page.waitForTimeout(500)
 uguale('e «rimettila com\'era» non lascia nemmeno uno zero',
   Object.keys(await ritocchiScritti()).length, 0)
-uguale('e la riga torna com\'era', await quanteAmbra(), 0)
+uguale('e la riga torna com\'era', await quanteAmbra(), ambraPrima)
 
 /* ── E IL TASTO CHE RIMETTE TUTTO ──
    Le correzioni sono tante e piccole, e dopo un po' nessuno ricorda
@@ -757,8 +723,9 @@ await taraSapere('conversioni', 'via')
 const dopoSpento = await leggiProfilo(page)
 uguale('l\'ultimo scatto spegne il pezzo di scuola, nel profilo',
        dopoSpento.settings.sa.conversioni, false)
+/* i decimali li ha spenti «rimetti com'era»: la fascia «quarta» li spegne da sé */
 uguale('e solo quello: acceso resta l\'assenza',
-       Object.keys(dopoSpento.settings.sa).length, 1)
+       Object.keys(dopoSpento.settings.sa).sort().join(' '), 'conversioni decimali')
 await apriBlocco('spenta')
 controlla('e le sue domande finiscono nel blocco di quello che hai tolto',
   (await page.locator('[data-manopola] [data-apri="spenta"] [data-riga="conversioni"]').count()) > 0)
@@ -910,25 +877,21 @@ uguale('col campo vuoto non si va avanti', await page.isDisabled('.via'), true)
 
 await page.fill('.benvenuto .nome', 'Federica')
 await page.click('.benvenuto .via')
-await page.waitForSelector('[data-manopola]', { timeout: 5000 })
+await page.waitForSelector('[data-nascita-domanda]', { timeout: 5000 })
 
-/* ── quanti anni ha ──
-   Col solo nome non si aggiunge: l'età decide cosa il bambino si
-   troverà in home la prima volta, e una risposta preselezionata si
-   preme senza leggerla. Il tasto spento è il modo di chiederlo senza
-   scriverlo. */
-/* La manopola nasce sui quattro anni: chi aggiunge un bambino sta
-   quasi sempre aggiungendo il più piccolo di casa, e da lì si sale
-   finché l'elenco di quello che si dà per scontato non comincia a dire
-   cose che non sa. Otto tocchi per arrivare a otto anni. */
-uguale('la manopola nasce sui quattro anni',
-  (await page.locator('[data-eta-ora]').innerText()).trim(), '4 anni')
-for (let i = 0; i < 8; i++) await page.click('[data-eta="su"]')
-await page.waitForTimeout(250)
-uguale('la manopola dice a che età si è fermata',
-  (await page.locator('[data-eta-ora]').innerText()).trim(), '8 anni')
-controlla('e il quadro dice cosa sta per succedere',
-  await page.isVisible('[data-manopola] .quadro'))
+/* ── quando è nato ──
+   Col solo nome non si aggiunge: l'età esce dalla data e decide cosa il
+   bambino si troverà in home la prima volta. Il tasto spento è il modo
+   di chiederlo senza scriverlo. */
+uguale('senza la data non si entra', await page.isDisabled('[data-azione="si-gioca"]'), true)
+{
+  const oggi = new Date()
+  const annoScol = oggi.getMonth() >= 8 ? oggi.getFullYear() : oggi.getFullYear() - 1
+  await page.selectOption('[data-nascita-mese]', String(oggi.getMonth()))
+  await page.selectOption('[data-nascita-anno]', String(annoScol - 8))
+}
+await page.waitForSelector('[data-nascita-eta]', { timeout: 3000 })
+controlla('e la data dice in che classe è', /terza elementare/.test(await page.locator('[data-nascita-eta]').innerText()))
 
 await page.click('[data-azione="si-gioca"]')
 await page.waitForSelector('.carte', { timeout: 8000 })

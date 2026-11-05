@@ -4,7 +4,7 @@
 // La discesa (motore/corsa.js) e i mercanti di sopra (motore/bottega.js) la estendono; gira in Node.
 import { TASCHE, TASCHE_EXTRA_MAX, POZIONI_MASSIME, prezzoTasca } from '../dati/mondo.js'
 import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta, FAMIGLIE, requisitoDi, livelloRichiesto } from '../dati/eroi.js'
-import { COSE, STANZE_TORCIA, PERGAMENE_MASSIME, aLivello, PESO_DELLA_DIFESA, CASELLE, CASELLE_DEL_TIPO, tipoDellaCasella } from '../dati/cose.js'
+import { COSE, STANZE_TORCIA, PERGAMENE_MASSIME, aLivello, PESO_DELLA_DIFESA, CASELLE, CASELLE_DEL_TIPO, tipoDellaCasella, diSerieDi } from '../dati/cose.js'
 import { GEMME_PER_FORTUNA, VALORE_GEMME_MASSIMO, ATT_PER_PUNTO, SCHIVATA_PER_DESTREZZA, ENERGIA_PER_INTELLIGENZA } from '../dati/livelli.js'
 import { rileggiCrescita, piuDellaCrescita, caratteristica, chiTrattiene, puntiDaDare, riassegna, costoDelRiassegnare, trattoDegliElisir,
          ELISIR_MAX } from './crescita.js'
@@ -12,6 +12,7 @@ import { CARATTERISTICHE } from '../dati/livelli.js'
 import { NODI, ENERGIA, aGrado } from '../dati/abilita.js'
 import { gradoDi, impara, metti, dimentica, costoDelDimenticare } from './abilita.js'
 import { VELOCITA_BASE_EROE, VELOCITA_PER_DESTREZZA } from './turni.js'
+import { rileggiTinte, tintaValida, sipuoTingere } from '../dati/tinte.js'
 
 // la forma di `cfg.avventure[eroe].roba` nel profilo: sale se un campo cambia significato (docs/core/ripresa.md)
 export const VERSIONE_ROBA = 1
@@ -74,7 +75,17 @@ export function rileggiRoba(dato) {
   }
   // in testa solo un copricapo: un dato storto torna in tasca, non si perde
   if (roba.testa && COSE[roba.testa].dove !== 'testa') { roba.zaino.push(roba.testa); roba.testa = null }
+  // le tinte del tintore (docs/sotterraneo/tintore.md): un salvataggio di prima non ha il campo, e vuol dire nessuna tinta (la `v` resta 1)
+  const tinte = tinteDeiPezzi(rileggiTinte(dato.tinte), roba)
+  if (Object.keys(tinte).length) roba.tinte = tinte
   return sistemaIGioielli(roba)
+}
+
+// le tinte dei pezzi che si hanno ancora (addosso o in tasca): un pezzo venduto o perso si porta via la sua
+const tinteDeiPezzi = (tinte, r) => {
+  const fuori = {}
+  for (const k of Object.keys(tinte)) if ([r.mano, r.mancina, r.corpo, r.testa, ...r.zaino].includes(k)) fuori[k] = tinte[k]
+  return fuori
 }
 
 // Prima c'era un posto solo, `dito`, per anelli e amuleti insieme: un gioiello nel posto sbagliato va nel suo (un amuleto al collo, un
@@ -109,17 +120,17 @@ export function schedaConLaRoba(eroe, roba = null, crescita = null) {
   if (elisir) tratti.push(elisir)
   return {
     vita: c.vitaConLaRoba, att: c.att, dif: c.dif, gemme: c.gemme, tasche: c.postiUsati(), capienza: c.capienza,
-    mano: c.mano, mancina: c.mancina, corpo: c.corpo, collo: c.collo, dito: c.dito, dito2: c.dito2, testa: c.testa, tratti, livello: c.livelloEroe, energiaMax: c.energiaMax,
+    mano: c.mano, mancina: c.mancina, corpo: c.corpo, collo: c.collo, dito: c.dito, dito2: c.dito2, testa: c.testa, tinte: c.roba.tinte || {}, tratti, livello: c.livelloEroe, energiaMax: c.energiaMax,
   }
 }
 
 const virgola = n => String(Math.round(n * 10) / 10).replace('.', ',')
 
 export class Corredo {
-  constructor({ eroe = DI_PARTENZA, roba = null, crescita = null } = {}) {
+  constructor({ eroe = DI_PARTENZA, roba = null, crescita = null, sesso = null, aspetto = null } = {}) {
     // la scheda dice braccio e difesa di partenza; il resto non sa che esistano quattro eroi
     this.chiEro = eroe
-    this.io = eroeDi(eroe)
+    this.io = eroeDi(eroe, sesso, aspetto)   // col sesso scelto cambiano il modello e il nome, mai i numeri (docs/sotterraneo/personaggio.md)
     // l'esperienza e i punti dati (motore/crescita.js): stanno nell'avventura come la roba, e salgono con lei
     this.crescita = rileggiCrescita(crescita, this.io.chiave)
     this.gemme = 0
@@ -131,6 +142,7 @@ export class Corredo {
     this.dito = null      // gli anelli: due posti, `dito` e `dito2`
     this.dito2 = null
     this.testa = null     // il copricapo (docs/sotterraneo/elmo.md)
+    this.tinte = {}       // { [chiaveOggetto]: idTinta }: i pezzi ritinti dal tintore (dati/tinte.js), seguono il pezzo
     // i copricapi si trovano e si comprano solo dove il gioco li accende (il sotterraneo, come le botti): spenti di difetto,
     // così il banco di prova e la taratura restano quelli di prima. Quello che si ha già si porta dappertutto
     this.copricapi = false
@@ -139,15 +151,28 @@ export class Corredo {
     this.torceInScorta = 0
     this.avvisi = []            // le righe da far comparire a schermo, in coda
     if (roba) this.indossa(roba)
+    this.rendiIlDiSerie()
   }
 
   // quello che si porta su: il resto (vita, piano, mappa) è della discesa e resta giù
   get roba() {
-    return {
+    const r = {
       v: VERSIONE_ROBA, gemme: this.gemme, zaino: [...this.zaino],
       mano: this.mano, mancina: this.mancina, corpo: this.corpo, collo: this.collo, dito: this.dito, dito2: this.dito2, testa: this.testa,
       torcia: this.torciaResta, torce: this.torceInScorta,
     }
+    // il campo c'è solo se c'è una tinta: chi non ha mai visto il tintore ha la roba di sempre
+    const tinte = tinteDeiPezzi(this.tinte, r)
+    if (Object.keys(tinte).length) r.tinte = tinte
+    return r
+  }
+
+  // la tinta di un pezzo (id), o null; `tingi` la cambia (la paga il tintore, motore/tintore.js)
+  tintaDi(k) { return k ? tintaValida(this.tinte[k]) : null }
+  tingi(k, id) {
+    if (!sipuoTingere(k)) return
+    if (id == null) delete this.tinte[k]
+    else if (tintaValida(id)) this.tinte[k] = id
   }
 
   indossa(dato) {
@@ -161,8 +186,20 @@ export class Corredo {
     this.dito = r.dito
     this.dito2 = r.dito2
     this.testa = r.testa
+    this.tinte = { ...(r.tinte || {}) }
     this.torciaResta = r.torcia
     this.torceInScorta = r.torce
+    this.rendiIlDiSerie()
+  }
+
+  // il copricapo di serie dell'eroe (dati/cose.js, `serie-<eroe>`; docs/sotterraneo/elmo.md): chi non ce l'ha né addosso né in tasca lo
+  // riceve, anche un salvataggio di prima. In testa se la testa è nuda; se porta un elmo vero resta in tasca (se c'è posto: se no al
+  // prossimo caricamento). Non si vende e non si trova, quindi una volta dato non sparisce
+  rendiIlDiSerie() {
+    const k = diSerieDi(this.chiEro)
+    if (!k || this.testa === k || this.zaino.includes(k)) return
+    if (!this.testa) this.testa = k
+    else if (this.cista(k)) this.zaino.push(k)
   }
 
   // una copia senza discesa intorno: serve a provare un acquisto prima di farlo (compra)

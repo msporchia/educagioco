@@ -34,6 +34,11 @@ export class Livello {
     this.carota = -1
     this.massi = []
     this.pecore = []
+    this.guerriero = false
+    this.pulsante = new Array(n).fill(null)
+    this.grata = new Array(n).fill(null)
+    this.nemici = []
+    this.spada = -1
 
     const buche = {}
     for (let y = 0; y < this.righe; y++) for (let x = 0; x < this.colonne; x++) {
@@ -48,6 +53,11 @@ export class Livello {
       if (d.masso) this.massi.push(i)
       if (d.pecora) this.pecore.push(i)
       if (d.lastra) this.lastra[i] = d.lastra
+      if (d.pulsante) this.pulsante[i] = d.pulsante
+      if (d.grata) this.grata[i] = d.grata
+      if (d.nemico) this.nemici.push(i)
+      if (d.spada) this.spada = i
+      if (d.principessa) this.guerriero = true
       if (d.coppia) {
         this.coppia[i] = d.coppia
         ;(buche[d.coppia] = buche[d.coppia] || []).push(i)
@@ -75,6 +85,17 @@ export class Livello {
   }
 
   eRecinto(i) { return this.terreno[i] === 'recinto' }
+
+  /* se il nemico in `n` vede la cella `p`: le otto attorno a lui. Di traverso
+     non vede solo dietro un angolo, con tutte e due le celle in mezzo sbarrate;
+     `chiusa` dice se una cella è una grata chiusa */
+  vede(n, p, chiusa = () => false) {
+    const dx = this.x(p) - this.x(n), dy = this.y(p) - this.y(n)
+    if (Math.abs(dx) > 1 || Math.abs(dy) > 1 || (!dx && !dy)) return false
+    if (!dx || !dy) return true
+    const sbarra = i => this.alto(i) || chiusa(i)
+    return !(sbarra(this.vicino(n, dx, 0)) && sbarra(this.vicino(n, 0, dy)))
+  }
 
   /* un ostacolo alto non si scavalca col salto; uno basso sì */
   alto(i) {

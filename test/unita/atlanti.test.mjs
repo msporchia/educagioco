@@ -167,7 +167,7 @@ for (const [nome, A] of ATLANTI) {
   // solo quello che un pannello mostra ancora dipinto: le cose senza modello (i tre gioielli di base, le curiosità) e l'arco degli
   // arcieri di Castle Battle; il resto si mostra con la foto del suo modello (docs/sotterraneo/anteprime-3d.md)
   stessaLista('e porta solo quello che un pannello mostra dipinto', [...nomi].sort(),
-              ['amuleto-rosso', 'arco-corto', 'calice', 'clessidra', 'libro', 'medaglione', 'ossa', 'sfera-cristallo'])
+              ['arco-corto', 'calice', 'clessidra', 'libro', 'ossa', 'sfera-cristallo'])
   const storti = nomi.filter(n => {
     const p = PEZZI[n], q = NITIDI[n]
     if (!p) return true

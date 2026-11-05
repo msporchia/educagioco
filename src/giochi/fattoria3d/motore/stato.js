@@ -1,6 +1,7 @@
 /* Lo stato che si salva (in profile.campagne.fattoria3d.cfg.stato) e come si rimette in forma quando si legge: un salvataggio
    di ieri non ha bisogno di migrazioni, i campi che mancano si riempiono. Dato + funzioni pure. */
 import { cassettoInForma } from '../dati/addobbi.js'
+import { armadioInForma } from '../dati/abiti.js'
 import { LOTTI_INIZIALI, PEZZO_DI_PARTENZA, POSTI_STORICI, lottoPerId } from '../dati/mondo.js'
 import { lottoDiversoDa } from '../dati/biomi.js'
 import { CHIAVI_COLTURE, TESSERE } from '../dati/colture.js'
@@ -14,8 +15,10 @@ import { livelloPer } from '../dati/livelli.js'
 import { ordineInForma } from './ordini.js'
 import { stivaInForma } from './mongolfiera.js'
 import { leggiLeBotteghe } from './botteghe.js'
+import { interniIniziali, interniInForma } from './interni.js'
 import { RIPOSO_MS } from '../dati/mongolfiera.js'
-import { casaIniziale, casaInForma } from '../dati/bestie.js'
+import { casaIniziale, casaInForma, nuovo as bisogniNuovi } from '../dati/bestie.js'
+import { compagniDiUnaVolta } from '../dati/compagni.js'
 import { POSTI_DI_PARTENZA, postiInForma } from '../dati/posti.js'
 import { TIPI_DI_SILO } from '../dati/silos.js'
 import { aspettoDaCodice } from '../dati/strade.js'
@@ -45,9 +48,13 @@ const LANA_DEL_SEGNAPOSTO = 2     // il premio della cassa del segnaposto di pri
 //    nuova (70 livelli, prezzi, tempi in minuti e silos della 2D); uno stato senza `scala` ha l'esperienza sulla scala di prima (22 livelli) e `normalizza` la porta
 //    nello stesso punto del percorso (motore/scala-vecchia.js), senza scendere sotto il livello che serve a tenere ciò che si ha. `silo`: quante volte è stato
 //    ingrandito ciascun magazzino (dati/silos.js), assente = zero. Un raccolto di prima in scorta resta anche se supera lo scomparto: il tetto frena solo ciò che entra.
-//    Senza cambiare versione: `aspettoStrade` (tipo e bordo delle strade, docs/fattoria3d/terreno.md «Le strade: tipi e bordi»); assente = ogni strada è terra senza bordo, come prima.
+//    Senza cambiare versione: `stradeTolte` (le strade di serie cancellate; assente = ci sono tutte) e `aspettoStrade` (tipo e bordo delle strade, docs/fattoria3d/terreno.md «Le strade: tipi e bordi»); assente = ogni strada è terra senza bordo, come prima.
 //    Senza cambiare versione: `staccionate` (le staccionate e i cancelli, { idCella: 'legno' | 'legno.c' }, dati/staccionate.js, docs/fattoria3d/staccionate.md); assente = niente.
 export const VERSIONE_STATO = 10
+
+/* Il nome che il bambino dà alla fattoria (vuoto = «La fattoria»); anche quella in comune ha il suo. Vedi docs/fattoria3d/nome.md. */
+export const NOME_FATTORIA_MAX = 24
+export const pulisciNomeFattoria = n => String(n ?? '').replace(/[\u0000-\u001f\u007f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, NOME_FATTORIA_MAX).trim()
 export const SCALA_ATTUALE = 2
 
 const vuote = () => Object.fromEntries(CHIAVI_COLTURE.map(k => [k, 0]))
@@ -69,6 +76,7 @@ export function statoIniziale() {
     merci: vuote(), prodotti: {}, lana: 0,
     esperienza: 0,             // monete spese in questo gioco; non scende mai (dati/livelli.js ne ricava il livello)
     scala: SCALA_ATTUALE,      // 2 = la scala dei livelli della 2D; uno stato senza `scala` ha l'esperienza sulla scala di prima e `normalizza` la porta qui
+    portoVoltato: false,                         // il porticciolo di prima si è già girato verso l'acqua (docs/fattoria3d/rotazione.md)
     silo: Object.fromEntries(TIPI_DI_SILO.map(t => [t, 0])),      // quante volte è stato ingrandito ogni magazzino (+2 pezzi per scomparto, dati/silos.js)
     posseduti: Object.fromEntries(TIPI_DI_EDIFICIO.map(t => [t, false])),
     lotti: { ...LOTTI_INIZIALI },
@@ -76,9 +84,12 @@ export function statoIniziale() {
     vecchi: [],                // gli id (`a_b`) dei lotti comprati prima della geografia grande dove ora cambierebbe qualcosa: si generano alla vecchia (generaLotto `vecchio: true`)
     vecchi1: [],               // gli id dei lotti comprati con `geo: 1` dove ora c'è un lago naturale al posto della pozzanghera: restano com'erano (generaLotto `vecchio: 1`)
     casa: casaIniziale(),      // le bestie di casa che hai preso (docs/fattoria3d/bestie-di-casa.md): { beagle: { pancia, pelo, gioco, quando, premiato, nome?, i?, j? } }
-    addobbi: {},               // il cassetto degli addobbi delle bestie: comprati e non addosso, { id: quanti } (dati/addobbi.js)
+    adozioni: 1,               // 1 = gli animali si adottano (docs/fattoria3d/adozioni.md); uno stato senza questo campo è di quando Watson e i gatti arrivavano da soli col livello: `normalizza` glieli scrive in `casa` e glieli lascia
+    addobbi: {},               // il cassetto degli addobbi delle bestie: comprati e non addosso, { 'id:colore': quanti } (dati/addobbi.js; un id solo di prima vale il colore di base)
+    armadio: {},               // i pezzi a pagamento del guardaroba del contadino comprati: { 'cappello:cilindro': true } (dati/abiti.js)
     pesca: {},                 // per lotto d'acqua tuo: { i, j (dove sta il galleggiante), fine (quando abbocca, null se non c'è la lenza), riposo (quando il banco si ripopola, null) }
     strade: [],                // le celle (indice di griglia) disegnate dal bambino
+    stradeTolte: [],           // le celle delle strade di serie che il bambino ha cancellato con la gomma
     aspettoStrade: {},         // per le strade che non sono quella di base: { idCella: 'ghiaia.cordolo' } (tipo.bordo, dati/strade.js); le altre sono terra senza bordo
     staccionate: {},           // le staccionate: { idCella: 'legno' } o 'legno.c' se è un cancello (tipo[.c], dati/staccionate.js)
     daRegalare: {},            // ciò che la fattoria 2D aveva e la 3D non ha ancora ({ 'cosa:ovile': 1, 'scorta:miele': 4, 'terra': 2 }): solo un conto, mai monete (motore/migra.js)
@@ -87,10 +98,12 @@ export function statoIniziale() {
     tagliati: [],              // i numeri degli alberi abbattuti
     ostacoli: [],              // gli id (le celle) dei sassi e dei cespugli tolti
     cose: [{ id: 1, tipo: PEZZO_DI_PARTENZA.tipo, i: PEZZO_DI_PARTENZA.i, j: PEZZO_DI_PARTENZA.j, tile: nuoveTessere() }],
+    nome: '',                  // il nome dato alla fattoria dal bambino; '' = nessuno (la barra dice «La fattoria»)
     prossimoId: 2,
     macchine: Object.fromEntries(TIPI_DI_MACCHINA.map(t => [t, macchinaVuota()])),
     mongolfiera: { stiva: null, via: null, riposo: null, giri: 0 },   // la nave (docs/fattoria3d/mongolfiera.md): il carico da riempire, quando è partita e quando torna, i viaggi fatti
     ordini: { aperti: Array(POSTI(1)).fill(null), riprende: Array(POSTI(1)).fill(null), prossimoId: 1 },   // il banco: un ordine o null per posto; `riprende` è quando un posto vuoto si riempie
+    interni: interniIniziali(),   // dentro la casa (docs/fattoria3d/casa.md): le stanze comprate, i mobili (messi o via), pavimento e pareti
     botteghe: {},              // le quattro botteghe del paese (docs/fattoria3d/botteghe.md), per tipo: { consegne (i cuori della fama), prossimo, banconi: [cliente | { dal } | null] }
   })
 }
@@ -129,6 +142,7 @@ export function normalizza(letto) {
   // `geo: 1` ha già la sua lista; i suoi lotti comprati dove ora c'è un lago naturale (o altro che cambia) restano com'erano (`vecchi1`). `geo: 2` ha tutte e due le liste.
   const lista = (v, tieni) => Array.isArray(v) ? [...new Set(v.filter(id => typeof id === 'string' && lottoPerId(id) && s.lotti[id] && tieni(id)))] : []
   const diverso = (gen, id) => { const l = lottoPerId(id); return l && lottoDiversoDa(l, gen) }
+  s.portoVoltato = letto.portoVoltato === true
   if (letto.geo === 1 || letto.geo === 2) {
     s.vecchi = lista(letto.vecchi, () => true)
     s.vecchi1 = letto.geo === 2 ? lista(letto.vecchi1, id => !s.vecchi.includes(id))
@@ -138,6 +152,7 @@ export function normalizza(letto) {
     s.vecchi1 = []
   }
   s.addobbi = cassettoInForma(letto.addobbi)
+  s.armadio = armadioInForma(letto.armadio)       // assente prima del guardaroba a pagamento, senza cambiare versione
   s.casa = casaInForma(letto.casa)       // le bestie di casa (assenti prima del giro G6, senza cambiare versione): uno stato di prima non ne ha
   for (const [id, v] of Object.entries(oggetto(letto.pesca))) {
     if (!lottoPerId(id) || !v || typeof v !== 'object' || !Number.isInteger(v.i) || !Number.isInteger(v.j)) continue
@@ -145,8 +160,10 @@ export function normalizza(letto) {
     if (fine !== null || riposo !== null) s.pesca[id] = { i: v.i, j: v.j, fine, riposo }
   }
   for (const [k, n] of Object.entries(oggetto(letto.daRegalare)).slice(0, 400)) if (typeof k === 'string' && k.length <= 64 && numero(n) >= 1) s.daRegalare[k] = Math.min(9999, Math.floor(n))
+  s.nome = pulisciNomeFattoria(letto.nome)
   s.migrato = Number.isInteger(letto.migrato) && letto.migrato > 0 ? Math.min(99, letto.migrato) : 0
   s.strade = Array.isArray(letto.strade) ? letto.strade.filter(Number.isInteger) : []
+  s.stradeTolte = Array.isArray(letto.stradeTolte) ? [...new Set(letto.stradeTolte.filter(Number.isInteger))] : []
   const sonoStrade = new Set(s.strade)
   for (const [id, cod] of Object.entries(oggetto(letto.aspettoStrade)).slice(0, 20000)) if (aspettoDaCodice(cod) && sonoStrade.has(+id)) s.aspettoStrade[id] = cod     // un tipo che non c'è più, o una cella non più strada: torna quella di base
   for (const [id, cod] of Object.entries(oggetto(letto.staccionate)).slice(0, 20000)) if (Number.isInteger(+id) && staccionataDaCodice(cod)) s.staccionate[id] = cod       // un tipo che non c'è più: la cella torna prato
@@ -156,8 +173,10 @@ export function normalizza(letto) {
   if (Array.isArray(letto.cose)) {
     let id = 1
     const edificiVisti = new Set()                 // un edificio è uno per tipo: il secondo si butta
+    const ciotoleViste = new Set()                 // una ciotola per animale: senza padrone, o la seconda, si butta (`Cura.sistema` rifà quella che manca)
     s.cose = letto.cose.filter(c => c && (PEZZI[c.tipo] || EDIFICI[c.tipo]) && Number.isInteger(c.i) && Number.isInteger(c.j)
-      && !(EDIFICI[c.tipo] && (edificiVisti.has(c.tipo) || !edificiVisti.add(c.tipo)))).map(c => {
+      && !(EDIFICI[c.tipo] && (edificiVisti.has(c.tipo) || !edificiVisti.add(c.tipo)))
+      && !(c.tipo === 'ciotola_bestia' && (!s.casa[c.bestia] || ciotoleViste.has(c.bestia) || !ciotoleViste.add(c.bestia)))).map(c => {
       const x = { id: Number.isInteger(c.id) && c.id >= id ? c.id : id, tipo: c.tipo, i: c.i, j: c.j }
       id = x.id + 1
       if (c.tipo === 'campo') {
@@ -169,6 +188,7 @@ export function normalizza(letto) {
         x.cibo = numero(c.cibo)
       }
       if (ANIMALI[c.tipo]) x.bestie = bestieInForma(c.tipo, c.bestie)
+      if (c.tipo === 'ciotola_bestia') x.bestia = c.bestia
       if (ruotabile(c.tipo) && rotLetta(c.rot)) x.rot = rotLetta(c.rot)          // un quarto di giro: assente = 0 (dati/rotazione.js)
       return x
     })
@@ -184,6 +204,12 @@ export function normalizza(letto) {
   }
   // la scala: l'esperienza di uno stato di prima vale sulla scala di prima (22 livelli); la si porta sulla scala della 2D nello stesso punto del percorso
   if (letto.scala !== SCALA_ATTUALE) s.esperienza = esperienzaDaPrima(s.esperienza, livelloMinimoDi(s))
+  // gli animali di una volta: chi aveva un salvataggio di quando i compagni arrivavano da soli col livello li tiene (mai un animale perso); da ora si adottano
+  if (letto.adozioni !== 1 && Number.isInteger(letto.v)) {
+    const ora = Date.now()
+    for (const id of compagniDiUnaVolta(livelloPer(s.esperienza))) if (!s.casa[id]) s.casa[id] = { ...bisogniNuovi(ora), premiato: false }
+  }
+  s.adozioni = 1
   // le macchine: un v1 aveva solo `pasticceria` in radice. Un v6 aveva altre ricette: ogni cosa in forno o pronta diventa il suo cugino di
   // oggi (`nuovoId`); se il cugino sta in un'altra macchina (il pane, che era della pasticceria) arriva subito in dispensa, se no resta
   // dov'era. Niente si perde: ciò che non entra nei tre posti va fra i pronti, e i pronti si ritirano.
@@ -233,5 +259,6 @@ export function normalizza(letto) {
   s.ordini.prossimoId = Math.max(numero(o.prossimoId, 1), 1, ...s.ordini.aperti.map(x => x ? x.id + 1 : 1))
   // le botteghe (assenti prima del giro G7, senza cambiare versione): uno stato di prima non ne ha, e nascono vuote
   s.botteghe = leggiLeBotteghe(letto.botteghe)
+  s.interni = interniInForma(letto.interni)       // dentro la casa (assente prima, senza cambiare versione): nasce con una stanza e l'armadio
   return s
 }

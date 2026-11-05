@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Personalizza: il mock</title>
+<!-- Il mock dell'interfaccia unica per personalizzare (poc/personalizza/README.md). Si scrive QUI; mock.html lo compone
+     `node poc/personalizza/fai.mjs`, mettendo al posto dei due segnaposto i dati (scenari.js) e le foto 3D. -->
+<style>
+/* ══════════ i temi: cambiano solo i valori, mai la struttura ══════════ */
+:root, .tema-fattoria {
+  --pagina: #3b2a1a; --foglio: #f7ecd6; --testa-fondo: linear-gradient(#9a6a3c, #7a4f2a); --testa-testo: #fff6e4;
+  --testo: #3b2614; --tenue: #8a6a4a; --bordo: #d9bf94; --gettone: #fffaf0; --gettone-bordo: #e2cba2;
+  --sel: #d9822b; --sel-fondo: #fde7c4; --prova: #3f8fd0; --tasto: #4f8a3a; --tasto-testo: #fff; --tasto-ombra: #2f5a22;
+  --spento: #c9b89a; --anteprima: radial-gradient(ellipse at 50% 88%, #e9d2a6 0 22%, transparent 23%), linear-gradient(#fbf3e2, #f0dfbd);
+  --scheda: #ead6b0; --scheda-testo: #6a4a2a; --scheda-sel: #fffaf0; --font: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  --raggio: 14px; --cassetto: #f2e2c2;
+}
+.tema-sotterraneo {
+  --pagina: #0c0a10; --foglio: #1b1720; --testa-fondo: linear-gradient(#2a2330, #1f1a25); --testa-testo: #f1dfb0;
+  --testo: #eee3cc; --tenue: #a8987a; --bordo: #4a3e2c; --gettone: #26202c; --gettone-bordo: #4c4030;
+  --sel: #e0b44c; --sel-fondo: #3a2f1c; --prova: #6ab0ff; --tasto: #c8992e; --tasto-testo: #1b1408; --tasto-ombra: #7a5a12;
+  --spento: #4a4250; --anteprima: radial-gradient(ellipse at 50% 88%, rgba(224,180,76,.28) 0 22%, transparent 23%), radial-gradient(circle at 50% 40%, #3a3044, #17131c 70%);
+  --scheda: #2a2330; --scheda-testo: #c9b48a; --scheda-sel: #3a2f1c; --font: Georgia, "Times New Roman", serif;
+  --raggio: 10px; --cassetto: #221c28;
+}
+.tema-animali {
+  --pagina: #2d5a3a; --foglio: #fbfaf3; --testa-fondo: linear-gradient(#7cc28a, #5aa86c); --testa-testo: #ffffff;
+  --testo: #2f3a2f; --tenue: #7a8a78; --bordo: #cfe3c6; --gettone: #ffffff; --gettone-bordo: #d7e8cf;
+  --sel: #f07a5a; --sel-fondo: #ffe6dc; --prova: #3f8fd0; --tasto: #f07a5a; --tasto-testo: #fff; --tasto-ombra: #b84a30;
+  --spento: #cdd6c8; --anteprima: radial-gradient(ellipse at 50% 90%, #a8d88a 0 24%, transparent 25%), linear-gradient(#e8f6ff, #d6f0c8);
+  --scheda: #e6f2df; --scheda-testo: #4a6a4a; --scheda-sel: #ffffff; --font: "Verdana", "Segoe UI", system-ui, sans-serif;
+  --raggio: 18px; --cassetto: #eef6e8;
+}
+
+/* ══════════ la pagina del mock ══════════ */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: #222; }
+body { display: flex; flex-direction: column; font-family: system-ui, sans-serif; user-select: none; -webkit-user-select: none; overscroll-behavior: none; }
+button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; touch-action: manipulation; }
+
+/* la barra del mock (non fa parte dell'interfaccia: serve a passare fra scenari, varianti e temi) */
+.mock { flex: 0 0 auto; background: #111; color: #ddd; font: 12px system-ui, sans-serif; padding: 4px 6px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.mock .gruppo { display: flex; border: 1px solid #444; border-radius: 8px; overflow: hidden; }
+.mock .gruppo button { padding: 0 7px; min-height: 30px; color: #bbb; }
+.mock .gruppo button[aria-pressed="true"] { background: #f0c050; color: #111; font-weight: 700; }
+.mock .conta { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.mock .conta b { color: #f0c050; font-size: 15px; }
+.mock .conta button, .mock .piccolo { border: 1px solid #444; border-radius: 8px; min-height: 30px; padding: 0 8px; color: #bbb; }
+.mock.chiuso { padding: 0; }
+.mock.chiuso > :not(.apri) { display: none; }
+.mock .apri { display: none; }
+.mock.chiuso .apri { display: block; width: 100%; min-height: 18px; font-size: 11px; color: #888; }
+.mock .riga-nota { width: 100%; color: #999; font-size: 12px; line-height: 1.3; }
+
+/* ══════════ il foglio: una colonna, un solo scorrimento ══════════ */
+.telefono { flex: 1 1 auto; min-height: 0; display: flex; justify-content: center; background: var(--pagina); }
+.foglio { position: relative; width: 100%; max-width: 430px; min-height: 0; display: flex; flex-direction: column; background: var(--foglio); color: var(--testo); font-family: var(--font); overflow: hidden; }
+.testa { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; min-height: 52px; padding: 0 4px 0 12px; background: var(--testa-fondo); color: var(--testa-testo); }
+.testa h2 { margin: 0; font-size: 18px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.testa .saldo { font-weight: 700; font-size: 15px; background: rgba(0,0,0,.22); border-radius: 99px; padding: 5px 10px; white-space: nowrap; }
+.testa .x { width: 48px; height: 48px; font-size: 22px; color: var(--testa-testo); border-radius: 12px; flex: 0 0 auto; }
+
+/* l'anteprima: si gira col dito e con le frecce; chi sei e il giro stanno DENTRO, non in righe a sé */
+.anteprima { position: relative; flex: 0 1 30%; min-height: 140px; background: var(--anteprima); touch-action: none; overflow: hidden; cursor: grab; }
+.anteprima img { position: absolute; inset: 0; margin: auto; height: 100%; width: auto; max-width: 100%; object-fit: contain; pointer-events: none; -webkit-user-drag: none; }
+.anteprima .gira { position: absolute; top: 50%; translate: 0 -50%; width: 48px; height: 64px; font-size: 34px; line-height: 1; color: var(--testo); opacity: .65; border-radius: 12px; }
+.anteprima .gira:active { background: rgba(0,0,0,.08); }
+.anteprima .gira.sx { left: 2px; } .anteprima .gira.dx { right: 2px; }
+.anteprima .chi { position: absolute; left: 10px; top: 8px; font-size: 13px; font-weight: 700; padding: 3px 9px; border-radius: 99px; background: var(--gettone); border: 1px solid var(--gettone-bordo); }
+.anteprima .giro { position: absolute; bottom: 7px; left: 50%; translate: -50% 0; display: flex; gap: 5px; }
+.anteprima .giro i { width: 7px; height: 7px; border-radius: 50%; background: var(--tenue); opacity: .35; }
+.anteprima .giro i.si { opacity: 1; background: var(--sel); }
+.anteprima .avviso { position: absolute; left: 50%; top: 40px; translate: -50% 0; background: var(--tasto); color: var(--tasto-testo); padding: 6px 14px; border-radius: 99px; font-weight: 700; font-size: 14px; animation: sparisci 1.8s forwards; pointer-events: none; white-space: nowrap; }
+@keyframes sparisci { 0%, 70% { opacity: 1 } 100% { opacity: 0 } }
+
+/* le schede: vanno a capo, tutte in vista, scritte senza icone */
+.schede { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 8px 0; border-bottom: 2px solid var(--bordo); }
+.schede button { flex: 1 1 auto; min-height: 44px; padding: 0 8px; border-radius: 10px 10px 0 0; background: var(--scheda); color: var(--scheda-testo); font-weight: 700; font-size: 14px; }
+.schede button[aria-pressed="true"] { background: var(--scheda-sel); color: var(--testo); box-shadow: inset 0 3px 0 var(--sel); }
+
+/* la parte che scorre: una sola */
+.corpo { flex: 1 1 0; min-height: 110px; overflow-y: auto; overscroll-behavior: contain; padding: 8px; }
+.griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; padding-top: 4px; }
+
+/* un gettone: la foto 3D, il nome, il prezzo o il livello */
+.gettone { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 4px 5px; min-height: 44px; border-radius: var(--raggio); background: var(--gettone); border: 2px solid var(--gettone-bordo); }
+.gettone .foto { width: 100%; aspect-ratio: 1; border-radius: calc(var(--raggio) - 4px); background-repeat: no-repeat; background-color: var(--anteprima-gettone, transparent); }
+.gettone .foto.vuota { display: grid; place-items: center; background: repeating-linear-gradient(45deg, #ccc 0 6px, #bbb 6px 12px); color: #555; font-size: 11px; }
+.gettone b { font-size: 12px; font-weight: 700; line-height: 1.15; text-align: center; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.gettone .prezzo { position: absolute; top: -6px; right: -6px; background: var(--sel); color: #fff; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 99px; white-space: nowrap; }
+.gettone.addosso { background: var(--sel-fondo); }
+.gettone.aperto { border-color: var(--sel); box-shadow: 0 0 0 2px var(--sel); }
+.gettone.prova, .gettone.aperto.prova { border-color: var(--prova); border-style: solid; box-shadow: 0 0 0 2px var(--prova); }
+.gettone.chiuso { border-style: dashed; }
+.gettone.chiuso .foto { filter: grayscale(.85) brightness(.9); opacity: .6; }
+.gettone.chiuso .prezzo { background: var(--spento); color: var(--testo); }
+
+/* il pannello dell'oggetto: sotto la griglia, sempre lì e sempre alto uguale (due righe fisse: forma e colore) */
+.pannello { flex: 0 0 auto; height: 164px; padding: 2px 8px 4px; border-top: 2px solid var(--bordo); background: var(--sel-fondo); overflow: hidden; }
+.pannello .titolo { height: 26px; display: flex; align-items: center; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.riga { display: flex; align-items: center; gap: 6px; height: 68px; }
+.riga + .riga { height: 64px; }
+.riga > span { flex: 0 0 52px; font-size: 11px; font-weight: 700; color: var(--tenue); text-transform: uppercase; letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; }
+.riga .scelte { flex: 1; min-width: 0; display: flex; flex-wrap: nowrap; gap: 4px; align-items: center; }
+.forma { position: relative; flex: 0 0 auto; width: 48px; height: 48px; padding: 2px; border-radius: 12px; background: var(--gettone); border: 2px solid var(--gettone-bordo); }
+.forma .foto { display: block; width: 100%; height: 100%; border-radius: 8px; background-repeat: no-repeat; }
+.forma .foto.vuota { display: grid; place-items: center; background: repeating-linear-gradient(45deg, #ccc 0 6px, #bbb 6px 12px); color: #555; font-size: 9px; }
+.forma.si { border-color: var(--sel); box-shadow: 0 0 0 2px var(--sel); }
+.forma.prova { border-color: var(--prova); box-shadow: 0 0 0 2px var(--prova); }
+.forma.chiuso { border-style: dashed; } .forma.chiuso .foto { filter: grayscale(.85); opacity: .55; }
+.forma .prezzo, .pastiglia .prezzo { position: absolute; top: -7px; right: -8px; background: var(--sel); color: #fff; font-size: 10px; font-weight: 700; padding: 0 5px; border-radius: 99px; white-space: nowrap; z-index: 1; }
+.forma.chiuso .prezzo, .pastiglia.chiuso .prezzo { background: var(--spento); color: var(--testo); }
+.pastiglia { position: relative; flex: 0 0 auto; width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--gettone); box-shadow: 0 0 0 2px var(--gettone-bordo); background-size: cover; }
+.pastiglia[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--sel); }
+.pastiglia.prova { box-shadow: 0 0 0 3px var(--prova); }
+.pastiglia.chiuso { opacity: .45; box-shadow: 0 0 0 2px var(--spento); border-style: dashed; }
+
+/* il fondo: la sola cosa che costa; si paga solo da qui */
+.fondo { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; height: 68px; overflow: hidden; padding: 8px 10px; border-top: 2px solid var(--bordo); background: var(--foglio); }
+.fondo .cosa { flex: 1; min-width: 0; font-size: 13px; line-height: 1.25; }
+.fondo .cosa b { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fondo .cosa small { color: var(--tenue); }
+.fondo .muto { color: var(--tenue); font-size: 13px; }
+.compra { min-height: 48px; padding: 0 14px; border-radius: 12px; background: var(--tasto); color: var(--tasto-testo); font-weight: 800; font-size: 15px; box-shadow: 0 3px 0 var(--tasto-ombra); white-space: nowrap; }
+.fondo .compra { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; }
+.compra small { font-size: 11px; font-weight: 600; opacity: .85; }
+.compra[disabled] { background: var(--spento); color: var(--testo); box-shadow: none; opacity: .8; }
+.gruppo-titolo { margin: 6px 2px 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--tenue); }
+.gruppo-titolo:first-child { margin-top: 2px; }
+.gettone.vuoto { border-style: dashed; background: transparent; }
+.gettone .foto.posto { display: grid; place-items: center; font-size: 22px; font-weight: 700; color: var(--tenue); opacity: .6; }
+.gettone .prezzo.manca { background: var(--spento); color: var(--testo); }
+.riga.vuota i { flex: 1; color: var(--tenue); font-style: normal; font-size: 13px; text-align: center; }
+.riga.azioni { gap: 8px; } .riga.azioni > button { flex: 1; min-height: 48px; }
+.pannello .nome { flex: 1; height: 48px; font: inherit; font-size: 18px; padding: 0 12px; border-radius: 12px; border: 2px solid var(--bordo); background: var(--gettone); color: var(--testo); user-select: text; -webkit-user-select: text; }
+.secondario.attento { border-color: #c0392b; color: #c0392b; }
+.secondario { min-height: 48px; padding: 0 10px; border-radius: 12px; border: 2px solid var(--bordo); font-weight: 700; font-size: 13px; color: var(--testo); }
+
+/* chiuso col ✕: nel gioco si torna dov'eri */
+.velo-chiuso { position: absolute; inset: 0; background: rgba(0,0,0,.6); display: grid; place-items: center; z-index: 5; }
+.velo-chiuso div { background: var(--foglio); color: var(--testo); border-radius: 16px; padding: 18px; max-width: 300px; text-align: center; font-size: 15px; }
+.velo-chiuso .compra { margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="mock" id="mock"></div>
+<div class="telefono" id="telefono"><div class="foglio" id="foglio"></div></div>
+
+<!--SCENARI-->
+<!--FOTO-->
+<script>
+'use strict'
+const { SCENARI, ANGOLI, FOTO, FOTO_OGGETTI } = window
+const $ = id => document.getElementById(id)
+
+// ══════════ lo stato del mock ══════════
+const mock = { scenario: 'fattoria', tema: null, tocchi: 0, chiusoMock: false }
+const stati = {}
+const P = v => { const [o, f, c] = String(v || '-/-/-').split('/'); return { o, f, c } }
+const S = () => SCENARI[mock.scenario]
+function nuovoStato(s) {
+  const st = { chi: s.chiDiSerie, indossato: {}, prova: {}, provaSet: null, posseduti: new Set(), saldo: s.valuta.saldo, angolo: 0,
+    scheda: s.schede[0].id, aperto: {}, ultimoPosto: null, avviso: '', chiuso: false,
+    mieiSet: (s.mieiSet || []).map((m, i) => ({ posto: i, nome: m.nome, chi: m.chi, pezzi: { ...s.base[m.chi], ...m.diff } })), setAperto: null, nomina: null, toglie: null }
+  for (const chi of s.chi) st.indossato[chi.id] = { ...s.base[chi.id] }
+  for (const [id, o] of Object.entries(s.oggetti)) if (o.posseduto) {
+    st.posseduti.add(id)
+    for (const chi of s.chi) { const fs = formeDi(o, chi.id); if (fs[0]) st.posseduti.add(id + '/' + fs[0].id) }
+  }
+  for (const chi of s.chi) for (const v of Object.values(s.base[chi.id])) segnaPosseduto(st, v, chi.id, s)
+  return st
+}
+const T = () => (stati[mock.scenario] = stati[mock.scenario] || nuovoStato(S()))
+
+// ══════════ il catalogo ══════════
+const nomeDi = (o, chi) => (o && typeof o.nome === 'object' ? o.nome[chi] : o && o.nome) || ''
+const formeDi = (o, chi) => (!o || !o.forme ? [] : Array.isArray(o.forme) ? o.forme : o.forme[chi] || [])
+const formaDi = (o, f, chi) => formeDi(o, chi).find(x => x.id === f) || null
+function coloriDi(o, f, chi) { const fo = formaDi(o, f, chi); return (fo && fo.colori) || o.colori || [] }
+const chiaveColore = (o, f, c, chi) => { const og = S().oggetti[o], fo = formaDi(og, f, chi); return fo && fo.colori ? `${o}/${f}:${c}` : `${o}:${c}` }
+const perChi = (o, chi) => !o.per || o.per.includes(chi)
+const oggettiDelPosto = (posto, chi) => Object.entries(S().oggetti).filter(([, o]) => o.posto === posto && !o.tratto && perChi(o, chi)).map(([id]) => id)
+function segnaPosseduto(st, v, chi, s = S()) {
+  const { o, f, c } = P(v), og = s.oggetti[o]
+  if (!og) return
+  st.posseduti.add(o); if (f !== '-') st.posseduti.add(o + '/' + f)
+  if (c !== '-') { const fo = formeDi(og, chi).find(x => x.id === f); st.posseduti.add(fo && fo.colori ? `${o}/${f}:${c}` : `${o}:${c}`) }
+}
+/** Il primo valore di un oggetto: la forma e il colore di base (o quello che si ha addosso, se è lui). */
+function valoreDi(oid, chi) {
+  const og = S().oggetti[oid], addosso = { ...T().indossato[chi], ...T().prova }[og.posto]
+  if (P(addosso).o === oid) return addosso
+  const f = formeDi(og, chi)[0], cs = coloriDi(og, f && f.id, chi)
+  return `${oid}/${f ? f.id : '-'}/${cs[0] ? cs[0].id : '-'}`
+}
+
+/** Quanto costa mettersi addosso `v`: { righe: [[nome, prezzo]], tot, liv }. Chi compra un oggetto (o una forma) lo prende nel colore che
+    prova; la forma e il colore di base vengono con l'oggetto; un altro colore dopo si paga (`prezzoColore`, o il prezzo del colore). */
+function costo(v, chi = T().chi) {
+  const s = S(), st = T(), { o, f, c } = P(v), og = s.oggetti[o], r = { righe: [], tot: 0, liv: 0 }
+  if (!og) return r
+  const fs = formeDi(og, chi), fo = fs.find(x => x.id === f), cs = coloriDi(og, f, chi), co = cs.find(x => x.id === c)
+  for (const x of [og, fo, co]) if (x && x.liv > s.livello) r.liv = Math.max(r.liv, x.liv)
+  const aggiungi = (nome, p) => { r.righe.push([nome, p]); r.tot += p }
+  let nuovo = false
+  if (!og.tratto) {
+    if (og.prezzo && !st.posseduti.has(o)) { aggiungi(nomeDi(og, chi), og.prezzo); nuovo = true }
+    if (fo && fo.prezzo && !st.posseduti.has(o + '/' + f)) { aggiungi(fs.length > 1 ? fo.nome : nomeDi(og, chi), fo.prezzo); nuovo = true }
+  }
+  if (co && !st.posseduti.has(chiaveColore(o, f, c, chi))) {
+    const base = co === cs[0]
+    const p = co.prezzo || (og.tratto || base || nuovo ? 0 : og.prezzoColore || 0)
+    if (p) aggiungi('colore ' + co.nome.toLowerCase(), p)
+  }
+  return r
+}
+function costoSet(set, chi = T().chi) {
+  let somma = 0, liv = 0
+  for (const v of Object.values(set.pezzi)) { const r = costo(v, chi); somma += r.tot; liv = Math.max(liv, r.liv) }
+  return { tot: Math.min(set.prezzo, somma), somma, liv }
+}
+/** La prova di adesso, tutta: quanto costa, cosa dire, se si può. */
+function contoProva() {
+  const st = T(), s = S(), posti = Object.keys(st.prova)
+  if (!posti.length) return null
+  if (st.provaSet) {
+    const set = s.set.find(x => x.id === st.provaSet), c = costoSet(set)
+    return { nome: set.nome, righe: [[`il set (${Object.keys(set.pezzi).length} pezzi)`, c.tot]], tot: c.tot, liv: c.liv, invece: c.somma > c.tot ? c.somma : 0 }
+  }
+  const out = { righe: [], tot: 0, liv: 0, nomi: [] }
+  for (const p of posti) {
+    const r = costo(st.prova[p]); out.righe.push(...r.righe); out.tot += r.tot; out.liv = Math.max(out.liv, r.liv)
+    out.nomi.push(nomeValore(st.prova[p]))
+  }
+  out.nome = out.nomi.join(' e ')
+  return out
+}
+function nomeValore(v, chi = T().chi) {
+  const { o, f, c } = P(v), og = S().oggetti[o], fo = formaDi(og, f, chi), co = coloriDi(og, f, chi).find(x => x.id === c)
+  const pezzi = [fo && formeDi(og, chi).length > 1 ? fo.nome : nomeDi(og, chi)]
+  if (co && coloriDi(og, f, chi).length > 1) pezzi.push(co.nome.toLowerCase())
+  return pezzi.join(' ')
+}
+
+// ══════════ le azioni ══════════
+function scegli(posto, v) {
+  const st = T(), r = costo(v)
+  st.provaSet = null; st.ultimoPosto = posto
+  if (!r.tot && !r.liv) { st.indossato[st.chi][posto] = v; delete st.prova[posto] }
+  else st.prova[posto] = v
+}
+function provaSet(id) {
+  const st = T(), set = S().set.find(x => x.id === id)
+  st.prova = { ...set.pezzi }; st.provaSet = id; st.ultimoPosto = Object.keys(set.pezzi)[0]
+  if (!costoSet(set).tot) { Object.assign(st.indossato[st.chi], set.pezzi); st.prova = {}; st.provaSet = null }
+}
+function paga() {
+  const st = T(), c = contoProva()
+  if (!c || c.liv || c.tot > st.saldo) return
+  st.saldo -= c.tot
+  for (const [p, v] of Object.entries(st.prova)) { segnaPosseduto(st, v, st.chi); st.indossato[st.chi][p] = v }
+  st.prova = {}; st.provaSet = null
+  st.avviso = c.tot ? `Fatto! −${c.tot} ${S().valuta.simbolo}` : 'Indossato'
+}
+function comEra() { const st = T(); st.prova = {}; st.provaSet = null }
+function cambiaChi(id) { const st = T(); st.chi = id; st.prova = {}; st.provaSet = null; st.ultimoPosto = null; st.aperto = {}; st.setAperto = null; st.nomina = null; st.toglie = null }
+
+// ══════════ le foto ══════════
+const blob = new Map()
+function url(dato) {
+  if (!blob.has(dato)) {
+    const [testa, b64] = dato.split(','), bin = atob(b64), a = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i)
+    blob.set(dato, URL.createObjectURL(new Blob([a], { type: testa.slice(5, testa.indexOf(';')) })))
+  }
+  return blob.get(dato)
+}
+const posaStato = (s, p) => ({ ...s.base[p.chi], ...p.diff })
+/** La posa fotografata più vicina allo stato: { posa, esatta }. A pari merito vince quella che mostra l'ultimo pezzo toccato. */
+function posaPer(stato, chi, ultimo) {
+  const s = S(); let meglio = null, punti = -1
+  for (const p of s.pose) {
+    if (p.chi !== chi || !FOTO[p.id]) continue
+    // lo stesso pezzo vale 10, la stessa forma in un altro colore 6, lo stesso oggetto 3
+    const ps = posaStato(s, p), simile = k => { const a = P(ps[k]), b = P(stato[k]); return ps[k] === stato[k] ? 10 : a.o === b.o && a.f === b.f ? 6 : a.o === b.o ? 3 : 0 }
+    let n = 0, uguali = 0
+    for (const k of s.posti) { const x = simile(k); n += x; if (x === 10) uguali++ }
+    if (ultimo) n += simile(ultimo) / 2
+    if (n > punti) { punti = n; meglio = p; meglio.uguali = uguali }
+  }
+  return { posa: meglio, esatta: !!meglio && meglio.uguali === s.posti.length }
+}
+/** La foto di un gettone: lo stato di adesso con quel pezzo cambiato, ritagliato sulla zona. */
+function fotoGettone(posto, v, zona) {
+  const s = S(), st = T(), og = s.oggetti[P(v).o]
+  if (og && og.foto === 'addobbo') { const k = `addobbo:${P(v).f}:${P(v).c}`; if (FOTO_OGGETTI[k]) return { src: url(FOTO_OGGETTI[k]), taglio: [1.05, 0.5, 0.5] } }
+  const base = { ...s.base[st.chi], [posto]: v }
+  const { posa, esatta } = posaPer(base, st.chi, posto)
+  let scelta = posa && (esatta || posaStato(s, posa)[posto] === v) ? posa : null
+  // senza la foto di quel colore: la stessa forma in un altro colore, poi lo stesso oggetto; e se chi si è non l'ha mai indossato, addosso a un altro
+  const forma = (a, b) => a.o === b.o && a.f === b.f, oggetto = (a, b) => a.o === b.o
+  if (!scelta) for (const [uguale, suo] of [[forma, true], [oggetto, true], [forma, false], [oggetto, false]]) {
+    scelta = s.pose.find(p => (!suo || p.chi === st.chi) && FOTO[p.id] && uguale(P(posaStato(s, p)[posto]), P(v)))
+    if (scelta) break
+  }
+  if (!scelta) return null
+  const t = s.tagli[zona] || s.tagli.tutto          // il quarto numero del taglio: da che lato (i capelli della maga si vedono di dietro)
+  return { src: url(FOTO[scelta.id][t[3] || 0]), taglio: t }
+}
+function stileFoto(f) {
+  if (!f) return null
+  const [z, cx, cy] = f.taglio, pos = c => (z <= 1 ? 50 : Math.max(0, Math.min(100, (c - 1 / (2 * z)) / (1 - 1 / z) * 100)))
+  return `background-image:url(${f.src});background-size:${z * 100}%;background-position:${pos(cx)}% ${pos(cy)}%`
+}
+const fotoHtml = f => (f ? `<span class="foto" style="${stileFoto(f)}"></span>` : '<span class="foto vuota">foto 3D</span>')
+
+// ══════════ i pezzi dell'interfaccia ══════════
+const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+const prezzoHtml = (tot, liv) => (liv ? `<span class="prezzo">liv. ${liv}</span>` : tot ? `<span class="prezzo">${tot} ${S().valuta.simbolo}</span>` : '')
+
+function testa() {
+  const s = S(), st = T()
+  return `<header class="testa">
+    <h2>${esc(s.titolo)}</h2>
+    <span class="saldo">${st.saldo} ${s.valuta.simbolo}</span>
+    <button class="x" data-azione="chiudi" data-chiudi aria-label="chiudi">✕</button>
+  </header>`
+}
+
+function anteprima() {
+  const s = S(), st = T(), stato = { ...st.indossato[st.chi], ...st.prova }
+  const { posa } = posaPer(stato, st.chi, st.ultimoPosto)
+  const chi = s.nomeChi || s.chi.find(c => c.id === st.chi).nome
+  const img = posa ? `<img id="figura" src="${url(FOTO[posa.id][st.angolo])}" alt="">` : ''
+  const avviso = st.avviso ? `<span class="avviso">${esc(st.avviso)}</span>` : ''
+  st.avviso = ''
+  return `<div class="anteprima" data-ruota>
+    ${img}
+    <span class="chi">${esc(chi)}</span>
+    <button class="gira sx" data-azione="gira" data-verso="1" aria-label="gira a sinistra">‹</button>
+    <button class="gira dx" data-azione="gira" data-verso="-1" aria-label="gira a destra">›</button>
+    <span class="giro" id="giro">${ANGOLI.map((_, i) => `<i class="${i === st.angolo ? 'si' : ''}"></i>`).join('')}</span>
+    ${avviso}
+  </div>`
+}
+
+function schede() {
+  const st = T(), visibili = S().schede.filter(sc => sc.tipo !== 'chi' || S().chi.length > 1)
+  return `<nav class="schede">${visibili.map(sc => `<button data-azione="scheda" data-id="${sc.id}" aria-pressed="${st.scheda === sc.id}">${esc(sc.nome)}</button>`).join('')}</nav>`
+}
+const schedaDi = id => S().schede.find(x => x.id === id)
+/** Gli oggetti di una scheda: quelli dei suoi posti, o i tratti (pelle, capelli, barba) per la scheda Aspetto. */
+function oggettiDi(sc) {
+  const chi = T().chi, s = S()
+  if (sc.tipo === 'tratti') return sc.tratti.filter(t => perChi(s.oggetti[t], chi))
+  return (sc.posti || [sc.posto]).flatMap(p => oggettiDelPosto(p, chi))
+}
+const addossoOra = () => { const st = T(); return { ...st.indossato[st.chi], ...st.prova } }
+/** L'oggetto aperto nel pannello: quello toccato per ultimo in questa scheda, se no quello che si ha addosso nel primo posto. */
+function apertoDi(sc) {
+  const st = T(), ids = oggettiDi(sc)
+  if (ids.includes(st.aperto[sc.id])) return st.aperto[sc.id]
+  if (sc.tipo === 'tratti') return ids[0]
+  const ora = addossoOra()
+  return ids.find(id => P(ora[S().oggetti[id].posto]).o === id) || null
+}
+
+/** Un gettone della griglia (la foto è l'oggetto nella forma e nel colore che si ha, o di base). */
+function gettoneOggetto(oid, aperto) {
+  const s = S(), st = T(), og = s.oggetti[oid], v = valoreDi(oid, st.chi)
+  const addosso = !og.tratto && P(st.indossato[st.chi][og.posto]).o === oid, inProva = !og.tratto && P(st.prova[og.posto]).o === oid
+  const liv = !st.posseduti.has(oid) && og.liv > s.livello ? og.liv : 0
+  const prezzo = og.tratto || st.posseduti.has(oid) ? 0 : (og.prezzo || (formeDi(og, st.chi)[0] || {}).prezzo || 0)
+  return `<button class="gettone ${addosso ? 'addosso' : ''} ${inProva ? 'prova' : ''} ${oid === aperto ? 'aperto' : ''} ${liv ? 'chiuso' : ''}" data-azione="oggetto" data-id="${oid}" aria-pressed="${oid === aperto}">
+    ${fotoHtml(fotoGettone(og.posto, v, og.taglio || og.posto))}<b>${esc(nomeDi(og, st.chi))}</b>${prezzoHtml(prezzo, liv)}</button>`
+}
+function gettoneChi(c) {
+  const s = S(), st = T(), { posa } = posaPer(st.indossato[c.id], c.id, null)
+  const f = posa ? { src: url(FOTO[posa.id][0]), taglio: s.tagli.tutto } : null
+  return `<button class="gettone ${st.chi === c.id ? 'addosso aperto' : ''}" data-azione="chi" data-id="${c.id}" aria-pressed="${st.chi === c.id}">${fotoHtml(f)}<b>${esc(c.nome)}</b></button>`
+}
+function gettoneSet(set) {
+  const s = S(), st = T(), c = costoSet(set), p = s.pose.find(x => x.chi === st.chi && JSON.stringify(x.diff) === JSON.stringify(set.pezzi))
+  const f = p && FOTO[p.id] ? { src: url(FOTO[p.id][0]), taglio: s.tagli.tutto } : null
+  return `<button class="gettone ${st.provaSet === set.id ? 'prova aperto' : ''} ${c.liv ? 'chiuso' : ''}" data-azione="set" data-id="${set.id}">${fotoHtml(f)}<b>${esc(set.nome)}</b>${prezzoHtml(c.tot, c.liv)}</button>`
+}
+const setsDi = () => S().set.filter(x => !x.per || x.per.includes(T().chi))
+
+/** Il pannello dell'oggetto aperto, SOTTO la griglia: sempre lì e sempre alto uguale. In ordine di dipendenza: l'oggetto (il titolo),
+    la sua forma (foto), il colore di quella forma (pastiglie). Una riga che l'oggetto non ha resta vuota, della stessa altezza. */
+const vuota = (testo = '') => `<div class="riga vuota">${testo ? `<i>${esc(testo)}</i>` : ''}</div>`
+function pannello() {
+  const s = S(), st = T(), chi = st.chi, sc = schedaDi(st.scheda)
+  if (sc.tipo === 'set') return pannelloSet()
+  const oid = sc.tipo === 'oggetti' || sc.tipo === 'tratti' ? apertoDi(sc) : null, og = oid && s.oggetti[oid]
+  if (!og || og.niente) {
+    const testo = og ? nomeDi(og, chi) : sc.tipo === 'chi' ? 'Tocca chi vuoi essere.' : 'Tocca un oggetto qui sopra.'
+    return `<section class="pannello spento" data-pannello><div class="titolo"><b>${esc(testo)}</b></div>${vuota(og ? 'Niente da scegliere: né forma né colore.' : '')}${vuota()}</section>`
+  }
+  const ora = addossoOra()[og.posto], suo = P(ora).o === oid, cur = suo ? P(ora) : P(valoreDi(oid, chi))
+  const fs = formeDi(og, chi), cs = coloriDi(og, cur.f, chi), inProva = !og.tratto && P(st.prova[og.posto]).o === oid
+  const fo = fs.find(x => x.id === cur.f), co = cs.find(x => x.id === cur.c)
+  const titolo = [nomeDi(og, chi), fs.length > 1 && fo ? fo.nome : '', cs.length > 1 && co ? co.nome.toLowerCase() : ''].filter(Boolean).join(' · ')
+  const riga1 = fs.length > 1 ? `<div class="riga"><span>${esc(og.nomeForme || 'Forma')}</span><div class="scelte">${fs.map(f => {
+    const cc = coloriDi(og, f.id, chi), col = cc.find(x => x.id === cur.c) || cc[0], v = `${oid}/${f.id}/${col ? col.id : '-'}`
+    const r = costo(v), sel = suo && cur.f === f.id
+    const prezzo = r.righe.filter(x => !x[0].startsWith('colore')).reduce((t, x) => t + x[1], 0)
+    return `<button class="forma ${sel ? (inProva ? 'prova' : 'si') : ''} ${r.liv ? 'chiuso' : ''}" data-azione="valore" data-posto="${og.posto}" data-v="${v}" aria-pressed="${sel}" aria-label="${esc(f.nome)}">${fotoHtml(fotoGettone(og.posto, v, og.taglio || og.posto))}${prezzoHtml(prezzo, r.liv)}</button>`
+  }).join('')}</div></div>` : vuota()
+  const riga2 = cs.length > 1 ? `<div class="riga"><span>${esc(og.tratto && !fs.length ? og.nome : og.nomeColori || 'Colore')}</span><div class="scelte">${cs.map(c => {
+    const v = `${oid}/${cur.f}/${c.id}`, r = costo(v), sel = suo && cur.c === c.id
+    const fondo = c.css ? `background:${c.css}` : stileFoto(fotoGettone(og.posto, v, og.taglio || og.posto)) || 'background:#999'
+    const prezzo = r.righe.filter(x => x[0].startsWith('colore')).reduce((t, x) => t + x[1], 0)
+    return `<button class="pastiglia ${sel && inProva ? 'prova' : ''} ${r.liv ? 'chiuso' : ''}" style="${fondo}" data-azione="valore" data-posto="${og.posto}" data-v="${v}" aria-pressed="${sel}" aria-label="${esc(c.nome)}">${prezzoHtml(prezzo, r.liv)}</button>`
+  }).join('')}</div></div>` : vuota()
+  return `<section class="pannello" data-pannello><div class="titolo"><b>${esc(titolo)}</b></div>${riga1}${riga2}</section>`
+}
+
+// ══════════ i set: quelli salvati (miei, per personaggio) e quelli del gioco ══════════
+// I miei set hanno sei POSTI fissi: salvare riempie un posto e togliere lo svuota, così la griglia sopra non cambia mai numero né ordine.
+const MAX_SET = 6
+const mioIn = i => T().mieiSet.find(m => m.chi === T().chi && m.posto === i) || null
+const quantiMiei = () => T().mieiSet.filter(m => m.chi === T().chi).length
+/** I pezzi di un set salvato che oggi non si possono mettere (non più tuoi, o di un livello che non hai). */
+const mancantiDi = m => Object.values(m.pezzi).filter(v => { const r = costo(v, m.chi); return r.tot || r.liv }).length
+function gettoneMio(i) {
+  const s = S(), st = T(), m = mioIn(i), aperto = st.setAperto === i ? 'aperto' : ''
+  if (!m) return `<button class="gettone vuoto ${aperto}" data-azione="set-mio" data-id="${i}"><span class="foto posto">${i + 1}</span><b>Libero</b></button>`
+  const { posa } = posaPer(m.pezzi, m.chi, null), n = mancantiDi(m)
+  const f = posa ? { src: url(FOTO[posa.id][0]), taglio: s.tagli.tutto } : null
+  const addosso = s.posti.every(p => st.indossato[st.chi][p] === m.pezzi[p])
+  return `<button class="gettone ${addosso ? 'addosso' : ''} ${aperto}" data-azione="set-mio" data-id="${i}">${fotoHtml(f)}<b>${esc(m.nome)}</b>${n ? `<span class="prezzo manca">${n} ${n > 1 ? 'mancano' : 'manca'}</span>` : ''}</button>`
+}
+/** Indossa un set salvato: quello che è tuo e del tuo livello subito e gratis; il resto si salta, e lo si dice. */
+function indossaMio(m) {
+  const st = T(), saltati = []
+  st.prova = {}; st.provaSet = null
+  for (const [p, v] of Object.entries(m.pezzi)) { const r = costo(v); if (r.tot || r.liv) saltati.push(p); else st.indossato[st.chi][p] = v }
+  st.ultimoPosto = null
+  st.avviso = saltati.length ? `Indossato, tranne ${saltati.length} ${saltati.length > 1 ? 'pezzi' : 'pezzo'}` : 'Indossato'
+}
+/** Dove va il set salvato: il posto toccato, o il primo libero. Null se sono tutti pieni e non se n'è toccato nessuno. */
+function postoPerSalvare() {
+  const st = T()
+  if (st.setAperto != null) return st.setAperto
+  for (let i = 0; i < MAX_SET; i++) if (!mioIn(i)) return i
+  return null
+}
+/** Il pannello della scheda Set: il tasto «Salva questo set» sempre al suo posto; il nome si scrive dentro il pannello. */
+function pannelloSet() {
+  const st = T(), n = st.nomina, i = st.setAperto, mio = i != null ? mioIn(i) : null
+  if (n) {
+    const titolo = n.modo === 'rinomina' ? 'Nuovo nome' : n.vecchio ? `Al posto di «${n.vecchio}»: come si chiama?` : 'Come si chiama questo set?'
+    return `<section class="pannello" data-pannello><div class="titolo"><b>${esc(titolo)}</b></div>
+      <div class="riga"><input id="nome-set" class="nome" maxlength="16" value="${esc(n.nome)}" aria-label="nome del set" autocomplete="off"></div>
+      <div class="riga azioni"><button class="secondario" data-azione="nome-no">Lascia stare</button><button class="compra" data-azione="nome-ok">Salva</button></div></section>`
+  }
+  const dove = postoPerSalvare(), occupato = dove != null && mioIn(dove)
+  const salva = dove == null ? `<button class="compra" disabled>I ${MAX_SET} posti sono pieni: toccane uno</button>`
+    : `<button class="compra" data-azione="salva-set">${occupato ? `Salva al posto di «${esc(occupato.nome)}»` : 'Salva questo set'}</button>`
+  const sotto = mio ? `<div class="riga azioni"><button class="secondario" data-azione="rinomina">Cambia nome</button>
+      <button class="secondario ${st.toglie === i ? 'attento' : ''}" data-azione="togli-set">${st.toglie === i ? 'Tocca ancora: via' : 'Togli'}</button></div>` : vuota()
+  return `<section class="pannello" data-pannello><div class="titolo"><b>I miei set · ${quantiMiei()} su ${MAX_SET}</b></div><div class="riga azioni">${salva}</div>${sotto}</section>`
+}
+function grigliaSet() {
+  return `<h3 class="gruppo-titolo">I miei set</h3><div class="griglia">${Array.from({ length: MAX_SET }, (_, i) => gettoneMio(i)).join('')}</div>
+    <h3 class="gruppo-titolo">Set del gioco</h3><div class="griglia">${setsDi().map(gettoneSet).join('')}</div>`
+}
+
+function fondo() {
+  const s = S(), st = T(), c = contoProva()
+  if (!c) return `<div class="fondo"><span class="muto">Tocca per provare. Quello che è tuo si mette subito; il resto si paga qui.</span></div>`
+  const dettaglio = c.righe.filter(r => r[1]).map(r => `${r[0]} ${r[1]}`).join(' + ') + (c.invece ? ` (invece di ${c.invece})` : '')
+  let tasto
+  if (c.liv) tasto = `<button class="compra" disabled>Dal livello ${c.liv}</button>`
+  else if (c.tot > st.saldo) tasto = `<button class="compra" disabled>Ti mancano ${c.tot - st.saldo} ${s.valuta.simbolo}</button>`
+  else tasto = `<button class="compra" data-azione="paga"><span>Acquista e indossa · ${c.tot} ${s.valuta.simbolo}</span><small>${esc(dettaglio)}</small></button>`
+  return `<div class="fondo">${tasto}</div>`
+}
+
+// ══════════ il foglio: le zone non si muovono mai ══════════
+// testa · anteprima · schede · griglia (scorre dentro la sua zona) · pannello dell'oggetto (forma e colore) · fondo che paga
+function foglio() {
+  const st = T(), sc = schedaDi(st.scheda)
+  let griglia
+  if (sc.tipo === 'chi') griglia = S().chi.map(gettoneChi).join('')
+  else if (sc.tipo !== 'set') { const aperto = apertoDi(sc); griglia = oggettiDi(sc).map(id => gettoneOggetto(id, aperto)).join('') }
+  const corpo = sc.tipo === 'set' ? grigliaSet() : `<div class="griglia">${griglia}</div>`
+  return `${testa()}${anteprima()}${schede()}<div class="corpo" id="corpo">${corpo}</div>${pannello()}${fondo()}`
+}
+
+// ══════════ disegnare ══════════
+function disegna() {
+  const s = S(), st = T(), tema = mock.tema || s.tema
+  const f = $('foglio'), corpo = $('corpo'), giu = corpo && corpo.dataset.dove === mock.scenario + st.scheda ? corpo.scrollTop : 0
+  f.className = 'foglio tema-' + tema
+  $('telefono').className = 'telefono tema-' + tema
+  f.innerHTML = foglio() +
+    (st.chiuso ? `<div class="velo-chiuso"><div>Chiuso con la ✕: nel gioco si torna dov'eri.${st.chiusoProva ? '<br><br>La prova non pagata è stata tolta: resta addosso quello che è tuo.' : ''}<br><button class="compra" data-azione="riapri">Riapri</button></div></div>` : '')
+  // la griglia resta dov'era quando si sceglie: torna in cima solo cambiando scheda
+  const nuovo = $('corpo'); nuovo.dataset.dove = mock.scenario + st.scheda; nuovo.scrollTop = giu
+  disegnaMock()
+}
+function disegnaMock() {
+  const gruppo = (nome, voci, val) => `<div class="gruppo">${voci.map(([id, t]) => `<button data-mock="${nome}" data-id="${id}" aria-pressed="${val === id}">${t}</button>`).join('')}</div>`
+  const m = $('mock')
+  m.className = 'mock' + (mock.chiusoMock ? ' chiuso' : '')
+  m.innerHTML = `<button class="apri" data-mock="apri">mock: tocca per aprire la barra</button>
+    ${gruppo('scenario', [['fattoria', 'Contadina'], ['sotterraneo', 'Eroe'], ['animali', 'Cane']], mock.scenario)}
+    ${gruppo('tema', [['', 'suo'], ['fattoria', 'legno'], ['sotterraneo', 'scuro'], ['animali', 'prato']], mock.tema || '')}
+    <span class="conta">tocchi <b>${mock.tocchi}</b><button data-mock="azzera">0</button><button data-mock="ricomincia">da capo</button><button data-mock="chiudi" aria-label="nascondi la barra del mock">▴</button></span>`
+}
+
+// ══════════ il dito ══════════
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-mock]')
+  if (b) {
+    const k = b.dataset.mock, id = b.dataset.id
+    if (k === 'scenario') mock.scenario = id
+    else if (k === 'tema') mock.tema = id || null
+    else if (k === 'azzera') mock.tocchi = 0
+    else if (k === 'ricomincia') { delete stati[mock.scenario]; mock.tocchi = 0 }
+    else if (k === 'chiudi') mock.chiusoMock = true
+    else if (k === 'apri') mock.chiusoMock = false
+    disegna(); return
+  }
+  if (trascinato) { trascinato = false; return }
+  const a = e.target.closest('[data-azione]')
+  if (!a || !$('foglio').contains(a) || a.disabled) return
+  const st = T(), s = S(), id = a.dataset.id
+  if (st.chiuso && a.dataset.azione !== 'riapri') return
+  mock.tocchi++
+  switch (a.dataset.azione) {
+    case 'gira': giraDi(Number(a.dataset.verso)); disegnaMock(); return
+    case 'chiudi': st.chiusoProva = Object.keys(st.prova).length > 0; comEra(); st.chiuso = true; break
+    case 'riapri': st.chiuso = false; mock.tocchi--; break
+    case 'scheda': st.scheda = id; st.nomina = null; st.toglie = null; break
+    case 'chi': cambiaChi(id); break
+    case 'set': provaSet(id); st.setAperto = null; st.toglie = null; break
+    case 'set-mio': { const i = Number(id), m = mioIn(i); if (m) indossaMio(m); st.setAperto = i; st.toglie = null; st.nomina = null; break }
+    case 'salva-set': {
+      const i = postoPerSalvare(), m = mioIn(i)
+      st.nomina = { modo: 'salva', posto: i, vecchio: m ? m.nome : '', nome: m ? m.nome : `Il mio set ${i + 1}` }
+      st.toglie = null; break
+    }
+    case 'nome-ok': {
+      // si salva quello che si ha addosso ed è tuo (una prova non pagata non entra in un set)
+      const n = st.nomina, nome = (($('nome-set') || {}).value || '').trim().slice(0, 16) || n.nome
+      if (n.modo === 'rinomina') mioIn(n.posto).nome = nome
+      else {
+        st.mieiSet = st.mieiSet.filter(m => !(m.chi === st.chi && m.posto === n.posto))
+        st.mieiSet.push({ chi: st.chi, posto: n.posto, nome, pezzi: { ...st.indossato[st.chi] } })
+        st.setAperto = n.posto
+      }
+      st.nomina = null; st.avviso = n.modo === 'rinomina' ? 'Fatto' : 'Salvato'; break
+    }
+    case 'nome-no': st.nomina = null; break
+    case 'rinomina': st.nomina = { modo: 'rinomina', posto: st.setAperto, nome: mioIn(st.setAperto).nome }; break
+    case 'togli-set':
+      if (st.toglie === st.setAperto) { st.mieiSet = st.mieiSet.filter(m => !(m.chi === st.chi && m.posto === st.setAperto)); st.toglie = null }
+      else st.toglie = st.setAperto
+      break
+    case 'oggetto': {
+      // toccare un oggetto lo apre nel pannello e lo prova addosso; un tratto (pelle, capelli) si apre e basta: si cambia nel pannello
+      const og = s.oggetti[id]
+      st.aperto[st.scheda] = id
+      if (!og.tratto) scegli(og.posto, valoreDi(id, st.chi))
+      break
+    }
+    case 'valore': scegli(a.dataset.posto, a.dataset.v); break
+    case 'paga': paga(); break
+    case 'comera': comEra(); break
+  }
+  disegna()
+})
+// girare: trascinando sull'anteprima (uno scatto ogni 28 px, la pagina non scorre) o con le frecce
+let trascina = null, trascinato = false
+const PASSO = 28
+function giraDi(d) {
+  const st = T(); st.angolo = (st.angolo + d + ANGOLI.length) % ANGOLI.length
+  const s = S(), stato = { ...st.indossato[st.chi], ...st.prova }, { posa } = posaPer(stato, st.chi, st.ultimoPosto)
+  const img = $('figura'); if (img && posa) img.src = url(FOTO[posa.id][st.angolo])
+  const giro = $('giro'); if (giro) [...giro.children].forEach((i, k) => i.classList.toggle('si', k === st.angolo))
+}
+document.addEventListener('pointerdown', e => {
+  const zona = e.target.closest('[data-ruota]')
+  if (!zona || e.target.closest('button')) return
+  trascina = { x: e.clientX, fatti: 0, mosso: false }
+  zona.setPointerCapture(e.pointerId)
+})
+document.addEventListener('pointermove', e => {
+  if (!trascina) return
+  const n = Math.trunc((e.clientX - trascina.x) / PASSO)
+  if (Math.abs(e.clientX - trascina.x) > 12) trascina.mosso = true
+  while (n !== trascina.fatti) { const d = n > trascina.fatti ? -1 : 1; giraDi(d); trascina.fatti -= d }
+})
+const lascia = () => { if (trascina && trascina.mosso) { mock.tocchi++; trascinato = true; setTimeout(() => (trascinato = false), 50); disegnaMock() } trascina = null }
+document.addEventListener('pointerup', lascia)
+document.addEventListener('pointercancel', lascia)
+document.addEventListener('contextmenu', e => e.preventDefault())
+
+disegna()
+</script>
+</body>
+</html>

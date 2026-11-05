@@ -13,9 +13,10 @@ export const MONDI = Object.keys(DATI)
 
 /* Dove sta sul fondale ogni isola delle strade (la chiave di motore/strade.js):
    quella del coniglio ha la chiave dell'isola dipinta, quella del cane sta nel
-   `cane` dell'isola dipinta che la porta. Per mondo: isola delle strade → isola dipinta */
+   `cane` dell'isola dipinta che la porta, e così quella del guerriero. Per mondo: isola delle strade → isola dipinta */
+const ALTRI = ['cane', 'guerriero']
 const DOVE = Object.fromEntries(MONDI.map(m => [m, new Map(Object.entries(DATI[m].ISOLE).flatMap(([k, d]) =>
-  [...(d.caselle ? [[k, k]] : []), ...(d.cane ? [[d.cane.isola, k]] : [])]))]))
+  [...(d.caselle ? [[k, k]] : []), ...ALTRI.filter(a => d[a]).map(a => [d[a].isola, k])]))]))
 // in che mondo sta un'isola delle strade: 'valle', 'zaino' o null
 export const mondoDellIsola = chiave => MONDI.find(m => DOVE[m].has(chiave)) ?? null
 export const nellaValle = chiave => mondoDellIsola(chiave) === 'valle'
@@ -44,11 +45,14 @@ export function quadroValle(S, { mondo = 'valle', dati = DATI[mondo], protagonis
   const strada = new Map()
   for (const [k, d] of Object.entries(dati.ISOLE)) {
     if (d.caselle && sue.has(k)) strada.set(k, k)
-    else if (d.cane && sue.has(d.cane.isola)) strada.set(k, d.cane.isola)
+    else for (const a of ALTRI) if (d[a] && sue.has(d[a].isola)) strada.set(k, d[a].isola)
   }
   const altroMondo = MONDI.find(m => m !== mondo)
   const diLa = [...sue.keys()].some(k => DOVE[altroMondo] && DOVE[altroMondo].has(k))
-  const via = new Set(dati.NODI.filter(n => n.tipo === 'passaggio' && !diLa).map(n => n.id))
+  // un'isola `solo` è di chi ci ha le caselle: per gli altri resta decoro, con la tana che ci porta
+  const fuori = n => dati.ISOLE[n.isola]?.solo && !strada.has(n.isola)
+  const chiuse = dati.NODI.filter(n => n.tipo === 'tana' && fuori(n)).map(n => n.id.replace(/:a$/, ':da'))
+  const via = new Set(dati.NODI.filter(n => (n.tipo === 'passaggio' && !diLa) || fuori(n) || chiuse.includes(n.id)).map(n => n.id))
   let archi = dati.ARCHI.filter(e => !via.has(e.a) && !via.has(e.b))
   const nuovo = new Map()
   const nodi = dati.NODI.filter(n => !via.has(n.id)).map(n => {
@@ -76,7 +80,7 @@ export function quadroValle(S, { mondo = 'valle', dati = DATI[mondo], protagonis
   archi = archi.map(e => ({ ...e, a: nuovo.get(e.a), b: nuovo.get(e.b), lungo: lunghezza(e.punti) }))
   // i cartelli: uno per isola dipinta dove chi gioca ha caselle, col nome della sua isola delle strade
   const isole = Object.fromEntries([...strada].map(([k, chiave]) => {
-    const d = dati.ISOLE[k], suo = protagonista === 'cane' ? d.cane || {} : d
+    const d = dati.ISOLE[k], suo = ALTRI.includes(protagonista) ? d[protagonista] || {} : d
     return [chiave, { cartello: suo.cartello || d.cartello, stemma: !!suo.stemma, isola: k }]
   }))
   const libere = [...(dati.LIBERE || []), ...Object.keys(dati.ISOLE).filter(k => !strada.has(k))]
@@ -271,7 +275,7 @@ export function viaggio(q, da, a, bloccati = new Set()) {
   })
   // un viaggio lungo non dura di più: i salti si fanno più svelti
   const tempo = passi.reduce((s, p) => s + (p.che === 'salto' ? p.dur : 0), 0)
-  if (tempo > TEMPO_MAX) for (const p of passi) if (p.che === 'salto') p.dur = Math.max(0.12, p.dur * TEMPO_MAX / tempo)
+  if (tempo > TEMPO_MAX) for (const p of passi) if (p.che === 'salto') p.dur = Math.max(0.1, p.dur * TEMPO_MAX / tempo)
   return passi
 }
 

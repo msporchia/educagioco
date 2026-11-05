@@ -32,6 +32,7 @@ comandi, pubblicazione, grafica, e le regole comuni a tutti i giochi.
 - [convenzione-giochi.md](convenzione-giochi.md) — come è fatto un gioco nuovo in `src/giochi/`
 - [home.md](home.md) — la home: il profilo, «riprendi da qui», il carosello delle copertine, l'indice, come la aprono i test
 - [interfaccia.md](interfaccia.md) — barra, fogli con la ✕, pausa, schermate verticali, `v-if`, orologi
+- [personalizza.md](personalizza.md) — l'interfaccia unica per vestire personaggi, animali e oggetti: zone, contratto «solo le zone sotto», dati, eventi, set
 - [pelle.md](pelle.md) — una pelle sola per home, profilo, impostazioni, guide e benvenuto: i valori in `style.css` e `.pulito`
 - [il-dito.md](il-dito.md) — tocco, click fantasma, scorrimento, selezione
 - [primati.md](primati.md) — i giochi senza fine e i record

@@ -29,6 +29,7 @@ export const OSTACOLI = {
   sasso:       { alto: true },
   tronco:      { alto: false },
   staccionata: { alto: false },
+  muro:        { alto: true },
 }
 
 /* le lastre: il colore, la forma che lo dice a chi i colori non li
@@ -63,6 +64,18 @@ export const LEGENDA = {
   'g': { terreno: 'prato', lastra: 'giallo' },
   'p': { terreno: 'prato', pecora: true },
   '#': { terreno: 'recinto' },
+  /* il guerriero: i pulsanti e le loro grate (del colore delle lastre), i
+     nemici, la spada, e la principessa al posto della tana */
+  '4': { terreno: 'prato', pulsante: 'rosso' },
+  '5': { terreno: 'prato', pulsante: 'blu' },
+  '6': { terreno: 'prato', pulsante: 'giallo' },
+  'R': { terreno: 'prato', grata: 'rosso' },
+  'U': { terreno: 'prato', grata: 'blu' },
+  'G': { terreno: 'prato', grata: 'giallo' },
+  'n': { terreno: 'prato', nemico: true },
+  's': { terreno: 'prato', spada: true },
+  'Q': { terreno: 'tana', principessa: true },
+  'W': { terreno: 'prato', ostacolo: 'muro' },
 }
 
 /* «la coppia 2 è viola» è un fatto del mondo, non solo del disegno:
@@ -87,11 +100,14 @@ export const MOSSE = Object.fromEntries([
   ...CHIAVI_VERSI.map(v => [v, { verso: v, salto: false, ...VERSI[v] }]),
   ...CHIAVI_VERSI.map(v => ['salto-' + v, { verso: v, salto: true, ...VERSI[v] }]),
 ])
+/* la mossa del guerriero: non è una freccia e sta fuori da MOSSE, che le frecce le contano tutti */
+export const ATTACCA = 'attacca'
 export const PASSI = CHIAVI_VERSI.slice()
 export const SALTI = CHIAVI_VERSI.map(v => 'salto-' + v)
 
 /* come si dice una mossa a chi non vede lo schermo (e ai test) */
 export const nomeDellaMossa = m => {
+  if (m === ATTACCA) return 'attacca'
   const d = MOSSE[m]
   if (!d) return ''
   return (d.salto ? 'salto ' : 'passo ') + d.nome
@@ -128,6 +144,13 @@ export function guastiDellaMappa(mappa, dove = 'mappa') {
     if (quante(d => d.terreno === 'recinto')) guasti.push(`${dove}: un recinto senza pecore`)
   }
   if (quante(d => d.carota) !== 1) guasti.push(`${dove}: la carota deve esserci una volta sola`)
+  /* le cose del guerriero stanno solo dove c'è la principessa */
+  const delGuerriero = d => d.pulsante || d.grata || d.nemico || d.spada
+  if (quante(delGuerriero) && !quante(d => d.principessa)) guasti.push(`${dove}: pulsanti, nemici o spade senza la principessa`)
+  if (quante(d => d.spada) > 1) guasti.push(`${dove}: la spada c'è più di una volta`)
+  for (const c of Object.keys(LASTRE))
+    if (quante(d => d.grata === c) && !quante(d => d.pulsante === c))
+      guasti.push(`${dove}: una grata ${LASTRE[c].nome} senza il suo pulsante`)
   for (const ch of Object.keys(LEGENDA).filter(ch => LEGENDA[ch].coppia))
     if (conta[ch] && conta[ch] !== 2)
       guasti.push(`${dove}: la buca «${ch}» c'è ${conta[ch]} volte, le buche vanno a coppie`)
@@ -143,6 +166,8 @@ export function guastiDelMondo() {
     if (d.coppia && !COPPIE[d.coppia]) guasti.push(`legenda «${ch}»: la coppia ${d.coppia} non ha un colore`)
     if (d.coppia && d.terreno !== 'buca') guasti.push(`legenda «${ch}»: una coppia che non è una buca`)
     if (d.lastra && !LASTRE[d.lastra]) guasti.push(`legenda «${ch}»: la lastra «${d.lastra}» non ha un colore`)
+    for (const c of [d.pulsante, d.grata])
+      if (c && !LASTRE[c]) guasti.push(`legenda «${ch}»: il colore «${c}» non c'è`)
     /* sopra un ostacolo non ci sta nient'altro: una carota dentro un
        cespuglio non la prende nessuno */
     if (d.ostacolo && (d.carota || d.masso || d.partenza || d.pecora))

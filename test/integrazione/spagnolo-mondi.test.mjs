@@ -51,7 +51,7 @@ await azzera(page)
 // l'età non apre mondi (lo prova il punto 6)
 const conEta = async (eta, resto = {}) => {
   const vecchio = await leggiProfilo(page)
-  await semina(page, { ...resto, settings: { ...((vecchio || {}).settings || {}), eta } })
+  await semina(page, { ...resto, settings: { ...((vecchio || {}).settings || {}), giochi: { spagnolo: true }, eta } })
 }
 await conEta(6.5)
 

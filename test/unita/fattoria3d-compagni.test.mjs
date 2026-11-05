@@ -3,11 +3,13 @@
    simulazione di tre minuti con tutto il motore vero, col caso finto: non finiscono mai in una cella bloccata.
    `node test/esegui.mjs fattoria3d-compagni`
    tempo: 1 */
-import { COMPAGNI, compagniAl, scegliMeta, cellaLiberaVicina, decidiCane, decidiGatto, durataDi, guastiDeiCompagni, ASPETTO_ERO,
+import { COMPAGNI, compagniAl, compagniDiUnaVolta, scegliMeta, cellaLiberaVicina, decidiCane, decidiGatto, durataDi, guastiDeiCompagni, ASPETTO_ERO,
   INTERAZIONI_CANE, scegliInterazioneCane, sequenzaCane, sequenzaRichiamo, sequenzaSonno, sequenzaSveglia, carezzaCane, scegliRispostaGatto, sequenzaGatto,
   sequenzaGattoSopra, incontroGattoCane, sequenzaIncontro, scegliMetaAttorno, SOGLIA_RICHIAMO, chiamaIlGatto, sequenzaGattoChiamato } from '../../src/giochi/fattoria3d/dati/compagni.js'
-import { roba, sogliaDi, guastiDeiLivelli, vuoto } from '../../src/giochi/fattoria3d/dati/livelli.js'
+import { POSTI, postiPer, occupanti, postoLibero, postiLiberi, scegliPosto } from '../../src/giochi/fattoria3d/dati/posti-compagni.js'
+import { roba, sogliaDi, livelloPer, guastiDeiLivelli, vuoto } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
+import { adottaCompagni } from '../aiuto/adozioni.mjs'
 import { controlla, uguale, dentro, riassunto } from '../aiuto/verifica.mjs'
 
 // un canvas finto: la faccia del contadino è una trama, qui basta che si possa disegnare
@@ -21,14 +23,17 @@ const { Compagni } = await import('../../src/giochi/fattoria3d/scena3d/compagni.
 const g = guastiDeiCompagni()
 controlla('i dati dei compagni non hanno guasti', g.length === 0, g.join(' · '))
 controlla('i dati dei livelli reggono con i compagni', guastiDeiLivelli().length === 0, guastiDeiLivelli().join(' · '))
-uguale('al livello 1 c\'è già Watson', compagniAl(1).map(c => c.id).join(), 'watson')
-uguale('al 2 si aggiunge Sherlock', compagniAl(2).map(c => c.id).join(), 'watson,sherlock')
-uguale('al 3 anche Irene', compagniAl(3).map(c => c.id).join(), 'watson,sherlock,irene')
-uguale('al 19 sono quattro (Pepe arriva dove arriva il gatto nero della 2D)', compagniAl(19).length, 4)
-uguale('«soloQuesto»: al 3 arriva solo Irene', compagniAl(3, true).map(c => c.id).join(), 'irene')
-uguale('roba(2) li raccoglie', roba(2).compagni.map(c => c.id).join(), 'sherlock')
-controlla('un livello coi soli compagni non è «vuoto» per il conto di roba', roba(3).compagni.length === 1 && roba(3).compagni[0].id === 'irene' && !vuoto({ pezzi: [], edifici: [], colture: [], ricette: [] }) === false)
-controlla('i quattro compagni sono due specie e tre mantelli', new Set(Object.values(COMPAGNI).map(c => c.variante)).size === 4)
+uguale('Watson si può adottare dal 3', compagniAl(3).map(c => c.id).join(), 'watson')
+uguale('al 10 anche Sherlock', compagniAl(10).map(c => c.id).join(), 'watson,sherlock')
+uguale('all\'11 Irene, al 14 Golia', compagniAl(14).map(c => c.id).join(), 'watson,sherlock,irene,golia')
+uguale('al 19 sono cinque (Pepe si apre dove si apriva il gatto nero della 2D)', compagniAl(19).length, 5)
+uguale('«soloQuesto»: al 14 si apre solo Golia', compagniAl(14, true).map(c => c.id).join(), 'golia')
+uguale('prima del 3 non c\'è niente da adottare', compagniAl(2).length, 0)
+uguale('chi aveva un salvataggio di una volta teneva Watson al 1, Sherlock al 2, Irene al 3 (Golia non c\'era)', [1, 2, 3, 19].map(l => compagniDiUnaVolta(l).join()).join('|'), 'watson|watson,sherlock|watson,sherlock,irene|watson,sherlock,irene,pepe')
+uguale('roba(14) li raccoglie', roba(14).compagni.map(c => c.id).join(), 'golia')
+controlla('un livello coi soli compagni non è «vuoto» per il conto di roba', roba(11).compagni.length === 1 && roba(11).compagni[0].id === 'irene' && !vuoto({ pezzi: [], edifici: [], colture: [], ricette: [] }) === false)
+controlla('i cinque compagni sono due specie e quattro mantelli', new Set(Object.values(COMPAGNI).map(c => c.variante)).size === 5)
+controlla('Golia e Pepe sono due gatti neri diversi (Pepe ha il ciuffo bianco, Golia è tutto nero)', COMPAGNI.golia.variante !== COMPAGNI.pepe.variante)
 controlla('l\'aspetto del contadino è uno dei due', ['contadino', 'contadina'].includes(ASPETTO_ERO))
 
 /* ══════════ 2. la scelta della meta ══════════ */
@@ -92,12 +97,12 @@ controlla('l\'aspetto del contadino è uno dei due', ['contadino', 'contadina'].
     const gg = creaGatto(v); posaGatto(gg, { stato: 'sta' }); const m = misure(gg)
     dentro(`gatto ${v}: piedi a terra`, m.sotto, -0.02, 0.03)
     dentro(`gatto ${v}: piccolo (orecchie grandi e coda alta: fino a 80 cm, meno di Watson)`, m.altezza, 0.3, 0.8)
-    dentro(`gatto ${v}: pochi mesh (pelo fuso per pezzo)`, m.mesh, 12, 45)
+    dentro(`gatto ${v}: pochi mesh (pelo fuso per pezzo, la coda una pelle sola)`, m.mesh, 9, 45)
   }
   const gatto = creaGatto('calico'), cane2 = creaCane()
   controlla('ogni compagno ha la zona del tocco', !!gatto.userData.colpo && !!cane2.userData.colpo && gatto.userData.colpo.visible === false)
-  uguale('creaCompagno per un cane', creaCompagno(compagniAl(1)[0]).userData.tipo, 'cane')
-  uguale('creaCompagno per un gatto', creaCompagno(compagniAl(2)[1]).userData.tipo, 'gatto')
+  uguale('creaCompagno per un cane', creaCompagno(compagniAl(3)[0]).userData.tipo, 'cane')
+  uguale('creaCompagno per un gatto', creaCompagno(compagniAl(10)[1]).userData.tipo, 'gatto')
   // geometrie condivise: due cani non ne duplicano
   const geoA = new Set(), geoB = new Set()
   creaCane().traverse(o => o.isMesh && geoA.add(o.geometry.uuid)); creaCane().traverse(o => o.isMesh && geoB.add(o.geometry.uuid))
@@ -137,7 +142,7 @@ controlla('l\'aspetto del contadino è uno dei due', ['contadino', 'contadina'].
     const b = { monete: 100000 }, t = { ora: 1_000_000 }
     const f = new Fattoria3d({ stato: null, borsa: { quante: () => b.monete, paga: n => { b.monete -= n; return true } }, ora: () => t.ora, rnd: () => 0.5 })
     f.s.esperienza = esp
-    return f
+    return adottaCompagni(f, ['watson', 'sherlock', 'irene', 'pepe'].filter(id => compagniDiUnaVolta(livelloPer(esp)).includes(id)))
   }
   const f = mondoVero(sogliaDi(19))
   const scena = new THREE.Scene()
@@ -165,12 +170,15 @@ controlla('l\'aspetto del contadino è uno dei due', ['contadino', 'contadina'].
   controlla('…e quasi mai su una cella bloccata (a un pezzo appena messo sotto i piedi ci si sposta)', fuori < 40, `${fuori} fotogrammi su ${3600 * 4}`)
   controlla('si sono mossi davvero', c.lista.every(k => Math.hypot(k.x - 0.5, k.z + 6.5) > 0.5 || k.stato !== 'sta'))
   // l'arrivo di un livello nuovo
-  const f2 = mondoVero(sogliaDi(1)), av2 = []
+  const f2 = mondoVero(sogliaDi(10)), av2 = []
+  f2.s.casa = {}; adottaCompagni(f2, ['watson'])
   const c2 = new Compagni(new THREE.Scene(), f2, eroe, fx, { avviso: t => av2.push(t) }, rnd)
-  uguale('al livello 1 c\'è già Watson, senza avviso', c2.lista.map(k => k.def.id).join() + av2.length, 'watson0')
-  f2.s.esperienza = sogliaDi(2); c2.aggiorna(0.05, 1); c2.aggiorna(0.05, 2); for (let n = 0; n < 30; n++) c2.aggiorna(0.05, 2 + n * 0.05)
-  uguale('salendo al 2 arriva Sherlock', c2.lista.map(k => k.def.id).join(), 'watson,sherlock')
-  uguale('…con il suo avviso', av2.join('|'), 'Sherlock, il gatto, è arrivato!')
+  uguale('chi c\'è è solo chi è stato adottato (Watson), senza avviso', c2.lista.map(k => k.def.id).join() + av2.length, 'watson0')
+  uguale('Sherlock non arriva da solo', (c2.aggiorna(0.05, 1), c2.lista.length), 1)
+  uguale('adottarlo costa le sue monete, più lo scatto per Watson', f2.cura.compra('sherlock').costo, COMPAGNI.sherlock.prezzo + 20)
+  c2.aggiorna(0.05, 2); c2.aggiorna(0.05, 2); for (let n = 0; n < 30; n++) c2.aggiorna(0.05, 2 + n * 0.05)
+  uguale('adottato, arriva Sherlock', c2.lista.map(k => k.def.id).join(), 'watson,sherlock')
+  uguale('…con il suo avviso, che dice la razza: il nome glielo dà il bambino', av2.join('|'), 'Un gatto bianconero è arrivato!')
   // il tocco semplice (l'eroe non sta fermo): il vecchio «Bau!»
   const volati = []; c2.fx = { ...fx, volo: t => volati.push(t) }
   eroe.az = { tipo: 'semina' }; eroe.percorso = []; { const w = c2.lista[0]; w.x = eroe.x + 2; w.z = eroe.z - 1; w.seq = null }
@@ -281,7 +289,7 @@ const generatore = seme => () => (seme = (seme * 16807) % 2147483647) / 21474836
     const b = { monete: 100000 }
     const f = new Fattoria3d({ stato: null, borsa: { quante: () => b.monete, paga: n => { b.monete -= n; return true } }, ora: () => 1_000_000, rnd: () => 0.5 })
     f.s.esperienza = esp
-    return f
+    return adottaCompagni(f, ['watson', 'sherlock', 'irene', 'pepe'].filter(id => compagniDiUnaVolta(livelloPer(esp)).includes(id)))
   }
   const f = mondoVero(sogliaDi(19))
   const eroe = { x: 0.5, z: 5.5, az: null, percorso: [], dir: 0, get fermo() { return !this.az && !this.percorso.length }, faccia(v) { this.dir = Math.atan2(v.x - this.x, v.z - this.z); this.guardato = v },
@@ -381,6 +389,52 @@ const generatore = seme => () => (seme = (seme * 16807) % 2147483647) / 21474836
   uguale('…e nessun compagno su una cella bloccata neanche dopo', fuori, 0)
   controlla('…nessuna sequenza bloccata', troppo.length === 0)
   controlla(`il richiamo vale oltre ${SOGLIA_RICHIAMO} celle`, SOGLIA_RICHIAMO === 2.5)
+}
+
+/* ══════════ 6. i posti da dormire: un posto, un occupante ══════════ */
+{
+  const cose = [{ id: 1, tipo: 'panchina' }, { id: 2, tipo: 'ceppo' }, { id: 3, tipo: 'cassa' }, { id: 4, tipo: 'sedia' }, { id: 5, tipo: 'cuccia' }, { id: 6, tipo: 'campo' }]
+  const gatto = tipo => ({ tipo, sopra: null, poi: null })
+  const a = gatto('gatto'), b = gatto('gatto'), w = gatto('cane'), tutti = [a, b, w]
+  uguale('i gatti hanno quattro posti, Watson la cuccia', [postiPer('gatto', cose).length, postiPer('cane', cose).map(k => k.id).join()].join(), '4,5')
+  controlla('un posto per gatti è alto fra 40 e 50 cm, la cuccia a terra', ['panchina', 'ceppo', 'cassa', 'sedia'].every(t => POSTI[t].quota >= 0.4 && POSTI[t].quota <= 0.5) && POSTI.cuccia.quota === 0)
+  controlla('all\'inizio sono tutti liberi', cose.filter(k => POSTI[k.tipo]).every(k => postoLibero(tutti, k.id)))
+  a.sopra = { id: 1 }
+  controlla('chi ci sta sopra lo occupa', !postoLibero(tutti, 1) && occupanti(tutti, 1).length === 1)
+  controlla('…ma per sé stesso è libero (non si scaccia da solo)', postoLibero(tutti, 1, a))
+  b.poi = { posto: { id: 2 } }
+  controlla('chi ci sta andando lo prenota', !postoLibero(tutti, 2) && postoLibero(tutti, 2, b))
+  uguale('a un altro gatto restano la cassa e la sedia', postiLiberi(tutti, cose, gatto('gatto')).map(k => k.id).join(), '3,4')
+  controlla('scegliPosto non dà mai né la panchina né il ceppo', Array.from({ length: 200 }, (_, n) => scegliPosto(tutti, cose, gatto('gatto'), () => n / 200).id).every(id => id === 3 || id === 4))
+  uguale('Watson non vede i posti dei gatti, solo la cuccia', scegliPosto(tutti, cose, w, () => 0.5).id, 5)
+  w.sopra = { id: 5 }
+  controlla('con la cuccia presa Watson non ne ha', scegliPosto(tutti, cose, gatto('cane'), () => 0) === null)
+  const pieno = [...tutti, { tipo: 'gatto', poi: { posto: { id: 3 } } }, { tipo: 'gatto', sopra: { id: 4 } }]
+  controlla('coi posti tutti presi il gatto non ne ha (resta a girare)', scegliPosto(pieno, cose, gatto('gatto')) === null)
+}
+{
+  // col motore vero: tre gatti, quattro posti, dieci minuti, e mai due sullo stesso (né in cammino né sopra)
+  const f = new Fattoria3d({ stato: null, borsa: { quante: () => 1e5, paga: () => true }, ora: () => 1_000_000, rnd: () => 0.5 })
+  f.s.esperienza = sogliaDi(19); adottaCompagni(f, ['watson', 'sherlock', 'irene', 'pepe'])
+  let n = 800
+  for (const [tipo, i, j] of [['panchina', 2, 4], ['ceppo', 5, 5], ['cassa', 3, 8], ['cuccia', 7, 3]]) f.s.cose.push({ id: n++, tipo, i, j })
+  const eroe = { x: 0.5, z: 5.5, az: null, percorso: [], get fermo() { return true } }
+  let seme = 11; const rnd = () => (seme = (seme * 9301 + 49297) % 233280) / 233280
+  const c = new Compagni(new THREE.Scene(), f, eroe, { volo() {}, scoppietta() {}, parla() {} }, { avviso() {} }, rnd)
+  const gatti = c.lista.filter(k => k.tipo === 'gatto')
+  uguale('al 19 i gatti sono tre', gatti.length, 3)
+  let doppi = 0, saliti = new Set(), insieme = 0, tt = 0
+  for (let k = 0; k < 12000; k++) {
+    tt += 0.05; c.aggiorna(0.05, tt)
+    const ids = c.lista.flatMap(o => [o.sopra?.id, o.poi?.posto?.id].filter(x => x != null))
+    if (new Set(ids).size !== ids.length) doppi++
+    const sopra = gatti.filter(o => o.sopra).length
+    if (sopra > 1) insieme++
+    for (const o of c.lista) if (o.sopra) saliti.add(o.sopra.tipo)
+  }
+  uguale('in dieci minuti due compagni non prendono mai lo stesso posto', doppi, 0)
+  controlla('…ma più gatti dormono insieme, su posti diversi', insieme > 0, String(insieme))
+  controlla(`…e usano più di un tipo di posto (${[...saliti].join()})`, saliti.size >= 2)
 }
 
 riassunto('fattoria3d-compagni')

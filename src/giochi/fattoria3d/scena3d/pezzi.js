@@ -16,6 +16,7 @@ import { creaStagnoAnatre, creaPorcile, creaRecintoCapre, creaPentolone, creaAna
 import { creaConigliera, creaRecintoAlpaca, creaRecintoAsini, creaApiario } from './modelli-cortile2.js'
 import { creaZucca, creaZucche, creaPupazzo } from './modelli-feste.js'
 import { DECORI_CREA } from './modelli-decori.js'
+import { NATALE_CREA } from './modelli-natale.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { RICETTE, MACCHINE, merceDi } from '../dati/ricette.js'
 import { SALITA_MS } from '../dati/mongolfiera.js'
@@ -23,6 +24,7 @@ import { ANIMALI, CORTILE, prodottoDelleBestie } from '../dati/animali.js'
 import { alleggeriOmbre } from './ottimizza.js'
 import { BancoCampi } from './campi-istanze.js'
 import { BancoStatici, STATICI } from './statici-istanze.js'
+import { creaCiotolaBestia, creaTinozza, scriviNome, mostraCibo } from './modelli-cura.js'
 import { tempoBreve } from '../dati/tempo.js'
 
 import { creaSiloRosso, creaSiloBianco, creaDispensa, cresciMagazzino } from './modelli-magazzini.js'
@@ -45,6 +47,8 @@ const CREA = {
   aiuola: () => creaAiuola(),
   panchina: () => creaPanchina(),
   pozzo: () => creaPozzo(),
+  ciotola_bestia: c => creaCiotolaBestia(c),
+  tinozza: () => creaTinozza(),
   spaventapasseri: () => creaSpaventapasseri(),
   trattore: () => creaTrattore(),
   silo: () => creaSiloRosso(), silo_bianco: () => creaSiloBianco(), dispensa: () => creaDispensa(),      // i magazzini, che crescono (modelli-magazzini.js)
@@ -59,6 +63,7 @@ const CREA = {
   zucca_intagliata: () => creaZucca(),
   zucche_mucchio: () => creaZucche(),
   pupazzo_neve: () => creaPupazzo(),
+  ...NATALE_CREA,                    // gli alberi grandi e le feste di Natale (modelli-natale.js)
   ...DECORI_CREA,                    // le decorazioni portate dalla 2D (giro G8): verde, recinti, raccolto, case, bestiole (modelli-decori*.js)
 }
 const CREA_EDIFICIO = {
@@ -113,13 +118,13 @@ export class Pezzi {
     grp.userData.bersaglio = { kind: 'cosa', id: c.id }
     grp.position.copy(centroDi(c, d)); grp.rotation.y = (c.rot || 0) * Math.PI / 2; this.scena.add(segna(grp, edificio ? 'edifici' : c.tipo === 'campo' ? 'campi' : 'pezzi'))
     if (this.usaBanchi && STATICI.has(c.tipo)) this.statici.adotta(grp)
-    const badge = edificio || c.tipo === 'bacheca' ? this.fx.nuovoBadge() : c.bestie || c.pecore ? this.fx.nuovoCartello(() => this.sulCompraBestia && this.sulCompraBestia(c.id), c.tipo) : null
-    this.voci.set(c.id, { id: c.id, kind: 'cosa', edificio, tipo: c.tipo, c, d, rot: c.rot || 0, grp, badge, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
+    const badge = edificio || c.tipo === 'bacheca' || c.tipo === 'ciotola_bestia' ? this.fx.nuovoBadge() : c.bestie || c.pecore ? this.fx.nuovoCartello(() => this.sulCompraBestia && this.sulCompraBestia(c.id), c.tipo) : null
+    if (c.tipo === 'ciotola_bestia') badge.el.dataset.ciotola = c.bestia
+    this.voci.set(c.id, { id: c.id, kind: 'cosa', edificio, tipo: c.tipo, c, d, rot: c.rot || 0, grp, badge, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
   }
   _togli(id) {
     const v = this.voci.get(id); if (!v) return
     this.scena.remove(v.grp); v.badge?.togli(); this.banco.lascia(v.grp); this.statici.lascia(v.grp)
-    if (v.anello) this.scena.remove(v.anello)
     this.voci.delete(id)
   }
 
@@ -163,17 +168,6 @@ export class Pezzi {
     return centroDi(c, this.m.misureCosa(c))
   }
 
-  /** L'anello giallo attorno a ciò che è in coda: sta sul terreno, non gira per lo schermo. */
-  segnaCoda(id, si) {
-    const v = this.voci.get(id); if (!v) return
-    if (si && !v.anello) {
-      const r = Math.max(v.d.w, v.d.d) * 0.62
-      v.anello = new THREE.Mesh(new THREE.RingGeometry(r, r + 0.12, 28), new THREE.MeshBasicMaterial({ color: 0xffc830, side: THREE.DoubleSide, transparent: true, opacity: 0.9 }))
-      v.anello.rotation.x = -Math.PI / 2; v.anello.position.y = 0.2; v.grp.add(v.anello)
-    }
-    if (v.anello) v.anello.visible = !!si
-  }
-
   aggiorna(dt, tt) {
     const adesso = this.m.ora()
     for (const v of this.voci.values()) {
@@ -207,8 +201,22 @@ export class Pezzi {
     if (v.salto) { v.salto -= dt * 1.2; g.position.y = Math.max(0, Math.sin(v.salto * Math.PI * 2)) * 0.18; if (v.salto <= 0) { v.salto = 0; g.position.y = 0 } }
   }
 
+  /** La ciotola: il nome sul cartellino e, quando ha fame, quello che chiede. Si guarda due volte al secondo. */
+  _ciotola(v, g, dt) {
+    v.prossimo = (v.prossimo || 0) - dt
+    if (v.prossimo > 0) return
+    v.prossimo = 0.5
+    const cura = this.m.cura, id = v.c.bestia, nome = cura.nomeDi(id)
+    if (v.nome !== nome) { v.nome = nome; scriviNome(g, nome) }
+    const c = cura.insiste(id) && cura.vuole(id)
+    v.badge.imposta(c ? c.emoji : '', c ? 'fame' : '')
+  }
+  /** Il cibo nella ciotola di quell'animale. */
+  cibo(id, si) { const v = [...this.voci.values()].find(o => o.c && o.c.bestia === id); if (v) mostraCibo(v.grp, si) }
+
   _cosa(v, g, dt, tt, adesso) {
     const c = v.c
+    if (c.tipo === 'ciotola_bestia') return this._ciotola(v, g, dt)
     if (g.userData.altezzaPiena) return void cresciMagazzino(g, this.m.tagliaDi(c))          // un magazzino: grande quanto è stato ingrandito
     if (c.tipo === 'campo') {
       if (!this.banco.visto(g)) { v.chiave = null; return }          // fuori dall'inquadratura (o sollevato): non si ripone, e al ritorno si rifà

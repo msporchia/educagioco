@@ -72,6 +72,8 @@
 .sot-richiamo[data-richiamo-di="vita"]::after { background: #ffe3e0 }
 .sot-richiamo[data-richiamo-di="energia"] { background: #dcecff }
 .sot-richiamo[data-richiamo-di="energia"]::after { background: #dcecff }
+.sot-richiamo[data-richiamo-di="torce"] { background: #ffecc2 }
+.sot-richiamo[data-richiamo-di="torce"]::after { background: #ffecc2 }
 /* il numero che sale sopra l'eroe curato: verde la vita, azzurro l'energia */
 .sot-cura-fiocco {
   position: absolute; left: 0; top: -64px; z-index: 3; font-size: 18px; font-weight: 800; white-space: nowrap;
@@ -492,7 +494,9 @@
 .sot-modale .sot-domanda { max-height: none }
 @keyframes sot-appare { from { opacity: 0 } }
 @keyframes sot-cresce { from { transform: scale(.94); opacity: 0 } }
-.sot-cambio-scheda .sot-cornice, .sot-cambio-scheda .sot-sipario { animation: none }
+/* durata zero e non `animation: none`: togliendo la classe (400 ms dopo) `none` → `sot-cresce` faceva ripartire l'animazione e la finestra
+   lampeggiava (si dissolveva e riappariva); con la stessa animazione già finita non riparte niente */
+.sot-cambio-scheda .sot-cornice, .sot-cambio-scheda .sot-sipario { animation-duration: 0s }
 /* stesso pannello messo in due posti: devono leggersi uguale */
 .sot-foglio h2, .sot-centrale h2 {
   margin: 0 0 2px; font-size: 19px; display: flex; align-items: center; gap: 8px;
@@ -1097,12 +1101,32 @@
 .sot-eroe-tratti { justify-content: center; margin: 2px 0 4px; flex: none }
 .sot-cornice .sot-eroe-torce { justify-content: center; margin: 2px 0 6px }
 /* un tasto piccolo e a bordo d'oro, non un altro tasto grosso: serve di rado, e non deve farsi premere per sbaglio */
+/* l'editor del personaggio (docs/sotterraneo/personaggio.md): i due modelli uno accanto all'altro, e la ✎ sulla scheda di ogni eroe */
+.sot-sessi { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0 12px }
+.sot-sesso {
+  display: grid; justify-items: center; gap: 6px; padding: 10px 6px; color: inherit; font: inherit;
+  background: #ffffff0d; border: 1px solid var(--sot-bordo); border-radius: 16px;
+}
+.sot-sesso.sot-scelto { border-color: var(--sot-oro); background: #ffd23f14 }
+.sot-sesso b { font-size: 15px }
+.sot-tinte { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 10px }
+.sot-tinte small { flex: 0 0 100%; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--sot-tenue) }
+.sot-tinta { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--sot-bordo) }
+.sot-scelta-breve { padding: 7px 12px; color: inherit; font: inherit; font-size: 13.5px; background: #ffffff0d; border: 1px solid var(--sot-bordo); border-radius: 12px }
+.sot-scelta-breve.sot-scelto { border-color: var(--sot-oro); background: #ffd23f14 }
+.sot-tinta.sot-scelto { border-color: var(--sot-oro); box-shadow: 0 0 0 2px #ffd23f55 }
+.sot-eroe-riga { position: relative }
+.sot-eroe-riga > .sot-ritocca {
+  position: absolute; top: 6px; right: 6px; width: 40px; height: 40px; display: grid; place-items: center;
+  color: var(--sot-oro); font: inherit; font-size: 18px; background: #00000040; border: 1px solid var(--sot-bordo); border-radius: 12px;
+}
 .sot-eroe-cambia {
   flex: none; align-self: center; margin-top: 12px; padding: 8px 18px;
   font: inherit; font-size: 13px; color: var(--sot-oro); background: none;
   border: 1px solid #ffd23f55; border-radius: 999px; cursor: pointer;
 }
 .sot-eroe-cambia:active { transform: translateY(1px) }
+.sot-eroe-azioni { flex: none; display: flex; justify-content: center; gap: 10px }
 
 /* le quattro schede della finestra dell'eroe (viste/SchedeEroe.vue): linguette di cuoio, quella aperta d'oro */
 .sot-schede { display: flex; gap: 5px; margin-right: 46px; flex: none }
@@ -1365,3 +1389,13 @@
 }
 .sot[data-tema~="legno"] .sot-pensiero-problema { border-color: #f3cf6b }
 .sot[data-tema~="legno"] .sot-pensiero-bolla { background: #2e1e12; border: 1.5px solid #c9963a }
+
+/* ═══════════ il tintore (viste/Tintore.vue, docs/sotterraneo/tintore.md) ═══════════ */
+.sot-tintore-gemme { margin: 0 0 8px; font-size: 13.5px; color: var(--sot-tenue) }
+.sot-tintore-corpo { display: flex; align-items: center; gap: 12px; margin: 0 0 10px }
+.sot-tintore-pezzi { flex: 1; min-width: 0; margin: 0; padding: 0; list-style: none; display: grid; gap: 6px }
+.sot-tintore-pezzi .sot-scelta-breve { display: block; width: 100%; text-align: left }
+.sot-tintore-pezzi small { display: block; font-size: 11px; color: var(--sot-tenue) }
+.sot-tintore-vuoto { font-size: 13px; color: var(--sot-tenue) }
+.sot-tintore-detto { margin: 0 0 8px; font-weight: 700; color: var(--sot-oro) }
+.sot-grosso:disabled { opacity: .5 }

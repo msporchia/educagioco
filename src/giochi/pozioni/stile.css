@@ -10,6 +10,7 @@
   --pz-verde: #2f9e5a;
   --pz-rosso: #d8524d;
   --pz-ambra: #f0b429;
+  --pz-gettoni: #0b6a73;    /* il colore dei gettoni: l'oro è delle monete vere */
   background: radial-gradient(120% 90% at 50% 0%, #3b2a55, var(--pz-fondo) 70%);
   color: #f0e9ff;
 }
@@ -21,6 +22,7 @@
             gap: 14px; width: 100%; max-width: 520px; margin: 0 auto;
             padding: 8px 12px calc(16px + env(safe-area-inset-bottom)) }
 .pz-intro { margin: 0; font-size: 12.5px; color: #c9bde6; text-align: center }
+.pz-intro .pz-gettone { margin: 0 1px }
 .pz-blocco > h3 { display: flex; align-items: center; gap: 7px; margin: 0 0 6px;
                   font-size: 15px; color: #c9bde6 }
 .pz-blocco > h3 b { color: #fff; font-size: 16px }
@@ -45,34 +47,6 @@
 .pz-tappa.pz-adesso { box-shadow: 0 3px 0 var(--pz-viola), inset 0 0 0 2px var(--pz-viola) }
 .pz-tappa.pz-fatta .pz-numero { background: var(--pz-verde) }
 
-/* il banco */
-.pz-banco { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 7px;
-            width: 100%; max-width: 520px; margin: 0 auto; padding: 6px 10px;
-            padding-bottom: calc(8px + env(safe-area-inset-bottom)); position: relative }
-.pz-bloccato .pz-attrezzi, .pz-bloccato .pz-scaffale { pointer-events: none }
-
-/* la pergamena e il calderone */
-.pz-alto { display: flex; gap: 8px; align-items: stretch; flex: none }
-.pz-pergamena { flex: 1; min-width: 0; background: var(--pz-carta); color: var(--pz-inchiostro);
-                border-radius: 12px; padding: 8px 10px; box-shadow: 0 3px 0 #00000055 }
-.pz-pergamena > b { display: block; font-size: 14px; margin-bottom: 4px }
-.pz-voci { display: flex; flex-direction: column; gap: 3px }
-.pz-voce { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 3px 6px;
-           border-radius: 8px; line-height: 1.2 }
-.pz-voce b { font-size: 15px }
-.pz-voce.pz-qui { background: #f3e8ff; box-shadow: inset 0 0 0 2px var(--pz-viola) }
-.pz-voce.pz-fatto { opacity: .55; text-decoration: line-through }
-.pz-paiolo { flex: none; width: 92px; position: relative; display: flex; flex-direction: column;
-             align-items: center; justify-content: flex-end }
-.pz-cliente { position: absolute; top: 0; right: 2px; font-size: 26px }
-.pz-pentola { width: 76px; height: 46px; border-radius: 8px 8px 30px 30px;
-              background: linear-gradient(180deg, #4a4358, #221c30); overflow: hidden;
-              box-shadow: 0 3px 0 #00000077; position: relative }
-.pz-brodo { position: absolute; left: 6px; right: 6px; top: 6px; height: 16px; border-radius: 50%;
-            background: var(--p); box-shadow: 0 0 10px var(--p); transition: background .6s }
-.pz-galleggia { position: absolute; bottom: 30px; font-size: 15px; animation: pz-galleggia 2.2s ease-in-out infinite }
-@keyframes pz-galleggia { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-4px) } }
-
 /* il cartello */
 .pz-cartello { flex: none; background: var(--pz-carta); color: var(--pz-inchiostro);
                border-radius: 12px; padding: 8px 12px; display: flex; flex-direction: column;
@@ -80,85 +54,12 @@
                border-left: 6px solid var(--pz-viola) }
 .pz-cartello > b { font-size: 15px }
 .pz-cartello.pz-giusto { border-left-color: var(--pz-verde) }
-.pz-cartello.pz-sbaglio { border-left-color: var(--pz-rosso) }
-.pz-cosi { background: #fff; border-radius: 8px; padding: 6px 8px; display: flex;
-           flex-direction: column; gap: 3px }
-.pz-cosi > i { font-style: normal; font-weight: 900; font-size: 11px; color: var(--pz-tenue);
-               text-transform: uppercase; letter-spacing: .5px }
-.pz-catena { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; font-size: 16px;
-             font-weight: 900 }
-.pz-catena em { font-style: normal; color: var(--pz-tenue) }
-.pz-catena .pz-meta { color: var(--pz-viola) }
+.pz-cartello.pz-trabocca { border-left-color: var(--pz-rosso) }
+.pz-cartello.pz-aiuto { border-left-color: var(--pz-ambra) }
+.pz-riga-esito { font-size: 13px }
 .pz-attesa { height: 5px; border-radius: 3px; background: #e6dff2; overflow: hidden }
 .pz-attesa i { display: block; height: 100%; background: var(--pz-rosso) }
-.pz-gradinata { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 900 }
-.pz-gradinata .pz-per { font-style: normal; font-size: 10px; color: var(--pz-tenue) }
-.pz-gradinata .pz-u { padding: 2px 6px; border-radius: 6px; background: #efe8f9 }
-.pz-gradinata .pz-capo { background: var(--pz-viola); color: #fff }
-.pz-consiglio { font-size: 13px }
-.pz-procedimento { font-weight: 700 }
-.pz-quanto { font-style: normal; font-size: 11.5px; color: var(--pz-tenue) }
 
-/* gli attrezzi */
-/* ancorati in basso, vicino allo scaffale e al pollice: lo spazio che
-   avanza resta sotto il cartello, dove non c'è niente da toccare */
-.pz-attrezzi { flex: 1; min-height: 0; display: flex; gap: 8px; align-items: stretch;
-               justify-content: center; flex-wrap: wrap; align-content: flex-end; overflow-y: auto }
-.pz-attrezzo { flex: 1 1 130px; max-width: 190px; min-height: 150px; display: flex; flex-direction: column;
-               align-items: center; justify-content: flex-end; gap: 4px; padding: 8px 6px;
-               border-radius: 14px; background: var(--pz-carta); color: var(--pz-inchiostro);
-               box-shadow: 0 3px 0 #00000055; transition: transform .12s, box-shadow .12s }
-.pz-attrezzo.pz-sopra { transform: scale(1.06); box-shadow: 0 0 0 4px var(--pz-ambra) }
-.pz-attrezzo:active { transform: translateY(2px) }
-.pz-tanti .pz-attrezzo { flex-basis: 30%; min-height: 96px; padding: 4px }
-.pz-tanti .pz-figura { height: 50px }
-.pz-figura { width: 100%; height: 92px; display: block }
-.pz-taglia-G { height: 104px }
-.pz-targa { display: flex; flex-direction: column; text-align: center; line-height: 1.2 }
-.pz-targa b { font-size: 12.5px }
-.pz-targa i { font-style: normal; font-size: 11px; color: var(--pz-tenue) }
-.pz-targa em { font-style: normal; font-weight: 900; color: var(--pz-viola) }
-.pz-tanti .pz-targa b { font-size: 11px }
-.pz-tanti .pz-targa i { font-size: 10px }
-
-/* i tratti delle figure */
-.pz-legno { fill: #8b5e3c } .pz-metallo { fill: #9aa3b5 } .pz-metallo-chiaro { fill: #c7ced9 }
-.pz-peso-fig { fill: #4b4358 } .pz-corpo-fig { fill: #e9e3f5; stroke: #9a8cbb; stroke-width: 2 }
-/* la taglia si vede anche dal colore, non solo dalla grandezza: la
-   bilancia del mercato è di legno chiaro, quella del magazzino di ferro */
-.pz-taglia-M .pz-corpo-fig { fill: #f6e7c8; stroke: #b98b1a }
-.pz-taglia-G .pz-corpo-fig { fill: #cfd5df; stroke: #5b6474 }
-.pz-taglia-M .pz-vetro { fill: #fff3dc; stroke: #b98b1a } .pz-taglia-M .pz-manico { stroke: #b98b1a }
-.pz-taglia-G .pz-vetro { fill: #e2e6ec; stroke: #5b6474 } .pz-taglia-G .pz-manico { stroke: #5b6474 }
-.pz-taglia-M .pz-nastro { fill: #ffd27a; stroke: #a0701a } .pz-taglia-G .pz-nastro { fill: #c9d1dc; stroke: #5b6474 } .pz-quadrante { fill: #fff; stroke: #4b4358; stroke-width: 2 }
-.pz-lancetta { stroke: #d8524d; stroke-width: 2; stroke-linecap: round }
-.pz-vetro { fill: #eaf4ff; stroke: #7fa8d8; stroke-width: 2.5 }
-.pz-vetro-bordo { fill: none; stroke: #7fa8d8; stroke-width: 2.5; stroke-linejoin: round }
-.pz-manico { fill: none; stroke: #7fa8d8; stroke-width: 3 }
-.pz-tacca { stroke: #4b4358; stroke-width: 1.5 }
-.pz-nastro { fill: #ffe08a; stroke: #b98b1a; stroke-width: 1.5 }
-.pz-arrotolato { fill: none; stroke: #b98b1a; stroke-width: 3; stroke-linecap: round }
-
-/* il pannello della dosatura */
-.pz-dosa { flex: 1; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 6px;
-           background: var(--pz-carta); color: var(--pz-inchiostro); border-radius: 14px;
-           padding: 8px 10px; box-shadow: 0 3px 0 #00000055 }
-.pz-testa { display: flex; align-items: center; justify-content: space-between; gap: 8px }
-.pz-testa .pz-targa { text-align: left }
-.pz-corpo { display: flex; align-items: center; gap: 10px; flex: 1; min-height: 0 }
-.pz-figura-grande { flex: 1; position: relative; height: 112px }
-.pz-figura-grande .pz-figura { height: 100% }
-.pz-sopra-figura { position: absolute; left: 50%; top: 0; transform: translateX(-50%); font-size: 26px }
-.pz-lettura { flex: none; min-width: 96px; text-align: center; font-size: 26px; font-weight: 900;
-              color: var(--pz-viola); background: #fff; border-radius: 10px; padding: 6px 8px;
-              box-shadow: inset 0 0 0 2px var(--pz-bordo) }
-.pz-pezzi { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center }
-.pz-pezzo { min-width: 54px; padding: 8px 8px; border-radius: 10px; background: #4b4358; color: #fff;
-            font-weight: 900; font-size: 13px; box-shadow: 0 3px 0 #2a2436 }
-.pz-pezzo:active { transform: translateY(2px); box-shadow: 0 1px 0 #2a2436 }
-.pz-pezzo:disabled { opacity: .35; box-shadow: none }
-.pz-pezzo.pz-annulla { background: #fff; color: var(--pz-inchiostro); box-shadow: inset 0 0 0 2px var(--pz-bordo) }
-.pz-azioni { display: flex; gap: 8px; align-items: center; justify-content: flex-end }
 .pz-piccolo { padding: 7px 10px; border-radius: 999px; background: #fff; color: var(--pz-inchiostro);
               font-weight: 800; font-size: 12.5px; box-shadow: inset 0 0 0 2px var(--pz-bordo) }
 .pz-piccolo:disabled { opacity: .4 }
@@ -167,25 +68,6 @@
 .pz-grosso:active { transform: translateY(2px); box-shadow: 0 2px 0 #4f3a8a }
 .pz-grosso:disabled { opacity: .45; box-shadow: none; transform: none }
 .pz-grosso.pz-chiaro { background: #fff; color: var(--pz-inchiostro); box-shadow: 0 4px 0 #d4dce6 }
-
-/* lo scaffale */
-.pz-scaffale { flex: none; display: flex; gap: 8px; justify-content: center; padding: 8px 6px 4px;
-               border-radius: 14px; background: #ffffff12; box-shadow: inset 0 3px 0 #00000033 }
-/* `touch-action: none` sulla carta e non sul contenitore: è il dito su
-   questa che trascina, e il browser non deve scambiarlo per uno
-   scorrimento */
-.pz-ingrediente { flex: 1 1 0; max-width: 110px; display: flex; flex-direction: column; align-items: center;
-                  gap: 3px; padding: 7px 4px; border-radius: 12px; background: var(--pz-carta);
-                  color: var(--pz-inchiostro); box-shadow: 0 3px 0 #00000055; touch-action: none;
-                  cursor: grab; transition: transform .12s, box-shadow .12s }
-.pz-ingrediente .pz-icona { font-size: 30px }
-.pz-ingrediente .pz-nome { font-size: 11px; font-weight: 800; text-align: center; line-height: 1.15 }
-.pz-ingrediente.pz-in-mano { transform: translateY(-8px); box-shadow: 0 0 0 3px var(--pz-ambra), 0 8px 0 #00000055 }
-.pz-ingrediente.pz-in-uso { opacity: .5 }
-.pz-ingrediente.pz-preso { opacity: .35 }
-.pz-ingrediente.pz-fatto { opacity: .3; cursor: default }
-.pz-fantasma { position: fixed; z-index: 50; pointer-events: none; font-size: 40px;
-               transform: translate(-50%, -60%); filter: drop-shadow(0 4px 4px #0006) }
 
 /* il cartello di fine */
 .pz-velo { position: absolute; inset: 0; z-index: 20; display: flex; align-items: center;
@@ -200,9 +82,124 @@
 .pz-monete { font-size: 20px; font-weight: 900; color: #b8860b }
 .pz-cartello-fine .pz-grosso { width: 100%; margin-top: 4px }
 
-/* orizzontale su un telefono: il banco stretto perde lo scaffale sotto,
-   e lì il gioco si gira (`.gira`, come tutti gli altri) */
-@media (max-height: 520px) {
-  .pz-figura { height: 48px }
-  .pz-attrezzo { min-height: 90px }
-}
+/* il laboratorio: la tela 3D sotto, la pergamena e il rotolo sopra, la borsa in fondo */
+.pz-mercante { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; width: 100% }
+.pz-scena { flex: 1; min-height: 0; position: relative; display: flex }
+.pz-tela { flex: 1; min-height: 0; width: 100%; display: block; touch-action: none }
+.pz-senza { position: absolute; inset: 40% 20px auto; text-align: center; display: flex; flex-direction: column;
+            gap: 10px; align-items: center; font-size: 14px }
+.pz-strati { position: absolute; inset: 6px 10px; display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+             max-width: 500px; margin: 0 auto }
+.pz-strati > * { pointer-events: auto }
+.pz-strati > .pz-vuoto-tela { flex: 1; pointer-events: none }
+
+/* la carta vecchia della pergamena e del rotolo, coi due rulli di legno */
+.pz-pergamena, .pz-rotolo {
+  --pz-carta-vecchia: #efdcb0;
+  position: relative; color: #4a3216; font-family: "Emoji Gioco", Georgia, "Times New Roman", serif;
+  background:
+    radial-gradient(circle at 12% 20%, #b98a4a22 0 10%, transparent 26%),
+    radial-gradient(circle at 88% 70%, #9c6b3026 0 12%, transparent 30%),
+    linear-gradient(90deg, #d9bf8c, var(--pz-carta-vecchia) 7%, #f6e8c6 50%, var(--pz-carta-vecchia) 93%, #d9bf8c);
+  box-shadow: 0 5px 12px #00000066; margin: 9px 5px }
+.pz-pergamena::before, .pz-pergamena::after, .pz-rotolo::before, .pz-rotolo::after {
+  content: ''; position: absolute; left: -7px; right: -7px; height: 13px; border-radius: 7px; z-index: 1;
+  background: linear-gradient(180deg, #a06a30, #e2bd7c 38%, #8a5526 80%, #5e3814); box-shadow: 0 2px 3px #0006 }
+.pz-pergamena::before, .pz-rotolo::before { top: -7px }
+.pz-pergamena::after, .pz-rotolo::after { bottom: -7px }
+.pz-pergamena { padding: 11px 14px 10px; flex: none }
+.pz-pergamena h3 { margin: 0 0 4px; font-size: 16px; font-style: italic; font-weight: 700; text-align: center; color: #6a3d12 }
+.pz-riga { display: flex; align-items: baseline; gap: 6px; font-size: 14px; line-height: 1.5 }
+.pz-foto { width: 26px; height: 26px; flex: none; object-fit: contain; vertical-align: middle }
+.pz-riga { align-items: center }
+.pz-riga .pz-nome { flex: none }
+.pz-puntini { flex: 1; min-width: 12px; border-bottom: 2px dotted #8a6a3a88; transform: translateY(-3px) }
+.pz-riga .pz-quanto { flex: none; text-align: right; font-size: 13px }
+.pz-riga .pz-quanto b { font-size: 15.5px }
+.pz-riga .pz-manca { display: block; font-size: 11.5px; line-height: 1.1; color: #8a6a3a }
+.pz-riga.pz-fatto { opacity: .6; text-decoration: line-through }
+
+/* il rotolo del mercante */
+.pz-rotolo { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 10px 10px 8px }
+.pz-testa-rotolo { display: flex; align-items: center; justify-content: center; position: relative; flex: none }
+.pz-testa-rotolo h3 { margin: 0; font-size: 17px; font-style: italic; color: #6a3d12 }
+.pz-chiudi { position: absolute; right: 0; top: -2px; width: 34px; height: 34px; border-radius: 50%; background: #6a3d1222;
+             color: #4a3216; font-weight: 900; font-size: 15px }
+.pz-elenco { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 7px; margin-top: 6px;
+             padding: 0 2px 4px; touch-action: pan-y }
+.pz-merce { padding-top: 6px; border-top: 1px dashed #8a6a3a66 }
+.pz-merce:first-child { border-top: 0; padding-top: 0 }
+.pz-merce h4 { margin: 0 0 5px; font-size: 14px; font-weight: 700 }
+.pz-merce h4 .pz-foto { width: 32px; height: 32px }
+.pz-regola { font-style: normal; font-weight: 400; font-size: 12px; color: #7a4a12; margin-left: 6px; white-space: nowrap }
+.pz-merce.pz-fatto { opacity: .4 }
+.pz-targhette { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px }
+/* una targhetta di cartoncino appesa, col buco per lo spago */
+.pz-targhetta { position: relative; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 12px 2px 5px;
+                background: #fffaf0; color: #3a2612; border-radius: 4px 4px 9px 9px; font-family: inherit;
+                clip-path: polygon(22% 0, 78% 0, 100% 16%, 100% 100%, 0 100%, 0 16%);
+                filter: drop-shadow(0 2px 1px #0000004d); transition: transform .1s }
+.pz-targhetta::before { content: ''; position: absolute; top: 4px; left: 50%; width: 7px; height: 7px; margin-left: -3.5px;
+                        border-radius: 50%; background: #8a6a3a; box-shadow: inset 0 1px 1px #0007 }
+.pz-targhetta:nth-child(odd) { transform: rotate(-1.5deg) }
+.pz-targhetta:nth-child(even) { transform: rotate(1.5deg) }
+.pz-targhetta:active { transform: translateY(2px) }
+.pz-targhetta:disabled { opacity: .5 }
+.pz-targhetta b { font-size: 16.5px; font-weight: 900; white-space: nowrap }
+.pz-targhetta em { font-style: normal; font-size: 11.5px; color: #7a4a12; white-space: nowrap }
+.pz-targhetta span { font-size: 13px; font-weight: 800; color: var(--pz-gettoni) }
+
+/* il gettone del mercante è un cristallo a sei lati, turchese: tondo e d'oro è la moneta del gioco */
+.pz-gettone { position: relative; display: inline-block; width: 1em; height: 1.14em; vertical-align: -.2em; margin-right: 2px;
+              clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: #07525a }
+.pz-gettone::before { content: ''; position: absolute; inset: .11em; clip-path: inherit;
+                      background: linear-gradient(155deg, #c9fbf4, #3fd6cd 48%, #0f9aa6) }
+.pz-gettone::after { content: ''; position: absolute; inset: .36em .3em; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); background: #fff }
+
+/* la borsa e l'ordine, vicino al pollice */
+.pz-piede { flex: none; display: flex; flex-direction: column; gap: 7px; width: 100%; max-width: 520px; margin: 0 auto;
+            padding: 7px 10px calc(8px + env(safe-area-inset-bottom)) }
+.pz-borsa { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 6px; font-size: 14px; color: #f0e9ff }
+.pz-borsa b { font-size: 17px; font-weight: 900 }
+.pz-borsa .pz-gettone { font-size: 19px }
+.pz-livello { grid-column: 1 / -1; display: flex; height: 9px; margin-top: 4px; border-radius: 5px; overflow: hidden;
+              background: #ffffff1c; box-shadow: inset 0 1px 2px #0007 }
+.pz-livello i { display: block; background: linear-gradient(180deg, #7fe9e0, #149aa3); transition: width .3s }
+.pz-livello .pz-in-ordine { background: repeating-linear-gradient(45deg, #c9fbf4 0 4px, #3fbdb8 4px 8px) }
+.pz-borsa.pz-rosso { color: #ffb0a8 }
+.pz-borsa.pz-rosso .pz-livello i { background: var(--pz-rosso) }
+.pz-ordine { display: flex; gap: 8px; align-items: flex-end }
+/* lo scontrino: carta bianca col bordo seghettato in fondo */
+.pz-scontrino { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; padding: 5px 8px 4px; margin-bottom: 6px;
+                background: #fffaf0; color: #3a2612; font-family: "Emoji Gioco", "Courier New", Courier, monospace; font-size: 13px; line-height: 1.2 }
+.pz-scontrino::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 6px;
+                       background: linear-gradient(135deg, #fffaf0 50%, transparent 50%) 0 0 / 10px 6px repeat-x,
+                                   linear-gradient(-135deg, #fffaf0 50%, transparent 50%) 0 0 / 10px 6px repeat-x }
+.pz-invito { margin: 0 0 3px; padding-bottom: 3px; border-bottom: 1px dashed #8a6a3a88; font-size: 12px }
+.pz-voce { display: flex; align-items: center; gap: 4px; min-height: 24px; width: 100%; padding: 0; background: none; color: inherit; font: inherit; text-align: left }
+.pz-voce .pz-foto { width: 20px; height: 20px }
+.pz-voce > span { flex: none; font-weight: 700; white-space: nowrap }
+.pz-voce > b { flex: none; color: var(--pz-gettoni); font-weight: 900; white-space: nowrap }
+.pz-voce .pz-via { flex: none; font-style: normal; font-size: 11px; color: #8a6a3a }
+.pz-voce .pz-puntini { border-bottom-color: #8a6a3a66; transform: none }
+.pz-totale { margin-top: 2px; border-top: 1px dashed #8a6a3a88; font-size: 14.5px }
+.pz-ordine .pz-grosso { flex: none; padding: 10px 16px; margin-bottom: 6px; white-space: nowrap }
+.pz-piede > .pz-grosso { width: 100% }
+.pz-pulisci { background: var(--pz-rosso); box-shadow: 0 4px 0 #8a2c28 }
+.pz-fine-righe { font-size: 13px; color: #5e5378; display: flex; flex-direction: column; gap: 3px }
+.pz-fine-righe .pz-gettone { font-size: 15px }
+
+/* la ricetta in parole, e il tavolo del procedimento */
+.pz-procedimento { margin: 5px 0 0; padding: 5px 0 0 18px; border-top: 1px dashed #b8925a; font-size: 13px; line-height: 1.3; color: #5a3a1a }
+.pz-procedimento .pz-fatto { opacity: .5; text-decoration: line-through }
+.pz-procedimento.pz-letto { margin-top: 2px; padding-top: 0; border: 0; font-size: 15.5px; line-height: 1.35 }
+.pz-procedimento.pz-letto li + li { margin-top: 3px }
+/* una ricetta lunga non deve coprire il calderone */
+.pz-procedimento.pz-letto.pz-lunga { font-size: 14px; line-height: 1.25 }
+.pz-procedimento.pz-letto.pz-lunga li + li { margin-top: 1px }
+.pz-dice { margin: 0 0 4px; padding: 0 6px; font-size: 13px; line-height: 1.3; color: #5a3a1a; text-align: center }
+/* il bancone serve alla roba: il cartello sale sotto la pergamena */
+.pz-mercante[data-fase="procedimento"] .pz-pergamena { order: 0 }
+.pz-mercante[data-fase="procedimento"] .pz-cartello { order: 1 }
+.pz-mercante[data-fase="procedimento"] .pz-vuoto-tela { order: 2 }
+.pz-infinita { margin-top: 12px; width: 100% }

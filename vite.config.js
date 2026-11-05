@@ -83,7 +83,7 @@ function scriviServiceWorker () {
           // il disegno 3D del sotterraneo: il file che Gioco.vue chiede a richiesta scendendo nel Sotterraneo 3D
           const sot3d = o.type === 'chunk' && /\/giochi\/sotterraneo\/scena3d\/indice\.js/.test(o.facadeModuleId || '')
           // il disegno 3D della fattoria 3D: il file che Gioco.vue chiede a richiesta, nel gruppo del suo gioco
-          const fat3d = o.type === 'chunk' && /\/giochi\/fattoria3d\/scena3d\/(?:mondo3d|visita)\.js/.test(o.facadeModuleId || '')
+          const fat3d = o.type === 'chunk' && /\/giochi\/fattoria3d\/scena3d\/(?:mondo3d|visita|casa3d|bottega3d)\.js/.test(o.facadeModuleId || '')
           return ['./' + nome, o.type === 'asset' ? o.source.length : o.code.length,
                   gioco ? gioco[1] : tre ? 'mate' : sot3d ? 'sotterraneo' : fat3d ? 'fattoria3d' : (vecchio && VECCHI[vecchio[1]]) || GRUPPI.get(nome) || '']
         })
@@ -106,67 +106,91 @@ const fresca = u => new Request(u, { cache: 'no-cache' })
 // Il sito spezzato, in due tempi (docs/core/avvio-e-memoria.md). Ogni file ha l'impronta nel nome, quindi non cambia
 // mai: quello che una versione precedente ha già in cassa si copia, senza rete. L'installazione scarica solo la BASE
 // (home, codice comune: i file senza gioco); i giochi li scarica poi, uno alla volta, quando la pagina lo chiede
-// (messaggio 'scarica': a ogni avvio, e riprende da dove era arrivato). Uno che manca fa fallire solo la base.
+// (messaggio 'scarica'). Il telefono può fermare questo service worker quando vuole e nessuno lo dice: quello che è in
+// cassa resta, e la pagina richiede finché non c'è tutto (docs/core/aggiornamento.md).
 // I progressi vanno alla pagina sul canale 'educagioco-scarico'.
 const canale = typeof BroadcastChannel === 'function' ? new BroadcastChannel('educagioco-scarico') : null
 const annuncia = d => { if (canale) canale.postMessage(d) }
 
-async function inCassa (c, f) {
-  if (await c.match(f[0])) return true
-  const altrove = await caches.match(f[0])          // la cache di una versione precedente
-  if (!altrove) return false
-  await c.put(f[0], altrove)
-  return true
+const OPERAI = 4
+const PAZIENZA_FILE = 30000, BANDA_MINIMA = 10   // ms, più il file a 10 byte al ms: chi va più piano di così è fermo
+const OGNI_QUANTO = 300                          // ms fra un annuncio e l'altro: dentro un gioco la pagina ha altro da fare
+
+const pesa = l => l.reduce((a, f) => a + f[1], 0)
+function stato (fase, elenco, errore) {
+  const fatti = elenco.filter(f => f.fatto)
+  return { fase: fase, fatti: fatti.length, totale: elenco.length, byteFatti: pesa(fatti), byteTotale: pesa(elenco),
+           mancanti: [...new Set(FILE.filter(f => f[2] && !f.fatto).map(f => f[2]))],
+           fine: fatti.length === elenco.length, errore: !!errore }
 }
 
-// scarica l'elenco dei file non ancora in cassa, qualche file alla volta, contando i byte
-async function scarica (c, elenco, fase, mancanti) {
-  const byteTotale = elenco.reduce((a, f) => a + f[1], 0)
-  let fatti = 0, byteFatti = 0
-  const coda = elenco.slice()
-  const stato = fine => ({ fase: fase, fatti: fatti, totale: elenco.length, byteFatti: byteFatti, byteTotale: byteTotale, mancanti: mancanti(), fine: !!fine })
-  annuncia(stato())
+// segna quello che c'è già: in questa cassa, o da copiare da quella di una versione precedente
+async function guardaCassa (c) {
+  const avute = new Set((await c.keys()).map(r => r.url))
+  for (const f of FILE) {
+    f.fatto = avute.has(new URL(f[0], self.location.href).href)
+    if (f.fatto) continue
+    const altrove = await caches.match(f[0])
+    if (altrove) { await c.put(f[0], altrove); f.fatto = true }
+  }
+}
+
+// un file dalla rete, con un tetto: una connessione che si ferma senza cadere non dà errori, e senza tetto si aspetta per sempre
+async function prendi (c, f) {
+  const ferma = new AbortController()
+  let tetto
+  const scaduto = new Promise((_, no) => {
+    tetto = setTimeout(() => { no(new Error('fermo')); ferma.abort() }, PAZIENZA_FILE + f[1] / BANDA_MINIMA)
+  })
+  const arriva = fetch(f[0], { signal: ferma.signal }).then(r => {
+    if (!r.ok) throw Object.assign(new Error('storta'), { sito: true })
+    return c.put(f[0], r)
+  })
+  try { await Promise.race([arriva, scaduto]) } finally { clearTimeout(tetto) }
+}
+
+// scarica quello che dell'elenco non è ancora in cassa, qualche file alla volta. Un file che il sito non ha salta il suo
+// turno; una rete che non risponde ferma l'operaio che l'ha incontrata, e gli altri continuano finché possono
+async function scarica (c, elenco, fase) {
+  const coda = elenco.filter(f => !f.fatto)
+  let detto = 0, sparito = false
+  annuncia(stato(fase, elenco))
   const operaio = async () => {
     for (let f = coda.shift(); f; f = coda.shift()) {
-      await c.add(f[0])
-      fatti++; byteFatti += f[1]; annuncia(stato())
+      try {
+        await prendi(c, f)
+      } catch (x) {
+        if (!x.sito) return
+        sparito = true
+        continue
+      }
+      f.fatto = true
+      if (Date.now() - detto >= OGNI_QUANTO) { detto = Date.now(); annuncia(stato(fase, elenco)) }
     }
   }
-  await Promise.all([operaio(), operaio(), operaio(), operaio()])
-  annuncia(stato(true))
+  await Promise.all(Array.from({ length: OPERAI }, operaio))
+  const monco = elenco.some(f => !f.fatto)
+  annuncia(stato(fase, elenco, monco))
+  // l'impronta è nel nome: un file che manca vuol dire che il sito è già passato a un'altra versione
+  if (sparito) self.registration.update().catch(() => {})
+  return !monco
 }
 
 async function scaricaBase (c) {
   if (!FILE.length) return
-  const daPrendere = []
-  for (const f of FILE) if (!(await inCassa(c, f)) && !f[2]) daPrendere.push(f)
-  await scarica(c, daPrendere, 'base', function () { return [] })
+  await guardaCassa(c)
+  if (!(await scarica(c, FILE.filter(f => !f[2]), 'base'))) throw new Error('base monca')
 }
 
 let inCorso = null
 function scaricaGiochi () {
   if (!inCorso) inCorso = (async () => {
     const c = await caches.open(CACHE)
-    const poi = []
-    for (const f of FILE) if (f[2] && !(await inCassa(c, f))) poi.push(f)
-    const mancano = function () { return [...new Set(poi.filter(function (f) { return !f.fatto }).map(function (f) { return f[2] }))] }
-    if (!poi.length) return annuncia({ fase: 'giochi', fatti: 0, totale: 0, byteFatti: 0, byteTotale: 0, mancanti: [], fine: true })
-    const gruppi = mancano()
+    await guardaCassa(c)
     // un gioco per volta: finito il suo, si può aprire senza rete
-    let byteFatti = 0
-    const byteTotale = poi.reduce((a, f) => a + f[1], 0)
-    for (const g of gruppi) {
-      const suoi = poi.filter(function (f) { return f[2] === g })
-      try {
-        await scarica(c, suoi, 'giochi-un-gioco', function () { return mancano() })
-      } catch (e) {
-        annuncia({ fase: 'giochi', fatti: 0, totale: poi.length, byteFatti: byteFatti, byteTotale: byteTotale, mancanti: mancano(), fine: false, errore: true })
-        return
-      }
-      for (const f of suoi) f.fatto = true
-      byteFatti += suoi.reduce((a, f) => a + f[1], 0)
-      annuncia({ fase: 'giochi', fatti: poi.filter(function (f) { return f.fatto }).length, totale: poi.length, byteFatti: byteFatti, byteTotale: byteTotale, mancanti: mancano(), fine: !mancano().length })
-    }
+    const giochi = FILE.filter(f => f[2]).sort((a, b) => a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0)
+    if (giochi.every(f => f.fatto)) return annuncia({ fase: 'giochi', fatti: 0, totale: 0, byteFatti: 0, byteTotale: 0, mancanti: [], fine: true, errore: false })
+    await scarica(c, giochi, 'giochi')
   })().then(function () { inCorso = null }, function () { inCorso = null })
   return inCorso
 }
@@ -351,7 +375,7 @@ export default defineConfig({
                // tirava dentro i dati in comune col 2D, e il Sotterraneo di sempre caricava three)
                if (/giochi\/sotterraneo\/scena3d\/indice\.js/.test(c.facadeModuleId || '')) return 'assets/sotterraneo-3d-[hash].js'
                // idem per il disegno 3D della fattoria 3D (three sta in asteroidi-3d, nel gruppo 'mate': si scarica anche da lì)
-               if (/giochi\/fattoria3d\/scena3d\/(?:mondo3d|visita)\.js/.test(c.facadeModuleId || '')) return 'assets/fattoria3d-3d-[hash].js'
+               if (/giochi\/fattoria3d\/scena3d\/(?:mondo3d|visita|casa3d|bottega3d)\.js/.test(c.facadeModuleId || '')) return 'assets/fattoria3d-3d-[hash].js'
                return m ? `assets/gioco-${m[1]}${m[2] || ''}-[hash].js` : 'assets/[name]-[hash].js'
              } } },
            target: 'es2020', assetsInlineLimit: SPEZZATO ? 4096 : 100000000, cssCodeSplit: false,

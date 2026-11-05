@@ -18,6 +18,9 @@ Il resto del 3D sta in [grafica-3d.md](grafica-3d.md).
   telecamera. I colori sono `COLORI_PORTALE` (azzurro e viola, di nessuno scenario).
 - **La pietra prende il chiarore del velo** (un emissivo viola): con la sola
   luce dell'eroe di lato i pilastri erano neri.
+- **Il gemello di sopra è lo stesso disegno** (l'utente, 1 novembre 2026: «il portale ha due disegni diversi se sei nel villaggio o sotto,
+  non è chiaro»): `creaPortale` di `scena3d/mondo/monumenti.js` non disegna più un anello suo, ma mette il varco di pietra di questo
+  modulo (in una scena finta, e lo piazza sul terreno): stessi pilastri, rune, vortice e cerchio per terra, sopra e sotto.
 - **Lo stesso modulo fa il gemello di sopra**: `creaPortale(scena, { cella,
   colori, alto, conMaschera })`; senza `conMaschera` la pietra non legge la
   maschera. `apri()` lo accende dal basso (il velo e le rune dei pilastri) e

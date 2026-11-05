@@ -27,6 +27,7 @@ stava a 60 fps: la misura legge un pixel a ogni fotogramma (aspetta la GPU), il 
 | 12 edifici a Natale / ad Halloween | 82 / 79 | 46 / 40k | 80 / 75 (+8 / +3) | 8 / 8 | |
 | `fattoria3d-tipo=30` / `=99` (giocate, piene) | 148 / 180 | 89 / 94k | 154 / 168 | 19 / 16 | ~95 / 101* |
 | `=99` con la camera lontana (40) | 223 | 108k | 165 | 20 | |
+| `=99` con lo zoom ai limiti nuovi (da 1 a 0,28 e 2,4 × 22; imitato del 1/11, bassa, `--esegui "window.__fattoria3d.mondo.camera.zoom=…"`): zoom 1 / 0,28 / 2,4 | 178 / 70 / 272 | 99 / 71 / 118k | 126 / 82 / 169 | 16 / 11 / 22 | |
 | preset `medio` (scala 1,5, ombre 1024): vuota / 26 edifici / 40 campi / tipo 99 | 44 / 187 / 150 / 320 | | 141 / 218 / 315 / 330 | 11 / 22 / 28 / 31 | |
 
 \* i campi sono triangoli (grano e riso 5,5k l'uno, pomodori 4,6k): SwiftShader li paga 5-10 volte il telefono, che da 86k a 475k
@@ -71,3 +72,5 @@ node strumenti/vecchio-telefono.mjs 'fattoria3d&qualita=bassa&degrado=no' --per 
 `--per` fa una riga per valore (un valore solo per chiave: `fattoria3d-tipo=30,fattoria3d-tipo=99` non va, due comandi);
 `&qualita=media` per il preset `medio`; la camera lontana con `--esegui` (`window.__fattoria3d.q.camera = 40`). Le leve:
 `&stress=` e `&degrado=no` ([../core/comandi.md](../core/comandi.md)), `Mondo3d.banco(n)`, `mondo.stress('edifici', n)`.
+
+**Lo zoom** ([terreno.md](terreno.md)): da vicino (0,28×) pesa meno di tutto, da lontano (2,4×) come la «camera lontana» di sopra (+35% sul banco, +50% di chiamate: entrano in campo più pezzi della finestra 9×9, che resta il tetto). Una fattoria piena a zoom massimo sul Note 7 è la più pesante possibile; il degrado automatico c'è per quello.

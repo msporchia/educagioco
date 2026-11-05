@@ -8,13 +8,16 @@
 import { computed, inject } from 'vue'
 import Icona from './Icona.vue'
 import Lastra from './Lastra.vue'
-import { nomeDellaMossa, LASTRE } from '../dati/mondo.js'
+import Figura from './Figura.vue'
+import Scritta from './Scritta.vue'
+import { nomeDellaMossa, LASTRE, VERSI } from '../dati/mondo.js'
 import { eApri, eSe, valoreDi } from '../dati/carte.js'
 
 defineOptions({ name: 'Carte' })
 const props = defineProps({
   nodi: { type: Array, required: true },
   fine: { type: Number, required: true },     // il posto in fondo a questo elenco
+  bocca: { type: Boolean, default: false },   // è il corpo di una scatola: in fondo c'è il suo +
 })
 
 const f = inject('fila')
@@ -43,29 +46,43 @@ const valoreNodo = n => (n.che === 'se' ? n.colore : n.volte ?? n.fino)
 function testaInParole(n) {
   const v = valoreNodo(n)
   const colore = c => (c === 'casa' ? 'a casa' : `alla lastra ${(LASTRE[c] || {}).nome || c}`)
+  if (n.che === 'se' && VERSI[v]) return `se ${VERSI[v].nome} si passa`
   if (n.che === 'se') return v == null ? 'se: che colore?' : `se sei sulla lastra ${(LASTRE[v] || {}).nome || v}`
   if (v == null) return 'ripeti: quante volte?'
   return typeof v === 'number' ? `ripeti ${v} volte` : `ripeti fino ${colore(v)}`
 }
 const numero = t => typeof valoreDi(t) === 'number'
+
+/* dove entra la prossima carta (o cade quella al dito) */
+const segnato = p => {
+  const s = f.s.value
+  return s.posa != null ? s.posa === p : s.cursore === p && !s.inCorsa
+}
+/* in fondo a un elenco il segno non è la sbarra: si accende il + della
+   scatola, o il primo posto libero dello zaino */
+const sbarra = p => segnato(p) && !(p === props.fine && (props.bocca || f.s.value.fondoLibero))
+const parolaDi = n => {
+  if (n.che === 'se') return 'se'
+  return typeof valoreNodo(n) === 'string' ? 'fino a' : 'volte'
+}
 </script>
 
 <template>
   <template v-for="x in pezzi" :key="x.key">
     <template v-if="x.che === 'posto'">
-      <span v-if="f.s.value.cursore === x.p && !f.s.value.inCorsa" class="pp-cursore" data-cursore
+      <span v-if="sbarra(x.p)" class="pp-cursore" data-cursore :data-posa="f.s.value.posa ?? null"
             aria-hidden="true"></span>
       <!-- il consiglio del 💡: la carta giusta in trasparenza, dove va -->
       <button v-if="f.s.value.cursore === x.p && f.s.value.fantasma" class="pp-tessera pp-fantasma"
-              :class="{ 'pp-salto': f.s.value.consiglio.startsWith('salto-'),
+              :class="{ 'pp-salto': f.s.value.consiglio.startsWith('salto-') || f.s.value.consiglio === 'attacca',
                         'pp-fantasma-ciclo': eCiclo(f.s.value.consiglio),
                         'pp-fantasma-se': eSe(f.s.value.consiglio) }"
               :data-consiglio="f.s.value.consiglio"
               :aria-label="`metti qui: ${eCiclo(f.s.value.consiglio) ? 'una scatola' : nomeDellaMossa(f.s.value.consiglio)}`"
               @click="f.metti(f.s.value.consiglio)">
         <template v-if="eCiclo(f.s.value.consiglio)">
-          <span class="pp-em pp-ciclo-icona">{{ eSe(f.s.value.consiglio) ? '❓' : '🔁' }}</span>
-          <b v-if="numero(f.s.value.consiglio)">{{ valoreDi(f.s.value.consiglio) }}</b>
+          <Figura :nome="eSe(f.s.value.consiglio) ? 'se' : 'ripeti'" />
+          <Scritta v-if="numero(f.s.value.consiglio)" :testo="valoreDi(f.s.value.consiglio)" />
           <Lastra v-else :colore="valoreDi(f.s.value.consiglio)" />
         </template>
         <Icona v-else :mossa="f.s.value.consiglio" />
@@ -73,37 +90,48 @@ const numero = t => typeof valoreDi(t) === 'number'
     </template>
 
     <button v-else-if="x.che === 'mossa'" class="pp-tessera"
-            :class="{ 'pp-salto': x.nodo.m.startsWith('salto-'),
+            :class="{ 'pp-salto': x.nodo.m.startsWith('salto-') || x.nodo.m === 'attacca',
                       'pp-corrente': f.s.value.corrente === x.nodo.i,
                       'pp-fatta': f.s.value.piatta && f.s.value.inCorsa && f.s.value.corrente > x.nodo.i,
                       'pp-guasto': f.s.value.guasto === x.nodo.i,
-                      'pp-sospetta': f.s.value.sospette && x.nodo.i >= f.s.value.cursore }"
+                      'pp-sospetta': f.s.value.sospette && x.nodo.i >= f.s.value.cursore,
+                      'pp-presa': f.s.value.presa === x.nodo.i }"
             :data-tessera="x.nodo.i" :data-mossa="x.nodo.m"
             :data-corrente="f.s.value.corrente === x.nodo.i ? '' : null"
             :data-guasto="f.s.value.guasto === x.nodo.i ? '' : null"
             :aria-label="nomeDellaMossa(x.nodo.m)"
-            @click="f.toccaTessera(x.nodo.i)">
+            @pointerdown="e => f.prendi(e, x.nodo.i)" @click="f.toccaTessera(x.nodo.i)">
       <Icona :mossa="x.nodo.m" />
     </button>
 
     <div v-else class="pp-scatola" :class="{ 'pp-se': x.nodo.che === 'se',
-                                             'pp-sospetta': f.s.value.sospette && x.nodo.i >= f.s.value.cursore }"
+                                             'pp-sospetta': f.s.value.sospette && x.nodo.i >= f.s.value.cursore,
+                                             'pp-qui': f.s.value.scatolaQui === x.nodo.i,
+                                             'pp-presa': f.s.value.presa === x.nodo.i }"
          :data-scatola="x.nodo.i" :data-tipo="x.nodo.che">
       <button class="pp-testa"
               :class="{ 'pp-manca': valoreNodo(x.nodo) == null, 'pp-aperta': f.s.value.scelta === x.nodo.i,
                         'pp-brilla': f.s.value.consiglioTesta === x.nodo.i,
                         'pp-gira': !!giroDi(x.nodo.i), 'pp-fermo': !!giroDi(x.nodo.i) && !f.s.value.inCorsa }"
               :data-testa="x.nodo.i" :data-volte="valoreNodo(x.nodo) ?? 'N'" :data-giro="giroDi(x.nodo.i)"
-              :aria-label="testaInParole(x.nodo)" @click="f.testa(x.nodo.i)">
-        <span class="pp-em pp-ciclo-icona" aria-hidden="true">{{ x.nodo.che === 'se' ? '❓' : '🔁' }}</span>
-        <b v-if="giroDi(x.nodo.i) || typeof valoreNodo(x.nodo) !== 'string'">
-          {{ giroDi(x.nodo.i) || (valoreNodo(x.nodo) ?? 'N') }}</b>
-        <Lastra v-else :colore="valoreNodo(x.nodo)" />
+              :aria-label="testaInParole(x.nodo)"
+              @pointerdown="e => f.prendi(e, x.nodo.i)" @click="f.testa(x.nodo.i)">
+        <Figura class="pp-testa-segno" :nome="x.nodo.che === 'se' ? 'se' : 'ripeti'" />
+        <span class="pp-testa-dice" :class="{ 'pp-prima': parolaDi(x.nodo) !== 'volte' }">
+          <Scritta v-if="giroDi(x.nodo.i) || typeof valoreNodo(x.nodo) !== 'string'" class="pp-testa-valore"
+                   :testo="giroDi(x.nodo.i) || (valoreNodo(x.nodo) ?? 'N')" />
+          <Lastra v-else :colore="valoreNodo(x.nodo)" />
+          <Scritta class="pp-testa-parola" :testo="parolaDi(x.nodo)" minuta />
+        </span>
       </button>
-      <Carte :nodi="x.nodo.corpo" :fine="x.nodo.fine" />
+      <Carte :nodi="x.nodo.corpo" :fine="x.nodo.fine" bocca />
       <!-- il bordo della scatola: toccarlo mette il cursore subito fuori -->
       <button class="pp-coda" :data-coda="x.nodo.fine" aria-label="dopo la scatola"
               @click="f.tocca(x.nodo.fine + 1)"></button>
     </div>
   </template>
+  <!-- il + della scatola: sempre a vista, si tocca e la prossima carta entra lì -->
+  <button v-if="bocca" class="pp-bocca" :class="{ 'pp-qui': segnato(fine) }" :data-bocca="fine"
+          :data-cursore="segnato(fine) ? '' : null" aria-label="aggiungi dentro la scatola"
+          @click="f.tocca(fine)"><Figura nome="piu" /></button>
 </template>

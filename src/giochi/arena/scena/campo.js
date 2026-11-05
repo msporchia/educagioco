@@ -7,65 +7,82 @@
 // niente): in campo guardano dalla parte della loro squadra.
 import { CAMPO, TRUPPE, POSTI, EDIFICIO_DI } from '../dati/regole.js'
 import { PEZZI as DIPINTE, ATLANTE as FOGLIO_CASERME, PIAZZOLA } from '../dati/caserme-dipinte.js'
-import { carica, componi, immagineScena } from '../../castello/scena/vestito.js'
-import { PEZZI as SCENE } from '../../castello/dati/vestiti.js'
+import { PEZZI as FORTEZZE, ATLANTE as FOGLIO_FORTEZZE } from '../dati/fortezze-dipinte.js'
+import { PEZZI as OPERE, ATLANTE as FOGLIO_OPERE } from '../dati/opere-disegnate.js'
 import { PEZZI } from '../../castello/dati/figure.js'
 import { caricaFigure, immagineFigure } from '../../castello/scena/pittori.js'
-import { SCALA, fotogramma, arco } from './figure.js'
+import { SCALA, fotogramma, fotogrammiDi, arco, armiPronte } from './figure.js'
 import { disegnaEdificio } from './edifici.js'
+import { Terreno } from './terreno.js'
+import { Atmosfera } from './atmosfera.js'
 
-// La carta del terreno, a celle da 64 (16 × 24): celle piccole, così il campo è largo e le
-// figure piccole. La strada sono due colonne, il fiume due righe (y 247–292, dov'è l'acqua del
-// motore). Le due metà di chi gioca sono solo prato, con gli alberi sul bordo: ci stanno le
-// cittadelle.
+// Tutto è piccolo e il campo è largo: `ZOOM` è la misura delle figure rispetto al mondo.
 const ZOOM = 0.5
-// caserme che il foglio dipinto non ha ancora e che per ora prendono il pezzo di un'altra (docs/arena/grafica.md):
-// la tana delle bestie cornute, per neve e lava, ha la capanna dei lupi, che là non ci sono
-const IN_PRESTITO = { 'tana:bestie:1': 'tana:lupi:1', 'tana:bestie:2': 'tana:lupi:2' }
+// quanto mondo si vede almeno, di lato: le piazzole coi loro bordi. Il resto dello schermo è terreno in più (docs/arena/grafica.md)
+const LARGO_MINIMO = 276
+// in partita non si disegna niente che si possa preparare (docs/arena/grafica.md): gli atlanti si caricano e si ricolorano una volta sola
+const atlanti = {}
 const ZT = ZOOM * 1.2                    // le truppe: un po' più grandi del terreno
 const ZE = 0.75                          // castello ed edifici: più grandi delle truppe
-const MAPPA = Array.from({ length: 24 }, (_, y) => Array.from({ length: 16 }, (_, x) => {
-  if (x === 7 || x === 8) return '+'
-  if (y === 11 || y === 12) return '~'
-  if (y <= 9 || y >= 14) return x === 0 || x === 15 ? '^' : '_'
-  const h = ((x * 73856093) ^ (y * 19349663)) >>> 0
-  const bordo = Math.min(x, 15 - x)
-  if (bordo === 0 && h % 4 === 0) return '^'
-  if (bordo > 1 && h % 11 === 0) return 'd'
-  return h % 3 ? '.' : ','
-}).join(''))
 const IO = '#3d8bff', NEM = '#ff5a4d'
 
 export class Campo {
   constructor(canvas, { vestito = 'bosco' } = {}) {
     this.cv = canvas
     this.ctx = canvas.getContext('2d')
-    this.vestito = vestito
+    this.terreno = new Terreno(vestito)
+    this.aria = new Atmosfera(this.terreno.a)
     this.pronto = false
     this.effetti = []
-    this.s = 1; this.ox = 0; this.oy = 0
+    this.s = 1; this.ox = 0; this.oy = 0; this.k = 1
     this.nate = new WeakMap()          // quando è comparsa ogni caserma, per farla spuntare
     this.rovine = new Map()            // 'lato:posto' → l'edificio crollato lì: ne resta il rudere
     this.caserme = null                // le caserme dipinte: { io, nem } (il nemico col blu fatto rosso)
+    this.fortezze = null               // castello, porta e ponte dipinti del posto, se il foglio è arrivato: come sopra
+    this.opere = null                  // i pezzi disegnati a monte, che ci sono sempre: come sopra
+    this.figure = new Map()            // le truppe già pronte alla misura dello schermo: vedi `figura`
   }
 
+  /* se un'immagine non arriva (cache che si sta rinnovando, memoria corta) si riprova: il campo non resta
+     verde per sempre */
   async prepara() {
-    await Promise.all([carica(this.vestito), caricaFigure(), this.caricaCaserme()])
+    for (let giro = 0; ; giro++) {
+      try {
+        await Promise.all([caricaFigure(), armiPronte(), this.caricaAtlanti(), this.terreno.prepara()])
+        break
+      } catch (e) {
+        if (giro >= 5) throw e
+        await new Promise(ok => setTimeout(ok, 800 * (giro + 1)))
+      }
+    }
     this.pronto = true
+    this.preparaFigure()
   }
 
-  /* l'atlante delle caserme dipinte, e la sua copia col blu della squadra fatto rosso */
-  caricaCaserme() {
-    if (typeof Image === 'undefined') return Promise.resolve()
-    return new Promise(ok => {
+  /* un atlante e la sua copia col blu della squadra fatto rosso; se l'immagine non arriva, null */
+  atlante(src) {
+    if (typeof Image === 'undefined' || !src) return Promise.resolve(null)
+    return (atlanti[src] ||= new Promise(ok => {
       const img = new Image()
-      img.onload = () => { this.caserme = { io: img, nem: this.ricolora(img) }; ok() }
-      img.onerror = () => ok()                                  // resta il disegno in codice
-      img.src = FOGLIO_CASERME
-    })
+      img.onload = () => ok({ io: img, nem: this.ricolora(img) })
+      img.onerror = () => { delete atlanti[src]; ok(null) }
+      img.src = src
+    }))
   }
 
-  /* il blu della squadra diventa rosso (e il rosso blu): castello e caserme del nemico */
+  async caricaAtlanti() {
+    [this.caserme, this.fortezze, this.opere] = await Promise.all([FOGLIO_CASERME, FOGLIO_FORTEZZE, FOGLIO_OPERE].map(src => this.atlante(src)))
+    if (!this.opere) throw new Error('atlante delle opere non caricato')     // `prepara` riprova
+  }
+
+  /* un pezzo per questo posto: il dipinto se c'è, se no quello disegnato a monte. `@` sta per il posto. Torna [atlante, rettangolo] */
+  fortezza(nome) {
+    const n = nome.replace('@', this.terreno.chiave)
+    if (this.fortezze && FORTEZZE[n]) return [this.fortezze, FORTEZZE[n]]
+    return this.opere && OPERE[n] ? [this.opere, OPERE[n]] : [null, null]
+  }
+
+  /* il blu della squadra diventa rosso: tutto quello del nemico. Il rosso del foglio resta dov'è: è il fuoco, e il drago */
   ricolora(img, sx = 0, sy = 0, w = img.width, h = img.height) {
     const cv = document.createElement('canvas'); cv.width = w; cv.height = h
     const x = cv.getContext('2d'); x.drawImage(img, sx, sy, w, h, 0, 0, w, h)
@@ -73,7 +90,6 @@ export class Campo {
     for (let i = 0; i < a.length; i += 4) {
       const r = a[i], g = a[i + 1], b = a[i + 2]
       if (b > r + 70 && b > g + 30) { a[i] = b; a[i + 1] = Math.round(g * 0.55); a[i + 2] = Math.round(r * 0.7) }
-      else if (r > g + 60 && r > b + 60) { a[i] = Math.round(b * 0.8); a[i + 1] = Math.round(g * 1.1); a[i + 2] = r }
     }
     x.putImageData(d, 0, 0)
     return cv
@@ -82,26 +98,31 @@ export class Campo {
   /* un pezzo delle caserme dipinte, con la piazzola larga `larga` e centrata in (x, piede);
      torna l'altezza a schermo, o 0 se non c'è (e allora si disegna in codice) */
   dipinta(c, nome, x, piede, larga, lato, k = 1) {
-    const p = DIPINTE[nome] || DIPINTE[IN_PRESTITO[nome]]
-    if (!p || !this.caserme) return 0
+    const dipinto = DIPINTE[nome]
+    const p = dipinto || OPERE[nome], foglio = dipinto ? this.caserme : this.opere
+    if (!p || !foglio) return 0
     const [sx, sy, w, h, cx, pd] = p, sc = larga / PIAZZOLA * k
-    c.drawImage(this.caserme[lato], sx, sy, w, h, x - cx * sc, piede - pd * sc, w * sc, h * sc)
+    c.drawImage(foglio[lato], sx, sy, w, h, x - cx * sc, piede - pd * sc, w * sc, h * sc)
     return h * sc
   }
 
   /* dove sta il piede di una piazzola, a schermo */
   piede(lato, py) { return this.Y(lato === 'io' ? py : CAMPO.H - py) + this.me(30) }
 
-  /* la tela prende la misura che il contenitore le dà; il mondo sta 3:2 */
+  /* la tela prende la misura che il contenitore le dà. Il mondo non si stira mai: la scala è una, il campo sta in altezza
+     (i castelli spuntano dai due bordi) e di lato si vede quanto terreno lo schermo lascia */
   adatta() {
     const dpr = window.devicePixelRatio || 1
     const w = this.cv.clientWidth, h = this.cv.clientHeight
     if (!w || !h) return
     this.cv.width = Math.round(w * dpr); this.cv.height = Math.round(h * dpr)
     this.k = this.cv.width / w
-    this.s = Math.min(w / CAMPO.W, h / CAMPO.H)
+    this.s = Math.min(w / LARGO_MINIMO, h / CAMPO.H)
     this.ox = (w - CAMPO.W * this.s) / 2
     this.oy = (h - CAMPO.H * this.s) / 2
+    this.terreno.scorda()
+    this.figure.clear()
+    if (this.pronto) this.preparaFigure()
   }
 
   /* dal motore allo schermo: stesse coordinate, scalate */
@@ -120,6 +141,9 @@ export class Campo {
       const durata = { colpo: 0.18, crollo: 0.7, cura: 0.7, costruita: 0.6, potenziata: 0.6, squadra: 0.4, miniera: 0.7, castello: 0.7, bomba: 0.8, bombaPronta: 0.1 }[e.tipo] || 0.4
       this.effetti.push({ ...e, t0: ora, durata })
       if (e.tipo === 'crollo' && e.che === 'caserma') this.rovine.set(`${e.lato}:${e.posto}`, EDIFICIO_DI[e.id])
+      if (e.tipo === 'crollo' && e.che === 'miniera') this.rovine.set(`${e.lato}:${e.posto}`, 'miniera')
+      // un crollo grosso e la bomba si sentono: il quadro trema un attimo (ma il mondo resta dov'è)
+      if (e.tipo === 'bomba' || e.tipo === 'crollo') this.scossa = { t0: ora, forza: e.tipo === 'bomba' ? 5 : 3 }
     }
   }
 
@@ -129,35 +153,32 @@ export class Campo {
     const W = this.cv.width / this.k, H = this.cv.height / this.k
     c.clearRect(0, 0, W, H)
     c.imageSmoothingEnabled = true
+    if (this.scossa) {
+      const q = (ora - this.scossa.t0) / 0.32
+      if (q >= 1) this.scossa = null
+      else c.translate(Math.sin(ora * 71) * this.scossa.forza * (1 - q), Math.cos(ora * 57) * this.scossa.forza * (1 - q))
+    }
+    // ogni due secondi circa: se la tela del terreno si è svuotata, si rifà
+    if (this.pronto && ora - (this.controllo || 0) > 2) { this.controllo = ora; this.terreno.controlla() }
     this.sfondo(c, W, H)
     if (!this.pronto) return
-    this.ponte(c)
+    this.aria.sotto(c, W, H, this.s, v => this.X(v), v => this.Y(v), ora)
     this.piazzole(c, p)
     // castelli, caserme e porte dall'alto in basso, così chi sta davanti copre chi sta dietro
-    const edifici = [...p.castelli.map(e => [e.y, () => this.base(c, p, e.lato)]),
+    const edifici = [...p.castelli.map(e => [e.y, () => this.base(c, p, e.lato, ora)]),
       ...p.caserme.map(e => [e.y + 10, () => this.caserma(c, p, e, ora)]), ...p.miniere.map(e => [e.y + 10, () => this.miniera(c, p, e, ora)]),
-      ...p.muri.map(e => [e.y, () => this.muro(c, e)])]
+      ...p.muri.map(e => [e.y, () => this.muro(c, e, ora)])]
     for (const [, disegna] of edifici.sort((a, b) => a[0] - b[0])) disegna()
     const ord = [...p.unita].sort((a, b) => this.Y(a.y) - this.Y(b.y))
     for (const u of ord) if (!u.vola) this.truppa(c, u, ora)
     for (const u of ord) if (u.vola) this.truppa(c, u, ora)
     this.fx(c, ora)
+    this.aria.sopra(c, W, H, this.s, ora)
   }
 
   sfondo(c, W, H) {
-    c.fillStyle = '#5f9a3c'; c.fillRect(0, 0, W, H)
-    const mappa = this.pronto ? componi(MAPPA, this.vestito) : null
-    if (!mappa) return
-    const w = CAMPO.W * this.s, h = CAMPO.H * this.s
-    // se il quadro è più alto del campo, il terreno continua specchiato (le giunzioni combaciano)
-    for (let n = 1; this.oy - (n - 1) * h > 0; n++) {
-      for (const dir of [-1, 1]) {
-        const y = this.oy + dir * n * h
-        c.save(); c.translate(this.ox, y + (n % 2 ? h : 0)); c.scale(1, n % 2 ? -1 : 1)
-        c.drawImage(mappa, 0, 0, w, h); c.restore()
-      }
-    }
-    c.drawImage(mappa, this.ox, this.oy, w, h)
+    c.fillStyle = this.terreno.a.tinta; c.fillRect(0, 0, W, H)
+    if (this.pronto) this.terreno.disegna(c, { W, H, k: this.k, s: this.s, X: v => this.X(v), Y: v => this.Y(v), sopra: t => this.ponte(t) })
   }
 
   /* un pezzo del foglio delle figure, col piede in (x, y) */
@@ -173,15 +194,42 @@ export class Campo {
     return lh
   }
 
-  /* il foglio delle figure tutto del colore di una squadra, per il contorno (si fa una volta) */
-  tinta(lato) {
-    this._tinte ||= {}
-    if (this._tinte[lato]) return this._tinte[lato]
-    const img = immagineFigure(), cv = document.createElement('canvas')
-    cv.width = img.width; cv.height = img.height
-    const x = cv.getContext('2d'); x.drawImage(img, 0, 0)
-    x.globalCompositeOperation = 'source-in'; x.fillStyle = lato === 'io' ? '#4f9dff' : '#ff4a3d'; x.fillRect(0, 0, cv.width, cv.height)
-    return (this._tinte[lato] = cv)
+  /* Una truppa già pronta alla misura dello schermo, col contorno della squadra e l'arco in mano, girata dalla parte giusta:
+     a fotogramma è un disegno solo e senza scala, invece di cinque ingranditi dal foglio. Con centinaia di figure è questo che
+     pesa. Si rifanno quando cambia la misura. */
+  figura(id, fg, lato) {
+    const chiave = `${lato}:${fg}:${id}`
+    let f = this.figure.get(chiave)
+    if (f) return f
+    const [sx, sy, w, h] = PEZZI[fg], k = this.k, sc = SCALA[id] * this.s / 0.85 * ZT * k, d = 1.3 * k
+    const lw = w * sc, lh = h * sc, specchia = lato === 'nem', bordo = Math.ceil(d) + 1
+    const extra = id === 'scheletri' ? lh * 0.5 : 0                       // l'arco esce dalla figura
+    const mezzo = Math.ceil(lw / 2 + extra + bordo), cv = document.createElement('canvas')
+    cv.width = mezzo * 2; cv.height = Math.ceil(lh + bordo * 2)
+    const piede = cv.height - bordo, corpo = document.createElement('canvas')
+    corpo.width = cv.width; corpo.height = cv.height
+    const q = corpo.getContext('2d')
+    q.translate(mezzo, piede)
+    if (specchia) q.scale(-1, 1)
+    q.drawImage(immagineFigure(), sx, sy, w, h, -lw / 2, -lh, lw, lh)
+    if (specchia) q.scale(-1, 1)
+    if (id === 'scheletri') arco(q, 0, 0, lw, lh, specchia, 0)
+    // il contorno: la figura tutta del colore della squadra, spostata di un pelo ai quattro lati, sotto la figura vera
+    const tinta = document.createElement('canvas'); tinta.width = cv.width; tinta.height = cv.height
+    const t = tinta.getContext('2d')
+    t.drawImage(corpo, 0, 0)
+    t.globalCompositeOperation = 'source-in'; t.fillStyle = lato === 'io' ? '#4f9dff' : '#ff4a3d'; t.fillRect(0, 0, cv.width, cv.height)
+    const c = cv.getContext('2d')
+    for (const [dx, dy] of [[-d, 0], [d, 0], [0, -d], [0, d]]) c.drawImage(tinta, dx, dy)
+    c.drawImage(corpo, 0, 0)
+    f = { cv, piede: piede / k, alto: lh / k }
+    this.figure.set(chiave, f)
+    return f
+  }
+
+  /* tutte le pose di tutte le truppe, prima che serva: durante la battaglia non si prepara niente */
+  preparaFigure() {
+    for (const id of Object.keys(TRUPPE)) for (const fg of fotogrammiDi(id)) for (const lato of ['io', 'nem']) this.figura(id, fg, lato)
   }
 
   barra(c, x, y, w, q, colore) {
@@ -196,18 +244,22 @@ export class Campo {
     c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, 7); c.fill()
   }
 
-  /* la base: il castello di chi gioca, la bocca da cui escono i mostri per il nemico */
-  base(c, p, lato) {
-    /* il castello sta sul bordo e se ne vede solo un pezzo, la cima (il nemico, in alto, la base):
-       è l'obiettivo finale, non deve prendere campo */
+  /* il castello sta sul bordo e se ne vede solo un pezzo, la cima (il nemico, in alto, la base):
+     è l'obiettivo finale, non deve prendere campo */
+  base(c, p, lato, ora) {
     const re = p.castello(lato)
-    const sc = SCENE[this.vestito], img = immagineScena(this.vestito)
-    const [sx, sy, w, h] = sc.castello
+    const [foglio, pezzo] = this.fortezza('castello:@')
+    const [sx, sy, w, h] = pezzo
     const lw = w * 0.56 * this.s / 0.85 * ZE, lh = h * 0.56 * this.s / 0.85 * ZE
     const x = this.X(re.x), piede = lato === 'io' ? this.Y(CAMPO.H + 60) : this.Y(60)
     if (re.hp > 0) {
-      if (lato === 'nem') c.drawImage(this.castelloNemico(img, sx, sy, w, h), x - lw / 2, piede - lh, lw, lh)
-      else c.drawImage(img, sx, sy, w, h, x - lw / 2, piede - lh, lw, lh)
+      c.drawImage(foglio[lato], sx, sy, w, h, x - lw / 2, piede - lh, lw, lh)
+      const y = lato === 'io' ? this.Y(CAMPO.H - 2) : piede - lh * 0.05
+      for (const v of [-1, 1]) {
+        const bx = x + v * lw * 0.62
+        c.fillStyle = '#2b2118'; c.fillRect(bx - 1, y - this.me(58), 2, this.me(58))
+        this.bandiera(c, bx, y - this.me(36), this.me(24), v, lato, ora)
+      }
     } else this.ombra(c, x, lato === 'io' ? this.Y(CAMPO.H) : this.Y(0), lw * 0.4, lh * 0.1, 0.5)
     // la vita del castello: una barra grande dalla parte del campo, sempre accesa (con la vita scritta)
     const by = lato === 'io' ? piede - lh - this.mi(18) : piede + this.mi(6)
@@ -215,89 +267,79 @@ export class Campo {
     this.livello(c, x + this.mi(66), by + this.mi(6.5), re.liv, lato)
   }
 
-  /* il castello del nemico è lo stesso, coi colori scambiati: tetti rossi, stendardi blu */
-  castelloNemico(img, sx, sy, w, h) {
-    return (this._nem ||= this.ricolora(img, sx, sy, w, h))
+  /* una bandiera che sventola: quattro fotogrammi già pronti, col tempo e non coi fotogrammi; `y` è il piede dell'asta */
+  bandiera(c, x, y, alta, verso, lato, ora) {
+    const [sx, sy, w, h] = OPERE[`stendardo:${verso > 0 ? 'd' : 's'}:${Math.floor(ora * 2.7 + x) & 3}`]
+    const k = alta / h, ax = (verso > 0 ? 2 : 14) / 16 * w
+    c.drawImage(this.opere[lato], sx, sy, w, h, x - ax * k, y - alta, w * k, alta)
   }
 
+  /* la vita del castello: una targa di ferro con l'orlo d'oro, il numero in mezzo */
   barraCastello(c, x, y, re, lato) {
-    const w = this.mi(104), h = this.mi(13), q = Math.max(0, re.hp / re.max)
-    c.fillStyle = 'rgba(0,0,0,.65)'
-    c.beginPath(); c.roundRect(x - w / 2 - 2, y - 2, w + 4, h + 4, h / 2 + 2); c.fill()
-    c.fillStyle = lato === 'io' ? IO : NEM
-    if (q > 0) { c.beginPath(); c.roundRect(x - w / 2, y, Math.max(h, w * q), h, h / 2); c.fill() }
-    c.fillStyle = '#fff'; c.font = `bold ${this.mi(10)}px "Emoji Gioco", system-ui, sans-serif`
+    const w = this.mi(112), h = this.mi(14), q = Math.max(0, re.hp / re.max), r = h * 0.28
+    c.fillStyle = '#ffd97a'
+    c.beginPath(); c.roundRect(x - w / 2 - 3, y - 3, w + 6, h + 6, r + 3); c.fill()
+    c.fillStyle = '#1a1420'
+    c.beginPath(); c.roundRect(x - w / 2 - 1.5, y - 1.5, w + 3, h + 3, r + 1); c.fill()
+    if (q > 0) {
+      const g = c.createLinearGradient(0, y, 0, y + h)
+      if (lato === 'io') { g.addColorStop(0, '#7cc0ff'); g.addColorStop(0.5, IO); g.addColorStop(1, '#1f4f9e') }
+      else { g.addColorStop(0, '#ff9c8a'); g.addColorStop(0.5, NEM); g.addColorStop(1, '#a32a22') }
+      c.fillStyle = g
+      c.beginPath(); c.roundRect(x - w / 2, y, Math.max(h * 0.6, w * q), h, r); c.fill()
+    }
+    c.fillStyle = '#fff'; c.font = `bold ${this.mi(10.5)}px "Emoji Gioco", system-ui, sans-serif`
     c.textAlign = 'center'; c.textBaseline = 'middle'
     c.shadowColor = '#000'; c.shadowBlur = 3
     c.fillText(`${Math.ceil(re.hp)}`, x, y + h / 2 + 0.5)
     c.shadowBlur = 0
   }
 
+  /* il livello: uno scudetto del colore della squadra, orlato d'oro */
   livello(c, x, y, liv, lato) {
-    c.font = `bold ${this.mi(8)}px "Emoji Gioco", system-ui, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'
-    const w = this.mi(18), h = this.mi(10)
-    c.fillStyle = lato === 'io' ? IO : NEM
-    c.beginPath(); c.roundRect(x - w / 2, y - h / 2, w, h, h / 2); c.fill()
-    c.fillStyle = '#fff'; c.fillText(liv, x, y + 0.5)
+    c.font = `bold ${this.mi(8.5)}px "Emoji Gioco", system-ui, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'
+    const w = this.mi(15), h = this.mi(15), t = y - h * 0.5
+    const scudo = (d) => {
+      c.beginPath(); c.moveTo(x - w / 2 - d, t - d); c.lineTo(x + w / 2 + d, t - d); c.lineTo(x + w / 2 + d, t + h * 0.58)
+      c.quadraticCurveTo(x + w / 2 + d, t + h * 0.86 + d, x, t + h + d * 1.6)
+      c.quadraticCurveTo(x - w / 2 - d, t + h * 0.86 + d, x - w / 2 - d, t + h * 0.58); c.closePath(); c.fill()
+    }
+    c.fillStyle = '#ffd97a'; scudo(1.4)
+    c.fillStyle = lato === 'io' ? '#1f4f9e' : '#a32a22'; scudo(0)
+    c.fillStyle = '#fff'; c.fillText(liv, x, y - h * 0.04)
   }
 
-  /* il ponte: assi di legno sull'acqua, con le sponde */
+  /* il ponte: una volta sola, dentro la tela del terreno. Il pezzo è più alto del fiume di 12 per parte: le spalle */
   ponte(c) {
-    const m = v => this.m(v)
-    const x0 = this.X(CAMPO.corsia - 26), x1 = this.X(CAMPO.corsia + 26)
-    const y0 = this.Y(CAMPO.fiume.alto - 8), y1 = this.Y(CAMPO.fiume.basso + 8)
-    this.ombra(c, (x0 + x1) / 2, y1, (x1 - x0) * 0.55, m(5), 0.25)
-    c.fillStyle = '#7a5130'; c.fillRect(x0, y0, x1 - x0, y1 - y0)
-    for (let y = y0, i = 0; y < y1; y += m(6), i++) {
-      c.fillStyle = i % 2 ? '#a8713f' : '#9a6636'
-      c.fillRect(x0 + m(2), y + m(0.6), x1 - x0 - m(4), m(5))
-    }
-    for (const x of [x0, x1]) {
-      c.fillStyle = '#5b3a1f'; c.fillRect(x - m(3), y0, m(5), y1 - y0)
-      for (let y = y0; y <= y1 + 1; y += (y1 - y0) / 3) { c.fillStyle = '#4a2f18'; c.fillRect(x - m(4), y - m(4), m(7), m(7)) }
-    }
+    const [foglio, [sx, sy, w, h]] = this.fortezza('ponte:@')
+    const alto = (CAMPO.fiume.basso - CAMPO.fiume.alto + 24) * this.s, largo = alto * w / h
+    c.drawImage(foglio.io, sx, sy, w, h, this.X(CAMPO.corsia) - largo / 2, this.Y(CAMPO.fiume.alto - 12), largo, alto)
   }
 
   /* i posti delle caserme: una base stabile sempre in vista, la piazzola del castello a torri.
      Vuota aspetta la caserma, e quando la caserma crolla resta lì. */
   piazzole(c, p) {
-    const sc = SCENE[this.vestito], img = immagineScena(this.vestito)
     for (const lato of ['io', 'nem']) POSTI.forEach(([px, py], i) => {
       // dipinte: la piazzola vuota del foglio, o il rudere della caserma crollata lì
       if (p.miniere.some(m => m.lato === lato && m.posto === i)) { this.rovine.delete(`${lato}:${i}`) }   // la miniera ci sta sopra, sulla piazzola
       if (this.caserme) {
         if (p.caserme.some(cs => cs.lato === lato && cs.posto === i)) return
-        const rovina = this.rovine.get(`${lato}:${i}`)
-        if (this.dipinta(c, rovina ? `${rovina}:rudere` : 'vuota', this.X(px), this.piede(lato, py), this.me(70), lato)) return
+        const rovina = this.rovine.get(`${lato}:${i}`), x = this.X(px), piede = this.piede(lato, py)
+        if (rovina !== 'miniera') return void this.dipinta(c, rovina ? `${rovina}:rudere` : 'vuota', x, piede, this.me(70), lato)
+        this.dipinta(c, 'vuota', x, piede, this.me(70), lato)
+        this.dipinta(c, 'miniera:rudere', x, piede, this.me(70), lato)
       }
-      const [sx, sy, w, h] = sc['piazzola:' + (i % 2)]
-      const lw = this.me(70), lh = lw * h / w
-      const y = this.Y(lato === 'io' ? py : CAMPO.H - py) + this.me(9)
-      this.ombra(c, this.X(px) + 2, y + lh * 0.42, lw * 0.5, lh * 0.14, 0.25)
-      c.drawImage(img, sx, sy, w, h, this.X(px) - lw / 2, y - lh / 2, lw, lh)
     })
   }
 
-  /* una miniera: disegnata in codice (prima in codice, poi dipinta), sulla sua piazzola: un monte di
-     roccia con l'imbocco di legno e un carrello d'oro; sotto il livello, sopra la vita se è ferita */
+  /* una miniera sulla sua piazzola; sotto il livello, sopra la vita se è ferita */
   miniera(c, p, m, ora) {
     if (!this.nate.has(m)) this.nate.set(m, p.t < 1 ? -99 : ora)
     const q = Math.min(1, (ora - this.nate.get(m)) / 0.7), k = q < 1 ? Math.max(0.05, q) : 1
-    const x = this.X(m.x), piede = this.piede(m.lato, m.lato === 'io' ? m.y : CAMPO.H - m.y)
-    const u = v => this.me(v) * k
+    const x = this.X(m.x), piede = this.piede(m.lato, m.lato === 'io' ? m.y : CAMPO.H - m.y), stadio = m.liv >= 5 ? 2 : 1
     c.save()
     if (m.fl > 0) c.globalAlpha = 0.7
-    this.ombra(c, x + u(2), piede - u(4), u(30), u(6), 0.3)
-    c.fillStyle = '#5d5466'; c.beginPath(); c.ellipse(x, piede - u(10), u(30), u(26), 0, Math.PI, 0); c.fill()       // il monte
-    c.fillStyle = '#7a6f86'; c.beginPath(); c.ellipse(x - u(8), piede - u(18), u(14), u(12), 0, Math.PI, 0); c.fill()
-    c.fillStyle = '#6b4a2b'; c.fillRect(x - u(11), piede - u(30), u(22), u(22))                                       // l'imbocco
-    c.fillStyle = '#1b1410'; c.fillRect(x - u(7), piede - u(26), u(14), u(18))
-    c.fillStyle = '#8a6438'; c.fillRect(x - u(13), piede - u(32), u(26), u(4))
-    c.fillStyle = '#3b3b44'; c.fillRect(x + u(10), piede - u(10), u(16), u(7))                                         // il carrello
-    c.fillStyle = '#ffd24a'
-    for (const [dx, dy] of [[13, -12], [18, -13], [23, -12], [15.5, -15], [20.5, -15.5]]) { c.beginPath(); c.arc(x + u(dx), piede + u(dy), u(3), 0, 7); c.fill() }
-    c.fillStyle = m.lato === 'io' ? IO : NEM; c.fillRect(x - u(2), piede - u(48), u(2), u(18))                         // la bandierina della squadra
-    c.beginPath(); c.moveTo(x, piede - u(48)); c.lineTo(x + u(12), piede - u(44)); c.lineTo(x, piede - u(40)); c.fill()
+    this.dipinta(c, `miniera:${stadio}`, x, piede, this.me(70), m.lato, k)
     c.restore()
     this.livello(c, x, piede + this.mi(4), m.liv, m.lato)
     if (m.hp < m.max) this.barra(c, x, piede - this.me(54), this.me(40), m.hp / m.max)
@@ -345,33 +387,18 @@ export class Campo {
     if (cs.riposo > 0) { c.font = `${u(11)}px "Emoji Gioco", system-ui, sans-serif`; c.textAlign = 'center'; c.fillText('💤', x - u(24), y - u(20)) }
   }
 
-  /* la porta in fondo al ponte: due torrette e il portone che si rompe; crollata, resta il cumulo */
-  muro(c, mu) {
-    const S = this.s, x = this.X(mu.x), y = this.Y(mu.y), col = mu.lato === 'io' ? IO : NEM
-    const mezza = 24 * S, alto = 13 * S
-    const torre = tx => {
-      c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(tx - 6 * S + 2, y - alto + 3, 12 * S, alto + 4 * S)
-      c.fillStyle = '#9c9486'; c.fillRect(tx - 6 * S, y - alto - 2 * S, 12 * S, alto + 6 * S)
-      c.fillStyle = '#c7bfb0'; for (const d of [-6, -1.5, 3]) c.fillRect(tx + d * S, y - alto - 5 * S, 3 * S, 3 * S)
-      c.fillStyle = col; c.fillRect(tx - 6 * S, y - alto - 2 * S, 12 * S, 1.8 * S)
-    }
-    if (mu.hp <= 0) {
-      c.fillStyle = '#8b8478'
-      for (const [dx, dy, r] of [[-10, 2, 5], [-2, 5, 6], [6, 1, 5], [12, 4, 4]]) {
-        c.beginPath(); c.ellipse(x + dx * S, y + dy * S, r * S, r * 0.6 * S, 0, 0, 7); c.fill()
-      }
-    } else {
-      c.save()
-      if (mu.fl > 0) c.globalAlpha = 0.7
-      c.fillStyle = '#6b4424'; c.fillRect(x - mezza + 4 * S, y - alto + 2 * S, 2 * mezza - 8 * S, alto + 2 * S)
-      c.strokeStyle = '#4a2e17'; c.lineWidth = Math.max(1, S * 0.8)
-      for (let d = -mezza + 9 * S; d < mezza - 5 * S; d += 5 * S) { c.beginPath(); c.moveTo(x + d, y - alto + 2 * S); c.lineTo(x + d, y + 4 * S); c.stroke() }
-      c.fillStyle = '#3b3b40'; c.fillRect(x - mezza + 4 * S, y - 3 * S, 2 * mezza - 8 * S, 1.6 * S)
-      c.fillStyle = col; c.fillRect(x - mezza + 4 * S, y - alto + 2 * S, 2 * mezza - 8 * S, 1.8 * S)
-      c.restore()
-    }
-    torre(x - mezza); torre(x + mezza)
-    if (mu.hp > 0 && mu.hp < mu.max) this.barra(c, x, y - alto - 9 * S, this.m(40), mu.hp / mu.max)
+  /* la porta in fondo al ponte: intera, rotta o crollata, e gli stendardi sulle torri finché regge */
+  muro(c, mu, ora) {
+    const x = this.X(mu.x), stato = mu.hp <= 0 ? 'crollata' : mu.hp / mu.max < 0.5 ? 'rotta' : 'intera'
+    const [foglio, [sx, sy, w, h]] = this.fortezza(`porta:@:${stato}`)
+    const largo = 70 * this.s, alto = largo * h / w, piede = this.Y(mu.y) + 6 * this.s
+    c.save()
+    if (mu.fl > 0) c.globalAlpha = 0.72
+    c.drawImage(foglio[mu.lato], sx, sy, w, h, x - largo / 2, piede - alto, largo, alto)
+    c.restore()
+    if (mu.hp <= 0) return
+    for (const v of [-1, 1]) this.bandiera(c, x + v * 24 * this.s, piede - 27 * this.s, 12 * this.s, v, mu.lato, ora)
+    if (mu.hp < mu.max) this.barra(c, x, piede - alto - 5, this.m(40), mu.hp / mu.max)
   }
 
   truppa(c, u, ora) {
@@ -388,15 +415,11 @@ export class Campo {
     const salto = u.cammina ? Math.abs(Math.sin(ora * 9 + u.x)) * m(2) : 0
     const nasce = u.nasce > 0 ? 1 - u.nasce / 0.8 : 1
     const sfasa = u.x * 0.07 + u.y * 0.05
-    const fg = fotogramma(u.id, ora, u.cammina, sfasa), sc = SCALA[u.id] * this.s / 0.85 * ZT * (0.6 + 0.4 * nasce)
-    const py = y - alto - salto + scatto, d = 1.3
-    // il contorno: la stessa figura tinta del colore della squadra, spostata di un pelo ai quattro lati
-    for (const [dx, dy] of [[-d, 0], [d, 0], [0, -d], [0, d]]) this.pezzo(c, fg, x + dx, py + dy, sc, u.lato === 'nem', 1, this.tinta(u.lato))
-    const lh = this.pezzo(c, fg, x, py, sc, u.lato === 'nem', u.fl > 0 ? 0.6 : 1)
-    if (u.id === 'scheletri') {
-      const [, , w, h] = PEZZI[fg]
-      arco(c, x, py, w * sc, h * sc, u.lato === 'nem', u.colpo > 0 ? Math.sin(u.colpo / 0.25 * Math.PI) : 0)
-    }
+    const f = this.figura(u.id, fotogramma(u.id, ora, u.cammina, sfasa), u.lato), py = y - alto - salto + scatto
+    const dentro = 0.6 + 0.4 * nasce, lw = f.cv.width / this.k * dentro, lh = f.alto * dentro
+    if (u.fl > 0) c.globalAlpha = 0.72
+    c.drawImage(f.cv, x - lw / 2, py - f.piede * dentro, lw, f.cv.height / this.k * dentro)
+    c.globalAlpha = 1
     if (u.hp < u.max) this.barra(c, x, y - alto - lh - m(5), m(15), u.hp / u.max)
     if (u.nasce > 0) {
       c.strokeStyle = 'rgba(255,255,255,.8)'; c.lineWidth = 1.5
@@ -426,7 +449,13 @@ export class Campo {
           c.textAlign = 'center'; c.fillText('+', x, y - q * this.m(24))
         } else if (e.tipo === 'crollo') {
           c.fillStyle = `rgba(150,140,120,${0.7 * (1 - q)})`
-          for (let i = 0; i < 5; i++) { const a = i * 1.26; c.beginPath(); c.arc(x + Math.cos(a) * q * this.m(20), y + Math.sin(a) * q * this.m(14), this.m(7) * (1 - q * 0.5), 0, 7); c.fill() }
+          for (let i = 0; i < 7; i++) { const a = i * 0.9; c.beginPath(); c.arc(x + Math.cos(a) * q * this.m(28), y + Math.sin(a) * q * this.m(18), this.m(9) * (1 - q * 0.5), 0, 7); c.fill() }
+          // le schegge saltano e ricadono
+          c.fillStyle = `rgba(70,58,50,${1 - q})`
+          for (let i = 0; i < 9; i++) {
+            const a = i * 0.7 + 0.3, d = q * this.m(30 + (i % 3) * 8)
+            c.fillRect(x + Math.cos(a) * d, y + Math.sin(a) * d * 0.6 - Math.sin(q * Math.PI) * this.m(20), this.m(3), this.m(3))
+          }
         } else if (['costruita', 'potenziata', 'castello', 'miniera'].includes(e.tipo)) {
           c.strokeStyle = `rgba(255,220,90,${1 - q})`; c.lineWidth = 3
           c.beginPath(); c.arc(x, y, this.m(8) + q * this.m(24), 0, 7); c.stroke()
@@ -434,6 +463,8 @@ export class Campo {
           const r = this.m(e.raggio) * (0.35 + 0.65 * Math.min(1, q * 2.2))
           c.fillStyle = `rgba(255,170,60,${0.55 * (1 - q)})`; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill()
           c.strokeStyle = `rgba(255,240,170,${1 - q})`; c.lineWidth = 4; c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke()
+          c.strokeStyle = `rgba(255,255,255,${0.7 * (1 - q)})`; c.lineWidth = 2; c.beginPath(); c.arc(x, y, r * 1.45, 0, 7); c.stroke()
+          if (q < 0.2) { c.fillStyle = `rgba(255,255,230,${0.5 * (1 - q * 5)})`; c.fillRect(0, 0, this.cv.width, this.cv.height) }
           c.fillStyle = `rgba(80,60,50,${0.5 * (1 - q)})`
           for (let i = 0; i < 6; i++) { const a = i * 1.05 + 0.4; c.beginPath(); c.arc(x + Math.cos(a) * r * 0.6, y + Math.sin(a) * r * 0.6 - q * this.m(14), this.m(8) * (1 - q * 0.5), 0, 7); c.fill() }
         } else if (e.tipo === 'squadra') {

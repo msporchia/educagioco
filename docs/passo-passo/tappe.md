@@ -2,7 +2,8 @@
 
 Tutte le tappe della campagna nell'ordine della fila (le stelle stanno sotto
 questo indice; la strada di ognuno dei due animali sta in
-[livelli.md](livelli.md#le-due-strade)).
+[livelli.md](livelli.md#le-due-strade)). Quelle del guerriero, in coda, stanno
+in [guerriero.md](guerriero.md#le-tappe).
 
 La colonna «frecce» è la strada più corta **con la carota**, misurata dal
 risolutore; per i livelli con lo zaino è quante carte tiene lo zaino.

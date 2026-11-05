@@ -1,5 +1,5 @@
-/* Le opzioni di qualità della scena (pannello ⚙): i preset, le scale della risoluzione, la qualità delle ombre. Dato puro.
-   Il punto di partenza lo sceglie la fascia grafica del telefono (store/qualita.js); poi si ritocca a mano e si ricorda. */
+/* Le opzioni di qualità della scena: i preset, le scale della risoluzione, la qualità delle ombre. Dato puro.
+   Il punto di partenza lo sceglie la fascia grafica del telefono (store/qualita.js); chi le aveva ritoccate col pannello di una volta le ritrova. */
 export const PRESET = {
   basso: { scala: 1,   ombre: false, ombraRes: 512,  vento: false, erba: true,  particelle: false, alberi: true, nebbia: true },
   medio: { scala: 1.5, ombre: true,  ombraRes: 1024, vento: true,  erba: true,  particelle: true,  alberi: true, nebbia: true },

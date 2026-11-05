@@ -1,0 +1,25 @@
+# I campi col dito
+
+Lo stesso gesto serve a ciotola, tinozza e recinti: [cura-sul-prato.md](cura-sul-prato.md).
+
+**Decisione dell'utente del 4/11/2026**: «tu premi sul campo e ti dà l'arma e tu la trascini, così anche se vuoi coltivare o falciare uno o più è
+sempre pronto». I tasti Libero, Semina e Raccogli non ci sono più, e con loro la coda dei campi e il foglio «Cosa semini?». Codice:
+`scena3d/attrezzi.js` (il mondo), `viste/Attrezzi.vue` (i gettoni), `azioni.semina` e `azioni.raccogli`.
+
+## Le regole
+
+- **Un tocco su un campo porta l'attrezzo accanto**: vuoto i semi, pronto il falcetto. Su un campo che cresce il contadino dice quanto manca.
+- **Si trascina l'attrezzo sui campi**, uno o tanti. Il campo cambia sotto il dito, senza aspettare il contadino, che non si muove.
+- **Ogni campo si fa una volta per passata**; i semi vanno solo sui vuoti, il falcetto solo sui pronti: gli altri si attraversano senza dire niente, **ma una passata che non ha fatto nessun campo lo dice** («Sta crescendo…», «È vuoto: prima semina qualcosa», «È già pronto: raccoglilo col falcetto»): un gesto che non fa niente non resta muto.
+- **Un tocco su un gettone non fa niente**: dice cos'è (nome, tempo). Il gesto è trascinare.
+- **I semi stanno ad arco**, cinque per pagina, solo quelli arrivati al livello; «» sotto l'arco sfogliano. L'arco si riapre sulla pagina dell'ultimo seme usato. Il numerino sotto ogni seme dice quanti ne hai già di quel raccolto.
+- **Raccogliere costa sempre il gesto (🪙1–2)** e guarda lo scomparto prima di cominciare: un rifiuto lo dice (in cima alla scena, [regole.md](regole.md#come-si-dice-di-no)) e ferma la passata, l'attrezzo resta lì.
+- **L'attrezzo si posa** dopo una passata riuscita, con un tocco altrove, spostando la vista o sollevando un pezzo.
+- **Il tasto di «🧭 E adesso?»** manda il contadino al primo campo che ne ha bisogno e lì apre l'attrezzo, col seme del consiglio già in vista.
+
+Un campo si riconosce sotto il dito dalla cella (`cosaSu`), non con un raggio sulle mesh: `passa` gira a ogni `pointermove`.
+
+## Nei test
+
+`integrazione/fattoria3d` e `integrazione/fattoria3d-guida` (il dito vero). Bersagli: `[data-f3="attrezzi"][data-tipo="semi|falce"]`, i gettoni
+`[data-seme="<coltura>"]` e `[data-f3="falce"]`, `[data-f3="gettone-conto"]`, `[data-f3="semi-prima|semi-dopo"]` (le pagine), `[data-f3="attrezzi-riga"]`.

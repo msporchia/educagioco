@@ -16,7 +16,9 @@ grossi sono del castello.
 - **La grandezza dei numeri la decide il bambino, poi il prezzo** (`bravura.js`).
   Ogni operazione ha una **base**, un grado del modulo: la prima caserma chiede
   quella, e una scelta cara sale di un grado ogni due di «peso» (`calcoloDi`, da 1
-  a 10: costruire `1 + prezzo/4`, potenziare il livello dell'edificio, la miniera
+  a 10: costruire e potenziare una truppa pesano **quanto vale l'edificio** (`pesoDelValore`: la
+  spesa totale fatta su di lui, col prezzo che si sta pagando, a scala logaritmica — un drago al livello 1 vale
+  più di un arciere al livello 1, e un arciere al livello 10 più di tutti; l'utente 1/11), la miniera
   `3 + livello`, il castello `2 + livello/2`). Prima la grandezza era solo del
   prezzo, e la prima caserma chiedeva `7 + 6` a tutti (l'utente: «troppo facili»).
 - **La base si muove giocando**: un conto giusto entro 6 secondi la alza di un
@@ -48,9 +50,9 @@ grossi sono del castello.
   ragiona, e sbagliare costa solo il riposo della caserma. Il calcolo prende **tutto lo schermo**.
   La taratura non è stata rimisurata: vedi [da-fare.md](da-fare.md).
 - **Per scegliere con calma ci sono «i numeri»**, nella scelta e nell'anello: aprono i dettagli (come sta
-  la cosa adesso, come starebbe al livello dopo, quanto costa) e **il campo sta
-  fermo finché sono aperti**: la scelta di cosa costruire si fa lì, senza fretta,
-  e il calcolo viene dopo. Che conto serve non si scrive: «si risolve una
+  la cosa adesso, come starebbe al livello dopo, quanto costa) e **il campo corre
+  anche mentre sono aperti** (l'utente 1/11: se si aspetta le monete, intanto arrivano): la scelta di
+  cosa costruire si fa lì, e il calcolo viene dopo (lui sì ferma il campo). Che conto serve non si scrive: «si risolve una
   moltiplicazione» è stato tolto (l'utente).
 - **Sbagliare non costa monete**: la caserma sbagliata riposa 6 secondi (il
   prezzo è il tempo), le altre scelte si ritentano quando si vuole.

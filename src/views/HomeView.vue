@@ -14,6 +14,7 @@ import { GIOCHI } from '../data/giochi.js'
 import { inCasa } from '../data/portata-giochi.js'
 import { AREE } from '../data/aree.js'
 import Nastri from '../guide/Nastri.vue'
+import Scarico from '../components/Scarico.vue'
 import Carosello from '../components/home/Carosello.vue'
 import Riprendi from '../components/home/Riprendi.vue'
 import ListaAmici from '../components/amici/ListaAmici.vue'
@@ -184,7 +185,7 @@ function riprendi (k) { chiediRipresa(k); emit('vai', k) }
         <i>{{ amiciDice }}</i>
       </button>
       <ListaAmici v-if="amiciAperti" @chiudi="amiciAperti = false" @vai="v => $emit('vai', v)" />
-      <!-- «Melody ti ha superato»: tocca e si va a riprenderla (docs/core/amici-nei-giochi.md) -->
+      <!-- «ti ha superato»: tocca e si va a riprenderlo (docs/core/amici-nei-giochi.md) -->
       <button v-for="x in sorpassi" :key="x.chiave + x.gioco" class="riga-amici sorpasso" type="button" data-sorpasso :data-gioco="x.gioco"
               @click="vaiARiprendere(x.gioco)">
         <PallinoAmico :amico="x" />
@@ -279,6 +280,7 @@ function riprendi (k) { chiediRipresa(k); emit('vai', k) }
                 :data-cercando="cercando ? '' : null" :aria-busy="cercando"
                 @click="cercaVersione"><span class="giro">↻</span> {{ cercando ? 'sto cercando…' : 'cerca aggiornamenti' }}</button>
       </p>
+      <Scarico />
     </div>
 
   </div>

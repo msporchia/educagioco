@@ -9,8 +9,20 @@ import { dati as datiAmici } from '../store/amici.js'
 import { stato as amiciStato, invita as invitaAmico } from '../amici/servizio.js'
 import { ingresso, prendiIngresso } from '../amici/ingresso.js'
 
+let ultimoTavolo = -Infinity                    // quando è partita l'ultima richiesta di un tavolo (il servizio ne dà un numero all'ora per indirizzo, e una famiglia ne ha uno solo)
+
+/* un tavolo nuovo, a passo: se l'ultimo è stato chiesto da poco si aspetta il resto della pausa, e il bambino intanto legge «Preparo la stanza…» */
+async function nuovoTavolo(posto) {
+  const resto = ultimoTavolo + PAUSA_TAVOLI - Date.now()
+  ultimoTavolo = Date.now() + Math.max(0, resto)
+  if (resto > 0) await new Promise(res => setTimeout(res, resto))
+  return creaTavolo({ posto })
+}
+
 export const ASPETTA_A_DIRLO = 1.5      // secondi di guasto prima del cartello: non si dice a ogni singhiozzo
 const ATTESA_INVITO = 45000             // ms: un amico che non risponde
+const PAUSA_TAVOLI = 4000               // ms: fra un tavolo e il prossimo di questo telefono; chi preme a raffica trova «Preparo la stanza…», non un errore
+const RIMANDA_INVITO = 5000             // ms: finché si aspetta, l'invito si rimanda (se l'amico aveva il filo caduto, il primo si perde)
 
 /* `gioco`: la chiave (quella degli inviti, src/amici/giochi.js); `regola()`: la regola per l'incontro; `alVia(incontro)`: la
    partita è partita, la si mette in scena; `mostra()`: il gioco fa vedere la sala (lasciando quello che stava facendo) */
@@ -24,7 +36,7 @@ export function usaSfida({ gioco, regola, alVia, mostra }) {
   const invitato = ref('')              // il nome dell'amico invitato, mentre lo si aspetta
   const scelto = ref('')                // la chiave dell'amico già scelto dalla lista degli amici («Gioca con…»): la sala parte da lui
   const linea = ref('')                 // '' | 'io' (ho perso la linea) | 'altro' (non si sente)
-  let guastaDa = 0, scadenza = 0
+  let guastaDa = 0, scadenza = 0, rimanda = 0
 
   const inDue = () => !!regia.value && regia.value.stato === 'gioco'
 
@@ -43,7 +55,7 @@ export function usaSfida({ gioco, regola, alVia, mostra }) {
     if (r.stato === 'rotta' && prima !== 'rotta') registra('sfida', `${gioco}: ${r.motivo}`, false)
     if (r.stato === 'finita' && prima !== 'finita' && r.canale.diario.cadute) registra('sfida', `${gioco}: finita bene, ${r.diagnosi()}`, false)
     // l'amico invitato è arrivato al tavolo: non lo si aspetta più (se no dopo 45 s la sfida si chiudeva a partita in corso)
-    if (r.stato !== 'attesa' && invitato.value) { clearTimeout(scadenza); invitato.value = '' }
+    if (r.stato !== 'attesa' && invitato.value) { clearTimeout(scadenza); clearInterval(rimanda); invitato.value = '' }
     if (r.stato === 'gioco' && prima !== 'gioco') {
       linea.value = ''; guastaDa = 0
       alVia(r)
@@ -52,7 +64,7 @@ export function usaSfida({ gioco, regola, alVia, mostra }) {
 
   function chiudi() {
     invitato.value = ''
-    clearTimeout(scadenza)
+    clearTimeout(scadenza); clearInterval(rimanda)
     const r = regia.value
     regia.value = null
     stato.value = ''
@@ -73,10 +85,13 @@ export function usaSfida({ gioco, regola, alVia, mostra }) {
     passo.value = 'scelta'
   }
 
+  const occupato = () => passo.value === 'creo' || passo.value === 'entro'   // un secondo tocco mentre il primo lavora non fa niente
+
   async function crea(scelte) {
+    if (occupato()) return
     passo.value = 'creo'
     const posto = nuovoPosto()
-    try { codice.value = await creaTavolo({ posto }) } catch (e) { return sbaglia(e.message) }
+    try { codice.value = await nuovoTavolo(posto) } catch (e) { return sbaglia(e.message) }
     passo.value = 'attesa'
     collegati(codice.value, scelte, posto)
   }
@@ -84,11 +99,12 @@ export function usaSfida({ gioco, regola, alVia, mostra }) {
   /* un amico invitato (docs/core/amici.md): si prepara il tavolo, ci si siede, e solo allora parte l'invito col codice dentro.
      `dati`: quello che l'invito porta oltre al codice (lo controlla `valida` in src/amici/giochi.js) */
   async function invita(chiave, scelte, dati) {
+    if (occupato()) return
     chiudi()
     const a = amiciStato.amici.find(x => x.chiave === chiave)
     passo.value = 'creo'
     const posto = nuovoPosto()
-    try { codice.value = await creaTavolo({ posto }) } catch (e) { return sbaglia(e.message) }
+    try { codice.value = await nuovoTavolo(posto) } catch (e) { return sbaglia(e.message) }
     collegati(codice.value, scelte, posto)
     const r = regia.value
     for (let t = 0; regia.value === r && r.ruolo !== 'host' && t < 120; t++) await new Promise(res => setTimeout(res, 100))
@@ -100,14 +116,18 @@ export function usaSfida({ gioco, regola, alVia, mostra }) {
     passo.value = 'attesa'
     clearTimeout(scadenza)
     scadenza = setTimeout(() => finisceInvito(`${invitato.value} non risponde`), ATTESA_INVITO)
+    // chi riceve lo stesso invito due volte lo mostra una sola (servizio.js, `trattati`)
+    clearInterval(rimanda)
+    rimanda = setInterval(() => { if (invitato.value && regia.value === r && r.stato === 'attesa') invitaAmico(chiave, gioco, { ...dati, codice: codice.value }); else clearInterval(rimanda) }, RIMANDA_INVITO)
   }
   function finisceInvito(perche) {
     if (!invitato.value || passo.value !== 'attesa' || (regia.value && regia.value.stato !== 'attesa')) return
-    chiudi(); sbaglia(perche)
+    chiudi(); sbaglia(perche)     // `chiudi` ferma anche il rimando
   }
   watch(() => amiciStato.risposta, r => { if (r && !r.ok) finisceInvito(`${invitato.value} adesso non può giocare`) })
 
   function entra(cod) {
+    if (occupato()) return
     passo.value = 'entro'
     codice.value = cod
     collegati(cod, null)

@@ -5,11 +5,9 @@
 import { tempoBreve } from '../dati/tempo.js'
 
 export const BERSAGLI = {
-  semina: '[data-f3="az-semina"]',
-  raccogli: '[data-f3="az-raccogli"]',
   costruisci: '[data-f3="az-costruisci"]',
-  seme: '[data-f3="semi"] [data-seme="grano"]',
-  chiudiSemi: '[data-f3="semi"] [data-chiudi]',
+  seme: '[data-f3="attrezzi"] [data-seme="grano"]',
+  falce: '[data-f3="attrezzi"] [data-f3="falce"]',
   carta: '[data-f3="costruisci-qui"] [data-carta="campo"]',
 }
 
@@ -25,25 +23,24 @@ export function servePrimoGiro({ esperienza = 0, merci = {}, prodotti = {}, lana
 /**
  * Il passo di adesso. Il quadro (tutto numeri e sì/no, niente motore):
  *  - `campi`: quanti campi ci sono; `vuoti`, `maturi`, `crescono`: come stanno; `secondi`: fra quanto il primo matura
- *  - `modo`: libero | semina | raccogli; `semi`: il foglio «Cosa semini?» è aperto; `costruisci`: il menu «Costruisci qui» è aperto
+ *  - `attrezzo`: semi | falce, l'attrezzo accanto al campo, o null; `costruisci`: il menu «Compra» è aperto
  *  - `foglio`: un altro foglio (macchina, banco, livelli…) è aperto; `raccolto`: il primo raccolto è in scorta
- *  - `visto`: il menu «Costruisci qui» è già stato aperto una volta nel primo giro
+ *  - `visto`: il menu «Compra» è già stato aperto una volta nel primo giro
  */
 export function guidaDelPrimoGiro(q = {}) {
-  const { campi = 0, vuoti = 0, maturi = 0, crescono = 0, secondi = 0, modo = 'libero', semi = false, costruisci = false, foglio = false, raccolto = false, visto = false } = q
+  const { campi = 0, vuoti = 0, maturi = 0, crescono = 0, secondi = 0, attrezzo = null, costruisci = false, foglio = false, raccolto = false, visto = false } = q
   if (foglio) return null                                   // un foglio di quelli che la guida non conosce: non gli si parla sopra
-  if (semi) return { dove: BERSAGLI.seme, mano: true, testo: 'Scegli il grano: si semina e cresce da solo.' }
+  if (attrezzo === 'semi') return { dove: BERSAGLI.seme, mano: true, testo: 'Trascina il grano sul campo: cresce da solo.' }
+  if (attrezzo === 'falce') return { dove: BERSAGLI.falce, mano: true, testo: 'Trascina il falcetto sul campo pronto.' }
   if (costruisci) {
     if (!campi) return { dove: BERSAGLI.carta, mano: true, testo: 'Tocca il campo: ci crescono i raccolti.' }
     return null
   }
-  if (!campi) return { dove: BERSAGLI.costruisci, mano: true, testo: 'Serve un campo: tocca 🏗 Costruisci.' }
-  if (maturi && modo !== 'raccogli') return { dove: BERSAGLI.raccogli, mano: true, testo: 'È pronto! Tocca ✂️ Raccogli.' }
-  if (maturi && modo === 'raccogli') return { dove: null, testo: 'Tocca il campo pronto: il contadino lo taglia.' }
+  if (!campi) return { dove: BERSAGLI.costruisci, mano: true, testo: 'Serve un campo: tocca 🛒 Compra.' }
+  if (maturi) return { dove: null, testo: 'È pronto! Tocca il campo.' }
   /* il primo raccolto è il traguardo: il campo tornato vuoto può aspettare, il passo è spendere */
-  if (raccolto && !visto) return { dove: BERSAGLI.costruisci, mano: true, testo: 'Bravo! Ora tocca 🏗 Costruisci e fai crescere la fattoria.' }
-  if (vuoti && modo !== 'semina') return { dove: BERSAGLI.semina, mano: true, testo: 'Tocca 🌱 Semina e scegli cosa far crescere.' }
-  if (vuoti && modo === 'semina') return { dove: null, testo: 'Tocca il campo vuoto: il contadino ci semina.' }
+  if (raccolto && !visto) return { dove: BERSAGLI.costruisci, mano: true, testo: 'Bravo! Ora tocca 🛒 Compra e fai crescere la fattoria.' }
+  if (vuoti) return { dove: null, testo: 'Tocca il campo vuoto.' }
   if (crescono) return { dove: null, testo: `Il grano cresce${secondi ? `: ancora ${tempoBreve(secondi * 1000)}` : ''}.` }
   return null
 }

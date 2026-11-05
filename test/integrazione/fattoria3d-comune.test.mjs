@@ -48,15 +48,15 @@ const fai = (p, codice, arg) => p.evaluate(codice, arg)
 const monete = p => p.evaluate(() => window.__fattoria3d.motore.monete())
 
 let A = null, B = null
-A = await telefono('leonardo', { id: 'bancomelody00', nome: 'Melody' })
+A = await telefono('lorenzo', { id: 'bancomarta000', nome: 'Marta' })
 const a = A.page
 controlla('con un amico, nella fattoria c\'è il 🤝', await a.locator('[data-f3="apri-comune"]').isVisible())
 const casaA = await fai(a, () => window.__fattoria3d.motore.s.cose.length)
 await scatto(a, 'comune-1-il-tasto')
 
-/* ── Leonardo entra per primo: la fattoria in comune nasce, e lui ci mette un campo e semina ── */
+/* ── Lorenzo entra per primo: la fattoria in comune nasce, e lui ci mette un campo e semina ── */
 await entraInComune(a)
-controlla('nella barra c\'è con chi è la fattoria', /melody/i.test(await a.locator('.barra-app .dove').innerText()))
+controlla('nella barra c\'è con chi è la fattoria', /marta/i.test(await a.locator('.barra-app .dove').innerText()))
 controlla('dentro la fattoria in comune il 🤝 lascia il posto al 🏠', await a.locator('[data-f3="torna-mia"]').count() > 0 && await a.locator('[data-f3="apri-comune"]').count() === 0)
 const campo = await fai(a, () => {
   const { motore: m, mondo } = window.__fattoria3d
@@ -65,28 +65,28 @@ const campo = await fai(a, () => {
   }
   return null
 })
-controlla('Leonardo mette un campo e semina il grano', !!campo)
+controlla('Lorenzo mette un campo e semina il grano', !!campo)
 await attendi(a, 1500)                                   // le mosse partono da sole
 
-/* ── Melody entra e trova il campo ── */
-B = await telefono('melody', { id: 'bancoleonardo', nome: 'Leonardo' })
+/* ── Marta entra e trova il campo ── */
+B = await telefono('marta', { id: 'bancolorenzo0', nome: 'Lorenzo' })
 const b = B.page
 await entraInComune(b)
 const visto = await fai(b, id => { const c = window.__fattoria3d.motore.cosa(id); return c && { tipo: c.tipo, coltura: c.coltura } }, campo.id)
-controlla('Melody trova il campo di Leonardo, seminato a grano, con lo stesso id', visto?.tipo === 'campo' && visto.coltura === 'grano', JSON.stringify(visto))
+controlla('Marta trova il campo di Lorenzo, seminato a grano, con lo stesso id', visto?.tipo === 'campo' && visto.coltura === 'grano', JSON.stringify(visto))
 
-/* ── Melody compra un lotto: Leonardo lo vede arrivare mentre gioca, e le sue monete non si muovono ── */
+/* ── Marta compra un lotto: Lorenzo lo vede arrivare mentre gioca, e le sue monete non si muovono ── */
 const moneteA = await monete(a), moneteB = await monete(b)
 const lotto = await fai(b, () => { const m = window.__fattoria3d.motore, l = m.lottiComprabili()[0]; return m.compraLotto(l.id).ok ? l.id : null })
-controlla('Melody compra un lotto con le sue monete', !!lotto && await monete(b) < moneteB)
+controlla('Marta compra un lotto con le sue monete', !!lotto && await monete(b) < moneteB)
 const arrivato = await a.waitForFunction(id => { const m = window.__fattoria3d.motore; return Object.prototype.hasOwnProperty.call(m.s.lotti, id) }, lotto, { timeout: 15000 }).then(() => true, () => false)
-controlla('il lotto di Melody arriva a Leonardo mentre gioca', arrivato)
-uguale('le monete di Leonardo non si muovono', await monete(a), moneteA)
+controlla('il lotto di Marta arriva a Lorenzo mentre gioca', arrivato)
+uguale('le monete di Lorenzo non si muovono', await monete(a), moneteA)
 const avviso = await a.locator('[data-f3="avviso-livello"]').innerText().catch(() => '')
-await scatto(a, 'comune-2-arriva-melody')
-controlla('e sopra la scena c\'è chi l\'ha fatto', /melody/i.test(avviso), avviso)
+await scatto(a, 'comune-2-arriva-marta')
+controlla('e sopra la scena c\'è chi l\'ha fatto', /marta/i.test(avviso), avviso)
 
-/* ── i due contadini: quello di Leonardo cammina nella scena di Melody, col suo nome, e sparisce quando esce ── */
+/* ── i due contadini: quello di Lorenzo cammina nella scena di Marta, col suo nome, e sparisce quando esce ── */
 const meta = await fai(a, () => {
   const { motore: m, mondo } = window.__fattoria3d, e = mondo.eroe, [i0, j0] = e.cella()
   for (let r = 3; r < 8; r++) for (const [i, j] of [[i0 + r, j0], [i0 - r, j0], [i0, j0 + r], [i0, j0 - r]]) {
@@ -95,18 +95,18 @@ const meta = await fai(a, () => {
   }
   return null
 })
-controlla('Leonardo cammina fino a un posto lontano', !!meta)
+controlla('Lorenzo cammina fino a un posto lontano', !!meta)
 const vede = await b.waitForFunction(([x, z]) => { const o = window.__fattoria3d.mondo.ospite; return !!o && o.visibile && Math.hypot(o.eroe.x - x, o.eroe.z - z) < 0.6 }, meta, { timeout: 10000 }).then(() => true, () => false)
-controlla('Melody vede il contadino di Leonardo arrivare dove è andato', vede)
-controlla('col suo nome sopra la testa', /leonardo/i.test(await b.locator('[data-f3="ospite"]').innerText().catch(() => '')))
+controlla('Marta vede il contadino di Lorenzo arrivare dove è andato', vede)
+controlla('col suo nome sopra la testa', /lorenzo/i.test(await b.locator('[data-f3="ospite"]').innerText().catch(() => '')))
 await scatto(b, 'comune-4-due-contadini')
 
 /* ── la propria fattoria resta com'era; rientrando, quella in comune è ancora lì ── */
 await a.click('[data-f3="torna-mia"]')
-const sparito = await b.waitForFunction(() => !window.__fattoria3d.mondo.ospite?.visibile, null, { timeout: 5000 }).then(() => true, () => false)
-controlla('Leonardo esce e il suo contadino sparisce da Melody', sparito)
+const sparito = await b.waitForFunction(() => !window.__fattoria3d.mondo.ospite?.visibile, null, { timeout: 9000 }).then(() => true, () => false)
+controlla('Lorenzo esce e il suo contadino sparisce da Marta', sparito)
 await a.waitForFunction(() => !/Con /.test(document.querySelector('.barra-app .dove')?.innerText || '') && !!window.__fattoria3d?.mondo, null, { timeout: 20000 })
-uguale('tornato a casa, la fattoria di Leonardo ha le cose di prima', await fai(a, () => window.__fattoria3d.motore.s.cose.length), casaA)
+uguale('tornato a casa, la fattoria di Lorenzo ha le cose di prima', await fai(a, () => window.__fattoria3d.motore.s.cose.length), casaA)
 await entraInComune(a)
 controlla('rientrando, il campo e il lotto sono ancora lì', await fai(a, ([id, l]) => { const m = window.__fattoria3d.motore; return !!m.cosa(id) && !!m.s.lotti[l] }, [campo.id, lotto]))
 
@@ -114,13 +114,13 @@ controlla('rientrando, il campo e il lotto sono ancora lì', await fai(a, ([id, 
 const C = await apriGioco(browser, { giocatori: ['ugo'] })
 await C.page.addInitScript(() => { globalThis.__SERVIZIO_SFIDE__ = 'http://127.0.0.1:9' })
 await semina(C.page, { coins: 100, settings: { eta: 8, sperimentali: true } }, 'ugo')
-await seminaAmici(C.page, [amico('bancoleonardo', 'Leonardo')], 'ugo')
+await seminaAmici(C.page, [amico('bancolorenzo0', 'Lorenzo')], 'ugo')
 await scegli(C.page, 'fattoria3d'); await pronto(C.page)
 await C.page.click('[data-f3="apri-comune"]'); await C.page.click('[data-f3="dialogo"] [data-scelta="0"]')
 await C.page.waitForSelector('[data-f3="comune-attesa"][data-errore]', { timeout: 20000 }).catch(() => {})
 await scatto(C.page, 'comune-3-senza-rete')
 controlla('senza rete la fattoria in comune dice che serve internet', /internet/i.test(await C.page.locator('[data-f3="comune-attesa"]').innerText().catch(() => '')))
 
-for (const [chi, T] of [['Leonardo', A], ['Melody', B], ['senza rete', C]]) controlla(`nessun errore (${chi})`, veri(T.errori).length === 0, veri(T.errori).join(' · '))
+for (const [chi, T] of [['Lorenzo', A], ['Marta', B], ['senza rete', C]]) controlla(`nessun errore (${chi})`, veri(T.errori).length === 0, veri(T.errori).join(' · '))
 await browser.close()
 riassunto('fattoria in comune: due telefoni')

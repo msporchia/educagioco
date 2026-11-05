@@ -33,9 +33,9 @@ const opz = (nome, def) => { const i = argv.indexOf(nome); return i >= 0 ? Numbe
    nell'ultima) e il tetto di chi non sbaglia mai (`misura`), che conta dalla tappa `dalla` (da 1) e scende da `da` ad `a`.
    Facile non ha tetto: il nemico lo regola solo il bambino. Il nemico non diventa più ricco ma più bravo (`nemicoDi`). */
 export const LIVELLI = {
-  facile:    { da: 0.95, a: 0.6,  bravo: null },
-  medio:     { da: 0.8,  a: 0.3,  bravo: { dalla: 2, da: 0.8,  a: 0.4 } },
-  difficile: { da: 0.7,  a: 0.15, bravo: { dalla: 3, da: 0.7,  a: 0.2 } },
+  facile:    { da: 0.8,  a: 0.3,  bravo: { dalla: 2, da: 0.8,  a: 0.4 } },
+  medio:     { da: 0.7,  a: 0.15, bravo: { dalla: 3, da: 0.7,  a: 0.2 } },
+  difficile: { da: 0.55, a: 0.12, bravo: { dalla: 3, da: 0.6,  a: 0.3 } },
 }
 const VOLTE = opz('--volte', 120)
 const GIRI = 8

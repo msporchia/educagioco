@@ -4,7 +4,7 @@
    (`serveLaRegola`) — mai a giocare al posto del bambino. Le strade si
    contano in frecce, non in celle: una scivolata lunga sei celle è una
    freccia sola. */
-import { PASSI, SALTI } from '../dati/mondo.js'
+import { PASSI, SALTI, ATTACCA } from '../dati/mondo.js'
 import { carteDi, daScegliere, eApri, eFine, eSe, valoreDi } from '../dati/carte.js'
 import { Mondo, esegui, TANA, eErrore } from './mondo.js'
 
@@ -14,8 +14,10 @@ const LIMITE = 400000
 
 /* le mosse che il livello mette in mano: le frecce-salto solo dove il
    livello le dichiara, e mai se la domanda è «senza salti» */
-export const mosseDi = (liv, senza = null) =>
-  liv.salti && senza !== 'salto' ? [...PASSI, ...SALTI] : PASSI
+export const mosseDi = (liv, senza = null) => [
+  ...PASSI, ...(liv.salti && senza !== 'salto' ? SALTI : []),
+  ...((liv.nemici || []).length && senza !== 'nemici' ? [ATTACCA] : []),
+]
 
 /* la strada più corta fino alla tana, con la carota se `carota`; `da`
    è un mondo già avviato, senza si parte dalla partenza. Torna l'elenco
@@ -88,13 +90,13 @@ export const carteUsate = (fila, esito) => carteDi(fila.slice(0, esito.dove + 1)
    Con lo zaino l'aiuto è un altro (`suggerisciNelloZaino`). */
 export function suggerisci(liv, fila = []) {
   if (liv.zaino) return suggerisciNelloZaino(liv, fila)
-  const intera = esegui(liv, fila, { eventi: false })
+  const intera = esegui(liv, fila, { eventi: false, aperta: true })
   const vince = intera.esito === TANA
   for (const carota of [true, false]) {
     const corta = risolvi(liv, { carota })
     if (!corta) continue
     for (let k = fila.length; k >= 0; k--) {
-      const r = esegui(liv, fila.slice(0, k), { eventi: false })
+      const r = esegui(liv, fila.slice(0, k), { eventi: false, aperta: true })
       if (eErrore(r.esito)) continue
       if (r.esito === TANA) {
         if (carota && !r.carota) continue
@@ -117,7 +119,7 @@ export function suggerisci(liv, fila = []) {
      { che: 'testa', apri, valore }      questa scatola vuole un altro valore
      { che: 'togli', cursore }           la carta prima del cursore è di troppo */
 function suggerisciNelloZaino(liv, fila) {
-  const r = esegui(liv, fila, { eventi: false })
+  const r = esegui(liv, fila, { eventi: false, aperta: true })
   if (r.esito === TANA && r.carota) return { che: 'via' }
   const buona = !eErrore(r.esito) && r.esito !== TANA
   const sciolta = carota => {
@@ -171,6 +173,8 @@ export function serveLaCarta(liv) {
        al masso è un livello del prato con un sasso in più. Le pecore
        stanno con loro: senza la loro regola non scappano, e nel recinto
        non ci va nessuno;
+     · le grate stanno con loro: senza pulsanti non si apre niente, e il
+       livello che si vince lo stesso non ha bisogno della grata;
      · il ghiaccio e le buche: la strada giusta, giocata in un mondo dove
        il ghiaccio è prato (o la buca è una buca qualsiasi), **non
        vince**. Col ghiaccio spento si arriva quasi sempre, ma per
@@ -178,8 +182,16 @@ export function serveLaCarta(liv) {
 export function serveLaRegola(liv, regola) {
   const vera = risolvi(liv, { carota: true })
   if (!vera) return false
-  if (regola === 'salto' || regola === 'spinta' || regola === 'pecore')
+  if (regola === 'salto' || regola === 'spinta' || regola === 'pecore' || regola === 'grate')
     return !risolvi(liv, { carota: false, senza: regola })
+  /* i nemici: senza di loro (o senza la regola dei due alla volta) la strada
+     sarebbe più corta, o non ci sarebbe proprio: il nemico la cambia. E serve
+     anche se la strada giusta ne batte uno */
+  if (regola === 'nemici' || regola === 'due') {
+    const libera = risolvi(liv, { carota: false, senza: regola })
+    if (!libera || libera.length < risolvi(liv, { carota: false }).length) return true
+    return regola === 'nemici' && esegui(liv, vera).passi.some(p => p.eventi.some(e => e.che === 'duello'))
+  }
   const r = esegui(liv, vera, { senza: regola, eventi: false })
   return !(r.esito === TANA && r.carota)
 }
@@ -193,7 +205,7 @@ export function serveLaRegola(liv, regola) {
 export function misura(liv, { limite = LIMITE } = {}) {
   const conCarota = risolvi(liv, { carota: true, limite })
   const senzaCarota = conCarota ? risolvi(liv, { carota: false, limite }) : null
-  const usa = { scivola: 0, salto: 0, spinta: 0, affonda: 0, masso: 0, buca: 0, passo: 0, fugge: 0 }
+  const usa = { scivola: 0, salto: 0, spinta: 0, affonda: 0, masso: 0, buca: 0, passo: 0, fugge: 0, pulsante: 0, duello: 0 }
   if (conCarota) {
     const r = esegui(liv, conCarota)
     for (const p of r.passi) for (const e of p.eventi) if (e.che in usa) usa[e.che]++

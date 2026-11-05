@@ -19,6 +19,8 @@ const da2d = (tipo, ripiego = {}) => {
 const edificio2d = tipo => ({ prezzo: prezzoDa2D(tipo), liv: livelloDa2D(tipo) })
 /** Una decorazione solo 3D: il suo prezzo, e il livello che la 2D le darebbe (la fila delle decorazioni è ordinata per prezzo). */
 const decoroSolo3D = prezzo => ({ prezzo, rincaro: 0, cresce: 0, liv: livelloPerPrezzo(prezzo) })
+/** Una festa solo 3D col livello scelto a mano (docs/fattoria3d/natale.md): le feste durano due mesi, quindi non seguono la fila dei prezzi dei decori, che metterebbe una ghirlanda da 14 monete al livello 50. */
+const festaSolo3D = (prezzo, liv) => ({ prezzo, rincaro: 0, cresce: 0, liv })
 
 export const PEZZI = {
   campo:           { nome: 'Campo',           emoji: '🌾', w: 2, d: 2, ...da2d('campo'), categoria: 'campi', produttivo: true },
@@ -31,6 +33,8 @@ export const PEZZI = {
   panchina:        { nome: 'Panchina',        emoji: '🪑', w: 2, d: 1, ...da2d('panchina'), categoria: 'decori' },
   fontana:         { nome: 'Fontana',         emoji: '⛲', w: 2, d: 2, ...da2d('fontana'), categoria: 'decori' },
   pozzo:           { nome: 'Pozzo',           emoji: '🪣', w: 1, d: 1, ...da2d('pozzo'), categoria: 'decori' },
+  ciotola_bestia:  { nome: 'Ciotola',         emoji: '🥣', w: 1, d: 1, prezzo: 0, rincaro: 0, cresce: 0, liv: 1, categoria: 'animali', dono: true },      // arriva con l'animale, porta il suo nome: si sposta gratis, non si compra e non si mette via (docs/fattoria3d/cura-sul-prato.md)
+  tinozza:         { nome: 'Tinozza',         emoji: '🛁', w: 2, d: 2, prezzo: 0, rincaro: 0, cresce: 0, liv: 1, categoria: 'animali', dono: true, unico: true },      // arriva col primo animale: qui si lavano
   spaventapasseri: { nome: 'Spaventapasseri', emoji: '🧑‍🌾', w: 1, d: 1, ...da2d('spaventapasseri'), categoria: 'decori' },
   passerella:      { nome: 'Passerella',      emoji: '🪵', w: 1, d: 3, ...decoroSolo3D(8), categoria: 'passaggi', calpestabile: true, suAcqua: true, alzato: 0.18 },   // calpestabili: non fermano il passo, contano come strada (regole.md)
   ponte:           { nome: 'Ponte',           emoji: '🌉', w: 3, d: 1, ...da2d('ponte'), categoria: 'passaggi', calpestabile: true, suAcqua: true, alzato: [0.25, 0.36, 0.25] },   // la gobba: una quota per cella lungo il lato lungo
@@ -44,6 +48,16 @@ export const PEZZI = {
   zucca_intagliata: { nome: 'Zucca intagliata', emoji: '🎃', w: 1, d: 1, ...da2d('zucca_intagliata'), categoria: 'decori', stagione: 'halloween' },
   zucche_mucchio:  { nome: 'Due zucche',       emoji: '🎃', w: 2, d: 1, ...da2d('zucche_mucchio'), categoria: 'decori', stagione: 'halloween' },
   pupazzo_neve:    { nome: 'Pupazzo di neve',  emoji: '⛄', w: 1, d: 1, ...decoroSolo3D(8), categoria: 'feste', stagione: 'natale' },      // solo 3D: la 2D non l'ha
+  // il Natale in più (docs/fattoria3d/natale.md): tre alberi grandi per i livelli alti, e le decorazioni di mappa; solo 3D, come il pupazzo
+  albero_natale_alto:    { nome: 'Albero di Natale alto',    emoji: '🎄', w: 2, d: 2, ...festaSolo3D(45, 20), categoria: 'feste', stagione: 'natale' },
+  albero_natale_grande:  { nome: 'Albero di Natale grande',  emoji: '🎄', w: 3, d: 3, ...festaSolo3D(90, 35), categoria: 'feste', stagione: 'natale' },
+  albero_natale_gigante: { nome: 'Albero di Natale gigante', emoji: '🎄', w: 4, d: 4, ...festaSolo3D(180, 50), categoria: 'feste', stagione: 'natale' },
+  bastoni_zucchero:      { nome: 'Bastoni di zucchero',      emoji: '🍭', w: 1, d: 1, ...festaSolo3D(6, 4), categoria: 'feste', stagione: 'natale' },
+  bastoni_zucchero_fila: { nome: 'Fila di bastoni di zucchero', emoji: '🍭', w: 2, d: 1, ...festaSolo3D(12, 9), categoria: 'feste', stagione: 'natale' },
+  pacchi_regalo:         { nome: 'Pacchi regalo',            emoji: '🎁', w: 1, d: 1, ...festaSolo3D(10, 7), categoria: 'feste', stagione: 'natale' },
+  ghirlanda_natale:      { nome: 'Ghirlanda di Natale',      emoji: '🎀', w: 2, d: 1, ...festaSolo3D(14, 12), categoria: 'feste', stagione: 'natale' },
+  renna_natale:          { nome: 'Renna',                    emoji: '🦌', w: 1, d: 1, ...festaSolo3D(18, 16), categoria: 'feste', stagione: 'natale' },
+  slitta_natale:         { nome: 'Slitta con le renne',      emoji: '🛷', w: 1, d: 3, ...festaSolo3D(40, 28), categoria: 'feste', stagione: 'natale' },
   // i magazzini (docs/fattoria3d/magazzini.md): non si comprano dal menu, arrivano da soli al livello del silo e il secondo si costruisce dal loro
   // foglio, e si mettono dal menu (la carta c'è solo se ce n'è uno da mettere); `magazzino` è il silo di cui sono l'edificio. Il prezzo vero è quello dell'ingrandimento (dati/silos.js): questo serve solo ai controlli
   silo:            { nome: 'Silo del raccolto', emoji: '🌾', art: 'il', w: 2, d: 2, prezzo: 40, rincaro: 0, cresce: 0, liv: 1, categoria: 'edifici', magazzino: 'terra' },
@@ -62,7 +76,7 @@ export function quotaDelPezzo(d, a, b) {
 }
 export const TIPI_DI_PEZZO = Object.keys(PEZZI)
 
-/** Le schede del menu «Costruisci qui», nell'ordine in cui si vedono (la `categoria` di ogni pezzo e di ogni edificio unico è una di queste).
+/** Le schede del menu «Compra», nell'ordine in cui si vedono (la `categoria` di ogni pezzo e di ogni edificio unico è una di queste).
     `strumenti`: la scheda delle strade ha anche la strada e la gomma, che non sono pezzi. Vedi docs/fattoria3d/scena.md. */
 export const CATEGORIE = {
   campi:    { nome: 'Campi',    emoji: '🌾' },
@@ -72,6 +86,14 @@ export const CATEGORIE = {
   ...SCHEDE_DECORI,        // verde, recinti, raccolto, case, bestiole: schede nuove, una per famiglia della 2D (dati/decori.js)
   passaggi: { nome: 'Strade',   emoji: '🛣️', strumenti: true },
 }
+/** Il taccuino del menu: le linguette a sinistra, ognuna con le sue schede. Ogni scheda di `CATEGORIE` sta in un gruppo solo (un test lo guarda). */
+export const GRUPPI = {
+  fattoria: { nome: 'Fattoria', emoji: '🚜', schede: ['campi', 'animali', 'edifici'] },
+  giardino: { nome: 'Giardino', emoji: '🌳', schede: ['verde', 'fiori', 'acqua', 'bestiole'] },
+  paese:    { nome: 'Paese',    emoji: '🏘️', schede: ['case', 'recinti', 'passaggi'] },
+  decori:   { nome: 'Decori',   emoji: '🎀', schede: ['decori', 'arredo', 'raccolto', 'feste'] },
+}
+export const gruppoDi = scheda => Object.keys(GRUPPI).find(g => GRUPPI[g].schede.includes(scheda)) || 'fattoria'
 
 // Unici: uno per tipo, si costruiscono dal menu e si mettono dove si vuole nel terreno proprio (docs/fattoria3d/edifici-liberi.md). Niente
 // `slot`: i posti di prima stanno in `POSTI_STORICI` di dati/mondo.js (servono solo a leggere un salvataggio vecchio). Pastificio (id
@@ -105,11 +127,11 @@ export function edificiDaCostruire(livello, posseduti = {}) {
   return Object.entries(EDIFICI).filter(([t, e]) => e.liv <= livello && !posseduti[t]).sort((a, b) => a[1].liv - b[1].liv).map(([t]) => t)
 }
 
-/** Cosa dice l'avviso quando si sale di livello e si apre un edificio: «il Panificio! Costruiscilo» (vuoto se non se ne apre nessuno). */
+/** Cosa dice l'avviso quando si sale di livello e si apre un edificio: «il Panificio! Compralo» (vuoto se non se ne apre nessuno). */
 export function avvisoEdificiNuovi(livello) {
   const nuovi = [...Object.values(EDIFICI), ...Object.values(PEZZI).filter(p => p.magazzino && p.liv > 1)].filter(e => e.liv === livello)      // anche un magazzino che arriva (il primo silo c'è da subito)
   if (!nuovi.length) return ''
-  return nuovi.map(e => `${e.art} ${e.nome}`).join(' e ') + '! ' + (nuovi.length > 1 ? 'Costruiscili' : 'Costruiscilo')
+  return nuovi.map(e => `${e.art} ${e.nome}`).join(' e ') + '! ' + (nuovi.length > 1 ? 'Comprali' : 'Compralo')
 }
 
 export function guastiDelCatalogo() {
@@ -118,7 +140,7 @@ export function guastiDelCatalogo() {
     if (!d.nome || !d.emoji) g.push(`${tipo}: manca nome o emoji`)
     if (EDIFICI[tipo] && !['il', 'lo', 'la'].includes(d.art)) g.push(`${tipo}: manca l'articolo (art)`)
     if (!(d.w >= 1 && d.d >= 1)) g.push(`${tipo}: misure impossibili`)
-    if (!(d.prezzo > 0)) g.push(`${tipo}: prezzo non positivo`)
+    if (!(d.prezzo > 0) && !d.dono) g.push(`${tipo}: prezzo non positivo`)
     if (!(Number.isInteger(d.liv) && d.liv >= 1)) g.push(`${tipo}: manca il livello`)
     if (!CATEGORIE[d.categoria]) g.push(`${tipo}: categoria sconosciuta (${d.categoria})`)
     if (d.calpestabile) {

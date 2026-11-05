@@ -16,6 +16,7 @@
     "taratura": "node strumenti/sotterraneo-taratura.mjs",
     "bottega": "node strumenti/sotterraneo-bottega.mjs",
     "tara:arena": "node strumenti/tara-arena.mjs",
+    "disegni:arena": "node strumenti/sprite/disegni-arena.mjs",
     "tara:fattoria3d": "node strumenti/tara-fattoria3d.mjs",
     "parita:fattoria3d": "node strumenti/parita-fattoria3d.mjs",
     "mondo": "vite --open /strumenti/banco/mondo.html",
@@ -44,13 +45,13 @@
     "anteprime": "node strumenti/anteprime.mjs"
   },
   "dependencies": {
-    "three": "^0.186.1",
+    "three": "^0.187.0",
     "vue": "^3.5.13"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.2.1",
+    "@vitejs/plugin-vue": "^6.0.10",
     "playwright": "^1.62.1",
-    "vite": "^6.0.7",
+    "vite": "^8.3.5",
     "vite-plugin-singlefile": "^2.1.0"
   }
 }

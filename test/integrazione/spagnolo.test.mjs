@@ -26,7 +26,7 @@ await page.addInitScript(() => {
 await azzera(page)
 
 /* ---------- 1. in home la carta c'è, accanto a quella inglese ---------- */
-uguale('in home c’è la carta dello spagnolo', await page.locator('.carta.gioco[data-gioco="spagnolo"]').count(), 1)
+uguale('su un profilo nuovo la carta dello spagnolo c’è', await page.locator('.carta.gioco[data-gioco="spagnolo"]').count(), 1)
 uguale('e quella inglese è rimasta al suo posto', await page.locator('.carta.gioco[data-gioco="inglese"]').count(), 1)
 
 /* ---------- 2. senza la campagna vecchia finita, niente ---------- */

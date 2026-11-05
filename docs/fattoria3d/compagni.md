@@ -1,27 +1,28 @@
 # I compagni: Watson, i gatti e il contadino
 
-Chi vive sulla fattoria senza lavorarci: il bobtail **Watson** e tre gatti camminano per il terreno, e il contadino ha un
-aspetto nuovo. Sono **vita sulla scena**: non costano esperienza, non producono, la loro posizione non si salva e a ogni apertura
+Chi vive sulla fattoria senza lavorarci: il bobtail **Watson** e quattro gatti (Sherlock, Irene, Golia, Pepe) camminano per il terreno, e il contadino ha un
+aspetto nuovo. **Dal 3/11/2026 si adottano** ([adozioni.md](adozioni.md)): non arrivano più da soli col livello, ma chi li aveva li tiene. Sono **vita sulla scena**: non costano esperienza, non producono, la loro posizione non si salva e a ogni apertura
 ripartono davanti alla casa. Dal 31/10/2026 **si curano** come le bestie di casa (bisogni, nome, premio: [bestie-di-casa.md](bestie-di-casa.md)):
 quello sì sta nello stato, in `stato.casa`. Codice: `dati/compagni.js` (dati e
 scelte pure), `scena3d/modelli-compagni.js` (i corpi e le pose), `scena3d/compagni.js` (il comportamento).
 
-**Le bestie che si comprano e si curano** (beagle, gatto rosso, coniglio, pappagallo) sono un'altra cosa: stanno in [bestie-di-casa.md](bestie-di-casa.md) e usano la stessa scena (`scena3d/compagni.js`: `def.daCurare`) e si comprano. I compagni di questa pagina restano gratis (sono gli animali veri di casa) ma si curano come loro: **tenendo premuto** su uno si apre il suo foglio, col nome che si può cambiare. Nella 2D si comprano anche bobtail, gatto bianco e nero e gatto nero: in 3D sono Watson, Sherlock e Pepe, quindi non si comprano (`COMPAGNO_DI`).
+**Le bestie che si comprano e si curano** (beagle, gatto rosso, coniglio, pappagallo) sono un'altra cosa: stanno in [bestie-di-casa.md](bestie-di-casa.md) e usano la stessa scena (`scena3d/compagni.js`: `def.daCurare`) e si comprano. I compagni di questa pagina si adottano (prezzo e livello in `COMPAGNI`, [adozioni.md](adozioni.md)) e si curano come loro: **tenendo premuto** su uno si apre il suo foglio, col nome che si può cambiare. Nella 2D si comprano anche bobtail, gatto bianco e nero e gatto nero: in 3D sono Watson, Sherlock e Pepe (`COMPAGNO_DI`), con gli stessi prezzi e livelli.
 
-## Quando arrivano
+## Quando si possono adottare
 
-Come tutto il resto, col livello: `liv` su ogni compagno, e `roba(liv).compagni` li raccoglie (il foglio dei livelli li
-mostra con 🐕/🐈). Non contano per `vuoto()` né per le «cose produttive» di un livello, quindi non spostano nessuna soglia.
+Col livello: `liv` e `prezzo` su ogni compagno, e `roba(liv).compagni` li raccoglie (il foglio dei livelli li
+mostra con 🐕/🐈, «puoi adottarlo»). In scena compare chi è in `stato.casa` (`Cura.compagniAdottati`). Non contano per `vuoto()` né per le «cose produttive» di un livello, quindi non spostano nessuna soglia.
 
 | livello | chi | mantello |
 |--:|---|---|
-| 1 | Watson | bobtail |
-| 2 | Sherlock | gatto bianco e nero (tuxedo): il gatto vero di casa, come Watson |
-| 3 | Irene | gattina calico (bianca, arancione e nera): l'altra gatta vera di casa |
-| 13 | Pepe | gatto nero |
+| 3 | Watson (90 🪙) | bobtail |
+| 10 | Sherlock (75) | gatto bianco e nero (tuxedo): il gatto vero di casa, come Watson |
+| 11 | Irene (75) | gattina calico (bianca, arancione e nera): l'altra gatta vera di casa |
+| 14 | Golia (75) | gatto nero, tutto nero (`golia`): occhi verde-oro, niente bianco |
+| 19 | Pepe (75) | gatto nero col ciuffo bianco sul petto e occhi gialli |
 
-I tre animali veri di casa (Watson, Sherlock, Irene) arrivano per primi, perché i bambini ci tengono. I gatti sono in scala 1,15 (`SCALA_GATTO`, come `SCALA_CANE` per Watson) per riconoscersi dalla telecamera di serie. Al caricamento ci sono tutti quelli del livello, senza avviso. Salendo di livello il nuovo compare con uno sbuffo di
-scintille e `ui.avviso` («Watson è arrivato!»). Il controllo è una volta al secondo (`Compagni.sync`).
+(Prima del 3/11/2026 arrivavano da soli ai livelli 1, 2, 3 e 19: `LIVELLO_DI_UNA_VOLTA`, per i salvataggi di allora.) I gatti sono in scala 0,82 (`SCALA_GATTO`; Golia un po' di più, Irene un po' di meno), più bassi di ogni cane: le taglie stanno in [taglie.md](taglie.md). Al caricamento ci sono tutti quelli adottati, senza avviso. Adottandone uno compare con uno sbuffo di
+scintille e `ui.avviso` («Un bobtail è arrivato!»: il nome glielo dà il bambino subito dopo). Il controllo è una volta al secondo (`Compagni.sync`).
 
 ## Com'è fatto il disegno
 
@@ -42,8 +43,9 @@ scintille e `ui.avviso` («Watson è arrivato!»). Il controllo è una volta al 
   annusa, dorme sdraiato col mento sulle zampe, fa festa (scodinzola col sedere, lingua fuori), trotta (la frangia e le
   orecchie ballano), e le pose di «Quando ci premi» (alza la testa, zampa, rotola, salta, riporta, starnuta, gira, mano, sbadiglia, incontra: sotto).
   In più un **bastoncino** (un mesh, ~20 triangoli, nascosto: lo mostra solo `riporta`). Il catalogo 3D ha una voce per posa (`npm run catalogo3d:scheda -- --gioco fattoria --q watson`).
-- **I gatti** (`creaGatto(variante)`): di cartone morbido. Testa tonda e grande con le guance piene, orecchie triangolari grandi
-  rosa dentro, occhi enormi con la fessura e il riflesso, nasino a triangolo e bocca a «w» (una **trama canvas trasparente** sul
+- **I gatti** (`creaGatto(variante)`): di cartone morbido. Testa tonda e grande con le guance piene (un volume solo con la testa: due palle
+  attaccate ai lati sembravano pezzi staccati), orecchie a guscio arrotondato **cotte nella testa** (base affondata nel cranio, stesso mantello:
+  Irene ha una nera e una arancione) con l'interno rosa; due coni sopra la testa sembravano staccati. Provato: orecchie a cono col bordo nero, non vanno, occhi enormi con la fessura e il riflesso, nasino a triangolo e bocca a «w» (una **trama canvas trasparente** sul
   davanti della testa, una per mantello, più una a occhi chiusi che si accende solo mentre dorme), sei baffi in un mesh. Il pelo è
   liscio: palle e tubi fusi in un mesh per pezzo (corpo, testa, ogni zampa, ogni segmento di coda) col mantello nei vertici:
   Sherlock (variante `bianconero`, dalla foto) nero con la striscia bianca dalla fronte al muso, bavaglino bianco, davanti
@@ -55,7 +57,9 @@ scintille e `ui.avviso` («Watson è arrivato!»). Il controllo è una volta al 
   stesso piano, resta un uncino. Gli orecchi grandi spingono l'altezza a ~75 cm in piedi e ~46 cm sdraiato (il test lo sa).
   Pose: sta, siede (coda attorno), si lava (zampa su), dorme a pagnotta, si stiracchia, fa le fusa (gli occhi si socchiudono piano), cammina basso,
   e struscia, rotola, miao, volta, incontra (con `sub`).
-- **Il costo**: Watson 17 mesh e ~6000 triangoli (il pelo; il test tiene il tetto a 8000), un gatto 15 mesh e ~5400 triangoli (lisci), il
+- **Il corpo, le zampe e la coda dei gatti sono nella creta** ([creta.md](creta.md)): il petto, le anche e le spalle fusi nel tronco, la zampa col gomito o il
+  garretto e il piede con tre dita, la coda una pelle sola su tre ossa che si curva (a riposo un punto di domanda). La testa resta di palle: la faccia è una trama che le sta sopra.
+- **Il costo**: Watson 17 mesh e ~6000 triangoli (il pelo; il test tiene il tetto a 8000), un gatto 11 mesh e ~15k triangoli (da lontano ~3k, quello che si vede in gioco), il
   contadino ~38 mesh dopo la fusione (di più con certi capi, il test tiene il tetto); geometrie e materiali condivisi, nessuna luce, nessuna texture oltre alla faccia. In più una sfera **invisibile** (`userData.colpo`) fa da bersaglio del dito: il gatto è piccolo.
 - Le pose (`posaCane`, `posaGatto`) sono funzioni senza memoria: stato, velocità, fase del passo e tempo; si provano in node.
 
@@ -68,14 +72,27 @@ Le scelte sono pure (`decidiCane`, `decidiGatto`, `scegliMeta`, tutte col `rnd` 
 
 - **Watson** segue il contadino a distanza (corre se è lontano), si siede quando lavora, ogni tanto va ad annusare un
   campo (si ferma a due celle e lo guarda), si ferma a guardarsi in giro, e dorme se il contadino sta fermo da un quarto d'ora.
-- **I gatti** girano per conto loro, si lavano, si stiracchiano e **dormono sulla panchina** se ce n'è una (salgono con un
-  salto, scendono da soli; se la panchina sparisce scendono subito). Con Watson **si salutano** (sotto). Non salgono
+- **I gatti** girano per conto loro, si lavano, si stiracchiano e **dormono sui posti da gatto** se ce n'è uno libero (sotto: salgono con un
+  salto, scendono da soli; se il pezzo sparisce scendono subito). Con Watson **si salutano** (sotto). Non salgono
   sulla bancarella: ha la merce sul bancone.
+
+## I posti
+
+`dati/posti-compagni.js` (`POSTI`, dato puro): **panchina, ceppo, cassa, sedia** per i gatti (la seduta sta a 42–50 cm, `quota`) e la **cuccia** per Watson, che
+non ci sale ma si corica nella cella di fronte (`accanto`) quando gli viene sonno. Aggiungere un posto è una riga di `POSTI` col suo tipo di pezzo. Provati e scartati:
+covone e sacco (cima a punta o tonda, il gatto scivolerebbe), tavolo e cassa grande (troppo alti).
+
+- **Un posto, un occupante.** Chi ci sta sopra (`c.sopra.id`) o ci sta andando (`c.poi.posto.id`: la prenotazione) lo tiene; chi decide dopo sceglie fra i posti
+  *liberi* della sua specie (`postiLiberi`, `scegliPosto`), e se non ce n'è nessuno gira o dorme dov'è. Niente elenco di prenotazioni da tenere in
+  pari: l'occupazione si ricava dallo stato dei compagni, quindi non resta mai un posto «bloccato». All'arrivo si ricontrolla (`postoLibero`) e se è stato
+  preso nel frattempo non si sale.
+- **La panchina arriva al livello 12** (in 2D era al 52): `LIVELLI_ANTICIPATI` in `dati/parita2d.js`, letto dai test di parità. Il prezzo è quello della 2D (14 🪙); cambia solo da
+  quando si può comprare, nessun salvataggio perde o guadagna niente.
 
 ## Quando ci premi
 
-`Mondo3d.tocca` chiede prima a `compagni.bersaglio(raggio)`; poi `Compagni.tocca(c)`. Col foglio «Costruisci qui» aperto non si
-accarezzano. Ogni risposta è una **sequenza di passi a tempo** (`{ stato, dur, sub?, guarda?, ev? }` o `{ va }`, tutte pure in
+`Mondo3d.tocca` chiede prima a `compagni.bersaglio(raggio)`; poi `Compagni.tocca(c)`. Col foglio «Compra» aperto non si
+accarezzano. Ogni tocco è anche giocare, e vale per tutti i cani e i gatti, non solo per i compagni: [cura-sul-prato.md](cura-sul-prato.md). Ogni risposta è una **sequenza di passi a tempo** (`{ stato, dur, sub?, guarda?, ev? }` o `{ va }`, tutte pure in
 `dati/compagni.js` col `rnd` da fuori) che `Compagni` esegue: gli eventi `ev` fanno i versi (`fx.volo`) e i cuoricini. Un tocco su chi è
 già in sequenza **non la riavvia** (tranne Watson che dorme: si sveglia con uno sbadiglio). Se **il contadino comincia a muoversi o a
 lavorare** durante una sequenza (non per il gesto «chiama»), la sequenza si ferma e il compagno torna a seguire/sedersi. Se il contadino
@@ -101,16 +118,16 @@ non sta fermo già al tocco, resta il vecchio «Bau!»/«Prrr…» sul posto (e 
   (si struscia e metà volte si rotola; la cosa buffa è sua), **Pepe** 40/20/30/10 (schivo: spesso si volta). *Si avvicina*: cammina (non corre)
   a ~1 cella e **si struscia** (coda dritta con la punta ripiegata, «Prrr…», cuori, ~3 s) poi va per conto suo; *fusa*: si siede lì, gira
   la testa e socchiude gli occhi; *si volta*: si stiracchia («Mrr»), siede di schiena con la coda che scatta; *buffa*: «Miao!» o si rotola.
-  Un gatto che dorme sulla panchina si sveglia stiracchiandosi e **resta** lì (poi scende da sé).
+  Un gatto che dorme su un posto si sveglia stiracchiandosi e **resta** lì (poi scende da sé).
 - **L'incontro gatto-cane** (`incontroGattoCane`): sono amici. Un gatto a ≤ 2,5 celle da Watson libero (non in sequenza, non addormentato) tira
   il dado: 35% a ogni avvicinamento, poi **25–40 s di riposo per gatto** (5 s se il dado dice no). Esito: ~90% un **saluto** (il cane resta fermo,
   il gatto gli va incontro e fanno **naso a naso**; poi *struscia* contro la zampa e il cane scodinzola, o *zampata* leggera e il gatto se ne va
   a coda alta mentre il cane scodinzola, o il cane *lecca* e il gatto infastidito si lava); ~10% la **fuga**, giocosa: scatta a pochi passi e si ferma a guardare.
-  Il carattere dei gatti non cambia (girano da soli, si lavano, dormono sulla panchina): l'incontro è un'eccezione, non un'abitudine.
+  Il carattere dei gatti non cambia (girano da soli, si lavano, dormono sui loro posti): l'incontro è un'eccezione, non un'abitudine.
 
 ## Nei test
 
-`test/unita/fattoria3d-compagni.test.mjs` (con un canvas finto): dati e livelli, la meta mai su una cella bloccata, le
+`unita/fattoria3d-compagni` ha anche la sezione dei posti: la prenotazione pura e dieci minuti col motore vero con tre gatti, quattro posti e mai due compagni sullo stesso. `test/unita/fattoria3d-compagni.test.mjs` (con un canvas finto): dati e livelli, la meta mai su una cella bloccata, le
 decisioni con un `rnd` finto, ingombro e mesh dei modelli, pose (anche quelle nuove) senza numeri sbagliati, tre minuti di scena col motore
 vero (nessun compagno su una cella bloccata, l'arrivo con l'avviso, il tocco, il raggio), le scelte di «Quando ci premi» (percentuali su un
 campione grande, mai due feste uguali, cooldown dell'incontro) e cinque minuti di tocchi su Watson lontano/vicino e sui gatti (richiamo a ≤ 2 celle, il gatto lontano chiamato per nome e quello vicino no, carezze,

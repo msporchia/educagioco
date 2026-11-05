@@ -1,143 +1,152 @@
 /* La tappa delle pozioni lasciata a metà: si scrive, si rilegge, e quella
-   ripresa è la stessa partita — la ricetta aperta, cosa c'è sul banco, le
-   perfette e gli errori. Vedi docs/pozioni/sosta.md.
+   ripresa è la stessa pozione — il listino, i misurini, i gettoni e le
+   macchie. Vedi docs/pozioni/sosta.md.
    `node test/esegui.mjs pozioni-sosta --niente-build` */
-import { CAMPAGNA } from '../../src/giochi/pozioni/dati/campagna.js'
-import { Partita } from '../../src/giochi/pozioni/motore/partita.js'
-import { caso, dosaBene } from '../../src/giochi/pozioni/motore/banco.js'
-import { scomponi } from '../../src/giochi/pozioni/motore/misura.js'
+import { CAMPAGNA, INFINITA, giroInfinito } from '../../src/giochi/pozioni/dati/campagna.js'
+import { TAGLIERE } from '../../src/giochi/pozioni/motore/procedimento.js'
+import { Bottega, caso, giocaBene, seguiLaRicetta, prossimoPasso } from '../../src/giochi/pozioni/motore/bottega.js'
+import { MORTAIO } from '../../src/giochi/pozioni/motore/procedimento.js'
 import { scrivi, leggi, dice, tappaDi, VERSIONE } from '../../src/giochi/pozioni/motore/sosta.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
-const via = p => JSON.parse(JSON.stringify(scrivi(p, CAMPAGNA.indexOf(p.tappa))))
-const firma = p => JSON.stringify({
-  n: p.n, sbagli: p.sbagli, pozioni: p.pozioni, perfette: p.perfette,
-  sbagliQui: p.sbagliQui, sbagliRicetta: p.sbagliRicetta, dosi: p.dosi,
-  pozione: p.ricetta.nome, cliente: p.ricetta.cliente, scaffale: p.ricetta.scaffale,
-  ing: p.ricetta.ingredienti.map(i => [i.nome, i.dose.testo, i.fatto]),
-  corrente: p.corrente, inMano: p.inMano, strumento: p.strumento && p.strumento.chiave,
-  messi: p.messi, esito: p.esito && [p.esito.tipo, p.esito.codice],
-  ultime: p.ultime.map(d => d.testo),
+// `monete` è il borsellino, come lo passa Gioco.vue: non deve pestare i piedi a quelle della pozione
+const via = b => JSON.parse(JSON.stringify(scrivi(b, CAMPAGNA.indexOf(b.tappa), { monete: { chiesto: 3, dato: 3 } })))
+const firma = b => JSON.stringify({
+  pozione: b.pozione, ingredienti: b.ingredienti.map(g => [g.nome, g.dose, g.unita, g.messo, g.pezzi, g.traboccate, g.offerte, g.ottimo.costo]),
+  gettoni: b.gettoni, speso: b.speso, minimo: b.minimo,
+  macchie: b.macchie, traboccate: b.traboccate, pulizie: b.pulizie, monete: b.monete, saltate: b.saltate,
 })
-const nuova = (t, seme = 3) => new Partita(t, { rnd: caso(seme) })
+const finisci = b => { b.pulisci(); for (const [i, g] of b.ingredienti.entries())
+  while (g.messo < g.dose) b.ordina([{ i, k: g.offerte.map((o, n) => n).filter(n => g.messo + g.offerte[n].base <= g.dose).sort((a, c) => g.offerte[c].base - g.offerte[a].base)[0] }])
+  seguiLaRicetta(b)
+  return [b.finita, b.stelle, b.speso, b.monete].join('/') }
 
-function finisci(p) {
-  if (p.esito) p.riprendi()
-  let giri = 0
-  while (!p.finita && giri++ < 500) dosaBene(p)
-  return [p.stelle, p.pozioni, p.perfette, p.sbagli, p.monete, p.dosiGiuste].join('/')
+for (const t of [CAMPAGNA[0], CAMPAGNA[9], CAMPAGNA[26], CAMPAGNA.at(-1)]) {
+  const b = new Bottega(t, { rnd: caso(3) })
+  const g = b.ingredienti[0]
+  b.ordina([{ i: 0, k: g.ottimo.pezzi[0] }])
+  const q = leggi(via(b))
+  controlla(`${t.chiave}: si legge`, !!q)
+  uguale(`${t.chiave}: è la stessa pozione`, firma(q), firma(b))
+  uguale(`${t.chiave}: e finisce allo stesso modo`, finisci(q), finisci(b))
 }
 
-// la dose in corso, fatta fino a metà: ingrediente preso, attrezzo posato, qualche pezzo
-function finoAI(p, quanto) {
-  const ing = p.daFare[0]
-  p.prendi(ing.nome)
-  if (quanto === 'preso') return
-  p.posa(p.consigliato().chiave)
-  if (quanto === 'posato') return
-  const pezzi = scomponi(ing.dose.base, p.strumento.pezzi)
-  p.metti(pezzi[0])
+/* con la macchia ancora da pulire */
+{
+  const t = CAMPAGNA.find(x => x.chiave === 'massa-miste')
+  const b = new Bottega(t, { rnd: caso(5) })
+  const g = b.ingredienti[0]
+  g.messo = g.dose - 1 // quasi pieno: qualunque ampolla trabocca
+  g.pezzi = [g.messo]
+  b.ordina([{ i: 0, k: 0 }])
+  uguale('la prova trabocca', b.macchie.join(), '0')
+  const q = leggi(via(b))
+  uguale('la macchia resta', q.macchie.join(), '0')
+  uguale('e prima di ordinare si pulisce', q.ordina([{ i: 1, k: 0 }]), null)
+  const d = dice(via(b))
+  uguale('la mappa dice le traboccate', d.traboccate, 1)
+  uguale('e quanti ingredienti', `${d.fatti}/${d.quanti}`, `0/${t.ingredienti}`)
 }
 
-const prima = CAMPAGNA[0], grandi = CAMPAGNA.find(t => t.gradino === 'inverse'), finale = CAMPAGNA.at(-1)
+/* a metà procedimento: la ricetta è la stessa, e si riparte dal passo dov'era */
+{
+  const t = CAMPAGNA.find(x => x.chiave === 'massa-virgole')
+  const b = new Bottega(t, { rnd: caso(5) })
+  for (const [i, g] of b.ingredienti.entries()) for (const k of g.ottimo.pezzi) b.ordina([{ i, k }])
+  b.fai('diluisci'); prossimoPasso(b)
+  const q = leggi(via(b))
+  uguale('la ricetta è la stessa', JSON.stringify([q.passi, q.righe]), JSON.stringify([b.passi, b.righe]))
+  uguale('il passo e quello che c\'è', JSON.stringify([q.passo, q.mortaio, q.pestato, q.dentro, q.pasticci]), JSON.stringify([b.passo, b.mortaio, b.pestato, b.dentro, b.pasticci]))
+  uguale('il minimo pure', q.minimo, b.minimo)
+  seguiLaRicetta(q)
+  controlla('e la pozione si finisce', q.finita)
+}
 
-/* ---------- la stessa partita, in ogni punto della dose ---------- */
-for (const t of [prima, CAMPAGNA[9], grandi, finale]) {
-  for (const quanto of ['niente', 'preso', 'posato', 'pezzo']) {
-    const p = nuova(t)
-    dosaBene(p)                       // una dose fatta: dosi, monete, ricetta già in corso
-    if (quanto !== 'niente') finoAI(p, quanto)
-    const dato = via(p)
-    const q = leggi(dato)
-    controlla(`${t.chiave} (${quanto}): si legge`, !!q)
-    uguale(`${t.chiave} (${quanto}): è la stessa partita`, firma(q), firma(p))
-    uguale(`${t.chiave} (${quanto}): e finisce allo stesso modo`, finisci(q), finisci(p))
+/* il tagliere a metà: la roba appoggiata e il mantice restano; una sosta di prima del tagliere si legge lo stesso */
+{
+  let b = null
+  for (let s = 1; s < 80 && !b; s++) {
+    const x = new Bottega(CAMPAGNA.find(t => t.chiave === 'lunghezza-virgole'), { rnd: caso(s) })
+    if (x.passi.some(p => p.azione === 'sminuzza')) b = x
   }
-}
-
-/* ---------- dopo gli sbagli: il conto resta, e le stelle non tornano ---------- */
-{
-  const p = nuova(CAMPAGNA[1])
-  p.prendi(p.ricetta.scaffale.find(s => !p.ricetta.ingredienti.some(i => i.nome === s.nome)).nome)
-  p.riprendi()
-  const ing = p.daFare[0]
-  p.prendi(ing.nome)
-  const e = p.posa(p.consigliato().chiave)
-  p.metti(p.strumento.pezzi[0]); p.metti(p.strumento.pezzi[0])
-  const sbagliato = p.conferma()
-  controlla('la prova dà uno sbaglio vero', sbagliato.tipo === 'sbaglio' && p.sbagli === 2, JSON.stringify(sbagliato.codice))
-  // con lo sbaglio ancora aperto: si rilegge e si può riprovare
-  const q = leggi(via(p))
-  controlla('lo sbaglio aperto si legge', !!q)
-  uguale('gli sbagli restano due', q.sbagli, 2)
-  uguale('e sulla dose', q.sbagliQui, p.sbagliQui)
-  controlla('l\'aiuto resta quello detto dopo lo sbaglio', q.aiuto && q.aiuto.livello === 'svolto')
-  controlla('lo sbaglio è già letto: niente esito', q.esito === null && q.occupato === false)
-  uguale('e finisce con le stesse stelle e senza perfette in più', finisci(q), (p.riprendi(), finisci(p)))
-  uguale('uscire non ha dato più di una stella in meno del giusto', q.stelle <= 2, true)
-}
-
-/* ---------- la dose già nel calderone: pagata e imparata, manca solo andare avanti ---------- */
-{
-  const p = nuova(CAMPAGNA[2])
-  const ing = p.daFare[0]
-  p.prendi(ing.nome); p.posa(p.consigliato().chiave)
-  for (const pz of scomponi(ing.dose.base, p.strumento.pezzi)) p.metti(pz)
-  p.conferma()
-  controlla('la prova ha un esito giusto aperto', p.esito && p.esito.tipo === 'giusto')
-  const dato = via(p)
-  uguale('si scrive lo stato dell\'esito', dato.esito.tipo, 'giusto')
+  for (const [i, g] of b.ingredienti.entries()) for (const k of g.ottimo.pezzi) b.ordina([{ i, k }])
+  prossimoPasso(b); prossimoPasso(b)
+  const [r] = b.passi[b.passo].cosa
+  b.fai('appoggia', [r])
+  const dato = JSON.parse(JSON.stringify(scrivi(b, 0)))
   const q = leggi(dato)
-  controlla('si legge', !!q)
-  uguale('la dose è già nella conta', q.dosi.length, 1)
-  controlla('e l\'esito aspetta chi va avanti', q.esito && q.esito.tipo === 'giusto')
-  uguale('uguale a se non si fosse uscito', finisci(q), finisci(p))
+  uguale('la roba sul tagliere resta', q.tagliere.join(), String(r))
+  uguale('e la si sminuzza', q.fai('sminuzza').giusto, true)
+  uguale('il tritato si versa ancora', q.fai('versa', [TAGLIERE]).giusto, true)
+  const { tagliere, tagliato, soffiato, incantato, ...vecchia } = dato
+  uguale('senza quei campi è un tagliere vuoto', leggi(vecchia).tagliere.length, 0)
 }
 
-/* ---------- a tappa finita non si scrive ---------- */
+/* il calderone senza fondo */
 {
-  const p = nuova(prima)
-  while (!p.finita) dosaBene(p)
-  uguale('una tappa finita non si scrive', scrivi(p, 0), null)
-  uguale('niente partita, niente sosta', scrivi(null, 0), null)
+  const b = new Bottega(giroInfinito(4, ['Elisir di Volo', '🪶', '#6ec6ff']), { rnd: caso(5), scorta: 3 })
+  const dato = JSON.parse(JSON.stringify(scrivi(b, -1, { monete: { chiesto: 3, dato: 3 } })))
+  const q = leggi(dato)
+  uguale('si rilegge', firma(q), firma(b))
+  uguale('a che giro era', q.tappa.giro, 4)
+  uguale('la mappa dice il suo nome', dice(dato).nome, INFINITA.nome)
 }
 
-/* ---------- quello che non torna non si legge ---------- */
+/* una sosta di quando si partiva con qualcosa in casa: si carica e si finisce com'era */
 {
-  const p = nuova(CAMPAGNA[5])
-  dosaBene(p); finoAI(p, 'pezzo')
-  const buono = via(p)
-  controlla('il salvataggio buono si legge', !!leggi(buono))
-  const rotto = (cosa, muta) => {
-    const d = JSON.parse(JSON.stringify(buono))
-    muta(d)
-    uguale(cosa, leggi(d), null)
-  }
-  uguale('nessun dato', leggi(null), null)
-  uguale('niente', leggi({}), null)
-  rotto('un\'altra versione', d => { d.v = VERSIONE + 1 })
-  rotto('una tappa che non c\'è più', d => { d.chiave = 'sparita' })
-  rotto('un ingrediente sparito', d => { d.ricetta.ingredienti[0].nome = 'polvere di niente' })
-  rotto('una dose che la tappa non ha', d => { d.ricetta.ingredienti[0].dose.base = 7777777 })
-  rotto('un attrezzo che la tappa non ha', d => { d.strumento = 'botte' })
-  rotto('un pezzo che l\'attrezzo non ha', d => { d.messi = [123456] })
-  rotto('un cliente fuori dalla tappa', d => { d.n = 99 })
-  rotto('un esito senza dose fatta', d => { d.esito = { tipo: 'giusto', pozioneFinita: false } })
-  rotto('la ricetta mancante', d => { delete d.ricetta })
-  rotto('l\'ingrediente non sullo scaffale', d => { d.ricetta.scaffale = [] })
+  const t = CAMPAGNA.find(x => x.chiave === 'capacita-inverse')
+  const b = new Bottega(t, { rnd: caso(8) })
+  const vecchia = via(b)
+  const i = b.ingredienti.findIndex(g => g.ottimo.pezzi.length > 1)
+  const g = b.ingredienti[i], casa = g.offerte[g.ottimo.pezzi[0]].base
+  vecchia.ingredienti = vecchia.ingredienti.map((x, n) => (n === i ? { ...x, casa, messo: casa, pezzi: [casa] } : { ...x, casa: 0 }))
+  const q = leggi(vecchia)
+  controlla('si carica', !!q)
+  uguale('lo strumento è dove era', q.ingredienti[i].messo, casa)
+  uguale('il minimo è solo quello che mancava', q.ingredienti[i].ottimo.pezzi.reduce((n, k) => n + q.ingredienti[i].offerte[k].base, 0), g.dose - casa)
+  const r = leggi(via(q))
+  uguale('e riscrivendola non cambia', r.minimo, q.minimo)
+  controlla('il resto delle dosi non ne sa niente', q.ingredienti.filter((_, n) => n !== i).every(x => !('casa' in x)))
+  giocaBene(q)
+  controlla('e la pozione si finisce con tre stelle', q.finita && q.stelle === 3)
+  uguale('una scorta oltre la dose non si legge', leggi({ ...vecchia, ingredienti: vecchia.ingredienti.map((x, n) => (n === i ? { ...x, casa: x.dose + 1 } : x)) }), null)
 }
 
-/* ---------- la mappa dice dove si era, senza aprire la partita ---------- */
+/* una sosta di quando i liquidi avevano la roba secca in dispensa: il mortaio torna sul tavolo */
 {
-  const p = nuova(CAMPAGNA[4])
-  dosaBene(p)
-  const d = dice(via(p))
-  uguale('il nome della tappa', d.nome, CAMPAGNA[4].nome)
-  uguale('l\'indice', d.indice, 4)
-  uguale('il cliente in corso', d.cliente, 1)
-  uguale('di quanti', d.clienti, CAMPAGNA[4].clienti)
-  uguale('niente da dire se la tappa non c\'è', dice({ v: VERSIONE, chiave: 'sparita' }), null)
-  uguale('la tappa si ritrova per chiave', tappaDi({ ...via(p), tappa: 0 }).indice, 4)
+  const t = CAMPAGNA.find(x => x.chiave === 'capacita-inverse')
+  const vecchia = via(new Bottega(t, { rnd: caso(8) }))
+  const secca = vecchia.ingredienti.length
+  vecchia.ingredienti.push({ nome: 'ghiande', unita: 'g', dose: 1, messo: 1, casa: 1, f: true, dispensa: true, traboccate: 0, pezzi: [], offerte: [] })
+  vecchia.passi = [{ azione: 'pesta', cosa: [secca] }, { azione: 'versa', cosa: [MORTAIO] },
+                   ...vecchia.passi]
+  vecchia.righe = [{ testo: 'Pesta ghiande e versa il pestato.', passi: [0, 1] }, ...vecchia.righe.map(r => ({ ...r, passi: r.passi.map(k => k + 2) }))]
+  const q = leggi(vecchia)
+  controlla('si carica', !!q)
+  controlla('per quella pozione il mortaio c\'è', q.tappa.azioni.includes('pesta'))
+  uguale('la roba secca non si compra', q.comprati.length, t.ingredienti)
+  uguale('e riscrivendola resta', leggi(JSON.parse(JSON.stringify(scrivi(q, CAMPAGNA.indexOf(t), { monete: { chiesto: 0, dato: 0 } })))).ingredienti.filter(g => g.dispensa).length, 1)
+  giocaBene(q)
+  controlla('e la pozione si finisce con tre stelle', q.finita && q.stelle === 3)
+  uguale('le tappe di adesso non cambiano', t.azioni.includes('pesta'), false)
+}
+
+/* quello che non torna non si legge */
+{
+  const b = new Bottega(CAMPAGNA[3], { rnd: caso(6) })
+  const buono = via(b)
+  uguale('la versione vecchia del banco non si legge', leggi({ ...buono, v: 1 }), null)
+  uguale('né quella di prima del procedimento', leggi({ ...buono, v: 3 }), null)
+  uguale('una ricetta bucata non si legge', leggi({ ...buono, passi: [{ azione: 'balla', cosa: [] }] }), null)
+  uguale('né un passo oltre la fine', leggi({ ...buono, passo: 99 }), null)
+  uguale('né la si dice alla mappa', dice({ ...buono, v: 1 }), null)
+  uguale('una tappa sparita non si legge', tappaDi({ ...buono, chiave: 'sparita' }), null)
+  uguale('un ingrediente sparito non si legge', leggi({ ...buono, ingredienti: buono.ingredienti.map((g, i) => (i ? g : { ...g, nome: 'niente' })) }), null)
+  uguale('un misurino oltre la dose non si legge', leggi({ ...buono, ingredienti: buono.ingredienti.map((g, i) => (i ? g : { ...g, messo: g.dose + 1 })) }), null)
+  uguale('un listino bucato non si legge', leggi({ ...buono, ingredienti: buono.ingredienti.map((g, i) => (i ? g : { ...g, offerte: [] })) }), null)
+  uguale('i gettoni negativi non si leggono', leggi({ ...buono, speso: -1 }), null)
+  uguale('il numero di versione è quello nuovo', buono.v, VERSIONE)
+  uguale('una pozione finita non si scrive', scrivi(giocaBene(new Bottega(CAMPAGNA[1], { rnd: caso(2) })), 1), null)
 }
 
 riassunto('pozioni — la tappa lasciata a metà')

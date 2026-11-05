@@ -1,10 +1,11 @@
 # 🐇 Passo passo
 
-Il coniglio (e poi il cane pastore) che esegue una fila di frecce, e dai
-sette anni e mezzo le carte e lo zaino. Codice in `src/giochi/passo-passo/`.
+Il coniglio (e poi il cane pastore e il guerriero) che esegue una fila di
+frecce, e dai sette anni e mezzo le carte e lo zaino. Codice in `src/giochi/passo-passo/`.
 
 - [presentazione.md](presentazione.md) — la pagina per chi arriva da fuori, e le note per i genitori
 - [regole.md](regole.md) — la fila come programma, le regole del mondo, il cane pastore e le pecore
+- [guerriero.md](guerriero.md) — il terzo protagonista: grate e pulsanti, nemici e spada, due alla volta, la principessa, le carte («fino al pulsante», «se di là si passa»), le trentaquattro tappe
 - [zaino.md](zaino.md) — carte, zaino, ripeti / fino a / se, le lastre, le soluzioni scritte
 - [stelle-e-aiuti.md](stelle-e-aiuti.md) — le quattro stelle, la strada più corta, monete, la scala del 💡
 - [sentiero.md](sentiero.md) — i due sentieri senza fine, del coniglio e del cane: le forme, il pavimento prima e dopo coi numeri misurati, i controlli, un record ciascuno

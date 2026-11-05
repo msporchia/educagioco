@@ -1,5 +1,5 @@
 // Il kit dei pezzi del mondo di sopra, tutti in codice e parametrici (il seme dà la variazione): case, le botteghe dei mercanti
-// (bancarella, erbe, fucina, torretta), il pozzo, il mulino con la ruota. Le parti ferme si posano in un «cantiere» e diventano
+// (bancarella, erbe, torce, fucina, torretta), il pozzo, il mulino con la ruota. Le parti ferme si posano in un «cantiere» e diventano
 // UNA mesh per materiale per pezzo di mondo (pochi draw call): il colore sta nei vertici, la trama nel materiale, la cella della
 // base in `aBase` (la nebbia mostra o nasconde la casa tutta intera). Le parti che si muovono restano a parte. Dal prototipo
 // poc/mondo-sopra/kit.js; ponti, grate, cartelli e il resto in ponti.js.
@@ -178,8 +178,8 @@ export function bottega(me, cant, m, cose) {
   const cx = me.x + me.w / 2, cz = me.y + me.h / 2
   cant.base(cx, quotaTerreno(m, cx, cz), cz, me.giro || 0)
   const w = me.w, d = me.h, r = caso(me.chiave.length * 97 + 3 + me.x)
-  if (me.bottega === 'bancarella' || me.bottega === 'erbe') {
-    const tela = me.bottega === 'erbe' ? [0.32, 0.56, 0.34] : [0.78, 0.22, 0.2]
+  if (me.bottega === 'bancarella' || me.bottega === 'erbe' || me.bottega === 'torce') {
+    const tela = me.bottega === 'erbe' ? [0.32, 0.56, 0.34] : me.bottega === 'torce' ? [0.86, 0.5, 0.14] : [0.78, 0.22, 0.2]
     for (const [sx, sz, h] of [[-1, 1, 1.75], [1, 1, 1.75], [-1, -1, 2.05], [1, -1, 2.05]]) cant.metti('legno', scatola(0.1, h, 0.1), sx * (w / 2 - 0.2), h / 2, sz * (d / 2 - 0.15), COLORI.legnoScuro)
     cant.metti('legno', scatola(w - 0.3, 0.8, 0.5, 1), 0, 0.4, d / 2 - 0.4, COLORI.legno)
     cant.metti('legno', scatola(w - 0.1, 0.06, 0.62, 1), 0, 0.82, d / 2 - 0.4, [0.62, 0.46, 0.32])
@@ -190,6 +190,15 @@ export function bottega(me, cant, m, cose) {
       for (let i = 0; i < 7; i++) cant.metti('liscio', new OctahedronGeometry(0.07), -w / 2 + 0.4 + i * (w - 0.8) / 6, 0.92, d / 2 - 0.4 + (r() - 0.5) * 0.25, scegli(r, [[0.9, 0.2, 0.3], [0.2, 0.5, 0.95], [0.3, 0.85, 0.4], [0.95, 0.8, 0.2], [0.75, 0.4, 0.9]]))
       cant.metti('legno', scatola(0.5, 0.32, 0.32, 1), -w / 2 + 0.55, 1.01, d / 2 - 0.45, [0.6, 0.38, 0.22])
       cant.metti('liscio', scatola(0.52, 0.05, 0.34), -w / 2 + 0.55, 1.18, d / 2 - 0.45, [0.85, 0.7, 0.25])
+    } else if (me.bottega === 'torce') {
+      // le torce in fila sul banco, dritte, con la fiamma in cima; un fascio di scorta in un secchio accanto
+      for (let i = 0; i < 6; i++) {
+        const tx = -w / 2 + 0.4 + i * (w - 0.8) / 5
+        cant.metti('legno', cilindro(0.035, 0.045, 0.55, 6), tx, 1.1, d / 2 - 0.4, COLORI.legnoScuro)
+        cant.metti('luce', new ConeGeometry(0.075, 0.2, 6), tx, 1.47, d / 2 - 0.4, [1.0, 0.62, 0.15])
+      }
+      cant.metti('legno', cilindro(0.22, 0.2, 0.38, 10), w / 2 + 0.2, 0.19, d / 2 - 0.1, COLORI.legno)
+      for (let i = 0; i < 3; i++) cant.metti('legno', cilindro(0.03, 0.04, 0.6, 5), w / 2 + 0.1 + i * 0.1, 0.62, d / 2 - 0.12, COLORI.legnoScuro, { rz: (i - 1) * 0.18 })
     } else {
       for (let i = 0; i < 6; i++) cant.metti('liscio', cilindro(0.07, 0.08, 0.2 + r() * 0.1, 8), -w / 2 + 0.4 + i * (w - 0.8) / 5, 0.97, d / 2 - 0.4, scegli(r, [[0.3, 0.6, 0.85], [0.85, 0.3, 0.3], [0.4, 0.8, 0.45], [0.9, 0.75, 0.3]]))
       for (let i = 0; i < 5; i++) cant.metti('liscio', new ConeGeometry(0.09, 0.32, 6), -w / 2 + 0.45 + i * (w - 0.9) / 4, 1.55, d / 2 - 0.35, [0.35 + r() * 0.2, 0.6, 0.3], { rx: Math.PI })

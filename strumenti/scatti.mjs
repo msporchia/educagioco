@@ -36,6 +36,7 @@ import { tmpdir } from 'node:os'
 import { spawnSync } from 'node:child_process'
 
 import { SOSTA } from './clip/survivors.mjs'
+import { alLavoro } from './clip/fattoria.mjs'
 import { FILA_ATTUALE } from '../src/giochi/costruttore/dati/campagna.js'
 // le discese del sotterraneo stanno sulla terra di sopra: ci si va a piedi, come nelle prove
 import { scendiNelSotterraneo, giocaGiornata } from '../test/aiuto/browser.mjs'
@@ -129,28 +130,6 @@ async function costruisciEChiama (page) {
     T.chiamaOnda()
     await attesa(2600)                       // i mostri entrano in campo e camminano
   })
-  await page.waitForTimeout(500)
-}
-
-/* ── la manopola dell'età ──
-   Si fotografa **dal primo avvio**, non dalle impostazioni: lì è la
-   schermata intera invece di un riquadro in mezzo a venti carte, ed è
-   anche il momento in cui la si incontra davvero. Vuole un archivio
-   vuoto (`vuoto: true`), se no si entra col profilo di prova già fatto
-   e l'onboarding non parte. */
-async function manopolaEta (page) {
-  await page.fill('input.nome', 'Anna')
-  await page.click('button.via')
-  await page.waitForSelector('.manopola-posto', { timeout: 6000 })
-  /* la manopola nasce sui quattro anni: otto passi da mezzo anno la
-     portano a otto, che è l'età in cui la casa è più piena e il quadro
-     sotto ha più da dire */
-  for (let i = 0; i < 8; i++) {
-    await page.click('button[aria-label="mezzo anno in più"]')
-    await page.waitForTimeout(100)
-  }
-  await page.evaluate(() => document.querySelector('.manopola-posto')
-    ?.scrollIntoView({ block: 'start' }))
   await page.waitForTimeout(500)
 }
 
@@ -294,10 +273,13 @@ const RICETTE = [
     profilo: p => { p.campagne.survivors.sosta = SOSTA; return p },
     passi: [['button[data-azione="riprendi"]', 700], ['button[data-azione="riprendi"]', 1400]] },
 
-  { file: 'sotterraneo-mappa', dove: 'sotterraneo', attesa: '[data-terra]' },
+  // il mondo di sopra in 3D (il villaggio), con l'eroe già scelto: senza, si fotograferebbe la scelta delle avventure
+  { file: 'sotterraneo-mappa', dove: 'sotterraneo', attesa: '[data-mondo3d][data-pronto="1"]',
+    profilo: p => { p.campagne.sotterraneo = { tappa: 3, libera: false, stelle: {}, cfg: { eroe: 'cavaliere' } }; return p },
+    passi: [async page => { await page.waitForTimeout(2500) }] },
   /* il campo dopo un paio di secondi: appena entrati la luce è ancora
      tutta addosso all'eroe, e lo scatto racconterebbe una stanza sola */
-  { file: 'sotterraneo-gioco', dove: 'sotterraneo', attesa: '[data-terra]',
+  { file: 'sotterraneo-gioco', dove: 'sotterraneo', attesa: '[data-mondo3d][data-pronto="1"]',
     profilo: p => { p.campagne.sotterraneo = { tappa: 3, libera: false, stelle: {}, cfg: { eroe: 'cavaliere' } }; return p },
     passi: [async page => { await scendiNelSotterraneo(page, 0); await page.waitForTimeout(2200) }] },
 
@@ -327,8 +309,8 @@ const RICETTE = [
      cominciata (campi a stadi diversi, macchine al lavoro: `fattoria3d/motore/tipo.js`). Appena
      aperta è un prato vuoto, e lo è per scelta. Il cheat butta quella del bambino nel cestino:
      qui è il bambino finto di `PROFILO`. */
-  { file: 'fattoria-gioco', dove: 'fattoria3d-tipo=30', attesa: '[data-f3="campo"]',
-    passi: [async page => { await page.waitForTimeout(4000) }] },       // il mondo si disegna, il fumetto d'avvio se ne va
+  { file: 'fattoria-gioco', dove: 'fattoria3d-tipo=30', attesa: '[data-f3="campo"]', giorno: '2026-06-15',
+    passi: [alLavoro(2, 1500)] },       // il contadino che falcia, da vicino: un campo vuoto o la fattoria da lontano non dicevano niente
 
   /* tre domande di tre materie, per il README: una col disegno del tempo,
      una di matematica disegnata, una di ragionamento a parole. Si ritaglia
@@ -344,7 +326,6 @@ const RICETTE = [
     passi: [...PIN, unaDomanda('log:ordine')] },
 
   { file: 'albo', dove: 'albo', attesa: '.testata' },
-  { file: 'eta', dove: '', vuoto: true, attesa: '.benvenuto', passi: [manopolaEta] },
   { file: 'genitori', dove: 'genitori', attesa: '.tastierino', passi: [...PIN] },
   { file: 'genitori-giochi', dove: 'genitori', attesa: '.tastierino',
     passi: [...PIN, ['.schede button[data-scheda="giochi"]', 800]] },
@@ -523,6 +504,12 @@ for (const r of scelte) {
   /* il roster va scritto prima che parta l'app, come nei test: senza,
      si apre l'onboarding e si fotografa quello dieci volte. `vuoto`
      è l'eccezione: è proprio l'onboarding la cosa da fotografare. */
+  /* `giorno`: la data della pagina, come se fosse quel giorno. La fattoria si veste di festa (Natale dal 1 novembre, Halloween in
+     ottobre) e una foto del README non deve dipendere da quando si rifà: il tempo scorre lo stesso, solo spostato. */
+  if (r.giorno) await page.addInitScript(g => {
+    const D = Date, scarto = new D(g + 'T12:00:00').getTime() - D.now()
+    globalThis.Date = class extends D { constructor(...a) { if (a.length) super(...a); else super(D.now() + scarto) } static now() { return D.now() + scarto } }
+  }, r.giorno)
   if (!r.vuoto) await page.addInitScript(p => {
     try {
       localStorage.setItem('giocatori', JSON.stringify([{ id: 'g1', nome: 'Anna' }]))

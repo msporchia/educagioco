@@ -23,6 +23,7 @@ import Stendardo from './Stendardo.vue'
 import InsegnaTana from './InsegnaTana.vue'
 import Coniglio from './Coniglio.vue'
 import Cane from './Cane.vue'
+import Guerriero from './Guerriero.vue'
 import PallinoAmico from '../../../components/amici/PallinoAmico.vue'
 import AmiciQui from '../../../components/amici/AmiciQui.vue'
 import RecordAmici from '../../../components/amici/RecordAmici.vue'
@@ -482,6 +483,7 @@ const dove = (x, y) => ({ left: x + 'px', top: y + 'px' })
            :data-animale="animale" :data-al="posato" :data-in-viaggio="viaggiando ? '1' : '0'">
         <div ref="corpo" class="pp-segnalino-corpo">
           <Coniglio v-if="animale === 'coniglio'" />
+          <Guerriero v-else-if="animale === 'guerriero'" />
           <Cane v-else />
         </div>
       </div>

@@ -192,7 +192,7 @@ export function vistaDelloScontro(c) {
     apertura: { agguato: !!f.agguato, sorpresa: !!f.sorpresa, mostri: f.campo.length },
     eroe: { em: c.io.em, vita: c.vita, vitaMax: c.vitaMax,
             // chi è e cosa ha in mano e addosso: per il ritratto 3D della fila dei turni (viste/anteprima3d.js)
-            chi: c.io.sprite || null, mano: c.mano || null, mancina: c.mancina || null, corpo: c.corpo || null },
+            chi: c.io.sprite || null, mano: c.mano || null, mancina: c.mancina || null, corpo: c.corpo || null, tinte: c.tinte || null },
     mie: statiMiei(f.io || {}, c),
     incanti: incantiAddosso(c),
   }

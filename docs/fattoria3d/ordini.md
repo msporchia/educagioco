@@ -1,6 +1,6 @@
 # Gli ordini: il banco della fattoria 3D
 
-Chi chiede i raccolti e i prodotti delle macchine. Dati in `dati/ordini.js`, regole pure in `motore/ordini.js`, il banco
+Chi chiede i raccolti, i prodotti delle macchine e il pesce crudo. Dati in `dati/ordini.js`, regole pure in `motore/ordini.js`, il banco
 (i posti, `consegna`, `rifiuta`) nella `Fattoria3d`. Il modello è il mercato della fattoria 2D, da
 Hay Day: il banco è il camion (tanti ordini piccoli, sempre), le [botteghe](botteghe.md) i visitatori, la [mongolfiera](mongolfiera.md)
 la nave. Tutti pagano esperienza e mai monete ([regole.md](regole.md)).
@@ -10,7 +10,7 @@ la nave. Tutti pagano esperienza e mai monete ([regole.md](regole.md)).
 - **Il banco lavora se c'è una bacheca o una bancarella**: il livello è almeno 2 (`LIVELLO_BANCO`, quello dei due pezzi) **e**
   una `cosa` di tipo `bacheca` o `bancarella` è messa sulla mappa (`PEZZI_DEL_BANCO` in `dati/ordini.js`, letto da `bancoAperto()`).
   La **bacheca** (2×1, 🪙 12, livello 2, 📋) è il pezzo vero del banco: i foglietti appuntati sono gli ordini aperti e sul suo
-  cartello compare «🧺 N pronti!» come per le macchine. La **bancarella** resta nel menu «Costruisci qui» (scheda Edifici) come arredo e apre lo stesso banco: chi
+  cartello compare «🧺 N pronti!» come per le macchine. La **bancarella** resta nel menu «Compra» (scheda Edifici) come arredo e apre lo stesso banco: chi
   l'aveva già messa non perde niente. Perché: dà un senso al pezzo, che prima era una decorazione, e un bambino che non l'ha
   comprato non vede un'interfaccia che non ha chiesto. Messi via tutti e due il banco si chiude (`ordini()` torna `[]`) ma gli
   ordini restano salvati e tornano rimettendone uno.
@@ -114,8 +114,7 @@ La **bacheca in scena** (`pezzi.js`, `dal-sotterraneo.js`) mostra tanti fogliett
 banco chiuso senza bacheca né bancarella o al livello 1, aperto con una sola delle due, la bacheca che si compra e si mette, consegna e `mancano`, salto di livello consegnando, rifiuto con ritardo,
 salvataggio e migrazione dal v2.
 
-`integrazione/fattoria3d` (sezione «il banco»; non eseguita dopo il passaggio alla bacheca: serve la build), bersagli: `[data-f3="apri-banco"]` (tasto
-nell'Hud, assente al livello 1), `[data-f3="banco-pronti"]` (il pallino), `[data-f3="banco"]` (il foglio), `[data-f3="banco-chiuso"]`
+`integrazione/fattoria3d` (sezione «il banco»; non eseguita dopo il passaggio alla bacheca: serve la build), bersagli: `[data-f3="banco"]` (il foglio: si apre toccando la bacheca in scena, il tasto dell'HUD è stato tolto il 4/11/2026; finché la bacheca non c'è la sua carta ha il «!», `serveBacheca`), `[data-f3="banco-chiuso"]`
 (la spiegazione), `[data-f3="biglietto"]` e `[data-ordine="<idx>"]` (con `data-pronto`, `data-sel`) per i biglietti, `[data-f3="ordine-attesa"]`
 dentro il biglietto di un posto che riposa, `[data-f3="ordini-conta"]` (l'indicatore delle consegne); nel dettaglio `[data-dettaglio="<idx>"]`
 con `[data-chiede="<chiave>"]`, `[data-f3="premio"]`, `[data-f3="consegna"]` (`data-puoi`), `[data-f3="cambia"]` (il cestino) e `[data-f3="banco-msg"]`.

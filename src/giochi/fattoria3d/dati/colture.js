@@ -1,8 +1,8 @@
 /* Le sedici colture: come si chiama, a che livello si semina (`liv`), quanto ci mette a maturare (`ms`) e quanto costa raccoglierle (`raccolta`,
-   🪙 a campo) sono quelli della fattoria di sempre: li legge da dati/parita2d.js, mai scritti qui (docs/fattoria3d/livelli.md). Come appare nel
+   🪙 a campo) sono quelli della fattoria di sempre (il riso arriva prima, col sushi): li legge da dati/parita2d.js, mai scritti qui (docs/fattoria3d/livelli.md). Come appare nel
    campo (altezza, colori, frutto) è del disegno, scena3d/modelli.js. `pezzo` è la faccia nell'atlante della 2D (docs/fattoria3d/merci-e-ricette.md).
    Un campo ha quattro tessere ma rende un raccolto solo, come uno della 2D (docs/fattoria3d/parita/decisioni.md, D12). */
-import { COLTURA, coltura2d, msDaMinuti } from './parita2d.js'
+import { COLTURA, COLTURE_ANTICIPATE, coltura2d, msDaMinuti } from './parita2d.js'
 
 const COLTURE_GREZZE = {
   grano:     { nome: 'Grano',      emoji: '🌾', pezzo: 'raccolto_grano' },
@@ -27,7 +27,7 @@ const COLTURE_GREZZE = {
 /** Le colture 3D con i numeri della 2D: `ms` (minuti veri), `liv`, `raccolta` (🪙 per raccogliere un campo), `semina` (🪙 per seminarlo, oggi sempre 0). */
 export const COLTURE = Object.fromEntries(Object.entries(COLTURE_GREZZE).map(([k, c]) => {
   const d = coltura2d(k)
-  return [k, { ...c, ms: msDaMinuti(d.minuti), liv: d.liv || 1, raccolta: d.raccolta || 0, semina: d.semina || 0 }]
+  return [k, { ...c, ms: msDaMinuti(d.minuti), liv: COLTURE_ANTICIPATE[k] ?? (d.liv || 1), raccolta: d.raccolta || 0, semina: d.semina || 0 }]
 }))
 export const CHIAVI_COLTURE = Object.keys(COLTURE)
 export const TESSERE = 4          // un campo è fatto di quattro tessere; il campo intero rende un raccolto, come in 2D (motore: `raccogliTessera`)

@@ -204,7 +204,7 @@ function linea(vedi, a, b, r) {
 // divieti, novità, taglie) resta. Torna la nebbia già letta (Uint8Array), `nuovo` (mai salvato) e `travasato`
 export function mondoDaSalvato(m, salvato, tappe = []) {
   const s = salvato && typeof salvato === 'object' && !Array.isArray(salvato) ? salvato : null
-  const stesso = !!s && s.firma === m.firma
+  const stesso = !!s && (s.firma === m.firma || MONDO_PERCORSO.firmeCompatibili.includes(s.firma))
   const letta = stesso ? nebbiaDaBase64(s.nebbia, m.W, m.H) : null
   if (letta) return { ...s, nebbia: letta, pietre: pietreDiOggi(s.pietre), nuovo: false, travasato: false }
   const n = mondoNuovo(m, tappe)

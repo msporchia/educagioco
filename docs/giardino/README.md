@@ -2,7 +2,7 @@
 
 Il gioco in cui i girasoli fanno soli, i soli comprano le piante e le piante
 sparano agli zombi che scendono: per mettere una pianta servono i soli **e un
-conto**. Cartella `src/giochi/giardino/`, chiave `giardino`. È **sperimentale**
+conto**. Cartella `src/giochi/giardino/`, chiave `giardino`. È **in prova** (`spentoDiBase` + `nota`)
 (dietro l'interruttore dei genitori) finché non è provato coi bambini.
 
 - [regole.md](regole.md) — il campo, le piante, gli zombi, il tempo che si ferma mentre si calcola, il carretto, cosa c'è nei test

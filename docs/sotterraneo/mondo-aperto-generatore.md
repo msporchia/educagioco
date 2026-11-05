@@ -152,7 +152,7 @@ confine che non porta da una riva all'altra.
 
 ## Il seme
 
-**Seme 8, firme `1ab5aff5` (scheletro) e `178a0fc6` (celle)** (il villaggio tondo del 21 ottobre), scelto il 20 ottobre 2026 con `--semi 1-12` sulla misura 504×300:
+**Seme 8, firme `a318930d` (scheletro) e `36765509` (celle)** (il villaggio tondo del 21 ottobre, più il lotto del carovaniere dell'1 novembre; la firma di prima, `1ab5aff5`, resta accettata dai salvataggi: `firmeCompatibili`), scelto il 20 ottobre 2026 con `--semi 1-12` sulla misura 504×300:
 nessuno dei dodici ha guasti; l'8 è quello del prototipo approvato e ha le pietre più pari (202–227) con la cripta a 76 passi.
 Chi cambia il generatore o la scheda vede le firme diventare rosse in `unita/sotterraneo-mondo-percorso`: si riguarda la pianta,
 se il seme non regge se ne sceglie un altro col foglio, si scrivono le firme nuove in `MONDO_PERCORSO`. **La firma dello

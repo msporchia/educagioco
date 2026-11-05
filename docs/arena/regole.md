@@ -247,8 +247,8 @@ che cade per ultimo, «vince il castello più sano» finiva quasi sempre pari.
 - **I dettagli** (`viste/Dettagli.vue`, la scheda dei «numeri») hanno le righe «adesso →
   livello dopo» di `motore/dettagli.js`, tre righe su chi colpisce e se vola, il pulsante col
   prezzo, e per un edificio costruito «Vendi» in disparte.
-- **Il campo sta fermo** finché dettagli o nuvoletta sono aperti: servono a confrontare
-  con calma.
+- **Il campo corre** mentre dettagli o nuvoletta sono aperti (l'utente 1/11: così intanto le monete
+  si accumulano mentre si decide); si ferma solo per il calcolo.
 - **Sotto resta una barra sottile**: le monete, 🔧 ripara e 💣 bomba, che non stanno su un
   edificio.
 
@@ -264,4 +264,4 @@ Il tempo di decidere c'è, poi la base viene sopraffatta.
 `[data-piazzola=<n>]` (con `data-variante=<truppa|miniera>` se c'è un edificio), `[data-castello]`,
 `[data-anello=potenzia|vendi|numeri]`, `[data-scelta=<n>]`, `[data-costruisci=<truppa|miniera>]`,
 `[data-dettagli=<truppa|miniera|ripara|bomba>]`, `[data-vendi]`, `[data-azione=ripara|bomba]`, `[data-monete]`, `[data-avviso]`,
-`[data-tappa=<n>]`, `[data-infinita]` (la voce della battaglia infinita in cima alla mappa, `disabled` se chiusa), `[data-ancora]` (il tasto del cartello di fine), `[data-fine=vinta|persa|pari]`.
+`[data-tappa=<n>]`, `[data-infinita]` (la voce della battaglia infinita in cima alla mappa, `disabled` se chiusa), `[data-ancora]` (il tasto del cartello di fine), `[data-fine=vinta|persa|pari]`, `[data-annuncio]` (il nome della battaglia che passa sul campo).

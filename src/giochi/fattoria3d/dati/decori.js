@@ -4,7 +4,7 @@
    di 2×1 non ha senso in 3D), l'emoji della carta e i vincoli che la 2D non ha (`stagione`, `fiera`, `soloAcqua`, `anfibio`, `riva`). Il disegno è in scena3d/modelli-decori-*.js. Vedi docs/fattoria3d/decorazioni.md. */
 import { voce2d, FAMIGLIA_DEL_DECORO } from './parita2d.js'
 
-/** Le schede nuove del menu «Costruisci qui» (le aggiunge catalogo.js a `CATEGORIE`, dopo «Decori»). «Feste» tiene l'albero di Natale (solo in stagione) e le otto
+/** Le schede nuove del menu «Compra» (le aggiunge catalogo.js a `CATEGORIE`, dopo «Decori»). «Feste» tiene l'albero di Natale (solo in stagione) e le otto
     decorazioni della fiera (solo se le hai: arrivano dalla mongolfiera); la scheda si nasconde quando non ha carte. */
 export const SCHEDE_DECORI = {
   verde:    { nome: 'Verde',    emoji: '🌳' },

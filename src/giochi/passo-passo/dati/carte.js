@@ -1,6 +1,6 @@
 /* LE CARTE — il vocabolario del programma, dal gradino del ripeti in là.
    Vedi docs/passo-passo/zaino.md per lo zaino e le teste delle scatole. */
-import { LASTRE } from './mondo.js'
+import { LASTRE, CHIAVI_VERSI } from './mondo.js'
 
 export const APRI = 'ripeti-'
 export const SE = 'se-'
@@ -19,6 +19,8 @@ export const CARTE = {
   fino:   { icona: '🚩', nome: 'ripeti fino a un colore' },
   casa:   { icona: '🏠', nome: 'ripeti fino a casa' },
   se:     { icona: '❓', nome: 'se' },
+  /* non è un tasto: accende nella scelta del ❓ i quattro versi, «se di là si passa» */
+  varco:  { icona: '🧭', nome: 'se di là si passa' },
 }
 
 export const apri = v => APRI + (v == null ? N : v)
@@ -52,10 +54,10 @@ export const daScegliere = (fila = []) =>
   fila.reduce((l, t, i) => (eApri(t) && valoreDi(t) == null ? [...l, i] : l), [])
 
 /* i valori che una testa può prendere: il ripeti un numero, un colore o
-   la casa, il se solo un colore */
+   la casa, il se un colore o un verso */
 export function valoreBuono(t, v) {
   if (v == null) return true
-  if (eSe(t)) return COLORI.includes(v)
+  if (eSe(t)) return COLORI.includes(v) || CHIAVI_VERSI.includes(v)
   return VOLTE.includes(v) || COLORI.includes(v) || v === CASA
 }
 

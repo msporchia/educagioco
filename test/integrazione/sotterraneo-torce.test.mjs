@@ -75,12 +75,12 @@ async function chiudi(sel) {
 /* ---------- 1. sopra, senza torce: la pagina dell'eroe dice chi le vende ---------- */
 let r = await paginaEroe()
 uguale('senza torce la pagina dell\'eroe ne conta zero', r.n, 0)
-controlla('e dice che le vende la guaritrice', /nessuna torcia/.test(r.testo) && /guaritrice/.test(r.testo), r.testo)
+controlla('e dice che le vende il carovaniere', /nessuna torcia/.test(r.testo) && /carovaniere/.test(r.testo), r.testo)
 await scatto(page, 'torce-eroe-nessuna')
 await chiudi('[data-pagina-eroe]')
 
-/* ---------- 2. tre torce dalla guaritrice ---------- */
-await alBancoDi(page, 'erborista', { tocca, toccaIl })
+/* ---------- 2. tre torce dal carovaniere ---------- */
+await alBancoDi(page, 'carovaniere', { tocca, toccaIl })
 // la prima la sceglie e la compra col tasto; poi la casella è già scelta, e un tocco su di lei compra di nuovo. Le comprate le
 // contano le gemme della bottega, che cambiano subito (il profilo si scrive dopo)
 const comprate = async () => (roba.gemme - Number((await page.locator('[data-gemme-bottega]').innerText()).match(/\d+/)[0])) / COSE.torcia.prezzo

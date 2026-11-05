@@ -1,13 +1,10 @@
 <script setup>
 // Il primo avvio e ogni bambino aggiunto: un modulo solo (`primo` cambia
 // due parole e la via d'uscita). Vedi docs/genitori/manopola.md.
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { creaGiocatore } from '../store/profile.js'
-import { eccezioniPerEta } from '../data/partenze.js'
 import { PERSONE } from '../grafica/atlante-fattoria.js'
 import SceltaAspetto from './SceltaAspetto.vue'
-import ManopolaEta from './eta/Manopola.vue'
-import Prova from '../quiz/Prova.vue'
 import VeloGuide from '../guide/VeloGuide.vue'
 import { ricordaScelta, AMICI_DI_BASE } from '../store/amici.js'
 import { PASSO } from '../amici/testi.js'
@@ -21,11 +18,10 @@ const emit = defineEmits(['fatto', 'lasciaStare'])
 const nome = ref('')
 const occupato = ref(false)
 const aspetto = ref(PERSONE[0])   // preselezionato: non cambia cosa vede/sa, solo la faccia in mappa
-const anni = ref(4)   // si parte da quattro, non da vuoto: premere senza leggere sbaglia dalla parte giusta
 const passo = ref(1)
 const amici = ref(AMICI_DI_BASE)   // la domanda ai genitori: di base spento (docs/core/amici.md)
 const leggiAmici = ref(false)
-// la data di nascita (facoltativa): mese e anno, solo sul telefono. Se c'è, la manopola si mette sull'età che ne esce, e da lì l'età si tiene aggiornata da sola
+// mese e anno, solo sul telefono: l'età esce da lì e si tiene aggiornata da sola (docs/genitori/riordino.md)
 const mese = ref('')
 const annoNascita = ref('')
 const ANNI_DISPONIBILI = Array.from({ length: 15 }, (_, i) => new Date().getFullYear() - i)
@@ -34,13 +30,10 @@ const nascita = computed(() => {
   return mese.value !== '' && annoNascita.value !== '' && nascitaValida(n) ? n : null
 })
 const etaDaData = computed(() => (nascita.value ? etaDiClasse(nascita.value) : null))
-watch(etaDaData, e => { if (e != null) anni.value = Math.max(4, Math.min(12, dentroGliEstremi(e))) })
+const anni = computed(() => (etaDaData.value == null ? null : dentroGliEstremi(etaDaData.value)))
 const spiegami = ref(false)
-const prova = ref(null)   // { sorgente|chiave, nome } | null
 
 const pulito = computed(() => nome.value.trim())
-const daQuellEta = computed(() =>
-  anni.value == null ? { giochi: {}, sa: {} } : eccezioniPerEta(anni.value))
 
 function avanti() {
   if (!pulito.value) return
@@ -86,31 +79,20 @@ async function entra() {
     </div>
 
     <div v-else class="centro fasce">
-      <span class="em">🎒</span>
-      <h1>{{ pulito }}<br><span>quanti anni ha?</span></h1>
-      <p class="mini alto">Non è un'anagrafe: è la taratura. Da qui si decide quali giochi
-        mettergli in casa e quanto difficili sono le domande. Si sposta quando si vuole,
-        dalle impostazioni.</p>
+      <span class="em">🎂</span>
+      <h1>{{ pulito }}<br><span>mese e anno di nascita</span></h1>
 
-      <!-- daQuellEta usa la stessa funzione che scriverà creaGiocatore: se
-           divergessero, il wizard prometterebbe una casa e ne consegnerebbe un'altra -->
-      <div class="manopola-posto">
-        <ManopolaEta :anni="anni" :giochi="daQuellEta.giochi" :sa="daQuellEta.sa"
-                     @scegli="anni = $event" @prova="prova = $event" />
-      </div>
-
-      <!-- facoltativa: con la data l'età si tiene aggiornata da sola (docs/genitori/riordino.md) -->
       <div class="nascita-domanda" data-nascita-domanda>
-        <b>🎂 Quando è nato? <small>(se vuoi)</small></b>
         <div class="selezioni">
           <select v-model="mese" aria-label="mese di nascita" data-nascita-mese><option value="">mese</option><option v-for="(m, i) in MESI" :key="m" :value="i">{{ m }}</option></select>
           <select v-model="annoNascita" aria-label="anno di nascita" data-nascita-anno><option value="">anno</option><option v-for="a in ANNI_DISPONIBILI" :key="a" :value="a">{{ a }}</option></select>
         </div>
-        <p v-if="etaDaData != null" class="mini" data-nascita-eta>{{ inClasse(nascita).replace(/^./, c => c.toUpperCase()) }}: da qui l'età si aggiorna da sola a ogni settembre.</p>
-        <p v-else class="mini">Senza, l'età resta quella che scegli qui sopra e la sposti tu quando serve.</p>
+        <p v-if="etaDaData != null" class="mini" data-nascita-eta>{{ inClasse(nascita).replace(/^./, c => c.toUpperCase()) }}.</p>
+        <p v-else-if="nascita" class="mini" data-nascita-futura>Questa data deve ancora arrivare.</p>
+        <p v-else class="mini">Serve a scegliere giochi e domande adatti. Si cambia quando si vuole, dalle impostazioni.</p>
       </div>
 
-      <!-- una domanda per i grandi, preselezionata sulla risposta prudente (come la manopola): docs/core/amici.md -->
+      <!-- una domanda per i grandi, preselezionata sulla risposta prudente: docs/core/amici.md -->
       <div class="amici-domanda" data-amici-domanda>
         <b>👫 {{ PASSO.titolo }}</b>
         <p v-if="!leggiAmici" class="mini">Invitare un amico a giocare, solo con chi i grandi abbinano con un codice, in alcuni giochi.
@@ -122,25 +104,18 @@ async function entra() {
         </div>
       </div>
 
-      <button class="via in-fondo" type="button" :disabled="occupato"
+      <button class="via in-fondo" type="button" :disabled="occupato || anni == null"
               data-azione="si-gioca" @click="entra">Si gioca!</button>
       <button class="indietro" type="button" @click="passo = 1">← cambia il nome</button>
     </div>
 
-    <!-- provare una domanda mentre si decide: eta e giro vanno passati a
-         Prova, senza un gruppo largo pescherebbe fra tutte le sue domande -->
     <VeloGuide v-if="spiegami" @chiudi="spiegami = false" />
-
-    <Prova v-if="prova" :chiave="prova.chiave || ''" :nome="prova.nome"
-           :sorgente="prova.sorgente || null" :giro="prova.giro || null"
-           :eta="prova.eta ?? null"
-           @chiudi="prova = null" />
   </div>
 </template>
 
 <style scoped>
 .benvenuto .centro { display:flex; flex-direction:column; align-items:center; gap:18px; padding:24px }
-/* una colonna che scorre, non centrata: il riassunto della manopola cresce quanto ha da dire */
+/* una colonna che scorre: «Leggi tutto» degli amici può allungarla */
 .benvenuto .centro.fasce { gap:12px; padding:18px 14px 28px; justify-content:flex-start;
                            min-height:100%; overflow-y:auto }
 .em { font-size:64px; line-height:1 }
@@ -162,7 +137,6 @@ form { display:flex; flex-direction:column; align-items:center; gap:14px; width:
 .via:disabled { opacity:.45; box-shadow:none }
 .via.in-fondo { position:sticky; bottom:6px; z-index:5 }
 .mini { opacity:.75; font-size:14px; text-align:center; margin:0 }
-.mini.alto { max-width:36ch; font-size:12.5px; margin:-4px 0 0 }
 .indietro { background:none; border:none; font-family:inherit; font-size:14px;
             color:var(--grigio); padding:4px 10px; cursor:pointer }
 
@@ -172,8 +146,7 @@ form { display:flex; flex-direction:column; align-items:center; gap:14px; width:
             margin-top:-2px; box-shadow:inset 0 0 0 1px var(--filo) }
 .che-roba:active { transform:translateY(1px) }
 
-/* una colonna sola, e sotto la manopola la pelle delle sue carte (Manopola.vue): se no sembrano tre schermate incollate */
-.manopola-posto, .nascita-domanda, .amici-domanda { width:100%; max-width:400px }
+.nascita-domanda, .amici-domanda { width:100%; max-width:400px }
 .nascita-domanda, .amici-domanda { display:flex; flex-direction:column; gap:6px; padding:9px 12px; border-radius:var(--raggio);
                                     background:var(--superficie); box-shadow:var(--ombra); text-align:left }
 .nascita-domanda p, .amici-domanda p { margin:0; text-align:left }

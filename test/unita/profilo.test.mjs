@@ -205,8 +205,8 @@ uguale('e uno che c\'era passa di qui con la sua versione',
   uguale('mentre «Com\'è fatto un animale» arriva adesso', sa2.adattamento, false)
 
   await selectPlayer('g3')
-  uguale('un profilo senza età vale nove anni, e a nove non si spegne niente',
-         Object.keys(state.profile.settings.sa).length, 0)
+  uguale('un profilo senza età vale nove anni, e a nove si spengono solo i decimali',
+         Object.keys(state.profile.settings.sa).join(','), 'decimali')
 
   await selectPlayer('g4')
   uguale('e chi era già aggiornato non si tocca',

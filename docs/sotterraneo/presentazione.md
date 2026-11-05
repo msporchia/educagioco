@@ -18,7 +18,7 @@ Si parte da un villaggio, e le sette discese stanno in fila lungo la
 strada, in un mondo da girare a piedi sotto un velo di nuvole che si apre
 camminando: dietro l'altare, sotto l'arco, sotto la torre in rovina, nella
 grotta, nello stagno, sotto una botola, nella miniera. Un vecchio minatore dice dov'è la prossima; fra
-le case stanno quattro botteghe — il fabbro, l'incantatrice, la guaritrice, il mercante — dove
+le case stanno cinque botteghe — il fabbro, l'incantatrice, la guaritrice, il carovaniere, il mercante — dove
 si spendono le gemme trovate giù ([mondo-3d.md](mondo-3d.md)).
 Con tutti si parla: un ritratto, poche righe a pagine, e le domande da
 fargli, che cambiano andando avanti nella storia ([dialoghi.md](dialoghi.md)).

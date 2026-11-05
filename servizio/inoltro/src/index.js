@@ -19,7 +19,8 @@ const MAX_BYTE = 512                             // una mossa sono poche decine 
 const MAX_AL_SECONDO = 30                        // messaggi per connessione
 const ATTESA = 5 * 60 * 1000                     // una stanza in cui non entra nessuno muore dopo cinque minuti
 const DURATA = 60 * 60 * 1000                    // e comunque dopo un'ora
-const CREAZIONI_ORA = 30                         // stanze create all'ora da uno stesso indirizzo
+const CREAZIONI_ORA = 30                         // stanze create all'ora da uno stesso indirizzo (la stanza vecchia, per i telefoni col gioco vecchio)
+const TAVOLI_AL_MINUTO = 6                       // tavoli al minuto da uno stesso indirizzo: una famiglia sola dietro la wifi, e un bambino nel panico che riprova; il minuto dopo si ricomincia
 
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS', 'access-control-allow-headers': 'content-type' }
 const json = (dato, stato = 200) => new Response(JSON.stringify(dato), { status: stato, headers: { 'content-type': 'application/json', ...CORS } })
@@ -53,8 +54,8 @@ export default {
       const posto = url.searchParams.get('posto') || ''
       if (!tavolo.POSTO.test(posto)) return json({ errore: 'posto storto' }, 400)
       const ip = richiesta.headers.get('cf-connecting-ip') || 'sconosciuto'
-      const limite = env.LIMITE.get(env.LIMITE.idFromName(ip))
-      if (!(await (await limite.fetch('https://limite/conta')).json()).ok) return json({ errore: 'troppi tavoli, riprova fra un po\'' }, 429)
+      const limite = env.LIMITE.get(env.LIMITE.idFromName('tavoli:' + ip))
+      if (!(await (await limite.fetch(`https://limite/conta?tetto=${TAVOLI_AL_MINUTO}&finestra=60000`)).json()).ok) return json({ errore: 'troppi tavoli, riprova fra un minuto' }, 429)
       for (let tentativo = 0; tentativo < 5; tentativo++) {           // un codice già in uso si cambia
         const codice = nuovoCodice()
         const r = await env.TAVOLI.get(env.TAVOLI.idFromName(codice)).fetch(`https://tavolo/apri?posto=${posto}`)
@@ -123,7 +124,7 @@ async function amici(richiesta, url, env) {
     const r = comune.leggiRichiesta(corpo)
     if (!r.ok) return json({ errore: r.errore }, 400)
     const limite = env.LIMITE.get(env.LIMITE.idFromName('comune:' + ip))
-    if (!(await (await limite.fetch(`https://limite/conta?tetto=${comune.COMUNE_ORA}`)).json()).ok) return json({ errore: 'troppe richieste, riprova fra un po\'' }, 429)
+    if (!(await (await limite.fetch(`https://limite/conta?tetti=${comune.TETTI_COMUNE.map(t => t.join(':')).join(',')}`)).json()).ok) return json({ errore: 'troppe richieste, riprova fra un po\'' }, 429)
     const c = await env.COMUNI.get(env.COMUNI.idFromName(r.chiave)).fetch('https://comune/usa', { method: 'POST', body: JSON.stringify(r) })
     if (c.status === 409) return json({ errore: 'questa amicizia è già di due' }, 409)
     const d = await c.json()
@@ -304,18 +305,27 @@ export class Tavolo {
 }
 
 /* Quante stanze crea un indirizzo all'ora: un contatore per indirizzo, che si azzera da solo. `?tetto=` per un conto con un
-   altro tetto (la bacheca). */
+   altro tetto (la bacheca), `?finestra=` (ms) per una finestra diversa dall'ora (i tavoli: al minuto), `?tetti=120:60000,5400:3600000`
+   per più finestre in una chiamata sola (la fattoria in comune). */
 export class Limite {
   constructor(stato) { this.stato = stato }
 
   async fetch(richiesta) {
+    const tetti = new URL(richiesta.url).searchParams.get('tetti')?.split(',').map(x => x.split(':').map(Number))
+    if (tetti) {
+      const r = comune.contaTetti(await this.stato.storage.get('conti'), tetti, Date.now())
+      await this.stato.storage.put('conti', r.conti)
+      await this.stato.storage.setAlarm(r.conti.at(-1).da + tetti.at(-1)[1])
+      return new Response(JSON.stringify({ ok: r.ok }))
+    }
     const tetto = Number(new URL(richiesta.url).searchParams.get('tetto')) || CREAZIONI_ORA
+    const finestra = Number(new URL(richiesta.url).searchParams.get('finestra')) || 60 * 60 * 1000
     const ora = Date.now()
     let { n = 0, da = ora } = (await this.stato.storage.get('conto')) || {}
-    if (ora - da > 60 * 60 * 1000) { n = 0; da = ora }
+    if (ora - da > finestra) { n = 0; da = ora }
     n++
     await this.stato.storage.put('conto', { n, da })
-    await this.stato.storage.setAlarm(da + 60 * 60 * 1000)
+    await this.stato.storage.setAlarm(da + finestra)
     return new Response(JSON.stringify({ ok: n <= tetto }))
   }
 

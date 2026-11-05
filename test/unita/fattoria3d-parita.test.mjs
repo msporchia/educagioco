@@ -16,7 +16,7 @@ import { RICETTE } from '../../src/giochi/fattoria3d/dati/ricette.js'
 import { ANIMALI, LANA, PRODOTTI_ANIMALI } from '../../src/giochi/fattoria3d/dati/animali.js'
 import { PECORE, TERRA, COSTI, prezzoDelLotto, lottiPerPiazzole } from '../../src/giochi/fattoria3d/dati/regole.js'
 import { ULTIMO, sogliaDi, livelloPer, roba, costoDelLivello, SCARTO_DELLA_PESCA, guastiDeiLivelli } from '../../src/giochi/fattoria3d/dati/livelli.js'
-import { VOCE, COLTURA, sullaScalaDellaDueD, LIVELLO_PESCA } from '../../src/giochi/fattoria3d/dati/parita2d.js'
+import { VOCE, COLTURA, sullaScalaDellaDueD, LIVELLO_PESCA, LIVELLO_PESCHIERA, LIVELLI_ANTICIPATI, COLTURE_ANTICIPATE, RICETTE_ANTICIPATE } from '../../src/giochi/fattoria3d/dati/parita2d.js'
 import { SILOS, TIPI_DI_SILO, siloDi, merciDelSilo, postiPerMerce, prezzoDelPasso, guastiDeiSilos } from '../../src/giochi/fattoria3d/dati/silos.js'
 import { RIPOSO_MS as RIPOSO_BANCO, premioDi, premioDelPezzo } from '../../src/giochi/fattoria3d/dati/ordini.js'
 import { RIPOSO_MS as RIPOSO_NAVE, premioDellaCassa } from '../../src/giochi/fattoria3d/dati/mongolfiera.js'
@@ -50,24 +50,24 @@ const maturo = (f, t, c) => { t.ora += COLTURE[c.coltura || 'grano'].ms + 1 }
 /* ══════════ 1. i livelli, i prezzi e i tempi sono quelli della 2D ══════════ */
 {
   uguale('i livelli sono settanta, come in 2D', ULTIMO, ULTIMO_2D)
-  controlla('le soglie sono quelle della 2D (con lo scarto della pesca dal livello dopo il suo)', Array.from({ length: ULTIMO + 3 }, (_, k) => k + 1).every(l => sogliaDi(l) === sogliaDi2D(l) + (l > LIVELLO_PESCA ? SCARTO_DELLA_PESCA : 0)))
+  controlla('le soglie sono quelle della 2D (con lo scarto della pesca dal livello dopo la peschiera)', Array.from({ length: ULTIMO + 3 }, (_, k) => k + 1).every(l => sogliaDi(l) === sogliaDi2D(l) + (l > LIVELLO_PESCHIERA ? SCARTO_DELLA_PESCA : 0)))
   uguale('il livello 2 è a 260 monete (45 minuti) e il 70 a ~72500 (202 ore)', [sogliaDi(2), Math.round(sogliaDi(70) / 6 / 60)].join(), '260,201')
   controlla('livelloPer è l\'inversa', Array.from({ length: ULTIMO + 2 }, (_, k) => k + 1).every(l => livelloPer(sogliaDi(l)) === l))
   for (const [tipo, v2] of Object.entries(VOCE)) {
     const c = PEZZI[tipo] || EDIFICI[tipo], v = D.PER_ID[v2]
     if (!c) { controlla(`${tipo}: esiste`, false); continue }
     uguale(`${tipo}: stesso prezzo della voce 2D «${v2}»`, c.prezzo, v.prezzo)
-    uguale(`${tipo}: stesso livello`, c.liv, livelloDellaVoce(v))
+    uguale(`${tipo}: stesso livello${LIVELLI_ANTICIPATI[tipo] ? ' (anticipato di proposito)' : ''}`, c.liv, LIVELLI_ANTICIPATI[tipo] ?? livelloDellaVoce(v))
     if (PEZZI[tipo]) uguale(`${tipo}: stesso rincaro per copia (${v.cresce || 0})`, c.cresce || 0, v.cresce || 0)
   }
   for (const [k, c] of Object.entries(COLTURE)) {
     const d = COLTURE_2D.find(x => x.id === COLTURA[k])
-    uguale(`${k}: ${d.minuti} minuti, livello ${d.liv}, raccolta 🪙${d.raccolta}`, [c.ms / MINUTO, c.liv, c.raccolta].join(), [d.minuti, d.liv, d.raccolta].join())
+    uguale(`${k}: ${d.minuti} minuti, livello ${d.liv}, raccolta 🪙${d.raccolta}`, [c.ms / MINUTO, c.liv, c.raccolta].join(), [d.minuti, COLTURE_ANTICIPATE[k] ?? d.liv, d.raccolta].join())
   }
   for (const [id, r] of Object.entries(RICETTE)) {
     if (r.solo3d) continue                                   // le tre ricette con la pancetta: solo 3D, provate sotto («9b»)
     const d = RICETTE_2D.find(x => x.id === id)
-    uguale(`${id}: ${d.minuti} minuti, livello ${livelloRicetta2D(d)}, 🪙${d.costo} a ogni avvio`, [r.ms / MINUTO, r.liv, r.costo].join(), [d.minuti, livelloRicetta2D(d), d.costo].join())
+    uguale(`${id}: ${d.minuti} minuti, livello ${livelloRicetta2D(d)}, 🪙${d.costo} a ogni avvio`, [r.ms / MINUTO, r.liv, r.costo].join(), [d.minuti, RICETTE_ANTICIPATE[id] ?? livelloRicetta2D(d), d.costo].join())
   }
   const bestia = { pollaio: 'uova', stalla: 'latte', anatre: 'uova_anatra', porcile: 'tartufi', capre: 'latte_capra' }
   for (const [t, id] of Object.entries(bestia)) { const d = RICETTE_2D.find(x => x.id === id); uguale(`${t}: ${d.minuti} minuti e 🪙${d.costo} a pasto`, [ANIMALI[t].ms / MINUTO, ANIMALI[t].costo].join(), [d.minuti, d.costo].join()) }
@@ -83,10 +83,13 @@ const maturo = (f, t, c) => { t.ora += COLTURE[c.coltura || 'grano'].ms + 1 }
 
 /* ══════════ 2. la pesca prende il posto della peschiera ══════════ */
 {
-  stessaLista('molo, molo girato e porticciolo arrivano al livello della peschiera (57)', ['molo', 'molo_v', 'porticciolo'].map(k => PEZZI[k].liv), [57, 57, 57])
+  stessaLista('molo, molo girato e porticciolo arrivano insieme, ben prima della peschiera', ['molo', 'molo_v', 'porticciolo'].map(k => PEZZI[k].liv), [10, 10, 10])
+  stessaLista('e con loro stagno e laghetto: si pesca anche senza un lago vicino', [PEZZI.stagno.liv, PEZZI.laghetto.liv], [10, 10])
+  uguale('la peschiera della 2D resta al 57: lì sta lo scarto delle soglie', LIVELLO_PESCHIERA, 57)
   controlla('la peschiera 2D costava 360, la pesca 3D 102: lo scarto è di −258 monete e riguarda solo i livelli dopo il 57', SCARTO_DELLA_PESCA === -258 && sogliaDi(57) === sogliaDi2D(57) && sogliaDi(58) === sogliaDi2D(58) - 258)
   uguale('un banco dà un pesce ogni quindici minuti, come la peschiera', (PESCA.ms + PESCA.riposoMs) / MINUTO, 15)
-  uguale('il pesce si fa dal livello della pesca e il sushi dopo (62)', [PRODOTTI_ANIMALI.pesce.dove, roba(57).pezzi.some(p => p.id === 'molo'), RICETTE.sushi.liv].join(), 'molo,true,62')
+  uguale('il pesce si fa dal livello della pesca, il sushi al 15 e il fritto al 19', [PRODOTTI_ANIMALI.pesce.dove, roba(LIVELLO_PESCA).pezzi.some(p => p.id === 'molo'), RICETTE.sushi.liv, RICETTE.fritto.liv].join(), 'molo,true,15,19')
+  uguale('il riso arriva col sushi bar', [COLTURE.riso.liv, EDIFICI.sushi_bar.liv].join(), '15,15')
 }
 
 /* ══════════ 3. il campo intero rende uno, e l'ultima tessera paga il gesto ══════════ */
@@ -308,11 +311,11 @@ const maturo = (f, t, c) => { t.ora += COLTURE[c.coltura || 'grano'].ms + 1 }
   const ricco = JSON.parse(JSON.stringify(statoIniziale())); delete ricco.scala; ricco.esperienza = 500
   ricco.posseduti.sushi_bar = true; ricco.cose.push({ id: 9, tipo: 'sushi_bar', i: 5, j: 5 })
   const lr = normalizza(JSON.parse(JSON.stringify(ricco)))
-  controlla('con un sushi bar in mappa il livello non scende sotto il 62', livelloPer(lr.esperienza) >= EDIFICI.sushi_bar.liv, String(livelloPer(lr.esperienza)))
+  controlla('con un sushi bar in mappa il livello non scende sotto il suo', livelloPer(lr.esperienza) >= EDIFICI.sushi_bar.liv, String(livelloPer(lr.esperienza)))
   const colt = JSON.parse(JSON.stringify(statoIniziale())); delete colt.scala; colt.esperienza = 100; colt.merci.riso = 3
-  controlla('con del riso in scorta il livello non scende sotto il 60', livelloPer(normalizza(colt).esperienza) >= COLTURE.riso.liv)
+  controlla('con del riso in scorta il livello non scende sotto il suo', livelloPer(normalizza(colt).esperienza) >= COLTURE.riso.liv)
   const f = mondo({ stato: normalizza(JSON.parse(JSON.stringify(ricco))) }).f
-  controlla('e il motore apre quello stato: la macchina c\'è, si può usare', f.s.posseduti.sushi_bar && f.livello() >= 62 && f.avviaRicettaIn('sushi_bar', 'sushi').motivo === 'mancano-ingredienti')
+  controlla('e il motore apre quello stato: la macchina c\'è, si può usare', f.s.posseduti.sushi_bar && f.livello() >= EDIFICI.sushi_bar.liv && f.avviaRicettaIn('sushi_bar', 'sushi').motivo === 'mancano-ingredienti')
   // la cosa più semplice che un genitore teme: nulla sparisce
   const pieno = JSON.parse(JSON.stringify(statoIniziale())); delete pieno.scala; pieno.esperienza = 3905
   pieno.merci.grano = 50; pieno.prodotti.pane = 40; pieno.lana = 30; pieno.magazzino = { campo: 2 }; pieno.lotti = { ...pieno.lotti, '3_1': true }

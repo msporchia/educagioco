@@ -1,6 +1,6 @@
 <script setup>
 // Il battesimo: un nome per la bestia appena presa. Prima si TOCCA (un bambino di quattro anni non sa scrivere): i nomi della fattoria di
-// sempre per la sua famiglia (`nomiPer`); sotto, la casella per scriverne uno suo, come nella 2D. «Lascia così» tiene il nome della razza;
+// sempre per la sua famiglia (`nomiPer`); sotto, la casella per scriverne uno suo, come nella 2D. «Lascia così» tiene quello che ha di suo (la razza, o Golia per Golia);
 // si può cambiare quando si vuole dal foglio della bestia. ✕ in alto a destra. Vedi docs/fattoria3d/bestie-di-casa.md.
 import { computed, ref } from 'vue'
 import { curabile, nomiPer, pulisciNome, NOME_MAX } from '../dati/bestie.js'

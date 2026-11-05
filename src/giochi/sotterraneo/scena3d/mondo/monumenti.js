@@ -6,6 +6,7 @@
 // accende, e il portale gemello. Le parti ferme nel cantiere, quelle che si muovono a parte. Dal prototipo poc/mondo-sopra/monumenti.js.
 import { Group, Mesh, MeshBasicMaterial, ShaderMaterial, AdditiveBlending, DoubleSide, Shape, ExtrudeGeometry, CircleGeometry,
          SphereGeometry, DodecahedronGeometry, TorusGeometry, RingGeometry, PlaneGeometry, ConeGeometry, OctahedronGeometry, Vector3 } from 'three'
+import { creaPortale as creaVarco } from '../portale.js'
 import { Cantiere, scatola, cilindro, triangolo } from './kit.js'
 import { quotaTerreno, LIVELLO_ACQUA, caso } from './suolo.js'
 
@@ -375,23 +376,15 @@ export function creaPortaDelleTerre(p, cant, m, kit, gruppo) {
            anim(k, t) { velo.material.uniforms.uT.value = t; velo.material.uniforms.uK.value = k; velo.visible = k > 0.01; rune.material.opacity = k * (0.7 + 0.3 * Math.sin(t * 2)) } }
 }
 
-// ── il portale gemello: un anello di pietra ritto e dentro il velo che gira ──
+// ── il portale gemello: lo stesso varco di pietra del portale sotto (scena3d/portale.js), perché si riconosca ──
+// quel modulo si mette da sé in una scena e conta il tempo a passi: qui lo si fa mettere in una scena finta, e lo piazza chi chiama
 export function creaPortale(x, y, z) {
-  const gruppo = new Group(); gruppo.position.set(x, y, z)
-  const anello = new Mesh(new TorusGeometry(0.72, 0.13, 8, 28), new MeshBasicMaterial({ color: 0x5a5872 }))
-  anello.position.y = 0.95; gruppo.add(anello)
-  const velo = new Mesh(new CircleGeometry(0.62, 32), new ShaderMaterial({
-    transparent: true, depthWrite: false, side: DoubleSide, blending: AdditiveBlending, uniforms: { uT: { value: 0 } },
-    vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-    fragmentShader: `uniform float uT; varying vec2 vUv;
-      void main(){ vec2 p = vUv - 0.5; float r = length(p) * 2.0, a = atan(p.y, p.x);
-        float g = sin(a * 3.0 + r * 9.0 - uT * 3.0) * 0.5 + 0.5;
-        vec3 c = mix(vec3(0.25, 0.4, 1.0), vec3(0.75, 0.55, 1.0), g) * (1.2 - r);
-        gl_FragColor = vec4(c, smoothstep(1.0, 0.7, r) * 0.9); }`,
-  }))
-  velo.position.y = 0.95; gruppo.add(velo)
-  const base = new Mesh(cilindro(0.5, 0.6, 0.18, 12), new MeshBasicMaterial({ color: 0x6a6878 }))
-  base.position.y = 0.09; gruppo.add(base)
-  return { gruppo, alto: 1.9, aggiorna(t) { velo.material.uniforms.uT.value = t; velo.scale.setScalar(1 + Math.sin(t * 2) * 0.03) },
-           via() { gruppo.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose() }) } }
+  const finta = { add() {}, remove() {} }
+  const p = creaVarco(finta, { cella: { x: -0.5, y: -0.5 } })
+  p.gruppo.position.set(x, y, z)
+  p.apri()
+  let prima = 0
+  return { gruppo: p.gruppo, alto: 1.9,
+           aggiorna(t) { const dt = prima ? Math.min(0.1, t - prima) : 0; prima = t; p.aggiorna(dt, t, 500, 1) },
+           via() { p.via() } }
 }

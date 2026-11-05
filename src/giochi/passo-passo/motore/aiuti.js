@@ -37,12 +37,24 @@ export function pensieroDi(liv) {
     const prima = quante && quante > liv.zaino
       ? `Lo zaino tiene ${liv.zaino} carte, e la strada, freccia per freccia, ne vuole ${quante}: scritta così non ci sta.`
       : `Lo zaino tiene ${liv.zaino} carte: la strada, scritta freccia per freccia, non ci sta.`
-    const seconda = carte.includes('se')
+    const seconda = carte.includes('varco')
+      ? 'Guarda la strada: dove deve girare? Il ❓ con la freccia chiede «di là si passa?», e il guerriero sceglie da solo a ogni passo.'
+      : liv.guerriero
+        ? 'Guarda la strada: cosa si ripete uguale? Se i pezzi sono lunghi diversi, dove finiscono? Su un pulsante?'
+        : carte.includes('se')
       ? 'Guarda la strada: cosa si ripete uguale? E dove il coniglio deve fare una cosa diversa, c\'è una lastra colorata che lo dice?'
       : carte.includes('fino') || carte.includes('casa')
         ? 'Guarda la strada: cosa si ripete uguale, e fino a quando? Quante volte, o fino a quale lastra?'
         : 'Guarda la strada: c\'è un pezzo che si ripete uguale? Quel pezzo si scrive una volta sola, dentro una scatola 🔁 — e quante volte?'
     return [prima, seconda]
+  }
+  if (liv.guerriero) {
+    const corona = liv.carota >= 0 ? ' E la corona 👑: portala alla principessa.' : ''
+    if (liv.nemici.length)
+      return ['I nemici vedono tutto attorno a sé, anche di traverso. Se ti fermi dove ti vedono devi attaccare subito ⚔️, con la spada in mano: se fai altro ti colpiscono. Contro due insieme non vince nessuno.',
+              'Dov\'è la spada? E da quale casella puoi prendere un nemico alla volta, senza fermarti accanto a un altro?' + corona]
+    return ['Una grata si apre col pulsante del suo colore: il guerriero ci mette il piede, e la grata resta aperta.',
+            'Quale grata sbarra la strada alla principessa 👸? Dov\'è il suo pulsante, e come ci arrivi?' + corona]
   }
   if (liv.cane) {
     const osso = liv.carota >= 0 ? ' E l\'osso 🦴: prendilo senza spaventarle.' : ''

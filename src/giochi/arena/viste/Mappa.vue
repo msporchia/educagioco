@@ -7,6 +7,9 @@ import { ref } from 'vue'
 import { riprendiSeChiesta } from '../../ripresa.js'
 import Ripresa from '../../Ripresa.vue'
 import AmiciQui from '../../../components/amici/AmiciQui.vue'
+import Panorama from './Panorama.vue'
+import Spade from './Spade.vue'
+import { INSEGNA } from '../dati/terreni-pronti.js'
 
 const props = defineProps({
   scalini: { type: Array, required: true },   // [{ chiave, nome, icona, dritta, tappe: [] }]
@@ -15,6 +18,7 @@ const props = defineProps({
   livelli: { type: Array, default: () => [] },  // [{ chiave, nome, icona }]
   livello: { type: String, default: 'medio' },
   davanti: { type: String, default: '' },     // l'amico da raggiungere, in parole (docs/core/amici-nei-giochi.md)
+  terreno: { type: String, default: 'bosco' }, // il posto della tappa a cui si è, per il frontone
 })
 const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'livello'])
 const SFIDA = 'sfida'   // la sfida in due non ha un indice: Gioco.vue la riconosce da questo
@@ -43,6 +47,12 @@ function vai() {
 
 <template>
   <div class="ar-mappa">
+    <header class="ar-frontone">
+      <img v-if="INSEGNA" :src="INSEGNA" class="ar-panorama" alt="" />
+      <Panorama v-else :terreno="terreno" />
+      <div class="ar-insegna"><Spade class="ar-spade" /><h2>Castle Battle</h2></div>
+    </header>
+
     <Ripresa :ripresa="ripresa" :chiede="chiede ? chiede.nome : ''"
              @riprendi="chiede = null; emit('riprendi')" @scorda="emit('scorda')"
              @comincia="vai" @annulla="chiede = null" />
@@ -51,8 +61,8 @@ function vai() {
 
     <section v-for="s in scalini" :key="s.chiave" class="ar-scalino">
       <h3>
-        <span class="em">{{ s.icona }}</span>
-        <b>{{ s.nome }}</b>
+        <Panorama :terreno="s.vestito" />
+        <span class="ar-regno"><span class="em">{{ s.icona }}</span> <b>{{ s.nome }}</b></span>
         <i>{{ s.dritta }}</i>
       </h3>
       <div class="ar-tappe">

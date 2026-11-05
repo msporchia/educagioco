@@ -9,8 +9,9 @@ Un pezzo o un edificio si gira di **un quarto di giro alla volta** (90°), attor
   non ha la chiave e si legge dritto. `normalizza` (`motore/stato.js`) tiene `rot` solo se è un intero e il tipo si gira
   (`rotLetta`: 9 → 1, `'2'`/NaN/oggetti → 0, mai un'eccezione); un campo con `rot` nello stato lo butta.
 - **Cosa si gira** (`ruotabile` in `dati/rotazione.js`): tutto tranne il campo (quadrato, non ha un davanti), l'acqua (stagno,
-  laghetto), i pezzi calpestabili (ponte, passerella, molo, molo girato: hanno già la versione girata, e la quota di chi ci cammina
-  dipende dal lato lungo) e il porticciolo (sta sulla riva).
+  laghetto) e i pezzi calpestabili (ponte, passerella, molo, molo girato: hanno già la versione girata, e la quota di chi ci cammina
+  dipende dal lato lungo).
+- **Il porticciolo guarda l'acqua da solo** (`versoAcqua`): trascinandolo si gira verso il lato con più acqua, finché non lo gira il bambino con ↻. Quelli messi prima si sono voltati una volta sola, gratis (`portoVoltato` nello stato).
 - **L'ingombro segue.** `motore.misure(tipo, rot)` scambia `w` e `d` se `rot` è dispari (`misureGirate`, in cache); `misureCosa(c)` lo
   fa per una cosa in mappa. `puoMettere`, `puoCompraEMettere`, `compraEMetti`, `mettiPezzo` e `spostaPezzo` hanno un `rot`;
   `_occupa`/`_libera` e chi misura una cosa (compagni.js per la panchina, `postoLibero` dei vicini, `celleDiServizio`) leggono `misureCosa`.
@@ -25,7 +26,9 @@ Un pezzo o un edificio si gira di **un quarto di giro alla volta** (90°), attor
 
 ## Il gesto
 
-Il pezzo da girare è **in mano**: sia il fantasma parcheggiato dal menu «Costruisci qui», sia un pezzo già messo sollevato tenendolo
+**Un tocco** su una cosa che si gira porta accanto ↻ ([gesti.md](gesti.md)): gira di un quarto e costa come spostare (`ruotaPezzo`), e l'arco resta lì per girare ancora.
+
+**In mano**, il pezzo da girare è **in mano**: sia il fantasma parcheggiato dal menu «Compra», sia un pezzo già messo sollevato tenendolo
 premuto (0,45 s). Mentre è in mano, in basso a destra sopra la fascia «metti via» compare il tasto **↻** (64 px, arancio): **un tocco
 con un secondo dito** (o, col fantasma parcheggiato, un tocco normale) gira il fantasma di un quarto attorno al suo centro, che resta
 sotto il dito; al rilascio si costruisce o si sposta già girato (l'avviso dice «Girato»). Il tasto non c'è per i pezzi che non si girano.
@@ -43,4 +46,4 @@ pointer); reagisce al `pointerdown`, non al `click` (un click arriverebbe dopo i
 
 `unita/fattoria3d-rotazione` (cosa si gira, misure girate, ingombro che segue, rifiuto senza costo, quattro giri tornano dritti, stato e
 vecchi stati, `normalizza` con valori sporchi, il gruppo che gira, il davanti, il fantasma e il tasto), `integrazione/fattoria3d` (blocco
-«ruotare»: pressione lunga, secondo dito sul tasto, rilascio). Bersagli: `[data-f3="ruota"]` (con `data-rot`).
+«ruotare»: pressione lunga, secondo dito sul tasto, rilascio, il tocco e ↻). Bersagli: `[data-f3="ruota"]` (con `data-rot`).

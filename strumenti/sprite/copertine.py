@@ -83,10 +83,12 @@ def croce(foglio, soglia=235):
 
 
 def sorgenti():
-    """(chiave, immagine) di ogni copertina: le singole e i quadri dei fogli."""
+    """(chiave, immagine) di ogni copertina: le singole e i quadri dei fogli. Una singola vince sul quadro di un foglio."""
+    singole = set()
     for f in sorted(SORGENTI.glob('copertina-*.*')):
         m = re.fullmatch(r'copertina-([a-z0-9-]+)\.(png|jpe?g|webp)', f.name)
         if m:
+            singole.add(m.group(1))
             yield m.group(1), Image.open(f).convert('RGB')
     fogli = SORGENTI / 'fogli.json'
     for nome, chiavi in (json.loads(fogli.read_text()) if fogli.exists() else {}).items():
@@ -100,7 +102,7 @@ def sorgenti():
         cx, cy = croce(foglio)
         quadri = [(0, 0, cx, cy), (cx, 0, w, cy), (0, cy, cx, h), (cx, cy, w, h)]
         for k, quadro in zip(chiavi, quadri):
-            if k:
+            if k and k not in singole:
                 yield k, senza_bianco(foglio.crop(quadro))
 
 

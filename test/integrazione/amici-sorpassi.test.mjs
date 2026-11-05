@@ -1,4 +1,4 @@
-/* «Leonardo ti ha superato» in home (docs/core/amici-nei-giochi.md): una riga per il sorpasso segnato quando è arrivata la sua
+/* «Lorenzo ti ha superato» in home (docs/core/amici-nei-giochi.md): una riga per il sorpasso segnato quando è arrivata la sua
    bacheca, col suo pallino e il gioco; niente per chi ho già ripreso, per un amico senza nome o per un gioco che non vedo.
    Toccarla apre il gioco, e tornati in home la riga non c'è più. I sorpassi sono già salvati sul telefono, come dopo una
    lettura: il servizio non serve. `node test/esegui.mjs amici-sorpassi --niente-build` */
@@ -18,8 +18,8 @@ const righe = () => page.$$eval('[data-sorpasso]', l => l.map(e => ({ gioco: e.d
 
 await semina(page, { mate: { tappa: 0, fila: 3, libera: false }, settings: { eta: 9 } })
 await seminaAmici(page, [
-  amicoDiProva('a', 'leonardo1', 'Leonardo', { giochi: mate(5, 0) }),
-  amicoDiProva('b', 'melody001', 'Melody', { giochi: mate(2, 0) }),     // mi aveva superato, ma l'ho ripresa
+  amicoDiProva('a', 'lorenzo01', 'Lorenzo', { giochi: mate(5, 0) }),
+  amicoDiProva('b', 'marta0001', 'Marta', { giochi: mate(2, 0) }),     // mi aveva superato, ma l'ho ripresa
   amicoDiProva('c', null, '', { giochi: mate(9, 0) }),                    // mai incontrato: senza nome
 ], undefined, { sorpassi: [
   { chiave: K('b'), gioco: 'mate', tipo: 'tappa' },
@@ -30,12 +30,12 @@ await page.waitForSelector('[data-sorpasso]')
 await attendi(page, 300)
 const r = await righe()
 uguale('una riga sola: chi è davvero davanti e ha un nome', r.length, 1)
-controlla('Leonardo, col suo pallino e il gioco', r[0]?.gioco === 'mate' && r[0].testo === 'LLeonardo ti ha superato☄️ Asteroidi', JSON.stringify(r))
+controlla('Lorenzo, col suo pallino e il gioco', r[0]?.gioco === 'mate' && r[0].testo === 'LLorenzo ti ha superato☄️ Asteroidi', JSON.stringify(r))
 await scatto(page, 'amici-sorpasso-home')
 
 await page.click('[data-sorpasso]')
 await page.waitForSelector('[data-rotta] [data-tappa]')
-controlla('toccarla porta al gioco, dove si vede chi è davanti', /Leonardo è 2 tappe più avanti di te/.test(await page.textContent('[data-amico-davanti]')))
+controlla('toccarla porta al gioco, dove si vede chi è davanti', /Lorenzo è 2 tappe più avanti di te/.test(await page.textContent('[data-amico-davanti]')))
 await page.click('button[aria-label="indietro"]')
 await page.waitForSelector('.carte')
 await attendi(page, 300)
@@ -47,7 +47,7 @@ const salvati = await page.evaluate(chiave => new Promise(ok => {
 ugualeJ('e non resta nell\'archivio (gli altri, mai detti, se ne vanno col gioco aperto)', salvati, [])
 
 /* un record battuto, in un gioco che non si vede: niente */
-await seminaAmici(page, [amicoDiProva('a', 'leonardo1', 'Leonardo', { giochi: { survivors: { posti: { '': 2 }, primati: { '': 500 } } } })],
+await seminaAmici(page, [amicoDiProva('a', 'lorenzo01', 'Lorenzo', { giochi: { survivors: { posti: { '': 2 }, primati: { '': 500 } } } })],
   undefined, { sorpassi: [{ chiave: K('a'), gioco: 'survivors', tipo: 'record' }] })
 await semina(page, { mate: { tappa: 0, fila: 3, libera: false }, campagne: { survivors: { tappa: 2, primato: { best: 300, quando: 1, partite: 1, ultime: [] } } },
   settings: { eta: 9, giochi: { survivors: false } } })

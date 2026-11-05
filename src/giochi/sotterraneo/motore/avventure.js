@@ -3,7 +3,7 @@
 // Il record della campagna di fuori (tappa, stelle, libera) resta quello che legge il resto dell'app, e vale il
 // massimo fra le avventure: lo scrive completa() di giochi/campagne.js, che tiene sempre il più alto.
 // Funzioni pure sul record della campagna: girano in Node, e Gioco.vue le passa a ritocca().
-import { EROI } from '../dati/eroi.js'
+import { EROI, SESSI, aspettoValido } from '../dati/eroi.js'
 import { rileggiRoba } from './corredo.js'
 
 // `missioni`: quelle dei personaggi, { [id]: stato } (motore/missioni.js, docs/sotterraneo/missioni.md)
@@ -23,7 +23,26 @@ export function avventuraDi(c, eroe) {
     libera: !!a.libera,
     stelle: oggetto(a.stelle) ? a.stelle : {},
     missioni: oggetto(a.missioni) ? a.missioni : {},
+    sesso: SESSI.includes(a.sesso) ? a.sesso : null,   // null: mai scelto, vale quello della persona del profilo (Gioco.vue)
+    aspetto: aspettoValido(a.aspetto),
+    vestiti: vestitiValidi(a.vestiti),
   }
+}
+
+// I set salvati dall'editor del personaggio (docs/sotterraneo/personaggio.md, «I set»): al più sei, in sei posti fissi, ognuno con un nome
+// corto, il sesso e l'aspetto. Uno storto si butta; due nello stesso posto: vale il primo.
+export const POSTI_VESTITI = 6
+export function vestitiValidi(l) {
+  if (!Array.isArray(l)) return []
+  const visti = new Set(), fuori = []
+  for (const v of l) {
+    if (!oggetto(v) || !Number.isInteger(v.posto) || v.posto < 0 || v.posto >= POSTI_VESTITI || visti.has(v.posto)) continue
+    const nome = typeof v.nome === 'string' ? v.nome.trim().slice(0, 16) : ''
+    if (!nome) continue
+    visti.add(v.posto)
+    fuori.push({ posto: v.posto, nome, sesso: SESSI.includes(v.sesso) ? v.sesso : null, aspetto: aspettoValido(v.aspetto) })
+  }
+  return fuori.sort((x, y) => x.posto - y.posto)
 }
 
 // scrive dentro l'avventura, e la crea se non c'è; un campo a null si toglie (la sosta buttata)

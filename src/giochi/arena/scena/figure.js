@@ -42,6 +42,9 @@ export function fotogramma(id, tempo, cammina, sfasa = 0) {
   return serie[Math.floor(tempo * 5 + sfasa) % serie.length]
 }
 
+/* tutte le pose di una truppa, per prepararle prima della battaglia */
+export const fotogrammiDi = id => { const p = pose[CREATURA[id]]; return [...p.lato, ...p.respiro] }
+
 export function guastiDelleFigure() {
   const g = []
   for (const [id, c] of Object.entries(CREATURA)) {

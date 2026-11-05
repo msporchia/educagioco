@@ -9,7 +9,8 @@ della mappa sta in [mappa.md](mappa.md).
 - **I sentieri sono spezzate in pixel del fondale**, una o più per isola.
   Uno con `"caselle": N` ne porta N del coniglio, distribuite dallo strumento
   fra i due `margini`; con `"cane": N` (e `margini-cane`, e `rovescio-cane`
-  se si contano dall'altro capo) quelle del cane, a parte: ognuno vede solo
+  se si contano dall'altro capo) quelle del cane, a parte, e allo stesso modo
+  con `"guerriero": N` quelle del guerriero: ognuno vede solo
   le sue, e si controlla che non si tocchino solo fra le sue. Le caselle di
   un'isola si contano nell'ordine del foglietto, e la k-esima è la k-esima
   tappa della sua isola in `motore/strade.js`: per il coniglio quella con la
@@ -40,6 +41,8 @@ della mappa sta in [mappa.md](mappa.md).
   aperte, senza caselle (la riva da cui si arriva dalla valle); `"prefisso": "z-"` si mette
   davanti agli id dei punti senza nome (`z-incrocio:3`), perché i due mondi non
   ne abbiano uno uguale (la mappa sa in che mondo sta un posto dal suo id).
+  `"solo": true` su un'isola la toglie dal quadro di chi non ci ha caselle,
+  con la tana che ci porta: per lui è decoro, e non ci va a finire toccando.
   `"stemma": true` su un'isola le dà lo scudo e non lo stendardo (per
   un'isola piccola, dove il nome non ci sta).
   `blocco: [a, b]` di un ponte sposta la sbarra dai suoi capi (px dal capo).

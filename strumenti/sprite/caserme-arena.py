@@ -3,7 +3,8 @@
 
     python3 strumenti/sprite/caserme-arena.py [provino.png]
 
-Legge `sorgenti/arena/caserme.json` (il foglio e cosa c'è in ogni riga), trova le
+Legge `sorgenti/arena/caserme-2.json` se il suo foglio c'è (quello definitivo, con la
+miniera), se no `caserme.json` (il foglio e cosa c'è in ogni riga), trova le
 figure da sé con `righe.py` e controlla che i conti tornino. Ogni figura poggia su
 una piazzola, e le piazzole del foglio non sono tutte della stessa misura: si
 misura la larghezza della piazzola (la fascia in basso) e ogni figura si scala
@@ -40,8 +41,13 @@ def piazzola(fig):
     return (min(xs) + max(xs) + 1) / 2, max(xs) + 1 - min(xs)
 
 
+def foglietto():
+    nuovo = json.loads((SORGENTI / 'caserme-2.json').read_text())
+    return nuovo if (SORGENTI / nuovo['foglio']).exists() else json.loads((SORGENTI / 'caserme.json').read_text())
+
+
 def main():
-    scheda = json.loads((SORGENTI / 'caserme.json').read_text())
+    scheda = foglietto()
     foglio = righe.senza_alone(Image.open(SORGENTI / scheda['foglio']))
     trovate = righe.righe_di_figure(foglio, stacco=scheda['stacco'])
     attese = [len(r) for r in scheda['righe']]

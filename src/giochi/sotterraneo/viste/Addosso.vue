@@ -15,6 +15,7 @@ const props = defineProps({
   dito: { type: Object, default: null },
   dito2: { type: Object, default: null },
   testa: { type: Object, default: null },
+  tinte: { type: Object, default: null },
   conTesta: { type: Boolean, default: false },   // la casella del copricapo anche vuota (il 3D)
   scelto: { type: String, default: null },    // la casella scelta
   va: { type: String, default: null },
@@ -52,7 +53,7 @@ const ombra = dove => dove === 'mancina' && dueMani.value
                :scelta="scelto === 'testa'" :accesa="va === 'testa'"
                data-casella="testa" :data-cosa="testa ? testa.chiave : null" :aria-label="testa ? testa.nome : TESTA.dice" @click="$emit('tocca', 'testa')" />
       <Armato :eroe="eroe" :mano="mano ? mano.chiave : null" :mancina="mancina ? mancina.chiave : null" :corpo="corpo ? corpo.chiave : null"
-              :testa="testa ? testa.chiave : null" :scala="3" />
+              :testa="testa ? testa.chiave : null" :tinte="tinte" :scala="3" />
     </div>
     <div class="sot-intorno-lato">
       <template v-for="p in POSTI.filter(x => x.dove === 'mano' || x.dove === 'dito' || x.dove === 'dito2')" :key="p.dove">

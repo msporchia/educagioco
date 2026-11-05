@@ -5,7 +5,8 @@
 import * as THREE from 'three'
 import { inquadra } from '../../fattoria3d/scena3d/anteprime-pura.js'
 import { creaCoda, leggiChiave, MISURE, RIPROVA } from './anteprime3d-pura.js'
-import { creaEroe, posaGuardia, posaMarcia } from './eroi3d/eroi.js'
+import { posaGuardia, posaMarcia } from './eroi3d/eroi.js'
+import { creaEroeDa } from './eroe-aspetto.js'
 import { equipaggia } from './eroi3d/armi.js'
 import { vesti, TIPI } from './eroi3d/armature.js'
 import { vestiDotazione } from './eroe3d.js'
@@ -59,6 +60,16 @@ function inPosaArma(pezzo, modo) {
   if (!a) return null
   const perno = new THREE.Group()
   perno.add(a); animaTutto(a, ISTANTE)
+  if (modo === 'gioiello' && a.userData.tipo === 'collana' && a.userData.catena) {
+    // una collana si legge dal ciondolo: si inquadra lui con un palmo di catena che esce in alto (la catena intera lo rimpiccioliva a un puntino a 46 px)
+    perno.rotation.y = -0.35
+    const cat = a.userData.catena
+    cat.visible = false
+    const s = scatolaDi(perno)
+    cat.visible = true
+    if (s) { s.max.y += 0.075; s.min.y -= 0.012; s.min.x -= 0.012; s.max.x += 0.012; return { obj: perno, scatola: s, verso: [0.15, 0.22, 1] } }
+    return { obj: perno, verso: [0.15, 0.22, 1] }
+  }
   if (modo === 'scudo' || modo === 'gioiello' || modo === 'consumabile') { perno.rotation.y = -0.35; return { obj: perno, verso: [0.15, 0.22, 1] } }
   // l'arco è disegnato col pancione verso +z: girato di lato si vede la curva; tutto in diagonale, la punta in alto a destra.
   // La balestra (il fusto verso +z, l'arco di piatto) la bocca in alto a destra, vista da sopra e un poco di fianco: la T di una balestra
@@ -71,14 +82,14 @@ function inPosaArma(pezzo, modo) {
 
 // l'eroe nella guardia di battaglia, come lo vede il giocatore, girato un poco verso chi guarda
 function inPosaEroe(c, busto) {
-  const g = creaEroe(c.eroe)
+  const g = creaEroeDa(c.eroe)   // il modello con l'aspetto scelto (dati/eroi.js)
   vestiDotazione(g, c)                   // come l'eroe in scena (eroe3d.js): la chiave porta la dotazione già decisa
   posaGuardia(g, ISTANTE_EROE)
   if (MARCIA) posaMarcia(g, 1.2)
   animaTutto(g, ISTANTE_EROE)
   for (const w of g.userData.armiAnima || []) animaTutto(w, ISTANTE)
   if (g.userData.animaArmatura) g.userData.animaArmatura(0.6)
-  g.rotation.y = GIRO
+  g.rotation.y = GIRO + (c.giro || 0) * Math.PI / 4   // `c.giro`: gli scatti da 45° dell'editor del personaggio
   if (!busto) return { obj: g, verso: [0.1, 0.16, 1] }
   // a mezzo busto: attorno alla faccia, uguale per tutti (la testa dei chibi è metà dell'eroe, e il cappello del mago o la barba del
   // nano la allungherebbero); prima il tutto, perché la faccia eredita la rotazione
@@ -92,7 +103,7 @@ function inPosaEroe(c, busto) {
 
 // l'armatura indossata da un manichino: l'eroe che la porterebbe, senza testa e senza armi
 function inPosaArmatura(c) {
-  const g = creaEroe(c.eroe)
+  const g = creaEroeDa(c.eroe)
   equipaggia(g, {})
   if (!(c.corpo.figura && vestiFigura(g, c.corpo.figura)) && TIPI.includes(c.armatura)) vesti(g, c.armatura, c.pregio)
   if (g.userData.animaArmatura) g.userData.animaArmatura(0)
@@ -104,6 +115,15 @@ function inPosaArmatura(c) {
 // il copricapo da solo (docs/sotterraneo/elmo.md): montato su una testa finta, senza eroe sotto (`copri` vuole il perno `testa`, il suo
 // centro e il raggio), di tre quarti e appena dall'alto; l'alone della rarità come le altre caselle
 function inPosaCopricapo(c) {
+  // quello di serie (`serie-<eroe>`): il copricapo del modello dell'eroe, staccato dalla sua testa e centrato
+  if (/^serie-/.test(c.id)) {
+    const u = creaEroeDa(c.id.slice(6)).userData, cop = u.copricapo
+    if (!cop) return null
+    const sola = new THREE.Group()
+    cop.parent.remove(cop); cop.position.y -= u.cy; sola.add(cop)
+    sola.rotation.set(0.25, -0.5, 0)
+    return { obj: sola, verso: [0.15, 0.3, 1] }
+  }
   const finto = new THREE.Group(), testa = new THREE.Group()
   finto.add(testa)
   finto.userData = { testa, cy: 0, R: 0.3, chiave: 'cavaliere' }

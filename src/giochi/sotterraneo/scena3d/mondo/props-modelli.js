@@ -230,6 +230,9 @@ export const MODELLI = {
     } else if (o.bottega === 'erbe') {
       c.metti('liscio', new ConeGeometry(0.08, 0.3, 5), x - 0.07, y, z, [0.34, 0.72, 0.36], { rz: 0.5 })
       c.metti('liscio', new ConeGeometry(0.08, 0.3, 5), x + 0.07, y, z, [0.28, 0.62, 0.32], { rz: -0.5 })
+    } else if (o.bottega === 'torce') {
+      c.metti('legno', cilindro(0.03, 0.04, 0.3, 5), x, y - 0.06, z, [0.3, 0.2, 0.12])
+      c.metti('luce', new ConeGeometry(0.08, 0.2, 6), x, y + 0.16, z, [1.0, 0.62, 0.15])
     } else if (o.bottega === 'torretta') {
       c.metti('luce', new OctahedronGeometry(0.14), x, y, z, [0.62, 0.5, 1], { s: [1, 1.3, 0.35] })
     } else {

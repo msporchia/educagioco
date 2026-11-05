@@ -26,7 +26,7 @@ export async function creaTavolo({ posto, servizio = indirizzo(), fetchImpl = gl
     clearTimeout(t)
   }
   if (!r) throw new Error('non riesco a collegarmi: serve internet')
-  if (r.status === 429) throw new Error('hai creato troppe sfide, riprova fra un po\'')
+  if (r.status === 429) throw new Error('hai creato troppe sfide, aspetta un minuto')
   if (!r.ok) throw new Error('il servizio delle sfide non risponde ora')
   const { codice } = corpo || {}
   if (!CODICE.test(codice || '')) throw new Error('il servizio delle sfide non risponde ora')

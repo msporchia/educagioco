@@ -19,7 +19,7 @@ import { eroeDi, portaLa } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { PASSO_EROE } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
-const TUTTI = ['armaiolo', 'incantatrice', 'erborista', 'rigattiere']
+const TUTTI = ['armaiolo', 'incantatrice', 'erborista', 'rigattiere', 'carovaniere']
 const roba = (r = {}) => ({ v: 1, gemme: 0, zaino: [], mano: null, mancina: null, corpo: null, collo: null, dito: null, dito2: null, torcia: 0, torce: 0, ...r })
 const sopra = (eroe, r, cr = null, extra = {}) => situazioneDi(new Corredo({ eroe, roba: roba(r), crescita: cr }), { mercanti: TUTTI, ...extra })
 const ids = (s, opz) => candidati(s, opz).map(x => x.p.id)
@@ -248,7 +248,7 @@ const falso = (id, s, cosa, opz) => controlla(`${id}: no, ${cosa}`, !ha(s, id, o
   const ORDINI = /\b(compra|comprati|compratelo|vai|va'|andate|devi|dovresti|bisogna|ricordati|ricorda|bevi|bevila|metti|mettiti|indossa|usa|apri|impara|vendi|spendi|torna|prendi|guarda|tocca|scendi|sali|prova)\b/i
   const GIUDIZI = /\b(buon[oaie]?|buonissim\w*|squisit\w*|gustos\w*|sapore|saporit\w*|delizios\w*|appetitos\w*|ottim[oaie])\b/i
   // le parole lunghe ammesse: tutte quelle che un bambino di sei anni sente leggere in una storia (le altre si aggiungono qui, pensandoci)
-  const LUNGHE = new Set(['guaritrice', 'incantatrice', 'piacerebbe', 'rimetterebbe', 'tranquillo', 'tranquilla', 'occhiolino', 'abbastanza',
+  const LUNGHE = new Set(['guaritrice', 'carovaniere', 'incantatrice', 'piacerebbe', 'rimetterebbe', 'tranquillo', 'tranquilla', 'occhiolino', 'abbastanza',
     'avvelenato', 'scintille', 'starebbe', 'sentirei', 'servirebbe', 'stanchezza', 'gorgoglio', 'qualcosa', 'tintinna', 'ammaccato', 'ammaccata',
     'tranquillo', 'spegnendo', 'migliori', 'giorni', 'leggero', 'leggera', 'sapiente', 'destrezza', 'intelligenza', 'incantata', 'arcano',
     'incanto', 'bestione', 'farebbe', 'avessi', 'sarebbe', 'qualche', 'mantello', 'corazza', 'bacchetta', 'spadone', 'misura', 'sicuro',

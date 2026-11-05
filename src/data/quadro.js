@@ -24,7 +24,7 @@ export const PASSATO = 'passato'    // troppo facile per lui, ormai
 export const AVANTI = 'avanti'      // arriva più avanti
 export const SPENTO = 'spento'      // l'ha spento un grande, non l'età
 
-export function giochiDiUnEta ({ eta, giochi = {}, sa = {}, sperimentali = false } = {}) {
+export function giochiDiUnEta ({ eta, giochi = {}, sa = {} } = {}) {
   const spenti = spente(sa)
   // giochi[k] === true: tienilo in casa anche se l'età dice di no (fissaGioco, vedi ritocchi.md)
   const forzati = new Set(Object.keys(giochi || {}).filter(k => giochi[k] === true))
@@ -37,7 +37,6 @@ export function giochiDiUnEta ({ eta, giochi = {}, sa = {}, sperimentali = false
     ...[...dEta].filter(k => typeof (giochi || {})[k] !== 'boolean')])
 
   return GIOCHI
-    .filter(g => !g.sperimentale || sperimentali) // i giochi in prova sono un interruttore di casa
     .map(g => {
       const arco = arcoDelGioco(TAPPE_DEL_GIOCO[g.chiave] || [])
       const tappe = TAPPE_DEL_GIOCO[g.chiave]
@@ -113,17 +112,16 @@ export function saperiDiUnEta (sa = {}, { classi = [], eta = null } = {}) {
 const PASSO_ETA = 0.5
 const MAX_ETA = 12
 
-export function domandeDiUnEta ({ eta, giochi = {}, sa = {}, sperimentali = false } = {}) {
+export function domandeDiUnEta ({ eta, giochi = {}, sa = {} } = {}) {
   const chiedono = elenco => elenco
     .filter(g => g.stato === QUI && GIOCHI.some(x => x.chiave === g.chiave && x.quiz))
-  const qui = chiedono(giochiDiUnEta({ eta, giochi, sa, sperimentali }))
+  const qui = chiedono(giochiDiUnEta({ eta, giochi, sa }))
   if (qui.length) return { chiedono: true, quali: qui.map(g => g.nome), da: null }
 
   // nessuno: da che età ne arriverebbe uno, mezzo anno per volta come si muove la manopola
   for (let e = (Number(eta) || 0) + PASSO_ETA; e <= MAX_ETA; e += PASSO_ETA) {
     const suoi = eccezioniPerEta(e)
-    const trovati = chiedono(giochiDiUnEta({ eta: e, giochi: suoi.giochi, sa: suoi.sa,
-                                             sperimentali }))
+    const trovati = chiedono(giochiDiUnEta({ eta: e, giochi: suoi.giochi, sa: suoi.sa }))
     if (trovati.length) return { chiedono: false, quali: trovati.map(g => g.nome), da: e }
   }
   return { chiedono: false, quali: [], da: null }
@@ -133,7 +131,7 @@ export function domandeDiUnEta ({ eta, giochi = {}, sa = {}, sperimentali = fals
 const ritoccoDi = (c, ritocchi) =>
   (ritocchi[c.tipo] || 0) + (c.sa || []).reduce((n, k) => n + (ritocchi[k] || 0), 0)
 
-export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false,
+export function quadroDi ({ eta, giochi = {}, sa = {},
                             ritocchi = {} } = {},
                           { classi = [] } = {}) {
   const spenti = spente(sa)
@@ -270,8 +268,8 @@ export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false,
     return { chiave, righe, saperi, quante: righe.length }
   })
 
-  const elencoGiochi = giochiDiUnEta({ eta, giochi, sa, sperimentali })
-  const domande = domandeDiUnEta({ eta, giochi, sa, sperimentali })
+  const elencoGiochi = giochiDiUnEta({ eta, giochi, sa })
+  const domande = domandeDiUnEta({ eta, giochi, sa })
 
   /* ── E SE NESSUNO LE CHIEDE, I BLOCCHI NON CI SONO ──
      Da quattro a cinque anni e mezzo in casa ci sono tre giochi e

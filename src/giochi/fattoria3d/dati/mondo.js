@@ -5,6 +5,8 @@
 import { EDIFICI } from './catalogo.js'
 
 export const LOTTO = 4
+/** I limiti dello zoom della telecamera (moltiplicano la distanza di base): 0,28 = il contadino e i disegnini da vicino, 2,4 = la panoramica. Oltre, il dito tira un elastico e torna. */
+export const ZOOM_MIN = 0.28, ZOOM_MAX = 2.4, ZOOM_ELASTICO = 0.18
 export const ORIGINE = { i: -14, j: -12 }                      // l'angolo del lotto 0_0
 
 // ── la chiave di una cella: un intero solo, senza collisioni, per le mappe sparse del motore ──

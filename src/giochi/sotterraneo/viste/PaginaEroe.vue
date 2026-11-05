@@ -17,6 +17,7 @@ const props = defineProps({
   mancina: { type: String, default: null },
   corpo: { type: String, default: null },        // l'armatura: per il ritratto 3D
   testa: { type: String, default: null },        // il copricapo: anche lui nel ritratto 3D
+  tinte: { type: Object, default: null },        // le tinte del tintore
   livello: { type: Number, required: true },
   forza: { type: Number, default: 0 },           // il livello di forza (motore/forza.js): quanto vale con la roba e le abilità di adesso
   fatto: { type: Number, default: 0 },           // l'esperienza fatta nel livello, e quella che serve per il dopo
@@ -32,7 +33,7 @@ const props = defineProps({
   costoRiassegnare: { type: Number, default: 0 },   // i punti dati tornano da dare, e si paga in gemme
   torcia: { type: Object, default: null },       // le torce (`torceDi` in Gioco.vue): quella accesa e quelle alla cintura
 })
-const emit = defineEmits(['dai', 'tesori', 'cambia', 'chiudi', 'fuori', 'scheda', 'riassegna'])
+const emit = defineEmits(['dai', 'tesori', 'cambia', 'chiudi', 'fuori', 'scheda', 'riassegna', 'personaggio'])
 // riassegnare costa gemme: il primo tocco chiede, il secondo fa
 const sicuro = ref(false)
 function riassegna() {
@@ -49,7 +50,7 @@ const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: 
   <Cornice alta data-pagina-eroe @chiudi="$emit('chiudi')" @fuori="e => $emit('fuori', e)">
     <SchedeEroe attiva="eroe" :punti="punti" :punti-abilita="puntiAbilita" :missioni="missioni" @scheda="s => $emit('scheda', s)" />
     <header class="sot-eroe-testa">
-      <span class="sot-eroe-ritratto"><Armato :eroe="eroe" :mano="mano" :mancina="mancina" :corpo="corpo" :testa="testa" :scala="3" /></span>
+      <span class="sot-eroe-ritratto"><Armato :eroe="eroe" :mano="mano" :mancina="mancina" :corpo="corpo" :testa="testa" :tinte="tinte" :scala="3" /></span>
       <span class="sot-eroe-nome">
         <b>{{ eroe.nome }}</b>
         <i data-livello-eroe :data-livello="livello">Livello {{ livello }}</i>
@@ -110,9 +111,15 @@ const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: 
       <span class="em">🏆</span> Tesori <small>{{ tesori.trovati }} / {{ tesori.tutti }}</small>
     </button>
 
-    <!-- le quattro avventure: la scelta è un altro foglio, e questa avventura resta com'è -->
-    <button v-if="cambia" type="button" class="sot-eroe-cambia" data-azione="eroe" @click="$emit('cambia')">
-      Cambia eroe
-    </button>
+    <!-- sulla stessa riga: una riga in più toglieva spazio alla lista delle caratteristiche (il «+» della tempra finiva sotto) -->
+    <div class="sot-eroe-azioni">
+      <button type="button" class="sot-eroe-cambia" data-azione="personaggio" :aria-label="`come è ${eroe.chi}`" @click="$emit('personaggio')">
+        ✎ Aspetto
+      </button>
+      <!-- le quattro avventure: la scelta è un altro foglio, e questa avventura resta com'è -->
+      <button v-if="cambia" type="button" class="sot-eroe-cambia" data-azione="eroe" @click="$emit('cambia')">
+        Cambia eroe
+      </button>
+    </div>
   </Cornice>
 </template>

@@ -224,6 +224,12 @@ if (serveBrowser && !senzaBuild) {
   console.log('· ricompilo dist/index.html')
   const { codice } = await esegui('npm', ['run', 'build'], { stdio: 'ignore' })
   if (codice !== 0) { console.log('❌ la build fallisce: i test non direbbero niente di utile'); process.exit(1) }
+  /* lo scarico a file esiste solo nel sito spezzato: `integrazione/scarico` gira su `dist-sito/` */
+  if (prove.some(t => t.gruppo === 'integrazione' && t.nome === 'scarico')) {
+    console.log('· ricompilo dist-sito/')
+    const { codice: sito } = await esegui('npm', ['run', 'build:sito'], { stdio: 'ignore' })
+    if (sito !== 0) { console.log('❌ la build del sito fallisce'); process.exit(1) }
+  }
 }
 
 /* ── L'USCITA A BLOCCHI ──

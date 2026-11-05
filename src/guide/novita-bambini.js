@@ -71,6 +71,14 @@ export const NOVITA = [
     testo: '🗺️ Il sotterraneo adesso è in 3D! La tua avventura continua da dove eri.' },
   { id: 35, quando: '2026-11-01', gioco: 'survivors',
     testo: '🃏 In Survivors a ogni livello scegli fra quattro carte, e due di quelle che hai già preso tornano sempre.' },
+  { id: 36, quando: '2026-11-01', gioco: 'arena',
+    testo: '🧮 A Castle Battle i calcoli crescono con la forza degli edifici: più sono potenti, più il conto è difficile.' },
+  { id: 37, quando: '2026-11-04', gioco: 'pozioni',
+    testo: '⚗️ Il laboratorio delle pozioni è tutto nuovo! Ogni tappa è una pozione col suo nome: compri gli ingredienti dal mercante coi gettoni contati (occhio al suo trucco, la stessa cosa può costare meno!), poi leggi la ricetta e pesti, versi, mescoli e accendi il fuoco. E in fondo alla mappa c\'è il calderone senza fondo: quante pozioni di fila riesci a fare?' },
+  { id: 38, quando: '2026-11-04', gioco: 'fattoria3d',
+    testo: '🏡 Alla fattoria adesso si entra in casa! Toccala e dentro la arredi come vuoi: compri stanze nuove, metti i mobili, scegli colori e stoffe, e dall\'armadio cambi vestiti.' },
+  { id: 39, quando: '2026-11-04', gioco: 'passo',
+    testo: '⚔️ In Passo passo adesso puoi essere un guerriero! Prendi la spada, apri le grate coi pulsanti e affronta le guardie del castello… ma riuscirai a salvare la principessa?' },
 ]
 
 export const PER_GIOCO = 4

@@ -28,6 +28,7 @@ import { usaAmici } from '../../amici/usaAmici.js'
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, INFINITA, tappeDelloScalino, scalinoDi, scalinoDelTerreno, terrenoDiverso, operazioniDi, operazionePer, senzaSaperi, PESO_DEL_RIPIEGO, stellePer, sfidaDi, sfidaInfinita, LIVELLI, livelloValido } from './dati/campagna.js'
 import { TRUPPE, EDIFICI, EDIFICIO_DI, AZIONI, BOMBA, POSTI, CAMPO, CRESCITA, truppeDelTerreno } from './dati/regole.js'
 import { Partita } from './motore/partita.js'
+import { chiesta, battagliaDiProva } from './motore/prova.js'
 import { scrivi, leggi, dice } from './motore/sosta.js'
 import { Campo } from './scena/campo.js'
 import { dettaglioTruppa, dettaglioAzione, ruoloDi } from './motore/dettagli.js'
@@ -68,8 +69,8 @@ const pannello = ref({ bersagli: [], anello: null, scelta: null, azioni: [] })
 const anello = ref(null)              // l'edificio toccato, con l'anello di pulsanti attorno: { chiave, posto } o { chiave, castello }
 const domanda = ref(null)             // la domanda che paga la scelta
 const finale = ref(null)
-const dettaglio = ref(null)           // la schermata dei dettagli: il campo sta fermo finché è aperta
-const scelta = ref(null)              // quale truppa per un edificio da costruire: anche qui il campo sta fermo
+const dettaglio = ref(null)           // la schermata dei dettagli: il campo corre (si aspettano le monete)
+const scelta = ref(null)              // quale truppa per un edificio da costruire: il campo corre anche qui
 const avviso = ref('')                // la riga che dice cosa è successo
 const toccato = ref(false)
 
@@ -82,7 +83,7 @@ let daSalvare = 0
 let ora = 0
 const giostra = new Giostra(passo)
 
-const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!finale.value || !!dettaglio.value || !!scelta.value })
+const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!finale.value, invito: () => !inDue() })
 
 const avanza = progresso(CHIAVE)
 const tappa = computed(() => CAMPAGNA[tappaIdx.value] || CAMPAGNA[0])
@@ -281,14 +282,14 @@ function anelloDi(p, bersagli) {
   const prezzo = a.castello ? p.prezzo(mio.value, 'castello') : p.prezzo(mio.value, 'potenzia', a.posto)
   const riposo = a.castello ? 0 : Math.max(0, e.riposo)
   const voci = [
-    { chiave: 'potenzia', icona: '⬆️', testo: riposo > 0 ? `💤 ${Math.ceil(riposo)}s` : `${prezzo} 💎`,
+    { chiave: 'potenzia', icona: riposo > 0 ? 'riposo' : 'potenzia', testo: riposo > 0 ? `${Math.ceil(riposo)} s` : `${prezzo} `, gemma: riposo <= 0,
       puoi: prezzo !== null && p.lati[mio.value].monete >= prezzo && riposo <= 0 },
   ]
-  // vendere è un tocco, ma due: il primo chiede «sicuro?» (la ✓ al posto del 💰), il secondo vende
-  if (!a.castello) voci.push({ chiave: 'vendi', icona: a.conferma ? '✓' : '💰', testo: `+${p.resa(mio.value, a.posto)} 💎`, puoi: true, sicuro: !!a.conferma })
-  voci.push({ chiave: 'numeri', icona: '?', testo: '', puoi: true, piccola: true })
-  // dentro il campo anche sulle piazzole di lato: i pulsanti grandi 68 px, il «?» 44
-  const largo = voci.reduce((t, v) => t + (v.piccola ? 44 : 68), 0) + (voci.length - 1) * 6, W = campo.cv.clientWidth
+  // vendere è un tocco, ma due: il primo chiede «sicuro?» (la ✓ al posto del sacco), il secondo vende
+  if (!a.castello) voci.push({ chiave: 'vendi', icona: a.conferma ? 'conferma' : 'vendi', testo: `+${p.resa(mio.value, a.posto)} `, gemma: true, puoi: true, sicuro: !!a.conferma })
+  voci.push({ chiave: 'numeri', icona: 'numeri', testo: 'numeri', puoi: true })
+  // dentro il campo anche sulle piazzole di lato: i pulsanti tutti uguali, da 68 px
+  const largo = voci.length * 68 + (voci.length - 1) * 6, W = campo.cv.clientWidth
   const x = Math.min(Math.max(b.x + b.w / 2, largo / 2 + 4), W - largo / 2 - 4)
   return { chiave: a.chiave, x, y: b.y + campo.me(6), voci }
 }
@@ -429,7 +430,7 @@ function comincia(nuova, indice) {
 function prendiTela(tela) {
   if (!tela) return
   campo = new Campo(tela, { vestito: infinita.value || scalino.value.vestito })
-  campo.prepara().then(() => { campo.adatta() })
+  campo.prepara().then(() => { campo.adatta() }).catch(() => {})   // dopo i tentativi: resta il campo vuoto, senza errori in giro
   giostra.avvia()
 }
 
@@ -456,7 +457,7 @@ function schedaDi(p, { posto, truppa, azione }) {
     const det = dettaglioAzione('miniera', { miniera: mina ? mina.liv : 0 })
     d = mina ? { azione: 'potenzia', posto } : { azione: 'costruisci', id: 'miniera', posto }
     scheda = { titolo: AZIONI.miniera.nome, nota: AZIONI.miniera.nota, ruolo: [], icona: '⛏️', sottotitolo: 'monete', ...det,
-               verbo: mina ? '⬆️ Potenzia' : 'Costruisci',
+               verbo: mina ? 'Potenzia' : 'Costruisci',
                puoi: mina ? p.puoFare(mio.value, 'potenzia', posto) && !p.inRiposo(mio.value, posto) : p.puoFare(mio.value, 'costruisci', 'miniera', d.posto),
                motivo: mina && p.inRiposo(mio.value, posto) ? 'la miniera riposa ancora un po\'' : 'servono più monete',
                fine: '', vendi: mina ? p.resa(mio.value, posto) : null }
@@ -470,7 +471,7 @@ function schedaDi(p, { posto, truppa, azione }) {
     d = c ? { azione: 'potenzia', posto } : { azione: 'costruisci', id: truppa, posto }
     scheda = { truppa: id, titolo: k.nome, nota: k.nota, ruolo: ruoloDi(id), livello: c ? c.liv : 0, sottotitolo: EDIFICI[EDIFICIO_DI[id]].nome,
                ...det,
-               verbo: c ? '⬆️ Potenzia' : 'Costruisci',
+               verbo: c ? 'Potenzia' : 'Costruisci',
                puoi: c ? p.puoFare(mio.value, 'potenzia', posto) && !p.inRiposo(mio.value, posto) : p.puoFare(mio.value, 'costruisci', truppa, d.posto),
                motivo: c && p.inRiposo(mio.value, posto) ? 'la caserma riposa ancora un po\'' : 'servono più monete',
                fine: 'È già al livello massimo.',
@@ -480,7 +481,7 @@ function schedaDi(p, { posto, truppa, azione }) {
     d = { azione }
     scheda = { titolo: AZIONI[azione].nome, nota: AZIONI[azione].nota, ruolo: [], sottotitolo: azione === 'bomba' ? 'in regalo' : '', icona: { miniera: '⛏️', ripara: '🔧', bomba: '💣' }[azione],
                castello: azione === 'castello', ...det,
-               verbo: azione === 'ripara' ? '🔧 Ripara' : azione === 'bomba' ? '💥 Lancia' : '⬆️ Potenzia',
+               verbo: azione === 'ripara' ? 'Ripara' : azione === 'bomba' ? 'Lancia' : 'Potenzia',
                puoi: p.puoFare(mio.value, azione),
                motivo: azione === 'bomba' ? (p.lati[mio.value].bombe ? 'non ci sono truppe nemiche da colpire' : `la prossima arriva fra ${Math.ceil(p.lati[mio.value].bombaT)} secondi`)
                      : azione === 'ripara' && !p.riparabili(mio.value).length ? 'non c\'è niente da riparare' : 'servono più monete',
@@ -686,6 +687,11 @@ onMounted(() => {
   diciGioco('arena')
   sfida.daInvito()
   gancioDiProva()
+  const prova = typeof location !== 'undefined' ? chiesta(location.hash) : null
+  if (prova) {
+    infinita.value = prova.terreno
+    comincia(battagliaDiProva(prova), 0)
+  }
   addEventListener('resize', ridimensiona)
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
@@ -706,12 +712,12 @@ onUnmounted(() => {
 <template>
   <div class="schermo">
     <!-- il ⏸ c'è solo dove scorre qualcosa -->
-    <Barra :titolo="vista === 'campo' ? titoloPartita : 'Castle Battle'" monete
+    <Barra :titolo="vista === 'campo' ? titoloPartita : 'Castle Battle'" monete scura
            :pausa="siGioca" @pausa="metti()" @aiuto="aiuto" @indietro="indietro" />
 
-    <div class="ar">
+    <div class="ar" :class="{ 'ar-largo': vista === 'campo' }">
       <Mappa v-if="vista === 'mappa'" :scalini="scalini" :infinita="laInfinita" :ripresa="ripresa" :davanti="amici.davanti"
-             :livelli="LIVELLI" :livello="livello" @livello="scegliLivello" @gioca="avvia" @riprendi="riprendiPartita" @scorda="scorda" />
+             :livelli="LIVELLI" :livello="livello" :terreno="scalino.vestito" @livello="scegliLivello" @gioca="avvia" @riprendi="riprendiPartita" @scorda="scorda" />
 
       <SalaSfida v-else-if="vista === 'sfida'" :fase="sfida.fase.value" :codice="sfida.codice.value" :messaggio="sfida.messaggio.value"
                  :amici="sfida.amici.value" :invitato="sfida.invitato.value" :scelto="sfida.scelto.value" partita="la battaglia" domanda="Dove vi sfidate?"
@@ -721,7 +727,7 @@ onUnmounted(() => {
       </SalaSfida>
 
       <CampoVista v-else :key="chiaveCampo" :cruscotto="cruscotto" :pannello="pannello" :avviso="avviso"
-                  :dritta="!toccato && !finale"
+                  :dritta="!toccato && !finale" :titolo="titoloPartita"
                   @tela="prendiTela" @scegli="scegli" @dettagli="apriDettagli" @tocca="tocca" @costruisci="costruisciDallaScelta"
                   @anello="dallAnello" @chiudi-anello="chiudiAnello" />
 

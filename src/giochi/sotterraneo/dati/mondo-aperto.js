@@ -20,6 +20,7 @@ export const BOTTEGHE = {
   erborista: { bottega: 'erbe', w: 3, h: 2 },
   armaiolo: { bottega: 'fucina', w: 4, h: 3 },
   incantatrice: { bottega: 'torretta', w: 3, h: 3 },
+  carovaniere: { bottega: 'torce', w: 3, h: 2 },
 }
 
 // Chi sta fermo fuori dalle città, vicino al posto delle sue missioni (le chiavi di dati/missioni.js). Il capitano è nuovo:
@@ -29,7 +30,7 @@ export const PERSONE = [
   { chiave: 'boscaiolo', vicino: 'gallerie' }, { chiave: 'pescatore', vicino: 'cisterna' },
   { chiave: 'mugnaio', vicino: 'mulino' },
 ]
-export const PERSONE_NUOVE = { capitano: { nome: 'Il capitano', chi: 'il capitano del forte' } }
+export const PERSONE_NUOVE = { capitano: { nome: 'Il capitano', chi: 'il capitano del forte' }, tintore: { nome: 'Il tintore', chi: 'il tintore' } }
 
 // Gli habitat: la quota di base, quanto la bucano gli spuntoni di roccia (0 niente, più basso più roccia), il decoro ogni cento
 // celle, l'acqua (un lago al centro, o le pozze della palude), la forma degli antri, e il decoro: [tipo, peso, blocca]. Un
@@ -81,7 +82,10 @@ export const LOTTI = { pietra: [2, 2], antro: [2, 2], bacheca: [2, 1], cartello:
 // `firma` è dello scheletro (si salva col mondo), `firmaCelle` di tutte le zone caricate: chi cambia il generatore le vede
 // cambiare in unita/sotterraneo-mondo-percorso e sa che il mondo dei bambini cambia (`npm run pianta -- --percorso` le stampa)
 export const MONDO_PERCORSO = { seme: 8, largo: 504, alto: 300, su: [352, 216], mezza: 29, salto: 14, terre: 5,
-  firma: '1ab5aff5', firmaCelle: '178a0fc6' }
+  firma: 'd1507c65', firmaCelle: '8870106f',
+  // le firme di prima che valgono ancora: il villaggio ha avuto un lotto in più (il carovaniere, 1 novembre 2026) e il resto del
+  // mondo è identico, quindi nebbia e posto salvati restano buoni (motore/mondo-sopra.js, mondoDaSalvato)
+  firmeCompatibili: ['1ab5aff5', 'a318930d'] }   // a318930d: col carovaniere, senza il tintore (2 novembre 2026)
 
 // La strada maestra: i punti per cui passa la curva, dal cancello del villaggio alla fine della landa (sulla misura `su`, la
 // riga 0 a nord). Tre file: in basso verso est (villaggio, prati, bosco), si sale a est, in mezzo verso ovest (brughiera,
@@ -195,12 +199,14 @@ export const VILLAGGIO = {
   strada: [[16.6, 13.2], [18.8, 14.4], [21, 15], [24.5, 15]],
   lotti: [
     { tipo: 'mercante', chiave: 'incantatrice', x: 4, y: 9, w: 3, h: 3, giro: 0.8, piede: { x: 7, y: 12 }, accanto: { x: 8, y: 13 } },
+    { tipo: 'mercante', chiave: 'carovaniere', x: 10, y: 4, w: 3, h: 2, giro: 0.1, piede: { x: 11, y: 6 }, accanto: { x: 11, y: 7 } },
     { tipo: 'mercante', chiave: 'erborista', x: 6, y: 6, w: 3, h: 2, giro: 0.4, piede: { x: 7, y: 8 }, accanto: { x: 8, y: 9 } },
     { tipo: 'minatore', chiave: 'minatore', x: 9, y: 2, w: 3, h: 2, piede: { x: 12, y: 4 }, accanto: { x: 12, y: 6 } },
     { tipo: 'mercante', chiave: 'rigattiere', x: 14, y: 5, w: 3, h: 2, giro: -0.25, piede: { x: 15, y: 7 }, accanto: { x: 15, y: 8 } },
     { tipo: 'persona', chiave: 'capitano', x: 17, y: 6, w: 1, h: 1, piede: { x: 17, y: 6 }, accanto: { x: 16, y: 8 } },
     { tipo: 'mercante', chiave: 'armaiolo', x: 18, y: 7, w: 4, h: 3, giro: -0.35, piede: { x: 17, y: 10 }, accanto: { x: 17, y: 11 } },
     { tipo: 'pozzo', chiave: 'pozzo', x: 11, y: 9, w: 2, h: 2, piede: { x: 11, y: 9 }, accanto: { x: 11, y: 12 } },
+    { tipo: 'persona', chiave: 'tintore', x: 16, y: 12, w: 1, h: 1, piede: { x: 16, y: 12 }, accanto: { x: 16, y: 13 } },
     { tipo: 'persona', chiave: 'ragazza', x: 13, y: 10, w: 1, h: 1, piede: { x: 13, y: 10 }, accanto: { x: 13, y: 12 } },
     { tipo: 'portale', chiave: 'villaggio', x: 6, y: 15, w: 1, h: 1, piede: { x: 6, y: 15 }, accanto: { x: 8, y: 15 } },
     { tipo: 'bacheca', chiave: 'bacheca:villaggio', x: 15, y: 15, w: 2, h: 1, piede: { x: 15, y: 15 }, accanto: { x: 15, y: 16 } },

@@ -225,12 +225,16 @@ for (const k of SOLO_PICCOLI) uguale(`«terza» spegne il gioco per i piccoli ${
 for (const k of CRESCONO) controlla(`«terza» LASCIA acceso ${k}, che comincia dai piccoli e cresce`,
   terza.giochi[k] === undefined)
 const spentiTerza = CHIAVI_GIOCHI.filter(k => terza.giochi[k] === false)
-uguale('e non spegne nessun altro gioco',
-       spentiTerza.slice().sort().join(','), SOLO_PICCOLI.slice().sort().join(','))
+// i giochi `spentoDiBase` (il giardino in prova) sono spenti per tutte le età: li accende il genitore
+const DI_BASE = GIOCHI.filter(g => g.spentoDiBase).map(g => g.chiave)
+uguale('e non spegne nessun altro gioco, oltre a quelli spenti di base',
+       spentiTerza.slice().sort().join(','), [...new Set([...SOLO_PICCOLI, ...DI_BASE])].sort().join(','))
+for (const p of ['terza', 'quarta'])
+  uguale(`lo spagnolo è acceso di base in «${p}»`, eccezioniDi(p).giochi.spagnolo, undefined)
 
 /* ── la quarta ── */
 const quarta = eccezioniDi('quarta')
-uguale('«quarta» non spegne nessun sapere', Object.keys(quarta.sa).length, 0)
+uguale('«quarta» spegne solo i decimali, che a scuola arrivano a metà quarta', Object.keys(quarta.sa).join(','), 'decimali')
 for (const k of SOLO_PICCOLI) uguale(`«quarta» spegne il gioco per i piccoli ${k}`, quarta.giochi[k], false)
 for (const k of CRESCONO) controlla(`«quarta» LASCIA acceso ${k}, che comincia dai piccoli e cresce`,
   quarta.giochi[k] === undefined)

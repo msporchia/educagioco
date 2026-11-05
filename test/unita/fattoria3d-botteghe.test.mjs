@@ -27,6 +27,8 @@ import { Fattoria } from '../../src/giochi/fattoria3d/da2d/motore/fattoria.js'
 import { statoDa2D, pezzoPer } from '../../src/giochi/fattoria3d/motore/migra.js'
 import { normalizza, statoIniziale } from '../../src/giochi/fattoria3d/motore/stato.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
+import { SALA, PORTA, INGRESSO_SALA, POSTI, TEMI, calpestabileInSala, abitoDelCliente } from '../../src/giochi/fattoria3d/dati/dentro-botteghe.js'
+import { percorso } from '../../src/giochi/fattoria3d/motore/percorso.js'
 
 const MIN = 60000
 const sequenza = (seme = 7) => { let x = seme; return () => (x = (x * 16807) % 2147483647) / 2147483647 }
@@ -205,7 +207,7 @@ stessaLista('quattro botteghe: pasticceria, osteria, mensa, merceria', TIPI_DI_B
     controlla(`${tipo}: appena aperta ha almeno tre merci già chiedibili, tutte già fattibili`, merciDellaBottega(f, tipo).length >= 3 && merciDellaBottega(f, tipo).every(k => livelloDellaMerce(k) <= EDIFICI[tipo].liv))
   }
   const alto = mondo({ liv: ULTIMO, tipo: 'bottega_osteria' }).f, basso = mondo({ liv: 29, tipo: 'bottega_osteria' }).f
-  controlla('più sale il livello più merci chiede (il sushi non è per il livello 29)', merciDellaBottega(alto, 'bottega_osteria').length > merciDellaBottega(basso, 'bottega_osteria').length && !merciDellaBottega(basso, 'bottega_osteria').includes('sushi'))
+  controlla('più sale il livello più merci chiede (le lasagne non sono per il livello 29)', merciDellaBottega(alto, 'bottega_osteria').length > merciDellaBottega(basso, 'bottega_osteria').length && !merciDellaBottega(basso, 'bottega_osteria').includes('lasagne'))
   controlla('uova, latte, pancetta e lana contano col livello del pezzo che li fa', Number.isFinite(livelloDellaMerce('uova')) && Number.isFinite(livelloDellaMerce('latte')) && Number.isFinite(livelloDellaMerce('lana')) && Number.isFinite(livelloDellaMerce('pancetta')))
 }
 
@@ -260,6 +262,17 @@ stessaLista('quattro botteghe: pasticceria, osteria, mensa, merceria', TIPI_DI_B
   for (const tipo of TIPI_DI_BOTTEGA) for (const x of f.vistaBottega(tipo).banconi) if (x.cliente) { forniscilo(f, x); const r = f.consegnaBottega(tipo, x.id); if (r.ok) tot += r.xp }
   controlla('quattro botteghe in mappa, tutti i clienti serviti: esperienza sì, monete no', tot > 0 && b.monete === 5000)
   controlla('un cliente composto ha sempre un premio dentro il tetto di 🪙6 al minuto della 3D', guastiDelleBotteghe().length === 0)
+}
+
+/* ══════════ 9. dentro la sala: dal portone si arriva a ogni cliente e a dove lo si serve; ogni cliente ha il suo abito, sempre quello ══════════ */
+{
+  const strada = (da, a) => !!percorso(calpestabileInSala, () => false, [da.i, da.j], [[a.i, a.j]])
+  controlla('dalla porta si arriva al posto di ogni cliente e a dove lo si serve', POSTI.every(p => strada(PORTA, p.cliente) && strada(INGRESSO_SALA, p.servi)))
+  controlla('il tavolino e il bancone non si camminano', POSTI.every(p => !calpestabileInSala(p.tavolo.i, p.tavolo.j)) && !calpestabileInSala(SALA.i0 + 3, SALA.j0))
+  controlla('ogni bottega ha la sua sala', TIPI_DI_BOTTEGA.every(t => TEMI[t]))
+  uguale('«La pasticcera» è una contadina, «Il cuoco» un contadino', abitoDelCliente('La pasticcera', 1).persona + ':' + abitoDelCliente('Il cuoco', 1).persona, 'contadina:contadino')
+  uguale('lo stesso cliente ha sempre lo stesso abito', JSON.stringify(abitoDelCliente('La maestra', 7)), JSON.stringify(abitoDelCliente('La maestra', 7)))
+  controlla('clienti diversi, abiti diversi', new Set([1, 2, 3, 4, 5, 6].map(n => JSON.stringify(abitoDelCliente('L\'oste', n)))).size >= 4)
 }
 
 riassunto('Le botteghe della fattoria 3D')

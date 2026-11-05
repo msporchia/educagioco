@@ -2,7 +2,7 @@
 // le armi dell'inventario in mano. `disegnaEroe` (eroe.js) gli passa lo stato (dove sta, dove guarda, se cammina, se assalta, il lampo
 // della ferita o della cura, la trasparenza del portale) e lui muove i perni. Non c'è uno sprite di ripiego (docs/sotterraneo/anteprime-3d.md).
 import { Vector3, Color, Group, Box3 } from 'three'
-import { creaEroe, posaMarcia, posaColpo, posaGuardia, CHIAVI } from './eroi3d/eroi.js'
+import { posaMarcia, posaColpo, posaGuardia } from './eroi3d/eroi.js'
 import { equipaggia } from './eroi3d/armi.js'
 import { vesti, TIPI } from './eroi3d/armature.js'
 import { copri } from './eroi3d/copricapi.js'
@@ -11,6 +11,9 @@ import { creaPezzo, vestiFigura, indossaGioiello } from './roba3d.js'
 import { studia, saldaTutto, osso, copiaMateriale, lampoFuso } from './salda3d.js'
 import { ACCESI } from './costanti.js'
 import { daSola, rifai } from './matrici.js'
+import { daSprite } from '../dati/eroi.js'
+import { creaEroeDa } from './eroe-aspetto.js'
+import { tingiGruppo, tingiAggiunte } from './tinge3d.js'
 
 // quanto è alto il personaggio rispetto allo sprite che sostituisce (le colonne dei sotterranei arrivano più o meno lì)
 const ALTEZZA_SPRITE = 0.72
@@ -31,10 +34,14 @@ export const vestiEroe = (g, roba = {}, opz = {}) => vestiDotazione(g, dotazione
 export function vestiDotazione(g, d, { semplici = false } = {}) {
   // in mano l'alone è più piccolo che da solo nella casella: addosso all'eroe copriva la faccia
   const destra = creaPezzo(d.destra, { scalaAlone: 0.8, semplice: semplici }), sinistra = creaPezzo(d.sinistra, { scalaAlone: 0.8, semplice: semplici })
+  // le tinte del tintore (docs/sotterraneo/tintore.md): `d.tinte` dice per posto; le armi sono gruppi, il corpo e la testa si tingono per differenza
+  const T = d.tinte || {}
+  if (T.destra) tingiGruppo(destra, T.destra)
+  if (T.sinistra) tingiGruppo(sinistra, T.sinistra)
   const togliArma = equipaggia(g, { destra, sinistra })
   // la veste della figura (il modulo vesti) o l'armatura di sempre col pregio della rarità
   const togliCorpo = !d.corpo ? null
-    : (d.corpo.figura && vestiFigura(g, d.corpo.figura)) || (TIPI.includes(d.corpo.tipo) ? vesti(g, d.corpo.tipo, d.corpo.pregio) : null)
+    : tingiAggiunte(g, T.corpo, () => (d.corpo.figura && vestiFigura(g, d.corpo.figura)) || (TIPI.includes(d.corpo.tipo) ? vesti(g, d.corpo.tipo, d.corpo.pregio) : null))
   const togliCollo = d.collo ? indossaGioiello(g, d.collo) : null
   const collana = togliCollo && togliCollo.gruppo
   // le fiamme e i bagliori delle armi vive vanno animati (da soli sono enormi), e gli aloni della rarità
@@ -43,9 +50,24 @@ export function vestiDotazione(g, d, { semplici = false } = {}) {
   const prova = (/[#&?]testa=([\w-]+)/.exec(typeof location === 'undefined' ? '' : location.hash + location.search) || [])[1]
   const idTesta = prova || (d.testa && d.testa.id) || null
   let togliTesta = null
-  try { togliTesta = idTesta ? copri(g, idTesta) : null } catch (e) { togliTesta = null }   // un modello che non c'è: resta quello di serie
+  try {
+    if (idTesta === 'nuda') togliTesta = nudaLaTesta(g)
+    else if (idTesta) togliTesta = tingiAggiunte(g, T.testa, () => copri(g, idTesta))
+    else if (T.testa && g.userData.copricapo) tingiGruppo(g.userData.copricapo, T.testa)   // quello di serie, ritinto (`serie-<eroe>`): il modello lo disegna già
+  } catch (e) { togliTesta = null }   // un modello che non c'è: resta quello di serie
   return () => { togliArma(); g.userData.armiAnima = null; if (togliCorpo) togliCorpo(); if (togliCollo) togliCollo(); if (togliTesta) togliTesta() }
 }
+
+/** La testa nuda (il copricapo di serie tolto): non si disegna, e i capelli restano a vista. Torna `togli()`. */
+export function nudaLaTesta(g) {
+  const u = g.userData, serie = u.copricapo, chioma = u.capelli
+  if (serie) serie.visible = false
+  if (chioma) chioma.visible = true
+  return () => { if (serie) serie.visible = true }
+}
+
+// le tinte di chi si disegna, per la firma di `equipa`: se cambiano si rifà (il ritratto e la scena ritingono)
+const tinteDi = corsa => { const t = dotazioneDi(corsa).tinte; return t ? [t.destra, t.sinistra, t.corpo, t.testa].map(x => x || '-').join('.') : '' }
 
 /** Ogni istanza ha i suoi materiali (il lampo cambia l'emissivo di uno solo); torna l'elenco per tingerli. */
 function clonaMateriali(radice) {
@@ -106,7 +128,7 @@ export function creaEroe3d(scena) {
   }
 
   function equipa(corsa) {
-    const f = `${corsa.mano || ''}|${corsa.mancina || ''}|${corsa.corpo || ''}|${corsa.collo || ''}|${corsa.testa || ''}|${ACCESI.armiSemplici ? 's' : ''}`
+    const f = `${corsa.mano || ''}|${corsa.mancina || ''}|${corsa.corpo || ''}|${corsa.collo || ''}|${corsa.testa || ''}|${tinteDi(corsa)}|${ACCESI.armiSemplici ? 's' : ''}`
     if (f === firma) return false
     firma = f
     // saldato, l'eroe non si sveste più pezzo per pezzo: si rifà da capo (le geometrie e i materiali di serie stanno in cache)
@@ -116,7 +138,7 @@ export function creaEroe3d(scena) {
       if (g.userData.scheletro) g.userData.scheletro.dispose()
       for (const t of tinte) t.m.dispose()
     }
-    g = creaEroe(chiave); radice.add(g)
+    g = creaEroeDa(chiave); radice.add(g)   // il modello con l'aspetto scelto: `maga~ambra.rossi.coda.baffi`
     vestiEroe(g, corsa, { semplici: ACCESI.armiSemplici })
     try { if (ACCESI.saldatura) saldaEroe(g, `${chiave}|${f}`, { pelle: ACCESI.pelle }) } catch (e) { console.warn('eroe 3D: non si salda', e) }   // resta com'è, solo più caro
     tinte = clonaMateriali(g)
@@ -131,13 +153,13 @@ export function creaEroe3d(scena) {
      * dovuto rifarlo: montarlo è un fotogramma lungo, e chi entra a passi gliene lascia uno suo.
      */
     prepara(corsa) {
-      const nuova = CHIAVI.includes(corsa.io && corsa.io.sprite) ? corsa.io.sprite : 'cavaliere'
+      const nuova = daSprite(corsa.io && corsa.io.sprite) ? daSprite(corsa.io.sprite).chiave : 'cavaliere'
       if (nuova !== chiave) { chiave = nuova; monta(corsa); return true }
       return equipa(corsa)
     },
     /** Un passo. `p`: { x, z, trasparenza, dt, t, alto } con `alto` quanto è alto lo sprite che sostituisce (per la scala). */
     aggiorna(e, corsa, { x, z, y = 0, trasparenza, dt, alto }) {
-      const nuova = CHIAVI.includes(corsa.io && corsa.io.sprite) ? corsa.io.sprite : 'cavaliere'
+      const nuova = daSprite(corsa.io && corsa.io.sprite) ? daSprite(corsa.io.sprite).chiave : 'cavaliere'
       if (nuova !== chiave) { chiave = nuova; monta(corsa) } else equipa(corsa)
       radice.visible = trasparenza > 0.02
       const k = (alto || 1.4) * ALTEZZA_SPRITE / altezza

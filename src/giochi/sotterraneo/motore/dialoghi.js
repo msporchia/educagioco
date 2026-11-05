@@ -179,6 +179,11 @@ export function mancaA(chi, forze) {
 }
 // il fumetto sopra la sua testa finché serve; null se non serve
 export const richiamoDi = (chi, forze) => (mancaA(chi, forze) > 0 ? curaDi(chi).richiamo : null)
+// il carovaniere chiama chi ha poche torce e le gemme per comprarne una: `torce` è { n, gemme, prezzo } di chi sta sopra (Gioco.vue)
+export function richiamoTorce(chi, torce) {
+  const t = (DIALOGHI[chi] || {}).torce
+  return t && torce && torce.n < t.poche && torce.gemme >= torce.prezzo ? t.richiamo : null
+}
 // cosa dice curando (o: non serve)
 export function dopoLaCura(chi, manca) {
   const c = curaDi(chi)

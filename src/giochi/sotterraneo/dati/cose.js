@@ -91,9 +91,9 @@ const BASI = {
                     luce: 2.5, prezzo: 14, dice: 'Al buio vedi molto più lontano.' },
   'anello-verde': { em: '💚', nome: 'Anello verde', sprite: 'anello-verde', dove: 'dito',
                     gemme: 0.5, prezzo: 16, dice: 'Ogni gemma che raccogli ne vale una e mezza.' },
-  'amuleto-rosso': { em: '❤️', nome: 'Amuleto rosso', sprite: 'amuleto-rosso', dove: 'collo',
+  'amuleto-rosso': { em: '❤️', nome: 'Amuleto rosso', sprite: 'amuleto-13', dove: 'collo',
                      vita: 6, prezzo: 18, dice: 'Sei punti di vita in più, finché lo porti.' },
-  medaglione: { em: '🥇', nome: 'Medaglione', sprite: 'medaglione', dove: 'collo',
+  medaglione: { em: '🥇', nome: 'Medaglione', sprite: 'amuleto-03', dove: 'collo',
                 dif: 1, prezzo: 15, dice: 'Para un pochino, come mezza corazza.' },
 
   // le armi col nome proprio stanno un gradino sopra la scala, non dentro: portano un tratto, non più braccio
@@ -152,7 +152,19 @@ const BASI = {
   'cappello-mago': { em: '🎩', nome: 'Cappello a punta', dove: 'testa', famiglia: 'stoffa', copricapo: true, dif: 1, vita: 3, prezzo: 16,
                      dice: 'Il cappello di chi studia le stelle: para, e ti tiene in piedi.' },
 
-  'amuleto-osso': { em: '🦴', nome: 'Amuleto d\'ossa', sprite: 'ossa', dove: 'collo',
+  // il copricapo di serie di ogni eroe (docs/sotterraneo/elmo.md, «Quello di serie»): quello che l'eroe ha in testa dal primo giorno è un
+  // pezzo vero, si toglie, si rimette e si ritinge. Niente numeri, niente prezzo (non si vende), mai nel bottino né sui banchi; lo
+  // disegna il modello dell'eroe (`userData.copricapo` di eroi3d/eroi.js), e ce n'è uno per eroe: lo dà Corredo.rendiIlDiSerie
+  'serie-cavaliere': { em: '🪖', nome: 'Elmo da cavaliere', dove: 'testa', copricapo: true, diSerie: true,
+                       dice: 'L\'elmo con cui sei partito: non para, ma è tuo.' },
+  'serie-elfa': { em: '👑', nome: 'Cerchietto verde', dove: 'testa', copricapo: true, diSerie: true,
+                  dice: 'Il cerchietto con cui sei partita: non para, ma è tuo.' },
+  'serie-mago': { em: '🎩', nome: 'Cappello viola', dove: 'testa', copricapo: true, diSerie: true,
+                  dice: 'Il cappello con cui sei partito: non para, ma è tuo.' },
+  'serie-nano': { em: '🪖', nome: 'Elmo da nano', dove: 'testa', copricapo: true, diSerie: true,
+                  dice: 'L\'elmo con cui sei partito: non para, ma è tuo.' },
+
+  'amuleto-osso': { em: '🦴', nome: 'Amuleto d\'ossa', sprite: 'amuleto-37', dove: 'collo',
                     dif: 1, vita: 4, prezzo: 24,
                     dice: 'Para un pochino, e ti tiene in piedi un po\' di più.' },
   'teschio-cercatore': { em: '💀', nome: 'Teschio del cercatore', sprite: 'amuleto-teschio',
@@ -332,7 +344,10 @@ export const ARMI_DI = grado =>
 export const PEZZI_DI_BASE = CHIAVI_COSE.filter(k => COSE[k].dove && !COSE[k].deiGrossi && !COSE[k].copricapo)
 // i copricapi: un elenco a parte, perché il bottino e i banchi di sempre (il banco di prova, la taratura) restino quelli di
 // prima; li pescano solo `copricapoDalTrovato` (motore/bottino.js) e le linguette `copricapi` (dati/mercanti.js), dove sono accesi
-export const COPRICAPI = CHIAVI_COSE.filter(k => COSE[k].dove === 'testa')
+export const COPRICAPI = CHIAVI_COSE.filter(k => COSE[k].dove === 'testa' && !COSE[k].diSerie)
+// quelli di serie, uno per eroe: la chiave è `serie-<eroe>`
+export const DI_SERIE = CHIAVI_COSE.filter(k => COSE[k].diSerie)
+export const diSerieDi = eroe => (COSE[`serie-${eroe}`] ? `serie-${eroe}` : null)
 
 // due elenchi diversi: dal forziere non escono chiavi né boccette
 export const IN_VENDITA = CHIAVI_COSE.filter(k => COSE[k].prezzo && !COSE[k].deiGrossi && !COSE[k].rarissimo && !COSE[k].copricapo)
@@ -432,7 +447,7 @@ export function guastiDelleCose(nomi = null) {
     // il copricapo non ha sprite: lo disegnano i modelli dei copricapi, e senza modello si vede la sua emoji; armi e scudi li disegna
     // sempre un modello (la figura, o il ripiego della collezione: unita/sotterraneo-roba-3d), e tre armi non hanno sprite
     if (c.dove && !['testa', 'mano', 'mancina'].includes(c.dove) && !c.sprite) g.push(`${k}: si indossa, ma non ha un pezzo disegnato`)
-    if (c.dove === 'testa' && !(c.dif || c.vita)) g.push(`${k}: in testa, ma non para e non tiene in piedi`)
+    if (c.dove === 'testa' && !c.diSerie && !(c.dif || c.vita)) g.push(`${k}: in testa, ma non para e non tiene in piedi`)
     if (c.dove === 'testa' && !c.copricapo) g.push(`${k}: in testa senza \`copricapo\`, entrerebbe nel bottino di sempre`)
     if (c.usa === 'cura' && !c.cura && !c.tutta) g.push(`${k}: cura zero`)
     if (c.usa === 'luce' && !(c.stanze > 0)) g.push(`${k}: fa luce, ma non dice per quante stanze`)

@@ -12,7 +12,7 @@ chi ci lavora. Cartella `src/giochi/arena/` (la chiave del gioco è `arena`;
 - [nemico.md](nemico.md) — l'IA: le scalette, l'emergenza, cosa fa quando perde, perché non lascia monete ferme
 - [taratura.md](taratura.md) — il giocatore finto, cosa promette la campagna e come si rimisura
 - [sosta.md](sosta.md) — la battaglia lasciata a metà: cosa si salva e cosa no
-- [grafica.md](grafica.md) — la corsia verticale, il castello sul bordo e le piazzole, gli edifici disegnati in codice, gli sprite che si riusano e quelli che mancano
+- [grafica.md](grafica.md) — il terreno più grande del campo e i posti di Castle Battle, la corsia verticale, il castello sul bordo e le piazzole, ponte, porta e miniera disegnati in codice, gli sprite, l'interfaccia di ferro e oro
 - [multigiocatore.md](multigiocatore.md) — la sfida in due: un servizio di inoltro su Cloudflare (`servizio/inoltro/`), due copie identiche della partita
 - [../core/amici.md](../core/amici.md) — gli amici per tutta l'app: la sfida si fa con un invito invece del codice
 - [../core/amici-nei-giochi.md](../core/amici-nei-giochi.md) — gli amici sulla mappa: dove sono arrivati, e chi ha finito è alla battaglia infinita (senza record)

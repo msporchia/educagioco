@@ -48,7 +48,8 @@ uguale('al collo una collana con la sua figura', dotazioneDi({ collo: 'medaglion
 uguale('un anello non sta al collo', dotazioneDi({ collo: 'anello-ambra' }).collo, null)
 
 // le chiavi: null dove resta lo sprite, la stessa per la stessa figura e la stessa rarità
-for (const k of ['medaglione', 'amuleto-rosso', 'amuleto-osso']) uguale(`${k}: niente modello, resta lo sprite`, chiaveDellaCosa({ chiave: k }), null)
+// i tre gioielli di base hanno la loro figura (cose.js): nessun gioiello resta sprite
+for (const k of ['medaglione', 'amuleto-rosso', 'amuleto-osso']) controlla(`${k}: ha il suo modello`, /^gioiello:amuleto-\d+\./.test(chiaveDellaCosa({ chiave: k })))
 uguale('una pozione: il suo modello', chiaveDellaCosa({ chiave: 'pozione' }), 'consumabile:pozione:c')
 uguale('la torcia anche', chiaveDellaCosa({ chiave: 'torcia' }), 'consumabile:torcia:c')
 uguale('un rarissimo brilla come un raro', chiaveDellaCosa({ chiave: 'elisir-toro' }), 'consumabile:elisir-toro:r')
