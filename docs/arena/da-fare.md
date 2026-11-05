@@ -1,6 +1,6 @@
 # Da fare
 
-- I fogli da generare, in ordine: i quattro terreni (8, si comincia dalle colline e si decide se fare gli altri), le fortezze dei
+- I fogli da generare, in ordine: gli altri tre terreni (8, le colline ci sono), le fortezze dei
   posti (9), la copertina (10), le icone dei comandi (11): voci di `strumenti/sprite/DA-GENERARE.md`, ogni strumento è già scritto e provato su un foglio finto.
   Poi le pose di attacco e di morte delle truppe.
 - Il potenziamento a scelta (attacco o difesa), idea dell'utente come le due truppe
