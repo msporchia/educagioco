@@ -586,6 +586,8 @@ const attesaCliente = () => page.evaluate(() => {
   return c ? Math.round(c.restaPazienza * 10) : -1
 })
 
+// il cartello di un traguardo nasconde il ⏸ per tre secondi, e il cartello del banco ne dura uno e mezzo
+await page.waitForFunction(() => !document.querySelector('.occhiello'), { timeout: 10000 })
 await page.evaluate(() => window.__shop.inizia(0))
 await page.waitForSelector('button[aria-label="pausa"]', { timeout: 10000 })   // coi test in parallelo 3 s non bastano
 const cartelloSu = await page.evaluate(() => !!window.__shop.cambio.value)
