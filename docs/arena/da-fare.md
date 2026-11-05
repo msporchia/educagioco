@@ -1,6 +1,6 @@
 # Da fare
 
-- I fogli da generare, in ordine: le truppe con la casacca (12), gli altri tre terreni (8, le colline ci sono), le fortezze dei
+- I fogli da generare, in ordine: le due pose degli opliti senza casacca (12), il ponte delle colline più stretto e gli altri tre terreni (8), le fortezze dei
   posti (9), la copertina (10), le icone dei comandi (11): voci di `strumenti/sprite/DA-GENERARE.md`, ogni strumento è già scritto e provato su un foglio finto.
   Poi le pose di attacco e di morte delle truppe.
 - Il potenziamento a scelta (attacco o difesa), idea dell'utente come le due truppe

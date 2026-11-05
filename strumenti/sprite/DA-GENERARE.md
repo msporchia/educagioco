@@ -688,15 +688,15 @@ RIGA 3, tre icone: una clessidra d'oro (il tempo), il simbolo dell'infinito in o
 LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: foglio ORIZZONTALE 1536×1024 px su FONDO TRASPARENTE; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; ogni icona sta in un quadrato di circa 220 px e lo riempie; almeno 60 px di trasparente fra un'icona e l'altra, anche fra le righe, e ogni icona è un pezzo solo, senza parti staccate; nessun fondo, nessun cerchio o bottone attorno, nessuna ombra sotto, nessun bagliore, nessuna cornice; NESSUNA PAROLA SCRITTA, NESSUN NUMERO, tranne la Z della luna.
 ```
 
-### 12 — Le truppe di Castle Battle con la casacca · 1 immagine · da fare
+### 12 — Le truppe di Castle Battle con la casacca · 1 immagine · ✅ 5 novembre 2026 (Grok), due pose degli opliti da rifare
 
 **Perché**: la squadra di una truppa oggi si legge da un contorno e da un disco; farlo in codice non regge (`docs/arena/grafica.md`). La casacca va
 dipinta sulla figura: una stoffa blu per ognuna, e il nemico la ha rossa da `ricolora()`, come le caserme. Sono le 35 pose che il gioco usa e solo quelle.
 
 **Come si manda**: ChatGPT, nella chat delle caserme. Si allega solo `sorgenti/arena/schemi/truppe.png` (lo rifà `python3 strumenti/sprite/truppe-arena.py`).
 
-**Si salva in** `strumenti/sprite/sorgenti/arena/truppe.png`. Il taglio si scrive quando c'è il foglio: 35 macchie in ordine di lettura, col piede in fondo alla casella. Se
-le pose di una truppa ballano da una all'altra, si chiede di correggere quella riga.
+**Si salva in** `strumenti/sprite/sorgenti/arena/truppe.png`, stessa griglia (sette per cinque, qualunque misura). **Comando**: `python3 strumenti/sprite/truppe-arena.py`. Una posa uscita male si
+fa uguale a un'altra in `truppe.json` finché non è corretta: oggi le 6 e 7, senza casacca.
 
 ```text
 Ti allego il foglio delle truppe di questo stesso gioco: 35 figure, sette per riga, cinque righe. Sono pose di un'animazione, e il gioco ha due squadre uguali che oggi non si distinguono: mi serve lo stesso foglio con ogni figura vestita del colore della squadra.
@@ -737,7 +737,7 @@ LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: foglio
 | 9 | castello, porta e ponte dei quattro posti (ChatGPT) | 1 | `schemi/partita` | `arena/fortezze.png` | i castelli di Castle Battle |
 | 10 | la copertina di Castle Battle (ChatGPT) | 1 | `schemi/partita` | `home/copertina-arena.png` | la home e il frontone della mappa |
 | 11 | le icone dei comandi di Castle Battle (ChatGPT) | 1 | `schemi/partita` | `arena/icone.png` | l'anello, ripara e bomba dipinti |
-| 12 | le truppe di Castle Battle con la casacca (ChatGPT) | 1 | `schemi/truppe` | `arena/truppe.png` | la squadra si legge dalla figura, via il contorno |
+| 12 ✅ | le truppe di Castle Battle con la casacca (Grok) | 1 | `schemi/truppe` | `arena/truppe.png` | la squadra si legge dalla figura, via il contorno |
 
 Il **minimo per rifare il gioco** sono l'1 e il 2: col bosco, le torri
 nuove e i mostri che ci sono già il castello si gioca e si pubblica. Il

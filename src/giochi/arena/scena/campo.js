@@ -9,6 +9,7 @@ import { CAMPO, TRUPPE, POSTI, EDIFICIO_DI } from '../dati/regole.js'
 import { PEZZI as DIPINTE, ATLANTE as FOGLIO_CASERME, PIAZZOLA } from '../dati/caserme-dipinte.js'
 import { PEZZI as FORTEZZE, ATLANTE as FOGLIO_FORTEZZE } from '../dati/fortezze-dipinte.js'
 import { PEZZI as OPERE, ATLANTE as FOGLIO_OPERE } from '../dati/opere-disegnate.js'
+import { PEZZI as VESTITE, ATLANTE as FOGLIO_TRUPPE } from '../dati/truppe-dipinte.js'
 import { PEZZI } from '../../castello/dati/figure.js'
 import { caricaFigure, immagineFigure } from '../../castello/scena/pittori.js'
 import { SCALA, fotogramma, fotogrammiDi, arco, armiPronte } from './figure.js'
@@ -72,8 +73,8 @@ export class Campo {
   }
 
   async caricaAtlanti() {
-    [this.caserme, this.fortezze, this.opere] = await Promise.all([FOGLIO_CASERME, FOGLIO_FORTEZZE, FOGLIO_OPERE].map(src => this.atlante(src)))
-    if (!this.opere) throw new Error('atlante delle opere non caricato')     // `prepara` riprova
+    [this.caserme, this.fortezze, this.opere, this.truppe] = await Promise.all([FOGLIO_CASERME, FOGLIO_FORTEZZE, FOGLIO_OPERE, FOGLIO_TRUPPE].map(src => this.atlante(src)))
+    if (!this.opere || !this.truppe) throw new Error('atlante delle opere o delle truppe non caricato')     // `prepara` riprova
   }
 
   /* un pezzo per questo posto: il dipinto se c'è, se no quello disegnato a monte. `@` sta per il posto. Torna [atlante, rettangolo] */
@@ -195,36 +196,23 @@ export class Campo {
     return lh
   }
 
-  /* Una truppa già pronta alla misura dello schermo, col contorno della squadra e l'arco in mano, girata dalla parte giusta:
-     a fotogramma è un disegno solo e senza scala, invece di cinque ingranditi dal foglio. Con centinaia di figure è questo che
-     pesa. Si rifanno quando cambia la misura. */
+  /* Una truppa già pronta alla misura dello schermo, con l'arco in mano e girata dalla parte giusta: a fotogramma è un disegno
+     solo e senza scala. Con centinaia di figure è questo che pesa. Si rifanno quando cambia la misura. */
   figura(id, fg, lato) {
     const chiave = `${lato}:${fg}:${id}`
     let f = this.figure.get(chiave)
     if (f) return f
-    const [sx, sy, w, h] = PEZZI[fg], k = this.k, sc = SCALA[id] * this.s / 0.85 * ZT * k, d = 0.75 * k
-    const lw = w * sc, lh = h * sc, specchia = lato === 'nem', bordo = Math.ceil(d) + 1
+    const [sx, sy, w, h] = VESTITE[fg], k = this.k, sc = SCALA[id] * this.s / 0.85 * ZT * k
+    const lw = w * sc, lh = h * sc, specchia = lato === 'nem'
     const extra = id === 'scheletri' ? lh * 0.5 : 0                       // l'arco esce dalla figura
-    const mezzo = Math.ceil(lw / 2 + extra + bordo), cv = document.createElement('canvas')
-    cv.width = mezzo * 2; cv.height = Math.ceil(lh + bordo * 2)
-    const piede = cv.height - bordo, corpo = document.createElement('canvas')
-    corpo.width = cv.width; corpo.height = cv.height
-    const q = corpo.getContext('2d')
+    const mezzo = Math.ceil(lw / 2 + extra + 1), cv = document.createElement('canvas')
+    cv.width = mezzo * 2; cv.height = Math.ceil(lh + 2)
+    const piede = cv.height - 1, q = cv.getContext('2d')
     q.translate(mezzo, piede)
     if (specchia) q.scale(-1, 1)
-    q.drawImage(immagineFigure(), sx, sy, w, h, -lw / 2, -lh, lw, lh)
+    q.drawImage(this.truppe[lato], sx, sy, w, h, -lw / 2, -lh, lw, lh)
     if (specchia) q.scale(-1, 1)
     if (id === 'scheletri') arco(q, 0, 0, lw, lh, specchia, 0)
-    // il contorno: la figura tutta del colore della squadra, spostata di un pelo ai quattro lati, sotto la figura vera
-    const tinta = document.createElement('canvas'); tinta.width = cv.width; tinta.height = cv.height
-    const t = tinta.getContext('2d')
-    t.drawImage(corpo, 0, 0)
-    t.globalCompositeOperation = 'source-in'; t.fillStyle = lato === 'io' ? '#2f7fe6' : '#dc3a2e'; t.fillRect(0, 0, cv.width, cv.height)
-    const c = cv.getContext('2d')
-    c.globalAlpha = 0.8
-    for (const [dx, dy] of [[-d, 0], [d, 0], [0, -d], [0, d]]) c.drawImage(tinta, dx, dy)
-    c.globalAlpha = 1
-    c.drawImage(corpo, 0, 0)
     f = { cv, piede: piede / k, alto: lh / k }
     this.figure.set(chiave, f)
     return f
