@@ -14,6 +14,7 @@ import { GIOCHI } from '../data/giochi.js'
 import { inCasa } from '../data/portata-giochi.js'
 import { AREE } from '../data/aree.js'
 import Nastri from '../guide/Nastri.vue'
+import Scarico from '../components/Scarico.vue'
 import Carosello from '../components/home/Carosello.vue'
 import Riprendi from '../components/home/Riprendi.vue'
 import ListaAmici from '../components/amici/ListaAmici.vue'
@@ -279,6 +280,7 @@ function riprendi (k) { chiediRipresa(k); emit('vai', k) }
                 :data-cercando="cercando ? '' : null" :aria-busy="cercando"
                 @click="cercaVersione"><span class="giro">↻</span> {{ cercando ? 'sto cercando…' : 'cerca aggiornamenti' }}</button>
       </p>
+      <Scarico />
     </div>
 
   </div>

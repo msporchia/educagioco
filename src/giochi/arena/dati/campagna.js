@@ -17,11 +17,13 @@ export const LIVELLI = [
 export const LIVELLO_DI_SEMPRE = 'medio'
 export const livelloValido = l => (LIVELLI.some(x => x.chiave === l) ? l : LIVELLO_DI_SEMPRE)
 
+/* Le chiavi e i `vestito` restano quelli di sempre (stanno nei salvataggi e nelle sfide); i posti sono di Castle Battle, non
+   quelli del castello a torri (`scena/ambienti.js`, docs/arena/grafica.md). */
 export const SCALINI = [
-  { chiave: 'bosco',  nome: 'Il bosco',     icona: '🌲', vestito: 'bosco',  dritta: 'Poche truppe e un nemico che impara adesso.' },
-  { chiave: 'palude', nome: 'La palude',    icona: '🐸', vestito: 'palude', dritta: 'Qui ci sono le mummie, e niente più pipistrelli: si calcola con le tabelline.' },
-  { chiave: 'neve',   nome: 'Le nevi',      icona: '❄️', vestito: 'neve',   dritta: 'Le bestie cornute e il golem, poi il drago: qui si divide.' },
-  { chiave: 'lava',   nome: 'La lava',      icona: '🌋', vestito: 'lava',   dritta: 'I diavoletti, e un nemico che non ti aspetta.' },
+  { chiave: 'bosco',  nome: 'Le colline d\'oro',        icona: '🍂', vestito: 'bosco',  dritta: 'Poche truppe e un nemico che impara adesso.' },
+  { chiave: 'palude', nome: 'Il deserto delle tombe',  icona: '🌴', vestito: 'palude', dritta: 'Qui ci sono le mummie, e niente più pipistrelli: si calcola con le tabelline.' },
+  { chiave: 'neve',   nome: 'Il canyon di cristallo',  icona: '🔮', vestito: 'neve',   dritta: 'Le bestie cornute e il golem, poi il drago: qui si divide.' },
+  { chiave: 'lava',   nome: 'Le terre di cenere',      icona: '🔥', vestito: 'lava',   dritta: 'I diavoletti, e un nemico che non ti aspetta.' },
 ]
 
 /* Le truppe di una tappa sono quelle del TERRENO del suo scalino (`truppeDelTerreno`, le stesse della battaglia
@@ -53,23 +55,23 @@ export const CAMPAGNA = [
     truppe: MENO2, nemico: NEMICO.radura,
     racconto: 'Il negromante colpisce a gruppi: ottimo contro le file.' },
 
-  { chiave: 'melma', nome: 'Gli stagni', scalino: 'palude', portata: 30,
+  { chiave: 'melma', nome: 'L\'oasi', scalino: 'palude', portata: 30,
     truppe: PALUDE, nemico: NEMICO.melma,
     racconto: 'Le mummie sono quattro, e svelte. Ma non colpiscono chi vola, e qui i pipistrelli non ci sono.' },
   { chiave: 'guado', nome: 'Il guado', scalino: 'palude', portata: 34,
     truppe: PALUDE2, nemico: NEMICO.guado,
     racconto: 'Gli arcieri e i maghi tengono a bada le mummie, ma da vicino sono loro a perdere.' },
-  { chiave: 'canneto', nome: 'Il canneto', scalino: 'palude', portata: 38,
+  { chiave: 'canneto', nome: 'La valle delle tombe', scalino: 'palude', portata: 38,
     truppe: PALUDE2, nemico: NEMICO.canneto,
     racconto: 'Il nemico adesso ripara e rialza il muro: non basta più correre.' },
 
   { chiave: 'valico', nome: 'Il valico', scalino: 'neve', portata: 45,
     truppe: NEVE, nemico: NEMICO.valico,
     racconto: 'Le bestie cornute corrono a testa bassa: reggono, e colpiscono da vicino.' },
-  { chiave: 'ghiaccio', nome: 'Il lago ghiacciato', scalino: 'neve', portata: 50,
+  { chiave: 'ghiaccio', nome: 'Il ponte sul baratro', scalino: 'neve', portata: 50,
     truppe: NEVE2, nemico: NEMICO.ghiaccio,
     racconto: 'Il drago vola e sputa fuoco ad area; il golem va dritto alle costruzioni. Costano caro, ma pesano.' },
-  { chiave: 'tormenta', nome: 'La tormenta', scalino: 'neve', portata: 55,
+  { chiave: 'tormenta', nome: 'Il cuore di cristallo', scalino: 'neve', portata: 55,
     truppe: NEVE2, nemico: NEMICO.tormenta,
     racconto: 'Il nemico non si ferma: ripara, rialza i muri, sale di livello.' },
 

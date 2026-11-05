@@ -31,7 +31,8 @@ export const QUANTO_E = {
 }
 
 // solo bestie, piante e cose del cielo: nessun ingrediente è un recipiente, e niente
-// di già pestato (è il bambino che pesta). `f`: femminile, per «pestate insieme»
+// di già pestato (è il bambino che pesta). `f`: femminile, per «pestate insieme».
+// `lavoro`: quello che ci si fa oltre a pestarlo, e `art` come lo si dice
 export const INGREDIENTI = [
   { nome: 'bava di drago', tipo: 'liquido', colore: '#5ec46a' },
   { nome: 'essenza di rana', tipo: 'liquido', colore: '#7fd4c1' },
@@ -42,15 +43,15 @@ export const INGREDIENTI = [
   { nome: 'mosto di strega', tipo: 'liquido', colore: '#8b5cc4' },
   { nome: 'polvere di luna', f: true, tipo: 'polvere', colore: '#d9defc' },
   { nome: 'stelle cadenti', f: true, tipo: 'polvere', colore: '#ffd85e' },
-  { nome: 'funghi secchi', tipo: 'polvere', colore: '#c06a4a' },
-  { nome: 'conchiglia', f: true, tipo: 'polvere', colore: '#eef1f5' },
+  { nome: 'funghi secchi', tipo: 'polvere', colore: '#c06a4a', lavoro: 'gratta', art: 'i ' },
+  { nome: 'conchiglia', f: true, tipo: 'polvere', colore: '#eef1f5', lavoro: 'gratta', art: 'la ' },
   { nome: 'cenere di cometa', f: true, tipo: 'polvere', colore: '#8b8f9a' },
-  { nome: 'ghiande', f: true, tipo: 'polvere', colore: '#a97142' },
-  { nome: 'radice di mandragora', f: true, tipo: 'radice', colore: '#4f9e4a' },
-  { nome: 'ramo di quercia', tipo: 'radice', colore: '#a9713c' },
-  { nome: 'osso di troll', tipo: 'radice', colore: '#e8e2d2' },
-  { nome: 'verme di palude', tipo: 'radice', colore: '#d08fa0' },
-  { nome: 'stelo dorato', tipo: 'radice', colore: '#e0c25a' },
+  { nome: 'ghiande', f: true, tipo: 'polvere', colore: '#a97142', lavoro: 'gratta', art: 'le ' },
+  { nome: 'radice di mandragora', f: true, tipo: 'radice', colore: '#4f9e4a', lavoro: 'sminuzza', art: 'la ' },
+  { nome: 'ramo di quercia', tipo: 'radice', colore: '#a9713c', lavoro: 'sminuzza', art: 'il ' },
+  { nome: 'osso di troll', tipo: 'radice', colore: '#e8e2d2', lavoro: 'gratta', art: 'l\'' },
+  { nome: 'verme di palude', tipo: 'radice', colore: '#d08fa0', lavoro: 'sminuzza', art: 'il ' },
+  { nome: 'stelo dorato', tipo: 'radice', colore: '#e0c25a', lavoro: 'sminuzza', art: 'lo ' },
 ].map(i => ({ ...i, famiglia: FAMIGLIE.find(f => f.tipo === i.tipo).chiave }))
 
 // una pozione per tappa, nell'ordine dei gradini: la tappa si chiama come lei

@@ -18,9 +18,9 @@ import { attesaDellEsito, PONDERA, TEMPO_MAX } from '../../quiz/nucleo/domanda.j
 import { CAMPAGNA, BLOCCHI, QUANTE_TAPPE, MONETE_A_DOSE, INFINITA, giroInfinito } from './dati/campagna.js'
 import { SENZA_FINE } from './gioco.js'
 import { fraseDiFine, primatoInParole } from '../primati.js'
-import { mescola, scrivi as scriviMisura } from './dati/misure.js'
+import { mescola } from './dati/misure.js'
 import { Bottega } from './motore/bottega.js'
-import { MORTAIO } from './motore/procedimento.js'
+import { MORTAIO, TAGLIERE } from './motore/procedimento.js'
 import { scrivi, leggi, dice, tappaDi } from './motore/sosta.js'
 import Mappa from './viste/Mappa.vue'
 import Mercante from './viste/Mercante.vue'
@@ -144,9 +144,17 @@ function riprendiPartita() {
 function seSparisce(e) {
   if (e?.type === 'pagehide' || document.visibilityState === 'hidden') salva({ subito: true })
 }
+// per guardare una tappa (docs/core/comandi.md): #pozioni=maestro anche chiusa, &banco=1 a spesa fatta
+function dallIndirizzo() {
+  const p = new URLSearchParams(location.hash.slice(1)), i = CAMPAGNA.findIndex(t => t.chiave === p.get('pozioni'))
+  if (i < 0) return
+  avviaTappa(i, true)
+  if (p.get('banco')) while (!bottega.value.pronta) bottega.value.salta()
+}
 onMounted(() => {
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
+  dallIndirizzo()
 })
 // prima che i figli se ne vadano (onUnmounted sarebbe tardi)
 onBeforeUnmount(() => {
@@ -164,21 +172,17 @@ function avviaInfinita() {
   entra(-1, new Bottega(giroInfinito(0), { scorta: INFINITA.scorta }))
 }
 
-function avviaTappa(i) {
-  if (!apertaQui(i)) return
+function avviaTappa(i, ancheChiusa = false) {
+  if (!ancheChiusa && !apertaQui(i)) return
   if (i < 0) return avviaInfinita()
   scorda()
   borsellino = borsa(CHIAVE)
   const t = CAMPAGNA[i]
   messaggio.value = { tipo: 'aiuto', righe: t.aiuto === 'gioco'
-    ? ['Fai le dosi spendendo meno gettoni che puoi.',
-       'Scegli le ampolle e ordinale: le verserà il mercante. Oltre il segno d\'oro trabocca, e poi c\'è da pulire.']
+    ? ['Fai le dosi spendendo meno gettoni che puoi: sono del mercante, non le tue monete.',
+       'Scegli le ampolle e ordinale tutte insieme: ogni ordine paga la spedizione. Oltre il segno d\'oro trabocca, e poi c\'è da pulire.']
     : [t.dritta] }
-  const b = new Bottega(t)
-  const inCasa = b.comprati.find(g => g.casa), secche = b.ingredienti.filter(g => g.dispensa).map(g => g.nome)
-  if (inCasa) messaggio.value.righe.push(`In casa hai già ${scriviMisura(inCasa.casa, inCasa.unita)} di ${inCasa.nome}.`)
-  if (secche.length) messaggio.value.righe.push(`In dispensa hai ${secche.join(' e ')}: non serve comprarli.`)
-  entra(i, b)
+  entra(i, new Bottega(t))
 }
 
 function allaMappa() {
@@ -281,6 +285,7 @@ function fai(azione, cosa = [], attrezzo = null) {
   if (!libero() || attesa.value > 0) return
   const b = bottega.value
   const pestato = b.mortaio.length ? mescola(colori(b.mortaio)) : null
+  const tritato = b.tagliere.length ? mescola(colori(b.tagliere)) : null
   const r = b.fai(azione, cosa)
   if (!r) return
   occupato.value = true
@@ -290,8 +295,8 @@ function fai(azione, cosa = [], attrezzo = null) {
   else salva({ subito: true })
   inCorso = r
   const fatti = r.giusto ? (r.versati || []) : []
-  animazione.value = { n: ++nAnim, tipo: 'passo', azione, attrezzo, giusto: r.giusto, mortaio: (r.cosa || []).includes(MORTAIO),
-                       colore: r.cosa?.includes(MORTAIO) ? pestato : azione === 'metti' ? mescola(colori(b.mortaio)) : fatti.length ? mescola(colori(fatti)) : null,
+  animazione.value = { n: ++nAnim, tipo: 'passo', azione, attrezzo, giusto: r.giusto, mortaio: (r.cosa || []).includes(MORTAIO), tagliere: (r.cosa || []).includes(TAGLIERE),
+                       colore: r.cosa?.includes(MORTAIO) ? pestato : r.cosa?.includes(TAGLIERE) ? tritato : azione === 'metti' ? mescola(colori(b.mortaio)) : azione === 'appoggia' ? mescola(colori(b.tagliere)) : fatti.length ? mescola(colori(fatti)) : null,
                        polvere: fatti.some(i => b.ingredienti[i].famiglia !== 'capacita'),
                        brodo: b.brodo, arcobaleno: !b.mescolato, riempito: b.dentro.length / b.ingredienti.length }
 }
@@ -395,7 +400,7 @@ function prossima() {
 
 /* per i test e per lo strumento delle foto: la stessa porta del gioco */
 if (typeof window !== 'undefined')
-  window.__poz = { vista, tappaIdx, serie, avviaInfinita, bottega, bozza, finale, avviaTappa, allaMappa, prossima,
+  window.__poz = { vista, tappaIdx, serie, avviaInfinita, bottega, bozza, finale, occupato, avviaTappa, allaMappa, prossima,
                    aggiungi, togliVoce, ordina, fai, pulisci, salta, CAMPAGNA, MONETE_A_DOSE }
 </script>
 

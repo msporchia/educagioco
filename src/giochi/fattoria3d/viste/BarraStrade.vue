@@ -11,7 +11,7 @@ const prezzo = computed(() => prezzoStrada(props.pennello.tipo, props.pennello.b
 
 <template>
   <div class="f3-barra-strade" data-f3="barra-strade">
-    <p class="f3-suggerimento">{{ testo || (strumento === 'gomma' ? 'Trascina sulle strade che hai disegnato per toglierle.' : `Trascina il dito sulla mappa per disegnare la strada (🪙 ${prezzo} a pezzo).`) }}</p>
+    <p class="f3-suggerimento">{{ testo || (strumento === 'gomma' ? 'Trascina sulle strade per toglierle.' : `Trascina il dito sulla mappa per disegnare la strada (🪙 ${prezzo} a pezzo).`) }}</p>
     <template v-if="strumento === 'strada'">
       <div class="f3-scelte" data-f3="strade-tipi">
         <button v-for="(t, id) in TIPI_STRADA" :key="id" :class="{ acceso: pennello.tipo === id, chiuso: livello < t.liv }" :data-tipo="id"

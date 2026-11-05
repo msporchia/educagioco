@@ -3,7 +3,9 @@
    macchie. Vedi docs/pozioni/sosta.md.
    `node test/esegui.mjs pozioni-sosta --niente-build` */
 import { CAMPAGNA, INFINITA, giroInfinito } from '../../src/giochi/pozioni/dati/campagna.js'
+import { TAGLIERE } from '../../src/giochi/pozioni/motore/procedimento.js'
 import { Bottega, caso, giocaBene, seguiLaRicetta, prossimoPasso } from '../../src/giochi/pozioni/motore/bottega.js'
+import { MORTAIO } from '../../src/giochi/pozioni/motore/procedimento.js'
 import { scrivi, leggi, dice, tappaDi, VERSIONE } from '../../src/giochi/pozioni/motore/sosta.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
@@ -55,10 +57,29 @@ for (const t of [CAMPAGNA[0], CAMPAGNA[9], CAMPAGNA[26], CAMPAGNA.at(-1)]) {
   const q = leggi(via(b))
   uguale('la ricetta è la stessa', JSON.stringify([q.passi, q.righe]), JSON.stringify([b.passi, b.righe]))
   uguale('il passo e quello che c\'è', JSON.stringify([q.passo, q.mortaio, q.pestato, q.dentro, q.pasticci]), JSON.stringify([b.passo, b.mortaio, b.pestato, b.dentro, b.pasticci]))
-  uguale('quello che è in casa resta', q.ingredienti.map(g => g.casa).join(), b.ingredienti.map(g => g.casa).join())
   uguale('il minimo pure', q.minimo, b.minimo)
   seguiLaRicetta(q)
   controlla('e la pozione si finisce', q.finita)
+}
+
+/* il tagliere a metà: la roba appoggiata e il mantice restano; una sosta di prima del tagliere si legge lo stesso */
+{
+  let b = null
+  for (let s = 1; s < 80 && !b; s++) {
+    const x = new Bottega(CAMPAGNA.find(t => t.chiave === 'lunghezza-virgole'), { rnd: caso(s) })
+    if (x.passi.some(p => p.azione === 'sminuzza')) b = x
+  }
+  for (const [i, g] of b.ingredienti.entries()) for (const k of g.ottimo.pezzi) b.ordina([{ i, k }])
+  prossimoPasso(b); prossimoPasso(b)
+  const [r] = b.passi[b.passo].cosa
+  b.fai('appoggia', [r])
+  const dato = JSON.parse(JSON.stringify(scrivi(b, 0)))
+  const q = leggi(dato)
+  uguale('la roba sul tagliere resta', q.tagliere.join(), String(r))
+  uguale('e la si sminuzza', q.fai('sminuzza').giusto, true)
+  uguale('il tritato si versa ancora', q.fai('versa', [TAGLIERE]).giusto, true)
+  const { tagliere, tagliato, soffiato, incantato, ...vecchia } = dato
+  uguale('senza quei campi è un tagliere vuoto', leggi(vecchia).tagliere.length, 0)
 }
 
 /* il calderone senza fondo */
@@ -69,6 +90,45 @@ for (const t of [CAMPAGNA[0], CAMPAGNA[9], CAMPAGNA[26], CAMPAGNA.at(-1)]) {
   uguale('si rilegge', firma(q), firma(b))
   uguale('a che giro era', q.tappa.giro, 4)
   uguale('la mappa dice il suo nome', dice(dato).nome, INFINITA.nome)
+}
+
+/* una sosta di quando si partiva con qualcosa in casa: si carica e si finisce com'era */
+{
+  const t = CAMPAGNA.find(x => x.chiave === 'capacita-inverse')
+  const b = new Bottega(t, { rnd: caso(8) })
+  const vecchia = via(b)
+  const i = b.ingredienti.findIndex(g => g.ottimo.pezzi.length > 1)
+  const g = b.ingredienti[i], casa = g.offerte[g.ottimo.pezzi[0]].base
+  vecchia.ingredienti = vecchia.ingredienti.map((x, n) => (n === i ? { ...x, casa, messo: casa, pezzi: [casa] } : { ...x, casa: 0 }))
+  const q = leggi(vecchia)
+  controlla('si carica', !!q)
+  uguale('lo strumento è dove era', q.ingredienti[i].messo, casa)
+  uguale('il minimo è solo quello che mancava', q.ingredienti[i].ottimo.pezzi.reduce((n, k) => n + q.ingredienti[i].offerte[k].base, 0), g.dose - casa)
+  const r = leggi(via(q))
+  uguale('e riscrivendola non cambia', r.minimo, q.minimo)
+  controlla('il resto delle dosi non ne sa niente', q.ingredienti.filter((_, n) => n !== i).every(x => !('casa' in x)))
+  giocaBene(q)
+  controlla('e la pozione si finisce con tre stelle', q.finita && q.stelle === 3)
+  uguale('una scorta oltre la dose non si legge', leggi({ ...vecchia, ingredienti: vecchia.ingredienti.map((x, n) => (n === i ? { ...x, casa: x.dose + 1 } : x)) }), null)
+}
+
+/* una sosta di quando i liquidi avevano la roba secca in dispensa: il mortaio torna sul tavolo */
+{
+  const t = CAMPAGNA.find(x => x.chiave === 'capacita-inverse')
+  const vecchia = via(new Bottega(t, { rnd: caso(8) }))
+  const secca = vecchia.ingredienti.length
+  vecchia.ingredienti.push({ nome: 'ghiande', unita: 'g', dose: 1, messo: 1, casa: 1, f: true, dispensa: true, traboccate: 0, pezzi: [], offerte: [] })
+  vecchia.passi = [{ azione: 'pesta', cosa: [secca] }, { azione: 'versa', cosa: [MORTAIO] },
+                   ...vecchia.passi]
+  vecchia.righe = [{ testo: 'Pesta ghiande e versa il pestato.', passi: [0, 1] }, ...vecchia.righe.map(r => ({ ...r, passi: r.passi.map(k => k + 2) }))]
+  const q = leggi(vecchia)
+  controlla('si carica', !!q)
+  controlla('per quella pozione il mortaio c\'è', q.tappa.azioni.includes('pesta'))
+  uguale('la roba secca non si compra', q.comprati.length, t.ingredienti)
+  uguale('e riscrivendola resta', leggi(JSON.parse(JSON.stringify(scrivi(q, CAMPAGNA.indexOf(t), { monete: { chiesto: 0, dato: 0 } })))).ingredienti.filter(g => g.dispensa).length, 1)
+  giocaBene(q)
+  controlla('e la pozione si finisce con tre stelle', q.finita && q.stelle === 3)
+  uguale('le tappe di adesso non cambiano', t.azioni.includes('pesta'), false)
 }
 
 /* quello che non torna non si legge */

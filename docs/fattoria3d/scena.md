@@ -15,7 +15,7 @@ gli Asteroidi e il sotterraneo: il 3D non si scrive a mano.
 | `azioni.js` | cosa fa il contadino davanti a ogni cosa: anima il gesto e **a metà gesto chiede al motore di farlo davvero**; un edificio in mappa è una cosa e apre il menu della sua macchina (comprarlo e piazzarlo è del menu «Compra») |
 | `detti.js` | `dettoDi` / `dettoDiRifiuto`: un rifiuto del motore in una riga che dice cosa fare. Senza three: lo usa anche `Gioco.vue` |
 | `costruzione.js` | cosa fa una carta del menu sulla cella premuta (`daMenu`), il fantasma (anche «parcheggiato», che aspetta un posto), riprendere e spostare un pezzo, le strade a pennello; al rilascio compra e mette in un gesto |
-| `dito.js` | i pointer sulla tela: tocco, mappa che scorre, pizzico, tenere premuto (su un pezzo lo riprende, su un posto libero apre il menu «Compra»), il fantasma parcheggiato, il pennello delle strade |
+| `dito.js` | i pointer sulla tela: tocco, mappa che scorre, pizzico, tenere premuto ([gesti.md](gesti.md): su un pezzo lo riprende, una bestia di casa la porta, su un posto libero apre il menu «Compra»), il fantasma parcheggiato, il pennello delle strade |
 | `camera.js` | la telecamera: segue il contadino, o libera se un dito la sposta (`trascina`) o se un pezzo tenuto contro il bordo la fa scorrere (`scorri`); mai oltre 30 celle dal contadino |
 | `trascinamento-puro.js` | il conto del pezzo al dito, senza three: `cellaSottoIlDito` (il centro del pezzo sul punto del dito), lo scarto della presa, `velocitaBordo` e le costanti dello scorrimento ai bordi (`unita/fattoria3d-trascinamento`) |
 | `effetti.js` | scintille e fumo, i testi che volano, il fumetto del contadino, i cartelli (`nuovoBadge`; `nuovoCartello` per le bestie, con un pulsante vero), l'albero che cade |

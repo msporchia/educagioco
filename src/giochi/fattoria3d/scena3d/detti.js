@@ -38,6 +38,7 @@ export function dettoDi(motivo, extra = {}) {
     }
     case 'banco-chiuso': return 'Il banco è chiuso: serve una bacheca'
     case 'sconosciuto': return 'Questo ordine non c\'è più'
+    case 'gia-tagliato': case 'gia-tolto': return 'Non c\'è più: l\'hai già tolto'
     case 'non-sbloccato': return extra.liv ? `Arriva al livello ${extra.liv}` : 'Non è ancora arrivato'
     case 'non-tua': return 'Prima compra questo edificio'
     case 'non-in-vendita': return 'Questa non si compra: arriva dalla mongolfiera'

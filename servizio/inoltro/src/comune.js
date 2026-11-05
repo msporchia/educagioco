@@ -8,7 +8,10 @@ export const MAX_MOSSA = 1024                              // byte di una mossa
 export const MAX_MOSSE = 20                                // mosse in una richiesta
 export const MAX_FILA = 400                                // mosse tenute: oltre, le più vecchie (chi torna dopo tanto riparte dalla fotografia)
 export const MAX_FOTO = 64 * 1024                          // byte della fotografia (una fattoria grande ne pesa ~9 KB)
-export const COMUNE_ORA = 3000                             // richieste all'ora da uno stesso indirizzo: due telefoni che giocano, una ogni tre secondi
+// richieste da uno stesso indirizzo: si fissa il minuto (quattro telefoni sulla stessa wifi ne fanno 80), e gli altri vengono da lì:
+// un'ora vale 45 minuti pieni, un giorno cinque ore piene. Chi gioca davvero non li tocca, un bug si ferma presto
+export const COMUNE_MINUTO = 120
+export const TETTI_COMUNE = [[COMUNE_MINUTO, 60 * 1000], [COMUNE_MINUTO * 45, 60 * 60 * 1000], [COMUNE_MINUTO * 300, 24 * 60 * 60 * 1000]]
 
 /* la richiesta del telefono: { chiave, id, dopo, mosse, foto } — `dopo` l'ultimo numero che ha già (-1 se non ha niente), `mosse`
    le sue nuove (oggetti), `foto` { seq, stato } la sua fattoria com'è dopo la mossa `seq`, o niente.
@@ -37,6 +40,15 @@ export function leggiRichiesta(corpo) {
     foto = { seq: f.seq, testo }
   }
   return { ok: true, chiave: corpo.chiave, id: corpo.id, dopo, mosse, foto }
+}
+
+/* Una richiesta in più su ogni finestra. `tetti` [[tetto, ms]], `conti` [{ n, da }] quelli tenuti: torna i nuovi, e se si sta nei tetti */
+export function contaTetti(conti, tetti, ora) {
+  const nuovi = tetti.map(([, finestra], i) => {
+    const c = conti?.[i]
+    return c && ora - c.da <= finestra ? { n: c.n + 1, da: c.da } : { n: 1, da: ora }
+  })
+  return { conti: nuovi, ok: nuovi.every((c, i) => c.n <= tetti[i][0]) }
 }
 
 export const vuota = () => ({ soci: [], ultimo: 0, mosse: [], foto: null, letto: {} })

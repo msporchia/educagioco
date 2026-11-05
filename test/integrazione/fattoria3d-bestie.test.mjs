@@ -4,7 +4,7 @@
    Si apre il menu «Compra» (🛒), la scheda Animali offre tutti gli animali da adottare (razze e compagni); una chiusa dice il livello; una a cui
    mancano le monete lo dice e non cambia niente; con le monete si prende (🪙90 il beagle), arriva in scena e si apre il battesimo: un nome si
    TOCCA (e sotto si può scrivere: «✎ Nome» nel foglio, una parola scritta e «Va bene» la salva). Un tocco vero sulla bestia in scena apre il suo foglio (✕ in alto a destra): tre bisogni, i cibi suoi, una carezza
-   gratis che non costa; un cibo dà da mangiare e scala le monete; «Sposta» porta la bestia dove si tocca (gratis, salvato); a 360 px il foglio
+   gratis che non costa; un cibo dà da mangiare e scala le monete; tenendola premuta la bestia segue il dito (gratis, salvato), e il tocco porta accanto le sue opzioni; a 360 px il foglio
    non scorre di lato e i bottoni sono alti almeno 44 px.
    Il dito è vero (`Input.dispatchTouchEvent`): un `page.click()` non porta i pointer del tocco (docs/core/il-dito.md).
    `node test/esegui.mjs fattoria3d-bestie --niente-build`
@@ -208,20 +208,45 @@ controlla('i bottoni sono alti almeno 44 px', await m3(() => [...document.queryS
 await scatto(page, 'fattoria3d-bestie-360')
 await page.setViewportSize({ width: 1280, height: 800 })
 
-/* ── sposta: gratis, e si salva ── */
+/* ── tenere premuto è spostare: gratis, e si salva ── */
 const m2 = await monete()
-await toccaEl('[data-azione="sposta"]')
-controlla('il foglio si chiude per toccare dove metterla', await page.locator('[data-f3="bestia"]').count() === 0 && await m3(() => window.__fattoria3d.mondo.inSposta === 'beagle'))
+uguale('spostare non è un tasto del foglio', await page.locator('[data-azione="sposta"]').count(), 0)
+await toccaEl('[data-f3="bestia"] [data-chiudi]')
 const cella = await m3(() => { const { motore, mondo } = window.__fattoria3d, r = mondo.canvas.getBoundingClientRect()
   for (let j = -8; j < 8; j++) for (let i = -8; i < 8; i++) { if (!motore.cellaPropria(i, j) || !motore.libera(i, j)) continue
     const [px, py, v] = mondo.proietta({ x: i + 0.5, y: 0, z: j + 0.5 }); if (v && px > 80 && px < r.width - 80 && py > 150 && py < r.height - 220 && Math.hypot(i + 0.5 - mondo.eroe.x, j + 0.5 - mondo.eroe.z) > 3) return [i, j] }
   return null })
 controlla('c\'è una cella libera in vista', !!cella)
-await tocca(...await schermoDi(cella[0] + 0.5, cella[1] + 0.5))
-await attendi(page, 600)
+const sullaBestia = () => m3(() => { const { mondo } = window.__fattoria3d, c = mondo.compagni.lista.find(o => o.def.id === 'beagle'), r = mondo.canvas.getBoundingClientRect(), [px, py] = mondo.proietta({ x: c.x, y: 0.3, z: c.z }); return [r.left + px, r.top + py] })
+const tenuta = () => m3(() => !!window.__fattoria3d.mondo.compagni.lista.find(o => o.def.id === 'beagle').tenuta)
+for (let prova = 0; prova < 4 && !await tenuta(); prova++) {                  // cammina: si riprova se il dito l'ha mancata
+  const [x, y] = await sullaBestia()
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] }); await attendi(page, 700)
+  if (!await tenuta()) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await attendi(page, 300); await m3(() => window.__fattoria3d.mondo.attrezzi.chiudi()) }
+}
+controlla('tenuta premuta si solleva', await tenuta())
+{
+  const [x, y] = await schermoDi(cella[0] + 0.5, cella[1] + 0.5)
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y }] }); await attendi(page, 150)
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await attendi(page, 600)
+}
+controlla('staccando il dito non è più tenuta, e non si apre niente', !await tenuta() && await page.locator('[data-f3="bestia"]').count() === 0)
 uguale('spostare è gratis', await monete(), m2)
 uguale('la casa della bestia è lì', String(await m3(() => window.__fattoria3d.motore.cura.casaDi('beagle'))), String(cella))
 controlla('e la salva nello stato', await m3(() => JSON.stringify(window.__fattoria3d.motore.serializza().casa.beagle.i) !== undefined))
+
+/* ── il tocco: si gioca, e accanto compaiono le sue opzioni ── */
+{
+  let aperto = false
+  for (let prova = 0; prova < 4 && !aperto; prova++) { await tocca(...await sullaBestia()); await attendi(page, 300); aperto = await page.locator('[data-f3="attrezzi"][data-tipo="opzioni"]').count() === 1 }
+  controlla('il tocco porta accanto le opzioni dell\'animale', aperto)
+  controlla('fra cui i vestiti e come sta', await page.locator('[data-opzione="vesti"]').count() === 1 && await page.locator('[data-opzione="come"]').count() === 1)
+  await scatto(page, 'fattoria3d-bestie-opzioni')
+  await toccaEl('[data-opzione="come"]')
+  await page.waitForSelector('[data-f3="bestia"]', { timeout: 3000 })
+  controlla('«Come sta» apre il foglio e chiude l\'arco', await page.locator('[data-f3="attrezzi"]').count() === 0)
+  await toccaEl('[data-f3="bestia"] [data-chiudi]')
+}
 
 /* ── un nome scritto, non della lista ── */
 await attendi(page, 800)

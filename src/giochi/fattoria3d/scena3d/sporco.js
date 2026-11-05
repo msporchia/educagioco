@@ -3,7 +3,9 @@
 // Vedi docs/fattoria3d/cura-sul-prato.md.
 import * as THREE from 'three'
 
-const FANGO = 'vec3(0.085, 0.052, 0.026)'
+// Il fango si vede sul pelo chiaro se è scuro e sul pelo scuro se è chiaro: un mantello nero (Sherlock, Golia, Pepe) con fango bruno scuro non cambiava. Si sceglie sulla luminosità del colore sotto.
+const FANGO_SCURO = 'vec3(0.085, 0.052, 0.026)'
+const FANGO_CHIARO = 'vec3(0.2, 0.135, 0.08)'
 
 /** Rumore a macchie, da 0 a 1: stesso punto, stesso valore. */
 const macchia = (x, y, z) => {
@@ -18,7 +20,7 @@ function soglie (geo, m, alto) {
   const p = geo.attributes.position, v = new THREE.Vector3(), a = new Float32Array(p.count)
   for (let i = 0; i < p.count; i++) {
     v.fromBufferAttribute(p, i).applyMatrix4(m)
-    a[i] = 0.1 + 0.95 * Math.max(0, v.y / alto) + (macchia(v.x, v.y, v.z) - 0.5) * 1.5
+    a[i] = 0.1 + 1.2 * Math.max(0, v.y / alto) + (macchia(v.x, v.y, v.z) - 0.5) * 1.5
   }
   geo.setAttribute('aSporco', new THREE.BufferAttribute(a, 1))
 }
@@ -28,7 +30,7 @@ function materialeSporco (base, u) {
   m.onBeforeCompile = s => {
     s.uniforms.uSporco = u
     s.vertexShader = s.vertexShader.replace('#include <common>', '#include <common>\nattribute float aSporco;\nuniform float uSporco;')
-      .replace('#include <color_vertex>', `#include <color_vertex>\nvColor.rgb = mix(vColor.rgb, ${FANGO}, smoothstep(aSporco - 0.05, aSporco + 0.05, uSporco) * 0.85);`)
+      .replace('#include <color_vertex>', `#include <color_vertex>\nfloat luce = dot(vColor.rgb, vec3(0.2126, 0.7152, 0.0722));\nvColor.rgb = mix(vColor.rgb, mix(${FANGO_CHIARO}, ${FANGO_SCURO}, smoothstep(0.03, 0.2, luce)), smoothstep(aSporco - 0.05, aSporco + 0.05, uSporco) * 0.85);`)
   }
   m.customProgramCacheKey = () => 'sporco'
   return m

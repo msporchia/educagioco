@@ -4,7 +4,8 @@ In cima la **riga del profilo**, poi **«riprendi da qui»**, il
 **carosello** delle copertine e l'**indice** di tutti i giochi. Prima era
 una lista di carte larghe, una per gioco: quindici giochi erano cinque
 schermate da scorrere, e nessuna diceva «è un gioco». Nastri, Impostazioni,
-Come funziona e versione sono rimasti dov'erano.
+Come funziona e versione sono rimasti dov'erano. Sotto la versione, finché
+c'è da scaricare, la riga dello scarico ([aggiornamento.md](aggiornamento.md)).
 
 I file: `src/views/HomeView.vue` mette insieme, `src/components/home/`
 disegna (`Riprendi.vue`, `Carosello.vue`, `Copertina.vue`, `scene.js`,

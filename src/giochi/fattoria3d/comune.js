@@ -7,12 +7,14 @@ import { dati } from '../../store/amici.js'
 import { scambiaComune } from '../../amici/rete.js'
 import { Fattoria3d } from './motore/fattoria3d.js'
 import { registra, rifai, mossaInForma } from './motore/registro.js'
+import { quiInForma, SPARISCE } from './contadino-amico.js'
 
 export const OGNI = 3000                 // ms fra una lettura e l'altra mentre si gioca
 export const PRESTO = 400                // ms dopo una mossa propria: si manda, raccogliendo quelle fatte di fila
 const FOTO_OGNI = 40                     // giri (due minuti): una fotografia anche senza uscire, se non c'è niente in viaggio
 const PREFISSO = 'fattoria3d-comune:'
-const MAX_PER_GIRO = 20
+const MAX_PER_GIRO = 19                  // il servizio ne prende 20: una è il contadino
+const DA_SOLO_OGNI = 20000               // ms: senza amico in giro si dice solo che si è qui, se no la fila si riempie di posizioni
 
 /* gli amici con cui si può avere una fattoria in comune: quelli che hanno un nome (incontrati online almeno una volta) */
 export const amiciPerComune = () => dati.attivo ? dati.amici.filter(a => a.nome) : []
@@ -38,19 +40,23 @@ export async function apriComune({ chiave, borsa, ora = Date.now, opzioni } = {}
     seq = x.s
   }
   motore.prendiEventi()                  // aprendo non si conta niente: quello che è successo prima è già contato da chi l'ha fatto
-  const s = new Sessione({ chiave, mio, motore, seq, corsia: r.corsia === 1 ? 1 : 0, opzioni })
+  const s = new Sessione({ chiave, mio, motore, seq, corsia: r.corsia === 1 ? 1 : 0, opzioni, ora })
   if (!r.foto && r.ultimo === 0 && !r.mosse.length) await s.giro({ foto: true })       // una fattoria nuova (o scaduta): la prima fotografia
   return s
 }
 
 export class Sessione {
-  constructor({ chiave, mio, motore, seq, corsia, opzioni }) {
-    Object.assign(this, { chiave, mio, motore, seq, corsia, opzioni })
+  constructor({ chiave, mio, motore, seq, corsia, opzioni, ora = Date.now }) {
+    Object.assign(this, { chiave, mio, motore, seq, corsia, opzioni, ora })
     this.coda = []                       // le mie mosse da mandare
     this.inViaggio = false
     this.giri = 0
     this.timer = 0; this.presto = 0
     this.alCambio = () => {}             // ({ mosse: [{ n, livello }], ricarica }) quando arriva qualcosa dall'amico
+    this.mioQui = null                   // () => dove sta il mio contadino (contadino-amico.js), lo chiede ogni giro
+    this.alQui = () => {}                // (messaggio) l'ultima notizia del contadino dell'amico
+    this.sentito = -Infinity; this.detto = -Infinity
+    this.seqMossa = seq                  // l'ultima mossa vera: la fotografia si ferma lì, o per una posizione non letta l'amico si riaprirebbe
     this.smetti = null
   }
 
@@ -63,7 +69,17 @@ export class Sessione {
     this.timer = setInterval(() => this.giro().catch(() => {}), OGNI)
   }
 
-  /* manda le mie mosse (o la fotografia, se non c'è niente in viaggio) e rifà quelle arrivate */
+  /* il mio contadino per questo giro: non è una mossa, e se il giro va perso non si rimanda (il prossimo ne ha uno più nuovo) */
+  quiDelGiro() {
+    const t = this.ora()
+    if (!this.mioQui || (t - this.sentito > SPARISCE && t - this.detto < DA_SOLO_OGNI)) return []
+    const m = this.mioQui()
+    if (!m) return []
+    this.detto = t
+    return [m]
+  }
+
+  /* manda le mie mosse (o la fotografia, se non c'è niente in viaggio) col mio contadino, e rifà quelle arrivate */
   async giro({ foto = false, keepalive = false } = {}) {
     if (this.inViaggio) return
     this.inViaggio = true
@@ -71,13 +87,17 @@ export class Sessione {
       const mosse = this.coda.splice(0, MAX_PER_GIRO)
       this.giri++
       const conFoto = !mosse.length && !this.coda.length && (foto || this.giri % FOTO_OGNI === 0)
-      const r = await scambiaComune(this.chiave, this.mio, { dopo: this.seq, mosse, foto: conFoto ? { seq: this.seq, stato: this.motore.serializza() } : null }, { ...this.opzioni, keepalive })
+      const r = await scambiaComune(this.chiave, this.mio, { dopo: this.seq, mosse: [...mosse, ...this.quiDelGiro()], foto: conFoto ? { seq: this.seqMossa, stato: this.motore.serializza() } : null }, { ...this.opzioni, keepalive })
       if (!r) { this.coda.unshift(...mosse); return }           // senza rete si riprova al giro dopo; di due già pieno, pazienza
       if (r.foto) return this.alCambio({ mosse: [], ricarica: true })     // l'amico è andato troppo avanti: si riparte dalla fotografia
       const arrivate = []
+      let contadino = null
       for (const x of r.mosse) {
         if (x.s <= this.seq) continue
         this.seq = x.s
+        const q = quiInForma(x.m)
+        if (q) { if (x.id !== this.mio) contadino = q; continue }       // conta solo l'ultimo
+        this.seqMossa = x.s
         if (x.id === this.mio) continue                       // le mie, già fatte qui
         const m = mossaInForma(x.m)
         if (!m) continue
@@ -85,6 +105,7 @@ export class Sessione {
         arrivate.push({ n: m.n, livello: esito.livello })
       }
       if (arrivate.length) this.alCambio({ mosse: arrivate, ricarica: false })
+      if (contadino) { this.sentito = this.ora(); this.alQui(contadino) }
       if (this.coda.length) setTimeout(() => this.giro().catch(() => {}), 0)
     } finally { this.inViaggio = false }
   }
@@ -99,6 +120,7 @@ export class Sessione {
   async chiudi() {
     clearInterval(this.timer); clearTimeout(this.presto)
     this.smetti?.(); this.smetti = null
+    this.mioQui = null; this.coda.push({ k: 'via' })
     this.ricorda({ subito: true })
     this.inViaggio = false
     await this.giro({ keepalive: true }).catch(() => {})

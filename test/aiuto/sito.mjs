@@ -21,7 +21,11 @@
    un **guasto** sulla pagina (`rotto`) o su `versione.json` (`muto`), non
    dare il service worker nuovo (`swFermo`), e mandare **a gocce** la
    pagina che scarica «cerca aggiornamenti» (`goccia`, ms fra un quarto
-   di megabyte e l'altro) — così il foglio si vede mentre conta.
+   di megabyte e l'altro) — così il foglio si vede mentre conta. Per lo
+   scarico dei file del sito spezzato (`cartella` = `dist-sito/`): `calmo`
+   (ms di attesa per ogni file di `assets/`), `appeso` (i file che
+   combaciano non rispondono mai: la rete che si ferma senza cadere) e
+   `sparito` (i file che combaciano danno 404).
 
    `pubblica({ id, etichetta })` mette in linea una versione nuova senza
    ricompilare: riscrive l'id e l'etichetta dentro pagina, service worker
@@ -31,21 +35,23 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { createServer } from 'node:http'
 import { createHash } from 'node:crypto'
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { dirname, join, extname } from 'node:path'
 import { COSTRUITO } from './browser.mjs'
 
 const TIPI = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.json': 'application/json', '.webmanifest': 'application/manifest+json',
-  '.svg': 'image/svg+xml', '.png': 'image/png',
+  '.svg': 'image/svg+xml', '.png': 'image/png', '.css': 'text/css', '.webp': 'image/webp',
+  '.ogg': 'audio/ogg', '.woff2': 'font/woff2',
 }
 const impronta = corpo => '"' + createHash('sha1').update(corpo).digest('hex').slice(0, 16) + '"'
 const aspetta = ms => new Promise(ok => setTimeout(ok, ms))
 
 export async function apriSito ({ cartella = dirname(COSTRUITO) } = {}) {
   const file = new Map()
-  for (const nome of readdirSync(cartella)) file.set('/' + nome, readFileSync(join(cartella, nome)))
+  for (const nome of readdirSync(cartella, { recursive: true }))
+    if (statSync(join(cartella, nome)).isFile()) file.set('/' + nome, readFileSync(join(cartella, nome)))
   const originale = JSON.parse(file.get('/versione.json').toString())
   const html = file.get('/index.html').toString()
   const sw = file.get('/sw.js').toString()
@@ -55,6 +61,7 @@ export async function apriSito ({ cartella = dirname(COSTRUITO) } = {}) {
     /* la versione in linea adesso: `{ id, etichetta }` */
     versione: { id: originale.id, etichetta: originale.etichetta },
     lento: 0, rotto: false, muto: false, swFermo: false, goccia: 0,
+    calmo: 0, appeso: null, sparito: null,
     /* ogni richiesta, con chi l'ha fatta: `navigate` è una pagina che si
        apre, `cors` una `fetch` (la nostra, o il service worker che si
        installa) */
@@ -94,6 +101,9 @@ export async function apriSito ({ cartella = dirname(COSTRUITO) } = {}) {
     if (nome === '/index.html' && sito.rotto) return rispondi(500, {}, 'guasto')
     if (nome === '/versione.json' && sito.muto) return rispondi(503, {}, 'fuori servizio')
     if (nome === '/sw.js' && sito.swFermo) return rispondi(503, {}, 'fuori servizio')
+    if (sito.calmo && nome.startsWith('/assets/')) await aspetta(sito.calmo)
+    if (sito.appeso?.test(nome)) return
+    if (sito.sparito?.test(nome)) return rispondi(404, {}, 'non c\'è')
     const corpo = file.get(nome)
     if (!corpo) return rispondi(404, {}, 'non c\'è')
 

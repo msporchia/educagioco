@@ -13,6 +13,16 @@ Si esce con ← anche a pozione a metà, e rientrando la mappa offre in cima
   nome, la tappa per chiave. Se uno non c'è più il salvataggio non torna, si
   butta e la tappa ricomincia. Una sosta di prima del procedimento (`v` sotto il 4) non si
   legge: la tappa ricomincia, e progressi e stelle restano.
+- **Una sosta di quando si partiva con qualcosa in casa si legge lo stesso**:
+  nel gioco la scorta non c'è più, ma quel salvataggio ha lo strumento già
+  avviato e il minimo fatto su quello che mancava. `leggi` tiene il suo `casa`
+  e `scrivi` lo riscrive finché quella pozione non è finita. Nessuna pozione
+  nuova ce l'ha.
+- **Una sosta di quando i liquidi avevano la roba secca in dispensa si legge lo
+  stesso**: la sua ricetta pesta, quindi per quella pozione mortaio e pestello tornano
+  sul tavolo (`dispensa` negli ingredienti di `leggi`).
+- **Una sosta di prima della spedizione** ha i gettoni contati senza: si legge, e
+  da lì la spedizione si paga, quindi il margine di quella pozione è un po' più stretto.
 - **L'ordine si scrive quando si ordina, non quando finisce di versarsi**: il
   motore ha già deciso tutto, e monete, `answer()` e fine della tappa partono
   subito. Uscire mentre il mercante versa non perde niente e non ripaga niente;

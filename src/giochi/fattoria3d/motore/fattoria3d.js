@@ -42,7 +42,8 @@ export class Fattoria3d {
     this.propri = new Set()                        // le chiavi dei lotti tuoi
     for (const id of Object.keys(this.s.lotti)) { const l = lottoPerId(id); if (l) this.propri.add(l.k) }
     this.strada = new Map()                        // cella (chiave) → 1 disegnata, 2 di serie
-    for (const k of stradeDiSerie()) this.strada.set(k, 2)
+    const tolte = new Set(this.s.stradeTolte.map(id => { const c = cellaDaId(id); return c ? chiave(c[0], c[1]) : null }))
+    for (const k of stradeDiSerie()) if (!tolte.has(k)) this.strada.set(k, 2)
     for (const id of this.s.strade) { const c = cellaDaId(id); if (c && !this.strada.has(chiave(c[0], c[1]))) this.strada.set(chiave(c[0], c[1]), 1) }
     this.aspettoStrade = new Map()                 // cella (chiave) → { tipo, bordo }, solo per le strade disegnate che non sono quella di base (docs/fattoria3d/terreno.md)
     for (const [id, cod] of Object.entries(this.s.aspettoStrade)) {
@@ -259,9 +260,12 @@ export class Fattoria3d {
     this._evento('strada')
     return { ok: true, costo }
   }
+  /** La gomma toglie ogni strada: quella di serie si vede uguale a una disegnata, e resta tolta (`stradeTolte`). */
   togliStrada(i, j) {
-    if (!dentro(i, j) || this.strada.get(chiave(i, j)) !== 1) return { ok: false, motivo: 'qui-no' }
-    this.strada.delete(chiave(i, j)); this.aspettoStrade.delete(chiave(i, j))
+    const k = chiave(i, j), c = this.strada.get(k)
+    if (!dentro(i, j) || !c) return { ok: false, motivo: 'qui-no' }
+    if (c === 2) this.s.stradeTolte.push(idCella(i, j))
+    this.strada.delete(k); this.aspettoStrade.delete(k)
     return { ok: true }
   }
 

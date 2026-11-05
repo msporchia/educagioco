@@ -103,7 +103,7 @@ await scatto(b, 'comune-4-due-contadini')
 
 /* ── la propria fattoria resta com'era; rientrando, quella in comune è ancora lì ── */
 await a.click('[data-f3="torna-mia"]')
-const sparito = await b.waitForFunction(() => !window.__fattoria3d.mondo.ospite?.visibile, null, { timeout: 5000 }).then(() => true, () => false)
+const sparito = await b.waitForFunction(() => !window.__fattoria3d.mondo.ospite?.visibile, null, { timeout: 9000 }).then(() => true, () => false)
 controlla('Lorenzo esce e il suo contadino sparisce da Marta', sparito)
 await a.waitForFunction(() => !/Con /.test(document.querySelector('.barra-app .dove')?.innerText || '') && !!window.__fattoria3d?.mondo, null, { timeout: 20000 })
 uguale('tornato a casa, la fattoria di Lorenzo ha le cose di prima', await fai(a, () => window.__fattoria3d.motore.s.cose.length), casaA)

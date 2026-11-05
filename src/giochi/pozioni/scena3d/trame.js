@@ -184,3 +184,55 @@ export function arcobaleno() {
   t.colorSpace = SRGBColorSpace
   return t
 }
+
+// quello che gira sul brodo: venature bianche su trasparente, la tinta la dà il materiale
+export function marmo() {
+  const L = 256, c = document.createElement('canvas')
+  c.width = c.height = L
+  const g = c.getContext('2d'), img = g.createImageData(L, L)
+  for (let y = 0; y < L; y++) for (let x = 0; x < L; x++) {
+    const dx = x / L - 0.5, dy = y / L - 0.5, r = Math.hypot(dx, dy) * 2, a = Math.atan2(dy, dx)
+    const v = Math.sin(a * 3 + r * 8 + Math.sin(r * 13 + a * 2) * 1.5) * 0.5 + 0.5
+    const k = (y * L + x) * 4
+    img.data[k] = img.data[k + 1] = img.data[k + 2] = 255
+    img.data[k + 3] = 255 * Math.max(0, Math.min(1, (v - 0.45) * 3)) * Math.max(0, Math.min(1, (1 - r) * 6))
+  }
+  g.putImageData(img, 0, 0)
+  const t = new CanvasTexture(c)
+  t.colorSpace = SRGBColorSpace
+  return t
+}
+
+// la grattugia: lamiera coi buchi
+export function lamiera() {
+  const [c, g] = tela(128, 256)
+  g.fillStyle = '#c9ced8'; g.fillRect(0, 0, 128, 256)
+  for (let y = 12, f = 0; y < 250; y += 17, f++) for (let x = f % 2 ? 22 : 12; x < 122; x += 20) {
+    g.fillStyle = '#2c3038'; g.beginPath(); g.ellipse(x, y, 6, 3.4, 0, 0, 7); g.fill()
+    g.fillStyle = '#f4f6fa'; g.fillRect(x - 6, y + 3.5, 12, 1.6)
+  }
+  return trama(c)
+}
+
+// le frecce del suggerimento: oro col bordo scuro, si leggono su tutto
+function tratto(g, disegna, largo = 20) {
+  g.lineCap = g.lineJoin = 'round'
+  g.strokeStyle = '#3a2612'; g.lineWidth = largo + 10; g.beginPath(); disegna(g); g.stroke()
+  g.strokeStyle = '#ffe27a'; g.lineWidth = largo; g.beginPath(); disegna(g); g.stroke()
+}
+const punta = (g, x, y, a, l = 44) => {
+  g.moveTo(x - Math.cos(a - 0.55) * l, y - Math.sin(a - 0.55) * l)
+  g.lineTo(x, y)
+  g.lineTo(x - Math.cos(a + 0.55) * l, y - Math.sin(a + 0.55) * l)
+}
+export function frecce() {
+  const fatta = (w, h, disegna) => { const [c, g] = tela(w, h); tratto(g, disegna); return trama(c) }
+  return {
+    giro: fatta(256, 256, g => { g.arc(128, 128, 88, -1.2, 4.1); const a = 4.1, x = 128 + Math.cos(a) * 88, y = 128 + Math.sin(a) * 88; g.moveTo(x, y); punta(g, x, y, a + Math.PI / 2) }),
+    'su-giu': fatta(256, 256, g => { g.moveTo(128, 30); g.lineTo(128, 226); punta(g, 128, 30, -Math.PI / 2); punta(g, 128, 226, Math.PI / 2) }),
+    lato: fatta(256, 256, g => { g.moveTo(30, 128); g.lineTo(226, 128); punta(g, 30, 128, Math.PI); punta(g, 226, 128, 0) }),
+    agita: fatta(256, 256, g => { g.moveTo(26, 150); g.lineTo(80, 96); g.lineTo(120, 160); g.lineTo(170, 96); g.lineTo(226, 130); punta(g, 226, 130, 0.5) }),
+    inclina: fatta(256, 256, g => { g.arc(128, 170, 96, Math.PI * 1.1, Math.PI * 1.75); const a = Math.PI * 1.75, x = 128 + Math.cos(a) * 96, y = 170 + Math.sin(a) * 96; g.moveTo(x, y); punta(g, x, y, a + Math.PI / 2) }),
+    strada: fatta(512, 128, g => { g.moveTo(26, 64); g.lineTo(486, 64); punta(g, 486, 64, 0) }),
+  }
+}

@@ -3,7 +3,7 @@
    si compra come un lotto. Come visite.js: la vista dice cosa si vuole, le regole sono del motore. Niente in comune con un amico: la casa è
    della propria fattoria. */
 import { ref, computed, nextTick } from 'vue'
-import { MOBILI, SCHEDE_MOBILI, ARMADIO, prezzoFinitura } from './dati/interni.js'
+import { MOBILI, SCHEDE_MOBILI, ARMADIO, prezzoFinitura, stanzaDi } from './dati/interni.js'
 
 const MOTIVI = {
   fuori: 'Lì non ci sta: deve stare tutto dentro una stanza tua.',
@@ -41,6 +41,13 @@ export function usaCasa({ dammi, tela, sopra, q, versione, cambio, abito, apriGu
     return o ? { ...o, voce: MOBILI[o.tipo] } : null
   })
 
+  /** I mobili messi nella stanza di quello aperto: la griglia del suo foglio. */
+  const nellaStanza = computed(() => {
+    const o = mobile.value; if (!o) return []
+    const s = stanzaDi(o.i, o.j)
+    return dammi().motore.s.interni.mobili.filter(m => m.i !== null && stanzaDi(m.i, m.j) === s).map(m => ({ ...m }))
+  })
+
   const ui = {
     cambio() { toc() },
     fogliAperti: () => !!foglio.value || !!tinte.value || altriFogli(),
@@ -53,6 +60,7 @@ export function usaCasa({ dammi, tela, sopra, q, versione, cambio, abito, apriGu
         [{ t: `Compra · 🪙 ${st.prezzo}`, fn: () => compraStanza(id) }, { t: 'Non ora', quieto: true }])
     },
     mano(info) { mano.value = info; if (info) messaggio.value = '' },
+    rifiuto(r) { dici(dettoInCasa(r)) },
   }
 
   async function entra() {
@@ -103,10 +111,10 @@ export function usaCasa({ dammi, tela, sopra, q, versione, cambio, abito, apriGu
   function gira() { casa?.giraInMano() }
   function lascia() { casa?.lasciaMano(); messaggio.value = '' }
 
-  // ── il foglio di un mobile: colore, trama, gira, sposta, metti via ──
+  // ── il foglio di un mobile: colore, trama, gira, metti via (spostare è tenerlo premuto) ──
   function tingi(colore, trama) { const r = dammi().motore.tingiMobile(mobileAperto.value, colore, trama); if (r.ok) { casa?.cambiato(); toc() } }
   function giraMobile() { const r = dammi().motore.giraMobile(mobileAperto.value); if (!r.ok) messaggio.value = 'Girato non ci sta: spostalo prima in un posto più largo.'; else { casa?.cambiato(); toc() } }
-  function sposta() { const id = mobileAperto.value; foglio.value = null; mobileAperto.value = null; casa?.prendi(id) }
+  function apriArmadio() { const o = mobile.value; chiudi(); if (o) casa?.apriArmadio(o) }
   function mettiVia() {
     const r = dammi().motore.mettiViaMobile(mobileAperto.value)
     if (!r.ok) return void (messaggio.value = dettoInCasa(r))
@@ -154,7 +162,7 @@ export function usaCasa({ dammi, tela, sopra, q, versione, cambio, abito, apriGu
 
   return {
     dentro, chiave, foglio, scheda, mobile, mobileAperto, tinte, prezzoTinte, mano, messaggio, vista, voci, eArmadio,
-    entra, esci, apriCatalogo, scegli, posa, gira, lascia, tingi, giraMobile, sposta, mettiVia, apriTinte, provaTinta, pagaTinte, lasciaTinte, chiudi,
+    entra, esci, apriCatalogo, scegli, posa, gira, lascia, tingi, giraMobile, apriArmadio, mettiVia, apriMobile: ui.apriMobile, nellaStanza, apriTinte, provaTinta, pagaTinte, lasciaTinte, chiudi,
     anteprima, anteprimaPronta, vesti, cameraLibera, tornaAllEroe, via,
     scena: () => casa,                     // per le prove e gli scatti (window.__fattoria3d.interni)
   }

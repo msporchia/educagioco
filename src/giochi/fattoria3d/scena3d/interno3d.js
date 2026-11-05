@@ -175,6 +175,7 @@ export class Interno3d {
   /** Il mobile in mano (solo in casa): finché c'è, il dito lo porta. */
   get inMano() { return false }
   portaInMano() {}
+  lasciaDalDito() {}
   aggiorna() {}
 
   /** Il contadino cambia abito, anche qui. */
@@ -209,7 +210,7 @@ export class Interno3d {
 }
 
 /** Il dito dentro: un tocco fa (`tocca`); un dito che scorre sposta la vista (o il mobile in mano); due dita zoomano; tenere premuto fa
-    quello che dice `daTenere`. Soglia di 16 px (docs/core/il-dito.md). */
+    quello che dice `daTenere` (in casa solleva il mobile, che resta al dito finché non si stacca). Soglia di 16 px (docs/core/il-dito.md). */
 class DitoInterno {
   constructor(posto) {
     this.c = posto; this.canvas = posto.canvas; this.punti = new Map(); this.inizio = null; this.lungo = 0
@@ -229,7 +230,7 @@ class DitoInterno {
     const c = this.c
     this.canvas.setPointerCapture(e.pointerId); this.punti.set(e.pointerId, [e.clientX, e.clientY])
     clearTimeout(this.lungo)
-    if (this.punti.size === 2) { this.pinch0 = this._distanza(); this.zoom0 = c.camera.zoom; this.inizio = null; return }
+    if (this.punti.size === 2) { if (this.inizio?.tenuto) c.lasciaDalDito(false); this.pinch0 = this._distanza(); this.zoom0 = c.camera.zoom; this.inizio = null; return }
     const ini = this.inizio = { x: e.clientX, y: e.clientY, trascina: false }
     if (c.ui.fogliAperti()) return
     if (c.inMano) { ini.mano = true; c.portaInMano(e.clientX, e.clientY); return }
@@ -238,6 +239,7 @@ class DitoInterno {
       if (this.inizio !== ini || ini.trascina || this.punti.size !== 1 || c.ui.fogliAperti()) return
       try { navigator.vibrate && navigator.vibrate(30) } catch (x) { /* niente vibrazione */ }
       ini.fatto = true; fai()
+      if (c.inMano) ini.mano = ini.tenuto = true
     }, ATTESA_PREMUTO)
   }
   _muovi(e) {
@@ -260,6 +262,7 @@ class DitoInterno {
     if (this.punti.size === 2) c.camera.zoom = dentroLimiti(zoomMorbido(c.camera.zoom))
     this.punti.delete(e.pointerId); clearTimeout(this.lungo); this.lungo = 0
     const ini = this.inizio; this.inizio = null
+    if (ini?.tenuto) c.lasciaDalDito(su)
     if (!ini || !su) return
     if (e.pointerType !== 'mouse') zittisciIlFantasma(e.clientX, e.clientY)          // il click che il dito si lascia dietro non deve premere il foglio appena aperto
     if (!ini.trascina && !ini.fatto && !ini.mano && !c.ui.fogliAperti()) c.tocca(e.clientX, e.clientY)

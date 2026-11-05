@@ -4,6 +4,8 @@
 // scritto (stelle, monete) da Gioco.vue. Nella battaglia infinita non c'è un
 // tempo da battere né stelle né record: c'è solo il tempo di questa volta.
 
+import Spade from './Spade.vue'
+
 defineProps({
   vinta: { type: Boolean, default: false },
   pari: { type: Boolean, default: false },
@@ -22,8 +24,12 @@ const minuti = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart
 
 <template>
   <div class="ar-velo ar-fine" :data-fine="vinta ? 'vinta' : pari ? 'pari' : 'persa'">
+    <div v-if="vinta" class="ar-raggi" aria-hidden="true"></div>
     <div class="ar-cartello">
-      <div class="ar-esito em">{{ ultima ? '🏆' : vinta ? '🎉' : pari ? '🤝' : '🛡️' }}</div>
+      <div class="ar-stemma" :class="{ 'ar-stemma-vinto': vinta }">
+        <Spade class="ar-spade" />
+        <span class="ar-esito em">{{ ultima ? '🏆' : vinta ? '🎉' : pari ? '🤝' : '🛡️' }}</span>
+      </div>
       <h2 v-if="sfida">{{ vinta ? 'Hai vinto la sfida!' : 'Questa volta ha vinto l\'altro' }}</h2>
       <h2 v-else-if="infinita">{{ vinta ? 'Castello nemico abbattuto!' : 'Il tuo castello è caduto' }}</h2>
       <h2 v-else-if="ultima">Campagna finita!</h2>

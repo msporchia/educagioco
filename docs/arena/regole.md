@@ -264,4 +264,4 @@ Il tempo di decidere c'è, poi la base viene sopraffatta.
 `[data-piazzola=<n>]` (con `data-variante=<truppa|miniera>` se c'è un edificio), `[data-castello]`,
 `[data-anello=potenzia|vendi|numeri]`, `[data-scelta=<n>]`, `[data-costruisci=<truppa|miniera>]`,
 `[data-dettagli=<truppa|miniera|ripara|bomba>]`, `[data-vendi]`, `[data-azione=ripara|bomba]`, `[data-monete]`, `[data-avviso]`,
-`[data-tappa=<n>]`, `[data-infinita]` (la voce della battaglia infinita in cima alla mappa, `disabled` se chiusa), `[data-ancora]` (il tasto del cartello di fine), `[data-fine=vinta|persa|pari]`.
+`[data-tappa=<n>]`, `[data-infinita]` (la voce della battaglia infinita in cima alla mappa, `disabled` se chiusa), `[data-ancora]` (il tasto del cartello di fine), `[data-fine=vinta|persa|pari]`, `[data-annuncio]` (il nome della battaglia che passa sul campo).

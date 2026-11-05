@@ -28,6 +28,7 @@ function daLontano (crea) {
   return g
 }
 
+const ALZATA = 0.45                               // quanto sta in aria chi è tenuto al dito
 const ACCOSTO = 0.62                              // a quanto dal centro della ciotola sta chi mangia
 const LOD_METRI = 12                              // oltre questa distanza dalla camera un compagno si disegna con le geometrie povere (modelli-compagni.js)
 const CASA = DAVANTI_CASA
@@ -69,7 +70,7 @@ export class Compagni {
       if (cella) { c.x = cella[0] + 0.5; c.z = cella[1] + 0.5 }
       c.dir = this.rnd() * Math.PI * 2
       grp.position.set(c.x, 0, c.z); grp.rotation.y = c.dir
-      if (!senzaAvviso) { this.fx.scoppietta(grp.position, 0xffe27a, 10, 1.4, 2.2); this.ui.avviso(d.arrivo) }
+      if (!senzaAvviso) { this.fx.scoppietta(grp.position, 0xffe27a, 10, 1.4, 2.2); this.ui.avviso(d.arrivo); this.ui.cartello?.(d.arrivo) }
     }
     this._bisogni()
   }
@@ -85,7 +86,15 @@ export class Compagni {
 
   /** Dove sta di casa: la cella dove il bambino ha messo la bestia, o davanti alla porta. */
   _casa(c) { const k = c.def.daCurare && this.m.cura.casaDi(c.def.id); return k ? [k[0] + 0.5, k[1] + 0.5] : CASA }
-  /** La bestia di casa spostata dal foglio (gratis): scompare e riappare, in una nuvola, nella nuova cella, che da ora è casa sua. */
+  /** Tenuta al dito (`Mondo3d.sollevaBestia`): smette quello che faceva, si alza e sta dove la mette `tieni`, finché `lascia` non la posa. */
+  prendi(c) {
+    c.seq = null; c.sub = ''; c.guarda = null; c.percorso = []; c.poi = null; c.salto = null; c.sopra = null; this._viaGioco(c)
+    c.tenuta = { x: c.x, z: c.z }; this._stato(c, 'sta')
+  }
+  tieni(c, x, z) { c.x = x; c.z = z; c.grp.position.set(x, ALZATA, z) }
+  /** Si stacca dal dito: torna dov'era, se nessuno l'ha portata altrove (`portaA`). */
+  lascia(c) { if (!c.tenuta) return; c.x = c.tenuta.x; c.z = c.tenuta.z; c.tenuta = null; c.grp.position.set(c.x, 0, c.z) }
+  /** La bestia di casa spostata col dito (gratis): scompare e riappare, in una nuvola, nella nuova cella, che da ora è casa sua. */
   portaA(id, i, j) {
     const c = this.lista.find(o => o.def.id === id)
     if (!c) return false
@@ -395,6 +404,7 @@ export class Compagni {
 
   _uno(c, dt) {
     const m = this.m, g = c.grp
+    if (c.tenuta) return
     c.tStato += dt
     if (c.seq && !c.seq.incontro && c.seq.eroeFermoAlVia && this._eroeSiMuove()) this._interrompi(c)      // l'eroe parte o lavora: la festa finisce
     // un pezzo messo proprio qui sotto: si sposta nella cella libera più vicina

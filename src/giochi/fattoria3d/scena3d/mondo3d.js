@@ -104,7 +104,6 @@ export class Mondo3d {
     this.attrezzi = this.ctx.attrezzi = new Attrezzi(this)
     this.compagni.cibo = (id, si) => this.pezzi.cibo(id, si)
     this.dito = new Dito(this)
-    this.inSposta = null           // l'id della bestia di casa che si sta spostando (il prossimo tocco su una cella libera la porta lì)
     this.badgeLotti = {}
 
     this.stat = { dts: new Float32Array(120), cpus: new Float32Array(120), logiche: new Float32Array(120), n: 0, info: { calls: 0, triangoli: 0, geometrie: 0, texture: 0, dpr: 1 }, fps: 0, nF: 0, tF: 0 }
@@ -157,15 +156,18 @@ export class Mondo3d {
     scatola.position.set(0, (b.max.y + b.min.y) / 2, 0); fuori.add(scatola)
     return fuori
   }
-  /** Il modo «sposta»: il prossimo tocco su una cella tua e libera porta lì la bestia di casa (gratis). Torna false se non è tua. */
-  iniziaSposta(id) { if (!this.m.cura.ho(id) || COMPAGNI[id]) return false; this.inSposta = id; this.fx.parla('Tocca dove vuoi metterla'); return true }
-  annullaSposta() { this.inSposta = null }
-  _sposta(x, y) {
-    const id = this.inSposta, p = this.puntaSuolo(x, y)
-    if (!p) return
-    const r = this.m.cura.sposta(id, Math.floor(p.x), Math.floor(p.z))
-    if (!r.ok) return this.fx.parla('Qui non ci sta')
-    this.inSposta = null; this.compagni.portaA(id, Math.floor(p.x), Math.floor(p.z)); this.ui.cambio()
+  /** Tenere premuto un animale: quello di casa si solleva e segue il dito; Watson e i gatti non si spostano, girano col contadino, e lo si dice. Torna true se è al dito. */
+  sollevaBestia(c, x, y) {
+    if (COMPAGNI[c.def.id]) { this.fx.parla(`${this.m.cura.nomeDi(c.def.id)} gira con te`); return false }
+    this.attrezzi.chiudi(); this.compagni.prendi(c); this.portaBestia(c, x, y)
+    return true
+  }
+  portaBestia(c, x, y) { const p = this.puntaSuolo(x, y); if (p) this.compagni.tieni(c, p.x, p.z) }
+  /** Il dito si stacca: sulla cella tua e libera la bestia sta lì (gratis), se no torna dov'era. `su` falso: il tocco è stato annullato. */
+  posaBestia(c, x, y, su) {
+    const p = su && this.puntaSuolo(x, y), i = p && Math.floor(p.x), j = p && Math.floor(p.z), r = p ? this.m.cura.sposta(c.def.id, i, j) : null
+    this.compagni.lascia(c)
+    if (r?.ok) { this.compagni.portaA(c.def.id, i, j); this.ui.cambio() } else if (su) this.fx.parla('Qui non ci sta')
   }
   /** La ciotola è stata riempita: il cibo si vede e l'animale corre a mangiarlo. */
   mangia(id) { this.pezzi.cibo(id, true); this.compagni.mangia(id) }
@@ -295,10 +297,9 @@ export class Mondo3d {
     const { ui, m, eroe } = this
     if (ui.fogliAperti()) return
     this.attrezzi.chiudi()                                              // un tocco altrove lo posa
-    if (this.inSposta) return this._sposta(x, y)
     const rg = this._raggio(x, y)
     const amico = this.compagni.bersaglio(rg)                           // Watson e i gatti si accarezzano prima di tutto
-    if (amico) return this.compagni.tocca(amico)
+    if (amico) { this.compagni.tocca(amico); return this.attrezzi.bestia(amico) }
     const casa = this.casaSotto(rg)                                     // la casa: il contadino va alla porta ed entra (docs/fattoria3d/casa.md)
     if (casa && !eroe.az) {
       // la porta, o (la casa sta fuori dalla terra di partenza) le celle tue più vicine alla porta
@@ -314,15 +315,20 @@ export class Mondo3d {
     if (cosa && cosa.tipo === 'campo') return this.attrezzi.tocco(cosa)           // i campi, le ciotole e la tinozza non aspettano il contadino: si fanno col dito (attrezzi.js)
     if (cosa && cosa.tipo === 'ciotola_bestia') return this.attrezzi.ciotola(cosa)
     if (cosa && cosa.tipo === 'tinozza') return this.attrezzi.tinozza(cosa)
+    if (cosa && !this.azioni.haGesto(cosa) && this.attrezzi.opzioni(cosa)) return  // una panchina: il contadino non ha niente da farci, accanto restano le sue opzioni
     if (eroe.az) return
     if (b && b.kind === 'albero') {
       const a = m.albero(b.n), l = lottoDi(a.i, a.j)
       if (!m.posseduto(l)) return this.azioni.offriLotto(l)               // ciò che sta in un terreno non tuo si compra
+      const no = this.azioni.noAbbatti(a)                                 // senza monete non si cammina fin lì per sentirselo dire
+      if (no) return this.azioni.dici(no)
       return eroe.vaiA(this.celleDiServizio(b), () => this.azioni.abbatti(a), this.centroDi(b))
     }
     if (b && b.kind === 'ostacolo') {
       const o = m.ostacolo(b.n), l = lottoDi(o.i, o.j)
       if (!m.posseduto(l)) return this.azioni.offriLotto(l)
+      const no = this.azioni.noTogliere(o)
+      if (no) return this.azioni.dici(no)
       return eroe.vaiA(this.celleDiServizio(b), () => this.azioni.togli(o), this.centroDi(b))
     }
     if (b && b.kind === 'cosa' && PEZZI[m.cosa(b.id)?.tipo]?.acqua) {            // l'acqua costruita (stagno, laghetto): si pesca nella cella toccata
