@@ -39,8 +39,8 @@ const fermo = () => page.waitForFunction(() => {
 }, undefined, { timeout: 30000 })
 
 // il tocco è vero; la camminata no, se non si prova quella: senza scheda grafica i fotogrammi sono pochi
-const PANE = '1,8', SUGO = '2,8', FORMAGGIO = '0,6', INSALATA = '0,5', PIATTI = '2,0', TAGLIERE = '0,1', CONSEGNA = '3,0', LAVELLO = '1,0'
-const PAVIMENTO = { [PANE]: [1, 7], [SUGO]: [2, 7], [FORMAGGIO]: [1, 6], [INSALATA]: [1, 5], [PIATTI]: [2, 1], [TAGLIERE]: [1, 1], [CONSEGNA]: [3, 1], [LAVELLO]: [1, 1] }
+const PANE = '1,9', SUGO = '2,9', FORMAGGIO = '0,6', INSALATA = '0,5', PIATTI = '2,0', TAGLIERE = '0,1', CONSEGNA = '3,0', LAVELLO = '1,0'
+const PAVIMENTO = { [PANE]: [1, 8], [SUGO]: [2, 8], [FORMAGGIO]: [1, 6], [INSALATA]: [1, 5], [PIATTI]: [2, 1], [TAGLIERE]: [1, 1], [CONSEGNA]: [3, 1], [LAVELLO]: [1, 1] }
 async function premi(id) {
   const [x, z] = PAVIMENTO[id]
   await page.evaluate(([x, z]) => Object.assign(window.__shop.cucina.value.cuoco, { x: x + 0.5, z: z + 0.5 }), [x, z])
@@ -70,11 +70,11 @@ uguale('niente persone', await page.locator('[data-cliente]').count(), 0)
 uguale('e niente ceste del mercato', await page.locator('.ceste').count(), 0)
 uguale('tre ordinazioni in lista', await page.locator('[data-ordine]').count(), 3)
 controlla('e sono foto, non icone', (await page.locator('[data-ordinato] img').first().getAttribute('src')).startsWith('data:image/webp'))
-await tocco(await dove('5,7'))
+await tocco(await dove('3,7'))
 await fermo()
 const k = (await stato()).cuoco
-uguale('toccando il pavimento il cuoco va lì', `${k.x},${k.z}`, '5.5,7.5')
-await page.evaluate(() => Object.assign(window.__shop.cucina.value.cuoco, { x: 5.5, z: 7.5 }))
+uguale('toccando il pavimento il cuoco va lì', `${k.x},${k.z}`, '3.5,7.5')
+await page.evaluate(() => Object.assign(window.__shop.cucina.value.cuoco, { x: 3.5, z: 7.5 }))
 await tocco(await dove(PANE))
 await tocco(await dove(TAGLIERE))
 uguale('l\'ultimo tocco comanda', (await stato()).fila.join(' '), TAGLIERE)

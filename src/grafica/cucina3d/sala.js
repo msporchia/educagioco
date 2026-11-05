@@ -203,3 +203,6 @@ export function creaMira() {
   o.renderOrder = 3
   return o
 }
+
+/** Un bancone solo: la foto dell'appoggio da comprare. */
+export const creaBancone = () => creaBanconi([{ x: -0.5, z: -0.5, tipo: 'banco' }])

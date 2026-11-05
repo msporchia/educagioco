@@ -10,7 +10,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { RICETTE, INGREDIENTI } from '/src/data/bancarella-cucine.js'
 import { cibo, confezione } from '/src/grafica/cucina3d/cibo.js'
 import { creaPiatto, riempiPiatto, creaPentola, creaPadella, creaTagliere, creaForno } from '/src/grafica/cucina3d/pezzi.js'
-import { creaPila } from '/src/grafica/cucina3d/sala.js'
+import { creaPila, creaBancone } from '/src/grafica/cucina3d/sala.js'
 
 const LATO = Number(new URLSearchParams(location.search).get('lato')) || 128, GRANDE = LATO * 3
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true })
@@ -57,6 +57,7 @@ const ORDINE = ['impasto', 'pasta', 'riso', 'uovo', 'pane', 'carne', 'pesce', 'a
 for (const r of RICETTE) scatta('piatto:' + r.emoji, piatto(r))
 for (const k of Object.keys(INGREDIENTI)) scatta('cosa:' + k, k === 'pane' ? cibo('pane-fette') : confezione(k))
 for (const [k, crea] of Object.entries({ pentola: creaPentola, padella: creaPadella, tagliere: creaTagliere, forno: creaForno })) scatta('attrezzo:' + k, crea())
+scatta('attrezzo:isola', creaBancone())
 scatta('attrezzo:piatti', (() => { const p = creaPila(); p.userData.mostra(3); return p })())
 window.__foto = foto
 </script>

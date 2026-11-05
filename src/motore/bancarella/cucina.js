@@ -7,18 +7,18 @@ const COLPO = 0.3                  // i secondi di un colpo: il cuoco taglia da 
 const LAVATA = 1.4                 // i secondi per lavare un piatto
 const RITORNO = 6                  // quanto ci mette un piatto a tornare sporco
 const PIZZA = { cuoce: 8, tiene: 45 }  // nel forno
-export const LARGA = 7, FONDA = 9  // la stanza, in celle
+export const LARGA = 5, FONDA = 10 // la stanza, in celle: stretta e alta, come un telefono
 const VELOCITA = 4.2
 
 /* La pianta, a zone: in fondo si finisce (lavello, piatti, consegna), a sinistra si taglia,
-   a destra si cuoce, davanti la dispensa; in mezzo due isole. `:2` è l'attrezzo comprato. */
+   a destra si cuoce, davanti la dispensa. `:2` è l'attrezzo comprato. */
 const FISSE = {
-  '1,0': { tipo: 'lavello' }, '2,0': { tipo: 'piatti' }, '3,0': { tipo: 'consegna' }, '5,0': { tipo: 'bidone' },
-  '0,1': 'tagliere', '0,2': 'tagliere:2', '0,3': 'tagliere:3', '0,4': 'tagliere:4', '0,5': 'insalata', '0,6': 'formaggio', '0,7': 'pesce', '0,8': 'alga',
-  '6,1': 'pentola', '6,2': 'pentola:2', '6,3': 'padella', '6,4': 'padella:2', '6,5': 'forno', '6,6': 'forno:2',
-  '0,0': 'pomodoro', '1,8': 'pane', '2,8': 'sugo', '3,8': 'riso', '4,8': 'uovo', '5,8': 'carne', '6,8': 'pasta', '6,7': 'impasto',
+  '0,0': 'pomodoro', '1,0': { tipo: 'lavello' }, '2,0': { tipo: 'piatti' }, '3,0': { tipo: 'consegna' }, '4,0': 'pasta',
+  '0,1': 'tagliere', '0,2': 'tagliere:2', '0,3': 'tagliere:3', '0,4': 'tagliere:4', '0,5': 'insalata', '0,6': 'formaggio', '0,7': 'pesce', '0,8': 'uovo',
+  '4,1': 'pentola', '4,2': 'pentola:2', '4,3': 'padella', '4,4': 'padella:2', '4,5': 'forno', '4,6': 'forno:2', '4,7': 'carne', '4,8': 'impasto',
+  '0,9': 'alga', '1,9': 'pane', '2,9': 'sugo', '3,9': 'riso', '4,9': { tipo: 'bidone' },
 }
-const ISOLA = ['2,3', '3,3', '4,3', '2,5', '3,5', '4,5']
+const ISOLE = ['2,3', '2,4', '2,6', '2,7']     // gli appoggi in più, nell'ordine in cui si comprano
 
 export const tipoDi = nome => nome.split(':')[0]
 const libera = () => ({ fase: 'vuota', t: 0, cosa: '', colpi: 0 })
@@ -30,7 +30,7 @@ function pianta(c) {
   const celle = [], cose = dispensaDi(c)
   for (let z = 0; z < FONDA; z++) for (let x = 0; x < LARGA; x++) {
     const id = `${x},${z}`
-    if (x && z && x < LARGA - 1 && z < FONDA - 1 && !ISOLA.includes(id)) continue
+    if (x && z && x < LARGA - 1 && z < FONDA - 1 && !c.isole.includes(id)) continue
     const f = FISSE[id]
     const cella = { id, x, z, tipo: 'banco' }
     if (f?.tipo && (f.tipo !== 'lavello' || c.puliti !== null)) cella.tipo = f.tipo
@@ -49,9 +49,9 @@ function pianta(c) {
 export function cucinaNuova(camp = CUCINE[0], attrezzi = {}) {
   const nomi = attrezziDi(camp).flatMap(t => [t, ...Array.from({ length: attrezzi[t] || 0 }, (_, i) => `${t}:${i + 2}`)])
   const c = { stazioni: Object.fromEntries(nomi.map(n => [n, libera()])), ricette: ricetteDi(camp.ricette),
-              puliti: camp.piatti ? camp.piatti + (attrezzi.piatti || 0) : null, sporchi: 0, ritorni: [] }
+              isole: ISOLE.slice(0, attrezzi.isola || 0), puliti: camp.piatti ? camp.piatti + (attrezzi.piatti || 0) : null, sporchi: 0, ritorni: [] }
   return { ...c, celle: pianta(c), sopra: {}, fila: [], strada: [], arrivato: '', perche: '', tagliando: '', colpo: 0, lavando: false, lavata: 0,
-           cuoco: { x: 3.5, z: 4.5, verso: 0, mano: null, cammina: false } }
+           cuoco: { x: 2.5, z: 5.5, verso: 0, mano: null, cammina: false } }
 }
 
 const tempiDi = s => (s.cosa === 'pizza' ? PIZZA : INGREDIENTI[s.cosa])

@@ -10,9 +10,9 @@ import { confezione, cibo } from './cibo.js'
 import { creaSala, creaCassetta, creaPila, creaCestino, creaConsegna, creaLavello, creaMira, ALTO } from './sala.js'
 import { creaCuoco } from './omino.js'
 
-const FOV = 30
+const FOV = 20     // stretto: da vicino la fila davanti si allargava fuori dallo schermo
 const VERSO = new Vector3(0, 0.9, 0.46).normalize()
-const LARGO = 7.3, FONDO = 10
+const LARGO = 5.3, FONDO = 10.9
 const SCALA_ROBA = 0.5      // i pezzi di cucina sono fatti per il banco col dito: qui stanno in una cella
 const COSTRUISCI = { pentola: creaPentola, padella: creaPadella, tagliere: creaTagliere, forno: creaForno }
 // quanto sporge dal piano quello che si tocca: il forno e la finestra si toccano anche in alto
@@ -92,10 +92,10 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
   scena.environmentIntensity = 0.5
   stanzaFinta.dispose()
   scena.add(new HemisphereLight(0xfff6e6, 0x8a6f52, 1))
-  const chiave = new DirectionalLight(0xfff0d8, 1.9); chiave.position.set(1.5, 11, 7.5); chiave.target.position.set(3.5, 0, 4.5)
+  const chiave = new DirectionalLight(0xfff0d8, 1.9); chiave.position.set(1, 11, 8); chiave.target.position.set(2.5, 0, 5)
   chiave.castShadow = true
   chiave.shadow.mapSize.set(1024, 1024)
-  chiave.shadow.camera.left = -6; chiave.shadow.camera.right = 6; chiave.shadow.camera.top = 8; chiave.shadow.camera.bottom = -8
+  chiave.shadow.camera.left = -6; chiave.shadow.camera.right = 6; chiave.shadow.camera.top = 9; chiave.shadow.camera.bottom = -9
   chiave.shadow.camera.far = 22; chiave.shadow.bias = -0.0006; chiave.shadow.normalBias = 0.02
   scena.add(chiave, chiave.target)
   renderer.shadowMap.enabled = true
@@ -104,7 +104,7 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
 
   /* ── la telecamera: tutta la stanza dentro, in piedi o coricato ── */
   let W = 1, H = 1, q = null, largo = 0, fondo = 0
-  const MIRA = new Vector3(3.5, 0.2, 4.1)
+  const MIRA = new Vector3(2.5, 0.2, 4.6)
   const dpr = fisso || Math.min(2, window.devicePixelRatio || 1)
   function misura() {
     const r = canvas.getBoundingClientRect()
@@ -119,7 +119,7 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
     camera.updateMatrixWorld()
     camera.updateProjectionMatrix()
     // sullo schermo lungo avanza spazio: la stanza scende in fondo, e sopra resta il muro
-    const giu = new Vector3(3.5, 0, fondo || 9).project(camera), avanza = H * (0.5 + giu.y / 2) - 6
+    const giu = new Vector3(2.5, 0, fondo || 10).project(camera), avanza = H * (0.5 + giu.y / 2) - 6
     if (avanza > 0) camera.setViewOffset(W, H, 0, -avanza, W, H)
     camera.updateProjectionMatrix()
   }
@@ -144,7 +144,7 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
         g.scale.setScalar(SCALA_ROBA)
         g.position.set(cx, ALTO, cz)
         if (tipo === 'padella') g.rotation.y = Math.PI                        // il manico verso chi cucina, non sul vicino
-        if (tipo === 'forno' && c.x === 6) g.rotation.y = -Math.PI / 2        // la bocca verso la stanza
+        if (tipo === 'forno') g.rotation.y = -Math.PI / 2        // la bocca verso la stanza
         const barra = creaBarra(); barra.scale.setScalar(0.62); barra.position.set(cx, ALTO + (tipo === 'forno' ? 1.05 : 0.8), cz)
         const fumo = new Group(); fumo.position.set(cx, ALTO + (tipo === 'forno' ? 0.85 : 0.55), cz)
         for (let i = 0; i < 5; i++) fumo.add(new Mesh(new SphereGeometry(0.1, 8, 6), new MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false })))

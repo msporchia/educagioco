@@ -460,7 +460,8 @@ onBeforeUnmount(() => {
 <template>
   <div class="schermo negozio">
     <!-- niente salvadanaio in barra: qui si maneggiano euro, e lo spazio serve ai cuori -->
-    <Barra titolo="La cucina" guida="bancarella" :monete="fase !== 'gioco'"
+    <!-- in partita il titolo cede il posto ai cuori: con le ordinazioni che scadono servono -->
+    <Barra :titolo="fase === 'gioco' ? '' : 'La cucina'" guida="bancarella" :monete="fase !== 'gioco'"
            :pausa="fase === 'gioco' && !state.festa.length" @pausa="mettiInPausa()"
            @aiuto="leggeLaGuida" @indietro="indietro">
       <template v-if="fase === 'gioco'">

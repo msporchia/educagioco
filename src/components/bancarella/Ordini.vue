@@ -25,12 +25,12 @@ defineEmits(['ricetta'])
 </template>
 
 <style scoped>
-.ordini { position:relative; flex:none; display:flex; align-items:stretch; gap:8px; min-height:92px; padding:8px 40px 8px 10px; background:#fff1d6; box-shadow:0 2px 6px #0003; z-index:3 }
-.ordine { flex:0 1 auto; display:flex; flex-direction:column; justify-content:space-between; gap:4px; padding:5px 6px 6px; border-radius:12px; background:#fffdf7; box-shadow:0 2px 0 #0000001f }
+.ordini { position:relative; flex:none; display:flex; align-items:stretch; gap:6px; min-height:92px; padding:8px 32px 8px 8px; background:#fff1d6; box-shadow:0 2px 6px #0003; z-index:3 }
+.ordine { flex:0 1 auto; min-width:0; display:flex; flex-direction:column; justify-content:space-between; gap:4px; padding:5px 6px 6px; border-radius:12px; background:#fffdf7; box-shadow:0 2px 0 #0000001f }
 .ordine.pagando { background:#dff3e3 }
 .piatti { display:flex; gap:2px }
-.piatti button { padding:0; border:0; background:none }
-.piatti img { width:62px; height:62px; display:block }
+.piatti button { flex:0 1 62px; min-width:0; padding:0; border:0; background:none }
+.piatti img { width:100%; max-width:62px; aspect-ratio:1; display:block }
 .piatti img.fatto { opacity:.32 }
 .tempo { display:block; height:7px; border-radius:4px; overflow:hidden; background:#e8dcc6 }
 .tempo b { display:block; height:100%; border-radius:4px; background:#38c172 }

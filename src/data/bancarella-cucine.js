@@ -141,6 +141,7 @@ export const FILA = CUCINE.map(c => ({ campagna: c.id, portata: c.portata, scuol
    primo livello dove servono, prima non si vedono. */
 const primoCon = t => CUCINE.findIndex(c => attrezziDi(c).includes(t))
 export const ATTREZZI = [
+  { che: 'isola', nome: 'Un appoggio in più', prezzi: [4000, 6000, 8000, 10000], da: 0 },
   { che: 'tagliere', nome: 'Un tagliere in più', prezzi: [8000, 16000, 24000], da: primoCon('tagliere') },
   { che: 'pentola', nome: 'La seconda pentola', prezzi: [25000], da: primoCon('pentola') },
   { che: 'piatti', nome: 'Un piatto in più', prezzi: [6000, 9000, 12000, 15000], da: CUCINE.findIndex(c => c.piatti) },
