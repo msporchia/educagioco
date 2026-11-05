@@ -113,6 +113,7 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
   vene d'oro, l'imbocco armato di travi con la lanterna, le rotaie, il carrello d'oro e lo stendardo; dal livello
   5 la torre col verricello. La roccia è uguale in tutti i posti (`ROCCIA`), se no sul terreno
   scuro spariva. Crollata resta il suo rudere. Il foglio 7c ha gli stessi tre pezzi, e `dipinta()` li preferisce: quello disegnato resta solo di riserva.
+- **Un terreno dipinto ha il suo ponte** (`PONTE_DIPINTO` di `dati/terreni-pronti.js`), e il gioco non ci mette il suo: sta fra le rive e largo il 10% dell'immagine, se no tocca le caserme ai lati.
 - **Il ponte e la porta** (`arena-disegni/opere.js`) prendono legno e pietra dal posto. Il ponte ha le assi fra due travi
   con le spalle di pietra; la porta due torri merlate con lo stendardo e il portone, che si crepa sotto i due terzi e
   sotto un terzo della vita; crollata, resta il cumulo. Il foglio 9 ha castello, porta (intera, rotta,

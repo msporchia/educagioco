@@ -12,6 +12,7 @@ import { PEZZI as OPERE, ATLANTE as FOGLIO_OPERE } from '../dati/opere-disegnate
 import { PEZZI } from '../../castello/dati/figure.js'
 import { caricaFigure, immagineFigure } from '../../castello/scena/pittori.js'
 import { SCALA, fotogramma, fotogrammiDi, arco, armiPronte } from './figure.js'
+import { PONTE_DIPINTO } from '../dati/terreni-pronti.js'
 import { disegnaEdificio } from './edifici.js'
 import { Terreno } from './terreno.js'
 import { Atmosfera } from './atmosfera.js'
@@ -313,6 +314,7 @@ export class Campo {
 
   /* il ponte: una volta sola, dentro la tela del terreno. Il pezzo è più alto del fiume di 12 per parte: le spalle */
   ponte(c) {
+    if (PONTE_DIPINTO.includes(this.terreno.chiave)) return
     const [foglio, [sx, sy, w, h]] = this.fortezza('ponte:@')
     const alto = (CAMPO.fiume.basso - CAMPO.fiume.alto + 24) * this.s, largo = alto * w / h
     c.drawImage(foglio.io, sx, sy, w, h, this.X(CAMPO.corsia) - largo / 2, this.Y(CAMPO.fiume.alto - 12), largo, alto)
