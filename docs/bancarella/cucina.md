@@ -12,10 +12,13 @@ con `Ordini.vue`, `Ricetta.vue`, `LeCucine.vue`; la scena `src/grafica/cucina3d/
 
 ## La stanza
 
-Sette celle per nove, banconi tutto intorno e due isole in mezzo, a zone. **In fondo si
-finisce**: lavello, piatti, consegna, bidone. **A sinistra si taglia**: i taglieri, con sotto
-insalata, formaggio, pesce e alga. **A destra si cuoce**: pentole, padelle, forni.
-**Davanti la dispensa**: pane, sugo, riso, uova, carne, pasta, e l'impasto sotto i forni. Una cucina mostra solo quello che le serve: il resto è bancone libero.
+Cinque celle per dieci, stretta e alta come un telefono: banconi tutto intorno, in mezzo solo
+pavimento, e le figure restano grandi. **In fondo si finisce**: lavello, piatti, consegna.
+**A sinistra si taglia**: i taglieri, con sotto insalata, formaggio, pesce. **A destra si
+cuoce**: pentole, padelle, forni, con carne e impasto. **Davanti la dispensa** e il bidone. Una
+cucina mostra solo quello che le serve: il resto è bancone libero. **Gli appoggi in più** (`ISOLE`)
+si comprano e stanno in mezzo, due per due, e ci si cammina attorno: fissi rimpicciolivano
+tutto.
 
 ## Si tocca dove si vuole andare
 
@@ -120,6 +123,7 @@ Nella scelta dei livelli si comprano gli attrezzi con l'incasso, a uno a uno:
 
 | attrezzo | prezzi |
 |---|---|
+| un appoggio in più, fino a quattro | 40, 60, 80, 100 € |
 | un tagliere in più, fino a tre | 80, 160, 240 € |
 | un piatto in più, fino a quattro | 60, 90, 120, 150 € |
 | la seconda pentola | 250 € |
@@ -127,7 +131,7 @@ Nella scelta dei livelli si comprano gli attrezzi con l'incasso, a uno a uno:
 | il secondo forno | 600 € |
 
 Un livello incassa una trentina di euro all'inizio e un centinaio alla fine: il primo tagliere
-costa un paio di livelli, il forno sei o sette degli ultimi. Tutto insieme fa 2.050 €, più
+costa un paio di livelli, il forno sei o sette degli ultimi. Tutto insieme fa 2.330 €, più
 dei circa 1.750 € che si incassano finendo la fila una volta: qualcosa si sceglie, o si rigioca. Si vedono
 dal livello dove servono, stanno in `banco.cucina` e compaiono nella stanza su celle fisse
 (`:2`, `:3`…).
@@ -148,8 +152,8 @@ dice se un modello è cambiato. `emoji` di una ricetta è solo la sua chiave.
 
 ## La scena
 
-Camera fissa dall'alto, la stanza intera dentro; sullo schermo lungo scende in fondo e
-sopra resta il muro. Il cibo è nella creta ([../fattoria3d/creta.md](../fattoria3d/creta.md)),
+Camera fissa dall'alto, la stanza intera dentro; quello che avanza sullo schermo resta sopra,
+col muro. Il cibo è nella creta ([../fattoria3d/creta.md](../fattoria3d/creta.md)),
 ogni modello si fa una volta e poi si clona; le maglie sono larghe (`MAGLIA`), prima di
 aprire si fa solo la dispensa e il cibo arriva dopo (`prepara`). In mano la roba è nuda:
 la tavola dell'impasto o la carta della carne sembrerebbero un piatto. Il cuoco ha
