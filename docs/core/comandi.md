@@ -167,7 +167,7 @@ posto della home e `.carte` non arriva.
 |---|---|
 | `#admin` | la pagina dei trucchi (`views/AdminView.vue`) |
 | `#monete=500` | monete al bambino attivo, anche a gioco già aperto; `#monete=-100` le toglie, mai sotto zero |
-| `#bancarella=cucina` | la cucina della bancarella, in prova ([../bancarella/cucina.md](../bancarella/cucina.md)) |
+| `#bancarella=cucina` | le cucine della bancarella, in prova; `&livello=5` dritto a quella ([../bancarella/cucina.md](../bancarella/cucina.md)) |
 | `#pin=1234` | rimette il codice dei grandi |
 | `#fattoria-tipo=30` | un bambino che arriva dalla 2D: scrive in `campagne.fattoria` la fattoria 2D di quel livello (1–99, `giochi/fattoria3d/da2d/motore/tipo.js`) e apre la fattoria, che la converte; è `dallIndirizzo` (`src/App.vue`) a scriverla e a passare il testimone a `#fattoria3d-da2d`, quindi **butta la fattoria del bambino attivo** nel cestino: si usa con un bambino di prova |
 | `#fattoria3d=10` | alza il livello della fattoria (non lo abbassa mai), il resto resta; `#fattoria=N`, il livello della 2D, non c'è più |
