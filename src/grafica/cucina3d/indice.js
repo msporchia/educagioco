@@ -130,7 +130,8 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
   /* ── le cose in scena: si mettono al primo `imposta`, secondo la cucina ── */
   const stazioni = {}, posti = {}
   let omino = null, inMano = null, pila = null, lavello = null, barraLavello = null, mira = null
-  const scatole = [], coltelli = []
+  const scatole = [], coltelli = {}
+  let tagliereInUso = ''
   function monta(s) {
     largo = Math.max(...s.celle.map(c => c.x)) + 1; fondo = Math.max(...s.celle.map(c => c.z)) + 1
     creaSala(scena, s.celle, largo, fondo)
@@ -151,7 +152,7 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
         stazioni[c.nome] = { g, barra, fumo, tipo }
         if (tipo === 'tagliere') {
           const k = creaColtello(); k.scale.setScalar(SCALA_ROBA); k.position.set(c.x + 0.8, ALTO + 0.1, c.z + 0.62)
-          scena.add(k); coltelli.push(k)
+          scena.add(k); coltelli[c.nome] = k
         }
       } else if (c.tipo === 'cassetta') {
         const g = creaCassetta(); g.position.set(cx, ALTO, cz)
@@ -273,7 +274,9 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
       const c = Object.values(q.stazioni).reduce((n, s) => n + s.colpi, 0)
       if (c > colpi) omino.taglia()
       colpi = c
-      coltelli.forEach(k => { k.visible = !omino.tagliando() })
+      // il coltello in mano al cuoco è quello del tagliere dove sta lavorando: gli altri restano al loro posto
+      tagliereInUso = q.tagliando || tagliereInUso
+      for (const [nome, k] of Object.entries(coltelli)) k.visible = !(omino.tagliando() && nome === tagliereInUso)
       pila?.userData.mostra(q.puliti)
       if (lavello) {
         const u = lavello.userData
