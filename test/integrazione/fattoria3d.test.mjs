@@ -897,7 +897,7 @@ await m3(`window.__fattoria3d.motore.s.prodotti['${AN.mangia[0]}'] = ${AN.pasti 
 await tocca3d(idP)
 await nuvola(AN.mangia[0])
 controlla('toccare il pollaio non nutre da solo: chiede', (await bestieDi(idP))[0] === null)
-uguale('la nuvoletta dice quanto mangime hai', await page.locator('[data-f3="gettone-conto"]').innerText(), '×' + AN.pasti * 5)
+uguale('la nuvoletta dice quanto mangime hai', await page.locator(`[data-cibo="${AN.mangia[0]}"] [data-f3="gettone-conto"]`).innerText(), '×' + AN.pasti * 5)
 await toccaEl(`[data-cibo="${AN.mangia[0]}"]`)
 await attendi(page, 1400)
 controlla('il mangime dato alla gallina la nutre', (await bestieDi(idP))[0] !== null)
