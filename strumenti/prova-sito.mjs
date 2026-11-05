@@ -6,6 +6,8 @@
 //   node strumenti/prova-sito.mjs --lento 4            # e la CPU 4 volte più lenta
 //   node strumenti/prova-sito.mjs --dist dist --solo-prima   # il file unico servito allo stesso modo, per confronto
 //   node strumenti/prova-sito.mjs sotterraneo inglese  # quali giochi aprire offline (di partenza alcuni)
+//   node strumenti/prova-sito.mjs --rete 40 --resta 11 # e resta sulla pagina 11 minuti, senza toccarla: ogni 15 s dice file in
+//                                                      # cassa, striscia e stato del service worker (docs/core/aggiornamento.md)
 //
 // Dice: quanto ci mette la home alla prima visita, quanto scarica il service worker (file e MB), la home e i giochi
 // offline, gli errori di console. Vedi docs/core/avvio-e-memoria.md.
@@ -15,7 +17,7 @@ import { join, extname, resolve } from 'node:path'
 
 const argv = process.argv.slice(2)
 const opz = (n, d = null) => { const i = argv.indexOf('--' + n); return i >= 0 && argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : d }
-const usati = new Set(['rete', 'lento', 'dist'].map(n => opz(n)).filter(Boolean))
+const usati = new Set(['rete', 'lento', 'dist', 'resta'].map(n => opz(n)).filter(Boolean))
 const giochi = argv.filter(a => !a.startsWith('--') && !usati.has(a))
 const GIOCHI = giochi.length ? giochi : ['sotterraneo', 'fattoria3d', 'torri', 'inglese']
 const radice = resolve(opz('dist', 'dist-sito'))
@@ -104,15 +106,35 @@ async function interrompi() {
   await chiudiTutto(); process.exit(0)
 }
 
+// la pagina lasciata lì, come un bambino dentro un gioco: nessun ritorno in primo piano, nessun tocco. Si guarda se lo scarico
+// va avanti da solo e se il service worker resta vivo
+async function resta(minuti) {
+  const stati = new Map()
+  s.on('ServiceWorker.workerVersionUpdated', e => { for (const v of e.versions) stati.set(v.versionId, v.runningStatus) })
+  await s.send('ServiceWorker.enable')
+  const t = Date.now()
+  for (let fine = t + minuti * 60000; Date.now() < fine;) {
+    const { file, testo } = await page.evaluate(async () => {
+      const k = await caches.keys()
+      const voci = await Promise.all(k.map(async n => (await (await caches.open(n)).keys()).length))
+      return { file: voci.join('+'), testo: (document.querySelector('[data-scarico]') || {}).innerText || '' }
+    })
+    console.log(`${String(Math.round((Date.now() - t) / 1000)).padStart(4)} s  in cassa ${file}  sw ${[...stati.values()].join('/')}  richieste ${richieste.length}  «${testo.replace(/\n/g, ' · ')}»`)
+    await page.waitForTimeout(15000)
+  }
+  await chiudiTutto(); process.exit(0)
+}
+
 const mb = b => (b / 1048576).toFixed(1)
 let t0 = Date.now()
-await page.goto(BASE)
-await page.waitForSelector('.carte', { timeout: 300000 })
+await page.goto(BASE, { timeout: 600000 })
+await page.waitForSelector('.carte', { timeout: 600000 })
 console.log(`\nprima visita: la home dopo ${Date.now() - t0} ms (${richieste.length} richieste al server)`)
 await page.waitForTimeout(rete ? 1500 : 0)
 const striscia = await page.evaluate(() => (document.querySelector('[data-scarico]') || {}).innerText || null)
 console.log(`la striscia del download: ${striscia ? '«' + striscia.replace(/\n/g, ' · ') + '»' : '(già finito o non comparsa)'}`)
 if (argv.includes('--solo-prima')) { await chiudiTutto(); process.exit(0) }
+if (argv.includes('--resta')) await resta(Number(opz('resta', 6)))
 if (argv.includes('--interrompi')) await interrompi()
 t0 = Date.now()
 const attesi = JSON.parse(/const FILE = (\[.*\])\s+\/\//.exec(readFileSync(join(radice, 'sw.js'), 'utf8'))[1]).map(f => '/' + f[0].slice(2))
