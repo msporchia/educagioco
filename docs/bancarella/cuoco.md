@@ -32,13 +32,13 @@ mossa di `decidi`:
 | un bancone libero | | posa |
 | un bancone con un piatto | prende il piatto | ci deposita quello che ha in mano |
 | un bancone con una cosa | prende | le unisce, e il piatto resta lì |
-| il tagliere | riprende a tagliare; tagliata, prende | posa l'insalata e la taglia; col piatto o con un'altra cosa unisce quella tagliata |
+| il tagliere | riprende a tagliare; tagliato, prende | posa insalata o formaggio e taglia; col piatto o con un'altra cosa unisce il tagliato |
 | un fuoco | prende quello che è pronto | ci mette il crudo; col piatto o con un'altra cosa unisce quello che è pronto |
 | il forno | prende la pizza | inforna la pizza condita |
 | il bidone | | butta |
 | la consegna | | serve |
 
-Se non si può, un fumetto dice cosa manca («Prima va cotta», «Le mani sono piene»).
+Se non si può, un fumetto dice cosa manca («Prima si cuoce», «Prima si taglia»).
 
 **I tocchi si mettono in fila** (`fila`, al massimo sei): pasta e poi pentola si toccano
 di seguito, e il cuoco li fa uno dopo l'altro. Ogni posto in fila ha il suo riquadro
@@ -55,9 +55,11 @@ che resta si ingoia, se no preme una moneta ([../core/il-dito.md](../core/il-dit
 - **Due cose pronte della stessa ricetta si uniscono da sole**: con l'impasto in mano si
   tocca il sugo, e il piatto ce lo mette il cuoco (`unisci`). La pila serve a chi vuole
   cominciare dal piatto.
-- **Crudo non va sul piatto**: pasta, carne e uovo passano dal fuoco, l'insalata dal
-  tagliere: un tocco e il cuoco taglia da sé fino alla fine, un secondo e mezzo (`TAGLI`,
+- **Crudo non va sul piatto**: pasta, carne e uovo passano dal fuoco, insalata e formaggio
+  dal tagliere (il formaggio solo qui, col dito no: per questo la prima cucina ha il tagliere): un tocco e il cuoco taglia da sé fino alla fine, un secondo e mezzo (`TAGLI`,
   `COLPO`). Intanto la fila aspetta; il pavimento lo porta via, e un tocco lo fa riprendere.
+- **Il pane è già tagliato**: nella cassetta c'è il panino aperto, la pagnotta intera
+  chiederebbe il tagliere. In mano la roba è nuda, senza tavola né carta, se no sembra un piatto.
 - **La pizza entra in forno col piatto** ed esce pronta, a mani libere.
 - **Il bruciato si prende a mani libere** e va nel bidone. Anche un piatto ci può andare.
 - **La consegna vuole il piatto del primo cliente**: quello sbagliato costa due secondi e
