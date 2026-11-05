@@ -28,6 +28,7 @@ import { usaAmici } from '../../amici/usaAmici.js'
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, INFINITA, tappeDelloScalino, scalinoDi, scalinoDelTerreno, terrenoDiverso, operazioniDi, operazionePer, senzaSaperi, PESO_DEL_RIPIEGO, stellePer, sfidaDi, sfidaInfinita, LIVELLI, livelloValido } from './dati/campagna.js'
 import { TRUPPE, EDIFICI, EDIFICIO_DI, AZIONI, BOMBA, POSTI, CAMPO, CRESCITA, truppeDelTerreno } from './dati/regole.js'
 import { Partita } from './motore/partita.js'
+import { chiesta, battagliaDiProva } from './motore/prova.js'
 import { scrivi, leggi, dice } from './motore/sosta.js'
 import { Campo } from './scena/campo.js'
 import { dettaglioTruppa, dettaglioAzione, ruoloDi } from './motore/dettagli.js'
@@ -686,6 +687,11 @@ onMounted(() => {
   diciGioco('arena')
   sfida.daInvito()
   gancioDiProva()
+  const prova = typeof location !== 'undefined' ? chiesta(location.hash) : null
+  if (prova) {
+    infinita.value = prova.terreno
+    comincia(battagliaDiProva(prova), 0)
+  }
   addEventListener('resize', ridimensiona)
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
@@ -706,12 +712,12 @@ onUnmounted(() => {
 <template>
   <div class="schermo">
     <!-- il ⏸ c'è solo dove scorre qualcosa -->
-    <Barra :titolo="vista === 'campo' ? titoloPartita : 'Castle Battle'" monete
+    <Barra :titolo="vista === 'campo' ? titoloPartita : 'Castle Battle'" monete scura
            :pausa="siGioca" @pausa="metti()" @aiuto="aiuto" @indietro="indietro" />
 
-    <div class="ar">
+    <div class="ar" :class="{ 'ar-largo': vista === 'campo' }">
       <Mappa v-if="vista === 'mappa'" :scalini="scalini" :infinita="laInfinita" :ripresa="ripresa" :davanti="amici.davanti"
-             :livelli="LIVELLI" :livello="livello" @livello="scegliLivello" @gioca="avvia" @riprendi="riprendiPartita" @scorda="scorda" />
+             :livelli="LIVELLI" :livello="livello" :terreno="scalino.vestito" @livello="scegliLivello" @gioca="avvia" @riprendi="riprendiPartita" @scorda="scorda" />
 
       <SalaSfida v-else-if="vista === 'sfida'" :fase="sfida.fase.value" :codice="sfida.codice.value" :messaggio="sfida.messaggio.value"
                  :amici="sfida.amici.value" :invitato="sfida.invitato.value" :scelto="sfida.scelto.value" partita="la battaglia" domanda="Dove vi sfidate?"
@@ -721,7 +727,7 @@ onUnmounted(() => {
       </SalaSfida>
 
       <CampoVista v-else :key="chiaveCampo" :cruscotto="cruscotto" :pannello="pannello" :avviso="avviso"
-                  :dritta="!toccato && !finale"
+                  :dritta="!toccato && !finale" :titolo="titoloPartita"
                   @tela="prendiTela" @scegli="scegli" @dettagli="apriDettagli" @tocca="tocca" @costruisci="costruisciDallaScelta"
                   @anello="dallAnello" @chiudi-anello="chiudiAnello" />
 

@@ -7,16 +7,20 @@
 // può fare. Il dito non è un mouse: niente di piccolo da toccare.
 import { ref, computed, onMounted } from 'vue'
 import Scelta from './Scelta.vue'
+import Spade from './Spade.vue'
 
 const props = defineProps({
   cruscotto: { type: Object, required: true },
   pannello: { type: Object, required: true },     // { bersagli: [], anello: null | {...}, azioni: [] }
   avviso: { type: String, default: '' },
   dritta: { type: Boolean, default: true },        // «tocca una piazzola»
+  titolo: { type: String, default: '' },           // il nome della battaglia, che si annuncia quando comincia
 })
 const emit = defineEmits(['tela', 'scegli', 'dettagli', 'tocca', 'anello', 'chiudiAnello', 'costruisci'])
 const tela = ref(null)
 onMounted(() => emit('tela', tela.value))
+// l'annuncio: solo per una battaglia che comincia (una ripresa nasce già toccata), e il campo sotto si tocca lo stesso
+const annuncio = ref(props.dritta)
 
 const orologio = computed(() => {
   // la battaglia infinita non ha un timer: l'orologio conta quanto si resiste
@@ -32,7 +36,7 @@ const px = v => `${Math.round(v)}px`
 <template>
   <div class="ar-campo">
     <div class="ar-hud em">
-      <span class="ar-gettone">{{ cruscotto.infinita ? '♾️' : '⏱️' }} <b>{{ orologio }}</b></span>
+      <span class="ar-gettone ar-orologio">{{ cruscotto.infinita ? '♾️' : '⏱️' }} <b>{{ orologio }}</b></span>
       <span class="ar-gettone ar-borsa" data-monete>💎 <b>{{ cruscotto.monete }}</b> <i>+{{ cruscotto.alSecondo.toFixed(1) }}/s</i></span>
     </div>
 
@@ -81,6 +85,12 @@ const px = v => `${Math.round(v)}px`
             <template v-else>{{ a.prezzo }} 💎</template>
           </span>
         </button>
+      </div>
+
+      <div v-if="annuncio && titolo" class="ar-annuncio" data-annuncio @animationend="annuncio = false">
+        <Spade class="ar-spade" />
+        <b>{{ titolo }}</b>
+        <i>alla battaglia!</i>
       </div>
 
       <div v-if="avviso" class="ar-avviso em" data-avviso>{{ avviso }}</div>
