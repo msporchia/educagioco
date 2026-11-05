@@ -114,6 +114,7 @@ export function creaBanco(scena, trame) {
   // il riflesso che gira sul brodo: si vede quando bolle, non prima
   const marmo = new Mesh(new CircleGeometry(0.97, 40), new MeshBasicMaterial({ map: trame.marmo, transparent: true, opacity: 0, depthWrite: false }))
   marmo.rotation.x = -Math.PI / 2
+  marmo.position.set(C.x, POSTI.brodo + 0.22, C.z)
   marmo.visible = false
   g.add(marmo)
   let modo = MODI.bolle, incanto = 0, metaIncanto = 0, forte = 0, metaForte = 0, vampa = 0, lampo = 0
@@ -134,7 +135,8 @@ export function creaBanco(scena, trame) {
 
   // il vapore
   const vapori = Array.from({ length: 9 }, (_, i) => {
-    const v = new Sprite(new SpriteMaterial({ map: morbido, color: 0xd8ccff, transparent: true, opacity: 0, depthWrite: false }))
+    // senza depthTest: un fumo che entra nel calderone ne taglierebbe il bordo di netto
+    const v = new Sprite(new SpriteMaterial({ map: morbido, color: 0xd8ccff, transparent: true, opacity: 0, depthWrite: false, depthTest: false }))
     v.userData.fase = i / 9
     g.add(v)
     return v

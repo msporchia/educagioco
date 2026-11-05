@@ -20,7 +20,7 @@ import { SENZA_FINE } from './gioco.js'
 import { fraseDiFine, primatoInParole } from '../primati.js'
 import { mescola, scrivi as scriviMisura } from './dati/misure.js'
 import { Bottega } from './motore/bottega.js'
-import { MORTAIO } from './motore/procedimento.js'
+import { MORTAIO, TAGLIERE } from './motore/procedimento.js'
 import { scrivi, leggi, dice, tappaDi } from './motore/sosta.js'
 import Mappa from './viste/Mappa.vue'
 import Mercante from './viste/Mercante.vue'
@@ -144,9 +144,17 @@ function riprendiPartita() {
 function seSparisce(e) {
   if (e?.type === 'pagehide' || document.visibilityState === 'hidden') salva({ subito: true })
 }
+// per guardare una tappa (docs/core/comandi.md): #pozioni=maestro anche chiusa, &banco=1 a spesa fatta
+function dallIndirizzo() {
+  const p = new URLSearchParams(location.hash.slice(1)), i = CAMPAGNA.findIndex(t => t.chiave === p.get('pozioni'))
+  if (i < 0) return
+  avviaTappa(i, true)
+  if (p.get('banco')) while (!bottega.value.pronta) bottega.value.salta()
+}
 onMounted(() => {
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
+  dallIndirizzo()
 })
 // prima che i figli se ne vadano (onUnmounted sarebbe tardi)
 onBeforeUnmount(() => {
@@ -164,8 +172,8 @@ function avviaInfinita() {
   entra(-1, new Bottega(giroInfinito(0), { scorta: INFINITA.scorta }))
 }
 
-function avviaTappa(i) {
-  if (!apertaQui(i)) return
+function avviaTappa(i, ancheChiusa = false) {
+  if (!ancheChiusa && !apertaQui(i)) return
   if (i < 0) return avviaInfinita()
   scorda()
   borsellino = borsa(CHIAVE)
@@ -281,6 +289,7 @@ function fai(azione, cosa = [], attrezzo = null) {
   if (!libero() || attesa.value > 0) return
   const b = bottega.value
   const pestato = b.mortaio.length ? mescola(colori(b.mortaio)) : null
+  const tritato = b.tagliere.length ? mescola(colori(b.tagliere)) : null
   const r = b.fai(azione, cosa)
   if (!r) return
   occupato.value = true
@@ -290,8 +299,8 @@ function fai(azione, cosa = [], attrezzo = null) {
   else salva({ subito: true })
   inCorso = r
   const fatti = r.giusto ? (r.versati || []) : []
-  animazione.value = { n: ++nAnim, tipo: 'passo', azione, attrezzo, giusto: r.giusto, mortaio: (r.cosa || []).includes(MORTAIO),
-                       colore: r.cosa?.includes(MORTAIO) ? pestato : azione === 'metti' ? mescola(colori(b.mortaio)) : fatti.length ? mescola(colori(fatti)) : null,
+  animazione.value = { n: ++nAnim, tipo: 'passo', azione, attrezzo, giusto: r.giusto, mortaio: (r.cosa || []).includes(MORTAIO), tagliere: (r.cosa || []).includes(TAGLIERE),
+                       colore: r.cosa?.includes(MORTAIO) ? pestato : r.cosa?.includes(TAGLIERE) ? tritato : azione === 'metti' ? mescola(colori(b.mortaio)) : azione === 'appoggia' ? mescola(colori(b.tagliere)) : fatti.length ? mescola(colori(fatti)) : null,
                        polvere: fatti.some(i => b.ingredienti[i].famiglia !== 'capacita'),
                        brodo: b.brodo, arcobaleno: !b.mescolato, riempito: b.dentro.length / b.ingredienti.length }
 }
