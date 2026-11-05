@@ -563,13 +563,21 @@ un'immagine già pronta, oggi disegnata a monte da `npm run disegni:arena`: ha g
 gioco non costa niente di più. Le colline hanno detto che lo stile regge. La base degli edifici sta nel foglio delle caserme, quindi nel terreno non ci va: i dodici
 riquadri che ChatGPT ha messo nelle colline li copre `terreno-bosco.json` (lo legge `terreni-arena.py`).
 
+**Le colline, la modifica** (nella stessa chat, senza allegati; poi `terreno-bosco.json` non serve più):
+
+```text
+Modifica questa immagine e lascia identico tutto il resto: stessa inquadratura, stesso fiume, stessa strada, stessi alberi, campi e muretti, stessa grana. Due cambiamenti soltanto.
+1. Togli i dodici riquadri di terra con i sassi attorno: al loro posto solo il terreno dorato, con qualche ciuffo e sassolino basso.
+2. Aggiungi sul fiume, al centro esatto dove la strada lo incontra, UN PONTE EPICO di pietra chiara e legno, con l'edera rossa d'autunno: dritto in verticale, visto dall'alto come il resto, da una riva all'altra, largo una volta e mezza la strada. Grandi spalle di pietra sulle due rive, parapetti robusti, due archi che si vedono sull'acqua, lanterne o stendardi rossi e oro solo sui parapetti. Il piano del ponte resta libero e leggibile, perché ci camminano sopra le truppe: niente torri, niente porte, niente personaggi.
+```
+
 **Come si manda**: ChatGPT, **nella chat delle caserme**: proseguire o modificare un'immagine costa meno che ripartire da zero e tiene
 tutto omogeneo (l'utente, 5/11). Si allega solo `sorgenti/arena/schemi/terreno-<chiave>.png` (lo rifà `npm run disegni:arena`). Se
 un'immagine ha un difetto si chiede di correggerla, non di rifarla.
 
 **Si salva in** `strumenti/sprite/sorgenti/arena/terreno-<chiave>.png` (`bosco`, `palude`, `neve`, `lava`). **Comando**:
-`python3 strumenti/sprite/terreni-arena.py`. Lo strumento si ferma se l'immagine non è 3:2: non si stira mai. Il ponte, la porta e il castello
-li mette il gioco, quindi nel dipinto non ci devono essere. Se il fiume esce storto o la strada si sposta, si scarta: il motore
+`python3 strumenti/sprite/terreni-arena.py`. Lo strumento si ferma se l'immagine non è 3:2: non si stira mai. Il ponte è del dipinto, perché ChatGPT lo fa
+meglio del disegno in codice; la porta, il castello e la base degli edifici li mette il gioco, quindi nel dipinto non ci devono essere. Se il fiume esce storto o la strada si sposta, si scarta: il motore
 cammina dov'è il disegno.
 
 **Le colline d'oro** (`terreno-bosco.png`):
@@ -579,9 +587,9 @@ Ora, nello stesso identico stile, con la stessa grana e gli stessi colori pieni,
 
 IL POSTO: le colline d'oro, un tramonto d'autunno. Erba secca dorata, campi di grano, boschi di querce rosse e arancioni, muretti di pietra, un fiume color verde scuro con i riflessi del sole basso. Luce calda e radente da in alto a sinistra, ombre lunghe.
 
-LA DISPOSIZIONE, da rispettare al millimetro, perché il gioco ci cammina sopra: il fiume attraversa tutta l'immagine in orizzontale, alto il 9% dell'immagine al centro, esattamente a metà altezza, e più largo verso i bordi. La strada è dritta in verticale al centro esatto, larga il 4% dell'immagine, da sopra a sotto, e si interrompe al fiume: IL PONTE NON C'È, lo aggiunge il gioco. La fascia centrale, dal 33% al 67% della larghezza, deve restare bassa e libera: solo terreno e piccoli dettagli a terra, niente alberi, niente rocce alte, niente che sembri una cosa da toccare. Le dodici chiazze di terra battuta restano dove sono, vuote. Il decoro alto sta solo fuori da quella fascia.
+LA DISPOSIZIONE, da rispettare al millimetro, perché il gioco ci cammina sopra: il fiume attraversa tutta l'immagine in orizzontale, alto il 9% dell'immagine al centro, esattamente a metà altezza, e più largo verso i bordi. La strada è dritta in verticale al centro esatto, larga il 4% dell'immagine, da sopra a sotto, e attraversa il fiume su UN PONTE EPICO di pietra chiara e legno, con l'edera rossa d'autunno: dritto, da una riva all'altra, largo una volta e mezza la strada, con spalle di pietra e parapetti robusti, e il piano libero e leggibile perché ci camminano sopra le truppe (niente torri, niente porte). La fascia centrale, dal 33% al 67% della larghezza, deve restare bassa e libera: solo terreno e piccoli dettagli a terra, niente alberi, niente rocce alte, niente che sembri una cosa da toccare. NIENTE chiazze né riquadri di terra: la base degli edifici la mette il gioco. Il decoro alto sta solo fuori da quella fascia.
 
-LE REGOLE TECNICHE: immagine ORIZZONTALE 1536×1024 px che riempie tutto il quadro; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; NESSUNA CASERMA, NESSUN CASTELLO, NESSUN EDIFICIO, NESSUN PONTE, NESSUN PERSONAGGIO, NESSUNA PAROLA SCRITTA, nessuna cornice. Ai quattro bordi il disegno continua specchiato, quindi niente di grande tagliato a metà sul bordo.
+LE REGOLE TECNICHE: immagine ORIZZONTALE 1536×1024 px che riempie tutto il quadro; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; NESSUNA CASERMA, NESSUN CASTELLO, NESSUN EDIFICIO, NESSUN PERSONAGGIO, NESSUNA PAROLA SCRITTA, nessuna cornice. Ai quattro bordi il disegno continua specchiato, quindi niente di grande tagliato a metà sul bordo.
 ```
 
 **Il deserto delle tombe** (`terreno-palude.png`):
@@ -591,9 +599,9 @@ Ora, nello stesso identico stile, con la stessa grana e gli stessi colori pieni,
 
 IL POSTO: il deserto delle tombe. Dune di sabbia dorata con le creste al vento, obelischi e colonne spezzate mezzi sepolti, blocchi di tempio, e un fiume d'oasi turchese con le rive verdi e le palme solo vicino all'acqua. Sole alto e abbagliante, ombre nette.
 
-LA DISPOSIZIONE, da rispettare al millimetro, perché il gioco ci cammina sopra: il fiume attraversa tutta l'immagine in orizzontale, alto il 9% dell'immagine al centro, esattamente a metà altezza, e più largo verso i bordi. La strada è un selciato antico, dritto in verticale al centro esatto, largo il 4% dell'immagine, da sopra a sotto, e si interrompe al fiume: IL PONTE NON C'È, lo aggiunge il gioco. La fascia centrale, dal 33% al 67% della larghezza, deve restare bassa e libera: solo sabbia e piccoli dettagli a terra, niente palme, niente colonne, niente che sembri una cosa da toccare. Le dodici chiazze di terra battuta restano dove sono, vuote. Il decoro alto sta solo fuori da quella fascia.
+LA DISPOSIZIONE, da rispettare al millimetro, perché il gioco ci cammina sopra: il fiume attraversa tutta l'immagine in orizzontale, alto il 9% dell'immagine al centro, esattamente a metà altezza, e più largo verso i bordi. La strada è un selciato antico, dritto in verticale al centro esatto, largo il 4% dell'immagine, da sopra a sotto, e attraversa il fiume su UN PONTE EPICO di grandi lastre d'arenaria, con colonne e obelischi ai lati: dritto, da una riva all'altra, largo una volta e mezza la strada, con spalle di pietra e parapetti robusti, e il piano libero e leggibile perché ci camminano sopra le truppe (niente torri, niente porte). La fascia centrale, dal 33% al 67% della larghezza, deve restare bassa e libera: solo sabbia e piccoli dettagli a terra, niente palme, niente colonne, niente che sembri una cosa da toccare. NIENTE chiazze né riquadri di terra: la base degli edifici la mette il gioco. Il decoro alto sta solo fuori da quella fascia.
 
-LE REGOLE TECNICHE: immagine ORIZZONTALE 1536×1024 px che riempie tutto il quadro; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; NESSUNA CASERMA, NESSUN CASTELLO, NESSUN EDIFICIO, NESSUN PONTE, NESSUN PERSONAGGIO, NESSUNA PAROLA SCRITTA, nessuna cornice. Ai quattro bordi il disegno continua specchiato, quindi niente di grande tagliato a metà sul bordo.
+LE REGOLE TECNICHE: immagine ORIZZONTALE 1536×1024 px che riempie tutto il quadro; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; NESSUNA CASERMA, NESSUN CASTELLO, NESSUN EDIFICIO, NESSUN PERSONAGGIO, NESSUNA PAROLA SCRITTA, nessuna cornice. Ai quattro bordi il disegno continua specchiato, quindi niente di grande tagliato a metà sul bordo.
 ```
 
 **Il canyon di cristallo** (`terreno-neve.png`):
@@ -603,9 +611,9 @@ Ora, nello stesso identico stile, con la stessa grana e gli stessi colori pieni,
 
 IL POSTO: il canyon di cristallo. Roccia scura blu violetta a lastre, percorsa da vene che brillano, grandi grappoli di cristalli viola, azzurri e rosa, guglie di pietra. Al posto del fiume c'è un baratro senza fondo con la nebbia viola che sale dal buio. Luce fredda che viene dai cristalli.
 
-LA DISPOSIZIONE, da rispettare al millimetro, perché il gioco ci cammina sopra: il baratro attraversa tutta l'immagine in orizzontale, alto il 9% dell'immagine al centro, esattamente a metà altezza, e più largo verso i bordi. La strada è un selciato dritto in verticale al centro esatto, largo il 4% dell'immagine, da sopra a sotto, e si interrompe al baratro: IL PONTE NON C'È, lo aggiunge il gioco. La fascia centrale, dal 33% al 67% della larghezza, deve restare bassa e libera: solo roccia e piccoli dettagli a terra, niente cristalli alti, niente guglie, niente che sembri una cosa da toccare. Le dodici chiazze di terra battuta restano dove sono, vuote. Il decoro alto sta solo fuori da quella fascia.
+LA DISPOSIZIONE, da rispettare al millimetro, perché il gioco ci cammina sopra: il baratro attraversa tutta l'immagine in orizzontale, alto il 9% dell'immagine al centro, esattamente a metà altezza, e più largo verso i bordi. La strada è un selciato dritto in verticale al centro esatto, largo il 4% dell'immagine, da sopra a sotto, e attraversa il baratro su UN PONTE EPICO di pietra scura sospeso con le catene, con cristalli incastonati: dritto, da una riva all'altra, largo una volta e mezza la strada, con spalle di pietra e parapetti robusti, e il piano libero e leggibile perché ci camminano sopra le truppe (niente torri, niente porte). La fascia centrale, dal 33% al 67% della larghezza, deve restare bassa e libera: solo roccia e piccoli dettagli a terra, niente cristalli alti, niente guglie, niente che sembri una cosa da toccare. NIENTE chiazze né riquadri di terra: la base degli edifici la mette il gioco. Il decoro alto sta solo fuori da quella fascia.
 
-LE REGOLE TECNICHE: immagine ORIZZONTALE 1536×1024 px che riempie tutto il quadro; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; NESSUNA CASERMA, NESSUN CASTELLO, NESSUN EDIFICIO, NESSUN PONTE, NESSUN PERSONAGGIO, NESSUNA PAROLA SCRITTA, nessuna cornice. Ai quattro bordi il disegno continua specchiato, quindi niente di grande tagliato a metà sul bordo.
+LE REGOLE TECNICHE: immagine ORIZZONTALE 1536×1024 px che riempie tutto il quadro; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; NESSUNA CASERMA, NESSUN CASTELLO, NESSUN EDIFICIO, NESSUN PERSONAGGIO, NESSUNA PAROLA SCRITTA, nessuna cornice. Ai quattro bordi il disegno continua specchiato, quindi niente di grande tagliato a metà sul bordo.
 ```
 
 **Le terre di cenere** (`terreno-lava.png`):
@@ -615,9 +623,9 @@ Ora, nello stesso identico stile, con la stessa grana e gli stessi colori pieni,
 
 IL POSTO: le terre di cenere, una notte rossa dopo una grande guerra. Terra nera e grigia di cenere con le crepe di brace, alberi morti, spuntoni di roccia, vecchie spade piantate nel terreno, stendardi strappati, bracieri. Al posto del fiume c'è un fossato di brace che pulsa sotto una crosta nera. Tono cupo ma adatto ai bambini: niente sangue, niente teschi in primo piano. Luce rossa dal basso.
 
-LA DISPOSIZIONE, da rispettare al millimetro, perché il gioco ci cammina sopra: il fossato attraversa tutta l'immagine in orizzontale, alto il 9% dell'immagine al centro, esattamente a metà altezza, e più largo verso i bordi. La strada è un selciato rotto, dritto in verticale al centro esatto, largo il 4% dell'immagine, da sopra a sotto, e si interrompe al fossato: IL PONTE NON C'È, lo aggiunge il gioco. La fascia centrale, dal 33% al 67% della larghezza, deve restare bassa e libera: solo terreno e piccoli dettagli a terra, niente alberi, niente spuntoni, niente che sembri una cosa da toccare. Le dodici chiazze di terra battuta restano dove sono, vuote. Il decoro alto sta solo fuori da quella fascia.
+LA DISPOSIZIONE, da rispettare al millimetro, perché il gioco ci cammina sopra: il fossato attraversa tutta l'immagine in orizzontale, alto il 9% dell'immagine al centro, esattamente a metà altezza, e più largo verso i bordi. La strada è un selciato rotto, dritto in verticale al centro esatto, largo il 4% dell'immagine, da sopra a sotto, e attraversa il fossato su UN PONTE EPICO di ferro e pietra nera, con bracieri accesi ai lati: dritto, da una riva all'altra, largo una volta e mezza la strada, con spalle di pietra e parapetti robusti, e il piano libero e leggibile perché ci camminano sopra le truppe (niente torri, niente porte). La fascia centrale, dal 33% al 67% della larghezza, deve restare bassa e libera: solo terreno e piccoli dettagli a terra, niente alberi, niente spuntoni, niente che sembri una cosa da toccare. NIENTE chiazze né riquadri di terra: la base degli edifici la mette il gioco. Il decoro alto sta solo fuori da quella fascia.
 
-LE REGOLE TECNICHE: immagine ORIZZONTALE 1536×1024 px che riempie tutto il quadro; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; NESSUNA CASERMA, NESSUN CASTELLO, NESSUN EDIFICIO, NESSUN PONTE, NESSUN PERSONAGGIO, NESSUNA PAROLA SCRITTA, nessuna cornice. Ai quattro bordi il disegno continua specchiato, quindi niente di grande tagliato a metà sul bordo.
+LE REGOLE TECNICHE: immagine ORIZZONTALE 1536×1024 px che riempie tutto il quadro; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; NESSUNA CASERMA, NESSUN CASTELLO, NESSUN EDIFICIO, NESSUN PERSONAGGIO, NESSUNA PAROLA SCRITTA, nessuna cornice. Ai quattro bordi il disegno continua specchiato, quindi niente di grande tagliato a metà sul bordo.
 ```
 
 ### 9 — Le fortezze dei quattro posti · 1 immagine · da fare
@@ -681,6 +689,34 @@ RIGA 3, tre icone: una clessidra d'oro (il tempo), il simbolo dell'infinito in o
 LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: foglio ORIZZONTALE 1536×1024 px su FONDO TRASPARENTE; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; ogni icona sta in un quadrato di circa 220 px e lo riempie; almeno 60 px di trasparente fra un'icona e l'altra, anche fra le righe, e ogni icona è un pezzo solo, senza parti staccate; nessun fondo, nessun cerchio o bottone attorno, nessuna ombra sotto, nessun bagliore, nessuna cornice; NESSUNA PAROLA SCRITTA, NESSUN NUMERO, tranne la Z della luna.
 ```
 
+### 12 — Le truppe di Castle Battle con la casacca · 1 immagine · da fare
+
+**Perché**: la squadra di una truppa oggi si legge da un contorno e da un disco; farlo in codice non regge (`docs/arena/grafica.md`). La casacca va
+dipinta sulla figura: una stoffa blu per ognuna, e il nemico la ha rossa da `ricolora()`, come le caserme. Sono le 35 pose che il gioco usa e solo quelle.
+
+**Come si manda**: ChatGPT, nella chat delle caserme. Si allega solo `sorgenti/arena/schemi/truppe.png` (lo rifà `python3 strumenti/sprite/truppe-arena.py`).
+
+**Si salva in** `strumenti/sprite/sorgenti/arena/truppe.png`. Il taglio si scrive quando c'è il foglio: 35 macchie in ordine di lettura, col piede in fondo alla casella. Se
+le pose di una truppa ballano da una all'altra, si chiede di correggere quella riga.
+
+```text
+Ti allego il foglio delle truppe di questo stesso gioco: 35 figure, sette per riga, cinque righe. Sono pose di un'animazione, e il gioco ha due squadre uguali che oggi non si distinguono: mi serve lo stesso foglio con ogni figura vestita del colore della squadra.
+
+COSA TI CHIEDO: ridipingi le 35 figure nello stesso stile delle caserme, nella stessa casella, con la stessa posa, la stessa misura e i piedi alla stessa altezza, e aggiungi a ognuna una stoffa di UN SOLO BLU vivo, cucita e ombreggiata come parte del personaggio, ben visibile anche da piccola, che resti uguale in tutte le pose della stessa truppa.
+Le figure, in ordine di lettura:
+1-4, gli scheletri arcieri: una casacca blu corta sul torace, con la cintura.
+5-7, gli scheletri opliti: la stessa casacca, e lo scudo col bordo blu.
+8-11, le mummie: una casacca blu sopra le bende.
+12-15, i diavoletti: un gilet blu e una fascia in vita.
+16-19, i pipistrelli: una mantellina blu sul dorso. Le ali diventano viola scuro, senza blu.
+20-21, le bestie cornute: una gualdrappa blu sulla schiena.
+22-25, i negromanti: la veste diventa blu, il cappuccio resta viola.
+26-29, i golem: una grande fascia di stoffa blu a tracolla.
+30-35, i draghi: una sella con la gualdrappa blu.
+
+LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: foglio ORIZZONTALE 1536×1024 px su FONDO TRASPARENTE; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; le figure staccate fra loro; il blu solo sulla stoffa, perché nel gioco diventa rosso per il nemico: niente altro di blu in tutto il foglio; niente ombre a terra, NESSUNA PAROLA SCRITTA, nessuna cornice.
+```
+
 ## In fila
 
 *Le scene `td_2/3/4.png` sono state eliminate il 13/10/2026 (stanno già in `terreno-neve/lava/palude.png`): dove la tabella le nomina come allegato di uno stile, si allega il `terreno-*.png` del vestito. `td_1.png` resta.*
@@ -702,6 +738,7 @@ LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: foglio
 | 9 | castello, porta e ponte dei quattro posti (ChatGPT) | 1 | `schemi/partita` | `arena/fortezze.png` | i castelli di Castle Battle |
 | 10 | la copertina di Castle Battle (ChatGPT) | 1 | `schemi/partita` | `home/copertina-arena.png` | la home e il frontone della mappa |
 | 11 | le icone dei comandi di Castle Battle (ChatGPT) | 1 | `schemi/partita` | `arena/icone.png` | l'anello, ripara e bomba dipinti |
+| 12 | le truppe di Castle Battle con la casacca (ChatGPT) | 1 | `schemi/truppe` | `arena/truppe.png` | la squadra si legge dalla figura, via il contorno |
 
 Il **minimo per rifare il gioco** sono l'1 e il 2: col bosco, le torri
 nuove e i mostri che ci sono già il castello si gioca e si pubblica. Il
