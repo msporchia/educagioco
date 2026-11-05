@@ -28,55 +28,6 @@ function venature(g, n, base, scuro, seme) {
   g.globalAlpha = 1
 }
 
-function piano() {
-  const t = trama(512, (g, n) => {
-    venature(g, n, '#c79a68', '#6e4526', 7)
-    for (let i = 1; i < 4; i++) { g.fillStyle = '#00000038'; g.fillRect(0, i * n / 4 - 1, n, 3) }
-  }, 3)
-  return new MeshStandardMaterial({ map: t, roughness: 0.62 })
-}
-
-function piastrelle() {
-  const t = trama(256, (g, n) => {
-    g.fillStyle = '#c9bfa9'; g.fillRect(0, 0, n, n)
-    const r = caso(11)
-    for (let y = 0; y < 4; y++) for (let x = -1; x < 3; x++) {
-      const v = 238 + Math.floor(r() * 12)
-      g.fillStyle = `rgb(${v},${v - 6},${v - 16})`
-      g.fillRect(x * 128 + (y % 2) * 64 + 3, y * 64 + 3, 122, 58)
-      g.fillStyle = '#ffffff30'; g.fillRect(x * 128 + (y % 2) * 64 + 6, y * 64 + 5, 116, 10)
-    }
-  })
-  t.repeat.set(5, 2.4)
-  return new MeshStandardMaterial({ map: t, roughness: 0.28 })
-}
-
-function marmo() {
-  const t = trama(256, (g, n) => {
-    g.fillStyle = '#eceae4'; g.fillRect(0, 0, n, n)
-    const r = caso(5)
-    for (let i = 0; i < 16; i++) {
-      g.strokeStyle = '#8f8f94'; g.globalAlpha = 0.1 + r() * 0.2; g.lineWidth = 0.6 + r() * 1.6
-      let x = r() * n, y = r() * n
-      g.beginPath(); g.moveTo(x, y)
-      for (let k = 0; k < 6; k++) { x += r() * 70 - 22; y += r() * 56 - 28; g.lineTo(x, y) }
-      g.stroke()
-    }
-    g.globalAlpha = 1
-  })
-  return new MeshStandardMaterial({ map: t, roughness: 0.3 })
-}
-
-/* Il muro è sfondo: niente sul muro sembra una cosa da prendere (docs/bancarella/cucina.md). */
-export function creaStanza(scena) {
-  const tavolo = m(new BoxGeometry(14, 0.4, 14), piano(), 0, -0.2, 3.4)
-  const muro = m(new PlaneGeometry(14, 6), piastrelle(), 0, 3, -3.55)
-  const battiscopa = m(new BoxGeometry(14, 0.1, 0.1), pieno(0x8e6a44, 0.6), 0, 0.05, -3.5)
-  const lastra = m(new BoxGeometry(8.9, 0.06, 2.1), marmo(), -0.1, 0.03, 0.45)
-  tavolo.receiveShadow = lastra.receiveShadow = muro.receiveShadow = true
-  scena.add(tavolo, muro, battiscopa, lastra)
-}
-
 const ombraTrama = () => trama(64, (g, n) => {
   const r = g.createRadialGradient(n / 2, n / 2, 2, n / 2, n / 2, n / 2)
   r.addColorStop(0, '#00000066'); r.addColorStop(1, '#00000000'); g.fillStyle = r; g.fillRect(0, 0, n, n)

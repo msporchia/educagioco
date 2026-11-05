@@ -323,6 +323,72 @@ function palloImpasto() {
   }, 0.68)
 }
 
+/* ── il mare: il pesce intero, le fette, il riso e l'alga ── */
+function pesceIntero() {
+  const forma = unione([
+    palla([0, 0.2, 0], [0.62, 0.2, 0.17]),
+    palla([0.42, 0.2, 0], [0.24, 0.16, 0.13]),
+    osso([-0.55, 0.2, 0], [-0.74, 0.2, 0], 0.08, 0.03),
+    palla([-0.84, 0.28, 0], [0.13, 0.13, 0.03]), palla([-0.84, 0.12, 0], [0.13, 0.13, 0.03]),
+    palla([-0.05, 0.4, 0], [0.26, 0.09, 0.03]),
+  ], 0.05)
+  const g = tutto(pezzo(forma, 0.02, (x, y, z, c) => {
+    c.setHex(0x8fb4c9)
+    verso(c, 0xe9f1f4, fra(0.24, 0.1, y))
+    verso(c, 0x3d6a86, fra(0.27, 0.36, y) * 0.8)
+    if (x > 0.34) verso(c, 0xc9d8df, fra(0.34, 0.38, x) * 0.6)
+    verso(c, 0x2f5671, fra(0.6, 0.9, Math.abs(Math.sin(x * 34 + y * 16))) * 0.16)
+  }, 0.3))
+  for (const s of [1, -1]) {
+    const o = new Mesh(new SphereGeometry(0.05, 12, 8), pieno(0x14161a, 0.15)); o.position.set(0.48, 0.25, s * 0.125)
+    const b = new Mesh(new SphereGeometry(0.075, 12, 8), pieno(0xf4f4ee, 0.3)); b.position.set(0.48, 0.25, s * 0.105)
+    g.add(b, o)
+  }
+  return g
+}
+
+function fettaPesce() {
+  const forma = palla([0, 0.05, 0], [0.17, 0.05, 0.3])
+  return pezzo(forma, 0.016, (x, y, z, c) => {
+    c.setHex(0xf2743a)
+    verso(c, 0xffb48a, fra(0.72, 0.95, Math.abs(Math.sin((z * 1.1 + x * 0.5) * 22))) * 0.9)
+  }, 0.28)
+}
+function fettePesce() {
+  const g = new Group()
+  for (const [x, a] of [[-0.24, 0.25], [0, 0], [0.24, -0.25]]) { const f = modello('pesce-fetta'); f.position.x = x; f.rotation.y = a; g.add(f) }
+  return g
+}
+
+const chicchi = (x, y, z, c) => {
+  c.setHex(0xfbf8ee)
+  verso(c, 0xdcd6c4, fra(0.5, 0.9, mosso(x, y, z, 60)) * 0.7)
+}
+const nigiri = () => pezzo(arruffata(palla([0, 0.1, 0], [0.15, 0.1, 0.25]), 0.012, 46), 0.016, chicchi, 0.6)
+const montoRiso = () => pezzo(arruffata(unione([palla([0, 0.2, 0], [0.44, 0.22, 0.44]), palla([0.12, 0.24, 0.08], [0.24, 0.16, 0.24])], 0.08), 0.016, 40), 0.024, chicchi, 0.6)
+function ciotolaRiso() {
+  const coccio = new Mesh(giro([[0, 0.02], [0.3, 0.02], [0.56, 0.16], [0.66, 0.36], [0.68, 0.4], [0.62, 0.38], [0.5, 0.2], [0, 0.1]]), pieno(0x2d4f7c, 0.28))
+  coccio.material.side = 2
+  const riso = montoRiso(); riso.position.y = 0.16; riso.scale.set(1.25, 1, 1.25)
+  return tutto(coccio, riso)
+}
+
+function fogliAlga() {
+  const g = new Group()
+  for (let i = 0; i < 3; i++) {
+    const q = (x, z) => 0.02 + 0.012 * Math.sin(x * 9 + i) * Math.cos(z * 7 - i)
+    const f = pezzo(foglio(q, { L: 0.5, t: 0.016, y: 0.02 }), 0.022, (x, y, z, c) => {
+      c.setHex(0x1f3a2c); verso(c, 0x355a44, fra(0.3, 0.8, mosso(x, 3, z, 34)) * 0.7)
+    }, 0.4)
+    f.position.y = i * 0.05; f.rotation.y = i * 0.22 - 0.2
+    g.add(f)
+  }
+  return g
+}
+const fasciaAlga = () => pezzo(palla([0, 0.1, 0], [0.07, 0.115, 0.27]), 0.016, (x, y, z, c) => {
+  c.setHex(0x1f3a2c); verso(c, 0x355a44, fra(0.3, 0.8, mosso(x, y, z, 44)) * 0.6)
+}, 0.4)
+
 /* ── i modelli si fanno una volta ── */
 const G = {}
 const FATTI = {
@@ -332,6 +398,8 @@ const FATTI = {
   'impasto-palla': () => tutto(palloImpasto()), 'pizza-impasto': () => pizza('impasto'), 'pizza-sugo': () => pizza('sugo'), 'pizza-bianca': () => pizza('bianca'), 'pizza-cruda': () => pizza('formaggio'), 'pizza': () => pizza('cotta'),
   'c:pasta': mazzoSpaghetti, 'c:sugo': ciotolaSugo, 'c:pane': pagnotta, 'c:formaggio': formaFormaggio, 'c:insalata': cespo,
   'c:carne': cartaCarne, 'c:uovo': uova, 'c:impasto': pallaImpasto,
+  'c:pesce': pesceIntero, 'c:riso': ciotolaRiso, 'c:alga': fogliAlga,
+  'pesce-fetta': fettaPesce, 'pesce-fette': fettePesce, 'riso': () => tutto(montoRiso()), 'riso-nigiri': nigiri, 'alga-fascia': fasciaAlga,
 }
 function clona(chiave, fai) {
   G[chiave] ||= fai()
@@ -358,18 +426,39 @@ export function impiatta(p) {
   if (!p) return g
   const { cose, pronto } = p
   const metti = (k, x = 0, y = 0, z = 0, gira = 0) => g.add(su(modello(k), x, y, z, gira))
-  if (cose[0] === 'pizza') metti('pizza', 0, 0.02)
-  else if (cose[0] === 'impasto') metti(cose.includes('sugo') ? (cose.includes('formaggio') ? 'pizza-cruda' : 'pizza-sugo') : cose.includes('formaggio') ? 'pizza-bianca' : 'pizza-impasto', 0, 0.02)
+  if (cose[0] === 'pizza') {
+    metti('pizza', 0, 0.02)
+    if (cose.includes('carne')) for (const [x, z] of [[-0.24, 0.1], [0.22, 0.14], [0, -0.24]]) { metti('carne', x, 0.1, z); g.children.at(-1).scale.setScalar(0.3) }
+  }
+  else if (cose[0] === 'impasto') {
+    metti(cose.includes('sugo') ? (cose.includes('formaggio') ? 'pizza-cruda' : 'pizza-sugo') : cose.includes('formaggio') ? 'pizza-bianca' : 'pizza-impasto', 0, 0.02)
+    if (cose.includes('carne')) for (const [x, z] of [[-0.24, 0.1], [0.22, 0.14], [0, -0.24]]) { metti('carne-cruda', x, 0.1, z); g.children.at(-1).scale.setScalar(0.3) }
+  }
+  else if (cose[0] === 'riso') {
+    for (const [x, a] of [[-0.3, 0.2], [0, 0], [0.3, -0.2]]) {
+      metti('riso-nigiri', x, 0.02, 0, a)
+      if (cose.includes('pesce')) metti('pesce-fetta', x, 0.17, 0, a)
+      if (cose.includes('alga')) metti('alga-fascia', x, cose.includes('pesce') ? 0.08 : 0.03, 0, a)
+    }
+  }
   else if (cose[0] === 'uovo') {
     metti('uovo', -0.2, 0.02, -0.06)
-    if (cose[1] === 'pane') { metti('pane', 0.42, 0.02, 0.26, 0.3); g.children.at(-1).scale.setScalar(0.62) }
+    if (cose.includes('pane')) { metti('pane', 0.42, 0.02, 0.26, 0.3); g.children.at(-1).scale.setScalar(0.62) }
+    if (cose.includes('insalata')) { metti('insalata', 0.3, 0.02, 0.2); g.children.at(-1).scale.setScalar(0.62) }
+    if (cose.includes('formaggio')) metti('formaggio-cubetti', -0.2, 0.1, -0.06)
   }
-  else if (cose[0] === 'insalata') { metti('insalata'); if (cose[1] === 'formaggio') metti('formaggio-cubetti', 0, 0.1) }
-  else if (cose[0] === 'pasta') { metti('pasta'); if (cose[1] === 'sugo') metti('sugo', 0, 0.21) }
+  else if (cose[0] === 'insalata') { metti('insalata'); if (cose.includes('formaggio')) metti('formaggio-cubetti', 0, 0.1) }
+  else if (cose[0] === 'pesce') { if (cose.includes('insalata')) metti('insalata'); metti('pesce-fette', 0, cose.includes('insalata') ? 0.14 : 0.02) }
+  else if (cose[0] === 'pasta') {
+    metti('pasta')
+    if (cose.includes('sugo')) metti('sugo', 0, 0.21)
+    if (cose.includes('carne')) { metti('carne', 0, 0.28); g.children.at(-1).scale.setScalar(0.5) }
+    if (cose.includes('formaggio')) metti('formaggio-cubetti', 0, 0.3)
+  }
   else {
     let y = 0
     for (const k of cose) { metti(k, 0, y, 0, k === 'formaggio' ? 0.7 : 0); y += ALTO[k] }
-    if (pronto) metti('pane-sopra', 0, y + 0.02, 0, 0.4)
+    if (pronto && cose[0] === 'pane' && cose.length > 1 && !cose.includes('sugo')) metti('pane-sopra', 0, y + 0.02, 0, 0.4)
   }
   return g
 }
@@ -383,6 +472,9 @@ export async function prepara(cose, ricette) {
   if (usa.has('pane')) chiavi.push('pane', 'pane-sopra')
   if (usa.has('formaggio')) chiavi.push('formaggio', 'formaggio-cubetti')
   if (usa.has('insalata')) chiavi.push('insalata')
+  if (usa.has('pesce')) chiavi.push('pesce-fetta', 'pesce-fette')
+  if (usa.has('riso')) chiavi.push('riso', 'riso-nigiri')
+  if (usa.has('alga')) chiavi.push('alga-fascia')
   if (usa.has('carne')) chiavi.push('carne-cruda', 'carne')
   if (usa.has('uovo')) chiavi.push('uovo')
   if (usa.has('impasto')) chiavi.push('impasto-palla', 'pizza-impasto', 'pizza-bianca', 'pizza-sugo', 'pizza-cruda', 'pizza')

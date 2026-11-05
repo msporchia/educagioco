@@ -1,4 +1,4 @@
-// La cucina col cuoco (three.js, WebGL 2): camera fissa dall'alto, la stanza intera dentro. Vedi docs/bancarella/cuoco.md.
+// La cucina (three.js, WebGL 2): camera fissa dall'alto, la stanza intera dentro. Vedi docs/bancarella/cucina.md.
 // Chi gioca non disegna: la scena legge a ogni fotogramma lo stato che riceve con `imposta`, e `cosaCe` dice cosa c'è sotto
 // il dito. Qui non entrano regole né prezzi.
 import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Vector3, ACESFilmicToneMapping, SRGBColorSpace, Color,
@@ -7,20 +7,20 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { segui, rilascia as rilasciaRenderer } from '../rilascio3d.js'
 import { creaPentola, creaPadella, creaTagliere, creaColtello, creaForno, creaPiatto, riempiPiatto, creaBarra } from './pezzi.js'
 import { confezione, cibo } from './cibo.js'
-import { creaSala, creaCassetta, creaPila, creaCestino, creaConsegna, creaMira, ALTO } from './sala.js'
+import { creaSala, creaCassetta, creaPila, creaCestino, creaConsegna, creaLavello, creaMira, ALTO } from './sala.js'
 import { creaCuoco } from './omino.js'
 
 const FOV = 30
 const VERSO = new Vector3(0, 0.9, 0.46).normalize()
-const LARGO = 7.3, FONDO = 8
+const LARGO = 7.3, FONDO = 10
 const SCALA_ROBA = 0.5      // i pezzi di cucina sono fatti per il banco col dito: qui stanno in una cella
 const COSTRUISCI = { pentola: creaPentola, padella: creaPadella, tagliere: creaTagliere, forno: creaForno }
 // quanto sporge dal piano quello che si tocca: il forno e la finestra si toccano anche in alto
-const SOPRA = { forno: 0.8, cassetta: 0.3, consegna: 1.4, bidone: 0.15, pentola: 0.5, padella: 0.25 }
-const TAGLIATO = { insalata: 'insalata', formaggio: 'formaggio-cubetti' }
+const SOPRA = { lavello: 0.45, forno: 0.8, cassetta: 0.3, consegna: 1.4, bidone: 0.15, pentola: 0.5, padella: 0.25 }
+const TAGLIATO = { insalata: 'insalata', formaggio: 'formaggio-cubetti', pesce: 'pesce-fette' }
 const ACQUA = { vuota: 0xa9d6ee, cuoce: 0x9fd0ea, pronta: 0xf1dd9a, scotta: 0xa9743c }
 
-export function creaCucinaCuoco(canvas, { sente, quanto, perso, dpr } = {}) {
+export function creaCucina3d(canvas, { quanto, quantoLavato, tipoDi, perso, dpr } = {}) {
   let gl = null, renderer
   try {
     gl = canvas.getContext('webgl2', { alpha: false, antialias: true, depth: true, stencil: false, powerPreference: 'high-performance' })
@@ -28,8 +28,8 @@ export function creaCucinaCuoco(canvas, { sente, quanto, perso, dpr } = {}) {
   if (!gl || gl.isContextLost()) return null
   try { renderer = segui(new WebGLRenderer({ canvas, context: gl, antialias: true })) } catch (e) { return null }
   let tutto
-  try { tutto = costruisci(renderer, canvas, { sente, quanto, dpr }) } catch (e) {
-    console.warn('cucina col cuoco: niente disegno', e)
+  try { tutto = costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr }) } catch (e) {
+    console.warn('cucina 3D: niente disegno', e)
     try { renderer.dispose() } catch (x) { /* pazienza */ }
     return null
   }
@@ -64,6 +64,7 @@ const figura = o => {
   // in mano la roba è nuda: la tavola dell'impasto e la carta della carne sembrerebbero un piatto
   if (o.cosa === 'impasto') return cibo('impasto-palla')
   if (o.cosa === 'carne') return cibo('carne', { crudo: !o.fatta })
+  if (o.cosa === 'riso') return cibo('riso')
   if (TAGLIATO[o.cosa] && o.fatta) return tagliato(o.cosa)
   return (o.cosa === 'pasta' || o.cosa === 'uovo') && o.fatta ? cibo(o.cosa) : inCassetta(o.cosa)
 }
@@ -75,7 +76,7 @@ function tagliato(cosa) {
   return f
 }
 
-function costruisci(renderer, canvas, { sente, quanto, dpr: fisso }) {
+function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso }) {
   renderer.outputColorSpace = SRGBColorSpace
   renderer.toneMapping = ACESFilmicToneMapping
   renderer.toneMappingExposure = 1.02
@@ -87,10 +88,10 @@ function costruisci(renderer, canvas, { sente, quanto, dpr: fisso }) {
   scena.environmentIntensity = 0.5
   stanzaFinta.dispose()
   scena.add(new HemisphereLight(0xfff6e6, 0x8a6f52, 1))
-  const chiave = new DirectionalLight(0xfff0d8, 1.9); chiave.position.set(1.5, 11, 6); chiave.target.position.set(3.5, 0, 3.5)
+  const chiave = new DirectionalLight(0xfff0d8, 1.9); chiave.position.set(1.5, 11, 7.5); chiave.target.position.set(3.5, 0, 4.5)
   chiave.castShadow = true
   chiave.shadow.mapSize.set(1024, 1024)
-  chiave.shadow.camera.left = -6; chiave.shadow.camera.right = 6; chiave.shadow.camera.top = 6.5; chiave.shadow.camera.bottom = -6.5
+  chiave.shadow.camera.left = -6; chiave.shadow.camera.right = 6; chiave.shadow.camera.top = 8; chiave.shadow.camera.bottom = -8
   chiave.shadow.camera.far = 22; chiave.shadow.bias = -0.0006; chiave.shadow.normalBias = 0.02
   scena.add(chiave, chiave.target)
   renderer.shadowMap.enabled = true
@@ -98,8 +99,8 @@ function costruisci(renderer, canvas, { sente, quanto, dpr: fisso }) {
   renderer.shadowMap.autoUpdate = false    // il cuoco ha un'ombra finta: quelle vere si rifanno solo se cambia cosa c'è sui banchi
 
   /* ── la telecamera: tutta la stanza dentro, in piedi o coricato ── */
-  let W = 1, H = 1
-  const MIRA = new Vector3(3.5, 0.2, 3.2)
+  let W = 1, H = 1, q = null, largo = 0, fondo = 0
+  const MIRA = new Vector3(3.5, 0.2, 4.1)
   const dpr = fisso || Math.min(2, window.devicePixelRatio || 1)
   function misura() {
     const r = canvas.getBoundingClientRect()
@@ -114,7 +115,7 @@ function costruisci(renderer, canvas, { sente, quanto, dpr: fisso }) {
     camera.updateMatrixWorld()
     camera.updateProjectionMatrix()
     // sullo schermo lungo avanza spazio: la stanza scende in fondo, e sopra resta il muro
-    const giu = new Vector3(3.5, 0, 7).project(camera), avanza = H * (0.5 + giu.y / 2) - 6
+    const giu = new Vector3(3.5, 0, fondo || 9).project(camera), avanza = H * (0.5 + giu.y / 2) - 6
     if (avanza > 0) camera.setViewOffset(W, H, 0, -avanza, W, H)
     camera.updateProjectionMatrix()
   }
@@ -123,48 +124,50 @@ function costruisci(renderer, canvas, { sente, quanto, dpr: fisso }) {
   misura()
 
   /* ── le cose in scena: si mettono al primo `imposta`, secondo la cucina ── */
-  let q = null, largo = 0, fondo = 0
   const stazioni = {}, posti = {}
-  let omino = null, inMano = null, coltello = null
-  const mire = [], scatole = []
+  let omino = null, inMano = null, pila = null, lavello = null, barraLavello = null
+  const mire = [], scatole = [], coltelli = []
   function monta(s) {
     largo = Math.max(...s.celle.map(c => c.x)) + 1; fondo = Math.max(...s.celle.map(c => c.z)) + 1
     creaSala(scena, s.celle, largo, fondo)
     for (const c of s.celle) {
       const cx = c.x + 0.5, cz = c.z + 0.5
-      scatole.push({ id: c.id, b: new Box3(new Vector3(c.x, 0, c.z), new Vector3(c.x + 1, ALTO + (SOPRA[c.tipo === 'stazione' ? c.nome : c.tipo] || 0.1), c.z + 1)) })
+      scatole.push({ id: c.id, b: new Box3(new Vector3(c.x, 0, c.z), new Vector3(c.x + 1, ALTO + (SOPRA[c.tipo === 'stazione' ? tipoDi(c.nome) : c.tipo] || 0.1), c.z + 1)) })
       if (c.tipo === 'stazione') {
-        const g = COSTRUISCI[c.nome]()
+        const tipo = tipoDi(c.nome)
+        const g = COSTRUISCI[tipo]()
         g.scale.setScalar(SCALA_ROBA)
         g.position.set(cx, ALTO, cz)
-        if (c.nome === 'padella') g.rotation.y = -Math.PI / 2      // il manico verso chi cucina, non sul vicino
-        const barra = creaBarra(); barra.scale.setScalar(0.62); barra.position.set(cx, ALTO + (c.nome === 'forno' ? 1.05 : 0.8), cz)
-        const fumo = new Group(); fumo.position.set(cx, ALTO + (c.nome === 'forno' ? 0.85 : 0.55), cz)
+        if (tipo === 'padella' && c.z === 0) g.rotation.y = -Math.PI / 2      // il manico verso chi cucina, non sul vicino
+        if (tipo === 'forno' && c.x === 6) g.rotation.y = -Math.PI / 2        // la bocca verso la stanza
+        const barra = creaBarra(); barra.scale.setScalar(0.62); barra.position.set(cx, ALTO + (tipo === 'forno' ? 1.05 : 0.8), cz)
+        const fumo = new Group(); fumo.position.set(cx, ALTO + (tipo === 'forno' ? 0.85 : 0.55), cz)
         for (let i = 0; i < 5; i++) fumo.add(new Mesh(new SphereGeometry(0.1, 8, 6), new MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false })))
         scena.add(g, barra, fumo)
-        stazioni[c.nome] = { g, barra, fumo }
+        stazioni[c.nome] = { g, barra, fumo, tipo }
+        if (tipo === 'tagliere') {
+          const k = creaColtello(); k.scale.setScalar(SCALA_ROBA); k.position.set(c.x + 0.8, ALTO + 0.1, c.z + 0.62)
+          scena.add(k); coltelli.push(k)
+        }
       } else if (c.tipo === 'cassetta') {
         const g = creaCassetta(); g.position.set(cx, ALTO, cz)
-        const dentro = inCassetta(c.cosa); dentro.scale.setScalar(0.48); dentro.position.y = 0.1
+        const dentro = inCassetta(c.cosa); dentro.scale.setScalar(c.cosa === 'pesce' ? 0.42 : 0.48); dentro.position.y = 0.1
         g.add(dentro)
         scena.add(g)
       } else if (c.tipo === 'piatti') {
-        const g = creaPila(); g.position.set(cx, ALTO, cz); scena.add(g)
+        pila = creaPila(); pila.position.set(cx, ALTO, cz); scena.add(pila)
       } else if (c.tipo === 'bidone') {
         const g = creaCestino(); g.position.set(cx, 0, cz); scena.add(g)
       } else if (c.tipo === 'consegna') {
         const g = creaConsegna(); g.position.set(cx, 0, cz); scena.add(g)
+      } else if (c.tipo === 'lavello') {
+        lavello = creaLavello(); lavello.position.set(cx, 0, cz); scena.add(lavello)
+        barraLavello = creaBarra(); barraLavello.scale.setScalar(0.62); barraLavello.position.set(cx, ALTO + 0.8, cz); scena.add(barraLavello)
       }
       if (c.tipo === 'banco') {
         const p = creaPosto(); p.g.position.set(cx, ALTO, cz); scena.add(p.g)
         posti[c.id] = p
       }
-    }
-    if (stazioni.tagliere) {
-      const c = s.celle.find(x => x.nome === 'tagliere')
-      coltello = creaColtello(); coltello.scale.setScalar(SCALA_ROBA)
-      coltello.position.set(c.x + 0.8, ALTO + 0.1, c.z + 0.62)
-      scena.add(coltello)
     }
     scena.traverse(o => { if (o.isMesh && !o.material.transparent && !o.material.isMeshBasicMaterial) o.castShadow = true })
     omino = creaCuoco()
@@ -173,6 +176,7 @@ function costruisci(renderer, canvas, { sente, quanto, dpr: fisso }) {
     omino.mano.add(inMano.g)
     for (let i = 0; i < 6; i++) { const m = creaMira(); m.visible = false; scena.add(m); mire.push(m) }
     renderer.shadowMap.needsUpdate = true
+    misura()
   }
 
   /* ── il dito: i banconi sono scatole, si prende la prima che il raggio incontra; se no è pavimento ── */
@@ -216,7 +220,7 @@ function costruisci(renderer, canvas, { sente, quanto, dpr: fisso }) {
       u.firma = firma
       u.dentro.clear()
       if (s.cosa) {
-        if (nome === 'tagliere') {
+        if (x.tipo === 'tagliere') {
           if (s.fase === 'taglia') {
             const testa = confezione(s.cosa); testa.scale.setScalar(0.74 - s.colpi * 0.1); u.dentro.add(testa)
             if (s.colpi) { const f = cibo(TAGLIATO[s.cosa]); f.position.set(0.32, 0, 0); f.scale.setScalar(0.4 + s.colpi * 0.09); u.dentro.add(f) }
@@ -227,7 +231,7 @@ function costruisci(renderer, canvas, { sente, quanto, dpr: fisso }) {
       renderer.shadowMap.needsUpdate = true
     }
     const q01 = Math.max(0, Math.min(1, quanto(s)))
-    const mostra = s.fase === 'cuoce' || s.fase === 'taglia' || (s.fase === 'pronta' && nome !== 'tagliere')
+    const mostra = s.fase === 'cuoce' || s.fase === 'taglia' || (s.fase === 'pronta' && x.tipo !== 'tagliere')
     x.barra.visible = mostra
     if (mostra) {
       x.barra.quaternion.copy(camera.quaternion)
@@ -237,8 +241,8 @@ function costruisci(renderer, canvas, { sente, quanto, dpr: fisso }) {
       p.material.color.setHex(s.fase === 'pronta' ? 0xffa62b : 0x4fb36b)
     }
     // pronta chiama: sussulta. Bruciata fuma nero, sul fuoco fuma bianco
-    if (u.tiene && nome !== 'tagliere') { const b = s.fase === 'pronta' ? 1 + 0.05 * Math.sin(t * 10) : 1; u.tiene.scale.setScalar(b) }
-    const colore = s.fase === 'scotta' ? 0x2c2a28 : 0xffffff, vivo = s.fase === 'scotta' ? 0.75 : (nome === 'pentola' && acceso) ? 0.4 : 0
+    if (u.tiene && x.tipo !== 'tagliere') { const b = s.fase === 'pronta' ? 1 + 0.05 * Math.sin(t * 10) : 1; u.tiene.scale.setScalar(b) }
+    const colore = s.fase === 'scotta' ? 0x2c2a28 : 0xffffff, vivo = s.fase === 'scotta' ? 0.75 : (x.tipo === 'pentola' && acceso) ? 0.4 : 0
     x.fumo.children.forEach((p, i) => {
       const f = (t * 0.5 + i / 5) % 1
       p.position.set(Math.sin(i * 2.4 + t) * 0.16, f * 0.7, Math.cos(i * 1.3) * 0.14)
@@ -262,10 +266,26 @@ function costruisci(renderer, canvas, { sente, quanto, dpr: fisso }) {
       omino.anima(dt, { cammina: k.cammina, porta: !!k.mano, verso: k.verso })
       inMano.metti(k.mano)
       for (const [id, p] of Object.entries(posti)) if (p.metti(q.sopra[id])) renderer.shadowMap.needsUpdate = true
-      const c = q.stazioni.tagliere?.colpi || 0
+      const c = Object.values(q.stazioni).reduce((n, s) => n + s.colpi, 0)
       if (c > colpi) omino.taglia()
       colpi = c
-      if (coltello) coltello.visible = !omino.tagliando()
+      coltelli.forEach(k => { k.visible = !omino.tagliando() })
+      pila?.userData.mostra(q.puliti)
+      if (lavello) {
+        const u = lavello.userData
+        u.sporchi.forEach((p, i) => { p.visible = i < q.sporchi })
+        u.schiuma.visible = q.lavando
+        barraLavello.visible = q.lavando
+        if (q.lavando) {
+          u.schiuma.children.forEach((b, i) => {
+            const a = i * 2.4 + t * 1.6
+            b.position.set(Math.cos(a) * 0.24, 0.05 * Math.sin(t * 5 + i), Math.sin(a) * 0.2)
+          })
+          barraLavello.quaternion.copy(camera.quaternion)
+          const p = barraLavello.userData.pieno, f = Math.max(0.001, Math.min(1, quantoLavato(q)))
+          p.scale.x = f; p.position.x = -0.57 * (1 - f); p.material.color.setHex(0x4fa8e0)
+        }
+      }
       // dove sta andando: i posti toccati, o il punto del pavimento
       const mete = [...new Set(q.fila)].map(id => q.celle.find(c => c.id === id))
       mire.forEach((m, i) => {
@@ -278,7 +298,6 @@ function costruisci(renderer, canvas, { sente, quanto, dpr: fisso }) {
         m.material.opacity = 0.72 + 0.28 * Math.sin(t * 7)
         m.scale.setScalar(pav ? 0.6 : 0.96 + 0.02 * Math.sin(t * 7))
       })
-      sente?.(!!k.mano?.pronto)
     }
     renderer.render(scena, camera)
     fotogrammi++

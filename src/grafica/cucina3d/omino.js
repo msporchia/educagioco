@@ -1,5 +1,5 @@
 // Il cuoco, nella creta (docs/fattoria3d/creta.md): corpo, due gambe e due braccia a parte, che si muovono coi perni.
-// Guarda verso +z, i piedi a quota zero. Vedi docs/bancarella/cuoco.md.
+// Guarda verso +z, i piedi a quota zero. Vedi docs/bancarella/cucina.md.
 import { Group, Mesh, MeshStandardMaterial, SphereGeometry } from 'three'
 import { palla, osso, unione, dentro, sopra, pelle, scatolaDi, fra, verso, mosso } from '../../giochi/fattoria3d/scena3d/creta.js'
 import { ombra, creaColtello } from './pezzi.js'

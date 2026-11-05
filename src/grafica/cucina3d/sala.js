@@ -1,6 +1,6 @@
-// La stanza del cuoco: pavimento, muri, banconi, cassette, la pila dei piatti, la consegna. Vedi docs/bancarella/cuoco.md.
-import { Group, Mesh, MeshStandardMaterial, MeshBasicMaterial, BoxGeometry, PlaneGeometry, CylinderGeometry, SphereGeometry, LatheGeometry, Vector2,
-         CanvasTexture, SRGBColorSpace, RepeatWrapping, DoubleSide } from 'three'
+// La stanza del cuoco: pavimento, muri, banconi, cassette, la pila dei piatti, la consegna. Vedi docs/bancarella/cucina.md.
+import { Group, Mesh, MeshStandardMaterial, MeshBasicMaterial, BoxGeometry, PlaneGeometry, CylinderGeometry, SphereGeometry, LatheGeometry, TubeGeometry, CircleGeometry,
+         CatmullRomCurve3, Vector2, Vector3, CanvasTexture, SRGBColorSpace, RepeatWrapping, DoubleSide } from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { creaPiatto, creaBidone, creaEtichetta } from './pezzi.js'
@@ -73,7 +73,7 @@ function creaBanconi(celle) {
     const mobile = new BoxGeometry(0.98, ALTO - 0.06, 0.98); mobile.translate(c.x + 0.5, (ALTO - 0.06) / 2, c.z + 0.5)
     mobili.push(mobile)
     const piano = new RoundedBoxGeometry(1, 0.09, 1, 2, 0.03); piano.translate(c.x + 0.5, ALTO - 0.045, c.z + 0.5)
-    ;(c.tipo === 'consegna' ? acciai : piani).push(piano)
+    ;(c.tipo === 'consegna' || c.tipo === 'lavello' ? acciai : piani).push(piano)
   }
   const g = new Group()
   const a = m(mergeGeometries(mobili), new MeshStandardMaterial({ map: tramaMobile(), roughness: 0.42 }))
@@ -120,10 +120,47 @@ export function creaCassetta() {
 /** La pila dei piatti puliti. */
 export function creaPila() {
   const g = new Group()
-  for (let i = 0; i < 5; i++) {
+  const piatti = Array.from({ length: 5 }, (_, i) => {
     const p = creaPiatto(); p.scale.setScalar(0.5); p.position.y = i * 0.055; p.children[0].visible = i === 0
     g.add(p)
+    return p
+  })
+  // `null`: non finiscono, se ne vede una bella pila
+  g.userData.mostra = n => piatti.forEach((p, i) => { p.visible = n === null || i < n })
+  return g
+}
+
+const tramaUnto = () => trama(128, (c, n) => {
+  c.clearRect(0, 0, n, n)
+  const r = caso(41)
+  for (let i = 0; i < 12; i++) {
+    c.fillStyle = ['#b5472fcc', '#8a5a2bcc', '#c9a23fbb'][i % 3]
+    c.beginPath(); c.ellipse(n / 2 + (r() - 0.5) * 70, n / 2 + (r() - 0.5) * 70, 5 + r() * 16, 4 + r() * 11, r() * 3, 0, 7); c.fill()
   }
+})
+
+/** Il lavello: la vasca d'acciaio, il rubinetto a collo di cigno, i piatti sporchi dentro e la schiuma quando si lava. */
+export function creaLavello() {
+  const g = new Group(), acciaio = pieno(0xc5ccd2, 0.24, 0.92)
+  const fondo = m(new BoxGeometry(0.72, 0.012, 0.66), pieno(0x8f9aa3, 0.3, 0.8), 0, ALTO + 0.008, 0.06)
+  const bordi = [[0.8, 0.05, 0.05, 0, 0.42], [0.8, 0.05, 0.05, 0, -0.3], [0.05, 0.05, 0.76, 0.4, 0.06], [0.05, 0.05, 0.76, -0.4, 0.06]]
+    .map(([l, h, p, x, z]) => m(new RoundedBoxGeometry(l, h, p, 2, 0.015), acciaio, x, ALTO + 0.03, z))
+  const curva = new CatmullRomCurve3([[0.26, 0, -0.38], [0.26, 0.32, -0.38], [0.26, 0.46, -0.28], [0.26, 0.42, -0.14], [0.26, 0.34, -0.1]].map(p => new Vector3(...p)))
+  const collo = m(new TubeGeometry(curva, 24, 0.028, 10), acciaio, 0, ALTO, 0)
+  const manopola = m(new CylinderGeometry(0.05, 0.06, 0.05, 14), pieno(0x2f6fb5, 0.35), 0.08, ALTO + 0.05, -0.38)
+  const unto = new MeshBasicMaterial({ map: tramaUnto(), transparent: true, depthWrite: false })
+  const pila = new Group(); pila.position.set(-0.06, ALTO + 0.02, 0.08)
+  const sporchi = Array.from({ length: 5 }, (_, i) => {
+    const p = creaPiatto(); p.scale.setScalar(0.4); p.position.y = i * 0.05; p.rotation.y = i * 1.3; p.children[0].visible = false
+    const macchia = m(new CircleGeometry(0.62, 18), unto, 0, 0.2, 0); macchia.rotation.x = -Math.PI / 2
+    p.add(macchia); pila.add(p)
+    return p
+  })
+  const schiuma = new Group(); schiuma.position.set(-0.06, ALTO + 0.14, 0.08)
+  for (let i = 0; i < 12; i++) schiuma.add(m(new SphereGeometry(0.05 + (i % 3) * 0.022, 10, 8), new MeshStandardMaterial({ color: 0xffffff, roughness: 0.25, transparent: true, opacity: 0.88 })))
+  schiuma.visible = false
+  g.add(fondo, ...bordi, collo, manopola, pila, schiuma)
+  g.userData = { sporchi, schiuma }
   return g
 }
 
@@ -165,4 +202,20 @@ export function creaMira() {
   o.rotation.x = -Math.PI / 2
   o.renderOrder = 3
   return o
+}
+
+/** Il libretto delle ricette: copertina rossa, pagine, il segnalibro. */
+export function creaLibro() {
+  const g = new Group()
+  const copertina = new RoundedBoxGeometry(1.1, 0.06, 1.4, 2, 0.025)
+  const rosso = pieno(0xc8442f, 0.5)
+  const sotto = m(copertina, rosso, 0, 0.03, 0), sopra = m(copertina, rosso, 0, 0.27, 0)
+  const pagine = m(new BoxGeometry(1.02, 0.2, 1.32), pieno(0xfbf6e8, 0.8), 0.03, 0.15, 0)
+  const dorso = m(new RoundedBoxGeometry(0.1, 0.3, 1.4, 2, 0.04), pieno(0x9d2a1f, 0.5), -0.53, 0.15, 0)
+  const nastro = m(new BoxGeometry(0.1, 0.01, 0.5), pieno(0xf0c94a, 0.4), 0.2, 0.305, 0.5)
+  const riquadro = m(new BoxGeometry(0.6, 0.01, 0.34), pieno(0xfbf0d0, 0.5), 0.02, 0.305, -0.2)
+  const cucchiaio = m(new SphereGeometry(0.13, 16, 10), pieno(0xf0c94a, 0.35, 0.6), 0, 0.31, 0.22); cucchiaio.scale.y = 0.2
+  const manico = m(new BoxGeometry(0.05, 0.01, 0.3), pieno(0xf0c94a, 0.35, 0.6), 0, 0.31, 0.45)
+  g.add(sotto, pagine, sopra, dorso, nastro, riquadro, cucchiaio, manico)
+  return g
 }

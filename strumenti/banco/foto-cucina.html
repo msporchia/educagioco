@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="it">
+<head><meta charset="utf-8"><title>Le foto della cucina</title></head>
+<body>
+<!-- La pagina che fotografa i piatti, gli ingredienti e gli attrezzi della bancarella per `npm run anteprime cucina`
+     (strumenti/anteprime-cucina.mjs): `window.__foto` a fine lavoro. Vuole il server di Vite. -->
+<script type="module">
+import * as THREE from 'three'
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
+import { RICETTE, INGREDIENTI } from '/src/data/bancarella-cucine.js'
+import { cibo, confezione } from '/src/grafica/cucina3d/cibo.js'
+import { creaPiatto, riempiPiatto, creaPentola, creaPadella, creaTagliere, creaForno } from '/src/grafica/cucina3d/pezzi.js'
+import { creaPila, creaLibro } from '/src/grafica/cucina3d/sala.js'
+
+const LATO = Number(new URLSearchParams(location.search).get('lato')) || 128, GRANDE = LATO * 3
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true })
+renderer.setPixelRatio(1); renderer.setSize(GRANDE, GRANDE, false); renderer.setClearColor(0, 0)
+renderer.outputColorSpace = THREE.SRGBColorSpace
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1
+const scena = new THREE.Scene()
+const finta = new THREE.PMREMGenerator(renderer)
+scena.environment = finta.fromScene(new RoomEnvironment(), 0.04).texture
+scena.environmentIntensity = 0.5
+scena.add(new THREE.HemisphereLight(0xfff4e0, 0x8a7a70, 1.3))
+const sole = new THREE.DirectionalLight(0xfff0d8, 2.2); sole.position.set(1, 4, 3); scena.add(sole)
+const camera = new THREE.PerspectiveCamera(26, 1, 0.05, 100)
+const verso = new THREE.Vector3(0, 0.8, 0.6).normalize()     // come in cucina: un po' dall'alto
+
+const piccola = Object.assign(document.createElement('canvas'), { width: LATO, height: LATO })
+const c2 = piccola.getContext('2d')
+const foto = {}
+function scatta(chiave, g) {
+  // le ombre finte e gli anelli allargherebbero l'inquadratura
+  const via = []
+  g.traverse(o => { if (o.isMesh && o.material?.isMeshBasicMaterial && o.material.transparent) via.push(o) })
+  via.forEach(o => o.removeFromParent())
+  if (g.userData.anello) g.userData.anello.removeFromParent()
+  scena.add(g)
+  g.updateMatrixWorld(true)
+  const sfera = new THREE.Box3().setFromObject(g).getBoundingSphere(new THREE.Sphere())
+  camera.position.copy(sfera.center).addScaledVector(verso, sfera.radius / Math.sin(THREE.MathUtils.degToRad(13)) * 1.02)
+  camera.lookAt(sfera.center)
+  renderer.render(scena, camera)
+  c2.clearRect(0, 0, LATO, LATO)
+  c2.imageSmoothingQuality = 'high'
+  c2.drawImage(renderer.domElement, 0, 0, LATO, LATO)
+  foto[chiave] = piccola.toDataURL('image/webp', 0.82)
+  scena.remove(g)
+}
+const piatto = r => {
+  const g = creaPiatto()
+  const cose = r.forno ? ['pizza', ...r.passi.filter(k => k === 'carne')] : [...r.passi].sort((a, b) => ORDINE.indexOf(a) - ORDINE.indexOf(b))
+  riempiPiatto(g, { cose, pronto: r.emoji, daInfornare: false })
+  return g
+}
+const ORDINE = ['impasto', 'pasta', 'riso', 'uovo', 'pane', 'carne', 'pesce', 'alga', 'insalata', 'sugo', 'formaggio']
+for (const r of RICETTE) scatta('piatto:' + r.emoji, piatto(r))
+for (const k of Object.keys(INGREDIENTI)) scatta('cosa:' + k, k === 'pane' ? cibo('pane-aperto') : confezione(k))
+for (const [k, crea] of Object.entries({ pentola: creaPentola, padella: creaPadella, tagliere: creaTagliere, forno: creaForno })) scatta('attrezzo:' + k, crea())
+scatta('attrezzo:piatti', (() => { const p = creaPila(); p.userData.mostra(3); return p })())
+scatta('ricettario', creaLibro())
+window.__foto = foto
+</script>
+</body>
+</html>
