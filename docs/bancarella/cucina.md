@@ -72,7 +72,9 @@ Niente persone: in cima c'è la lista (`Ordini.vue`), una scheda per ordinazione
 foto dei piatti e la barra del tempo. La lista è la coda di sempre: tre per tappa, tre
 tappe. Scadono una dopo l'altra (`STACCO_ORDINI`), tutte alla stessa velocità, e la tenda
 del banco dà gli stessi secondi in più. Il piatto va alla prima ordinazione della lista che
-lo aspetta, e senza piatto non si serve; quello che nessuno ha ordinato resta in mano.
+lo aspetta, e senza piatto non si serve. Quello che non va resta in mano, e il fumetto dice cosa
+manca rispetto all'ordinazione più simile («Manca l'alga», «Manca la pasta, da cuocere», `cheManca`);
+«non l'ha ordinato nessuno» resta per quando non somiglia a niente.
 
 Un'ordinazione scaduta costa un cuore e sparisce, ma **non conta come conto sbagliato**:
 il ripasso del resto misura il resto, non la cucina.
@@ -80,10 +82,10 @@ il ripasso del resto misura il resto, non la cucina.
 ## Il resto è un foglio
 
 Finita un'ordinazione, passa in cima alla coda e si apre il foglio: i soldi che danno, lo
-scontrino, le monete. La ✕ lo mette da parte e «dai il resto» lo riapre, intanto si
-cucina. **Col foglio aperto tutto è fermo**, fuochi e ordinazioni, in ogni livello: la
-fretta sta nello spostare le cose, i conti si fanno da fermi. Si paga come la sua
-giornata, e l'incasso va nel banco.
+scontrino, le monete. **Finché il resto non è dato tutto è fermo**, fuochi e ordinazioni, in
+ogni livello: la fretta sta nello spostare le cose, i conti si fanno da fermi. Il foglio non ha
+la ✕: si consegna, si dà il resto e si torna a cucinare. Si paga come il suo livello, e
+l'incasso va nel banco.
 
 ## I piatti da lavare
 
@@ -99,15 +101,20 @@ Ventotto livelli (`CUCINE`), ognuno con qualcosa in più; si aprono vincendo que
 (`banco.cucina.fatte`, in `profile.campagne.bancarella`). Gli attrezzi di un livello si leggono
 dalle sue ricette. La `portata` va dritta da 32 a 72 lungo la fila (`FILA`).
 
-| livelli | cosa cambia |
-|---|---|
-| 1–5 | **a crudo**, con tempo da vendere e il resto detto dalla cassa: si impara a muoversi senza fretta. Panini, insalate, sushi |
-| 6 | il lavello |
-| 7–8 | la pentola, e il resto si conta a mente |
-| 9–15 | la padella: uova, carne, hamburger, ragù |
-| 16–19 | il forno |
-| 20–24 | due piatti a ordinazione: il totale si batte, si paga coi 20 € |
-| 25–28 | le ordinazioni scadono prima |
+| livelli | in cucina | alla cassa |
+|---|---|---|
+| 1–5 | **a crudo**, con tempo da vendere: panini, insalate, sushi | la cassa dice il resto, euro tondi |
+| 6 | il lavello | |
+| 7–9 | la pentola, poi la padella | **il resto lo conti tu**, euro tondi |
+| 10–15 | uova, carne, hamburger, ragù | prezzi al mezzo euro |
+| 16–19 | il forno | prezzi ai dieci centesimi, si paga anche coi 20 € |
+| 20–22 | due piatti a ordinazione | **anche il totale da chiedere lo batti tu**; prezzi di nuovo al mezzo euro |
+| 23–25 | | prezzi ai dieci centesimi |
+| 26–28 | le ordinazioni scadono prima | prezzi ai cinque centesimi, si paga anche coi 50 € |
+
+La cassa sale a gradini (`SCALA_CASSA`), come nel vecchio mercato: chi fa i conti non torna mai
+indietro, e quando entra un conto nuovo i prezzi tornano più facili. Il prezzo di un piatto è
+quello del menù arrotondato o col suo di più in centesimi (`prezzoDi`).
 
 Nella scelta dei livelli si comprano gli attrezzi con l'incasso: un tagliere in più 25 € (fino a tre), la seconda pentola 30 €, la seconda padella
 40 €, il secondo forno 70 €, un piatto in più 15 € (fino a quattro). Si vedono dal livello
@@ -151,4 +158,4 @@ mercato di prima non si leggono, e al primo avvio spariscono. I dati di quel mer
 veri). `window.__cucina3d.dove('3,0')` dice dove sta sullo schermo una cella o il pavimento.
 Bersagli: `[data-cucine]`, `[data-cucina-n]`, `[data-attrezzo]`, `[data-cucina]`, `[data-tela]`,
 `[data-detto]`, `[data-ordini]`, `[data-ordine]`, `[data-ordinato]`, `[data-ricetta]`, `[data-chiudi-ricetta]`,
-`[data-azione="al-resto"]`, `[data-porge]`.
+`[data-porge]`.
