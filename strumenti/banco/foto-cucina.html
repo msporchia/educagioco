@@ -55,7 +55,7 @@ const piatto = r => {
 }
 const ORDINE = ['impasto', 'pasta', 'riso', 'uovo', 'pane', 'carne', 'pesce', 'alga', 'insalata', 'pomodoro', 'sugo', 'formaggio']
 for (const r of RICETTE) scatta('piatto:' + r.emoji, piatto(r))
-for (const k of Object.keys(INGREDIENTI)) scatta('cosa:' + k, k === 'pane' ? cibo('pane-aperto') : confezione(k))
+for (const k of Object.keys(INGREDIENTI)) scatta('cosa:' + k, k === 'pane' ? cibo('pane-fette') : confezione(k))
 for (const [k, crea] of Object.entries({ pentola: creaPentola, padella: creaPadella, tagliere: creaTagliere, forno: creaForno })) scatta('attrezzo:' + k, crea())
 scatta('attrezzo:piatti', (() => { const p = creaPila(); p.userData.mostra(3); return p })())
 window.__foto = foto

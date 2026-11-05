@@ -66,13 +66,14 @@ const figura = o => {
   if (o.bruciata) return cibo(o.cosa === 'impasto' ? 'pizza' : o.cosa, { bruciato: true })
   // in mano la roba è nuda: la tavola dell'impasto e la carta della carne sembrerebbero un piatto
   if (o.cosa === 'impasto') return cibo('impasto-palla')
+  if (o.cosa === 'pane') return cibo('toast')
   if (o.cosa === 'carne') return cibo('carne', { crudo: !o.fatta })
   if (o.cosa === 'riso') return cibo('riso')
   if (TAGLIATO[o.cosa] && o.fatta) return tagliato(o.cosa)
   return (o.cosa === 'pasta' || o.cosa === 'uovo') && o.fatta ? cibo(o.cosa) : inCassetta(o.cosa)
 }
 // il pane qui è già tagliato: una pagnotta intera chiederebbe il tagliere
-const inCassetta = cosa => (cosa === 'pane' ? cibo('pane-aperto') : confezione(cosa))
+const inCassetta = cosa => (cosa === 'pane' ? cibo('pane-fette') : confezione(cosa))
 function tagliato(cosa) {
   const f = cibo(TAGLIATO[cosa])
   if (cosa === 'formaggio') f.scale.setScalar(1.7)     // i cubetti sono fatti per stare sull'insalata: da soli non si vedono

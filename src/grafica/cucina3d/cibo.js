@@ -88,11 +88,34 @@ function fondoPanino() {
   }, 0.72)
 }
 
-/* Il panino già tagliato: il sopra alzato sul fondo, che si vede la mollica. */
-function paninoAperto() {
-  const sopra = modello('pane-sopra')
-  sopra.position.set(0.2, 0.36, -0.1); sopra.rotation.z = -0.55
-  return tutto(modello('pane'), sopra)
+/* La fetta di pancarrè: quadrata, con le spalle in cima e la crosta tutt'intorno. Così un panino
+   non si scambia per una pizzetta: il pane tondo resta all'hamburger. */
+const contorno = (x, z) => {
+  const qx = Math.abs(x) - 0.33, qz = Math.abs(z + 0.02) - 0.31
+  return Math.hypot(Math.max(qx, 0), Math.max(qz, 0)) + Math.min(Math.max(qx, qz), 0) - 0.15
+}
+const spalle = (x, z) => Math.hypot((Math.abs(x) - 0.27) / 1.25, z + 0.42) - 0.2
+function toast() {
+  const forma = {
+    f: (x, y, z) => {
+      const d = Math.min(contorno(x, z), spalle(x, z)), h = Math.abs(y - 0.07) - 0.045
+      return Math.min(Math.max(d, h), 0) + Math.hypot(Math.max(d, 0), Math.max(h, 0)) - 0.025
+    }, c: [0, 0.07, 0], r: 0.8,
+  }
+  return pezzo(forma, 0.02, (x, y, z, c, nx, ny) => {
+    const bordo = Math.min(contorno(x, z), spalle(x, z))
+    c.setHex(0xf6e6c2)
+    verso(c, 0xe7cd98, fra(0.1, 0.7, mosso(x, 3, z, 30)) * 0.6)
+    verso(c, 0xb9772e, fra(-0.07, -0.015, bordo))
+    if (ny < 0.6) c.setHex(0xb9772e)
+  }, 0.7)
+}
+
+/* La cassetta del pane: le fette già tagliate, una sull'altra. */
+function fetteDiPane() {
+  const g = new Group()
+  for (const [y, a, x] of [[0, 0.15, -0.05], [0.14, -0.2, 0.06], [0.28, 0.1, 0]]) { const f = modello('toast'); f.position.set(x, y, 0); f.rotation.y = a; g.add(f) }
+  return g
 }
 
 function semi() {
@@ -414,7 +437,7 @@ function pomodoroTagliato() {
 const G = {}
 const FATTI = {
   'pasta': () => tutto(nido()), 'pasta-pentola': () => tutto(nido(SPAGO, 0.56, 0.1)), 'pasta-bruciata': () => tutto(nido(0x3a2715, 0.56, 0.12)),
-  'sugo': sugo, 'pane': fondoPanino, 'pane-sopra': sopraPanino, 'pane-aperto': paninoAperto, 'formaggio': fetta, 'formaggio-cubetti': cubetti,
+  'sugo': sugo, 'pane': fondoPanino, 'pane-sopra': sopraPanino, 'toast': () => tutto(toast()), 'pane-fette': fetteDiPane, 'formaggio': fetta, 'formaggio-cubetti': cubetti,
   'insalata': () => foglie(), 'carne-cruda': () => polpetta(true), 'carne': () => polpetta(false), 'uovo': uovoFritto,
   'impasto-palla': () => tutto(palloImpasto()), 'pizza-impasto': () => pizza('impasto'), 'pizza-sugo': () => pizza('sugo'), 'pizza-bianca': () => pizza('bianca'), 'pizza-cruda': () => pizza('formaggio'), 'pizza': () => pizza('cotta'),
   'c:pasta': mazzoSpaghetti, 'c:sugo': ciotolaSugo, 'c:pane': pagnotta, 'c:formaggio': formaFormaggio, 'c:insalata': cespo,
@@ -465,8 +488,8 @@ export function impiatta(p) {
   }
   else if (cose[0] === 'uovo') {
     if (cose.includes('pane')) {
-      metti('pane'); metti('uovo', 0, 0.17)
-      if (pronto) metti('pane-sopra', 0, 0.26, 0, 0.4)
+      metti('toast'); metti('uovo', 0, 0.13)
+      if (pronto) metti('toast', 0.2, 0.22, -0.18, 0.4)
     } else metti('uovo', -0.2, 0.02, -0.06)
     if (cose.includes('insalata')) { metti('insalata', 0.3, 0.02, 0.2); g.children.at(-1).scale.setScalar(0.62) }
     if (cose.includes('formaggio')) metti('formaggio-cubetti', -0.2, 0.1, -0.06)
@@ -481,8 +504,16 @@ export function impiatta(p) {
   }
   else {
     let y = 0
-    for (const k of cose) { metti(k === 'pomodoro' ? 'pomodoro-tagliato' : k, 0, y, 0, k === 'formaggio' ? 0.7 : 0); y += ALTO[k] }
-    if (pronto && cose[0] === 'pane' && cose.length > 1 && !cose.includes('pomodoro')) metti('pane-sopra', 0, y + 0.02, 0, 0.4)
+    const tondo = cose.includes('carne') && cose.includes('insalata')     // l'hamburger: gli altri sono a fette
+    for (const k of cose) {
+      metti(k === 'pomodoro' ? 'pomodoro-tagliato' : k === 'pane' && !tondo ? 'toast' : k, 0, y, 0, k === 'formaggio' ? 0.7 : 0)
+      y += k === 'pane' && !tondo ? 0.13 : ALTO[k]
+    }
+    // la fetta di sopra sta di sbieco: si deve vedere cosa c'è dentro, se no i panini sono tutti uguali
+    if (pronto && cose[0] === 'pane' && !cose.includes('pomodoro')) {
+      if (tondo) metti('pane-sopra', 0, y + 0.02, 0, 0.4)
+      else metti('toast', 0.2, y + 0.02, -0.18, 0.4)
+    }
   }
   return g
 }
@@ -493,7 +524,7 @@ export async function prepara(cose, ricette) {
   const usa = new Set(ricette.flatMap(r => r.passi))
   if (usa.has('pasta')) chiavi.push('pasta', 'pasta-pentola', 'pasta-bruciata')
   if (usa.has('sugo')) chiavi.push('sugo')
-  if (usa.has('pane')) chiavi.push('pane', 'pane-sopra')
+  if (usa.has('pane')) chiavi.push('toast', 'pane-fette', 'pane', 'pane-sopra')
   if (usa.has('formaggio')) chiavi.push('formaggio', 'formaggio-cubetti')
   if (usa.has('insalata')) chiavi.push('insalata')
   if (usa.has('pomodoro')) chiavi.push('pomodoro-tagliato')
