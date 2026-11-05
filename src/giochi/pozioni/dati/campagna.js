@@ -110,12 +110,15 @@ const dosiDi = (f, specs) => specs.flatMap(s => s.valori.map(v => unaDose(f, s, 
 const comune = t => ({ aiuto: t.aiuto, ingredienti: t.ingredienti, procedimento: t.procedimento, azioni: AZIONI_DEL[t.procedimento], margine: t.margine,
                        manca: t.manca, etichette: t.etichette, gemelli: t.etichette.length > 1, tondi: !!t.tondi })
 
+// i liquidi non si pestano: in una pozione di soli liquidi il mortaio non sta sul tavolo
+const azioniDel = (f, t) => (f.chiave === 'capacita' ? t.azioni.filter(a => a !== 'pesta') : t.azioni)
+
 function tappaDelGradino(f, gradino, n) {
   const g = FAMIGLIE_TONDE.includes(f.chiave) && SENZA_VIRGOLA[gradino.id] ? { ...gradino, ...SENZA_VIRGOLA[gradino.id], tondi: true } : gradino
   const [nome, emoji, colore] = POZIONI[f.chiave][n]
   return {
     chiave: `${f.chiave}-${g.id}`, famiglie: [f.chiave], gradino: g.id,
-    nome, dritta: g.dritta(f), emoji, colore, ...comune(g),
+    nome, dritta: g.dritta(f), emoji, colore, ...comune(g), azioni: azioniDel(f, comune(g)),
     dosi: dosiDi(f, g.dosi),
     portata: PORTATA_DA[f.chiave] + n * PASSO_PORTATA,
     scuola: g.scuola || 'conversioni',

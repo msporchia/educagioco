@@ -60,10 +60,10 @@ li usa: capire cosa serve è parte del gioco.
 
 - **L'ordine cambia di ricetta in ricetta**: se fosse sempre lo stesso si
   imparerebbe a memoria e il testo non si leggerebbe.
-- **I liquidi non si pestano**, e tentarlo è un pasticcio. Una pozione di soli
-  liquidi lascerebbe il mortaio sul tavolo per niente: per quelle in dispensa c'è
-  qualcosa di secco (`dispensa`), una cosa al livello 3 e due dopo, che non si
-  compra, non sta sul listino e aspetta sul bancone.
+- **I liquidi non si pestano**: in una pozione di soli liquidi il mortaio e il
+  pestello non stanno sul tavolo (`azioniDel`), e la ricetta versa tutto. Provato con
+  della roba secca in dispensa per dare un senso al mortaio: era di nuovo «hai già
+  qualcosa in casa», e confondeva. Nelle finali, con pesi e lunghezze, il mortaio c'è.
 
 ## Il calderone senza fondo
 

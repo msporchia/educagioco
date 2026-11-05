@@ -3,7 +3,8 @@
 // gettoni, le macchie e il procedimento a che punto è. Le tappe e gli
 // ingredienti si rifanno dal codice. Una sosta di prima del procedimento
 // (v 1, 2 e 3) non si legge: la tappa ricomincia. `casa` c'è solo in una
-// sosta di quando si partiva con qualcosa in casa, e la si tiene fino alla fine di quella pozione.
+// sosta di quando si partiva con qualcosa in casa, e la si tiene fino alla fine di quella pozione;
+// `dispensa` in una di quando i liquidi avevano la roba secca per il mortaio, che lì torna sul tavolo.
 import { Bottega, ottimo, minimoDi } from './bottega.js'
 import { AZIONI, MORTAIO } from './procedimento.js'
 import { CAMPAGNA, INFINITA, giroInfinito } from '../dati/campagna.js'
@@ -102,6 +103,7 @@ function rimetti(dato, rnd) {
 
   const b = new Bottega(t.tappa, { rnd })
   b.ingredienti = ingredienti
+  if (ingredienti.some(g => g.dispensa) && !t.tappa.azioni.includes('pesta')) b.tappa = { ...t.tappa, azioni: ['pesta', ...t.tappa.azioni] }
   b.minimo = minimoDi(ingredienti)
   b.gettoni = dato.gettoni; b.speso = dato.speso
   b.macchie = [...dato.macchie]; b.traboccate = dato.traboccate; b.pulizie = dato.pulizie

@@ -152,11 +152,6 @@ export class Bottega {
       return { nome: i.nome, f: !!i.f, colore: i.colore, famiglia, unita: d.unita, dose: d.base, messo: 0,
                offerte, ottimo: ottimo(d.base, offerte), traboccate: 0, pezzi: [] }
     })
-    // i liquidi non si pestano: per il mortaio c'è qualcosa di secco in dispensa, che non si compra
-    const secche = tappa.famiglie.length === 1 && tappa.famiglie[0] === 'capacita' && tappa.procedimento >= 3 ? (tappa.procedimento >= 4 ? 2 : 1) : 0
-    for (const i of mescolata(rnd, INGREDIENTI.filter(x => x.famiglia === 'massa')).slice(0, secche))
-      this.ingredienti.push({ nome: i.nome, f: !!i.f, colore: i.colore, famiglia: i.famiglia, unita: 'g', dose: 1, messo: 1, dispensa: true,
-                              offerte: [], ottimo: { costo: 0, pezzi: [] }, traboccate: 0, pezzi: [] })
     this.pozione = { nome: tappa.nome, emoji: tappa.emoji, colore: tappa.colore }
     this.passi = ricetta(rnd, this.ingredienti, tappa.procedimento)
     this.righe = testo(rnd, this.passi, this.ingredienti, tappa.procedimento >= 5)
@@ -180,6 +175,7 @@ export class Bottega {
   }
 
   get resto() { return this.gettoni - this.speso }
+  // tutti, tranne la roba secca che una sosta di prima si porta dietro (motore/sosta.js)
   get comprati() { return this.ingredienti.filter(g => !g.dispensa) }
   get extra() { return this.speso - this.minimo }
   // le stelle dicono quanto si è speso, non quante volte si è sbagliato

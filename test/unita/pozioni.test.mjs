@@ -265,7 +265,7 @@ for (const t of CAMPAGNA) {
   uguale(`${t.chiave}: si comincia mettendo qualcosa`, senzaOrdine, 0)
   uguale(`${t.chiave}: la ricetta dice tutti i passi`, ricetteBrutte, 0)
   if (t.procedimento >= 2) controlla(`${t.chiave}: l'ordine cambia, se no non si legge`, ordini.size > 1, [...ordini].join(' | '))
-  if (t.procedimento >= 3) controlla(`${t.chiave}: col mortaio sul tavolo si pesta sempre`, [...ordini].every(o => o.startsWith('pesta')), [...ordini].join(' | '))
+  if (t.azioni.includes('pesta')) controlla(`${t.chiave}: col mortaio sul tavolo si pesta sempre`, [...ordini].every(o => o.startsWith('pesta')), [...ordini].join(' | '))
 }
 {
   const b = new Bottega(tappa('massa-miste'), { rnd: caso(3) })
@@ -333,17 +333,18 @@ for (const t of CAMPAGNA) {
   uguale('all\'inizio due passi', b.passi.map(p => p.azione).join(), 'versa,mescola')
 }
 
-/* ---------- i liquidi non si pestano: il secco sta in dispensa ---------- */
-{
-  const b = new Bottega(tappa('capacita-inversa'), { rnd: caso(4) })
-  uguale('la dispensa non si compra', b.comprati.length, tappa('capacita-inversa').ingredienti)
-  uguale('e ha due cose secche', b.ingredienti.filter(g => g.dispensa && g.famiglia === 'massa').length, 2)
-  uguale('che costano zero', b.ingredienti.filter(g => g.dispensa).reduce((n, g) => n + g.ottimo.costo, 0), 0)
-  controlla('e sono già pronte', b.ingredienti.filter(g => g.dispensa).every(g => g.messo >= g.dose))
-  uguale('il pestello serve', b.passi[0].azione, 'pesta')
-  giocaBene(b)
-  controlla('e la pozione si finisce', b.finita && b.stelle === 3)
+/* ---------- i liquidi non si pestano: niente mortaio, e niente già in dispensa ---------- */
+for (const t of CAMPAGNA.filter(x => x.famiglie.join() === 'capacita')) {
+  uguale(`${t.chiave}: il mortaio non è sul tavolo`, t.azioni.includes('pesta'), false)
+  for (let s = 1; s <= 30; s++) {
+    const b = new Bottega(t, { rnd: caso(s) })
+    uguale(`${t.chiave}: tutto quello che serve si compra`, b.ingredienti.length, t.ingredienti)
+    uguale(`${t.chiave}: la ricetta non pesta`, b.passi.some(p => p.azione === 'pesta'), false)
+    giocaBene(b)
+    controlla(`${t.chiave}: e la pozione si finisce`, b.finita && b.stelle === 3)
+  }
 }
+controlla('nelle finali, con pesi e lunghezze, il mortaio c\'è', ['calderone', 'maestro'].every(c => tappa(c).azioni.includes('pesta')))
 
 /* ---------- il calderone senza fondo ---------- */
 {

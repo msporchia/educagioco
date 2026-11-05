@@ -4,6 +4,7 @@
    `node test/esegui.mjs pozioni-sosta --niente-build` */
 import { CAMPAGNA, INFINITA, giroInfinito } from '../../src/giochi/pozioni/dati/campagna.js'
 import { Bottega, caso, giocaBene, seguiLaRicetta, prossimoPasso } from '../../src/giochi/pozioni/motore/bottega.js'
+import { MORTAIO } from '../../src/giochi/pozioni/motore/procedimento.js'
 import { scrivi, leggi, dice, tappaDi, VERSIONE } from '../../src/giochi/pozioni/motore/sosta.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
@@ -75,10 +76,9 @@ for (const t of [CAMPAGNA[0], CAMPAGNA[9], CAMPAGNA[26], CAMPAGNA.at(-1)]) {
   const t = CAMPAGNA.find(x => x.chiave === 'capacita-inverse')
   const b = new Bottega(t, { rnd: caso(8) })
   const vecchia = via(b)
-  const i = b.ingredienti.findIndex(g => !g.dispensa && g.ottimo.pezzi.length > 1)
+  const i = b.ingredienti.findIndex(g => g.ottimo.pezzi.length > 1)
   const g = b.ingredienti[i], casa = g.offerte[g.ottimo.pezzi[0]].base
-  const dispensa = vecchia.ingredienti.findIndex(x => x.dispensa)
-  vecchia.ingredienti = vecchia.ingredienti.map((x, n) => (n === i ? { ...x, casa, messo: casa, pezzi: [casa] } : n === dispensa ? { ...x, casa: 1 } : { ...x, casa: 0 }))
+  vecchia.ingredienti = vecchia.ingredienti.map((x, n) => (n === i ? { ...x, casa, messo: casa, pezzi: [casa] } : { ...x, casa: 0 }))
   const q = leggi(vecchia)
   controlla('si carica', !!q)
   uguale('lo strumento è dove era', q.ingredienti[i].messo, casa)
@@ -89,6 +89,25 @@ for (const t of [CAMPAGNA[0], CAMPAGNA[9], CAMPAGNA[26], CAMPAGNA.at(-1)]) {
   giocaBene(q)
   controlla('e la pozione si finisce con tre stelle', q.finita && q.stelle === 3)
   uguale('una scorta oltre la dose non si legge', leggi({ ...vecchia, ingredienti: vecchia.ingredienti.map((x, n) => (n === i ? { ...x, casa: x.dose + 1 } : x)) }), null)
+}
+
+/* una sosta di quando i liquidi avevano la roba secca in dispensa: il mortaio torna sul tavolo */
+{
+  const t = CAMPAGNA.find(x => x.chiave === 'capacita-inverse')
+  const vecchia = via(new Bottega(t, { rnd: caso(8) }))
+  const secca = vecchia.ingredienti.length
+  vecchia.ingredienti.push({ nome: 'ghiande', unita: 'g', dose: 1, messo: 1, casa: 1, f: true, dispensa: true, traboccate: 0, pezzi: [], offerte: [] })
+  vecchia.passi = [{ azione: 'pesta', cosa: [secca] }, { azione: 'versa', cosa: [MORTAIO] },
+                   ...vecchia.passi]
+  vecchia.righe = [{ testo: 'Pesta ghiande e versa il pestato.', passi: [0, 1] }, ...vecchia.righe.map(r => ({ ...r, passi: r.passi.map(k => k + 2) }))]
+  const q = leggi(vecchia)
+  controlla('si carica', !!q)
+  controlla('per quella pozione il mortaio c\'è', q.tappa.azioni.includes('pesta'))
+  uguale('la roba secca non si compra', q.comprati.length, t.ingredienti)
+  uguale('e riscrivendola resta', leggi(JSON.parse(JSON.stringify(scrivi(q, CAMPAGNA.indexOf(t), { monete: { chiesto: 0, dato: 0 } })))).ingredienti.filter(g => g.dispensa).length, 1)
+  giocaBene(q)
+  controlla('e la pozione si finisce con tre stelle', q.finita && q.stelle === 3)
+  uguale('le tappe di adesso non cambiano', t.azioni.includes('pesta'), false)
 }
 
 /* quello che non torna non si legge */

@@ -174,10 +174,7 @@ function avviaTappa(i) {
     ? ['Fai le dosi spendendo meno gettoni che puoi: sono del mercante, non le tue monete.',
        'Scegli le ampolle e ordinale tutte insieme: ogni ordine paga la spedizione. Oltre il segno d\'oro trabocca, e poi c\'è da pulire.']
     : [t.dritta] }
-  const b = new Bottega(t)
-  const secche = b.ingredienti.filter(g => g.dispensa).map(g => g.nome)
-  if (secche.length) messaggio.value.righe.push(`In dispensa hai ${secche.join(' e ')}: non serve comprarli.`)
-  entra(i, b)
+  entra(i, new Bottega(t))
 }
 
 function allaMappa() {
