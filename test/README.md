@@ -173,7 +173,8 @@ await semina(page, { coins: 200, campagne: { sotterraneo: { tappa: 2 /* ... */ }
 worker. Serve `dist/` su una porta a caso di `127.0.0.1` come lo serve GitHub
 Pages (`Cache-Control: max-age=600`, ETag e 304), mette in linea una versione
 nuova senza ricompilare (`pubblica({ id, etichetta })`) e fa a comando i giorni
-storti: `lento`, `rotto`, `muto`, `swFermo`, `goccia`. Tiene il registro di
+storti: `lento`, `rotto`, `muto`, `swFermo`, `goccia`; con `cartella` il sito
+spezzato (`dist-sito/`) e i suoi file: `calmo`, `appeso`, `sparito`. Tiene il registro di
 ogni richiesta (`richieste`), con chi l'ha fatta e se era una rivalutazione.
 Si apre in un **`apriTelefono()`** (`aiuto/browser.mjs`) e non in un
 `apriBrowser()`: un profilo con la cache su disco, perché l'incognito tiene la
