@@ -20,10 +20,22 @@ le cucine `CUCINE` in `src/data/bancarella.js`.
 ## La scena
 
 Un bancone in 3D a camera fissa (three.js, solo qui e solo a richiesta: la bancarella
-di sempre non lo scarica), come il banco delle pozioni. Le stazioni in fondo, i
-piatti e il bidone al centro, la dispensa davanti. Forme semplici e morbide, costruite
-al volo: niente creta, si fotografa solo se il gioco resta. Senza WebGL lo dice e offre
+di sempre non lo scarica), come il banco delle pozioni. I fuochi in fondo, i piatti e
+il bidone sulla lastra di marmo, la dispensa davanti. Senza WebGL lo dice e offre
 «riprova». Il foglio del resto è HTML, sopra la tela.
+
+- **Il cibo e la dispensa** (`cucina3d/cibo.js`) sono nella creta
+  ([../fattoria3d/creta.md](../fattoria3d/creta.md)), gli spaghetti a tubi veri. Il
+  piatto si compone come si è cucinato (`impiatta`): il panino si chiude da solo col
+  coperchio al sesamo quando è finito.
+- **Fuochi, forno, tagliere, piatti** (`cucina3d/pezzi.js`) sono a giro e a estrusione,
+  con le trame disegnate in codice: il forno è a legna, coi mattoni.
+- **Il muro è sfondo**: niente appeso che sembri una cosa da prendere.
+- **Il peso**: ogni modello si fa una volta e poi si clona. Le maglie sono larghe
+  (`MAGLIA`): più fini, la quinta cucina chiedeva cinque secondi di creta e 28.000
+  triangoli a pezzo. Ora un paio di secondi su un computer, un fotogramma ~130.000
+  triangoli e ~200 chiamate; prima di aprire si fa solo la dispensa, il cibo arriva
+  dopo (`prepara`). Le ombre vere si rifanno solo se qualcosa si muove.
 
 ## Si lavora col dito
 
