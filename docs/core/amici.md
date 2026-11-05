@@ -54,8 +54,7 @@ Perché regge (non è un buco di sicurezza):
   ci si ripresenta agli amici ogni 20 s, se il primo «presento» si fosse perso.
 - **Si è raggiungibili mentre l'app è aperta** (se i grandi l'hanno acceso): il telefono tiene aperto **un collegamento solo**
   (non uno per amico), con rientro a ritardo crescente se cade, e un ping ogni 15 s: senza risposta per 40 s il filo è morto in
-  silenzio e se ne apre un altro (`BATTITO` in `amici/rete.js`; il ping lo risponde Cloudflare da solo). Nella fattoria in comune, dove sul filo
-  cammina il contadino, batte molto più svelto ([../fattoria3d/in-comune.md](../fattoria3d/in-comune.md), «La linea del contadino»). Se internet manca o il servizio è giù: nessun errore, nessun
+  silenzio e se ne apre un altro (`BATTITO` in `amici/rete.js`; il ping lo risponde Cloudflare da solo). Se internet manca o il servizio è giù: nessun errore, nessun
   cartello, la lista in grigio.
 
 ## Chi lo accende: i grandi, e di base è spento
@@ -138,7 +137,6 @@ non li legge):
 | `{ k: 'presento', id, nome, gioco }` | entrando, quando l'altro entra (`su`), e quando cambia qualcosa. `nome` ≤ 20 caratteri, `gioco` = a cosa sta giocando o `null` |
 | `{ k: 'invito', gioco, dati }` | `dati` per Castle Battle: `{ terreno, secondi }` |
 | `{ k: 'risposta', ok }` | accetto / no grazie |
-| `{ k: 'qui', x, z, d, r?, g?, a? }` / `{ k: 'via' }` | nella fattoria in comune: dove sta il mio contadino (fino a 5 al secondo), e quando esco ([../fattoria3d/in-comune.md](../fattoria3d/in-comune.md)) |
 
 Per Castle Battle non c'è un messaggio a parte per la stanza: chi invita crea il tavolo di sempre (`creaTavolo`), **si siede** (il
 suo collegamento deve essere `host`) e solo allora manda l'invito con il `codice` dentro (`dati: { terreno, secondi, codice }`);

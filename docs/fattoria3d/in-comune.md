@@ -50,38 +50,25 @@ lascia la fotografia. Se l'amico è andato tanto avanti che le mosse sono state 
 ## I due contadini
 
 Se l'amico è dentro anche lui, il suo contadino cammina nella scena col suo abito e il nome sopra la testa (`scena3d/ospite.js`):
-**è parte dell'esperienza** (l'utente). Non passa dal servizio della fila ma dal collegamento degli amici, quello degli inviti:
-ogni telefono manda `{ k: 'qui', x, z, d, r?, g?, a? }` (dove sta, verso dove guarda, se corre, il gesto, ogni due secondi l'abito)
-cinque volte al secondo se cambia qualcosa e ogni due secondi comunque, e `{ k: 'via' }` uscendo ([../core/amici.md](../core/amici.md)).
-Dall'altra parte il contadino ospite cammina verso l'ultimo punto arrivato, salta se è più indietro di cinque celle, fa i gesti, e
-sparisce dopo dieci secondi senza notizie. Le mosse restano quelle della fila: il contadino ospite non tocca la fattoria.
+**è parte dell'esperienza** (l'utente). **Viaggia nello stesso giro delle mosse** (`contadino-amico.js`, `Sessione.quiDelGiro`), così dove
+arriva una mossa arriva anche lui. Prima stava sul filo degli inviti: se il filo moriva in silenzio le mosse passavano e il contadino
+spariva per 36-50 s (misurato con due browser). Mosse e contadino sono due informazioni diverse:
 
-### La linea del contadino
+- **Una mossa persa si rimanda**, una **posizione no**: il giro dopo ne porta una più nuova.
+- Ogni giro porta `{ k: 'qui', p, d, r?, g?, a? }`: `p` la strada fatta dall'ultimo giro (un punto ogni 0,4 s, al massimo 10), verso dove
+  guarda, se ha corso, l'ultimo gesto, ogni quattro giri l'abito. Uscendo, `{ k: 'via' }`.
+- **Chi riceve tiene solo l'ultima** e ne segue la strada: il contadino cammina, ma **circa tre secondi indietro** rispetto all'amico. Se è
+  più lontano di cinque celle dall'inizio della strada ci salta; sparisce dopo 15 s senza notizie (un giro perso ne costa sei).
+- Il contadino ospite non tocca la fattoria.
 
-Mosse e contadino viaggiano separati: le mosse sono richieste che si aprono ogni volta, il contadino sta su un filo che resta aperto.
-Se il filo muore in silenzio (il telefono cambia rete, la wifi singhiozza) le mosse passano e il contadino no: i bambini vedevano le
-cose spostarsi senza vedere chi le spostava, e dopo un po' il contadino tornava. Il filo era tarato per gli inviti, dove aspettare non
-costa niente, e tre cose tenevano il contadino lontano:
+**Sta nella fila ma non è una mossa**: così il servizio non cambia, e `mossaInForma` lo scarta aprendo. Tre cose lo tengono a bada:
+- `seqMossa`: la fotografia si ferma all'ultima mossa vera. Col numero dell'ultima posizione, l'amico indietro di una posizione riceverebbe
+  la fotografia e si riaprirebbe a ogni fotografia.
+- Se dell'amico non si sa niente da 15 s, una posizione ogni 20 s (`DA_SOLO_OGNI`): chi arriva vede che ci sei e la fila non si riempie.
+- `MAX_PER_GIRO` è 19: il servizio ne prende 20 a richiesta, e una è il contadino.
 
-- **Il filo morto si scopriva tardi**: un ping ogni 15 s e 40 s di silenzio prima di lasciarlo. Con due browser veri: 36–50 s senza contadino.
-- **La rete piantata faceva chiudere il filo**: cinque posizioni al secondo restavano in coda e arrivavano tutte insieme, oltre le 20 al
-  secondo del servizio (`1008 troppi messaggi`).
-- **Riaprire poteva costare un minuto**, coi ritardi crescenti di quando non si gioca.
-
-Così adesso, tutto sul telefono (il servizio non cambia): finché la fattoria in comune è aperta `quandoQui` mette il `Ponte` in gioco
-(`inGioco`, `BATTITO_GIOCO` in `amici/rete.js`). Il ping lo risponde Cloudflare: non costa e non conta nelle 20 al secondo.
-
-| | | perché |
-|---|---|---|
-| `ogni` / `sordo` | 1 s / 3,5 s | un filo morto si scopre in 4,5 s al massimo |
-| `fermo` | 1,8 s | filo zitto da tanto: una posizione invecchia, non si mette in coda (`mandaFresco`). Riparte da sola, e la spedizione (`contadino-amico.js`) la riprova al giro dopo |
-| `ritardi` | 1 s, poi 2 s | per riaprire. Provato 0,2 s: lo stesso bambino su due telefoni (stesso id) si caccia dal servizio cinque volte al secondo |
-| `SPARISCE` | 10 s | deve superare il caso peggiore: l'ultima notizia da fermo (2 s), scoprire (4,5 s), riaprire (1 s e la rete) |
-
-Un guasto così adesso si vede come un contadino che si ferma qualche secondo e riparte. Una rete spenta davvero per più di dieci
-secondi lo fa ancora sparire, ma lì non arrivano nemmeno le mosse. `node strumenti/banco-contadino.mjs`, 12 partite da 30 minuti, per
-quanto sparisce il contadino in un'ora di gioco (`--lento`: com'era): `casa` da 450 s a 0, `agitata` da 1675 s a 438 s, e nessun filo
-chiuso dal servizio (erano 36 in `agitata`). Provato con due browser e il proxy cattivo, non su due telefoni veri.
+Il giro è di 3 s perché il servizio dà 3000 richieste all'ora per indirizzo, e due telefoni a casa ne fanno 2400: per un contadino meno
+indietro bisognerebbe alzare quel tetto.
 
 **Con più amici, più fattorie in comune**: una per amicizia, e il 🤝 ha un tasto per ognuno.
 
@@ -96,9 +83,8 @@ chiuso dal servizio (erano 36 in `agitata`). Provato con due browser e il proxy 
 ## Nei test
 
 `unita/fattoria3d-registro` (due telefoni finti a mano: la stessa fattoria, il doppio raccolto, il doppio pezzo, le monete,
-gli id, le mosse storte), `unita/amici-servizio` (la fila e la fotografia), `unita/amici-contadino` (la linea del contadino: due `Ponte`
-veri sulla presenza finta, `test/aiuto/contadini-finti.mjs`), `integrazione/fattoria3d-comune-contadino` (due pagine col proxy cattivo: filo
-morto, rete piantata, filo tagliato, mentre le mosse arrivano; solo con `SERVIZIO=http://localhost:8787`, se no salta), `integrazione/fattoria3d-comune` (due pagine e il
+gli id, le mosse storte), `unita/amici-servizio` (la fila e la fotografia), `unita/fattoria3d-comune-giro` (il contadino nel giro: due `Sessione` vere
+davanti alle regole vere del servizio), `integrazione/fattoria3d-comune` (due pagine e il
 servizio: entra, costruisce, l'altro trova, un lotto arriva mentre si gioca, il contadino dell'altro cammina col suo nome e sparisce quando esce, la propria fattoria intatta, senza rete; **serve il
 servizio con la v6**, in locale `cd servizio/inoltro && npx wrangler dev` e `SERVIZIO=http://localhost:8787`, se no salta).
 
