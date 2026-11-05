@@ -20,6 +20,8 @@ di larghezza; in fondità si tengono almeno tre banconi liberi, finché ci stann
 A zone: **in fondo si finisce** (lavello, piatti, consegna), **a sinistra si taglia** (i taglieri,
 poi pomodoro, insalata, formaggio, pesce), **a destra si cuoce** (pentole, padelle, forni, poi
 pasta, carne, uova), **davanti la dispensa** e il bidone. Quello che la cucina non usa non c'è.
+**Negli angoli niente attrezzi**: ci si arriva solo di sbieco. Ci finisce una cassetta solo se non
+ci sta altrove, nelle ultime cucine piene.
 **Gli appoggi in più** si comprano e stanno nella colonna di mezzo, a coppie, e ci si cammina
 attorno. Fissi rimpicciolivano tutto.
 
