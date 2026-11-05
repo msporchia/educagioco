@@ -1,10 +1,10 @@
 # Le cucine (in prova)
 
-Un prototipo, disegnato in codice: cinque cucine, ognuna con qualcosa in più. Non
+Un prototipo: cinque cucine in 3D, ognuna con qualcosa in più. Non
 stanno nella fila e non si salvano: si aprono da `#bancarella=cucina`, che mostra la
 scelta (c'è anche il tasto in `#admin`; `&livello=5` porta dritto alla quinta). Il
 motore è `src/motore/bancarella/cucina.js`, la schermata
-`src/components/bancarella/Cucina.vue`, i disegni `src/grafica/bancarella-cucina.js`,
+`src/components/bancarella/Cucina.vue`, la scena `src/grafica/cucina3d/`,
 le cucine `CUCINE` in `src/data/bancarella.js`.
 
 ## Le cucine
@@ -17,7 +17,34 @@ le cucine `CUCINE` in `src/data/bancarella.js`.
 | 4 | La pizzeria | il forno: la pizza si condisce e va infornata | + forno | + 🍕 |
 | 5 | Il gran servizio | due piatti a cliente, il totale si batte, i fuochi non si fermano | tutte | tutti |
 
-## Come si gioca
+## La scena
+
+Un bancone in 3D a camera fissa (three.js, solo qui e solo a richiesta: la bancarella
+di sempre non lo scarica), come il banco delle pozioni. Le stazioni in fondo, i
+piatti e il bidone al centro, la dispensa davanti. Forme semplici e morbide, costruite
+al volo: niente creta, si fotografa solo se il gioco resta. Senza WebGL lo dice e offre
+«riprova». Il foglio del resto è HTML, sopra la tela.
+
+## Si lavora col dito
+
+Niente tasti: tutto si trascina, e un tocco fermo dice solo cosa fare.
+
+| gesto | cosa fa |
+|---|---|
+| dalla dispensa a una stazione o a un piatto | ci mette l'ingrediente, se è il suo posto |
+| la pentola o la padella pronte su un piatto | si rovesciano sul piatto |
+| il coltello avanti e indietro sul tagliere | tre passate tagliano l'insalata |
+| l'insalata tagliata su un piatto | la posa |
+| il piatto con la pizza cruda sul forno | la inforna; poi la pizza si tira fuori su un piatto vuoto |
+| il piatto finito verso il cliente, sopra la tela | lo serve |
+| quello che è bruciato, o un piatto, sul bidone | lo butta |
+
+Il bersaglio si cerca sullo schermo, con un po' di largo, come nelle pozioni. Ogni
+gesto è una mossa di `motore/bancarella/cucina.js` (`metti`, `svuota`, `taglia`,
+`inforna`, `butta`, `buttaPiatto`, `servi`): la tela chiede e la vista risponde se è
+riuscita; se no il pezzo torna al suo posto e un fumetto dice «Qui non va».
+
+## Le regole
 
 | piatto | i passi, in ordine | prezzo |
 |---|---|---|
@@ -28,11 +55,9 @@ le cucine `CUCINE` in `src/data/bancarella.js`.
 | 🍳 uovo col pane | uovo cotto, pane | 4,50 € |
 | 🍕 pizza | impasto, sugo, formaggio, forno | 8,00 € |
 
-- **Un ingrediente va da solo dove serve** (`posa`): sul piatto che lo aspetta, se
-  no su uno libero se comincia una ricetta. Se non ha posto non succede niente.
 - **Sul fuoco** (`INGREDIENTI`, `cuoce` e `tiene`): pasta 7 + 6 secondi, carne 5 + 5,
-  uovo 3 + 4, pizza 8 + 7. Passato il tempo brucia: si butta e si ricomincia, e
-  costa solo il tempo. La carne senza un pane che la aspetta resta sul fuoco.
+  uovo 3 + 4, pizza 8 + 7. Passato il tempo brucia e fuma: va nel bidone, e costa solo
+  il tempo. La carne senza un pane che la aspetta resta sul fuoco.
 - **La fila si vede**: sopra chi aspetta c'è cosa vuole, così si cucina in anticipo.
   Un piatto fatto resta lì finché arriva chi lo vuole.
 - **Il piatto sbagliato costa due secondi** di pazienza, come la cesta sbagliata.
@@ -42,10 +67,9 @@ le cucine `CUCINE` in `src/data/bancarella.js`.
 
 ## Il resto è un foglio
 
-La cassa non prende lo schermo: è un foglio sotto le stazioni, che restano tutte in
-vista (`.cassa.foglio`; l'altezza delle stazioni è ferma per questo). La ✕ lo mette
-da parte e «dai il resto» lo riapre: il cliente aspetta, intanto si cucina. Le
-stazioni si toccano anche a foglio aperto.
+La cassa non prende lo schermo: è un foglio sotto le stazioni, che restano in vista.
+La ✕ lo mette da parte e «dai il resto» lo riapre: il cliente aspetta, intanto si
+cucina.
 
 ## La fretta
 
@@ -60,6 +84,7 @@ Una città dopo Tokyo con queste giornate, forno e fuochi fra le cose da comprar
 
 ## Nei test
 
-`unita/bancarella-cucina`, `integrazione/bancarella-cucina`. Bersagli: `[data-cucine]`,
-`[data-cucina-n]`, `[data-cucina]`, `[data-stazione]` (`data-fase`), `[data-piatto]`
-(`data-pronto`), `[data-cosa]`, `[data-vuole]`, `[data-azione="al-resto"]`.
+`unita/bancarella-cucina`, `integrazione/bancarella-cucina` (trascina davvero).
+`window.__cucina3d.dove('pentola'|'cosa:pasta'|'piatto:0'|'coltello'|'bidone'|'cliente')`
+dice dove sta sullo schermo. Bersagli: `[data-cucine]`, `[data-cucina-n]`, `[data-cucina]`,
+`[data-tela]`, `[data-detto]`, `[data-cliente]`, `[data-vuole]`, `[data-azione="al-resto"]`.
