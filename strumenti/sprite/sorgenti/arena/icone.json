@@ -1,0 +1,10 @@
+{
+  "_": "Le icone dei comandi di Castle Battle (ChatGPT, DA-GENERARE.md voce 11): cosa c'è in ogni riga, da sinistra. Lo legge strumenti/sprite/icone-arena.py.",
+  "foglio": "icone.png",
+  "stacco": 16,
+  "righe": [
+    ["potenzia", "vendi", "conferma", "numeri"],
+    ["ripara", "bomba", "miniera", "riposo"],
+    ["orologio", "infinita", "diamante"]
+  ]
+}

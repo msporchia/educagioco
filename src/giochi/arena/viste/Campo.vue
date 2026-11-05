@@ -2,12 +2,13 @@
 // Il campo, che si tocca: consegna il suo canvas a chi lo deve dipingere (emit('tela')) e
 // sopra le piazzole e il castello mette dei bersagli trasparenti grandi quanto l'edificio.
 // Toccata una piazzola libera le compare sopra la nuvoletta con le truppe (il disegno e il prezzo);
-// toccato un edificio gli compare attorno l'anello (⬆️ potenzia, 💰 vendi, ? i numeri). Diamanti in alto,
+// toccato un edificio gli compare attorno l'anello (potenzia, vendi, i numeri). Diamanti in alto,
 // ripara e bomba come icone in basso a destra. Non conosce le regole: riceve già decisi posti, prezzi e cosa si
 // può fare. Il dito non è un mouse: niente di piccolo da toccare.
 import { ref, computed, onMounted } from 'vue'
 import Scelta from './Scelta.vue'
 import Spade from './Spade.vue'
+import Icona from './Icona.vue'
 
 const props = defineProps({
   cruscotto: { type: Object, required: true },
@@ -28,7 +29,6 @@ const orologio = computed(() => {
   const s = Math.max(0, c.infinita ? Math.floor(c.t) : Math.ceil(c.resto))
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 })
-const ICONA = { ripara: '🔧', bomba: '💣' }
 const NOME = { ripara: 'Ripara', bomba: 'Bomba' }
 const px = v => `${Math.round(v)}px`
 </script>
@@ -36,8 +36,8 @@ const px = v => `${Math.round(v)}px`
 <template>
   <div class="ar-campo">
     <div class="ar-hud em">
-      <span class="ar-gettone ar-orologio">{{ cruscotto.infinita ? '♾️' : '⏱️' }} <b>{{ orologio }}</b></span>
-      <span class="ar-gettone ar-borsa" data-monete>💎 <b>{{ cruscotto.monete }}</b> <i>+{{ cruscotto.alSecondo.toFixed(1) }}/s</i></span>
+      <span class="ar-gettone ar-orologio" :data-orologio="cruscotto.infinita ? 'infinita' : 'tappa'"><Icona :nome="cruscotto.infinita ? 'infinita' : 'orologio'" /> <b>{{ orologio }}</b></span>
+      <span class="ar-gettone ar-borsa" data-monete><Icona nome="diamante" /> <b>{{ cruscotto.monete }}</b> <i>+{{ cruscotto.alSecondo.toFixed(1) }}/s</i></span>
     </div>
 
     <div class="ar-quadro" @click.self="emit('chiudiAnello')">
@@ -59,15 +59,10 @@ const px = v => `${Math.round(v)}px`
       <!-- l'anello attorno all'edificio toccato: potenzia, vendi (due tocchi), il «?» dei numeri -->
       <div v-if="pannello.anello" class="ar-anello" :style="{ left: px(pannello.anello.x), top: px(pannello.anello.y) }">
         <button v-for="v in pannello.anello.voci" :key="v.chiave" class="ar-voce em"
-                :class="{ 'ar-no': !v.puoi, 'ar-piccola': v.piccola, 'ar-sicuro': v.sicuro }" :data-anello="v.chiave"
+                :class="{ 'ar-no': !v.puoi, 'ar-sicuro': v.sicuro }" :data-anello="v.chiave"
                 :aria-label="v.chiave" @click.stop="emit('anello', v.chiave)">
-          <svg v-if="v.chiave === 'potenzia' && !v.testo.startsWith('💤')" class="ar-freccia" viewBox="0 0 34 34" aria-hidden="true">
-            <defs><linearGradient id="ar-fr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9af06a"/><stop offset="1" stop-color="#2fa84a"/></linearGradient></defs>
-            <path d="M17 3 L30 16 H22 V20 H12 V16 H4 Z" fill="url(#ar-fr)" stroke="#1d6b2a" stroke-width="1.6" stroke-linejoin="round"/>
-            <path d="M17 18 L28 29 H6 Z" fill="url(#ar-fr)" stroke="#1d6b2a" stroke-width="1.6" stroke-linejoin="round"/>
-          </svg>
-          <span v-else class="ar-voce-icona">{{ v.icona }}</span>
-          <span v-if="v.testo" class="ar-voce-testo">{{ v.testo }}</span>
+          <Icona :nome="v.icona" />
+          <span class="ar-voce-testo">{{ v.testo }}<Icona v-if="v.gemma" nome="diamante" /></span>
         </button>
       </div>
 
@@ -78,11 +73,11 @@ const px = v => `${Math.round(v)}px`
                 @click.stop="emit('scegli', { azione: a.azione })">
           <span class="ar-info em" role="button" aria-label="dettagli" :data-dettagli="a.azione"
                 @click.stop="emit('dettagli', { azione: a.azione })">?</span>
-          <span class="ar-icona em">{{ ICONA[a.azione] }}</span>
+          <Icona class="ar-icona" :nome="a.azione" />
           <span class="ar-prezzo em">
             <template v-if="a.azione === 'bomba'">{{ a.attesa && !a.puoi ? a.attesa + ' s' : 'gratis' }}</template>
             <template v-else-if="a.prezzo === null">—</template>
-            <template v-else>{{ a.prezzo }} 💎</template>
+            <template v-else>{{ a.prezzo }} <Icona nome="diamante" /></template>
           </span>
         </button>
       </div>

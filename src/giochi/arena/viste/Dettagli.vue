@@ -3,12 +3,14 @@
 // ha descrizioni: le righe dicono tutto, e chi non ci pensa non le apre. Il campo sta fermo finché è
 // aperta (lo decide Gioco.vue): serve a scegliere con calma quale conviene.
 // Riceve tutto già calcolato (motore/dettagli.js): non conosce le regole.
+import Icona from './Icona.vue'
 import Ritratto from './Ritratto.vue'
 
 defineProps({
   d: { type: Object, required: true },
 })
 defineEmits(['chiudi', 'procedi', 'vendi'])
+const ICONA = { Potenzia: 'potenzia', Ripara: 'ripara', Lancia: 'bomba' }
 </script>
 
 <template>
@@ -54,13 +56,13 @@ defineEmits(['chiudi', 'procedi', 'vendi'])
 
       <button v-if="d.prezzo !== null" class="ar-pill" :class="{ 'ar-spento': !d.puoi }" data-procedi
               :disabled="!d.puoi" @click="$emit('procedi')">
-        <span class="em">{{ d.verbo }}</span> · <span class="em">{{ d.prezzo }} 💎</span>
+        <Icona v-if="ICONA[d.verbo]" :nome="ICONA[d.verbo]" /> <span class="em">{{ d.verbo }}</span> · <span class="em">{{ d.prezzo }} <Icona nome="diamante" /></span>
       </button>
       <p v-if="d.prezzo !== null && !d.puoi" class="ar-motivo">{{ d.motivo }}</p>
       <p v-if="d.prezzo === null" class="ar-motivo">{{ d.fine }}</p>
       <!-- vendere: per cambiare strategia, ridà metà della spesa; sta in disparte -->
       <button v-if="d.vendi !== null && d.vendi !== undefined" class="ar-vendi-link" data-vendi @click="$emit('vendi')">
-        <span class="em">💰 Vendi · +{{ d.vendi }} 💎</span>
+        <Icona nome="vendi" /> <span class="em">Vendi · +{{ d.vendi }} <Icona nome="diamante" /></span>
       </button>
     </div>
   </div>
