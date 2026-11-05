@@ -40,7 +40,6 @@
 .ar-insegna .ar-spade { width: 46px; height: 46px; filter: drop-shadow(0 3px 3px #000a) }
 .ar-insegna h2 { margin: 0; font: 900 31px/1 var(--ar-epica); letter-spacing: .5px; color: var(--ar-oro-chiaro); text-shadow: 0 2px 0 var(--ar-oro-scuro), 0 4px 10px #000 }
 .ar-panorama { display: block; width: 100%; height: 84px; object-fit: cover; image-rendering: pixelated; background: #2d2534 }
-.ar-panorama.ar-schema { position: fixed; inset: 0; z-index: 999; width: 100vw; height: 100vh }
 .ar-scalino > h3 { position: relative; margin: 0 0 8px; overflow: hidden; border-radius: 12px; border: 2px solid var(--ar-oro); box-shadow: 0 0 0 2px #0007, 0 5px 12px #0008;
                    font-weight: 400 }
 .ar-scalino > h3::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, #0d0a14e0, #0d0a1466 62%, #0000) }
@@ -98,16 +97,16 @@
 @keyframes ar-respira { 50% { box-shadow: 0 0 14px 3px #ffd97acc; transform: scale(1.09) } }
 /* l'anello: pochi pulsanti cremosi come quelli della fattoria, sopra l'edificio toccato; il «?» è piccolo */
 .ar-anello { position: absolute; z-index: 6; transform: translate(-50%, -100%); display: flex; align-items: flex-end; gap: 6px; pointer-events: none }
-.ar-voce { pointer-events: auto; width: 68px; min-height: 60px; padding: 5px 4px 6px; border-radius: 12px;
+.ar-voce { pointer-events: auto; width: 68px; height: 68px; padding: 5px 2px; border-radius: 12px;
            background: linear-gradient(180deg, #fff3cf, #e8cf98); color: #4a2c12; border: 3px solid var(--ar-oro-scuro);
-           box-shadow: 0 0 0 1.5px var(--ar-oro-chiaro), 0 3px 0 #5a3a10, 0 7px 16px #000a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px }
+           box-shadow: 0 0 0 1.5px var(--ar-oro-chiaro), 0 3px 0 #5a3a10, 0 7px 16px #000a; display: flex; flex-direction: column; align-items: center; justify-content: space-between }
 .ar-voce:active { transform: translateY(2px) }
-.ar-voce.ar-no { opacity: .55 }
-.ar-voce.ar-sicuro { background: #ffe0d6; border-color: #e0644f; box-shadow: 0 3px 0 #9b2f1c, 0 6px 14px #0008 }
-.ar-voce.ar-piccola { width: 44px; min-height: 44px; padding: 0; border-radius: 50%; font-size: 18px; font-weight: 900 }
-.ar-voce-icona { font-size: 22px; line-height: 1; display: grid; place-items: center }
-.ar-freccia { width: 34px; height: 34px; filter: drop-shadow(0 2px 0 #1d6b2a66) }
-.ar-voce-testo { font-size: 11.5px; font-weight: 800; white-space: nowrap }
+.ar-voce.ar-no { filter: grayscale(.7); opacity: .8 }
+.ar-voce.ar-sicuro { background: linear-gradient(180deg, #ffe0d6, #e8a890); border-color: #9b2f1c }
+.ar-voce > .ar-ic { width: 34px; height: 34px }
+.ar-voce-testo { display: flex; align-items: center; gap: 2px; height: 15px; font-size: 12.5px; font-weight: 800; white-space: nowrap }
+/* le icone dei comandi (viste/Icona.vue): una famiglia sola, la misura la dà chi le ospita */
+.ar-ic { display: inline-block; width: 1.1em; height: 1.1em; flex: none; vertical-align: -.16em; background-repeat: no-repeat; overflow: visible }
 /* ripara e bomba: due scudi tondi nei due angoli di sotto, ai lati del castello e sotto le piazzole (il dito: almeno 56 px).
    Su uno schermo largo stanno agli angoli del campo, non a quelli del quadro */
 .ar-quadro { container-type: size }
@@ -119,7 +118,7 @@
                    box-shadow: 0 0 0 2px #0009, 0 0 0 3.5px var(--ar-oro-scuro), 0 5px 12px #000b }
 .ar-azione-tonda:active { transform: scale(.94) }
 .ar-azione-tonda.ar-no { filter: grayscale(.75) brightness(.8) }
-.ar-azione-tonda .ar-icona { font-size: 28px; height: 32px }
+.ar-azione-tonda .ar-icona { width: 34px; height: 34px }
 .ar-azione-tonda .ar-prezzo { position: absolute; bottom: -9px; padding: 2px 7px; border-radius: 6px; background: var(--ar-ferro); border: 1.5px solid var(--ar-oro);
                               font-size: 11px; color: #fff; white-space: nowrap }
 .ar-azione-tonda .ar-info { top: -10px; left: auto; right: -6px }
@@ -138,7 +137,7 @@
               box-shadow: 0 3px 0 #c9a46a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 0 }
 .ar-costo { font-size: 14px; font-weight: 800; color: #5a3410; white-space: nowrap }
 .ar-disegno:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #c9a46a }
-.ar-pico { font-size: 38px }
+.ar-pico { width: 42px; height: 42px }
 /* il «?» dei numeri: un cerchietto nell'angolo, dentro un'area più larga che il dito prende */
 .ar-punto { position: absolute; top: -9px; right: -9px; width: 36px; height: 36px; z-index: 2; display: grid; place-items: center;
             font-size: 13px; font-weight: 900; color: #6b4a26; background: none; padding: 0 }

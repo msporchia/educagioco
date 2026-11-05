@@ -537,7 +537,7 @@ LE REGOLE TECNICHE, queste sì precise, perché il foglio poi si taglia a pezzi:
 
 **Si salva in** `strumenti/sprite/sorgenti/arena/caserme-2.png`. **Comando**: `python3 strumenti/sprite/caserme-arena.py`, che legge
 il foglietto `caserme-2.json` e pretende righe da 6, 7, 5, 5, 3; se i conti non tornano si guarda
-`python3 strumenti/sprite/righe.py strumenti/sprite/sorgenti/arena/caserme-2.png provino.png`. Il disegno in codice della miniera resta finché il pezzo non c'è.
+`python3 strumenti/sprite/righe.py strumenti/sprite/sorgenti/arena/caserme-2.png provino.png`. La miniera disegnata a monte resta finché il pezzo non c'è.
 
 ```text
 Ti allego tre immagini di un gioco per bambini dai 6 ai 12 anni, Castle Battle. La prima è il foglio provvisorio delle caserme: è il foglio da rifare, tienine il formato e l'idea di ogni edificio ma disegnalo molto meglio, più ricco, più epico, più curato. La seconda e la terza sono schermate del gioco: servono solo a capire chi abita le caserme e quanto piccole si vedono, non sono lo stile da copiare.
@@ -558,11 +558,12 @@ LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: foglio
 
 ### 8 — I quattro terreni di Castle Battle · 4 immagini · da fare
 
-**Perché**: il terreno è più grande del campo e si adatta allo schermo senza stirarsi (`docs/arena/grafica.md`). Il disegno in
-codice ha già la forma giusta: il dipinto la rifà, non la inventa. Si comincia dalle colline, che dicono se lo stile regge.
+**Perché**: il terreno è più grande del campo e si adatta allo schermo senza stirarsi (`docs/arena/grafica.md`). In partita è
+un'immagine già pronta, oggi disegnata a monte da `npm run disegni:arena`: ha già la forma giusta, il dipinto la rifà e non la inventa, e al
+gioco non costa niente di più. Si comincia dalle colline, che dicono se lo stile regge.
 
 **Come si manda**: ChatGPT, una chat nuova per ogni posto. Si allega `sorgenti/arena/schemi/terreno-<chiave>.png` (lo rifà
-`node strumenti/sprite/schemi-arena.mjs`). Dal secondo posto in poi si allega per secondo il terreno già riuscito, «solo stile».
+`npm run disegni:arena`). Dal secondo posto in poi si allega per secondo il terreno già riuscito, «solo stile».
 
 **Si salva in** `strumenti/sprite/sorgenti/arena/terreno-<chiave>.png` (`bosco`, `palude`, `neve`, `lava`). **Comando**:
 `python3 strumenti/sprite/terreni-arena.py`. Lo strumento si ferma se l'immagine non è 3:2: non si stira mai. Il ponte, la porta e il castello
@@ -619,7 +620,7 @@ LE REGOLE TECNICHE: immagine ORIZZONTALE 1536×1024 px che riempie tutto il quad
 
 ### 9 — Le fortezze dei quattro posti · 1 immagine · da fare
 
-**Perché**: il castello è ancora quello del vestito `bosco` del castello a torri, ricolorato; porta e ponte sono disegnati in codice.
+**Perché**: il castello è ancora quello del vestito `bosco` del castello a torri, ricolorato a monte; porta e ponte sono disegnati a monte col programma.
 
 **Come si manda**: ChatGPT, chat nuova. Si allegano `sorgenti/arena/schemi/partita.png` e, se ci sono già, i terreni riusciti («solo stile»).
 
@@ -657,6 +658,27 @@ LA SCENA: un grande campo di battaglia al tramonto, visto da lontano e dall'alto
 LE REGOLE: immagine ORIZZONTALE 1536×1024 px, pixel art ricca, ogni pixel del disegno un quadrato pieno di 4×4 px. La parte importante sta nella striscia centrale, fra il 30% e il 70% dell'altezza: il resto può essere tagliato. NESSUNA PAROLA SCRITTA, NESSUN TITOLO, nessuna cornice.
 ```
 
+### 11 — Le icone dei comandi · 1 immagine · da fare
+
+**Perché**: accanto a un edificio stanno tre pulsanti, e con emoji di stili diversi facevano brutto (l'utente). Oggi sono undici icone di una famiglia sola
+disegnate in `viste/Icona.vue`: il foglio le rifà più belle, e i pulsanti non cambiano.
+
+**Come si manda**: ChatGPT, chat nuova. Si allega `sorgenti/arena/schemi/partita.png`, «solo per capire il gioco».
+
+**Si salva in** `strumenti/sprite/sorgenti/arena/icone.png`. **Comando**: `python3 strumenti/sprite/icone-arena.py`, che legge il foglietto `icone.json`, pretende
+righe da 4, 4, 3 e mette ogni icona nello stesso quadrato.
+
+```text
+Dipingi un foglio di icone per i comandi di un gioco di battaglia per bambini, Castle Battle, in stile fantasy epico. L'immagine allegata è una schermata del gioco: serve solo a capire il tono. La cosa più importante: le undici icone sono UNA FAMIGLIA SOLA. Stesso stile, stesso tratto scuro attorno, stessa luce da in alto a sinistra, stessa grandezza a schermo, stesso peso visivo. Messe in fila devono sembrare fatte dalla stessa mano, come le icone di un gioco di strategia.
+
+COSA TI CHIEDO, tre righe.
+RIGA 1, quattro icone: una doppia freccia verde verso l'alto (potenzia), un sacchetto di monete d'oro (vendi), un segno di spunta verde (confermo), una pergamena scritta (i numeri).
+RIGA 2, quattro icone: una chiave inglese d'acciaio (ripara), una bomba nera con la miccia accesa (bomba), un piccone (miniera), una luna con una Z (riposa).
+RIGA 3, tre icone: una clessidra d'oro (il tempo), il simbolo dell'infinito in oro, un diamante azzurro (le monete di battaglia).
+
+LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: foglio ORIZZONTALE 1536×1024 px su FONDO TRASPARENTE; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; ogni icona sta in un quadrato di circa 220 px e lo riempie; almeno 60 px di trasparente fra un'icona e l'altra, anche fra le righe, e ogni icona è un pezzo solo, senza parti staccate; nessun fondo, nessun cerchio o bottone attorno, nessuna ombra sotto, nessun bagliore, nessuna cornice; NESSUNA PAROLA SCRITTA, NESSUN NUMERO, tranne la Z della luna.
+```
+
 ## In fila
 
 *Le scene `td_2/3/4.png` sono state eliminate il 13/10/2026 (stanno già in `terreno-neve/lava/palude.png`): dove la tabella le nomina come allegato di uno stile, si allega il `terreno-*.png` del vestito. `td_1.png` resta.*
@@ -677,6 +699,7 @@ LE REGOLE: immagine ORIZZONTALE 1536×1024 px, pixel art ricca, ogni pixel del d
 | 8 | i quattro terreni di Castle Battle (ChatGPT, si ridipinge il disegno in codice) | 4 | `schemi/terreno-<chiave>` | `arena/terreno-<chiave>.png` | il terreno dipinto |
 | 9 | castello, porta e ponte dei quattro posti (ChatGPT) | 1 | `schemi/partita` | `arena/fortezze.png` | i castelli di Castle Battle |
 | 10 | la copertina di Castle Battle (ChatGPT) | 1 | `schemi/partita` | `home/copertina-arena.png` | la home e il frontone della mappa |
+| 11 | le icone dei comandi di Castle Battle (ChatGPT) | 1 | `schemi/partita` | `arena/icone.png` | l'anello, ripara e bomba dipinti |
 
 Il **minimo per rifare il gioco** sono l'1 e il 2: col bosco, le torri
 nuove e i mostri che ci sono già il castello si gioca e si pubblica. Il

@@ -15,7 +15,9 @@ import { firmaEquilibrio } from '../../src/giochi/arena/motore/firma.js'
 import { FIRMA, NEMICO, NEMICO_PER_LIVELLO } from '../../src/giochi/arena/dati/taratura.js'
 import { guastiDeiDettagli, dettaglioTruppa, dettaglioAzione, ruoloDi } from '../../src/giochi/arena/motore/dettagli.js'
 import { guastiDelleFigure } from '../../src/giochi/arena/scena/figure.js'
-import { guastiDelTerreno } from '../../src/giochi/arena/scena/terreno.js'
+import { guastiDelTerreno } from '../../strumenti/sprite/arena-disegni/terreno.js'
+import { firmaDisegni } from '../../strumenti/sprite/arena-disegni/firma.mjs'
+import { FIRMA as FIRMA_DISEGNI } from '../../src/giochi/arena/dati/opere-disegnate.js'
 import manifesto from '../../src/giochi/arena/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
 import { GRADO_A_MENTE, PARTENZA_MAX, partenza, basi, gradoDi, dopoLaRisposta, gradoDelleTabelline, gradoDellEta }
@@ -422,6 +424,7 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
 
 /* ══════════ i posti ══════════ */
 uguale('ogni terreno ha il suo posto, e i decori stanno dove non coprono niente', guastiDelTerreno().join('; '), '')
+uguale('i disegni pronti sono freschi: se questo è rosso, rilancia `npm run disegni:arena`', FIRMA_DISEGNI, firmaDisegni())
 
 /* ══════════ 8. la taratura è fresca ══════════ */
 controlla('la taratura è fresca: se questo è rosso, rilancia `npm run tara:arena`',

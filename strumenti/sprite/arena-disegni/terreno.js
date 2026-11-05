@@ -1,10 +1,7 @@
-// Il terreno di Castle Battle: un mondo più grande del campo, che si guarda dalla finestra che lo schermo lascia e non si stira
-// mai (docs/arena/grafica.md). Si dipinge una volta sola, punto per punto, sulla grana delle figure; è funzione delle sole
-// coordinate del mondo, quindi due schermi diversi vedono lo stesso posto. Quando c'è il dipinto (`dati/terreni-dipinti.js`,
-// `strumenti/sprite/terreni-arena.py`) si usa quello.
-import { CAMPO, POSTI, TERRENI } from '../dati/regole.js'
-import { TERRENI_DIPINTI, DIPINTO } from '../dati/terreni-dipinti.js'
-import { AMBIENTI, ambiente } from './ambienti.js'
+// Il terreno di Castle Battle disegnato col programma, A MONTE: `npm run disegni:arena` lo fa punto per punto e ne salva
+// l'immagine, che il gioco legge già pronta, e che ChatGPT ridipinge (docs/arena/grafica.md). Il gioco non importa questo file.
+import { CAMPO, POSTI, TERRENI } from '../../../src/giochi/arena/dati/regole.js'
+import { AMBIENTI, ambiente } from '../../../src/giochi/arena/scena/ambienti.js'
 import { disegnaDecori, ombraDecoro, FIGURE } from './decori.js'
 
 export const G = 2                       // punti del disegno per unità del mondo: la grana delle figure
@@ -194,84 +191,9 @@ function decora(c, a, v, W, H, g) {
   c.drawImage(cv, 0, 0)
 }
 
-/* la luce del posto: da in alto a sinistra, e scura verso i bordi perché l'occhio stia sul campo */
+/* la luce del posto: da in alto a sinistra */
 function luce(c, a, W, H) {
   const g = c.createLinearGradient(0, 0, W, H)
   a.luce.forEach((col, i) => g.addColorStop(i / (a.luce.length - 1), col))
   c.fillStyle = g; c.fillRect(0, 0, W, H)
-  bordi(c, W, H)
 }
-
-/* i bordi scuri tengono l'occhio sul campo; stanno nella tela perché a fotogramma una velatura intera costerebbe troppo */
-function bordi(c, W, H) {
-  const g = c.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.46, W / 2, H / 2, Math.hypot(W, H) * 0.56)
-  g.addColorStop(0, 'rgba(6,3,14,0)'); g.addColorStop(1, 'rgba(6,3,14,.5)')
-  c.fillStyle = g; c.fillRect(0, 0, W, H)
-}
-
-/* il terreno dipinto, se c'è: il suo pezzo di mondo è DIPINTO, e fuori si continua specchiato */
-function dalDipinto(img, { x, y, w, h }) {
-  const cv = document.createElement('canvas'); cv.width = Math.ceil(w * G); cv.height = Math.ceil(h * G)
-  const c = cv.getContext('2d')
-  c.scale(G, G); c.translate(-x, -y)
-  const D = DIPINTO
-  for (let j = Math.floor((y - D.y) / D.h) - 1; j * D.h + D.y < y + h; j++) {
-    for (let i = Math.floor((x - D.x) / D.w) - 1; i * D.w + D.x < x + w; i++) {
-      c.save(); c.translate(D.x + i * D.w + (i & 1 ? D.w : 0), D.y + j * D.h + (j & 1 ? D.h : 0)); c.scale(i & 1 ? -1 : 1, j & 1 ? -1 : 1)
-      c.drawImage(img, 0, 0, D.w, D.h); c.restore()
-    }
-  }
-  c.setTransform(1, 0, 0, 1, 0, 0)
-  bordi(c, cv.width, cv.height)
-  return cv
-}
-
-const dipinti = {}
-function caricaDipinto(chiave) {
-  if (!TERRENI_DIPINTI[chiave] || typeof Image === 'undefined') return Promise.resolve(null)
-  return (dipinti[chiave] ||= new Promise(ok => {
-    const i = new Image()
-    i.onload = () => ok(i)
-    i.onerror = () => { delete dipinti[chiave]; ok(null) }     // resta il disegno in codice
-    i.src = TERRENI_DIPINTI[chiave]
-  }))
-}
-
-export class Terreno {
-  constructor(chiave) {
-    this.chiave = chiave
-    this.a = ambiente(chiave)
-    this.tela = null
-    this.vista = null
-    this.dipinto = null
-  }
-
-  async prepara() { this.dipinto = await caricaDipinto(this.chiave) }
-
-  /* la finestra sul mondo, in unità; con un margine, così un ritocco di misura non ridipinge */
-  inquadra({ x, y, w, h }) {
-    const v = this.vista
-    if (v && x >= v.x && y >= v.y && x + w <= v.x + v.w && y + h <= v.y + v.h) return
-    this.vista = { x: Math.floor(x) - 4, y: Math.floor(y) - 4, w: Math.ceil(w) + 8, h: Math.ceil(h) + 8 }
-    this.tela = null
-  }
-
-  /* un telefono a corto di memoria può svuotare una tela in silenzio: si guarda un punto, e se è trasparente si rifà */
-  controlla() {
-    if (!this.tela) return
-    try {
-      if (this.tela.getContext('2d').getImageData(this.tela.width >> 1, this.tela.height >> 1, 1, 1).data[3] === 0) this.tela = null
-    } catch { /* tela non leggibile: non si giudica */ }
-  }
-
-  /* disegna la tela; `X`, `Y` e `s` sono quelli del campo */
-  disegna(c, X, Y, s) {
-    if (!this.vista) return
-    this.tela ||= this.dipinto ? dalDipinto(this.dipinto, this.vista) : dipingi(this.chiave, this.vista)
-    const v = this.vista
-    c.imageSmoothingEnabled = false
-    c.drawImage(this.tela, X(v.x), Y(v.y), this.tela.width / G * s, this.tela.height / G * s)
-    c.imageSmoothingEnabled = true
-  }
-}
-

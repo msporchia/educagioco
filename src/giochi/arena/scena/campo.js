@@ -8,29 +8,26 @@
 import { CAMPO, TRUPPE, POSTI, EDIFICIO_DI } from '../dati/regole.js'
 import { PEZZI as DIPINTE, ATLANTE as FOGLIO_CASERME, PIAZZOLA } from '../dati/caserme-dipinte.js'
 import { PEZZI as FORTEZZE, ATLANTE as FOGLIO_FORTEZZE } from '../dati/fortezze-dipinte.js'
-import { carica, immagineScena } from '../../castello/scena/vestito.js'
-import { PEZZI as SCENE } from '../../castello/dati/vestiti.js'
+import { PEZZI as OPERE, ATLANTE as FOGLIO_OPERE } from '../dati/opere-disegnate.js'
 import { PEZZI } from '../../castello/dati/figure.js'
 import { caricaFigure, immagineFigure } from '../../castello/scena/pittori.js'
-import { SCALA, fotogramma, arco } from './figure.js'
+import { SCALA, fotogramma, fotogrammiDi, arco, armiPronte } from './figure.js'
 import { disegnaEdificio } from './edifici.js'
-import { Terreno, hex } from './terreno.js'
+import { Terreno } from './terreno.js'
 import { Atmosfera } from './atmosfera.js'
-import { disegnaPonte, disegnaPorta, disegnaMiniera, disegnaRuderiMiniera, stendardo } from './opere.js'
 
 // Tutto è piccolo e il campo è largo: `ZOOM` è la misura delle figure rispetto al mondo.
 const ZOOM = 0.5
 // quanto mondo si vede almeno, di lato: le piazzole coi loro bordi. Il resto dello schermo è terreno in più (docs/arena/grafica.md)
 const LARGO_MINIMO = 276
-// i castelli sono dipinti una volta sola, e il nemico è lo stesso col blu fatto rosso: i vestiti del castello a torri non c'entrano
-const CASTELLO_DI = 'bosco'
+// in partita non si disegna niente che si possa preparare (docs/arena/grafica.md): gli atlanti si caricano e si ricolorano una volta sola
+const atlanti = {}
 // caserme che il foglio dipinto non ha ancora e che per ora prendono il pezzo di un'altra (docs/arena/grafica.md):
 // la tana delle bestie cornute, per neve e lava, ha la capanna dei lupi, che là non ci sono
 const IN_PRESTITO = { 'tana:bestie:1': 'tana:lupi:1', 'tana:bestie:2': 'tana:lupi:2' }
 const ZT = ZOOM * 1.2                    // le truppe: un po' più grandi del terreno
 const ZE = 0.75                          // castello ed edifici: più grandi delle truppe
 const IO = '#3d8bff', NEM = '#ff5a4d'
-const ROCCIA = ['#5a5260', '#8a8290', '#bcb4c0']   // la miniera è uguale dappertutto: sul terreno scuro deve staccare
 
 export class Campo {
   constructor(canvas, { vestito = 'bosco' } = {}) {
@@ -45,6 +42,8 @@ export class Campo {
     this.rovine = new Map()            // 'lato:posto' → l'edificio crollato lì: ne resta il rudere
     this.caserme = null                // le caserme dipinte: { io, nem } (il nemico col blu fatto rosso)
     this.fortezze = null               // castello, porta e ponte dipinti del posto, se il foglio è arrivato: come sopra
+    this.opere = null                  // i pezzi disegnati a monte, che ci sono sempre: come sopra
+    this.figure = new Map()            // le truppe già pronte alla misura dello schermo: vedi `figura`
   }
 
   /* se un'immagine non arriva (cache che si sta rinnovando, memoria corta) si riprova: il campo non resta
@@ -52,7 +51,7 @@ export class Campo {
   async prepara() {
     for (let giro = 0; ; giro++) {
       try {
-        await Promise.all([carica(CASTELLO_DI), caricaFigure(), this.caricaCaserme(), this.caricaFortezze(), this.terreno.prepara()])
+        await Promise.all([caricaFigure(), armiPronte(), this.caricaAtlanti(), this.terreno.prepara()])
         break
       } catch (e) {
         if (giro >= 5) throw e
@@ -60,31 +59,31 @@ export class Campo {
       }
     }
     this.pronto = true
+    this.preparaFigure()
   }
 
-  /* l'atlante delle caserme dipinte, e la sua copia col blu della squadra fatto rosso */
-  caricaCaserme() {
-    if (typeof Image === 'undefined') return Promise.resolve()
-    return new Promise(ok => {
+  /* un atlante e la sua copia col blu della squadra fatto rosso; se l'immagine non arriva, null */
+  atlante(src) {
+    if (typeof Image === 'undefined' || !src) return Promise.resolve(null)
+    return (atlanti[src] ||= new Promise(ok => {
       const img = new Image()
-      img.onload = () => { this.caserme = { io: img, nem: this.ricolora(img) }; ok() }
-      img.onerror = () => ok()                                  // resta il disegno in codice
-      img.src = FOGLIO_CASERME
-    })
+      img.onload = () => ok({ io: img, nem: this.ricolora(img) })
+      img.onerror = () => { delete atlanti[src]; ok(null) }
+      img.src = src
+    }))
   }
 
-  caricaFortezze() {
-    if (typeof Image === 'undefined' || !FOGLIO_FORTEZZE) return Promise.resolve()
-    return new Promise(ok => {
-      const img = new Image()
-      img.onload = () => { this.fortezze = { io: img, nem: this.ricolora(img) }; ok() }
-      img.onerror = () => ok()                                  // resta il disegno in codice
-      img.src = FOGLIO_FORTEZZE
-    })
+  async caricaAtlanti() {
+    [this.caserme, this.fortezze, this.opere] = await Promise.all([FOGLIO_CASERME, FOGLIO_FORTEZZE, FOGLIO_OPERE].map(src => this.atlante(src)))
+    if (!this.opere) throw new Error('atlante delle opere non caricato')     // `prepara` riprova
   }
 
-  /* un pezzo del foglio delle fortezze per questo posto, o null */
-  fortezza(nome) { return this.fortezze ? FORTEZZE[nome.replace('@', this.terreno.chiave)] : null }
+  /* un pezzo per questo posto: il dipinto se c'è, se no quello disegnato a monte. `@` sta per il posto. Torna [atlante, rettangolo] */
+  fortezza(nome) {
+    const n = nome.replace('@', this.terreno.chiave)
+    if (this.fortezze && FORTEZZE[n]) return [this.fortezze, FORTEZZE[n]]
+    return this.opere && OPERE[n] ? [this.opere, OPERE[n]] : [null, null]
+  }
 
   /* il blu della squadra diventa rosso (e il rosso blu): castello e caserme del nemico */
   ricolora(img, sx = 0, sy = 0, w = img.width, h = img.height) {
@@ -103,10 +102,11 @@ export class Campo {
   /* un pezzo delle caserme dipinte, con la piazzola larga `larga` e centrata in (x, piede);
      torna l'altezza a schermo, o 0 se non c'è (e allora si disegna in codice) */
   dipinta(c, nome, x, piede, larga, lato, k = 1) {
-    const p = DIPINTE[nome] || DIPINTE[IN_PRESTITO[nome]]
-    if (!p || !this.caserme) return 0
+    const dipinto = DIPINTE[nome] || DIPINTE[IN_PRESTITO[nome]]
+    const p = dipinto || OPERE[nome], foglio = dipinto ? this.caserme : this.opere
+    if (!p || !foglio) return 0
     const [sx, sy, w, h, cx, pd] = p, sc = larga / PIAZZOLA * k
-    c.drawImage(this.caserme[lato], sx, sy, w, h, x - cx * sc, piede - pd * sc, w * sc, h * sc)
+    c.drawImage(foglio[lato], sx, sy, w, h, x - cx * sc, piede - pd * sc, w * sc, h * sc)
     return h * sc
   }
 
@@ -124,7 +124,9 @@ export class Campo {
     this.s = Math.min(w / LARGO_MINIMO, h / CAMPO.H)
     this.ox = (w - CAMPO.W * this.s) / 2
     this.oy = (h - CAMPO.H * this.s) / 2
-    this.terreno.inquadra({ x: -this.ox / this.s, y: -this.oy / this.s, w: w / this.s, h: h / this.s })
+    this.terreno.scorda()
+    this.figure.clear()
+    if (this.pronto) this.preparaFigure()
   }
 
   /* dal motore allo schermo: stesse coordinate, scalate */
@@ -165,7 +167,6 @@ export class Campo {
     this.sfondo(c, W, H)
     if (!this.pronto) return
     this.aria.sotto(c, W, H, this.s, v => this.X(v), v => this.Y(v), ora)
-    this.ponte(c)
     this.piazzole(c, p)
     // castelli, caserme e porte dall'alto in basso, così chi sta davanti copre chi sta dietro
     const edifici = [...p.castelli.map(e => [e.y, () => this.base(c, p, e.lato, ora)]),
@@ -181,7 +182,7 @@ export class Campo {
 
   sfondo(c, W, H) {
     c.fillStyle = this.terreno.a.tinta; c.fillRect(0, 0, W, H)
-    if (this.pronto) this.terreno.disegna(c, v => this.X(v), v => this.Y(v), this.s)
+    if (this.pronto) this.terreno.disegna(c, { W, H, k: this.k, s: this.s, X: v => this.X(v), Y: v => this.Y(v), sopra: t => this.ponte(t) })
   }
 
   /* un pezzo del foglio delle figure, col piede in (x, y) */
@@ -197,15 +198,42 @@ export class Campo {
     return lh
   }
 
-  /* il foglio delle figure tutto del colore di una squadra, per il contorno (si fa una volta) */
-  tinta(lato) {
-    this._tinte ||= {}
-    if (this._tinte[lato]) return this._tinte[lato]
-    const img = immagineFigure(), cv = document.createElement('canvas')
-    cv.width = img.width; cv.height = img.height
-    const x = cv.getContext('2d'); x.drawImage(img, 0, 0)
-    x.globalCompositeOperation = 'source-in'; x.fillStyle = lato === 'io' ? '#4f9dff' : '#ff4a3d'; x.fillRect(0, 0, cv.width, cv.height)
-    return (this._tinte[lato] = cv)
+  /* Una truppa già pronta alla misura dello schermo, col contorno della squadra e l'arco in mano, girata dalla parte giusta:
+     a fotogramma è un disegno solo e senza scala, invece di cinque ingranditi dal foglio. Con centinaia di figure è questo che
+     pesa. Si rifanno quando cambia la misura. */
+  figura(id, fg, lato) {
+    const chiave = `${lato}:${fg}:${id}`
+    let f = this.figure.get(chiave)
+    if (f) return f
+    const [sx, sy, w, h] = PEZZI[fg], k = this.k, sc = SCALA[id] * this.s / 0.85 * ZT * k, d = 1.3 * k
+    const lw = w * sc, lh = h * sc, specchia = lato === 'nem', bordo = Math.ceil(d) + 1
+    const extra = id === 'scheletri' ? lh * 0.5 : 0                       // l'arco esce dalla figura
+    const mezzo = Math.ceil(lw / 2 + extra + bordo), cv = document.createElement('canvas')
+    cv.width = mezzo * 2; cv.height = Math.ceil(lh + bordo * 2)
+    const piede = cv.height - bordo, corpo = document.createElement('canvas')
+    corpo.width = cv.width; corpo.height = cv.height
+    const q = corpo.getContext('2d')
+    q.translate(mezzo, piede)
+    if (specchia) q.scale(-1, 1)
+    q.drawImage(immagineFigure(), sx, sy, w, h, -lw / 2, -lh, lw, lh)
+    if (specchia) q.scale(-1, 1)
+    if (id === 'scheletri') arco(q, 0, 0, lw, lh, specchia, 0)
+    // il contorno: la figura tutta del colore della squadra, spostata di un pelo ai quattro lati, sotto la figura vera
+    const tinta = document.createElement('canvas'); tinta.width = cv.width; tinta.height = cv.height
+    const t = tinta.getContext('2d')
+    t.drawImage(corpo, 0, 0)
+    t.globalCompositeOperation = 'source-in'; t.fillStyle = lato === 'io' ? '#4f9dff' : '#ff4a3d'; t.fillRect(0, 0, cv.width, cv.height)
+    const c = cv.getContext('2d')
+    for (const [dx, dy] of [[-d, 0], [d, 0], [0, -d], [0, d]]) c.drawImage(tinta, dx, dy)
+    c.drawImage(corpo, 0, 0)
+    f = { cv, piede: piede / k, alto: lh / k }
+    this.figure.set(chiave, f)
+    return f
+  }
+
+  /* tutte le pose di tutte le truppe, prima che serva: durante la battaglia non si prepara niente */
+  preparaFigure() {
+    for (const id of Object.keys(TRUPPE)) for (const fg of fotogrammiDi(id)) for (const lato of ['io', 'nem']) this.figura(id, fg, lato)
   }
 
   barra(c, x, y, w, q, colore) {
@@ -224,15 +252,18 @@ export class Campo {
      è l'obiettivo finale, non deve prendere campo */
   base(c, p, lato, ora) {
     const re = p.castello(lato)
-    const dipinto = this.fortezza('castello:@')
-    const img = dipinto ? this.fortezze.io : immagineScena(CASTELLO_DI)
-    const [sx, sy, w, h] = dipinto || SCENE[CASTELLO_DI].castello
+    const [foglio, pezzo] = this.fortezza('castello:@')
+    const [sx, sy, w, h] = pezzo
     const lw = w * 0.56 * this.s / 0.85 * ZE, lh = h * 0.56 * this.s / 0.85 * ZE
     const x = this.X(re.x), piede = lato === 'io' ? this.Y(CAMPO.H + 60) : this.Y(60)
     if (re.hp > 0) {
-      c.drawImage(this.castelloDi(lato, img, sx, sy, w, h, !!dipinto), x - lw / 2, piede - lh, lw, lh)
-      const col = lato === 'io' ? IO : NEM, y = lato === 'io' ? this.Y(CAMPO.H - 2) : piede - lh * 0.05
-      for (const v of [-1, 1]) stendardo(c, x + v * lw * 0.62, y, this.me(58), this.me(20), col, ora, v)
+      c.drawImage(foglio[lato], sx, sy, w, h, x - lw / 2, piede - lh, lw, lh)
+      const y = lato === 'io' ? this.Y(CAMPO.H - 2) : piede - lh * 0.05
+      for (const v of [-1, 1]) {
+        const bx = x + v * lw * 0.62
+        c.fillStyle = '#2b2118'; c.fillRect(bx - 1, y - this.me(58), 2, this.me(58))
+        this.bandiera(c, bx, y - this.me(36), this.me(24), v, lato, ora)
+      }
     } else this.ombra(c, x, lato === 'io' ? this.Y(CAMPO.H) : this.Y(0), lw * 0.4, lh * 0.1, 0.5)
     // la vita del castello: una barra grande dalla parte del campo, sempre accesa (con la vita scritta)
     const by = lato === 'io' ? piede - lh - this.mi(18) : piede + this.mi(6)
@@ -240,25 +271,11 @@ export class Campo {
     this.livello(c, x + this.mi(66), by + this.mi(6.5), re.liv, lato)
   }
 
-  /* un castello tutto del colore della sua squadra (il foglio ha tetti blu e stendardi rossi), e il prato dipinto ai suoi
-     piedi prende il colore del posto: il foglio è del bosco, e qui il bosco non c'è */
-  castelloDi(lato, img, sx, sy, w, h, delPosto) {
-    this._castelli ||= {}
-    if (this._castelli[lato]) return this._castelli[lato]
-    const cv = document.createElement('canvas'); cv.width = w; cv.height = h
-    const x = cv.getContext('2d'); x.drawImage(img, sx, sy, w, h, 0, 0, w, h)
-    const d = x.getImageData(0, 0, w, h), a = d.data, terra = this.terreno.a.terra.map(hex)
-    for (let i = 0; i < a.length; i += 4) {
-      const r = a[i], g = a[i + 1], b = a[i + 2]
-      if (lato === 'nem' && b > r + 70 && b > g + 30) { a[i] = b; a[i + 1] = Math.round(g * 0.55); a[i + 2] = Math.round(r * 0.7) }
-      else if (lato === 'io' && r > g + 60 && r > b + 60) { a[i] = Math.round(b * 0.8); a[i + 1] = Math.round(g * 1.1); a[i + 2] = r }
-      else if (!delPosto && g > r + 14 && g > b + 14) {
-        const t = terra[Math.min(terra.length - 1, Math.floor((r + g + b) / 765 * terra.length * 1.4))]
-        a[i] = t[0]; a[i + 1] = t[1]; a[i + 2] = t[2]
-      }
-    }
-    x.putImageData(d, 0, 0)
-    return (this._castelli[lato] = cv)
+  /* una bandiera che sventola: quattro fotogrammi già pronti, col tempo e non coi fotogrammi; `y` è il piede dell'asta */
+  bandiera(c, x, y, alta, verso, lato, ora) {
+    const [sx, sy, w, h] = OPERE[`stendardo:${verso > 0 ? 'd' : 's'}:${Math.floor(ora * 2.7 + x) & 3}`]
+    const k = alta / h, ax = (verso > 0 ? 2 : 14) / 16 * w
+    c.drawImage(this.opere[lato], sx, sy, w, h, x - ax * k, y - alta, w * k, alta)
   }
 
   /* la vita del castello: una targa di ferro con l'orlo d'oro, il numero in mezzo */
@@ -296,53 +313,37 @@ export class Campo {
     c.fillStyle = '#fff'; c.fillText(liv, x, y - h * 0.04)
   }
 
-  /* il ponte (scena/opere.js) */
+  /* il ponte: una volta sola, dentro la tela del terreno. Il pezzo è più alto del fiume di 12 per parte: le spalle */
   ponte(c) {
-    const dipinto = this.fortezza('ponte:@')
-    if (dipinto) {
-      const [sx, sy, w, h] = dipinto, alto = (CAMPO.fiume.basso - CAMPO.fiume.alto + 16) * this.s, largo = alto * w / h
-      c.drawImage(this.fortezze.io, sx, sy, w, h, this.X(CAMPO.corsia) - largo / 2, this.Y(CAMPO.fiume.alto - 8), largo, alto)
-      return
-    }
-    disegnaPonte(c, { x0: this.X(CAMPO.corsia - 26), x1: this.X(CAMPO.corsia + 26), y0: this.Y(CAMPO.fiume.alto - 8), y1: this.Y(CAMPO.fiume.basso + 8),
-                      m: v => this.m(v), colori: this.terreno.a.ponte })
+    const [foglio, [sx, sy, w, h]] = this.fortezza('ponte:@')
+    const alto = (CAMPO.fiume.basso - CAMPO.fiume.alto + 24) * this.s, largo = alto * w / h
+    c.drawImage(foglio.io, sx, sy, w, h, this.X(CAMPO.corsia) - largo / 2, this.Y(CAMPO.fiume.alto - 12), largo, alto)
   }
 
   /* i posti delle caserme: una base stabile sempre in vista, la piazzola del castello a torri.
      Vuota aspetta la caserma, e quando la caserma crolla resta lì. */
   piazzole(c, p) {
-    const sc = SCENE[CASTELLO_DI], img = immagineScena(CASTELLO_DI)
     for (const lato of ['io', 'nem']) POSTI.forEach(([px, py], i) => {
       // dipinte: la piazzola vuota del foglio, o il rudere della caserma crollata lì
       if (p.miniere.some(m => m.lato === lato && m.posto === i)) { this.rovine.delete(`${lato}:${i}`) }   // la miniera ci sta sopra, sulla piazzola
       if (this.caserme) {
         if (p.caserme.some(cs => cs.lato === lato && cs.posto === i)) return
         const rovina = this.rovine.get(`${lato}:${i}`), x = this.X(px), piede = this.piede(lato, py)
-        if (this.dipinta(c, rovina ? `${rovina}:rudere` : 'vuota', x, piede, this.me(70), lato)) return
-        if (rovina === 'miniera' && this.dipinta(c, 'vuota', x, piede, this.me(70), lato)) {
-          disegnaRuderiMiniera(c, { x, piede, u: v => this.me(v), sasso: ROCCIA })
-          return
-        }
+        if (rovina !== 'miniera') return void this.dipinta(c, rovina ? `${rovina}:rudere` : 'vuota', x, piede, this.me(70), lato)
+        this.dipinta(c, 'vuota', x, piede, this.me(70), lato)
+        this.dipinta(c, 'miniera:rudere', x, piede, this.me(70), lato)
       }
-      const [sx, sy, w, h] = sc['piazzola:' + (i % 2)]
-      const lw = this.me(70), lh = lw * h / w
-      const y = this.Y(lato === 'io' ? py : CAMPO.H - py) + this.me(9)
-      this.ombra(c, this.X(px) + 2, y + lh * 0.42, lw * 0.5, lh * 0.14, 0.25)
-      c.drawImage(img, sx, sy, w, h, this.X(px) - lw / 2, y - lh / 2, lw, lh)
     })
   }
 
-  /* una miniera sulla sua piazzola, dipinta se il foglio ce l'ha, se no disegnata in codice (scena/opere.js); sotto il
-     livello, sopra la vita se è ferita */
+  /* una miniera sulla sua piazzola; sotto il livello, sopra la vita se è ferita */
   miniera(c, p, m, ora) {
     if (!this.nate.has(m)) this.nate.set(m, p.t < 1 ? -99 : ora)
     const q = Math.min(1, (ora - this.nate.get(m)) / 0.7), k = q < 1 ? Math.max(0.05, q) : 1
     const x = this.X(m.x), piede = this.piede(m.lato, m.lato === 'io' ? m.y : CAMPO.H - m.y), stadio = m.liv >= 5 ? 2 : 1
     c.save()
     if (m.fl > 0) c.globalAlpha = 0.7
-    if (!this.dipinta(c, `miniera:${stadio}`, x, piede, this.me(70), m.lato, k)) {
-      disegnaMiniera(c, { x, piede, u: v => this.me(v) * k, stadio, lato: m.lato, ora, sasso: ROCCIA })
-    }
+    this.dipinta(c, `miniera:${stadio}`, x, piede, this.me(70), m.lato, k)
     c.restore()
     this.livello(c, x, piede + this.mi(4), m.liv, m.lato)
     if (m.hp < m.max) this.barra(c, x, piede - this.me(54), this.me(40), m.hp / m.max)
@@ -390,18 +391,18 @@ export class Campo {
     if (cs.riposo > 0) { c.font = `${u(11)}px "Emoji Gioco", system-ui, sans-serif`; c.textAlign = 'center'; c.fillText('💤', x - u(24), y - u(20)) }
   }
 
-  /* la porta in fondo al ponte (scena/opere.js) */
+  /* la porta in fondo al ponte: intera, rotta o crollata, e gli stendardi sulle torri finché regge */
   muro(c, mu, ora) {
     const x = this.X(mu.x), stato = mu.hp <= 0 ? 'crollata' : mu.hp / mu.max < 0.5 ? 'rotta' : 'intera'
-    const dipinta = this.fortezza(`porta:@:${stato}`)
-    if (dipinta) {
-      const [sx, sy, w, h] = dipinta, largo = 70 * this.s, alto = largo * h / w, piede = this.Y(mu.y) + 6 * this.s
-      c.drawImage(this.fortezze[mu.lato], sx, sy, w, h, x - largo / 2, piede - alto, largo, alto)
-      if (mu.hp > 0 && mu.hp < mu.max) this.barra(c, x, piede - alto - 5, this.m(40), mu.hp / mu.max)
-      return
-    }
-    disegnaPorta(c, { x, y: this.Y(mu.y), S: this.s, lato: mu.lato, hp: mu.hp, max: mu.max, ferita: mu.fl > 0, pietra: this.terreno.a.ponte.pietra, ora,
-                      barra: mu.hp > 0 && mu.hp < mu.max ? y => this.barra(c, x, y, this.m(40), mu.hp / mu.max) : null })
+    const [foglio, [sx, sy, w, h]] = this.fortezza(`porta:@:${stato}`)
+    const largo = 70 * this.s, alto = largo * h / w, piede = this.Y(mu.y) + 6 * this.s
+    c.save()
+    if (mu.fl > 0) c.globalAlpha = 0.72
+    c.drawImage(foglio[mu.lato], sx, sy, w, h, x - largo / 2, piede - alto, largo, alto)
+    c.restore()
+    if (mu.hp <= 0) return
+    for (const v of [-1, 1]) this.bandiera(c, x + v * 24 * this.s, piede - 27 * this.s, 12 * this.s, v, mu.lato, ora)
+    if (mu.hp < mu.max) this.barra(c, x, piede - alto - 5, this.m(40), mu.hp / mu.max)
   }
 
   truppa(c, u, ora) {
@@ -418,15 +419,11 @@ export class Campo {
     const salto = u.cammina ? Math.abs(Math.sin(ora * 9 + u.x)) * m(2) : 0
     const nasce = u.nasce > 0 ? 1 - u.nasce / 0.8 : 1
     const sfasa = u.x * 0.07 + u.y * 0.05
-    const fg = fotogramma(u.id, ora, u.cammina, sfasa), sc = SCALA[u.id] * this.s / 0.85 * ZT * (0.6 + 0.4 * nasce)
-    const py = y - alto - salto + scatto, d = 1.3
-    // il contorno: la stessa figura tinta del colore della squadra, spostata di un pelo ai quattro lati
-    for (const [dx, dy] of [[-d, 0], [d, 0], [0, -d], [0, d]]) this.pezzo(c, fg, x + dx, py + dy, sc, u.lato === 'nem', 1, this.tinta(u.lato))
-    const lh = this.pezzo(c, fg, x, py, sc, u.lato === 'nem', u.fl > 0 ? 0.6 : 1)
-    if (u.id === 'scheletri') {
-      const [, , w, h] = PEZZI[fg]
-      arco(c, x, py, w * sc, h * sc, u.lato === 'nem', u.colpo > 0 ? Math.sin(u.colpo / 0.25 * Math.PI) : 0)
-    }
+    const f = this.figura(u.id, fotogramma(u.id, ora, u.cammina, sfasa), u.lato), py = y - alto - salto + scatto
+    const dentro = 0.6 + 0.4 * nasce, lw = f.cv.width / this.k * dentro, lh = f.alto * dentro
+    if (u.fl > 0) c.globalAlpha = 0.72
+    c.drawImage(f.cv, x - lw / 2, py - f.piede * dentro, lw, f.cv.height / this.k * dentro)
+    c.globalAlpha = 1
     if (u.hp < u.max) this.barra(c, x, y - alto - lh - m(5), m(15), u.hp / u.max)
     if (u.nasce > 0) {
       c.strokeStyle = 'rgba(255,255,255,.8)'; c.lineWidth = 1.5

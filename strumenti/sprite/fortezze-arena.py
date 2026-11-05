@@ -63,7 +63,7 @@ def main():
     print(f'  {len(pos)} pezzi, atlante {codifica.riga(im, dati)}')
     MODULO.write_text('/* GENERATO da strumenti/sprite/fortezze-arena.py: non si tocca a mano.\n'
                       '   Castelli, porte e ponti dipinti di Castle Battle (docs/arena/grafica.md). PEZZI: nome →\n'
-                      '   [x, y, largo, alto], in px dell\'atlante. Vuoto = resta il disegno in codice. */\n'
+                      '   [x, y, largo, alto], in px dell\'atlante. Vuoto = restano quelli di dati/opere-disegnate.js. */\n'
                       'export const PEZZI = {\n'
                       + ''.join(f"  '{n}': {json.dumps(v)},\n" for n, v in sorted(pos.items()))
                       + '}\n'

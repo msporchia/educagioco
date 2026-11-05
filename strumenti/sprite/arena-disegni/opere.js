@@ -1,5 +1,5 @@
-// Le opere disegnate in codice: il ponte, la porta e la miniera, finché non arriva il foglio dipinto (docs/arena/grafica.md).
-// Ricevono già misure e colori: qui non entra niente delle regole, solo quello che il motore ha deciso.
+// Il ponte, la porta e la miniera disegnati col programma, A MONTE: `npm run disegni:arena` ne fa i pezzi dell'atlante, e in partita
+// non si disegnano più (docs/arena/grafica.md). Il gioco non importa questo file.
 const IO = '#3d8bff', NEM = '#ff5a4d'
 const squadra = lato => (lato === 'io' ? IO : NEM)
 
@@ -54,9 +54,9 @@ export function disegnaPonte(c, { x0, x1, y0, y1, m, colori }) {
 }
 
 /* la porta in fondo al ponte: due torri merlate e il portone che si rompe; crollata, resta il cumulo */
-export function disegnaPorta(c, { x, y, S, lato, hp, max, ferita, pietra, ora, barra }) {
+export function disegnaPorta(c, { x, y, S, lato, hp, max, pietra }) {
   const col = squadra(lato), mezza = 24 * S, alto = 15 * S, q = hp / max
-  const torre = (tx, verso) => {
+  const torre = tx => {
     const w = 8 * S, h = alto + 9 * S, base = y + 5 * S
     c.fillStyle = 'rgba(0,0,0,.3)'; c.fillRect(tx - w + 3, base - 2, w * 2 + 3, 5 * S)
     c.fillStyle = pietra[0]; c.fillRect(tx - w, base - h, w * 2, h)
@@ -69,7 +69,6 @@ export function disegnaPorta(c, { x, y, S, lato, hp, max, ferita, pietra, ora, b
       c.fillStyle = pietra[2]; c.fillRect(tx + d, base - h - 4 * S, 4.6 * S, 1.3 * S)
     }
     c.fillStyle = '#17121a'; c.fillRect(tx - 1.6 * S, base - h + 5 * S, 3.2 * S, 7 * S)        // la feritoia
-    stendardo(c, tx, base - h - 2 * S, 11 * S, 11 * S, col, ora, verso)
   }
   if (hp <= 0) {
     for (const [dx, dy, r, i] of [[-13, 3, 6, 0], [-3, 6, 7, 1], [7, 2, 6, 0], [14, 5, 5, 1], [0, 0, 4, 2]]) {
@@ -78,7 +77,6 @@ export function disegnaPorta(c, { x, y, S, lato, hp, max, ferita, pietra, ora, b
     return
   }
   c.save()
-  if (ferita) c.globalAlpha = 0.72
   c.fillStyle = pietra[0]; c.fillRect(x - mezza, y - alto - 3 * S, mezza * 2, alto + 8 * S)     // l'arco
   c.fillStyle = '#2b1a10'; c.beginPath(); c.roundRect(x - mezza + 6 * S, y - alto + 1 * S, mezza * 2 - 12 * S, alto + 4 * S, [9 * S, 9 * S, 0, 0]); c.fill()
   c.fillStyle = '#6b4424'; c.beginPath(); c.roundRect(x - mezza + 7 * S, y - alto + 2 * S, mezza * 2 - 14 * S, alto + 3 * S, [8 * S, 8 * S, 0, 0]); c.fill()
@@ -92,8 +90,7 @@ export function disegnaPorta(c, { x, y, S, lato, hp, max, ferita, pietra, ora, b
   if (q < 0.66) { c.beginPath(); c.moveTo(x - 7 * S, y - alto + 4 * S); c.lineTo(x - 2 * S, y - 5 * S); c.lineTo(x - 6 * S, y + 3 * S); c.stroke() }
   if (q < 0.33) { c.beginPath(); c.moveTo(x + 8 * S, y - alto + 6 * S); c.lineTo(x + 3 * S, y - 3 * S); c.lineTo(x + 9 * S, y + 4 * S); c.stroke() }
   c.restore()
-  torre(x - mezza, -1); torre(x + mezza, 1)
-  if (barra) barra(y - alto - 14 * S)
+  torre(x - mezza); torre(x + mezza)
 }
 
 /* la miniera: un monte di roccia con l'imbocco armato di travi, le rotaie e il carrello d'oro; dal livello 5 cresce la

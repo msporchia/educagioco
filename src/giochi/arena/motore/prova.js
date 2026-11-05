@@ -1,6 +1,5 @@
 // La battaglia di prova, per guardare il campo senza giocare mezz'ora: `#arena=lava&battaglia=40` apre quel
-// terreno con le sei piazzole piene da tutte e due le parti, dopo tanti secondi di scontro, `&vuota` senza edifici;
-// `#arena=lava&schema` solo il terreno, su tutto il pezzo che il dipinto deve coprire (docs/core/comandi.md).
+// terreno con le sei piazzole piene da tutte e due le parti, dopo tanti secondi di scontro, `&vuota` senza edifici (docs/core/comandi.md).
 import { POSTI, truppeDelTerreno } from '../dati/regole.js'
 import { Partita } from './partita.js'
 
@@ -9,8 +8,8 @@ const LENTO = { moneteAlSecondo: 0, pensa: 9999, forza: 1 }
 /* il terreno e i secondi dall'indirizzo; null se il cheat non c'è */
 export function chiesta(frammento) {
   const q = new URLSearchParams(String(frammento || '').replace(/^#/, ''))
-  if (!q.has('battaglia') && !q.has('schema')) return null
-  return { terreno: q.get('arena') || 'bosco', secondi: Number(q.get('battaglia')) || 0, vuota: q.has('vuota'), schema: q.has('schema') }
+  if (!q.has('battaglia')) return null
+  return { terreno: q.get('arena') || 'bosco', secondi: Number(q.get('battaglia')) || 0, vuota: q.has('vuota') }
 }
 
 export function battagliaDiProva({ terreno, secondi, vuota }) {

@@ -9,7 +9,7 @@ import Ripresa from '../../Ripresa.vue'
 import AmiciQui from '../../../components/amici/AmiciQui.vue'
 import Panorama from './Panorama.vue'
 import Spade from './Spade.vue'
-import { INSEGNA } from '../dati/terreni-dipinti.js'
+import { INSEGNA } from '../dati/terreni-pronti.js'
 
 const props = defineProps({
   scalini: { type: Array, required: true },   // [{ chiave, nome, icona, dritta, tappe: [] }]
@@ -49,7 +49,7 @@ function vai() {
   <div class="ar-mappa">
     <header class="ar-frontone">
       <img v-if="INSEGNA" :src="INSEGNA" class="ar-panorama" alt="" />
-      <Panorama v-else :terreno="terreno" :pezzo="{ x: 40, y: 200, w: 280, h: 140 }" />
+      <Panorama v-else :terreno="terreno" />
       <div class="ar-insegna"><Spade class="ar-spade" /><h2>Castle Battle</h2></div>
     </header>
 
@@ -59,9 +59,9 @@ function vai() {
 
     <p v-if="davanti" class="ar-davanti" data-amico-davanti>{{ davanti }}</p>
 
-    <section v-for="(s, i) in scalini" :key="s.chiave" class="ar-scalino">
+    <section v-for="s in scalini" :key="s.chiave" class="ar-scalino">
       <h3>
-        <Panorama :terreno="s.vestito" :ritardo="i + 1" />
+        <Panorama :terreno="s.vestito" />
         <span class="ar-regno"><span class="em">{{ s.icona }}</span> <b>{{ s.nome }}</b></span>
         <i>{{ s.dritta }}</i>
       </h3>

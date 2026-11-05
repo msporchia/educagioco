@@ -40,8 +40,6 @@ import CampoVista from './viste/Campo.vue'
 import Finale from './viste/Finale.vue'
 import SceltaSfida from './viste/SceltaSfida.vue'
 import Dettagli from './viste/Dettagli.vue'
-import Panorama from './viste/Panorama.vue'
-import { DIPINTO } from './dati/terreni-dipinti.js'
 import './stile.css'
 
 defineOptions({ name: 'CastleBattle' })
@@ -75,7 +73,6 @@ const dettaglio = ref(null)           // la schermata dei dettagli: il campo cor
 const scelta = ref(null)              // quale truppa per un edificio da costruire: il campo corre anche qui
 const avviso = ref('')                // la riga che dice cosa è successo
 const toccato = ref(false)
-const schema = ref('')                // il terreno da mostrare da solo (`#arena=lava&schema`, per gli allegati delle schede)
 
 let voluta = null                     // la scelta che si sta pagando
 let campo = null
@@ -285,14 +282,14 @@ function anelloDi(p, bersagli) {
   const prezzo = a.castello ? p.prezzo(mio.value, 'castello') : p.prezzo(mio.value, 'potenzia', a.posto)
   const riposo = a.castello ? 0 : Math.max(0, e.riposo)
   const voci = [
-    { chiave: 'potenzia', icona: '⬆️', testo: riposo > 0 ? `💤 ${Math.ceil(riposo)}s` : `${prezzo} 💎`,
+    { chiave: 'potenzia', icona: riposo > 0 ? 'riposo' : 'potenzia', testo: riposo > 0 ? `${Math.ceil(riposo)} s` : `${prezzo} `, gemma: riposo <= 0,
       puoi: prezzo !== null && p.lati[mio.value].monete >= prezzo && riposo <= 0 },
   ]
-  // vendere è un tocco, ma due: il primo chiede «sicuro?» (la ✓ al posto del 💰), il secondo vende
-  if (!a.castello) voci.push({ chiave: 'vendi', icona: a.conferma ? '✓' : '💰', testo: `+${p.resa(mio.value, a.posto)} 💎`, puoi: true, sicuro: !!a.conferma })
-  voci.push({ chiave: 'numeri', icona: '?', testo: '', puoi: true, piccola: true })
-  // dentro il campo anche sulle piazzole di lato: i pulsanti grandi 68 px, il «?» 44
-  const largo = voci.reduce((t, v) => t + (v.piccola ? 44 : 68), 0) + (voci.length - 1) * 6, W = campo.cv.clientWidth
+  // vendere è un tocco, ma due: il primo chiede «sicuro?» (la ✓ al posto del sacco), il secondo vende
+  if (!a.castello) voci.push({ chiave: 'vendi', icona: a.conferma ? 'conferma' : 'vendi', testo: `+${p.resa(mio.value, a.posto)} `, gemma: true, puoi: true, sicuro: !!a.conferma })
+  voci.push({ chiave: 'numeri', icona: 'numeri', testo: 'numeri', puoi: true })
+  // dentro il campo anche sulle piazzole di lato: i pulsanti tutti uguali, da 68 px
+  const largo = voci.length * 68 + (voci.length - 1) * 6, W = campo.cv.clientWidth
   const x = Math.min(Math.max(b.x + b.w / 2, largo / 2 + 4), W - largo / 2 - 4)
   return { chiave: a.chiave, x, y: b.y + campo.me(6), voci }
 }
@@ -460,7 +457,7 @@ function schedaDi(p, { posto, truppa, azione }) {
     const det = dettaglioAzione('miniera', { miniera: mina ? mina.liv : 0 })
     d = mina ? { azione: 'potenzia', posto } : { azione: 'costruisci', id: 'miniera', posto }
     scheda = { titolo: AZIONI.miniera.nome, nota: AZIONI.miniera.nota, ruolo: [], icona: '⛏️', sottotitolo: 'monete', ...det,
-               verbo: mina ? '⬆️ Potenzia' : 'Costruisci',
+               verbo: mina ? 'Potenzia' : 'Costruisci',
                puoi: mina ? p.puoFare(mio.value, 'potenzia', posto) && !p.inRiposo(mio.value, posto) : p.puoFare(mio.value, 'costruisci', 'miniera', d.posto),
                motivo: mina && p.inRiposo(mio.value, posto) ? 'la miniera riposa ancora un po\'' : 'servono più monete',
                fine: '', vendi: mina ? p.resa(mio.value, posto) : null }
@@ -474,7 +471,7 @@ function schedaDi(p, { posto, truppa, azione }) {
     d = c ? { azione: 'potenzia', posto } : { azione: 'costruisci', id: truppa, posto }
     scheda = { truppa: id, titolo: k.nome, nota: k.nota, ruolo: ruoloDi(id), livello: c ? c.liv : 0, sottotitolo: EDIFICI[EDIFICIO_DI[id]].nome,
                ...det,
-               verbo: c ? '⬆️ Potenzia' : 'Costruisci',
+               verbo: c ? 'Potenzia' : 'Costruisci',
                puoi: c ? p.puoFare(mio.value, 'potenzia', posto) && !p.inRiposo(mio.value, posto) : p.puoFare(mio.value, 'costruisci', truppa, d.posto),
                motivo: c && p.inRiposo(mio.value, posto) ? 'la caserma riposa ancora un po\'' : 'servono più monete',
                fine: 'È già al livello massimo.',
@@ -484,7 +481,7 @@ function schedaDi(p, { posto, truppa, azione }) {
     d = { azione }
     scheda = { titolo: AZIONI[azione].nome, nota: AZIONI[azione].nota, ruolo: [], sottotitolo: azione === 'bomba' ? 'in regalo' : '', icona: { miniera: '⛏️', ripara: '🔧', bomba: '💣' }[azione],
                castello: azione === 'castello', ...det,
-               verbo: azione === 'ripara' ? '🔧 Ripara' : azione === 'bomba' ? '💥 Lancia' : '⬆️ Potenzia',
+               verbo: azione === 'ripara' ? 'Ripara' : azione === 'bomba' ? 'Lancia' : 'Potenzia',
                puoi: p.puoFare(mio.value, azione),
                motivo: azione === 'bomba' ? (p.lati[mio.value].bombe ? 'non ci sono truppe nemiche da colpire' : `la prossima arriva fra ${Math.ceil(p.lati[mio.value].bombaT)} secondi`)
                      : azione === 'ripara' && !p.riparabili(mio.value).length ? 'non c\'è niente da riparare' : 'servono più monete',
@@ -691,8 +688,7 @@ onMounted(() => {
   sfida.daInvito()
   gancioDiProva()
   const prova = typeof location !== 'undefined' ? chiesta(location.hash) : null
-  if (prova?.schema) schema.value = prova.terreno
-  else if (prova) {
+  if (prova) {
     infinita.value = prova.terreno
     comincia(battagliaDiProva(prova), 0)
   }
@@ -747,8 +743,6 @@ onUnmounted(() => {
       <!-- la sfida si è rotta (l'altro se n'è andato, versioni diverse, la linea non è tornata), o la linea va e viene: si aspetta -->
       <CartelloLinea v-if="vista === 'campo' && !finale && (sfida.rotta.value || sfida.linea.value)" :rotta="sfida.rotta.value"
                      :motivo="sfida.motivo.value" :linea="sfida.linea.value" partita="la battaglia" @esci="allaMappa" />
-
-      <Panorama v-if="schema" class="ar-schema" :terreno="schema" :pezzo="DIPINTO" :grana="2" />
 
       <VeloPausa v-if="inPausa && siGioca" :dove="dovEravamo" @riprendi="togli" @esci="indietro" />
     </div>
