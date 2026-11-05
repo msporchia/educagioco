@@ -1,6 +1,8 @@
 /* LA BANCARELLA — i soldi e le ordinazioni: chi paga cosa, e con che resto.
    Le cucine stanno in bancarella-cucine.js. Vedi docs/bancarella/cucina.md. */
 
+import { prezzoDi } from './bancarella-cucine.js'
+
 export const TAGLI = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000]  // centesimi
 export const euro = c => (c / 100).toFixed(2).replace('.', ',') + ' €'
 
@@ -104,7 +106,8 @@ function manciata(paga, t) {
 
 /* Un'ordinazione del giro: i piatti, chi paga e con che resto. */
 export function nuovoOrdine(t, piatti) {
-  const articoli = piattiDi(t, piatti).map(p => ({ emoji: p.emoji, nome: p.nome, prezzo: p.prezzo }))
+  const listino = piatti.map(p => ({ emoji: p.emoji, nome: p.nome, prezzo: prezzoDi(p, t.passo) }))
+  const articoli = piattiDi(t, listino)
   const totale = articoli.reduce((s, a) => s + a.prezzo, 0)
   const paga = scegli(comePuoPagare(totale, t.paga))
   const resto = paga - totale

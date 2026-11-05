@@ -377,6 +377,22 @@ export function consegna(c, vuole) {
   return true
 }
 
+/* Alla consegna con quello che non va: si guarda l'ordinazione a cui somiglia di più, e si dice
+   cosa manca invece di «non l'ha ordinato nessuno». `ordinati`: i piatti ancora da servire. */
+const daFare = k => ({ pentola: ', da cuocere', padella: ', da cuocere', tagliere: ', da tagliare' }[INGREDIENTI[k].va] || '')
+export function cheManca(c, m, ordinati) {
+  if (m.bruciata) return 'Quello è bruciato: va nel bidone'
+  if (!ePiatto(m) && !m.fatta) return nonPronta(m)
+  const cose = ePiatto(m) ? m.cose : [m.cosa]
+  const simili = c.ricette.filter(r => ordinati.includes(r.emoji) && cose.every(k => r.passi.includes(k)))
+    .sort((a, b) => a.passi.length - b.passi.length)
+  if (!simili.length) return 'Questo non l\'ha ordinato nessuno'
+  const r = simili[0], mancano = r.passi.filter(k => !cose.includes(k))
+  if (!mancano.length) return r.forno ? 'Prima va in forno' : SERVE_PIATTO
+  if (mancano.length === 1) return `Manca ${INGREDIENTI[mancano[0]].il}${daFare(mancano[0])}`
+  return `Mancano ${mancano.map(k => INGREDIENTI[k].il).join(' e ')}`
+}
+
 /* Le righe della ricetta. */
 const COME = { pentola: 'si cuoce in pentola', padella: 'si cuoce in padella', tagliere: 'si taglia sul tagliere' }
 export const passiRicetta = r => [

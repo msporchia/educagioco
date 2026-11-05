@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { cucinaNuova, passo, usa, tocca, vaiA, arriva, consegna, passiRicetta, TAGLI, SERVE_PIATTO } from '../../src/motore/bancarella/cucina.js'
-import { CUCINE, RICETTE, INGREDIENTI, ATTREZZI, attrezziDi, cucinaPulita, compraAttrezzo, bancoPulito, ricetteDi } from '../../src/data/bancarella-cucine.js'
+import { cucinaNuova, passo, usa, tocca, vaiA, arriva, consegna, cheManca, passiRicetta, TAGLI, SERVE_PIATTO } from '../../src/motore/bancarella/cucina.js'
+import { CUCINE, RICETTE, INGREDIENTI, ATTREZZI, attrezziDi, cucinaPulita, compraAttrezzo, bancoPulito, ricetteDi, prezzoDi } from '../../src/data/bancarella-cucine.js'
 import { nuovoOrdine, tappaDi, scomponi, premioCliente, chiaveResto } from '../../src/data/bancarella.js'
 import { scrivi, leggi, dice } from '../../src/motore/bancarella/sosta.js'
 
@@ -289,6 +289,41 @@ test('senza piatto non si serve', () => {
   assert.deepEqual(u.cuoco.mano.cose, ['pane'])
 })
 
+test('alla consegna dice cosa manca', () => {
+  const c = cucina()
+  const piatto = (...cose) => ({ piatto: true, cose, pronto: '', daInfornare: false, forno: '' })
+  assert.equal(cheManca(c, piatto('riso', 'pesce'), ['🍱']), 'Manca l\'alga')
+  assert.equal(cheManca(c, piatto('pasta', 'sugo'), ['🍝🧀']), 'Manca il formaggio, da tagliare')
+  assert.equal(cheManca(c, piatto('sugo'), ['🍝']), 'Manca la pasta, da cuocere')
+  assert.equal(cheManca(c, piatto('impasto'), ['🍕']), 'Mancano il sugo e il formaggio')
+  assert.equal(cheManca(c, piatto('impasto', 'sugo', 'formaggio'), ['🍕']), 'Prima va in forno')
+  assert.equal(cheManca(c, { ...piatto('pane', 'pomodoro'), nudo: true }, ['🥖']), SERVE_PIATTO)
+  assert.equal(cheManca(c, { cosa: 'pasta', fatta: false, bruciata: false }, ['🍝']), 'Prima si cuoce')
+  assert.equal(cheManca(c, { cosa: 'carne', fatta: true, bruciata: true }, ['🍔']), 'Quello è bruciato: va nel bidone')
+  assert.equal(cheManca(c, piatto('riso', 'pesce'), ['🍝']), 'Questo non l\'ha ordinato nessuno')
+  assert.equal(cheManca(c, piatto('riso'), ['🍣', '🍱']), 'Manca il pesce, da tagliare', 'si guarda la più vicina')
+})
+
+test('la cassa sale a gradini: chi fa i conti non torna mai indietro', () => {
+  const ordine = ['niente', 'resto', 'tutto']
+  let prima = 0
+  for (const c of CUCINE) {
+    const i = ordine.indexOf(c.conto)
+    assert.ok(i >= prima, `${c.nome}: ${c.conto}`)
+    prima = i
+  }
+  assert.deepEqual(CUCINE.slice(0, 6).map(c => c.conto), Array(6).fill('niente'), 'all\'inizio il resto lo dice la cassa')
+  assert.equal(CUCINE[6].conto, 'resto', 'poi lo conti tu')
+  assert.equal(CUCINE.find(c => c.conto === 'tutto').articoli[1], 2, 'il totale da chiedere arriva coi due piatti')
+  assert.equal(CUCINE.at(-1).passo, 5)
+  const pizza = RICETTE.find(r => r.emoji === '🍕')
+  assert.equal(prezzoDi({ prezzo: 350, emoji: '🥪' }, 100), 400, 'all\'inizio euro tondi')
+  assert.equal(prezzoDi(pizza, 50), 800)
+  assert.equal(prezzoDi(pizza, 10) % 10, 0)
+  assert.ok(prezzoDi(pizza, 10) % 50 > 0)
+  assert.equal(prezzoDi(pizza, 5) % 10, 5, 'alla fine i cinque centesimi')
+})
+
 test('il piatto nel bidone torna nel lavello', () => {
   const c = cucinaNuova({ ...CUCINE.at(-1), piatti: 2 })
   fa(c, '2,0'); fa(c, '5,0')
@@ -333,7 +368,7 @@ test('i livelli: tanti, a crudo i primi, ogni ricetta ha i suoi attrezzi', () =>
     const k = cucinaNuova(c)
     assert.equal(k.ricette.length, c.ricette.length, c.nome)
     assert.ok(c.ricette.includes(c.foto) || RICETTE.some(r => r.emoji === c.foto), `${c.nome}: la foto è di un piatto`)
-    assert.ok(k.ricette.every(r => r.prezzo <= c.tetto), c.nome)
+    assert.ok(k.ricette.every(r => prezzoDi(r, c.passo) <= c.tetto), c.nome)
     for (const cosa of new Set(k.ricette.flatMap(r => r.passi))) assert.ok(k.celle.some(q => q.cosa === cosa), `${c.nome}: la cassetta di ${cosa}`)
   }
   const usati = new Set(CUCINE.flatMap(c => c.ricette))
@@ -352,8 +387,6 @@ test('le ordinazioni: i conti tornano in ogni livello', () => {
     assert.equal(new Set(o.articoli.map(a => a.emoji)).size, o.articoli.length, 'due piatti diversi')
   }
   assert.ok(premioCliente(CUCINE[0]) > 0)
-  assert.equal(CUCINE[0].conto, 'niente', 'all\'inizio il resto lo dice la cassa')
-  assert.equal(CUCINE.at(-1).conto, 'tutto')
 })
 
 test('la sosta riporta la stanza com\'era', () => {

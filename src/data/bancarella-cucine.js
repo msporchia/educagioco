@@ -5,18 +5,18 @@
 /* `va`: dove si cuoce o si taglia; chi non ce l'ha va dritto sul piatto. `cuoce` e `tiene`
    sono i secondi sul fuoco e quelli prima di bruciare: a bruciare ci si deve impegnare. */
 export const INGREDIENTI = {
-  pasta:     { emoji: '🍝', nome: 'pasta', va: 'pentola', cuoce: 7, tiene: 45 },
-  carne:     { emoji: '🥩', nome: 'carne', va: 'padella', cuoce: 5, tiene: 45 },
-  uovo:      { emoji: '🥚', nome: 'uovo', va: 'padella', cuoce: 3, tiene: 45 },
-  insalata:  { emoji: '🥬', nome: 'insalata', va: 'tagliere' },
-  formaggio: { emoji: '🧀', nome: 'formaggio', va: 'tagliere' },
-  pesce:     { emoji: '🐟', nome: 'pesce', va: 'tagliere' },
-  pomodoro:  { emoji: '🍅', nome: 'pomodoro', va: 'tagliere' },
-  pane:      { emoji: '🍞', nome: 'pane' },
-  sugo:      { emoji: '🥫', nome: 'sugo' },
-  riso:      { emoji: '🍚', nome: 'riso' },
-  alga:      { emoji: '🌿', nome: 'alga' },
-  impasto:   { emoji: '🫓', nome: 'impasto' },
+  pasta:     { emoji: '🍝', nome: 'pasta', il: 'la pasta', va: 'pentola', cuoce: 7, tiene: 45 },
+  carne:     { emoji: '🥩', nome: 'carne', il: 'la carne', va: 'padella', cuoce: 5, tiene: 45 },
+  uovo:      { emoji: '🥚', nome: 'uovo', il: 'l\'uovo', va: 'padella', cuoce: 3, tiene: 45 },
+  insalata:  { emoji: '🥬', nome: 'insalata', il: 'l\'insalata', va: 'tagliere' },
+  formaggio: { emoji: '🧀', nome: 'formaggio', il: 'il formaggio', va: 'tagliere' },
+  pesce:     { emoji: '🐟', nome: 'pesce', il: 'il pesce', va: 'tagliere' },
+  pomodoro:  { emoji: '🍅', nome: 'pomodoro', il: 'il pomodoro', va: 'tagliere' },
+  pane:      { emoji: '🍞', nome: 'pane', il: 'il pane' },
+  sugo:      { emoji: '🥫', nome: 'sugo', il: 'il sugo' },
+  riso:      { emoji: '🍚', nome: 'riso', il: 'il riso' },
+  alga:      { emoji: '🌿', nome: 'alga', il: 'l\'alga' },
+  impasto:   { emoji: '🫓', nome: 'impasto', il: 'l\'impasto' },
 }
 
 /* `emoji` è la chiave del piatto, a schermo si vede la sua foto. Una ricetta può
@@ -53,16 +53,50 @@ export function attrezziDi(camp) {
   return ['pentola', 'padella', 'tagliere', 'forno'].filter(t => tipi.has(t))
 }
 
-const BASE = { conto: 'resto', tappe: 3, passo: 50, articoli: [1, 1], tetto: 1000, paga: [1000], monete: [50, 100, 200, 500], tempo: [78, 62] }
-// i primi livelli sono a crudo, con tempo da vendere, e il resto lo dice la cassa: si impara a muoversi senza fretta
-const CALMA = { conto: 'niente', tempo: [120, 100] }
-// due piatti a cliente: il totale si batte, si paga coi 20 €
-const DUE = { conto: 'tutto', articoli: [1, 2], tetto: 1900, paga: [2000], monete: [50, 100, 200, 500, 1000], tempo: [95, 75] }
+const BASE = { tappe: 3, articoli: [1, 1], tetto: 1000, tempo: [78, 62] }
+// i primi livelli sono a crudo e con tempo da vendere: si impara a muoversi senza fretta
+const CALMA = { tempo: [120, 100] }
+// due piatti a ordinazione
+const DUE = { articoli: [1, 2], tetto: 1990, tempo: [95, 75] }
 // gli ultimi: le ordinazioni scadono prima. La fretta sta nel muoversi: i conti si fanno sempre da fermi
 const FRETTA = { ...DUE, tempo: [80, 65] }
 
 const PORTATA_DA = 32        // sei anni e mezzo: sotto, il gioco non si offre
 const PORTATA_A = 72         // nove anni e tre quarti
+
+/* La scala della cassa, una riga per gradino: quanti livelli, chi fa i conti (`conto`: prima li fa
+   la cassa, poi il resto lo conti tu, poi anche il totale da chiedere), quanto fini sono i prezzi
+   (`passo`) e con cosa si paga. Quando entra un conto nuovo i prezzi tornano più facili. */
+const SCALA_CASSA = [
+  [6, 'niente', 100, [500, 1000]],
+  [3, 'resto', 100, [1000]],
+  [6, 'resto', 50, [1000]],
+  [4, 'resto', 10, [1000, 2000]],
+  [3, 'tutto', 50, [2000]],
+  [3, 'tutto', 10, [2000]],
+  [3, 'tutto', 5, [2000, 5000]],
+]
+const MONETE_DEL_PASSO = { 100: [100, 200, 500], 50: [50, 100, 200, 500], 10: [10, 20, 50, 100, 200, 500], 5: [5, 10, 20, 50, 100, 200, 500] }
+const cassaDi = k => {
+  let n = 0
+  for (const [quanti, conto, passo, paga] of SCALA_CASSA) {
+    n += quanti
+    if (k >= n) continue
+    const banconote = [paga.includes(2000) && 1000, paga.includes(5000) && 2000].filter(Boolean)
+    return { conto, passo, paga, monete: [...MONETE_DEL_PASSO[passo], ...banconote] }
+  }
+  return null
+}
+
+/* Il prezzo di un piatto con quel `passo`: euro tondi all'inizio, poi quello del menù, poi coi
+   centesimi. Il di più è fisso per piatto: lo stesso piatto costa sempre uguale, a parità di livello. */
+const CENTESIMI = { 10: [10, 20, 30, 40], 5: [15, 25, 35, 45] }
+export function prezzoDi(r, passo) {
+  if (passo >= 100) return Math.max(100, Math.round(r.prezzo / 100) * 100)
+  const piu = CENTESIMI[passo]
+  if (!piu) return r.prezzo
+  return r.prezzo + piu[[...r.emoji].reduce((s, ch) => s + ch.codePointAt(0), 0) % piu.length]
+}
 
 /* `piatti`: quanti ce ne sono, e da lì tornano sporchi. Senza, la pila non finisce.
    `foto`: il piatto che si vede nella scelta. */
@@ -96,7 +130,7 @@ export const CUCINE = [
   L('L\'ora di punta', '🍝🥩', 'più carne sul fuoco', ['🍔', '🍝🥩', '🥩🥗', '🍕'], { ...FRETTA, piatti: 5 }),
   L('La sala piena', '🍔🧀', 'il formaggio dappertutto', ['🍔🧀', '🍝🧀', '🍕', '🍱', '🥗'], { ...FRETTA, piatti: 4 }),
   L('Il gran servizio', '🍕🥩', 'tutti i piatti', RICETTE.map(r => r.emoji), { ...FRETTA, tempo: [90, 75], piatti: 4 }),
-].map((c, k, tutte) => ({ ...c, id: 'cucina-' + (k + 1), scuola: 'numeri',
+].map((c, k, tutte) => ({ ...c, ...cassaDi(k), id: 'cucina-' + (k + 1), scuola: 'numeri',
                          portata: Math.round(PORTATA_DA + k / (tutte.length - 1) * (PORTATA_A - PORTATA_DA)) }))
 
 /* la fila che `data/portata.js` si aspetta di ricevere */

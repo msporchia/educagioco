@@ -110,7 +110,7 @@ await scegli(page, 'bancarella')
 await page.waitForSelector('[data-cucine]', { timeout: 5000 })
 await page.click('[data-cucina-n="1"]')
 await page.waitForFunction(() => !window.__shop.cambio.value, null, { timeout: 5000 })
-await page.evaluate(() => { const S = window.__shop; S.momento.value = 'cassa'; S.cassaAperta.value = true })
+await page.evaluate(() => { const S = window.__shop; S.momento.value = 'cassa' })
 {
   const inFila = () => page.evaluate(() => window.__shop.coda.value.length)
   const prima = await foto(), soldiPrima = await soldi()

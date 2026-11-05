@@ -114,15 +114,12 @@ uguale('e il dito che si alza non preme una moneta', await page.evaluate(() => w
 controlla('il foglio mostra i soldi che danno', await page.locator('[data-porge]').count() > 0)
 await scatto(page, 'cucina-il-resto')
 
-/* ---------- 4. il foglio ferma, la ✕ lo mette da parte ---------- */
+/* ---------- 4. alla cassa è tutto fermo, e si esce solo dando il resto ---------- */
 {
   const prima = await page.evaluate(() => window.__shop.coda.value[1].restaPazienza)
   await attendi(page, 900)
   uguale('col foglio aperto le ordinazioni aspettano', await page.evaluate(() => window.__shop.coda.value[1].restaPazienza), prima)
-  await page.click('[data-chiudi]')
-  await attendi(page, 700)
-  controlla('col foglio chiuso scorrono', await page.evaluate(() => window.__shop.coda.value[1].restaPazienza) < prima)
-  await page.click('[data-azione="al-resto"]')
+  uguale('il foglio non si mette da parte', await page.locator('[data-chiudi], [data-azione="al-resto"]').count(), 0)
 }
 await daiResto()
 await page.waitForFunction(() => window.__shop.hud.serviti === 1, undefined, { timeout: 4000 })
