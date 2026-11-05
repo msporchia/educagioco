@@ -155,7 +155,7 @@ export function creaCuoco() {
     braccia[1].rotation.z = porta ? -0.28 : -0.08
     coltello.visible = colpo > 0
   }
-  return { g, anima, mano, taglia() { colpo = 1 } }
+  return { g, anima, mano, taglia() { colpo = 1 }, tagliando: () => colpo > 0 }
 }
 
 /** Si modella prima di aprire: non si ferma lo schermo a metà partita. */

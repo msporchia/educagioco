@@ -7,6 +7,7 @@ import { creaPiatto, creaBidone, creaEtichetta } from './pezzi.js'
 import { pieno } from './cibo.js'
 
 export const ALTO = 0.62    // il piano dei banconi
+const MURO = 8              // alto: sullo schermo lungo riempie quello che avanza sopra la stanza
 
 const m = (geo, materiale, x = 0, y = 0, z = 0) => { const o = new Mesh(geo, materiale); o.position.set(x, y, z); return o }
 function trama(lato, disegna, ripeti = [1, 1]) {
@@ -86,9 +87,9 @@ function creaBanconi(celle) {
 export function creaSala(scena, celle, largo, fondo) {
   const pavimento = m(new PlaneGeometry(largo, fondo), new MeshStandardMaterial({ map: tramaPavimento(largo, fondo), roughness: 0.55 }), largo / 2, 0, fondo / 2)
   pavimento.rotation.x = -Math.PI / 2; pavimento.receiveShadow = true
-  const muro = m(new PlaneGeometry(largo + 0.4, 2.4), new MeshStandardMaterial({ map: tramaMuro(largo + 0.4, 2.4), roughness: 0.3 }), largo / 2, 1.2, -0.02)
+  const muro = m(new PlaneGeometry(largo + 0.4, MURO), new MeshStandardMaterial({ map: tramaMuro(largo + 0.4, MURO), roughness: 0.3 }), largo / 2, MURO / 2, -0.02)
   const fianchi = [-0.02, largo + 0.02].map((x, i) => {
-    const f = m(new PlaneGeometry(fondo, 2.4), new MeshStandardMaterial({ map: tramaMuro(fondo, 2.4), roughness: 0.3 }), x, 1.2, fondo / 2)
+    const f = m(new PlaneGeometry(fondo, MURO), new MeshStandardMaterial({ map: tramaMuro(fondo, MURO), roughness: 0.3 }), x, MURO / 2, fondo / 2)
     f.rotation.y = i ? -Math.PI / 2 : Math.PI / 2
     return f
   })
@@ -160,7 +161,7 @@ export function creaMira() {
     c.strokeStyle = '#ffffff'; c.lineWidth = 10
     c.beginPath(); c.roundRect(8, 8, n - 16, n - 16, 18); c.stroke()
   })
-  const o = m(new PlaneGeometry(1.02, 1.02), new MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false }))
+  const o = m(new PlaneGeometry(1.02, 1.02), new MeshBasicMaterial({ map: t, color: 0x4ee07a, transparent: true, depthWrite: false, depthTest: false, toneMapped: false }))
   o.rotation.x = -Math.PI / 2
   o.renderOrder = 3
   return o

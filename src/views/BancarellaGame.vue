@@ -8,7 +8,7 @@ import { generaCliente, esposizione, tappaDi, campagnaDi, scomponi, euro,
          centesimiScritti, scriviCifra, premioCliente, stelleDiGiornata, perLaProssima,
          BANCHI, CAMPAGNE, LIBERA, CLIENTI_PER_TAPPA, CUCINE, CUCINA_BANCO, cucinaIdx, eCucina } from '../data/bancarella.js'
 import { ricetteDi, cucinaNuova, avanza, metti as mettiInCucina, svuota, taglia, inforna, butta, buttaPiatto, servi } from '../motore/bancarella/cucina.js'
-import { cucinaCuoco, passo as passoCuoco, usa, taglia as tagliaCuoco, bersaglio, consegna as daiPiatto } from '../motore/bancarella/cuoco.js'
+import { cucinaCuoco, passo as passoCuoco, usa, tocca, vaiA, arriva, consegna as daiPiatto } from '../motore/bancarella/cuoco.js'
 import { bancoPulito, merceMia, cesteDi, pazienzaDi, compra, puoiComprare } from '../data/bancarella-banco.js'
 import { CITTA, statoCitta, statoGiornata, cittaCorrente, fatteIn, indiceDi, giornataDi,
          cittaDelleGiornata, stelleGiornata, stelleCitta, stelleMassime } from '../data/bancarella-mondo.js'
@@ -64,6 +64,7 @@ const voto = ref(null)              // a giornata vinta: { stelle, migliore } (l
 const volo = ref(null)              // la roba che vola dalla cesta al cliente
 const cucina = ref(cucinaNuova())   // le stazioni e i piatti: docs/bancarella/cucina.md
 const conCuoco = ref(/[#&]cuoco=1/.test(location.hash))   // la prova col cuoco: docs/bancarella/cuoco.md
+const dettoCuoco = ref(null)        // il perché di un tocco a vuoto
 const portaPiatto = ref(false)      // ha in mano un piatto pronto: il cliente lo aspetta
 const cassaAperta = ref(true)       // in cucina il resto è un foglio, e si può mettere da parte
 const frasePrimato = ref('')        // a fine mercato senza fine: com'è andata col record
@@ -329,7 +330,7 @@ const MOSSE = {
   metti: a => mettiInCucina(cucina.value, a.cosa, a.dove), svuota: a => svuota(cucina.value, a.nome, a.i),
   taglia: () => taglia(cucina.value), inforna: a => inforna(cucina.value, a.i),
   butta: a => butta(cucina.value, a.nome), buttaPiatto: a => buttaPiatto(cucina.value, a.i), servi: a => serviPiatto(a.i),
-  usa: () => (bersaglio(cucina.value)?.tipo === 'consegna' ? serviDalleMani() : usa(cucina.value)), tagliaCuoco: () => tagliaCuoco(cucina.value),
+  usa: a => (a.posto.tipo === 'consegna' ? serviDalleMani() : usa(cucina.value, a.posto)),
 }
 /* Un gesto della tela: torna `true` se è riuscito, e la tela sa cosa fare del pezzo in mano. */
 function inCucina(a) {
@@ -339,7 +340,13 @@ function inCucina(a) {
   else if (a.che !== 'servi') suono.no()
   return fatta
 }
-function spingeLeva(x, z) { if (cucina.value.leva) { cucina.value.leva.x = x; cucina.value.leva.z = z } }
+const toccaStanza = d => (d.id ? tocca(cucina.value, d.id) : vaiA(cucina.value, d.x, d.z))
+/* Il cuoco è arrivato dove si era toccato: si fa quello che lì è ovvio. */
+function agisciCuoco() {
+  if (occupato || cambio.value || !cliente.value) return
+  const k = cucina.value
+  if (!inCucina({ che: 'usa', posto: arriva(k) }) && k.perche) dettoCuoco.value = { testo: k.perche }
+}
 
 function serviPiatto(i) {
   const piatto = cucina.value.piatti[i]
@@ -510,6 +517,7 @@ function ciclo(ts) {
     if (c && c.restaPazienza <= 0) scaduto()
     if (camp.value.cucina && (momento.value === 'raccolta' || !cassaAperta.value || camp.value.fuocoAcceso))
       (cucina.value.cuoco ? passoCuoco : avanza)(cucina.value, dt)
+    if (cucina.value.arrivato) agisciCuoco()
   }
   raf = requestAnimationFrame(ciclo)
 }
@@ -832,7 +840,7 @@ onBeforeUnmount(() => {
 
         <!-- niente `:key` sui due rami: in produzione, con una key esplicita su
              uno solo dei due, il patch del DOM va in confusione al cambio tappa -->
-        <CucinaCuoco v-if="camp.cucina && cucina.cuoco" :stato="cucina" :azione="inCucina" @presa="v => (portaPiatto = v)" @leva="spingeLeva" />
+        <CucinaCuoco v-if="camp.cucina && cucina.cuoco" :stato="cucina" :detto="dettoCuoco" @presa="v => (portaPiatto = v)" @tocca="toccaStanza" />
         <Cucina v-else-if="camp.cucina" :stato="cucina" :azione="inCucina" @presa="v => (portaPiatto = v)" />
 
         <div v-else-if="momento === 'raccolta'" class="ceste" :style="{ '--r': righe.length }">
@@ -855,7 +863,7 @@ onBeforeUnmount(() => {
         </div>
 
         <!-- in cucina il resto non chiude i fornelli: sta in un foglio, e la ✕ lo mette da parte -->
-        <button v-if="camp.cucina && momento === 'cassa' && !cassaAperta" type="button" class="al-resto" :class="{ 'sui-tasti': cucina.cuoco }"
+        <button v-if="camp.cucina && momento === 'cassa' && !cassaAperta" type="button" class="al-resto"
                 data-azione="al-resto" @click="cassaAperta = true">🧾 dai il resto</button>
         <div v-if="momento === 'cassa' && (!camp.cucina || cassaAperta)" class="cassa" :class="{ foglio: camp.cucina }">
           <button v-if="camp.cucina" type="button" class="chiudi-foglio" data-chiudi aria-label="torna ai fornelli"
@@ -1080,7 +1088,6 @@ onBeforeUnmount(() => {
 .foglio .quanto b { font-size:18px }
 .chiudi-foglio { position:absolute; right:6px; top:-14px; z-index:2; width:34px; height:34px; border:0; border-radius:50%; font-size:16px; font-weight:900;
                  color:#fff; background:#c8442f; box-shadow:0 2px 4px #0005 }
-.al-resto.sui-tasti { bottom:calc(140px + env(safe-area-inset-bottom)) }
 .al-resto { position:absolute; left:50%; bottom:calc(14px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:20; padding:12px 24px; border:0;
             border-radius:14px; font-size:17px; font-weight:900; color:#5a3200; background:linear-gradient(180deg,#ffd257,#ffa62b); box-shadow:0 4px 0 #c97b12, 0 6px 12px #0004 }
 .cucine { flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding:12px }
