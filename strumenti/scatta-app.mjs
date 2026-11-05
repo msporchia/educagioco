@@ -86,7 +86,8 @@ const pixel = Number(opz('pixel', 2))   // il deviceScaleFactor: 1, 1.25, 1.5 pe
 const browser = await apriBrowser()
 const { page, errori } = pagina ? await apriPagina() : await apriGioco(browser, {
   viewport: { width: larghezza, height: alto }, hash: dove, attesa: null, pixel,
-  indirizzo: conDist ? `file://${dist}` : `http://localhost:${porta}/`,
+  // `--sito <indirizzo>`: una copia pubblicata, in un browser nuovo che non vede i salvataggi di nessuno
+  indirizzo: opz('sito', null) || (conDist ? `file://${dist}` : `http://localhost:${porta}/`),
 })
 await page.waitForTimeout(1200)                 // l'app aspetta il profilo
 // `--aspetta 4000`: prima dei tocchi e dello scatto (il 3D del sotterraneo ci mette un attimo a nascere)
