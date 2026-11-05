@@ -90,6 +90,24 @@ uguale('niente levetta né tasti', await page.locator('[data-leva], [data-usa], 
   })
 }
 
+/* ---------- il ricettario: si apre su quello che ordinano, si sfoglia, e il tempo sta fermo ---------- */
+{
+  const ordine = await page.evaluate(() => window.__shop.cliente.value.articoli[0].emoji)
+  await page.click('[data-apri-ricettario]')
+  await page.waitForSelector('[data-ricettario]', { timeout: 2000 })
+  uguale('si apre su quello che ha ordinato', await page.locator('.piatto.qui').getAttribute('data-ricetta'), ordine)
+  await scatto(page, 'cuoco-ricettario')
+  const altro = ordine === '🍝' ? '🥪' : '🍝'
+  await page.click(`[data-ricetta="${altro}"]`)
+  uguale('si sfoglia', await page.locator('.piatto.qui').getAttribute('data-ricetta'), altro)
+  const prima = await page.evaluate(() => window.__shop.cliente.value.restaPazienza)
+  await attendi(page, 700)
+  uguale('il cliente aspetta', await page.evaluate(() => window.__shop.cliente.value.restaPazienza), prima)
+  await page.click('[data-chiudi-ricettario]')
+  await attendi(page, 700)
+  controlla('chiuso, il tempo riparte', await page.evaluate(() => window.__shop.cliente.value.restaPazienza) < prima)
+}
+
 /* ---------- 2. il piatto si porta alla consegna ---------- */
 const primo = await page.evaluate(() => window.__shop.cliente.value.articoli[0].emoji)
 const altro = primo === '🍝' ? '🥪' : '🍝'

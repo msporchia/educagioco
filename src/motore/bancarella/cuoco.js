@@ -279,5 +279,12 @@ export function consegna(c, vuole) {
   return true
 }
 
+/* Le righe del ricettario. */
+const COME = { pentola: 'si cuoce in pentola', padella: 'si cuoce in padella', tagliere: 'si taglia sul tagliere' }
+export const passiRicetta = r => [
+  ...r.passi.map(k => ({ emoji: INGREDIENTI[k].emoji, nome: INGREDIENTI[k].nome, come: COME[vaA(k)] || 'va dritto sul piatto' })),
+  ...(r.forno ? [{ emoji: '🔥', nome: 'forno', come: 'tutto insieme sul piatto, poi in forno' }] : []),
+]
+
 // la barra sulla stazione, da 0 a 1
 export const quanto = s => (s.fase === 'taglia' ? s.colpi / TAGLI : quantoStazione(s))

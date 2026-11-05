@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { CUCINE } from '../../src/data/bancarella.js'
-import { cucinaCuoco, passo, usa, tocca, vaiA, arriva, consegna, TAGLI, FILA_MAX } from '../../src/motore/bancarella/cuoco.js'
+import { cucinaCuoco, passo, usa, tocca, vaiA, arriva, consegna, passiRicetta, TAGLI, FILA_MAX } from '../../src/motore/bancarella/cuoco.js'
 
 /* Tocca un posto, lascia camminare il cuoco e fa la mossa, come fa la vista. */
 function vai(c, id) {
@@ -188,6 +188,14 @@ test('la pizza entra col piatto ed esce pronta; il bruciato va nel bidone', () =
   assert.equal(c.stazioni.padella.fase, 'scotta')
   assert.ok(fa(c, '2,0')); assert.ok(c.cuoco.mano.bruciata)
   assert.ok(fa(c, '1,6')); assert.equal(c.cuoco.mano, null)
+})
+
+test('il ricettario dice dove passa ogni cosa', () => {
+  const pizza = cucina(3).ricette.find(r => r.emoji === '🍕')
+  assert.deepEqual(passiRicetta(pizza).map(p => [p.nome, p.come]), [
+    ['impasto', 'va dritto sul piatto'], ['sugo', 'va dritto sul piatto'], ['formaggio', 'si taglia sul tagliere'],
+    ['forno', 'tutto insieme sul piatto, poi in forno'],
+  ])
 })
 
 test('ogni ricetta di ogni cucina si può finire', () => {

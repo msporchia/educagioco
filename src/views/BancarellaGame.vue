@@ -64,6 +64,7 @@ const voto = ref(null)              // a giornata vinta: { stelle, migliore } (l
 const volo = ref(null)              // la roba che vola dalla cesta al cliente
 const cucina = ref(cucinaNuova())   // le stazioni e i piatti: docs/bancarella/cucina.md
 const conCuoco = ref(/[#&]cuoco=1/.test(location.hash))   // la prova col cuoco: docs/bancarella/cuoco.md
+const ricettarioAperto = ref(false) // col ricettario aperto il tempo si ferma: si legge senza fretta
 const dettoCuoco = ref(null)        // il perché di un tocco a vuoto
 const portaPiatto = ref(false)      // ha in mano un piatto pronto: il cliente lo aspetta
 const cassaAperta = ref(true)       // in cucina il resto è un foglio, e si può mettere da parte
@@ -341,6 +342,8 @@ function inCucina(a) {
   return fatta
 }
 const toccaStanza = d => (d.id ? tocca(cucina.value, d.id) : vaiA(cucina.value, d.x, d.z))
+// per il ricettario: prima quello che manca al cliente al banco, poi la fila
+const ordinati = computed(() => [...daPrendere.value.map(a => a.emoji), ...coda.value.slice(1).flatMap(c => c.articoli.map(a => a.emoji))])
 /* Il cuoco è arrivato dove si era toccato: si fa quello che lì è ovvio. */
 function agisciCuoco() {
   if (occupato || cambio.value || !cliente.value) return
@@ -509,7 +512,7 @@ function consegna() {
    quindi non passano da `fermo`. */
 function ciclo(ts) {
   const dt = Math.min(0.05, (ts - ultimo) / 1000 || 0); ultimo = ts
-  if (!fermo.value && !cambio.value && !occupato) {
+  if (!fermo.value && !cambio.value && !occupato && !ricettarioAperto.value) {
     // chi è in fila si spazientisce molto più piano di chi è al banco
     coda.value.forEach((c, i) => { c.restaPazienza -= dt * (i === 0 ? 1 : 0.35) })
     const c = coda.value[0]
@@ -840,7 +843,8 @@ onBeforeUnmount(() => {
 
         <!-- niente `:key` sui due rami: in produzione, con una key esplicita su
              uno solo dei due, il patch del DOM va in confusione al cambio tappa -->
-        <CucinaCuoco v-if="camp.cucina && cucina.cuoco" :stato="cucina" :detto="dettoCuoco" @presa="v => (portaPiatto = v)" @tocca="toccaStanza" />
+        <CucinaCuoco v-if="camp.cucina && cucina.cuoco" :stato="cucina" :detto="dettoCuoco" :ordinati="ordinati" @presa="v => (portaPiatto = v)"
+                     @tocca="toccaStanza" @ricettario="v => (ricettarioAperto = v)" />
         <Cucina v-else-if="camp.cucina" :stato="cucina" :azione="inCucina" @presa="v => (portaPiatto = v)" />
 
         <div v-else-if="momento === 'raccolta'" class="ceste" :style="{ '--r': righe.length }">
