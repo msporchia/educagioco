@@ -168,8 +168,8 @@ e ibernato non costa tempo). Una battaglia in due manda circa 20 messaggi al sec
 all'ora**. Una famiglia con quattro bambini e dieci ore di battaglia al giorno sta a ~36.000 richieste e ~4.500 GB·s: un terzo del
 limite. La presenza (collegamenti quasi fermi) pesa pochissimo; un telefono che non riesce a collegarsi riprova al massimo una volta
 al minuto. **Il rischio vero non è il costo ma l'abuso**: l'indirizzo del servizio è nel codice, e chi lo martella può finire le
-richieste del giorno e fermare tutti fino a mezzanotte. I tetti per indirizzo (codici 30 all'ora, tentativi 10 al minuto, stanze 30 all'ora, tavoli 6 al minuto)
-limitano chi lo fa a mano, non un attacco vero. Dove guardare: pannello Cloudflare → *Workers & Pages* → `sfida` → *Metrics*.
+richieste del giorno e fermare tutti fino a mezzanotte. I tetti per indirizzo (codici 30 all'ora, tentativi 10 al minuto, stanze 30 all'ora, tavoli 6 al minuto, fattoria in comune 120 al minuto, 5400 all'ora e 36.000 al giorno)
+limitano chi lo fa a mano, non un attacco vero. **La fattoria in comune è quella che pesa di più**: ogni giro è una richiesta al Worker e due ai Durable Object (il tetto e la fattoria), quindi venti telefoni per un'ora ne fanno 24.000 e 48.000, quasi metà della quota del giorno dei Durable Object, che è di tutti. Dove guardare: pannello Cloudflare → *Workers & Pages* → `sfida` → *Metrics*.
 
 ## Cosa questo apre (non è in questo lavoro)
 

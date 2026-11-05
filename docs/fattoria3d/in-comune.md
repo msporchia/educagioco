@@ -67,8 +67,11 @@ spariva per 36-50 s (misurato con due browser). Mosse e contadino sono due infor
 - Se dell'amico non si sa niente da 15 s, una posizione ogni 20 s (`DA_SOLO_OGNI`): chi arriva vede che ci sei e la fila non si riempie.
 - `MAX_PER_GIRO` è 19: il servizio ne prende 20 a richiesta, e una è il contadino.
 
-Il giro è di 3 s perché il servizio dà 3000 richieste all'ora per indirizzo, e due telefoni a casa ne fanno 2400: per un contadino meno
-indietro bisognerebbe alzare quel tetto.
+Un giro ogni 3 s sono 20 richieste al minuto per telefono. **I tetti per indirizzo** (`TETTI_COMUNE`) sono una cintura contro i bug e chi
+martella, non un conto dei bambini: si fissa il minuto, 120 (quattro telefoni sulla stessa wifi ne fanno 80), e gli altri vengono da lì.
+Un'ora vale 45 minuti pieni (5400), un giorno cinque ore piene (36.000). Chi gioca davvero non li tocca: quattro telefoni per un'ora intera
+fanno 4800. Erano 3000 all'ora, tarati su una coppia: con quattro bambini tutto si fermava dopo 37 minuti. Il tetto vero con tanti bambini
+è la quota del piano gratuito, che è di tutti: [../core/amici.md](../core/amici.md).
 
 **Con più amici, più fattorie in comune**: una per amicizia, e il 🤝 ha un tasto per ognuno.
 
