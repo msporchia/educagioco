@@ -124,7 +124,7 @@ async function amici(richiesta, url, env) {
     const r = comune.leggiRichiesta(corpo)
     if (!r.ok) return json({ errore: r.errore }, 400)
     const limite = env.LIMITE.get(env.LIMITE.idFromName('comune:' + ip))
-    if (!(await (await limite.fetch(`https://limite/conta?tetto=${comune.COMUNE_ORA}`)).json()).ok) return json({ errore: 'troppe richieste, riprova fra un po\'' }, 429)
+    if (!(await (await limite.fetch(`https://limite/conta?tetti=${comune.TETTI_COMUNE.map(t => t.join(':')).join(',')}`)).json()).ok) return json({ errore: 'troppe richieste, riprova fra un po\'' }, 429)
     const c = await env.COMUNI.get(env.COMUNI.idFromName(r.chiave)).fetch('https://comune/usa', { method: 'POST', body: JSON.stringify(r) })
     if (c.status === 409) return json({ errore: 'questa amicizia è già di due' }, 409)
     const d = await c.json()
@@ -305,11 +305,19 @@ export class Tavolo {
 }
 
 /* Quante stanze crea un indirizzo all'ora: un contatore per indirizzo, che si azzera da solo. `?tetto=` per un conto con un
-   altro tetto (la bacheca), `?finestra=` (ms) per una finestra diversa dall'ora (i tavoli: al minuto). */
+   altro tetto (la bacheca), `?finestra=` (ms) per una finestra diversa dall'ora (i tavoli: al minuto), `?tetti=120:60000,5400:3600000`
+   per più finestre in una chiamata sola (la fattoria in comune). */
 export class Limite {
   constructor(stato) { this.stato = stato }
 
   async fetch(richiesta) {
+    const tetti = new URL(richiesta.url).searchParams.get('tetti')?.split(',').map(x => x.split(':').map(Number))
+    if (tetti) {
+      const r = comune.contaTetti(await this.stato.storage.get('conti'), tetti, Date.now())
+      await this.stato.storage.put('conti', r.conti)
+      await this.stato.storage.setAlarm(r.conti.at(-1).da + tetti.at(-1)[1])
+      return new Response(JSON.stringify({ ok: r.ok }))
+    }
     const tetto = Number(new URL(richiesta.url).searchParams.get('tetto')) || CREAZIONI_ORA
     const finestra = Number(new URL(richiesta.url).searchParams.get('finestra')) || 60 * 60 * 1000
     const ora = Date.now()
