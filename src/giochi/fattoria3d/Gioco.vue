@@ -69,9 +69,7 @@ import { usaBottegaDentro } from './bottega-dentro.js'
 import { DAI as DAI_CARRETTO } from './motore/carretto.js'
 import { prendiIngresso, chiediIngresso } from '../../amici/ingresso.js'
 import { apriComune, amiciPerComune, nomeDellAmico, dettoDellaMossa, TERRA } from './comune.js'
-import { quandoQui, mandaA, mandaFresco } from '../../amici/servizio.js'
-import { spedizione, OGNI_QUI } from './contadino-amico.js'
-import { qui as msgQui, via as msgVia, GESTI } from '../../amici/messaggi.js'
+import { Strada, OGNI_PUNTO, GESTI } from './contadino-amico.js'
 import './stile.css'
 import './stile-guida.css'
 
@@ -688,17 +686,17 @@ function arrivaDallAmico({ mosse, ricarica }) {
   ripresa()
 }
 
-// il mio contadino all'amico, sul collegamento degli amici (contadino-amico.js); il suo arriva a `arrivaQui` e cammina nella mia
-// scena (scena3d/ospite.js)
-const spedisciQui = spedizione(m => mandaFresco(comune, m))
+// il mio contadino all'amico: la sua strada parte col giro delle mosse (contadino-amico.js); il suo arriva a `arrivaQui` e cammina
+// nella mia scena (scena3d/ospite.js)
+const strada = new Strada()
 let timerQui = 0
-function mandaQui() {
+function segnaQui() {
   if (!mondo) return
   const e = mondo.eroe, g = e.az && GESTI.includes(e.az.tipo) ? e.az.tipo : null
-  spedisciQui(msgQui({ x: e.x, z: e.z, d: e.dir, r: e.corsa, g }), abito.value)
+  strada.segna({ x: e.x, z: e.z, d: e.dir, r: e.corsa, g })
 }
-function arrivaQui(chiave, l) {
-  if (chiave !== comune || !mondo) return
+function arrivaQui(l) {
+  if (!mondo) return
   if (l.k === 'via') return void mondo.ospiteVia()
   mondo.ospiteQui({ nome: nomeDellAmico(comune), abito: l.a ? normalizzaAbito(l.a, l.a.persona) : null }, l)
 }
@@ -724,7 +722,7 @@ onMounted(async () => {
   for (const [t, n] of stress) mondo.stress(t, Number(n))
   mondo.avvia()
   guidaAttiva.value = !comune && !saltaLeSpiegazioni() && !(scelta(CHIAVE, 'guida', null) || {}).finita && servePrimoGiro(motore.s)
-  if (sessione) { sessione.alCambio = arrivaDallAmico; sessione.avvia(); quandoQui(arrivaQui); timerQui = setInterval(mandaQui, OGNI_QUI) }
+  if (sessione) { sessione.alCambio = arrivaDallAmico; sessione.mioQui = () => strada.prendi(abito.value); sessione.alQui = arrivaQui; sessione.avvia(); timerQui = setInterval(segnaQui, OGNI_PUNTO) }
   else visite.avvia(scelta(CHIAVE, 'vicini', null))
   ripresa()
   battito = setInterval(ritmo, 250)
@@ -739,7 +737,7 @@ onBeforeUnmount(() => {
   removeEventListener('pagehide', seSparisce)
   if (motore) salva({ subito: true })
   sessione?.chiudi()
-  if (sessione) { clearInterval(timerQui); quandoQui(null); mandaA(comune, msgVia()) }
+  clearInterval(timerQui)
   visite.via()
   interni.via()
   sala.via()

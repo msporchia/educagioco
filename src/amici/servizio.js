@@ -21,8 +21,6 @@ let scadenza = 0
 let ripresenta = 0
 let trattati = new Set()                 // gli inviti già risposti o scaduti: chi li rimanda (l'invito si ripete finché si aspetta) non li rifà comparire
 let suBacheca = () => {}                 // l'amico ha riscritto la sua bacheca: la mette bacheca.js
-let suQui = () => {}                     // dove sta il contadino dell'amico nella fattoria in comune: lo mette la fattoria 3D
-let inGioco = false                      // la fattoria in comune è aperta: il collegamento batte svelto
 
 function aggiorna() {
   stato.amici = dati.amici.map(a => {
@@ -55,8 +53,6 @@ function arrivato(chiave, m) {
     stato.risposta = { chiave, ok: l.ok }
   } else if (l.k === 'bacheca') {
     suBacheca(chiave)
-  } else if (l.k === 'qui' || l.k === 'via') {
-    return void suQui(chiave, l)                                          // tanti al secondo: niente da rifare nella lista
   }
   aggiorna()
 }
@@ -80,7 +76,6 @@ export function avvia({ nome = '', gioco = null, puoGiocare: puo = () => true, .
   if (!dati.attivo || !dati.online) { aggiorna(); return }
   stato.acceso = true
   ponte = new Ponte({ id: dati.id, chiavi: () => dati.amici.map(a => a.chiave), ...opzioni, alMessaggio: arrivato, alCambio: cambiato })
-  ponte.inGioco(inGioco)
   ponte.avvia()
   clearInterval(ripresenta)
   ripresenta = setInterval(() => { for (const c of ponte?.presenti || []) presentati(c) }, RIPRESENTA)
@@ -128,10 +123,6 @@ export function rispondi(ok) {
 
 /* la bacheca (docs/core/amici-bacheca.md): chi la rilegge quando l'amico avvisa, e l'avviso a chi è online adesso */
 export const quandoBacheca = f => { suBacheca = typeof f === 'function' ? f : () => {} }
-/* la fattoria in comune (docs/fattoria3d/in-comune.md): chi riceve il contadino dell'amico, e un messaggio a quell'amico solo */
-export const quandoQui = f => { inGioco = typeof f === 'function'; suQui = inGioco ? f : () => {}; ponte?.inGioco(inGioco) }
-export function mandaA(chiave, m) { return ponte?.presenti.has(chiave) ? !!ponte.invia(chiave, m) : false }
-export function mandaFresco(chiave, m) { return !!ponte?.mandaFresco(chiave, m) }
 export function avvisaPresenti(m) { for (const chiave of ponte?.presenti || []) ponte.invia(chiave, m) }
 
 /* lo schermo torna acceso: il collegamento riprova subito; spento, smettono di riprovare da soli */

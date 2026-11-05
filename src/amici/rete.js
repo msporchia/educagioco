@@ -1,7 +1,7 @@
 // Il filo verso il servizio degli amici (servizio/inoltro, docs/core/amici.md): i codici brevi e il collegamento di una amicizia.
 // Regola: gli amici sono un di più e non danno mai errori. Il `Ponte` riprova da solo, in silenzio, con attese crescenti, e non
 // riprova a schermo spento. Il resto del gioco non sa che esiste.
-import { indirizzo, orologioVero } from '../insieme/rete.js'
+import { indirizzo } from '../insieme/rete.js'
 
 const ATTESA = 4000                                   // ms per fare una richiesta prima di darla per persa
 const TENTATIVI = 3
@@ -61,20 +61,14 @@ export const RITARDI = [2000, 4000, 8000, 16000, 32000, 60000]
 // il battito: un filo morto in silenzio (il telefono crede di essere collegato) non riceve inviti; se il servizio non risponde al
 // ping per tanto, il filo si lascia e se ne apre un altro (lo stesso guaio della sfida: docs/core/insieme.md)
 export const BATTITO = { ogni: 15000, sordo: 40000 }
-// mentre si gioca su questo filo (il contadino nella fattoria in comune) un filo morto si vede in pochi secondi, e si riapre subito:
-// le mosse viaggiano a parte, e l'amico sparirebbe mentre lavora. `fermo`: quanto silenzio basta per non mettere più posizioni in
-// coda (arrivando tutte insieme farebbero chiudere il filo dal servizio). Vedi docs/fattoria3d/in-comune.md, «La linea del contadino»
-export const BATTITO_GIOCO = { ogni: 1000, sordo: 3500, fermo: 1800, ritardi: [1000, 2000] }
 
 /* L'UNICO collegamento di questo telefono verso il servizio degli amici (docs/core/amici.md), che si rimette in piedi da solo.
    Dichiara chi è (`id`) e le chiavi delle sue amicizie (`chiavi()` le legge ogni volta: aggiungerne una è solo `imposta()`).
    `alMessaggio(chiave, oggetto)` per quello che manda un amico, `alCambio()` quando cambia aperto/chi c'è. */
 export class Ponte {
   constructor({ id, chiavi = () => [], servizio, WebSocketImpl = globalThis.WebSocket, alMessaggio = () => {}, alCambio = () => {}, ritardi = RITARDI,
-                attesaApertura = 5000, visibile = () => typeof document === 'undefined' || !document.hidden, battito = BATTITO,
-                battitoGioco = BATTITO_GIOCO, tempo = orologioVero }) {
-    Object.assign(this, { id, chiavi, servizio, WebSocketImpl, alMessaggio, alCambio, ritardi, attesaApertura, visibile, battito, battitoGioco, tempo })
-    this.gioco = false                 // si sta giocando su questo filo: batte svelto
+                attesaApertura = 5000, visibile = () => typeof document === 'undefined' || !document.hidden, battito = BATTITO }) {
+    Object.assign(this, { id, chiavi, servizio, WebSocketImpl, alMessaggio, alCambio, ritardi, attesaApertura, visibile, battito })
     this.cuore = 0
     this.sentito = 0
     this.aperto = false
@@ -88,25 +82,29 @@ export class Ponte {
   avvia() { this.fermo = false; this.apri() }
 
   apri() {
-    const t = this.tempo
-    t.ferma(this.timer)
+    clearTimeout(this.timer)
     if (this.fermo || this.ws || !this.visibile()) return
     let w
     try { w = new this.WebSocketImpl(`${(this.servizio || indirizzo()).replace(/^http/, 'ws')}/amici/presenza`) } catch { return this.riprova() }
     this.ws = w
     const mio = () => this.ws === w
-    const lento = t.dopo(this.attesaApertura, () => { if (mio() && !this.aperto) { try { w.close() } catch { /* già chiuso */ } this.cadi() } })
+    const lento = setTimeout(() => { if (mio() && !this.aperto) { try { w.close() } catch { /* già chiuso */ } this.cadi() } }, this.attesaApertura)
     w.addEventListener('open', () => {
       if (!mio()) return
-      t.ferma(lento); this.aperto = true; this.prova = 0
-      this.sentito = t.ora()
-      this.pulsa()
+      clearTimeout(lento); this.aperto = true; this.prova = 0
+      this.sentito = Date.now()
+      clearInterval(this.cuore)
+      this.cuore = setInterval(() => {
+        if (!mio()) return clearInterval(this.cuore)
+        if (Date.now() - this.sentito > this.battito.sordo) { try { w.close() } catch { /* già chiuso */ } return this.cadi() }
+        this.manda('{"t":"ping"}')
+      }, this.battito.ogni)
       this.dichiara()                                                    // chi sono e con chi sono in amicizia
       this.alCambio()
     })
     w.addEventListener('message', e => {
       if (!mio()) return
-      this.sentito = t.ora()
+      this.sentito = Date.now()
       let m
       try { m = JSON.parse(e.data) } catch { return }
       if (!m || typeof m !== 'object') return
@@ -115,27 +113,9 @@ export class Ponte {
       else if (m.t === 'giu' && typeof m.chiave === 'string') { this.presenti.delete(m.chiave); this.alCambio() }
       else if (m.t === 'da' && typeof m.chiave === 'string' && m.m && typeof m.m === 'object') this.alMessaggio(m.chiave, m.m)
     })
-    const chiuso = () => { t.ferma(lento); if (mio()) this.cadi() }
+    const chiuso = () => { clearTimeout(lento); if (mio()) this.cadi() }
     w.addEventListener('close', chiuso)
     w.addEventListener('error', chiuso)
-  }
-
-  /* il battito del filo aperto, al ritmo di adesso */
-  pulsa() {
-    const { tempo: t, ws: w } = this, { ogni, sordo } = this.gioco ? this.battitoGioco : this.battito
-    t.ferma(this.cuore)
-    this.cuore = t.ogni(ogni, () => {
-      if (this.ws !== w) return t.ferma(this.cuore)
-      if (t.ora() - this.sentito > sordo) { try { w.close() } catch { /* già chiuso */ } return this.cadi() }
-      this.manda('{"t":"ping"}')
-    })
-  }
-
-  /* si comincia o si smette di giocare su questo filo; il silenzio di prima, a battito lento, non conta */
-  inGioco(acceso) {
-    this.gioco = !!acceso
-    if (this.aperto) { this.sentito = this.tempo.ora(); this.pulsa() }
-    else if (this.gioco) this.riprendi()
   }
 
   dichiara() { this.manda({ k: 'dichiaro', id: this.id, chiavi: this.chiavi() }) }
@@ -145,7 +125,7 @@ export class Ponte {
 
   /* il collegamento è finito: si riprova più tardi, in silenzio */
   cadi() {
-    this.tempo.ferma(this.cuore)
+    clearInterval(this.cuore)
     const c = this.aperto || this.presenti.size
     this.ws = null; this.aperto = false; this.presenti = new Set()
     if (c) this.alCambio()
@@ -154,10 +134,9 @@ export class Ponte {
 
   riprova() {
     if (this.fermo) return
-    const ritardi = this.gioco ? this.battitoGioco.ritardi : this.ritardi
-    const ritardo = ritardi[Math.min(this.prova++, ritardi.length - 1)]
-    this.tempo.ferma(this.timer)
-    this.timer = this.tempo.dopo(ritardo, () => this.apri())
+    const ritardo = this.ritardi[Math.min(this.prova++, this.ritardi.length - 1)]
+    clearTimeout(this.timer)
+    this.timer = setTimeout(() => this.apri(), ritardo)
   }
 
   /* lo schermo torna acceso: si riprova subito invece di aspettare */
@@ -171,13 +150,9 @@ export class Ponte {
   /* un messaggio per l'amico di quella amicizia */
   invia(chiave, m) { return this.manda({ k: 'a', chiave, m }) }
 
-  /* una cosa che invecchia (dove sta il contadino): parte solo se il filo risponde, e l'amico c'è */
-  get fresco() { return this.aperto && (!this.gioco || this.tempo.ora() - this.sentito <= this.battitoGioco.fermo) }
-  mandaFresco(chiave, m) { return this.presenti.has(chiave) && this.fresco && this.invia(chiave, m) }
-
   chiudi() {
     this.fermo = true
-    this.tempo.ferma(this.timer); this.tempo.ferma(this.cuore)
+    clearTimeout(this.timer); clearInterval(this.cuore)
     const w = this.ws
     this.ws = null; this.aperto = false; this.presenti = new Set()
     try { w?.close() } catch { /* già chiuso */ }

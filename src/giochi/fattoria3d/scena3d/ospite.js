@@ -1,7 +1,7 @@
 // Il contadino dell'amico nella fattoria in comune (docs/fattoria3d/in-comune.md): lo stesso corpo e la stessa camminata
-// dell'eroe, guidati da dove l'amico dice di essere (pochi messaggi al secondo) invece che dal dito. Cammina verso l'ultimo
-// punto arrivato, salta se è rimasto troppo indietro, fa i gesti che l'amico fa; il nome gli sta sopra la testa. Se l'amico
-// tace per qualche secondo (è uscito, ha perso la rete) sparisce.
+// dell'eroe, guidati dalla strada che l'amico ha fatto nell'ultimo giro invece che dal dito. Segue l'ultima strada arrivata, salta
+// se è rimasto troppo indietro, fa i gesti che l'amico fa; il nome gli sta sopra la testa. Se l'amico tace per qualche secondo (è
+// uscito, ha perso la rete) sparisce.
 import { Eroe } from './eroe.js'
 import { SPARISCE } from '../contadino-amico.js'
 
@@ -22,11 +22,14 @@ export class Ospite {
 
   get visibile() { return this.eroe.grp.visible }
 
-  /** Un segno di vita: dove sta, verso dove guarda, se corre, il gesto che ha cominciato. */
-  qui({ x, z, d, r, g }) {
-    const e = this.eroe
-    if (!this.visibile || Math.hypot(x - e.x, z - e.z) > SALTA_DA) { e.x = x; e.z = z; e.dir = d; e.percorso = [] }
-    else if (Math.hypot(x - e.x, z - e.z) > 0.05) e.percorso = [[x, z]]
+  /** Un segno di vita: la strada fatta nell'ultimo giro, verso dove guarda, se corre, il gesto che ha cominciato. */
+  qui({ p, d, r, g }) {
+    const e = this.eroe, [x, z] = p.at(-1), [x0, z0] = p[0]
+    if (!this.visibile) { e.x = x; e.z = z; e.dir = d; e.percorso = [] }
+    else {
+      if (Math.hypot(x0 - e.x, z0 - e.z) > SALTA_DA) { e.x = x0; e.z = z0 }
+      e.percorso = p.map(c => [...c])
+    }
     e.corsa = !!r; this.dir = d
     if (g && !e.az) e.avvia(g, DURATA_GESTO)
     this.visto = performance.now()

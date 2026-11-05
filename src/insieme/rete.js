@@ -49,7 +49,7 @@ export const PEZZO = 800             // caratteri: un oggetto più lungo viaggia
 const MAX_FUORI = 5000               // messaggi non confermati: oltre, l'altro è troppo indietro per essere ancora lì
 const PER_GIRO = 8                   // quelli in coda partono al massimo così a ogni giro (32 al secondo: il servizio ne lascia 40)
 
-export const orologioVero = {
+const orologioVero = {
   ora: () => Date.now(),
   dopo: (ms, f) => setTimeout(f, ms),
   ogni: (ms, f) => setInterval(f, ms),
