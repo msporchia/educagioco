@@ -69,7 +69,8 @@ import { usaBottegaDentro } from './bottega-dentro.js'
 import { DAI as DAI_CARRETTO } from './motore/carretto.js'
 import { prendiIngresso, chiediIngresso } from '../../amici/ingresso.js'
 import { apriComune, amiciPerComune, nomeDellAmico, dettoDellaMossa, TERRA } from './comune.js'
-import { quandoQui, mandaA } from '../../amici/servizio.js'
+import { quandoQui, mandaA, mandaFresco } from '../../amici/servizio.js'
+import { spedizione, OGNI_QUI } from './contadino-amico.js'
 import { qui as msgQui, via as msgVia, GESTI } from '../../amici/messaggi.js'
 import './stile.css'
 import './stile-guida.css'
@@ -687,18 +688,14 @@ function arrivaDallAmico({ mosse, ricarica }) {
   ripresa()
 }
 
-// il mio contadino all'amico, sul collegamento degli amici: cinque volte al secondo se cambia qualcosa, ogni due secondi comunque
-// (così sa che ci sono), con l'abito; il suo arriva a `arrivaQui` e cammina nella mia scena (scena3d/ospite.js)
-const OGNI_QUI = 200, ANCORA_QUI = 2000
-let timerQui = 0, spedito = '', speditoA = 0
+// il mio contadino all'amico, sul collegamento degli amici (contadino-amico.js); il suo arriva a `arrivaQui` e cammina nella mia
+// scena (scena3d/ospite.js)
+const spedisciQui = spedizione(m => mandaFresco(comune, m))
+let timerQui = 0
 function mandaQui() {
   if (!mondo) return
   const e = mondo.eroe, g = e.az && GESTI.includes(e.az.tipo) ? e.az.tipo : null
-  const m = msgQui({ x: e.x, z: e.z, d: e.dir, r: e.corsa, g }), firma = JSON.stringify(m), t = performance.now()
-  if (firma === spedito && t - speditoA < ANCORA_QUI) return
-  if (t - speditoA >= ANCORA_QUI) m.a = { ...abito.value }
-  spedito = firma; speditoA = t
-  mandaA(comune, m)
+  spedisciQui(msgQui({ x: e.x, z: e.z, d: e.dir, r: e.corsa, g }), abito.value)
 }
 function arrivaQui(chiave, l) {
   if (chiave !== comune || !mondo) return

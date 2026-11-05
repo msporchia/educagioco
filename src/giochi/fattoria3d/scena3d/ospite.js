@@ -3,10 +3,10 @@
 // punto arrivato, salta se è rimasto troppo indietro, fa i gesti che l'amico fa; il nome gli sta sopra la testa. Se l'amico
 // tace per qualche secondo (è uscito, ha perso la rete) sparisce.
 import { Eroe } from './eroe.js'
+import { SPARISCE } from '../contadino-amico.js'
 
 const SALTA_DA = 5            // celle: più lontano di così non lo si fa camminare, lo si mette lì
 const DURATA_GESTO = 0.9      // s: il gesto di chi guarda dura sempre uguale (il motore non lo aspetta)
-export const SPARISCE = 6000  // ms senza notizie
 
 export class Ospite {
   constructor({ scena, motore, effetti, sopra, vista, nome, abito }) {
