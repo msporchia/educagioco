@@ -16,7 +16,8 @@ const fatte = computed(() => props.banco.cucina.fatte)
 const chiusa = k => !props.aperte && k > fatte.value
 const attrezzi = computed(() => ATTREZZI.filter(a => props.aperte || a.da <= fatte.value))
 const preso = a => props.banco.cucina[a.che]
-const finito = a => preso(a) >= a.quanti
+const prezzo = a => a.prezzi[preso(a)]
+const finito = a => prezzo(a) === undefined
 </script>
 
 <template>
@@ -25,10 +26,10 @@ const finito = a => preso(a) >= a.quanti
 
     <section v-if="attrezzi.length" class="attrezzi">
       <button v-for="a in attrezzi" :key="a.che" type="button" class="attrezzo" :class="{ finito: finito(a) }" :data-attrezzo="a.che"
-              :disabled="finito(a) || a.prezzo > banco.cassa" @click="emit('compra', a.che)">
+              :disabled="finito(a) || prezzo(a) > banco.cassa" @click="emit('compra', a.che)">
         <img :src="FOTO['attrezzo:' + a.che]" alt="">
         <span>{{ a.nome }}</span>
-        <b>{{ finito(a) ? 'tuo' : euro(a.prezzo) }}</b>
+        <b>{{ finito(a) ? 'tuo' : euro(prezzo(a)) }}</b>
       </button>
     </section>
 

@@ -143,7 +143,7 @@ await page.waitForSelector('[data-cucine]', { timeout: 3000 })
 controlla('il secondo livello si è aperto', await page.locator('[data-cucina-n="2"]').isEnabled())
 {
   const a = ATTREZZI.find(x => x.che === 'tagliere')
-  await page.evaluate(n => { const S = window.__shop; S.mioBanco.value = { ...S.mioBanco.value, cassa: n } }, a.prezzo + 50)
+  await page.evaluate(n => { const S = window.__shop; S.mioBanco.value = { ...S.mioBanco.value, cassa: n } }, a.prezzi[0] + 50)
   await page.click('[data-attrezzo="tagliere"]')
   await attendi(page, 300)
   uguale('il tagliere in più è comprato', await page.evaluate(() => window.__shop.mioBanco.value.cucina.tagliere), 1)

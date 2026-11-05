@@ -136,22 +136,23 @@ export const CUCINE = [
 /* la fila che `data/portata.js` si aspetta di ricevere */
 export const FILA = CUCINE.map(c => ({ campagna: c.id, portata: c.portata, scuola: c.scuola }))
 
-/* Gli attrezzi da comprare: uno in più di ognuno, i taglieri e i piatti a uno a uno. `da`: il
+/* Gli attrezzi da comprare, a uno a uno: `prezzi` è quanto costa ogni copia, e chi finisce la fila
+   una volta non arriva a comprare tutto (docs/bancarella/cucina.md). `da`: il
    primo livello dove servono, prima non si vedono. */
 const primoCon = t => CUCINE.findIndex(c => attrezziDi(c).includes(t))
 export const ATTREZZI = [
-  { che: 'tagliere', nome: 'Un tagliere in più', emoji: '🔪', prezzo: 2500, quanti: 3, da: primoCon('tagliere') },
-  { che: 'pentola', nome: 'La seconda pentola', emoji: '🍲', prezzo: 3000, quanti: 1, da: primoCon('pentola') },
-  { che: 'piatti', nome: 'Un piatto in più', emoji: '🍽️', prezzo: 1500, quanti: 4, da: CUCINE.findIndex(c => c.piatti) },
-  { che: 'padella', nome: 'La seconda padella', emoji: '🍳', prezzo: 4000, quanti: 1, da: primoCon('padella') },
-  { che: 'forno', nome: 'Il secondo forno', emoji: '🔥', prezzo: 7000, quanti: 1, da: primoCon('forno') },
+  { che: 'tagliere', nome: 'Un tagliere in più', prezzi: [8000, 16000, 24000], da: primoCon('tagliere') },
+  { che: 'pentola', nome: 'La seconda pentola', prezzi: [25000], da: primoCon('pentola') },
+  { che: 'piatti', nome: 'Un piatto in più', prezzi: [6000, 9000, 12000, 15000], da: CUCINE.findIndex(c => c.piatti) },
+  { che: 'padella', nome: 'La seconda padella', prezzi: [30000], da: primoCon('padella') },
+  { che: 'forno', nome: 'Il secondo forno', prezzi: [60000], da: primoCon('forno') },
 ]
 
 const intero = (n, max) => (Number.isInteger(n) && n >= 0 ? Math.min(n, max) : 0)
 /* La parte del banco che riguarda la cucina: `fatte` sono i livelli vinti, gli altri quanti se ne sono comprati. */
 export function cucinaPulita(s) {
   const o = s && typeof s === 'object' ? s : {}
-  return { fatte: intero(o.fatte, CUCINE.length), ...Object.fromEntries(ATTREZZI.map(a => [a.che, intero(o[a.che], a.quanti)])) }
+  return { fatte: intero(o.fatte, CUCINE.length), ...Object.fromEntries(ATTREZZI.map(a => [a.che, intero(o[a.che], a.prezzi.length)])) }
 }
 
 /* Il banco salvato, messo a posto: l'incasso resta, chi giocava prima lo ritrova in cassa. */
@@ -164,6 +165,7 @@ export function bancoPulito(salvato, incassato = 0) {
 /* Il banco dopo l'acquisto, o `null` se non si può. */
 export function compraAttrezzo(b, che) {
   const a = ATTREZZI.find(x => x.che === che)
-  if (!a || b.cucina[che] >= a.quanti || a.prezzo > b.cassa || a.da > b.cucina.fatte) return null
-  return { ...b, cassa: b.cassa - a.prezzo, cucina: { ...b.cucina, [che]: b.cucina[che] + 1 } }
+  const prezzo = a && a.prezzi[b.cucina[che]]
+  if (!prezzo || prezzo > b.cassa || a.da > b.cucina.fatte) return null
+  return { ...b, cassa: b.cassa - prezzo, cucina: { ...b.cucina, [che]: b.cucina[che] + 1 } }
 }

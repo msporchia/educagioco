@@ -350,13 +350,14 @@ test('gli attrezzi comprati stanno nella stanza', () => {
 
 test('si comprano col banco, e il banco li ricorda', () => {
   const a = ATTREZZI.find(x => x.che === 'tagliere')
-  const b = bancoPulito({ cassa: a.prezzo + 100, cucina: { fatte: 3 } })
+  const b = bancoPulito({ cassa: a.prezzi[0] + 100, cucina: { fatte: 3 } })
   assert.deepEqual(bancoPulito(b).cucina, b.cucina)
   const dopo = compraAttrezzo(b, 'tagliere')
   assert.equal(dopo.cassa, 100); assert.equal(dopo.cucina.tagliere, 1)
-  assert.equal(compraAttrezzo({ ...dopo, cassa: 100000, cucina: { ...dopo.cucina, tagliere: a.quanti } }, 'tagliere'), null, 'c\'è un tetto')
+  assert.equal(compraAttrezzo({ ...dopo, cassa: a.prezzi[1] - 1 }, 'tagliere'), null, 'il secondo costa di più')
+  assert.equal(compraAttrezzo({ ...dopo, cassa: 1000000, cucina: { ...dopo.cucina, tagliere: a.prezzi.length } }, 'tagliere'), null, 'c\'è un tetto')
   assert.equal(compraAttrezzo({ ...b, cassa: 0 }, 'tagliere'), null, 'la cassa non va sotto zero')
-  assert.equal(compraAttrezzo({ ...b, cassa: 100000 }, 'forno'), null, 'prima di arrivarci non si vede')
+  assert.equal(compraAttrezzo({ ...b, cassa: 1000000 }, 'forno'), null, 'prima di arrivarci non si vede')
   assert.equal(cucinaPulita({ fatte: 999, piatti: 99 }).fatte, CUCINE.length)
 })
 
