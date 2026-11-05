@@ -8,6 +8,7 @@ import { generaCliente, esposizione, tappaDi, campagnaDi, scomponi, euro,
          centesimiScritti, scriviCifra, premioCliente, stelleDiGiornata, perLaProssima,
          BANCHI, CAMPAGNE, LIBERA, CLIENTI_PER_TAPPA, CUCINE, CUCINA_BANCO, cucinaIdx, eCucina } from '../data/bancarella.js'
 import { ricetteDi, cucinaNuova, avanza, metti as mettiInCucina, svuota, taglia, inforna, butta, buttaPiatto, servi } from '../motore/bancarella/cucina.js'
+import { cucinaCuoco, passo as passoCuoco, usa, taglia as tagliaCuoco, bersaglio, consegna as daiPiatto } from '../motore/bancarella/cuoco.js'
 import { bancoPulito, merceMia, cesteDi, pazienzaDi, compra, puoiComprare } from '../data/bancarella-banco.js'
 import { CITTA, statoCitta, statoGiornata, cittaCorrente, fatteIn, indiceDi, giornataDi,
          cittaDelleGiornata, stelleGiornata, stelleCitta, stelleMassime } from '../data/bancarella-mondo.js'
@@ -20,6 +21,7 @@ import Mondo from '../components/bancarella/Mondo.vue'
 import Piazza from '../components/bancarella/Piazza.vue'
 import IlMioBanco from '../components/bancarella/IlMioBanco.vue'
 import Cucina from '../components/bancarella/Cucina.vue'
+import CucinaCuoco from '../components/bancarella/CucinaCuoco.vue'
 import Soldo from '../components/Soldo.vue'
 import { usaPausa } from '../giochi/pausa.js'
 import VeloPausa from '../giochi/VeloPausa.vue'
@@ -61,6 +63,7 @@ const esito = ref('')               // vinta | persa
 const voto = ref(null)              // a giornata vinta: { stelle, migliore } (le stelle di questa volta e le migliori)
 const volo = ref(null)              // la roba che vola dalla cesta al cliente
 const cucina = ref(cucinaNuova())   // le stazioni e i piatti: docs/bancarella/cucina.md
+const conCuoco = ref(/[#&]cuoco=1/.test(location.hash))   // la prova col cuoco: docs/bancarella/cuoco.md
 const portaPiatto = ref(false)      // ha in mano un piatto pronto: il cliente lo aspetta
 const cassaAperta = ref(true)       // in cucina il resto è un foglio, e si può mettere da parte
 const frasePrimato = ref('')        // a fine mercato senza fine: com'è andata col record
@@ -212,7 +215,7 @@ function inizia(i = idx.value) {
   if (!puoGiocare(i)) return
   // la cucina è una prova fuori dalla fila: non si salva, e una giornata lasciata a metà resta dov'è
   if (!eCucina(i)) scorda()
-  cucina.value = cucinaNuova(campagnaDi(i))
+  cucina.value = (eCucina(i) && conCuoco.value ? cucinaCuoco : cucinaNuova)(campagnaDi(i))
   cittaPrima = cittaCorr.value
   const k = cittaDelleGiornata(campagnaDi(i).id)
   if (k >= 0) citta.value = k
@@ -326,6 +329,7 @@ const MOSSE = {
   metti: a => mettiInCucina(cucina.value, a.cosa, a.dove), svuota: a => svuota(cucina.value, a.nome, a.i),
   taglia: () => taglia(cucina.value), inforna: a => inforna(cucina.value, a.i),
   butta: a => butta(cucina.value, a.nome), buttaPiatto: a => buttaPiatto(cucina.value, a.i), servi: a => serviPiatto(a.i),
+  usa: () => (bersaglio(cucina.value)?.tipo === 'consegna' ? serviDalleMani() : usa(cucina.value)), tagliaCuoco: () => tagliaCuoco(cucina.value),
 }
 /* Un gesto della tela: torna `true` se è riuscito, e la tela sa cosa fare del pezzo in mano. */
 function inCucina(a) {
@@ -335,13 +339,25 @@ function inCucina(a) {
   else if (a.che !== 'servi') suono.no()
   return fatta
 }
+function spingeLeva(x, z) { if (cucina.value.leva) { cucina.value.leva.x = x; cucina.value.leva.z = z } }
 
 function serviPiatto(i) {
-  const c = cliente.value
   const piatto = cucina.value.piatti[i]
   if (!piatto || !piatto.pronto || momento.value !== 'raccolta') return false
-  const emoji = piatto.pronto
-  if (!servi(cucina.value, i, daPrendere.value.map(a => a.emoji))) {
+  return servito(piatto.pronto, servi(cucina.value, i, daPrendere.value.map(a => a.emoji)))
+}
+
+function serviDalleMani() {
+  const k = cucina.value
+  if (momento.value !== 'raccolta') { k.perche = 'Prima dai il resto'; return false }
+  if (!k.cuoco.mano?.pronto) { k.perche = 'Qui si porta il piatto finito'; return false }
+  const emoji = k.cuoco.mano.pronto
+  return servito(emoji, daiPiatto(k, daPrendere.value.map(a => a.emoji)))
+}
+
+function servito(emoji, giusto) {
+  const c = cliente.value
+  if (!giusto) {
     battuta.value = pick(SBAGLIO)
     suono.no()
     c.restaPazienza = Math.max(2, c.restaPazienza - 2)
@@ -493,7 +509,7 @@ function ciclo(ts) {
     if (c && !dettoFretta && barra(c) < 30) { dettoFretta = true; battuta.value = pick(FRETTA) }
     if (c && c.restaPazienza <= 0) scaduto()
     if (camp.value.cucina && (momento.value === 'raccolta' || !cassaAperta.value || camp.value.fuocoAcceso))
-      avanza(cucina.value, dt)
+      (cucina.value.cuoco ? passoCuoco : avanza)(cucina.value, dt)
   }
   raf = requestAnimationFrame(ciclo)
 }
@@ -750,6 +766,10 @@ onBeforeUnmount(() => {
 
     <!-- le cucine in prova: si sceglie quale, non si salva niente -->
     <div v-else-if="fase === 'cucine'" class="cucine" data-cucine>
+      <div class="stile-cucina">
+        <button type="button" :class="{ qui: !conCuoco }" data-stile="dito" @click="conCuoco = false">👆 Col dito</button>
+        <button type="button" :class="{ qui: conCuoco }" data-stile="cuoco" @click="conCuoco = true">🧑‍🍳 Col cuoco</button>
+      </div>
       <button v-for="(c, k) in CUCINE" :key="c.id" type="button" class="scelta-cucina" :data-cucina-n="k + 1" @click="inizia(cucinaIdx(k))">
         <span class="em">{{ c.emoji }}</span>
         <span class="testo-cucina"><b>{{ k + 1 }} · {{ c.nome }}</b><small>{{ c.nuovo }}</small><i>{{ c.ricette.join(' ') }}</i></span>
@@ -812,7 +832,8 @@ onBeforeUnmount(() => {
 
         <!-- niente `:key` sui due rami: in produzione, con una key esplicita su
              uno solo dei due, il patch del DOM va in confusione al cambio tappa -->
-        <Cucina v-if="camp.cucina" :stato="cucina" :azione="inCucina" @presa="v => (portaPiatto = v)" />
+        <CucinaCuoco v-if="camp.cucina && cucina.cuoco" :stato="cucina" :azione="inCucina" @presa="v => (portaPiatto = v)" @leva="spingeLeva" />
+        <Cucina v-else-if="camp.cucina" :stato="cucina" :azione="inCucina" @presa="v => (portaPiatto = v)" />
 
         <div v-else-if="momento === 'raccolta'" class="ceste" :style="{ '--r': righe.length }">
           <div v-for="(riga, r) in righe" :key="r" class="rigacesta"
@@ -834,7 +855,7 @@ onBeforeUnmount(() => {
         </div>
 
         <!-- in cucina il resto non chiude i fornelli: sta in un foglio, e la ✕ lo mette da parte -->
-        <button v-if="camp.cucina && momento === 'cassa' && !cassaAperta" type="button" class="al-resto"
+        <button v-if="camp.cucina && momento === 'cassa' && !cassaAperta" type="button" class="al-resto" :class="{ 'sui-tasti': cucina.cuoco }"
                 data-azione="al-resto" @click="cassaAperta = true">🧾 dai il resto</button>
         <div v-if="momento === 'cassa' && (!camp.cucina || cassaAperta)" class="cassa" :class="{ foglio: camp.cucina }">
           <button v-if="camp.cucina" type="button" class="chiudi-foglio" data-chiudi aria-label="torna ai fornelli"
@@ -1059,9 +1080,13 @@ onBeforeUnmount(() => {
 .foglio .quanto b { font-size:18px }
 .chiudi-foglio { position:absolute; right:6px; top:-14px; z-index:2; width:34px; height:34px; border:0; border-radius:50%; font-size:16px; font-weight:900;
                  color:#fff; background:#c8442f; box-shadow:0 2px 4px #0005 }
+.al-resto.sui-tasti { bottom:calc(140px + env(safe-area-inset-bottom)) }
 .al-resto { position:absolute; left:50%; bottom:calc(14px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:20; padding:12px 24px; border:0;
             border-radius:14px; font-size:17px; font-weight:900; color:#5a3200; background:linear-gradient(180deg,#ffd257,#ffa62b); box-shadow:0 4px 0 #c97b12, 0 6px 12px #0004 }
 .cucine { flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding:12px }
+.stile-cucina { display:flex; gap:8px }
+.stile-cucina button { flex:1; padding:10px 6px; border:0; border-radius:14px; font-size:15px; font-weight:900; color:#6d5a44; background:#ffffff8c }
+.stile-cucina button.qui { color:#a8301f; background:#fffdf7; box-shadow:0 0 0 3px #e2533a }
 .scelta-cucina { display:flex; align-items:center; gap:12px; padding:12px; border:0; border-radius:16px; text-align:left; background:#fffdf7; box-shadow:0 3px 0 #0000001f }
 .scelta-cucina:active { transform:translateY(2px) }
 .scelta-cucina .em { font-size:40px; line-height:1 }

@@ -292,7 +292,7 @@ export function creaBarra() {
 export function creaEtichetta(testo) {
   const t = trama(256, (g, n) => {
     g.clearRect(0, 0, n, n)
-    g.font = '800 42px "Noto Sans", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'
+    g.font = '800 42px "Emoji Gioco", "Noto Sans", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'
     const w = g.measureText(testo).width + 40
     g.fillStyle = '#34383be6'; g.beginPath(); g.roundRect((n - w) / 2, n / 2 - 33, w, 66, 12); g.fill()
     g.strokeStyle = '#c9a26a'; g.lineWidth = 4; g.stroke()
