@@ -1,17 +1,15 @@
 # Da fare
 
-- Il foglio definitivo delle caserme (quello di adesso è provvisorio: voce 7b di
-  `strumenti/sprite/DA-GENERARE.md`), la porta e il ponte dipinti, le pose di attacco e di
-  morte delle truppe.
+- I fogli da generare, in ordine: i quattro terreni (8, si comincia dalle colline e si decide se fare gli altri), le fortezze dei
+  posti (9), la copertina (10), le icone dei comandi (11): voci di `strumenti/sprite/DA-GENERARE.md`, ogni strumento è già scritto e provato su un foglio finto.
+  Poi le pose di attacco e di morte delle truppe.
 - Il potenziamento a scelta (attacco o difesa), idea dell'utente come le due truppe
   per edificio.
-- La miniera dipinta (oggi disegnata in codice), e le sei piazzole guardate col dito: sono
-  vicine fra loro e alla barra della vita del castello.
+- Le sei piazzole guardate col dito: sono vicine fra loro e alla barra della vita del castello.
 - Il limite delle sei piazzole è da rivedere più avanti (l'utente: «ce lo segnamo per un futuro»).
-- La copertina dipinta della home (oggi quella del manifesto) e la guida in
-  app (`AIUTI.arena`, il «?» della barra).
+- La guida in app (`AIUTI.arena`, il «?» della barra).
 - La battaglia infinita è fatta (senza timer, nemico al massimo, un terreno a ogni volta, niente record):
-  il nemico ora impara col tempo ([nemico.md](nemico.md)), la palude resta troppo facile per chi mette un po' di tutto e non fa miniera ([nemico.md](nemico.md)); il pezzo dipinto della tana delle bestie cornute (oggi la capanna dei lupi).
+  il nemico ora impara col tempo ([nemico.md](nemico.md)), la palude resta troppo facile per chi mette un po' di tutto e non fa miniera ([nemico.md](nemico.md)).
 - `test/misure/arena.test.mjs`: le promesse della taratura (il bambino di prova
   vince la quota della tappa) come test d'equilibrio, oltre alla firma.
 - La bomba: scegliere il punto col dito (oggi lo sceglie il gioco), un effetto più epico e il suono.

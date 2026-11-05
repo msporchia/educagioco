@@ -3,6 +3,7 @@
 // non un foglio): il disegno di ogni truppa della tappa e della miniera, col prezzo dentro lo stesso riquadro. Si preme il riquadro; il «?» piccolo apre «i numeri». Niente nomi né frasi: il bambino sa già cosa
 // vuole. Da soli il campo sta fermo finché è aperta, in due no (lo decide Gioco.vue, che le dà il punto x, y, coda e i prezzi).
 import Ritratto from './Ritratto.vue'
+import Icona from './Icona.vue'
 
 defineProps({
   s: { type: Object, required: true },
@@ -17,7 +18,7 @@ defineEmits(['costruisci', 'dettagli'])
       <button class="ar-disegno" :disabled="!v.puoi" :data-costruisci="v.id" :aria-label="v.nome"
               @click="$emit('costruisci', v.id)">
         <Ritratto :id="v.id" :lato="50" />
-        <span class="ar-costo em">{{ v.prezzo }} 💎</span>
+        <span class="ar-costo em">{{ v.prezzo }} <Icona nome="diamante" /></span>
       </button>
       <button class="ar-punto em" :data-dettagli="v.id" aria-label="i numeri"
               @click.stop="$emit('dettagli', { truppa: v.id })">?</button>
@@ -25,8 +26,8 @@ defineEmits(['costruisci', 'dettagli'])
     <div class="ar-opzione" :class="{ 'ar-no': !s.miniera.puoi }" data-variante="miniera">
       <button class="ar-disegno" :disabled="!s.miniera.puoi" data-costruisci="miniera" :aria-label="s.miniera.nome"
               @click="$emit('costruisci', 'miniera')">
-        <span class="ar-pico em">⛏️</span>
-        <span class="ar-costo em">{{ s.miniera.prezzo }} 💎</span>
+        <Icona class="ar-pico" nome="miniera" />
+        <span class="ar-costo em">{{ s.miniera.prezzo }} <Icona nome="diamante" /></span>
       </button>
       <button class="ar-punto em" data-dettagli="miniera" aria-label="i numeri"
               @click.stop="$emit('dettagli', { truppa: 'miniera' })">?</button>

@@ -18,12 +18,12 @@ sottrazioni, mummie, bestie cornute e golem moltiplicazioni, diavoletti e drago 
 riposa qualche secondo.
 
 Finite le dodici tappe si apre la **battaglia infinita**: niente timer, il nemico più forte, e a ogni volta un terreno
-diverso (bosco, palude, neve, lava) con una truppa che c'è solo lì. Si tiene il tempo che si resiste.
+diverso (le colline d'oro, il deserto delle tombe, il canyon di cristallo, le terre di cenere) con una truppa che c'è solo lì. Si tiene il tempo che si resiste.
 
 ## Per i genitori
 
-- Il calcolo è quello che la tappa ha insegnato: nel bosco solo somme e
-  sottrazioni, poi le tabelline nella palude, le divisioni sulla neve. I
+- Il calcolo è quello che la tappa ha insegnato: sulle colline solo somme e
+  sottrazioni, poi le tabelline nel deserto, le divisioni nel canyon. I
   numeri si adattano all'età e ai saperi spenti dai genitori.
 - Dopo uno sbaglio il gioco dice com'è il conto e perché.
 - Le monete vere si guadagnano calcolando bene (una a conto giusto), mai per

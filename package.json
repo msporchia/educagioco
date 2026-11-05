@@ -16,6 +16,7 @@
     "taratura": "node strumenti/sotterraneo-taratura.mjs",
     "bottega": "node strumenti/sotterraneo-bottega.mjs",
     "tara:arena": "node strumenti/tara-arena.mjs",
+    "disegni:arena": "node strumenti/sprite/disegni-arena.mjs",
     "tara:fattoria3d": "node strumenti/tara-fattoria3d.mjs",
     "parita:fattoria3d": "node strumenti/parita-fattoria3d.mjs",
     "mondo": "vite --open /strumenti/banco/mondo.html",

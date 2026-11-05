@@ -151,7 +151,8 @@ Una riga ciascuna; il perché sta nel documento indicato.
   (`npm run tara`, un test confronta la firma), `docs/apprendimento/livelli-delle-domande.md`
   (`npm run quiz:livelli`), `src/quiz/dati/sillabe-parole-vere.js`
   (`npm run quiz:parole-sillabe`), `src/giochi/arena/dati/taratura.js`
-  (`npm run tara:arena`, un test confronta la firma), `src/data/voci*.js`
+  (`npm run tara:arena`, un test confronta la firma), `src/giochi/arena/dati/opere-disegnate.js` e `terreni-pronti.js`
+  (`npm run disegni:arena`, un test confronta la firma), `src/data/voci*.js`
   (`npm run voci`, e se dice «non incise» si rilancia), `src/giochi/sotterraneo/dati/icone-mondo.js`
   (`npm run scatti icone-mondo`, la firma sta nel file e un test la ricalcola), `src/giochi/fattoria3d/dati/anteprime.js`, `src/giochi/pozioni/dati/anteprime.js` e
   `src/giochi/sotterraneo/dati/anteprime-fatte.js` e `sagome-fatte.js` (`npm run anteprime`, rifatti anche quando cambia un modello: un test lo dice), le copie dei prototipi in `scena3d/eroi3d|mostri3d|effetti3d/`

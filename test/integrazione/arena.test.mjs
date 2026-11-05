@@ -44,6 +44,7 @@ await scatto(page, 'arena-mappa')
 
 await page.locator('[data-tappa="0"]').click()
 await page.waitForSelector('[data-piazzola="0"]', { timeout: 8000 })
+controlla('la battaglia si annuncia, e l\'annuncio non ferma le dita', await page.locator('[data-annuncio]').evaluate(e => getComputedStyle(e).pointerEvents) === 'none')
 
 /* il campo si dipinge: le figure arrivano dopo, ma entro qualche secondo
    nel canvas c'è più di un colore */
@@ -63,6 +64,20 @@ let n = 0
 for (let t = 0; t < 40 && n < 25; t++) { await attendi(page, 250); n = await colori() }
 controlla('il campo è dipinto (non è un canvas vuoto)', n >= 25, `solo ${n} colori`)
 await scatto(page, 'arena-campo')
+
+/* il terreno è più grande del campo: lo schermo cambia forma, il quadro lo riempie e il mondo non si stira */
+const tela = () => page.evaluate(() => {
+  const c = document.querySelector('.ar-tela')
+  return { largo: c.clientWidth, schermo: innerWidth, stira: Math.abs(c.width / c.clientWidth - c.height / c.clientHeight) }
+})
+for (const [width, height] of [[1280, 800], [390, 844]]) {
+  await page.setViewportSize({ width, height })
+  await attendi(page, 400)
+  const t = await tela()
+  controlla(`a ${width}×${height} il quadro prende tutta la larghezza e non stira`, t.largo === t.schermo && t.stira < 0.02, JSON.stringify(t))
+  const b = await page.locator('[data-piazzola="1"]').boundingBox()
+  controlla(`a ${width}×${height} le piazzole stanno nello schermo`, b.x >= 0 && b.x + b.width <= width, JSON.stringify(b))
+}
 
 const monete = async () => Number((await page.locator('[data-monete] b').innerText()).trim())
 controlla('si parte con qualche moneta di battaglia', await monete() >= 14)
@@ -93,7 +108,7 @@ controlla('mentre si leggono i dettagli il campo corre', await orologio() !== t0
 const testo = await page.locator('[data-dettagli-aperti]').innerText()
 controlla('i dettagli dicono com\'è adesso e com\'è al livello dopo, coi numeri',
           /Livello 1/.test(testo) && /Livello 2/.test(testo) && /Una squadra ogni/.test(testo) && /Vita di ogni truppa/.test(testo) && !/%/.test(testo), testo.slice(0, 300))
-controlla('e quanto costa, senza dire che conto serve', /6\s*💎/.test(testo) && !/si risolve/.test(testo), testo.slice(0, 200))
+controlla('e quanto costa, senza dire che conto serve', /·\s*6\b/.test(testo) && !/si risolve/.test(testo), testo.slice(0, 200))
 await scatto(page, 'arena-dettagli')
 await page.locator('[data-procedi]').click()
 
@@ -126,7 +141,7 @@ if (costruita) {
   // toccata, la caserma mostra l'anello: potenziarla al livello 2, venderla per metà della spesa, i numeri
   await page.locator('[data-piazzola="0"]').click()
   await page.waitForSelector('[data-anello="potenzia"]', { timeout: 4000 })
-  controlla('toccata, la caserma mostra l\'anello col prezzo, senza scritte', /^\s*\d+\s*💎\s*$/.test(await page.locator('[data-anello="potenzia"]').innerText()))
+  controlla('toccata, la caserma mostra l\'anello col prezzo, senza scritte', /^\s*\d+\s*$/.test(await page.locator('[data-anello="potenzia"]').innerText()))
   controlla('e si vende per metà della spesa', /\+3/.test(await page.locator('[data-anello="vendi"]').innerText()))
   await scatto(page, 'arena-anello')
   await page.locator('[data-anello="numeri"]').click()
@@ -198,7 +213,7 @@ await entra('infinita')
 let terreno1 = null
 for (let t = 0; t < 20 && !terreno1; t++) { await attendi(page, 250); terreno1 = await ultimoTerreno() }
 controlla('il terreno si scrive nel profilo, in campagne.arena', Object.keys(FIRMA).includes(terreno1), String(terreno1))
-controlla('l\'orologio conta quanto si resiste, non quanto manca', /♾️/.test(await page.locator('.ar-hud').innerText()) && await tempoDelCampo() < 20)
+controlla('l\'orologio conta quanto si resiste, non quanto manca', await page.locator('[data-orologio="infinita"]').count() === 1 && await tempoDelCampo() < 20)
 await scatto(page, 'arena-infinita')
 
 /* la nuvoletta di una piazzola libera: le truppe di quel terreno e nessuna firma degli altri */
@@ -234,7 +249,7 @@ controlla('uscendo la sosta della battaglia infinita ha il suo terreno e nessun 
 controlla('e la mappa offre di riprendere', await page.locator('[data-ripresa]').count() === 1)
 await page.locator('[data-azione="riprendi"]').first().click()
 await entra('ripresa')
-controlla('riprendendo il terreno e il campo sono gli stessi', await ultimoTerreno() === terreno1 && /♾️/.test(await page.locator('.ar-hud').innerText()))
+controlla('riprendendo il terreno e il campo sono gli stessi', await ultimoTerreno() === terreno1 && await page.locator('[data-orologio="infinita"]').count() === 1)
 await attendi(page, 900)                                 // la ripresa nasce in pausa: si tocca per continuare
 await page.locator('[data-pausa]').click()
 await page.waitForSelector('[data-pausa]', { state: 'detached', timeout: 4000 })

@@ -8,10 +8,10 @@ nemico, che terreno c'è. **Le operazioni arrivano una famiglia alla volta**
 
 | scalino | terreno | si costruiscono | operazione |
 |---|---|---|---|
-| Il bosco (3 tappe) | bosco | arcieri e opliti (la cripta), poi pipistrelli, poi negromanti | `+` `−` |
-| La palude (3) | palude | arcieri, opliti, **mummie**, poi negromanti: niente pipistrelli né golem | `×` |
-| Le nevi (3) | neve | arcieri, opliti, negromanti, **bestie cornute**; dal ghiaccio **golem e drago** | `÷` col drago |
-| La lava (3) | lava | arcieri, opliti, negromanti, bestie, **diavoletti**, drago: niente golem | tutte |
+| Le colline d'oro (3 tappe) | bosco | arcieri e opliti (la cripta), poi pipistrelli, poi negromanti | `+` `−` |
+| Il deserto delle tombe (3) | palude | arcieri, opliti, **mummie**, poi negromanti: niente pipistrelli né golem | `×` |
+| Il canyon di cristallo (3) | neve | arcieri, opliti, negromanti, **bestie cornute**; dal ghiaccio **golem e drago** | `÷` col drago |
+| Le terre di cenere (3) | lava | arcieri, opliti, negromanti, bestie, **diavoletti**, drago: niente golem | tutte |
 
 **Le truppe di una tappa sono quelle del terreno** (`truppeDelTerreno`, la stessa lista della
 battaglia infinita, [regole.md](regole.md#la-battaglia-infinita-e-le-truppe-di-un-terreno)), tolte
@@ -31,8 +31,8 @@ dentro lo scalino no (`guastiDellaCampagna`).
   ([taratura.md](taratura.md)).
 - **Le stelle**: una per aver vinto, una per aver chiuso col castello oltre la
   metà della vita, una per averlo tenuto oltre l'85% (`stellePer`).
-- Il vestito del terreno è quello del castello (`bosco`, `palude`, `neve`,
-  `lava`): stesso foglio, niente da generare.
+- Il terreno è di Castle Battle, con le chiavi di sempre (`bosco`, `palude`, `neve`, `lava`): i posti stanno in
+  [grafica.md](grafica.md).
 - `guastiDellaCampagna()` pretende la cripta in ogni tappa (è la prima mossa), che le
   portate non scendano, le truppe nemmeno dentro uno scalino e siano tutte del terreno, che
   il nemico non diventi più debole e che la prima tappa sia di sole somme.
