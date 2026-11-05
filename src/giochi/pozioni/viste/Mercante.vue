@@ -7,7 +7,7 @@
 // cosa il dito ha toccato. Vedi docs/pozioni/regole.md.
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { scrivi, mescola } from '../dati/misure.js'
-import { PULIZIA } from '../dati/bottega.js'
+import { PULIZIA, SPEDIZIONE } from '../dati/bottega.js'
 import { ANTEPRIME } from '../dati/anteprime.js'
 import { regola } from '../motore/misura.js'
 import { ATTREZZI, MOSSE } from '../motore/procedimento.js'
@@ -54,7 +54,7 @@ const pieno = (g, i) => messo(g, i) >= g.dose
 
 const voce = v => { const g = b.value.ingredienti[v.i], o = g.offerte[v.k]; return { g, o, testo: scrivi(o.base, o.unita) } }
 const piena = computed(() => props.bozza.length >= b.value.quanteInOrdine)
-const totale = computed(() => props.bozza.reduce((s, v) => s + voce(v).o.prezzo, 0))
+const totale = computed(() => (props.bozza.length ? props.bozza.reduce((s, v) => s + voce(v).o.prezzo, SPEDIZIONE) : 0))
 const percento = n => Math.min(100, n / b.value.gettoni * 100) + '%'
 // il conto scritto sotto la targhetta, solo dove la tappa lo dà
 const vale = (g, o) => (aiuto.value === 'svolto' && o.unita !== g.unita ? `= ${scrivi(o.base, g.unita)}` : '')
@@ -192,14 +192,27 @@ if (typeof window !== 'undefined') window.__bottega3d = { grafica: () => scena?.
         </div>
       </div>
       <div v-if="listino" class="pz-ordine" data-ordine>
-        <button v-for="n in b.quanteInOrdine" :key="n" class="pz-posto" :class="{ 'pz-libero': !bozza[n - 1] }"
-                :data-posto="n - 1" :disabled="!bozza[n - 1] || bloccato" @click="$emit('togli', n - 1)">
-          <template v-if="bozza[n - 1]">
-            <img class="pz-foto" :src="ANTEPRIME[voce(bozza[n - 1]).g.nome]" alt="">
-            <b>{{ voce(bozza[n - 1]).testo }}</b>
+        <!-- lo scontrino: quello che si pagherà, riga per riga; una riga toccata si toglie -->
+        <div class="pz-scontrino" data-scontrino>
+          <p v-if="!bozza.length" class="pz-invito">Tocca le targhette: fino a {{ b.quanteInOrdine }} in un ordine.</p>
+          <button v-for="(v, n) in bozza" :key="n" class="pz-voce" :data-posto="n" :disabled="bloccato" @click="$emit('togli', n)">
             <i class="pz-via" aria-hidden="true">✕</i>
-          </template>
-        </button>
+            <img class="pz-foto" :src="ANTEPRIME[voce(v).g.nome]" alt="">
+            <span>{{ voce(v).testo }}</span>
+            <i class="pz-puntini" aria-hidden="true"></i>
+            <b><i class="pz-gettone" aria-hidden="true"></i>{{ voce(v).o.prezzo }}</b>
+          </button>
+          <div class="pz-voce" data-spedizione>
+            <span>Spedizione</span>
+            <i class="pz-puntini" aria-hidden="true"></i>
+            <b><i class="pz-gettone" aria-hidden="true"></i>{{ SPEDIZIONE }}</b>
+          </div>
+          <div v-if="bozza.length" class="pz-voce pz-totale" data-totale>
+            <span>Totale</span>
+            <i class="pz-puntini" aria-hidden="true"></i>
+            <b><i class="pz-gettone" aria-hidden="true"></i>{{ totale }}</b>
+          </div>
+        </div>
         <button class="pz-grosso pz-ordina" data-azione="ordina" :disabled="bloccato || !bozza.length || sporco" @click="$emit('ordina')">
           Ordina
         </button>

@@ -35,8 +35,10 @@ come quando si sommano monete diverse.
 in due unità, e una costa un gettone in più. Chi riconosce che sono la stessa
 cosa risparmia.
 
-**L'ordine.** Si scelgono due o tre ampolle e si ordina: si paga, e il mercante
-le versa una alla volta. Quando uno strumento arriva all'oro finisce nel
+**L'ordine.** Si scelgono fino a cinque ampolle e si ordina: si paga, e il mercante
+le versa una alla volta. Lo scontrino dice prima quanto costa, e ogni ordine ha un
+gettone di spedizione: una cosa per volta costa di più, tutto insieme chiede di
+fare i conti prima di vedere. Quando uno strumento arriva all'oro finisce nel
 calderone, e il brodo sale e cambia colore.
 
 **Se trabocca.** Oltre il segno d'oro l'ampolla è persa, e resta una macchia da

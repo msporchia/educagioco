@@ -14,5 +14,7 @@ export const PREZZI = [1, 1, 2, 2, 3, 4]
 export const TONDI = [0.1, 0.2, 0.5, 1]
 export const PREZZI_TONDI = [1, 2, 3, 4]
 
+export const AMPOLLE_A_ORDINE = 5   // quante ampolle ci stanno in un ordine
+export const SPEDIZIONE = 1         // gettoni a ordine: comprare una cosa per volta non conviene
 export const PULIZIA = 1            // gettoni per pulire una macchia (una per misurino traboccato)
 export const PASTICCIO = 1          // gettoni per un'azione sbagliata del procedimento

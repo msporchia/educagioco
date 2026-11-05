@@ -5,7 +5,7 @@
    `node test/esegui.mjs unita/pozioni --niente-build` */
 import { CAMPAGNA, BLOCCHI, QUANTE_TAPPE, MONETE_A_DOSE, MONETE_A_PASSO, INFINITA, giroInfinito, guastiDellaCampagna } from '../../src/giochi/pozioni/dati/campagna.js'
 import { FAMIGLIA, VALE, mescola, guastiDelleMisure, scrivi } from '../../src/giochi/pozioni/dati/misure.js'
-import { PULIZIA, PASTICCIO } from '../../src/giochi/pozioni/dati/bottega.js'
+import { PULIZIA, PASTICCIO, SPEDIZIONE, AMPOLLE_A_ORDINE } from '../../src/giochi/pozioni/dati/bottega.js'
 import { Bottega, banchetto, ottimo, giocaBene, giocaGoloso, seguiLaRicetta, prossimoPasso, caso, unitaBuone, pezziDi } from '../../src/giochi/pozioni/motore/bottega.js'
 import { MORTAIO } from '../../src/giochi/pozioni/motore/procedimento.js'
 import { regola, chiaveDi } from '../../src/giochi/pozioni/motore/misura.js'
@@ -154,7 +154,7 @@ for (const t of CAMPAGNA) {
   const b = new Bottega(t, { rnd: caso(7) })
   const g = b.ingredienti[0], altro = b.ingredienti[1]
   const k = g.offerte.reduce((m, o, n) => (o.base > g.offerte[m].base ? n : m), 0)
-  uguale('più ampolle di quante se ne ordinano non si ordinano', b.ordina(Array(t.ordine + 1).fill({ i: 0, k })), null)
+  uguale('più ampolle di quante se ne ordinano non si ordinano', b.ordina(Array(AMPOLLE_A_ORDINE + 1).fill({ i: 0, k })), null)
   // si riempie fino a non far più stare la più grande
   while (g.messo + g.offerte[k].base <= g.dose) b.ordina([{ i: 0, k }])
   const piccola = altro.offerte.reduce((m, o, n) => (o.base < altro.offerte[m].base ? n : m), 0)
@@ -164,7 +164,7 @@ for (const t of CAMPAGNA) {
     uguale('due esiti, nell\'ordine scritto', r.esiti.map(e => e.tipo).join(), 'trabocca,giusto')
     uguale('quello traboccato resta com\'era', g.messo, prima)
     uguale('l\'altra ampolla dell\'ordine si versa lo stesso', altro.messo, altro.offerte[piccola].base)
-    uguale('l\'ordine si paga tutto', b.speso, spesoPrima + g.offerte[k].prezzo + altro.offerte[piccola].prezzo)
+    uguale('l\'ordine si paga tutto, con la spedizione', b.speso, spesoPrima + g.offerte[k].prezzo + altro.offerte[piccola].prezzo + SPEDIZIONE)
     controlla('il perché ha i numeri di quel momento', r.esiti[0].righe.length === 2 && r.esiti[0].righe[1].includes('oltre la tacca'), r.esiti[0].righe.join(' | '))
     uguale('con la macchia non si ordina', b.ordina([{ i: 1, k: piccola }]), null)
     const speso = b.speso
@@ -193,6 +193,24 @@ for (const t of CAMPAGNA) {
   uguale('due strumenti traboccati fanno due macchie', c.macchie.length, 2)
   uguale('e la spugna ne pulisce due', c.pulisci(), 2)
 }
+/* ---------- la spedizione: una a ordine, e il minimo la conta ---------- */
+{
+  const t = tappa('massa-miste')
+  const voci = b => b.ingredienti.flatMap((g, i) => g.ottimo.pezzi.map(k => ({ i, k })))
+  const sola = new Bottega(t, { rnd: caso(11) })
+  const prezzi = voci(sola).reduce((s, v) => s + sola.ingredienti[v.i].offerte[v.k].prezzo, 0)
+  uguale('il minimo è le ampolle più una spedizione ogni cinque', sola.minimo, prezzi + Math.ceil(voci(sola).length / AMPOLLE_A_ORDINE) * SPEDIZIONE)
+  const a = voci(sola).slice(0, AMPOLLE_A_ORDINE)
+  controlla('cinque ampolle stanno in un ordine', !!sola.ordina(Array(AMPOLLE_A_ORDINE).fill(a[0]).map((v, n) => a[n] || v)))
+  const unaAllaVolta = new Bottega(t, { rnd: caso(11) })
+  for (const v of voci(unaAllaVolta)) unaAllaVolta.ordina([v])
+  seguiLaRicetta(unaAllaVolta)
+  uguale('una per volta si paga una spedizione ad ampolla', unaAllaVolta.speso, prezzi + voci(unaAllaVolta).length * SPEDIZIONE)
+  controlla('e non sono più tre stelle', unaAllaVolta.stelle < 3, `${unaAllaVolta.stelle}`)
+  const riga = new Bottega(t, { rnd: caso(11) }).piuEconomico().at(-1)
+  uguale('alla fine si dice anche la spedizione', riga.nome, 'spedizione')
+}
+
 /* ---------- cosa va al motore di apprendimento ---------- */
 {
   const annotate = chiave => {
@@ -248,7 +266,8 @@ for (const t of CAMPAGNA) {
 {
   const b = new Bottega(tappa('massa-miste'), { rnd: caso(3) })
   uguale('prima della spesa niente azioni', b.fai('mescola'), null)
-  for (const [i, g] of b.ingredienti.entries()) for (const k of g.ottimo.pezzi) b.ordina([{ i, k }])
+  const tutte = b.ingredienti.flatMap((g, i) => g.ottimo.pezzi.map(k => ({ i, k })))
+  for (let n = 0; n < tutte.length; n += AMPOLLE_A_ORDINE) b.ordina(tutte.slice(n, n + AMPOLLE_A_ORDINE))
   controlla('fatta la spesa la pozione non è finita', b.pronta && !b.finita)
   uguale('il calderone è ancora vuoto', b.dentro.length, 0)
   uguale('niente più ordini', b.ordina([{ i: 0, k: 0 }]), null)
@@ -315,7 +334,7 @@ for (const t of CAMPAGNA) {
   const b = new Bottega(tappa('capacita-inversa'), { rnd: caso(4) })
   uguale('la dispensa non si compra', b.comprati.length, tappa('capacita-inversa').ingredienti)
   uguale('e ha due cose secche', b.ingredienti.filter(g => g.dispensa && g.famiglia === 'massa').length, 2)
-  uguale('che costano zero', b.minimo, b.comprati.reduce((n, g) => n + g.ottimo.costo, 0))
+  uguale('che costano zero', b.ingredienti.filter(g => g.dispensa).reduce((n, g) => n + g.ottimo.costo, 0), 0)
   controlla('e sono già pronte', b.ingredienti.filter(g => g.dispensa).every(g => g.messo >= g.dose))
   uguale('il pestello serve', b.passi[0].azione, 'pesta')
   giocaBene(b)

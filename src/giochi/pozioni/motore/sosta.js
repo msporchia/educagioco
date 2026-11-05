@@ -4,7 +4,7 @@
 // ingredienti si rifanno dal codice. Una sosta di prima del procedimento
 // (v 1, 2 e 3) non si legge: la tappa ricomincia. `casa` c'è solo in una
 // sosta di quando si partiva con qualcosa in casa, e la si tiene fino alla fine di quella pozione.
-import { Bottega, ottimo } from './bottega.js'
+import { Bottega, ottimo, minimoDi } from './bottega.js'
 import { AZIONI, MORTAIO } from './procedimento.js'
 import { CAMPAGNA, INFINITA, giroInfinito } from '../dati/campagna.js'
 import { INGREDIENTI, VALE } from '../dati/misure.js'
@@ -102,7 +102,7 @@ function rimetti(dato, rnd) {
 
   const b = new Bottega(t.tappa, { rnd })
   b.ingredienti = ingredienti
-  b.minimo = ingredienti.reduce((n, g) => n + g.ottimo.costo, 0)
+  b.minimo = minimoDi(ingredienti)
   b.gettoni = dato.gettoni; b.speso = dato.speso
   b.macchie = [...dato.macchie]; b.traboccate = dato.traboccate; b.pulizie = dato.pulizie
   b.monete = dato.rese; b.saltate = dato.saltate

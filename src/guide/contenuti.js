@@ -705,6 +705,7 @@ export const AIUTI = {
         'I **gettoni** sono i cristalli turchesi del mercante e restano nel laboratorio: non sono le tue monete, che si guadagnano finendo gli ingredienti e i passi della ricetta.',
         'Il mercante scrive come gli pare: «2000 g», «20 hg», «2 kg». Le ampolle grandi costano meno, quindi conviene **la più grande che ci sta**, ma per sapere cosa ci sta devi fare il conto.',
         'Spesso la stessa quantità compare due volte, scritta in due modi, e una costa di più: è il **trucco del mercante**.',
+        'In un ordine ci stanno fino a cinque ampolle, e lo **scontrino** dice cosa pagherai. Ogni ordine paga **un gettone di spedizione**: comprare una cosa per volta costa di più, ma ordinare tutto insieme vuol dire fare i conti prima di vedere.',
         'In fondo vedi sempre quanti gettoni hai speso, e le stelle dicono quanto ti sei avvicinato al minimo.',
         'Fatta la spesa, la pergamena dice **cosa fare**. La roba e gli attrezzi **si trascinano**: la roba nel calderone o nel mortaio, il pestello sul mortaio, il mestolo e il fiammifero sul calderone. Una mossa fuori tempo fa un pasticcio e costa un gettone.',
       ] },

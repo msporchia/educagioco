@@ -1,11 +1,11 @@
 // La bottega del mercante: una tappa è una pozione con tanti ingredienti,
 // un listino di ampolle a prezzo per ognuno, e i gettoni contati. Si
-// ordinano due o tre ampolle e il mercante le versa nei loro misurini;
+// ordinano fino a cinque ampolle, con la spedizione a ogni ordine, e il mercante le versa nei loro misurini;
 // oltre la tacca d'oro trabocca, e prima di ordinare ancora si pulisce.
 // Fatta la spesa si segue il procedimento (motore/procedimento.js).
 // Puro: il caso arriva da fuori (`rnd`). Le regole in docs/pozioni/regole.md.
 import { FAMIGLIA, INGREDIENTI, VALE, scrivi, mescola } from '../dati/misure.js'
-import { PEZZI, PREZZI, TONDI, PREZZI_TONDI, PULIZIA, PASTICCIO } from '../dati/bottega.js'
+import { PEZZI, PREZZI, TONDI, PREZZI_TONDI, AMPOLLE_A_ORDINE, SPEDIZIONE, PULIZIA, PASTICCIO } from '../dati/bottega.js'
 import { MONETE_A_DOSE, MONETE_A_PASSO } from '../dati/campagna.js'
 import { chiaveDi } from './misura.js'
 import { AZIONI, MORTAIO, ricetta, testo, frase } from './procedimento.js'
@@ -126,6 +126,12 @@ export function ottimo(dose, offerte) {
   return { costo: pezzi.reduce((s, k) => s + offerte[k].prezzo, 0), pezzi: pezzi.sort((a, b) => offerte[b].base - offerte[a].base) }
 }
 
+// quanti ordini bastano per quello che manca, e quanto costa la spesa più
+// economica: le ampolle e la spedizione. Pagare un gettone in più per
+// risparmiare un'ampolla è pari, quindi `ottimo` ingrediente per ingrediente regge
+const ordiniMinimi = ingredienti => Math.ceil(ingredienti.reduce((n, g) => n + g.ottimo.pezzi.length, 0) / AMPOLLE_A_ORDINE)
+export const minimoDi = ingredienti => ingredienti.reduce((s, g) => s + g.ottimo.costo, 0) + ordiniMinimi(ingredienti) * SPEDIZIONE
+
 export class Bottega {
   // `scorta`: i gettoni che il calderone senza fondo si porta dalla pozione prima
   constructor(tappa, { rnd = Math.random, scorta = 0 } = {}) {
@@ -162,7 +168,7 @@ export class Bottega {
     this.mescolato = false       // dall'ultima versata: se no nel calderone c'è l'arcobaleno
     this.pasticci = 0
     this.pasticciato = false     // il passo in corso ha già avuto uno sbaglio: non paga
-    this.minimo = this.ingredienti.reduce((s, i) => s + i.ottimo.costo, 0)
+    this.minimo = minimoDi(this.ingredienti)
     this.gettoni = this.minimo + tappa.margine + scorta
     this.speso = 0
     this.macchie = []            // gli strumenti con la macchia attorno, da pulire prima del prossimo ordine
@@ -186,17 +192,17 @@ export class Bottega {
   }
   // la spesa è fatta: tutti gli strumenti sono all'oro
   get pronta() { return this.ingredienti.every((_, j) => this.fatto(j)) }
-  get quanteInOrdine() { return this.tappa.ordine }
+  get quanteInOrdine() { return AMPOLLE_A_ORDINE }
   fatto(i) { const g = this.ingredienti[i]; return g.messo >= g.dose }
 
-  /* L'ordine al mercante: due o tre ampolle (`voci`: { i, k }, anche di
-     ingredienti diversi), pagate tutte insieme e versate in fila. Ognuna
+  /* L'ordine al mercante: fino a cinque ampolle (`voci`: { i, k }, anche di
+     ingredienti diversi), pagate tutte insieme con una spedizione e versate in fila. Ognuna
      ci sta o trabocca da sola, nell'ordine scritto. Torna gli esiti, uno
      per ampolla, già decisi: la scena li suona uno dopo l'altro. */
   ordina(voci) {
     if (this.pronta || this.macchie.length || !voci || !voci.length || voci.length > this.quanteInOrdine) return null
     if (voci.some(v => !this.ingredienti[v.i] || !this.ingredienti[v.i].offerte[v.k])) return null
-    const costo = voci.reduce((s, v) => s + this.ingredienti[v.i].offerte[v.k].prezzo, 0)
+    const costo = voci.reduce((s, v) => s + this.ingredienti[v.i].offerte[v.k].prezzo, SPEDIZIONE)
     this.speso += costo
     const esiti = voci.map(v => this.versaUna(v.i, v.k))
     return { costo, esiti, pronta: this.pronta }
@@ -309,15 +315,16 @@ export class Bottega {
 
   // il modo più economico, ingrediente per ingrediente, da dire alla fine
   piuEconomico() {
-    return this.comprati.map(g => ({
+    const ordini = ordiniMinimi(this.ingredienti)
+    return [...this.comprati.map(g => ({
       nome: g.nome, costo: g.ottimo.costo,
       pezzi: g.ottimo.pezzi.map(k => scrivi(g.offerte[k].base, g.offerte[k].unita)),
-    }))
+    })), { nome: 'spedizione', costo: ordini * SPEDIZIONE, pezzi: [ordini === 1 ? 'un ordine solo' : `${ordini} ordini`] }]
   }
 }
 
 // Due giocatori finti, per i test e per tarare: chi ordina sempre il
-// minimo, e il goloso che ordina ogni volta l'ampolla più grande che ci sta.
+// minimo, e il goloso che prende ogni volta l'ampolla più grande che ci sta.
 export function giocaBene(b) {
   const voci = b.ingredienti.flatMap((g, i) => g.ottimo.pezzi.map(k => ({ i, k })))
   for (let n = 0; n < voci.length; n += b.quanteInOrdine) b.ordina(voci.slice(n, n + b.quanteInOrdine))
@@ -335,12 +342,17 @@ export function seguiLaRicetta(b) {
   return b
 }
 export function giocaGoloso(b) {
-  for (let giri = 0; !b.pronta && giri < 500; giri++) {
-    const i = b.ingredienti.findIndex((_, j) => !b.fatto(j)), g = b.ingredienti[i]
-    const k = g.offerte.map((o, k) => k).filter(k => g.messo + g.offerte[k].base <= g.dose)
-      .sort((a, c) => g.offerte[c].base - g.offerte[a].base || g.offerte[a].prezzo - g.offerte[c].prezzo)[0]
-    if (k == null) break
-    b.ordina([{ i, k }])
-  }
+  const voci = b.ingredienti.flatMap((g, i) => {
+    const sue = []
+    for (let messo = g.messo; messo < g.dose;) {
+      const k = g.offerte.map((o, k) => k).filter(k => messo + g.offerte[k].base <= g.dose)
+        .sort((a, c) => g.offerte[c].base - g.offerte[a].base || g.offerte[a].prezzo - g.offerte[c].prezzo)[0]
+      if (k == null) break
+      messo += g.offerte[k].base
+      sue.push({ i, k })
+    }
+    return sue
+  })
+  for (let n = 0; n < voci.length; n += b.quanteInOrdine) b.ordina(voci.slice(n, n + b.quanteInOrdine))
   return seguiLaRicetta(b)
 }

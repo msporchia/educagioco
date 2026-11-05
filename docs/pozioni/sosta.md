@@ -18,6 +18,8 @@ Si esce con ← anche a pozione a metà, e rientrando la mappa offre in cima
   avviato e il minimo fatto su quello che mancava. `leggi` tiene il suo `casa`
   e `scrivi` lo riscrive finché quella pozione non è finita. Nessuna pozione
   nuova ce l'ha.
+- **Una sosta di prima della spedizione** ha i gettoni contati senza: si legge, e
+  da lì la spedizione si paga, quindi il margine di quella pozione è un po' più stretto.
 - **L'ordine si scrive quando si ordina, non quando finisce di versarsi**: il
   motore ha già deciso tutto, e monete, `answer()` e fine della tappa partono
   subito. Uscire mentre il mercante versa non perde niente e non ripaga niente;

@@ -25,10 +25,16 @@ scaletta, gli sbagli e cosa va al motore di apprendimento. Il gioco sta in
   davano la risposta senza leggere. Lì quanto c'è lo dice solo la targhetta.
   **Una volta comprate si vedono a misura reale**: è il momento di capire cosa
   si è ordinato, e cosa si è sbagliato.
-- **Si fa un ordine**: due o tre targhette (`ordine`), anche di ingredienti
-  diversi, poi «Ordina». Si paga tutto, il mercante porta le ampolle sul
-  bancone e le versa una alla volta, nell'ordine scritto.
+- **Si fa un ordine**: fino a cinque targhette (`AMPOLLE_A_ORDINE`), anche di
+  ingredienti diversi, poi «Ordina». Si paga tutto, il mercante porta le ampolle
+  sul bancone e le versa una alla volta, nell'ordine scritto.
   Più ampolle insieme vuol dire fare la somma prima di vederla.
+- **Ogni ordine paga la spedizione** (`SPEDIZIONE`, un gettone): è il freno al
+  posto del tetto di due o tre ampolle. Comprare una cosa per volta si può, ma
+  costa; ordinare tutto insieme risparmia, e chiede di fare i conti prima.
+- **Lo scontrino dice cosa si pagherà**: sotto il rotolo, una riga per ampolla col
+  prezzo, la riga «Spedizione» sempre in vista, e il totale. Una riga toccata si
+  toglie.
 - **Le grandi costano meno al chilo** (`PEZZI`, `PREZZI`; `TONDI`,
   `PREZZI_TONDI` nelle tappe senza virgola): 1 kg 4 gettoni,
   5 hg 3, 1 hg 1. Conviene sempre «la più grande che ci sta», ma per sapere
@@ -136,7 +142,8 @@ ventinove tappe non cambiano**: sono quelle dei progressi e delle stelle.
 - **Due ingredienti della stessa pozione non hanno la stessa quantità**, anche
   scritta in unità diverse.
 - `ottimo` cerca il minimo con le ampolle del listino; il test lo confronta
-  con la forza bruta. Il minimo non dipende da come si raggruppano gli ordini.
+  con la forza bruta. Il minimo della tappa (`minimoDi`) è la loro somma più una
+  spedizione ogni cinque ampolle: tre stelle vogliono anche pochi ordini.
 - Il caso arriva da fuori (`rnd`), così una pozione si rifà identica nei test.
 
 ## Lo sbaglio
@@ -184,7 +191,9 @@ versata, se no il risultato si legge prima di vederlo.
   [procedimento.md](procedimento.md)).
 - **La consegna** (`ampolle.js`): fiasco, barattolo, radice sui pioli, a misura
   reale (la radice lunga quanto sarà sul metro), con la targhetta. Una alla volta
-  volano, perdono il tappo o il panno, si piegano e versano.
+  volano, perdono il tappo o il panno, si piegano e versano. **Sul bancone ne stanno
+  tre** (`SUL_BANCONE`): un ordine più lungo arriva a giri. Provato con cinque in
+  fila: sul telefono in piedi le due in fondo uscivano dallo schermo.
 - **Gli ingredienti sono modelli veri, fotografati** (`scena3d/ingredienti3d.js`,
   nella creta della fattoria): il liquido si mostra con da dove viene (la bava
   col drago, il succo con la rapa). Il gioco non li costruisce: legge
@@ -214,7 +223,7 @@ versata, se no il risultato si legge prima di vederlo.
 
 ## Il dito
 
-Sul rotolo si tocca: una targhetta va nell'ordine, un posto dell'ordine toccato
+Sul rotolo si tocca: una targhetta va nell'ordine, una riga dello scontrino toccata
 la toglie, il rotolo si chiude con la ✕. Sulla tela un tocco fermo (sotto i
 16 px) su una macchia, o sul suo strumento, pulisce.
 
@@ -224,8 +233,8 @@ Nei test: `unita/pozioni`, `unita/pozioni-sosta`, `integrazione/pozioni`,
 (`banco`·`listino`·`macchia`·`procedimento`·`finita`), `[data-tela]`, `[data-pergamena]`,
 `[data-voce]`, `[data-dose]`, `[data-gettoni]`, `[data-listino]`, `[data-merce]`,
 `[data-targhetta="i:k"]`, `[data-vale]`, `[data-regola]`, `[data-chiudi]`,
-`[data-ordine]`, `[data-posto]`, `[data-azione="mercante"|"ordina"|"pulisci"]`,
+`[data-ordine]`, `[data-scontrino]`, `[data-posto]`, `[data-spedizione]`, `[data-totale]`, `[data-azione="mercante"|"ordina"|"pulisci"]`,
 `[data-esito][data-codice]` (`aiuto`·`giusto`·`trabocca`), `[data-fine="tappa"]`,
 `[data-righe]`, `[data-stelle]`, `[data-monete]`, `[data-nota-monete]`,
 `[data-azione="avanti"|"mappa"]`; `window.__poz` (`aggiungi(i, k)`,
-`togliVoce(n)`, `ordina()`, `pulisci()`, `salta()`, `bottega`).
+`togliVoce(n)`, `ordina()`, `pulisci()`, `salta()`, `bottega`, `occupato`).

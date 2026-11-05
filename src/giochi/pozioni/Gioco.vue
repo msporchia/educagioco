@@ -172,7 +172,7 @@ function avviaTappa(i) {
   const t = CAMPAGNA[i]
   messaggio.value = { tipo: 'aiuto', righe: t.aiuto === 'gioco'
     ? ['Fai le dosi spendendo meno gettoni che puoi: sono del mercante, non le tue monete.',
-       'Scegli le ampolle e ordinale: le verserà il mercante. Oltre il segno d\'oro trabocca, e poi c\'è da pulire.']
+       'Scegli le ampolle e ordinale tutte insieme: ogni ordine paga la spedizione. Oltre il segno d\'oro trabocca, e poi c\'è da pulire.']
     : [t.dritta] }
   const b = new Bottega(t)
   const secche = b.ingredienti.filter(g => g.dispensa).map(g => g.nome)
@@ -394,7 +394,7 @@ function prossima() {
 
 /* per i test e per lo strumento delle foto: la stessa porta del gioco */
 if (typeof window !== 'undefined')
-  window.__poz = { vista, tappaIdx, serie, avviaInfinita, bottega, bozza, finale, avviaTappa, allaMappa, prossima,
+  window.__poz = { vista, tappaIdx, serie, avviaInfinita, bottega, bozza, finale, occupato, avviaTappa, allaMappa, prossima,
                    aggiungi, togliVoce, ordina, fai, pulisci, salta, CAMPAGNA, MONETE_A_DOSE }
 </script>
 

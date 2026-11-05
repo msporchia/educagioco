@@ -79,10 +79,13 @@ const fermo = () => page.waitForFunction(() => {
 
 /* un posto dell'ordine toccato si toglie */
 await page.locator(`[data-targhetta="${await laGiusta()}"]`).click()
-uguale('la targhetta va nell\'ordine', await page.locator('[data-posto]:not(.pz-libero)').count(), 1)
+uguale('la targhetta va nello scontrino', await page.locator('[data-scontrino] [data-posto]').count(), 1)
+{ const prezzo = await page.evaluate(() => { const v = window.__poz.bozza.value[0]; return window.__poz.bottega.value.ingredienti[v.i].offerte[v.k].prezzo })
+  controlla('la spedizione si vede', /Spedizione/.test(await page.locator('[data-spedizione]').innerText()))
+  uguale('e il totale la conta', (await page.locator('[data-totale] b').innerText()).trim(), String(prezzo + 1)) }
 controlla('la borsa fa vedere quanto costa l\'ordine', /ordine \d+/.test(await page.locator('[data-gettoni]').innerText()))
 await page.locator('[data-posto="0"]').click()
-uguale('e dall\'ordine si toglie', await page.locator('[data-posto]:not(.pz-libero)').count(), 0)
+uguale('e dallo scontrino si toglie', await page.locator('[data-scontrino] [data-posto]').count(), 0)
 await page.locator('[data-chiudi]').click()
 uguale('la ✕ chiude il rotolo', await page.locator('[data-listino]').count(), 0)
 
@@ -118,10 +121,11 @@ await attendi(page, 500)
 }
 
 /* la roba nel calderone, una alla volta */
+const fermaLaScena = () => page.waitForFunction(() => !window.__poz.occupato.value, null, { timeout: 25000 })
 for (let i = 0; i < CAMPAGNA[0].ingredienti; i++) {
   await trascina(await dove(`roba:${i}`), await dove('calderone'))
   await page.waitForFunction(n => window.__poz.bottega.value.dentro.length === n, i + 1, { timeout: 25000 })
-  await attendi(page, 2500)
+  await fermaLaScena()   // un gesto a scena occupata non conta: quanto dura lo decide la macchina
 }
 uguale('il calderone si è riempito', await page.evaluate(() => window.__poz.bottega.value.dentro.length), CAMPAGNA[0].ingredienti)
 await trascina(await dove('mestolo'), await dove('calderone'))
@@ -196,12 +200,12 @@ await attendi(page, 1200)
   uguale('la ricetta comincia dal mortaio', await page.evaluate(() => window.__poz.bottega.value.passi[0].azione), 'pesta')
   for (const i of sulMortaio) {
     await trascina(await dove(`roba:${i}`), await dove('mortaio'))
-    await attendi(page, 700)
+    await fermaLaScena()
   }
   uguale('la roba trascinata sul mortaio ci entra', await page.evaluate(() => window.__poz.bottega.value.mortaio.length), 2)
   await trascina(await dove('pestello'), await dove('mortaio'))
   await page.waitForFunction(() => window.__poz.bottega.value.passo === 1, null, { timeout: 25000 })
-  await attendi(page, 3500)
+  await fermaLaScena()
   await trascina(await dove('mortaio'), await dove('calderone'))
   await page.waitForFunction(() => window.__poz.bottega.value.passo === 2, null, { timeout: 25000 })
   uguale('il pestato è nel calderone', await page.evaluate(() => window.__poz.bottega.value.dentro.length), 2)
