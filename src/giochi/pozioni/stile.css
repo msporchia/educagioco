@@ -10,6 +10,7 @@
   --pz-verde: #2f9e5a;
   --pz-rosso: #d8524d;
   --pz-ambra: #f0b429;
+  --pz-gettoni: #0b6a73;    /* il colore dei gettoni: l'oro è delle monete vere */
   background: radial-gradient(120% 90% at 50% 0%, #3b2a55, var(--pz-fondo) 70%);
   color: #f0e9ff;
 }
@@ -21,6 +22,7 @@
             gap: 14px; width: 100%; max-width: 520px; margin: 0 auto;
             padding: 8px 12px calc(16px + env(safe-area-inset-bottom)) }
 .pz-intro { margin: 0; font-size: 12.5px; color: #c9bde6; text-align: center }
+.pz-intro .pz-gettone { margin: 0 1px }
 .pz-blocco > h3 { display: flex; align-items: center; gap: 7px; margin: 0 0 6px;
                   font-size: 15px; color: #c9bde6 }
 .pz-blocco > h3 b { color: #fff; font-size: 16px }
@@ -145,10 +147,14 @@
 .pz-targhetta:disabled { opacity: .5 }
 .pz-targhetta b { font-size: 16.5px; font-weight: 900; white-space: nowrap }
 .pz-targhetta em { font-style: normal; font-size: 11.5px; color: #7a4a12; white-space: nowrap }
-.pz-targhetta span { font-size: 13px; font-weight: 800; color: #7a4a12 }
+.pz-targhetta span { font-size: 13px; font-weight: 800; color: var(--pz-gettoni) }
 
-.pz-gettone { display: inline-block; width: 1em; height: 1em; border-radius: 50%; vertical-align: -.15em; margin-right: 2px;
-              background: radial-gradient(circle at 50% 45%, #ffd98a 0 30%, #e8a93a 32% 62%, #7a4a12 64%) }
+/* il gettone del mercante è un cristallo a sei lati, turchese: tondo e d'oro è la moneta del gioco */
+.pz-gettone { position: relative; display: inline-block; width: 1em; height: 1.14em; vertical-align: -.2em; margin-right: 2px;
+              clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: #07525a }
+.pz-gettone::before { content: ''; position: absolute; inset: .11em; clip-path: inherit;
+                      background: linear-gradient(155deg, #c9fbf4, #3fd6cd 48%, #0f9aa6) }
+.pz-gettone::after { content: ''; position: absolute; inset: .36em .3em; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); background: #fff }
 
 /* la borsa e l'ordine, vicino al pollice */
 .pz-piede { flex: none; display: flex; flex-direction: column; gap: 7px; width: 100%; max-width: 520px; margin: 0 auto;
@@ -158,8 +164,8 @@
 .pz-borsa .pz-gettone { font-size: 19px }
 .pz-livello { grid-column: 1 / -1; display: flex; height: 9px; margin-top: 4px; border-radius: 5px; overflow: hidden;
               background: #ffffff1c; box-shadow: inset 0 1px 2px #0007 }
-.pz-livello i { display: block; background: linear-gradient(180deg, #ffd98a, #d9962a); transition: width .3s }
-.pz-livello .pz-in-ordine { background: repeating-linear-gradient(45deg, #ffe9b8 0 4px, #e0b050 4px 8px) }
+.pz-livello i { display: block; background: linear-gradient(180deg, #7fe9e0, #149aa3); transition: width .3s }
+.pz-livello .pz-in-ordine { background: repeating-linear-gradient(45deg, #c9fbf4 0 4px, #3fbdb8 4px 8px) }
 .pz-borsa.pz-rosso { color: #ffb0a8 }
 .pz-borsa.pz-rosso .pz-livello i { background: var(--pz-rosso) }
 .pz-ordine { display: flex; gap: 6px; align-items: stretch }
@@ -172,6 +178,7 @@
 .pz-piede > .pz-grosso { width: 100% }
 .pz-pulisci { background: var(--pz-rosso); box-shadow: 0 4px 0 #8a2c28 }
 .pz-fine-righe { font-size: 13px; color: #5e5378; display: flex; flex-direction: column; gap: 3px }
+.pz-fine-righe .pz-gettone { font-size: 15px }
 
 /* la ricetta in parole, e il tavolo del procedimento */
 .pz-procedimento { margin: 5px 0 0; padding: 5px 0 0 18px; border-top: 1px dashed #b8925a; font-size: 13px; line-height: 1.3; color: #5a3a1a }

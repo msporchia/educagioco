@@ -171,7 +171,7 @@ function avviaTappa(i) {
   borsellino = borsa(CHIAVE)
   const t = CAMPAGNA[i]
   messaggio.value = { tipo: 'aiuto', righe: t.aiuto === 'gioco'
-    ? ['Fai le dosi spendendo meno gettoni che puoi.',
+    ? ['Fai le dosi spendendo meno gettoni che puoi: sono del mercante, non le tue monete.',
        'Scegli le ampolle e ordinale: le verserà il mercante. Oltre il segno d\'oro trabocca, e poi c\'è da pulire.']
     : [t.dritta] }
   const b = new Bottega(t)

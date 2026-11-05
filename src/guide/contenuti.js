@@ -702,6 +702,7 @@ export const AIUTI = {
       'La pergamena chiede «1,5 kg di polvere di luna» e altri ingredienti, e il calderone è vuoto. Dal **listino del mercante** scegli le ampolle e ordinale: le verserà lui.',
       { titolo: 'Il listino e i gettoni', righe: [
         'Il rotolo del mercante ha tutti gli ingredienti della ricetta. Ogni targhetta dice quanto c\'è nell\'ampolla e quanti gettoni costa.',
+        'I **gettoni** sono i cristalli turchesi del mercante e restano nel laboratorio: non sono le tue monete, che si guadagnano finendo gli ingredienti e i passi della ricetta.',
         'Il mercante scrive come gli pare: «5 hg», «0,2 kg», «300 g». Le ampolle grandi costano meno, quindi conviene **la più grande che ci sta**, ma per sapere cosa ci sta devi fare il conto.',
         'Spesso la stessa quantità compare due volte, scritta in due modi, e una costa di più: è il **trucco del mercante**.',
         'In fondo vedi sempre quanti gettoni hai speso, e le stelle dicono quanto ti sei avvicinato al minimo.',

@@ -58,6 +58,10 @@ scaletta, gli sbagli e cosa va al motore di apprendimento. Il gioco sta in
   ingrediente per ingrediente (`piuEconomico`).
 - **I gettoni sono della pozione**, non le monete del bambino: il bilancio è
   il minimo più il `margine` della tappa, largo all'inizio e stretto in fondo.
+  **Non si devono confondere con le monete**: il gettone è un cristallo a sei
+  lati turchese (`.pz-gettone`, disegnato in CSS), e turchese è tutto quello che
+  li conta (prezzi, barra della borsa). L'oro e la forma tonda restano al 🪙.
+  Provato il gettone tondo e d'oro: i bambini li scambiavano.
 - **Tre monete per ingrediente finito senza traboccare** (`MONETE_A_DOSE`):
   una dose è una domanda vera, e tante ampolle piccole non rendono di più.
   Si pagano quando si ordina, così uscire mentre il mercante versa non perde
