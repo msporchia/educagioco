@@ -177,7 +177,7 @@ export function creaAttrezzi(scena, { morbido, lamiera }) {
   brocca.add(ansa)
   attrezzo('brocca', brocca, 2.3, 0, 0, -0.45)
 
-  // il sale e il pepe: uno a ogni lato, col nome davanti perché la ricetta ne chiede uno
+  // il sale e il pepe: negli angoli in fondo, col nome davanti perché la ricetta ne chiede uno
   const barattolo = (id, corpo, x) => {
     const g = new Group()
     g.add(new Mesh(new LatheGeometry(giro([[0, 0], [0.2, 0], [0.24, 0.06], [0.2, 0.36], [0.21, 0.42], [0, 0.42]]), 20), corpo))
@@ -187,13 +187,13 @@ export function creaAttrezzi(scena, { morbido, lamiera }) {
     targa.scale.set(0.95, 0.3, 1); targa.position.set(0, 0.02, 0.42)
     g.add(targa)
     trame.push(nome)
-    attrezzo(id, g, x, 0, 0, 1.25)
+    attrezzo(id, g, x, 0, 0, -2.7)
     g.userData.targa = targa
     g.userData.presa.scale.setScalar(0.65)     // piena, ruberebbe il mestolo
     return g
   }
-  const sale = barattolo('sale', ceramica, -2.1)
-  const pepe = barattolo('pepe', nero, 2.1)
+  const sale = barattolo('sale', ceramica, -2.4)
+  const pepe = barattolo('pepe', nero, 2.4)
 
   // la fiala: si riempie dal calderone e si tappa, e resta sul tavolo col colore della pozione
   const fiala = new Group()

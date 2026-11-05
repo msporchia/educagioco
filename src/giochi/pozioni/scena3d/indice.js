@@ -148,7 +148,7 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
     mira(x, y)
     if (!raggio.ray.intersectPlane(piano, qui)) return
     casa.x = Math.max(-2.7, Math.min(2.7, qui.x))
-    casa.z = Math.max(-0.9, Math.min(2.5, qui.z))
+    casa.z = Math.max(Math.min(-0.9, casa.z), Math.min(2.5, qui.z))   // chi sta in fondo può restarci
   }
 
   /* ── il gesto: l'attrezzo a bersaglio lo muove il dito, e quando ha finito è una mossa ── */
