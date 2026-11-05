@@ -92,6 +92,7 @@ viste/
   Guardaroba.vue     il foglio dell'abito ([guardaroba.md](guardaroba.md)): il ritratto 3D (anteprima `contadino:<abito>`), chi si è (la scelta del profilo, `SceltaAspetto`), le schede dei capi e i gettoni col lucchetto
 
   BarraAzioni.vue    il tasto 🛒 Compra col suo «!»
+  Mobile.vue         il foglio di un mobile di casa, sopra l'interfaccia unica ([casa.md](casa.md))
   Attrezzi.vue       i semi ad arco o il falcetto accanto al campo toccato, da trascinare ([campi.md](campi.md)); le opzioni accanto a una cosa o a un animale ([gesti.md](gesti.md))
   CostruisciQui.vue  il foglio «Cosa compriamo?» (il tasto 🛒, o tenendo premuto su un posto libero): il taccuino con le linguette, le schede e la griglia di carte con l'anteprima 3D del modello (`anteprima(tipo)`, emoji come segnaposto), il prezzo o «📦 ×N», le chiuse col lucchetto che tremano e dicono il livello ([scena.md](scena.md))
   BarraStrade.vue    il pennello delle strade: strada, gomma, «Fatto»

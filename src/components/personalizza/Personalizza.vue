@@ -265,7 +265,7 @@ const prezzoTesto = (tot, liv, chiuso = '') => (liv ? `liv. ${liv}` : chiuso || 
           <button v-else-if="valuta && saldo != null && c.tot > saldo" type="button" class="prs-compra" disabled data-prs="paga">Ti mancano {{ c.tot - saldo }} {{ valuta }}</button>
           <button v-else type="button" class="prs-compra" data-prs="paga" @click="fai({ tipo: 'paga' })"><span>Acquista e indossa · {{ c.tot }} {{ valuta }}</span><small>{{ dettaglio }}</small></button>
         </template>
-        <span v-else class="prs-muto">{{ aiuto || (valuta ? 'Tocca per provare. Quello che è tuo si mette subito; il resto si paga qui.' : 'Tocca per scegliere: si mette subito.') }}</span>
+        <slot v-else name="fondo"><span class="prs-muto">{{ aiuto || (valuta ? 'Tocca per provare. Quello che è tuo si mette subito; il resto si paga qui.' : 'Tocca per scegliere: si mette subito.') }}</span></slot>
       </div>
     </div>
   </div>

@@ -3,7 +3,7 @@
 **Stato: prima prova** (3 novembre 2026, su richiesta dell'utente: una bambina voleva entrare in casa). La casa di scena della fattoria si tocca e
 ci si entra: dentro ci sono stanze da comprare e mobili da mettere, colorare e spostare. **In casa si arreda e basta**: niente produce,
 niente si vende. Codice: `dati/interni.js`, `motore/interni.js`, `scena3d/casa3d.js`, `scena3d/mobili.js`, `scena3d/trame-pure.js`,
-`casa.js`, `viste/Casa.vue`, `stile-casa.css`. La base comune agli interni (anche alle botteghe, [botteghe.md](botteghe.md) «Dentro») è
+`casa.js`, `viste/Casa.vue`, `viste/Mobile.vue`, `stile-casa.css`. La base comune agli interni (anche alle botteghe, [botteghe.md](botteghe.md) «Dentro») è
 `scena3d/interno3d.js`.
 
 ## Le regole (dell'utente)
@@ -57,7 +57,7 @@ i mobili che non esistono, mette via (non perde) un mobile che non sta più dov'
 riparte uscendo. Riusa il contadino (`Eroe`, con un motore finto che presta solo la strada), la telecamera e gli effetti della fattoria.
 La camera guarda da sud un po' oltre il contadino (`AVANTI`); **i muri orizzontali fra lei e il contadino si abbassano** (come nel
 sotterraneo), il fronte di casa sempre: una stanza dietro un'altra si vede. Pavimenti e carta sono trame canvas (`trame-pure.js`, senza
-three: le usa anche la striscia per i campioni). Le foto del catalogo le fa il renderer della casa (`mobile:<tipo>:<colore>:<trama>`), non
+three: le usa anche la striscia per i campioni). Le foto del catalogo le fa il renderer della casa (`mobile:<tipo>:<colore>:<trama>`; quella grande in cima al foglio di un mobile è `vestita:…:<giro>`, la chiave che `anteprime.js` fa grande), non
 `npm run anteprime`.
 
 **Le stanze in vendita** hanno un pavimento accennato (un tratteggio sul buio) e un cartello `＋ 🪙 N` sul muro dove si aprirebbe la porta più
@@ -70,7 +70,8 @@ dice il contadino nel suo fumetto (`fx.parla`), perché l'avviso della fattoria 
 com'era e non costa.
 
 **Il dito** ([gesti.md](gesti.md)): un tocco sul pavimento fa camminare; su una stanza in vendita o sul suo cartello chiede se comprarla; su un mobile apre il suo foglio
-(colore, trama, ↻ gira, 📦 metti via; l'armadio ha anche «👕 Apri l'armadio» e non ha 📦); **tenere premuto un mobile lo sposta**: segue il dito, si posa staccandolo, dove non ci sta torna
+(`viste/Mobile.vue`, sopra l'interfaccia unica, [../core/personalizza.md](../core/personalizza.md): la griglia ha i mobili della stessa stanza, così si intonano senza richiudere; la forma è la trama, il colore è il colore, tutto gratis e subito;
+nel fondo ↻ gira e 📦 metti via, e per l'armadio «👕 Apri l'armadio» al posto di 📦); **tenere premuto un mobile lo sposta**: segue il dito, si posa staccandolo, dove non ci sta torna
 dov'era e lo dice il contadino. **Il mobile in mano** (dal catalogo o da «Messi via») è un fantasma verde o rosso che va dove si tocca o si trascina; la riga
 sopra dice perché lì non ci sta; sotto, «🛒 Compra 🪙N» (o «✓ Metti qui»), ↻ e ✖️. Un mobile nuovo si paga solo posandolo. Il click che il dito
 si lascia dietro si ingoia (`zittisciIlFantasma`, [../core/il-dito.md](../core/il-dito.md)).
@@ -89,7 +90,7 @@ si lascia dietro si ingoia (`zittisciIlFantasma`, [../core/il-dito.md](../core/i
 che si pagano, l'armadio, lo stato rotto e di prima); `integrazione/fattoria3d-casa` (col dito: il cartello, il divano lungo il muro, la stanza
 comprata, la striscia, le finestre, il motivo del fantasma, le opzioni e il colore dell'armadio, un mobile tenuto al dito, senza monete). `node test/esegui.mjs fattoria3d-casa` li lancia tutti e due.
 Bersagli: `[data-f3="casa-dentro"]`, `[data-f3="tela-casa"]`, `[data-f3="esci-casa"]`, `[data-f3="apri-arreda"]`, `[data-f3="apri-tinte"]`,
-`[data-f3="catalogo-casa"]` con `[data-scheda-casa]` e `[data-mobile-carta]`, `[data-f3="mobile"][data-tipo]` con `[data-colore]`,
+`[data-f3="catalogo-casa"]` con `[data-scheda-casa]` e `[data-mobile-carta]`, `[data-f3="mobile"][data-tipo]` (con `[data-personalizza]` e i bersagli di quello) con `[data-mobile]`, `[data-colore]`,
 `[data-trama]`, `[data-f3="mobile-gira|mobile-via|apri-armadio"]`, `[data-f3="mano"][data-ok]` con
 `[data-f3="mano-riga|mano-gira|mano-posa|mano-lascia"]`, `[data-f3="tinte"][data-stanza]` con `[data-parte]`, `[data-pavimento]`, `[data-pareti]`,
 `[data-carta]` e `[data-f3="tinte-riga|tinte-compra|tinte-lascia"]`, `[data-f3="dialogo"]` con `[data-scelta]`.

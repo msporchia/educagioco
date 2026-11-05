@@ -240,9 +240,9 @@ export class Casa3d extends Interno3d {
   guardaStanza(id) { const { i0, j0 } = origine(STANZE[id]); Object.assign(this.camera.libera, { on: true, x: i0 + STANZA.w / 2, z: j0 + STANZA.d / 2 + SOPRA_LA_STRISCIA }) }
   /** Mostra una stanza con pavimento e pareti in prova (`finitura`), o com'è davvero (`stanza` null). */
   provaFinitura(stanza, finitura = null) { this.prova = stanza === null ? null : { stanza, finitura }; this.sincronizza() }
-  /** L'anteprima di un mobile col suo colore (`mobile:<tipo>:<colore>:<trama>`), fotografata col renderer di qui. */
+  /** L'anteprima di un mobile col suo colore (`mobile:<tipo>:<colore>:<trama>`, o grande e girato `vestita:<tipo>:<colore>:<trama>:<giro>`, scatti di 45°), fotografata col renderer di qui. */
   anteprima(chiave) {
-    if (!this._anteprime) this._anteprime = creaAnteprime(this.renderer, k => { const [, t, c, tr] = k.split(':'); return creaMobile(t, c, tr === 'null' ? null : tr) })
+    if (!this._anteprime) this._anteprime = creaAnteprime(this.renderer, k => { const [, t, c, tr, r] = k.split(':'), g = creaMobile(t, c, tr === 'null' ? null : tr); g.rotation.y = (+r || 0) * Math.PI / 4; return g })
     return this._anteprime.chiedi(chiave)
   }
   anteprimaPronta(chiave) { return this._anteprime ? this._anteprime.leggi(chiave) : null }

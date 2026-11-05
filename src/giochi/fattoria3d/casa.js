@@ -3,7 +3,7 @@
    si compra come un lotto. Come visite.js: la vista dice cosa si vuole, le regole sono del motore. Niente in comune con un amico: la casa è
    della propria fattoria. */
 import { ref, computed, nextTick } from 'vue'
-import { MOBILI, SCHEDE_MOBILI, ARMADIO, prezzoFinitura } from './dati/interni.js'
+import { MOBILI, SCHEDE_MOBILI, ARMADIO, prezzoFinitura, stanzaDi } from './dati/interni.js'
 
 const MOTIVI = {
   fuori: 'Lì non ci sta: deve stare tutto dentro una stanza tua.',
@@ -39,6 +39,13 @@ export function usaCasa({ dammi, tela, sopra, q, versione, cambio, abito, apriGu
     const { motore } = dammi(); if (!motore || mobileAperto.value === null) return null
     const o = motore.s.interni.mobili.find(m => m.id === mobileAperto.value)
     return o ? { ...o, voce: MOBILI[o.tipo] } : null
+  })
+
+  /** I mobili messi nella stanza di quello aperto: la griglia del suo foglio. */
+  const nellaStanza = computed(() => {
+    const o = mobile.value; if (!o) return []
+    const s = stanzaDi(o.i, o.j)
+    return dammi().motore.s.interni.mobili.filter(m => m.i !== null && stanzaDi(m.i, m.j) === s).map(m => ({ ...m }))
   })
 
   const ui = {
@@ -155,7 +162,7 @@ export function usaCasa({ dammi, tela, sopra, q, versione, cambio, abito, apriGu
 
   return {
     dentro, chiave, foglio, scheda, mobile, mobileAperto, tinte, prezzoTinte, mano, messaggio, vista, voci, eArmadio,
-    entra, esci, apriCatalogo, scegli, posa, gira, lascia, tingi, giraMobile, apriArmadio, mettiVia, apriTinte, provaTinta, pagaTinte, lasciaTinte, chiudi,
+    entra, esci, apriCatalogo, scegli, posa, gira, lascia, tingi, giraMobile, apriArmadio, mettiVia, apriMobile: ui.apriMobile, nellaStanza, apriTinte, provaTinta, pagaTinte, lasciaTinte, chiudi,
     anteprima, anteprimaPronta, vesti, cameraLibera, tornaAllEroe, via,
     scena: () => casa,                     // per le prove e gli scatti (window.__fattoria3d.interni)
   }

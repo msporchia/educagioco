@@ -12,7 +12,7 @@ con un tocco altrove. Il perché di ogni numero del dito sta in [../core/il-dito
 | decorazione senza gesto (panchina, tavolo) | ↻ accanto, subito: il contadino non ci va | si solleva |
 | un animale di casa | ci si gioca, e accanto pappa, bagno, vestiti, come sta | segue il dito (gratis) |
 | Watson e i gatti di casa | come sopra | dicono che girano col contadino: non si spostano |
-| un mobile, anche l'armadio | il suo foglio: colore, trama, ↻, 📦 (l'armadio: «👕 Apri l'armadio», senza 📦) | segue il dito, gratis |
+| un mobile, anche l'armadio | il suo foglio, nell'interfaccia unica: colore, trama, ↻, 📦 (l'armadio: «👕 Apri l'armadio», senza 📦) | segue il dito, gratis |
 | il prato tuo | il contadino ci va | il menu «Compra» |
 
 ## Le opzioni accanto

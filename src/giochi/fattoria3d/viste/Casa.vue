@@ -1,19 +1,19 @@
 <script setup>
 // Dentro la casa, la parte che si tocca (docs/fattoria3d/casa.md): la testata con «Esci», i due tasti (Arreda, Colori), la barra del mobile
 // in mano (gira, compra o metti qui, lascia), la striscia di pavimento e pareti (si provano sulla stanza, si pagano qui) e i due fogli: il
-// catalogo dei mobili e il foglio di un mobile, che si apre col tocco (colore, trama, gira, metti via; l'armadio apre anche il guardaroba).
-// Spostare è tenerlo premuto (scena3d/casa3d.js). Riceve l'oggetto di casa.js.
+// catalogo dei mobili e il foglio di un mobile, che si apre col tocco (viste/Mobile.vue). Spostare è tenerlo premuto (scena3d/casa3d.js). Riceve l'oggetto di casa.js.
 import { reactive } from 'vue'
-import { SCHEDE_MOBILI, COLORI, TRAME, PAVIMENTI, PARETI, CARTE, PREZZI_FINITURE } from '../dati/interni.js'
+import { SCHEDE_MOBILI, PAVIMENTI, PARETI, CARTE, PREZZI_FINITURE } from '../dati/interni.js'
 import { dettoInCasa } from '../casa.js'
-import { disegnaTrama } from '../scena3d/trame-pure.js'
+import { campioneTrama } from './campione-trama.js'
+import Mobile from './Mobile.vue'
 import '../stile-casa.css'
 
 const p = defineProps({
   casa: { type: Object, required: true },          // usaCasa() di casa.js
   monete: { type: Number, default: 0 },
 })
-const { foglio, scheda, mobile, tinte, prezzoTinte, mano, messaggio, vista, voci, eArmadio } = p.casa
+const { foglio, scheda, mobile, tinte, prezzoTinte, mano, messaggio, vista, voci } = p.casa
 const c = p.casa
 const vaiScheda = id => { scheda.value = id }
 const PARTI = [{ id: 'pavimento', nome: 'Pavimento' }, { id: 'pareti', nome: 'Pareti' }, { id: 'carta', nome: 'Carta' }]
@@ -21,9 +21,10 @@ const vaiParte = id => { tinte.value.parte = id }
 
 // le foto dei mobili: quella pronta se c'è, se no si chiede e arriva
 const foto = reactive({})
-const chiaveFoto = (tipo, colore, trama) => `mobile:${tipo}:${colore}:${trama}`
-function fotoDi(tipo, colore, trama) {
-  const k = chiaveFoto(tipo, colore, trama)
+// col giro è la foto grande in cima al foglio: `vestita:` è la chiave che anteprime.js fa grande
+const chiaveFoto = (tipo, colore, trama, giro) => (giro === null ? `mobile:${tipo}:${colore}:${trama}` : `vestita:${tipo}:${colore}:${trama}:${giro}`)
+function fotoDi(tipo, colore, trama, giro = null) {
+  const k = chiaveFoto(tipo, colore, trama, giro)
   if (foto[k] !== undefined) return foto[k]
   const pronta = c.anteprimaPronta(k)
   if (pronta) return (foto[k] = pronta)
@@ -31,17 +32,6 @@ function fotoDi(tipo, colore, trama) {
   c.anteprima(k).then(u => { foto[k] = u || null })
   return null
 }
-// i campioni delle trame: un canvas piccolo per (colore, trama), disegnato una volta
-const campioni = {}
-function campione(colore, trama) {
-  const k = colore + trama
-  if (!campioni[k] && typeof document !== 'undefined') {
-    const cv = document.createElement('canvas'); cv.width = cv.height = 48
-    disegnaTrama(cv.getContext('2d'), 48, colore, trama); campioni[k] = cv.toDataURL()
-  }
-  return campioni[k]
-}
-const coloreHex = (materiale, id) => (COLORI[materiale].find(x => x.id === id) || COLORI[materiale][0]).c
 const colorePareti = () => (PARETI.find(x => x.id === tinte.value.prova.pareti) || PARETI[0]).c
 </script>
 
@@ -85,7 +75,7 @@ const colorePareti = () => (PARETI.find(x => x.id === tinte.value.prova.pareti) 
       </div>
       <div v-else class="f3-int-campioni">
         <button v-for="ct in CARTE" :key="ct.id" class="campione" :class="{ su: tinte.prova.carta === ct.id }" :aria-label="ct.nome" :data-carta="ct.id"
-                :style="{ backgroundImage: `url(${campione(colorePareti(), ct.id)})` }" @click="c.provaTinta('carta', ct.id)"></button>
+                :style="{ backgroundImage: `url(${campioneTrama(colorePareti(), ct.id)})` }" @click="c.provaTinta('carta', ct.id)"></button>
       </div>
       <p class="riga" data-f3="tinte-riga">{{ messaggio || (prezzoTinte ? 'Ti piace così?' : 'Tocca un colore: lo vedi subito, lo paghi solo se ti piace.') }}</p>
       <div class="tasti">
@@ -115,34 +105,7 @@ const colorePareti = () => (PARETI.find(x => x.id === tinte.value.prova.pareti) 
       </div>
     </div>
 
-    <!-- un mobile -->
-    <div v-if="foglio === 'mobile' && mobile" class="f3-foglio f3-colonna f3-int-mob" data-f3="mobile" :data-tipo="mobile.tipo">
-      <h2>{{ mobile.voce.nome }}</h2>
-      <button class="f3-chiudi" data-chiudi aria-label="chiudi" @click="c.chiudi()">✕</button>
-      <div class="f3-corpo">
-        <div class="f3-int-ritratto">
-          <img v-if="fotoDi(mobile.tipo, mobile.colore, mobile.trama)" :src="fotoDi(mobile.tipo, mobile.colore, mobile.trama)" alt="" />
-        </div>
-        <p v-if="messaggio" class="f3-messaggio" data-f3="mobile-msg">{{ messaggio }}</p>
-        <button v-if="eArmadio" class="f3-int-grande" data-f3="apri-armadio" @click="c.apriArmadio()">👕 Apri l'armadio</button>
-        <h3>Colore</h3>
-        <div class="f3-int-campioni">
-          <button v-for="col in COLORI[mobile.voce.tinte]" :key="col.id" class="campione" :class="{ su: mobile.colore === col.id }" :style="{ background: col.c }"
-                  :aria-label="col.nome" :data-colore="col.id" @click="c.tingi(col.id, mobile.trama)"></button>
-        </div>
-        <template v-if="mobile.voce.trame">
-          <h3>Trama</h3>
-          <div class="f3-int-campioni">
-            <button v-for="t in TRAME" :key="t.id" class="campione" :class="{ su: mobile.trama === t.id }" :aria-label="t.nome" :data-trama="t.id"
-                    :style="{ backgroundImage: `url(${campione(coloreHex(mobile.voce.tinte, mobile.colore), t.id)})` }" @click="c.tingi(mobile.colore, t.id)"></button>
-          </div>
-        </template>
-        <div class="f3-int-fila">
-          <button v-if="mobile.voce.strato !== 'muro'" data-f3="mobile-gira" @click="c.giraMobile()">↻ Gira</button>
-          <button v-if="!eArmadio" data-f3="mobile-via" @click="c.mettiVia()">📦 Metti via</button>
-        </div>
-        <p class="f3-nota">Tieni premuto un mobile per spostarlo. Colore, trama, girare e spostare non costano niente.</p>
-      </div>
-    </div>
+    <!-- un mobile: colore, trama, gira, metti via -->
+    <Mobile v-if="foglio === 'mobile' && mobile" :casa="casa" :foto="fotoDi" />
   </div>
 </template>
