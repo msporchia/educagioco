@@ -2,6 +2,7 @@
    Vedi docs/bancarella/banco.md. Tutto in centesimi: sono gli euro del gioco,
    non le 🪙. Puro, gira in Node. */
 import { LISTINO, BANCHI } from './bancarella.js'
+import { cucinaPulita } from './bancarella-cucine.js'
 
 /* La scala del carretto: quante ceste stanno sul banco. */
 export const CARRETTI = [
@@ -54,6 +55,7 @@ export function bancoPulito(salvato, incassato = 0) {
     tenda: intero(s && s.tenda, TENDE.length - 1),
     carretto: intero(s && s.carretto, CARRETTI.length - 1),
     merce: s && Array.isArray(s.merce) ? [...new Set(s.merce.filter(e => vendibili.has(e)))] : [],
+    cucina: cucinaPulita(s && s.cucina),
   }
 }
 

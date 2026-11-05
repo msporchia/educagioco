@@ -64,7 +64,7 @@ const A_MANO = [
   ['#seme=812', 'il sotterraneo con quel seme, per rivedere una discesa'],
   ['#mate=5&livello=7&vite=1', 'asteroidi: la tappa 5 della fila (o volo), con livello e vite; &madre=1 la nave madre, &tela=2d il disegno di riserva, &nave=scafo:oro,ali:rosso,disegno:fiamme,stemma:stella una vernice da guardare'],
   ['#sotterraneo&tema=legno', 'i pannelli del sotterraneo in prova (legno, rilievo, attuale): il telefono se lo ricorda'],
-  ['#bancarella=cucina', 'le cucine della bancarella, in prova (&livello=5 dritto alla quinta)'],
+  ['#bancarella=cucina', 'la cucina della bancarella, in prova (&livello=28 dritto a quello, &aperte=1 tutti aperti)'],
   ['#pin=1234', 'il codice dei grandi rimesso a quello'],
   ['#ripara', 'butta la copia del gioco e la riscarica'],
   ['#fattoria3d', 'apre un gioco: la chiave dopo il #'],

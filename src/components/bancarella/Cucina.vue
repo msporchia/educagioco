@@ -1,10 +1,10 @@
 <script setup>
-/* La cucina col cuoco, in prova: si tocca la stanza. Riceve lo stato, e `tocca` dice
-   dove è caduto il dito; il resto lo fa la vista. Vedi docs/bancarella/cuoco.md. */
+/* La cucina: si tocca la stanza. Riceve lo stato, e `tocca` dice dove è caduto il dito;
+   il resto lo fa la vista. Vedi docs/bancarella/cucina.md. */
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { zittisciIlFantasma } from '../../giochi/fattoria3d/viste/dito-soglie.js'
-import { dispensaDi } from '../../motore/bancarella/cucina.js'
-import { quanto } from '../../motore/bancarella/cuoco.js'
+import { dispensaDi, quanto, quantoLavato, tipoDi } from '../../motore/bancarella/cucina.js'
+import { FOTO } from '../../data/bancarella-foto.js'
 import Ricettario from './Ricettario.vue'
 
 const props = defineProps({
@@ -12,7 +12,7 @@ const props = defineProps({
   detto: { type: Object, default: null },     // { testo }: un oggetto nuovo a ogni cosa da dire, anche se è la stessa
   ordinati: { type: Array, default: () => [] },
 })
-const emit = defineEmits(['presa', 'tocca', 'ricettario'])
+const emit = defineEmits(['tocca', 'ricettario'])
 
 const tela = ref(null)
 const senza3d = ref(false)
@@ -32,7 +32,7 @@ watch(() => props.detto, d => {
 async function accendi() {
   senza3d.value = false
   apre.value = true
-  const [{ creaCucinaCuoco }, { prepara }, { preparaCuoco }] = await Promise.all([import('../../grafica/cucina3d/cuoco.js'),
+  const [{ creaCucina3d }, { prepara }, { preparaCuoco }] = await Promise.all([import('../../grafica/cucina3d/indice.js'),
     import('../../grafica/cucina3d/cibo.js'), import('../../grafica/cucina3d/omino.js')])
   await prepara(dispensaDi(props.stato), props.stato.ricette)
   preparaCuoco()
@@ -41,7 +41,7 @@ async function accendi() {
   scena?.rilascia()
   // `&dpr=1` nell'indirizzo: il pixel ratio fisso, per le foto e per i test senza scheda grafica
   const dpr = Number((location.hash.match(/dpr=(\d)/) || [])[1]) || undefined
-  scena = creaCucinaCuoco(tela.value, { quanto, dpr, sente: v => emit('presa', v), perso: () => { senza3d.value = true } })
+  scena = creaCucina3d(tela.value, { quanto, quantoLavato, tipoDi, dpr, perso: () => { senza3d.value = true } })
   senza3d.value = !scena
   scena?.imposta(props.stato)
 }
@@ -60,10 +60,11 @@ if (typeof window !== 'undefined') window.__cucina3d = { grafica: () => scena?.g
 </script>
 
 <template>
-  <div class="cucina" data-cucina data-cuoco>
+  <div class="cucina" data-cucina>
     <canvas ref="tela" class="tela" data-tela @pointerdown.prevent="premi" @pointerup="alzato"></canvas>
     <p v-if="fumetto" class="detto" data-detto>{{ fumetto }}</p>
-    <button v-if="!apre && !senza3d" type="button" class="apri-ricettario" data-apri-ricettario aria-label="il ricettario" @click="ricettario = true">📖</button>
+    <button v-if="!apre && !senza3d" type="button" class="apri-ricettario" data-apri-ricettario aria-label="il ricettario" @click="ricettario = true">
+      <img :src="FOTO.ricettario" alt=""></button>
     <Ricettario v-if="ricettario" :ricette="stato.ricette" :ordinati="ordinati" @chiudi="ricettario = false" />
     <p v-if="apre" class="apre">Si accendono i fornelli…</p>
     <div v-if="senza3d" class="senza">
@@ -74,15 +75,15 @@ if (typeof window !== 'undefined') window.__cucina3d = { grafica: () => scena?.g
 </template>
 
 <style scoped>
-.cucina { position:relative; flex:1; min-height:0; margin-top:-13px; overflow:hidden; background:#3f3128 }
+.cucina { position:relative; flex:1; min-height:0; overflow:hidden; background:#3f3128 }
 .tela { position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none }
 .detto { position:absolute; left:50%; bottom:calc(10px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:2; margin:0; padding:7px 14px; max-width:90%; white-space:nowrap;
          border-radius:12px; background:#3a2a1ae6; color:#fffdf7; font-size:14px; font-weight:800; text-align:center; pointer-events:none }
-.apri-ricettario { position:absolute; right:10px; top:24px; z-index:3; width:52px; height:52px; border:0; border-radius:16px; font-size:30px; line-height:1;
-                   background:#fffdf7; box-shadow:0 3px 0 #0000003d }
-.apri-ricettario:active { transform:translateY(2px); box-shadow:0 1px 0 #0000003d }
 .apre { position:absolute; inset:0; display:grid; place-items:center; margin:0; font-size:17px; font-weight:900; color:#f1e6cf }
 .senza { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:24px; text-align:center;
          font-weight:800; color:#f1e6cf }
 .senza button { padding:9px 18px; border:0; border-radius:12px; font-weight:900; color:#5a3200; background:#ffd257 }
+.apri-ricettario { position:absolute; right:10px; top:10px; z-index:3; width:56px; height:56px; padding:3px; border:0; border-radius:16px; background:#fffdf7; box-shadow:0 3px 0 #0000003d }
+.apri-ricettario:active { transform:translateY(2px); box-shadow:0 1px 0 #0000003d }
+.apri-ricettario img { display:block; width:100%; height:100% }
 </style>

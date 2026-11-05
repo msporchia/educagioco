@@ -24,6 +24,7 @@
    15  Due cose uguali       resto    4     3    1    1c    20 €   «due angurie, per favore»
    16  Tutte quelle che riesce resto  4     3    1    1c    20 €   «ho 5 €: me ne dia più che può»
    17  La cassa rotta        tutto    4     3    1    5c    20 €   TUTTI E DUE I CONTI INSIEME */
+import { CUCINE, eCucina } from './bancarella-cucine.js'
 
 export const TAGLI = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000]  // centesimi
 export const euro = c => (c / 100).toFixed(2).replace('.', ',') + ' €'
@@ -346,28 +347,7 @@ export const LIBERA = {
   monete: [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000],
 }
 
-/* Le cucine, in prova: fuori dalla fila, si aprono da `#bancarella=cucina`.
-   Ogni cucina aggiunge una stazione o una cosa da fare. `fuocoAcceso`: i fornelli
-   non si fermano mentre si conta. Vedi docs/bancarella/cucina.md. */
-export const CUCINA_BANCO = { nome: 'La cucina', icona: '🍝', colore: '#b5472f', tenda: '#f0a58f', legno: '#a9713c' }
-const CUCINA_BASE = { conto: 'resto', cucina: true, tappe: ['cucina', 'cucina', 'cucina'], passo: 50, articoli: [1, 1],
-                      tetto: 1000, paga: [1000], copie: 0, monete: [50, 100, 200, 500] }
-export const CUCINE = [
-  { ...CUCINA_BASE, id: 'cucina-pasta', nome: 'La trattoria', emoji: '🍝', tempo: [75, 60], nuovo: 'la pentola',
-    stazioni: ['pentola'], quantiPiatti: 2, ricette: ['🍝', '🥪'] },
-  { ...CUCINA_BASE, id: 'cucina-insalata', nome: 'L\'orto in tavola', emoji: '🥗', tempo: [75, 60], nuovo: 'il tagliere: tre tocchi per tagliare',
-    stazioni: ['pentola', 'tagliere'], quantiPiatti: 2, ricette: ['🍝', '🥪', '🥗'] },
-  { ...CUCINA_BASE, id: 'cucina-padella', nome: 'La piastra', emoji: '🍔', tempo: [75, 58], nuovo: 'la padella: due fuochi da guardare',
-    stazioni: ['pentola', 'padella', 'tagliere'], quantiPiatti: 3, ricette: ['🍝', '🥗', '🍔', '🍳'] },
-  { ...CUCINA_BASE, id: 'cucina-forno', nome: 'La pizzeria', emoji: '🍕', tempo: [78, 60], nuovo: 'il forno: la pizza va infornata',
-    stazioni: ['pentola', 'padella', 'tagliere', 'forno'], quantiPiatti: 3, ricette: ['🍝', '🥗', '🍔', '🍳', '🍕'] },
-  { ...CUCINA_BASE, id: 'cucina-servizio', nome: 'Il gran servizio', emoji: '🔥', tempo: [90, 70], nuovo: 'due piatti a cliente, il totale lo batti tu, e i fuochi non si fermano',
-    conto: 'tutto', articoli: [1, 2], tetto: 1900, paga: [2000], monete: [50, 100, 200, 500, 1000], fuocoAcceso: true,
-    stazioni: ['pentola', 'padella', 'tagliere', 'forno'], quantiPiatti: 3, ricette: ['🍝', '🥪', '🥗', '🍔', '🍳', '🍕'] },
-]
-export const cucinaIdx = k => -2 - k
-export const eCucina = i => i <= -2
-
+export { CUCINE, CUCINA_BANCO, cucinaIdx, eCucina } from './bancarella-cucine.js'
 export const campagnaDi = i => (eCucina(i) ? CUCINE[-2 - i] : i >= 0 && i < CAMPAGNE.length ? CAMPAGNE[i] : LIBERA)
 
 /* Che cosa tocca alla tappa numero `n` di una giornata: quale banco, e con

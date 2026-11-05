@@ -1,20 +1,25 @@
-/* LE CUCINE, COL CUOCO
-     node test/integrazione/bancarella-cuoco.test.mjs   (dopo `npm run build`)
+/* LA CUCINA
+     node test/integrazione/bancarella-cucina.test.mjs   (dopo `npm run build`)
 
-   Quello che `unita/bancarella-cuoco` non vede: un tocco vero sulla stanza trova
-   il posto giusto, il cuoco ci cammina e fa la mossa, e il piatto alla consegna
-   apre il foglio del resto, che sta sotto il dito e non deve prendersi il suo
-   click. Vedi docs/bancarella/cuoco.md. */
+   Quello che `unita/bancarella-cucina` non vede: un tocco vero sulla stanza trova
+   il posto giusto, il cuoco ci cammina e fa la mossa; le ordinazioni si fanno in
+   qualsiasi ordine, scadono, e quella finita apre il foglio del resto, che sta
+   sotto il dito e non deve prendersi il suo click. Il ricettario ferma il tempo,
+   i livelli si aprono vincendo, gli attrezzi si comprano. Vedi docs/bancarella/cucina.md. */
 import { apriBrowser, apriGioco, azzera, leggiProfilo, attendi, scatto, TELEFONO } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
-import { TAGLI } from '../../src/motore/bancarella/cuoco.js'
+import { TAGLI } from '../../src/motore/bancarella/cucina.js'
+import { CUCINE, ATTREZZI } from '../../src/data/bancarella-cucine.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
 await azzera(page)
 await page.evaluate(() => { location.hash = 'bancarella=cucina&dpr=1' })
 await page.waitForSelector('[data-cucine]', { timeout: 8000 })
-await page.click('[data-stile="cuoco"]')
+uguale('si vedono tutti i livelli', await page.locator('[data-cucina-n]').count(), CUCINE.length)
+controlla('la prima è aperta', await page.locator('[data-cucina-n="1"]').isEnabled())
+controlla('la seconda no', await page.locator('[data-cucina-n="2"]').isDisabled())
+await scatto(page, 'cucina-scelta')
 
 const cdp = await page.context().newCDPSession(page)
 await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 2 })
@@ -34,7 +39,8 @@ const fermo = () => page.waitForFunction(() => {
 }, undefined, { timeout: 30000 })
 
 // il tocco è vero; la camminata no, se non si prova quella: senza scheda grafica i fotogrammi sono pochi
-const PAVIMENTO = { '2,6': [2, 5], '0,1': [1, 1], '6,1': [5, 1], '6,2': [5, 2], '6,3': [5, 3], '6,4': [5, 4], '1,0': [1, 1], '5,6': [5, 5], '3,0': [3, 1], '3,3': [3, 4] }
+const PANE = '6,2', SUGO = '6,1', FORMAGGIO = '6,4', INSALATA = '6,6', PIATTI = '2,8', TAGLIERE = '5,8', CONSEGNA = '3,0', LAVELLO = '3,8'
+const PAVIMENTO = { [PANE]: [5, 2], [SUGO]: [5, 1], [FORMAGGIO]: [5, 4], [INSALATA]: [5, 6], [PIATTI]: [2, 7], [TAGLIERE]: [5, 7], [CONSEGNA]: [3, 1], [LAVELLO]: [3, 7] }
 async function premi(id) {
   const [x, z] = PAVIMENTO[id]
   await page.evaluate(([x, z]) => Object.assign(window.__shop.cucina.value.cuoco, { x: x + 0.5, z: z + 0.5 }), [x, z])
@@ -42,122 +48,143 @@ async function premi(id) {
   await fermo()
   await attendi(page, 40)
 }
-const PASTA = '0,1', SUGO = '6,1', FORMAGGIO = '6,2', PANE = '6,3', INSALATA = '6,4', PIATTI = '2,6', PENTOLA = '1,0', TAGLIERE = '5,6', CONSEGNA = '3,0', ISOLA = '3,3'
-const finisci = (k, f) => page.evaluate(k => {
-  const s = window.__shop.cucina.value.stazioni[k]
-  s.t = 7 - 0.02
-}, k).then(() => page.waitForFunction(([k, f]) => window.__shop.cucina.value.stazioni[k].fase === f, [k, f], { timeout: 20000 }))
-
+const tagliato = () => page.waitForFunction(() => !window.__shop.cucina.value.tagliando, undefined, { timeout: 30000 })
 async function fai(piatto) {
-  if (piatto === '🥪') {
-    await premi(FORMAGGIO); await premi(TAGLIERE)
-    await page.waitForFunction(() => window.__shop.cucina.value.stazioni.tagliere.fase === 'pronta', undefined, { timeout: 30000 })
-    await premi(PANE); await premi(TAGLIERE)
-    return
-  }
-  await premi(PIATTI)
-  await premi(ISOLA)
-  await premi(PASTA); await premi(PENTOLA)
-  await finisci('pentola', 'pronta')
-  await premi(ISOLA)                // prende il piatto
-  await premi(PENTOLA)              // ci versa la pasta
-  await premi(SUGO)
+  if (piatto === '🥖') { await premi(PANE); await premi(SUGO); return }
+  await premi(FORMAGGIO); await premi(TAGLIERE); await tagliato()
+  await premi(PANE); await premi(TAGLIERE)
+}
+const ordini = () => page.evaluate(() => window.__shop.coda.value.map(c => c.articoli[0].emoji))
+async function daiResto() {
+  await page.waitForSelector('.cassa.foglio', { timeout: 2000 })
+  await page.evaluate(() => {
+    const S = window.__shop
+    for (const v of S.scomponi(S.cliente.value.resto, S.cliente.value.monete)) S.metti(v)
+    S.proponi()
+  })
 }
 
 /* ---------- 1. si tocca dove si vuole andare ---------- */
 await apri(1)
 nota(`la scena: ${JSON.stringify(await page.evaluate(() => window.__cucina3d.grafica()))}`)
-uguale('niente levetta né tasti', await page.locator('[data-leva], [data-usa], [data-taglia]').count(), 0)
-{
-  await tocco(await dove('5,5'))
-  await fermo()
-  const k = (await stato()).cuoco
-  uguale('toccando il pavimento il cuoco va lì', `${k.x},${k.z}`, '5.5,5.5')
-  await tocco(await dove(PASTA))
-  await tocco(await dove(PENTOLA))
-  uguale('due tocchi in fila', (await stato()).fila.join(' '), `${PASTA} ${PENTOLA}`)
-  await scatto(page, 'cuoco-cammina')
-  await fermo()
-  uguale('prende la pasta e la mette sul fuoco da solo', (await stato()).stazioni.pentola.fase, 'cuoce')
-  await premi(SUGO)
-  await premi(PANE)
-  await page.waitForSelector('[data-detto]', { timeout: 1500 })
-  uguale('quello che non si unisce lo dice', await page.locator('[data-detto]').innerText(), 'Questi due non vanno insieme')
-  await page.evaluate(() => {
-    const c = window.__shop.cucina.value
-    c.stazioni.pentola = { fase: 'vuota', t: 0, cosa: '', colpi: 0 }
-    c.cuoco.mano = null
-  })
-}
+uguale('niente persone', await page.locator('[data-cliente]').count(), 0)
+uguale('tre ordinazioni in lista', await page.locator('[data-ordine]').count(), 3)
+controlla('e sono foto, non icone', (await page.locator('[data-ordinato]').first().getAttribute('src')).startsWith('data:image/webp'))
+await tocco(await dove('5,7'))
+await fermo()
+const k = (await stato()).cuoco
+uguale('toccando il pavimento il cuoco va lì', `${k.x},${k.z}`, '5.5,7.5')
+await page.evaluate(() => Object.assign(window.__shop.cucina.value.cuoco, { x: 1.5, z: 1.5 }))
+await tocco(await dove(INSALATA))
+await tocco(await dove(TAGLIERE))
+uguale('due tocchi in fila', (await stato()).fila.join(' '), `${INSALATA} ${TAGLIERE}`)
+await fermo()
+await page.waitForFunction(() => window.__shop.cucina.value.tagliando === '' , undefined, { timeout: 20000 })
+await page.evaluate(() => { const c = window.__shop.cucina.value; c.stazioni.tagliere = { fase: 'vuota', t: 0, cosa: '', colpi: 0 }; c.cuoco.mano = null })
+await premi(SUGO)
+await premi(FORMAGGIO)
+await page.waitForSelector('[data-detto]', { timeout: 1500 })
+uguale('quello che non si unisce lo dice', await page.locator('[data-detto]').innerText(), 'Prima si taglia')
+await page.evaluate(() => { window.__shop.cucina.value.cuoco.mano = null })
 
-/* ---------- il ricettario: si apre su quello che ordinano, si sfoglia, e il tempo sta fermo ---------- */
+/* ---------- 2. il ricettario ferma il tempo ---------- */
 {
-  const ordine = await page.evaluate(() => window.__shop.cliente.value.articoli[0].emoji)
+  const primo = (await ordini())[0]
   await page.click('[data-apri-ricettario]')
   await page.waitForSelector('[data-ricettario]', { timeout: 2000 })
-  uguale('si apre su quello che ha ordinato', await page.locator('.piatto.qui').getAttribute('data-ricetta'), ordine)
-  await scatto(page, 'cuoco-ricettario')
-  const altro = ordine === '🍝' ? '🥪' : '🍝'
+  uguale('si apre su quello che ordinano', await page.locator('.piatto.qui').getAttribute('data-ricetta'), primo)
+  await scatto(page, 'cucina-ricettario')
+  const altro = primo === '🥖' ? '🥪' : '🥖'
   await page.click(`[data-ricetta="${altro}"]`)
   uguale('si sfoglia', await page.locator('.piatto.qui').getAttribute('data-ricetta'), altro)
   const prima = await page.evaluate(() => window.__shop.cliente.value.restaPazienza)
   await attendi(page, 700)
-  uguale('il cliente aspetta', await page.evaluate(() => window.__shop.cliente.value.restaPazienza), prima)
+  uguale('l\'ordinazione aspetta', await page.evaluate(() => window.__shop.cliente.value.restaPazienza), prima)
   await page.click('[data-chiudi-ricettario]')
   await attendi(page, 700)
   controlla('chiuso, il tempo riparte', await page.evaluate(() => window.__shop.cliente.value.restaPazienza) < prima)
 }
 
-/* ---------- 2. il piatto si porta alla consegna ---------- */
-const primo = await page.evaluate(() => window.__shop.cliente.value.articoli[0].emoji)
-const altro = primo === '🍝' ? '🥪' : '🍝'
-await fai(altro)
-uguale('il piatto è pronto', (await stato()).cuoco.mano?.pronto, altro)
-const prima = await page.evaluate(() => window.__shop.cliente.value.restaPazienza)
-await premi(CONSEGNA)
-controlla('il piatto che non ha chiesto costa due secondi', await page.evaluate(() => window.__shop.cliente.value.restaPazienza) <= prima - 2)
-uguale('e resta in mano', (await stato()).cuoco.mano?.pronto, altro)
-await page.evaluate(() => { window.__shop.cucina.value.cuoco.mano = null })
-await fai(primo)
+/* ---------- 3. si servono in qualsiasi ordine ---------- */
+await page.evaluate(() => {
+  const o = window.__shop.coda.value
+  o[0].articoli[0] = { ...o[0].articoli[0], emoji: '🥖' }; o[1].articoli[0] = { ...o[1].articoli[0], emoji: '🥪' }; o[2].articoli[0] = { ...o[2].articoli[0], emoji: '🥖' }
+})
+await fai('🥪')
+uguale('il piatto è pronto', (await stato()).cuoco.mano?.pronto, '🥪')
 await premi(CONSEGNA)
 await page.waitForSelector('.cassa.foglio', { timeout: 2000 })
-uguale('il piatto giusto apre il foglio del resto', await page.evaluate(() => window.__shop.momento.value), 'cassa')
+uguale('la seconda ordinazione è servita per prima', (await ordini())[0], '🥪')
 await attendi(page, 500)
 uguale('e il dito che si alza non preme una moneta', await page.evaluate(() => window.__shop.dato.value), 0)
-await scatto(page, 'cuoco-il-resto')
+controlla('il foglio mostra i soldi che danno', await page.locator('.in-foglio [data-porge], .porge.in-foglio').count() > 0)
+await scatto(page, 'cucina-il-resto')
 
-/* ---------- 3. il foglio si mette da parte, e si cammina ---------- */
-await page.evaluate(() => { window.__shop.cucina.value.stazioni.pentola = { fase: 'cuoce', t: 1, cosa: 'pasta', colpi: 0 } })
-await attendi(page, 900)
-uguale('col foglio aperto il fuoco è fermo', (await stato()).stazioni.pentola.t, 1)
-await page.click('[data-chiudi]')
-await attendi(page, 700)
-controlla('col foglio chiuso cuoce', (await stato()).stazioni.pentola.t > 1)
-await page.click('[data-azione="al-resto"]')
-await page.waitForSelector('.cassa.foglio', { timeout: 2000 })
-await page.evaluate(() => {
-  const S = window.__shop
-  for (const v of S.scomponi(S.cliente.value.resto, S.cliente.value.monete)) S.metti(v)
-  S.proponi()
-})
+/* ---------- 4. il foglio ferma, la ✕ lo mette da parte ---------- */
+{
+  const prima = await page.evaluate(() => window.__shop.coda.value[1].restaPazienza)
+  await attendi(page, 900)
+  uguale('col foglio aperto le ordinazioni aspettano', await page.evaluate(() => window.__shop.coda.value[1].restaPazienza), prima)
+  await page.click('[data-chiudi]')
+  await attendi(page, 700)
+  controlla('col foglio chiuso scorrono', await page.evaluate(() => window.__shop.coda.value[1].restaPazienza) < prima)
+  await page.click('[data-azione="al-resto"]')
+}
+await daiResto()
 await page.waitForFunction(() => window.__shop.hud.serviti === 1, undefined, { timeout: 4000 })
 await attendi(page, 500)
 const p = await leggiProfilo(page)
 controlla('l\'incasso va nel banco', p.campagne.bancarella.banco.cassa > 0)
-uguale('la prova non muove la fila delle giornate', p.mercato.tappa, 0)
+uguale('la fila delle giornate non si muove', p.mercato.tappa, 0)
 
-/* ---------- 4. l'insalata: un tocco la posa e il cuoco taglia da sé, poi si prende ---------- */
-await page.click('button[aria-label="indietro"]')
+/* ---------- 5. un'ordinazione che scade costa un cuore e sparisce ---------- */
+{
+  const cuori = await page.evaluate(() => window.__shop.hud.cuori)
+  await page.evaluate(() => { window.__shop.coda.value.at(-1).restaPazienza = 0.05 })
+  await page.waitForFunction(c => window.__shop.hud.cuori === c - 1, cuori, { timeout: 8000 })
+  uguale('resta quella che non è scaduta', await page.locator('[data-ordine]').count(), 1)
+}
+
+/* ---------- 6. vincere apre il livello dopo, e si comprano gli attrezzi ---------- */
+await page.evaluate(() => { const S = window.__shop; S.hud.serviti = 8; S.tappa.value = 2; S.coda.value = S.coda.value.slice(0, 1); S.chiudi('vinta') })
+await page.waitForFunction(() => window.__shop.fase.value === 'fine', undefined, { timeout: 4000 })
+await page.click('[data-azione="le-giornate"]')
 await page.waitForSelector('[data-cucine]', { timeout: 3000 })
+controlla('il secondo livello si è aperto', await page.locator('[data-cucina-n="2"]').isEnabled())
+{
+  const a = ATTREZZI.find(x => x.che === 'tagliere')
+  await page.evaluate(n => { const S = window.__shop; S.mioBanco.value = { ...S.mioBanco.value, cassa: n } }, a.prezzo + 50)
+  await page.click('[data-attrezzo="tagliere"]')
+  await attendi(page, 300)
+  uguale('il tagliere in più è comprato', await page.evaluate(() => window.__shop.mioBanco.value.cucina.tagliere), 1)
+  uguale('e pagato', await page.evaluate(() => window.__shop.mioBanco.value.cassa), 50)
+}
 await apri(2)
+controlla('il secondo tagliere sta in cucina', !!(await stato()).stazioni['tagliere:2'])
+
+/* ---------- 7. l'insalata: un tocco la posa e il cuoco taglia da sé, poi si prende ---------- */
 await premi(INSALATA); await premi(TAGLIERE)
 controlla('l\'insalata va sul tagliere e il cuoco taglia', (await stato()).tagliando)
-await page.waitForFunction(() => window.__shop.cucina.value.stazioni.tagliere.fase === 'pronta', undefined, { timeout: 30000 })
+await tagliato()
 uguale('senza altri tocchi', (await stato()).stazioni.tagliere.colpi, TAGLI)
 await premi(TAGLIERE)
 uguale('e il tocco dopo la prende', (await stato()).cuoco.mano?.cosa, 'insalata')
 
+/* ---------- 8. il lavello ---------- */
+await page.click('button[aria-label="indietro"]')
+await page.waitForSelector('[data-cucine]', { timeout: 3000 })
+await page.evaluate(() => { location.hash = 'bancarella=cucina&livello=6&dpr=1' })
+await page.reload()
+await page.waitForFunction(() => window.__cucina3d?.grafica()?.fotogrammi > 3 && window.__shop?.cliente.value && !window.__shop.cambio.value, undefined, { timeout: 30000 })
+await page.evaluate(() => { const c = window.__shop.cucina.value; c.puliti = 0; c.sporchi = 1 })
+await premi(PIATTI)
+await page.waitForSelector('[data-detto]', { timeout: 1500 })
+uguale('senza piatti puliti lo dice', await page.locator('[data-detto]').innerText(), 'Non ci sono piatti puliti: lavali')
+await premi(LAVELLO)
+await page.waitForFunction(() => window.__shop.cucina.value.puliti === 1, undefined, { timeout: 30000 })
+await scatto(page, 'cucina-lavello')
+
 uguale('nessun errore in console', errori.length, 0)
 if (errori.length) errori.forEach(e => nota(e))
 await browser.close()
-riassunto('Le cucine col cuoco')
+riassunto('La cucina della bancarella')
