@@ -32,7 +32,7 @@ mossa di `decidi`:
 | un bancone libero | | posa |
 | un bancone con un piatto | prende il piatto | ci deposita quello che ha in mano |
 | un bancone con una cosa | prende | le unisce, e il piatto resta lì |
-| il tagliere | taglia, un colpo a tocco; tagliata, prende | posa l'insalata; col piatto ce la mette |
+| il tagliere | riprende a tagliare; tagliata, prende | posa l'insalata e la taglia; col piatto o con un'altra cosa unisce quella tagliata |
 | un fuoco | prende quello che è pronto | ci mette il crudo; col piatto o con un'altra cosa unisce quello che è pronto |
 | il forno | prende la pizza | inforna la pizza condita |
 | il bidone | | butta |
@@ -56,7 +56,8 @@ che resta si ingoia, se no preme una moneta ([../core/il-dito.md](../core/il-dit
   tocca il sugo, e il piatto ce lo mette il cuoco (`unisci`). La pila serve a chi vuole
   cominciare dal piatto.
 - **Crudo non va sul piatto**: pasta, carne e uovo passano dal fuoco, l'insalata dal
-  tagliere (cinque tocchi, `TAGLI`, a mani libere).
+  tagliere: un tocco e il cuoco taglia da sé fino alla fine, un secondo e mezzo (`TAGLI`,
+  `COLPO`). Intanto la fila aspetta; il pavimento lo porta via, e un tocco lo fa riprendere.
 - **La pizza entra in forno col piatto** ed esce pronta, a mani libere.
 - **Il bruciato si prende a mani libere** e va nel bidone. Anche un piatto ci può andare.
 - **La consegna vuole il piatto del primo cliente**: quello sbagliato costa due secondi e

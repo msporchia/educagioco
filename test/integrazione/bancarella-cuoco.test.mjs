@@ -123,14 +123,14 @@ const p = await leggiProfilo(page)
 controlla('l\'incasso va nel banco', p.campagne.bancarella.banco.cassa > 0)
 uguale('la prova non muove la fila delle giornate', p.mercato.tappa, 0)
 
-/* ---------- 4. l'insalata: si posa, si taglia a tocchi, si prende ---------- */
+/* ---------- 4. l'insalata: un tocco la posa e il cuoco taglia da sé, poi si prende ---------- */
 await page.click('button[aria-label="indietro"]')
 await page.waitForSelector('[data-cucine]', { timeout: 3000 })
 await apri(2)
 await premi(INSALATA); await premi(TAGLIERE)
-uguale('l\'insalata va sul tagliere', (await stato()).stazioni.tagliere.fase, 'taglia')
-for (let i = 0; i < TAGLI; i++) await premi(TAGLIERE)
-uguale('cinque tocchi e l\'insalata è tagliata', (await stato()).stazioni.tagliere.fase, 'pronta')
+controlla('l\'insalata va sul tagliere e il cuoco taglia', (await stato()).tagliando)
+await page.waitForFunction(() => window.__shop.cucina.value.stazioni.tagliere.fase === 'pronta', undefined, { timeout: 30000 })
+uguale('senza altri tocchi', (await stato()).stazioni.tagliere.colpi, TAGLI)
 await premi(TAGLIERE)
 uguale('e il tocco dopo la prende', (await stato()).cuoco.mano?.cosa, 'insalata')
 

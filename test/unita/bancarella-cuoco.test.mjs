@@ -126,17 +126,46 @@ test('due cose della stessa ricetta si uniscono anche senza piatto', () => {
   assert.equal(n.cuoco.mano.cosa, 'sugo')
 })
 
-test('il tagliere: si posa, si taglia a tocchi, poi si prende', () => {
+test('il tagliere: un tocco, e il cuoco taglia fino alla fine', () => {
   const c = cucina(1)
   fa(c, cassetta(c, 'insalata'))
   assert.ok(fa(c, '5,6')); assert.equal(c.stazioni.tagliere.fase, 'taglia')
-  for (let i = 0; i < TAGLI; i++) { assert.equal(c.stazioni.tagliere.colpi, i); assert.ok(fa(c, '5,6')) }
+  assert.ok(c.tagliando, 'comincia da solo')
+  tocca(c, '5,6')
+  aspetta(c, 0.7)
+  assert.equal(c.fila.length, 1, 'la fila aspetta che abbia finito')
+  assert.ok(c.stazioni.tagliere.colpi > 0 && c.stazioni.tagliere.colpi < TAGLI)
+  aspetta(c, 1)
   assert.equal(c.stazioni.tagliere.fase, 'pronta')
-  assert.ok(fa(c, '5,6')); assert.deepEqual({ ...c.cuoco.mano }, { cosa: 'insalata', fatta: true, bruciata: false })
-  c.cuoco.mano = null
-  fa(c, cassetta(c, 'insalata')); fa(c, '5,6'); fa(c, cassetta(c, 'pane'))
-  assert.equal(fa(c, '5,6'), false, 'con le mani piene non si taglia')
+  assert.equal(c.tagliando, false)
+  assert.ok(usa(c, vai2(c)), 'il tocco di prima prende l\'insalata')
+  assert.deepEqual({ ...c.cuoco.mano }, { cosa: 'insalata', fatta: true, bruciata: false })
+})
+
+test('chi lascia a metà riprende con un tocco; con le mani piene no', () => {
+  const c = cucina(1)
+  fa(c, cassetta(c, 'insalata')); fa(c, '5,6')
+  aspetta(c, 0.7)
+  const colpi = c.stazioni.tagliere.colpi
+  assert.ok(vaiA(c, 3, 4))
+  assert.equal(c.tagliando, false)
+  aspetta(c, 2)
+  assert.equal(c.stazioni.tagliere.colpi, colpi, 'senza il cuoco non si taglia')
+  fa(c, cassetta(c, 'pane'))
+  assert.equal(fa(c, '5,6'), false)
   assert.equal(c.perche, 'Per tagliare servono le mani libere')
+  c.cuoco.mano = null
+  assert.ok(fa(c, '5,6'))
+  aspetta(c, 1.5)
+  assert.equal(c.stazioni.tagliere.fase, 'pronta')
+})
+
+test('l\'insalata: tagliata, col formaggio si unisce e si serve', () => {
+  const c = cucina(1)
+  fa(c, cassetta(c, 'insalata')); fa(c, '5,6'); aspetta(c, 1.6)
+  fa(c, cassetta(c, 'formaggio'))
+  assert.ok(fa(c, '5,6'), 'col formaggio in mano, sul tagliere')
+  assert.equal(c.cuoco.mano.pronto, '🥗')
 })
 
 test('la pizza entra col piatto ed esce pronta; il bruciato va nel bidone', () => {

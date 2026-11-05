@@ -2,7 +2,8 @@
    ci va e fa quello che lì è ovvio. Vedi docs/bancarella/cuoco.md. Puro, gira in Node. */
 import { INGREDIENTI, cucinaNuova, dispensaDi, avanza, quantoStazione } from './cucina.js'
 
-export const TAGLI = 5             // i tocchi per tagliare
+export const TAGLI = 5             // i colpi di coltello
+const COLPO = 0.3                  // i secondi di un colpo: il cuoco taglia da sé, fino alla fine
 export const LARGA = 7, FONDA = 7  // la stanza, in celle
 export const FILA_MAX = 6          // i tocchi che il cuoco si ricorda
 const VELOCITA = 3.6
@@ -37,7 +38,7 @@ function pianta(c) {
    `arrivato`: il posto raggiunto, dove chi gioca fa la mossa (`arriva`). */
 export function cucinaCuoco(camp) {
   const c = cucinaNuova(camp)
-  return { ...c, celle: pianta(c), sopra: {}, fila: [], strada: [], arrivato: '', perche: '',
+  return { ...c, celle: pianta(c), sopra: {}, fila: [], strada: [], arrivato: '', perche: '', tagliando: false, colpo: 0,
            cuoco: { x: 3.5, z: 4.5, verso: 0, mano: null, cammina: false } }
 }
 
@@ -83,7 +84,7 @@ function postiPer(occupate, q) {
 export function vaiA(c, x, z) {
   const occupate = pieni(c), strada = via(occupate, dovesta(c.cuoco), [[x, z]])
   if (!strada) return false
-  c.fila = []; c.arrivato = ''
+  c.fila = []; c.arrivato = ''; c.tagliando = false
   c.strada = aiCentri(strada)
   return true
 }
@@ -119,8 +120,21 @@ function cammina(c, dt) {
   if (!k.cammina && c.fila.length && !c.arrivato) { versoIl(c, c.fila[0]); c.arrivato = c.fila[0] }
 }
 
+/* Mentre taglia sta lì: la fila aspetta, e solo il pavimento lo porta via. */
+function taglia(c, dt) {
+  c.colpo += dt
+  if (c.colpo < COLPO) return
+  c.colpo -= COLPO
+  const s = c.stazioni.tagliere
+  if (++s.colpi < TAGLI) return
+  s.fase = 'pronta'
+  c.tagliando = false
+  c.colpo = 0
+}
+
 export function passo(c, dt) {
-  cammina(c, dt)
+  if (c.tagliando) taglia(c, dt)
+  else cammina(c, dt)
   avanza(c, dt)
   return c
 }
@@ -220,12 +234,13 @@ function allaStazione(c, nome, m) {
     if (ePiatto(m) || m.fatta || INGREDIENTI[m.cosa].va !== nome) return { perche: 'Qui non va' }
     return { fai: () => {
       c.stazioni[nome] = { ...libera(), fase: nome === 'tagliere' ? 'taglia' : 'cuoce', cosa: m.cosa }
+      c.tagliando = nome === 'tagliere'
       k.mano = null
     } }
   }
   if (s.fase === 'taglia') {
     if (m) return { perche: 'Per tagliare servono le mani libere' }
-    return { fai: () => { if (++s.colpi >= TAGLI) s.fase = 'pronta' } }
+    return { fai: () => { c.tagliando = true } }
   }
   if (s.fase === 'cuoce') return { perche: 'Sta cuocendo' }
   if (s.fase === 'scotta') {
