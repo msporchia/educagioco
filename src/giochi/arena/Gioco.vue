@@ -40,6 +40,8 @@ import CampoVista from './viste/Campo.vue'
 import Finale from './viste/Finale.vue'
 import SceltaSfida from './viste/SceltaSfida.vue'
 import Dettagli from './viste/Dettagli.vue'
+import Panorama from './viste/Panorama.vue'
+import { DIPINTO } from './dati/terreni-dipinti.js'
 import './stile.css'
 
 defineOptions({ name: 'CastleBattle' })
@@ -73,6 +75,7 @@ const dettaglio = ref(null)           // la schermata dei dettagli: il campo cor
 const scelta = ref(null)              // quale truppa per un edificio da costruire: il campo corre anche qui
 const avviso = ref('')                // la riga che dice cosa è successo
 const toccato = ref(false)
+const schema = ref('')                // il terreno da mostrare da solo (`#arena=lava&schema`, per gli allegati delle schede)
 
 let voluta = null                     // la scelta che si sta pagando
 let campo = null
@@ -688,7 +691,8 @@ onMounted(() => {
   sfida.daInvito()
   gancioDiProva()
   const prova = typeof location !== 'undefined' ? chiesta(location.hash) : null
-  if (prova) {
+  if (prova?.schema) schema.value = prova.terreno
+  else if (prova) {
     infinita.value = prova.terreno
     comincia(battagliaDiProva(prova), 0)
   }
@@ -743,6 +747,8 @@ onUnmounted(() => {
       <!-- la sfida si è rotta (l'altro se n'è andato, versioni diverse, la linea non è tornata), o la linea va e viene: si aspetta -->
       <CartelloLinea v-if="vista === 'campo' && !finale && (sfida.rotta.value || sfida.linea.value)" :rotta="sfida.rotta.value"
                      :motivo="sfida.motivo.value" :linea="sfida.linea.value" partita="la battaglia" @esci="allaMappa" />
+
+      <Panorama v-if="schema" class="ar-schema" :terreno="schema" :pezzo="DIPINTO" :grana="2" />
 
       <VeloPausa v-if="inPausa && siGioca" :dove="dovEravamo" @riprendi="togli" @esci="indietro" />
     </div>

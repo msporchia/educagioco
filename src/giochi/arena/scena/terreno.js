@@ -2,12 +2,27 @@
 // mai (docs/arena/grafica.md). Si dipinge una volta sola, punto per punto, sulla grana delle figure; è funzione delle sole
 // coordinate del mondo, quindi due schermi diversi vedono lo stesso posto. Quando c'è il dipinto (`dati/terreni-dipinti.js`,
 // `strumenti/sprite/terreni-arena.py`) si usa quello.
-import { CAMPO, POSTI } from '../dati/regole.js'
+import { CAMPO, POSTI, TERRENI } from '../dati/regole.js'
 import { TERRENI_DIPINTI, DIPINTO } from '../dati/terreni-dipinti.js'
-import { ambiente } from './ambienti.js'
-import { disegnaDecori, ombraDecoro } from './decori.js'
+import { AMBIENTI, ambiente } from './ambienti.js'
+import { disegnaDecori, ombraDecoro, FIGURE } from './decori.js'
 
 export const G = 2                       // punti del disegno per unità del mondo: la grana delle figure
+
+/* quello che un test può guardare senza schermo: ogni posto ha i suoi colori e i suoi decori, e nessun decoro alto sta su una piazzola */
+export function guastiDelTerreno() {
+  const g = []
+  for (const t of TERRENI) {
+    const a = AMBIENTI[t]
+    if (!a) { g.push(`${t}: manca l'ambientazione`); continue }
+    if (!SUOLI[a.suolo] || !FIUMI[a.fiume]) g.push(`${t}: suolo o fiume sconosciuto`)
+    for (const d of [...a.alti, ...a.bassi, ...(a.vicinoAcqua || [])]) if (!FIGURE[d]) g.push(`${t}: decoro sconosciuto ${d}`)
+  }
+  for (const [x, y] of CENTRI) if (libero(x, y, true) || libero(x, y, false)) g.push(`un decoro può stare sulla piazzola ${x},${y}`)
+  if (libero(CAMPO.corsia, 100, false)) g.push('un decoro può stare sulla strada')
+  if (libero(60, MEZZO, false)) g.push('un decoro può stare nel fiume')
+  return g
+}
 
 /* il rumore: una tavola letta con l'interpolazione, così costa pochi conti anche su un telefono vecchio */
 const T = 256

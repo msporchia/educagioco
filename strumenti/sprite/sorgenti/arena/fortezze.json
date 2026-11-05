@@ -1,0 +1,11 @@
+{
+  "_": "Le fortezze di Castle Battle (ChatGPT, DA-GENERARE.md voce 9): una riga per posto, da sinistra il castello, la porta intera, rotta e crollata, il ponte. Lo legge strumenti/sprite/fortezze-arena.py.",
+  "foglio": "fortezze.png",
+  "stacco": 12,
+  "righe": [
+    ["castello:bosco", "porta:bosco:intera", "porta:bosco:rotta", "porta:bosco:crollata", "ponte:bosco"],
+    ["castello:palude", "porta:palude:intera", "porta:palude:rotta", "porta:palude:crollata", "ponte:palude"],
+    ["castello:neve", "porta:neve:intera", "porta:neve:rotta", "porta:neve:crollata", "ponte:neve"],
+    ["castello:lava", "porta:lava:intera", "porta:lava:rotta", "porta:lava:crollata", "ponte:lava"]
+  ]
+}

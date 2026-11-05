@@ -7,6 +7,7 @@
 // niente): in campo guardano dalla parte della loro squadra.
 import { CAMPO, TRUPPE, POSTI, EDIFICIO_DI } from '../dati/regole.js'
 import { PEZZI as DIPINTE, ATLANTE as FOGLIO_CASERME, PIAZZOLA } from '../dati/caserme-dipinte.js'
+import { PEZZI as FORTEZZE, ATLANTE as FOGLIO_FORTEZZE } from '../dati/fortezze-dipinte.js'
 import { carica, immagineScena } from '../../castello/scena/vestito.js'
 import { PEZZI as SCENE } from '../../castello/dati/vestiti.js'
 import { PEZZI } from '../../castello/dati/figure.js'
@@ -43,6 +44,7 @@ export class Campo {
     this.nate = new WeakMap()          // quando è comparsa ogni caserma, per farla spuntare
     this.rovine = new Map()            // 'lato:posto' → l'edificio crollato lì: ne resta il rudere
     this.caserme = null                // le caserme dipinte: { io, nem } (il nemico col blu fatto rosso)
+    this.fortezze = null               // castello, porta e ponte dipinti del posto, se il foglio è arrivato: come sopra
   }
 
   /* se un'immagine non arriva (cache che si sta rinnovando, memoria corta) si riprova: il campo non resta
@@ -50,7 +52,7 @@ export class Campo {
   async prepara() {
     for (let giro = 0; ; giro++) {
       try {
-        await Promise.all([carica(CASTELLO_DI), caricaFigure(), this.caricaCaserme(), this.terreno.prepara()])
+        await Promise.all([carica(CASTELLO_DI), caricaFigure(), this.caricaCaserme(), this.caricaFortezze(), this.terreno.prepara()])
         break
       } catch (e) {
         if (giro >= 5) throw e
@@ -70,6 +72,19 @@ export class Campo {
       img.src = FOGLIO_CASERME
     })
   }
+
+  caricaFortezze() {
+    if (typeof Image === 'undefined' || !FOGLIO_FORTEZZE) return Promise.resolve()
+    return new Promise(ok => {
+      const img = new Image()
+      img.onload = () => { this.fortezze = { io: img, nem: this.ricolora(img) }; ok() }
+      img.onerror = () => ok()                                  // resta il disegno in codice
+      img.src = FOGLIO_FORTEZZE
+    })
+  }
+
+  /* un pezzo del foglio delle fortezze per questo posto, o null */
+  fortezza(nome) { return this.fortezze ? FORTEZZE[nome.replace('@', this.terreno.chiave)] : null }
 
   /* il blu della squadra diventa rosso (e il rosso blu): castello e caserme del nemico */
   ricolora(img, sx = 0, sy = 0, w = img.width, h = img.height) {
@@ -209,12 +224,13 @@ export class Campo {
      è l'obiettivo finale, non deve prendere campo */
   base(c, p, lato, ora) {
     const re = p.castello(lato)
-    const sc = SCENE[CASTELLO_DI], img = immagineScena(CASTELLO_DI)
-    const [sx, sy, w, h] = sc.castello
+    const dipinto = this.fortezza('castello:@')
+    const img = dipinto ? this.fortezze.io : immagineScena(CASTELLO_DI)
+    const [sx, sy, w, h] = dipinto || SCENE[CASTELLO_DI].castello
     const lw = w * 0.56 * this.s / 0.85 * ZE, lh = h * 0.56 * this.s / 0.85 * ZE
     const x = this.X(re.x), piede = lato === 'io' ? this.Y(CAMPO.H + 60) : this.Y(60)
     if (re.hp > 0) {
-      c.drawImage(this.castelloDi(lato, img, sx, sy, w, h), x - lw / 2, piede - lh, lw, lh)
+      c.drawImage(this.castelloDi(lato, img, sx, sy, w, h, !!dipinto), x - lw / 2, piede - lh, lw, lh)
       const col = lato === 'io' ? IO : NEM, y = lato === 'io' ? this.Y(CAMPO.H - 2) : piede - lh * 0.05
       for (const v of [-1, 1]) stendardo(c, x + v * lw * 0.62, y, this.me(58), this.me(20), col, ora, v)
     } else this.ombra(c, x, lato === 'io' ? this.Y(CAMPO.H) : this.Y(0), lw * 0.4, lh * 0.1, 0.5)
@@ -226,7 +242,7 @@ export class Campo {
 
   /* un castello tutto del colore della sua squadra (il foglio ha tetti blu e stendardi rossi), e il prato dipinto ai suoi
      piedi prende il colore del posto: il foglio è del bosco, e qui il bosco non c'è */
-  castelloDi(lato, img, sx, sy, w, h) {
+  castelloDi(lato, img, sx, sy, w, h, delPosto) {
     this._castelli ||= {}
     if (this._castelli[lato]) return this._castelli[lato]
     const cv = document.createElement('canvas'); cv.width = w; cv.height = h
@@ -236,7 +252,7 @@ export class Campo {
       const r = a[i], g = a[i + 1], b = a[i + 2]
       if (lato === 'nem' && b > r + 70 && b > g + 30) { a[i] = b; a[i + 1] = Math.round(g * 0.55); a[i + 2] = Math.round(r * 0.7) }
       else if (lato === 'io' && r > g + 60 && r > b + 60) { a[i] = Math.round(b * 0.8); a[i + 1] = Math.round(g * 1.1); a[i + 2] = r }
-      else if (g > r + 14 && g > b + 14) {
+      else if (!delPosto && g > r + 14 && g > b + 14) {
         const t = terra[Math.min(terra.length - 1, Math.floor((r + g + b) / 765 * terra.length * 1.4))]
         a[i] = t[0]; a[i + 1] = t[1]; a[i + 2] = t[2]
       }
@@ -282,6 +298,12 @@ export class Campo {
 
   /* il ponte (scena/opere.js) */
   ponte(c) {
+    const dipinto = this.fortezza('ponte:@')
+    if (dipinto) {
+      const [sx, sy, w, h] = dipinto, alto = (CAMPO.fiume.basso - CAMPO.fiume.alto + 16) * this.s, largo = alto * w / h
+      c.drawImage(this.fortezze.io, sx, sy, w, h, this.X(CAMPO.corsia) - largo / 2, this.Y(CAMPO.fiume.alto - 8), largo, alto)
+      return
+    }
     disegnaPonte(c, { x0: this.X(CAMPO.corsia - 26), x1: this.X(CAMPO.corsia + 26), y0: this.Y(CAMPO.fiume.alto - 8), y1: this.Y(CAMPO.fiume.basso + 8),
                       m: v => this.m(v), colori: this.terreno.a.ponte })
   }
@@ -370,7 +392,14 @@ export class Campo {
 
   /* la porta in fondo al ponte (scena/opere.js) */
   muro(c, mu, ora) {
-    const x = this.X(mu.x)
+    const x = this.X(mu.x), stato = mu.hp <= 0 ? 'crollata' : mu.hp / mu.max < 0.5 ? 'rotta' : 'intera'
+    const dipinta = this.fortezza(`porta:@:${stato}`)
+    if (dipinta) {
+      const [sx, sy, w, h] = dipinta, largo = 70 * this.s, alto = largo * h / w, piede = this.Y(mu.y) + 6 * this.s
+      c.drawImage(this.fortezze[mu.lato], sx, sy, w, h, x - largo / 2, piede - alto, largo, alto)
+      if (mu.hp > 0 && mu.hp < mu.max) this.barra(c, x, piede - alto - 5, this.m(40), mu.hp / mu.max)
+      return
+    }
     disegnaPorta(c, { x, y: this.Y(mu.y), S: this.s, lato: mu.lato, hp: mu.hp, max: mu.max, ferita: mu.fl > 0, pietra: this.terreno.a.ponte.pietra, ora,
                       barra: mu.hp > 0 && mu.hp < mu.max ? y => this.barra(c, x, y, this.m(40), mu.hp / mu.max) : null })
   }

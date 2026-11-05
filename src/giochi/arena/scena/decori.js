@@ -23,7 +23,7 @@ export function ombraDecoro(c, d) {
   c.beginPath(); c.ellipse(d.x + lungo * 0.55, d.y + lungo * 0.16, lungo * 0.72, Math.max(3, alto * 0.14), 0.26, 0, 7); c.fill()
 }
 
-const FIGURE = {
+export const FIGURE = {
   albero(c, d, a, r) {
     const [scuro, medio, chiaro] = a.chioma[Math.floor(r() * a.chioma.length)], k = 0.85 + r() * 0.5
     poli(c, a.tronco, d.x - 2 * k, d.y, d.x + 2 * k, d.y, d.x + 1.4 * k, d.y - 12 * k, d.x - 1.4 * k, d.y - 12 * k)

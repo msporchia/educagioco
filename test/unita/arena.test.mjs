@@ -15,6 +15,7 @@ import { firmaEquilibrio } from '../../src/giochi/arena/motore/firma.js'
 import { FIRMA, NEMICO, NEMICO_PER_LIVELLO } from '../../src/giochi/arena/dati/taratura.js'
 import { guastiDeiDettagli, dettaglioTruppa, dettaglioAzione, ruoloDi } from '../../src/giochi/arena/motore/dettagli.js'
 import { guastiDelleFigure } from '../../src/giochi/arena/scena/figure.js'
+import { guastiDelTerreno } from '../../src/giochi/arena/scena/terreno.js'
 import manifesto from '../../src/giochi/arena/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
 import { GRADO_A_MENTE, PARTENZA_MAX, partenza, basi, gradoDi, dopoLaRisposta, gradoDelleTabelline, gradoDellEta }
@@ -418,6 +419,9 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   controlla('una miniera rende il 70% in più a livello', m1.righe[1].ora === '+70%' && m1.righe[1].dopo === '+140%')
   controlla('e costa quanto dice il motore', m0.prezzo === new Partita({ rnd: caso(1) }).prezzo('io', 'costruisci', 'miniera'))
 }
+
+/* ══════════ i posti ══════════ */
+uguale('ogni terreno ha il suo posto, e i decori stanno dove non coprono niente', guastiDelTerreno().join('; '), '')
 
 /* ══════════ 8. la taratura è fresca ══════════ */
 controlla('la taratura è fresca: se questo è rosso, rilancia `npm run tara:arena`',

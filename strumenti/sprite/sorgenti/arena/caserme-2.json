@@ -1,0 +1,12 @@
+{
+  "_": "Il foglio definitivo delle caserme di Castle Battle (ChatGPT, DA-GENERARE.md voce 7c): cosa c'è in ogni riga, da sinistra. Vince su caserme.json appena esiste il file nominato in `foglio`. `tana:lupi` sono le mummie (id storico). Lo legge strumenti/sprite/caserme-arena.py.",
+  "foglio": "caserme-2.png",
+  "stacco": 12,
+  "righe": [
+    ["cripta:scheletri:1", "cripta:scheletri:2", "cripta:guardiano:1", "cripta:guardiano:2", "cripta:rudere", "vuota"],
+    ["tana:lupi:1", "tana:lupi:2", "tana:pipistrelli:1", "tana:pipistrelli:2", "tana:bestie:1", "tana:bestie:2", "tana:rudere"],
+    ["torre:negromante:1", "torre:negromante:2", "torre:diavoletto:1", "torre:diavoletto:2", "torre:rudere"],
+    ["antro:golem:1", "antro:golem:2", "antro:drago:1", "antro:drago:2", "antro:rudere"],
+    ["miniera:1", "miniera:2", "miniera:rudere"]
+  ]
+}

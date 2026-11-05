@@ -44,6 +44,7 @@ await scatto(page, 'arena-mappa')
 
 await page.locator('[data-tappa="0"]').click()
 await page.waitForSelector('[data-piazzola="0"]', { timeout: 8000 })
+controlla('la battaglia si annuncia, e l\'annuncio non ferma le dita', await page.locator('[data-annuncio]').evaluate(e => getComputedStyle(e).pointerEvents) === 'none')
 
 /* il campo si dipinge: le figure arrivano dopo, ma entro qualche secondo
    nel canvas c'è più di un colore */
@@ -63,6 +64,20 @@ let n = 0
 for (let t = 0; t < 40 && n < 25; t++) { await attendi(page, 250); n = await colori() }
 controlla('il campo è dipinto (non è un canvas vuoto)', n >= 25, `solo ${n} colori`)
 await scatto(page, 'arena-campo')
+
+/* il terreno è più grande del campo: lo schermo cambia forma, il quadro lo riempie e il mondo non si stira */
+const tela = () => page.evaluate(() => {
+  const c = document.querySelector('.ar-tela')
+  return { largo: c.clientWidth, schermo: innerWidth, stira: Math.abs(c.width / c.clientWidth - c.height / c.clientHeight) }
+})
+for (const [width, height] of [[1280, 800], [390, 844]]) {
+  await page.setViewportSize({ width, height })
+  await attendi(page, 400)
+  const t = await tela()
+  controlla(`a ${width}×${height} il quadro prende tutta la larghezza e non stira`, t.largo === t.schermo && t.stira < 0.02, JSON.stringify(t))
+  const b = await page.locator('[data-piazzola="1"]').boundingBox()
+  controlla(`a ${width}×${height} le piazzole stanno nello schermo`, b.x >= 0 && b.x + b.width <= width, JSON.stringify(b))
+}
 
 const monete = async () => Number((await page.locator('[data-monete] b').innerText()).trim())
 controlla('si parte con qualche moneta di battaglia', await monete() >= 14)

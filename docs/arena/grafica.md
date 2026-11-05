@@ -1,15 +1,51 @@
 # La grafica
 
-Le truppe, il castello e le piazzole sono sprite del castello, riusati tali e quali
-(`src/giochi/castello/dati/figure.js` e `vestiti.js`); gli edifici, la porta e il ponte
-sono disegnati in codice finché non arriva il foglio dipinto.
+Le truppe sono sprite del castello a torri, riusati tali e quali
+(`src/giochi/castello/dati/figure.js`); il terreno, il ponte, la porta e la miniera sono
+disegnati in codice finché non arriva il foglio dipinto, e di ognuno il foglio ha già la
+sua voce in `strumenti/sprite/DA-GENERARE.md` (7c, 8, 9 e 10).
+
+## Il terreno e i posti
+
+- **Il terreno è più grande del campo e non si stira mai** (`scena/terreno.js`). Il campo del
+  motore (360 × 540) sta in mezzo a un mondo senza bordi: la scala è una sola (`adatta()` in
+  `scena/campo.js`), il campo sta in altezza così i castelli spuntano dai due bordi, e di lato
+  si vede il terreno che lo schermo lascia. Sotto i `LARGO_MINIMO` (276) di mondo non si scende:
+  sono le piazzole coi loro bordi, e su un telefono stretto è la larghezza a decidere la scala.
+  Il quadro prende tutto lo schermo (`.ar-largo`, niente più colonna). È solo scena: motore, posti
+  e taratura non cambiano. **Era** una colonna 2:3 col terreno specchiato sopra e sotto: su un telefono
+  alto il castello si vedeva intero, su un monitor restavano due bande vuote.
+- **Si dipinge punto per punto, una volta sola**, a due punti per unità del mondo (`G`), la grana
+  delle figure: rampe di colori col retino (`tono()`), rumore da una tavola, poi i decori e la luce. È funzione
+  delle sole coordinate del mondo: chi vede di più vede le stesse cose, e in più altre. La tela si rifà se
+  si svuota (un telefono a corto di memoria lo fa in silenzio, `controlla()`).
+- **I posti sono di Castle Battle** (`scena/ambienti.js`), non i vestiti del castello a torri:
+
+  | chiave | il posto | al posto del fiume | truppa firma |
+  |---|---|---|---|
+  | `bosco` | le colline d'oro, un tramonto d'autunno | l'acqua | pipistrelli |
+  | `palude` | il deserto delle tombe, con le palme solo sull'acqua | l'oasi | mummie |
+  | `neve` | il canyon di cristallo | un baratro, con la nebbia viola | golem |
+  | `lava` | le terre di cenere, una notte rossa | un fossato di brace | diavoletti |
+
+  **Le chiavi non cambiano** (stanno in `ultimoTerreno`, nella sosta e nelle sfide): cambia solo quello che si vede.
+- **I decori stanno a macchie**, con le radure in mezzo (`decora()`): uniformi, l'occhio non si fermava da
+  nessuna parte. Quello alto sta fuori dalla diagonale delle piazzole (`libero()`), davanti non copre nessuno;
+  sul campo solo cose basse che non si confondono con quello che si tocca.
+- **L'aria del posto** (`scena/atmosfera.js`) sta sopra il terreno e costa poche decine di tocchi a fotogramma: ombre
+  di nuvole, riflessi, foglie, sabbia, scintille, braci e bordi scuri. Va col tempo, e non sa niente della partita.
+- **Il dipinto prende il posto del disegno senza toccare il gioco**: `terreni-arena.py` scrive
+  `dati/terreni-dipinti.js`, e `Terreno` usa l'immagine di quel posto per il pezzo di mondo `DIPINTO` (810 × 540, il
+  campo in mezzo), specchiandola oltre i bordi. Gli allegati sono il disegno stesso (`strumenti/sprite/schemi-arena.mjs`, cheat
+  `#arena=lava&schema`): il prompt chiede di ridipingere quella forma.
+
+## La scena
 
 - **La corsia è verticale**: il nemico in alto, chi gioca in basso. È come il motore
   conta (`y` lungo la corsia), quindi la scena non ruota niente. **Provato orizzontale
   e tolto**: i castelli ai due capi mangiavano più di metà della corsia.
-- **Tutto è piccolo e il campo è largo** (`ZOOM` 0,5 in `scena/campo.js`): la carta del
-  terreno è a celle da mezza misura (16 × 24), e le cose ci stanno «più armoniose».
-  Le truppe sono un po' più grandi del terreno (×1,2), castello ed edifici ancora di
+- **Tutto è piccolo e il campo è largo** (`ZOOM` 0,5 in `scena/campo.js`): le cose ci stanno
+  «più armoniose». Le truppe sono un po' più grandi del terreno (×1,2), castello ed edifici ancora di
   più (`ZE`).
 - **Il castello spunta dal bordo** (`base()`): di chi gioca la cima, in basso; del nemico la
   base col portone, in alto. La barra della vita sta dalla parte del campo.
@@ -31,10 +67,11 @@ sono disegnati in codice finché non arriva il foglio dipinto.
   edifici si disegnano in codice (`scena/edifici.js`, con lo scudo della truppa davanti).
 - **Il nemico ha le stesse immagini col blu fatto rosso** (`ricolora()`, una volta per
   atlante): per questo il prompt vuole il colore della squadra di un blu solo.
-- **Il castello nemico è lo stesso** coi colori scambiati pixel per pixel
-  (`castelloNemico()`: il blu dei tetti diventa rosso, il rosso degli stendardi blu).
-  Prima il nemico aveva la bocca d'albero: in un gioco che si chiama Castle Battle
-  stonava. **Provato** il filtro `hue-rotate`: tetti verdi e neve rosa.
+- **Il castello è uno solo, del colore della sua squadra** (`castelloDi()`, pixel per pixel: chi gioca
+  ha anche gli stendardi blu, il nemico anche i tetti rossi), e il prato dipinto ai suoi piedi prende il colore del
+  posto. Viene dal vestito `bosco` del castello a torri finché non arrivano i castelli del posto (voce 9).
+  Prima ogni terreno aveva il suo, e nella lava i colori delle squadre erano rovesciati.
+  **Provato** il filtro `hue-rotate`: tetti verdi e neve rosa.
 - **Di che squadra è una truppa** si vede da un contorno del suo colore (la figura tinta,
   `tinta()`, spostata di un pelo ai quattro lati) e da un disco pieno sotto i piedi: con
   il solo cerchietto, vicine, non si distinguevano.
@@ -55,27 +92,39 @@ sono disegnati in codice finché non arriva il foglio dipinto.
   capanna dei lupi (`IN_PRESTITO` in `scena/campo.js`; la figura della truppa davanti dice chi abita), e
   quando il foglio avrà `tana:bestie:1/2` basta metterli in `sorgenti/arena/caserme.json`.
 - **Una caserma nuova spunta** dalla sua piazzola con un rimbalzo e uno sbuffo di polvere.
-- **La vita dei castelli sta SOPRA i castelli**, in una barra grande e sempre accesa, col
-  numero. **Le altre barre si vedono solo sul ferito** (caserme, porta, truppe).
+- **La vita dei castelli sta SOPRA i castelli**, in una targa di ferro orlata d'oro, grande e sempre
+  accesa, col numero. Il livello è uno scudetto. **Le altre barre si vedono solo sul ferito** (caserme, porta, truppe).
+- **Un crollo e la bomba si sentono**: il quadro trema un terzo di secondo (`scossa`), le schegge saltano, la bomba ha
+  il lampo e la seconda onda. Trema solo il disegno: il mondo resta dov'è.
 - **Niente barra della prossima squadra**: c'era, verde, sotto il livello delle carte; tolta
   (l'utente: «orribili»), e poi tolte anche le carte: si tocca il campo ([regole.md](regole.md)).
-- **La miniera è disegnata in codice** (`miniera()` in `scena/campo.js`): un monte di roccia
-  con l'imbocco di legno, il carrello d'oro e la bandierina della squadra. Prima in codice,
-  poi dipinta: nel foglio delle caserme non c'è.
-- **Il ponte** è di assi, con la porta di ciascuno al suo capo: due torrette e il
-  portone; crollata, resta il cumulo.
-- **Mancano**: gli edifici e la porta dipinti, pose di attacco e di morte delle truppe.
+- **La miniera è disegnata in codice** (`disegnaMiniera()` in `scena/opere.js`): un monte di roccia con le
+  vene che brillano, l'imbocco armato di travi con la lanterna, le rotaie, il carrello d'oro e lo stendardo; dal livello
+  5 la torre col verricello che gira. La roccia è uguale in tutti i posti (`ROCCIA`), se no sul terreno
+  scuro spariva. Crollata resta il suo rudere. Il foglio 7c ha `miniera:1`, `miniera:2` e `miniera:rudere`:
+  se ci sono, `dipinta()` li preferisce.
+- **Il ponte e la porta** (`scena/opere.js`) prendono legno e pietra dal posto. Il ponte ha le assi fra due travi
+  con le spalle di pietra; la porta due torri merlate con lo stendardo e il portone, che si crepa sotto i due terzi e
+  sotto un terzo della vita; crollata, resta il cumulo. Il foglio 9 ha castello, porta (intera, rotta,
+  crollata) e ponte per ogni posto (`strumenti/sprite/fortezze-arena.py`, `dati/fortezze-dipinte.js`).
+- **Mancano**: i fogli 7c, 8, 9 e 10, e le pose di attacco e di morte delle truppe.
 
 ## Il quadro e i comandi
 
-Il quadro è alto quanto lo schermo lascia e il terreno continua specchiato sopra e
-sotto il campo (`sfondo` in `scena/campo.js`): niente fascia verde. Orologio e
-diamanti stanno in alto; ripara e bomba sono due icone tonde in basso a destra
-sul campo (`.ar-azioni`), col prezzo o l'attesa in un cartellino.
+Tutta l'interfaccia è **ferro e oro** (`--ar-ferro`, `--ar-oro` in `stile.css`, i titoli in serif: niente font in più). Il quadro
+prende tutto quello che la barra (`scura`) e la targa lasciano. Orologio e diamanti stanno nella targa in alto; ripara e
+bomba sono due scudi di bronzo nei due angoli di sotto del campo (`.ar-azioni`), ai lati del castello e più bassi delle
+piazzole, col prezzo o l'attesa in un cartellino: impilati a destra coprivano una caserma. Su uno schermo largo
+stanno agli angoli del campo, non a quelli del quadro (`cqh`).
+- **L'annuncio**: quando una battaglia comincia (non quando si riprende) il suo nome passa su una fascia con le spade
+  (`.ar-annuncio`), e sparisce da solo. Non ferma le dita.
+- **La fine**: stemma con le spade, e i raggi che girano dietro una vittoria.
+- **La mappa è una sala di guerra**: il frontone, e per ogni posto uno scorcio dello stesso terreno del campo (`viste/Panorama.vue`,
+  a grana più grossa perché costi poco). Quando c'è la copertina dipinta (voce 10) il frontone mostra quella (`INSEGNA`).
 - **La nuvoletta va a capo**: con più di quattro opzioni (le truppe di un terreno della battaglia
   infinita sono sei, più la miniera) le righe sono due, bilanciate; prima, con otto truppe, usciva dallo schermo.
 - **Le modali sono quelle della fattoria e del sotterraneo, ma asciutte**: la scelta di una
-  piazzola è una nuvoletta crema con l'orlo giallo (disegno e pulsantino col prezzo, il «?»
+  piazzola è una nuvoletta di pergamena con l'orlo di bronzo (disegno e pulsantino col prezzo, il «?»
   dei numeri piccolo nell'angolo), l'anello usa gli stessi pulsanti, i dettagli una scheda
   scura con la ✕ rossa tonda. Il bambino sa già cosa vuole costruire: **niente nomi, note e
   titoli**, e le emoji restano solo dove portano informazione (💎 del prezzo, 💰 vendi, ⛏️ per
@@ -83,8 +132,7 @@ sul campo (`.ar-azioni`), col prezzo o l'attesa in un cartellino.
 
 ## Lo sfondo che resta verde
 
-Se il campo restava del colore di fondo (`#5f9a3c`) c'erano due strade: l'immagine del terreno o delle figure non
-arrivava (`carica` e `caricaFigure` ricordavano il fallimento per sempre) o la carta composta, che è una tela, si svuotava (un
-telefono a corto di memoria lo fa in silenzio). Ora `Campo.prepara` riprova fino a cinque volte e ogni due secondi `carteVuote`
-(`castello/scena/vestito.js`) controlla un punto della carta: se è trasparente la butta e `componi` la rifà. Non riprodotto
-a banco: se torna, si guarda quale delle due.
+Se il campo restava del colore di fondo c'erano due strade: un'immagine non arrivava (`carica` e `caricaFigure` ricordavano il
+fallimento per sempre) o la tela del terreno si svuotava. Ora `Campo.prepara` riprova fino a cinque volte e ogni due secondi
+`Terreno.controlla` guarda un punto della tela: se è trasparente la butta e la rifà. Non riprodotto a banco: se torna, si guarda
+quale delle due.

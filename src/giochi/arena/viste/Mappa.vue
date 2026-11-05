@@ -9,6 +9,7 @@ import Ripresa from '../../Ripresa.vue'
 import AmiciQui from '../../../components/amici/AmiciQui.vue'
 import Panorama from './Panorama.vue'
 import Spade from './Spade.vue'
+import { INSEGNA } from '../dati/terreni-dipinti.js'
 
 const props = defineProps({
   scalini: { type: Array, required: true },   // [{ chiave, nome, icona, dritta, tappe: [] }]
@@ -47,7 +48,8 @@ function vai() {
 <template>
   <div class="ar-mappa">
     <header class="ar-frontone">
-      <Panorama :terreno="terreno" :pezzo="{ x: 40, y: 200, w: 280, h: 140 }" />
+      <img v-if="INSEGNA" :src="INSEGNA" class="ar-panorama" alt="" />
+      <Panorama v-else :terreno="terreno" :pezzo="{ x: 40, y: 200, w: 280, h: 140 }" />
       <div class="ar-insegna"><Spade class="ar-spade" /><h2>Castle Battle</h2></div>
     </header>
 

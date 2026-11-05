@@ -62,7 +62,10 @@ pubblicato.** Per controllare solo che il build passi:
 | `python3 strumenti/sprite/regno-castello.py` (`--provino` in `tmp/regno/`) | `src/giochi/castello/dati/regno.js` | dopo aver spostato un posto o un ponte nel foglietto `castello/regno.json`, o quando cambia la mappa ([../castello/regno.md](../castello/regno.md)) |
 | `python3 strumenti/sprite/isole-passo-passo.py [zaino\|valle]` (`--provino` in `tmp/isole/`) | `src/giochi/passo-passo/dati/isole-mappa.js` e `zaino-mappa.js` | dopo aver corretto un foglietto di Passo passo (`isole.json` la valle, `zaino.json` lo zaino: sentieri, ponti, tane, cartelli), o quando cambia un fondale o il numero di tappe di un'isola ([../passo-passo/mappa.md](../passo-passo/mappa.md#il-foglietto-e-lo-strumento)) |
 | `python3 strumenti/sprite/copertine.py` (`--collana`: le copertine fatte in `tmp/copertine/collana.png`, lo stile da allegare) | `src/components/home/copertine-dipinte.js` | quando arriva o cambia una `copertina-<chiave>` in `strumenti/sprite/sorgenti/home/` ([home.md](home.md#le-copertine)) |
-| `python3 strumenti/sprite/caserme-arena.py [provino.png]` | `src/giochi/arena/dati/caserme-dipinte.js` | quando arriva o cambia il foglio delle caserme di Castle Battle (`sorgenti/arena/caserme.webp` e il suo foglietto `caserme.json`: cosa c'è in ogni riga) ([../arena/grafica.md](../arena/grafica.md)) |
+| `python3 strumenti/sprite/caserme-arena.py [provino.png]` | `src/giochi/arena/dati/caserme-dipinte.js` | quando arriva o cambia il foglio delle caserme di Castle Battle (`sorgenti/arena/caserme-2.png` col foglietto `caserme-2.json`; finché non c'è, `caserme.webp` e `caserme.json`) ([../arena/grafica.md](../arena/grafica.md)) |
+| `python3 strumenti/sprite/terreni-arena.py` | `src/giochi/arena/dati/terreni-dipinti.js` | quando arriva un terreno dipinto di Castle Battle (`sorgenti/arena/terreno-<chiave>.png`) o la copertina (`sorgenti/home/copertina-arena.png`, che vuole anche `copertine.py`) |
+| `python3 strumenti/sprite/fortezze-arena.py [provino.png]` | `src/giochi/arena/dati/fortezze-dipinte.js` | quando arriva il foglio di castelli, porte e ponti di Castle Battle (`sorgenti/arena/fortezze.png`, foglietto `fortezze.json`) |
+| `npm run build && node strumenti/sprite/schemi-arena.mjs` | `strumenti/sprite/sorgenti/arena/schemi/` | gli allegati delle schede di Castle Battle: i terreni disegnati in codice e due schermate; quando cambia un terreno |
 | `node strumenti/sprite/in-campo.mjs <creatura>` | `tmp/in-campo/<creatura>/` (GIF del campo, di lato, di fronte) | per guardare una creatura camminare in partita, dopo `vesti.py --atlante` e `npm run build` |
 | `node strumenti/sprite/carte-castello.mjs` | `poc/scatti/castello-carte*.png`, `castello-battaglia*.png` | dopo aver toccato carte, schizzi o bestiario |
 
@@ -142,6 +145,8 @@ testa, e una modifica sparisce senza rumore alla prossima rigenerazione.
 | `src/giochi/passo-passo/dati/isole-mappa.js`, `zaino-mappa.js` | `isole-passo-passo.py` — `unita/passo-passo-valle` diventa rosso se il foglietto è cambiato dopo |
 | `src/components/home/copertine-dipinte.js` | `copertine.py` |
 | `src/giochi/arena/dati/caserme-dipinte.js` | `caserme-arena.py` |
+| `src/giochi/arena/dati/terreni-dipinti.js` | `terreni-arena.py` |
+| `src/giochi/arena/dati/fortezze-dipinte.js` | `fortezze-arena.py` |
 | `src/giochi/sotterraneo/dati/aspetti.js` (e il blocco `__aspetti` dei foglietti) | `roba.py --gioco` — `unita/sotterraneo-rarita` diventa rosso se non è quello del catalogo `roba.json` |
 | `docs/apprendimento/livelli-delle-domande.md` | `npm run quiz:livelli` |
 | `src/quiz/dati/sillabe-parole-vere.js` | `npm run quiz:parole-sillabe` |
@@ -168,6 +173,7 @@ posto della home e `.carte` non arriva.
 | `#admin` | la pagina dei trucchi (`views/AdminView.vue`) |
 | `#monete=500` | monete al bambino attivo, anche a gioco già aperto; `#monete=-100` le toglie, mai sotto zero |
 | `#pin=1234` | rimette il codice dei grandi |
+| `#arena=lava&battaglia=40` | Castle Battle su quel terreno (`bosco`, `palude`, `neve`, `lava`), le sei piazzole piene da tutte e due le parti dopo quei secondi di scontro (`motore/prova.js`); `&vuota` senza edifici; `#arena=lava&schema` solo il terreno, per gli allegati delle schede. Butta la partita lasciata a metà del bambino attivo |
 | `#fattoria-tipo=30` | un bambino che arriva dalla 2D: scrive in `campagne.fattoria` la fattoria 2D di quel livello (1–99, `giochi/fattoria3d/da2d/motore/tipo.js`) e apre la fattoria, che la converte; è `dallIndirizzo` (`src/App.vue`) a scriverla e a passare il testimone a `#fattoria3d-da2d`, quindi **butta la fattoria del bambino attivo** nel cestino: si usa con un bambino di prova |
 | `#fattoria3d=10` | alza il livello della fattoria (non lo abbassa mai), il resto resta; `#fattoria=N`, il livello della 2D, non c'è più |
 | `#fattoria3d-tipo=10` | mette una fattoria già giocata di quel livello (1–99, `giochi/fattoria3d/motore/tipo.js`: stesso motore, borsa infinita, campi a stadi diversi e macchine in moto); **butta quella del bambino attivo** nel cestino: si usa con un bambino di prova |

@@ -9,12 +9,13 @@ const props = defineProps({
   ritardo: { type: Number, default: 0 },
   // il pezzo di mondo: il fiume e le sue rive, dove il posto si riconosce
   pezzo: { type: Object, default: () => ({ x: 20, y: 176, w: 320, h: 92 }) },
+  grana: { type: Number, default: 1 },
 })
 const tela = ref(null)
 onMounted(() => setTimeout(() => {
   const cv = tela.value
   if (!cv) return
-  const fatto = dipingi(props.terreno, props.pezzo, 1)
+  const fatto = dipingi(props.terreno, props.pezzo, props.grana)
   cv.width = fatto.width; cv.height = fatto.height
   cv.getContext('2d').drawImage(fatto, 0, 0)
 }, 30 + props.ritardo * 60))
