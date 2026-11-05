@@ -1,12 +1,11 @@
 # La cucina col cuoco (in prova)
 
 La stessa cucina di [cucina.md](cucina.md), giocata in un altro modo: invece di
-trascinare le cose si cammina. Un cuoco si muove in una stanza con la levetta, un
-tasto prende e posa, uno taglia, e il piatto va portato alla consegna. Serve a capire
-quale dei due stili si adatta meglio; sta su un ramo suo. Si sceglie in
-`#bancarella=cucina` col tasto «Col cuoco» (`&cuoco=1&livello=5` porta dritto alla
-quinta). Cucine, ricette, tempi, prezzi e cassa sono gli stessi: cambia solo come si
-lavora.
+trascinare le cose si cammina. Si tocca un posto della stanza, il cuoco ci va e fa
+quello che lì è ovvio; il piatto va portato alla consegna. Serve a capire quale dei due
+stili si adatta meglio; sta su un ramo suo. Si sceglie in `#bancarella=cucina` col tasto
+«Col cuoco» (`&cuoco=1&livello=5` porta dritto alla quinta). Cucine, ricette, tempi,
+prezzi e cassa sono gli stessi: cambia solo come si lavora.
 
 Il motore è `src/motore/bancarella/cuoco.js`, la schermata
 `src/components/bancarella/CucinaCuoco.vue`, la scena `src/grafica/cucina3d/cuoco.js`,
@@ -14,28 +13,38 @@ con `sala.js` (stanza e banconi) e `omino.js` (il cuoco, nella creta).
 
 ## La stanza
 
-Sette celle per sei, banconi tutto intorno e un'isola in mezzo. In fondo la consegna,
+Sette celle per sette, banconi tutto intorno e un'isola in mezzo. In fondo la consegna,
 sotto il cliente, con i fuochi ai lati; a sinistra le cassette di pasta, carne, uovo,
 impasto; a destra sugo, formaggio, pane, insalata; davanti bidone, piatti, tagliere.
 Una cucina mostra solo quello che le serve: il resto è bancone libero.
 
-## I comandi
+## Si tocca dove si vuole andare
 
-Stanno sotto la stanza, non sopra: il pollice non copre mai il cuoco.
+Niente levetta né tasti: provati, erano un di più. Il tocco cade su un posto (i banconi
+sono scatole, quelle alte si toccano anche in alto) o sul pavimento. Il cuoco gira
+attorno ai banconi (`via`, la strada più corta di casella in casella) e arrivato fa la
+mossa di `decidi`:
 
-| comando | cosa fa |
-|---|---|
-| levetta | cammina; contro un bancone si scivola |
-| tasto verde | fa quello che c'è scritto: Prendi, Posa, Metti, Cuoci, Inforna, Butta, Servi |
-| 🔪 Taglia | un colpo, tenerlo giù vale come batterci sopra; si accende davanti al tagliere |
+| tocchi | con le mani vuote | con qualcosa in mano |
+|---|---|---|
+| una cassetta | prende | col piatto: se è pronta, ce la mette |
+| la pila dei piatti | prende un piatto | un piatto vuoto: lo rimette |
+| un bancone libero | | posa |
+| un bancone con un piatto | prende il piatto | ci deposita quello che ha in mano |
+| il tagliere | taglia, un colpo a tocco; tagliata, prende | posa l'insalata; col piatto ce la mette |
+| un fuoco | prende quello che è pronto | ci mette il crudo; col piatto ci versa quello che è pronto |
+| il forno | prende la pizza | inforna la pizza condita |
+| il bidone | | butta |
+| la consegna | | serve |
 
-Il tasto tocca la cella davanti alle mani, mai quella alle spalle, e la cella si
-illumina: verde se si può fare, grigia se no. Se non si può, un fumetto dice cosa manca
-(«Prima va cotta», «Le mani sono piene»): `decidi` del motore è la sola che lo sa.
+Se non si può, un fumetto dice cosa manca («Prima va cotta», «Le mani sono piene»).
 
-I tasti partono al `pointerdown`, mai al `click`: col pollice sulla levetta sono due dita
-giù, e il click non parte. «Servi» apre il foglio sotto il dito: il click che resta si
-ingoia, se no preme una moneta ([../core/il-dito.md](../core/il-dito.md)).
+**I tocchi si mettono in fila** (`fila`, al massimo sei): pasta e poi pentola si toccano
+di seguito, e il cuoco li fa uno dopo l'altro. Ogni posto in fila ha il suo riquadro
+verde. Il pavimento butta la fila e va lì.
+
+Il tocco vale al `pointerdown`. Il foglio del resto può aprirsi sotto il dito: il click
+che resta si ingoia, se no preme una moneta ([../core/il-dito.md](../core/il-dito.md)).
 
 ## Le regole
 
@@ -43,7 +52,7 @@ ingoia, se no preme una moneta ([../core/il-dito.md](../core/il-dito.md)).
 - **Il piatto si riempie in qualunque ordine**, a differenza del dito, e si dispone da
   solo. Va bene sia l'ingrediente portato al piatto, sia il piatto portato all'ingrediente.
 - **Crudo non va sul piatto**: pasta, carne e uovo passano dal fuoco, l'insalata dal
-  tagliere (cinque colpi, `TAGLI`, a mani libere).
+  tagliere (cinque tocchi, `TAGLI`, a mani libere).
 - **La pizza entra in forno col piatto** ed esce pronta, a mani libere.
 - **Il bruciato si prende a mani libere** e va nel bidone. Anche un piatto ci può andare.
 - **La consegna vuole il piatto del primo cliente**: quello sbagliato costa due secondi e
@@ -60,6 +69,6 @@ banconi sono tre geometrie unite. Il cappello è basso perché la telecamera sta
 
 ## Nei test
 
-`unita/bancarella-cuoco`, `integrazione/bancarella-cuoco` (tocchi veri, anche a due dita).
-Bersagli: `[data-stile]`, `[data-cuoco]`, `[data-leva]`, `[data-usa]`, `[data-taglia]`,
-`[data-detto]`.
+`unita/bancarella-cuoco`, `integrazione/bancarella-cuoco` (tocchi veri).
+`window.__cucina3d.dove('3,0')` dice dove sta sullo schermo una cella o il pavimento.
+Bersagli: `[data-stile]`, `[data-cuoco]`, `[data-tela]`, `[data-detto]`.
