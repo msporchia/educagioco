@@ -4,9 +4,9 @@
    traboccare costa l'ampolla e la pulizia. Vedi docs/pozioni/regole.md.
    `node test/esegui.mjs unita/pozioni --niente-build` */
 import { CAMPAGNA, BLOCCHI, QUANTE_TAPPE, MONETE_A_DOSE, MONETE_A_PASSO, INFINITA, giroInfinito, guastiDellaCampagna } from '../../src/giochi/pozioni/dati/campagna.js'
-import { FAMIGLIA, VALE, mescola, guastiDelleMisure } from '../../src/giochi/pozioni/dati/misure.js'
-import { PULIZIA, PASTICCIO, PEZZI, PREZZI } from '../../src/giochi/pozioni/dati/bottega.js'
-import { Bottega, banchetto, ottimo, giocaBene, giocaGoloso, seguiLaRicetta, prossimoPasso, caso, unitaBuone, scalaDi } from '../../src/giochi/pozioni/motore/bottega.js'
+import { FAMIGLIA, VALE, mescola, guastiDelleMisure, scrivi } from '../../src/giochi/pozioni/dati/misure.js'
+import { PULIZIA, PASTICCIO } from '../../src/giochi/pozioni/dati/bottega.js'
+import { Bottega, banchetto, ottimo, giocaBene, giocaGoloso, seguiLaRicetta, prossimoPasso, caso, unitaBuone, pezziDi } from '../../src/giochi/pozioni/motore/bottega.js'
 import { MORTAIO } from '../../src/giochi/pozioni/motore/procedimento.js'
 import { regola, chiaveDi } from '../../src/giochi/pozioni/motore/misura.js'
 import { CONVERSIONI } from '../../src/giochi/pozioni/gioco.js'
@@ -83,22 +83,55 @@ for (const t of CAMPAGNA) {
   uguale('il calderone mescola le famiglie', new Set(finale.ingredienti.map(g => g.famiglia)).size, 3)
 }
 
+/* ---------- la virgola: niente fino ai liquidi, e nessun conto fa uscire un ,5 ---------- */
+{
+  const prima = CAMPAGNA.findIndex(t => !t.tondi)
+  uguale('la virgola arriva con la tappa 22, e dopo non se ne va', [CAMPAGNA[prima].chiave, prima + 1, CAMPAGNA.slice(prima).filter(t => t.tondi).length].join(), 'capacita-virgola,22,0')
+  controlla('sui liquidi si ricomincia dagli interi', ['capacita-banco', 'capacita-grande', 'capacita-grandi'].every(c => tappa(c).tondi))
+  controlla('a quell\'età la scuola l\'ha fatta: metà quarta è 68,75 sulla scala', CAMPAGNA[prima].portata > 68.75, `${CAMPAGNA[prima].portata}`)
+  for (const t of CAMPAGNA.filter(x => x.tondi)) {
+    const scritte = new Set([t.dritta])
+    for (let s = 1; s <= SEMI; s++) {
+      const b = new Bottega(t, { rnd: caso(s) })
+      for (const g of b.comprati) {
+        scritte.add(scrivi(g.dose, g.unita))
+        for (const o of g.offerte) { scritte.add(scrivi(o.base, o.unita)); scritte.add(scrivi(o.base, g.unita)) }
+      }
+      // tutto quello che la pergamena e i cartelli possono dire mentre si versa
+      for (const [i, g] of b.ingredienti.entries()) for (const k of g.ottimo.pezzi) {
+        const e = b.ordina([{ i, k }]).esiti[0]
+        e.righe.forEach(r => scritte.add(r))
+        scritte.add(scrivi(g.messo, g.unita)); scritte.add(scrivi(g.dose - g.messo, g.unita))
+      }
+      const c = new Bottega(t, { rnd: caso(s) }), g = c.comprati[0]
+      const grande = g.offerte.reduce((m, o, n) => (o.base > g.offerte[m].base ? n : m), 0)
+      for (let n = 0; n < 2; n++) { c.ordina([{ i: 0, k: grande }])?.esiti[0].righe.forEach(r => scritte.add(r)); c.pulisci() }
+    }
+    uguale(`${t.chiave}: mai una virgola, né scritta né nei conti`, [...scritte].filter(x => /\d,\d/.test(x)).join(' | '), '')
+    const brutti = t.dosi.flatMap(d => pezziDi(d.base, d.famiglia, d.unita, t).map(p => p.base / VALE[d.unita]).filter(x => !Number.isInteger(x)))
+    uguale(`${t.chiave}: i pezzi sono interi nell'unità della ricetta`, brutti.length, 0)
+  }
+  const pezzi = new Set(CAMPAGNA.filter(t => t.tondi).flatMap(t => t.dosi.flatMap(d => pezziDi(d.base, d.famiglia, d.unita, t).map(p => String(p.base).replace(/0+$/, '')))))
+  uguale('nelle tappe tonde solo 1, 2 e 5, coi loro zeri', [...pezzi].sort().join(), '1,2,5')
+  uguale('la dritta dice il conto giusto', tappa('lunghezza-virgola').dritta.split(':')[0], '150 centimetri sono 1 m e 50 cm')
+}
+
 /* ---------- il listino ha sempre un'ampolla sensata: da 1 m a 1,2 m non resta solo il 5 cm ---------- */
 {
   let brutte = 0, esempio = ''
   for (const t of CAMPAGNA) for (const d of t.dosi) for (let s = 1; s <= 12; s++) {
     const o = banchetto(caso(s), d.base, d.famiglia, d.unita, t)
     const usate = ottimo(d.base, o).pezzi.length
-    const meglio = ottimo(d.base, PEZZI.map((p, i) => ({ base: Math.round(p * scalaDi(d.base, d.famiglia) * VALE[FAMIGLIA[d.famiglia].unita.G]), prezzo: PREZZI[i] }))).pezzi.length
+    const meglio = ottimo(d.base, pezziDi(d.base, d.famiglia, d.unita, t)).pezzi.length
     if (usate > meglio + 1) { brutte++; esempio = `${d.testo}: ${o.map(x => x.base).join()}` }
   }
   uguale('il listino fa la dose con le ampolle che servono', brutte, 0)
   if (esempio) nota(esempio)
-  const metro = { ...tappa('lunghezza-virgole') }
+  const litro = { ...tappa('capacita-virgole') }
   for (let s = 1; s <= 40; s++) {
-    const o = banchetto(caso(s), 1200, 'lunghezza', 'm', metro)
-    controlla('per 1,2 m c\'è il metro', o.some(x => x.base === 1000))
-    controlla('e il pezzo da 20 cm', o.some(x => x.base === 200))
+    const o = banchetto(caso(s), 1200, 'capacita', 'l', litro)
+    controlla('per 1,2 l c\'è il litro', o.some(x => x.base === 1000))
+    controlla('e il pezzo da 200 ml', o.some(x => x.base === 200))
   }
 }
 

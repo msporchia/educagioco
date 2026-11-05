@@ -5,7 +5,7 @@
 // Fatta la spesa si segue il procedimento (motore/procedimento.js).
 // Puro: il caso arriva da fuori (`rnd`). Le regole in docs/pozioni/regole.md.
 import { FAMIGLIA, INGREDIENTI, VALE, scrivi, mescola } from '../dati/misure.js'
-import { PEZZI, PREZZI, PULIZIA, PASTICCIO } from '../dati/bottega.js'
+import { PEZZI, PREZZI, TONDI, PREZZI_TONDI, PULIZIA, PASTICCIO } from '../dati/bottega.js'
 import { MONETE_A_DOSE, MONETE_A_PASSO } from '../dati/campagna.js'
 import { chiaveDi } from './misura.js'
 import { AZIONI, MORTAIO, ricetta, testo, frase } from './procedimento.js'
@@ -29,19 +29,20 @@ function mescolata(rnd, lista) {
 }
 const grande = famiglia => VALE[FAMIGLIA[famiglia].unita.G]
 
-// le unità in cui una quantità si scrive bene: almeno 0,1, un decimale al più, e non cifre da capogiro
-export function unitaBuone(base, famiglia) {
-  const f = FAMIGLIA[famiglia]
+// le unità in cui una quantità si scrive bene: almeno 0,1, un decimale al più
+// (`interi`: nessuno), e non cifre da capogiro
+export function unitaBuone(base, famiglia, interi = false) {
+  const f = FAMIGLIA[famiglia], decimi = interi ? 1 : 10
   return [f.unita.G, f.unita.M, f.unita.P].filter(u => {
     const x = base / VALE[u]
-    return x >= 0.1 && x <= 20000 && Math.abs(x * 10 - Math.round(x * 10)) < 1e-9
+    return x >= 0.1 && x <= 20000 && Math.abs(x * decimi - Math.round(x * decimi)) < 1e-9
   })
 }
 
 // il mercante scrive come gli pare, dentro le unità che la tappa conosce:
 // di solito non quella della ricetta
-function etichetta(rnd, base, famiglia, ammesse, evita) {
-  const buone = unitaBuone(base, famiglia)
+function etichetta(rnd, base, famiglia, ammesse, evita, interi) {
+  const buone = unitaBuone(base, famiglia, interi)
   const ok = buone.filter(u => ammesse.includes(u))
   const scelte = ok.length ? ok : buone
   const altre = scelte.filter(u => u !== evita)
@@ -55,6 +56,21 @@ export function scalaDi(dose, famiglia) {
   return [100, 10].find(k => dose >= 0.25 * k * G && dose % Math.round(PEZZI[0] * k * G) === 0) || 1
 }
 
+// nelle tappe tonde il pezzo più piccolo è un intero anche nell'unità della
+// ricetta: per «3 kg» il listino va da 1 a 10 kg, e la pergamena non dice mai 0,5 kg
+function scalaTonda(dose, famiglia, unita) {
+  const G = grande(famiglia)
+  const possibili = [1, 10, 100].filter(k => { const p = Math.round(TONDI[0] * k * G); return dose % p === 0 && p % VALE[unita] === 0 })
+  return possibili.filter(k => dose >= 0.25 * k * G).at(-1) ?? possibili[0]
+}
+
+// tutti i pezzi che il mercante può vendere per quella dose, dal più piccolo
+export function pezziDi(dose, famiglia, unita, tappa) {
+  const G = grande(famiglia)
+  const [pezzi, prezzi, k] = tappa.tondi ? [TONDI, PREZZI_TONDI, scalaTonda(dose, famiglia, unita)] : [PEZZI, PREZZI, scalaDi(dose, famiglia)]
+  return pezzi.map((p, i) => ({ base: Math.round(p * k * G), prezzo: prezzi[i] }))
+}
+
 /* Il listino di un ingrediente: quattro ampolle. Si parte dai pezzi che
    fanno davvero la dose (per 1,2 m: 1 m e 20 cm), così a ogni punto c'è
    un'ampolla sensata; poi il pezzo piccolo che divide tutti, così un
@@ -62,16 +78,17 @@ export function scalaDi(dose, famiglia) {
    poi il trucco del mercante — la stessa quantità in un'altra unità, a un
    altro prezzo — e, se avanza un posto, un altro pezzo. */
 export function banchetto(rnd, dose, famiglia, unita, tappa) {
-  const f = FAMIGLIA[famiglia], k = scalaDi(dose, famiglia), G = grande(famiglia)
+  const f = FAMIGLIA[famiglia], interi = !!tappa.tondi
   const ammesse = (tappa.etichette || ['G', 'M', 'P']).map(t => f.unita[t])
-  const tutti = PEZZI.map((p, i) => ({ base: Math.round(p * k * G), prezzo: PREZZI[i] }))
+  const tutti = pezziDi(dose, famiglia, unita, tappa)
   const servono = [...new Set(ottimo(dose, tutti).pezzi)].map(n => tutti[n])
   const passo = servono.reduce((g, p) => mcd(g, p.base), dose)
-  // sempre uno dei due più piccoli: una dose da un pezzo solo non resta con un listino di un'ampolla
-  const piccolo = tutti.slice(0, 2).filter(p => passo % p.base === 0).at(-1)
-  const buoni = tutti.filter(p => p.base % piccolo.base === 0)
-  const o = [...new Set([...servono, piccolo])].map(p => ({ ...p, unita: etichetta(rnd, p.base, famiglia, ammesse, unita) }))
-  const altreDi = p => unitaBuone(p.base, famiglia).filter(u => u !== p.unita && ammesse.includes(u))
+  // sempre uno dei due più piccoli, e che lasci quattro pezzi: una dose da un pezzo solo non resta con un listino di un'ampolla
+  const multipli = p => tutti.filter(q => q.base % p.base === 0)
+  const piccolo = tutti.slice(0, 2).filter(p => passo % p.base === 0 && multipli(p).length >= 4).at(-1)
+  const buoni = multipli(piccolo)
+  const o = [...new Set([...servono, piccolo])].map(p => ({ ...p, unita: etichetta(rnd, p.base, famiglia, ammesse, unita, interi) }))
+  const altreDi = p => unitaBuone(p.base, famiglia, interi).filter(u => u !== p.unita && ammesse.includes(u))
   const doppiabili = o.filter(p => altreDi(p).length)
   if (tappa.gemelli && o.length < 4 && doppiabili.length && rnd() < 0.75) {
     const a = pesca(rnd, doppiabili)
@@ -83,7 +100,7 @@ export function banchetto(rnd, dose, famiglia, unita, tappa) {
   // se avanza un posto, prima un pezzo che ci sta
   for (const p of [...mescolata(rnd, buoni.filter(x => x.base <= dose)), ...buoni.filter(x => x.base > dose)]) {
     if (o.length >= 4) break
-    if (!o.some(x => x.base === p.base)) o.push({ ...p, unita: etichetta(rnd, p.base, famiglia, ammesse, unita) })
+    if (!o.some(x => x.base === p.base)) o.push({ ...p, unita: etichetta(rnd, p.base, famiglia, ammesse, unita, interi) })
   }
   return mescolata(rnd, o)
 }

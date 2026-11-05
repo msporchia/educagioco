@@ -29,13 +29,16 @@ scaletta, gli sbagli e cosa va al motore di apprendimento. Il gioco sta in
   diversi, poi «Ordina». Si paga tutto, il mercante porta le ampolle sul
   bancone e le versa una alla volta, nell'ordine scritto.
   Più ampolle insieme vuol dire fare la somma prima di vederla.
-- **Le grandi costano meno al chilo** (`PEZZI`, `PREZZI`): 1 kg 4 gettoni,
+- **Le grandi costano meno al chilo** (`PEZZI`, `PREZZI`; `TONDI`,
+  `PREZZI_TONDI` nelle tappe senza virgola): 1 kg 4 gettoni,
   5 hg 3, 1 hg 1. Conviene sempre «la più grande che ci sta», ma per sapere
   cosa ci sta bisogna sapere a cosa corrisponde l'etichetta, come quando si
   sommano monete diverse.
 - **Il trucco del mercante** (`gemelli`): spesso la stessa quantità sta sul
   listino due volte, in due unità, e una costa un gettone in più. Chi
   riconosce che «5 hg» e «500 g» sono la stessa cosa risparmia.
+- **Si parte sempre da zero**: gli strumenti cominciano vuoti e tutta la dose si
+  compra ([procedimento.md](procedimento.md)).
 - **Oltre il segno d'oro trabocca**: quell'ampolla è pagata e persa, lo
   strumento resta dov'era, e le altre dell'ordine si versano lo stesso. **Quello
   che resta sul tavolo dipende dalla roba**: il liquido fa una pozza, la polvere un
@@ -79,13 +82,23 @@ ventinove tappe non cambiano**: sono quelle dei progressi e delle stelle.
 | 1 | `banco` | «500 g» | in grammi: niente da convertire | `gioco` | 8 |
 | 2 | `grande` | «1 kg» | in grammi | `svolto` | 8 |
 | 3 | `grandi` | 2 kg, 5 kg | grammi e chili | `regola` | 6 |
-| 4 | `virgola` | 0,5 kg, 1,5 kg | grammi e chili | `svolto` | 6 |
-| 5 | `virgole` | le stesse, e 1,2 kg | grammi e chili | niente | 4 |
+| 4 | `virgola` | «1500 g»; coi liquidi 0,5 l, 1,5 l | grammi e chili | `svolto` | 6 |
+| 5 | `virgole` | le stesse, e «3500 g»; coi liquidi 1,2 l | grammi e chili | niente | 4 |
 | 6 | `media` | 8 kg, 12 kg | arrivano gli etti | `svolto` | 6 |
 | 7 | `miste` | in tre unità | in tre unità | `regola` | 4 |
 | 8 | `inversa` | «6000 g» | chili ed etti: si sale | `svolto` | 5 |
 | 9 | `inverse` | su e giù | in tre unità | niente | 3 |
 
+- **La virgola arriva coi liquidi, alla tappa 22** (`capacita-virgola`). A scuola
+  la virgola come numero si fa a metà quarta (`data/partenze.js`), cioè 68,75 sulla
+  scala, e lì cominciano i liquidi. Provato con la virgola alla quarta tappa: in
+  terza i ,5 fermavano i bambini prima ancora della conversione.
+- **Prima della tappa 22 tutto è intero** (`tondi`, `SENZA_VIRGOLA`): la ricetta, il
+  listino, la pergamena, «manca», i conti dei cartelli. Vale per i pesi e le lunghezze
+  interi e per i primi tre gradini dei liquidi. I pezzi sono da 1, 2, 5 e 10, sempre
+  interi nell'unità della ricetta: per «3 kg» il listino va da 1000 g a 10000 g
+  (`scalaTonda`), così la pergamena non dice mai 0,5 kg. Le chiavi `virgola` e
+  `virgole` restano, ma nei pesi e nelle lunghezze chiedono «1500 g = 1 kg e 500 g».
 - Poi due tappe finali (`FINALI`): **l'Elisir del Calderone** (le tre famiglie
   nella stessa pozione) e **la Pozione del Maestro**, con le dosi da magazzino.
 - **Quanto si dice lo decide la tappa** (`aiuto`): `gioco` il cartello dice
@@ -97,7 +110,8 @@ ventinove tappe non cambiano**: sono quelle dei progressi e delle stelle.
 - **La portata sale lungo la fila**: `PORTATA_DA` 44 i pesi (sette anni e
   mezzo, quando le misure entrano a scuola), 56 le lunghezze, 68 i liquidi,
   e un punto e mezzo a gradino (`PASSO_PORTATA`); 82 e 85 le finali.
-- `guastiDellaCampagna` controlla che ogni dose si componga.
+- `guastiDellaCampagna` controlla che ogni dose si componga, e che in una tappa
+  tonda non abbia la virgola.
 
 ## Il listino
 
@@ -113,7 +127,8 @@ ventinove tappe non cambiano**: sono quelle dei progressi e delle stelle.
 - **Il pezzo piccolo divide la dose e tutti gli altri pezzi**: è quello che
   rende ogni dose componibile da qualunque punto. Provato senza (0,1 e 0,25
   sullo stesso banco): resta un avanzo che nessuna ampolla copre.
-- **Per le dosi grandi tutto il listino sale di dieci o di cento** (`scalaDi`)
+- **Per le dosi grandi tutto il listino sale di dieci o di cento** (`scalaDi`, nelle
+  tappe tonde `scalaTonda`)
   e i prezzi restano quelli: la fatica sta nelle unità, non nei soldi. Se no
   diventa una bancarella.
 - **Il mercante scrive come gli pare**, dentro le unità della tappa

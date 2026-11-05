@@ -699,11 +699,11 @@ export const AIUTI = {
   pozioni: {
     emoji: '🧪', titolo: 'Le pozioni',
     blocchi: [
-      'La pergamena chiede «1,5 kg di polvere di luna» e altri ingredienti, e il calderone è vuoto. Dal **listino del mercante** scegli le ampolle e ordinale: le verserà lui.',
+      'La pergamena chiede «2 kg di polvere di luna» e altri ingredienti, e il calderone è vuoto. Dal **listino del mercante** scegli le ampolle e ordinale: le verserà lui.',
       { titolo: 'Il listino e i gettoni', righe: [
         'Il rotolo del mercante ha tutti gli ingredienti della ricetta. Ogni targhetta dice quanto c\'è nell\'ampolla e quanti gettoni costa.',
         'I **gettoni** sono i cristalli turchesi del mercante e restano nel laboratorio: non sono le tue monete, che si guadagnano finendo gli ingredienti e i passi della ricetta.',
-        'Il mercante scrive come gli pare: «5 hg», «0,2 kg», «300 g». Le ampolle grandi costano meno, quindi conviene **la più grande che ci sta**, ma per sapere cosa ci sta devi fare il conto.',
+        'Il mercante scrive come gli pare: «2000 g», «20 hg», «2 kg». Le ampolle grandi costano meno, quindi conviene **la più grande che ci sta**, ma per sapere cosa ci sta devi fare il conto.',
         'Spesso la stessa quantità compare due volte, scritta in due modi, e una costa di più: è il **trucco del mercante**.',
         'In fondo vedi sempre quanti gettoni hai speso, e le stelle dicono quanto ti sei avvicinato al minimo.',
         'Fatta la spesa, la pergamena dice **cosa fare**. La roba e gli attrezzi **si trascinano**: la roba nel calderone o nel mortaio, il pestello sul mortaio, il mestolo e il fiammifero sul calderone. Una mossa fuori tempo fa un pasticcio e costa un gettone.',
@@ -713,8 +713,8 @@ export const AIUTI = {
         'Il cartello dice **perché e come si fa**, coi numeri di quel momento. Non c\'è fretta e non ci sono cuori: la tappa si finisce sempre, anche coi gettoni in rosso.',
       ] },
       { titolo: 'Una cosa nuova per volta', righe: [
-        'Prima si impara il gesto, senza conversioni. Poi arriva il chilo, col conto scritto sotto ogni targhetta. Poi lo stesso senza il conto, poi la virgola, poi gli etti, poi le conversioni al contrario.',
-        'Le lunghezze e i liquidi rifanno la stessa scaletta. Nelle ultime due tappe arriva di tutto nella stessa pozione.',
+        'Prima si impara il gesto, senza conversioni. Poi arriva il chilo, col conto scritto sotto ogni targhetta. Poi lo stesso senza il conto, poi chili e grammi insieme, poi gli etti, poi le conversioni al contrario.',
+        'Le lunghezze rifanno la stessa scaletta, sempre con numeri interi. La virgola arriva solo coi liquidi. Nelle ultime due tappe arriva di tutto nella stessa pozione.',
       ] },
       { titolo: 'Cosa allena', righe: [
         'Le misure e le unità: chili, etti e grammi; metri, decimetri e centimetri; litri, decilitri e millilitri — e passare dall\'una all\'altra, in tutti e due i versi.',

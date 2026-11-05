@@ -19,7 +19,7 @@ Tre famiglie di misure, ognuna con le sue unità e il suo strumento:
 | 🫗 | i liquidi | l · dl · ml | il cilindro graduato |
 
 **Una tappa è una pozione, col suo nome.** Sulla pergamena ci sono gli
-ingredienti con la loro dose, «1,5 kg di polvere di luna», e sul banco uno
+ingredienti con la loro dose, «2 kg di polvere di luna», e sul banco uno
 strumento per ognuno col segno d'oro dove arrivare. Sotto, la ricetta a punti dice cosa fare con la roba comprata: si trascina nel
 calderone o nel mortaio, e si pesta,
 si mescola, si accende il fuoco, si diluisce. Una mossa fuori tempo fa un pasticcio.
@@ -27,7 +27,7 @@ si mescola, si accende il fuoco, si diluisce. Una mossa fuori tempo fa un pastic
 **Dal mercante.** Il suo rotolo elenca gli ingredienti della ricetta, con
 quattro targhette a testa: quanto c'è nell'ampolla e il prezzo in gettoni. Le ampolle grandi costano meno al chilo, quindi conviene sempre la più
 grande che ci sta. Ma per sapere cosa ci sta bisogna sapere a cosa corrisponde
-quello che c'è scritto: il mercante scrive «5 hg», «0,2 kg», «300 g» come gli
+quello che c'è scritto: il mercante scrive «2000 g», «20 hg», «2 kg» come gli
 pare. **La conversione non è il compito, è quello che serve per scegliere**,
 come quando si sommano monete diverse.
 
@@ -41,8 +41,8 @@ calderone, e il brodo sale e cambia colore.
 
 **Se trabocca.** Oltre il segno d'oro l'ampolla è persa, e resta una macchia da
 pulire: un gettone alla spugna. Il cartello dice subito perché, coi numeri di
-quel momento: «100 cm = 1 m. C'erano 1 m: 1 m + 1 m = 2 m, oltre la tacca di
-1,2 m. Ne mancavano 0,2 m».
+quel momento: «C'erano 1000 g: 1000 g + 1000 g = 2000 g, oltre la tacca di
+1500 g. Ne mancavano 500 g».
 
 ## La scaletta: una cosa nuova per volta
 
@@ -55,15 +55,17 @@ famiglie:
 | 1 | il banco | «500 g», e il listino in grammi | come si gioca |
 | 2 | arriva il chilo | «1 kg», e il listino in grammi | il conto sotto ogni targhetta |
 | 3 | chili interi | 2 kg, 5 kg | solo la regola: 1 kg = 1000 g |
-| 4 | la virgola | 0,5 kg, 1,5 kg | il conto sotto ogni targhetta |
-| 5 | virgole senza aiuti | le stesse, e 1,2 kg | niente |
+| 4 | chili e grammi insieme | «1500 g», cioè 1 kg e 500 g | il conto sotto ogni targhetta |
+| 5 | chili e grammi senza aiuti | le stesse, e «3500 g» | niente |
 | 6 | etti sul listino | 8 kg, 12 kg, e arrivano gli etti | il conto sotto ogni targhetta |
 | 7 | chili, etti e grammi | la ricetta parla in tre unità | la regola |
 | 8 | al contrario | «6000 g», e il mercante vende a chili | il conto sotto ogni targhetta |
 | 9 | su e giù per la scala | tutto insieme | niente |
 
-Le lunghezze rifanno la scaletta con metri, decimetri e centimetri; i liquidi
-con litri, decilitri e millilitri. Poi due tappe in cui arriva di tutto: pesi,
+Le lunghezze rifanno la scaletta con metri, decimetri e centimetri, sempre in
+numeri interi: si pensa alla conversione, non ai conti. I liquidi la rifanno con
+litri, decilitri e millilitri, ed è lì che arriva la virgola, dalla tappa 22,
+quando a scuola la si è già fatta: 0,5 l, 1,5 l. Poi due tappe in cui arriva di tutto: pesi,
 lunghezze e liquidi nella stessa pozione. Ventinove tappe in tutto, e i gettoni
 in più si stringono andando avanti.
 

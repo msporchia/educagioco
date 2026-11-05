@@ -11,18 +11,19 @@ const AZIONI_DEL = { 1: ['versa', 'mescola'], 2: ['versa', 'mescola', 'scalda'],
 // grande. `etichette`: in che unità il mercante scrive il listino.
 // `margine`: i gettoni oltre il minimo. `procedimento`: quanto è ricco il
 // passo dopo la spesa (motore/procedimento.js). `manca`: la pergamena fa la
-// sottrazione. `ordine`: quante ampolle si chiedono in una volta.
+// sottrazione. `ordine`: quante ampolle si chiedono in una volta. `tondi`: niente
+// virgola in tutta la tappa, e sul listino solo pezzi da 1, 2, 5 e 10.
 const GRADINI = [
-  { id: 'banco', aiuto: 'gioco', ingredienti: 2, procedimento: 1, ordine: 2, margine: 8, manca: true, etichette: ['P'],
+  { id: 'banco', aiuto: 'gioco', ingredienti: 2, procedimento: 1, ordine: 2, margine: 8, manca: true, etichette: ['P'], tondi: true,
     scuola: 'misure',
     dritta: () => 'Ordina dal listino le ampolle che fanno la dose.',
-    dosi: [{ in: 'P', valori: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1, 1.5, 2] }] },
+    dosi: [{ in: 'P', valori: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1, 2] }] },
 
-  { id: 'grande', aiuto: 'svolto', ingredienti: 2, procedimento: 2, ordine: 2, margine: 8, manca: true, etichette: ['P'],
+  { id: 'grande', aiuto: 'svolto', ingredienti: 2, procedimento: 2, ordine: 2, margine: 8, manca: true, etichette: ['P'], tondi: true,
     dritta: f => `Un ${f.parole.G[0]} sono ${VALE[f.unita.G] / VALE[f.unita.P]} ${f.parole.P[1]}: sotto ogni targhetta c'è quanto vale.`,
     dosi: [{ in: 'G', valori: [1, 2, 3] }] },
 
-  { id: 'grandi', aiuto: 'regola', ingredienti: 3, procedimento: 3, ordine: 3, margine: 6, manca: true, etichette: ['P', 'G'],
+  { id: 'grandi', aiuto: 'regola', ingredienti: 3, procedimento: 3, ordine: 3, margine: 6, manca: true, etichette: ['P', 'G'], tondi: true,
     dritta: () => 'Stessi numeri, ma il conto adesso lo fai tu.',
     dosi: [{ in: 'G', valori: [1, 2, 3, 4, 5] }] },
 
@@ -55,6 +56,27 @@ const GRADINI = [
            { in: 'G', valori: [0.5, 3, 12] }] },
 ]
 
+/* La virgola come numero a scuola arriva a metà quarta (data/partenze.js): i
+   liquidi, a quell'età sulla scala, sono i primi a usarla. Pesi e lunghezze la
+   saltano: gli stessi gradini con le stesse chiavi, in numeri interi. Al posto di
+   «1,5 kg» c'è «1500 g», che si fa con 1 kg e 500 g. */
+const FAMIGLIE_TONDE = ['massa', 'lunghezza']
+const SENZA_VIRGOLA = {
+  virgola: { dritta: f => { const uno = VALE[f.unita.G] / VALE[f.unita.P]
+                            return `${uno * 1.5} ${f.parole.P[1]} sono 1 ${f.unita.G} e ${uno / 2} ${f.unita.P}: sotto ogni targhetta c'è quanto vale.` },
+             dosi: [{ in: 'P', valori: [1.2, 1.5, 2.2, 2.5] }] },
+  virgole: { dritta: () => 'Stesse ricette, e adesso il conto lo fai tu.',
+             dosi: [{ in: 'P', valori: [1.2, 1.5, 2.2, 2.5, 3.2, 3.5, 3.6] }] },
+  media: {},
+  miste: { dosi: [{ in: 'G', valori: [6, 8, 12, 15] },
+                  { in: 'M', valori: [0.3, 0.7, 2, 4, 6] },
+                  { in: 'P', valori: [0.3, 0.7, 1.2, 2.5] }] },
+  inversa: {},
+  inverse: { dosi: [{ in: 'P', valori: [6, 7, 9, 12, 18] },
+                    { in: 'M', valori: [2, 7, 15] },
+                    { in: 'G', valori: [1, 3, 12] }] },
+}
+
 // le due tappe finali: pescano da tutte e tre le famiglie, con le dosi
 // dei gradini senza aiuti più (nell'ultima) quelle da magazzino
 const FINALI = [
@@ -86,9 +108,10 @@ const unaDose = (f, spec, v) => {
 const dosiDi = (f, specs) => specs.flatMap(s => s.valori.map(v => unaDose(f, s, v)))
 
 const comune = t => ({ aiuto: t.aiuto, ingredienti: t.ingredienti, ordine: t.ordine, procedimento: t.procedimento, azioni: AZIONI_DEL[t.procedimento], margine: t.margine,
-                       manca: t.manca, etichette: t.etichette, gemelli: t.etichette.length > 1 })
+                       manca: t.manca, etichette: t.etichette, gemelli: t.etichette.length > 1, tondi: !!t.tondi })
 
-function tappaDelGradino(f, g, n) {
+function tappaDelGradino(f, gradino, n) {
+  const g = FAMIGLIE_TONDE.includes(f.chiave) && SENZA_VIRGOLA[gradino.id] ? { ...gradino, ...SENZA_VIRGOLA[gradino.id], tondi: true } : gradino
   const [nome, emoji, colore] = POZIONI[f.chiave][n]
   return {
     chiave: `${f.chiave}-${g.id}`, famiglie: [f.chiave], gradino: g.id,
@@ -172,6 +195,7 @@ export function guastiDellaCampagna(siCompone, campagna = CAMPAGNA) {
     if (!(t.portata >= 0 && t.portata <= 100)) g.push(`${dove}: portata fuori scala`)
     if (i && t.portata < campagna[i - 1].portata) g.push(`${dove}: la portata scende`)
     if (!t.dosi.length) g.push(`${dove}: nessuna dose`)
+    if (t.tondi) for (const d of t.dosi) if (d.testo.includes(',')) g.push(`${dove}: la dose ${d.testo} ha la virgola`)
     for (const d of t.dosi) if (!siCompone(d, t)) g.push(`${dove}: la dose ${d.testo} non si compone`)
     for (const f of t.famiglie)
       if (!t.dosi.some(d => d.famiglia === f)) g.push(`${dove}: la famiglia ${f} è in scena senza dosi`)
