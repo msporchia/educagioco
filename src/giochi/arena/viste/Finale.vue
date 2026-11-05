@@ -5,6 +5,7 @@
 // tempo da battere né stelle né record: c'è solo il tempo di questa volta.
 
 import Spade from './Spade.vue'
+import Angoli from '../../sotterraneo/viste/Angoli.vue'
 
 defineProps({
   vinta: { type: Boolean, default: false },
@@ -26,6 +27,7 @@ const minuti = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart
   <div class="ar-velo ar-fine" :data-fine="vinta ? 'vinta' : pari ? 'pari' : 'persa'">
     <div v-if="vinta" class="ar-raggi" aria-hidden="true"></div>
     <div class="ar-cartello">
+      <Angoli />
       <div class="ar-stemma" :class="{ 'ar-stemma-vinto': vinta }">
         <Spade class="ar-spade" />
         <span class="ar-esito em">{{ ultima ? '🏆' : vinta ? '🎉' : pari ? '🤝' : '🛡️' }}</span>

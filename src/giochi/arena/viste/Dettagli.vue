@@ -5,6 +5,7 @@
 // Riceve tutto già calcolato (motore/dettagli.js): non conosce le regole.
 import Icona from './Icona.vue'
 import Ritratto from './Ritratto.vue'
+import Angoli from '../../sotterraneo/viste/Angoli.vue'
 
 defineProps({
   d: { type: Object, required: true },
@@ -16,6 +17,7 @@ const ICONA = { Potenzia: 'potenzia', Ripara: 'ripara', Lancia: 'bomba' }
 <template>
   <div class="ar-velo ar-dettagli" data-dettagli-aperti @click.self="$emit('chiudi')">
     <div class="ar-scheda">
+      <Angoli />
       <button class="ar-x" aria-label="chiudi" @click="$emit('chiudi')">✕</button>
 
       <div class="ar-intesta">

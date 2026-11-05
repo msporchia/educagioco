@@ -104,7 +104,7 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
   colpiscono, un saltello quando camminano. Guardano di lato (di schiena non esiste
   niente): ciascuna dalla parte della sua squadra.
 - **Una caserma nuova spunta** dalla sua piazzola con un rimbalzo e uno sbuffo di polvere.
-- **La vita dei castelli sta SOPRA i castelli**, in una targa di ferro orlata d'oro, grande e sempre
+- **La vita dei castelli sta SOPRA i castelli**, in una targa di legno orlata d'oro, grande e sempre
   accesa, col numero. Il livello è uno scudetto. **Le altre barre si vedono solo sul ferito** (caserme, porta, truppe).
 - **Un crollo e la bomba si sentono**: il quadro trema un terzo di secondo (`scossa`), le schegge saltano, la bomba ha
   il lampo e la seconda onda. Trema solo il disegno: il mondo resta dov'è.
@@ -128,7 +128,7 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
   diversi nella stessa riga facevano brutto (l'utente): nell'anello sono tre gemelli da 68 px, icona sopra e una riga sotto, e niente emoji
   dove c'è un'icona, nemmeno il diamante dei prezzi. Il foglio 11 le rifà dipinte.
 
-Tutta l'interfaccia è **ferro e oro** (`--ar-ferro`, `--ar-oro` in `stile.css`, i titoli in serif: niente font in più). Il quadro
+Tutta l'interfaccia è **legno e oro come le finestre del sotterraneo** (`--ar-cornice`, `--ar-ottone` e gli altri valori in testa a `stile.css`, gli angoli sono il suo `Angoli.vue`, i titoli in serif: niente font in più). Una finestra ha il bordo d'oro sfumato, dentro i riquadri sono incassati, i tasti che contano sono d'ottone. Il quadro
 prende tutto quello che la barra (`scura`) e la targa lasciano. Orologio e diamanti stanno nella targa in alto; ripara e
 bomba sono due scudi di bronzo nei due angoli di sotto del campo (`.ar-azioni`), ai lati del castello e più bassi delle
 piazzole, col prezzo o l'attesa in un cartellino: impilati a destra coprivano una caserma. Su uno schermo largo
