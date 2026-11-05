@@ -12,13 +12,16 @@ con `Ordini.vue`, `Ricetta.vue`, `LeCucine.vue`; la scena `src/grafica/cucina3d/
 
 ## La stanza
 
-Cinque celle per dieci, stretta e alta come un telefono: banconi tutto intorno, in mezzo solo
-pavimento, e le figure restano grandi. **In fondo si finisce**: lavello, piatti, consegna.
-**A sinistra si taglia**: i taglieri, con sotto insalata, formaggio, pesce. **A destra si
-cuoce**: pentole, padelle, forni, con carne e impasto. **Davanti la dispensa** e il bidone. Una
-cucina mostra solo quello che le serve: il resto è bancone libero. **Gli appoggi in più** (`ISOLE`)
-si comprano e stanno in mezzo, due per due, e ci si cammina attorno: fissi rimpicciolivano
-tutto.
+**La stanza è grande quanto serve** (`pianta`): all'inizio quattro celle per cinque, poi si
+allarga con quello che entra, fino a cinque per dieci, e la telecamera la inquadra tutta: chi ha
+poche cose non corre, e le figure sono più grandi. Il lavello e gli appoggi la portano a cinque
+di larghezza; in fondità si tengono almeno tre banconi liberi, finché ci stanno.
+
+A zone: **in fondo si finisce** (lavello, piatti, consegna), **a sinistra si taglia** (i taglieri,
+poi pomodoro, insalata, formaggio, pesce), **a destra si cuoce** (pentole, padelle, forni, poi
+pasta, carne, uova), **davanti la dispensa** e il bidone. Quello che la cucina non usa non c'è.
+**Gli appoggi in più** si comprano e stanno nella colonna di mezzo, a coppie, e ci si cammina
+attorno. Fissi rimpicciolivano tutto.
 
 ## Si tocca dove si vuole andare
 
@@ -100,7 +103,7 @@ una pizza bruciata, torna nel lavello: i piatti non si perdono mai.
 
 ## I livelli e gli attrezzi
 
-Ventotto livelli (`CUCINE`), ognuno con qualcosa in più; si aprono vincendo quello prima
+Ventotto livelli (`CUCINE`), ognuno con qualcosa in più, e in fondo **la cucina senza fine**; si aprono vincendo quello prima
 (`banco.cucina.fatte`, in `profile.campagne.bancarella`). Gli attrezzi di un livello si leggono
 dalle sue ricette. La `portata` va dritta da 32 a 72 lungo la fila (`FILA`).
 
@@ -114,6 +117,7 @@ dalle sue ricette. La `portata` va dritta da 32 a 72 lungo la fila (`FILA`).
 | 20–22 | due piatti a ordinazione | **anche il totale da chiedere lo batti tu**; prezzi di nuovo al mezzo euro |
 | 23–25 | | prezzi ai dieci centesimi |
 | 26–28 | le ordinazioni scadono prima | prezzi ai cinque centesimi, si paga anche coi 50 € |
+| ∞ | la cucina senza fine: tutte le ricette, giri finché i cuori reggono, il tempo si stringe fino a un tetto | come gli ultimi; conta il record delle ordinazioni servite (`senzaFine`) |
 
 La cassa sale a gradini (`SCALA_CASSA`), come nel vecchio mercato: chi fa i conti non torna mai
 indietro, e quando entra un conto nuovo i prezzi tornano più facili. Il prezzo di un piatto è
@@ -152,7 +156,7 @@ dice se un modello è cambiato. `emoji` di una ricetta è solo la sua chiave.
 
 ## La scena
 
-Camera fissa dall'alto, la stanza intera dentro; quello che avanza sullo schermo resta sopra,
+Camera fissa dall'alto, la stanza intera dentro, ma diversa a ogni cucina; quello che avanza sullo schermo resta sopra,
 col muro. Il cibo è nella creta ([../fattoria3d/creta.md](../fattoria3d/creta.md)),
 ogni modello si fa una volta e poi si clona; le maglie sono larghe (`MAGLIA`), prima di
 aprire si fa solo la dispensa e il cibo arriva dopo (`prepara`). In mano la roba è nuda:
@@ -171,7 +175,7 @@ mercato di prima non si leggono, e al primo avvio spariscono. I dati di quel mer
 ## Nei test
 
 `unita/bancarella-cucina`, `unita/bancarella-foto`, `integrazione/bancarella-cucina` (tocchi
-veri). `window.__cucina3d.dove('3,0')` dice dove sta sullo schermo una cella o il pavimento.
+veri). `window.__cucina3d.dove('1,3')` dice dove sta sullo schermo una cella o il pavimento: le celle cambiano con la cucina, si cercano in `celle`.
 Bersagli: `[data-cucine]`, `[data-cucina-n]`, `[data-attrezzo]`, `[data-cucina]`, `[data-tela]`,
 `[data-detto]`, `[data-ordini]`, `[data-ordine]`, `[data-ordinato]`, `[data-ricetta]`, `[data-chiudi-ricetta]`,
 `[data-porge]`.
