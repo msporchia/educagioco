@@ -708,7 +708,7 @@ export const AIUTI = {
         'Spesso la stessa quantità compare due volte, scritta in due modi, e una costa di più: è il **trucco del mercante**.',
         'In un ordine ci stanno fino a cinque ampolle, e lo **scontrino** dice cosa pagherai. Ogni ordine paga **un gettone di spedizione**: comprare una cosa per volta costa di più, ma ordinare tutto insieme vuol dire fare i conti prima di vedere.',
         'In fondo vedi sempre quanti gettoni hai speso, e le stelle dicono quanto ti sei avvicinato al minimo.',
-        'Fatta la spesa, la pergamena dice **cosa fare**. La roba e gli attrezzi **si trascinano**, e gli attrezzi poi **si muovono col dito**: il mestolo gira nel calderone, il pestello picchia nel mortaio, il coltello taglia sul tagliere, il fiammifero si sfrega sulla legna. Se il bambino resta fermo, una freccia gli fa vedere il gesto. Una mossa fuori tempo fa un pasticcio e costa un gettone.',
+        'Fatta la spesa, la pergamena dice **cosa fare**. La roba e gli attrezzi **si trascinano**, e gli attrezzi poi **si muovono col dito**: il mestolo gira nel calderone, il pestello picchia nel mortaio, il coltello taglia sul tagliere, il fiammifero si sfrega sulla legna, il sale e il pepe si scuotono sul calderone, senza misurare. Alla fine si riempie la fiala. Se il bambino resta fermo, una freccia gli fa vedere il gesto. Una mossa fuori tempo fa un pasticcio e costa un gettone.',
       ] },
       { titolo: 'Se trabocca', righe: [
         'Ogni ingrediente ha il suo strumento col segno d\'oro: la bilancia, il metro, il cilindro. Oltre il segno trabocca: l\'ampolla è persa, e prima di ordinare ancora c\'è da **pulire**, un gettone a macchia.',
