@@ -532,15 +532,15 @@ LE REGOLE TECNICHE, queste sì precise, perché il foglio poi si taglia a pezzi:
 **Perché**: il foglio della 7b è provvisorio ed è nato quando le truppe erano altre. Adesso sono fissate: la tana ha le mummie
 (prima lupi) e le bestie cornute, che oggi prendono in prestito la capanna, e la miniera non c'è. Un foglio solo, ventisei figure.
 
-**Come si manda**: ChatGPT, chat nuova. Si allegano in quest'ordine `sorgenti/arena/caserme.webp` (il foglio da rifare, per primo),
-`sorgenti/arena/schemi/partita.png` e `sorgenti/arena/schemi/scelta.png` (le truppe e il gioco, «solo per capire»).
+**Come si manda**: ChatGPT, chat nuova. Si allegano in quest'ordine `sorgenti/arena/caserme.webp` (il foglio da rifare, per primo) e
+`sorgenti/arena/schemi/partita.png` (il gioco, «solo per capire»): più di due allegati non passano.
 
 **Si salva in** `strumenti/sprite/sorgenti/arena/caserme-2.png`. **Comando**: `python3 strumenti/sprite/caserme-arena.py`, che legge
 il foglietto `caserme-2.json` e pretende righe da 6, 7, 5, 5, 3; se i conti non tornano si guarda
 `python3 strumenti/sprite/righe.py strumenti/sprite/sorgenti/arena/caserme-2.png provino.png`. La miniera disegnata a monte resta finché il pezzo non c'è.
 
 ```text
-Ti allego tre immagini di un gioco per bambini dai 6 ai 12 anni, Castle Battle. La prima è il foglio provvisorio delle caserme: è il foglio da rifare, tienine il formato e l'idea di ogni edificio ma disegnalo molto meglio, più ricco, più epico, più curato. La seconda e la terza sono schermate del gioco: servono solo a capire chi abita le caserme e quanto piccole si vedono, non sono lo stile da copiare.
+Ti allego due immagini di un gioco per bambini dai 6 ai 12 anni, Castle Battle. La prima è il foglio provvisorio delle caserme: è il foglio da rifare, tienine il formato e l'idea di ogni edificio ma disegnalo molto meglio, più ricco, più epico, più curato. La seconda è una schermata del gioco: serve solo a capire chi abita le caserme e quanto piccole si vedono, non è lo stile da copiare.
 
 IL GIOCO. Il campo è verticale: il tuo castello in basso, quello nemico in alto, in mezzo un fiume con un ponte. Davanti a ogni castello ci sono sei piazzole fisse di legno e pietra, e su ognuna si costruisce un edificio. Le caserme fanno uscire da sole le truppe. La miniera fa guadagnare monete. Un edificio abbattuto lascia un rudere sulla sua piazzola.
 
@@ -695,7 +695,7 @@ LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: foglio
 | 6 | gli eroi | 1 | `mostri-1`, una scena | — | l'addio a 0x72 |
 | 7 ✗ | la cittadella di Castle Battle a fogli (ChatGPT, 13/10: niente di buono) | 2 | `torri-2`, `td_1` | — | — |
 | 7b ✅ | le caserme di Castle Battle sulle piazzole (ChatGPT, il gioco raccontato; provvisorio) | 1 | uno screen del gioco, `terreno-bosco` | `arena/caserme.webp` | caserme dipinte, rudere e piazzola vuota |
-| 7c | le caserme definitive di Castle Battle, con mummie, bestie cornute e miniera (ChatGPT) | 1 | `arena/caserme.webp`, `schemi/partita`, `schemi/scelta` | `arena/caserme-2.png` | caserme e miniera dipinte |
+| 7c | le caserme definitive di Castle Battle, con mummie, bestie cornute e miniera (ChatGPT) | 1 | `arena/caserme.webp`, `schemi/partita` | `arena/caserme-2.png` | caserme e miniera dipinte |
 | 8 | i quattro terreni di Castle Battle (ChatGPT, si ridipinge il disegno in codice) | 4 | `schemi/terreno-<chiave>` | `arena/terreno-<chiave>.png` | il terreno dipinto |
 | 9 | castello, porta e ponte dei quattro posti (ChatGPT) | 1 | `schemi/partita` | `arena/fortezze.png` | i castelli di Castle Battle |
 | 10 | la copertina di Castle Battle (ChatGPT) | 1 | `schemi/partita` | `home/copertina-arena.png` | la home e il frontone della mappa |
