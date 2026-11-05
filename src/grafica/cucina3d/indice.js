@@ -17,7 +17,7 @@ const SCALA_ROBA = 0.5      // i pezzi di cucina sono fatti per il banco col dit
 const COSTRUISCI = { pentola: creaPentola, padella: creaPadella, tagliere: creaTagliere, forno: creaForno }
 // quanto sporge dal piano quello che si tocca: il forno e la finestra si toccano anche in alto
 const SOPRA = { lavello: 0.45, forno: 0.8, cassetta: 0.3, consegna: 1.4, bidone: 0.15, pentola: 0.5, padella: 0.25 }
-const TAGLIATO = { insalata: 'insalata', formaggio: 'formaggio-cubetti', pesce: 'pesce-fette' }
+const TAGLIATO = { insalata: 'insalata', formaggio: 'formaggio-cubetti', pesce: 'pesce-fette', pomodoro: 'pomodoro-tagliato' }
 const ACQUA = { vuota: 0xa9d6ee, cuoce: 0x9fd0ea, pronta: 0xf1dd9a, scotta: 0xa9743c }
 
 export function creaCucina3d(canvas, { quanto, quantoLavato, tipoDi, perso, dpr } = {}) {

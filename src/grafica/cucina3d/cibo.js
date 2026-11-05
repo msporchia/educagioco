@@ -389,6 +389,27 @@ const fasciaAlga = () => pezzo(palla([0, 0.1, 0], [0.07, 0.115, 0.27]), 0.016, (
   c.setHex(0x1f3a2c); verso(c, 0x355a44, fra(0.3, 0.8, mosso(x, y, z, 44)) * 0.6)
 }, 0.4)
 
+/* ── il pomodoro: intero, e a cubetti per la bruschetta ── */
+function pomodoroIntero() {
+  const forma = unione([palla([0, 0.3, 0], [0.42, 0.33, 0.42]), palla([0.12, 0.28, 0.1], [0.3, 0.27, 0.3]), palla([-0.12, 0.28, -0.08], [0.3, 0.27, 0.3])], 0.08)
+  const g = tutto(pezzo(forma, 0.024, (x, y, z, c) => {
+    c.setHex(0xd8331f); verso(c, 0xf0603a, fra(-0.3, 0.6, mosso(x, y, z, 7)) * 0.5)
+    verso(c, 0xa81f12, fra(0.34, 0.1, y) * 0.5)
+  }, 0.22))
+  for (let i = 0; i < 5; i++) { const f = foglia(0.2, 0.06, 0x3f8a3a); f.position.set(0, 0.6, 0); f.rotation.y = i * 1.26; f.rotation.z = 0.1; g.add(f) }
+  return g
+}
+function pomodoroTagliato() {
+  const pezzi = []
+  for (let i = 0; i < 14; i++) {
+    const a = i * 2.4, r = 0.34 * Math.sqrt((i + 1) / 14)
+    pezzi.push(palla([Math.cos(a) * r, 0.07 + (i % 3) * 0.022, Math.sin(a) * r], [0.085, 0.06, 0.08]))
+  }
+  return tutto(pezzo(unione(pezzi, 0.008), 0.018, (x, y, z, c) => {
+    c.setHex(0xd8331f); verso(c, 0xf58a55, fra(0.2, 0.7, mosso(x, y, z, 24)) * 0.7)
+  }, 0.22))
+}
+
 /* ── i modelli si fanno una volta ── */
 const G = {}
 const FATTI = {
@@ -399,6 +420,7 @@ const FATTI = {
   'c:pasta': mazzoSpaghetti, 'c:sugo': ciotolaSugo, 'c:pane': pagnotta, 'c:formaggio': formaFormaggio, 'c:insalata': cespo,
   'c:carne': cartaCarne, 'c:uovo': uova, 'c:impasto': pallaImpasto,
   'c:pesce': pesceIntero, 'c:riso': ciotolaRiso, 'c:alga': fogliAlga,
+  'c:pomodoro': pomodoroIntero, 'pomodoro-tagliato': pomodoroTagliato,
   'pesce-fetta': fettaPesce, 'pesce-fette': fettePesce, 'riso': () => tutto(montoRiso()), 'riso-nigiri': nigiri, 'alga-fascia': fasciaAlga,
 }
 function clona(chiave, fai) {
@@ -408,7 +430,7 @@ function clona(chiave, fai) {
 const modello = k => clona(k, FATTI[k])
 const annerito = o => { o.traverse(m => { if (m.isMesh) { m.material = m.material.clone(); m.material.vertexColors = false; m.material.color.setHex(0x241812) } }); return o }
 
-const ALTO = { pasta: 0.3, sugo: 0.12, pane: 0.17, formaggio: 0.06, insalata: 0.2, carne: 0.15, uovo: 0.12, impasto: 0.1 }
+const ALTO = { pomodoro: 0.1, pasta: 0.3, sugo: 0.12, pane: 0.17, formaggio: 0.06, insalata: 0.2, carne: 0.15, uovo: 0.12, impasto: 0.1 }
 export const confezione = cosa => modello('c:' + cosa)
 
 /** Il pezzo sul fuoco o nelle mani. */
@@ -459,8 +481,8 @@ export function impiatta(p) {
   }
   else {
     let y = 0
-    for (const k of cose) { metti(k, 0, y, 0, k === 'formaggio' ? 0.7 : 0); y += ALTO[k] }
-    if (pronto && cose[0] === 'pane' && cose.length > 1 && !cose.includes('sugo')) metti('pane-sopra', 0, y + 0.02, 0, 0.4)
+    for (const k of cose) { metti(k === 'pomodoro' ? 'pomodoro-tagliato' : k, 0, y, 0, k === 'formaggio' ? 0.7 : 0); y += ALTO[k] }
+    if (pronto && cose[0] === 'pane' && cose.length > 1 && !cose.includes('pomodoro')) metti('pane-sopra', 0, y + 0.02, 0, 0.4)
   }
   return g
 }
@@ -474,6 +496,7 @@ export async function prepara(cose, ricette) {
   if (usa.has('pane')) chiavi.push('pane', 'pane-sopra')
   if (usa.has('formaggio')) chiavi.push('formaggio', 'formaggio-cubetti')
   if (usa.has('insalata')) chiavi.push('insalata')
+  if (usa.has('pomodoro')) chiavi.push('pomodoro-tagliato')
   if (usa.has('pesce')) chiavi.push('pesce-fetta', 'pesce-fette')
   if (usa.has('riso')) chiavi.push('riso', 'riso-nigiri')
   if (usa.has('alga')) chiavi.push('alga-fascia')

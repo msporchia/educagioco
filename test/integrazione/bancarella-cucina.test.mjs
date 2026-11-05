@@ -55,7 +55,7 @@ async function fai(piatto) {
 }
 const ordini = () => page.evaluate(() => window.__shop.coda.value.map(c => c.articoli[0].emoji))
 async function daiResto() {
-  await page.waitForSelector('.cassa.foglio', { timeout: 2000 })
+  await page.waitForSelector('.cassa', { timeout: 2000 })
   await page.evaluate(() => {
     const S = window.__shop
     for (const v of S.scomponi(S.cliente.value.resto, S.cliente.value.monete)) S.metti(v)
@@ -107,11 +107,11 @@ await page.evaluate(() => {
 await fai('🥪')
 uguale('il piatto è pronto', (await stato()).cuoco.mano?.pronto, '🥪')
 await premi(CONSEGNA)
-await page.waitForSelector('.cassa.foglio', { timeout: 2000 })
+await page.waitForSelector('.cassa', { timeout: 2000 })
 uguale('la seconda ordinazione è servita per prima', (await ordini())[0], '🥪')
 await attendi(page, 500)
 uguale('e il dito che si alza non preme una moneta', await page.evaluate(() => window.__shop.dato.value), 0)
-controlla('il foglio mostra i soldi che danno', await page.locator('.in-foglio [data-porge], .porge.in-foglio').count() > 0)
+controlla('il foglio mostra i soldi che danno', await page.locator('[data-porge]').count() > 0)
 await scatto(page, 'cucina-il-resto')
 
 /* ---------- 4. il foglio ferma, la ✕ lo mette da parte ---------- */
@@ -129,7 +129,6 @@ await page.waitForFunction(() => window.__shop.hud.serviti === 1, undefined, { t
 await attendi(page, 500)
 const p = await leggiProfilo(page)
 controlla('l\'incasso va nel banco', p.campagne.bancarella.banco.cassa > 0)
-uguale('la fila delle giornate non si muove', p.mercato.tappa, 0)
 
 /* ---------- 5. un'ordinazione che scade costa un cuore e sparisce ---------- */
 {
@@ -142,7 +141,7 @@ uguale('la fila delle giornate non si muove', p.mercato.tappa, 0)
 /* ---------- 6. vincere apre il livello dopo, e si comprano gli attrezzi ---------- */
 await page.evaluate(() => { const S = window.__shop; S.hud.serviti = 8; S.tappa.value = 2; S.coda.value = S.coda.value.slice(0, 1); S.chiudi('vinta') })
 await page.waitForFunction(() => window.__shop.fase.value === 'fine', undefined, { timeout: 4000 })
-await page.click('[data-azione="le-giornate"]')
+await page.click('[data-azione="le-cucine"]')
 await page.waitForSelector('[data-cucine]', { timeout: 3000 })
 controlla('il secondo livello si è aperto', await page.locator('[data-cucina-n="2"]').isEnabled())
 {
@@ -178,6 +177,13 @@ uguale('senza piatti puliti lo dice', await page.locator('[data-detto]').innerTe
 await premi(LAVELLO)
 await page.waitForFunction(() => window.__shop.cucina.value.puliti === 1, undefined, { timeout: 30000 })
 await scatto(page, 'cucina-lavello')
+
+/* ---------- 9. uscire non butta il livello ---------- */
+await page.click('button[aria-label="indietro"]')
+await page.waitForSelector('[data-ripresa]', { timeout: 3000 })
+await page.click('[data-azione="riprendi"]')
+await page.waitForFunction(() => window.__shop.fase.value === 'gioco', undefined, { timeout: 3000 })
+uguale('riprendendo la stanza è com\'era', (await stato()).puliti, 1)
 
 uguale('nessun errore in console', errori.length, 0)
 if (errori.length) errori.forEach(e => nota(e))

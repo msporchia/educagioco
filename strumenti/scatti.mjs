@@ -39,7 +39,7 @@ import { SOSTA } from './clip/survivors.mjs'
 import { alLavoro } from './clip/fattoria.mjs'
 import { FILA_ATTUALE } from '../src/giochi/costruttore/dati/campagna.js'
 // le discese del sotterraneo stanno sulla terra di sopra: ci si va a piedi, come nelle prove
-import { scendiNelSotterraneo, giocaGiornata } from '../test/aiuto/browser.mjs'
+import { scendiNelSotterraneo } from '../test/aiuto/browser.mjs'
 
 const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const GIOCO = 'file://' + resolve(RADICE, 'dist/index.html')
@@ -261,11 +261,6 @@ const RICETTE = [
   /* il giro del mondo: l'aereo dopo un attimo, posato alla prima città
      (docs/bancarella/mappa.md); il gioco si raggiunge come lo raggiunge un
      bambino, dal mondo alla città al banco */
-  { file: 'bancarella-mappa', dove: 'bancarella', attesa: '[data-mondo] [data-citta]',
-    passi: [page => page.waitForTimeout(600)] },
-  { file: 'bancarella-gioco', dove: 'bancarella', attesa: '[data-mondo] [data-citta]',
-    passi: [async page => { await giocaGiornata(page, 'banchetto'); await page.waitForTimeout(1800) }] },
-
   { file: 'survivors-mappa', dove: 'survivors', attesa: '.sv-mappa' },
   { file: 'survivors-gioco', dove: 'survivors', attesa: '.sv-mappa',
     /* una partita già avanti (la sosta della clip): al primo livello il prato è vuoto e

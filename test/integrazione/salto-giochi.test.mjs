@@ -15,7 +15,7 @@
    `node test/esegui.mjs salto-giochi --niente-build`
    tempo: 120
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, attendi, scegli, leggiProfilo, giocaGiornata }
+import { apriBrowser, apriGioco, azzera, semina, attendi, scegli, leggiProfilo }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -107,14 +107,10 @@ await page.waitForSelector('.tastiera button', { timeout: 3000 })
 /* ---------- 3. bancarella ---------- */
 await nuovo()
 await scegli(page, 'bancarella')
-await page.waitForSelector('[data-mondo]', { timeout: 5000 })
-await giocaGiornata(page, 'banchetto')
+await page.waitForSelector('[data-cucine]', { timeout: 5000 })
+await page.click('[data-cucina-n="1"]')
 await page.waitForFunction(() => !window.__shop.cambio.value, null, { timeout: 5000 })
-await page.evaluate(() => {
-  const S = window.__shop
-  for (let i = 0; i < 40 && S.daPrendere.value.length; i++) S.prendi(S.daPrendere.value[0])
-})
-await page.waitForFunction(() => window.__shop.momento.value === 'cassa', null, { timeout: 3000 })
+await page.evaluate(() => { const S = window.__shop; S.momento.value = 'cassa'; S.cassaAperta.value = true })
 {
   const inFila = () => page.evaluate(() => window.__shop.coda.value.length)
   const prima = await foto(), soldiPrima = await soldi()

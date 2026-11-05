@@ -114,7 +114,7 @@ await page.click('[data-guida="giochi-elenco"]')
 await page.waitForTimeout(250)
 const listaGiochi = await page.evaluate(() => document.body.innerText)
 controlla('l\'elenco nomina i giochi veri',
-  listaGiochi.includes('La bancarella') && listaGiochi.includes('Il sotterraneo'))
+  listaGiochi.includes('La cucina') && listaGiochi.includes('Il sotterraneo'))
 controlla('e nessun asterisco è arrivato a schermo', !listaGiochi.includes('*'),
   (listaGiochi.match(/.{0,30}\*.{0,30}/) || [''])[0])
 
