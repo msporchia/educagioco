@@ -23,7 +23,7 @@ defineEmits(['avanti', 'mappa'])
       <div v-if="stelle" class="pz-punteggio em" data-stelle>{{ '⭐'.repeat(stelle) }}</div>
       <p v-if="maestro">Pesi, lunghezze e liquidi: tutte le conversioni, in tutti e due i versi.</p>
       <div class="pz-fine-righe" data-righe>
-        <span v-for="(r, n) in righe" :key="n">{{ r }}</span>
+        <span v-for="(r, n) in righe" :key="n"><i v-if="stelle && !n" class="pz-gettone" aria-hidden="true"></i>{{ r }}</span>
       </div>
       <p v-if="monete" class="pz-monete" data-monete data-monete-prese>+{{ monete }} 🪙</p>
       <p v-if="notaMonete" data-nota-monete>{{ notaMonete }}</p>

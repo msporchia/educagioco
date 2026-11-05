@@ -21,9 +21,9 @@ pasticcio. Il motore è `motore/procedimento.js`.
   prima non serviva.
 - **Con la spesa nel calderone non va niente**: gli strumenti arrivati all'oro si
   mettono via, e dentro si versa solo col procedimento.
-- **In casa c'è già qualcosa** (`casa`, su `virgole`, `inverse` e le finali): un
-  ingrediente parte col pezzo più grande già nello strumento, e il rotolo lo dice.
-  Si compra solo quello che manca, cioè una sottrazione fra unità diverse.
+- **Si parte sempre da zero**: ogni strumento comincia vuoto, e tutta la dose si
+  compra dal mercante. Provato con un pezzo già in casa: confondeva, e la
+  sottrazione fra unità diverse rubava la scena alla conversione.
 - **Niente bottoni: tutto si trascina, e gli attrezzi si muovono col dito.** La roba
   sta sul bancone, con la foto del suo modello e il nome, gli attrezzi sul tavolo. La
   roba sul calderone si versa, sul mortaio e sul tagliere ci va, sulla grattugia si
@@ -58,7 +58,7 @@ pasticcio. Il motore è `motore/procedimento.js`.
 ## La scaletta
 
 `procedimento` in `dati/campagna.js` dice quanto è ricco; gli attrezzi sul tavolo
-(`AZIONI_DEL`, `ATTREZZI`) sono tutti quelli del livello, anche se la ricetta non
+(`azioniDi`, `ATTREZZI`) sono tutti quelli del livello, anche se la ricetta non
 li usa: capire cosa serve è parte del gioco.
 
 | | passi | gradini |
@@ -78,10 +78,10 @@ li usa: capire cosa serve è parte del gioco.
 - **Si mescola sempre prima di scaldare**, il mantice viene dopo il fuoco.
 - **L'ordine cambia di ricetta in ricetta**: mantice, bacchetta e brocca cambiano
   posto, se no si imparerebbe a memoria e il testo non si leggerebbe.
-- **I liquidi non si pestano**, e tentarlo è un pasticcio. Una pozione di soli
-  liquidi lascerebbe il mortaio sul tavolo per niente: per quelle in dispensa c'è
-  qualcosa di secco (`dispensa`), una cosa al livello 3 e due dopo, che non si
-  compra, non sta sul listino e aspetta sul bancone.
+- **I liquidi non si pestano**: in una pozione di soli liquidi il mortaio e il
+  pestello non stanno sul tavolo (`azioniDel`), e la ricetta versa tutto. Provato con
+  della roba secca in dispensa per dare un senso al mortaio: era di nuovo «hai già
+  qualcosa in casa», e confondeva. Nelle finali, con pesi e lunghezze, il mortaio c'è.
 
 ## Il calderone senza fondo
 

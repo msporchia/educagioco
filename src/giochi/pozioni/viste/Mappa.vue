@@ -22,7 +22,8 @@ defineEmits(['gioca', 'riprendi', 'scorda', 'comincia', 'annulla'])
              @comincia="$emit('comincia')" @annulla="$emit('annulla')" />
     <p v-if="davanti" class="pz-davanti" data-amico-davanti>{{ davanti }}</p>
     <p class="pz-intro">La ricetta parla di chili, metri e litri, e il mercante scrive come gli
-      pare: leggi bene, ordina le ampolle giuste e spendi meno gettoni che puoi.</p>
+      pare: leggi bene, ordina le ampolle giuste e spendi meno gettoni che puoi.
+      I gettoni <i class="pz-gettone" aria-hidden="true"></i> restano qui dentro: non sono le tue monete.</p>
     <section v-for="b in blocchi" :key="b.chiave" class="pz-blocco" :data-blocco="b.chiave">
       <h3>
         <span class="em">{{ b.emoji }}</span>

@@ -326,17 +326,22 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
   /* L'ordine: le ampolle arrivano sul bancone a misura reale (la radice
      lunga quanto sarà sul metro), e il mercante le versa una alla volta
      nell'ordine scritto. Ogni voce dice già com'è andata. Nel calderone non
-     va niente: quello lo fa il procedimento. */
+     va niente: quello lo fa il procedimento. Sul telefono in piedi il bancone
+     ne mostra tre: un ordine più lungo arriva a giri, non più piccolo. */
+  const SUL_BANCONE = 3
   async function ordine(voci, dopoOgni) {
     const toccati = [...new Set(voci.map(v => v.i))]
     for (const i of toccati) vasi.trattieni(i, true)
-    ampolle.consegna(voci.map(v => ({ ...v, lungo: v.misura * TACCA * vasi.scala(v.i) })))
-    suoni.ampolle(voci.length)
-    await aspetta(0.6 + voci.length * 0.25)
-    for (let k = 0; k < voci.length; k++) {
-      await versaUna(k, voci[k])
-      dopoOgni?.(k)
-      await aspetta(0.15)
+    for (let da = 0; da < voci.length; da += SUL_BANCONE) {
+      const giro = voci.slice(da, da + SUL_BANCONE)
+      ampolle.consegna(giro.map(v => ({ ...v, lungo: v.misura * TACCA * vasi.scala(v.i) })))
+      suoni.ampolle(giro.length)
+      await aspetta(0.6 + giro.length * 0.25)
+      for (let k = 0; k < giro.length; k++) {
+        await versaUna(k, giro[k])
+        dopoOgni?.(da + k)
+        await aspetta(0.15)
+      }
     }
     ampolle.sgombra()
     for (const i of toccati) vasi.trattieni(i, false)

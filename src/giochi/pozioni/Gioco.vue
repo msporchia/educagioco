@@ -18,7 +18,7 @@ import { attesaDellEsito, PONDERA, TEMPO_MAX } from '../../quiz/nucleo/domanda.j
 import { CAMPAGNA, BLOCCHI, QUANTE_TAPPE, MONETE_A_DOSE, INFINITA, giroInfinito } from './dati/campagna.js'
 import { SENZA_FINE } from './gioco.js'
 import { fraseDiFine, primatoInParole } from '../primati.js'
-import { mescola, scrivi as scriviMisura } from './dati/misure.js'
+import { mescola } from './dati/misure.js'
 import { Bottega } from './motore/bottega.js'
 import { MORTAIO, TAGLIERE } from './motore/procedimento.js'
 import { scrivi, leggi, dice, tappaDi } from './motore/sosta.js'
@@ -179,14 +179,10 @@ function avviaTappa(i, ancheChiusa = false) {
   borsellino = borsa(CHIAVE)
   const t = CAMPAGNA[i]
   messaggio.value = { tipo: 'aiuto', righe: t.aiuto === 'gioco'
-    ? ['Fai le dosi spendendo meno gettoni che puoi.',
-       'Scegli le ampolle e ordinale: le verserà il mercante. Oltre il segno d\'oro trabocca, e poi c\'è da pulire.']
+    ? ['Fai le dosi spendendo meno gettoni che puoi: sono del mercante, non le tue monete.',
+       'Scegli le ampolle e ordinale tutte insieme: ogni ordine paga la spedizione. Oltre il segno d\'oro trabocca, e poi c\'è da pulire.']
     : [t.dritta] }
-  const b = new Bottega(t)
-  const inCasa = b.comprati.find(g => g.casa), secche = b.ingredienti.filter(g => g.dispensa).map(g => g.nome)
-  if (inCasa) messaggio.value.righe.push(`In casa hai già ${scriviMisura(inCasa.casa, inCasa.unita)} di ${inCasa.nome}.`)
-  if (secche.length) messaggio.value.righe.push(`In dispensa hai ${secche.join(' e ')}: non serve comprarli.`)
-  entra(i, b)
+  entra(i, new Bottega(t))
 }
 
 function allaMappa() {
@@ -404,7 +400,7 @@ function prossima() {
 
 /* per i test e per lo strumento delle foto: la stessa porta del gioco */
 if (typeof window !== 'undefined')
-  window.__poz = { vista, tappaIdx, serie, avviaInfinita, bottega, bozza, finale, avviaTappa, allaMappa, prossima,
+  window.__poz = { vista, tappaIdx, serie, avviaInfinita, bottega, bozza, finale, occupato, avviaTappa, allaMappa, prossima,
                    aggiungi, togliVoce, ordina, fai, pulisci, salta, CAMPAGNA, MONETE_A_DOSE }
 </script>
 

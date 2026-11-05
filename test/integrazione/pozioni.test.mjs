@@ -48,6 +48,11 @@ await scatto(page, 'pozioni-gioco')
 await page.waitForSelector('[data-listino]')
 uguale('il rotolo ha tutti gli ingredienti della ricetta, e solo quelli', await page.locator('[data-merce]').count(), CAMPAGNA[0].ingredienti)
 uguale('quattro targhette a ingrediente', await page.locator('[data-targhetta]').count(), CAMPAGNA[0].ingredienti * 4)
+controlla('il gettone non è una moneta: a sei lati, sul listino e nella borsa', await page.evaluate(() => {
+  const tutti = [...document.querySelectorAll('[data-listino] .pz-gettone, [data-gettoni] .pz-gettone')]
+  return tutti.length > 4 && tutti.every(g => { const s = getComputedStyle(g); return s.clipPath.startsWith('polygon') && s.borderRadius === '0px' })
+}))
+controlla('e sul banco di monete non ce ne sono', !/🪙|monet/i.test(await page.locator('[data-listino]').innerText() + await page.locator('[data-gettoni]').innerText()) || /non le tue monete/.test(await page.locator('[data-esito]').innerText()))
 await scatto(page, 'pozioni-listino')
 
 const stato = () => page.evaluate(() => {
@@ -75,10 +80,13 @@ const fermo = () => page.waitForFunction(() => {
 
 /* un posto dell'ordine toccato si toglie */
 await page.locator(`[data-targhetta="${await laGiusta()}"]`).click()
-uguale('la targhetta va nell\'ordine', await page.locator('[data-posto]:not(.pz-libero)').count(), 1)
+uguale('la targhetta va nello scontrino', await page.locator('[data-scontrino] [data-posto]').count(), 1)
+{ const prezzo = await page.evaluate(() => { const v = window.__poz.bozza.value[0]; return window.__poz.bottega.value.ingredienti[v.i].offerte[v.k].prezzo })
+  controlla('la spedizione si vede', /Spedizione/.test(await page.locator('[data-spedizione]').innerText()))
+  uguale('e il totale la conta', (await page.locator('[data-totale] b').innerText()).trim(), String(prezzo + 1)) }
 controlla('la borsa fa vedere quanto costa l\'ordine', /ordine \d+/.test(await page.locator('[data-gettoni]').innerText()))
 await page.locator('[data-posto="0"]').click()
-uguale('e dall\'ordine si toglie', await page.locator('[data-posto]:not(.pz-libero)').count(), 0)
+uguale('e dallo scontrino si toglie', await page.locator('[data-scontrino] [data-posto]').count(), 0)
 await page.locator('[data-chiudi]').click()
 uguale('la ✕ chiude il rotolo', await page.locator('[data-listino]').count(), 0)
 
@@ -147,10 +155,11 @@ await attendi(page, 500)
 }
 
 /* la roba nel calderone, una alla volta */
+const fermaLaScena = () => page.waitForFunction(() => !window.__poz.occupato.value, null, { timeout: 25000 })
 for (let i = 0; i < CAMPAGNA[0].ingredienti; i++) {
   await trascina(await dove(`roba:${i}`), await dove('calderone'))
   await page.waitForFunction(n => window.__poz.bottega.value.dentro.length === n, i + 1, { timeout: 25000 })
-  await attendi(page, 2500)
+  await fermaLaScena()   // un gesto a scena occupata non conta: quanto dura lo decide la macchina
 }
 uguale('il calderone si è riempito', await page.evaluate(() => window.__poz.bottega.value.dentro.length), CAMPAGNA[0].ingredienti)
 await conGesto('mestolo', 'calderone')
@@ -225,7 +234,7 @@ await attendi(page, 1200)
   uguale('la ricetta comincia dal mortaio', await page.evaluate(() => window.__poz.bottega.value.passi[0].azione), 'pesta')
   for (const i of sulMortaio) {
     await trascina(await dove(`roba:${i}`), await dove('mortaio'))
-    await attendi(page, 700)
+    await fermaLaScena()
   }
   uguale('la roba trascinata sul mortaio ci entra', await page.evaluate(() => window.__poz.bottega.value.mortaio.length), 2)
   /* il pestello fermo sul mortaio non pesta: passato un attimo, la freccia */
@@ -241,7 +250,7 @@ await attendi(page, 1200)
   }
   await page.waitForFunction(() => window.__poz.bottega.value.passo === 1, null, { timeout: 25000 })
   uguale('e facendolo la freccia se ne va', await page.locator('[data-suggerimento]').count(), 0)
-  await attendi(page, 900)
+  await fermaLaScena()
   await conGesto('mortaio', 'calderone')
   await page.waitForFunction(() => window.__poz.bottega.value.passo === 2, null, { timeout: 25000 })
   uguale('il pestato è nel calderone', await page.evaluate(() => window.__poz.bottega.value.dentro.length), 2)
