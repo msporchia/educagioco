@@ -188,10 +188,10 @@ const bottegaMsg = ref('')
 const magazzinoAperto = ref(null)          // il silo di cui si vede il foglio (docs/fattoria3d/magazzini.md)
 const magazzinoMsg = ref('')
 const toast = ref(null)                  // { testo, fine }: l'avviso del livello, sopra la scena
-const DURATA_TOAST = 4500, DURATA_AVVISO = 6000, DURATA_RIFIUTO = 3400
+const DURATA_TOAST = 4500, DURATA_AVVISO = 6000, DURATA_CARTELLO = 3400
 let avvisoFine = 0
-const rifiuto = ref(null)                // { testo, n, fine }: un gesto che non si può fare, detto a parole in cima alla scena (docs/fattoria3d/regole.md, «Come si dice di no»)
-let rifiutiDetti = 0
+const cartello = ref(null)               // { testo, n, fine }: una riga che si vede sempre, in basso sulla scena: i «no» e le notizie del gioco (docs/fattoria3d/regole.md, «Come si dice di no»)
+let cartelliDetti = 0
 const dialogo = ref(null)                // { titolo, testo, bottoni: [{ t, fn, quieto }] }
 const cameraLibera = ref(false)
 const q = reactive(qualitaIniziale(fasciaAttiva()))
@@ -244,19 +244,19 @@ const ui = {
   apriMongolfiera() { naveMsg.value = ''; naveCons.value = null; nave.value = true },
   apriBottega(tipo) { bottegaMsg.value = ''; bottegaCons.value = null; bottegaAperta.value = tipo },
   apriMagazzino(silo) { magazzinoMsg.value = ''; magazzinoAperto.value = silo },          // un tocco su un magazzino
-  apriMappa() { if (comune) ui.avviso('Dai vicini si va col trattore della tua fattoria.'); else visite.apriMappa() },
+  apriMappa() { if (comune) ui.cartello('Dai vicini si va col trattore della tua fattoria.'); else visite.apriMappa() },
   apriBestia(id) { bestiaMsg.value = ''; bestiaAperta.value = id },             // tenere premuto su un animale
   riempi: riempiCiotola,
   lava,
   bagno(info) { bagno.value = info },
   apriGuardaroba() { guardarobaAperto.value = true },
   entraBottega(tipo) { sala.entra(tipo) },          // un tocco su una bottega del paese: si entra (docs/fattoria3d/botteghe.md, «Dentro»)
-  entraInCasa() { if (comune) ui.avviso('La casa è nella tua fattoria: qui si lavora insieme.'); else interni.entra() },          // un tocco sulla casa (docs/fattoria3d/casa.md)
+  entraInCasa() { if (comune) ui.cartello('La casa è nella tua fattoria: qui si lavora insieme.'); else interni.entra() },          // un tocco sulla casa (docs/fattoria3d/casa.md)
   avviso(testo) {
     avvisoTesto.value = testo || ''
     avvisoFine = testo ? performance.now() + DURATA_AVVISO : 0
   },
-  rifiuto(testo) { rifiuto.value = testo ? { testo, n: ++rifiutiDetti, fine: performance.now() + DURATA_RIFIUTO } : null },
+  cartello(testo) { cartello.value = testo ? { testo, n: ++cartelliDetti, fine: performance.now() + DURATA_CARTELLO } : null },
   apriCostruisci(i, j) { apriCostruisci(i, j) },                           // tenere premuto su un posto libero del terreno tuo
   fogliAperti: () => !!alberoK.value || !!dialogo.value || !!consiglio.value || !!costruisciQui.value || !!macchinaAperta.value || livelliAperto.value || guardarobaAperto.value || !!bestiaAperta.value || !!addobbiDi.value || !!battesimoDi.value || bancoAperto.value || nave.value || !!bottegaAperta.value || !!magazzinoAperto.value || mappaAperta.value || !!carretto.value,
   zonaDrop: () => (zonaVia.value || null)?.getBoundingClientRect() || null,
@@ -313,15 +313,15 @@ const bestiaVista = computed(() => {
 // ── la cura sul prato: quello che si trascina nella ciotola e nella tinozza arriva qui (scena3d/attrezzi.js); tornano false se resta aperto ──
 function riempiCiotola(id, k) {
   const r = motore.cura.riempi(id, k)
-  if (!r.ok) { ui.rifiuto(dettoCura(r, { monete: motore.monete() })); ui.cambio(); return false }
+  if (!r.ok) { ui.cartello(dettoCura(r, { monete: motore.monete() })); ui.cambio(); return false }
   mondo.mangia(id)
-  if (r.premio) ui.avviso(dettoEsito(r, motore.cura.nomeDi(id)))
+  if (r.premio) ui.cartello(dettoEsito(r, motore.cura.nomeDi(id)))
   ui.cambio()
   return true
 }
 function lava(id) {
   const no = motore.cura.rifiutoBagno(id)
-  if (no) { ui.rifiuto(dettoCura(no, { monete: motore.monete() })); return false }
+  if (no) { ui.cartello(dettoCura(no, { monete: motore.monete() })); return false }
   return mondo.bagno.inizia(id)
 }
 function lasciaBagno() { mondo.bagno.annulla() }
@@ -457,7 +457,9 @@ function piuPosto() {
   if (v.passo === 'nuovo') {                 // quello nuovo è nel magazzino dei pezzi: si mette come dal menu, davanti al contadino o col fantasma da trascinare
     magazzinoAperto.value = null; ui.cambio(); mondo.cambiato()
     const [i, j] = mondo.cellaDavanti(), q = mondo.costruisciQui(r.tipo, i, j)
-    return void ui.avviso(q.esito === 'messo' ? `${SILOS[silo].emoji} Eccolo! Ogni ${SILOS[silo].cosa} ha posto per ${r.posti}.` : `${SILOS[silo].emoji} Mettilo dove vuoi: è nel menu Compra.`)
+    const testo = q.esito === 'messo' ? `${SILOS[silo].emoji} Eccolo! Ogni ${SILOS[silo].cosa} ha posto per ${r.posti}.` : `${SILOS[silo].emoji} Mettilo dove vuoi: è nel menu Compra.`
+    ui.avviso(testo); ui.cartello(testo)           // la fascia del trascinamento la legge dall'avviso
+    return
   }
   magazzinoMsg.value = `Fatto! Adesso ogni ${SILOS[silo].cosa} ha posto per ${r.posti}.`
   ui.cambio(); mondo.cambiato()
@@ -615,7 +617,7 @@ function ritmo() {
   contaEventi(); ripresa(); chiudiLaGuida()
   const t = performance.now()
   if (toast.value && t >= toast.value.fine) toast.value = null
-  if (rifiuto.value && t >= rifiuto.value.fine) rifiuto.value = null
+  if (cartello.value && t >= cartello.value.fine) cartello.value = null
   if (avvisoFine && t >= avvisoFine) { avvisoFine = 0; avvisoTesto.value = '' }
   cameraLibera.value = mondo.cameraLibera
   if (sporco) salva()
@@ -781,7 +783,7 @@ onBeforeUnmount(() => {
         <div class="f3-casa" v-show="!inVisita && !inCasa && !tipoSala">
         <Hud v-bind="foto" :nuovo="livelloNuovo" @livello="apriLivelli" />
         <div v-if="toast" class="f3-toast" data-f3="avviso-livello">⭐ {{ toast.testo }}</div>
-        <div v-if="rifiuto" :key="rifiuto.n" class="f3-no" role="status" data-f3="rifiuto">{{ rifiuto.testo }}</div>
+        <div v-if="cartello" :key="cartello.n" class="f3-cartello" role="status" data-f3="cartello">{{ cartello.testo }}</div>
         <button v-if="!comune && amiciComune.length" class="f3-angolo f3-insieme" aria-label="la fattoria in comune" data-f3="apri-comune" @click="apriInsieme">🤝</button>
         <button v-if="comune" class="f3-angolo f3-insieme" aria-label="torna alla tua fattoria" data-f3="torna-mia" @click="indietro">🏠</button>
         <button class="f3-adesso" aria-label="cosa faccio adesso" data-f3="apri-consiglio" @click="apriConsiglio">🧭 E adesso?</button>

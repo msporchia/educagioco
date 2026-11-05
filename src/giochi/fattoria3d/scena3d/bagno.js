@@ -43,7 +43,7 @@ export class Bagno {
     const c = this.c, w = this.w, r = w.m.cura.lava(c.id)
     this._chiudi()
     w.compagni.esceDalBagno(c.id, true)
-    if (r.ok) { if (r.premio) w.fx.volo(`+${r.premio.xp} ⭐`, c.amico.grp.position, 1.6); w.ui.cambio() } else w.ui.rifiuto?.('Il bagno non è riuscito: riprova')
+    if (r.ok) { if (r.premio) w.fx.volo(`+${r.premio.xp} ⭐`, c.amico.grp.position, 1.6); w.ui.cambio() } else w.ui.cartello?.('Il bagno non è riuscito: riprova')
   }
   /** Lasciato a metà: l'animale esce com'era e non si paga. */
   annulla () {

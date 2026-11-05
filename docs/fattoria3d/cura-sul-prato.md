@@ -60,5 +60,5 @@ Il coniglio e il pappagallo non portano niente. Niente che rovini la fattoria: s
 ## Nei test
 
 `unita/fattoria3d-cura-prato` (ciotole e tinozza, salvataggi di prima, prezzo, fame, scappatoia, gioco, lavare, sporco, sequenze e scena), `unita/fattoria3d-attrezzi` (i rifiuti detti in cima alla scena), `integrazione/fattoria3d-bestie` (un tocco vero sulla ciotola e sulla tinozza, il cibo, la strofinata). Bersagli:
-`[data-f3="attrezzi"][data-tipo="ciotola|tinozza|recinto"]`, `[data-f3="attrezzi-riga"]`, `[data-f3="gettone-conto"]`, `[data-cibo="<id>"]`, `[data-vuole]`, `.f3-badge.fame[data-ciotola="<id>"]`, `[data-sporca="<id>"]`, `[data-f3="bagno"]`, `[data-f3="rifiuto"]` (il cartello del «no»).
+`[data-f3="attrezzi"][data-tipo="ciotola|tinozza|recinto"]`, `[data-f3="attrezzi-riga"]`, `[data-f3="gettone-conto"]`, `[data-cibo="<id>"]`, `[data-vuole]`, `.f3-badge.fame[data-ciotola="<id>"]`, `[data-sporca="<id>"]`, `[data-f3="bagno"]`, `[data-f3="cartello"]` (il cartello: i «no» e le notizie).
 Per guardare: `#animali=watson,beagle&bisogni=fame,sporco,noia` ([comandi](../core/comandi.md)), `npm run catalogo3d:scheda -- --gioco fattoria --q labrador --sporco 0.7` (anche `--q "=fattoria:sherlock|=fattoria:golia|=fattoria:pepe"`: i tre scuri).

@@ -20,7 +20,7 @@ function mondo() {
   const w = {
     m, rect: { width: 390, height: 700 }, proietta: () => [100, 200, true], pezzi: { centroDi: () => ({}), salta: () => {} }, puntaSuolo: (x, y) => ({ x, z: y }),
     fx: { parla: t => detti.push(t) },
-    ui: { rifiuto: t => rifiuti.push(t), attrezzi: x => aperti.push(x), riempi: (id, k) => { fatti.push(['riempi', id, k]); return k !== 'no' }, lava: id => { fatti.push(['lava', id]); return true } },
+    ui: { cartello: t => rifiuti.push(t), attrezzi: x => aperti.push(x), riempi: (id, k) => { fatti.push(['riempi', id, k]); return k !== 'no' }, lava: id => { fatti.push(['lava', id]); return true } },
     azioni: {
       campo: () => detti.push('cresce'),
       dici: t => detti.push(t),

@@ -69,7 +69,7 @@ export class Compagni {
       if (cella) { c.x = cella[0] + 0.5; c.z = cella[1] + 0.5 }
       c.dir = this.rnd() * Math.PI * 2
       grp.position.set(c.x, 0, c.z); grp.rotation.y = c.dir
-      if (!senzaAvviso) { this.fx.scoppietta(grp.position, 0xffe27a, 10, 1.4, 2.2); this.ui.avviso(d.arrivo) }
+      if (!senzaAvviso) { this.fx.scoppietta(grp.position, 0xffe27a, 10, 1.4, 2.2); this.ui.avviso(d.arrivo); this.ui.cartello?.(d.arrivo) }
     }
     this._bisogni()
   }

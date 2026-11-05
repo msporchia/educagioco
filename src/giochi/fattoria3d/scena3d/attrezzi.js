@@ -36,7 +36,7 @@ export class Attrezzi {
     this._accanto(c, { tipo: 'recinto', voci, riga: riga || `Hanno fame: trascina qui ${voci[0].nome.toLowerCase()}` })
   }
   /** Un gesto che non fa niente lo dice: nel fumetto del contadino e in cima alla scena (lui può essere lontano). */
-  _no(testo) { this.w.fx.parla(testo); this.w.ui.rifiuto?.(testo) }
+  _no(testo) { this.w.fx.parla(testo); this.w.ui.cartello?.(testo) }
   _accanto(c, info) {
     const w = this.w, [x, y] = w.proietta(w.pezzi.centroDi({ kind: 'cosa', id: c.id }), 0.3)
     this.aperto = { ...info, id: c.id, x, y, larghezza: w.rect.width, altezza: w.rect.height }

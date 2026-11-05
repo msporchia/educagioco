@@ -261,7 +261,7 @@ export class Azioni {
     if (eBottega(tipo)) return ui.entraBottega ? ui.entraBottega(tipo) : ui.apriBottega(tipo)             // una bottega del paese: si entra, dentro ci sono i clienti
   }
   /** Una riga che si vede sempre: nel fumetto dell'eroe, in cima alla scena (il contadino può essere lontano) e nella barra del costruire se è aperta. */
-  dici(testo) { this.c.fx.parla(testo); this.c.ui.avviso(testo); this.c.ui.rifiuto?.(testo) }
+  dici(testo) { this.c.fx.parla(testo); this.c.ui.avviso(testo); this.c.ui.cartello?.(testo) }
 
   // ── il terreno ──
   offriLotto(l) {
