@@ -4,10 +4,12 @@
 import { FAMIGLIE, POZIONI, VALE, scrivi } from './misure.js'
 
 // quali azioni ci sono sul tavolo, a quel `procedimento`: una in più per volta
-const AZIONI_DEL = { 1: ['versa', 'mescola'], 2: ['versa', 'mescola', 'scalda'], 3: ['pesta', 'versa', 'mescola', 'scalda'],
-                     4: ['pesta', 'versa', 'mescola', 'scalda', 'diluisci'], 5: ['pesta', 'versa', 'mescola', 'scalda', 'diluisci'] }
-// e quelle che si aggiungono da un gradino in poi: i bambini si divertono a farle, quindi presto
-const AZIONI_DA = { agita: 'grande', soffia: 'virgola', sminuzza: 'virgole', gratta: 'virgole' }
+// i bambini si divertono a farle, quindi già dalla prima: docs/pozioni/procedimento.md
+const DI_TUTTE = ['versa', 'mescola', 'scalda', 'agita', 'sale', 'pepe', 'imbottiglia']
+const AZIONI_DEL = { 1: DI_TUTTE, 2: [...DI_TUTTE, 'soffia'], 3: ['pesta', ...DI_TUTTE, 'soffia'],
+                     4: ['pesta', ...DI_TUTTE, 'soffia', 'diluisci'], 5: ['pesta', ...DI_TUTTE, 'soffia', 'diluisci'] }
+// e quelle che si aggiungono da un gradino in poi
+const AZIONI_DA = { sminuzza: 'virgole', gratta: 'virgole' }
 // senza gradino, cioè nelle finali e nel calderone senza fondo, ci sono tutte
 const azioniDi = (procedimento, gradino) => {
   const posto = id => GRADINI.findIndex(g => g.id === id)

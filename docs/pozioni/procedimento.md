@@ -30,7 +30,7 @@ pasticcio. Il motore è `motore/procedimento.js`.
   sfrega; il pestello sul mortaio pesta, il coltello sul tagliere sminuzza, il mortaio
   e il tagliere sul calderone versano; il mestolo mescola, il fiammifero sulla legna
   accende il fuoco, il mantice sulla legna lo alza, la bacchetta fa l'incantesimo, la
-  brocca diluisce (`MOSSE` in `procedimento.js`, i gesti in [gesti.md](gesti.md)). Le
+  brocca diluisce, il sale e il pepe si scuotono, la fiala si riempie (`MOSSE` in `procedimento.js`, i gesti in [gesti.md](gesti.md)). Le
   cose entrano una alla volta, in qualunque ordine; provato coi bottoni: troppi, e
   non sembrava di fare niente.
 - **Sminuzzare e grattugiare dipendono dalla roba** (`lavoro` in `dati/misure.js`):
@@ -41,6 +41,10 @@ pasticcio. Il motore è `motore/procedimento.js`.
 - **L'incantesimo ha una riga tutta sua**, con la formula: «Agita la bacchetta sul
   calderone e sussurra: «Stelle e vapore, cambia colore!»». La formula dipende dagli
   ingredienti (`FORMULE`). Scritto solo «agita la bacchetta» era poco teatrale.
+- **Il pizzico non si misura**: sale o pepe, uno a ricetta. Non si compra e non ha dose,
+  è un gesto in più per divertirsi. Sul tavolo ci sono tutti e due col nome davanti: quello
+  che la ricetta non dice è un pasticcio. Viene dopo che la roba è nel calderone.
+- **La fiala chiude sempre la ricetta**: si vede la pozione fatta, e resta sul tavolo.
 - **Lasciato sul tavolo, resta lì**: se un attrezzo dà fastidio lo si sposta, come
   su un banco vero (`posa`). Non si salva: rientrando ognuno è al suo posto.
 - **Il fuoco parte spento**: scaldare vuol dire accenderlo, e a fuoco spento il
@@ -63,18 +67,20 @@ li usa: capire cosa serve è parte del gioco.
 
 | | passi | gradini |
 |---|---|---|
-| 1 | versa tutto, mescola | `banco` |
-| 2 | versa tutto, mescola, accendi il fuoco | `grande` |
-| 3 | pesta due cose e versa, poi il resto | `grandi`, `virgola`, `virgole` |
+| 1 | versa tutto, mescola, accendi il fuoco, la bacchetta, il pizzico, la fiala | `banco` |
+| 2 | come l'1, e il mantice | `grande` |
+| 3 | pesta due cose e versa, poi il resto; i liquidi versano tutto | `grandi`, `virgola`, `virgole` |
 | 4 | come il 3, e si diluisce | `media`, `miste`, `inversa` |
 | 5 | come il 4, e una coppia di passi detta al contrario («accendi il fuoco dopo aver mescolato bene») | `inverse`, le finali |
 
-- **Gli attrezzi nuovi arrivano un gradino alla volta, e presto** (`AZIONI_DA`): la
-  bacchetta da `grande`, il mantice da `virgola`, tagliere e grattugia da `virgole`.
-  Nelle finali e nel calderone senza fondo ci sono tutti.
-- **Mantice e bacchetta sono di contorno**: uno a ricetta fino al livello 3, due dopo,
-  mai oltre dieci passi (`TETTO`: la pergamena coprirebbe il calderone). Quello che
-  resta fuori sta sul tavolo lo stesso.
+- **Si gioca al banco dalla prima tappa**: con «versa e mescola» il fuoco restava spento
+  e il brodo non ribolliva. Fuoco, bacchetta, pizzico e fiala ci sono da subito, il
+  mantice da `grande`, tagliere e grattugia da `virgole` (`AZIONI_DA`). Nelle finali e nel
+  calderone senza fondo c'è tutto.
+- **Mantice e bacchetta sono di contorno**: entrano appena sono sul tavolo, mai oltre
+  dieci passi e otto punti (`TETTO`, `RIGHE`: la pergamena coprirebbe il calderone). Il
+  posto per la fiala è tenuto, poi vengono loro e per ultimo il pizzico. Quello che resta
+  fuori sta sul tavolo lo stesso.
 - **Si mescola sempre prima di scaldare**, il mantice viene dopo il fuoco.
 - **L'ordine cambia di ricetta in ricetta**: mantice, bacchetta e brocca cambiano
   posto, se no si imparerebbe a memoria e il testo non si leggerebbe.
@@ -108,7 +114,7 @@ finali: dalla quarta quattro ingredienti, e il procedimento sale fino in fondo.
 - **I suoni** stanno in `suoni.js`, sopra `nota` e `rumore` di `src/audio.js`: le
   ampolle, il liquido che gorgoglia salendo, la polvere, la radice, il trabocco, il
   tuffo, il pestello, la lama, la grattugia, il mestolo, il fiammifero, il mantice,
-  la bacchetta, il fuoco, il pasticcio, una bolla ogni tanto.
+  la bacchetta, il pizzico, il tappo, il fuoco, il pasticcio, una bolla ogni tanto.
   **Non dicono niente che non si veda**: a volume spento il gioco è intero.
 
 Provato e tolto: due o tre pozioni per tappa con un cliente che arrivava a berle
