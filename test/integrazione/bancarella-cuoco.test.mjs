@@ -49,8 +49,13 @@ const finisci = (k, f) => page.evaluate(k => {
 }, k).then(() => page.waitForFunction(([k, f]) => window.__shop.cucina.value.stazioni[k].fase === f, [k, f], { timeout: 20000 }))
 
 async function fai(piatto) {
+  if (piatto === '🥪') {
+    await premi(FORMAGGIO); await premi(TAGLIERE)
+    await page.waitForFunction(() => window.__shop.cucina.value.stazioni.tagliere.fase === 'pronta', undefined, { timeout: 30000 })
+    await premi(PANE); await premi(TAGLIERE)
+    return
+  }
   await premi(PIATTI)
-  if (piatto === '🥪') { await premi(PANE); await premi(FORMAGGIO); return }
   await premi(ISOLA)
   await premi(PASTA); await premi(PENTOLA)
   await finisci('pentola', 'pronta')
@@ -75,7 +80,7 @@ uguale('niente levetta né tasti', await page.locator('[data-leva], [data-usa], 
   await fermo()
   uguale('prende la pasta e la mette sul fuoco da solo', (await stato()).stazioni.pentola.fase, 'cuoce')
   await premi(SUGO)
-  await premi(FORMAGGIO)
+  await premi(PANE)
   await page.waitForSelector('[data-detto]', { timeout: 1500 })
   uguale('quello che non si unisce lo dice', await page.locator('[data-detto]').innerText(), 'Questi due non vanno insieme')
   await page.evaluate(() => {

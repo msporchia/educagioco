@@ -20,7 +20,7 @@ const cassetta = (c, cosa) => cella(c, k => k.cosa === cosa)
 
 test('la stanza ha solo quello che serve alla cucina', () => {
   const c = cucina(0)
-  assert.deepEqual(Object.keys(c.stazioni), ['pentola'])
+  assert.deepEqual(Object.keys(c.stazioni), ['pentola', 'tagliere'], 'il tagliere serve al formaggio')
   assert.ok(c.celle.some(k => k.nome === 'pentola'))
   assert.ok(!c.celle.some(k => k.nome === 'forno'))
   assert.ok(!c.celle.some(k => k.cosa === 'impasto'))
@@ -82,7 +82,7 @@ test('sul piatto si deposita, a mani vuote si prende', () => {
   assert.ok(fa(c, '3,3'), 'il piatto si posa sull\'isola')
   assert.ok(c.sopra['3,3'].piatto)
   fa(c, cassetta(c, 'pasta'))
-  assert.equal(fa(c, '3,3'), false); assert.equal(c.perche, 'Prima va cotta')
+  assert.equal(fa(c, '3,3'), false); assert.equal(c.perche, 'Prima si cuoce')
   c.cuoco.mano = null
   fa(c, cassetta(c, 'sugo'))
   assert.ok(fa(c, '3,3'), 'quello che ho in mano va sul piatto')
@@ -99,14 +99,17 @@ test('due cose della stessa ricetta si uniscono anche senza piatto', () => {
   assert.ok(fa(c, cassetta(c, 'sugo')), 'con l\'impasto in mano, sul sugo')
   assert.ok(c.cuoco.mano.piatto)
   assert.deepEqual(c.cuoco.mano.cose, ['impasto', 'sugo'])
-  assert.ok(fa(c, cassetta(c, 'formaggio')))
+  assert.equal(fa(c, cassetta(c, 'formaggio')), false)
+  assert.equal(c.perche, 'Prima si taglia')
+  c.stazioni.tagliere = { fase: 'pronta', t: 0, cosa: 'formaggio', colpi: TAGLI }
+  assert.ok(fa(c, '5,6'), 'il formaggio tagliato va sul piatto')
   assert.ok(c.cuoco.mano.daInfornare)
   assert.ok(fa(c, '4,0'), 'e va in forno')
 
   const b = cucina(3)                 // sul bancone: il piatto resta lì
   fa(b, cassetta(b, 'pane')); fa(b, '3,3')
   fa(b, cassetta(b, 'insalata'))
-  assert.equal(fa(b, '3,3'), false); assert.equal(b.perche, 'Prima va tagliata')
+  assert.equal(fa(b, '3,3'), false); assert.equal(b.perche, 'Prima si taglia')
   b.cuoco.mano = { cosa: 'insalata', fatta: true, bruciata: false }
   assert.ok(fa(b, '3,3'))
   assert.equal(b.cuoco.mano, null)
@@ -160,12 +163,16 @@ test('chi lascia a metà riprende con un tocco; con le mani piene no', () => {
   assert.equal(c.stazioni.tagliere.fase, 'pronta')
 })
 
-test('l\'insalata: tagliata, col formaggio si unisce e si serve', () => {
+test('l\'insalata: si tagliano tutte e due, si uniscono e si serve', () => {
   const c = cucina(1)
   fa(c, cassetta(c, 'insalata')); fa(c, '5,6'); aspetta(c, 1.6)
-  fa(c, cassetta(c, 'formaggio'))
-  assert.ok(fa(c, '5,6'), 'col formaggio in mano, sul tagliere')
-  assert.equal(c.cuoco.mano.pronto, '🥗')
+  fa(c, '5,6'); fa(c, '3,3')
+  fa(c, cassetta(c, 'formaggio')); fa(c, '5,6'); aspetta(c, 1.6)
+  assert.equal(c.stazioni.tagliere.cosa, 'formaggio')
+  fa(c, '5,6')
+  assert.deepEqual({ ...c.cuoco.mano }, { cosa: 'formaggio', fatta: true, bruciata: false })
+  assert.ok(fa(c, '3,3'), 'il formaggio tagliato sull\'insalata tagliata')
+  assert.equal(c.sopra['3,3'].pronto, '🥗')
 })
 
 test('la pizza entra col piatto ed esce pronta; il bruciato va nel bidone', () => {

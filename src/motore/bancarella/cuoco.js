@@ -18,6 +18,9 @@ const FISSE = {
 }
 const ISOLA = ['2,3', '3,3', '4,3']
 
+// qui il formaggio si taglia: col dito no, e le ricette sono le stesse
+const vaA = cosa => (cosa === 'formaggio' ? 'tagliere' : INGREDIENTI[cosa].va)
+
 function pianta(c) {
   const celle = [], cose = dispensaDi(c)
   for (let z = 0; z < FONDA; z++) for (let x = 0; x < LARGA; x++) {
@@ -38,6 +41,7 @@ function pianta(c) {
    `arrivato`: il posto raggiunto, dove chi gioca fa la mossa (`arriva`). */
 export function cucinaCuoco(camp) {
   const c = cucinaNuova(camp)
+  if (dispensaDi(c).includes('formaggio')) c.stazioni.tagliere ||= libera()
   return { ...c, celle: pianta(c), sopra: {}, fila: [], strada: [], arrivato: '', perche: '', tagliando: false, colpo: 0,
            cuoco: { x: 3.5, z: 4.5, verso: 0, mano: null, cammina: false } }
 }
@@ -148,7 +152,7 @@ export function arriva(c) {
 }
 
 /* ── le cose ── */
-const crudo = cosa => ({ cosa, fatta: !INGREDIENTI[cosa].va, bruciata: false })
+const crudo = cosa => ({ cosa, fatta: !vaA(cosa), bruciata: false })
 const nuovoPiatto = () => ({ piatto: true, cose: [], pronto: '', daInfornare: false })
 const ePiatto = o => !!o?.piatto
 
@@ -164,7 +168,7 @@ function sulPiatto(c, p, cosa) {
   else if (r) p.pronto = r.emoji
 }
 
-const nonPronta = o => (INGREDIENTI[o.cosa].va === 'tagliere' ? 'Prima va tagliata' : 'Prima va cotta')
+const nonPronta = o => (vaA(o.cosa) === 'tagliere' ? 'Prima si taglia' : 'Prima si cuoce')
 
 /* Due cose senza piatto: se stanno nella stessa ricetta si uniscono, e il piatto ce lo mette il cuoco. */
 function unisci(c, a, b, dopo) {
@@ -230,8 +234,8 @@ function allaStazione(c, nome, m) {
       if (ePiatto(m) && m.daInfornare) return { fai: () => { c.stazioni.forno = { ...libera(), fase: 'cuoce', cosa: 'pizza' }; k.mano = null } }
       return { perche: 'Qui va la pizza condita, sul piatto' }
     }
-    if (!m) return { perche: nome === 'tagliere' ? 'Porta qui l\'insalata' : 'Porta qui quello da cuocere' }
-    if (ePiatto(m) || m.fatta || INGREDIENTI[m.cosa].va !== nome) return { perche: 'Qui non va' }
+    if (!m) return { perche: nome === 'tagliere' ? 'Porta qui quello da tagliare' : 'Porta qui quello da cuocere' }
+    if (ePiatto(m) || m.fatta || vaA(m.cosa) !== nome) return { perche: 'Qui non va' }
     return { fai: () => {
       c.stazioni[nome] = { ...libera(), fase: nome === 'tagliere' ? 'taglia' : 'cuoce', cosa: m.cosa }
       c.tagliando = nome === 'tagliere'
