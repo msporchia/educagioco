@@ -17,6 +17,7 @@ const SCALA_ROBA = 0.5      // i pezzi di cucina sono fatti per il banco col dit
 const COSTRUISCI = { pentola: creaPentola, padella: creaPadella, tagliere: creaTagliere, forno: creaForno }
 // quanto sporge dal piano quello che si tocca: il forno e la finestra si toccano anche in alto
 const SOPRA = { forno: 0.8, cassetta: 0.3, consegna: 1.4, bidone: 0.15, pentola: 0.5, padella: 0.25 }
+const TAGLIATO = { insalata: 'insalata', formaggio: 'formaggio-cubetti' }
 const ACQUA = { vuota: 0xa9d6ee, cuoce: 0x9fd0ea, pronta: 0xf1dd9a, scotta: 0xa9743c }
 
 export function creaCucinaCuoco(canvas, { sente, quanto, perso, dpr } = {}) {
@@ -60,8 +61,18 @@ function creaPosto() {
 }
 const figura = o => {
   if (o.bruciata) return cibo(o.cosa === 'impasto' ? 'pizza' : o.cosa, { bruciato: true })
-  if (o.cosa === 'insalata') return o.fatta ? cibo('insalata') : confezione('insalata')
-  return o.cosa === 'pasta' || o.cosa === 'carne' || o.cosa === 'uovo' ? (o.fatta ? cibo(o.cosa) : confezione(o.cosa)) : confezione(o.cosa)
+  // in mano la roba è nuda: la tavola dell'impasto e la carta della carne sembrerebbero un piatto
+  if (o.cosa === 'impasto') return cibo('impasto-palla')
+  if (o.cosa === 'carne') return cibo('carne', { crudo: !o.fatta })
+  if (TAGLIATO[o.cosa] && o.fatta) return tagliato(o.cosa)
+  return (o.cosa === 'pasta' || o.cosa === 'uovo') && o.fatta ? cibo(o.cosa) : inCassetta(o.cosa)
+}
+// il pane qui è già tagliato: una pagnotta intera chiederebbe il tagliere
+const inCassetta = cosa => (cosa === 'pane' ? cibo('pane-aperto') : confezione(cosa))
+function tagliato(cosa) {
+  const f = cibo(TAGLIATO[cosa])
+  if (cosa === 'formaggio') f.scale.setScalar(1.7)     // i cubetti sono fatti per stare sull'insalata: da soli non si vedono
+  return f
 }
 
 function costruisci(renderer, canvas, { sente, quanto, dpr: fisso }) {
@@ -134,7 +145,7 @@ function costruisci(renderer, canvas, { sente, quanto, dpr: fisso }) {
         stazioni[c.nome] = { g, barra, fumo }
       } else if (c.tipo === 'cassetta') {
         const g = creaCassetta(); g.position.set(cx, ALTO, cz)
-        const dentro = confezione(c.cosa); dentro.scale.setScalar(0.48); dentro.position.y = 0.1
+        const dentro = inCassetta(c.cosa); dentro.scale.setScalar(0.48); dentro.position.y = 0.1
         g.add(dentro)
         scena.add(g)
       } else if (c.tipo === 'piatti') {
@@ -207,16 +218,16 @@ function costruisci(renderer, canvas, { sente, quanto, dpr: fisso }) {
       if (s.cosa) {
         if (nome === 'tagliere') {
           if (s.fase === 'taglia') {
-            const testa = confezione('insalata'); testa.scale.setScalar(0.74 - s.colpi * 0.1); u.dentro.add(testa)
-            if (s.colpi) { const f = cibo('insalata'); f.position.set(0.32, 0, 0); f.scale.setScalar(0.4 + s.colpi * 0.09); u.dentro.add(f) }
-          } else u.dentro.add(cibo('insalata'))
+            const testa = confezione(s.cosa); testa.scale.setScalar(0.74 - s.colpi * 0.1); u.dentro.add(testa)
+            if (s.colpi) { const f = cibo(TAGLIATO[s.cosa]); f.position.set(0.32, 0, 0); f.scale.setScalar(0.4 + s.colpi * 0.09); u.dentro.add(f) }
+          } else u.dentro.add(tagliato(s.cosa))
         } else u.dentro.add(cibo(s.cosa, { bruciato: s.fase === 'scotta', crudo: s.fase === 'cuoce' }))
         u.dentro.traverse(o => { if (o.isMesh) o.castShadow = true })
       }
       renderer.shadowMap.needsUpdate = true
     }
     const q01 = Math.max(0, Math.min(1, quanto(s)))
-    const mostra = s.fase === 'cuoce' || s.fase === 'pronta' || s.fase === 'taglia'
+    const mostra = s.fase === 'cuoce' || s.fase === 'taglia' || (s.fase === 'pronta' && nome !== 'tagliere')
     x.barra.visible = mostra
     if (mostra) {
       x.barra.quaternion.copy(camera.quaternion)

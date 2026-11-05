@@ -88,6 +88,13 @@ function fondoPanino() {
   }, 0.72)
 }
 
+/* Il panino già tagliato: il sopra alzato sul fondo, che si vede la mollica. */
+function paninoAperto() {
+  const sopra = modello('pane-sopra')
+  sopra.position.set(0.2, 0.36, -0.1); sopra.rotation.z = -0.55
+  return tutto(modello('pane'), sopra)
+}
+
 function semi() {
   const pezzi = []
   for (let i = 0; i < 46; i++) {
@@ -168,16 +175,17 @@ function foglie(quante = 7, largo = 0.46) {
 /* La pizza: una pelle sola, quattro colori. */
 const PIZZA_FORMA = () => arruffata(unione([disco(0.05, 0.6, 0.06, 0.02), ciambella(0.075, 0.6, 0.075, 0.95)], 0.05), 0.01, 16)
 const macchia = (x, z, fitto) => mosso(x, 2, z, fitto)
+const mozzarella = (x, y, z, c) => {
+  if (Math.hypot(x, z) < 0.5 && y > 0.05 && macchia(x, z, 9) + macchia(z, x, 13) * 0.5 > -0.12) { c.setHex(0xfbf3dc); verso(c, 0xf3e0a4, fra(0, 0.5, macchia(x, z, 21)) * 0.5) }
+}
 const COLORI_PIZZA = {
   impasto: (x, y, z, c) => { c.setHex(0xf0dcae); verso(c, 0xf9efd2, fra(-0.2, 0.5, macchia(x, z, 16)) * 0.65) },
   sugo: (x, y, z, c) => {
     COLORI_PIZZA.impasto(x, y, z, c)
     if (Math.hypot(x, z) + macchia(x, z, 18) * 0.03 < 0.53 && y > 0.05) { c.setHex(0xc22a18); verso(c, 0xe2502c, fra(-0.3, 0.5, macchia(z, x, 14)) * 0.5) }
   },
-  formaggio: (x, y, z, c) => {
-    COLORI_PIZZA.sugo(x, y, z, c)
-    if (Math.hypot(x, z) < 0.5 && y > 0.05 && macchia(x, z, 9) + macchia(z, x, 13) * 0.5 > -0.12) { c.setHex(0xfbf3dc); verso(c, 0xf3e0a4, fra(0, 0.5, macchia(x, z, 21)) * 0.5) }
-  },
+  formaggio: (x, y, z, c) => { COLORI_PIZZA.sugo(x, y, z, c); mozzarella(x, y, z, c) },
+  bianca: (x, y, z, c) => { COLORI_PIZZA.impasto(x, y, z, c); mozzarella(x, y, z, c) },
   cotta: (x, y, z, c) => {
     const r = Math.hypot(x, z)
     if (r >= 0.54) {
@@ -306,20 +314,22 @@ function pallaImpasto() {
   const tavola = new Mesh(giro([[0, 0], [0.68, 0], [0.72, 0.03], [0.7, 0.07], [0, 0.07]]), pieno(0xc49a64, 0.7))
   const farina = new Mesh(new CylinderGeometry(0.58, 0.6, 0.012, 26), pieno(0xfbf6e8, 0.95))
   farina.position.y = 0.075
-  const pasta = pezzo(arruffata(unione([palla([0, 0.3, 0], [0.45, 0.26, 0.45]), palla([0.14, 0.34, 0.1], [0.26, 0.2, 0.26]), palla([-0.14, 0.3, -0.1], [0.26, 0.21, 0.26])], 0.16), 0.01, 7), 0.022, (x, y, z, c) => {
+  tavola.material.side = 2
+  return tutto(tavola, farina, palloImpasto())
+}
+function palloImpasto() {
+  return pezzo(arruffata(unione([palla([0, 0.3, 0], [0.45, 0.26, 0.45]), palla([0.14, 0.34, 0.1], [0.26, 0.2, 0.26]), palla([-0.14, 0.3, -0.1], [0.26, 0.21, 0.26])], 0.16), 0.01, 7), 0.022, (x, y, z, c) => {
     c.setHex(0xf0dcae); verso(c, 0xfbf3df, fra(-0.3, 0.5, mosso(x, y, z, 12)) * 0.75)
   }, 0.68)
-  tavola.material.side = 2
-  return tutto(tavola, farina, pasta)
 }
 
 /* ── i modelli si fanno una volta ── */
 const G = {}
 const FATTI = {
   'pasta': () => tutto(nido()), 'pasta-pentola': () => tutto(nido(SPAGO, 0.56, 0.1)), 'pasta-bruciata': () => tutto(nido(0x3a2715, 0.56, 0.12)),
-  'sugo': sugo, 'pane': fondoPanino, 'pane-sopra': sopraPanino, 'formaggio': fetta, 'formaggio-cubetti': cubetti,
+  'sugo': sugo, 'pane': fondoPanino, 'pane-sopra': sopraPanino, 'pane-aperto': paninoAperto, 'formaggio': fetta, 'formaggio-cubetti': cubetti,
   'insalata': () => foglie(), 'carne-cruda': () => polpetta(true), 'carne': () => polpetta(false), 'uovo': uovoFritto,
-  'pizza-impasto': () => pizza('impasto'), 'pizza-sugo': () => pizza('sugo'), 'pizza-cruda': () => pizza('formaggio'), 'pizza': () => pizza('cotta'),
+  'impasto-palla': () => tutto(palloImpasto()), 'pizza-impasto': () => pizza('impasto'), 'pizza-sugo': () => pizza('sugo'), 'pizza-bianca': () => pizza('bianca'), 'pizza-cruda': () => pizza('formaggio'), 'pizza': () => pizza('cotta'),
   'c:pasta': mazzoSpaghetti, 'c:sugo': ciotolaSugo, 'c:pane': pagnotta, 'c:formaggio': formaFormaggio, 'c:insalata': cespo,
   'c:carne': cartaCarne, 'c:uovo': uova, 'c:impasto': pallaImpasto,
 }
@@ -349,7 +359,7 @@ export function impiatta(p) {
   const { cose, pronto } = p
   const metti = (k, x = 0, y = 0, z = 0, gira = 0) => g.add(su(modello(k), x, y, z, gira))
   if (cose[0] === 'pizza') metti('pizza', 0, 0.02)
-  else if (cose[0] === 'impasto') metti(cose.includes('formaggio') ? 'pizza-cruda' : cose.includes('sugo') ? 'pizza-sugo' : 'pizza-impasto', 0, 0.02)
+  else if (cose[0] === 'impasto') metti(cose.includes('sugo') ? (cose.includes('formaggio') ? 'pizza-cruda' : 'pizza-sugo') : cose.includes('formaggio') ? 'pizza-bianca' : 'pizza-impasto', 0, 0.02)
   else if (cose[0] === 'uovo') {
     metti('uovo', -0.2, 0.02, -0.06)
     if (cose[1] === 'pane') { metti('pane', 0.42, 0.02, 0.26, 0.3); g.children.at(-1).scale.setScalar(0.62) }
@@ -375,7 +385,7 @@ export async function prepara(cose, ricette) {
   if (usa.has('insalata')) chiavi.push('insalata')
   if (usa.has('carne')) chiavi.push('carne-cruda', 'carne')
   if (usa.has('uovo')) chiavi.push('uovo')
-  if (usa.has('impasto')) chiavi.push('pizza-impasto', 'pizza-sugo', 'pizza-cruda', 'pizza')
+  if (usa.has('impasto')) chiavi.push('impasto-palla', 'pizza-impasto', 'pizza-bianca', 'pizza-sugo', 'pizza-cruda', 'pizza')
   const passo = async k => { if (!G[k]) { modello(k); await new Promise(r => setTimeout(r)) } }
   // la dispensa si vede subito; il cibo si fa mentre cala il cartello, e chi arriva prima se lo fa da sé
   for (const k of chiavi.slice(0, cose.length)) await passo(k)
