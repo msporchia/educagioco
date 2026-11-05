@@ -3,8 +3,9 @@
    Tutto ciò che può non riuscire torna { ok: false, motivo } e non cambia niente; quello che riesce torna { ok: true, … }.
    Gli eventi (`prendiEventi()`) dicono cosa è successo, per i contatori. L'esperienza è la spesa in monete fatta qui dentro
    (terra, pezzi, edifici, strade; non gli spostamenti, e i rimborsi non la riducono): da lei il livello, che apre le cose. Vedi docs/fattoria3d/regole.md. */
+import { TIPO_STACCIONATA_DI_BASE, tipoStaccionataValido, prezzoStaccionata, PREZZO_CANCELLO, TIPI_STACCIONATA, codiceStaccionata, staccionataDaCodice } from '../dati/staccionate.js'
 import { TIPO_DI_BASE, BORDO_DI_BASE, tipoValido, bordoValido, prezzoStrada, livelloStrada, codiceAspetto, aspettoDaCodice, eDiBase } from '../dati/strade.js'
-import { LIM, chiave, cellaDa, lottoDaChiave, cellaDaId, idCella, dentro, lotto, lottoDi, lottoPerId, vicinoDi, VICINI_4, LOTTI_INIZIALI, FISSI, POSTI_STORICI, stradeDiSerie } from '../dati/mondo.js'
+import { LIM, chiave, cellaDa, lottoDaChiave, cellaDaId, idCella, dentro, lotto, lottoDi, lottoPerId, vicinoDi, VICINI_4, LOTTI_INIZIALI, FISSI, POSTI_STORICI, PARTENZA, stradeDiSerie } from '../dati/mondo.js'
 import { PEZZI, EDIFICI, quotaDelPezzo, edificiDaCostruire } from '../dati/catalogo.js'
 import { ruotabile, misureGirate, DAVANTI } from '../dati/rotazione.js'
 import { COLTURE, TESSERE } from '../dati/colture.js'
@@ -18,7 +19,7 @@ import { biomaDiGen, acquaDelLotto, tipoAcqua } from '../dati/biomi.js'
 import { provaPesca, lanciaLenza, ritiraPesca, bancoDi, lenzeInAcqua, ripulisciPesca, riesaminaPesca, postiDiPesca } from './pesca.js'
 import { ANIMALI, CORTILE, LANA, prezzoDellaBestia, PRODOTTI_ANIMALI } from '../dati/animali.js'
 import { normalizza, nuoveTessere, pulisciNomeFattoria } from './stato.js'
-import { percorso } from './percorso.js'
+import { percorso, raggiungibili } from './percorso.js'
 import { POSTI, RIPOSO_MS, LIVELLO_BANCO, PEZZI_DEL_BANCO, clienteDi, tipoDelOrdine } from '../dati/ordini.js'
 import { nuovoOrdine } from './ordini.js'
 import { Cura } from './cura.js'
@@ -50,6 +51,7 @@ export class Fattoria3d {
       const c = cellaDaId(+id), a = aspettoDaCodice(cod)
       if (c && a && this.strada.get(chiave(c[0], c[1])) === 1 && !eDiBase(a)) this.aspettoStrade.set(chiave(c[0], c[1]), a)
     }
+    this.staccionata = new Map()                   // cella (chiave) → { tipo, cancello }: le staccionate e i cancelli, riempita dopo i lotti (docs/fattoria3d/staccionate.md)
     this.bloccoFisso = new Set()                   // fienile, casa, gli alberi in piedi e i sassi e cespugli ancora lì
     for (const f of FISSI) for (let a = 0; a < f.w; a++) for (let b = 0; b < f.d; b++) this.bloccoFisso.add(chiave(f.i + a, f.j + b))
     this.tagliati = new Set(this.s.tagliati)
@@ -71,6 +73,10 @@ export class Fattoria3d {
     this.vecchi = new Set(this.s.vecchi)           // i lotti comprati prima della geografia grande dove ora c'è il mare o un lago: si generano alla vecchia (generazione 0)
     this.vecchi1 = new Set(this.s.vecchi1)         // i lotti comprati con i laghetti-pozzanghera, dove ora c'è un lago naturale: restano pozzanghere (generazione 1; docs/fattoria3d/laghi.md)
     for (const k of this.propri) this._apriAnello(lottoDaChiave(k))
+    for (const [id, cod] of Object.entries(this.s.staccionate)) {
+      const c = cellaDaId(+id), a = staccionataDaCodice(cod)
+      if (c && a && this.cellaPropria(c[0], c[1]) && !this._bloccaSenzaAcqua(c[0], c[1]) && !this.acqua(c[0], c[1]) && !this.cellaAcqua.has(chiave(c[0], c[1]))) this.staccionata.set(chiave(c[0], c[1]), a)
+    }
     this.tick()
     if (magazzini) this.cura.sistema()             // chi aveva già gli animali trova ciotole e tinozza (non nella fattoria di un vicino)
     if (magazzini) this._voltaIlPorticciolo()
@@ -211,19 +217,22 @@ export class Fattoria3d {
   eStrada(i, j) { return this.strada.get(chiave(i, j)) || 0 }
   stradaSu(i, j) { return this.strada.get(chiave(i, j)) || 0 }
   /** Una cella è occupata da qualcosa che si vede (strada, pezzo, edificio, albero, sasso): per i ciuffi d'erba. */
-  occupata(i, j) { const k = chiave(i, j); return this.strada.has(k) || this.cellaCosa.has(k) || this.bloccoFisso.has(k) }
+  occupata(i, j) { const k = chiave(i, j); return this.strada.has(k) || this.staccionata.has(k) || this.cellaCosa.has(k) || this.bloccoFisso.has(k) }
   _bloccaSenzaAcqua(i, j, ignora = 0) {
     if (!this.cellaPropria(i, j)) return true      // ci si chiude dentro il recinto: il terreno non tuo non si calpesta
     const k = chiave(i, j)
     if (this.bloccoFisso.has(k)) return true
+    if (this.staccionata.has(k)) return true       // anche il cancello: ci si cammina (`libera`) ma non ci si costruisce
     const c = this.cellaCosa.get(k) || 0
     return c !== 0 && c !== ignora
   }
   blocca(i, j, ignora = 0) { return this._bloccaSenzaAcqua(i, j, ignora) || this.acqua(i, j, ignora) }
   /** Il passo: come `blocca`, ma un pezzo calpestabile (ponte, passerella) non ferma chi cammina, nemmeno sull'acqua. Il costruire usa `blocca`. */
   libera(i, j) {
-    const p = this.cellaPasso.get(chiave(i, j))
-    return p > 0 ? this.cellaPropria(i, j) : !this.blocca(i, j)
+    const k = chiave(i, j), p = this.cellaPasso.get(k)
+    if (p > 0) return this.cellaPropria(i, j)
+    const s = this.staccionata.get(k)
+    return s ? s.cancello && this.cellaPropria(i, j) : !this.blocca(i, j)       // un cancello si attraversa, il resto della staccionata no
   }
   /** Una cella dove si cammina in fretta: la strada, o un pezzo calpestabile (conta come strada nel percorso). */
   sullaStrada(i, j) { const k = chiave(i, j); return this.strada.has(k) || this.cellaPasso.has(k) }
@@ -259,6 +268,82 @@ export class Fattoria3d {
     if (tipo === TIPO_DI_BASE && bordo === BORDO_DI_BASE) this.aspettoStrade.delete(k); else this.aspettoStrade.set(k, { tipo, bordo })
     this._evento('strada')
     return { ok: true, costo }
+  }
+  // ── le staccionate e i cancelli (docs/fattoria3d/staccionate.md) ──
+  /** Com'è la staccionata in una cella: { tipo, cancello }, o `null` se non c'è. */
+  aspettoStaccionata(i, j) { return this.staccionata.get(chiave(i, j)) || null }
+  /**
+   * Quante celle si raggiungono a piedi da `da` se la cella `chiusa` (chiave) smette di essere libera; il numero conta solo le celle che c'erano già prima.
+   * E se un pezzo, un edificio o la casa perde l'ultimo lato da cui lo si tocca. Torna `true` se la cella chiusa taglia fuori qualcosa.
+   */
+  _tagliaFuori(k, da) {
+    const libera = (i, j) => this.libera(i, j)
+    const prima = raggiungibili(libera, da)
+    if (!prima) return false                                   // un mondo troppo grande da contare: non si controlla
+    const dopo = raggiungibili((i, j) => chiave(i, j) !== k && libera(i, j), da)
+    if (!dopo) return false
+    for (const x of prima) if (x !== k && !dopo.has(x)) return true
+    const [ci, cj] = cellaDa(k), visti = new Set()
+    for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) {      // le cose accanto: toccano ancora un lato raggiungibile?
+      const id = this.cellaCosa.get(chiave(ci + di, cj + dj)); let lati = null
+      if (id && !visti.has(id)) {
+        visti.add(id)
+        const c = this.cosa(id), d = c && this.misureCosa(c)
+        if (d) lati = this._latiDi(c.i, c.j, d.w, d.d)
+      } else if (!id && FISSI.some(f => ci + di >= f.i && ci + di < f.i + f.w && cj + dj >= f.j && cj + dj < f.j + f.d)) {
+        const f = FISSI.find(f => ci + di >= f.i && ci + di < f.i + f.w && cj + dj >= f.j && cj + dj < f.j + f.d)
+        if (!visti.has(f)) { visti.add(f); lati = this._latiDi(f.i, f.j, f.w, f.d) }
+      }
+      if (lati && lati.some(x => prima.has(x)) && !lati.some(x => dopo.has(x))) return true
+    }
+    return false
+  }
+  /** Le chiavi delle celle che toccano per lato un rettangolo (i lati da cui lo si usa). */
+  _latiDi(i, j, w, d) {
+    const out = []
+    for (let a = 0; a < w; a++) out.push(chiave(i + a, j - 1), chiave(i + a, j + d))
+    for (let b = 0; b < d; b++) out.push(chiave(i - 1, j + b), chiave(i + w, j + b))
+    return out
+  }
+  /**
+   * Si posa un pezzo di staccionata: il tipo deve essere aperto dal livello, la cella tua e vuota (una strada sotto va bene: ci si fa un cancello). Una
+   * staccionata non chiude mai la strada: se questo pezzo taglierebbe fuori qualcosa (il contadino, un edificio, un pezzo), diventa da sé un cancello e
+   * costa come tale (`cancello: true` nel risultato). Su un pezzo di staccionata di un altro tipo si ridipinge e si paga il nuovo; su un cancello dello
+   * stesso tipo torna un pezzo (se non chiude niente). `da` è dove sta il contadino, `evita` le celle dove si sta in piedi.
+   */
+  disegnaStaccionata(i, j, { tipo = TIPO_STACCIONATA_DI_BASE, gratis = false, da = null, evita = [] } = {}) {
+    if (!tipoStaccionataValido(tipo) || !dentro(i, j) || !this.cellaPropria(i, j)) return { ok: false, motivo: 'qui-no' }
+    const k = chiave(i, j), c = this.staccionata.get(k)
+    if (c && c.tipo === tipo && !c.cancello) return { ok: false, motivo: 'qui-no' }
+    if (!c && this.blocca(i, j)) return { ok: false, motivo: 'occupato' }
+    const ritorna = !!c && c.tipo === tipo                      // un cancello che torna pezzo, dello stesso tipo
+    if (!ritorna && !gratis && this.livello() < TIPI_STACCIONATA[tipo].liv) return { ok: false, motivo: 'livello', livello: TIPI_STACCIONATA[tipo].liv }
+    const taglia = c?.cancello && !ritorna ? false : this._tagliaFuori(k, da || [Math.floor(PARTENZA.x), Math.floor(PARTENZA.z)])
+    if (ritorna && taglia) return { ok: false, motivo: 'chiude' }          // il cancello resta: toglierlo chiuderebbe il passo
+    const cancello = c ? c.cancello && !ritorna : taglia                    // ridipingere lascia com'era; su un prato, il pezzo che chiude diventa cancello
+    if (!cancello && evita.some(([a, b]) => a === i && b === j)) return { ok: false, motivo: 'occupato' }
+    const costo = gratis || ritorna ? 0 : prezzoStaccionata(tipo, cancello && !c)
+    if (costo && !this._spendi(costo)) return { ok: false, motivo: 'poche-monete', costo }
+    this.staccionata.set(k, { tipo, cancello })
+    this._evento('staccionata')
+    return { ok: true, costo, cancello }
+  }
+  /** Un cancello su un pezzo di staccionata che c'è già (si paga solo il cancello). Su un cancello non fa niente. */
+  mettiCancello(i, j, { gratis = false } = {}) {
+    const k = chiave(i, j), c = this.staccionata.get(k)
+    if (!c) return { ok: false, motivo: 'senza-tratto' }
+    if (c.cancello) return { ok: false, motivo: 'qui-no' }
+    if (!gratis && this.livello() < TIPI_STACCIONATA[c.tipo].liv) return { ok: false, motivo: 'livello', livello: TIPI_STACCIONATA[c.tipo].liv }
+    const costo = gratis ? 0 : PREZZO_CANCELLO
+    if (costo && !this._spendi(costo)) return { ok: false, motivo: 'poche-monete', costo }
+    this.staccionata.set(k, { tipo: c.tipo, cancello: true })
+    this._evento('cancello')
+    return { ok: true, costo }
+  }
+  /** Si toglie una staccionata o un cancello (gratis, non si rimborsa): è la via d'uscita da qualunque pasticcio. */
+  togliStaccionata(i, j) {
+    if (!this.staccionata.delete(chiave(i, j))) return { ok: false, motivo: 'qui-no' }
+    return { ok: true }
   }
   /** La gomma toglie ogni strada: quella di serie si vede uguale a una disegnata, e resta tolta (`stradeTolte`). */
   togliStrada(i, j) {
@@ -1121,6 +1206,8 @@ export class Fattoria3d {
     this._allungaPosti()                     // così la lettura rifà lo stesso stato (`normalizza` allunga allo stesso modo)
     s.strade = []
     s.aspettoStrade = {}
+    s.staccionate = {}
+    for (const [k, a] of this.staccionata) { const c = cellaDa(k); s.staccionate[idCella(c[0], c[1])] = codiceStaccionata(a.tipo, a.cancello) }
     for (const [k, v] of this.strada) if (v === 1) {
       const c = cellaDa(k), id = idCella(c[0], c[1]), a = this.aspettoStrade.get(k)
       s.strade.push(id)

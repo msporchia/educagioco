@@ -125,6 +125,26 @@ export function creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena }
     'brocca:calderone': c => inclina(c, 1, () => '#bfe4ff', false, new Vector3(-0.45, 0.4, 0)),
     'mortaio:calderone': c => inclina(c, -1, () => scena().attrezzi.pestato, true, new Vector3(0.45, 0.4, 0)),
     'tagliere:calderone': c => inclina(c, -1, () => scena().attrezzi.tagliere, true, new Vector3(0.7, 0.1, 0)),
+    'sale:calderone': c => pizzico(c, '#f6f2ea'),
+    'pepe:calderone': c => pizzico(c, '#3b3330'),
+    // si piega verso il brodo, e piegata si riempie
+    'fiala:calderone': c => {
+      let riempie = false
+      return {
+        dito() {
+          const piega = Math.abs(c.gesto.piega)
+          c.meta.p.set(C.x + 1, banco.quotaBrodo() + 0.55 - piega * 0.4, C.z + 0.55); c.meta.rz = piega * 1.4
+        },
+        scorre() {
+          const si = Math.abs(c.gesto.piega) >= VERSA_DA
+          attrezzi.riempi(c.gesto.avanzato, scena().calderone)
+          if (si && !riempie) suoni.liquido(0.9)
+          if (si && Math.random() < 0.4) eff.gocce.emetti(1, { da: new Vector3(C.x + 0.1, banco.quotaBrodo(), C.z + 0.55), sparpaglia: 0.15, verso: [0.4, 0.8, 0], caso: 0.3, colore: scena().calderone, vita: 0.35, misura: 0.06, gravita: 3 })
+          riempie = si
+        },
+        via() { attrezzi.riempi(0) },
+      }
+    },
     // si sfrega su e giù, si consuma e cade dentro
     'roba:grattugia': c => {
       const giu = finestra(46), g = attrezzi.grattugia.position
@@ -141,6 +161,23 @@ export function creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena }
         via() { c.cosa.scale.setScalar(1) },
       }
     },
+  }
+
+  // capovolto sul calderone: su e giù, e a ogni scossa ne cade un po'
+  function pizzico(c, colore) {
+    const giu = finestra(46), { targa } = c.cosa.userData
+    return {
+      dito(x, y, e) {
+        targa.visible = false
+        c.meta.p.set(C.x - 0.35, 2.75 - giu(y) * 0.5, C.z + 0.5); c.meta.rz = 2.7
+        if (e.colpo) {
+          suoni.pizzico()
+          eff.gocce.emetti(14, { da: dalla(c.cosa, new Vector3(0, 0.56, 0)), sparpaglia: 0.1, verso: [0, -1.6, 0], caso: 0.35, colore, vita: 0.6, misura: 0.05, gravita: 5 })
+        }
+      },
+      via() { targa.visible = true },
+      fine() { targa.visible = true },
+    }
   }
 
   // sopra il calderone: il dito di lato lo piega, e piegato versa

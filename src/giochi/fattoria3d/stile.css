@@ -107,7 +107,7 @@
 .f3-barra-strade { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 30; display: flex; flex-direction: column; align-items: center; gap: 8px; width: calc(100% - 28px); max-width: 420px; }
 .f3-barra-strade .f3-suggerimento { margin: 0; padding: 6px 12px; border-radius: 14px; background: rgba(255,251,240,.94); box-shadow: 0 2px 8px rgba(0,0,0,.25); font-size: 13px; font-weight: 700; color: #5a3a2a; text-align: center; }
 .f3-strumenti { display: flex; gap: 4px; background: rgba(255,251,240,.94); padding: 6px; border-radius: 28px; box-shadow: 0 3px 10px rgba(0,0,0,.25); }
-.f3-strumenti button { width: 72px; height: 56px; border-radius: 26px; border: 2px solid transparent; background: transparent; color: #3a2a1a; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; touch-action: manipulation; }
+.f3-strumenti button { width: 62px; height: 56px; border-radius: 26px; border: 2px solid transparent; background: transparent; color: #3a2a1a; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; touch-action: manipulation; }
 .f3-strumenti button > span { font-size: 24px; line-height: 1; } .f3-strumenti button small { font: 700 10px "Emoji Gioco", system-ui, sans-serif; color: #7a5a3a; }
 .f3-strumenti button.acceso { background: #9be07a; border-color: #5fae3a; }
 .f3-strumenti button.fatto { background: #ffd36a; }

@@ -482,6 +482,36 @@ controlla('scegliere la strada chiude il menu e porta la sua barra', await menuA
   await attendi(page, 300)
   controlla('il dito sulla mappa disegna la strada (🪙 1 a pezzo)', await conta() > strade0)
 }
+// le staccionate e i cancelli: stessa barra, altri due strumenti; si apre col livello (qui lo si alza per la prova e si rimette), il cancello si attraversa
+{
+  const xp0 = await page.evaluate(() => window.__fattoria3d.motore.s.esperienza)
+  await page.evaluate(() => { const { motore } = window.__fattoria3d; motore.s.esperienza = Math.max(motore.s.esperienza, 2000) })
+  await attendi(page, 400)
+  await toccaEl('[data-strumento="staccionata"]')
+  await attendi(page, 300)
+  controlla('la staccionata ha i suoi tipi nella barra', await page.locator('[data-f3="staccionate-tipi"] [data-staccionata]').count() === 5)
+  const celle = () => page.evaluate(() => window.__fattoria3d.motore.staccionata.size)
+  const c0 = await celle()
+  const j = posto.j + 2
+  await trascina(await schermoDi(posto.i + 0.5, j + 0.5), await schermoDi(posto.i + 3.5, j + 0.5))
+  await attendi(page, 300)
+  controlla('il dito sulla mappa disegna la staccionata', await celle() > c0)
+  await toccaEl('[data-strumento="cancello"]')
+  await attendi(page, 200)
+  await trascina(await schermoDi(posto.i + 0.5, j + 0.5), await schermoDi(posto.i + 1.5, j + 0.5))
+  await attendi(page, 300)
+  controlla('il cancello su un pezzo si attraversa, il resto della staccionata no', await page.evaluate(([i, j]) => {
+    const m = window.__fattoria3d.motore, tutte = [...m.staccionata.values()], cella = [...m.staccionata.entries()].find(([, a]) => a.cancello)
+    return tutte.some(a => a.cancello) && !!cella && tutte.some(a => !a.cancello)
+  }, [posto.i, j]))
+  await toccaEl('[data-strumento="gomma"]')
+  await trascina(await schermoDi(posto.i + 0.5, j + 0.5), await schermoDi(posto.i + 3.5, j + 0.5))
+  await attendi(page, 300)
+  controlla('la gomma le toglie', await celle() === c0)
+  await page.evaluate(x => { window.__fattoria3d.motore.s.esperienza = x }, xp0)
+  await toccaEl('[data-strumento="strada"]')
+  await attendi(page, 200)
+}
 await toccaEl('[data-f3="strade-fatto"]')
 await attendi(page, 300)
 controlla('«Fatto» rimette la barra delle azioni', await page.locator('[data-f3="barra-strade"]').count() === 0 && await page.locator('[data-f3^="az-"]').count() === 1)
@@ -604,7 +634,7 @@ controlla('la ✕ chiude il foglio dei livelli', await page.locator('[data-f3="l
 await toccaEl('[data-f3="az-costruisci"]')
 await apriMenu()
 {
-  // le carte di tutte le schede, dai dati: i pezzi, gli edifici unici da costruire e i due strumenti
+  // le carte di tutte le schede, dai dati: i pezzi, gli edifici unici da costruire e gli strumenti del pennello
   let carte = 0
   const posseduti = await page.evaluate(() => ({ ...window.__fattoria3d.motore.s.posseduti }))   // un edificio già comprato non si offre
   const daMettere = await page.evaluate(() => ({ ...window.__fattoria3d.motore.s.magazzino }))   // un magazzino si offre solo se ce n'è uno da mettere
@@ -618,10 +648,10 @@ await apriMenu()
   await page.waitForFunction(() => [...document.querySelectorAll('[data-carta]')].length > 0, null, { timeout: 5000 })
   for (const k of visibili) {
     await vaiScheda(k)
-    await page.waitForFunction(() => [...document.querySelectorAll('[data-carta]')].every(c => /^(strada|gomma)$/.test(c.dataset.carta) || c.querySelector('img[data-anteprima="pronta"]')), null, { timeout: 60000 })
+    await page.waitForFunction(() => [...document.querySelectorAll('[data-carta]')].every(c => /^(strada|staccionata|cancello|gomma)$/.test(c.dataset.carta) || c.querySelector('img[data-anteprima="pronta"]')), null, { timeout: 60000 })
   }
   controlla('ogni carta di pezzo o edificio mostra l\'anteprima 3D, non l\'emoji', await page.locator('[data-carta] img[data-anteprima="pronta"]').count() > 0)
-  uguale('le schede hanno tutti i pezzi e gli edifici dei dati e i due strumenti', carte, Object.entries(PEZZI).filter(([t, d]) => !d.fiera && !d.dono && (!d.magazzino || daMettere[t] > 0) && (!d.stagione || d.stagione === stagioneOra)).length + Object.keys(EDIFICI).filter(t => !posseduti[t]).length + 2 + 15)          // + le carte degli animali da adottare (scheda Animali: dieci razze e cinque compagni, docs/fattoria3d/adozioni.md)
+  uguale('le schede hanno tutti i pezzi e gli edifici dei dati e i quattro strumenti', carte, Object.entries(PEZZI).filter(([t, d]) => !d.fiera && !d.dono && (!d.magazzino || daMettere[t] > 0) && (!d.stagione || d.stagione === stagioneOra)).length + Object.keys(EDIFICI).filter(t => !posseduti[t]).length + 4 + 15)          // + le carte degli animali da adottare (scheda Animali: dieci razze e cinque compagni, docs/fattoria3d/adozioni.md)
   await vaiScheda('animali')
   controlla('il recinto non è arrivato: carta in grigio col livello', await page.locator('[data-carta="recinto"].bloccata').count() === 1 && /Livello 14/.test(await page.locator('[data-carta="recinto"]').innerText()))
   const schede = await page.evaluate(() => { const c = document.querySelector('.f3-schede'); return [c.scrollWidth, c.clientWidth, document.documentElement.scrollWidth, innerWidth] })

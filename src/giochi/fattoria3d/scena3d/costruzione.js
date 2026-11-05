@@ -249,19 +249,27 @@ export class Costruzione {
     let cambiato = false
     for (const [i, j] of lineaDiCelle(da, cella)) {
       if (!dentro(i, j)) continue
-      if (gesto === 'strada') {
+      if (gesto === 'staccionata' || gesto === 'cancello') {
+        const p = this.c.cmd.pennello || {}, eroe = this.c.eroe.cella()
+        const r = gesto === 'cancello' ? this.m.mettiCancello(i, j) : this.m.disegnaStaccionata(i, j, { tipo: p.staccionata, da: eroe, evita: [eroe] })
+        if (r.ok) { this.tratto.celle.push({ i, j, aggiunta: true }); this.tratto.costo += r.costo; if (r.cancello) this.tratto.cancello = true; cambiato = true }
+        else if (r.motivo === 'poche-monete') { this._dice('Hai finito le monete'); break }
+        else if (r.motivo === 'livello') { this._dice(`Questa staccionata si apre al livello ${r.livello}`); break }
+        else if (r.motivo === 'senza-tratto' && !this.tratto.avvisato) { this.tratto.avvisato = true; this._dice('Il cancello va su un pezzo di staccionata') }
+        else if (r.motivo === 'chiude' && !this.tratto.avvisato) { this.tratto.avvisato = true; this._dice('Quel cancello serve: senza, resteresti chiuso') }
+      } else if (gesto === 'strada') {
         const r = this.m.disegnaStrada(i, j, this.c.cmd.pennello || {})
         if (r.ok) { this.tratto.celle.push({ i, j, aggiunta: true }); this.tratto.costo += r.costo; cambiato = true }
         else if (r.motivo === 'poche-monete') { this.c.ui.avviso('Hai finito le monete: niente altra strada'); break }
         else if (r.motivo === 'livello') { this.c.ui.avviso(`Questa strada si apre al livello ${r.livello}`); break }
-      } else if (this.m.togliStrada(i, j).ok) { this.tratto.celle.push({ i, j, aggiunta: false }); cambiato = true }
+      } else if (this.m.togliStaccionata(i, j).ok || this.m.togliStrada(i, j).ok) { this.tratto.celle.push({ i, j, aggiunta: false }); cambiato = true }      // sotto una staccionata c'è una strada: prima va l'una, poi l'altra
     }
     if (cambiato) { this.c.terreno.ridisegnaStrade(); this.c.ui.cambio() }
   }
   finisciTratto(gesto) {
     this.ultimaCella = null; this.pennelloDito = null
     if (this.tratto && this.tratto.celle.length) {
-      this.c.ui.avviso(gesto === 'strada' ? `Strada fatta (🪙 ${this.tratto.costo})` : 'Tolta')
+      this.c.ui.avviso(gesto === 'gomma' ? 'Tolta' : gesto === 'strada' ? `Strada fatta (🪙 ${this.tratto.costo})` : this.tratto.cancello ? `Fatto (🪙 ${this.tratto.costo}): l'ultimo pezzo è un cancello, così non resti chiuso` : `Fatto (🪙 ${this.tratto.costo})`)
     }
     this.tratto = null
   }

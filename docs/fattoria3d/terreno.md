@@ -103,11 +103,13 @@ chiedono tutti alla stessa funzione. Per uno strato nuovo (staccionata, acqua di
    e monete (`_spendi`: la spesa dà esperienza), un `togli…`, e in `serializza`/`normalizza` un campo di stato come `aspettoStrade` (senza cambiare versione, se è solo un campo in più).
 3. **Vicini**: `viciniDi(aspettoDi, unisce, i, j)` con le due funzioni dello strato. `unisce` decide cosa si fonde (stesso tipo; per le staccionate stesso tipo
    *e* una sull'altra in linea, i cancelli come aspetto a parte che il passo lascia passare); `lati` e `angoli` dicono dove va un pezzo.
-   Una staccionata sta sui **lati** fra celle, non dentro: dallo stesso `lati[s]` si ricava il bordo condiviso con `s < 2` (nord ed est) per non contarlo due volte.
+   Una staccionata sta **in una cella** (come la strada, non sui lati: [staccionate.md](staccionate.md) dice perché) e `lati[s] === 'unito'` dice verso dove va il tratto.
 4. **Scena**: una classe come `StradeBordate` (un banco per pezzo, `ridisegna()` che azzera i `count` e rimette tutto, `CAPACITA_…` come tetto), creata in `terreno.js` dentro `el('…')` e ridisegnata
    da `ridisegnaStrade()` (o da una sua gemella chiamata da `Mondo3d.cambiato()`). L'acqua fra due celle dello stesso tipo si unisce come la strada (`unisce`: stesso tipo), e la riva è il lato `vuoto`.
 5. **Dove si vede**: il passo (`blocca`, `sullaStrada`) lo decide il motore, mai la scena; un'acqua disegnata deve dirlo a `cellaAcqua` come gli stagni (le strade ci sparivano già sotto).
 6. **Test**: come `unita/fattoria3d-strade` (dati, vicini, motore, salvataggi di prima).
+
+Lo strato che viene dopo le strade sono le staccionate e i cancelli: [staccionate.md](staccionate.md) (in una cella, stesso `viciniDi`; il pennello è nella stessa barra).
 
 ## La telecamera
 

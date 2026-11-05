@@ -337,7 +337,7 @@ for (const t of CAMPAGNA) {
     for (const r of new Bottega(t, { rnd: caso(s) }).righe) if (/ma prima|^Versa.*dopo aver|^Pesta.*dopo aver/.test(r.testo)) brutte++
   uguale('mai «versa, ma prima pesta»', brutte, 0)
   const b = new Bottega(tappa('massa-banco'), { rnd: caso(1) })
-  uguale('all\'inizio due passi', b.passi.map(p => p.azione).join(), 'versa,mescola')
+  controlla('già all\'inizio il fuoco, la bacchetta, un pizzico e la fiala', b.passi.length === 6 && ['scalda', 'agita', 'imbottiglia'].every(a => b.passi.some(p => p.azione === a)), b.passi.map(p => p.azione).join())
 }
 
 /* ---------- i liquidi non si pestano: niente mortaio, e niente già in dispensa ---------- */
@@ -384,7 +384,36 @@ controlla('nelle finali, con pesi e lunghezze, il mortaio c\'è', ['calderone', 
   const fatti = new Set()
   for (const t of CAMPAGNA) for (let s = 1; s <= 40; s++) for (const p of new Bottega(t, { rnd: caso(s) }).passi) fatti.add(p.azione)
   for (const a of ['sminuzza', 'gratta', 'soffia', 'agita']) controlla(`${a} entra nelle ricette`, fatti.has(a))
-  uguale('la prima tappa resta semplice', tappa('massa-banco').azioni.join(), 'versa,mescola')
+  uguale('alla prima tappa niente mortaio né mantice', tappa('massa-banco').azioni.join(), 'versa,mescola,scalda,agita,sale,pepe,imbottiglia')
+  controlla('il mantice arriva alla seconda', tappa('massa-grande').azioni.includes('soffia'))
+  for (const c of ['massa-banco', 'lunghezza-banco', 'capacita-banco', 'capacita-grandi', 'capacita-virgole'])
+    controlla(`${c}: una ricetta che non sia misera`, Array.from({ length: 30 }, (_, s) => new Bottega(tappa(c), { rnd: caso(s + 1) })).every(x => x.passi.length >= 6))
+  /* la fiala chiude sempre, e il pizzico è uno, quando c'è tutto nel calderone */
+  let storte = 0
+  const pizzichi = new Set()
+  for (const t of CAMPAGNA) for (let s = 1; s <= 40; s++) {
+    const azioni = new Bottega(t, { rnd: caso(s) }).passi.map(p => p.azione)
+    const quanti = azioni.filter(a => a === 'sale' || a === 'pepe')
+    quanti.forEach(a => pizzichi.add(a))
+    if (azioni.at(-1) !== 'imbottiglia' || azioni.filter(a => a === 'imbottiglia').length !== 1 || quanti.length > 1) storte++
+    if (quanti.length && azioni.slice(azioni.indexOf(quanti[0])).some(a => ['versa', 'gratta', 'pesta', 'sminuzza'].includes(a))) storte++
+  }
+  uguale('la fiala è l\'ultimo passo, e il pizzico viene dopo la roba', storte, 0)
+  uguale('capita il sale e capita il pepe', [...pizzichi].sort().join(), 'pepe,sale')
+  /* il barattolo sbagliato è un pasticcio come gli altri, e il pizzico non si compra */
+  {
+    const c = Array.from({ length: 40 }, (_, s) => new Bottega(tappa('massa-banco'), { rnd: caso(s + 1) })).find(x => x.passi.some(p => p.azione === 'pepe'))
+    const riga = c.righe.find(r => r.passi.some(k => c.passi[k].azione === 'pepe'))
+    controlla('la ricetta dice quale', /pizzico di pepe|aggiunto il pepe/.test(riga.testo), riga.testo)
+    uguale('sul listino non c\'è', c.ingredienti.some(g => /sale|pepe/.test(g.nome)), false)
+    const voci = c.ingredienti.flatMap((g, i) => g.ottimo.pezzi.map(k => ({ i, k })))
+    for (let n = 0; n < voci.length; n += c.quanteInOrdine) c.ordina(voci.slice(n, n + c.quanteInOrdine))
+    while (c.passi[c.passo].azione !== 'pepe') prossimoPasso(c)
+    const speso = c.speso
+    uguale('col sale al posto del pepe è un pasticcio', c.fai('sale').giusto, false)
+    uguale('e costa un gettone', c.speso, speso + 1)
+    uguale('il pepe invece va', c.fai('pepe').giusto, true)
+  }
   /* la bacchetta ha la sua formula, su una riga sola */
   const b = Array.from({ length: 40 }, (_, s) => new Bottega(tappa('massa-grande'), { rnd: caso(s + 1) })).find(x => x.passi.some(p => p.azione === 'agita'))
   const riga = b.righe.find(r => r.passi.some(k => b.passi[k].azione === 'agita'))

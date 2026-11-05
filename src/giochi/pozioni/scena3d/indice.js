@@ -148,7 +148,7 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
     mira(x, y)
     if (!raggio.ray.intersectPlane(piano, qui)) return
     casa.x = Math.max(-2.7, Math.min(2.7, qui.x))
-    casa.z = Math.max(-0.9, Math.min(2.5, qui.z))
+    casa.z = Math.max(Math.min(-0.9, casa.z), Math.min(2.5, qui.z))   // chi sta in fondo può restarci
   }
 
   /* ── il gesto: l'attrezzo a bersaglio lo muove il dito, e quando ha finito è una mossa ── */
@@ -527,6 +527,18 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
       suoni.tuffo()
       await aCasa(attrezzi.brocca)
     },
+    sale: () => pizzico(attrezzi.sale),
+    pepe: () => pizzico(attrezzi.pepe),
+    async imbottiglia(a) {
+      attrezzi.riempi(1, a.brodo)
+      await anima(0.3, f => attrezzi.tappa(liscio(f)))
+      suoni.tappo()
+      await aCasa(attrezzi.fiala)
+    },
+  }
+  async function pizzico(cosa) {
+    banco.ribolli(3)
+    await aCasa(cosa)
   }
 
   async function passo(a) {
@@ -534,6 +546,7 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
     // il pasticcio: il calderone rutta, e la roba resta dov'era
     banco.sfuma(1)
     attrezzi.fiammella(false)
+    attrezzi.riempi(0)
     if (a.attrezzo) aCasa(attrezzi.cosa(a.attrezzo))
     suoni.pasticcio()
     banco.ribolli(8)

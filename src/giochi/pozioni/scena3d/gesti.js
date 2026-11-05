@@ -20,6 +20,9 @@ export const GESTI = {
   'brocca:calderone': { tipo: 'inclina', quanti: 0.9, freccia: 'inclina' },
   'mortaio:calderone': { tipo: 'inclina', quanti: 0.9, freccia: 'inclina' },
   'tagliere:calderone': { tipo: 'inclina', quanti: 0.9, freccia: 'inclina' },
+  'sale:calderone': { tipo: 'colpi', asse: 'y', quanti: 3, freccia: 'su-giu' },
+  'pepe:calderone': { tipo: 'colpi', asse: 'y', quanti: 3, freccia: 'su-giu' },
+  'fiala:calderone': { tipo: 'inclina', quanti: 0.9, freccia: 'inclina' },
 }
 
 // avanti e indietro lungo un asse: dice quando il dito torna indietro

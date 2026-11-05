@@ -60,7 +60,7 @@ motore/
   botteghe.js        le botteghe del paese: `componiCliente`, `aggiornaLaBottega`, `consegnaInBottega`, `rifiutaInBottega`, `leggiLeBotteghe`, `vistaDellaBottega`, `famaDi`, `guastiDelleBotteghe` ([botteghe.md](botteghe.md))
   stato.js           lo stato salvato (esperienza, `posseduti` = edificio in mappa; gli edifici sono anche `cose`, il v8 si migra al posto di prima: [edifici-liberi.md](edifici-liberi.md); `macchine`, `ordini`, `bestie` di pollaio e stalla; la versione sta in `VERSIONE_STATO`), `statoIniziale()` e `normalizza()` (un salvataggio rotto si rimette in forma; un v6 passa dagli id vecchi ai nuovi, v7)
   tipo.js            la fattoria «tipo» (`fattoriaTipo(livello)`, borsa infinita, deterministica): il cheat `#fattoria3d-tipo=N` ([comandi](../core/comandi.md)); test `unita/fattoria3d-tipo`
-  percorso.js        Dijkstra sulla griglia, le strade costano meno
+  percorso.js        Dijkstra sulla griglia, le strade costano meno; `raggiungibili` (le celle che si toccano a piedi, per la regola delle staccionate)
   pesca.js           la pesca: `provaPesca`, `lanciaLenza`, `ritiraPesca`, `bancoDi`, `lenzeInAcqua`, `riesaminaPesca` (funzioni pure sulla `Fattoria3d`); `stato.pesca` per lotto d'acqua
   carretto.js        il carretto del vicino: 5 contro 1, roba con roba, mai monete (`cosaPuoiDare`, `cosaOffre`, `scambia`)
   (fattoria3d.js)    i magazzini in mappa: `edificiDelSilo`, `tagliaDi`, `passoDelSilo`, `costruisciMagazzino`, `_assicuraMagazzini` ([magazzini.md](magazzini.md))
@@ -72,6 +72,7 @@ scena3d/             il disegno (vedi scena.md); `facce.js` la faccia di una mer
   scena3d/modelli-cura.js       la ciotola col nome e la tinozza
   scena3d/sporco.js             lo sporco sul corpo: una soglia per vertice e un numero per animale
   scena3d/bagno.js              il bagno nella tinozza: la camera, il dito che strofina, il pagamento alla fine
+  scena3d/staccionate.js        le staccionate e i cancelli a istanze (due banchi, scatole e sfere); `dati/staccionate.js` i cinque tipi, i prezzi e i codici ([staccionate.md](staccionate.md))
   scena3d/modelli-passaggi.js   ponte, passerella e tavolo con le panche: presi dal sotterraneo e rifatti con i materiali della fattoria (scena.md)
   scena3d/modelli-decori*.js    le 206 decorazioni della 2D portate (giri G8 e G9): `modelli-decori-base.js` (attrezzi, motivo di ogni coltura, `decoro()`), `-verde`, `-recinti`, `-raccolto`, `-case`, `-bestiole`, `-fiori`, `-arredo`, `-acqua`, `-feste` (albero di Natale e fiera), il registro `modelli-decori.js` (`DECORI_CREA`); i dati in `dati/decori.js` ([decorazioni.md](decorazioni.md))
   scena3d/modelli-acqua.js      lo stagno (3×3) e il laghetto (5×4) costruiti dal bambino, e i materiali dell'acqua (`materialeAcqua`, `materialeMare`, `uTAcqua`) che usa anche il terreno ([laghi.md](laghi.md))
@@ -95,7 +96,7 @@ viste/
   Mobile.vue         il foglio di un mobile di casa, sopra l'interfaccia unica ([casa.md](casa.md))
   Attrezzi.vue       i semi ad arco o il falcetto accanto al campo toccato, da trascinare ([campi.md](campi.md)); le opzioni accanto a una cosa o a un animale ([gesti.md](gesti.md))
   CostruisciQui.vue  il foglio «Cosa compriamo?» (il tasto 🛒, o tenendo premuto su un posto libero): il taccuino con le linguette, le schede e la griglia di carte con l'anteprima 3D del modello (`anteprima(tipo)`, emoji come segnaposto), il prezzo o «📦 ×N», le chiuse col lucchetto che tremano e dicono il livello ([scena.md](scena.md))
-  BarraStrade.vue    il pennello delle strade: strada, gomma, «Fatto»
+  BarraStrade.vue    il pennello: strada, staccionata, cancello, gomma, «Fatto»
   Macchina.vue       il foglio di una macchina (la sua, qualunque sia), come in Hay Day e nella 2D: l'insegna col suo colore (`[data-macchina]` in stile.css), i **posti della fila** col nome della macchina (`dentro`: «Nel forno», «Al telaio»…: libero, cuoce con barra e tempo, aspetta) seguiti dai **vani chiusi col prezzo** da comprare (`bloccati`, evento `compra`), la **pila dei pronti** con «Ritira tutto», le ricette come **carte** con la faccia del prodotto e il numero di quante se ne fanno con le scorte (ingredienti con ✓/✗ e `ha/serve`); le chiuse velate col lucchetto e il livello. Una carta si **trascina** su un posto o sulla fila, o si **tocca** e va in fila (vedi sotto). Stile in `stile-macchina.css`
   macchina-pura.js   il conto del foglio senza DOM: `ordinaRicette`, `statoDelPosto`, `bersaglioSotto`, `gestoDelDito` (`unita/fattoria3d-macchina`)
   Bacheca.vue        il foglio «Gli ordini» a bacheca ([ordini.md](ordini.md)): i biglietti colorati sulla tavola (3–8, uno per posto), il dettaglio di quello scelto con le merci, il cestino e «Consegna», l'indicatore delle consegne; stile in `stile-bacheca.css`
@@ -133,6 +134,7 @@ Registrazione: `src/giochi/indice.js` (il manifesto, in coda) e `src/giochi/sche
 | `[data-f3="ruota"]` (con `data-rot`) | il tasto ↻ mentre un pezzo ruotabile è in mano: gira di un quarto ([rotazione.md](rotazione.md)) |
 | `[data-f3="zona-via"]` | la fascia in basso mentre un pezzo è sollevato o il fantasma aspetta un posto (toccarla annulla il fantasma) |
 | `[data-f3="barra-strade"]`, `[data-strumento="strada"]`, `[data-f3="strade-fatto"]` | la barra del pennello |
+| `[data-strumento="staccionata"]`, `[data-strumento="cancello"]`, `[data-f3="staccionate-tipi"]` (`data-staccionata`) | le staccionate e i cancelli ([staccionate.md](staccionate.md)) |
 | `[data-f3="dialogo"]`, `[data-scelta="0"]` | la conferma (solo i lotti di terreno); la prima scelta è «Compra · 🪙 N» |
 | `[data-f3="costruisci-esclama"]`, `[data-f3="scheda-esclama"]`, `[data-f3="carta-esclama"]` | il «!» pulsante: un edificio aperto dal livello e non costruito (sul tasto 🛒, sulla linguetta Edifici, sulla carta); `[data-f3="ordine-esclama"]`/`[data-f3="ordine-serve"]` nel banco: [edifici-liberi.md](edifici-liberi.md) |
 | `[data-f3="cartello-bestie"]` (`data-pezzo`: recinto, pollaio, stalla), `[data-f3="compra-bestia"]` (`aria-disabled`) | il cartello sopra recinto, pollaio e stalla e il suo «＋ 🪙 N»; si tocca con `dispatchEvent('click')` perché può stare fuori dallo schermo |

@@ -43,6 +43,9 @@ export const suoni = {
   sciacquo() { rumore(0.16, 0.05, 1100, 500); blop(0.7) },
   // la lama sul legno
   taglio() { nota(fra(900, 1100), 420, 0.04, 'triangle', 0.07); nota(180, 110, 0.06, 'square', 0.07); rumore(0.04, 0.05, 3800, 1500) },
+  // il pizzico che cade, e il tappo che entra nella fiala
+  pizzico() { rumore(0.08, 0.03, 8000, 3000); ripeti(3, 35, () => { const f = fra(3200, 5600); nota(f, f, 0.02, 'triangle', 0.02) }) },
+  tappo() { nota(1150, 620, 0.06, 'sine', 0.12); rumore(0.03, 0.04, 3000, 1200) },
   gratta() { rumore(0.13, 0.05, 7000, 2600); nota(fra(1500, 1900), fra(1100, 1300), 0.08, 'sawtooth', 0.012) },
   sfrega() { rumore(0.09, 0.07, 6000, 2000) },
   soffio() { rumore(0.34, 0.08, 700, 2000) },

@@ -19,11 +19,15 @@ export const AZIONI = {
   soffia: { fare: 'Soffiare sul fuoco' },
   agita: { fare: 'Fare l\'incantesimo' },
   diluisci: { fare: 'Diluire' },
+  sale: { fare: 'Aggiungere il sale' },
+  pepe: { fare: 'Aggiungere il pepe' },
+  imbottiglia: { fare: 'Riempire la fiala' },
 }
 
 // gli attrezzi sul tavolo, per le azioni di una tappa
 export const ATTREZZI = { pesta: ['mortaio', 'pestello'], sminuzza: ['tagliere', 'coltello'], gratta: ['grattugia'], mescola: ['mestolo'],
-                          scalda: ['fiammifero'], soffia: ['mantice'], agita: ['bacchetta'], diluisci: ['brocca'] }
+                          scalda: ['fiammifero'], soffia: ['mantice'], agita: ['bacchetta'], diluisci: ['brocca'],
+                          sale: ['sale'], pepe: ['pepe'], imbottiglia: ['fiala'] }
 
 // cosa vuol dire portare un attrezzo su un'altra cosa: «attrezzo:dove»
 export const MOSSE = {
@@ -36,6 +40,9 @@ export const MOSSE = {
   'mantice:legna': ['soffia', []],
   'bacchetta:calderone': ['agita', []],
   'brocca:calderone': ['diluisci', []],
+  'sale:calderone': ['sale', []],
+  'pepe:calderone': ['pepe', []],
+  'fiala:calderone': ['imbottiglia', []],
 }
 // e cosa vuol dire portarci la roba
 export const ROBA_SU = { calderone: 'versa', mortaio: 'metti', tagliere: 'appoggia', grattugia: 'gratta' }
@@ -62,11 +69,13 @@ const inFila = (rnd, lista) => lista.map(x => [rnd(), x]).sort((a, b) => a[0] - 
 const elenco = nomi => (nomi.length < 2 ? nomi.join('') : `${nomi.slice(0, -1).join(', ')} e ${nomi.at(-1)}`)
 
 const TETTO = 10                // i passi di una ricetta: oltre, la pergamena copre il calderone
+const RIGHE = 8                 // e i punti della pergamena: se no se ne mettono due insieme
 
-// `livello` (dati/campagna.js): 1 versa e mescola, 2 anche scalda, 3 si
-// pesta, 4 si diluisce, 5 come il 4 ma col testo intrecciato. `azioni`: quelle
-// della tappa, che portano il resto. Si mescola sempre prima di scaldare; il
-// resto cambia posto, se no si impara una filastrocca e la ricetta non si legge.
+// `livello` (dati/campagna.js): 1 versa, mescola e accendi il fuoco, 2 uguale
+// ma con più attrezzi, 3 si pesta, 4 si diluisce, 5 come il 4 ma col testo
+// intrecciato. `azioni`: quelle della tappa, che portano il resto. Si mescola
+// sempre prima di scaldare e la fiala chiude; il resto cambia posto, se no si
+// impara una filastrocca e la ricetta non si legge.
 export function ricetta(rnd, ingredienti, livello, azioni = []) {
   const tutti = ingredienti.map((_, i) => i)
   const duri = tutti.filter(i => ingredienti[i].famiglia !== 'capacita')
@@ -84,16 +93,19 @@ export function ricetta(rnd, ingredienti, livello, azioni = []) {
     if (gratta != null) passi.push({ azione: 'gratta', cosa: [gratta] })
     if (sfusi.length) passi.push({ azione: 'versa', cosa: sfusi })
   } else passi.push({ azione: 'versa', cosa: tutti })
-  passi.push({ azione: 'mescola', cosa: [] })
-  if (livello >= 2) passi.push({ azione: 'scalda', cosa: [] })
+  passi.push({ azione: 'mescola', cosa: [] }, { azione: 'scalda', cosa: [] })
   if (livello >= 4) passi.splice(passi.length - (rnd() < 0.5 ? 0 : 1), 0, { azione: 'diluisci', cosa: [] })
-  // il mantice e la bacchetta: dopo il fuoco l'uno, dopo il mestolo l'altra, in un punto a caso
-  const dopo = (a, nuovo) => {
-    const da = passi.findIndex(p => p.azione === a) + 1
-    passi.splice(da + Math.floor(rnd() * (passi.length - da + 1)), 0, { azione: nuovo, cosa: [] })
-  }
-  for (const a of inFila(rnd, ['soffia', 'agita'].filter(x => azioni.includes(x))).slice(0, livello >= 4 ? 2 : 1))
-    if (passi.length < TETTO) dopo(a === 'soffia' ? 'scalda' : 'mescola', a)
+  // da un passo in poi, in un punto a caso
+  const dopo = (da, nuovo) => passi.splice(da + Math.floor(rnd() * (passi.length - da + 1)), 0, { azione: nuovo, cosa: [] })
+  const fiala = azioni.includes('imbottiglia')
+  const ceStaAncora = () => passi.length < TETTO - (fiala ? 1 : 0)
+  // il mantice e la bacchetta: dopo il fuoco l'uno, dopo il mestolo l'altra
+  for (const a of inFila(rnd, ['soffia', 'agita'].filter(x => azioni.includes(x))))
+    if (ceStaAncora()) dopo(passi.findIndex(p => p.azione === (a === 'soffia' ? 'scalda' : 'mescola')) + 1, a)
+  // il pizzico: appena c'è tutto nel calderone, e solo se ci sta
+  const pizzichi = ['sale', 'pepe'].filter(x => azioni.includes(x))
+  if (pizzichi.length && ceStaAncora()) dopo(passi.findLastIndex(p => p.azione === 'versa' || p.azione === 'gratta') + 1, pizzichi[Math.floor(rnd() * pizzichi.length)])
+  if (fiala) passi.push({ azione: 'imbottiglia', cosa: [] })
   return passi
 }
 
@@ -113,7 +125,8 @@ export function frase(p, ingredienti) {
   if (p.azione === 'gratta') return `gratta ${con(ingredienti[p.cosa[0]])} nel calderone`
   if (p.azione === 'versa') return p.cosa.includes(MORTAIO) ? 'versa il pestato nel calderone' : p.cosa.includes(TAGLIERE) ? 'versa il tritato nel calderone' : `versa ${elenco(nomi)} nel calderone`
   if (p.azione === 'agita') return `agita la bacchetta sul calderone e ${formula(ingredienti)}`
-  return { mescola: 'mescola bene', scalda: 'accendi il fuoco', soffia: 'soffia sul fuoco col mantice', diluisci: 'diluisci con l\'acqua' }[p.azione]
+  return { mescola: 'mescola bene', scalda: 'accendi il fuoco', soffia: 'soffia sul fuoco col mantice', diluisci: 'diluisci con l\'acqua',
+           sale: 'aggiungi un pizzico di sale', pepe: 'aggiungi un pizzico di pepe', imbottiglia: 'riempi la fiala' }[p.azione]
 }
 
 const Maiuscola = t => t[0].toUpperCase() + t.slice(1)
@@ -125,8 +138,8 @@ const Maiuscola = t => t[0].toUpperCase() + t.slice(1)
 // Al contrario si dicono solo le mosse sul calderone («accendi il fuoco dopo
 // aver mescolato bene»), e pesta e versa diventano «versa X e Y pestati insieme».
 const INSIEME = 0.4, GIRATA = 0.6, DENTRO = ' nel calderone'
-const SUL_CALDERONE = ['mescola', 'scalda', 'soffia', 'diluisci']
-const FATTO = { mescola: 'mescolato bene', scalda: 'acceso il fuoco', soffia: 'soffiato sul fuoco', diluisci: 'diluito con l\'acqua' }
+const SUL_CALDERONE = ['mescola', 'scalda', 'soffia', 'diluisci', 'sale', 'pepe']
+const FATTO = { mescola: 'mescolato bene', scalda: 'acceso il fuoco', soffia: 'soffiato sul fuoco', diluisci: 'diluito con l\'acqua', sale: 'aggiunto il sale', pepe: 'aggiunto il pepe' }
 // «sminuzza il ramo e versalo»: il pronome va con l'articolo
 const PRONOME = { 'il ': 'lo', 'lo ': 'lo', 'la ': 'la', 'l\'': 'lo', 'i ': 'li', 'le ': 'le' }
 export function testo(rnd, passi, ingredienti, intrecciato) {
@@ -143,7 +156,7 @@ export function testo(rnd, passi, ingredienti, intrecciato) {
       const cose = passi[k].cosa.map(i => ingredienti[i])
       righe.push({ testo: `Versa nel calderone ${elenco(cose.map(g => g.nome))} ${cose.every(g => g.f) ? 'pestate' : 'pestati'} insieme.`, passi: [k, ++k] })
     } else if (tagliaEVersa(k)) righe.push({ testo: `${Maiuscola(detto(k))} e versa${PRONOME[ingredienti[passi[k].cosa[0]].art]} nel calderone.`, passi: [k, ++k] })
-    else if (k + 1 < passi.length && k + 1 !== girata && !tagliaEVersa(k + 1) && !incanto(k) && !incanto(k + 1) && passi.length > 2 && rnd() < INSIEME)
+    else if (k + 1 < passi.length && k + 1 !== girata && !tagliaEVersa(k + 1) && !incanto(k) && !incanto(k + 1) && (rnd() < INSIEME || righe.length + passi.length - k > RIGHE))
       // «nel calderone» una volta sola
       righe.push({ testo: `${Maiuscola(detto(k + 1).endsWith(DENTRO) ? detto(k).replace(DENTRO, '') : detto(k))} e ${detto(k + 1)}.`, passi: [k, ++k] })
     else righe.push({ testo: incanto(k) ? Maiuscola(detto(k)) : `${Maiuscola(detto(k))}.`, passi: [k] })

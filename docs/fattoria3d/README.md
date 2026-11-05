@@ -26,6 +26,7 @@ convertire) sta in `src/giochi/fattoria3d/da2d/`. Le monete sono quelle vere.
 - [in-comune.md](in-comune.md) — la fattoria in comune fra due amici: si gioca collegati, le mosse al posto della fattoria, il merge permissivo, la fila e la fotografia sul servizio
 - [nome.md](nome.md) — il nome che il bambino dà alla fattoria, anche a quelle in comune: dove sta, le regole, il ✏️ nella barra
 - [terreno.md](terreno.md) — i lotti da comprare, il recinto, gli alberi che si abbattono, le strade a pennello, la telecamera
+- [staccionate.md](staccionate.md) — le staccionate di cinque tipi e il cancello (si attraversa), la regola di chi resta chiuso (il pezzo che chiude diventa cancello), come si legano, il salvataggio, e **come si aggancia l'acqua disegnabile**
 - [mondo-infinito.md](mondo-infinito.md) — il mondo senza confini: lotti `a_b` qualunque, generazione per lotto, gli id salvati, la finestra della scena, il prezzo che si auto-limita
 - [laghi.md](laghi.md) — i laghetti (biomi), gli stagni e i laghetti che costruisce il bambino, l'acqua, i ponti, il disegno, e dove la pesca si aggancia
 - [geografia-e-pesca.md](geografia-e-pesca.md) — il mare a ovest e i laghi grandi a est (forme continue fra lotti), i salvataggi di prima che tengono i loro lotti, il molo, il porticciolo, i banchi di pesce, i pesciolini a istanze, il pesce, friggitoria e sushi bar, i livelli 17 e 18

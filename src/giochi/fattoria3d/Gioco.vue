@@ -39,6 +39,7 @@ import NomeFattoria from './viste/NomeFattoria.vue'
 import CostruisciQui from './viste/CostruisciQui.vue'
 import BarraStrade from './viste/BarraStrade.vue'
 import { TIPO_DI_BASE, BORDO_DI_BASE, TIPI_STRADA, BORDI_STRADA, stradeAl } from './dati/strade.js'
+import { TIPO_STACCIONATA_DI_BASE, TIPI_STACCIONATA, staccionateAl } from './dati/staccionate.js'
 import { schedeDi, festaDaScoprire } from './dati/carte.js'
 import { stagioneAttiva } from './dati/stagioni3d.js'
 import Attrezzi from './viste/Attrezzi.vue'
@@ -122,7 +123,8 @@ const EVENTI = { terra: 'fattoria3dTerre', pezzo: 'fattoria3dPezzi', raccolto: '
 function salito(livello) {
   const nome = nomeDi(livello), vuoto = /^Livello \d+$/.test(nome)           // un livello che non apre niente (la 3D ha meno cose della 2D) lo dice
   const strade = stradeAl(livello), nuoveStrade = [...strade.tipi.map(t => TIPI_STRADA[t].nome), ...strade.bordi.map(b => `bordo ${BORDI_STRADA[b].nome.toLowerCase()}`)]
-  const testo = `Livello ${livello}: ${avvisoEdificiNuovi(livello) || (nuoveStrade.length ? `strade nuove (${nuoveStrade.join(', ')})` : vuoto ? 'niente di nuovo, ma sei più in alto!' : nome)}`      // se si apre un edificio lo nomina: il «!» sul tasto Compra resta finché non c'è
+  const nuoveStacc = staccionateAl(livello).map(t => TIPI_STACCIONATA[t].nome)
+  const testo = `Livello ${livello}: ${avvisoEdificiNuovi(livello) || (nuoveStrade.length ? `strade nuove (${nuoveStrade.join(', ')})` : nuoveStacc.length ? `staccionata nuova (${nuoveStacc.join(', ')})` : vuoto ? 'niente di nuovo, ma sei più in alto!' : nome)}`      // se si apre un edificio lo nomina: il «!» sul tasto Compra resta finché non c'è
   ui.avviso(testo)
   toast.value = { testo, fine: performance.now() + DURATA_TOAST }
   livelloNuovo.value = true
@@ -162,8 +164,8 @@ function seSparisce(e) { if (e?.type === 'pagehide' || document.visibilityState 
 
 // ── lo stato della vista ──
 const attrezzi = ref(null)                // { tipo, x, y, … }: l'attrezzo accanto al campo toccato (viste/Attrezzi.vue)
-const strumento = ref(null)              // il pennello delle strade: null | 'strada' | 'gomma'
-const pennello = ref({ tipo: TIPO_DI_BASE, bordo: BORDO_DI_BASE })      // com'è la strada che si disegna (dati/strade.js): lo sceglie il bambino nella barra
+const strumento = ref(null)              // il pennello: null | 'strada' | 'staccionata' | 'cancello' | 'gomma'
+const pennello = ref({ tipo: TIPO_DI_BASE, bordo: BORDO_DI_BASE, staccionata: TIPO_STACCIONATA_DI_BASE })      // com'è la strada che si disegna (dati/strade.js): lo sceglie il bambino nella barra
 const costruisciQui = ref(null)          // { i, j, msg }: il menu «Compra», con la cella premuta
 const avvisoTesto = ref('')
 const stagione = ref(stagioneAttiva(new Date(), typeof location !== 'undefined' ? location.hash : ''))          // la festa in corso (dati/stagioni3d.js): Natale, Halloween o niente
