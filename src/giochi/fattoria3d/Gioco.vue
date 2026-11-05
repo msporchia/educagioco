@@ -243,7 +243,8 @@ const ui = {
   apriBottega(tipo) { bottegaMsg.value = ''; bottegaCons.value = null; bottegaAperta.value = tipo },
   apriMagazzino(silo) { magazzinoMsg.value = ''; magazzinoAperto.value = silo },          // un tocco su un magazzino
   apriMappa() { if (comune) ui.avviso('Dai vicini si va col trattore della tua fattoria.'); else visite.apriMappa() },
-  apriBestia(id) { bestiaMsg.value = ''; bestiaAperta.value = id },             // tenere premuto su un animale
+  apriBestia(id) { bestiaMsg.value = ''; bestiaAperta.value = id },             // «Come sta», fra le opzioni di un animale
+  apriAddobbi(id) { bestiaMsg.value = ''; addobbiDi.value = id },                // «Vestiti», fra le opzioni di un animale
   riempi: riempiCiotola,
   lava,
   bagno(info) { bagno.value = info },
@@ -347,7 +348,6 @@ function spogliaBestia(dove) {
   ui.cambio()
 }
 function setBestia(fai) { const id = addobbiDi.value; if (id && fai(id).ok) { bestiaMsg.value = ''; ui.cambio() } }
-function spostaBestia() { const id = bestiaAperta.value; if (id && mondo.iniziaSposta(id)) bestiaAperta.value = null }
 const predefinitoFattoria = computed(() => comune ? `Con ${nomeDellAmico(comune)}` : 'La fattoria')
 const titoloFattoria = computed(() => foto.value.nome || predefinitoFattoria.value)
 function daiNomeAllaFattoria(nome) {
@@ -797,7 +797,7 @@ onBeforeUnmount(() => {
 
         <CostruisciQui v-if="costruisciQui" :schede="schede" :messaggio="costruisciQui.msg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta" :festa="festa" @scegli="sceglieCarta" @chiudi="chiudiCostruisci" />
         <Attrezzi v-if="attrezzi" :key="attrezzi.tipo + attrezzi.id" v-bind="attrezzi" :livello="foto.livello" :scorta="k => motore.scortaDi(k)" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
-                  @prendi="k => mondo.attrezzi.prendi(k)" @passa="(x, y) => mondo.attrezzi.passa(x, y)" @lascia="mondo.attrezzi.lascia()" @metti="k => mondo.attrezzi.metti(k)" />
+                  @prendi="k => mondo.attrezzi.prendi(k)" @passa="(x, y) => mondo.attrezzi.passa(x, y)" @lascia="mondo.attrezzi.lascia()" @metti="k => mondo.attrezzi.metti(k)" @opzione="k => mondo.attrezzi.opzione(k)" />
         <Macchina v-if="macchina" :key="macchina.tipo" v-bind="macchina" :messaggio="macchinaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta" @prepara="prepara" @compra="compraPosto" @ritira="ritira" @chiudi="macchinaAperta = null"
                   :consiglio="macchinaCons" @consiglio="facciConsiglio" />
         <Bacheca v-if="bancoAperto" v-bind="{ aperto: banco.aperto, perche: banco.perche, ordini: banco.ordini, traguardo: traguardoOrdini }" :messaggio="bancoMsg" :consiglio="bancoCons" @consiglio="facciConsiglio"
@@ -809,7 +809,7 @@ onBeforeUnmount(() => {
  <Consiglio v-if="consiglio" :consiglio="consiglio" @fai="facciConsiglio" @chiudi="consiglio = null" />
         <Livelli v-if="livelliAperto" v-bind="livelli" @chiudi="livelliAperto = false" />
         <Bestia v-if="bestiaVista" :key="bestiaVista.id" v-bind="bestiaVista" :messaggio="bestiaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
-                @sposta="spostaBestia" @negozio="apriAddobbi" @nome="battesimoDi = bestiaAperta; bestiaAperta = null" @chiudi="bestiaAperta = null" />
+                @negozio="apriAddobbi" @nome="battesimoDi = bestiaAperta; bestiaAperta = null" @chiudi="bestiaAperta = null" />
         <Addobbi v-if="addobbiVista" :key="'add-' + addobbiVista.id" v-bind="addobbiVista" :messaggio="bestiaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
                  @veste="vestiBestia" @spoglia="spogliaBestia" @salva-set="x => setBestia(id => motore.cura.salvaVestito(id, x.posto, x.nome))"
                  @rinomina-set="x => setBestia(id => motore.cura.rinominaVestito(id, x.posto, x.nome))" @togli-set="p => setBestia(id => motore.cura.togliVestito(id, p))" @chiudi="chiudiAddobbi" />
@@ -828,7 +828,7 @@ onBeforeUnmount(() => {
         <template v-if="inCasa">
           <canvas :key="chiaveCasa" ref="telaCasa" class="f3-int-tela" data-f3="tela-casa"></canvas>
           <div ref="sopraCasa" class="f3-int-sopra"></div>
-          <Casa :casa="interni" :monete="guardarobaVista.monete" @guardaroba="interni.chiudi(); guardarobaAperto = true" />
+          <Casa :casa="interni" :monete="guardarobaVista.monete" />
         </template>
         <!-- dentro una bottega: la sala coi clienti (docs/fattoria3d/botteghe.md, «Dentro») -->
         <template v-if="tipoSala">

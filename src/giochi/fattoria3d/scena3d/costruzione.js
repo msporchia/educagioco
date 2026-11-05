@@ -32,7 +32,7 @@ export class Costruzione {
     this.c = ctx
     this.D = { attivo: false, tipo: null, spostando: null, parcheggiato: false, rot: 0, i: 0, j: 0, ok: false, fant: null, presa: PRESA_NUOVO, dentro: false, dito: null }
     this.tratto = null; this.ultimaCella = null
-    this.pennelloDito = null        // il dito che disegna: { x, y, gesto }, per scorrere ai bordi anche da fermo
+    this.pennelloDito = null        // il dito che disegna o che tiene una bestia: { x, y, gesto | fai }, per scorrere ai bordi anche da fermo
     this._camPrima = null
   }
   /** Le misure del pezzo in mano com'è girato adesso. */
@@ -232,8 +232,12 @@ export class Costruzione {
     if (!mossa && !mosso) return
     cam.cam.updateMatrixWorld()                                      // `puntaSuolo` legge la matrice, che altrimenti è quella dell'ultimo disegno
     if (dito) this.muovi(dito.x, dito.y)
+    else if (pun.fai) pun.fai(pun.x, pun.y)
     else this.pennello(pun.x, pun.y, pun.gesto)
   }
+
+  /** Una cosa che non è un pezzo tenuta al dito (una bestia di casa): contro il bordo la vista scorre e `fai(x, y)` la riporta sotto il dito. */
+  tieni(x, y, fai) { this.pennelloDito = { x, y, fai } }
 
   // ── le strade a pennello ──
   pennello(x, y, gesto) {

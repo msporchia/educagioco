@@ -1,7 +1,12 @@
 // I gesti col dito (docs/fattoria3d/campi.md): un tocco su un campo porta accanto l'attrezzo giusto (i semi se è vuoto, il falcetto se è
 // pronto) e l'attrezzo si trascina sui campi, uno o tanti: il campo cambia sotto il dito, senza aspettare il contadino. Allo stesso modo un tocco
 // su una ciotola porta i cibi, sulla tinozza gli animali da lavare, su un recinto la nuvoletta col mangime: si trascinano dentro
-// (docs/fattoria3d/cura-sul-prato.md). Le regole sono del motore.
+// (docs/fattoria3d/cura-sul-prato.md). Le altre opzioni di una cosa (↻, e di un animale pappa, bagno, vestiti, come sta) stanno nello stesso arco, e si toccano
+// (docs/fattoria3d/gesti.md). Le regole sono del motore.
+import { ruotabile } from '../dati/rotazione.js'
+import { COSTI } from '../dati/regole.js'
+import { dettoDi } from './detti.js'
+
 const VICINO = 70, MANO = 52             // a quanti pixel dal bersaglio il dito conta come «dentro», e di quanto la figura in mano sta sopra il dito: vale anche lei
 
 export class Attrezzi {
@@ -35,9 +40,47 @@ export class Attrezzi {
     const voci = this.w.m.mangimeDi(c)
     this._accanto(c, { tipo: 'recinto', voci, riga: riga || `Hanno fame: trascina qui ${voci[0].nome.toLowerCase()}` })
   }
+  /** Accanto a una cosa quello che ha in più, se non è già aperto il suo arco. Torna false se non ha niente. */
+  opzioni(c) {
+    if (this.aperto && this.aperto.id === c.id) return true
+    if (!this._opzioniDi(c).length) return false
+    this._accanto(c, { tipo: 'opzioni' })
+    return true
+  }
+  _opzioniDi(c) { return ruotabile(c.tipo) ? [{ id: 'gira', emoji: '↻', nome: 'Gira', conto: '🪙' + COSTI.spostare }] : [] }
+  /** Un tocco su un animale: gioca (`compagni.tocca`), e accanto a lui quello che gli serve: la pappa se ha fame, il bagno se è sporco, i vestiti, come sta. */
+  bestia(a) {
+    const w = this.w, { cura } = w.m, id = a.def.id, voci = []
+    if (!w.ui.apriBestia || !cura.stato(id)) return
+    if (cura.haFame(id) && cura.ciotolaDi(id)) voci.push({ id: 'pappa', emoji: '🍽️', nome: 'Pappa', conto: 'Pappa' })
+    if (cura.sporche().includes(id) && cura.tinozza()) voci.push({ id: 'bagno', emoji: '🛁', nome: 'Bagno', conto: 'Bagno' })
+    if (cura.vestiarioDi(id).length) voci.push({ id: 'vesti', emoji: '🎀', nome: 'Vestiti', conto: 'Vestiti' })
+    voci.push({ id: 'come', emoji: '🐾', nome: 'Come sta', conto: 'Come sta' })
+    const [x, y] = w.proietta({ x: a.x, y: 0, z: a.z }, 0.3)
+    this.aperto = { tipo: 'opzioni', bestia: id, opzioni: voci, id: 0, x, y, larghezza: w.rect.width, altezza: w.rect.height }
+    w.ui.attrezzi(this.aperto)
+  }
+  /** Un'opzione toccata. */
+  opzione(k) {
+    const a = this.aperto, w = this.w, { cura } = w.m
+    if (!a) return
+    if (k === 'gira') return this._gira(a.id)
+    const id = a.bestia
+    this.chiudi()
+    if (k === 'pappa') this._vaiA(cura.ciotolaDi(id), c => this.ciotola(c))
+    else if (k === 'bagno') this._vaiA(cura.tinozza(), c => this.tinozza(c))
+    else if (k === 'vesti') w.ui.apriAddobbi(id)
+    else w.ui.apriBestia(id)
+  }
+  /** Gira di un quarto la cosa toccata: l'arco resta lì, per girarla ancora. */
+  _gira(id) {
+    const w = this.w, r = w.m.ruotaPezzo(id)
+    if (!r.ok) return w.azioni.dici(dettoDi(r.motivo, { mancano: COSTI.spostare }))
+    w.cambiato(); w.pezzi.salta(id)
+  }
   _accanto(c, info) {
     const w = this.w, [x, y] = w.proietta(w.pezzi.centroDi({ kind: 'cosa', id: c.id }), 0.3)
-    this.aperto = { ...info, id: c.id, x, y, larghezza: w.rect.width, altezza: w.rect.height }
+    this.aperto = { ...info, opzioni: this._opzioniDi(c), id: c.id, x, y, larghezza: w.rect.width, altezza: w.rect.height }
     w.ui.attrezzi(this.aperto)
   }
   chiudi() {
@@ -48,9 +91,12 @@ export class Attrezzi {
   /** Il contadino va al primo campo che ne ha bisogno e lì compare l'attrezzo (il tasto di «E adesso?»). */
   vaiAlCampo(che, seme = null) {
     const w = this.w, { m } = w, c = m.s.cose.find(x => x.tipo === 'campo' && (che === 'semina' ? m.campoVuoto(x) : m.campoMaturo(x)))
-    if (!c) return
-    const b = { kind: 'cosa', id: c.id }
-    if (!w.eroe.vaiA(w.celleDiServizio(b), () => this.apri(c, seme), w.centroDi(b))) this.apri(c, seme)
+    if (c) this._vaiA(c, () => this.apri(c, seme))
+  }
+  /** Il contadino va alla cosa `c` e lì fa `fai(c)`; se non ci arriva lo fa subito. */
+  _vaiA(c, fai) {
+    const w = this.w, b = { kind: 'cosa', id: c.id }
+    if (!w.eroe.vaiA(w.celleDiServizio(b), () => fai(c), w.centroDi(b))) fai(c)
   }
 
   // ── il dito con l'attrezzo in mano ──

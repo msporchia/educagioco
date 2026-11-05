@@ -1,6 +1,6 @@
 # La cura sul prato
 
-Dal 4/11/2026 gli animali si curano **sul prato, non da un foglio**: la ciotola, la tinozza, un tocco per giocare. Il foglio che si apre tenendo premuto dice come stanno e serve per nome, vestiti e Sposta.
+Dal 4/11/2026 gli animali si curano **sul prato, non da un foglio**: la ciotola, la tinozza, un tocco per giocare. Il foglio che si apre da «🐾 Come sta», fra le opzioni che il tocco porta accanto all'animale ([gesti.md](gesti.md)), dice come stanno e serve per nome e vestiti.
 Codice: `motore/cura.js` (le regole), `dati/bestie.js` (soglie, `ciboChiesto`), `dati/compagni.js` (le sequenze pure), `scena3d/compagni.js` (il comportamento), `scena3d/modelli-cura.js`
 (ciotola e tinozza), `scena3d/bagno.js`, `scena3d/sporco.js`, `scena3d/attrezzi.js`, `viste/Attrezzi.vue`.
 
@@ -43,7 +43,7 @@ Senza mangime la nuvoletta c'è lo stesso, col gettone spento, e la riga dice co
 ## Il gioco
 
 **Un tocco sull'animale è giocare**: gratis, sempre (`Cura.gioca`). Riempie e può dare il premio **solo se non è già felice** (sotto `FELICE`, 0,55): da felice ci giochi quanto vuoi e non ne viene niente, così non diventa un tasto da premere a raffica.
-Il tocco fa le sue scenette anche ai cani e ai gatti di razza; il foglio non si apre più col tocco, ma tenendo premuto.
+Il tocco fa le sue scenette anche ai cani e ai gatti di razza, e accanto compaiono le opzioni: la pappa se ha fame, il bagno se è sporco, i vestiti, come sta.
 
 ## Chi si annoia
 

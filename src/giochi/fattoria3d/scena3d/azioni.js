@@ -13,9 +13,13 @@ import { tempoBreve } from '../dati/tempo.js'
 
 export { dettoDi, dettoDiRifiuto }
 
+// quello che il contadino va a fare toccando una cosa (`fai`): tutto il resto, se si gira, ha solo le sue opzioni (attrezzi.js)
+const CON_GESTO = new Set(['campo', 'recinto', 'pollaio', 'stalla', 'anatre', 'porcile', 'capre', 'conigliera', 'alpaca', 'asini', 'arnie', 'bacheca', 'bancarella', 'fontana', 'molo', 'molo_v', 'stagno', 'laghetto', 'trattore', 'silo', 'silo_bianco', 'dispensa'])
+
 export class Azioni {
   constructor(ctx) { this.c = ctx }
   get m() { return this.c.m }
+  haGesto(c) { return CON_GESTO.has(c.tipo) || !!EDIFICI[c.tipo] }
 
   /** Un tocco su una cosa: l'eroe l'ha raggiunta, ora la fa. `b`: { kind: 'cosa', id } (anche un edificio) | { kind: 'albero', n } | { kind: 'ostacolo', n }. */
   fai(b) {
@@ -27,6 +31,7 @@ export class Azioni {
     if (b.kind === 'edificio') return this.edificio(b.tipo)
     const cosa = this.m.cosa(b.id)
     if (!cosa) return
+    this.c.attrezzi.opzioni(cosa)                      // accanto a lei quello che ha in più: se il gesto apre un foglio, sono lì quando si chiude
     switch (cosa.tipo) {
       case 'campo': return this.campo(cosa)
       case 'recinto': return this.cura(cosa)

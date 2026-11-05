@@ -9,7 +9,7 @@ premio, il nome e la posizione. Codice: `dati/bestie.js` (tabella, ciotola, stat
 gatti: stessi bisogni, ciotola, coccole e foglio; il premio è quello della bestia 2D che sostituiscono (Watson 6 come il bobtail, i gatti 5;
 Irene quello del gatto bianco e nero). Il loro record in `stato.casa` nasce con l'adozione (`Cura.compra`; per i salvataggi di prima, da `normalizza`); il nome vero
 si può cambiare dal foglio e «Lascia “Watson”» lo rimette. **Non si comprano e non si spostano** (girano col contadino: `sposta` dice
-`gira-con-te`, il foglio non ha «📍 Sposta»). `cura.tue()` resta le comprate, `cura.curate()` le dice tutte.
+`gira-con-te`: tenuti premuti lo dicono). `cura.tue()` resta le comprate, `cura.curate()` le dice tutte.
 
 **Il disegno** di beagle, coniglio e pappagallo è liscio: ellissoidi e ossi col doppio dei lati e `flatShading: false` (`LISCIO` in `modelli-bestie.js`).
 Le facce piatte a pochi lati accanto ai gatti morbidi stonavano.
@@ -89,7 +89,7 @@ quando un bisogno scende sotto `BENE` (circa tre ore); uno stato già in forma p
   **scriverne uno suo**, come nella 2D: «✔ Va bene» o l'invio della tastiera lo salva (vuota non si tocca), un nome scritto torna nella casella riaprendo. Prima la lista:
   chi ha quattro anni non sa scrivere. «Lascia “Beagle”» tiene il nome della razza, «Lascia “Golia”» quello del compagno, e così resta chiudendo con la ✕; «✎ Nome» nel foglio lo cambia, gratis e sempre, anche a Watson e ai gatti. Si salva in
   `stato.casa[id].nome` (`pulisciNome`: spazi in fila ridotti a uno, 16 lettere, e la casella non ne accetta di più).
-- **Sposta**: dal foglio, «📍 Sposta» chiude il foglio e il prossimo tocco su una cella tua e libera porta lì la bestia (`Mondo3d.iniziaSposta`). Gratis. La cella è la **casa**
+- **Sposta**: tenendola premuta la bestia segue il dito, e staccandolo su una cella tua e libera sta lì ([gesti.md](gesti.md)). Gratis. La cella è la **casa**
   della bestia (`stato.casa[id].i,j`): ci gira intorno (due passi, si siede, annusa, dorme; il gatto si lava), anche dopo aver chiuso il gioco. Senza posizione sta
   davanti alla porta della casa. Una bestia di casa non segue il contadino, come Watson: sta dove l'hai messa.
 
@@ -122,16 +122,15 @@ Il ritratto del foglio e delle carte è un `bestia:<id>` di `anteprime.js`.
 ## L'interfaccia
 
 Le bestie si prendono dal menu 🛒 «Compra», scheda **Animali** (carte `🪙 prezzo`, il lucchetto dice il livello; in vendita dicono la razza, non un nome: [adozioni.md](adozioni.md); una già tua dice come si chiama e «🐾 è tua», e apre il foglio).
-**Tenendo premuto** su una bestia in scena (anche Watson e i gatti) si apre il suo foglio (`scena3d/dito.js`, dopo 0,45 s come gli altri «tieni
-premuto»); il tocco breve è giocare ([cura-sul-prato.md](cura-sul-prato.md)). Il foglio (`Bestia.vue`): ✕ in
-alto a destra, ritratto, la frase «come sta», le tre barre, 📍 Sposta / ✎ Nome / 🛍️ Negozio e una riga che dice dove si cura. Quando manca roba la ciotola dice **dove si fa** («Non hai 🥚 uova: lo fanno
+**Un tocco** su una bestia in scena (anche Watson e i gatti) è giocare ([cura-sul-prato.md](cura-sul-prato.md)) e porta accanto le sue opzioni; «🐾 Come sta» apre il foglio ([gesti.md](gesti.md)).
+Il foglio (`Bestia.vue`): ✕ in alto a destra, ritratto, la frase «come sta», le tre barre, ✎ Nome / 🛍️ Negozio e una riga che dice dove si cura. Quando manca roba la ciotola dice **dove si fa** («Non hai 🥚 uova: lo fanno
 gli animali: pollaio») o **quante monete mancano**. Bottoni da 44 px e più, il dito non è un mouse.
 
 ## Nei test
 
 `unita/fattoria3d-bestie` (parità con la 2D numero per numero, i bisogni mai sotto `FONDO` dopo 400 ore, il cibo sbagliato rifiutato col perché senza pagare, il premio una volta per ciclo, nome e posizione
 salvati, lo stato letto dritto, la migrazione è in `unita/fattoria3d-migra`), `unita/fattoria3d-bestie-connesse` (le parti si toccano), `unita/fattoria3d-ordini` (la veterinaria è l'unica), `integrazione/fattoria3d-bestie`
-(il dito: menu, compera, battesimo, foglio, ciotola, bagno, 360 px, sposta, un nome scritto). Bersagli: `[data-f3="bestia"]`, `[data-bisogno]`, `[data-azione="sposta|nome"]`,
+(il dito: menu, compera, battesimo, foglio, ciotola, bagno, 360 px, tenuta al dito, le opzioni, un nome scritto). Bersagli: `[data-f3="bestia"]`, `[data-bisogno]`, `[data-azione="nome"]`,
 `[data-f3="battesimo"]`, `[data-nome="<nome>"]`, `[data-f3="battesimo-scrivi"]` (la casella), `[data-azione="scrivi"]`, `[data-carta="bestia:<id>"]`.
 
 ## Provato e no / da fare
