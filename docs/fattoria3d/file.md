@@ -92,7 +92,7 @@ viste/
   Guardaroba.vue     il foglio dell'abito ([guardaroba.md](guardaroba.md)): il ritratto 3D (anteprima `contadino:<abito>`), chi si è (la scelta del profilo, `SceltaAspetto`), le schede dei capi e i gettoni col lucchetto
 
   BarraAzioni.vue    il tasto 🛒 Compra col suo «!»
-  Attrezzi.vue       i semi ad arco o il falcetto accanto al campo toccato, da trascinare ([campi.md](campi.md))
+  Attrezzi.vue       i semi ad arco o il falcetto accanto al campo toccato, da trascinare ([campi.md](campi.md)); le opzioni accanto a una cosa o a un animale ([gesti.md](gesti.md))
   CostruisciQui.vue  il foglio «Cosa compriamo?» (il tasto 🛒, o tenendo premuto su un posto libero): il taccuino con le linguette, le schede e la griglia di carte con l'anteprima 3D del modello (`anteprima(tipo)`, emoji come segnaposto), il prezzo o «📦 ×N», le chiuse col lucchetto che tremano e dicono il livello ([scena.md](scena.md))
   BarraStrade.vue    il pennello delle strade: strada, gomma, «Fatto»
   Macchina.vue       il foglio di una macchina (la sua, qualunque sia), come in Hay Day e nella 2D: l'insegna col suo colore (`[data-macchina]` in stile.css), i **posti della fila** col nome della macchina (`dentro`: «Nel forno», «Al telaio»…: libero, cuoce con barra e tempo, aspetta) seguiti dai **vani chiusi col prezzo** da comprare (`bloccati`, evento `compra`), la **pila dei pronti** con «Ritira tutto», le ricette come **carte** con la faccia del prodotto e il numero di quante se ne fanno con le scorte (ingredienti con ✓/✗ e `ha/serve`); le chiuse velate col lucchetto e il livello. Una carta si **trascina** su un posto o sulla fila, o si **tocca** e va in fila (vedi sotto). Stile in `stile-macchina.css`

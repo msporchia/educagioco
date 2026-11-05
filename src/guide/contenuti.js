@@ -497,7 +497,8 @@ export const AIUTI = {
         '**Tocca un campo**: se è vuoto compaiono i semi, se è pronto il falcetto. **Trascinali sui campi**, uno o tanti: il campo cambia sotto il dito.',
         '**Tieni il dito premuto** su un posto libero del tuo terreno: si apre il menu «Compra». Anche il tasto 🛒 fa lo stesso.',
         '**Tieni premuto** su una cosa già messa per **spostarla**: la porti dove vuoi, oppure sulla scritta in basso per metterla via nel magazzino (rimetterla fuori è gratis).',
-        '**Un tocco** su Watson o su un gatto: fa la festa. **Tieni premuto** sopra di lui: vedi come sta, cosa gli serve e puoi cambiargli il nome.',
+        '**Un tocco** su un animale: ci giochi, e accanto a lui compare quello che puoi fargli: la pappa, il bagno, i vestiti, come sta.',
+        '**Un tocco** su una cosa che si gira: accanto compare ↻ per girarla.',
       ] },
       { titolo: 'Le prime cose da fare', righe: [
         'Semina il grano, aspetta qualche secondo, raccoglilo. Niente marcisce mai: se ti dimentichi un campo, lo trovi lì.',

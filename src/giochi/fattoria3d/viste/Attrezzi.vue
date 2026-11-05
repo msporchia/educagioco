@@ -1,7 +1,7 @@
 <script setup>
 // Quello che si trascina, accanto alla cosa toccata: i semi ad arco, a pagine se non ci stanno, o il falcetto (docs/fattoria3d/campi.md); i cibi sulla ciotola, gli animali
 // sulla tinozza, il mangime nella nuvoletta di un recinto (docs/fattoria3d/cura-sul-prato.md). Trascinare è il gesto: il gettone segue il dito e la scena fa il resto
-// (scena3d/attrezzi.js). Un tocco su un seme dice cos'è; sugli altri li mette dentro, perché chi ha quattro anni trascina male. Soglia di 16 px (docs/core/il-dito.md).
+// (scena3d/attrezzi.js). Le opzioni di una cosa (`opzioni`: ↻, e di un animale pappa, bagno, vestiti, come sta) stanno nello stesso arco, e si toccano e basta. Un tocco su un seme dice cos'è; sugli altri li mette dentro, perché chi ha quattro anni trascina male. Soglia di 16 px (docs/core/il-dito.md).
 import { ref, computed, watch } from 'vue'
 import { COLTURE } from '../dati/colture.js'
 import { livelloDellaColtura } from '../dati/livelli.js'
@@ -14,7 +14,7 @@ const PER_PAGINA = 5, RAGGIO = 126, SOGLIA = 16      // cinque gettoni da 64 px 
 let ultimoSeme = 'grano'                    // l'arco si riapre sulla pagina dell'ultimo seme usato
 
 const p = defineProps({
-  tipo: { type: String, required: true },          // semi | falce | ciotola | tinozza | recinto
+  tipo: { type: String, required: true },          // semi | falce | ciotola | tinozza | recinto | opzioni
   x: { type: Number, required: true },             // la cosa sullo schermo
   y: { type: Number, required: true },
   id: { type: Number, default: 0 },
@@ -24,18 +24,20 @@ const p = defineProps({
   seme: { type: String, default: null },           // la coltura da mostrare per prima
   livello: { type: Number, default: 1 },
   voci: { type: Array, default: () => [] },        // ciotola, tinozza, recinto: [{ id, k, nome, emoji, prezzo, n, ok, vuole }]
+  opzioni: { type: Array, default: () => [] },     // quello che la cosa ha in più: [{ id, emoji, nome, conto }]
   riga: { type: String, default: '' },             // quello che si legge appena si apre
   sopra: { type: Boolean, default: false },        // quello in mano è sopra il bersaglio
   scorta: { type: Function, default: () => 0 },    // quanti ne hai di un raccolto
   anteprima: { type: Function, default: null },
   anteprimaPronta: { type: Function, default: null },
 })
-const emit = defineEmits(['prendi', 'passa', 'lascia', 'metti'])
+const emit = defineEmits(['prendi', 'passa', 'lascia', 'metti', 'opzione'])
 
 const semi = computed(() => Object.keys(COLTURE).filter(k => livelloDellaColtura(k) <= p.livello))
-const lista = computed(() => p.tipo === 'falce' ? [{ k: 'falce', chi: 'falce' }]
+const lista = computed(() => [...(p.tipo === 'falce' ? [{ k: 'falce', chi: 'falce' }]
   : p.tipo === 'semi' ? semi.value.map(k => ({ k, chi: k, nome: COLTURE[k].nome, emoji: COLTURE[k].emoji }))
-    : p.voci.map(v => ({ ...v, chi: v.id, k: v.k || v.id })))
+    : p.voci.map(v => ({ ...v, chi: v.id, k: v.k || v.id }))),
+  ...p.opzioni.map(o => ({ ...o, chi: o.id, k: o.id, opzione: true }))])
 const pagine = computed(() => Math.max(1, Math.ceil(lista.value.length / PER_PAGINA)))
 const pagina = ref(p.tipo === 'semi' ? Math.max(0, Math.floor(semi.value.indexOf(p.seme || ultimoSeme) / PER_PAGINA)) : 0)
 const gettoni = computed(() => lista.value.slice(pagina.value * PER_PAGINA, (pagina.value + 1) * PER_PAGINA))
@@ -46,7 +48,7 @@ function posto(n) {
   const a = Math.PI * (1 + (n + 1) / (gettoni.value.length + 1))
   return { left: cx.value + Math.cos(a) * RAGGIO + 'px', top: cy.value + Math.sin(a) * RAGGIO + 'px' }
 }
-const conto = g => p.tipo === 'falce' ? '' : p.tipo === 'semi' ? p.scorta(g.k) : p.tipo === 'tinozza' ? g.nome : g.n != null ? '×' + g.n : '🪙' + g.prezzo
+const conto = g => g.opzione ? g.conto : p.tipo === 'falce' ? '' : p.tipo === 'semi' ? p.scorta(g.k) : p.tipo === 'tinozza' ? g.nome : g.n != null ? '×' + g.n : '🪙' + g.prezzo
 
 // i ritratti degli animali, sulla tinozza
 const foto = ref({})
@@ -65,7 +67,7 @@ let dito = null
 function giu(g, e) { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); dito = { id: e.pointerId, x: e.clientX, y: e.clientY, g, via: false } }
 function muovi(e) {
   if (!dito || e.pointerId !== dito.id) return
-  if (!dito.via && dito.g.ok !== false && Math.hypot(e.clientX - dito.x, e.clientY - dito.y) > SOGLIA) {
+  if (!dito.via && !dito.g.opzione && dito.g.ok !== false && Math.hypot(e.clientX - dito.x, e.clientY - dito.y) > SOGLIA) {
     dito.via = true; riga.value = ''
     if (p.tipo === 'semi') ultimoSeme = dito.g.k
     emit('prendi', dito.g.chi)
@@ -79,6 +81,7 @@ function su(e) {
   const d = dito; dito = null; mano.value = null
   if (e.pointerType !== 'mouse') zittisciIlFantasma(e.clientX, e.clientY)      // il gettone sparisce: sotto può esserci il cartello che compra una bestia
   if (d.via) return emit('lascia')
+  if (d.g.opzione) return emit('opzione', d.g.chi)
   if (p.tipo === 'falce') riga.value = 'Trascina il falcetto sui campi pronti'
   else if (p.tipo === 'semi') riga.value = `${d.g.nome} · ⏱️ ${tempoBreve(COLTURE[d.g.k].ms)}: trascinalo sui campi vuoti`
   else if (d.g.ok === false) riga.value = d.g.prezzo ? `Servono 🪙 ${d.g.prezzo}` : `${d.g.nome}: non ne hai`
@@ -90,8 +93,8 @@ function sfoglia(n) { pagina.value = (pagina.value + n + pagine.value) % pagine.
 <template>
   <div class="f3-attrezzi" :class="{ inMano: mano }" data-f3="attrezzi" :data-tipo="tipo">
     <button v-for="(g, n) in gettoni" :key="g.chi" class="gettone" :class="{ vuole: g.vuole, manca: g.ok === false, nuvola: tipo === 'recinto' }" :style="posto(n)"
-            :data-seme="tipo === 'semi' ? g.k : null" :data-f3="tipo === 'falce' ? 'falce' : null" :data-cibo="tipo === 'ciotola' || tipo === 'recinto' ? g.chi : null"
-            :data-sporca="tipo === 'tinozza' ? g.chi : null" :data-vuole="g.vuole || null" :aria-label="tipo === 'falce' ? 'falcetto' : g.nome"
+            :data-seme="tipo === 'semi' ? g.k : null" :data-f3="tipo === 'falce' ? 'falce' : null" :data-cibo="(tipo === 'ciotola' || tipo === 'recinto') && !g.opzione ? g.chi : null"
+            :data-sporca="tipo === 'tinozza' && !g.opzione ? g.chi : null" :data-opzione="g.opzione ? g.chi : null" :data-vuole="g.vuole || null" :aria-label="tipo === 'falce' ? 'falcetto' : g.nome"
             @pointerdown="giu(g, $event)" @pointermove="muovi" @pointerup="su" @pointercancel="su">
       <svg v-if="g.k === 'falce'" viewBox="0 0 64 64" aria-hidden="true"><path d="M52 7c-1 20-18 32-39 29 6 4 13 6 20 5 14-2 24-17 19-34z" fill="#d7dee6" stroke="#5c6570" stroke-width="2.5" stroke-linejoin="round" /><path d="M15 38 7 57" stroke="#8a5a33" stroke-width="8" stroke-linecap="round" /></svg>
       <img v-else-if="foto[g.chi]" :src="foto[g.chi]" alt="" draggable="false">

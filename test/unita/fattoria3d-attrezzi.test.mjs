@@ -130,4 +130,44 @@ const su = c => [c.i + 0.5, c.j + 0.5]
   uguale('senza scorte si vede lo stesso, spento, e la riga dice cosa manca', [a.aperto.voci[0].ok, a.aperto.riga], [false, 'Serve il becchime'])
 }
 
+/* le opzioni: quello che una cosa ha in più sta nello stesso arco, e si tocca */
+{
+  const { a, w, m, uno, aperti, detti, b } = mondo()
+  w.azioni.dici = t => detti.push(t); w.cambiato = () => {}
+  m.s.magazzino.tavolo = 1
+  let tavolo = null
+  for (let i = -14; i < 14 && !tavolo; i++) for (let j = -12; j < 12 && !tavolo; j++) if (m.puoMettere('tavolo', i, j).ok && m.puoMettere('tavolo', i + 1, j - 1, 0, 1).ok) tavolo = m.mettiPezzo('tavolo', i, j).cosa
+  uguale('un campo non si gira: niente opzioni', [a.opzioni(uno), a.aperto], [false, null])
+  controlla('un tavolo ha ↻', a.opzioni(tavolo) && a.aperto.tipo === 'opzioni' && a.aperto.opzioni[0].id === 'gira')
+  const monete = b.monete
+  a.opzione('gira')
+  uguale('l\'opzione lo gira e costa come spostarlo', [m.cosa(tavolo.id).rot, monete - b.monete], [1, 1])
+  controlla('e l\'arco resta lì', !!a.aperto)
+  const prima = aperti.length
+  a.opzioni(tavolo)
+  uguale('sulla stessa cosa non si riapre', aperti.length, prima)
+  b.monete = 0
+  a.opzione('gira')
+  uguale('senza monete resta com\'è e lo dice', [m.cosa(tavolo.id).rot, detti.length], [1, 1])
+}
+
+/* le opzioni di un animale: ci sono solo quelle che gli servono */
+{
+  const { a, w, m } = mondo(), aperti = []
+  m.s.esperienza = 1e6
+  w.ui.apriBestia = id => aperti.push(['foglio', id]); w.ui.apriAddobbi = id => aperti.push(['vesti', id])
+  m.cura.compra('beagle')
+  const c = { def: { id: 'beagle' }, x: 0, z: 0 }, ids = () => a.aperto.opzioni.map(o => o.id)
+  m.cura.casa.beagle.pancia = 1; m.cura.casa.beagle.pelo = 1
+  a.bestia(c)
+  controlla('sazia e pulita: niente pappa né bagno', !ids().includes('pappa') && !ids().includes('bagno') && ids().includes('come'))
+  m.cura.casa.beagle.pancia = 0.1; m.cura.casa.beagle.pelo = 0.1
+  a.bestia(c)
+  controlla('con fame e sporca ci sono', ids().includes('pappa') && ids().includes('bagno'))
+  a.opzione('come')
+  uguale('«Come sta» apre il foglio e chiude l\'arco', [aperti, a.aperto], [[['foglio', 'beagle']], null])
+  a.bestia({ def: { id: 'nessuno' }, x: 0, z: 0 })
+  uguale('chi non è tuo non ha opzioni', a.aperto, null)
+}
+
 riassunto('I campi col dito')
