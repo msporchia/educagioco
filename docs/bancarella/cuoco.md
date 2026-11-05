@@ -68,6 +68,14 @@ che resta si ingoia, se no preme una moneta ([../core/il-dito.md](../core/il-dit
 Il foglio del resto e la fretta sono quelli di [cucina.md](cucina.md): col foglio aperto
 il fuoco è fermo, nell'ultima no; con la ✕ si torna a camminare.
 
+## Il ricettario
+
+Il libretto 📖 in alto a destra (`components/bancarella/Ricettario.vue`). Si apre sul piatto
+che manca al cliente al banco; in cima ci sono tutti i piatti della cucina, si sfogliano
+toccandoli, e un pallino segna quelli che stanno ordinando, fila compresa. Per ogni cosa
+dice dove passa (`passiRicetta`). Copre la stanza, e intanto clienti e fuochi stanno fermi:
+è un aiuto, leggerlo non deve costare.
+
 ## La scena
 
 Camera fissa, la stanza intera dentro. Il cuoco ha un'ombra finta e le ombre vere si
@@ -78,4 +86,5 @@ banconi sono tre geometrie unite. Il cappello è basso perché la telecamera sta
 
 `unita/bancarella-cuoco`, `integrazione/bancarella-cuoco` (tocchi veri).
 `window.__cucina3d.dove('3,0')` dice dove sta sullo schermo una cella o il pavimento.
-Bersagli: `[data-stile]`, `[data-cuoco]`, `[data-tela]`, `[data-detto]`.
+Bersagli: `[data-stile]`, `[data-cuoco]`, `[data-tela]`, `[data-detto]`, `[data-apri-ricettario]`,
+`[data-ricettario]`, `[data-ricetta]`, `[data-chiesto]`, `[data-chiudi-ricettario]`.
