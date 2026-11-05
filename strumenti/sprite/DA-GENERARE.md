@@ -716,6 +716,39 @@ Le figure, in ordine di lettura:
 LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: foglio ORIZZONTALE 1536×1024 px su FONDO TRASPARENTE; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; le figure staccate fra loro; il blu solo sulla stoffa, perché nel gioco diventa rosso per il nemico: niente altro di blu in tutto il foglio; niente ombre a terra, NESSUNA PAROLA SCRITTA, nessuna cornice.
 ```
 
+### 12b — Le truppe in due colori: un foglio blu e uno rosso · 2 immagini · da fare
+
+**Perché**: le squadre sono due sole, quindi conviene dipingerle tutte e due invece di tingere il nemico: la figura intera sta sul suo colore, magie comprese, e il
+rosso non dipende più da `ricolora()`. Le pose sono quelle di `truppe.png`, così si corregge anche la 6 e la 7.
+
+**Come si manda**: nella chat di Grok del foglio delle truppe, prima il blu e poi il rosso. In una chat nuova si allega `sorgenti/arena/truppe.png`.
+
+**Si salva in** `strumenti/sprite/sorgenti/arena/truppe-blu.png` e `truppe-rosso.png`, stessa griglia. Il taglio dei due fogli e il gioco che prende ogni squadra dal suo si fanno quando ci sono.
+
+**La squadra blu**:
+
+```text
+Ridipingi questo foglio per la squadra BLU. Stesse 35 figure, stessa casella, stessa posa, stessa misura, piedi alla stessa altezza, stesso stile. Ora il blu non è solo una stoffa: ogni figura è nata blu, con le sue sfumature, dal blu notte all'azzurro, e ogni cosa che lancia o che brilla è azzurra. Tutte le 35 figure hanno la casacca o la stoffa della loro truppa, comprese la 6 e la 7 che ne erano senza.
+Le figure, in ordine di lettura:
+1-4, gli scheletri arcieri: ossa chiare con riflessi azzurri, casacca blu.
+5-7, gli scheletri opliti: la stessa casacca, scudo blu, lama azzurrina.
+8-11, le mummie: bende azzurro-grigie, casacca blu, occhi azzurri.
+12-15, i diavoletti: pelle blu, corna dorate, occhi chiari.
+16-19, i pipistrelli: ali e corpo blu elettrico, occhi chiari.
+20-21, le bestie cornute: pelo blu notte, le braci diventano crepe azzurre luminose, corna dorate, gualdrappa blu.
+22-25, i negromanti: veste e cappuccio blu, sfera e magia azzurre.
+26-29, i golem: roccia grigio-blu, il muschio diventa cristalli azzurri, occhi azzurri, fascia blu.
+30-35, i draghi: scaglie e ali blu, sella con la gualdrappa azzurra.
+
+LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: stessa griglia di sette per cinque, FONDO TRASPARENTE, pixel art, le figure staccate fra loro, niente rosso, niente ombre a terra, NESSUNA PAROLA SCRITTA, nessuna cornice.
+```
+
+**La squadra rossa** (subito dopo, nella stessa chat):
+
+```text
+Ora lo stesso identico foglio per la squadra ROSSA: figura per figura uguale a quella blu che hai appena fatto, stessa casella, stessa posa, stessa misura. Cambia solo il colore: ogni figura è nata rossa, con le sue sfumature, dal rosso scuro all'arancio, e ogni cosa che lancia o che brilla è rossa e arancio. Ossa chiare con riflessi caldi e casacche rosse, bende color sabbia rosata, diavoletti rossi, pipistrelli rosso scuro, bestie rosso brace con le crepe di fuoco, negromanti con veste e cappuccio rossi e magia di fuoco, golem di roccia bruna con le crepe di lava, draghi rossi con la gualdrappa arancio. Stesse regole tecniche, e niente blu.
+```
+
 ## In fila
 
 *Le scene `td_2/3/4.png` sono state eliminate il 13/10/2026 (stanno già in `terreno-neve/lava/palude.png`): dove la tabella le nomina come allegato di uno stile, si allega il `terreno-*.png` del vestito. `td_1.png` resta.*
@@ -738,6 +771,7 @@ LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: foglio
 | 10 | la copertina di Castle Battle (ChatGPT) | 1 | `schemi/partita` | `home/copertina-arena.png` | la home e il frontone della mappa |
 | 11 | le icone dei comandi di Castle Battle (ChatGPT) | 1 | `schemi/partita` | `arena/icone.png` | l'anello, ripara e bomba dipinti |
 | 12 ✅ | le truppe di Castle Battle con la casacca (Grok) | 1 | `schemi/truppe` | `arena/truppe.png` | la squadra si legge dalla figura, via il contorno |
+| 12b | le truppe in due colori, un foglio per squadra (Grok) | 2 | `arena/truppe` | `arena/truppe-blu.png`, `arena/truppe-rosso.png` | il nemico dipinto invece che tinto |
 
 Il **minimo per rifare il gioco** sono l'1 e il 2: col bosco, le torri
 nuove e i mostri che ci sono già il castello si gioca e si pubblica. Il
