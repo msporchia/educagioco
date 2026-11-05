@@ -2,7 +2,8 @@
 
 Come una versione nuova arriva su un telefono: il service worker
 (`vite.config.js`), il nastro «c'è una versione nuova»
-(`src/aggiornamento.js`) e il tasto «↻ cerca aggiornamenti».
+(`src/aggiornamento.js`), il tasto «↻ cerca aggiornamenti» e lo scarico
+dei giochi (`src/scarico.js`).
 
 ## Il service worker
 
@@ -102,6 +103,50 @@ la ✕ (che ferma quello che c'è in corso) o con «Va bene» se è già l'ultim
   cambiando versione»** è la rete di GitHub che distribuisce la copia di
   prima per qualche minuto.
 
+## Lo scarico dei giochi
+
+Nel sito spezzato il service worker scarica i giochi quando la pagina glielo
+chiede ([avvio-e-memoria.md](avvio-e-memoria.md)). A che punto è lo dice una riga
+grigia in fondo alla home (`components/Scarico.vue`), sotto la versione: **solo in
+home**, in mezzo al resto e non sopra, perché è roba da sapere e non da guardare:
+una striscia fissa copre la barra dei giochi e non ha niente da chiudere. Lo stato
+(`src/scarico.js`) e lo scarico vivono fuori dalla home: dentro un gioco si scarica
+lo stesso, senza farsi vedere.
+
+- **Perché si pianta.** Un evento del service worker ha un tetto: Chrome lo
+  ferma dopo **cinque minuti** esatti (misurato: `--rete 40`, partito a 205 s, fermo
+  a 505 s con 451 file su 1316), e il telefono può fermarlo prima, per la memoria
+  o per la batteria. Non lo dice a nessuno: lo scarico si interrompe e la pagina
+  resta sull'ultimo numero. Chiedere solo all'avvio e al ritorno in primo piano
+  non basta: **dentro un gioco non succedono**, e si resta lì più di cinque minuti.
+- **Gli altri tre modi di fermarsi**, stesso sintomo: un file che non risponde e
+  non dà errore (senza un tetto l'attesa non finisce, e con lei tutti i giochi
+  dopo), un file sparito perché il sito è passato a un'altra versione (si aspetterebbe
+  un `online` che non arriva, la rete non è caduta) e l'installazione caduta a metà.
+- **Il numero si muove a ogni file**, al più ogni 300 ms: contato a gioco finito
+  sembra fermo anche quando non lo è (il sotterraneo sono 773 file).
+- **Il service worker non è affidabile, la cassa sì.** Ogni file finito resta in
+  cassa e non si riscarica: la pagina richiede (`daRichiedere`, ogni 5 s si guarda)
+  dopo 20 s di silenzio, anche dentro un gioco, e il service worker riprende da lì.
+  Richiedere a uno che sta lavorando non fa niente. A vuoto si aspetta il doppio,
+  fino a 5 minuti: un telefono pieno non deve bruciare i dati del piano. Se era ferma
+  l'installazione, si rifà `register` + `update`.
+- **Ogni file ha un tetto** (`prendi`): 30 s più il file a 10 KB/s, con `fetch` e
+  `abort` al posto di `c.add`, che non si interrompe. Guardare i byte che passano
+  con un `TransformStream` sarebbe più preciso, ma mette un flusso in più dentro
+  `Cache.put`, e su Safari da qui non si prova.
+- **Non blocca il gioco**: il lavoro sta nel service worker, e alla pagina arriva un
+  messaggio ogni 300 ms che dentro un gioco non ridisegna niente.
+- **Il totale è di tutti i giochi**, non di quello che manca: ripartendo la riga
+  non torna a zero. Un aggiornamento piccolo si vede come «99%».
+
+Provarlo a mano: `node strumenti/prova-sito.mjs --rete 40 --resta 13` lascia la
+pagina ferma e ogni 15 s dice file in cassa, riga e stato del service worker.
+
+Sul telefono resta da vedere quanto vive il service worker e che
+`AbortController` fermi davvero un `Cache.put` su Safari; se non lo fa, il tetto
+libera l'operaio lo stesso.
+
 ## Come si prova
 
 Con un sito vero: `integrazione/aggiornamento` apre `test/aiuto/sito.mjs`
@@ -110,6 +155,10 @@ in un `apriTelefono()`, cioè un profilo su disco — quello in incognito la
 pagina da otto megabyte non se la tiene, e senza la pagina tenuta il guasto
 non si vede. Dettagli degli attrezzi in `test/README.md`.
 
+Lo scarico si prova su `dist-sito/` in `integrazione/scarico`, che il lanciatore
+ricompila da sé: service worker fermato via CDP dentro un gioco, file appeso, file
+sparito. La regola del silenzio sta in `unita/scarico`.
+
 Nei test: `[data-azione="cerca-versione"]` (`[data-cercando]` mentre lavora), `[data-aggiorna][data-fase=…]`,
 `[data-scaricati]`, `[data-azione="aggiorna"]` sul nastro,
-`[data-azione="riprova"]`.
+`[data-azione="riprova"]`, `[data-scarico]` (la riga in home).
