@@ -27,12 +27,13 @@ mossa di `decidi`:
 
 | tocchi | con le mani vuote | con qualcosa in mano |
 |---|---|---|
-| una cassetta | prende | col piatto: se è pronta, ce la mette |
+| una cassetta | prende | col piatto: se è pronta, ce la mette; con un'altra cosa: le unisce |
 | la pila dei piatti | prende un piatto | un piatto vuoto: lo rimette |
 | un bancone libero | | posa |
 | un bancone con un piatto | prende il piatto | ci deposita quello che ha in mano |
+| un bancone con una cosa | prende | le unisce, e il piatto resta lì |
 | il tagliere | taglia, un colpo a tocco; tagliata, prende | posa l'insalata; col piatto ce la mette |
-| un fuoco | prende quello che è pronto | ci mette il crudo; col piatto ci versa quello che è pronto |
+| un fuoco | prende quello che è pronto | ci mette il crudo; col piatto o con un'altra cosa unisce quello che è pronto |
 | il forno | prende la pizza | inforna la pizza condita |
 | il bidone | | butta |
 | la consegna | | serve |
@@ -51,6 +52,9 @@ che resta si ingoia, se no preme una moneta ([../core/il-dito.md](../core/il-dit
 - **Le mani tengono una cosa**: un ingrediente o un piatto. Ogni bancone ne tiene una.
 - **Il piatto si riempie in qualunque ordine**, a differenza del dito, e si dispone da
   solo. Va bene sia l'ingrediente portato al piatto, sia il piatto portato all'ingrediente.
+- **Due cose pronte della stessa ricetta si uniscono da sole**: con l'impasto in mano si
+  tocca il sugo, e il piatto ce lo mette il cuoco (`unisci`). La pila serve a chi vuole
+  cominciare dal piatto.
 - **Crudo non va sul piatto**: pasta, carne e uovo passano dal fuoco, l'insalata dal
   tagliere (cinque tocchi, `TAGLI`, a mani libere).
 - **La pizza entra in forno col piatto** ed esce pronta, a mani libere.
