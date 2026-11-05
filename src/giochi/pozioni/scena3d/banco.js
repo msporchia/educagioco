@@ -5,10 +5,12 @@
 import { Mesh, Group, BoxGeometry, PlaneGeometry, CylinderGeometry, CircleGeometry, SphereGeometry, TorusGeometry,
          LatheGeometry, Vector2, Vector3, Color, MeshStandardMaterial, Sprite, SpriteMaterial,
          InstancedMesh, Object3D, PointLight, AdditiveBlending, DoubleSide, MeshBasicMaterial } from 'three'
+import { MODI } from './bollori.js'
 
 // dove stanno le cose (il tavolo è a y = 0)
 export const POSTI = {
   calderone: new Vector3(0, 0, -2.3),
+  legna: new Vector3(0, 0.24, -1.3),   // sporge davanti al calderone: si accende lì
   brodo: 1.12,              // l'altezza del brodo nel calderone
   vasiZ: 0.75,              // la fila dei misurini
   bancoZ: 2.45, bancoY: 0.22,   // il bancone del mercante, e dove ci si appoggia sopra
@@ -108,7 +110,15 @@ export function creaBanco(scena, trame) {
   arcobaleno.position.set(C.x, POSTI.brodo + 0.22, C.z)
   arcobaleno.visible = false
   g.add(arcobaleno)
-  let arco = 0, metaArco = 0, giri = 0
+  let arco = 0, metaArco = 0, giri = 0, sfumato = 1
+  // il riflesso che gira sul brodo: si vede quando bolle, non prima
+  const marmo = new Mesh(new CircleGeometry(0.97, 40), new MeshBasicMaterial({ map: trame.marmo, transparent: true, opacity: 0, depthWrite: false }))
+  marmo.rotation.x = -Math.PI / 2
+  marmo.position.set(C.x, POSTI.brodo + 0.22, C.z)
+  marmo.visible = false
+  g.add(marmo)
+  let modo = MODI.bolle, incanto = 0, metaIncanto = 0, forte = 0, metaForte = 0, vampa = 0, lampo = 0
+  const riflesso = new Color(0xffffff)
   // parte vuoto: il brodo nasce col primo ingrediente e sale con gli altri
   let pieno = 0, metaPieno = 0
   const quotaBrodo = () => 0.6 + (POSTI.brodo + 0.22 - 0.6) * pieno
@@ -118,30 +128,39 @@ export function creaBanco(scena, trame) {
   const bolle = new InstancedMesh(new SphereGeometry(0.09, 10, 8),
     new MeshStandardMaterial({ color: 0xffffff, roughness: 0.1, metalness: 0, transparent: true, opacity: 0.85 }), NB)
   const datiBolle = Array.from({ length: NB }, (_, i) => ({ fase: i / NB, vel: 0.5 + (i * 7 % 5) / 8, x: 0, z: 0 }))
-  const nuovoPosto = b => { const a = Math.random() * 7, r = Math.sqrt(Math.random()) * 0.78; b.x = C.x + Math.cos(a) * r; b.z = C.z + Math.sin(a) * r }
+  const nuovoPosto = b => { const a = Math.random() * 7, r = modo.bordo ? 0.68 + Math.random() * 0.2 : Math.sqrt(Math.random()) * 0.78; b.x = C.x + Math.cos(a) * r; b.z = C.z + Math.sin(a) * r }
   datiBolle.forEach(nuovoPosto)
   g.add(bolle)
   let bollore = 1                                   // si alza quando entra qualcosa
 
   // il vapore
   const vapori = Array.from({ length: 9 }, (_, i) => {
-    const v = new Sprite(new SpriteMaterial({ map: morbido, color: 0xd8ccff, transparent: true, opacity: 0, depthWrite: false }))
+    // senza depthTest: un fumo che entra nel calderone ne taglierebbe il bordo di netto
+    const v = new Sprite(new SpriteMaterial({ map: morbido, color: 0xd8ccff, transparent: true, opacity: 0, depthWrite: false, depthTest: false }))
     v.userData.fase = i / 9
     g.add(v)
     return v
   })
 
-  // il fuoco sotto
-  for (let i = 0; i < 3; i++) {
-    const l = new Mesh(new CylinderGeometry(0.09, 0.09, 1.1, 8), piatto(0x3a2414, { emissive: 0x401000 }))
-    l.rotation.set(0, i * 1.05, Math.PI / 2); l.position.set(C.x, 0.1, C.z)
-    g.add(l)
+  // la legna: i ciocchi spuntano a raggiera da sotto il calderone, così si vedono e si toccano
+  const corteccia = piatto(0x5a3a22, { emissive: 0xff4a10, emissiveIntensity: 0 })
+  const taglio = piatto(0xd8b483)
+  for (const [a, l] of [[-0.95, 1.5], [-0.34, 1.75], [0.3, 1.7], [0.92, 1.5]]) {
+    const ciocco = new Group()
+    const tronco = new Mesh(new CylinderGeometry(0.115, 0.13, l, 10), corteccia)
+    tronco.rotation.x = Math.PI / 2
+    const faccia = new Mesh(new CircleGeometry(0.115, 12), taglio)
+    faccia.position.z = l / 2 + 0.002
+    ciocco.add(tronco, faccia)
+    ciocco.position.set(C.x + Math.sin(a) * 0.68, 0.13, C.z + Math.cos(a) * 0.68)
+    ciocco.rotation.y = a
+    g.add(ciocco)
   }
-  for (let i = 0; i < 7; i++) fiamma(C.x + (i - 3) * 0.17, 0.32, C.z + 0.35 + Math.sin(i) * 0.12, 1.6 + (i % 3) * 0.3)
-  const fiammeSotto = fiamme.slice(-7)
+  for (let i = 0; i < 9; i++) fiamma(C.x + (i - 4) * 0.2, 0.34, C.z + 0.95 + Math.sin(i * 2.1) * 0.16, 1.7 + (i % 3) * 0.3)
+  const fiammeSotto = fiamme.slice(-9)
   let fuoco = 0, metaFuoco = 0                       // spento: scaldare vuol dire accenderlo
   const luceFuoco = new PointLight(0xff8a3a, 6, 7, 1.6)
-  luceFuoco.position.set(C.x, 0.8, C.z + 0.9)
+  luceFuoco.position.set(C.x, 0.8, C.z + 1.1)
   g.add(luceFuoco)
 
   function aggiorna(dt, t) {
@@ -150,39 +169,59 @@ export function creaBanco(scena, trame) {
     brodo.visible = pieno > 0.01
     brodo.position.y = quotaBrodo()
     brodo.scale.setScalar(0.8 + 0.2 * pieno)
-    brodo.material.emissive.copy(coloreBrodo).multiplyScalar(0.45)
-    arco += (metaArco - arco) * Math.min(1, dt * 2)
+    // il cangiante va e viene fra il colore e il riflesso
+    tinta.copy(coloreBrodo)
+    if (modo.cangia && fuoco > 0.2) tinta.lerp(riflesso, (Math.sin(t * 1.1) * 0.5 + 0.5) * 0.75)
+    brodo.material.color.copy(tinta)
+    brodo.material.emissive.copy(tinta).multiplyScalar(0.45 + vampa * 0.2)
+    arco += (metaArco * sfumato - arco) * Math.min(1, dt * 4)
     giri = Math.max(0, giri - dt * 0.9)
     arcobaleno.visible = brodo.visible && arco > 0.02
     arcobaleno.material.opacity = arco * 0.92
     arcobaleno.position.y = brodo.position.y + 0.006
     arcobaleno.scale.setScalar(brodo.scale.x)
     arcobaleno.rotation.z -= dt * (0.3 + giri * 5)
-    bollore += (1 - bollore) * Math.min(1, dt * 0.8)
+    forte += (metaForte - forte) * Math.min(1, dt * 2)
+    incanto += (metaIncanto - incanto) * Math.min(1, dt * 2)
+    vampa = Math.max(0, vampa - dt * 2.2)
+    lampo = Math.max(0, lampo - dt * 5)
+    bollore += (1 + forte * 0.9 - bollore) * Math.min(1, dt * 0.8)
     fuoco += (metaFuoco - fuoco) * Math.min(1, dt * 2.5)
+    corteccia.emissiveIntensity = fuoco * (0.35 + Math.sin(t * 5) * 0.1)
+    const acceso = brodo.visible && fuoco > 0.2
+    marmo.visible = acceso || incanto > 0.02
+    marmo.position.y = brodo.position.y + 0.004
+    marmo.scale.setScalar(brodo.scale.x)
+    marmo.rotation.z -= dt * (0.18 + modo.giro * 0.55 + forte * 0.15)
+    marmo.material.opacity = Math.min(0.9, (0.5 * fuoco + 0.45 * incanto) * (1 - arco))
+    marmo.material.color.copy(riflesso)
     for (const f of fiamme) {
       const k = 0.85 + Math.sin(t * 13 + f.userData.fase) * 0.08 + Math.sin(t * 7.3 + f.userData.fase * 2) * 0.07
-      const alto = fiammeSotto.includes(f) ? fuoco : 1
+      const alto = fiammeSotto.includes(f) ? fuoco * (1 + forte * 0.55 + vampa * 0.5) : 1
       f.visible = alto > 0.02
       f.scale.set(f.userData.base.x * k * alto, f.userData.base.y * (0.9 + (k - 0.85) * 2) * alto, 1)
     }
-    luceFuoco.intensity = (5.5 + Math.sin(t * 11) * 0.6 + Math.sin(t * 17.3) * 0.4) * fuoco
+    luceFuoco.intensity = (5.5 + Math.sin(t * 11) * 0.6 + Math.sin(t * 17.3) * 0.4) * fuoco * (1 + forte * 0.5 + vampa * 0.6) + lampo * 16
+    luceFuoco.color.set(0xff8a3a).lerp(riflesso, lampo)
+    const gira = t * modo.giro, coseno = Math.cos(gira), seno = Math.sin(gira)
     datiBolle.forEach((b, i) => {
-      b.fase += dt * b.vel * bollore
+      b.fase += dt * b.vel * bollore * modo.vel
       if (b.fase >= 1) { b.fase -= 1; nuovoPosto(b) }
       // a fuoco spento il brodo sta fermo
-      const s = brodo.visible && fuoco > 0.2 ? Math.sin(b.fase * Math.PI) * (0.6 + bollore * 0.25) : 0
-      finto.position.set(C.x + (b.x - C.x) * brodo.scale.x, brodo.position.y, C.z + (b.z - C.z) * brodo.scale.x)
-      finto.scale.setScalar(Math.max(0.001, s)); finto.updateMatrix()
+      const s = acceso && i < modo.quante ? Math.sin(b.fase * Math.PI) * (0.6 + bollore * 0.25) * modo.misura : 0
+      const x = b.x - C.x, z = b.z - C.z
+      finto.position.set(C.x + (x * coseno - z * seno) * brodo.scale.x, brodo.position.y, C.z + (x * seno + z * coseno) * brodo.scale.x)
+      finto.scale.set(Math.max(0.001, s), Math.max(0.001, s * modo.piatte), Math.max(0.001, s)); finto.updateMatrix()
       bolle.setMatrixAt(i, finto.matrix)
     })
     bolle.instanceMatrix.needsUpdate = true
     bolle.material.color.copy(coloreBrodo).lerp(BIANCO, 0.45)
     for (const v of vapori) {
       const f = (t * 0.12 * (0.8 + bollore * 0.3) + v.userData.fase) % 1
-      v.position.set(C.x + Math.sin(f * 6 + v.userData.fase * 9) * 0.4, POSTI.brodo + 0.3 + f * 2.4, C.z + Math.cos(v.userData.fase * 7) * 0.3)
-      v.scale.setScalar(0.5 + f * 1.4)
-      v.material.opacity = brodo.visible ? Math.sin(f * Math.PI) * 0.16 * (0.7 + bollore * 0.3) * fuoco : 0
+      const largo = 0.4 + modo.basso * f * 1.4
+      v.position.set(C.x + Math.sin(f * 6 + v.userData.fase * 9) * largo, POSTI.brodo + 0.3 + f * 2.4 * (1 - modo.basso * 0.85), C.z + Math.cos(v.userData.fase * 7) * 0.3 * (1 + modo.basso * 2 * f))
+      v.scale.setScalar(0.5 + f * 1.4 + modo.basso * 0.5)
+      v.material.opacity = brodo.visible ? Math.min(0.5, Math.sin(f * Math.PI) * 0.16 * (0.7 + bollore * 0.3) * modo.vapore) * fuoco : 0
       v.material.color.copy(coloreBrodo).lerp(BIANCO, 0.65)
     }
   }
@@ -196,6 +235,21 @@ export function creaBanco(scena, trame) {
     fuoco(k) { metaFuoco = k },
     // `gira`: quanto vortica mentre lo si mescola
     arcobaleno(si, gira = 0) { metaArco = si ? 1 : 0; giri = Math.max(giri, gira) },
+    // mentre il dito mescola l'arcobaleno se ne va a poco a poco
+    sfuma(k) { sfumato = k },
+    gira(v) { giri = Math.max(giri, v) },
+    // come ribolle questa pozione: { modo, riflesso } (dati/bollori.js)
+    bollore({ modo: m, riflesso: r }) {
+      if (MODI[m] !== modo) { modo = MODI[m]; datiBolle.forEach(nuovoPosto) }
+      riflesso.set(r)
+    },
+    forte(k) { metaForte = k },
+    incanto(k) { metaIncanto = k },
+    vampa() { vampa = 1 },
+    lampo() { lampo = 1 },
+    // sta bollendo: chi fa schizzare qualcosa guarda qui
+    scia: () => (brodo.visible && fuoco > 0.2 ? modo.scia : null),
+    riflesso,
     luceFuoco,
   }
 }

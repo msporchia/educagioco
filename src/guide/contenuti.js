@@ -706,7 +706,7 @@ export const AIUTI = {
         'Il mercante scrive come gli pare: «5 hg», «0,2 kg», «300 g». Le ampolle grandi costano meno, quindi conviene **la più grande che ci sta**, ma per sapere cosa ci sta devi fare il conto.',
         'Spesso la stessa quantità compare due volte, scritta in due modi, e una costa di più: è il **trucco del mercante**.',
         'In fondo vedi sempre quanti gettoni hai speso, e le stelle dicono quanto ti sei avvicinato al minimo.',
-        'Fatta la spesa, la pergamena dice **cosa fare**. La roba e gli attrezzi **si trascinano**: la roba nel calderone o nel mortaio, il pestello sul mortaio, il mestolo e il fiammifero sul calderone. Una mossa fuori tempo fa un pasticcio e costa un gettone.',
+        'Fatta la spesa, la pergamena dice **cosa fare**. La roba e gli attrezzi **si trascinano**, e gli attrezzi poi **si muovono col dito**: il mestolo gira nel calderone, il pestello picchia nel mortaio, il coltello taglia sul tagliere, il fiammifero si sfrega sulla legna. Se il bambino resta fermo, una freccia gli fa vedere il gesto. Una mossa fuori tempo fa un pasticcio e costa un gettone.',
       ] },
       { titolo: 'Se trabocca', righe: [
         'Ogni ingrediente ha il suo strumento col segno d\'oro: la bilancia, il metro, il cilindro. Oltre il segno trabocca: l\'ampolla è persa, e prima di ordinare ancora c\'è da **pulire**, un gettone a macchia.',

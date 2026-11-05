@@ -104,6 +104,7 @@ for (let g = 0; g < 30 && await page.locator('[data-fase="procedimento"]').count
   await fermo()
 }
 /* a metà procedimento si esce e si rientra: il passo fatto resta */
+let passi = 0
 {
   const unPasso = () => page.evaluate(async () => {
     const Z = window.__poz, b = Z.bottega.value, p = b.passi[b.passo]
@@ -112,6 +113,7 @@ for (let g = 0; g < 30 && await page.locator('[data-fase="procedimento"]').count
     if (p.azione === 'pesta') Z.fai('metti', [...p.cosa]), await new Promise(r => setTimeout(r, 1500))
     Z.fai(p.azione, p.azione === 'pesta' ? [] : [...p.cosa])
   })
+  passi = await page.evaluate(() => window.__poz.bottega.value.passi.length)
   await unPasso()
   await attendi(page, 4000)
   await indietro()
@@ -128,7 +130,7 @@ for (let g = 0; g < 30 && await page.locator('[data-fase="procedimento"]').count
 }
 uguale('la tappa finisce', await page.locator('[data-fine="tappa"]').count(), 1)
 uguale('le monete sono quelle di tutta la tappa, anche prima dell\'uscita',
-       (await page.locator('[data-monete]').innerText()).trim(), `+${CAMPAGNA[1].ingredienti * MONETE_A_DOSE + 3} 🪙`)
+       (await page.locator('[data-monete]').innerText()).trim(), `+${CAMPAGNA[1].ingredienti * MONETE_A_DOSE + passi} 🪙`)
 await page.click('[data-fine] [data-azione="mappa"]')
 await attendi(page, 500)
 uguale('finita la tappa la carta non c\'è', await page.locator('[data-ripresa]').count(), 0)

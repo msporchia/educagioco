@@ -36,9 +36,17 @@ export const suoni = {
   bolla: () => blop(0.42),
   spugna: () => ripeti(4, 190, i => { nota(760 + i * 40, 1220, 0.1, 'sine', 0.05); rumore(0.09, 0.025, 4200, 1800) }),
   sbuffo() { rumore(1.2, 0.11, 3200, 400); [392, 523, 659, 784, 1047].forEach((f, i) => nota(f, f * 1.02, 0.2, 'triangle', 0.07, 200 + i * 110)) },
-  // i colpi del pestello: pietra su pietra
-  colpi: (n, ogni) => ripeti(n, ogni, () => { nota(fra(190, 230), 90, 0.09, 'square', 0.1); rumore(0.07, 0.09, 3200, 700) }),
+  // un colpo di pestello: pietra su pietra
+  colpo() { nota(fra(190, 230), 90, 0.09, 'square', 0.1); rumore(0.07, 0.09, 3200, 700) },
   tonfo() { nota(300, 150, 0.08, 'triangle', 0.09); rumore(0.05, 0.04, 1800, 600) },
+  // un giro di mestolo nel brodo
+  sciacquo() { rumore(0.16, 0.05, 1100, 500); blop(0.7) },
+  // la lama sul legno
+  taglio() { nota(fra(900, 1100), 420, 0.04, 'triangle', 0.07); nota(180, 110, 0.06, 'square', 0.07); rumore(0.04, 0.05, 3800, 1500) },
+  gratta() { rumore(0.13, 0.05, 7000, 2600); nota(fra(1500, 1900), fra(1100, 1300), 0.08, 'sawtooth', 0.012) },
+  sfrega() { rumore(0.09, 0.07, 6000, 2000) },
+  soffio() { rumore(0.34, 0.08, 700, 2000) },
+  incanto: n => { const f = [660, 784, 880, 988, 1175, 1319][n % 6]; nota(f, f * 1.01, 0.22, 'sine', 0.05); nota(f * 2, f * 2, 0.12, 'triangle', 0.015, 40) },
   mescola: () => ripeti(5, 230, () => { rumore(0.2, 0.05, 1100, 500); blop(0.8) }),
   scalda() { rumore(1.1, 0.07, 500, 2600); ripeti(6, 170, () => rumore(0.05, 0.04, 5000, 2000)) },
   pasticcio() { nota(160, 60, 0.5, 'sawtooth', 0.12); rumore(0.5, 0.12, 900, 150); ripeti(3, 130, () => blop(1.5)) },

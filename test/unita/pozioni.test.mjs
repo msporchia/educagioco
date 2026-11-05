@@ -7,10 +7,14 @@ import { CAMPAGNA, BLOCCHI, QUANTE_TAPPE, MONETE_A_DOSE, MONETE_A_PASSO, INFINIT
 import { FAMIGLIA, VALE, mescola, guastiDelleMisure } from '../../src/giochi/pozioni/dati/misure.js'
 import { PULIZIA, PASTICCIO, PEZZI, PREZZI } from '../../src/giochi/pozioni/dati/bottega.js'
 import { Bottega, banchetto, ottimo, giocaBene, giocaGoloso, seguiLaRicetta, prossimoPasso, caso, unitaBuone, scalaDi } from '../../src/giochi/pozioni/motore/bottega.js'
-import { MORTAIO } from '../../src/giochi/pozioni/motore/procedimento.js'
+import { MORTAIO, TAGLIERE, MOSSE, ROBA_SU, ATTREZZI, attrezziDi, prossimaMossa } from '../../src/giochi/pozioni/motore/procedimento.js'
+import { GESTI, creaGesto } from '../../src/giochi/pozioni/scena3d/gesti.js'
+import { MODI } from '../../src/giochi/pozioni/scena3d/bollori.js'
+import { BOLLORI, bolloreDi } from '../../src/giochi/pozioni/dati/bollori.js'
+import { POZIONI } from '../../src/giochi/pozioni/dati/misure.js'
 import { regola, chiaveDi } from '../../src/giochi/pozioni/motore/misura.js'
 import { CONVERSIONI } from '../../src/giochi/pozioni/gioco.js'
-import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
+import { dentro, controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const SEMI = 120
 const tappa = chiave => CAMPAGNA.find(t => t.chiave === chiave)
@@ -197,12 +201,16 @@ for (const t of CAMPAGNA) {
     const azioni = b.passi.map(p => p.azione)
     if (azioni.some(a => !t.azioni.includes(a))) rotte++
     // ogni ingrediente finisce nel calderone una volta sola, e si scalda e si mescola sempre dopo che c'è qualcosa dentro
-    const versati = b.passi.flatMap(p => (p.azione === 'versa' ? p.cosa.filter(i => i !== MORTAIO) : p.azione === 'pesta' ? p.cosa : []))
+    const versati = b.passi.flatMap(p => (p.azione === 'versa' ? p.cosa.filter(i => i >= 0) : ['pesta', 'sminuzza', 'gratta'].includes(p.azione) ? p.cosa : []))
     if (versati.length !== b.ingredienti.length || new Set(versati).size !== versati.length) rotte++
     if (b.passi[0].azione !== 'pesta' && b.passi[0].azione !== 'versa') senzaOrdine++
     const lette = b.righe.flatMap(r => r.passi)
-    if (lette.join() !== b.passi.map((_, k) => k).join() || b.righe.some(r => !/^[A-Z].*\.$/.test(r.testo))) ricetteBrutte++
+    if (lette.join() !== b.passi.map((_, k) => k).join() || b.righe.some(r => !/^[A-Z].*[.»]$/.test(r.testo))) ricetteBrutte++
     ordini.add(azioni.join())
+    // si mescola prima di scaldare, e il mantice viene dopo il fuoco
+    if (azioni.includes('scalda') && azioni.indexOf('mescola') > azioni.indexOf('scalda')) rotte++
+    if (azioni.includes('soffia') && azioni.indexOf('scalda') > azioni.indexOf('soffia')) rotte++
+    if (azioni.length > 10 || b.righe.length > 8) rotte++
     giocaBene(b)
     if (b.monete !== t.ingredienti * MONETE_A_DOSE + b.passi.length * MONETE_A_PASSO || !b.finita || b.pasticci) rotte++
     if (b.comprati.filter(g => g.casa).length > (t.casa ? 1 : 0)) rotte++
@@ -320,6 +328,101 @@ for (const t of CAMPAGNA) {
   }
   controlla('nelle tappe con la casa capita', con > 20, `${con}`)
   uguale('nelle altre no', new Bottega(tappa('massa-grande'), { rnd: caso(2) }).ingredienti.some(g => g.casa), false)
+}
+
+/* ---------- le azioni nuove ---------- */
+{
+  const fatti = new Set()
+  for (const t of CAMPAGNA) for (let s = 1; s <= 40; s++) for (const p of new Bottega(t, { rnd: caso(s) }).passi) fatti.add(p.azione)
+  for (const a of ['sminuzza', 'gratta', 'soffia', 'agita']) controlla(`${a} entra nelle ricette`, fatti.has(a))
+  uguale('la prima tappa resta semplice', tappa('massa-banco').azioni.join(), 'versa,mescola')
+  /* la bacchetta ha la sua formula, su una riga sola */
+  const b = Array.from({ length: 40 }, (_, s) => new Bottega(tappa('massa-grande'), { rnd: caso(s + 1) })).find(x => x.passi.some(p => p.azione === 'agita'))
+  const riga = b.righe.find(r => r.passi.some(k => b.passi[k].azione === 'agita'))
+  controlla('l\'incantesimo si dice', /^Agita la bacchetta sul calderone e (sussurra|grida): «.*!»$/.test(riga.testo), riga.testo)
+  uguale('e sta da solo', riga.passi.length, 1)
+  /* il tagliere si tira fuori solo se c'è da tagliare */
+  uguale('senza niente da tagliare niente tagliere', attrezziDi(['sminuzza', 'mescola'], [{ lavoro: 'gratta' }]).join(), 'mestolo')
+  uguale('con la radice sì', attrezziDi(['sminuzza'], [{ lavoro: 'sminuzza' }]).join(), 'tagliere,coltello')
+}
+{
+  /* il tagliere va come il mortaio: si appoggia, si sminuzza, si versa */
+  let b = null
+  for (let s = 1; s < 80 && !b; s++) {
+    const x = new Bottega(tappa('lunghezza-virgole'), { rnd: caso(s) })
+    if (x.passi.some(p => p.azione === 'sminuzza')) b = x
+  }
+  for (const [i, g] of b.ingredienti.entries()) for (const k of g.ottimo.pezzi) b.ordina([{ i, k }])
+  prossimoPasso(b); prossimoPasso(b)
+  uguale('dopo il pestato c\'è il tagliere', b.passi[b.passo].azione, 'sminuzza')
+  const [r] = b.passi[b.passo].cosa
+  uguale('il suggerimento porta la roba sul tagliere', prossimaMossa(b.passi[b.passo], b.mancaAl(b.passi[b.passo])).su, 'tagliere')
+  uguale('il tagliere vuoto non si sminuzza', b.fai('sminuzza').giusto, false)
+  uguale('si appoggia', b.fai('appoggia', [r]).giusto, true)
+  uguale('prima di tagliare non si versa', b.fai('versa', [TAGLIERE]).giusto, false)
+  uguale('poi il coltello', prossimaMossa(b.passi[b.passo], b.mancaAl(b.passi[b.passo])).da, 'coltello')
+  controlla('si sminuzza', b.fai('sminuzza').giusto)
+  controlla('la riga dice tutto', /^Sminuzza (la|il|lo) .* e versal[oa] nel calderone\.$/.test(b.righe.find(x => x.passi.includes(b.passo - 1)).testo), b.righe.map(x => x.testo).join(' | '))
+  const v = b.fai('versa', [TAGLIERE])
+  uguale('il tritato si versa', v.versati.join(), String(r))
+  uguale('e il tagliere è vuoto', b.tagliere.length, 0)
+  controlla('e sta nel calderone', b.dentro.includes(r))
+}
+{
+  /* ogni mossa ha il suo gesto, e ogni attrezzo la sua mossa */
+  for (const k of Object.keys(MOSSE)) controlla(`${k} ha un gesto`, !!GESTI[k])
+  controlla('la roba si grattugia col dito', !!GESTI['roba:grattugia'] && ROBA_SU.grattugia === 'gratta')
+  for (const nomi of Object.values(ATTREZZI)) for (const a of nomi) if (a !== 'mortaio' && a !== 'tagliere' && a !== 'grattugia')
+    controlla(`${a} serve a qualcosa`, Object.keys(MOSSE).some(k => k.startsWith(a + ':')))
+
+  /* il dito disegna, il gesto riconosce */
+  const cerchio = (g, giri, r = 40, cx = 100, cy = 100) => { for (let n = 0; n <= giri * 24; n++) g.punto(cx + Math.cos(n / 24 * Math.PI * 2) * r, cy + Math.sin(n / 24 * Math.PI * 2) * r) }
+  const su = (g, volte, y = 'y', largo = 40) => { for (let n = 0; n < volte; n++) for (const v of [0, largo, 0]) g.punto(y === 'x' ? 100 + v : 100, y === 'y' ? 100 + v : 100) }
+  const mestolo = creaGesto(GESTI['mestolo:calderone'])
+  cerchio(mestolo, 1)
+  dentro('un giro è metà', mestolo.avanzato, 0.45, 0.55)
+  cerchio(mestolo, 1.2)
+  uguale('due giri bastano', mestolo.avanzato, 1)
+  const storto = creaGesto(GESTI['mestolo:calderone'])
+  cerchio(storto, 2.2, 90, 30, 400)
+  uguale('un cerchio largo e fuori centro vale uguale', storto.avanzato, 1)
+  const zigzag = creaGesto(GESTI['mestolo:calderone'])
+  su(zigzag, 12)
+  controlla('su e giù non è mescolare', zigzag.avanzato < 0.2, `${zigzag.avanzato}`)
+  const pestello = creaGesto(GESTI['pestello:mortaio'])
+  su(pestello, 3)
+  dentro('tre colpi su cinque', pestello.avanzato, 0.4, 0.6)
+  su(pestello, 3)
+  uguale('cinque colpi bastano', pestello.avanzato, 1)
+  const tremolio = creaGesto(GESTI['pestello:mortaio'])
+  su(tremolio, 20, 'y', 12)
+  uguale('il dito che trema non pesta', tremolio.avanzato, 0)
+  const diLato = creaGesto(GESTI['pestello:mortaio'])
+  su(diLato, 10, 'x')
+  uguale('di lato non si pesta', diLato.avanzato, 0)
+  const fiammifero = creaGesto(GESTI['fiammifero:legna'])
+  su(fiammifero, 4, 'x')
+  uguale('il fiammifero si sfrega di lato', fiammifero.avanzato, 1)
+  const brocca = creaGesto(GESTI['brocca:calderone'])
+  brocca.punto(100, 100); brocca.scorre(2)
+  uguale('dritta non versa', brocca.avanzato, 0)
+  brocca.punto(170, 100); brocca.scorre(0.45)
+  dentro('piegata versa', brocca.avanzato, 0.4, 0.6)
+  brocca.scorre(1)
+  uguale('e finisce', brocca.avanzato, 1)
+  const bacchetta = creaGesto(GESTI['bacchetta:calderone'])
+  su(bacchetta, 7, 'x')
+  uguale('la bacchetta si scuote', bacchetta.avanzato, 1)
+}
+{
+  /* ogni pozione ribolle a modo suo */
+  const nomi = [...Object.values(POZIONI).flat().map(p => p[0]), ...CAMPAGNA.filter(t => t.famiglie.length > 1).map(t => t.nome)]
+  for (const n of nomi) controlla(`${n} ha un modo di ribollire`, !!MODI[BOLLORI[n]?.[0]])
+  uguale('nessun nome di troppo', Object.keys(BOLLORI).length, nomi.length)
+  controlla('i modi sono tanti', new Set(Object.values(BOLLORI).map(b => b[0])).size >= 8)
+  const riflessi = new Set()
+  for (let s = 1; s < 30; s++) { const b = new Bottega(tappa('massa-grandi'), { rnd: caso(s) }); riflessi.add(bolloreDi(b.pozione.nome, b.ingredienti).riflesso) }
+  uguale('rifacendola il riflesso può cambiare', riflessi.size, 2)
 }
 
 riassunto('pozioni')
