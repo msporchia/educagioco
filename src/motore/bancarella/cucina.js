@@ -8,18 +8,15 @@ const LAVATA = 1.4                 // i secondi per lavare un piatto
 const RITORNO = 6                  // quanto ci mette un piatto a tornare sporco
 const PIZZA = { cuoce: 8, tiene: 45 }  // nel forno
 export const LARGA = 7, FONDA = 9  // la stanza, in celle
-export const FILA_MAX = 6          // i tocchi che il cuoco si ricorda
 const VELOCITA = 4.2
 
-/* La pianta: tutto il giro è di banconi, in mezzo c'è l'isola. In fondo la consegna,
-   sotto il cliente; i fuochi accanto alla pasta e alla carne, il tagliere accanto
-   all'insalata, il lavello accanto ai piatti. `:2` è l'attrezzo comprato. */
+/* La pianta, a zone: in fondo si finisce (lavello, piatti, consegna), a sinistra si taglia,
+   a destra si cuoce, davanti la dispensa; in mezzo due isole. `:2` è l'attrezzo comprato. */
 const FISSE = {
-  '1,0': 'pentola', '2,0': 'padella', '4,0': 'forno', '5,8': 'tagliere',
-  '5,0': 'pentola:2', '0,6': 'padella:2', '6,7': 'forno:2', '4,8': 'tagliere:2',
-  '3,0': { tipo: 'consegna' }, '2,8': { tipo: 'piatti' }, '1,8': { tipo: 'bidone' }, '3,8': { tipo: 'lavello' },
-  '0,1': 'pasta', '0,2': 'carne', '0,3': 'uovo', '0,4': 'impasto', '0,5': 'riso',
-  '6,1': 'sugo', '6,2': 'pane', '6,3': 'alga', '6,4': 'formaggio', '6,5': 'pesce', '6,6': 'insalata',
+  '1,0': { tipo: 'lavello' }, '2,0': { tipo: 'piatti' }, '3,0': { tipo: 'consegna' }, '5,0': { tipo: 'bidone' },
+  '0,1': 'tagliere', '0,2': 'tagliere:2', '0,3': 'tagliere:3', '0,4': 'tagliere:4', '0,5': 'insalata', '0,6': 'formaggio', '0,7': 'pesce', '0,8': 'alga',
+  '6,1': 'pentola', '6,2': 'pentola:2', '6,3': 'padella', '6,4': 'padella:2', '6,5': 'forno', '6,6': 'forno:2',
+  '1,8': 'pane', '2,8': 'sugo', '3,8': 'riso', '4,8': 'uovo', '5,8': 'carne', '6,8': 'pasta', '6,7': 'impasto',
 }
 const ISOLA = ['2,3', '3,3', '4,3', '2,5', '3,5', '4,5']
 
@@ -45,12 +42,12 @@ function pianta(c) {
 }
 
 /* `camp` è una delle CUCINE, `attrezzi` quello che il bambino ha comprato.
-   `fila`: i posti toccati, in ordine; `strada`: i punti per arrivare al primo;
+   `fila`: il posto toccato, finché il cuoco non ci arriva; `strada`: i punti per arrivarci;
    `arrivato`: il posto raggiunto, dove chi gioca fa la mossa (`arriva`).
    `puliti`: i piatti in pila, `null` se non finiscono; `sporchi`: quelli nel lavello;
    `ritorni`: i secondi che mancano a quelli in giro. */
 export function cucinaNuova(camp = CUCINE[0], attrezzi = {}) {
-  const nomi = attrezziDi(camp).flatMap(t => (attrezzi[t] ? [t, t + ':2'] : [t]))
+  const nomi = attrezziDi(camp).flatMap(t => [t, ...Array.from({ length: attrezzi[t] || 0 }, (_, i) => `${t}:${i + 2}`)])
   const c = { stazioni: Object.fromEntries(nomi.map(n => [n, libera()])), ricette: ricetteDi(camp.ricette),
               puliti: camp.piatti ? camp.piatti + (attrezzi.piatti || 0) : null, sporchi: 0, ritorni: [] }
   return { ...c, celle: pianta(c), sopra: {}, fila: [], strada: [], arrivato: '', perche: '', tagliando: '', colpo: 0, lavando: false, lavata: 0,
@@ -135,11 +132,11 @@ export function vaiA(c, x, z) {
   return true
 }
 
-/* Si è toccato un bancone: il cuoco se lo segna, e ci va dopo quelli di prima. */
+/* Si è toccato un bancone: l'ultimo tocco comanda. Se sta tagliando o lavando finisce, e poi ci va. */
 export function tocca(c, id) {
-  if (c.fila.length >= FILA_MAX || !cellaDi(c, id)) return false
-  if (!c.fila.length) c.strada = []
-  c.fila.push(id)
+  if (!cellaDi(c, id)) return false
+  if (!c.tagliando && !c.lavando) { c.strada = []; c.arrivato = '' }
+  c.fila = [id]
   return true
 }
 
@@ -178,14 +175,14 @@ function taglia(c, dt) {
   c.colpo = 0
 }
 
-/* Lava finché ce n'è, anche quelli che tornano intanto. */
+/* Un tocco, un piatto. */
 function lava(c, dt) {
   c.lavata += dt
   if (c.lavata < LAVATA) return
   c.lavata = 0
   c.sporchi--
   c.puliti++
-  if (!c.sporchi) c.lavando = false
+  c.lavando = false
 }
 
 export function passo(c, dt) {
@@ -227,17 +224,48 @@ function sulPiatto(c, p, cosa) {
 
 const nonPronta = o => (INGREDIENTI[o.cosa].va === 'tagliere' ? 'Prima si taglia' : 'Prima si cuoce')
 const LAVALI = 'Non ci sono piatti puliti: lavali'
+export const SERVE_PIATTO = 'Serve un piatto: passa dalla pila'
+const SOLO_SUL_PIATTO = ['sugo', 'riso']     // in mano non si tengono: come il cotto e il tagliato
 
-/* Due cose senza piatto: se stanno nella stessa ricetta si uniscono, e il piatto ce lo mette il cuoco. */
+/* Due cose senza piatto: se stanno nella stessa ricetta si uniscono, ma il piatto non compare
+   da solo: restano `nudo`, e prima di servire si passa dai piatti. */
 function unisci(c, a, b, dopo) {
   if (a.bruciata || b.bruciata) return { perche: 'Quello è bruciato: va nel bidone' }
   const cruda = [a, b].find(o => !o.fatta)
   if (cruda) return { perche: nonPronta(cruda) }
-  const p = nuovoPiatto()
+  const p = { ...nuovoPiatto(), nudo: true }
   sulPiatto(c, p, a.cosa)
   if (!prendeIl(c, p, b.cosa)) return { perche: 'Questi due non vanno insieme' }
+  return { fai: () => { sulPiatto(c, p, b.cosa); dopo(p) } }
+}
+
+/* Due mucchi, o un mucchio e un piatto: quello senza piatto passa sull'altro. */
+function travaso(c, t, o, m) {
+  const k = c.cuoco
+  if (!o.nudo && !m.nudo) return { perche: 'Le mani sono piene' }
+  const [dentro, via] = o.nudo ? [m, o] : [o, m]
+  const prova = { ...dentro, cose: [...dentro.cose] }
+  for (const cosa of via.cose) {
+    if (!prendeIl(c, prova, cosa)) return { perche: 'Su questo piatto non va' }
+    sulPiatto(c, prova, cosa)
+  }
+  return { fai: () => {
+    Object.assign(dentro, prova)
+    if (dentro === o) k.mano = null
+    else delete c.sopra[t.id]
+  } }
+}
+
+/* Dalla pila: un piatto a mani vuote; con qualcosa in mano, ci finisce sopra. */
+function dallaPila(c, m) {
+  const k = c.cuoco
+  if (ePiatto(m) && !m.nudo) return m.cose.length ? { perche: 'Qui stanno i piatti puliti' } : { fai: () => { if (c.puliti !== null) c.puliti++; k.mano = null } }
+  if (m?.bruciata) return { perche: 'Quello è bruciato: va nel bidone' }
+  if (m && !ePiatto(m) && !m.fatta) return { perche: nonPronta(m) }
   if (senzaPiatti(c)) return { perche: LAVALI }
-  return { fai: () => { usaPiatto(c); sulPiatto(c, p, b.cosa); dopo(p) } }
+  if (!m) return { fai: () => { usaPiatto(c); k.mano = nuovoPiatto() } }
+  if (ePiatto(m)) return { fai: () => { usaPiatto(c); m.nudo = false } }
+  return { fai: () => { const p = nuovoPiatto(); sulPiatto(c, p, m.cosa); usaPiatto(c); k.mano = p } }
 }
 
 /* Quello che è ovvio fare in un posto: { fai } se si può, { perche } se no. */
@@ -245,13 +273,9 @@ function decidi(c, t) {
   const k = c.cuoco, m = k.mano
   if (t.tipo === 'bidone') {
     if (!m) return { perche: 'Qui si butta quello che è bruciato' }
-    return { fai: () => { if (ePiatto(m)) sporcaPiatto(c); k.mano = null } }
+    return { fai: () => { if (ePiatto(m) && !m.nudo) sporcaPiatto(c); k.mano = null } }
   }
-  if (t.tipo === 'piatti') {
-    if (!m) return senzaPiatti(c) ? { perche: LAVALI } : { fai: () => { usaPiatto(c); k.mano = nuovoPiatto() } }
-    if (ePiatto(m) && !m.cose.length) return { fai: () => { if (c.puliti !== null) c.puliti++; k.mano = null } }
-    return { perche: 'Qui stanno i piatti puliti' }
-  }
+  if (t.tipo === 'piatti') return dallaPila(c, m)
   if (t.tipo === 'lavello') {
     if (m) return { perche: 'Per lavare servono le mani libere' }
     if (!c.sporchi) return { perche: 'Non c\'è niente da lavare' }
@@ -264,7 +288,7 @@ function decidi(c, t) {
 
 function dallaCassetta(c, t, m) {
   const k = c.cuoco, o = crudo(t.cosa)
-  if (!m) return { fai: () => { k.mano = o } }
+  if (!m) return SOLO_SUL_PIATTO.includes(t.cosa) ? { perche: SERVE_PIATTO } : { fai: () => { k.mano = o } }
   if (!ePiatto(m)) {
     if (m.cosa === t.cosa && !m.bruciata && m.fatta === o.fatta) return { fai: () => { k.mano = null } }
     return unisci(c, m, o, p => { k.mano = p })
@@ -279,8 +303,8 @@ function sulBanco(c, t, m) {
   if (!o) return { fai: () => { c.sopra[t.id] = m; k.mano = null } }
   if (!m) return { fai: () => { k.mano = o; delete c.sopra[t.id] } }
   if (!ePiatto(o) && !ePiatto(m)) return unisci(c, o, m, p => { c.sopra[t.id] = p; k.mano = null })
+  if (ePiatto(o) && ePiatto(m)) return travaso(c, t, o, m)
   const [p, cosa] = ePiatto(o) ? [o, m] : [m, o]
-  if (ePiatto(cosa)) return { perche: 'Le mani sono piene' }
   if (cosa.bruciata) return { perche: 'Quello è bruciato: va nel bidone' }
   if (!cosa.fatta) return { perche: nonPronta(cosa) }
   if (!prendeIl(c, p, cosa.cosa)) return { perche: 'Su questo piatto non va' }
@@ -296,6 +320,7 @@ function allaStazione(c, nome, m) {
   const svuota = () => { c.stazioni[nome] = libera() }
   if (s.fase === 'vuota') {
     if (forno) {
+      if (m?.nudo && m.daInfornare) return { perche: SERVE_PIATTO }
       if (ePiatto(m) && m.daInfornare) return { fai: () => { c.stazioni[nome] = { ...libera(), fase: 'cuoce', cosa: 'pizza', piatto: m }; k.mano = null } }
       return { perche: ePiatto(m) && m.cose.includes('impasto') ? 'Alla pizza manca ancora qualcosa' : 'Qui va la pizza condita, sul piatto' }
     }
@@ -329,7 +354,7 @@ function allaStazione(c, nome, m) {
       svuota()
     } }
   }
-  if (!m) return { fai: () => { k.mano = { cosa: s.cosa, fatta: true, bruciata: false }; svuota() } }
+  if (!m) return { perche: SERVE_PIATTO }
   if (ePiatto(m)) return prendeIl(c, m, s.cosa) ? { fai: () => { sulPiatto(c, m, s.cosa); svuota() } } : { perche: 'Su questo piatto non va' }
   return unisci(c, m, { cosa: s.cosa, fatta: true }, p => { k.mano = p; svuota() })
 }
@@ -346,13 +371,13 @@ export function usa(c, t) {
 /* Il piatto in mano va al cliente, se è uno di quelli che vuole; poi torna sporco. */
 export function consegna(c, vuole) {
   const m = c.cuoco.mano
-  if (!m?.pronto || !vuole.includes(m.pronto)) return false
+  if (!m?.pronto || m.nudo || !vuole.includes(m.pronto)) return false
   c.cuoco.mano = null
   if (c.puliti !== null) c.ritorni.push(RITORNO)
   return true
 }
 
-/* Le righe del ricettario. */
+/* Le righe della ricetta. */
 const COME = { pentola: 'si cuoce in pentola', padella: 'si cuoce in padella', tagliere: 'si taglia sul tagliere' }
 export const passiRicetta = r => [
   ...r.passi.map(k => ({ foto: 'cosa:' + k, nome: INGREDIENTI[k].nome, come: COME[INGREDIENTI[k].va] || 'va dritto sul piatto' })),

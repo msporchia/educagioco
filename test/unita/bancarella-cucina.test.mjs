@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { CUCINE } from '../../src/data/bancarella.js'
-import { cucinaNuova, passo, usa, tocca, vaiA, arriva, consegna, passiRicetta, TAGLI, FILA_MAX } from '../../src/motore/bancarella/cucina.js'
+import { cucinaNuova, passo, usa, tocca, vaiA, arriva, consegna, passiRicetta, TAGLI, SERVE_PIATTO } from '../../src/motore/bancarella/cucina.js'
 import { RICETTE, INGREDIENTI, ATTREZZI, attrezziDi, cucinaPulita, compraAttrezzo } from '../../src/data/bancarella-cucine.js'
 import { bancoPulito } from '../../src/data/bancarella-banco.js'
 
@@ -45,15 +45,15 @@ test('si arriva anche agli angoli', () => {
   for (const id of ['0,0', '6,0', '0,8', '6,8']) vai(c, id)
 })
 
-test('i tocchi si mettono in fila, il pavimento li butta', () => {
+test('l\'ultimo tocco comanda, il pavimento porta via', () => {
   const c = cucina()
-  tocca(c, cassetta(c, 'pasta')); tocca(c, '1,0')
-  assert.equal(c.fila.length, 2)
-  usa(c, vai2(c)); usa(c, vai2(c))
-  assert.equal(c.stazioni.pentola.fase, 'cuoce')
-  assert.equal(c.fila.length, 0)
-  for (let i = 0; i <= FILA_MAX; i++) tocca(c, '3,3')
-  assert.equal(c.fila.length, FILA_MAX, 'la fila ha un tetto')
+  tocca(c, cassetta(c, 'pasta')); passo(c, 0.1)
+  tocca(c, '6,1')
+  assert.deepEqual([...c.fila], ['6,1'], 'il primo posto è dimenticato')
+  usa(c, vai2(c))
+  assert.equal(c.cuoco.mano, null)
+  assert.equal(c.perche, 'Porta qui quello da cuocere')
+  tocca(c, '3,3')
   assert.ok(vaiA(c, 5, 5))
   assert.equal(c.fila.length, 0)
   aspetta(c, 3)
@@ -63,14 +63,14 @@ test('i tocchi si mettono in fila, il pavimento li butta', () => {
 test('la pasta al pomodoro, dalla cassetta alla consegna', () => {
   const c = cucina()
   assert.ok(fa(c, cassetta(c, 'pasta'))); assert.equal(c.cuoco.mano.cosa, 'pasta')
-  assert.ok(fa(c, '1,0')); assert.equal(c.stazioni.pentola.fase, 'cuoce'); assert.equal(c.cuoco.mano, null)
-  assert.ok(fa(c, '2,8')); assert.ok(c.cuoco.mano.piatto)
+  assert.ok(fa(c, '6,1')); assert.equal(c.stazioni.pentola.fase, 'cuoce'); assert.equal(c.cuoco.mano, null)
+  assert.ok(fa(c, '2,0')); assert.ok(c.cuoco.mano.piatto)
   assert.ok(fa(c, cassetta(c, 'sugo')), 'il sugo va dritto sul piatto')
   assert.deepEqual(c.cuoco.mano.cose, ['sugo'])
-  assert.equal(fa(c, '1,0'), false); assert.equal(c.perche, 'Sta cuocendo')
+  assert.equal(fa(c, '6,1'), false); assert.equal(c.perche, 'Sta cuocendo')
   aspetta(c, 7.1)
   assert.equal(c.stazioni.pentola.fase, 'pronta')
-  assert.ok(fa(c, '1,0'))
+  assert.ok(fa(c, '6,1'))
   assert.equal(c.cuoco.mano.pronto, '🍝')
   assert.deepEqual(c.cuoco.mano.cose, ['pasta', 'sugo'], 'il piatto si dispone da sé')
   assert.equal(consegna(c, ['🥪']), false, 'il piatto sbagliato resta in mano')
@@ -81,16 +81,16 @@ test('la pasta al pomodoro, dalla cassetta alla consegna', () => {
 
 test('sul piatto si deposita, a mani vuote si prende', () => {
   const c = cucina()
-  fa(c, '2,8')
+  fa(c, '2,0')
   assert.ok(fa(c, '3,3'), 'il piatto si posa sull\'isola')
   assert.ok(c.sopra['3,3'].piatto)
   fa(c, cassetta(c, 'pasta'))
   assert.equal(fa(c, '3,3'), false); assert.equal(c.perche, 'Prima si cuoce')
   c.cuoco.mano = null
-  fa(c, cassetta(c, 'sugo'))
+  fa(c, cassetta(c, 'pane'))
   assert.ok(fa(c, '3,3'), 'quello che ho in mano va sul piatto')
   assert.equal(c.cuoco.mano, null)
-  assert.deepEqual(c.sopra['3,3'].cose, ['sugo'])
+  assert.deepEqual(c.sopra['3,3'].cose, ['pane'])
   assert.ok(fa(c, '3,3'), 'a mani vuote il piatto si prende')
   assert.ok(c.cuoco.mano.piatto)
   assert.equal(c.sopra['3,3'], undefined)
@@ -100,14 +100,17 @@ test('due cose della stessa ricetta si uniscono anche senza piatto', () => {
   const c = cucina()
   fa(c, cassetta(c, 'impasto'))
   assert.ok(fa(c, cassetta(c, 'sugo')), 'con l\'impasto in mano, sul sugo')
-  assert.ok(c.cuoco.mano.piatto)
+  assert.ok(c.cuoco.mano.nudo, 'il piatto non compare da solo')
   assert.deepEqual(c.cuoco.mano.cose, ['impasto', 'sugo'])
   assert.equal(fa(c, cassetta(c, 'formaggio')), false)
   assert.equal(c.perche, 'Prima si taglia')
   c.stazioni.tagliere = { fase: 'pronta', t: 0, cosa: 'formaggio', colpi: TAGLI }
-  assert.ok(fa(c, '5,8'), 'il formaggio tagliato va sul piatto')
+  assert.ok(fa(c, '0,1'), 'il formaggio tagliato va sul piatto')
   assert.ok(c.cuoco.mano.daInfornare)
-  assert.ok(fa(c, '4,0'), 'e va in forno')
+  assert.equal(fa(c, '6,5'), false, 'in forno ci vuole il piatto')
+  assert.ok(fa(c, '2,0'), 'dalla pila')
+  assert.equal(c.cuoco.mano.nudo, false)
+  assert.ok(fa(c, '6,5'), 'e va in forno')
 
   const b = cucina()                 // sul bancone: il piatto resta lì
   fa(b, cassetta(b, 'pane')); fa(b, '3,3')
@@ -119,38 +122,41 @@ test('due cose della stessa ricetta si uniscono anche senza piatto', () => {
   assert.deepEqual(b.sopra['3,3'].cose, ['pane', 'insalata'])
 
   const s = cucina()                 // dal fuoco: la carne pronta va col pane in mano
-  fa(s, cassetta(s, 'carne')); fa(s, '2,0'); aspetta(s, 5.1)
+  fa(s, cassetta(s, 'carne')); fa(s, '6,3'); aspetta(s, 5.1)
   fa(s, cassetta(s, 'pane'))
-  assert.ok(fa(s, '2,0'))
+  assert.ok(fa(s, '6,3'))
   assert.deepEqual(s.cuoco.mano.cose, ['pane', 'carne'])
   assert.equal(s.stazioni.padella.fase, 'vuota')
 
   const n = cucina()                 // quello che non sta in nessuna ricetta resta in mano
-  fa(n, cassetta(n, 'sugo'))
+  fa(n, cassetta(n, 'pane'))
   assert.equal(fa(n, cassetta(n, 'riso')), false)
   assert.equal(n.perche, 'Questi due non vanno insieme')
-  assert.equal(n.cuoco.mano.cosa, 'sugo')
+  assert.equal(n.cuoco.mano.cosa, 'pane')
 })
 
 test('il tagliere: un tocco, e il cuoco taglia fino alla fine', () => {
   const c = cucina()
   fa(c, cassetta(c, 'insalata'))
-  assert.ok(fa(c, '5,8')); assert.equal(c.stazioni.tagliere.fase, 'taglia')
+  assert.ok(fa(c, '0,1')); assert.equal(c.stazioni.tagliere.fase, 'taglia')
   assert.ok(c.tagliando, 'comincia da solo')
-  tocca(c, '5,8')
+  tocca(c, '0,1')
   aspetta(c, 0.7)
   assert.equal(c.fila.length, 1, 'la fila aspetta che abbia finito')
   assert.ok(c.stazioni.tagliere.colpi > 0 && c.stazioni.tagliere.colpi < TAGLI)
   aspetta(c, 1)
   assert.equal(c.stazioni.tagliere.fase, 'pronta')
   assert.equal(c.tagliando, '')
-  assert.ok(usa(c, vai2(c)), 'il tocco di prima prende l\'insalata')
-  assert.deepEqual({ ...c.cuoco.mano }, { cosa: 'insalata', fatta: true, bruciata: false })
+  assert.equal(usa(c, vai2(c)), false, 'il tagliato non si prende con le mani')
+  assert.equal(c.perche, SERVE_PIATTO)
+  fa(c, '2,0')
+  assert.ok(fa(c, '0,1'))
+  assert.deepEqual(c.cuoco.mano.cose, ['insalata'])
 })
 
 test('chi lascia a metà riprende con un tocco; con le mani piene no', () => {
   const c = cucina()
-  fa(c, cassetta(c, 'insalata')); fa(c, '5,8')
+  fa(c, cassetta(c, 'insalata')); fa(c, '0,1')
   aspetta(c, 0.7)
   const colpi = c.stazioni.tagliere.colpi
   assert.ok(vaiA(c, 3, 4))
@@ -158,44 +164,43 @@ test('chi lascia a metà riprende con un tocco; con le mani piene no', () => {
   aspetta(c, 2)
   assert.equal(c.stazioni.tagliere.colpi, colpi, 'senza il cuoco non si taglia')
   fa(c, cassetta(c, 'pane'))
-  assert.equal(fa(c, '5,8'), false)
+  assert.equal(fa(c, '0,1'), false)
   assert.equal(c.perche, 'Per tagliare servono le mani libere')
   c.cuoco.mano = null
-  assert.ok(fa(c, '5,8'))
+  assert.ok(fa(c, '0,1'))
   aspetta(c, 1.5)
   assert.equal(c.stazioni.tagliere.fase, 'pronta')
 })
 
 test('l\'insalata: si tagliano tutte e due, si uniscono e si serve', () => {
   const c = cucina()
-  fa(c, cassetta(c, 'insalata')); fa(c, '5,8'); aspetta(c, 1.6)
-  fa(c, '5,8'); fa(c, '3,3')
-  fa(c, cassetta(c, 'formaggio')); fa(c, '5,8'); aspetta(c, 1.6)
+  fa(c, cassetta(c, 'insalata')); fa(c, '0,1'); aspetta(c, 1.6)
+  fa(c, '2,0'); fa(c, '0,1'); fa(c, '3,3')
+  fa(c, cassetta(c, 'formaggio')); fa(c, '0,1'); aspetta(c, 1.6)
   assert.equal(c.stazioni.tagliere.cosa, 'formaggio')
-  fa(c, '5,8')
-  assert.deepEqual({ ...c.cuoco.mano }, { cosa: 'formaggio', fatta: true, bruciata: false })
-  assert.ok(fa(c, '3,3'), 'il formaggio tagliato sull\'insalata tagliata')
-  assert.equal(c.sopra['3,3'].pronto, '🥗')
+  fa(c, '3,3')
+  assert.ok(fa(c, '0,1'), 'il piatto va a prendere il formaggio')
+  assert.equal(c.cuoco.mano.pronto, '🥗')
 })
 
 test('la pizza entra col piatto ed esce pronta; il bruciato va nel bidone', () => {
   const c = cucina()
   c.cuoco.mano = { piatto: true, cose: ['impasto', 'sugo', 'formaggio'], pronto: '', daInfornare: true, forno: '🍕' }
-  assert.ok(fa(c, '4,0')); assert.equal(c.stazioni.forno.cosa, 'pizza'); assert.equal(c.cuoco.mano, null)
+  assert.ok(fa(c, '6,5')); assert.equal(c.stazioni.forno.cosa, 'pizza'); assert.equal(c.cuoco.mano, null)
   aspetta(c, 8.1)
-  assert.ok(fa(c, '4,0')); assert.equal(c.cuoco.mano.pronto, '🍕')
+  assert.ok(fa(c, '6,5')); assert.equal(c.cuoco.mano.pronto, '🍕')
   c.cuoco.mano = null
   fa(c, cassetta(c, 'carne'))
-  fa(c, '2,0')
+  fa(c, '6,3')
   aspetta(c, 49)
   assert.equal(c.stazioni.padella.fase, 'pronta', 'a bruciare ci si deve impegnare')
   aspetta(c, 2)
   assert.equal(c.stazioni.padella.fase, 'scotta')
-  assert.ok(fa(c, '2,0')); assert.ok(c.cuoco.mano.bruciata)
-  assert.ok(fa(c, '1,8')); assert.equal(c.cuoco.mano, null)
+  assert.ok(fa(c, '6,3')); assert.ok(c.cuoco.mano.bruciata)
+  assert.ok(fa(c, '5,0')); assert.equal(c.cuoco.mano, null)
 })
 
-test('il ricettario dice dove passa ogni cosa', () => {
+test('la ricetta dice dove passa ogni cosa', () => {
   const pizza = RICETTE.find(r => r.emoji === '🍕')
   assert.deepEqual(passiRicetta(pizza).map(p => [p.nome, p.come]), [
     ['impasto', 'va dritto sul piatto'], ['sugo', 'va dritto sul piatto'], ['formaggio', 'si taglia sul tagliere'],
@@ -211,57 +216,99 @@ test('il piatto pronto cresce: dalla pasta alla pasta col formaggio', () => {
   assert.equal(c.sopra['3,3'].pronto, '🍝🧀')
 })
 
-test('i piatti: finiscono, tornano sporchi, si lavano con un tocco', () => {
+test('i piatti: finiscono, tornano sporchi, si lavano a uno a uno', () => {
   const c = cucinaNuova({ ...CUCINE.at(-1), piatti: 2 })
   const conta = () => c.puliti + c.sporchi + c.ritorni.length + (c.cuoco.mano?.piatto ? 1 : 0) + Object.values(c.sopra).filter(o => o.piatto).length
-  assert.ok(fa(c, '2,8')); assert.equal(c.puliti, 1)
+  assert.ok(fa(c, '2,0')); assert.equal(c.puliti, 1)
   c.cuoco.mano = { ...c.cuoco.mano, cose: ['pane', 'formaggio'], pronto: '🥪' }
   assert.ok(consegna(c, ['🥪']))
   assert.equal(conta(), 2)
   c.ritorni = [1000]                  // torna quando lo diciamo noi: il cuoco qui cammina parecchio
   assert.equal(c.ritorni.length, 1)
-  fa(c, '2,8'); fa(c, '3,3')
+  fa(c, '2,0'); fa(c, '3,3')
   assert.equal(c.puliti, 0)
-  assert.equal(fa(c, '2,8'), false)
+  assert.equal(fa(c, '2,0'), false)
   assert.equal(c.perche, 'Non ci sono piatti puliti: lavali')
-  fa(c, cassetta(c, 'pane')); c.cuoco.mano = null
-  fa(c, cassetta(c, 'riso'))
-  fa(c, cassetta(c, 'alga'))
-  assert.equal(c.perche, 'Non ci sono piatti puliti: lavali', 'unire vuole un piatto')
+  fa(c, cassetta(c, 'pane'))
+  assert.equal(fa(c, '2,0'), false, 'anche con la roba in mano')
   c.cuoco.mano = null
-  assert.equal(fa(c, '3,8'), false, 'il lavello è vuoto finché il piatto è in giro')
+  assert.equal(fa(c, '1,0'), false, 'il lavello è vuoto finché il piatto è in giro')
   c.ritorni = [0.1]
   aspetta(c, 0.2)
   assert.equal(c.sporchi, 1)
-  assert.ok(fa(c, '3,8'))
+  assert.ok(fa(c, '1,0'))
   assert.ok(c.lavando)
   aspetta(c, 1.6)
   assert.equal(c.lavando, false)
   assert.equal(c.puliti, 1); assert.equal(c.sporchi, 0)
   assert.equal(conta(), 2)
+  c.sporchi = 2
+  assert.ok(fa(c, '1,0'))
+  aspetta(c, 3)
+  assert.equal(c.sporchi, 1, 'un tocco, un piatto')
+  c.sporchi = 0; c.puliti = 1
+})
+
+test('il cotto, il tagliato, il sugo e il riso vogliono il piatto', () => {
+  const c = cucina()
+  assert.equal(fa(c, cassetta(c, 'sugo')), false); assert.equal(c.perche, SERVE_PIATTO)
+  assert.equal(fa(c, cassetta(c, 'riso')), false); assert.equal(c.perche, SERVE_PIATTO)
+  fa(c, cassetta(c, 'pasta')); fa(c, '6,1'); aspetta(c, 7.1)
+  assert.equal(fa(c, '6,1'), false, 'la pasta non si prende con le mani')
+  assert.equal(c.perche, SERVE_PIATTO)
+  assert.equal(c.stazioni.pentola.fase, 'pronta')
+  fa(c, '2,0')
+  assert.ok(fa(c, '6,1'))
+  assert.deepEqual(c.cuoco.mano.cose, ['pasta'])
+})
+
+test('senza piatto non si serve', () => {
+  const c = cucina()
+  fa(c, cassetta(c, 'pane'))
+  assert.ok(fa(c, cassetta(c, 'sugo')), 'pane e pomodoro si uniscono')
+  assert.equal(c.cuoco.mano.pronto, '🥖')
+  assert.ok(c.cuoco.mano.nudo)
+  assert.equal(consegna(c, ['🥖']), false, 'ma senza piatto no')
+  assert.ok(c.cuoco.mano)
+  fa(c, '2,0')
+  assert.ok(consegna(c, ['🥖']))
+
+  const b = cucina()                  // sul piatto già posato
+  fa(b, '2,0'); fa(b, '3,3')
+  fa(b, cassetta(b, 'pane')); fa(b, cassetta(b, 'sugo'))
+  assert.ok(fa(b, '3,3'))
+  assert.equal(b.cuoco.mano, null)
+  assert.equal(b.sopra['3,3'].pronto, '🥖')
+  assert.ok(!b.sopra['3,3'].nudo)
+
+  const u = cucina()                  // una cosa sola, portata alla pila
+  fa(u, cassetta(u, 'pane'))
+  assert.ok(fa(u, '2,0'))
+  assert.ok(u.cuoco.mano.piatto && !u.cuoco.mano.nudo)
+  assert.deepEqual(u.cuoco.mano.cose, ['pane'])
 })
 
 test('il piatto nel bidone torna nel lavello', () => {
   const c = cucinaNuova({ ...CUCINE.at(-1), piatti: 2 })
-  fa(c, '2,8'); fa(c, '1,8')
+  fa(c, '2,0'); fa(c, '5,0')
   assert.equal(c.sporchi, 1)
   assert.equal(c.puliti, 1)
 })
 
 test('gli attrezzi comprati stanno nella stanza', () => {
-  const c = cucinaNuova(CUCINE.at(-1), { pentola: 1, forno: 1, padella: 1, tagliere: 1, piatti: 2 })
-  assert.deepEqual(Object.keys(c.stazioni).sort(), ['forno', 'forno:2', 'padella', 'padella:2', 'pentola', 'pentola:2', 'tagliere', 'tagliere:2'])
+  const c = cucinaNuova(CUCINE.at(-1), { pentola: 1, forno: 1, padella: 1, tagliere: 3, piatti: 2 })
+  assert.deepEqual(Object.keys(c.stazioni).sort(), ['forno', 'forno:2', 'padella', 'padella:2', 'pentola', 'pentola:2', 'tagliere', 'tagliere:2', 'tagliere:3', 'tagliere:4'])
   assert.equal(c.puliti, CUCINE.at(-1).piatti + 2)
   for (const n of Object.keys(c.stazioni)) assert.ok(c.celle.some(k => k.nome === n), `${n} ha il suo posto`)
-  fa(c, cassetta(c, 'pasta')); fa(c, '1,0')
-  fa(c, cassetta(c, 'pasta')); assert.ok(fa(c, '5,0'), 'due pentole insieme')
+  fa(c, cassetta(c, 'pasta')); fa(c, '6,1')
+  fa(c, cassetta(c, 'pasta')); assert.ok(fa(c, '6,2'), 'due pentole insieme')
   aspetta(c, 7.1)
   assert.equal(c.stazioni['pentola:2'].fase, 'pronta')
-  fa(c, cassetta(c, 'pesce')); assert.ok(fa(c, '4,8'), 'il secondo tagliere')
+  fa(c, cassetta(c, 'pesce')); assert.ok(fa(c, '0,2'), 'il secondo tagliere')
   aspetta(c, 1.6)
   assert.equal(c.stazioni['tagliere:2'].fase, 'pronta')
   c.cuoco.mano = { piatto: true, cose: ['impasto', 'sugo', 'formaggio'], pronto: '', daInfornare: true, forno: '🍕' }
-  assert.ok(fa(c, '6,7'), 'il secondo forno')
+  assert.ok(fa(c, '6,6'), 'il secondo forno')
   assert.equal(c.stazioni['forno:2'].cosa, 'pizza')
 })
 
@@ -271,7 +318,7 @@ test('si comprano col banco, e il banco li ricorda', () => {
   assert.deepEqual(bancoPulito(b).cucina, b.cucina)
   const dopo = compraAttrezzo(b, 'tagliere')
   assert.equal(dopo.cassa, 100); assert.equal(dopo.cucina.tagliere, 1)
-  assert.equal(compraAttrezzo(dopo, 'tagliere'), null, 'uno solo in più')
+  assert.equal(compraAttrezzo({ ...dopo, cassa: 100000, cucina: { ...dopo.cucina, tagliere: a.quanti } }, 'tagliere'), null, 'c\'è un tetto')
   assert.equal(compraAttrezzo({ ...b, cassa: 0 }, 'tagliere'), null, 'la cassa non va sotto zero')
   assert.equal(compraAttrezzo({ ...b, cassa: 100000 }, 'forno'), null, 'prima di arrivarci non si vede')
   assert.equal(cucinaPulita({ fatte: 999, piatti: 99 }).fatte, CUCINE.length)

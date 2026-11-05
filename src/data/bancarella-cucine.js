@@ -32,9 +32,9 @@ export const RICETTE = [
   R('🍝', 'pasta al pomodoro', 650, ['pasta', 'sugo']),
   R('🍝🧀', 'pasta col formaggio', 750, ['pasta', 'sugo', 'formaggio']),
   R('🍝🥩', 'pasta al ragù', 850, ['pasta', 'sugo', 'carne']),
-  R('🍳', 'uovo col pane', 450, ['uovo', 'pane']),
-  R('🍳🧀', 'uovo col formaggio', 500, ['uovo', 'formaggio']),
-  R('🍳🥗', 'uovo con l\'insalata', 550, ['uovo', 'insalata']),
+  R('🍳', 'panino con l\'uovo', 450, ['uovo', 'pane']),
+  R('🍳🧀', 'frittata col formaggio', 500, ['uovo', 'formaggio']),
+  R('🍳🥗', 'insalata con l\'uovo', 550, ['uovo', 'insalata']),
   R('🥪🥩', 'panino con la carne', 550, ['pane', 'carne']),
   R('🥩🥗', 'carne con l\'insalata', 600, ['carne', 'insalata']),
   R('🍔', 'hamburger', 750, ['pane', 'carne', 'insalata']),
@@ -59,7 +59,8 @@ const BASE = { conto: 'resto', cucina: true, tappe: ['cucina', 'cucina', 'cucina
 const CALMA = { tempo: [120, 100] }
 // due piatti a cliente: il totale si batte, si paga coi 20 €
 const DUE = { conto: 'tutto', articoli: [1, 2], tetto: 1900, paga: [2000], monete: [50, 100, 200, 500, 1000], tempo: [95, 75] }
-const FRETTA = { ...DUE, fuocoAcceso: true }
+// gli ultimi: le ordinazioni scadono prima. La fretta sta nel muoversi: i conti si fanno sempre da fermi
+const FRETTA = { ...DUE, tempo: [80, 65] }
 
 /* `piatti`: quanti ce ne sono, e da lì tornano sporchi. Senza, la pila non finisce.
    `foto`: il piatto che si vede nella scelta. */
@@ -73,7 +74,7 @@ export const CUCINE = [
   L('Il lavello', '🍣', 'i piatti tornano sporchi: vanno lavati', ['🥪', '🥗', '🍣'], { ...CALMA, piatti: 4 }),
   L('La trattoria', '🍝', 'la pentola: la pasta si cuoce', ['🍝', '🥪', '🥖'], { piatti: 4 }),
   L('Formaggio per tutti', '🍝🧀', 'la pasta col formaggio', ['🍝', '🥗', '🍝🧀'], { piatti: 4 }),
-  L('La piastra', '🍳', 'la padella: l\'uovo col pane', ['🥪', '🥗', '🍳'], { piatti: 4 }),
+  L('La piastra', '🍳', 'la padella: il panino con l\'uovo', ['🥪', '🥗', '🍳'], { piatti: 4 }),
   L('Il panino caldo', '🥪🥩', 'il panino con la carne', ['🍝', '🍳', '🥪🥩'], { piatti: 4 }),
   L('La colazione', '🍳🧀', 'l\'uovo in tre modi', ['🍳', '🍳🧀', '🍳🥗'], { piatti: 4 }),
   L('L\'hamburger', '🍔', 'tre cose da mettere insieme', ['🥪🥩', '🍔', '🥗'], { piatti: 4 }),
@@ -89,19 +90,19 @@ export const CUCINE = [
   L('Il pranzo della domenica', '🍕', 'due piatti, col forno', ['🍕', '🍝', '🥗', '🍔'], { ...DUE, piatti: 5 }),
   L('Mare e terra', '🍱', 'il sushi coi fuochi accesi', ['🍱', '🍝', '🐟🥗', '🍔'], { ...DUE, piatti: 5 }),
   L('Meno piatti', '🍝🧀', 'ne hai uno di meno', ['🍕', '🍝🧀', '🍔', '🍳🥗'], { ...DUE, piatti: 4 }),
-  L('Il fuoco non si ferma', '🍳', 'i fornelli vanno anche mentre conti', ['🍝', '🥗', '🍳', '🍕'], { ...FRETTA, piatti: 5 }),
+  L('Il servizio veloce', '🍳', 'le ordinazioni scadono prima', ['🍝', '🥗', '🍳', '🍕'], { ...FRETTA, piatti: 5 }),
   L('L\'ora di punta', '🍝🥩', 'più carne sul fuoco', ['🍔', '🍝🥩', '🥩🥗', '🍕'], { ...FRETTA, piatti: 5 }),
   L('La sala piena', '🍔🧀', 'il formaggio dappertutto', ['🍔🧀', '🍝🧀', '🍕', '🍱', '🥗'], { ...FRETTA, piatti: 4 }),
-  L('Il gran servizio', '🍕🥩', 'tutti i piatti del ricettario', RICETTE.map(r => r.emoji), { ...FRETTA, tempo: [105, 85], piatti: 4 }),
+  L('Il gran servizio', '🍕🥩', 'tutti i piatti', RICETTE.map(r => r.emoji), { ...FRETTA, tempo: [90, 75], piatti: 4 }),
 ].map((c, k) => ({ ...c, id: 'cucina-' + (k + 1) }))
 export const cucinaIdx = k => -2 - k
 export const eCucina = i => i <= -2
 
-/* Gli attrezzi da comprare: uno in più di ognuno, i piatti a uno a uno. `da`: il
+/* Gli attrezzi da comprare: uno in più di ognuno, i taglieri e i piatti a uno a uno. `da`: il
    primo livello dove servono, prima non si vedono. */
 const primoCon = t => CUCINE.findIndex(c => attrezziDi(c).includes(t))
 export const ATTREZZI = [
-  { che: 'tagliere', nome: 'Il secondo tagliere', emoji: '🔪', prezzo: 2500, quanti: 1, da: primoCon('tagliere') },
+  { che: 'tagliere', nome: 'Un tagliere in più', emoji: '🔪', prezzo: 2500, quanti: 3, da: primoCon('tagliere') },
   { che: 'pentola', nome: 'La seconda pentola', emoji: '🍲', prezzo: 3000, quanti: 1, da: primoCon('pentola') },
   { che: 'piatti', nome: 'Un piatto in più', emoji: '🍽️', prezzo: 1500, quanti: 4, da: CUCINE.findIndex(c => c.piatti) },
   { che: 'padella', nome: 'La seconda padella', emoji: '🍳', prezzo: 4000, quanti: 1, da: primoCon('padella') },
