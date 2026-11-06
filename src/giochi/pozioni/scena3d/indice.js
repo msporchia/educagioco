@@ -28,7 +28,7 @@ const FERMO_SU = 1.3            // s con l'attrezzo a bersaglio senza fare nient
 const FERMO_TAVOLO = 12         // s senza toccare niente: quanto basta per leggere la ricetta
 const RESTA = 3.5               // s: dopo un attrezzo lasciato lì, quanto resta la freccia
 
-export function creaBottega3d(canvas, { tocca, lascia, suggerisce, perso, dpr } = {}) {
+export function creaBottega3d(canvas, { tocca, lascia, comincia, suggerisce, perso, dpr } = {}) {
   let gl = null, renderer
   try {
     gl = canvas.getContext('webgl2', { alpha: false, antialias: true, depth: true, stencil: false, powerPreference: 'high-performance' })
@@ -36,7 +36,7 @@ export function creaBottega3d(canvas, { tocca, lascia, suggerisce, perso, dpr } 
   if (!gl || gl.isContextLost()) return null
   try { renderer = segui(new WebGLRenderer({ canvas, context: gl, antialias: true })) } catch (e) { return null }
   let tutto
-  try { tutto = costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr }) } catch (e) {
+  try { tutto = costruisci(renderer, canvas, { tocca, lascia, comincia, suggerisce, dpr }) } catch (e) {
     console.warn('pozioni 3D: niente disegno', e)
     try { renderer.dispose() } catch (x) { /* pazienza */ }
     return null
@@ -48,7 +48,7 @@ export function creaBottega3d(canvas, { tocca, lascia, suggerisce, perso, dpr } 
   return tutto
 }
 
-function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso }) {
+function costruisci(renderer, canvas, { tocca, lascia, comincia, suggerisce, dpr: fisso }) {
   renderer.outputColorSpace = SRGBColorSpace
   renderer.toneMapping = ACESFilmicToneMapping
   renderer.toneMappingExposure = 1.1
@@ -164,7 +164,7 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
   /* ── il gesto: l'attrezzo a bersaglio lo muove il dito, e quando ha finito è una mossa ── */
   const sulPiano = (x, y, quota, dove) => { piano.constant = -quota; mira(x, y); return raggio.ray.intersectPlane(piano, dove) }
   const sulCalderone = lato => new Vector3(POSTI.calderone.x + lato * 0.55, 2.35, POSTI.calderone.z + 0.5)
-  const mani = creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena: () => ultima })
+  const mani = creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena: () => ultima, comincia })
   const frecce = creaFrecce(scena, camera, { frecce: disegni, morbido: trame.morbido }, t => suggerisce?.(t))
   const suggerisciGesto = (su, spec, durata) => frecce.gesto(spec.freccia, su === 'calderone' ? POSTI.calderone.clone().setY(POSTI.brodo + 0.6) : ZONE[su].dove(), durata)
   // il mestolo non va dritto alla fiala: la strada parte da dove pesca
@@ -562,6 +562,8 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
     attrezzi.fiammella(false)
     attrezzi.riempi(0)
     if (a.attrezzo) { const c = attrezzi.cosa(a.attrezzo); c.userData.vuota?.(0); aCasa(c) }
+    // il passo era cominciato: niente pasticcio, si fa vedere cosa manca
+    if (a.gratis) { const { da, su } = ultima.attrezzi.prossimo; return suggerisciStrada(da, su, RESTA) }
     suoni.pasticcio()
     banco.ribolli(8)
     const su = new Vector3(POSTI.calderone.x, banco.quotaBrodo() + 0.1, POSTI.calderone.z)

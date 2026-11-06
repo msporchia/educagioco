@@ -296,7 +296,7 @@ function fai(azione, cosa = [], attrezzo = null) {
   else salva({ subito: true })
   inCorso = r
   const fatti = r.giusto ? (r.versati || []) : []
-  animazione.value = { n: ++nAnim, tipo: 'passo', azione, attrezzo, giusto: r.giusto, mortaio: (r.cosa || []).includes(MORTAIO), tagliere: (r.cosa || []).includes(TAGLIERE), ciotolino: (r.cosa || []).includes(GRATTATO),
+  animazione.value = { n: ++nAnim, tipo: 'passo', azione, attrezzo, giusto: r.giusto, gratis: r.gratis, mortaio: (r.cosa || []).includes(MORTAIO), tagliere: (r.cosa || []).includes(TAGLIERE), ciotolino: (r.cosa || []).includes(GRATTATO),
                        colore: r.cosa?.includes(MORTAIO) ? pestato : r.cosa?.includes(TAGLIERE) ? tritato : r.cosa?.includes(GRATTATO) ? grattato : azione === 'metti' ? mescola(colori(b.mortaio)) : azione === 'appoggia' ? mescola(colori(b.tagliere)) : fatti.length ? mescola(colori(fatti)) : null,
                        brodo: b.brodo, arcobaleno: !b.mescolato, riempito: b.dentro.length / b.ingredienti.length }
 }
@@ -306,7 +306,8 @@ function fermoPasso(r) {
   if (r.giusto) {
     if (r.monete || r.finita) suono.ok()
     if (r.finita) return festa()
-  } else {
+  } else if (r.gratis) messaggio.value = { tipo: 'aiuto', righe: r.righe }
+  else {
     suono.no()
     messaggio.value = { tipo: 'trabocca', righe: r.righe }
     leggiPrima(r.righe)
@@ -415,7 +416,7 @@ if (typeof window !== 'undefined')
 
     <Mercante v-else-if="bottega" :key="giro" :bottega="bottega" :bozza="bozza" :animazione="animazione"
               :messaggio="messaggio" :attesa="attesa" :bloccato="occupato || cieco"
-              @aggiungi="aggiungi" @togli="togliVoce" @ordina="ordina" @fai="fai" @pulisci="pulisci" @fermo="fermo" />
+              @aggiungi="aggiungi" @togli="togliVoce" @ordina="ordina" @fai="fai" @comincia="(a, c) => bottega.comincia(a, c)" @pulisci="pulisci" @fermo="fermo" />
     <TastoSalta v-if="bottega && vista === 'banco' && !finale" @salta="salta" />
 
     <Fine v-if="finale" v-bind="finale" @avanti="prossima" @mappa="allaMappa" />

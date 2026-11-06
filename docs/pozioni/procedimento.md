@@ -58,6 +58,11 @@ pasticcio. Il motore è `motore/procedimento.js`.
 - **Il pasticcio**: una mossa che non fa avanzare il prossimo passo, o con la cosa
   sbagliata, non cambia niente, il calderone sbuffa, costa un gettone (`PASTICCIO`) e il
   cartello dice cosa diceva la ricetta. Si legge con la barra, come dopo un trabocco.
+- **Un passo cominciato non è mai un pasticcio**: non sempre si capisce di aver finito.
+  Se il dito ha lasciato a metà il gesto del passo giusto (`comincia`) e fa la mossa del
+  passo dopo, quello a metà vale fatto e pagano tutti e due (`chiudi`). Ogni altra mossa
+  sbagliata a passo cominciato, anche con mezza roba versata o nel mortaio, non costa e non
+  sbuffa: un cartello dice cosa manca e la strada lo fa vedere (`gratis`).
 - **Le stelle restano sui gettoni**: i pasticci pesano lì, non c'è un secondo conto.
 - **Un passo giusto al primo colpo vale una moneta** (`MONETE_A_PASSO`): è una
   lettura, non un conto. Dopo un pasticcio quel passo non paga.

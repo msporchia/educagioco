@@ -145,10 +145,10 @@ const conGesto = async (id, su) => {
   await page.mouse.up()
 }
 const prossimo = () => page.evaluate(() => { const b = window.__poz.bottega.value, p = b.passi[b.passo]; return p ? { p: { azione: p.azione, cosa: [...p.cosa] }, manca: b.mancaAl(p) } : null })
-async function giocaRicetta(viste) {
+async function giocaRicetta(viste, finoA = null) {
   for (let g = 0; g < 30; g++) {
     const q = await prossimo()
-    if (!q || await page.evaluate(() => window.__poz.bottega.value.finita)) return
+    if (!q || q.p.azione === finoA || await page.evaluate(() => window.__poz.bottega.value.finita)) return
     const { da, su } = prossimaMossa(q.p, q.manca)
     viste.add(q.p.azione)
     const prima = await page.evaluate(() => { const b = window.__poz.bottega.value; return b.passo + b.mortaio.length + b.tagliere.length + b.dentro.length })
@@ -336,6 +336,21 @@ const apri = async (chiave, servono) => {
   await giocaRicetta(viste)
   await page.waitForSelector('[data-fine="tappa"]', { timeout: 30000 })
   await apri('massa-virgole', ['gratta', 'agita'])
+  await giocaRicetta(viste, 'mescola')
+  /* mescolato un po' e lasciato lì: chi passa alla riga dopo non ha fatto un pasticcio */
+  {
+    const a = await dove('calderone')
+    await porta(await dove('mestolo'), a)
+    for (let n = 0; n <= 16; n++) await page.mouse.move(a.x + Math.cos(n / 24 * Math.PI * 2) * 36, a.y + Math.sin(n / 24 * Math.PI * 2) * 30)
+    await page.mouse.up()
+    await attendi(page, 800)
+    const q = await page.evaluate(() => { const b = window.__poz.bottega.value, p = b.passi[b.passo + 1]; return { n: b.passo, speso: b.speso, p: { azione: p.azione, cosa: [...p.cosa] } } })
+    const { da, su } = prossimaMossa(q.p, q.p.cosa)
+    await conGesto(da, su)
+    await page.waitForFunction(n => window.__poz.bottega.value.passo >= n + 2, q.n, { timeout: 15000 })
+    uguale('mescolare a metà e andare avanti non costa', await page.evaluate(() => window.__poz.bottega.value.speso), q.speso)
+    await attendi(page, 1100)
+  }
   await giocaRicetta(viste)
   for (const a of ['pesta', 'sminuzza', 'gratta', 'versa', 'mescola', 'scalda', 'agita'])
     controlla(`col dito si fa anche «${a}»`, viste.has(a), [...viste].join())

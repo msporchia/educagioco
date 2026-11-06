@@ -36,7 +36,8 @@ punti in pixel), la figura è `scena3d/mani.js`, il suggerimento `scena3d/frecce
   tutti: si vedeva la polvere sulla bilancia e poi una stella, o un gufo da versare.
 - **Il momento giusto lo dice il motore, a gesto finito**: fuori tempo si fa tutto
   il gesto e poi il calderone sbuffa. Passarci sopra per spostare un attrezzo non è
-  un pasticcio, e nemmeno lasciarlo lì a metà: non è successo niente.
+  un pasticcio, e nemmeno lasciarlo lì a metà: niente di fatto, ma se era il passo giusto
+  il motore lo sa (`comincia`, vedi [procedimento.md](procedimento.md)).
 - **Il fuoco si accende sulla legna**: spunta da sotto il calderone a raggiera apposta.
   Il fiammifero sul calderone non fa niente, e una freccia dice dove va. Un attrezzo
   sulla cosa sbagliata non è mai un pasticcio.
