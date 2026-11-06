@@ -56,6 +56,8 @@ una scatola sottile, la siepe sono sfere schiacciate, il muretto scatole grigie 
 non ce l'ha e non ha niente; un tipo che non c'è più si butta alla lettura (`normalizza`), e una cella che non è più tua, o dove ora c'è un pezzo, l'acqua o un ostacolo, si butta
 nel costruttore (le staccionate si rileggono dopo i lotti e i pezzi). Nessuna perdita per chi non ha mai usato il pennello: la lista è vuota.
 
+Nella fattoria in comune i tre metodi (`disegnaStaccionata`, `mettiCancello`, `togliStaccionata`) sono mosse come le strade: un metodo nuovo che cambia la fattoria va in `MOSSE` di `motore/registro.js`, se no l'amico non lo vede e la sua fotografia lo cancella ([in-comune.md](in-comune.md)).
+
 ## Come si aggancia l'acqua (lo strato che manca)
 
 Lo stesso schema (le sei voci di [terreno.md](terreno.md#gli-strati-del-terreno-come-si-aggancia-uno-strato-nuovo)); qui cosa cambia per l'acqua disegnabile:

@@ -18,7 +18,7 @@ freccia riportano alla propria. Codice: `motore/registro.js`, `comune.js`, `Gioc
 ## Come sta in piedi: le mosse, non la fattoria
 
 I telefoni non si mandano la fattoria ma le **mosse**: le chiamate del motore che la cambiano (`MOSSE` in `motore/registro.js`:
-comprare, mettere, seminare, raccogliere, le macchine, le bestie…). `registra(motore, quando)` avvolge quei metodi sull'istanza,
+comprare, mettere, seminare, raccogliere, strade e staccionate, le macchine, le bestie…). `registra(motore, quando)` avvolge quei metodi sull'istanza,
 così la scena e le viste non cambiano: ogni mossa riuscita del bambino diventa `{ n, a, f, i0? }` (il metodo, gli argomenti,
 quello che ha guadagnato, il primo id delle cose nuove) e parte.
 

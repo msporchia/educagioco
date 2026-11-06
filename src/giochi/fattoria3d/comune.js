@@ -132,11 +132,11 @@ export class Sessione {
 const DETTI = {
   semina: 'ha seminato', raccogliTessera: 'ha raccolto', compraEMetti: 'ha costruito', mettiPezzo: 'ha messo un pezzo', compraEdificio: 'ha costruito',
   spostaPezzo: 'ha spostato un pezzo', ruotaPezzo: 'ha girato un pezzo', compraLotto: 'ha comprato un lotto di terra', abbatti: 'ha abbattuto un albero',
-  togliOstacolo: 'ha tolto un sasso', disegnaStrada: 'ha fatto una strada', avviaRicettaIn: 'ha acceso una macchina', ritiraDa: 'ha ritirato dalle macchine',
+  togliOstacolo: 'ha tolto un sasso', disegnaStrada: 'ha fatto una strada', disegnaStaccionata: 'ha fatto una staccionata', mettiCancello: 'ha messo un cancello', avviaRicettaIn: 'ha acceso una macchina', ritiraDa: 'ha ritirato dalle macchine',
   nutri: 'ha dato da mangiare alle pecore', nutriBestie: 'ha dato da mangiare alle bestie', raccogliProdotti: 'ha raccolto uova e latte', tosa: 'ha tosato le pecore',
   caricaCassa: 'ha caricato la mongolfiera', consegna: 'ha consegnato un ordine', 'cura.coccola': 'ha coccolato una bestia', 'cura.carezza': 'ha fatto una carezza',
   'cura.nutri': 'ha dato la ciotola',
 }
 export const dettoDellaMossa = n => DETTI[n] || 'lavora nella fattoria'
 /* le mosse che cambiano il terreno: la scena lo ridisegna tutto */
-export const TERRA = new Set(['compraLotto', 'abbatti', 'togliOstacolo', 'disegnaStrada', 'togliStrada', 'lanciaLenza', 'ritiraPesca'])
+export const TERRA = new Set(['compraLotto', 'abbatti', 'togliOstacolo', 'disegnaStrada', 'togliStrada', 'disegnaStaccionata', 'mettiCancello', 'togliStaccionata', 'lanciaLenza', 'ritiraPesca'])
