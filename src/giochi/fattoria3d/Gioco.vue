@@ -780,7 +780,7 @@ onBeforeUnmount(() => {
         <div class="f3-casa" v-show="!inVisita && !inCasa && !tipoSala">
         <Hud v-bind="foto" :nuovo="livelloNuovo" @livello="apriLivelli" />
         <div v-if="toast" class="f3-toast" data-f3="avviso-livello">⭐ {{ toast.testo }}</div>
-        <div v-if="cartello" :key="cartello.n" class="f3-cartello" role="status" data-f3="cartello">{{ cartello.testo }}</div>
+        <div v-if="cartello" :key="cartello.n" class="f3-notizia" role="status" data-f3="cartello">{{ cartello.testo }}</div>
         <button v-if="!comune && amiciComune.length" class="f3-angolo f3-insieme" aria-label="la fattoria in comune" data-f3="apri-comune" @click="apriInsieme">🤝</button>
         <button v-if="comune" class="f3-angolo f3-insieme" aria-label="torna alla tua fattoria" data-f3="torna-mia" @click="indietro">🏠</button>
         <button class="f3-adesso" aria-label="cosa faccio adesso" data-f3="apri-consiglio" @click="apriConsiglio">🧭 E adesso?</button>

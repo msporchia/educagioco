@@ -71,6 +71,16 @@ export function cellaLiberaVicina(libera, x, z, raggioMax = 14) {
 
 // ── cosa fa il cane / il gatto adesso ──
 // stati del cane: 'sta' 'siede' 'annusa' 'dorme' 'festa' 'segue' 'vaga' (e quelli delle sequenze: alza zampa rotola salta riporta starnuta gira mano sbadiglia incontra); del gatto: 'sta' 'siede' 'lava' 'dorme' 'stiracchia' 'fusa' 'vaga' 'fugge' (e struscia rotola miao volta incontra)
+/** Da quale punto di una `fila` di tappe restano al più `metri` di strada fino in fondo: l'indice, 0 se la strada è già così corta. */
+export function daDoveRestano(percorso, metri) {
+  let resto = 0
+  for (let n = percorso.length - 1; n > 0; n--) {
+    resto += Math.hypot(percorso[n][0] - percorso[n - 1][0], percorso[n][1] - percorso[n - 1][1])
+    if (resto > metri) return n
+  }
+  return 0
+}
+
 export const DURATA = {
   siede: [4, 9], sta: [2, 4], annusa: [3, 6], dorme: [9, 18], festa: [2.2, 2.2], lava: [5, 9], stiracchia: [2.2, 3], fusa: [2.5, 2.5],
 }
