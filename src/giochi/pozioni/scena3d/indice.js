@@ -120,6 +120,7 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
     tagliere: { dove: () => attrezzi.tagliere.userData.casa.clone().setY(0.2), largo: 1 },
     legna: { dove: () => POSTI.legna.clone(), largo: 1 },
     grattugia: { dove: () => attrezzi.grattugia.position.clone(), largo: 0.62 },
+    fiala: { dove: () => attrezzi.fiala.userData.casa.clone().setY(0.5), largo: 0.75 },
   }
   // quanto è lontano il dito da una zona: sotto 1 ci sta sopra
   function distanza(nome, x, y) {
@@ -127,13 +128,14 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
     return Math.hypot(x - a.x, y - a.y) / Math.hypot(b.x - a.x, b.y - a.y)
   }
   const gestoDi = (id, su) => {
+    if (su === 'fiala' && !attrezzi.pescato) return null     // la riempie il mestolo, e prima deve pescare nel brodo
     if (!id.startsWith('roba:')) return GESTI[`${id}:${su}`]
     const d = ultima?.attrezzi.roba.find(x => `roba:${x.i}` === id)
     return d?.recipiente ? GESTI[`ciotola:${su}`] : su === 'grattugia' && d?.gratta ? GESTI['roba:grattugia'] : null
   }
   const vedo = nome => !attrezzi.cosa(nome) || attrezzi.cosa(nome).visible
-  // la legna e la grattugia stanno dentro il calderone, sullo schermo: valgono solo per chi ci lavora
-  const conta = (nome, id) => vedo(nome) && nome !== id && (!['legna', 'grattugia'].includes(nome) || gestoDi(id, nome))
+  // la legna e la grattugia stanno dentro il calderone, sullo schermo: valgono solo per chi ci lavora. Come la fiala, che sta lì accanto
+  const conta = (nome, id) => vedo(nome) && nome !== id && (!['legna', 'grattugia', 'fiala'].includes(nome) || gestoDi(id, nome))
   function bersaglio(x, y, id) {
     let meglio = null, vicino = Infinity
     for (const nome of Object.keys(ZONE)) {
@@ -143,6 +145,9 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
     }
     return meglio
   }
+  // il bersaglio più vicino fra quelli dove l'attrezzo ha un gesto
+  const doveLavora = (x, y, id) => Object.keys(ZONE).filter(nome => conta(nome, id) && gestoDi(id, nome) && distanza(nome, x, y) < 1)
+    .sort((a, b) => distanza(a, x, y) - distanza(b, x, y))[0]
 
   // lasciato sul tavolo resta lì: si fa posto come su un banco vero
   const piano = new Plane(new Vector3(0, 1, 0), 0)
@@ -162,7 +167,10 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
   const mani = creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena: () => ultima })
   const frecce = creaFrecce(scena, camera, { frecce: disegni, morbido: trame.morbido }, t => suggerisce?.(t))
   const suggerisciGesto = (su, spec, durata) => frecce.gesto(spec.freccia, su === 'calderone' ? POSTI.calderone.clone().setY(POSTI.brodo + 0.6) : ZONE[su].dove(), durata)
-  const suggerisciStrada = (id, su, durata) => frecce.strada(attrezzi.cosa(id).userData.casa.clone().setY(0.5), ZONE[su].dove(), durata)
+  // il mestolo non va dritto alla fiala: la strada parte da dove pesca
+  const suggerisciStrada = (id, su, durata) => frecce.strada((su === 'fiala' ? POSTI.calderone : attrezzi.cosa(id).userData.casa).clone().setY(0.5), ZONE[su].dove(), durata)
+  // il coperchio ha fumato: la strada per toglierlo
+  const suggerisciVia = () => frecce.strada(POSTI.calderone.clone().setY(1.6), attrezzi.coperchio.userData.casa)
   const suoBersaglio = id => Object.keys(ZONE).find(su => GESTI[`${id}:${su}`])
 
   // il gesto è fatto: da qui è una mossa come le altre
@@ -178,6 +186,11 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
 
   let giu = null, presa = null, quieto = 0
   const premi = e => {
+    // il gesto va da sé: il mortaio finisce di versare, il coperchio fuma e quand'è pronto basta toccarlo
+    if (mani.solo) {
+      if (distanza('calderone', e.clientX, e.clientY) < 1 && mani.togli()) finisci()
+      return
+    }
     giu = { x: e.clientX, y: e.clientY, id: e.pointerId }
     quieto = 0
     frecce.nascondi()
@@ -191,30 +204,33 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
   const muovi = e => {
     if (!presa || !giu || giu.id !== e.pointerId) return
     const id = presa.userData.id
+    const su = Math.hypot(e.clientX - giu.x, e.clientY - giu.y) > SOGLIA && doveLavora(e.clientX, e.clientY, id)
     if (mani.su) {
-      // lontano dal bersaglio il gesto si lascia, e l'attrezzo torna al dito
-      if (distanza(mani.su, e.clientX, e.clientY) < 2.4) {
+      // lontano dal bersaglio il gesto si lascia, e l'attrezzo torna al dito. La fiala sta vicina
+      // al calderone: il mestolo che ha pescato ci arriva prima di allontanarsi
+      if (su !== 'fiala' && distanza(mani.su, e.clientX, e.clientY) < 2.4) {
         mani.dito(e.clientX, e.clientY)
         if (mani.fatto) finisci()               // il dito può staccarsi prima del prossimo fotogramma
         return
       }
+      if (mani.su === su) return mani.dito(e.clientX, e.clientY)
+      if (mani.togli()) return finisci()        // il coperchio pronto, portato via col dito ancora giù
       mani.lascia()
     }
-    if (Math.hypot(e.clientX - giu.x, e.clientY - giu.y) > SOGLIA) {
-      const su = Object.keys(ZONE).find(nome => conta(nome, id) && gestoDi(id, nome) && distanza(nome, e.clientX, e.clientY) < 1)
-      if (su) return mani.prendi(su, gestoDi(id, su), presa, e.clientX, e.clientY)
-    }
+    if (su) return mani.prendi(su, gestoDi(id, su), presa, e.clientX, e.clientY)
     mira(e.clientX, e.clientY)
     if (!raggio.ray.intersectPlane(inAria, qui)) return
     presa.position.copy(qui)
-    presa.rotation.set(0, 0, 0)
+    presa.rotation.set(0, 0, attrezzi.pescato && id === 'mestolo' ? 1.25 : 0)   // pieno, con la coppa all'insù
   }
   const alza = e => {
+    if (mani.solo) return
     const g = giu; giu = null
     if (presa) {
       const p = presa, id = p.userData.id; presa = null
       // lasciato a metà del gesto non è successo niente: si fa vedere come si fa
       if (mani.su) {
+        if (mani.molla()) { presa = p; return }   // piegato, o il coperchio posato: va avanti da sé
         const su = mani.su, spec = mani.spec
         mani.lascia()
         suggerisciGesto(su, spec, RESTA)
@@ -227,10 +243,12 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
       // arrivato lì di slancio, senza gesto: si fa vedere come si fa. La roba intera si lascia
       // cadere; un attrezzo sulla cosa sbagliata non fa niente, e si dice dove va
       const gesto = su && gestoDi(id, su)
+      if (gesto?.tipo === 'attesa') { presa = p; mani.prendi(su, gesto, p, e.clientX, e.clientY); mani.molla(); return }
       if (gesto) suggerisciGesto(su, gesto, RESTA)
       else if (su && id.startsWith('roba:')) lascia?.({ attrezzo: id, su })
-      else if (su) suggerisciStrada(id, suoBersaglio(id), RESTA)
-      else if (mosso) posa(p, e.clientX, e.clientY)
+      else if (su && suoBersaglio(id)) suggerisciStrada(id, suoBersaglio(id), RESTA)
+      else if (id === 'mestolo' && mosso && distanza('fiala', e.clientX, e.clientY) < 1) suggerisciStrada(id, 'calderone', RESTA)   // vuoto: prima si pesca
+      else if (mosso && !su) posa(p, e.clientX, e.clientY)
       if (!occupata) aCasa(p)                  // niente mossa: va al suo posto, che può essere quello nuovo
       return
     }
@@ -240,7 +258,7 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
     const colpito = raggio.intersectObjects(bersagli, false)[0]
     if (colpito) tocca?.(colpito.object.userData.tocca)
   }
-  const annulla = () => { giu = null; if (presa) { mani.lascia(); aCasa(presa); presa = null } }
+  const annulla = () => { if (mani.solo) return; giu = null; if (presa) { mani.lascia(); aCasa(presa); presa = null } }
   canvas.addEventListener('pointerdown', premi)
   canvas.addEventListener('pointermove', muovi)
   canvas.addEventListener('pointerup', alza)
@@ -264,6 +282,7 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
     if (presa && mani.su) {
       mani.scorre(dt)
       if (mani.fatto) finisci()
+      else if (mani.pronto) { if (!frecce.tipo) suggerisciVia() }
       else if (mani.fermo > FERMO_SU) suggerisciGestoUnaVolta()
       else if (frecce.tipo && mani.fermo < 0.15) frecce.nascondi()
     }
@@ -449,6 +468,7 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
   async function aCasa(cosa) {
     const { casa, giu, sdraiato } = cosa.userData, da = cosa.position.clone(), r = cosa.rotation.z, x = cosa.rotation.x
     cosa.scale.setScalar(1)
+    if (cosa === attrezzi.mestolo) attrezzi.pesca(null)
     await anima(0.3, f => { cosa.position.lerpVectors(da, casa, liscio(f)); cosa.rotation.z = r + (giu - r) * liscio(f); cosa.rotation.x = x + (sdraiato - x) * liscio(f) })
     cosa.rotation.set(sdraiato, 0, giu)
   }
@@ -533,7 +553,7 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
       attrezzi.riempi(1, a.brodo)
       await anima(0.3, f => attrezzi.tappa(liscio(f)))
       suoni.tappo()
-      await aCasa(attrezzi.fiala)
+      await aCasa(attrezzi.mestolo)
     },
   }
   async function cade(cosa) {

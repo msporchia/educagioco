@@ -120,27 +120,39 @@ const giro = async c => { for (let n = 0; n <= 56; n++) await page.mouse.move(c.
 const avanti = (asse, volte) => async c => { for (let n = 0; n < volte; n++) for (const v of [-34, 34]) await page.mouse.move(c.x + (asse === 'x' ? v : 0), c.y + (asse === 'y' ? v : 0), { steps: 4 }) }
 /* versa finché è piegato: quanto dura lo dice l'orologio dei fotogrammi, che su una macchina carica è lento */
 const fatte = () => { const b = window.__poz.bottega.value; return b.passo + b.dentro.length + b.mortaio.length }
-/* la piega si misura da dove il dito è entrato sul bersaglio: chi arriva di lato è già piegato, e tornando indietro si raddrizza */
-const inclina = (foto, lato = 75) => async c => {
+/* la piega si misura da dove il dito è entrato sul bersaglio: tirando dritto oltre il centro è piegato di sicuro. Piegato, il dito si stacca e finisce da solo */
+const inclina = foto => async (c, verso) => {
   const n = await page.evaluate(fatte)
-  await page.mouse.move(c.x + lato, c.y, { steps: 5 })
+  await page.mouse.move(c.x + verso * 80, c.y, { steps: 5 })
   if (foto) await scatto(page, foto)
-  const versato = t => page.waitForFunction(`(${fatte})() > ${n}`, null, { timeout: t })
-  await versato(12000).catch(async () => {
-    await page.mouse.move(c.x - lato / 2, c.y, { steps: 5 })
-    await versato(13000)
-  })
+  await page.mouse.up()
+  await page.waitForFunction(`(${fatte})() > ${n}`, null, { timeout: 13000 })
 }
-const GESTO = { mestolo: giro, pestello: avanti('y', 6), coltello: avanti('y', 6), coperchio: avanti('y', 4), roba: avanti('y', 6), fiammifero: avanti('x', 4),
-                bacchetta: avanti('x', 5), sale: avanti('y', 4), pepe: avanti('y', 4), brocca: inclina(), mortaio: inclina(), tagliere: inclina(), fiala: inclina('pozioni-fiala', -160) }
+const GESTO = { mestolo: giro, pestello: avanti('y', 6), coltello: avanti('y', 6), roba: avanti('y', 6), fiammifero: avanti('x', 4),
+                bacchetta: avanti('x', 5), sale: avanti('y', 4), pepe: avanti('y', 4), brocca: inclina(), mortaio: inclina(), tagliere: inclina() }
 /* la roba nel suo recipiente si versa piegandola, come il mortaio */
 const nelRecipiente = id => page.evaluate(i => { const b = window.__poz.bottega.value, g = b.ingredienti[i]; return g.famiglia === 'capacita' || (g.famiglia === 'massa' && !b.passi.some(p => p.azione === 'gratta' && p.cosa.includes(i))) }, Number(id.slice(5)))
 const conGesto = async (id, su) => {
-  const a = await dove(su)
-  await porta(await dove(id), a)
+  const a = await dove(su), da = await dove(id), calderone = await dove('calderone')
+  /* la fiala non si tuffa: il mestolo pesca nel calderone e il brodo lo porta lui */
+  if (su === 'fiala') { await porta(da, calderone); await page.mouse.move(a.x, a.y, { steps: 6 }) }
+  else await porta(da, a)
   await attendi(page, 100)
-  if (id === 'coperchio') { await avanti('y', 1)(a); await scatto(page, 'pozioni-coperchio') }
-  await (id.startsWith('roba:') && su !== 'grattugia' ? inclina('pozioni-ciotola') : GESTO[id.split(':')[0]])(a)
+  /* il coperchio si posa: fuma da solo, e prima che sia pronto toccarlo non fa niente */
+  if (id === 'coperchio') {
+    const passo = () => page.evaluate(() => window.__poz.bottega.value.passo), n = await passo()
+    await page.mouse.up()
+    await scatto(page, 'pozioni-coperchio')
+    await page.mouse.click(a.x, a.y)
+    await attendi(page, 200)
+    uguale('messo e basta il passo non è fatto', await passo(), n)
+    await page.waitForSelector('[data-suggerimento="strada"]', { timeout: 20000 })
+    await page.mouse.click(a.x, a.y)
+    return
+  }
+  const verso = (su === 'fiala' ? calderone : da).x <= a.x ? 1 : -1
+  const gesto = su === 'fiala' ? inclina('pozioni-fiala') : id.startsWith('roba:') && su !== 'grattugia' ? inclina('pozioni-ciotola') : GESTO[id.split(':')[0]]
+  await gesto(a, verso)
   await attendi(page, 150)
   await page.mouse.up()
 }

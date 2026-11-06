@@ -8,23 +8,23 @@ const STORTO = 1.4              // rad: una svolta più secca non è un giro, è
 const PIEGA = 70                // px: di lato fin qui, l'attrezzo è piegato del tutto
 export const VERSA_DA = 0.55    // quanto va piegato perché esca qualcosa
 
-// `freccia`: il disegno del suggerimento (frecce.js). `quanti`: giri, colpi, secondi di versata
+// `freccia`: il disegno del suggerimento (frecce.js). `quanti`: giri, colpi, secondi di versata o d'attesa
 export const GESTI = {
   'mestolo:calderone': { tipo: 'giro', quanti: 2, freccia: 'giro' },
   'pestello:mortaio': { tipo: 'colpi', asse: 'y', quanti: 5, freccia: 'su-giu' },
   'coltello:tagliere': { tipo: 'colpi', asse: 'y', quanti: 5, freccia: 'su-giu' },
   'fiammifero:legna': { tipo: 'colpi', asse: 'x', quanti: 5, freccia: 'lato' },
-  'coperchio:calderone': { tipo: 'colpi', asse: 'y', quanti: 3, freccia: 'su-giu' },
+  'coperchio:calderone': { tipo: 'attesa', quanti: 2.5 },
   'roba:grattugia': { tipo: 'colpi', asse: 'y', quanti: 5, freccia: 'su-giu' },
   'bacchetta:calderone': { tipo: 'agita', quanti: 6, freccia: 'agita' },
-  'ciotola:calderone': { tipo: 'inclina', quanti: 0.9, freccia: 'inclina' },
-  'ciotola:mortaio': { tipo: 'inclina', quanti: 0.9, freccia: 'inclina' },
-  'brocca:calderone': { tipo: 'inclina', quanti: 0.9, freccia: 'inclina' },
-  'mortaio:calderone': { tipo: 'inclina', quanti: 0.9, freccia: 'inclina' },
-  'tagliere:calderone': { tipo: 'inclina', quanti: 0.9, freccia: 'inclina' },
+  'ciotola:calderone': { tipo: 'inclina', quanti: 0.6, freccia: 'inclina' },
+  'ciotola:mortaio': { tipo: 'inclina', quanti: 0.6, freccia: 'inclina' },
+  'brocca:calderone': { tipo: 'inclina', quanti: 0.6, freccia: 'inclina' },
+  'mortaio:calderone': { tipo: 'inclina', quanti: 0.6, freccia: 'inclina' },
+  'tagliere:calderone': { tipo: 'inclina', quanti: 0.6, freccia: 'inclina' },
   'sale:calderone': { tipo: 'colpi', asse: 'y', quanti: 3, freccia: 'su-giu' },
   'pepe:calderone': { tipo: 'colpi', asse: 'y', quanti: 3, freccia: 'su-giu' },
-  'fiala:calderone': { tipo: 'inclina', quanti: 0.9, freccia: 'inclina' },
+  'mestolo:fiala': { tipo: 'inclina', quanti: 0.6, freccia: 'inclina' },
 }
 
 // avanti e indietro lungo un asse: dice quando il dito torna indietro
@@ -95,21 +95,39 @@ function giro({ quanti }) {
   }
 }
 
-// di lato si piega, e finché è piegato versa: il tempo arriva da `scorre`
+// di lato si piega, e finché è piegato versa: il tempo arriva da `scorre`. Staccando il
+// dito da piegato finisce `solo`: non si aspetta che scorra
 function inclina({ quanti }) {
   let da = null, tempo = 0
   const g = {
     piega: 0,
+    solo: false,
     punto(x) {
       if (da === null) da = x
       g.piega = Math.max(-1, Math.min(1, (x - da) / PIEGA))
       return { colpo: false }
     },
     scorre(dt) { if (Math.abs(g.piega) >= VERSA_DA) tempo += dt },
+    molla() { return (g.solo = Math.abs(g.piega) >= VERSA_DA) },
     get avanzato() { return Math.min(1, tempo / quanti) },
   }
   return g
 }
 
-const TIPI = { colpi, agita, giro, inclina }
+// posato sul bersaglio non vuole più il dito: passa il tempo, e solo dopo si può togliere
+function attesa({ quanti }) {
+  let tempo = 0, tolto = false
+  const g = {
+    solo: false,
+    punto: () => ({ colpo: false }),
+    scorre(dt) { tempo += dt },
+    molla() { return (g.solo = true) },
+    get pronto() { return tempo >= quanti },
+    togli() { return (tolto = g.pronto) },
+    get avanzato() { return tolto ? 1 : Math.min(0.99, tempo / quanti) },
+  }
+  return g
+}
+
+const TIPI = { colpi, agita, giro, inclina, attesa }
 export const creaGesto = spec => TIPI[spec.tipo](spec)
