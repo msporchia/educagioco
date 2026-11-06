@@ -113,7 +113,7 @@ una pizza bruciata, torna nel lavello: i piatti non si perdono mai.
 ## I livelli
 
 Ventotto livelli (`CUCINE`), ognuno con qualcosa in più, e in fondo **Cinque minuti**; si aprono vincendo quello prima
-(`banco.cucina.fatte`, in `profile.campagne.bancarella`). Gli attrezzi di un livello si leggono
+(`banco.cucina.fatte`, in `profile.campagne.bancarella`), con i lucchetti di tutti (`tappaApertaQui`: «tutte le tappe aperte» e l'età). Gli attrezzi di un livello si leggono
 dalle sue ricette, e quanti sono lo dice il livello: **non si compra niente**, provato e tolto
 perché confondeva. La `portata` va dritta da 32 a 72 lungo la fila (`FILA`).
 
