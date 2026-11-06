@@ -100,8 +100,7 @@ stanno dentro l'ultimo giro: un test lo misura (`quantoCi`).
 Finita un'ordinazione, passa in cima alla coda e si apre il foglio: i soldi che danno, lo
 scontrino, le monete. **Finché il resto non è dato tutto è fermo**, fuochi e ordinazioni, in
 ogni livello, e con loro l'orologio dell'ultimo: la fretta sta nello spostare le cose, i conti si fanno da fermi. Il foglio non ha
-la ✕: si consegna, si dà il resto e si torna a cucinare. Si paga come il suo livello, e
-l'incasso va nel banco.
+la ✕: si consegna, si dà il resto e si torna a cucinare. Si paga come il suo livello.
 
 ## I piatti da lavare
 
@@ -141,7 +140,7 @@ mazzetta.
 Fino al livello 19 c'è un attrezzo per tipo: un'ordinazione è un piatto, e il secondo allargherebbe
 la stanza per niente. Da 20 un'ordinazione può volere due volte la stessa cosa, e il doppio (`:2`)
 sta sulla sua cella fissa. I piatti sono quattro fino al 19 e cinque dopo, tranne «Meno piatti».
-L'incasso resta in cassa, come conto di quanto si è guadagnato: non si spende.
+L'incasso non si spende e non si tiene: si vede a fine livello, e va nei conti del profilo (`totals.incasso`).
 
 ## La ricetta
 
@@ -173,7 +172,7 @@ cambia cosa c'è sui banchi. I banconi sono tre geometrie unite. Senza WebGL lo 
 Uscire non butta il livello: `motore/bancarella/sosta.js` scrive tutto, stanza compresa, e la
 carta in cima ai livelli lo offre ([../core/ripresa.md](../core/ripresa.md)). Le soste del
 mercato di prima non si leggono, e al primo avvio spariscono. I dati di quel mercato
-(`profile.mercato`, stelle e giornate) non si caricano più; l'incasso resta in cassa.
+(`profile.mercato`, stelle e giornate) non si caricano più.
 
 ## Nei test
 
