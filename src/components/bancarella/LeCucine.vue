@@ -7,12 +7,12 @@ import { FOTO } from '../../data/bancarella-foto.js'
 
 const props = defineProps({
   banco: { type: Object, required: true },
-  aperte: { type: Boolean, default: false },   // la prova dei grandi: `&aperte=1`
+  aperta: { type: Function, required: true },  // la regola dei lucchetti la dice chi gioca
 })
 const emit = defineEmits(['scegli'])
 
 const fatte = computed(() => props.banco.cucina.fatte)
-const chiusa = k => !props.aperte && k > fatte.value
+const chiusa = k => !props.aperta(k)
 </script>
 
 <template>

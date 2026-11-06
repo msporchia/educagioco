@@ -1,7 +1,8 @@
 <script setup>
 /* LA BANCARELLA — la cucina: le ordinazioni, il cuoco, la cassa. Vedi docs/bancarella/cucina.md. */
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
-import { state, answer, segna, segnaBest, tappaAperta } from '../store/profile.js'
+import { state, answer, segna, segnaBest } from '../store/profile.js'
+import { tappaApertaQui } from '../data/portata-giochi.js'
 import { nuovoOrdine, tappaDi, scomponi, euro, centesimiScritti, scriviCifra, premioCliente, ORDINI_PER_TAPPA } from '../data/bancarella.js'
 import { CUCINE, ricetteDi, bancoPulito, orologio } from '../data/bancarella-cucine.js'
 import { FOTO } from '../data/bancarella-foto.js'
@@ -64,7 +65,7 @@ const scriviBanco = (b, opzioni) => {
 let raf = 0, ultimo = 0, apertoIl = 0, occupato = false, rifiuti = 0, ordiniFatti = 0
 
 const amici = usaAmici(CHIAVE)
-const puoGiocare = k => cucineAperte || tappaAperta(k, mioBanco.value.cucina.fatte)
+const puoGiocare = k => cucineAperte || tappaApertaQui(CHIAVE, k, mioBanco.value.cucina.fatte)
 
 const camp = computed(() => CUCINE[livello.value])
 const T = computed(() => tappaDi(camp.value, nTappa.value))
@@ -476,7 +477,7 @@ onBeforeUnmount(() => {
       </div>
       <!-- chi è da raggiungere -->
       <p v-if="amici.davanti" class="davanti" data-amico-davanti>{{ amici.davanti }}</p>
-      <LeCucine :banco="mioBanco" :aperte="cucineAperte" @scegli="vuoleIniziare" />
+      <LeCucine :banco="mioBanco" :aperta="puoGiocare" @scegli="vuoleIniziare" />
     </template>
 
     <template v-else-if="fase === 'gioco'">

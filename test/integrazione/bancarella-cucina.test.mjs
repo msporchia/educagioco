@@ -6,7 +6,7 @@
    qualsiasi ordine, scadono, e quella finita apre il foglio del resto, che sta
    sotto il dito e non deve prendersi il suo click. La ricetta ferma il tempo,
    i livelli si aprono vincendo. Vedi docs/bancarella/cucina.md. */
-import { apriBrowser, apriGioco, azzera, leggiProfilo, attendi, scatto, TELEFONO } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, attendi, scatto, TELEFONO } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { TAGLI } from '../../src/motore/bancarella/cucina.js'
 import { CUCINE } from '../../src/data/bancarella-cucine.js'
@@ -14,6 +14,7 @@ import { CUCINE } from '../../src/data/bancarella-cucine.js'
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
 await azzera(page)
+await semina(page, { settings: { eta: 6 } })   // più grandi, le prime sono già passate
 await page.evaluate(() => { location.hash = 'bancarella=cucina&dpr=1' })
 await page.waitForSelector('[data-cucine]', { timeout: 8000 })
 uguale('si vedono tutti i livelli', await page.locator('[data-cucina-n]').count(), CUCINE.length)
@@ -200,6 +201,15 @@ await page.waitForSelector('[data-resta]', { timeout: 3000 })
   await page.waitForFunction(() => window.__shop.fase.value === 'fine', undefined, { timeout: 3000 })
   await page.waitForSelector('[data-primato]', { timeout: 2000 })
   uguale('a zero finisce col record', await page.evaluate(() => window.__shop.esito.value), 'tempo')
+}
+
+/* ---------- 11. i lucchetti sono quelli di tutti: «tutte le tappe aperte» e l'età ---------- */
+for (const [settings, n, che] of [[{ eta: 8, tuttoAperto: true }, CUCINE.length, 'col flag acceso anche l\'ultima è aperta'], [{ eta: 10 }, 5, 'a dieci anni le prime sono già passate']]) {
+  await azzera(page)
+  await semina(page, { settings })
+  await page.evaluate(() => { location.hash = 'bancarella=cucina&dpr=1' })
+  await page.waitForSelector('[data-cucine]', { timeout: 8000 })
+  controlla(che, await page.locator(`[data-cucina-n="${n}"]`).isEnabled())
 }
 
 uguale('nessun errore in console', errori.length, 0)
