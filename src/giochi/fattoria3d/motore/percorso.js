@@ -50,3 +50,22 @@ export function percorso(libera, eStrada, da, mete) {
   for (let k = meta; k !== k0; k = prev.get(k)) via.push(cellaDa(k))
   return via.reverse()
 }
+
+/**
+ * Le celle che si raggiungono da `da` camminando (le stesse regole di `percorso`: otto direzioni, senza tagliare gli angoli), come insieme di chiavi.
+ * Serve a chi deve sapere se un nuovo ostacolo chiude qualcosa. Se supera `tetto` smette e torna `null` (un mondo troppo grande per contarlo).
+ */
+export function raggiungibili(libera, da, tetto = 60000) {
+  const k0 = chiave(da[0], da[1]), visti = new Set([k0]), coda = [k0]
+  for (let q = 0; q < coda.length; q++) {
+    const [ci, cj] = cellaDa(coda[q])
+    for (const [di, dj] of DIRS) {
+      const ni = ci + di, nj = cj + dj, k = chiave(ni, nj)
+      if (visti.has(k) || !libera(ni, nj)) continue
+      if (di && dj && (!libera(ci + di, cj) || !libera(ci, cj + dj))) continue
+      visti.add(k); coda.push(k)
+      if (visti.size > tetto) return null
+    }
+  }
+  return visti
+}

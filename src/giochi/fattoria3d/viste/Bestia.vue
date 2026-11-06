@@ -1,5 +1,5 @@
 <script setup>
-// Il foglio di un animale: come sta (pancia, pelo, gioco), il nome, i vestiti, dove sta. Curarlo si fa sul prato: la ciotola, la tinozza, un tocco per giocare
+// Il foglio di un animale: come sta (pancia, pelo, gioco), il nome, i vestiti. Curarlo si fa sul prato: la ciotola, la tinozza, un tocco per giocare; spostarlo è tenerlo premuto
 // (docs/fattoria3d/cura-sul-prato.md). ✕ in alto a destra. Il ritratto lo fotografa `anteprime.js` (`bestia:<id>`).
 import { ref, computed, watch, onMounted } from 'vue'
 import { BISOGNI, CHIAVI, curabile, comeSta } from '../dati/bestie.js'
@@ -15,7 +15,7 @@ const props = defineProps({
   anteprimaPronta: { type: Function, default: null },
   vestiario: { type: Array, default: () => [] },     // gli addobbi che le stanno (Cura.vestiarioDi): se ce n'è, c'è il tasto «Negozio»
 })
-const emit = defineEmits(['nome', 'sposta', 'negozio', 'chiudi'])
+const emit = defineEmits(['nome', 'negozio', 'chiudi'])
 
 const b = computed(() => curabile(props.id))
 const pieno = k => (props.stato[k] ?? 0) > 0.93
@@ -54,7 +54,6 @@ onMounted(disegna)
         </div>
       </section>
       <div class="f3-bes-azioni">
-        <button v-if="!b.compagno" type="button" class="f3-bes-az" data-azione="sposta" @click="emit('sposta')">📍 Sposta<small>gratis</small></button>
         <button type="button" class="f3-bes-az" data-azione="nome" @click="emit('nome')">✎ Nome</button>
         <button v-if="vestiario.length" type="button" class="f3-bes-az" data-azione="negozio" data-f3="bestia-vestiario" @click="emit('negozio')">🛍️ Negozio<small>vestilo</small></button>
       </div>

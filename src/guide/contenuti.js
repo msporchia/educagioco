@@ -497,7 +497,8 @@ export const AIUTI = {
         '**Tocca un campo**: se è vuoto compaiono i semi, se è pronto il falcetto. **Trascinali sui campi**, uno o tanti: il campo cambia sotto il dito.',
         '**Tieni il dito premuto** su un posto libero del tuo terreno: si apre il menu «Compra». Anche il tasto 🛒 fa lo stesso.',
         '**Tieni premuto** su una cosa già messa per **spostarla**: la porti dove vuoi, oppure sulla scritta in basso per metterla via nel magazzino (rimetterla fuori è gratis).',
-        '**Un tocco** su Watson o su un gatto: fa la festa. **Tieni premuto** sopra di lui: vedi come sta, cosa gli serve e puoi cambiargli il nome.',
+        '**Un tocco** su un animale: ci giochi, e accanto a lui compare quello che puoi fargli: la pappa, il bagno, i vestiti, come sta.',
+        '**Un tocco** su una cosa che si gira: accanto compare ↻ per girarla.',
       ] },
       { titolo: 'Le prime cose da fare', righe: [
         'Semina il grano, aspetta qualche secondo, raccoglilo. Niente marcisce mai: se ti dimentichi un campo, lo trovi lì.',
@@ -675,23 +676,29 @@ export const AIUTI = {
   },
 
   bancarella: {
-    emoji: '🍎', titolo: 'Al mercato',
+    emoji: '🍳', titolo: 'In cucina',
     blocchi: [
-      'Un banco per volta, tre clienti a banco: si legge il cartellino, si conta quello che chiedono e si dà il resto giusto.',
+      'Una cucina da girare col cuoco: si tocca dove andare e lui fa quello che lì è ovvio. In cima ci sono le ordinazioni, che si fanno in qualsiasi ordine e scadono.',
       { titolo: 'La cosa da sapere', righe: [
-        'I clienti **hanno una loro pazienza**: se ci si mette troppo si lamentano, e la giornata si può chiudere male.',
-        'Tappa dopo tappa il tempo si stringe: è lì che il gioco diventa difficile, non nei numeri più grandi.',
+        'Toccando un piatto ordinato si legge la sua **ricetta**, e intanto il tempo si ferma.',
+        'Il cotto e il tagliato si prendono **col piatto**, e senza piatto non si serve. I piatti sporchi si lavano al lavello, uno per tocco.',
       ] },
-      { titolo: 'La cassa fa sempre meno conti', chiuso: true, righe: [
-        'Le prime giornate la cassa somma la spesa e dice quanto resto dare: il lavoro è comporlo con le monete del cassetto.',
-        'Poi il totale sparisce e si batte sulla tastiera — somme in euro tondi, entro il dieci.',
-        'Poi tocca al resto: il totale resta scritto, il cliente paga con 10 €, e la sottrazione la fa lui.',
-        'Nell\'ultima giornata la cassa non calcola più niente. **Ogni giornata aggiunge una cosa sola**: un prodotto in più, o una banconota più grossa, o i centesimi — mai due insieme.',
+      { titolo: 'La cassa', chiuso: true, righe: [
+        'Ogni ordinazione finita **si fa pagare**: si danno i soldi e si conta il resto. Mentre si conta è tutto fermo: la fretta sta nel muoversi, mai nei conti.',
+        'Nei primi livelli la cassa dice il resto e lo si compone coi soldi del cassetto; poi lo si conta a mente; alla fine si batte anche il totale di due piatti.',
+      ] },
+      { titolo: 'I livelli', righe: [
+        'I primi sono **a crudo**, con tempo da vendere: panini, insalate, sushi. Poi la pentola, la padella, il forno.',
+        'Dai due piatti a ordinazione in cucina c\'è tutto doppio.',
+        'L\'ultimo dura **cinque minuti** e non ha cuori: si servono più ordinazioni che si può, e conta il record. Mentre si dà il resto l\'orologio è fermo.',
+      ] },
+      { titolo: 'In due', chiuso: true, righe: [
+        'Due telefoni, la stessa cucina, ognuno col suo cuoco. Chi crea la partita sceglie i minuti e quante pietanze.',
+        'Andando a consegnare l\'ordinazione diventa tua; col tasto **prenota** la tieni anche prima, e prende il tuo colore. Ognuno fa i conti sul suo telefono, quelli del suo livello: intanto il suo cuoco sta fermo con la calcolatrice sopra, e l\'altro va avanti. Qui non ci sono pause.',
       ] },
       { titolo: 'Cosa allena', righe: [
         'I soldi veri: euro e centesimi, comporre una cifra coi tagli che si hanno, e **il resto**.',
-        'La somma e la sottrazione dove servono davvero: alla cassa, con la roba sul banco.',
-        'Contare avendo un po\' di fretta addosso — che è come si conta alla cassa vera.',
+        'Tenere a mente più cose e decidere in che ordine farle.',
       ] },
     ],
   },
@@ -699,21 +706,24 @@ export const AIUTI = {
   pozioni: {
     emoji: '🧪', titolo: 'Le pozioni',
     blocchi: [
-      'La pergamena chiede «1,5 kg di polvere di luna» e altri ingredienti, e il calderone è vuoto. Dal **listino del mercante** scegli le ampolle e ordinale: le verserà lui.',
+      'La pergamena chiede «2 kg di polvere di luna» e altri ingredienti, e il calderone è vuoto. Dal **listino del mercante** scegli le ampolle e ordinale: le verserà lui.',
       { titolo: 'Il listino e i gettoni', righe: [
         'Il rotolo del mercante ha tutti gli ingredienti della ricetta. Ogni targhetta dice quanto c\'è nell\'ampolla e quanti gettoni costa.',
-        'Il mercante scrive come gli pare: «5 hg», «0,2 kg», «300 g». Le ampolle grandi costano meno, quindi conviene **la più grande che ci sta**, ma per sapere cosa ci sta devi fare il conto.',
+        'I **gettoni** sono i cristalli turchesi del mercante e restano nel laboratorio: non sono le tue monete, che si guadagnano finendo gli ingredienti e i passi della ricetta.',
+        'Il mercante scrive come gli pare: «2000 g», «20 hg», «2 kg». Le ampolle grandi costano meno, quindi conviene **la più grande che ci sta**, ma per sapere cosa ci sta devi fare il conto.',
         'Spesso la stessa quantità compare due volte, scritta in due modi, e una costa di più: è il **trucco del mercante**.',
+        'In un ordine ci stanno fino a cinque ampolle, e lo **scontrino** dice cosa pagherai. Ogni ordine paga **un gettone di spedizione**: comprare una cosa per volta costa di più, ma ordinare tutto insieme vuol dire fare i conti prima di vedere.',
         'In fondo vedi sempre quanti gettoni hai speso, e le stelle dicono quanto ti sei avvicinato al minimo.',
-        'Fatta la spesa, la pergamena dice **cosa fare**. La roba e gli attrezzi **si trascinano**: la roba nel calderone o nel mortaio, il pestello sul mortaio, il mestolo e il fiammifero sul calderone. Una mossa fuori tempo fa un pasticcio e costa un gettone.',
+        'Fatta la spesa, la pergamena dice **cosa fare**. La roba e gli attrezzi **si trascinano**, e gli attrezzi poi **si muovono col dito**: il mestolo gira nel calderone, il pestello picchia nel mortaio, il coltello taglia sul tagliere, il fiammifero si sfrega sulla legna, il sale e il pepe si scuotono sul calderone, senza misurare. Alla fine si riempie la fiala. Se il bambino resta fermo, una freccia gli fa vedere il gesto. Una mossa fuori tempo fa un pasticcio e costa un gettone.',
       ] },
       { titolo: 'Se trabocca', righe: [
         'Ogni ingrediente ha il suo strumento col segno d\'oro: la bilancia, il metro, il cilindro. Oltre il segno trabocca: l\'ampolla è persa, e prima di ordinare ancora c\'è da **pulire**, un gettone a macchia.',
         'Il cartello dice **perché e come si fa**, coi numeri di quel momento. Non c\'è fretta e non ci sono cuori: la tappa si finisce sempre, anche coi gettoni in rosso.',
       ] },
       { titolo: 'Una cosa nuova per volta', righe: [
-        'Prima si impara il gesto, senza conversioni. Poi arriva il chilo, col conto scritto sotto ogni targhetta. Poi lo stesso senza il conto, poi la virgola, poi gli etti, poi le conversioni al contrario.',
-        'Le lunghezze e i liquidi rifanno la stessa scaletta. Nelle ultime due tappe arriva di tutto nella stessa pozione.',
+        'Prima si impara il gesto, senza conversioni. Poi arriva il chilo, col conto scritto sotto ogni targhetta. Poi lo stesso senza il conto, poi chili e grammi insieme, poi gli etti, poi le conversioni al contrario.',
+        'Le lunghezze rifanno la stessa scaletta, sempre con numeri interi. La virgola arriva solo coi liquidi. Nelle ultime due tappe arriva di tutto nella stessa pozione.',
+        'Accanto a ogni ingrediente resta sempre scritto quanto vale un\'unità nell\'altra, «1 kg = 1000 g». Solo nel calderone senza fondo si va a memoria.',
       ] },
       { titolo: 'Cosa allena', righe: [
         'Le misure e le unità: chili, etti e grammi; metri, decimetri e centimetri; litri, decilitri e millilitri — e passare dall\'una all\'altra, in tutti e due i versi.',

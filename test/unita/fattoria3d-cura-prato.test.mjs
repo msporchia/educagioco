@@ -3,11 +3,12 @@
    gli animali trova ciotole e tinozza. In scena: va alla ciotola, uno alla volta ti chiama, mangia, fa il bagno, si annoia.
    `node test/esegui.mjs fattoria3d-cura-prato`
    tempo: 1 */
+import { readFileSync } from 'node:fs'
 import * as THREE from 'three'
 import { BESTIE, CURATI, RINCARO_ADOZIONE, prezzoAdozione, FAME, FELICE, NOIA, SPORCO, FONDO, sporcoDi, ciboChiesto, cibiPer, cibiComprati } from '../../src/giochi/fattoria3d/dati/bestie.js'
 import { PEZZI } from '../../src/giochi/fattoria3d/dati/catalogo.js'
 import { schedeDi } from '../../src/giochi/fattoria3d/dati/carte.js'
-import { scegliNoia, sequenzaNoia, sequenzaFame, sequenzaPasto } from '../../src/giochi/fattoria3d/dati/compagni.js'
+import { scegliNoia, sequenzaNoia, sequenzaFame, sequenzaPasto, daDoveRestano } from '../../src/giochi/fattoria3d/dati/compagni.js'
 import { sogliaDi } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { adottaCompagni } from '../aiuto/adozioni.mjs'
@@ -182,6 +183,22 @@ const motore = ({ liv = 70, monete = 1000, t = { ora: ORA }, stato = null } = {}
   controlla('chi ha fame non si ferma se cammini', sequenzaFame(true).ostinata && sequenzaPasto(true, false).ostinata)
 }
 
+/* ══════════ il cartello dei recinti non è la notizia in basso ══════════ */
+{
+  const css = readFileSync(new URL('../../src/giochi/fattoria3d/stile.css', import.meta.url), 'utf8')
+  controlla('il cartello sopra un recinto non prende bordo e altezza da nessuno', !/^\.f3-cartello\s*\{/m.test(css))
+  controlla('la notizia in basso ha il suo nome', /^\.f3-notizia\s*\{/m.test(css))
+  controlla('le note dei fogli hanno il loro stile', /^\.f3-nota\s*\{/m.test(css) && /\.f3-livelli \.f3-nome\s*\{/.test(css))
+}
+
+/* ══════════ il bagno da lontano: quanta strada resta ══════════ */
+{
+  const fila = [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0]]
+  uguale('strada corta: si fa tutta', daDoveRestano(fila, 9), 0)
+  uguale('strada lunga: restano due metri', daDoveRestano(fila, 2), 2)
+  uguale('niente strada', daDoveRestano([], 2), 0)
+}
+
 /* ══════════ in scena ══════════ */
 function scena ({ rnd = () => 0.4, t = { ora: ORA } } = {}) {
   const { f, b } = motore({ t })
@@ -218,6 +235,19 @@ const scorri = (c, da, secondi) => { let tt = da; for (let k = 0; k < secondi * 
   c.esceDalBagno('beagle', true)
   scorri(c, tt, 6)
   controlla('esce e torna a terra', !a.inBagno && !a.sopra && a.grp.position.y < 0.05)
+}
+for (const id of ['beagle', 'coniglio']) {
+  const s = scena(), { f, c } = s
+  f.cura.compra(id); c.sync(true)
+  const t = f.cura.tinozza(), d = f.misureCosa(t), a = c.lista.find(o => o.def.id === id)
+  const celle = []
+  for (let i = -30; i <= 30; i++) for (let j = -30; j <= 30; j++) if (f.libera(i, j)) celle.push([i, j])
+  const lontana = celle.filter(k => f.percorsoVerso(k, [[t.i - 2, t.j]])).sort((p, q) => Math.hypot(q[0] - t.i, q[1] - t.j) - Math.hypot(p[0] - t.i, p[1] - t.j))[0]
+  a.x = lontana[0] + 0.5; a.z = lontana[1] + 0.5
+  controlla(`${id}: parte da lontano`, Math.hypot(a.x - t.i, a.z - t.j) > 10, String(lontana))
+  c.alBagno(id, { id: t.id, tipo: t.tipo, i: t.i, j: t.j, x: t.i + d.w / 2, z: t.j + d.d / 2 })
+  for (let k = 0; k < 120; k++) c.aggiorna(1 / 60, k / 60)                    // a 60 Hz: col passo largo di `scorri` ogni curva perde un pezzo di fotogramma
+  controlla(`${id}: in due secondi è nella tinozza`, a.inBagno?.dentro, JSON.stringify(a.inBagno))
 }
 {
   const s = scena({ rnd: () => 0.1 }), { f, c } = s

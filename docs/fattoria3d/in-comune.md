@@ -18,7 +18,7 @@ freccia riportano alla propria. Codice: `motore/registro.js`, `comune.js`, `Gioc
 ## Come sta in piedi: le mosse, non la fattoria
 
 I telefoni non si mandano la fattoria ma le **mosse**: le chiamate del motore che la cambiano (`MOSSE` in `motore/registro.js`:
-comprare, mettere, seminare, raccogliere, le macchine, le bestie…). `registra(motore, quando)` avvolge quei metodi sull'istanza,
+comprare, mettere, seminare, raccogliere, strade e staccionate, le macchine, le bestie…). `registra(motore, quando)` avvolge quei metodi sull'istanza,
 così la scena e le viste non cambiano: ogni mossa riuscita del bambino diventa `{ n, a, f, i0? }` (il metodo, gli argomenti,
 quello che ha guadagnato, il primo id delle cose nuove) e parte.
 
@@ -50,11 +50,28 @@ lascia la fotografia. Se l'amico è andato tanto avanti che le mosse sono state 
 ## I due contadini
 
 Se l'amico è dentro anche lui, il suo contadino cammina nella scena col suo abito e il nome sopra la testa (`scena3d/ospite.js`):
-**è parte dell'esperienza** (l'utente). Non passa dal servizio della fila ma dal collegamento degli amici, quello degli inviti:
-ogni telefono manda `{ k: 'qui', x, z, d, r?, g?, a? }` (dove sta, verso dove guarda, se corre, il gesto, ogni due secondi l'abito)
-cinque volte al secondo se cambia qualcosa e ogni due secondi comunque, e `{ k: 'via' }` uscendo ([../core/amici.md](../core/amici.md)).
-Dall'altra parte il contadino ospite cammina verso l'ultimo punto arrivato, salta se è più indietro di cinque celle, fa i gesti, e
-sparisce dopo sei secondi senza notizie. Le mosse restano quelle della fila: il contadino ospite non tocca la fattoria.
+**è parte dell'esperienza** (l'utente). **Viaggia nello stesso giro delle mosse** (`contadino-amico.js`, `Sessione.quiDelGiro`), così dove
+arriva una mossa arriva anche lui. Prima stava sul filo degli inviti: se il filo moriva in silenzio le mosse passavano e il contadino
+spariva per 36-50 s (misurato con due browser). Mosse e contadino sono due informazioni diverse:
+
+- **Una mossa persa si rimanda**, una **posizione no**: il giro dopo ne porta una più nuova.
+- Ogni giro porta `{ k: 'qui', p, d, r?, g?, a? }`: `p` la strada fatta dall'ultimo giro (un punto ogni 0,4 s, al massimo 10), verso dove
+  guarda, se ha corso, l'ultimo gesto, ogni quattro giri l'abito. Uscendo, `{ k: 'via' }`.
+- **Chi riceve tiene solo l'ultima** e ne segue la strada: il contadino cammina, ma **da tre a sei secondi indietro** rispetto all'amico (la strada di un giro, più l'attesa del giro di chi guarda). Se è
+  più lontano di cinque celle dall'inizio della strada ci salta; sparisce dopo 15 s senza notizie (un giro perso ne costa sei).
+- Il contadino ospite non tocca la fattoria.
+
+**Sta nella fila ma non è una mossa**: così il servizio non cambia, e `mossaInForma` lo scarta aprendo. Tre cose lo tengono a bada:
+- `seqMossa`: la fotografia si ferma all'ultima mossa vera. Col numero dell'ultima posizione, l'amico indietro di una posizione riceverebbe
+  la fotografia e si riaprirebbe a ogni fotografia.
+- Se dell'amico non si sa niente da 15 s, una posizione ogni 20 s (`DA_SOLO_OGNI`): chi arriva vede che ci sei e la fila non si riempie.
+- `MAX_PER_GIRO` è 19: il servizio ne prende 20 a richiesta, e una è il contadino.
+
+Un giro ogni 3 s sono 20 richieste al minuto per telefono. **I tetti per indirizzo** (`TETTI_COMUNE`) sono una cintura contro i bug e chi
+martella, non un conto dei bambini: si fissa il minuto, 120 (quattro telefoni sulla stessa wifi ne fanno 80), e gli altri vengono da lì.
+Un'ora vale 45 minuti pieni (5400), un giorno cinque ore piene (36.000). Chi gioca davvero non li tocca: quattro telefoni per un'ora intera
+fanno 4800. Erano 3000 all'ora, tarati su una coppia: con quattro bambini tutto si fermava dopo 37 minuti. Il tetto vero con tanti bambini
+è la quota del piano gratuito, che è di tutti: [../core/amici.md](../core/amici.md).
 
 **Con più amici, più fattorie in comune**: una per amicizia, e il 🤝 ha un tasto per ognuno.
 
@@ -69,7 +86,8 @@ sparisce dopo sei secondi senza notizie. Le mosse restano quelle della fila: il 
 ## Nei test
 
 `unita/fattoria3d-registro` (due telefoni finti a mano: la stessa fattoria, il doppio raccolto, il doppio pezzo, le monete,
-gli id, le mosse storte), `unita/amici-servizio` (la fila e la fotografia), `integrazione/fattoria3d-comune` (due pagine e il
+gli id, le mosse storte), `unita/amici-servizio` (la fila e la fotografia), `unita/fattoria3d-comune-giro` (il contadino nel giro: due `Sessione` vere
+davanti alle regole vere del servizio), `integrazione/fattoria3d-comune` (due pagine e il
 servizio: entra, costruisce, l'altro trova, un lotto arriva mentre si gioca, il contadino dell'altro cammina col suo nome e sparisce quando esce, la propria fattoria intatta, senza rete; **serve il
 servizio con la v6**, in locale `cd servizio/inoltro && npx wrangler dev` e `SERVIZIO=http://localhost:8787`, se no salta).
 

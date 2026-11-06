@@ -134,4 +134,31 @@ const ugualeJ = (cosa, a, b) => uguale(cosa, JSON.stringify(a), JSON.stringify(b
   uguale('la fila non supera il tetto', lunga.mosse.length, C.MAX_FILA)
   uguale('la fattoria in comune dura due mesi dall\'ultima volta', C.SCADENZA, 60 * 24 * 3600 * 1000)
 }
+/* ── i tetti della fattoria in comune: si fissa il minuto, gli altri vengono da lì ── */
+{
+  const { contaTetti, TETTI_COMUNE: T, COMUNE_MINUTO: M } = comune
+  uguale('un\'ora vale 45 minuti pieni, un giorno cinque ore piene', T.map(t => t[0]).join(), [M, M * 45, M * 300].join())
+  const gioca = (telefoni, minuti, partenza = 0, conti = null) => {
+    let ok = true
+    for (let m = 0; m < minuti; m++) for (let i = 0; i < telefoni * 20; i++) {
+      const r = contaTetti(conti, T, partenza + m * 60000 + i * 10); conti = r.conti; ok &&= r.ok
+    }
+    return { ok, conti }
+  }
+  controlla('quattro telefoni sulla stessa wifi giocano un\'ora intera senza toccarli', gioca(4, 60).ok)
+  controlla('sette telefoni sulla stessa wifi no: 140 al minuto', !gioca(7, 1).ok)
+  let conti = null, r
+  for (let i = 0; i <= M; i++) { r = contaTetti(conti, T, i); conti = r.conti }
+  controlla('oltre il minuto ci si ferma', !r.ok)
+  r = contaTetti(conti, T, 61000)
+  controlla('e al minuto dopo si riparte', r.ok)
+  let piano = null, minuti = 0
+  for (; minuti < 60; minuti++) {                     // un bug al massimo del minuto
+    let fermo = false
+    for (let i = 0; i < M; i++) { const x = contaTetti(piano, T, minuti * 61000 + i); piano = x.conti; fermo ||= !x.ok }
+    if (fermo) break
+  }
+  controlla('un bug al massimo si ferma dopo 45 minuti', minuti === 44 || minuti === 45, `al minuto ${minuti}`)
+}
+
 riassunto('amici: le regole del servizio')

@@ -83,8 +83,7 @@ c'è da dire su una tappa sta lì. Il pezzo comune è
 - I colori si cambiano con `--fumetto-fondo`, `--fumetto-tenue` (una cosa
   chiusa, `tenue`) e `--fumetto-testo`.
 
-Chi lo usa: la scheda del Robot ([../costruttore/scheda.md](../costruttore/scheda.md)), il giro del mondo
-e le piazze della bancarella ([../bancarella/mappa.md](../bancarella/mappa.md)).
+Chi lo usa: la scheda del Robot ([../costruttore/scheda.md](../costruttore/scheda.md)).
 La rotta degli asteroidi ha ancora il suo, venuto prima, e può passare a
 questo ([../asteroidi/mappa.md](../asteroidi/mappa.md#il-fumetto)).
 

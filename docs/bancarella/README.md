@@ -1,11 +1,12 @@
-# 🛒 La bancarella
+# 🍳 La cucina
 
-Il resto al mercato (`src/views/BancarellaGame.vue`, `src/data/bancarella.js`).
+La chiave resta `bancarella`, ma il gioco è una cucina: si cucina col cuoco e si dà il
+resto (`src/views/BancarellaGame.vue`, `src/data/bancarella*.js`, `src/motore/bancarella/`).
+Il mercato con le ceste e il giro del mondo sono stati tolti il 5/11/2026: `git log` li tiene.
 
-- [presentazione.md](presentazione.md) — il gioco per chi arriva da fuori, la scaletta in sedici giornate, le note per i genitori
-- [regole.md](regole.md) — chi fa i conti, una leva per giornata, con cosa paga il cliente, il tempo, lasciare a metà, quanto rende
-- [mappa.md](mappa.md) — il giro del mondo: le città, la piazza coi banchi, l'aereo e il carretto, i fondali dipinti che arriveranno
+- [presentazione.md](presentazione.md) — il gioco per chi arriva da fuori
+- [in-due.md](in-due.md) — due bambini nella stessa cucina, ognuno col suo telefono: minuti, pietanze, prenotare, i conti
+- [cucina.md](cucina.md) — le regole: si tocca dove andare, le ordinazioni, la cassa, i piatti da lavare, i livelli e cosa c'è in ognuno, le foto dei modelli
 
-Vedi anche: [../core/amici-nei-giochi.md](../core/amici-nei-giochi.md) (gli amici sul giro del mondo e sui banchi);
-la tabella della scaletta in testa a `src/data/bancarella.js`;
+Vedi anche: [../core/amici-nei-giochi.md](../core/amici-nei-giochi.md);
 [../apprendimento/calibrazione.md](../apprendimento/calibrazione.md) (quanto vale una moneta).

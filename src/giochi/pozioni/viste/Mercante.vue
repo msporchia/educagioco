@@ -7,10 +7,11 @@
 // cosa il dito ha toccato. Vedi docs/pozioni/regole.md.
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { scrivi, mescola } from '../dati/misure.js'
-import { PULIZIA } from '../dati/bottega.js'
+import { PULIZIA, SPEDIZIONE } from '../dati/bottega.js'
 import { ANTEPRIME } from '../dati/anteprime.js'
 import { regola } from '../motore/misura.js'
-import { ATTREZZI, MOSSE } from '../motore/procedimento.js'
+import { MOSSE, ROBA_SU, attrezziDi, prossimaMossa, recipiente } from '../motore/procedimento.js'
+import { bolloreDi } from '../dati/bollori.js'
 import { creaBottega3d } from '../scena3d/indice.js'
 
 const props = defineProps({
@@ -42,7 +43,7 @@ const pronta = computed(() => b.value.pronta && !mostrati.value)
 
 /* il procedimento: niente bottoni, sulla tela si trascina tutto */
 function lascia({ attrezzo, su }) {
-  if (attrezzo.startsWith('roba:')) return emit('fai', su === 'mortaio' ? 'metti' : 'versa', [Number(attrezzo.slice(5))], attrezzo)
+  if (attrezzo.startsWith('roba:')) return emit('fai', ROBA_SU[su], [Number(attrezzo.slice(5))], attrezzo)
   const m = MOSSE[`${attrezzo}:${su}`]
   if (m) emit('fai', m[0], m[1], attrezzo)
 }
@@ -54,11 +55,12 @@ const pieno = (g, i) => messo(g, i) >= g.dose
 
 const voce = v => { const g = b.value.ingredienti[v.i], o = g.offerte[v.k]; return { g, o, testo: scrivi(o.base, o.unita) } }
 const piena = computed(() => props.bozza.length >= b.value.quanteInOrdine)
-const totale = computed(() => props.bozza.reduce((s, v) => s + voce(v).o.prezzo, 0))
+const totale = computed(() => (props.bozza.length ? props.bozza.reduce((s, v) => s + voce(v).o.prezzo, SPEDIZIONE) : 0))
 const percento = n => Math.min(100, n / b.value.gettoni * 100) + '%'
 // il conto scritto sotto la targhetta, solo dove la tappa lo dà
 const vale = (g, o) => (aiuto.value === 'svolto' && o.unita !== g.unita ? `= ${scrivi(o.base, g.unita)}` : '')
-const leRegole = g => (aiuto.value !== 'regola' ? [] : [...new Set(g.offerte.map(o => regola(g.unita, o.unita)).filter(Boolean))])
+// l'uguaglianza resta scritta in tutte le tappe: a memoria si va solo nel calderone senza fondo
+const leRegole = g => (aiuto.value === '' ? [] : [...new Set(g.offerte.map(o => regola(g.unita, o.unita)).filter(Boolean))])
 
 /* la scena, già decisa: la tela la traduce e basta */
 const quadro = computed(() => {
@@ -74,14 +76,20 @@ const quadro = computed(() => {
     riempito: q.dentro.length / q.ingredienti.length,
     arcobaleno: q.dentro.length > 0 && !q.mescolato,
     fuoco: q.scaldato ? 1 : 0,
-    attrezzi: { visibili: q.pronta && !q.macchie.length, quali: q.tappa.azioni.flatMap(a => ATTREZZI[a] || []), quanti: q.ingredienti.length,
-                roba: q.ingredienti.flatMap((x, i) => (q.dentro.includes(i) || q.mortaio.includes(i) ? [] : [{ i, posto: i, nome: x.nome, foto: ANTEPRIME[x.nome] }])),
-                pestato: q.mortaio.length ? mescola(q.mortaio.map(i => q.ingredienti[i].colore)) : null },
+    forte: q.coperto, incantato: q.incantato, bollore: bolloreDi(q.pozione.nome, q.ingredienti),
+    attrezzi: { visibili: q.pronta && !q.macchie.length, quali: attrezziDi(q.tappa.azioni, q.ingredienti), quanti: q.ingredienti.length,
+                roba: q.ingredienti.flatMap((x, i) => (q.dentro.includes(i) || q.mortaio.includes(i) || q.tagliere.includes(i) ? [] : [{ i, posto: i, nome: x.nome, foto: ANTEPRIME[x.nome], colore: x.colore, gratta: x.lavoro === 'gratta', recipiente: recipiente(x, i, q.passi) }])),
+                pestato: q.mortaio.length ? mescola(q.mortaio.map(i => q.ingredienti[i].colore)) : null, macinato: q.pestato,
+                grumi: q.mortaio.some(i => !recipiente(q.ingredienti[i], i, q.passi)),
+                tagliere: q.tagliere.length ? mescola(q.tagliere.map(i => q.ingredienti[i].colore)) : null, tagliato: q.tagliato,
+                fiala: q.finita ? q.brodo : null,
+                prossimo: q.finita ? null : prossimaMossa(q.passi[q.passo], q.mancaAl(q.passi[q.passo])) },
   }
 })
 
 const tela = ref(null)
 const senza3d = ref(false)
+const suggerimento = ref(null)   // il disegno che la scena sta mostrando, per i test
 let scena = null
 
 function tocca(t) {
@@ -91,7 +99,7 @@ function tocca(t) {
 }
 function accendi() {
   scena?.rilascia()
-  scena = creaBottega3d(tela.value, { tocca, lascia, perso: () => { senza3d.value = true } })
+  scena = creaBottega3d(tela.value, { tocca, lascia, suggerisce: t => { suggerimento.value = t }, perso: () => { senza3d.value = true } })
   senza3d.value = !scena
   if (scena) scena.imposta(quadro.value)
 }
@@ -116,11 +124,11 @@ watch(() => props.animazione, async a => {
 }, { flush: 'sync' })
 
 /* per lo strumento delle foto: quanto costa un fotogramma */
-if (typeof window !== 'undefined') window.__bottega3d = { grafica: () => scena?.grafica(), dove: id => scena?.dove(id) }
+if (typeof window !== 'undefined') window.__bottega3d = { grafica: () => scena?.grafica(), dove: id => scena?.dove(id), ferma: () => scena?.ferma() }
 </script>
 
 <template>
-  <div class="pz-mercante" :data-fase="sporco ? 'macchia' : b.finita ? 'finita' : pronta ? 'procedimento' : listino ? 'listino' : 'banco'">
+  <div class="pz-mercante" :data-fase="sporco ? 'macchia' : b.finita ? 'finita' : pronta ? 'procedimento' : listino ? 'listino' : 'banco'" :data-suggerimento="suggerimento">
     <div class="pz-scena">
       <canvas ref="tela" class="pz-tela" data-tela></canvas>
       <div v-if="senza3d" class="pz-senza">
@@ -142,7 +150,7 @@ if (typeof window !== 'undefined') window.__bottega3d = { grafica: () => scena?.
             </span>
           </div>
           <!-- col rotolo aperto basta la lista: sul telefono non ci starebbe -->
-          <ul v-if="!listino" class="pz-procedimento" :class="{ 'pz-letto': pronta }" data-ricetta>
+          <ul v-if="!listino" class="pz-procedimento" :class="{ 'pz-letto': pronta, 'pz-lunga': b.righe.length > 5 }" data-ricetta>
             <li v-for="(r, n) in b.righe" :key="n" :class="{ 'pz-fatto': rigaFatta(r) }" data-riga>{{ r.testo }}</li>
           </ul>
         </div>
@@ -192,14 +200,27 @@ if (typeof window !== 'undefined') window.__bottega3d = { grafica: () => scena?.
         </div>
       </div>
       <div v-if="listino" class="pz-ordine" data-ordine>
-        <button v-for="n in b.quanteInOrdine" :key="n" class="pz-posto" :class="{ 'pz-libero': !bozza[n - 1] }"
-                :data-posto="n - 1" :disabled="!bozza[n - 1] || bloccato" @click="$emit('togli', n - 1)">
-          <template v-if="bozza[n - 1]">
-            <img class="pz-foto" :src="ANTEPRIME[voce(bozza[n - 1]).g.nome]" alt="">
-            <b>{{ voce(bozza[n - 1]).testo }}</b>
+        <!-- lo scontrino: quello che si pagherà, riga per riga; una riga toccata si toglie -->
+        <div class="pz-scontrino" data-scontrino>
+          <p v-if="!bozza.length" class="pz-invito">Tocca le targhette: fino a {{ b.quanteInOrdine }} in un ordine.</p>
+          <button v-for="(v, n) in bozza" :key="n" class="pz-voce" :data-posto="n" :disabled="bloccato" @click="$emit('togli', n)">
             <i class="pz-via" aria-hidden="true">✕</i>
-          </template>
-        </button>
+            <img class="pz-foto" :src="ANTEPRIME[voce(v).g.nome]" alt="">
+            <span>{{ voce(v).testo }}</span>
+            <i class="pz-puntini" aria-hidden="true"></i>
+            <b><i class="pz-gettone" aria-hidden="true"></i>{{ voce(v).o.prezzo }}</b>
+          </button>
+          <div class="pz-voce" data-spedizione>
+            <span>Spedizione</span>
+            <i class="pz-puntini" aria-hidden="true"></i>
+            <b><i class="pz-gettone" aria-hidden="true"></i>{{ SPEDIZIONE }}</b>
+          </div>
+          <div v-if="bozza.length" class="pz-voce pz-totale" data-totale>
+            <span>Totale</span>
+            <i class="pz-puntini" aria-hidden="true"></i>
+            <b><i class="pz-gettone" aria-hidden="true"></i>{{ totale }}</b>
+          </div>
+        </div>
         <button class="pz-grosso pz-ordina" data-azione="ordina" :disabled="bloccato || !bozza.length || sporco" @click="$emit('ordina')">
           Ordina
         </button>

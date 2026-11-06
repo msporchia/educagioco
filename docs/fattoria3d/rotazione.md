@@ -26,7 +26,9 @@ Un pezzo o un edificio si gira di **un quarto di giro alla volta** (90°), attor
 
 ## Il gesto
 
-Il pezzo da girare è **in mano**: sia il fantasma parcheggiato dal menu «Compra», sia un pezzo già messo sollevato tenendolo
+**Un tocco** su una cosa che si gira porta accanto ↻ ([gesti.md](gesti.md)): gira di un quarto e costa come spostare (`ruotaPezzo`), e l'arco resta lì per girare ancora.
+
+**In mano**, il pezzo da girare è **in mano**: sia il fantasma parcheggiato dal menu «Compra», sia un pezzo già messo sollevato tenendolo
 premuto (0,45 s). Mentre è in mano, in basso a destra sopra la fascia «metti via» compare il tasto **↻** (64 px, arancio): **un tocco
 con un secondo dito** (o, col fantasma parcheggiato, un tocco normale) gira il fantasma di un quarto attorno al suo centro, che resta
 sotto il dito; al rilascio si costruisce o si sposta già girato (l'avviso dice «Girato»). Il tasto non c'è per i pezzi che non si girano.
@@ -44,4 +46,4 @@ pointer); reagisce al `pointerdown`, non al `click` (un click arriverebbe dopo i
 
 `unita/fattoria3d-rotazione` (cosa si gira, misure girate, ingombro che segue, rifiuto senza costo, quattro giri tornano dritti, stato e
 vecchi stati, `normalizza` con valori sporchi, il gruppo che gira, il davanti, il fantasma e il tasto), `integrazione/fattoria3d` (blocco
-«ruotare»: pressione lunga, secondo dito sul tasto, rilascio). Bersagli: `[data-f3="ruota"]` (con `data-rot`).
+«ruotare»: pressione lunga, secondo dito sul tasto, rilascio, il tocco e ↻). Bersagli: `[data-f3="ruota"]` (con `data-rot`).

@@ -57,7 +57,7 @@ albero. Il dito è largo: oltre al raggio sul disegno basta la cella (`bersaglio
 
 Una per cella, a istanze (vedi sotto: tipi e bordi; `stato.strade` salva gli id di cella come gli altri; `strada` è una mappa cella → 1 disegnata, 2 di serie). Quelle di
 serie sono un incrocio a T davanti ai due edifici e fino alla partenza. **Il bambino le disegna a pennello** (🛣️, 🪙 1 a
-pezzo, solo in terreno proprio e non sopra una cosa) e le toglie con 🧽 (gratis, solo quelle sue). **In strada il contadino
+pezzo, solo in terreno proprio e non sopra una cosa) e le toglie con 🧽 (gratis, **tutte**: anche quelle di serie, che a vederle sono uguali; restano tolte in `stato.stradeTolte`, e ci si può ridisegnare sopra). **In strada il contadino
 va più in fretta** (6,6 contro 4,8) **e il percorso le preferisce** (costano il 55%): disegnarle serve a qualcosa.
 
 ### Le strade: tipi e bordi
@@ -83,6 +83,7 @@ di esercizio: la cella più cara, mattoni + ciottolini o steccato, costa 🪙 8,
   strade si uniscono il lato è chiuso e non sfuma. Cordolo, ciottolini e steccato tengono il fondo netto: la cornice sta sul bordo. Il fondo è una lastra trasparente (non più una scatola), `depthWrite` spento.
 - **Ridipingere**: sopra una strada tua di un altro aspetto si disegna di nuovo e si paga il nuovo (il vecchio non si rimborsa). Quelle di serie non si ridipingono.
   La gomma toglie tutto allo stesso modo, gratis.
+- **Col pennello il dito rimasto continua**: un secondo dito che si appoggia sposta la vista, e quando si stacca il primo riprende a disegnare (se si muove oltre la soglia: chi finisce un pizzico non paga una strada). Prima restava giù senza fare niente.
 - **Il disegno** (`scena3d/strade-bordate.js`): un banco di istanze per tipo (una texture a canvas per tipo, che ripetuta cella per cella si cuce da sola) e uno
   per ogni pezzo di bordo; la variazione dei sassi e dell'erba viene da `caso(i, j, sale)`, la stessa a ogni ridisegno. Il peso non cresce con la fattoria:
   la finestra di lotti e le capacità (`CAPACITA_STRADE`) lo limitano, e fuori dalla finestra non si disegna niente (`limiti.md`).
@@ -102,11 +103,13 @@ chiedono tutti alla stessa funzione. Per uno strato nuovo (staccionata, acqua di
    e monete (`_spendi`: la spesa dà esperienza), un `togli…`, e in `serializza`/`normalizza` un campo di stato come `aspettoStrade` (senza cambiare versione, se è solo un campo in più).
 3. **Vicini**: `viciniDi(aspettoDi, unisce, i, j)` con le due funzioni dello strato. `unisce` decide cosa si fonde (stesso tipo; per le staccionate stesso tipo
    *e* una sull'altra in linea, i cancelli come aspetto a parte che il passo lascia passare); `lati` e `angoli` dicono dove va un pezzo.
-   Una staccionata sta sui **lati** fra celle, non dentro: dallo stesso `lati[s]` si ricava il bordo condiviso con `s < 2` (nord ed est) per non contarlo due volte.
+   Una staccionata sta **in una cella** (come la strada, non sui lati: [staccionate.md](staccionate.md) dice perché) e `lati[s] === 'unito'` dice verso dove va il tratto.
 4. **Scena**: una classe come `StradeBordate` (un banco per pezzo, `ridisegna()` che azzera i `count` e rimette tutto, `CAPACITA_…` come tetto), creata in `terreno.js` dentro `el('…')` e ridisegnata
    da `ridisegnaStrade()` (o da una sua gemella chiamata da `Mondo3d.cambiato()`). L'acqua fra due celle dello stesso tipo si unisce come la strada (`unisce`: stesso tipo), e la riva è il lato `vuoto`.
 5. **Dove si vede**: il passo (`blocca`, `sullaStrada`) lo decide il motore, mai la scena; un'acqua disegnata deve dirlo a `cellaAcqua` come gli stagni (le strade ci sparivano già sotto).
 6. **Test**: come `unita/fattoria3d-strade` (dati, vicini, motore, salvataggi di prima).
+
+Lo strato che viene dopo le strade sono le staccionate e i cancelli: [staccionate.md](staccionate.md) (in una cella, stesso `viciniDi`; il pennello è nella stessa barra).
 
 ## La telecamera
 
@@ -114,6 +117,6 @@ Segue il contadino da sopra, **senza limiti** (distanza di serie 22: si vede una
 «libera») e compare «⌖ Torna al contadino»; mandare il contadino da qualche parte la rimette a seguirlo. Due dita (o la rotella) zoomano **da 0,28× a 2,4×** la distanza di base (`ZOOM_MIN`/`ZOOM_MAX` in `dati/mondo.js`: prima 0,55–1,7): da vicino si vedono i disegnini, da lontano la panoramica. Oltre i limiti il dito tira un elastico (`zoomMorbido`, camera.js: un quinto dello scarto) e al rilascio torna dentro. Con la distanza crescono anche `far` della camera e la nebbia (`scalaLontano`, `Mondo3d._nebbiaLontana`), e `near` si stringe da vicino; la finestra d'ombra si restringe fino a 8 celle. Da lontano si vede il bordo dei lotti aperti: il peso resta quello della finestra 9×9 ([mondo-infinito.md](mondo-infinito.md)). Misurato con scatti `--esegui "window.__fattoria3d.mondo.camera.zoom=2.4"`. **Il
 contadino corre** quando il percorso supera 9 celle (1,75×). Non c'è più una telecamera «in costruzione»: si costruisce premendo dove si vuole ([scena.md](scena.md)); col pennello delle strade due dita spostano la vista.
 
-**Nei test**: `[data-f3="barra-strade"]`, `[data-f3="strade-tipi"]` e `[data-f3="strade-bordi"]` (i tasti hanno `data-tipo` e `data-bordo`), `[data-strumento]`, `[data-f3="strade-fatto"]`; unità `unita/fattoria3d-strade`.
+**Nei test**: `[data-f3="barra-strade"]`, `[data-f3="strade-tipi"]` e `[data-f3="strade-bordi"]` (i tasti hanno `data-tipo` e `data-bordo`), `[data-strumento]`, `[data-f3="strade-fatto"]`; unità `unita/fattoria3d-strade`; col dito vero `integrazione/fattoria3d-strade` (la gomma sulle strade disegnate e su quelle di serie, il secondo dito).
 
 Provati e scartati: sassi scuri e radi (sembravano bernoccoli); una frangia d'erba a striscia con ciuffi in fila (un muro di fili dritto lungo il lato: tolta, ora i ciuffi sono mazzetti sparsi); il fondo tagliato netto sul prato (cucito sopra: ora sfuma). Due trappole del disegno: **mai una scala negativa** sulle istanze (specchiare una frangia la rende nera: la normale si rovescia) e **mai `DoubleSide` per i fili d'erba** (lo stesso: si raddoppiano i triangoli).

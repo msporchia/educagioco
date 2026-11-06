@@ -9,6 +9,12 @@ export const GIOCHI = {
     valida: d => TERRENI.includes(d?.terreno) && Number.isInteger(d.secondi) && d.secondi >= 3 && d.secondi <= 30 && /^[A-Z]{5}$/.test(d.codice || ''),
     descrivi: () => 'una battaglia a due',
   },
+  // la cucina in due (docs/bancarella/in-due.md): i minuti e le pietanze li ha scelti chi invita
+  bancarella: {
+    nome: 'La cucina',
+    valida: d => [5, 10, 15].includes(d?.minuti) && ['pochi', 'tante', 'tutte'].includes(d.menu) && /^[A-Z]{5}$/.test(d.codice || ''),
+    descrivi: () => 'una cucina in due',
+  },
   // il sotterraneo in due (docs/sotterraneo/in-due.md): il posto e la difficoltà li ha scelti chi invita; i nomi si controllano
   // a forma, senza caricare i dati del sotterraneo con l'app
   sotterraneo: {

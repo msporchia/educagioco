@@ -98,4 +98,18 @@ const [i5, j5] = postoPer(A.m, 'campo')
 A.m.compraEMetti('campo', i5, j5)
 uguale('smesso di ascoltare, il motore non registra più', A.inviate.length, 0)
 
+/* ══════════ 7. le staccionate: il pennello passa dalle mosse come le strade ══════════ */
+const C = telefono(0, JSON.parse(JSON.stringify(base))), D = telefono(1, JSON.parse(JSON.stringify(base)))
+const [is, js] = postoPer(C.m, 'campo')
+const moneteD = D.b.monete, moneteC = C.b.monete
+const pezzo = C.m.disegnaStaccionata(is, js, { tipo: 'legno' })
+controlla('il bambino posa un pezzo di staccionata e lo paga', pezzo.ok && !pezzo.cancello && C.b.monete < moneteC)
+uguale('il pezzo diventa una mossa', C.inviate.map(x => x.n).join(), 'disegnaStaccionata')
+controlla('rifatta dall\'amico, la staccionata c\'è anche da lui', consegna(C, D)[0].ok && D.m.aspettoStaccionata(is, js)?.tipo === 'legno')
+uguale('e le sue monete non si muovono', D.b.monete, moneteD)
+controlla('il cancello arriva anche lui', C.m.mettiCancello(is, js).ok && consegna(C, D)[0].ok && D.m.aspettoStaccionata(is, js)?.cancello === true)
+uguale('i due salvataggi hanno la stessa staccionata', JSON.stringify(D.m.serializza().staccionate), JSON.stringify(C.m.serializza().staccionate))
+controlla('e la gomma la toglie a tutti e due', D.m.togliStaccionata(is, js).ok && consegna(D, C)[0].ok && C.m.aspettoStaccionata(is, js) === null)
+C.smetti(); D.smetti()
+
 riassunto('fattoria3d-registro')

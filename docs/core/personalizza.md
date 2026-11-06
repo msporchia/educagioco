@@ -119,7 +119,8 @@ import Personalizza from '../../components/personalizza/Personalizza.vue'
 nel pannello). `niente`: «Nessuno». `dati`: attributi per i test
 (`{ 'data-pelle': 'ambra' }`). Un colore senza `css` ha la foto (slot `foto`).
 
-**Slot**: `anteprima` (`{ stato, giro }`: quello che si ha addosso con la
+**Slot**: `fondo`, al posto della riga di aiuto quando non c'è niente da pagare (i tasti
+di un oggetto che non sono scelte: il mobile della casa ha ↻ e 📦); `anteprima` (`{ stato, giro }`: quello che si ha addosso con la
 prova sopra) e `foto` (`{ zona: 'voce' | 'forma' | 'colore' | 'set', voce?,
 forma?, colore?, valore?, set?, stato }`: lo stato con quel pezzo cambiato, da
 disegnare). Senza foto né slot resta un riquadro grigio «foto 3D»: **mai
@@ -161,5 +162,5 @@ prova; il gioco tiene il resto e lo ridà nelle props.
 
 Chi lo usa: l'editor degli eroi e il tintore del sotterraneo
 ([../sotterraneo/personaggio.md](../sotterraneo/personaggio.md), [../sotterraneo/tintore.md](../sotterraneo/tintore.md)), il guardaroba del
-contadino e gli addobbi delle bestie della fattoria ([../fattoria3d/guardaroba.md](../fattoria3d/guardaroba.md),
-[../fattoria3d/addobbi.md](../fattoria3d/addobbi.md)). L'interfaccia di prima non c'è più.
+contadino, gli addobbi delle bestie e i mobili di casa della fattoria ([../fattoria3d/guardaroba.md](../fattoria3d/guardaroba.md),
+[../fattoria3d/addobbi.md](../fattoria3d/addobbi.md), [../fattoria3d/casa.md](../fattoria3d/casa.md)). L'interfaccia di prima non c'è più.

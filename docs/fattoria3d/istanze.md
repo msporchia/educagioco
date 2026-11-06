@@ -22,6 +22,8 @@ Quattro cose, tutte dietro un'interfaccia piccola, così i pezzi nuovi di chi la
 **Un campo da solo** (anteprime, fantasma di chi lo trascina, catalogo) disegna come prima, con le sue mesh: `creaCampo()` le crea, `aggiornaCampo()` le riempie;
 solo `BancoCampi.adotta(g)` le toglie. Così `modelloAnteprima` e i test del campo non cambiano.
 
+**Le staccionate** (`scena3d/staccionate.js`): due banchi in tutto, scatole e sfere con un colore per istanza, per ogni tipo; stessa finestra di lotti delle strade, nessun culling per istanza ([staccionate.md](staccionate.md)).
+
 ### Come si aggiunge un pezzo istanziato
 
 - **Un pezzo fermo nuovo** (decorazione: nessun `userData.anima`, niente trasparenti, niente `InstancedMesh`, un solo materiale per mesh): scrivi il modello in `modelli*.js` come sempre

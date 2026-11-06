@@ -6,7 +6,7 @@ import { EDIFICI } from '../dati/catalogo.js'
 
 // i metodi del motore che cambiano la fattoria; `cura.<metodo>` quelli delle bestie di casa
 export const MOSSE = [
-  'compraLotto', 'disegnaStrada', 'togliStrada', 'compraPezzo', 'mettiPezzo', 'compraEMetti', 'spostaPezzo', 'ruotaPezzo', 'mettiVia',
+  'compraLotto', 'disegnaStrada', 'togliStrada', 'disegnaStaccionata', 'mettiCancello', 'togliStaccionata', 'compraPezzo', 'mettiPezzo', 'compraEMetti', 'spostaPezzo', 'ruotaPezzo', 'mettiVia',
   'compraEdificio', 'semina', 'raccogliTessera', 'ingrandisciSilo', 'costruisciMagazzino', 'abbatti', 'togliOstacolo', 'tosa', 'nutri', 'nutriBestie',
   'raccogliProdotti', 'compraBestia', 'compraPosto', 'avviaRicettaIn', 'ritiraDa', 'caricaCassa', 'partiMongolfiera', 'consegna',
   'rinomina', 'rifiuta', 'consegnaBottega', 'rifiutaBottega', 'lanciaLenza', 'ritiraPesca',

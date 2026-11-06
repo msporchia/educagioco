@@ -32,7 +32,7 @@ export class Costruzione {
     this.c = ctx
     this.D = { attivo: false, tipo: null, spostando: null, parcheggiato: false, rot: 0, i: 0, j: 0, ok: false, fant: null, presa: PRESA_NUOVO, dentro: false, dito: null }
     this.tratto = null; this.ultimaCella = null
-    this.pennelloDito = null        // il dito che disegna: { x, y, gesto }, per scorrere ai bordi anche da fermo
+    this.pennelloDito = null        // il dito che disegna o che tiene una bestia: { x, y, gesto | fai }, per scorrere ai bordi anche da fermo
     this._camPrima = null
   }
   /** Le misure del pezzo in mano com'è girato adesso. */
@@ -232,8 +232,12 @@ export class Costruzione {
     if (!mossa && !mosso) return
     cam.cam.updateMatrixWorld()                                      // `puntaSuolo` legge la matrice, che altrimenti è quella dell'ultimo disegno
     if (dito) this.muovi(dito.x, dito.y)
+    else if (pun.fai) pun.fai(pun.x, pun.y)
     else this.pennello(pun.x, pun.y, pun.gesto)
   }
+
+  /** Una cosa che non è un pezzo tenuta al dito (una bestia di casa): contro il bordo la vista scorre e `fai(x, y)` la riporta sotto il dito. */
+  tieni(x, y, fai) { this.pennelloDito = { x, y, fai } }
 
   // ── le strade a pennello ──
   pennello(x, y, gesto) {
@@ -245,19 +249,27 @@ export class Costruzione {
     let cambiato = false
     for (const [i, j] of lineaDiCelle(da, cella)) {
       if (!dentro(i, j)) continue
-      if (gesto === 'strada') {
+      if (gesto === 'staccionata' || gesto === 'cancello') {
+        const p = this.c.cmd.pennello || {}, eroe = this.c.eroe.cella()
+        const r = gesto === 'cancello' ? this.m.mettiCancello(i, j) : this.m.disegnaStaccionata(i, j, { tipo: p.staccionata, da: eroe, evita: [eroe] })
+        if (r.ok) { this.tratto.celle.push({ i, j, aggiunta: true }); this.tratto.costo += r.costo; if (r.cancello) this.tratto.cancello = true; cambiato = true }
+        else if (r.motivo === 'poche-monete') { this._dice('Hai finito le monete'); break }
+        else if (r.motivo === 'livello') { this._dice(`Questa staccionata si apre al livello ${r.livello}`); break }
+        else if (r.motivo === 'senza-tratto' && !this.tratto.avvisato) { this.tratto.avvisato = true; this._dice('Il cancello va su un pezzo di staccionata') }
+        else if (r.motivo === 'chiude' && !this.tratto.avvisato) { this.tratto.avvisato = true; this._dice('Quel cancello serve: senza, resteresti chiuso') }
+      } else if (gesto === 'strada') {
         const r = this.m.disegnaStrada(i, j, this.c.cmd.pennello || {})
         if (r.ok) { this.tratto.celle.push({ i, j, aggiunta: true }); this.tratto.costo += r.costo; cambiato = true }
         else if (r.motivo === 'poche-monete') { this.c.ui.avviso('Hai finito le monete: niente altra strada'); break }
         else if (r.motivo === 'livello') { this.c.ui.avviso(`Questa strada si apre al livello ${r.livello}`); break }
-      } else if (this.m.togliStrada(i, j).ok) { this.tratto.celle.push({ i, j, aggiunta: false }); cambiato = true }
+      } else if (this.m.togliStaccionata(i, j).ok || this.m.togliStrada(i, j).ok) { this.tratto.celle.push({ i, j, aggiunta: false }); cambiato = true }      // sotto una staccionata c'è una strada: prima va l'una, poi l'altra
     }
     if (cambiato) { this.c.terreno.ridisegnaStrade(); this.c.ui.cambio() }
   }
   finisciTratto(gesto) {
     this.ultimaCella = null; this.pennelloDito = null
     if (this.tratto && this.tratto.celle.length) {
-      this.c.ui.avviso(gesto === 'strada' ? `Strada fatta (🪙 ${this.tratto.costo})` : 'Tolta')
+      this.c.ui.avviso(gesto === 'gomma' ? 'Tolta' : gesto === 'strada' ? `Strada fatta (🪙 ${this.tratto.costo})` : this.tratto.cancello ? `Fatto (🪙 ${this.tratto.costo}): l'ultimo pezzo è un cancello, così non resti chiuso` : `Fatto (🪙 ${this.tratto.costo})`)
     }
     this.tratto = null
   }

@@ -69,7 +69,7 @@ Lo prova `integrazione/pozioni-sosta`.
     dietro il velo della pausa ([../sotterraneo/regole.md](../sotterraneo/portale-e-sosta.md#il-portale-e-luscita));
   - Survivors ([../survivors/regole.md](../survivors/regole.md));
   - castello ([../castello/sosta.md](../castello/sosta.md));
-  - bancarella ([../bancarella/regole.md](../bancarella/regole.md));
+  - la cucina della bancarella ([../bancarella/cucina.md](../bancarella/cucina.md));
   - Asteroidi ([../asteroidi/sosta.md](../asteroidi/sosta.md));
   - Conta ([../conta/regole.md](../conta/regole.md));
   - Prima e dopo ([../prima-dopo/sosta.md](../prima-dopo/sosta.md));

@@ -2,9 +2,11 @@
 // aperta com'è: il listino di ogni ingrediente, quanto c'è negli strumenti, i
 // gettoni, le macchie e il procedimento a che punto è. Le tappe e gli
 // ingredienti si rifanno dal codice. Una sosta di prima del procedimento
-// (v 1, 2 e 3) non si legge: la tappa ricomincia.
-import { Bottega, ottimo } from './bottega.js'
-import { AZIONI, MORTAIO } from './procedimento.js'
+// (v 1, 2 e 3) non si legge: la tappa ricomincia. `casa` c'è solo in una
+// sosta di quando si partiva con qualcosa in casa, e la si tiene fino alla fine di quella pozione;
+// `dispensa` in una di quando i liquidi avevano la roba secca per il mortaio, che lì torna sul tavolo.
+import { Bottega, ottimo, minimoDi } from './bottega.js'
+import { AZIONI, MORTAIO, TAGLIERE } from './procedimento.js'
 import { CAMPAGNA, INFINITA, giroInfinito } from '../dati/campagna.js'
 import { INGREDIENTI, VALE } from '../dati/misure.js'
 
@@ -38,9 +40,9 @@ export function scrivi(b, indice, extra = {}) {
     v: VERSIONE, tappa: indice, chiave: b.tappa.chiave,
     ...(indice < 0 ? { giro: { n: b.tappa.giro, pozione: [b.pozione.nome, b.pozione.emoji, b.pozione.colore] } } : {}),
     passi: b.passi.map(p => ({ azione: p.azione, cosa: [...p.cosa] })), righe: b.righe.map(r => ({ testo: r.testo, passi: [...r.passi] })),
-    passo: b.passo, mortaio: [...b.mortaio], pestato: b.pestato, dentro: [...b.dentro], scaldato: b.scaldato, mescolato: b.mescolato, pasticci: b.pasticci, pasticciato: b.pasticciato,
+    passo: b.passo, mortaio: [...b.mortaio], pestato: b.pestato, tagliere: [...b.tagliere], tagliato: b.tagliato, dentro: [...b.dentro], scaldato: b.scaldato, coperto: b.coperto, incantato: b.incantato, mescolato: b.mescolato, pasticci: b.pasticci, pasticciato: b.pasticciato,
     ingredienti: b.ingredienti.map(g => ({
-      nome: g.nome, unita: g.unita, dose: g.dose, messo: g.messo, casa: g.casa, f: !!g.f, dispensa: !!g.dispensa, traboccate: g.traboccate, pezzi: [...g.pezzi],
+      nome: g.nome, unita: g.unita, dose: g.dose, messo: g.messo, ...(g.casa ? { casa: g.casa } : {}), f: !!g.f, dispensa: !!g.dispensa, traboccate: g.traboccate, pezzi: [...g.pezzi],
       offerte: g.offerte.map(o => ({ base: o.base, prezzo: o.prezzo, unita: o.unita })),
     })),
     gettoni: b.gettoni, speso: b.speso, macchie: [...b.macchie],
@@ -64,18 +66,22 @@ function leggiOfferte(lista) {
   })
 }
 
+// il mantice è diventato il coperchio: una sosta di prima ha ancora il suo passo, e la sua riga
+const ORA = azione => (azione === 'soffia' ? 'copri' : azione)
+const riscritta = testo => testo.replace(/soffia sul fuoco col mantice/i, m => (m[0] === 'S' ? 'Metti' : 'metti') + ' il coperchio sul calderone').replace('soffiato sul fuoco', 'messo il coperchio')
+
 function leggiPassi(lista, quanti) {
   if (!Array.isArray(lista) || !lista.length) throw new Error('passi')
   return lista.map(p => {
-    if (!AZIONI[p.azione] || !Array.isArray(p.cosa) || p.cosa.some(i => i !== MORTAIO && !intero(i, 0, quanti - 1))) throw new Error('passo')
-    return { azione: p.azione, cosa: [...p.cosa] }
+    if (!AZIONI[ORA(p.azione)] || !Array.isArray(p.cosa) || p.cosa.some(i => i !== MORTAIO && i !== TAGLIERE && !intero(i, 0, quanti - 1))) throw new Error('passo')
+    return { azione: ORA(p.azione), cosa: [...p.cosa] }
   })
 }
 function leggiRighe(lista, quanti) {
   if (!Array.isArray(lista) || !lista.length) throw new Error('righe')
   return lista.map(r => {
     if (typeof r.testo !== 'string' || !Array.isArray(r.passi) || r.passi.some(k => !intero(k, 0, quanti - 1))) throw new Error('riga')
-    return { testo: r.testo, passi: [...r.passi] }
+    return { testo: riscritta(r.testo), passi: [...r.passi] }
   })
 }
 
@@ -90,17 +96,19 @@ function rimetti(dato, rnd) {
       throw new Error('ingrediente')
     if (!Array.isArray(s.pezzi) || s.pezzi.reduce((n, x) => n + x, 0) > s.dose) throw new Error('pezzi')
     const offerte = s.dispensa ? [] : leggiOfferte(s.offerte)
-    if (!intero(s.casa, 0, s.dose)) throw new Error('casa')
-    const migliore = s.dispensa ? { costo: 0, pezzi: [] } : ottimo(s.dose - s.casa, offerte)
+    const casa = s.dispensa ? 0 : s.casa ?? 0
+    if (!intero(casa, 0, s.dose)) throw new Error('casa')
+    const migliore = s.dispensa ? { costo: 0, pezzi: [] } : ottimo(s.dose - casa, offerte)
     if (!migliore) throw new Error('ottimo')
-    return { nome: i.nome, colore: i.colore, famiglia: i.famiglia, unita: s.unita, dose: s.dose,
-             messo: s.messo, casa: s.casa, dispensa: !!s.dispensa, offerte, ottimo: migliore, traboccate: s.traboccate, pezzi: [...s.pezzi] }
+    return { nome: i.nome, art: i.art, lavoro: i.lavoro, colore: i.colore, famiglia: i.famiglia, unita: s.unita, dose: s.dose,
+             messo: s.messo, ...(casa ? { casa } : {}), dispensa: !!s.dispensa, offerte, ottimo: migliore, traboccate: s.traboccate, pezzi: [...s.pezzi] }
   })
   if (!Array.isArray(dato.macchie) || dato.macchie.some(i => !intero(i, 0, ingredienti.length - 1))) return null
 
   const b = new Bottega(t.tappa, { rnd })
   b.ingredienti = ingredienti
-  b.minimo = ingredienti.reduce((n, g) => n + g.ottimo.costo, 0)
+  if (ingredienti.some(g => g.dispensa) && !t.tappa.azioni.includes('pesta')) b.tappa = { ...t.tappa, azioni: ['pesta', ...t.tappa.azioni] }
+  b.minimo = minimoDi(ingredienti)
   b.gettoni = dato.gettoni; b.speso = dato.speso
   b.macchie = [...dato.macchie]; b.traboccate = dato.traboccate; b.pulizie = dato.pulizie
   b.monete = dato.rese; b.saltate = dato.saltate
@@ -108,6 +116,8 @@ function rimetti(dato, rnd) {
   b.righe = leggiRighe(dato.righe, b.passi.length)
   if (dato.passo >= b.passi.length || !Array.isArray(dato.mortaio) || !Array.isArray(dato.dentro)) return null
   b.passo = dato.passo; b.mortaio = [...dato.mortaio]; b.dentro = [...dato.dentro]
+  // tagliere e coperchio sono venuti dopo: in una sosta vecchia non ci sono, e va bene
+  b.tagliere = Array.isArray(dato.tagliere) ? [...dato.tagliere] : []; b.tagliato = !!dato.tagliato; b.coperto = !!(dato.coperto ?? dato.soffiato); b.incantato = !!dato.incantato
   b.pestato = !!dato.pestato; b.scaldato = !!dato.scaldato; b.mescolato = !!dato.mescolato; b.pasticci = dato.pasticci; b.pasticciato = !!dato.pasticciato
   return b
 }

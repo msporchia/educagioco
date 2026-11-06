@@ -67,7 +67,7 @@ quale file.
 | `docs/arena/` | Castle Battle (`src/giochi/arena/`): regole, calcoli, campagna, taratura (`npm run tara:arena`), sosta, grafica — prima di toccare `giochi/arena/dati/`, il motore o un prezzo |
 | `docs/giardino/` | Il giardino (`src/giochi/giardino/`, in prova): regole, calcoli, campagna, taratura — prima di toccare `giochi/giardino/dati/`, il motore o un prezzo |
 | `docs/lingue/` | English ed Español: vocaboli, campagne, la pronuncia incisa (`npm run voci`) |
-| `docs/bancarella/` | La bancarella: regole e difficoltà |
+| `docs/bancarella/` | La cucina (chiave `bancarella`): il cuoco in 3D, le ordinazioni, la cassa, i livelli e gli attrezzi (`cucina.md`) — prima di toccare `data/bancarella*.js`, `motore/bancarella/`, `grafica/cucina3d/` o un prezzo |
 | `docs/pozioni/` | Il laboratorio delle pozioni: il mercante, l'ordine a gettoni, le tappe, il banco in 3D (`scena3d/`), la ricetta da seguire e i suoni (`procedimento.md`) |
 | `docs/passo-passo/` | Passo passo: regole del mondo, cane pastore, guerriero (grate, nemici, spada), zaino e carte, stelle, sentiero, come si scrive un livello |
 | `docs/costruttore/` | Il Robot (era «Il costruttore»: chiave e cartelle restano `costruttore`): linguaggio, progetti e attrezzi, il porto, gli algoritmi, la campagna, la scheda e il robot disegnato |
@@ -89,7 +89,7 @@ Altri documenti vivono accanto al codice che descrivono: `test/README.md`
 - **I fine riga sono LF** (`.gitattributes`). Uno script che riscrive un file
   (Python lo fa senza chiedere) non deve cambiarli, se no il diff annega.
 - **Niente dipendenze a runtime oltre a Vue**, con un'eccezione: three.js
-  per gli Asteroidi, il sotterraneo, la fattoria e le pozioni (tutti solo in 3D) (~640 KB, accettati dall'utente: il
+  per gli Asteroidi, il sotterraneo, la fattoria, le pozioni (tutti solo in 3D) e la cucina della bancarella (~640 KB, accettati dall'utente: il
   3D non si scrive a mano). Suoni sintetizzati,
   icone emoji o disegnate, nessun file esterno: il build resta un HTML
   unico. → `docs/asteroidi/grafica-3d.md`
@@ -154,7 +154,7 @@ Una riga ciascuna; il perché sta nel documento indicato.
   (`npm run tara:arena`, un test confronta la firma), `src/giochi/arena/dati/opere-disegnate.js` e `terreni-pronti.js`
   (`npm run disegni:arena`, un test confronta la firma), `src/data/voci*.js`
   (`npm run voci`, e se dice «non incise» si rilancia), `src/giochi/sotterraneo/dati/icone-mondo.js`
-  (`npm run scatti icone-mondo`, la firma sta nel file e un test la ricalcola), `src/giochi/fattoria3d/dati/anteprime.js`, `src/giochi/pozioni/dati/anteprime.js` e
+  (`npm run scatti icone-mondo`, la firma sta nel file e un test la ricalcola), `src/giochi/fattoria3d/dati/anteprime.js`, `src/giochi/pozioni/dati/anteprime.js`, `src/data/bancarella-foto.js` e
   `src/giochi/sotterraneo/dati/anteprime-fatte.js` e `sagome-fatte.js` (`npm run anteprime`, rifatti anche quando cambia un modello: un test lo dice), le copie dei prototipi in `scena3d/eroi3d|mostri3d|effetti3d/`
   (`npm run promuovi3d`). → `docs/core/comandi.md`
 - **Un'emoji nuova vuole `npm run emoji`**: il gioco disegna le emoji col suo font

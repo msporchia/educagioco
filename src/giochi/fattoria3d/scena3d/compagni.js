@@ -4,7 +4,7 @@
 // Vedi docs/fattoria3d/compagni.md.
 import * as THREE from 'three'
 import { segna } from '../../../grafica/elementi3d.js'
-import { scegliMeta, scegliMetaAttorno, cellaLiberaVicina, cellaDi, decidiCane, decidiGatto, durataDi, SOGLIA_RICHIAMO, DIST_INCONTRO, DAVANTI_CASA,
+import { scegliMeta, scegliMetaAttorno, cellaLiberaVicina, cellaDi, daDoveRestano, decidiCane, decidiGatto, durataDi, SOGLIA_RICHIAMO, DIST_INCONTRO, DAVANTI_CASA,
   scegliInterazioneCane, sequenzaCane, sequenzaRichiamo, sequenzaSonno, sequenzaSveglia, carezzaCane, scegliRispostaGatto, sequenzaGatto,
   chiamaIlGatto, sequenzaGattoChiamato, sequenzaFame, sequenzaPasto, scegliNoia, sequenzaNoia,
   sequenzaGattoSopra, incontroGattoCane, sequenzaIncontro } from '../dati/compagni.js'
@@ -28,6 +28,8 @@ function daLontano (crea) {
   return g
 }
 
+const ALZATA = 0.45                               // quanto sta in aria chi è tenuto al dito
+const CORSA_AL_BAGNO = 1.3                        // secondi di corsa al massimo: col salto fanno i 2 secondi che si aspetta davanti alla tinozza
 const ACCOSTO = 0.62                              // a quanto dal centro della ciotola sta chi mangia
 const LOD_METRI = 12                              // oltre questa distanza dalla camera un compagno si disegna con le geometrie povere (modelli-compagni.js)
 const CASA = DAVANTI_CASA
@@ -69,7 +71,7 @@ export class Compagni {
       if (cella) { c.x = cella[0] + 0.5; c.z = cella[1] + 0.5 }
       c.dir = this.rnd() * Math.PI * 2
       grp.position.set(c.x, 0, c.z); grp.rotation.y = c.dir
-      if (!senzaAvviso) { this.fx.scoppietta(grp.position, 0xffe27a, 10, 1.4, 2.2); this.ui.avviso(d.arrivo) }
+      if (!senzaAvviso) { this.fx.scoppietta(grp.position, 0xffe27a, 10, 1.4, 2.2); this.ui.avviso(d.arrivo); this.ui.cartello?.(d.arrivo) }
     }
     this._bisogni()
   }
@@ -85,7 +87,15 @@ export class Compagni {
 
   /** Dove sta di casa: la cella dove il bambino ha messo la bestia, o davanti alla porta. */
   _casa(c) { const k = c.def.daCurare && this.m.cura.casaDi(c.def.id); return k ? [k[0] + 0.5, k[1] + 0.5] : CASA }
-  /** La bestia di casa spostata dal foglio (gratis): scompare e riappare, in una nuvola, nella nuova cella, che da ora è casa sua. */
+  /** Tenuta al dito (`Mondo3d.sollevaBestia`): smette quello che faceva, si alza e sta dove la mette `tieni`, finché `lascia` non la posa. */
+  prendi(c) {
+    c.seq = null; c.sub = ''; c.guarda = null; c.percorso = []; c.poi = null; c.salto = null; c.sopra = null; this._viaGioco(c)
+    c.tenuta = { x: c.x, z: c.z }; this._stato(c, 'sta')
+  }
+  tieni(c, x, z) { c.x = x; c.z = z; c.grp.position.set(x, ALZATA, z) }
+  /** Si stacca dal dito: torna dov'era, se nessuno l'ha portata altrove (`portaA`). */
+  lascia(c) { if (!c.tenuta) return; c.x = c.tenuta.x; c.z = c.tenuta.z; c.tenuta = null; c.grp.position.set(c.x, 0, c.z) }
+  /** La bestia di casa spostata col dito (gratis): scompare e riappare, in una nuvola, nella nuova cella, che da ora è casa sua. */
   portaA(id, i, j) {
     const c = this.lista.find(o => o.def.id === id)
     if (!c) return false
@@ -356,7 +366,7 @@ export class Compagni {
   _zolle(c) { this.fx.scoppietta(new THREE.Vector3(c.x + Math.sin(c.dir) * 0.45, 0.15, c.z + Math.cos(c.dir) * 0.45), 0x7a5a36, 7, 1.6, 2) }
 
   // ── il bagno (scena3d/bagno.js) ──
-  /** Va alla tinozza e ci salta dentro; se non c'è strada ci arriva in una nuvola. Torna il compagno, o null. */
+  /** Va alla tinozza e ci salta dentro, in due secondi anche da lontano (`_scorcia`); se non c'è strada ci arriva in una nuvola. Torna il compagno, o null. */
   alBagno(id, t) {
     const c = this.lista.find(o => o.def.id === id)
     if (!c) return null
@@ -365,10 +375,19 @@ export class Compagni {
     c.inBagno = { ...t, dentro: false }
     const libera = (i, j) => this.m.libera(i, j)
     const meta = scegliMetaAttorno({ libera, centro: [t.x, t.z], rMin: 1.5, rMax: 2.4, rnd: this.rnd, evita: this._altri(c) }) || cellaLiberaVicina(libera, t.x, t.z)
-    if (meta && !this._vai(c, meta, c.tipo === 'cane' ? 'segue' : c.tipo === 'gatto' ? 'fugge' : 'vaga', { corsa: true, poi: { bagno: true } })) {
-      this.fx.scoppietta(new THREE.Vector3(c.x, 0.3, c.z), 0xffffff, 6, 0.9, 1.6); c.x = meta[0] + 0.5; c.z = meta[1] + 0.5; c.poi = { bagno: true }; this._arrivato(c)
-    }
+    if (!meta) return c
+    if (this._vai(c, meta, c.tipo === 'cane' ? 'segue' : c.tipo === 'gatto' ? 'fugge' : 'vaga', { corsa: true, poi: { bagno: true } })) this._scorcia(c)
+    else { this.fx.scoppietta(new THREE.Vector3(c.x, 0.3, c.z), 0xffffff, 6, 0.9, 1.6); c.x = meta[0] + 0.5; c.z = meta[1] + 0.5; c.poi = { bagno: true }; this._arrivato(c) }
     return c
+  }
+  /** Chi è lontano bara: la camera è già sulla tinozza, così salta il grosso della strada in una nuvola e corre solo l'ultimo tratto. */
+  _scorcia(c) {
+    const n = daDoveRestano([[c.x, c.z], ...c.percorso], this._velocita(c) * CORSA_AL_BAGNO)
+    if (!n) return
+    this.fx.scoppietta(new THREE.Vector3(c.x, 0.3, c.z), 0xffffff, 6, 0.9, 1.6)
+    ;[c.x, c.z] = c.percorso[n - 1]; c.percorso = c.percorso.slice(n)
+    this.fx.scoppietta(new THREE.Vector3(c.x, 0.3, c.z), 0xffffff, 6, 0.9, 1.6)
+    if (!c.percorso.length) this._arrivato(c)
   }
   /** Esce dalla tinozza; pulito si scrolla e fa festa. */
   esceDalBagno(id, pulito) {
@@ -395,6 +414,7 @@ export class Compagni {
 
   _uno(c, dt) {
     const m = this.m, g = c.grp
+    if (c.tenuta) return
     c.tStato += dt
     if (c.seq && !c.seq.incontro && c.seq.eroeFermoAlVia && this._eroeSiMuove()) this._interrompi(c)      // l'eroe parte o lavora: la festa finisce
     // un pezzo messo proprio qui sotto: si sposta nella cella libera più vicina
@@ -451,10 +471,11 @@ export class Compagni {
     return !!cane && !c.sopra && c.stato !== 'fugge' && !cane.seq && cane.stato !== 'dorme' && this.t >= c.prossimoIncontro && Math.hypot(cane.x - c.x, cane.z - c.z) < DIST_INCONTRO
   }
 
+  _velocita(c) { return (VEL[c.tipo][c.stato] || VEL[c.tipo].vaga) * (c.corsa ? (c.tipo === 'cane' ? VEL.cane.corsa / VEL.cane.segue : 1) : 1) }
   _cammina(c, dt) {
     const m = this.m, [px, pz] = c.percorso[0]
     if (!m.libera(Math.floor(px), Math.floor(pz))) { c.percorso = []; c.velo = 0; this._decidi(c); return }   // l'hanno chiusa: si ripensa
-    const v0 = (VEL[c.tipo][c.stato] || VEL[c.tipo].vaga) * (c.corsa ? (c.tipo === 'cane' ? VEL.cane.corsa / VEL.cane.segue : 1) : 1)
+    const v0 = this._velocita(c)
     const dx = px - c.x, dz = pz - c.z, d = Math.hypot(dx, dz), passo = Math.min(d, v0 * dt)
     if (d > 0.001) {
       c.x += dx / d * passo; c.z += dz / d * passo

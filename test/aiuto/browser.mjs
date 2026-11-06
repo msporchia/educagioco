@@ -15,7 +15,6 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve, join } from 'node:path'
-import { CITTA } from '../../src/data/bancarella-mondo.js'
 import { STRADE } from '../../src/giochi/passo-passo/motore/strade.js'
 import { SENTIERO_CANE } from '../../src/giochi/passo-passo/scena/animale.js'
 
@@ -375,31 +374,6 @@ export async function fumettoDel(page, quale) {
   const testo = (await page.locator('[data-fumetto]').textContent()).replace(/\s+/g, ' ').trim()
   await page.locator(quale).first().click()
   return testo
-}
-
-/* Apre una giornata della bancarella dal giro del mondo
-   (docs/bancarella/mappa.md): il tocco su una città apre il fumetto e
-   «▶ entra» porta nella sua piazza; lì il tocco su un banco apre il suo e
-   «▶ gioca» comincia la giornata. Dalla piazza giusta si parte da lì, da
-   un'altra si passa dal cartello del mondo; con una giornata a metà la carta
-   chiede, e qui si risponde «comincio». `id` è l'id della giornata
-   (`banchetto`, `resto-copie`, `libera`…). */
-export async function giocaGiornata(page, id) {
-  const citta = CITTA.find(c => c.giornate.includes(id)).id
-  const piazza = `[data-piazza][data-citta-di="${citta}"]`
-  await page.waitForSelector('[data-mondo], [data-piazza]', { timeout: 8000 })
-  if (!(await page.locator(piazza).count())) {
-    if (!(await page.locator('[data-mondo]').count())) await page.click('[data-azione="al-mondo"]')
-    await page.waitForSelector('[data-mondo]', { timeout: 5000 })
-    await page.locator(`[data-citta="${citta}"]`).click()
-    await page.click(`[data-fumetto-per="${citta}"] [data-azione="entra"]`)
-    await page.waitForSelector(piazza, { timeout: 5000 })
-  }
-  await page.locator(`[data-camp="${id}"]`).click()
-  await page.click(`[data-fumetto-per="${id}"] [data-azione="gioca"]`)
-  if (await page.locator('[data-chiede]').count())
-    await page.click('[data-chiede] [data-azione="comincia"]')
-  await page.waitForSelector('.banco', { timeout: 5000 })
 }
 
 /* La mappa di Passo passo ha un protagonista per strada, il coniglio o il

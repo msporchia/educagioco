@@ -25,17 +25,26 @@ scaletta, gli sbagli e cosa va al motore di apprendimento. Il gioco sta in
   davano la risposta senza leggere. Lì quanto c'è lo dice solo la targhetta.
   **Una volta comprate si vedono a misura reale**: è il momento di capire cosa
   si è ordinato, e cosa si è sbagliato.
-- **Si fa un ordine**: due o tre targhette (`ordine`), anche di ingredienti
-  diversi, poi «Ordina». Si paga tutto, il mercante porta le ampolle sul
-  bancone e le versa una alla volta, nell'ordine scritto.
+- **Si fa un ordine**: fino a cinque targhette (`AMPOLLE_A_ORDINE`), anche di
+  ingredienti diversi, poi «Ordina». Si paga tutto, il mercante porta le ampolle
+  sul bancone e le versa una alla volta, nell'ordine scritto.
   Più ampolle insieme vuol dire fare la somma prima di vederla.
-- **Le grandi costano meno al chilo** (`PEZZI`, `PREZZI`): 1 kg 4 gettoni,
+- **Ogni ordine paga la spedizione** (`SPEDIZIONE`, un gettone): è il freno al
+  posto del tetto di due o tre ampolle. Comprare una cosa per volta si può, ma
+  costa; ordinare tutto insieme risparmia, e chiede di fare i conti prima.
+- **Lo scontrino dice cosa si pagherà**: sotto il rotolo, una riga per ampolla col
+  prezzo, la riga «Spedizione» sempre in vista, e il totale. Una riga toccata si
+  toglie.
+- **Le grandi costano meno al chilo** (`PEZZI`, `PREZZI`; `TONDI`,
+  `PREZZI_TONDI` nelle tappe senza virgola): 1 kg 4 gettoni,
   5 hg 3, 1 hg 1. Conviene sempre «la più grande che ci sta», ma per sapere
   cosa ci sta bisogna sapere a cosa corrisponde l'etichetta, come quando si
   sommano monete diverse.
 - **Il trucco del mercante** (`gemelli`): spesso la stessa quantità sta sul
   listino due volte, in due unità, e una costa un gettone in più. Chi
   riconosce che «5 hg» e «500 g» sono la stessa cosa risparmia.
+- **Si parte sempre da zero**: gli strumenti cominciano vuoti e tutta la dose si
+  compra ([procedimento.md](procedimento.md)).
 - **Oltre il segno d'oro trabocca**: quell'ampolla è pagata e persa, lo
   strumento resta dov'era, e le altre dell'ordine si versano lo stesso. **Quello
   che resta sul tavolo dipende dalla roba**: il liquido fa una pozza, la polvere un
@@ -58,6 +67,10 @@ scaletta, gli sbagli e cosa va al motore di apprendimento. Il gioco sta in
   ingrediente per ingrediente (`piuEconomico`).
 - **I gettoni sono della pozione**, non le monete del bambino: il bilancio è
   il minimo più il `margine` della tappa, largo all'inizio e stretto in fondo.
+  **Non si devono confondere con le monete**: il gettone è un cristallo a sei
+  lati turchese (`.pz-gettone`, disegnato in CSS), e turchese è tutto quello che
+  li conta (prezzi, barra della borsa). L'oro e la forma tonda restano al 🪙.
+  Provato il gettone tondo e d'oro: i bambini li scambiavano.
 - **Tre monete per ingrediente finito senza traboccare** (`MONETE_A_DOSE`):
   una dose è una domanda vera, e tante ampolle piccole non rendono di più.
   Si pagano quando si ordina, così uscire mentre il mercante versa non perde
@@ -75,25 +88,38 @@ ventinove tappe non cambiano**: sono quelle dei progressi e delle stelle.
 | 1 | `banco` | «500 g» | in grammi: niente da convertire | `gioco` | 8 |
 | 2 | `grande` | «1 kg» | in grammi | `svolto` | 8 |
 | 3 | `grandi` | 2 kg, 5 kg | grammi e chili | `regola` | 6 |
-| 4 | `virgola` | 0,5 kg, 1,5 kg | grammi e chili | `svolto` | 6 |
-| 5 | `virgole` | le stesse, e 1,2 kg | grammi e chili | niente | 4 |
+| 4 | `virgola` | «1500 g»; coi liquidi 0,5 l, 1,5 l | grammi e chili | `svolto` | 6 |
+| 5 | `virgole` | le stesse, e «3500 g»; coi liquidi 1,2 l | grammi e chili | `regola` | 4 |
 | 6 | `media` | 8 kg, 12 kg | arrivano gli etti | `svolto` | 6 |
 | 7 | `miste` | in tre unità | in tre unità | `regola` | 4 |
 | 8 | `inversa` | «6000 g» | chili ed etti: si sale | `svolto` | 5 |
-| 9 | `inverse` | su e giù | in tre unità | niente | 3 |
+| 9 | `inverse` | su e giù | in tre unità | `regola` | 3 |
 
+- **La virgola arriva coi liquidi, alla tappa 22** (`capacita-virgola`). A scuola
+  la virgola come numero si fa a metà quarta (`data/partenze.js`), cioè 68,75 sulla
+  scala, e lì cominciano i liquidi. Provato con la virgola alla quarta tappa: in
+  terza i ,5 fermavano i bambini prima ancora della conversione.
+- **Prima della tappa 22 tutto è intero** (`tondi`, `SENZA_VIRGOLA`): la ricetta, il
+  listino, la pergamena, «manca», i conti dei cartelli. Vale per i pesi e le lunghezze
+  interi e per i primi tre gradini dei liquidi. I pezzi sono da 1, 2, 5 e 10, sempre
+  interi nell'unità della ricetta: per «3 kg» il listino va da 1000 g a 10000 g
+  (`scalaTonda`), così la pergamena non dice mai 0,5 kg. Le chiavi `virgola` e
+  `virgole` restano, ma nei pesi e nelle lunghezze chiedono «1500 g = 1 kg e 500 g».
 - Poi due tappe finali (`FINALI`): **l'Elisir del Calderone** (le tre famiglie
   nella stessa pozione) e **la Pozione del Maestro**, con le dosi da magazzino.
 - **Quanto si dice lo decide la tappa** (`aiuto`): `gioco` il cartello dice
   come si gioca, `svolto` sotto ogni targhetta c'è quanto vale nell'unità
-  della ricetta, `regola` accanto all'ingrediente c'è l'uguaglianza («1 kg =
-  1000 g»), `''` niente.
+  della ricetta, `regola` il conto lo si fa da sé.
+- **L'uguaglianza resta sempre scritta** accanto all'ingrediente («1 kg = 1000 g»),
+  in tutte le ventinove tappe: si impara a usarla, non a ricordarla. A memoria si va
+  solo nel calderone senza fondo (`aiuto: ''`).
 - **`manca`**: la pergamena dice quanto manca (la sottrazione la fa il
   gioco). Solo in `inverse` e nelle finali la si fa da sé.
 - **La portata sale lungo la fila**: `PORTATA_DA` 44 i pesi (sette anni e
   mezzo, quando le misure entrano a scuola), 56 le lunghezze, 68 i liquidi,
   e un punto e mezzo a gradino (`PASSO_PORTATA`); 82 e 85 le finali.
-- `guastiDellaCampagna` controlla che ogni dose si componga.
+- `guastiDellaCampagna` controlla che ogni dose si componga, e che in una tappa
+  tonda non abbia la virgola.
 
 ## Il listino
 
@@ -109,7 +135,8 @@ ventinove tappe non cambiano**: sono quelle dei progressi e delle stelle.
 - **Il pezzo piccolo divide la dose e tutti gli altri pezzi**: è quello che
   rende ogni dose componibile da qualunque punto. Provato senza (0,1 e 0,25
   sullo stesso banco): resta un avanzo che nessuna ampolla copre.
-- **Per le dosi grandi tutto il listino sale di dieci o di cento** (`scalaDi`)
+- **Per le dosi grandi tutto il listino sale di dieci o di cento** (`scalaDi`, nelle
+  tappe tonde `scalaTonda`)
   e i prezzi restano quelli: la fatica sta nelle unità, non nei soldi. Se no
   diventa una bancarella.
 - **Il mercante scrive come gli pare**, dentro le unità della tappa
@@ -117,7 +144,8 @@ ventinove tappe non cambiano**: sono quelle dei progressi e delle stelle.
 - **Due ingredienti della stessa pozione non hanno la stessa quantità**, anche
   scritta in unità diverse.
 - `ottimo` cerca il minimo con le ampolle del listino; il test lo confronta
-  con la forza bruta. Il minimo non dipende da come si raggruppano gli ordini.
+  con la forza bruta. Il minimo della tappa (`minimoDi`) è la loro somma più una
+  spedizione ogni cinque ampolle: tre stelle vogliono anche pochi ordini.
 - Il caso arriva da fuori (`rnd`), così una pozione si rifà identica nei test.
 
 ## Lo sbaglio
@@ -165,7 +193,9 @@ versata, se no il risultato si legge prima di vederlo.
   [procedimento.md](procedimento.md)).
 - **La consegna** (`ampolle.js`): fiasco, barattolo, radice sui pioli, a misura
   reale (la radice lunga quanto sarà sul metro), con la targhetta. Una alla volta
-  volano, perdono il tappo o il panno, si piegano e versano.
+  volano, perdono il tappo o il panno, si piegano e versano. **Sul bancone ne stanno
+  tre** (`SUL_BANCONE`): un ordine più lungo arriva a giri. Provato con cinque in
+  fila: sul telefono in piedi le due in fondo uscivano dallo schermo.
 - **Gli ingredienti sono modelli veri, fotografati** (`scena3d/ingredienti3d.js`,
   nella creta della fattoria): il liquido si mostra con da dove viene (la bava
   col drago, il succo con la rapa). Il gioco non li costruisce: legge
@@ -195,7 +225,7 @@ versata, se no il risultato si legge prima di vederlo.
 
 ## Il dito
 
-Sul rotolo si tocca: una targhetta va nell'ordine, un posto dell'ordine toccato
+Sul rotolo si tocca: una targhetta va nell'ordine, una riga dello scontrino toccata
 la toglie, il rotolo si chiude con la ✕. Sulla tela un tocco fermo (sotto i
 16 px) su una macchia, o sul suo strumento, pulisce.
 
@@ -205,8 +235,8 @@ Nei test: `unita/pozioni`, `unita/pozioni-sosta`, `integrazione/pozioni`,
 (`banco`·`listino`·`macchia`·`procedimento`·`finita`), `[data-tela]`, `[data-pergamena]`,
 `[data-voce]`, `[data-dose]`, `[data-gettoni]`, `[data-listino]`, `[data-merce]`,
 `[data-targhetta="i:k"]`, `[data-vale]`, `[data-regola]`, `[data-chiudi]`,
-`[data-ordine]`, `[data-posto]`, `[data-azione="mercante"|"ordina"|"pulisci"]`,
+`[data-ordine]`, `[data-scontrino]`, `[data-posto]`, `[data-spedizione]`, `[data-totale]`, `[data-azione="mercante"|"ordina"|"pulisci"]`,
 `[data-esito][data-codice]` (`aiuto`·`giusto`·`trabocca`), `[data-fine="tappa"]`,
 `[data-righe]`, `[data-stelle]`, `[data-monete]`, `[data-nota-monete]`,
 `[data-azione="avanti"|"mappa"]`; `window.__poz` (`aggiungi(i, k)`,
-`togliVoce(n)`, `ordina()`, `pulisci()`, `salta()`, `bottega`).
+`togliVoce(n)`, `ordina()`, `pulisci()`, `salta()`, `bottega`, `occupato`).

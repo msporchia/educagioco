@@ -2,5 +2,6 @@
    in due aggiunge qui il suo file (docs/core/insieme.md, «Un gioco nuovo in due») */
 import arena from './arena.mjs'
 import sotterraneo from './sotterraneo.mjs'
+import cucina from './cucina.mjs'
 
-export const GIOCHI_IN_DUE = { arena, sotterraneo }
+export const GIOCHI_IN_DUE = { arena, sotterraneo, cucina }
