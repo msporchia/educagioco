@@ -196,7 +196,7 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
     if (c) { presa = attrezzi.cosa(c.object.userData.attrezzo); canvas.setPointerCapture?.(e.pointerId) }
   }
   const muovi = e => {
-    if (!presa || !giu || giu.id !== e.pointerId) return
+    if (!presa || !giu || giu.id !== e.pointerId || mani.solo) return
     const id = presa.userData.id
     const su = Math.hypot(e.clientX - giu.x, e.clientY - giu.y) > SOGLIA && doveLavora(e.clientX, e.clientY, id)
     if (mani.su) {
@@ -223,7 +223,7 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
       const p = presa, id = p.userData.id; presa = null
       // lasciato a metà del gesto non è successo niente: si fa vedere come si fa
       if (mani.su) {
-        if (mani.molla()) { presa = p; return }   // piegato: finisce da solo
+        if (mani.molla()) { presa = p; return }   // versa da solo
         const su = mani.su, spec = mani.spec
         mani.lascia()
         suggerisciGesto(su, spec, RESTA)
@@ -236,6 +236,7 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
       // arrivato lì di slancio, senza gesto: si fa vedere come si fa. La roba intera si lascia
       // cadere; un attrezzo sulla cosa sbagliata non fa niente, e si dice dove va
       const gesto = su && gestoDi(id, su)
+      if (gesto?.tipo === 'inclina') { presa = p; mani.prendi(su, gesto, p, e.clientX, e.clientY); mani.molla(); return }
       if (gesto) suggerisciGesto(su, gesto, RESTA)
       else if (su && id.startsWith('roba:')) lascia?.({ attrezzo: id, su })
       else if (su && suoBersaglio(id)) suggerisciStrada(id, suoBersaglio(id), RESTA)
@@ -298,7 +299,7 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
   }
   giro = requestAnimationFrame(ciclo)
 
-  function suggerisciGestoUnaVolta() { if (!frecce.tipo) suggerisciGesto(mani.su, mani.spec) }
+  function suggerisciGestoUnaVolta() { if (!frecce.tipo && mani.spec.freccia) suggerisciGesto(mani.su, mani.spec) }
 
   // quello che schizza dal brodo, per le pozioni che lo fanno (scena3d/bollori.js)
   let sciaFra = 0

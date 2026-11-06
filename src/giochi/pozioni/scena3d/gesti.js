@@ -5,7 +5,9 @@
 const SCATTO = 22               // px: tanto bisogna tornare indietro perché sia un colpo
 const PASSETTO = 8              // px: sotto, il verso del dito è solo tremolio
 const STORTO = 1.4              // rad: una svolta più secca non è un giro, è uno zig-zag
-const PIEGA = 70                // px: di lato fin qui, l'attrezzo è piegato del tutto
+const SOSTA = 0.3               // s col dito fermo sul bersaglio: basta, si versa
+const TREMA = 14                // px: sotto, il dito è ancora fermo
+const PIEGATA = 0.2             // s per piegarsi del tutto
 export const VERSA_DA = 0.55    // quanto va piegato perché esca qualcosa
 
 // `freccia`: il disegno del suggerimento (frecce.js). `quanti`: giri, colpi, secondi di versata
@@ -16,15 +18,15 @@ export const GESTI = {
   'fiammifero:legna': { tipo: 'colpi', asse: 'x', quanti: 5, freccia: 'lato' },
   'roba:grattugia': { tipo: 'colpi', asse: 'y', quanti: 5, freccia: 'su-giu' },
   'bacchetta:calderone': { tipo: 'agita', quanti: 6, freccia: 'agita' },
-  'ciotola:calderone': { tipo: 'inclina', quanti: 0.6, freccia: 'inclina' },
-  'ciotola:mortaio': { tipo: 'inclina', quanti: 0.6, freccia: 'inclina' },
-  'brocca:calderone': { tipo: 'inclina', quanti: 0.6, freccia: 'inclina' },
-  'mortaio:calderone': { tipo: 'inclina', quanti: 0.6, freccia: 'inclina' },
-  'tagliere:calderone': { tipo: 'inclina', quanti: 0.6, freccia: 'inclina' },
-  'ciotolino:calderone': { tipo: 'inclina', quanti: 0.6, freccia: 'inclina' },
+  'ciotola:calderone': { tipo: 'inclina', quanti: 0.6 },
+  'ciotola:mortaio': { tipo: 'inclina', quanti: 0.6 },
+  'brocca:calderone': { tipo: 'inclina', quanti: 0.6 },
+  'mortaio:calderone': { tipo: 'inclina', quanti: 0.6 },
+  'tagliere:calderone': { tipo: 'inclina', quanti: 0.6 },
+  'ciotolino:calderone': { tipo: 'inclina', quanti: 0.6 },
   'sale:calderone': { tipo: 'colpi', asse: 'y', quanti: 3, freccia: 'su-giu' },
   'pepe:calderone': { tipo: 'colpi', asse: 'y', quanti: 3, freccia: 'su-giu' },
-  'mestolo:fiala': { tipo: 'inclina', quanti: 0.6, freccia: 'inclina' },
+  'mestolo:fiala': { tipo: 'inclina', quanti: 0.6 },
 }
 
 // avanti e indietro lungo un asse: dice quando il dito torna indietro
@@ -95,20 +97,24 @@ function giro({ quanti }) {
   }
 }
 
-// di lato si piega, e finché è piegato versa: il tempo arriva da `scorre`. Staccando il
-// dito da piegato finisce `solo`: non si aspetta che scorra
+// fermo sul bersaglio, o col dito staccato, si piega e versa `solo`, e da lì il dito non conta
+// più. Finché si muove ci sta solo passando sopra. Il tempo arriva da `scorre`
 function inclina({ quanti }) {
-  let da = null, tempo = 0
+  let qui = null, fermo = 0, tempo = 0
   const g = {
     piega: 0,
     solo: false,
-    punto(x) {
-      if (da === null) da = x
-      g.piega = Math.max(-1, Math.min(1, (x - da) / PIEGA))
+    punto(x, y) {
+      if (!qui || Math.hypot(x - qui[0], y - qui[1]) > TREMA) { qui = [x, y]; fermo = 0 }
       return { colpo: false }
     },
-    scorre(dt) { if (Math.abs(g.piega) >= VERSA_DA) tempo += dt },
-    molla() { return (g.solo = Math.abs(g.piega) >= VERSA_DA) },
+    scorre(dt) {
+      if ((fermo += dt) >= SOSTA) g.solo = true
+      if (!g.solo) return
+      g.piega = Math.min(1, g.piega + dt / PIEGATA)
+      if (g.piega >= VERSA_DA) tempo += dt
+    },
+    molla() { return (g.solo = true) },
     get avanzato() { return Math.min(1, tempo / quanti) },
   }
   return g

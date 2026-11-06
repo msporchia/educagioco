@@ -121,15 +121,15 @@ export function creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena }
     },
     'sale:calderone': c => pizzico(c, '#f6f2ea'),
     'pepe:calderone': c => pizzico(c, '#3b3330'),
-    // il mestolo pescato nel brodo: sopra la fiala si piega, e il getto la riempie. Di suo sta
+    // il mestolo pescato nel brodo: fermo sopra la fiala si piega, e il getto la riempie. Di suo sta
     // con la coppa all'insù, e la coppa guarda di lato quando il manico è dritto
     'mestolo:fiala': c => {
       const f = attrezzi.fiala.position, labbro = new Vector3(0.28, -0.2, 0), colore = () => scena().calderone
       let versando = false
       return {
-        dito() { c.meta.p.set(f.x - 0.3, 1.65, f.z); c.meta.rz = 1.25 - Math.abs(c.gesto.piega) * 1.4 },
+        dito() { c.meta.p.set(f.x - 0.3, 1.65, f.z); c.meta.rz = 1.25 - c.gesto.piega * 1.4 },
         scorre() {
-          const si = Math.abs(c.gesto.piega) >= VERSA_DA
+          const si = c.gesto.piega >= VERSA_DA
           attrezzi.riempi(c.gesto.avanzato, colore())
           attrezzi.pesca(colore(), 1 - c.gesto.avanzato)
           if (si) {
@@ -192,13 +192,13 @@ export function creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena }
       fine() { v.fine(); targa.visible = true } }
   }
 
-  // sopra il calderone: il dito di lato lo piega, e piegato versa
+  // sopra il calderone si piega da solo, e piegato versa
   function inclina(c, lato, colore, polvere, bocca, sopra = () => sulCalderone(lato), fondo = () => banco.quotaBrodo()) {
     let versando = false
     return {
-      dito() { c.meta.p.copy(sopra()); c.meta.rz = lato * Math.abs(c.gesto.piega) * 1.9 },
+      dito() { c.meta.p.copy(sopra()); c.meta.rz = lato * c.gesto.piega * 1.9 },
       scorre() {
-        const k = colore() && Math.abs(c.gesto.piega) >= VERSA_DA
+        const k = colore() && c.gesto.piega >= VERSA_DA
         if (k) {
           if (!versando) { if (polvere) suoni.polvere(0.55); else suoni.liquido(0.55) }
           const b = dalla(c.cosa, bocca)
@@ -230,6 +230,7 @@ export function creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena }
     },
     scorre(dt) {
       c.gesto.scorre?.(dt)
+      if (c.gesto.solo) posa.dito()              // il dito non c'è più, o non conta: si piega da sé
       posa.scorre?.(dt)
       c.fermo = c.gesto.avanzato > c.fatto ? 0 : c.fermo + dt
       c.fatto = c.gesto.avanzato
