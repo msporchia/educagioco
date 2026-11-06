@@ -7,7 +7,7 @@ import { CAMPAGNA, BLOCCHI, QUANTE_TAPPE, MONETE_A_DOSE, MONETE_A_PASSO, INFINIT
 import { FAMIGLIA, VALE, mescola, guastiDelleMisure, scrivi, POZIONI } from '../../src/giochi/pozioni/dati/misure.js'
 import { PULIZIA, PASTICCIO, PEZZI, PREZZI, SPEDIZIONE, AMPOLLE_A_ORDINE } from '../../src/giochi/pozioni/dati/bottega.js'
 import { Bottega, banchetto, ottimo, giocaBene, giocaGoloso, seguiLaRicetta, prossimoPasso, caso, unitaBuone, scalaDi, pezziDi } from '../../src/giochi/pozioni/motore/bottega.js'
-import { MORTAIO, TAGLIERE, MOSSE, ROBA_SU, ATTREZZI, attrezziDi, prossimaMossa, recipiente } from '../../src/giochi/pozioni/motore/procedimento.js'
+import { MORTAIO, TAGLIERE, GRATTATO, MOSSE, ROBA_SU, ATTREZZI, attrezziDi, prossimaMossa, recipiente } from '../../src/giochi/pozioni/motore/procedimento.js'
 import { GESTI, creaGesto } from '../../src/giochi/pozioni/scena3d/gesti.js'
 import { MODI } from '../../src/giochi/pozioni/scena3d/bollori.js'
 import { BOLLORI, bolloreDi } from '../../src/giochi/pozioni/dati/bollori.js'
@@ -261,9 +261,8 @@ for (const t of CAMPAGNA) {
     const lette = b.righe.flatMap(r => r.passi)
     if (lette.join() !== b.passi.map((_, k) => k).join() || b.righe.some(r => !/^[A-Z].*[.»]$/.test(r.testo))) ricetteBrutte++
     ordini.add(azioni.join())
-    // si mescola prima di scaldare, e il coperchio viene dopo il fuoco
+    // si mescola prima di scaldare
     if (azioni.includes('scalda') && azioni.indexOf('mescola') > azioni.indexOf('scalda')) rotte++
-    if (azioni.includes('copri') && azioni.indexOf('scalda') > azioni.indexOf('copri')) rotte++
     if (azioni.length > 10 || b.righe.length > 8) rotte++
     giocaBene(b)
     if (b.monete !== t.ingredienti * MONETE_A_DOSE + b.passi.length * MONETE_A_PASSO || !b.finita || b.pasticci) rotte++
@@ -383,9 +382,8 @@ controlla('nelle finali, con pesi e lunghezze, il mortaio c\'è', ['calderone', 
 {
   const fatti = new Set()
   for (const t of CAMPAGNA) for (let s = 1; s <= 40; s++) for (const p of new Bottega(t, { rnd: caso(s) }).passi) fatti.add(p.azione)
-  for (const a of ['sminuzza', 'gratta', 'copri', 'agita']) controlla(`${a} entra nelle ricette`, fatti.has(a))
-  uguale('alla prima tappa niente mortaio né coperchio', tappa('massa-banco').azioni.join(), 'versa,mescola,scalda,agita,sale,pepe,imbottiglia')
-  controlla('il coperchio arriva alla seconda', tappa('massa-grande').azioni.includes('copri'))
+  for (const a of ['sminuzza', 'gratta', 'agita']) controlla(`${a} entra nelle ricette`, fatti.has(a))
+  uguale('alla prima tappa niente mortaio', tappa('massa-banco').azioni.join(), 'versa,mescola,scalda,agita,sale,pepe,imbottiglia')
   /* quello che si è misurato arriva com'era: non si versa una stella, né un gufo */
   const passi = [{ azione: 'gratta', cosa: [2] }]
   uguale('la polvere sta in una ciotola', recipiente({ famiglia: 'massa' }, 0, passi), 'ciotola')
@@ -453,6 +451,27 @@ controlla('nelle finali, con pesi e lunghezze, il mortaio c\'è', ['calderone', 
   controlla('e sta nel calderone', b.dentro.includes(r))
 }
 {
+  /* si gratta nel ciotolino, e il ciotolino si versa: nel calderone non va niente da solo */
+  let b = null
+  for (let s = 1; s < 80 && !b; s++) {
+    const x = new Bottega(tappa('massa-virgole'), { rnd: caso(s) })
+    if (x.passi.some(p => p.azione === 'gratta')) b = x
+  }
+  for (const [i, g] of b.ingredienti.entries()) for (const k of g.ottimo.pezzi) b.ordina([{ i, k }])
+  while (b.passi[b.passo].azione !== 'gratta') prossimoPasso(b)
+  const [r] = b.passi[b.passo].cosa, riga = b.righe.find(x => x.passi.includes(b.passo))
+  controlla('la riga dice tutto', /^Gratta .* e versal[aeio] nel calderone\.$/.test(riga.testo), riga.testo)
+  uguale('prima di grattare non si versa', b.fai('versa', [GRATTATO]).giusto, false)
+  uguale('si gratta', b.fai('gratta', [r]).giusto, true)
+  uguale('sta nel ciotolino', b.grattato.join(), String(r))
+  controlla('e non ancora nel calderone', !b.dentro.includes(r))
+  uguale('il suggerimento porta il ciotolino', prossimaMossa(b.passi[b.passo], b.mancaAl(b.passi[b.passo])).da, 'ciotolino')
+  const v = b.fai('versa', [GRATTATO])
+  uguale('il grattato si versa', v.versati.join(), String(r))
+  uguale('e il ciotolino è vuoto', b.grattato.length, 0)
+  controlla('e sta nel calderone', b.dentro.includes(r))
+}
+{
   /* ogni mossa ha il suo gesto, e ogni attrezzo la sua mossa */
   for (const k of Object.keys(MOSSE)) controlla(`${k} ha un gesto`, !!GESTI[k])
   controlla('la roba si grattugia col dito', !!GESTI['roba:grattugia'] && ROBA_SU.grattugia === 'gratta')
@@ -502,19 +521,6 @@ controlla('nelle finali, con pesi e lunghezze, il mortaio c\'è', ['calderone', 
   uguale('staccando da piegata finisce da sola', staccata.molla(), true)
   staccata.scorre(1)
   uguale('e versa tutto', staccata.avanzato, 1)
-  /* il coperchio: si mette, fuma e si toglie */
-  const coperchio = creaGesto(GESTI['coperchio:calderone'])
-  su(coperchio, 10)
-  uguale('il coperchio non si scuote', coperchio.pronto, false)
-  uguale('si posa e basta', coperchio.molla(), true)
-  coperchio.scorre(1)
-  uguale('prima che abbia fumato non si toglie', coperchio.togli(), false)
-  controlla('e il passo non è fatto', coperchio.avanzato < 1)
-  coperchio.scorre(3)
-  uguale('ha fumato', coperchio.pronto, true)
-  controlla('ma resta lì finché non si toglie', coperchio.avanzato < 1)
-  uguale('si toglie', coperchio.togli(), true)
-  uguale('ed è fatto', coperchio.avanzato, 1)
   const bacchetta = creaGesto(GESTI['bacchetta:calderone'])
   su(bacchetta, 7, 'x')
   uguale('la bacchetta si scuote', bacchetta.avanzato, 1)

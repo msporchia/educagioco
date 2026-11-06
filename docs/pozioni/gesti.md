@@ -3,8 +3,7 @@
 Un attrezzo arrivato sul suo bersaglio non fa niente da solo: lo muove il dito, e
 il passo si fa quando il gesto è finito. I bambini si divertono proprio lì, quindi
 il gioco non lo fa al posto loro. Ma il gesto deve voler dire la cosa che si fa: dove
-il dito non ha niente da aggiungere (il coperchio posato, la roba che scorre) non lo si
-tiene lì ad aspettare. Il riconoscimento è `scena3d/gesti.js` (puro, a
+il dito non ha niente da aggiungere (la roba che scorre) non lo si tiene lì ad aspettare. Il riconoscimento è `scena3d/gesti.js` (puro, a
 punti in pixel), la figura è `scena3d/mani.js`, il suggerimento `scena3d/frecce.js`.
 
 ## Il gesto
@@ -15,11 +14,10 @@ punti in pixel), la figura è `scena3d/mani.js`, il suggerimento `scena3d/frecce
 | pestello | mortaio | su e giù | cinque colpi |
 | coltello | tagliere | su e giù | cinque tagli |
 | fiammifero | legna | sfrega di lato | cinque sfregate |
-| coperchio | calderone | si posa, fuma da solo, si tocca per toglierlo | 2,5 s |
 | la roba dura | grattugia | su e giù | cinque passate |
 | bacchetta | calderone | scuote | sei scosse |
 | sale, pepe | calderone | su e giù, capovolto | tre scosse |
-| brocca, mortaio, tagliere | calderone | di lato si piega, e piegato versa | 0,6 s |
+| brocca, mortaio, tagliere, ciotolino | calderone | di lato si piega, e piegato versa | 0,6 s |
 | ciotola, bicchiere | calderone, mortaio | di lato si piega, e piegato versa | 0,6 s |
 | mestolo | calderone, poi fiala | pesca nel brodo; sulla fiala di lato si piega e la riempie | 0,6 s |
 
@@ -52,20 +50,18 @@ punti in pixel), la figura è `scena3d/mani.js`, il suggerimento `scena3d/frecce
   non dice niente che non si veda.
 - **Dopo il gesto resta solo il risultato** (`MOSSE` in `indice.js`): niente
   animazione doppia. `window.__poz.fai` passa di lì, senza dito.
-- **Il coperchio si mette, fuma e si toglie**: basta portarlo sul calderone, e la riga lo
-  dice («fai fumare il calderone col coperchio»). A fuoco acceso balla e sbuffa dal bordo;
-  a tempo scaduto si ferma con uno sbuffo grosso e la freccia dice di toglierlo: un tocco,
-  o portarlo via col dito. Il passo si fa lì, e la pozione bolle più forte. Prima di allora
-  toccarlo non fa niente e il resto del banco aspetta: sopra c'è il coperchio. Provato
-  schiacciarlo su e giù: se la ricetta dice di metterlo, si mette. Provato il mantice: un
-  oggetto che i bambini non conoscono, per un effetto che si vedeva poco.
+- **Niente coperchio e niente mantice**: provati tutti e due per far bollire più forte.
+  Il mantice era un oggetto che i bambini non conoscono, e il coperchio, schiacciato o da far
+  fumare, non si capiva cosa volesse dire: un passo che non si spiega da solo si toglie.
 - **La fiala non si tuffa, la riempie il mestolo**: una fiala immersa nel brodo uscirebbe
   sporca. Il mestolo che entra nel calderone pesca da solo (`pesca`, si vede il brodo nella
   coppa) e sulla fiala versa; vuoto sulla fiala non fa niente, e la strada dice di passare
   dal calderone. Si tappa da sola a gesto finito, e fuori tempo si svuota. Finita la pozione
   resta sul tavolo, del colore del brodo. La fiala si può spostare, ma non è lei che si porta.
-- **La grattugia sta appesa al calderone**, non si trascina: quello che si gratta cade
-  dentro, quindi è un passo solo.
+- **Si gratta nel ciotolino, e il ciotolino si versa**, come il tagliere: la grattugia sta
+  in piedi sul tavolo, non si trascina, e sotto il mucchietto cresce a ogni passata (`grattato`
+  in `bottega.js`, `GRATTATO` nel `cosa` della versata). Provata appesa al calderone: da fuori
+  sembrava di grattare sul tavolo.
 
 ## Il suggerimento
 
@@ -87,12 +83,12 @@ Una freccia dipinta sul bersaglio e un puntino bianco che fa il gesto al posto d
   colore da solo.
 - **Due riflessi a pozione**, che girano sul brodo come venature: quale dipende dagli
   ingredienti, quindi la stessa pozione rifatta può cambiare.
-- **Tutto questo vale a fuoco acceso**: a fuoco spento il brodo sta fermo. Il coperchio
-  alza fiamme e bollore, la bacchetta accende il riflesso.
+- **Tutto questo vale a fuoco acceso**: a fuoco spento il brodo sta fermo. La bacchetta
+  accende il riflesso.
 - **Il lampo usa la luce del fuoco**: provata una luce sua, ogni luce in più si paga su
   tutto il banco.
 
 Nei test: `unita/pozioni` (`creaGesto`, `GESTI`, `BOLLORI`), `integrazione/pozioni`
 (la ricetta intera col dito); `.pz-mercante[data-suggerimento]`
 (`giro`·`su-giu`·`lato`·`agita`·`inclina`·`strada`),
-`window.__bottega3d.dove('legna'|'grattugia'|'tagliere'|'fiala'|'coperchio'|…)`, `window.__bottega3d.ferma()` (il banco si può prendere: le animazioni vanno a fotogrammi, e su una macchina carica durano di più), il cheat `#pozioni=maestro&banco=1`.
+`window.__bottega3d.dove('legna'|'grattugia'|'ciotolino'|'tagliere'|'fiala'|…)`, `window.__bottega3d.ferma()` (il banco si può prendere: le animazioni vanno a fotogrammi, e su una macchina carica durano di più), il cheat `#pozioni=maestro&banco=1`.

@@ -121,7 +121,7 @@ export function creaBanco(scena, trame) {
   marmo.position.set(C.x, POSTI.brodo + 0.22, C.z)
   marmo.visible = false
   g.add(marmo)
-  let modo = MODI.bolle, incanto = 0, metaIncanto = 0, forte = 0, metaForte = 0, vampa = 0, lampo = 0
+  let modo = MODI.bolle, incanto = 0, metaIncanto = 0, lampo = 0
   const riflesso = new Color(0xffffff)
   // parte vuoto: il brodo nasce col primo ingrediente e sale con gli altri
   let pieno = 0, metaPieno = 0
@@ -177,7 +177,7 @@ export function creaBanco(scena, trame) {
     tinta.copy(coloreBrodo)
     if (modo.cangia && fuoco > 0.2) tinta.lerp(riflesso, (Math.sin(t * 1.1) * 0.5 + 0.5) * 0.75)
     brodo.material.color.copy(tinta)
-    brodo.material.emissive.copy(tinta).multiplyScalar(0.45 + vampa * 0.2)
+    brodo.material.emissive.copy(tinta).multiplyScalar(0.45)
     arco += (metaArco * sfumato - arco) * Math.min(1, dt * 4)
     giri = Math.max(0, giri - dt * 0.9)
     arcobaleno.visible = brodo.visible && arco > 0.02
@@ -185,27 +185,25 @@ export function creaBanco(scena, trame) {
     arcobaleno.position.y = brodo.position.y + 0.006
     arcobaleno.scale.setScalar(brodo.scale.x)
     arcobaleno.rotation.z -= dt * (0.3 + giri * 5)
-    forte += (metaForte - forte) * Math.min(1, dt * 2)
     incanto += (metaIncanto - incanto) * Math.min(1, dt * 2)
-    vampa = Math.max(0, vampa - dt * 2.2)
     lampo = Math.max(0, lampo - dt * 5)
-    bollore += (1 + forte * 0.9 - bollore) * Math.min(1, dt * 0.8)
+    bollore += (1 - bollore) * Math.min(1, dt * 0.8)
     fuoco += (metaFuoco - fuoco) * Math.min(1, dt * 2.5)
     corteccia.emissiveIntensity = fuoco * (0.35 + Math.sin(t * 5) * 0.1)
     const acceso = brodo.visible && fuoco > 0.2
     marmo.visible = acceso || incanto > 0.02
     marmo.position.y = brodo.position.y + 0.004
     marmo.scale.setScalar(brodo.scale.x)
-    marmo.rotation.z -= dt * (0.18 + modo.giro * 0.55 + forte * 0.15)
+    marmo.rotation.z -= dt * (0.18 + modo.giro * 0.55)
     marmo.material.opacity = Math.min(0.9, (0.5 * fuoco + 0.45 * incanto) * (1 - arco))
     marmo.material.color.copy(riflesso)
     for (const f of fiamme) {
       const k = 0.85 + Math.sin(t * 13 + f.userData.fase) * 0.08 + Math.sin(t * 7.3 + f.userData.fase * 2) * 0.07
-      const alto = fiammeSotto.includes(f) ? fuoco * (1 + forte * 0.55 + vampa * 0.5) : 1
+      const alto = fiammeSotto.includes(f) ? fuoco : 1
       f.visible = alto > 0.02
       f.scale.set(f.userData.base.x * k * alto, f.userData.base.y * (0.9 + (k - 0.85) * 2) * alto, 1)
     }
-    luceFuoco.intensity = (5.5 + Math.sin(t * 11) * 0.6 + Math.sin(t * 17.3) * 0.4) * fuoco * (1 + forte * 0.5 + vampa * 0.6) + lampo * 16
+    luceFuoco.intensity = (5.5 + Math.sin(t * 11) * 0.6 + Math.sin(t * 17.3) * 0.4) * fuoco + lampo * 16
     luceFuoco.color.set(0xff8a3a).lerp(riflesso, lampo)
     const gira = t * modo.giro, coseno = Math.cos(gira), seno = Math.sin(gira)
     datiBolle.forEach((b, i) => {
@@ -247,9 +245,7 @@ export function creaBanco(scena, trame) {
       if (MODI[m] !== modo) { modo = MODI[m]; datiBolle.forEach(nuovoPosto) }
       riflesso.set(r)
     },
-    forte(k) { metaForte = k },
     incanto(k) { metaIncanto = k },
-    vampa() { vampa = 1 },
     lampo() { lampo = 1 },
     // sta bollendo: chi fa schizzare qualcosa guarda qui
     scia: () => (brodo.visible && fuoco > 0.2 ? modo.scia : null),

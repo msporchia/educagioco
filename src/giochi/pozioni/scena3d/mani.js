@@ -91,29 +91,6 @@ export function creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena }
         via() { attrezzi.fiammella(false) },
       }
     },
-    // posato sul calderone fuma da solo: a fuoco acceso il vapore lo fa ballare, e quand'è pronto sbuffa e si ferma
-    'coperchio:calderone': c => {
-      const orlo = 1.52
-      let t = 0, sbuffo = 0, finito = false
-      const fuma = quanti => { for (let a = 0; a < 6.2; a += 0.78) eff.gocce.emetti(quanti, { da: q.set(C.x + Math.cos(a) * 1.08, orlo + 0.05, C.z + Math.sin(a) * 1.08), sparpaglia: 0.1, verso: [Math.cos(a) * 1.1, 1.2, Math.sin(a) * 1.1], caso: 0.4, colore: '#eae6f2', vita: 0.7, misura: 0.24, gravita: -0.4, allarga: 2 }) }
-      suoni.coperchio()
-      return {
-        dito() {},
-        scorre(dt) {
-          const caldo = scena().fuoco > 0, balla = caldo && !c.gesto.pronto
-          t += dt
-          c.meta.p.set(C.x, orlo + (balla ? Math.abs(Math.sin(t * 9)) * 0.05 : 0), C.z)
-          c.meta.rz = balla ? Math.sin(t * 13) * 0.025 : 0
-          if (c.gesto.pronto && !finito) {
-            finito = true
-            if (caldo) { suoni.sbuffo(); banco.vampa(); banco.ribolli(3); fuma(7) }
-          } else if (balla && (sbuffo -= dt) < 0) {
-            sbuffo = 0.6
-            suoni.coperchio(); banco.ribolli(3); fuma(3)
-          }
-        },
-      }
-    },
     // lascia una scia del colore della pozione, e scuotendo scoppia
     'bacchetta:calderone': c => {
       let n = 0
@@ -138,6 +115,10 @@ export function creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena }
     'brocca:calderone': c => inclina(c, 1, () => '#bfe4ff', false, new Vector3(-0.45, 0.4, 0)),
     'mortaio:calderone': c => inclina(c, -1, () => scena().attrezzi.pestato, true, new Vector3(0.45, 0.4, 0)),
     'tagliere:calderone': c => inclina(c, -1, () => scena().attrezzi.tagliere, true, new Vector3(0.7, 0.1, 0)),
+    'ciotolino:calderone': c => {
+      const v = inclina(c, 1, () => scena().attrezzi.ciotolino, true, new Vector3(-0.42, 0.32, 0)), a = v.scorre
+      return { ...v, scorre() { a(); attrezzi.grattato(1 - c.gesto.avanzato) }, via() { v.via(); attrezzi.grattato(1) } }
+    },
     'sale:calderone': c => pizzico(c, '#f6f2ea'),
     'pepe:calderone': c => pizzico(c, '#3b3330'),
     // il mestolo pescato nel brodo: sopra la fiala si piega, e il getto la riempie. Di suo sta
@@ -162,7 +143,7 @@ export function creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena }
         fine() { eff.smetti() },
       }
     },
-    // si sfrega su e giù, si consuma e cade dentro
+    // si sfrega su e giù, si consuma, e quello che cade si ammucchia nel ciotolino
     'roba:grattugia': c => {
       const giu = finestra(46), g = attrezzi.grattugia.position
       const colore = () => scena().attrezzi.roba.find(d => `roba:${d.i}` === c.cosa.userData.id)?.colore || '#ffffff'
@@ -170,12 +151,13 @@ export function creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena }
         dito(x, y, e) {
           c.meta.p.set(g.x, g.y + 0.45 - giu(y) * 0.9, g.z + 0.25)
           c.cosa.scale.setScalar(1 - c.gesto.avanzato * 0.55)
+          attrezzi.grattato(c.gesto.avanzato, colore())
           if (e.colpo) {
             suoni.gratta()
-            eff.gocce.emetti(10, { da: new Vector3(g.x - 0.1, g.y - 0.1, g.z), sparpaglia: 0.3, verso: [-1, -0.4, -0.5], caso: 0.5, colore: colore(), vita: 0.55, misura: 0.05, gravita: 4 })
+            eff.gocce.emetti(10, { da: new Vector3(g.x, g.y - 0.1, g.z + 0.2), sparpaglia: 0.15, verso: [0, -0.8, 0.2], caso: 0.2, colore: colore(), vita: 0.35, misura: 0.05, gravita: 4 })
           }
         },
-        via() { c.cosa.scale.setScalar(1) },
+        via() { c.cosa.scale.setScalar(1); attrezzi.grattato(0) },
       }
     },
   }
@@ -235,7 +217,6 @@ export function creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena }
     get spec() { return c?.spec ?? null },
     get fatto() { return c?.gesto.avanzato >= 1 },
     get solo() { return !!c?.gesto.solo },       // il dito si è staccato e il gesto va avanti da sé
-    get pronto() { return !!c?.gesto.pronto },
     get fermo() { return c?.fermo ?? 0 },
     prendi(su, spec, cosa, x, y) {
       const id = cosa.userData.id
@@ -257,7 +238,6 @@ export function creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena }
       r.x += (c.meta.rx - r.x) * k; r.z += (c.meta.rz - r.z) * k
     },
     molla() { return !!c?.gesto.molla?.() },
-    togli() { return !!c?.gesto.togli?.() },
     // il dito se n'è andato prima della fine: come se niente fosse
     lascia() { if (c) posa.via?.(); c = posa = null },
     // il gesto è finito: quello che ha fatto resta, ci pensa la mossa

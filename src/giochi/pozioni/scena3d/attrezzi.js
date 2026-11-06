@@ -1,7 +1,7 @@
 // Gli attrezzi del procedimento, sul tavolo a spesa fatta: il mortaio, il
 // pestello, il tagliere, il coltello, il fiammifero, la brocca, il sale, il pepe, la
-// fiala, la grattugia appesa al calderone; in fondo il mestolo appeso, il coperchio
-// appoggiato e la bacchetta nel suo vasetto; e sul bancone la roba comprata, nel suo
+// fiala, la grattugia nel suo ciotolino; in fondo il mestolo appeso e la bacchetta nel
+// suo vasetto; e sul bancone la roba comprata, nel suo
 // recipiente o con la foto del suo modello. Tutto si trascina (indice.js): ognuno ha
 // una presa invisibile più grande di lui, se no il dito non lo prende.
 import { Group, Mesh, Sprite, SpriteMaterial, LatheGeometry, CylinderGeometry, SphereGeometry, CircleGeometry, TorusGeometry, BoxGeometry,
@@ -12,7 +12,7 @@ import { nomeSulBanco } from './trame.js'
 
 const giro = punti => punti.map(([x, y]) => new Vector2(x, y))
 const FILA = 0.1                // la z della fila sul tavolo
-const COSTRUITI = ['mortaio', 'pestello', 'tagliere', 'coltello', 'mestolo', 'fiammifero', 'coperchio', 'bacchetta', 'brocca', 'grattugia', 'sale', 'pepe', 'fiala']
+const COSTRUITI = ['mortaio', 'pestello', 'tagliere', 'coltello', 'mestolo', 'fiammifero', 'bacchetta', 'brocca', 'grattugia', 'ciotolino', 'sale', 'pepe', 'fiala']
 const FETTE = 7
 const PASSO_ROBA = 1.6          // quanto stanno distanti sul bancone
 const GRANDE_ROBA = 1.25
@@ -25,7 +25,6 @@ export function creaAttrezzi(scena, { morbido, lamiera, polvere }) {
   const capocchia = new MeshStandardMaterial({ color: 0xd8342a, roughness: 0.6 })
   const legno = new MeshStandardMaterial({ color: 0xb98a5a, roughness: 0.7, side: DoubleSide })
   const scuro = new MeshStandardMaterial({ color: 0x4a2e1c, roughness: 0.65 })
-  const rame = new MeshStandardMaterial({ color: 0xd08a52, roughness: 0.35, metalness: 0.6, side: DoubleSide })
   const oro = new MeshStandardMaterial({ color: 0xffd76a, emissive: 0xa87a18, roughness: 0.35 })
   const notte = new MeshStandardMaterial({ color: 0x5b3fc4, emissive: 0x24146a, roughness: 0.3 })
   const tagliato = new MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 })
@@ -152,19 +151,6 @@ export function creaAttrezzi(scena, { morbido, lamiera, polvere }) {
   attrezzo('fiammifero', fiammifero, 1.55, 0.08, -1.5, -1.65)
   fiammifero.userData.presa.position.y = 0.5
 
-  // il coperchio: una cupola di rame col pomolo, appoggiata in fondo al tavolo. È largo come il calderone
-  const coperchio = new Group()
-  coperchio.add(new Mesh(new LatheGeometry(giro([[0, 0.3], [0.26, 0.28], [0.58, 0.2], [0.86, 0.09], [1.02, 0.03], [1.08, 0], [1.05, -0.03], [0.98, 0.01]]), 40), rame))
-  const pomolo = new Mesh(new SphereGeometry(0.13, 14, 10), oro)
-  pomolo.position.y = 0.42
-  const collo = new Mesh(new CylinderGeometry(0.05, 0.08, 0.12, 12), rame)
-  collo.position.y = 0.33
-  coperchio.add(pomolo, collo)
-  attrezzo('coperchio', coperchio, -2.1, 1.04, 0, -2.92, 1.42)
-  coperchio.userData.presa.position.y = 0.15
-  coperchio.userData.presa.scale.setScalar(1.15)
-  coperchio.userData.fisso = true
-
   // la bacchetta: nel suo vasetto, con la stella che brilla e si guarda attorno. Pende un po' indietro:
   // la camera guarda dall'alto, e dritta si accorcerebbe a niente
   const bacchetta = new Group()
@@ -242,19 +228,28 @@ export function creaAttrezzi(scena, { morbido, lamiera, polvere }) {
   fiala.userData.presa.position.y = 0.35
   fiala.userData.presa.scale.setScalar(0.75)
 
-  // la grattugia: sta appesa al calderone, quello che ci si sfrega cade dentro
+  // la grattugia: in piedi sul tavolo dentro il suo ciotolino, che poi si versa come il mortaio
   const grattugia = new Group()
   const lamina = new Mesh(new BoxGeometry(0.58, 1.05, 0.03), new MeshStandardMaterial({ map: lamiera, roughness: 0.4, metalness: 0.5 }))
   const anello = new Mesh(new TorusGeometry(0.1, 0.022, 8, 16), metallo)
   anello.position.y = 0.6
   grattugia.add(lamina, anello)
-  grattugia.position.set(POSTI.calderone.x + 1.2, 1.0, POSTI.calderone.z + 0.95)
-  grattugia.rotation.set(-0.5, 0, -0.2)
+  grattugia.position.set(1.7, 0.62, 0.75)
+  grattugia.rotation.set(-0.3, 0, -0.12)
   grattugia.visible = false
   grattugia.userData = { id: 'grattugia', casa: grattugia.position.clone() }
   scena.add(grattugia)
+  const ciotolino = new Group(), dentroCiotolino = new Group(), sfarinato = new MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, map: polvere })
+  const mucchietto = new Mesh(mucchioGeo, sfarinato)
+  mucchietto.position.y = 0.2
+  dentroCiotolino.scale.setScalar(0.75)        // lo stesso della roba, in piccolo. Fuori dal gruppo: `aCasa` rimette la scala a 1
+  dentroCiotolino.add(new Mesh(ciotolaGeo, coccio), mucchietto)
+  ciotolino.add(dentroCiotolino)
+  attrezzo('ciotolino', ciotolino, 1.7, 0, 0, 0.95)
+  ciotolino.userData.presa.position.y = 0.15
+  ciotolino.userData.presa.scale.setScalar(0.7)
 
-  const tutti = { mortaio, pestello, tagliere, coltello, mestolo, fiammifero, coperchio, bacchetta, brocca, grattugia, sale, pepe, fiala }
+  const tutti = { mortaio, pestello, tagliere, coltello, mestolo, fiammifero, bacchetta, brocca, grattugia, ciotolino, sale, pepe, fiala }
   let quali = []
 
   // quello che si è misurato arriva com'era sulla bilancia o nel cilindro: `vuota` lo fa calare mentre si versa
@@ -320,6 +315,7 @@ export function creaAttrezzi(scena, { morbido, lamiera, polvere }) {
       if (q.tagliere) tagliato.color.set(q.tagliere)
       intero.visible = !!q.tagliere && !q.tagliato
       this.taglia(q.tagliere ? (q.tagliato ? 1 : 0) : -1)
+      this.grattato(q.ciotolino ? 1 : 0, q.ciotolino)
       this.riempi(q.fiala ? 1 : 0, q.fiala)
       this.tappa(q.fiala ? 1 : 0)
     },
@@ -340,6 +336,12 @@ export function creaAttrezzi(scena, { morbido, lamiera, polvere }) {
       fette.forEach((f, i) => { f.visible = k >= 0 && i < Math.round(k * FETTE) })
     },
     fiammella(si) { fiammella.visible = si },
+    // quello che è caduto nel ciotolino: `k` quanto è pieno
+    grattato(k, colore) {
+      mucchietto.visible = k > 0
+      mucchietto.scale.set(0.3 + k * 0.7, Math.max(0.001, 0.72 * k), 0.3 + k * 0.7)
+      if (colore) sfarinato.color.set(colore)
+    },
     // il mestolo col brodo: `k` quanto ne resta, null è vuoto
     pesca(colore, k = 1) {
       cucchiaiata.visible = !!colore
@@ -364,7 +366,7 @@ export function creaAttrezzi(scena, { morbido, lamiera, polvere }) {
       for (const a of [...Object.values(tutti), portaBacchetta]) { a.traverse(o => { if (o.geometry !== presaGeo) o.geometry?.dispose() }); scena.remove(a) }
       presaGeo.dispose()
       for (const t of trame) t.dispose()
-      for (const m of [pietra, metallo, coccio, pesto, capocchia, legno, scuro, rame, oro, notte, tagliato, ceramica, nero, vetro, succo, pescata, niente, stecco.material, lamina.material, fiammella.material, alone.material,
+      for (const m of [pietra, metallo, coccio, pesto, capocchia, legno, scuro, oro, notte, tagliato, ceramica, nero, vetro, succo, pescata, sfarinato, niente, stecco.material, lamina.material, fiammella.material, alone.material,
                        sale.userData.targa.material, pepe.userData.targa.material, ...tinte]) m.dispose()
     },
   }

@@ -8,7 +8,7 @@ import { FAMIGLIA, INGREDIENTI, VALE, scrivi, mescola } from '../dati/misure.js'
 import { PEZZI, PREZZI, TONDI, PREZZI_TONDI, AMPOLLE_A_ORDINE, SPEDIZIONE, PULIZIA, PASTICCIO } from '../dati/bottega.js'
 import { MONETE_A_DOSE, MONETE_A_PASSO } from '../dati/campagna.js'
 import { chiaveDi } from './misura.js'
-import { AZIONI, MORTAIO, TAGLIERE, ricetta, testo, frase } from './procedimento.js'
+import { AZIONI, MORTAIO, TAGLIERE, GRATTATO, ricetta, testo, frase } from './procedimento.js'
 
 export function caso(seme = 1) {
   let s = seme >>> 0 || 1
@@ -160,9 +160,9 @@ export class Bottega {
     this.pestato = false         // ed è già stato pestato
     this.tagliere = []           // quello che è sul tagliere
     this.tagliato = false        // ed è già stato sminuzzato
+    this.grattato = []           // quello che è caduto nel ciotolino
     this.dentro = []             // quello che è nel calderone
     this.scaldato = false
-    this.coperto = false         // il coperchio: bolle più forte
     this.incantato = false       // la bacchetta
     this.mescolato = false       // dall'ultima versata: se no nel calderone c'è l'arcobaleno
     this.pasticci = 0
@@ -222,7 +222,7 @@ export class Bottega {
       : azione === 'appoggia' ? atteso.azione === 'sminuzza' && fra
       : azione === 'sminuzza' ? atteso.azione === 'sminuzza' && !manca.length
       : azione === 'gratta' ? atteso.azione === 'gratta' && fra
-      : azione === 'versa' ? atteso.azione === 'versa' && fra && (!cosa.includes(MORTAIO) || this.pestato) && (!cosa.includes(TAGLIERE) || this.tagliato)
+      : azione === 'versa' ? atteso.azione === 'versa' && fra && (!cosa.includes(MORTAIO) || this.pestato) && (!cosa.includes(TAGLIERE) || this.tagliato) && (!cosa.includes(GRATTATO) || this.grattato.length)
       : azione === atteso.azione
     if (!giusto) {
       this.speso += PASTICCIO
@@ -243,23 +243,24 @@ export class Bottega {
 
   // quello che il passo aspetta ancora
   mancaAl(p) {
-    const gia = p.azione === 'pesta' ? this.mortaio : p.azione === 'sminuzza' ? this.tagliere : this.dentro
+    const gia = p.azione === 'pesta' ? this.mortaio : p.azione === 'sminuzza' ? this.tagliere : p.azione === 'gratta' ? this.grattato : this.dentro
     return p.cosa.filter(i => !gia.includes(i))
   }
 
   faiPasso(p) {
-    const versati = p.cosa.includes(MORTAIO) ? this.mortaio : p.cosa.includes(TAGLIERE) ? this.tagliere : this.mancaAl(p)
+    const versati = p.cosa.includes(MORTAIO) ? this.mortaio : p.cosa.includes(TAGLIERE) ? this.tagliere : p.cosa.includes(GRATTATO) ? this.grattato : this.mancaAl(p)
     if (p.azione === 'pesta') { this.mortaio = [...p.cosa]; this.pestato = true }
     if (p.azione === 'sminuzza') { this.tagliere = [...p.cosa]; this.tagliato = true }
-    if (p.azione === 'versa' || p.azione === 'gratta') {
+    if (p.azione === 'gratta') this.grattato = [...p.cosa]
+    if (p.azione === 'versa') {
       this.dentro = [...this.dentro, ...versati]
       this.mescolato = false
       if (p.cosa.includes(MORTAIO)) { this.mortaio = []; this.pestato = false }
       if (p.cosa.includes(TAGLIERE)) { this.tagliere = []; this.tagliato = false }
+      if (p.cosa.includes(GRATTATO)) this.grattato = []
     }
     if (p.azione === 'mescola') this.mescolato = true
     if (p.azione === 'scalda') this.scaldato = true
-    if (p.azione === 'copri') this.coperto = true
     if (p.azione === 'agita') this.incantato = true
     this.passo++
     this.finita = this.passo >= this.passi.length

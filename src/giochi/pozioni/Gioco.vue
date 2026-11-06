@@ -20,7 +20,7 @@ import { SENZA_FINE } from './gioco.js'
 import { fraseDiFine, primatoInParole } from '../primati.js'
 import { mescola } from './dati/misure.js'
 import { Bottega } from './motore/bottega.js'
-import { MORTAIO, TAGLIERE } from './motore/procedimento.js'
+import { MORTAIO, TAGLIERE, GRATTATO } from './motore/procedimento.js'
 import { scrivi, leggi, dice, tappaDi } from './motore/sosta.js'
 import Mappa from './viste/Mappa.vue'
 import Mercante from './viste/Mercante.vue'
@@ -286,6 +286,7 @@ function fai(azione, cosa = [], attrezzo = null) {
   const b = bottega.value
   const pestato = b.mortaio.length ? mescola(colori(b.mortaio)) : null
   const tritato = b.tagliere.length ? mescola(colori(b.tagliere)) : null
+  const grattato = b.grattato.length ? mescola(colori(b.grattato)) : null
   const r = b.fai(azione, cosa)
   if (!r) return
   occupato.value = true
@@ -295,8 +296,8 @@ function fai(azione, cosa = [], attrezzo = null) {
   else salva({ subito: true })
   inCorso = r
   const fatti = r.giusto ? (r.versati || []) : []
-  animazione.value = { n: ++nAnim, tipo: 'passo', azione, attrezzo, giusto: r.giusto, mortaio: (r.cosa || []).includes(MORTAIO), tagliere: (r.cosa || []).includes(TAGLIERE),
-                       colore: r.cosa?.includes(MORTAIO) ? pestato : r.cosa?.includes(TAGLIERE) ? tritato : azione === 'metti' ? mescola(colori(b.mortaio)) : azione === 'appoggia' ? mescola(colori(b.tagliere)) : fatti.length ? mescola(colori(fatti)) : null,
+  animazione.value = { n: ++nAnim, tipo: 'passo', azione, attrezzo, giusto: r.giusto, mortaio: (r.cosa || []).includes(MORTAIO), tagliere: (r.cosa || []).includes(TAGLIERE), ciotolino: (r.cosa || []).includes(GRATTATO),
+                       colore: r.cosa?.includes(MORTAIO) ? pestato : r.cosa?.includes(TAGLIERE) ? tritato : r.cosa?.includes(GRATTATO) ? grattato : azione === 'metti' ? mescola(colori(b.mortaio)) : azione === 'appoggia' ? mescola(colori(b.tagliere)) : fatti.length ? mescola(colori(fatti)) : null,
                        brodo: b.brodo, arcobaleno: !b.mescolato, riempito: b.dentro.length / b.ingredienti.length }
 }
 
