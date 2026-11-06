@@ -14,7 +14,7 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
   `strumenti/sprite/DA-GENERARE.md`). Il disegno a monte è la forma, ed è anche l'allegato del prompt.
 - **Il terreno si compone una volta sola alla misura vera dello schermo**, col ponte e i bordi scuri dentro (`scena/terreno.js`): a
   fotogramma è un disegno senza scala. **Provato** a disegnare in partita, punto per punto: bello ma lavoro buttato a ogni battaglia.
-- **Ogni truppa è già pronta** (`figura()` in `scena/campo.js`): alla misura dello schermo, col contorno della squadra, l'arco in mano e
+- **Ogni truppa è già pronta** (`figura()` in `scena/campo.js`): alla misura dello schermo, con l'arco in mano e
   girata dalla sua parte, tutte le pose prima che la battaglia cominci. Un disegno a fotogramma invece di cinque ingranditi dal foglio. Il prezzo:
   l'arco non rincula più. Sul telefono lento finto (`vecchio-telefono.mjs`, CPU ×6, ultima misura 5/11) il lavoro del filo principale a
   fotogramma è sceso da 23 a 16,6 ms, con le figure più grandi di prima.
@@ -61,6 +61,7 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
   più (`ZE`).
 - **Il castello spunta dal bordo** (`base()`): di chi gioca la cima, in basso; del nemico la
   base col portone, in alto. La barra della vita sta dalla parte del campo.
+- **Gli edifici sulle piazzole sono il 30% più piccoli del castello** (`TAGLIA`, `ma()` in `scena/campo.js`), perché il campo non sembri affollato. I posti del motore non cambiano, e il bersaglio resta largo per il dito.
 - **I posti delle caserme sono piazzole fisse** (`piazzole()`): la piazzola del castello a
   torri, sempre in vista anche vuota, come in un tower defense. Nella metà di ciascuno
   non ci sono alberi né staccionate (le celle `_` della carta prendono solo il prato).
@@ -84,9 +85,12 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
   il prato dipinto ai suoi piedi prende il colore del posto. Viene dal vestito `bosco` del castello a torri finché non arrivano i castelli del posto (voce 9).
   Prima ogni terreno aveva il suo, e nella lava i colori delle squadre erano rovesciati.
   **Provato** il filtro `hue-rotate`: tetti verdi e neve rosa.
-- **Di che squadra è una truppa** si vede da un contorno del suo colore (la figura tinta,
-  `tinta()`, spostata di un pelo ai quattro lati) e da un disco pieno sotto i piedi: con
-  il solo cerchietto, vicine, non si distinguevano.
+- **Di che squadra è una truppa** si vede dalla casacca dipinta (`dati/truppe-dipinte.js`, voce 12,
+  `truppe-arena.py`) e da un disco pieno sotto i piedi: una stoffa blu, che `ricolora()` fa rossa per il
+  nemico. I pezzi hanno il nome della posa e la scala di prima, così `figura()` e i ritratti li mettono dove stavano.
+  Nel foglio due pose degli opliti sono uscite senza casacca: `truppe.json` le fa uguali alla prima.
+  **Provati**, e bocciati: un contorno del colore della squadra (un alone al neon anche sottile), una fascia
+  di traverso in codice (nastro adesivo), il busto tinto in codice.
 - **Gli arcieri hanno in mano l'arco del sotterraneo** (`arco()` in `scena/figure.js`, il
   pezzo grande `arco-corto` di `sotterraneo/dati/atlante.js`): nel foglio lo scheletro è a
   mani vuote. Come l'arma dell'eroe là, sta a un punto fisso davanti al corpo, non a un
@@ -101,7 +105,7 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
   colpiscono, un saltello quando camminano. Guardano di lato (di schiena non esiste
   niente): ciascuna dalla parte della sua squadra.
 - **Una caserma nuova spunta** dalla sua piazzola con un rimbalzo e uno sbuffo di polvere.
-- **La vita dei castelli sta SOPRA i castelli**, in una targa di ferro orlata d'oro, grande e sempre
+- **La vita dei castelli sta SOPRA i castelli**, in una targa di legno orlata d'oro, grande e sempre
   accesa, col numero. Il livello è uno scudetto. **Le altre barre si vedono solo sul ferito** (caserme, porta, truppe).
 - **Un crollo e la bomba si sentono**: il quadro trema un terzo di secondo (`scossa`), le schegge saltano, la bomba ha
   il lampo e la seconda onda. Trema solo il disegno: il mondo resta dov'è.
@@ -111,11 +115,14 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
   vene d'oro, l'imbocco armato di travi con la lanterna, le rotaie, il carrello d'oro e lo stendardo; dal livello
   5 la torre col verricello. La roccia è uguale in tutti i posti (`ROCCIA`), se no sul terreno
   scuro spariva. Crollata resta il suo rudere. Il foglio 7c ha gli stessi tre pezzi, e `dipinta()` li preferisce: quello disegnato resta solo di riserva.
+- **I terreni dipinti entrano tutti insieme**: `terreni-arena.py` li usa solo quando ci sono tutti e quattro, perché uno solo in mezzo ai disegni stona. Ora ci sono: il ponte delle colline è ancora largo e tocca le caserme ai lati, si rifà (voce 8).
+- **Sul ponte si cammina fra i parapetti** (`CAMPO.ponte`, in `separa()`): chi non ci passa si mette in fila, chi vola ci passa sopra. Il limite è la misura del piano dei dipinti, meno mezza truppa.
+- **Un terreno dipinto ha il suo ponte** (`PONTE_DIPINTO` di `dati/terreni-pronti.js`), e il gioco non ci mette il suo: sta fra le rive e largo il 10% dell'immagine, se no tocca le caserme ai lati.
 - **Il ponte e la porta** (`arena-disegni/opere.js`) prendono legno e pietra dal posto. Il ponte ha le assi fra due travi
   con le spalle di pietra; la porta due torri merlate con lo stendardo e il portone, che si crepa sotto i due terzi e
-  sotto un terzo della vita; crollata, resta il cumulo. Il foglio 9 ha castello, porta (intera, rotta,
-  crollata) e ponte per ogni posto (`strumenti/sprite/fortezze-arena.py`, `dati/fortezze-dipinte.js`).
-- **Mancano**: i fogli 8, 9, 10 e 11, e le pose di attacco e di morte delle truppe.
+  sotto un terzo della vita; crollata, resta il cumulo. Il foglio 9 ha castello e porta (intera, rotta,
+  crollata) per ogni posto, col fondo trasparente: il ponte sta nel terreno (`strumenti/sprite/fortezze-arena.py`, `dati/fortezze-dipinte.js`).
+- **Mancano**: i fogli 9, 10 e 11, e le pose di attacco e di morte delle truppe.
 
 ## Il quadro e i comandi
 
@@ -123,7 +130,7 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
   diversi nella stessa riga facevano brutto (l'utente): nell'anello sono tre gemelli da 68 px, icona sopra e una riga sotto, e niente emoji
   dove c'è un'icona, nemmeno il diamante dei prezzi. Il foglio 11 le rifà dipinte.
 
-Tutta l'interfaccia è **ferro e oro** (`--ar-ferro`, `--ar-oro` in `stile.css`, i titoli in serif: niente font in più). Il quadro
+Tutta l'interfaccia è **legno e oro come le finestre del sotterraneo** (`--ar-cornice`, `--ar-ottone` e gli altri valori in testa a `stile.css`, gli angoli sono il suo `Angoli.vue`, i titoli in serif: niente font in più). Una finestra ha il bordo d'oro sfumato, dentro i riquadri sono incassati, i tasti che contano sono d'ottone. Il quadro
 prende tutto quello che la barra (`scura`) e la targa lasciano. Orologio e diamanti stanno nella targa in alto; ripara e
 bomba sono due scudi di bronzo nei due angoli di sotto del campo (`.ar-azioni`), ai lati del castello e più bassi delle
 piazzole, col prezzo o l'attesa in un cartellino: impilati a destra coprivano una caserma. Su uno schermo largo

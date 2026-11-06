@@ -292,6 +292,12 @@ export class Partita {
         a.x -= dx * s; a.y -= dy * s; b.x += dx * s; b.y += dy * s
       }
     }
+    // sul ponte si sta fra i parapetti: chi non ci passa si mette in fila (chi vola no, e chi è sulla riva accanto nemmeno)
+    const { alto, basso, largo } = CAMPO.ponte
+    for (const a of u) {
+      const d = a.x - CAMPO.corsia
+      if (!a.vola && a.y > alto && a.y < basso && Math.abs(d) > largo && Math.abs(d) < largo * 2) a.x = CAMPO.corsia + Math.sign(d) * largo
+    }
   }
 
   muoviCastello(t, dt) {
@@ -474,13 +480,15 @@ export class Partita {
     return [...this.castelli, ...this.muri, ...this.caserme, ...this.miniere].filter(e => e.lato === lato && e.hp < e.max && (e.tipo === 'muro' || viva(e)))
   }
 
-  /* la riparazione va alla costruzione messa peggio */
+  /* la riparazione va alla costruzione messa peggio, e a tutte le caserme e le miniere ferite: serve a riprendersi (docs/arena/regole.md) */
   ripara(lato, p) {
-    const e = this.riparabili(lato).sort((a, b) => a.hp / a.max - b.hp / b.max)[0]
+    const ferite = this.riparabili(lato).sort((a, b) => a.hp / a.max - b.hp / b.max)
     this.paga(lato, p)
-    e.hp = Math.min(e.max, e.hp + e.max * RIPARA)
-    if (e.tipo === 'muro') e.crollato = false
-    this.evento({ tipo: 'cura', lato, x: e.x, y: e.y })
+    for (const e of ferite.filter((e, i) => !i || e.tipo === 'caserma' || e.tipo === 'miniera')) {
+      e.hp = Math.min(e.max, e.hp + e.max * RIPARA)
+      if (e.tipo === 'muro') e.crollato = false
+      this.evento({ tipo: 'cura', lato, x: e.x, y: e.y })
+    }
     return true
   }
 

@@ -6,6 +6,7 @@
 // niente per tutte: in campo guardano dalla parte della loro squadra.
 import { PEZZI } from '../../castello/dati/figure.js'
 import { NITIDO, NITIDI } from '../../sotterraneo/dati/atlante.js'
+import { PEZZI as VESTITE } from '../dati/truppe-dipinte.js'
 
 export const CREATURA = {
   scheletri: 'scheletro', guardiano: 'scheletro-scudo', lupi: 'mummia', diavoletto: 'diavoletto',
@@ -50,6 +51,7 @@ export function guastiDelleFigure() {
   for (const [id, c] of Object.entries(CREATURA)) {
     if (!pose[c] || (!pose[c].respiro.length && !pose[c].lato.length)) g.push(`${id}: la creatura ${c} non ha fotogrammi`)
     if (!(SCALA[id] > 0)) g.push(`${id}: manca la scala`)
+    if (pose[c]) for (const nome of fotogrammiDi(id)) if (!VESTITE[nome]) g.push(`${nome}: non è in truppe-dipinte.js`)
   }
   return g
 }

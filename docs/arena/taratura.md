@@ -107,6 +107,8 @@ promesse reggono: il nemico ora è più forte a parità di `d`, quindi `d` è sc
 `-- --infinita --mono` (una truppa sola, mai miniera, in ogni terreno) è il controllo contro le strade senza
 contromossa; [nemico.md](nemico.md).
 
+Il 6 novembre, con le piazzole più vicine fra loro e al castello, Ripara che cura tutte le caserme e le miniere e il ponte stretto fra i parapetti, le tre rampe sono state ritarate: il Medio resta in linea con prima (ultima tappa `d` 1,25, bambino 4%). Nella partita in due finta le partite finite sono scese da 12 a 9 su 16. Non dipende da Ripara né dal ponte: resta lo spostamento delle piazzole, ma il perché non è misurato. Quelle che non finiscono hanno il castello del finto ospite molto alto.
+
 ## L'economia: base bassa, miniera che conta (23 ottobre)
 
 L'utente: «partiamo con troppi soldi forse, se la miniera di base non è utile». Misurato: con le monete di base di prima

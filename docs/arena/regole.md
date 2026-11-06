@@ -166,7 +166,7 @@ Costano diamanti di battaglia (💎, per non confonderli con le monete vere) e u
 
 | scelta | cosa fa | prezzo |
 |---|---|---|
-| 🔧 Ripara | +40% di vita alla costruzione messa peggio, porta compresa (anche crollata) | 6 |
+| 🔧 Ripara | +40% di vita alla costruzione messa peggio, porta compresa (anche crollata), e a tutte le caserme e le miniere ferite: serve a riprendersi quando il nemico comincia a buttarle giù (l'utente) | 6 |
 | 🏰 Castello | più danno, cadenza, gittata e vita (+300 per livello); si tocca sul campo | 8, 10, 14, 18, 23… |
 | 💣 Bomba | **in regalo** (non si compra): spazza le truppe nemiche più fitte | 0 monete, un calcolo |
 

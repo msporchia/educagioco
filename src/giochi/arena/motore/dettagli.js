@@ -116,6 +116,7 @@ export function dettaglioAzione(azione, { miniera = 0, castello = 1 } = {}) {
     etichette: { ora: 'Cosa fa', dopo: '' },
     prezzo: AZIONI.ripara.prezzo,
     righe: [{ nome: 'Rimette in sesto', ora: `${Math.round(RIPARA * 100)}% della vita`, dopo: null },
+            { nome: 'Caserme e miniere', ora: 'tutte quelle ferite', dopo: null },
             { nome: 'Il muro crollato', ora: `torna in piedi con ${num(MURO.hp * RIPARA)} di vita`, dopo: null }],
   }
 }

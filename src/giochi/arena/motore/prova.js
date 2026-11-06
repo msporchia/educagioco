@@ -1,5 +1,5 @@
 // La battaglia di prova, per guardare il campo senza giocare mezz'ora: `#arena=lava&battaglia=40` apre quel
-// terreno con le sei piazzole piene da tutte e due le parti, dopo tanti secondi di scontro, `&vuota` senza edifici (docs/core/comandi.md).
+// terreno con le sei piazzole piene da tutte e due le parti, dopo tanti secondi di scontro, `&vuota` senza edifici, `&fine=vinto` o `perso` per il cartello di fine (docs/core/comandi.md).
 import { POSTI, truppeDelTerreno } from '../dati/regole.js'
 import { Partita } from './partita.js'
 
@@ -9,10 +9,10 @@ const LENTO = { moneteAlSecondo: 0, pensa: 9999, forza: 1 }
 export function chiesta(frammento) {
   const q = new URLSearchParams(String(frammento || '').replace(/^#/, ''))
   if (!q.has('battaglia')) return null
-  return { terreno: q.get('arena') || 'bosco', secondi: Number(q.get('battaglia')) || 0, vuota: q.has('vuota') }
+  return { terreno: q.get('arena') || 'bosco', secondi: Number(q.get('battaglia')) || 0, vuota: q.has('vuota'), fine: q.get('fine') }
 }
 
-export function battagliaDiProva({ terreno, secondi, vuota }) {
+export function battagliaDiProva({ terreno, secondi, vuota, fine }) {
   const truppe = truppeDelTerreno(terreno)
   const p = new Partita({ registra: true, sfida: { nemico: LENTO, truppe, durata: Infinity, monete: 9999 } })
   if (vuota) { p.lati.io.monete = p.lati.nem.monete = 40; return p }
@@ -24,5 +24,6 @@ export function battagliaDiProva({ terreno, secondi, vuota }) {
   }
   p.avanza(secondi)
   p.prendiEventi()
+  if (fine) p.castello(fine === 'vinto' ? 'nem' : 'io').hp = 0
   return p
 }

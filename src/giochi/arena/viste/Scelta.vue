@@ -3,6 +3,7 @@
 // non un foglio): il disegno di ogni truppa della tappa e della miniera, col prezzo dentro lo stesso riquadro. Si preme il riquadro; il «?» piccolo apre «i numeri». Niente nomi né frasi: il bambino sa già cosa
 // vuole. Da soli il campo sta fermo finché è aperta, in due no (lo decide Gioco.vue, che le dà il punto x, y, coda e i prezzi).
 import Ritratto from './Ritratto.vue'
+import Angoli from '../../sotterraneo/viste/Angoli.vue'
 import Icona from './Icona.vue'
 
 defineProps({
@@ -14,6 +15,7 @@ defineEmits(['costruisci', 'dettagli'])
 <template>
   <div class="ar-nuvola" :data-scelta="s.posto" :style="{ left: s.x + 'px', top: s.y + 'px', width: s.larga + 'px', '--coda': s.coda + 'px' }"
        @click.stop>
+    <Angoli />
     <div v-for="v in s.varianti" :key="v.id" class="ar-opzione" :class="{ 'ar-no': !v.puoi }" :data-variante="v.id">
       <button class="ar-disegno" :disabled="!v.puoi" :data-costruisci="v.id" :aria-label="v.nome"
               @click="$emit('costruisci', v.id)">

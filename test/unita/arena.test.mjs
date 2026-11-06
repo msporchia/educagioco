@@ -90,7 +90,24 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   controlla('il muro non si costruisce: non c\'è nemmeno la scelta', p.prezzo('io', 'muro') === null)
   uguale('il castello sale come le caserme', p.fai('io', 'castello') && p.castello('io').liv, 2)
   p.muro('io').hp = 0
+  {
+    const d = new Partita({ sfida: { nemico: { moneteAlSecondo: 0, pensa: 9999, forza: 1 }, truppe: ['scheletri'], durata: Infinity, monete: 0 } })
+    const fanti = [176, 178, 180, 182, 184, 186].map(x => ({ id: 'scheletri', lato: 'io', x, y: 270, hp: 9, max: 9, vola: false }))
+    const uccello = { id: 'pipistrelli', lato: 'io', x: 205, y: 270, hp: 9, max: 9, vola: true }, riva = { id: 'scheletri', lato: 'io', x: 90, y: 230, hp: 9, max: 9, vola: false }
+    d.unita.push(...fanti, uccello, riva)
+    for (let i = 0; i < 30; i++) d.separa()
+    controlla('sul ponte chi cammina resta fra i parapetti', fanti.every(f => Math.abs(f.x - CAMPO.corsia) <= CAMPO.ponte.largo + 0.01), fanti.map(f => f.x).join(' '))
+    controlla('chi vola ci passa sopra, e chi è sulla riva resta lì', uccello.x === 205 && riva.x === 90)
+  }
   controlla('una porta crollata si ricostruisce riparando', p.riparabili('io').includes(p.muro('io')) && p.fai('io', 'ripara') && p.muro('io').hp > 0)
+  {
+    const miniera = p.miniereDi('io')[0], porta = p.muro('io'), castello = p.castello('io')
+    cripta.hp = cripta.max * 0.5; miniera.hp = miniera.max * 0.5; porta.hp = 0; castello.hp = castello.max * 0.9
+    p.fai('io', 'ripara')
+    controlla('riparare cura la porta crollata, la caserma e la miniera insieme', porta.hp > 0 && cripta.hp > cripta.max * 0.5 && miniera.hp > miniera.max * 0.5)
+    controlla('ma il castello solo se è lui il messo peggio', castello.hp === castello.max * 0.9)
+    cripta.hp = cripta.max; miniera.hp = miniera.max; porta.hp = porta.max; castello.hp = castello.max
+  }
   p.sbagliata('io', cripta.posto)
   controlla('un calcolo sbagliato ferma la caserma', p.inRiposo('io', cripta.posto))
   controlla('ma non toglie monete', p.lati.io.monete > 30)
