@@ -56,6 +56,9 @@ export function attrezziDi(camp) {
 const BASE = { tappe: 3, articoli: [1, 1], tetto: 1000, tempo: [78, 62] }
 // i primi livelli sono a crudo e con tempo da vendere: si impara a muoversi senza fretta (un test misura il margine)
 const CALMA = { tempo: [170, 150] }
+// dalla pentola il tempo scende un po' a ogni livello, da quello dei primi a quello di BASE: niente scalini (un test misura il margine)
+const GRADINI = 13
+const scende = n => ({ tempo: CALMA.tempo.map((t, i) => Math.round(t + (BASE.tempo[i] - t) * n / GRADINI)) })
 // due piatti a ordinazione: il totale da chiedere vuole una somma, e in cucina tutto doppio con due appoggi in mezzo
 const DUE = { articoli: [2, 2], tetto: 1990, tempo: [95, 75], copie: { tagliere: 1, pentola: 1, padella: 1, forno: 1 }, appoggi: 2 }
 // gli ultimi: le ordinazioni scadono prima. La fretta sta nel muoversi: i conti si fanno sempre da fermi
@@ -109,19 +112,19 @@ export const CUCINE = [
   L('Il banco del pesce', '🐟🥗', 'il pesce con l\'insalata', ['🍣', '🐟🥗', '🥗'], CALMA),
   L('Il sushi con l\'alga', '🍱', 'tre cose sullo stesso piatto', ['🍱', '🍣', '🍙'], CALMA),
   L('Il lavello', '🍣', 'i piatti tornano sporchi: vanno lavati', ['🥪', '🥗', '🍣'], { ...CALMA, piatti: 4 }),
-  L('La trattoria', '🍝', 'la pentola: la pasta si cuoce', ['🍝', '🥪', '🥖'], { piatti: 4 }),
-  L('Formaggio per tutti', '🍝🧀', 'la pasta col formaggio', ['🍝', '🥗', '🍝🧀'], { piatti: 4 }),
-  L('La piastra', '🍳', 'la padella: il panino con l\'uovo', ['🥪', '🥗', '🍳'], { piatti: 4 }),
-  L('Il panino caldo', '🥪🥩', 'il panino con la carne', ['🍝', '🍳', '🥪🥩'], { piatti: 4 }),
-  L('La colazione', '🍳🧀', 'l\'uovo in tre modi', ['🍳', '🍳🧀', '🍳🥗'], { piatti: 4 }),
-  L('L\'hamburger', '🍔', 'tre cose da mettere insieme', ['🥪🥩', '🍔', '🥗'], { piatti: 4 }),
-  L('Il ragù', '🍝🥩', 'la pasta al ragù', ['🍝', '🍝🧀', '🍝🥩'], { piatti: 4 }),
-  L('Il secondo', '🥩🥗', 'la carne con l\'insalata', ['🥩🥗', '🍳🥗', '🍔'], { piatti: 4 }),
-  L('Doppio formaggio', '🍔🧀', 'l\'hamburger col formaggio', ['🍔🧀', '🍝🧀', '🍳🧀'], { piatti: 4 }),
-  L('La pizzeria', '🍕', 'il forno: la pizza va infornata', ['🍕', '🥗'], { piatti: 4 }),
-  L('Pizza e pasta', '🍝🧀', 'due cose lunghe insieme', ['🍕', '🍝', '🍝🧀'], { piatti: 4 }),
-  L('Pizza e panini', '🍔', 'tutti i fuochi accesi', ['🍕', '🍔', '🥪'], { piatti: 4 }),
-  L('La pizza con la carne', '🍕🥩', 'la padella prima del forno', ['🍕🥩', '🍕', '🥩🥗'], { piatti: 4 }),
+  L('La trattoria', '🍝', 'la pentola: la pasta si cuoce', ['🍝', '🥪', '🥖'], { ...scende(1), piatti: 4 }),
+  L('Formaggio per tutti', '🍝🧀', 'la pasta col formaggio', ['🍝', '🥗', '🍝🧀'], { ...scende(2), piatti: 4 }),
+  L('La piastra', '🍳', 'la padella: il panino con l\'uovo', ['🥪', '🥗', '🍳'], { ...scende(3), piatti: 4 }),
+  L('Il panino caldo', '🥪🥩', 'il panino con la carne', ['🍝', '🍳', '🥪🥩'], { ...scende(4), piatti: 4 }),
+  L('La colazione', '🍳🧀', 'l\'uovo in tre modi', ['🍳', '🍳🧀', '🍳🥗'], { ...scende(5), piatti: 4 }),
+  L('L\'hamburger', '🍔', 'tre cose da mettere insieme', ['🥪🥩', '🍔', '🥗'], { ...scende(6), piatti: 4 }),
+  L('Il ragù', '🍝🥩', 'la pasta al ragù', ['🍝', '🍝🧀', '🍝🥩'], { ...scende(7), piatti: 4 }),
+  L('Il secondo', '🥩🥗', 'la carne con l\'insalata', ['🥩🥗', '🍳🥗', '🍔'], { ...scende(8), piatti: 4 }),
+  L('Doppio formaggio', '🍔🧀', 'l\'hamburger col formaggio', ['🍔🧀', '🍝🧀', '🍳🧀'], { ...scende(9), piatti: 4 }),
+  L('La pizzeria', '🍕', 'il forno: la pizza va infornata', ['🍕', '🥗'], { ...scende(10), piatti: 4 }),
+  L('Pizza e pasta', '🍝🧀', 'due cose lunghe insieme', ['🍕', '🍝', '🍝🧀'], { ...scende(11), piatti: 4 }),
+  L('Pizza e panini', '🍔', 'tutti i fuochi accesi', ['🍕', '🍔', '🥪'], { ...scende(12), piatti: 4 }),
+  L('La pizza con la carne', '🍕🥩', 'la padella prima del forno', ['🍕🥩', '🍕', '🥩🥗'], { ...scende(13), piatti: 4 }),
   L('Due per volta', '🍝', 'due piatti a ordine, il totale lo batti tu', ['🍝', '🥪', '🥗', '🍳'], { ...DUE, piatti: 5 }),
   L('La tavolata', '🍔', 'due piatti, più carne', ['🍔', '🥪🥩', '🥗', '🍳🥗'], { ...DUE, piatti: 5 }),
   L('Il pranzo della domenica', '🍕', 'due piatti, col forno', ['🍕', '🍝', '🥗', '🍔'], { ...DUE, piatti: 5 }),

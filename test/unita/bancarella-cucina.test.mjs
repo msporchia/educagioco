@@ -470,17 +470,20 @@ test('la sosta riporta la stanza com\'era', () => {
 /* Un bambino che ci pensa su: `PENSA` secondi prima di ogni tocco, e la strada lunga, col piatto posato su un bancone. */
 const PENSA = 4
 function quantoCi(camp, r) {
-  const c = cucinaNuova({ ...camp, piatti: 0 }), banco = libero(c), tagliere = posto(c, 'tagliere')
+  const c = cucinaNuova({ ...camp, piatti: 0 }), banco = libero(c)
   let tempo = 0
   const scorre = finche => { for (let t = 0; t < 8 && finche(); t += 0.05) { passo(c, 0.05); tempo += 0.05 } }
   const va = id => { tempo += PENSA; assert.ok(tocca(c, id)); scorre(() => !c.arrivato); assert.ok(usa(c, arriva(c)), `${r.nome}: a ${id}`) }
+  const cuoci = s => { aspetta(c, s + 0.1); tempo += s + 0.1 }
   va(posto(c, 'piatti')); va(banco)
   for (const k of r.passi) {
-    if (INGREDIENTI[k].va === 'tagliere') { va(cassetta(c, k)); va(tagliere); scorre(() => c.tagliando); va(banco); va(tagliere); va(banco) }
+    if (INGREDIENTI[k].va === 'tagliere') { const tagliere = posto(c, 'tagliere'); va(cassetta(c, k)); va(tagliere); scorre(() => c.tagliando); va(banco); va(tagliere); va(banco) }
+    else if (INGREDIENTI[k].va) { const fuoco = posto(c, INGREDIENTI[k].va); va(cassetta(c, k)); va(fuoco); cuoci(INGREDIENTI[k].cuoce); va(banco); va(fuoco); va(banco) }
     else if (['riso', 'sugo'].includes(k)) { va(banco); va(cassetta(c, k)); va(banco) }
     else { va(cassetta(c, k)); va(banco) }
   }
   va(banco)
+  if (r.forno) { const forno = posto(c, 'forno'); va(forno); cuoci(8); va(forno) }
   assert.equal(c.cuoco.mano.pronto, r.emoji)
   tocca(c, posto(c, 'consegna')); tempo += PENSA; scorre(() => !c.arrivato)
   return tempo
@@ -492,6 +495,11 @@ test('nei primi cinque livelli c\'è tempo anche per chi ci pensa su', () => {
     // l'ultimo giro, tre ordinazioni di fila, tutte della più lunga: scadono a venti secondi l'una dall'altra
     assert.ok(3 * piuLunga <= camp.tempo[1] + 2 * 20, `${camp.nome}: la terza arriva in tempo`)
   }
+})
+
+test('il tempo si stringe senza scalini: il margine sulla ricetta più lunga non crolla da un livello all\'altro', () => {
+  const margini = CUCINE.map(camp => camp.tempo[1] / (camp.articoli[0] * Math.max(...ricetteDi(camp.ricette).map(r => quantoCi(camp, r)))))
+  margini.slice(1).forEach((m, k) => assert.ok(m >= 0.6 * margini[k], `${CUCINE[k + 1].nome}: da ${margini[k].toFixed(2)} a ${m.toFixed(2)}`))
 })
 
 test('ogni ricetta di ogni cucina si può finire', () => {

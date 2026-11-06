@@ -91,9 +91,12 @@ il ripasso del resto misura il resto, non la cucina.
 **Il tempo totale c'è solo nell'ultimo livello**, Cinque minuti: l'orologio sta in cima al posto
 dei cuori (`hud.resta`), un'ordinazione scaduta sparisce e basta, e a zero la partita finisce
 col record. Così dura sempre cinque minuti: coi cuori chi sbaglia presto avrebbe giocato meno.
-Negli altri livelli il tempo è solo quello delle ordinazioni. Nei primi cinque (`CALMA`) tre
-ordinazioni della ricetta più lunga, fatte di fila da chi pensa quattro secondi a ogni tocco,
-stanno dentro l'ultimo giro: un test lo misura (`quantoCi`).
+Negli altri livelli il tempo è solo quello delle ordinazioni. Nei primi sei (`CALMA`) è lo stesso,
+e nei primi cinque tre ordinazioni della ricetta più lunga, fatte di fila da chi pensa quattro
+secondi a ogni tocco, stanno dentro l'ultimo giro. Dal settimo al diciannovesimo scende un po' a
+ogni livello (`scende`), da 170–150 secondi a 78–62; coi due piatti risale perché il lavoro
+raddoppia. Il metro è il margine, il tempo dell'ultimo giro diviso per la ricetta più lunga fatta
+con calma: da un livello all'altro non cala mai più del 40 % (`quantoCi`, in un test).
 
 ## Il resto è un foglio
 
