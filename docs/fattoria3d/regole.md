@@ -41,7 +41,7 @@ tempo o un rifiuto.
   bambino di sei anni davanti a un no non ricostruisce una catena a ritroso: chiude il gioco.
 - **Un «no» si vede dove si guarda**: il fumetto del contadino sta sopra la sua testa, e chi tocca un campo, la ciotola o la tinozza non ha il
   contadino accanto (a volte è fuori dallo schermo). Ogni rifiuto passa da `Azioni.dici` (o `Attrezzi._no`), che oltre al fumetto accende il **cartello in
-  basso `[data-f3="cartello"]`** (`ui.cartello`, ~3,4 s, cornice arancione: `.f3-cartello`). `ui.avviso` invece si vede solo nella barra del costruire e nella
+  basso `[data-f3="cartello"]`** (`ui.cartello`, ~3,4 s, cornice arancione: `.f3-notizia`; `.f3-cartello` è un'altra cosa, il cartello sopra i recinti). `ui.avviso` invece si vede solo nella barra del costruire e nella
   fascia del trascinamento: un rifiuto detto solo lì, in gioco normale, è muto. Lo stesso cartello porta le poche notizie che prima restavano mute (l'arrivo di un
   animale, «Eccolo!» dei silos, «sta benissimo!» dopo un pasto, i messaggi della fattoria in comune): chi scrive una riga nuova per il bambino usa `ui.cartello`. Un albero o un sasso senza monete lo dice **al tocco**, prima che il contadino
   cammini fin là (`noAbbatti`, `noTogliere`).
