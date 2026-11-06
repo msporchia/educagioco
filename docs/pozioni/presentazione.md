@@ -22,7 +22,7 @@ Tre famiglie di misure, ognuna con le sue unità e il suo strumento:
 ingredienti con la loro dose, «2 kg di polvere di luna», e sul banco uno
 strumento per ognuno col segno d'oro dove arrivare. Sotto, la ricetta a punti dice cosa fare con la roba comprata: si trascina nel
 calderone, nel mortaio o sul tagliere, e col dito si pesta, si sminuzza, si gratta, si
-mescola, si sfrega il fiammifero sulla legna, si fa fumare il coperchio, si fa l'incantesimo
+mescola, si sfrega il fiammifero sulla legna, si fa l'incantesimo
 con la bacchetta, si scuote un pizzico di sale o di pepe, e alla fine si riempie la fiala col mestolo. Chi resta fermo vede una freccia col gesto. Una mossa fuori tempo fa
 un pasticcio. Ogni pozione ribolle a modo suo.
 

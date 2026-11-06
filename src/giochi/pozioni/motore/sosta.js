@@ -2,15 +2,16 @@
 // aperta com'è: il listino di ogni ingrediente, quanto c'è negli strumenti, i
 // gettoni, le macchie e il procedimento a che punto è. Le tappe e gli
 // ingredienti si rifanno dal codice. Una sosta di prima del procedimento
-// (v 1, 2 e 3) non si legge: la tappa ricomincia. `casa` c'è solo in una
+// (v 1, 2 e 3), o di quando c'erano il coperchio e la grattugia sul calderone (v 4), non si
+// legge: la tappa ricomincia. `casa` c'è solo in una
 // sosta di quando si partiva con qualcosa in casa, e la si tiene fino alla fine di quella pozione;
 // `dispensa` in una di quando i liquidi avevano la roba secca per il mortaio, che lì torna sul tavolo.
 import { Bottega, ottimo, minimoDi } from './bottega.js'
-import { AZIONI, MORTAIO, TAGLIERE } from './procedimento.js'
+import { AZIONI, MORTAIO, TAGLIERE, GRATTATO } from './procedimento.js'
 import { CAMPAGNA, INFINITA, giroInfinito } from '../dati/campagna.js'
 import { INGREDIENTI, VALE } from '../dati/misure.js'
 
-export const VERSIONE = 4
+export const VERSIONE = 5
 
 const intero = (n, da, a) => Number.isInteger(n) && n >= da && n <= a
 
@@ -40,7 +41,7 @@ export function scrivi(b, indice, extra = {}) {
     v: VERSIONE, tappa: indice, chiave: b.tappa.chiave,
     ...(indice < 0 ? { giro: { n: b.tappa.giro, pozione: [b.pozione.nome, b.pozione.emoji, b.pozione.colore] } } : {}),
     passi: b.passi.map(p => ({ azione: p.azione, cosa: [...p.cosa] })), righe: b.righe.map(r => ({ testo: r.testo, passi: [...r.passi] })),
-    passo: b.passo, mortaio: [...b.mortaio], pestato: b.pestato, tagliere: [...b.tagliere], tagliato: b.tagliato, dentro: [...b.dentro], scaldato: b.scaldato, coperto: b.coperto, incantato: b.incantato, mescolato: b.mescolato, pasticci: b.pasticci, pasticciato: b.pasticciato,
+    passo: b.passo, mortaio: [...b.mortaio], pestato: b.pestato, tagliere: [...b.tagliere], tagliato: b.tagliato, grattato: [...b.grattato], dentro: [...b.dentro], scaldato: b.scaldato, incantato: b.incantato, mescolato: b.mescolato, pasticci: b.pasticci, pasticciato: b.pasticciato,
     ingredienti: b.ingredienti.map(g => ({
       nome: g.nome, unita: g.unita, dose: g.dose, messo: g.messo, ...(g.casa ? { casa: g.casa } : {}), f: !!g.f, dispensa: !!g.dispensa, traboccate: g.traboccate, pezzi: [...g.pezzi],
       offerte: g.offerte.map(o => ({ base: o.base, prezzo: o.prezzo, unita: o.unita })),
@@ -66,22 +67,18 @@ function leggiOfferte(lista) {
   })
 }
 
-// il mantice è diventato il coperchio: una sosta di prima ha ancora il suo passo, e la sua riga
-const ORA = azione => (azione === 'soffia' ? 'copri' : azione)
-const riscritta = testo => testo.replace(/soffia sul fuoco col mantice/i, m => (m[0] === 'S' ? 'Fai' : 'fai') + ' fumare il calderone col coperchio').replace('soffiato sul fuoco', 'fatto fumare il calderone')
-
 function leggiPassi(lista, quanti) {
   if (!Array.isArray(lista) || !lista.length) throw new Error('passi')
   return lista.map(p => {
-    if (!AZIONI[ORA(p.azione)] || !Array.isArray(p.cosa) || p.cosa.some(i => i !== MORTAIO && i !== TAGLIERE && !intero(i, 0, quanti - 1))) throw new Error('passo')
-    return { azione: ORA(p.azione), cosa: [...p.cosa] }
+    if (!AZIONI[p.azione] || !Array.isArray(p.cosa) || p.cosa.some(i => i !== MORTAIO && i !== TAGLIERE && i !== GRATTATO && !intero(i, 0, quanti - 1))) throw new Error('passo')
+    return { azione: p.azione, cosa: [...p.cosa] }
   })
 }
 function leggiRighe(lista, quanti) {
   if (!Array.isArray(lista) || !lista.length) throw new Error('righe')
   return lista.map(r => {
     if (typeof r.testo !== 'string' || !Array.isArray(r.passi) || r.passi.some(k => !intero(k, 0, quanti - 1))) throw new Error('riga')
-    return { testo: riscritta(r.testo), passi: [...r.passi] }
+    return { testo: r.testo, passi: [...r.passi] }
   })
 }
 
@@ -116,8 +113,9 @@ function rimetti(dato, rnd) {
   b.righe = leggiRighe(dato.righe, b.passi.length)
   if (dato.passo >= b.passi.length || !Array.isArray(dato.mortaio) || !Array.isArray(dato.dentro)) return null
   b.passo = dato.passo; b.mortaio = [...dato.mortaio]; b.dentro = [...dato.dentro]
-  // tagliere e coperchio sono venuti dopo: in una sosta vecchia non ci sono, e va bene
-  b.tagliere = Array.isArray(dato.tagliere) ? [...dato.tagliere] : []; b.tagliato = !!dato.tagliato; b.coperto = !!(dato.coperto ?? dato.soffiato); b.incantato = !!dato.incantato
+  // il tagliere è venuto dopo: in una sosta vecchia non c'è, e va bene
+  b.tagliere = Array.isArray(dato.tagliere) ? [...dato.tagliere] : []; b.tagliato = !!dato.tagliato; b.incantato = !!dato.incantato
+  b.grattato = Array.isArray(dato.grattato) ? [...dato.grattato] : []
   b.pestato = !!dato.pestato; b.scaldato = !!dato.scaldato; b.mescolato = !!dato.mescolato; b.pasticci = dato.pasticci; b.pasticciato = !!dato.pasticciato
   return b
 }

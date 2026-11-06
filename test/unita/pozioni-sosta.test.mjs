@@ -3,7 +3,7 @@
    macchie. Vedi docs/pozioni/sosta.md.
    `node test/esegui.mjs pozioni-sosta --niente-build` */
 import { CAMPAGNA, INFINITA, giroInfinito } from '../../src/giochi/pozioni/dati/campagna.js'
-import { TAGLIERE } from '../../src/giochi/pozioni/motore/procedimento.js'
+import { TAGLIERE, GRATTATO } from '../../src/giochi/pozioni/motore/procedimento.js'
 import { Bottega, caso, giocaBene, seguiLaRicetta, prossimoPasso } from '../../src/giochi/pozioni/motore/bottega.js'
 import { MORTAIO } from '../../src/giochi/pozioni/motore/procedimento.js'
 import { scrivi, leggi, dice, tappaDi, VERSIONE } from '../../src/giochi/pozioni/motore/sosta.js'
@@ -62,12 +62,12 @@ for (const t of [CAMPAGNA[0], CAMPAGNA[9], CAMPAGNA[26], CAMPAGNA.at(-1)]) {
   controlla('e la pozione si finisce', q.finita)
 }
 
-/* il tagliere a metà: la roba appoggiata e il coperchio restano; una sosta di prima del tagliere si legge lo stesso */
+/* il tagliere a metà: la roba appoggiata resta; una sosta di prima del tagliere si legge lo stesso */
 {
   let b = null
   for (let s = 1; s < 80 && !b; s++) {
     const x = new Bottega(CAMPAGNA.find(t => t.chiave === 'lunghezza-virgole'), { rnd: caso(s) })
-    if (['sminuzza', 'copri'].every(a => x.passi.some(p => p.azione === a))) b = x
+    if (x.passi.some(p => p.azione === 'sminuzza')) b = x
   }
   for (const [i, g] of b.ingredienti.entries()) for (const k of g.ottimo.pezzi) b.ordina([{ i, k }])
   prossimoPasso(b); prossimoPasso(b)
@@ -78,14 +78,25 @@ for (const t of [CAMPAGNA[0], CAMPAGNA[9], CAMPAGNA[26], CAMPAGNA.at(-1)]) {
   uguale('la roba sul tagliere resta', q.tagliere.join(), String(r))
   uguale('e la si sminuzza', q.fai('sminuzza').giusto, true)
   uguale('il tritato si versa ancora', q.fai('versa', [TAGLIERE]).giusto, true)
-  const { tagliere, tagliato, coperto, incantato, ...vecchia } = dato
+  const { tagliere, tagliato, incantato, ...vecchia } = dato
   uguale('senza quei campi è un tagliere vuoto', leggi(vecchia).tagliere.length, 0)
-  /* una sosta di quando c'era il mantice: il suo passo è diventato il coperchio, e si finisce */
-  const k = dato.passi.findIndex(p => p.azione === 'copri'), riga = dato.righe.find(r => r.passi.includes(k))
-  const m = leggi({ ...dato, passi: dato.passi.map(p => (p.azione === 'copri' ? { ...p, azione: 'soffia' } : p)),
-                    righe: dato.righe.map(r => (r === riga ? { ...r, testo: 'Soffia sul fuoco col mantice.' } : r)) })
-  uguale('il passo del mantice è il coperchio', m.passi[k].azione, 'copri')
-  controlla('e la riga lo dice', m.righe.some(r => r.testo === 'Fai fumare il calderone col coperchio.'))
+}
+
+/* il ciotolino pieno resta, e si versa dopo */
+{
+  let b = null
+  for (let s = 1; s < 80 && !b; s++) {
+    const x = new Bottega(CAMPAGNA.find(t => t.chiave === 'massa-virgole'), { rnd: caso(s) })
+    if (x.passi.some(p => p.azione === 'gratta')) b = x
+  }
+  for (const [i, g] of b.ingredienti.entries()) for (const k of g.ottimo.pezzi) b.ordina([{ i, k }])
+  while (b.passi[b.passo].azione !== 'gratta') prossimoPasso(b)
+  const [r] = b.passi[b.passo].cosa
+  b.fai('gratta', [r])
+  const q = leggi(JSON.parse(JSON.stringify(scrivi(b, 0))))
+  uguale('il grattato resta nel ciotolino', q.grattato.join(), String(r))
+  uguale('e si versa', q.fai('versa', [GRATTATO]).giusto, true)
+  controlla('e sta nel calderone', q.dentro.includes(r))
 }
 
 /* il calderone senza fondo */

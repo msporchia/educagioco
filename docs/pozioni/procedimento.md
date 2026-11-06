@@ -28,9 +28,9 @@ pasticcio. Il motore è `motore/procedimento.js`.
   sta sul bancone col nome, nel suo recipiente o con la foto del suo modello
   ([gesti.md](gesti.md)), gli attrezzi sul tavolo. La
   roba sul calderone si versa, sul mortaio e sul tagliere ci va, sulla grattugia si
-  sfrega; il pestello sul mortaio pesta, il coltello sul tagliere sminuzza, il mortaio
-  e il tagliere sul calderone versano; il mestolo mescola, il fiammifero sulla legna
-  accende il fuoco, il coperchio sul calderone fuma e lo alza, la bacchetta fa l'incantesimo, la
+  sfrega; il pestello sul mortaio pesta, il coltello sul tagliere sminuzza, il mortaio,
+  il tagliere e il ciotolino sul calderone versano; il mestolo mescola, il fiammifero sulla legna
+  accende il fuoco, la bacchetta fa l'incantesimo, la
   brocca diluisce, il sale e il pepe si scuotono, il mestolo pieno riempie la fiala (`MOSSE` in `procedimento.js`, i gesti in [gesti.md](gesti.md)). Le
   cose entrano una alla volta, in qualunque ordine; provato coi bottoni: troppi, e
   non sembrava di fare niente.
@@ -49,8 +49,8 @@ pasticcio. Il motore è `motore/procedimento.js`.
 - **Lasciato sul tavolo, resta lì**: se un attrezzo dà fastidio lo si sposta, come
   su un banco vero (`posa`). Non si salva: rientrando ognuno è al suo posto.
 - **Quello che ingombra sta in fondo**: il mestolo appeso al gancio sotto lo scaffale,
-  il coperchio appoggiato al muro, la bacchetta nel suo vasetto, che pende indietro perché
-  dall'alto, dritta, si accorcerebbe a niente. Questi tre (`fisso`) tornano sempre lì.
+  la bacchetta nel suo vasetto, che pende indietro perché dall'alto, dritta, si accorcerebbe
+  a niente. Questi due (`fisso`) tornano sempre lì.
 - **Il fuoco parte spento**: scaldare vuol dire accenderlo, e a fuoco spento il
   brodo non bolle e non fuma.
 - **Finché non si mescola nel calderone c'è un arcobaleno che gira**; mescolando
@@ -72,21 +72,21 @@ li usa: capire cosa serve è parte del gioco.
 | | passi | gradini |
 |---|---|---|
 | 1 | versa tutto, mescola, accendi il fuoco, la bacchetta, il pizzico, la fiala | `banco` |
-| 2 | come l'1, e il coperchio | `grande` |
+| 2 | come l'1 | `grande` |
 | 3 | pesta due cose e versa, poi il resto; i liquidi versano tutto | `grandi`, `virgola`, `virgole` |
 | 4 | come il 3, e si diluisce | `media`, `miste`, `inversa` |
 | 5 | come il 4, e una coppia di passi detta al contrario («accendi il fuoco dopo aver mescolato bene») | `inverse`, le finali |
 
 - **Si gioca al banco dalla prima tappa**: con «versa e mescola» il fuoco restava spento
-  e il brodo non ribolliva. Fuoco, bacchetta, pizzico e fiala ci sono da subito, il
-  coperchio da `grande`, tagliere e grattugia da `virgole` (`AZIONI_DA`). Nelle finali e nel
+  e il brodo non ribolliva. Fuoco, bacchetta, pizzico e fiala ci sono da subito,
+  tagliere e grattugia da `virgole` (`AZIONI_DA`). Nelle finali e nel
   calderone senza fondo c'è tutto.
-- **Coperchio e bacchetta sono di contorno**: entrano appena sono sul tavolo, mai oltre
+- **La bacchetta è di contorno**: entra appena è sul tavolo, mai oltre
   dieci passi e otto punti (`TETTO`, `RIGHE`: la pergamena coprirebbe il calderone). Il
-  posto per la fiala è tenuto, poi vengono loro e per ultimo il pizzico. Quello che resta
+  posto per la fiala è tenuto, poi viene lei e per ultimo il pizzico. Quello che resta
   fuori sta sul tavolo lo stesso.
-- **Si mescola sempre prima di scaldare**, il coperchio viene dopo il fuoco.
-- **L'ordine cambia di ricetta in ricetta**: coperchio, bacchetta e brocca cambiano
+- **Si mescola sempre prima di scaldare.**
+- **L'ordine cambia di ricetta in ricetta**: bacchetta e brocca cambiano
   posto, se no si imparerebbe a memoria e il testo non si leggerebbe.
 - **I liquidi non si pestano**: in una pozione di soli liquidi il mortaio e il
   pestello non stanno sul tavolo (`azioniDel`), e la ricetta versa tutto. Provato con
@@ -117,7 +117,7 @@ finali: dalla quarta quattro ingredienti, e il procedimento sale fino in fondo.
 - `passo(a)` suona le mosse: la view dice solo com'è andata.
 - **I suoni** stanno in `suoni.js`, sopra `nota` e `rumore` di `src/audio.js`: le
   ampolle, il liquido che gorgoglia salendo, la polvere, la radice, il trabocco, il
-  tuffo, il pestello, la lama, la grattugia, il mestolo, il fiammifero, il coperchio,
+  tuffo, il pestello, la lama, la grattugia, il mestolo, il fiammifero,
   la bacchetta, il pizzico, il tappo, il fuoco, il pasticcio, una bolla ogni tanto.
   **Non dicono niente che non si veda**: a volume spento il gioco è intero.
 

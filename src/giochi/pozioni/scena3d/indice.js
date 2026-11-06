@@ -134,7 +134,7 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
     return d?.recipiente ? GESTI[`ciotola:${su}`] : su === 'grattugia' && d?.gratta ? GESTI['roba:grattugia'] : null
   }
   const vedo = nome => !attrezzi.cosa(nome) || attrezzi.cosa(nome).visible
-  // la legna e la grattugia stanno dentro il calderone, sullo schermo: valgono solo per chi ci lavora. Come la fiala, che sta lì accanto
+  // la legna sta dentro il calderone, sullo schermo, e la grattugia e la fiala in mezzo agli attrezzi: valgono solo per chi ci lavora
   const conta = (nome, id) => vedo(nome) && nome !== id && (!['legna', 'grattugia', 'fiala'].includes(nome) || gestoDi(id, nome))
   function bersaglio(x, y, id) {
     let meglio = null, vicino = Infinity
@@ -169,8 +169,6 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
   const suggerisciGesto = (su, spec, durata) => frecce.gesto(spec.freccia, su === 'calderone' ? POSTI.calderone.clone().setY(POSTI.brodo + 0.6) : ZONE[su].dove(), durata)
   // il mestolo non va dritto alla fiala: la strada parte da dove pesca
   const suggerisciStrada = (id, su, durata) => frecce.strada((su === 'fiala' ? POSTI.calderone : attrezzi.cosa(id).userData.casa).clone().setY(0.5), ZONE[su].dove(), durata)
-  // il coperchio ha fumato: la strada per toglierlo
-  const suggerisciVia = () => frecce.strada(POSTI.calderone.clone().setY(1.6), attrezzi.coperchio.userData.casa)
   const suoBersaglio = id => Object.keys(ZONE).find(su => GESTI[`${id}:${su}`])
 
   // il gesto è fatto: da qui è una mossa come le altre
@@ -186,11 +184,7 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
 
   let giu = null, presa = null, quieto = 0
   const premi = e => {
-    // il gesto va da sé: il mortaio finisce di versare, il coperchio fuma e quand'è pronto basta toccarlo
-    if (mani.solo) {
-      if (distanza('calderone', e.clientX, e.clientY) < 1 && mani.togli()) finisci()
-      return
-    }
+    if (mani.solo) return                       // sta finendo di versare da solo
     giu = { x: e.clientX, y: e.clientY, id: e.pointerId }
     quieto = 0
     frecce.nascondi()
@@ -214,7 +208,6 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
         return
       }
       if (mani.su === su) return mani.dito(e.clientX, e.clientY)
-      if (mani.togli()) return finisci()        // il coperchio pronto, portato via col dito ancora giù
       mani.lascia()
     }
     if (su) return mani.prendi(su, gestoDi(id, su), presa, e.clientX, e.clientY)
@@ -230,7 +223,7 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
       const p = presa, id = p.userData.id; presa = null
       // lasciato a metà del gesto non è successo niente: si fa vedere come si fa
       if (mani.su) {
-        if (mani.molla()) { presa = p; return }   // piegato, o il coperchio posato: va avanti da sé
+        if (mani.molla()) { presa = p; return }   // piegato: finisce da solo
         const su = mani.su, spec = mani.spec
         mani.lascia()
         suggerisciGesto(su, spec, RESTA)
@@ -243,7 +236,6 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
       // arrivato lì di slancio, senza gesto: si fa vedere come si fa. La roba intera si lascia
       // cadere; un attrezzo sulla cosa sbagliata non fa niente, e si dice dove va
       const gesto = su && gestoDi(id, su)
-      if (gesto?.tipo === 'attesa') { presa = p; mani.prendi(su, gesto, p, e.clientX, e.clientY); mani.molla(); return }
       if (gesto) suggerisciGesto(su, gesto, RESTA)
       else if (su && id.startsWith('roba:')) lascia?.({ attrezzo: id, su })
       else if (su && suoBersaglio(id)) suggerisciStrada(id, suoBersaglio(id), RESTA)
@@ -282,7 +274,6 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
     if (presa && mani.su) {
       mani.scorre(dt)
       if (mani.fatto) finisci()
-      else if (mani.pronto) { if (!frecce.tipo) suggerisciVia() }
       else if (mani.fermo > FERMO_SU) suggerisciGestoUnaVolta()
       else if (frecce.tipo && mani.fermo < 0.15) frecce.nascondi()
     }
@@ -334,7 +325,6 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
     banco.fuoco(q.fuoco)
     banco.arcobaleno(q.arcobaleno)
     banco.bollore(q.bollore)
-    banco.forte(q.forte ? 1 : 0)
     banco.incanto(q.incantato ? 1 : 0)
     attrezzi.imposta(q.attrezzi)
     const sporchi = new Set(q.macchie.map(m => m.i))
@@ -494,10 +484,10 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
     sminuzza: () => aCasa(attrezzi.coltello),
     async versa(a) {
       const finire = () => { banco.colore(a.brodo); banco.riempi(a.riempito); banco.arcobaleno(true); banco.ribolli(4); suoni.tuffo() }
-      if (a.mortaio || a.tagliere) {
+      if (a.mortaio || a.tagliere || a.ciotolino) {
         finire()
-        attrezzi.imposta({ ...ultima.attrezzi, ...(a.mortaio ? { pestato: null } : { tagliere: null }) })
-        await aCasa(attrezzi.cosa(a.mortaio ? 'mortaio' : 'tagliere'))
+        attrezzi.imposta({ ...ultima.attrezzi, ...(a.mortaio ? { pestato: null } : a.tagliere ? { tagliere: null } : { ciotolino: null }) })
+        await aCasa(attrezzi.cosa(a.mortaio ? 'mortaio' : a.tagliere ? 'tagliere' : 'ciotolino'))
       } else {
         // dalla ciotola l'ha versata il dito; quello che è intero ci cade dentro
         const c = a.attrezzo && attrezzi.cosa(a.attrezzo)
@@ -507,9 +497,8 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
       }
     },
     async gratta(a) {
-      banco.colore(a.brodo); banco.riempi(a.riempito); banco.arcobaleno(true); banco.ribolli(4)
-      suoni.tuffo()
       if (a.attrezzo) attrezzi.cosa(a.attrezzo).visible = false
+      attrezzi.imposta({ ...ultima.attrezzi, ciotolino: a.colore })
       await aspetta(0.2)
     },
     async mescola(a) {
@@ -527,11 +516,6 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
       await anima(0.7, () => { eff.luci.emetti(2, { da: su, sparpaglia: 0.7, verso: [0, 2, 0], caso: 1, colore: '#ffb34a', vita: 0.6, misura: 0.1, gravita: 0 }) })
       attrezzi.fiammella(false)
       await aCasa(attrezzi.fiammifero)
-    },
-    async copri() {
-      banco.forte(1)
-      banco.ribolli(6)
-      await aCasa(attrezzi.coperchio)
     },
     async agita() {
       banco.incanto(1)
