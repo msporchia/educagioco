@@ -136,6 +136,16 @@ export const CUCINE = [
 ].map((c, k, tutte) => ({ ...c, ...cassaDi(k), id: 'cucina-' + (k + 1), scuola: 'numeri',
                          portata: Math.round(PORTATA_DA + k / (tutte.length - 1) * (PORTATA_A - PORTATA_DA)) }))
 
+/* La cucina in due (docs/bancarella/in-due.md): chi crea sceglie i minuti e quante pietanze ci sono. La stanza è quella grande,
+   con tutto doppio; i conti no: ognuno fa quelli del suo livello, sul suo telefono. */
+export const MINUTI_IN_DUE = [5, 10, 15]
+export const MENU_IN_DUE = {
+  pochi: { nome: 'Poche', tempo: 110, ricette: ['🥖', '🥪', '🥗', '🍣', '🍙'] },
+  tante: { nome: 'Tante', tempo: 100, ricette: ['🥪', '🥗', '🍣', '🍝', '🍝🧀', '🍳', '🥪🥩', '🍔', '🥩🥗', '🍳🧀'] },
+  tutte: { nome: 'Tutte', tempo: 90, ricette: RICETTE.map(r => r.emoji) },
+}
+export const campInDue = menu => ({ ricette: MENU_IN_DUE[menu].ricette, copie: DUE.copie, appoggi: DUE.appoggi, piatti: 8 })
+
 /* I secondi che restano, come si leggono: 4:05. */
 export function orologio(secondi) {
   const s = Math.max(0, Math.ceil(secondi))

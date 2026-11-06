@@ -1,6 +1,7 @@
 /* LA CUCINA — ci si cammina dentro: si tocca un posto, il cuoco ci va e fa quello che
    lì è ovvio, poi la cassa di sempre. Vedi docs/bancarella/cucina.md. Puro, gira in Node. */
 import { INGREDIENTI, CUCINE, ricetteDi, attrezziDi } from '../../data/bancarella-cucine.js'
+import { ipot } from '../conti-uguali.js'
 
 export const TAGLI = 5             // i colpi di coltello
 const COLPO = 0.3                  // i secondi di un colpo: il cuoco taglia da sé, fino alla fine
@@ -175,7 +176,7 @@ function cammina(c, dt) {
   }
   let resta = VELOCITA * dt
   while (resta > 0 && c.strada.length) {
-    const p = c.strada[0], dx = p.x - k.x, dz = p.z - k.z, d = Math.hypot(dx, dz)
+    const p = c.strada[0], dx = p.x - k.x, dz = p.z - k.z, d = ipot(dx, dz)
     if (d > 1e-6) k.verso = Math.atan2(dx, dz)
     if (d > resta) { k.x += dx / d * resta; k.z += dz / d * resta; resta = 0 }
     else { k.x = p.x; k.z = p.z; resta -= d; c.strada.shift() }
@@ -190,6 +191,8 @@ function taglia(c, dt) {
   if (c.colpo < COLPO) return
   c.colpo -= COLPO
   const s = c.stazioni[c.tagliando]
+  // in due l'altro può aver finito lui, e il tagliere può essere già vuoto
+  if (s.fase !== 'taglia') { c.tagliando = ''; c.colpo = 0; return }
   if (++s.colpi < TAGLI) return
   s.fase = 'pronta'
   c.tagliando = ''
@@ -201,17 +204,25 @@ function lava(c, dt) {
   c.lavata += dt
   if (c.lavata < LAVATA) return
   c.lavata = 0
+  c.lavando = false
+  if (!c.sporchi) return             // in due l'altro può aver lavato l'ultimo
   c.sporchi--
   c.puliti++
-  c.lavando = false
 }
 
-export function passo(c, dt) {
+/* Il cuoco e la stanza vanno separati perché in due i cuochi sono due, la stanza una. */
+export function passoCuoco(c, dt) {
   if (c.tagliando) taglia(c, dt)
   else if (c.lavando) lava(c, dt)
   else cammina(c, dt)
+}
+export function passoStanza(c, dt) {
   fuochi(c, dt)
   ritorni(c, dt)
+}
+export function passo(c, dt) {
+  passoCuoco(c, dt)
+  passoStanza(c, dt)
   return c
 }
 
