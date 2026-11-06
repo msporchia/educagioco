@@ -16,7 +16,7 @@ export const AZIONI = {
   versa: { fare: 'Versare' },
   mescola: { fare: 'Mescolare' },
   scalda: { fare: 'Accendere il fuoco' },
-  soffia: { fare: 'Soffiare sul fuoco' },
+  copri: { fare: 'Mettere il coperchio' },
   agita: { fare: 'Fare l\'incantesimo' },
   diluisci: { fare: 'Diluire' },
   sale: { fare: 'Aggiungere il sale' },
@@ -26,7 +26,7 @@ export const AZIONI = {
 
 // gli attrezzi sul tavolo, per le azioni di una tappa
 export const ATTREZZI = { pesta: ['mortaio', 'pestello'], sminuzza: ['tagliere', 'coltello'], gratta: ['grattugia'], mescola: ['mestolo'],
-                          scalda: ['fiammifero'], soffia: ['mantice'], agita: ['bacchetta'], diluisci: ['brocca'],
+                          scalda: ['fiammifero'], copri: ['coperchio'], agita: ['bacchetta'], diluisci: ['brocca'],
                           sale: ['sale'], pepe: ['pepe'], imbottiglia: ['fiala'] }
 
 // cosa vuol dire portare un attrezzo su un'altra cosa: «attrezzo:dove»
@@ -37,7 +37,7 @@ export const MOSSE = {
   'tagliere:calderone': ['versa', [TAGLIERE]],
   'mestolo:calderone': ['mescola', []],
   'fiammifero:legna': ['scalda', []],
-  'mantice:legna': ['soffia', []],
+  'coperchio:calderone': ['copri', []],
   'bacchetta:calderone': ['agita', []],
   'brocca:calderone': ['diluisci', []],
   'sale:calderone': ['sale', []],
@@ -63,6 +63,13 @@ export function prossimaMossa(p, manca) {
   if (p.azione === 'versa') return { da: p.cosa.includes(MORTAIO) ? 'mortaio' : p.cosa.includes(TAGLIERE) ? 'tagliere' : roba, su: 'calderone' }
   const [da, su] = Object.keys(MOSSE).find(k => MOSSE[k][0] === p.azione).split(':')
   return { da, su }
+}
+
+// come arriva sul bancone quello che si è misurato: quello che stava sulla bilancia in una
+// ciotola, il liquido in un bicchiere. Resta intero quello che ha una forma, e quello che si gratta
+export function recipiente(g, i, passi) {
+  if (g.famiglia === 'capacita') return 'bicchiere'
+  return g.famiglia === 'massa' && !passi.some(p => p.azione === 'gratta' && p.cosa.includes(i)) ? 'ciotola' : null
 }
 
 const inFila = (rnd, lista) => lista.map(x => [rnd(), x]).sort((a, b) => a[0] - b[0]).map(x => x[1])
@@ -99,9 +106,9 @@ export function ricetta(rnd, ingredienti, livello, azioni = []) {
   const dopo = (da, nuovo) => passi.splice(da + Math.floor(rnd() * (passi.length - da + 1)), 0, { azione: nuovo, cosa: [] })
   const fiala = azioni.includes('imbottiglia')
   const ceStaAncora = () => passi.length < TETTO - (fiala ? 1 : 0)
-  // il mantice e la bacchetta: dopo il fuoco l'uno, dopo il mestolo l'altra
-  for (const a of inFila(rnd, ['soffia', 'agita'].filter(x => azioni.includes(x))))
-    if (ceStaAncora()) dopo(passi.findIndex(p => p.azione === (a === 'soffia' ? 'scalda' : 'mescola')) + 1, a)
+  // il coperchio e la bacchetta: dopo il fuoco l'uno, dopo il mestolo l'altra
+  for (const a of inFila(rnd, ['copri', 'agita'].filter(x => azioni.includes(x))))
+    if (ceStaAncora()) dopo(passi.findIndex(p => p.azione === (a === 'copri' ? 'scalda' : 'mescola')) + 1, a)
   // il pizzico: appena c'è tutto nel calderone, e solo se ci sta
   const pizzichi = ['sale', 'pepe'].filter(x => azioni.includes(x))
   if (pizzichi.length && ceStaAncora()) dopo(passi.findLastIndex(p => p.azione === 'versa' || p.azione === 'gratta') + 1, pizzichi[Math.floor(rnd() * pizzichi.length)])
@@ -125,7 +132,7 @@ export function frase(p, ingredienti) {
   if (p.azione === 'gratta') return `gratta ${con(ingredienti[p.cosa[0]])} nel calderone`
   if (p.azione === 'versa') return p.cosa.includes(MORTAIO) ? 'versa il pestato nel calderone' : p.cosa.includes(TAGLIERE) ? 'versa il tritato nel calderone' : `versa ${elenco(nomi)} nel calderone`
   if (p.azione === 'agita') return `agita la bacchetta sul calderone e ${formula(ingredienti)}`
-  return { mescola: 'mescola bene', scalda: 'accendi il fuoco', soffia: 'soffia sul fuoco col mantice', diluisci: 'diluisci con l\'acqua',
+  return { mescola: 'mescola bene', scalda: 'accendi il fuoco', copri: 'metti il coperchio sul calderone', diluisci: 'diluisci con l\'acqua',
            sale: 'aggiungi un pizzico di sale', pepe: 'aggiungi un pizzico di pepe', imbottiglia: 'riempi la fiala' }[p.azione]
 }
 
@@ -138,8 +145,8 @@ const Maiuscola = t => t[0].toUpperCase() + t.slice(1)
 // Al contrario si dicono solo le mosse sul calderone («accendi il fuoco dopo
 // aver mescolato bene»), e pesta e versa diventano «versa X e Y pestati insieme».
 const INSIEME = 0.4, GIRATA = 0.6, DENTRO = ' nel calderone'
-const SUL_CALDERONE = ['mescola', 'scalda', 'soffia', 'diluisci', 'sale', 'pepe']
-const FATTO = { mescola: 'mescolato bene', scalda: 'acceso il fuoco', soffia: 'soffiato sul fuoco', diluisci: 'diluito con l\'acqua', sale: 'aggiunto il sale', pepe: 'aggiunto il pepe' }
+const SUL_CALDERONE = ['mescola', 'scalda', 'copri', 'diluisci', 'sale', 'pepe']
+const FATTO = { mescola: 'mescolato bene', scalda: 'acceso il fuoco', copri: 'messo il coperchio', diluisci: 'diluito con l\'acqua', sale: 'aggiunto il sale', pepe: 'aggiunto il pepe' }
 // «sminuzza il ramo e versalo»: il pronome va con l'articolo
 const PRONOME = { 'il ': 'lo', 'lo ': 'lo', 'la ': 'la', 'l\'': 'lo', 'i ': 'li', 'le ': 'le' }
 export function testo(rnd, passi, ingredienti, intrecciato) {

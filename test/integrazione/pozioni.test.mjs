@@ -119,19 +119,28 @@ const porta = async (da, a) => {
 const giro = async c => { for (let n = 0; n <= 56; n++) await page.mouse.move(c.x + Math.cos(n / 24 * Math.PI * 2) * 36, c.y + Math.sin(n / 24 * Math.PI * 2) * 30) }
 const avanti = (asse, volte) => async c => { for (let n = 0; n < volte; n++) for (const v of [-34, 34]) await page.mouse.move(c.x + (asse === 'x' ? v : 0), c.y + (asse === 'y' ? v : 0), { steps: 4 }) }
 /* versa finché è piegato: quanto dura lo dice l'orologio dei fotogrammi, che su una macchina carica è lento */
+const fatte = () => { const b = window.__poz.bottega.value; return b.passo + b.dentro.length + b.mortaio.length }
+/* la piega si misura da dove il dito è entrato sul bersaglio: chi arriva di lato è già piegato, e tornando indietro si raddrizza */
 const inclina = (foto, lato = 75) => async c => {
-  const n = await page.evaluate(() => window.__poz.bottega.value.passo)
+  const n = await page.evaluate(fatte)
   await page.mouse.move(c.x + lato, c.y, { steps: 5 })
   if (foto) await scatto(page, foto)
-  await page.waitForFunction(n => window.__poz.bottega.value.passo > n, n, { timeout: 25000 })
+  const versato = t => page.waitForFunction(`(${fatte})() > ${n}`, null, { timeout: t })
+  await versato(12000).catch(async () => {
+    await page.mouse.move(c.x - lato / 2, c.y, { steps: 5 })
+    await versato(13000)
+  })
 }
-const GESTO = { mestolo: giro, pestello: avanti('y', 6), coltello: avanti('y', 6), mantice: avanti('y', 4), roba: avanti('y', 6), fiammifero: avanti('x', 4),
+const GESTO = { mestolo: giro, pestello: avanti('y', 6), coltello: avanti('y', 6), coperchio: avanti('y', 4), roba: avanti('y', 6), fiammifero: avanti('x', 4),
                 bacchetta: avanti('x', 5), sale: avanti('y', 4), pepe: avanti('y', 4), brocca: inclina(), mortaio: inclina(), tagliere: inclina(), fiala: inclina('pozioni-fiala', -160) }
+/* la roba nel suo recipiente si versa piegandola, come il mortaio */
+const nelRecipiente = id => page.evaluate(i => { const b = window.__poz.bottega.value, g = b.ingredienti[i]; return g.famiglia === 'capacita' || (g.famiglia === 'massa' && !b.passi.some(p => p.azione === 'gratta' && p.cosa.includes(i))) }, Number(id.slice(5)))
 const conGesto = async (id, su) => {
   const a = await dove(su)
   await porta(await dove(id), a)
   await attendi(page, 100)
-  await GESTO[id.split(':')[0]](a)
+  if (id === 'coperchio') { await avanti('y', 1)(a); await scatto(page, 'pozioni-coperchio') }
+  await (id.startsWith('roba:') && su !== 'grattugia' ? inclina('pozioni-ciotola') : GESTO[id.split(':')[0]])(a)
   await attendi(page, 150)
   await page.mouse.up()
 }
@@ -143,7 +152,7 @@ async function giocaRicetta(viste) {
     const { da, su } = prossimaMossa(q.p, q.manca)
     viste.add(q.p.azione)
     const prima = await page.evaluate(() => { const b = window.__poz.bottega.value; return b.passo + b.mortaio.length + b.tagliere.length + b.dentro.length })
-    if (da.startsWith('roba:') && su !== 'grattugia') await trascina(await dove(da), await dove(su))
+    if (da.startsWith('roba:') && su !== 'grattugia' && !await nelRecipiente(da)) await trascina(await dove(da), await dove(su))
     else await conGesto(da, su)
     await page.waitForFunction(n => { const b = window.__poz.bottega.value; return b.finita || b.passo + b.mortaio.length + b.tagliere.length + b.dentro.length > n }, prima, { timeout: 15000 })
       .catch(() => controlla(`la mossa ${da} → ${su} va`, false, q.p.azione))
@@ -173,13 +182,12 @@ await attendi(page, 500)
 /* la roba nel calderone, una alla volta */
 const fermaLaScena = () => page.waitForFunction(() => !window.__poz.occupato.value, null, { timeout: 25000 })
 for (let i = 0; i < CAMPAGNA[0].ingredienti; i++) {
-  await trascina(await dove(`roba:${i}`), await dove('calderone'))
+  await conGesto(`roba:${i}`, 'calderone')
   await page.waitForFunction(n => window.__poz.bottega.value.dentro.length === n, i + 1, { timeout: 25000 })
   await fermaLaScena()   // un gesto a scena occupata non conta: quanto dura lo decide la macchina
 }
 uguale('il calderone si è riempito', await page.evaluate(() => window.__poz.bottega.value.dentro.length), CAMPAGNA[0].ingredienti)
 await scatto(page, 'pozioni-sale-e-pepe')
-await conGesto('mestolo', 'calderone')
 {
   /* già la prima tappa ha il fuoco, la bacchetta, un pizzico e la fiala */
   const viste = new Set()
@@ -248,19 +256,26 @@ await attendi(page, 1200)
 {
   const passo = () => page.evaluate(() => window.__poz.bottega.value.passo)
   /* quello che dà fastidio si sposta, e resta lì */
-  const prima = await dove('mestolo')
-  await trascina(prima, { x: prima.x - 45, y: prima.y - 30 })
+  const prima = await dove('fiala')
+  await trascina(prima, { x: prima.x + 45, y: prima.y + 30 })
   await attendi(page, 900)
-  const dopo = await dove('mestolo')
+  const dopo = await dove('fiala')
   controlla('lasciato sul tavolo resta dove lo si è messo', Math.hypot(dopo.x - prima.x, dopo.y - prima.y) > 30, JSON.stringify([prima, dopo]))
+  /* quello che sta appeso torna al suo gancio */
+  const appeso = await dove('mestolo')
+  await trascina(appeso, { x: appeso.x - 20, y: appeso.y + 90 })
+  await attendi(page, 900)
+  const tornato = await dove('mestolo')
+  controlla('il mestolo torna al gancio', Math.hypot(tornato.x - appeso.x, tornato.y - appeso.y) < 3, JSON.stringify([appeso, tornato]))
   uguale('e spostare non è un pasticcio', await page.evaluate(() => window.__poz.bottega.value.pasticci), 0)
   const sulMortaio = await page.evaluate(() => [...window.__poz.bottega.value.passi[0].cosa])
   uguale('la ricetta comincia dal mortaio', await page.evaluate(() => window.__poz.bottega.value.passi[0].azione), 'pesta')
   for (const i of sulMortaio) {
-    await trascina(await dove(`roba:${i}`), await dove('mortaio'))
+    if (await nelRecipiente(`roba:${i}`)) await conGesto(`roba:${i}`, 'mortaio')
+    else await trascina(await dove(`roba:${i}`), await dove('mortaio'))
     await fermaLaScena()
   }
-  uguale('la roba trascinata sul mortaio ci entra', await page.evaluate(() => window.__poz.bottega.value.mortaio.length), 2)
+  uguale('la roba portata sul mortaio ci entra', await page.evaluate(() => window.__poz.bottega.value.mortaio.length), 2)
   /* il pestello fermo sul mortaio non pesta: passato un attimo, la freccia */
   {
     const a = await dove('mortaio')
@@ -295,7 +310,7 @@ const apri = async (chiave, servono) => {
 }
 {
   const viste = new Set()
-  await apri('lunghezza-virgole', ['sminuzza', 'soffia'])
+  await apri('lunghezza-virgole', ['sminuzza', 'copri'])
   /* il fiammifero sul calderone non fa niente: il fuoco si accende sulla legna */
   await trascina(await dove('fiammifero'), await dove('calderone'))
   await page.waitForSelector('[data-suggerimento="strada"]', { timeout: 5000 })
@@ -322,7 +337,7 @@ const apri = async (chiave, servono) => {
   await page.waitForSelector('[data-fine="tappa"]', { timeout: 30000 })
   await apri('massa-virgole', ['gratta', 'agita'])
   await giocaRicetta(viste)
-  for (const a of ['pesta', 'sminuzza', 'gratta', 'versa', 'mescola', 'scalda', 'soffia', 'agita'])
+  for (const a of ['pesta', 'sminuzza', 'gratta', 'versa', 'mescola', 'scalda', 'copri', 'agita'])
     controlla(`col dito si fa anche «${a}»`, viste.has(a), [...viste].join())
   uguale('e senza un pasticcio', await page.evaluate(() => window.__poz.bottega.value.pasticci), 0)
   await page.waitForSelector('[data-fine="tappa"]', { timeout: 30000 })

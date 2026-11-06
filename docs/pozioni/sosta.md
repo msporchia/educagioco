@@ -23,6 +23,8 @@ Si esce con ← anche a pozione a metà, e rientrando la mappa offre in cima
   sul tavolo (`dispensa` negli ingredienti di `leggi`).
 - **Una sosta di prima del fuoco alla prima tappa** tiene la sua ricetta: gli attrezzi
   nuovi stanno sul tavolo, ma quella pozione finisce coi passi che aveva.
+- **Una sosta di quando c'era il mantice** si legge lo stesso: il suo passo `soffia` diventa
+  `copri`, e la riga della pergamena si riscrive (`leggiPassi`, `riscritta`).
 - **Una sosta di prima della spedizione** ha i gettoni contati senza: si legge, e
   da lì la spedizione si paga, quindi il margine di quella pozione è un po' più stretto.
 - **L'ordine si scrive quando si ordina, non quando finisce di versarsi**: il

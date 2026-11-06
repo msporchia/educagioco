@@ -7,7 +7,7 @@ import { CAMPAGNA, BLOCCHI, QUANTE_TAPPE, MONETE_A_DOSE, MONETE_A_PASSO, INFINIT
 import { FAMIGLIA, VALE, mescola, guastiDelleMisure, scrivi, POZIONI } from '../../src/giochi/pozioni/dati/misure.js'
 import { PULIZIA, PASTICCIO, PEZZI, PREZZI, SPEDIZIONE, AMPOLLE_A_ORDINE } from '../../src/giochi/pozioni/dati/bottega.js'
 import { Bottega, banchetto, ottimo, giocaBene, giocaGoloso, seguiLaRicetta, prossimoPasso, caso, unitaBuone, scalaDi, pezziDi } from '../../src/giochi/pozioni/motore/bottega.js'
-import { MORTAIO, TAGLIERE, MOSSE, ROBA_SU, ATTREZZI, attrezziDi, prossimaMossa } from '../../src/giochi/pozioni/motore/procedimento.js'
+import { MORTAIO, TAGLIERE, MOSSE, ROBA_SU, ATTREZZI, attrezziDi, prossimaMossa, recipiente } from '../../src/giochi/pozioni/motore/procedimento.js'
 import { GESTI, creaGesto } from '../../src/giochi/pozioni/scena3d/gesti.js'
 import { MODI } from '../../src/giochi/pozioni/scena3d/bollori.js'
 import { BOLLORI, bolloreDi } from '../../src/giochi/pozioni/dati/bollori.js'
@@ -261,9 +261,9 @@ for (const t of CAMPAGNA) {
     const lette = b.righe.flatMap(r => r.passi)
     if (lette.join() !== b.passi.map((_, k) => k).join() || b.righe.some(r => !/^[A-Z].*[.»]$/.test(r.testo))) ricetteBrutte++
     ordini.add(azioni.join())
-    // si mescola prima di scaldare, e il mantice viene dopo il fuoco
+    // si mescola prima di scaldare, e il coperchio viene dopo il fuoco
     if (azioni.includes('scalda') && azioni.indexOf('mescola') > azioni.indexOf('scalda')) rotte++
-    if (azioni.includes('soffia') && azioni.indexOf('scalda') > azioni.indexOf('soffia')) rotte++
+    if (azioni.includes('copri') && azioni.indexOf('scalda') > azioni.indexOf('copri')) rotte++
     if (azioni.length > 10 || b.righe.length > 8) rotte++
     giocaBene(b)
     if (b.monete !== t.ingredienti * MONETE_A_DOSE + b.passi.length * MONETE_A_PASSO || !b.finita || b.pasticci) rotte++
@@ -383,9 +383,15 @@ controlla('nelle finali, con pesi e lunghezze, il mortaio c\'è', ['calderone', 
 {
   const fatti = new Set()
   for (const t of CAMPAGNA) for (let s = 1; s <= 40; s++) for (const p of new Bottega(t, { rnd: caso(s) }).passi) fatti.add(p.azione)
-  for (const a of ['sminuzza', 'gratta', 'soffia', 'agita']) controlla(`${a} entra nelle ricette`, fatti.has(a))
-  uguale('alla prima tappa niente mortaio né mantice', tappa('massa-banco').azioni.join(), 'versa,mescola,scalda,agita,sale,pepe,imbottiglia')
-  controlla('il mantice arriva alla seconda', tappa('massa-grande').azioni.includes('soffia'))
+  for (const a of ['sminuzza', 'gratta', 'copri', 'agita']) controlla(`${a} entra nelle ricette`, fatti.has(a))
+  uguale('alla prima tappa niente mortaio né coperchio', tappa('massa-banco').azioni.join(), 'versa,mescola,scalda,agita,sale,pepe,imbottiglia')
+  controlla('il coperchio arriva alla seconda', tappa('massa-grande').azioni.includes('copri'))
+  /* quello che si è misurato arriva com'era: non si versa una stella, né un gufo */
+  const passi = [{ azione: 'gratta', cosa: [2] }]
+  uguale('la polvere sta in una ciotola', recipiente({ famiglia: 'massa' }, 0, passi), 'ciotola')
+  uguale('il liquido in un bicchiere', recipiente({ famiglia: 'capacita' }, 0, passi), 'bicchiere')
+  uguale('la radice resta intera', recipiente({ famiglia: 'lunghezza' }, 0, passi), null)
+  uguale('e pure quello che si gratta', recipiente({ famiglia: 'massa' }, 2, passi), null)
   for (const c of ['massa-banco', 'lunghezza-banco', 'capacita-banco', 'capacita-grandi', 'capacita-virgole'])
     controlla(`${c}: una ricetta che non sia misera`, Array.from({ length: 30 }, (_, s) => new Bottega(tappa(c), { rnd: caso(s + 1) })).every(x => x.passi.length >= 6))
   /* la fiala chiude sempre, e il pizzico è uno, quando c'è tutto nel calderone */

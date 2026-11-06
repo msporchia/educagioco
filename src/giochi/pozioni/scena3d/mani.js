@@ -90,20 +90,19 @@ export function creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena }
         via() { attrezzi.fiammella(false) },
       }
     },
-    'mantice:legna': c => {
-      const giu = finestra(46), { soffietto, bocca } = c.cosa.userData
+    // il vapore lo spinge su, il dito lo schiaccia giù: a ogni colpo sbuffa dal bordo e il fuoco si alza
+    'coperchio:calderone': c => {
+      const giu = finestra(46), orlo = 1.52
       return {
         dito(x, y, e) {
-          c.meta.p.set(L.x - 1.05, 0.3, L.z + 0.25); c.meta.rz = -0.12
-          soffietto.scale.y = 1.15 - giu(y) * 0.75
+          c.meta.p.set(C.x, orlo + (1 - giu(y)) * 0.38, C.z)
           if (e.colpo) {
-            suoni.soffio()
+            suoni.coperchio()
             banco.vampa()
-            eff.gocce.emetti(9, { da: dalla(c.cosa, bocca), sparpaglia: 0.06, verso: [3, 0.3, 0], caso: 0.6, colore: '#e8e0d8', vita: 0.4, misura: 0.1, gravita: 0, allarga: 2 })
+            banco.ribolli(3)
+            for (let a = 0; a < 6.2; a += 0.78) eff.gocce.emetti(3, { da: q.set(C.x + Math.cos(a) * 1.08, orlo + 0.05, C.z + Math.sin(a) * 1.08), sparpaglia: 0.1, verso: [Math.cos(a) * 1.1, 1.2, Math.sin(a) * 1.1], caso: 0.4, colore: '#eae6f2', vita: 0.7, misura: 0.24, gravita: -0.4, allarga: 2 })
           }
         },
-        via() { soffietto.scale.y = 1 },
-        fine() { soffietto.scale.y = 1 },
       }
     },
     // lascia una scia del colore della pozione, e scuotendo scoppia
@@ -121,6 +120,11 @@ export function creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena }
           }
         },
       }
+    },
+    'ciotola:calderone': c => versaRoba(c, () => sulCalderone(1), () => banco.quotaBrodo()),
+    'ciotola:mortaio': c => {
+      const m = attrezzi.mortaio.position
+      return versaRoba(c, () => q.set(m.x + 0.55, 1.55, m.z), () => 0.45)
     },
     'brocca:calderone': c => inclina(c, 1, () => '#bfe4ff', false, new Vector3(-0.45, 0.4, 0)),
     'mortaio:calderone': c => inclina(c, -1, () => scena().attrezzi.pestato, true, new Vector3(0.45, 0.4, 0)),
@@ -180,17 +184,30 @@ export function creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena }
     }
   }
 
+  // la ciotola o il bicchiere della roba: come gli attrezzi, e intanto si vede calare
+  function versaRoba(c, sopra, fondo) {
+    const { id, targa, bocca, vuota } = c.cosa.userData
+    const d = () => scena().attrezzi.roba.find(x => `roba:${x.i}` === id)
+    const v = inclina(c, 1, () => d()?.colore, d()?.recipiente === 'ciotola', bocca, sopra, fondo)
+    const a = v.scorre
+    return { ...v,
+      dito() { targa.visible = false; v.dito() },
+      scorre() { a(); vuota(c.gesto.avanzato) },
+      via() { v.via(); vuota(0); targa.visible = true },
+      fine() { v.fine(); targa.visible = true } }
+  }
+
   // sopra il calderone: il dito di lato lo piega, e piegato versa
-  function inclina(c, lato, colore, polvere, bocca) {
+  function inclina(c, lato, colore, polvere, bocca, sopra = () => sulCalderone(lato), fondo = () => banco.quotaBrodo()) {
     let versando = false
     return {
-      dito() { c.meta.p.copy(sulCalderone(lato)); c.meta.rz = lato * Math.abs(c.gesto.piega) * 1.9 },
+      dito() { c.meta.p.copy(sopra()); c.meta.rz = lato * Math.abs(c.gesto.piega) * 1.9 },
       scorre() {
         const k = colore() && Math.abs(c.gesto.piega) >= VERSA_DA
         if (k) {
           if (!versando) { if (polvere) suoni.polvere(0.55); else suoni.liquido(0.55) }
           const b = dalla(c.cosa, bocca)
-          eff.versa(b, new Vector3(b.x, banco.quotaBrodo(), b.z), colore(), polvere)
+          eff.versa(b, new Vector3(b.x, fondo(), b.z), colore(), polvere)
         } else if (versando) eff.smetti()
         versando = !!k
       },
@@ -208,7 +225,8 @@ export function creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena }
     prendi(su, spec, cosa, x, y) {
       const id = cosa.userData.id
       c = { su, spec, cosa, gesto: creaGesto(spec), fermo: 0, fatto: 0, meta: { p: cosa.position.clone(), rx: 0, rz: 0 } }
-      posa = POSE[`${id.startsWith('roba:') ? 'roba' : id}:${su}`](c)
+      // la roba: sulla grattugia si sfrega quella intera, altrove si versa dal suo recipiente
+      posa = POSE[`${id.startsWith('roba:') ? (su === 'grattugia' ? 'roba' : 'ciotola') : id}:${su}`](c)
       this.dito(x, y)
     },
     dito(x, y) {

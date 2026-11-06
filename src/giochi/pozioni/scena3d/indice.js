@@ -126,7 +126,11 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
     const z = ZONE[nome], c = z.dove(), a = schermo(c), b = schermo(c.clone().setX(c.x + z.largo))
     return Math.hypot(x - a.x, y - a.y) / Math.hypot(b.x - a.x, b.y - a.y)
   }
-  const gestoDi = (id, su) => (id.startsWith('roba:') ? (su === 'grattugia' && ultima?.attrezzi.roba.find(d => `roba:${d.i}` === id)?.gratta ? GESTI['roba:grattugia'] : null) : GESTI[`${id}:${su}`])
+  const gestoDi = (id, su) => {
+    if (!id.startsWith('roba:')) return GESTI[`${id}:${su}`]
+    const d = ultima?.attrezzi.roba.find(x => `roba:${x.i}` === id)
+    return d?.recipiente ? GESTI[`ciotola:${su}`] : su === 'grattugia' && d?.gratta ? GESTI['roba:grattugia'] : null
+  }
   const vedo = nome => !attrezzi.cosa(nome) || attrezzi.cosa(nome).visible
   // la legna e la grattugia stanno dentro il calderone, sullo schermo: valgono solo per chi ci lavora
   const conta = (nome, id) => vedo(nome) && nome !== id && (!['legna', 'grattugia'].includes(nome) || gestoDi(id, nome))
@@ -144,6 +148,7 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
   const piano = new Plane(new Vector3(0, 1, 0), 0)
   function posa(cosa, x, y) {
     const casa = cosa.userData.casa
+    if (cosa.userData.fisso) return            // appeso o nel suo vasetto: torna lì
     piano.constant = -casa.y
     mira(x, y)
     if (!raggio.ray.intersectPlane(piano, qui)) return
@@ -219,8 +224,11 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
       // un tocco fermo non è una mossa: il fiammifero sta vicino al calderone
       const mosso = g && Math.hypot(e.clientX - g.x, e.clientY - g.y) > SOGLIA
       const su = mosso && bersaglio(e.clientX, e.clientY, id)
-      // la roba si lascia cadere; un attrezzo sulla cosa sbagliata non fa niente, e si dice dove va
-      if (su && id.startsWith('roba:')) lascia?.({ attrezzo: id, su })
+      // arrivato lì di slancio, senza gesto: si fa vedere come si fa. La roba intera si lascia
+      // cadere; un attrezzo sulla cosa sbagliata non fa niente, e si dice dove va
+      const gesto = su && gestoDi(id, su)
+      if (gesto) suggerisciGesto(su, gesto, RESTA)
+      else if (su && id.startsWith('roba:')) lascia?.({ attrezzo: id, su })
       else if (su) suggerisciStrada(id, suoBersaglio(id), RESTA)
       else if (mosso) posa(p, e.clientX, e.clientY)
       if (!occupata) aCasa(p)                  // niente mossa: va al suo posto, che può essere quello nuovo
@@ -239,7 +247,7 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
   canvas.addEventListener('pointercancel', annulla)
 
   /* ── il ciclo ── */
-  let ultimo = performance.now(), giro = 0, vivo = true, fotogrammi = 0, bolla = 2
+  let ultimo = performance.now(), giro = 0, vivo = true, fotogrammi = 0, bolla = 2, scintilla = 0
   function ciclo(ora) {
     if (!vivo) return
     giro = requestAnimationFrame(ciclo)
@@ -260,6 +268,12 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
       else if (frecce.tipo && mani.fermo < 0.15) frecce.nascondi()
     }
     spruzza(dt)
+    attrezzi.aggiorna(t)
+    // ogni tanto dalla stella della bacchetta cade una scintilla
+    if ((scintilla -= dt) < 0) {
+      scintilla = 0.35 + Math.random() * 0.5
+      if (attrezzi.bacchetta.visible) eff.luci.emetti(1, { da: attrezzi.bacchetta.localToWorld(qui.copy(attrezzi.bacchetta.userData.punta)), sparpaglia: 0.3, verso: [0, -0.15, 0], caso: 0.2, colore: '#ffe9a0', vita: 1, misura: 0.07, gravita: 0.3 })
+    }
     // fermo davanti alla ricetta: si fa vedere da dove si comincia
     if (presa || occupata || !ultima?.attrezzi.prossimo || !ultima.attrezzi.visibili) quieto = 0
     else if ((quieto += dt) > FERMO_TAVOLO && !frecce.tipo) { const { da, su } = ultima.attrezzi.prossimo; suggerisciStrada(da, su) }
@@ -432,19 +446,6 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
      fare l'ha fatto il dito (mani.js), e qui resta il risultato; sbagliata il
      calderone sbuffa e non cambia niente. A fine mossa ogni attrezzo torna al suo
      posto (`aCasa`). */
-  async function versaDa(cosa, lato, colore, polvere, finire) {
-    await anima(0.2, f => { cosa.rotation.z = lato * liscio(f) * 1.9 })
-    if (polvere) suoni.polvere(0.55); else suoni.liquido(0.55)
-    await anima(0.55, () => {
-      const b = cosa.localToWorld(new Vector3(-lato * 0.45, 0.4, 0))
-      eff.versa(b, new Vector3(b.x, banco.quotaBrodo(), b.z), colore, polvere)
-    })
-    eff.smetti()
-    finire()
-    banco.ribolli(4)
-    suoni.tuffo()
-    await anima(0.2, f => { cosa.rotation.z = lato * 1.9 * (1 - liscio(f)) })
-  }
   async function aCasa(cosa) {
     const { casa, giu, sdraiato } = cosa.userData, da = cosa.position.clone(), r = cosa.rotation.z, x = cosa.rotation.x
     cosa.scale.setScalar(1)
@@ -478,12 +479,11 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
         attrezzi.imposta({ ...ultima.attrezzi, ...(a.mortaio ? { pestato: null } : { tagliere: null }) })
         await aCasa(attrezzi.cosa(a.mortaio ? 'mortaio' : 'tagliere'))
       } else {
-        const c = attrezzi.ciotola
-        if (a.attrezzo) attrezzi.cosa(a.attrezzo).visible = false
-        attrezzi.tintaCiotola(a.colore)
-        c.position.copy(sulCalderone(1)); c.rotation.set(0, 0, 0); c.visible = true
-        await versaDa(c, 1, a.colore, a.polvere, finire)
-        c.visible = false
+        // dalla ciotola l'ha versata il dito; quello che è intero ci cade dentro
+        const c = a.attrezzo && attrezzi.cosa(a.attrezzo)
+        if (c && !c.userData.vuota) await cade(c)
+        if (c) c.visible = false
+        finire()
       }
     },
     async gratta(a) {
@@ -508,10 +508,10 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
       attrezzi.fiammella(false)
       await aCasa(attrezzi.fiammifero)
     },
-    async soffia() {
+    async copri() {
       banco.forte(1)
       banco.ribolli(6)
-      await aCasa(attrezzi.mantice)
+      await aCasa(attrezzi.coperchio)
     },
     async agita() {
       banco.incanto(1)
@@ -536,6 +536,15 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
       await aCasa(attrezzi.fiala)
     },
   }
+  async function cade(cosa) {
+    const da = cosa.position.clone(), a = POSTI.calderone.clone().setY(banco.quotaBrodo())
+    await anima(0.4, f => {
+      cosa.position.lerpVectors(da, a, f * f)
+      cosa.position.y += Math.sin(f * Math.PI) * 0.5
+      cosa.scale.setScalar(Math.max(0.001, 1 - f * 0.6))
+    })
+    cosa.scale.setScalar(1)
+  }
   async function pizzico(cosa) {
     banco.ribolli(3)
     await aCasa(cosa)
@@ -547,7 +556,7 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
     banco.sfuma(1)
     attrezzi.fiammella(false)
     attrezzi.riempi(0)
-    if (a.attrezzo) aCasa(attrezzi.cosa(a.attrezzo))
+    if (a.attrezzo) { const c = attrezzi.cosa(a.attrezzo); c.userData.vuota?.(0); aCasa(c) }
     suoni.pasticcio()
     banco.ribolli(8)
     const su = new Vector3(POSTI.calderone.x, banco.quotaBrodo() + 0.1, POSTI.calderone.z)
@@ -626,7 +635,8 @@ function costruisci(renderer, canvas, { tocca, lascia, suggerisce, dpr: fisso })
            // per i test: se il banco si può prendere, e dove sta una cosa sullo schermo
            ferma: () => !occupata,
            dove(id) {
-             const c = id === 'calderone' ? POSTI.calderone.clone().setY(1.1) : ZONE[id] && id !== 'mortaio' ? ZONE[id].dove() : attrezzi.cosa(id).position.clone().setY(id === 'mortaio' ? 0.4 : 0.3)
+             const c = id === 'calderone' ? POSTI.calderone.clone().setY(1.1) : ZONE[id] && id !== 'mortaio' ? ZONE[id].dove()
+               : attrezzi.cosa(id)?.userData.fisso ? attrezzi.cosa(id).userData.presa.getWorldPosition(new Vector3()) : attrezzi.cosa(id).position.clone().setY(id === 'mortaio' ? 0.4 : 0.3)
              return schermo(c)
            }, rilascia, misura,
            grafica: () => ({ fotogrammi, chiamate: renderer.info.render.calls, triangoli: renderer.info.render.triangles }) }

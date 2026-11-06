@@ -297,7 +297,6 @@ function fai(azione, cosa = [], attrezzo = null) {
   const fatti = r.giusto ? (r.versati || []) : []
   animazione.value = { n: ++nAnim, tipo: 'passo', azione, attrezzo, giusto: r.giusto, mortaio: (r.cosa || []).includes(MORTAIO), tagliere: (r.cosa || []).includes(TAGLIERE),
                        colore: r.cosa?.includes(MORTAIO) ? pestato : r.cosa?.includes(TAGLIERE) ? tritato : azione === 'metti' ? mescola(colori(b.mortaio)) : azione === 'appoggia' ? mescola(colori(b.tagliere)) : fatti.length ? mescola(colori(fatti)) : null,
-                       polvere: fatti.some(i => b.ingredienti[i].famiglia !== 'capacita'),
                        brodo: b.brodo, arcobaleno: !b.mescolato, riempito: b.dentro.length / b.ingredienti.length }
 }
 
