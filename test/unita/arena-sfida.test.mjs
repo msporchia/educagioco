@@ -179,7 +179,7 @@ console.warn = () => {}                                  // la rotta la scrive i
    fanno mosse, e un guasto e mezzo al minuto. Alla fine: nessuna rottura, le copie mai separate, se finisce finisce uguale. */
 const RETE_CATTIVA = { min: 30, max: 350, alMinuto: 1.5, spenta: [2000, 42000], ferma: [1000, 9000] }
 let finite = 0
-for (const seme of [21, 22, 23, 24]) {
+for (const seme of [21, 22, 23, 24, 25, 26]) {
   const { host, ospite, guasti: visti, linee, rete } = partitaInDue({ gioco: arena, seme, scenario: RETE_CATTIVA })
   const n = Object.values(visti).reduce((s, x) => s + x, 0)
   const ph = host.partita, po = ospite.partita
@@ -193,6 +193,6 @@ for (const seme of [21, 22, 23, 24]) {
   controlla(`seme ${seme}: nessun filo chiuso dal servizio per troppi messaggi`, rete.conta.rifiutati === 0, String(rete.conta.rifiutati))
   if (n) controlla(`seme ${seme}: i guasti si sono visti come «linea giù», non come fine`, [...linee].some(l => l !== 'su/su'), [...linee].join(' '))
 }
-controlla('e la maggior parte delle partite arriva fino alla fine (un castello cade)', finite >= 3, `${finite} su 4`)
+controlla('e la maggior parte delle partite arriva fino alla fine (un castello cade)', finite >= 4, `${finite} su 6`)
 console.warn = piano
 riassunto('arena in due: il lockstep, l\'incontro e partite intere su una rete cattiva')

@@ -8,6 +8,7 @@ export const CAMPO = {
   W: 360, H: 540,
   fiume: { alto: 245, basso: 295 },   // l'acqua; la strada la attraversa, larga quanto la corsia
   corsia: 180,                         // la x del ponte e della strada
+  ponte: { alto: 200, basso: 318, largo: 16 },   // fra i parapetti dipinti: chi cammina non si allarga oltre `largo` dalla corsia
   muro: 312,                           // la porta in fondo al ponte, metà di sotto (la sopra è specchiata)
   base: 520,                           // la y del castello, metà di sotto: sul bordo, se ne vede solo la cima
 }
@@ -17,7 +18,7 @@ export const CAMPO = {
    castello, su tre file: chi assedia le trova prima del castello. Ci va una caserma o una
    miniera. Chi gioca la sceglie toccandola; il nemico la lascia al motore: prima il lato con
    meno edifici, e dentro il lato il posto più al sicuro (più lontano dal fiume). */
-export const POSTI = [[86, 452], [274, 452], [98, 398], [262, 398], [110, 344], [250, 344]]
+export const POSTI = [[86, 452], [274, 452], [94, 406], [266, 406], [102, 360], [258, 360]]
 
 /* Le truppe. `op` è l'operazione che si risolve per costruire e potenziare la
    sua caserma; `costo` è quello della prima pietra, uguale per le due truppe di
@@ -135,7 +136,7 @@ export const AZIONI = {
   miniera:  { nome: 'Miniera', op: '×', prezzo: null,
               nota: 'Una miniera su una piazzola: le monete arrivano il doppio più in fretta per ogni suo livello (la base da sola è poca), finché sta in piedi. Costa ora, rende dopo, e il nemico la può abbattere.' },
   ripara:   { nome: 'Ripara',     op: '+', prezzo: 6,
-              nota: 'Rimette in sesto la costruzione messa peggio (anche il muro, anche crollato): +40% di vita.' },
+              nota: 'Rimette in sesto la costruzione messa peggio (anche il muro, anche crollato) e tutte le caserme e le miniere ferite: +40% di vita.' },
   castello: { nome: 'Castello',   op: '÷', prezzo: null,
               nota: 'Il castello spara più forte e più spesso, e resiste di più.' },
   vendi:    { nome: 'Vendi',      op: '−', prezzo: 0,
