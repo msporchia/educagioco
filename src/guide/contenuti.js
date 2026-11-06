@@ -692,6 +692,10 @@ export const AIUTI = {
         'Dai due piatti a ordinazione in cucina c\'è tutto doppio.',
         'L\'ultimo dura **cinque minuti** e non ha cuori: si servono più ordinazioni che si può, e conta il record. Mentre si dà il resto l\'orologio è fermo.',
       ] },
+      { titolo: 'In due', chiuso: true, righe: [
+        'Due telefoni, la stessa cucina, ognuno col suo cuoco. Chi crea la partita sceglie i minuti e quante pietanze.',
+        'Andando a consegnare l\'ordinazione diventa tua; col tasto **prenota** la tieni anche prima, e prende il tuo colore. Ognuno fa i conti sul suo telefono, quelli del suo livello: intanto il suo cuoco sta fermo con la calcolatrice sopra, e l\'altro va avanti. Qui non ci sono pause.',
+      ] },
       { titolo: 'Cosa allena', righe: [
         'I soldi veri: euro e centesimi, comporre una cifra coi tagli che si hanno, e **il resto**.',
         'Tenere a mente più cose e decidere in che ordine farle.',

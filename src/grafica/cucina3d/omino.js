@@ -10,7 +10,7 @@ const PELLE = 0xf2c6a0, GIACCA = 0xfbf7ee, GREMBIULE = 0x2f6f8f, FAZZOLETTO = 0x
 const opaco = lucido => new MeshStandardMaterial({ vertexColors: true, roughness: lucido, metalness: 0 })
 const pezzo = (forma, passo, colore, lucido = 0.62) => new Mesh(pelle(forma, { ...scatolaDi(forma, 0.04), passo, colore }), opaco(lucido))
 
-function busto() {
+function busto(fazzoletto = FAZZOLETTO, ombraFazzoletto = 0x9d2a1f) {
   const forma = unione([
     palla([0, 0.57, 0], [0.28, 0.31, 0.25]),
     palla([0, 0.45, 0.03], [0.27, 0.2, 0.25]),
@@ -24,8 +24,8 @@ function busto() {
     const davanti = z > 0.02
     if (davanti && y < 0.6 && Math.abs(x) < 0.27) { c.setHex(GREMBIULE); verso(c, 0x234f69, fra(0.3, 0.6, mosso(x, y, z, 14)) * 0.35) }
     if (davanti && y >= 0.6 && y < 0.78 && Math.abs(Math.abs(x) - 0.12) < 0.035) c.setHex(GREMBIULE)
-    if (y > 0.765) { c.setHex(FAZZOLETTO); verso(c, 0x9d2a1f, fra(0.4, 0.8, mosso(x, y, z, 26)) * 0.5) }
-    if (y > 0.67 && y <= 0.8 && x > 0.04 && z > 0.17) c.setHex(FAZZOLETTO)
+    if (y > 0.765) { c.setHex(fazzoletto); verso(c, ombraFazzoletto, fra(0.4, 0.8, mosso(x, y, z, 26)) * 0.5) }
+    if (y > 0.67 && y <= 0.8 && x > 0.04 && z > 0.17) c.setHex(fazzoletto)
   })
 }
 
@@ -43,7 +43,7 @@ function testa() {
   }, 0.5)
 }
 
-function cappello() {
+function cappello(fascia = 0) {
   // basso e stretto: la telecamera sta in alto, e un cappello largo copre la faccia
   const puff = [[0, 0], [0.11, 0.03], [-0.11, 0.02], [0.03, 0.11], [-0.03, -0.11]]
   const forma = unione([
@@ -55,6 +55,7 @@ function cappello() {
     const a = Math.atan2(z, x)
     if (y > 1.45) verso(c, 0xcfc9bd, fra(0.55, 1, Math.abs(Math.sin(a * 7))) * fra(1.45, 1.56, y) * 0.5)
     if (y < 1.42) verso(c, 0xe7e1d4, 0.5)
+    if (fascia && y < 1.4) c.setHex(fascia)      // in due: da sopra si vede il cappello
   }, 0.75)
 }
 
@@ -104,14 +105,23 @@ function braccio(s) {
   return g
 }
 
+/* In due chi è chi si dice col colore, e le ordinazioni prenotate prendono lo stesso (`Ordini.vue`). */
+export const COLORI_IN_DUE = { host: [0xd2402e, 0x9d2a1f], ospite: [0x2f7fd6, 0x1f5a9e] }
 let stampo = null
+const inDue = {}
 function modella() {
   stampo = { busto: busto(), testa: testa(), cappello: cappello(), sorriso: sorriso(), gamba: gamba(), braccioD: braccio(1), braccioS: braccio(-1) }
 }
-
-/** Il cuoco: `g` si mette in scena, `anima(dt, stato)` lo fa muovere, `mano` è dove sta quello che porta. */
-export function creaCuoco() {
+function stampoDi(ruolo) {
   if (!stampo) modella()
+  if (!ruolo) return stampo
+  const [colore, scuro] = COLORI_IN_DUE[ruolo]
+  return (inDue[ruolo] ??= { ...stampo, busto: busto(colore, scuro), cappello: cappello(colore) })
+}
+
+/** Il cuoco: `g` si mette in scena, `anima(dt, stato)` lo fa muovere, `mano` è dove sta quello che porta. `ruolo`: quale dei due, in due. */
+export function creaCuoco(ruolo = '') {
+  const stampo = stampoDi(ruolo)
   const figura = new Group()
   const sopraVita = new Group()
   // la testa guarda un po' in su, verso la telecamera: da sopra se no si vede solo il cappello
@@ -160,4 +170,4 @@ export function creaCuoco() {
 }
 
 /** Si modella prima di aprire: non si ferma lo schermo a metà partita. */
-export const preparaCuoco = () => { if (!stampo) modella() }
+export const preparaCuoco = (...ruoli) => { stampoDi(''); ruoli.forEach(stampoDi) }

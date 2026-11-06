@@ -30,7 +30,7 @@ async function accendi() {
   const [{ creaCucina3d }, { prepara }, { preparaCuoco }] = await Promise.all([import('../../grafica/cucina3d/indice.js'),
     import('../../grafica/cucina3d/cibo.js'), import('../../grafica/cucina3d/omino.js')])
   await prepara(dispensaDi(props.stato), props.stato.ricette)
-  preparaCuoco()
+  preparaCuoco(...(props.stato.altro ? ['host', 'ospite'] : []))
   apre.value = false
   if (spento) return
   scena?.rilascia()

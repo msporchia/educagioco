@@ -7,7 +7,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { segui, rilascia as rilasciaRenderer } from '../rilascio3d.js'
 import { creaPentola, creaPadella, creaTagliere, creaColtello, creaForno, creaPiatto, riempiPiatto, creaBarra } from './pezzi.js'
 import { confezione, cibo } from './cibo.js'
-import { creaSala, creaCassetta, creaPila, creaCestino, creaConsegna, creaLavello, creaMira, ALTO } from './sala.js'
+import { creaSala, creaCassetta, creaPila, creaCestino, creaConsegna, creaLavello, creaMira, creaCalcolatrice, ALTO } from './sala.js'
 import { creaCuoco } from './omino.js'
 
 const FOV = 20     // stretto: da vicino la fila davanti si allargava fuori dallo schermo
@@ -127,6 +127,7 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
   /* ── le cose in scena: si mettono al primo `imposta`, secondo la cucina ── */
   const stazioni = {}, posti = {}
   let omino = null, inMano = null, pila = null, lavello = null, barraLavello = null, mira = null
+  let compagno = null, inManoSua = null, calcolatrice = null   // in due: l'altro cuoco
   const scatole = [], coltelli = {}
   let tagliereInUso = ''
   function monta(s) {
@@ -172,10 +173,19 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
       }
     }
     scena.traverse(o => { if (o.isMesh && !o.material.transparent && !o.material.isMeshBasicMaterial) o.castShadow = true })
-    omino = creaCuoco()
+    omino = creaCuoco(s.mio)
     scena.add(omino.g)
     inMano = creaPosto()
     omino.mano.add(inMano.g)
+    if (s.altro) {
+      compagno = creaCuoco(s.mio === 'host' ? 'ospite' : 'host')
+      inManoSua = creaPosto()
+      compagno.mano.add(inManoSua.g)
+      calcolatrice = creaCalcolatrice()
+      calcolatrice.position.y = 1.95
+      compagno.g.add(calcolatrice)
+      scena.add(compagno.g)
+    }
     mira = creaMira(); mira.visible = false; scena.add(mira)
     renderer.shadowMap.needsUpdate = true
     misura()
@@ -267,9 +277,18 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
       omino.g.position.set(k.x, 0, k.z)
       omino.anima(dt, { cammina: k.cammina, porta: !!k.mano, verso: k.verso })
       inMano.metti(k.mano)
+      const a = q.altro
+      if (a) {
+        compagno.g.position.set(a.cuoco.x, 0, a.cuoco.z)
+        compagno.anima(dt, { cammina: a.cuoco.cammina, porta: !!a.cuoco.mano, verso: a.cuoco.verso })
+        inManoSua.metti(a.cuoco.mano)
+        calcolatrice.visible = !!a.calcola
+        if (a.calcola) calcolatrice.position.y = 1.95 + 0.05 * Math.sin(t * 4)
+      }
       for (const [id, p] of Object.entries(posti)) if (p.metti(q.sopra[id])) renderer.shadowMap.needsUpdate = true
       const c = Object.values(q.stazioni).reduce((n, s) => n + s.colpi, 0)
-      if (c > colpi) omino.taglia()
+      if (c > colpi && (!a || q.tagliando)) omino.taglia()
+      if (c > colpi && a?.tagliando) compagno.taglia()
       colpi = c
       // il coltello in mano al cuoco è quello del tagliere dove sta lavorando: gli altri restano al loro posto
       tagliereInUso = q.tagliando || tagliereInUso
@@ -278,15 +297,16 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
       if (lavello) {
         const u = lavello.userData
         u.sporchi.forEach((p, i) => { p.visible = i < q.sporchi })
-        u.schiuma.visible = q.lavando
-        barraLavello.visible = q.lavando
-        if (q.lavando) {
+        const chiLava = q.lavando ? q : a?.lavando ? a : null
+        u.schiuma.visible = !!chiLava
+        barraLavello.visible = !!chiLava
+        if (chiLava) {
           u.schiuma.children.forEach((b, i) => {
             const a = i * 2.4 + t * 1.6
             b.position.set(Math.cos(a) * 0.24, 0.05 * Math.sin(t * 5 + i), Math.sin(a) * 0.2)
           })
           barraLavello.quaternion.copy(camera.quaternion)
-          const p = barraLavello.userData.pieno, f = Math.max(0.001, Math.min(1, quantoLavato(q)))
+          const p = barraLavello.userData.pieno, f = Math.max(0.001, Math.min(1, quantoLavato(chiLava)))
           p.scale.x = f; p.position.x = -0.57 * (1 - f); p.material.color.setHex(0x4fa8e0)
         }
       }

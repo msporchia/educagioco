@@ -1,5 +1,5 @@
 // La stanza del cuoco: pavimento, muri, banconi, cassette, la pila dei piatti, la consegna. Vedi docs/bancarella/cucina.md.
-import { Group, Mesh, MeshStandardMaterial, MeshBasicMaterial, BoxGeometry, PlaneGeometry, CylinderGeometry, SphereGeometry, LatheGeometry, TubeGeometry, CircleGeometry,
+import { Group, Mesh, Sprite, SpriteMaterial, MeshStandardMaterial, MeshBasicMaterial, BoxGeometry, PlaneGeometry, CylinderGeometry, SphereGeometry, LatheGeometry, TubeGeometry, CircleGeometry,
          CatmullRomCurve3, Vector2, Vector3, CanvasTexture, SRGBColorSpace, RepeatWrapping, DoubleSide } from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
@@ -192,6 +192,24 @@ export function creaConsegna() {
 }
 
 /** Il riquadro sulla cella che il tasto tocca: una cornice tonda, che pulsa. */
+/* In due, sopra il cuoco che sta facendo i conti sul suo telefono: guarda sempre la telecamera. */
+export function creaCalcolatrice() {
+  const t = trama(128, (c, n) => {
+    c.clearRect(0, 0, n, n)
+    c.fillStyle = '#fffdf7'; c.beginPath(); c.roundRect(14, 2, 100, 124, 20); c.fill()
+    c.fillStyle = '#3a4a5a'; c.beginPath(); c.roundRect(22, 10, 84, 108, 12); c.fill()
+    c.fillStyle = '#bfe8c4'; c.beginPath(); c.roundRect(30, 18, 68, 26, 6); c.fill()
+    for (let r = 0; r < 3; r++) for (let k = 0; k < 3; k++) {
+      c.fillStyle = k === 2 ? '#ffa62b' : '#f4efe4'
+      c.beginPath(); c.roundRect(31 + k * 23, 52 + r * 21, 19, 16, 4); c.fill()
+    }
+  })
+  const o = new Sprite(new SpriteMaterial({ map: t, transparent: true, depthTest: false }))
+  o.scale.set(0.72, 0.72, 1)
+  o.renderOrder = 5
+  return o
+}
+
 export function creaMira() {
   const t = trama(128, (c, n) => {
     c.clearRect(0, 0, n, n)

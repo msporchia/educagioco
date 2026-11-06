@@ -1,10 +1,15 @@
 <script setup>
 /* LA BANCARELLA — la cucina: le ordinazioni, il cuoco, la cassa. Vedi docs/bancarella/cucina.md. */
-import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
+import { ref, shallowRef, markRaw, reactive, computed, watch, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import { state, answer, segna, segnaBest } from '../store/profile.js'
 import { tappaApertaQui } from '../data/portata-giochi.js'
 import { nuovoOrdine, tappaDi, scomponi, euro, centesimiScritti, scriviCifra, premioCliente, ORDINI_PER_TAPPA } from '../data/bancarella.js'
-import { CUCINE, ricetteDi, bancoPulito, orologio } from '../data/bancarella-cucine.js'
+import { CUCINE, RICETTE, ricetteDi, bancoPulito, orologio, campInDue } from '../data/bancarella-cucine.js'
+import { regolaCucina, vistaDi, partitaNuova, motoreDi, altroDi } from '../motore/bancarella/in-due.js'
+import { usaSfida } from '../insieme/sfida.js'
+import SalaSfida from '../insieme/SalaSfida.vue'
+import CartelloLinea from '../insieme/CartelloLinea.vue'
+import SceltaInDue from '../components/bancarella/SceltaInDue.vue'
 import { FOTO } from '../data/bancarella-foto.js'
 import { cucinaNuova, passo as passoCucina, usa, tocca, vaiA, arriva, consegna as daiPiatto, cheManca } from '../motore/bancarella/cucina.js'
 import { suono } from '../audio.js'
@@ -36,7 +41,8 @@ const guadagno = reactive({ monete: 0, nota: '' })
    cifre, la virgola e il cancelletto. Il ✓ sta a parte perché è l'unico
    che manda qualcosa — gli altri scrivono e basta. */
 const TASTI = ['1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '0', '⌫']
-const fase = ref('cucine')          // cucine | gioco | fine
+const fase = ref('cucine')          // cucine | sala | gioco | fine
+const due = shallowRef(null)        // la partita in due: { m: il motore, ruolo, camp, prova }
 const livello = ref(0)              // l'indice in CUCINE
 const nTappa = ref(0)               // a che giro di ordinazioni siamo
 const coda = ref([])                // le ordinazioni: quella che si paga sta in cima
@@ -67,7 +73,7 @@ let raf = 0, ultimo = 0, apertoIl = 0, occupato = false, rifiuti = 0, ordiniFatt
 const amici = usaAmici(CHIAVE)
 const puoGiocare = k => cucineAperte || tappaApertaQui(CHIAVE, k, mioBanco.value.cucina.fatte)
 
-const camp = computed(() => CUCINE[livello.value])
+const camp = computed(() => due.value?.camp || CUCINE[livello.value])
 const T = computed(() => tappaDi(camp.value, nTappa.value))
 const cliente = computed(() => coda.value[0] || null)
 const dato = computed(() => piatto.value.reduce((s, c) => s + c, 0))
@@ -156,6 +162,7 @@ function allaCucina() {
 
 /* pagata la prima, si torna ai fornelli: se non ne restano, il giro è finito */
 function prossimo() {
+  if (due.value) return contoFattoDue()
   coda.value.shift()
   allaCucina()
   if (!coda.value.length) tappaFinita()
@@ -173,7 +180,10 @@ function tappaFinita() {
 /* ---------- la cucina ----------
    Le ordinazioni si fanno in qualsiasi ordine, e quella finita passa in cima per farsi pagare. */
 const mancaA = o => o.articoli.map(a => a.emoji).filter(e => !o.fatti.includes(e))
-const toccaStanza = d => (d.id ? tocca(cucina.value, d.id) : vaiA(cucina.value, d.x, d.z))
+const toccaStanza = d => {
+  if (due.value) return mossaDue(d)
+  return d.id ? tocca(cucina.value, d.id) : vaiA(cucina.value, d.x, d.z)
+}
 
 /* Il cuoco è arrivato dove si era toccato: si fa quello che lì è ovvio. */
 function agisciCuoco() {
@@ -217,10 +227,129 @@ function tempoCucina(dt) {
   if (via) ordineScaduto(via)
 }
 
-const ordini = computed(() => coda.value.map(o => ({
+const ordini = computed(() => (due.value ? ordiniDue.value : coda.value).map(o => (due.value ? o : {
   id: o.id, quanto: barra(o), pagando: momento.value === 'cassa' && o === coda.value[0],
   piatti: o.articoli.map(a => ({ emoji: a.emoji, nome: a.nome, fatto: o.fatti.includes(a.emoji) })),
 })))
+
+/* ---------- in due (docs/bancarella/in-due.md) ----------
+   La partita sta nel motore, uguale sui due telefoni. Qui si guarda e si mandano le mosse; i conti restano di questo telefono:
+   sono quelli del livello di chi gioca, con la cassa di sempre, e all'altro arriva solo che sono finiti. */
+const scelteDue = reactive({ minuti: 5, menu: 'pochi' })
+const ordiniDue = ref([])
+const fineDue = ref(null)           // { tu, altro, scadute }: quello che dice la schermata di fine
+const vistaDue = markRaw({})
+const nomePiatto = emoji => RICETTE.find(r => r.emoji === emoji)
+let visti = { fatti: 0, detti: 0 }, pagataOra = 0, tocco = null
+
+const sfida = usaSfida({ gioco: CHIAVE, regola: () => regolaCucina(), alVia: r => partiInDue(r.motore, r.ruolo, r.proposta), mostra: apriSala })
+const creaDue = () => sfida.crea({ ...scelteDue })
+const invitaDue = chiave => sfida.invita(chiave, { ...scelteDue }, { ...scelteDue })
+
+function apriSala() {
+  if (fase.value === 'gioco' && !due.value) salva({ subito: true })
+  lasciaDue()
+  fase.value = 'sala'
+}
+
+function lasciaDue() {
+  due.value = null
+  momento.value = 'cucina'
+  coda.value = []
+  cancelAnimationFrame(raf)
+}
+
+function partiInDue(m, ruolo, { menu, minuti }, prova = false) {
+  spegniOrologio()
+  // i conti sono quelli a cui è arrivato chi gioca qui, e le ordinazioni hanno un piatto solo
+  const mio = CUCINE[Math.min(mioBanco.value.cucina.fatte, CUCINE.length - 2)]
+  due.value = { m, ruolo, prova, camp: { ...mio, ...campInDue(menu), nome: 'In due', durata: minuti * 60, articoli: [1, 1], tetto: Infinity,
+                                paga: [...new Set([...mio.paga, 2000])] } }   // qui anche i piatti cari: ci vuole la banconota che basta
+  nTappa.value = 0
+  visti = { fatti: 0, detti: 0 }; pagataOra = 0; tocco = null; fineDue.value = null
+  hud.cuori = CUORI; hud.serviti = 0; hud.perfetti = 0; hud.incasso = 0
+  borsellino = borsa(CHIAVE); Object.assign(guadagno, { monete: 0, nota: '' })
+  occupato = false; esito.value = ''; ricettaAperta.value = ''
+  allaCucina()
+  guardaDue()
+  cucina.value = vistaDue
+  fase.value = 'gioco'
+  accendi()
+}
+
+function mandaDue(mossa) {
+  const d = due.value
+  if (!d) return
+  if (d.prova) d.m.applica(d.ruolo, mossa)
+  else sfida.regia.value?.scegli(mossa)
+}
+
+/* Il riquadro verde si accende subito: la mossa vale qualche tick dopo, il tempo di arrivare all'altro. */
+function mossaDue(d) {
+  if (momento.value === 'cassa') return
+  tocco = d.id ? { id: d.id, fino: performance.now() + 700 } : null
+  mandaDue(d.id ? ['tocca', d.id] : ['vai', d.x, d.z])
+}
+
+function guardaDue() {
+  const { m, ruolo } = due.value, S = m.S, io = S.cuochi[ruolo]
+  vistaDi(S, ruolo, vistaDue)
+  if (tocco && performance.now() < tocco.fino) vistaDue.fila = [tocco.id]
+  hud.resta = S.resta
+  hud.serviti = S.serviti.host + S.serviti.ospite
+  ordiniDue.value = S.ordini.map(o => ({
+    id: o.id, quanto: o.resta / o.tempo * 100, pagando: o.paga, colore: o.di, di: !o.di ? '' : o.di === ruolo ? 'mia' : 'sua',
+    piatti: [{ emoji: o.piatto, nome: nomePiatto(o.piatto).nome, fatto: false }],
+  }))
+  if (io.fatti !== visti.fatti) suono.nota(720, 980, 0.07, 'triangle', 0.1)
+  if (io.detti !== visti.detti) { suono.no(); dettoCuoco.value = { testo: io.detto } }
+  visti = { fatti: io.fatti, detti: io.detti }
+  if (io.calcola && io.calcola !== pagataOra && momento.value !== 'cassa') alContoDue(io.calcola)
+}
+
+/* Il piatto è arrivato: il conto si fa qui, da questo telefono. */
+function alContoDue(id) {
+  const piatto = nomePiatto(due.value.m.S.ordini.find(o => o.id === id).piatto)
+  coda.value = [{ ...nuovoOrdine(T.value, [piatto]), id, fatti: [] }]
+  allaCucina()
+  allaCassa()
+}
+
+function contoFattoDue() {
+  const c = coda.value[0]
+  pagataOra = c.id
+  coda.value = []
+  allaCucina()
+  mandaDue(['pagata', c.id])
+}
+
+function fineInDue() {
+  const { m, ruolo } = due.value, S = m.S
+  fineDue.value = { tu: S.serviti[ruolo], altro: S.serviti[altroDi(ruolo)], scadute: S.scadute }
+  sfida.regia.value?.finisci()
+  spegniOrologio()
+  lasciaDue()
+  esito.value = 'tempo'
+  guadagno.nota = borsellino.nota()
+  fase.value = 'fine'
+  suono.fine()
+}
+
+function cicloDue(dt) {
+  const d = due.value
+  if (d.prova) { d.acc = (d.acc || 0) + dt; while (d.acc >= d.m.passo && !d.m.fine()) { d.m.avanza(); d.acc -= d.m.passo } }
+  else sfida.avanza(dt)
+  guardaDue()
+  if (d.m.fine()) fineInDue()
+}
+
+function esciDue() {
+  sfida.chiudi()
+  lasciaDue()
+  fineDue.value = null
+  ripresa.value = laRipresa()
+  fase.value = 'cucine'
+}
 
 /* ---------- la cassa ----------
    `chiediTotale`/`aMente` sono `conto` (vedi data/bancarella.js) scomposto in due
@@ -319,6 +448,12 @@ function consegna() {
 
 /* ---------- il tempo ---------- */
 function ciclo(ts) {
+  if (due.value) {
+    // in due non ci si ferma mai: niente pausa, e il tempo è quello vero
+    cicloDue(Math.min(0.25, (ts - ultimo) / 1000 || 0)); ultimo = ts
+    if (due.value) raf = requestAnimationFrame(ciclo)
+    return
+  }
   const dt = Math.min(0.05, (ts - ultimo) / 1000 || 0); ultimo = ts
   if (!fermo.value && !cambio.value && !occupato && !ricettaAperta.value) tempoCucina(dt)
   raf = requestAnimationFrame(ciclo)
@@ -353,6 +488,7 @@ function alleCucine() {
 }
 function indietro() {
   if (fase.value === 'cucine') esci()
+  else if (fase.value === 'sala' || due.value || fineDue.value) esciDue()
   else alleCucine()
 }
 
@@ -371,7 +507,7 @@ const foto = () => ({
 })
 
 function salva({ subito = false } = {}) {
-  if (fase.value !== 'gioco') return
+  if (fase.value !== 'gioco' || due.value) return      // una partita in due non si salva: l'altro va avanti
   // l'ordinazione appena pagata ha già pagato: il suo giro si chiude prima di scrivere
   if (occupato && faPoi === prossimo) {
     spegniOrologio(); prossimo()
@@ -437,15 +573,19 @@ function seSparisce(e) {
 onMounted(() => {
   window.__shop = { fase, coda, piatto, hud, inizia, metti, togli, proponi, mioBanco, cliente, dato, manca, scomponi, momento,
                     tappa: nTappa, camp, T, cambio, esito, batti, confermaTotale, digitato, contoFatto, chiediTotale, aMente,
-                    TASTI, cucina, guadagno, inPausa, chiudi, livello }
+                    TASTI, cucina, guadagno, inPausa, chiudi, livello, due, fineDue }
   // la sosta del mercato che non c'è più non si legge: via
   if (sosta(CHIAVE) && !leggi(sosta(CHIAVE))) scorda()
   const n = Number((location.hash.match(/livello=(\d+)/) || [])[1])
   if (n >= 1 && n <= CUCINE.length) inizia(n - 1)
+  // la prova dei grandi: `#bancarella=due&menu=tante&minuti=5`, da soli, con l'altro cuoco fermo
+  const prova = location.hash.match(/bancarella=due(?:&menu=(\w+))?(?:&minuti=(\d+))?/)
+  if (prova) { const p = { seme: 1, menu: prova[1] || 'pochi', minuti: Number(prova[2]) || 5 }; partiInDue(motoreDi(partitaNuova(p)), 'host', p, true) }
+  sfida.daInvito()
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
 })
-onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
+onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio(); sfida.chiudi() })
 // prima di smontare: dopo, le ordinazioni non ci sono più
 onBeforeUnmount(() => {
   salva({ subito: true })
@@ -459,7 +599,7 @@ onBeforeUnmount(() => {
     <!-- niente salvadanaio in barra: qui si maneggiano euro, e lo spazio serve ai cuori -->
     <!-- in partita il titolo cede il posto ai cuori: con le ordinazioni che scadono servono -->
     <Barra :titolo="fase === 'gioco' ? '' : 'La cucina'" guida="bancarella" :monete="fase !== 'gioco'"
-           :pausa="fase === 'gioco' && !state.festa.length" @pausa="mettiInPausa()"
+           :pausa="fase === 'gioco' && !state.festa.length && !due" @pausa="mettiInPausa()"
            @aiuto="leggeLaGuida" @indietro="indietro">
       <template v-if="fase === 'gioco'">
         <div v-if="camp.durata" class="gettone" :class="{ poco: hud.resta < 30 }" data-resta>⏱️ <b>{{ orologio(hud.resta) }}</b></div>
@@ -477,15 +617,25 @@ onBeforeUnmount(() => {
       </div>
       <!-- chi è da raggiungere -->
       <p v-if="amici.davanti" class="davanti" data-amico-davanti>{{ amici.davanti }}</p>
-      <LeCucine :banco="mioBanco" :aperta="puoGiocare" @scegli="vuoleIniziare" />
+      <LeCucine :banco="mioBanco" :aperta="puoGiocare" @scegli="vuoleIniziare" @due="sfida.apri()" />
     </template>
 
+    <SalaSfida v-else-if="fase === 'sala'" :fase="sfida.fase.value" :codice="sfida.codice.value" :messaggio="sfida.messaggio.value"
+               :amici="sfida.amici.value" :invitato="sfida.invitato.value" :scelto="sfida.scelto.value" partita="la cucina" titolo="👥 Si cucina insieme" cosa="partita"
+               domanda="Quanti minuti?" spiega="Due telefoni, la stessa cucina: ognuno col suo cuoco e i suoi conti. Serve internet su tutti e due."
+               @crea="creaDue" @invita="invitaDue" @entra="sfida.entra" @indietro="esciDue">
+      <template #scelte><SceltaInDue v-model:minuti="scelteDue.minuti" v-model:menu="scelteDue.menu" /></template>
+    </SalaSfida>
+
     <template v-else-if="fase === 'gioco'">
-      <Ordini :ordini="ordini" :tappa="camp.infinita ? 'giro ' + (T.i + 1) : (T.i + 1) + '/' + camp.tappe" @ricetta="e => (ricettaAperta = e)" />
+      <Ordini :ordini="ordini" :tappa="due ? '' : camp.infinita ? 'giro ' + (T.i + 1) : (T.i + 1) + '/' + camp.tappe" :prenota="!!due"
+              @ricetta="e => (ricettaAperta = e)" @prenota="id => mandaDue(['prenota', id])" />
 
       <div class="banco">
         <Ricetta v-if="ricettaAperta" :ricetta="cucina.ricette.find(r => r.emoji === ricettaAperta)" @chiudi="ricettaAperta = ''" />
         <Cucina :stato="cucina" :detto="dettoCuoco" @tocca="toccaStanza" />
+        <CartelloLinea v-if="due && (sfida.rotta.value || sfida.linea.value)" :rotta="sfida.rotta.value" :motivo="sfida.motivo.value"
+                       :linea="sfida.linea.value" partita="la cucina" @esci="esciDue" />
 
         <!-- il resto non chiude i fornelli: sta in un foglio, e finché non è dato non si va avanti -->
         <div v-if="momento === 'cassa'" class="cassa">
@@ -578,17 +728,20 @@ onBeforeUnmount(() => {
     </template>
 
     <div v-else class="centro">
-      <h1 style="font-size:30px">{{ esito === 'vinta' || camp.infinita ? 'Servizio finito!' : 'La cucina ha chiuso' }}</h1>
+      <h1 style="font-size:30px">{{ esito === 'vinta' || esito === 'tempo' || camp.infinita ? 'Servizio finito!' : 'La cucina ha chiuso' }}</h1>
       <div class="vetrina">{{ esito === 'vinta' ? '🎉' : hud.serviti >= 5 ? '😊' : '😅' }}</div>
       <p class="testo">Ordinazioni servite: <b>{{ hud.serviti }}</b> ·
         resti perfetti: <b>{{ hud.perfetti }}</b><br>Incasso: <b>{{ euro(hud.incasso) }}</b><template
           v-if="guadagno.monete"> · <b data-monete-prese>+{{ guadagno.monete }} 🪙</b></template></p>
+      <p v-if="fineDue" class="testo" data-fine-in-due>Insieme: <b>{{ fineDue.tu + fineDue.altro }}</b> · tu <b>{{ fineDue.tu }}</b> ·
+        l'altro cuoco <b>{{ fineDue.altro }}</b><template v-if="fineDue.scadute"><br>Scadute: <b>{{ fineDue.scadute }}</b></template></p>
       <p v-if="guadagno.nota" class="mini" data-nota-monete>{{ guadagno.nota }}</p>
       <p v-if="frasePrimato" class="testo" data-primato>{{ frasePrimato }}</p>
       <div class="riga">
-        <button v-if="esito === 'vinta' && dopo !== null" class="bottone" @click="inizia(dopo)">Prossima cucina ▶</button>
+        <button v-if="fineDue" class="bottone" @click="sfida.apri()">Ancora in due ▶</button>
+        <button v-else-if="esito === 'vinta' && dopo !== null" class="bottone" @click="inizia(dopo)">Prossima cucina ▶</button>
         <button v-else class="bottone" @click="inizia(livello)">Riprova ▶</button>
-        <button class="bottone chiaro" data-azione="le-cucine" @click="alleCucine">Le cucine</button>
+        <button class="bottone chiaro" data-azione="le-cucine" @click="fineDue ? esciDue() : alleCucine()">Le cucine</button>
       </div>
     </div>
 
@@ -596,7 +749,7 @@ onBeforeUnmount(() => {
 
     <!-- niente velo sopra un altro velo: dove il gioco è già fermo dietro
          il suo (fine livello, traguardo) non se ne mette un secondo -->
-    <VeloPausa v-if="inPausa && fase === 'gioco' && !state.festa.length"
+    <VeloPausa v-if="inPausa && fase === 'gioco' && !state.festa.length && !due"
                :dove="dovEravamo" @riprendi="togliLaPausa" @esci="esci" />
   </div>
 </template>

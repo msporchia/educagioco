@@ -9,7 +9,7 @@ const props = defineProps({
   banco: { type: Object, required: true },
   aperta: { type: Function, required: true },  // la regola dei lucchetti la dice chi gioca
 })
-const emit = defineEmits(['scegli'])
+const emit = defineEmits(['scegli', 'due'])
 
 const fatte = computed(() => props.banco.cucina.fatte)
 const chiusa = k => !props.aperta(k)
@@ -17,6 +17,10 @@ const chiusa = k => !props.aperta(k)
 
 <template>
   <div class="cucine" data-cucine>
+    <button type="button" class="in-due" data-cucina-in-due @click="emit('due')">
+      <span class="em">👥</span><span class="testo"><b>In due</b><small>si cucina insieme, ognuno col suo telefono</small></span>
+    </button>
+
     <button v-for="(c, k) in CUCINE" :key="c.id" type="button" class="livello" :class="{ chiusa: chiusa(k), fatta: k < fatte }" :data-cucina-n="k + 1"
             :disabled="chiusa(k)" @click="emit('scegli', k)">
       <img :src="FOTO['piatto:' + c.foto]" alt="">
@@ -27,6 +31,8 @@ const chiusa = k => !props.aperta(k)
 
 <style scoped>
 .cucine { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; display:flex; flex-direction:column; gap:8px; padding:10px 12px calc(14px + env(safe-area-inset-bottom)) }
+.in-due { flex:none; display:flex; align-items:center; gap:10px; padding:10px 12px; border:0; border-radius:14px; text-align:left; background:#ffe9b8; box-shadow:0 3px 0 #0000001f }
+.in-due .em { font-size:30px }
 .livello { flex:none; display:flex; align-items:center; gap:10px; padding:6px 10px; border:0; border-radius:14px; text-align:left; background:#fffdf7; box-shadow:0 3px 0 #0000001f }
 .livello:active:not(:disabled) { transform:translateY(2px) }
 .livello img { flex:none; width:58px; height:58px }

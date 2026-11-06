@@ -15,6 +15,8 @@ const props = defineProps({
   partita: { type: String, default: 'la partita' },   // come la chiama il gioco: «la battaglia»
   spiega: { type: String, default: 'Due telefoni, la stessa partita. Serve internet su tutti e due.' },
   domanda: { type: String, default: 'Come giocate?' }, // il titolo delle scelte di chi crea
+  titolo: { type: String, default: '⚔️ Sfida un amico' },
+  cosa: { type: String, default: 'sfida' },            // sui tasti: «Crea una sfida», o «Crea una partita» per chi gioca insieme
 })
 const emit = defineEmits(['crea', 'entra', 'indietro', 'invita'])
 
@@ -39,9 +41,9 @@ watch(() => [props.scelto, props.fase, props.amici], () => {
   <div class="ins-sala" data-sfida>
     <template v-if="fase === 'scelta'">
       <template v-if="!modo">
-        <h2>⚔️ Sfida un amico</h2>
+        <h2>{{ titolo }}</h2>
         <p>{{ spiega }}</p>
-        <button class="bottone" data-sfida-crea @click="modo = 'crea'">Crea una sfida</button>
+        <button class="bottone" data-sfida-crea @click="modo = 'crea'">Crea una {{ cosa }}</button>
         <button class="bottone chiaro" data-sfida-entra @click="modo = 'entra'">Entra con un codice</button>
         <template v-if="amici.length">
           <h3 class="ins-amici" data-sfida-amici>Oppure invita un amico</h3>
@@ -55,7 +57,7 @@ watch(() => [props.scelto, props.fase, props.amici], () => {
         <h2 v-if="amico">Sfidi {{ amico.nome }}</h2>
         <h2>{{ domanda }}</h2>
         <slot name="scelte" />
-        <button class="bottone" data-sfida-vai @click="crea">{{ amico ? `Invita ${amico.nome}` : 'Crea la sfida' }}</button>
+        <button class="bottone" data-sfida-vai @click="crea">{{ amico ? `Invita ${amico.nome}` : `Crea la ${cosa}` }}</button>
         <button class="bottone chiaro" @click="indietroDalleScelte">Indietro</button>
       </template>
       <template v-else>
