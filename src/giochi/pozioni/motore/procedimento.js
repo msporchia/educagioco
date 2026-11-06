@@ -42,7 +42,7 @@ export const MOSSE = {
   'brocca:calderone': ['diluisci', []],
   'sale:calderone': ['sale', []],
   'pepe:calderone': ['pepe', []],
-  'fiala:calderone': ['imbottiglia', []],
+  'mestolo:fiala': ['imbottiglia', []],
 }
 // e cosa vuol dire portarci la roba
 export const ROBA_SU = { calderone: 'versa', mortaio: 'metti', tagliere: 'appoggia', grattugia: 'gratta' }
@@ -132,8 +132,8 @@ export function frase(p, ingredienti) {
   if (p.azione === 'gratta') return `gratta ${con(ingredienti[p.cosa[0]])} nel calderone`
   if (p.azione === 'versa') return p.cosa.includes(MORTAIO) ? 'versa il pestato nel calderone' : p.cosa.includes(TAGLIERE) ? 'versa il tritato nel calderone' : `versa ${elenco(nomi)} nel calderone`
   if (p.azione === 'agita') return `agita la bacchetta sul calderone e ${formula(ingredienti)}`
-  return { mescola: 'mescola bene', scalda: 'accendi il fuoco', copri: 'metti il coperchio sul calderone', diluisci: 'diluisci con l\'acqua',
-           sale: 'aggiungi un pizzico di sale', pepe: 'aggiungi un pizzico di pepe', imbottiglia: 'riempi la fiala' }[p.azione]
+  return { mescola: 'mescola bene', scalda: 'accendi il fuoco', copri: 'fai fumare il calderone col coperchio', diluisci: 'diluisci con l\'acqua',
+           sale: 'aggiungi un pizzico di sale', pepe: 'aggiungi un pizzico di pepe', imbottiglia: 'riempi la fiala col mestolo' }[p.azione]
 }
 
 const Maiuscola = t => t[0].toUpperCase() + t.slice(1)
@@ -146,7 +146,7 @@ const Maiuscola = t => t[0].toUpperCase() + t.slice(1)
 // aver mescolato bene»), e pesta e versa diventano «versa X e Y pestati insieme».
 const INSIEME = 0.4, GIRATA = 0.6, DENTRO = ' nel calderone'
 const SUL_CALDERONE = ['mescola', 'scalda', 'copri', 'diluisci', 'sale', 'pepe']
-const FATTO = { mescola: 'mescolato bene', scalda: 'acceso il fuoco', copri: 'messo il coperchio', diluisci: 'diluito con l\'acqua', sale: 'aggiunto il sale', pepe: 'aggiunto il pepe' }
+const FATTO = { mescola: 'mescolato bene', scalda: 'acceso il fuoco', copri: 'fatto fumare il calderone', diluisci: 'diluito con l\'acqua', sale: 'aggiunto il sale', pepe: 'aggiunto il pepe' }
 // «sminuzza il ramo e versalo»: il pronome va con l'articolo
 const PRONOME = { 'il ': 'lo', 'lo ': 'lo', 'la ': 'la', 'l\'': 'lo', 'i ': 'li', 'le ': 'le' }
 export function testo(rnd, passi, ingredienti, intrecciato) {

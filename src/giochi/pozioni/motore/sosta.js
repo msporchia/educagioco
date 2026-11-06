@@ -68,7 +68,7 @@ function leggiOfferte(lista) {
 
 // il mantice è diventato il coperchio: una sosta di prima ha ancora il suo passo, e la sua riga
 const ORA = azione => (azione === 'soffia' ? 'copri' : azione)
-const riscritta = testo => testo.replace(/soffia sul fuoco col mantice/i, m => (m[0] === 'S' ? 'Metti' : 'metti') + ' il coperchio sul calderone').replace('soffiato sul fuoco', 'messo il coperchio')
+const riscritta = testo => testo.replace(/soffia sul fuoco col mantice/i, m => (m[0] === 'S' ? 'Fai' : 'fai') + ' fumare il calderone col coperchio').replace('soffiato sul fuoco', 'fatto fumare il calderone')
 
 function leggiPassi(lista, quanti) {
   if (!Array.isArray(lista) || !lista.length) throw new Error('passi')

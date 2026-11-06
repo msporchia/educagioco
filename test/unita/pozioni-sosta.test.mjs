@@ -85,7 +85,7 @@ for (const t of [CAMPAGNA[0], CAMPAGNA[9], CAMPAGNA[26], CAMPAGNA.at(-1)]) {
   const m = leggi({ ...dato, passi: dato.passi.map(p => (p.azione === 'copri' ? { ...p, azione: 'soffia' } : p)),
                     righe: dato.righe.map(r => (r === riga ? { ...r, testo: 'Soffia sul fuoco col mantice.' } : r)) })
   uguale('il passo del mantice è il coperchio', m.passi[k].azione, 'copri')
-  controlla('e la riga lo dice', m.righe.some(r => r.testo === 'Metti il coperchio sul calderone.'))
+  controlla('e la riga lo dice', m.righe.some(r => r.testo === 'Fai fumare il calderone col coperchio.'))
 }
 
 /* il calderone senza fondo */

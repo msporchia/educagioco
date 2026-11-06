@@ -93,7 +93,13 @@ export function creaAttrezzi(scena, { morbido, lamiera, polvere }) {
   manico.position.set(0.22, 1.0, 0)
   const gancio = new Mesh(new TorusGeometry(0.07, 0.024, 8, 16, Math.PI * 1.3), metallo)
   gancio.position.set(0.22, 1.8, 0.0)
-  mestolo.add(new Mesh(coppa, metallo), manico, gancio)
+  // quello che ha pescato nel brodo: un disco sulla bocca della coppa, che guarda di lato
+  const pescata = new MeshStandardMaterial({ color: 0xffffff, roughness: 0.3, side: DoubleSide })
+  const cucchiaiata = new Mesh(new CircleGeometry(0.25, 20), pescata)
+  cucchiaiata.rotation.y = Math.PI / 2
+  cucchiaiata.position.x = 0.22
+  cucchiaiata.visible = false
+  mestolo.add(new Mesh(coppa, metallo), manico, gancio, cucchiaiata)
   attrezzo('mestolo', mestolo, POSTI.gancio.x - 0.22, POSTI.gancio.y - 1.84, 0, POSTI.gancio.z)
   mestolo.userData.presa.position.y = 0.7
   mestolo.userData.fisso = true
@@ -222,7 +228,7 @@ export function creaAttrezzi(scena, { morbido, lamiera, polvere }) {
   const sale = barattolo('sale', ceramica, -2.4)
   const pepe = barattolo('pepe', nero, 2.4)
 
-  // la fiala: si riempie dal calderone e si tappa, e resta sul tavolo col colore della pozione
+  // la fiala: la riempie il mestolo, si tappa e resta sul tavolo col colore della pozione
   const fiala = new Group()
   const dentroFiala = new Group()
   dentroFiala.scale.setScalar(1.35)
@@ -334,6 +340,14 @@ export function creaAttrezzi(scena, { morbido, lamiera, polvere }) {
       fette.forEach((f, i) => { f.visible = k >= 0 && i < Math.round(k * FETTE) })
     },
     fiammella(si) { fiammella.visible = si },
+    // il mestolo col brodo: `k` quanto ne resta, null è vuoto
+    pesca(colore, k = 1) {
+      cucchiaiata.visible = !!colore
+      if (!colore) return
+      pescata.color.set(colore)
+      cucchiaiata.scale.setScalar(Math.max(0.001, k))
+    },
+    get pescato() { return cucchiaiata.visible },
     // la fiala piena a `k`, di quel colore
     riempi(k, colore) {
       liquido.visible = k > 0
@@ -350,7 +364,7 @@ export function creaAttrezzi(scena, { morbido, lamiera, polvere }) {
       for (const a of [...Object.values(tutti), portaBacchetta]) { a.traverse(o => { if (o.geometry !== presaGeo) o.geometry?.dispose() }); scena.remove(a) }
       presaGeo.dispose()
       for (const t of trame) t.dispose()
-      for (const m of [pietra, metallo, coccio, pesto, capocchia, legno, scuro, rame, oro, notte, tagliato, ceramica, nero, vetro, succo, niente, stecco.material, lamina.material, fiammella.material, alone.material,
+      for (const m of [pietra, metallo, coccio, pesto, capocchia, legno, scuro, rame, oro, notte, tagliato, ceramica, nero, vetro, succo, pescata, niente, stecco.material, lamina.material, fiammella.material, alone.material,
                        sale.userData.targa.material, pepe.userData.targa.material, ...tinte]) m.dispose()
     },
   }

@@ -30,8 +30,8 @@ pasticcio. Il motore è `motore/procedimento.js`.
   roba sul calderone si versa, sul mortaio e sul tagliere ci va, sulla grattugia si
   sfrega; il pestello sul mortaio pesta, il coltello sul tagliere sminuzza, il mortaio
   e il tagliere sul calderone versano; il mestolo mescola, il fiammifero sulla legna
-  accende il fuoco, il coperchio sul calderone lo alza, la bacchetta fa l'incantesimo, la
-  brocca diluisce, il sale e il pepe si scuotono, la fiala si riempie (`MOSSE` in `procedimento.js`, i gesti in [gesti.md](gesti.md)). Le
+  accende il fuoco, il coperchio sul calderone fuma e lo alza, la bacchetta fa l'incantesimo, la
+  brocca diluisce, il sale e il pepe si scuotono, il mestolo pieno riempie la fiala (`MOSSE` in `procedimento.js`, i gesti in [gesti.md](gesti.md)). Le
   cose entrano una alla volta, in qualunque ordine; provato coi bottoni: troppi, e
   non sembrava di fare niente.
 - **Sminuzzare e grattugiare dipendono dalla roba** (`lavoro` in `dati/misure.js`):
