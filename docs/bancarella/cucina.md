@@ -6,7 +6,7 @@ scadono; ognuna finita si fa pagare col resto. `#bancarella=cucina&livello=28` p
 a quel livello, `&aperte=1` apre tutti i livelli.
 
 Il motore è `src/motore/bancarella/cucina.js`, i dati `src/data/bancarella-cucine.js`
-(ingredienti, ricette, livelli, attrezzi) e `src/data/bancarella.js` (i soldi e le ordinazioni), la schermata `components/bancarella/Cucina.vue`
+(ingredienti, ricette, livelli) e `src/data/bancarella.js` (i soldi e le ordinazioni), la schermata `components/bancarella/Cucina.vue`
 con `Ordini.vue`, `Ricetta.vue`, `LeCucine.vue`; la scena `src/grafica/cucina3d/`
 (`indice.js`, `sala.js` stanza e banconi, `omino.js` il cuoco, `cibo.js` e `pezzi.js`).
 
@@ -22,8 +22,8 @@ poi pomodoro, insalata, formaggio, pesce), **a destra si cuoce** (pentole, padel
 pasta, carne, uova), **davanti la dispensa** e il bidone. Quello che la cucina non usa non c'è.
 **Negli angoli niente attrezzi**: ci si arriva solo di sbieco. Ci finisce una cassetta solo se non
 ci sta altrove, nelle ultime cucine piene.
-**Gli appoggi in più** si comprano e stanno nella colonna di mezzo, a coppie, e ci si cammina
-attorno. Fissi rimpicciolivano tutto.
+**Gli appoggi** stanno nella colonna di mezzo e ci si cammina attorno. Ci sono solo dai due piatti
+a ordinazione in su: in tutti i livelli rimpicciolivano tutto.
 
 ## Si tocca dove si vuole andare
 
@@ -98,17 +98,18 @@ l'incasso va nel banco.
 
 ## I piatti da lavare
 
-Dal sesto livello i piatti sono contati (`piatti` del livello, più quelli comprati). Un
+Dal sesto livello i piatti sono contati (`piatti` del livello). Un
 piatto servito torna sporco nel lavello dopo sei secondi (`RITORNO`); un tocco sul lavello,
 a mani libere, e il cuoco ne lava uno, poco più di un secondo (`LAVATA`), e lo rimette in
 pila: un tocco, un piatto. Un piatto buttato, o quello di
 una pizza bruciata, torna nel lavello: i piatti non si perdono mai.
 
-## I livelli e gli attrezzi
+## I livelli
 
 Ventotto livelli (`CUCINE`), ognuno con qualcosa in più, e in fondo **la cucina senza fine**; si aprono vincendo quello prima
 (`banco.cucina.fatte`, in `profile.campagne.bancarella`). Gli attrezzi di un livello si leggono
-dalle sue ricette. La `portata` va dritta da 32 a 72 lungo la fila (`FILA`).
+dalle sue ricette, e quanti sono lo dice il livello: **non si compra niente**, provato e tolto
+perché confondeva. La `portata` va dritta da 32 a 72 lungo la fila (`FILA`).
 
 | livelli | in cucina | alla cassa |
 |---|---|---|
@@ -117,7 +118,7 @@ dalle sue ricette. La `portata` va dritta da 32 a 72 lungo la fila (`FILA`).
 | 7–9 | la pentola, poi la padella | **il resto lo conti tu**, euro tondi |
 | 10–15 | uova, carne, hamburger, ragù | prezzi al mezzo euro |
 | 16–19 | il forno | prezzi ai dieci centesimi, banconote fino a 20 € |
-| 20–22 | sempre due piatti a ordinazione | **anche il totale da chiedere lo batti tu**, che è una somma; prezzi di nuovo al mezzo euro |
+| 20–22 | sempre due piatti a ordinazione: tutti gli attrezzi doppi (`copie`) e due appoggi (`appoggi`) | **anche il totale da chiedere lo batti tu**, che è una somma; prezzi di nuovo al mezzo euro |
 | 23–25 | | prezzi ai dieci centesimi |
 | 26–28 | le ordinazioni scadono prima | prezzi ai cinque centesimi, banconote fino a 50 € |
 | ∞ | la cucina senza fine: tutte le ricette, giri finché i cuori reggono, il tempo si stringe fino a un tetto | come gli ultimi; conta il record delle ordinazioni servite (`senzaFine`) |
@@ -130,22 +131,10 @@ panino; oppure l'euro tondo sopra il totale in tre pezzi al massimo, 5 € + 2 �
 I conti non devono essere difficili: devono sembrare veri. Nel cassetto i soldi sono a pile: le monete una sull'altra, le banconote a
 mazzetta.
 
-Nella scelta dei livelli si comprano gli attrezzi con l'incasso, a uno a uno:
-
-| attrezzo | prezzi |
-|---|---|
-| un appoggio in più, fino a quattro | 40, 60, 80, 100 € |
-| un tagliere in più, fino a tre | 80, 160, 240 € |
-| un piatto in più, fino a quattro | 60, 90, 120, 150 € |
-| la seconda pentola | 250 € |
-| la seconda padella | 300 € |
-| il secondo forno | 600 € |
-
-Un livello incassa una trentina di euro all'inizio e un centinaio alla fine: il primo tagliere
-costa un paio di livelli, il forno sei o sette degli ultimi. Tutto insieme fa 2.330 €, più
-dei circa 1.750 € che si incassano finendo la fila una volta: qualcosa si sceglie, o si rigioca. Si vedono
-dal livello dove servono, stanno in `banco.cucina` e compaiono nella stanza su celle fisse
-(`:2`, `:3`…).
+Fino al livello 19 c'è un attrezzo per tipo: un'ordinazione è un piatto, e il secondo allargherebbe
+la stanza per niente. Da 20 un'ordinazione può volere due volte la stessa cosa, e il doppio (`:2`)
+sta sulla sua cella fissa. I piatti sono quattro fino al 19 e cinque dopo, tranne «Meno piatti».
+L'incasso resta in cassa, come conto di quanto si è guadagnato: non si spende.
 
 ## La ricetta
 
@@ -155,8 +144,8 @@ un aiuto, leggerlo non deve costare.
 
 ## Le figure sono i modelli
 
-Niente emoji per piatti e ingredienti: ordinazioni, ricette, scontrino, livelli e
-attrezzi mostrano la **foto del modello 3D**, così a schermo si riconosce quello che sta
+Niente emoji per piatti e ingredienti: ordinazioni, ricette, scontrino e livelli
+mostrano la **foto del modello 3D**, così a schermo si riconosce quello che sta
 nella stanza. Le fa `npm run anteprime cucina` (`strumenti/anteprime-cucina.mjs` e
 `strumenti/banco/foto-cucina.html`) in `src/data/bancarella-foto.js`, generato, e un test
 dice se un modello è cambiato. `emoji` di una ricetta è solo la sua chiave.
@@ -183,6 +172,6 @@ mercato di prima non si leggono, e al primo avvio spariscono. I dati di quel mer
 
 `unita/bancarella-cucina`, `unita/bancarella-foto`, `integrazione/bancarella-cucina` (tocchi
 veri). `window.__cucina3d.dove('1,3')` dice dove sta sullo schermo una cella o il pavimento: le celle cambiano con la cucina, si cercano in `celle`.
-Bersagli: `[data-cucine]`, `[data-cucina-n]`, `[data-attrezzo]`, `[data-cucina]`, `[data-tela]`,
+Bersagli: `[data-cucine]`, `[data-cucina-n]`, `[data-cucina]`, `[data-tela]`,
 `[data-detto]`, `[data-ordini]`, `[data-ordine]`, `[data-ordinato]`, `[data-ricetta]`, `[data-chiudi-ricetta]`,
 `[data-porge]`.
