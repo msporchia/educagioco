@@ -556,7 +556,7 @@ Le versioni dello stesso edificio si somigliano: cambia la parte che dice chi ci
 LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: foglio ORIZZONTALE 1536×1024 px su FONDO TRASPARENTE; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; vista dall'alto a tre quarti; tutte le figure stanno sulla stessa piazzola, della stessa misura in tutte e ventisei, larga circa 140 px, e l'edificio non esce dalla piazzola di lato; ogni riga è alta al massimo 190 px e le figure di una riga poggiano sulla stessa linea; almeno 30 px di trasparente fra una figura e l'altra, anche fra le righe, e niente che tocchi la figura vicina; nessuna ombra sotto, nessun prato, nessun bagliore, nessuna cornice; NESSUNA PAROLA SCRITTA, NESSUN NUMERO. Tetti, bandiere e stendardi di tutti gli edifici sono di UN SOLO BLU SATURO E UNIFORME (come #2a5cff), nessun altro blu, e niente rosso tranne il fuoco: il gioco ridipinge quel blu di rosso per il nemico.
 ```
 
-### 8 — I quattro terreni di Castle Battle · 4 immagini · colline ✅ 5 novembre 2026 col ponte da stringere, gli altri tre da fare
+### 8 — I quattro terreni di Castle Battle · 4 immagini · colline ✅ 5 novembre 2026 col ponte da stringere, canyon ✅ 6 novembre 2026 (Grok), deserto e cenere da fare
 
 **Perché**: il terreno è più grande del campo e si adatta allo schermo senza stirarsi (`docs/arena/grafica.md`). In partita è
 un'immagine già pronta, oggi disegnata a monte da `npm run disegni:arena`: ha già la forma giusta, il dipinto la rifà e non la inventa, e al
@@ -573,6 +573,30 @@ Modifica questa immagine e lascia identico tutto il resto: stessa inquadratura, 
 **Come si manda**: ChatGPT, **nella chat delle caserme**: proseguire o modificare un'immagine costa meno che ripartire da zero e tiene
 tutto omogeneo (l'utente, 5/11). Si allega solo `sorgenti/arena/schemi/terreno-<chiave>.png` (lo rifà `npm run disegni:arena`). Se
 un'immagine ha un difetto si chiede di correggerla, non di rifarla.
+
+**Con Grok** il canyon è venuto al primo colpo, con due allegati: le colline per lo stile e lo schema per la disposizione. Gli altri due si fanno nella stessa chat, senza allegati, rifacendo il canyon in un altro posto: così le misure restano quelle che in partita hanno retto.
+
+```text
+Ora rifai questa stessa immagine in un altro posto. Tieni identici l'inquadratura, lo stile, la grana e tutte le misure: la fascia orizzontale al centro, la strada dritta, il ponte largo e lungo uguale, la zona attorno alla strada bassa e libera, col decoro alto solo ai lati. Cambia solo il mondo: di cristalli e roccia viola non deve restare niente.
+
+IL POSTO: il deserto delle tombe. Dune di sabbia dorata con le creste al vento. La fascia al centro diventa un fiume d'oasi turchese con le rive verdi. La strada è un selciato antico di arenaria. Il ponte è di grandi lastre d'arenaria, con piccole colonne sui parapetti al posto delle catene. Ai lati obelischi e colonne spezzate mezzi sepolti, blocchi di tempio, e palme solo vicino all'acqua. Attorno alla strada solo sabbia e piccoli dettagli a terra. Sole alto e abbagliante, ombre nette.
+
+Stesso formato 3:2. NESSUN EDIFICIO, NESSUN CASTELLO, NESSUN PERSONAGGIO, NESSUNA SCRITTA, nessuna cornice.
+```
+
+```text
+Ora rifai questa stessa immagine in un altro posto ancora. Tieni identici l'inquadratura, lo stile, la grana e tutte le misure: la fascia orizzontale al centro, la strada dritta, il ponte largo e lungo uguale, la zona attorno alla strada bassa e libera, col decoro alto solo ai lati. Cambia solo il mondo: di sabbia, acqua e palme non deve restare niente.
+
+IL POSTO: le terre di cenere, una notte rossa dopo una grande guerra. Terra nera e grigia di cenere con le crepe di brace. La fascia al centro diventa un fossato di brace che pulsa sotto una crosta nera. La strada è un selciato rotto. Il ponte è di ferro e pietra nera, con piccoli bracieri accesi sui parapetti. Ai lati alberi morti, spuntoni di roccia, vecchie spade piantate nel terreno, stendardi strappati. Attorno alla strada solo terreno e piccoli dettagli a terra. Tono cupo ma adatto ai bambini: niente sangue, niente teschi in primo piano. Luce rossa dal basso.
+
+Stesso formato 3:2. NESSUN EDIFICIO, NESSUN CASTELLO, NESSUN PERSONAGGIO, NESSUNA SCRITTA, nessuna cornice.
+```
+
+Le colline, nella stessa chat, con `terreno-bosco.png` allegato:
+
+```text
+Ora riprendi questa immagine delle colline e lascia identico tutto il resto: stessa inquadratura, stesso fiume, stessa strada, stessi alberi, campi e muretti, stessa grana. Un cambiamento soltanto: il ponte è troppo largo. Rifallo stretto come quello del canyon, meno della metà di adesso. Tieni la pietra chiara, il legno, l'edera rossa e gli stendardi rossi e oro sui parapetti. Dove il ponte si ritira ci va il fiume con le sue rive, come ai lati. Il formato resta 3:2.
+```
 
 **Si salva in** `strumenti/sprite/sorgenti/arena/terreno-<chiave>.png` (`bosco`, `palude`, `neve`, `lava`). **Comando**:
 `python3 strumenti/sprite/terreni-arena.py`. Lo strumento si ferma se l'immagine non è 3:2: non si stira mai, e i dipinti entrano in gioco solo quando ci sono tutti e quattro. Il ponte è del dipinto, perché ChatGPT lo fa
