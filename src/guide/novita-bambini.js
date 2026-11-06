@@ -79,6 +79,8 @@ export const NOVITA = [
     testo: '🏡 Alla fattoria adesso si entra in casa! Toccala e dentro la arredi come vuoi: compri stanze nuove, metti i mobili, scegli colori e stoffe, e dall\'armadio cambi vestiti.' },
   { id: 39, quando: '2026-11-04', gioco: 'passo',
     testo: '⚔️ In Passo passo adesso puoi essere un guerriero! Prendi la spada, apri le grate coi pulsanti e affronta le guardie del castello… ma riuscirai a salvare la principessa?' },
+  { id: 40, quando: '2026-11-06', gioco: 'bancarella',
+    testo: '🍳 La bancarella adesso è una cucina! Giri col cuoco, tagli, cuoci e impiatti le ordinazioni prima che scadano, poi alla cassa dai il resto giusto. Ci sono ventotto livelli, in fondo cinque minuti a orologio per fare il record, e puoi cucinare in due, ognuno col suo telefono.' },
 ]
 
 export const PER_GIOCO = 4
