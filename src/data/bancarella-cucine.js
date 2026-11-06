@@ -54,8 +54,8 @@ export function attrezziDi(camp) {
 }
 
 const BASE = { tappe: 3, articoli: [1, 1], tetto: 1000, tempo: [78, 62] }
-// i primi livelli sono a crudo e con tempo da vendere: si impara a muoversi senza fretta
-const CALMA = { tempo: [120, 100] }
+// i primi livelli sono a crudo e con tempo da vendere: si impara a muoversi senza fretta (un test misura il margine)
+const CALMA = { tempo: [170, 150] }
 // due piatti a ordinazione: il totale da chiedere vuole una somma, e in cucina tutto doppio con due appoggi in mezzo
 const DUE = { articoli: [2, 2], tetto: 1990, tempo: [95, 75], copie: { tagliere: 1, pentola: 1, padella: 1, forno: 1 }, appoggi: 2 }
 // gli ultimi: le ordinazioni scadono prima. La fretta sta nel muoversi: i conti si fanno sempre da fermi
@@ -131,10 +131,16 @@ export const CUCINE = [
   L('L\'ora di punta', '🍝🥩', 'più carne sul fuoco', ['🍔', '🍝🥩', '🥩🥗', '🍕'], { ...FRETTA, piatti: 5 }),
   L('La sala piena', '🍔🧀', 'il formaggio dappertutto', ['🍔🧀', '🍝🧀', '🍕', '🍱', '🥗'], { ...FRETTA, piatti: 5 }),
   L('Il gran servizio', '🍕🥩', 'tutti i piatti', RICETTE.map(r => r.emoji), { ...FRETTA, tempo: [90, 75], piatti: 5 }),
-  // l'ultima non finisce: si va avanti finché i cuori reggono, e conta il record (`senzaFine` in data/giochi.js)
-  L('La cucina senza fine', '🍕🥩', 'non finisce mai: quante ordinazioni servi?', RICETTE.map(r => r.emoji), { ...FRETTA, infinita: true, tappe: Infinity, tempo: [100, 60], piatti: 5 }),
+  // l'ultima è a tempo: `durata` in secondi, niente cuori, e conta il record (`senzaFine` in data/giochi.js)
+  L('Cinque minuti', '🍕🥩', 'quante ordinazioni servi in cinque minuti?', RICETTE.map(r => r.emoji), { ...FRETTA, infinita: true, tappe: Infinity, tempo: [100, 60], piatti: 5, durata: 300 }),
 ].map((c, k, tutte) => ({ ...c, ...cassaDi(k), id: 'cucina-' + (k + 1), scuola: 'numeri',
                          portata: Math.round(PORTATA_DA + k / (tutte.length - 1) * (PORTATA_A - PORTATA_DA)) }))
+
+/* I secondi che restano, come si leggono: 4:05. */
+export function orologio(secondi) {
+  const s = Math.max(0, Math.ceil(secondi))
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+}
 
 /* la fila che `data/portata.js` si aspetta di ricevere */
 export const FILA = CUCINE.map(c => ({ campagna: c.id, portata: c.portata, scuola: c.scuola }))

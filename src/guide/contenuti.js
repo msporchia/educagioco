@@ -690,6 +690,7 @@ export const AIUTI = {
       { titolo: 'I livelli', righe: [
         'I primi sono **a crudo**, con tempo da vendere: panini, insalate, sushi. Poi la pentola, la padella, il forno.',
         'Dai due piatti a ordinazione in cucina c\'è tutto doppio.',
+        'L\'ultimo dura **cinque minuti** e non ha cuori: si servono più ordinazioni che si può, e conta il record. Mentre si dà il resto l\'orologio è fermo.',
       ] },
       { titolo: 'Cosa allena', righe: [
         'I soldi veri: euro e centesimi, comporre una cifra coi tagli che si hanno, e **il resto**.',

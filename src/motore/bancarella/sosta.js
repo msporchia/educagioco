@@ -1,6 +1,6 @@
 /* LA SOSTA — il livello lasciato a metà: tutto quello che serve per riprenderlo, stanza compresa.
    Puro, gira in Node. Vedi docs/core/ripresa.md. */
-import { CUCINE } from '../../data/bancarella-cucine.js'
+import { CUCINE, orologio } from '../../data/bancarella-cucine.js'
 
 const VERSIONE = 2                 // la 1 era il mercato: non si legge più
 
@@ -15,6 +15,6 @@ export function leggi(s) {
 export function dice(s) {
   const g = leggi(s)
   const c = g && CUCINE[g.livello]
-  return g && { nome: c.nome, tappa: c.infinita ? `giro ${g.nTappa + 1}` : `ordinazioni ${g.nTappa + 1} di ${c.tappe}`,
-                cuori: g.hud.cuori, serviti: g.hud.serviti }
+  return g && { nome: c.nome, tappa: c.durata ? `restano ${orologio(g.hud.resta ?? c.durata)}` : `ordinazioni ${g.nTappa + 1} di ${c.tappe}`,
+                cuori: c.durata ? 0 : g.hud.cuori, serviti: g.hud.serviti }
 }

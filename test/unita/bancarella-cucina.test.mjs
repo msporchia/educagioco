@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { cucinaNuova, passo, usa, tocca, vaiA, arriva, consegna, cheManca, passiRicetta, TAGLI, SERVE_PIATTO } from '../../src/motore/bancarella/cucina.js'
-import { CUCINE, RICETTE, INGREDIENTI, attrezziDi, cucinaPulita, bancoPulito, ricetteDi, prezzoDi } from '../../src/data/bancarella-cucine.js'
+import { CUCINE, RICETTE, INGREDIENTI, attrezziDi, cucinaPulita, bancoPulito, ricetteDi, prezzoDi, orologio } from '../../src/data/bancarella-cucine.js'
 import { nuovoOrdine, tappaDi, scomponi, premioCliente, chiaveResto } from '../../src/data/bancarella.js'
 import { scrivi, leggi, dice } from '../../src/motore/bancarella/sosta.js'
 
@@ -60,13 +60,15 @@ test('la stanza cresce con quello che c\'è dentro', () => {
   }
 })
 
-test('l\'ultima non finisce, e il tempo si stringe fino a un tetto', () => {
+test('l\'ultima dura cinque minuti, e il tempo delle ordinazioni si stringe fino a un tetto', () => {
   const c = CUCINE.at(-1)
-  assert.ok(c.infinita)
+  assert.equal(c.durata, 300)
+  assert.ok(CUCINE.slice(0, -1).every(k => !k.durata), 'le altre non hanno orologio')
   assert.equal(c.ricette.length, RICETTE.length)
   assert.ok(tappaDi(c, 5).tempo < tappaDi(c, 0).tempo)
   assert.equal(tappaDi(c, 200).tempo, c.tempo[1])
-  assert.equal(dice(scrivi({ livello: CUCINE.length - 1, nTappa: 4, hud: { cuori: 1, serviti: 9 }, coda: [{}], cucina: cucinaNuova(c) })).tappa, 'giro 5')
+  assert.equal(dice(scrivi({ livello: CUCINE.length - 1, nTappa: 4, hud: { cuori: 1, serviti: 9, resta: 125.2 }, coda: [{}], cucina: cucinaNuova(c) })).tappa, 'restano 2:06')
+  assert.equal(orologio(0), '0:00'); assert.equal(orologio(300), '5:00'); assert.equal(orologio(-3), '0:00')
 })
 
 test('si arriva anche agli angoli', () => {
@@ -463,6 +465,33 @@ test('la sosta riporta la stanza com\'era', () => {
   assert.equal(dice(scrivi(f)).cuori, 2)
   assert.equal(leggi({ idx: 3, coda: [] }), null, 'la sosta del mercato non si legge')
   assert.equal(leggi({ ...scrivi(f), livello: 99 }), null)
+})
+
+/* Un bambino che ci pensa su: `PENSA` secondi prima di ogni tocco, e la strada lunga, col piatto posato su un bancone. */
+const PENSA = 4
+function quantoCi(camp, r) {
+  const c = cucinaNuova({ ...camp, piatti: 0 }), banco = libero(c), tagliere = posto(c, 'tagliere')
+  let tempo = 0
+  const scorre = finche => { for (let t = 0; t < 8 && finche(); t += 0.05) { passo(c, 0.05); tempo += 0.05 } }
+  const va = id => { tempo += PENSA; assert.ok(tocca(c, id)); scorre(() => !c.arrivato); assert.ok(usa(c, arriva(c)), `${r.nome}: a ${id}`) }
+  va(posto(c, 'piatti')); va(banco)
+  for (const k of r.passi) {
+    if (INGREDIENTI[k].va === 'tagliere') { va(cassetta(c, k)); va(tagliere); scorre(() => c.tagliando); va(banco); va(tagliere); va(banco) }
+    else if (['riso', 'sugo'].includes(k)) { va(banco); va(cassetta(c, k)); va(banco) }
+    else { va(cassetta(c, k)); va(banco) }
+  }
+  va(banco)
+  assert.equal(c.cuoco.mano.pronto, r.emoji)
+  tocca(c, posto(c, 'consegna')); tempo += PENSA; scorre(() => !c.arrivato)
+  return tempo
+}
+
+test('nei primi cinque livelli c\'è tempo anche per chi ci pensa su', () => {
+  for (const camp of CUCINE.slice(0, 5)) {
+    const piuLunga = Math.max(...ricetteDi(camp.ricette).map(r => quantoCi(camp, r)))
+    // l'ultimo giro, tre ordinazioni di fila, tutte della più lunga: scadono a venti secondi l'una dall'altra
+    assert.ok(3 * piuLunga <= camp.tempo[1] + 2 * 20, `${camp.nome}: la terza arriva in tempo`)
+  }
 })
 
 test('ogni ricetta di ogni cucina si può finire', () => {

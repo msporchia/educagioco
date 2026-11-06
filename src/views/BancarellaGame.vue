@@ -3,7 +3,7 @@
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import { state, answer, segna, segnaBest, tappaAperta } from '../store/profile.js'
 import { nuovoOrdine, tappaDi, scomponi, euro, centesimiScritti, scriviCifra, premioCliente, ORDINI_PER_TAPPA } from '../data/bancarella.js'
-import { CUCINE, ricetteDi, bancoPulito } from '../data/bancarella-cucine.js'
+import { CUCINE, ricetteDi, bancoPulito, orologio } from '../data/bancarella-cucine.js'
 import { FOTO } from '../data/bancarella-foto.js'
 import { cucinaNuova, passo as passoCucina, usa, tocca, vaiA, arriva, consegna as daiPiatto, cheManca } from '../motore/bancarella/cucina.js'
 import { suono } from '../audio.js'
@@ -40,7 +40,7 @@ const livello = ref(0)              // l'indice in CUCINE
 const nTappa = ref(0)               // a che giro di ordinazioni siamo
 const coda = ref([])                // le ordinazioni: quella che si paga sta in cima
 const piatto = ref([])              // le monete già posate
-const hud = reactive({ cuori: CUORI, serviti: 0, perfetti: 0, incasso: 0 })
+const hud = reactive({ cuori: CUORI, serviti: 0, perfetti: 0, incasso: 0, resta: 0 })   // `resta`: i secondi, nell'ultima
 const momento = ref('cucina')       // cucina | cassa
 const sbagliato = ref('')
 const rifiutata = ref(0)
@@ -49,7 +49,7 @@ const moneta = ref(0)
 const digitato = ref('')            // la cifra che sta battendo sulla cassa
 const contoFatto = ref(false)       // il totale l'ha già indovinato
 const cambio = ref(null)            // il cartello fra un giro e l'altro
-const esito = ref('')               // vinta | persa
+const esito = ref('')               // vinta | persa | tempo
 const cucina = ref(cucinaNuova())   // la stanza, il cuoco, i piatti
 const cucineAperte = /[#&](aperte|livello)=/.test(location.hash)   // la prova dei grandi
 const ricettaAperta = ref('')       // il piatto di cui si legge la ricetta: intanto il tempo si ferma
@@ -118,7 +118,7 @@ function inizia(k = livello.value) {
   cucina.value = cucinaNuova(CUCINE[k])
   ricettaAperta.value = ''
   nTappa.value = 0
-  hud.cuori = CUORI; hud.serviti = 0; hud.perfetti = 0; hud.incasso = 0
+  hud.cuori = CUORI; hud.serviti = 0; hud.perfetti = 0; hud.incasso = 0; hud.resta = CUCINE[k].durata || 0
   borsellino = borsa(CHIAVE); Object.assign(guadagno, { monete: 0, nota: '' })
   occupato = false; esito.value = ''
   fase.value = 'gioco'
@@ -203,13 +203,14 @@ function serviDalleMani() {
 function ordineScaduto(o) {
   suono.no()
   coda.value = coda.value.filter(c => c !== o)
-  if (--hud.cuori <= 0) return chiudi('persa')
+  if (!camp.value.durata && --hud.cuori <= 0) return chiudi('persa')
   if (!coda.value.length) tappaFinita()
 }
 
 /* Alla cassa si conta da fermi, sempre: la fretta sta nel muoversi. */
 function tempoCucina(dt) {
   if (momento.value === 'cassa') return
+  if (camp.value.durata && (hud.resta -= dt) <= 0) return chiudi('tempo')
   for (const o of coda.value) o.restaPazienza -= dt
   passoCucina(cucina.value, dt)
   if (cucina.value.arrivato) agisciCuoco()
@@ -360,7 +361,7 @@ function indietro() {
 /* ── il livello lasciato a metà ── */
 const laRipresa = () => {
   const d = dice(sosta(CHIAVE))
-  return d && { emoji: '🍳', nome: d.nome, dettaglio: `${d.tappa} · ${'❤️'.repeat(d.cuori)} · 🧾 ${d.serviti}` }
+  return d && { emoji: '🍳', nome: d.nome, dettaglio: [d.tappa, '❤️'.repeat(d.cuori), `🧾 ${d.serviti}`].filter(Boolean).join(' · ') }
 }
 const ripresa = ref(laRipresa())
 const chiede = ref(null)           // { nome, k }: il livello nuovo che butterebbe quello a metà
@@ -403,7 +404,7 @@ function riprendiPartita() {
   mettiInPausa({ auto: true })
   livello.value = g.livello
   nTappa.value = g.nTappa
-  Object.assign(hud, g.hud)
+  Object.assign(hud, { resta: CUCINE[g.livello].durata || 0 }, g.hud)
   borsellino = borsa(CHIAVE, g.monete)
   Object.assign(guadagno, { monete: borsellino.dato, nota: '' })
   coda.value = g.coda
@@ -463,7 +464,8 @@ onBeforeUnmount(() => {
            :pausa="fase === 'gioco' && !state.festa.length" @pausa="mettiInPausa()"
            @aiuto="leggeLaGuida" @indietro="indietro">
       <template v-if="fase === 'gioco'">
-        <div class="gettone">{{ '❤️'.repeat(Math.max(0, hud.cuori)) || '💔' }}</div>
+        <div v-if="camp.durata" class="gettone" :class="{ poco: hud.resta < 30 }" data-resta>⏱️ <b>{{ orologio(hud.resta) }}</b></div>
+        <div v-else class="gettone">{{ '❤️'.repeat(Math.max(0, hud.cuori)) || '💔' }}</div>
         <div class="gettone">🧾 <b>{{ hud.serviti }}</b></div>
         <div class="gettone">✨ <b>{{ hud.perfetti }}</b></div>
       </template>

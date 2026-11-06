@@ -57,8 +57,8 @@ export const GIOCHI = [
   { chiave: 'bancarella', ico: '🍳', nome: 'La cucina',
     che: 'cucinare, euro e resto', area: 'numeri', come: 'fare',
     copertina: { fondo: '#ffd36b', disegno: '#e8553f', scena: 'tenda' },
-    // il record dell'ultima, che non finisce (docs/bancarella/cucina.md)
-    senzaFine: { nome: 'La cucina senza fine', icona: '♾️', misura: 'quanti', che: 'quante ordinazioni servi',
+    // il record dell'ultima, quella a tempo (docs/bancarella/cucina.md)
+    senzaFine: { nome: 'Cinque minuti', icona: '⏱️', misura: 'quanti', che: 'quante ordinazioni servi',
                  dettagli: d => [`${(d.incasso / 100).toFixed(2).replace('.', ',')} € incassati`, `${d.banchi} giri`] },
     // gli amici sui livelli (docs/core/amici-nei-giochi.md): quanti ne ha vinti sta nel banco
     amici: { tappe: CUCINE.length, dove: 'al gran servizio', tappa: p => p.campagne?.bancarella?.banco?.cucina?.fatte } },
