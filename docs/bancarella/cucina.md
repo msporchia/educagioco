@@ -39,7 +39,7 @@ mossa di `decidi`:
 | un bancone libero | | posa |
 | un bancone con un piatto | prende il piatto | ci deposita quello che ha in mano |
 | un bancone con una cosa | prende | le unisce, e il piatto resta lì |
-| il tagliere | riprende a tagliare | posa e taglia; col piatto o con un'altra cosa prende il tagliato |
+| il tagliere | riprende a tagliare; il formaggio tagliato si prende | posa e taglia; col piatto o con un'altra cosa prende il tagliato |
 | un fuoco | prende solo il bruciato | ci mette il crudo; col piatto o con un'altra cosa prende quello che è pronto |
 | il forno | prende la pizza | inforna la pizza condita |
 | il lavello | lava | |
@@ -65,7 +65,8 @@ che resta si ingoia, se no preme una moneta ([../core/il-dito.md](../core/il-dit
 - **Il piatto pronto può crescere**: alla pasta al pomodoro si aggiunge il formaggio, e
   diventa l'altra ricetta. Per questo una ricetta può contenerne un'altra.
 - **Con le mani si tiene quello che si terrebbe**: il cotto, il tagliato, il sugo e il riso
-  vogliono un piatto. Il bruciato si prende a mani libere, per buttarlo.
+  vogliono un piatto, tranne il formaggio, che è a fette. Il bruciato si prende a mani libere,
+  per buttarlo.
 - **Crudo non va sul piatto**: pasta, carne e uovo passano dal fuoco; insalata, formaggio
   e pesce dal tagliere: un tocco e il cuoco taglia da sé fino alla fine, un secondo e
   mezzo (`TAGLI`, `COLPO`). Il pavimento lo porta via, e un tocco lo fa riprendere. Il pane è già a fette, tipo toast: una pagnotta intera chiederebbe il
@@ -116,7 +117,7 @@ dalle sue ricette. La `portata` va dritta da 32 a 72 lungo la fila (`FILA`).
 | 7–9 | la pentola, poi la padella | **il resto lo conti tu**, euro tondi |
 | 10–15 | uova, carne, hamburger, ragù | prezzi al mezzo euro |
 | 16–19 | il forno | prezzi ai dieci centesimi, si paga anche coi 20 € |
-| 20–22 | due piatti a ordinazione | **anche il totale da chiedere lo batti tu**; prezzi di nuovo al mezzo euro |
+| 20–22 | sempre due piatti a ordinazione | **anche il totale da chiedere lo batti tu**, che è una somma; prezzi di nuovo al mezzo euro |
 | 23–25 | | prezzi ai dieci centesimi |
 | 26–28 | le ordinazioni scadono prima | prezzi ai cinque centesimi, si paga anche coi 50 € |
 | ∞ | la cucina senza fine: tutte le ricette, giri finché i cuori reggono, il tempo si stringe fino a un tetto | come gli ultimi; conta il record delle ordinazioni servite (`senzaFine`) |
