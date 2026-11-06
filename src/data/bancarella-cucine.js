@@ -69,17 +69,17 @@ const PORTATA_A = 72         // nove anni e tre quarti
 
 /* La scala della cassa, una riga per gradino: quanti livelli, chi fa i conti (`conto`: prima li fa
    la cassa, poi il resto lo conti tu, poi anche il totale da chiedere), quanto fini sono i prezzi
-   (`passo`) e fin dove arrivano le banconote. Quando entra un conto nuovo i prezzi tornano più facili. */
+   (`passo`) e fin dove arrivano le banconote. Quando entra un conto nuovo si torna agli euro tondi. */
 const SCALA_CASSA = [
   [6, 'niente', 100, [500, 1000]],
-  [3, 'resto', 100, [1000]],
-  [6, 'resto', 50, [1000]],
+  [6, 'resto', 100, [1000]],
+  [3, 'resto', 50, [1000]],
   [4, 'resto', 10, [1000, 2000]],
+  [3, 'tutto', 100, [2000]],
   [3, 'tutto', 50, [2000]],
-  [3, 'tutto', 10, [2000]],
-  [4, 'tutto', 5, [2000, 5000]],
+  [4, 'tutto', 10, [2000, 5000]],
 ]
-const MONETE_DEL_PASSO = { 100: [100, 200, 500], 50: [50, 100, 200, 500], 10: [10, 20, 50, 100, 200, 500], 5: [5, 10, 20, 50, 100, 200, 500] }
+const MONETE_DEL_PASSO = { 100: [100, 200, 500], 50: [50, 100, 200, 500], 10: [10, 20, 50, 100, 200, 500] }
 const cassaDi = k => {
   let n = 0
   for (const [quanti, conto, passo, paga] of SCALA_CASSA) {
@@ -91,14 +91,23 @@ const cassaDi = k => {
   return null
 }
 
-/* Il prezzo di un piatto con quel `passo`: euro tondi all'inizio, poi quello del menù, poi coi
-   centesimi. Il di più è fisso per piatto: lo stesso piatto costa sempre uguale, a parità di livello. */
-const CENTESIMI = { 10: [10, 20, 30, 40], 5: [15, 25, 35, 45] }
-export function prezzoDi(r, passo) {
-  if (passo >= 100) return Math.max(100, Math.round(r.prezzo / 100) * 100)
-  const piu = CENTESIMI[passo]
-  if (!piu) return r.prezzo
-  return r.prezzo + piu[[...r.emoji].reduce((s, ch) => s + ch.codePointAt(0), 0) % piu.length]
+/* Il prezzo di un piatto con quel `passo`: euro tondi all'inizio, poi i mezzi euro, poi coi centesimi.
+   Ogni cucina ha il suo listino (il suo numero): dentro una cucina un piatto costa sempre uguale, da una
+   all'altra no. Sugli euro e sui mezzi il menù si sposta tutto insieme, così chi ha più roba resta più caro. */
+const SPOSTA = [0, 1, -1]
+const CENTESIMI = [10, 20, 30, 40, -10, -20, -30, -40]
+export function prezzoDi(r, passo, listino = 0) {
+  if (passo >= 50) return Math.max(passo, (Math.round(r.prezzo / passo) + SPOSTA[listino % SPOSTA.length]) * passo)
+  return r.prezzo + CENTESIMI[([...r.emoji].reduce((s, ch) => s + ch.codePointAt(0), 0) + listino) % CENTESIMI.length]
+}
+
+/* I prezzi di una cucina, per piatto: due piatti non costano mai uguale, se no alla cassa c'è una cifra sola. */
+export function listinoDi(camp) {
+  const prezzi = {}
+  let sotto = 0
+  for (const r of ricetteDi(camp.ricette).sort((a, b) => a.prezzo - b.prezzo))
+    sotto = prezzi[r.emoji] = Math.max(prezzoDi(r, camp.passo, camp.listino), sotto + camp.passo)
+  return prezzi
 }
 
 /* `piatti`: quanti ce ne sono, e da lì tornano sporchi. Senza, la pila non finisce.
@@ -136,7 +145,7 @@ export const CUCINE = [
   L('Il gran servizio', '🍕🥩', 'tutti i piatti', RICETTE.map(r => r.emoji), { ...FRETTA, tempo: [90, 75], piatti: 5 }),
   // l'ultima è a tempo: `durata` in secondi, niente cuori, e conta il record (`senzaFine` in data/giochi.js)
   L('Cinque minuti', '🍕🥩', 'quante ordinazioni servi in cinque minuti?', RICETTE.map(r => r.emoji), { ...FRETTA, infinita: true, tappe: Infinity, tempo: [100, 60], piatti: 5, durata: 300 }),
-].map((c, k, tutte) => ({ ...c, ...cassaDi(k), id: 'cucina-' + (k + 1), scuola: 'numeri',
+].map((c, k, tutte) => ({ ...c, ...cassaDi(k), id: 'cucina-' + (k + 1), listino: k, scuola: 'numeri',
                          portata: Math.round(PORTATA_DA + k / (tutte.length - 1) * (PORTATA_A - PORTATA_DA)) }))
 
 /* La cucina in due (docs/bancarella/in-due.md): chi crea sceglie i minuti e quante pietanze ci sono. La stanza è quella grande,

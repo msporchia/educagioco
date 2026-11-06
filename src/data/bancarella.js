@@ -1,7 +1,7 @@
 /* LA BANCARELLA — i soldi e le ordinazioni: chi paga cosa, e con che resto.
    Le cucine stanno in bancarella-cucine.js. Vedi docs/bancarella/cucina.md. */
 
-import { prezzoDi } from './bancarella-cucine.js'
+import { listinoDi } from './bancarella-cucine.js'
 
 export const TAGLI = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000]  // centesimi
 export const euro = c => (c / 100).toFixed(2).replace('.', ',') + ' €'
@@ -51,17 +51,23 @@ export const fasciaDi = cent => FASCE.find(f => cent % f.passo === 0) || FASCE[F
 export const chiaveResto = cent => 'bancarella:' + fasciaDi(cent).id
 
 /* Con cosa si paga: come farebbe una persona. La banconota più piccola che basta, ogni tanto quella
-   dopo, mai cinquanta euro per un panino; oppure quello che ha in tasca, l'euro tondo sopra il totale
-   in tre pezzi al massimo (5 € + 2 € + 2 €). `paga` del livello dice fin dove si arriva. */
+   dopo, mai cinquanta euro per un panino; oppure due banconote, 10 € + 5 € per 12 €; oppure, se il
+   conto ha i centesimi, l'euro tondo sopra il totale (5 € + 2 € + 2 € per 8,50 €). `paga` del livello
+   dice fin dove si arriva. Ogni pezzo deve servire (`serveTutto`): 10 + 2 + 1 per 12 € non lo dà nessuno. */
 const BANCONOTE = [500, 1000, 2000, 5000]
-const SPEZZA = { 5000: [2000, 2000, 1000], 2000: [1000, 1000], 1000: [500, 500], 500: [200, 200, 100] }
+const SPEZZA = { 2000: [1000, 1000], 1000: [500, 500], 500: [200, 200, 100] }
+const somma = pezzi => pezzi.reduce((s, v) => s + v, 0)
+export const serveTutto = (pezzi, totale) => somma(pezzi) - Math.min(...pezzi) < totale
 function comeSiPaga(totale, paga) {
   const tetto = Math.max(...paga)
-  const tondo = (Math.floor(totale / 100) + 1) * 100, inTasca = scomponi(tondo, [100, 200, ...BANCONOTE])
-  if (inTasca.length > 1 && inTasca.length <= 3 && tondo <= tetto && Math.random() < 0.35) return inTasca
+  const buono = m => m.length > 1 && m.length <= 3 && somma(m) <= tetto && serveTutto(m, totale)
+  const tasca = totale % 100 ? scomponi(Math.ceil(totale / 100) * 100, [100, 200, ...BANCONOTE]) : []
+  if (buono(tasca) && Math.random() < 0.35) return tasca
+  const carta = scomponi((Math.floor(totale / 500) + 1) * 500, BANCONOTE)
+  if (buono(carta) && Math.random() < 0.5) return carta
   const [giusta, dopo] = BANCONOTE.filter(p => p > totale && p <= tetto)
   const nota = dopo && dopo <= totale * 4 && Math.random() < 0.25 ? dopo : giusta
-  return Math.random() < 0.2 ? SPEZZA[nota] : [nota]
+  return buono(SPEZZA[nota] ?? []) && Math.random() < 0.2 ? SPEZZA[nota] : [nota]
 }
 
 /* I piatti di un'ordinazione, sotto il `tetto` del livello: si tira a sorte e si riprova
@@ -78,7 +84,8 @@ function piattiDi(t, piatti) {
 
 /* Un'ordinazione del giro: i piatti, chi paga e con che resto. */
 export function nuovoOrdine(t, piatti) {
-  const listino = piatti.map(p => ({ emoji: p.emoji, nome: p.nome, prezzo: prezzoDi(p, t.passo) }))
+  const prezzi = listinoDi(t.camp)
+  const listino = piatti.map(p => ({ emoji: p.emoji, nome: p.nome, prezzo: prezzi[p.emoji] }))
   const articoli = piattiDi(t, listino)
   const totale = articoli.reduce((s, a) => s + a.prezzo, 0)
   const pagaCon = comeSiPaga(totale, t.paga), paga = pagaCon.reduce((n, v) => n + v, 0)
