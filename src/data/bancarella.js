@@ -50,27 +50,13 @@ export const FASCE = [
 export const fasciaDi = cent => FASCE.find(f => cent % f.passo === 0) || FASCE[FASCE.length - 1]
 export const chiaveResto = cent => 'bancarella:' + fasciaDi(cent).id
 
-/* Con cosa si paga: è metà della difficoltà del conto. Se nessuna banconota dichiarata bastasse, si
-   ripiega sui modi veri: la banconota che ha in tasca, oppure una cifra
-   tonda un po' più alta della spesa — 3,00 €, 2,50 € — che si compone con
-   tre pezzi al massimo. Un cliente senza soldi bloccherebbe la fila. */
-const PAGAMENTI = [200, 500, 1000, 2000, 5000]
-const TONDI = [50, 100, 200, 500, 1000]
-
-function comePuoPagare(totale, ammessi) {
-  if (ammessi && ammessi.length) {
-    const buoni = ammessi.filter(p => p > totale && scomponi(p, TAGLI).length <= 3)
-    if (buoni.length) return buoni.slice().sort((a, b) => a - b)
-  }
-  const out = new Set()
-  for (const p of PAGAMENTI) if (p > totale) out.add(p)
-  for (const passo of TONDI)
-    for (let k = 0; k < 3; k++) {
-      const p = Math.ceil((totale + 1) / passo) * passo + k * passo
-      if (p > totale && p <= totale + 2000) out.add(p)
-    }
-  // deve poterli tirare fuori dal portafoglio: al massimo tre pezzi
-  return [...out].filter(p => scomponi(p, TAGLI).length <= 3).sort((a, b) => a - b)
+/* Con cosa si paga: come farebbe una persona, la banconota più piccola che basta, e ogni tanto
+   quella dopo, ma mai cinquanta euro per un panino. `paga` del livello dice fin dove si arriva. */
+const BANCONOTE = [500, 1000, 2000, 5000]
+function conCosaPaga(totale, paga) {
+  const tetto = Math.max(...paga)
+  const [giusta, dopo] = BANCONOTE.filter(p => p > totale && p <= tetto)
+  return dopo && dopo <= totale * 4 && Math.random() < 0.25 ? dopo : giusta
 }
 
 /* I piatti di un'ordinazione, sotto il `tetto` del livello: si tira a sorte e si riprova
@@ -85,36 +71,20 @@ function piattiDi(t, piatti) {
   return [...piatti].sort((a, b) => a.prezzo - b.prezzo).slice(0, quanti)
 }
 
-/* Il pugno di monete in mano al cliente: dove la giornata dichiara la
-   banconota è quella, altrove più il passo è fine più pezzi tira fuori. */
-const SPEZZA = { 5000: [2000, 2000, 1000], 2000: [1000, 1000], 1000: [500, 500], 500: [200, 200, 100],
-                 200: [100, 100], 100: [50, 50], 50: [20, 20, 10] }
-const pezziInMano = passo => (passo >= 100 ? 3 : passo >= 50 ? 4 : 5)
-
-function manciata(paga, t) {
-  const pezzi = scomponi(paga, TAGLI)
-  if (t.paga && t.paga.length === 1) return pezzi
-  const tetto = pezziInMano(t.passo)
-  const voglia = caso(Math.min(pezzi.length, tetto), tetto)
-  while (pezzi.length < voglia) {
-    const buoni = pezzi.filter(p => SPEZZA[p] && pezzi.length - 1 + SPEZZA[p].length <= tetto)
-    if (!buoni.length) break
-    const p = scegli(buoni)
-    pezzi.splice(pezzi.indexOf(p), 1, ...SPEZZA[p])
-  }
-  return pezzi.sort((a, b) => b - a)
-}
+/* I soldi che si vedono: la banconota, e ogni tanto la stessa cifra in due o tre pezzi. */
+const SPEZZA = { 5000: [2000, 2000, 1000], 2000: [1000, 1000], 1000: [500, 500], 500: [200, 200, 100] }
+const manciata = paga => (Math.random() < 0.3 ? SPEZZA[paga] : [paga])
 
 /* Un'ordinazione del giro: i piatti, chi paga e con che resto. */
 export function nuovoOrdine(t, piatti) {
   const listino = piatti.map(p => ({ emoji: p.emoji, nome: p.nome, prezzo: prezzoDi(p, t.passo) }))
   const articoli = piattiDi(t, listino)
   const totale = articoli.reduce((s, a) => s + a.prezzo, 0)
-  const paga = scegli(comePuoPagare(totale, t.paga))
+  const paga = conCosaPaga(totale, t.paga)
   const resto = paga - totale
   // con un piatto solo il totale è già scritto sul prezzo: da battere c'è solo una somma
   return { articoli, totale, paga, resto, chiediTotale: t.chiediTotale && articoli.length > 1, chiediResto: t.chiediResto,
-           pagaCon: manciata(paga, t), monete: t.monete, pazienza: t.tempo + 20 * (articoli.length - 1),
+           pagaCon: manciata(paga), monete: t.monete, pazienza: t.tempo + 20 * (articoli.length - 1),
            chiave: chiaveResto(resto), minimo: scomponi(resto, t.monete).length }
 }
 

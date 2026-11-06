@@ -66,7 +66,7 @@ const PORTATA_A = 72         // nove anni e tre quarti
 
 /* La scala della cassa, una riga per gradino: quanti livelli, chi fa i conti (`conto`: prima li fa
    la cassa, poi il resto lo conti tu, poi anche il totale da chiedere), quanto fini sono i prezzi
-   (`passo`) e con cosa si paga. Quando entra un conto nuovo i prezzi tornano più facili. */
+   (`passo`) e fin dove arrivano le banconote. Quando entra un conto nuovo i prezzi tornano più facili. */
 const SCALA_CASSA = [
   [6, 'niente', 100, [500, 1000]],
   [3, 'resto', 100, [1000]],

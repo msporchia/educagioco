@@ -559,13 +559,17 @@ onBeforeUnmount(() => {
           <div v-if="!chiediTotale" class="cassetto">
             <div class="vaschette" :class="{ poche: monetine.length < 3 }" :style="{ '--colonne': Math.min(3, monetine.length) }">
               <button v-for="v in monetine" :key="v" class="scomparto" :data-v="v" @click="metti(v)">
-                <Soldo :cents="v" :class="{ rifiutata: rifiutata === v }" />
+                <span class="pila" :class="{ rifiutata: rifiutata === v }">
+                  <Soldo v-for="i in 5" :key="i" :cents="v" :style="{ '--i': i - 1 }" />
+                </span>
               </button>
             </div>
             <div class="vaschette larghe" v-if="carte.length"
                  :style="{ gridTemplateColumns: 'repeat(' + carte.length + ',1fr)' }">
               <button v-for="v in carte" :key="v" class="scomparto" :data-v="v" @click="metti(v)">
-                <Soldo :cents="v" :class="{ rifiutata: rifiutata === v }" />
+                <span class="pila mazzetta" :class="{ rifiutata: rifiutata === v }">
+                  <Soldo v-for="i in 4" :key="i" :cents="v" :style="{ '--i': i - 1 }" />
+                </span>
               </button>
             </div>
           </div>
@@ -620,7 +624,6 @@ onBeforeUnmount(() => {
 .porge { display:flex; align-items:center; gap:6px; margin:0 4px 6px }
 .porge small { font-size:13px; font-weight:800; color:#fff3dc }
 .foto-voce { width:34px; height:34px; vertical-align:middle }
-.vaschette .soldo { max-width:64px; font-size:21px }
 
 /* il registratore disegnato: scontrino e display verde, e sotto il cassetto estratto con gli scomparti */
 .macchina { flex:none; display:flex; align-items:stretch; gap:8px; padding:0 2px }
@@ -693,12 +696,15 @@ onBeforeUnmount(() => {
              border-radius:7px; background:#00000038; border:0;
              box-shadow:inset 0 3px 6px #00000059, inset 0 -1px 0 #ffffff1a }
 .scomparto:active { transform:translateY(2px) }
-.vaschette.poche .soldo { max-width:112px; font-size:36px }
-/* nel cassetto c'è una pila, non una moneta sola */
-.scomparto .soldo:not(.carta) { box-shadow:0 3px 0 #0000006b, 0 6px 0 #00000052, 0 9px 0 #00000038, 0 12px 8px #00000038 }
-.scomparto .soldo.carta { box-shadow:2px 3px 0 #00000052, 4px 6px 0 #00000038, inset 0 0 0 2px #ffffff66, inset 0 0 0 3px #00000014 }
-.vaschette.larghe { height:28% }
-.vaschette.larghe .soldo { max-width:none; width:auto; height:100%; font-size:inherit }
+/* nel cassetto i soldi si vedono a pile: le monete una sull'altra, le banconote a mazzetta */
+.pila { position:relative; display:grid; place-items:center; width:100%; height:100%; min-height:0 }
+.pila .soldo { grid-area:1/1; max-width:min(100%,58px); font-size:19px; transform:translateY(calc(var(--i) * -4px + 8px));
+               box-shadow:0 2px 0 #00000059 }
+.vaschette.poche .pila .soldo { max-width:84px; font-size:28px }
+.vaschette.larghe { height:30% }
+.pila.mazzetta .soldo { max-width:min(100%,128px); width:100%; font-size:22px;
+                        transform:translate(calc(var(--i) * 3px - 5px), calc(var(--i) * -3px + 5px)) rotate(calc((var(--i) - 2) * 1.6deg));
+                        box-shadow:1px 2px 2px #00000059 }
 @media (min-width:700px) { .vaschette { grid-template-columns:repeat(4,1fr) } }
 
 /* il cartello fra un giro di ordinazioni e l'altro */
@@ -712,7 +718,7 @@ onBeforeUnmount(() => {
 
 /* ---------- monete e banconote ---------- */
 /* il disegno è di `components/Soldo.vue` (stile in `grafica/soldi.js`); qui solo lo scarto */
-.soldo.rifiutata { animation:scarto .42s }
+.rifiutata { animation:scarto .42s }
 @keyframes scarto { 0%,100%{transform:none} 25%{transform:translateX(-8px) rotate(-9deg)}
                     60%{transform:translateX(8px) rotate(9deg)} }
 .annulla { width:32px; height:32px; border-radius:50%; background:#ffffff44; color:#fff;
