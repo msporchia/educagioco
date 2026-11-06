@@ -316,8 +316,45 @@ for (const t of CAMPAGNA) {
   const b = new Bottega(tappa('massa-banco'), { rnd: caso(1) })
   for (const [i, g] of b.ingredienti.entries()) for (const k of g.ottimo.pezzi) b.ordina([{ i, k }])
   uguale('una versata a metà non fa passo', (b.fai('versa', [0]), b.passo), 0)
-  uguale('due volte la stessa cosa è un pasticcio', b.fai('versa', [0]).giusto, false)
+  uguale('due volte la stessa cosa non va', b.fai('versa', [0]).giusto, false)
   uguale('la seconda chiude il passo', (b.fai('versa', [1]), b.passo), 1)
+}
+{
+  /* un passo cominciato non è un pasticcio: non sempre si capisce di averlo finito */
+  const nuova = () => {
+    const b = new Bottega(tappa('massa-banco'), { rnd: caso(1) })
+    for (const [i, g] of b.ingredienti.entries()) for (const k of g.ottimo.pezzi) b.ordina([{ i, k }])
+    return b
+  }
+  const b = nuova(), speso = b.speso
+  b.fai('versa', [0])
+  const azzardo = b.fai('mescola')
+  uguale('a metà versata mescolare non si fa', azzardo.giusto, false)
+  uguale('ma non è un pasticcio', azzardo.gratis, true)
+  uguale('non costa', b.speso, speso)
+  uguale('e il passo paga ancora', b.pasticciato, false)
+  controlla('dice cosa manca', azzardo.righe[1].includes(b.ingredienti[1].nome), azzardo.righe.join(' | '))
+  const c = nuova()
+  while (c.passi[c.passo].azione !== 'mescola') prossimoPasso(c)
+  const n = c.passo, dopo = c.passi[n + 1], prima = c.monete
+  uguale('senza averlo toccato è un pasticcio', c.fai(dopo.azione, dopo.cosa).gratis, undefined)
+  c.pasticciato = false
+  c.comincia('mescola')
+  const avanti = c.fai(dopo.azione, dopo.cosa)
+  uguale('cominciato a mescolare si può andare avanti', avanti.giusto, true)
+  uguale('e vale per tutti e due i passi', c.passo, n + 2)
+  uguale('tutti e due pagano', avanti.monete, MONETE_A_PASSO * 2)
+  uguale('e il mestolo ha mescolato', c.mescolato, true)
+  const d = nuova()
+  while (d.passi[d.passo].azione !== 'mescola') prossimoPasso(d)
+  const quanti = d.speso
+  d.comincia('mescola')
+  const lontano = d.fai('imbottiglia')
+  uguale('cominciato, una mossa lontana non va', lontano.giusto, false)
+  uguale('ma non costa nemmeno lei', d.speso, quanti)
+  const e = nuova()
+  e.comincia('scalda')
+  uguale('cominciare quello che non si aspetta non conta', e.iniziato, false)
 }
 {
   const b = new Bottega(tappa('lunghezza-miste'), { rnd: caso(9) })

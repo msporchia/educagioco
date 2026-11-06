@@ -132,6 +132,10 @@ export function ottimo(dose, offerte) {
 const ordiniMinimi = ingredienti => Math.ceil(ingredienti.reduce((n, g) => n + g.ottimo.pezzi.length, 0) / AMPOLLE_A_ORDINE)
 export const minimoDi = ingredienti => ingredienti.reduce((s, g) => s + g.ottimo.costo, 0) + ordiniMinimi(ingredienti) * SPEDIZIONE
 
+// la mossa è quella del passo `p`: chi aveva cominciato quello prima è già andato avanti
+const INIZIA = { metti: 'pesta', appoggia: 'sminuzza' }
+const seguente = (p, azione, cosa) => p && (INIZIA[azione] || azione) === p.azione && (!cosa.length || cosa.some(i => p.cosa.includes(i)))
+
 export class Bottega {
   // `scorta`: i gettoni che il calderone senza fondo si porta dalla pozione prima
   constructor(tappa, { rnd = Math.random, scorta = 0 } = {}) {
@@ -161,6 +165,7 @@ export class Bottega {
     this.tagliere = []           // quello che è sul tagliere
     this.tagliato = false        // ed è già stato sminuzzato
     this.grattato = []           // quello che è caduto nel ciotolino
+    this.iniziato = false        // il dito ha cominciato il passo e l'ha lasciato lì
     this.dentro = []             // quello che è nel calderone
     this.scaldato = false
     this.incantato = false       // la bacchetta
@@ -225,6 +230,9 @@ export class Bottega {
       : azione === 'versa' ? atteso.azione === 'versa' && fra && (!cosa.includes(MORTAIO) || this.pestato) && (!cosa.includes(TAGLIERE) || this.tagliato) && (!cosa.includes(GRATTATO) || this.grattato.length)
       : azione === atteso.azione
     if (!giusto) {
+      if (this.iniziato && seguente(this.passi[this.passo + 1], azione, cosa)) { const m = this.chiudi(atteso).monete, r = this.fai(azione, cosa); return { ...r, monete: (r.monete || 0) + m } }
+      if (this.iniziato || manca.length < atteso.cosa.length)
+        return { giusto: false, gratis: true, azione, righe: ['Manca ancora un pezzo.', `La ricetta dice: ${frase(atteso.azione === 'versa' ? { ...atteso, cosa: manca } : atteso, this.ingredienti)}.`] }
       this.speso += PASTICCIO
       this.pasticci++
       this.pasticciato = true
@@ -234,11 +242,21 @@ export class Bottega {
     if (azione === 'metti') { this.mortaio = [...this.mortaio, ...cosa]; return { giusto: true, azione, cosa, versati: cosa, monete: 0, finita: false } }
     if (azione === 'appoggia') { this.tagliere = [...this.tagliere, ...cosa]; return { giusto: true, azione, cosa, versati: cosa, monete: 0, finita: false } }
     if (azione === 'versa' && cosa.length < manca.length) { this.dentro = [...this.dentro, ...cosa]; this.mescolato = false; return { giusto: true, azione, cosa, versati: cosa, monete: 0, finita: false } }
-    const r = this.faiPasso(atteso)
+    return this.chiudi(atteso)
+  }
+
+  chiudi(p) {
+    const r = this.faiPasso(p)
     const monete = this.pasticciato ? 0 : MONETE_A_PASSO
     this.monete += monete
     this.pasticciato = false
     return { ...r, giusto: true, monete }
+  }
+
+  // il dito ha cominciato il passo che si aspettava, e l'ha lasciato prima della fine
+  comincia(azione, cosa = []) {
+    const p = this.passi[this.passo]
+    if (p?.azione === azione && (azione === 'gratta' ? p.cosa.includes(cosa[0]) : !this.mancaAl(p).length)) this.iniziato = true
   }
 
   // quello che il passo aspetta ancora
@@ -263,6 +281,7 @@ export class Bottega {
     if (p.azione === 'scalda') this.scaldato = true
     if (p.azione === 'agita') this.incantato = true
     this.passo++
+    this.iniziato = false
     this.finita = this.passo >= this.passi.length
     return { azione: p.azione, cosa: [...p.cosa], versati: [...versati], finita: this.finita }
   }

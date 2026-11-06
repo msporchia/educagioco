@@ -22,7 +22,7 @@ const props = defineProps({
   attesa: { type: Number, default: 0 },          // 0..1, quanto manca prima di poter pulire
   bloccato: { type: Boolean, default: false },
 })
-const emit = defineEmits(['aggiungi', 'togli', 'ordina', 'fai', 'pulisci', 'fermo'])
+const emit = defineEmits(['aggiungi', 'togli', 'ordina', 'fai', 'comincia', 'pulisci', 'fermo'])
 
 const b = computed(() => props.bottega)
 const aiuto = computed(() => b.value.tappa.aiuto)
@@ -42,10 +42,14 @@ const daComprare = computed(() => b.value.ingredienti.map((g, i) => ({ g, i })).
 const pronta = computed(() => b.value.pronta && !mostrati.value)
 
 /* il procedimento: niente bottoni, sulla tela si trascina tutto */
+const mossaDi = (attrezzo, su) => (attrezzo.startsWith('roba:') ? [ROBA_SU[su], [Number(attrezzo.slice(5))]] : MOSSE[`${attrezzo}:${su}`])
 function lascia({ attrezzo, su }) {
-  if (attrezzo.startsWith('roba:')) return emit('fai', ROBA_SU[su], [Number(attrezzo.slice(5))], attrezzo)
-  const m = MOSSE[`${attrezzo}:${su}`]
+  const m = mossaDi(attrezzo, su)
   if (m) emit('fai', m[0], m[1], attrezzo)
+}
+function comincia({ attrezzo, su }) {
+  const m = mossaDi(attrezzo, su)
+  if (m) emit('comincia', m[0], m[1])
 }
 // la riga è fatta quando tutti i suoi passi sono fatti
 const rigaFatta = r => r.passi.every(k => k < b.value.passo)
@@ -100,7 +104,7 @@ function tocca(t) {
 }
 function accendi() {
   scena?.rilascia()
-  scena = creaBottega3d(tela.value, { tocca, lascia, suggerisce: t => { suggerimento.value = t }, perso: () => { senza3d.value = true } })
+  scena = creaBottega3d(tela.value, { tocca, lascia, comincia, suggerisce: t => { suggerimento.value = t }, perso: () => { senza3d.value = true } })
   senza3d.value = !scena
   if (scena) scena.imposta(quadro.value)
 }

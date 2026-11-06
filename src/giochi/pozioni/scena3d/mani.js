@@ -22,7 +22,7 @@ function finestra(largo) {
   }
 }
 
-export function creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena }) {
+export function creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena, comincia }) {
   const C = POSTI.calderone, L = POSTI.legna, q = new Vector3()
   const dalla = (cosa, punto) => cosa.localToWorld(punto.clone())
 
@@ -239,8 +239,11 @@ export function creaMani({ attrezzi, banco, eff, sulPiano, sulCalderone, scena }
       r.x += (c.meta.rx - r.x) * k; r.z += (c.meta.rz - r.z) * k
     },
     molla() { return !!c?.gesto.molla?.() },
-    // il dito se n'è andato prima della fine: come se niente fosse
-    lascia() { if (c) posa.via?.(); c = posa = null },
+    // il dito se n'è andato prima della fine: come se niente fosse, ma se aveva cominciato si sa
+    lascia() {
+      if (c) { posa.via?.(); if (c.gesto.avanzato > 0) comincia?.({ attrezzo: c.cosa.userData.id, su: c.su }) }
+      c = posa = null
+    },
     // il gesto è finito: quello che ha fatto resta, ci pensa la mossa
     finita() { posa.fine?.(); c = posa = null },
   }
