@@ -1,4 +1,4 @@
-/* LE CUCINE — gli ingredienti, le ricette, i livelli e gli attrezzi da comprare.
+/* LE CUCINE — gli ingredienti, le ricette e i livelli.
    Vedi docs/bancarella/cucina.md. Tutto in centesimi: sono gli euro del gioco,
    non le 🪙. Puro, gira in Node. */
 
@@ -56,8 +56,8 @@ export function attrezziDi(camp) {
 const BASE = { tappe: 3, articoli: [1, 1], tetto: 1000, tempo: [78, 62] }
 // i primi livelli sono a crudo e con tempo da vendere: si impara a muoversi senza fretta
 const CALMA = { tempo: [120, 100] }
-// due piatti a ordinazione: il totale da chiedere vuole una somma
-const DUE = { articoli: [2, 2], tetto: 1990, tempo: [95, 75] }
+// due piatti a ordinazione: il totale da chiedere vuole una somma, e in cucina tutto doppio con due appoggi in mezzo
+const DUE = { articoli: [2, 2], tetto: 1990, tempo: [95, 75], copie: { tagliere: 1, pentola: 1, padella: 1, forno: 1 }, appoggi: 2 }
 // gli ultimi: le ordinazioni scadono prima. La fretta sta nel muoversi: i conti si fanno sempre da fermi
 const FRETTA = { ...DUE, tempo: [80, 65] }
 
@@ -99,6 +99,7 @@ export function prezzoDi(r, passo) {
 }
 
 /* `piatti`: quanti ce ne sono, e da lì tornano sporchi. Senza, la pila non finisce.
+   `copie`: gli attrezzi doppi, `appoggi`: i banconi in mezzo alla stanza.
    `foto`: il piatto che si vede nella scelta. */
 const L = (nome, foto, nuovo, ricette, altro = {}) => ({ ...BASE, nome, foto, nuovo, ricette, ...altro })
 export const CUCINE = [
@@ -128,8 +129,8 @@ export const CUCINE = [
   L('Meno piatti', '🍝🧀', 'ne hai uno di meno', ['🍕', '🍝🧀', '🍔', '🍳🥗'], { ...DUE, piatti: 4 }),
   L('Il servizio veloce', '🍳', 'le ordinazioni scadono prima', ['🍝', '🥗', '🍳', '🍕'], { ...FRETTA, piatti: 5 }),
   L('L\'ora di punta', '🍝🥩', 'più carne sul fuoco', ['🍔', '🍝🥩', '🥩🥗', '🍕'], { ...FRETTA, piatti: 5 }),
-  L('La sala piena', '🍔🧀', 'il formaggio dappertutto', ['🍔🧀', '🍝🧀', '🍕', '🍱', '🥗'], { ...FRETTA, piatti: 4 }),
-  L('Il gran servizio', '🍕🥩', 'tutti i piatti', RICETTE.map(r => r.emoji), { ...FRETTA, tempo: [90, 75], piatti: 4 }),
+  L('La sala piena', '🍔🧀', 'il formaggio dappertutto', ['🍔🧀', '🍝🧀', '🍕', '🍱', '🥗'], { ...FRETTA, piatti: 5 }),
+  L('Il gran servizio', '🍕🥩', 'tutti i piatti', RICETTE.map(r => r.emoji), { ...FRETTA, tempo: [90, 75], piatti: 5 }),
   // l'ultima non finisce: si va avanti finché i cuori reggono, e conta il record (`senzaFine` in data/giochi.js)
   L('La cucina senza fine', '🍕🥩', 'non finisce mai: quante ordinazioni servi?', RICETTE.map(r => r.emoji), { ...FRETTA, infinita: true, tappe: Infinity, tempo: [100, 60], piatti: 5 }),
 ].map((c, k, tutte) => ({ ...c, ...cassaDi(k), id: 'cucina-' + (k + 1), scuola: 'numeri',
@@ -138,24 +139,11 @@ export const CUCINE = [
 /* la fila che `data/portata.js` si aspetta di ricevere */
 export const FILA = CUCINE.map(c => ({ campagna: c.id, portata: c.portata, scuola: c.scuola }))
 
-/* Gli attrezzi da comprare, a uno a uno: `prezzi` è quanto costa ogni copia, e chi finisce la fila
-   una volta non arriva a comprare tutto (docs/bancarella/cucina.md). `da`: il
-   primo livello dove servono, prima non si vedono. */
-const primoCon = t => CUCINE.findIndex(c => attrezziDi(c).includes(t))
-export const ATTREZZI = [
-  { che: 'isola', nome: 'Un appoggio in più', prezzi: [4000, 6000, 8000, 10000], da: 0 },
-  { che: 'tagliere', nome: 'Un tagliere in più', prezzi: [8000, 16000, 24000], da: primoCon('tagliere') },
-  { che: 'pentola', nome: 'La seconda pentola', prezzi: [25000], da: primoCon('pentola') },
-  { che: 'piatti', nome: 'Un piatto in più', prezzi: [6000, 9000, 12000, 15000], da: CUCINE.findIndex(c => c.piatti) },
-  { che: 'padella', nome: 'La seconda padella', prezzi: [30000], da: primoCon('padella') },
-  { che: 'forno', nome: 'Il secondo forno', prezzi: [60000], da: primoCon('forno') },
-]
-
 const intero = (n, max) => (Number.isInteger(n) && n >= 0 ? Math.min(n, max) : 0)
-/* La parte del banco che riguarda la cucina: `fatte` sono i livelli vinti, gli altri quanti se ne sono comprati. */
+/* La parte del banco che riguarda la cucina: `fatte` sono i livelli vinti. */
 export function cucinaPulita(s) {
   const o = s && typeof s === 'object' ? s : {}
-  return { fatte: intero(o.fatte, CUCINE.length), ...Object.fromEntries(ATTREZZI.map(a => [a.che, intero(o[a.che], a.prezzi.length)])) }
+  return { fatte: intero(o.fatte, CUCINE.length) }
 }
 
 /* Il banco salvato, messo a posto: l'incasso resta, chi giocava prima lo ritrova in cassa. */
@@ -163,12 +151,4 @@ export function bancoPulito(salvato, incassato = 0) {
   const s = salvato && typeof salvato === 'object' ? salvato : null
   return { cassa: s && Number.isInteger(s.cassa) && s.cassa >= 0 ? s.cassa : Math.max(0, Math.round(incassato) || 0),
            cucina: cucinaPulita(s && s.cucina) }
-}
-
-/* Il banco dopo l'acquisto, o `null` se non si può. */
-export function compraAttrezzo(b, che) {
-  const a = ATTREZZI.find(x => x.che === che)
-  const prezzo = a && a.prezzi[b.cucina[che]]
-  if (!prezzo || prezzo > b.cassa || a.da > b.cucina.fatte) return null
-  return { ...b, cassa: b.cassa - prezzo, cucina: { ...b.cucina, [che]: b.cucina[che] + 1 } }
 }

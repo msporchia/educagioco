@@ -19,7 +19,7 @@ const FILE = resolve(RADICE, 'src/data/bancarella-foto.js')
 const SORGENTI = ['src/grafica/cucina3d/cibo.js', 'src/grafica/cucina3d/pezzi.js', 'src/grafica/cucina3d/sala.js', 'src/giochi/fattoria3d/scena3d/creta.js', 'strumenti/banco/foto-cucina.html']
 export const PIXEL = 128           // nelle ordinazioni stanno a 62 px CSS, a dpr 2 sono 124
 export const CHIAVI = [...RICETTE.map(r => 'piatto:' + r.emoji), ...Object.keys(INGREDIENTI).map(k => 'cosa:' + k),
-  ...['pentola', 'padella', 'tagliere', 'forno', 'piatti', 'isola'].map(k => 'attrezzo:' + k)]
+  'attrezzo:forno']
 
 export const firmaSorgenti = () => {
   const h = createHash('sha1')

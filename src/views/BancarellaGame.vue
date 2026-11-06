@@ -3,7 +3,7 @@
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import { state, answer, segna, segnaBest, tappaAperta } from '../store/profile.js'
 import { nuovoOrdine, tappaDi, scomponi, euro, centesimiScritti, scriviCifra, premioCliente, ORDINI_PER_TAPPA } from '../data/bancarella.js'
-import { CUCINE, ricetteDi, compraAttrezzo, bancoPulito } from '../data/bancarella-cucine.js'
+import { CUCINE, ricetteDi, bancoPulito } from '../data/bancarella-cucine.js'
 import { FOTO } from '../data/bancarella-foto.js'
 import { cucinaNuova, passo as passoCucina, usa, tocca, vaiA, arriva, consegna as daiPiatto, cheManca } from '../motore/bancarella/cucina.js'
 import { suono } from '../audio.js'
@@ -56,19 +56,13 @@ const ricettaAperta = ref('')       // il piatto di cui si legge la ricetta: int
 const dettoCuoco = ref(null)        // il perché di un tocco a vuoto
 const frasePrimato = ref('')        // alla fine della cucina senza fine: com'è andata col record
 
-/* L'incasso resta, e compra gli attrezzi. */
+/* L'incasso resta. */
 const mioBanco = ref(bancoPulito((state.profile.campagne || {}).bancarella?.banco, state.profile.totals.incasso))
 const scriviBanco = (b, opzioni) => {
   mioBanco.value = b
   ritocca(CHIAVE, c => { c.banco = b }, opzioni)
 }
 const incassa = cent => scriviBanco({ ...mioBanco.value, cassa: mioBanco.value.cassa + cent })
-function compraPerCucina(che) {
-  const dopo = compraAttrezzo(mioBanco.value, che)
-  if (!dopo) return suono.no()
-  suono.moneta()
-  scriviBanco(dopo, { subito: true })
-}
 let raf = 0, ultimo = 0, apertoIl = 0, occupato = false, rifiuti = 0, ordiniFatti = 0
 
 const amici = usaAmici(CHIAVE)
@@ -121,7 +115,7 @@ function inizia(k = livello.value) {
   togliLaPausa()
   spegniOrologio()
   livello.value = k
-  cucina.value = cucinaNuova(CUCINE[k], mioBanco.value.cucina)
+  cucina.value = cucinaNuova(CUCINE[k])
   ricettaAperta.value = ''
   nTappa.value = 0
   hud.cuori = CUORI; hud.serviti = 0; hud.perfetti = 0; hud.incasso = 0
@@ -483,7 +477,7 @@ onBeforeUnmount(() => {
       </div>
       <!-- chi è da raggiungere -->
       <p v-if="amici.davanti" class="davanti" data-amico-davanti>{{ amici.davanti }}</p>
-      <LeCucine :banco="mioBanco" :aperte="cucineAperte" @scegli="vuoleIniziare" @compra="compraPerCucina" />
+      <LeCucine :banco="mioBanco" :aperte="cucineAperte" @scegli="vuoleIniziare" />
     </template>
 
     <template v-else-if="fase === 'gioco'">

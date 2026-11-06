@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { cucinaNuova, passo, usa, tocca, vaiA, arriva, consegna, cheManca, passiRicetta, TAGLI, SERVE_PIATTO } from '../../src/motore/bancarella/cucina.js'
-import { CUCINE, RICETTE, INGREDIENTI, ATTREZZI, attrezziDi, cucinaPulita, compraAttrezzo, bancoPulito, ricetteDi, prezzoDi } from '../../src/data/bancarella-cucine.js'
+import { CUCINE, RICETTE, INGREDIENTI, attrezziDi, cucinaPulita, bancoPulito, ricetteDi, prezzoDi } from '../../src/data/bancarella-cucine.js'
 import { nuovoOrdine, tappaDi, scomponi, premioCliente, chiaveResto } from '../../src/data/bancarella.js'
 import { scrivi, leggi, dice } from '../../src/motore/bancarella/sosta.js'
 
@@ -45,23 +45,18 @@ test('il cuoco gira attorno ai banconi e si ferma davanti al posto toccato', () 
 })
 
 test('la stanza cresce con quello che c\'è dentro', () => {
-  const prima = cucinaNuova(CUCINE[0]), ultima = cucinaNuova(CUCINE.at(-1)), tutto = cucinaNuova(CUCINE.at(-1), { pentola: 1, padella: 1, forno: 1, tagliere: 3 })
+  const prima = cucinaNuova(CUCINE[0]), ultima = cucinaNuova(CUCINE.at(-1))
   assert.deepEqual([prima.largo, prima.fondo], [4, 5], 'all\'inizio è piccola')
   assert.ok(ultima.fondo > prima.fondo && ultima.largo > prima.largo)
-  assert.ok(tutto.fondo >= ultima.fondo)
-  assert.ok(tutto.fondo <= 10)
+  assert.ok(ultima.fondo <= 10)
   for (const c of CUCINE) {
     const k = cucinaNuova(c)
-    assert.ok(k.celle.filter(q => q.tipo === 'banco').length >= 2, `${c.nome}: dove posare`)
-    assert.ok(!k.celle.some(q => (q.x === 0 || q.x === k.largo - 1) && (q.z === 0 || q.z === k.fondo - 1) && q.tipo === 'stazione'), `${c.nome}: negli angoli niente attrezzi`)
-  }
-  for (const [c, att] of [[CUCINE.at(-1), { pentola: 1, padella: 1, forno: 1, tagliere: 3, isola: 4 }], [CUCINE[0], { tagliere: 3 }]]) {
-    const k = cucinaNuova(c, att)
-    for (const n of Object.keys(k.stazioni)) assert.ok(k.celle.some(q => q.nome === n), `${n} ha il suo posto`)
-    for (const cosa of new Set(k.ricette.flatMap(r => r.passi))) assert.ok(k.celle.some(q => q.cosa === cosa), `la cassetta di ${cosa}`)
+    assert.ok(k.celle.filter(q => q.tipo === 'banco').length >= 3, `${c.nome}: dove posare`)
+    for (const n of Object.keys(k.stazioni)) assert.ok(k.celle.some(q => q.nome === n), `${c.nome}: ${n} ha il suo posto`)
+    for (const cosa of new Set(k.ricette.flatMap(r => r.passi))) assert.ok(k.celle.some(q => q.cosa === cosa), `${c.nome}: la cassetta di ${cosa}`)
     const angolo = q => (q.x === 0 || q.x === k.largo - 1) && (q.z === 0 || q.z === k.fondo - 1)
-    assert.ok(!k.celle.some(q => angolo(q) && q.tipo === 'stazione'), 'negli angoli niente attrezzi')
-    for (const q of k.celle) { const v = cucinaNuova(c, att); v.cuoco.x = 1.5; tocca(v, q.id); for (let t = 0; t < 8 && !v.arrivato; t += 0.05) passo(v, 0.05); assert.equal(v.arrivato, q.id, `si arriva a ${q.id}`) }
+    assert.ok(!k.celle.some(q => angolo(q) && q.tipo === 'stazione'), `${c.nome}: negli angoli niente attrezzi`)
+    for (const q of k.celle) { const v = cucinaNuova(c); v.cuoco.x = 1.5; tocca(v, q.id); for (let t = 0; t < 8 && !v.arrivato; t += 0.05) passo(v, 0.05); assert.equal(v.arrivato, q.id, `${c.nome}: si arriva a ${q.id}`) }
   }
 })
 
@@ -377,11 +372,14 @@ test('il piatto nel bidone torna nel lavello', () => {
   assert.equal(c.puliti, 1)
 })
 
-test('gli attrezzi comprati stanno nella stanza', () => {
-  const c = cucinaNuova(ULTIMA, { pentola: 1, forno: 1, padella: 1, tagliere: 3, piatti: 2 })
-  assert.deepEqual(Object.keys(c.stazioni).sort(), ['forno', 'forno:2', 'padella', 'padella:2', 'pentola', 'pentola:2', 'tagliere', 'tagliere:2', 'tagliere:3', 'tagliere:4'])
-  assert.equal(c.puliti, ULTIMA.piatti + 2)
-  for (const n of Object.keys(c.stazioni)) assert.ok(c.celle.some(k => k.nome === n), `${n} ha il suo posto`)
+test('con due piatti a ordinazione gli attrezzi sono doppi', () => {
+  const c = cucinaNuova(ULTIMA)
+  assert.deepEqual(Object.keys(c.stazioni).sort(), ['forno', 'forno:2', 'padella', 'padella:2', 'pentola', 'pentola:2', 'tagliere', 'tagliere:2'])
+  assert.equal(c.puliti, ULTIMA.piatti)
+  for (const camp of CUCINE) {
+    const doppi = Object.keys(cucinaNuova(camp).stazioni).filter(n => n.includes(':')).length
+    assert.equal(doppi, camp.articoli[0] === 2 ? attrezziDi(camp).length : 0, `${camp.nome}: quanti doppi`)
+  }
   fa(c, cassetta(c, 'pasta')); fa(c, posto(c, 'pentola'))
   fa(c, cassetta(c, 'pasta')); assert.ok(fa(c, posto(c, 'pentola:2')), 'due pentole insieme')
   aspetta(c, 7.1)
@@ -394,28 +392,22 @@ test('gli attrezzi comprati stanno nella stanza', () => {
   assert.equal(c.stazioni['forno:2'].cosa, 'pizza')
 })
 
-test('gli appoggi in più stanno in mezzo, e ci si cammina attorno', () => {
-  const c = cucinaNuova(CUCINE[0], { isola: 4 })
-  assert.equal(c.celle.filter(k => k.x === 2 && k.z > 0 && k.z < c.fondo - 1).length, 4)
+test('gli appoggi stanno in mezzo, e ci si cammina attorno', () => {
+  const c = cucinaNuova(ULTIMA)
+  assert.equal(c.celle.filter(k => k.x === 2 && k.z > 0 && k.z < c.fondo - 1).length, 2)
   assert.ok(fa(c, posto(c, 'piatti')))
   assert.ok(fa(c, '2,3'), 'ci si posa')
   assert.ok(c.sopra['2,3'].piatto)
-  for (const id of ['2,6', '2,2', '2,5']) vai(c, id)
+  vai(c, '2,2')
   const senza = cucinaNuova(CUCINE[5])
   assert.equal(senza.celle.filter(k => k.x === 2 && k.z > 0 && k.z < senza.fondo - 1).length, 0, 'di base non ci sono')
 })
 
-test('si comprano col banco, e il banco li ricorda', () => {
-  const a = ATTREZZI.find(x => x.che === 'tagliere')
-  const b = bancoPulito({ cassa: a.prezzi[0] + 100, cucina: { fatte: 3 } })
-  assert.deepEqual(bancoPulito(b).cucina, b.cucina)
-  const dopo = compraAttrezzo(b, 'tagliere')
-  assert.equal(dopo.cassa, 100); assert.equal(dopo.cucina.tagliere, 1)
-  assert.equal(compraAttrezzo({ ...dopo, cassa: a.prezzi[1] - 1 }, 'tagliere'), null, 'il secondo costa di più')
-  assert.equal(compraAttrezzo({ ...dopo, cassa: 1000000, cucina: { ...dopo.cucina, tagliere: a.prezzi.length } }, 'tagliere'), null, 'c\'è un tetto')
-  assert.equal(compraAttrezzo({ ...b, cassa: 0 }, 'tagliere'), null, 'la cassa non va sotto zero')
-  assert.equal(compraAttrezzo({ ...b, cassa: 1000000 }, 'forno'), null, 'prima di arrivarci non si vede')
-  assert.equal(cucinaPulita({ fatte: 999, piatti: 99 }).fatte, CUCINE.length)
+test('il banco ricorda i livelli vinti, e quello che si era comprato prima non conta più', () => {
+  const b = bancoPulito({ cassa: 500, cucina: { fatte: 3, tagliere: 2, isola: 1 } })
+  assert.deepEqual(b, { cassa: 500, cucina: { fatte: 3 } })
+  assert.deepEqual(bancoPulito(b), b)
+  assert.equal(cucinaPulita({ fatte: 999 }).fatte, CUCINE.length)
 })
 
 test('i livelli: tanti, a crudo i primi, ogni ricetta ha i suoi attrezzi', () => {

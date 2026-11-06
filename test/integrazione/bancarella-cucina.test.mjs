@@ -5,11 +5,11 @@
    il posto giusto, il cuoco ci cammina e fa la mossa; le ordinazioni si fanno in
    qualsiasi ordine, scadono, e quella finita apre il foglio del resto, che sta
    sotto il dito e non deve prendersi il suo click. La ricetta ferma il tempo,
-   i livelli si aprono vincendo, gli attrezzi si comprano. Vedi docs/bancarella/cucina.md. */
+   i livelli si aprono vincendo. Vedi docs/bancarella/cucina.md. */
 import { apriBrowser, apriGioco, azzera, leggiProfilo, attendi, scatto, TELEFONO } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { TAGLI } from '../../src/motore/bancarella/cucina.js'
-import { CUCINE, ATTREZZI } from '../../src/data/bancarella-cucine.js'
+import { CUCINE } from '../../src/data/bancarella-cucine.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
@@ -138,22 +138,14 @@ controlla('l\'incasso va nel banco', p.campagne.bancarella.banco.cassa > 0)
   uguale('resta quella che non è scaduta', await page.locator('[data-ordine]').count(), 1)
 }
 
-/* ---------- 6. vincere apre il livello dopo, e si comprano gli attrezzi ---------- */
+/* ---------- 6. vincere apre il livello dopo, e nella scelta non si compra niente ---------- */
 await page.evaluate(() => { const S = window.__shop; S.hud.serviti = 8; S.tappa.value = 2; S.coda.value = S.coda.value.slice(0, 1); S.chiudi('vinta') })
 await page.waitForFunction(() => window.__shop.fase.value === 'fine', undefined, { timeout: 4000 })
 await page.click('[data-azione="le-cucine"]')
 await page.waitForSelector('[data-cucine]', { timeout: 3000 })
 controlla('il secondo livello si è aperto', await page.locator('[data-cucina-n="2"]').isEnabled())
-{
-  const a = ATTREZZI.find(x => x.che === 'tagliere')
-  await page.evaluate(n => { const S = window.__shop; S.mioBanco.value = { ...S.mioBanco.value, cassa: n } }, a.prezzi[0] + 50)
-  await page.click('[data-attrezzo="tagliere"]')
-  await attendi(page, 300)
-  uguale('il tagliere in più è comprato', await page.evaluate(() => window.__shop.mioBanco.value.cucina.tagliere), 1)
-  uguale('e pagato', await page.evaluate(() => window.__shop.mioBanco.value.cassa), 50)
-}
+uguale('non c\'è niente da comprare', await page.locator('.cucine button:not(.livello)').count(), 0)
 await apri(2)
-controlla('il secondo tagliere sta in cucina', !!(await stato()).stazioni['tagliere:2'])
 
 /* ---------- 7. l'insalata: un tocco la posa e il cuoco taglia da sé, poi si prende ---------- */
 await premi(INSALATA); await premi(TAGLIERE)

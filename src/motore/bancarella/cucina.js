@@ -11,11 +11,11 @@ const VELOCITA = 4.2
 
 /* La pianta, a zone: in fondo si finisce (lavello, piatti, consegna), a sinistra si taglia, a destra
    si cuoce, davanti la dispensa. La stanza è grande quanto serve: chi ha poche cose non corre.
-   `:2` è l'attrezzo comprato. */
-const A_SINISTRA = ['tagliere', 'tagliere:2', 'tagliere:3', 'tagliere:4', 'pomodoro', 'insalata', 'formaggio', 'pesce']
+   `:2` è l'attrezzo doppio. */
+const A_SINISTRA = ['tagliere', 'tagliere:2', 'pomodoro', 'insalata', 'formaggio', 'pesce']
 const A_DESTRA = ['pentola', 'pentola:2', 'padella', 'padella:2', 'forno', 'forno:2', 'pasta', 'carne', 'uovo']
 const DAVANTI = ['pane', 'sugo', 'riso', 'alga', 'impasto']
-const RIGHE_ISOLE = [2, 3, 5, 6]   // gli appoggi in più, nella colonna di mezzo
+const RIGHE_ISOLE = [2, 3]         // gli appoggi, nella colonna di mezzo
 const LIBERI = 3                   // i banconi vuoti che si cerca di lasciare
 const MINIMO = 5, MASSIMO = 10     // quanto è fonda
 
@@ -61,16 +61,16 @@ function pianta(c, quanteIsole) {
   return { celle, largo, fondo }
 }
 
-/* `camp` è una delle CUCINE, `attrezzi` quello che il bambino ha comprato.
+/* `camp` è una delle CUCINE: dice lei quanti attrezzi, appoggi e piatti ci sono.
    `fila`: il posto toccato, finché il cuoco non ci arriva; `strada`: i punti per arrivarci;
    `arrivato`: il posto raggiunto, dove chi gioca fa la mossa (`arriva`).
    `puliti`: i piatti in pila, `null` se non finiscono; `sporchi`: quelli nel lavello;
    `ritorni`: i secondi che mancano a quelli in giro. */
-export function cucinaNuova(camp = CUCINE[0], attrezzi = {}) {
-  const nomi = attrezziDi(camp).flatMap(t => [t, ...Array.from({ length: attrezzi[t] || 0 }, (_, i) => `${t}:${i + 2}`)])
+export function cucinaNuova(camp = CUCINE[0]) {
+  const nomi = attrezziDi(camp).flatMap(t => (camp.copie?.[t] ? [t, `${t}:2`] : [t]))
   const c = { stazioni: Object.fromEntries(nomi.map(n => [n, libera()])), ricette: ricetteDi(camp.ricette),
-              puliti: camp.piatti ? camp.piatti + (attrezzi.piatti || 0) : null, sporchi: 0, ritorni: [] }
-  const stanza = pianta(c, attrezzi.isola || 0)
+              puliti: camp.piatti || null, sporchi: 0, ritorni: [] }
+  const stanza = pianta(c, camp.appoggi || 0)
   return { ...c, ...stanza, sopra: {}, fila: [], strada: [], arrivato: '', perche: '', tagliando: '', colpo: 0, lavando: false, lavata: 0,
            cuoco: { x: 1.5, z: stanza.fondo - 1.5, verso: 0, mano: null, cammina: false } }
 }

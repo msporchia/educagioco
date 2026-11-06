@@ -689,7 +689,7 @@ export const AIUTI = {
       ] },
       { titolo: 'I livelli', righe: [
         'I primi sono **a crudo**, con tempo da vendere: panini, insalate, sushi. Poi la pentola, la padella, il forno.',
-        'Con l\'incasso si comprano taglieri, pentole, padelle, forni e piatti in più.',
+        'Dai due piatti a ordinazione in cucina c\'è tutto doppio.',
       ] },
       { titolo: 'Cosa allena', righe: [
         'I soldi veri: euro e centesimi, comporre una cifra coi tagli che si hanno, e **il resto**.',
