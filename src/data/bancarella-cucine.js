@@ -152,9 +152,5 @@ export function cucinaPulita(s) {
   return { fatte: intero(o.fatte, CUCINE.length) }
 }
 
-/* Il banco salvato, messo a posto: l'incasso resta, chi giocava prima lo ritrova in cassa. */
-export function bancoPulito(salvato, incassato = 0) {
-  const s = salvato && typeof salvato === 'object' ? salvato : null
-  return { cassa: s && Number.isInteger(s.cassa) && s.cassa >= 0 ? s.cassa : Math.max(0, Math.round(incassato) || 0),
-           cucina: cucinaPulita(s && s.cucina) }
-}
+/* Il banco salvato, messo a posto. */
+export const bancoPulito = salvato => ({ cucina: cucinaPulita(salvato?.cucina) })

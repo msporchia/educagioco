@@ -407,7 +407,7 @@ test('gli appoggi stanno in mezzo, e ci si cammina attorno', () => {
 
 test('il banco ricorda i livelli vinti, e quello che si era comprato prima non conta più', () => {
   const b = bancoPulito({ cassa: 500, cucina: { fatte: 3, tagliere: 2, isola: 1 } })
-  assert.deepEqual(b, { cassa: 500, cucina: { fatte: 3 } })
+  assert.deepEqual(b, { cucina: { fatte: 3 } })
   assert.deepEqual(bancoPulito(b), b)
   assert.equal(cucinaPulita({ fatte: 999 }).fatte, CUCINE.length)
 })

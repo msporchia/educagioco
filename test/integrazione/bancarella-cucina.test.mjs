@@ -128,7 +128,7 @@ await daiResto()
 await page.waitForFunction(() => window.__shop.hud.serviti === 1, undefined, { timeout: 4000 })
 await attendi(page, 500)
 const p = await leggiProfilo(page)
-controlla('l\'incasso va nel banco', p.campagne.bancarella.banco.cassa > 0)
+controlla('l\'incasso finisce nei conti', p.totals.incasso > 0)
 
 /* ---------- 5. un'ordinazione che scade costa un cuore e sparisce ---------- */
 {
@@ -145,6 +145,7 @@ await page.click('[data-azione="le-cucine"]')
 await page.waitForSelector('[data-cucine]', { timeout: 3000 })
 controlla('il secondo livello si è aperto', await page.locator('[data-cucina-n="2"]').isEnabled())
 uguale('non c\'è niente da comprare', await page.locator('.cucine button:not(.livello)').count(), 0)
+uguale('e niente cassa', await page.locator('.cucine .cassa').count(), 0)
 await apri(2)
 
 /* ---------- 7. l'insalata: un tocco la posa e il cuoco taglia da sé, poi si prende ---------- */

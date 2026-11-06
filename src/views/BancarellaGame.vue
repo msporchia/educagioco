@@ -56,13 +56,11 @@ const ricettaAperta = ref('')       // il piatto di cui si legge la ricetta: int
 const dettoCuoco = ref(null)        // il perché di un tocco a vuoto
 const frasePrimato = ref('')        // alla fine della cucina senza fine: com'è andata col record
 
-/* L'incasso resta. */
-const mioBanco = ref(bancoPulito((state.profile.campagne || {}).bancarella?.banco, state.profile.totals.incasso))
+const mioBanco = ref(bancoPulito((state.profile.campagne || {}).bancarella?.banco))
 const scriviBanco = (b, opzioni) => {
   mioBanco.value = b
   ritocca(CHIAVE, c => { c.banco = b }, opzioni)
 }
-const incassa = cent => scriviBanco({ ...mioBanco.value, cassa: mioBanco.value.cassa + cent })
 let raf = 0, ultimo = 0, apertoIl = 0, occupato = false, rifiuti = 0, ordiniFatti = 0
 
 const amici = usaAmici(CHIAVE)
@@ -288,11 +286,10 @@ function proponi() {
   nonTorna()
 }
 
-function paga(c) {
+function paga() {
   const preso = borsellino.paga(premioCliente(camp.value))
   guadagno.monete = borsellino.dato
   if (preso) { moneta.value = preso; setTimeout(() => (moneta.value = 0), 1100) }
-  incassa(c.totale)
 }
 
 /* Il tasto «salta» dei grandi (docs/core/comandi.md): il conto è dato per fatto. Paga come
@@ -302,7 +299,7 @@ function salta() {
   if (occupato || !c || momento.value !== 'cassa') return
   occupato = true
   suono.moneta()
-  paga(c)
+  paga()
   programma(prossimo, 600)
 }
 
@@ -315,7 +312,7 @@ function consegna() {
   segna('clienti'); segna('incasso', c.totale)
   if (perfetto) { hud.perfetti++; bonus.value = true; segna('restiPerfetti') }
   suono.moneta()
-  paga(c)
+  paga()
   programma(prossimo, 900)
 }
 
