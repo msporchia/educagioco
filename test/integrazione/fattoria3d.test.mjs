@@ -1105,6 +1105,8 @@ controlla('il pollaio con le bestie non si mette via', via.ok === false && via.m
   const cdp = await page.context().newCDPSession(page)
   const giu = (x, y) => cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] })
   const su = () => cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  const tocca = async (x, y) => { await giu(x, y); await attendi(page, 60); await su() }      // quelli di fuori toccano l'altra pagina
+  const toccaEl = async sel => { const r = await page.locator(sel).boundingBox(); await tocca(r.x + r.width / 2, r.y + r.height / 2) }
   const schermoDi = (x, z) => page.evaluate(([x, z]) => {
     const { mondo } = window.__fattoria3d, r = mondo.canvas.getBoundingClientRect(), [px, py] = mondo.proietta({ x, y: 0, z })
     return [r.left + px, r.top + py]
