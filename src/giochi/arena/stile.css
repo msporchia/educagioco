@@ -102,8 +102,10 @@
 /* i bersagli sopra piazzole e castello: trasparenti, grandi quanto l'edificio */
 .ar-bersaglio { position: absolute; background: transparent; border: 0; padding: 0; border-radius: 14px; z-index: 3;
                 display: grid; place-items: center }
-.ar-bersaglio.ar-scelto { box-shadow: 0 0 0 3px #ffe98a, 0 0 18px #ffe98a88 }
-.ar-piu { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; font-size: 20px; font-weight: 900; color: var(--ar-oro-chiaro);
+.ar-bersaglio[data-castello].ar-scelto, .ar-bersaglio[data-piazzola].ar-scelto::after { box-shadow: 0 0 0 3px #ffe98a, 0 0 18px #ffe98a88 }
+/* il bersaglio è più largo dell'edificio per il dito: il contorno segue l'edificio */
+.ar-bersaglio[data-piazzola].ar-scelto::after { content: ''; position: absolute; inset: 12% 14% 0; border-radius: 12px; pointer-events: none }
+.ar-piu { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font-size: 15px; font-weight: 900; color: var(--ar-oro-chiaro);
           background: #1a1420b8; border: 2px solid var(--ar-oro); text-shadow: 0 1px 3px #000; animation: ar-respira 1.8s ease-in-out infinite }
 @keyframes ar-respira { 50% { box-shadow: 0 0 14px 3px #ffd97acc; transform: scale(1.09) } }
 /* l'anello: pochi pulsanti di legno sopra l'edificio toccato; il «?» è piccolo */

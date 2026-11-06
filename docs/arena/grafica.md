@@ -61,6 +61,7 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
   più (`ZE`).
 - **Il castello spunta dal bordo** (`base()`): di chi gioca la cima, in basso; del nemico la
   base col portone, in alto. La barra della vita sta dalla parte del campo.
+- **Gli edifici sulle piazzole sono il 30% più piccoli del castello** (`TAGLIA`, `ma()` in `scena/campo.js`), perché il campo non sembri affollato. I posti del motore non cambiano, e il bersaglio resta largo per il dito.
 - **I posti delle caserme sono piazzole fisse** (`piazzole()`): la piazzola del castello a
   torri, sempre in vista anche vuota, come in un tower defense. Nella metà di ciascuno
   non ci sono alberi né staccionate (le celle `_` della carta prendono solo il prato).

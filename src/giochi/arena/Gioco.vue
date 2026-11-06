@@ -242,8 +242,8 @@ function aggiornaCruscotto() {
   }
 }
 
-/* Si gioca toccando il campo: un bersaglio trasparente su ogni piazzola e sul castello, grande
-   quanto l'edificio (le misure della scena, che sa dove ha disegnato). Toccata una piazzola libera
+/* Si gioca toccando il campo: un bersaglio trasparente su ogni piazzola e sul castello, più
+   grande dell'edificio per il dito (le misure della scena, che sa dove ha disegnato). Toccata una piazzola libera
    si sceglie cosa costruire; toccato un edificio gli compare sopra l'anello. Sotto, la barra
    sottile: ripara e bomba, che non stanno su un edificio. */
 function costruisciPannello(p) {
