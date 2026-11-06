@@ -1,8 +1,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { cucinaNuova, passo, usa, tocca, vaiA, arriva, consegna, cheManca, passiRicetta, TAGLI, SERVE_PIATTO } from '../../src/motore/bancarella/cucina.js'
-import { CUCINE, RICETTE, INGREDIENTI, attrezziDi, cucinaPulita, bancoPulito, ricetteDi, prezzoDi, orologio } from '../../src/data/bancarella-cucine.js'
-import { nuovoOrdine, tappaDi, scomponi, premioCliente, chiaveResto } from '../../src/data/bancarella.js'
+import { CUCINE, RICETTE, INGREDIENTI, attrezziDi, cucinaPulita, bancoPulito, ricetteDi, prezzoDi, listinoDi, orologio } from '../../src/data/bancarella-cucine.js'
+import { nuovoOrdine, tappaDi, scomponi, premioCliente, chiaveResto, serveTutto } from '../../src/data/bancarella.js'
 import { scrivi, leggi, dice } from '../../src/motore/bancarella/sosta.js'
 
 /* Tocca un posto, lascia camminare il cuoco e fa la mossa, come fa la vista. */
@@ -358,13 +358,28 @@ test('la cassa sale a gradini: chi fa i conti non torna mai indietro', () => {
   assert.equal(CUCINE[6].conto, 'resto', 'poi lo conti tu')
   assert.equal(CUCINE.find(c => c.conto === 'tutto').articoli[0], 2, 'il totale da chiedere arriva coi due piatti')
   assert.equal(nuovoOrdine({ ...tappaDi(CUCINE.at(-1), 0), articoli: [1, 1] }, ricetteDi(['🍝'])).chiediTotale, false, 'con un piatto solo non c\'è niente da sommare')
-  assert.equal(CUCINE.at(-1).passo, 5)
+  assert.equal(CUCINE.at(-1).passo, 10)
+  assert.deepEqual(CUCINE.slice(0, 12).map(c => c.passo), Array(12).fill(100), 'si parte con gli euro tondi')
+  assert.equal(CUCINE.find(c => c.conto === 'tutto').passo, 100, 'e ci si torna quando il totale lo batti tu')
   const pizza = RICETTE.find(r => r.emoji === '🍕')
   assert.equal(prezzoDi({ prezzo: 350, emoji: '🥪' }, 100), 400, 'all\'inizio euro tondi')
   assert.equal(prezzoDi(pizza, 50), 800)
   assert.equal(prezzoDi(pizza, 10) % 10, 0)
   assert.ok(prezzoDi(pizza, 10) % 50 > 0)
-  assert.equal(prezzoDi(pizza, 5) % 10, 5, 'alla fine i cinque centesimi')
+})
+
+test('ogni cucina ha il suo listino', () => {
+  const pasta = RICETTE.find(r => r.emoji === '🍝'), sushi = RICETTE.find(r => r.emoji === '🍣'), alga = RICETTE.find(r => r.emoji === '🍱')
+  const prezzi = passo => new Set(CUCINE.map((_, k) => prezzoDi(pasta, passo, k)))
+  assert.equal(prezzi(100).size, 3, 'sugli euro la pasta cambia da una cucina all\'altra')
+  assert.equal(prezzi(50).size, 3)
+  assert.ok(prezzi(10).size >= 8, 'e coi centesimi non è sempre 6,70 €')
+  for (const c of CUCINE) {
+    assert.ok(prezzoDi(alga, c.passo, c.listino) > prezzoDi(sushi, c.passo, c.listino), `${c.nome}: con l'alga costa di più`)
+    const prezzi = Object.values(listinoDi(c))
+    assert.equal(prezzi.length, c.ricette.length, `${c.nome}: ogni piatto ha il prezzo`)
+    assert.equal(new Set(prezzi).size, prezzi.length, `${c.nome}: due piatti non costano uguale: ${prezzi}`)
+  }
 })
 
 test('il piatto nel bidone torna nel lavello', () => {
@@ -420,7 +435,7 @@ test('i livelli: tanti, a crudo i primi, ogni ricetta ha i suoi attrezzi', () =>
     const k = cucinaNuova(c)
     assert.equal(k.ricette.length, c.ricette.length, c.nome)
     assert.ok(c.ricette.includes(c.foto) || RICETTE.some(r => r.emoji === c.foto), `${c.nome}: la foto è di un piatto`)
-    assert.ok(k.ricette.every(r => prezzoDi(r, c.passo) <= c.tetto), c.nome)
+    assert.ok(Object.values(listinoDi(c)).every(p => p <= c.tetto && p < Math.max(...c.paga)), `${c.nome}: c'è la banconota che basta`)
     for (const cosa of new Set(k.ricette.flatMap(r => r.passi))) assert.ok(k.celle.some(q => q.cosa === cosa), `${c.nome}: la cassetta di ${cosa}`)
   }
   const usati = new Set(CUCINE.flatMap(c => c.ricette))
@@ -433,9 +448,10 @@ test('le ordinazioni: i conti tornano in ogni livello', () => {
     const t = tappaDi(camp, i % camp.tappe), o = nuovoOrdine(t, ricetteDi(camp.ricette))
     assert.equal(o.totale, o.articoli.reduce((s, a) => s + a.prezzo, 0))
     const note = [500, 1000, 2000, 5000].filter(p => p > o.totale)
-    const tondo = (Math.floor(o.totale / 100) + 1) * 100
-    assert.ok(o.paga === note[0] || o.paga === tondo || (o.paga === note[1] && o.paga <= o.totale * 4), `${camp.nome}: ${o.totale} si paga con ${o.paga}`)
+    const tondo = Math.ceil(o.totale / 100) * 100, carta = (Math.floor(o.totale / 500) + 1) * 500
+    assert.ok(o.paga === note[0] || o.paga === carta || (o.paga === tondo && o.totale % 100) || (o.paga === note[1] && o.paga <= o.totale * 4), `${camp.nome}: ${o.totale} si paga con ${o.paga}`)
     assert.ok(o.pagaCon.length <= 3, 'al massimo tre pezzi')
+    assert.ok(serveTutto(o.pagaCon, o.totale), `${camp.nome}: ${o.totale} con ${o.pagaCon}, un pezzo se lo poteva tenere`)
     assert.ok(o.resto > 0, `${camp.nome}: c'è sempre un resto`)
     assert.equal(o.pagaCon.reduce((s, v) => s + v, 0), o.paga, 'i soldi mostrati sono quelli pagati')
     assert.equal(scomponi(o.resto, t.monete).reduce((s, v) => s + v, 0), o.resto, `${camp.nome}: il resto si compone col cassetto`)
@@ -450,9 +466,18 @@ test('le ordinazioni: i conti tornano in ogni livello', () => {
 })
 
 test('si può pagare con quello che si ha in tasca', () => {
-  const camp = CUCINE[20], visti = new Set()
-  for (let i = 0; i < 400; i++) visti.add(nuovoOrdine(tappaDi(camp, 0), [{ emoji: 'x', nome: 'x', prezzo: 850 }, { emoji: 'y', nome: 'y', prezzo: 0 }]).pagaCon.join('+'))
+  const camp = { ...CUCINE.find(c => c.passo === 50 && c.listino % 3 === 0), ricette: ['🍔🧀'] }, visti = new Set()
+  for (let i = 0; i < 400; i++) visti.add(nuovoOrdine({ ...tappaDi(camp, 0), articoli: [1, 1] }, ricetteDi(camp.ricette)).pagaCon.join('+'))
   assert.ok(visti.has('500+200+200'), `8,50 € con 5 + 2 + 2: ${[...visti]}`)
+})
+
+test('12 € si pagano con la carta, non col totale giusto più una moneta', () => {
+  const camp = { ...CUCINE.find(c => c.passo === 100 && c.conto === 'tutto' && c.listino % 3 === 0), ricette: ['🍝', '🍳'] }, visti = new Set()
+  for (let i = 0; i < 400; i++) visti.add(nuovoOrdine(tappaDi(camp, 0), ricetteDi(camp.ricette)).pagaCon.join('+'))
+  assert.ok(visti.has('1000+500'), `10 € + 5 €: ${[...visti]}`)
+  assert.ok(visti.has('2000'), `oppure 20 €: ${[...visti]}`)
+  assert.ok(!visti.has('1000+200+100'), `mai 13 € per riavere la sua moneta: ${[...visti]}`)
+  assert.ok(serveTutto([1000, 500], 1200) && !serveTutto([1000, 200, 100], 1200) && !serveTutto([1000, 1000], 1000))
 })
 
 test('la sosta riporta la stanza com\'era', () => {
