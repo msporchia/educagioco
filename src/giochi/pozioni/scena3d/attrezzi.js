@@ -1,22 +1,23 @@
 // Gli attrezzi del procedimento, sul tavolo a spesa fatta: il mortaio, il
-// pestello, il tagliere, il coltello, il mestolo, il fiammifero, il mantice, la
-// bacchetta, la brocca, il sale, il pepe, la fiala, la grattugia appesa al calderone; e sul bancone la roba
-// comprata, con la foto del suo modello. Tutto si trascina (indice.js): ognuno ha
+// pestello, il tagliere, il coltello, il fiammifero, la brocca, il sale, il pepe, la
+// fiala, la grattugia appesa al calderone; in fondo il mestolo appeso, il coperchio
+// appoggiato e la bacchetta nel suo vasetto; e sul bancone la roba comprata, nel suo
+// recipiente o con la foto del suo modello. Tutto si trascina (indice.js): ognuno ha
 // una presa invisibile più grande di lui, se no il dito non lo prende.
 import { Group, Mesh, Sprite, SpriteMaterial, LatheGeometry, CylinderGeometry, SphereGeometry, CircleGeometry, TorusGeometry, BoxGeometry,
-         ConeGeometry, DodecahedronGeometry, ShapeGeometry, Shape, Vector2, Vector3,
+         DodecahedronGeometry, ExtrudeGeometry, ShapeGeometry, Shape, Vector2, Vector3,
          MeshStandardMaterial, MeshBasicMaterial, DoubleSide, TextureLoader, SRGBColorSpace, AdditiveBlending } from 'three'
 import { POSTI } from './banco.js'
 import { nomeSulBanco } from './trame.js'
 
 const giro = punti => punti.map(([x, y]) => new Vector2(x, y))
 const FILA = 0.1                // la z della fila sul tavolo
-const COSTRUITI = ['mortaio', 'pestello', 'tagliere', 'coltello', 'mestolo', 'fiammifero', 'mantice', 'bacchetta', 'brocca', 'grattugia', 'sale', 'pepe', 'fiala']
+const COSTRUITI = ['mortaio', 'pestello', 'tagliere', 'coltello', 'mestolo', 'fiammifero', 'coperchio', 'bacchetta', 'brocca', 'grattugia', 'sale', 'pepe', 'fiala']
 const FETTE = 7
 const PASSO_ROBA = 1.6          // quanto stanno distanti sul bancone
 const GRANDE_ROBA = 1.25
 
-export function creaAttrezzi(scena, { morbido, lamiera }) {
+export function creaAttrezzi(scena, { morbido, lamiera, polvere }) {
   const pietra = new MeshStandardMaterial({ color: 0x8d8a92, roughness: 0.85, side: DoubleSide })
   const metallo = new MeshStandardMaterial({ color: 0xc2c8d2, roughness: 0.35, metalness: 0.6, side: DoubleSide })
   const coccio = new MeshStandardMaterial({ color: 0xc87a4a, roughness: 0.6, side: DoubleSide })
@@ -24,8 +25,9 @@ export function creaAttrezzi(scena, { morbido, lamiera }) {
   const capocchia = new MeshStandardMaterial({ color: 0xd8342a, roughness: 0.6 })
   const legno = new MeshStandardMaterial({ color: 0xb98a5a, roughness: 0.7, side: DoubleSide })
   const scuro = new MeshStandardMaterial({ color: 0x4a2e1c, roughness: 0.65 })
-  const cuoio = new MeshStandardMaterial({ color: 0x7a4a2a, roughness: 0.9 })
-  const oro = new MeshStandardMaterial({ color: 0xffd76a, emissive: 0x8a6210, roughness: 0.35 })
+  const rame = new MeshStandardMaterial({ color: 0xd08a52, roughness: 0.35, metalness: 0.6, side: DoubleSide })
+  const oro = new MeshStandardMaterial({ color: 0xffd76a, emissive: 0xa87a18, roughness: 0.35 })
+  const notte = new MeshStandardMaterial({ color: 0x5b3fc4, emissive: 0x24146a, roughness: 0.3 })
   const tagliato = new MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 })
   const ceramica = new MeshStandardMaterial({ color: 0xf2efe8, roughness: 0.45 })
   const nero = new MeshStandardMaterial({ color: 0x2b2a2e, roughness: 0.5 })
@@ -33,7 +35,12 @@ export function creaAttrezzi(scena, { morbido, lamiera }) {
   const succo = new MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 })
   const niente = new MeshBasicMaterial({ visible: false })
   const presaGeo = new SphereGeometry(0.72, 8, 6)
-  const trame = []
+  const trame = [], tinte = []
+  const ciotolaGeo = new LatheGeometry(giro([[0, 0], [0.34, 0.01], [0.52, 0.2], [0.58, 0.42], [0.54, 0.44], [0.46, 0.24], [0.3, 0.12], [0, 0.1]]), 28)
+  const mucchioGeo = new SphereGeometry(0.47, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2)
+  const bicchiereGeo = new LatheGeometry(giro([[0, 0], [0.32, 0], [0.38, 0.05], [0.38, 0.74], [0.42, 0.8]]), 24)
+  const dentroBicchiereGeo = new CylinderGeometry(0.35, 0.35, 0.56, 22)
+  dentroBicchiereGeo.translate(0, 0.28, 0)
 
   // `x`, `y`, `z`: dove riposa; `giu`: com'è posato (in mano sta dritto)
   const attrezzo = (id, gruppo, x, y, giu, z = FILA, sdraiato = 0) => {
@@ -55,7 +62,7 @@ export function creaAttrezzi(scena, { morbido, lamiera }) {
   const dentro = new Mesh(new CircleGeometry(0.48, 24), pesto)
   dentro.rotation.x = -Math.PI / 2; dentro.position.y = 0.4; dentro.visible = false
   mortaio.add(dentro)
-  // i pezzi interi, che il pestello fa sparire
+  // i pezzi interi, che il pestello fa sparire: la polvere versata dalla ciotola non ne ha
   const grumi = new Group()
   const geoGrumo = new DodecahedronGeometry(0.13)
   for (let i = 0; i < 6; i++) {
@@ -87,8 +94,9 @@ export function creaAttrezzi(scena, { morbido, lamiera }) {
   const gancio = new Mesh(new TorusGeometry(0.07, 0.024, 8, 16, Math.PI * 1.3), metallo)
   gancio.position.set(0.22, 1.8, 0.0)
   mestolo.add(new Mesh(coppa, metallo), manico, gancio)
-  attrezzo('mestolo', mestolo, 2.35, 0.3, 1.5, 0.35)
+  attrezzo('mestolo', mestolo, POSTI.gancio.x - 0.22, POSTI.gancio.y - 1.84, 0, POSTI.gancio.z)
   mestolo.userData.presa.position.y = 0.7
+  mestolo.userData.fisso = true
 
   // il tagliere, con quello che si sminuzza: un pezzo intero che si accorcia e le fette
   const tagliere = new Group()
@@ -135,47 +143,66 @@ export function creaAttrezzi(scena, { morbido, lamiera }) {
   const fiammella = new Sprite(new SpriteMaterial({ map: morbido, color: 0xffb347, blending: AdditiveBlending, depthWrite: false, transparent: true }))
   fiammella.position.y = 1.08; fiammella.scale.set(0.2, 0.34, 1); fiammella.visible = false
   fiammifero.add(fiammella)
-  attrezzo('fiammifero', fiammifero, 1.75, 0.08, -1.5, -1.65)
+  attrezzo('fiammifero', fiammifero, 1.55, 0.08, -1.5, -1.65)
   fiammifero.userData.presa.position.y = 0.5
 
-  // il mantice: due assi col cuoio in mezzo, il becco in avanti
-  const mantice = new Group()
-  const soffietto = new Group()
-  const pancia = new Mesh(new SphereGeometry(0.34, 16, 10), cuoio)
-  pancia.scale.set(1.15, 0.5, 0.85)
-  const assaSu = new Mesh(new CylinderGeometry(0.38, 0.38, 0.04, 20), legno)
-  assaSu.scale.set(1.25, 1, 0.92); assaSu.position.y = 0.17
-  soffietto.add(pancia, assaSu)
-  soffietto.position.y = 0.2
-  const assaGiu = new Mesh(new CylinderGeometry(0.38, 0.38, 0.04, 20), legno)
-  assaGiu.scale.set(1.25, 1, 0.92); assaGiu.position.y = 0.04
-  const becco = new Mesh(new ConeGeometry(0.075, 0.45, 12), metallo)
-  becco.rotation.z = -Math.PI / 2; becco.position.set(0.62, 0.16, 0)
-  const manici = new Mesh(new BoxGeometry(0.42, 0.05, 0.1), scuro)
-  manici.position.set(-0.62, 0.1, 0)
-  mantice.add(soffietto, assaGiu, becco, manici)
-  attrezzo('mantice', mantice, -1.85, 0, 0, -1.55)
-  mantice.userData.presa.position.y = 0.2
-  mantice.userData.soffietto = soffietto
-  mantice.userData.bocca = new Vector3(0.86, 0.16, 0)
+  // il coperchio: una cupola di rame col pomolo, appoggiata in fondo al tavolo. È largo come il calderone
+  const coperchio = new Group()
+  coperchio.add(new Mesh(new LatheGeometry(giro([[0, 0.3], [0.26, 0.28], [0.58, 0.2], [0.86, 0.09], [1.02, 0.03], [1.08, 0], [1.05, -0.03], [0.98, 0.01]]), 40), rame))
+  const pomolo = new Mesh(new SphereGeometry(0.13, 14, 10), oro)
+  pomolo.position.y = 0.42
+  const collo = new Mesh(new CylinderGeometry(0.05, 0.08, 0.12, 12), rame)
+  collo.position.y = 0.33
+  coperchio.add(pomolo, collo)
+  attrezzo('coperchio', coperchio, -2.1, 1.04, 0, -2.92, 1.42)
+  coperchio.userData.presa.position.y = 0.15
+  coperchio.userData.presa.scale.setScalar(1.15)
+  coperchio.userData.fisso = true
 
-  // la bacchetta, con la stellina in cima
+  // la bacchetta: nel suo vasetto, con la stella che brilla e si guarda attorno. Pende un po' indietro:
+  // la camera guarda dall'alto, e dritta si accorcerebbe a niente
   const bacchetta = new Group()
-  const verga = new Mesh(new CylinderGeometry(0.018, 0.034, 1.15, 8), scuro)
-  verga.position.y = 0.58
-  const stellina = new Mesh(new DodecahedronGeometry(0.075), oro)
-  stellina.position.y = 1.2
-  bacchetta.add(verga, stellina)
-  attrezzo('bacchetta', bacchetta, 0.9, 0.05, 1.5, -0.45)
-  bacchetta.userData.presa.position.y = 0.55
-  bacchetta.userData.punta = new Vector3(0, 1.2, 0)
+  const verga = new Mesh(new CylinderGeometry(0.022, 0.04, 1.05, 10), notte)
+  verga.position.y = 0.62
+  const manicoB = new Mesh(new CylinderGeometry(0.05, 0.055, 0.3, 12), oro)
+  manicoB.position.y = 0.15
+  const anelli = [0.34, 0.8, 1.12].map(y => {
+    const a = new Mesh(new TorusGeometry(0.038 - y * 0.012, 0.012, 8, 16), oro)
+    a.rotation.x = Math.PI / 2; a.position.y = y
+    return a
+  })
+  const punte = new Shape()
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 ? 0.1 : 0.23, a = Math.PI / 2 + i * Math.PI / 5
+    if (i) punte.lineTo(Math.cos(a) * r, Math.sin(a) * r); else punte.moveTo(Math.cos(a) * r, Math.sin(a) * r)
+  }
+  const forma = new ExtrudeGeometry(punte, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.035, bevelSize: 0.035, bevelSegments: 3, curveSegments: 4 })
+  forma.translate(0, 0, -0.025)
+  const stella = new Mesh(forma, oro)
+  stella.position.y = 1.36
+  const alone = new Sprite(new SpriteMaterial({ map: morbido, color: 0xffdf8a, blending: AdditiveBlending, depthWrite: false, transparent: true }))
+  alone.position.y = 1.36
+  bacchetta.add(verga, manicoB, ...anelli, stella, alone)
+  attrezzo('bacchetta', bacchetta, 2.42, 0.12, 0, 0.55, -0.55)
+  bacchetta.userData.presa.position.y = 0.75
+  bacchetta.userData.presa.scale.setScalar(0.8)
+  bacchetta.userData.punta = new Vector3(0, 1.36, 0)
+  bacchetta.userData.fisso = true
+  const vasetto = new Mesh(new LatheGeometry(giro([[0, 0], [0.2, 0], [0.26, 0.1], [0.24, 0.3], [0.18, 0.38], [0.21, 0.42], [0.14, 0.42], [0.1, 0.34], [0, 0.3]]), 22), notte)
+  const orlo = new Mesh(new TorusGeometry(0.2, 0.018, 8, 22), oro)
+  orlo.rotation.x = Math.PI / 2; orlo.position.y = 0.42
+  const portaBacchetta = new Group()
+  portaBacchetta.add(vasetto, orlo)
+  portaBacchetta.position.set(2.42, 0, 0.45)
+  portaBacchetta.visible = false
+  scena.add(portaBacchetta)
 
   const brocca = new Group()
   brocca.add(new Mesh(new LatheGeometry(giro([[0, 0], [0.3, 0.01], [0.38, 0.3], [0.3, 0.68], [0.24, 0.82], [0.32, 0.92], [0.27, 0.92], [0.2, 0.8], [0.25, 0.66], [0, 0.6]]), 24), coccio))
   const ansa = new Mesh(new TorusGeometry(0.2, 0.04, 8, 16, Math.PI), coccio)
   ansa.position.set(0.34, 0.5, 0); ansa.rotation.z = -Math.PI / 2
   brocca.add(ansa)
-  attrezzo('brocca', brocca, 2.3, 0, 0, -0.45)
+  attrezzo('brocca', brocca, -1.62, 0, 0, -1.55)
 
   // il sale e il pepe: negli angoli in fondo, col nome davanti perché la ricetta ne chiede uno
   const barattolo = (id, corpo, x) => {
@@ -221,42 +248,61 @@ export function creaAttrezzi(scena, { morbido, lamiera }) {
   grattugia.userData = { id: 'grattugia', casa: grattugia.position.clone() }
   scena.add(grattugia)
 
-  // la ciotola: compare sul calderone per versare quello che arriva dal fondo dello schermo
-  const ciotola = new Group()
-  ciotola.add(new Mesh(new LatheGeometry(giro([[0, 0], [0.3, 0.01], [0.46, 0.18], [0.5, 0.34], [0.45, 0.34], [0.38, 0.2], [0, 0.1]]), 24), coccio))
-  const sopra = new Mesh(new CircleGeometry(0.42, 20), new MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 }))
-  sopra.rotation.x = -Math.PI / 2; sopra.position.y = 0.27
-  ciotola.add(sopra)
-  ciotola.visible = false
-  scena.add(ciotola)
-
-  const tutti = { mortaio, pestello, tagliere, coltello, mestolo, fiammifero, mantice, bacchetta, brocca, grattugia, sale, pepe, fiala }
+  const tutti = { mortaio, pestello, tagliere, coltello, mestolo, fiammifero, coperchio, bacchetta, brocca, grattugia, sale, pepe, fiala }
   let quali = []
 
-  // la roba sul bancone: la foto, col nome davanti. Ognuna ha il suo posto, che non cambia
-  function nuovaRoba({ i, nome, foto }, posto, quanti) {
+  // quello che si è misurato arriva com'era sulla bilancia o nel cilindro: `vuota` lo fa calare mentre si versa
+  function nelRecipiente(tipo, colore) {
+    const corpo = new Group(), tinta = new MeshStandardMaterial({ color: colore, roughness: tipo === 'ciotola' ? 0.95 : 0.2, ...(tipo === 'ciotola' ? { map: polvere } : { emissive: colore, emissiveIntensity: 0.3 }) })
+    tinte.push(tinta)
+    if (tipo === 'ciotola') {
+      const mucchio = new Mesh(mucchioGeo, tinta)
+      mucchio.position.y = 0.26; mucchio.scale.y = 0.72
+      corpo.add(new Mesh(ciotolaGeo, coccio), mucchio)
+      return { corpo, bocca: new Vector3(-0.56, 0.42, 0), vuota: k => { mucchio.scale.set(1 - k * 0.5, Math.max(0.001, 0.72 * (1 - k)), 1 - k * 0.5) } }
+    }
+    const liquido = new Mesh(dentroBicchiereGeo, tinta)
+    liquido.position.y = 0.04
+    corpo.add(liquido, new Mesh(bicchiereGeo, vetro))
+    return { corpo, bocca: new Vector3(-0.42, 0.78, 0), vuota: k => { liquido.scale.y = Math.max(0.001, 1 - k) } }
+  }
+
+  // la roba sul bancone, col nome davanti. Ognuna ha il suo posto, che non cambia
+  function nuovaRoba({ i, nome, foto, recipiente, colore }, posto, quanti) {
     const g = new Group()
-    const t = new TextureLoader().load(foto); t.colorSpace = SRGBColorSpace
-    const figura = new Sprite(new SpriteMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false }))
     const passo = Math.min(PASSO_ROBA, 3.8 / (quanti - 1 || 1))
-    figura.scale.setScalar(Math.min(GRANDE_ROBA, passo)); figura.center.set(0.5, 0.05)
+    const dentro = recipiente && nelRecipiente(recipiente, colore)
+    if (dentro) {
+      dentro.corpo.scale.setScalar(Math.min(0.92, passo / 1.35))
+      g.add(dentro.corpo)
+    } else {
+      const t = new TextureLoader().load(foto); t.colorSpace = SRGBColorSpace
+      const figura = new Sprite(new SpriteMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false }))
+      figura.scale.setScalar(Math.min(GRANDE_ROBA, passo)); figura.center.set(0.5, 0.05)
+      g.add(figura)
+      trame.push(t)
+    }
     const nomeT = nomeSulBanco(nome)
     const targa = new Sprite(new SpriteMaterial({ map: nomeT, transparent: true, depthWrite: false, depthTest: false, toneMapped: false }))
     const targhe = Math.min(1.3, passo * 0.94)
-    targa.scale.set(targhe, targhe * 0.32, 1); targa.position.set(0, 0.2, 0.42)
-    g.add(figura, targa)
-    trame.push(t, nomeT)
-    return attrezzo(`roba:${i}`, g, (posto - (quanti - 1) / 2) * passo, POSTI.bancoY, 0, POSTI.bancoZ - 0.55)
+    targa.scale.set(targhe, targhe * 0.32, 1); targa.position.set(0, 0.2, dentro ? 0.66 : 0.42)   // una ciotola è bassa: la coprirebbe
+    g.add(targa)
+    trame.push(nomeT)
+    attrezzo(`roba:${i}`, g, (posto - (quanti - 1) / 2) * passo, POSTI.bancoY, 0, POSTI.bancoZ - 0.55)
+    g.userData.targa = targa
+    if (dentro) Object.assign(g.userData, { vuota: dentro.vuota, bocca: dentro.bocca.clone().multiplyScalar(dentro.corpo.scale.x) })
+    return g
   }
 
   return {
-    ...tutti, ciotola,
+    ...tutti,
     cosa: id => tutti[id],
-    // `q`: { visibili, quali: gli attrezzi di questa tappa, pestato e tagliere: colore o null, macinato e tagliato: già lavorati,
+    // `q`: { visibili, quali: gli attrezzi di questa tappa, pestato e tagliere: colore o null, grumi: nel mortaio c'è roba intera, macinato e tagliato: già lavorati,
     //       fiala: il colore, a pozione finita, roba: [{ i, nome, foto, posto }], quanti }
     imposta(q) {
       quali = q.visibili ? q.quali : []
       for (const id of COSTRUITI) tutti[id].visible = quali.includes(id)
+      portaBacchetta.visible = bacchetta.visible
       const sulBanco = q.visibili ? q.roba : []
       for (const d of sulBanco) tutti[`roba:${d.i}`] ||= nuovaRoba(d, d.posto, q.quanti)
       for (const id of Object.keys(tutti).filter(k => k.startsWith('roba:'))) tutti[id].visible = false
@@ -264,12 +310,17 @@ export function creaAttrezzi(scena, { morbido, lamiera }) {
       dentro.visible = !!q.pestato
       if (q.pestato) pesto.color.set(q.pestato)
       this.macina(q.macinato ? 1 : 0)
-      grumi.visible = !!q.pestato && !q.macinato
+      grumi.visible = !!q.pestato && !q.macinato && q.grumi
       if (q.tagliere) tagliato.color.set(q.tagliere)
       intero.visible = !!q.tagliere && !q.tagliato
       this.taglia(q.tagliere ? (q.tagliato ? 1 : 0) : -1)
       this.riempi(q.fiala ? 1 : 0, q.fiala)
       this.tappa(q.fiala ? 1 : 0)
+    },
+    // la stella si guarda attorno e brilla: col tempo, anche quando è in mano
+    aggiorna(t) {
+      stella.rotation.set(-0.64 - bacchetta.rotation.x, Math.sin(t * 1.1) * 0.55, Math.sin(t * 0.7) * 0.12)   // guarda la camera
+      alone.scale.setScalar(0.72 + Math.sin(t * 2.6) * 0.13)
     },
     // il pestello ha fatto `k`: i pezzi spariscono e la polvere sale
     macina(k) {
@@ -295,13 +346,12 @@ export function creaAttrezzi(scena, { morbido, lamiera }) {
       tappo.position.y = 1.15 - 0.33 * k
     },
     colpibili: () => quali.filter(id => id !== 'grattugia').map(id => tutti[id].userData.presa),
-    tintaCiotola(colore) { sopra.material.color.set(colore) },
     rilascia() {
-      for (const a of [...Object.values(tutti), ciotola]) { a.traverse(o => { if (o.geometry !== presaGeo) o.geometry?.dispose() }); scena.remove(a) }
+      for (const a of [...Object.values(tutti), portaBacchetta]) { a.traverse(o => { if (o.geometry !== presaGeo) o.geometry?.dispose() }); scena.remove(a) }
       presaGeo.dispose()
       for (const t of trame) t.dispose()
-      for (const m of [pietra, metallo, coccio, pesto, capocchia, legno, scuro, cuoio, oro, tagliato, ceramica, nero, vetro, succo, niente, sopra.material, stecco.material, lamina.material, fiammella.material,
-                       sale.userData.targa.material, pepe.userData.targa.material]) m.dispose()
+      for (const m of [pietra, metallo, coccio, pesto, capocchia, legno, scuro, rame, oro, notte, tagliato, ceramica, nero, vetro, succo, niente, stecco.material, lamina.material, fiammella.material, alone.material,
+                       sale.userData.targa.material, pepe.userData.targa.material, ...tinte]) m.dispose()
     },
   }
 }

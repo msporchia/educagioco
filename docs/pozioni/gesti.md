@@ -13,15 +13,22 @@ punti in pixel), la figura è `scena3d/mani.js`, il suggerimento `scena3d/frecce
 | pestello | mortaio | su e giù | cinque colpi |
 | coltello | tagliere | su e giù | cinque tagli |
 | fiammifero | legna | sfrega di lato | cinque sfregate |
-| mantice | legna | su e giù | tre soffi |
+| coperchio | calderone | su e giù | tre schiacciate |
 | la roba dura | grattugia | su e giù | cinque passate |
 | bacchetta | calderone | scuote | sei scosse |
 | sale, pepe | calderone | su e giù, capovolto | tre scosse |
 | brocca, mortaio, tagliere | calderone | di lato si piega, e piegato versa | 0,9 s |
+| ciotola, bicchiere | calderone, mortaio | di lato si piega, e piegato versa | 0,9 s |
 | fiala | calderone | di lato si piega, e piegata si riempie | 0,9 s |
 
-- **La roba si lascia cadere**: nel calderone, nel mortaio, sul tagliere. L'unico
-  gesto è sulla grattugia, dove si sfrega.
+- **Quello che si è misurato si versa, quello che è intero si lascia cadere.** Sul
+  bancone arriva com'era sulla bilancia o nel cilindro (`recipiente` in
+  `procedimento.js`): la roba da bilancia in una ciotola, il liquido in un bicchiere, e
+  si versa piegandolo come il mortaio, col mucchio che cala. Le lunghezze e quello che
+  si gratta restano interi, con la foto: nel calderone, nel mortaio e sul tagliere si
+  lasciano cadere, e sulla grattugia si sfregano. Nel mortaio i pezzi da schiacciare ci
+  sono solo se c'è roba intera (`grumi`). Prima sul bancone c'era la foto per
+  tutti: si vedeva la polvere sulla bilancia e poi una stella, o un gufo da versare.
 - **Il momento giusto lo dice il motore, a gesto finito**: fuori tempo si fa tutto
   il gesto e poi il calderone sbuffa. Passarci sopra per spostare un attrezzo non è
   un pasticcio, e nemmeno lasciarlo lì a metà: non è successo niente.
@@ -39,6 +46,10 @@ punti in pixel), la figura è `scena3d/mani.js`, il suggerimento `scena3d/frecce
   non dice niente che non si veda.
 - **Dopo il gesto resta solo il risultato** (`MOSSE` in `indice.js`): niente
   animazione doppia. `window.__poz.fai` passa di lì, senza dito.
+- **Il coperchio si schiaccia**: il vapore lo spinge su e il dito lo tiene giù, e a ogni
+  colpo sbuffa dal bordo e il fuoco si alza. Finito torna al suo posto, e la pozione bolle
+  più forte. Provato il mantice: un oggetto che i bambini non conoscono, per un effetto che
+  si vedeva poco.
 - **La fiala si riempie mentre è piegata** e si tappa da sola, a gesto finito. Fuori tempo
   si svuota. Finita la pozione resta sul tavolo, del colore del brodo.
 - **La grattugia sta appesa al calderone**, non si trascina: quello che si gratta cade
@@ -64,7 +75,7 @@ Una freccia dipinta sul bersaglio e un puntino bianco che fa il gesto al posto d
   colore da solo.
 - **Due riflessi a pozione**, che girano sul brodo come venature: quale dipende dagli
   ingredienti, quindi la stessa pozione rifatta può cambiare.
-- **Tutto questo vale a fuoco acceso**: a fuoco spento il brodo sta fermo. Il mantice
+- **Tutto questo vale a fuoco acceso**: a fuoco spento il brodo sta fermo. Il coperchio
   alza fiamme e bollore, la bacchetta accende il riflesso.
 - **Il lampo usa la luce del fuoco**: provata una luce sua, ogni luce in più si paga su
   tutto il banco.
@@ -72,4 +83,4 @@ Una freccia dipinta sul bersaglio e un puntino bianco che fa il gesto al posto d
 Nei test: `unita/pozioni` (`creaGesto`, `GESTI`, `BOLLORI`), `integrazione/pozioni`
 (la ricetta intera col dito); `.pz-mercante[data-suggerimento]`
 (`giro`·`su-giu`·`lato`·`agita`·`inclina`·`strada`),
-`window.__bottega3d.dove('legna'|'grattugia'|'tagliere'|…)`, `window.__bottega3d.ferma()` (il banco si può prendere: le animazioni vanno a fotogrammi, e su una macchina carica durano di più), il cheat `#pozioni=maestro&banco=1`.
+`window.__bottega3d.dove('legna'|'grattugia'|'tagliere'|'coperchio'|…)`, `window.__bottega3d.ferma()` (il banco si può prendere: le animazioni vanno a fotogrammi, e su una macchina carica durano di più), il cheat `#pozioni=maestro&banco=1`.

@@ -62,12 +62,12 @@ for (const t of [CAMPAGNA[0], CAMPAGNA[9], CAMPAGNA[26], CAMPAGNA.at(-1)]) {
   controlla('e la pozione si finisce', q.finita)
 }
 
-/* il tagliere a metà: la roba appoggiata e il mantice restano; una sosta di prima del tagliere si legge lo stesso */
+/* il tagliere a metà: la roba appoggiata e il coperchio restano; una sosta di prima del tagliere si legge lo stesso */
 {
   let b = null
   for (let s = 1; s < 80 && !b; s++) {
     const x = new Bottega(CAMPAGNA.find(t => t.chiave === 'lunghezza-virgole'), { rnd: caso(s) })
-    if (x.passi.some(p => p.azione === 'sminuzza')) b = x
+    if (['sminuzza', 'copri'].every(a => x.passi.some(p => p.azione === a))) b = x
   }
   for (const [i, g] of b.ingredienti.entries()) for (const k of g.ottimo.pezzi) b.ordina([{ i, k }])
   prossimoPasso(b); prossimoPasso(b)
@@ -78,8 +78,14 @@ for (const t of [CAMPAGNA[0], CAMPAGNA[9], CAMPAGNA[26], CAMPAGNA.at(-1)]) {
   uguale('la roba sul tagliere resta', q.tagliere.join(), String(r))
   uguale('e la si sminuzza', q.fai('sminuzza').giusto, true)
   uguale('il tritato si versa ancora', q.fai('versa', [TAGLIERE]).giusto, true)
-  const { tagliere, tagliato, soffiato, incantato, ...vecchia } = dato
+  const { tagliere, tagliato, coperto, incantato, ...vecchia } = dato
   uguale('senza quei campi è un tagliere vuoto', leggi(vecchia).tagliere.length, 0)
+  /* una sosta di quando c'era il mantice: il suo passo è diventato il coperchio, e si finisce */
+  const k = dato.passi.findIndex(p => p.azione === 'copri'), riga = dato.righe.find(r => r.passi.includes(k))
+  const m = leggi({ ...dato, passi: dato.passi.map(p => (p.azione === 'copri' ? { ...p, azione: 'soffia' } : p)),
+                    righe: dato.righe.map(r => (r === riga ? { ...r, testo: 'Soffia sul fuoco col mantice.' } : r)) })
+  uguale('il passo del mantice è il coperchio', m.passi[k].azione, 'copri')
+  controlla('e la riga lo dice', m.righe.some(r => r.testo === 'Metti il coperchio sul calderone.'))
 }
 
 /* il calderone senza fondo */
