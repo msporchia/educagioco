@@ -439,7 +439,9 @@ test('le ordinazioni: i conti tornano in ogni livello', () => {
     const t = tappaDi(camp, i % camp.tappe), o = nuovoOrdine(t, ricetteDi(camp.ricette))
     assert.equal(o.totale, o.articoli.reduce((s, a) => s + a.prezzo, 0))
     const note = [500, 1000, 2000, 5000].filter(p => p > o.totale)
-    assert.ok(o.paga === note[0] || (o.paga === note[1] && o.paga <= o.totale * 4), `${camp.nome}: ${o.totale} si paga con ${o.paga}`)
+    const tondo = (Math.floor(o.totale / 100) + 1) * 100
+    assert.ok(o.paga === note[0] || o.paga === tondo || (o.paga === note[1] && o.paga <= o.totale * 4), `${camp.nome}: ${o.totale} si paga con ${o.paga}`)
+    assert.ok(o.pagaCon.length <= 3, 'al massimo tre pezzi')
     assert.ok(o.resto > 0, `${camp.nome}: c'è sempre un resto`)
     assert.equal(o.pagaCon.reduce((s, v) => s + v, 0), o.paga, 'i soldi mostrati sono quelli pagati')
     assert.equal(scomponi(o.resto, t.monete).reduce((s, v) => s + v, 0), o.resto, `${camp.nome}: il resto si compone col cassetto`)
@@ -451,6 +453,12 @@ test('le ordinazioni: i conti tornano in ogni livello', () => {
     }
   }
   assert.ok(premioCliente(CUCINE[0]) > 0)
+})
+
+test('si può pagare con quello che si ha in tasca', () => {
+  const camp = CUCINE[20], visti = new Set()
+  for (let i = 0; i < 400; i++) visti.add(nuovoOrdine(tappaDi(camp, 0), [{ emoji: 'x', nome: 'x', prezzo: 850 }, { emoji: 'y', nome: 'y', prezzo: 0 }]).pagaCon.join('+'))
+  assert.ok(visti.has('500+200+200'), `8,50 € con 5 + 2 + 2: ${[...visti]}`)
 })
 
 test('la sosta riporta la stanza com\'era', () => {

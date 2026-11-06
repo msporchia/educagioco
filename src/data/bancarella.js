@@ -50,13 +50,18 @@ export const FASCE = [
 export const fasciaDi = cent => FASCE.find(f => cent % f.passo === 0) || FASCE[FASCE.length - 1]
 export const chiaveResto = cent => 'bancarella:' + fasciaDi(cent).id
 
-/* Con cosa si paga: come farebbe una persona, la banconota più piccola che basta, e ogni tanto
-   quella dopo, ma mai cinquanta euro per un panino. `paga` del livello dice fin dove si arriva. */
+/* Con cosa si paga: come farebbe una persona. La banconota più piccola che basta, ogni tanto quella
+   dopo, mai cinquanta euro per un panino; oppure quello che ha in tasca, l'euro tondo sopra il totale
+   in tre pezzi al massimo (5 € + 2 € + 2 €). `paga` del livello dice fin dove si arriva. */
 const BANCONOTE = [500, 1000, 2000, 5000]
-function conCosaPaga(totale, paga) {
+const SPEZZA = { 5000: [2000, 2000, 1000], 2000: [1000, 1000], 1000: [500, 500], 500: [200, 200, 100] }
+function comeSiPaga(totale, paga) {
   const tetto = Math.max(...paga)
+  const tondo = (Math.floor(totale / 100) + 1) * 100, inTasca = scomponi(tondo, [100, 200, ...BANCONOTE])
+  if (inTasca.length > 1 && inTasca.length <= 3 && tondo <= tetto && Math.random() < 0.35) return inTasca
   const [giusta, dopo] = BANCONOTE.filter(p => p > totale && p <= tetto)
-  return dopo && dopo <= totale * 4 && Math.random() < 0.25 ? dopo : giusta
+  const nota = dopo && dopo <= totale * 4 && Math.random() < 0.25 ? dopo : giusta
+  return Math.random() < 0.2 ? SPEZZA[nota] : [nota]
 }
 
 /* I piatti di un'ordinazione, sotto il `tetto` del livello: si tira a sorte e si riprova
@@ -71,20 +76,16 @@ function piattiDi(t, piatti) {
   return [...piatti].sort((a, b) => a.prezzo - b.prezzo).slice(0, quanti)
 }
 
-/* I soldi che si vedono: la banconota, e ogni tanto la stessa cifra in due o tre pezzi. */
-const SPEZZA = { 5000: [2000, 2000, 1000], 2000: [1000, 1000], 1000: [500, 500], 500: [200, 200, 100] }
-const manciata = paga => (Math.random() < 0.3 ? SPEZZA[paga] : [paga])
-
 /* Un'ordinazione del giro: i piatti, chi paga e con che resto. */
 export function nuovoOrdine(t, piatti) {
   const listino = piatti.map(p => ({ emoji: p.emoji, nome: p.nome, prezzo: prezzoDi(p, t.passo) }))
   const articoli = piattiDi(t, listino)
   const totale = articoli.reduce((s, a) => s + a.prezzo, 0)
-  const paga = conCosaPaga(totale, t.paga)
+  const pagaCon = comeSiPaga(totale, t.paga), paga = pagaCon.reduce((n, v) => n + v, 0)
   const resto = paga - totale
   // con un piatto solo il totale è già scritto sul prezzo: da battere c'è solo una somma
   return { articoli, totale, paga, resto, chiediTotale: t.chiediTotale && articoli.length > 1, chiediResto: t.chiediResto,
-           pagaCon: manciata(paga), monete: t.monete, pazienza: t.tempo + 20 * (articoli.length - 1),
+           pagaCon, monete: t.monete, pazienza: t.tempo + 20 * (articoli.length - 1),
            chiave: chiaveResto(resto), minimo: scomponi(resto, t.monete).length }
 }
 

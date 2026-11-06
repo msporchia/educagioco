@@ -126,7 +126,8 @@ La cassa sale a gradini (`SCALA_CASSA`), come nel vecchio mercato: chi fa i cont
 indietro, e quando entra un conto nuovo i prezzi tornano più facili. Il prezzo di un piatto è
 quello del menù arrotondato o col suo di più in centesimi (`prezzoDi`). Si paga come farebbe una
 persona: la banconota più piccola che basta, ogni tanto quella dopo, mai cinquanta euro per un
-panino (`conCosaPaga`). Nel cassetto i soldi sono a pile: le monete una sull'altra, le banconote a
+panino; oppure l'euro tondo sopra il totale in tre pezzi al massimo, 5 € + 2 € + 2 € (`comeSiPaga`).
+I conti non devono essere difficili: devono sembrare veri. Nel cassetto i soldi sono a pile: le monete una sull'altra, le banconote a
 mazzetta.
 
 Nella scelta dei livelli si comprano gli attrezzi con l'incasso, a uno a uno:
