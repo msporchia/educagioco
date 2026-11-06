@@ -23,7 +23,7 @@ QUI = Path(__file__).resolve().parent
 REPO = QUI.parent.parent
 SORGENTI = QUI / 'sorgenti' / 'arena'
 MODULO = REPO / 'src' / 'giochi' / 'arena' / 'dati' / 'fortezze-dipinte.js'
-LARGHEZZE = {'castello': 306, 'porta': 144, 'ponte': 120}    # px dell'atlante; il castello è largo quanto quello del foglio di prima
+LARGHEZZE = {'castello': 306, 'porta': 144}    # px dell'atlante; il castello è largo quanto quello del foglio di prima
 LARGO = 1024
 
 
@@ -62,7 +62,7 @@ def main():
     dati = codifica.webp(im)
     print(f'  {len(pos)} pezzi, atlante {codifica.riga(im, dati)}')
     MODULO.write_text('/* GENERATO da strumenti/sprite/fortezze-arena.py: non si tocca a mano.\n'
-                      '   Castelli, porte e ponti dipinti di Castle Battle (docs/arena/grafica.md). PEZZI: nome →\n'
+                      '   Castelli e porte dipinti di Castle Battle (docs/arena/grafica.md). PEZZI: nome →\n'
                       '   [x, y, largo, alto], in px dell\'atlante. Vuoto = restano quelli di dati/opere-disegnate.js. */\n'
                       'export const PEZZI = {\n'
                       + ''.join(f"  '{n}': {json.dumps(v)},\n" for n, v in sorted(pos.items()))

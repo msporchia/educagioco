@@ -651,27 +651,27 @@ LA DISPOSIZIONE, da rispettare al millimetro, perché il gioco ci cammina sopra:
 LE REGOLE TECNICHE: immagine ORIZZONTALE 1536×1024 px che riempie tutto il quadro; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; NESSUNA CASERMA, NESSUN CASTELLO, NESSUN EDIFICIO, NESSUN PERSONAGGIO, NESSUNA PAROLA SCRITTA, nessuna cornice. Ai quattro bordi il disegno continua specchiato, quindi niente di grande tagliato a metà sul bordo.
 ```
 
-### 9 — Le fortezze dei quattro posti · 1 immagine · da fare
+### 9 — I castelli e le porte dei quattro posti · 1 immagine · da fare
 
-**Perché**: il castello è ancora quello del vestito `bosco` del castello a torri, ricolorato a monte; porta e ponte sono disegnati a monte col programma.
+**Perché**: il castello è ancora quello del vestito `bosco` del castello a torri, uguale in tutti i posti, e la porta è disegnata a monte col programma: sui terreni dipinti stonano. Si aggiungono sopra al terreno, quindi vogliono il fondo trasparente. Il ponte non si chiede: è nel terreno.
 
-**Come si manda**: ChatGPT, chat nuova. Si allegano `sorgenti/arena/schemi/partita.png` e, se ci sono già, i terreni riusciti («solo stile»).
+**Come si manda**: Grok, nella chat dei terreni, senza allegati: i quattro posti li ha già visti (le colline erano il primo allegato). Se un pezzo ha un difetto si chiede di correggerlo, non di rifare il foglio.
 
-**Si salva in** `strumenti/sprite/sorgenti/arena/fortezze.png`. **Comando**: `python3 strumenti/sprite/fortezze-arena.py`, che legge il foglietto
-`fortezze.json` e pretende quattro righe da cinque. Il nemico ridipinge il blu di rosso.
+**Si salva in** `strumenti/sprite/sorgenti/arena/fortezze.png`. **Comando**: `python3 strumenti/sprite/fortezze-arena.py provino.png`, che legge il foglietto
+`fortezze.json` e pretende quattro righe da quattro. Il nemico ridipinge il blu di rosso.
 
 ```text
-Ti chiedo un foglio di fortezze per un gioco di battaglia per bambini, Castle Battle. L'immagine allegata è una schermata del gioco: guardala per capire le misure, non per lo stile. Il gioco ha quattro posti e voglio per ognuno il suo castello, epico e bellissimo, la sua porta fortificata e il suo ponte.
+Ora, nello stesso identico stile dei quattro terreni che abbiamo fatto, mi serve quello che ci va sopra: un foglio con il castello e la porta fortificata di ogni posto. Ogni figura deve sembrare costruita con i materiali di quel mondo, come se fosse sempre stata lì.
 
-COSA TI CHIEDO: quattro righe da cinque figure. Ogni riga è un posto: da sinistra il CASTELLO, la PORTA INTERA (due torri merlate e un portone in mezzo), la stessa PORTA ROTTA (crepe, portone sfondato), la stessa PORTA CROLLATA (un cumulo di macerie) e il PONTE, visto dall'alto, più alto che largo, da attraversare dal basso verso l'alto.
+COSA TI CHIEDO: quattro righe da quattro figure. Ogni riga è un posto: da sinistra il CASTELLO, la PORTA INTERA (due torri merlate e un portone in mezzo), la stessa PORTA ROTTA (crepe, portone sfondato) e la stessa PORTA CROLLATA (un cumulo basso di macerie).
 RIGA 1, le colline d'oro: pietra chiara calda, legno, edera rossa d'autunno.
-RIGA 2, il deserto delle tombe: arenaria, colonne, obelischi, ponte di lastre.
-RIGA 3, il canyon di cristallo: pietra scura violetta con cristalli incastonati, ponte di pietra sospeso con le catene.
-RIGA 4, le terre di cenere: pietra nera, ferro, bracieri accesi, ponte di ferro e assi bruciate.
+RIGA 2, il deserto delle tombe: arenaria, colonne, obelischi, geroglifici.
+RIGA 3, il canyon di cristallo: pietra scura violetta con cristalli viola e rosa incastonati, catene.
+RIGA 4, le terre di cenere: pietra nera, ferro, bracieri accesi.
 
-Il castello si vede dal davanti a tre quarti, con la base larga e le torri alte: nel gioco ne spunta solo un pezzo dal bordo dello schermo, quindi deve essere bello sia in cima sia al portone.
+Il castello è epico e bellissimo, visto dal davanti a tre quarti, con la base larga e le torri alte: nel gioco ne spunta solo un pezzo dal bordo dello schermo, una volta la cima e una volta il portone, quindi deve essere bello in tutti e due. La porta sta in fondo a un ponte e lo chiude: guardala larga quanto il ponte dei terreni, con la stessa vista dall'alto a tre quarti.
 
-LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: foglio ORIZZONTALE 1536×1024 px su FONDO TRASPARENTE; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; ogni riga è alta al massimo 230 px; il castello è largo circa 340 px, le porte circa 200 px, il ponte circa 150 px; le figure di una riga poggiano sulla stessa linea; almeno 30 px di trasparente fra una figura e l'altra, anche fra le righe; nessuna ombra sotto, nessun prato, nessun bagliore, nessuna cornice; NESSUNA PAROLA SCRITTA, NESSUN NUMERO. Tetti, bandiere e stendardi sono di UN SOLO BLU SATURO E UNIFORME (come #2a5cff), nessun altro blu, e niente rosso tranne il fuoco: il gioco ridipinge quel blu di rosso per il nemico.
+LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: foglio ORIZZONTALE in formato 3:2 su FONDO TRASPARENTE; stessa grana di pixel dei terreni; il castello è largo circa il doppio di una porta; le figure di una riga poggiano sulla stessa linea; tanto spazio trasparente fra una figura e l'altra, anche fra le righe; nessuna ombra sotto, nessun prato, nessun pezzo di terreno, nessun bagliore, nessuna cornice; NESSUNA PAROLA SCRITTA, NESSUN NUMERO. Tetti, bandiere e stendardi sono di UN SOLO BLU SATURO E UNIFORME, e nient'altro è blu o azzurro, nemmeno i cristalli: il gioco ridipinge quel blu di rosso per il nemico.
 ```
 
 ### 10 — La copertina di Castle Battle · 1 immagine · da fare
@@ -792,7 +792,7 @@ Ora lo stesso identico foglio per la squadra ROSSA: stesse 9 truppe, stesse pose
 | 7b ✅ | le caserme di Castle Battle sulle piazzole (ChatGPT, il gioco raccontato; provvisorio) | 1 | uno screen del gioco, `terreno-bosco` | `arena/caserme.webp` | caserme dipinte, rudere e piazzola vuota |
 | 7c ✅ | le caserme definitive di Castle Battle, con mummie, bestie cornute e miniera (ChatGPT) | 1 | `arena/caserme.webp`, `schemi/partita` | `arena/caserme-2.png` | caserme e miniera dipinte |
 | 8 | i quattro terreni di Castle Battle (ChatGPT, si ridipinge il disegno in codice) | 4 | `schemi/terreno-<chiave>` | `arena/terreno-<chiave>.png` | il terreno dipinto |
-| 9 | castello, porta e ponte dei quattro posti (ChatGPT) | 1 | `schemi/partita` | `arena/fortezze.png` | i castelli di Castle Battle |
+| 9 | castello e porta dei quattro posti (Grok, nella chat dei terreni) | 1 | nessuno | `arena/fortezze.png` | i castelli di Castle Battle |
 | 10 | la copertina di Castle Battle (ChatGPT) | 1 | `schemi/partita` | `home/copertina-arena.png` | la home e il frontone della mappa |
 | 11 | le icone dei comandi di Castle Battle (ChatGPT) | 1 | `schemi/partita` | `arena/icone.png` | l'anello, ripara e bomba dipinti |
 | 12 ✅ | le truppe di Castle Battle con la casacca (Grok) | 1 | `schemi/truppe` | `arena/truppe.png` | la squadra si legge dalla figura, via il contorno |
