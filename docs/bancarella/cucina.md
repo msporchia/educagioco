@@ -116,15 +116,18 @@ dalle sue ricette. La `portata` va dritta da 32 a 72 lungo la fila (`FILA`).
 | 6 | il lavello | |
 | 7–9 | la pentola, poi la padella | **il resto lo conti tu**, euro tondi |
 | 10–15 | uova, carne, hamburger, ragù | prezzi al mezzo euro |
-| 16–19 | il forno | prezzi ai dieci centesimi, si paga anche coi 20 € |
+| 16–19 | il forno | prezzi ai dieci centesimi, banconote fino a 20 € |
 | 20–22 | sempre due piatti a ordinazione | **anche il totale da chiedere lo batti tu**, che è una somma; prezzi di nuovo al mezzo euro |
 | 23–25 | | prezzi ai dieci centesimi |
-| 26–28 | le ordinazioni scadono prima | prezzi ai cinque centesimi, si paga anche coi 50 € |
+| 26–28 | le ordinazioni scadono prima | prezzi ai cinque centesimi, banconote fino a 50 € |
 | ∞ | la cucina senza fine: tutte le ricette, giri finché i cuori reggono, il tempo si stringe fino a un tetto | come gli ultimi; conta il record delle ordinazioni servite (`senzaFine`) |
 
 La cassa sale a gradini (`SCALA_CASSA`), come nel vecchio mercato: chi fa i conti non torna mai
 indietro, e quando entra un conto nuovo i prezzi tornano più facili. Il prezzo di un piatto è
-quello del menù arrotondato o col suo di più in centesimi (`prezzoDi`).
+quello del menù arrotondato o col suo di più in centesimi (`prezzoDi`). Si paga come farebbe una
+persona: la banconota più piccola che basta, ogni tanto quella dopo, mai cinquanta euro per un
+panino (`conCosaPaga`). Nel cassetto i soldi sono a pile: le monete una sull'altra, le banconote a
+mazzetta.
 
 Nella scelta dei livelli si comprano gli attrezzi con l'incasso, a uno a uno:
 
