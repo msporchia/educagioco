@@ -12,7 +12,6 @@ const STRADE = {
   'su-giu': u => [0, Math.sin(u * Math.PI * 4) * 0.6],
   lato: u => [Math.sin(u * Math.PI * 4) * 0.6, 0],
   agita: u => [Math.sin(u * Math.PI * 6) * 0.6, Math.cos(u * Math.PI * 2) * 0.3],
-  inclina: u => { const a = Math.PI * (0.9 - 0.6 * Math.min(1, u * 1.6)); return [Math.cos(a) * 0.7, Math.sin(a) * 0.7 - 0.3] },
 }
 
 export function creaFrecce(scena, camera, trame, cambia) {

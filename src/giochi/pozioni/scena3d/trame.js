@@ -232,7 +232,6 @@ export function frecce() {
     'su-giu': fatta(256, 256, g => { g.moveTo(128, 30); g.lineTo(128, 226); punta(g, 128, 30, -Math.PI / 2); punta(g, 128, 226, Math.PI / 2) }),
     lato: fatta(256, 256, g => { g.moveTo(30, 128); g.lineTo(226, 128); punta(g, 30, 128, Math.PI); punta(g, 226, 128, 0) }),
     agita: fatta(256, 256, g => { g.moveTo(26, 150); g.lineTo(80, 96); g.lineTo(120, 160); g.lineTo(170, 96); g.lineTo(226, 130); punta(g, 226, 130, 0.5) }),
-    inclina: fatta(256, 256, g => { g.arc(128, 170, 96, Math.PI * 1.1, Math.PI * 1.75); const a = Math.PI * 1.75, x = 128 + Math.cos(a) * 96, y = 170 + Math.sin(a) * 96; g.moveTo(x, y); punta(g, x, y, a + Math.PI / 2) }),
     strada: fatta(512, 128, g => { g.moveTo(26, 64); g.lineTo(486, 64); punta(g, 486, 64, 0) }),
   }
 }

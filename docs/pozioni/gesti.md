@@ -17,18 +17,19 @@ punti in pixel), la figura è `scena3d/mani.js`, il suggerimento `scena3d/frecce
 | la roba dura | grattugia | su e giù | cinque passate |
 | bacchetta | calderone | scuote | sei scosse |
 | sale, pepe | calderone | su e giù, capovolto | tre scosse |
-| brocca, mortaio, tagliere, ciotolino | calderone | di lato si piega, e piegato versa | 0,6 s |
-| ciotola, bicchiere | calderone, mortaio | di lato si piega, e piegato versa | 0,6 s |
-| mestolo | calderone, poi fiala | pesca nel brodo; sulla fiala di lato si piega e la riempie | 0,6 s |
+| brocca, mortaio, tagliere, ciotolino | calderone | fermo sopra versa da solo | 0,6 s |
+| ciotola, bicchiere | calderone, mortaio | fermo sopra versa da solo | 0,6 s |
+| mestolo | calderone, poi fiala | pesca nel brodo; fermo sulla fiala la riempie da solo | 0,6 s |
 
-- **Piegato si può staccare il dito**: finisce di versare da solo (`solo` in `gesti.js`), e
-  non si aspetta che scorra. Col dito giù si può ancora raddrizzare o portare via, così
-  passarci sopra non versa niente. Lasciato da dritto è un gesto a metà.
-
+- **Per versare basta arrivare**: col dito fermo per 0,3 s sul bersaglio (`SOSTA`), o
+  staccandolo, si piega e versa da solo, e da lì il dito non conta più. Finché si muove ci
+  sta solo passando sopra, quindi portare la roba altrove non versa niente. Provato piegare
+  col dito di lato: la piega si misurava da dove era entrato, chi arrivava di lato era già
+  piegato, e un dito che tornava indietro interrompeva il getto.
 - **Quello che si è misurato si versa, quello che è intero si lascia cadere.** Sul
   bancone arriva com'era sulla bilancia o nel cilindro (`recipiente` in
   `procedimento.js`): la roba da bilancia in una ciotola, il liquido in un bicchiere, e
-  si versa piegandolo come il mortaio, col mucchio che cala. Le lunghezze e quello che
+  si versa come il mortaio, col mucchio che cala. Le lunghezze e quello che
   si gratta restano interi, con la foto: nel calderone, nel mortaio e sul tagliere si
   lasciano cadere, e sulla grattugia si sfregano. Nel mortaio i pezzi da schiacciare ci
   sono solo se c'è roba intera (`grumi`). Prima sul bancone c'era la foto per
@@ -90,5 +91,5 @@ Una freccia dipinta sul bersaglio e un puntino bianco che fa il gesto al posto d
 
 Nei test: `unita/pozioni` (`creaGesto`, `GESTI`, `BOLLORI`), `integrazione/pozioni`
 (la ricetta intera col dito); `.pz-mercante[data-suggerimento]`
-(`giro`·`su-giu`·`lato`·`agita`·`inclina`·`strada`),
+(`giro`·`su-giu`·`lato`·`agita`·`strada`),
 `window.__bottega3d.dove('legna'|'grattugia'|'ciotolino'|'tagliere'|'fiala'|…)`, `window.__bottega3d.ferma()` (il banco si può prendere: le animazioni vanno a fotogrammi, e su una macchina carica durano di più), il cheat `#pozioni=maestro&banco=1`.

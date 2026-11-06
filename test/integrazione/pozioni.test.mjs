@@ -120,12 +120,13 @@ const giro = async c => { for (let n = 0; n <= 56; n++) await page.mouse.move(c.
 const avanti = (asse, volte) => async c => { for (let n = 0; n < volte; n++) for (const v of [-34, 34]) await page.mouse.move(c.x + (asse === 'x' ? v : 0), c.y + (asse === 'y' ? v : 0), { steps: 4 }) }
 /* versa finché è piegato: quanto dura lo dice l'orologio dei fotogrammi, che su una macchina carica è lento */
 const fatte = () => { const b = window.__poz.bottega.value; return b.passo + b.dentro.length + b.mortaio.length }
-/* la piega si misura da dove il dito è entrato sul bersaglio: tirando dritto oltre il centro è piegato di sicuro. Piegato, il dito si stacca e finisce da solo */
-const inclina = foto => async (c, verso) => {
+/* basta arrivare: una volta si stacca il dito, una volta si sta fermi e poi si scappa via, e deve finire lo stesso */
+let versate = 0
+const inclina = foto => async c => {
   const n = await page.evaluate(fatte)
-  await page.mouse.move(c.x + verso * 80, c.y, { steps: 5 })
   if (foto) await scatto(page, foto)
-  await page.mouse.up()
+  if (versate++ % 2) await page.mouse.up()
+  else { await attendi(page, 1500); await page.mouse.move(c.x + 300, c.y + 200, { steps: 3 }) }
   await page.waitForFunction(`(${fatte})() > ${n}`, null, { timeout: 13000 })
 }
 const GESTO = { mestolo: giro, pestello: avanti('y', 6), coltello: avanti('y', 6), roba: avanti('y', 6), fiammifero: avanti('x', 4),
@@ -138,9 +139,8 @@ const conGesto = async (id, su) => {
   if (su === 'fiala') { await porta(da, calderone); await page.mouse.move(a.x, a.y, { steps: 6 }) }
   else await porta(da, a)
   await attendi(page, 100)
-  const verso = (su === 'fiala' ? calderone : da).x <= a.x ? 1 : -1
   const gesto = su === 'fiala' ? inclina('pozioni-fiala') : id.startsWith('roba:') && su !== 'grattugia' ? inclina('pozioni-ciotola') : GESTO[id.split(':')[0]]
-  await gesto(a, verso)
+  await gesto(a)
   await attendi(page, 150)
   await page.mouse.up()
 }
