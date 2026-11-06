@@ -88,11 +88,18 @@ manca rispetto all'ordinazione più simile («Manca l'alga», «Manca la pasta, 
 Un'ordinazione scaduta costa un cuore e sparisce, ma **non conta come conto sbagliato**:
 il ripasso del resto misura il resto, non la cucina.
 
+**Il tempo totale c'è solo nell'ultimo livello**, Cinque minuti: l'orologio sta in cima al posto
+dei cuori (`hud.resta`), un'ordinazione scaduta sparisce e basta, e a zero la partita finisce
+col record. Così dura sempre cinque minuti: coi cuori chi sbaglia presto avrebbe giocato meno.
+Negli altri livelli il tempo è solo quello delle ordinazioni. Nei primi cinque (`CALMA`) tre
+ordinazioni della ricetta più lunga, fatte di fila da chi pensa quattro secondi a ogni tocco,
+stanno dentro l'ultimo giro: un test lo misura (`quantoCi`).
+
 ## Il resto è un foglio
 
 Finita un'ordinazione, passa in cima alla coda e si apre il foglio: i soldi che danno, lo
 scontrino, le monete. **Finché il resto non è dato tutto è fermo**, fuochi e ordinazioni, in
-ogni livello: la fretta sta nello spostare le cose, i conti si fanno da fermi. Il foglio non ha
+ogni livello, e con loro l'orologio dell'ultimo: la fretta sta nello spostare le cose, i conti si fanno da fermi. Il foglio non ha
 la ✕: si consegna, si dà il resto e si torna a cucinare. Si paga come il suo livello, e
 l'incasso va nel banco.
 
@@ -106,7 +113,7 @@ una pizza bruciata, torna nel lavello: i piatti non si perdono mai.
 
 ## I livelli
 
-Ventotto livelli (`CUCINE`), ognuno con qualcosa in più, e in fondo **la cucina senza fine**; si aprono vincendo quello prima
+Ventotto livelli (`CUCINE`), ognuno con qualcosa in più, e in fondo **Cinque minuti**; si aprono vincendo quello prima
 (`banco.cucina.fatte`, in `profile.campagne.bancarella`). Gli attrezzi di un livello si leggono
 dalle sue ricette, e quanti sono lo dice il livello: **non si compra niente**, provato e tolto
 perché confondeva. La `portata` va dritta da 32 a 72 lungo la fila (`FILA`).
@@ -121,7 +128,7 @@ perché confondeva. La `portata` va dritta da 32 a 72 lungo la fila (`FILA`).
 | 20–22 | sempre due piatti a ordinazione: tutti gli attrezzi doppi (`copie`) e due appoggi (`appoggi`) | **anche il totale da chiedere lo batti tu**, che è una somma; prezzi di nuovo al mezzo euro |
 | 23–25 | | prezzi ai dieci centesimi |
 | 26–28 | le ordinazioni scadono prima | prezzi ai cinque centesimi, banconote fino a 50 € |
-| ∞ | la cucina senza fine: tutte le ricette, giri finché i cuori reggono, il tempo si stringe fino a un tetto | come gli ultimi; conta il record delle ordinazioni servite (`senzaFine`) |
+| ⏱️ | Cinque minuti: tutte le ricette, giri finché dura l'orologio (`durata`), il tempo delle ordinazioni si stringe fino a un tetto | come gli ultimi; conta il record delle ordinazioni servite (`senzaFine`) |
 
 La cassa sale a gradini (`SCALA_CASSA`), come nel vecchio mercato: chi fa i conti non torna mai
 indietro, e quando entra un conto nuovo i prezzi tornano più facili. Il prezzo di un piatto è
@@ -173,5 +180,5 @@ mercato di prima non si leggono, e al primo avvio spariscono. I dati di quel mer
 `unita/bancarella-cucina`, `unita/bancarella-foto`, `integrazione/bancarella-cucina` (tocchi
 veri). `window.__cucina3d.dove('1,3')` dice dove sta sullo schermo una cella o il pavimento: le celle cambiano con la cucina, si cercano in `celle`.
 Bersagli: `[data-cucine]`, `[data-cucina-n]`, `[data-cucina]`, `[data-tela]`,
-`[data-detto]`, `[data-ordini]`, `[data-ordine]`, `[data-ordinato]`, `[data-ricetta]`, `[data-chiudi-ricetta]`,
+`[data-detto]`, `[data-resta]`, `[data-ordini]`, `[data-ordine]`, `[data-ordinato]`, `[data-ricetta]`, `[data-chiudi-ricetta]`,
 `[data-porge]`.

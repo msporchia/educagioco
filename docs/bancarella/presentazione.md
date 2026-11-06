@@ -15,6 +15,6 @@ tenere a mente più cose e decidere in che ordine farle.
 **Come cresce.** Ventotto livelli. I primi sono a crudo, con tempo da vendere e il resto
 detto dalla cassa: panini, insalate, sushi. Poi arrivano i piatti da lavare, la pentola, la
 padella, il forno, il resto da contare a mente, due piatti per ordinazione, e allora in
-cucina c'è tutto doppio.
+cucina c'è tutto doppio. In fondo cinque minuti a orologio: più ordinazioni che si può, e conta il record.
 
 Le regole stanno in [cucina.md](cucina.md).
