@@ -17,4 +17,6 @@ detto dalla cassa: panini, insalate, sushi. Poi arrivano i piatti da lavare, la 
 padella, il forno, il resto da contare a mente, due piatti per ordinazione, e allora in
 cucina c'è tutto doppio. In fondo cinque minuti a orologio: più ordinazioni che si può, e conta il record.
 
+**In due.** Due bambini nella stessa cucina, ognuno col suo telefono e i suoi conti: [in-due.md](in-due.md).
+
 Le regole stanno in [cucina.md](cucina.md).

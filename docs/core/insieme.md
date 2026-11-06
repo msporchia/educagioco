@@ -2,8 +2,8 @@
 
 **Stato: fatto** (28 ottobre 2026), provato su una rete finta e cattiva e con due browser veri davanti al servizio in locale.
 **Da mettere online: il servizio** (`cd servizio/inoltro && npx wrangler deploy`, lo fa l'utente): prima del deploy la sfida dei
-telefoni aggiornati non trova il tavolo. Il pezzo comune per due telefoni che giocano la stessa partita. Oggi lo usa Castle Battle
-([../arena/multigiocatore.md](../arena/multigiocatore.md)); un gioco nuovo in due ci mette solo le sue regole.
+telefoni aggiornati non trova il tavolo. Il pezzo comune per due telefoni che giocano la stessa partita. Oggi lo usano Castle Battle
+([../arena/multigiocatore.md](../arena/multigiocatore.md)), il sotterraneo e la cucina ([../bancarella/in-due.md](../bancarella/in-due.md)); un gioco nuovo in due ci mette solo le sue regole.
 
 ## Perché esiste
 
