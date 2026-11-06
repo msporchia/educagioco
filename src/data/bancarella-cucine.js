@@ -56,8 +56,8 @@ export function attrezziDi(camp) {
 const BASE = { tappe: 3, articoli: [1, 1], tetto: 1000, tempo: [78, 62] }
 // i primi livelli sono a crudo e con tempo da vendere: si impara a muoversi senza fretta
 const CALMA = { tempo: [120, 100] }
-// due piatti a ordinazione
-const DUE = { articoli: [1, 2], tetto: 1990, tempo: [95, 75] }
+// due piatti a ordinazione: il totale da chiedere vuole una somma
+const DUE = { articoli: [2, 2], tetto: 1990, tempo: [95, 75] }
 // gli ultimi: le ordinazioni scadono prima. La fretta sta nel muoversi: i conti si fanno sempre da fermi
 const FRETTA = { ...DUE, tempo: [80, 65] }
 

@@ -284,6 +284,16 @@ test('i piatti: finiscono, tornano sporchi, si lavano a uno a uno', () => {
   c.sporchi = 0; c.puliti = 1
 })
 
+test('il formaggio tagliato si prende anche con le mani', () => {
+  const c = cucina()
+  fa(c, cassetta(c, 'formaggio')); fa(c, posto(c, 'tagliere')); aspetta(c, 1.6)
+  assert.ok(fa(c, posto(c, 'tagliere')))
+  assert.deepEqual({ ...c.cuoco.mano }, { cosa: 'formaggio', fatta: true, bruciata: false })
+  assert.equal(c.stazioni.tagliere.fase, 'vuota')
+  assert.ok(fa(c, cassetta(c, 'pane')), 'e si unisce al pane')
+  assert.equal(c.cuoco.mano.pronto, '🥪')
+})
+
 test('il cotto, il tagliato, il sugo e il riso vogliono il piatto', () => {
   const c = cucina()
   assert.equal(fa(c, cassetta(c, 'sugo')), false); assert.equal(c.perche, SERVE_PIATTO)
@@ -349,7 +359,8 @@ test('la cassa sale a gradini: chi fa i conti non torna mai indietro', () => {
   }
   assert.deepEqual(CUCINE.slice(0, 6).map(c => c.conto), Array(6).fill('niente'), 'all\'inizio il resto lo dice la cassa')
   assert.equal(CUCINE[6].conto, 'resto', 'poi lo conti tu')
-  assert.equal(CUCINE.find(c => c.conto === 'tutto').articoli[1], 2, 'il totale da chiedere arriva coi due piatti')
+  assert.equal(CUCINE.find(c => c.conto === 'tutto').articoli[0], 2, 'il totale da chiedere arriva coi due piatti')
+  assert.equal(nuovoOrdine({ ...tappaDi(CUCINE.at(-1), 0), articoli: [1, 1] }, ricetteDi(['🍝'])).chiediTotale, false, 'con un piatto solo non c\'è niente da sommare')
   assert.equal(CUCINE.at(-1).passo, 5)
   const pizza = RICETTE.find(r => r.emoji === '🍕')
   assert.equal(prezzoDi({ prezzo: 350, emoji: '🥪' }, 100), 400, 'all\'inizio euro tondi')
@@ -432,6 +443,10 @@ test('le ordinazioni: i conti tornano in ogni livello', () => {
     assert.equal(scomponi(o.resto, t.monete).reduce((s, v) => s + v, 0), o.resto, `${camp.nome}: il resto si compone col cassetto`)
     assert.equal(o.chiave, chiaveResto(o.resto))
     assert.equal(new Set(o.articoli.map(a => a.emoji)).size, o.articoli.length, 'due piatti diversi')
+    if (camp.conto === 'tutto') {
+      assert.equal(o.articoli.length, 2, `${camp.nome}: col totale da chiedere i piatti sono due`)
+      assert.ok(o.chiediTotale)
+    }
   }
   assert.ok(premioCliente(CUCINE[0]) > 0)
 })

@@ -112,7 +112,8 @@ export function nuovoOrdine(t, piatti) {
   const totale = articoli.reduce((s, a) => s + a.prezzo, 0)
   const paga = scegli(comePuoPagare(totale, t.paga))
   const resto = paga - totale
-  return { articoli, totale, paga, resto, chiediTotale: t.chiediTotale, chiediResto: t.chiediResto,
+  // con un piatto solo il totale è già scritto sul prezzo: da battere c'è solo una somma
+  return { articoli, totale, paga, resto, chiediTotale: t.chiediTotale && articoli.length > 1, chiediResto: t.chiediResto,
            pagaCon: manciata(paga, t), monete: t.monete, pazienza: t.tempo + 20 * (articoli.length - 1),
            chiave: chiaveResto(resto), minimo: scomponi(resto, t.monete).length }
 }

@@ -145,12 +145,11 @@ function fetta() {
   }, 0.3)
 }
 
-function cubetti() {
+/* Il formaggio tagliato: fette sottili, un po' a ventaglio. */
+function fetteFormaggio() {
   const g = new Group()
-  for (const [x, z, a] of [[0.18, 0.05, 0.4], [-0.16, 0.14, 1.1], [0.02, -0.2, 0.2], [-0.22, -0.12, 0.8], [0.26, -0.16, 1.4], [0.06, 0.24, 0.6]]) {
-    const b = pezzo(unione([palla([0, 0, 0], [0.085, 0.07, 0.085])], 0), 0.016, (px, py, pz, c) => { c.setHex(0xf6c334); verso(c, 0xffe98f, fra(0, 0.07, py) * 0.6) }, 0.35)
-    b.position.set(x, 0.14, z); b.rotation.y = a
-    g.add(b)
+  for (const [x, z, a, y] of [[-0.13, 0.05, 0.3, 0], [0.1, -0.06, -0.25, 0.03], [0.02, 0.12, 0.9, 0.06]]) {
+    const f = modello('formaggio'); f.scale.setScalar(0.62); f.position.set(x, y, z); f.rotation.y = a; g.add(f)
   }
   return g
 }
@@ -437,7 +436,7 @@ function pomodoroTagliato() {
 const G = {}
 const FATTI = {
   'pasta': () => tutto(nido()), 'pasta-pentola': () => tutto(nido(SPAGO, 0.56, 0.1)), 'pasta-bruciata': () => tutto(nido(0x3a2715, 0.56, 0.12)),
-  'sugo': sugo, 'pane': fondoPanino, 'pane-sopra': sopraPanino, 'toast': () => tutto(toast()), 'pane-fette': fetteDiPane, 'formaggio': fetta, 'formaggio-cubetti': cubetti,
+  'sugo': sugo, 'pane': fondoPanino, 'pane-sopra': sopraPanino, 'toast': () => tutto(toast()), 'pane-fette': fetteDiPane, 'formaggio': fetta, 'formaggio-fette': fetteFormaggio,
   'insalata': () => foglie(), 'carne-cruda': () => polpetta(true), 'carne': () => polpetta(false), 'uovo': uovoFritto,
   'impasto-palla': () => tutto(palloImpasto()), 'pizza-impasto': () => pizza('impasto'), 'pizza-sugo': () => pizza('sugo'), 'pizza-bianca': () => pizza('bianca'), 'pizza-cruda': () => pizza('formaggio'), 'pizza': () => pizza('cotta'),
   'c:pasta': mazzoSpaghetti, 'c:sugo': ciotolaSugo, 'c:pane': pagnotta, 'c:formaggio': formaFormaggio, 'c:insalata': cespo,
@@ -492,15 +491,15 @@ export function impiatta(p) {
       if (pronto) metti('toast', 0.2, 0.22, -0.18, 0.4)
     } else metti('uovo', -0.2, 0.02, -0.06)
     if (cose.includes('insalata')) { metti('insalata', 0.3, 0.02, 0.2); g.children.at(-1).scale.setScalar(0.62) }
-    if (cose.includes('formaggio')) metti('formaggio-cubetti', -0.2, 0.1, -0.06)
+    if (cose.includes('formaggio')) metti('formaggio-fette', -0.2, 0.1, -0.06)
   }
-  else if (cose[0] === 'insalata') { metti('insalata'); if (cose.includes('formaggio')) metti('formaggio-cubetti', 0, 0.1) }
+  else if (cose[0] === 'insalata') { metti('insalata'); if (cose.includes('formaggio')) metti('formaggio-fette', 0, 0.1) }
   else if (cose[0] === 'pesce') { if (cose.includes('insalata')) metti('insalata'); metti('pesce-fette', 0, cose.includes('insalata') ? 0.14 : 0.02) }
   else if (cose[0] === 'pasta') {
     metti('pasta')
     if (cose.includes('sugo')) metti('sugo', 0, 0.21)
     if (cose.includes('carne')) { metti('carne', 0, 0.28); g.children.at(-1).scale.setScalar(0.5) }
-    if (cose.includes('formaggio')) metti('formaggio-cubetti', 0, 0.3)
+    if (cose.includes('formaggio')) metti('formaggio-fette', 0, 0.3)
   }
   else {
     let y = 0
@@ -525,7 +524,7 @@ export async function prepara(cose, ricette) {
   if (usa.has('pasta')) chiavi.push('pasta', 'pasta-pentola', 'pasta-bruciata')
   if (usa.has('sugo')) chiavi.push('sugo')
   if (usa.has('pane')) chiavi.push('toast', 'pane-fette', 'pane', 'pane-sopra')
-  if (usa.has('formaggio')) chiavi.push('formaggio', 'formaggio-cubetti')
+  if (usa.has('formaggio')) chiavi.push('formaggio', 'formaggio-fette')
   if (usa.has('insalata')) chiavi.push('insalata')
   if (usa.has('pomodoro')) chiavi.push('pomodoro-tagliato')
   if (usa.has('pesce')) chiavi.push('pesce-fetta', 'pesce-fette')

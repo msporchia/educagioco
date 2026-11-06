@@ -375,7 +375,7 @@ function allaStazione(c, nome, m) {
       svuota()
     } }
   }
-  if (!m) return { perche: SERVE_PIATTO }
+  if (!m) return s.cosa === 'formaggio' ? { fai: () => { k.mano = { cosa: s.cosa, fatta: true, bruciata: false }; svuota() } } : { perche: SERVE_PIATTO }
   if (ePiatto(m)) return prendeIl(c, m, s.cosa) ? { fai: () => { sulPiatto(c, m, s.cosa); svuota() } } : { perche: 'Su questo piatto non va' }
   return unisci(c, m, { cosa: s.cosa, fatta: true }, p => { k.mano = p; svuota() })
 }

@@ -16,7 +16,7 @@ const SCALA_ROBA = 0.5      // i pezzi di cucina sono fatti per il banco col dit
 const COSTRUISCI = { pentola: creaPentola, padella: creaPadella, tagliere: creaTagliere, forno: creaForno }
 // quanto sporge dal piano quello che si tocca: il forno e la finestra si toccano anche in alto
 const SOPRA = { lavello: 0.45, forno: 0.8, cassetta: 0.3, consegna: 1.4, bidone: 0.15, pentola: 0.5, padella: 0.25 }
-const TAGLIATO = { insalata: 'insalata', formaggio: 'formaggio-cubetti', pesce: 'pesce-fette', pomodoro: 'pomodoro-tagliato' }
+const TAGLIATO = { insalata: 'insalata', formaggio: 'formaggio-fette', pesce: 'pesce-fette', pomodoro: 'pomodoro-tagliato' }
 const ACQUA = { vuota: 0xa9d6ee, cuoce: 0x9fd0ea, pronta: 0xf1dd9a, scotta: 0xa9743c }
 
 export function creaCucina3d(canvas, { quanto, quantoLavato, tipoDi, perso, dpr } = {}) {
@@ -73,11 +73,7 @@ const figura = o => {
 }
 // il pane qui è già tagliato: una pagnotta intera chiederebbe il tagliere
 const inCassetta = cosa => (cosa === 'pane' ? cibo('pane-fette') : confezione(cosa))
-function tagliato(cosa) {
-  const f = cibo(TAGLIATO[cosa])
-  if (cosa === 'formaggio') f.scale.setScalar(1.7)     // i cubetti sono fatti per stare sull'insalata: da soli non si vedono
-  return f
-}
+const tagliato = cosa => cibo(TAGLIATO[cosa])
 
 function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso }) {
   renderer.outputColorSpace = SRGBColorSpace
