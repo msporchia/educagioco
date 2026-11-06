@@ -556,7 +556,7 @@ Le versioni dello stesso edificio si somigliano: cambia la parte che dice chi ci
 LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: foglio ORIZZONTALE 1536×1024 px su FONDO TRASPARENTE; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; vista dall'alto a tre quarti; tutte le figure stanno sulla stessa piazzola, della stessa misura in tutte e ventisei, larga circa 140 px, e l'edificio non esce dalla piazzola di lato; ogni riga è alta al massimo 190 px e le figure di una riga poggiano sulla stessa linea; almeno 30 px di trasparente fra una figura e l'altra, anche fra le righe, e niente che tocchi la figura vicina; nessuna ombra sotto, nessun prato, nessun bagliore, nessuna cornice; NESSUNA PAROLA SCRITTA, NESSUN NUMERO. Tetti, bandiere e stendardi di tutti gli edifici sono di UN SOLO BLU SATURO E UNIFORME (come #2a5cff), nessun altro blu, e niente rosso tranne il fuoco: il gioco ridipinge quel blu di rosso per il nemico.
 ```
 
-### 8 — I quattro terreni di Castle Battle · 4 immagini · colline ✅ 5 novembre 2026 col ponte da stringere, canyon ✅ 6 novembre 2026 (Grok), deserto e cenere da fare
+### 8 — I quattro terreni di Castle Battle · 4 immagini · colline ✅ 5 novembre 2026 col ponte da stringere, canyon, deserto e cenere ✅ 6 novembre 2026 (Grok)
 
 **Perché**: il terreno è più grande del campo e si adatta allo schermo senza stirarsi (`docs/arena/grafica.md`). In partita è
 un'immagine già pronta, oggi disegnata a monte da `npm run disegni:arena`: ha già la forma giusta, il dipinto la rifà e non la inventa, e al
@@ -574,7 +574,7 @@ Modifica questa immagine e lascia identico tutto il resto: stessa inquadratura, 
 tutto omogeneo (l'utente, 5/11). Si allega solo `sorgenti/arena/schemi/terreno-<chiave>.png` (lo rifà `npm run disegni:arena`). Se
 un'immagine ha un difetto si chiede di correggerla, non di rifarla.
 
-**Con Grok** il canyon è venuto al primo colpo, con due allegati: le colline per lo stile e lo schema per la disposizione. Gli altri due si fanno nella stessa chat, senza allegati, rifacendo il canyon in un altro posto: così le misure restano quelle che in partita hanno retto.
+**Con Grok** il canyon è venuto al primo colpo, con due allegati: le colline per lo stile e lo schema per la disposizione. Gli altri due sono venuti nella stessa chat, senza allegati, rifacendo il canyon in un altro posto: così le misure restano quelle che in partita hanno retto.
 
 ```text
 Ora rifai questa stessa immagine in un altro posto. Tieni identici l'inquadratura, lo stile, la grana e tutte le misure: la fascia orizzontale al centro, la strada dritta, il ponte largo e lungo uguale, la zona attorno alla strada bassa e libera, col decoro alto solo ai lati. Cambia solo il mondo: di cristalli e roccia viola non deve restare niente.
