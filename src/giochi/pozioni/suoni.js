@@ -48,7 +48,8 @@ export const suoni = {
   tappo() { nota(1150, 620, 0.06, 'sine', 0.12); rumore(0.03, 0.04, 3000, 1200) },
   gratta() { rumore(0.13, 0.05, 7000, 2600); nota(fra(1500, 1900), fra(1100, 1300), 0.08, 'sawtooth', 0.012) },
   sfrega() { rumore(0.09, 0.07, 6000, 2000) },
-  soffio() { rumore(0.34, 0.08, 700, 2000) },
+  // il coperchio che sbatte sul bordo, e il vapore che scappa
+  coperchio() { nota(fra(620, 700), 380, 0.09, 'triangle', 0.1); nota(fra(1500, 1700), 1200, 0.06, 'sine', 0.04); rumore(0.3, 0.06, 2600, 900) },
   incanto: n => { const f = [660, 784, 880, 988, 1175, 1319][n % 6]; nota(f, f * 1.01, 0.22, 'sine', 0.05); nota(f * 2, f * 2, 0.12, 'triangle', 0.015, 40) },
   mescola: () => ripeti(5, 230, () => { rumore(0.2, 0.05, 1100, 500); blop(0.8) }),
   scalda() { rumore(1.1, 0.07, 500, 2600); ripeti(6, 170, () => rumore(0.05, 0.04, 5000, 2000)) },

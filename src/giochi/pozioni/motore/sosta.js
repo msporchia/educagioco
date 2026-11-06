@@ -40,7 +40,7 @@ export function scrivi(b, indice, extra = {}) {
     v: VERSIONE, tappa: indice, chiave: b.tappa.chiave,
     ...(indice < 0 ? { giro: { n: b.tappa.giro, pozione: [b.pozione.nome, b.pozione.emoji, b.pozione.colore] } } : {}),
     passi: b.passi.map(p => ({ azione: p.azione, cosa: [...p.cosa] })), righe: b.righe.map(r => ({ testo: r.testo, passi: [...r.passi] })),
-    passo: b.passo, mortaio: [...b.mortaio], pestato: b.pestato, tagliere: [...b.tagliere], tagliato: b.tagliato, dentro: [...b.dentro], scaldato: b.scaldato, soffiato: b.soffiato, incantato: b.incantato, mescolato: b.mescolato, pasticci: b.pasticci, pasticciato: b.pasticciato,
+    passo: b.passo, mortaio: [...b.mortaio], pestato: b.pestato, tagliere: [...b.tagliere], tagliato: b.tagliato, dentro: [...b.dentro], scaldato: b.scaldato, coperto: b.coperto, incantato: b.incantato, mescolato: b.mescolato, pasticci: b.pasticci, pasticciato: b.pasticciato,
     ingredienti: b.ingredienti.map(g => ({
       nome: g.nome, unita: g.unita, dose: g.dose, messo: g.messo, ...(g.casa ? { casa: g.casa } : {}), f: !!g.f, dispensa: !!g.dispensa, traboccate: g.traboccate, pezzi: [...g.pezzi],
       offerte: g.offerte.map(o => ({ base: o.base, prezzo: o.prezzo, unita: o.unita })),
@@ -66,18 +66,22 @@ function leggiOfferte(lista) {
   })
 }
 
+// il mantice è diventato il coperchio: una sosta di prima ha ancora il suo passo, e la sua riga
+const ORA = azione => (azione === 'soffia' ? 'copri' : azione)
+const riscritta = testo => testo.replace(/soffia sul fuoco col mantice/i, m => (m[0] === 'S' ? 'Metti' : 'metti') + ' il coperchio sul calderone').replace('soffiato sul fuoco', 'messo il coperchio')
+
 function leggiPassi(lista, quanti) {
   if (!Array.isArray(lista) || !lista.length) throw new Error('passi')
   return lista.map(p => {
-    if (!AZIONI[p.azione] || !Array.isArray(p.cosa) || p.cosa.some(i => i !== MORTAIO && i !== TAGLIERE && !intero(i, 0, quanti - 1))) throw new Error('passo')
-    return { azione: p.azione, cosa: [...p.cosa] }
+    if (!AZIONI[ORA(p.azione)] || !Array.isArray(p.cosa) || p.cosa.some(i => i !== MORTAIO && i !== TAGLIERE && !intero(i, 0, quanti - 1))) throw new Error('passo')
+    return { azione: ORA(p.azione), cosa: [...p.cosa] }
   })
 }
 function leggiRighe(lista, quanti) {
   if (!Array.isArray(lista) || !lista.length) throw new Error('righe')
   return lista.map(r => {
     if (typeof r.testo !== 'string' || !Array.isArray(r.passi) || r.passi.some(k => !intero(k, 0, quanti - 1))) throw new Error('riga')
-    return { testo: r.testo, passi: [...r.passi] }
+    return { testo: riscritta(r.testo), passi: [...r.passi] }
   })
 }
 
@@ -112,8 +116,8 @@ function rimetti(dato, rnd) {
   b.righe = leggiRighe(dato.righe, b.passi.length)
   if (dato.passo >= b.passi.length || !Array.isArray(dato.mortaio) || !Array.isArray(dato.dentro)) return null
   b.passo = dato.passo; b.mortaio = [...dato.mortaio]; b.dentro = [...dato.dentro]
-  // tagliere e mantice sono venuti dopo: in una sosta vecchia non ci sono, e va bene
-  b.tagliere = Array.isArray(dato.tagliere) ? [...dato.tagliere] : []; b.tagliato = !!dato.tagliato; b.soffiato = !!dato.soffiato; b.incantato = !!dato.incantato
+  // tagliere e coperchio sono venuti dopo: in una sosta vecchia non ci sono, e va bene
+  b.tagliere = Array.isArray(dato.tagliere) ? [...dato.tagliere] : []; b.tagliato = !!dato.tagliato; b.coperto = !!(dato.coperto ?? dato.soffiato); b.incantato = !!dato.incantato
   b.pestato = !!dato.pestato; b.scaldato = !!dato.scaldato; b.mescolato = !!dato.mescolato; b.pasticci = dato.pasticci; b.pasticciato = !!dato.pasticciato
   return b
 }

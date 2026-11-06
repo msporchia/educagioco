@@ -10,6 +10,7 @@ import { MODI } from './bollori.js'
 // dove stanno le cose (il tavolo è a y = 0)
 export const POSTI = {
   calderone: new Vector3(0, 0, -2.3),
+  gancio: new Vector3(3.02, 1.84, -3.04),   // sotto lo scaffale: ci sta appeso il mestolo
   legna: new Vector3(0, 0.24, -1.3),   // sporge davanti al calderone: si accende lì
   brodo: 1.12,              // l'altezza del brodo nel calderone
   vasiZ: 0.75,              // la fila dei misurini
@@ -48,6 +49,9 @@ export function creaBanco(scena, trame) {
     s.position.set(0, y, -3.4)
     g.add(s)
   }
+  const gancio = new Mesh(new TorusGeometry(0.07, 0.022, 8, 16, Math.PI * 1.4), piatto(0xc9a24a, { metalness: 0.6, roughness: 0.4 }))
+  gancio.position.copy(POSTI.gancio); gancio.rotation.z = 1.2
+  g.add(gancio)
   const barattoli = new InstancedMesh(new CylinderGeometry(0.17, 0.19, 0.5, 12), piatto(0xffffff, { roughness: 0.3, metalness: 0.1 }), 22)
   const finto = new Object3D(), tinta = new Color()
   const tinte = [0x7fd4c1, 0xe2a53a, 0x8b5cc4, 0xd0455e, 0x5ec46a, 0x4aa3ff, 0xffd85e, 0xc06a4a]

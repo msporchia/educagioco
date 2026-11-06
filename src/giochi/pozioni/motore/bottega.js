@@ -162,7 +162,7 @@ export class Bottega {
     this.tagliato = false        // ed è già stato sminuzzato
     this.dentro = []             // quello che è nel calderone
     this.scaldato = false
-    this.soffiato = false        // il mantice: il fuoco è più alto
+    this.coperto = false         // il coperchio: bolle più forte
     this.incantato = false       // la bacchetta
     this.mescolato = false       // dall'ultima versata: se no nel calderone c'è l'arcobaleno
     this.pasticci = 0
@@ -259,7 +259,7 @@ export class Bottega {
     }
     if (p.azione === 'mescola') this.mescolato = true
     if (p.azione === 'scalda') this.scaldato = true
-    if (p.azione === 'soffia') this.soffiato = true
+    if (p.azione === 'copri') this.coperto = true
     if (p.azione === 'agita') this.incantato = true
     this.passo++
     this.finita = this.passo >= this.passi.length

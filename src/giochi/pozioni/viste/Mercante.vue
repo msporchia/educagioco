@@ -10,7 +10,7 @@ import { scrivi, mescola } from '../dati/misure.js'
 import { PULIZIA, SPEDIZIONE } from '../dati/bottega.js'
 import { ANTEPRIME } from '../dati/anteprime.js'
 import { regola } from '../motore/misura.js'
-import { MOSSE, ROBA_SU, attrezziDi, prossimaMossa } from '../motore/procedimento.js'
+import { MOSSE, ROBA_SU, attrezziDi, prossimaMossa, recipiente } from '../motore/procedimento.js'
 import { bolloreDi } from '../dati/bollori.js'
 import { creaBottega3d } from '../scena3d/indice.js'
 
@@ -76,10 +76,11 @@ const quadro = computed(() => {
     riempito: q.dentro.length / q.ingredienti.length,
     arcobaleno: q.dentro.length > 0 && !q.mescolato,
     fuoco: q.scaldato ? 1 : 0,
-    forte: q.soffiato, incantato: q.incantato, bollore: bolloreDi(q.pozione.nome, q.ingredienti),
+    forte: q.coperto, incantato: q.incantato, bollore: bolloreDi(q.pozione.nome, q.ingredienti),
     attrezzi: { visibili: q.pronta && !q.macchie.length, quali: attrezziDi(q.tappa.azioni, q.ingredienti), quanti: q.ingredienti.length,
-                roba: q.ingredienti.flatMap((x, i) => (q.dentro.includes(i) || q.mortaio.includes(i) || q.tagliere.includes(i) ? [] : [{ i, posto: i, nome: x.nome, foto: ANTEPRIME[x.nome], colore: x.colore, gratta: x.lavoro === 'gratta' }])),
+                roba: q.ingredienti.flatMap((x, i) => (q.dentro.includes(i) || q.mortaio.includes(i) || q.tagliere.includes(i) ? [] : [{ i, posto: i, nome: x.nome, foto: ANTEPRIME[x.nome], colore: x.colore, gratta: x.lavoro === 'gratta', recipiente: recipiente(x, i, q.passi) }])),
                 pestato: q.mortaio.length ? mescola(q.mortaio.map(i => q.ingredienti[i].colore)) : null, macinato: q.pestato,
+                grumi: q.mortaio.some(i => !recipiente(q.ingredienti[i], i, q.passi)),
                 tagliere: q.tagliere.length ? mescola(q.tagliere.map(i => q.ingredienti[i].colore)) : null, tagliato: q.tagliato,
                 fiala: q.finita ? q.brodo : null,
                 prossimo: q.finita ? null : prossimaMossa(q.passi[q.passo], q.mancaAl(q.passi[q.passo])) },
