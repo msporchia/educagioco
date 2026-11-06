@@ -3,6 +3,7 @@
    gli animali trova ciotole e tinozza. In scena: va alla ciotola, uno alla volta ti chiama, mangia, fa il bagno, si annoia.
    `node test/esegui.mjs fattoria3d-cura-prato`
    tempo: 1 */
+import { readFileSync } from 'node:fs'
 import * as THREE from 'three'
 import { BESTIE, CURATI, RINCARO_ADOZIONE, prezzoAdozione, FAME, FELICE, NOIA, SPORCO, FONDO, sporcoDi, ciboChiesto, cibiPer, cibiComprati } from '../../src/giochi/fattoria3d/dati/bestie.js'
 import { PEZZI } from '../../src/giochi/fattoria3d/dati/catalogo.js'
@@ -180,6 +181,14 @@ const motore = ({ liv = 70, monete = 1000, t = { ora: ORA }, stato = null } = {}
     else controlla(`${tipo}: porta il gioco`, viste.has('porta'))
   }
   controlla('chi ha fame non si ferma se cammini', sequenzaFame(true).ostinata && sequenzaPasto(true, false).ostinata)
+}
+
+/* ══════════ il cartello dei recinti non è la notizia in basso ══════════ */
+{
+  const css = readFileSync(new URL('../../src/giochi/fattoria3d/stile.css', import.meta.url), 'utf8')
+  controlla('il cartello sopra un recinto non prende bordo e altezza da nessuno', !/^\.f3-cartello\s*\{/m.test(css))
+  controlla('la notizia in basso ha il suo nome', /^\.f3-notizia\s*\{/m.test(css))
+  controlla('le note dei fogli hanno il loro stile', /^\.f3-nota\s*\{/m.test(css) && /\.f3-livelli \.f3-nome\s*\{/.test(css))
 }
 
 /* ══════════ il bagno da lontano: quanta strada resta ══════════ */
