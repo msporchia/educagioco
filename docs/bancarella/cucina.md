@@ -124,20 +124,32 @@ perché confondeva. La `portata` va dritta da 32 a 72 lungo la fila (`FILA`).
 |---|---|---|
 | 1–5 | **a crudo**, con tempo da vendere: panini, insalate, sushi | la cassa dice il resto, euro tondi |
 | 6 | il lavello | |
-| 7–9 | la pentola, poi la padella | **il resto lo conti tu**, euro tondi |
-| 10–15 | uova, carne, hamburger, ragù | prezzi al mezzo euro |
+| 7–12 | la pentola, la padella, uova, carne, hamburger | **il resto lo conti tu**, euro tondi |
+| 13–15 | il ragù, il secondo | prezzi al mezzo euro |
 | 16–19 | il forno | prezzi ai dieci centesimi, banconote fino a 20 € |
-| 20–22 | sempre due piatti a ordinazione: tutti gli attrezzi doppi (`copie`) e due appoggi (`appoggi`) | **anche il totale da chiedere lo batti tu**, che è una somma; prezzi di nuovo al mezzo euro |
-| 23–25 | | prezzi ai dieci centesimi |
-| 26–28 | le ordinazioni scadono prima | prezzi ai cinque centesimi, banconote fino a 50 € |
+| 20–22 | sempre due piatti a ordinazione: tutti gli attrezzi doppi (`copie`) e due appoggi (`appoggi`) | **anche il totale da chiedere lo batti tu**, che è una somma; di nuovo euro tondi |
+| 23–25 | | prezzi al mezzo euro |
+| 26–28 | le ordinazioni scadono prima | prezzi ai dieci centesimi, banconote fino a 50 € |
 | ⏱️ | Cinque minuti: tutte le ricette, giri finché dura l'orologio (`durata`), il tempo delle ordinazioni si stringe fino a un tetto | come gli ultimi; conta il record delle ordinazioni servite (`senzaFine`) |
 
 La cassa sale a gradini (`SCALA_CASSA`), come nel vecchio mercato: chi fa i conti non torna mai
-indietro, e quando entra un conto nuovo i prezzi tornano più facili. Il prezzo di un piatto è
-quello del menù arrotondato o col suo di più in centesimi (`prezzoDi`). Si paga come farebbe una
-persona: la banconota più piccola che basta, ogni tanto quella dopo, mai cinquanta euro per un
-panino; oppure l'euro tondo sopra il totale in tre pezzi al massimo, 5 € + 2 € + 2 € (`comeSiPaga`).
-I conti non devono essere difficili: devono sembrare veri. Nel cassetto i soldi sono a pile: le monete una sull'altra, le banconote a
+indietro, e quando entra un conto nuovo si torna agli euro tondi. I cinque centesimi non ci sono:
+sommare 6,35 € e 4,25 € è fatica senza niente di vero. **Ogni cucina ha il suo listino** (`prezzoDi`,
+`listino`): dentro un livello un piatto costa sempre uguale, così i conti si prevedono, ma da un
+livello all'altro cambia, se no la pasta era 6,70 € dappertutto. Sugli euro e sui mezzi il menù si
+sposta tutto insieme (chi ha più roba resta più caro), coi centesimi ogni piatto ha il suo. Due
+piatti della stessa cucina non costano mai uguale (`listinoDi`): arrotondando, 3,50 € e 4 € facevano
+4 € tutti e due, e un livello aveva una cifra sola.
+
+Si paga come farebbe una persona (`comeSiPaga`): la banconota più piccola che basta, ogni tanto
+quella dopo, mai cinquanta euro per un panino; oppure due banconote, 10 € + 5 € per 12 €, e il resto
+torna in moneta; oppure, se il conto ha i centesimi, l'euro tondo sopra il totale, 5 € + 2 € + 2 €
+per 8,50 €. **Ogni pezzo deve servire** (`serveTutto`): il resto è sempre meno del pezzo più piccolo
+che ti danno. Si può non avere i soldi contati, ma nessuno dà il totale giusto più una moneta per
+riaverla indietro (10 + 2 + 1 per 12 €).
+
+I conti non devono essere difficili: devono sembrare veri. `node strumenti/cassa-cucina.mjs` mette in
+fila listini, totali e modi di pagare di ogni livello. Nel cassetto i soldi sono a pile: le monete una sull'altra, le banconote a
 mazzetta.
 
 Fino al livello 19 c'è un attrezzo per tipo: un'ordinazione è un piatto, e il secondo allargherebbe
