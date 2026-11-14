@@ -382,17 +382,20 @@ export class Campo {
     if (cs.riposo > 0) { c.font = `${u(11)}px "Emoji Gioco", system-ui, sans-serif`; c.textAlign = 'center'; c.fillText('💤', x - u(24), y - u(20)) }
   }
 
-  /* la porta in fondo al ponte: intera, rotta o crollata, e gli stendardi sulle torri finché regge */
+  /* la porta in fondo al ponte: intera, rotta o crollata, e gli stendardi sulle torri finché regge.
+     Quella di chi gioca la vediamo da dietro (`:dietro`), se il posto ce l'ha */
   muro(c, mu, ora) {
     const x = this.X(mu.x), stato = mu.hp <= 0 ? 'crollata' : mu.hp / mu.max < 0.5 ? 'rotta' : 'intera'
-    const [foglio, [sx, sy, w, h]] = this.fortezza(`porta:@:${stato}`)
+    const dietro = mu.lato === 'io' && this.fortezza(`porta:@:${stato}:dietro`)
+    const [foglio, [sx, sy, w, h]] = dietro?.[0] ? dietro : this.fortezza(`porta:@:${stato}`)
     const largo = 70 * this.s, alto = largo * h / w, piede = this.Y(mu.y) + 6 * this.s
     c.save()
     if (mu.fl > 0) c.globalAlpha = 0.72
     c.drawImage(foglio[mu.lato], sx, sy, w, h, x - largo / 2, piede - alto, largo, alto)
     c.restore()
     if (mu.hp <= 0) return
-    for (const v of [-1, 1]) this.bandiera(c, x + v * 24 * this.s, piede - 27 * this.s, 12 * this.s, v, mu.lato, ora)
+    // la porta dipinta ha le sue bandiere: quelle in codice solo sulla porta disegnata a monte
+    if (foglio !== this.fortezze) for (const v of [-1, 1]) this.bandiera(c, x + v * 24 * this.s, piede - 27 * this.s, 12 * this.s, v, mu.lato, ora)
     if (mu.hp < mu.max) this.barra(c, x, piede - alto - 5, this.m(40), mu.hp / mu.max)
   }
 
