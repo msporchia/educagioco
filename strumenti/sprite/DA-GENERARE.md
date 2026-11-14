@@ -651,11 +651,13 @@ LA DISPOSIZIONE, da rispettare al millimetro, perché il gioco ci cammina sopra:
 LE REGOLE TECNICHE: immagine ORIZZONTALE 1536×1024 px che riempie tutto il quadro; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; NESSUNA CASERMA, NESSUN CASTELLO, NESSUN EDIFICIO, NESSUN PERSONAGGIO, NESSUNA PAROLA SCRITTA, nessuna cornice. Ai quattro bordi il disegno continua specchiato, quindi niente di grande tagliato a metà sul bordo.
 ```
 
-### 9 — I castelli e le porte dei quattro posti · 1 immagine · da fare
+### 9 — I castelli e le porte dei quattro posti · 1 immagine · ✅ 14 novembre 2026 (ChatGPT), le porte di chi gioca le rifà la 9b
+
+**Com'è andata**: il foglio è tornato pulito, 16 figure, e il ritaglio regge. Due difetti: le porte sono tutte viste dal davanti, giuste solo per il nemico (vedi 9b), e nella riga della cenere gli stendardi sono rossi, quindi lì anche il castello di chi gioca resta rosso.
 
 **Perché**: il castello è ancora quello del vestito `bosco` del castello a torri, uguale in tutti i posti, e la porta è disegnata a monte col programma: sui terreni dipinti stonano. Si aggiungono sopra al terreno, quindi vogliono il fondo trasparente. Il ponte non si chiede: è nel terreno.
 
-**Come si manda**: Grok, nella chat dei terreni, senza allegati: i quattro posti li ha già visti (le colline erano il primo allegato). Se un pezzo ha un difetto si chiede di correggerlo, non di rifare il foglio.
+**Come si manda**: nella chat dei terreni, senza allegati: i quattro posti li ha già visti (le colline erano il primo allegato). Il 14/11 era ChatGPT. Se un pezzo ha un difetto si chiede di correggerlo, non di rifare il foglio.
 
 **Si salva in** `strumenti/sprite/sorgenti/arena/fortezze.png`. **Comando**: `python3 strumenti/sprite/fortezze-arena.py provino.png`, che legge il foglietto
 `fortezze.json` e pretende quattro righe da quattro. Il nemico ridipinge il blu di rosso.
@@ -672,6 +674,28 @@ RIGA 4, le terre di cenere: pietra nera, ferro, bracieri accesi.
 Il castello è epico e bellissimo, visto dal davanti a tre quarti, con la base larga e le torri alte: nel gioco ne spunta solo un pezzo dal bordo dello schermo, una volta la cima e una volta il portone, quindi deve essere bello in tutti e due. La porta sta in fondo a un ponte e lo chiude: guardala larga quanto il ponte dei terreni, con la stessa vista dall'alto a tre quarti.
 
 LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: foglio ORIZZONTALE in formato 3:2 su FONDO TRASPARENTE; stessa grana di pixel dei terreni; il castello è largo circa il doppio di una porta; le figure di una riga poggiano sulla stessa linea; tanto spazio trasparente fra una figura e l'altra, anche fra le righe; nessuna ombra sotto, nessun prato, nessun pezzo di terreno, nessun bagliore, nessuna cornice; NESSUNA PAROLA SCRITTA, NESSUN NUMERO. Tetti, bandiere e stendardi sono di UN SOLO BLU SATURO E UNIFORME, e nient'altro è blu o azzurro, nemmeno i cristalli: il gioco ridipinge quel blu di rosso per il nemico.
+```
+
+### 9b — Le porte di chi gioca, viste da dietro · 2 immagini · ✅ 14 novembre 2026 (ChatGPT)
+
+**Com'è andata**: il primo foglio (`fortezze-dietro.png`) ha le porte di colline, deserto e canyon e il castello della cenere blu, ma **non le porte della cenere**, e da dietro tiene la scalinata davanti. Si usa lo stesso: dal portone con le travi, le guardie sui merli e le scale laterali si legge come il lato interno. Fra le porte del canyon e il castello ci sono solo 8 px, per questo lo `stacco` del foglio è 6. Alla domanda di ChatGPT «vista posteriore o misure del foglio» si risponde la vista: la misura la rifà il ritaglio. La riga della cenere, chiesta a parte, è tornata con la **scacchiera dipinta** al posto della trasparenza (`fortezze-cenere.png`, `"fondo": "scacchiera"` nel foglietto: la toglie `vesti.py`, tasche comprese, come il buco del portone rotto).
+
+**Perché**: la scena si guarda da sud, dall'alto a tre quarti. La porta del nemico chiude il ponte in cima e ci mostra la faccia col portone e la scalinata che scende al ponte: giusto. Quella di chi gioca chiude il ponte in fondo, e la sua faccia col portone guarda il nemico: noi ne vediamo il dietro. Col foglio 9 la porta di sotto mostra il portone e una scalinata che scende verso il nostro castello, cioè dalla parte sbagliata. Il castello no: di chi gioca si vede solo la cima, uguale da tutti e due i lati. Dal foglio 9 restano i castelli e le porte del nemico.
+
+**Come si manda**: ChatGPT, nella chat del foglio 9. In una chat nuova si allega `sorgenti/arena/fortezze.png`.
+
+**Si salva in** `strumenti/sprite/sorgenti/arena/fortezze-dietro.png` (la riga della cenere, se torna da sola, in un terzo foglio: una voce in più in `fortezze.json`). **Comando**: `python3 strumenti/sprite/fortezze-arena.py provino.png`; le porte `:dietro` vanno a chi gioca, il castello della cenere a tutti e due, e un posto senza la porta da dietro usa quella dal davanti.
+
+```text
+Il foglio va benissimo, ora mi serve un secondo foglio con solo le cose che mancano, nello stesso identico stile, stessa grana, stessa misura delle figure.
+
+Nel gioco il ponte ha una porta a ogni capo. Quella in alto la vediamo dal davanti, ed è giusta così. Quella in basso invece la guardiamo DA DIETRO: il suo portone guarda verso l'alto, verso il nemico, e noi vediamo il lato interno.
+
+COSA TI CHIEDO: cinque righe.
+RIGHE da 1 a 4, una per posto, nello stesso ordine di prima (colline d'oro, deserto delle tombe, canyon di cristallo, terre di cenere): la stessa porta del foglio di prima, ma VISTA DA DIETRO, sempre dall'alto a tre quarti. Tre figure per riga: la porta INTERA, la porta ROTTA, la porta CROLLATA. Da dietro si vedono il cammino di ronda dietro i merli, il retro delle due torri, il portone chiuso visto dall'interno con le travi e la sbarra, e il ponte che passa sotto l'arco e continua verso l'alto. NIENTE SCALINATA verso chi guarda: davanti alla porta c'è solo il passaggio piano. Gli stendardi pendono dalla parte di fuori, quindi da dietro se ne vede solo il bastone in cima alle torri con la bandiera.
+RIGA 5, una figura sola: il CASTELLO delle terre di cenere, identico a quello di prima, ma con TUTTI gli stendardi e le bandiere blu invece che rossi; fuoco, bracieri e lava restano come sono.
+
+LE REGOLE TECNICHE, le stesse di prima: foglio ORIZZONTALE su FONDO TRASPARENTE; le figure di una riga poggiano sulla stessa linea; tanto spazio trasparente fra una figura e l'altra, anche fra le righe; nessuna ombra sotto, nessun prato, nessun bagliore, nessuna cornice; NESSUNA PAROLA SCRITTA, NESSUN NUMERO. Tetti, bandiere e stendardi sono di UN SOLO BLU SATURO E UNIFORME, in tutte le righe, e nient'altro è blu o azzurro, nemmeno i cristalli.
 ```
 
 ### 10 — La copertina di Castle Battle · 1 immagine · da fare
@@ -792,7 +816,8 @@ Ora lo stesso identico foglio per la squadra ROSSA: stesse 9 truppe, stesse pose
 | 7b ✅ | le caserme di Castle Battle sulle piazzole (ChatGPT, il gioco raccontato; provvisorio) | 1 | uno screen del gioco, `terreno-bosco` | `arena/caserme.webp` | caserme dipinte, rudere e piazzola vuota |
 | 7c ✅ | le caserme definitive di Castle Battle, con mummie, bestie cornute e miniera (ChatGPT) | 1 | `arena/caserme.webp`, `schemi/partita` | `arena/caserme-2.png` | caserme e miniera dipinte |
 | 8 | i quattro terreni di Castle Battle (ChatGPT, si ridipinge il disegno in codice) | 4 | `schemi/terreno-<chiave>` | `arena/terreno-<chiave>.png` | il terreno dipinto |
-| 9 | castello e porta dei quattro posti (Grok, nella chat dei terreni) | 1 | nessuno | `arena/fortezze.png` | i castelli di Castle Battle |
+| 9 ✅ | castello e porta dei quattro posti (ChatGPT, nella chat dei terreni) | 1 | nessuno | `arena/fortezze.png` | i castelli di Castle Battle |
+| 9b ✅ | le porte di chi gioca viste da dietro, e il castello della cenere blu (ChatGPT, nella chat del foglio 9; la cenere a parte) | 2 | `arena/fortezze` in una chat nuova | `arena/fortezze-dietro.png` | le porte giuste dai due capi del ponte |
 | 10 | la copertina di Castle Battle (ChatGPT) | 1 | `schemi/partita` | `home/copertina-arena.png` | la home e il frontone della mappa |
 | 11 | le icone dei comandi di Castle Battle (ChatGPT) | 1 | `schemi/partita` | `arena/icone.png` | l'anello, ripara e bomba dipinti |
 | 12 ✅ | le truppe di Castle Battle con la casacca (Grok) | 1 | `schemi/truppe` | `arena/truppe.png` | la squadra si legge dalla figura, via il contorno |

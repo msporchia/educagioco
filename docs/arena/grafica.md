@@ -122,6 +122,8 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
   con le spalle di pietra; la porta due torri merlate con lo stendardo e il portone, che si crepa sotto i due terzi e
   sotto un terzo della vita; crollata, resta il cumulo. Il foglio 9 ha castello e porta (intera, rotta,
   crollata) per ogni posto, col fondo trasparente: il ponte sta nel terreno (`strumenti/sprite/fortezze-arena.py`, `dati/fortezze-dipinte.js`).
+  **La porta di chi gioca si vede da dietro** (`porta:<posto>:<stato>:dietro`, foglio 9b): il campo si guarda da sotto, e la sua faccia col portone
+  guarda il nemico. Un posto che non ce l'ha usa quella dal davanti. Le porte dipinte hanno le loro bandiere: quelle in codice solo sulle disegnate.
 - **Mancano**: i fogli 9, 10 e 11, e le pose di attacco e di morte delle truppe.
 
 ## Il quadro e i comandi

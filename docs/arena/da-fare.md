@@ -1,7 +1,6 @@
 # Da fare
 
-- I fogli da generare, in ordine: le truppe nuove in due colori (12b, con la posa del colpo), il ponte delle colline più stretto (8), le fortezze dei
-  posti (9), la copertina (10), le icone dei comandi (11): voci di `strumenti/sprite/DA-GENERARE.md`, ogni strumento è già scritto e provato su un foglio finto.
+- I fogli da generare, in ordine: le truppe nuove in due colori (12b, con la posa del colpo), il ponte delle colline più stretto (8), la copertina (10), le icone dei comandi (11): voci di `strumenti/sprite/DA-GENERARE.md`, ogni strumento è già scritto e provato su un foglio finto.
   Poi le pose di attacco e di morte delle truppe.
 - Il potenziamento a scelta (attacco o difesa), idea dell'utente come le due truppe
   per edificio.
