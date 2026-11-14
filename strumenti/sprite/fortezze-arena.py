@@ -3,8 +3,9 @@
 
     python3 strumenti/sprite/fortezze-arena.py [provino.png]
 
-Legge `sorgenti/arena/fortezze.json` (il foglio e cosa c'è in ogni riga), trova le figure da sé con `righe.py` e
-controlla che i conti tornino. Ogni pezzo si porta alla sua larghezza (`LARGHEZZE`), senza stirarlo; il punto
+Legge `sorgenti/arena/fortezze.json` (i fogli e cosa c'è in ogni riga), trova le figure da sé con `righe.py` e
+controlla che i conti tornino. Un nome che torna in un foglio dopo vince su quello di prima. Il provino è uno per
+foglio: `provino-1.png`, `provino-2.png`… Ogni pezzo si porta alla sua larghezza (`LARGHEZZE`), senza stirarlo; il punto
 d'appoggio è il piede. Scrive `src/giochi/arena/dati/fortezze-dipinte.js` (un atlante WebP e i pezzi). Come le usa la
 scena: docs/arena/grafica.md.
 """
@@ -18,6 +19,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).parent))
 import codifica  # noqa: E402
 import righe  # noqa: E402
+import vesti  # noqa: E402
 
 QUI = Path(__file__).resolve().parent
 REPO = QUI.parent.parent
@@ -27,25 +29,40 @@ LARGHEZZE = {'castello': 306, 'porta': 144}    # px dell'atlante; il castello è
 LARGO = 1024
 
 
+def pulito(sorgente, fondo):
+    """Il foglio senza fondo. Di difetto è trasparente con l'alone; `"scacchiera"` è la trasparenza dipinta
+    (ChatGPT, la riga della cenere): via dai bordi, poi le tasche chiuse dentro le figure, come il buco del
+    portone rotto, e il filo chiaro che resta attorno."""
+    if fondo != 'scacchiera':
+        return righe.senza_alone(Image.open(sorgente))
+    im = vesti.senza_fondo(str(sorgente), 'scacchiera').copy()
+    px, w, h = im.load(), im.width, im.height
+    vesti.tasche(px, w, h, lambda c: max(c[:3]) - min(c[:3]) < 16 and min(c[:3]) > 150)
+    vesti.sfrangia(px, w, h, lambda c: max(c[:3]) - min(c[:3]) < 24 and min(c[:3]) > 120)
+    return im
+
+
 def main():
     scheda = json.loads((SORGENTI / 'fortezze.json').read_text())
-    sorgente = SORGENTI / scheda['foglio']
-    if not sorgente.exists():
-        sys.exit(f'manca {sorgente.relative_to(REPO)}: voce 9 di strumenti/sprite/DA-GENERARE.md')
-    foglio = righe.senza_alone(Image.open(sorgente))
-    trovate = righe.righe_di_figure(foglio, stacco=scheda['stacco'])
-    attese = [len(r) for r in scheda['righe']]
-    if [len(r) for r in trovate] != attese:
-        sys.exit(f"attese righe da {attese}, trovate da {[len(r) for r in trovate]}: "
-                 f"python3 strumenti/sprite/righe.py {sorgente} provino.png")
-    if len(sys.argv) > 1:
-        righe.provino(foglio, trovate, sys.argv[1])
-    pezzi = []
-    for nomi, rettangoli in zip(scheda['righe'], trovate):
-        for nome, (x, y, w, h) in zip(nomi, rettangoli):
-            k = LARGHEZZE[nome.split(':')[0]] / w
-            fig = foglio.crop((x, y, x + w, y + h)).resize((max(1, round(w * k)), max(1, round(h * k))), Image.LANCZOS)
-            pezzi.append((nome, fig))
+    figure = {}
+    for i, f in enumerate(scheda['fogli'], 1):
+        sorgente = SORGENTI / f['foglio']
+        if not sorgente.exists():
+            sys.exit(f'manca {sorgente.relative_to(REPO)}: voci 9 e 9b di strumenti/sprite/DA-GENERARE.md')
+        foglio = pulito(sorgente, f.get('fondo'))
+        trovate = righe.righe_di_figure(foglio, stacco=f['stacco'])
+        attese = [len(r) for r in f['righe']]
+        if [len(r) for r in trovate] != attese:
+            sys.exit(f"{f['foglio']}: attese righe da {attese}, trovate da {[len(r) for r in trovate]}: "
+                     f"python3 strumenti/sprite/righe.py {sorgente} provino.png")
+        if len(sys.argv) > 1:
+            uscita = Path(sys.argv[1])
+            righe.provino(foglio, trovate, str(uscita.with_name(f'{uscita.stem}-{i}{uscita.suffix}')))
+        for nomi, rettangoli in zip(f['righe'], trovate):
+            for nome, (x, y, w, h) in zip(nomi, rettangoli):
+                k = LARGHEZZE[nome.split(':')[0]] / w
+                figure[nome] = foglio.crop((x, y, x + w, y + h)).resize((max(1, round(w * k)), max(1, round(h * k))), Image.LANCZOS)
+    pezzi = list(figure.items())
     # l'atlante: a scaffali, dal più alto
     pezzi.sort(key=lambda p: -p[1].size[1])
     atlante, pos, xx, yy, alto = [], {}, 0, 0, 0

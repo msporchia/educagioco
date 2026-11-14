@@ -1,11 +1,33 @@
 {
-  "_": "Le fortezze di Castle Battle (ChatGPT, DA-GENERARE.md voce 9): una riga per posto, da sinistra il castello, la porta intera, rotta e crollata. Lo legge strumenti/sprite/fortezze-arena.py.",
-  "foglio": "fortezze.png",
-  "stacco": 12,
-  "righe": [
-    ["castello:bosco", "porta:bosco:intera", "porta:bosco:rotta", "porta:bosco:crollata"],
-    ["castello:palude", "porta:palude:intera", "porta:palude:rotta", "porta:palude:crollata"],
-    ["castello:neve", "porta:neve:intera", "porta:neve:rotta", "porta:neve:crollata"],
-    ["castello:lava", "porta:lava:intera", "porta:lava:rotta", "porta:lava:crollata"]
+  "_": "Le fortezze di Castle Battle (Grok, DA-GENERARE.md voci 9 e 9b): una riga per posto. Il primo foglio ha il castello e la porta intera, rotta e crollata vista dal davanti (il nemico); il secondo le porte viste da dietro (chi gioca, `:dietro`) e il castello della cenere coi suoi stendardi blu, che vince su quello del primo; il terzo le porte della cenere viste da dietro, con la scacchiera dipinta al posto della trasparenza. Lo legge strumenti/sprite/fortezze-arena.py.",
+  "fogli": [
+    {
+      "foglio": "fortezze.png",
+      "stacco": 12,
+      "righe": [
+        ["castello:bosco", "porta:bosco:intera", "porta:bosco:rotta", "porta:bosco:crollata"],
+        ["castello:palude", "porta:palude:intera", "porta:palude:rotta", "porta:palude:crollata"],
+        ["castello:neve", "porta:neve:intera", "porta:neve:rotta", "porta:neve:crollata"],
+        ["castello:lava", "porta:lava:intera", "porta:lava:rotta", "porta:lava:crollata"]
+      ]
+    },
+    {
+      "foglio": "fortezze-dietro.png",
+      "stacco": 6,
+      "righe": [
+        ["porta:bosco:intera:dietro", "porta:bosco:rotta:dietro", "porta:bosco:crollata:dietro"],
+        ["porta:palude:intera:dietro", "porta:palude:rotta:dietro", "porta:palude:crollata:dietro"],
+        ["porta:neve:intera:dietro", "porta:neve:rotta:dietro", "porta:neve:crollata:dietro"],
+        ["castello:lava"]
+      ]
+    },
+    {
+      "foglio": "fortezze-cenere.png",
+      "fondo": "scacchiera",
+      "stacco": 12,
+      "righe": [
+        ["porta:lava:intera:dietro", "porta:lava:rotta:dietro", "porta:lava:crollata:dietro"]
+      ]
+    }
   ]
 }
