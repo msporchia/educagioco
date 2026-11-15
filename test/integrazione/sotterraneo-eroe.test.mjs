@@ -203,6 +203,10 @@ await attendi(page, 300)
 // un eroe nuovo per la discesa: a un soffio dal livello 2, per vederlo salire battendo il mostro grosso
 // (l'indirizzo della discesa di prima aprirebbe il gioco al ricaricamento: si riparte dalla home)
 await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
+// e prima si esce dal gioco: al `pagehide` della ricarica di `semina` il sotterraneo salva l'eroe di prima (livello 12) e, una
+// volta sì e una no, quella scrittura arrivava dopo il profilo seminato e se lo mangiava (la festa del livello non veniva mai)
+await page.reload()
+await page.waitForSelector('.carte', { timeout: 10000 })
 await semina(page, {
   coins: 300,
   campagne: { sotterraneo: { tappa: 1, libera: false, stelle: { 0: 3 },
@@ -229,6 +233,7 @@ await page.evaluate(() => {
 })
 const ossa0 = Number(await page.locator('[data-grosso]').getAttribute('data-ossa'))
 let calata = false
+const storia = []   // la vita del grosso a ogni turno: se la festa non arriva, il messaggio la dice
 for (let n = 0; n < 12 && (await page.locator('[data-scontro-3d]').count()); n++) {
   await scegliAttacco(page)
   await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 5000 }).catch(() => {})
@@ -239,13 +244,18 @@ for (let n = 0; n < 12 && (await page.locator('[data-scontro-3d]').count()); n++
   await page.waitForFunction(() => !document.querySelector('[data-scontro-3d]') || document.querySelector('[data-caselle-abilita][data-pronto]'), null, { timeout: 30000 })
   await attendi(page, 200)
   if (await page.locator('[data-grosso]').count() && Number(await page.locator('[data-grosso]').getAttribute('data-ossa')) < ossa0) calata = true
+  storia.push(await page.locator('[data-grosso]').count() ? await page.locator('[data-grosso]').getAttribute('data-ossa') : '·')
 }
 controlla('rispondendo giusto la sua vita in cima cala (o cade al primo colpo)', calata || ossa0 <= 0 ||
           !(await page.locator('[data-grosso]').count()))
 uguale('battuto, la sua vita in cima se ne va', await page.locator('[data-grosso]').count(), 0)
 
 /* ---------- 6. il livello salito si festeggia ---------- */
-await page.waitForFunction(() => window.__livelloSu, null, { timeout: 4000 })
+await page.waitForFunction(() => window.__livelloSu, null, { timeout: 4000 }).catch(async e => {
+  const stato = await page.evaluate(() => ({ scontro: !!document.querySelector('[data-scontro-3d]'), grosso: document.querySelector('[data-grosso]')?.dataset.ossa ?? null,
+    fine: document.querySelector('[data-fine], [data-esito]')?.outerHTML.slice(0, 120) ?? null, livello: document.querySelector('[data-azione="eroe-pagina"]')?.dataset.livello }))
+  throw new Error(`la festa del livello non arriva: ${JSON.stringify({ ossa0, storia, ...stato })}`, { cause: e })
+})
 uguale('la festa del livello', await page.evaluate(() => window.__livelloSu), '2')
 await scatto(page, 'eroe-livello')
 uguale('il tasto del globo sa il livello nuovo', await page.locator('[data-azione="eroe-pagina"]').getAttribute('data-livello'), '2')
