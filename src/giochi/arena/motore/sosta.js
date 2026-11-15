@@ -27,8 +27,8 @@ export function scrivi(p, indice, livello) {
     livello: livelloValido(livello),
     ...(infinita ? { terreno: infinita } : {}),
     t: r1(p.t), resto: infinita ? 0 : r1(p.resto), pensa: r1(p.pensa),
-    lati: { io: { monete: r1(p.lati.io.monete), bombe: p.lati.io.bombe, bombaT: r1(p.lati.io.bombaT) },
-            nem: { monete: r1(p.lati.nem.monete), bombe: p.lati.nem.bombe, bombaT: r1(p.lati.nem.bombaT) } },
+    lati: { io: { monete: r1(p.lati.io.monete), bombe: p.lati.io.bombe, bombaT: r1(p.lati.io.bombaT), riparate: p.lati.io.riparate },
+            nem: { monete: r1(p.lati.nem.monete), bombe: p.lati.nem.bombe, bombaT: r1(p.lati.nem.bombaT), riparate: p.lati.nem.riparate } },
     miniere: p.miniere.map(m => ({ lato: m.lato, posto: m.posto, liv: m.liv, spesa: m.spesa, hp: Math.round(m.hp), max: m.max })),
     castelli: p.castelli.map(c => ({ lato: c.lato, hp: Math.round(c.hp), max: c.max, liv: c.liv })),
     muri: p.muri.map(m => ({ lato: m.lato, hp: Math.round(m.hp), max: m.max })),
@@ -53,6 +53,7 @@ export function leggi(dato, { campagna = CAMPAGNA, rnd = Math.random } = {}) {
     for (const lato of ['io', 'nem']) {
       const l = dato.lati?.[lato]
       if (!l || !num(l.monete, 0, 1e6) || !intero(l.bombe, 0, BOMBA.max) || !num(l.bombaT, 0, BOMBA.ogni + 1)) return null
+      if (l.riparate !== undefined && !intero(l.riparate, 0, 1000)) return null      // una sosta di prima non ce l'ha: 0
     }
     const p = new Partita({ rnd, sfida })
     p.t = dato.t; p.resto = infinita ? Infinity : dato.resto; p.pensa = dato.pensa
@@ -60,6 +61,7 @@ export function leggi(dato, { campagna = CAMPAGNA, rnd = Math.random } = {}) {
       p.lati[lato].monete = dato.lati[lato].monete
       p.lati[lato].bombe = dato.lati[lato].bombe
       p.lati[lato].bombaT = dato.lati[lato].bombaT
+      p.lati[lato].riparate = dato.lati[lato].riparate ?? 0
     }
 
     if (!Array.isArray(dato.castelli)) return null

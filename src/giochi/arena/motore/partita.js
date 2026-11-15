@@ -65,7 +65,7 @@ export class Partita {
   casuale(a, b) { return a + Math.floor(this.rnd() * (b - a + 1)) }
 
   nuovoLato(lato, alSecondo, monete) {
-    return { monete, alSecondo, miniera: 1, mosse: 0, bombe: 0, bombaT: BOMBA.ogni, abbattuti: 0 }
+    return { monete, alSecondo, miniera: 1, mosse: 0, bombe: 0, bombaT: BOMBA.ogni, abbattuti: 0, riparate: 0 }
   }
   y(lato, y) { return lato === 'io' ? y : CAMPO.H - y }
 
@@ -370,7 +370,7 @@ export class Partita {
       return m ? this.prezzo(lato, 'potenzia', m.posto) : this.prezzo(lato, 'costruisci', 'miniera')
     }
     if (azione === 'bomba') return this.lati[lato].bombe > 0 && this.puntoDellaBomba(lato) ? 0 : null
-    if (azione === 'ripara') return this.riparabili(lato).length ? AZIONI.ripara.prezzo : null
+    if (azione === 'ripara') return this.riparabili(lato).length ? CRESCITA.ripara(this.lati[lato].riparate) : null
     if (azione === 'castello') {
       const t = this.castello(lato)
       return viva(t) && t.liv < LIV_MAX ? CRESCITA.castello.prezzo(t.liv) : null
@@ -480,11 +480,12 @@ export class Partita {
     return [...this.castelli, ...this.muri, ...this.caserme, ...this.miniere].filter(e => e.lato === lato && e.hp < e.max && (e.tipo === 'muro' || viva(e)))
   }
 
-  /* la riparazione va alla costruzione messa peggio, e a tutte le caserme e le miniere ferite: serve a riprendersi (docs/arena/regole.md) */
+  /* la riparazione va a tutto quello che è ferito, castello, porta, caserme e miniere: serve a riprendersi (docs/arena/regole.md) */
   ripara(lato, p) {
-    const ferite = this.riparabili(lato).sort((a, b) => a.hp / a.max - b.hp / b.max)
+    const ferite = this.riparabili(lato)
     this.paga(lato, p)
-    for (const e of ferite.filter((e, i) => !i || e.tipo === 'caserma' || e.tipo === 'miniera')) {
+    this.lati[lato].riparate++                            // la prossima costa di più: CRESCITA.ripara
+    for (const e of ferite) {
       e.hp = Math.min(e.max, e.hp + e.max * RIPARA)
       if (e.tipo === 'muro') e.crollato = false
       this.evento({ tipo: 'cura', lato, x: e.x, y: e.y })

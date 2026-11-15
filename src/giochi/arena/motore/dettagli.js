@@ -70,7 +70,7 @@ export function dettaglioTruppa(id, liv, { costruire = false } = {}) {
 
 /* Le righe di una scelta che non è una truppa. `miniera` è il livello di QUELLA miniera (0 = da
    costruire), `castello` quello del castello. */
-export function dettaglioAzione(azione, { miniera = 0, castello = 1 } = {}) {
+export function dettaglioAzione(azione, { miniera = 0, castello = 1, riparate = 0 } = {}) {
   if (azione === 'miniera') {
     const base = Math.max(1, miniera)
     const piu = l => GIOCATORE.moneteAlSecondo * 0.7 * l            // le monete al secondo che porta una miniera di livello l
@@ -114,10 +114,11 @@ export function dettaglioAzione(azione, { miniera = 0, castello = 1 } = {}) {
   return {
     livello: 0,
     etichette: { ora: 'Cosa fa', dopo: '' },
-    prezzo: AZIONI.ripara.prezzo,
-    righe: [{ nome: 'Rimette in sesto', ora: `${Math.round(RIPARA * 100)}% della vita`, dopo: null },
-            { nome: 'Caserme e miniere', ora: 'tutte quelle ferite', dopo: null },
-            { nome: 'Il muro crollato', ora: `torna in piedi con ${num(MURO.hp * RIPARA)} di vita`, dopo: null }],
+    prezzo: CRESCITA.ripara(riparate),
+    righe: [{ nome: 'Rimette in sesto', ora: RIPARA >= 1 ? 'tutta la vita' : `${Math.round(RIPARA * 100)}% della vita`, dopo: null },
+            { nome: 'Cosa cura', ora: 'tutto quello che è ferito: castello, muro, caserme e miniere', dopo: null },
+            { nome: 'Il muro crollato', ora: `torna in piedi con ${num(MURO.hp * RIPARA)} di vita`, dopo: null },
+            { nome: 'La prossima volta', ora: `costa ${CRESCITA.ripara(riparate + 1)}`, dopo: null }],
   }
 }
 

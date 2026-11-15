@@ -104,8 +104,11 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
     const miniera = p.miniereDi('io')[0], porta = p.muro('io'), castello = p.castello('io')
     cripta.hp = cripta.max * 0.5; miniera.hp = miniera.max * 0.5; porta.hp = 0; castello.hp = castello.max * 0.9
     p.fai('io', 'ripara')
-    controlla('riparare cura la porta crollata, la caserma e la miniera insieme', porta.hp > 0 && cripta.hp > cripta.max * 0.5 && miniera.hp > miniera.max * 0.5)
-    controlla('ma il castello solo se è lui il messo peggio', castello.hp === castello.max * 0.9)
+    controlla('riparare cura tutto insieme: la porta crollata, la caserma, la miniera e il castello', porta.hp > 0 && cripta.hp > cripta.max * 0.5 && miniera.hp > miniera.max * 0.5 && castello.hp === castello.max)
+    cripta.hp = cripta.max * 0.5
+    const prima = p.prezzo('io', 'ripara'), fatte = p.lati.io.riparate
+    p.lati.io.monete = 100; p.fai('io', 'ripara'); cripta.hp = cripta.max * 0.5
+    controlla('e ogni riparazione costa di più della precedente', p.prezzo('io', 'ripara') > prima && p.lati.io.riparate === fatte + 1, `${prima} → ${p.prezzo('io', 'ripara')}`)
     cripta.hp = cripta.max; miniera.hp = miniera.max; porta.hp = porta.max; castello.hp = castello.max
   }
   p.sbagliata('io', cripta.posto)
@@ -329,6 +332,7 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   p.fai('io', 'costruisci', 'scheletri'); p.fai('io', 'costruisci', 'lupi'); p.fai('io', 'costruisci', 'lupi')
   p.fai('io', 'potenzia', p.casermeDi('io').find(c => c.id === 'lupi').posto); p.fai('io', 'miniera'); p.fai('io', 'castello')
   p.avanza(40)
+  p.lati.io.riparate = 3
   const dato = scrivi(p, tappa)
   controlla('una partita in corso si salva', dato && dato.v === VERSIONE)
   const letto = leggi(JSON.parse(JSON.stringify(dato)), { rnd: caso(1) })
@@ -339,6 +343,9 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   uguale('stesse caserme', q.casermeDi('io').map(c => c.id + c.liv).sort().join(), p.casermeDi('io').map(c => c.id + c.liv).sort().join())
   uguale('con la spesa di ognuna, per vendere', q.casermeDi('io').map(c => c.spesa).sort().join(), p.casermeDi('io').map(c => c.spesa).sort().join())
   uguale('stesso castello', q.castello('io').liv, p.castello('io').liv)
+  uguale('e le riparazioni già fatte, che decidono il prezzo della prossima', q.lati.io.riparate, 3)
+  { const vecchio = JSON.parse(JSON.stringify(dato)); delete vecchio.lati.io.riparate
+    uguale('una sosta di prima delle riparazioni care riparte da zero', leggi(vecchio, { rnd: caso(1) })?.partita.lati.io.riparate, 0) }
   uguale('stesse truppe in campo', q.unita.length, p.unita.length)
   q.avanza(5)
   controlla('la partita ripresa continua', q.t > p.t)

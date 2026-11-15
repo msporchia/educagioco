@@ -166,7 +166,7 @@ Costano diamanti di battaglia (💎, per non confonderli con le monete vere) e u
 
 | scelta | cosa fa | prezzo |
 |---|---|---|
-| 🔧 Ripara | +40% di vita alla costruzione messa peggio, porta compresa (anche crollata), e a tutte le caserme e le miniere ferite: serve a riprendersi quando il nemico comincia a buttarle giù (l'utente) | 6 |
+| 🔧 Ripara | +70% di vita a **tutto** quello che è ferito: castello, porta (anche crollata), caserme e miniere. Serve a riprendersi: già spendere le monete per riparare è uno svantaggio, e chi resta mezzo ferito non si riprende più (l'utente, 14/11). **Il prezzo raddoppia a ogni riparazione** (`CRESCITA.ripara`): rialzare tutto due o tre volte non è gratis, e a partita avanzata 6 monete si fanno in un attimo. Provata la cura piena a ×1,5: il nemico andava al massimo in tutti e tre i livelli, e il Facile finiva uguale al Difficile ([taratura.md](taratura.md)) | 6, 12, 24, 48, 96… |
 | 🏰 Castello | più danno, cadenza, gittata e vita (+300 per livello); si tocca sul campo | 8, 10, 14, 18, 23… |
 | 💣 Bomba | **in regalo** (non si compra): spazza le truppe nemiche più fitte | 0 monete, un calcolo |
 

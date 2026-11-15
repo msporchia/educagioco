@@ -1,5 +1,6 @@
 /* Castle Battle per la partita finta in due (../sfida-finta.mjs) e il banco della rete: la regola, le scelte di chi crea e le mosse
-   dei due bambini finti. L'host costruisce e potenzia spesso (così la partita finisce), l'ospite muove poco. */
+   dei due bambini finti. L'host costruisce e potenzia spesso (così la partita finisce), l'ospite muove poco e non fa le mosse che
+   servono solo a durare (ripara, castello): a caso portava il castello al livello 14, e la partita non finiva più. */
 import { regolaArena } from '../../../src/giochi/arena/sfida/regia.js'
 
 const AZIONI = ['costruisci', 'potenzia', 'miniera', 'ripara', 'castello', 'bomba']
@@ -18,6 +19,6 @@ export default {
     const p = inc.partita
     if (ruolo === 'host') {
       if (r() < 0.02) { const x = r(); inc.scegli(x < 0.5 ? ['costruisci', p.truppeAmmesse[0], Math.floor(r() * 6)] : x < 0.85 ? ['potenzia', Math.floor(r() * 6)] : mossaACaso(r, p)) }
-    } else if (r() < 0.001) inc.scegli(mossaACaso(r, p))
+    } else if (r() < 0.001) { const m = mossaACaso(r, p); if (m[0] !== 'ripara' && m[0] !== 'castello') inc.scegli(m) }
   },
 }

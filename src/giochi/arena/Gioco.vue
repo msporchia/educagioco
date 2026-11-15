@@ -477,7 +477,7 @@ function schedaDi(p, { posto, truppa, azione }) {
                fine: 'È già al livello massimo.',
                vendi: c ? p.resa(mio.value, posto) : null }
   } else {
-    const det = dettaglioAzione(azione, { miniera: p.lati[mio.value].miniera, castello: p.castello(mio.value).liv })
+    const det = dettaglioAzione(azione, { miniera: p.lati[mio.value].miniera, castello: p.castello(mio.value).liv, riparate: p.lati[mio.value].riparate })
     d = { azione }
     scheda = { titolo: AZIONI[azione].nome, nota: AZIONI[azione].nota, ruolo: [], sottotitolo: azione === 'bomba' ? 'in regalo' : '', icona: { miniera: '⛏️', ripara: '🔧', bomba: '💣' }[azione],
                castello: azione === 'castello', ...det,

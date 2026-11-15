@@ -114,6 +114,7 @@ export const CRESCITA = {
   vitaCaserma: liv => 1100 + 160 * (liv - 1),            // il primo bersaglio dell'assedio: deve reggere, il castello la copre
   omini: (liv, n) => ominiDi(liv, n),                    // truppe in più per squadra: una ogni TRE livelli (3, 6, 9…), fino a SQUADRA_MAX
   salita: liv => Math.round(8 * 1.32 ** (liv - 1)),        // costo di liv → liv+1 per una caserma: 8, 11, 14, 18, 24, 32, 42, 55, 73
+  ripara: n => 6 * 2 ** n,                               // la riparazione dopo `n` già fatte: 6, 12, 24, 48, 96… (docs/arena/regole.md)
   castello: {
     prezzo: liv => Math.round(8 * 1.3 ** (liv - 1)),       // 8, 10, 14, 18, 23, 30, 39, 51, 66
     danno: liv => 1 + 0.3 * (liv - 1),
@@ -135,8 +136,8 @@ export const CRESCITA = {
 export const AZIONI = {
   miniera:  { nome: 'Miniera', op: '×', prezzo: null,
               nota: 'Una miniera su una piazzola: le monete arrivano il doppio più in fretta per ogni suo livello (la base da sola è poca), finché sta in piedi. Costa ora, rende dopo, e il nemico la può abbattere.' },
-  ripara:   { nome: 'Ripara',     op: '+', prezzo: 6,
-              nota: 'Rimette in sesto la costruzione messa peggio (anche il muro, anche crollato) e tutte le caserme e le miniere ferite: +40% di vita.' },
+  ripara:   { nome: 'Ripara',     op: '+', prezzo: null,
+              nota: 'Rimette in sesto tutto quello che è ferito: il castello, il muro (anche crollato), le caserme e le miniere: +70% di vita a ognuno. Ogni volta costa il doppio.' },
   castello: { nome: 'Castello',   op: '÷', prezzo: null,
               nota: 'Il castello spara più forte e più spesso, e resiste di più.' },
   vendi:    { nome: 'Vendi',      op: '−', prezzo: 0,
@@ -150,7 +151,7 @@ export const AZIONI = {
 export const BOMBA = { ogni: 40, max: 2, raggio: 95, dmg: 700 }
 
 export const MURO = { hp: 1400, r: 26 }             // uno per parte, la porta in fondo al ponte: non si costruisce, si ripara
-export const RIPARA = 0.4                            // la quota di vita che rimette
+export const RIPARA = 0.7                            // la quota di vita che rimette a ogni cosa ferita (docs/arena/regole.md)
 export const RIPOSO = 6                              // secondi di caserma ferma dopo un calcolo sbagliato
 export const COSTRUZIONE = 6                         // secondi prima della prima squadra di una caserma nuova
 
