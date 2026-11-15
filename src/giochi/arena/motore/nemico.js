@@ -16,6 +16,8 @@ const CASERME = POSTI.length - 1
 const MURO_OGNI = 12
 // e per le altre riparazioni: al più una ogni tanto, e solo sotto questa frazione di vita
 const RIPARA_OGNI = 25
+// e non a ogni prezzo: Ripara raddoppia a ogni volta, e una da 96 monete gli mangiava l'economia (14 novembre)
+const RIPARA_SECONDI = 20                  // ripara solo se costa al più tanti secondi di entrate
 const RIPARA_SOTTO = 0.5
 // da quante caserme in su chi ragiona le potenzia prima di farne altre
 const TRE = 3
@@ -71,7 +73,7 @@ export const CARATTERI = {
 
 /* sale a ogni ritocco del modo di giocare del nemico: entra nella firma dell'equilibrio (`firma.js`),
    così un'IA cambiata senza ritarare è un test rosso */
-export const VERSIONE_IA = 13
+export const VERSIONE_IA = 14
 
 /* `evita`: il carattere dell'ultima partita, per non giocare due volte di fila contro lo stesso */
 export function creaIA(rnd, evita = null) {
@@ -104,19 +106,22 @@ function sottoPressione(p) {
          p.lati.io.abbattuti > p.lati.nem.abbattuti + (k >= 1 ? 1 : 2)
 }
 
+/* una riparazione costa al più RIPARA_SECONDI di entrate */
+const conviene = p => (p.prezzo('nem', 'ripara') ?? Infinity) <= RIPARA_SECONDI * p.alSecondo('nem')
+
 /* una mossa dall'emergenza: la bomba su un ammasso che arriva, o una riparazione */
 function emergenza(p) {
   const l = p.lati.nem
   const colpo = l.bombe > 0 ? p.puntoDellaBomba('nem') : null
   if (colpo && colpo.peso >= p.ia.bomba && p.fai('nem', 'bomba')) return true
-  // `ripara` rimette in sesto l'edificio messo peggio, muro compreso: chi martella il muro lo fa ricostruire ogni pochi
+  // `ripara` rimette in sesto tutto il ferito; si decide guardando il messo peggio, muro compreso: chi martella il muro lo fa ricostruire ogni pochi
   // secondi e gli mangia le monete (spendeva quasi metà delle entrate). Il muro si rifà solo se è crollato e non da poco
   const peggiore = [...p.riparabili('nem')].sort((a, b) => a.hp / a.max - b.hp / b.max)[0]
   if (peggiore) {
     const muro = peggiore.tipo === 'muro'
     const serve = muro ? peggiore.hp <= 0 && p.ia.riparaMuro && p.t - p.ia.murata > MURO_OGNI : peggiore.hp < peggiore.max * Math.min(p.ia.riparaSotto, RIPARA_SOTTO)
     // una riparazione ogni tanto: riparare a ogni colpo gli mangiava le monete che servivano a potenziare (palude, 22 ottobre)
-    if (serve && p.t - p.ia.riparato > RIPARA_OGNI && si(p, 'ripara') && p.fai('nem', 'ripara')) {
+    if (serve && p.t - p.ia.riparato > RIPARA_OGNI && conviene(p) && si(p, 'ripara') && p.fai('nem', 'ripara')) {
       if (muro) p.ia.murata = p.t
       p.ia.riparato = p.t
       return true
@@ -141,7 +146,7 @@ function candidate(p, difesa) {
   if (difesa) {
     // chi sta perdendo rafforza: castello, riparazioni, poi chi ferisce a gruppi e chi vola
     if (castello.liv <= mediaLiv + 2) aggiungi('castello')
-    if (p.t - p.ia.riparato > RIPARA_OGNI && p.riparabili('nem').some(e => e.hp < e.max * Math.min(0.85, p.ia.riparaSotto + 0.15))) aggiungi('ripara')
+    if (p.t - p.ia.riparato > RIPARA_OGNI && conviene(p) && p.riparabili('nem').some(e => e.hp < e.max * Math.min(0.85, p.ia.riparaSotto + 0.15))) aggiungi('ripara')
     for (const c of bassa.slice(0, 2)) aggiungi('potenzia', c.posto)
     for (const id of costruibili.slice(0, 2)) aggiungi('costruisci', id)
   } else {

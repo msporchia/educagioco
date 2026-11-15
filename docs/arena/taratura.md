@@ -109,6 +109,14 @@ contromossa; [nemico.md](nemico.md).
 
 Il 6 novembre, con le piazzole più vicine fra loro e al castello, Ripara che cura tutte le caserme e le miniere e il ponte stretto fra i parapetti, le tre rampe sono state ritarate: il Medio resta in linea con prima (ultima tappa `d` 1,25, bambino 4%). Nella partita in due finta le partite finite sono scese da 12 a 9 su 16. Non dipende da Ripara né dal ponte: resta lo spostamento delle piazzole, ma il perché non è misurato. Quelle che non finiscono hanno il castello del finto ospite molto alto.
 
+Il 14 novembre Ripara rimette il 70% di vita a **tutto** e il prezzo raddoppia a ogni uso (6, 12, 24…; l'utente: chi resta
+mezzo ferito non si riprende più). Il nemico ripara solo se costa al più 20 secondi di entrate (`VERSIONE_IA` 14). Con questa
+Ripara **la manopola non sale in fila oltre 1**: il nemico più furbo gioca peggio (a `d` 2 `misura` vince il 78% all'ultima tappa,
+a `d` 1 il 21%), e la bisezione finiva al massimo quasi ovunque. **La ricerca si ferma a `d` 1** (`D_TETTO` in
+`strumenti/tara-arena.mjs`): un limite messo a mano, da rivedere giocando con un bambino vero, perché i piloti sono AI contro AI e
+non bambini. Risultato: all'ultima tappa Facile 0,81 (bambino 29%), Medio e Difficile 1 (bambino 19%): **in cima Medio e Difficile
+coincidono**. L'`economia` (cripta e miniera presto) vince il 74-100% a ogni livello: è la strada che il nemico non sa fermare.
+
 ## L'economia: base bassa, miniera che conta (23 ottobre)
 
 L'utente: «partiamo con troppi soldi forse, se la miniera di base non è utile». Misurato: con le monete di base di prima

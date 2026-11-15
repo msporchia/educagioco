@@ -40,6 +40,8 @@ export const LIVELLI = {
 const VOLTE = opz('--volte', 120)
 const GIRI = 8
 const D_MAX = 2
+// la ricerca si ferma qui: con la Ripara che cura tutto e costa sempre di più, oltre 1 il nemico più furbo gioca peggio (docs/arena/taratura.md)
+const D_TETTO = 1
 
 /* la manopola: da un nemico che quasi non gioca a uno bravo quanto il giocatore. Monete e forza
    delle truppe salgono fino a pari (d = 1) e non oltre: più su il nemico non diventa più ricco ma
@@ -143,7 +145,7 @@ const rampa = (da, a) => i => da + (a - da) * (i / Math.max(1, CAMPAGNA.length -
 
 /* il `d` più alto a cui `pilota` vince ancora almeno `quota` (le vittorie scendono col `d`) */
 async function finoA(t, pilota, quota) {
-  let basso = 0, alto = D_MAX
+  let basso = 0, alto = D_TETTO
   if (await vinte(t, basso, pilota) < quota) return basso
   if (await vinte(t, alto, pilota) >= quota) return alto
   for (let g = 0; g < GIRI; g++) {
@@ -178,12 +180,12 @@ for (const [livello, spec] of Object.entries(LIVELLI)) {
     // se nemmeno col nemico al massimo il rush scende sotto il tetto (la palude: le mummie battono tutto quello che c'è) non
     // si guasta la taratura di chi gioca davvero: il tetto del rush non conta e il log lo dice
     const dRushVero = tetto >= 1 ? 0 : await finoA(t, PILOTI.rush, Math.min(1, tetto + 0.1) + 0.001)
-    const dRush = dRushVero >= D_MAX ? 0 : dRushVero
+    const dRush = dRushVero >= D_TETTO ? 0 : dRushVero
     const d = Math.max(dBambino, dBravo, dRush)
     risultati[t.chiave] = nemicoDi(d)
     const chi = d > dBambino ? (d > dBravo ? 'il rush' : 'il bravo') : 'il bambino'
     const riga = (await Promise.all(Object.entries(PILOTI).map(async ([n, p]) => `${n} ${Math.round(await vinte(t, d, p, 80) * 100)}%`))).join(' · ')
-    console.log(`${String(i + 1).padStart(2)} ${t.chiave.padEnd(12)} d=${d.toFixed(2)}  (bambino ≥ ${Math.round(mira * 100)}%, bravo ≤ ${Math.round(tetto * 100)}%: decide ${chi}${dRushVero >= D_MAX ? '; IL RUSH NON SI FERMA' : ''})  ${riga}`)
+    console.log(`${String(i + 1).padStart(2)} ${t.chiave.padEnd(12)} d=${d.toFixed(2)}  (bambino ≥ ${Math.round(mira * 100)}%, bravo ≤ ${Math.round(tetto * 100)}%: decide ${chi}${dRushVero >= D_TETTO ? '; IL RUSH NON SI FERMA' : ''})  ${riga}`)
   }
 }
 
