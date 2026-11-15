@@ -931,6 +931,9 @@ const grosso = dallaCorsa(c => {
 const festa = ref(null)          // { che: 'livello', livello } | { che: 'leggendario', nome, storia, cosa }
 const sale = ref(false)
 let festaFino = 0
+// una festa alla volta: il grosso che cade fa salire di livello e lascia un leggendario nello stesso istante, e la seconda
+// cancellava la prima prima che si vedesse. Quelle che arrivano mentre una è a schermo aspettano il loro turno
+const codaFeste = []
 const suoniDellaFesta = {
   livello: () => {
     [392, 523, 659, 784, 1047].forEach((f, i) => suono.nota(f, f, 0.22, 'triangle', 0.12, i * 90))
@@ -947,18 +950,26 @@ function festeggia(e, c) {
     return
   }
   if (e.che === 'livello') {
-    festa.value = { che: 'livello', livello: e.livello }
+    mostraFesta({ che: 'livello', livello: e.livello })
     sale.value = true
     setTimeout(() => { sale.value = false }, 1600)
     if (pittore) pittore.colonne.push({ x: c.eroe.x, y: c.eroe.y, t: orologio, colore: '255,226,140', segui: true })
   } else if (e.che === 'leggendario') {
     const k = COSE[e.cosa]
     if (!k) return
-    festa.value = { che: 'leggendario', nome: k.nome, storia: k.storia, cosa: e.cosa, sprite: k.sprite, em: k.em }
+    mostraFesta({ che: 'leggendario', nome: k.nome, storia: k.storia, cosa: e.cosa, sprite: k.sprite, em: k.em })
   }
-  suoniDellaFesta[e.che]?.()
+}
+function mostraFesta(f) {
+  if (festa.value) { codaFeste.push(f); return }
+  festa.value = f
+  suoniDellaFesta[f.che]?.()
   clearTimeout(festaFino)
-  festaFino = setTimeout(() => { festa.value = null }, e.che === 'leggendario' ? 4200 : 2600)
+  festaFino = setTimeout(() => {
+    festa.value = null
+    const dopo = codaFeste.shift()
+    if (dopo) setTimeout(() => mostraFesta(dopo), 250)
+  }, f.che === 'leggendario' ? 4200 : 2600)
 }
 
 // il globo della vita sobbalza quando cala: un colpo preso si vede anche con gli occhi sul mostro
