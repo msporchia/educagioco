@@ -10,7 +10,7 @@ const orologio = orologioFinto()
 const CHIAVE = 'k'.repeat(32)
 const HASH = await L.hashChiave(CHIAVE)
 const XHASH = await L.hashChiave('x'.repeat(32))        // l'orologio è sincrono: gli hash si preparano prima
-const stato = L.nuovaLezione(L.leggiCreazione({ lezione: { id: 'l1', nome: 'T', obiettivo: { esercizio: ES, quante: 5, minuti: null }, dopo: null },
+const stato = L.nuovaLezione(L.leggiCreazione({ lezione: { id: 'l1', nome: 'T', blocchi: [{ esercizio: ES, passa: { giuste: 5 } }], inTondo: false },
   alunni: [{ id: 'a1', nome: 'Lorenzo' }, { id: 'a2', nome: 'Marta' }] }), 0, HASH)
 const fili = new Set()
 let giu = new Set()                  // i posti senza rete: niente si apre e niente passa
@@ -64,9 +64,10 @@ const buco = posto => { for (const f of fili) if (f.posto === posto && f.stato =
 
 const memoria = () => { const m = new Map(); return { getItem: k => m.has(k) ? m.get(k) : null, setItem: (k, v) => m.set(k, String(v)), removeItem: k => m.delete(k), get length() { return m.size }, key: i => [...m.keys()][i], m } }
 const base = { servizio: 'http://prova', orologio, WebSocketImpl: WebSocketFinto }
-const ris = k => ({ parte: 'obiettivo', chiave: 'c' + k, fatto: '7x' + k, data: '' + 7 * k, attesa: '' + 7 * k, giusta: true, ms: 900 })
+const ris = k => ({ blocco: 0, chiave: 'c' + k, fatto: '7x' + k, data: '' + 7 * k, attesa: '' + 7 * k, giusta: true, ms: 900 })
 
 // la maestra: chiave giusta e sbagliata
+const avanti = []
 let tuttiRicevuti = null, rifiuto = null, risposteMaestra = [], fasi = [], listaAlunni = null, lineaM = []
 const sbagliata = apriMaestra('ABCDE', 'x'.repeat(32), { ...base, suRifiuto: m => { rifiuto = m }, suTutto: () => { rifiuto = 'entrata!' } })
 orologio.avanti(500)
@@ -77,7 +78,7 @@ const codiceNo = apriMaestra('ZZZZZ', CHIAVE, { ...base, suRifiuto: m => { rifiu
 orologio.avanti(500)
 uguale('un codice che non c\'è: «codice»', rifiuto, 'codice')
 
-const maestra = apriMaestra('ABCDE', CHIAVE, { ...base, suTutto: d => { tuttiRicevuti = d }, suAlunni: a => { listaAlunni = a }, suRisposta: (a, r) => risposteMaestra.push([a, r.n]), suFase: f => fasi.push(f), suLinea: x => lineaM.push(x) })
+const maestra = apriMaestra('ABCDE', CHIAVE, { ...base, suTutto: d => { tuttiRicevuti = d }, suAlunni: a => { listaAlunni = a }, suRisposta: (a, r) => risposteMaestra.push([a, r.n]), suFase: f => fasi.push(f), suAvanti: a => avanti.push(a), suLinea: x => lineaM.push(x) })
 orologio.avanti(500)
 controlla('la chiave giusta entra e riceve tutto', tuttiRicevuti?.t === 'tutto' && tuttiRicevuti.alunni.length === 2)
 stessaLista('la linea dice «su»', lineaM, ['su'])
@@ -104,13 +105,16 @@ altro.chiudi()
 maestra.via(); orologio.avanti(200)
 uguale('la maestra fa partire la lezione: il bambino lo sa', stati.at(-1).fase, 'via')
 stessaLista('e la maestra lo sa', fasi, ['via'])
+maestra.avanti(); orologio.avanti(200)
+uguale('«Avanti tutti»: il bambino lo trova nello stato', stati.at(-1).avanti, 1)
+stessaLista('e la maestra lo sa', avanti, [1])
 
 b.rispondi(ris(1)); b.rispondi(ris(2)); orologio.avanti(200)
 stessaLista('due risposte: arrivano e la coda si svuota', [risposteMaestra.length, b.inCoda()], [2, 0])
 uguale('lo stato del servizio le ha prese', stato.risposte.a1.length, 2)
 
 // la rete cade: le risposte restano in coda e ripartono al rientro, senza contarsi due volte
-b.dove('obiettivo')
+b.dove(0)
 taglia(salvato.posto); orologio.avanti(10)
 b.rispondi(ris(3)); b.rispondi(ris(4))
 uguale('senza rete la coda tiene le risposte', b.inCoda(), 2)

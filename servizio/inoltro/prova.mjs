@@ -25,7 +25,7 @@ function collegaScuola(percorso) {
   })
 }
 async function scuola() {
-  const lezione = { id: 'l1', nome: 'Tabellina del 9', obiettivo: { esercizio: { tipo: 'tabelline', tabelline: [9], modo: 'prodotto' }, quante: 10, minuti: null }, dopo: null }
+  const lezione = { id: 'l1', nome: 'Tabellina del 9', blocchi: [{ esercizio: { tipo: 'tabelline', tabelline: [9], modo: 'prodotto' }, passa: null }, { esercizio: { tipo: 'tabelline', tabelline: [7], modo: 'prodotto' }, passa: { giuste: 5 } }], inTondo: false }
   const nuova = await post('/scuola/lezione', { lezione, alunni: [{ id: 'a1', nome: 'Lorenzo' }, { id: 'a2', nome: 'Marta' }] }).then(r => r.json())
   controlla('la maestra avvia: un codice e una chiave', /^[A-Z]{5}$/.test(nuova.codice || '') && (nuova.chiave || '').length === 32, JSON.stringify(nuova))
   controlla('il codice esiste, in attesa', (await fetch(`${BASE}/scuola/${nuova.codice}`).then(r => r.json())).fase === 'attesa')
@@ -43,7 +43,9 @@ async function scuola() {
   controlla('un altro PC non prende lo stesso nome', pc2.arrivati.some(m => m.t === 'no' && m.perche === 'preso'), JSON.stringify(pc2.arrivati))
   maestra.manda({ k: 'via' }); await pausa(300)
   controlla('il via arriva al bambino', pc1.arrivati.some(m => m.t === 'stato' && m.fase === 'via'))
-  const r = { k: 'risposta', n: 1, parte: 'obiettivo', chiave: 'tab:prodotto', fatto: '9 × 7', data: '63', attesa: '63', giusta: true, ms: 3200 }
+  maestra.manda({ k: 'avanti' }); await pausa(300)
+  controlla('«Avanti tutti» arriva al bambino e alla maestra', pc1.arrivati.some(m => m.t === 'stato' && m.avanti === 1) && maestra.arrivati.some(m => m.t === 'avanti' && m.avanti === 1))
+  const r = { k: 'risposta', n: 1, blocco: 0, chiave: 'tab:prodotto', fatto: '9 × 7', data: '63', attesa: '63', giusta: true, ms: 3200 }
   pc1.manda(r); pc1.manda(r); await pausa(400)
   controlla('la risposta è confermata', pc1.arrivati.some(m => m.t === 'preso' && m.n === 1))
   controlla('e alla maestra arriva una volta sola', maestra.arrivati.filter(m => m.t === 'risposta').length === 1, JSON.stringify(maestra.arrivati.filter(m => m.t === 'risposta')))

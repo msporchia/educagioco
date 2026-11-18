@@ -36,16 +36,24 @@ export function chiaveGiusta(stato, hash) {
 export const nomePulito = (s, max = MAX_NOME) => String(s ?? '').replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max).trim()
 const oggetto = x => !!x && typeof x === 'object' && !Array.isArray(x)
 const intero = (x, max) => Number.isInteger(x) && x >= 1 && x <= max
+const MAX_BLOCCHI = 8, MAX_AVANTI = 1000, MAX_POSIZIONE = 10000
+const TETTI_PASSA = { giuste: 500, domande: 500, minuti: 180 }
+/* `passa`: null (lo dice la maestra) o un oggetto con una sola chiave fra giuste/domande/minuti */
+const passaGiusto = p => {
+  if (p === null) return true
+  if (!oggetto(p)) return false
+  const k = Object.keys(p)
+  return k.length === 1 && k[0] in TETTI_PASSA && intero(p[k[0]], TETTI_PASSA[k[0]])
+}
+const blocchiGiusti = b => Array.isArray(b) && b.length >= 1 && b.length <= MAX_BLOCCHI
+  && b.every(x => oggetto(x) && oggetto(x.esercizio) && x.passa !== undefined && passaGiusto(x.passa) && Object.keys(x).every(k => k === 'esercizio' || k === 'passa'))
 
 /* il corpo di `POST /scuola/lezione`: torna la lezione e gli alunni ripuliti, o l'errore */
 export function leggiCreazione(corpo) {
   if (!oggetto(corpo) || !oggetto(corpo.lezione) || !Array.isArray(corpo.alunni)) return { ok: false, errore: 'richiesta storta' }
-  const l = corpo.lezione, o = l.obiettivo
+  const l = corpo.lezione
   if (typeof l.id !== 'string' || !l.id || l.id.length > 40 || typeof l.nome !== 'string') return { ok: false, errore: 'lezione storta' }
-  if (!oggetto(o) || !oggetto(o.esercizio)) return { ok: false, errore: 'obiettivo storto' }
-  const quante = o.quante ?? null, minuti = o.minuti ?? null
-  if ((quante === null) === (minuti === null) || (quante !== null && !intero(quante, 500)) || (minuti !== null && !intero(minuti, 180))) return { ok: false, errore: 'obiettivo storto' }
-  if (l.dopo != null && !oggetto(l.dopo)) return { ok: false, errore: 'lezione storta' }
+  if (typeof l.inTondo !== 'boolean' || !blocchiGiusti(l.blocchi) || !Object.keys(l).every(k => ['id', 'nome', 'blocchi', 'inTondo'].includes(k))) return { ok: false, errore: 'lezione storta' }
   if (corpo.alunni.length > MAX_ALUNNI) return { ok: false, errore: 'troppi alunni' }
   const vistiId = new Set(), alunni = []
   for (const a of corpo.alunni) {
@@ -54,11 +62,11 @@ export function leggiCreazione(corpo) {
     vistiId.add(a.id)
     alunni.push({ id: a.id, nome })
   }
-  return { ok: true, alunni, lezione: { id: l.id, nome: nomePulito(l.nome, 60), obiettivo: { esercizio: o.esercizio, quante, minuti }, dopo: l.dopo ?? null } }
+  return { ok: true, alunni, lezione: { id: l.id, nome: nomePulito(l.nome, 60), blocchi: l.blocchi.map(x => ({ esercizio: x.esercizio, passa: x.passa })), inTondo: l.inTondo } }
 }
 
 export const nuovaLezione = ({ lezione, alunni }, ora, chiaveHash) => ({
-  nato: ora, scade: ora + DURATA, fase: 'attesa', chiaveHash, lezione,
+  nato: ora, scade: ora + DURATA, fase: 'attesa', avanti: 0, chiaveHash, lezione,
   alunni: alunni.map(a => ({ id: a.id, nome: a.nome, nuovo: false, posto: null, dove: null })),
   risposte: {}, presi: {},
 })
@@ -67,13 +75,13 @@ export const nuovaLezione = ({ lezione, alunni }, ora, chiaveHash) => ({
 const alunnoDi = (stato, posto) => stato.alunni.find(a => a.posto === posto) || null
 export const msgStato = (stato, posto) => {
   const io = alunnoDi(stato, posto)
-  return { t: 'stato', fase: stato.fase, lezione: stato.lezione, alunni: stato.alunni.map(a => ({ id: a.id, nome: a.nome, preso: a.posto !== null })),
+  return { t: 'stato', fase: stato.fase, lezione: stato.lezione, avanti: stato.avanti || 0, alunni: stato.alunni.map(a => ({ id: a.id, nome: a.nome, preso: a.posto !== null })),
            io: io ? { id: io.id, nome: io.nome } : null, preso: stato.presi[posto] || 0 }
 }
 const collegatoA = (collegati, a) => a.posto !== null && collegati.some(c => c.ruolo === 'bambino' && c.posto === a.posto)
 const elencoMaestra = (stato, collegati) => stato.alunni.map(a => ({ id: a.id, nome: a.nome, nuovo: a.nuovo, preso: a.posto !== null, collegato: collegatoA(collegati, a), dove: a.dove }))
 export const msgAlunni = (stato, collegati) => ({ t: 'alunni', alunni: elencoMaestra(stato, collegati) })
-export const msgTutto = (stato, collegati) => ({ t: 'tutto', fase: stato.fase, lezione: stato.lezione, scade: stato.scade, alunni: elencoMaestra(stato, collegati), risposte: stato.risposte })
+export const msgTutto = (stato, collegati) => ({ t: 'tutto', fase: stato.fase, lezione: stato.lezione, scade: stato.scade, avanti: stato.avanti || 0, alunni: elencoMaestra(stato, collegati), risposte: stato.risposte })
 
 const bambini = collegati => collegati.filter(c => c.ruolo === 'bambino')
 const aMaestre = (collegati, msg) => collegati.filter(c => c.ruolo === 'maestra').map(c => ({ a: c.ws, msg }))
@@ -119,7 +127,7 @@ export function daBambino(stato, collegati, ws, posto, dato, azzardo = () => Mat
   if (dato.k === 'risposta') {
     const n = Number.isInteger(dato.n) && dato.n >= 1 ? dato.n : undefined
     const io = alunnoDi(stato, posto)
-    if (n === undefined || !io || !(dato.parte === 'obiettivo' || dato.parte === 'dopo') || !['chiave', 'fatto', 'data', 'attesa'].every(c => testo(dato[c]))
+    if (n === undefined || !io || !Number.isInteger(dato.blocco) || dato.blocco < 0 || dato.blocco > MAX_POSIZIONE || !['chiave', 'fatto', 'data', 'attesa'].every(c => testo(dato[c]))
         || typeof dato.giusta !== 'boolean' || !(dato.ultima === undefined || typeof dato.ultima === 'boolean') || !Number.isFinite(dato.ms) || dato.ms < 0 || dato.ms > 3600000) return no(ws, 'storto', n)
     if (stato.fase === 'chiusa') return no(ws, 'chiusa', n)
     if (stato.fase !== 'via') return no(ws, 'storto', n)
@@ -130,7 +138,7 @@ export function daBambino(stato, collegati, ws, posto, dato, azzardo = () => Mat
     const lista = stato.risposte[io.id] ||= []
     const invii = [{ a: ws, msg: { t: 'preso', n } }]
     if (lista.length < MAX_RISPOSTE) {                                                  // oltre il tetto: ignorata, ma confermata
-      const r = { n, parte: dato.parte, chiave: dato.chiave, fatto: dato.fatto, data: dato.data, attesa: dato.attesa, giusta: dato.giusta, ms: Math.round(dato.ms), ...(dato.ultima === false ? { ultima: false } : {}) }
+      const r = { n, blocco: dato.blocco, chiave: dato.chiave, fatto: dato.fatto, data: dato.data, attesa: dato.attesa, giusta: dato.giusta, ms: Math.round(dato.ms), ...(dato.ultima === false ? { ultima: false } : {}) }
       lista.push(r)
       invii.push(...aMaestre(collegati, { t: 'risposta', alunno: io.id, r }))
     }
@@ -138,7 +146,7 @@ export function daBambino(stato, collegati, ws, posto, dato, azzardo = () => Mat
   }
   if (dato.k === 'dove') {
     const io = alunnoDi(stato, posto)
-    if (!io || !['obiettivo', 'dopo', 'finito'].includes(dato.dove)) return no(ws, 'storto')
+    if (!io || !(dato.dove === 'finito' || (Number.isInteger(dato.dove) && dato.dove >= 0 && dato.dove <= MAX_POSIZIONE))) return no(ws, 'storto')
     if (io.dove === dato.dove) return { invii: [] }
     io.dove = dato.dove
     return { meta: true, invii: aMaestre(collegati, msgAlunni(stato, collegati)) }
@@ -148,6 +156,10 @@ export function daBambino(stato, collegati, ws, posto, dato, azzardo = () => Mat
 
 export function daMaestra(stato, collegati, dato) {
   if (dato.k === 'via' && stato.fase === 'attesa') { stato.fase = 'via'; return { meta: true, invii: [...aMaestre(collegati, { t: 'fase', fase: 'via' }), ...stati(stato, collegati)] } }
+  if (dato.k === 'avanti' && stato.fase === 'via') {
+    stato.avanti = Math.min(MAX_AVANTI, (stato.avanti || 0) + 1)
+    return { meta: true, invii: [...aMaestre(collegati, { t: 'avanti', avanti: stato.avanti }), ...stati(stato, collegati)] }
+  }
   if (dato.k === 'chiudi' && stato.fase !== 'chiusa') { stato.fase = 'chiusa'; return { meta: true, invii: [...aMaestre(collegati, { t: 'fase', fase: 'chiusa' }), ...stati(stato, collegati)] } }
   const a = typeof dato.alunno === 'string' ? stato.alunni.find(x => x.id === dato.alunno) : null
   if (dato.k === 'libera' && a && a.posto !== null) { a.posto = null; a.dove = null; return { meta: true, invii: nomiCambiati(stato, collegati) } }

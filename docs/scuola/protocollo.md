@@ -27,7 +27,7 @@ comune dei due lati è `src/scuola/comune/rete.js`. Il deploy del servizio lo fa
 
 La forma e il perché stanno in [lezione.md](lezione.md); `esercizio` in [esercizi.md](esercizi.md). Il servizio non legge
 gli esercizi: controlla la forma dei blocchi e di `passa` (i tetti di `MODI_PASSA`: 500 giuste o domande, 180 minuti), la
-misura, e rimanda la lezione così com'è.
+misura, e rimanda la lezione così com'è. Una chiave in più, un `passa` con due chiavi o vuoto, `inTondo` non booleano e la forma vecchia (`obiettivo`/`dopo`) sono rifiutati (`lezione storta`); `blocco` e `dove` stanno fra 0 e 10000.
 
 ## Le richieste HTTP
 

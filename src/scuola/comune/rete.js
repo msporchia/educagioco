@@ -138,7 +138,7 @@ export function apriBambino(codice, { suStato, suNo, suLinea, servizio = indiriz
         if (io) { mio.alunno = io.id; vuole = null; salva() }    // se no, liberato dalla maestra, richiederebbe lo stesso nome
         togliFinoA(d.preso)
         if (!io && vuole) c.manda({ k: 'sono', ...vuole })
-        if (ultimoDove) c.manda({ k: 'dove', dove: ultimoDove })
+        if (ultimoDove !== null) c.manda({ k: 'dove', dove: ultimoDove })
         suStato?.(d)
         if (d.fase === 'chiusa') { mio.coda = []; salva() } else rimanda()
       } else if (d.t === 'preso') { mio.coda = mio.coda.filter(v => v.n !== d.n); salva() }
@@ -174,7 +174,7 @@ export function apriBambino(codice, { suStato, suNo, suLinea, servizio = indiriz
     },
     rispondi(r) {
       const n = ++mio.ultimaN
-      mio.coda.push({ n, t: orologio.ora(), r: { parte: r.parte, chiave: r.chiave, fatto: r.fatto, data: r.data, attesa: r.attesa, giusta: r.giusta, ms: r.ms, ...(r.ultima === false ? { ultima: false } : {}) } })
+      mio.coda.push({ n, t: orologio.ora(), r: { blocco: r.blocco, chiave: r.chiave, fatto: r.fatto, data: r.data, attesa: r.attesa, giusta: r.giusta, ms: r.ms, ...(r.ultima === false ? { ultima: false } : {}) } })
       salva()
       if (pronto && io) c.manda({ k: 'risposta', n, ...mio.coda.at(-1).r })
       return n
@@ -185,9 +185,9 @@ export function apriBambino(codice, { suStato, suNo, suLinea, servizio = indiriz
   }
 }
 
-/* La maestra: si collega subito. `via()` fa partire la lezione, `smetti()` la chiude, `chiudi()` chiude il collegamento. `suTutto` all'ingresso (tutto quello che il servizio sa), poi `suAlunni`, `suRisposta(alunno, r)`, `suFase`.
+/* La maestra: si collega subito. `via()` fa partire la lezione, `smetti()` la chiude, `chiudi()` chiude il collegamento. `suTutto` all'ingresso (tutto quello che il servizio sa), poi `suAlunni`, `suRisposta(alunno, r)`, `suFase`, `suAvanti(avanti)`; `avanti()` è «Avanti tutti».
    `suRifiuto('chiave' | 'codice')` quando il servizio non la accetta, e non ci riprova. */
-export function apriMaestra(codice, chiave, { suTutto, suAlunni, suRisposta, suFase, suLinea, suRifiuto, servizio = indirizzoScuola(), orologio = orologioVero, WebSocketImpl = globalThis.WebSocket } = {}) {
+export function apriMaestra(codice, chiave, { suTutto, suAlunni, suRisposta, suFase, suAvanti, suLinea, suRifiuto, servizio = indirizzoScuola(), orologio = orologioVero, WebSocketImpl = globalThis.WebSocket } = {}) {
   codice = String(codice).toUpperCase()
   const c = collegamento({
     url: () => `${aWs(servizio)}/scuola/${codice}/maestra?chiave=${encodeURIComponent(chiave)}`, orologio, WebSocketImpl, suLinea,
@@ -197,11 +197,13 @@ export function apriMaestra(codice, chiave, { suTutto, suAlunni, suRisposta, suF
       else if (d.t === 'alunni') suAlunni?.(d.alunni)
       else if (d.t === 'risposta') suRisposta?.(d.alunno, d.r)
       else if (d.t === 'fase') suFase?.(d.fase)
+      else if (d.t === 'avanti') suAvanti?.(d.avanti)
     },
   })
   c.via()
   return {
     via: () => c.manda({ k: 'via' }),
+    avanti: () => c.manda({ k: 'avanti' }),
     chiudi: c.chiudi,
     libera: id => c.manda({ k: 'libera', alunno: id }),
     togli: id => c.manda({ k: 'togli', alunno: id }),
