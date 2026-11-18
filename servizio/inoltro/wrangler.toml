@@ -36,6 +36,10 @@ class_name = "Bacheca"
 name = "COMUNI"
 class_name = "Comune"
 
+[[durable_objects.bindings]]
+name = "LEZIONI"
+class_name = "Lezione"
+
 # il piano gratuito vuole i Durable Object con la memoria SQLite
 [[migrations]]
 tag = "v1"
@@ -66,3 +70,8 @@ new_sqlite_classes = ["Bacheca"]
 [[migrations]]
 tag = "v6"
 new_sqlite_classes = ["Comune"]
+
+# la scuola (docs/scuola/protocollo.md): una lezione per codice, che muore dopo tre ore
+[[migrations]]
+tag = "v7"
+new_sqlite_classes = ["Lezione"]

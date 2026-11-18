@@ -12,6 +12,7 @@ import * as tavolo from './tavolo.js'
 import { CODICE, DURATA as DURATA_CODICE, CODICI_ORA, nuovoCodice as codiceBreve, contaErrore, bloccato } from './codici.js'
 import * as bacheca from './bacheca.js'
 import * as comune from './comune.js'
+import * as lezione from './lezione.js'
 
 const ALFABETO = 'ABCDEFGHJKLMNPQRSTUVWXYZ'      // senza la I e la O: si confondono con 1 e 0 a voce
 const LUNGHEZZA = 5
@@ -49,6 +50,7 @@ export default {
     }
 
     if (url.pathname.startsWith('/amici/')) return amici(richiesta, url, env)
+    if (url.pathname.startsWith('/scuola/')) return scuola(richiesta, url, env)
 
     if (url.pathname === '/tavolo/nuovo') {
       const posto = url.searchParams.get('posto') || ''
@@ -136,6 +138,157 @@ async function amici(richiesta, url, env) {
     return env.PRESENZA.get(env.PRESENZA.idFromName('sala')).fetch('https://presenza/entra', richiesta)
   }
   return json({ errore: 'non c\'è' }, 404)
+}
+
+/* La scuola (docs/scuola/protocollo.md): una lezione per codice, creata dalla maestra, con i bambini e la maestra collegati.
+   Una classe sta dietro un indirizzo solo: i tetti per indirizzo sono più larghi di quelli degli amici (lezione.js). */
+async function scuola(richiesta, url, env) {
+  const ip = richiesta.headers.get('cf-connecting-ip') || 'sconosciuto'
+  if (url.pathname === '/scuola/lezione' && richiesta.method === 'POST') {
+    const testo = await richiesta.text()
+    if (testo.length > lezione.MAX_BYTE_LEZIONE) return json({ errore: 'lezione troppo grande' }, 413)
+    let corpo
+    try { corpo = JSON.parse(testo) } catch { return json({ errore: 'richiesta storta' }, 400) }
+    const l = lezione.leggiCreazione(corpo)
+    if (!l.ok) return json({ errore: l.errore }, 400)
+    const limite = env.LIMITE.get(env.LIMITE.idFromName('scuola:' + ip))
+    if (!(await (await limite.fetch(`https://limite/conta?tetto=${lezione.LEZIONI_ORA}&finestra=3600000`)).json()).ok) return json({ errore: 'troppe lezioni, riprova fra un po\'' }, 429)
+    const chiave = lezione.nuovaChiave(crypto.getRandomValues(new Uint8Array(32)))
+    const ora = Date.now()
+    const stato = lezione.nuovaLezione(l, ora, await lezione.hashChiave(chiave))
+    for (let tentativo = 0; tentativo < 5; tentativo++) {          // un codice già in uso si cambia
+      const codice = codiceBreve(crypto.getRandomValues(new Uint8Array(LUNGHEZZA)))
+      const r = await env.LEZIONI.get(env.LEZIONI.idFromName(codice)).fetch('https://lezione/apri', { method: 'POST', body: JSON.stringify(stato) })
+      if (r.ok) return json({ codice, chiave, scade: stato.scade })
+    }
+    return json({ errore: 'riprova' }, 503)
+  }
+  const m = url.pathname.match(/^\/scuola\/([A-Z]{5})(?:\/(bambino|maestra))?$/)
+  if (!m) return json({ errore: 'non c\'è' }, 404)
+  const lezioneDO = env.LEZIONI.get(env.LEZIONI.idFromName(m[1]))
+  if (!m[2]) {
+    const errori = env.ERRORI.get(env.ERRORI.idFromName('scuola:' + ip))
+    if ((await (await errori.fetch(`https://errori/stato?tetto=${lezione.CODICI_SBAGLIATI_AL_MINUTO}`)).json()).bloccato) return json({ errore: 'troppi tentativi, riprova fra un minuto' }, 429)
+    const r = await lezioneDO.fetch('https://lezione/esiste')
+    if (!r.ok) { await errori.fetch('https://errori/sbaglio'); return json({ errore: 'non c\'è' }, 404) }
+    return json(await r.json())
+  }
+  if (richiesta.headers.get('upgrade') !== 'websocket') return json({ errore: 'serve un WebSocket' }, 426)
+  return lezioneDO.fetch(`https://lezione/${m[2]}?posto=${encodeURIComponent(url.searchParams.get('posto') || '')}&chiave=${encodeURIComponent(url.searchParams.get('chiave') || '')}`, richiesta)
+}
+
+/* Una lezione (la logica sta in lezione.js). Lo stato sta nello storage: `meta` (tutto tranne le risposte) e `r:<alunno>` (le
+   risposte di ciascuno, che in un valore solo sforerebbero il tetto); l'allarme a tre ore cancella tutto. Come la presenza,
+   usa l'API di ibernazione e il ping lo risponde Cloudflare. */
+export class Lezione {
+  constructor(stato) {
+    this.stato = stato
+    this.s = null                      // lo stato in memoria (si ricarica dopo il sonno)
+    this.recenti = new Map()
+    stato.setWebSocketAutoResponse(new WebSocketRequestResponsePair('{"t":"ping"}', '{"t":"pong"}'))
+  }
+
+  async carica() {
+    if (this.s) return this.s
+    const meta = await this.stato.storage.get('meta')
+    if (!meta) return null
+    meta.risposte = {}
+    for (const [k, v] of await this.stato.storage.list({ prefix: 'r:' })) meta.risposte[k.slice(2)] = v
+    return (this.s = meta)
+  }
+
+  collegati(tranne = null) {
+    const r = []
+    for (const ws of this.stato.getWebSockets()) {
+      if (ws === tranne) continue
+      const a = ws.deserializeAttachment()
+      if (a?.ruolo && !a.sostituito) r.push({ ws, ruolo: a.ruolo, posto: a.posto })
+    }
+    return r
+  }
+
+  manda(invii) { for (const { a, msg } of invii) { try { a.send(JSON.stringify(msg)) } catch { /* se n'è andato */ } } }
+
+  async salva(r) {
+    const { risposte, ...meta } = this.s
+    if (r.meta) await this.stato.storage.put('meta', meta)
+    for (const id of r.risposte || []) await this.stato.storage.put('r:' + id, risposte[id] || [])
+    for (const id of r.elimina || []) await this.stato.storage.delete('r:' + id)
+  }
+
+  rifiuta(codice, perche) {
+    const { 0: cliente, 1: server } = new WebSocketPair()
+    server.accept()
+    server.close(codice, perche)
+    return new Response(null, { status: 101, webSocket: cliente })
+  }
+
+  async fetch(richiesta) {
+    const url = new URL(richiesta.url)
+    if (url.pathname === '/apri') {
+      if (await this.stato.storage.get('meta')) return new Response('occupato', { status: 409 })
+      const dato = await richiesta.json()
+      this.s = dato
+      await this.salva({ meta: true })
+      await this.stato.storage.setAlarm(dato.scade)
+      return new Response('ok')
+    }
+    const s = await this.carica()
+    if (url.pathname === '/esiste') return s ? new Response(JSON.stringify({ fase: s.fase })) : new Response('non c\'è', { status: 404 })
+    if (url.pathname !== '/bambino' && url.pathname !== '/maestra') return new Response('?', { status: 404 })
+    if (!s) return this.rifiuta(4404, 'nessuna lezione')
+    const maestra = url.pathname === '/maestra'
+    const posto = url.searchParams.get('posto') || ''
+    if (maestra ? !lezione.chiaveGiusta(s, await lezione.hashChiave(url.searchParams.get('chiave') || '')) : !lezione.POSTO.test(posto)) return this.rifiuta(4403, 'chiave')
+    if (this.stato.getWebSockets().length >= lezione.MAX_COLLEGAMENTI) return new Response('pieno', { status: 503 })
+    const { 0: cliente, 1: server } = new WebSocketPair()
+    this.stato.acceptWebSocket(server)
+    let r
+    if (maestra) {
+      server.serializeAttachment({ ruolo: 'maestra' })
+      r = lezione.entraMaestra(s, this.collegati(), server)
+    } else {
+      r = lezione.entraBambino(s, this.collegati(), server, posto)
+      for (const vecchio of r.sostituiti) { try { vecchio.serializeAttachment({ ruolo: 'bambino', posto, sostituito: true }); vecchio.close(4000, 'sostituito') } catch { /* già chiuso */ } }
+      server.serializeAttachment({ ruolo: 'bambino', posto })
+    }
+    this.manda(r.invii)
+    return new Response(null, { status: 101, webSocket: cliente })
+  }
+
+  async webSocketMessage(ws, messaggio) {
+    const a = ws.deserializeAttachment()
+    if (!a?.ruolo || a.sostituito) return
+    if (messaggio === '{"t":"ping"}') return ws.send('{"t":"pong"}')       // se la risposta da sola non c'è (in locale)
+    const c = lezione.leggiMessaggio(messaggio, this.recenti.get(ws) || [], Date.now())
+    if (!c.ok) return ws.close(c.codice, c.ragione)
+    this.recenti.set(ws, c.recenti)
+    const s = await this.carica()
+    if (!s) return ws.close(4404, 'nessuna lezione')
+    const collegati = this.collegati()
+    const r = a.ruolo === 'maestra' ? lezione.daMaestra(s, collegati, c.dato) : lezione.daBambino(s, collegati, ws, a.posto, c.dato)
+    await this.salva(r)
+    this.manda(r.invii)
+  }
+
+  async chiuso(ws) {
+    this.recenti.delete(ws)
+    const a = ws.deserializeAttachment()
+    if (a?.ruolo !== 'bambino' || a.sostituito) return
+    ws.serializeAttachment({ ...a, sostituito: true })
+    const s = await this.carica()
+    if (s) this.manda(lezione.esceBambino(s, this.collegati(ws), a.posto).invii)
+  }
+
+  async webSocketClose(ws) { await this.chiuso(ws) }
+  async webSocketError(ws) { await this.chiuso(ws) }
+
+  /* tre ore dopo la nascita: via tutto, anche i risultati */
+  async alarm() {
+    for (const ws of this.stato.getWebSockets()) { try { ws.close(4404, 'lezione finita') } catch { /* già chiuso */ } }
+    this.s = null
+    await this.stato.storage.deleteAll()
+  }
 }
 
 /* Una stanza. Usa l'API di ibernazione: a stanza ferma non si paga il tempo di calcolo. Il segno «aperta» sta
@@ -404,7 +557,8 @@ export class Errori {
       await this.stato.storage.setAlarm(nuovo.da + 2 * 60 * 1000)
       return new Response('ok')
     }
-    return new Response(JSON.stringify({ bloccato: bloccato(stato, ora) }))
+    const tetto = Number(new URL(richiesta.url).searchParams.get('tetto')) || undefined      // la scuola: una classe sta dietro un indirizzo solo
+    return new Response(JSON.stringify({ bloccato: bloccato(stato, ora, tetto) }))
   }
 
   async alarm() { await this.stato.storage.deleteAll() }

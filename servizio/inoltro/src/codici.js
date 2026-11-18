@@ -19,4 +19,4 @@ export function contaErrore(stato, ora) {
 }
 
 /* chi ha già sbagliato troppo nell'ultimo minuto non prova più, nemmeno col codice giusto */
-export const bloccato = (stato, ora) => !!stato && ora - stato.da <= 60 * 1000 && stato.n >= ERRORI_AL_MINUTO
+export const bloccato = (stato, ora, tetto = ERRORI_AL_MINUTO) => !!stato && ora - stato.da <= 60 * 1000 && stato.n >= tetto
