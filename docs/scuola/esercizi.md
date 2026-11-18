@@ -72,6 +72,16 @@ pezzo di `moduli/conti.js` che dati due numeri fa il conto: il grado 7 è l'ulti
 - Filtrare da fuori le domande di `tabelline.js` finché non esce il 9 non basta: a casa il per 1 non
   c'è, e il fattore è scambiato a caso (7 × 9 e 9 × 7).
 
+## Più cose insieme, con l'intensità
+
+Un obiettivo (o il «se hai finito») può mescolare più esercizi: `{ tipo: 'insieme', parti: [{ esercizio, peso }] }`, da due a
+`MAX_PARTI` (6) parti, ognuna un esercizio semplice (né un altro insieme né un `gioco` dentro). `peso` è `'poco'`, `'normale'`
+o `'tanto'` (`PESI`): una parte «tanto» esce quattro volte una «un po'», e le parti si alternano a turno pesato e liscio,
+sparse e non a blocchi (con 4 e 1, mai cinque della prima di fila). È la risposta a «tanta tabellina dell'8 e un ripasso
+blando del 3, 4, 5 e 6»: due parti di tabelline; ma si mescolano anche voci diverse (tabelline e orologio). Un insieme va in un
+gioco solo se il gioco accetta ogni parte; agli Asteroidi arriva come gruppi con le loro volte (`limiteAsteroidi`). Nell'editor
+della maestra una parte sola è un esercizio semplice, come prima: «＋ Aggiungi un'altra cosa» la fa diventare un insieme.
+
 ## Il gioco in cui si fa
 
 Un esercizio può portare `gioco` (`GIOCHI` in `esercizi.js`): senza, o con `'schede'`, sono le domande una per

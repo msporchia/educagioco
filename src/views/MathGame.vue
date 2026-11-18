@@ -238,7 +238,7 @@ function poolAttivo() {
   const quanti = insiemeDi(tabelle.value) + picker.riposati
   const ora = Date.now()
   marea = mareaTabelline(state.profile.items, ora)
-  if (lim) return chiaviDelle(tabelle.value)   // tutti e dieci i fatti, non l'insieme di chi comincia
+  if (lim) return chiaviDelle(lim.prossime())   // tutti e dieci i fatti, non l'insieme di chi comincia; a gruppi, con le loro intensità
   return poolTappa(tappa.value, state.profile.items, ora, quanti)
 }
 

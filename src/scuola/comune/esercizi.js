@@ -128,10 +128,31 @@ export const GIOCHI = [
   { id: 'asteroidi', nome: 'Gli Asteroidi', nei: 'negli Asteroidi', spiega: 'La nave colpisce il sasso col risultato giusto. Vuole un PC che regga la grafica 3D.',
     voci: ['tabelline'], modi: ['prodotto'] },
 ]
-const accetta = (g, e) => !g.voci || (g.voci.includes(e.tipo === 'tabelline' ? 'tabelline' : e.modulo) && (!g.modi || g.modi.includes(e.modo)))
+const accetta = (g, e) => e.tipo === 'insieme' ? e.parti.every(p => accetta(g, p.esercizio))
+  : !g.voci || (g.voci.includes(e.tipo === 'tabelline' ? 'tabelline' : e.modulo) && (!g.modi || g.modi.includes(e.modo)))
 // i giochi in cui si può fare questo esercizio (il campo `gioco` a parte)
 export const giochiPer = e => GIOCHI.filter(g => accetta(g, e))
 export const giocoDi = e => e?.gioco || 'schede'
+
+/* ══════════════ più cose insieme ══════════════ */
+
+// un obiettivo può mescolare più esercizi, ognuno con la sua intensità («tanto l'8, un po' di ripasso del 3, 4, 5 e 6»):
+// `{ tipo: 'insieme', parti: [{ esercizio, peso }] }`; una parte «tanto» esce quattro volte una «un po'»
+export const PESI = [
+  { id: 'poco', nome: 'Un po\'', volte: 1 },
+  { id: 'normale', nome: 'Normale', volte: 2 },
+  { id: 'tanto', nome: 'Tanto', volte: 4 },
+]
+export const MAX_PARTI = 6
+const volteDi = peso => PESI.find(p => p.id === peso)?.volte ?? 1
+
+/* il limite per gli Asteroidi (docs/asteroidi/scuola.md): le tabelline a gruppi, ognuno con quante volte esce */
+export function limiteAsteroidi(e) {
+  const { gioco, ...x } = e
+  return x.tipo === 'insieme'
+    ? { gruppi: x.parti.map(p => ({ tabelline: [...p.esercizio.tabelline], volte: volteDi(p.peso) })) }
+    : { gruppi: [{ tabelline: [...x.tabelline], volte: 1 }] }
+}
 
 /* ══════════════ valido ══════════════ */
 
@@ -157,6 +178,11 @@ export function valido(e) {
     const { gioco, ...resto } = e
     return !!g && valido(resto) && accetta(g, resto)
   }
+  if (e.tipo === 'insieme') {
+    return soloChiavi(e, ['tipo', 'parti']) && Array.isArray(e.parti) && e.parti.length >= 2 && e.parti.length <= MAX_PARTI &&
+      e.parti.every(p => oggetto(p) && soloChiavi(p, ['esercizio', 'peso']) && PESI.some(x => x.id === p.peso) &&
+        oggetto(p.esercizio) && p.esercizio.tipo !== 'insieme' && !('gioco' in p.esercizio) && valido(p.esercizio))
+  }
   if (e.tipo === 'tabelline') {
     return soloChiavi(e, ['tipo', 'tabelline', 'modo']) &&
       interi(e.tabelline, 1, TABELLINE.length) && e.tabelline.length > 0 &&
@@ -181,6 +207,8 @@ const minuscola = s => s.charAt(0).toLowerCase() + s.slice(1)
 export function descrivi(e) {
   if (!valido(e)) return 'Esercizio non valido'
   if (giocoDi(e) !== 'schede') { const { gioco, ...resto } = e; return `${descrivi(resto)} · ${GIOCHI.find(g => g.id === gioco).nei}` }
+  if (e.tipo === 'insieme')
+    return e.parti.map(p => `${descrivi(p.esercizio)} (${minuscola(PESI.find(x => x.id === p.peso).nome)})`).join(' + ')
   if (e.tipo === 'tabelline') return `${nomeTabelline(e.tabelline)} · ${NOME_MODO[e.modo]}`
   const m = perId(e.modulo)
   const parti = [m.nome]
@@ -253,10 +281,25 @@ function pescatoreModulo(e, sorte) {
   }
 }
 
+// le parti a turno pesato e liscio: con «tanto» e «un po'» quattro della prima per una della seconda, sparse e non a blocchi
+function pescatoreInsieme(e, sorte) {
+  const parti = e.parti.map(p => ({ pesca: pescatore(p.esercizio, sorte), volte: volteDi(p.peso), credito: 0 }))
+  const totale = parti.reduce((s, x) => s + x.volte, 0)
+  return {
+    prossima() {
+      for (const x of parti) x.credito += x.volte
+      const scelta = parti.reduce((a, b) => (b.credito > a.credito ? b : a))
+      scelta.credito -= totale
+      return scelta.pesca.prossima()
+    },
+  }
+}
+
 export function pescatore(e, sorte = sorteQualunque()) {
   if (!valido(e)) throw new Error(`esercizio non valido: ${JSON.stringify(e)?.slice(0, 200)}`)
   if (!(sorte instanceof Sorte)) sorte = new Sorte(Number(sorte) || 1)
-  return e.tipo === 'tabelline' ? pescatoreTabelline(e, sorte) : pescatoreModulo(e, sorte)
+  if ('gioco' in e) { const { gioco, ...resto } = e; e = resto }
+  return e.tipo === 'insieme' ? pescatoreInsieme(e, sorte) : e.tipo === 'tabelline' ? pescatoreTabelline(e, sorte) : pescatoreModulo(e, sorte)
 }
 
 /* ══════════════ racconta ══════════════ */

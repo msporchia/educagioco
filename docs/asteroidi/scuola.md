@@ -8,7 +8,9 @@ dei bambini ([../scuola/bambini.md](../scuola/bambini.md)); cosa la maestra può
 
 ## La prop `limite`
 
-- `<MathGame :limite="{ tabelline: [9] }">`: una o più tabelline da 1 a 10. **A casa manca** (`null` di difetto),
+- `<MathGame :limite="{ tabelline: [9] }">`: una o più tabelline da 1 a 10, oppure a gruppi con le loro intensità,
+  `{ gruppi: [{ tabelline: [8], volte: 4 }, { tabelline: [3, 4, 5, 6], volte: 1 }] }`: la domanda dopo pesca dal gruppo
+  che tocca a turno pesato (`creaTurni`), e dentro il gruppo tutti i fatti come sempre. **A casa manca** (`null` di difetto),
   e senza limite niente di quello che segue esiste: la mappa, la fila, le soste e i premi sono quelli di sempre.
 - Il limite diventa una **tappa finta** (`tappaDelLimite` in `src/motore/asteroidi/limite.js`, puro): un pianeta con
   le sole tabelline chieste, nessuna tabellina «nuova», nessun centro «mirato» e il **bersaglio infinito**. Così la

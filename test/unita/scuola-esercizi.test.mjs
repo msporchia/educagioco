@@ -5,7 +5,7 @@
    una risposta sta nei 40 caratteri del protocollo. Vedi docs/scuola/esercizi.md.
    `node test/esegui.mjs scuola-esercizi --niente-build` */
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
-import { CATALOGO, MODULI_USATI, valido, descrivi, pescatore, racconta, raccontaAsteroide, LUNGO }
+import { CATALOGO, MODULI_USATI, valido, descrivi, pescatore, racconta, raccontaAsteroide, LUNGO, giochiPer, limiteAsteroidi }
   from '../../src/scuola/comune/esercizi.js'
 import { MODULI } from '../../src/scuola/sostituti/registro.js'
 import { guastiDi, spiegazioneDi } from '../../src/quiz/nucleo/domanda.js'
@@ -190,6 +190,30 @@ function guardaDomanda(dove, q, { chiavi = null } = {}) {
   uguale('il giusto caduto: nessuna risposta', raccontaAsteroide({ testo: '9 × 7 = ?', data: null, attesa: 63 }).data, '—')
   controlla('anche da storto non lancia e resta corto', Object.values(raccontaAsteroide({ testo: 'x'.repeat(99) }))
     .every(t => typeof t === 'string' && t.length <= LUNGO))
+}
+
+console.log('\nPIÙ COSE INSIEME, CON LE INTENSITÀ')
+{
+  const t = (tabelline, modo = 'prodotto') => ({ tipo: 'tabelline', tabelline, modo })
+  const ins = (...parti) => ({ tipo: 'insieme', parti: parti.map(([esercizio, peso]) => ({ esercizio, peso })) })
+  const otto = ins([t([8]), 'tanto'], [t([3, 4, 5, 6]), 'poco'])
+  controlla('«tanto l\'8, un po\' il 3-6» è valido', valido(otto))
+  uguale('e si descrive con le intensità', descrivi(otto), 'Tabellina dell\'8 · il risultato (tanto) + Tabelline dal 3 al 6 · il risultato (un po\')')
+  const p = pescatore(otto, 7)
+  const usciti = Array.from({ length: 50 }, () => p.prossima().domanda.testo)
+  uguale('quattro domande dell\'8 per una del ripasso', usciti.filter(s => s.startsWith('8 ×')).length, 40)
+  controlla('e il ripasso le gira tutte e quattro', [3, 4, 5, 6].every(n => usciti.some(s => s.startsWith(n + ' ×'))))
+  const misto = ins([t([8], 'nascosto'), 'normale'], [{ tipo: 'modulo', modulo: 'orologio', da: 1, a: 2, tipologie: [] }, 'poco'])
+  controlla('tabelline e orologio insieme si possono fare', valido(misto) && !!pescatore(misto, 3).prossima().domanda)
+  stessaLista('ma solo a schede', giochiPer(misto).map(g => g.id), ['schede'])
+  controlla('e agli Asteroidi no', !valido({ ...misto, gioco: 'asteroidi' }))
+  controlla('tutte tabelline col risultato: anche negli Asteroidi', valido({ ...otto, gioco: 'asteroidi' }))
+  stessaLista('che ricevono i gruppi con le loro volte', limiteAsteroidi({ ...otto, gioco: 'asteroidi' }).gruppi,
+    [{ tabelline: [8], volte: 4 }, { tabelline: [3, 4, 5, 6], volte: 1 }])
+  for (const [cosa, e] of [['una parte sola', ins([t([8]), 'tanto'])], ['un\'intensità sconosciuta', ins([t([8]), 'tantissimo'], [t([2]), 'poco'])],
+    ['un insieme dentro un insieme', ins([otto, 'poco'], [t([2]), 'poco'])], ['un gioco dentro una parte', ins([{ ...t([8]), gioco: 'asteroidi' }, 'poco'], [t([2]), 'poco'])],
+    ['sette parti', ins(...Array.from({ length: 7 }, (_, i) => [t([i + 1]), 'poco']))]])
+    controlla(`non è valido: ${cosa}`, !valido(e))
 }
 
 riassunto('gli esercizi della scuola')

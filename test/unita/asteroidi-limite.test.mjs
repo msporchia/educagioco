@@ -4,7 +4,7 @@
    i fatti, il bersaglio che non arriva mai (niente nave madre, hangar, stella). Senza limite la tappa finta non c'è e
    casa resta com'è. Vedi docs/asteroidi/scuola.md.
    `node test/esegui.mjs asteroidi-limite --niente-build` */
-import { tappaDelLimite, tabellineDel } from '../../src/motore/asteroidi/limite.js'
+import { tappaDelLimite, tabellineDel, gruppiDel } from '../../src/motore/asteroidi/limite.js'
 import { chiaviDelle, leggi } from '../../src/store/tabelline.js'
 import { createPicker } from '../../src/store/srs.js'
 import { fattoriDi } from '../../src/data/tabelline.js'
@@ -44,6 +44,19 @@ console.log('\nPIÙ TABELLINE')
   uguale('il cielo della più alta', cieloDi(v), cieloDi({ tipo: 'pianeta', i: 6 }))
   uguale('3 × 7 è un fatto solo: diciannove', chiaviDelle(v.T.tabelle).length, 19)
   uguale('la tabellina dell\'1 non ha pianeta: il cielo di partenza', cieloDi(tappaDelLimite({ tabelline: [1] })), 'cintura')
+}
+
+console.log('\nA GRUPPI, CON LE LORO INTENSITÀ')
+{
+  // «tanto l'8, un po' di ripasso del 3, 4, 5 e 6»: quattro domande dell'8 per una del ripasso, sparse
+  const v = tappaDelLimite({ gruppi: [{ tabelline: [8], volte: 4 }, { tabelline: [3, 4, 5, 6], volte: 1 }] })
+  stessaLista('le tabelline in gioco sono tutte quelle dei gruppi', v.T.tabelle, [3, 4, 5, 6, 8])
+  const giri = Array.from({ length: 50 }, () => v.prossime())
+  uguale('in cinquanta domande, quaranta dall\'8', giri.filter(g => g.length === 1 && g[0] === 8).length, 40)
+  controlla('e mai cinque dell\'8 di fila', !giri.map(g => (g[0] === 8 ? 'x' : '-')).join('').includes('xxxxx'))
+  stessaLista('un gruppo storto si butta, il resto resta', gruppiDel({ gruppi: [{ tabelline: [12] }, { tabelline: [2], volte: 0 }] }),
+    [{ tabelline: [2], volte: 1 }])
+  stessaLista('la forma di prima vale un gruppo solo', gruppiDel({ tabelline: [9] }), [{ tabelline: [9], volte: 1 }])
 }
 
 riassunto('gli Asteroidi limitati')

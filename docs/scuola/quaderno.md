@@ -137,7 +137,8 @@ ritorno e manomesso, il riassunto che `tutto` non raddoppia, le più sbagliate, 
 scadenza, le chiavi di localStorage, il file storto e l'unione per id, l'anno della classe che un quaderno vecchio non ha) e `unita/scuola-lezioni-pronte`. Bersagli: la radice `[data-schermata="<nome>"]`,
 `button[aria-label="indietro"]`, `[data-versione]`, `[data-avviso="pieno"|"link-rotto"]`; nell'inizio
 `[data-in-corso]`, `[data-indirizzo-bambini]`, `[data-classe=<id>]`, `[data-lezione=<id>]`, `[data-storico-classe=<id>]`,
-`[data-file-quaderno]` (l'input del file), `[data-esito-file="bene"|"male"]`, `[data-link-lezione]`; negli editor
+`[data-file-quaderno]` (l'input del file), `[data-esito-file="bene"|"male"]`, `[data-link-lezione]`; nell'esercizio a più parti
+`[data-parte=<i>]`, `[data-peso="poco"|"normale"|"tanto"]`, `[data-azione="aggiungi-parte"|"togli-parte"]`; negli editor
 `[data-campo="nome-classe"|"alunni"|"nome-lezione"|"materia"|"voce"|"da"|"a"|"quante"|"minuti"]`,
 `[data-esercizio="obiettivo"|"dopo"]`, `[data-tabellina=<n>]`, `[data-modo]`, `[data-tipologia]`, `[data-gioco=<id>]`, `[data-per]`,
 `[data-dopo="no"|"si"]`, `[data-descrizione]`, `[data-problema]`, `[data-da-pronta]`; nella classe `[data-anno=<1..5>|""]`;
