@@ -29,6 +29,7 @@ const props = defineProps({
   corta: { type: Boolean, default: false },
   zaino: { type: Boolean, default: false },
   lunga: { type: Boolean, default: false },       // si poteva fare con meno: la riga lo dice
+  mappa: { type: Boolean, default: true },        // a scuola la mappa non c'è (docs/passo-passo/scuola.md)
 })
 defineEmits(['avanti', 'rigioca', 'mappa'])
 
@@ -76,7 +77,7 @@ onUnmounted(() => clearTimeout(sveglia))
       <p v-if="racconto" class="pp-racconto">{{ racconto }}</p>
 
       <div class="pp-scelte">
-        <button class="pp-piccolo" data-azione="mappa" aria-label="alla mappa" :disabled="!pronto"
+        <button v-if="mappa" class="pp-piccolo" data-azione="mappa" aria-label="alla mappa" :disabled="!pronto"
                 @click="$emit('mappa')"><span class="pp-em">🗺️</span></button>
         <button v-if="che === 'tappa'" class="pp-piccolo" data-azione="rigioca" aria-label="rigioca"
                 :disabled="!pronto" @click="$emit('rigioca')"><span class="pp-em">🔁</span></button>

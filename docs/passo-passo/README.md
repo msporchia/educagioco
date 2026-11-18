@@ -17,6 +17,7 @@ frecce, e dai sette anni e mezzo le carte e lo zaino. Codice in `src/giochi/pass
 - [sosta.md](sosta.md) — lasciare a metà: la fila di ogni livello resta, il sentiero si riprende dalla carta in cima
 - [livelli.md](livelli.md) — come si scrive un livello, cosa pretende il banco, riordinare la fila, le due strade (chi apre cosa)
 - [tappe.md](tappe.md) — le tappe di oggi, con la strada più corta di ognuna
+- [scuola.md](scuola.md) — a scuola: la maestra sceglie il protagonista e i gradini, i loro livelli in giro senza mappa né monete, il 💡 solo gratis, ogni ▶ raccontato alla maestra
 
 Vedi anche: [../core/aiuti.md](../core/aiuti.md) (la scala a monete comune),
 [../core/amici-nei-giochi.md](../core/amici-nei-giochi.md) (gli amici sulle due mappe e sotto i due sentieri),

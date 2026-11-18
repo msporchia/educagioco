@@ -33,6 +33,7 @@ import { usaGuida } from '../guida.js'
 import { scrivi, leggi, dice, scriviFila, scriviSerie, pagatoDa, svelatoDa } from './motore/sosta.js'
 import Ripresa from '../Ripresa.vue'
 import { usaAmici } from '../../amici/usaAmici.js'
+import { tappeDelLimite, dopoNelGiro, scalaAScuola, dataDi, attesaDi } from './motore/limite.js'
 
 import Mappa from './viste/Mappa.vue'
 import Campo from './viste/Campo.vue'
@@ -40,7 +41,11 @@ import Finale from './viste/Finale.vue'
 import './stile.css'
 
 defineOptions({ name: 'PassoPasso' })
-const emit = defineEmits(['vai'])
+const emit = defineEmits(['vai', 'risposta'])
+// a scuola: `{ gradini: ['ghiaccio'], protagonista: 'coniglio' }`, e si giocano solo quei livelli in giro (docs/passo-passo/scuola.md); a casa manca
+const props = defineProps({ limite: { type: Object, default: null } })
+const giro = tappeDelLimite(props.limite)     // null a casa
+const vinteNelGiro = reactive(new Set())      // a scuola le stelle non si scrivono: la guida guarda queste
 
 const CHIAVE = 'passo'
 /* la finestra cieca di sempre (`docs/core/interfaccia.md`): una schermata appena comparsa
@@ -83,6 +88,8 @@ let cieco = false
 let sbarra = 0
 let esitoInCorsa = null
 let partitoAlle = 0
+let pensaDa = 0                     // a scuola: da quando si scrive la fila di questo ▶
+let provaDa = 0                     // e quanto ci è voluto
 let passoCorrente = -1              // il passo che sta girando (coi cicli non è la carta)
 /* la partita è già vinta prima che finisca la festa, ma si scrive solo a
    festa finita: un traguardo a metà festa coprirebbe il coniglio */
@@ -130,7 +137,7 @@ const stradaDopo = i => STRADE.animale[i]
    La fila di ogni livello e il sentiero in corso: vedi docs/passo-passo/sosta.md */
 const quaderno = reactive(leggi(sosta(CHIAVE)))
 // quello che non tornava se n'è andato: lo si dice anche all'archivio
-if (JSON.stringify(scrivi(quaderno)) !== JSON.stringify(sosta(CHIAVE) || null))
+if (!giro && JSON.stringify(scrivi(quaderno)) !== JSON.stringify(sosta(CHIAVE) || null))
   salvaSosta(CHIAVE, scrivi(quaderno))
 let vinta = false                   // il posto in gioco è vinto: la sua fila non si tiene
 const chiede = ref('')              // il sentiero nuovo che butterebbe quello a metà
@@ -231,9 +238,9 @@ const passoGuida = computed(() => {
   const fermo = inCorsa.value || !!finale.value
   // la prima volta che una tappa mette in mano 🔁, col coniglio o col cane: nessuna vinta l'aveva
   if (tappaIdx.value >= 0 && concettiDi(CAMPAGNA[tappaIdx.value]).includes('ripeti') &&
-      !CAMPAGNA.some((t, j) => stelleDi(CHIAVE, j) > 0 && concettiDi(t).includes('ripeti')))
+      !CAMPAGNA.some((t, j) => (giro ? vinteNelGiro.has(j) : stelleDi(CHIAVE, j) > 0) && concettiDi(t).includes('ripeti')))
     return guidaDelRipeti({ fermo, conScatola: conCicli(fila.value) || scelta.value != null })
-  if (tappaIdx.value !== 0 || avanza.tappa > 0) return null
+  if (tappaIdx.value !== 0 || (giro ? vinteNelGiro.size : avanza.tappa) > 0) return null
   return guidaDelPrato({ fila: fila.value, fermo, provato: provato.value !== null,
                          cambiato: provato.value !== JSON.stringify(fila.value),
                          sbattuto: guasto.value != null, fermoPrima: fermoPrima.value })
@@ -243,6 +250,7 @@ usaGuida(radice, passoGuida)
 const titolo = computed(() => {
   if (vista.value !== 'campo' || !tappa.value) return 'Passo passo'
   if (sentiero.value) return `${quale.value === 'cane' ? '🐕' : '🐇'} ${sentieri.value + 1} · ${tappa.value.nome}`
+  if (giro) return `${giro.indexOf(tappaIdx.value) + 1}/${giro.length} · ${tappa.value.nome}`
   return `${STRADE.numero[tappaIdx.value]}. ${tappa.value.nome}`
 })
 
@@ -309,11 +317,13 @@ function fotografa() {
 }
 let salvaTimer = 0
 function salvaOra() {
+  if (giro) return                  // a scuola niente sosta
   clearTimeout(salvaTimer)
   fotografa()
   salvaSosta(CHIAVE, scrivi(quaderno), { subito: true })
 }
 function salvaPresto() {
+  if (giro) return
   clearTimeout(salvaTimer)
   salvaTimer = setTimeout(() => { fotografa(); salvaSosta(CHIAVE, scrivi(quaderno)) }, 500)
 }
@@ -326,6 +336,7 @@ function seSparisce(e) {
 onMounted(() => {
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
+  if (giro) return avviaTappa(giro[0])   // a scuola niente mappa
   // `#passo=la-torre` apre quella tappa anche chiusa, per guardarla (docs/core/comandi.md)
   const i = CAMPAGNA.findIndex(t => t.chiave === new URLSearchParams((location.hash || '').slice(1)).get('passo'))
   if (i >= 0) avviaTappa(i)
@@ -382,6 +393,7 @@ function entra(t, indice, gia = indice >= 0 ? quaderno.livelli[t.chiave] : null)
   chiusaDallAiuto = null
   chiusaContro = ''
   vinta = false
+  pensaDa = performance.now()
   if (gia) {
     fila.value = gia.fila.slice()
     cursore.value = gia.cursore
@@ -400,7 +412,7 @@ function entra(t, indice, gia = indice >= 0 ? quaderno.livelli[t.chiave] : null)
 }
 
 // la tappa giocata per ultima: lì torna il segnalino (docs/passo-passo/mappa.md)
-const avviaTappa = i => { ricorda(CHIAVE, 'ultima', i); entra(CAMPAGNA[i], i) }
+const avviaTappa = i => { if (!giro) ricorda(CHIAVE, 'ultima', i); entra(CAMPAGNA[i], i) }
 
 /* ═══════════ comporre la fila ═══════════
    Ogni tocco passa da `motore/fila.js`, che dice com'è la fila dopo. */
@@ -523,7 +535,8 @@ function via() {
   partitoAlle = performance.now()
   ultimoSuono = ''
   regia.suona(pro)
-  segna('ppProve')
+  provaDa = performance.now() - pensaDa
+  if (!giro) segna('ppProve')
 }
 
 // passi e non carte: coi cicli la stessa carta si esegue a ogni giro
@@ -549,6 +562,7 @@ function ferma() {
   inCorsa.value = false
   corrente.value = -1
   esitoInCorsa = null
+  pensaDa = performance.now()
   suono.nota(440, 330, 0.1, 'sine', 0.05)
   aiutoPrenotato()
 }
@@ -575,6 +589,8 @@ function fineGiro() {
     suono.livello()
     return
   }
+  if (giro) riferisci(esito)
+  pensaDa = performance.now()
   if (errore) {
     /* la tessera colpevole resta segnata, e il cursore le si mette
        subito dopo: un ⌫ toglie proprio lei, e la freccia giusta entra
@@ -594,7 +610,7 @@ function fineGiro() {
 }
 
 /* ═══════════ 💡 ═══════════ vedi docs/passo-passo/stelle-e-aiuti.md */
-const SCALA = scalaDi()
+const SCALA = giro ? scalaAScuola() : scalaDi()
 const prossimo = computed(() => SCALA[presi.value] || null)
 const monete = computed(() => state.profile.coins || 0)
 /* il prezzo che il tasto mostra: niente quando la scala è finita (da lì
@@ -630,7 +646,8 @@ function scendi() {
   const p = prossimo.value
   // la carta di prima si riaccende gratis, solo se si comprerebbe di nuovo lei
   if (ultimaCarta && ultimaCarta === firma() && p && p.cosa === 'carta') { mostraCarta(s); suona(); return }
-  /* la scala è finita: quello che si è pagato si rimette */
+  /* la scala è finita: quello che si è pagato si rimette; a scuola, dove ci si ferma */
+  if (!p && giro) { mostraDove(); suona(); return }
   if (!p) { scriviPezzo(SCALA[SCALA.length - 1]); return }
   if (povero.value) { poveroScossa.value++; suono.nota(330, 262, 0.12, 'triangle', 0.06); return }
   if (chiedeConferma(p) && !armato.value) {
@@ -764,6 +781,7 @@ function vittoria(esito) {
 function scriviVittoria(esito) {
   const strada = misuraLaStrada(esito)
   const stelle = stelleDellaVittoria({ carota: esito.carota, svelato: svelato.value, corta: strada.corta })
+  if (giro) return vittoriaNelGiro(esito, strada, stelle)
   if (sentiero.value) return vittoriaSentiero(esito, strada)
 
   const i = tappaIdx.value
@@ -781,6 +799,24 @@ function scriviVittoria(esito) {
     // ▶ va avanti sulla strada che si sta facendo; in fondo può portare al sentiero senza fine
     prossima: prossimaDopo(i) !== null || (sentieroDopo(i) && sentieroAperto(stradaDopo(i))),
   }
+}
+
+/* ═══════════ a scuola ═══════════
+   Ogni ▶ va alla maestra: vinto chiude il livello, se no è un tentativo (docs/passo-passo/scuola.md) */
+const attese = new Map()            // la soluzione in breve di ogni livello, misurata una volta
+function riferisci(esito) {
+  const t = CAMPAGNA[tappaIdx.value], vinto = esito.esito === TANA
+  if (!attese.has(t.chiave)) attese.set(t.chiave, attesaDi(liv))
+  emit('risposta', { chiave: `passo:${t.chiave}`, giusta: vinto, ultima: vinto, ms: Math.round(provaDa),
+                     fatto: t.nome, data: dataDi(liv, fila.value, esito), attesa: attese.get(t.chiave) })
+}
+// il cartello di sempre, senza monete né mappa, e ▶ porta al livello dopo del giro
+function vittoriaNelGiro(esito, strada, stelle) {
+  const i = tappaIdx.value
+  vinteNelGiro.add(i)
+  riferisci(esito)
+  return { che: 'tappa', titolo: CAMPAGNA[i].nome, stelle, carota: esito.carota, cane: !!liv.cane, guerriero: !!liv.guerriero,
+           svelato: false, monete: 0, ...strada, zaino: !!liv.zaino, racconto: CAMPAGNA[i].racconto, prossima: true, mappa: false }
 }
 
 /* ═══════════ i sentieri senza fine ═══════════
@@ -896,6 +932,7 @@ function vittoriaSentiero(esito, strada) {
 
 /* ═══════════ dopo il cartello ═══════════ */
 function avanti() {
+  if (giro) return avviaTappa(dopoNelGiro(giro, tappaIdx.value))
   if (sentiero.value) return prossimoSentiero()
   const i = tappaIdx.value, p = prossimaDopo(i)
   if (p !== null) avviaTappa(p)

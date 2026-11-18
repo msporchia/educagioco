@@ -1,9 +1,42 @@
 <script setup>
-// Da riempire (docs/scuola/giochi.md): finché c'è questa, il gioco «non parte» e si torna alle schede
-import { onMounted } from 'vue'
-defineProps({ esercizio: { type: Object, required: true }, alunno: { type: Object, required: true } })
+// Passo passo vero, limitato ai gradini dell'esercizio, su un profilo in memoria; se non parte, la maestra lo vede. docs/passo-passo/scuola.md
+import { shallowRef, onMounted, onErrorCaptured } from 'vue'
+import PassoPasso from '../../../giochi/passo-passo/Gioco.vue'
+import { bambinoInMemoria } from '../../bambini/profilo.js'
+import scheda from './scheda.js'
+
+const props = defineProps({
+  esercizio: { type: Object, required: true },
+  alunno: { type: Object, required: true },     // { id, nome }
+})
 const emit = defineEmits(['risposta', 'guasto'])
-onMounted(() => emit('guasto'))
+const { gioco, ...esercizio } = props.esercizio
+const limite = scheda.tipo.valido(esercizio) ? { gradini: esercizio.gradini, protagonista: esercizio.protagonista } : null
+const chi = shallowRef('')           // il profilo pronto: prima il gioco non si monta
+
+let guasto = false
+function nonParte() { if (!guasto) { guasto = true; emit('guasto') } }
+
+onMounted(async () => {
+  if (!limite) return nonParte()
+  try { chi.value = await bambinoInMemoria(props.alunno.id, props.alunno.nome) } catch { nonParte() }
+})
+onErrorCaptured(() => { nonParte(); return false })
+
+// la risposta arriva già raccontata dal gioco (docs/scuola/giochi.md)
+const riferisci = r => emit('risposta', r)
 </script>
 
-<template><div /></template>
+<template>
+  <div class="passo-passo" data-gioco="passo-passo">
+    <div class="colonna">
+      <PassoPasso v-if="chi" :key="chi" :limite="limite" @risposta="riferisci" />
+    </div>
+  </div>
+</template>
+
+<style scoped>
+/* il gioco è un `.schermo` assoluto: sta nella colonna, centrata su uno schermo largo */
+.passo-passo { position: relative; flex: 1; min-height: 0; display: flex; justify-content: center; background: #eef4e4 }
+.colonna { position: relative; flex: 1; max-width: 720px; overflow: hidden }
+</style>
