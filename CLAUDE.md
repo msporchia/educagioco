@@ -34,6 +34,8 @@ npm run test:browser   # solo dentro Chrome, un minuto e mezzo
 npm run test:misure    # l'equilibrio dei giochi (partite finte, la mappa inglese)
 npm run test:tutto     # tutto, misure e browser compresi: prima di pubblicare
 npm run test:commenti  # fallisce se il codice è cambiato oltre ai commenti
+npm run build:scuola   # le due pagine della scuola in dist-scuola/ (docs/scuola/)
+npm run dev:scuola     # le pagine della scuola in sviluppo, porta 5174
 node test/esegui.mjs animali            # solo i file che contengono "animali"
 node test/esegui.mjs --niente-build     # non ricompilare prima
 node test/esegui.mjs torri --scatti     # e lascia anche le foto
@@ -65,6 +67,7 @@ quale file.
 | `docs/asteroidi/` | Tabelline Asteroidi: la scaletta unica di pianeti e stazioni, il volo, i cieli, la nave madre e l'hangar, il cielo in 3D e i comandi col dito — prima di toccare `grafica/spazio3d/` |
 | `docs/castello/` | Difendi il Castello: taratura (`npm run tara`), torri, operazioni, mostri e immunità, partite libere e regali, campagne — prima di toccare `data/castello.js`, `data/mostri.js`, `data/campagne-castello.js` o un prezzo |
 | `docs/arena/` | Castle Battle (`src/giochi/arena/`): regole, calcoli, campagna, taratura (`npm run tara:arena`), sosta, grafica — prima di toccare `giochi/arena/dati/`, il motore o un prezzo |
+| `docs/scuola/` | La scuola (`src/scuola/`, `scuola/*.html`): l'app delle maestre e quella dei PC dei bambini, il codice della lezione sul servizio, i sostituti dei moduli di casa, la pipeline col tag `scuola-*` — prima di toccare `src/scuola/`, o un import di `quiz/Domanda.vue` e dei moduli di quiz |
 | `docs/giardino/` | Il giardino (`src/giochi/giardino/`, in prova): regole, calcoli, campagna, taratura — prima di toccare `giochi/giardino/dati/`, il motore o un prezzo |
 | `docs/lingue/` | English ed Español: vocaboli, campagne, la pronuncia incisa (`npm run voci`) |
 | `docs/bancarella/` | La cucina (chiave `bancarella`): il cuoco in 3D, le ordinazioni, la cassa, i livelli e gli attrezzi (`cucina.md`) — prima di toccare `data/bancarella*.js`, `motore/bancarella/`, `grafica/cucina3d/` o un prezzo |
@@ -187,6 +190,8 @@ Una riga ciascuna; il perché sta nel documento indicato.
   sito vero**: una prova che tocca l'archivio tocca i salvataggi veri. → `docs/core/pubblicare.md`
 - **Il `+` in coda alla versione** (`922257a+`) vuol dire build con modifiche
   non committate. → `docs/core/pubblicare.md`
+- **`quiz/Domanda.vue` e i moduli di quiz finiscono anche nella scuola**: un import nuovo verso `store/`
+  li porta fuori dal pacchetto leggero e `unita/scuola-pacchetto` diventa rosso. → `docs/scuola/architettura.md`
 - **`index.html` in radice è il template di Vite**, non un file giocabile.
 
 ## Come si lavora

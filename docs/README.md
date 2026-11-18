@@ -12,6 +12,7 @@ da fuori, e `da-fare.md` tiene le voci aperte.
 - [passo-passo/](passo-passo/README.md) · [costruttore/](costruttore/README.md) (il Robot)
 - [sotterraneo/](sotterraneo/README.md) · [survivors/](survivors/README.md)
 - [codice-segreto/](codice-segreto/README.md) · [fattoria3d/](fattoria3d/README.md) (la fattoria) · [conta/](conta/README.md) · [prima-dopo/](prima-dopo/README.md)
+- [scuola/](scuola/README.md) — l'app per le maestre e i PC dei bambini: lezioni, codice, resoconto
 - `img/` — le immagini e le clip del README (le rifà `npm run scatti`)
 
 **Dove va una spiegazione nuova**: nel file del suo argomento, o in un file
