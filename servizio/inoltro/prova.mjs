@@ -1,5 +1,5 @@
 // Prova il servizio di inoltro, in locale (`npx wrangler dev`, poi `node prova.mjs`) o sul tuo indirizzo:
-//   node prova.mjs https://sfida.<tuo-sottodominio>.workers.dev
+//   node prova.mjs https://sfida.<tuo-sottodominio>.workers.dev          (con `scuola` in fondo: solo la scuola)
 // Il tavolo (docs/core/insieme.md): i posti, l'inoltro, il ping, chi cade e rientra col suo posto, chi se ne va, i no.
 // La stanza di prima (per i telefoni col gioco vecchio): i ruoli, l'inoltro, il terzo che non entra, il messaggio troppo
 // grande, il codice sbagliato e l'«via» quando uno se ne va. Poi gli amici, con la bacheca.
@@ -8,6 +8,54 @@ const WS = BASE.replace(/^http/, 'ws')
 let guasti = 0
 const controlla = (cosa, ok, dettaglio = '') => { console.log(`${ok ? '✅' : '❌'} ${cosa}${ok ? '' : ' — ' + dettaglio}`); if (!ok) guasti++ }
 const pausa = ms => new Promise(r => setTimeout(r, ms))
+const casuale = n => Array.from(crypto.getRandomValues(new Uint8Array(n)), x => 'abcdefghijklmnopqrstuvwxyz0123456789'[x % 36]).join('')
+const post = (percorso, corpo) => fetch(`${BASE}${percorso}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(corpo) })
+const finito = () => { console.log(guasti ? `\n❌ ${guasti} controlli falliti` : '\n✅ tutto a posto'); process.exit(guasti ? 1 : 0) }
+
+// la scuola (docs/scuola/protocollo.md): la maestra avvia, il bambino sceglie il nome, il via, una risposta che arriva una volta sola
+function collegaScuola(percorso) {
+  return new Promise((ok, no) => {
+    const ws = new WebSocket(`${WS}${percorso}`)
+    const arrivati = []
+    let chiuso = null
+    ws.addEventListener('message', e => arrivati.push(JSON.parse(e.data)))
+    ws.addEventListener('close', e => { chiuso = e.code })
+    ws.addEventListener('open', () => ok({ ws, arrivati, chiuso: () => chiuso, manda: m => ws.send(JSON.stringify(m)) }))
+    ws.addEventListener('error', () => no(new Error('non si apre')))
+  })
+}
+async function scuola() {
+  const lezione = { id: 'l1', nome: 'Tabellina del 9', obiettivo: { esercizio: { tipo: 'tabelline', tabelline: [9], modo: 'prodotto' }, quante: 10, minuti: null }, dopo: null }
+  const nuova = await post('/scuola/lezione', { lezione, alunni: [{ id: 'a1', nome: 'Lorenzo' }, { id: 'a2', nome: 'Marta' }] }).then(r => r.json())
+  controlla('la maestra avvia: un codice e una chiave', /^[A-Z]{5}$/.test(nuova.codice || '') && (nuova.chiave || '').length === 32, JSON.stringify(nuova))
+  controlla('il codice esiste, in attesa', (await fetch(`${BASE}/scuola/${nuova.codice}`).then(r => r.json())).fase === 'attesa')
+  controlla('un codice che non c\'è: 404', (await fetch(`${BASE}/scuola/ZZZZZ`)).status === 404)
+  const maestra = await collegaScuola(`/scuola/${nuova.codice}/maestra?chiave=${nuova.chiave}`); await pausa(300)
+  controlla('la maestra riceve tutto', maestra.arrivati[0]?.t === 'tutto' && maestra.arrivati[0].alunni.length === 2, JSON.stringify(maestra.arrivati[0]))
+  const intrusa = await collegaScuola(`/scuola/${nuova.codice}/maestra?chiave=${casuale(32)}`); await pausa(300)
+  controlla('con la chiave sbagliata non si entra (4403)', intrusa.chiuso() === 4403, String(intrusa.chiuso()))
+  const pc1 = await collegaScuola(`/scuola/${nuova.codice}/bambino?posto=${casuale(12)}`); await pausa(300)
+  controlla('il bambino vede la lista dei nomi', pc1.arrivati[0]?.t === 'stato' && pc1.arrivati[0].alunni.length === 2, JSON.stringify(pc1.arrivati[0]))
+  pc1.manda({ k: 'sono', alunno: 'a1' }); await pausa(300)
+  controlla('sceglie il suo nome', pc1.arrivati.some(m => m.t === 'stato' && m.io?.id === 'a1'))
+  const pc2 = await collegaScuola(`/scuola/${nuova.codice}/bambino?posto=${casuale(12)}`); await pausa(200)
+  pc2.manda({ k: 'sono', alunno: 'a1' }); await pausa(300)
+  controlla('un altro PC non prende lo stesso nome', pc2.arrivati.some(m => m.t === 'no' && m.perche === 'preso'), JSON.stringify(pc2.arrivati))
+  maestra.manda({ k: 'via' }); await pausa(300)
+  controlla('il via arriva al bambino', pc1.arrivati.some(m => m.t === 'stato' && m.fase === 'via'))
+  const r = { k: 'risposta', n: 1, parte: 'obiettivo', chiave: 'tab:prodotto', fatto: '9 × 7', data: '63', attesa: '63', giusta: true, ms: 3200 }
+  pc1.manda(r); pc1.manda(r); await pausa(400)
+  controlla('la risposta è confermata', pc1.arrivati.some(m => m.t === 'preso' && m.n === 1))
+  controlla('e alla maestra arriva una volta sola', maestra.arrivati.filter(m => m.t === 'risposta').length === 1, JSON.stringify(maestra.arrivati.filter(m => m.t === 'risposta')))
+  maestra.manda({ k: 'chiudi' }); await pausa(300)
+  controlla('chiusa, il bambino lo sa', pc1.arrivati.some(m => m.t === 'stato' && m.fase === 'chiusa'))
+  const ritorno = await collegaScuola(`/scuola/${nuova.codice}/maestra?chiave=${nuova.chiave}`); await pausa(300)
+  controlla('chiusa, la maestra recupera ancora i risultati', ritorno.arrivati[0]?.risposte?.a1?.length === 1, JSON.stringify(ritorno.arrivati[0]?.risposte))
+  for (const c of [maestra, ritorno, pc1, pc2]) c.ws.close()
+}
+
+// `node prova.mjs <indirizzo> scuola`: solo la scuola, senza il blocco di un minuto dei codici degli amici in fondo
+if (process.argv[3] === 'scuola') { await scuola(); finito() }
 
 function apri(codice) {
   return new Promise((ok, no) => {
@@ -106,8 +154,6 @@ const c = await fetch(`${BASE}/crea`).then(r => r.json())
 controlla('si possono creare altre stanze', /^[A-Z]{5}$/.test(c.codice || ''))
 
 /* ── gli amici (docs/core/amici.md) ── */
-const casuale = n => Array.from(crypto.getRandomValues(new Uint8Array(n)), x => 'abcdefghijklmnopqrstuvwxyz0123456789'[x % 36]).join('')
-const post = (percorso, corpo) => fetch(`${BASE}${percorso}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(corpo) })
 const chiave = casuale(32)
 const cod = await post('/amici/codice', { chiave }).then(r => r.json())
 controlla('un codice per abbinarsi: cinque lettere e una scadenza', /^[A-Z]{5}$/.test(cod.codice || '') && cod.scade > Date.now(), JSON.stringify(cod))
@@ -161,49 +207,10 @@ controlla('e quando scrive, la prima trova la sua', b3.altro?.giochi?.mate?.reco
 controlla('un terzo non entra in una bacheca di due', (await post('/amici/bacheca', { chiave, id: 'estraneo01', dati: null })).status === 409)
 controlla('una richiesta storta no', (await post('/amici/bacheca', { chiave: 'corta', id: 'marta0001' })).status === 400)
 controlla('dati troppo grandi no', (await post('/amici/bacheca', { chiave, id: 'marta0001', dati: { x: 'y'.repeat(3000) } })).status === 400)
-// la scuola (docs/scuola/protocollo.md): la maestra avvia, il bambino sceglie il nome, il via, una risposta che arriva una volta sola
-function collegaScuola(percorso) {
-  return new Promise((ok, no) => {
-    const ws = new WebSocket(`${WS}${percorso}`)
-    const arrivati = []
-    let chiuso = null
-    ws.addEventListener('message', e => arrivati.push(JSON.parse(e.data)))
-    ws.addEventListener('close', e => { chiuso = e.code })
-    ws.addEventListener('open', () => ok({ ws, arrivati, chiuso: () => chiuso, manda: m => ws.send(JSON.stringify(m)) }))
-    ws.addEventListener('error', () => no(new Error('non si apre')))
-  })
-}
-const lezione = { id: 'l1', nome: 'Tabellina del 9', obiettivo: { esercizio: { tipo: 'tabelline', tabelline: [9], modo: 'prodotto' }, quante: 10, minuti: null }, dopo: null }
-const nuova = await post('/scuola/lezione', { lezione, alunni: [{ id: 'a1', nome: 'Lorenzo' }, { id: 'a2', nome: 'Marta' }] }).then(r => r.json())
-controlla('la maestra avvia: un codice e una chiave', /^[A-Z]{5}$/.test(nuova.codice || '') && (nuova.chiave || '').length === 32, JSON.stringify(nuova))
-controlla('il codice esiste, in attesa', (await fetch(`${BASE}/scuola/${nuova.codice}`).then(r => r.json())).fase === 'attesa')
-controlla('un codice che non c\'è: 404', (await fetch(`${BASE}/scuola/ZZZZZ`)).status === 404)
-const maestra = await collegaScuola(`/scuola/${nuova.codice}/maestra?chiave=${nuova.chiave}`); await pausa(300)
-controlla('la maestra riceve tutto', maestra.arrivati[0]?.t === 'tutto' && maestra.arrivati[0].alunni.length === 2, JSON.stringify(maestra.arrivati[0]))
-const intrusa = await collegaScuola(`/scuola/${nuova.codice}/maestra?chiave=${casuale(32)}`); await pausa(300)
-controlla('con la chiave sbagliata non si entra (4403)', intrusa.chiuso() === 4403, String(intrusa.chiuso()))
-const pc1 = await collegaScuola(`/scuola/${nuova.codice}/bambino?posto=${casuale(12)}`); await pausa(300)
-controlla('il bambino vede la lista dei nomi', pc1.arrivati[0]?.t === 'stato' && pc1.arrivati[0].alunni.length === 2, JSON.stringify(pc1.arrivati[0]))
-pc1.manda({ k: 'sono', alunno: 'a1' }); await pausa(300)
-controlla('sceglie il suo nome', pc1.arrivati.some(m => m.t === 'stato' && m.io?.id === 'a1'))
-const pc2 = await collegaScuola(`/scuola/${nuova.codice}/bambino?posto=${casuale(12)}`); await pausa(200)
-pc2.manda({ k: 'sono', alunno: 'a1' }); await pausa(300)
-controlla('un altro PC non prende lo stesso nome', pc2.arrivati.some(m => m.t === 'no' && m.perche === 'preso'), JSON.stringify(pc2.arrivati))
-maestra.manda({ k: 'via' }); await pausa(300)
-controlla('il via arriva al bambino', pc1.arrivati.some(m => m.t === 'stato' && m.fase === 'via'))
-const r = { k: 'risposta', n: 1, parte: 'obiettivo', chiave: 'tab:prodotto', fatto: '9 × 7', data: '63', attesa: '63', giusta: true, ms: 3200 }
-pc1.manda(r); pc1.manda(r); await pausa(400)
-controlla('la risposta è confermata', pc1.arrivati.some(m => m.t === 'preso' && m.n === 1))
-controlla('e alla maestra arriva una volta sola', maestra.arrivati.filter(m => m.t === 'risposta').length === 1, JSON.stringify(maestra.arrivati.filter(m => m.t === 'risposta')))
-maestra.manda({ k: 'chiudi' }); await pausa(300)
-controlla('chiusa, il bambino lo sa', pc1.arrivati.some(m => m.t === 'stato' && m.fase === 'chiusa'))
-const ritorno = await collegaScuola(`/scuola/${nuova.codice}/maestra?chiave=${nuova.chiave}`); await pausa(300)
-controlla('chiusa, la maestra recupera ancora i risultati', ritorno.arrivati[0]?.risposte?.a1?.length === 1, JSON.stringify(ritorno.arrivati[0]?.risposte))
-for (const c of [maestra, ritorno, pc1, pc2]) c.ws.close()
+await scuola()
 
 // per ultimo: indovinare i codici blocca l'indirizzo per un minuto
 let ultimoStato = 0
 for (let i = 0; i < 12; i++) ultimoStato = (await post('/amici/riscatta', { codice: 'AAAA' + 'BCDEFGHJKLMN'[i] })).status
 controlla('dopo dieci codici sbagliati si viene fermati (429)', ultimoStato === 429, String(ultimoStato))
-console.log(guasti ? `\n❌ ${guasti} controlli falliti` : '\n✅ tutto a posto')
-process.exit(guasti ? 1 : 0)
+finito()
