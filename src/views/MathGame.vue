@@ -27,6 +27,7 @@ import { GIOCHI } from '../data/giochi.js'
 import { segnaPrimato, primatoDi, sosta, salvaSosta, buttaSosta, ritocca } from '../giochi/campagne.js'
 import { hangarDi, vintaTappa, vintoVolo, bossNelVolo, livrea, pacchiDi } from '../motore/asteroidi/hangar.js'
 import { scrivi, leggi, dice, recordDi, chiaveDi } from '../motore/asteroidi/sosta.js'
+import { tappaDelLimite } from '../motore/asteroidi/limite.js'
 import Ripresa from '../giochi/Ripresa.vue'
 import { fraseDiFine, recordInParole, sfidaDi } from '../giochi/primati.js'
 import { usaAmici } from '../amici/usaAmici.js'
@@ -50,7 +51,10 @@ import RottaAsteroidi from '../components/RottaAsteroidi.vue'
 import Barra from '../components/Barra.vue'
 import TastoSalta from '../components/TastoSalta.vue'
 
-const emit = defineEmits(['vai'])
+const emit = defineEmits(['vai', 'risposta'])
+// a scuola: `{ tabelline: [9] }`, e la partita gioca solo quelle (docs/asteroidi/scuola.md); a casa manca
+const props = defineProps({ limite: { type: Object, default: null } })
+const lim = tappaDelLimite(props.limite)
 
 const CFG = {
   vite: 3, viteMax: 5, cadutaSec: 10,
@@ -68,7 +72,7 @@ const CFG = {
 /* ---------- elementi: chiave normalizzata, 6×8 e 8×6 sono lo stesso fatto ---------- */
 const daChiave = fattoriDi
 
-const fase = ref('mappa')          // mappa | gioco | vinta | trionfo | fine | tavola
+const fase = ref(lim ? 'gioco' : 'mappa')   // mappa | gioco | vinta | trionfo | fine | tavola
 
 /* La pausa: vedi docs/core/interfaccia.md. Qui `anche` è una condizione
    sola — fuori dalla partita (mappa, veli, tavola di «Cosa so») — che
@@ -93,8 +97,8 @@ const dove = computed(() => posizioneOra(contatore.value))
 // un fatto della fila ma della domanda, e lo dice `magazzino` (store/volo.js)
 const posizione = ref(0)
 const magazzino = ref('tabelline')
-const voce = computed(() => (posizione.value >= 0 ? fila[posizione.value] : null))
-const campagna = computed(() => posizione.value >= 0)
+const voce = computed(() => (lim || (posizione.value >= 0 ? fila[posizione.value] : null)))
+const campagna = computed(() => !!lim || posizione.value >= 0)
 // quale dei due mestieri: il tipo della voce, o nel volo il magazzino
 const mente = computed(() => (voce.value ? voce.value.tipo === 'mente'
                                          : magazzino.value === 'mente'))
@@ -102,7 +106,7 @@ const tappa = computed(() => (voce.value ? voce.value.T : VOLO))
 /* la sfida senza fine del manifesto: misura, racconto e record del volo */
 const SFIDA_VOLO = sfidaDi(GIOCHI.find(g => g.chiave === 'mate').senzaFine)
 // cosa dire sul velo della pausa: il posto nella fila
-const dovEravamo = computed(() => voce.value
+const dovEravamo = computed(() => lim ? `${lim.T.emoji} ${lim.T.nome}` : voce.value
   ? `${voce.value.T.emoji} tappa ${voce.value.n} di ${fila.length}`
   : `${VOLO.emoji} ${VOLO.nome}`)
 // il lucchetto legge `dove` (posizione in fila) e l'età (`data/portata-giochi.js`)
@@ -234,6 +238,7 @@ function poolAttivo() {
   const quanti = insiemeDi(tabelle.value) + picker.riposati
   const ora = Date.now()
   marea = mareaTabelline(state.profile.items, ora)
+  if (lim) return chiaviDelle(tabelle.value)   // tutti e dieci i fatti, non l'insieme di chi comincia
   return poolTappa(tappa.value, state.profile.items, ora, quanti)
 }
 
@@ -642,6 +647,11 @@ function abbattiMadre() {
   avanti()
 }
 
+// per chi limita il gioco da fuori (docs/asteroidi/scuola.md): prima che la domanda cambi; `ultima` quando si chiude
+function rispondi(chiave, data, ms, ultima) {
+  emit('risposta', { chiave, testo: domanda.testo, giusta: data === domanda.ris, ms: Math.round(ms), data, attesa: domanda.ris, ultima })
+}
+
 function colpisci(a) {
   const k = domanda.chiave
   // il tempo è da `prontaIl` (quando il sasso era raggiungibile), non dalla
@@ -652,6 +662,7 @@ function colpisci(a) {
   if (!gelo) nota.ms = ms
   if (a.ok) {
     answer(k, nota); picker.afterAnswer(k, true)
+    rispondi(k, a.v, ms, true)
     hud.giuste++; hud.serie++
     hud.serieMax = Math.max(hud.serieMax, hud.serie)
     if (mirata) hud.mirate++
@@ -663,7 +674,7 @@ function colpisci(a) {
     premia(hud.serie)
     borsellino.paga(PAGA.asteroide)
     // la moneta è già arrivata: il cartello ogni dieci centri dice solo quante ne hai fatte
-    if (hud.giuste % CFG.cartelloMonete === 0 && borsellino.dato > mostrate) {
+    if (!lim && hud.giuste % CFG.cartelloMonete === 0 && borsellino.dato > mostrate) {
       mostraCartello('+' + (borsellino.dato - mostrate) + ' 🪙', '#ffd94a'); suono.moneta()
       mostrate = borsellino.dato
     }
@@ -672,6 +683,7 @@ function colpisci(a) {
     avanti()
   } else {
     answer(k, nota); picker.afterAnswer(k, false)
+    rispondi(k, a.v, ms, hud.vite <= 1)   // la domanda si chiude solo se questa era l'ultima vita
     a.morto = true; hud.serie = 0; hud.sbagliate++
     // il sasso sbagliato non esplode: diventa rosso e il colpo lo spinge via
     a.respinto = 1; a.rosso = 1
@@ -840,6 +852,7 @@ function aggiorna(dt) {
   if (caduto) {
     const k = domanda.chiave
     answer(k, { correct: false, ms: CFG.msNonRisposto }); picker.afterAnswer(k, false)
+    rispondi(k, null, CFG.msNonRisposto, true)
     hud.sbagliate++
     // il sasso arriva in fondo (o addosso alla nave): la botta la prende
     // lei (`perdiVita`), e qui resta solo lo scoppio là dove ha colpito
@@ -1035,7 +1048,7 @@ function domandaAperta() {
 }
 
 function salva({ subito = false } = {}) {
-  if (fase.value !== 'gioco') return
+  if (lim || fase.value !== 'gioco') return       // a scuola niente sosta
   salvaSosta(CHIAVE, scrivi({
     chiave: chiaveDi(voce.value), hud, tasca, ultimoGettone, chieste, magazzino: magazzino.value,
     monete: { chiesto: borsellino.chiesto, dato: borsellino.dato, mostrate },
@@ -1232,7 +1245,8 @@ onMounted(() => {
                     grafica: () => (pittore3d ? { tre: true, ...pittore3d.info() } : { tre: false }) }
   ridimensiona()
   accendi3d()
-  dalCheat()
+  if (lim) inizia()          // niente mappa: si parte giocando
+  else dalCheat()
   window.addEventListener('resize', ridimensiona)
   if (window.ResizeObserver && campoEl.value) { osservatore = new ResizeObserver(() => ridimensiona()); osservatore.observe(campoEl.value) }
   window.addEventListener('pointermove', guida)
@@ -1291,7 +1305,7 @@ function dalCheat() {
          (docs/asteroidi/volo.md): quanto manca alla tappa, e sulla nuova -->
     <Barra v-if="fase === 'gioco'" :titolo="campagna ? '' : VOLO.nome"
            guida="mate" scura pausa @pausa="metti()" @aiuto="aiuto" @indietro="allaMappa">
-      <div v-if="campagna" class="avanza">
+      <div v-if="campagna && !lim" class="avanza">
         <i :style="{ width: quota(hud.giuste, tappa.bersaglio) }"></i>
         <span>{{ tappa.emoji }} {{ hud.giuste }}/{{ tappa.bersaglio }}</span>
       </div>
@@ -1447,8 +1461,14 @@ function dalCheat() {
       </div>
     </div>
 
+    <!-- fine partita, a scuola: niente mappa, record, monete né festa -->
+    <div v-if="fase === 'fine' && lim" class="velo" data-fine-limite>
+      <h1 class="chiaro">Fine partita</h1>
+      <button class="bottone" data-azione="riparti" @click="inizia()">Riparti ▶</button>
+    </div>
+
     <!-- fine partita -->
-    <div v-if="fase === 'fine'" class="velo">
+    <div v-if="fase === 'fine' && !lim" class="velo">
       <h1 class="chiaro">Fine partita</h1>
       <div v-if="campagna" class="dato">{{ tappa.emoji }} {{ tappa.nome }}:
         <span>{{ finale.giuste }}/{{ tappa.bersaglio }}</span> centri</div>
