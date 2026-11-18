@@ -1,0 +1,47 @@
+/* La pelle della pagina della maestra: quella pulita di casa (docs/core/pelle.md), coi valori di src/style.css */
+.maestra { overflow-y:auto; color:var(--inchiostro) }
+.maestra .pagina { width:100%; max-width:calc(var(--colonna) * 2.4); margin:0 auto; padding:16px;
+                   display:flex; flex-direction:column; gap:16px }
+.maestra .carta { background:var(--superficie); border-radius:var(--raggio); box-shadow:var(--ombra);
+                  padding:16px; display:flex; flex-direction:column; gap:12px }
+.maestra h1 { font-size:22px; font-weight:600; color:var(--inchiostro); line-height:1.2 }
+.maestra h3 { font-size:15px; font-weight:600 }
+.maestra p, .maestra li { line-height:1.45 }
+.maestra .testo { max-width:none }
+.maestra .mini { text-align:left }
+.maestra .fila { display:flex; flex-wrap:wrap; gap:8px; align-items:center }
+.maestra .fila.fine { justify-content:flex-end }
+.maestra .bottone { padding:10px 18px; font-size:15px }
+.maestra .bottone.piccolo { padding:6px 12px; font-size:13px }
+.maestra .bottone:disabled { opacity:.45 }
+.maestra a.bottone { text-decoration:none; display:inline-block }
+.maestra .campo { width:100%; padding:10px 12px; font:inherit; color:var(--inchiostro); background:var(--superficie);
+                  border:1px solid var(--filo); border-radius:var(--raggio-piccolo) }
+.maestra textarea.campo { min-height:200px; resize:vertical; line-height:1.5 }
+.maestra label { display:flex; flex-direction:column; gap:6px; font-size:14px; font-weight:600 }
+.maestra .tessera { padding:8px 12px; border-radius:var(--raggio-piccolo); background:var(--tessera); color:var(--inchiostro);
+                    font:inherit; font-size:14px; border:1px solid transparent }
+.maestra .tessera.scelta { background:var(--inchiostro); color:var(--superficie) }
+.maestra .tessera:disabled { opacity:.4 }
+.maestra .elenco { list-style:none; display:flex; flex-direction:column; gap:10px }
+.maestra .elenco > li { display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center; justify-content:space-between;
+                        padding:12px 0; border-top:1px solid var(--filo) }
+.maestra .elenco > li:first-child { border-top:0; padding-top:0 }
+.maestra .elenco .cosa { flex:1 1 220px; min-width:0; display:flex; flex-direction:column; gap:2px }
+.maestra .nota { font-size:13px; color:var(--grigio) }
+.maestra .avviso { max-width:none; font-size:14px }
+.maestra .bene { font-size:14px; color:var(--inchiostro); background:var(--tessera); border-radius:var(--raggio-piccolo); padding:8px 12px }
+.maestra .etichetta { font-size:11px; font-weight:600; padding:2px 8px; border-radius:999px; background:var(--tessera); color:var(--grigio) }
+.maestra .copiabile { overflow-wrap:anywhere }
+.maestra .tabella { width:100%; border-collapse:collapse; font-size:14px }
+.maestra .tabella th { text-align:left; font-weight:600; color:var(--grigio); font-size:12px; padding:6px 8px; border-bottom:1px solid var(--filo) }
+.maestra .tabella td { padding:8px; border-bottom:1px solid var(--filo); vertical-align:top }
+.maestra .scorre { overflow-x:auto }
+
+@media print {
+  html, body, #app { height:auto; overflow:visible; background:#fff }
+  .maestra { position:static; overflow:visible; background:#fff }
+  .maestra .carta { box-shadow:none; padding:0 }
+  .maestra .no-stampa { display:none !important }
+  .maestra .pagina { max-width:none; padding:0 }
+}
