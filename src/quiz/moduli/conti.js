@@ -288,6 +288,7 @@ function aiutoProdotto(grado, a, b, ris) {
       parti.map(p => p * b).join(' + ') + ` = ${ris}`
   }
   const [piccolo, grande] = a <= b ? [a, b] : [b, a]
+  if (piccolo === 1) return `${grande} × 1 = ${grande}: un gruppo solo di ${grande}` // solo la scuola chiede il per 1
   if (piccolo === 10) return `${grande} × 10: basta mettere uno zero dopo ${grande} → ${ris}`
   if (piccolo === 2) return `${grande} × 2 è il doppio: ${grande} + ${grande} = ${ris}`
   if (piccolo === 5) return `${grande} × 5 è la metà di ${grande} × 10: ${grande * 10}, e la metà fa ${ris}`
@@ -393,13 +394,19 @@ class ContiPuri extends Modulo {
     const f = FAMIGLIE[chiave.slice('conti:'.length)]
     const g = Math.max(1, Math.min(this.gradi, Math.round(grado || 1)))
     const [a, b] = f.numeri(g, sorte)
+    return this.conto(chiave, g, a, b, sorte)
+  }
+
+  // la domanda di due numeri già scelti da fuori (la tabellina della scuola: docs/scuola/esercizi.md)
+  conto(chiave, grado, a, b, sorte) {
+    const f = FAMIGLIE[chiave.slice('conti:'.length)]
     const ris = f.vale(a, b)
     return domanda({
       testo: `${a} ${f.segno} ${b} = ?`,
       buona: testo(ris),
-      falsi: f.falsi(sorte, g, a, b, ris),
+      falsi: f.falsi(sorte, grado, a, b, ris),
       chiave,
-      aiuto: f.aiuto(g, a, b, ris),
+      aiuto: f.aiuto(grado, a, b, ris),
       sorte,
     })
   }
