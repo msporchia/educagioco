@@ -24,6 +24,7 @@ import { guida, guidaScheda } from './motore/guida.js'
 import { usaGuida } from '../guida.js'
 import Guida from '../Guida.vue'
 import { Regia, quadroFermo } from './regia.js'
+import { filaDelLimite, dopo, scalaDelLimite, raccontaEsecuzione } from './motore/limite.js'
 
 import Scheda from './viste/Scheda.vue'
 import Ordine from './viste/Ordine.vue'
@@ -38,12 +39,15 @@ import Finale from './viste/Finale.vue'
 import './stile.css'
 
 defineOptions({ name: 'Costruttore' })
-const emit = defineEmits(['vai'])
+const emit = defineEmits(['vai', 'risposta'])
+// a scuola: `{ capitoli: ['cantiere'] }`, e si giocano in fila solo i loro livelli (docs/costruttore/scuola.md); a casa manca
+const props = defineProps({ limite: { type: Object, default: null } })
+const fila = filaDelLimite(props.limite)
 
 const CHIAVE = 'costruttore'
 
 /* ═══════════ dove siamo ═══════════ */
-const vista = ref('mappa')             // mappa | cantiere
+const vista = ref(fila ? 'cantiere' : 'mappa')   // mappa | cantiere
 const idx = ref(-1)
 /* il cantiere libero non è una tappa: ha un indice suo, fuori dalla fila */
 const LIBERO_IDX = -2
@@ -130,6 +134,7 @@ async function apriLivello(i) {
   finale.value = null
   aiutiVisti.value = aiutiPresi(CHIAVE, l.chiave)
   ordineVisto.value = 0
+  tentativoDal = Date.now()
   resetRisultato()
 }
 
@@ -396,7 +401,7 @@ function ricomincia() {
 }
 
 // gli aiuti: la scala e i prezzi in docs/costruttore/campagna.md
-const scala = computed(() => (liv.value ? scalaDi(liv.value) : []))
+const scala = computed(() => (!liv.value ? [] : fila ? scalaDelLimite(scalaDi(liv.value)) : scalaDi(liv.value)))
 const aiutiFatti = computed(() => scala.value.slice(0, aiutiVisti.value))
 const prossimoAiuto = computed(() => scala.value[aiutiVisti.value] || null)
 const monete = computed(() => state.profile.coins || 0)
@@ -441,6 +446,7 @@ const messaggio = ref(null)            // { tipo: 'errore' | 'sbagliato', testo 
 const finale = ref(null)
 let regia = null
 let mattoni = 0
+let tentativoDal = 0                   // con `limite`: da quando si prova (per `ms`); 0 a livello vinto, che non risponde più
 
 function resetRisultato() {
   if (!liv.value) return
@@ -554,6 +560,10 @@ function fine(esito) {
     messaggio.value = { tipo: 'fatto', testo: 'Fatto! Il cantiere libero non si vince: si costruisce. Cambia il programma e riprova.' }
     return
   }
+  if (fila && tentativoDal) {
+    emit('risposta', { ...raccontaEsecuzione(l, esito), ms: Date.now() - tentativoDal })
+    tentativoDal = esito.vinto ? 0 : Date.now()
+  }
   if (esito.vinto) return vittoria()
   const prefisso = l.ordini.length > 1 ? `Con «${l.ordini[esito.ordine].nome}»: ` : ''
   if (esito.errore) {
@@ -572,6 +582,11 @@ function fine(esito) {
 function vittoria() {
   const i = idx.value
   const l = liv.value
+  // con `limite` niente monete, stelle né tappa: il cartello e avanti
+  if (fila) {
+    finale.value = { titolo: l.nome, stelle: null, ordini: l.ordini.map(o => o.nome), daCapo: dopo(fila, i).daCapo }
+    return
+  }
   const primaVolta = stelleDi(CHIAVE, i) === 0
   const stelle = prog.value.svelato ? 1 : 2
   /* le monete prima della tappa: `completa` scrive subito su disco, e
@@ -588,8 +603,19 @@ function vittoria() {
 function avanti() {
   const i = idx.value + 1
   finale.value = null
+  if (fila) return dopoNelLimite()
   if (i < LIVELLI.length && aperta(CHIAVE, i)) apriLivello(i)
   else allaMappa()
+}
+
+// finita la fila si ricomincia dal primo, coi programmi da scrivere di nuovo
+function dopoNelLimite() {
+  const d = dopo(fila, idx.value)
+  if (d.daCapo) {
+    for (const k of fila) delete archivio.programmi[LIVELLI[k].chiave]
+    storie.clear()
+  }
+  apriLivello(d.indice)
 }
 
 function allaMappa() {
@@ -628,6 +654,7 @@ function seSparisce(e) {
   if (e?.type === 'pagehide' || document.visibilityState === 'hidden') salvaOra()
 }
 onMounted(() => {
+  if (fila) apriLivello(fila[0])
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
 })

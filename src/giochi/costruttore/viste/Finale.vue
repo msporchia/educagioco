@@ -7,11 +7,12 @@ import Robot from './Robot.vue'
 
 defineProps({
   titolo: { type: String, required: true },
-  stelle: { type: Number, default: 1 },
+  stelle: { type: Number, default: 1 },           // null: senza stelle (a scuola, docs/costruttore/scuola.md)
   monete: { type: Number, default: 0 },
   ordini: { type: Array, default: () => [] },     // i nomi degli ordini
   svelato: { type: Boolean, default: false },
   ultimo: { type: Boolean, default: false },
+  daCapo: { type: Boolean, default: false },      // a scuola: dopo questo si ricomincia dal primo
 })
 const emit = defineEmits(['avanti', 'mappa', 'resta'])
 
@@ -31,10 +32,11 @@ onUnmounted(() => clearTimeout(timer))
         <Robot braccia="su" occhi="contenti" />
       </svg>
       <h2>{{ titolo }}</h2>
-      <div class="cst-stelle-grandi">{{ '⭐'.repeat(stelle) }}<span class="cst-spenta">{{ '⭐'.repeat(2 - stelle) }}</span></div>
+      <div v-if="stelle !== null" class="cst-stelle-grandi">{{ '⭐'.repeat(stelle) }}<span class="cst-spenta">{{ '⭐'.repeat(2 - stelle) }}</span></div>
       <p v-if="ordini.length > 1">Il tuo programma ha retto su tutti gli ordini: <b>{{ ordini.join(' · ') }}</b>.</p>
       <p v-else>Costruito!</p>
       <p v-if="svelato" class="cst-piccolo">Con la soluzione mostrata la seconda stella resta spenta: ricomincia da capo e prova da solo.</p>
+      <p v-if="daCapo" data-da-capo>Hai fatto tutti i livelli: adesso si ricomincia dal primo.</p>
       <p v-if="monete" class="cst-monete">+{{ monete }} 🪙</p>
       <div class="cst-tasti-foglio">
         <button type="button" class="cst-secondario" data-azione="resta" :disabled="cieco" @click="emit('resta')">guarda il programma</button>

@@ -19,6 +19,7 @@ toccava ogni import, test e rimando.
 - [campagna.md](campagna.md) — programmi fuori dal profilo, riordinare la fila, si apre per merito, stelle e 💡
 - [scheda.md](scheda.md) — la scheda del robot: dove si sceglie il livello, chip e led, la corrente e il robot, il fumetto; e il robot disegnato, uguale in ogni schermata, con le sue pose
 - [livelli.md](livelli.md) — come si scrive un livello: i campi, le cinque regole, l'ordine dei capitoli
+- [scuola.md](scuola.md) — il Robot a scuola: la maestra sceglie i capitoli, la fila che ricomincia, gli aiuti gratis, la risposta di ogni ▶
 
 Vedi anche: [../core/aiuti.md](../core/aiuti.md) (la scala a monete comune),
 [../core/amici-nei-giochi.md](../core/amici-nei-giochi.md) (gli amici sulla scheda),
