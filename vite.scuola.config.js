@@ -9,7 +9,7 @@ import { SOSTITUTI } from './src/scuola/sostituti/elenco.js'
 
 const RADICE = import.meta.dirname
 const PAGINE = ['index', 'maestra']
-const TETTO = { index: 5_000_000, maestra: 3_000_000 }   // byte per pagina: se la build li supera fallisce (i bambini: tre giochi veri in più, docs/scuola/giochi.md)
+const TETTO = { index: 60_000_000, maestra: 5_000_000 }   // byte per pagina, solo contro uno sbaglio grosso: il peso non è un problema (scelta dell'utente)
 
 // il nome del tag `scuola-*`, o lo sha corto col «+» se ci sono modifiche (come la build di casa)
 function versione () {

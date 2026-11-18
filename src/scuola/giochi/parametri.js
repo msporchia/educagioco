@@ -4,4 +4,8 @@ import { defineAsyncComponent } from 'vue'
 export const PARAMETRI = {
   'passo-passo': defineAsyncComponent(() => import('./passo-passo/Parametri.vue')),
   robot: defineAsyncComponent(() => import('./robot/Parametri.vue')),
+  inglese: defineAsyncComponent(() => import('./inglese/Parametri.vue')),
+  pozioni: defineAsyncComponent(() => import('./pozioni/Parametri.vue')),
+  cucina: defineAsyncComponent(() => import('./cucina/Parametri.vue')),
+  castello: defineAsyncComponent(() => import('./castello/Parametri.vue')),
 }

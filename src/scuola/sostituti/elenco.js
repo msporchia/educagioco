@@ -4,8 +4,14 @@ import asteroidi from '../giochi/asteroidi/sostituti.js'
 import survivors from '../giochi/survivors/sostituti.js'
 import passoPasso from '../giochi/passo-passo/sostituti.js'
 import robot from '../giochi/robot/sostituti.js'
+import inglese from '../giochi/inglese/sostituti.js'
+import pozioni from '../giochi/pozioni/sostituti.js'
+import cucina from '../giochi/cucina/sostituti.js'
+import castello from '../giochi/castello/sostituti.js'
+import sotterraneo from '../giochi/sotterraneo/sostituti.js'
+import insieme from '../giochi/insieme.js'
 
-const GIOCHI = [asteroidi, survivors, passoPasso, robot]
+const GIOCHI = [asteroidi, survivors, passoPasso, robot, inglese, pozioni, cucina, castello, sotterraneo]
 
 const COMUNI = {
   'src/store/giudizi.js': 'src/scuola/sostituti/giudizi.js',
@@ -26,6 +32,6 @@ const COMUNI = {
   'src/amici/usaAmici.js': 'src/scuola/sostituti/usaAmici.js',
 }
 
-export const SOSTITUTI = Object.assign({}, COMUNI, ...GIOCHI.map(g => g.sostituti))
+export const SOSTITUTI = Object.assign({}, COMUNI, insieme, ...GIOCHI.map(g => g.sostituti))
 // i pezzi dei giochi di casa che possono entrare nel pacchetto dei bambini (la guardia vieta gli altri)
 export const AMMESSI = GIOCHI.flatMap(g => g.ammessi)

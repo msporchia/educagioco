@@ -15,8 +15,7 @@ che mescola gli argomenti in un formato divertente; non si storpia, si limita. C
   `domandaDellaCarta` (col limite la domanda dopo dell'esercizio, a casa `domandaPerGioco` col prezzo della carta) e
   `liberaDelLimite`.
 - **La partita è la Sopravvivenza** (la partita libera, senza fine: `LIBERO`), con gli stessi numeri, ma **sul prato**
-  invece che di notte: a scuola il terreno è quello disegnato di ripiego (sotto) e al buio gli ostacoli piatti non si
-  vedrebbero. Il prato ha anche meno ostacoli della notte.
+  invece che di notte: il prato ha meno ostacoli e si legge meglio su un PC di classe.
 - Il prezzo della carta non sceglie più la difficoltà della domanda: la decide l'esercizio.
 
 ## Cosa resta e cosa si spegne
@@ -44,11 +43,8 @@ la carta non c'è e l'offerta va avanti, come a casa): la vista la racconta con 
 
 Survivors prende in prestito le figure dei fogli del castello e del sotterraneo ([grafica.md](grafica.md)). A scuola:
 
-- **Le figure vere restano**: i mostri dal foglio delle figure del castello (~1,76 MB) e l'eroe, la vespa e il fungo
-  dall'atlante del sotterraneo (~0,50 MB). L'eroe è il personaggio che si guida: l'atlante non è secondario.
-- **Il terreno è il ripiego disegnato** che il gioco ha già per quando i fogli non sono pronti (`terreno()` e
-  `ostacoloPiatto()` in `scena/campo.js`): il sostituto `src/scuola/sostituti/survivors-vestiti.js` ha gli stessi nomi dei
-  vestiti del castello senza immagini (~2,1 MB in meno); l'immagine vuota non si carica e il campo resta disegnato.
+- **Tutto vero, come a casa**: i mostri dal foglio delle figure del castello, l'eroe, la vespa e il fungo dall'atlante del
+  sotterraneo, il terreno dai vestiti del castello. Il peso a scuola non è un problema (scelta dell'utente).
 - `viste/Mappa.vue` (che porta gli amici) e `viste/Finale.vue` (che porta la festa) a scuola sono `Vuoto.vue`.
 
 Dal grafo degli import la pagina dei bambini passa da ~1,7 a ~4,1 MB di sorgente; il grosso sono le due immagini in base64,

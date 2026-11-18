@@ -46,6 +46,7 @@ const MATERIE = [
   { id: 'tempo', nome: 'Tempo e orologio', emoji: '🕰️' },
   { id: 'logica', nome: 'Logica', emoji: '🧩' },
   { id: 'scienze', nome: 'Scienze', emoji: '🔬' },
+  { id: 'inglese', nome: 'Inglese', emoji: '🔤' },
   { id: 'programmazione', nome: 'Programmare', emoji: '🤖' },
 ]
 
