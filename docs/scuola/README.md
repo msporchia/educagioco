@@ -8,6 +8,7 @@ giocano ai giochi veri limitati alla lezione, e alla fine lei ha il resoconto.
 
 - [progetto.md](progetto.md) — cosa fa, il giro di una lezione, le scelte e cosa non c'è
 - [architettura.md](architettura.md) — le due pagine, i sostituti, la build, la pipeline col tag, il service worker di casa
+- [lezione.md](lezione.md) — la lezione a blocchi: cosa si chiede, in che gioco, quando si passa al blocco dopo (da solo o «Avanti tutti»), in tondo
 - [protocollo.md](protocollo.md) — il servizio: la lezione sul Durable Object, le richieste, i messaggi, i limiti, le 3 ore
 - [esercizi.md](esercizi.md) — cosa può scegliere la maestra, come si pescano le domande, come si racconta una risposta
 - [quaderno.md](quaderno.md) — cosa tiene il PC della maestra: classi, lezioni, storico, il file da salvare e il link di una lezione, il percorso di «Nuova lezione»

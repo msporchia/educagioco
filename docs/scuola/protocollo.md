@@ -20,13 +20,14 @@ comune dei due lati è `src/scuola/comune/rete.js`. Il deploy del servizio lo fa
 ## La lezione che viaggia
 
 ```js
-{ id, nome,                                   // id della lezione nel quaderno, nome per la maestra
-  obiettivo: { esercizio, quante, minuti },   // uno dei due fra quante (domande) e minuti; l'altro null
-  dopo: esercizio | null }                    // il «se hai finito», senza fine
+{ id, nome,                          // id della lezione nel quaderno, nome per la maestra
+  blocchi: [{ esercizio, passa }],   // da 1 a 8; passa: { giuste | domande | minuti: n } o null (quando lo dice la maestra)
+  inTondo }                          // dopo l'ultimo blocco si ricomincia dal primo
 ```
 
-`esercizio` è un oggetto descritto in [esercizi.md](esercizi.md) (`valido(esercizio)` lo controlla). Il
-servizio non lo legge: controlla solo la misura e lo rimanda così com'è.
+La forma e il perché stanno in [lezione.md](lezione.md); `esercizio` in [esercizi.md](esercizi.md). Il servizio non legge
+gli esercizi: controlla la forma dei blocchi e di `passa` (i tetti di `MODI_PASSA`: 500 giuste o domande, 180 minuti), la
+misura, e rimanda la lezione così com'è.
 
 ## Le richieste HTTP
 
@@ -47,12 +48,12 @@ Tutti JSON, un oggetto per messaggio, ≤ 2 KB (≤ 8 KB quello della lezione ne
 |---|---|
 | `{ k: 'sono', alunno }` | sceglie un nome della lista. Rifiutato (`{ t: 'no', perche: 'preso' }`) se quel nome lo tiene un altro posto, `storto` se il nome non c'è o se il posto ne ha già uno (cambiarlo lo fa la maestra con `libera`); `chiusa` a lezione finita |
 | `{ k: 'sono', nome }` | «Non trovo il mio nome»: il servizio crea un alunno `nuovo` (id `n` + casuale) e glielo assegna |
-| `{ k: 'risposta', n, parte, chiave, fatto, data, attesa, giusta, ms, ultima? }` | `ultima: false` è un colpo sbagliato di un gioco con la domanda ancora aperta (negli Asteroidi un sasso sbagliato): la maestra lo vede fra le sbagliate ma non lo conta fra le fatte; senza, la risposta chiude la domanda. `n` progressivo del posto (da 1); `parte` è `'obiettivo'` o `'dopo'`; `fatto`/`data`/`attesa` sono testi brevi (≤ 40) da `racconta()` di [esercizi.md](esercizi.md). Accettata solo in fase `via`, e solo se `n` è più grande dell'ultima presa per quel posto (chi rimanda una risposta già presa riceve solo la conferma) |
-| `{ k: 'dove', dove }` | `'obiettivo'`, `'dopo'` o `'finito'`: a che punto è, per il pannello della maestra |
+| `{ k: 'risposta', n, blocco, chiave, fatto, data, attesa, giusta, ms, ultima? }` | `ultima: false` è un colpo sbagliato di un gioco con la domanda ancora aperta (negli Asteroidi un sasso sbagliato): la maestra lo vede fra le sbagliate ma non lo conta fra le fatte; senza, la risposta chiude la domanda. `n` progressivo del posto (da 1); `blocco` è la posizione `p` del bambino quando ha risposto (intero ≥ 0: in tondo cresce a ogni giro, il blocco è `p % blocchi`, [lezione.md](lezione.md)); `fatto`/`data`/`attesa` sono testi brevi (≤ 40) da `racconta()` di [esercizi.md](esercizi.md). Accettata solo in fase `via`, e solo se `n` è più grande dell'ultima presa per quel posto (chi rimanda una risposta già presa riceve solo la conferma) |
+| `{ k: 'dove', dove }` | la posizione `p` (intero ≥ 0) o `'finito'`: a che punto è, per il pannello della maestra |
 
 | Al bambino | |
 |---|---|
-| `{ t: 'stato', fase, lezione, alunni: [{ id, nome, preso }], io, preso }` | all'ingresso e a ogni cambio di fase o di nomi presi. `io`: l'alunno di questo posto o `null`; `preso`: l'ultima `n` presa per questo posto (la coda rimanda solo quelle dopo) |
+| `{ t: 'stato', fase, lezione, avanti, alunni: [{ id, nome, preso }], io, preso }` | all'ingresso e a ogni cambio di fase, di nomi presi o di `avanti` (il pavimento di «Avanti tutti»: il bambino sta in `max(sua posizione, avanti)`). `io`: l'alunno di questo posto o `null`; `preso`: l'ultima `n` presa per questo posto (la coda rimanda solo quelle dopo) |
 | `{ t: 'preso', n }` | la risposta `n` è salvata |
 | `{ t: 'no', perche, n? }` | `'preso'`, `'chiusa'`, `'storto'`; per una risposta rifiutata c'è anche la sua `n` (la `storta` non sarà mai accettata: il client la butta dalla coda; con `chiusa` il client butta tutta la coda) |
 
@@ -60,15 +61,17 @@ Tutti JSON, un oggetto per messaggio, ≤ 2 KB (≤ 8 KB quello della lezione ne
 |---|---|
 | `{ k: 'via' }` | da `attesa` a `via` |
 | `{ k: 'chiudi' }` | a `chiusa` |
+| `{ k: 'avanti' }` | «Avanti tutti»: `avanti` cresce di uno (al più 1000), e lo sanno tutti i bambini (`stato`) e le maestre (`avanti`). Solo in fase `via` |
 | `{ k: 'libera', alunno }` | il nome torna libero (un PC rotto, un bambino che ha toccato il nome sbagliato): il posto che lo teneva riceve uno `stato` con `io: null` e torna alla lista. Le risposte restano all'alunno |
 | `{ k: 'togli', alunno }` | solo per un alunno `nuovo` (un nome che la maestra non conosce): via lui e le sue risposte |
 
 | Alla maestra | |
 |---|---|
-| `{ t: 'tutto', fase, lezione, scade, alunni: [{ id, nome, nuovo, preso, collegato, dove }], risposte: { <alunno>: [r…] } }` | all'ingresso: tutto quello che il servizio sa (è anche «Recupera i risultati») |
+| `{ t: 'tutto', fase, lezione, scade, avanti, alunni: [{ id, nome, nuovo, preso, collegato, dove }], risposte: { <alunno>: [r…] } }` | all'ingresso: tutto quello che il servizio sa (è anche «Recupera i risultati») |
 | `{ t: 'alunni', alunni }` | a ogni cambio di nomi, collegamenti o `dove` |
 | `{ t: 'risposta', alunno, r }` | ogni risposta presa, appena presa |
 | `{ t: 'fase', fase }` | a ogni cambio di fase |
+| `{ t: 'avanti', avanti }` | a ogni «Avanti tutti» |
 
 `r` è la risposta come l'ha mandata il bambino, senza `k`.
 
@@ -104,12 +107,12 @@ Orologio (`{ ora, dopo, ogni, ferma }`), `WebSocketImpl`, `fetchImpl` e `storage
 - `creaLezione(lezione, alunni)` → `{ codice, chiave, scade }`; riprova se la richiesta si perde; l'errore
   (`Error`) ha già la frase.
 - `controllaCodice(codice)` → `{ esito: 'ok' | 'no' | 'rete', fase }`.
-- `apriBambino(codice, { suStato, suNo, suLinea })` → `{ sono(alunnoId | { nome }), rispondi({ parte, chiave, fatto,
-  data, attesa, giusta, ms }) → n, dove(d), inCoda(), chiudi() }`. `suStato(msg)` riceve ogni `stato`;
+- `apriBambino(codice, { suStato, suNo, suLinea })` → `{ sono(alunnoId | { nome }), rispondi({ blocco, chiave, fatto,
+  data, attesa, giusta, ms, ultima }) → n, dove(p | 'finito'), inCoda(), chiudi() }`. `suStato(msg)` riceve ogni `stato`;
   `suNo(perche)` i rifiuti, e `'codice'` se la lezione non esiste (non riprova); `suLinea('su' | 'giu')`.
   Si collega subito. Il posto, l'alunno, l'ultima `n` e la coda stanno in `scuola:<CODICE>`.
-- `apriMaestra(codice, chiave, { suTutto, suAlunni, suRisposta(alunno, r), suFase, suLinea, suRifiuto })` →
-  `{ via(), chiudi(), libera(id), togli(id), smetti() }`. Si collega subito; `via()` fa partire la lezione,
+- `apriMaestra(codice, chiave, { suTutto, suAlunni, suRisposta(alunno, r), suFase, suAvanti(avanti), suLinea, suRifiuto })` →
+  `{ via(), avanti(), chiudi(), libera(id), togli(id), smetti() }`; `avanti()` è «Avanti tutti». Si collega subito; `via()` fa partire la lezione,
   `smetti()` la chiude, `chiudi()` chiude il collegamento. `suRifiuto('chiave' | 'codice')`, senza riprovare.
 
 ## Nei test
