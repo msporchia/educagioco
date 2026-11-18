@@ -2,8 +2,8 @@
 // Gli Asteroidi veri, limitati alle tabelline dell'esercizio, su un profilo in memoria; se non partono, chi la monta torna alle schede. docs/scuola/bambini.md
 import { ref, shallowRef, onMounted, onErrorCaptured } from 'vue'
 import MathGame from '../../../views/MathGame.vue'
-import { bambinoInMemoria } from '../profilo.js'
-import { limiteAsteroidi } from '../../comune/esercizi.js'
+import { bambinoInMemoria } from '../../bambini/profilo.js'
+import { limiteAsteroidi, raccontaAsteroide } from '../../comune/esercizi.js'
 
 const props = defineProps({
   esercizio: { type: Object, required: true },
@@ -33,12 +33,15 @@ onMounted(async () => {
   setTimeout(() => { if (radice.value?.querySelector('[data-riaccendi-tela]')) nonParte() }, 0)
 })
 onErrorCaptured(() => { nonParte(); return false })
+
+// alla maestra va ogni colpo; il blocco conta la domanda una volta, quando si chiude (`ultima`). La forma: docs/scuola/giochi.md
+const riferisci = e => emit('risposta', { chiave: 'tab:prodotto', giusta: e.giusta, ms: e.ms, ultima: e.ultima !== false, ...raccontaAsteroide(e) })
 </script>
 
 <template>
   <div ref="radice" class="asteroidi" data-gioco="asteroidi">
     <div class="colonna">
-      <MathGame v-if="chi" :key="chi" :limite="limite" @risposta="e => emit('risposta', e)" />
+      <MathGame v-if="chi" :key="chi" :limite="limite" @risposta="riferisci" />
     </div>
   </div>
 </template>

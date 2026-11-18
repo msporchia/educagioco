@@ -2,13 +2,14 @@
 // L'app del bambino a scuola: codice, nome, attesa, i blocchi della lezione, fine. Il giro sta in giro.js; docs/scuola/bambini.md
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { apriBambino } from '../comune/rete.js'
-import { descrivi, racconta, raccontaAsteroide, giocoDi } from '../comune/esercizi.js'
+import { descrivi, racconta, giocoDi } from '../comune/esercizi.js'
 import { posizione, bloccoDi } from '../comune/lezione.js'
 import * as G from './giro.js'
 import Codice from './viste/Codice.vue'
 import Nomi from './viste/Nomi.vue'
 import Domande from './viste/Domande.vue'
-import Asteroidi from './viste/Asteroidi.vue'
+import { VISTE } from '../giochi/viste.js'
+import { SCHEDE } from '../giochi/elenco.js'
 
 const versione = __VERSIONE_SCUOLA__
 const PAZIENZA = 3000      // prima di dire «Sto ricollegando…» al primo collegamento
@@ -25,7 +26,7 @@ const avviso = ref('')
 const ora = ref(Date.now())
 let rete = null, attesa = 0, battito = 0
 
-// gli Asteroidi vogliono WebGL 2 (come grafica/spazio3d), provato una volta e solo se serve: senza, o se il gioco non parte, si fa a schede
+// un gioco in 3D vuole WebGL 2 (come grafica/spazio3d), provato una volta e solo se serve: senza, o se il gioco non parte, si fa a schede
 let webgl = null
 function cèWebGL() {
   if (webgl !== null) return webgl
@@ -46,7 +47,11 @@ const pos = computed(() => (io.value ? posizione(G.camminoDi(cammino.value, stat
 const blocco = computed(() => (schermo.value === 'blocco' || schermo.value === 'passaggio' ? lezione.value.blocchi[bloccoDi(lezione.value, pos.value)] : null))
 const segno = computed(() => (schermo.value === 'blocco' ? G.segno(blocco.value.passa, G.camminoDi(cammino.value, stato.value).conto, ora.value) : ''))
 const ricollego = computed(() => !!codice.value && !collegato.value && pazienza.value && schermo.value !== 'chiusa')
-const inGioco = computed(() => !senzaGioco.value && giocoDi(blocco.value?.esercizio) === 'asteroidi' && cèWebGL())
+// il gioco del blocco (docs/scuola/giochi.md); un esercizio col contenuto di un gioco non ha le schede come ripiego
+const gioco = computed(() => giocoDi(blocco.value?.esercizio))
+const scheda = computed(() => SCHEDE.find(s => s.id === gioco.value) || null)
+const soloNelGioco = computed(() => !!scheda.value?.tipo && blocco.value?.esercizio?.tipo === scheda.value.tipo.id)
+const inGioco = computed(() => !!VISTE[gioco.value] && !senzaGioco.value && (!scheda.value?.tred || cèWebGL()))
 
 function chiudiRete() {
   rete?.chiudi()
@@ -103,10 +108,10 @@ function risposta(p, { domanda, giusto, indice, chiave, tempo }) {
   contaRisposta(p, giusto, true)
 }
 
-// negli Asteroidi alla maestra va ogni colpo, ma il blocco conta la domanda una volta, quando si chiude (`ultima`)
-function rispostaGioco(p, e) {
-  rete?.rispondi({ blocco: p, chiave: 'tab:prodotto', giusta: e.giusta, ms: e.ms, ultima: e.ultima !== false, ...raccontaAsteroide(e) })
-  contaRisposta(p, e.giusta, e.ultima)
+// un gioco vero manda la risposta già raccontata (docs/scuola/giochi.md); il blocco conta la domanda quando si chiude (`ultima`)
+function rispostaGioco(p, { chiave, giusta, ms, ultima, fatto, data, attesa }) {
+  rete?.rispondi({ blocco: p, chiave, giusta, ms: Math.round(ms), ultima: ultima !== false, fatto, data, attesa })
+  contaRisposta(p, giusta, ultima !== false)
 }
 
 function continua() {
@@ -168,8 +173,11 @@ onUnmounted(() => { chiudiRete(); clearInterval(battito) })
     </div>
 
     <div v-else-if="schermo === 'blocco'" class="dentro" data-domanda :data-blocco="bloccoDi(lezione, pos)">
-      <Asteroidi v-if="inGioco" :key="'gioco-' + pos" :esercizio="blocco.esercizio" :alunno="io"
+      <component :is="VISTE[gioco]" v-if="inGioco" :key="'gioco-' + pos" :esercizio="blocco.esercizio" :alunno="io"
                  :onRisposta="aPos(pos, rispostaGioco)" @guasto="senzaGioco = true" />
+      <div v-else-if="soloNelGioco" class="centro" data-senza-gioco>
+        <p class="frase">Questo gioco non parte su questo computer: chiama la maestra.</p>
+      </div>
       <Domande v-else :key="'schede-' + pos" :esercizio="blocco.esercizio" :onRisposta="aPos(pos, risposta)" />
     </div>
 

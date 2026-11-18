@@ -29,6 +29,7 @@ import sequenze from '../../quiz/moduli/sequenze.js'
 import sillabe from '../../quiz/moduli/sillabe.js'
 import soldi from '../../quiz/moduli/soldi.js'
 import tabelline from '../../quiz/moduli/tabelline.js'
+import { SCHEDE } from '../giochi/elenco.js'
 
 // i moduli che la maestra sceglie per tipologia e gradini (la voce «Le tabelline» usa conti e tabelline da sé)
 const SCELTI = [analogie, animali, bilance, calendario, capire, coniugazione, connettivi, conti, frazioni,
@@ -45,6 +46,7 @@ const MATERIE = [
   { id: 'tempo', nome: 'Tempo e orologio', emoji: '🕰️' },
   { id: 'logica', nome: 'Logica', emoji: '🧩' },
   { id: 'scienze', nome: 'Scienze', emoji: '🔬' },
+  { id: 'programmazione', nome: 'Programmare', emoji: '🤖' },
 ]
 
 /* ══════════════ le tabelline ══════════════ */
@@ -108,12 +110,20 @@ function voceDelModulo(m) {
   }
 }
 
+/* i giochi pronti (docs/scuola/giochi.md); quelli con un contenuto loro (`tipo`: i livelli di Passo passo, i capitoli del
+   Robot) portano una voce nel catalogo, con `tipo` uguale all'id del tipo, e si fanno solo nel loro gioco */
+const PRONTI = SCHEDE.filter(s => s.pronto !== false)
+const conTipo = PRONTI.filter(s => s.tipo)
+const padroneDi = e => conTipo.find(s => s.tipo.id === e?.tipo) || null
+const voceDelGioco = s => ({ ...s.tipo.voce, id: s.tipo.id, tipo: s.tipo.id, materia: s.tipo.materia, gioco: s.id })
+
 export const CATALOGO = {
   materie: MATERIE.map(mat => ({
     ...mat,
     voci: [
       ...(mat.id === 'matematica' ? [VOCE_TABELLINE] : []),
       ...SCELTI.filter(m => m.materia === mat.id).map(voceDelModulo),
+      ...conTipo.filter(s => s.tipo.materia === mat.id).map(voceDelGioco),
     ],
   })).filter(mat => mat.voci.length),
 }
@@ -122,17 +132,20 @@ const perId = id => SCELTI.find(m => m.id === id)
 
 /* ══════════════ i giochi ══════════════ */
 
-// dove si fa un esercizio: le schede vanno con tutto, un gioco vero solo con le voci e i modi che sa fare (docs/scuola/esercizi.md)
-export const GIOCHI = [
-  { id: 'schede', nome: 'Le domande', spiega: 'Una domanda alla volta, su una scheda. Va bene su ogni PC.' },
-  { id: 'asteroidi', nome: 'Gli Asteroidi', nei: 'negli Asteroidi', spiega: 'La nave colpisce il sasso col risultato giusto. Vuole un PC che regga la grafica 3D.',
-    voci: ['tabelline'], modi: ['prodotto'] },
-]
-const accetta = (g, e) => e.tipo === 'insieme' ? e.parti.every(p => accetta(g, p.esercizio))
-  : !g.voci || (g.voci.includes(e.tipo === 'tabelline' ? 'tabelline' : e.modulo) && (!g.modi || g.modi.includes(e.modo)))
+// dove si fa un esercizio: le schede con tutto il catalogo, un gioco vero con quello che sa fare (`accetta` della sua
+// scheda) e col suo contenuto, se ne ha uno (docs/scuola/giochi.md)
+const SCHEDE_DOMANDE = { id: 'schede', nome: 'Le domande', spiega: 'Una domanda alla volta, su una scheda. Va bene su ogni PC.' }
+export const GIOCHI = [SCHEDE_DOMANDE, ...PRONTI]
+const delCatalogo = e => e.tipo === 'tabelline' || e.tipo === 'modulo'
+function accetta(g, e) {
+  if (e.tipo === 'insieme') return e.parti.every(p => accetta(g, p.esercizio))
+  if (!delCatalogo(e)) return g.tipo?.id === e.tipo
+  return g.id === 'schede' || !!g.accetta?.(e)
+}
 // i giochi in cui si può fare questo esercizio (il campo `gioco` a parte)
 export const giochiPer = e => GIOCHI.filter(g => accetta(g, e))
-export const giocoDi = e => e?.gioco || 'schede'
+// un esercizio col contenuto di un gioco si fa sempre in quel gioco, anche senza il campo `gioco`
+export const giocoDi = e => e?.gioco || padroneDi(e)?.id || 'schede'
 
 /* ══════════════ più cose insieme ══════════════ */
 
@@ -181,8 +194,10 @@ export function valido(e) {
   if (e.tipo === 'insieme') {
     return soloChiavi(e, ['tipo', 'parti']) && Array.isArray(e.parti) && e.parti.length >= 2 && e.parti.length <= MAX_PARTI &&
       e.parti.every(p => oggetto(p) && soloChiavi(p, ['esercizio', 'peso']) && PESI.some(x => x.id === p.peso) &&
-        oggetto(p.esercizio) && p.esercizio.tipo !== 'insieme' && !('gioco' in p.esercizio) && valido(p.esercizio))
+        oggetto(p.esercizio) && delCatalogo(p.esercizio) && !('gioco' in p.esercizio) && valido(p.esercizio))
   }
+  const padrone = padroneDi(e)
+  if (padrone) { try { return padrone.tipo.valido(e) === true } catch { return false } }
   if (e.tipo === 'tabelline') {
     return soloChiavi(e, ['tipo', 'tabelline', 'modo']) &&
       interi(e.tabelline, 1, TABELLINE.length) && e.tabelline.length > 0 &&
@@ -206,7 +221,9 @@ const minuscola = s => s.charAt(0).toLowerCase() + s.slice(1)
 
 export function descrivi(e) {
   if (!valido(e)) return 'Esercizio non valido'
-  if (giocoDi(e) !== 'schede') { const { gioco, ...resto } = e; return `${descrivi(resto)} · ${GIOCHI.find(g => g.id === gioco).nei}` }
+  if ('gioco' in e && e.gioco !== 'schede') { const { gioco, ...resto } = e; return `${descrivi(resto)} · ${GIOCHI.find(g => g.id === gioco).nei}` }
+  const padrone = padroneDi(e)
+  if (padrone) return padrone.tipo.descrivi(e)
   if (e.tipo === 'insieme')
     return e.parti.map(p => `${descrivi(p.esercizio)} (${minuscola(PESI.find(x => x.id === p.peso).nome)})`).join(' + ')
   if (e.tipo === 'tabelline') return `${nomeTabelline(e.tabelline)} · ${NOME_MODO[e.modo]}`
@@ -299,6 +316,7 @@ export function pescatore(e, sorte = sorteQualunque()) {
   if (!valido(e)) throw new Error(`esercizio non valido: ${JSON.stringify(e)?.slice(0, 200)}`)
   if (!(sorte instanceof Sorte)) sorte = new Sorte(Number(sorte) || 1)
   if ('gioco' in e) { const { gioco, ...resto } = e; e = resto }
+  if (!delCatalogo(e) && e.tipo !== 'insieme') throw new Error(`questo esercizio si fa solo nel suo gioco: ${e.tipo}`)
   return e.tipo === 'insieme' ? pescatoreInsieme(e, sorte) : e.tipo === 'tabelline' ? pescatoreTabelline(e, sorte) : pescatoreModulo(e, sorte)
 }
 

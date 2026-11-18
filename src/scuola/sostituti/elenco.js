@@ -1,5 +1,13 @@
 // Originale → sostituto (percorsi dalla radice del repo): lo leggono vite.scuola.config.js e i test. docs/scuola/architettura.md
-export const SOSTITUTI = {
+// I sostituti di un gioco e le sue cartelle ammesse stanno nella sua cartella (docs/scuola/giochi.md)
+import asteroidi from '../giochi/asteroidi/sostituti.js'
+import survivors from '../giochi/survivors/sostituti.js'
+import passoPasso from '../giochi/passo-passo/sostituti.js'
+import robot from '../giochi/robot/sostituti.js'
+
+const GIOCHI = [asteroidi, survivors, passoPasso, robot]
+
+const COMUNI = {
   'src/store/giudizi.js': 'src/scuola/sostituti/giudizi.js',
   'src/store/salto.js': 'src/scuola/sostituti/salto.js',
   'src/quiz/memoria.js': 'src/scuola/sostituti/memoria.js',
@@ -16,10 +24,8 @@ export const SOSTITUTI = {
   'src/guide/novita-bambini.js': 'src/scuola/sostituti/novita-bambini.js',
   'src/amici/servizio.js': 'src/scuola/sostituti/amici-servizio.js',
   'src/amici/usaAmici.js': 'src/scuola/sostituti/usaAmici.js',
-  // le pagine attorno agli Asteroidi, che a scuola non si aprono (docs/asteroidi/scuola.md)
-  'src/components/RottaAsteroidi.vue': 'src/scuola/sostituti/Vuoto.vue',
-  'src/components/MappaTabelline.vue': 'src/scuola/sostituti/Vuoto.vue',
-  'src/components/MappaConcetti.vue': 'src/scuola/sostituti/Vuoto.vue',
-  'src/components/HangarAsteroidi.vue': 'src/scuola/sostituti/Vuoto.vue',
-  'src/components/RegaloHangar.vue': 'src/scuola/sostituti/Vuoto.vue',
 }
+
+export const SOSTITUTI = Object.assign({}, COMUNI, ...GIOCHI.map(g => g.sostituti))
+// i pezzi dei giochi di casa che possono entrare nel pacchetto dei bambini (la guardia vieta gli altri)
+export const AMMESSI = GIOCHI.flatMap(g => g.ammessi)

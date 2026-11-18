@@ -2,13 +2,14 @@
 // Una parte di un esercizio, costruita solo dal catalogo (docs/scuola/esercizi.md): materia → voce → i suoi parametri
 import { computed } from 'vue'
 import { CATALOGO } from '../comune/esercizi.js'
+import { PARAMETRI } from '../giochi/parametri.js'
 
 const props = defineProps({ modelValue: { type: Object, required: true } })
 const emit = defineEmits(['update:modelValue'])
 
 const tutte = CATALOGO.materie.flatMap(m => m.voci.map(v => ({ ...v, materia: m.id })))
 const copia = x => JSON.parse(JSON.stringify(x))
-const idDella = e => (e?.tipo === 'tabelline' ? 'tabelline' : e?.modulo)
+const idDella = e => (e?.tipo === 'tabelline' ? 'tabelline' : e?.tipo === 'modulo' ? e.modulo : e?.tipo)   // la voce di un gioco ha l'id del suo tipo
 
 const voce = computed(() => tutte.find(v => v.id === idDella(props.modelValue)) || null)
 const materia = computed(() => CATALOGO.materie.find(m => m.id === voce.value?.materia) || null)
@@ -78,6 +79,10 @@ function tipologia(id) {
         </div>
       </div>
     </template>
+
+    <!-- il contenuto di un gioco (docs/scuola/giochi.md): i parametri li disegna il gioco -->
+    <component :is="PARAMETRI[voce.gioco]" v-else-if="voce?.gioco && PARAMETRI[voce.gioco]" :model-value="e"
+               @update:model-value="x => emit('update:modelValue', x)" />
 
     <template v-else-if="voce?.tipo === 'modulo'">
       <div class="due">
