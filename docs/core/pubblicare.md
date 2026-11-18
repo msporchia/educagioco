@@ -16,6 +16,10 @@ non si annulla (lascerebbe il sito con i file di due versioni).
 
 Il sito pubblicato è **spezzato in file** (`npm run build:sito`, `dist-sito/`) con accanto `giochi.html`, il file unico: vedi [avvio-e-memoria.md](avvio-e-memoria.md).
 
+La scuola ([../scuola/architettura.md](../scuola/architettura.md)) esce con un tag `scuola-*`
+(`.github/workflows/scuola.yml`: build e release); sul sito la pubblica sempre `pubblica.yml`, che mette sotto `/scuola/`
+gli allegati dell'ultima release `scuola-*`.
+
 La CI non lancia le prove nel browser: chi tocca lo schermo le lancia a
 mano prima del push (vedi [test.md](test.md)).
 

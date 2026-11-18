@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "build:sito": "SPEZZATO=1 vite build",
+    "build:scuola": "PAGINA_SCUOLA=index vite build -c vite.scuola.config.js && PAGINA_SCUOLA=maestra vite build -c vite.scuola.config.js",
+    "dev:scuola": "vite -c vite.scuola.config.js --port 5174 --strictPort",
     "voci": "node strumenti/incidi-voci.mjs",
     "simula": "node strumenti/simula-castello.mjs",
     "tara": "node strumenti/tara-castello.mjs",

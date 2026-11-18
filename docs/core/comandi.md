@@ -17,12 +17,17 @@ build non passa più.
 | `npm run test:misure` | l'equilibrio dei giochi: partite finte, la mappa inglese | ~30 s |
 | `npm run test:svelto` | solo quelle sotto il secondo, senza ricompilare | ~4 s |
 | `npm run build` | `dist/index.html`, il file unico | ~3 s |
+| `npm run build:scuola` (`PESI_SCUOLA=20` stampa i venti moduli più pesanti di ogni pagina) | la scuola: `dist-scuola/index.html`, `maestra.html`, `versione.json` ([../scuola/architettura.md](../scuola/architettura.md)); non tocca `dist/` | ~2 s |
+| `npm run dev:scuola` | la scuola in sviluppo su `localhost:5174`: `/scuola/index.html` (bambini) e `/scuola/maestra.html` | — |
 | `npm run test:browser` | solo le prove dentro Chrome | ~1,5 min |
 | `npm run test:tutto` | tutto, misure e browser compresi: prima del push | ~1,5 min |
 | `node test/esegui.mjs <nome>` | un file solo (`pozioni`, `fattoria`…) | secondi |
 
 Opzioni del lanciatore: `--niente-build`, `--scatti`, `--svelti`,
 `--tempo=600`, `--alla-volta=N`. Quando usarle: [test.md](test.md).
+
+**Il rilascio della scuola** è un tag: `git tag scuola-AAAA-MM-GG && git push origin scuola-AAAA-MM-GG`
+(unità, build, release con gli allegati, poi riparte `pubblica.yml`).
 
 **`npm run build` scrive `dist/`, e `dist/` può essere quello
 pubblicato.** Per controllare solo che il build passi:

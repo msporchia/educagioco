@@ -242,6 +242,8 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return
   const url = new URL(e.request.url)
   if (url.origin !== self.location.origin) return
+  // la scuola è un'altra app sotto lo stesso sito (docs/scuola/architettura.md): non è roba nostra
+  if (url.pathname.includes('/scuola/')) return
   // versione.json dice cosa sta servendo il sito adesso: se rispondesse
   // la cache direbbe sempre la versione di questo service worker, cioè
   // proprio la domanda a cui deve rispondere

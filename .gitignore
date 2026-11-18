@@ -36,3 +36,4 @@ servizio/inoltro/.wrangler/
 
 # i log mandati dal telefono al ricevitore (strumenti/ricevi-log.mjs)
 strumenti/vecchio-telefono/log/ricevuti/
+dist-scuola/

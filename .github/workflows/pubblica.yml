@@ -31,6 +31,8 @@ jobs:
       # la versione che è appena stata costruita, per il controllo finale:
       # il job che pubblica non ha il codice sotto mano e non può ricavarla
       versione: ${{ steps.versione.outputs.id }}
+      # la scuola messa nel sito, o vuoto se non c'è ancora nessuna release `scuola-*`
+      scuola: ${{ steps.scuola.outputs.id }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -53,6 +55,22 @@ jobs:
           id=$(node -p "require('./dist-sito/versione.json').id")
           echo "costruita la versione $id"
           echo "id=$id" >> "$GITHUB_OUTPUT"
+      # la scuola (docs/scuola/architettura.md): gli allegati dell'ultima release `scuola-*` stanno sotto /scuola/.
+      # Se la release segnata «latest» è una scuola-* si prende quella, se no la più recente delle scuola-*.
+      - id: scuola
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh release list --limit 100 --json tagName,isLatest --jq '[.[] | select(.tagName | startswith("scuola-"))] | (map(select(.isLatest)) + .)[0].tagName // empty')
+          if [ -z "$tag" ]; then
+            echo "nessuna release della scuola: il sito esce senza"
+            echo "id=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "la scuola è la release $tag"
+          mkdir -p dist-sito/scuola
+          gh release download "$tag" --dir dist-sito/scuola --pattern index.html --pattern maestra.html --pattern versione.json
+          echo "id=$(node -p "require('./dist-sito/scuola/versione.json').id")" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-pages-artifact@v5
         with:
           path: dist-sito
@@ -90,4 +108,18 @@ jobs:
           done
           echo "dopo un minuto il sito serve ancora un'altra versione."
           echo "Non è detto sia un guasto: Pages a volte ci mette di più."
+          exit 1
+
+      - name: La scuola serve davvero quella rilasciata
+        if: needs.costruisci.outputs.scuola != ''
+        run: |
+          atteso='${{ needs.costruisci.outputs.scuola }}'
+          url="${{ steps.deploy.outputs.page_url }}scuola/versione.json"
+          for i in $(seq 1 12); do
+            servito=$(curl -fsS "$url" | node -pe 'JSON.parse(require("fs").readFileSync(0,"utf8")).id' 2>/dev/null || true)
+            echo "prova $i: la scuola serve «$servito»"
+            if [ "$servito" = "$atteso" ]; then exit 0; fi
+            sleep 5
+          done
+          echo "dopo un minuto la scuola serve ancora un'altra versione."
           exit 1
