@@ -15,6 +15,7 @@ import { progresso, aperta, adesso, stelleDi, completa, primatoDi, segnaPrimato,
 import { fraseDiFine, recordInParole } from '../primati.js'
 import { usaAmici } from '../../amici/usaAmici.js'
 import { SENZA_FINE } from './gioco.js'
+import { limiteDi, domandaDellaCarta, liberaDelLimite } from './limite.js'
 import { usaPausa } from '../pausa.js'
 import VeloPausa from '../VeloPausa.vue'
 import { domandaPerGioco } from '../../quiz/scelta.js'
@@ -34,14 +35,18 @@ import Finale from './viste/Finale.vue'
 import './stile.css'
 
 defineOptions({ name: 'Survivors' })
-const emit = defineEmits(['vai'])
+const emit = defineEmits(['vai', 'risposta'])
+// a scuola: `{ domande }` (un oggetto con `prossima()`), e si gioca la Sopravvivenza con quelle domande (docs/survivors/scuola.md); a casa manca
+const props = defineProps({ limite: { type: Object, default: null } })
+const lim = limiteDi(props.limite)
+const LIBERA = lim ? liberaDelLimite(LIBERO) : LIBERO
 
 const CHIAVE = 'survivors'
 let borsellino = borsa(CHIAVE)   // le monete di questa partita, una risposta giusta alla volta
 const RESPIRO = 500          // quanto si guarda il campo prima del cartello
 
 // dove siamo
-const vista = ref('mappa')            // mappa | campo
+const vista = ref(lim ? 'campo' : 'mappa')   // mappa | campo
 const tappaIdx = ref(-1)              // -1 = gioco libero
 const partita = shallowRef(null)      // il motore: NON reattivo dentro
 const cruscotto = ref(vuoto())
@@ -69,7 +74,7 @@ const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!finale
 
 const avanza = progresso(CHIAVE)
 const libera = computed(() => tappaIdx.value < 0)
-const regoleOra = computed(() => libera.value ? LIBERO : CAMPAGNA[tappaIdx.value] || CAMPAGNA[0])
+const regoleOra = computed(() => libera.value ? LIBERA : CAMPAGNA[tappaIdx.value] || CAMPAGNA[0])
 const veste = computed(() => scenario(regoleOra.value.scenario))
 
 // dove il gioco scorre davvero: le carte, la domanda e il cartello
@@ -103,7 +108,7 @@ function laRipresa() {
 
 function salva({ subito = false } = {}) {
   const p = partita.value
-  if (!p) return
+  if (!p || lim) return               // a scuola niente sosta
   daSalvare = 0
   const dato = scrivi(p, tappaIdx.value)
   // `scrivi` torna null a partita finita o già vinta: la sosta va tolta
@@ -245,7 +250,7 @@ function avvia(indice) {
   togli()   // una partita che comincia non comincia in pausa
   scorda()  // una partita nuova butta quella lasciata a metà (già chiesto dalla mappa)
   tappaIdx.value = indice
-  const t = indice < 0 ? LIBERO : CAMPAGNA[indice]
+  const t = indice < 0 ? LIBERA : CAMPAGNA[indice]
   partita.value = new Partita(new Regole(t))
   cruscotto.value = partita.value.cruscotto
   offerta.value = null
@@ -297,15 +302,17 @@ function scegliCarta(chiave) {
   const p = partita.value
   voluta = p.offerta.find(c => c.chiave === chiave) || p.offerta[0]
   offerta.value = null
-  domanda.value = domandaPerGioco({ difficolta: voluta.prezzo, evita: ultimoModulo })
+  domanda.value = domandaDellaCarta(lim, voluta, ultimoModulo, domandaPerGioco)
   suono.ok()
 }
 
 // il potenziamento si vince rispondendo, e la risposta giusta paga subito;
 // sbagliare non dà niente (niente monetina di consolazione — sarebbe il modo
 // più veloce di farne, vedi docs/apprendimento/calibrazione.md)
-function risposto({ giusto, saltata }) {
+function risposto(e) {
+  const { giusto, saltata } = e
   const p = partita.value
+  if (lim) emit('risposta', { ...e, domanda: domanda.value.domanda })   // prima che la domanda sparisca
   ultimoModulo = domanda.value?.modulo || null
   domanda.value = null
   // rispondere è il tocco che riprende: il freno può essersi acceso
@@ -358,6 +365,8 @@ function chiudiPartita() {
   const extra = Math.floor(p.extra)
   let primato = null, controGliAmici = ''
 
+  // a scuola niente record né segni: solo quanto si è resistito
+  if (lim) { finale.value = { tempo: `${Math.floor(secondi / 60)}:${String(secondi % 60).padStart(2, '0')}`, uccisi: p.uccisi, livello: p.livello }; return }
   if (libera.value) {
     const esito = segnaPrimato(CHIAVE, secondi, Date.now(),
                                { uccisi: p.uccisi, livello: p.livello })
@@ -455,6 +464,7 @@ onMounted(() => {
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
   gancioDiProva()
+  if (lim) avvia(-1)          // niente mappa: si parte giocando
 })
 onUnmounted(() => {
   if (import.meta.env.DEV) delete window.__survivors
@@ -491,10 +501,23 @@ onUnmounted(() => {
              :cassa="cruscotto.cassa" @scegli="scegliCarta" />
 
       <Domanda v-if="domanda" :domanda="domanda.domanda" :pittori="domanda.pittori"
-               :titolo="`${domanda.icona} ${domanda.nome}`"
-               :origine="domanda" gioco="survivors" @risposto="risposto" />
+               :titolo="lim ? domanda.titolo : `${domanda.icona} ${domanda.nome}`"
+               :origine="lim ? null : domanda" gioco="survivors" @risposto="risposto" />
 
-      <Finale v-if="finale" v-bind="finale"
+      <!-- fine partita, a scuola: niente mappa, record, monete né festa -->
+      <div v-if="finale && lim" class="sv-velo sv-fine" data-fine-limite>
+        <div class="sv-cartello">
+          <h2>Fine partita</h2>
+          <div class="sv-rapporto">
+            <div class="sv-dato"><b>{{ finale.tempo }}</b><span>resistito</span></div>
+            <div class="sv-dato"><b>{{ finale.uccisi }}</b><span>mostri</span></div>
+            <div class="sv-dato"><b>{{ finale.livello }}</b><span>livello</span></div>
+          </div>
+          <button class="sv-grosso" data-azione="riparti" @click="avvia(-1)">Riparti ▶</button>
+        </div>
+      </div>
+
+      <Finale v-if="finale && !lim" v-bind="finale"
               @ancora="ancora" @esci="allaMappa" @resta="resta" />
 
       <!-- il velo copre tutto lo schermo: le carte, la domanda e il

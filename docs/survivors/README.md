@@ -9,6 +9,7 @@ Sopravvivenza senza fine dopo le nove tappe. Il codice sta in
 - [taratura.md](taratura.md) — i numeri misurati: arco e gemme, il riscaldamento dei primi trenta secondi, oggetti e muri, la folla e la stazza oltre il traguardo, l'esperienza
 - [terreno.md](terreno.md) — gli ostacoli che non si attraversano, le macchie di altri posti, i varchi garantiti, come i mostri ci girano intorno
 - [grafica.md](grafica.md) — creature e fondale presi in prestito dai fogli del castello e del sotterraneo, gli effetti, cosa resta da dipingere
+- [scuola.md](scuola.md) — a scuola: la prop `limite` con le domande dell'esercizio, cosa si spegne, l'evento `risposta`, il terreno disegnato per il peso
 
 Vedi anche: [../core/primati.md](../core/primati.md) (i record dei giochi
 senza fine), [../core/amici-nei-giochi.md](../core/amici-nei-giochi.md) (gli amici sulla mappa e i loro record),
