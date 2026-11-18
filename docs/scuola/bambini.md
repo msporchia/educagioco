@@ -1,15 +1,16 @@
 # L'app del bambino
 
 La pagina dei PC della classe (`scuola/index.html` → `src/scuola/bambini/`). Il giro senza disegno (quale
-schermata, l'obiettivo, i minuti, il ricordo) sta in `giro.js`, puro e provato in Node; `App.vue` tiene il
-collegamento (`apriBambino` di [protocollo.md](protocollo.md)) e sceglie la vista; le domande sono quelle di casa
-(`quiz/Domanda.vue`) pescate da `pescatore` di [esercizi.md](esercizi.md), oppure il gioco vero in cui l'esercizio si fa
-(sotto, «I giochi veri»). Niente monete, record, premi, suoni.
+schermata, dove sta il bambino nella lezione a blocchi, il conto del blocco, il segno, il ricordo) sta in `giro.js`,
+puro e provato in Node, sopra il modello di [lezione.md](lezione.md) (`posizione`, `finita`, `bloccoDi`, `superato`);
+`App.vue` tiene il collegamento (`apriBambino` di [protocollo.md](protocollo.md)) e sceglie la vista; le domande sono
+quelle di casa (`quiz/Domanda.vue`) pescate da `pescatore` di [esercizi.md](esercizi.md), oppure il gioco vero in cui
+l'esercizio del blocco si fa (sotto, «I giochi veri»). Niente monete, record, premi, suoni.
 
 ## Le schermate
 
-Le decide `schermata()` da tre cose: il codice, l'ultimo `stato` del servizio (o quello ricordato) e
-l'avanzamento dell'obiettivo.
+Le decide `schermata()` da tre cose: il codice, l'ultimo `stato` del servizio (o quello ricordato) e il cammino del
+bambino (sotto).
 
 | Schermata | Quando | Cosa si vede |
 |---|---|---|
@@ -17,11 +18,11 @@ l'avanzamento dell'obiettivo.
 | `collego` | codice, nessuno `stato` ancora | «Mi collego alla classe…» |
 | `nome` | `stato.io` è `null` | i nomi della classe come tasti; un nome preso da un altro è grigio e non si tocca. In fondo «Non trovo il mio nome» → un campo → `sono({ nome })` |
 | `aspetta` | nome scelto, fase `attesa` | il nome e «Aspetta il via della maestra» |
-| `obiettivo` | fase `via` | le domande dell'obiettivo (o il gioco); in cima il nome e il segno di quanto manca |
-| `finito` | obiettivo fatto | «Hai finito!» e, se la lezione ha un `dopo`, «Ora puoi continuare con: <descrivi(dopo)>» e «Continua»; se no «Aspetta la maestra» |
-| `dopo` | toccato «Continua» | le domande del `dopo`, senza fine e senza segno |
+| `blocco` | fase `via`, nel blocco | le domande del blocco (o il suo gioco); in cima il nome e il segno |
+| `passaggio` | superato un blocco (da solo o con «Avanti tutti»), «Continua» non ancora toccato | «Bravo!», «Adesso: <descrivi(esercizio del blocco nuovo)>» e «Continua» |
+| `finito` | oltre l'ultimo blocco, senza `inTondo` | «Hai finito!» e «Aspetta la maestra», senza passaggio prima |
 | `chiusa` | fase `chiusa` (vince su tutto) | «La lezione è finita. Hai lavorato bene!» e, piccolo, «Entra in un'altra lezione» |
-| `guasta` | fase `via` ma l'esercizio non è `valido` | «Questa lezione non si apre: chiedi alla maestra» (il servizio non legge la lezione: un link storto arriva fin qui) |
+| `guasta` | fase `via` ma la lezione non è `lezioneValida` | «Questa lezione non si apre: chiedi alla maestra» (il servizio non legge gli esercizi: un link storto arriva fin qui) |
 
 - **Il nome liberato dalla maestra** (`io` torna `null`) riporta a `nome` da qualunque schermata.
 - **«Ho sbagliato codice»** (piccolo, sotto i nomi e in `collego`) chiude il collegamento, dimentica e torna a
@@ -32,19 +33,43 @@ l'avanzamento dell'obiettivo.
   chiedi alla maestra.».
 - **La versione** (`__VERSIONE_SCUOLA__` di `vite.scuola.config.js`) sta piccolissima nell'angolo in basso a destra.
 
-## L'obiettivo
+## Il cammino nei blocchi
 
-- **A domande** (`quante`): ogni risposta, giusta o sbagliata, conta una; il segno dice la domanda a schermo,
-  «7 di 15». All'ultima risposta l'obiettivo è fatto.
-- **A minuti** (`minuti`): il tempo parte alla prima domanda di quel bambino (chi entra tardi ha i suoi
-  minuti) ed è **tempo di parete** (`Date.now`): passa anche a pagina chiusa, come passa per la classe. Il segno
-  dice «Ancora 7 minuti» (arrotondato in su), poi «Ultima domanda»: **la domanda a schermo allo scadere si
-  finisce**, e la sua risposta conta. Un orologio della pagina (ogni 2 s) rilegge solo l'ora per il segno;
-  nessun `setTimeout` decide la fine, quindi un timer in ritardo o uno schermo spento non sbagliano il conto.
-- Ogni risposta va a `rispondi({ parte, chiave, giusta, ms, fatto, data, attesa })`: `ms` è il `tempo` di
-  `Domanda.vue` (quello davanti agli occhi, col tetto di casa), `fatto`/`data`/`attesa` da `racconta()`.
-- `dove('obiettivo' | 'finito' | 'dopo')` a ogni cambio: `finito` appena l'obiettivo è fatto, anche se c'è un
-  `dopo` non ancora cominciato. `rete.js` lo ripete a ogni rientro.
+Il cammino è `{ alunno, p, visto, conto: { fatte, giuste, inizio } }`: `p` la posizione propria (i blocchi superati,
+[lezione.md](lezione.md)), `visto` la posizione in cui il bambino ha toccato «Continua», `conto` le domande chiuse del
+blocco in corso. Il bambino sta in `posizione(p, stato.avanti)`; se `visto` è indietro si vede il passaggio.
+
+- **Da solo**: a ogni domanda chiusa il conto cresce (`fatte`, e `giuste` se giusta); quando `superato(passa, conto, ora)`
+  la posizione sale di uno, il conto riparte e si vede il passaggio (o `finito`). Una sbagliata conta fra le domande,
+  non fra le giuste.
+- **«Avanti tutti»**: lo `stato` porta un `avanti` più alto; `segui` alza `p` fino al pavimento e fa ripartire il conto,
+  col passaggio. Chi era già avanti resta dov'è, col suo conto.
+- **Chi arriva tardi** (un nome scelto a lezione avviata) comincia dal pavimento, senza passaggio.
+- **In tondo** la posizione cresce senza fine e il blocco è `p % blocchi` (`bloccoDi`): mai `finito`.
+- **Il conto è di un blocco**: riparte a ogni blocco, e una risposta che arriva dopo un cambio di blocco (la vista di
+  prima era montata in un'altra posizione) va alla maestra ma non conta qui.
+
+### Il segno in alto
+
+Secondo `passa` del blocco: `{ giuste }` → «3 di 10 giuste»; `{ domande }` → la domanda a schermo, «7 di 20» (non oltre il
+totale); `{ minuti }` → «Ancora 7 minuti» (arrotondato in su), poi «Ultima domanda»; `null` → niente.
+
+### I minuti
+
+Il tempo di un blocco parte quando il bambino ci entra (dopo «Continua», o alla prima domanda del primo blocco: chi
+entra tardi ha i suoi minuti) ed è **tempo di parete** (`Date.now`): passa anche a pagina chiusa, come passa per la
+classe. **La domanda a schermo allo scadere si finisce**, e la sua risposta fa passare: un blocco tolto a metà
+domanda perderebbe la risposta già data (la scheda la manda dopo l'attesa dell'esito). Un orologio della pagina (ogni
+2 s) rilegge l'ora per il segno; nessun `setTimeout` decide, quindi un timer in ritardo o uno schermo spento non
+sbagliano il conto. Riaprendo la pagina a tempo scaduto il blocco è superato subito (`entraNelBlocco`).
+
+### Al servizio
+
+- Ogni risposta va a `rispondi({ blocco, chiave, giusta, ms, ultima, fatto, data, attesa })`: `blocco` è la posizione in
+  cui è stata data, `ms` il `tempo` di `Domanda.vue` (quello davanti agli occhi, col tetto di casa), `fatto`/`data`/
+  `attesa` da `racconta()`; nelle schede `ultima` è sempre vera.
+- `dove(p)` a ogni cambio di posizione (anche nel passaggio), `dove('finito')` a lezione finita. `rete.js` lo ripete a
+  ogni rientro.
 - La risposta parte quando `Domanda.vue` emette `risposto`, cioè dopo l'attesa dell'esito: una pagina chiusa in
   quei secondi perde quella risposta.
 - `Domanda.vue` resta com'è: dal di fuori si toglie solo il velo scuro e sfocato (`backdrop-filter` costa sui
@@ -54,23 +79,24 @@ l'avanzamento dell'obiettivo.
 
 Un esercizio con `gioco: 'asteroidi'` ([esercizi.md](esercizi.md#il-gioco-in-cui-si-fa)) si fa negli Asteroidi di
 casa, limitati alle sue tabelline ([../asteroidi/scuola.md](../asteroidi/scuola.md)): la vista è
-`viste/Asteroidi.vue`, al posto di `Domande.vue`, nell'obiettivo come nel «se hai finito».
+`viste/Asteroidi.vue`, al posto di `Domande.vue`, in ogni blocco che lo chiede. Ogni blocco ha il suo gioco: un blocco
+nuovo rimonta la vista (`:key` con la posizione), e gli Asteroidi ricevono l'esercizio del blocco, anche a più parti
+(`limiteAsteroidi`).
 
 - **Il profilo** è quello di casa, ma in memoria: `bambinoInMemoria(alunno, nome)` di `profilo.js` lo crea con
   `creaGiocatore`, spegne il suono e mette la grafica nella fascia `'bassa'` (i PC della scuola sono lenti).
   L'archivio è il sostituto in memoria ([architettura.md](architettura.md)): niente scrive sul PC della classe, e
-  ricaricando la pagina il gioco riparte da livello 1 (l'avanzamento dell'obiettivo invece è nel ricordo, sotto).
-  **Lo stesso alunno lo tiene** fra obiettivo e «dopo»; un altro nome sullo stesso PC riparte da zero.
+  ricaricando la pagina il gioco riparte da livello 1 (il cammino invece è nel ricordo, sotto).
+  **Lo stesso alunno lo tiene** da un blocco all'altro; un altro nome sullo stesso PC riparte da zero.
 - **La festa dei traguardi** a casa la mostra e la svuota l'app; qui nessuno lo farebbe, e piena fermerebbe il gioco
   (`giochi/pausa.js`). Il sostituto di `store/progressi.js` non dà mai traguardi, e in più `profilo.js` la svuota
   appena qualcosa la riempie.
 - La vista aspetta il font delle emoji (col tetto di 1,5 s, come `src/main.js`: la tela scrive i numeri dei sassi
   con quel font) e il profilo, poi monta il gioco in **una colonna** larga al più 600 px, centrata su fondo scuro.
 - **Ogni colpo va alla maestra**, giusto o sbagliato, con la chiave `tab:prodotto` (come le schede) e `fatto`,
-  `data`, `attesa` da `raccontaAsteroide` ([esercizi.md](esercizi.md)). **L'obiettivo conta la domanda una volta**,
-  quando si chiude (`ultima` dell'evento: `rispostaData(…, ultima)` non conta un colpo sbagliato con la domanda ancora
-  aperta). Il segno «7 di 15» conta quindi le domande, e l'obiettivo fatto porta a «finito» alla fine della domanda
-  in corso, mai a metà.
+  `data`, `attesa` da `raccontaAsteroide` ([esercizi.md](esercizi.md)). Alla maestra va anche `ultima`; **il blocco conta la domanda una
+  volta**, quando si chiude (`rispostaData` non conta un colpo con `ultima: false`). Il segno conta quindi le domande, e
+  una soglia raggiunta porta al passaggio alla fine della domanda in corso, mai a metà.
 - **Si torna alle schede** se il PC non ha WebGL 2 (lo stesso controllo di `grafica/spazio3d`, fatto la prima
   volta che serve), se il cielo non si accende (il gioco mostra il tasto per riaccenderlo) o se il gioco lancia un errore:
   la vista emette `guasto` e da lì, per quella pagina, l'esercizio si fa a schede.
@@ -82,17 +108,19 @@ Due chiavi in localStorage, tutte e due sotto `scuola:` con un campo `nato`: `re
 
 | Chiave | Chi la scrive | Cosa |
 |---|---|---|
-| `scuola:bambino` | `giro.js` (`ricorda`) | `{ codice, nato, stato: { fase, lezione, io, alunni }, avanzamento: { alunno, fatte, inizio, parte } }` |
+| `scuola:bambino` | `giro.js` (`ricorda`) | `{ forma: 'blocchi', codice, nato, stato: { fase, lezione, avanti, io, alunni }, cammino: { alunno, p, visto, conto } }` |
 | `scuola:<CODICE>` | `rete.js` | il posto del PC, l'alunno, l'ultima `n` e la coda delle risposte ([protocollo.md](protocollo.md)) |
 
-- **Riaprendo la pagina** si legge `scuola:bambino` e si riparte **subito** dallo stato ricordato (anche senza
-  rete: le domande ricominciano e le risposte vanno in coda); il collegamento, con lo stesso posto, riporta lo
-  stesso nome e corregge quello che è cambiato intanto. Quante fatte e l'inizio dei minuti sono nell'avanzamento.
-- **L'avanzamento è di un nome**: se sullo stesso PC ne viene scelto un altro, riparte da zero. Lo stesso nome
-  ripreso da **un altro PC** riparte da zero anche lui (il servizio non rimanda il conto delle risposte).
+- **Riaprendo la pagina** si legge `scuola:bambino` e si riparte **subito** dallo stato ricordato, nello stesso blocco
+  col suo conto (anche senza rete: le domande ricominciano e le risposte vanno in coda); il collegamento, con lo stesso
+  posto, riporta lo stesso nome e corregge quello che è cambiato intanto (un «Avanti tutti» perso porta avanti).
+- **Il cammino è di un nome**: se sullo stesso PC ne viene scelto un altro, riparte dal pavimento. Lo stesso nome
+  ripreso da **un altro PC** riparte dal pavimento anche lui (il servizio non rimanda il conto delle risposte).
 - **Si ricorda solo una lezione aperta**: a lezione chiusa la chiave si toglie, e una pagina riaperta chiede il
-  codice. Un ricordo guasto, vecchio o con un codice storto è come nessun ricordo; uno stato o un avanzamento
-  guasti si buttano e resta il codice.
+  codice. Un ricordo guasto, vecchio, con un codice storto o **nella forma di prima** (obiettivo e «dopo», senza
+  `forma`) è come nessun ricordo; uno stato o un cammino guasti si buttano e resta il codice.
+- **Una lezione nella forma di prima** (non la manda il servizio nuovo, ma per prudenza) si converte con
+  `convertiLezione` appena arriva (`statoDa`).
 - **La lezione che non c'è più** (il WebSocket chiuso con `4404`, `suNo('codice')`) riporta a `codice` senza
   nessun messaggio.
 - localStorage vietato o pieno: si va avanti senza ricordo (ogni accesso è in un `try`).
@@ -110,8 +138,8 @@ Due chiavi in localStorage, tutte e due sotto `scuola:` con un campo `nato`: `re
 
 - `src/scuola/bambini/main.js` — monta l'app con lo stile e le emoji di casa.
 - `src/scuola/bambini/App.vue` — il collegamento, i `watch` del giro, le schermate semplici.
-- `src/scuola/bambini/giro.js` — `schermata`, l'avanzamento (`perAlunno`, `entraNellObiettivo`, `rispostaData`,
-  `continua`, `segno`), il ricordo (`leggiRicordo`, `ricorda`, `dimentica`), `pulisciCodice`.
+- `src/scuola/bambini/giro.js` — `schermata`, `statoDa`, il cammino (`nuovoCammino`, `segui`, `entraNelBlocco`,
+  `rispostaData`, `continua`, `segno`), il ricordo (`leggiRicordo`, `ricorda`, `dimentica`), `pulisciCodice`.
 - `src/scuola/bambini/viste/` — `Codice.vue` (controlla il codice da sé), `Nomi.vue`, `Domande.vue` (pesca e
   mette in scena; chi la monta decide quando basta), `Asteroidi.vue` (il gioco vero, sopra).
 - `src/scuola/bambini/profilo.js` — `bambinoInMemoria`, il profilo di casa per i giochi veri.
@@ -120,14 +148,16 @@ La pelle è quella delle schermate di contorno (`.schermo.pulito`, i valori di `
 [../core/pelle.md](../core/pelle.md)); niente animazioni nostre; i tasti dei nomi sono larghi almeno 190 px
 e alti 60, e stanno in una griglia che si allarga fino a 960 px.
 
-Nei test: `unita/scuola-bambini` (codice, schermate, obiettivo a domande e a minuti, i colpi che non chiudono la
-domanda, ripresa a pagina riaperta, il ricordo e i suoi guasti), `unita/scuola-profilo` (`bambinoInMemoria` coi
-sostituti applicati in Node: suono spento, fascia bassa, lo stesso alunno tiene il profilo, un altro riparte, la festa
-resta vuota, nessun accesso al disco). Bersagli: la radice ha `[data-schermata="<schermata>"]`; `[data-codice]` (il campo),
+Nei test: `unita/scuola-bambini` (codice, schermate, soglie a giuste, a domande e a minuti, «Avanti tutti» che porta
+avanti e fa ripartire il conto, chi è già avanti resta, in tondo, finita, i colpi che non chiudono la domanda, la
+lezione e il ricordo nella forma di prima, ripresa a pagina riaperta, il ricordo e i suoi guasti), `unita/scuola-profilo`
+(`bambinoInMemoria` coi sostituti applicati in Node: suono spento, fascia bassa, lo stesso alunno tiene il profilo, un
+altro riparte, la festa resta vuota, nessun accesso al disco). Bersagli: la radice ha
+`[data-schermata="codice|collego|nome|aspetta|blocco|passaggio|finito|chiusa|guasta"]`; `[data-codice]` (il campo),
 `[data-entra]`, `[data-codice-errore]`; `[data-collego]`; `[data-nomi]`, `[data-nome="<id alunno>"]` (con
 `[data-preso]` se è di un altro), `[data-scelgo]`, `[data-nome-avviso]`, `[data-non-trovo]`, `[data-nome-nuovo]`
 (il campo), `[data-nome-nuovo-manda]`, `[data-cambia-codice]`; `[data-aspetta]`; `[data-domanda]` con
-`[data-parte="obiettivo"|"dopo"]` (dentro, i bersagli di `Domanda.vue`, come `[data-giusta]`, oppure il gioco
+`[data-blocco="<indice del blocco>"]` (dentro, i bersagli di `Domanda.vue`, come `[data-giusta]`, oppure il gioco
 `[data-gioco="asteroidi"]` coi bersagli di [../asteroidi/scuola.md](../asteroidi/scuola.md)), `[data-segno]`;
-`[data-finito]`, `[data-continua]`; `[data-chiusa]`, `[data-altra-lezione]`; `[data-guasta]`; `[data-ricollego]`;
-`[data-versione]`.
+`[data-passaggio]`, `[data-continua]`; `[data-finito]`; `[data-chiusa]`, `[data-altra-lezione]`; `[data-guasta]`;
+`[data-ricollego]`; `[data-versione]`.

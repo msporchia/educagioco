@@ -33,7 +33,7 @@ controlla('il profilo sta nell\'archivio in memoria', (await chiavi('profilo:'))
 
 console.log('\nLO STESSO ALUNNO LO TIENE, UN ALTRO RIPARTE')
 P.answer('math:7x9', { correct: true, ms: 2000 })
-uguale('lo stesso alunno (dall\'obiettivo al «dopo») ha lo stesso profilo', await bambinoInMemoria('a1', 'Lorenzo'), id)
+uguale('lo stesso alunno (da un blocco all\'altro) ha lo stesso profilo', await bambinoInMemoria('a1', 'Lorenzo'), id)
 controlla('con quello che ha già fatto', !!P.state.profile.items['math:7x9'])
 const altro = await bambinoInMemoria('a2', 'Marta')
 controlla('un altro alunno ha un profilo nuovo', altro !== id && P.state.player === altro)

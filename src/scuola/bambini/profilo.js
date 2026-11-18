@@ -1,5 +1,5 @@
 /* Il profilo di casa per i giochi veri a scuola: uno per alunno, in memoria (l'archivio è il sostituto), muto e con la
-   grafica leggera. Lo stesso alunno lo tiene fra obiettivo e «dopo», un altro riparte da zero. Vedi docs/scuola/bambini.md */
+   grafica leggera. Lo stesso alunno lo tiene da un blocco all'altro, un altro riparte da zero. Vedi docs/scuola/bambini.md */
 import { watch } from 'vue'
 import { state, creaGiocatore, accendiSuono, festaVista } from '../../store/profile.js'
 import { scegliFascia } from '../../store/qualita.js'

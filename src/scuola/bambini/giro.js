@@ -1,73 +1,87 @@
-/* Il giro del bambino a scuola, senza disegno: quale schermata, l'avanzamento dell'obiettivo, il conto dei minuti e il
-   ricordo in localStorage. Gira in Node. Vedi docs/scuola/bambini.md */
-import { valido } from '../comune/esercizi.js'
+/* Il giro del bambino a scuola, senza disegno: quale schermata, dove sta nella lezione a blocchi, il conto del blocco, il
+   segno in alto e il ricordo in localStorage. Gira in Node. Vedi docs/scuola/bambini.md */
+import { lezioneValida, convertiLezione, posizione, finita, bloccoDi, superato, modoDi, sogliaDi } from '../comune/lezione.js'
 
 export const RICORDO = 'scuola:bambino'
+const FORMA = 'blocchi'          // un ricordo senza (quello dell'obiettivo e del «dopo») vale come nessun ricordo
 const TRE_ORE = 3 * 60 * 60 * 1000
 const MINUTO = 60 * 1000
-const PARTI = ['obiettivo', 'finito', 'dopo']
 
 /* il codice come lo scrive il bambino: minuscole e spazi vanno bene, si tengono solo le lettere */
 export const pulisciCodice = testo => String(testo ?? '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5)
 export const codiceCompleto = c => typeof c === 'string' && /^[A-Z]{5}$/.test(c)
 
-export const haDopo = lezione => valido(lezione?.dopo)
+/* lo `stato` del servizio come lo tiene la pagina; una lezione nella forma di prima si converte (per prudenza) */
+export const statoDa = d => ({
+  fase: d.fase, lezione: convertiLezione(d.lezione), avanti: Number.isInteger(d.avanti) && d.avanti > 0 ? d.avanti : 0,
+  io: d.io ?? null, alunni: Array.isArray(d.alunni) ? d.alunni : [],
+})
 
-/* quale schermata, da quello che si sa: il codice, l'ultimo `stato` del servizio (o quello ricordato) e l'avanzamento */
-export function schermata({ codice, stato, avanzamento }) {
+/* ══════════════ il cammino: dove sta il bambino e il conto del blocco ══════════════
+
+   `{ alunno, p, visto, conto: { fatte, giuste, inizio } }`: `p` la posizione propria (i blocchi superati), `visto` l'ultima
+   posizione in cui ha toccato «Continua» (se è indietro si mostra il passaggio), `conto` le domande chiuse del blocco. */
+
+export const nuovoConto = () => ({ fatte: 0, giuste: 0, inizio: null })
+// chi arriva a lezione già avanti comincia dal pavimento, senza passaggio
+export const nuovoCammino = (alunno, avanti = 0) => ({ alunno, p: avanti | 0, visto: avanti | 0, conto: nuovoConto() })
+const avanza = (c, p) => ({ ...c, p, conto: nuovoConto() })
+// il cammino del nome di `stato.io`, anche prima che la pagina l'abbia fatto
+export const camminoDi = (c, stato) => (c?.alunno === stato.io.id ? c : nuovoCammino(stato.io.id, stato.avanti))
+
+/* il cammino di quel nome, al passo con «Avanti tutti»: un nome diverso riparte, un pavimento più alto porta avanti e fa
+   ripartire il conto, chi era già avanti resta */
+export function segui(c, alunno, avanti = 0) {
+  const mio = c?.alunno === alunno ? c : nuovoCammino(alunno, avanti)
+  const p = posizione(mio.p, avanti)
+  return p > mio.p ? avanza(mio, p) : mio
+}
+
+/* entrando nel blocco (anche a pagina riaperta): il tempo parte, e se la soglia era già passata il blocco è superato */
+export function entraNelBlocco(c, lezione, ora) {
+  const a = c.conto.inizio == null ? { ...c, conto: { ...c.conto, inizio: ora } } : c
+  const b = lezione.blocchi[bloccoDi(lezione, a.p)]
+  return b && superato(b.passa, a.conto, ora) ? avanza(a, a.p + 1) : a
+}
+
+/* una domanda chiusa nel blocco `blocco` (la posizione in cui è stata data). `ultima: false` è un colpo sbagliato di un
+   gioco con la domanda ancora aperta: va alla maestra, ma qui non conta. A minuti la domanda a schermo allo scadere si
+   finisce, e la sua risposta fa passare */
+export function rispostaData(c, lezione, { blocco, giusta, ultima = true }, ora) {
+  if (ultima === false || blocco !== c.p || c.visto !== c.p || finita(lezione, c.p)) return c
+  const conto = { ...c.conto, fatte: c.conto.fatte + 1, giuste: c.conto.giuste + (giusta ? 1 : 0) }
+  return superato(lezione.blocchi[bloccoDi(lezione, c.p)].passa, conto, ora) ? avanza(c, c.p + 1) : { ...c, conto }
+}
+
+export const continua = c => ({ ...c, visto: c.p })
+
+/* ══════════════ la schermata ══════════════ */
+
+/* da quello che si sa: il codice, l'ultimo `stato` del servizio (o quello ricordato) e il cammino */
+export function schermata({ codice, stato, cammino }) {
   if (!codice) return 'codice'
   if (!stato) return 'collego'
   if (stato.fase === 'chiusa') return 'chiusa'
   if (!stato.io) return 'nome'
   if (stato.fase !== 'via') return 'aspetta'
-  if (!valido(stato.lezione?.obiettivo?.esercizio)) return 'guasta'
-  const parte = avanzamento?.alunno === stato.io.id ? avanzamento.parte : 'obiettivo'
-  if (parte === 'obiettivo') return 'obiettivo'
-  return parte === 'dopo' && haDopo(stato.lezione) ? 'dopo' : 'finito'
+  if (!lezioneValida(stato.lezione)) return 'guasta'
+  const c = camminoDi(cammino, stato)
+  const p = posizione(c.p, stato.avanti)
+  if (finita(stato.lezione, p)) return 'finito'
+  return c.visto < p ? 'passaggio' : 'blocco'
 }
 
-/* ══════════════ l'avanzamento dell'obiettivo ══════════════ */
-
-export const nuovoAvanzamento = alunno => ({ alunno, fatte: 0, inizio: null, parte: 'obiettivo' })
-// un nome diverso sullo stesso PC (la maestra l'ha liberato e ne è stato scelto un altro) riparte da zero
-export const perAlunno = (av, alunno) => (av?.alunno === alunno ? av : nuovoAvanzamento(alunno))
-// i minuti partono alla prima domanda, e sono tempo di parete (Date.now): passano anche a pagina chiusa
-export const comincia = (av, ora) => (av.inizio == null ? { ...av, inizio: ora } : av)
-
-const passato = (av, ora) => (av.inizio == null ? 0 : Math.max(0, ora - av.inizio))
-
-export function obiettivoFatto(av, obiettivo, ora) {
-  if (obiettivo?.quante > 0) return av.fatte >= obiettivo.quante
-  if (obiettivo?.minuti > 0) return av.inizio != null && passato(av, ora) >= obiettivo.minuti * MINUTO
-  return false
-}
-
-/* una risposta data: conta solo nell'obiettivo, e chiude l'obiettivo quando basta (a tempo: la domanda a schermo si finisce).
-   `ultima: false` è un colpo sbagliato di un gioco con la domanda ancora aperta: va alla maestra, ma qui non conta */
-export function rispostaData(av, obiettivo, ora, ultima = true) {
-  if (av.parte !== 'obiettivo' || ultima === false) return av
-  const dopo = { ...av, fatte: av.fatte + 1 }
-  return obiettivoFatto(dopo, obiettivo, ora) ? { ...dopo, parte: 'finito' } : dopo
-}
-
-/* all'ingresso nell'obiettivo (anche a pagina riaperta): il tempo parte, e se era già scaduto l'obiettivo è finito */
-export function entraNellObiettivo(av, obiettivo, ora) {
-  const a = comincia(av, ora)
-  return a.parte === 'obiettivo' && obiettivoFatto(a, obiettivo, ora) ? { ...a, parte: 'finito' } : a
-}
-
-export const continua = av => (av.parte === 'finito' ? { ...av, parte: 'dopo' } : av)
-
-/* il segno discreto di quanto manca: «7 di 15» (la domanda a schermo) o i minuti che restano */
-export function segno(av, obiettivo, ora) {
-  if (obiettivo?.quante > 0) return `${Math.min(av.fatte + 1, obiettivo.quante)} di ${obiettivo.quante}`
-  if (obiettivo?.minuti > 0) {
-    const resta = obiettivo.minuti * MINUTO - passato(av, ora)
-    if (resta <= 0) return 'Ultima domanda'
-    const m = Math.ceil(resta / MINUTO)
-    return m === 1 ? 'Ancora 1 minuto' : `Ancora ${m} minuti`
-  }
-  return ''
+/* il segno discreto in alto, secondo come si passa: «3 di 10 giuste», «7 di 20» (la domanda a schermo), i minuti che
+   restano; quando lo dice la maestra, niente */
+export function segno(passa, conto, ora) {
+  if (passa === null) return ''
+  const n = sogliaDi(passa), modo = modoDi(passa)
+  if (modo === 'giuste') return `${Math.min(conto.giuste, n)} di ${n} giuste`
+  if (modo === 'domande') return `${Math.min(conto.fatte + 1, n)} di ${n}`
+  const resta = n * MINUTO - (conto.inizio == null ? 0 : Math.max(0, ora - conto.inizio))
+  if (resta <= 0) return 'Ultima domanda'
+  const m = Math.ceil(resta / MINUTO)
+  return m === 1 ? 'Ancora 1 minuto' : `Ancora ${m} minuti`
 }
 
 /* ══════════════ il ricordo: `scuola:bambino` ══════════════ */
@@ -78,28 +92,29 @@ function archivio(storage) {
   try { return globalThis.localStorage ?? null } catch { return null }
 }
 
-const avanzamentoBuono = a => a && typeof a.alunno === 'string' && Number.isInteger(a.fatte) && a.fatte >= 0
-  && (a.inizio === null || Number.isFinite(a.inizio)) && PARTI.includes(a.parte)
-const statoBuono = s => s && typeof s.fase === 'string' && s.lezione && typeof s.lezione === 'object'
+const naturale = n => Number.isInteger(n) && n >= 0
+const camminoBuono = c => c && typeof c.alunno === 'string' && naturale(c.p) && naturale(c.visto) && c.visto <= c.p
+  && c.conto && naturale(c.conto.fatte) && naturale(c.conto.giuste) && (c.conto.inizio === null || Number.isFinite(c.conto.inizio))
+const statoBuono = s => s && typeof s.fase === 'string' && s.lezione && typeof s.lezione === 'object' && naturale(s.avanti)
   && Array.isArray(s.alunni) && (s.io === null || typeof s.io?.id === 'string')
 
-/* l'ultimo ricordo, o null se manca, è guasto, è di più di tre ore fa o è di una lezione chiusa */
+/* l'ultimo ricordo, o null se manca, è guasto, è nella forma di prima, è di più di tre ore fa o è di una lezione chiusa */
 export function leggiRicordo(ora, storage) {
   let r
   try { r = JSON.parse(archivio(storage)?.getItem(RICORDO) ?? 'null') } catch { return null }
-  if (!r || typeof r !== 'object' || !codiceCompleto(r.codice) || !Number.isFinite(r.nato) || !(ora - r.nato < TRE_ORE)) return null
-  const stato = statoBuono(r.stato) && r.stato.fase !== 'chiusa' ? r.stato : null
-  const avanzamento = avanzamentoBuono(r.avanzamento) ? r.avanzamento : null
-  return { codice: r.codice, nato: r.nato, stato, avanzamento }
+  if (!r || typeof r !== 'object' || r.forma !== FORMA || !codiceCompleto(r.codice) || !Number.isFinite(r.nato) || !(ora - r.nato < TRE_ORE)) return null
+  const stato = statoBuono(r.stato) && r.stato.fase !== 'chiusa' ? statoDa(r.stato) : null
+  const cammino = camminoBuono(r.cammino) ? r.cammino : null
+  return { codice: r.codice, nato: r.nato, stato, cammino }
 }
 
 /* si ricorda solo una lezione aperta: senza codice o a lezione chiusa il ricordo si toglie, e la pagina riparte dal codice */
-export function ricorda({ codice, nato, stato, avanzamento }, storage) {
+export function ricorda({ codice, nato, stato, cammino }, storage) {
   const a = archivio(storage)
   try {
     if (!codice || stato?.fase === 'chiusa') return void a?.removeItem(RICORDO)
-    const s = stato && { fase: stato.fase, lezione: stato.lezione, io: stato.io ?? null, alunni: stato.alunni ?? [] }
-    a?.setItem(RICORDO, JSON.stringify({ codice, nato, stato: s, avanzamento: avanzamento ?? null }))
+    const s = stato && { fase: stato.fase, lezione: stato.lezione, avanti: stato.avanti ?? 0, io: stato.io ?? null, alunni: stato.alunni ?? [] }
+    a?.setItem(RICORDO, JSON.stringify({ forma: FORMA, codice, nato, stato: s, cammino: cammino ?? null }))
   } catch { /* pieno o vietato: si va avanti senza ricordo */ }
 }
 

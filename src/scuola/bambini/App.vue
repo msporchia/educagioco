@@ -1,8 +1,9 @@
 <script setup>
-// L'app del bambino a scuola: codice, nome, attesa, domande, fine. Il giro sta in giro.js; docs/scuola/bambini.md
+// L'app del bambino a scuola: codice, nome, attesa, i blocchi della lezione, fine. Il giro sta in giro.js; docs/scuola/bambini.md
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { apriBambino } from '../comune/rete.js'
 import { descrivi, racconta, raccontaAsteroide, giocoDi } from '../comune/esercizi.js'
+import { posizione, bloccoDi } from '../comune/lezione.js'
 import * as G from './giro.js'
 import Codice from './viste/Codice.vue'
 import Nomi from './viste/Nomi.vue'
@@ -15,8 +16,8 @@ const BATTITO = 2000       // ogni quanto si rilegge l'orologio per i minuti che
 
 const codice = ref(null)
 const nato = ref(0)
-const stato = ref(null)          // { fase, lezione, io, alunni }: l'ultimo dal servizio, o quello ricordato
-const avanzamento = ref(null)
+const stato = ref(null)          // { fase, lezione, avanti, io, alunni }: l'ultimo dal servizio, o quello ricordato
+const cammino = ref(null)        // { alunno, p, visto, conto }: dove sta questo bambino
 const collegato = ref(false)
 const pazienza = ref(false)
 const scelgo = ref(false)
@@ -37,15 +38,15 @@ function cèWebGL() {
 }
 const senzaGioco = ref(false)
 
-const schermo = computed(() => G.schermata({ codice: codice.value, stato: stato.value, avanzamento: avanzamento.value }))
+const schermo = computed(() => G.schermata({ codice: codice.value, stato: stato.value, cammino: cammino.value }))
 const io = computed(() => stato.value?.io || null)
 const lezione = computed(() => stato.value?.lezione || null)
-const segno = computed(() => (schermo.value === 'obiettivo' && avanzamento.value
-  ? G.segno(avanzamento.value, lezione.value.obiettivo, ora.value) : ''))
+// la posizione e il blocco in cui sta, nelle schermate della lezione
+const pos = computed(() => (io.value ? posizione(G.camminoDi(cammino.value, stato.value).p, stato.value.avanti) : 0))
+const blocco = computed(() => (schermo.value === 'blocco' || schermo.value === 'passaggio' ? lezione.value.blocchi[bloccoDi(lezione.value, pos.value)] : null))
+const segno = computed(() => (schermo.value === 'blocco' ? G.segno(blocco.value.passa, G.camminoDi(cammino.value, stato.value).conto, ora.value) : ''))
 const ricollego = computed(() => !!codice.value && !collegato.value && pazienza.value && schermo.value !== 'chiusa')
-const dopo = computed(() => (G.haDopo(lezione.value) ? descrivi(lezione.value.dopo) : ''))
-const esercizioDi = parte => (parte === 'obiettivo' ? lezione.value.obiettivo.esercizio : lezione.value.dopo)
-const inGioco = parte => !senzaGioco.value && giocoDi(esercizioDi(parte)) === 'asteroidi' && cèWebGL()
+const inGioco = computed(() => !senzaGioco.value && giocoDi(blocco.value?.esercizio) === 'asteroidi' && cèWebGL())
 
 function chiudiRete() {
   rete?.chiudi()
@@ -58,14 +59,14 @@ function entra(c, ricordo = null) {
   codice.value = c
   nato.value = ricordo?.nato ?? Date.now()
   stato.value = ricordo?.stato ?? null
-  avanzamento.value = ricordo?.avanzamento ?? null
+  cammino.value = ricordo?.cammino ?? null
   collegato.value = false
   pazienza.value = false
   scelgo.value = false
   avviso.value = ''
   attesa = setTimeout(() => { pazienza.value = true }, PAZIENZA)
   rete = apriBambino(c, {
-    suStato: d => { stato.value = { fase: d.fase, lezione: d.lezione, io: d.io, alunni: d.alunni || [] } },
+    suStato: d => { stato.value = G.statoDa(d) },
     suNo: perche => {
       if (perche === 'codice') return esci()           // la lezione non c'è più: si torna al codice, senza errori
       if (schermo.value !== 'nome' || (perche !== 'preso' && perche !== 'storto')) return
@@ -82,7 +83,7 @@ function esci() {
   G.dimentica()
   codice.value = null
   stato.value = null
-  avanzamento.value = null
+  cammino.value = null
 }
 
 function scegli(chi) {
@@ -91,38 +92,44 @@ function scegli(chi) {
   rete?.sono(chi)
 }
 
-function risposta(parte, { domanda, giusto, indice, chiave, tempo }) {
-  rete?.rispondi({ parte, chiave, giusta: giusto, ms: Math.round(tempo * 1000), ...racconta(domanda, indice) })
-  if (parte === 'obiettivo') avanzamento.value = G.rispostaData(avanzamento.value, lezione.value.obiettivo, Date.now())
+// `p` è la posizione in cui la vista è stata montata (`:key`): una risposta arrivata dopo un cambio di blocco non conta qui
+const aPos = (p, f) => e => f(p, e)
+function contaRisposta(p, giusta, ultima) {
+  cammino.value = G.rispostaData(cammino.value, lezione.value, { blocco: p, giusta, ultima }, Date.now())
 }
 
-// negli Asteroidi alla maestra va ogni colpo, ma l'obiettivo conta la domanda una volta, quando si chiude (`ultima`)
-function rispostaGioco(parte, e) {
-  rete?.rispondi({ parte, chiave: 'tab:prodotto', giusta: e.giusta, ms: e.ms, ultima: e.ultima, ...raccontaAsteroide(e) })
-  if (parte === 'obiettivo') avanzamento.value = G.rispostaData(avanzamento.value, lezione.value.obiettivo, Date.now(), e.ultima)
+function risposta(p, { domanda, giusto, indice, chiave, tempo }) {
+  rete?.rispondi({ blocco: p, chiave, giusta: giusto, ms: Math.round(tempo * 1000), ultima: true, ...racconta(domanda, indice) })
+  contaRisposta(p, giusto, true)
+}
+
+// negli Asteroidi alla maestra va ogni colpo, ma il blocco conta la domanda una volta, quando si chiude (`ultima`)
+function rispostaGioco(p, e) {
+  rete?.rispondi({ blocco: p, chiave: 'tab:prodotto', giusta: e.giusta, ms: e.ms, ultima: e.ultima !== false, ...raccontaAsteroide(e) })
+  contaRisposta(p, e.giusta, e.ultima)
 }
 
 function continua() {
-  avanzamento.value = G.continua(avanzamento.value)
+  cammino.value = G.continua(cammino.value)
 }
 
-// il nome cambia (scelto, o liberato dalla maestra): l'avanzamento è di quel nome
-watch(() => io.value?.id, id => {
-  scelgo.value = false
-  avviso.value = ''
-  if (id) avanzamento.value = G.perAlunno(avanzamento.value, id)
+// il nome cambia (scelto, o liberato dalla maestra) o la maestra preme «Avanti tutti»: il cammino è di quel nome, al passo col pavimento
+watch([() => io.value?.id, () => stato.value?.avanti], ([id], [prima]) => {
+  if (id !== prima) { scelgo.value = false; avviso.value = '' }
+  if (id) cammino.value = G.segui(cammino.value, id, stato.value.avanti)
 })
 
-watch(schermo, s => {
-  if (s === 'obiettivo') {
-    avanzamento.value = G.entraNellObiettivo(G.perAlunno(avanzamento.value, io.value.id), lezione.value.obiettivo, Date.now())
-    if (avanzamento.value.parte !== 'obiettivo') return       // il tempo era già scaduto: lo schermo passa a «finito»
-  }
-  if (s === 'obiettivo' || s === 'finito' || s === 'dopo') rete?.dove(s)
+// entrando in un blocco il tempo parte; a minuti, una soglia già passata (pagina riaperta tardi) porta al blocco dopo
+watch([schermo, pos], ([s]) => {
+  if (s === 'blocco') cammino.value = G.entraNelBlocco(G.camminoDi(cammino.value, stato.value), lezione.value, Date.now())
 })
 
-watch([codice, stato, avanzamento], () => {
-  G.ricorda({ codice: codice.value, nato: nato.value, stato: stato.value, avanzamento: avanzamento.value })
+// alla maestra: la posizione a ogni cambio di blocco, «finito» a lezione finita
+const dove = computed(() => (schermo.value === 'blocco' || schermo.value === 'passaggio' ? pos.value : schermo.value === 'finito' ? 'finito' : null))
+watch(dove, d => { if (d !== null) rete?.dove(d) })
+
+watch([codice, stato, cammino], () => {
+  G.ricorda({ codice: codice.value, nato: nato.value, stato: stato.value, cammino: cammino.value })
 })
 
 onMounted(() => {
@@ -160,19 +167,21 @@ onUnmounted(() => { chiudiRete(); clearInterval(battito) })
       <p class="frase">Aspetta il via della maestra</p>
     </div>
 
-    <div v-else-if="schermo === 'obiettivo' || schermo === 'dopo'" class="dentro" data-domanda :data-parte="schermo">
-      <Asteroidi v-if="inGioco(schermo)" :key="'gioco-' + schermo" :esercizio="esercizioDi(schermo)" :alunno="io"
-                 @risposta="e => rispostaGioco(schermo, e)" @guasto="senzaGioco = true" />
-      <Domande v-else :key="schermo" :esercizio="esercizioDi(schermo)" @risposta="e => risposta(schermo, e)" />
+    <div v-else-if="schermo === 'blocco'" class="dentro" data-domanda :data-blocco="bloccoDi(lezione, pos)">
+      <Asteroidi v-if="inGioco" :key="'gioco-' + pos" :esercizio="blocco.esercizio" :alunno="io"
+                 :onRisposta="aPos(pos, rispostaGioco)" @guasto="senzaGioco = true" />
+      <Domande v-else :key="'schede-' + pos" :esercizio="blocco.esercizio" :onRisposta="aPos(pos, risposta)" />
+    </div>
+
+    <div v-else-if="schermo === 'passaggio'" class="centro" data-passaggio>
+      <p class="grande">Bravo!</p>
+      <p class="frase">Adesso: {{ descrivi(blocco.esercizio) }}</p>
+      <button type="button" class="bottone" data-continua @click="continua">Continua</button>
     </div>
 
     <div v-else-if="schermo === 'finito'" class="centro" data-finito>
       <p class="grande">Hai finito!</p>
-      <template v-if="dopo">
-        <p class="frase">Ora puoi continuare con: {{ dopo }}</p>
-        <button type="button" class="bottone" data-continua @click="continua">Continua</button>
-      </template>
-      <p v-else class="frase">Aspetta la maestra</p>
+      <p class="frase">Aspetta la maestra</p>
     </div>
 
     <div v-else-if="schermo === 'chiusa'" class="centro" data-chiusa>
