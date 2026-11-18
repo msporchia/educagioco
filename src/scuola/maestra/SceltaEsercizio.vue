@@ -1,10 +1,10 @@
 <script setup>
-// L'esercizio di un obiettivo o del «se hai finito»: una o più parti, ognuna con la sua intensità, e il gioco in cui si fa (docs/scuola/esercizi.md)
+// L'esercizio di un blocco della lezione: una o più parti, ognuna con la sua intensità, e il gioco in cui si fa (docs/scuola/esercizi.md)
 import { computed } from 'vue'
 import { valido, descrivi, giochiPer, giocoDi, PESI, MAX_PARTI } from '../comune/esercizi.js'
 import ParteEsercizio from './ParteEsercizio.vue'
 
-const props = defineProps({ modelValue: { type: Object, required: true }, dove: { type: String, default: 'obiettivo' } })
+const props = defineProps({ modelValue: { type: Object, required: true }, dove: { type: String, default: 'blocco' } })
 const emit = defineEmits(['update:modelValue'])
 
 const copia = x => JSON.parse(JSON.stringify(x))

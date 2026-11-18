@@ -4,7 +4,7 @@ import { ref, computed } from 'vue'
 import { quaderno } from './stato.js'
 import { avvia } from './diretta.js'
 import { MAX_ALUNNI, lezioneValida } from './quaderno.js'
-import { comeSiSvolge, seHaiFinito } from './utili.js'
+import { comeSiSvolge } from './utili.js'
 
 const props = defineProps({ lezione: { type: Object, required: true } })
 const emit = defineEmits(['vai', 'indietro'])
@@ -37,8 +37,7 @@ async function parti() {
 <template>
   <section class="carta" data-avvia>
     <h1>{{ lezione.nome }}</h1>
-    <p>{{ comeSiSvolge(lezione) }}</p>
-    <p class="nota">{{ seHaiFinito(lezione) }}</p>
+    <p v-for="(r, i) in comeSiSvolge(lezione)" :key="i">{{ r }}</p>
   </section>
   <section class="carta">
     <h2>Con quale classe?</h2>

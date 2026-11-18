@@ -8,33 +8,33 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
 import { CATALOGO, GIOCHI, valido, giochiPer, giocoDi } from '../../src/scuola/comune/esercizi.js'
 import { ANNI, ANNO_TABELLINE, LEZIONI_PRONTE, annoDi, materiaDi, pronte, materiePer, giochiDi, lezioneDa }
   from '../../src/scuola/comune/lezioni-pronte.js'
-import { lezioneValida, MAX_QUANTE, MAX_MINUTI } from '../../src/scuola/maestra/quaderno.js'
+import { lezioneValida } from '../../src/scuola/maestra/quaderno.js'
+import { lezioneValida as validaComune, passaValido, modoDi } from '../../src/scuola/comune/lezione.js'
 
 const senzaGioco = ({ gioco, ...resto }) => resto
 
 /* ══════════ 1. ogni lezione pronta è una lezione valida ══════════ */
+// l'obiettivo di prima è il primo blocco (a domande o a minuti), il «se hai finito» il secondo (quando lo dice la maestra)
 for (const p of LEZIONI_PRONTE) {
-  const o = p.obiettivo
-  controlla(`${p.id}: l'obiettivo è un esercizio valido`, valido(o.esercizio), JSON.stringify(o.esercizio))
-  controlla(`${p.id}: il «se hai finito» è nessuno o valido`, p.dopo === null || valido(p.dopo), JSON.stringify(p.dopo))
-  controlla(`${p.id}: esattamente uno fra quante e minuti`, (o.quante === null) !== (o.minuti === null), JSON.stringify(o))
-  controlla(`${p.id}: dentro i tetti del servizio`,
-    o.quante === null ? Number.isInteger(o.minuti) && o.minuti >= 1 && o.minuti <= MAX_MINUTI : Number.isInteger(o.quante) && o.quante >= 1 && o.quante <= MAX_QUANTE,
-    JSON.stringify(o))
+  const [primo, secondo, ...altri] = p.blocchi
+  controlla(`${p.id}: ogni blocco chiede un esercizio valido`, p.blocchi.every(b => valido(b.esercizio)), JSON.stringify(p.blocchi))
+  controlla(`${p.id}: il primo blocco passa da solo, a domande o a minuti, dentro i tetti`,
+    passaValido(primo.passa) && ['domande', 'minuti'].includes(modoDi(primo.passa)), JSON.stringify(primo.passa))
+  controlla(`${p.id}: il secondo, se c'è, passa quando lo dice la maestra`, !secondo || secondo.passa === null, JSON.stringify(secondo))
+  controlla(`${p.id}: al più due blocchi, non in tondo`, !altri.length && p.inTondo === false)
   controlla(`${p.id}: ha un anno della primaria, una materia del catalogo e una riga per la maestra`,
     ANNI.includes(p.anno) && CATALOGO.materie.some(m => m.id === p.materia) && typeof p.allena === 'string' && p.allena.length > 10)
-  uguale(`${p.id}: l'obiettivo è della sua materia`, materiaDi(o.esercizio), p.materia)
+  uguale(`${p.id}: il primo blocco è della sua materia`, materiaDi(primo.esercizio), p.materia)
   const l = lezioneDa(p, 'lprova')
-  controlla(`${p.id}: data all'editor è una lezione che si salva`, lezioneValida(l), JSON.stringify(l))
-  stessaLista(`${p.id}: data all'editor ha solo i campi della lezione che viaggia`, Object.keys(l), ['id', 'nome', 'obiettivo', 'dopo'])
+  controlla(`${p.id}: data all'editor è una lezione che si salva`, lezioneValida(l) && validaComune(l), JSON.stringify(l))
+  stessaLista(`${p.id}: data all'editor ha solo i campi della lezione che viaggia`, Object.keys(l), ['id', 'nome', 'blocchi', 'inTondo'])
 }
 
 /* ══════════ 2. sta nel suo anno ══════════ */
 for (const p of LEZIONI_PRONTE) {
-  for (const [parte, e] of [['l\'obiettivo', p.obiettivo.esercizio], ['il «se hai finito»', p.dopo]]) {
-    if (!e) continue
-    const a = annoDi(e)
-    controlla(`${p.id}: ${parte} non è di un anno dopo la ${p.anno}ª`, Number.isInteger(a) && a <= p.anno, `è di ${a}ª`)
+  for (const [i, { esercizio }] of p.blocchi.entries()) {
+    const a = annoDi(esercizio)
+    controlla(`${p.id}: il blocco ${i + 1} non è di un anno dopo la ${p.anno}ª`, Number.isInteger(a) && a <= p.anno, `è di ${a}ª`)
   }
 }
 uguale('le tabelline sono di seconda', annoDi({ tipo: 'tabelline', tabelline: [7], modo: 'prodotto' }), ANNO_TABELLINE)
@@ -66,7 +66,7 @@ for (const anno of ANNI) {
     const qui = pronte({ anno, materia: mat.id })
     controlla(`${anno}ª: ci sono lezioni pronte di ${mat.nome}`, qui.length > 0)
     for (const v of voci) {
-      const usata = qui.some(p => (p.obiettivo.esercizio.tipo === 'tabelline' ? 'tabelline' : p.obiettivo.esercizio.modulo) === v.id)
+      const usata = qui.some(p => (p.blocchi[0].esercizio.tipo === 'tabelline' ? 'tabelline' : p.blocchi[0].esercizio.modulo) === v.id)
       controlla(`${anno}ª: «${v.nome}» ha un gradino di quest'anno e una lezione pronta`, usata)
     }
   }
@@ -76,14 +76,14 @@ for (const anno of ANNI) {
 /* ══════════ 5. i giochi ══════════ */
 {
   for (const p of LEZIONI_PRONTE) {
-    const g = giocoDi(p.obiettivo.esercizio)
+    const g = giocoDi(p.blocchi[0].esercizio)
     if (g === 'schede') continue
     const gemella = LEZIONI_PRONTE.find(x => x.id === p.id.replace(new RegExp(`-${g}$`), ''))
-    controlla(`${p.id}: nel gioco c'è anche la stessa nelle domande`, !!gemella && JSON.stringify(senzaGioco(p.obiettivo.esercizio)) === JSON.stringify(gemella.obiettivo.esercizio))
+    controlla(`${p.id}: nel gioco c'è anche la stessa nelle domande`, !!gemella && JSON.stringify(p.blocchi.map(b => senzaGioco(b.esercizio))) === JSON.stringify(gemella.blocchi.map(b => b.esercizio)))
   }
-  for (const p of LEZIONI_PRONTE.filter(x => giocoDi(x.obiettivo.esercizio) === 'schede')) {
-    for (const g of giochiPer(p.obiettivo.esercizio).filter(x => x.id !== 'schede'))
-      controlla(`${p.id}: il gioco «${g.nome}» accetta l'obiettivo, e c'è la lezione lì`, LEZIONI_PRONTE.some(x => x.id === `${p.id}-${g.id}`))
+  for (const p of LEZIONI_PRONTE.filter(x => giocoDi(x.blocchi[0].esercizio) === 'schede')) {
+    for (const g of giochiPer(p.blocchi[0].esercizio).filter(x => x.id !== 'schede'))
+      controlla(`${p.id}: il gioco «${g.nome}» accetta il primo blocco, e c'è la lezione lì`, LEZIONI_PRONTE.some(x => x.id === `${p.id}-${g.id}`))
   }
   const asteroidi = pronte({ gioco: 'asteroidi' })
   controlla('negli Asteroidi ci sono lezioni, tutte di matematica', asteroidi.length > 0 && asteroidi.every(p => p.materia === 'matematica'))
@@ -96,14 +96,14 @@ for (const anno of ANNI) {
 {
   uguale('senza filtri, tutte', pronte().length, LEZIONI_PRONTE.length)
   controlla('per anno, materia e gioco', pronte({ anno: 3, materia: 'matematica', gioco: 'schede' })
-    .every(p => p.anno === 3 && p.materia === 'matematica' && giocoDi(p.obiettivo.esercizio) === 'schede'))
+    .every(p => p.anno === 3 && p.materia === 'matematica' && giocoDi(p.blocchi[0].esercizio) === 'schede'))
   stessaLista('le materie seguono l\'ordine del catalogo', materiePer(1).map(m => m.id),
     CATALOGO.materie.map(m => m.id).filter(id => pronte({ anno: 1, materia: id }).length))
   uguale('un anno che non c\'è non ha niente', pronte({ anno: 6 }).length, 0)
   const p = pronte({ anno: 2, materia: 'matematica' })[0]
   const l = lezioneDa(p, 'lx')
-  l.obiettivo.esercizio.tabelline?.push(99)
-  controlla('lezioneDa dà una copia: cambiarla non tocca la pronta', valido(p.obiettivo.esercizio))
+  l.blocchi[0].esercizio.tabelline?.push(99)
+  controlla('lezioneDa dà una copia: cambiarla non tocca la pronta', valido(p.blocchi[0].esercizio))
 }
 
 nota(`${LEZIONI_PRONTE.length} lezioni pronte`)

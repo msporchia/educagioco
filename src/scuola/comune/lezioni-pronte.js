@@ -28,7 +28,7 @@ const m = (modulo, da, a = da, tipologie = []) => ({ tipo: 'modulo', modulo, da,
 const t = (tabelline, modo = 'prodotto') => ({ tipo: 'tabelline', tabelline, modo })
 const TUTTE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 const SD = ['conti:somma', 'conti:differenza']
-// [nome, cosa allena, obiettivo, quante domande o '<n> min', se hai finito]
+// [nome, cosa allena, obiettivo, quante domande o '<n> min', se hai finito]: i due blocchi, sotto in `scritta`
 const SCRITTE = {
   1: {
     italiano: [
@@ -261,17 +261,18 @@ const SCRITTE = {
 const slug = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 const conGioco = (e, gioco) => (e && giochiPer(e).some(g => g.id === gioco) ? { ...e, gioco } : e)
 
+// l'obiettivo è il primo blocco (passa a quella soglia), il «se hai finito» il secondo (quando lo dice la maestra)
 function scritta(anno, materia, [nome, allena, esercizio, misura, dopo]) {
-  const minuti = typeof misura === 'string' ? Number.parseInt(misura, 10) : null
+  const passa = typeof misura === 'string' ? { minuti: Number.parseInt(misura, 10) } : { domande: misura }
   return { id: `${anno}-${materia}-${slug(nome)}`, anno, materia, nome, allena,
-           obiettivo: { esercizio, quante: minuti ? null : misura, minuti }, dopo: dopo ?? null }
+           blocchi: [{ esercizio, passa }, ...(dopo ? [{ esercizio: dopo, passa: null }] : [])], inTondo: false }
 }
 
-// dove un gioco vero accetta l'obiettivo, la stessa lezione anche lì (e il «se hai finito», se lo accetta)
+// dove un gioco vero accetta il primo blocco, la stessa lezione anche lì (e gli altri blocchi, se li accetta)
 function neiGiochi(p) {
-  return GIOCHI.filter(g => g.id !== 'schede' && giochiPer(p.obiettivo.esercizio).some(x => x.id === g.id)).map(g => ({
+  return GIOCHI.filter(g => g.id !== 'schede' && giochiPer(p.blocchi[0].esercizio).some(x => x.id === g.id)).map(g => ({
     ...p, id: `${p.id}-${g.id}`, nome: `${p.nome} ${g.nei}`,
-    obiettivo: { ...p.obiettivo, esercizio: conGioco(p.obiettivo.esercizio, g.id) }, dopo: conGioco(p.dopo, g.id),
+    blocchi: p.blocchi.map(b => ({ ...b, esercizio: conGioco(b.esercizio, g.id) })),
   }))
 }
 
@@ -280,7 +281,7 @@ export const LEZIONI_PRONTE = Object.freeze(ANNI.flatMap(anno => CATALOGO.materi
 
 /* ══════════════ i filtri ══════════════ */
 
-export const giocoDellaPronta = p => giocoDi(p.obiettivo.esercizio)
+export const giocoDellaPronta = p => giocoDi(p.blocchi[0].esercizio)
 
 // quelle che rispondono a tutti i filtri dati (un filtro assente vale tutto)
 export const pronte = ({ anno, materia, gioco } = {}) => LEZIONI_PRONTE.filter(p =>
@@ -293,4 +294,4 @@ export const materiePer = anno => CATALOGO.materie.filter(mat => pronte({ anno, 
 export const giochiDi = (anno, materia) => GIOCHI.filter(g => pronte({ anno, materia, gioco: g.id }).length)
 
 // la lezione che viaggia (docs/scuola/protocollo.md), da dare all'editor: una copia, con l'id nuovo
-export const lezioneDa = (p, id) => JSON.parse(JSON.stringify({ id, nome: p.nome, obiettivo: p.obiettivo, dopo: p.dopo }))
+export const lezioneDa = (p, id) => JSON.parse(JSON.stringify({ id, nome: p.nome, blocchi: p.blocchi, inTondo: p.inTondo }))

@@ -3,7 +3,7 @@
 import { ref, computed } from 'vue'
 import { quaderno, salva, lezioneDi } from './stato.js'
 import * as Q from './quaderno.js'
-import { paginaMaestra, copia, comeSiSvolge, seHaiFinito } from './utili.js'
+import { paginaMaestra, copia, comeSiSvolge } from './utili.js'
 
 const props = defineProps({ lezione: { type: Object, required: true } })
 const emit = defineEmits(['vai', 'indietro'])
@@ -24,8 +24,7 @@ async function copiaLink() {
 <template>
   <section class="carta" data-lezione-dal-link>
     <h1>{{ lezione.nome }}</h1>
-    <p>{{ comeSiSvolge(lezione) }}</p>
-    <p class="nota">{{ seHaiFinito(lezione) }}</p>
+    <p v-for="(r, i) in comeSiSvolge(lezione)" :key="i">{{ r }}</p>
     <p v-if="aggiunta" class="bene" data-esito="aggiunta">È nel quaderno, fra le lezioni.</p>
     <p v-else-if="giaDentro" class="nota">Nel quaderno c'è già questa lezione: aggiungendola la sostituisci con quella del link.</p>
     <div class="fila">

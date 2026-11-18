@@ -1,22 +1,19 @@
 /* Il quaderno della maestra: classi, lezioni, storico e la lezione in corso, solo nel suo browser. Funzioni pure (lo
    storage si passa da fuori); quelle che cambiano il quaderno lo cambiano sul posto. Vedi docs/scuola/quaderno.md. */
-import { valido } from '../comune/esercizi.js'
+import * as L from '../comune/lezione.js'
 
 export const CHIAVI = { classi: 'scuola:classi', lezioni: 'scuola:lezioni', storico: 'scuola:storico', inCorso: 'scuola:in-corso' }
 export const FORMATO = 'educagioco-quaderno'
 export const VERSIONE = 1
 export const MAX_ALUNNI = 40          // i tetti del servizio (docs/scuola/protocollo.md)
 export const MAX_NOME = 24
-export const MAX_NOME_LEZIONE = 60
+export const MAX_NOME_LEZIONE = L.MAX_NOME_LEZIONE
 export const MAX_NOME_CLASSE = 40
-export const MAX_QUANTE = 500
-export const MAX_MINUTI = 180
 const MAX_SBAGLIATE = 20              // per alunno e lezione: le più sbagliate, le altre si lasciano
 const ULTIME = 3
 const DETTE = 3
 
 const oggetto = x => !!x && typeof x === 'object' && !Array.isArray(x)
-const soloChiavi = (x, chiavi) => Object.keys(x).every(k => chiavi.includes(k))
 const testo = (x, max) => typeof x === 'string' && x.length <= max
 const conta = x => (Number.isInteger(x) && x >= 0 ? x : 0)
 const ID = /^[A-Za-z0-9_-]{1,40}$/
@@ -91,23 +88,18 @@ export function aggiungiAllaClasse(q, classeId, alunno) {
 
 /* ══════════════ le lezioni ══════════════ */
 
-export function nuovaLezione(esercizio) {
-  return { id: nuovoId('l'), nome: '', obiettivo: { esercizio, quante: 20, minuti: null }, dopo: null }
+// un blocco che passa da solo dopo le giuste: la scelta di partenza (docs/scuola/lezione.md)
+export const passaDiBase = (modo = 'giuste') => {
+  const m = L.MODI_PASSA.find(x => x.id === modo)
+  return m?.unita ? { [m.id]: m.base } : null
 }
 
-// la forma della lezione che viaggia (docs/scuola/protocollo.md), con un esercizio che si può fare
-export function lezioneValida(l) {
-  if (!oggetto(l) || !soloChiavi(l, ['id', 'nome', 'obiettivo', 'dopo'])) return false
-  if (typeof l.id !== 'string' || !ID.test(l.id)) return false
-  if (typeof l.nome !== 'string' || !nomePulito(l.nome, MAX_NOME_LEZIONE) || l.nome.length > MAX_NOME_LEZIONE) return false
-  const o = l.obiettivo
-  if (!oggetto(o) || !soloChiavi(o, ['esercizio', 'quante', 'minuti']) || !valido(o.esercizio)) return false
-  const quante = o.quante ?? null, minuti = o.minuti ?? null
-  if ((quante === null) === (minuti === null)) return false
-  if (quante !== null && !(Number.isInteger(quante) && quante >= 1 && quante <= MAX_QUANTE)) return false
-  if (minuti !== null && !(Number.isInteger(minuti) && minuti >= 1 && minuti <= MAX_MINUTI)) return false
-  return l.dopo === null || valido(l.dopo)
+export function nuovaLezione(esercizio) {
+  return { id: nuovoId('l'), nome: '', blocchi: [{ esercizio, passa: passaDiBase() }], inTondo: false }
 }
+
+// la lezione a blocchi di comune/lezione.js, con un nome che non sia solo spazi e un id che sta in un attributo
+export const lezioneValida = l => L.lezioneValida(l) && ID.test(l.id) && !!nomePulito(l.nome, MAX_NOME_LEZIONE)
 
 export function salvaLezione(q, l) {
   if (!lezioneValida(l)) return false
@@ -144,15 +136,24 @@ export function lezioneDalLink(indirizzo) {
   const m = /#(?:.*&)?lezione=([A-Za-z0-9_-]+)/.exec(String(indirizzo ?? ''))
   if (!m) return null
   try {
-    const l = JSON.parse(daBase64url(m[1]))
+    const l = L.convertiLezione(JSON.parse(daBase64url(m[1])))       // un link di prima porta obiettivo e «se hai finito»
     return lezioneValida(l) ? l : null
   } catch { return null }
 }
 
 /* ══════════════ lo storico: un riassunto per alunno, non ogni risposta ══════════════ */
 
-const parteVuota = () => ({ fatte: 0, giuste: 0 })
-export const riassuntoVuoto = () => ({ presente: false, obiettivo: parteVuota(), dopo: parteVuota(), sbagliate: [], ultime: [] })
+/* `blocchi[i]`: fatte e giuste del blocco i, sommate su tutti i giri se la lezione è in tondo */
+const contoVuoto = () => ({ fatte: 0, giuste: 0 })
+export const riassuntoVuoto = (n = 1) => ({ presente: false, blocchi: Array.from({ length: n }, contoVuoto), sbagliate: [], ultime: [] })
+const quantiBlocchi = voce => Math.max(1, voce?.lezione?.blocchi?.length | 0)
+
+/* il blocco di una risposta: `blocco` è la posizione del bambino (in tondo cresce a ogni giro); una risposta di prima
+   dei blocchi ha `parte` ('obiettivo' o 'dopo') */
+export function bloccoDellaRisposta(r, n) {
+  if (Number.isInteger(r?.blocco) && r.blocco >= 0) return r.blocco % n
+  return r?.parte === 'dopo' ? Math.min(1, n - 1) : 0
+}
 
 /* la voce dello storico nasce all'avvio, con gli alunni della classe; codice e chiave restano finché il servizio la tiene */
 export function nuovaVoce({ classe, lezione, codice, chiave, scade, ora }) {
@@ -164,11 +165,12 @@ export function nuovaVoce({ classe, lezione, codice, chiave, scade, ora }) {
   }
 }
 
-function conta1(es, r) {
-  const parte = r.parte === 'dopo' ? es.dopo : es.obiettivo
+function conta1(es, r, n) {
+  const b = bloccoDellaRisposta(r, n)
+  const conto = (es.blocchi[b] ||= contoVuoto())
   const chiude = r.ultima !== false            // un colpo sbagliato con la domanda ancora aperta: è fra le sbagliate, non fra le fatte
-  if (chiude) parte.fatte++
-  if (r.giusta) { if (chiude) parte.giuste++; return }
+  if (chiude) conto.fatte++
+  if (r.giusta) { if (chiude) conto.giuste++; return }
   const fatto = String(r.fatto ?? ''), attesa = String(r.attesa ?? ''), data = String(r.data ?? '')
   let s = es.sbagliate.find(x => x.fatto === fatto && x.attesa === attesa)
   if (!s) { s = { fatto, attesa, volte: 0, dette: [] }; es.sbagliate.push(s) }
@@ -176,17 +178,34 @@ function conta1(es, r) {
   if (data && !s.dette.includes(data)) { s.dette.push(data); if (s.dette.length > DETTE) s.dette.shift() }
   es.sbagliate.sort((a, b) => b.volte - a.volte)
   if (es.sbagliate.length > MAX_SBAGLIATE) es.sbagliate.length = MAX_SBAGLIATE
-  es.ultime.unshift({ parte: r.parte === 'dopo' ? 'dopo' : 'obiettivo', fatto, data, attesa })
+  es.ultime.unshift({ blocco: b, fatto, data, attesa })
   if (es.ultime.length > ULTIME) es.ultime.length = ULTIME
 }
 
-const esitoDi = (voce, id) => (voce.esiti[id] ||= riassuntoVuoto())
+const esitoDi = (voce, id) => (voce.esiti[id] ||= riassuntoVuoto(quantiBlocchi(voce)))
 
 export function aggiungiRisposta(voce, alunnoId, r) {
   if (!voce || typeof alunnoId !== 'string' || !oggetto(r)) return
   const es = esitoDi(voce, alunnoId)
   es.presente = true
-  conta1(es, r)
+  conta1(es, r, quantiBlocchi(voce))
+}
+
+/* per il pannello: fatte e giuste di ogni alunno a ogni posizione (il blocco di questo giro, non la somma dei giri).
+   Non si salva: `tutto` lo rifà da capo. `conti`: { <alunno>: { <posizione>: { fatte, giuste } } } */
+export function contaPosizione(conti, alunnoId, r) {
+  if (!oggetto(conti) || typeof alunnoId !== 'string' || !oggetto(r)) return
+  const p = Number.isInteger(r.blocco) && r.blocco >= 0 ? r.blocco : 0
+  const c = ((conti[alunnoId] ||= {})[p] ||= contoVuoto())
+  if (r.ultima === false) return
+  c.fatte++
+  if (r.giusta) c.giuste++
+}
+export function contiDelleRisposte(risposte) {
+  const conti = {}
+  for (const [id, lista] of Object.entries(oggetto(risposte) ? risposte : {}))
+    if (Array.isArray(lista)) for (const r of lista) contaPosizione(conti, id, r)
+  return conti
 }
 
 const segnaPresenti = (voce, alunni) => {
@@ -213,7 +232,7 @@ export function ricalcola(voce, tutto) {
     if (!Array.isArray(lista)) continue
     const es = esitoDi(voce, a.id)
     es.presente = true
-    for (const r of [...lista].sort((x, y) => (x.n ?? 0) - (y.n ?? 0))) conta1(es, r)
+    for (const r of [...lista].sort((x, y) => (x.n ?? 0) - (y.n ?? 0))) conta1(es, r, quantiBlocchi(voce))
   }
   if (Number.isFinite(tutto.scade)) voce.scade = tutto.scade
 }
@@ -237,10 +256,15 @@ export const recuperabile = (v, ora) => !!v?.chiave && ora < v.scade
 
 /* ══════════════ il resoconto e lo storico ══════════════ */
 
+// i conti di un alunno, uno per blocco della lezione (anche per chi non ha risposto: zero)
+const contiPerBlocco = (voce, es) => Array.from({ length: quantiBlocchi(voce) }, (_, i) => ({ ...contoVuoto(), ...es?.blocchi?.[i] }))
+const ha = conti => conti.some(c => c.fatte > 0)
+
 export function righeResoconto(voce) {
   return voce.alunni.map(a => {
     const es = voce.esiti[a.id] || riassuntoVuoto()
-    return { id: a.id, nome: a.nome, nuovo: a.nuovo, presente: es.presente, obiettivo: es.obiettivo, dopo: es.dopo,
+    const blocchi = contiPerBlocco(voce, es)
+    return { id: a.id, nome: a.nome, nuovo: a.nuovo, presente: es.presente || ha(blocchi), blocchi,
              sbagliate: es.sbagliate.slice(0, 3), ultime: es.ultime }
   })
 }
@@ -282,8 +306,9 @@ export function classiNelloStorico(q) {
 export function storicoDelBambino(q, classeId, alunnoId) {
   const voci = vociDellaClasse(q, classeId).filter(v => v.alunni.some(a => a.id === alunnoId))
   const lezioni = voci.map(v => {
-    const es = v.esiti[alunnoId] || riassuntoVuoto()
-    return { voce: v.id, avviata: v.avviata, nome: v.lezione.nome, presente: es.presente, obiettivo: es.obiettivo, dopo: es.dopo }
+    const es = v.esiti[alunnoId]
+    const blocchi = contiPerBlocco(v, es)
+    return { voce: v.id, avviata: v.avviata, nome: v.lezione.nome, presente: !!es?.presente || ha(blocchi), blocchi }
   })
   return { lezioni, sbaglia: sommaSbagliate(voci.map(v => v.esiti[alunnoId]?.sbagliate || []), 8) }
 }
@@ -299,10 +324,11 @@ const cella = v => {
 const dettaSbagliata = s => `${s.fatto} → ${s.attesa}${s.volte > 1 ? ` (${s.volte} volte)` : ''}`
 
 export function csvResoconto(voce) {
-  const righe = [['Bambino', 'Nuovo', 'Obiettivo: fatte', 'Obiettivo: giuste', 'Se hai finito: fatte', 'Se hai finito: giuste', 'Domande sbagliate']]
+  const blocchi = Array.from({ length: quantiBlocchi(voce) }, (_, i) => [`Blocco ${i + 1}: fatte`, `Blocco ${i + 1}: giuste`]).flat()
+  const righe = [['Bambino', 'Nuovo', ...blocchi, 'Domande sbagliate']]
   for (const r of righeResoconto(voce)) {
     const es = voce.esiti[r.id]
-    righe.push([r.nome, r.nuovo ? 'sì' : '', r.obiettivo.fatte, r.obiettivo.giuste, r.dopo.fatte, r.dopo.giuste,
+    righe.push([r.nome, r.nuovo ? 'sì' : '', ...r.blocchi.flatMap(c => [c.fatte, c.giuste]),
       (es?.sbagliate || []).map(dettaSbagliata).join(', ')])
   }
   return righe.map(r => r.map(cella).join(';')).join('\r\n') + '\r\n'
@@ -321,15 +347,15 @@ function normalizzaClasse(c) {
   return conAnno(c.id, nomePulito(c.nome, MAX_NOME_CLASSE), c.anno, alunni)
 }
 
-/* la forma e basta: una lezione il cui esercizio non c'è più nel catalogo si tiene (si vede «non valido» e non si avvia) */
-function normalizzaLezione(l) {
+/* la forma e basta: una lezione il cui esercizio non c'è più nel catalogo si tiene (si vede «non valido» e non si avvia).
+   Una lezione di prima (obiettivo e «se hai finito») diventa a blocchi. */
+function normalizzaLezione(x) {
+  const l = L.convertiLezione(x)
   if (!oggetto(l) || typeof l.id !== 'string' || !ID.test(l.id) || typeof l.nome !== 'string') return null
-  const o = l.obiettivo
-  if (!oggetto(o) || !oggetto(o.esercizio)) return null
-  const quante = o.quante ?? null, minuti = o.minuti ?? null
-  if ((quante === null) === (minuti === null) || ![quante, minuti].every(x => x === null || Number.isInteger(x))) return null
-  if (l.dopo != null && !oggetto(l.dopo)) return null
-  return JSON.parse(JSON.stringify({ id: l.id, nome: l.nome.slice(0, MAX_NOME_LEZIONE), obiettivo: { esercizio: o.esercizio, quante, minuti }, dopo: l.dopo ?? null }))
+  if (!Array.isArray(l.blocchi) || !l.blocchi.length || l.blocchi.length > L.MAX_BLOCCHI) return null
+  if (!l.blocchi.every(b => oggetto(b) && oggetto(b.esercizio) && 'passa' in b && L.passaValido(b.passa))) return null
+  return JSON.parse(JSON.stringify({ id: l.id, nome: l.nome.slice(0, MAX_NOME_LEZIONE),
+    blocchi: l.blocchi.map(b => ({ esercizio: b.esercizio, passa: b.passa })), inTondo: l.inTondo === true }))
 }
 
 function normalizzaSbagliata(s) {
@@ -338,20 +364,25 @@ function normalizzaSbagliata(s) {
            dette: Array.isArray(s.dette) ? s.dette.filter(d => testo(d, 200)).slice(-DETTE) : [] }
 }
 
-function normalizzaRiassunto(e) {
+/* `n`: i blocchi della lezione. Un riassunto di prima ha `obiettivo` e `dopo`: sono i blocchi 0 e 1 */
+function normalizzaRiassunto(e, n) {
   if (!oggetto(e)) return null
-  const parte = p => { const f = conta(p?.fatte); return { fatte: f, giuste: Math.min(f, conta(p?.giuste)) } }
+  const conto1 = p => { const f = conta(p?.fatte); return { fatte: f, giuste: Math.min(f, conta(p?.giuste)) } }
+  const prima = Array.isArray(e.blocchi) ? e.blocchi : [e.obiettivo, e.dopo]
+  const bloccoDi = u => (Number.isInteger(u.blocco) && u.blocco >= 0 && u.blocco < n ? u.blocco : u.parte === 'dopo' ? Math.min(1, n - 1) : 0)
   return {
-    presente: !!e.presente, obiettivo: parte(e.obiettivo), dopo: parte(e.dopo),
+    presente: !!e.presente, blocchi: Array.from({ length: n }, (_, i) => conto1(prima[i])),
     sbagliate: (Array.isArray(e.sbagliate) ? e.sbagliate : []).map(normalizzaSbagliata).filter(Boolean).slice(0, MAX_SBAGLIATE),
     ultime: (Array.isArray(e.ultime) ? e.ultime : []).filter(u => oggetto(u) && testo(u.fatto, 200) && testo(u.data, 200) && testo(u.attesa, 200))
-      .slice(0, ULTIME).map(u => ({ parte: u.parte === 'dopo' ? 'dopo' : 'obiettivo', fatto: u.fatto, data: u.data, attesa: u.attesa })),
+      .slice(0, ULTIME).map(u => ({ blocco: bloccoDi(u), fatto: u.fatto, data: u.data, attesa: u.attesa })),
   }
 }
 
 function normalizzaVoce(v) {
   if (!oggetto(v) || typeof v.id !== 'string' || !ID.test(v.id) || typeof v.classe !== 'string' || !Number.isFinite(v.avviata)) return null
-  if (!oggetto(v.lezione) || typeof v.lezione.nome !== 'string' || !Array.isArray(v.alunni)) return null
+  const lezione = L.convertiLezione(v.lezione)          // una voce di prima ha la lezione con obiettivo e «se hai finito»
+  if (!oggetto(lezione) || typeof lezione.nome !== 'string' || !Array.isArray(lezione.blocchi) || !lezione.blocchi.length || !Array.isArray(v.alunni)) return null
+  const n = lezione.blocchi.length
   const alunni = []
   for (const a of v.alunni) {
     if (!oggetto(a) || typeof a.id !== 'string' || !ID_ALUNNO.test(a.id) || typeof a.nome !== 'string') return null
@@ -359,12 +390,12 @@ function normalizzaVoce(v) {
   }
   const esiti = {}
   for (const [id, e] of Object.entries(oggetto(v.esiti) ? v.esiti : {})) {
-    const r = normalizzaRiassunto(e)
+    const r = normalizzaRiassunto(e, n)
     if (r && alunni.some(a => a.id === id)) esiti[id] = r
   }
   const chiave = typeof v.chiave === 'string' && /^[a-z0-9]{32}$/.test(v.chiave) ? v.chiave : null
   return {
-    id: v.id, classe: v.classe, nomeClasse: typeof v.nomeClasse === 'string' ? v.nomeClasse : '', lezione: JSON.parse(JSON.stringify(v.lezione)),
+    id: v.id, classe: v.classe, nomeClasse: typeof v.nomeClasse === 'string' ? v.nomeClasse : '', lezione: JSON.parse(JSON.stringify(lezione)),
     avviata: v.avviata, codice: typeof v.codice === 'string' ? v.codice : '', chiave, scade: Number.isFinite(v.scade) ? v.scade : v.avviata,
     chiusa: !!v.chiusa, alunni, esiti,
   }
@@ -374,7 +405,7 @@ function normalizzaInCorso(c, storico) {
   if (!oggetto(c) || !/^[A-Z]{5}$/.test(c.codice || '') || !/^[a-z0-9]{32}$/.test(c.chiave || '') || !Number.isFinite(c.scade)) return null
   if (!storico.some(v => v.id === c.voce)) return null
   return { codice: c.codice, chiave: c.chiave, scade: c.scade, avviata: Number.isFinite(c.avviata) ? c.avviata : 0,
-           classe: String(c.classe ?? ''), lezione: c.lezione, voce: c.voce }
+           classe: String(c.classe ?? ''), lezione: L.convertiLezione(c.lezione), voce: c.voce }
 }
 
 // una lista di voci: le storte si contano e si lasciano, le altre passano (e un id doppio vale una volta, l'ultima)
@@ -455,4 +486,10 @@ export function unisci(q, altro) {
 
 /* ══════════════ come si dice una lezione ══════════════ */
 
-export const misura = o => (o?.quante ? `${o.quante} domande` : `${o?.minuti} minuti`)
+// una riga per blocco, numerata se sono più d'uno, e il giro se è in tondo
+export function righeDellaLezione(l) {
+  const blocchi = Array.isArray(l?.blocchi) ? l.blocchi : []
+  const righe = blocchi.map((b, i) => (blocchi.length > 1 ? `${i + 1}. ` : '') + L.descriviBlocco(b))
+  if (l?.inTondo) righe.push('In tondo: dopo l\'ultimo blocco si ricomincia dal primo')
+  return righe
+}

@@ -5,8 +5,9 @@ import { creaLezione, apriMaestra } from '../comune/rete.js'
 import * as Q from './quaderno.js'
 import { quaderno, salva, salvaPresto, voceDi } from './stato.js'
 
-// `alunni`: l'ultimo elenco del servizio ({ id, nome, nuovo, preso, collegato, dove }); vuoto finché non arriva
-export const diretta = reactive({ fase: null, linea: 'giu', alunni: [], errore: '', sentito: false })
+// `alunni`: l'ultimo elenco del servizio ({ id, nome, nuovo, preso, collegato, dove }); `avanti`: quante volte «Avanti tutti»;
+// `conti`: fatte e giuste per alunno e posizione (Q.contaPosizione), per il blocco in corso nel pannello
+export const diretta = reactive({ fase: null, linea: 'giu', alunni: [], avanti: 0, conti: {}, errore: '', sentito: false })
 let filo = null, sveglia = null
 
 const viva = () => (quaderno.inCorso ? voceDi(quaderno.inCorso.voce) : null)
@@ -36,7 +37,7 @@ function smettiDiAscoltare() {
   if (filo) filo.chiudi()
   if (sveglia) clearTimeout(sveglia)
   filo = null; sveglia = null
-  Object.assign(diretta, { fase: null, linea: 'giu', alunni: [], sentito: false })
+  Object.assign(diretta, { fase: null, linea: 'giu', alunni: [], avanti: 0, conti: {}, sentito: false })
 }
 
 export function collega() {
@@ -45,15 +46,17 @@ export function collega() {
   diretta.errore = ''
   filo = apriMaestra(c.codice, c.chiave, {
     suTutto(d) {
-      Object.assign(diretta, { fase: d.fase, alunni: d.alunni || [], sentito: true })
+      Object.assign(diretta, { fase: d.fase, alunni: d.alunni || [], avanti: Number.isInteger(d.avanti) ? d.avanti : 0,
+                               conti: Q.contiDelleRisposte(d.risposte), sentito: true })
       Q.ricalcola(viva(), d)
       if (Number.isFinite(d.scade) && quaderno.inCorso) { quaderno.inCorso.scade = d.scade; salva(['inCorso']) }
       salvaPresto()
       if (d.fase === 'chiusa') finisci()
     },
     suAlunni(a) { diretta.alunni = a; Q.aggiornaAlunni(viva(), a); salvaPresto() },
-    suRisposta(id, r) { Q.aggiungiRisposta(viva(), id, r); salvaPresto() },
+    suRisposta(id, r) { Q.aggiungiRisposta(viva(), id, r); Q.contaPosizione(diretta.conti, id, r); salvaPresto() },
     suFase(f) { diretta.fase = f; if (f === 'chiusa') finisci() },
+    suAvanti(n) { if (Number.isInteger(n)) diretta.avanti = n },
     suLinea(l) { diretta.linea = l },
     // il servizio non la conosce più (scaduta) o non accetta la chiave: si chiude qui, coi risultati presi fin qui
     suRifiuto: perche => finisci(perche === 'chiave' ? 'Il servizio non riconosce più questa lezione: l\'ho chiusa qui.' : ''),
@@ -69,6 +72,7 @@ export function riprendi() {
 
 // false: non c'è linea, il messaggio non è partito
 export const via = () => !!filo?.via()
+export const avantiTutti = () => !!filo?.avanti()
 export const libera = id => !!filo?.libera(id)
 export const togli = id => !!filo?.togli(id)
 

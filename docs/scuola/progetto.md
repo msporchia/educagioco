@@ -19,18 +19,20 @@ rete interna su cui contare. Quindi:
 ## Il giro di una lezione
 
 1. **Prima, con calma.** La maestra apre la sua pagina (`…/scuola/maestra.html`), crea la classe con i
-   nomi degli alunni e prepara le lezioni: un **obiettivo** (un esercizio, quante domande o quanti
-   minuti) e, facoltativo, un **«se hai finito»** (un altro esercizio, senza fine). Tutto resta nel suo
-   browser; «Salva il quaderno» lo scarica in un file che si riapre su un altro PC.
+   nomi degli alunni e prepara le lezioni, di solito partendo da una pronta: una **fila di blocchi**, ognuno
+   con cosa si chiede, in che gioco e quando si passa al blocco dopo (da solo dopo X giuste, N domande o M
+   minuti, oppure quando lo dice lei) → [lezione.md](lezione.md). Tutto resta nel suo browser; «Salva il
+   quaderno» lo scarica in un file che si riapre su un altro PC.
 2. **I PC dei bambini** aprono la pagina dei bambini: dall'indirizzo (`…/scuola/`) oppure dal file
    unico copiato con la chiavetta (doppio click, si apre dal disco: sui PC lenti parte prima). Il file è
    **uguale per tutte le classi**: non porta dentro né la classe né la lezione.
 3. **«Avvia»**: la maestra sceglie lezione e classe; il servizio risponde con un **codice di 5 lettere**,
    che lei scrive grande alla lavagna. I bambini lo scrivono, **toccano il loro nome** nella lista della
    classe (un nome preso diventa grigio; «Non trovo il mio nome» per chi manca) e aspettano.
-4. **«Via»**: su tutti i PC partono le domande dell'obiettivo. Chi finisce passa al «se hai finito», o
-   vede «Hai finito!» se la maestra non l'ha messo. La maestra vede per ogni bambino quante ne ha fatte,
-   quante giuste e dove inciampa.
+4. **«Via»**: su tutti i PC parte il primo blocco. Ognuno passa al blocco dopo col suo passo, o tutti
+   insieme quando la maestra preme **«Avanti tutti»** (i giri a rotazione); dopo l'ultimo «Hai finito!», o
+   in tondo si ricomincia. La maestra vede per ogni bambino in che blocco è, quante ne ha fatte, quante
+   giuste e dove inciampa.
 5. **«Chiudi lezione»**: sui PC compare «La lezione è finita». La pagina della maestra ha già salvato i
    risultati man mano; il resoconto si stampa o si scarica (CSV) ed entra nello **storico** della classe.
    Se la sua pagina era chiusa, «Recupera i risultati» funziona finché il servizio tiene la lezione (3 ore).

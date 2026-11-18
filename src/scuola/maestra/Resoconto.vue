@@ -1,10 +1,11 @@
 <script setup>
-// Il resoconto di una lezione: per bambino, le domande più sbagliate della classe, stampa e CSV
+// Il resoconto di una lezione: per bambino e per blocco, le domande più sbagliate della classe, stampa e CSV
 import { ref, computed } from 'vue'
 import { quaderno, salva, voceDi, classeDi } from './stato.js'
 import { recupera } from './diretta.js'
 import * as Q from './quaderno.js'
-import { scarica, giorno, ora, comeSiSvolge, seHaiFinito } from './utili.js'
+import { scarica, giorno, ora, comeSiSvolge } from './utili.js'
+import { descriviBlocco, modoDi, sogliaDi } from '../comune/lezione.js'
 
 const props = defineProps({ voce: { type: String, required: true } })
 const emit = defineEmits(['vai', 'indietro'])
@@ -14,7 +15,13 @@ const sbagliate = computed(() => (v.value ? Q.piuSbagliate(v.value) : []))
 const classe = computed(() => (v.value ? classeDi(v.value.classe) : null))
 const viva = computed(() => quaderno.inCorso?.voce === props.voce)
 const recuperabile = computed(() => !viva.value && Q.recuperabile(v.value, Date.now()))
-const quante = computed(() => v.value?.lezione.obiettivo?.quante ?? null)
+const blocchi = computed(() => v.value?.lezione.blocchi ?? [])
+// la soglia non raggiunta di un blocco che passa da solo (in tondo i giri si sommano: non si dice)
+function sotto(i, c) {
+  const passa = blocchi.value[i]?.passa ?? null, n = sogliaDi(passa), modo = modoDi(passa)
+  if (v.value.lezione.inTondo || !n || modo === 'minuti') return ''
+  return (modo === 'giuste' ? c.giuste : c.fatte) < n ? ` (su ${n} ${modo})` : ''
+}
 const recuperando = ref(false)
 const esitoRecupero = ref('')
 
@@ -44,8 +51,7 @@ const stampa = () => globalThis.print()
     <section class="carta" data-resoconto>
       <h1>{{ v.lezione.nome }}</h1>
       <p>{{ v.nomeClasse }} · {{ giorno(v.avviata) }}, {{ ora(v.avviata) }}</p>
-      <p v-if="v.lezione.obiettivo" class="nota">{{ comeSiSvolge(v.lezione) }}</p>
-      <p v-if="v.lezione.obiettivo" class="nota">{{ seHaiFinito(v.lezione) }}</p>
+      <p v-for="(r, i) in comeSiSvolge(v.lezione)" :key="i" class="nota">{{ r }}</p>
       <div v-if="viva" class="fila no-stampa">
         <span class="bene">La lezione è ancora in corso: i numeri crescono.</span>
         <button class="bottone chiaro piccolo" @click="emit('vai', 'diretta')">Torna alla lezione</button>
@@ -64,7 +70,9 @@ const stampa = () => globalThis.print()
       <h2>Bambino per bambino</h2>
       <div class="scorre">
         <table class="tabella" data-tabella-resoconto>
-          <thead><tr><th>Bambino</th><th>Obiettivo</th><th>Se hai finito</th><th>Sbaglia</th></tr></thead>
+          <thead><tr><th>Bambino</th>
+            <th v-for="(b, i) in blocchi" :key="i" :title="descriviBlocco(b)">{{ blocchi.length > 1 ? `Blocco ${i + 1}` : 'Fatte e giuste' }}</th>
+            <th>Sbaglia</th></tr></thead>
           <tbody>
             <tr v-for="r in righe" :key="r.id" :data-alunno="r.id">
               <td>
@@ -73,12 +81,11 @@ const stampa = () => globalThis.print()
                   <button class="bottone chiaro piccolo" data-azione="aggiungi-alla-classe" @click="aggiungi(r)">Aggiungi alla classe</button>
                 </div>
               </td>
-              <template v-if="r.presente || r.obiettivo.fatte || r.dopo.fatte">
-                <td>{{ fatteGiuste(r.obiettivo) }}<span v-if="quante && r.obiettivo.fatte < quante" class="nota"> (su {{ quante }})</span></td>
-                <td>{{ fatteGiuste(r.dopo) }}</td>
+              <template v-if="r.presente">
+                <td v-for="(c, i) in r.blocchi" :key="i" :data-blocco="i">{{ fatteGiuste(c) }}<span v-if="c.fatte" class="nota">{{ sotto(i, c) }}</span></td>
                 <td><span v-for="(s, i) in r.sbagliate" :key="i" class="sbaglio">{{ s.fatto }} → {{ s.attesa }}<template v-if="s.volte > 1"> ({{ s.volte }})</template></span></td>
               </template>
-              <td v-else colspan="3" class="nota">non c'era</td>
+              <td v-else :colspan="r.blocchi.length + 1" class="nota">non c'era</td>
             </tr>
           </tbody>
         </table>

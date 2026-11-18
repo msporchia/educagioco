@@ -29,12 +29,12 @@ cambia non deve far sparire il lavoro.
 
 ```js
 classi:  [{ id: 'c…', nome, anno?, alunni: [{ id: 'a…', nome }] }]   // nome della classe ≤ 40, alunni ≤ 40, nome ≤ 24
-lezioni: [{ id: 'l…', nome, obiettivo: { esercizio, quante, minuti }, dopo }]   // la lezione che viaggia, protocollo.md
+lezioni: [{ id: 'l…', nome, blocchi: [{ esercizio, passa }], inTondo }]   // la lezione a blocchi, lezione.md
 storico: [{ id: 'v…', classe, nomeClasse, lezione, avviata, codice, chiave, scade, chiusa,
             alunni: [{ id, nome, nuovo }],
-            esiti: { <alunno>: { presente, obiettivo: { fatte, giuste }, dopo: { fatte, giuste },
+            esiti: { <alunno>: { presente, blocchi: [{ fatte, giuste }],          // uno per blocco della lezione
                                  sbagliate: [{ fatto, attesa, volte, dette: [...] }],
-                                 ultime: [{ parte, fatto, data, attesa }] } } }]
+                                 ultime: [{ blocco, fatto, data, attesa }] } } }]
 inCorso: { codice, chiave, scade, avviata, classe, lezione, voce } | null
 ```
 
@@ -50,12 +50,31 @@ inCorso: { codice, chiave, scade, avviata, classe, lezione, voce } | null
   nella classe con quello stesso id, così lo storico lo ritrova.
 - **La voce dello storico tiene la classe com'era** (`nomeClasse`, `alunni`): cancellare una classe non cancella
   il suo storico, che resta nella pagina d'inizio con «classe cancellata».
+- **Una lezione si salva solo se è valida**: `lezioneValida` del quaderno è quella di `comune/lezione.js`, più un nome
+  che non sia solo spazi e un id che sta in un attributo. Una lezione nuova ha un blocco che passa dopo 10 giuste
+  (`passaDiBase`).
+
+## Le cose di prima dei blocchi
+
+Nessuno perde niente: quello che è stato salvato con obiettivo e «se hai finito» si legge a blocchi
+(`convertiLezione` di [lezione.md](lezione.md)), all'apertura della pagina come da un file o da un link.
+
+- **Le lezioni** (in `scuola:lezioni`, nel file, nel `#lezione=` di un link vecchio) diventano due blocchi:
+  l'obiettivo che passa dopo quelle domande o quei minuti, il «se hai finito» che passa quando lo dice la maestra.
+- **Lo storico**: la lezione della voce si converte, e `obiettivo` e `dopo` di ogni riassunto sono i blocchi 1 e 2;
+  le ultime sbagliate passano da `parte` a `blocco`. Una risposta che arriva ancora con `parte` va nel blocco 1 o 2.
+- **La lezione in corso** (`scuola:in-corso`) si converte anche lei, per il pannello.
 
 ## Lo storico è un riassunto
 
-Non ogni risposta: per alunno e lezione fatte e giuste dell'obiettivo e del «se hai finito», le domande sbagliate
-raccolte per `fatto` e `attesa` (quante volte, e le ultime tre risposte date, `dette`; al più le venti più
-sbagliate) e le ultime tre sbagliate per il pannello. `presente`: ha risposto o è stato visto collegato.
+Non ogni risposta: per alunno e lezione fatte e giuste **blocco per blocco**, le domande sbagliate raccolte per
+`fatto` e `attesa` (quante volte, e le ultime tre risposte date, `dette`; al più le venti più sbagliate) e le
+ultime tre sbagliate per il pannello. `presente`: ha risposto o è stato visto collegato.
+
+- Una risposta porta `blocco`, la posizione del bambino quando ha risposto; il blocco è `blocco % blocchi.length`.
+  **In tondo i giri si sommano**: il riassunto dice quanto ha fatto in quel blocco in tutta la lezione.
+- Il pannello vuole invece il blocco **di questo giro**: `contaPosizione` e `contiDelleRisposte` contano per
+  posizione, in `diretta.conti`, che non si salva (`tutto` lo rifà).
 
 - `risposta` aggiunge al riassunto; **`tutto` lo rifà da capo** con tutte le risposte che il servizio tiene:
   così un rientro (la maestra si ricollega) non conta niente due volte, e un nuovo tolto esce con le sue.
@@ -95,14 +114,15 @@ raddoppia niente. La voce della lezione in corso non si sovrascrive.
 ## Il link di una lezione
 
 `maestra.html#lezione=<la lezione in JSON, UTF-8, base64url>`. Aperto, la pagina toglie l'hash e mostra la
-lezione con «Aggiungi al quaderno» (stesso id: sostituisce) e «Avvia». Un link troncato o manomesso (un
+lezione con «Aggiungi al quaderno» (stesso id: sostituisce) e «Avvia». Un link di prima dei blocchi si converte.
+Un link troncato o manomesso (un
 esercizio con una chiave in più, una lezione che `lezioneValida` rifiuta) non entra: la pagina d'inizio dice che
 è rotto.
 
 ## Il CSV
 
 Punto e virgola, a capo `\r\n`, con il BOM davanti (il foglio di calcolo italiano lo apre con gli accenti).
-Colonne: Bambino, Nuovo, Obiettivo fatte e giuste, Se hai finito fatte e giuste, Domande sbagliate
+Colonne: Bambino, Nuovo, per ogni blocco «Blocco N: fatte» e «Blocco N: giuste», Domande sbagliate
 («9 × 7 → 63 (2 volte)»). Un nome che comincia con `= + - @` prende un apostrofo davanti: non diventa una formula.
 
 ## Le schermate
@@ -112,13 +132,33 @@ Colonne: Bambino, Nuovo, Obiettivo fatte e giuste, Se hai finito fatte e giuste,
 | `inizio` | la lezione in corso (se c'è), come funziona in quattro passi, l'indirizzo e il file dei bambini (`./index.html` scaricato come `educagioco-classe.html`), classi, lezioni, storico per classe, salva/apri il quaderno |
 | `classe` | nome, l'anno (1ª–5ª o «non lo dico») e alunni uno per riga; cancella (lo storico resta) |
 | `nuova` | il percorso di «Nuova lezione», sotto |
-| `lezione` | nome, obiettivo (esercizio dal `CATALOGO`, quante domande o quanti minuti), «se hai finito»; per ogni esercizio che un gioco vero accetta, la scelta del gioco (`giochiPer`); salva solo una lezione valida e torna all'inizio; copia il link, duplica, cancella |
+| `lezione` | nome e la fila dei blocchi (sotto); salva solo una lezione valida e torna all'inizio; copia il link, duplica, cancella |
 | `link` | una lezione arrivata da un link |
 | `avvia` | la scelta della classe e l'avvio |
-| `diretta` | per la LIM: in attesa il codice enorme, l'indirizzo, i nomi che diventano verdi e «Via»; poi un riquadro per bambino (a che punto è, fatte e giuste dell'obiettivo, le ultime sbagliate), «Libera», «Togli», «Chiudi lezione» |
-| `resoconto` | tabella per bambino («non c'era» per chi non è entrato), le domande più sbagliate della classe, Stampa, Scarica CSV, Recupera, «Aggiungi alla classe» per i nuovi |
+| `diretta` | per la LIM: in attesa il codice enorme, l'indirizzo, i nomi che diventano verdi e «Via»; poi «Avanti tutti» e un riquadro per bambino (in che blocco è, fatte e giuste del blocco in corso, le ultime sbagliate), «Libera», «Togli», «Chiudi lezione» |
+| `resoconto` | i blocchi della lezione, tabella per bambino con una colonna per blocco («non c'era» per chi non è entrato), le domande più sbagliate della classe, Stampa, Scarica CSV, Recupera, «Aggiungi alla classe» per i nuovi |
 | `storico` | per classe le lezioni fatte con la data e i bambini |
-| `bambino` | lezione per lezione fatte e giuste, e le domande che sbaglia più spesso |
+| `bambino` | lezione per lezione fatte e giuste in tutto e blocco per blocco, e le domande che sbaglia più spesso |
+
+## L'editor della lezione
+
+Una carta per blocco, nell'ordine: **cosa si chiede** (`SceltaEsercizio.vue`: più voci con l'intensità e, se un gioco
+vero lo accetta, il gioco: [esercizi.md](esercizi.md)) e **quando si passa al blocco dopo** (`MODI_PASSA`: dopo X
+giuste, dopo N domande, dopo M minuti, quando lo dice la maestra; scegliendo una soglia il numero riparte dal suo
+`base`). Ogni blocco si sposta su e giù e si toglie (l'ultimo che resta no); «＋ Aggiungi un blocco», fino a
+`MAX_BLOCCHI`, ripete l'esercizio dell'ultimo e passa dopo 10 giuste. Sotto l'ultimo una riga dice cosa succede
+dopo («Hai finito!», si resta lì fino ad «Avanti tutti», o si ricomincia). «In tondo» è una spunta.
+
+## Il pannello in diretta
+
+- **Dove sta un bambino**: la posizione `dove` che manda (o `'finito'`), almeno il pavimento di «Avanti tutti»
+  (`posizione`): chi è scollegato lo raggiunge al rientro, e il pannello lo mette già lì. Si dice «blocco 2 di 3» e,
+  in tondo, «giro 2»; con un blocco solo «al lavoro».
+- **Le giuste e le fatte del blocco in corso**, di questo giro, con la soglia se il blocco passa da solo («6 giuste
+  su 10»).
+- **«Avanti tutti»** c'è sempre in fase `via` e chiama `avanti()` di [protocollo.md](protocollo.md); accanto dice dove
+  porta chi è più indietro e quante volte è stato premuto (`diretta.avanti`, da `tutto` e da `avanti`). È spento
+  solo quando senza «in tondo» tutti hanno già passato l'ultimo blocco.
 
 ## «Nuova lezione»: il percorso guidato
 
@@ -133,23 +173,27 @@ indietro dall'editor si ritrovano.
 La stampa toglie barra, tasti e ombre (`.no-stampa`, `@media print` in `maestra.css`).
 
 Nei test: `unita/scuola-quaderno` (gli id stabili, la lista incollata, `lezioneValida`, il link andata e
-ritorno e manomesso, il riassunto che `tutto` non raddoppia, le più sbagliate, il CSV, lo storico del bambino, la
-scadenza, le chiavi di localStorage, il file storto e l'unione per id, l'anno della classe che un quaderno vecchio non ha) e `unita/scuola-lezioni-pronte`. Bersagli: la radice `[data-schermata="<nome>"]`,
+ritorno e manomesso, il riassunto per blocco che `tutto` non raddoppia, i giri sommati in tondo e i conti per
+posizione, le più sbagliate, il CSV, lo storico del bambino, la scadenza, le chiavi di localStorage, il file storto e
+l'unione per id, l'anno della classe che un quaderno vecchio non ha, e le lezioni, lo storico, la lezione in corso, il
+file e il link di prima dei blocchi) e `unita/scuola-lezioni-pronte`. Bersagli: la radice `[data-schermata="<nome>"]`,
 `button[aria-label="indietro"]`, `[data-versione]`, `[data-avviso="pieno"|"link-rotto"]`; nell'inizio
 `[data-in-corso]`, `[data-indirizzo-bambini]`, `[data-classe=<id>]`, `[data-lezione=<id>]`, `[data-storico-classe=<id>]`,
 `[data-file-quaderno]` (l'input del file), `[data-esito-file="bene"|"male"]`, `[data-link-lezione]`; nell'esercizio a più parti
 `[data-parte=<i>]`, `[data-peso="poco"|"normale"|"tanto"]`, `[data-azione="aggiungi-parte"|"togli-parte"]`; negli editor
-`[data-campo="nome-classe"|"alunni"|"nome-lezione"|"materia"|"voce"|"da"|"a"|"quante"|"minuti"]`,
-`[data-esercizio="obiettivo"|"dopo"]`, `[data-tabellina=<n>]`, `[data-modo]`, `[data-tipologia]`, `[data-gioco=<id>]`, `[data-per]`,
-`[data-dopo="no"|"si"]`, `[data-descrizione]`, `[data-problema]`, `[data-da-pronta]`; nella classe `[data-anno=<1..5>|""]`;
+`[data-campo="nome-classe"|"alunni"|"nome-lezione"|"materia"|"voce"|"da"|"a"|"soglia"|"in-tondo"]`,
+`[data-esercizio="blocco"]`, `[data-tabellina=<n>]`, `[data-modo]`, `[data-tipologia]`, `[data-gioco=<id>]`,
+`[data-descrizione]`, `[data-problema]`, `[data-da-pronta]`; nell'editor della lezione un blocco è `[data-blocco=<i>]`
+(da 0), con `[data-passa="giuste"|"domande"|"minuti"|"maestra"]` e `[data-campo="soglia"]`; nella classe `[data-anno=<1..5>|""]`;
 nel percorso `[data-percorso]`, `[data-passo="anno"|"materia"|"gioco"|"lezioni"]`, `[data-anno=<n>]`, `[data-materia=<id>]`,
 `[data-gioco=<id>]`, `[data-pronta=<id>]`; nella lezione `[data-diretta]`, `[data-linea]`,
-`[data-sala]`, `[data-codice]`, `[data-alunno=<id>]` (con `data-preso` in sala e `data-dove` nel pannello),
-`[data-pannello]`, `[data-messaggio]`; nel resoconto `[data-resoconto]`, `[data-tabella-resoconto]`,
+`[data-sala]`, `[data-codice]`, `[data-alunno=<id>]` (con `data-preso` in sala e `data-dove` nel pannello: la
+posizione col pavimento, `finito` o vuoto), `[data-blocco-in-corso]`, `[data-avanti=<volte>]`,
+`[data-pannello]`, `[data-messaggio]`; nel resoconto `[data-resoconto]`, `[data-tabella-resoconto]` (una cella `[data-blocco=<i>]` per blocco),
 `[data-piu-sbagliate]`, `[data-esito-recupero]`; nello storico `[data-storico-di="classe"|"bambino"]`, `[data-voce]`,
 `[data-sbaglia]`. I tasti: `[data-azione="…"]` con `nuova-classe`, `modifica-classe`, `salva-classe`,
 `cancella-classe`, `storico-classe`, `nuova-lezione`, `preparala-tu`, `modifica-lezione`, `salva-lezione`, `duplica`, `copia-link`,
-`cancella-lezione`, `avvia`, `avvia-lezione`, `aggiungi-al-quaderno`, `salva-quaderno`, `apri-quaderno`,
-`scarica-pagina-bambini`, `torna-alla-lezione`, `via`, `libera`, `togli`, `chiudi-lezione`, `conferma-chiudi`,
+`cancella-lezione`, `aggiungi-blocco`, `togli-blocco`, `su`, `giu`, `avvia`, `avvia-lezione`, `aggiungi-al-quaderno`, `salva-quaderno`, `apri-quaderno`,
+`scarica-pagina-bambini`, `torna-alla-lezione`, `via`, `avanti-tutti`, `libera`, `togli`, `chiudi-lezione`, `conferma-chiudi`,
 `chiudi-solo-qui`, `annulla`, `stampa`, `csv`, `recupera`, `aggiungi-alla-classe`, `apri-resoconto`; un tasto con
 «sicura?» (cancella, togli) si conferma con `[data-azione="conferma"]`.

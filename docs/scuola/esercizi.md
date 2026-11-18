@@ -25,7 +25,7 @@ Un oggetto piccolo, che viaggia nel link della lezione e sul servizio (che non l
   manomesso non porta dentro niente.
 - **Un esercizio deve chiedere qualcosa**: le tipologie scelte devono esistere in almeno un gradino fra
   `da` e `a` (le ore intere vivono nei gradini 1-3: `da: 4` con solo `ora:intere` non è valido).
-- La quantità (quante domande, quanti minuti) non sta qui: è della lezione (`obiettivo`).
+- Quanto dura (giuste, domande, minuti) non sta qui: è del blocco della lezione (`passa`, [lezione.md](lezione.md)).
 
 ## Il catalogo
 
@@ -74,7 +74,7 @@ pezzo di `moduli/conti.js` che dati due numeri fa il conto: il grado 7 è l'ulti
 
 ## Più cose insieme, con l'intensità
 
-Un obiettivo (o il «se hai finito») può mescolare più esercizi: `{ tipo: 'insieme', parti: [{ esercizio, peso }] }`, da due a
+Un blocco della lezione può mescolare più esercizi: `{ tipo: 'insieme', parti: [{ esercizio, peso }] }`, da due a
 `MAX_PARTI` (6) parti, ognuna un esercizio semplice (né un altro insieme né un `gioco` dentro). `peso` è `'poco'`, `'normale'`
 o `'tanto'` (`PESI`): una parte «tanto» esce quattro volte una «un po'», e le parti si alternano a turno pesato e liscio,
 sparse e non a blocchi (con 4 e 1, mai cinque della prima di fila). È la risposta a «tanta tabellina dell'8 e un ripasso

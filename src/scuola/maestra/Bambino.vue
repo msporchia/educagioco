@@ -1,5 +1,5 @@
 <script setup>
-// Lo storico di un bambino: lezione per lezione fatte e giuste, e le domande che sbaglia più spesso
+// Lo storico di un bambino: lezione per lezione fatte e giuste (in tutto e blocco per blocco), e le domande che sbaglia più spesso
 import { computed } from 'vue'
 import { quaderno, classeDi } from './stato.js'
 import { storicoDelBambino, vociDellaClasse } from './quaderno.js'
@@ -11,6 +11,8 @@ const s = computed(() => storicoDelBambino(quaderno, props.classe, props.alunno)
 const nome = computed(() => classeDi(props.classe)?.alunni.find(a => a.id === props.alunno)?.nome
   ?? vociDellaClasse(quaderno, props.classe).flatMap(v => v.alunni).find(a => a.id === props.alunno)?.nome ?? '')
 const fg = p => (p.fatte ? `${p.fatte} fatte, ${p.giuste} giuste` : '—')
+const tutto = bl => bl.reduce((t, c) => ({ fatte: t.fatte + c.fatte, giuste: t.giuste + c.giuste }), { fatte: 0, giuste: 0 })
+const perBlocco = bl => bl.map((c, i) => `${i + 1}: ${c.fatte ? `${c.fatte}/${c.giuste}` : '—'}`).join(' · ')
 </script>
 
 <template>
@@ -20,13 +22,13 @@ const fg = p => (p.fatte ? `${p.fatte} fatte, ${p.giuste} giuste` : '—')
     <p v-if="!s.lezioni.length" class="nota">Nessuna lezione ancora.</p>
     <div v-else class="scorre">
       <table class="tabella" data-tabella-bambino>
-        <thead><tr><th>Quando</th><th>Lezione</th><th>Obiettivo</th><th>Se hai finito</th></tr></thead>
+        <thead><tr><th>Quando</th><th>Lezione</th><th>In tutto</th><th>Blocco per blocco (fatte/giuste)</th></tr></thead>
         <tbody>
           <tr v-for="l in s.lezioni" :key="l.voce" :data-voce="l.voce">
             <td>{{ giorno(l.avviata) }}</td>
             <td><button class="collegamento" @click="emit('vai', 'resoconto', { voce: l.voce })">{{ l.nome }}</button></td>
-            <template v-if="l.presente || l.obiettivo.fatte || l.dopo.fatte">
-              <td>{{ fg(l.obiettivo) }}</td><td>{{ fg(l.dopo) }}</td>
+            <template v-if="l.presente">
+              <td>{{ fg(tutto(l.blocchi)) }}</td><td class="nota">{{ l.blocchi.length > 1 ? perBlocco(l.blocchi) : '' }}</td>
             </template>
             <td v-else colspan="2" class="nota">non c'era</td>
           </tr>

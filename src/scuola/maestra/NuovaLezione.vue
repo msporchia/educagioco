@@ -10,7 +10,7 @@ import { computed } from 'vue'
 import { quaderno } from './stato.js'
 import { annoDelleClassi } from './quaderno.js'
 import { ANNI, pronte, materiePer, giochiDi } from '../comune/lezioni-pronte.js'
-import { comeSiSvolge, seHaiFinito } from './utili.js'
+import { comeSiSvolge } from './utili.js'
 
 const emit = defineEmits(['vai', 'indietro'])
 
@@ -73,8 +73,7 @@ sistema()
         <button class="pronta" :data-pronta="p.id" @click="emit('vai', 'lezione', { proposta: p })">
           <b>{{ p.nome }}</b>
           <span>{{ p.allena }}</span>
-          <span class="nota">{{ comeSiSvolge(p) }}</span>
-          <span class="nota">{{ seHaiFinito(p) }}</span>
+          <span v-for="(r, i) in comeSiSvolge(p)" :key="i" class="nota">{{ r }}</span>
         </button>
       </li>
     </ul>

@@ -1,9 +1,10 @@
 <script setup>
-// La lezione in corso, per la LIM: il codice enorme e i nomi che si accendono, poi «Via» e chi è a che punto
+// La lezione in corso, per la LIM: il codice enorme e i nomi che si accendono, poi «Via», chi è in che blocco e «Avanti tutti»
 import { ref, computed, watch } from 'vue'
 import { quaderno, voceDi, classeDi } from './stato.js'
-import { diretta, via, libera, togli, chiudiLezione } from './diretta.js'
+import { diretta, via, avantiTutti, libera, togli, chiudiLezione } from './diretta.js'
 import { riassuntoVuoto } from './quaderno.js'
+import { posizione, finita, bloccoDi, modoDi, sogliaDi } from '../comune/lezione.js'
 import { indirizzoBambini } from './utili.js'
 import Conferma from './Conferma.vue'
 
@@ -22,12 +23,36 @@ const alunni = computed(() => {
 })
 const dentro = computed(() => alunni.value.filter(a => a.collegato).length)
 const inAttesa = computed(() => diretta.fase !== 'via')
-const quante = computed(() => lezione.value?.obiettivo.quante ?? null)
 const nomeClasse = computed(() => classeDi(quaderno.inCorso?.classe ?? '')?.nome ?? voce.value?.nomeClasse ?? '')
+const n = computed(() => lezione.value?.blocchi?.length || 1)
 
-const DOVE = { obiettivo: 'sta facendo l\'obiettivo', dopo: 'è al «se hai finito»', finito: 'ha finito' }
-const doveDi = a => DOVE[a.dove] ?? (a.collegato ? 'è dentro' : (a.esito.presente ? 'non collegato' : 'non è entrato'))
-const puoLiberare = a => a.collegato || !!a.dove || a.esito.presente
+// dove sta: la posizione che dice il bambino, almeno il pavimento di «Avanti tutti» (chi è scollegato lo raggiunge al rientro)
+const posDi = a => (a.dove === 'finito' ? 'finito' : Number.isInteger(a.dove) ? posizione(a.dove, diretta.avanti) : null)
+const fuori = a => (a.collegato ? 'è dentro' : (a.esito.presente ? 'non collegato' : 'non è entrato'))
+const giroDi = p => (lezione.value.inTondo ? `giro ${Math.floor(p / n.value) + 1}` : '')
+function bloccoDetto(p) {
+  if (p === 'finito' || finita(lezione.value, p)) return 'ha finito'
+  return [n.value > 1 ? `blocco ${bloccoDi(lezione.value, p) + 1} di ${n.value}` : 'al lavoro', giroDi(p)].filter(Boolean).join(' · ')
+}
+const doveDi = a => { const p = posDi(a); return p === null ? fuori(a) : bloccoDetto(p) }
+// fatte e giuste nel blocco in corso (in tondo, di questo giro), con la soglia se il blocco passa da solo
+function inCorsoDi(a) {
+  const p = posDi(a)
+  if (p === null || p === 'finito' || finita(lezione.value, p)) return null
+  const passa = lezione.value.blocchi[bloccoDi(lezione.value, p)].passa
+  return { fatte: 0, giuste: 0, ...diretta.conti[a.id]?.[p], modo: modoDi(passa), soglia: sogliaDi(passa) }
+}
+const puoLiberare = a => a.collegato || a.dove != null || a.esito.presente
+
+// «Avanti tutti» alza il pavimento: dopo, nessuno sta prima della posizione avanti + 1
+const avantiInutile = computed(() => !!lezione.value && finita(lezione.value, diretta.avanti))
+const dopoAvanti = computed(() => {
+  const p = diretta.avanti + 1
+  if (!lezione.value || finita(lezione.value, p)) return 'Chi è ancora all\'ultimo blocco finisce la lezione.'
+  const dove = [n.value > 1 ? `blocco ${bloccoDi(lezione.value, p) + 1}` : '', giroDi(p)].filter(Boolean).join(', ')
+  return `Chi è più indietro passa al ${dove}.`
+})
+function avanti() { messaggio.value = ''; if (!avantiTutti()) senzaLinea() }
 
 const senzaLinea = () => { messaggio.value = 'Non c\'è linea: riprova fra un attimo.' }
 function parti() { messaggio.value = ''; if (!via()) senzaLinea() }
@@ -74,19 +99,25 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
     <template v-else>
       <section class="carta">
         <p class="nota">Chi arriva tardi: <b class="copiabile">{{ indirizzo }}</b>, codice <b class="copiabile" data-codice>{{ quaderno.inCorso.codice }}</b></p>
+        <div class="fila">
+          <button class="bottone" :disabled="avantiInutile" data-azione="avanti-tutti" @click="avanti">Avanti tutti</button>
+          <span class="nota" :data-avanti="diretta.avanti">{{ avantiInutile ? 'Tutti hanno finito l\'ultimo blocco.' : dopoAvanti }}
+            {{ diretta.avanti === 0 ? '' : diretta.avanti === 1 ? 'Premuto una volta.' : `Premuto ${diretta.avanti} volte.` }}</span>
+        </div>
       </section>
       <ul class="bambini" data-pannello>
-        <li v-for="a in alunni" :key="a.id" class="carta bambino" :class="{ spento: !a.collegato }" :data-alunno="a.id" :data-dove="a.dove || ''">
+        <li v-for="a in alunni" :key="a.id" class="carta bambino" :class="{ spento: !a.collegato }" :data-alunno="a.id" :data-dove="posDi(a) ?? ''">
           <div class="fila tra">
             <b>{{ a.nome }} <span v-if="a.nuovo" class="etichetta">nuovo</span></b>
             <span class="nota">{{ doveDi(a) }}</span>
           </div>
-          <p data-obiettivo>
-            <b>{{ a.esito.obiettivo.fatte }}</b><span v-if="quante"> su {{ quante }}</span> fatte · <b>{{ a.esito.obiettivo.giuste }}</b> giuste
+          <p v-if="inCorsoDi(a)" data-blocco-in-corso>
+            <template v-if="inCorsoDi(a).modo === 'giuste'"><b>{{ inCorsoDi(a).giuste }}</b> giuste su {{ inCorsoDi(a).soglia }} · {{ inCorsoDi(a).fatte }} fatte</template>
+            <template v-else-if="inCorsoDi(a).modo === 'domande'"><b>{{ inCorsoDi(a).fatte }}</b> fatte su {{ inCorsoDi(a).soglia }} · {{ inCorsoDi(a).giuste }} giuste</template>
+            <template v-else><b>{{ inCorsoDi(a).fatte }}</b> fatte · <b>{{ inCorsoDi(a).giuste }}</b> giuste</template>
           </p>
-          <p v-if="a.esito.dopo.fatte" class="nota" data-dopo>Se hai finito: {{ a.esito.dopo.fatte }} fatte · {{ a.esito.dopo.giuste }} giuste</p>
           <ul v-if="a.esito.ultime.length" class="sbagliate" data-ultime-sbagliate>
-            <li v-for="(s, i) in a.esito.ultime" :key="i"><b>{{ s.fatto }}</b>: ha detto {{ s.data }}, era {{ s.attesa }}</li>
+            <li v-for="(s, i) in a.esito.ultime" :key="i"><b>{{ s.fatto }}</b>: ha detto {{ s.data }}, era {{ s.attesa }}<span v-if="n > 1"> (blocco {{ s.blocco + 1 }})</span></li>
           </ul>
           <div class="fila">
             <button v-if="!a.nuovo && puoLiberare(a)" class="bottone chiaro piccolo" data-azione="libera" @click="liberaNome(a.id)">Libera</button>

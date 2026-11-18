@@ -7,23 +7,26 @@ vuole prima di salvarla. Servono a toglierle fatica, non a decidere per lei. Il 
 
 ## La forma
 
-Una lezione pronta è la lezione che viaggia di [protocollo.md](protocollo.md) senza `id`, più tre campi:
+Una lezione pronta è la lezione a blocchi di [lezione.md](lezione.md) senza `id`, più tre campi:
 
 ```js
 { id: '3-matematica-le-prime-divisioni',      // per la pagina e i test, non per il quaderno
   anno: 3, materia: 'matematica',             // 1..5 e una materia del CATALOGO
   nome, allena,                               // allena: una riga per la maestra, «cosa allena»
-  obiettivo: { esercizio, quante, minuti },   // uno dei due, dentro i tetti del servizio
-  dopo: esercizio | null }
+  blocchi: [{ esercizio, passa: { domande: n } | { minuti: n } },   // l'obiettivo: passa da solo
+            { esercizio, passa: null }],                           // il «se hai finito», se c'è: quando lo dice la maestra
+  inTondo: false }
 ```
 
-`lezioneDa(pronta, id)` ne fa la lezione del quaderno (copia, con l'id nuovo): l'editor parte da quella.
+Sono scritte come obiettivo e «se hai finito» (sotto), e diventano i due blocchi: la forma che darebbe
+`convertiLezione` a una lezione di prima. `lezioneDa(pronta, id)` ne fa la lezione del quaderno (copia, con l'id
+nuovo, già a blocchi): l'editor parte da quella.
 
 ## Il criterio
 
 - **L'anno di un esercizio è quello del suo gradino più alto** (`annoDi`): il `classe` dei gradini del
   catalogo ([esercizi.md](esercizi.md)), contando solo i gradini che le tipologie scelte aprono davvero. Una
-  lezione non chiede niente di un anno dopo il suo, né nell'obiettivo né nel «se hai finito».
+  lezione non chiede niente di un anno dopo il suo, in nessun blocco.
 - **Le tabelline sono di seconda** (`ANNO_TABELLINE`): la voce non ha gradini, e in `conti.js` «fino al 9»
   è un gradino di seconda. In terza si consolidano (IN 2012, fine terza: «conoscere con sicurezza le tabelline»).
 - **Ogni voce con un gradino di quell'anno ha almeno una lezione** in quell'anno; la prima prende anche i
@@ -35,7 +38,7 @@ Una lezione pronta è la lezione che viaggia di [protocollo.md](protocollo.md) s
   dello stesso gradino solo lo specchio; le viste dall'alto (`geo:viste`) in quinta, in terza solo nomi e
   facce dei solidi; i numeri con la virgola (`soldi` 4, gradino di terza) in quarta, perché la virgola si fa a
   metà quarta; gli ambienti del mondo (`animali` 2-4) anche in quarta, dove sono geografia.
-- **Il «se hai finito»** è il passo prima (ripasso) o quello accanto dello stesso anno; mai un anno dopo.
+- **Il «se hai finito»** (il secondo blocco) è il passo prima (ripasso) o quello accanto dello stesso anno; mai un anno dopo.
 - **Quante**: 15 domande in prima, 20 dopo, 10 per i testi lunghi (capire, indizi), 30 per un gruppo di
   tabelline; i minuti per «tutte le tabelline» (10, o 5 per il riscaldamento di quarta e quinta).
 - **Niente riempitivi**: un ripasso c'è solo dove il programma lo chiede (le tabelline prima delle operazioni
@@ -43,9 +46,10 @@ Una lezione pronta è la lezione che viaggia di [protocollo.md](protocollo.md) s
 
 ## Nei giochi
 
-Dove un gioco vero accetta l'obiettivo (`giochiPer`, [esercizi.md](esercizi.md) «Il gioco in cui si fa»), la
-stessa lezione c'è anche lì, fatta da sola: stesso esercizio con `gioco`, nome con «negli Asteroidi» in coda,
-id con `-asteroidi` in coda. Il «se hai finito» va nel gioco se il gioco lo accetta, se no resta alle domande.
+Dove un gioco vero accetta il primo blocco (`giochiPer`, [esercizi.md](esercizi.md) «Il gioco in cui si fa»), la
+stessa lezione c'è anche lì, fatta da sola: stessi esercizi con `gioco`, nome con «negli Asteroidi» in coda,
+id con `-asteroidi` in coda. Il secondo blocco va nel gioco se il gioco lo accetta, se no resta alle domande.
+Il gioco della lezione (`giocoDellaPronta`, il filtro del percorso) è quello del primo blocco.
 Oggi sono le tabelline col risultato, dalla seconda alla quinta.
 
 ## Cosa c'è
@@ -69,12 +73,13 @@ In tutto 165, contate le 9 negli Asteroidi. Il numero esatto lo dice `node test/
 
 ## Come se ne aggiunge una
 
-Una riga in `SCRITTE[anno][materia]`: `[nome, allena, obiettivo, quante o '<n> min', dopo]`, con `m(modulo,
+Una riga in `SCRITTE[anno][materia]`: `[nome, allena, obiettivo, quante o '<n> min', dopo]` (i due blocchi), con `m(modulo,
 da, a, tipologie)` e `t(tabelline, modo)`. Il nome è unico nel suo anno e nella sua materia e sta nei 60
 caratteri anche con «negli Asteroidi» in coda; l'id viene dal nome. La versione nei giochi nasce da sé. Una
 voce nuova del catalogo con un gradino di un anno vuole una lezione in quell'anno: il test lo dice.
 
-Nei test: `unita/scuola-lezioni-pronte` (ogni pronta passa `valido` nell'obiettivo e nel dopo e `lezioneValida`
-data all'editor, uno solo fra quante e minuti dentro i tetti, l'obiettivo della sua materia, nessun gradino di un
-anno dopo; nomi unici per anno e materia e id unici; ogni voce con un gradino di quell'anno ha una lezione; la
-gemella nelle domande di ogni lezione nei giochi e viceversa; i filtri).
+Nei test: `unita/scuola-lezioni-pronte` (ogni pronta ha blocchi con esercizi validi, il primo che passa a domande o
+a minuti dentro i tetti, il secondo, se c'è, quando lo dice la maestra, ed è `lezioneValida` data all'editor; il
+primo blocco della sua materia, nessun gradino di un anno dopo in nessun blocco; nomi unici per anno e materia e id
+unici; ogni voce con un gradino di quell'anno ha una lezione; la gemella nelle domande di ogni lezione nei giochi e
+viceversa; i filtri).

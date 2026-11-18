@@ -4,7 +4,7 @@ import { ref, computed } from 'vue'
 import { quaderno, salva } from './stato.js'
 import * as Q from './quaderno.js'
 import { lezioneValida, classiNelloStorico } from './quaderno.js'
-import { indirizzoBambini, paginaMaestra, copia, scarica, comeSiSvolge, seHaiFinito } from './utili.js'
+import { indirizzoBambini, paginaMaestra, copia, scarica, comeSiSvolge } from './utili.js'
 import Conferma from './Conferma.vue'
 
 const emit = defineEmits(['vai', 'indietro'])
@@ -60,7 +60,7 @@ function apriFile(e) {
   <section class="carta" data-come-funziona>
     <h2>Come funziona</h2>
     <ol class="passi">
-      <li><b>Prepara</b> una classe con i nomi degli alunni e una lezione: cosa fare, quante domande o quanti minuti.</li>
+      <li><b>Prepara</b> una classe con i nomi degli alunni e una lezione: cosa fare, blocco per blocco, e quando si passa al blocco dopo.</li>
       <li><b>Sui PC dei bambini</b> apri la pagina dei bambini, dall'indirizzo qui sotto o dal file copiato con la chiavetta.</li>
       <li><b>Avvia</b> la lezione: esce un codice da scrivere alla lavagna. Ogni bambino lo scrive e tocca il suo nome.</li>
       <li><b>Via!</b> I bambini rispondono, tu vedi a che punto sono. Alla fine chiudi la lezione e hai il resoconto.</li>
@@ -98,8 +98,7 @@ function apriFile(e) {
       <li v-for="l in quaderno.lezioni" :key="l.id" :data-lezione="l.id">
         <span class="cosa">
           <b>{{ l.nome }}</b>
-          <span class="nota">{{ comeSiSvolge(l) }}</span>
-          <span class="nota">{{ seHaiFinito(l) }}</span>
+          <span v-for="(r, i) in comeSiSvolge(l)" :key="i" class="nota">{{ r }}</span>
         </span>
         <span class="fila">
           <button class="bottone piccolo" data-azione="avvia" :disabled="!lezioneValida(l) || !!quaderno.inCorso"
