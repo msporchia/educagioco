@@ -7,11 +7,12 @@
    `node test/esegui.mjs scuola-pacchetto --niente-build` */
 import { readFileSync, existsSync, statSync } from 'node:fs'
 import { resolve, dirname, relative } from 'node:path'
-import { SOSTITUTI } from '../../src/scuola/sostituti/elenco.js'
+import { SOSTITUTI, AMMESSI } from '../../src/scuola/sostituti/elenco.js'
 import { controlla, riassunto, nota } from '../aiuto/verifica.mjs'
 
 const RADICE = resolve(import.meta.dirname, '../..')
 const rel = p => relative(RADICE, p).split('\\').join('/')
+const ammesso = p => AMMESSI.some(a => p === a || (a.endsWith('/') && p.startsWith(a)))
 const SOST = new Map(Object.entries(SOSTITUTI).map(([da, a]) => [resolve(RADICE, da), resolve(RADICE, a)]))
 
 const MAESTRA = {
@@ -36,8 +37,8 @@ const BAMBINI = {
     [p => p.startsWith('src/amici/'), 'src/amici/'],
     [p => p.startsWith('src/guide/'), 'src/guide/'],
     [p => p.startsWith('src/insieme/') && p !== 'src/insieme/rete.js', 'src/insieme/'],
-    [p => /^src\/giochi\/[^/]+\//.test(p), 'un altro gioco (src/giochi/<cartella>/)'],
-    [p => p.startsWith('src/views/') && p !== 'src/views/MathGame.vue', 'un altro gioco (src/views/)'],
+    [p => /^src\/giochi\/[^/]+\//.test(p) && !ammesso(p), 'un gioco non ammesso (src/giochi/<cartella>/: docs/scuola/giochi.md)'],
+    [p => p.startsWith('src/views/') && !ammesso(p), 'un gioco non ammesso (src/views/)'],
   ],
   testi: [
     [() => true, /\bindexedDB\b/, 'indexedDB'],
