@@ -57,8 +57,8 @@ uguale('il gioco non cambia l\'anno', annoDi({ tipo: 'tabelline', tabelline: [7]
 /* ══════════ 4. ogni anno ha lezioni dove il catalogo ha qualcosa per lui ══════════ */
 // «per quell'anno»: un gradino di quell'anno (la prima prende anche la scuola dell'infanzia)
 const diQuellAnno = (classe, anno) => (anno === 1 ? classe <= 1 : classe === anno)
-const vociDellAnno = (mat, anno) => mat.voci.filter(v =>
-  v.tipo === 'tabelline' ? anno === ANNO_TABELLINE : v.gradini.some(g => diQuellAnno(g.classe, anno)))
+const vociDellAnno = (mat, anno) => mat.voci.filter(v => !v.gioco && (
+  v.tipo === 'tabelline' ? anno === ANNO_TABELLINE : v.gradini.some(g => diQuellAnno(g.classe, anno))))
 for (const anno of ANNI) {
   for (const mat of CATALOGO.materie) {
     const voci = vociDellAnno(mat, anno)
@@ -87,8 +87,8 @@ for (const anno of ANNI) {
   }
   const asteroidi = pronte({ gioco: 'asteroidi' })
   controlla('negli Asteroidi ci sono lezioni, tutte di matematica', asteroidi.length > 0 && asteroidi.every(p => p.materia === 'matematica'))
-  stessaLista('in seconda la matematica si fa nelle domande e negli Asteroidi', giochiDi(2, 'matematica').map(g => g.id), ['schede', 'asteroidi'])
-  stessaLista('l\'italiano solo nelle domande', giochiDi(3, 'italiano').map(g => g.id), ['schede'])
+  stessaLista('in seconda la matematica si fa nelle domande, negli Asteroidi e in Survivors', giochiDi(2, 'matematica').map(g => g.id), ['schede', 'asteroidi', 'survivors'])
+  stessaLista('l\'italiano nelle domande e in Survivors', giochiDi(3, 'italiano').map(g => g.id), ['schede', 'survivors'])
   controlla('ogni gioco proposto è un gioco vero', ANNI.every(a => materiePer(a).every(m => giochiDi(a, m.id).every(g => GIOCHI.includes(g)))))
 }
 

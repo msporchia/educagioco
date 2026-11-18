@@ -38,6 +38,7 @@ function guardaDomanda(dove, q, { chiavi = null } = {}) {
     controlla(`${v.id}: l'esercizio di partenza è valido`, valido(v.base), JSON.stringify(v.base))
     controlla(`${v.id}: descrivi dice qualcosa`, descrivi(v.base).length > 3)
     controlla(`${v.id}: l'esercizio passa dal link così com'è`, valido(JSON.parse(JSON.stringify(v.base))))
+    if (v.gioco) continue           // il contenuto di un gioco (docs/scuola/giochi.md): lo prova il test del gioco
     if (v.tipo === 'tabelline') {
       for (const t of v.tabelline) for (const modo of v.modi.map(m => m.id))
         controlla(`tabellina ${t.valore}, ${modo}: valida`, valido({ tipo: 'tabelline', tabelline: [t.valore], modo }))
@@ -205,7 +206,7 @@ console.log('\nPIÙ COSE INSIEME, CON LE INTENSITÀ')
   controlla('e il ripasso le gira tutte e quattro', [3, 4, 5, 6].every(n => usciti.some(s => s.startsWith(n + ' ×'))))
   const misto = ins([t([8], 'nascosto'), 'normale'], [{ tipo: 'modulo', modulo: 'orologio', da: 1, a: 2, tipologie: [] }, 'poco'])
   controlla('tabelline e orologio insieme si possono fare', valido(misto) && !!pescatore(misto, 3).prossima().domanda)
-  stessaLista('ma solo a schede', giochiPer(misto).map(g => g.id), ['schede'])
+  stessaLista('nelle domande e in Survivors, che prende tutto il catalogo', giochiPer(misto).map(g => g.id), ['schede', 'survivors'])
   controlla('e agli Asteroidi no', !valido({ ...misto, gioco: 'asteroidi' }))
   controlla('tutte tabelline col risultato: anche negli Asteroidi', valido({ ...otto, gioco: 'asteroidi' }))
   stessaLista('che ricevono i gruppi con le loro volte', limiteAsteroidi({ ...otto, gioco: 'asteroidi' }).gruppi,

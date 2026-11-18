@@ -33,9 +33,21 @@ sbagliato con la domanda ancora aperta (un sasso sbagliato, un ▶ che non arriv
 blocco non lo conta. Le soglie dei blocchi contano le domande chiuse e le giuste: in un gioco di programmare una
 «giusta» è un livello vinto.
 
+## A che punto è ogni gioco
+
+| Gioco | Cosa sceglie la maestra | Una risposta è | Documento |
+|---|---|---|---|
+| Asteroidi | tabelline col risultato (anche a più parti) | ogni colpo; la domanda si chiude col giusto | [../asteroidi/scuola.md](../asteroidi/scuola.md) |
+| Survivors | qualunque esercizio del catalogo (anche a più parti) | ogni carta pagata con una domanda | [../survivors/scuola.md](../survivors/scuola.md) |
+| Passo passo | `{ tipo: 'passo', protagonista, gradini }` | ogni ▶; un livello vinto chiude | [../passo-passo/scuola.md](../passo-passo/scuola.md) |
+| Il Robot | `{ tipo: 'robot', capitoli }` | ogni esecuzione; un livello vinto chiude | [../costruttore/scuola.md](../costruttore/scuola.md) |
+
+Valutati e non ancora portati: English (senza audio, scelta dell'utente), le Pozioni, la Cucina e il castello (svago), il
+sotterraneo (una discesa breve nella cripta, dalla terza). Per i pesanti prima va diviso il sito online (sotto).
+
 ## Il peso
 
-Tutti i giochi stanno nel file dei bambini (le viste a richiesta, nel file unico, sono in linea comunque). Il tetto di
+Tutti i giochi stanno nel file dei bambini (le viste a richiesta, nel file unico, sono in linea comunque): con i quattro di sopra pesa 4,8 MB, sotto il tetto di 5. Il tetto di
 `vite.scuola.config.js` è per pagina; quando i giochi pesanti (English, il castello, il sotterraneo) arrivano, il sito
 online si divide in un pezzo per gioco e la chiavetta resta un file solo: [architettura.md](architettura.md).
 
