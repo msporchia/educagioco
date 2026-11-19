@@ -10,6 +10,7 @@ defineProps({
   ultima: { type: Boolean, default: false },
   righe: { type: Array, default: () => [] },   // quanto si è speso, e il modo più economico
   ancora: { type: Boolean, default: false },   // il calderone senza fondo: si ricomincia
+  mappa: { type: Boolean, default: true },     // a scuola no (docs/pozioni/scuola.md)
 })
 defineEmits(['avanti', 'mappa'])
 </script>
@@ -30,7 +31,7 @@ defineEmits(['avanti', 'mappa'])
       <button v-if="!ultima" class="pz-grosso" data-azione="avanti" @click="$emit('avanti')">
         {{ ancora ? 'Un altro giro' : 'Tappa dopo' }} ▶
       </button>
-      <button class="pz-grosso pz-chiaro" data-azione="mappa" @click="$emit('mappa')">
+      <button v-if="mappa" class="pz-grosso pz-chiaro" data-azione="mappa" @click="$emit('mappa')">
         <span class="em">🗺️</span> Le tappe
       </button>
     </div>

@@ -14,6 +14,7 @@ import { progresso, aperta, adesso, stelleDi, completa, primatoDi, segnaPrimato,
          sosta, salvaSosta, buttaSosta } from '../campagne.js'
 import { usaAmici } from '../../amici/usaAmici.js'
 import { attesaDellEsito, PONDERA, TEMPO_MAX } from '../../quiz/nucleo/domanda.js'
+import { fasciaAttiva } from '../../store/qualita.js'
 
 import { CAMPAGNA, BLOCCHI, QUANTE_TAPPE, MONETE_A_DOSE, INFINITA, giroInfinito } from './dati/campagna.js'
 import { SENZA_FINE } from './gioco.js'
@@ -22,19 +23,25 @@ import { mescola } from './dati/misure.js'
 import { Bottega } from './motore/bottega.js'
 import { MORTAIO, TAGLIERE, GRATTATO } from './motore/procedimento.js'
 import { scrivi, leggi, dice, tappaDi } from './motore/sosta.js'
+import { tappeDelLimite, dopoNelGiro, risposteDellOrdine } from './motore/limite.js'
 import Mappa from './viste/Mappa.vue'
 import Mercante from './viste/Mercante.vue'
 import Fine from './viste/Fine.vue'
 import './stile.css'
 
 defineOptions({ name: 'Pozioni' })
-const emit = defineEmits(['vai'])
+const emit = defineEmits(['vai', 'risposta'])
+// a scuola (docs/pozioni/scuola.md): `{ famiglie, gradini }`, le tappe da giocare in giro; a casa manca
+const props = defineProps({ limite: { type: Object, default: null } })
+const scelte = tappeDelLimite(props.limite)     // null a casa
+// i PC della scuola sono lenti: col limite e la fascia bassa il banco si disegna leggero
+const leggera = !!scelte && fasciaAttiva() === 'bassa'
 
 const CHIAVE = 'pozioni'
 const CIECO = 320           // una schermata appena comparsa non si tocca subito
 
 // dove siamo
-const vista = ref('mappa')          // mappa | banco
+const vista = ref(scelte ? 'banco' : 'mappa')   // mappa | banco
 const tappaIdx = ref(0)
 const bottega = ref(null)
 const bozza = ref([])               // l'ordine in preparazione: [{ i, k }]
@@ -52,7 +59,8 @@ const tappa = computed(() => (tappaIdx.value < 0 ? INFINITA : CAMPAGNA[tappaIdx.
 const apertaQui = i => aperta(CHIAVE, i < 0 ? QUANTE_TAPPE - 1 : i)
 const serie = ref(0)                // le pozioni fatte nel calderone senza fondo
 let prossimo = null                 // quella dopo, già pronta: chi esce mentre fa festa la ritrova
-const titolo = computed(() => (vista.value === 'banco' ? tappa.value.nome : 'Le pozioni'))
+const titolo = computed(() => (vista.value !== 'banco' ? 'Le pozioni'
+  : scelte ? `${scelte.indexOf(tappaIdx.value) + 1}/${scelte.length} · ${tappa.value.nome}` : tappa.value.nome))
 
 // gli amici dalla loro bacheca (docs/core/amici-nei-giochi.md): la tappa da fare di ognuno
 const amici = usaAmici(CHIAVE)
@@ -88,12 +96,12 @@ const laRipresa = () => {
   const sbagli = d.traboccate ? ` · 💥 ${d.traboccate}` : ''
   return { emoji: d.emoji, nome: d.nome, dettaglio: `🧪 ${d.fatti} ingredienti su ${d.quanti}${sbagli}` }
 }
-const ripresa = ref(laRipresa())
+const ripresa = ref(scelte ? null : laRipresa())
 const chiede = ref(null)            // { nome, i }: la tappa nuova che butterebbe quella a metà
 
 function salva({ subito = false } = {}) {
   const b = prossimo || bottega.value
-  if (vista.value !== 'banco' || !b || b.finita) return
+  if (scelte || vista.value !== 'banco' || !b || b.finita) return
   salvaSosta(CHIAVE, scrivi(b, tappaIdx.value,
     { monete: { chiesto: borsellino.chiesto, dato: borsellino.dato } }), { subito })
 }
@@ -112,6 +120,8 @@ function vuoleIniziare(i) {
 function comincia() { avviaTappa(chiede.value.i) }
 
 function entra(i, b) {
+  riferisci()
+  comprate = []
   cancelAnimationFrame(barra); attesa.value = 0
   tappaIdx.value = i
   bottega.value = b
@@ -154,10 +164,12 @@ function dallIndirizzo() {
 onMounted(() => {
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
-  dallIndirizzo()
+  if (scelte) avviaTappa(scelte[0], true)
+  else dallIndirizzo()
 })
 // prima che i figli se ne vadano (onUnmounted sarebbe tardi)
 onBeforeUnmount(() => {
+  riferisci()
   salva({ subito: true })
   cancelAnimationFrame(barra)
   document.removeEventListener('visibilitychange', seSparisce)
@@ -195,6 +207,7 @@ function allaMappa() {
 
 // dal banco il ← porta alla mappa, e la tappa a metà resta lì in cima
 function indietro() {
+  if (scelte) return
   if (vista.value === 'mappa') return emit('vai', 'home')
   salva({ subito: true })
   ripresa.value = laRipresa()
@@ -236,9 +249,10 @@ function ordina() {
   suono.nota(300, 520, 0.12, 'triangle', 0.08)
   for (const e of r.esiti) {
     annota(e.annota)
-    if (e.tipo === 'giusto') segna('misure')
+    if (e.tipo === 'giusto' && !scelte) segna('misure')
     if (e.monete) borsellino.paga(e.monete)
   }
+  if (scelte) daDire.push(...risposteDellOrdine(b, r.esiti, comprate, Math.min(TEMPO_MAX, performance.now() - apertaIl)))
   salva({ subito: true })
   inCorso = r
   animazione.value = { n: ++nAnim, tipo: 'ordine', prima, voci: r.esiti.map(e => {
@@ -251,6 +265,7 @@ function ordina() {
 
 function fermo(n) {
   if (n !== nAnim) return
+  riferisci()
   const r = inCorso
   inCorso = null
   if (animazione.value?.tipo === 'festa') {
@@ -354,9 +369,19 @@ function annota(a) {
   answer(a.chiave, { correct: a.giusto, ms })
 }
 
+/* A scuola ogni dose va alla maestra (docs/pozioni/scuola.md): si decide all'ordine e si dice quando il mercante ha
+   finito di versare, quello che il bambino vede; chi esce prima la manda lo stesso */
+let daDire = [], comprate = []
+function riferisci() {
+  const r = daDire
+  daDire = []
+  for (const x of r) emit('risposta', x)
+}
+
 let chiusa = null
 function chiudiTappa() {
   const q = bottega.value
+  if (scelte) return chiudiNelGiro(q)
   if (!q.saltate) segna('pozioni')
   if (q.perfetta) segna('pozioniPerfette')
   if (tappaIdx.value < 0) return chiudiGiro(q)
@@ -370,6 +395,13 @@ function chiudiTappa() {
   if (q.extra > 0) for (const x of q.piuEconomico()) righe.push(`${x.nome}: ${x.pezzi.join(' + ')} (${x.costo})`)
   chiusa = { titolo: tappa.value.nome, stelle: q.stelle, monete: borsellino.dato, notaMonete: borsellino.nota(),
              maestro: ultima && !giaFatta, ultima, righe }
+}
+
+// a scuola: niente completa, contatori né monete; le stelle dicono lo stesso quanto si è speso
+function chiudiNelGiro(q) {
+  const righe = [`Hai speso ${q.speso} gettoni: il minimo era ${q.minimo}.`]
+  if (q.extra > 0) for (const x of q.piuEconomico()) righe.push(`${x.nome}: ${x.pezzi.join(' + ')} (${x.costo})`)
+  chiusa = { titolo: tappa.value.nome, stelle: q.stelle, mappa: false, righe }
 }
 
 // una pozione del calderone senza fondo è finita: si va avanti finché non si è in rosso
@@ -394,6 +426,7 @@ function pozioneDopo() {
 }
 
 function prossima() {
+  if (scelte) return avviaTappa(dopoNelGiro(scelte, tappaIdx.value), true)
   if (tappaIdx.value < 0) return avviaInfinita()
   if (tappaIdx.value >= QUANTE_TAPPE - 1) return allaMappa()
   avviaTappa(tappaIdx.value + 1)
@@ -415,7 +448,7 @@ if (typeof window !== 'undefined')
            @comincia="comincia" @annulla="chiede = null" />
 
     <Mercante v-else-if="bottega" :key="giro" :bottega="bottega" :bozza="bozza" :animazione="animazione"
-              :messaggio="messaggio" :attesa="attesa" :bloccato="occupato || cieco"
+              :messaggio="messaggio" :attesa="attesa" :bloccato="occupato || cieco" :leggera="leggera"
               @aggiungi="aggiungi" @togli="togliVoce" @ordina="ordina" @fai="fai" @comincia="(a, c) => bottega.comincia(a, c)" @pulisci="pulisci" @fermo="fermo" />
     <TastoSalta v-if="bottega && vista === 'banco' && !finale" @salta="salta" />
 

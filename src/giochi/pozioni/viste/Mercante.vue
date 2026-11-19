@@ -21,6 +21,7 @@ const props = defineProps({
   messaggio: { type: Object, default: null },    // { tipo: aiuto | giusto | trabocca, righe }
   attesa: { type: Number, default: 0 },          // 0..1, quanto manca prima di poter pulire
   bloccato: { type: Boolean, default: false },
+  leggera: { type: Boolean, default: false },    // a scuola, nella fascia bassa (docs/pozioni/scuola.md)
 })
 const emit = defineEmits(['aggiungi', 'togli', 'ordina', 'fai', 'comincia', 'pulisci', 'fermo'])
 
@@ -104,7 +105,7 @@ function tocca(t) {
 }
 function accendi() {
   scena?.rilascia()
-  scena = creaBottega3d(tela.value, { tocca, lascia, comincia, suggerisce: t => { suggerimento.value = t }, perso: () => { senza3d.value = true } })
+  scena = creaBottega3d(tela.value, { tocca, lascia, comincia, suggerisce: t => { suggerimento.value = t }, perso: () => { senza3d.value = true }, leggera: props.leggera })
   senza3d.value = !scena
   if (scena) scena.imposta(quadro.value)
 }
@@ -136,7 +137,7 @@ if (typeof window !== 'undefined') window.__bottega3d = { grafica: () => scena?.
   <div class="pz-mercante" :data-fase="sporco ? 'macchia' : b.finita ? 'finita' : pronta ? 'procedimento' : listino ? 'listino' : 'banco'" :data-suggerimento="suggerimento">
     <div class="pz-scena">
       <canvas ref="tela" class="pz-tela" data-tela></canvas>
-      <div v-if="senza3d" class="pz-senza">
+      <div v-if="senza3d" class="pz-senza" data-senza-3d>
         Qui il banco non si riesce a disegnare.
         <button class="pz-piccolo" @click="accendi">riprova</button>
       </div>

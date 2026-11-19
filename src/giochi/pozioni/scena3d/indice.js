@@ -28,15 +28,16 @@ const FERMO_SU = 1.3            // s con l'attrezzo a bersaglio senza fare nient
 const FERMO_TAVOLO = 12         // s senza toccare niente: quanto basta per leggere la ricetta
 const RESTA = 3.5               // s: dopo un attrezzo lasciato lì, quanto resta la freccia
 
-export function creaBottega3d(canvas, { tocca, lascia, comincia, suggerisce, perso, dpr } = {}) {
+// `leggera`: senza antialias e a un pixel per punto, per i PC lenti della scuola (docs/pozioni/scuola.md)
+export function creaBottega3d(canvas, { tocca, lascia, comincia, suggerisce, perso, dpr, leggera = false } = {}) {
   let gl = null, renderer
   try {
-    gl = canvas.getContext('webgl2', { alpha: false, antialias: true, depth: true, stencil: false, powerPreference: 'high-performance' })
+    gl = canvas.getContext('webgl2', { alpha: false, antialias: !leggera, depth: true, stencil: false, powerPreference: 'high-performance' })
   } catch (e) { gl = null }
   if (!gl || gl.isContextLost()) return null
-  try { renderer = segui(new WebGLRenderer({ canvas, context: gl, antialias: true })) } catch (e) { return null }
+  try { renderer = segui(new WebGLRenderer({ canvas, context: gl, antialias: !leggera })) } catch (e) { return null }
   let tutto
-  try { tutto = costruisci(renderer, canvas, { tocca, lascia, comincia, suggerisce, dpr }) } catch (e) {
+  try { tutto = costruisci(renderer, canvas, { tocca, lascia, comincia, suggerisce, dpr: leggera ? 1 : dpr }) } catch (e) {
     console.warn('pozioni 3D: niente disegno', e)
     try { renderer.dispose() } catch (x) { /* pazienza */ }
     return null

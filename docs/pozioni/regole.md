@@ -232,7 +232,7 @@ la toglie, il rotolo si chiude con la ✕. Sulla tela un tocco fermo (sotto i
 Nei test: `unita/pozioni`, `unita/pozioni-sosta`, `integrazione/pozioni`,
 `integrazione/pozioni-sosta`; `.carta.gioco[data-gioco="pozioni"]`,
 `.pz-tappa[data-tappa]`, `.pz-mercante[data-fase]`
-(`banco`·`listino`·`macchia`·`procedimento`·`finita`), `[data-tela]`, `[data-pergamena]`,
+(`banco`·`listino`·`macchia`·`procedimento`·`finita`), `[data-tela]`, `[data-senza-3d]`, `[data-pergamena]`,
 `[data-voce]`, `[data-dose]`, `[data-gettoni]`, `[data-listino]`, `[data-merce]`,
 `[data-targhetta="i:k"]`, `[data-vale]`, `[data-regola]`, `[data-chiudi]`,
 `[data-ordine]`, `[data-scontrino]`, `[data-posto]`, `[data-spedizione]`, `[data-totale]`, `[data-azione="mercante"|"ordina"|"pulisci"]`,
