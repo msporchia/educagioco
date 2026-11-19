@@ -34,6 +34,7 @@ import { storieAperte, prossimaStoria, unAltraStoria, segnaLetta, cosaServeAlLib
 import { traduci } from './motore/lessico.js'
 import { scrivi as scriviSosta, leggi as leggiSosta, dice as diceSosta } from './motore/sosta.js'
 import * as F from './motore/fila.js'
+import { tappeDelLimite, dopoNelGiro, racconta as raccontaRisposta } from './motore/scuola.js'
 
 import Mappa from './viste/Mappa.vue'
 import { usaAmici } from '../../amici/usaAmici.js'
@@ -46,10 +47,16 @@ import { usaOrologio } from './viste/orologio.js'
 import './stile.css'
 
 defineOptions({ name: 'IngleseAMondi' })
-defineProps({ lingua: { type: String, default: 'en' } })   // App.vue la passa a tutte le lingue
-const emit = defineEmits(['vai'])
+const props = defineProps({
+  lingua: { type: String, default: 'en' },   // App.vue la passa a tutte le lingue
+  // a scuola: `{ isola, tappe }`, e si giocano solo quelle tappe in giro, senza audio (docs/lingue/scuola.md); a casa manca
+  limite: { type: Object, default: null },
+})
+const emit = defineEmits(['vai', 'risposta'])
+const scelte = tappeDelLimite(props.limite)     // le tappe della maestra, in giro; null a casa
+const vinteNelGiro = new Set()                // a scuola le tappe vinte non si scrivono: la presentazione guarda queste
 
-const vista = ref('mappa')          // mappa | tappa | libro | prima
+const vista = ref(scelte ? 'tappa' : 'mappa')   // mappa | tappa | libro | prima
 const c = progresso(CHIAVE)
 // gli amici dalla loro bacheca (docs/core/amici-nei-giochi.md): la tappa da fare di ognuno sulla mappa
 const amici = usaAmici(CHIAVE)
@@ -95,7 +102,7 @@ const cartaRipresa = computed(() => {
 })
 
 function salva({ subito = false } = {}) {
-  if (vista.value !== 'tappa' || !sessione || !tappa.value) return
+  if (scelte || vista.value !== 'tappa' || !sessione || !tappa.value) return    // a scuola niente sosta
   if (sessione.finita) vinci()       // uscire dopo l'ultima giusta: la tappa è vinta
   const dato = finePronta || fine.value ? null : scriviSosta({
     tappa: tappa.value, sessione, conti, domanda: esito.value ? null : d.value,
@@ -182,14 +189,15 @@ let inArrivo = null                  // la pagina del concetto che segue uno sba
 let altraStoria = null               // la storia di «Un'altra storia», dal cartello di fine
 let puntataOfferta = null            // «Puntata 2 →», dal cartello di fine di una puntata
 
-const haVoceOra = p => suono.acceso.value && haVoce(p, 'en')
+// a scuola niente audio: senza voce le domande in ascolto non escono
+const haVoceOra = p => !scelte && suono.acceso.value && haVoce(p, 'en')
 
 function avvia(t) {
   tappa.value = t
   // chi ha tutto aperto non riparte dal «cosa vuol dire»
   const partenza = tuttoAperto() ? 2 : 0
   // i concetti si presentano la prima volta; rigiocando, la pagina torna solo con gli sbagli
-  const presenta = !t.cassetto && !!t.frasi && !vinta(c, t.id)
+  const presenta = !t.cassetto && !!t.frasi && !(scelte ? vinteNelGiro.has(t.id) : vinta(c, t.id))
   sessione = new Sessione({ tappa: t, itemDi: leggi, haVoce: haVoceOra, eta: etaDelBambino(), partenza, presenta })
   Object.assign(conti, { giuste: 0, errori: 0, monete: 0, chieste: 0, bersaglio: sessione.bersaglio,
                          gradoPrima: t.cassetto ? null : sessione.gradoIniziale })
@@ -197,7 +205,7 @@ function avvia(t) {
   finePronta = null
   inArrivo = null
   vista.value = 'tappa'
-  if (t.parole) prepara(t.parole, 'en')
+  if (t.parole && !scelte) prepara(t.parole, 'en')
   prossima()
 }
 const giocaTappa = id => avvia(tappaDi(id))
@@ -223,7 +231,7 @@ function mostra(q, ripreso = null) {
   pagaQui.value = ripreso ? ripreso.pagaQui : true
   bolla.value = null
   orologio.riparti(ripreso ? ripreso.visto : 0)
-  if (!ripreso && q.genere === 'parola' && q.domanda.ascolta) setTimeout(() => pronuncia(q.domanda.ascolta, 'en'), 260)
+  if (!ripreso && !scelte && q.genere === 'parola' && q.domanda.ascolta) setTimeout(() => pronuncia(q.domanda.ascolta, 'en'), 260)
   salva()
 }
 
@@ -276,13 +284,13 @@ function rispondi(risposta, scelta, { saltata = false } = {}) {
   if (e.giusta) {
     conti.giuste++
     const k = contatoreDi(q.chiave)
-    if (k && !saltata) segna(k)
+    if (k && !saltata && !scelte) segna(k)
     suono.ok()
   } else {
     conti.errori++
     suono.no()
   }
-  if (e.paga) {
+  if (e.paga && !scelte) {
     const pagato = incassa(pagaDi(q))
     conti.monete += pagato.dato
     conti.chieste += pagato.chiesto
@@ -293,6 +301,10 @@ function rispondi(risposta, scelta, { saltata = false } = {}) {
   const diFretta = !saltata && troppoDiFretta(daLeggere, { giusto: e.giusta, tempo })
   const penale = saltata ? { attesa: 0 } : pesoDellaFretta(diFretta, e.giusta)
   const giustaEra = !e.giusta && q.tessere ? e.giustaEra : null
+  // a scuola ogni risposta va alla maestra, e la domanda si chiude sempre: dopo viene un'altra
+  if (scelte && !saltata)
+    emit('risposta', { chiave: q.chiave, giusta: e.giusta, ultima: true, ms: Math.round(tempo * 1000),
+                       ...raccontaRisposta(q, risposta, e) })
   esito.value = {
     giusta: e.giusta, saltata, scelta, diFretta, giustaEra,
     perche: e.perche || '', siFa: e.giusta ? '' : (e.siFa || ''),
@@ -315,6 +327,7 @@ function rispondi(risposta, scelta, { saltata = false } = {}) {
 function vinci() {
   if (finePronta || fine.value || !tappa.value) return
   const t = tappa.value
+  if (scelte) return vintaNelGiro(t)
   let primaVolta = false
   if (!t.cassetto) {
     primaVolta = segnaVinta(c, t.id)
@@ -337,6 +350,17 @@ function vinci() {
     ancora: 'Rigioca',
   }
   prossimaId = avanti ? avanti.id : null
+}
+
+// a scuola: il cartello senza monete né mappa, e avanti c'è la tappa dopo del giro
+function vintaNelGiro(t) {
+  vinteNelGiro.add(t.id)
+  const dopo = tappaDi(dopoNelGiro(scelte, t.id))
+  finePronta = {
+    titolo: 'Tappa vinta!', sotto: t.nome, prima: conti.gradoPrima, dopo: gradoTappa(t, forzaDi),
+    giuste: conti.giuste, errori: conti.errori, monete: null, avanti: dopo.nome, mappa: false,
+  }
+  prossimaId = dopo.id
 }
 
 function chiudiTappa() {
@@ -477,7 +501,7 @@ function tocchiQui() {
   return null
 }
 // c'è ancora un guadagno che un tocco toglierebbe? (nel libro, una domanda che paga)
-const siPerde = () => (vista.value === 'libro'
+const siPerde = () => !scelte && (vista.value === 'libro'
   ? !!libro.value && libro.value.domande.length > libroPersi.value : pagaQui.value)
 
 // Un tocco che toglierebbe il guadagno si chiede prima, in una bolla accanto
@@ -510,7 +534,7 @@ function svela(parola, centro, sopra, { storia = false } = {}) {
   if (t) persist()   // il conto dei tocchi gratis sta sull'elemento SRS della parola
   if (t && t === tocchi) salva()   // una parola chiesta costa: uscire non la ridà
   const x = Math.min(innerWidth - 90, Math.max(90, centro))   // la nuvoletta resta dentro lo schermo
-  bolla.value = { parola, it: r.it || '', costa: !r.gratis, x, y: sopra, storia }
+  bolla.value = { parola, it: r.it || '', costa: !r.gratis && !scelte, x, y: sopra, storia }
   clearTimeout(bollaTimer)
   bollaTimer = setTimeout(() => { bolla.value = null }, 2200)
 }
@@ -531,6 +555,7 @@ function ascolta() {
 
 /* ═══════════ l'indicatore delle monete ═══════════ */
 const indicatore = computed(() => {
+  if (scelte) return null
   if (vista.value === 'tappa' && d.value && !fine.value) {
     const quanto = pagaDi(d.value)
     return pagaQui.value ? { testo: `+${quanto}`, paga: true } : { testo: '+0', paga: false }
@@ -543,7 +568,8 @@ const indicatore = computed(() => {
 })
 
 const titolo = computed(() => {
-  if (vista.value === 'tappa' && tappa.value) return tappa.value.nome
+  if (vista.value === 'tappa' && tappa.value)
+    return scelte ? `${scelte.indexOf(tappa.value.id) + 1}/${scelte.length} · ${tappa.value.nome}` : tappa.value.nome
   if (vista.value === 'libro' && libro.value) return 'Il libro'
   return 'English'
 })
@@ -556,6 +582,7 @@ function seSparisce(e) {
 onMounted(() => {
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
+  if (scelte) giocaTappa(scelte[0])     // a scuola niente mappa
 })
 onBeforeUnmount(() => {
   salva({ subito: true })
@@ -609,7 +636,7 @@ onUnmounted(() => { clearTimeout(bollaTimer); zittisci() })
            @ho-letto="hoLetto" @rispondi="rispondiLibro" @tocca="tocca"
            @salta="rispondiLibro(rispostaGiusta(libro.domande[libroK]), { saltata: true })" />
 
-    <Fine v-if="fine" v-bind="fine" @mappa="allaMappa" @avanti="avantiDaFine" @ancora="ancoraDaFine"
+    <Fine v-if="fine" v-bind="fine" @mappa="scelte ? avantiDaFine() : allaMappa()" @avanti="avantiDaFine" @ancora="ancoraDaFine"
           @altro="altroDaFine" />
     <Bolla v-if="bolla" :parola="bolla.parola" :it="bolla.it" :costa="bolla.costa" :chiede="bolla.chiede"
            :storia="bolla.storia"

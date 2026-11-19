@@ -20,6 +20,7 @@ per chi lo aveva finito.
 - [libro-racconti.md](libro-racconti.md) — raccontare di più in quarta e quinta: le parole della storia, le domande «chi», «frase» e «ordine», le storie a puntate
 - [libro-vista.md](libro-vista.md) — il libro a schermo: le pagine, le battute, le parole della storia, le tre domande nuove, le puntate, i bersagli dei test
 - [sosta.md](sosta.md) — la tappa lasciata a metà: cosa si salva, quando, e perché niente si ripaga
+- [scuola.md](scuola.md) — English a scuola: la maestra sceglie un'isola e le sue tappe, il giro, niente audio, la risposta per la maestra
 - [da-fare.md](da-fare.md) — cosa manca all'inglese a mondi: le strutture fuori programma, le parole e le voci, la mappa, lo spagnolo
 - [spagnolo.md](spagnolo.md) — il percorso dello spagnolo: dove sbaglia chi parla italiano, le sei isole, cosa c'è e cosa manca
 - [spagnolo-motore.md](spagnolo-motore.md) — lo spagnolo a mondi: cosa è per lingua nel motore, il contratto per frasi, concetti e capitoli, le trappole che nascono da sole, i limiti

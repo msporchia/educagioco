@@ -11,11 +11,12 @@ defineProps({
   dopo: { type: Number, default: null },        // e alla fine
   giuste: { type: Number, default: 0 },
   errori: { type: Number, default: 0 },
-  monete: { type: Number, default: 0 },
+  monete: { type: Number, default: 0 },         // null: a scuola, dove le monete non ci sono
   notaMonete: { type: String, default: '' },
   avanti: { type: String, default: '' },        // il nome della tappa dopo, se si può andare
   ancora: { type: String, default: '' },        // «Rigioca», se la stessa cosa si può rifare
   altro: { type: String, default: '' },         // nel libro: «Un'altra storia» accanto a «Puntata 2»
+  mappa: { type: Boolean, default: true },      // a scuola la mappa non c'è (docs/lingue/scuola.md)
 })
 defineEmits(['mappa', 'avanti', 'ancora', 'altro'])
 </script>
@@ -34,7 +35,7 @@ defineEmits(['mappa', 'avanti', 'ancora', 'altro'])
       </div>
       <div class="ing-conti">✅ {{ giuste }} giuste<template v-if="errori"> · ✋ {{ errori }} da rivedere</template></div>
       <p v-if="notaMonete" class="ing-nota-monete" data-nota-monete>{{ notaMonete }}</p>
-      <div v-else class="ing-premio" data-monete-fine :data-monete="monete">+{{ monete }} 🪙</div>
+      <div v-else-if="monete != null" class="ing-premio" data-monete-fine :data-monete="monete">+{{ monete }} 🪙</div>
       <div class="ing-bottoni">
         <button v-if="avanti" type="button" class="ing-grosso" data-azione="avanti" @click="$emit('avanti')">
           {{ avanti }} →
@@ -43,7 +44,7 @@ defineEmits(['mappa', 'avanti', 'ancora', 'altro'])
                 @click="$emit('altro')">{{ altro }} →</button>
         <button v-if="ancora" type="button" class="ing-grosso ing-chiaro" data-azione="ancora"
                 @click="$emit('ancora')">↻ {{ ancora }}</button>
-        <button type="button" class="ing-grosso ing-chiaro" data-azione="mappa" @click="$emit('mappa')">
+        <button v-if="mappa" type="button" class="ing-grosso ing-chiaro" data-azione="mappa" @click="$emit('mappa')">
           La mappa
         </button>
       </div>
