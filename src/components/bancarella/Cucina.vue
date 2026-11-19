@@ -8,6 +8,7 @@ import { dispensaDi, quanto, quantoLavato, tipoDi } from '../../motore/bancarell
 const props = defineProps({
   stato: { type: Object, required: true },
   detto: { type: Object, default: null },     // { testo }: un oggetto nuovo a ogni cosa da dire, anche se è la stessa
+  dpr: { type: Number, default: null },       // a scuola il pixel ratio della fascia bassa (docs/bancarella/scuola.md); a casa manca
 })
 const emit = defineEmits(['tocca'])
 
@@ -35,7 +36,7 @@ async function accendi() {
   if (spento) return
   scena?.rilascia()
   // `&dpr=1` nell'indirizzo: il pixel ratio fisso, per le foto e per i test senza scheda grafica
-  const dpr = Number((location.hash.match(/dpr=(\d)/) || [])[1]) || undefined
+  const dpr = Number((location.hash.match(/dpr=(\d)/) || [])[1]) || props.dpr || undefined
   scena = creaCucina3d(tela.value, { quanto, quantoLavato, tipoDi, dpr, perso: () => { senza3d.value = true } })
   senza3d.value = !scena
   scena?.imposta(props.stato)
@@ -59,7 +60,7 @@ if (typeof window !== 'undefined') window.__cucina3d = { grafica: () => scena?.g
     <canvas ref="tela" class="tela" data-tela @pointerdown.prevent="premi" @pointerup="alzato"></canvas>
     <p v-if="fumetto" class="detto" data-detto>{{ fumetto }}</p>
     <p v-if="apre" class="apre">Si accendono i fornelli…</p>
-    <div v-if="senza3d" class="senza">
+    <div v-if="senza3d" class="senza" data-senza3d>
       Qui la cucina non si riesce a disegnare.
       <button type="button" @click="accendi">riprova</button>
     </div>

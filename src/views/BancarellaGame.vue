@@ -28,8 +28,14 @@ import Ripresa from '../giochi/Ripresa.vue'
 import { sosta, salvaSosta, buttaSosta, ritocca, segnaPrimato } from '../giochi/campagne.js'
 import { fraseDiFine } from '../giochi/primati.js'
 import { scrivi, leggi, dice } from '../motore/bancarella/sosta.js'
+import { livelliDelLimite, dopoNelGiro, raccontaResto } from '../motore/bancarella/limite.js'
+import { fasciaAttiva } from '../store/qualita.js'
 
-const emit = defineEmits(['vai'])
+const emit = defineEmits(['vai', 'risposta'])
+// a scuola (docs/bancarella/scuola.md): i livelli della maestra in giro; a casa manca, e `giro` è null
+const props = defineProps({ limite: { type: Object, default: null } })
+const giro = livelliDelLimite(props.limite)
+const leggera = giro && fasciaAttiva() === 'bassa' ? 1 : null   // i PC di scuola: il pixel ratio della fascia bassa
 
 const CHIAVE = 'bancarella'
 const CUORI = 3
@@ -68,10 +74,10 @@ const scriviBanco = (b, opzioni) => {
   mioBanco.value = b
   ritocca(CHIAVE, c => { c.banco = b }, opzioni)
 }
-let raf = 0, ultimo = 0, apertoIl = 0, occupato = false, rifiuti = 0, ordiniFatti = 0
+let raf = 0, ultimo = 0, apertoIl = 0, occupato = false, rifiuti = 0, ordiniFatti = 0, sbaglio = null
 
 const amici = usaAmici(CHIAVE)
-const puoGiocare = k => cucineAperte || tappaApertaQui(CHIAVE, k, mioBanco.value.cucina.fatte)
+const puoGiocare = k => (giro ? giro.includes(k) : cucineAperte || tappaApertaQui(CHIAVE, k, mioBanco.value.cucina.fatte))
 
 const camp = computed(() => due.value?.camp || CUCINE[livello.value])
 const T = computed(() => tappaDi(camp.value, nTappa.value))
@@ -155,7 +161,7 @@ function allaCucina() {
   piatto.value = []
   digitato.value = ''
   contoFatto.value = false
-  rifiuti = 0
+  rifiuti = 0; sbaglio = null
   bonus.value = false
   occupato = false
 }
@@ -386,6 +392,7 @@ function confermaTotale() {
     suono.nota(720, 980, 0.09, 'triangle', 0.11)
     return
   }
+  sbaglio ||= { cosa: 'totale', cent: detto }
   nonTorna()
   digitato.value = ''
 }
@@ -413,10 +420,12 @@ function proponi() {
   const c = cliente.value
   if (occupato || !c || momento.value !== 'cassa' || chiediTotale.value || !piatto.value.length) return
   if (dato.value === c.resto) return consegna()
+  sbaglio ||= { cosa: 'resto', cent: dato.value }
   nonTorna()
 }
 
 function paga() {
+  if (giro) return
   const preso = borsellino.paga(premioCliente(camp.value))
   guadagno.monete = borsellino.dato
   if (preso) { moneta.value = preso; setTimeout(() => (moneta.value = 0), 1100) }
@@ -438,9 +447,11 @@ function consegna() {
   const c = cliente.value
   const perfetto = piatto.value.length === c.minimo
   answer(c.chiave, { correct: rifiuti === 0, ms: performance.now() - apertoIl })
+  const detta = giro && raccontaResto(c, { rifiuti, sbaglio, dato: dato.value, ms: performance.now() - apertoIl })
+  if (detta) emit('risposta', detta)
   hud.serviti++; hud.incasso += c.totale
-  segna('clienti'); segna('incasso', c.totale)
-  if (perfetto) { hud.perfetti++; bonus.value = true; segna('restiPerfetti') }
+  if (!giro) { segna('clienti'); segna('incasso', c.totale) }
+  if (perfetto) { hud.perfetti++; bonus.value = true; if (!giro) segna('restiPerfetti') }
   suono.moneta()
   paga()
   programma(prossimo, 900)
@@ -467,6 +478,7 @@ function chiudi(come) {
   cancelAnimationFrame(raf)
   spegniOrologio()
   cambio.value = null
+  if (giro) { guadagno.nota = ''; return suono.fine() }
   segnaBest('clienti', hud.serviti)
   frasePrimato.value = camp.value.infinita
     ? fraseDiFine(segnaPrimato(CHIAVE, hud.serviti, Date.now(), { incasso: hud.incasso, banchi: nTappa.value }), 'quanti') : ''
@@ -478,7 +490,7 @@ function chiudi(come) {
   suono.fine()
 }
 
-const dopo = computed(() => (livello.value + 1 < CUCINE.length ? livello.value + 1 : null))
+const dopo = computed(() => (giro ? dopoNelGiro(giro, livello.value) : livello.value + 1 < CUCINE.length ? livello.value + 1 : null))
 function alleCucine() {
   salva({ subito: true })
   spegniOrologio()
@@ -487,6 +499,7 @@ function alleCucine() {
   fase.value = 'cucine'
 }
 function indietro() {
+  if (giro) return
   if (fase.value === 'cucine') esci()
   else if (fase.value === 'sala' || due.value || fineDue.value) esciDue()
   else alleCucine()
@@ -507,7 +520,7 @@ const foto = () => ({
 })
 
 function salva({ subito = false } = {}) {
-  if (fase.value !== 'gioco' || due.value) return      // una partita in due non si salva: l'altro va avanti
+  if (fase.value !== 'gioco' || due.value || giro) return      // una partita in due non si salva: l'altro va avanti
   // l'ordinazione appena pagata ha già pagato: il suo giro si chiude prima di scrivere
   if (occupato && faPoi === prossimo) {
     spegniOrologio(); prossimo()
@@ -570,16 +583,18 @@ function esci() {
 function seSparisce(e) {
   if (e?.type === 'pagehide' || document.visibilityState === 'hidden') salva({ subito: true })
 }
+// a scuola si parte giocando, dal primo livello della maestra
+if (giro) inizia(giro[0])
 onMounted(() => {
   window.__shop = { fase, coda, piatto, hud, inizia, metti, togli, proponi, mioBanco, cliente, dato, manca, scomponi, momento,
                     tappa: nTappa, camp, T, cambio, esito, batti, confermaTotale, digitato, contoFatto, chiediTotale, aMente,
                     TASTI, cucina, guadagno, inPausa, chiudi, livello, due, fineDue }
   // la sosta del mercato che non c'è più non si legge: via
   if (sosta(CHIAVE) && !leggi(sosta(CHIAVE))) scorda()
-  const n = Number((location.hash.match(/livello=(\d+)/) || [])[1])
+  const n = giro ? 0 : Number((location.hash.match(/livello=(\d+)/) || [])[1])
   if (n >= 1 && n <= CUCINE.length) inizia(n - 1)
   // la prova dei grandi: `#bancarella=due&menu=tante&minuti=5`, da soli, con l'altro cuoco fermo
-  const prova = location.hash.match(/bancarella=due(?:&menu=(\w+))?(?:&minuti=(\d+))?/)
+  const prova = !giro && location.hash.match(/bancarella=due(?:&menu=(\w+))?(?:&minuti=(\d+))?/)
   if (prova) { const p = { seme: 1, menu: prova[1] || 'pochi', minuti: Number(prova[2]) || 5 }; partiInDue(motoreDi(partitaNuova(p)), 'host', p, true) }
   sfida.daInvito()
   document.addEventListener('visibilitychange', seSparisce)
@@ -633,7 +648,7 @@ onBeforeUnmount(() => {
 
       <div class="banco">
         <Ricetta v-if="ricettaAperta" :ricetta="cucina.ricette.find(r => r.emoji === ricettaAperta)" @chiudi="ricettaAperta = ''" />
-        <Cucina :stato="cucina" :detto="dettoCuoco" @tocca="toccaStanza" />
+        <Cucina :stato="cucina" :detto="dettoCuoco" :dpr="leggera" @tocca="toccaStanza" />
         <CartelloLinea v-if="due && (sfida.rotta.value || sfida.linea.value)" :rotta="sfida.rotta.value" :motivo="sfida.motivo.value"
                        :linea="sfida.linea.value" partita="la cucina" @esci="esciDue" />
 
@@ -739,9 +754,9 @@ onBeforeUnmount(() => {
       <p v-if="frasePrimato" class="testo" data-primato>{{ frasePrimato }}</p>
       <div class="riga">
         <button v-if="fineDue" class="bottone" @click="sfida.apri()">Ancora in due ▶</button>
-        <button v-else-if="esito === 'vinta' && dopo !== null" class="bottone" @click="inizia(dopo)">Prossima cucina ▶</button>
-        <button v-else class="bottone" @click="inizia(livello)">Riprova ▶</button>
-        <button class="bottone chiaro" data-azione="le-cucine" @click="fineDue ? esciDue() : alleCucine()">Le cucine</button>
+        <button v-else-if="esito === 'vinta' && dopo !== null" class="bottone" :data-azione="giro ? 'prossima' : null" @click="inizia(dopo)">Prossima cucina ▶</button>
+        <button v-else class="bottone" :data-azione="giro ? 'riparti' : null" @click="inizia(livello)">{{ giro ? 'Riparti' : 'Riprova' }} ▶</button>
+        <button v-if="!giro" class="bottone chiaro" data-azione="le-cucine" @click="fineDue ? esciDue() : alleCucine()">Le cucine</button>
       </div>
     </div>
 

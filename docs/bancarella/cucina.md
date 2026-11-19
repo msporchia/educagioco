@@ -195,4 +195,4 @@ mercato di prima non si leggono, e al primo avvio spariscono. I dati di quel mer
 veri). `window.__cucina3d.dove('1,3')` dice dove sta sullo schermo una cella o il pavimento: le celle cambiano con la cucina, si cercano in `celle`.
 Bersagli: `[data-cucine]`, `[data-cucina-n]`, `[data-cucina]`, `[data-tela]`,
 `[data-detto]`, `[data-resta]`, `[data-ordini]`, `[data-ordine]`, `[data-ordinato]`, `[data-ricetta]`, `[data-chiudi-ricetta]`,
-`[data-porge]`.
+`[data-porge]`, `[data-senza3d]` (la cucina che non si disegna).
