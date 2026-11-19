@@ -206,7 +206,7 @@ console.log('\nPIÙ COSE INSIEME, CON LE INTENSITÀ')
   controlla('e il ripasso le gira tutte e quattro', [3, 4, 5, 6].every(n => usciti.some(s => s.startsWith(n + ' ×'))))
   const misto = ins([t([8], 'nascosto'), 'normale'], [{ tipo: 'modulo', modulo: 'orologio', da: 1, a: 2, tipologie: [] }, 'poco'])
   controlla('tabelline e orologio insieme si possono fare', valido(misto) && !!pescatore(misto, 3).prossima().domanda)
-  stessaLista('nelle domande e in Survivors, che prende tutto il catalogo', giochiPer(misto).map(g => g.id), ['schede', 'survivors'])
+  stessaLista('nelle domande, in Survivors e nel sotterraneo, che prendono tutto il catalogo', giochiPer(misto).map(g => g.id), ['schede', 'survivors', 'sotterraneo'])
   controlla('e agli Asteroidi no', !valido({ ...misto, gioco: 'asteroidi' }))
   controlla('tutte tabelline col risultato: anche negli Asteroidi', valido({ ...otto, gioco: 'asteroidi' }))
   stessaLista('che ricevono i gruppi con le loro volte', limiteAsteroidi({ ...otto, gioco: 'asteroidi' }).gruppi,

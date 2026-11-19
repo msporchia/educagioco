@@ -10,7 +10,7 @@ per gioco.
 
 | File | Cosa |
 |---|---|
-| `scheda.js` | `{ id, nome, nei, spiega, tred, accetta?, tipo? }`, puro: lo leggono il catalogo (`esercizi.js`), le due pagine e i test. `nei` completa una frase («… negli Asteroidi»), `tred` vuol dire 3D (senza WebGL 2 non parte). `pronto: false` lo tiene nascosto alla maestra finché non è fatto |
+| `scheda.js` | `{ id, nome, nei, spiega, tred, accetta?, tipo? }`, puro: lo leggono il catalogo (`esercizi.js`), le due pagine e i test. `nei` completa una frase («… negli Asteroidi»), `tred` vuol dire 3D (senza WebGL 2 non parte); `daAnno` (facoltativo) è da che classe le lezioni pronte lo propongono. `pronto: false` lo tiene nascosto alla maestra finché non è fatto |
 | `sostituti.js` | `{ sostituti: { originale: sostituto }, ammessi: [percorsi] }`: i moduli di casa che a scuola si rimpiazzano per questo gioco (percorsi dalla radice) e i pezzi del gioco di casa che possono entrare nel pacchetto dei bambini (una cartella finisce con `/`). La guardia vieta ogni altro gioco |
 | `Vista.vue` | la vista per la pagina dei bambini, caricata a richiesta: props `esercizio` e `alunno` (`{ id, nome }`), il profilo in memoria con `bambinoInMemoria` (`bambini/profilo.js`); emette `risposta` e `guasto` |
 | `Parametri.vue` | solo per un gioco con un contenuto suo: l'editor del suo esercizio nella pagina della maestra (`v-model`) |
@@ -41,15 +41,18 @@ blocco non lo conta. Le soglie dei blocchi contano le domande chiuse e le giuste
 | Survivors | qualunque esercizio del catalogo (anche a più parti) | ogni carta pagata con una domanda | [../survivors/scuola.md](../survivors/scuola.md) |
 | Passo passo | `{ tipo: 'passo', protagonista, gradini }` | ogni ▶; un livello vinto chiude | [../passo-passo/scuola.md](../passo-passo/scuola.md) |
 | Il Robot | `{ tipo: 'robot', capitoli }` | ogni esecuzione; un livello vinto chiude | [../costruttore/scuola.md](../costruttore/scuola.md) |
+| English (senza audio) | `{ tipo: 'inglese', isola, tappe }` | ogni domanda; ognuna chiude | [../lingue/scuola.md](../lingue/scuola.md) |
+| Le Pozioni | `{ tipo: 'pozioni', famiglie, gradini }` | ogni dose; un ingrediente al segno chiude, un trabocco è un tentativo | [../pozioni/scuola.md](../pozioni/scuola.md) |
+| La cucina (svago) | `{ tipo: 'cucina', da, a }` | ogni resto contato dal bambino (dal livello 7) | [../bancarella/scuola.md](../bancarella/scuola.md) |
+| Il castello (svago) | `{ tipo: 'castello', tappa }` | ogni operazione in colonna; ognuna chiude | [../castello/scuola.md](../castello/scuola.md) |
+| Il sotterraneo | qualunque esercizio del catalogo tranne le prime lettere e le sillabe; dalla terza | ogni domanda (porta, forziere, fonte, colpo); ognuna chiude | [../sotterraneo/scuola.md](../sotterraneo/scuola.md) |
 
-Valutati e non ancora portati: English (senza audio, scelta dell'utente), le Pozioni, la Cucina e il castello (svago), il
-sotterraneo (una discesa breve nella cripta, dalla terza). Per i pesanti prima va diviso il sito online (sotto).
 
 ## Il peso
 
-Tutti i giochi stanno nel file dei bambini (le viste a richiesta, nel file unico, sono in linea comunque): con i quattro di sopra pesa 4,8 MB, sotto il tetto di 5. Il tetto di
-`vite.scuola.config.js` è per pagina; quando i giochi pesanti (English, il castello, il sotterraneo) arrivano, il sito
-online si divide in un pezzo per gioco e la chiavetta resta un file solo: [architettura.md](architettura.md).
+Tutti i giochi stanno nel file dei bambini (le viste a richiesta, nel file unico, sono in linea comunque). **Il peso non è
+un problema** (scelta dell'utente): niente sostituti per alleggerire, e il tetto di `vite.scuola.config.js` resta solo
+contro uno sbaglio grosso.
 
 Nei test: `unita/scuola-pacchetto` (la guardia legge `ammessi` di ogni gioco), `unita/scuola-sostituti` (anche i sostituti
 dei giochi), e il test di unità di ogni gioco sul suo limite.
