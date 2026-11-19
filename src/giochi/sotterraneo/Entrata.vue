@@ -12,14 +12,16 @@ import './stile-3d.css'
 
 // App.vue passa a tutte le schermate `disegno` e `lingua`: qui non devono cadere su Gioco
 defineOptions({ name: 'IlSotterraneo', inheritAttrs: false })
-const emit = defineEmits(['vai'])
+const emit = defineEmits(['vai', 'risposta'])
+// a scuola: passa al gioco (docs/sotterraneo/scuola.md)
+defineProps({ limite: { type: Object, default: null } })
 // `#sotterraneo&tela=niente`: per provare il messaggio su un browser che il WebGL ce l'ha
 const finto = typeof location !== 'undefined' && /(?:^#?|&)tela=niente(?:&|$)/.test(location.hash || '')
 const puo = ref(!finto && haWebGL2())
 </script>
 
 <template>
-  <Gioco v-if="puo" @vai="v => emit('vai', v)" />
+  <Gioco v-if="puo" :limite="limite" @vai="v => emit('vai', v)" @risposta="r => emit('risposta', r)" />
   <div v-else class="schermo">
     <Barra titolo="Il sotterraneo" scura @indietro="emit('vai', 'home')" />
     <div class="sot3d-senza" data-senza-3d>

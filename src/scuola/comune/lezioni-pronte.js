@@ -270,7 +270,7 @@ function scritta(anno, materia, [nome, allena, esercizio, misura, dopo]) {
 
 // dove un gioco vero accetta il primo blocco, la stessa lezione anche lì (e gli altri blocchi, se li accetta)
 function neiGiochi(p) {
-  return GIOCHI.filter(g => g.id !== 'schede' && giochiPer(p.blocchi[0].esercizio).some(x => x.id === g.id)).map(g => ({
+  return GIOCHI.filter(g => g.id !== 'schede' && (g.daAnno ?? 1) <= p.anno && giochiPer(p.blocchi[0].esercizio).some(x => x.id === g.id)).map(g => ({
     ...p, id: `${p.id}-${g.id}`, nome: `${p.nome} ${g.nei}`,
     blocchi: p.blocchi.map(b => ({ ...b, esercizio: conGioco(b.esercizio, g.id) })),
   }))

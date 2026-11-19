@@ -82,13 +82,14 @@ for (const anno of ANNI) {
     controlla(`${p.id}: nel gioco c'è anche la stessa nelle domande`, !!gemella && JSON.stringify(p.blocchi.map(b => senzaGioco(b.esercizio))) === JSON.stringify(gemella.blocchi.map(b => b.esercizio)))
   }
   for (const p of LEZIONI_PRONTE.filter(x => giocoDi(x.blocchi[0].esercizio) === 'schede')) {
-    for (const g of giochiPer(p.blocchi[0].esercizio).filter(x => x.id !== 'schede'))
+    for (const g of giochiPer(p.blocchi[0].esercizio).filter(x => x.id !== 'schede' && (x.daAnno ?? 1) <= p.anno))
       controlla(`${p.id}: il gioco «${g.nome}» accetta il primo blocco, e c'è la lezione lì`, LEZIONI_PRONTE.some(x => x.id === `${p.id}-${g.id}`))
   }
   const asteroidi = pronte({ gioco: 'asteroidi' })
   controlla('negli Asteroidi ci sono lezioni, tutte di matematica', asteroidi.length > 0 && asteroidi.every(p => p.materia === 'matematica'))
   stessaLista('in seconda la matematica si fa nelle domande, negli Asteroidi e in Survivors', giochiDi(2, 'matematica').map(g => g.id), ['schede', 'asteroidi', 'survivors'])
-  stessaLista('l\'italiano nelle domande e in Survivors', giochiDi(3, 'italiano').map(g => g.id), ['schede', 'survivors'])
+  stessaLista('l\'italiano in terza nelle domande, in Survivors e nel sotterraneo', giochiDi(3, 'italiano').map(g => g.id), ['schede', 'survivors', 'sotterraneo'])
+  controlla('il sotterraneo si propone dalla terza', !giochiDi(2, 'matematica').some(g => g.id === 'sotterraneo') && !giochiDi(2, 'italiano').some(g => g.id === 'sotterraneo'))
   controlla('ogni gioco proposto è un gioco vero', ANNI.every(a => materiePer(a).every(m => giochiDi(a, m.id).every(g => GIOCHI.includes(g)))))
 }
 

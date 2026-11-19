@@ -96,9 +96,13 @@ import './tema/barra.css'
 import './tema/rilievo.css'
 import { usaTema, ATTRIBUTO } from './tema/tema.js'
 import { fornisciAnteprime3d } from './viste/anteprima3d.js'
+import { limiteDi, domandaDelLimite, corredoDelLimite, tappaDelLimite, mondoDopoIlLimite, versoIlVillaggio, TAPPA_DEL_LIMITE } from './limite.js'
 
 defineOptions({ name: 'IlSotterraneo' })
-const emit = defineEmits(['vai'])
+const emit = defineEmits(['vai', 'risposta'])
+// a scuola (docs/sotterraneo/scuola.md): le domande da fuori, una cripta dopo l'altra, nessuna strada verso il villaggio
+const props = defineProps({ limite: { type: Object, default: null } })
+const lim = limiteDi(props.limite)
 
 const CHIAVE = 'sotterraneo'
 // il dito si lascia dietro un click che va ingoiato (vedi giochi/fattoria)
@@ -223,6 +227,7 @@ function scegli(k) {
   chiEro.value = ricorda(CHIAVE, 'eroe', k)
   scegliEroe.value = false
   suono.ok()
+  if (lim) return scendiNelLimite()
   nextTick(riprendiSeUscito)   // l'avventura scelta ha la discesa lasciata con la ✕? si riprende giù
 }
 
@@ -360,6 +365,7 @@ function scorda() {
 // una 'uscita', senza gemello, e rientrando si riprende giù (docs/sotterraneo/portale-e-sosta.md, «Il portale e l'uscita»)
 function salgoDalPortale() {
   if (inDueOra.value) return chiudi()   // in due il portale porta su e finisce la discesa (l'altro lo sa subito)
+  if (lim) return
   const c = corsa.value
   if (!c || c.finita) return
   const sale = c.foglio && c.foglio.chi
@@ -1511,7 +1517,7 @@ function avvia(i, { prova = false } = {}) {
 // quello da cui nuovaCorsa dipende: uguale, la corsa fatta prima è la stessa
 const firmaCorsa = i => { try { return JSON.stringify([i, eroeQui(), sessoQui.value, aspettoQui.value, roba.value, crescita.value, missioni.value, qui.value.conti, semeDallIndirizzo()]) } catch (e) { return String(Math.random()) } }
 function nuovaCorsa(i, prova = false) {
-  let t = i === INDICE_ABISSO ? L_ABISSO : nelMondo(i).tappa
+  let t = lim ? tappaDelLimite(eroeQui(), mondoQui.value) : i === INDICE_ABISSO ? L_ABISSO : nelMondo(i).tappa
   // `#scenario=ghiaccio` (solo col cheat che scende): la discesa vestita da quel paesaggio (dati/paesaggi.js), per guardarlo
   if (prova) t = inPaesaggio(t, new URLSearchParams(location.hash.slice(1)).get('scenario'))
   const c = new Corsa(t, { seme: semeDallIndirizzo() ?? t.seme ?? null, eroe: eroeQui(), sesso: sessoQui.value, aspetto: aspettoQui.value, roba: roba.value,
@@ -1624,6 +1630,7 @@ function siPerdeIl3d() {
   cancelAnimationFrame(raf)
   butta3d()
   perso3d.value = true
+  if (lim) emit('vai', 'home')   // a scuola chi monta il gioco torna alle schede
 }
 
 // il tempo lo tiene questo file, non il motore: passo(dt) è pura, e il banco può farla girare mille volte in un millisecondo
@@ -1719,7 +1726,7 @@ watch(() => { tic.value; return corsa.value?.chiesta?.id }, (id) => {
   if (!id) { domanda.value = null; return }
   const chiesta = corsa.value.chiesta
   try {
-    const q = domandaPerGioco({ difficolta: chiesta.difficolta, evita: ultimoModulo })
+    const q = domandaDelLimite(lim, chiesta, ultimoModulo, domandaPerGioco)
     if (!q?.domanda) throw new Error('nessun modulo di quiz')
     ultimoModulo = q.modulo
     domanda.value = q
@@ -1730,7 +1737,9 @@ watch(() => { tic.value; return corsa.value?.chiesta?.id }, (id) => {
   }
 })
 
-function risposto({ giusto, saltata }) {
+function risposto(e) {
+  const { giusto, saltata } = e
+  if (lim) emit('risposta', { ...e, domanda: domanda.value.domanda })   // prima che la domanda sparisca
   domanda.value = null
   // rispondere È il tocco che riprende: il freno può essersi acceso durante la domanda
   togli()
@@ -1988,6 +1997,7 @@ function chiudi({ senzaCartello = false } = {}) {
   // un dungeon del mondo ripulito (battuto il grosso, uscendo dalla scala in fondo) rientrando è un altro: un rifatti in più
   // nel mondo della terra di quella discesa (una sosta lasciata in un'altra terra torna lì)
   const tGiu = c.tappa && c.tappa.delMondo ? c.tappa.delMondo.terra : terraOra()
+  if (lim) return finitaNelLimite(c, tGiu)
   const dopo = dopoLaDiscesa(mondoDellaTerra(qui.value, tGiu), c.tappa, { ...e, grossoBattuto: !c.livello.robe.some(r => r.che === 'mostro' && r.grosso && !r.morto) })
   if (dopo.mondo) nelMondo3d(dopo.mondo, undefined, tGiu)
   // l'abisso non si butta (finisce la sera, non la discesa): si scrive il punto da cui si rientra
@@ -2041,6 +2051,7 @@ function ancora() {
   // dall'abisso si torna alla mappa: "ci riprovo" ricomincerebbe dal piano 1, buttando quello appena salvato; in due anche
   const allaFila = vinta || fine.value.abisso || fine.value.inDue
   fine.value = null
+  if (lim) return scendiNelLimite()
   if (allaFila) return allaMappa()
   avvia(tappaIdx.value)
 }
@@ -2064,6 +2075,7 @@ function allaMappa() {
 // è un portale, e la terra di sopra con i suoi mercanti non è dietro l'angolo per chi finge di uscire. Rientrando si
 // è già giù (riprendiSeUscito). Finita la discesa (il cartello di fine) la ✕ porta alla mappa, com'è giusto
 function indietro() {
+  if (lim) return togli()   // a scuola dal gioco non si esce
   if (salaAperta.value) return chiudiSala()
   if (inDueOra.value && corsa.value && !fine.value) return chiudi({ senzaCartello: true })   // l'altro lo sa subito
   if (sopra.value) { chiudiSopra({ lascia: true }); return emit('vai', 'home') }   // lo scontro di sopra: i rimasti aspettano lì
@@ -2082,7 +2094,7 @@ function indietro() {
 const perdendo = ref(false)
 function lascioPerdere() {
   perdendo.value = false
-  if (!corsa.value || corsa.value.finita || nellAbisso.value) return
+  if (!corsa.value || corsa.value.finita || nellAbisso.value || lim) return
   chiudi({ senzaCartello: true })
 }
 
@@ -2091,7 +2103,7 @@ function lascioPerdere() {
 // com'è e si apre la scelta; chiuderla senza scegliere riporta giù (chiudiLaScelta)
 function cambioEroeDaGiu() {
   const c = corsa.value
-  if (!c || c.finita) return
+  if (!c || c.finita || lim) return
   salva({ subito: true })
   allaMappa()
   scegliEroe.value = true
@@ -2290,7 +2302,7 @@ function scesaDaProva() {
   if (i === INDICE_ABISSO || (Number.isInteger(i) && i >= 0 && i < CAMPAGNA.length)) avvia(i, { prova: true })
   else if (CHIAVI_DEI_DUNGEON.includes(g)) avvia(g, { prova: true })   // `#sotterraneo=cerchio`: un dungeon del mondo per chiave
 }
-scesaDaProva()
+if (!lim) scesaDaProva()
 // `#bottega=armaiolo` (o `incantatrice`) apre subito quel banco (`&scheda=difese`), con l'eroe a `&livello=12` e `&roba=rara` (un raro per posto), `&roba=nuda`
 // o quella attesa dalla storia, `&gemme=800` e `&zaino=pozione,ampolla-vita` (le sole cose in tasca): per guardare la bottega senza camminare
 // fino al mercante (strumenti/scatta-app.mjs)
@@ -2307,8 +2319,25 @@ function bottegaDaProva() {
   nellAvventura({ roba: r, ...(L ? { crescita: crescitaA(eroeDi(eroeQui()), L) } : {}) })
   apriBottega(k, h.get('scheda'))
 }
-bottegaDaProva()
+if (!lim) bottegaDaProva()
 if (!scegliEroe.value && !corsa.value) riprendiSeUscito()
+if (lim && !scegliEroe.value && !corsa.value) scendiNelLimite()
+
+/* ═══════════ a scuola (docs/sotterraneo/scuola.md) ═══════════
+   Una cripta dopo l'altra con lo stesso eroe: la prima volta col corredo atteso, poi con quello che si è portato su */
+function scendiNelLimite() {
+  if (!cominciata(qui.value)) nellAvventura(corredoDelLimite(eroeQui()), { subito: true })
+  fine.value = null
+  avvia(TAPPA_DEL_LIMITE, { prova: true })
+}
+// finita, vinta o persa: niente storia, stelle né sosta, e la prossima è un'altra cripta
+function finitaNelLimite(c, terra) {
+  nelMondo3d(mondoDopoIlLimite(mondoDellaTerra(qui.value, terra)), undefined, terra)
+  scorda()
+  const e = c.esito
+  if (e.vinta) suono.livello(); else suono.fine()
+  fine.value = { vinta: e.vinta, titolo: c.tappa.nome, fatti: e }
+}
 
 onMounted(() => {
   if (corsa.value) nextTick(accendi)   // la tela esiste solo adesso
@@ -2342,14 +2371,14 @@ function ridimensiona() { if (pittore) pittore.misura() }
            :pausa="siGioca && !inDueOra" @pausa="metti()" @indietro="indietro">
       <!-- vita, gemme e zaino stanno nella barra in basso; attacco e difesa nella pagina dell'eroe (docs/sotterraneo/barra.md) -->
       <!-- in due: dalla terra di sopra (docs/sotterraneo/in-due.md) -->
-      <button v-if="!corsa && !sopra && !salaAperta" type="button" class="sot-in-due-apri" data-sfida-apri
+      <button v-if="!corsa && !sopra && !salaAperta && !lim" type="button" class="sot-in-due-apri" data-sfida-apri
               aria-label="Scendi con un amico" @click="sfida.apri()"><span class="em">👥</span></button>
     </Barra>
 
     <!-- l'aspetto dei pannelli in prova (`#tema=legno|rilievo`, docs/sotterraneo/tema-pannelli.md) -->
     <div ref="radice" class="sot" :class="{ 'sot-cambio-scheda': cambioScheda }" :data-tema="ATTRIBUTO[tema]">
       <!-- lo scontro di sopra (`sopra`) si gioca sul mondo, che resta montato: il pannello è quello delle discese (viste/ScontroSopra.vue) -->
-      <template v-if="!corsa || sopra">
+      <template v-if="(!corsa || sopra) && !lim">
         <!-- la chiave è l'eroe e la terra: cambiando avventura o terra il mondo di sopra rinasce con la nebbia e il posto suoi -->
         <Campagna ref="campagnaEl" :key="eroeQui() + ':' + terraOra()" :di="eroeQui() + ':' + terraOra()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
                   :roba="robaSopra" :mondo="mondoQui" @mondo="ricordaMondo" :dungeon="dungeonDelMondo" :terre="porta" @terre="allaTerra"
@@ -2403,6 +2432,14 @@ function ridimensiona() { if (pittore) pittore.misura() }
             <template #scelte><SceltaInDue v-model:posto="postoInDue" v-model:difficolta="difficoltaInDue" /></template>
           </SalaSfida>
         </div>
+      </template>
+
+      <!-- a scuola, fuori dalla discesa: la scelta dell'eroe (una volta) o il velo per scendere ancora; mai il mondo di sopra -->
+      <template v-else-if="!corsa">
+        <Eroi v-if="scegliEroe" :avventure="avventure" :scelto="chiEro || ''" :primo="!chiEro"
+              @scegli="scegli" @chiudi="chiudiLaScelta" @personaggio="k => apriEditor(k)" />
+        <Personaggio v-if="schedaEditor" :eroe="schedaEditor" :sesso="schedaEditor.sesso" :aspetto="schedaEditor.aspettoScelto" :vestiti="schedaEditor.vestiti"
+                     @scegli="sceglieSesso" @aspetto="sceglieAspetto" @salva-set="salvaVestito" @rinomina-set="rinominaVestito" @togli-set="togliVestito" @chiudi="editor = null" />
       </template>
 
       <template v-else>
@@ -2504,7 +2541,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
               </div>
               <div class="sot-domanda">
                 <Domanda :domanda="domanda.domanda" :pittori="domanda.pittori"
-                         :origine="domanda" gioco="sotterraneo" :respiro="900"
+                         :origine="lim ? null : domanda" :titolo="lim ? domanda.titolo : ''" gioco="sotterraneo" :respiro="900"
                          @risposto="risposto" />
               </div>
             </template>
@@ -2514,7 +2551,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <Foglio v-else-if="foglio && foglio.che === 'porta'" em="🚪" titolo="Una porta chiusa">
           <div v-if="domanda" class="sot-domanda">
             <Domanda :domanda="domanda.domanda" :pittori="domanda.pittori"
-                     :origine="domanda" gioco="sotterraneo" :respiro="900"
+                     :origine="lim ? null : domanda" :titolo="lim ? domanda.titolo : ''" gioco="sotterraneo" :respiro="900"
                      @risposto="risposto" />
           </div>
           <button class="sot-grosso sot-chiaro" data-azione="dopo" @click="chiudiFoglio">
@@ -2529,7 +2566,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
                                            : 'Una domanda sola: sbagliata, resta chiuso per sempre.'">
           <div v-if="domanda" class="sot-domanda">
             <Domanda :domanda="domanda.domanda" :pittori="domanda.pittori"
-                     :origine="domanda" gioco="sotterraneo" :respiro="900"
+                     :origine="lim ? null : domanda" :titolo="lim ? domanda.titolo : ''" gioco="sotterraneo" :respiro="900"
                      @risposto="risposto" />
           </div>
           <button class="sot-grosso sot-chiaro" data-azione="dopo" @click="chiudiFoglio">
@@ -2541,7 +2578,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
                 dice="Acqua limpida e fredda: rimette in forze.">
           <div v-if="domanda" class="sot-domanda">
             <Domanda :domanda="domanda.domanda" :pittori="domanda.pittori"
-                     :origine="domanda" gioco="sotterraneo" :respiro="900"
+                     :origine="lim ? null : domanda" :titolo="lim ? domanda.titolo : ''" gioco="sotterraneo" :respiro="900"
                      @risposto="risposto" />
           </div>
           <button class="sot-grosso sot-chiaro" data-azione="dopo" @click="chiudiFoglio">
@@ -2566,13 +2603,19 @@ function ridimensiona() { if (pittore) pittore.misura() }
           <template v-else>
             <div v-if="domanda" class="sot-domanda">
               <Domanda :domanda="domanda.domanda" :pittori="domanda.pittori"
-                       :origine="domanda" gioco="sotterraneo" :respiro="900"
+                       :origine="lim ? null : domanda" :titolo="lim ? domanda.titolo : ''" gioco="sotterraneo" :respiro="900"
                        @risposto="risposto" />
             </div>
             <button class="sot-grosso sot-chiaro" data-azione="dopo" @click="chiudiFoglio">
               lascio perdere
             </button>
           </template>
+        </Foglio>
+
+        <!-- a scuola il portale e la scala che sale dal primo piano non portano su: oggi si resta giù -->
+        <Foglio v-else-if="lim && versoIlVillaggio(foglio)" :em="foglio.che === 'portale' ? '🌀' : '🪜'"
+                :titolo="foglio.che === 'portale' ? 'Un portale' : 'La scala che sale'" dice="Porta al villaggio, ma oggi si resta giù." data-chiuso-limite>
+          <button class="sot-grosso" data-azione="dopo" @click="chiudiFoglio">resto qui</button>
         </Foglio>
 
         <!-- il portale: niente domanda, è la strada di casa; il piano resta com'è -->
@@ -2662,7 +2705,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <Preparati v-else-if="preparatiAperti" :voci="preparabiliVisti" :energia="eroe.energia" :energia-max="eroe.energiaMax" :punti-abilita="barra.puntiAbilita"
                    @prepara="preparaDalCampo" @albero="apriPaginaEroe('abilita')" @chiudi="preparatiAperti = false" @fuori="toccoFuori" />
 
-        <Fine v-if="fine" v-bind="fine" @ancora="ancora" @esci="allaMappa" />
+        <Fine v-if="fine && !lim" v-bind="fine" @ancora="ancora" @esci="allaMappa" />
         <!-- quale pozione bere, con più stadi: sopra a tutto, anche allo scontro (docs/sotterraneo/roba.md, «Le pozioni») -->
         <ScegliPozione v-if="sceltaPozione && scelteDiPozione.length > 1" :scelte="scelteDiPozione" :manca="eroe.vitaMax - eroe.vita"
                        :nello-scontro="!!(foglio && foglio.che === 'scontro')"
@@ -2685,14 +2728,23 @@ function ridimensiona() { if (pittore) pittore.misura() }
       <!-- sta in fondo e fuori da tutto: la domanda e il cartello di fine hanno già la loro pausa -->
       <VeloPausa v-if="inPausa && siGioca && !perdendo" :dove="dovEravamo" @riprendi="togli" @esci="indietro">
         <!-- da qui si può anche cambiare eroe, o lasciar perdere la discesa e risalire; nell'abisso la strada su è il portale -->
-        <button v-if="!sopra" type="button" class="sot-lascia" data-azione="eroe-giu" @click.stop="cambioEroeDaGiu">
+        <button v-if="!sopra && !lim" type="button" class="sot-lascia" data-azione="eroe-giu" @click.stop="cambioEroeDaGiu">
           scelgo un altro eroe
         </button>
-        <button v-if="!nellAbisso && !sopra" type="button" class="sot-lascia" data-azione="lascia-discesa" @click.stop="perdendo = true">
+        <button v-if="!nellAbisso && !sopra && !lim" type="button" class="sot-lascia" data-azione="lascia-discesa" @click.stop="perdendo = true">
           lascio perdere questa discesa
         </button>
       </VeloPausa>
       <LascioPerdere v-if="perdendo && siGioca" :nome="titolo" giu @si="lascioPerdere" @no="perdendo = false" />
+      <!-- a scuola, finita una discesa (o fuori da una senza volerlo): si scende ancora, con lo stesso eroe -->
+      <div v-if="lim && !scegliEroe && !schedaEditor && (fine || !corsa)" class="sot-velo sot-fine-limite" data-fine-limite>
+        <div class="sot-modale">
+          <h2><span class="em">🕯️</span> Discesa finita</h2>
+          <p v-if="fine">{{ fine.vinta ? 'Sei uscito dalla cripta!' : 'Ti hanno portato su: la cripta ti aspetta.' }}</p>
+          <p v-if="fine" class="em">⚔️ {{ fine.fatti.mostri || 0 }} · 💎 {{ fine.fatti.gemme || 0 }}</p>
+          <button type="button" class="sot-grosso" data-azione="scendi-ancora" @click="scendiNelLimite">Scendi ancora ▶</button>
+        </div>
+      </div>
       <!-- il 3D si è fermato (la scheda video ha perso il contesto): la discesa è salvata, si esce pulito -->
       <div v-if="perso3d" class="sot3d-senza sot3d-perso" data-perso-3d>
         <h1>Il disegno si è fermato</h1>
