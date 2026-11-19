@@ -20,7 +20,7 @@ import { ref, reactive, computed, watch, nextTick, onMounted, onBeforeUnmount } 
 import { state, answer, tdProgresso, tdCompleta,
          segna, segnaBest, divisioniAccese, tuttoAperto,
          guidaGiaVista, segnaGuidaVista } from '../store/profile.js'
-import { saltaLeSpiegazioni } from '../guide/aiuto.js'
+import { saltaLeSpiegazioni } from './castello/spiegazioni.js'
 import { usaPausa } from '../giochi/pausa.js'
 import { primatoDi, segnaPrimato, regaliDi, regaloPreso,
          sosta, salvaSosta, buttaSosta } from '../giochi/campagne.js'
@@ -53,9 +53,13 @@ import FineTappa from '../components/castello/FineTappa.vue'
 import Regalo from '../components/castello/Regalo.vue'
 import Potenziamenti from '../components/castello/Potenziamenti.vue'
 import { Cassa } from './castello/cassa.js'
+import { tappaDelLimite, raccontaConto } from './castello/limite.js'
 import { suono } from '../audio.js'
 
-const emit = defineEmits(['vai'])
+const emit = defineEmits(['vai', 'risposta'])
+// a scuola: `{ tappa: 'bosco/Il sentiero' }`, e si gioca solo quella (docs/castello/scuola.md); a casa manca
+const props = defineProps({ limite: { type: Object, default: null } })
+const tappaScuola = tappaDelLimite(props.limite)      // l'indice della tappa, o null
 
 const fase = ref('mappa')          // mappa | gioco | vinta | trionfo | fine
 
@@ -306,9 +310,10 @@ function operazioneFinita({ errori, ms, saltata = false }) {
   const t = scelta.value, torre = bersaglio.value
   // il tasto «salta» dei grandi (docs/core/comandi.md): la torre sale e paga come un conto pulito, ma nessuno ha risposto
   if (!saltata) answer(cassa.chiave(t), { correct: errori === 0, ms })
-  if (errori === 0 && !saltata) segna('perfette')
-  // un conto senza errori è una risposta giusta, e si paga adesso (docs/apprendimento/calibrazione.md)
-  const presi = errori === 0 ? borsellino.paga(PAGA.operazione) : 0
+  if (tappaScuola !== null && !saltata) emit('risposta', raccontaConto(op.value, cassa.chiave(t), { errori, ms }))
+  if (errori === 0 && !saltata && tappaScuola === null) segna('perfette')
+  // un conto senza errori è una risposta giusta, e si paga adesso (docs/apprendimento/calibrazione.md); a scuola niente monete
+  const presi = errori === 0 && tappaScuola === null ? borsellino.paga(PAGA.operazione) : 0
   monete.prese = borsellino.dato
   // il conto: il prezzo pattuito più una penale per ogni errore. Si paga in
   // energia, non in vite: sbagliare rallenta la difesa, non la fa crollare.
@@ -352,6 +357,7 @@ const eventi = {
   },
   /* il motore conta quello che succede, il profilo sa cosa farsene */
   segna: (che, valore) => {
+    if (tappaScuola !== null) return
     if (che === 'onda-massima') segnaBest('onda', valore)
     else segna(che)
   },
@@ -444,6 +450,7 @@ function finita(esito) {
 /* la tappa è superata quando l'ultima ondata è finita e il campo è pulito */
 function tappaSuperata() {
   if (!campagna.value) return           // la partita libera non finisce mai
+  if (tappaScuola !== null) { fase.value = 'vinta'; suono.livello(); return }   // a scuola niente avanzamento né traguardi
   const ultima = tappaIdx.value === TAPPE.length - 1
   // niente premio di tappa: ogni conto si è già pagato quando la torre è salita
   const p = tdCompleta(tappaIdx.value, TAPPE.length)
@@ -485,12 +492,12 @@ const laRipresa = () => {
   return { emoji: d.emoji, nome: d.nome,
            dettaglio: `⚔️ ${dove} · ❤️ ${d.cuori} · ⚡ ${d.energia} · 🏰 ${d.torri} ${d.torri === 1 ? 'torre' : 'torri'}` }
 }
-const ripresa = ref(laRipresa())
+const ripresa = ref(tappaScuola === null ? laRipresa() : null)
 const chiede = ref(null)           // { nome, i, quale }: la partita nuova che butterebbe quella a metà
 
 function salva({ subito = false } = {}) {
   const m = motore()
-  if (fase.value !== 'gioco' || !m) return
+  if (fase.value !== 'gioco' || !m || tappaScuola !== null) return      // a scuola niente sosta
   salvaSosta(CHIAVE, scrivi(m, tappaIdx.value, {
     monete: { chiesto: borsellino.chiesto, dato: borsellino.dato }, velocita: velocita.value,
   }), { subito })
@@ -566,7 +573,7 @@ function allaMappa() {
 }
 
 onMounted(() => {
-  tappaIdx.value = Math.min(TAPPE.length - 1, progresso.value.tappa)
+  tappaIdx.value = tappaScuola ?? Math.min(TAPPE.length - 1, progresso.value.tappa)
   cassa.perTappa(tappa.value)
   regali.value = regaliDi('torri')
   campo.value.apparecchia(tappa.value, tappaIdx.value + 1)
@@ -607,6 +614,7 @@ onMounted(() => {
                   LIBERE, liberaScelta,
                   // aggancio per i test: apre un'operazione a un livello preciso
                   forzaOp: (t, lv) => { scelta.value = t; op.value = cassa.operazioneA(t, lv) } }
+  if (tappaScuola !== null) inizia(tappaScuola)      // niente regno: si parte nella tappa
 })
 </script>
 
@@ -615,7 +623,7 @@ onMounted(() => {
     <!-- il ⏸ c'è solo dove il campo cammina -->
     <Barra titolo="Castello" guida="torri" @aiuto="aiuto"
            :pausa="fase === 'gioco' && !state.festa.length" @pausa="metti()"
-           :monete="fase !== 'gioco'" @indietro="esci">
+           :monete="fase !== 'gioco' && tappaScuola === null" @indietro="esci">
       <GettoniCampo v-if="fase === 'gioco'" :hud="hud" :velocita="velocita"
                     :ondate="campagna ? tappa.ondate : ''" @velocita="cambiaVelocita" />
     </Barra>
@@ -674,6 +682,14 @@ onMounted(() => {
                  :amici="amiciSugliScudi" :amici-al-centro="amiciAlCentro"
                  @gioca="i => vuoleIniziare(i)" @libera="quale => vuoleIniziare(-1, quale)" />
         </template>
+        <!-- a scuola: niente mappa, monete né tappa dopo, e vinta o persa si riparte -->
+        <div v-else-if="tappaScuola !== null" class="fine-limite" data-fine-limite>
+          <h2>{{ fase === 'fine' ? 'Il castello è caduto' : `${tappa.emoji} Tappa superata!` }}</h2>
+          <p class="testo">{{ tappa.emoji }} {{ tappa.nome }}: ondate superate
+            <b>{{ fase === 'fine' ? hud.onda - 1 : tappa.ondate }}</b> su {{ tappa.ondate }} · nemici fermati:
+            <b>{{ hud.uccisi }}</b> · torri costruite: <b>{{ hud.torri }}</b></p>
+          <div class="riga"><button class="bottone" data-azione="riparti" @click="inizia(tappaScuola)">Riparti ▶</button></div>
+        </div>
         <FineTappa v-else :fase="fase" :tappa="tappa" :prossima="prossima" :hud="hud"
                    :monete="monete.prese" :nota-monete="monete.nota" :quante="TAPPE.length" :campagna="campagna"
                    :divisioni="divisioni" :primato="primato" :amici="controAmici"

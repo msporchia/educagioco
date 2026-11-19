@@ -15,6 +15,7 @@ pagina per chi arriva da fuori e i documenti per chi ci lavora.
 - [campagne.md](campagne.md) — le venti tappe, perché i percorsi sono quelli, le tappe a più bocche, i terreni, i salvataggi
 - [libere.md](libere.md) — le quattro partite libere, come si tarano, i regali e quanto valgono
 - [sosta.md](sosta.md) — la battaglia lasciata a metà: cosa si salva, cosa no, e quando
+- [scuola.md](scuola.md) — il castello a scuola, come svago: la tappa scelta dalla maestra, il `limite` e la risposta di ogni conto
 - [da-fare.md](da-fare.md) — le voci aperte
 
 Vedi anche: [`../apprendimento/calibrazione.md`](../apprendimento/calibrazione.md)
