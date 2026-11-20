@@ -1,7 +1,7 @@
 /* LA LEZIONE A BLOCCHI — la forma, le soglie, dove sta un bambino, le lezioni di prima convertite.
    Vedi docs/scuola/lezione.md. `node test/esegui.mjs scuola-lezione --niente-build` */
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
-import { lezioneValida, passaValido, descriviPassa, convertiLezione, posizione, finita, bloccoDi, superato, MAX_BLOCCHI }
+import { lezioneValida, passaValido, descriviPassa, convertiLezione, posizione, finita, bloccoDi, superato, MAX_BLOCCHI, alleDomande }
   from '../../src/scuola/comune/lezione.js'
 
 const NOVE = { tipo: 'tabelline', tabelline: [9], modo: 'prodotto' }
@@ -48,6 +48,17 @@ console.log('\nDOVE STA UN BAMBINO')
   controlla('le domande contano le fatte', superato({ domande: 4 }, { fatte: 4, giuste: 0 }, 0))
   controlla('i minuti contano dall\'inizio del blocco', superato({ minuti: 2 }, { inizio: 1000 }, 1000 + 120_000) && !superato({ minuti: 2 }, { inizio: 1000 }, 1000 + 119_999))
   controlla('quando lo dice la maestra non passa mai da solo', !superato(null, { fatte: 999, giuste: 999, inizio: 0 }, 1e12))
+}
+
+console.log('\nTUTTI ALLE DOMANDE')
+{
+  const PASSO = { tipo: 'passo', protagonista: 'coniglio', gradini: ['passi'] }
+  const l = lez([{ esercizio: { ...NOVE, gioco: 'asteroidi', difficolta: 'facile' }, passa: { giuste: 3 } }, { esercizio: OROLOGIO, passa: null }, { esercizio: PASSO, passa: null }])
+  const { lezione: d, restano } = alleDomande(l)
+  stessaLista('il blocco degli Asteroidi lascia il gioco e la difficoltà', d.blocchi[0], { esercizio: NOVE, passa: { giuste: 3 } })
+  stessaLista('quello a schede resta com\'è', d.blocchi[1], l.blocchi[1])
+  controlla('quello che c\'è solo nel gioco resta, e si conta', d.blocchi[2] === l.blocchi[2] && restano === 1)
+  controlla('ed è ancora valida', lezioneValida(d))
 }
 
 riassunto('la lezione a blocchi')

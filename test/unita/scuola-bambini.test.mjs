@@ -199,4 +199,25 @@ console.log('\nIL RICORDO')
   uguale('senza localStorage: null', G.leggiRicordo(ora, null), null)
 }
 
+console.log('\nI RIPIEGHI')
+{
+  const s = { ...st('via', { id: 'a1', nome: 'Lorenzo', avanti: 1, domande: false }), avanti: 0 }
+  uguale('il pavimento è il più alto fra «Avanti tutti» e il suo «Salta»', G.pavimento(s), 1)
+  uguale('col suo pavimento passa al blocco 2, col passaggio come per «Avanti tutti»', G.schermata({ codice: 'ABCDE', stato: s, cammino: c0(0) }), 'passaggio')
+  uguale('e lì comincia, senza passaggio', G.camminoDi(null, s).p, 1)
+  const c = G.salta(c0(0, { conto: { fatte: 2, giuste: 1, inizio: 5 } }), 0)
+  controlla('«Salta al blocco dopo» dal menu: un blocco avanti, conto da capo, niente passaggio', c.p === 1 && c.visto === 1 && c.conto.fatte === 0)
+  uguale('saltare l\'ultimo finisce la lezione', G.schermata({ codice: 'ABCDE', stato: st('via'), cammino: G.salta(c, 0) }), 'finito')
+  const senza = G.statoDa(G.statoSenzaLezione(L))
+  uguale('senza lezione: si parte dal primo blocco', G.schermata({ codice: G.SENZA, stato: senza, cammino: null }), 'blocco')
+  const a = new Archivio(), ora = 1e12
+  G.ricorda({ codice: null, locale: true, nato: ora, stato: senza, cammino: c0(1) }, a)
+  const r = G.leggiRicordo(ora + 1000, a)
+  controlla('senza lezione si ricorda anche a pagina riaperta', r?.locale === true && r.stato.lezione.nome === 'Prova' && r.cammino.p === 1)
+  a.setItem(G.RICORDO, JSON.stringify({ forma: 'blocchi', codice: null, locale: true, nato: ora, stato: { ...senza, lezione: { id: 'x' } }, cammino: null }))
+  uguale('una lezione storta senza lezione è nessun ricordo', G.leggiRicordo(ora, a), null)
+  controlla('statoDa porta rifatta e il pavimento suo', G.statoDa({ fase: 'via', lezione: L, rifatta: 2, io: { id: 'a1', nome: 'x', avanti: 3, domande: true } }).rifatta === 2
+    && G.statoDa({ fase: 'via', lezione: L, io: { id: 'a1', nome: 'x', avanti: 3, domande: true } }).io.avanti === 3)
+}
+
 riassunto('il giro del bambino a scuola')

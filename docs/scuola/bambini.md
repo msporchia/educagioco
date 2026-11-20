@@ -37,7 +37,8 @@ bambino (sotto).
 
 Il cammino è `{ alunno, p, visto, conto: { fatte, giuste, inizio } }`: `p` la posizione propria (i blocchi superati,
 [lezione.md](lezione.md)), `visto` la posizione in cui il bambino ha toccato «Continua», `conto` le domande chiuse del
-blocco in corso. Il bambino sta in `posizione(p, stato.avanti)`; se `visto` è indietro si vede il passaggio.
+blocco in corso. Il bambino sta in `posizione(p, pavimento(stato))` (il più alto fra `avanti` e il suo `io.avanti`); se
+`visto` è indietro si vede il passaggio.
 
 - **Da solo**: a ogni domanda chiusa il conto cresce (`fatte`, e `giuste` se giusta); quando `superato(passa, conto, ora)`
   la posizione sale di uno, il conto riparte e si vede il passaggio (o `finito`). Una sbagliata conta fra le domande,
@@ -126,6 +127,8 @@ Due chiavi in localStorage, tutte e due sotto `scuola:` con un campo `nato`: `re
 - localStorage vietato o pieno: si va avanti senza ricordo (ogni accesso è in un `try`).
 
 ## Quando la rete cade
+
+I ripieghi della maestra (il tasto «Maestra», «Senza lezione», le pagine che si riaprono) stanno in [ripieghi.md](ripieghi.md).
 
 - **Il bambino non si ferma**: le domande vengono dal PC, le risposte vanno nella coda di `rete.js` e partono
   al rientro. Niente errori rossi, niente blocchi.

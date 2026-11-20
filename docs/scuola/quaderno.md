@@ -157,8 +157,10 @@ dopo («Hai finito!», si resta lì fino ad «Avanti tutti», o si ricomincia). 
 - **Le giuste e le fatte del blocco in corso**, di questo giro, con la soglia se il blocco passa da solo («6 giuste
   su 10»).
 - **«Avanti tutti»** c'è sempre in fase `via` e chiama `avanti()` di [protocollo.md](protocollo.md); accanto dice dove
-  porta chi è più indietro e quante volte è stato premuto (`diretta.avanti`, da `tutto` e da `avanti`). È spento
-  solo quando senza «in tondo» tutti hanno già passato l'ultimo blocco.
+  porta chi è più indietro fra i collegati (come lo calcola il servizio). È spento solo quando senza «in tondo» tutti
+  hanno già passato l'ultimo blocco.
+- **«Se qualcosa non va»**: «Cambia la lezione», «Tutti alle domande», il codice per i PC; sotto ogni nome «Salta il
+  blocco» e «Le domande». Tutto in [ripieghi.md](ripieghi.md).
 
 ## «Nuova lezione»: il percorso guidato
 
@@ -188,7 +190,7 @@ file e il link di prima dei blocchi) e `unita/scuola-lezioni-pronte`. Bersagli: 
 nel percorso `[data-percorso]`, `[data-passo="anno"|"materia"|"gioco"|"lezioni"]`, `[data-anno=<n>]`, `[data-materia=<id>]`,
 `[data-gioco=<id>]`, `[data-pronta=<id>]`; nella lezione `[data-diretta]`, `[data-linea]`,
 `[data-sala]`, `[data-codice]`, `[data-alunno=<id>]` (con `data-preso` in sala e `data-dove` nel pannello: la
-posizione col pavimento, `finito` o vuoto), `[data-blocco-in-corso]`, `[data-avanti=<volte>]`,
+posizione col pavimento, `finito` o vuoto), `[data-blocco-in-corso]`, `[data-avanti=<pavimento>]`,
 `[data-pannello]`, `[data-messaggio]`; nel resoconto `[data-resoconto]`, `[data-tabella-resoconto]` (una cella `[data-blocco=<i>]` per blocco),
 `[data-piu-sbagliate]`, `[data-esito-recupero]`; nello storico `[data-storico-di="classe"|"bambino"]`, `[data-voce]`,
 `[data-sbaglia]`. I tasti: `[data-azione="…"]` con `nuova-classe`, `modifica-classe`, `salva-classe`,

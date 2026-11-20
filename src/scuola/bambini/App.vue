@@ -8,6 +8,8 @@ import * as G from './giro.js'
 import Codice from './viste/Codice.vue'
 import Nomi from './viste/Nomi.vue'
 import Domande from './viste/Domande.vue'
+import MenuMaestra from './viste/MenuMaestra.vue'
+import SenzaLezione from './viste/SenzaLezione.vue'
 import { VISTE } from '../giochi/viste.js'
 import { SCHEDE } from '../giochi/elenco.js'
 
@@ -16,6 +18,10 @@ const PAZIENZA = 3000      // prima di dire «Sto ricollegando…» al primo col
 const BATTITO = 2000       // ogni quanto si rilegge l'orologio per i minuti che restano
 
 const codice = ref(null)
+const locale = ref(false)        // senza lezione: la maestra l'ha fatta partire sul PC, niente servizio (docs/scuola/ripieghi.md)
+const preparo = ref(false)       // la maestra sta scegliendo cosa far partire senza lezione
+const menu = ref(false)
+const avvisoMenu = ref('')
 const nato = ref(0)
 const stato = ref(null)          // { fase, lezione, avanti, io, alunni }: l'ultimo dal servizio, o quello ricordato
 const cammino = ref(null)        // { alunno, p, visto, conto }: dove sta questo bambino
@@ -37,21 +43,29 @@ function cèWebGL() {
   } catch { webgl = false }
   return webgl
 }
-const senzaGioco = ref(false)
+const guastoGioco = ref(false)   // il gioco non è partito su questo PC: da lì in poi le schede
+const senzaGioco = ref(false)    // le domande al posto del gioco, scelte dal menu della maestra
 
-const schermo = computed(() => G.schermata({ codice: codice.value, stato: stato.value, cammino: cammino.value }))
+const schermo = computed(() => (preparo.value ? 'senza'
+  : G.schermata({ codice: codice.value || (locale.value ? G.SENZA : null), stato: stato.value, cammino: cammino.value })))
 const io = computed(() => stato.value?.io || null)
 const lezione = computed(() => stato.value?.lezione || null)
 // la posizione e il blocco in cui sta, nelle schermate della lezione
-const pos = computed(() => (io.value ? posizione(G.camminoDi(cammino.value, stato.value).p, stato.value.avanti) : 0))
+const pos = computed(() => (io.value ? posizione(G.camminoDi(cammino.value, stato.value).p, G.pavimento(stato.value)) : 0))
+const pav = computed(() => G.pavimento(stato.value))
 const blocco = computed(() => (schermo.value === 'blocco' || schermo.value === 'passaggio' ? lezione.value.blocchi[bloccoDi(lezione.value, pos.value)] : null))
 const segno = computed(() => (schermo.value === 'blocco' ? G.segno(blocco.value.passa, G.camminoDi(cammino.value, stato.value).conto, ora.value) : ''))
-const ricollego = computed(() => !!codice.value && !collegato.value && pazienza.value && schermo.value !== 'chiusa')
+const ricollego = computed(() => !!codice.value && !locale.value && !collegato.value && pazienza.value && schermo.value !== 'chiusa')
 // il gioco del blocco (docs/scuola/giochi.md); un esercizio col contenuto di un gioco non ha le schede come ripiego
 const gioco = computed(() => giocoDi(blocco.value?.esercizio))
 const scheda = computed(() => SCHEDE.find(s => s.id === gioco.value) || null)
 const soloNelGioco = computed(() => !!scheda.value?.tipo && blocco.value?.esercizio?.tipo === scheda.value.tipo.id)
-const inGioco = computed(() => !!VISTE[gioco.value] && !senzaGioco.value && (!scheda.value?.tred || cèWebGL()))
+// le domande al posto del gioco: dal menu sul PC, o la maestra dal suo pannello per lui solo
+const domande = computed(() => senzaGioco.value || !!io.value?.domande)
+// (un esercizio che c'è solo nel gioco resta nel gioco: le domande non ci sono)
+const inGioco = computed(() => !!VISTE[gioco.value] && !guastoGioco.value && !(domande.value && !soloNelGioco.value) && (!scheda.value?.tred || cèWebGL()))
+// la vista si rifà a ogni blocco, e quando la maestra cambia la lezione in corso
+const chiaveVista = computed(() => `${stato.value?.rifatta ?? 0}-${pos.value}`)
 
 function chiudiRete() {
   rete?.chiudi()
@@ -61,6 +75,8 @@ function chiudiRete() {
 
 function entra(c, ricordo = null) {
   chiudiRete()
+  locale.value = false
+  preparo.value = false
   codice.value = c
   nato.value = ricordo?.nato ?? Date.now()
   stato.value = ricordo?.stato ?? null
@@ -87,8 +103,42 @@ function esci() {
   chiudiRete()
   G.dimentica()
   codice.value = null
+  locale.value = false
   stato.value = null
   cammino.value = null
+  menu.value = false
+  senzaGioco.value = false
+}
+
+/* senza lezione: uno stato come quello del servizio, già via, e nessun collegamento */
+function entraSenza(lezione, ricordo = null) {
+  chiudiRete()
+  preparo.value = false
+  codice.value = null
+  locale.value = true
+  nato.value = ricordo?.nato ?? Date.now()
+  stato.value = ricordo?.stato ?? G.statoDa(G.statoSenzaLezione(lezione))
+  cammino.value = ricordo?.cammino ?? null
+  senzaGioco.value = false
+}
+
+/* ── il menu della maestra (docs/scuola/ripieghi.md) ── */
+const nelBlocco = computed(() => schermo.value === 'blocco' || schermo.value === 'passaggio')
+const conGioco = computed(() => nelBlocco.value && gioco.value !== 'schede' && !soloNelGioco.value)
+function apriMenu() { avvisoMenu.value = ''; menu.value = true }
+function menuDomande() { senzaGioco.value = !senzaGioco.value; menu.value = false }
+function menuSalta() {
+  cammino.value = G.salta(G.camminoDi(cammino.value, stato.value), pav.value)
+  menu.value = false
+}
+function menuNome() {
+  if (!rete?.lascia()) { avvisoMenu.value = 'Non c\'è linea: riprova fra un attimo, o libera il nome dalla pagina della maestra.'; return }
+  cammino.value = null
+  menu.value = false
+}
+function menuEsci() {
+  if (!locale.value) rete?.lascia()
+  esci()
 }
 
 function scegli(chi) {
@@ -119,9 +169,9 @@ function continua() {
 }
 
 // il nome cambia (scelto, o liberato dalla maestra) o la maestra preme «Avanti tutti»: il cammino è di quel nome, al passo col pavimento
-watch([() => io.value?.id, () => stato.value?.avanti], ([id], [prima]) => {
+watch([() => io.value?.id, pav], ([id], [prima]) => {
   if (id !== prima) { scelgo.value = false; avviso.value = '' }
-  if (id) cammino.value = G.segui(cammino.value, id, stato.value.avanti)
+  if (id) cammino.value = G.segui(cammino.value, id, pav.value)
 })
 
 // entrando in un blocco il tempo parte; a minuti, una soglia già passata (pagina riaperta tardi) porta al blocco dopo
@@ -130,16 +180,17 @@ watch([schermo, pos], ([s]) => {
 })
 
 // alla maestra: la posizione a ogni cambio di blocco, «finito» a lezione finita
-const dove = computed(() => (schermo.value === 'blocco' || schermo.value === 'passaggio' ? pos.value : schermo.value === 'finito' ? 'finito' : null))
+const dove = computed(() => (nelBlocco.value ? pos.value : schermo.value === 'finito' ? 'finito' : null))
 watch(dove, d => { if (d !== null) rete?.dove(d) })
 
 watch([codice, stato, cammino], () => {
-  G.ricorda({ codice: codice.value, nato: nato.value, stato: stato.value, cammino: cammino.value })
+  G.ricorda({ codice: codice.value, locale: locale.value, nato: nato.value, stato: stato.value, cammino: cammino.value })
 })
 
 onMounted(() => {
   const r = G.leggiRicordo(Date.now())
-  if (r) entra(r.codice, r)
+  if (r?.locale) entraSenza(r.stato.lezione, r)
+  else if (r) entra(r.codice, r)
   battito = setInterval(() => { ora.value = Date.now() }, BATTITO)
 })
 onUnmounted(() => { chiudiRete(); clearInterval(battito) })
@@ -147,13 +198,15 @@ onUnmounted(() => { chiudiRete(); clearInterval(battito) })
 
 <template>
   <div class="schermo pulito scuola" :data-schermata="schermo">
-    <header v-if="io && schermo !== 'chiusa'" class="testa">
+    <header v-if="io && schermo !== 'chiusa' && (io.nome || segno)" class="testa">
       <span class="chi">{{ io.nome }}</span>
       <span v-if="ricollego" class="ricollego" data-ricollego>Sto ricollegando…</span>
       <span v-if="segno" class="segno" data-segno>{{ segno }}</span>
     </header>
 
-    <Codice v-if="schermo === 'codice'" @entra="entra" />
+    <Codice v-if="schermo === 'codice'" @entra="entra" @senza="preparo = true" />
+
+    <SenzaLezione v-else-if="schermo === 'senza'" @via="l => entraSenza(l)" @annulla="preparo = false" />
 
     <div v-else-if="schermo === 'collego'" class="centro" data-collego>
       <p class="frase">Mi collego alla classe…</p>
@@ -173,12 +226,12 @@ onUnmounted(() => { chiudiRete(); clearInterval(battito) })
     </div>
 
     <div v-else-if="schermo === 'blocco'" class="dentro" data-domanda :data-blocco="bloccoDi(lezione, pos)">
-      <component :is="VISTE[gioco]" v-if="inGioco" :key="'gioco-' + pos" :esercizio="blocco.esercizio" :alunno="io"
-                 :onRisposta="aPos(pos, rispostaGioco)" @guasto="senzaGioco = true" />
+      <component :is="VISTE[gioco]" v-if="inGioco" :key="'gioco-' + chiaveVista" :esercizio="blocco.esercizio" :alunno="io"
+                 :onRisposta="aPos(pos, rispostaGioco)" @guasto="guastoGioco = true" />
       <div v-else-if="soloNelGioco" class="centro" data-senza-gioco>
         <p class="frase">Questo gioco non parte su questo computer: chiama la maestra.</p>
       </div>
-      <Domande v-else :key="'schede-' + pos" :esercizio="blocco.esercizio" :onRisposta="aPos(pos, risposta)" />
+      <Domande v-else :key="'schede-' + chiaveVista" :esercizio="blocco.esercizio" :onRisposta="aPos(pos, risposta)" />
     </div>
 
     <div v-else-if="schermo === 'passaggio'" class="centro" data-passaggio>
@@ -203,6 +256,12 @@ onUnmounted(() => { chiudiRete(); clearInterval(battito) })
       <button type="button" class="link" data-cambia-codice @click="esci">Ho sbagliato codice</button>
     </div>
 
+    <button v-if="schermo !== 'codice' && schermo !== 'senza' && schermo !== 'chiusa'" type="button" class="tasto-maestra"
+            data-azione="maestra" @click="apriMenu">Maestra</button>
+    <MenuMaestra v-if="menu" :locale="locale" :con-gioco="conGioco && !io?.domande" :domande="senzaGioco" :nel-blocco="nelBlocco"
+                 :con-nome="!locale && !!io" :avviso="avvisoMenu"
+                 @chiudi="menu = false" @domande="menuDomande" @salta="menuSalta" @nome="menuNome" @esci="menuEsci" />
+
     <span class="versione" data-versione>{{ versione }}</span>
   </div>
 </template>
@@ -223,6 +282,10 @@ onUnmounted(() => { chiudiRete(); clearInterval(battito) })
 .frase { font-size: 21px; max-width: 32ch; line-height: 1.4 }
 .centro .bottone { font-size: 18px; padding: 14px 28px; min-width: 180px }
 .centro .link { font-size: 14px }
+.tasto-maestra {
+  position: fixed; left: 6px; bottom: 4px; z-index: 60; padding: 4px 10px; border: 0; border-radius: 999px;
+  font: inherit; font-size: 12px; color: var(--grigio); background: var(--superficie); opacity: .8; cursor: pointer;
+}
 .versione {
   position: fixed; right: 6px; bottom: 3px; z-index: 50; pointer-events: none;
   font-size: 10px; color: var(--grigio); opacity: .7;

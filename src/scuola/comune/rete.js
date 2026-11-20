@@ -180,14 +180,17 @@ export function apriBambino(codice, { suStato, suNo, suLinea, servizio = indiriz
       return n
     },
     dove(d) { ultimoDove = d; c.manda({ k: 'dove', dove: d }) },
+    // «Cambia nome» dal menu della maestra: il nome torna nella lista, e la pagina rimostra i nomi
+    lascia() { ultimoDove = null; mio.alunno = null; salva(); return c.manda({ k: 'lascia' }) },
     inCoda: () => mio.coda.length,
     chiudi() { if (giro) orologio.ferma(giro); c.chiudi() },
   }
 }
 
-/* La maestra: si collega subito. `via()` fa partire la lezione, `smetti()` la chiude, `chiudi()` chiude il collegamento. `suTutto` all'ingresso (tutto quello che il servizio sa), poi `suAlunni`, `suRisposta(alunno, r)`, `suFase`, `suAvanti(avanti)`; `avanti()` è «Avanti tutti».
+/* La maestra: si collega subito. `via()` fa partire la lezione, `smetti()` la chiude, `chiudi()` chiude il collegamento. `suTutto` all'ingresso (tutto quello che il servizio sa), poi `suAlunni`, `suRisposta(alunno, r)`, `suFase`, `suAvanti(avanti)`, `suLezione(lezione, rifatta)`; `avanti()` è «Avanti tutti».
+   I ripieghi (docs/scuola/ripieghi.md): `cambiaLezione(l)`, e per un bambino solo `salta(id)` e `domande(id, sì)`.
    `suRifiuto('chiave' | 'codice')` quando il servizio non la accetta, e non ci riprova. */
-export function apriMaestra(codice, chiave, { suTutto, suAlunni, suRisposta, suFase, suAvanti, suLinea, suRifiuto, servizio = indirizzoScuola(), orologio = orologioVero, WebSocketImpl = globalThis.WebSocket } = {}) {
+export function apriMaestra(codice, chiave, { suTutto, suAlunni, suRisposta, suFase, suAvanti, suLezione, suLinea, suRifiuto, servizio = indirizzoScuola(), orologio = orologioVero, WebSocketImpl = globalThis.WebSocket } = {}) {
   codice = String(codice).toUpperCase()
   const c = collegamento({
     url: () => `${aWs(servizio)}/scuola/${codice}/maestra?chiave=${encodeURIComponent(chiave)}`, orologio, WebSocketImpl, suLinea,
@@ -198,6 +201,7 @@ export function apriMaestra(codice, chiave, { suTutto, suAlunni, suRisposta, suF
       else if (d.t === 'risposta') suRisposta?.(d.alunno, d.r)
       else if (d.t === 'fase') suFase?.(d.fase)
       else if (d.t === 'avanti') suAvanti?.(d.avanti)
+      else if (d.t === 'lezione') suLezione?.(d.lezione, d.rifatta)
     },
   })
   c.via()
@@ -208,5 +212,8 @@ export function apriMaestra(codice, chiave, { suTutto, suAlunni, suRisposta, suF
     libera: id => c.manda({ k: 'libera', alunno: id }),
     togli: id => c.manda({ k: 'togli', alunno: id }),
     smetti: () => c.manda({ k: 'chiudi' }),
+    cambiaLezione: lezione => c.manda({ k: 'lezione', lezione }),
+    salta: id => c.manda({ k: 'salta', alunno: id }),
+    domande: (id, si) => c.manda({ k: 'domande', alunno: id, si: !!si }),
   }
 }

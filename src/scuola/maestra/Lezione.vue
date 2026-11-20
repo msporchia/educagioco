@@ -1,5 +1,6 @@
 <script setup>
-// L'editor di una lezione a blocchi (docs/scuola/lezione.md): nome, i blocchi con cosa si chiede e quando si passa, in tondo; anche da una lezione pronta
+// L'editor di una lezione a blocchi (docs/scuola/lezione.md): nome, i blocchi con cosa si chiede e quando si passa, in tondo; anche da una lezione pronta,
+// e la lezione in corso da mandare cambiata ai bambini (`inCorso`, docs/scuola/ripieghi.md)
 import { ref, computed } from 'vue'
 import { CATALOGO, valido, descrivi } from '../comune/esercizi.js'
 import { MODI_PASSA, MAX_BLOCCHI, modoDi, sogliaDi, descriviPassa, passaValido } from '../comune/lezione.js'
@@ -9,13 +10,15 @@ import { paginaMaestra, copia } from './utili.js'
 import { lezioneDa } from '../comune/lezioni-pronte.js'
 import SceltaEsercizio from './SceltaEsercizio.vue'
 import Conferma from './Conferma.vue'
+import { cambiaLezione, diretta } from './diretta.js'
 
-const props = defineProps({ id: { type: String, default: null }, proposta: { type: Object, default: null } })
+const props = defineProps({ id: { type: String, default: null }, proposta: { type: Object, default: null }, inCorso: { type: Boolean, default: false } })
 const emit = defineEmits(['vai', 'indietro'])
 
 const vecchia = props.id ? lezioneDi(props.id) : null
 const primaBase = () => JSON.parse(JSON.stringify(CATALOGO.materie[0].voci[0].base))
-const partenza = vecchia ? JSON.parse(JSON.stringify(vecchia))
+const inCorso = props.inCorso && quaderno.inCorso ? quaderno.inCorso.lezione : null
+const partenza = inCorso ? JSON.parse(JSON.stringify(inCorso)) : vecchia ? JSON.parse(JSON.stringify(vecchia))
   : props.proposta ? lezioneDa(props.proposta, Q.nuovoId('l')) : Q.nuovaLezione(primaBase())
 
 // un blocco come lo tocca l'editor: il modo e il numero a parte, così il numero si scrive anche storto e si dice perché
@@ -75,6 +78,12 @@ function salvaLezione() {
   salva(['lezioni'])
   emit('vai', 'inizio')
 }
+const nonMandata = ref('')
+function manda() {
+  if (problema.value) return
+  if (!cambiaLezione(pronta.value)) { nonMandata.value = 'Non c\'è linea: riprova fra un attimo.'; return }
+  emit('indietro')
+}
 function duplica() {
   const c = Q.duplicaLezione(quaderno, vecchia.id)
   salva(['lezioni'])
@@ -90,7 +99,9 @@ async function copiaLink() {
 
 <template>
   <section class="carta" data-editor-lezione>
-    <h1>{{ vecchia ? 'Modifica la lezione' : 'Nuova lezione' }}</h1>
+    <h1>{{ inCorso ? 'Cambia la lezione in corso' : vecchia ? 'Modifica la lezione' : 'Nuova lezione' }}</h1>
+    <p v-if="inCorso" class="bene" data-cambia-in-corso>La mandi ai bambini senza un codice nuovo: ognuno resta al blocco dove si
+      trova (il primo è il blocco 1). Se togli blocchi, chi era oltre l'ultimo ha finito. Nel quaderno resta la lezione di prima.</p>
     <label>Nome della lezione
       <input v-model="nome" class="campo" :maxlength="Q.MAX_NOME_LEZIONE" :placeholder="pronta.nome || 'per esempio: ripasso del 9'" data-campo="nome-lezione">
     </label>
@@ -137,7 +148,16 @@ async function copiaLink() {
     <p class="nota">Per i giri a rotazione: più blocchi che passano quando lo dici tu, e a ogni giro premi «Avanti tutti».</p>
   </section>
 
-  <section class="carta">
+  <section v-if="inCorso" class="carta">
+    <p v-if="problema" class="avviso" data-problema>{{ problema }}</p>
+    <p v-if="nonMandata" class="avviso" data-messaggio>{{ nonMandata }}</p>
+    <div class="fila">
+      <button class="bottone" :disabled="!!problema || diretta.linea !== 'su'" data-azione="manda-lezione" @click="manda">Manda ai bambini</button>
+      <button class="bottone chiaro" data-azione="annulla" @click="emit('indietro')">Lascia com'era</button>
+    </div>
+  </section>
+
+  <section v-else class="carta">
     <p v-if="problema" class="avviso" data-problema>{{ problema }}</p>
     <div class="fila">
       <button class="bottone" :disabled="!!problema" data-azione="salva-lezione" @click="salvaLezione">Salva la lezione</button>

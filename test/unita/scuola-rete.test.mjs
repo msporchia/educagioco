@@ -109,6 +109,15 @@ maestra.avanti(); orologio.avanti(200)
 uguale('«Avanti tutti»: il bambino lo trova nello stato', stati.at(-1).avanti, 1)
 stessaLista('e la maestra lo sa', avanti, [1])
 
+// i ripieghi: la lezione cambiata, un bambino solo (docs/scuola/ripieghi.md)
+const cambiata = { ...stato.lezione, nome: 'Cambiata', blocchi: [...stato.lezione.blocchi, { esercizio: ES, passa: null }] }
+maestra.cambiaLezione(cambiata); orologio.avanti(200)
+controlla('«Cambia la lezione»: il bambino la riceve, con rifatta', stati.at(-1).lezione.nome === 'Cambiata' && stati.at(-1).rifatta === 1)
+maestra.domande('a1', true); orologio.avanti(200)
+uguale('«Le domande» per lui: lo sa', stati.at(-1).io.domande, true)
+maestra.domande('a1', false); maestra.salta('a1'); orologio.avanti(200)
+controlla('«Salta il blocco» per lui: il suo pavimento sale', stati.at(-1).io.avanti >= 1 && stati.at(-1).io.domande === false)
+
 b.rispondi(ris(1)); b.rispondi(ris(2)); orologio.avanti(200)
 stessaLista('due risposte: arrivano e la coda si svuota', [risposteMaestra.length, b.inCoda()], [2, 0])
 uguale('lo stato del servizio le ha prese', stato.risposte.a1.length, 2)

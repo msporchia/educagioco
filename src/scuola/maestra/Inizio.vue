@@ -6,6 +6,7 @@ import * as Q from './quaderno.js'
 import { lezioneValida, classiNelloStorico } from './quaderno.js'
 import { indirizzoBambini, paginaMaestra, copia, scarica, comeSiSvolge } from './utili.js'
 import Conferma from './Conferma.vue'
+import CodicePerIPc from './CodicePerIPc.vue'
 
 const emit = defineEmits(['vai', 'indietro'])
 const indirizzo = indirizzoBambini()
@@ -74,6 +75,7 @@ function apriFile(e) {
     <div class="fila">
       <a class="bottone chiaro" href="./index.html" download="educagioco-classe.html" data-azione="scarica-pagina-bambini">Scarica il file per i PC dei bambini</a>
     </div>
+    <CodicePerIPc />
   </section>
 
   <section class="carta" data-classi>

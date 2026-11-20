@@ -12,10 +12,14 @@ export const pulisciCodice = testo => String(testo ?? '').toUpperCase().replace(
 export const codiceCompleto = c => typeof c === 'string' && /^[A-Z]{5}$/.test(c)
 
 /* lo `stato` del servizio come lo tiene la pagina; una lezione nella forma di prima si converte (per prudenza) */
+const naturaleO0 = n => (Number.isInteger(n) && n > 0 ? n : 0)
 export const statoDa = d => ({
-  fase: d.fase, lezione: convertiLezione(d.lezione), avanti: Number.isInteger(d.avanti) && d.avanti > 0 ? d.avanti : 0,
-  io: d.io ?? null, alunni: Array.isArray(d.alunni) ? d.alunni : [],
+  fase: d.fase, lezione: convertiLezione(d.lezione), avanti: naturaleO0(d.avanti), rifatta: naturaleO0(d.rifatta),
+  io: d.io ? { ...d.io, avanti: naturaleO0(d.io.avanti), domande: !!d.io.domande } : null, alunni: Array.isArray(d.alunni) ? d.alunni : [],
 })
+
+/* il pavimento di questo bambino: «Avanti tutti» per tutti, «Salta il blocco» della maestra per lui solo */
+export const pavimento = s => Math.max(s?.avanti | 0, s?.io?.avanti | 0)
 
 /* ══════════════ il cammino: dove sta il bambino e il conto del blocco ══════════════
 
@@ -27,7 +31,7 @@ export const nuovoConto = () => ({ fatte: 0, giuste: 0, inizio: null })
 export const nuovoCammino = (alunno, avanti = 0) => ({ alunno, p: avanti | 0, visto: avanti | 0, conto: nuovoConto() })
 const avanza = (c, p) => ({ ...c, p, conto: nuovoConto() })
 // il cammino del nome di `stato.io`, anche prima che la pagina l'abbia fatto
-export const camminoDi = (c, stato) => (c?.alunno === stato.io.id ? c : nuovoCammino(stato.io.id, stato.avanti))
+export const camminoDi = (c, stato) => (c?.alunno === stato.io.id ? c : nuovoCammino(stato.io.id, pavimento(stato)))
 
 /* il cammino di quel nome, al passo con «Avanti tutti»: un nome diverso riparte, un pavimento più alto porta avanti e fa
    ripartire il conto, chi era già avanti resta */
@@ -55,6 +59,9 @@ export function rispostaData(c, lezione, { blocco, giusta, ultima = true }, ora)
 
 export const continua = c => ({ ...c, visto: c.p })
 
+/* «Salta al blocco dopo» dal menu della maestra sul PC: il blocco dopo quello in cui sta, senza passaggio */
+export const salta = (c, pav = 0) => { const p = posizione(c.p, pav) + 1; return { ...c, p, visto: p, conto: nuovoConto() } }
+
 /* ══════════════ la schermata ══════════════ */
 
 /* da quello che si sa: il codice, l'ultimo `stato` del servizio (o quello ricordato) e il cammino */
@@ -66,7 +73,7 @@ export function schermata({ codice, stato, cammino }) {
   if (stato.fase !== 'via') return 'aspetta'
   if (!lezioneValida(stato.lezione)) return 'guasta'
   const c = camminoDi(cammino, stato)
-  const p = posizione(c.p, stato.avanti)
+  const p = posizione(c.p, pavimento(stato))
   if (finita(stato.lezione, p)) return 'finito'
   return c.visto < p ? 'passaggio' : 'blocco'
 }
@@ -83,6 +90,13 @@ export function segno(passa, conto, ora) {
   const m = Math.ceil(resta / MINUTO)
   return m === 1 ? 'Ancora 1 minuto' : `Ancora ${m} minuti`
 }
+
+/* ══════════════ senza lezione ══════════════
+
+   La lezione fatta partire dalla maestra sul PC, senza servizio (docs/scuola/ripieghi.md): uno stato come quello del
+   servizio, già «via», con un alunno senza nome; i blocchi «quando lo dice la maestra» passano dal suo menu. */
+export const SENZA = 'senza-lezione'
+export const statoSenzaLezione = lezione => ({ fase: 'via', lezione, avanti: 0, rifatta: 0, io: { id: SENZA, nome: '', avanti: 0, domande: false }, alunni: [] })
 
 /* ══════════════ il ricordo: `scuola:bambino` ══════════════ */
 // `nato` serve anche a rete.js, che all'avvio butta ogni `scuola:*` più vecchia di tre ore
@@ -102,19 +116,21 @@ const statoBuono = s => s && typeof s.fase === 'string' && s.lezione && typeof s
 export function leggiRicordo(ora, storage) {
   let r
   try { r = JSON.parse(archivio(storage)?.getItem(RICORDO) ?? 'null') } catch { return null }
-  if (!r || typeof r !== 'object' || r.forma !== FORMA || !codiceCompleto(r.codice) || !Number.isFinite(r.nato) || !(ora - r.nato < TRE_ORE)) return null
+  if (!r || typeof r !== 'object' || r.forma !== FORMA || !Number.isFinite(r.nato) || !(ora - r.nato < TRE_ORE)) return null
   const stato = statoBuono(r.stato) && r.stato.fase !== 'chiusa' ? statoDa(r.stato) : null
   const cammino = camminoBuono(r.cammino) ? r.cammino : null
-  return { codice: r.codice, nato: r.nato, stato, cammino }
+  if (r.locale === true) return stato && lezioneValida(stato.lezione) ? { codice: null, locale: true, nato: r.nato, stato, cammino } : null
+  if (!codiceCompleto(r.codice)) return null
+  return { codice: r.codice, locale: false, nato: r.nato, stato, cammino }
 }
 
 /* si ricorda solo una lezione aperta: senza codice o a lezione chiusa il ricordo si toglie, e la pagina riparte dal codice */
-export function ricorda({ codice, nato, stato, cammino }, storage) {
+export function ricorda({ codice, locale = false, nato, stato, cammino }, storage) {
   const a = archivio(storage)
   try {
-    if (!codice || stato?.fase === 'chiusa') return void a?.removeItem(RICORDO)
-    const s = stato && { fase: stato.fase, lezione: stato.lezione, avanti: stato.avanti ?? 0, io: stato.io ?? null, alunni: stato.alunni ?? [] }
-    a?.setItem(RICORDO, JSON.stringify({ forma: FORMA, codice, nato, stato: s, cammino: cammino ?? null }))
+    if ((!codice && !locale) || stato?.fase === 'chiusa') return void a?.removeItem(RICORDO)
+    const s = stato && { fase: stato.fase, lezione: stato.lezione, avanti: stato.avanti ?? 0, rifatta: stato.rifatta ?? 0, io: stato.io ?? null, alunni: stato.alunni ?? [] }
+    a?.setItem(RICORDO, JSON.stringify({ forma: FORMA, codice: locale ? null : codice, ...(locale ? { locale: true } : {}), nato, stato: s, cammino: cammino ?? null }))
   } catch { /* pieno o vietato: si va avanti senza ricordo */ }
 }
 

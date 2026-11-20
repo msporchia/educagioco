@@ -12,6 +12,16 @@ let filo = null, sveglia = null
 
 const viva = () => (quaderno.inCorso ? voceDi(quaderno.inCorso.voce) : null)
 
+/* la lezione cambiata a metà (docs/scuola/ripieghi.md): la lezione in corso e quella della voce diventano la nuova */
+function nuovaLezione(l) {
+  if (!l || !quaderno.inCorso) return
+  if (JSON.stringify(l) === JSON.stringify(quaderno.inCorso.lezione)) return
+  quaderno.inCorso.lezione = JSON.parse(JSON.stringify(l))
+  const v = viva()
+  if (v) v.lezione = JSON.parse(JSON.stringify(l))
+  salva(['storico', 'inCorso'])
+}
+
 export async function avvia(lezione, classe) {
   const { codice, chiave, scade } = await creaLezione(lezione, classe.alunni.map(a => ({ id: a.id, nome: a.nome })))
   const ora = Date.now()
@@ -48,6 +58,7 @@ export function collega() {
     suTutto(d) {
       Object.assign(diretta, { fase: d.fase, alunni: d.alunni || [], avanti: Number.isInteger(d.avanti) ? d.avanti : 0,
                                conti: Q.contiDelleRisposte(d.risposte), sentito: true })
+      nuovaLezione(d.lezione)
       Q.ricalcola(viva(), d)
       if (Number.isFinite(d.scade) && quaderno.inCorso) { quaderno.inCorso.scade = d.scade; salva(['inCorso']) }
       salvaPresto()
@@ -57,6 +68,7 @@ export function collega() {
     suRisposta(id, r) { Q.aggiungiRisposta(viva(), id, r); Q.contaPosizione(diretta.conti, id, r); salvaPresto() },
     suFase(f) { diretta.fase = f; if (f === 'chiusa') finisci() },
     suAvanti(n) { if (Number.isInteger(n)) diretta.avanti = n },
+    suLezione(l) { nuovaLezione(l) },
     suLinea(l) { diretta.linea = l },
     // il servizio non la conosce più (scaduta) o non accetta la chiave: si chiude qui, coi risultati presi fin qui
     suRifiuto: perche => finisci(perche === 'chiave' ? 'Il servizio non riconosce più questa lezione: l\'ho chiusa qui.' : ''),
@@ -75,6 +87,9 @@ export const via = () => !!filo?.via()
 export const avantiTutti = () => !!filo?.avanti()
 export const libera = id => !!filo?.libera(id)
 export const togli = id => !!filo?.togli(id)
+export const cambiaLezione = l => !!filo?.cambiaLezione(l)
+export const saltaBlocco = id => !!filo?.salta(id)
+export const domandePer = (id, si) => !!filo?.domande(id, si)
 
 /* «Chiudi lezione»: col filo su la chiude il servizio (e i PC lo sanno); `soloQui` la chiude senza linea */
 export function chiudiLezione({ soloQui = false } = {}) {

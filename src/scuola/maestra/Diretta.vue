@@ -2,11 +2,13 @@
 // La lezione in corso, per la LIM: il codice enorme e i nomi che si accendono, poi «Via», chi è in che blocco e «Avanti tutti»
 import { ref, computed, watch } from 'vue'
 import { quaderno, voceDi, classeDi } from './stato.js'
-import { diretta, via, avantiTutti, libera, togli, chiudiLezione } from './diretta.js'
+import { diretta, via, avantiTutti, libera, togli, chiudiLezione, cambiaLezione, saltaBlocco, domandePer } from './diretta.js'
 import { riassuntoVuoto } from './quaderno.js'
-import { posizione, finita, bloccoDi, modoDi, sogliaDi } from '../comune/lezione.js'
+import { posizione, finita, bloccoDi, modoDi, sogliaDi, alleDomande } from '../comune/lezione.js'
+import { giocoDi } from '../comune/esercizi.js'
 import { indirizzoBambini } from './utili.js'
 import Conferma from './Conferma.vue'
+import CodicePerIPc from './CodicePerIPc.vue'
 
 const emit = defineEmits(['vai', 'indietro'])
 const voceId = quaderno.inCorso?.voce ?? null
@@ -27,7 +29,7 @@ const nomeClasse = computed(() => classeDi(quaderno.inCorso?.classe ?? '')?.nome
 const n = computed(() => lezione.value?.blocchi?.length || 1)
 
 // dove sta: la posizione che dice il bambino, almeno il pavimento di «Avanti tutti» (chi è scollegato lo raggiunge al rientro)
-const posDi = a => (a.dove === 'finito' ? 'finito' : Number.isInteger(a.dove) ? posizione(a.dove, diretta.avanti) : null)
+const posDi = a => (a.dove === 'finito' ? 'finito' : Number.isInteger(a.dove) ? posizione(a.dove, Math.max(diretta.avanti, a.avanti | 0)) : null)
 const fuori = a => (a.collegato ? 'è dentro' : (a.esito.presente ? 'non collegato' : 'non è entrato'))
 const giroDi = p => (lezione.value.inTondo ? `giro ${Math.floor(p / n.value) + 1}` : '')
 function bloccoDetto(p) {
@@ -44,10 +46,11 @@ function inCorsoDi(a) {
 }
 const puoLiberare = a => a.collegato || a.dove != null || a.esito.presente
 
-// «Avanti tutti» alza il pavimento: dopo, nessuno sta prima della posizione avanti + 1
+// «Avanti tutti» sposta di un blocco chi è più indietro fra i collegati (il servizio: nuovoAvanti); chi è avanti resta
 const avantiInutile = computed(() => !!lezione.value && finita(lezione.value, diretta.avanti))
 const dopoAvanti = computed(() => {
-  const p = diretta.avanti + 1
+  const qui = alunni.value.filter(a => a.collegato).map(posDi).filter(Number.isInteger)
+  const p = Math.max(diretta.avanti + 1, (qui.length ? Math.min(...qui) : diretta.avanti) + 1)
   if (!lezione.value || finita(lezione.value, p)) return 'Chi è ancora all\'ultimo blocco finisce la lezione.'
   const dove = [n.value > 1 ? `blocco ${bloccoDi(lezione.value, p) + 1}` : '', giroDi(p)].filter(Boolean).join(', ')
   return `Chi è più indietro passa al ${dove}.`
@@ -58,6 +61,20 @@ const senzaLinea = () => { messaggio.value = 'Non c\'è linea: riprova fra un at
 function parti() { messaggio.value = ''; if (!via()) senzaLinea() }
 function liberaNome(id) { messaggio.value = ''; if (!libera(id)) senzaLinea() }
 function togliNome(id) { messaggio.value = ''; if (!togli(id)) senzaLinea() }
+
+/* ── se qualcosa non va (docs/scuola/ripieghi.md) ── */
+const conGiochi = computed(() => !!lezione.value?.blocchi.some(b => giocoDi(b.esercizio) !== 'schede'))
+function tuttiAlleDomande() {
+  messaggio.value = ''
+  const { lezione: l, restano } = alleDomande(lezione.value)
+  if (!cambiaLezione(l)) return senzaLinea()
+  messaggio.value = restano ? `Fatto. ${restano === 1 ? 'Un blocco esiste' : `${restano} blocchi esistono`} solo dentro il suo gioco: cambialo con «Cambia la lezione».`
+    : 'Fatto: da adesso si risponde alle domande, senza giochi.'
+}
+// le domande al posto del gioco hanno senso se il suo blocco ha un gioco che si può lasciare
+const bloccoConGioco = a => { const p = posDi(a); return Number.isInteger(p) && !finita(lezione.value, p) && giocoDi(lezione.value.blocchi[bloccoDi(lezione.value, p)].esercizio) !== 'schede' }
+function salta(id) { messaggio.value = ''; if (!saltaBlocco(id)) senzaLinea() }
+function domande(a) { messaggio.value = ''; if (!domandePer(a.id, !a.domande)) senzaLinea() }
 function chiudi(soloQui = false) {
   messaggio.value = ''
   if (!chiudiLezione({ soloQui })) senzaLinea()
@@ -102,7 +119,7 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
         <div class="fila">
           <button class="bottone" :disabled="avantiInutile" data-azione="avanti-tutti" @click="avanti">Avanti tutti</button>
           <span class="nota" :data-avanti="diretta.avanti">{{ avantiInutile ? 'Tutti hanno finito l\'ultimo blocco.' : dopoAvanti }}
-            {{ diretta.avanti === 0 ? '' : diretta.avanti === 1 ? 'Premuto una volta.' : `Premuto ${diretta.avanti} volte.` }}</span>
+</span>
         </div>
       </section>
       <ul class="bambini" data-pannello>
@@ -119,13 +136,28 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
           <ul v-if="a.esito.ultime.length" class="sbagliate" data-ultime-sbagliate>
             <li v-for="(s, i) in a.esito.ultime" :key="i"><b>{{ s.fatto }}</b>: ha detto {{ s.data }}, era {{ s.attesa }}<span v-if="n > 1"> (blocco {{ s.blocco + 1 }})</span></li>
           </ul>
+          <p v-if="a.domande" class="nota" data-solo-domande>Fa le domande al posto del gioco.</p>
           <div class="fila">
+            <button v-if="a.preso && posDi(a) !== 'finito'" class="bottone chiaro piccolo" data-azione="salta" @click="salta(a.id)">Salta il blocco</button>
+            <button v-if="a.preso && (a.domande || bloccoConGioco(a))" class="bottone chiaro piccolo" data-azione="domande" @click="domande(a)">
+              {{ a.domande ? 'Torna al gioco' : 'Le domande' }}</button>
             <button v-if="!a.nuovo && puoLiberare(a)" class="bottone chiaro piccolo" data-azione="libera" @click="liberaNome(a.id)">Libera</button>
             <Conferma v-if="a.nuovo" etichetta="Togli" domanda="Lo tolgo, con le sue risposte?" si="Togli" data-azione="togli" @si="togliNome(a.id)" />
           </div>
         </li>
       </ul>
     </template>
+
+    <section class="carta" data-se-non-va>
+      <h2>Se qualcosa non va</h2>
+      <div class="fila">
+        <button class="bottone chiaro" :disabled="diretta.linea !== 'su'" data-azione="cambia-lezione" @click="emit('vai', 'lezione', { inCorso: true })">Cambia la lezione</button>
+        <Conferma v-if="conGiochi" etichetta="Tutti alle domande" domanda="Tolgo i giochi a tutti?" si="Togli i giochi" data-azione="tutti-alle-domande" @si="tuttiAlleDomande" />
+      </div>
+      <p class="nota">Senza un codice nuovo: ognuno resta al blocco dove si trova. Per un bambino solo ci sono «Salta il blocco» e
+        «Le domande» sotto il suo nome.</p>
+      <CodicePerIPc />
+    </section>
 
     <section class="carta">
       <div v-if="!chiudendo" class="fila">

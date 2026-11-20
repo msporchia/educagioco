@@ -1,6 +1,6 @@
 /* La lezione a blocchi: la forma, quando si passa al blocco dopo, dove sta un bambino, e la conversione delle lezioni
    salvate prima (obiettivo + «se hai finito»). Gira in Node. Vedi docs/scuola/lezione.md */
-import { valido, descrivi } from './esercizi.js'
+import { valido, descrivi, giochiPer, giocoDi } from './esercizi.js'
 
 export const MAX_BLOCCHI = 8
 export const MAX_NOME_LEZIONE = 60
@@ -76,4 +76,17 @@ export function superato(passa, conto, ora) {
   if (modo === 'giuste') return (conto?.giuste ?? 0) >= n
   if (modo === 'domande') return (conto?.fatte ?? 0) >= n
   return conto?.inizio != null && ora - conto.inizio >= n * 60 * 1000
+}
+
+/* «Tutti alle domande» (docs/scuola/ripieghi.md): ogni blocco che si può fare a schede lascia il suo gioco; quelli che
+   esistono solo dentro un gioco (i gradini di Passo passo…) restano come sono, e `restano` dice quanti */
+export function alleDomande(l) {
+  let restano = 0
+  const blocchi = l.blocchi.map(b => {
+    const { gioco, difficolta, ...esercizio } = b.esercizio
+    if (giochiPer(esercizio).some(g => g.id === 'schede')) return { ...b, esercizio }
+    if (giocoDi(b.esercizio) !== 'schede') restano++
+    return b
+  })
+  return { lezione: { ...l, blocchi }, restano }
 }

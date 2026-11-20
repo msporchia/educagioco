@@ -4,7 +4,7 @@ import { ref, computed, onMounted } from 'vue'
 import { controllaCodice } from '../../comune/rete.js'
 import { pulisciCodice, codiceCompleto } from '../giro.js'
 
-const emit = defineEmits(['entra'])
+const emit = defineEmits(['entra', 'senza'])
 const codice = ref('')
 const errore = ref('')
 const controllo = ref(false)
@@ -38,6 +38,7 @@ onMounted(() => campo.value?.focus())
            aria-label="il codice della lezione" @input="scrivi">
     <button type="submit" class="bottone" data-entra :disabled="!pronto">{{ controllo ? 'Controllo…' : 'Entra' }}</button>
     <p v-if="errore" class="errore" data-codice-errore>{{ errore }}</p>
+    <button type="button" class="link senza" data-azione="senza-lezione" @click="emit('senza')">Senza lezione (per la maestra)</button>
   </form>
 </template>
 
@@ -52,4 +53,5 @@ onMounted(() => campo.value?.focus())
 .campo:focus { border-color: var(--accento) }
 .codice .bottone { min-width: 180px; font-size: 18px; padding: 14px 28px }
 .errore { font-size: 17px; color: var(--inchiostro); max-width: var(--colonna) }
+.senza { margin-top: 24px; font-size: 13px; opacity: .8 }
 </style>
