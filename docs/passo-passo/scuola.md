@@ -23,8 +23,15 @@ si storpia: si limita da fuori. Chi lo monta è la vista della scuola (`src/scuo
   del gioco e quanti livelli hanno; il test dice se non sono più quelli delle strade.
 - **`valido`** rifiuta chiavi in più, un protagonista che non c'è, gradini vuoti, doppi o di un altro protagonista.
   **`descrivi`**: «Passo passo · il ghiaccio e le buche · col coniglio», e «tutti i livelli» se sono tutti.
-- L'editor (`Parametri.vue`) ha due file di tessere: chi gioca e quali gradini, ognuno col numero dei suoi livelli;
-  cambiando protagonista restano i gradini che ha anche lui (le carte), se no il suo primo. Almeno uno resta acceso.
+- L'editor (`Parametri.vue`) ha due file di righe (`maestra/Righe.vue`): chi gioca e quali gradini, ognuno col numero dei
+  suoi livelli; cambiando protagonista restano i gradini che ha anche lui (le carte), se no il suo primo. Almeno uno resta
+  acceso. **Un protagonista per blocco** (il gioco ha una strada per volta): la nota lo dice, e per fare il coniglio e
+  poi il cane si aggiunge un blocco dopo; cambiando protagonista si ritrovano le scelte fatte per lui finché la pagina è
+  aperta. Le righe dei protagonisti dicono cosa fa ognuno e per chi è (da cominciare, dopo il coniglio, il più difficile).
+- **Ogni riga ha l'anteprima** del primo livello (`MiniMappa.vue`): la mappa vera di `dati/campagna.js` a quadretti, coi
+  colori dei terreni e le emoji delle cose; non è il gioco dipinto ma è quel livello. «Guarda i N livelli» li apre tutti,
+  ognuno col suo `racconto` (chiesto dall'utente: senza figure i gradini non si capivano). Per questo `Parametri.vue`
+  importa la campagna e le strade, la scheda no.
 
 ## Il gioco col limite
 

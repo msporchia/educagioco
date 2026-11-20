@@ -4,9 +4,12 @@
    unita/passo-passo-scuola controlla che gradini e livelli siano quelli delle strade */
 
 export const PROTAGONISTI = [
-  { id: 'coniglio', nome: 'Il coniglio', icona: '🐇', col: 'col coniglio', spiega: 'La strada di partenza: le frecce, poi le carte.' },
-  { id: 'cane', nome: 'Il cane', icona: '🐕', col: 'col cane', spiega: 'Dopo il coniglio: porta le pecore nel recinto.' },
-  { id: 'guerriero', nome: 'Il guerriero', icona: '⚔️', col: 'col guerriero', spiega: "Il più difficile: grate, nemici, e l'ordine in cui fare le cose." },
+  { id: 'coniglio', nome: 'Il coniglio', icona: '🐇', col: 'col coniglio',
+    spiega: 'Da cominciare. Il coniglio va alla tana, prendendo la carota per strada: frecce, salti, ghiaccio e buche, poi le carte che ripetono.' },
+  { id: 'cane', nome: 'Il cane', icona: '🐕', col: 'col cane',
+    spiega: 'Dopo il coniglio. Il cane porta le pecore nel recinto senza toccarle: si scansano quando lui si ferma vicino, e bisogna prevedere dove vanno.' },
+  { id: 'guerriero', nome: 'Il guerriero', icona: '⚔️', col: 'col guerriero',
+    spiega: "Il più difficile. Il guerriero apre le grate coi pulsanti e affronta i nemici: conta l'ordine in cui si fanno le cose." },
 ]
 
 // i gradini di ogni protagonista, nell'ordine della sua strada; `livelli` quanti ne ha

@@ -12,19 +12,26 @@ const emit = defineEmits(['tocca'])
 
 <template>
   <div class="righe">
-    <button v-for="v in props.voci" :key="v.chiave" class="riga" :class="{ scelta: props.scelte.includes(v.chiave) }"
+    <div v-for="v in props.voci" :key="v.chiave" class="voce">
+    <button class="riga" :class="{ scelta: props.scelte.includes(v.chiave) }"
             :aria-pressed="props.scelte.includes(v.chiave)" v-bind="{ [`data-${props.attributo}`]: v.chiave }" @click="emit('tocca', v.chiave)">
       <span class="segno" :class="{ tondo: props.una }" aria-hidden="true">{{ props.scelte.includes(v.chiave) ? (props.una ? '●' : '✓') : '' }}</span>
       <span class="corpo">
         <span class="nome"><span v-if="v.icona" class="icona">{{ v.icona }}</span>{{ v.nome }}<span v-if="v.quanti" class="quanti">{{ v.quanti }}</span></span>
         <span v-if="v.testo" class="testo">{{ v.testo }}</span>
       </span>
+      <!-- un disegno accanto (l'anteprima di un livello) e, sotto la riga, quello che il gioco vuole aggiungere -->
+      <span v-if="$slots.figura" class="figura"><slot name="figura" :voce="v" /></span>
     </button>
+    <slot name="sotto" :voce="v" />
+    </div>
   </div>
 </template>
 
 <style scoped>
 .righe { display:flex; flex-direction:column; gap:6px }
+.voce { display:flex; flex-direction:column; gap:4px }
+.figura { margin-left:auto; flex:none; padding-left:8px }
 .riga { display:flex; align-items:flex-start; justify-content:flex-start; gap:10px; width:100%; padding:10px 12px; text-align:left; font:inherit; color:var(--inchiostro);
         background:var(--tessera); border:2px solid transparent; border-radius:var(--raggio-piccolo); cursor:pointer }
 .riga.scelta { background:var(--superficie); border-color:var(--inchiostro) }
