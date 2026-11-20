@@ -8,7 +8,7 @@ import { CAMPAGNA, SCALINI } from '../../src/giochi/passo-passo/dati/campagna.js
 import { STRADE } from '../../src/giochi/passo-passo/motore/strade.js'
 import { Livello } from '../../src/giochi/passo-passo/motore/livello.js'
 import { esegui, TANA, FINITA, SBATTE } from '../../src/giochi/passo-passo/motore/mondo.js'
-import { tappeDelLimite, dopoNelGiro, scalaAScuola, attesaDi, dataDi, soluzioneDi, PROTAGONISTI, LUNGO }
+import { tappeDelLimite, dopoNelGiro, generatoDelLimite, scalaAScuola, attesaDi, dataDi, soluzioneDi, PROTAGONISTI, LUNGO }
   from '../../src/giochi/passo-passo/motore/limite.js'
 import { guastiDellaScala, RAGIONA } from '../../src/giochi/aiuti.js'
 import scheda, { GRADINI, PROTAGONISTI as SCELTE } from '../../src/scuola/giochi/passo-passo/scheda.js'
@@ -124,6 +124,29 @@ console.log('\nI RACCONTI PER LA MAESTRA')
   const zaino = Livello.da(CAMPAGNA.find(t => t.chiave === 'viale'))
   controlla('con lo zaino si contano le carte', /^\d+ carte: .*🔁/.test(attesaDi(zaino)), attesaDi(zaino))
   controlla('ogni livello vinto si dice', date.every(d => /^(a casa|il gregge nel recinto|dalla principessa)/.test(d)))
+}
+
+console.log('\nFINITI I LIVELLI SCELTI: POSTI NUOVI')
+{
+  const { generaSentiero, caso } = await import('../../src/giochi/passo-passo/motore/generatore.js')
+  uguale('il guerriero non ha un sentiero: ricomincia il giro', generatoDelLimite({ protagonista: 'guerriero', gradini: ['grate'] }), null)
+  uguale('a casa niente', generatoDelLimite(null), null)
+  stessaLista('i primi passi del coniglio: nessuna regola in più', generatoDelLimite({ protagonista: 'coniglio', gradini: ['passi'] }).sbloccati, [])
+  const ripeti = generatoDelLimite({ protagonista: 'coniglio', gradini: ['ripeti'] })
+  controlla('il ripeti del coniglio porta anche le regole dei gradini prima sulla sua strada',
+    ['salto', 'ghiaccio', 'buche', 'massi', 'ripeti'].every(x => ripeti.sbloccati.includes(x)) && !ripeti.sbloccati.includes('se'), ripeti.sbloccati.join(' '))
+  controlla('il cane ha sempre le pecore', generatoDelLimite({ protagonista: 'cane', gradini: ['ripeti'] }).sbloccati.includes('cane'))
+  uguale('lo stesso seme per gli stessi gradini, in qualunque ordine: tutta la classe trova gli stessi posti',
+    generatoDelLimite({ protagonista: 'coniglio', gradini: ['ghiaccio', 'salto'] }).seme, generatoDelLimite({ protagonista: 'coniglio', gradini: ['salto', 'ghiaccio'] }).seme)
+  for (const l of [{ protagonista: 'coniglio', gradini: ['passi'] }, { protagonista: 'coniglio', gradini: ['ripeti'] }, { protagonista: 'cane', gradini: ['pecore'] }]) {
+    const g = generatoDelLimite(l)
+    for (let n = 0; n < 3; n++) {
+      const t = generaSentiero(n, caso(g.seme * 1009 + n), { sbloccati: g.sbloccati, strada: g.strada })
+      const liv = Livello.da(t)
+      controlla(`${l.protagonista} ${l.gradini}: il posto nuovo ${n + 1} si costruisce (${t.nome})`, !!liv && Array.isArray(t.mappa))
+      controlla(`${l.protagonista} ${l.gradini}: col suo animale`, !!liv.cane === (l.protagonista === 'cane'))
+    }
+  }
 }
 
 riassunto('Passo passo a scuola')

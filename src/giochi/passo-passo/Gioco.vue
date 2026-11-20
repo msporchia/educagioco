@@ -33,7 +33,7 @@ import { usaGuida } from '../guida.js'
 import { scrivi, leggi, dice, scriviFila, scriviSerie, pagatoDa, svelatoDa } from './motore/sosta.js'
 import Ripresa from '../Ripresa.vue'
 import { usaAmici } from '../../amici/usaAmici.js'
-import { tappeDelLimite, dopoNelGiro, scalaAScuola, dataDi, attesaDi } from './motore/limite.js'
+import { tappeDelLimite, dopoNelGiro, generatoDelLimite, scalaAScuola, dataDi, attesaDi } from './motore/limite.js'
 
 import Mappa from './viste/Mappa.vue'
 import Campo from './viste/Campo.vue'
@@ -45,6 +45,7 @@ const emit = defineEmits(['vai', 'risposta'])
 // a scuola: `{ gradini: ['ghiaccio'], protagonista: 'coniglio' }`, e si giocano solo quei livelli in giro (docs/passo-passo/scuola.md); a casa manca
 const props = defineProps({ limite: { type: Object, default: null } })
 const giro = tappeDelLimite(props.limite)     // null a casa
+const generato = giro ? generatoDelLimite(props.limite) : null   // a scuola, dopo i livelli scelti: posti nuovi
 const vinteNelGiro = reactive(new Set())      // a scuola le stelle non si scrivono: la guida guarda queste
 
 const CHIAVE = 'passo'
@@ -781,7 +782,7 @@ function vittoria(esito) {
 function scriviVittoria(esito) {
   const strada = misuraLaStrada(esito)
   const stelle = stelleDellaVittoria({ carota: esito.carota, svelato: svelato.value, corta: strada.corta })
-  if (giro) return vittoriaNelGiro(esito, strada, stelle)
+  if (giro) return sentiero.value ? vittoriaGenerata(esito, strada, stelle) : vittoriaNelGiro(esito, strada, stelle)
   if (sentiero.value) return vittoriaSentiero(esito, strada)
 
   const i = tappaIdx.value
@@ -805,10 +806,29 @@ function scriviVittoria(esito) {
    Ogni ▶ va alla maestra: vinto chiude il livello, se no è un tentativo (docs/passo-passo/scuola.md) */
 const attese = new Map()            // la soluzione in breve di ogni livello, misurata una volta
 function riferisci(esito) {
-  const t = CAMPAGNA[tappaIdx.value], vinto = esito.esito === TANA
+  // un posto nuovo si dice «Nuovo 2: La siepe», e alla maestra ha la chiave di tutti i posti nuovi
+  const nuovo = tappaIdx.value < 0, t = nuovo ? tappa.value : CAMPAGNA[tappaIdx.value], vinto = esito.esito === TANA
   if (!attese.has(t.chiave)) attese.set(t.chiave, attesaDi(liv))
-  emit('risposta', { chiave: `passo:${t.chiave}`, giusta: vinto, ultima: vinto, ms: Math.round(provaDa),
-                     fatto: t.nome, data: dataDi(liv, fila.value, esito), attesa: attese.get(t.chiave) })
+  emit('risposta', { chiave: nuovo ? 'passo:nuovo' : `passo:${t.chiave}`, giusta: vinto, ultima: vinto, ms: Math.round(provaDa),
+                     fatto: nuovo ? `Nuovo ${sentieri.value + (vinto ? 0 : 1)}: ${t.nome}` : t.nome, data: dataDi(liv, fila.value, esito),
+                     attesa: attese.get(t.chiave) })
+}
+// un posto nuovo vinto: il cartello del giro, senza racconto da campagna; ▶ ne fa un altro (docs/passo-passo/scuola.md)
+function vittoriaGenerata(esito, strada, stelle) {
+  sentieri.value++
+  riferisci(esito)
+  preparaIlProssimo()
+  return { che: 'tappa', titolo: tappa.value.nome, stelle, carota: esito.carota, cane: !!liv.cane, guerriero: false,
+           svelato: false, monete: 0, ...strada, zaino: !!liv.zaino, prossima: true, mappa: false,
+           racconto: 'Un posto nuovo, fatto apposta con le regole e le carte di questa lezione.' }
+}
+// finiti i livelli scelti: i posti nuovi, uguali per tutta la classe (il seme viene dai gradini)
+function avviaGenerati() {
+  quale.value = generato.strada
+  sentieri.value = 0
+  semeSeduta = generato.seme
+  famigliaPrima = null
+  prossimoSentiero()
 }
 // il cartello di sempre, senza monete né mappa, e ▶ porta al livello dopo del giro
 function vittoriaNelGiro(esito, strada, stelle) {
@@ -837,7 +857,7 @@ function avviaSentiero(di = quale.value) {
    posto: quello fatto mentre si guardava il cartello si usa e basta */
 const richiesta = () => ({ n: sentieri.value, seme: semeSeduta, prima: famigliaPrima, strada: quale.value })
 function faiSentiero(r) {
-  return generaSentiero(r.n, caso(r.seme * 1009 + r.n), { sbloccati: sbloccati(), prima: r.prima, strada: r.strada })
+  return generaSentiero(r.n, caso(r.seme * 1009 + r.n), { sbloccati: generato ? generato.sbloccati : sbloccati(), prima: r.prima, strada: r.strada })
 }
 function prossimoSentiero() {
   const r = richiesta()
@@ -932,7 +952,11 @@ function vittoriaSentiero(esito, strada) {
 
 /* ═══════════ dopo il cartello ═══════════ */
 function avanti() {
-  if (giro) return avviaTappa(dopoNelGiro(giro, tappaIdx.value))
+  if (giro) {
+    if (sentiero.value) return prossimoSentiero()
+    if (generato && giro.indexOf(tappaIdx.value) === giro.length - 1) return avviaGenerati()
+    return avviaTappa(dopoNelGiro(giro, tappaIdx.value))
+  }
   if (sentiero.value) return prossimoSentiero()
   const i = tappaIdx.value, p = prossimaDopo(i)
   if (p !== null) avviaTappa(p)
@@ -946,6 +970,7 @@ function avanti() {
 }
 
 function rigioca() {
+  if (sentiero.value && giro) return entra(tappa.value, -1)   // a scuola il posto nuovo si rigioca uguale
   if (sentiero.value) return
   avviaTappa(tappaIdx.value)
 }

@@ -39,11 +39,16 @@ si storpia: si limita da fuori. Chi lo monta è la vista della scuola (`src/scuo
 (`motore/limite.js`, puro) torna `null`: niente di quello che segue esiste.
 
 - **Il giro**: i livelli dei gradini scelti, nell'ordine della strada del protagonista (dal più facile). Si parte dal
-  primo senza mappa; il ▶ del cartello porta al livello dopo del giro, e finito l'ultimo **si ricomincia** dal primo.
-  Il titolo dice «2/9 · Il sasso che frena».
-- Scelto il giro e non il sentiero senza fine: i livelli della campagna sono pensati uno per uno (la regola del gradino
-  serve, il racconto dice l'«aha»), sono gli stessi per tutta la classe e la maestra li conosce; il sentiero è fatto a
-  caso e misura la serie, che a scuola non conta.
+  primo senza mappa; il ▶ del cartello porta al livello dopo del giro. Il titolo dice «2/9 · Il sasso che frena».
+- Prima i livelli della campagna, non il sentiero: sono pensati uno per uno (la regola del gradino serve, il racconto
+  dice l'«aha»), sono gli stessi per tutta la classe e la maestra li conosce.
+- **Finito l'ultimo, posti nuovi** (scelta dell'utente, 20 novembre 2026: chi va veloce non deve rifare sempre gli stessi):
+  il generatore dei sentieri ([sentiero.md](sentiero.md)) con le regole e le carte dei gradini della strada fino al più alto
+  scelto (`generatoDelLimite` di `motore/limite.js`), uno dopo l'altro senza fine. Il seme viene dai gradini, così tutta la
+  classe trova gli stessi posti nello stesso ordine; niente serie né record né sosta. Il titolo dice «🐇 2 · Le balze»,
+  alla maestra arrivano con la chiave `passo:nuovo` e il nome «Nuovo 2: Le balze»; 🔁 rigioca lo stesso posto.
+  I posti nuovi hanno la difficoltà del finale (un labirinto da 14 frecce in su): sono la sfida di chi ha finito.
+  **Il guerriero** un sentiero non ce l'ha: finiti i suoi livelli si ricomincia dal primo.
 - **Il cartello** è quello di sempre, con le stelle (dicono la carota e la strada corta), senza monete e senza 🗺️
   (`mappa: false` di `Finale.vue`); 🔁 rigioca lo stesso livello.
 

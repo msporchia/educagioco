@@ -6,6 +6,7 @@ import { MOSSE, ATTACCA } from '../dati/mondo.js'
 import { carteDi, eApri, eSe, eFine, valoreDi, CASA } from '../dati/carte.js'
 import { RAGIONA } from '../../aiuti.js'
 import { STRADE } from './strade.js'
+import { INGREDIENTI } from './generatore.js'
 import { scalaDi } from './aiuti.js'
 import { risolvi } from './risolutore.js'
 import { TANA, SBATTE, SPLASH, STANCO, PERSA, CADUTO } from './mondo.js'
@@ -22,8 +23,23 @@ export function tappeDelLimite(limite) {
   return giro.length ? giro : null
 }
 
-// finito l'ultimo si ricomincia dal primo
+// finito l'ultimo si ricomincia dal primo (il guerriero; coniglio e cane passano ai posti nuovi, sotto)
 export const dopoNelGiro = (giro, i) => giro[(giro.indexOf(i) + 1) % giro.length]
+
+/* finiti i livelli scelti, posti nuovi dal generatore dei sentieri (scelta dell'utente: chi va veloce non rifà sempre gli
+   stessi). Le regole e le carte sono quelle dei gradini della strada fino al più alto scelto; il seme viene dai gradini,
+   così tutta la classe trova gli stessi posti nello stesso ordine. Il guerriero un sentiero non ce l'ha: `null` */
+export function generatoDelLimite(limite) {
+  const giro = tappeDelLimite(limite)
+  if (!giro || limite.protagonista === 'guerriero') return null
+  const strada = STRADE[limite.protagonista]
+  const fin = Math.max(...giro.map(i => strada.indexOf(i)))
+  const sbloccati = [...new Set(strada.slice(0, fin + 1).map(i => INGREDIENTI[CAMPAGNA[i].scalino]).filter(Boolean))]
+  if (limite.protagonista === 'cane' && !sbloccati.includes('cane')) sbloccati.push('cane')
+  let seme = 7
+  for (const c of `${limite.protagonista}:${[...limite.gradini].sort().join(',')}`) seme = (Math.imul(seme, 31) + c.charCodeAt(0)) >>> 0
+  return { strada: limite.protagonista, sbloccati, seme: (seme % 99991) + 1 }
+}
 
 // il 💡 a scuola: solo i gradini gratis che fanno ragionare (docs/core/aiuti.md); il profilo non ha monete
 export const scalaAScuola = () => scalaDi().filter(p => p.che === RAGIONA)
