@@ -23,11 +23,15 @@ vista).
 
 ## Il codice della maestra
 
-Il menu sul PC e «Senza lezione» si aprono con **quattro cifre che cambiano ogni cinque minuti**
-(`comune/codice-maestra.js`), come i codici a tempo delle banche: le due pagine le calcolano dall'ora, senza rete. La
-maestra le legge con «Codice per i PC» (nella pagina d'inizio e nella diretta), nascosto finché non lo chiede perché la
-pagina può stare sulla LIM, e visibile per un minuto. Il PC accetta i codici da dieci minuti prima a cinque dopo (lei lo
-legge e cammina); dopo tre sbagli aspetta un minuto.
+Il menu sul PC e «Senza lezione» si aprono con **quattro cifre che cambiano ogni ora** (`comune/codice-maestra.js`), come
+i codici a tempo delle banche: le due pagine le calcolano dall'ora, senza rete. La maestra le legge con «Codice per i PC»
+(nella pagina d'inizio e nella diretta), nascosto finché non lo chiede perché la pagina può stare sulla LIM, e visibile per
+un minuto. **Un codice letto vale almeno tre ore** (il PC accetta quelli delle tre ore prima e dell'ora dopo): la maestra
+se lo segna a inizio mattina e non ha fretta, e la pagina dice fino a che ora vale (`valeFinoAl`). Scelto dall'utente il
+20 novembre 2026: prima cambiava ogni cinque minuti, e metteva fretta.
+
+- **A tentativi non si indovina**: dopo tre sbagli il PC aspetta un minuto, poi due, quattro… fino a mezz'ora
+  (`attesaDopo`); il conto sta in `scuola:codice-maestra`, così chiudere il menu o riaprire la pagina non lo azzera.
 
 - **Ferma i bambini, non un adulto**: il segreto è nel file pubblico, e nasconderlo non servirebbe. Un codice a chiave
   pubblica non si può: una firma verificabile è lunga decine di byte, non quattro cifre.
@@ -66,7 +70,7 @@ chiavetta resta per quelli che non l'hanno mai aperta. Dal file (`file://`) il s
 Scartato: **il file dei bambini con la lezione dentro**, scaricato dal quaderno. Va copiato su ogni PC, magari in un
 momento concitato; la pagina che si riapre da sola e «Senza lezione» fanno lo stesso senza chiavetta.
 
-Nei test: `unita/scuola-codice-maestra` (quattro cifre, la finestra, quelle accettate, quasi mai uguali), in
+Nei test: `unita/scuola-codice-maestra` (quattro cifre, l'ora, le tre ore in cui vale, quasi mai uguali, l'attesa che raddoppia), in
 `unita/scuola-bambini` «I ripieghi» (il pavimento suo, `salta`, senza lezione e il suo ricordo), in `unita/scuola-lezione`
 `alleDomande`, in `unita/scuola-servizio` e `unita/scuola-rete` i messaggi `lezione`, `salta`, `domande`, `lascia`.
 Nel browser `integrazione/scuola` (le domande per lui dal pannello, il menu col codice, «Tutti alle domande», «Cambia la
@@ -76,4 +80,5 @@ menu salta al blocco dopo, a pagina riaperta si è ancora lì.
 Bersagli: `[data-azione=maestra|senza-lezione|codice-maestra|chiudi-menu|domande|salta|cambia-nome|esci|via-senza|scelta-tua
 |mostra-codice-pc|cambia-lezione|tutti-alle-domande|manda-lezione]`, `[data-campo=codice-maestra|ora-del-pc]`,
 `[data-menu-maestra]`, `[data-senza-lezione]`, `[data-codice-pc]`, `[data-codice-altra-ora]`, `[data-se-non-va]`,
-`[data-solo-domande]`, `[data-cambia-in-corso]`, `[data-ora-del-pc]`, `[data-codice-maestra-errore]`, `[data-schermata=senza]`.
+`[data-solo-domande]`, `[data-cambia-in-corso]`, `[data-ora-del-pc]`, `[data-codice-maestra-errore]`, `[data-schermata=senza]`,
+`[data-vale-fino]`.

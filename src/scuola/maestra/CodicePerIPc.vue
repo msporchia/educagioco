@@ -2,7 +2,7 @@
 // Il codice della maestra per i PC dei bambini (comune/codice-maestra.js): nascosto finché non lo chiede, perché la pagina
 // può stare sulla LIM; e quello di un'altra ora, per un PC con l'orologio sbagliato. docs/scuola/ripieghi.md
 import { ref, computed, onUnmounted } from 'vue'
-import { codiceAl, cambiaAl } from '../comune/codice-maestra.js'
+import { codiceAl, valeFinoAl } from '../comune/codice-maestra.js'
 import { ora as oraDi } from './utili.js'
 
 const VISIBILE = 60 * 1000
@@ -31,7 +31,7 @@ onUnmounted(() => clearInterval(battito))
         {{ visibile ? 'Nascondi il codice' : 'Codice per i PC' }}</button>
       <template v-if="visibile">
         <b class="cifre" data-codice-pc>{{ codice }}</b>
-        <span class="nota">vale fino alle {{ oraDi(cambiaAl(ora)) }}, poi ne esce un altro</span>
+        <span class="nota" data-vale-fino>vale fino alle {{ oraDi(valeFinoAl(ora)) }}: puoi segnartelo</span>
       </template>
     </div>
     <p class="nota">Sul PC di un bambino apre il tasto «Maestra» (le domande al posto del gioco, il blocco dopo, un altro nome) e

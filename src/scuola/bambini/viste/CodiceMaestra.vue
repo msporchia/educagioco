@@ -2,32 +2,49 @@
 // Il codice della maestra sul PC del bambino: quattro cifre a tempo (comune/codice-maestra.js). Dice anche l'ora del PC,
 // perché se l'orologio è sbagliato la maestra chiede alla sua pagina il codice di quell'ora. docs/scuola/ripieghi.md
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { codiceGiusto, SBAGLI, ATTESA_SBAGLI } from '../../comune/codice-maestra.js'
+import { codiceGiusto, SBAGLI, attesaDopo } from '../../comune/codice-maestra.js'
+
+// il conto degli sbagli resta a menu chiuso e a pagina riaperta: se no chiudere e riaprire azzererebbe l'attesa
+const CHIAVE = 'scuola:codice-maestra'
+function leggiConto() {
+  try { const c = JSON.parse(localStorage.getItem(CHIAVE)); if (c && Number.isFinite(c.fermoFino)) return c } catch { /* niente */ }
+  return { sbagli: 0, giri: 0, fermoFino: 0 }
+}
+function scriviConto(c) { try { localStorage.setItem(CHIAVE, JSON.stringify(c)) } catch { /* senza: vale finché la pagina è aperta */ } }
 
 const emit = defineEmits(['giusto', 'annulla'])
 const scritto = ref('')
 const errore = ref('')
 const ora = ref(Date.now())
 const campo = ref(null)
-let sbagli = 0, fermoFino = 0, battito = 0
+const conto = ref(leggiConto())
+let battito = 0
 
-const fermo = computed(() => ora.value < fermoFino)
+const fermo = computed(() => ora.value < conto.value.fermoFino)
+const minuti = computed(() => Math.max(1, Math.ceil((conto.value.fermoFino - ora.value) / 60000)))
 const pronto = computed(() => scritto.value.length === 4 && !fermo.value)
 const oraDelPc = computed(() => new Date(ora.value).toLocaleString('it-IT', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }))
 
 function scrivi(e) {
   scritto.value = String(e.target.value).replace(/\D/g, '').slice(0, 4)
   e.target.value = scritto.value
-  if (!fermo.value) errore.value = ''
+  errore.value = ''
 }
 
 function prova() {
   ora.value = Date.now()
   if (!pronto.value) return
-  if (codiceGiusto(scritto.value, ora.value)) return emit('giusto')
+  if (codiceGiusto(scritto.value, ora.value)) {
+    conto.value = { sbagli: 0, giri: 0, fermoFino: 0 }
+    scriviConto(conto.value)
+    return emit('giusto')
+  }
   scritto.value = ''
-  if (++sbagli >= SBAGLI) { sbagli = 0; fermoFino = ora.value + ATTESA_SBAGLI; errore.value = 'Troppi codici sbagliati: aspetta un minuto.' }
-  else errore.value = 'Il codice non è giusto.'
+  const c = { ...conto.value, sbagli: conto.value.sbagli + 1 }
+  if (c.sbagli >= SBAGLI) { c.sbagli = 0; c.giri++; c.fermoFino = ora.value + attesaDopo(c.giri) }
+  conto.value = c
+  scriviConto(c)
+  errore.value = fermo.value ? '' : 'Il codice non è giusto.'
   campo.value?.focus()
 }
 
@@ -45,7 +62,8 @@ onUnmounted(() => clearInterval(battito))
       <button type="submit" class="bottone" :disabled="!pronto" data-azione="codice-maestra">Apri</button>
       <button type="button" class="bottone chiaro" data-azione="annulla" @click="emit('annulla')">Annulla</button>
     </div>
-    <p v-if="errore" class="avviso" data-codice-maestra-errore>{{ errore }}</p>
+    <p v-if="fermo" class="avviso" data-codice-maestra-errore>Troppi codici sbagliati: aspetta {{ minuti === 1 ? 'un minuto' : `${minuti} minuti` }}.</p>
+    <p v-else-if="errore" class="avviso" data-codice-maestra-errore>{{ errore }}</p>
     <p class="nota" data-ora-del-pc>Questo computer segna {{ oraDelPc }}. Se è sbagliato, nella pagina della maestra c'è il codice per quell'ora.</p>
   </form>
 </template>

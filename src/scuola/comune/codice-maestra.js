@@ -1,9 +1,10 @@
-/* Il codice della maestra (docs/scuola/ripieghi.md): quattro cifre che cambiano ogni cinque minuti, calcolate dall'ora
-   dalle due pagine, anche senza rete, come i codici a tempo delle banche. Apre il menu della maestra sul PC del bambino e
-   «Senza lezione». Ferma i bambini, non un adulto: il segreto è nel file pubblico, e nasconderlo non servirebbe. */
-export const FINESTRA = 5 * 60 * 1000
-// le finestre accettate attorno a quella del PC del bambino: la maestra lo legge, cammina, lo scrive
-const PRIMA = 2, DOPO = 1
+/* Il codice della maestra (docs/scuola/ripieghi.md): quattro cifre che cambiano ogni ora, calcolate dall'ora dalle due
+   pagine, anche senza rete, come i codici a tempo delle banche. Apre il menu della maestra sul PC del bambino e «Senza
+   lezione». Ferma i bambini, non un adulto: il segreto è nel file pubblico, e nasconderlo non servirebbe. */
+export const FINESTRA = 60 * 60 * 1000
+// le finestre accettate attorno a quella del PC del bambino: un codice letto vale almeno tre ore (la maestra se lo segna a
+// inizio mattina), e un'ora prima per un orologio un po' indietro
+const PRIMA = 3, DOPO = 1
 const SEGRETO = 'educagioco·scuola·la-maestra-apre'
 
 // cyrb53: un mescolamento a 53 bit, puro e sincrono (crypto.subtle da file:// non c'è dappertutto)
@@ -22,9 +23,9 @@ function mescola(testo) {
 const finestra = ms => Math.floor(ms / FINESTRA)
 const codiceDella = f => String(mescola(`${SEGRETO}:${f}`) % 10000).padStart(4, '0')
 
-/* il codice valido all'istante `ms`, e quando cambia */
+/* il codice da leggere all'istante `ms`, e fino a quando il PC lo accetta */
 export const codiceAl = ms => codiceDella(finestra(ms))
-export const cambiaAl = ms => (finestra(ms) + 1) * FINESTRA
+export const valeFinoAl = ms => (finestra(ms) + PRIMA + 1) * FINESTRA
 
 /* il codice scritto sul PC del bambino, con l'ora di quel PC */
 export function codiceGiusto(scritto, ms) {
@@ -35,6 +36,8 @@ export function codiceGiusto(scritto, ms) {
   return false
 }
 
-/* dopo tre sbagli si aspetta un minuto: a tentativi quattro cifre non si indovinano */
+/* dopo tre sbagli si aspetta, e ogni volta il doppio (un minuto, due, quattro… fino a mezz'ora): un codice che vale ore
+   a tentativi non si indovina. Il conto resta a pagina riaperta (bambini/viste/CodiceMaestra.vue) */
 export const SBAGLI = 3
 export const ATTESA_SBAGLI = 60 * 1000
+export const attesaDopo = giri => Math.min(30 * 60 * 1000, ATTESA_SBAGLI * 2 ** Math.max(0, giri - 1))
