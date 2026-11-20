@@ -69,7 +69,7 @@ jobs:
           fi
           echo "la scuola è la release $tag"
           mkdir -p dist-sito/scuola
-          gh release download "$tag" --dir dist-sito/scuola --pattern index.html --pattern maestra.html --pattern versione.json
+          gh release download "$tag" --dir dist-sito/scuola --pattern index.html --pattern maestra.html --pattern versione.json --pattern sw.js
           echo "id=$(node -p "require('./dist-sito/scuola/versione.json').id")" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-pages-artifact@v5
         with:

@@ -10,9 +10,10 @@
    Il bambino lo scrive, tocca il suo nome e la maestra lo vede preso;
    al «Via» risponde giusto a due schede, vede il passaggio, «Continua»,
    e negli Asteroidi un colpo arriva nel pannello (senza 3D si torna alle
-   schede, e si risponde lì). «Avanti tutti» due volte: la prima alza il
-   pavimento al blocco dove lui è già (resta lì), la seconda lo porta a
-   «Hai finito!». «Chiudi lezione»: lui vede che è finita, la maestra il
+   schede, e si risponde lì). La maestra gli dà «Le domande» al posto del
+   gioco, e sul suo PC il tasto «Maestra», col codice a tempo, apre il
+   menu. «Avanti tutti» una volta: lui era già da solo al blocco «quando
+   lo dice la maestra», e arriva a «Hai finito!». «Chiudi lezione»: lui vede che è finita, la maestra il
    resoconto con le sue giuste blocco per blocco. E alla fine la pagina
    dei bambini non ha lasciato niente sul PC: IndexedDB vuoto, in
    localStorage solo chiavi `scuola:*`.
@@ -181,13 +182,43 @@ stessaLista('il servizio ha le tre risposte di Lorenzo, coi blocchi', risposte.m
             [[0, 'tab:prodotto', true], [0, 'tab:prodotto', true], [1, 'tab:prodotto', true]])
 if (nelGioco) controlla('quella del gioco racconta la tabellina del 2', /^2 × \d+$/.test(risposte[2]?.fatto || ''), risposte[2]?.fatto)
 
-/* ── «Avanti tutti»: il pavimento sale; chi è già nel blocco 2 ci resta, alla seconda finisce ── */
-controlla('la maestra sa dove porta «Avanti tutti»', /passa al blocco 2/.test(await testo(m, '[data-avanti]')), await testo(m, '[data-avanti]'))
-await M.tocca('[data-azione="avanti-tutti"]')
-await m.waitForSelector('[data-avanti="1"]', { timeout: 5000 })
-await attendi(b, 500)
-uguale('alla prima Lorenzo, già nel blocco 2, resta lì', await b.locator('[data-schermata="blocco"] [data-domanda][data-blocco="1"]').count(), 1)
-controlla('e la maestra sa che la prossima chiude', /finisce la lezione/.test(await testo(m, '[data-avanti]')), await testo(m, '[data-avanti]'))
+/* ── i ripieghi (docs/scuola/ripieghi.md): le domande per lui solo, il menu della maestra sul suo PC ── */
+const card = `[data-pannello] [data-alunno="${lorenzo}"]`
+await M.tocca(`${card} [data-azione="domande"]`)
+await m.waitForSelector(`${card} [data-solo-domande]`, { timeout: 5000 })
+await b.waitForSelector('[data-domanda][data-blocco="1"] .qz-tasto', { timeout: 8000 })
+uguale('«Le domande» dalla maestra: sul suo PC il gioco lascia il posto alle schede', await b.locator('[data-gioco="asteroidi"]').count(), 0)
+uguale('e il servizio lo sa', servizio.lezioni.get(codice).stato.alunni.find(a => a.id === lorenzo).domande, true)
+const { codiceAl } = await import('../../src/scuola/comune/codice-maestra.js')
+await B.tocca('[data-azione="maestra"]')
+await b.fill('[data-menu-maestra] [data-campo="codice-maestra"]', codiceAl(Date.now()))
+await B.tocca('[data-menu-maestra] [data-azione="codice-maestra"]')
+await b.waitForSelector('[data-menu-maestra] [data-azione="salta"]', { timeout: 3000 })
+uguale('col codice della maestra il menu ha «Cambia nome»', await b.locator('[data-menu-maestra] [data-azione="cambia-nome"]').count(), 1)
+await scatto(b, 'scuola-menu-maestra')
+await B.tocca('[data-azione="chiudi-menu"]')
+uguale('la ✕ lo chiude', await b.locator('[data-menu-maestra]').count(), 0)
+
+/* ── «Tutti alle domande» e «Cambia la lezione»: la lezione cambia a metà, senza un codice nuovo ── */
+await M.tocca('[data-azione="tutti-alle-domande"]')
+await M.tocca('[data-se-non-va] [data-azione="conferma"]')
+await m.waitForFunction(() => /senza giochi/.test(document.querySelector('[data-messaggio]')?.innerText || ''), null, { timeout: 5000 })
+const sulServizioOra = () => servizio.lezioni.get(codice).stato
+controlla('«Tutti alle domande»: il blocco degli Asteroidi lascia il gioco', !('gioco' in sulServizioOra().lezione.blocchi[1].esercizio) && sulServizioOra().rifatta === 1)
+await b.waitForSelector('[data-domanda][data-blocco="1"] .qz-tasto', { timeout: 8000 })
+await M.tocca('[data-azione="cambia-lezione"]')
+await schermata(m, 'lezione')
+controlla('«Cambia la lezione» apre l\'editor con la lezione in corso', await m.locator('[data-cambia-in-corso]').count() === 1 && await m.locator('[data-blocco="1"]').count() === 1)
+await M.tocca('[data-azione="manda-lezione"]')
+await schermata(m, 'diretta')
+await m.waitForFunction(() => true)
+await attendi(m, 300)
+uguale('mandata: il servizio ha la lezione rifatta un\'altra volta', sulServizioOra().rifatta, 2)
+await b.waitForSelector('[data-domanda][data-blocco="1"]', { timeout: 5000 })
+controlla('e Lorenzo resta nel blocco 2', true)
+
+/* ── «Avanti tutti»: Lorenzo è già da solo nel blocco 2, «quando lo dice la maestra»: una pressione e finisce ── */
+controlla('la maestra sa che «Avanti tutti» chiude la lezione', /finisce la lezione/.test(await testo(m, '[data-avanti]')), await testo(m, '[data-avanti]'))
 await M.tocca('[data-azione="avanti-tutti"]')
 await schermata(b, 'finito')
 controlla('il bambino ha finito', /Hai finito!/.test(await testo(b, '[data-finito]')))

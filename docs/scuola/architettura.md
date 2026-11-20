@@ -90,7 +90,8 @@ i venti moduli che pesano di più.
 Il service worker dell'app di casa sta alla radice del sito e controllerebbe anche `/scuola/`: con la rete
 lenta risponderebbe con la pagina di casa che ha in cache. Il suo `fetch` (`vite.config.js`) lascia
 passare ogni indirizzo sotto `/scuola/`; questa riga deve uscire con l'app di casa prima della prima
-release della scuola.
+release della scuola. Le due pagine hanno un service worker loro, `scuola/sw.js` con lo scope `/scuola/`, che la build
+copia in `dist-scuola/` e la release allega accanto alle pagine: le riapre senza rete ([ripieghi.md](ripieghi.md)).
 
 Nei test: `unita/scuola-sostituti` (ogni sostituto esporta i nomi dell'originale), `unita/scuola-pacchetto` (la
 guardia degli import, per pagina), `unita/scuola-archivio` (l'archivio in memoria rilegge copie e non tocca un

@@ -3,7 +3,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { viteSingleFile } from 'vite-plugin-singlefile'
 import { execSync } from 'node:child_process'
-import { mkdirSync, writeFileSync, statSync } from 'node:fs'
+import { mkdirSync, writeFileSync, statSync, copyFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { SOSTITUTI } from './src/scuola/sostituti/elenco.js'
 
@@ -32,7 +32,8 @@ function sostituti () {
   } }
 }
 
-// la pagina esce alla radice di dist-scuola/ (non in scuola/), poi il tetto di peso e, dopo l'ultima, versione.json
+// la pagina esce alla radice di dist-scuola/ (non in scuola/), poi il tetto di peso e, dopo l'ultima, versione.json e il
+// service worker delle due pagine (docs/scuola/ripieghi.md)
 function chiudi (pagina) {
   return { name: 'chiudi-scuola', apply: 'build', enforce: 'post',
   generateBundle (_o, bundle) {
@@ -53,6 +54,7 @@ function chiudi (pagina) {
     if (pagina === PAGINE[PAGINE.length - 1]) {
       writeFileSync(resolve(opz.dir, 'versione.json'),
         JSON.stringify({ id: VERSIONE, data: new Date().toISOString() }, null, 2))
+      copyFileSync(resolve(RADICE, 'scuola/sw.js'), resolve(opz.dir, 'sw.js'))
     }
   } }
 }

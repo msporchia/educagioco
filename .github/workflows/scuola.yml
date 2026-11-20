@@ -27,7 +27,7 @@ jobs:
       - name: La release col nome del tag
         run: |
           gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes "La scuola, versione $GITHUB_REF_NAME" \
-            dist-scuola/index.html dist-scuola/maestra.html dist-scuola/versione.json
+            dist-scuola/index.html dist-scuola/maestra.html dist-scuola/versione.json dist-scuola/sw.js
       # il sito di casa riparte da main e si porta dietro l'ultima release della scuola
       - name: Ripubblica il sito
         run: gh workflow run pubblica.yml --ref main
