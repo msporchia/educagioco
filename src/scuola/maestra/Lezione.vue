@@ -57,32 +57,42 @@ function sistemaModo(b) { if (!modiPassaPer(b.esercizio).some(m => m.id === b.mo
 function cambiaEsercizio(b, x) { b.esercizio = x; sistemaModo(b) }
 
 // la lezione come uscirà: senza nome prende quello del primo esercizio
+// un blocco solo va finché la maestra chiude: niente «quando si passa» né «in tondo» (scelta dell'utente: un blocco dopo si
+// aggiunge, non si propone)
+const solo = computed(() => blocchi.value.length === 1)
+const passaVero = b => (solo.value ? null : passaDi(b))
 const pronta = computed(() => {
   const primo = blocchi.value[0]?.esercizio
   const n = Q.nomePulito(nome.value, Q.MAX_NOME_LEZIONE) || (valido(primo) ? descrivi(primo).slice(0, Q.MAX_NOME_LEZIONE) : '')
-  return { id: partenza.id, nome: n, blocchi: blocchi.value.map(b => ({ esercizio: b.esercizio, passa: passaDi(b) })), inTondo: inTondo.value }
+  return { id: partenza.id, nome: n, blocchi: blocchi.value.map(b => ({ esercizio: b.esercizio, passa: passaVero(b) })), inTondo: !solo.value && inTondo.value }
 })
 const problema = computed(() => {
   for (const [i, b] of blocchi.value.entries()) {
     const quale = blocchi.value.length > 1 ? `Il blocco ${i + 1}` : 'Il blocco'
     if (!valido(b.esercizio)) return `${quale} così non chiede niente.`
     const m = modo(b.modo)
-    if (!passaValido(passaDi(b))) return `${quale}: le ${m.unita} vanno da 1 a ${m.tetto}.`
+    if (!passaValido(passaVero(b))) return `${quale}: le ${m.unita} vanno da 1 a ${m.tetto}.`
   }
   return Q.lezioneValida(pronta.value) ? '' : 'La lezione non è completa.'
 })
 
-// la nota sotto l'ultimo blocco: cosa succede dopo
-const dopoLUltimo = computed(() => {
-  if (inTondo.value) return 'Poi si ricomincia dal primo blocco.'
-  return modo(blocchi.value.at(-1).modo).unita ? 'Poi il bambino vede «Hai finito!».' : 'Il bambino resta qui finché non chiudi il blocco.'
-})
 
 // un blocco nuovo ripete l'esercizio dell'ultimo e passa dopo le giuste: si cambia quello che serve
 function aggiungi() {
   if (blocchi.value.length >= MAX_BLOCCHI) return
   blocchi.value.push(daBlocco({ esercizio: JSON.parse(JSON.stringify(blocchi.value.at(-1).esercizio)), passa: Q.passaDiBase() }))
 }
+// il seguito consigliato di una lezione pronta: il blocco dopo, e il primo che passa alla sua soglia
+const seguito = computed(() => (props.proposta?.seguito && solo.value && !vecchia ? props.proposta.seguito : null))
+function aggiungiSeguito() {
+  const s = seguito.value
+  if (!s) return
+  const primo = blocchi.value[0]
+  primo.modo = modoDi(s.primoPassa); primo.n = sogliaDi(s.primoPassa)
+  blocchi.value.push(daBlocco({ esercizio: JSON.parse(JSON.stringify(s.esercizio)), passa: null }))
+}
+// l'ultimo blocco senza «in tondo» non ha un blocco dopo: lì si dice quando la lezione finisce per il bambino
+const titoloPassa = i => (i === blocchi.value.length - 1 && !inTondo.value ? 'Per il bambino la lezione finisce' : 'Al blocco dopo si passa')
 const togli = i => { if (blocchi.value.length > 1) blocchi.value.splice(i, 1) }
 function sposta(i, verso) {
   const j = i + verso
@@ -124,12 +134,11 @@ async function copiaLink() {
       <input v-model="nome" class="campo" :maxlength="Q.MAX_NOME_LEZIONE" :placeholder="pronta.nome || 'per esempio: ripasso del 9'" data-campo="nome-lezione">
     </label>
     <p v-if="props.proposta && !vecchia" class="bene" data-da-pronta>Pronta per la {{ props.proposta.anno }}ª: {{ props.proposta.allena }} Cambia quello che vuoi e salvala.</p>
-    <p class="nota">Una fila di blocchi: ognuno dice a che gioco, cosa si fa e quando si passa al blocco dopo.</p>
   </section>
 
   <section v-for="(b, i) in blocchi" :key="b.chiave" class="carta" :data-blocco="i">
     <div class="fila tra">
-      <h2>{{ blocchi.length > 1 ? `Blocco ${i + 1}` : 'Il blocco' }}</h2>
+      <h2 v-if="!solo">Blocco {{ i + 1 }}</h2>
       <span v-if="blocchi.length > 1" class="fila">
         <button class="bottone chiaro piccolo" :disabled="i === 0" aria-label="sposta su" data-azione="su" @click="sposta(i, -1)">↑</button>
         <button class="bottone chiaro piccolo" :disabled="i === blocchi.length - 1" aria-label="sposta giù" data-azione="giu" @click="sposta(i, 1)">↓</button>
@@ -137,9 +146,10 @@ async function copiaLink() {
       </span>
     </div>
     <SceltaEsercizio :model-value="b.esercizio" dove="blocco" @update:model-value="x => cambiaEsercizio(b, x)" />
-    <div class="gruppo passa">
+    <p v-if="solo" class="nota" data-un-blocco>Si gioca finché non chiudi la lezione.</p>
+    <div v-else class="gruppo passa">
       <div class="fila">
-        <span class="titoletto">Al blocco dopo si passa</span>
+        <span class="titoletto">{{ titoloPassa(i) }}</span>
         <b :data-passa-scelto="b.modo">{{ passaValido(passaDi(b)) ? descriviPassa(passaDi(b), b.esercizio) : '…' }}</b>
         <button class="bottone chiaro piccolo" :aria-expanded="b.cambia" data-azione="cambia-passa" @click="b.cambia = !b.cambia">
           {{ b.cambia ? 'Fatto' : 'Cambia' }}</button>
@@ -159,16 +169,21 @@ async function copiaLink() {
           <span>{{ b.modo === 'minuti' ? 'minuti' : b.modo === 'giuste' ? contaDi(b.esercizio).giuste : contaDi(b.esercizio).tante }}</span>
         </div>
       </template>
-      <p v-if="i === blocchi.length - 1" class="nota">{{ dopoLUltimo }}</p>
+
     </div>
   </section>
 
   <section class="carta">
-    <div class="fila">
-      <button v-if="blocchi.length < MAX_BLOCCHI" class="tessera" data-azione="aggiungi-blocco" @click="aggiungi">＋ Aggiungi un blocco</button>
-      <span v-else class="nota">Al massimo {{ MAX_BLOCCHI }} blocchi.</span>
+    <div v-if="seguito" class="fila">
+      <button class="tessera" data-azione="aggiungi-seguito" @click="aggiungiSeguito">＋ Poi, consigliato: {{ descrivi(seguito.esercizio) }}</button>
+      <Aiuto :testo="`Il seguito consigliato per chi finisce prima: il primo blocco passa ${descriviPassa(seguito.primoPassa, blocchi[0].esercizio)}, poi si fa questo finché chiudi la lezione.`" />
     </div>
     <div class="fila">
+      <button v-if="blocchi.length < MAX_BLOCCHI" class="tessera" data-azione="aggiungi-blocco" @click="aggiungi">＋ Aggiungi un blocco dopo</button>
+      <span v-else class="nota">Al massimo {{ MAX_BLOCCHI }} blocchi.</span>
+      <Aiuto testo="Una cosa dopo l'altra: per esempio prima la tabellina del 7 a schede, poi gli Asteroidi. Per ogni blocco scegli quando si passa al dopo. Per mescolare due cose nelle stesse domande, invece, c'è «Mescola un'altra cosa»." />
+    </div>
+    <div v-if="!solo" class="fila">
       <label class="spunta">
         <input v-model="inTondo" type="checkbox" data-campo="in-tondo">
         <span>In tondo: dopo l'ultimo blocco si ricomincia dal primo</span>

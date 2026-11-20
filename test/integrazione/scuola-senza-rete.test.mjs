@@ -8,8 +8,8 @@
    Sulla pagina della maestra «Codice per i PC» dà le quattro cifre; sul
    PC del bambino «Senza lezione», un codice sbagliato no, quello giusto
    sì; la seconda, il gioco a schede, la prima lezione pronta, «Via», e si
-   risponde. Il tasto «Maestra» (lo stesso codice) salta al blocco dopo;
-   a pagina riaperta si è ancora lì; «Torna all'inizio» riporta al codice.
+   risponde. Il tasto «Maestra» (lo stesso codice) salta al blocco dopo,
+   e la lezione pronta, che è di un blocco, finisce; a pagina riaperta si è ancora lì; «Torna all'inizio» riporta al codice.
    Docs: docs/scuola/ripieghi.md. `node test/esegui.mjs scuola-senza-rete`
    ═══════════════════════════════════════════════════════════════════ */
 import { resolve } from 'node:path'
@@ -100,10 +100,10 @@ await B.tocca('[data-azione="maestra"]')
 await b.fill('[data-menu-maestra] [data-campo="codice-maestra"]', cifre)
 await B.tocca('[data-menu-maestra] [data-azione="codice-maestra"]')
 await B.tocca('[data-menu-maestra] [data-azione="salta"]')
-await b.waitForSelector('[data-domanda][data-blocco="1"]', { timeout: 5000 })
-controlla('«Salta al blocco dopo» porta al secondo blocco', true)
+await schermata(b, 'finito', 5000)
+controlla('una lezione pronta è un blocco solo: «Salta al blocco dopo» la fa finire', true)
 await b.reload()
-await b.waitForSelector('[data-domanda][data-blocco="1"]', { timeout: 15000 })
+await schermata(b, 'finito', 15000)
 controlla('a pagina riaperta, senza rete, si è ancora lì', true)
 await B.tocca('[data-azione="maestra"]')
 await b.fill('[data-menu-maestra] [data-campo="codice-maestra"]', cifre)

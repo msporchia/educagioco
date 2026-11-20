@@ -80,7 +80,7 @@ o `'tanto'` (`PESI`): una parte «tanto» esce quattro volte una «un po'», e l
 sparse e non a blocchi (con 4 e 1, mai cinque della prima di fila). È la risposta a «tanta tabellina dell'8 e un ripasso
 blando del 3, 4, 5 e 6»: due parti di tabelline; ma si mescolano anche voci diverse (tabelline e orologio). Un insieme va in un
 gioco solo se il gioco accetta ogni parte; agli Asteroidi arriva come gruppi con le loro volte (`limiteAsteroidi`). Nell'editor
-della maestra una parte sola è un esercizio semplice, come prima: «＋ Un'altra cosa» la fa diventare un insieme. Lì il peso
+della maestra una parte sola è un esercizio semplice, come prima: «＋ Mescola un'altra cosa» la fa diventare un insieme (il suo «?» dice la differenza con un blocco dopo). Lì il peso
 non si scrive: ogni parte ha un colore e tre tasti a pallini (uno, due, quattro), e sopra una barra divisa nei colori dice
 «8 su 10», «2 su 10» (`suDieci` in `SceltaEsercizio.vue`). Provato «Un po'/Normale/Tanto» a parole: per l'utente era
 testo e basta.

@@ -5,6 +5,7 @@ import { ref, computed } from 'vue'
 import { valido, descrivi, giochiPer, giocoDi, PESI, MAX_PARTI, GIOCHI, DIFFICOLTA, difficoltaDi, materieDelGioco, mescolaPiuCose } from '../comune/esercizi.js'
 import ParteEsercizio from './ParteEsercizio.vue'
 import TesseraGioco from './TesseraGioco.vue'
+import Aiuto from './Aiuto.vue'
 
 const props = defineProps({
   modelValue: { type: Object, required: true },
@@ -92,9 +93,10 @@ const scegliDifficolta = d => scrivi(parti.value, gioco.value, d)
         </div>
         <ParteEsercizio :model-value="p.esercizio" :gioco="gioco" @update:model-value="x => cambiaParte(i, x)" />
       </div>
-      <button v-if="piuCose && parti.length < MAX_PARTI" class="tessera aggiungi" data-azione="aggiungi-parte" @click="aggiungiParte">
-        ＋ Un'altra cosa, per esempio un ripasso
-      </button>
+      <span v-if="piuCose && parti.length < MAX_PARTI" class="fila">
+        <button class="tessera aggiungi" data-azione="aggiungi-parte" @click="aggiungiParte">＋ Mescola un'altra cosa</button>
+        <Aiuto testo="Nello stesso blocco le domande si mescolano: per esempio tanta tabellina dell'8 e un po' di ripasso del 3. Per fare una cosa dopo l'altra, invece, aggiungi un blocco dopo." />
+      </span>
     </div>
 
     <div v-if="schedaDelGioco.difficolta" class="gruppo">
@@ -107,9 +109,8 @@ const scegliDifficolta = d => scrivi(parti.value, gioco.value, d)
       <p class="nota">{{ difficolta === 'normale' ? 'Com\'è a casa.' : schedaDelGioco.difficolta[difficolta] }}</p>
     </div>
 
-    <p class="descrizione" :class="{ storta: !valido(e) }" data-descrizione>
-      {{ valido(e) ? descrivi(e) : 'Così l\'esercizio non chiede niente: cambia i gradini o le domande.' }}
-    </p>
+    <!-- il riassunto ripeteva le scelte appena fatte: resta solo quando l'esercizio così non chiede niente -->
+    <p v-if="!valido(e)" class="descrizione storta" data-descrizione>Così l'esercizio non chiede niente: cambia le scelte qui sopra.</p>
   </div>
 </template>
 

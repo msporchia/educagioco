@@ -41,7 +41,10 @@ chiude (negli Asteroidi un colpo sbagliato con la domanda aperta non è una doma
 
 ## I casi di prima, dentro questo
 
+- **Un blocco solo** = si gioca finché la maestra chiude la lezione (`passa: null`): è la lezione nuova e quella pronta.
+  Nell'editor un blocco solo non ha «quando si passa» né «in tondo»; i blocchi dopo si aggiungono.
 - **Obiettivo + «se hai finito»** = due blocchi: il primo `{ domande: 20 }` (o `{ minuti }`), il secondo `passa: null`.
+  Nell'ultimo blocco la scelta si chiama «Per il bambino la lezione finisce».
   `convertiLezione` trasforma così le lezioni salvate prima (quaderno, link, file), e una lezione già a blocchi torna uguale.
 - **«Prima un po' di 7, poi l'8»** = due blocchi, il primo `{ giuste: 5 }`.
 - **I giri a rotazione** = più blocchi `passa: null`, anche in giochi diversi o nello stesso gioco con voci diverse,

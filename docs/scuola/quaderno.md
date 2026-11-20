@@ -145,7 +145,8 @@ Colonne: Bambino, Nuovo, per ogni blocco «Blocco N: fatte» e «Blocco N: giust
 ## L'editor della lezione
 
 Una carta per blocco, nell'ordine: **il gioco, cosa si fa e quanto è difficile** (`SceltaEsercizio.vue`,
-[esercizi.md](esercizi.md)) e **quando si passa al blocco dopo**: una riga sola, «Al blocco dopo si passa quando lo dice
+[esercizi.md](esercizi.md)) e, solo se c'è più di un blocco, **quando si passa al blocco dopo** (nell'ultimo «Per il
+bambino la lezione finisce»): una riga sola, «Al blocco dopo si passa quando lo dice
 la maestra», con «Cambia» che apre le scelte (prima «Lo dici tu», poi giuste, domande, minuti con le parole del gioco:
 [lezione.md](lezione.md)), ognuna col suo «?»; scegliendo una soglia il numero riparte dal suo `base`. Ogni blocco si
 sposta su e giù e si toglie (l'ultimo che resta no); «＋ Aggiungi un blocco», fino a `MAX_BLOCCHI`, ripete l'esercizio
@@ -162,6 +163,10 @@ dopo («Hai finito!», si resta lì fino ad «Avanti tutti», o si ricomincia). 
   risposte e la giusta segnata, e «Un'altra». I giochi col contenuto loro hanno le scelte come **righe** (`Righe.vue`) col
   caso concreto scritto sotto (cosa chiede, cosa fa il bambino), non tessere col nome solo: «il banco» o «l'unità grande»
   non dicevano niente.
+- **Una lezione nasce di un blocco** e va finché la maestra la chiude («Si gioca finché non chiudi la lezione»): niente
+  «quando si passa» né «in tondo». «＋ Aggiungi un blocco dopo» fa la fila, «＋ Mescola un'altra cosa» mescola nello stesso
+  blocco, ognuno col «?» che dice la differenza; una lezione pronta offre il suo seguito («＋ Poi, consigliato: …»). Sotto
+  l'esercizio non si ripete più il riassunto delle scelte: resta solo l'avviso quando così non chiede niente.
 - **Il «?»** (`Aiuto.vue`) accanto alle scelte meno chiare: un tocco apre due righe, un tocco fuori le chiude (col dito
   niente tooltip).
 - **Quanto è difficile**: tre tasti con tre tacche che si riempiono, e una riga su cosa cambia.

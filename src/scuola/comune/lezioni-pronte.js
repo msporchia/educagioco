@@ -261,11 +261,13 @@ const SCRITTE = {
 const slug = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 const conGioco = (e, gioco) => (e && giochiPer(e).some(g => g.id === gioco) ? { ...e, gioco } : e)
 
-// l'obiettivo è il primo blocco (passa a quella soglia), il «se hai finito» il secondo (quando lo dice la maestra)
+/* una lezione pronta è un blocco solo, che va finché la maestra chiude (scelta dell'utente: due blocchi già fatti confondono
+   chi il gioco non lo conosce). Il «se hai finito» è il `seguito` consigliato: l'editor lo offre come blocco da aggiungere,
+   e aggiungendolo il primo passa a quella soglia */
 function scritta(anno, materia, [nome, allena, esercizio, misura, dopo]) {
   const passa = typeof misura === 'string' ? { minuti: Number.parseInt(misura, 10) } : { domande: misura }
   return { id: `${anno}-${materia}-${slug(nome)}`, anno, materia, nome, allena,
-           blocchi: [{ esercizio, passa }, ...(dopo ? [{ esercizio: dopo, passa: null }] : [])], inTondo: false }
+           blocchi: [{ esercizio, passa: null }], seguito: dopo ? { esercizio: dopo, primoPassa: passa } : null, inTondo: false }
 }
 
 // dove un gioco vero accetta il primo blocco, la stessa lezione anche lì (e gli altri blocchi, se li accetta)
@@ -273,6 +275,7 @@ function neiGiochi(p) {
   return GIOCHI.filter(g => g.id !== 'schede' && (g.daAnno ?? 1) <= p.anno && giochiPer(p.blocchi[0].esercizio).some(x => x.id === g.id)).map(g => ({
     ...p, id: `${p.id}-${g.id}`, nome: `${p.nome} ${g.nei}`,
     blocchi: p.blocchi.map(b => ({ ...b, esercizio: conGioco(b.esercizio, g.id) })),
+    seguito: p.seguito && { ...p.seguito, esercizio: conGioco(p.seguito.esercizio, g.id) },
   }))
 }
 

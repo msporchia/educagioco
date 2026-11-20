@@ -13,14 +13,15 @@ Una lezione pronta è la lezione a blocchi di [lezione.md](lezione.md) senza `id
 { id: '3-matematica-le-prime-divisioni',      // per la pagina e i test, non per il quaderno
   anno: 3, materia: 'matematica',             // 1..5 e una materia del CATALOGO
   nome, allena,                               // allena: una riga per la maestra, «cosa allena»
-  blocchi: [{ esercizio, passa: { domande: n } | { minuti: n } },   // l'obiettivo: passa da solo
-            { esercizio, passa: null }],                           // il «se hai finito», se c'è: quando lo dice la maestra
+  blocchi: [{ esercizio, passa: null }],      // un blocco solo: va finché la maestra chiude la lezione
+  seguito: { esercizio, primoPassa: { domande: n } | { minuti: n } } | null,   // il «se hai finito» consigliato
   inTondo: false }
 ```
 
-Sono scritte come obiettivo e «se hai finito» (sotto), e diventano i due blocchi: la forma che darebbe
-`convertiLezione` a una lezione di prima. `lezioneDa(pronta, id)` ne fa la lezione del quaderno (copia, con l'id
-nuovo, già a blocchi): l'editor parte da quella.
+Sono scritte come obiettivo e «se hai finito» (sotto), ma **diventano un blocco solo** (scelta dell'utente, 20 novembre
+2026: due blocchi già fatti confondevano chi il gioco non lo conosce). Il «se hai finito» è il `seguito`: l'editor lo offre
+come «＋ Poi, consigliato: …», e aggiungendolo il primo blocco passa a quella soglia. `lezioneDa(pronta, id)` ne fa la
+lezione del quaderno (copia, con l'id nuovo, senza il seguito): l'editor parte da quella.
 
 ## Il criterio
 
@@ -38,7 +39,7 @@ nuovo, già a blocchi): l'editor parte da quella.
   dello stesso gradino solo lo specchio; le viste dall'alto (`geo:viste`) in quinta, in terza solo nomi e
   facce dei solidi; i numeri con la virgola (`soldi` 4, gradino di terza) in quarta, perché la virgola si fa a
   metà quarta; gli ambienti del mondo (`animali` 2-4) anche in quarta, dove sono geografia.
-- **Il «se hai finito»** (il secondo blocco) è il passo prima (ripasso) o quello accanto dello stesso anno; mai un anno dopo.
+- **Il «se hai finito»** (il seguito consigliato) è il passo prima (ripasso) o quello accanto dello stesso anno; mai un anno dopo.
 - **Quante**: 15 domande in prima, 20 dopo, 10 per i testi lunghi (capire, indizi), 30 per un gruppo di
   tabelline; i minuti per «tutte le tabelline» (10, o 5 per il riscaldamento di quarta e quinta).
 - **Niente riempitivi**: un ripasso c'è solo dove il programma lo chiede (le tabelline prima delle operazioni
@@ -48,7 +49,7 @@ nuovo, già a blocchi): l'editor parte da quella.
 
 Dove un gioco vero accetta il primo blocco (`giochiPer`, [esercizi.md](esercizi.md) «Il gioco in cui si fa»), la
 stessa lezione c'è anche lì, fatta da sola: stessi esercizi con `gioco`, nome con «negli Asteroidi» in coda,
-id con `-asteroidi` in coda. Il secondo blocco va nel gioco se il gioco lo accetta, se no resta alle domande.
+id con `-asteroidi` in coda. Il seguito va nel gioco se il gioco lo accetta, se no resta alle domande.
 Il gioco della lezione (`giocoDellaPronta`, il filtro del percorso) è quello del primo blocco.
 Oggi sono le tabelline, col risultato e col numero nascosto, dalla seconda alla quinta.
 
@@ -73,7 +74,7 @@ In tutto 165, contate le 9 negli Asteroidi. Il numero esatto lo dice `node test/
 
 ## Come se ne aggiunge una
 
-Una riga in `SCRITTE[anno][materia]`: `[nome, allena, obiettivo, quante o '<n> min', dopo]` (i due blocchi), con `m(modulo,
+Una riga in `SCRITTE[anno][materia]`: `[nome, allena, obiettivo, quante o '<n> min', dopo]` (il blocco, la soglia e il seguito), con `m(modulo,
 da, a, tipologie)` e `t(tabelline, modo)`. Il nome è unico nel suo anno e nella sua materia e sta nei 60
 caratteri anche con «negli Asteroidi» in coda; l'id viene dal nome. La versione nei giochi nasce da sé. Una
 voce nuova del catalogo con un gradino di un anno vuole una lezione in quell'anno: il test lo dice.

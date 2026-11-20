@@ -14,14 +14,14 @@ import { lezioneValida as validaComune, passaValido, modoDi } from '../../src/sc
 const senzaGioco = ({ gioco, ...resto }) => resto
 
 /* ══════════ 1. ogni lezione pronta è una lezione valida ══════════ */
-// l'obiettivo di prima è il primo blocco (a domande o a minuti), il «se hai finito» il secondo (quando lo dice la maestra)
+// un blocco solo, che va finché la maestra chiude; il «se hai finito» di prima è il seguito consigliato, con la soglia del primo
 for (const p of LEZIONI_PRONTE) {
-  const [primo, secondo, ...altri] = p.blocchi
-  controlla(`${p.id}: ogni blocco chiede un esercizio valido`, p.blocchi.every(b => valido(b.esercizio)), JSON.stringify(p.blocchi))
-  controlla(`${p.id}: il primo blocco passa da solo, a domande o a minuti, dentro i tetti`,
-    passaValido(primo.passa) && ['domande', 'minuti'].includes(modoDi(primo.passa)), JSON.stringify(primo.passa))
-  controlla(`${p.id}: il secondo, se c'è, passa quando lo dice la maestra`, !secondo || secondo.passa === null, JSON.stringify(secondo))
-  controlla(`${p.id}: al più due blocchi, non in tondo`, !altri.length && p.inTondo === false)
+  const [primo, ...altri] = p.blocchi
+  controlla(`${p.id}: un blocco solo, che chiede un esercizio valido`, !altri.length && valido(primo.esercizio), JSON.stringify(p.blocchi))
+  controlla(`${p.id}: e va finché lo dice la maestra, non in tondo`, primo.passa === null && p.inTondo === false)
+  controlla(`${p.id}: il seguito, se c'è, è un esercizio valido e dà al primo una soglia a domande o a minuti`,
+    !p.seguito || (valido(p.seguito.esercizio) && passaValido(p.seguito.primoPassa) && ['domande', 'minuti'].includes(modoDi(p.seguito.primoPassa))),
+    JSON.stringify(p.seguito))
   controlla(`${p.id}: ha un anno della primaria, una materia del catalogo e una riga per la maestra`,
     ANNI.includes(p.anno) && CATALOGO.materie.some(m => m.id === p.materia) && typeof p.allena === 'string' && p.allena.length > 10)
   uguale(`${p.id}: il primo blocco è della sua materia`, materiaDi(primo.esercizio), p.materia)
@@ -32,7 +32,7 @@ for (const p of LEZIONI_PRONTE) {
 
 /* ══════════ 2. sta nel suo anno ══════════ */
 for (const p of LEZIONI_PRONTE) {
-  for (const [i, { esercizio }] of p.blocchi.entries()) {
+  for (const [i, { esercizio }] of [...p.blocchi, ...(p.seguito ? [p.seguito] : [])].entries()) {
     const a = annoDi(esercizio)
     controlla(`${p.id}: il blocco ${i + 1} non è di un anno dopo la ${p.anno}ª`, Number.isInteger(a) && a <= p.anno, `è di ${a}ª`)
   }
