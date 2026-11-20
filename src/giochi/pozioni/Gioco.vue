@@ -23,7 +23,7 @@ import { mescola } from './dati/misure.js'
 import { Bottega } from './motore/bottega.js'
 import { MORTAIO, TAGLIERE, GRATTATO } from './motore/procedimento.js'
 import { scrivi, leggi, dice, tappaDi } from './motore/sosta.js'
-import { tappeDelLimite, dopoNelGiro, risposteDellOrdine } from './motore/limite.js'
+import { tappeDelLimite, tappaDiScuola, dopoNelGiro, risposteDellOrdine } from './motore/limite.js'
 import Mappa from './viste/Mappa.vue'
 import Mercante from './viste/Mercante.vue'
 import Fine from './viste/Fine.vue'
@@ -194,7 +194,7 @@ function avviaTappa(i, ancheChiusa = false) {
     ? ['Fai le dosi spendendo meno gettoni che puoi: sono del mercante, non le tue monete.',
        'Scegli le ampolle e ordinale tutte insieme: ogni ordine paga la spedizione. Oltre il segno d\'oro trabocca, e poi c\'è da pulire.']
     : [t.dritta] }
-  entra(i, new Bottega(t))
+  entra(i, new Bottega(tappaDiScuola(t, props.limite)))
 }
 
 function allaMappa() {

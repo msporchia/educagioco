@@ -28,7 +28,7 @@ import Ripresa from '../giochi/Ripresa.vue'
 import { sosta, salvaSosta, buttaSosta, ritocca, segnaPrimato } from '../giochi/campagne.js'
 import { fraseDiFine } from '../giochi/primati.js'
 import { scrivi, leggi, dice } from '../motore/bancarella/sosta.js'
-import { livelliDelLimite, dopoNelGiro, raccontaResto } from '../motore/bancarella/limite.js'
+import { livelliDelLimite, dopoNelGiro, raccontaResto, regolaDi } from '../motore/bancarella/limite.js'
 import { fasciaAttiva } from '../store/qualita.js'
 
 const emit = defineEmits(['vai', 'risposta'])
@@ -38,7 +38,8 @@ const giro = livelliDelLimite(props.limite)
 const leggera = giro && fasciaAttiva() === 'bassa' ? 1 : null   // i PC di scuola: il pixel ratio della fascia bassa
 
 const CHIAVE = 'bancarella'
-const CUORI = 3
+const regola = regolaDi(props.limite)     // la difficoltà della maestra; a casa è sempre normale
+const CUORI = regola.cuori
 const STACCO_ORDINI = 20            // le ordinazioni scadono una dopo l'altra, così c'è il tempo di farle
 // le monete di questo livello: un'ordinazione pagata paga subito (docs/apprendimento/calibrazione.md)
 let borsellino = borsa(CHIAVE)
@@ -148,7 +149,7 @@ function apriTappa() {
   const t = T.value, piatti = ricetteDi(t.camp.ricette)
   coda.value = Array.from({ length: ORDINI_PER_TAPPA }, (_, i) => {
     const o = nuovoOrdine(t, piatti)
-    const pazienza = o.pazienza + i * STACCO_ORDINI
+    const pazienza = o.pazienza * regola.pazienza + i * STACCO_ORDINI
     return { ...o, pazienza, restaPazienza: pazienza, fatti: [], id: ++ordiniFatti }
   })
   allaCucina()

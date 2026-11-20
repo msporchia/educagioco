@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { CUCINE, ricetteDi } from '../../src/data/bancarella-cucine.js'
 import { tappaDi, nuovoOrdine } from '../../src/data/bancarella.js'
-import { livelliDelLimite, dopoNelGiro, raccontaResto, soldi, A_SCUOLA, LUNGO } from '../../src/motore/bancarella/limite.js'
+import { livelliDelLimite, dopoNelGiro, raccontaResto, regolaDi, REGOLE, soldi, A_SCUOLA, LUNGO } from '../../src/motore/bancarella/limite.js'
 import scheda, { LIVELLI_CUCINA, TRATTI_CUCINA } from '../../src/scuola/giochi/cucina/scheda.js'
 import { valido as validoCatalogo, descrivi as descriviCatalogo, giocoDi, giochiPer, CATALOGO }
   from '../../src/scuola/comune/esercizi.js'
@@ -125,5 +125,18 @@ for (let k = 0; k < A_SCUOLA; k++) {
 controlla(`${dette} ordinazioni raccontate, nessuna oltre i ${LUNGO} né dove non si conta`, !lunghe.length, lunghe.slice(0, 5).join('\n     '))
 controlla('nei primi sei la cassa dice il resto', CUCINE.slice(0, 6).every(c => !tappaDi(c, 0).chiediResto))
 controlla('dal settimo lo conta il bambino', CUCINE.slice(6, A_SCUOLA).every(c => tappaDi(c, 0).chiediResto))
+
+console.log('\nLA DIFFICOLTÀ')
+controlla('la scheda dice cosa cambia', !!scheda.difficolta?.facile && !!scheda.difficolta?.difficile)
+uguale('facile: cuori', regolaDi({ ...e(1, 6), difficolta: 'facile' }).cuori, 5)
+uguale('facile: pazienza', regolaDi({ ...e(1, 6), difficolta: 'facile' }).pazienza, 1.5)
+uguale('difficile: cuori', regolaDi({ ...e(1, 6), difficolta: 'difficile' }).cuori, 2)
+uguale('difficile: pazienza', regolaDi({ ...e(1, 6), difficolta: 'difficile' }).pazienza, 0.75)
+uguale('normale è casa: 3 cuori', regolaDi(e(1, 6)).cuori, 3)
+uguale('normale è casa: pazienza intera', regolaDi(e(1, 6)).pazienza, 1)
+controlla('normale scritto = senza', regolaDi({ ...e(1, 6), difficolta: 'normale' }) === regolaDi(e(1, 6)))
+controlla('senza limite o parola ignota: normale', regolaDi(null) === REGOLE.normale && regolaDi({ difficolta: 'x' }) === REGOLE.normale)
+uguale('la difficoltà non cambia il giro', livelliDelLimite({ ...e(7, 9), difficolta: 'facile' }).join(), livelliDelLimite(e(7, 9)).join())
+controlla('nel catalogo con la difficoltà', validoCatalogo({ ...e(7, 12), difficolta: 'difficile' }))
 
 riassunto('la cucina a scuola')

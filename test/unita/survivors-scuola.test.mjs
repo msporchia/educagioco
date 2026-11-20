@@ -66,6 +66,18 @@ console.log('\nLA PARTITA DELLA SCUOLA')
   uguale('e quella di casa resta di notte', notte, 'notte')
 }
 
+console.log('\nLA DIFFICOLTA')
+{
+  uguale('normale è senza difficoltà', JSON.stringify(liberaDelLimite(LIBERO, 'normale')), JSON.stringify(liberaDelLimite(LIBERO)))
+  const f = liberaDelLimite(LIBERO, 'facile'), d = liberaDelLimite(LIBERO, 'difficile')
+  uguale('facile: cuori, ritmo, vigore', [f.cuori, f.ritmo, f.vigore].join(' '), '5 0.96 1.52')
+  uguale('difficile: cuori, ritmo, vigore', [d.cuori, d.ritmo, d.vigore].join(' '), '2 1.44 2.09')
+  controlla('restano sul prato e senza fine', [f, d].every(x => x.scenario === 'prato' && x.durata === Infinity))
+  controlla('la scheda dice cosa cambia', !!scheda.difficolta.facile && !!scheda.difficolta.difficile)
+  const e = { tipo: 'tabelline', tabelline: [9], modo: 'prodotto', gioco: 'survivors', difficolta: 'facile' }
+  controlla('l\'esercizio con difficoltà è valido', valido(e))
+}
+
 console.log('\nOGNI VOCE DEL CATALOGO')
 {
   const voci = CATALOGO.materie.flatMap(m => m.voci).filter(v => v.tipo === 'tabelline' || v.tipo === 'modulo')

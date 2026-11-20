@@ -7,7 +7,7 @@
 import { CAMPAGNA, ID_GRADINI } from '../../src/giochi/pozioni/dati/campagna.js'
 import { FAMIGLIE } from '../../src/giochi/pozioni/dati/misure.js'
 import { Bottega, caso, giocaBene } from '../../src/giochi/pozioni/motore/bottega.js'
-import { tappeDelLimite, dopoNelGiro, risposteDellOrdine, corto, LUNGO } from '../../src/giochi/pozioni/motore/limite.js'
+import { tappeDelLimite, tappaDiScuola, dopoNelGiro, risposteDellOrdine, corto, LUNGO } from '../../src/giochi/pozioni/motore/limite.js'
 import scheda, { FAMIGLIE_POZIONI, GRADINI_POZIONI, quanteTappe } from '../../src/scuola/giochi/pozioni/scheda.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
@@ -131,6 +131,25 @@ for (let n = 0; n < voci.length; n += b.quanteInOrdine) fine.push(...risposteDel
 uguale('dopo un trabocco la dose finita chiude lo stesso', fine.length, 1)
 controlla('giusta e chiusa', fine[0].giusta && fine[0].ultima)
 controlla('data: le ampolle entrate, il trabocco no', fine[0].data.startsWith(`${comprate[j][0]} + `) && comprate[j].length === 1 + voci.length, fine[0].data)
+
+console.log('\nLA DIFFICOLTÀ')
+controlla('la scheda dice cosa cambia', !!scheda.difficolta?.facile && !!scheda.difficolta?.difficile)
+const l0 = { famiglie: ['massa'], gradini: ['banco'] }
+for (const tp of CAMPAGNA) {
+  controlla(`${tp.chiave}: normale è la tappa di casa`, tappaDiScuola(tp, { ...l0, difficolta: 'normale' }) === tp && tappaDiScuola(tp, l0) === tp && tappaDiScuola(tp, null) === tp)
+  uguale(`${tp.chiave}: facile, quattro gettoni in più`, tappaDiScuola(tp, { ...l0, difficolta: 'facile' }).margine, tp.margine + 4)
+  const d = tappaDiScuola(tp, { ...l0, difficolta: 'difficile' }).margine
+  controlla(`${tp.chiave}: difficile, la metà e mai zero`, d === Math.ceil(tp.margine / 2) && d >= 1 && d < tp.margine || tp.margine <= 1, String(d))
+}
+const tb = CAMPAGNA[t]
+uguale('la tappa di casa non si tocca', tb.margine, CAMPAGNA[t].margine)
+const gf = new Bottega(tappaDiScuola(tb, { ...l0, difficolta: 'facile' }), { rnd: caso(7) })
+const gn = new Bottega(tappaDiScuola(tb, { ...l0, difficolta: 'normale' }), { rnd: caso(7) })
+const gs = new Bottega(tb, { rnd: caso(7) })
+const gd = new Bottega(tappaDiScuola(tb, { ...l0, difficolta: 'difficile' }), { rnd: caso(7) })
+uguale('stesso minimo in ogni difficoltà', gf.minimo + gd.minimo, gn.minimo * 2)
+uguale('normale = senza difficoltà (i gettoni)', gn.gettoni, gs.gettoni)
+controlla('facile > normale > difficile (i gettoni)', gf.gettoni > gn.gettoni && gn.gettoni > gd.gettoni)
 
 console.log('\nCORTO')
 uguale('sotto i 40 resta', corto('500 g di polvere di luna'), '500 g di polvere di luna')

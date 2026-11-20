@@ -47,6 +47,19 @@ e, per il 3D, gli Asteroidi ([../asteroidi/scuola.md](../asteroidi/scuola.md)).
 - Le monete e le risposte allo SRS si contano lo stesso, nel profilo in memoria che muore con la pagina; la barra e la
   pausa da cui non si esce, il suono spento e il profilo li mette la scuola ([../scuola/architettura.md](../scuola/architettura.md)).
 
+## La difficoltà
+
+La scheda dichiara `difficolta: { facile, difficile }` e la vista passa `difficoltaDi(esercizio)` nel limite
+(`{ famiglie, gradini, difficolta }`, tolta la chiave prima di `valido`). L'unica leva che il gioco ha già da regolare sono i
+**gettoni oltre il minimo** (`margine` della tappa, `tappaDiScuola` in `motore/limite.js`); le stelle, i listini e le dosi
+sono dati tarati e non si toccano.
+
+- **Normale**: il `margine` della tappa, com'è a casa. Senza limite la funzione torna la tappa stessa.
+- **Facile**: `margine + 4`, per poter sbagliare qualche ampolla senza andare in rosso. **Difficile**: la metà, arrotondata
+  per eccesso (da 4-8 a 2-4): il minimo resta lo stesso, e un ordine sprecato si sente subito.
+- Perché il margine e non altro: le stelle (tre al minimo) contano il di più speso, quindi non dipendono dal bilancio e
+  restano uguali; cambia solo quanto stretto è il conto. Il numero di ingredienti o di ampolle sarebbe cambiare la tappa.
+
 ## Il 3D leggero
 
 Col limite e la fascia `'bassa'` (`fasciaAttiva()` di `store/qualita.js`, che il profilo della scuola sceglie) il banco
@@ -80,6 +93,6 @@ ha finito di versare (quello che il bambino vede); uscire prima (il blocco che c
 
 Nei test: `unita/pozioni-scuola` (senza limite nessun giro; la scheda uguale alla campagna; `valido` contro una ventina
 di forme storte; `descrivi`; il giro in ordine e da capo, senza le finali; in ogni tappa le dosi del giocatore che fa
-il minimo sono tutte giuste e chiuse, con i testi nei 40; il trabocco aperto e la dose finita dopo). Bersagli: la vista
+il minimo sono tutte giuste e chiuse, con i testi nei 40; il trabocco aperto e la dose finita dopo; la difficoltà: normale uguale a casa, facile +4 gettoni, difficile la metà). Bersagli: la vista
 `[data-gioco="pozioni"]`; nell'editor `[data-famiglia]` e `[data-gradino]`; il cartello senza `[data-azione="mappa"]`;
 `[data-senza-3d]`.

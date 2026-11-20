@@ -3,7 +3,7 @@
 import { ref, shallowRef, onMounted, onErrorCaptured } from 'vue'
 import Sotterraneo from '../../../giochi/sotterraneo/Entrata.vue'
 import { bambinoInMemoria } from '../../bambini/profilo.js'
-import { pescatore } from '../../comune/esercizi.js'
+import { pescatore, difficoltaDi } from '../../comune/esercizi.js'
 import { raccontaSotterraneo } from './risposta.js'
 
 const props = defineProps({
@@ -18,7 +18,7 @@ let guasto = false
 function nonParte() { if (!guasto) { guasto = true; emit('guasto') } }
 
 let limite = null
-try { limite = { domande: pescatore(props.esercizio) } } catch { /* esercizio storto: nonParte al montaggio */ }
+try { limite = { domande: pescatore(props.esercizio), difficolta: difficoltaDi(props.esercizio) } } catch { /* esercizio storto: nonParte al montaggio */ }
 
 onMounted(async () => {
   if (!limite) return nonParte()

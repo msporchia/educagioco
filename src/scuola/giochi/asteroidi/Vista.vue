@@ -3,14 +3,14 @@
 import { ref, shallowRef, onMounted, onErrorCaptured } from 'vue'
 import MathGame from '../../../views/MathGame.vue'
 import { bambinoInMemoria } from '../../bambini/profilo.js'
-import { limiteAsteroidi, raccontaAsteroide } from '../../comune/esercizi.js'
+import { limiteAsteroidi, raccontaAsteroide, difficoltaDi } from '../../comune/esercizi.js'
 
 const props = defineProps({
   esercizio: { type: Object, required: true },
   alunno: { type: Object, required: true },     // { id, nome }
 })
 const emit = defineEmits(['risposta', 'guasto'])
-const limite = limiteAsteroidi(props.esercizio)
+const limite = { ...limiteAsteroidi(props.esercizio), difficolta: difficoltaDi(props.esercizio) }
 const chi = shallowRef('')           // il profilo pronto: prima il gioco non si monta
 const radice = ref(null)
 

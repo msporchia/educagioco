@@ -13,14 +13,17 @@ export const TAPPA_DEL_LIMITE = 0
 const CHIAVE_DEL_LIMITE = CAMPAGNA[TAPPA_DEL_LIMITE].chiave
 // i livelli in più di quello atteso per la cripta: perdonano chi sbaglia
 export const LIVELLI_IN_PIU = 2
+// la difficoltà della maestra sposta solo questo: Facile 4 livelli in più, Normale 2 (com'è), Difficile 0 (l'eroe atteso per la cripta)
+export const LIVELLI_PER_DIFFICOLTA = { facile: 4, normale: LIVELLI_IN_PIU, difficile: 0 }
+export const livelliInPiuDi = d => LIVELLI_PER_DIFFICOLTA[d] ?? LIVELLI_IN_PIU
 
 // la domanda per una cosa che chiede: col limite quella dopo dell'esercizio, a casa la scelta di casa con la difficoltà della discesa
 export const domandaDelLimite = (lim, chiesta, evita, diCasa) =>
   lim ? lim.domande.prossima() : diCasa({ difficolta: chiesta.difficolta, evita })
 
 // la roba e la crescita della prima discesa: quelle attese per la cripta, qualche livello sopra
-export const corredoDelLimite = eroe =>
-  ({ roba: robaAttesa(eroe, TAPPA_DEL_LIMITE), crescita: crescitaA(eroeDi(eroe), livelloAtteso(TAPPA_DEL_LIMITE) + LIVELLI_IN_PIU) })
+export const corredoDelLimite = (eroe, difficolta) =>
+  ({ roba: robaAttesa(eroe, TAPPA_DEL_LIMITE), crescita: crescitaA(eroeDi(eroe), livelloAtteso(TAPPA_DEL_LIMITE) + livelliInPiuDi(difficolta)) })
 
 // la cripta della storia (sempre due piani), col seme della volta: `rifatti` del mondo dell'avventura
 export const tappaDelLimite = (eroe, mondo) =>

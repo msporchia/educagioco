@@ -4,6 +4,7 @@ import { ref, shallowRef, onMounted, onBeforeUnmount, onErrorCaptured } from 'vu
 import Pozioni from '../../../giochi/pozioni/Gioco.vue'
 import { bambinoInMemoria } from '../../bambini/profilo.js'
 import scheda from './scheda.js'
+import { difficoltaDi } from '../../comune/esercizi.js'
 
 const props = defineProps({
   esercizio: { type: Object, required: true },
@@ -11,7 +12,8 @@ const props = defineProps({
 })
 const emit = defineEmits(['risposta', 'guasto'])
 const { gioco, ...esercizio } = props.esercizio
-const limite = scheda.tipo.valido(esercizio) ? { famiglie: esercizio.famiglie, gradini: esercizio.gradini } : null
+const { difficolta: _, ...resto } = esercizio     // la chiave comune non è del gioco: `valido` la rifiuterebbe
+const limite = scheda.tipo.valido(resto) ? { famiglie: resto.famiglie, gradini: resto.gradini, difficolta: difficoltaDi(esercizio) } : null
 const chi = shallowRef('')           // il profilo pronto (muto, fascia bassa): prima il gioco non si monta
 const radice = ref(null)
 

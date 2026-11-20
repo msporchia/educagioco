@@ -10,8 +10,8 @@ const props = defineProps({
   alunno: { type: Object, required: true },     // { id, nome }
 })
 const emit = defineEmits(['risposta', 'guasto'])
-const { gioco, ...esercizio } = props.esercizio
-const limite = scheda.tipo.valido(esercizio) ? { tappa: esercizio.tappa } : null
+const { gioco, difficolta, ...esercizio } = props.esercizio
+const limite = scheda.tipo.valido(esercizio) ? { tappa: esercizio.tappa, difficolta } : null
 const chi = shallowRef('')           // il profilo pronto: prima il gioco non si monta
 
 // la tela scrive i numeri col font delle emoji: si aspetta che sia decodificato, ma non a lungo (come src/main.js)

@@ -10,6 +10,13 @@ export function tappaDelLimite(limite) {
   return i < 0 ? null : i
 }
 
+// la difficoltà a scuola: i cuori del castello (a casa 5, CFG.cuori); null senza limite o per Normale (docs/castello/scuola.md)
+export const CUORI_SCUOLA = { facile: 8, difficile: 3 }
+export function cuoriDelLimite(limite) {
+  if (tappaDelLimite(limite) === null) return null
+  return CUORI_SCUOLA[limite.difficolta] ?? null
+}
+
 const taglia = s => (s.length <= LUNGO ? s : s.slice(0, LUNGO - 1) + '…')
 
 // un conto finito: giusto se scritto senza errori, e chiude sempre la domanda (la colonna finisce comunque)

@@ -2326,7 +2326,7 @@ if (lim && !scegliEroe.value && !corsa.value) scendiNelLimite()
 /* ═══════════ a scuola (docs/sotterraneo/scuola.md) ═══════════
    Una cripta dopo l'altra con lo stesso eroe: la prima volta col corredo atteso, poi con quello che si è portato su */
 function scendiNelLimite() {
-  if (!cominciata(qui.value)) nellAvventura(corredoDelLimite(eroeQui()), { subito: true })
+  if (!cominciata(qui.value)) nellAvventura(corredoDelLimite(eroeQui(), lim.difficolta), { subito: true })
   fine.value = null
   avvia(TAPPA_DEL_LIMITE, { prova: true })
 }

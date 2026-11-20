@@ -44,6 +44,20 @@ non si storpia, si limita da fuori. Chi lo monta è la vista della scuola (`src/
 La barra e la pausa da cui non si esce, il suono spento, il profilo in memoria li mette la scuola
 ([../scuola/architettura.md](../scuola/architettura.md)).
 
+## La difficoltà
+
+La scheda dichiara `difficolta` e la maestra sceglie Facile, Normale o Difficile; la vista passa `difficolta` nel limite
+e `regolaDi` (`motore/bancarella/limite.js`) dà le due leve che il gioco ha già: i cuori e la pazienza dei clienti.
+
+| | Cuori | Pazienza dei clienti |
+|---|---|---|
+| Facile | 5 | ×1,5 |
+| **Normale (com'è a casa)** | 3 | ×1 |
+| Difficile | 2 | ×0,75 |
+
+Perché: con 2 cuori un cliente perso pesa, ma il giro finito ridà un cuore e Difficile non diventa impossibile; 5 cuori e un
+terzo di tempo in più bastano a chi è ancora lento con i conti. Senza limite (casa) `regolaDi` torna Normale: identica.
+
 ## Il 3D
 
 Il profilo della scuola sceglie la fascia `'bassa'` ([../scuola/bambini.md](../scuola/bambini.md)): col limite e quella

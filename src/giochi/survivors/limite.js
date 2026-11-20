@@ -9,4 +9,10 @@ export const domandaDellaCarta = (lim, carta, evita, diCasa) =>
 
 // la partita della scuola: la Sopravvivenza senza fine, ma sul prato. A scuola il terreno è quello disegnato di ripiego
 // (senza i fogli del castello) e al buio della notte gli ostacoli piatti non si vedrebbero
-export const liberaDelLimite = libero => ({ ...libero, scenario: 'prato' })
+export const liberaDelLimite = (libero, difficolta) => ({ ...libero, scenario: 'prato', ...(DIFFICOLTA[difficolta]?.(libero) || {}) })
+
+// la difficoltà scelta dalla maestra (docs/survivors/scuola.md): solo leve che la partita ha già; normale (o ignota) non cambia niente
+const DIFFICOLTA = {
+  facile: l => ({ cuori: 5, ritmo: +(l.ritmo * 0.8).toFixed(2), vigore: +(l.vigore * 0.8).toFixed(2) }),
+  difficile: l => ({ cuori: 2, ritmo: +(l.ritmo * 1.2).toFixed(2), vigore: +(l.vigore * 1.1).toFixed(2) }),
+}

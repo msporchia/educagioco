@@ -15,6 +15,15 @@ export function livelliDelLimite(limite) {
   return Array.from({ length: limite.a - limite.da + 1 }, (_, i) => limite.da - 1 + i)
 }
 
+/* La difficoltà della maestra (docs/bancarella/scuola.md): quanti cuori e quanta pazienza in più o in meno ai clienti.
+   Normale è com'è a casa; senza limite, o con una parola che non conosce, è normale */
+export const REGOLE = {
+  facile: { cuori: 5, pazienza: 1.5 },
+  normale: { cuori: 3, pazienza: 1 },
+  difficile: { cuori: 2, pazienza: 0.75 },
+}
+export const regolaDi = limite => REGOLE[limite?.difficolta] || REGOLE.normale
+
 // finito l'ultimo si ricomincia dal primo
 export const dopoNelGiro = (giro, k) => giro[(giro.indexOf(k) + 1) % giro.length]
 

@@ -43,3 +43,7 @@ export function tappaDelLimite(limite) {
   return { tipo: 'pianeta', i: pianeta ? pianeta.i : -1, T, pos: -1, n: 0, cap: -1, prossime: creaTurni(gruppiDel(limite)) }
 }
 
+
+/* Facile e Difficile a scuola: le vite e i secondi che il sasso ci mette a cadere (`CFG` di MathGame); Normale è com'è a casa */
+const RITOCCHI = { facile: { vite: 4, cadutaSec: 14 }, difficile: { vite: 2, cadutaSec: 7.5 } }
+export const ritoccoDifficolta = d => ({ ...(RITOCCHI[d] || {}) })

@@ -18,6 +18,13 @@ che mescola gli argomenti in un formato divertente; non si storpia, si limita. C
   invece che di notte: il prato ha meno ostacoli e si legge meglio su un PC di classe.
 - Il prezzo della carta non sceglie più la difficoltà della domanda: la decide l'esercizio.
 
+## La difficoltà
+
+La maestra sceglie Facile, Normale o Difficile (`limite.difficolta`, dall'esercizio). **Normale è com'è a casa** (la
+Sopravvivenza sul prato). Facile: 5 cuori, ritmo ×0,8, vigore ×0,8; Difficile: 2 cuori, ritmo ×1,2, vigore ×1,1. Sono le
+leve di `Regole` (`cuori`, `ritmo`, `vigore`), niente di nuovo; il vigore sale meno perché già a 1,9 i mostri sono duri.
+`liberaDelLimite(libero, difficolta)` in `limite.js`; senza limite non c'è difficoltà.
+
 ## Cosa resta e cosa si spegne
 
 | Resta (è il gioco) | Si spegne con `limite` |

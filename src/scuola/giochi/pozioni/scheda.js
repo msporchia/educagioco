@@ -52,6 +52,10 @@ export default {
   nei: 'nel laboratorio delle pozioni',
   spiega: 'Si comprano dal mercante le ampolle che fanno la dose, spendendo poco. Vuole un PC che regga la grafica 3D.',
   tred: true,
+  difficolta: {
+    facile: 'Più gettoni in tasca: quattro in più del solito per ogni pozione, così si può sbagliare qualche ampolla senza andare in rosso.',
+    difficile: 'Gettoni contati: la metà di quelli oltre il minimo, quindi un ordine sprecato costa subito.',
+  },
   // gli esercizi del catalogo no: solo il suo contenuto
   accetta: () => false,
   tipo: {

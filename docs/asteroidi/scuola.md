@@ -21,6 +21,13 @@ dei bambini ([../scuola/bambini.md](../scuola/bambini.md)); cosa la maestra può
   picker resta quello di sempre: tre giuste di fila e il fatto riposa, uno sbagliato torna presto.
 - Il verso è quello della tabellina: con il 9, sempre «9 × 7», mai «7 × 9».
 
+## La difficoltà
+
+L'esercizio può portare `difficolta: 'facile' | 'difficile'` (la maestra la sceglie nell'editor; assente = Normale, com'è a
+casa). La vista la mette nel limite e `ritoccoDifficolta` (`limite.js`) dà le due leve che il gioco ha già: **Facile** 4 vite e
+sassi che cadono in 14 s invece di 10; **Difficile** 2 vite e 7,5 s. Il livello cresce come sempre dalla base ritoccata. Senza
+limite il ritocco non si applica.
+
 ## Cosa resta e cosa si spegne
 
 | Resta (è il gioco) | Si spegne con `limite` |

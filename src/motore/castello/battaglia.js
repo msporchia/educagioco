@@ -57,7 +57,7 @@ export class Battaglia {
   }
 
   inizia() {
-    this.tabellone.azzera(this.tappa.partenza)
+    this.tabellone.azzera(this.tappa.partenza, this.tappa.cuori)   // `cuori` solo a scuola (difficoltà)
     this.nemici = []; this.torri = []; this.colpi = []; this.schizzi = []; this.nati = []
     this.daGenerare = 0; this.prossimo = 0; this.pausa = 0; this.tempo = 0
     this.usciti = 0

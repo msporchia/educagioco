@@ -4,7 +4,7 @@
    i fatti, il bersaglio che non arriva mai (niente nave madre, hangar, stella). Senza limite la tappa finta non c'è e
    casa resta com'è. Vedi docs/asteroidi/scuola.md.
    `node test/esegui.mjs asteroidi-limite --niente-build` */
-import { tappaDelLimite, tabellineDel, gruppiDel } from '../../src/motore/asteroidi/limite.js'
+import { tappaDelLimite, tabellineDel, gruppiDel, ritoccoDifficolta } from '../../src/motore/asteroidi/limite.js'
 import { chiaviDelle, leggi } from '../../src/store/tabelline.js'
 import { createPicker } from '../../src/store/srs.js'
 import { fattoriDi } from '../../src/data/tabelline.js'
@@ -57,6 +57,17 @@ console.log('\nA GRUPPI, CON LE LORO INTENSITÀ')
   stessaLista('un gruppo storto si butta, il resto resta', gruppiDel({ gruppi: [{ tabelline: [12] }, { tabelline: [2], volte: 0 }] }),
     [{ tabelline: [2], volte: 1 }])
   stessaLista('la forma di prima vale un gruppo solo', gruppiDel({ tabelline: [9] }), [{ tabelline: [9], volte: 1 }])
+}
+
+console.log('\nLA DIFFICOLTÀ')
+{
+  stessaLista('Normale, o niente, non ritocca nulla: è com\'è a casa', [ritoccoDifficolta('normale'), ritoccoDifficolta(undefined)], [{}, {}])
+  const f = ritoccoDifficolta('facile'), d = ritoccoDifficolta('difficile')
+  controlla('Facile: più vite e sassi più lenti (cadono in più tempo)', f.vite > 3 && f.cadutaSec > 10)
+  controlla('Difficile: meno vite e sassi più veloci', d.vite < 3 && d.cadutaSec < 10)
+  uguale('Facile: vite', f.vite, 4); uguale('Difficile: vite', d.vite, 2)
+  controlla('le vite non passano il tetto di scorta del gioco (5)', f.vite <= 5)
+  controlla('la difficoltà non cambia la tappa finta', tappaDelLimite({ tabelline: [9], difficolta: 'difficile' }).T.tabelle[0] === 9)
 }
 
 riassunto('gli Asteroidi limitati')

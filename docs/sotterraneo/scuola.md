@@ -32,6 +32,13 @@ scegliere sta in [../scuola/esercizi.md](../scuola/esercizi.md).
 - Una discesa lasciata a metà (il blocco che cambia) resta nella sosta: un blocco dopo, nello stesso gioco, si riprende
   giù dietro la pausa, come a casa.
 
+## La difficoltà
+
+La maestra sceglie Facile, Normale o Difficile ([../scuola/giochi.md](../scuola/giochi.md)); la vista la passa nel limite
+(`limite.difficolta`) e muove una leva sola, i livelli dell'eroe sopra quello atteso per la cripta (`livelliInPiuDi` in
+`limite.js`): **Facile +4, Normale +2 (com'è), Difficile +0**. Perché: è la leva che c'è già, e +0 è l'eroe che la storia
+si aspetta, quindi senza margine per gli sbagli. Senza `limite.difficolta` (e a casa) è Normale.
+
 ## Cosa si spegne con `limite`
 
 | Resta (è il gioco) | Si spegne |

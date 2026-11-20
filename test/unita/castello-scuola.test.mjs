@@ -7,8 +7,10 @@
 import scheda, { TAPPE_CASTELLO, CAMPAGNE_CASTELLO, ESEMPI, tappaCastello } from '../../src/scuola/giochi/castello/scheda.js'
 import { valido as validoCatalogo, descrivi as descriviCatalogo, giocoDi, giochiPer, CATALOGO }
   from '../../src/scuola/comune/esercizi.js'
-import { tappaDelLimite, raccontaConto, LUNGO } from '../../src/views/castello/limite.js'
-import { TAPPE, chiaveTappa } from '../../src/data/castello.js'
+import { tappaDelLimite, cuoriDelLimite, CUORI_SCUOLA, raccontaConto, LUNGO } from '../../src/views/castello/limite.js'
+import { TAPPE, chiaveTappa, CFG } from '../../src/data/castello.js'
+import { Tabellone } from '../../src/motore/castello/tabellone.js'
+import { difficoltaDi, valido as validoEsercizio } from '../../src/scuola/comune/esercizi.js'
 import { GENERATORI, contoDi, gradoDi } from '../../src/data/ops.js'
 import { GIOCHI as GIOCHI_DI_CASA } from '../../src/data/giochi.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
@@ -122,6 +124,25 @@ console.log('\nLA RISPOSTA DI UN CONTO')
     }
   }
   controlla('ogni conto di ogni gradino si racconta nei 40 caratteri, col risultato giusto', !lunghi.length, lunghi.slice(0, 3).join('; '))
+}
+
+console.log('\nLA DIFFICOLTÀ')
+{
+  const t = 'bosco/Il sentiero'
+  controlla('la scheda la dichiara, con le due frasi', !!scheda.difficolta?.facile && !!scheda.difficolta?.difficile)
+  controlla('Facile e Difficile sono esercizi validi nel catalogo, Normale non si scrive',
+    validoEsercizio({ ...e(t), difficolta: 'facile' }) && validoEsercizio({ ...e(t), difficolta: 'difficile' })
+    && difficoltaDi(e(t)) === 'normale')
+  uguale('Normale (senza difficoltà) lascia i cuori di casa', cuoriDelLimite({ tappa: t }), null)
+  uguale('Normale scritto come undefined: uguale', cuoriDelLimite({ tappa: t, difficolta: undefined }), null)
+  uguale('Facile: più cuori di casa', cuoriDelLimite({ tappa: t, difficolta: 'facile' }), 8)
+  uguale('Difficile: meno cuori di casa', cuoriDelLimite({ tappa: t, difficolta: 'difficile' }), 3)
+  controlla('Facile > casa > Difficile', CUORI_SCUOLA.facile > CFG.cuori && CFG.cuori > CUORI_SCUOLA.difficile)
+  uguale('a casa (senza limite) niente cuori diversi', cuoriDelLimite(null), null)
+  uguale('con una tappa che non c\'è niente', cuoriDelLimite({ tappa: 'bosco/La luna', difficolta: 'facile' }), null)
+  const cuori = c => { const s = {}; new Tabellone(s).azzera(40, c); return s.cuori }
+  uguale('il tabellone senza cuori dati parte da quelli di casa', cuori(undefined), CFG.cuori)
+  uguale('il tabellone con 8 cuori', cuori(8), 8)
 }
 
 riassunto('il castello a scuola')

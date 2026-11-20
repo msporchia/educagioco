@@ -6,7 +6,7 @@
    `node test/esegui.mjs sotterraneo-scuola --niente-build` */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { limiteDi, domandaDelLimite, corredoDelLimite, tappaDelLimite, mondoDopoIlLimite, versoIlVillaggio, TAPPA_DEL_LIMITE, LIVELLI_IN_PIU }
+import { limiteDi, domandaDelLimite, corredoDelLimite, tappaDelLimite, mondoDopoIlLimite, versoIlVillaggio, TAPPA_DEL_LIMITE, LIVELLI_IN_PIU, livelliInPiuDi }
   from '../../src/giochi/sotterraneo/limite.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
@@ -75,6 +75,17 @@ for (const e of EROI) {
   uguale(`${e.chiave}: ${LIVELLI_IN_PIU} livelli sopra quello atteso`, livelloDella(k.crescita), livelloAtteso(TAPPA_DEL_LIMITE) + LIVELLI_IN_PIU)
   uguale(`${e.chiave}: con la roba attesa per la cripta`, JSON.stringify(k.roba), JSON.stringify(robaAttesa(e.chiave, TAPPA_DEL_LIMITE)))
 }
+
+console.log('\nLA DIFFICOLTA')
+for (const e of EROI) {
+  const base = livelloAtteso(TAPPA_DEL_LIMITE)
+  uguale(`${e.chiave}: facile`, livelloDella(corredoDelLimite(e.chiave, 'facile').crescita), base + 4)
+  uguale(`${e.chiave}: difficile`, livelloDella(corredoDelLimite(e.chiave, 'difficile').crescita), base)
+  uguale(`${e.chiave}: normale = senza difficolta`, JSON.stringify(corredoDelLimite(e.chiave, 'normale')), JSON.stringify(corredoDelLimite(e.chiave)))
+}
+controlla('normale e assente valgono come a casa', livelliInPiuDi('normale') === LIVELLI_IN_PIU && livelliInPiuDi(undefined) === LIVELLI_IN_PIU)
+controlla('la scheda dichiara facile e difficile', !!scheda.difficolta?.facile && !!scheda.difficolta?.difficile)
+controlla('la vista passa la difficolta nel limite', readFileSync(resolve(RADICE, 'src/scuola/giochi/sotterraneo/Vista.vue'), 'utf8').includes('difficolta: difficoltaDi(props.esercizio)'))
 
 console.log('\nLE USCITE VERSO IL VILLAGGIO')
 {

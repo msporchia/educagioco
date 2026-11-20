@@ -53,13 +53,14 @@ import FineTappa from '../components/castello/FineTappa.vue'
 import Regalo from '../components/castello/Regalo.vue'
 import Potenziamenti from '../components/castello/Potenziamenti.vue'
 import { Cassa } from './castello/cassa.js'
-import { tappaDelLimite, raccontaConto } from './castello/limite.js'
+import { tappaDelLimite, cuoriDelLimite, raccontaConto } from './castello/limite.js'
 import { suono } from '../audio.js'
 
 const emit = defineEmits(['vai', 'risposta'])
 // a scuola: `{ tappa: 'bosco/Il sentiero' }`, e si gioca solo quella (docs/castello/scuola.md); a casa manca
 const props = defineProps({ limite: { type: Object, default: null } })
 const tappaScuola = tappaDelLimite(props.limite)      // l'indice della tappa, o null
+const cuoriScuola = cuoriDelLimite(props.limite)      // i cuori di Facile/Difficile, o null
 
 const fase = ref('mappa')          // mappa | gioco | vinta | trionfo | fine
 
@@ -116,7 +117,7 @@ const progresso = computed(() => tdProgresso())
 const tappaIdx = ref(0)            // -1 = partita libera, quella di `liberaScelta`
 const liberaScelta = ref(LIBERE[0].chiave)
 const tappa = computed(() => (tappaIdx.value < 0 ? liberaDi(liberaScelta.value) || LIBERE[0]
-                                                  : TAPPE[tappaIdx.value]))
+                              : cuoriScuola === null ? TAPPE[tappaIdx.value] : { ...TAPPE[tappaIdx.value], cuori: cuoriScuola }))
 const campagna = computed(() => tappaIdx.value >= 0)
 const divisioni = computed(() => divisioniAccese())
 const libera = computed(() => progresso.value.libera || tuttoAperto())

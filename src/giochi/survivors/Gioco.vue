@@ -39,7 +39,7 @@ const emit = defineEmits(['vai', 'risposta'])
 // a scuola: `{ domande }` (un oggetto con `prossima()`), e si gioca la Sopravvivenza con quelle domande (docs/survivors/scuola.md); a casa manca
 const props = defineProps({ limite: { type: Object, default: null } })
 const lim = limiteDi(props.limite)
-const LIBERA = lim ? liberaDelLimite(LIBERO) : LIBERO
+const LIBERA = lim ? liberaDelLimite(LIBERO, lim.difficolta) : LIBERO
 
 const CHIAVE = 'survivors'
 let borsellino = borsa(CHIAVE)   // le monete di questa partita, una risposta giusta alla volta

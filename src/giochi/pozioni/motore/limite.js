@@ -16,6 +16,15 @@ export function tappeDelLimite(limite) {
   return giro.length ? giro : null
 }
 
+/* La difficoltà della maestra agisce sui gettoni oltre il minimo (`margine`, la leva che il gioco ha già): facile quattro
+   in più, difficile la metà (a salire). Normale, o senza limite, è la tappa com'è a casa: docs/pozioni/scuola.md */
+export function tappaDiScuola(tappa, limite) {
+  const d = limite?.difficolta
+  if (d === 'facile') return { ...tappa, margine: tappa.margine + 4 }
+  if (d === 'difficile') return { ...tappa, margine: Math.ceil(tappa.margine / 2) }
+  return tappa
+}
+
 // finita l'ultima si ricomincia dalla prima
 export const dopoNelGiro = (giro, i) => giro[(giro.indexOf(i) + 1) % giro.length]
 

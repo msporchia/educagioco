@@ -48,6 +48,15 @@ storpia, si limita. Chi lo monta è la vista della scuola (`src/scuola/giochi/ca
 - La barra e la pausa da cui non si esce, il suono spento, il profilo in memoria li mette la scuola
   ([../scuola/architettura.md](../scuola/architettura.md)).
 
+## La difficoltà
+
+La scheda dichiara `difficolta: { facile, difficile }` e la vista passa `difficolta` nel limite (la toglie prima di
+`valido`, che rifiuta chiavi in più). La leva è una sola, già del gioco: **i cuori del castello**. Normale ne ha 5
+(`CFG.cuori`, com'è a casa), **Facile 8**, **Difficile 3** (`CUORI_SCUOLA` di `views/castello/limite.js`; la tappa porta
+`cuori` e `Tabellone.azzera` lo legge). Si è scelta questa perché la taratura (ondate, energia, vite per tappa) è generata e
+resta intatta, e perché un conto sbagliato costa energia, non cuori: i cuori contano solo quando la difesa si sfalda. Senza
+limite, o per Normale, `cuori` non c'è e il gioco è identico.
+
 ## L'evento `risposta`
 
 Ogni operazione in colonna finita è una risposta (`operazioneFinita`, accanto ad `answer`), già raccontata da

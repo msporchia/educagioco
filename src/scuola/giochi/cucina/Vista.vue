@@ -10,8 +10,8 @@ const props = defineProps({
   alunno: { type: Object, required: true },     // { id, nome }
 })
 const emit = defineEmits(['risposta', 'guasto'])
-const { gioco, ...esercizio } = props.esercizio
-const limite = scheda.tipo.valido(esercizio) ? { da: esercizio.da, a: esercizio.a } : null
+const { gioco, difficolta, ...esercizio } = props.esercizio
+const limite = scheda.tipo.valido(esercizio) ? { da: esercizio.da, a: esercizio.a, difficolta } : null
 const chi = shallowRef('')           // il profilo pronto: prima il gioco non si monta
 const radice = ref(null)
 

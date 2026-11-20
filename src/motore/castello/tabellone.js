@@ -6,9 +6,9 @@ import { CFG } from '../../data/castello.js'
 export class Tabellone {
   constructor(stato) { this.stato = stato }
 
-  azzera(partenza) {
+  azzera(partenza, cuori = CFG.cuori) {
     const s = this.stato
-    s.cuori = CFG.cuori; s.onda = 0; s.uccisi = 0; s.torri = 0; s.energia = partenza
+    s.cuori = cuori; s.onda = 0; s.uccisi = 0; s.torri = 0; s.energia = partenza
     this.resto = 0
   }
 

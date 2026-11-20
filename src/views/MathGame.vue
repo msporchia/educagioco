@@ -27,7 +27,7 @@ import { GIOCHI } from '../data/giochi.js'
 import { segnaPrimato, primatoDi, sosta, salvaSosta, buttaSosta, ritocca } from '../giochi/campagne.js'
 import { hangarDi, vintaTappa, vintoVolo, bossNelVolo, livrea, pacchiDi } from '../motore/asteroidi/hangar.js'
 import { scrivi, leggi, dice, recordDi, chiaveDi } from '../motore/asteroidi/sosta.js'
-import { tappaDelLimite } from '../motore/asteroidi/limite.js'
+import { tappaDelLimite, ritoccoDifficolta } from '../motore/asteroidi/limite.js'
 import Ripresa from '../giochi/Ripresa.vue'
 import { fraseDiFine, recordInParole, sfidaDi } from '../giochi/primati.js'
 import { usaAmici } from '../amici/usaAmici.js'
@@ -68,6 +68,7 @@ const CFG = {
   // falsi nascono a quote distanti `falsiOgni` raggi (docs/asteroidi/grafica-3d.md)
   guida: 12, rimbalzo: 520, falsiOgni: 1.5,
 }
+if (lim) Object.assign(CFG, ritoccoDifficolta(props.limite?.difficolta))   // a scuola: Facile e Difficile (docs/asteroidi/scuola.md)
 
 /* ---------- elementi: chiave normalizzata, 6×8 e 8×6 sono lo stesso fatto ---------- */
 const daChiave = fattoriDi
@@ -164,7 +165,7 @@ const tabelle = computed(() =>
 
 // `serieMax`: il filotto più lungo, per il record del volo
 // `partenza`: il livello di inizio, sempre 1; resta per le soste di prima (docs/asteroidi/volo.md)
-const hud = reactive({ vite: 3, punti: 0, giuste: 0, mirate: 0, sbagliate: 0, livello: 1,
+const hud = reactive({ vite: CFG.vite, punti: 0, giuste: 0, mirate: 0, sbagliate: 0, livello: 1,
                        partenza: 1, serie: 0, serieMax: 0 })
 const cartello = reactive({ testo: '', colore: '', n: 0 })
 const finale = reactive({ punti: 0, giuste: 0, mirate: 0, livello: 1, record: false, ripasso: [],

@@ -51,6 +51,10 @@ export default {
   nei: 'in cucina',
   spiega: 'Si cucina col cuoco e si dà il resto: i livelli scelti, uno dopo l\'altro. Vuole un PC che regga la grafica 3D.',
   tred: true,
+  difficolta: {
+    facile: 'Cinque cuori invece di tre, e i clienti aspettano la metà in più: più tempo per cucinare.',
+    difficile: 'Due cuori invece di tre, e i clienti aspettano un quarto in meno: bisogna essere svelti.',
+  },
   // gli esercizi del catalogo no: solo il suo contenuto
   accetta: () => false,
   tipo: {
