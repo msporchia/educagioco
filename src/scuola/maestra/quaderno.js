@@ -89,7 +89,7 @@ export function aggiungiAllaClasse(q, classeId, alunno) {
 /* ══════════════ le lezioni ══════════════ */
 
 // un blocco che passa da solo dopo le giuste: la scelta di partenza (docs/scuola/lezione.md)
-export const passaDiBase = (modo = 'giuste') => {
+export const passaDiBase = (modo = 'maestra') => {   // di base la maestra: «Avanti tutti» (scelta dell'utente)
   const m = L.MODI_PASSA.find(x => x.id === modo)
   return m?.unita ? { [m.id]: m.base } : null
 }
@@ -402,7 +402,7 @@ function normalizzaVoce(v) {
 }
 
 function normalizzaInCorso(c, storico) {
-  if (!oggetto(c) || !/^[A-Z]{5}$/.test(c.codice || '') || !/^[a-z0-9]{32}$/.test(c.chiave || '') || !Number.isFinite(c.scade)) return null
+  if (!oggetto(c) || !/^\d{4}$/.test(c.codice || '') || !/^[a-z0-9]{32}$/.test(c.chiave || '') || !Number.isFinite(c.scade)) return null
   if (!storico.some(v => v.id === c.voce)) return null
   return { codice: c.codice, chiave: c.chiave, scade: c.scade, avviata: Number.isFinite(c.avviata) ? c.avviata : 0,
            classe: String(c.classe ?? ''), lezione: L.convertiLezione(c.lezione), voce: c.voce }

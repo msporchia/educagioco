@@ -12,9 +12,14 @@ dopo**. Il codice è `src/scuola/comune/lezione.js` (puro, gira in Node). Scelte
 
 ## Quando si passa al blocco dopo: due modi, scelti blocco per blocco
 
-- **Da solo**, a una soglia: `{ giuste: X }` (dopo X risposte giuste: la scelta di partenza), `{ domande: N }` o
-  `{ minuti: M }`. Ognuno col suo passo.
-- **Quando lo dice la maestra**: `passa: null`. Il blocco non finisce da solo; si passa con «Avanti tutti».
+- **Quando lo dice la maestra**: `passa: null`, **la scelta di partenza** (dell'utente, 20 novembre 2026: la classe va
+  insieme, e il resto si sceglie quando serve). Il blocco non finisce da solo; si passa con «Avanti tutti».
+- **Da solo**, a una soglia: `{ giuste: X }` (dopo X risposte giuste), `{ domande: N }` o `{ minuti: M }`. Ognuno col
+  suo passo.
+- **Con le parole del gioco** (`conta` della scheda, `contaDi` e `modiPassaPer` di `comune/lezione.js`): nel coniglio e nel
+  Robot una risposta chiusa è un livello vinto, quindi «dopo 3 livelli» e niente «giuste»; nel castello «operazioni», in
+  cucina «resti», nelle pozioni «ingredienti». `descriviPassa(passa, esercizio)` le usa; senza esercizio sono «domande».
+  Provato «dopo 3 domande» per il coniglio: non si capiva.
 
 «Avanti tutti» nel pannello della maestra c'è **sempre**, anche nei blocchi che passano da soli: sblocca chi è rimasto
 indietro, o chiude un blocco prima (la campanella). Sposta di un blocco **chi è più indietro** fra i collegati; chi era
@@ -23,7 +28,7 @@ già avanti resta dov'è. Così chi è arrivato da solo a un blocco «quando lo 
 ## Dove sta un bambino
 
 La **posizione** `p` conta i blocchi superati (0 = il primo). Il bambino la fa crescere superando le soglie; «Avanti tutti»
-alza un **pavimento comune** `avanti` (sul servizio), e vale il più grande dei due (`posizione`); «Salta il blocco» della
+alza un **pavimento comune** `avanti` (sul servizio), e vale il più grande dei due (`posizione`); «Mandalo al blocco dopo» della
 maestra dà a un bambino solo un pavimento suo ([ripieghi.md](ripieghi.md)). Senza `inTondo`, con `p`
 oltre l'ultimo blocco la lezione è finita per lui («Hai finito!»); in tondo `p` cresce senza fine e il blocco è
 `p % blocchi.length` (`bloccoDi`). Il **conto** di un blocco (`{ fatte, giuste, inizio }`: domande chiuse, giuste, quando è

@@ -3,7 +3,7 @@ export default {
   id: 'asteroidi',
   nome: 'Gli Asteroidi',
   nei: 'negli Asteroidi',
-  spiega: 'La nave colpisce il sasso col numero giusto. Vuole un PC che regga la grafica 3D.',
+  spiega: 'La nave colpisce il sasso col numero giusto.',
   tred: true,
   // gli esercizi del catalogo che sa fare: solo le tabelline, col risultato o col numero nascosto (anche a più parti)
   difficolta: {

@@ -53,6 +53,7 @@ export default {
   nei: 'nel castello',
   spiega: 'Ogni torre si paga con un\'operazione in colonna: la tappa scelta, e vinta o persa si riparte.',
   tred: false,
+  conta: { tante: 'operazioni', una: "un'operazione", giuste: 'operazioni giuste', giusta: "un'operazione giusta" },
   difficolta: {
     facile: 'Il castello ha 8 cuori invece di 5: si può sbagliare qualche difesa in più prima di cadere.',
     difficile: 'Il castello ha solo 3 cuori invece di 5: ogni mostro che passa pesa di più.',

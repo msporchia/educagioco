@@ -9,7 +9,6 @@ import TesseraGioco from './TesseraGioco.vue'
 const props = defineProps({
   modelValue: { type: Object, required: true },
   dove: { type: String, default: 'blocco' },
-  apriGiochi: { type: Boolean, default: false },   // i giochi tutti in vista: una lezione da zero; se no il gioco scelto e «Cambia»
 })
 const emit = defineEmits(['update:modelValue'])
 
@@ -34,7 +33,7 @@ function scrivi(nuove, gioco = giocoDi(e.value), d = difficoltaDi(e.value)) {
 /* ── il gioco: se non sa fare quello che c'era, si parte dalla prima cosa che sa fare ── */
 const gioco = computed(() => giocoDi(e.value))
 const schedaDelGioco = computed(() => GIOCHI.find(g => g.id === gioco.value) || GIOCHI[0])
-const tuttiIGiochi = ref(props.apriGiochi)
+const tuttiIGiochi = ref(false)   // il gioco scelto e «Cambia gioco»; i giochi tutti in vista solo per cambiarlo
 function scegliGioco(id) {
   tuttiIGiochi.value = false
   if (id === gioco.value) return

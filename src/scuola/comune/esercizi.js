@@ -135,7 +135,7 @@ const perId = id => SCELTI.find(m => m.id === id)
 
 // dove si fa un esercizio: le schede con tutto il catalogo, un gioco vero con quello che sa fare (`accetta` della sua
 // scheda) e col suo contenuto, se ne ha uno (docs/scuola/giochi.md)
-const SCHEDE_DOMANDE = { id: 'schede', nome: 'Le domande', spiega: 'Una domanda alla volta, su una scheda. Va bene su ogni PC.' }
+const SCHEDE_DOMANDE = { id: 'schede', nome: 'Le domande', spiega: 'Una domanda alla volta, su una scheda, con le risposte da toccare.' }
 export const GIOCHI = [SCHEDE_DOMANDE, ...PRONTI]
 const delCatalogo = e => e.tipo === 'tabelline' || e.tipo === 'modulo'
 function accetta(g, e) {

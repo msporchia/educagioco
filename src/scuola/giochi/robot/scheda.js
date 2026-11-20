@@ -40,6 +40,7 @@ export default {
   nei: 'col Robot',
   spiega: 'Il bambino scrive il programma e il robot costruisce, una riga alla volta: i livelli dei capitoli scelti, in fila.',
   tred: false,
+  conta: { tante: 'livelli', una: 'un livello', giuste: null },   // una risposta chiusa è un livello vinto
   tipo: {
     id: 'robot',
     materia: 'programmazione',

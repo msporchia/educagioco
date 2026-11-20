@@ -1,6 +1,6 @@
 /* La lezione a blocchi: la forma, quando si passa al blocco dopo, dove sta un bambino, e la conversione delle lezioni
    salvate prima (obiettivo + «se hai finito»). Gira in Node. Vedi docs/scuola/lezione.md */
-import { valido, descrivi, giochiPer, giocoDi } from './esercizi.js'
+import { valido, descrivi, giochiPer, giocoDi, GIOCHI } from './esercizi.js'
 
 export const MAX_BLOCCHI = 8
 export const MAX_NOME_LEZIONE = 60
@@ -28,11 +28,18 @@ export function passaValido(p) {
 export const modoDi = p => (p === null ? 'maestra' : Object.keys(p)[0])
 export const sogliaDi = p => (p === null ? null : p[modoDi(p)])
 
-export function descriviPassa(p) {
+/* come si contano le domande nel gioco dell'esercizio (`conta` della scheda): nel coniglio «dopo 3 livelli», non «dopo 3
+   domande»; un gioco senza `giuste` (un livello si chiude solo vinto) non offre «dopo N giuste» */
+const CONTA_DOMANDE = { tante: 'domande', una: 'una domanda', giuste: 'risposte giuste', giusta: 'una risposta giusta' }
+export const contaDi = e => GIOCHI.find(g => g.id === giocoDi(e))?.conta || CONTA_DOMANDE
+export const modiPassaPer = e => MODI_PASSA.filter(m => m.id !== 'giuste' || contaDi(e).giuste)
+
+export function descriviPassa(p, e = null) {
   if (p === null) return 'quando lo dice la maestra'
+  const c = contaDi(e)
   const n = sogliaDi(p), modo = modoDi(p)
-  if (modo === 'giuste') return n === 1 ? 'dopo una risposta giusta' : `dopo ${n} risposte giuste`
-  if (modo === 'domande') return n === 1 ? 'dopo una domanda' : `dopo ${n} domande`
+  if (modo === 'giuste' && c.giuste) return n === 1 ? `dopo ${c.giusta}` : `dopo ${n} ${c.giuste}`
+  if (modo === 'giuste' || modo === 'domande') return n === 1 ? `dopo ${c.una}` : `dopo ${n} ${c.tante}`
   return n === 1 ? 'dopo un minuto' : `dopo ${n} minuti`
 }
 
@@ -48,7 +55,7 @@ export function lezioneValida(l) {
     valido(b.esercizio) && 'passa' in b && passaValido(b.passa))
 }
 
-export function descriviBlocco(b) { return `${descrivi(b.esercizio)} · ${descriviPassa(b.passa)}` }
+export function descriviBlocco(b) { return `${descrivi(b.esercizio)} · ${descriviPassa(b.passa, b.esercizio)}` }
 
 /* la forma di prima: `obiettivo: { esercizio, quante | minuti }` e `dopo` (un esercizio senza fine). Diventa un blocco
    che passa alla soglia e, se c'era, un secondo che non passa mai da solo. Una lezione già a blocchi torna uguale. */

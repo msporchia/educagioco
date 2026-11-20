@@ -92,7 +92,7 @@ function via() { if (lezione.value && lezioneValida(lezione.value)) emit('via', 
 
         <section v-else class="carta" data-passo="scelta-tua">
           <h2>Cosa chiedere</h2>
-          <SceltaEsercizio v-model="esercizio" dove="senza-lezione" apri-giochi />
+          <SceltaEsercizio v-model="esercizio" dove="senza-lezione" />
           <p class="nota">Si va avanti finché non la cambi dal tasto «Maestra».</p>
         </section>
 

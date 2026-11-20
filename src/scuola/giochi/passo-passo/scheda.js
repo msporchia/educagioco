@@ -72,6 +72,7 @@ export default {
   nei: 'in Passo passo',
   spiega: 'Una fila di frecce porta il coniglio alla tana: i livelli scelti, uno dopo l\'altro.',
   tred: false,
+  conta: { tante: 'livelli', una: 'un livello', giuste: null },   // una risposta chiusa è un livello vinto
   // gli esercizi del catalogo no: solo il suo contenuto
   accetta: () => false,
   tipo: {

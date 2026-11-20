@@ -3,12 +3,13 @@
 // e la lezione in corso da mandare cambiata ai bambini (`inCorso`, docs/scuola/ripieghi.md)
 import { ref, computed } from 'vue'
 import { CATALOGO, valido, descrivi } from '../comune/esercizi.js'
-import { MODI_PASSA, MAX_BLOCCHI, modoDi, sogliaDi, descriviPassa, passaValido } from '../comune/lezione.js'
+import { MODI_PASSA, MAX_BLOCCHI, modoDi, sogliaDi, descriviPassa, passaValido, contaDi, modiPassaPer } from '../comune/lezione.js'
 import { quaderno, salva, lezioneDi } from './stato.js'
 import * as Q from './quaderno.js'
 import { paginaMaestra, copia } from './utili.js'
 import { lezioneDa } from '../comune/lezioni-pronte.js'
 import SceltaEsercizio from './SceltaEsercizio.vue'
+import Aiuto from './Aiuto.vue'
 import Conferma from './Conferma.vue'
 import { cambiaLezione, diretta } from './diretta.js'
 
@@ -16,7 +17,6 @@ const props = defineProps({ id: { type: String, default: null }, proposta: { typ
 const emit = defineEmits(['vai', 'indietro'])
 
 const vecchia = props.id ? lezioneDi(props.id) : null
-const daZero = !vecchia && !props.proposta && !props.inCorso    // «Preparala tu»: il primo blocco mostra tutti i giochi
 const primaBase = () => JSON.parse(JSON.stringify(CATALOGO.materie[0].voci[0].base))
 const inCorso = props.inCorso && quaderno.inCorso ? quaderno.inCorso.lezione : null
 const partenza = inCorso ? JSON.parse(JSON.stringify(inCorso)) : vecchia ? JSON.parse(JSON.stringify(vecchia))
@@ -24,7 +24,7 @@ const partenza = inCorso ? JSON.parse(JSON.stringify(inCorso)) : vecchia ? JSON.
 
 // un blocco come lo tocca l'editor: il modo e il numero a parte, così il numero si scrive anche storto e si dice perché
 let chiavi = 0
-const daBlocco = b => ({ chiave: ++chiavi, esercizio: b.esercizio, modo: modoDi(b.passa), n: sogliaDi(b.passa) })
+const daBlocco = b => ({ chiave: ++chiavi, esercizio: b.esercizio, modo: modoDi(b.passa), n: sogliaDi(b.passa), cambia: false })
 const nome = ref(partenza.nome)
 const blocchi = ref(partenza.blocchi.map(daBlocco))
 const inTondo = ref(!!partenza.inTondo)
@@ -38,6 +38,23 @@ function scegliModo(b, id) {
   b.modo = id
   b.n = modo(id).base ?? null
 }
+// le scelte per «quando si passa», con le parole del gioco del blocco (nel coniglio «livelli», non «domande») e il loro «?»
+function scelteDi(b) {
+  const c = contaDi(b.esercizio)
+  const dove = { maestra: 'Lo dici tu', giuste: cap(c.giuste || ''), domande: cap(c.tante), minuti: 'Minuti' }
+  const aiuto = {
+    maestra: 'Il bambino resta su questo blocco finché non premi «Avanti tutti» nel pannello della lezione: la classe va avanti insieme.',
+    giuste: `Ognuno passa da solo quando ha fatto quel numero di ${c.giuste}: chi sbaglia ci resta un po' di più.`,
+    domande: `Ognuno passa da solo dopo quel numero di ${c.tante}, giuste o sbagliate.`,
+    minuti: 'Ognuno passa da solo dopo quei minuti su questo blocco.',
+  }
+  const prima = m => (m.id === 'maestra' ? 0 : 1)   // la scelta di base per prima
+  return modiPassaPer(b.esercizio).map(m => ({ ...m, nome: dove[m.id], aiuto: aiuto[m.id] })).sort((x, y) => prima(x) - prima(y))
+}
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1)
+// un blocco col «dopo N giuste» passato in un gioco che non le conta (il coniglio) ripiega su «dopo N livelli»
+function sistemaModo(b) { if (!modiPassaPer(b.esercizio).some(m => m.id === b.modo)) b.modo = 'domande' }
+function cambiaEsercizio(b, x) { b.esercizio = x; sistemaModo(b) }
 
 // la lezione come uscirà: senza nome prende quello del primo esercizio
 const pronta = computed(() => {
@@ -119,20 +136,30 @@ async function copiaLink() {
         <button class="bottone chiaro piccolo" aria-label="togli questo blocco" data-azione="togli-blocco" @click="togli(i)">Togli</button>
       </span>
     </div>
-    <SceltaEsercizio v-model="b.esercizio" dove="blocco" :apri-giochi="daZero && i === 0" />
-    <div class="gruppo">
-      <span class="titoletto">Quando si passa al blocco dopo</span>
+    <SceltaEsercizio :model-value="b.esercizio" dove="blocco" @update:model-value="x => cambiaEsercizio(b, x)" />
+    <div class="gruppo passa">
       <div class="fila">
-        <button v-for="m in MODI_PASSA" :key="m.id" class="tessera" :class="{ scelta: b.modo === m.id }" :aria-pressed="b.modo === m.id"
-                :data-passa="m.id" @click="scegliModo(b, m.id)">{{ m.nome }}</button>
+        <span class="titoletto">Al blocco dopo si passa</span>
+        <b :data-passa-scelto="b.modo">{{ passaValido(passaDi(b)) ? descriviPassa(passaDi(b), b.esercizio) : '…' }}</b>
+        <button class="bottone chiaro piccolo" :aria-expanded="b.cambia" data-azione="cambia-passa" @click="b.cambia = !b.cambia">
+          {{ b.cambia ? 'Fatto' : 'Cambia' }}</button>
       </div>
-      <div v-if="modo(b.modo).unita" class="fila">
-        <input v-model.number="b.n" class="campo numero" type="number" min="1" :max="modo(b.modo).tetto" data-campo="soglia"
-               :aria-label="`quante ${modo(b.modo).unita}`">
-        <span>{{ modo(b.modo).unita }}</span>
-      </div>
-      <p class="nota">{{ passaValido(passaDi(b)) ? `Si passa ${descriviPassa(passaDi(b))}.` : '' }}
-        <template v-if="i === blocchi.length - 1">{{ dopoLUltimo }}</template></p>
+      <template v-if="b.cambia">
+        <div class="fila">
+          <span v-for="m in scelteDi(b)" :key="m.id" class="scelta-passa">
+            <button class="tessera" :class="{ scelta: b.modo === m.id }" :aria-pressed="b.modo === m.id" :data-passa="m.id"
+                    @click="scegliModo(b, m.id)">{{ m.nome }}</button>
+            <Aiuto :testo="m.aiuto" />
+          </span>
+        </div>
+        <div v-if="modo(b.modo).unita" class="fila">
+          <span>Dopo</span>
+          <input v-model.number="b.n" class="campo numero" type="number" min="1" :max="modo(b.modo).tetto" data-campo="soglia"
+                 :aria-label="`quante ${modo(b.modo).unita}`">
+          <span>{{ b.modo === 'minuti' ? 'minuti' : b.modo === 'giuste' ? contaDi(b.esercizio).giuste : contaDi(b.esercizio).tante }}</span>
+        </div>
+      </template>
+      <p v-if="i === blocchi.length - 1" class="nota">{{ dopoLUltimo }}</p>
     </div>
   </section>
 
@@ -141,11 +168,13 @@ async function copiaLink() {
       <button v-if="blocchi.length < MAX_BLOCCHI" class="tessera" data-azione="aggiungi-blocco" @click="aggiungi">＋ Aggiungi un blocco</button>
       <span v-else class="nota">Al massimo {{ MAX_BLOCCHI }} blocchi.</span>
     </div>
-    <label class="spunta">
-      <input v-model="inTondo" type="checkbox" data-campo="in-tondo">
-      <span>In tondo: dopo l'ultimo blocco si ricomincia dal primo</span>
-    </label>
-    <p class="nota">Per i giri a rotazione: più blocchi che passano quando lo dici tu, e a ogni giro premi «Avanti tutti».</p>
+    <div class="fila">
+      <label class="spunta">
+        <input v-model="inTondo" type="checkbox" data-campo="in-tondo">
+        <span>In tondo: dopo l'ultimo blocco si ricomincia dal primo</span>
+      </label>
+      <Aiuto testo="Per i giri a rotazione: per esempio tre giochi, e a ogni giro premi «Avanti tutti» e ognuno passa al gioco dopo." />
+    </div>
   </section>
 
   <section v-if="inCorso" class="carta">
@@ -173,10 +202,12 @@ async function copiaLink() {
 </template>
 
 <style scoped>
-.numero { width:110px }
+.campo.numero { width:110px; flex:none }
 .tra { justify-content:space-between }
 .gruppo { display:flex; flex-direction:column; gap:6px }
 .titoletto { font-size:14px; font-weight:600 }
 .spunta { flex-direction:row; align-items:center; gap:10px; font-weight:600 }
+.passa { padding-top:12px; border-top:1px solid var(--tessera) }
+.scelta-passa { display:inline-flex; align-items:center; gap:4px }
 .spunta input { width:20px; height:20px; flex:none }
 </style>

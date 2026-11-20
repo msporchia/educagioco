@@ -42,7 +42,7 @@ const storageFinto = () => {
 {
   const q = Q.vuoto()
   const l = { ...Q.nuovaLezione(ES), nome: 'Il nove · ripasso è più' }
-  stessaLista('una lezione nuova: un blocco che passa dopo 10 giuste, non in tondo', [l.blocchi, l.inTondo], [[{ esercizio: ES, passa: { giuste: 10 } }], false])
+  stessaLista('una lezione nuova: un blocco che passa quando lo dice la maestra, non in tondo', [l.blocchi, l.inTondo], [[{ esercizio: ES, passa: null }], false])
   controlla('una lezione nuova con un nome è valida', Q.lezioneValida(l))
   controlla('senza nome no', !Q.lezioneValida({ ...l, nome: '  ' }))
   controlla('con un id che non sta in un attributo no', !Q.lezioneValida({ ...l, id: 'l 1' }))
@@ -85,7 +85,7 @@ const LEZ = { id: 'l1', nome: 'Il nove', blocchi: [{ esercizio: ES, passa: { dom
 const r = (n, giusta, fatto = '9 × 7', data = '56', blocco = 0) => ({ n, blocco, chiave: 'tab:prodotto', fatto, data, attesa: fatto === '9 × 7' ? '63' : '72', giusta, ms: 3000 })
 let voce
 {
-  voce = Q.nuovaVoce({ classe: CLASSE, lezione: LEZ, codice: 'ABCDE', chiave: 'k'.repeat(32), scade: 99_999, ora: 1000 })
+  voce = Q.nuovaVoce({ classe: CLASSE, lezione: LEZ, codice: '4821', chiave: 'k'.repeat(32), scade: 99_999, ora: 1000 })
   stessaLista('la voce nasce con gli alunni della classe', voce.alunni.map(a => a.id), ['a1', 'a2', 'a3'])
   Q.aggiungiRisposta(voce, 'a1', r(1, true))
   Q.aggiungiRisposta(voce, 'a1', r(2, false))
@@ -98,7 +98,7 @@ let voce
   uguale('le ultime sbagliate, la più recente prima', e.ultime[0].data, '54')
   controlla('chi risponde è presente', e.presente)
   // in un gioco un colpo sbagliato lascia la domanda aperta (`ultima: false`): è fra le sbagliate, non fra le fatte
-  const v2 = Q.nuovaVoce({ classe: CLASSE, lezione: LEZ, codice: 'ABCDE', chiave: 'k'.repeat(32), scade: 99_999, ora: 1000 })
+  const v2 = Q.nuovaVoce({ classe: CLASSE, lezione: LEZ, codice: '4821', chiave: 'k'.repeat(32), scade: 99_999, ora: 1000 })
   Q.aggiungiRisposta(v2, 'a1', { ...r(1, false, '9 × 7', '54'), ultima: false })
   Q.aggiungiRisposta(v2, 'a1', r(2, true))
   stessaLista('un colpo sbagliato e poi quello giusto: una domanda fatta e giusta', v2.esiti.a1.blocchi[0], { fatte: 1, giuste: 1 })
@@ -107,7 +107,7 @@ let voce
 
   // in tondo la posizione cresce a ogni giro: il riassunto somma per blocco, il pannello conta per posizione
   const giro = { ...LEZ, inTondo: true }
-  const v3 = Q.nuovaVoce({ classe: CLASSE, lezione: giro, codice: 'ABCDE', chiave: null, scade: 0, ora: 0 })
+  const v3 = Q.nuovaVoce({ classe: CLASSE, lezione: giro, codice: '4821', chiave: null, scade: 0, ora: 0 })
   const tondo = [r(1, true, '9 × 7', '63', 0), r(2, true, '9 × 7', '63', 1), r(3, false, '9 × 7', '56', 2), r(4, true, '9 × 7', '63', 3)]
   for (const x of tondo) Q.aggiungiRisposta(v3, 'a1', x)
   stessaLista('in tondo i giri si sommano per blocco', v3.esiti.a1.blocchi, [{ fatte: 2, giuste: 1 }, { fatte: 2, giuste: 2 }])
@@ -116,7 +116,7 @@ let voce
   Q.contaPosizione(conti, 'a1', { ...r(5, false, '9 × 7', '54', 3), ultima: false })
   stessaLista('un colpo che lascia aperta la domanda non conta nella posizione', conti.a1[3], { fatte: 1, giuste: 1 })
   // una risposta di prima dei blocchi porta `parte`
-  const v4 = Q.nuovaVoce({ classe: CLASSE, lezione: LEZ, codice: 'ABCDE', chiave: null, scade: 0, ora: 0 })
+  const v4 = Q.nuovaVoce({ classe: CLASSE, lezione: LEZ, codice: '4821', chiave: null, scade: 0, ora: 0 })
   Q.aggiungiRisposta(v4, 'a1', { ...r(1, true), blocco: undefined, parte: 'dopo' })
   stessaLista('una risposta col «dopo» di prima va nel secondo blocco', v4.esiti.a1.blocchi, [{ fatte: 0, giuste: 0 }, { fatte: 1, giuste: 1 }])
 
@@ -163,7 +163,7 @@ let voce
   const riga = Q.csvResoconto(strano).split('\r\n')[1]
   controlla('un nome che sembra una formula non lo diventa, e le virgolette si raddoppiano', riga.startsWith(`"'=SOMMA(A1); ""x""";`), riga)
 
-  const voce2 = Q.nuovaVoce({ classe: CLASSE, lezione: { ...LEZ, nome: 'Ancora il nove' }, codice: 'FGHIL', chiave: null, scade: 0, ora: 5000 })
+  const voce2 = Q.nuovaVoce({ classe: CLASSE, lezione: { ...LEZ, nome: 'Ancora il nove' }, codice: '5730', chiave: null, scade: 0, ora: 5000 })
   Q.aggiungiRisposta(voce2, 'a1', r(1, false, '9 × 7', '56'))
   q.storico.push(voce2)
   stessaLista('le lezioni della classe, la più recente prima', Q.vociDellaClasse(q, 'c1').map(v => v.lezione.nome), ['Ancora il nove', 'Il nove'])
@@ -183,9 +183,9 @@ let voce
 /* ══════════ 5. la scadenza: la lezione in corso si chiude da sé ══════════ */
 {
   const q = Q.vuoto()
-  const v = Q.nuovaVoce({ classe: CLASSE, lezione: LEZ, codice: 'ABCDE', chiave: 'k'.repeat(32), scade: 10_000, ora: 0 })
+  const v = Q.nuovaVoce({ classe: CLASSE, lezione: LEZ, codice: '4821', chiave: 'k'.repeat(32), scade: 10_000, ora: 0 })
   q.storico.push(v)
-  q.inCorso = { codice: 'ABCDE', chiave: 'k'.repeat(32), scade: 10_000, avviata: 0, classe: 'c1', lezione: LEZ, voce: v.id }
+  q.inCorso = { codice: '4821', chiave: 'k'.repeat(32), scade: 10_000, avviata: 0, classe: 'c1', lezione: LEZ, voce: v.id }
   controlla('prima della scadenza si può recuperare', Q.recuperabile(v, 9_999))
   uguale('prima della scadenza non cambia niente', Q.pulisciScadute(q, 9_999), false)
   uguale('dopo sì', Q.pulisciScadute(q, 10_000), true)
@@ -200,10 +200,10 @@ let voce
   q.classi.push(copia(CLASSE))
   Q.salvaLezione(q, LEZ)
   q.storico.push(copia(voce))
-  q.inCorso = { codice: 'ABCDE', chiave: 'k'.repeat(32), scade: 99, avviata: 1, classe: 'c1', lezione: LEZ, voce: voce.id }
+  q.inCorso = { codice: '4821', chiave: 'k'.repeat(32), scade: 99, avviata: 1, classe: 'c1', lezione: LEZ, voce: voce.id }
   uguale('salva', Q.salva(q, st), true)
   controlla('quattro chiavi, tutte `scuola:` e nessuna come quelle dei bambini',
-    [...st.m.keys()].length === 4 && [...st.m.keys()].every(k => k.startsWith('scuola:') && !/^scuola:[A-Z]{5}$/.test(k)), [...st.m.keys()].join(' '))
+    [...st.m.keys()].length === 4 && [...st.m.keys()].every(k => k.startsWith('scuola:') && !/^scuola:\d{4}$/.test(k)), [...st.m.keys()].join(' '))
   stessaLista('e ricarica uguale', Q.carica(st), copia(q))
   q.inCorso = null
   Q.salva(q, st, ['inCorso'])
@@ -287,7 +287,7 @@ let voce
   const VECCHIA = { id: 'l7', nome: 'Il nove', obiettivo: { esercizio: ES, quante: 15, minuti: null }, dopo: OROLOGIO }
   const A_BLOCCHI = { id: 'l7', nome: 'Il nove', blocchi: [{ esercizio: ES, passa: { domande: 15 } }, { esercizio: OROLOGIO, passa: null }], inTondo: false }
   const vecchiaVoce = {
-    id: 'v7', classe: 'c1', nomeClasse: '3ª B', lezione: VECCHIA, avviata: 1000, codice: 'ABCDE', chiave: null, scade: 2000, chiusa: true,
+    id: 'v7', classe: 'c1', nomeClasse: '3ª B', lezione: VECCHIA, avviata: 1000, codice: '4821', chiave: null, scade: 2000, chiusa: true,
     alunni: [{ id: 'a1', nome: 'Lorenzo', nuovo: false }],
     esiti: { a1: { presente: true, obiettivo: { fatte: 15, giuste: 12 }, dopo: { fatte: 4, giuste: 4 },
                    sbagliate: [{ fatto: '9 × 7', attesa: '63', volte: 2, dette: ['56'] }],
@@ -296,7 +296,7 @@ let voce
   const st = storageFinto()
   st.setItem(Q.CHIAVI.lezioni, JSON.stringify([VECCHIA, { ...VECCHIA, id: 'l8', obiettivo: { esercizio: ES, quante: null, minuti: 10 }, dopo: null }]))
   st.setItem(Q.CHIAVI.storico, JSON.stringify([vecchiaVoce]))
-  st.setItem(Q.CHIAVI.inCorso, JSON.stringify({ codice: 'ABCDE', chiave: 'k'.repeat(32), scade: 9, avviata: 1, classe: 'c1', lezione: VECCHIA, voce: 'v7' }))
+  st.setItem(Q.CHIAVI.inCorso, JSON.stringify({ codice: '4821', chiave: 'k'.repeat(32), scade: 9, avviata: 1, classe: 'c1', lezione: VECCHIA, voce: 'v7' }))
   const q = Q.carica(st)
   stessaLista('una lezione salvata prima si legge a blocchi', q.lezioni[0], A_BLOCCHI)
   stessaLista('a minuti, senza «se hai finito»: un blocco', q.lezioni[1].blocchi, [{ esercizio: ES, passa: { minuti: 10 } }])
