@@ -4,11 +4,13 @@ import { ref, computed, watch } from 'vue'
 import { quaderno, voceDi, classeDi } from './stato.js'
 import { diretta, via, avantiTutti, libera, togli, chiudiLezione, cambiaLezione, saltaBlocco, domandePer } from './diretta.js'
 import { riassuntoVuoto } from './quaderno.js'
-import { posizione, finita, bloccoDi, modoDi, sogliaDi, alleDomande } from '../comune/lezione.js'
-import { giocoDi } from '../comune/esercizi.js'
+import { posizione, finita, bloccoDi, modoDi, sogliaDi, alleDomande, contaDi } from '../comune/lezione.js'
+import { giocoDi, GIOCHI } from '../comune/esercizi.js'
+import { ICONE } from '../comune/icone-giochi.js'
 import { indirizzoBambini } from './utili.js'
 import Conferma from './Conferma.vue'
 import CodicePerIPc from './CodicePerIPc.vue'
+import Aiuto from './Aiuto.vue'
 
 const emit = defineEmits(['vai', 'indietro'])
 const voceId = quaderno.inCorso?.voce ?? null
@@ -41,10 +43,32 @@ const doveDi = a => { const p = posDi(a); return p === null ? fuori(a) : bloccoD
 function inCorsoDi(a) {
   const p = posDi(a)
   if (p === null || p === 'finito' || finita(lezione.value, p)) return null
-  const passa = lezione.value.blocchi[bloccoDi(lezione.value, p)].passa
-  return { fatte: 0, giuste: 0, ...diretta.conti[a.id]?.[p], modo: modoDi(passa), soglia: sogliaDi(passa) }
+  const { passa, esercizio } = lezione.value.blocchi[bloccoDi(lezione.value, p)]
+  return { fatte: 0, giuste: 0, ...diretta.conti[a.id]?.[p], modo: modoDi(passa), soglia: sogliaDi(passa), cosa: contaDi(esercizio).tante }
 }
 const puoLiberare = a => a.collegato || a.dove != null || a.esito.presente
+
+/* ── a colpo d'occhio: i pallini dei blocchi per ognuno, e la classe divisa per blocco ── */
+const qualeBlocco = a => { const p = posDi(a); return p === null ? null : p === 'finito' || finita(lezione.value, p) ? 'finito' : bloccoDi(lezione.value, p) }
+// per ogni blocco: fatto, qui, dopo (in tondo, di questo giro); chi non è entrato ha tutti i pallini vuoti
+function pallini(a) {
+  const b = qualeBlocco(a)
+  return Array.from({ length: n.value }, (_, i) => (b === null ? 'dopo' : b === 'finito' || i < b ? 'fatto' : i === b ? 'qui' : 'dopo'))
+}
+// quanto manca alla soglia del blocco in corso (0..1); null se passa quando lo dice la maestra o a minuti
+function soglia(a) {
+  const c = inCorsoDi(a)
+  if (!c?.soglia || c.modo === 'minuti') return null
+  return Math.min(1, (c.modo === 'giuste' ? c.giuste : c.fatte) / c.soglia)
+}
+const giusteSuFatte = a => { const c = inCorsoDi(a); return c && c.fatte ? c.giuste / c.fatte : null }
+const iniziali = nome => nome.split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0].toUpperCase()).join('')
+const blocchiVisti = computed(() => (lezione.value?.blocchi ?? []).map((b, i) => {
+  const g = GIOCHI.find(x => x.id === giocoDi(b.esercizio))
+  return { i, nome: g?.nome ?? '', icona: ICONE[g?.id] ?? null, chi: alunni.value.filter(a => qualeBlocco(a) === i) }
+}))
+const finiti = computed(() => alunni.value.filter(a => qualeBlocco(a) === 'finito'))
+const nonDentro = computed(() => alunni.value.filter(a => qualeBlocco(a) === null))
 
 // «Avanti tutti» sposta di un blocco chi è più indietro fra i collegati (il servizio: nuovoAvanti); chi è avanti resta
 const avantiInutile = computed(() => !!lezione.value && finita(lezione.value, diretta.avanti))
@@ -102,12 +126,12 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
         <li v-for="a in alunni" :key="a.id" class="nome" :class="{ preso: a.preso, nuovo: a.nuovo }" :data-alunno="a.id" :data-preso="a.preso">
           <span>{{ a.nome }}</span>
           <span v-if="a.nuovo" class="etichetta">nuovo</span>
-          <button v-if="!a.nuovo && puoLiberare(a)" class="bottone chiaro piccolo" data-azione="libera" @click="liberaNome(a.id)">Libera</button>
-          <Conferma v-if="a.nuovo" etichetta="Togli" domanda="Lo tolgo?" si="Togli" data-azione="togli" @si="togliNome(a.id)" />
+          <button v-if="!a.nuovo && puoLiberare(a)" class="bottone chiaro piccolo" data-azione="libera" @click="liberaNome(a.id)">Sblocca il nome</button>
+          <Conferma v-if="a.nuovo" etichetta="Togli il nome" domanda="Lo tolgo?" si="Togli" data-azione="togli" @si="togliNome(a.id)" />
         </li>
       </ul>
-      <p class="nota">Un nome diventa verde quando un bambino lo tocca. «Libera» lo rimette nella lista (un PC rotto, un nome sbagliato);
-        «Togli» manda via un nome nuovo che non conosci.</p>
+      <p class="nota">Un nome diventa verde quando un bambino lo tocca. «Sblocca il nome» <Aiuto testo="Il nome torna libero nella lista e il bambino lo ritocca, da questo PC o da un altro: per un PC che si è rotto o un nome toccato per sbaglio. Le risposte date restano sue." />
+        «Togli il nome» <Aiuto testo="Un nome che non è nella tua classe, scritto da un bambino: lo togli, con le sue risposte." /></p>
       <div class="fila centro-fila">
         <button class="bottone grande" data-azione="via" :disabled="!diretta.sentito" @click="parti">Via</button>
       </div>
@@ -122,15 +146,47 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
 </span>
         </div>
       </section>
+      <section class="carta" data-panoramica>
+        <h2>La classe</h2>
+        <div class="colonne">
+          <div v-for="b in blocchiVisti" :key="b.i" class="colonna" :data-colonna="b.i">
+            <div class="testa-colonna">
+              <img v-if="b.icona" :src="b.icona.src" alt="" class="ico">
+              <span><b>Blocco {{ b.i + 1 }}</b><span class="nota">{{ b.nome }}</span></span>
+            </div>
+            <div class="gente">
+              <span v-for="a in b.chi" :key="a.id" class="persona" :class="{ spento: !a.collegato }" :title="a.nome">{{ iniziali(a.nome) }}</span>
+            </div>
+            <span class="quanti">{{ b.chi.length }}</span>
+          </div>
+          <div class="colonna fine" data-colonna="finito">
+            <div class="testa-colonna"><span class="ico bandiera" aria-hidden="true">✓</span><b>Finito</b></div>
+            <div class="gente">
+              <span v-for="a in finiti" :key="a.id" class="persona verde" :title="a.nome">{{ iniziali(a.nome) }}</span>
+            </div>
+            <span class="quanti">{{ finiti.length }}</span>
+          </div>
+        </div>
+        <p v-if="nonDentro.length" class="nota">Non sono entrati: {{ nonDentro.map(a => a.nome).join(', ') }}</p>
+      </section>
       <ul class="bambini" data-pannello>
         <li v-for="a in alunni" :key="a.id" class="carta bambino" :class="{ spento: !a.collegato }" :data-alunno="a.id" :data-dove="posDi(a) ?? ''">
           <div class="fila tra">
             <b>{{ a.nome }} <span v-if="a.nuovo" class="etichetta">nuovo</span></b>
             <span class="nota">{{ doveDi(a) }}</span>
           </div>
+          <div v-if="n > 1" class="pallini" aria-hidden="true">
+            <span v-for="(s, i) in pallini(a)" :key="i" class="pallino" :class="s"></span>
+          </div>
+          <div v-if="soglia(a) !== null" class="barra" :title="`${Math.round(soglia(a) * 100)}% della soglia`">
+            <span :style="{ width: `${soglia(a) * 100}%` }"></span>
+          </div>
+          <div v-if="giusteSuFatte(a) !== null" class="esiti" :title="`${inCorsoDi(a).giuste} giuste su ${inCorsoDi(a).fatte}`">
+            <span class="si" :style="{ flexGrow: inCorsoDi(a).giuste }"></span><span class="no" :style="{ flexGrow: inCorsoDi(a).fatte - inCorsoDi(a).giuste }"></span>
+          </div>
           <p v-if="inCorsoDi(a)" data-blocco-in-corso>
             <template v-if="inCorsoDi(a).modo === 'giuste'"><b>{{ inCorsoDi(a).giuste }}</b> giuste su {{ inCorsoDi(a).soglia }} · {{ inCorsoDi(a).fatte }} fatte</template>
-            <template v-else-if="inCorsoDi(a).modo === 'domande'"><b>{{ inCorsoDi(a).fatte }}</b> fatte su {{ inCorsoDi(a).soglia }} · {{ inCorsoDi(a).giuste }} giuste</template>
+            <template v-else-if="inCorsoDi(a).modo === 'domande'"><b>{{ inCorsoDi(a).fatte }}</b> {{ inCorsoDi(a).cosa }} su {{ inCorsoDi(a).soglia }} · {{ inCorsoDi(a).giuste }} giuste</template>
             <template v-else><b>{{ inCorsoDi(a).fatte }}</b> fatte · <b>{{ inCorsoDi(a).giuste }}</b> giuste</template>
           </p>
           <ul v-if="a.esito.ultime.length" class="sbagliate" data-ultime-sbagliate>
@@ -138,11 +194,19 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
           </ul>
           <p v-if="a.domande" class="nota" data-solo-domande>Fa le domande al posto del gioco.</p>
           <div class="fila">
-            <button v-if="a.preso && posDi(a) !== 'finito'" class="bottone chiaro piccolo" data-azione="salta" @click="salta(a.id)">Salta il blocco</button>
-            <button v-if="a.preso && (a.domande || bloccoConGioco(a))" class="bottone chiaro piccolo" data-azione="domande" @click="domande(a)">
-              {{ a.domande ? 'Torna al gioco' : 'Le domande' }}</button>
-            <button v-if="!a.nuovo && puoLiberare(a)" class="bottone chiaro piccolo" data-azione="libera" @click="liberaNome(a.id)">Libera</button>
-            <Conferma v-if="a.nuovo" etichetta="Togli" domanda="Lo tolgo, con le sue risposte?" si="Togli" data-azione="togli" @si="togliNome(a.id)" />
+            <span v-if="a.preso && posDi(a) !== 'finito'" class="comando">
+              <button class="bottone chiaro piccolo" data-azione="salta" @click="salta(a.id)">Mandalo al blocco dopo</button>
+              <Aiuto testo="Solo lui passa al blocco dopo, gli altri restano dove sono: per chi è bloccato o ha già capito." /></span>
+            <span v-if="a.preso && (a.domande || bloccoConGioco(a))" class="comando">
+              <button class="bottone chiaro piccolo" data-azione="domande" @click="domande(a)">
+                {{ a.domande ? 'Rimettigli il gioco' : 'Domande invece del gioco' }}</button>
+              <Aiuto testo="Se sul suo PC il gioco è lento o non parte: fa lo stesso esercizio come domande su una scheda, finché non gli rimetti il gioco." /></span>
+            <span v-if="!a.nuovo && puoLiberare(a)" class="comando">
+              <button class="bottone chiaro piccolo" data-azione="libera" @click="liberaNome(a.id)">Sblocca il nome</button>
+              <Aiuto testo="Il nome torna libero nella lista e il bambino lo ritocca, da questo PC o da un altro: per un PC che si è rotto o un nome toccato per sbaglio. Le risposte date restano sue." /></span>
+            <span v-if="a.nuovo" class="comando">
+              <Conferma etichetta="Togli il nome" domanda="Lo tolgo, con le sue risposte?" si="Togli" data-azione="togli" @si="togliNome(a.id)" />
+              <Aiuto testo="Un nome che non è nella tua classe, scritto da un bambino: lo togli, con le sue risposte." /></span>
           </div>
         </li>
       </ul>
@@ -154,8 +218,7 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
         <button class="bottone chiaro" :disabled="diretta.linea !== 'su'" data-azione="cambia-lezione" @click="emit('vai', 'lezione', { inCorso: true })">Cambia la lezione</button>
         <Conferma v-if="conGiochi" etichetta="Tutti alle domande" domanda="Tolgo i giochi a tutti?" si="Togli i giochi" data-azione="tutti-alle-domande" @si="tuttiAlleDomande" />
       </div>
-      <p class="nota">Senza un codice nuovo: ognuno resta al blocco dove si trova. Per un bambino solo ci sono «Salta il blocco» e
-        «Le domande» sotto il suo nome.</p>
+      <p class="nota">Senza un codice nuovo: ognuno resta al blocco dove si trova. Per un bambino solo, i comandi stanno sotto il suo nome.</p>
       <CodicePerIPc />
     </section>
 
@@ -201,4 +264,26 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
 .bambino { gap:6px }
 .bambino.spento { opacity:.75 }
 .sbagliate { list-style:none; font-size:13px; color:var(--grigio); display:flex; flex-direction:column; gap:2px }
+.comando { display:inline-flex; align-items:center; gap:4px }
+.colonne { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px }
+.colonna { flex:1 0 130px; display:flex; flex-direction:column; gap:8px; padding:10px; border-radius:var(--raggio-piccolo); background:var(--tessera) }
+.colonna.fine { background:#e6f4ea }
+.testa-colonna { display:flex; align-items:center; gap:8px; font-size:14px }
+.testa-colonna > span { display:flex; flex-direction:column }
+.ico { width:32px; height:32px; border-radius:8px; object-fit:cover; flex:none }
+.bandiera { display:grid; place-items:center; background:var(--verde); color:#fff; font-weight:700 }
+.gente { display:flex; flex-wrap:wrap; gap:4px; min-height:30px }
+.persona { width:30px; height:30px; border-radius:50%; display:grid; place-items:center; font-size:11px; font-weight:700;
+         background:var(--accento); color:#fff }
+.persona.spento { background:var(--filo); color:var(--grigio) }
+.persona.verde { background:var(--verde) }
+.quanti { font-size:22px; font-weight:700; color:var(--grigio); align-self:flex-end; line-height:1 }
+.pallini { display:flex; gap:4px }
+.pallino { flex:1; height:8px; border-radius:4px; background:var(--tessera) }
+.pallino.fatto { background:var(--verde) }
+.pallino.qui { background:var(--accento) }
+.barra { height:10px; border-radius:5px; background:var(--tessera); overflow:hidden }
+.barra span { display:block; height:100%; background:var(--accento); border-radius:5px }
+.esiti { display:flex; height:6px; border-radius:3px; overflow:hidden; gap:1px }
+.esiti .si { background:var(--verde) } .esiti .no { background:var(--rosso) }
 </style>

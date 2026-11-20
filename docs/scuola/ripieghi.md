@@ -14,8 +14,9 @@ Nella diretta, il riquadro «Se qualcosa non va» (`maestra/Diretta.vue`):
   resoconto la descrive), quella salvata nel quaderno resta com'era.
 - **«Tutti alle domande»** (`alleDomande` di `comune/lezione.js`) toglie gioco e difficoltà a ogni blocco che si può fare
   a schede; un blocco che esiste solo dentro un gioco (i gradini di Passo passo) resta e la maestra lo sa.
-- Per **un bambino solo**, sotto il suo nome: **«Salta il blocco»** (messaggio `salta`: un pavimento suo, come «Avanti
-  tutti» ma per lui) e **«Le domande»** / «Torna al gioco» (`domande`: le schede al posto del gioco, finché lei non lo
+- Per **un bambino solo**, sotto il suo nome, ognuno col suo «?»: **«Mandalo al blocco dopo»** (messaggio `salta`: un
+  pavimento suo, come «Avanti tutti» ma per lui) e **«Domande invece del gioco»** / «Rimettigli il gioco» (`domande`: le
+  schede al posto del gioco, finché lei non lo
   toglie).
 
 Sul PC del bambino la vista del gioco si rifà quando la lezione cambia (`rifatta` nello `stato`, nella chiave della

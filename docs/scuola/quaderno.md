@@ -51,8 +51,8 @@ inCorso: { codice, chiave, scade, avviata, classe, lezione, voce } | null
 - **La voce dello storico tiene la classe com'era** (`nomeClasse`, `alunni`): cancellare una classe non cancella
   il suo storico, che resta nella pagina d'inizio con «classe cancellata».
 - **Una lezione si salva solo se è valida**: `lezioneValida` del quaderno è quella di `comune/lezione.js`, più un nome
-  che non sia solo spazi e un id che sta in un attributo. Una lezione nuova ha un blocco che passa dopo 10 giuste
-  (`passaDiBase`).
+  che non sia solo spazi e un id che sta in un attributo. Una lezione nuova ha un blocco che passa quando lo dice
+  la maestra (`passaDiBase`).
 
 ## Le cose di prima dei blocchi
 
@@ -93,7 +93,7 @@ ultime tre sbagliate per il pannello. `presente`: ha risposto o è stato visto c
   collegamento solo per prendere `tutto`, rifare il riassunto e chiudere. Se il servizio non la conosce più, la
   chiave si butta.
 - In sala il verde è «preso» (un PC tiene quel nome, anche se in questo momento è caduto); nel pannello il grigio
-  è «non collegato». «Libera» compare su chi è collegato o ha già fatto qualcosa.
+  è «non collegato». «Sblocca il nome» (era «Libera») compare su chi è collegato o ha già fatto qualcosa.
 
 ## Il file del quaderno
 
@@ -135,7 +135,7 @@ Colonne: Bambino, Nuovo, per ogni blocco «Blocco N: fatte» e «Blocco N: giust
 | `lezione` | nome e la fila dei blocchi (sotto); salva solo una lezione valida e torna all'inizio; copia il link, duplica, cancella |
 | `link` | una lezione arrivata da un link |
 | `avvia` | la scelta della classe e l'avvio |
-| `diretta` | per la LIM: in attesa il codice enorme, l'indirizzo, i nomi che diventano verdi e «Via»; poi «Avanti tutti» e un riquadro per bambino (in che blocco è, fatte e giuste del blocco in corso, le ultime sbagliate), «Libera», «Togli», «Chiudi lezione» |
+| `diretta` | per la LIM: in attesa il codice enorme, l'indirizzo, i nomi che diventano verdi e «Via»; poi «Avanti tutti», «La classe» divisa per blocco e un riquadro per bambino (pallini dei blocchi, fatte e giuste del blocco in corso, le ultime sbagliate), i suoi comandi, «Chiudi lezione» |
 | `resoconto` | i blocchi della lezione, tabella per bambino con una colonna per blocco («non c'era» per chi non è entrato), le domande più sbagliate della classe, Stampa, Scarica CSV, Recupera, «Aggiungi alla classe» per i nuovi |
 | `storico` | per classe le lezioni fatte con la data e i bambini |
 | `bambino` | lezione per lezione fatte e giuste in tutto e blocco per blocco, e le domande che sbaglia più spesso |
@@ -143,18 +143,25 @@ Colonne: Bambino, Nuovo, per ogni blocco «Blocco N: fatte» e «Blocco N: giust
 ## L'editor della lezione
 
 Una carta per blocco, nell'ordine: **il gioco, cosa si fa e quanto è difficile** (`SceltaEsercizio.vue`,
-[esercizi.md](esercizi.md)) e **quando si passa al blocco dopo** (`MODI_PASSA`: dopo X
-giuste, dopo N domande, dopo M minuti, quando lo dice la maestra; scegliendo una soglia il numero riparte dal suo
-`base`). Ogni blocco si sposta su e giù e si toglie (l'ultimo che resta no); «＋ Aggiungi un blocco», fino a
-`MAX_BLOCCHI`, ripete l'esercizio dell'ultimo e passa dopo 10 giuste. Sotto l'ultimo una riga dice cosa succede
+[esercizi.md](esercizi.md)) e **quando si passa al blocco dopo**: una riga sola, «Al blocco dopo si passa quando lo dice
+la maestra», con «Cambia» che apre le scelte (prima «Lo dici tu», poi giuste, domande, minuti con le parole del gioco:
+[lezione.md](lezione.md)), ognuna col suo «?»; scegliendo una soglia il numero riparte dal suo `base`. Ogni blocco si
+sposta su e giù e si toglie (l'ultimo che resta no); «＋ Aggiungi un blocco», fino a `MAX_BLOCCHI`, ripete l'esercizio
+dell'ultimo e passa quando lo dice la maestra. Sotto l'ultimo una riga dice cosa succede
 dopo («Hai finito!», si resta lì fino ad «Avanti tutti», o si ricomincia). «In tondo» è una spunta.
 
 - **Il gioco ha il suo disegno** (`TesseraGioco.vue`): l'icona dipinta della copertina di casa (`comune/icone-giochi.js`; nella
   build il plugin `iconeGiochi` di `vite.scuola.config.js` ci lascia solo le nove della scuola, ~300 KB invece dei 2,7 MB
-  di tutte le copertine), un foglio per le domande. Scelto il gioco resta solo quello, con «Cambia gioco»; tutti in vista
-  solo nel primo blocco di una lezione da zero e in «Senza lezione».
+  di tutte le copertine), un foglio per le domande. Si vede solo il gioco scelto, con «Cambia gioco» che li mostra tutti.
+  Le descrizioni dei giochi non parlano del PC: si suppone che reggano (scelta dell'utente).
 - **Cosa si fa** sono tessere: le materie (se il gioco ne ha più d'una) e le voci di quella materia, solo quelle che il
   gioco sa fare. La spiegazione della voce c'è solo quando c'era da scegliere.
+- **Un esempio vero** per ogni voce del catalogo (`Esempio.vue`): una domanda pescata come la pescherà il gioco, con le
+  risposte e la giusta segnata, e «Un'altra». I giochi col contenuto loro hanno le scelte come **righe** (`Righe.vue`) col
+  caso concreto scritto sotto (cosa chiede, cosa fa il bambino), non tessere col nome solo: «il banco» o «l'unità grande»
+  non dicevano niente.
+- **Il «?»** (`Aiuto.vue`) accanto alle scelte meno chiare: un tocco apre due righe, un tocco fuori le chiude (col dito
+  niente tooltip).
 - **Quanto è difficile**: tre tasti con tre tacche che si riempiono, e una riga su cosa cambia.
 
 ## Il pannello in diretta
@@ -163,12 +170,15 @@ dopo («Hai finito!», si resta lì fino ad «Avanti tutti», o si ricomincia). 
   (`posizione`): chi è scollegato lo raggiunge al rientro, e il pannello lo mette già lì. Si dice «blocco 2 di 3» e,
   in tondo, «giro 2»; con un blocco solo «al lavoro».
 - **Le giuste e le fatte del blocco in corso**, di questo giro, con la soglia se il blocco passa da solo («6 giuste
-  su 10»).
+  su 10»; nel coniglio «2 livelli su 3»).
+- **A colpo d'occhio** (chiesto dall'utente): «La classe» divide i bambini per blocco, una colonna per blocco col disegno del
+  suo gioco e una per chi ha finito, coi tondi delle iniziali (grigi se scollegati); sotto ogni nome i pallini dei blocchi
+  (fatti verdi, quello in corso blu), la barra verso la soglia e una barretta verde e rossa delle giuste e delle sbagliate.
 - **«Avanti tutti»** c'è sempre in fase `via` e chiama `avanti()` di [protocollo.md](protocollo.md); accanto dice dove
   porta chi è più indietro fra i collegati (come lo calcola il servizio). È spento solo quando senza «in tondo» tutti
   hanno già passato l'ultimo blocco.
-- **«Se qualcosa non va»**: «Cambia la lezione», «Tutti alle domande», il codice per i PC; sotto ogni nome «Salta il
-  blocco» e «Le domande». Tutto in [ripieghi.md](ripieghi.md).
+- **«Se qualcosa non va»**: «Cambia la lezione», «Tutti alle domande», il codice per i PC; sotto ogni nome «Mandalo al
+  blocco dopo», «Domande invece del gioco», «Sblocca il nome», ognuno col suo «?». Tutto in [ripieghi.md](ripieghi.md).
 
 ## «Nuova lezione»: il percorso guidato
 
@@ -193,7 +203,7 @@ file e il link di prima dei blocchi) e `unita/scuola-lezioni-pronte`. Bersagli: 
 `[data-parte=<i>]`, `[data-peso="poco"|"normale"|"tanto"]`, `[data-azione="aggiungi-parte"|"togli-parte"]`; negli editor
 `[data-campo="nome-classe"|"alunni"|"nome-lezione"|"da"|"a"|"soglia"|"in-tondo"]`,
 `[data-esercizio="blocco"]`, `[data-scegli-gioco]`, `[data-azione="cambia-gioco"]`, `[data-materia=<id>]`, `[data-voce=<id>]`,
-`[data-mescola]`, `[data-difficolta]`, `[data-tabellina=<n>]`, `[data-modo]`, `[data-tipologia]`, `[data-gioco=<id>]`,
+`[data-mescola]`, `[data-difficolta]`, `[data-esempio]` (con `[data-giusta]`), `[data-azione="altro-esempio"|"cambia-passa"]`, `[data-passa-scelto=<modo>]`, `[data-aiuto]`, `[data-aiuto-testo]`, `[data-panoramica]` con `[data-colonna=<i>|"finito"]`, `[data-tabellina=<n>]`, `[data-modo]`, `[data-tipologia]`, `[data-gioco=<id>]`,
 `[data-descrizione]`, `[data-problema]`, `[data-da-pronta]`; nell'editor della lezione un blocco è `[data-blocco=<i>]`
 (da 0), con `[data-passa="giuste"|"domande"|"minuti"|"maestra"]` e `[data-campo="soglia"]`; nella classe `[data-anno=<1..5>|""]`;
 nel percorso `[data-percorso]`, `[data-passo="anno"|"gioco"|"lezioni"]`, `[data-anno=<n>]`, `[data-materia=<id>]` (un gruppo),
