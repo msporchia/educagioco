@@ -25,6 +25,15 @@ per gioco.
   gioco (`giocoDi`), non entra in un insieme e non ha le schede come ripiego: se il gioco non parte il bambino vede
   «chiama la maestra».
 
+## La difficoltà
+
+Un gioco che ha una difficoltà da regolare la dichiara nella scheda: `difficolta: { facile, difficile }`, una frase per la
+maestra su cosa cambia. Nell'editor compare «Quanto è difficile» (Facile, Normale, Difficile) e l'esercizio porta
+`difficolta: 'facile' | 'difficile'`; **Normale è com'è a casa** e non si scrive. La vista la legge (`difficoltaDi`) e la
+passa nel limite; il gioco usa solo leve che ha già (velocità, vite, livello dell'eroe…), senza meccaniche nuove. Così la
+maestra regola da sola, vedendo come va la classe. Dove la difficoltà è già quello che si sceglie (i gradini di Passo
+passo, i capitoli del Robot, le tappe di English) la manopola non c'è.
+
 ## La risposta
 
 Ogni `risposta` della vista è già raccontata: `{ chiave, giusta, ms, ultima, fatto, data, attesa }`, i tre testi ≤ 40

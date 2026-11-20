@@ -148,6 +148,15 @@ export const giochiPer = e => GIOCHI.filter(g => accetta(g, e))
 // un esercizio col contenuto di un gioco si fa sempre in quel gioco, anche senza il campo `gioco`
 export const giocoDi = e => e?.gioco || padroneDi(e)?.id || 'schede'
 
+/* la difficoltà del gioco, scelta dalla maestra (docs/scuola/giochi.md): un gioco che la regge ha nella scheda
+   `difficolta: { facile, difficile }` (cosa cambia, per la maestra); «normale» è com'è a casa e non si scrive */
+export const DIFFICOLTA = [
+  { id: 'facile', nome: 'Facile' },
+  { id: 'normale', nome: 'Normale' },
+  { id: 'difficile', nome: 'Difficile' },
+]
+export const difficoltaDi = e => e?.difficolta || 'normale'
+
 /* ══════════════ più cose insieme ══════════════ */
 
 // un obiettivo può mescolare più esercizi, ognuno con la sua intensità («tanto l'8, un po' di ripasso del 3, 4, 5 e 6»):
@@ -162,7 +171,7 @@ const volteDi = peso => PESI.find(p => p.id === peso)?.volte ?? 1
 
 /* il limite per gli Asteroidi (docs/asteroidi/scuola.md): le tabelline a gruppi, ognuno con quante volte esce */
 export function limiteAsteroidi(e) {
-  const { gioco, ...x } = e
+  const { gioco, difficolta, ...x } = e
   return x.tipo === 'insieme'
     ? { gruppi: x.parti.map(p => ({ tabelline: [...p.esercizio.tabelline], volte: volteDi(p.peso) })) }
     : { gruppi: [{ tabelline: [...x.tabelline], volte: 1 }] }
@@ -187,6 +196,11 @@ function classiDi(m, { da, a, tipologie }) {
 // anche contro un link manomesso: niente chiavi in più, niente valori fuori dal catalogo
 export function valido(e) {
   if (!oggetto(e)) return false
+  if ('difficolta' in e) {
+    const { difficolta, ...resto } = e
+    const g = GIOCHI.find(x => x.id === giocoDi(resto))
+    return !!g?.difficolta && (difficolta === 'facile' || difficolta === 'difficile') && valido(resto)
+  }
   if ('gioco' in e) {
     const g = GIOCHI.find(x => x.id === e.gioco)
     const { gioco, ...resto } = e
@@ -222,6 +236,7 @@ const minuscola = s => s.charAt(0).toLowerCase() + s.slice(1)
 
 export function descrivi(e) {
   if (!valido(e)) return 'Esercizio non valido'
+  if ('difficolta' in e) { const { difficolta, ...resto } = e; return `${descrivi(resto)} · ${difficolta}` }
   if ('gioco' in e && e.gioco !== 'schede') { const { gioco, ...resto } = e; return `${descrivi(resto)} · ${GIOCHI.find(g => g.id === gioco).nei}` }
   const padrone = padroneDi(e)
   if (padrone) return padrone.tipo.descrivi(e)
@@ -316,7 +331,7 @@ function pescatoreInsieme(e, sorte) {
 export function pescatore(e, sorte = sorteQualunque()) {
   if (!valido(e)) throw new Error(`esercizio non valido: ${JSON.stringify(e)?.slice(0, 200)}`)
   if (!(sorte instanceof Sorte)) sorte = new Sorte(Number(sorte) || 1)
-  if ('gioco' in e) { const { gioco, ...resto } = e; e = resto }
+  { const { gioco, difficolta, ...resto } = e; e = resto }
   if (!delCatalogo(e) && e.tipo !== 'insieme') throw new Error(`questo esercizio si fa solo nel suo gioco: ${e.tipo}`)
   return e.tipo === 'insieme' ? pescatoreInsieme(e, sorte) : e.tipo === 'tabelline' ? pescatoreTabelline(e, sorte) : pescatoreModulo(e, sorte)
 }

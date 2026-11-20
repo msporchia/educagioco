@@ -1,14 +1,14 @@
 <script setup>
 // L'esercizio di un blocco della lezione: una o più parti, ognuna con la sua intensità, e il gioco in cui si fa (docs/scuola/esercizi.md)
 import { computed } from 'vue'
-import { valido, descrivi, giochiPer, giocoDi, PESI, MAX_PARTI } from '../comune/esercizi.js'
+import { valido, descrivi, giochiPer, giocoDi, PESI, MAX_PARTI, GIOCHI, DIFFICOLTA, difficoltaDi } from '../comune/esercizi.js'
 import ParteEsercizio from './ParteEsercizio.vue'
 
 const props = defineProps({ modelValue: { type: Object, required: true }, dove: { type: String, default: 'blocco' } })
 const emit = defineEmits(['update:modelValue'])
 
 const copia = x => JSON.parse(JSON.stringify(x))
-const senzaGioco = ({ gioco, ...resto }) => resto
+const senzaGioco = ({ gioco, difficolta, ...resto }) => resto
 const e = computed(() => props.modelValue)
 
 // le parti come le vede l'editor: un esercizio semplice è una parte sola, «normale»
@@ -19,9 +19,11 @@ const parti = computed(() => {
 
 // il gioco scelto resta finché accetta l'esercizio; se no si torna alle domande
 const conGioco = (es, gioco) => (gioco && gioco !== 'schede' && giochiPer(es).some(g => g.id === gioco) ? { ...es, gioco } : es)
-function scrivi(nuove, gioco = giocoDi(e.value)) {
+// la difficoltà resta finché il gioco la regge; «normale» non si scrive (docs/scuola/giochi.md)
+const conDifficolta = (es, d) => (d !== 'normale' && GIOCHI.find(g => g.id === giocoDi(es))?.difficolta ? { ...es, difficolta: d } : es)
+function scrivi(nuove, gioco = giocoDi(e.value), d = difficoltaDi(e.value)) {
   const es = nuove.length === 1 ? copia(nuove[0].esercizio) : { tipo: 'insieme', parti: copia(nuove) }
-  emit('update:modelValue', conGioco(es, gioco))
+  emit('update:modelValue', conDifficolta(conGioco(es, gioco), d))
 }
 
 const cambiaParte = (i, esercizio) => scrivi(parti.value.map((p, j) => (j === i ? { ...p, esercizio } : p)))
@@ -33,6 +35,9 @@ const aggiungiParte = () => scrivi([...parti.value, { esercizio: copia(parti.val
 const giochi = computed(() => (valido(senzaGioco(e.value)) ? giochiPer(senzaGioco(e.value)) : []))
 const gioco = computed(() => giochi.value.find(g => g.id === giocoDi(e.value)) || null)
 const scegliGioco = id => scrivi(parti.value, id)
+const schedaDelGioco = computed(() => GIOCHI.find(g => g.id === giocoDi(e.value)) || null)
+const difficolta = computed(() => difficoltaDi(e.value))
+const scegliDifficolta = d => scrivi(parti.value, giocoDi(e.value), d)
 </script>
 
 <template>
@@ -61,6 +66,15 @@ const scegliGioco = id => scrivi(parti.value, id)
                 :data-gioco="g.id" @click="scegliGioco(g.id)">{{ g.nome }}</button>
       </div>
       <p v-if="gioco" class="nota">{{ gioco.spiega }}</p>
+    </div>
+
+    <div v-if="schedaDelGioco?.difficolta" class="gruppo">
+      <span class="titoletto">Quanto è difficile</span>
+      <div class="fila">
+        <button v-for="d in DIFFICOLTA" :key="d.id" class="tessera" :class="{ scelta: difficolta === d.id }" :aria-pressed="difficolta === d.id"
+                :data-difficolta="d.id" @click="scegliDifficolta(d.id)">{{ d.nome }}</button>
+      </div>
+      <p class="nota">{{ difficolta === 'normale' ? 'Com\'è a casa.' : schedaDelGioco.difficolta[difficolta] }}</p>
     </div>
 
     <p class="descrizione" :class="{ storta: !valido(e) }" data-descrizione>
