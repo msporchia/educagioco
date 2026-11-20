@@ -151,6 +151,12 @@ La pelle è quella delle schermate di contorno (`.schermo.pulito`, i valori di `
 [../core/pelle.md](../core/pelle.md)); niente animazioni nostre; i tasti dei nomi sono larghi almeno 190 px
 e alti 60, e stanno in una griglia che si allarga fino a 960 px.
 
+## La prova della maestra
+
+Con `#prova=<la lezione>` nell'indirizzo (il «Prova la lezione» della pagina della maestra, [quaderno.md](quaderno.md)) la
+pagina fa partire quella lezione come «Senza lezione», toglie l'hash e non la ricorda. Al posto del tasto «Maestra» c'è una
+striscia gialla `[data-prova]` con «Blocco dopo» `[data-azione="prova-salta"]` e «Chiudi la prova» `[data-azione="chiudi-prova"]`.
+
 Nei test: `unita/scuola-bambini` (codice, schermate, soglie a giuste, a domande e a minuti, «Avanti tutti» che porta
 avanti e fa ripartire il conto, chi è già avanti resta, in tondo, finita, i colpi che non chiudono la domanda, la
 lezione e il ricordo nella forma di prima, ripresa a pagina riaperta, il ricordo e i suoi guasti), `unita/scuola-profilo`

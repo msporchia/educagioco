@@ -130,6 +130,8 @@ function daBase64url(s) {
 }
 
 export const linkDellaLezione = (l, pagina) => `${String(pagina).split('#')[0]}#lezione=${aBase64url(JSON.stringify(l))}`
+// «Prova la lezione»: la pagina dei bambini con la lezione dentro, che la fa partire su quel PC senza servizio (docs/scuola/quaderno.md)
+export const linkDiProva = (l, paginaBambini) => `${String(paginaBambini).split('#')[0]}#prova=${aBase64url(JSON.stringify(l))}`
 
 /* da un indirizzo intero o dal solo `#…`; null se manca o se la lezione non è valida (un link manomesso non entra) */
 export function lezioneDalLink(indirizzo) {

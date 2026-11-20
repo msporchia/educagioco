@@ -220,4 +220,15 @@ console.log('\nI RIPIEGHI')
     && G.statoDa({ fase: 'via', lezione: L, io: { id: 'a1', nome: 'x', avanti: 3, domande: true } }).io.avanti === 3)
 }
 
+console.log('\nPROVA LA LEZIONE')
+{
+  const { linkDiProva } = await import('../../src/scuola/maestra/quaderno.js')
+  const l = { id: 'l1', nome: 'Il nove', blocchi: [{ esercizio: { tipo: 'tabelline', tabelline: [9], modo: 'prodotto' }, passa: null }], inTondo: false }
+  const link = linkDiProva(l, 'https://scuola.prova/scuola/index.html#vecchio')
+  controlla('il link porta alla pagina dei bambini con #prova=', link.startsWith('https://scuola.prova/scuola/index.html#prova='), link)
+  stessaLista('e la pagina dei bambini ne ritrova la lezione', G.provaDa(link), l)
+  uguale('senza #prova= niente', G.provaDa('https://scuola.prova/scuola/index.html'), null)
+  uguale('una lezione storta nemmeno', G.provaDa('https://x/index.html#prova=bm9u'), null)
+}
+
 riassunto('il giro del bambino a scuola')

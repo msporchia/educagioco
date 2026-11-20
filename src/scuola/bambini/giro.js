@@ -1,11 +1,16 @@
 /* Il giro del bambino a scuola, senza disegno: quale schermata, dove sta nella lezione a blocchi, il conto del blocco, il
    segno in alto e il ricordo in localStorage. Gira in Node. Vedi docs/scuola/bambini.md */
 import { lezioneValida, convertiLezione, posizione, finita, bloccoDi, superato, modoDi, sogliaDi } from '../comune/lezione.js'
+import { lezioneDalLink } from '../maestra/quaderno.js'
 
 export const RICORDO = 'scuola:bambino'
 const FORMA = 'blocchi'          // un ricordo senza (quello dell'obiettivo e del «dopo») vale come nessun ricordo
 const TRE_ORE = 3 * 60 * 60 * 1000
 const MINUTO = 60 * 1000
+
+/* «Prova la lezione» della maestra: `#prova=<la lezione>`, come il link di una lezione; null se manca o è storta */
+export const provaDa = indirizzo => (/#(?:.*&)?prova=/.test(String(indirizzo ?? ''))
+  ? lezioneDalLink(String(indirizzo).replace('prova=', 'lezione=')) : null)
 
 /* il codice come lo scrive il bambino: quattro cifre, spazi e altro si tolgono */
 export const pulisciCodice = testo => String(testo ?? '').replace(/\D/g, '').slice(0, 4)

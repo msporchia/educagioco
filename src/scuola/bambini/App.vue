@@ -184,10 +184,22 @@ const dove = computed(() => (nelBlocco.value ? pos.value : schermo.value === 'fi
 watch(dove, d => { if (d !== null) rete?.dove(d) })
 
 watch([codice, stato, cammino], () => {
+  if (prova.value) return
   G.ricorda({ codice: codice.value, locale: locale.value, nato: nato.value, stato: stato.value, cammino: cammino.value })
 })
 
+// «Prova la lezione» della maestra: parte senza servizio e non si ricorda (il PC della maestra non deve riaprirla ai bambini)
+const prova = ref(false)
+function chiudiProva() { globalThis.close(); prova.value = false; esci() }
 onMounted(() => {
+  const daProvare = G.provaDa(globalThis.location?.href)
+  if (daProvare) {
+    history.replaceState(null, '', location.pathname + location.search)
+    prova.value = true
+    entraSenza(daProvare)
+    battito = setInterval(() => { ora.value = Date.now() }, BATTITO)
+    return
+  }
   const r = G.leggiRicordo(Date.now())
   if (r?.locale) entraSenza(r.stato.lezione, r)
   else if (r) entra(r.codice, r)
@@ -256,7 +268,12 @@ onUnmounted(() => { chiudiRete(); clearInterval(battito) })
       <button type="button" class="link" data-cambia-codice @click="esci">Ho sbagliato codice</button>
     </div>
 
-    <button v-if="schermo !== 'codice' && schermo !== 'senza' && schermo !== 'chiusa'" type="button" class="tasto-maestra"
+    <div v-if="prova" class="striscia-prova" data-prova>
+      <span>Prova: così la vedono i bambini. Non arriva niente a nessuno.</span>
+      <button v-if="nelBlocco" type="button" data-azione="prova-salta" @click="menuSalta">Blocco dopo</button>
+      <button type="button" data-azione="chiudi-prova" @click="chiudiProva">Chiudi la prova</button>
+    </div>
+    <button v-if="!prova && schermo !== 'codice' && schermo !== 'senza' && schermo !== 'chiusa'" type="button" class="tasto-maestra"
             data-azione="maestra" @click="apriMenu">Maestra</button>
     <MenuMaestra v-if="menu" :locale="locale" :con-gioco="conGioco && !io?.domande" :domande="senzaGioco" :nel-blocco="nelBlocco"
                  :con-nome="!locale && !!io" :avviso="avvisoMenu"
@@ -290,4 +307,7 @@ onUnmounted(() => { chiudiRete(); clearInterval(battito) })
   position: fixed; right: 6px; bottom: 3px; z-index: 50; pointer-events: none;
   font-size: 10px; color: var(--grigio); opacity: .7;
 }
+.striscia-prova { position:fixed; left:50%; bottom:10px; transform:translateX(-50%); z-index:70; display:flex; align-items:center; gap:10px;
+                 padding:8px 10px 8px 16px; border-radius:999px; background:#ffe36e; color:#1f2433; font-size:14px; box-shadow:0 2px 8px #0003 }
+.striscia-prova button { padding:6px 12px; border-radius:999px; border:0; background:#1f2433; color:#fff; font:inherit; font-size:13px; cursor:pointer }
 </style>

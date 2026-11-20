@@ -1,5 +1,5 @@
 // Quello che le schermate della maestra si dividono: copiare, scaricare, le date, l'indirizzo dei bambini.
-import { righeDellaLezione } from './quaderno.js'
+import { righeDellaLezione, linkDiProva } from './quaderno.js'
 
 // dal disco (file://) la pagina non sa dove sta il sito: si dice quello pubblicato
 export const indirizzoBambini = () => (/^https?:/.test(globalThis.location?.protocol || '')
@@ -33,4 +33,10 @@ export function coloreDi(nome) {
   let h = 0
   for (const c of String(nome ?? '')) h = (h * 31 + c.codePointAt(0)) >>> 0
   return COLORI[h % COLORI.length]
+}
+
+// «Prova la lezione»: la pagina dei bambini accanto a questa, in una scheda nuova, che la fa partire su questo PC
+export function provaLezione(l) {
+  const pagina = new URL('./index.html', globalThis.location?.href || 'http://localhost/').href
+  globalThis.open?.(linkDiProva(l, pagina), '_blank')
 }
