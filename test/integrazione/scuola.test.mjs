@@ -72,20 +72,18 @@ uguale('nel quaderno c\'è una classe', await m.locator('[data-classi] [data-cla
 
 /* ── la lezione a due blocchi, dall'editor ── */
 await M.tocca('[data-azione="nuova-lezione"]')
-await schermata(m, 'nuova')
-await M.tocca('[data-azione="preparala-tu"]')
 await schermata(m, 'lezione')
 await m.fill('[data-campo="nome-lezione"]', 'Il 2 e gli Asteroidi')
-// tutti e dieci i giochi sempre in vista, le domande scelte, e sotto cosa fa il bambino; poi Matematica, che comincia con le
-// tabelline (del 2, col risultato)
+// una lezione nuova non ha scelte fatte: tutti e dieci i giochi in vista, nessuno scelto, e non si salva
 uguale('tutti e dieci i giochi in vista', await m.locator('[data-blocco="0"] [data-scegli-gioco] [data-gioco]').count(), 10)
-controlla('e la scheda di quello scelto dice cosa fa il bambino', /Il bambino risponde/.test(await testo(m, '[data-blocco="0"] [data-scheda-gioco]')))
+uguale('nessuno scelto', await m.locator('[data-blocco="0"] [data-scegli-gioco] [data-gioco][aria-pressed="true"]').count(), 0)
+controlla('e la lezione dice di scegliere il gioco', /scegli il gioco/.test(await testo(m, '[data-problema]')))
 await M.tocca('[data-blocco="0"] [data-gioco="schede"]')
-// cosa si chiede è un elenco per materia con la spunta: si accendono le tabelline e si spegne la prima voce d'italiano
+controlla('la scheda del gioco scelto dice cosa fa il bambino', /Il bambino risponde/.test(await testo(m, '[data-blocco="0"] [data-scheda-gioco]')))
+uguale('e nessuna domanda accesa', await m.locator('[data-blocco="0"] [data-elenco-domande] [data-voce][aria-pressed="true"]').count(), 0)
+// cosa si chiede è un elenco per materia con la spunta: si aprono la matematica e le tabelline
 await M.tocca('[data-blocco="0"] [data-materia-elenco="matematica"] .testa-materia')
 await M.tocca('[data-blocco="0"] [data-voce="tabelline"]')
-await M.tocca('[data-blocco="0"] [data-materia-elenco="italiano"] [data-voce][aria-pressed="true"]')
-uguale('resta accesa una cosa sola: le tabelline', await m.locator('[data-blocco="0"] [data-elenco-domande] [data-voce][aria-pressed="true"]').count(), 1)
 const premuto = sel => m.locator(sel).first().getAttribute('aria-pressed')
 uguale('il primo blocco parte dalla tabellina del 2', await premuto('[data-blocco="0"] [data-tabellina="2"]'), 'true')
 uguale('col risultato', await premuto('[data-blocco="0"] [data-modo="prodotto"]'), 'true')
@@ -101,7 +99,10 @@ await M.tocca('[data-blocco="0"] [data-azione="cambia-passa"]')
 await M.tocca('[data-blocco="0"] [data-passa="giuste"]')
 await m.fill('[data-blocco="0"] [data-campo="soglia"]', '2')
 uguale('si passa dopo 2 risposte giuste', (await testo(m, '[data-blocco="0"] [data-passa-scelto]')).trim(), 'dopo 2 risposte giuste')
+uguale('il blocco nuovo nasce senza gioco', await m.locator('[data-blocco="1"] [data-scegli-gioco] [data-gioco][aria-pressed="true"]').count(), 0)
 await M.tocca('[data-blocco="1"] [data-gioco="asteroidi"]')
+// negli Asteroidi la sola materia è già aperta, e le tabelline si accendono
+await M.tocca('[data-blocco="1"] [data-voce="tabelline"]')
 uguale('negli Asteroidi resta solo quello che sanno fare: niente materie da scegliere', await m.locator('[data-blocco="1"] [data-materia]').count(), 0)
 uguale('il secondo blocco negli Asteroidi', await premuto('[data-blocco="1"] [data-gioco="asteroidi"]'), 'true')
 uguale('finché lo dice la maestra (un blocco nuovo nasce così)', await m.locator('[data-blocco="1"] [data-passa-scelto]').getAttribute('data-passa-scelto'), 'maestra')

@@ -3,7 +3,7 @@
 // elenco solo, per materia, dove ogni tipo di domanda si accende con la spunta e prende la sua intensità (scelta dell'utente:
 // una scelta sola e in fila, non «una cosa e poi mescolane un'altra»). Le parti sono quelle di un esercizio `insieme`.
 // docs/scuola/esercizi.md
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { materieDelGioco, PESI, MAX_PARTI } from '../comune/esercizi.js'
 import ParteEsercizio from './ParteEsercizio.vue'
 import Aiuto from './Aiuto.vue'
@@ -21,16 +21,16 @@ const partiDi = v => props.parti.map((p, i) => ({ ...p, i })).filter(p => idDell
 const quanteIn = m => m.voci.reduce((n, v) => n + (partiDi(v).length ? 1 : 0), 0)
 const pieno = () => props.parti.length >= MAX_PARTI
 
-// le materie aperte: quelle che hanno già qualcosa acceso; le altre si aprono toccandole
-const aperte = ref(new Set(materie().filter(m => quanteIn(m)).map(m => m.id)))
+// le materie aperte: quelle che hanno già qualcosa acceso, e sempre tutte se il gioco ne ha una sola (gli Asteroidi); le
+// altre si aprono toccandole. Cambiando gioco il componente resta lo stesso: le aperte si rifanno (docs/core/interfaccia.md)
+const daAprire = () => new Set(materie().filter(m => quanteIn(m) || materie().length === 1).map(m => m.id))
+const aperte = ref(daAprire())
+watch(() => props.gioco, () => { aperte.value = daAprire() })
 const apri = id => { const x = new Set(aperte.value); x.has(id) ? x.delete(id) : x.add(id); aperte.value = x }
 
 function accendi(v) {
-  if (partiDi(v).length) {                       // spenta: via tutte le sue parti, ma una cosa almeno resta
-    const restano = props.parti.filter(p => idDella(p.esercizio) !== v.id)
-    if (restano.length) emit('cambia', restano)
-    return
-  }
+  // spenta: via tutte le sue parti (anche l'ultima: il blocco torna a non chiedere niente, e l'editor lo dice)
+  if (partiDi(v).length) return emit('cambia', props.parti.filter(p => idDella(p.esercizio) !== v.id))
   if (!pieno()) emit('cambia', [...props.parti, { esercizio: copia(v.base), peso: 'normale' }])
 }
 const ancora = v => { if (!pieno()) emit('cambia', [...props.parti, { esercizio: copia(v.base), peso: 'poco' }]) }

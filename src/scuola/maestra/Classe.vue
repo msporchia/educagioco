@@ -42,15 +42,6 @@ function cancella() {
     <label>Nome della classe
       <input v-model="nome" class="campo" :maxlength="Q.MAX_NOME_CLASSE" placeholder="per esempio: 3ª B" data-campo="nome-classe">
     </label>
-    <div class="anno">
-      <span class="titoletto">Che anno della primaria</span>
-      <div class="fila">
-        <button v-for="a in [1, 2, 3, 4, 5]" :key="a" class="tessera" :class="{ scelta: anno === a }" :aria-pressed="anno === a"
-                :data-anno="a" @click="anno = anno === a ? null : a">{{ a }}ª</button>
-        <button class="tessera" :class="{ scelta: !anno }" :aria-pressed="!anno" data-anno="" @click="anno = null">Non lo dico</button>
-      </div>
-      <p class="nota">Serve a proporti le lezioni pronte per quell'anno.</p>
-    </div>
     <label>Gli alunni, uno per riga
       <textarea v-model="testo" class="campo" spellcheck="false" data-campo="alunni"
                 placeholder="Si possono anche incollare da un elenco o da un foglio di calcolo"></textarea>

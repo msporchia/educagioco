@@ -7,7 +7,6 @@ import { lezioneDalLink } from './quaderno.js'
 import Inizio from './Inizio.vue'
 import Classe from './Classe.vue'
 import Lezione from './Lezione.vue'
-import NuovaLezione from './NuovaLezione.vue'
 import LezioneDalLink from './LezioneDalLink.vue'
 import Avvia from './Avvia.vue'
 import Diretta from './Diretta.vue'
@@ -16,9 +15,9 @@ import Storico from './Storico.vue'
 import Bambino from './Bambino.vue'
 
 const versione = __VERSIONE_SCUOLA__
-const VISTE = { inizio: Inizio, classe: Classe, nuova: NuovaLezione, lezione: Lezione, link: LezioneDalLink, avvia: Avvia, diretta: Diretta,
+const VISTE = { inizio: Inizio, classe: Classe, lezione: Lezione, link: LezioneDalLink, avvia: Avvia, diretta: Diretta,
                 resoconto: Resoconto, storico: Storico, bambino: Bambino }
-const TITOLI = { inizio: 'Educagioco a scuola', classe: 'La classe', nuova: 'Nuova lezione', lezione: 'La lezione', link: 'Una lezione dal link',
+const TITOLI = { inizio: 'Educagioco a scuola', classe: 'La classe', lezione: 'La lezione', link: 'Una lezione dal link',
                  avvia: 'Avvia la lezione', diretta: 'La lezione', resoconto: 'Il resoconto', storico: 'Lo storico', bambino: 'Lo storico' }
 
 const pila = ref([{ nome: 'inizio' }])

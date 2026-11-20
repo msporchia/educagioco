@@ -143,6 +143,10 @@ function accetta(g, e) {
   if (!delCatalogo(e)) return g.tipo?.id === e.tipo
   return g.id === 'schede' || !!g.accetta?.(e)
 }
+/* un blocco che non chiede ancora niente, solo nell'editor: `{ tipo: 'niente', gioco? }`. Non è valido, quindi non si salva
+   né parte; una scelta non nasce fatta (la convenzione dei giochi: niente valori di comodo) */
+export const NIENTE = Object.freeze({ tipo: 'niente' })
+
 // i giochi in cui si può fare questo esercizio (il campo `gioco` a parte)
 export const giochiPer = e => GIOCHI.filter(g => accetta(g, e))
 // quello che un gioco sa fare, per materia: le voci del catalogo che accetta (l'editor sceglie prima il gioco)

@@ -1,47 +1,43 @@
 <script setup>
-// Una domanda vera dell'esercizio, pescata come la pescherà il gioco, con la risposta che ci si aspetta: per capire cosa si
-// chiede senza leggere i nomi dei gradini. «Un'altra» ne pesca una nuova. docs/scuola/quaderno.md
-import { ref, computed } from 'vue'
+// Una domanda vera dell'esercizio, nella scheda che vedono i bambini (quiz/Domanda.vue, la stessa di bambini/viste/Domande.vue),
+// pescata come la pescherà il gioco: con le figure, e si può rispondere per vedere cosa succede. «Un'altra» ne pesca una nuova.
+// Provato un riassunto a parole: le risposte disegnate diventavano «(una figura)». docs/scuola/quaderno.md
+import { shallowRef, watch } from 'vue'
+import Domanda from '../../quiz/Domanda.vue'
 import { valido, pescatore } from '../comune/esercizi.js'
 
-const props = defineProps({ esercizio: { type: Object, required: true } })
-const seme = ref(1)
+const props = defineProps({ esercizio: { type: Object, required: true }, gioco: { type: String, default: 'schede' } })
+let pesca = null
+const ora = shallowRef(null)
 
-const domanda = computed(() => {
-  if (!valido(props.esercizio)) return null
-  try { return pescatore(props.esercizio, seme.value).prossima().domanda } catch { return null }
-})
-// la risposta come la vede il bambino: il testo, il nome con l'emoji, o l'emoji sola; un disegno senza nome non si scrive
-const detta = r => (r?.testo !== undefined ? String(r.testo) : [r?.emoji, r?.nome].filter(Boolean).join(' ') || '(una figura)')
-const soggetto = computed(() => {
-  const s = domanda.value?.soggetto
-  if (!s) return ''
-  return typeof s.testo === 'string' ? s.testo : [s.emoji, s.nome].filter(Boolean).join(' ')
-})
+function prossima() {
+  try { ora.value = pesca ? pesca.prossima() : null } catch { ora.value = null }
+}
+// l'esercizio cambia (un gradino, una tabellina): un pescatore nuovo e la sua prima domanda
+watch(() => JSON.stringify(props.esercizio), () => {
+  try { pesca = valido(props.esercizio) ? pescatore(props.esercizio) : null } catch { pesca = null }
+  prossima()
+}, { immediate: true })
 </script>
 
 <template>
-  <div v-if="domanda" class="esempio" data-esempio>
+  <aside v-if="ora" class="esempio" data-esempio>
     <div class="testa">
-      <span class="titoletto">Per esempio</span>
-      <button class="bottone chiaro piccolo" data-azione="altro-esempio" @click="seme++">Un'altra</button>
+      <span class="titoletto">{{ props.gioco === 'schede' ? 'Così la vede il bambino' : 'Una domanda così (nel gioco cambia l\'aspetto)' }}</span>
+      <button class="bottone chiaro piccolo" data-azione="altro-esempio" @click="prossima">Un'altra</button>
     </div>
-    <p v-if="soggetto" class="soggetto">{{ soggetto }}</p>
-    <p class="domanda">{{ domanda.testo }}</p>
-    <div class="risposte">
-      <span v-for="(r, i) in domanda.risposte || []" :key="i" class="risposta" :class="{ giusta: i === domanda.giusta }"
-            :data-giusta="i === domanda.giusta ? '' : null">{{ detta(r) }}<b v-if="i === domanda.giusta"> ✓</b></span>
+    <div class="schermo-finto">
+      <Domanda :domanda="ora.domanda" :pittori="ora.pittori" :titolo="ora.titolo" @risposto="prossima" />
     </div>
-  </div>
+  </aside>
 </template>
 
 <style scoped>
-.esempio { display:flex; flex-direction:column; gap:8px; padding:12px; border-radius:var(--raggio-piccolo); border:1px dashed var(--filo) }
+.esempio { display:flex; flex-direction:column; gap:8px }
 .testa { display:flex; align-items:center; justify-content:space-between; gap:8px }
 .titoletto { font-size:13px; font-weight:600; color:var(--grigio) }
-.soggetto { font-size:15px; white-space:pre-line }
-.domanda { font-size:17px; font-weight:600; white-space:pre-line }
-.risposte { display:flex; flex-wrap:wrap; gap:6px }
-.risposta { padding:6px 12px; border-radius:var(--raggio-piccolo); background:var(--tessera); font-size:15px }
-.risposta.giusta { background:#dff3e4; color:#1f6b3a; font-weight:600 }
+/* la domanda è un velo `absolute` sopra chi la contiene: qui un riquadro della sua misura, con l'altezza che le serve */
+.schermo-finto { position:relative; height:380px; border-radius:var(--raggio-piccolo); overflow:hidden; background:#eef1f6;
+                 --qz-h:4.4px; text-align:left }
+.schermo-finto :deep(.qz-velo) { --qz-h:4.4px; background:none; backdrop-filter:none; animation:none }
 </style>

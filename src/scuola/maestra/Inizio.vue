@@ -80,9 +80,9 @@ function apriFile(e) {
   <section class="carta" data-lezioni>
     <div class="fila tra">
       <h2>Le lezioni</h2>
-      <button class="bottone" data-azione="nuova-lezione" @click="emit('vai', 'nuova')">Nuova lezione</button>
+      <button class="bottone" data-azione="nuova-lezione" @click="emit('vai', 'lezione', { id: null })">Nuova lezione</button>
     </div>
-    <p v-if="!quaderno.lezioni.length" class="nota">Ancora nessuna lezione: «Nuova lezione» te ne propone di pronte, per classe e per gioco.</p>
+    <p v-if="!quaderno.lezioni.length" class="nota">Ancora nessuna lezione: con «Nuova lezione» scegli il gioco e cosa si chiede.</p>
     <ul v-else class="schede">
       <li v-for="l in quaderno.lezioni" :key="l.id" class="scheda" :data-lezione="l.id">
         <span class="disegni">

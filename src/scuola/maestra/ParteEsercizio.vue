@@ -18,6 +18,7 @@ const voce = computed(() => tutte.find(v => v.id === idDella(props.modelValue)) 
 const materie = computed(() => materieDelGioco(props.gioco))
 const materia = computed(() => materie.value.find(m => m.id === voce.value?.materia) || null)
 const e = computed(() => props.modelValue)
+const conEsempio = computed(() => voce.value?.tipo === 'tabelline' || voce.value?.tipo === 'modulo')
 
 const cambia = parti => emit('update:modelValue', { ...copia(props.modelValue), ...parti })
 
@@ -36,6 +37,13 @@ function tabellina(n) {
   if (scelte.length) cambia({ tabelline: scelte })
 }
 
+/* ── cosa si chiede delle tabelline: due spunte, il risultato e il numero nascosto; tutte e due sono «misti». Una resta accesa ── */
+const modiAccesi = computed(() => (e.value.modo === 'misti' ? ['prodotto', 'nascosto'] : [e.value.modo]))
+function modo(id) {
+  const accesi = modiAccesi.value.includes(id) ? modiAccesi.value.filter(x => x !== id) : [...modiAccesi.value, id]
+  if (accesi.length) cambia({ modo: accesi.length === 2 ? 'misti' : accesi[0] })
+}
+
 /* ── un modulo: i gradini da..a e le tipologie (nessuna scelta vuol dire tutte) ── */
 const aperta = t => t.gradini.some(g => g >= e.value.da && g <= e.value.a)
 function gradini(da, a) {
@@ -51,7 +59,8 @@ function tipologia(id) {
 </script>
 
 <template>
-  <div class="parte-esercizio">
+  <div class="parte-esercizio" :class="{ 'con-esempio': conEsempio }">
+    <div class="scelte">
     <div v-if="materie.length > 1 && !props.soloParametri" class="fila" data-materie>
       <button v-for="m in materie" :key="m.id" class="tessera" :class="{ scelta: materia?.id === m.id }" :aria-pressed="materia?.id === m.id"
               :data-materia="m.id" @click="sceltaMateria(m.id)">{{ m.emoji }} {{ m.nome }}</button>
@@ -72,10 +81,11 @@ function tipologia(id) {
         </div>
       </div>
       <div class="gruppo">
-        <span class="titoletto">Cosa si chiede</span>
+        <span class="titoletto">Che domande <span class="nota">(anche tutte e due: si mescolano)</span></span>
         <div class="fila">
-          <button v-for="m in voce.modi" :key="m.id" class="tessera" :class="{ scelta: e.modo === m.id }" :aria-pressed="e.modo === m.id"
-                  :data-modo="m.id" @click="cambia({ modo: m.id })">{{ m.nome }} <span class="esempio">{{ m.esempio }}</span></button>
+          <button v-for="m in voce.modi.filter(x => x.id !== 'misti')" :key="m.id" class="tessera spunta-modo"
+                  :class="{ scelta: modiAccesi.includes(m.id) }" :aria-pressed="modiAccesi.includes(m.id)" :data-modo="m.id" @click="modo(m.id)">
+            <span class="quadretto" aria-hidden="true">{{ modiAccesi.includes(m.id) ? '✓' : '' }}</span>{{ m.nome }} <span class="esempio">{{ m.esempio }}</span></button>
         </div>
       </div>
     </template>
@@ -109,16 +119,23 @@ function tipologia(id) {
       </div>
     </template>
 
-    <!-- una domanda vera, con la risposta che ci si aspetta: le voci del catalogo (i giochi col contenuto loro lo dicono da sé) -->
-    <Esempio v-if="voce?.tipo === 'tabelline' || voce?.tipo === 'modulo'" :esercizio="e" />
+    </div>
+    <!-- a destra la domanda vera, nella scheda dei bambini: le voci del catalogo (i giochi col contenuto loro lo dicono da sé) -->
+    <Esempio v-if="conEsempio" :esercizio="e" :gioco="props.gioco" />
   </div>
 </template>
 
 <style scoped>
 .parte-esercizio { display:flex; flex-direction:column; gap:12px }
+.scelte { display:flex; flex-direction:column; gap:12px; min-width:0 }
+/* su uno schermo largo le scelte a sinistra e la domanda d'esempio a destra */
+@media (min-width:900px) { .parte-esercizio.con-esempio { display:grid; grid-template-columns:minmax(0, 1fr) 360px; gap:16px; align-items:start } }
 .due { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px }
 .gruppo { display:flex; flex-direction:column; gap:6px }
 .titoletto { font-size:14px; font-weight:600 }
 .esempio { font-weight:400; opacity:.7; margin-left:4px }
 .voci { padding-top:8px; border-top:1px solid var(--tessera) }
+.spunta-modo { display:inline-flex; align-items:center; gap:8px }
+.quadretto { width:18px; height:18px; display:grid; place-items:center; font-size:12px; font-weight:700; border-radius:4px;
+             border:2px solid currentColor; opacity:.9 }
 </style>

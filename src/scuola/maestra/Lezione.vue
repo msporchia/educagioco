@@ -2,31 +2,23 @@
 // L'editor di una lezione a blocchi (docs/scuola/lezione.md): nome, i blocchi con cosa si chiede e quando si passa, in tondo; anche da una lezione pronta,
 // e la lezione in corso da mandare cambiata ai bambini (`inCorso`, docs/scuola/ripieghi.md)
 import { ref, computed } from 'vue'
-import { CATALOGO, valido, descrivi, materieDelGioco } from '../comune/esercizi.js'
+import { valido, descrivi, NIENTE } from '../comune/esercizi.js'
 import { MODI_PASSA, MAX_BLOCCHI, modoDi, sogliaDi, descriviPassa, passaValido, contaDi, modiPassaPer } from '../comune/lezione.js'
 import { quaderno, salva, lezioneDi } from './stato.js'
 import * as Q from './quaderno.js'
 import { paginaMaestra, copia, provaLezione } from './utili.js'
-import { lezioneDa } from '../comune/lezioni-pronte.js'
 import SceltaEsercizio from './SceltaEsercizio.vue'
 import Aiuto from './Aiuto.vue'
 import Conferma from './Conferma.vue'
 import { cambiaLezione, diretta } from './diretta.js'
 
-const props = defineProps({ id: { type: String, default: null }, proposta: { type: Object, default: null }, inCorso: { type: Boolean, default: false },
-  gioco: { type: String, default: null } })   // da «Nuova lezione»: si parte già in quel gioco
+const props = defineProps({ id: { type: String, default: null }, inCorso: { type: Boolean, default: false } })
 const emit = defineEmits(['vai', 'indietro'])
 
 const vecchia = props.id ? lezioneDi(props.id) : null
-// la prima cosa che il gioco sa fare (le domande: la prima voce del catalogo), già nel suo gioco
-function primaBase() {
-  const v = materieDelGioco(props.gioco || 'schede')[0]?.voci[0] || CATALOGO.materie[0].voci[0]
-  const base = JSON.parse(JSON.stringify(v.base))
-  return props.gioco && props.gioco !== 'schede' ? { ...base, gioco: props.gioco } : base
-}
 const inCorso = props.inCorso && quaderno.inCorso ? quaderno.inCorso.lezione : null
 const partenza = inCorso ? JSON.parse(JSON.stringify(inCorso)) : vecchia ? JSON.parse(JSON.stringify(vecchia))
-  : props.proposta ? lezioneDa(props.proposta, Q.nuovoId('l')) : Q.nuovaLezione(primaBase())
+  : Q.nuovaLezione({ ...NIENTE })
 
 // un blocco come lo tocca l'editor: il modo e il numero a parte, così il numero si scrive anche storto e si dice perché
 let chiavi = 0
@@ -75,6 +67,7 @@ const pronta = computed(() => {
 const problema = computed(() => {
   for (const [i, b] of blocchi.value.entries()) {
     const quale = blocchi.value.length > 1 ? `Il blocco ${i + 1}` : 'Il blocco'
+    if (b.esercizio?.tipo === NIENTE.tipo) return b.esercizio.gioco ? `${quale}: scegli cosa si chiede.` : `${quale}: scegli il gioco.`
     if (!valido(b.esercizio)) return `${quale} così non chiede niente.`
     const m = modo(b.modo)
     if (!passaValido(passaVero(b))) return `${quale}: le ${m.unita} vanno da 1 a ${m.tetto}.`
@@ -86,17 +79,10 @@ const problema = computed(() => {
 // un blocco nuovo ripete l'esercizio dell'ultimo e passa dopo le giuste: si cambia quello che serve
 function aggiungi() {
   if (blocchi.value.length >= MAX_BLOCCHI) return
-  blocchi.value.push(daBlocco({ esercizio: JSON.parse(JSON.stringify(blocchi.value.at(-1).esercizio)), passa: Q.passaDiBase() }))
+  blocchi.value.push(daBlocco({ esercizio: { ...NIENTE }, passa: Q.passaDiBase() }))   // nasce vuoto: niente scelte fatte
 }
-// il seguito consigliato di una lezione pronta: il blocco dopo, e il primo che passa alla sua soglia
-const seguito = computed(() => (props.proposta?.seguito && solo.value && !vecchia ? props.proposta.seguito : null))
-function aggiungiSeguito() {
-  const s = seguito.value
-  if (!s) return
-  const primo = blocchi.value[0]
-  primo.modo = modoDi(s.primoPassa); primo.n = sogliaDi(s.primoPassa)
-  blocchi.value.push(daBlocco({ esercizio: JSON.parse(JSON.stringify(s.esercizio)), passa: null }))
-}
+// un blocco solo, che va finché si chiude la prova: per vedere quel gioco con quelle domande senza passare dagli altri
+const provaBlocco = b => provaLezione({ id: partenza.id, nome: pronta.value.nome || 'Prova', blocchi: [{ esercizio: b.esercizio, passa: null }], inTondo: false })
 // l'ultimo blocco senza «in tondo» non ha un blocco dopo: lì si dice quando la lezione finisce per il bambino
 const titoloPassa = i => (i === blocchi.value.length - 1 && !inTondo.value ? 'Per il bambino la lezione finisce' : 'Al blocco dopo si passa')
 const togli = i => { if (blocchi.value.length > 1) blocchi.value.splice(i, 1) }
@@ -136,15 +122,18 @@ async function copiaLink() {
     <h1>{{ inCorso ? 'Cambia la lezione in corso' : vecchia ? 'Modifica la lezione' : 'Nuova lezione' }}</h1>
     <p v-if="inCorso" class="bene" data-cambia-in-corso>La mandi ai bambini senza un codice nuovo: ognuno resta al blocco dove si
       trova (il primo è il blocco 1). Se togli blocchi, chi era oltre l'ultimo ha finito. Nel quaderno resta la lezione di prima.</p>
-    <label>Nome della lezione
-      <input v-model="nome" class="campo" :maxlength="Q.MAX_NOME_LEZIONE" :placeholder="pronta.nome || 'per esempio: ripasso del 9'" data-campo="nome-lezione">
+    <label>Il nome della lezione <span class="nota">(facoltativo: se lo lasci vuoto prende quello di cosa si chiede)</span>
+      <input v-model="nome" class="campo nome-lezione" :maxlength="Q.MAX_NOME_LEZIONE" :placeholder="pronta.nome || 'per esempio: il ripasso del 9'" data-campo="nome-lezione">
     </label>
-    <p v-if="props.proposta && !vecchia" class="bene" data-da-pronta>Pronta per la {{ props.proposta.anno }}ª: {{ props.proposta.allena }} Cambia quello che vuoi e salvala.</p>
   </section>
 
   <section v-for="(b, i) in blocchi" :key="b.chiave" class="carta" :data-blocco="i">
     <div class="fila tra">
       <h2 v-if="!solo">Blocco {{ i + 1 }}</h2>
+      <span class="fila">
+        <button class="bottone chiaro piccolo" :disabled="!valido(b.esercizio)" data-azione="prova-blocco" @click="provaBlocco(b)">
+          {{ solo ? 'Prova' : 'Prova questo blocco' }}</button>
+      </span>
       <span v-if="blocchi.length > 1" class="fila">
         <button class="bottone chiaro piccolo" :disabled="i === 0" aria-label="sposta su" data-azione="su" @click="sposta(i, -1)">↑</button>
         <button class="bottone chiaro piccolo" :disabled="i === blocchi.length - 1" aria-label="sposta giù" data-azione="giu" @click="sposta(i, 1)">↓</button>
@@ -180,10 +169,6 @@ async function copiaLink() {
   </section>
 
   <section class="carta">
-    <div v-if="seguito" class="fila">
-      <button class="tessera" data-azione="aggiungi-seguito" @click="aggiungiSeguito">＋ Poi, consigliato: {{ descrivi(seguito.esercizio) }}</button>
-      <Aiuto :testo="`Il seguito consigliato per chi finisce prima: il primo blocco passa ${descriviPassa(seguito.primoPassa, blocchi[0].esercizio)}, poi si fa questo finché chiudi la lezione.`" />
-    </div>
     <div class="fila">
       <button v-if="blocchi.length < MAX_BLOCCHI" class="tessera" data-azione="aggiungi-blocco" @click="aggiungi">＋ Aggiungi un blocco dopo</button>
       <span v-else class="nota">Al massimo {{ MAX_BLOCCHI }} blocchi.</span>
@@ -226,6 +211,7 @@ async function copiaLink() {
 
 <style scoped>
 .campo.numero { width:110px; flex:none }
+.nome-lezione { font-size:18px; font-weight:600 }
 .tra { justify-content:space-between }
 .gruppo { display:flex; flex-direction:column; gap:6px }
 .titoletto { font-size:14px; font-weight:600 }

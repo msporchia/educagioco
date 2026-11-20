@@ -210,6 +210,12 @@ onUnmounted(() => { chiudiRete(); clearInterval(battito) })
 
 <template>
   <div class="schermo pulito scuola" :data-schermata="schermo">
+    <!-- la prova della maestra: una riga in cima, nel flusso, così il gioco si stringe sotto e niente resta coperto -->
+    <div v-if="prova" class="striscia-prova" data-prova>
+      <span>Prova della lezione: così la vedono i bambini, e non arriva niente a nessuno.</span>
+      <button v-if="nelBlocco" type="button" data-azione="prova-salta" @click="menuSalta">Blocco dopo</button>
+      <button type="button" data-azione="chiudi-prova" @click="chiudiProva">Chiudi la prova</button>
+    </div>
     <header v-if="io && schermo !== 'chiusa' && (io.nome || segno)" class="testa">
       <span class="chi">{{ io.nome }}</span>
       <span v-if="ricollego" class="ricollego" data-ricollego>Sto ricollegando…</span>
@@ -268,11 +274,6 @@ onUnmounted(() => { chiudiRete(); clearInterval(battito) })
       <button type="button" class="link" data-cambia-codice @click="esci">Ho sbagliato codice</button>
     </div>
 
-    <div v-if="prova" class="striscia-prova" data-prova>
-      <span>Prova: così la vedono i bambini. Non arriva niente a nessuno.</span>
-      <button v-if="nelBlocco" type="button" data-azione="prova-salta" @click="menuSalta">Blocco dopo</button>
-      <button type="button" data-azione="chiudi-prova" @click="chiudiProva">Chiudi la prova</button>
-    </div>
     <button v-if="!prova && schermo !== 'codice' && schermo !== 'senza' && schermo !== 'chiusa'" type="button" class="tasto-maestra"
             data-azione="maestra" @click="apriMenu">Maestra</button>
     <MenuMaestra v-if="menu" :locale="locale" :con-gioco="conGioco && !io?.domande" :domande="senzaGioco" :nel-blocco="nelBlocco"
@@ -307,7 +308,8 @@ onUnmounted(() => { chiudiRete(); clearInterval(battito) })
   position: fixed; right: 6px; bottom: 3px; z-index: 50; pointer-events: none;
   font-size: 10px; color: var(--grigio); opacity: .7;
 }
-.striscia-prova { position:fixed; left:50%; bottom:10px; transform:translateX(-50%); z-index:70; display:flex; align-items:center; gap:10px;
-                 padding:8px 10px 8px 16px; border-radius:999px; background:#ffe36e; color:#1f2433; font-size:14px; box-shadow:0 2px 8px #0003 }
+.striscia-prova { flex:none; display:flex; align-items:center; gap:10px; padding:6px 12px; background:#ffe36e; color:#1f2433;
+                 font-size:14px; border-bottom:1px solid #e6c84a }
+.striscia-prova span { flex:1; min-width:0 }
 .striscia-prova button { padding:6px 12px; border-radius:999px; border:0; background:#1f2433; color:#fff; font:inherit; font-size:13px; cursor:pointer }
 </style>

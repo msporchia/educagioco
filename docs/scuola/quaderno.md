@@ -41,9 +41,8 @@ inCorso: { codice, chiave, scade, avviata, classe, lezione, voce } | null
 - **Gli id degli alunni sono stabili**: riscrivendo la lista, un nome uguale (senza badare a maiuscole e spazi)
   riprende l'id di prima, nell'ordine (il primo «Luca» il primo id di «Luca»). Un nome cambiato è un alunno nuovo.
   Due nomi uguali nella stessa classe non si salvano: il bambino non saprebbe quale toccare.
-- **L'anno della classe è facoltativo** (`anno`: 1..5, la primaria): una classe senza anno non ha il campo, così un
-  quaderno o un file di prima si aprono uguali; un anno storto si toglie e la classe resta. Serve solo a proporre
-  le lezioni pronte: se le classi che lo dicono dicono tutte lo stesso (`annoDelleClassi`), è già scelto.
+- **L'anno della classe** (`anno`: 1..5) non si chiede più: serviva a proporre le lezioni pronte, che sono state tolte.
+  Un quaderno che lo ha si apre uguale e lo tiene; un anno storto si toglie e la classe resta.
 - **La lista si può incollare**: una riga per nome; le colonne di un foglio di calcolo diventano spazi, i numeri e
   i puntini di un elenco si tolgono; un nome oltre 24 lettere si accorcia e la pagina lo dice.
 - **Un «nuovo»** («Non trovo il mio nome») ha l'id che gli dà il servizio (`n…`); «Aggiungi alla classe» lo mette
@@ -133,7 +132,6 @@ Colonne: Bambino, Nuovo, per ogni blocco «Blocco N: fatte» e «Blocco N: giust
 |---|---|
 | `inizio` | la lezione in corso (se c'è), come funziona in quattro passi, l'indirizzo e il file dei bambini (`./index.html` scaricato come `educagioco-classe.html`), classi, lezioni, storico per classe, salva/apri il quaderno |
 | `classe` | nome, l'anno (1ª–5ª o «non lo dico») e alunni uno per riga; cancella (lo storico resta) |
-| `nuova` | il percorso di «Nuova lezione», sotto |
 | `lezione` | nome e la fila dei blocchi (sotto); salva solo una lezione valida e torna all'inizio; copia il link, duplica, cancella |
 | `link` | una lezione arrivata da un link |
 | `avvia` | la scelta della classe e l'avvio |
@@ -161,14 +159,19 @@ dopo («Hai finito!», si resta lì fino ad «Avanti tutti», o si ricomincia). 
   non parlano del PC: si suppone che reggano (scelta dell'utente).
 - **Cosa si fa** sono tessere: le materie (se il gioco ne ha più d'una) e le voci di quella materia, solo quelle che il
   gioco sa fare. La spiegazione della voce c'è solo quando c'era da scegliere.
-- **Un esempio vero** per ogni voce del catalogo (`Esempio.vue`): una domanda pescata come la pescherà il gioco, con le
-  risposte e la giusta segnata, e «Un'altra». I giochi col contenuto loro hanno le scelte come **righe** (`Righe.vue`) col
+- **La domanda vera** per ogni voce accesa (`Esempio.vue`): a destra delle sue scelte, nella scheda che vedono i bambini
+  (`quiz/Domanda.vue`, con le figure), pescata come la pescherà il gioco; ci si può rispondere, e «Un'altra» ne pesca una
+  nuova. Provato un riassunto a parole: le risposte disegnate diventavano «(una figura)». I giochi col contenuto loro hanno le scelte come **righe** (`Righe.vue`) col
   caso concreto scritto sotto (cosa chiede, cosa fa il bambino), non tessere col nome solo: «il banco» o «l'unità grande»
   non dicevano niente.
-- **Una lezione nasce di un blocco** e va finché la maestra la chiude («Si gioca finché non chiudi la lezione»): niente
-  «quando si passa» né «in tondo». «＋ Aggiungi un blocco dopo» fa la fila, «＋ Mescola un'altra cosa» mescola nello stesso
-  blocco, ognuno col «?» che dice la differenza; una lezione pronta offre il suo seguito («＋ Poi, consigliato: …»). Sotto
-  l'esercizio non si ripete più il riassunto delle scelte: resta solo l'avviso quando così non chiede niente.
+- **Una lezione nasce di un blocco, e senza scelte fatte**: nessun gioco, nessuna domanda (`NIENTE` di `esercizi.js`, che
+  non è valido e non si salva; la lezione dice «scegli il gioco», poi «scegli cosa si chiede»). Va finché la maestra la
+  chiude («Si gioca finché non chiudi la lezione»): niente «quando si passa» né «in tondo». «＋ Aggiungi un blocco dopo»
+  fa la fila, e **anche il blocco nuovo nasce vuoto** (prima copiava le scelte di quello sopra). Sotto l'esercizio non si
+  ripete il riassunto delle scelte: resta solo l'avviso quando così non chiede niente.
+- **Niente «una cosa sola» dove ne vanno bene tante**: il risultato e il numero nascosto delle tabelline sono due spunte
+  (tutte e due: si mescolano, il modo `misti`), come le tabelline e le domande di un modulo.
+- **«Prova questo blocco»** su ogni blocco: la prova (sotto) con quel blocco solo.
 - **«Prova la lezione»** (nell'editor, e «Prova» su ogni scheda dell'inizio): apre in una scheda nuova la pagina dei
   bambini con `#prova=<la lezione>` (`linkDiProva` del quaderno, `provaDa` di `bambini/giro.js`), che la fa partire su quel
   PC come «Senza lezione», senza codice e senza servizio. Una striscia gialla dice che è una prova, ha «Blocco dopo» al
@@ -208,17 +211,11 @@ quadretti** del quaderno di scuola come fondo, e **i colori delle penne** (`--pe
 - **«Se qualcosa non va»**: «Cambia la lezione», «Tutti alle domande», il codice per i PC; sotto ogni nome «Mandalo al
   blocco dopo», «Domande invece del gioco», «Sblocca il nome», ognuno col suo «?». Tutto in [ripieghi.md](ripieghi.md).
 
-## «Nuova lezione»: il percorso guidato
+## Le lezioni pronte sono state tolte
 
-`NuovaLezione.vue`, una schermata sola che si apre a passi, uno sotto l'altro: **per quale classe** (1ª–5ª, coi
-nomi delle classi del quaderno di quell'anno; già scelto con `annoDelleClassi`) → **in che gioco** (col disegno, quelli
-con lezioni pronte per l'anno) → **le lezioni pronte** di [lezioni-pronte.md](lezioni-pronte.md) di quel gioco, a gruppi
-per materia, col nome e come si svolgono. I giochi sono **tutti**: per uno che in quella classe non ha lezioni pronte
-c'è «Preparala tu», che apre l'editor già in quel gioco (`gioco` di `Lezione.vue`). Prima si vedevano solo quelli con
-lezioni pronte, e in seconda erano tre.
-Toccata una, si apre l'editor (`lezione`) già compilato con un id nuovo: la maestra cambia quello che vuole e
-salva. «Preparala tu» apre l'editor di sempre, vuoto. Le scelte restano finché la pagina è aperta: tornando
-indietro dall'editor si ritrovano.
+Il 20 novembre 2026, per scelta dell'utente: «fanno solo casino». Erano una sessantina per anno e materia, col percorso
+classe → gioco → lezione; chi il gioco non lo conosce si trovava due blocchi già fatti e non capiva da dove partire.
+«Nuova lezione» apre l'editor vuoto, e «Senza lezione» sul PC del bambino è la stessa scelta di gioco e domande.
 
 La stampa toglie barra, tasti e ombre (`.no-stampa`, `@media print` in `maestra.css`).
 
@@ -226,7 +223,7 @@ Nei test: `unita/scuola-quaderno` (gli id stabili, la lista incollata, `lezioneV
 ritorno e manomesso, il riassunto per blocco che `tutto` non raddoppia, i giri sommati in tondo e i conti per
 posizione, le più sbagliate, il CSV, lo storico del bambino, la scadenza, le chiavi di localStorage, il file storto e
 l'unione per id, l'anno della classe che un quaderno vecchio non ha, e le lezioni, lo storico, la lezione in corso, il
-file e il link di prima dei blocchi) e `unita/scuola-lezioni-pronte`. Bersagli: la radice `[data-schermata="<nome>"]`,
+file e il link di prima dei blocchi). Bersagli: la radice `[data-schermata="<nome>"]`,
 `button[aria-label="indietro"]`, `[data-versione]`, `[data-avviso="pieno"|"link-rotto"]`; nell'inizio
 `[data-in-corso]`, `[data-indirizzo-bambini]`, `[data-classe=<id>]`, `[data-lezione=<id>]`, `[data-storico-classe=<id>]`,
 `[data-file-quaderno]` (l'input del file), `[data-esito-file="bene"|"male"]`, `[data-link-lezione]`; nell'esercizio a più parti
@@ -234,10 +231,8 @@ file e il link di prima dei blocchi) e `unita/scuola-lezioni-pronte`. Bersagli: 
 `[data-campo="nome-classe"|"alunni"|"nome-lezione"|"da"|"a"|"soglia"|"in-tondo"]`,
 `[data-esercizio="blocco"]`, `[data-scegli-gioco]`, `[data-scheda-gioco]`, `[data-elenco-domande]` con `[data-materia-elenco=<id>]` e `[data-voce=<id>]`, `[data-azione="prova-lezione"|"preparala-nel-gioco"]`, `[data-materia=<id>]`, `[data-voce=<id>]`,
 `[data-mescola]`, `[data-difficolta]`, `[data-esempio]` (con `[data-giusta]`), `[data-azione="altro-esempio"|"cambia-passa"]`, `[data-passa-scelto=<modo>]`, `[data-aiuto]`, `[data-aiuto-testo]`, `[data-panoramica]` con `[data-colonna=<i>|"finito"]`, `[data-tabellina=<n>]`, `[data-modo]`, `[data-tipologia]`, `[data-gioco=<id>]`,
-`[data-descrizione]`, `[data-problema]`, `[data-da-pronta]`; nell'editor della lezione un blocco è `[data-blocco=<i>]`
-(da 0), con `[data-passa="giuste"|"domande"|"minuti"|"maestra"]` e `[data-campo="soglia"]`; nella classe `[data-anno=<1..5>|""]`;
-nel percorso `[data-percorso]`, `[data-passo="anno"|"gioco"|"lezioni"]`, `[data-anno=<n>]`, `[data-materia=<id>]` (un gruppo),
-`[data-gioco=<id>]`, `[data-pronta=<id>]`; nella lezione `[data-diretta]`, `[data-linea]`,
+`[data-descrizione]`, `[data-problema]`, `[data-azione="prova-blocco"]`; nell'editor della lezione un blocco è `[data-blocco=<i>]`
+(da 0), con `[data-passa="giuste"|"domande"|"minuti"|"maestra"]` e `[data-campo="soglia"]`; nella lezione `[data-diretta]`, `[data-linea]`,
 `[data-sala]`, `[data-codice]`, `[data-alunno=<id>]` (con `data-preso` in sala e `data-dove` nel pannello: la
 posizione col pavimento, `finito` o vuoto), `[data-blocco-in-corso]`, `[data-avanti=<pavimento>]`,
 `[data-pannello]`, `[data-messaggio]`; nel resoconto `[data-resoconto]`, `[data-pagella]` (una riga `[data-alunno=<id>]`, un blocco `[data-blocco=<i>]`), `[data-tabella-resoconto]` (solo in stampa, una cella `[data-blocco=<i>]` per blocco),

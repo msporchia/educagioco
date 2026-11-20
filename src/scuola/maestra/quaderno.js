@@ -62,12 +62,6 @@ const conAnno = (id, nome, anno, alunni) => ({ id, nome, ...(annoValido(anno) ? 
 
 export function nuovaClasse(nome = '', anno = null) { return conAnno(nuovoId('c'), nomePulito(nome, MAX_NOME_CLASSE), anno, []) }
 
-/* l'anno da proporre per una lezione nuova: quello delle classi che lo dicono, se è uno solo */
-export function annoDelleClassi(q) {
-  const anni = new Set(q.classi.map(c => c.anno).filter(annoValido))
-  return anni.size === 1 ? [...anni][0] : null
-}
-
 const sostituisci = (lista, voce) => {
   const i = lista.findIndex(x => x.id === voce.id)
   if (i >= 0) lista.splice(i, 1, voce)

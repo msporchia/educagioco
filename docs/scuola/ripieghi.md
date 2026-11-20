@@ -55,8 +55,8 @@ il menu basta per i blocchi della maestra.
 ## Senza internet: «Senza lezione»
 
 Sotto il codice della lezione c'è «Senza lezione (per la maestra)» (`bambini/viste/SenzaLezione.vue`): col codice,
-la maestra sceglie **classe → gioco → una lezione pronta → quanto è difficile** e «Via», oppure «Scegli tu cosa chiedere»
-(lo stesso editor di un blocco della sua pagina, un blocco solo che non finisce). La lezione gira sul PC senza servizio
+la maestra sceglie **il gioco e cosa si chiede** (lo stesso editor di un blocco della sua pagina, che parte vuoto) e «Via»:
+un blocco solo, che non finisce. La lezione gira sul PC senza servizio
 (`statoSenzaLezione` di `giro.js`): le soglie passano da sole, i blocchi «quando lo dice la maestra» col menu; le
 risposte non arrivano a nessuno. Si ricorda a pagina riaperta, come una lezione vera, e «Torna all'inizio» la toglie.
 Le schermate della maestra sul PC hanno la sua pelle (`maestra.css`, tutta sotto `.maestra`).

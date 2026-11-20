@@ -2,7 +2,7 @@
 // L'esercizio di un blocco della lezione (docs/scuola/esercizi.md): prima il gioco, col suo disegno, poi quello che quel gioco sa
 // fare (una o più parti, con quante domande ciascuna), poi quanto è difficile
 import { computed } from 'vue'
-import { valido, descrivi, giochiPer, giocoDi, PESI, GIOCHI, DIFFICOLTA, difficoltaDi, materieDelGioco, mescolaPiuCose } from '../comune/esercizi.js'
+import { valido, descrivi, giochiPer, giocoDi, PESI, GIOCHI, DIFFICOLTA, difficoltaDi, materieDelGioco, mescolaPiuCose, NIENTE } from '../comune/esercizi.js'
 import ParteEsercizio from './ParteEsercizio.vue'
 import TesseraGioco from './TesseraGioco.vue'
 import ElencoDomande from './ElencoDomande.vue'
@@ -18,7 +18,9 @@ const senzaGioco = ({ gioco, difficolta, ...resto }) => resto
 const e = computed(() => props.modelValue)
 
 // le parti come le vede l'editor: un esercizio semplice è una parte sola, «normale»
+const vuoto = computed(() => e.value?.tipo === NIENTE.tipo)
 const parti = computed(() => {
+  if (vuoto.value) return []
   const x = senzaGioco(e.value)
   return x.tipo === 'insieme' ? x.parti : [{ esercizio: x, peso: 'normale' }]
 })
@@ -26,14 +28,17 @@ const parti = computed(() => {
 // il gioco resta scritto finché accetta l'esercizio; la difficoltà finché il gioco la regge («normale» non si scrive)
 const conGioco = (es, gioco) => (gioco && gioco !== 'schede' && giochiPer(es).some(g => g.id === gioco) ? { ...es, gioco } : es)
 const conDifficolta = (es, d) => (d !== 'normale' && GIOCHI.find(g => g.id === giocoDi(es))?.difficolta ? { ...es, difficolta: d } : es)
-function scrivi(nuove, gioco = giocoDi(e.value), d = difficoltaDi(e.value)) {
+function scrivi(nuove, gioco = qualeGioco(), d = difficoltaDi(e.value)) {
+  if (!nuove.length) return emit('update:modelValue', { ...NIENTE, gioco })   // spento tutto: il gioco resta, le domande no
   const es = nuove.length === 1 ? copia(nuove[0].esercizio) : { tipo: 'insieme', parti: copia(nuove) }
   emit('update:modelValue', conDifficolta(conGioco(es, gioco), d))
 }
 
 /* ── il gioco: se non sa fare quello che c'era, si parte dalla prima cosa che sa fare ── */
-const gioco = computed(() => giocoDi(e.value))
-const schedaDelGioco = computed(() => GIOCHI.find(g => g.id === gioco.value) || GIOCHI[0])
+// il gioco scelto; null finché la maestra non ne tocca uno
+const qualeGioco = () => (vuoto.value ? e.value.gioco ?? null : giocoDi(e.value))
+const gioco = computed(qualeGioco)
+const schedaDelGioco = computed(() => GIOCHI.find(g => g.id === gioco.value) || null)
 // cosa gli si può chiedere, detto alla maestra: le materie del catalogo che accetta, o il suo contenuto
 const siChiede = computed(() => {
   const m = materieDelGioco(gioco.value)
@@ -42,7 +47,9 @@ const siChiede = computed(() => {
 })
 function scegliGioco(id) {
   if (id === gioco.value) return
-  if (valido(senzaGioco(e.value)) && giochiPer(senzaGioco(e.value)).some(g => g.id === id)) return scrivi(parti.value, id)
+  if (!vuoto.value && valido(senzaGioco(e.value)) && giochiPer(senzaGioco(e.value)).some(g => g.id === id)) return scrivi(parti.value, id)
+  // un gioco che prende le domande del catalogo parte senza domande accese; uno col suo contenuto dal suo (i gradini, i capitoli)
+  if (mescolaPiuCose(id)) return emit('update:modelValue', { ...NIENTE, gioco: id })
   const prima = materieDelGioco(id)[0]?.voci[0]
   if (prima) scrivi([{ esercizio: prima.base, peso: 'normale' }], id)
 }
@@ -71,24 +78,25 @@ const scegliDifficolta = d => scrivi(parti.value, gioco.value, d)
       <div class="giochi">
         <TesseraGioco v-for="g in GIOCHI" :key="g.id" :gioco="g" :scelta="gioco === g.id" piccola @click="scegliGioco(g.id)" />
       </div>
-      <div class="scheda-gioco" data-scheda-gioco>
+      <p v-if="!schedaDelGioco" class="nota" data-scegli-un-gioco>Tocca un gioco: sotto ti dico cosa fa il bambino e cosa gli si può chiedere.</p>
+      <div v-else class="scheda-gioco" data-scheda-gioco>
         <b>{{ schedaDelGioco.nome }}</b>
         <span>{{ schedaDelGioco.spiega }}</span>
         <span class="nota"><b>Si può chiedere:</b> {{ siChiede }}</span>
       </div>
     </div>
 
-    <div class="gruppo">
+    <div v-if="gioco" class="gruppo">
       <span class="titoletto">Cosa si chiede</span>
       <div v-if="parti.length > 1" class="mescola" data-mescola aria-label="quante domande di ogni parte">
         <span v-for="(p, i) in parti" :key="i" class="fetta" :class="`c${i}`" :style="{ flexGrow: volte(p.peso) }">{{ suDieci[i] }} su 10</span>
       </div>
       <!-- i giochi che prendono le domande del catalogo: un elenco con la spunta e l'intensità; gli altri, il loro contenuto -->
       <ElencoDomande v-if="piuCose" :parti="parti" :gioco="gioco" @cambia="nuove => scrivi(nuove)" />
-      <ParteEsercizio v-else :model-value="parti[0].esercizio" :gioco="gioco" @update:model-value="x => cambiaParte(0, x)" />
+      <ParteEsercizio v-else-if="parti.length" :model-value="parti[0].esercizio" :gioco="gioco" @update:model-value="x => cambiaParte(0, x)" />
     </div>
 
-    <div v-if="schedaDelGioco.difficolta" class="gruppo">
+    <div v-if="schedaDelGioco?.difficolta && !vuoto" class="gruppo">
       <span class="titoletto">Quanto è difficile</span>
       <div class="livelli">
         <button v-for="(d, k) in DIFFICOLTA" :key="d.id" class="livello" :class="{ scelta: difficolta === d.id }" :aria-pressed="difficolta === d.id"
@@ -99,7 +107,7 @@ const scegliDifficolta = d => scrivi(parti.value, gioco.value, d)
     </div>
 
     <!-- il riassunto ripeteva le scelte appena fatte: resta solo quando l'esercizio così non chiede niente -->
-    <p v-if="!valido(e)" class="descrizione storta" data-descrizione>Così l'esercizio non chiede niente: cambia le scelte qui sopra.</p>
+    <p v-if="!valido(e) && !vuoto" class="descrizione storta" data-descrizione>Così l'esercizio non chiede niente: cambia le scelte qui sopra.</p>
   </div>
 </template>
 

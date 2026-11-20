@@ -275,11 +275,6 @@ let voce
   Q.salva(q, st)
   stessaLista('e dal browser torna uguale', Q.carica(st).classi, [conAnno])
 
-  // l'anno da proporre per una lezione nuova
-  const conClassi = (...anni) => ({ classi: anni.map((anno, i) => (anno ? { id: `c${i}`, nome: 'x', anno, alunni: [] } : { id: `c${i}`, nome: 'x', alunni: [] })) })
-  uguale('nessuna classe: nessun anno', Q.annoDelleClassi(conClassi()), null)
-  uguale('le classi con l\'anno dicono tutte la terza: terza', Q.annoDelleClassi(conClassi(3, null, 3)), 3)
-  uguale('due anni diversi: nessuno', Q.annoDelleClassi(conClassi(3, 4)), null)
 }
 
 /* ══════════ 9. le cose di prima dei blocchi: lezioni, storico, lezione in corso ══════════ */

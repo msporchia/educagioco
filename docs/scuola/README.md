@@ -12,7 +12,6 @@ giocano ai giochi veri limitati alla lezione, e alla fine lei ha il resoconto.
 - [protocollo.md](protocollo.md) — il servizio: la lezione sul Durable Object, le richieste, i messaggi, i limiti, le 3 ore
 - [esercizi.md](esercizi.md) — cosa può scegliere la maestra, come si pescano le domande, come si racconta una risposta
 - [quaderno.md](quaderno.md) — cosa tiene il PC della maestra: classi, lezioni, storico, il file da salvare e il link di una lezione, il percorso di «Nuova lezione», l'editor a blocchi e il pannello con «Avanti tutti»
-- [lezioni-pronte.md](lezioni-pronte.md) — le lezioni già preparate per anno e materia: il criterio, cosa c'è, come se ne aggiunge una
 - [giochi.md](giochi.md) — i giochi veri: una cartella per gioco in `src/scuola/giochi/`, la scheda, i sostituti, la vista, i parametri, la risposta
 - [bambini.md](bambini.md) — le schermate del bambino, il nome dalla lista, cosa succede quando la rete cade
 - [ripieghi.md](ripieghi.md) — quando qualcosa non va: la lezione cambiata a metà, un bambino solo, il codice della maestra a tempo, il tasto «Maestra» sul PC, «Senza lezione» senza internet, le pagine che si riaprono senza rete

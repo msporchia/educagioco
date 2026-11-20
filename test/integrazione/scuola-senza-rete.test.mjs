@@ -7,9 +7,9 @@
    svuota: le pagine si riaprono lo stesso, dalla copia del service worker.
    Sulla pagina della maestra «Codice per i PC» dà le quattro cifre; sul
    PC del bambino «Senza lezione», un codice sbagliato no, quello giusto
-   sì; la seconda, il gioco a schede, la prima lezione pronta, «Via», e si
+   sì; le domande a schede, le tabelline, «Via», e si
    risponde. Il tasto «Maestra» (lo stesso codice) salta al blocco dopo,
-   e la lezione pronta, che è di un blocco, finisce; a pagina riaperta si è ancora lì; «Torna all'inizio» riporta al codice.
+   e la lezione, che è di un blocco, finisce; a pagina riaperta si è ancora lì; «Torna all'inizio» riporta al codice.
    Docs: docs/scuola/ripieghi.md. `node test/esegui.mjs scuola-senza-rete`
    ═══════════════════════════════════════════════════════════════════ */
 import { resolve } from 'node:path'
@@ -83,9 +83,9 @@ await b.waitForSelector('[data-codice-maestra-errore]', { timeout: 3000 })
 controlla('un codice sbagliato non apre', /non è giusto/.test(await testo(b, '[data-codice-maestra-errore]')))
 await b.fill('[data-campo="codice-maestra"]', cifre)
 await B.tocca('[data-azione="codice-maestra"]')
-await B.tocca('[data-passo="anno"] [data-anno="2"]')
-await B.tocca('[data-passo="gioco"] [data-gioco="schede"]')
-await B.tocca('[data-passo="lezioni"] [data-pronta]')
+await B.tocca('[data-senza-lezione] [data-gioco="schede"]')
+await B.tocca('[data-materia-elenco="matematica"] .testa-materia')
+await B.tocca('[data-voce="tabelline"]')
 await scatto(b, 'scuola-senza-lezione')
 await B.tocca('[data-azione="via-senza"]')
 await schermata(b, 'blocco')
@@ -101,7 +101,7 @@ await b.fill('[data-menu-maestra] [data-campo="codice-maestra"]', cifre)
 await B.tocca('[data-menu-maestra] [data-azione="codice-maestra"]')
 await B.tocca('[data-menu-maestra] [data-azione="salta"]')
 await schermata(b, 'finito', 5000)
-controlla('una lezione pronta è un blocco solo: «Salta al blocco dopo» la fa finire', true)
+controlla('senza lezione è un blocco solo: «Salta al blocco dopo» la fa finire', true)
 await b.reload()
 await schermata(b, 'finito', 15000)
 controlla('a pagina riaperta, senza rete, si è ancora lì', true)
