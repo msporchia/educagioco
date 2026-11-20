@@ -91,7 +91,9 @@ ultime tre sbagliate per il pannello. `presente`: ha risposto o è stato visto c
   «Chiudi solo qui» (i PC dei bambini non lo sanno: è l'uscita quando la rete della scuola è giù).
 - **Recupera i risultati**, nel resoconto di una lezione chiusa qui, finché c'è la chiave e non è scaduta: un
   collegamento solo per prendere `tutto`, rifare il riassunto e chiudere. Se il servizio non la conosce più, la
-  chiave si butta.
+  chiave si butta. La pagina lo dice senza nominare il servizio: «La lezione e i risultati sono salvati su questo
+  computer», e le tre ore stanno nel «?» del tasto. Scritto prima come «il servizio tiene la lezione per tre ore»: sembrava
+  che in locale non si salvasse niente.
 - In sala il verde è «preso» (un PC tiene quel nome, anche se in questo momento è caduto); nel pannello il grigio
   è «non collegato». «Sblocca il nome» (era «Libera») compare su chi è collegato o ha già fatto qualcosa.
 

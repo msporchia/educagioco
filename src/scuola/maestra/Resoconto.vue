@@ -6,6 +6,7 @@ import { recupera } from './diretta.js'
 import * as Q from './quaderno.js'
 import { scarica, giorno, ora, comeSiSvolge } from './utili.js'
 import { descriviBlocco, modoDi, sogliaDi } from '../comune/lezione.js'
+import Aiuto from './Aiuto.vue'
 
 const props = defineProps({ voce: { type: String, required: true } })
 const emit = defineEmits(['vai', 'indietro'])
@@ -25,7 +26,7 @@ function sotto(i, c) {
 const recuperando = ref(false)
 const esitoRecupero = ref('')
 
-const ESITI = { ok: 'Risultati recuperati.', scaduta: 'Il servizio non ha più questa lezione: tre ore dall\'avvio sono passate.',
+const ESITI = { ok: 'Fatto: adesso ci sono anche le risposte che mancavano.', scaduta: 'Le risposte che mancavano non si possono più chiedere: sono passate tre ore. Quelle che vedi restano qui.',
                 rete: 'Non riesco a collegarmi: riprova fra poco.' }
 async function recuperaRisultati() {
   recuperando.value = true
@@ -59,11 +60,14 @@ const stampa = () => globalThis.print()
       <div class="fila no-stampa">
         <button class="bottone" data-azione="stampa" @click="stampa">Stampa</button>
         <button class="bottone chiaro" data-azione="csv" @click="csv">Scarica CSV</button>
-        <button v-if="recuperabile" class="bottone chiaro" :disabled="recuperando" data-azione="recupera" @click="recuperaRisultati">
-          {{ recuperando ? 'Mi collego…' : 'Recupera i risultati' }}</button>
+        <span v-if="recuperabile" class="fila">
+          <button class="bottone chiaro" :disabled="recuperando" data-azione="recupera" @click="recuperaRisultati">
+            {{ recuperando ? 'Mi collego…' : 'Recupera i risultati' }}</button>
+          <Aiuto testo="Se durante la lezione è caduta la rete, qualche risposta può non essere arrivata qui: questo tasto la va a prendere. Si può fare per tre ore dall'avvio della lezione." />
+        </span>
       </div>
+      <p class="nota no-stampa">La lezione e i risultati sono salvati su questo computer, nel quaderno.</p>
       <p v-if="esitoRecupero" class="nota no-stampa" data-esito-recupero>{{ esitoRecupero }}</p>
-      <p v-if="recuperabile" class="nota no-stampa">Il servizio tiene la lezione per tre ore dall'avvio: fino ad allora si possono riprendere tutte le risposte.</p>
     </section>
 
     <section class="carta">

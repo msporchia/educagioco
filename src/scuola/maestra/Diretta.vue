@@ -229,8 +229,8 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
       </div>
       <template v-else>
         <p v-if="diretta.linea === 'su'">Chiudo la lezione? Sui PC dei bambini compare «La lezione è finita» e non si risponde più.</p>
-        <p v-else>Non c'è linea: posso chiuderla solo qui. I PC dei bambini non lo sapranno, e i risultati che mancano
-          si recuperano dal resoconto entro tre ore dall'avvio.</p>
+        <p v-else>Non c'è linea: posso chiuderla solo qui. I PC dei bambini non lo sapranno. Le risposte arrivate restano su
+          questo computer; quelle che mancano le prendi poi dal resoconto con «Recupera i risultati».</p>
         <div class="fila">
           <button v-if="diretta.linea === 'su'" class="bottone rosso" data-azione="conferma-chiudi" @click="chiudi()">Chiudi la lezione</button>
           <button v-else class="bottone rosso" data-azione="chiudi-solo-qui" @click="chiudi(true)">Chiudi solo qui</button>
