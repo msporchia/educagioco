@@ -210,7 +210,11 @@ console.log('\nPIÙ COSE INSIEME, CON LE INTENSITÀ')
   controlla('e agli Asteroidi no', !valido({ ...misto, gioco: 'asteroidi' }))
   controlla('tutte tabelline col risultato: anche negli Asteroidi', valido({ ...otto, gioco: 'asteroidi' }))
   stessaLista('che ricevono i gruppi con le loro volte', limiteAsteroidi({ ...otto, gioco: 'asteroidi' }).gruppi,
-    [{ tabelline: [8], volte: 4 }, { tabelline: [3, 4, 5, 6], volte: 1 }])
+    [{ tabelline: [8], volte: 4, modo: 'prodotto' }, { tabelline: [3, 4, 5, 6], volte: 1, modo: 'prodotto' }])
+  const nascosti = ins([t([7], 'nascosto'), 'tanto'], [t([2, 3], 'misti'), 'poco'])
+  controlla('anche il numero nascosto e i misti negli Asteroidi (9 × ? = 63)', valido({ ...nascosti, gioco: 'asteroidi' }) &&
+    valido({ ...t([9], 'nascosto'), gioco: 'asteroidi' }))
+  stessaLista('e ogni gruppo porta il suo modo', limiteAsteroidi({ ...nascosti, gioco: 'asteroidi' }).gruppi.map(g => g.modo), ['nascosto', 'misti'])
   for (const [cosa, e] of [['una parte sola', ins([t([8]), 'tanto'])], ['un\'intensità sconosciuta', ins([t([8]), 'tantissimo'], [t([2]), 'poco'])],
     ['un insieme dentro un insieme', ins([otto, 'poco'], [t([2]), 'poco'])], ['un gioco dentro una parte', ins([{ ...t([8]), gioco: 'asteroidi' }, 'poco'], [t([2]), 'poco'])],
     ['sette parti', ins(...Array.from({ length: 7 }, (_, i) => [t([i + 1]), 'poco']))]])

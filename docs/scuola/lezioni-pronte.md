@@ -1,7 +1,7 @@
 # Le lezioni pronte
 
 Lezioni già preparate per ogni anno della primaria e per materia, col programma di quell'anno: la maestra
-sceglie classe, materia e gioco, tocca una lezione e la ritrova nell'editor già compilata, da cambiare come
+sceglie classe e gioco, tocca una lezione e la ritrova nell'editor già compilata, da cambiare come
 vuole prima di salvarla. Servono a toglierle fatica, non a decidere per lei. Il codice è
 `src/scuola/comune/lezioni-pronte.js` (gira in Node); il percorso nella pagina è in [quaderno.md](quaderno.md).
 
@@ -50,7 +50,7 @@ Dove un gioco vero accetta il primo blocco (`giochiPer`, [esercizi.md](esercizi.
 stessa lezione c'è anche lì, fatta da sola: stessi esercizi con `gioco`, nome con «negli Asteroidi» in coda,
 id con `-asteroidi` in coda. Il secondo blocco va nel gioco se il gioco lo accetta, se no resta alle domande.
 Il gioco della lezione (`giocoDellaPronta`, il filtro del percorso) è quello del primo blocco.
-Oggi sono le tabelline col risultato, dalla seconda alla quinta.
+Oggi sono le tabelline, col risultato e col numero nascosto, dalla seconda alla quinta.
 
 ## Cosa c'è
 

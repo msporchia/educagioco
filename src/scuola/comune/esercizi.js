@@ -145,6 +145,14 @@ function accetta(g, e) {
 }
 // i giochi in cui si può fare questo esercizio (il campo `gioco` a parte)
 export const giochiPer = e => GIOCHI.filter(g => accetta(g, e))
+// quello che un gioco sa fare, per materia: le voci del catalogo che accetta (l'editor sceglie prima il gioco)
+export function materieDelGioco(id) {
+  const g = GIOCHI.find(x => x.id === id)
+  if (!g) return []
+  return CATALOGO.materie.map(m => ({ ...m, voci: m.voci.filter(v => accetta(g, v.base)) })).filter(m => m.voci.length)
+}
+// un gioco che mescola più cose in un blocco: quelli del catalogo, non quelli col contenuto loro
+export const mescolaPiuCose = id => id === 'schede' || !!GIOCHI.find(g => g.id === id)?.accetta?.(VOCE_TABELLINE.base)
 // un esercizio col contenuto di un gioco si fa sempre in quel gioco, anche senza il campo `gioco`
 export const giocoDi = e => e?.gioco || padroneDi(e)?.id || 'schede'
 
@@ -169,12 +177,12 @@ export const PESI = [
 export const MAX_PARTI = 6
 const volteDi = peso => PESI.find(p => p.id === peso)?.volte ?? 1
 
-/* il limite per gli Asteroidi (docs/asteroidi/scuola.md): le tabelline a gruppi, ognuno con quante volte esce */
+/* il limite per gli Asteroidi (docs/asteroidi/scuola.md): le tabelline a gruppi, ognuno con quante volte esce e cosa chiede */
 export function limiteAsteroidi(e) {
   const { gioco, difficolta, ...x } = e
   return x.tipo === 'insieme'
-    ? { gruppi: x.parti.map(p => ({ tabelline: [...p.esercizio.tabelline], volte: volteDi(p.peso) })) }
-    : { gruppi: [{ tabelline: [...x.tabelline], volte: 1 }] }
+    ? { gruppi: x.parti.map(p => ({ tabelline: [...p.esercizio.tabelline], volte: volteDi(p.peso), modo: p.esercizio.modo })) }
+    : { gruppi: [{ tabelline: [...x.tabelline], volte: 1, modo: x.modo }] }
 }
 
 /* ══════════════ valido ══════════════ */

@@ -2,7 +2,7 @@
 
 A scuola il bambino gioca agli Asteroidi veri (`src/views/MathGame.vue`), limitati alle tabelline della lezione.
 Il gioco non si storpia: si limita da fuori perché mostri solo quello che la maestra ha chiesto, e accetta solo
-quello che sa fare già (il risultato, «9 × 7 = ?»; il numero nascosto resta alle schede). Chi lo monta è la pagina
+quello che sa fare già: il risultato, «9 × 7 = ?», e il numero nascosto, «9 × ? = 63». Chi lo monta è la pagina
 dei bambini ([../scuola/bambini.md](../scuola/bambini.md)); cosa la maestra può scegliere sta in
 [../scuola/esercizi.md](../scuola/esercizi.md#il-gioco-in-cui-si-fa).
 
@@ -20,6 +20,10 @@ dei bambini ([../scuola/bambini.md](../scuola/bambini.md)); cosa la maestra può
   l'insieme di lavoro di chi comincia (`poolTappa`, che a un profilo nuovo darebbe i sei fatti più facili). Il
   picker resta quello di sempre: tre giuste di fila e il fatto riposa, uno sbagliato torna presto.
 - Il verso è quello della tabellina: con il 9, sempre «9 × 7», mai «7 × 9».
+- **Il numero nascosto**: ogni gruppo porta `modo` (`'prodotto'` di difetto, `'nascosto'`, `'misti'` metà e metà con
+  `formaDel`); `prossime()` lascia in `modo` quello del gruppo uscito. La domanda è «9 × ? = 63» con la risposta 7 e i
+  falsi della divisione, peso 2 come la grande girata del volo (`preparaTabellina`). Alla maestra la risposta arriva con la
+  chiave `tab:nascosto`.
 
 ## La difficoltà
 

@@ -46,7 +46,7 @@ blocco non lo conta. Le soglie dei blocchi contano le domande chiuse e le giuste
 
 | Gioco | Cosa sceglie la maestra | Una risposta è | Documento |
 |---|---|---|---|
-| Asteroidi | tabelline col risultato (anche a più parti) | ogni colpo; la domanda si chiude col giusto | [../asteroidi/scuola.md](../asteroidi/scuola.md) |
+| Asteroidi | tabelline, col risultato o col numero nascosto (anche a più parti) | ogni colpo; la domanda si chiude col giusto | [../asteroidi/scuola.md](../asteroidi/scuola.md) |
 | Survivors | qualunque esercizio del catalogo (anche a più parti) | ogni carta pagata con una domanda | [../survivors/scuola.md](../survivors/scuola.md) |
 | Passo passo | `{ tipo: 'passo', protagonista, gradini }` | ogni ▶; un livello vinto chiude | [../passo-passo/scuola.md](../passo-passo/scuola.md) |
 | Il Robot | `{ tipo: 'robot', capitoli }` | ogni esecuzione; un livello vinto chiude | [../costruttore/scuola.md](../costruttore/scuola.md) |

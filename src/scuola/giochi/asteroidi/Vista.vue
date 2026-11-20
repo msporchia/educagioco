@@ -35,7 +35,8 @@ onMounted(async () => {
 onErrorCaptured(() => { nonParte(); return false })
 
 // alla maestra va ogni colpo; il blocco conta la domanda una volta, quando si chiude (`ultima`). La forma: docs/scuola/giochi.md
-const riferisci = e => emit('risposta', { chiave: 'tab:prodotto', giusta: e.giusta, ms: e.ms, ultima: e.ultima !== false, ...raccontaAsteroide(e) })
+const chiaveDi = testo => (/= \?$/.test(String(testo ?? '').trim()) ? 'tab:prodotto' : 'tab:nascosto')   // «9 × ? = 63» è il nascosto
+const riferisci = e => emit('risposta', { chiave: chiaveDi(e.testo), giusta: e.giusta, ms: e.ms, ultima: e.ultima !== false, ...raccontaAsteroide(e) })
 </script>
 
 <template>

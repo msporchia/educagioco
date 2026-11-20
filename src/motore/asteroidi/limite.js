@@ -6,12 +6,19 @@ const TABELLINE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 const buone = lista => [...new Set((Array.isArray(lista) ? lista : []).filter(n => TABELLINE.includes(n)))].sort((a, b) => a - b)
 
-// `{ tabelline: [9] }` o `{ gruppi: [{ tabelline: [8], volte: 4 }, { tabelline: [3, 4], volte: 1 }] }` → i gruppi buoni
+// cosa si chiede: il risultato («9 × 7 = ?»), il numero nascosto («9 × ? = 63») o tutti e due a caso
+export const MODI = ['prodotto', 'nascosto', 'misti']
+const modoBuono = m => (MODI.includes(m) ? m : 'prodotto')
+
+// `{ tabelline: [9], modo }` o `{ gruppi: [{ tabelline: [8], volte: 4, modo }, { tabelline: [3, 4], volte: 1 }] }` → i gruppi buoni
 export function gruppiDel(limite) {
-  const crudi = Array.isArray(limite?.gruppi) ? limite.gruppi : [{ tabelline: limite?.tabelline, volte: 1 }]
-  return crudi.map(g => ({ tabelline: buone(g?.tabelline), volte: Number.isInteger(g?.volte) && g.volte > 0 ? g.volte : 1 }))
+  const crudi = Array.isArray(limite?.gruppi) ? limite.gruppi : [{ tabelline: limite?.tabelline, volte: 1, modo: limite?.modo }]
+  return crudi.map(g => ({ tabelline: buone(g?.tabelline), volte: Number.isInteger(g?.volte) && g.volte > 0 ? g.volte : 1, modo: modoBuono(g?.modo) }))
     .filter(g => g.tabelline.length)
 }
+
+// la forma della domanda dopo, dal modo del suo gruppo: nei misti metà e metà
+export const formaDel = (modo, caso = Math.random()) => (modo === 'misti' ? (caso < 0.5 ? 'prodotto' : 'nascosto') : modoBuono(modo))
 
 // tutte le tabelline del limite, in ordine e senza doppioni; [] se non ce n'è nessuna
 export const tabellineDel = limite => buone(gruppiDel(limite).flatMap(g => g.tabelline))
@@ -39,8 +46,12 @@ export function tappaDelLimite(limite) {
     emoji: pianeta ? pianeta.emoji : '✖️',
     nuova: null, tabelle, bersaglio: Infinity, mirate: 0,
   }
-  // `prossime()`: le tabelline da cui pescare la domanda dopo
-  return { tipo: 'pianeta', i: pianeta ? pianeta.i : -1, T, pos: -1, n: 0, cap: -1, prossime: creaTurni(gruppiDel(limite)) }
+  // `prossime()`: le tabelline da cui pescare la domanda dopo; `modo` quello del gruppo appena uscito
+  const gruppi = gruppiDel(limite)
+  const turni = creaTurni(gruppi)
+  const voce = { tipo: 'pianeta', i: pianeta ? pianeta.i : -1, T, pos: -1, n: 0, cap: -1, modo: gruppi[0].modo,
+    prossime() { const t = turni(); voce.modo = gruppi.find(g => g.tabelline === t).modo; return t } }
+  return voce
 }
 
 

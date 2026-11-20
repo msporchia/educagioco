@@ -4,7 +4,7 @@
    i fatti, il bersaglio che non arriva mai (niente nave madre, hangar, stella). Senza limite la tappa finta non c'è e
    casa resta com'è. Vedi docs/asteroidi/scuola.md.
    `node test/esegui.mjs asteroidi-limite --niente-build` */
-import { tappaDelLimite, tabellineDel, gruppiDel, ritoccoDifficolta } from '../../src/motore/asteroidi/limite.js'
+import { tappaDelLimite, tabellineDel, gruppiDel, ritoccoDifficolta, formaDel } from '../../src/motore/asteroidi/limite.js'
 import { chiaviDelle, leggi } from '../../src/store/tabelline.js'
 import { createPicker } from '../../src/store/srs.js'
 import { fattoriDi } from '../../src/data/tabelline.js'
@@ -55,8 +55,19 @@ console.log('\nA GRUPPI, CON LE LORO INTENSITÀ')
   uguale('in cinquanta domande, quaranta dall\'8', giri.filter(g => g.length === 1 && g[0] === 8).length, 40)
   controlla('e mai cinque dell\'8 di fila', !giri.map(g => (g[0] === 8 ? 'x' : '-')).join('').includes('xxxxx'))
   stessaLista('un gruppo storto si butta, il resto resta', gruppiDel({ gruppi: [{ tabelline: [12] }, { tabelline: [2], volte: 0 }] }),
-    [{ tabelline: [2], volte: 1 }])
-  stessaLista('la forma di prima vale un gruppo solo', gruppiDel({ tabelline: [9] }), [{ tabelline: [9], volte: 1 }])
+    [{ tabelline: [2], volte: 1, modo: 'prodotto' }])
+  stessaLista('la forma di prima vale un gruppo solo', gruppiDel({ tabelline: [9] }), [{ tabelline: [9], volte: 1, modo: 'prodotto' }])
+}
+
+console.log('\nIL NUMERO NASCOSTO (9 × ? = 63)')
+{
+  uguale('senza modo, il risultato com\'era', tappaDelLimite({ tabelline: [9] }).modo, 'prodotto')
+  uguale('un modo sconosciuto vale il risultato', gruppiDel({ tabelline: [9], modo: 'boh' })[0].modo, 'prodotto')
+  const v = tappaDelLimite({ gruppi: [{ tabelline: [8], volte: 1, modo: 'nascosto' }, { tabelline: [3], volte: 1, modo: 'prodotto' }] })
+  const giri = Array.from({ length: 10 }, () => { const t = v.prossime(); return `${t[0]}${v.modo}` })
+  controlla('il modo segue il gruppo appena uscito', giri.every(g => g === '8nascosto' || g === '3prodotto') && new Set(giri).size === 2, giri.join(' '))
+  uguale('nascosto: sempre nascosto', formaDel('nascosto', 0.1), 'nascosto')
+  stessaLista('misti: metà e metà', [formaDel('misti', 0.2), formaDel('misti', 0.7)], ['prodotto', 'nascosto'])
 }
 
 console.log('\nLA DIFFICOLTÀ')

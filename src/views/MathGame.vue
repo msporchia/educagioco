@@ -27,7 +27,7 @@ import { GIOCHI } from '../data/giochi.js'
 import { segnaPrimato, primatoDi, sosta, salvaSosta, buttaSosta, ritocca } from '../giochi/campagne.js'
 import { hangarDi, vintaTappa, vintoVolo, bossNelVolo, livrea, pacchiDi } from '../motore/asteroidi/hangar.js'
 import { scrivi, leggi, dice, recordDi, chiaveDi } from '../motore/asteroidi/sosta.js'
-import { tappaDelLimite, ritoccoDifficolta } from '../motore/asteroidi/limite.js'
+import { tappaDelLimite, ritoccoDifficolta, formaDel } from '../motore/asteroidi/limite.js'
 import Ripresa from '../giochi/Ripresa.vue'
 import { fraseDiFine, recordInParole, sfidaDi } from '../giochi/primati.js'
 import { usaAmici } from '../amici/usaAmici.js'
@@ -298,8 +298,15 @@ function preparaTabellina(k) {
   domanda.testo = `${a} × ${b} = ?`
   domanda.peso = 1
   domanda.difficile = (Math.min(a, b) >= 6 && Math.max(a, b) >= 6) || a * b >= 48
+  // a scuola il numero nascosto (9 × ? = 63): i falsi sono quelli della divisione, come la girata (docs/asteroidi/scuola.md)
+  if (lim && formaDel(lim.modo) === 'nascosto') {
+    domanda.ris = b
+    domanda.testo = `${a} × ? = ${a * b}`
+    domanda.peso = 2; domanda.difficile = true
+    esercizio = { a: a * b, b: a, segno: ':', ris: b }
+  }
   // la grande girata (96 : 12 = ?): vedi docs/asteroidi/volo.md
-  if (!campagna.value && giraLaGrande(k)) {
+  else if (!campagna.value && giraLaGrande(k)) {
     domanda.a = a * b; domanda.b = a; domanda.ris = b
     domanda.testo = `${a * b} : ${a} = ?`
     domanda.peso = 2; domanda.difficile = true

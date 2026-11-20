@@ -80,16 +80,24 @@ o `'tanto'` (`PESI`): una parte «tanto» esce quattro volte una «un po'», e l
 sparse e non a blocchi (con 4 e 1, mai cinque della prima di fila). È la risposta a «tanta tabellina dell'8 e un ripasso
 blando del 3, 4, 5 e 6»: due parti di tabelline; ma si mescolano anche voci diverse (tabelline e orologio). Un insieme va in un
 gioco solo se il gioco accetta ogni parte; agli Asteroidi arriva come gruppi con le loro volte (`limiteAsteroidi`). Nell'editor
-della maestra una parte sola è un esercizio semplice, come prima: «＋ Aggiungi un'altra cosa» la fa diventare un insieme.
+della maestra una parte sola è un esercizio semplice, come prima: «＋ Un'altra cosa» la fa diventare un insieme. Lì il peso
+non si scrive: ogni parte ha un colore e tre tasti a pallini (uno, due, quattro), e sopra una barra divisa nei colori dice
+«8 su 10», «2 su 10» (`suDieci` in `SceltaEsercizio.vue`). Provato «Un po'/Normale/Tanto» a parole: per l'utente era
+testo e basta.
 
 ## Il gioco in cui si fa
 
 Un esercizio può portare `gioco` (`GIOCHI` in `esercizi.js`): senza, o con `'schede'`, sono le domande una per
 scheda; con `'asteroidi'` il bambino gioca agli Asteroidi veri, limitati a quell'esercizio. **Un gioco vero
-accetta solo quello che sa fare già**, senza forme nuove: gli Asteroidi le tabelline nel modo «il risultato»
-(il numero nascosto resta alle schede). `giochiPer(esercizio)` dice in quali giochi si può fare, `giocoDi`
+accetta solo quello che sa fare già**: gli Asteroidi le tabelline, col risultato e col numero nascosto («9 × ? = 63»,
+la forma della domanda girata che il gioco aveva già). `giochiPer(esercizio)` dice in quali giochi si può fare, `giocoDi`
 legge il campo; `valido` rifiuta un gioco sconosciuto o che non accetta l'esercizio, e `descrivi` aggiunge
 «negli Asteroidi». Come il gioco si limita: [../asteroidi/scuola.md](../asteroidi/scuola.md).
+
+**Nell'editor si sceglie prima il gioco**, poi quello che sa fare (scelta dell'utente, 20 novembre 2026: al contrario la
+pagina era un elenco di testo). `materieDelGioco(id)` dà le voci del catalogo che il gioco accetta, per materia;
+`mescolaPiuCose(id)` dice se mescola più parti (non i giochi col contenuto loro). Cambiando gioco l'esercizio resta se il
+gioco nuovo lo accetta, se no riparte dalla prima cosa che quel gioco sa fare.
 
 ## Le funzioni
 
