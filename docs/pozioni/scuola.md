@@ -17,14 +17,18 @@ e, per il 3D, gli Asteroidi ([../asteroidi/scuola.md](../asteroidi/scuola.md)).
   ([regole.md](regole.md#la-scaletta-una-cosa-nuova-per-volta)). Le due finali (calderone e Maestro) mescolano le tre
   famiglie e restano fuori; il calderone senza fondo pure.
 - **La scheda è pura** (`scheda.js`): prende le famiglie da `dati/misure.js` e tiene a mano i nomi dei nove gradini per
-  una maestra («Il banco», «L'unità grande», «Grande e piccola, da soli», …), uguali per le tre famiglie e con gli esempi
-  coi pesi; coi liquidi «Grande e piccola» porta la virgola. Il test dice se le chiavi non sono più quelle della campagna.
+  una maestra («Stessa unità», «Dai chili ai grammi, col conto scritto», …), uguali per le tre famiglie, ognuno con un caso
+  concreto coi pesi (cosa chiede la ricetta, cosa vende il mercante, cosa fa il bambino) e un nome `breve` per `descrivi`.
+  Provato coi nomi della campagna («Il banco», «L'unità grande»): a una maestra non dicevano niente. Il test dice se le chiavi non sono più quelle della campagna.
 - **`valido`** rifiuta chiavi in più, liste vuote, doppie, chiavi che non ci sono e le finali; l'ordine non conta.
-  **`descrivi`**: «Le pozioni · i pesi e i liquidi · il banco e grande e piccola · 4 tappe»; «pesi, lunghezze e liquidi» e
+  **`descrivi`**: «Le pozioni · i pesi e i liquidi · stessa unità e la virgola col conto · 4 tappe»; «pesi, lunghezze e liquidi» e
   «tutti i gradini» quando sono tutti. La voce sta in Matematica, con l'icona del gioco (⚗️); di partenza i pesi coi primi
   tre gradini.
-- L'editor (`Parametri.vue`) ha due file di tessere: quali misure (con le unità) e quali gradini (numerati come la
-  scaletta), e quante tappe fanno; almeno una per fila resta accesa, sempre nell'ordine della campagna.
+- L'editor (`Parametri.vue`) ha le tessere delle misure (con le unità) e i gradini come righe (`maestra/Righe.vue`), numerati
+  come la scaletta e col loro caso scritto sotto, e quante tappe fanno; almeno uno per gruppo resta acceso, sempre
+  nell'ordine della campagna.
+- **In classe la formula della bacchetta si sussurra**: `motore/formule.js` a scuola è sostituito da `formule.js` della
+  scuola, con le stesse formule tutte «sussurra» (scelta dell'utente: «grida» fa confusione in classe).
 
 ## Il gioco col limite
 

@@ -3,6 +3,8 @@
 // mescolare e scaldare. Puro: il caso arriva da fuori. Le regole in
 // docs/pozioni/procedimento.md.
 
+import { FORMULE } from './formule.js'            // a scuola tutte sussurrate (un sostituto)
+
 export const MORTAIO = -1       // nel `cosa` di una versata: quello che è stato pestato
 export const TAGLIERE = -2      // e quello che è stato sminuzzato
 export const GRATTATO = -3      // e quello che è caduto nel ciotolino
@@ -116,8 +118,6 @@ export function ricetta(rnd, ingredienti, livello, azioni = []) {
 }
 
 // la bacchetta non si agita e basta: c'è la formula, che cambia con quello che c'è nel calderone
-const FORMULE = ['sussurra: «Stelle e vapore, cambia colore!»', 'grida: «Bolli, ribolli, brilla!»', 'sussurra: «Zolfo e rugiada, la magia vada!»',
-                 'grida: «Uno, due, tre, magia per me!»', 'sussurra: «Luna e radice, fammi felice!»', 'grida: «Fumo e scintilla, la pozione brilla!»']
 const formula = ingredienti => FORMULE[ingredienti.reduce((n, g) => n + g.nome.length, 0) % FORMULE.length]
 
 // la cosa con l'articolo, per chi la lavora: «sminuzza il ramo di quercia»
