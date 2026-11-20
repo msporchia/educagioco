@@ -260,7 +260,7 @@ export class Lezione {
     const a = ws.deserializeAttachment()
     if (!a?.ruolo || a.sostituito) return
     if (messaggio === '{"t":"ping"}') return ws.send('{"t":"pong"}')       // se la risposta da sola non c'è (in locale)
-    const c = lezione.leggiMessaggio(messaggio, this.recenti.get(ws) || [], Date.now())
+    const c = lezione.leggiMessaggio(messaggio, this.recenti.get(ws) || [], Date.now(), a.ruolo === 'maestra' ? lezione.MAX_BYTE_MAESTRA : lezione.MAX_BYTE)
     if (!c.ok) return ws.close(c.codice, c.ragione)
     this.recenti.set(ws, c.recenti)
     const s = await this.carica()

@@ -17,12 +17,14 @@ dopo**. Il codice è `src/scuola/comune/lezione.js` (puro, gira in Node). Scelte
 - **Quando lo dice la maestra**: `passa: null`. Il blocco non finisce da solo; si passa con «Avanti tutti».
 
 «Avanti tutti» nel pannello della maestra c'è **sempre**, anche nei blocchi che passano da soli: sblocca chi è rimasto
-indietro, o chiude un blocco prima (la campanella). Chi era già avanti resta dov'è.
+indietro, o chiude un blocco prima (la campanella). Sposta di un blocco **chi è più indietro** fra i collegati; chi era
+già avanti resta dov'è. Così chi è arrivato da solo a un blocco «quando lo dice la maestra» passa alla prima pressione.
 
 ## Dove sta un bambino
 
 La **posizione** `p` conta i blocchi superati (0 = il primo). Il bambino la fa crescere superando le soglie; «Avanti tutti»
-alza un **pavimento comune** `avanti` (sul servizio), e vale il più grande dei due (`posizione`). Senza `inTondo`, con `p`
+alza un **pavimento comune** `avanti` (sul servizio), e vale il più grande dei due (`posizione`); «Salta il blocco» della
+maestra dà a un bambino solo un pavimento suo ([ripieghi.md](ripieghi.md)). Senza `inTondo`, con `p`
 oltre l'ultimo blocco la lezione è finita per lui («Hai finito!»); in tondo `p` cresce senza fine e il blocco è
 `p % blocchi.length` (`bloccoDi`). Il **conto** di un blocco (`{ fatte, giuste, inizio }`: domande chiuse, giuste, quando è
 cominciato) riparte a ogni blocco; `superato(passa, conto, ora)` dice se la soglia è raggiunta. Una domanda conta quando si

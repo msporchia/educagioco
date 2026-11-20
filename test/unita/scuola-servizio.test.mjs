@@ -145,6 +145,45 @@ const dest = (r, a, t) => r.invii.filter(i => i.a === a && (!t || i.msg.t === t)
   controlla('chiusa non si riapre', L.daMaestra(s, col, { k: 'via' }).invii.length === 0 && s.fase === 'chiusa')
 }
 
+// «Avanti tutti» sposta chi è più indietro; la lezione cambiata a metà; un bambino solo; «Cambia nome» dal suo PC
+{
+  stessaLista('«Avanti tutti»: il più indietro passa al blocco dopo, almeno uno in più', [
+    L.nuovoAvanti(0, []), L.nuovoAvanti(0, [1]), L.nuovoAvanti(0, [0, 1]), L.nuovoAvanti(2, [0]), L.nuovoAvanti(0, [3, 5]), L.nuovoAvanti(999, [2000])],
+    [1, 2, 1, 3, 4, 1000])
+  const s = nuova(), m = ws('m'), b1 = ws('b1'), b2 = ws('b2')
+  s.lezione.blocchi.push(blocco(null))
+  const col = [{ ws: m, ruolo: 'maestra' }, { ws: b1, ruolo: 'bambino', posto: 'posto0001' }, { ws: b2, ruolo: 'bambino', posto: 'posto0002' }]
+  L.daBambino(s, col, b1, 'posto0001', { k: 'sono', alunno: 'a1' })
+  L.daBambino(s, col, b2, 'posto0002', { k: 'sono', alunno: 'a2' })
+  L.daMaestra(s, col, { k: 'via' })
+  L.daBambino(s, col, b1, 'posto0001', { k: 'dove', dove: 1 })
+  L.daBambino(s, col, b2, 'posto0002', { k: 'dove', dove: 1 })
+  L.daMaestra(s, col, { k: 'avanti' })
+  uguale('tutti già al blocco «della maestra» da soli: una pressione basta', s.avanti, 2)
+  // la lezione cambiata
+  const altra = { id: 'l2', nome: 'Senza gioco', blocchi: [blocco(), blocco(null), blocco(null)], inTondo: false }
+  let r = L.daMaestra(s, col, { k: 'lezione', lezione: altra })
+  controlla('«Cambia la lezione»: i bambini la ricevono, con rifatta 1', dest(r, b1, 'stato')[0].lezione.id === 'l2' && dest(r, b1, 'stato')[0].rifatta === 1)
+  controlla('e la maestra anche', dest(r, m, 'lezione')[0]?.rifatta === 1 && L.msgTutto(s, col).rifatta === 1)
+  uguale('il pavimento resta dov\'era', s.avanti, 2)
+  controlla('una lezione storta non entra', L.daMaestra(s, col, { k: 'lezione', lezione: { ...altra, blocchi: [] } }).invii.length === 0 && s.lezione.id === 'l2')
+  controlla('un messaggio della maestra può portare una lezione grande, uno del bambino no',
+    L.leggiMessaggio(JSON.stringify({ k: 'lezione', d: 'x'.repeat(6000) }), [], 1, L.MAX_BYTE_MAESTRA).ok && !L.leggiMessaggio(JSON.stringify({ k: 'x', d: 'x'.repeat(6000) }), [], 1).ok)
+  // un bambino solo
+  r = L.daMaestra(s, col, { k: 'salta', alunno: 'a1' })
+  controlla('«Salta il blocco»: lui solo passa al blocco dopo il suo', dest(r, b1, 'stato')[0].io.avanti === 3 && dest(r, b2, 'stato')[0].io.avanti === 0)
+  r = L.daMaestra(s, col, { k: 'domande', alunno: 'a2', si: true })
+  controlla('«Le domande»: lo sa lui, e la maestra lo vede', dest(r, b2, 'stato')[0].io.domande === true && dest(r, b1, 'stato')[0].io.domande === false
+    && dest(r, m, 'alunni')[0].alunni.find(a => a.id === 'a2').domande === true)
+  controlla('«domande» vuole un sì o un no', L.daMaestra(s, col, { k: 'domande', alunno: 'a2', si: 'boh' }).invii.length === 0)
+  // «Cambia nome»
+  r = L.daBambino(s, col, b2, 'posto0002', { k: 'lascia' })
+  controlla('«lascia»: il nome torna libero, e il PC lo sa', dest(r, b2, 'stato')[0].io === null && !dest(r, m, 'alunni')[0].alunni.find(a => a.id === 'a2').preso)
+  uguale('e si può riprendere', dest(L.daBambino(s, col, b2, 'posto0002', { k: 'sono', alunno: 'a2' }), b2, 'stato')[0].io.domande, true)
+  r = L.daMaestra(s, col, { k: 'chiudi' })
+  controlla('a lezione chiusa la lezione non si cambia più', L.daMaestra(s, col, { k: 'lezione', lezione: altra }).invii.length === 0)
+}
+
 // in un gioco un colpo sbagliato lascia aperta la domanda: `ultima: false` arriva alla maestra, una risposta normale non lo porta
 {
   const s = nuova(), m = ws('m'), b = ws('b')

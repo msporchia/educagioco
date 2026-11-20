@@ -163,7 +163,7 @@ export function servizioScuola({ host = '127.0.0.1' } = {}) {
     ws.suTesto = testo => {
       if (filo.sostituito) return
       if (testo === '{"t":"ping"}') return ws.send('{"t":"pong"}')
-      const c = L.leggiMessaggio(testo, filo.recenti, Date.now())
+      const c = L.leggiMessaggio(testo, filo.recenti, Date.now(), maestra ? L.MAX_BYTE_MAESTRA : L.MAX_BYTE)
       if (!c.ok) return ws.close(c.codice, c.ragione)
       filo.recenti = c.recenti
       const tutti = collegati(l)

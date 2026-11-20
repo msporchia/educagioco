@@ -7,6 +7,7 @@ export const POSTO = /^[a-z0-9]{8,24}$/
 export const CHIAVE = /^[a-z0-9]{32}$/
 export const MAX_BYTE = 2048
 export const MAX_BYTE_LEZIONE = 8192
+export const MAX_BYTE_MAESTRA = MAX_BYTE_LEZIONE + 256     // un messaggio della maestra può portare una lezione intera
 export const MAX_ALUNNI = 40
 export const MAX_NUOVI = 10
 export const MAX_NOME = 24
@@ -36,7 +37,8 @@ export function chiaveGiusta(stato, hash) {
 export const nomePulito = (s, max = MAX_NOME) => String(s ?? '').replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max).trim()
 const oggetto = x => !!x && typeof x === 'object' && !Array.isArray(x)
 const intero = (x, max) => Number.isInteger(x) && x >= 1 && x <= max
-const MAX_BLOCCHI = 8, MAX_AVANTI = 1000, MAX_POSIZIONE = 10000
+const MAX_BLOCCHI = 8, MAX_POSIZIONE = 10000
+export const MAX_AVANTI = 1000
 const TETTI_PASSA = { giuste: 500, domande: 500, minuti: 180 }
 /* `passa`: null (lo dice la maestra) o un oggetto con una sola chiave fra giuste/domande/minuti */
 const passaGiusto = p => {
@@ -48,12 +50,18 @@ const passaGiusto = p => {
 const blocchiGiusti = b => Array.isArray(b) && b.length >= 1 && b.length <= MAX_BLOCCHI
   && b.every(x => oggetto(x) && oggetto(x.esercizio) && x.passa !== undefined && passaGiusto(x.passa) && Object.keys(x).every(k => k === 'esercizio' || k === 'passa'))
 
+/* una lezione a blocchi ripulita, o null */
+export function leggiLezione(l) {
+  if (!oggetto(l) || typeof l.id !== 'string' || !l.id || l.id.length > 40 || typeof l.nome !== 'string') return null
+  if (typeof l.inTondo !== 'boolean' || !blocchiGiusti(l.blocchi) || !Object.keys(l).every(k => ['id', 'nome', 'blocchi', 'inTondo'].includes(k))) return null
+  return { id: l.id, nome: nomePulito(l.nome, 60), blocchi: l.blocchi.map(x => ({ esercizio: x.esercizio, passa: x.passa })), inTondo: l.inTondo }
+}
+
 /* il corpo di `POST /scuola/lezione`: torna la lezione e gli alunni ripuliti, o l'errore */
 export function leggiCreazione(corpo) {
   if (!oggetto(corpo) || !oggetto(corpo.lezione) || !Array.isArray(corpo.alunni)) return { ok: false, errore: 'richiesta storta' }
-  const l = corpo.lezione
-  if (typeof l.id !== 'string' || !l.id || l.id.length > 40 || typeof l.nome !== 'string') return { ok: false, errore: 'lezione storta' }
-  if (typeof l.inTondo !== 'boolean' || !blocchiGiusti(l.blocchi) || !Object.keys(l).every(k => ['id', 'nome', 'blocchi', 'inTondo'].includes(k))) return { ok: false, errore: 'lezione storta' }
+  const lezione = leggiLezione(corpo.lezione)
+  if (!lezione) return { ok: false, errore: 'lezione storta' }
   if (corpo.alunni.length > MAX_ALUNNI) return { ok: false, errore: 'troppi alunni' }
   const vistiId = new Set(), alunni = []
   for (const a of corpo.alunni) {
@@ -62,26 +70,39 @@ export function leggiCreazione(corpo) {
     vistiId.add(a.id)
     alunni.push({ id: a.id, nome })
   }
-  return { ok: true, alunni, lezione: { id: l.id, nome: nomePulito(l.nome, 60), blocchi: l.blocchi.map(x => ({ esercizio: x.esercizio, passa: x.passa })), inTondo: l.inTondo } }
+  return { ok: true, alunni, lezione }
 }
 
+/* `rifatta`: quante volte la maestra ha cambiato la lezione in corso. Per alunno, `avanti` è il suo pavimento («Salta il
+   blocco») e `domande` le domande al posto del gioco */
 export const nuovaLezione = ({ lezione, alunni }, ora, chiaveHash) => ({
-  nato: ora, scade: ora + DURATA, fase: 'attesa', avanti: 0, chiaveHash, lezione,
-  alunni: alunni.map(a => ({ id: a.id, nome: a.nome, nuovo: false, posto: null, dove: null })),
+  nato: ora, scade: ora + DURATA, fase: 'attesa', avanti: 0, rifatta: 0, chiaveHash, lezione,
+  alunni: alunni.map(a => ({ id: a.id, nome: a.nome, nuovo: false, posto: null, dove: null, avanti: 0, domande: false })),
   risposte: {}, presi: {},
 })
+
+/* «Avanti tutti»: chi è più indietro fra i presenti passa al blocco dopo, chi è già avanti resta dov'è. Il pavimento sale
+   almeno di uno, e fino alla posizione del più indietro più uno: così un bambino già arrivato da solo al blocco «quando lo
+   dice la maestra» passa alla prima pressione. `posizioni`: quelle dette dai bambini collegati (senza chi ha finito) */
+export function nuovoAvanti(avanti, posizioni) {
+  const min = posizioni.length ? Math.min(...posizioni.map(p => Math.max(p, avanti))) : avanti
+  return Math.min(MAX_AVANTI, Math.max(avanti + 1, min + 1))
+}
+const posizioneDi = (stato, a) => Math.max(Number.isInteger(a.dove) ? a.dove : 0, stato.avanti || 0, a.avanti || 0)
 
 /* ── cosa si racconta ── */
 const alunnoDi = (stato, posto) => stato.alunni.find(a => a.posto === posto) || null
 export const msgStato = (stato, posto) => {
   const io = alunnoDi(stato, posto)
-  return { t: 'stato', fase: stato.fase, lezione: stato.lezione, avanti: stato.avanti || 0, alunni: stato.alunni.map(a => ({ id: a.id, nome: a.nome, preso: a.posto !== null })),
-           io: io ? { id: io.id, nome: io.nome } : null, preso: stato.presi[posto] || 0 }
+  return { t: 'stato', fase: stato.fase, lezione: stato.lezione, rifatta: stato.rifatta || 0, avanti: stato.avanti || 0,
+           alunni: stato.alunni.map(a => ({ id: a.id, nome: a.nome, preso: a.posto !== null })),
+           io: io ? { id: io.id, nome: io.nome, avanti: io.avanti || 0, domande: !!io.domande } : null, preso: stato.presi[posto] || 0 }
 }
 const collegatoA = (collegati, a) => a.posto !== null && collegati.some(c => c.ruolo === 'bambino' && c.posto === a.posto)
-const elencoMaestra = (stato, collegati) => stato.alunni.map(a => ({ id: a.id, nome: a.nome, nuovo: a.nuovo, preso: a.posto !== null, collegato: collegatoA(collegati, a), dove: a.dove }))
+const elencoMaestra = (stato, collegati) => stato.alunni.map(a => ({ id: a.id, nome: a.nome, nuovo: a.nuovo, preso: a.posto !== null, collegato: collegatoA(collegati, a), dove: a.dove,
+  avanti: a.avanti || 0, domande: !!a.domande }))
 export const msgAlunni = (stato, collegati) => ({ t: 'alunni', alunni: elencoMaestra(stato, collegati) })
-export const msgTutto = (stato, collegati) => ({ t: 'tutto', fase: stato.fase, lezione: stato.lezione, scade: stato.scade, avanti: stato.avanti || 0, alunni: elencoMaestra(stato, collegati), risposte: stato.risposte })
+export const msgTutto = (stato, collegati) => ({ t: 'tutto', fase: stato.fase, lezione: stato.lezione, rifatta: stato.rifatta || 0, scade: stato.scade, avanti: stato.avanti || 0, alunni: elencoMaestra(stato, collegati), risposte: stato.risposte })
 
 const bambini = collegati => collegati.filter(c => c.ruolo === 'bambino')
 const aMaestre = (collegati, msg) => collegati.filter(c => c.ruolo === 'maestra').map(c => ({ a: c.ws, msg }))
@@ -120,7 +141,7 @@ export function daBambino(stato, collegati, ws, posto, dato, azzardo = () => Mat
       if (!nome || stato.alunni.filter(a => a.nuovo).length >= MAX_NUOVI) return no(ws, 'storto')
       let id
       do id = 'n' + azzardo(); while (stato.alunni.some(a => a.id === id))
-      stato.alunni.push({ id, nome, nuovo: true, posto, dove: null })
+      stato.alunni.push({ id, nome, nuovo: true, posto, dove: null, avanti: 0, domande: false })
     }
     return { meta: true, invii: nomiCambiati(stato, collegati) }
   }
@@ -151,17 +172,42 @@ export function daBambino(stato, collegati, ws, posto, dato, azzardo = () => Mat
     io.dove = dato.dove
     return { meta: true, invii: aMaestre(collegati, msgAlunni(stato, collegati)) }
   }
+  // «Cambia nome» dal menu della maestra sul PC del bambino: il nome torna nella lista
+  if (dato.k === 'lascia') {
+    const io = alunnoDi(stato, posto)
+    if (!io) return { invii: [] }
+    io.posto = null; io.dove = null
+    return { meta: true, invii: nomiCambiati(stato, collegati) }
+  }
   return { invii: [] }
 }
 
 export function daMaestra(stato, collegati, dato) {
   if (dato.k === 'via' && stato.fase === 'attesa') { stato.fase = 'via'; return { meta: true, invii: [...aMaestre(collegati, { t: 'fase', fase: 'via' }), ...stati(stato, collegati)] } }
   if (dato.k === 'avanti' && stato.fase === 'via') {
-    stato.avanti = Math.min(MAX_AVANTI, (stato.avanti || 0) + 1)
+    const presenti = stato.alunni.filter(a => collegatoA(collegati, a) && a.dove !== 'finito').map(a => posizioneDi(stato, a))
+    stato.avanti = nuovoAvanti(stato.avanti || 0, presenti)
     return { meta: true, invii: [...aMaestre(collegati, { t: 'avanti', avanti: stato.avanti }), ...stati(stato, collegati)] }
+  }
+  // «Cambia la lezione»: la stessa lezione con altri blocchi, senza un codice nuovo; ognuno resta alla sua posizione
+  if (dato.k === 'lezione' && stato.fase !== 'chiusa') {
+    const l = leggiLezione(dato.lezione)
+    if (!l) return { invii: [] }
+    stato.lezione = l
+    stato.rifatta = (stato.rifatta || 0) + 1
+    return { meta: true, invii: [...aMaestre(collegati, { t: 'lezione', lezione: l, rifatta: stato.rifatta }), ...stati(stato, collegati)] }
   }
   if (dato.k === 'chiudi' && stato.fase !== 'chiusa') { stato.fase = 'chiusa'; return { meta: true, invii: [...aMaestre(collegati, { t: 'fase', fase: 'chiusa' }), ...stati(stato, collegati)] } }
   const a = typeof dato.alunno === 'string' ? stato.alunni.find(x => x.id === dato.alunno) : null
+  // per un bambino solo: il blocco dopo il suo, o le domande al posto del gioco
+  if (dato.k === 'salta' && a && stato.fase === 'via' && a.dove !== 'finito') {
+    a.avanti = Math.min(MAX_AVANTI, posizioneDi(stato, a) + 1)
+    return { meta: true, invii: nomiCambiati(stato, collegati) }
+  }
+  if (dato.k === 'domande' && a && typeof dato.si === 'boolean') {
+    a.domande = dato.si
+    return { meta: true, invii: nomiCambiati(stato, collegati) }
+  }
   if (dato.k === 'libera' && a && a.posto !== null) { a.posto = null; a.dove = null; return { meta: true, invii: nomiCambiati(stato, collegati) } }
   if (dato.k === 'togli' && a && a.nuovo) {
     stato.alunni = stato.alunni.filter(x => x !== a)
@@ -173,8 +219,8 @@ export function daMaestra(stato, collegati, dato) {
 
 /* un messaggio in arrivo: di testo, piccolo, un oggetto con `k`, e non più di `MAX_AL_SECONDO` al secondo.
    `recenti`: gli istanti (ms) dei messaggi di questo collegamento nell'ultimo secondo */
-export function leggiMessaggio(messaggio, recenti, ora) {
-  if (typeof messaggio !== 'string' || messaggio.length > MAX_BYTE) return { ok: false, codice: 1009, ragione: 'messaggio troppo grande' }
+export function leggiMessaggio(messaggio, recenti, ora, max = MAX_BYTE) {
+  if (typeof messaggio !== 'string' || messaggio.length > max) return { ok: false, codice: 1009, ragione: 'messaggio troppo grande' }
   const r = recenti.filter(t => ora - t < 1000)
   r.push(ora)
   if (r.length > MAX_AL_SECONDO) return { ok: false, codice: 1008, ragione: 'troppi messaggi' }
