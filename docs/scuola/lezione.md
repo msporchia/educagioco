@@ -21,6 +21,10 @@ dopo**. Il codice è `src/scuola/comune/lezione.js` (puro, gira in Node). Scelte
   cucina «resti», nelle pozioni «ingredienti». `descriviPassa(passa, esercizio)` le usa; senza esercizio sono «domande».
   Provato «dopo 3 domande» per il coniglio: non si capiva.
 
+Nella pagina il tasto si chiama **«Chiudi il blocco 2»** (il blocco dove sta chi è più indietro) e accanto dice chi si
+muove: «Marta e Luca passano al blocco 3. Chi è già più avanti resta dov'è». Si chiamava «Avanti tutti», e coi bambini in
+blocchi diversi non si capiva cosa facesse; nel codice e qui il nome resta `avanti`, «Avanti tutti».
+
 «Avanti tutti» nel pannello della maestra c'è **sempre**, anche nei blocchi che passano da soli: sblocca chi è rimasto
 indietro, o chiude un blocco prima (la campanella). Sposta di un blocco **chi è più indietro** fra i collegati; chi era
 già avanti resta dov'è. Così chi è arrivato da solo a un blocco «quando lo dice la maestra» passa alla prima pressione.

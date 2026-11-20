@@ -43,7 +43,7 @@ function scelteDi(b) {
   const c = contaDi(b.esercizio)
   const dove = { maestra: 'Lo dici tu', giuste: cap(c.giuste || ''), domande: cap(c.tante), minuti: 'Minuti' }
   const aiuto = {
-    maestra: 'Il bambino resta su questo blocco finché non premi «Avanti tutti» nel pannello della lezione: la classe va avanti insieme.',
+    maestra: 'Il bambino resta su questo blocco finché non premi «Chiudi il blocco» nel pannello della lezione: la classe va avanti insieme.',
     giuste: `Ognuno passa da solo quando ha fatto quel numero di ${c.giuste}: chi sbaglia ci resta un po' di più.`,
     domande: `Ognuno passa da solo dopo quel numero di ${c.tante}, giuste o sbagliate.`,
     minuti: 'Ognuno passa da solo dopo quei minuti su questo blocco.',
@@ -75,7 +75,7 @@ const problema = computed(() => {
 // la nota sotto l'ultimo blocco: cosa succede dopo
 const dopoLUltimo = computed(() => {
   if (inTondo.value) return 'Poi si ricomincia dal primo blocco.'
-  return modo(blocchi.value.at(-1).modo).unita ? 'Poi il bambino vede «Hai finito!».' : 'Il bambino resta qui finché non premi «Avanti tutti».'
+  return modo(blocchi.value.at(-1).modo).unita ? 'Poi il bambino vede «Hai finito!».' : 'Il bambino resta qui finché non chiudi il blocco.'
 })
 
 // un blocco nuovo ripete l'esercizio dell'ultimo e passa dopo le giuste: si cambia quello che serve
@@ -173,7 +173,7 @@ async function copiaLink() {
         <input v-model="inTondo" type="checkbox" data-campo="in-tondo">
         <span>In tondo: dopo l'ultimo blocco si ricomincia dal primo</span>
       </label>
-      <Aiuto testo="Per i giri a rotazione: per esempio tre giochi, e a ogni giro premi «Avanti tutti» e ognuno passa al gioco dopo." />
+      <Aiuto testo="Per i giri a rotazione: per esempio tre giochi, e a ogni giro chiudi il blocco e ognuno passa al gioco dopo." />
     </div>
   </section>
 

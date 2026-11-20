@@ -233,7 +233,8 @@ await b.waitForSelector('[data-domanda][data-blocco="1"]', { timeout: 5000 })
 controlla('e Lorenzo resta nel blocco 2', true)
 
 /* ── «Avanti tutti»: Lorenzo è già da solo nel blocco 2, «quando lo dice la maestra»: una pressione e finisce ── */
-controlla('la maestra sa che «Avanti tutti» chiude la lezione', /finisce la lezione/.test(await testo(m, '[data-avanti]')), await testo(m, '[data-avanti]'))
+controlla('la maestra sa che chiudere il blocco fa finire la lezione a Lorenzo', /Lorenzo finisce la lezione/.test(await testo(m, '[data-avanti]')), await testo(m, '[data-avanti]'))
+uguale('il tasto dice quale blocco chiude', (await testo(m, '[data-azione="avanti-tutti"]')).trim(), 'Chiudi il blocco 2')
 await M.tocca('[data-azione="avanti-tutti"]')
 await schermata(b, 'finito')
 controlla('il bambino ha finito', /Hai finito!/.test(await testo(b, '[data-finito]')))

@@ -1,5 +1,5 @@
 <script setup>
-// La lezione in corso, per la LIM: il codice enorme e i nomi che si accendono, poi «Via», chi è in che blocco e «Avanti tutti»
+// La lezione in corso, per la LIM: il codice enorme e i nomi che si accendono, poi «Via», chi è in che blocco e «Chiudi il blocco»
 import { ref, computed, watch } from 'vue'
 import { quaderno, voceDi, classeDi } from './stato.js'
 import { diretta, via, avantiTutti, libera, togli, chiudiLezione, cambiaLezione, saltaBlocco, domandePer } from './diretta.js'
@@ -69,15 +69,28 @@ const blocchiVisti = computed(() => (lezione.value?.blocchi ?? []).map((b, i) =>
 const finiti = computed(() => alunni.value.filter(a => qualeBlocco(a) === 'finito'))
 const nonDentro = computed(() => alunni.value.filter(a => qualeBlocco(a) === null))
 
-// «Avanti tutti» sposta di un blocco chi è più indietro fra i collegati (il servizio: nuovoAvanti); chi è avanti resta
+/* «Chiudi il blocco» (nel codice `avanti`, «Avanti tutti»): chiude il blocco dove sta chi è più indietro fra i collegati, e
+   chi ci sta passa al dopo; chi è già avanti resta (il servizio: nuovoAvanti). Il tasto dice quale blocco e chi si muove. */
 const avantiInutile = computed(() => !!lezione.value && finita(lezione.value, diretta.avanti))
-const dopoAvanti = computed(() => {
+const nomeBlocco = p => [n.value > 1 ? `blocco ${bloccoDi(lezione.value, p) + 1}` : 'blocco', giroDi(p) ? `del ${giroDi(p)}` : ''].filter(Boolean).join(' ')
+const chiusura = computed(() => {
+  if (!lezione.value) return null
   const qui = alunni.value.filter(a => a.collegato).map(posDi).filter(Number.isInteger)
-  const p = Math.max(diretta.avanti + 1, (qui.length ? Math.min(...qui) : diretta.avanti) + 1)
-  if (!lezione.value || finita(lezione.value, p)) return 'Chi è ancora all\'ultimo blocco finisce la lezione.'
-  const dove = [n.value > 1 ? `blocco ${bloccoDi(lezione.value, p) + 1}` : '', giroDi(p)].filter(Boolean).join(', ')
-  return `Chi è più indietro passa al ${dove}.`
+  const dopo = Math.max(diretta.avanti + 1, (qui.length ? Math.min(...qui) : diretta.avanti) + 1)
+  const ora = dopo - 1
+  const chi = alunni.value.filter(a => a.collegato && posDi(a) === ora).map(a => a.nome)
+  const finisce = finita(lezione.value, dopo)
+  const tanti = chi.length > 1
+  const dove = finisce ? (tanti ? 'finiscono la lezione' : 'finisce la lezione') : `${tanti ? 'passano' : 'passa'} al ${nomeBlocco(dopo)}`
+  return {
+    blocco: bloccoDi(lezione.value, ora),
+    tasto: `Chiudi il ${nomeBlocco(ora)}`,
+    frase: chi.length ? `${elenco(chi)} ${dove}. Chi è già più avanti resta dov'è.`
+      : `Nessun collegato è lì: chi arriva dopo ${finisce ? 'trova la lezione finita' : `parte dal ${nomeBlocco(dopo)}`}.`,
+  }
 })
+const elenco = nomi => (nomi.length <= 4 ? (nomi.length < 2 ? nomi.join('') : `${nomi.slice(0, -1).join(', ')} e ${nomi.at(-1)}`)
+  : `${nomi.slice(0, 3).join(', ')} e altri ${nomi.length - 3}`)
 function avanti() { messaggio.value = ''; if (!avantiTutti()) senzaLinea() }
 
 const senzaLinea = () => { messaggio.value = 'Non c\'è linea: riprova fra un attimo.' }
@@ -140,15 +153,15 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
       <section class="carta">
         <p class="nota">Chi arriva tardi: <b class="copiabile">{{ indirizzo }}</b>, codice <b class="copiabile" data-codice>{{ quaderno.inCorso.codice }}</b></p>
         <div class="fila">
-          <button class="bottone" :disabled="avantiInutile" data-azione="avanti-tutti" @click="avanti">Avanti tutti</button>
-          <span class="nota" :data-avanti="diretta.avanti">{{ avantiInutile ? 'Tutti hanno finito l\'ultimo blocco.' : dopoAvanti }}
-</span>
+          <button class="bottone" :disabled="avantiInutile" data-azione="avanti-tutti" @click="avanti">{{ avantiInutile ? 'Lezione finita per tutti' : chiusura?.tasto }}</button>
+          <Aiuto testo="Per la campanella o per chi è rimasto indietro: chi è nel blocco più indietro passa al blocco dopo, anche se quel blocco passerebbe da solo. Chi è già più avanti non si muove. Si può premere più volte." />
+          <span class="nota" :data-avanti="diretta.avanti">{{ avantiInutile ? 'Tutti hanno finito l\'ultimo blocco.' : chiusura?.frase }}</span>
         </div>
       </section>
       <section class="carta" data-panoramica>
         <h2>La classe</h2>
         <div class="colonne">
-          <div v-for="b in blocchiVisti" :key="b.i" class="colonna" :data-colonna="b.i">
+          <div v-for="b in blocchiVisti" :key="b.i" class="colonna" :class="{ chiude: !avantiInutile && chiusura?.blocco === b.i }" :data-colonna="b.i">
             <div class="testa-colonna">
               <img v-if="b.icona" :src="b.icona.src" alt="" class="ico">
               <span><b>Blocco {{ b.i + 1 }}</b><span class="nota">{{ b.nome }}</span></span>
@@ -281,4 +294,5 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
 .striscia span { display:block; height:100%; background:var(--accento); border-radius:5px }
 .esiti { display:flex; height:6px; border-radius:3px; overflow:hidden; gap:1px }
 .esiti .si { background:var(--verde) } .esiti .no { background:var(--rosso) }
+.colonna.chiude { box-shadow:inset 0 0 0 2px var(--penna) }
 </style>

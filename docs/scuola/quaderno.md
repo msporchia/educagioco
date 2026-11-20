@@ -190,8 +190,9 @@ quadretti** del quaderno di scuola come fondo, e **i colori delle penne** (`--pe
 - **A colpo d'occhio** (chiesto dall'utente): «La classe» divide i bambini per blocco, una colonna per blocco col disegno del
   suo gioco e una per chi ha finito, coi tondi delle iniziali (grigi se scollegati); sotto ogni nome i pallini dei blocchi
   (fatti verdi, quello in corso blu), la barra verso la soglia e una barretta verde e rossa delle giuste e delle sbagliate.
-- **«Avanti tutti»** c'è sempre in fase `via` e chiama `avanti()` di [protocollo.md](protocollo.md); accanto dice dove
-  porta chi è più indietro fra i collegati (come lo calcola il servizio). È spento solo quando senza «in tondo» tutti
+- **«Chiudi il blocco N»** («Avanti tutti» nel codice) c'è sempre in fase `via` e chiama `avanti()` di
+  [protocollo.md](protocollo.md): il tasto dice quale blocco chiude, la frase accanto chi passa e dove (come lo calcola il
+  servizio), un «?» lo spiega, e nella panoramica quel blocco ha il bordo blu. È spento solo quando senza «in tondo» tutti
   hanno già passato l'ultimo blocco.
 - **«Se qualcosa non va»**: «Cambia la lezione», «Tutti alle domande», il codice per i PC; sotto ogni nome «Mandalo al
   blocco dopo», «Domande invece del gioco», «Sblocca il nome», ognuno col suo «?». Tutto in [ripieghi.md](ripieghi.md).
