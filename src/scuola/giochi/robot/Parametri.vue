@@ -2,6 +2,7 @@
 // I capitoli del Robot per la maestra: tessere da accendere, almeno una; si giocano nell'ordine della campagna. docs/costruttore/scuola.md
 import { computed } from 'vue'
 import { CAPITOLI_ROBOT } from './scheda.js'
+import Righe from '../../maestra/Righe.vue'
 
 const props = defineProps({ modelValue: { type: Object, required: true } })
 const emit = defineEmits(['update:modelValue'])
@@ -20,11 +21,11 @@ function capitolo(k) {
 <template>
   <div class="gruppo">
     <span class="titoletto">Quali capitoli</span>
-    <div class="fila">
-      <button v-for="(c, i) in CAPITOLI_ROBOT" :key="c.chiave" class="tessera" :class="{ scelta: scelti.includes(c.chiave) }"
-              :aria-pressed="scelti.includes(c.chiave)" :title="c.dice" :data-capitolo-robot="c.chiave"
-              @click="capitolo(c.chiave)">{{ c.icona }} {{ i + 1 }}. {{ c.nome }} <span class="quanti">{{ c.livelli }}</span></button>
-    </div>
+    <p class="nota">Il bambino scrive un programma a righe e preme ▶: il robot lo esegue e costruisce. Se il risultato è quello
+      del disegno il livello è fatto, se no si corregge e si riprova.</p>
+    <Righe :voci="CAPITOLI_ROBOT.map((c, i) => ({ chiave: c.chiave, nome: `${i + 1}. ${c.nome}`, icona: c.icona,
+                  quanti: c.livelli === 1 ? '1 livello' : `${c.livelli} livelli`, testo: c.dice }))"
+           :scelte="scelti" attributo="capitolo-robot" @tocca="capitolo" />
     <p class="nota">{{ livelli === 1 ? '1 livello' : `${livelli} livelli` }}, in fila; finiti, si ricomincia dal primo. I capitoli
       vanno in ordine: ognuno usa quello che s'impara prima, e il primo spiega da sé come si gioca.</p>
   </div>

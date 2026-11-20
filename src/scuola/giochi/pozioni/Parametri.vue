@@ -2,6 +2,7 @@
 // L'esercizio delle pozioni per la maestra: le misure e i gradini come tessere (docs/pozioni/scuola.md)
 import { computed } from 'vue'
 import { FAMIGLIE_POZIONI, GRADINI_POZIONI, quanteTappe } from './scheda.js'
+import Righe from '../../maestra/Righe.vue'
 
 const props = defineProps({ modelValue: { type: Object, required: true } })
 const emit = defineEmits(['update:modelValue'])
@@ -36,14 +37,11 @@ function gradino(chiave) {
       </div>
     </div>
     <div class="gruppo">
-      <span class="titoletto">Quali gradini</span>
-      <div class="fila">
-        <button v-for="(g, n) in GRADINI_POZIONI" :key="g.chiave" class="tessera" :class="{ scelta: e.gradini.includes(g.chiave) }"
-                :aria-pressed="e.gradini.includes(g.chiave)" :title="g.spiega" :data-gradino="g.chiave"
-                @click="gradino(g.chiave)"><span class="quanti">{{ n + 1 }}</span> {{ g.nome }}</button>
-      </div>
-      <p class="nota">{{ tappe }} {{ tappe === 1 ? 'tappa' : 'tappe' }} in fila, dalla più facile; finite, si ricomincia.
-        <template v-if="scelti.length === 1"> {{ scelti[0].spiega }}</template></p>
+      <span class="titoletto">Cosa si chiede</span>
+      <p class="nota">In ogni tappa una ricetta: per ogni dose il bambino compra dal mercante le ampolle giuste, spendendo poco.</p>
+      <Righe :voci="GRADINI_POZIONI.map((g, n) => ({ chiave: g.chiave, nome: `${n + 1}. ${g.nome}`, testo: g.spiega }))" :scelte="e.gradini"
+             attributo="gradino" @tocca="gradino" />
+      <p class="nota">{{ tappe }} {{ tappe === 1 ? 'tappa' : 'tappe' }} in fila, dalla più facile; finite, si ricomincia.</p>
     </div>
   </div>
 </template>

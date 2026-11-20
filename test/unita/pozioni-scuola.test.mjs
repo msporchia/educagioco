@@ -57,9 +57,9 @@ for (const [cosa, e] of [
 ]) controlla(`no: ${cosa}`, valido(e) === false)
 
 console.log('\nDESCRIVI')
-uguale('la base', descrivi(base), 'Le pozioni · i pesi · il banco, l\'unità grande e più unità grandi · 3 tappe')
+uguale('la base', descrivi(base), 'Le pozioni · i pesi · stessa unità, chili in grammi col conto e chili in grammi · 3 tappe')
 uguale('due e due', descrivi({ tipo: 'pozioni', famiglie: ['capacita', 'massa'], gradini: ['virgola', 'banco'] }),
-  'Le pozioni · i pesi e i liquidi · il banco e grande e piccola · 4 tappe')
+  'Le pozioni · i pesi e i liquidi · stessa unità e la virgola col conto · 4 tappe')
 uguale('tutto', descrivi({ tipo: 'pozioni', famiglie: FAMIGLIE_POZIONI.map(f => f.chiave), gradini: GRADINI_POZIONI.map(g => g.chiave) }),
   'Le pozioni · pesi, lunghezze e liquidi · tutti i gradini · 27 tappe')
 uguale('una tappa', descrivi({ tipo: 'pozioni', famiglie: ['lunghezza'], gradini: ['miste'] }), 'Le pozioni · le lunghezze · tre unità · 1 tappa')

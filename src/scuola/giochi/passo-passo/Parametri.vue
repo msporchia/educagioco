@@ -2,6 +2,7 @@
 // L'esercizio di Passo passo per la maestra: il protagonista e i gradini come tessere (docs/passo-passo/scuola.md)
 import { computed } from 'vue'
 import { PROTAGONISTI, GRADINI } from './scheda.js'
+import Righe from '../../maestra/Righe.vue'
 
 const props = defineProps({ modelValue: { type: Object, required: true } })
 const emit = defineEmits(['update:modelValue'])
@@ -30,21 +31,16 @@ function gradino(chiave) {
   <div class="parametri-passo">
     <div class="gruppo">
       <span class="titoletto">Chi gioca</span>
-      <div class="fila">
-        <button v-for="p in PROTAGONISTI" :key="p.id" class="tessera" :class="{ scelta: e.protagonista === p.id }"
-                :aria-pressed="e.protagonista === p.id" :title="p.spiega" :data-protagonista="p.id"
-                @click="protagonista(p.id)">{{ p.icona }} {{ p.nome }}</button>
-      </div>
+      <p class="nota">Il bambino mette in fila delle carte (frecce, salto, cicli) e preme ▶: il personaggio le esegue una per una.
+        Se arriva alla meta il livello è fatto, se no si corregge la fila e si riprova.</p>
+      <Righe :voci="PROTAGONISTI.map(p => ({ chiave: p.id, nome: p.nome, icona: p.icona, testo: p.spiega }))" :scelte="[e.protagonista]"
+             attributo="protagonista" una @tocca="protagonista" />
     </div>
     <div class="gruppo">
-      <span class="titoletto">Quali gradini</span>
-      <div class="fila">
-        <button v-for="g in suoi" :key="g.chiave" class="tessera" :class="{ scelta: e.gradini.includes(g.chiave) }"
-                :aria-pressed="e.gradini.includes(g.chiave)" :title="g.spiega" :data-gradino="g.chiave"
-                @click="gradino(g.chiave)">{{ g.icona }} {{ g.nome }} <span class="quanti">{{ g.livelli }}</span></button>
-      </div>
-      <p class="nota">{{ livelli }} {{ livelli === 1 ? 'livello' : 'livelli' }} in fila, dal più facile; finiti, si ricomincia.
-        <template v-if="scelti.length === 1"> {{ scelti[0].spiega }}</template></p>
+      <span class="titoletto">Cosa si impara</span>
+      <Righe :voci="suoi.map(g => ({ chiave: g.chiave, nome: g.nome, icona: g.icona, quanti: g.livelli === 1 ? '1 livello' : `${g.livelli} livelli`, testo: g.spiega }))"
+             :scelte="e.gradini" attributo="gradino" @tocca="gradino" />
+      <p class="nota">{{ livelli }} {{ livelli === 1 ? 'livello' : 'livelli' }} in fila, dal più facile; finiti, si ricomincia.</p>
     </div>
   </div>
 </template>

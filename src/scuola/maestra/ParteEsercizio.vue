@@ -4,6 +4,7 @@
 import { computed } from 'vue'
 import { CATALOGO, materieDelGioco } from '../comune/esercizi.js'
 import { PARAMETRI } from '../giochi/parametri.js'
+import Esempio from './Esempio.vue'
 
 const props = defineProps({ modelValue: { type: Object, required: true }, gioco: { type: String, default: 'schede' } })
 const emit = defineEmits(['update:modelValue'])
@@ -107,6 +108,8 @@ function tipologia(id) {
       </div>
     </template>
 
+    <!-- una domanda vera, con la risposta che ci si aspetta: le voci del catalogo (i giochi col contenuto loro lo dicono da sé) -->
+    <Esempio v-if="voce?.tipo === 'tabelline' || voce?.tipo === 'modulo'" :esercizio="e" />
   </div>
 </template>
 

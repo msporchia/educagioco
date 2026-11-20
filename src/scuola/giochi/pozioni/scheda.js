@@ -7,17 +7,18 @@ export const FAMIGLIE_POZIONI = FAMIGLIE.map(f => ({
   chiave: f.chiave, nome: f.nome, icona: f.emoji, unita: `${f.unita.G}, ${f.unita.M} e ${f.unita.P}`,
 }))
 
-// i nove gradini, uguali per le tre famiglie: i nomi per una maestra, gli esempi coi pesi
+// i nove gradini, uguali per le tre famiglie: i nomi per una maestra, e un caso concreto coi pesi (cosa chiede la ricetta,
+// cosa vende il mercante, cosa fa il bambino): il nome da solo non lo dice
 export const GRADINI_POZIONI = [
-  { chiave: 'banco', nome: 'Il banco', spiega: 'Ricetta e listino nella stessa unità: si impara a ordinare.' },
-  { chiave: 'grande', nome: "L'unità grande", spiega: 'La ricetta dice «1 kg», il listino è in grammi; sotto ogni targhetta c\'è quanto vale.' },
-  { chiave: 'grandi', nome: 'Più unità grandi', spiega: '«2 kg», «5 kg», col listino in grammi e chili: il conto lo fa il bambino.' },
-  { chiave: 'virgola', nome: 'Grande e piccola', spiega: '«1500 g» è 1 kg e 500 g; coi liquidi arriva la virgola, «1,5 l». Il conto è scritto.' },
-  { chiave: 'virgole', nome: 'Grande e piccola, da soli', spiega: 'Le stesse dosi, e il conto lo fa il bambino.' },
-  { chiave: 'media', nome: "L'unità di mezzo", spiega: 'Dosi grandi, e sul listino arrivano etti, decimetri e decilitri. Il conto è scritto.' },
-  { chiave: 'miste', nome: 'Tre unità', spiega: 'La ricetta e il listino parlano in tre unità: il conto lo fa il bambino.' },
-  { chiave: 'inversa', nome: 'Al contrario', spiega: '«6000 g» sulla ricetta e il listino a chili: si sale. Il conto è scritto.' },
-  { chiave: 'inverse', nome: 'Su e giù', spiega: 'Salire o scendere, e anche quanto manca lo conta il bambino.' },
+  { chiave: 'banco', breve: 'stessa unità', nome: 'Stessa unità', spiega: 'La ricetta chiede «300 g», il mercante vende ampolle in grammi: il bambino compra quelle che fanno 300 g, spendendo poco.' },
+  { chiave: 'grande', breve: 'chili in grammi col conto', nome: 'Dai chili ai grammi, col conto scritto', spiega: 'La ricetta dice «2 kg», il mercante vende in grammi; sotto ogni targhetta c\'è scritto quanto vale. Il bambino compra 2000 g.' },
+  { chiave: 'grandi', breve: 'chili in grammi', nome: 'Dai chili ai grammi, da solo', spiega: 'La ricetta dice «4 kg», il listino è in grammi e in chili, e nessun aiuto: il conto 4 kg = 4000 g lo fa il bambino.' },
+  { chiave: 'virgola', breve: 'la virgola col conto', nome: 'Chili e grammi insieme, col conto scritto', spiega: '«1500 g» è 1 kg e 500 g, «1,5 kg» lo stesso (coi liquidi «1,5 l»): sotto le targhette c\'è il conto.' },
+  { chiave: 'virgole', breve: 'la virgola', nome: 'Chili e grammi insieme, da solo', spiega: 'Le stesse dosi con la virgola, «2,5 kg» o «0,4 kg», e il conto lo fa il bambino.' },
+  { chiave: 'media', breve: 'gli ettogrammi', nome: 'Arrivano gli ettogrammi', spiega: 'La ricetta dice «12 kg» e il mercante vende anche a ettogrammi (decimetri, decilitri): il conto è scritto.' },
+  { chiave: 'miste', breve: 'tre unità', nome: 'Tre unità insieme, da solo', spiega: 'Una dose in chili, una in ettogrammi, una in grammi: il bambino le porta all\'unità del listino da solo.' },
+  { chiave: 'inversa', breve: 'grammi in chili col conto', nome: 'Dai grammi ai chili, col conto scritto', spiega: 'La ricetta dice «6000 g» e il mercante vende a chili: si sale, servono 6 kg. Il conto è scritto.' },
+  { chiave: 'inverse', breve: 'su e giù', nome: 'Su e giù, da solo', spiega: 'Ricetta e listino in unità diverse: il bambino decide se salire o scendere, e conta da solo anche quanto manca.' },
 ]
 
 const oggetto = x => !!x && typeof x === 'object' && !Array.isArray(x)
@@ -36,10 +37,10 @@ function valido(e) {
 // una tappa per famiglia e gradino
 export const quanteTappe = e => e.famiglie.length * e.gradini.length
 
-// «Le pozioni · i pesi e i liquidi · il banco e l'unità grande · 4 tappe», nell'ordine della campagna
+// «Le pozioni · i pesi e i liquidi · stessa unità e la virgola col conto · 4 tappe», nell'ordine della campagna (coi nomi brevi)
 function descrivi(e) {
   if (!valido(e)) return 'Esercizio non valido'
-  const scelte = (tutte, chiavi) => tutte.filter(x => chiavi.includes(x.chiave)).map(x => minuscola(x.nome))
+  const scelte = (tutte, chiavi) => tutte.filter(x => chiavi.includes(x.chiave)).map(x => x.breve || minuscola(x.nome))
   const famiglie = e.famiglie.length === FAMIGLIE_POZIONI.length ? 'pesi, lunghezze e liquidi' : inFila(scelte(FAMIGLIE_POZIONI, e.famiglie))
   const gradini = e.gradini.length === GRADINI_POZIONI.length ? 'tutti i gradini' : inFila(scelte(GRADINI_POZIONI, e.gradini))
   const n = quanteTappe(e)
@@ -50,8 +51,9 @@ export default {
   id: 'pozioni',
   nome: 'Le pozioni',
   nei: 'nel laboratorio delle pozioni',
-  spiega: 'Si comprano dal mercante le ampolle che fanno la dose, spendendo poco. Vuole un PC che regga la grafica 3D.',
+  spiega: 'Si comprano dal mercante le ampolle che fanno la dose, spendendo poco.',
   tred: true,
+  conta: { tante: 'ingredienti', una: 'un ingrediente', giuste: 'ingredienti giusti', giusta: 'un ingrediente giusto' },
   difficolta: {
     facile: 'Più gettoni in tasca: quattro in più del solito per ogni pozione, così si può sbagliare qualche ampolla senza andare in rosso.',
     difficile: 'Gettoni contati: la metà di quelli oltre il minimo, quindi un ordine sprecato costa subito.',
