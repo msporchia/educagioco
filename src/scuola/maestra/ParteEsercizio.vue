@@ -1,10 +1,11 @@
 <script setup>
-// Una parte di un esercizio, costruita solo dal catalogo (docs/scuola/esercizi.md): materia → voce → i suoi parametri
+// Una parte di un esercizio, costruita solo dal catalogo (docs/scuola/esercizi.md): fra quello che il gioco sa fare, la materia
+// e la voce (tessere, nascoste se c'è una sola scelta), poi i suoi parametri
 import { computed } from 'vue'
-import { CATALOGO } from '../comune/esercizi.js'
+import { CATALOGO, materieDelGioco } from '../comune/esercizi.js'
 import { PARAMETRI } from '../giochi/parametri.js'
 
-const props = defineProps({ modelValue: { type: Object, required: true } })
+const props = defineProps({ modelValue: { type: Object, required: true }, gioco: { type: String, default: 'schede' } })
 const emit = defineEmits(['update:modelValue'])
 
 const tutte = CATALOGO.materie.flatMap(m => m.voci.map(v => ({ ...v, materia: m.id })))
@@ -12,14 +13,15 @@ const copia = x => JSON.parse(JSON.stringify(x))
 const idDella = e => (e?.tipo === 'tabelline' ? 'tabelline' : e?.tipo === 'modulo' ? e.modulo : e?.tipo)   // la voce di un gioco ha l'id del suo tipo
 
 const voce = computed(() => tutte.find(v => v.id === idDella(props.modelValue)) || null)
-const materia = computed(() => CATALOGO.materie.find(m => m.id === voce.value?.materia) || null)
+const materie = computed(() => materieDelGioco(props.gioco))
+const materia = computed(() => materie.value.find(m => m.id === voce.value?.materia) || null)
 const e = computed(() => props.modelValue)
 
 const cambia = parti => emit('update:modelValue', { ...copia(props.modelValue), ...parti })
 
 function sceltaMateria(id) {
-  const m = CATALOGO.materie.find(x => x.id === id)
-  if (m) emit('update:modelValue', copia(m.voci[0].base))
+  const m = materie.value.find(x => x.id === id)
+  if (m && m.id !== materia.value?.id) emit('update:modelValue', copia(m.voci[0].base))
 }
 function sceltaVoce(id) {
   const v = tutte.find(x => x.id === id)
@@ -48,19 +50,15 @@ function tipologia(id) {
 
 <template>
   <div class="parte-esercizio">
-    <div class="due">
-      <label>Materia
-        <select class="campo" :value="materia?.id" data-campo="materia" @change="sceltaMateria($event.target.value)">
-          <option v-for="m in CATALOGO.materie" :key="m.id" :value="m.id">{{ m.emoji }} {{ m.nome }}</option>
-        </select>
-      </label>
-      <label>Esercizio
-        <select class="campo" :value="voce?.id" data-campo="voce" @change="sceltaVoce($event.target.value)">
-          <option v-for="v in materia?.voci || []" :key="v.id" :value="v.id">{{ v.icona }} {{ v.nome }}</option>
-        </select>
-      </label>
+    <div v-if="materie.length > 1" class="fila" data-materie>
+      <button v-for="m in materie" :key="m.id" class="tessera" :class="{ scelta: materia?.id === m.id }" :aria-pressed="materia?.id === m.id"
+              :data-materia="m.id" @click="sceltaMateria(m.id)">{{ m.emoji }} {{ m.nome }}</button>
     </div>
-    <p v-if="voce" class="nota">{{ voce.spiega }}</p>
+    <div v-if="(materia?.voci.length || 0) > 1" class="fila voci" data-voci>
+      <button v-for="v in materia.voci" :key="v.id" class="tessera" :class="{ scelta: voce?.id === v.id }" :aria-pressed="voce?.id === v.id"
+              :data-voce="v.id" @click="sceltaVoce(v.id)">{{ v.icona }} {{ v.nome }}</button>
+    </div>
+    <p v-if="voce && (materia?.voci.length || 0) > 1" class="nota">{{ voce.spiega }}</p>
 
     <template v-if="voce?.tipo === 'tabelline'">
       <div class="gruppo">
@@ -118,4 +116,5 @@ function tipologia(id) {
 .gruppo { display:flex; flex-direction:column; gap:6px }
 .titoletto { font-size:14px; font-weight:600 }
 .esempio { font-weight:400; opacity:.7; margin-left:4px }
+.voci { padding-top:8px; border-top:1px solid var(--tessera) }
 </style>

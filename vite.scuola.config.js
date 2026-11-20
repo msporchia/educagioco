@@ -5,6 +5,7 @@ import { viteSingleFile } from 'vite-plugin-singlefile'
 import { execSync } from 'node:child_process'
 import { mkdirSync, writeFileSync, statSync, copyFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { SOSTITUTI } from './src/scuola/sostituti/elenco.js'
 
 const RADICE = import.meta.dirname
@@ -29,6 +30,16 @@ function sostituti () {
   return { name: 'sostituti-scuola', enforce: 'pre', resolveId (fonte, da) {
     if (!da || !fonte.startsWith('.')) return null
     return mappa.get(resolve(da.split('?')[0], '..', fonte.split('?')[0])) || null
+  } }
+}
+
+// le icone dei giochi (src/scuola/comune/icone-giochi.js): nelle pagine solo le nove della scuola, non le copertine di tutti
+function iconeGiochi () {
+  const file = resolve(RADICE, 'src/scuola/comune/icone-giochi.js')
+  return { name: 'icone-giochi-scuola', async load (id) {
+    if (id.split('?')[0] !== file) return null
+    const { ICONE } = await import(pathToFileURL(file).href)
+    return `export const ICONE = ${JSON.stringify(ICONE)}\n`
   } }
 }
 
@@ -61,7 +72,7 @@ function chiudi (pagina) {
 
 export default defineConfig(() => {
   const pagina = process.env.PAGINA_SCUOLA
-  const comune = { plugins: [sostituti(), vue()], define: { __VERSIONE_SCUOLA__: JSON.stringify(VERSIONE) } }
+  const comune = { plugins: [sostituti(), iconeGiochi(), vue()], define: { __VERSIONE_SCUOLA__: JSON.stringify(VERSIONE) } }
   // sviluppo: la radice è la cartella della pagina, e si aprono /scuola/index.html e /scuola/maestra.html
   if (!pagina) return { ...comune, server: { port: 5174, strictPort: true } }
   return {

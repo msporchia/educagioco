@@ -7,6 +7,7 @@ import { ANNI, pronte, lezioneDa } from '../../comune/lezioni-pronte.js'
 import { lezioneValida, descriviPassa } from '../../comune/lezione.js'
 import CodiceMaestra from './CodiceMaestra.vue'
 import SceltaEsercizio from '../../maestra/SceltaEsercizio.vue'
+import TesseraGioco from '../../maestra/TesseraGioco.vue'
 
 const emit = defineEmits(['via', 'annulla'])
 const aperto = ref(false)
@@ -66,8 +67,7 @@ function via() { if (lezione.value && lezioneValida(lezione.value)) emit('via', 
           <section v-if="anno" class="carta" data-passo="gioco">
             <h2>In che gioco?</h2>
             <div class="fila">
-              <button v-for="g in giochi" :key="g.id" class="tessera" :class="{ scelta: gioco === g.id }" :aria-pressed="gioco === g.id"
-                      :data-gioco="g.id" @click="scegliGioco(g.id)">{{ g.nome }}</button>
+              <TesseraGioco v-for="g in giochi" :key="g.id" :gioco="g" :scelta="gioco === g.id" @click="scegliGioco(g.id)" />
             </div>
           </section>
           <section v-if="gioco" class="carta" data-passo="lezioni">
@@ -92,7 +92,7 @@ function via() { if (lezione.value && lezioneValida(lezione.value)) emit('via', 
 
         <section v-else class="carta" data-passo="scelta-tua">
           <h2>Cosa chiedere</h2>
-          <SceltaEsercizio v-model="esercizio" dove="senza-lezione" />
+          <SceltaEsercizio v-model="esercizio" dove="senza-lezione" apri-giochi />
           <p class="nota">Si va avanti finché non la cambi dal tasto «Maestra».</p>
         </section>
 

@@ -142,12 +142,20 @@ Colonne: Bambino, Nuovo, per ogni blocco «Blocco N: fatte» e «Blocco N: giust
 
 ## L'editor della lezione
 
-Una carta per blocco, nell'ordine: **cosa si chiede** (`SceltaEsercizio.vue`: più voci con l'intensità e, se un gioco
-vero lo accetta, il gioco: [esercizi.md](esercizi.md)) e **quando si passa al blocco dopo** (`MODI_PASSA`: dopo X
+Una carta per blocco, nell'ordine: **il gioco, cosa si fa e quanto è difficile** (`SceltaEsercizio.vue`,
+[esercizi.md](esercizi.md)) e **quando si passa al blocco dopo** (`MODI_PASSA`: dopo X
 giuste, dopo N domande, dopo M minuti, quando lo dice la maestra; scegliendo una soglia il numero riparte dal suo
 `base`). Ogni blocco si sposta su e giù e si toglie (l'ultimo che resta no); «＋ Aggiungi un blocco», fino a
 `MAX_BLOCCHI`, ripete l'esercizio dell'ultimo e passa dopo 10 giuste. Sotto l'ultimo una riga dice cosa succede
 dopo («Hai finito!», si resta lì fino ad «Avanti tutti», o si ricomincia). «In tondo» è una spunta.
+
+- **Il gioco ha il suo disegno** (`TesseraGioco.vue`): l'icona dipinta della copertina di casa (`comune/icone-giochi.js`; nella
+  build il plugin `iconeGiochi` di `vite.scuola.config.js` ci lascia solo le nove della scuola, ~300 KB invece dei 2,7 MB
+  di tutte le copertine), un foglio per le domande. Scelto il gioco resta solo quello, con «Cambia gioco»; tutti in vista
+  solo nel primo blocco di una lezione da zero e in «Senza lezione».
+- **Cosa si fa** sono tessere: le materie (se il gioco ne ha più d'una) e le voci di quella materia, solo quelle che il
+  gioco sa fare. La spiegazione della voce c'è solo quando c'era da scegliere.
+- **Quanto è difficile**: tre tasti con tre tacche che si riempiono, e una riga su cosa cambia.
 
 ## Il pannello in diretta
 
@@ -165,9 +173,9 @@ dopo («Hai finito!», si resta lì fino ad «Avanti tutti», o si ricomincia). 
 ## «Nuova lezione»: il percorso guidato
 
 `NuovaLezione.vue`, una schermata sola che si apre a passi, uno sotto l'altro: **per quale classe** (1ª–5ª, coi
-nomi delle classi del quaderno di quell'anno; già scelto con `annoDelleClassi`) → **che materia** (quelle con
-lezioni pronte per l'anno) → **in che gioco** (quelli in cui c'è qualcosa di quella materia; uno solo è già scelto)
-→ **le lezioni pronte** di [lezioni-pronte.md](lezioni-pronte.md), col nome, cosa allenano e come si svolgono.
+nomi delle classi del quaderno di quell'anno; già scelto con `annoDelleClassi`) → **in che gioco** (col disegno, quelli
+con lezioni pronte per l'anno) → **le lezioni pronte** di [lezioni-pronte.md](lezioni-pronte.md) di quel gioco, a gruppi
+per materia, col nome e come si svolgono.
 Toccata una, si apre l'editor (`lezione`) già compilato con un id nuovo: la maestra cambia quello che vuole e
 salva. «Preparala tu» apre l'editor di sempre, vuoto. Le scelte restano finché la pagina è aperta: tornando
 indietro dall'editor si ritrovano.
@@ -183,11 +191,12 @@ file e il link di prima dei blocchi) e `unita/scuola-lezioni-pronte`. Bersagli: 
 `[data-in-corso]`, `[data-indirizzo-bambini]`, `[data-classe=<id>]`, `[data-lezione=<id>]`, `[data-storico-classe=<id>]`,
 `[data-file-quaderno]` (l'input del file), `[data-esito-file="bene"|"male"]`, `[data-link-lezione]`; nell'esercizio a più parti
 `[data-parte=<i>]`, `[data-peso="poco"|"normale"|"tanto"]`, `[data-azione="aggiungi-parte"|"togli-parte"]`; negli editor
-`[data-campo="nome-classe"|"alunni"|"nome-lezione"|"materia"|"voce"|"da"|"a"|"soglia"|"in-tondo"]`,
-`[data-esercizio="blocco"]`, `[data-tabellina=<n>]`, `[data-modo]`, `[data-tipologia]`, `[data-gioco=<id>]`,
+`[data-campo="nome-classe"|"alunni"|"nome-lezione"|"da"|"a"|"soglia"|"in-tondo"]`,
+`[data-esercizio="blocco"]`, `[data-scegli-gioco]`, `[data-azione="cambia-gioco"]`, `[data-materia=<id>]`, `[data-voce=<id>]`,
+`[data-mescola]`, `[data-difficolta]`, `[data-tabellina=<n>]`, `[data-modo]`, `[data-tipologia]`, `[data-gioco=<id>]`,
 `[data-descrizione]`, `[data-problema]`, `[data-da-pronta]`; nell'editor della lezione un blocco è `[data-blocco=<i>]`
 (da 0), con `[data-passa="giuste"|"domande"|"minuti"|"maestra"]` e `[data-campo="soglia"]`; nella classe `[data-anno=<1..5>|""]`;
-nel percorso `[data-percorso]`, `[data-passo="anno"|"materia"|"gioco"|"lezioni"]`, `[data-anno=<n>]`, `[data-materia=<id>]`,
+nel percorso `[data-percorso]`, `[data-passo="anno"|"gioco"|"lezioni"]`, `[data-anno=<n>]`, `[data-materia=<id>]` (un gruppo),
 `[data-gioco=<id>]`, `[data-pronta=<id>]`; nella lezione `[data-diretta]`, `[data-linea]`,
 `[data-sala]`, `[data-codice]`, `[data-alunno=<id>]` (con `data-preso` in sala e `data-dove` nel pannello: la
 posizione col pavimento, `finito` o vuoto), `[data-blocco-in-corso]`, `[data-avanti=<pavimento>]`,

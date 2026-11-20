@@ -16,6 +16,7 @@ const props = defineProps({ id: { type: String, default: null }, proposta: { typ
 const emit = defineEmits(['vai', 'indietro'])
 
 const vecchia = props.id ? lezioneDi(props.id) : null
+const daZero = !vecchia && !props.proposta && !props.inCorso    // «Preparala tu»: il primo blocco mostra tutti i giochi
 const primaBase = () => JSON.parse(JSON.stringify(CATALOGO.materie[0].voci[0].base))
 const inCorso = props.inCorso && quaderno.inCorso ? quaderno.inCorso.lezione : null
 const partenza = inCorso ? JSON.parse(JSON.stringify(inCorso)) : vecchia ? JSON.parse(JSON.stringify(vecchia))
@@ -106,8 +107,7 @@ async function copiaLink() {
       <input v-model="nome" class="campo" :maxlength="Q.MAX_NOME_LEZIONE" :placeholder="pronta.nome || 'per esempio: ripasso del 9'" data-campo="nome-lezione">
     </label>
     <p v-if="props.proposta && !vecchia" class="bene" data-da-pronta>Pronta per la {{ props.proposta.anno }}ª: {{ props.proposta.allena }} Cambia quello che vuoi e salvala.</p>
-    <p class="nota">La lezione è una fila di blocchi: ognuno dice cosa si fa e quando si passa al blocco dopo. «Avanti tutti», durante
-      la lezione, porta avanti chi è rimasto indietro anche nei blocchi che passano da soli.</p>
+    <p class="nota">Una fila di blocchi: ognuno dice a che gioco, cosa si fa e quando si passa al blocco dopo.</p>
   </section>
 
   <section v-for="(b, i) in blocchi" :key="b.chiave" class="carta" :data-blocco="i">
@@ -119,7 +119,7 @@ async function copiaLink() {
         <button class="bottone chiaro piccolo" aria-label="togli questo blocco" data-azione="togli-blocco" @click="togli(i)">Togli</button>
       </span>
     </div>
-    <SceltaEsercizio v-model="b.esercizio" dove="blocco" />
+    <SceltaEsercizio v-model="b.esercizio" dove="blocco" :apri-giochi="daZero && i === 0" />
     <div class="gruppo">
       <span class="titoletto">Quando si passa al blocco dopo</span>
       <div class="fila">
