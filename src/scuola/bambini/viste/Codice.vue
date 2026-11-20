@@ -1,5 +1,5 @@
 <script setup>
-// Entra nella classe: il codice di 5 lettere della lavagna, controllato col servizio. docs/scuola/bambini.md
+// Entra nella classe: le 4 cifre della lavagna, controllato col servizio. docs/scuola/bambini.md
 import { ref, computed, onMounted } from 'vue'
 import { controllaCodice } from '../../comune/rete.js'
 import { pulisciCodice, codiceCompleto } from '../giro.js'
@@ -13,7 +13,7 @@ const pronto = computed(() => codiceCompleto(codice.value) && !controllo.value)
 
 function scrivi(e) {
   codice.value = pulisciCodice(e.target.value)
-  e.target.value = codice.value          // il campo mostra subito la versione pulita, maiuscola
+  e.target.value = codice.value          // il campo mostra subito la versione pulita, solo cifre
   errore.value = ''
 }
 
@@ -33,8 +33,8 @@ onMounted(() => campo.value?.focus())
 <template>
   <form class="centro codice" @submit.prevent="entra">
     <h2>Scrivi il codice della lavagna</h2>
-    <input ref="campo" class="campo" data-codice :value="codice" maxlength="5" inputmode="text"
-           autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false"
+    <input ref="campo" class="campo" data-codice :value="codice" maxlength="4" inputmode="numeric"
+           autocomplete="off" autocorrect="off" spellcheck="false"
            aria-label="il codice della lezione" @input="scrivi">
     <button type="submit" class="bottone" data-entra :disabled="!pronto">{{ controllo ? 'Controllo…' : 'Entra' }}</button>
     <p v-if="errore" class="errore" data-codice-errore>{{ errore }}</p>
@@ -46,7 +46,7 @@ onMounted(() => campo.value?.focus())
 .codice h2 { font-size: 22px }
 .campo {
   width: 100%; max-width: 320px; padding: 14px 10px; text-align: center;
-  font: inherit; font-size: 44px; font-weight: 600; letter-spacing: .3em; text-indent: .3em; text-transform: uppercase;
+  font: inherit; font-size: 44px; font-weight: 600; letter-spacing: .3em; text-indent: .3em;
   color: var(--inchiostro); background: var(--superficie); border: 2px solid var(--filo); border-radius: var(--raggio);
   outline: none;
 }

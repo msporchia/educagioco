@@ -39,14 +39,14 @@ export async function creaLezione(lezione, alunni, { servizio = indirizzoScuola(
   const r = await chiedi(`${servizio}/scuola/lezione`, { metodo: 'POST', corpo: { lezione, alunni }, fetchImpl, tentativi, attesa })
   if (!r) throw new Error('non riesco a collegarmi: serve internet')
   if (r.stato === 429) throw new Error('hai creato troppe lezioni, aspetta un po\'')
-  if (r.stato !== 200 || !/^[A-Z]{5}$/.test(r.dato?.codice || '')) throw new Error('il servizio della scuola non risponde ora')
+  if (r.stato !== 200 || !/^\d{4}$/.test(r.dato?.codice || '')) throw new Error('il servizio della scuola non risponde ora')
   return { codice: r.dato.codice, chiave: r.dato.chiave, scade: r.dato.scade }
 }
 
 /* il codice scritto da un bambino: 'ok' (con la fase), 'no' (non c'è) o 'rete' (non si sa) */
 export async function controllaCodice(codice, { servizio = indirizzoScuola(), fetchImpl = globalThis.fetch, tentativi = 2, attesa = TEMPI.attesaHttp } = {}) {
   const c = String(codice || '').trim().toUpperCase()
-  if (!/^[A-Z]{5}$/.test(c)) return { esito: 'no' }
+  if (!/^\d{4}$/.test(c)) return { esito: 'no' }
   const r = await chiedi(`${servizio}/scuola/${c}`, { fetchImpl, tentativi, attesa })
   if (r?.stato === 200 && r.dato?.fase) return { esito: 'ok', fase: r.dato.fase }
   return { esito: r?.stato === 404 ? 'no' : 'rete' }
@@ -121,7 +121,7 @@ export function apriBambino(codice, { suStato, suNo, suLinea, servizio = indiriz
   codice = String(codice).toUpperCase()
   const m = magazzino(storage), chiaveM = 'scuola:' + codice
   // solo le code dei codici: le altre chiavi `scuola:` (il quaderno della maestra, il ricordo del bambino) sono di altri
-  for (const k of m.chiavi()) if (/^scuola:[A-Z]{5}$/.test(k) && !(orologio.ora() - (m.leggi(k)?.nato ?? 0) < TRE_ORE)) m.togli(k)
+  for (const k of m.chiavi()) if (/^scuola:(\d{4}|[A-Z]{5})$/.test(k) && !(orologio.ora() - (m.leggi(k)?.nato ?? 0) < TRE_ORE)) m.togli(k)
   const mio = m.leggi(chiaveM) || { nato: orologio.ora(), posto: postoDato || casuale(), alunno: null, ultimaN: 0, coda: [] }
   mio.coda = (mio.coda || []).filter(v => orologio.ora() - v.t < TRE_ORE)
   const salva = () => m.scrivi(chiaveM, mio)

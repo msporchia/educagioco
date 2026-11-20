@@ -3,6 +3,10 @@
    (`meta`: lo stato senza le risposte; `risposte`: gli alunni di cui riscrivere l'elenco; `elimina`: quelli da buttare).
    `collegati`: i fili aperti adesso, [{ ws, ruolo: 'bambino' | 'maestra', posto }], senza i sostituiti. */
 export const DURATA = 3 * 60 * 60 * 1000
+// il codice della lezione: quattro cifre, facili da scrivere sul PC (scelta dell'utente: le lezioni insieme sono poche, e uno
+// già in uso si cambia); `casuali` è un Uint16Array di una voce
+export const CODICE_LEZIONE = /^\d{4}$/
+export const codiceLezione = casuali => String(casuali[0] % 10000).padStart(4, '0')
 export const POSTO = /^[a-z0-9]{8,24}$/
 export const CHIAVE = /^[a-z0-9]{32}$/
 export const MAX_BYTE = 2048

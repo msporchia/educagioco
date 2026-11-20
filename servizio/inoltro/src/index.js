@@ -156,14 +156,14 @@ async function scuola(richiesta, url, env) {
     const chiave = lezione.nuovaChiave(crypto.getRandomValues(new Uint8Array(32)))
     const ora = Date.now()
     const stato = lezione.nuovaLezione(l, ora, await lezione.hashChiave(chiave))
-    for (let tentativo = 0; tentativo < 5; tentativo++) {          // un codice già in uso si cambia
-      const codice = codiceBreve(crypto.getRandomValues(new Uint8Array(LUNGHEZZA)))
+    for (let tentativo = 0; tentativo < 20; tentativo++) {         // un codice già in uso si cambia
+      const codice = lezione.codiceLezione(crypto.getRandomValues(new Uint16Array(1)))
       const r = await env.LEZIONI.get(env.LEZIONI.idFromName(codice)).fetch('https://lezione/apri', { method: 'POST', body: JSON.stringify(stato) })
       if (r.ok) return json({ codice, chiave, scade: stato.scade })
     }
     return json({ errore: 'riprova' }, 503)
   }
-  const m = url.pathname.match(/^\/scuola\/([A-Z]{5})(?:\/(bambino|maestra))?$/)
+  const m = url.pathname.match(/^\/scuola\/(\d{4})(?:\/(bambino|maestra))?$/)
   if (!m) return json({ errore: 'non c\'è' }, 404)
   const lezioneDO = env.LEZIONI.get(env.LEZIONI.idFromName(m[1]))
   if (!m[2]) {

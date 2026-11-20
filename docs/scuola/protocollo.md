@@ -33,7 +33,7 @@ misura, e rimanda la lezione così com'è. Una chiave in più, un `passa` con du
 
 | Richiesta | Risposta |
 |---|---|
-| `POST /scuola/lezione` `{ lezione, alunni: [{ id, nome }] }` | `{ codice, chiave, scade }` — `chiave`: 32 caratteri casuali, l'unica volta che viaggia verso la maestra |
+| `POST /scuola/lezione` `{ lezione, alunni: [{ id, nome }] }` | `{ codice, chiave, scade }` — `codice`: quattro cifre (`codiceLezione`; uno già in uso si cambia, fino a venti volte), `chiave`: 32 caratteri casuali, l'unica volta che viaggia verso la maestra |
 | `GET /scuola/<CODICE>` | `200 { fase }` se esiste, `404` se no (un tentativo sbagliato in più per quell'indirizzo) |
 | `GET /scuola/<CODICE>/bambino?posto=<p>` | WebSocket del bambino. `posto`: id casuale del PC (`/^[a-z0-9]{8,24}$/`) |
 | `GET /scuola/<CODICE>/maestra?chiave=<k>` | WebSocket della maestra; chiave sbagliata → chiuso col codice `4403` |

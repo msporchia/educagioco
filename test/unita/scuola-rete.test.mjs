@@ -20,10 +20,10 @@ const collegati = () => [...fili].filter(f => f.dentro && !f.sostituito).map(f =
 const manda = invii => { for (const { a, msg } of invii) a.alTelefono(JSON.stringify(msg)) }
 class WebSocketFinto {
   constructor(url) {
-    const [, codice, ruolo, q] = url.match(/\/scuola\/([A-Z]{5})\/(bambino|maestra)\?(.*)$/)
+    const [, codice, ruolo, q] = url.match(/\/scuola\/(\d{4})\/(bambino|maestra)\?(.*)$/)
     const p = new URLSearchParams(q)
     Object.assign(this, { ruolo, posto: p.get('posto'), ev: {}, stato: 0, dentro: false, buco: false, sostituito: false, ricevuti: [] })
-    if (codice !== 'ABCDE') return void orologio.dopo(20, () => this.chiudi(4404))
+    if (codice !== '4821') return void orologio.dopo(20, () => this.chiudi(4404))
     fili.add(this)
     orologio.dopo(20, () => {
       if (this.stato !== 0) return
@@ -69,16 +69,16 @@ const ris = k => ({ blocco: 0, chiave: 'c' + k, fatto: '7x' + k, data: '' + 7 * 
 // la maestra: chiave giusta e sbagliata
 const avanti = []
 let tuttiRicevuti = null, rifiuto = null, risposteMaestra = [], fasi = [], listaAlunni = null, lineaM = []
-const sbagliata = apriMaestra('ABCDE', 'x'.repeat(32), { ...base, suRifiuto: m => { rifiuto = m }, suTutto: () => { rifiuto = 'entrata!' } })
+const sbagliata = apriMaestra('4821', 'x'.repeat(32), { ...base, suRifiuto: m => { rifiuto = m }, suTutto: () => { rifiuto = 'entrata!' } })
 orologio.avanti(500)
 uguale('la chiave sbagliata è rifiutata', rifiuto, 'chiave')
 orologio.avanti(60000)
 controlla('e non ci riprova', rifiuto === 'chiave' && [...fili].filter(f => f.ruolo === 'maestra').length === 1)
-const codiceNo = apriMaestra('ZZZZZ', CHIAVE, { ...base, suRifiuto: m => { rifiuto = m } })
+const codiceNo = apriMaestra('9999', CHIAVE, { ...base, suRifiuto: m => { rifiuto = m } })
 orologio.avanti(500)
 uguale('un codice che non c\'è: «codice»', rifiuto, 'codice')
 
-const maestra = apriMaestra('ABCDE', CHIAVE, { ...base, suTutto: d => { tuttiRicevuti = d }, suAlunni: a => { listaAlunni = a }, suRisposta: (a, r) => risposteMaestra.push([a, r.n]), suFase: f => fasi.push(f), suAvanti: a => avanti.push(a), suLinea: x => lineaM.push(x) })
+const maestra = apriMaestra('4821', CHIAVE, { ...base, suTutto: d => { tuttiRicevuti = d }, suAlunni: a => { listaAlunni = a }, suRisposta: (a, r) => risposteMaestra.push([a, r.n]), suFase: f => fasi.push(f), suAvanti: a => avanti.push(a), suLinea: x => lineaM.push(x) })
 orologio.avanti(500)
 controlla('la chiave giusta entra e riceve tutto', tuttiRicevuti?.t === 'tutto' && tuttiRicevuti.alunni.length === 2)
 stessaLista('la linea dice «su»', lineaM, ['su'])
@@ -86,19 +86,19 @@ stessaLista('la linea dice «su»', lineaM, ['su'])
 // un bambino: nome, via, risposte
 const mem = memoria()
 let stati = [], no = [], linea = []
-let b = apriBambino('abcde', { ...base, storage: mem, suStato: s => stati.push(s), suNo: p => no.push(p), suLinea: x => linea.push(x) })
+let b = apriBambino('4821', { ...base, storage: mem, suStato: s => stati.push(s), suNo: p => no.push(p), suLinea: x => linea.push(x) })
 orologio.avanti(500)
 uguale('il bambino riceve lo stato appena entrato', stati.at(-1)?.fase, 'attesa')
 b.sono('a1')
 orologio.avanti(200)
 uguale('sceglie il nome e lo stato lo dice', stati.at(-1).io.id, 'a1')
 controlla('la maestra lo vede collegato', listaAlunni.find(a => a.id === 'a1').collegato)
-const chiaveM = 'scuola:ABCDE'
+const chiaveM = 'scuola:4821'
 const salvato = JSON.parse(mem.getItem(chiaveM))
 controlla('posto e alunno stanno in localStorage', L.POSTO.test(salvato.posto) && salvato.alunno === 'a1')
 // un altro PC non ruba il nome
 const memAltro = memoria(); let noAltro = []
-const altro = apriBambino('ABCDE', { ...base, storage: memAltro, suNo: p => noAltro.push(p) })
+const altro = apriBambino('4821', { ...base, storage: memAltro, suNo: p => noAltro.push(p) })
 orologio.avanti(500); altro.sono('a1'); orologio.avanti(200)
 stessaLista('un altro PC non ruba un nome preso', noAltro, ['preso'])
 altro.chiudi()
@@ -149,7 +149,7 @@ const dopoChiuso = JSON.parse(mem.getItem(chiaveM))
 uguale('la coda è in localStorage', dopoChiuso.coda.length, 3)
 giu.clear()
 stato.presi[salvato.posto] = 7           // il servizio ne aveva già prese due (il bambino non lo sapeva)
-const b2 = apriBambino('ABCDE', { ...base, storage: mem, suStato: s => stati.push(s) })
+const b2 = apriBambino('4821', { ...base, storage: mem, suStato: s => stati.push(s) })
 orologio.avanti(2000)
 uguale('si riparte dalla coda salvata: solo quella dopo `preso` va mandata, e si svuota', b2.inCoda(), 0)
 uguale('la risposta 8 è arrivata, le 6 e 7 non due volte', stato.risposte.a1.map(r => r.n).join(), '1,2,3,4,5,8')
@@ -160,7 +160,7 @@ uguale('anche la 9', stato.risposte.a1.at(-1).n, 9)
 // la coda lunga non supera il ritmo del servizio
 {
   const mem2 = memoria(); let noRitmo = []
-  const c = apriBambino('ABCDE', { ...base, storage: mem2, suNo: p => noRitmo.push(p), posto: 'postolungo1' })
+  const c = apriBambino('4821', { ...base, storage: mem2, suNo: p => noRitmo.push(p), posto: 'postolungo1' })
   orologio.avanti(500); c.sono('a2'); orologio.avanti(200)
   giu.add('postolungo1'); taglia('postolungo1'); orologio.avanti(100)
   for (let k = 1; k <= 60; k++) c.rispondi(ris(k))
@@ -172,11 +172,11 @@ uguale('anche la 9', stato.risposte.a1.at(-1).n, 9)
 // le voci vecchie si buttano all'avvio
 {
   const mem3 = memoria()
-  mem3.setItem('scuola:VECCH', JSON.stringify({ nato: orologio.ora() - 3 * 3600 * 1000 - 1, posto: 'x'.repeat(10), coda: [] }))
-  mem3.setItem('scuola:FRESC', JSON.stringify({ nato: orologio.ora() - 1000, posto: 'y'.repeat(10), coda: [] }))
+  mem3.setItem('scuola:1111', JSON.stringify({ nato: orologio.ora() - 3 * 3600 * 1000 - 1, posto: 'x'.repeat(10), coda: [] }))
+  mem3.setItem('scuola:2222', JSON.stringify({ nato: orologio.ora() - 1000, posto: 'y'.repeat(10), coda: [] }))
   mem3.setItem('scuola:quaderno', JSON.stringify({ classi: [] }))
-  const d = apriBambino('ABCDE', { ...base, storage: mem3 })
-  controlla('una voce di più di tre ore si butta, una fresca resta', mem3.getItem('scuola:VECCH') === null && mem3.getItem('scuola:FRESC') !== null)
+  const d = apriBambino('4821', { ...base, storage: mem3 })
+  controlla('una voce di più di tre ore si butta, una fresca resta', mem3.getItem('scuola:1111') === null && mem3.getItem('scuola:2222') !== null)
   controlla('le chiavi `scuola:` che non sono un codice (il quaderno della maestra) non si toccano', mem3.getItem('scuola:quaderno') !== null)
   d.chiudi()
 }
@@ -184,7 +184,7 @@ uguale('anche la 9', stato.risposte.a1.at(-1).n, 9)
 // la maestra libera un nome e toglie un nuovo: il PC torna alla lista e non se lo riprende da solo
 {
   const memL = memoria(); let st = []
-  const g = apriBambino('ABCDE', { ...base, storage: memL, suStato: s => st.push(s), posto: 'postolibe1' })
+  const g = apriBambino('4821', { ...base, storage: memL, suStato: s => st.push(s), posto: 'postolibe1' })
   maestra.libera('a2')                    // lo tiene il PC della prova sul ritmo
   orologio.avanti(500); g.sono('a2'); orologio.avanti(200)
   uguale('prende il nome', st.at(-1).io?.id, 'a2')
@@ -201,7 +201,7 @@ uguale('anche la 9', stato.risposte.a1.at(-1).n, 9)
 // la lezione chiusa: la coda non si rimanda e il bambino lo sa
 {
   const mem4 = memoria(); let st = [], n = []
-  const e = apriBambino('ABCDE', { ...base, storage: mem4, suStato: s => st.push(s), suNo: p => n.push(p), posto: 'postochiu1' })
+  const e = apriBambino('4821', { ...base, storage: mem4, suStato: s => st.push(s), suNo: p => n.push(p), posto: 'postochiu1' })
   orologio.avanti(500); e.sono('a2'); orologio.avanti(200)
   giu.add('postochiu1'); taglia('postochiu1'); orologio.avanti(100)
   e.rispondi(ris(1))
@@ -219,7 +219,7 @@ uguale('la maestra ha saputo che è chiusa', fasi.at(-1), 'chiusa')
   const mem5 = memoria(); const tentativi = []
   const Rotto = class { constructor() { tentativi.push(orologio.ora()); this.ev = {}; orologio.dopo(1, () => (this.ev.close || []).forEach(f => f({ code: 1006 }))) } addEventListener(n, f) { (this.ev[n] ||= []).push(f) } close() {} send() {} }
   const t0 = orologio.ora()
-  const f = apriBambino('ABCDE', { ...base, storage: mem5, WebSocketImpl: Rotto, posto: 'postorotto1' })
+  const f = apriBambino('4821', { ...base, storage: mem5, WebSocketImpl: Rotto, posto: 'postorotto1' })
   orologio.avanti(40000)
   const dist = tentativi.slice(1).map((t, i) => t - tentativi[i])
   stessaLista('i tentativi si fanno più radi: 1, 2, 4, 8 s, poi 10', dist.slice(0, 6).map(x => Math.round(x / 1000)), [1, 2, 4, 8, 10, 10])
@@ -232,18 +232,18 @@ uguale('la maestra ha saputo che è chiusa', fasi.at(-1), 'chiusa')
 // HTTP
 {
   let chiamate = 0
-  const f1 = async (u, o) => { chiamate++; if (chiamate < 3) throw new Error('rete'); return { status: 200, json: async () => ({ codice: 'ABCDE', chiave: CHIAVE, scade: 5 }) } }
+  const f1 = async (u, o) => { chiamate++; if (chiamate < 3) throw new Error('rete'); return { status: 200, json: async () => ({ codice: '4821', chiave: CHIAVE, scade: 5 }) } }
   const r = await creaLezione({ id: 'l' }, [], { servizio: 'http://prova', fetchImpl: f1 })
-  controlla('creaLezione rifà una richiesta persa', chiamate === 3 && r.codice === 'ABCDE' && r.chiave === CHIAVE && r.scade === 5)
+  controlla('creaLezione rifà una richiesta persa', chiamate === 3 && r.codice === '4821' && r.chiave === CHIAVE && r.scade === 5)
   let errore = ''
   await creaLezione({}, [], { servizio: 'http://prova', fetchImpl: async () => { throw new Error('x') }, tentativi: 2 }).catch(e => { errore = e.message })
   controlla('senza rete l\'errore è chiaro', errore.includes('serve internet'))
   await creaLezione({}, [], { servizio: 'http://prova', fetchImpl: async () => ({ status: 429, json: async () => ({}) }) }).catch(e => { errore = e.message })
   controlla('troppe lezioni: lo dice', errore.includes('troppe lezioni'))
   const ris200 = async () => ({ status: 200, json: async () => ({ fase: 'via' }) })
-  stessaLista('controllaCodice ok', Object.values(await controllaCodice('abcde', { servizio: 'http://prova', fetchImpl: ris200 })), ['ok', 'via'])
-  uguale('controllaCodice no (404)', (await controllaCodice('ABCDE', { servizio: 'http://prova', fetchImpl: async () => ({ status: 404, json: async () => ({}) }) })).esito, 'no')
-  uguale('controllaCodice rete', (await controllaCodice('ABCDE', { servizio: 'http://prova', fetchImpl: async () => { throw new Error('x') } })).esito, 'rete')
+  stessaLista('controllaCodice ok', Object.values(await controllaCodice('4821', { servizio: 'http://prova', fetchImpl: ris200 })), ['ok', 'via'])
+  uguale('controllaCodice no (404)', (await controllaCodice('4821', { servizio: 'http://prova', fetchImpl: async () => ({ status: 404, json: async () => ({}) }) })).esito, 'no')
+  uguale('controllaCodice rete', (await controllaCodice('4821', { servizio: 'http://prova', fetchImpl: async () => { throw new Error('x') } })).esito, 'rete')
   uguale('un codice che non ha la forma non chiama nemmeno', (await controllaCodice('ab', { servizio: 'http://prova', fetchImpl: async () => { throw new Error('no') } })).esito, 'no')
   uguale('l\'indirizzo è quello del servizio degli amici', indirizzoScuola(), 'https://sfida.educagioco.workers.dev')
 }

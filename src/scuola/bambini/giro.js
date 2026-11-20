@@ -7,9 +7,9 @@ const FORMA = 'blocchi'          // un ricordo senza (quello dell'obiettivo e de
 const TRE_ORE = 3 * 60 * 60 * 1000
 const MINUTO = 60 * 1000
 
-/* il codice come lo scrive il bambino: minuscole e spazi vanno bene, si tengono solo le lettere */
-export const pulisciCodice = testo => String(testo ?? '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5)
-export const codiceCompleto = c => typeof c === 'string' && /^[A-Z]{5}$/.test(c)
+/* il codice come lo scrive il bambino: quattro cifre, spazi e altro si tolgono */
+export const pulisciCodice = testo => String(testo ?? '').replace(/\D/g, '').slice(0, 4)
+export const codiceCompleto = c => typeof c === 'string' && /^\d{4}$/.test(c)
 
 /* lo `stato` del servizio come lo tiene la pagina; una lezione nella forma di prima si converte (per prudenza) */
 const naturaleO0 = n => (Number.isInteger(n) && n > 0 ? n : 0)

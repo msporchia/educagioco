@@ -26,7 +26,7 @@ rete interna su cui contare. Quindi:
 2. **I PC dei bambini** aprono la pagina dei bambini: dall'indirizzo (`…/scuola/`) oppure dal file
    unico copiato con la chiavetta (doppio click, si apre dal disco: sui PC lenti parte prima). Il file è
    **uguale per tutte le classi**: non porta dentro né la classe né la lezione.
-3. **«Avvia»**: la maestra sceglie lezione e classe; il servizio risponde con un **codice di 5 lettere**,
+3. **«Avvia»**: la maestra sceglie lezione e classe; il servizio risponde con un **codice di 4 cifre**,
    che lei scrive grande alla lavagna. I bambini lo scrivono, **toccano il loro nome** nella lista della
    classe (un nome preso diventa grigio; «Non trovo il mio nome» per chi manca) e aspettano.
 4. **«Via»**: su tutti i PC parte il primo blocco. Ognuno passa al blocco dopo col suo passo, o tutti

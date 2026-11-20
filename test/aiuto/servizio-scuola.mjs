@@ -21,7 +21,6 @@
 import http from 'node:http'
 import { createHash } from 'node:crypto'
 import * as L from '../../servizio/inoltro/src/lezione.js'
-import { nuovoCodice } from '../../servizio/inoltro/src/codici.js'
 
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS', 'access-control-allow-headers': 'content-type' }
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
@@ -116,7 +115,7 @@ export function servizioScuola({ host = '127.0.0.1' } = {}) {
     const chiave = L.nuovaChiave(globalThis.crypto.getRandomValues(new Uint8Array(32)))
     const stato = L.nuovaLezione(l, Date.now(), await L.hashChiave(chiave))
     let codice
-    do codice = nuovoCodice(globalThis.crypto.getRandomValues(new Uint8Array(5))); while (lezioni.has(codice))
+    do codice = L.codiceLezione(globalThis.crypto.getRandomValues(new Uint16Array(1))); while (lezioni.has(codice))
     lezioni.set(codice, { stato, fili: [] })
     json(res, { codice, chiave, scade: stato.scade })
   }
@@ -126,7 +125,7 @@ export function servizioScuola({ host = '127.0.0.1' } = {}) {
     richieste.push(`${req.method} ${url.pathname}`)
     if (req.method === 'OPTIONS') { res.writeHead(204, CORS); return res.end() }
     if (url.pathname === '/scuola/lezione' && req.method === 'POST') return void crea(req, res).catch(() => json(res, { errore: 'riprova' }, 503))
-    const m = url.pathname.match(/^\/scuola\/([A-Z]{5})$/)
+    const m = url.pathname.match(/^\/scuola\/(\d{4})$/)
     if (m && req.method === 'GET') {
       const l = lezioni.get(m[1])
       return l ? json(res, { fase: l.stato.fase }) : json(res, { errore: 'non c\'è' }, 404)
@@ -140,7 +139,7 @@ export function servizioScuola({ host = '127.0.0.1' } = {}) {
   server.on('upgrade', async (req, sock) => {
     const url = new URL(req.url, 'http://x')
     richieste.push(`WS ${url.pathname}`)
-    const m = url.pathname.match(/^\/scuola\/([A-Z]{5})\/(bambino|maestra)$/)
+    const m = url.pathname.match(/^\/scuola\/(\d{4})\/(bambino|maestra)$/)
     if (!m) { sock.destroy(); return }
     const l = lezioni.get(m[1])
     const maestra = m[2] === 'maestra'
