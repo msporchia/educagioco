@@ -57,11 +57,13 @@ controlli: importa da `../aiuto/`.
   quando gioca o genera per più di qualche secondo.
 - **`test/integrazione/`** — Chrome su `dist/index.html`, si gioca col
   dito. Il lanciatore ricompila prima, se non gli si dice
-  `--niente-build`.
+  `--niente-build`. `integrazione/scuola*` apre invece le due pagine di
+  `dist-scuola/`, e per quelli si ricompila la scuola.
 - **`test/aiuto/`** — `verifica.mjs` (`controlla`, `uguale`, `nota`,
   `riassunto`), `browser.mjs` (apre Chrome, semina o rilegge un profilo,
   azzera, scatta), `livello.mjs` (banco di un livello del Generale),
-  `sito.mjs` (il sito finto per il service worker).
+  `sito.mjs` (il sito finto per il service worker), `servizio-scuola.mjs`
+  (il servizio della scuola in locale, colla logica vera).
 
 ## Le regole per scriverne uno
 

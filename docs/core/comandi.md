@@ -22,6 +22,7 @@ build non passa più.
 | `npm run test:browser` | solo le prove dentro Chrome | ~1,5 min |
 | `npm run test:tutto` | tutto, misure e browser compresi: prima del push | ~1,5 min |
 | `node test/esegui.mjs <nome>` | un file solo (`pozioni`, `fattoria`…) | secondi |
+| `node test/esegui.mjs scuola` | le unità della scuola e `integrazione/scuola` (la maestra e un bambino nelle due pagine, col servizio in locale): costruisce `dist-scuola/` con `build:scuola` e non `dist/` | ~10 s |
 
 Opzioni del lanciatore: `--niente-build`, `--scatti`, `--svelti`,
 `--tempo=600`, `--alla-volta=N`. Quando usarle: [test.md](test.md).

@@ -130,6 +130,10 @@ una riga fra i primi commenti del file:
 
 Il lanciatore ricompila `dist/index.html` prima dei test di integrazione:
 dimenticarsene vuol dire provare la versione di ieri e non accorgersene.
+`integrazione/scuola*` prova invece le due pagine della scuola, e per
+quelli il lanciatore fa `npm run build:scuola` (`dist-scuola/`); `dist/`
+lo ricompila solo se c'è anche un altro test nel browser. `--niente-build`
+vale per tutte e due.
 
 ## Com'è diviso
 
@@ -168,6 +172,13 @@ senza giocarsi le prime due.
 ```js
 await semina(page, { coins: 200, campagne: { sotterraneo: { tappa: 2 /* ... */ } } })
 ```
+
+`aiuto/servizio-scuola.mjs` — il servizio della scuola su una porta a caso
+di `127.0.0.1` (`POST /scuola/lezione`, `GET /scuola/<CODICE>` e i due
+WebSocket di `docs/scuola/protocollo.md`), che risponde con la logica vera
+di `servizio/inoltro/src/lezione.js`; le pagine ci arrivano con
+`globalThis.__SERVIZIO_SFIDE__`. Il WebSocket è scritto a mano, il minimo
+che parla un browser: nessuna dipendenza.
 
 `aiuto/sito.mjs` — per l'unica cosa che da `file://` non esiste: il service
 worker. Serve `dist/` su una porta a caso di `127.0.0.1` come lo serve GitHub

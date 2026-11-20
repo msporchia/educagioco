@@ -26,7 +26,8 @@
 
    I test di integrazione girano su `dist/index.html`, quindi la build
    la fa il lanciatore: dimenticarsela vuol dire provare la versione di
-   ieri e non accorgersene.
+   ieri e non accorgersene. Quelli della scuola (`integrazione/scuola*`)
+   girano su `dist-scuola/`, e il lanciatore fa `npm run build:scuola`.
 
    Le foto invece **non** si fanno da sole. Nessun test le guarda: sono
    per gli occhi di chi lavora, e farle a ogni giro costa secondi e
@@ -219,8 +220,16 @@ if (!prove.length) {
   process.exit(1)
 }
 
-const serveBrowser = prove.some(t => t.gruppo === 'integrazione')
-if (serveBrowser && !senzaBuild) {
+/* la scuola (`integrazione/scuola*`) prova le sue due pagine in `dist-scuola/`, non `dist/`: si costruisce quella, e la
+   casa solo se c'è anche un altro test nel browser */
+const diScuola = t => t.gruppo === 'integrazione' && t.nome.startsWith('scuola')
+const serveCasa = prove.some(t => t.gruppo === 'integrazione' && !diScuola(t))
+if (prove.some(diScuola) && !senzaBuild) {
+  console.log('· ricompilo dist-scuola/')
+  const { codice } = await esegui('npm', ['run', 'build:scuola'], { stdio: 'ignore' })
+  if (codice !== 0) { console.log('❌ la build della scuola fallisce: i test non direbbero niente di utile'); process.exit(1) }
+}
+if (serveCasa && !senzaBuild) {
   console.log('· ricompilo dist/index.html')
   const { codice } = await esegui('npm', ['run', 'build'], { stdio: 'ignore' })
   if (codice !== 0) { console.log('❌ la build fallisce: i test non direbbero niente di utile'); process.exit(1) }

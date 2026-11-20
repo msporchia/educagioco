@@ -67,11 +67,10 @@ modifica su `main` che ingrassa la scuola è rossa subito, non al tag. Le regole
   `rete.js`), gli altri giochi (`src/giochi/<cartella>/`, gli altri `src/views/*`), `import.meta.glob`, la parola
   `indexedDB` in qualunque file e `localStorage`/`sessionStorage` fuori da `src/scuola/` (i commenti non contano).
 
-La build in più fallisce se una pagina supera il suo tetto in byte (`TETTO` in `vite.scuola.config.js`, 3 MB per
-pagina). Col gioco la pagina dei bambini pesa ~1,72 MB (era ~0,93 MB con le sole schede): ~0,64 MB sono three, il
-resto gli Asteroidi e il loro 3D. Senza i sostituti del peso (le righe da `store/progressi.js` in giù nella tabella)
-pesava ~2,6 MB. `PESI_SCUOLA=20 npm run build:scuola` stampa i venti moduli che pesano di più, per sapere cosa
-sostituire.
+**Il peso non è un problema** (scelta dell'utente): coi nove giochi la pagina dei bambini pesa ~20 MB e quella della
+maestra ~1,2 MB; il tetto in byte di `vite.scuola.config.js` resta solo contro uno sbaglio grosso. I sostituti servono
+a tenere fuori quello che a scuola non deve esserci, non ad alleggerire. `PESI_SCUOLA=20 npm run build:scuola` stampa
+i venti moduli che pesano di più.
 
 ## La pipeline: il tag `scuola-*`
 

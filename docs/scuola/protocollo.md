@@ -120,5 +120,8 @@ Orologio (`{ ora, dopo, ogni, ferma }`), `WebSocketImpl`, `fetchImpl` e `storage
 `test/unita/scuola-servizio` (la logica di `lezione.js`: nomi, risposte, fasi, limiti) e
 `test/unita/scuola-rete` (il client con orologio e socket finti: coda, rientro, ritmo, chiave).
 
+Nel browser, `integrazione/scuola` parla con `test/aiuto/servizio-scuola.mjs`: le richieste e i WebSocket di questa pagina
+su una porta locale, con la logica vera di `lezione.js` (senza i tetti per indirizzo e senza l'allarme delle tre ore).
+
 Dal vivo, contro il servizio pubblicato: `cd servizio/inoltro && node prova.mjs https://sfida.educagioco.workers.dev scuola`
 (solo la scuola: la prova intera finisce bloccando per un minuto l'indirizzo sui codici degli amici).

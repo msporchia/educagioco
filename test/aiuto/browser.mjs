@@ -43,10 +43,11 @@ function trovaChrome() {
   return undefined                                  // quello di playwright, se c'è
 }
 
-// `args`: opzioni in più per Chrome (il banco delle perdite vuole `--js-flags=--expose-gc`)
-export async function apriBrowser({ args = [] } = {}) {
-  if (!existsSync(COSTRUITO))
-    throw new Error('manca dist/index.html — lancia prima `npm run build`')
+// `args`: opzioni in più per Chrome (il banco delle perdite vuole `--js-flags=--expose-gc`); `file`: la pagina costruita che
+// serve (la scuola prova `dist-scuola/`, non `dist/`)
+export async function apriBrowser({ args = [], file = COSTRUITO } = {}) {
+  if (!existsSync(file))
+    throw new Error(`manca ${file} — lancia prima la build`)
   const exe = trovaChrome()
   return chromium.launch({ ...(exe ? { executablePath: exe } : {}), ...(args.length ? { args } : {}) })
 }

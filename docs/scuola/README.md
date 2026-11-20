@@ -15,3 +15,12 @@ giocano ai giochi veri limitati alla lezione, e alla fine lei ha il resoconto.
 - [lezioni-pronte.md](lezioni-pronte.md) — le lezioni già preparate per anno e materia: il criterio, cosa c'è, come se ne aggiunge una
 - [giochi.md](giochi.md) — i giochi veri: una cartella per gioco in `src/scuola/giochi/`, la scheda, i sostituti, la vista, i parametri, la risposta
 - [bambini.md](bambini.md) — le schermate del bambino, il nome dalla lista, cosa succede quando la rete cade
+
+Nei test: le unità `unita/scuola-*` (i bersagli e cosa provano stanno in ogni file sopra) e, nel browser,
+`integrazione/scuola` (`node test/esegui.mjs scuola`, che costruisce `dist-scuola/`): le due pagine costruite in due
+contesti di Chrome, col servizio in locale (`test/aiuto/servizio-scuola.mjs`, la logica vera di `lezione.js`). La maestra
+crea dai tasti la classe e una lezione a due blocchi (la tabellina del 2 a schede fino a 2 giuste, poi gli Asteroidi
+finché lo dice lei), avvia, e il bambino entra col codice e il suo nome; due schede giuste, il passaggio, un colpo negli
+Asteroidi che arriva nel pannello (senza 3D, una scheda), «Avanti tutti» due volte (la prima alza il pavimento al blocco
+dove lui è già), «Chiudi lezione» e il resoconto per blocco. Alla fine la pagina dei bambini ha IndexedDB vuoto e in
+localStorage solo chiavi `scuola:*`.
