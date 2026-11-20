@@ -4,7 +4,7 @@ import { ref, computed } from 'vue'
 import { quaderno, salva } from './stato.js'
 import * as Q from './quaderno.js'
 import { lezioneValida, classiNelloStorico } from './quaderno.js'
-import { indirizzoBambini, paginaMaestra, copia, scarica, iniziali, coloreDi } from './utili.js'
+import { indirizzoBambini, paginaMaestra, copia, scarica, iniziali, coloreDi, provaLezione } from './utili.js'
 import { descriviBlocco } from '../comune/lezione.js'
 import { giocoDi } from '../comune/esercizi.js'
 import { ICONE } from '../comune/icone-giochi.js'
@@ -98,6 +98,7 @@ function apriFile(e) {
         <span class="fila azioni">
           <button class="bottone piccolo" data-azione="avvia" :disabled="!lezioneValida(l) || !!quaderno.inCorso"
                   @click="emit('vai', 'avvia', { lezione: l })">Avvia</button>
+          <button class="bottone chiaro piccolo" data-azione="prova-lezione" :disabled="!lezioneValida(l)" @click="provaLezione(l)">Prova</button>
           <button class="bottone chiaro piccolo" data-azione="modifica-lezione" @click="emit('vai', 'lezione', { id: l.id })">Modifica</button>
           <button class="bottone chiaro piccolo" data-azione="duplica" @click="duplica(l.id)">Duplica</button>
           <button class="bottone chiaro piccolo" data-azione="copia-link" :disabled="!lezioneValida(l)" @click="copiaLink(l)">

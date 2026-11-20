@@ -3,7 +3,7 @@ export default {
   id: 'survivors',
   nome: 'Survivors',
   nei: 'in Survivors',
-  spiega: 'Si scappa dai mostri e ogni potenziamento si paga con una domanda. Va con qualunque esercizio, anche a più voci.',
+  spiega: 'Il bambino muove un eroe che scappa dai mostri; ogni tanto può diventare più forte, e per farlo risponde a una domanda.',
   tred: false,
   difficolta: {
     facile: 'Cinque cuori invece di tre e mostri meno numerosi e meno resistenti: si resiste a lungo anche sbagliando qualche mossa.',

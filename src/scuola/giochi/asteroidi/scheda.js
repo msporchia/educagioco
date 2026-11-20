@@ -3,7 +3,7 @@ export default {
   id: 'asteroidi',
   nome: 'Gli Asteroidi',
   nei: 'negli Asteroidi',
-  spiega: 'La nave colpisce il sasso col numero giusto.',
+  spiega: "Il bambino guida una navicella nello spazio: sullo schermo c'è una tabellina, e deve colpire il sasso che porta il numero giusto prima che cada.",
   tred: true,
   // gli esercizi del catalogo che sa fare: solo le tabelline, col risultato o col numero nascosto (anche a più parti)
   difficolta: {

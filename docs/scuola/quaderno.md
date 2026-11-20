@@ -155,8 +155,10 @@ dopo («Hai finito!», si resta lì fino ad «Avanti tutti», o si ricomincia). 
 
 - **Il gioco ha il suo disegno** (`TesseraGioco.vue`): l'icona dipinta della copertina di casa (`comune/icone-giochi.js`; nella
   build il plugin `iconeGiochi` di `vite.scuola.config.js` ci lascia solo le nove della scuola, ~300 KB invece dei 2,7 MB
-  di tutte le copertine), un foglio per le domande. Si vede solo il gioco scelto, con «Cambia gioco» che li mostra tutti.
-  Le descrizioni dei giochi non parlano del PC: si suppone che reggano (scelta dell'utente).
+  di tutte le copertine), un foglio per le domande. **Tutti i giochi restano sempre in vista**, piccoli, e sotto quello scelto
+  ha la sua scheda: cosa fa il bambino («Il bambino guida una navicella…», lo `spiega` della scheda) e cosa gli si può
+  chiedere (le materie che accetta). Provato «il gioco scelto e Cambia gioco»: si perdevano le alternative. Le descrizioni
+  non parlano del PC: si suppone che reggano (scelta dell'utente).
 - **Cosa si fa** sono tessere: le materie (se il gioco ne ha più d'una) e le voci di quella materia, solo quelle che il
   gioco sa fare. La spiegazione della voce c'è solo quando c'era da scegliere.
 - **Un esempio vero** per ogni voce del catalogo (`Esempio.vue`): una domanda pescata come la pescherà il gioco, con le
@@ -167,6 +169,10 @@ dopo («Hai finito!», si resta lì fino ad «Avanti tutti», o si ricomincia). 
   «quando si passa» né «in tondo». «＋ Aggiungi un blocco dopo» fa la fila, «＋ Mescola un'altra cosa» mescola nello stesso
   blocco, ognuno col «?» che dice la differenza; una lezione pronta offre il suo seguito («＋ Poi, consigliato: …»). Sotto
   l'esercizio non si ripete più il riassunto delle scelte: resta solo l'avviso quando così non chiede niente.
+- **«Prova la lezione»** (nell'editor, e «Prova» su ogni scheda dell'inizio): apre in una scheda nuova la pagina dei
+  bambini con `#prova=<la lezione>` (`linkDiProva` del quaderno, `provaDa` di `bambini/giro.js`), che la fa partire su quel
+  PC come «Senza lezione», senza codice e senza servizio. Una striscia gialla dice che è una prova, ha «Blocco dopo» al
+  posto del menu col codice e «Chiudi la prova»; la prova non si ricorda.
 - **Il «?»** (`Aiuto.vue`) accanto alle scelte meno chiare: un tocco apre due righe, un tocco fuori le chiude (col dito
   niente tooltip).
 - **Quanto è difficile**: tre tasti con tre tacche che si riempiono, e una riga su cosa cambia.
@@ -207,7 +213,9 @@ quadretti** del quaderno di scuola come fondo, e **i colori delle penne** (`--pe
 `NuovaLezione.vue`, una schermata sola che si apre a passi, uno sotto l'altro: **per quale classe** (1ª–5ª, coi
 nomi delle classi del quaderno di quell'anno; già scelto con `annoDelleClassi`) → **in che gioco** (col disegno, quelli
 con lezioni pronte per l'anno) → **le lezioni pronte** di [lezioni-pronte.md](lezioni-pronte.md) di quel gioco, a gruppi
-per materia, col nome e come si svolgono.
+per materia, col nome e come si svolgono. I giochi sono **tutti**: per uno che in quella classe non ha lezioni pronte
+c'è «Preparala tu», che apre l'editor già in quel gioco (`gioco` di `Lezione.vue`). Prima si vedevano solo quelli con
+lezioni pronte, e in seconda erano tre.
 Toccata una, si apre l'editor (`lezione`) già compilato con un id nuovo: la maestra cambia quello che vuole e
 salva. «Preparala tu» apre l'editor di sempre, vuoto. Le scelte restano finché la pagina è aperta: tornando
 indietro dall'editor si ritrovano.
@@ -224,7 +232,7 @@ file e il link di prima dei blocchi) e `unita/scuola-lezioni-pronte`. Bersagli: 
 `[data-file-quaderno]` (l'input del file), `[data-esito-file="bene"|"male"]`, `[data-link-lezione]`; nell'esercizio a più parti
 `[data-parte=<i>]`, `[data-peso="poco"|"normale"|"tanto"]`, `[data-azione="aggiungi-parte"|"togli-parte"]`; negli editor
 `[data-campo="nome-classe"|"alunni"|"nome-lezione"|"da"|"a"|"soglia"|"in-tondo"]`,
-`[data-esercizio="blocco"]`, `[data-scegli-gioco]`, `[data-azione="cambia-gioco"]`, `[data-materia=<id>]`, `[data-voce=<id>]`,
+`[data-esercizio="blocco"]`, `[data-scegli-gioco]`, `[data-scheda-gioco]`, `[data-elenco-domande]` con `[data-materia-elenco=<id>]` e `[data-voce=<id>]`, `[data-azione="prova-lezione"|"preparala-nel-gioco"]`, `[data-materia=<id>]`, `[data-voce=<id>]`,
 `[data-mescola]`, `[data-difficolta]`, `[data-esempio]` (con `[data-giusta]`), `[data-azione="altro-esempio"|"cambia-passa"]`, `[data-passa-scelto=<modo>]`, `[data-aiuto]`, `[data-aiuto-testo]`, `[data-panoramica]` con `[data-colonna=<i>|"finito"]`, `[data-tabellina=<n>]`, `[data-modo]`, `[data-tipologia]`, `[data-gioco=<id>]`,
 `[data-descrizione]`, `[data-problema]`, `[data-da-pronta]`; nell'editor della lezione un blocco è `[data-blocco=<i>]`
 (da 0), con `[data-passa="giuste"|"domande"|"minuti"|"maestra"]` e `[data-campo="soglia"]`; nella classe `[data-anno=<1..5>|""]`;

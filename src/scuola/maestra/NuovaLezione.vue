@@ -16,7 +16,9 @@ import TesseraGioco from './TesseraGioco.vue'
 
 const emit = defineEmits(['vai', 'indietro'])
 
-const giochi = computed(() => (ricordo.anno ? GIOCHI.filter(g => pronte({ anno: ricordo.anno, gioco: g.id }).length) : []))
+// tutti i giochi: quelli senza lezioni pronte per quella classe si preparano da zero, già nel loro gioco
+const giochi = GIOCHI
+const conPronte = id => !!ricordo.anno && pronte({ anno: ricordo.anno, gioco: id }).length > 0
 // le lezioni pronte del gioco, a gruppi per materia nell'ordine del catalogo
 const perMateria = computed(() => {
   if (!ricordo.gioco) return []
@@ -25,10 +27,7 @@ const perMateria = computed(() => {
 })
 const classiDellAnno = a => quaderno.classi.filter(c => c.anno === a).map(c => c.nome).join(', ')
 
-function scegliAnno(a) {
-  ricordo.anno = a
-  if (!giochi.value.some(g => g.id === ricordo.gioco)) ricordo.gioco = null
-}
+function scegliAnno(a) { ricordo.anno = a }
 
 if (!ricordo.anno) ricordo.anno = annoDelleClassi(quaderno)
 if (ricordo.anno) scegliAnno(ricordo.anno)
@@ -58,7 +57,15 @@ if (ricordo.anno) scegliAnno(ricordo.anno)
     <p v-if="ricordo.gioco" class="nota">{{ giochi.find(g => g.id === ricordo.gioco)?.spiega }}</p>
   </section>
 
-  <section v-if="ricordo.gioco" class="carta" data-passo="lezioni">
+  <section v-if="ricordo.gioco && !conPronte(ricordo.gioco)" class="carta" data-passo="da-zero">
+    <h2>Lezioni pronte non ce ne sono</h2>
+    <p class="nota">Per questo gioco in {{ ricordo.anno }}ª non c'è una lezione già fatta: la prepari tu, e l'editor parte già da qui.</p>
+    <div class="fila">
+      <button class="bottone" data-azione="preparala-nel-gioco" @click="emit('vai', 'lezione', { id: null, gioco: ricordo.gioco })">Preparala tu</button>
+    </div>
+  </section>
+
+  <section v-if="ricordo.gioco && conPronte(ricordo.gioco)" class="carta" data-passo="lezioni">
     <h2>Le lezioni pronte</h2>
     <p class="nota">Toccane una: si apre già fatta e la cambi come vuoi.</p>
     <div v-for="m in perMateria" :key="m.id" class="materia" :data-materia="m.id">

@@ -51,7 +51,7 @@ export default {
   id: 'pozioni',
   nome: 'Le pozioni',
   nei: 'nel laboratorio delle pozioni',
-  spiega: 'Si comprano dal mercante le ampolle che fanno la dose, spendendo poco.',
+  spiega: 'Il bambino prepara pozioni: legge la ricetta («1,5 kg di polvere») e compra dal mercante le ampolle giuste, convertendo le misure.',
   tred: true,
   conta: { tante: 'ingredienti', una: 'un ingrediente', giuste: 'ingredienti giusti', giusta: 'un ingrediente giusto' },
   difficolta: {

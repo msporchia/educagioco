@@ -38,7 +38,7 @@ export default {
   id: 'robot',
   nome: 'Il Robot',
   nei: 'col Robot',
-  spiega: 'Il bambino scrive il programma e il robot costruisce, una riga alla volta: i livelli dei capitoli scelti, in fila.',
+  spiega: 'Il bambino scrive un programma a righe e il robot lo esegue, mattone dopo mattone, finché la costruzione è uguale al disegno.',
   tred: false,
   conta: { tante: 'livelli', una: 'un livello', giuste: null },   // una risposta chiusa è un livello vinto
   tipo: {

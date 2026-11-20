@@ -51,7 +51,7 @@ export default {
   id: 'castello',
   nome: 'Difendi il castello',
   nei: 'nel castello',
-  spiega: 'Ogni torre si paga con un\'operazione in colonna: la tappa scelta, e vinta o persa si riparte.',
+  spiega: "Il bambino difende un castello dai mostri: ogni torre si costruisce risolvendo un'operazione in colonna. È lo svago di fine lezione.",
   tred: false,
   conta: { tante: 'operazioni', una: "un'operazione", giuste: 'operazioni giuste', giusta: "un'operazione giusta" },
   difficolta: {

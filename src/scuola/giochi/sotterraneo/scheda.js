@@ -6,7 +6,7 @@ export default {
   id: 'sotterraneo',
   nome: 'Il sotterraneo',
   nei: 'nel sotterraneo',
-  spiega: 'Una discesa breve nella cripta: porte, forzieri e mostri si pagano con le domande dell\'esercizio. Per le classi dalla terza in su.',
+  spiega: 'Il bambino esplora una cripta: per aprire porte e forzieri e per battere i mostri risponde alle domande. Per le classi dalla terza in su.',
   tred: true,
   daAnno: 3,   // le lezioni pronte lo propongono dalla terza (docs/scuola/giochi.md)
   difficolta: {

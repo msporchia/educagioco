@@ -6,7 +6,8 @@ import { CATALOGO, materieDelGioco } from '../comune/esercizi.js'
 import { PARAMETRI } from '../giochi/parametri.js'
 import Esempio from './Esempio.vue'
 
-const props = defineProps({ modelValue: { type: Object, required: true }, gioco: { type: String, default: 'schede' } })
+const props = defineProps({ modelValue: { type: Object, required: true }, gioco: { type: String, default: 'schede' },
+  soloParametri: { type: Boolean, default: false } })   // nell'elenco delle domande la voce è già scelta: solo le sue scelte
 const emit = defineEmits(['update:modelValue'])
 
 const tutte = CATALOGO.materie.flatMap(m => m.voci.map(v => ({ ...v, materia: m.id })))
@@ -51,15 +52,15 @@ function tipologia(id) {
 
 <template>
   <div class="parte-esercizio">
-    <div v-if="materie.length > 1" class="fila" data-materie>
+    <div v-if="materie.length > 1 && !props.soloParametri" class="fila" data-materie>
       <button v-for="m in materie" :key="m.id" class="tessera" :class="{ scelta: materia?.id === m.id }" :aria-pressed="materia?.id === m.id"
               :data-materia="m.id" @click="sceltaMateria(m.id)">{{ m.emoji }} {{ m.nome }}</button>
     </div>
-    <div v-if="(materia?.voci.length || 0) > 1" class="fila voci" data-voci>
+    <div v-if="(materia?.voci.length || 0) > 1 && !props.soloParametri" class="fila voci" data-voci>
       <button v-for="v in materia.voci" :key="v.id" class="tessera" :class="{ scelta: voce?.id === v.id }" :aria-pressed="voce?.id === v.id"
               :data-voce="v.id" @click="sceltaVoce(v.id)">{{ v.icona }} {{ v.nome }}</button>
     </div>
-    <p v-if="voce && (materia?.voci.length || 0) > 1" class="nota">{{ voce.spiega }}</p>
+    <p v-if="voce && (materia?.voci.length || 0) > 1 && !props.soloParametri" class="nota">{{ voce.spiega }}</p>
 
     <template v-if="voce?.tipo === 'tabelline'">
       <div class="gruppo">

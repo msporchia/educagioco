@@ -73,7 +73,7 @@ export default {
   id: 'passo-passo',
   nome: 'Passo passo',
   nei: 'in Passo passo',
-  spiega: 'Una fila di frecce porta il coniglio alla tana: i livelli scelti, uno dopo l\'altro.',
+  spiega: 'Il bambino mette in fila delle frecce (e poi dei cicli) e preme ▶: il personaggio le esegue e deve arrivare alla meta. È il primo passo verso la programmazione.',
   tred: false,
   conta: { tante: 'livelli', una: 'un livello', giuste: null },   // una risposta chiusa è un livello vinto
   // gli esercizi del catalogo no: solo il suo contenuto

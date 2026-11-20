@@ -1,11 +1,11 @@
 <script setup>
 // L'esercizio di un blocco della lezione (docs/scuola/esercizi.md): prima il gioco, col suo disegno, poi quello che quel gioco sa
 // fare (una o più parti, con quante domande ciascuna), poi quanto è difficile
-import { ref, computed } from 'vue'
-import { valido, descrivi, giochiPer, giocoDi, PESI, MAX_PARTI, GIOCHI, DIFFICOLTA, difficoltaDi, materieDelGioco, mescolaPiuCose } from '../comune/esercizi.js'
+import { computed } from 'vue'
+import { valido, descrivi, giochiPer, giocoDi, PESI, GIOCHI, DIFFICOLTA, difficoltaDi, materieDelGioco, mescolaPiuCose } from '../comune/esercizi.js'
 import ParteEsercizio from './ParteEsercizio.vue'
 import TesseraGioco from './TesseraGioco.vue'
-import Aiuto from './Aiuto.vue'
+import ElencoDomande from './ElencoDomande.vue'
 
 const props = defineProps({
   modelValue: { type: Object, required: true },
@@ -34,9 +34,13 @@ function scrivi(nuove, gioco = giocoDi(e.value), d = difficoltaDi(e.value)) {
 /* ── il gioco: se non sa fare quello che c'era, si parte dalla prima cosa che sa fare ── */
 const gioco = computed(() => giocoDi(e.value))
 const schedaDelGioco = computed(() => GIOCHI.find(g => g.id === gioco.value) || GIOCHI[0])
-const tuttiIGiochi = ref(false)   // il gioco scelto e «Cambia gioco»; i giochi tutti in vista solo per cambiarlo
+// cosa gli si può chiedere, detto alla maestra: le materie del catalogo che accetta, o il suo contenuto
+const siChiede = computed(() => {
+  const m = materieDelGioco(gioco.value)
+  if (m.length === 1 && m[0].voci.length === 1) return m[0].voci[0].nome
+  return m.map(x => x.nome).join(', ')
+})
 function scegliGioco(id) {
-  tuttiIGiochi.value = false
   if (id === gioco.value) return
   if (valido(senzaGioco(e.value)) && giochiPer(senzaGioco(e.value)).some(g => g.id === id)) return scrivi(parti.value, id)
   const prima = materieDelGioco(id)[0]?.voci[0]
@@ -45,10 +49,6 @@ function scegliGioco(id) {
 
 /* ── le parti, e quante domande per ciascuna ── */
 const cambiaParte = (i, esercizio) => scrivi(parti.value.map((p, j) => (j === i ? { ...p, esercizio } : p)))
-const cambiaPeso = (i, peso) => scrivi(parti.value.map((p, j) => (j === i ? { ...p, peso } : p)))
-const togliParte = i => scrivi(parti.value.filter((_, j) => j !== i))
-// una parte nuova parte dalla stessa voce dell'ultima, «un po'»: di solito si aggiunge un ripasso
-const aggiungiParte = () => scrivi([...parti.value, { esercizio: copia(parti.value.at(-1).esercizio), peso: 'poco' }])
 const piuCose = computed(() => mescolaPiuCose(gioco.value))
 
 const volte = peso => PESI.find(x => x.id === peso)?.volte ?? 1
@@ -67,36 +67,25 @@ const scegliDifficolta = d => scrivi(parti.value, gioco.value, d)
   <div class="scelta-esercizio" :data-esercizio="dove">
     <div class="gruppo" data-scegli-gioco>
       <span class="titoletto">Il gioco</span>
-      <div v-if="tuttiIGiochi" class="giochi">
-        <TesseraGioco v-for="g in GIOCHI" :key="g.id" :gioco="g" :scelta="gioco === g.id" @click="scegliGioco(g.id)" />
+      <!-- tutti i giochi sempre in vista, piccoli; sotto, cosa fa il bambino in quello scelto e cosa gli si chiede -->
+      <div class="giochi">
+        <TesseraGioco v-for="g in GIOCHI" :key="g.id" :gioco="g" :scelta="gioco === g.id" piccola @click="scegliGioco(g.id)" />
       </div>
-      <div v-else class="scelto">
-        <TesseraGioco :gioco="schedaDelGioco" scelta grande @click="tuttiIGiochi = true" />
-        <button class="bottone chiaro piccolo" data-azione="cambia-gioco" @click="tuttiIGiochi = true">Cambia gioco</button>
+      <div class="scheda-gioco" data-scheda-gioco>
+        <b>{{ schedaDelGioco.nome }}</b>
+        <span>{{ schedaDelGioco.spiega }}</span>
+        <span class="nota"><b>Si può chiedere:</b> {{ siChiede }}</span>
       </div>
     </div>
 
     <div class="gruppo">
-      <span class="titoletto">Cosa si fa</span>
+      <span class="titoletto">Cosa si chiede</span>
       <div v-if="parti.length > 1" class="mescola" data-mescola aria-label="quante domande di ogni parte">
         <span v-for="(p, i) in parti" :key="i" class="fetta" :class="`c${i}`" :style="{ flexGrow: volte(p.peso) }">{{ suDieci[i] }} su 10</span>
       </div>
-      <div v-for="(p, i) in parti" :key="i" class="parte" :class="[{ insieme: parti.length > 1 }, `c${i}`]" :data-parte="i">
-        <div v-if="parti.length > 1" class="testa-parte">
-          <span class="titoletto">Quante domande</span>
-          <div class="pesi">
-            <button v-for="x in PESI" :key="x.id" class="peso" :class="{ scelta: p.peso === x.id }" :aria-pressed="p.peso === x.id"
-                    :aria-label="x.nome" :title="x.nome" :data-peso="x.id" @click="cambiaPeso(i, x.id)">
-              <i v-for="n in x.volte" :key="n"></i></button>
-          </div>
-          <button class="togli" aria-label="togli questa parte" data-azione="togli-parte" @click="togliParte(i)">✕</button>
-        </div>
-        <ParteEsercizio :model-value="p.esercizio" :gioco="gioco" @update:model-value="x => cambiaParte(i, x)" />
-      </div>
-      <span v-if="piuCose && parti.length < MAX_PARTI" class="fila">
-        <button class="tessera aggiungi" data-azione="aggiungi-parte" @click="aggiungiParte">＋ Mescola un'altra cosa</button>
-        <Aiuto testo="Nello stesso blocco le domande si mescolano: per esempio tanta tabellina dell'8 e un po' di ripasso del 3. Per fare una cosa dopo l'altra, invece, aggiungi un blocco dopo." />
-      </span>
+      <!-- i giochi che prendono le domande del catalogo: un elenco con la spunta e l'intensità; gli altri, il loro contenuto -->
+      <ElencoDomande v-if="piuCose" :parti="parti" :gioco="gioco" @cambia="nuove => scrivi(nuove)" />
+      <ParteEsercizio v-else :model-value="parti[0].esercizio" :gioco="gioco" @update:model-value="x => cambiaParte(0, x)" />
     </div>
 
     <div v-if="schedaDelGioco.difficolta" class="gruppo">
@@ -118,9 +107,10 @@ const scegliDifficolta = d => scrivi(parti.value, gioco.value, d)
 .scelta-esercizio { display:flex; flex-direction:column; gap:16px }
 .gruppo { display:flex; flex-direction:column; gap:8px }
 .titoletto { font-size:14px; font-weight:600 }
-.giochi { display:flex; flex-wrap:wrap; gap:8px }
-.scelto { display:flex; align-items:center; gap:10px }
-.scelto .tessera-gioco { flex:1; max-width:520px }
+.giochi { display:flex; flex-wrap:wrap; gap:6px }
+.scheda-gioco { display:flex; flex-direction:column; gap:4px; padding:12px 14px; border-radius:var(--raggio-piccolo);
+                background:var(--penna-chiara, var(--tessera)); font-size:14px; line-height:1.45 }
+.scheda-gioco > b { font-size:16px }
 
 /* le parti: ognuna col suo colore, lo stesso della sua fetta nella barra */
 .c0 { --colore:#5b8def } .c1 { --colore:#e8a33d } .c2 { --colore:#55b07f } .c3 { --colore:#c46ac4 } .c4 { --colore:#d9645a } .c5 { --colore:#6bb6c9 }

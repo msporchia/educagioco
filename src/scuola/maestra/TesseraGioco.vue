@@ -6,12 +6,13 @@ const props = defineProps({
   gioco: { type: Object, required: true },     // una voce di GIOCHI
   scelta: { type: Boolean, default: false },
   grande: { type: Boolean, default: false },   // con la riga che spiega
+  piccola: { type: Boolean, default: false },  // in fila con tutti gli altri, nell'editor
 })
 const icona = ICONE[props.gioco.id] || null
 </script>
 
 <template>
-  <button class="tessera-gioco" :class="{ scelta: props.scelta, grande: props.grande }" :aria-pressed="props.scelta" :data-gioco="props.gioco.id">
+  <button class="tessera-gioco" :class="{ scelta: props.scelta, grande: props.grande, piccola: props.piccola }" :aria-pressed="props.scelta" :data-gioco="props.gioco.id">
     <span class="disegno" :style="icona ? { background: icona.fondo } : null">
       <img v-if="icona" :src="icona.src" alt="" draggable="false">
       <span v-else class="foglio" aria-hidden="true">📝</span>
@@ -33,6 +34,11 @@ const icona = ICONE[props.gioco.id] || null
 .foglio { font-size:40px }
 .testi { display:flex; flex-direction:column; gap:2px }
 .nome { font-size:13px; font-weight:600; line-height:1.2 }
+.piccola { width:84px; padding:6px 4px 8px; gap:4px }
+.piccola .disegno { width:52px; height:52px; border-radius:12px }
+.piccola .foglio { font-size:28px }
+.piccola .nome { font-size:12px }
+.tessera-gioco.scelta { border-color:var(--penna, var(--inchiostro)) }
 .grande { width:100%; flex-direction:row; gap:12px; padding:10px; text-align:left }
 .grande .nome { font-size:15px }
 .spiega { font-size:13px; color:var(--grigio); line-height:1.35 }

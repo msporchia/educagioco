@@ -38,7 +38,7 @@ export default {
   id: 'inglese',
   nome: 'English',
   nei: 'in English',
-  spiega: 'La mappa del tesoro dell’inglese: le tappe scelte di un’isola, una dopo l’altra, senza audio.',
+  spiega: 'Il bambino segue una mappa del tesoro: in ogni tappa riconosce parole inglesi con le figure e compone frasi semplici. Senza audio.',
   tred: false,
   // gli esercizi del catalogo no: solo il suo contenuto
   accetta: () => false,

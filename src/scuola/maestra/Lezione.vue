@@ -2,22 +2,28 @@
 // L'editor di una lezione a blocchi (docs/scuola/lezione.md): nome, i blocchi con cosa si chiede e quando si passa, in tondo; anche da una lezione pronta,
 // e la lezione in corso da mandare cambiata ai bambini (`inCorso`, docs/scuola/ripieghi.md)
 import { ref, computed } from 'vue'
-import { CATALOGO, valido, descrivi } from '../comune/esercizi.js'
+import { CATALOGO, valido, descrivi, materieDelGioco } from '../comune/esercizi.js'
 import { MODI_PASSA, MAX_BLOCCHI, modoDi, sogliaDi, descriviPassa, passaValido, contaDi, modiPassaPer } from '../comune/lezione.js'
 import { quaderno, salva, lezioneDi } from './stato.js'
 import * as Q from './quaderno.js'
-import { paginaMaestra, copia } from './utili.js'
+import { paginaMaestra, copia, provaLezione } from './utili.js'
 import { lezioneDa } from '../comune/lezioni-pronte.js'
 import SceltaEsercizio from './SceltaEsercizio.vue'
 import Aiuto from './Aiuto.vue'
 import Conferma from './Conferma.vue'
 import { cambiaLezione, diretta } from './diretta.js'
 
-const props = defineProps({ id: { type: String, default: null }, proposta: { type: Object, default: null }, inCorso: { type: Boolean, default: false } })
+const props = defineProps({ id: { type: String, default: null }, proposta: { type: Object, default: null }, inCorso: { type: Boolean, default: false },
+  gioco: { type: String, default: null } })   // da «Nuova lezione»: si parte già in quel gioco
 const emit = defineEmits(['vai', 'indietro'])
 
 const vecchia = props.id ? lezioneDi(props.id) : null
-const primaBase = () => JSON.parse(JSON.stringify(CATALOGO.materie[0].voci[0].base))
+// la prima cosa che il gioco sa fare (le domande: la prima voce del catalogo), già nel suo gioco
+function primaBase() {
+  const v = materieDelGioco(props.gioco || 'schede')[0]?.voci[0] || CATALOGO.materie[0].voci[0]
+  const base = JSON.parse(JSON.stringify(v.base))
+  return props.gioco && props.gioco !== 'schede' ? { ...base, gioco: props.gioco } : base
+}
 const inCorso = props.inCorso && quaderno.inCorso ? quaderno.inCorso.lezione : null
 const partenza = inCorso ? JSON.parse(JSON.stringify(inCorso)) : vecchia ? JSON.parse(JSON.stringify(vecchia))
   : props.proposta ? lezioneDa(props.proposta, Q.nuovoId('l')) : Q.nuovaLezione(primaBase())
@@ -205,6 +211,8 @@ async function copiaLink() {
     <p v-if="problema" class="avviso" data-problema>{{ problema }}</p>
     <div class="fila">
       <button class="bottone" :disabled="!!problema" data-azione="salva-lezione" @click="salvaLezione">Salva la lezione</button>
+      <button class="bottone chiaro" :disabled="!!problema" data-azione="prova-lezione" @click="provaLezione(pronta)">Prova la lezione</button>
+      <Aiuto testo="Si apre la pagina dei bambini in una scheda nuova, con questa lezione già partita: la giochi come un bambino, senza codice e senza che arrivi niente a nessuno." />
       <button class="bottone chiaro" :disabled="!!problema" data-azione="copia-link" @click="copiaLink">{{ copiato ? 'Link copiato' : 'Copia il link' }}</button>
       <button v-if="vecchia" class="bottone chiaro" data-azione="duplica" @click="duplica">Duplica</button>
       <Conferma v-if="vecchia" etichetta="Cancella" si="Cancella" data-azione="cancella-lezione" @si="cancella" />

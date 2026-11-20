@@ -49,7 +49,7 @@ export default {
   id: 'cucina',
   nome: 'La cucina',
   nei: 'in cucina',
-  spiega: 'Si cucina col cuoco e si dà il resto: i livelli scelti, uno dopo l\'altro.',
+  spiega: 'Il bambino fa il cuoco: prepara le ordinazioni e alla cassa dà il resto ai clienti, prima aiutato e poi da solo.',
   tred: true,
   conta: { tante: 'resti', una: 'un resto', giuste: 'resti giusti', giusta: 'un resto giusto' },
   difficolta: {

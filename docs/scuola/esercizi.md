@@ -80,7 +80,7 @@ o `'tanto'` (`PESI`): una parte «tanto» esce quattro volte una «un po'», e l
 sparse e non a blocchi (con 4 e 1, mai cinque della prima di fila). È la risposta a «tanta tabellina dell'8 e un ripasso
 blando del 3, 4, 5 e 6»: due parti di tabelline; ma si mescolano anche voci diverse (tabelline e orologio). Un insieme va in un
 gioco solo se il gioco accetta ogni parte; agli Asteroidi arriva come gruppi con le loro volte (`limiteAsteroidi`). Nell'editor
-della maestra una parte sola è un esercizio semplice, come prima: «＋ Mescola un'altra cosa» la fa diventare un insieme (il suo «?» dice la differenza con un blocco dopo). Lì il peso
+della maestra una parte sola è un esercizio semplice, come prima: accendere una seconda voce nell'elenco la fa diventare un insieme. Lì il peso
 non si scrive: ogni parte ha un colore e tre tasti a pallini (uno, due, quattro), e sopra una barra divisa nei colori dice
 «8 su 10», «2 su 10» (`suDieci` in `SceltaEsercizio.vue`). Provato «Un po'/Normale/Tanto» a parole: per l'utente era
 testo e basta.
@@ -93,6 +93,13 @@ accetta solo quello che sa fare già**: gli Asteroidi le tabelline, col risultat
 la forma della domanda girata che il gioco aveva già). `giochiPer(esercizio)` dice in quali giochi si può fare, `giocoDi`
 legge il campo; `valido` rifiuta un gioco sconosciuto o che non accetta l'esercizio, e `descrivi` aggiunge
 «negli Asteroidi». Come il gioco si limita: [../asteroidi/scuola.md](../asteroidi/scuola.md).
+
+**Nei giochi che prendono le domande del catalogo** (le schede, Survivors, il sotterraneo, gli Asteroidi) cosa si chiede è
+**un elenco solo** (`maestra/ElencoDomande.vue`, scelta dell'utente: una scelta sola e in fila, non «una cosa e poi
+mescolane un'altra»): le materie si aprono toccandole, ogni tipo di domanda si accende con la spunta e, se ce n'è più d'uno,
+prende la sua intensità a pallini («quanto spesso»); sotto si aprono le sue scelte (gradini, tabelline) e il suo esempio.
+«＋ Ancora le tabelline, con altre scelte» fa una seconda parte della stessa voce (tanta tabellina dell'8, un po' di
+ripasso del 3-6). Le parti sono quelle di `insieme`, fino a `MAX_PARTI`; l'ultima accesa non si spegne.
 
 **Nell'editor si sceglie prima il gioco**, poi quello che sa fare (scelta dell'utente, 20 novembre 2026: al contrario la
 pagina era un elenco di testo). `materieDelGioco(id)` dà le voci del catalogo che il gioco accetta, per materia;
