@@ -25,3 +25,12 @@ export const ora = ms => new Date(ms).toLocaleTimeString('it-IT', { hour: '2-dig
 
 // una riga per blocco: cosa si chiede e quando si passa al blocco dopo
 export const comeSiSvolge = righeDellaLezione
+
+// le iniziali e un colore per ogni nome, sempre lo stesso: i tondi dei bambini nel resoconto, nelle classi e nella diretta
+const COLORI = ['#2b59c3', '#2f9e5f', '#c4572f', '#8a4fc0', '#b8861b', '#1f8a9e', '#c2417a', '#5d6d2e']
+export const iniziali = nome => String(nome ?? '').split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0].toUpperCase()).join('') || '?'
+export function coloreDi(nome) {
+  let h = 0
+  for (const c of String(nome ?? '')) h = (h * 31 + c.codePointAt(0)) >>> 0
+  return COLORI[h % COLORI.length]
+}

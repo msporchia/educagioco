@@ -166,6 +166,20 @@ dopo («Hai finito!», si resta lì fino ad «Avanti tutti», o si ricomincia). 
   niente tooltip).
 - **Quanto è difficile**: tre tasti con tre tacche che si riempiono, e una riga su cosa cambia.
 
+## La pelle
+
+Chiesto dall'utente il 20 novembre 2026 («tutto molto triste e tabellare»). Un'idea sola, in `maestra.css`: **il foglio a
+quadretti** del quaderno di scuola come fondo, e **i colori delle penne** (`--penna` blu per fare, `--corretto` verde,
+`--correzione` rossa, `--evidenziatore` giallo per i codici da scrivere alla lavagna). Il resto resta la pelle pulita di casa.
+
+- **I bambini sono tondi con le iniziali**, ognuno col colore che il suo nome sceglie (`iniziali` e `coloreDi` di
+  `utili.js`): nelle classi, nella diretta, nel resoconto e nello storico.
+- **Il resoconto non è una tabella**: in testa quanti bambini, quante risposte e la percentuale di giuste; i blocchi col
+  disegno del loro gioco; una riga per bambino con una barra verde e rossa per blocco, la percentuale (verde da 80, gialla
+  da 50, rossa sotto) e i suoi sbagli. La tabella c'è ancora, solo in stampa (`.solo-stampa`), ed è quella del CSV.
+- **L'inizio**: come funziona in quattro passi numerati, lezioni e classi come schede (i disegni dei giochi della lezione,
+  le iniziali dei bambini della classe).
+
 ## Il pannello in diretta
 
 - **Dove sta un bambino**: la posizione `dove` che manda (o `'finito'`), almeno il pavimento di «Avanti tutti»
@@ -212,7 +226,7 @@ nel percorso `[data-percorso]`, `[data-passo="anno"|"gioco"|"lezioni"]`, `[data-
 `[data-gioco=<id>]`, `[data-pronta=<id>]`; nella lezione `[data-diretta]`, `[data-linea]`,
 `[data-sala]`, `[data-codice]`, `[data-alunno=<id>]` (con `data-preso` in sala e `data-dove` nel pannello: la
 posizione col pavimento, `finito` o vuoto), `[data-blocco-in-corso]`, `[data-avanti=<pavimento>]`,
-`[data-pannello]`, `[data-messaggio]`; nel resoconto `[data-resoconto]`, `[data-tabella-resoconto]` (una cella `[data-blocco=<i>]` per blocco),
+`[data-pannello]`, `[data-messaggio]`; nel resoconto `[data-resoconto]`, `[data-pagella]` (una riga `[data-alunno=<id>]`, un blocco `[data-blocco=<i>]`), `[data-tabella-resoconto]` (solo in stampa, una cella `[data-blocco=<i>]` per blocco),
 `[data-piu-sbagliate]`, `[data-esito-recupero]`; nello storico `[data-storico-di="classe"|"bambino"]`, `[data-voce]`,
 `[data-sbaglia]`. I tasti: `[data-azione="…"]` con `nuova-classe`, `modifica-classe`, `salva-classe`,
 `cancella-classe`, `storico-classe`, `nuova-lezione`, `preparala-tu`, `modifica-lezione`, `salva-lezione`, `duplica`, `copia-link`,

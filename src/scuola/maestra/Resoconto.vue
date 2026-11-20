@@ -4,8 +4,11 @@ import { ref, computed } from 'vue'
 import { quaderno, salva, voceDi, classeDi } from './stato.js'
 import { recupera } from './diretta.js'
 import * as Q from './quaderno.js'
-import { scarica, giorno, ora, comeSiSvolge } from './utili.js'
+import { scarica, giorno, ora, iniziali, coloreDi } from './utili.js'
 import { descriviBlocco, modoDi, sogliaDi } from '../comune/lezione.js'
+import { giocoDi, GIOCHI, descrivi } from '../comune/esercizi.js'
+import { descriviPassa } from '../comune/lezione.js'
+import { ICONE } from '../comune/icone-giochi.js'
 import Aiuto from './Aiuto.vue'
 
 const props = defineProps({ voce: { type: String, required: true } })
@@ -43,6 +46,19 @@ function csv() {
   scarica(nome, '﻿' + Q.csvResoconto(v.value), 'text/csv;charset=utf-8')
 }
 const fatteGiuste = p => (p.fatte ? `${p.fatte} fatte, ${p.giuste} giuste` : '—')
+
+/* ── a colpo d'occhio: la classe in tre numeri, i blocchi col loro gioco, una riga per bambino con le barre ── */
+const presenti = computed(() => righe.value.filter(r => r.presente))
+const somma = (lista, k) => lista.reduce((n, r) => n + r.blocchi.reduce((m, c) => m + c[k], 0), 0)
+const percento = (g, f) => (f ? Math.round(g / f * 100) : null)
+const classeIntera = computed(() => ({ fatte: somma(presenti.value, 'fatte'), giuste: somma(presenti.value, 'giuste') }))
+const tutte = r => ({ fatte: r.blocchi.reduce((n, c) => n + c.fatte, 0), giuste: r.blocchi.reduce((n, c) => n + c.giuste, 0) })
+// il colore del voto: verde da 80 su cento, giallo da 50, se no rosso
+const tono = p => (p === null ? '' : p >= 80 ? 'alto' : p >= 50 ? 'medio' : 'basso')
+const blocchiVisti = computed(() => blocchi.value.map((b, i) => {
+  const g = GIOCHI.find(x => x.id === giocoDi(b.esercizio))
+  return { i, gioco: g?.nome ?? '', icona: ICONE[g?.id] ?? null, cosa: descrivi(b.esercizio), passa: descriviPassa(b.passa, b.esercizio) }
+}))
 const stampa = () => globalThis.print()
 </script>
 
@@ -51,8 +67,21 @@ const stampa = () => globalThis.print()
   <template v-else>
     <section class="carta" data-resoconto>
       <h1>{{ v.lezione.nome }}</h1>
-      <p>{{ v.nomeClasse }} · {{ giorno(v.avviata) }}, {{ ora(v.avviata) }}</p>
-      <p v-for="(r, i) in comeSiSvolge(v.lezione)" :key="i" class="nota">{{ r }}</p>
+      <p class="quando">{{ v.nomeClasse }}, {{ giorno(v.avviata) }} alle {{ ora(v.avviata) }}</p>
+      <div class="numeri">
+        <span class="numero"><b>{{ presenti.length }}</b> su {{ righe.length }} bambini</span>
+        <span class="numero"><b>{{ classeIntera.fatte }}</b> risposte</span>
+        <span v-if="classeIntera.fatte" class="numero" :class="`tono-${tono(percento(classeIntera.giuste, classeIntera.fatte))}`">
+          <b>{{ percento(classeIntera.giuste, classeIntera.fatte) }}%</b> giuste</span>
+      </div>
+      <ol class="blocchi-lezione">
+        <li v-for="b in blocchiVisti" :key="b.i">
+          <img v-if="b.icona" :src="b.icona.src" alt="" class="ico">
+          <span v-else class="ico foglio" aria-hidden="true">📝</span>
+          <span><span><b>{{ blocchiVisti.length > 1 ? `Blocco ${b.i + 1}` : b.gioco }}</b><template v-if="blocchiVisti.length > 1">, {{ b.gioco }}</template></span>
+            <span class="nota">{{ b.cosa }}, {{ b.passa }}</span></span>
+        </li>
+      </ol>
       <div v-if="viva" class="fila no-stampa">
         <span class="bene">La lezione è ancora in corso: i numeri crescono.</span>
         <button class="bottone chiaro piccolo" @click="emit('vai', 'diretta')">Torna alla lezione</button>
@@ -72,22 +101,43 @@ const stampa = () => globalThis.print()
 
     <section class="carta">
       <h2>Bambino per bambino</h2>
-      <div class="scorre">
+      <ul class="pagella" data-pagella>
+        <li v-for="r in righe" :key="r.id" class="bimbo" :class="{ assente: !r.presente }" :data-alunno="r.id">
+          <span class="iniziali" :style="{ '--colore': r.presente ? coloreDi(r.nome) : 'var(--filo)' }" aria-hidden="true">{{ iniziali(r.nome) }}</span>
+          <span class="chi">
+            <b>{{ r.nome }}</b> <span v-if="r.nuovo" class="etichetta">nuovo</span>
+            <button v-if="r.nuovo && classe && !inClasse(r.id)" class="bottone chiaro piccolo no-stampa" data-azione="aggiungi-alla-classe" @click="aggiungi(r)">Aggiungi alla classe</button>
+          </span>
+          <template v-if="r.presente">
+            <span class="barre">
+              <span v-for="(c, i) in r.blocchi" :key="i" class="blocco-bimbo" :data-blocco="i">
+                <span class="striscia" :title="fatteGiuste(c)">
+                  <span class="si" :style="{ flexGrow: c.giuste }"></span><span class="no" :style="{ flexGrow: c.fatte - c.giuste }"></span>
+                </span>
+                <span class="nota">{{ blocchi.length > 1 ? `${i + 1}: ` : '' }}{{ c.fatte ? `${c.giuste} ${c.giuste === 1 ? 'giusta' : 'giuste'} su ${c.fatte}` : 'niente' }}{{ c.fatte ? sotto(i, c) : '' }}</span>
+              </span>
+            </span>
+            <span class="voto" :class="tono(percento(tutte(r).giuste, tutte(r).fatte))">{{ percento(tutte(r).giuste, tutte(r).fatte) ?? '–' }}<small v-if="tutte(r).fatte">%</small></span>
+            <span v-if="r.sbagliate.length" class="sbagli">
+              <span v-for="(x, i) in r.sbagliate" :key="i" class="sbaglio" title="sbagliata"><b>{{ x.fatto }}</b> fa {{ x.attesa }}<template v-if="x.volte > 1"> ×{{ x.volte }}</template></span>
+            </span>
+          </template>
+          <span v-else class="nota">non c'era</span>
+        </li>
+      </ul>
+
+      <!-- per la stampa e per chi la vuole a tabella: la stessa cosa in righe e colonne -->
+      <div class="scorre solo-stampa">
         <table class="tabella" data-tabella-resoconto>
           <thead><tr><th>Bambino</th>
             <th v-for="(b, i) in blocchi" :key="i" :title="descriviBlocco(b)">{{ blocchi.length > 1 ? `Blocco ${i + 1}` : 'Fatte e giuste' }}</th>
             <th>Sbaglia</th></tr></thead>
           <tbody>
             <tr v-for="r in righe" :key="r.id" :data-alunno="r.id">
-              <td>
-                <b>{{ r.nome }}</b> <span v-if="r.nuovo" class="etichetta">nuovo</span>
-                <div v-if="r.nuovo && classe && !inClasse(r.id)" class="no-stampa">
-                  <button class="bottone chiaro piccolo" data-azione="aggiungi-alla-classe" @click="aggiungi(r)">Aggiungi alla classe</button>
-                </div>
-              </td>
+              <td><b>{{ r.nome }}</b> <span v-if="r.nuovo" class="etichetta">nuovo</span></td>
               <template v-if="r.presente">
                 <td v-for="(c, i) in r.blocchi" :key="i" :data-blocco="i">{{ fatteGiuste(c) }}<span v-if="c.fatte" class="nota">{{ sotto(i, c) }}</span></td>
-                <td><span v-for="(s, i) in r.sbagliate" :key="i" class="sbaglio">{{ s.fatto }} → {{ s.attesa }}<template v-if="s.volte > 1"> ({{ s.volte }})</template></span></td>
+                <td><span v-for="(x, i) in r.sbagliate" :key="i" class="sbaglio-stampa">{{ x.fatto }} → {{ x.attesa }}<template v-if="x.volte > 1"> ({{ x.volte }})</template></span></td>
               </template>
               <td v-else :colspan="r.blocchi.length + 1" class="nota">non c'era</td>
             </tr>
@@ -99,15 +149,56 @@ const stampa = () => globalThis.print()
     <section class="carta" data-piu-sbagliate>
       <h2>Le domande più sbagliate</h2>
       <p v-if="!sbagliate.length" class="nota">Nessuna domanda sbagliata.</p>
-      <ol v-else class="lista">
-        <li v-for="(s, i) in sbagliate" :key="i"><b>{{ s.fatto }}</b> → {{ s.attesa }}
-          <span class="nota">· {{ s.quanti === 1 ? 'un bambino' : `${s.quanti} bambini` }}, {{ s.volte === 1 ? 'una volta' : `${s.volte} volte` }}</span></li>
-      </ol>
+      <ul v-else class="lista">
+        <li v-for="(x, i) in sbagliate" :key="i" class="sbagliata">
+          <span class="conto"><b>{{ x.fatto }}</b><span class="giusto">fa {{ x.attesa }}</span></span>
+          <span class="quanti"><span v-for="n in Math.min(x.quanti, 12)" :key="n" class="tacca"></span>
+            {{ x.quanti === 1 ? 'un bambino' : `${x.quanti} bambini` }}<template v-if="x.volte > x.quanti">, {{ x.volte }} volte</template></span>
+        </li>
+      </ul>
     </section>
   </template>
 </template>
 
 <style scoped>
-.sbaglio { display:block; font-size:13px }
-.lista { padding-left:22px; display:flex; flex-direction:column; gap:4px }
+.quando { color:var(--grigio) }
+.numeri { display:flex; flex-wrap:wrap; gap:8px }
+.numero { padding:6px 12px; border-radius:999px; background:var(--penna-chiara); color:var(--penna); font-size:14px }
+.numero b { font-size:18px }
+.numero.tono-alto { background:var(--corretto-chiaro); color:var(--corretto) }
+.numero.tono-medio { background:#fff6d6; color:#8a6a00 }
+.numero.tono-basso { background:var(--correzione-chiara); color:var(--correzione) }
+.blocchi-lezione { list-style:none; display:flex; flex-direction:column; gap:8px }
+.blocchi-lezione li { display:flex; align-items:center; gap:10px; font-size:14px }
+.blocchi-lezione li > span { display:flex; flex-direction:column }
+.ico { width:36px; height:36px; border-radius:9px; object-fit:cover; flex:none }
+.ico.foglio { display:grid; place-items:center; background:#e9edf3; font-size:20px }
+
+.pagella { list-style:none; display:flex; flex-direction:column }
+.bimbo { display:grid; grid-template-columns:auto minmax(110px, 160px) 1fr auto; align-items:center; gap:6px 14px; padding:12px 0;
+         border-top:1px solid var(--filo) }
+.bimbo:first-child { border-top:0 }
+.bimbo.assente { opacity:.6 }
+.bimbo.assente .nota { grid-column:3 / -1 }
+.chi { display:flex; flex-direction:column; align-items:flex-start; gap:4px }
+.barre { display:flex; flex-wrap:wrap; gap:10px }
+.blocco-bimbo { flex:1 1 140px; display:flex; flex-direction:column; gap:3px }
+.striscia { display:flex; height:12px; border-radius:6px; overflow:hidden; background:var(--tessera); gap:1px }
+.striscia .si { background:var(--corretto) } .striscia .no { background:var(--correzione) }
+.voto { font-size:26px; font-weight:800; min-width:64px; text-align:right; color:var(--grigio); font-variant-numeric:tabular-nums }
+.voto small { font-size:14px; font-weight:600 }
+.voto.alto { color:var(--corretto) } .voto.medio { color:#b8861b } .voto.basso { color:var(--correzione) }
+.sbagli { grid-column:2 / -1; display:flex; flex-wrap:wrap; gap:6px }
+.sbaglio { font-size:13px; padding:2px 8px; border-radius:6px; background:var(--correzione-chiara) }
+.sbaglio b { color:var(--correzione) }
+.sbaglio-stampa { display:block; font-size:13px }
+@media (max-width:640px) { .bimbo { grid-template-columns:auto 1fr auto } .barre { grid-column:1 / -1 } }
+
+.lista { list-style:none; display:flex; flex-direction:column; gap:8px }
+.sbagliata { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 16px; padding:10px 12px;
+             border-radius:var(--raggio-piccolo); background:var(--correzione-chiara) }
+.conto { display:flex; align-items:baseline; gap:10px; font-size:17px }
+.giusto { font-size:14px; color:var(--corretto); font-weight:600 }
+.quanti { display:flex; align-items:center; gap:3px; font-size:13px; color:var(--grigio) }
+.tacca { width:6px; height:16px; border-radius:2px; background:var(--correzione); margin-right:1px }
 </style>

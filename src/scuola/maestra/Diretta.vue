@@ -7,7 +7,7 @@ import { riassuntoVuoto } from './quaderno.js'
 import { posizione, finita, bloccoDi, modoDi, sogliaDi, alleDomande, contaDi } from '../comune/lezione.js'
 import { giocoDi, GIOCHI } from '../comune/esercizi.js'
 import { ICONE } from '../comune/icone-giochi.js'
-import { indirizzoBambini } from './utili.js'
+import { indirizzoBambini, iniziali, coloreDi } from './utili.js'
 import Conferma from './Conferma.vue'
 import CodicePerIPc from './CodicePerIPc.vue'
 import Aiuto from './Aiuto.vue'
@@ -62,7 +62,6 @@ function soglia(a) {
   return Math.min(1, (c.modo === 'giuste' ? c.giuste : c.fatte) / c.soglia)
 }
 const giusteSuFatte = a => { const c = inCorsoDi(a); return c && c.fatte ? c.giuste / c.fatte : null }
-const iniziali = nome => nome.split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0].toUpperCase()).join('')
 const blocchiVisti = computed(() => (lezione.value?.blocchi ?? []).map((b, i) => {
   const g = GIOCHI.find(x => x.id === giocoDi(b.esercizio))
   return { i, nome: g?.nome ?? '', icona: ICONE[g?.id] ?? null, chi: alunni.value.filter(a => qualeBlocco(a) === i) }
@@ -121,7 +120,7 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
 
     <section v-if="inAttesa" class="carta lim" data-sala>
       <p class="invito">Aprite <b class="copiabile">{{ indirizzo }}</b> e scrivete il codice</p>
-      <div class="codice copiabile" data-codice>{{ quaderno.inCorso.codice }}</div>
+      <div class="codice copiabile" data-codice><span class="evidenziato">{{ quaderno.inCorso.codice }}</span></div>
       <ul class="nomi">
         <li v-for="a in alunni" :key="a.id" class="nome" :class="{ preso: a.preso, nuovo: a.nuovo }" :data-alunno="a.id" :data-preso="a.preso">
           <span>{{ a.nome }}</span>
@@ -155,14 +154,14 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
               <span><b>Blocco {{ b.i + 1 }}</b><span class="nota">{{ b.nome }}</span></span>
             </div>
             <div class="gente">
-              <span v-for="a in b.chi" :key="a.id" class="persona" :class="{ spento: !a.collegato }" :title="a.nome">{{ iniziali(a.nome) }}</span>
+              <span v-for="a in b.chi" :key="a.id" class="iniziali" :style="{ '--colore': a.collegato ? coloreDi(a.nome) : 'var(--filo)' }" :title="a.nome">{{ iniziali(a.nome) }}</span>
             </div>
             <span class="quanti">{{ b.chi.length }}</span>
           </div>
           <div class="colonna fine" data-colonna="finito">
             <div class="testa-colonna"><span class="ico bandiera" aria-hidden="true">✓</span><b>Finito</b></div>
             <div class="gente">
-              <span v-for="a in finiti" :key="a.id" class="persona verde" :title="a.nome">{{ iniziali(a.nome) }}</span>
+              <span v-for="a in finiti" :key="a.id" class="iniziali" :style="{ '--colore': coloreDi(a.nome) }" :title="a.nome">{{ iniziali(a.nome) }}</span>
             </div>
             <span class="quanti">{{ finiti.length }}</span>
           </div>
@@ -178,7 +177,7 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
           <div v-if="n > 1" class="pallini" aria-hidden="true">
             <span v-for="(s, i) in pallini(a)" :key="i" class="pallino" :class="s"></span>
           </div>
-          <div v-if="soglia(a) !== null" class="barra" :title="`${Math.round(soglia(a) * 100)}% della soglia`">
+          <div v-if="soglia(a) !== null" class="striscia" :title="`${Math.round(soglia(a) * 100)}% della soglia`">
             <span :style="{ width: `${soglia(a) * 100}%` }"></span>
           </div>
           <div v-if="giusteSuFatte(a) !== null" class="esiti" :title="`${inCorsoDi(a).giuste} giuste su ${inCorsoDi(a).fatte}`">
@@ -273,17 +272,13 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
 .ico { width:32px; height:32px; border-radius:8px; object-fit:cover; flex:none }
 .bandiera { display:grid; place-items:center; background:var(--verde); color:#fff; font-weight:700 }
 .gente { display:flex; flex-wrap:wrap; gap:4px; min-height:30px }
-.persona { width:30px; height:30px; border-radius:50%; display:grid; place-items:center; font-size:11px; font-weight:700;
-         background:var(--accento); color:#fff }
-.persona.spento { background:var(--filo); color:var(--grigio) }
-.persona.verde { background:var(--verde) }
 .quanti { font-size:22px; font-weight:700; color:var(--grigio); align-self:flex-end; line-height:1 }
 .pallini { display:flex; gap:4px }
 .pallino { flex:1; height:8px; border-radius:4px; background:var(--tessera) }
 .pallino.fatto { background:var(--verde) }
 .pallino.qui { background:var(--accento) }
-.barra { height:10px; border-radius:5px; background:var(--tessera); overflow:hidden }
-.barra span { display:block; height:100%; background:var(--accento); border-radius:5px }
+.striscia { height:10px; border-radius:5px; background:var(--tessera); overflow:hidden }
+.striscia span { display:block; height:100%; background:var(--accento); border-radius:5px }
 .esiti { display:flex; height:6px; border-radius:3px; overflow:hidden; gap:1px }
 .esiti .si { background:var(--verde) } .esiti .no { background:var(--rosso) }
 </style>

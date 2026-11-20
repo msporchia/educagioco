@@ -3,7 +3,7 @@
 import { computed } from 'vue'
 import { quaderno, classeDi } from './stato.js'
 import { vociDellaClasse } from './quaderno.js'
-import { giorno } from './utili.js'
+import { giorno, iniziali, coloreDi } from './utili.js'
 
 const props = defineProps({ classe: { type: String, required: true } })
 const emit = defineEmits(['vai', 'indietro'])
@@ -29,7 +29,7 @@ const inCorso = v => quaderno.inCorso?.voce === v.id
     <ul v-else class="elenco">
       <li v-for="v in voci" :key="v.id" :data-voce="v.id">
         <span class="cosa"><b>{{ v.lezione.nome }}</b>
-          <span class="nota">{{ giorno(v.avviata) }} · {{ presenti(v) }} bambini{{ inCorso(v) ? ' · in corso' : '' }}</span></span>
+          <span class="nota">{{ giorno(v.avviata) }}, {{ presenti(v) }} bambini{{ inCorso(v) ? ', in corso' : '' }}</span></span>
         <button class="bottone chiaro piccolo" data-azione="apri-resoconto" @click="emit('vai', 'resoconto', { voce: v.id })">Resoconto</button>
       </li>
     </ul>
@@ -38,8 +38,13 @@ const inCorso = v => quaderno.inCorso?.voce === v.id
   <section v-if="voci.length" class="carta">
     <h2>Bambino per bambino</h2>
     <div class="fila">
-      <button v-for="a in alunni" :key="a.id" class="tessera" :data-alunno="a.id"
-              @click="emit('vai', 'bambino', { classe: props.classe, alunno: a.id })">{{ a.nome }}</button>
+      <button v-for="a in alunni" :key="a.id" class="tessera bimbo" :data-alunno="a.id"
+              @click="emit('vai', 'bambino', { classe: props.classe, alunno: a.id })">
+        <span class="iniziali" :style="{ '--colore': coloreDi(a.nome) }" aria-hidden="true">{{ iniziali(a.nome) }}</span>{{ a.nome }}</button>
     </div>
   </section>
 </template>
+
+<style scoped>
+.bimbo { display:inline-flex; align-items:center; gap:8px; padding:6px 12px 6px 6px; border-radius:999px }
+</style>

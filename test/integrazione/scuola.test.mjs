@@ -107,6 +107,7 @@ await scatto(m, 'scuola-editor')
 await M.tocca('[data-azione="salva-lezione"]')
 await schermata(m, 'inizio')
 uguale('nel quaderno c\'è una lezione', await m.locator('[data-lezioni] [data-lezione]').count(), 1)
+await scatto(m, 'scuola-inizio')
 
 /* ── avvia: il codice si legge dalla sala ── */
 await M.tocca('[data-lezioni] [data-azione="avvia"]')
@@ -192,7 +193,7 @@ const risposte = servizio.lezioni.get(codice).stato.risposte[lorenzo] || []
 stessaLista('il servizio ha le tre risposte di Lorenzo, coi blocchi', risposte.map(r => [r.blocco, r.chiave, r.giusta]),
             [[0, 'tab:prodotto', true], [0, 'tab:prodotto', true], [1, 'tab:prodotto', true]])
 if (nelGioco) controlla('quella del gioco racconta la tabellina del 2', /^2 × \d+$/.test(risposte[2]?.fatto || ''), risposte[2]?.fatto)
-uguale('nella panoramica della classe Lorenzo sta nel blocco 2', await m.locator('[data-panoramica] [data-colonna="1"] .persona').count(), 1)
+uguale('nella panoramica della classe Lorenzo sta nel blocco 2', await m.locator('[data-panoramica] [data-colonna="1"] .iniziali').count(), 1)
 await m.locator('[data-panoramica]').scrollIntoViewIfNeeded()
 await scatto(m, 'scuola-pannello')
 
@@ -246,10 +247,11 @@ await M.tocca('[data-azione="conferma-chiudi"]')
 await schermata(b, 'chiusa')
 controlla('il bambino vede che la lezione è finita', /La lezione è finita/.test(await testo(b, '[data-chiusa]')))
 await schermata(m, 'resoconto')
-const riga = `[data-tabella-resoconto] tr[data-alunno="${lorenzo}"]`
-uguale('nel resoconto, il blocco 1 di Lorenzo', (await testo(m, `${riga} td[data-blocco="0"]`)).trim(), '2 fatte, 2 giuste')
-uguale('e il blocco 2', (await testo(m, `${riga} td[data-blocco="1"]`)).trim(), '1 fatte, 1 giuste')
-controlla('Marta non c\'era', /non c'era/.test(await testo(m, `[data-tabella-resoconto] tr[data-alunno="${marta}"]`)))
+const riga = `[data-pagella] [data-alunno="${lorenzo}"]`
+uguale('nel resoconto, il blocco 1 di Lorenzo', (await testo(m, `${riga} [data-blocco="0"]`)).trim(), '1: 2 giuste su 2')
+uguale('e il blocco 2', (await testo(m, `${riga} [data-blocco="1"]`)).trim(), '2: 1 giusta su 1')
+controlla('Marta non c\'era', /non c'era/.test(await testo(m, `[data-pagella] [data-alunno="${marta}"]`)))
+uguale('e la tabella per la stampa dice lo stesso', await m.locator(`[data-tabella-resoconto] tr[data-alunno="${lorenzo}"] td[data-blocco="0"]`).textContent(), '2 fatte, 2 giuste')
 await scatto(m, 'scuola-resoconto')
 
 /* ── la pagina dei bambini non ha lasciato niente sul PC ── */

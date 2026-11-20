@@ -1,5 +1,21 @@
-/* La pelle della pagina della maestra: quella pulita di casa (docs/core/pelle.md), coi valori di src/style.css */
-.maestra { overflow-y:auto; color:var(--inchiostro) }
+/* La pelle della pagina della maestra: quella pulita di casa (docs/core/pelle.md), coi valori di src/style.css, su un foglio
+   a quadretti come il quaderno di scuola e coi colori delle penne: blu per fare, verde giusto, rosso per correggere, il
+   giallo dell'evidenziatore per i codici. docs/scuola/quaderno.md («La pelle») */
+.maestra { overflow-y:auto; color:var(--inchiostro);
+           --penna:#2b59c3; --penna-chiara:#e8eefc; --corretto:#2f9e5f; --corretto-chiaro:#e3f4ea; --correzione:#d6453d;
+           --correzione-chiara:#fdeceb; --evidenziatore:#ffe36e; --quadretto:#e2e9f5;
+           background-color:#f8faff;
+           background-image:linear-gradient(var(--quadretto) 1px, transparent 1px), linear-gradient(90deg, var(--quadretto) 1px, transparent 1px);
+           background-size:22px 22px; background-attachment:local }
+.maestra h2 { font-size:18px; font-weight:700 }
+/* il codice da scrivere alla lavagna, passato con l'evidenziatore */
+.maestra .evidenziato { background:linear-gradient(transparent 12%, var(--evidenziatore) 12%, var(--evidenziatore) 88%, transparent 88%);
+                        padding:0 .2em; border-radius:3px }
+.maestra .bottone:not(.chiaro):not(.rosso) { background:var(--penna); color:#fff }
+.maestra .bottone.chiaro { color:var(--penna) }
+/* le iniziali di un bambino in un tondo, col colore che il suo nome sceglie (utili.js, coloreDi) */
+.maestra .iniziali { width:32px; height:32px; flex:none; border-radius:50%; display:grid; place-items:center; font-size:12px;
+                     font-weight:700; color:#fff; background:var(--colore, var(--penna)) }
 .maestra .pagina { width:100%; max-width:calc(var(--colonna) * 2.4); margin:0 auto; padding:16px;
                    display:flex; flex-direction:column; gap:16px }
 .maestra .carta { background:var(--superficie); border-radius:var(--raggio); box-shadow:var(--ombra);
@@ -21,7 +37,7 @@
 .maestra label { display:flex; flex-direction:column; gap:6px; font-size:14px; font-weight:600 }
 .maestra .tessera { padding:8px 12px; border-radius:var(--raggio-piccolo); background:var(--tessera); color:var(--inchiostro);
                     font:inherit; font-size:14px; border:1px solid transparent }
-.maestra .tessera.scelta { background:var(--inchiostro); color:var(--superficie) }
+.maestra .tessera.scelta { background:var(--penna); color:#fff }
 .maestra .tessera:disabled { opacity:.4 }
 .maestra .elenco { list-style:none; display:flex; flex-direction:column; gap:10px }
 .maestra .elenco > li { display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center; justify-content:space-between;
@@ -38,9 +54,12 @@
 .maestra .tabella td { padding:8px; border-bottom:1px solid var(--filo); vertical-align:top }
 .maestra .scorre { overflow-x:auto }
 
+.maestra .solo-stampa { display:none }
+
 @media print {
   html, body, #app { height:auto; overflow:visible; background:#fff }
-  .maestra { position:static; overflow:visible; background:#fff }
+  .maestra { position:static; overflow:visible; background:#fff; background-image:none }
+  .maestra .solo-stampa { display:block !important }
   .maestra .carta { box-shadow:none; padding:0 }
   .maestra .no-stampa { display:none !important }
   .maestra .pagina { max-width:none; padding:0 }
