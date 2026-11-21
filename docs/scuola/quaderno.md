@@ -161,9 +161,11 @@ dopo («Hai finito!», si resta lì fino ad «Avanti tutti», o si ricomincia). 
   gioco sa fare. La spiegazione della voce c'è solo quando c'era da scegliere.
 - **La domanda vera** per ogni voce accesa (`Esempio.vue`): a destra delle sue scelte, nella scheda che vedono i bambini
   (`quiz/Domanda.vue`, con le figure), pescata come la pescherà il gioco; ci si può rispondere, e «Un'altra» ne pesca una
-  nuova. Provato un riassunto a parole: le risposte disegnate diventavano «(una figura)». I giochi col contenuto loro hanno le scelte come **righe** (`Righe.vue`) col
-  caso concreto scritto sotto (cosa chiede, cosa fa il bambino), non tessere col nome solo: «il banco» o «l'unità grande»
-  non dicevano niente.
+  nuova. Provato un riassunto a parole: le risposte disegnate diventavano «(una figura)». I giochi col contenuto loro hanno le scelte come **schede in griglia** (`Righe.vue`):
+  l'anteprima in alto (dove c'è), il nome, il caso concreto scritto sotto (cosa chiede, cosa fa il bambino) e in fondo
+  **▶ Prova**, che apre la pagina dei bambini con quel gradino o capitolo solo (`provaEsercizio` di `utili.js`): per
+  capirne la difficoltà giocandolo. Prima erano righe a tutta larghezza col nome solo, poi con l'anteprima a destra: lo
+  spazio si sprecava.
 - **Una lezione nasce di un blocco, e senza scelte fatte**: nessun gioco, nessuna domanda (`NIENTE` di `esercizi.js`, che
   non è valido e non si salva; la lezione dice «scegli il gioco», poi «scegli cosa si chiede»). Va finché la maestra la
   chiude («Si gioca finché non chiudi la lezione»): niente «quando si passa» né «in tondo». «＋ Aggiungi un blocco dopo»

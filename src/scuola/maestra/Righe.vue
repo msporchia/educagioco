@@ -1,47 +1,51 @@
 <script setup>
-// Le scelte di un gioco (gradini, capitoli, tappe) come righe con la spiegazione scritta sotto, non come tessere col nome solo:
-// «il banco» o «l'unità grande» da soli non dicono niente. docs/scuola/quaderno.md
+// Le scelte di un gioco (gradini, capitoli, personaggi) come schede in griglia: l'anteprima in alto, il nome, la spiegazione
+// scritta («il banco» o «l'unità grande» da soli non dicono niente) e in fondo quello che il gioco aggiunge (▶ Prova, i livelli).
+// Toccare la scheda la accende o la spegne. docs/scuola/quaderno.md
 const props = defineProps({
   voci: { type: Array, required: true },        // [{ chiave, nome, icona?, quanti?, testo }]
   scelte: { type: Array, required: true },      // le chiavi accese
   attributo: { type: String, required: true },  // il bersaglio dei test: data-<attributo>="<chiave>"
   una: { type: Boolean, default: false },       // se ne sceglie una sola (il pallino al posto della spunta)
+  larghe: { type: Array, default: () => [] },   // le chiavi la cui scheda prende tutta la riga (i livelli aperti)
 })
 const emit = defineEmits(['tocca'])
 </script>
 
 <template>
   <div class="righe">
-    <div v-for="v in props.voci" :key="v.chiave" class="voce">
-    <button class="riga" :class="{ scelta: props.scelte.includes(v.chiave) }"
-            :aria-pressed="props.scelte.includes(v.chiave)" v-bind="{ [`data-${props.attributo}`]: v.chiave }" @click="emit('tocca', v.chiave)">
-      <span class="segno" :class="{ tondo: props.una }" aria-hidden="true">{{ props.scelte.includes(v.chiave) ? (props.una ? '●' : '✓') : '' }}</span>
-      <span class="corpo">
-        <span class="nome"><span v-if="v.icona" class="icona">{{ v.icona }}</span>{{ v.nome }}<span v-if="v.quanti" class="quanti">{{ v.quanti }}</span></span>
+    <div v-for="v in props.voci" :key="v.chiave" class="voce" :class="{ scelta: props.scelte.includes(v.chiave), larga: props.larghe.includes(v.chiave) }">
+      <button class="riga" :aria-pressed="props.scelte.includes(v.chiave)" v-bind="{ [`data-${props.attributo}`]: v.chiave }" @click="emit('tocca', v.chiave)">
+        <span v-if="$slots.figura" class="figura"><slot name="figura" :voce="v" /></span>
+        <span class="testa">
+          <span class="segno" :class="{ tondo: props.una }" aria-hidden="true">{{ props.scelte.includes(v.chiave) ? (props.una ? '●' : '✓') : '' }}</span>
+          <span class="nome"><span v-if="v.icona" class="icona">{{ v.icona }}</span>{{ v.nome }}</span>
+          <span v-if="v.quanti" class="quanti">{{ v.quanti }}</span>
+        </span>
         <span v-if="v.testo" class="testo">{{ v.testo }}</span>
-      </span>
-      <!-- un disegno accanto (l'anteprima di un livello) e, sotto la riga, quello che il gioco vuole aggiungere -->
-      <span v-if="$slots.figura" class="figura"><slot name="figura" :voce="v" /></span>
-    </button>
-    <slot name="sotto" :voce="v" />
+      </button>
+      <div v-if="$slots.sotto" class="piede"><slot name="sotto" :voce="v" /></div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.righe { display:flex; flex-direction:column; gap:6px }
-.voce { display:flex; flex-direction:column; gap:4px }
-.figura { margin-left:auto; flex:none; padding-left:8px }
-.riga { display:flex; align-items:flex-start; justify-content:flex-start; gap:10px; width:100%; padding:10px 12px; text-align:left; font:inherit; color:var(--inchiostro);
-        background:var(--tessera); border:2px solid transparent; border-radius:var(--raggio-piccolo); cursor:pointer }
-.riga.scelta { background:var(--superficie); border-color:var(--inchiostro) }
-.segno { flex:none; width:20px; height:20px; margin-top:1px; display:grid; place-items:center; font-size:13px; font-weight:700;
+.righe { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:10px }
+.voce { display:flex; flex-direction:column; border-radius:var(--raggio); background:var(--tessera); border:2px solid transparent; overflow:hidden }
+.voce.scelta { background:var(--superficie); border-color:var(--penna, var(--inchiostro)) }
+.voce.larga { grid-column:1 / -1 }
+.riga { flex:1; display:flex; flex-direction:column; align-items:stretch; gap:6px; width:100%; padding:10px 12px; text-align:left;
+        font:inherit; color:var(--inchiostro); background:none; border:0; cursor:pointer }
+.figura { display:flex; justify-content:center; align-items:center; min-height:96px; padding:6px; border-radius:var(--raggio-piccolo); background:#00000008 }
+.figura :deep(svg) { max-height:150px; width:auto }
+.testa { display:flex; align-items:center; gap:8px; flex-wrap:wrap }
+.segno { flex:none; width:20px; height:20px; display:grid; place-items:center; font-size:13px; font-weight:700;
          border:2px solid var(--filo); border-radius:5px; background:var(--superficie) }
 .segno.tondo { border-radius:50% }
-.scelta .segno { border-color:var(--inchiostro); background:var(--inchiostro); color:var(--superficie) }
-.corpo { display:flex; flex-direction:column; gap:2px; min-width:0 }
-.nome { font-size:15px; font-weight:600 }
+.scelta .segno { border-color:var(--penna, var(--inchiostro)); background:var(--penna, var(--inchiostro)); color:#fff }
+.nome { font-size:15px; font-weight:700 }
 .icona { margin-right:6px }
-.quanti { font-weight:400; color:var(--grigio); font-size:13px; margin-left:6px }
+.quanti { font-size:12px; color:var(--grigio) }
 .testo { font-size:13px; color:var(--grigio); line-height:1.4 }
+.piede { display:flex; flex-direction:column; gap:8px; padding:0 12px 10px }
 </style>

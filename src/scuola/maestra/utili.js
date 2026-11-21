@@ -40,3 +40,6 @@ export function provaLezione(l) {
   const pagina = new URL('./index.html', globalThis.location?.href || 'http://localhost/').href
   globalThis.open?.(linkDiProva(l, pagina), '_blank')
 }
+// ▶ Prova di una scelta sola (un gradino, un capitolo): una lezione di un blocco con quell'esercizio, nella pagina dei bambini
+export const provaEsercizio = (esercizio, nome = 'Prova') =>
+  provaLezione({ id: 'prova', nome, blocchi: [{ esercizio, passa: null }], inTondo: false })

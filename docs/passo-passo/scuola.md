@@ -31,7 +31,8 @@ si storpia: si limita da fuori. Chi lo monta è la vista della scuola (`src/scuo
 - **Ogni riga ha l'anteprima** del primo livello (`MiniMappa.vue`): la mappa vera di `dati/campagna.js` a quadretti, coi
   colori dei terreni e le emoji delle cose; non è il gioco dipinto ma è quel livello. «Guarda i N livelli» li apre tutti,
   ognuno col suo `racconto` (chiesto dall'utente: senza figure i gradini non si capivano). Per questo `Parametri.vue`
-  importa la campagna e le strade, la scheda no.
+  importa la campagna e le strade, la scheda no. Le righe sono schede in griglia, e ognuna ha **▶ Prova** (il personaggio
+  col suo primo gradino, o quel gradino): apre la pagina dei bambini con quei livelli, per giocarli e capirne la difficoltà.
 
 ## Il gioco col limite
 

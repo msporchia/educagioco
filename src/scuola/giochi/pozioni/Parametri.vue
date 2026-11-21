@@ -3,6 +3,7 @@
 import { computed } from 'vue'
 import { FAMIGLIE_POZIONI, GRADINI_POZIONI, quanteTappe } from './scheda.js'
 import Righe from '../../maestra/Righe.vue'
+import { provaEsercizio } from '../../maestra/utili.js'
 
 const props = defineProps({ modelValue: { type: Object, required: true } })
 const emit = defineEmits(['update:modelValue'])
@@ -40,7 +41,12 @@ function gradino(chiave) {
       <span class="titoletto">Cosa si chiede</span>
       <p class="nota">In ogni tappa una ricetta: per ogni dose il bambino compra dal mercante le ampolle giuste, spendendo poco.</p>
       <Righe :voci="GRADINI_POZIONI.map((g, n) => ({ chiave: g.chiave, nome: `${n + 1}. ${g.nome}`, testo: g.spiega }))" :scelte="e.gradini"
-             attributo="gradino" @tocca="gradino" />
+             attributo="gradino" @tocca="gradino">
+        <template #sotto="{ voce }">
+          <button class="prova" :data-prova-di="voce.chiave"
+                  @click="provaEsercizio({ tipo: 'pozioni', famiglie: e.famiglie, gradini: [voce.chiave] }, voce.nome)">▶ Prova</button>
+        </template>
+      </Righe>
       <p class="nota">{{ tappe }} {{ tappe === 1 ? 'tappa' : 'tappe' }} in fila, dalla più facile; finite, si ricomincia.</p>
     </div>
   </div>
@@ -52,4 +58,5 @@ function gradino(chiave) {
 .gruppo { display:flex; flex-direction:column; gap:6px }
 .titoletto { font-size:14px; font-weight:600 }
 .quanti { font-weight:400; opacity:.7; margin:0 4px }
+.prova { align-self:flex-start; padding:6px 14px; border-radius:999px; border:0; background:var(--penna); color:#fff; font:inherit; font-size:13px; font-weight:700; cursor:pointer }
 </style>
