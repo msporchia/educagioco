@@ -51,4 +51,6 @@ const riferisci = r => emit('risposta', r)
 /* il gioco è un `.schermo` assoluto: sta nella colonna, centrata su uno schermo largo */
 .pozioni { position: relative; flex: 1; min-height: 0; display: flex; justify-content: center; background: #150f22 }
 .colonna { position: relative; flex: 1; max-width: 720px; overflow: hidden }
+/* su un PC il banco si stende, con la pergamena in colonna a sinistra: docs/pozioni/schermo-largo.md */
+@media (min-width: 900px) and (min-aspect-ratio: 5 / 4) { .colonna { max-width: 1280px } }
 </style>

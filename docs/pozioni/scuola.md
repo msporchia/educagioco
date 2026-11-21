@@ -71,6 +71,9 @@ si disegna **senza antialias e a un pixel per punto** (`leggera` di `creaBottega
 la fascia non si legge: un telefono in fascia bassa ha il banco di sempre. Se il banco non si disegna, subito o perso
 dopo, compare «riprova» (`[data-senza-3d]`): la vista lo vede e manda `guasto`, e il bambino chiama la maestra.
 
+Sul PC la colonna della vista si allarga fino a 1280 pixel, come per il sotterraneo, e il banco si stende con la carta in
+colonna a sinistra: [schermo-largo.md](schermo-largo.md).
+
 ## L'evento `risposta`
 
 **Ogni dose è una risposta** (`risposteDellOrdine`): si decide all'ordine, come le monete, e si dice quando il mercante
