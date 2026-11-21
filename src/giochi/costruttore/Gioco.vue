@@ -20,8 +20,8 @@ import * as mod from './motore/modifica.js'
 import { fraseDi } from './motore/esecutore.js'
 import { conAttrezzi } from './motore/attrezzi.js'
 import { righeDi, righeScritte, impronta } from './motore/zaino.js'
-import { guida, guidaScheda } from './motore/guida.js'
-import { usaGuida } from '../guida.js'
+import { guida, guidaScheda, guidaDelLivello } from './motore/guida.js'
+import { usaGuidaRichiamata } from '../guida.js'
 import Guida from '../Guida.vue'
 import { Regia, quadroFermo } from './regia.js'
 import { filaDelLimite, dopo, scalaDelLimite, raccontaEsecuzione } from './motore/limite.js'
@@ -240,8 +240,20 @@ function annulla() {
 const zaino = computed(() => (liv.value && liv.value.zaino) || null)
 const righe = computed(() => (prog.value ? righeScritte(prog.value) : 0))
 // la guida accompagna un livello che la chiede finché non è vinto (motore/guida.js)
+// quella richiamata col ? (e a scuola, da sé al primo livello della pagina, con la ✕) vale su ogni livello: docs/core/come-si-gioca.md
 const radice = ref(null)
-const passoGuida = computed(() => {
+const guidaRich = usaGuidaRichiamata({ prima: !!fila, saltabile: !!fila })
+const passoRichiamato = computed(() => {
+  if (!guidaRich.accesa.value || vista.value === 'mappa' || !liv.value || !prog.value) return null
+  const q = { righe: prog.value.principale, cassetta: foglio.value === 'cassetta', scegliendo: !!aperta_.value, problemi: problemi.value.size > 0,
+              inCorso: !!stato.inCorso, provato: provato.value !== null, cambiato: provato.value !== JSON.stringify(prog.value.principale) }
+  const vinto = guidaRich.fatto('vinto')
+  // il livello che ha la sua guida (il primo muretto) la usa, finché ha qualcosa da dire
+  return (liv.value.guida && !vinto && guida({ ...q, mancano: mancano.value })) || guidaDelLivello({ ...q, vinto })
+})
+// a scuola la guida è solo quella che si salta con la ✕
+const passoGuida = computed(() => passoRichiamato.value || (fila ? null : passoPrimoGiro.value))
+const passoPrimoGiro = computed(() => {
   if (vista.value === 'mappa')
     return LIVELLI[0].guida && adesso(CHIAVE, 0) ? guidaScheda({ primoVinto: stelleDi(CHIAVE, 0) > 0, aperto: fumettoMappa.value }) : null
   const l = liv.value
@@ -250,7 +262,7 @@ const passoGuida = computed(() => {
                  problemi: problemi.value.size > 0, inCorso: !!stato.inCorso, provato: provato.value !== null,
                  cambiato: provato.value !== JSON.stringify(prog.value.principale), mancano: mancano.value })
 })
-usaGuida(radice, passoGuida)
+guidaRich.segui(radice, passoGuida)
 function troppoPerLoZaino(quante) {
   if (!zaino.value || quante <= zaino.value) return false
   messaggio.value = { tipo: 'errore', testo: fraseZainoPieno() }
@@ -582,6 +594,7 @@ function fine(esito) {
 function vittoria() {
   const i = idx.value
   const l = liv.value
+  guidaRich.segna('vinto')
   // con `limite` niente monete, stelle né tappa: il cartello e avanti
   if (fila) {
     finale.value = { titolo: l.nome, stelle: null, ordini: l.ordini.map(o => o.nome), daCapo: dopo(fila, i).daCapo }
@@ -671,7 +684,7 @@ const progettoAperto = computed(() =>
 
 <template>
   <div class="schermo">
-    <Barra :titolo="titolo" guida="costruttore" monete @indietro="indietro" />
+    <Barra :titolo="titolo" guida="costruttore" monete :come="vista !== 'mappa'" @come="guidaRich.alterna()" @indietro="indietro" />
 
     <!-- `cst-largo`: mentre si gioca, su uno schermo largo e orizzontale programma e mondo si affiancano (stile.css) -->
     <div ref="radice" class="cst" :class="{ 'cst-largo': vista !== 'mappa' }">
@@ -699,7 +712,7 @@ const progettoAperto = computed(() =>
                    @via="via" @stop="stop" @velocita="cambiaVelocita" @aiuto="apriAiuti"
                    @nuova-lavagnetta="nuovaLavagnetta(null)" />
           <p v-if="messaggio" class="cst-messaggio" :class="'cst-' + messaggio.tipo" data-messaggio>{{ messaggio.testo }}</p>
-          <Guida :passo="passoGuida" />
+          <Guida :passo="passoGuida" :spegnibile="guidaRich.spegnibile.value" @spegni="guidaRich.spegni()" />
         </div>
         <Editor :programma="prog" :livello="liv" :tab="tabMostrato" :sel="sel" :aperta="aperta_"
                 :accesa="stato.inCorso ? stato.riga : null" :guasto="stato.guasto" :problemi="problemi"

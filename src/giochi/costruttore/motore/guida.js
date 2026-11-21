@@ -38,3 +38,17 @@ export function guida({ righe = [], cassetta = false, scegliendo = false, proble
   if (mancano) return { dove: BERSAGLI.aggiungi, testo: 'Il robot ha fatto solo quello che c\'era scritto, e il muretto non è finito: aggiungi ancora «metti» e «vai», poi riprova ▶.' }
   return null
 }
+
+// la guida richiamata col ? (docs/core/come-si-gioca.md): lo stesso giro su qualunque livello, finché non è vinto
+export const CASSETTA = '[data-cassetta] [data-blocco]'
+export function guidaDelLivello({ vinto = false, righe = [], cassetta = false, scegliendo = false, problemi = false,
+                                  inCorso = false, provato = false, cambiato = false }) {
+  if (vinto) return { dove: null, fine: true, testo: 'Così si gioca: scrivi le righe, poi ▶ Via. Il robot fa solo quello che c\'è scritto.' }
+  if (inCorso) return null
+  if (cassetta) return { dove: CASSETTA, testo: 'Scegli cosa fa il robot: la riga va nel programma.' }
+  if (scegliendo) return { dove: null, testo: 'Scegli qui sotto, poi vai avanti.' }
+  if (!righe.length) return { dove: BERSAGLI.aggiungi, testo: 'Tocca «＋ aggiungi» qui sotto, e scegli cosa fa il robot.' }
+  if (problemi) return { dove: null, testo: 'Tocca la casella che lampeggia, e scegli.' }
+  if (!provato || cambiato) return { dove: BERSAGLI.via, testo: 'Premi ▶ Via: il robot fa le righe una dopo l\'altra.' }
+  return { dove: BERSAGLI.aggiungi, testo: 'Non è finito: guarda dove si è fermato, cambia le righe e riprova ▶.' }
+}

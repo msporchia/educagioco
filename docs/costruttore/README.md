@@ -21,7 +21,7 @@ toccava ogni import, test e rimando.
 - [livelli.md](livelli.md) — come si scrive un livello: i campi, le cinque regole, l'ordine dei capitoli
 - [scuola.md](scuola.md) — il Robot a scuola: la maestra sceglie i capitoli, la fila che ricomincia, gli aiuti gratis, la risposta di ogni ▶
 
-Vedi anche: [../core/aiuti.md](../core/aiuti.md) (la scala a monete comune),
+Vedi anche: [../core/come-si-gioca.md](../core/come-si-gioca.md) (la guida «Come si gioca», col `?` e a scuola), [../core/aiuti.md](../core/aiuti.md) (la scala a monete comune),
 [../core/amici-nei-giochi.md](../core/amici-nei-giochi.md) (gli amici sulla scheda),
 [../passo-passo/](../passo-passo/README.md) (il gioco che viene prima),
 [../generale.md](../generale.md) (sequenze ed eventi).
