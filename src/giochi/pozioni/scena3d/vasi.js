@@ -190,12 +190,13 @@ export function creaVasi(scena, trame) {
     if (v.pila && (d.pezzi || []).length !== v.pezzi) impila(v, d.pezzi || [])
   }
 
+  let stesa = 1                    // lo schermo largo li allontana, a misura uguale (indice.js)
   function disponi() {
     const qui = [...vasi.values()].filter(v => !v.esce), n = qui.length
     // pochi strumenti stanno larghi e crescono: si leggono meglio
     const passo = Math.min(1.7, LARGO / Math.max(1, n)), scala = Math.min(1.2, passo / 1.2)
     qui.forEach((v, i) => {
-      v.casa.x = (i - (n - 1) / 2) * passo
+      v.casa.x = (i - (n - 1) / 2) * passo * stesa
       v.scala = scala
       if (v.nuovo) { v.gruppo.position.x = v.casa.x; v.nuovo = false }
     })
@@ -227,6 +228,7 @@ export function creaVasi(scena, trame) {
 
   return {
     imposta, aggiorna,
+    stendi(f) { stesa = f; disponi() },
     vaso: i => vasi.get(i),
     colpibili: () => [...vasi.values()].map(x => x.colpo),
     trattieni(i, si) { const x = vasi.get(i); if (!x) return; x.trattenuto = si; if (!si) applica(x) },

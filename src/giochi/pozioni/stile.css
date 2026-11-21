@@ -208,3 +208,20 @@
 .pz-mercante[data-fase="procedimento"] .pz-cartello { order: 1 }
 .pz-mercante[data-fase="procedimento"] .pz-vuoto-tela { order: 2 }
 .pz-infinita { margin-top: 12px; width: 100% }
+
+/* lo schermo largo (un PC, un tablet in orizzontale): la carta sta in una colonna a sinistra, pergamena, cartello,
+   rotolo e borsa, e la tela prende tutto il resto. `--pz-colonna` la legge anche la scena 3D, che centra il banco
+   a destra della colonna e lo stende (scena3d/indice.js). docs/pozioni/schermo-largo.md */
+@media (min-width: 900px) and (min-aspect-ratio: 5 / 4) {
+  .pz-mercante { --pz-colonna: 320px; display: grid; grid-template-columns: var(--pz-colonna) minmax(0, 1fr);
+                 grid-template-rows: minmax(0, 1fr) auto }
+  .pz-scena { display: contents }
+  .pz-tela { grid-area: 1 / 1 / -1 / -1; width: 100%; height: 100% }
+  .pz-strati { position: relative; inset: auto; grid-area: 1 / 1; max-width: none; margin: 6px 0 0 10px; min-height: 0 }
+  .pz-piede { grid-area: 2 / 1; position: relative; max-width: none; margin: 0; padding-left: 15px; padding-right: 5px }
+  .pz-mercante::before { content: ''; grid-area: 1 / 1 / -1 / 2; position: relative; pointer-events: none;
+                         background: linear-gradient(90deg, #150f22cc, #150f2299 85%, transparent) }
+}
+@media (min-width: 1200px) and (min-aspect-ratio: 5 / 4) {
+  .pz-mercante { --pz-colonna: 380px }
+}

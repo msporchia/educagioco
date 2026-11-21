@@ -250,7 +250,7 @@ export function creaAttrezzi(scena, { morbido, lamiera, polvere }) {
   ciotolino.userData.presa.scale.setScalar(0.7)
 
   const tutti = { mortaio, pestello, tagliere, coltello, mestolo, fiammifero, bacchetta, brocca, grattugia, ciotolino, sale, pepe, fiala }
-  let quali = []
+  let quali = [], stesa = 1      // lo schermo largo li allontana dal calderone, a misura uguale (indice.js)
 
   // quello che si è misurato arriva com'era sulla bilancia o nel cilindro: `vuota` lo fa calare mentre si versa
   function nelRecipiente(tipo, colore) {
@@ -289,7 +289,7 @@ export function creaAttrezzi(scena, { morbido, lamiera, polvere }) {
     targa.scale.set(targhe, targhe * 0.32, 1); targa.position.set(0, 0.2, dentro ? 0.66 : 0.42)   // una ciotola è bassa: la coprirebbe
     g.add(targa)
     trame.push(nomeT)
-    attrezzo(`roba:${i}`, g, (posto - (quanti - 1) / 2) * passo, POSTI.bancoY, 0, POSTI.bancoZ - 0.55)
+    attrezzo(`roba:${i}`, g, (posto - (quanti - 1) / 2) * passo * stesa, POSTI.bancoY, 0, POSTI.bancoZ - 0.55)
     g.userData.targa = targa
     if (dentro) Object.assign(g.userData, { vuota: dentro.vuota, bocca: dentro.bocca.clone().multiplyScalar(dentro.corpo.scale.x) })
     return g
@@ -298,6 +298,17 @@ export function creaAttrezzi(scena, { morbido, lamiera, polvere }) {
   return {
     ...tutti,
     cosa: id => tutti[id],
+    // tutto si allontana in x dal calderone, anche quello spostato col dito; il mestolo segue il suo gancio (banco.js)
+    stendi(f) {
+      const k = f / stesa
+      stesa = f
+      for (const [id, a] of Object.entries(tutti)) {
+        const casa = a.userData.casa, fermo = a.position.distanceTo(casa) < 1e-3
+        casa.x = id === 'mestolo' ? POSTI.gancio.x * f - 0.22 : casa.x * k
+        if (fermo) a.position.x = casa.x
+      }
+      portaBacchetta.position.x *= k
+    },
     // `q`: { visibili, quali: gli attrezzi di questa tappa, pestato e tagliere: colore o null, grumi: nel mortaio c'è roba intera, macinato e tagliato: già lavorati,
     //       fiala: il colore, a pozione finita, roba: [{ i, nome, foto, posto }], quanti }
     imposta(q) {

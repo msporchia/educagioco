@@ -28,7 +28,7 @@ function radice(l) {
 export function creaAmpolle(scena, trame) {
   const g = new Group()
   scena.add(g)
-  let posti = []
+  let posti = [], stesa = 1      // lo schermo largo le allontana (indice.js)
 
   const vetro = new MeshStandardMaterial({ color: 0xe6f4ff, transparent: true, opacity: 0.28, roughness: 0.05,
                                            depthWrite: false, side: DoubleSide })
@@ -84,7 +84,7 @@ export function creaAmpolle(scena, trame) {
     cartello.position.y = alto + 0.5
     const gruppo = new Group()
     gruppo.add(corpo, cartello)
-    const casa = new Vector3((k - (n - 1) / 2) * PASSO, POSTI.bancoY, POSTI.bancoZ)
+    const casa = new Vector3((k - (n - 1) / 2) * PASSO * stesa, POSTI.bancoY, POSTI.bancoZ)
     gruppo.position.copy(casa)
     gruppo.scale.setScalar(0.001)
     g.add(gruppo)
@@ -114,6 +114,7 @@ export function creaAmpolle(scena, trame) {
   const sgombra = () => { for (const a of posti) if (a) butta(a); posti = [] }
   return {
     aggiorna, sgombra,
+    stendi(f) { stesa = f },
     // le ampolle dell'ordine compaiono sul bancone: `voci` [{ testo, colore, famiglia }]
     consegna(voci) { sgombra(); posti = voci.map((d, k) => costruisci(d, k, voci.length)) },
     // la si prende dal bancone per versarla

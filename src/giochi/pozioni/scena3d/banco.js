@@ -251,5 +251,7 @@ export function creaBanco(scena, trame) {
     scia: () => (brodo.visible && fuoco > 0.2 ? modo.scia : null),
     riflesso,
     luceFuoco,
+    // lo schermo largo stende il banco (indice.js): il bancone del mercante si allunga, il gancio del mestolo si sposta
+    stendi(f) { banco.scale.x = f; bordo.scale.x = f; gancio.position.x = POSTI.gancio.x * f },
   }
 }

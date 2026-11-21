@@ -208,7 +208,8 @@ versata, se no il risultato si legge prima di vederlo.
 - **Lo sporco sta attorno alla base**: davanti lo coprirebbero le targhette.
 - **La telecamera** inquadra tutta la larghezza, e sposta la mira finché il
   bordo basso cade sul bordo del bancone: in piedi avanza muro sopra, dove sta
-  la pergamena.
+  la pergamena. Sullo schermo largo la carta va in colonna e il banco si stende:
+  [schermo-largo.md](schermo-largo.md).
 - **Pergamena e rotolo** sono carta vecchia in CSS coi due rulli di legno,
   le targhette cartoncini col buco per lo spago (`stile.css`). Prima in codice:
   dipingerli viene dopo.

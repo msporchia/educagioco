@@ -22,6 +22,7 @@ import * as T from './trame.js'
 const FOV = 46
 const SOGLIA = 16               // sotto, un dito è ancora fermo (docs/core/il-dito.md)
 const LARGO = 6.9, PROFONDO = 7.4
+const STESA = [1.4, 1.6]        // sullo schermo largo il banco si stende in x fra tanto e tanto (docs/pozioni/schermo-largo.md)
 const DAVANTI = 3.2            // il bordo del bancone: in fondo allo schermo, mai più su
 const VERSO = new Vector3(0, 0.6, 0.8).normalize()
 const FERMO_SU = 1.3            // s con l'attrezzo a bersaglio senza fare niente: arriva il suggerimento
@@ -76,6 +77,14 @@ function costruisci(renderer, canvas, { tocca, lascia, comincia, suggerisce, dpr
   const aspetta = s => anima(s, () => {})
   const liscio = x => x * x * (3 - 2 * x)
 
+  // lo schermo largo stende il banco: le cose si allontanano in x dal calderone, a misura uguale
+  let stesa = 1
+  function stendi(f) {
+    for (const [, m] of eff.macchie) m.position.x *= f / stesa
+    stesa = f
+    banco.stendi(f); vasi.stendi(f); ampolle.stendi(f); attrezzi.stendi(f)
+  }
+
   /* ── la telecamera: tutto il banco dentro, in piedi o coricato ── */
   let W = 1, H = 1, dpr = fisso || Math.min(2, window.devicePixelRatio || 1)
   function misura() {
@@ -84,8 +93,16 @@ function costruisci(renderer, canvas, { tocca, lascia, comincia, suggerisce, dpr
     renderer.setPixelRatio(dpr)
     renderer.setSize(W, H, false)
     camera.aspect = W / H
+    // sullo schermo largo la pergamena sta in una colonna a sinistra (`--pz-colonna`, stile.css): il banco si centra
+    // nel resto e si stende quanto ci sta alla profondità di sempre, ma almeno del minimo, e se non basta si guarda
+    // un po' più da lontano. Sul telefono la colonna non c'è e niente cambia
+    const colonna = Math.min(W / 2, parseFloat(getComputedStyle(canvas).getPropertyValue('--pz-colonna')) || 0)
+    const largo = (W - colonna) / H
+    const f = colonna ? Math.max(STESA[0], Math.min(STESA[1], PROFONDO * largo / LARGO)) : 1
+    if (f !== stesa) stendi(f)
+    if (colonna) camera.setViewOffset(W, H, -colonna / 2, 0, W, H); else camera.clearViewOffset()
     const t = Math.tan(FOV * Math.PI / 360)
-    const d = Math.max(LARGO / 2 / (t * camera.aspect), PROFONDO / 2 / t)
+    const d = Math.max(LARGO * stesa / 2 / (t * largo), PROFONDO / 2 / t)
     // si sposta la mira finché il bordo basso dello schermo cade sul bordo del bancone:
     // in piedi avanza muro sopra (lì c'è la pergamena), mai tavolo vuoto sotto
     const mira = new Vector3(0, 0.55, 0.25), giu = new Vector3()
@@ -158,7 +175,7 @@ function costruisci(renderer, canvas, { tocca, lascia, comincia, suggerisce, dpr
     piano.constant = -casa.y
     mira(x, y)
     if (!raggio.ray.intersectPlane(piano, qui)) return
-    casa.x = Math.max(-2.7, Math.min(2.7, qui.x))
+    casa.x = Math.max(-2.7 * stesa, Math.min(2.7 * stesa, qui.x))
     casa.z = Math.max(Math.min(-0.9, casa.z), Math.min(2.5, qui.z))   // chi sta in fondo può restarci
   }
 
