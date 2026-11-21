@@ -126,18 +126,21 @@ controlla('la pausa non finisce nel tempo di risposta',
           t > 0 && t < 6000, `${Math.round(t)} ms per ${colpito}`)
 nota(`otto secondi fermo e l'SRS ha segnato ${Math.round(t)} ms`)
 
-/* ---------- 5. col foglio del ? aperto il cielo aspetta ----------
-   Il `?` non è una pausa e non mostra il velo — è già un foglio sopra il
-   gioco, e due veli uno sull'altro sono un gioco rotto — ma ferma la
-   partita lo stesso: leggere come si gioca non deve costare le vite
-   della partita che si sta giocando. */
+/* ---------- 5. col foglio del testo aperto il cielo aspetta ----------
+   Il `?` accende la guida «Come si gioca», e il foglio del testo sta dietro
+   il 📖 della sua riga (docs/core/come-si-gioca.md). Il foglio non è una
+   pausa e non mostra il velo — è già sopra il gioco, e due veli uno
+   sull'altro sono un gioco rotto — ma ferma la partita lo stesso: leggere
+   come si gioca non deve costare le vite della partita che si sta giocando. */
 await bottoni('aiuto').click()
+await page.locator('[data-guida-regole]').click({ timeout: 5000 })
 await page.waitForSelector('[data-azione="chiudi-aiuto"]', { timeout: 5000 })
 uguale('il ? non mette un secondo velo', await veli(), 0)
 const letti = await cielo()
 await attendi(page, 1200)
 uguale('ma il cielo aspetta lo stesso', await cielo(), letti)
 await page.locator('[data-azione="chiudi-aiuto"]').click()
+await page.locator('[data-guida-spegni]').click()   // la guida richiamata si spegne: il resto della prova non la cerca
 await attendi(page, 500)
 controlla('e chiuso il foglio si riparte', await cielo() !== letti)
 

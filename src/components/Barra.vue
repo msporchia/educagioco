@@ -1,10 +1,11 @@
 <script setup>
 // La barra in cima, uguale ovunque: vedi docs/core/interfaccia.md.
-import { ref, computed } from 'vue'
+import { ref, computed, watch, watchEffect, onUnmounted } from 'vue'
 import { state, accendiSuono } from '../store/profile.js'
 import { suono } from '../audio.js'
 import { aiutoDi } from '../guide/contenuti.js'
 import VeloAiuto from '../guide/VeloAiuto.vue'
+import { regole } from '../giochi/guida.js'
 
 const props = defineProps({
   titolo: { type: String, default: '' },
@@ -20,6 +21,11 @@ const emit = defineEmits(['indietro', 'aiuto', 'pausa', 'come'])
 const aiuto = computed(() => aiutoDi(props.guida))
 const apertoAiuto = ref(false)
 function mostraAiuto (v) { apertoAiuto.value = v; emit('aiuto', v) }
+// con `come` il foglio sta in fondo alla guida, dietro il «📖 tutte le regole» (docs/core/come-si-gioca.md)
+const io = Symbol('barra')
+watchEffect(() => { if (props.come && aiuto.value) regole.di.add(io); else regole.di.delete(io) })
+watch(() => regole.chiesto, () => { if (props.come && aiuto.value) mostraAiuto(true) })
+onUnmounted(() => { regole.di.delete(io) })
 </script>
 
 <template>

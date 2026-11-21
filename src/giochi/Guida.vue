@@ -1,4 +1,5 @@
 <script setup>
+import { regole } from './guida.js'
 // La riga della guida, una per tutti i giochi. Contratto in giochi/guida.js, regole in docs/core/guida.md
 // e, per la ✕ e il passo finale della guida richiamata, docs/core/come-si-gioca.md.
 defineProps({
@@ -13,6 +14,9 @@ defineEmits(['spegni'])
     <span v-if="passo.fine" class="gd-fatto" aria-hidden="true">✓</span>
     <span v-else class="gd-dito" aria-hidden="true">👇</span>
     <span>{{ passo.testo }}</span>
+    <!-- il foglio del testo (solo a casa, se il gioco ce l'ha): sulla riga finale, e su ogni riga di una guida richiamata col ? -->
+    <button v-if="regole.di.size && (passo.fine || spegnibile)" type="button" class="gd-regole" data-guida-regole
+            aria-label="tutte le regole" @click.stop="regole.chiesto++">📖<span v-if="passo.fine"> tutte le regole</span></button>
     <button v-if="spegnibile" type="button" class="gd-spegni" data-guida-spegni aria-label="basta guida"
             @click.stop="$emit('spegni')">✕</button>
   </p>
@@ -25,6 +29,8 @@ defineEmits(['spegni'])
 .gd-riga > span:nth-child(2) { flex: 1; min-width: 0 }
 .gd-dito { flex: none; font-size: 15px; animation: gd-dito 1.2s ease-in-out infinite }
 @keyframes gd-dito { 50% { transform: translateY(3px) } }
+.gd-regole { flex: none; min-height: 32px; margin: -4px 0; padding: 2px 8px; border: 0; border-radius: 8px; background: #f3c64a66;
+              color: #4a3600; font: inherit; font-weight: 800; white-space: nowrap }
 .gd-fatto { flex: none; font-size: 17px; font-weight: 900; color: #2f8a3a }
 /* grande per il dito anche se il segno è piccolo: il riquadro tocca i bordi della riga */
 .gd-spegni { flex: none; width: 36px; height: 36px; margin: -6px -6px -6px 0; border: 0; border-radius: 9px;

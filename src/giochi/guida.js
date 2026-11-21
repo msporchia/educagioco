@@ -29,6 +29,11 @@ export function usaGuida(radice, passo) {
   onUnmounted(() => { osserva?.disconnect(); for (const e of accesi) e.removeAttribute('data-indicato') })
 }
 
+/* il «📖 tutte le regole» (docs/core/come-si-gioca.md): ogni barra di casa che ha il foglio del testo si mette in `di` (un insieme:
+   due barre si montano e si smontano in un ordine qualunque) e lo apre quando la riga lo chiede (`chiesto` sale); la barra della
+   scuola non lo tocca, e lì il 📖 non c'è */
+export const regole = reactive({ di: new Set(), chiesto: 0 })
+
 /* La guida che si richiama col `?` (docs/core/come-si-gioca.md): accesa da sé al primo giro (`prima`) o dal `?`.
    `saltabile`: la ✕ anche sul primo giro (a scuola). `finita()` si chiama una volta per accensione, quando si spegne.
    Le mosse fatte (`segna`/`fatto`) contano da quando è accesa, così richiamata a metà partita fa fare una mossa vera. */
