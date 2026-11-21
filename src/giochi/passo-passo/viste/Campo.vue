@@ -71,6 +71,7 @@ const inParole = v => (v === CASA ? 'fino a casa' : VERSI[v] ? `se ${VERSI[v].no
 /* l'ordine dei tasti: sinistra, su, giù, destra — le due frecce verticali
    in mezzo, come sulla tastiera di un computer */
 const ORDINE = ['sinistra', 'su', 'giu', 'destra']
+const FRECCE = { sinistra: '←', su: '↑', giu: '↓', destra: '→' }   // il tasto scritto sul pulsante (a scuola)
 
 /* la tastiera fa quello che fanno i pulsanti, con gli stessi divieti (docs/passo-passo/regole.md, «La tastiera») */
 const libero = () => !props.inCorsa && !props.piena
@@ -119,6 +120,7 @@ defineExpose({ tela })
                   :data-freccia="v" :aria-label="nomeDellaMossa(v)"
                   :disabled="inCorsa || piena" @click="emit('freccia', v)">
             <Icona :mossa="v" />
+            <TastoTastiera class="pp-tasto-tastiera" :nome="FRECCE[v]" />
           </button>
         </div>
         <div v-if="salti" class="pp-riga">
@@ -127,7 +129,7 @@ defineExpose({ tela })
                   :data-salto="v" :aria-label="nomeDellaMossa('salto-' + v)"
                   :disabled="inCorsa || piena" @click="emit('freccia', 'salto-' + v)">
             <Icona :mossa="'salto-' + v" />
-            <TastoTastiera class="pp-tasto-tastiera" nome="⇧" />
+            <TastoTastiera class="pp-tasto-tastiera" :nome="`⇧${FRECCE[v]}`" />
           </button>
         </div>
         <div v-if="conRipeti || conSe || attacca" class="pp-riga pp-carte"

@@ -312,6 +312,9 @@ controlla('in localStorage solo chiavi scuola:*', disco.chiavi.every(k => k.star
     const [mappa, tasti] = await Promise.all(['.pp-scena', '.pp-tasti'].map(s => P.page.locator(s).boundingBox()))
     controlla('sullo schermo largo la mappa sta a destra dei tasti', tasti.x + tasti.width <= mappa.x, JSON.stringify({ mappa, tasti }))
   }
+  controlla('a scuola i tasti si vedono subito, prima di premerne uno: anche sulle frecce',
+            await P.page.locator('[data-freccia="destra"] [data-tasto-tastiera]').isVisible()
+            && (await P.page.locator('[data-freccia="destra"] [data-tasto-tastiera]').innerText()) === '→')
   await scatto(P.page, 'scuola-passo-largo')
   await P.page.keyboard.press('ArrowRight')
   await P.page.keyboard.press('ArrowDown')

@@ -13,9 +13,11 @@ dito. Il codice comune è `src/giochi/tastiera.js` (`usaTasti`) e
 - **Un tasto fa quello che fa un pulsante**, con gli stessi divieti: un
   pulsante spento non si preme nemmeno dalla tastiera. Niente comandi che
   esistono solo da tastiera.
-- **Il tasto si vede accanto al pulsante solo dove c'è una tastiera**: con
-  un mouse (`hover: hover` e `pointer: fine`, i PC) da subito; su un tablet
-  o una LIM solo dopo il primo tasto premuto davvero.
+- **Ogni pulsante dice il suo tasto, sempre**: un tastino disegnato
+  nell'angolo (`TastoTastiera`), anche sulle frecce (←) e sui salti (⇧→).
+  A scuola i PC hanno la tastiera, quindi non si indovina: provato a
+  mostrarli solo con un mouse (`pointer: fine`), e su un portatile con lo
+  schermo touch e nelle prove non comparivano.
 - **Un tasto tenuto giù non si ripete**: un passo per pressione, come un
   tocco. Ctrl, Alt e ⌘ restano del browser; dentro un campo di testo i tasti
   sono del campo.

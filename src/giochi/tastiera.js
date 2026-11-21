@@ -3,9 +3,9 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { ACCESA } from './tastiera-accesa.js'
 
-// con un mouse (i PC della scuola) i tasti si vedono subito; su un tablet solo dopo il primo tasto premuto davvero
-const conMouse = typeof matchMedia === 'function' && matchMedia('(hover: hover) and (pointer: fine)').matches
-export const conTastiera = ref(ACCESA && conMouse)
+// a scuola i tasti si vedono sempre: i PC hanno la tastiera, e un PC con lo schermo touch si crede un tablet (provato a
+// guardare il mouse, `pointer: fine`: sui portatili touch e nelle prove i tasti non comparivano)
+export const conTastiera = ref(ACCESA)
 
 const scrivibile = el => !!el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))
 

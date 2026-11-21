@@ -12,7 +12,7 @@ defineProps({ nome: { type: String, required: true } })   // quello che c'è scr
 
 <style scoped>
 /* chiaro con l'orlo in basso, come un tasto vero: si legge su ogni fondo */
-.tasto-tastiera { display:inline-grid; place-items:center; min-width:22px; height:22px; padding:0 5px; box-sizing:border-box;
-                  font:700 14px/1 "Emoji Gioco", system-ui, sans-serif; color:#2a2f3a; background:#f6f7fb; border:1px solid #0000002e;
+.tasto-tastiera { display:inline-grid; place-items:center; min-width:26px; height:26px; padding:0 6px; box-sizing:border-box;
+                  font:700 17px/1 "Emoji Gioco", system-ui, sans-serif; color:#2a2f3a; background:#f6f7fb; border:1px solid #0000002e;
                   border-bottom-width:3px; border-radius:5px; pointer-events:none; white-space:nowrap }
 </style>
