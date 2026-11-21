@@ -1,7 +1,11 @@
 <script setup>
 /* LA BANCARELLA — la cucina: le ordinazioni, il cuoco, la cassa. Vedi docs/bancarella/cucina.md. */
 import { ref, shallowRef, markRaw, reactive, computed, watch, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
-import { state, answer, segna, segnaBest } from '../store/profile.js'
+import { state, answer, segna, segnaBest, guidaGiaVista, segnaGuidaVista } from '../store/profile.js'
+import { usaGuidaRichiamata } from '../giochi/guida.js'
+import Guida from '../giochi/Guida.vue'
+import { saltaLeSpiegazioni } from '../giochi/spiegazioni.js'
+import { guidaDellaCucina } from '../motore/bancarella/guida.js'
 import { tappaApertaQui } from '../data/portata-giochi.js'
 import { nuovoOrdine, tappaDi, scomponi, euro, centesimiScritti, scriviCifra, premioCliente, ORDINI_PER_TAPPA } from '../data/bancarella.js'
 import { CUCINE, RICETTE, ricetteDi, bancoPulito, orologio, campInDue } from '../data/bancarella-cucine.js'
@@ -67,6 +71,21 @@ const esito = ref('')               // vinta | persa | tempo
 const cucina = ref(cucinaNuova())   // la stanza, il cuoco, i piatti
 const cucineAperte = /[#&](aperte|livello)=/.test(location.hash)   // la prova dei grandi
 const ricettaAperta = ref('')       // il piatto di cui si legge la ricetta: intanto il tempo si ferma
+
+/* la guida «Come si gioca» (motore/bancarella/guida.js, docs/core/come-si-gioca.md): una ricetta letta, un piatto servito e il
+   resto, alla prima partita della vita (a scuola della pagina, con la ✕); il `?` la richiama. Il tempo corre come sempre: si
+   ferma solo con la ricetta aperta */
+const radice = ref(null)
+const guida = usaGuidaRichiamata({
+  prima: !!giro || (!saltaLeSpiegazioni() && !guidaGiaVista(CHIAVE)),
+  saltabile: !!giro,
+  finita: () => { if (!giro) segnaGuidaVista(CHIAVE) },
+})
+const passoGuida = computed(() => (guida.accesa.value && fase.value === 'gioco' && !due.value
+  ? guidaDellaCucina({ cassa: momento.value === 'cassa', ricetta: !!ricettaAperta.value, letta: guida.fatto('ricetta'),
+                       mosso: guida.fatto('tocca'), servito: guida.fatto('servito') })
+  : null))
+guida.segui(radice, passoGuida)
 const dettoCuoco = ref(null)        // il perché di un tocco a vuoto
 const frasePrimato = ref('')        // alla fine della cucina senza fine: com'è andata col record
 
@@ -189,6 +208,7 @@ function tappaFinita() {
 const mancaA = o => o.articoli.map(a => a.emoji).filter(e => !o.fatti.includes(e))
 const toccaStanza = d => {
   if (due.value) return mossaDue(d)
+  guida.segna('tocca')
   return d.id ? tocca(cucina.value, d.id) : vaiA(cucina.value, d.x, d.z)
 }
 
@@ -446,6 +466,7 @@ function salta() {
 
 function consegna() {
   occupato = true
+  guida.segna('servito')
   const c = cliente.value
   const perfetto = piatto.value.length === c.minimo
   answer(c.chiave, { correct: rifiuti === 0, ms: performance.now() - apertoIl })
@@ -612,12 +633,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="schermo negozio">
+  <div ref="radice" class="schermo negozio">
     <!-- niente salvadanaio in barra: qui si maneggiano euro, e lo spazio serve ai cuori -->
     <!-- in partita il titolo cede il posto ai cuori: con le ordinazioni che scadono servono -->
     <Barra :titolo="fase === 'gioco' ? '' : 'La cucina'" guida="bancarella" :monete="fase !== 'gioco'"
            :pausa="fase === 'gioco' && !state.festa.length && !due" @pausa="mettiInPausa()"
-           @aiuto="leggeLaGuida" @indietro="indietro">
+           :come="fase === 'gioco' && !due" @come="guida.alterna()" @aiuto="leggeLaGuida" @indietro="indietro">
       <template v-if="fase === 'gioco'">
         <div v-if="camp.durata" class="gettone" :class="{ poco: hud.resta < 30 }" data-resta>⏱️ <b>{{ orologio(hud.resta) }}</b></div>
         <div v-else class="gettone">{{ '❤️'.repeat(Math.max(0, hud.cuori)) || '💔' }}</div>
@@ -646,7 +667,8 @@ onBeforeUnmount(() => {
 
     <template v-else-if="fase === 'gioco'">
       <Ordini :ordini="ordini" :tappa="due ? '' : camp.infinita ? 'giro ' + (T.i + 1) : (T.i + 1) + '/' + camp.tappe" :prenota="!!due"
-              @ricetta="e => (ricettaAperta = e)" @prenota="id => mandaDue(['prenota', id])" />
+              @ricetta="e => { ricettaAperta = e; guida.segna('ricetta') }" @prenota="id => mandaDue(['prenota', id])" />
+      <Guida class="guida-cucina" :passo="passoGuida" :spegnibile="guida.spegnibile.value" @spegni="guida.spegni()" />
 
       <div class="banco">
         <Ricetta v-if="ricettaAperta" :ricetta="cucina.ricette.find(r => r.emoji === ricettaAperta)" @chiudi="ricettaAperta = ''" />
@@ -780,6 +802,8 @@ onBeforeUnmount(() => {
 
 /* la stanza, e sopra il foglio del resto */
 .banco { flex:1; min-height:0; display:flex; flex-direction:column; position:relative; overflow:hidden; background:#3f3128 }
+/* la riga della guida «Come si gioca» (docs/core/come-si-gioca.md): fra le ordinazioni e la cucina */
+.guida-cucina { margin:4px 8px }
 .cassa { position:absolute; left:0; right:0; bottom:0; top:min(120px,18%); z-index:20; display:flex; flex-direction:column; gap:7px;
          padding:10px 8px calc(8px + env(safe-area-inset-bottom)); border-radius:18px 18px 0 0;
          background-color:#a9713c; background-image:repeating-linear-gradient(179deg,#ffffff0f 0 2px,#00000000 2px 34px,#00000026 34px 36px);
