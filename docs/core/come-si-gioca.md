@@ -65,6 +65,10 @@ const guida = usaGuidaRichiamata({ prima, saltabile: aScuola, finita: () => segn
 const passoGuida = computed(() => guida.accesa.value ? guidaDiArena(quadro()) : null)
 guida.segui(radice, passoGuida)   // usaGuida, e lo spegnersi dopo il passo finale
 ```
+
+**La trappola**: `segui` legge il passo subito, nel setup. Se la guida nasce accesa (a scuola) e il passo legge una variabile
+dichiarata più in basso nel componente, il gioco non parte («chiama la maestra»): il blocco della guida va dopo tutto quello
+che legge. Così si era rotto English a scuola; a casa non si vede, perché lì la guida nasce spenta.
 ```html
 <Barra :come="sulCampo" @come="guida.alterna()" … />
 <Guida :passo="passoGuida" :spegnibile="guida.spegnibile.value" @spegni="guida.spegni()" />
@@ -115,6 +119,19 @@ altri. Ognuno ha la sua funzione pura dei passi; le stesse regole del pilota.
 |---|---|---|
 | Castle Battle | `giochi/arena/motore/guida.js` | una caserma costruita e una potenziata (sopra) |
 | Asteroidi | `motore/asteroidi/guida.js` | un sasso giusto colpito: l'anello sulla domanda, il segno giallo della tastiera (`q.indica` in `grafica/spazio3d/sassi.js`) attorno a **tutti** i sassi, mai al solo giusto (la guida non dice la risposta). Il cielo si ferma quando il giusto è sceso a un terzo dello schermo (`QUOTA_GUIDA`): fermo da subito, non arriverebbe mai. Dopo uno sbagliato lo dice |
+| Passo passo | `guidaDelLivello` in `passo-passo/motore/guida.js` | su qualunque livello: le frecce (l'anello su tutte, senza manine), ▶, togli quella che fa sbattere, finché arriva alla tana. Il primo prato di casa resta quello di prima, a manine e senza riga; la riga c'è solo con la ✕ |
+| Il Robot | `guidaDelLivello` in `costruttore/motore/guida.js` | «＋ aggiungi», la cassetta, ▶ Via, finché il livello è vinto; il primo muretto usa la sua guida finché ha qualcosa da dire |
+| Il sotterraneo | `sotterraneo/motore/guida.js` | giù: camminare, una cosa aperta con una domanda, un colpo con ⚔️. Il pavimento è nel 3D: solo la riga, l'anello su ⚔️. Prende il posto dei promemoria delle missioni mentre parla, e divide l'anello col segno dei pensieri (la guida prima) |
+| Survivors | `survivors/motore/guida.js` | muoversi, le gemme, una carta pagata. Il campo non si ferma: muoversi e prendere gemme vogliono il tempo |
+| Le pozioni | `pozioni/motore/guida.js` | le ampolle (le targhette, o «Dal mercante» se il rotolo è chiuso: indica quello che c'è), «Ordina», pulire se trabocca, fino alla ricetta |
+| La cucina | `motore/bancarella/guida.js` | una ricetta letta (l'anello sui piatti delle ordinazioni), il cuoco che si muove, un piatto servito e il resto. Il tempo corre come sempre (si ferma solo con la ricetta aperta) |
+| English | `inglese/motore/guida.js` | una risposta: la pagina del concetto («Ho capito»), le opzioni o le tessere e «Fatto ✓» |
+| Il castello | `passoRichiamato` in `views/TowerDefense.vue` | una torre vera e «Comincia la battaglia». A casa la riga dei primi passi resta com'era (una volta, senza ✕); a scuola la sostituisce questa |
+
+**I giochi con un testo in `AIUTI`** (tutti questi tranne Castle Battle) hanno il «📖 tutte le regole» sulla riga:
+`regole` in `giochi/guida.js`: ogni barra di casa con `come` e una voce in `AIUTI` si mette in `regole.di` (un insieme,
+perché due barre dello stesso gioco si montano e si smontano in un ordine qualunque) e ascolta `chiesto`. Sta sulla riga finale e su ogni riga della guida richiamata col `?`: arrivare in fondo alla guida per
+leggere il foglio sarebbe troppo per un grande che vuole solo le regole. A scuola la barra non lo riempie e il 📖 non c'è.
 
 Da fare dopo, non a scuola: Codice Segreto, Conta, Prima e dopo, il giardino, la fattoria
 (ha già il primo giro), Español.
@@ -125,5 +142,5 @@ Da fare dopo, non a scuola: Codice Segreto, Conta, Prima e dopo, il giardino, la
 (`="fine"` sulla riga finale), `[data-indicato]`, `[data-guida-spegni]` (la ✕). Castle Battle:
 `unita/arena-guida` (i passi dal quadro), `integrazione/arena-guida` (il giro col dito a casa);
 la scuola in `integrazione/scuola`. Asteroidi: `[data-domanda-nave]`, `unita/asteroidi-guida`,
-`integrazione/asteroidi-guida`. Gli altri giochi: `unita/<gioco>-guida`, e il giro a scuola in
-`integrazione/scuola`.
+`integrazione/asteroidi-guida`. Gli altri giochi: `unita/guide-richiamate` (i passi dal quadro), e a scuola
+`integrazione/scuola` (`guidaDaSe`: parte da sé, la ✕, il `?`, per ogni gioco). Il 📖: `[data-guida-regole]`.

@@ -34,6 +34,22 @@ const browser = await apriBrowser({ file: resolve(CARTELLA, 'index.html') })
 const veri = errori => errori.filter(e => !/WebSocket|ERR_|Failed to load resource/.test(e))
 
 /* una pagina in un contesto suo (i due PC non si dividono localStorage né IndexedDB), col servizio locale */
+/* la guida «Come si gioca» (docs/core/come-si-gioca.md): a scuola parte da sé, si salta con la ✕, il `?` della barra la riaccende;
+   alla fine la si lascia spenta, perché il resto della prova non la trovi in mezzo */
+async function guidaDaSe(page, nome) {
+  await page.waitForSelector('[data-guida-riga]', { timeout: 8000 }).catch(() => {})
+  controlla(`${nome}: la guida parte da sé, con la ✕`, await page.locator('[data-guida-spegni]').count() === 1)
+  await page.locator('[data-guida-spegni]').click().catch(() => {})
+  await page.waitForSelector('[data-guida-riga]', { state: 'detached', timeout: 2000 }).catch(() => {})
+  controlla(`${nome}: la ✕ la salta`, await page.locator('[data-guida-riga]').count() === 0)
+  await page.locator('[data-azione="aiuto"]').click().catch(() => {})
+  await page.waitForSelector('[data-guida-riga]', { timeout: 2000 }).catch(() => {})
+  controlla(`${nome}: il ? della barra la riaccende`, await page.locator('[data-guida-riga]').count() === 1)
+  await scatto(page, 'scuola-guida-' + nome.replace(/\W+/g, '-'))
+  await page.locator('[data-guida-spegni]').click().catch(() => {})
+  await page.waitForSelector('[data-guida-riga]', { state: 'detached', timeout: 2000 }).catch(() => {})
+}
+
 async function apri(file) {
   const page = await browser.newPage({ viewport: SCRIVANIA, hasTouch: true })
   const errori = []
@@ -197,6 +213,9 @@ if (nelGioco) {
 }
 if (nelGioco) {
   controlla('il gioco ha il cielo in 3D', await b.evaluate(() => window.__mate.grafica?.()?.tre === true))
+  // la guida «Come si gioca» parte da sé (con la ✕) e parla dei tasti; resta accesa: le frecce e Invio funzionano lo stesso
+  controlla('negli Asteroidi la guida parte da sé, con la ✕, e dice frecce e Invio',
+            await b.locator('[data-guida-spegni]').count() === 1 && /Invio/.test(await b.locator('[data-guida-riga]').innerText().catch(() => '')))
   await scatto(b, 'scuola-asteroidi')
   // a scuola la tastiera comanda (docs/asteroidi/grafica-3d.md, «La tastiera»): ← → fino al giusto, e Invio
   // le frecce scelgono fra i sassi già in vista: si aspetta che il giusto sia sceso nello schermo
@@ -307,6 +326,7 @@ controlla('in localStorage solo chiavi scuola:*', disco.chiavi.every(k => k.star
   await P.page.reload()
   await P.page.waitForSelector('.pp-campo [data-freccia="destra"]', { timeout: 15000 })
   await attendi(P.page, 400)
+  await guidaDaSe(P.page, 'Passo passo')
   {
     // su un PC fila e tasti a sinistra, la mappa a destra (docs/passo-passo/scuola.md, «Lo schermo largo»)
     const [mappa, tasti] = await Promise.all(['.pp-scena', '.pp-tasti'].map(s => P.page.locator(s).boundingBox()))
@@ -348,6 +368,7 @@ controlla('in localStorage solo chiavi scuola:*', disco.chiavi.every(k => k.star
   await R.page.reload()
   await R.page.waitForSelector('.cst-editor', { timeout: 15000 })
   await attendi(R.page, 400)
+  await guidaDaSe(R.page, 'il Robot')
   const [editor, mondo] = await Promise.all(['.cst-editor', '.cst-sopra'].map(s => R.page.locator(s).boundingBox()))
   controlla('sullo schermo largo il programma sta a sinistra del mondo', editor.x + editor.width <= mondo.x, JSON.stringify({ editor, mondo }))
   await scatto(R.page, 'scuola-robot-largo')
@@ -364,17 +385,30 @@ controlla('in localStorage solo chiavi scuola:*', disco.chiavi.every(k => k.star
   await C.page.waitForSelector('[data-gioco="castle-battle"] canvas', { timeout: 15000 })
   controlla('Castle Battle parte nella tappa scelta, senza mappa', /Il ponte di pietra/.test(await C.page.locator('[data-gioco="castle-battle"]').innerText()))
   await scatto(C.page, 'scuola-castle-battle')
-  // la guida «Come si gioca» (docs/core/come-si-gioca.md): a scuola parte da sé, si salta con la ✕, il `?` la riaccende
-  await C.page.waitForSelector('[data-gioco="castle-battle"] [data-guida-riga]', { timeout: 8000 }).catch(() => {})
-  controlla('a scuola la guida di Castle Battle parte da sé, con la ✕', await C.page.locator('[data-guida-spegni]').count() === 1)
-  await C.page.locator('[data-guida-spegni]').click().catch(() => {})
-  await C.page.waitForSelector('[data-guida-riga]', { state: 'detached', timeout: 2000 }).catch(() => {})
-  controlla('la ✕ la salta', await C.page.locator('[data-guida-riga]').count() === 0)
-  await C.page.locator('[data-gioco="castle-battle"] [data-azione="aiuto"]').click().catch(() => {})
-  await C.page.waitForSelector('[data-guida-riga]', { timeout: 2000 }).catch(() => {})
-  controlla('il ? della barra della scuola la riaccende', await C.page.locator('[data-guida-riga]').count() === 1)
+  await guidaDaSe(C.page, 'Castle Battle')
   controlla('nessun errore nella prova di Castle Battle', veri(C.errori).length === 0, veri(C.errori).join(' | '))
   await C.page.close()
+}
+
+/* ── la guida «Come si gioca» negli altri giochi della scuola, ognuno da una prova: parte da sé, la ✕, il ? (docs/core/come-si-gioca.md) ── */
+const CON_LA_GUIDA = [
+  ['survivors', { tipo: 'tabelline', tabelline: [2], modo: 'prodotto', gioco: 'survivors' }],
+  ['sotterraneo', { tipo: 'tabelline', tabelline: [2], modo: 'prodotto', gioco: 'sotterraneo' },
+   async page => { await page.locator('.sot-eroe[data-eroe]').first().click({ timeout: 20000 }).catch(() => {}) }],
+  ['pozioni', { tipo: 'pozioni', famiglie: ['massa'], gradini: ['banco', 'grande', 'grandi'] }],
+  ['cucina', { tipo: 'cucina', da: 1, a: 6 }],
+  ['inglese', { tipo: 'inglese', isola: 'prima', tappe: ['prima-colori'] }],
+  ['castello', { tipo: 'castello', tappa: 'bosco/Il sentiero' }],
+]
+for (const [gioco, esercizio, prima] of CON_LA_GUIDA) {
+  const G = await apri('index.html')
+  await G.page.goto(linkDiProva({ id: 'prova', nome: 'Prova', inTondo: false, blocchi: [{ esercizio, passa: null }] }, G.page.url()))
+  await G.page.reload()
+  await G.page.waitForSelector(`[data-gioco="${gioco}"]`, { timeout: 15000 }).catch(() => {})
+  if (prima) await prima(G.page)
+  await guidaDaSe(G.page, gioco)
+  controlla(`nessun errore nella prova di ${gioco}`, veri(G.errori).length === 0, veri(G.errori).join(' | '))
+  await G.page.close()
 }
 
 controlla('nessun errore nella pagina della maestra', veri(M.errori).length === 0, veri(M.errori).join(' | '))
