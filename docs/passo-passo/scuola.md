@@ -76,11 +76,12 @@ sul tasto, e la stella 🧠 resta sempre accesa.
 
 ## Lo schermo largo
 
-Sui PC (più largo di 900 pixel e orizzontale) la fila e i tasti stanno a sinistra, la mappa a destra con tutta l'altezza:
-si legge da sinistra a destra, si scrive e poi si vede cosa fa (scelta dell'utente). In colonna una mappa alta (sette
-per nove) restava piccola, così è una volta e mezza più larga. Lo accende la vista della
-scuola con la classe `pp-schermo-largo` (in `stile.css`); a casa si gioca in verticale sul telefono. Una mappa bassa
-(sette per tre) cresce poco o niente: la tela ingrandisce a multipli interi, e ci stava già.
+Su uno schermo largo e orizzontale (da 900 pixel: un PC a scuola, ma anche un tablet in orizzontale a casa, scelta
+dell'utente) la fila e i tasti stanno a sinistra, la mappa a destra con tutta l'altezza: si legge da sinistra a destra, si
+scrive e poi si vede cosa fa. In colonna una mappa alta (sette per nove) restava piccola, così è una volta e mezza più
+larga. Il telefono resta in verticale. Lo fa `stile.css` con una media query; `pp-largo` sul contenitore c'è solo mentre
+si gioca, così la mappa delle isole non si stira. Una mappa bassa (sette per tre) cresce poco o niente: la tela ingrandisce
+a multipli interi, e ci stava già. L'app installata parte bloccata in verticale (il manifest): lì non scatta.
 
 Nei test: `integrazione/scuola` (la mappa a destra dei tasti, `scuola-passo-largo` con `--scatti`).
 

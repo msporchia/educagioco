@@ -506,16 +506,16 @@
   .pp-tasto.pp-ripeti { height: 40px }
 }
 
-/* ═══════════ a scuola, su un PC: il programma a sinistra, la mappa a destra ═══════════
-   Lo accende la vista della scuola (`.pp-schermo-largo`, docs/passo-passo/scuola.md): a casa si gioca in verticale sul
-   telefono. Su uno schermo largo e basso la colonna lasciava alla mappa un francobollo: qui la mappa prende tutta l'altezza.
-   Si legge da sinistra a destra (scelta dell'utente): a sinistra si scrive, la fila (più alta: più righe a vista) e sotto i
-   tasti; a destra si vede cosa fa */
+/* ═══════════ su uno schermo largo: il programma a sinistra, la mappa a destra ═══════════
+   Un PC o un tablet in orizzontale (docs/passo-passo/scuola.md, «Lo schermo largo»); il telefono resta in verticale. In
+   colonna, su uno schermo largo e basso, la mappa restava un francobollo: qui prende tutta l'altezza. Si legge da sinistra a
+   destra (scelta dell'utente): a sinistra si scrive, la fila (più alta: più righe a vista) e sotto i tasti; a destra si vede
+   cosa fa. `pp-largo` c'è solo mentre si gioca: la mappa delle isole non si stira */
 @media (min-width: 900px) and (min-aspect-ratio: 5 / 4) {
-  .pp-schermo-largo .pp { max-width: 1240px }
-  .pp-schermo-largo .pp-campo { display: grid; grid-template-columns: minmax(380px, 440px) minmax(0, 1fr);
-                                grid-template-rows: minmax(0, 1fr) auto; column-gap: 22px; row-gap: 12px; padding: 12px 20px 16px }
-  .pp-schermo-largo .pp-scena { grid-column: 2; grid-row: 1 / span 2; min-height: 0 }
-  .pp-schermo-largo .pp-fila { grid-column: 1; grid-row: 1; height: auto; min-height: calc(2 * var(--pp-tessera) + 60px) }
-  .pp-schermo-largo .pp-tasti { grid-column: 1; grid-row: 2 }
+  .pp.pp-largo { max-width: 1240px }
+  .pp-campo { display: grid; grid-template-columns: minmax(380px, 440px) minmax(0, 1fr);
+              grid-template-rows: minmax(0, 1fr) auto; column-gap: 22px; row-gap: 12px; padding: 12px 20px 16px }
+  .pp-campo .pp-scena { grid-column: 2; grid-row: 1 / span 2; min-height: 0 }
+  .pp-campo .pp-fila { grid-column: 1; grid-row: 1; height: auto; min-height: calc(2 * var(--pp-tessera) + 60px) }
+  .pp-campo .pp-tasti { grid-column: 1; grid-row: 2 }
 }

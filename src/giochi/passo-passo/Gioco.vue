@@ -1009,7 +1009,8 @@ function indietro() {
   <div ref="radice" class="schermo">
     <Barra :titolo="titolo" guida="passo" monete @indietro="indietro" @aiuto="v => guidaAperta = v" />
 
-    <div class="pp">
+    <!-- `pp-largo`: mentre si gioca, su uno schermo largo e orizzontale il campo si stende (stile.css); la mappa no -->
+    <div class="pp" :class="{ 'pp-largo': vista !== 'mappa' }">
       <Mappa v-if="vista === 'mappa'" :voci="voci" :sentieri="statoSentieri"
              :dove="doveSegnalino" :primo="primoProtagonista" :chi="state.player || ''"
              @gioca="avviaTappa" @senza-fine="vuoleSentiero">

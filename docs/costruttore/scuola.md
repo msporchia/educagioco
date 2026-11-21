@@ -61,10 +61,11 @@ Ogni esecuzione che arriva in fondo (il ▶ che gira fino a vincere o a sbagliar
 
 ## Lo schermo largo
 
-Sui PC (più largo di 900 pixel e orizzontale) il programma sta a sinistra e a destra l'ordine, il mondo e i comandi, come
-in Passo passo: si legge da sinistra a destra, si scrive e poi si vede (scelta dell'utente). Il mondo prende il 60%
-dell'altezza invece del 36-44% (`viste/Campo.vue`) e «più spazio al programma» sparisce. Lo accende la vista della scuola
-con la classe `cst-schermo-largo` (in `stile.css`); a casa si gioca in verticale.
+Su uno schermo largo e orizzontale (da 900 pixel: un PC a scuola, ma anche un tablet in orizzontale a casa, scelta
+dell'utente) il programma sta a sinistra e a destra l'ordine, il mondo e i comandi, come in Passo passo: si legge da
+sinistra a destra, si scrive e poi si vede. Il mondo prende il 60% dell'altezza invece del 36-44% (`viste/Campo.vue`) e
+«più spazio al programma» sparisce. Il telefono resta in verticale. Lo fa `stile.css` con una media query; `cst-largo` sul
+contenitore c'è solo mentre si gioca, così la scheda dei livelli non si stira.
 
 Nei test: `integrazione/scuola` (il programma a sinistra del mondo, `scuola-robot-largo` con `--scatti`).
 

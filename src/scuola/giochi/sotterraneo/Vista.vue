@@ -32,7 +32,7 @@ const riferisci = e => emit('risposta', raccontaSotterraneo(e))
 </script>
 
 <template>
-  <div ref="radice" class="sotterraneo sot-schermo-largo" data-gioco="sotterraneo">
+  <div ref="radice" class="sotterraneo" data-gioco="sotterraneo">
     <div class="colonna">
       <!-- il gioco esce verso casa solo se qualcosa è andato storto (il 3D perso): si torna alle schede -->
       <Sotterraneo v-if="chi" :key="chi" :limite="limite" @risposta="riferisci" @vai="nonParte" />

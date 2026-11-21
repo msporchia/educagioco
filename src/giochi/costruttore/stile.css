@@ -340,16 +340,15 @@
 .cst-monete { font-size: 20px; font-weight: 700 }
 .cst-cartello .cst-tasti-foglio { justify-content: center }
 
-/* ═══════════ a scuola, su un PC: il programma a sinistra, il mondo a destra ═══════════
-   Lo accende la vista della scuola (`.cst-schermo-largo`, docs/costruttore/scuola.md): a casa si gioca in verticale. Si
-   legge da sinistra a destra (scelta dell'utente): a sinistra si scrive, a destra l'ordine, il mondo e i comandi. Il mondo
-   prende più altezza (viste/Campo.vue), e «più spazio al programma» non serve */
+/* ═══════════ su uno schermo largo: il programma a sinistra, il mondo a destra ═══════════
+   Un PC o un tablet in orizzontale (docs/costruttore/scuola.md, «Lo schermo largo»); il telefono resta in verticale. Si legge da sinistra a destra (scelta dell'utente): a sinistra si scrive, a
+   destra l'ordine, il mondo e i comandi. Il mondo prende più altezza (viste/Campo.vue), e «più spazio al programma» non
+   serve. `cst-largo` c'è solo mentre si gioca: la scheda dei livelli non si stira */
 @media (min-width: 900px) and (min-aspect-ratio: 5 / 4) {
-  .cst-schermo-largo .cst { max-width: 1240px }
-  .cst-schermo-largo .cst-cantiere { display: grid; grid-template-columns: minmax(380px, 480px) minmax(0, 1fr);
-                                     grid-template-rows: minmax(0, 1fr) auto }
-  .cst-schermo-largo .cst-editor { grid-column: 1; grid-row: 1; border-top: 0; border-right: 1.5px solid var(--cst-bordo) }
-  .cst-schermo-largo .cst-sopra { grid-column: 2; grid-row: 1; min-height: 0; overflow-y: auto; padding: 10px 16px }
-  .cst-schermo-largo .cst-fisso { grid-column: 1 / -1; grid-row: 2 }
-  .cst-schermo-largo [data-azione="solo-programma"] { display: none }
+  .cst.cst-largo { max-width: 1240px }
+  .cst-cantiere { display: grid; grid-template-columns: minmax(380px, 480px) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto }
+  .cst-cantiere .cst-editor { grid-column: 1; grid-row: 1; border-top: 0; border-right: 1.5px solid var(--cst-bordo) }
+  .cst-cantiere .cst-sopra { grid-column: 2; grid-row: 1; min-height: 0; overflow-y: auto; padding: 10px 16px }
+  .cst-cantiere .cst-fisso { grid-column: 1 / -1; grid-row: 2 }
+  .cst-cantiere [data-azione="solo-programma"] { display: none }
 }

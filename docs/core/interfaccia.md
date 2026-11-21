@@ -185,7 +185,9 @@ si ferma, senza nessun errore.
 - **I giochi sono verticali**: il manifest della PWA chiede `portrait` e
   l'app installata parte bloccata; dal browser non si può imporre, e
   girando il telefono esce il cartello «Gira il telefono» (`.gira` in
-  `src/App.vue`), mai su tablet e computer.
+  `src/App.vue`), mai su tablet e computer. Su uno schermo largo e orizzontale (da 900 pixel: PC, tablet girato) tre giochi
+  si stendono invece di stare in colonna: Passo passo e il Robot affiancano programma e mondo, il sotterraneo allarga la
+  cripta (media query nei loro `stile.css`; il perché in `docs/passo-passo/scuola.md`, «Lo schermo largo»).
 - **Un errore non resta muto**: Vue scrive in console e lascia la
   schermata com'era, cioè un tasto che non fa niente. `src/incidenti.js` lo
   scrive in archivio e lo dice a schermo.

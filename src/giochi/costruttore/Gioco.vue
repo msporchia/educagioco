@@ -673,7 +673,8 @@ const progettoAperto = computed(() =>
   <div class="schermo">
     <Barra :titolo="titolo" guida="costruttore" monete @indietro="indietro" />
 
-    <div ref="radice" class="cst">
+    <!-- `cst-largo`: mentre si gioca, su uno schermo largo e orizzontale programma e mondo si affiancano (stile.css) -->
+    <div ref="radice" class="cst" :class="{ 'cst-largo': vista !== 'mappa' }">
       <template v-if="vista === 'mappa'">
         <div v-if="passoGuida" class="cst-guida-scheda"><Guida :passo="passoGuida" /></div>
         <p v-if="amici.davanti" class="cst-davanti" data-amico-davanti>{{ amici.davanti }}</p>

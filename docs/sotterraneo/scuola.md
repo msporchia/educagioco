@@ -59,11 +59,11 @@ si aspetta, quindi senza margine per gli sbagli. Senza `limite.difficolta` (e a 
 
 ## Lo schermo largo
 
-Sui PC (più largo di 900 pixel e orizzontale) la cripta si allarga fino a 1240 pixel invece di 560: si vede più
-sotterraneo (scelta dell'utente). Il pannello delle domande resta largo 560 e centrato. Più tela da dipingere costa di
-più alla scheda video, ma il pixel ratio lo regge da sé: scende a passi fino a 0,6 se i fotogrammi pesano e risale piano
-(`scena3d/contesto.js`), e i PC della scuola hanno di solito schermi a densità 1. Lo accende la vista della scuola con la
-classe `sot-schermo-largo` (in `stile.css`); a casa nulla cambia.
+Su uno schermo largo e orizzontale (da 900 pixel: un PC a scuola, ma anche un tablet in orizzontale a casa, scelta
+dell'utente) la cripta si allarga fino a 1240 pixel invece di 560: si vede più sotterraneo. Il pannello delle domande resta
+largo 560 e centrato. Più tela da dipingere costa di più alla scheda video, ma il pixel ratio lo regge da sé: scende a passi
+fino a 0,6 se i fotogrammi pesano e risale piano (`scena3d/contesto.js`). Lo fa `stile.css` con una media query; il
+telefono resta in verticale.
 
 ## L'evento `risposta`
 

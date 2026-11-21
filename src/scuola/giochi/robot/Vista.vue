@@ -37,8 +37,7 @@ const riferisci = r => emit('risposta', r)
 </script>
 
 <template>
-  <!-- `cst-schermo-largo`: su un PC il programma a sinistra, il mondo a destra (giochi/costruttore/stile.css) -->
-  <div class="robot cst-schermo-largo" data-gioco="robot">
+  <div class="robot" data-gioco="robot">
     <div class="colonna">
       <Robot v-if="chi" :key="chi" :limite="limite" @risposta="riferisci" />
     </div>
