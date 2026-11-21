@@ -3,7 +3,7 @@
 import { ref, computed, watch } from 'vue'
 import { quaderno, voceDi, classeDi } from './stato.js'
 import { diretta, via, avantiTutti, libera, togli, chiudiLezione, cambiaLezione, saltaBlocco, domandePer } from './diretta.js'
-import { riassuntoVuoto } from './quaderno.js'
+import { riassuntoVuoto, bloccoDellaRisposta } from './quaderno.js'
 import { posizione, finita, bloccoDi, modoDi, sogliaDi, alleDomande, contaDi } from '../comune/lezione.js'
 import { giocoDi, GIOCHI } from '../comune/esercizi.js'
 import { ICONE } from '../comune/icone-giochi.js'
@@ -11,6 +11,7 @@ import { indirizzoBambini, iniziali, coloreDi } from './utili.js'
 import Conferma from './Conferma.vue'
 import CodicePerIPc from './CodicePerIPc.vue'
 import Aiuto from './Aiuto.vue'
+import Altro from './Altro.vue'
 
 const emit = defineEmits(['vai', 'indietro'])
 const voceId = quaderno.inCorso?.voce ?? null
@@ -47,6 +48,18 @@ function inCorsoDi(a) {
   return { fatte: 0, giuste: 0, ...diretta.conti[a.id]?.[p], modo: modoDi(passa), soglia: sogliaDi(passa), cosa: contaDi(esercizio).tante }
 }
 const puoLiberare = a => a.collegato || a.dove != null || a.esito.presente
+
+/* le sue risposte, da aprire sotto il nome: per blocco, l'ultima in cima. «—» è il giusto caduto senza risposta (gli
+   Asteroidi): non ha risposto, che non è uno sbaglio da spiegare */
+function risposteDi(a) {
+  const lista = [...(diretta.risposte[a.id] ?? [])].sort((x, y) => (y.n ?? 0) - (x.n ?? 0))
+    .map(r => ({ ...r, b: bloccoDellaRisposta(r, n.value), esito: r.giusta ? 'si' : r.data === '—' ? 'vuota' : 'no' }))
+  const conta = e => lista.filter(r => r.esito === e).length
+  const blocchi = Array.from({ length: n.value }, (_, i) => ({ i, righe: lista.filter(r => r.b === i) })).filter(x => x.righe.length)
+  return { quante: lista.length, giuste: conta('si'), sbagliate: conta('no'), vuote: conta('vuota'), blocchi }
+}
+const contiDette = r => [r.giuste && `${r.giuste} giuste`, r.sbagliate && `${r.sbagliate} sbagliate`,
+  r.vuote && `${r.vuote} senza risposta`].filter(Boolean).join(' · ')
 
 /* ── a colpo d'occhio: i pallini dei blocchi per ognuno, e la classe divisa per blocco ── */
 const qualeBlocco = a => { const p = posDi(a); return p === null ? null : p === 'finito' || finita(lezione.value, p) ? 'finito' : bloccoDi(lezione.value, p) }
@@ -138,11 +151,11 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
         <li v-for="a in alunni" :key="a.id" class="nome" :class="{ preso: a.preso, nuovo: a.nuovo }" :data-alunno="a.id" :data-preso="a.preso">
           <span>{{ a.nome }}</span>
           <span v-if="a.nuovo" class="etichetta">nuovo</span>
-          <button v-if="!a.nuovo && puoLiberare(a)" class="bottone chiaro piccolo" data-azione="libera" @click="liberaNome(a.id)">Sblocca il nome</button>
+          <button v-if="!a.nuovo && puoLiberare(a)" class="bottone chiaro piccolo" data-azione="libera" @click="liberaNome(a.id)">Rimetti nella lista</button>
           <Conferma v-if="a.nuovo" etichetta="Togli il nome" domanda="Lo tolgo?" si="Togli" data-azione="togli" @si="togliNome(a.id)" />
         </li>
       </ul>
-      <p class="nota">Un nome diventa verde quando un bambino lo tocca. «Sblocca il nome» <Aiuto testo="Il nome torna libero nella lista e il bambino lo ritocca, da questo PC o da un altro: per un PC che si è rotto o un nome toccato per sbaglio. Le risposte date restano sue." />
+      <p class="nota">Un nome diventa verde quando un bambino lo tocca. «Rimetti nella lista» <Aiuto testo="Il nome torna libero nella lista e il bambino lo ritocca, da questo PC o da un altro: per un PC che si è rotto o un nome toccato per sbaglio. Le risposte date restano sue." />
         «Togli il nome» <Aiuto testo="Un nome che non è nella tua classe, scritto da un bambino: lo togli, con le sue risposte." /></p>
       <div class="fila centro-fila">
         <button class="bottone grande" data-azione="via" :disabled="!diretta.sentito" @click="parti">Via</button>
@@ -201,24 +214,39 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
             <template v-else-if="inCorsoDi(a).modo === 'domande'"><b>{{ inCorsoDi(a).fatte }}</b> {{ inCorsoDi(a).cosa }} su {{ inCorsoDi(a).soglia }} · {{ inCorsoDi(a).giuste }} giuste</template>
             <template v-else><b>{{ inCorsoDi(a).fatte }}</b> fatte · <b>{{ inCorsoDi(a).giuste }}</b> giuste</template>
           </p>
-          <ul v-if="a.esito.ultime.length" class="sbagliate" data-ultime-sbagliate>
-            <li v-for="(s, i) in a.esito.ultime" :key="i"><b>{{ s.fatto }}</b>: ha detto {{ s.data }}, era {{ s.attesa }}<span v-if="n > 1"> (blocco {{ s.blocco + 1 }})</span></li>
-          </ul>
+          <details v-if="risposteDi(a).quante" class="risposte" data-risposte>
+            <summary>Le risposte <span class="nota">{{ contiDette(risposteDi(a)) }}</span></summary>
+            <div v-for="x in risposteDi(a).blocchi" :key="x.i" class="blocco-risposte" :data-risposte-blocco="x.i">
+              <p v-if="n > 1" class="titoletto">Blocco {{ x.i + 1 }}</p>
+              <ul>
+                <li v-for="(r, k) in x.righe" :key="k" :class="r.esito" :data-esito="r.esito">
+                  <span class="segno" aria-hidden="true">{{ r.esito === 'si' ? '✓' : r.esito === 'no' ? '✗' : '–' }}</span>
+                  <span><b>{{ r.fatto }}</b>
+                    <template v-if="r.esito === 'si'"><template v-if="r.data && r.data !== '—'">: {{ r.data }}</template></template>
+                    <template v-else-if="r.esito === 'no'">: ha detto {{ r.data }}, era {{ r.attesa }}</template>
+                    <template v-else>: non ha risposto, era {{ r.attesa }}</template></span>
+                </li>
+              </ul>
+            </div>
+          </details>
           <p v-if="a.domande" class="nota" data-solo-domande>Fa le domande al posto del gioco.</p>
           <div class="fila">
             <span v-if="a.preso && posDi(a) !== 'finito'" class="comando">
               <button class="bottone chiaro piccolo" data-azione="salta" @click="salta(a.id)">Mandalo al blocco dopo</button>
               <Aiuto testo="Solo lui passa al blocco dopo, gli altri restano dove sono: per chi è bloccato o ha già capito." /></span>
-            <span v-if="a.preso && (a.domande || bloccoConGioco(a))" class="comando">
-              <button class="bottone chiaro piccolo" data-azione="domande" @click="domande(a)">
-                {{ a.domande ? 'Rimettigli il gioco' : 'Domande invece del gioco' }}</button>
-              <Aiuto testo="Se sul suo PC il gioco è lento o non parte: fa lo stesso esercizio come domande su una scheda, finché non gli rimetti il gioco." /></span>
-            <span v-if="!a.nuovo && puoLiberare(a)" class="comando">
-              <button class="bottone chiaro piccolo" data-azione="libera" @click="liberaNome(a.id)">Sblocca il nome</button>
-              <Aiuto testo="Il nome torna libero nella lista e il bambino lo ritocca, da questo PC o da un altro: per un PC che si è rotto o un nome toccato per sbaglio. Le risposte date restano sue." /></span>
             <span v-if="a.nuovo" class="comando">
               <Conferma etichetta="Togli il nome" domanda="Lo tolgo, con le sue risposte?" si="Togli" data-azione="togli" @si="togliNome(a.id)" />
               <Aiuto testo="Un nome che non è nella tua classe, scritto da un bambino: lo togli, con le sue risposte." /></span>
+            <!-- i casi rari: in un menu, ognuno con la sua spiegazione -->
+            <Altro v-if="(a.preso && (a.domande || bloccoConGioco(a))) || (!a.nuovo && puoLiberare(a))" class="a-destra">
+              <button v-if="a.preso && (a.domande || bloccoConGioco(a))" class="voce-menu" role="menuitem" data-azione="domande" @click="domande(a)">
+                <b>{{ a.domande ? 'Rimettigli il gioco' : 'Domande invece del gioco' }}</b>
+                <span>{{ a.domande ? 'Torna a giocare allo stesso esercizio.'
+                  : 'Se sul suo PC il gioco è lento o non parte: lo stesso esercizio come domande su una scheda.' }}</span></button>
+              <button v-if="!a.nuovo && puoLiberare(a)" class="voce-menu" role="menuitem" data-azione="libera" @click="liberaNome(a.id)">
+                <b>Rimetti il nome nella lista</b>
+                <span>Per cambiare PC, o se ha toccato il nome di un altro: lo ritocca e riparte da dov'era. Le risposte restano sue.</span></button>
+            </Altro>
           </div>
         </li>
       </ul>
@@ -275,7 +303,17 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
 .bambini { list-style:none; display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:12px }
 .bambino { gap:6px }
 .bambino.spento { opacity:.75 }
-.sbagliate { list-style:none; font-size:13px; color:var(--grigio); display:flex; flex-direction:column; gap:2px }
+.risposte { font-size:13px }
+.risposte summary { cursor:pointer; font-weight:600; padding:2px 0 }
+.risposte summary .nota { font-weight:400; margin-left:4px }
+.blocco-risposte { margin-top:6px; max-height:240px; overflow-y:auto }
+.blocco-risposte .titoletto { font-size:12px; font-weight:700; color:var(--grigio); margin-bottom:2px }
+.blocco-risposte ul { list-style:none; display:flex; flex-direction:column; gap:2px }
+.blocco-risposte li { display:flex; gap:6px; color:var(--grigio) }
+.blocco-risposte .segno { flex:none; width:14px; font-weight:800 }
+.blocco-risposte .si .segno { color:var(--verde) }
+.blocco-risposte .no .segno { color:var(--rosso) }
+.a-destra { margin-left:auto }
 .comando { display:inline-flex; align-items:center; gap:4px }
 .colonne { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px }
 .colonna { flex:1 0 130px; display:flex; flex-direction:column; gap:8px; padding:10px; border-radius:var(--raggio-piccolo); background:var(--tessera) }

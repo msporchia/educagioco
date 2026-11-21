@@ -94,7 +94,8 @@ ultime tre sbagliate per il pannello. `presente`: ha risposto o è stato visto c
   computer», e le tre ore stanno nel «?» del tasto. Scritto prima come «il servizio tiene la lezione per tre ore»: sembrava
   che in locale non si salvasse niente.
 - In sala il verde è «preso» (un PC tiene quel nome, anche se in questo momento è caduto); nel pannello il grigio
-  è «non collegato». «Sblocca il nome» (era «Libera») compare su chi è collegato o ha già fatto qualcosa.
+  è «non collegato». «Rimetti nella lista» (prima «Libera», poi «Sblocca il nome»: nessuno dei due diceva cosa
+  succede) compare su chi è collegato o ha già fatto qualcosa.
 
 ## Il file del quaderno
 
@@ -226,8 +227,13 @@ quadretti** del quaderno di scuola come fondo, e **i colori delle penne** (`--pe
   [protocollo.md](protocollo.md): il tasto dice quale blocco chiude, la frase accanto chi passa e dove (come lo calcola il
   servizio), un «?» lo spiega, e nella panoramica quel blocco ha il bordo blu. È spento solo quando senza «in tondo» tutti
   hanno già passato l'ultimo blocco.
+- **Le risposte, da aprire** (chiesto dall'utente): sotto ogni nome «Le risposte» dice i conti (giuste, sbagliate, senza
+  risposta) e aperto le elenca per blocco, l'ultima in cima: ✓ giusta, ✗ «ha detto X, era Y», – «non ha risposto» (il
+  sasso giusto degli Asteroidi caduto: spesso un gioco lasciato acceso). Vengono da `diretta.risposte`, che non si salva:
+  lo storico tiene il riassunto.
 - **«Se qualcosa non va»**: «Cambia la lezione», «Tutti alle domande», il codice per i PC; sotto ogni nome «Mandalo al
-  blocco dopo», «Domande invece del gioco», «Sblocca il nome», ognuno col suo «?». Tutto in [ripieghi.md](ripieghi.md).
+  blocco dopo» col suo «?», e i casi rari nel menu «⋯» (`Altro.vue`), ognuno spiegato sotto il suo nome: «Domande invece
+  del gioco» e «Rimetti il nome nella lista». Tutto in [ripieghi.md](ripieghi.md).
 
 ## Le lezioni pronte sono state tolte
 
@@ -243,7 +249,8 @@ posizione, le più sbagliate, il CSV, lo storico del bambino, la scadenza, le ch
 l'unione per id, l'anno della classe che un quaderno vecchio non ha, e le lezioni, lo storico, la lezione in corso, il
 file e il link di prima dei blocchi). Bersagli: la radice `[data-schermata="<nome>"]`,
 `button[aria-label="indietro"]`, `[data-versione]`, `[data-avviso="pieno"|"link-rotto"]`; nell'inizio
-`[data-in-corso]`, `[data-indirizzo-bambini]`, `[data-classe=<id>]`, `[data-lezione=<id>]`, `[data-storico-classe=<id>]`,
+`[data-in-corso]`, `[data-indirizzo-bambini]` (un link), nella diretta `[data-risposte]` con
+`[data-risposte-blocco=<i>]` e `[data-esito="si"|"no"|"vuota"]`, `[data-azione="altro"]` (il «⋯»), `[data-classe=<id>]`, `[data-lezione=<id>]`, `[data-storico-classe=<id>]`,
 `[data-file-quaderno]` (l'input del file), `[data-esito-file="bene"|"male"]`, `[data-link-lezione]`; nell'esercizio a più parti
 `[data-parte=<i>]`, `[data-peso="poco"|"normale"|"tanto"]`, `[data-azione="aggiungi-parte"|"togli-parte"]`; negli editor
 `[data-campo="nome-classe"|"alunni"|"nome-lezione"|"da"|"a"|"soglia"|"in-tondo"]`,

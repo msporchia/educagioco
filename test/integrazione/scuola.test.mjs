@@ -219,12 +219,21 @@ const risposte = servizio.lezioni.get(codice).stato.risposte[lorenzo] || []
 stessaLista('il servizio ha le tre risposte di Lorenzo, coi blocchi', risposte.map(r => [r.blocco, r.chiave, r.giusta]),
             [[0, 'tab:prodotto', true], [0, 'tab:prodotto', true], [1, 'tab:prodotto', true]])
 if (nelGioco) controlla('quella del gioco racconta la tabellina del 2', /^2 × \d+$/.test(risposte[2]?.fatto || ''), risposte[2]?.fatto)
+{
+  // il riassunto sotto il nome: chiuso dice i conti, aperto le risposte per blocco
+  const sotto = `[data-pannello] [data-alunno="${lorenzo}"] [data-risposte]`
+  controlla('sotto il nome, le sue risposte in breve', /3 giuste/.test(await testo(m, `${sotto} summary`)), await testo(m, `${sotto} summary`))
+  await m.locator(`${sotto} summary`).click()
+  stessaLista('aperte: due giuste nel blocco 1 e una nel 2',
+         [await m.locator(`${sotto} [data-risposte-blocco="0"] [data-esito="si"]`).count(), await m.locator(`${sotto} [data-risposte-blocco="1"] [data-esito="si"]`).count()], [2, 1])
+}
 uguale('nella panoramica della classe Lorenzo sta nel blocco 2', await m.locator('[data-panoramica] [data-colonna="1"] .iniziali').count(), 1)
 await m.locator('[data-panoramica]').scrollIntoViewIfNeeded()
 await scatto(m, 'scuola-pannello')
 
 /* ── i ripieghi (docs/scuola/ripieghi.md): le domande per lui solo, il menu della maestra sul suo PC ── */
 const card = `[data-pannello] [data-alunno="${lorenzo}"]`
+await M.tocca(`${card} [data-azione="altro"]`)   // i comandi rari stanno nel menu «⋯»
 await M.tocca(`${card} [data-azione="domande"]`)
 await m.waitForSelector(`${card} [data-solo-domande]`, { timeout: 5000 })
 await b.waitForSelector('[data-domanda][data-blocco="1"] .qz-tasto', { timeout: 8000 })

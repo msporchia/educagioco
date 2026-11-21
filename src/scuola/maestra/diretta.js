@@ -6,11 +6,14 @@ import * as Q from './quaderno.js'
 import { quaderno, salva, salvaPresto, voceDi } from './stato.js'
 
 // `alunni`: l'ultimo elenco del servizio ({ id, nome, nuovo, preso, collegato, dove }); `avanti`: quante volte «Avanti tutti»;
-// `conti`: fatte e giuste per alunno e posizione (Q.contaPosizione), per il blocco in corso nel pannello
-export const diretta = reactive({ fase: null, linea: 'giu', alunni: [], avanti: 0, conti: {}, errore: '', sentito: false })
+// `conti`: fatte e giuste per alunno e posizione (Q.contaPosizione), per il blocco in corso nel pannello. `risposte`: tutte
+// quelle della lezione per alunno, per il riassunto da aprire sotto il nome; non si salvano (lo storico tiene il riassunto)
+export const diretta = reactive({ fase: null, linea: 'giu', alunni: [], avanti: 0, conti: {}, risposte: {}, errore: '', sentito: false })
 let filo = null, sveglia = null
 
 const viva = () => (quaderno.inCorso ? voceDi(quaderno.inCorso.voce) : null)
+const copiaRisposte = r => Object.fromEntries(Object.entries(r && typeof r === 'object' ? r : {})
+  .filter(([, l]) => Array.isArray(l)).map(([id, l]) => [id, [...l]]))
 
 /* la lezione cambiata a metà (docs/scuola/ripieghi.md): la lezione in corso e quella della voce diventano la nuova */
 function nuovaLezione(l) {
@@ -47,7 +50,7 @@ function smettiDiAscoltare() {
   if (filo) filo.chiudi()
   if (sveglia) clearTimeout(sveglia)
   filo = null; sveglia = null
-  Object.assign(diretta, { fase: null, linea: 'giu', alunni: [], avanti: 0, conti: {}, sentito: false })
+  Object.assign(diretta, { fase: null, linea: 'giu', alunni: [], avanti: 0, conti: {}, risposte: {}, sentito: false })
 }
 
 export function collega() {
@@ -57,7 +60,7 @@ export function collega() {
   filo = apriMaestra(c.codice, c.chiave, {
     suTutto(d) {
       Object.assign(diretta, { fase: d.fase, alunni: d.alunni || [], avanti: Number.isInteger(d.avanti) ? d.avanti : 0,
-                               conti: Q.contiDelleRisposte(d.risposte), sentito: true })
+                               conti: Q.contiDelleRisposte(d.risposte), risposte: copiaRisposte(d.risposte), sentito: true })
       nuovaLezione(d.lezione)
       Q.ricalcola(viva(), d)
       if (Number.isFinite(d.scade) && quaderno.inCorso) { quaderno.inCorso.scade = d.scade; salva(['inCorso']) }
@@ -65,7 +68,11 @@ export function collega() {
       if (d.fase === 'chiusa') finisci()
     },
     suAlunni(a) { diretta.alunni = a; Q.aggiornaAlunni(viva(), a); salvaPresto() },
-    suRisposta(id, r) { Q.aggiungiRisposta(viva(), id, r); Q.contaPosizione(diretta.conti, id, r); salvaPresto() },
+    suRisposta(id, r) {
+      Q.aggiungiRisposta(viva(), id, r); Q.contaPosizione(diretta.conti, id, r)
+      if (typeof id === 'string' && r && typeof r === 'object') (diretta.risposte[id] ||= []).push(r)
+      salvaPresto()
+    },
     suFase(f) { diretta.fase = f; if (f === 'chiusa') finisci() },
     suAvanti(n) { if (Number.isInteger(n)) diretta.avanti = n },
     suLezione(l) { nuovaLezione(l) },
