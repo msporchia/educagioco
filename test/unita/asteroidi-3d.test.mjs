@@ -2,7 +2,8 @@
    il falso che urta la nave, le quote dei falsi) e le forme dei sassi di ogni cielo.
    Vedi docs/asteroidi/grafica-3d.md.
    `node test/esegui.mjs asteroidi-3d --niente-build` */
-import { sassoSotto, toccaLaNave, ordineFalsi, TOCCO } from '../../src/motore/asteroidi/comandi.js'
+import { sassoSotto, toccaLaNave, ordineFalsi, TOCCO, prossimoSasso } from '../../src/motore/asteroidi/comandi.js'
+import { nomeDelTasto } from '../../src/giochi/tastiera.js'
 import { formaDi, VARIANTI } from '../../src/grafica/spazio3d/forme.js'
 import { CIELI, specieDi } from '../../src/grafica/cieli.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -17,6 +18,23 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   uguale('un sasso già tolto non si prende', sassoSotto([{ ...a, morto: true }], 100, 100), null)
   const piccolo = { x: 0, y: 0, r: 10, morto: false }
   uguale('un sasso piccolo si prende entro il minimo del pollice', sassoSotto([piccolo], TOCCO.minimo - 1, 0), piccolo)
+}
+
+/* ══════════ 1b. la tastiera: ← → scelgono il sasso, Invio spara ══════════ */
+{
+  const s = (x, y = 100, morto = false) => ({ x, y, r: 30, morto })
+  const a = s(100), b = s(300), c = s(500), sopra = s(400, -40), tolto = s(350, 100, true)
+  const cielo = [a, b, c, sopra, tolto]
+  uguale('→ dalla nave: il più vicino a destra', prossimoSasso(cielo, 250, 1), b)
+  uguale('← dalla nave: il più vicino a sinistra', prossimoSasso(cielo, 250, -1), a)
+  uguale('→ dal sasso scelto passa al prossimo, saltando quelli non ancora in vista e quelli tolti', prossimoSasso(cielo, 300, 1, b), c)
+  uguale('in fondo a destra resta quello scelto', prossimoSasso(cielo, 500, 1, c), c)
+  uguale('niente da quella parte e niente scelto: il più vicino', prossimoSasso(cielo, 600, 1), c)
+  uguale('Invio senza scelta: il più vicino alla nave', prossimoSasso(cielo, 280, 0), b)
+  uguale('cielo vuoto: niente', prossimoSasso([sopra, tolto], 250, 1), null)
+  const t = (key, shiftKey = false) => nomeDelTasto({ key, shiftKey })
+  stessaLista('i nomi dei tasti', [t('ArrowLeft'), t('ArrowLeft', true), t(' '), t('R', true), t('Enter'), t('7')],
+              ['ArrowLeft', 'Shift+ArrowLeft', 'Spazio', 'r', 'Enter', '7'])
 }
 
 /* ══════════ 2. il falso che tocca la nave ══════════ */

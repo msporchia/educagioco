@@ -26,3 +26,14 @@ export function ordineFalsi(n) {
   const quote = Array.from({ length: Math.max(0, n) }, (_, j) => j)
   return [...quote.filter(j => j % 2), ...quote.filter(j => !(j % 2))]
 }
+
+/* Con la tastiera (docs/asteroidi/grafica-3d.md, «La tastiera»): ← e → passano al sasso vivo e in vista più vicino da
+   quella parte di `da` (il sasso scelto, o la nave). `verso` 0, o nessuno da quella parte senza un sasso già scelto: il più
+   vicino a `da`. Null se in cielo non c'è niente da scegliere, e allora resta quello che c'era. */
+export function prossimoSasso(asteroidi, da, verso, gia = null) {
+  const vivi = asteroidi.filter(a => !a.morto && a.y > 0)
+  const vicino = l => l.reduce((m, a) => (!m || Math.abs(a.x - da) < Math.abs(m.x - da) ? a : m), null)
+  const la = verso ? vicino(vivi.filter(a => a !== gia && (a.x - da) * verso > 0)) : null
+  if (la) return la
+  return gia && !gia.morto ? gia : vicino(vivi)
+}

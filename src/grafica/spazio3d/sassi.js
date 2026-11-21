@@ -2,8 +2,8 @@
 // da un'ondata all'altra. Il numero è inciso: la stessa tela fa da colore (la pietra
 // più scura attorno) e da rilievo (la scanalatura), e una seconda accende di azzurro il
 // fondo del solco. Il disegno non guarda mai `a.ok` (docs/asteroidi/cieli.md).
-import { Mesh, Group, CanvasTexture, NoColorSpace, SRGBColorSpace, PlaneGeometry, ConeGeometry, SphereGeometry,
-         ShaderMaterial, MeshStandardMaterial, AdditiveBlending, Color } from 'three'
+import { Mesh, Group, CanvasTexture, NoColorSpace, SRGBColorSpace, PlaneGeometry, ConeGeometry, SphereGeometry, RingGeometry,
+         ShaderMaterial, MeshStandardMaterial, MeshBasicMaterial, AdditiveBlending, Color } from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { materialeSasso, BRACE_FISSA, BRACE_CATENA } from './materia.js'
 import { formaDi, tingi, posa, INCLINA_DISCO } from './forme.js'
@@ -89,7 +89,10 @@ function comuni() {
   const alone = new PlaneGeometry(2, 2)
   const aloneF = /* glsl */`varying vec2 vU; uniform vec3 uC; uniform float uA;
     void main(){ float r = length(vU); float a = pow(max(0., 1. - r), 2.) * uA; gl_FragColor = vec4(uC * a, a); }`
-  return { coda, codaMat, alieno, alienoMat, cupola, cupolaMat, traente, traenteMat, alone, aloneV: QV, aloneF }
+  // la mira della tastiera: un anello giallo attorno al sasso scelto con le frecce, sopra a tutto
+  const mira = new RingGeometry(1.32, 1.5, 48)
+  const miraMat = new MeshBasicMaterial({ color: 0xffe066, transparent: true, depthTest: false, depthWrite: false })
+  return { coda, codaMat, alieno, alienoMat, cupola, cupolaMat, traente, traenteMat, alone, aloneV: QV, aloneF, mira, miraMat }
 }
 
 export function creaSassi(scena) {
@@ -114,9 +117,10 @@ export function creaSassi(scena) {
     const ponte = new Group(); ponte.rotation.x = INCLINA_DISCO   // come il disco, che è inclinato nella forma
     ponte.add(alieno, cupola); sasso.add(ponte)
     const traente = new Mesh(C.traente, C.traenteMat); traente.position.y = -0.15; traente.renderOrder = 1
-    gruppo.add(alone, coda, traente, sasso)
+    const mira = new Mesh(C.mira, C.miraMat); mira.renderOrder = 5; mira.visible = false
+    gruppo.add(alone, coda, traente, sasso, mira)
     scena.add(gruppo)
-    posti.push({ gruppo, sasso, coda, alone, alieno, cupola, traente, mat, mappa, luce, tele: { a, b },
+    posti.push({ gruppo, sasso, coda, alone, alieno, cupola, traente, mira, mat, mappa, luce, tele: { a, b },
                  di: null, v: null, specie: null, seme: -1, usato: false })
   }
   const chi = new WeakMap()   // sasso della view → posto
@@ -178,6 +182,8 @@ export function creaSassi(scena) {
         if (brina) p.alone.material.uniforms.uC.value.setRGB(0.62, 0.85, 1)
         else { const tt = rgb(A.alone); p.alone.material.uniforms.uC.value.setRGB(tt[0], tt[1], tt[2]) }
         if (rosso > 0) p.alone.material.uniforms.uC.value.setRGB(1, 0.25, 0.2)
+        p.mira.visible = a === q.puntato && !a.morto
+        if (p.mira.visible) p.mira.scale.setScalar(1 + 0.06 * Math.sin(t * 6))
       }
       for (const p of posti) if (!p.usato) { p.gruppo.visible = false; if (p.di && !q.asteroidi.includes(p.di)) p.di = null }
     },

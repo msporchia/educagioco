@@ -11,7 +11,8 @@
 
    Una carta sola, «Asteroidi», anche coi giochi in prova spenti. Senza il
    contesto WebGL (perso, o un browser che non ce l'ha) il cielo si ferma e un
-   tasto lo riaccende, senza errori.
+   tasto lo riaccende, senza errori. Con la tastiera ← → scelgono il sasso e
+   Invio spara.
 
    `node test/esegui.mjs asteroidi-3d --niente-build`
    tempo: 120
@@ -141,6 +142,22 @@ dopo = await conto(page)
 uguale('il giusto addosso alla nave costa una vita', dopo.vite, prima.vite - 1)
 uguale('ed è segnato come non preso', dopo.sbagliate, prima.sbagliate + 1)
 uguale('non è un centro', dopo.giuste, prima.giuste)
+
+/* ---------- 7b. la tastiera: ← → scelgono il sasso, Invio spara ---------- */
+s = await unSasso(page, true)
+await page.keyboard.press('ArrowLeft')
+controlla('una freccia sceglie un sasso', await page.evaluate(() => !!window.__mate.puntato()))
+controlla('e accende i tasti scritti in fondo', await page.locator('[data-tasti-nave]').isVisible())
+for (let i = 0; i < 6; i++) await page.keyboard.press('ArrowLeft')   // il primo a sinistra
+for (let i = 0; i < 6 && !(await page.evaluate(() => window.__mate.puntato()?.ok)); i++) await page.keyboard.press('ArrowRight')
+controlla('con le frecce si arriva al giusto', await page.evaluate(() => window.__mate.puntato()?.ok))
+await attendi(page, 300)
+dentro('la nave gli va sotto', Math.round(await page.evaluate(() => window.__mate.nave.x - window.__mate.puntato().x)), -20, 20)
+prima = await conto(page)
+await page.keyboard.press('Enter')
+await attendi(page, 150)
+dopo = await conto(page)
+uguale('Invio spara al sasso scelto: un centro', dopo.giuste, prima.giuste + 1)
 
 controlla('nessun errore in console', errori.length === 0, errori.join(' | '))
 await page.close()

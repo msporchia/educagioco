@@ -76,6 +76,21 @@ ritmi, `rispostaEntro`, il cronometro che parte quando il sasso giusto è tutto 
 - **Il cannone spazza ancora**: la torretta sulla nave segue `mira`, che a
   riposo non punta niente ([volo.md](volo.md)).
 
+### La tastiera
+
+Per i PC (a scuola, soprattutto): serve alla coordinazione, non sostituisce
+il dito. Le regole comuni in [../core/tastiera.md](../core/tastiera.md).
+
+- **← e → scelgono un sasso** (`prossimoSasso` in `motore/asteroidi/comandi.js`):
+  il più vicino da quella parte, fra quelli vivi e già in vista. La nave gli
+  va sotto e lo segue, il cannone lo guarda, attorno c'è un anello giallo
+  (`q.puntato`, disegnato da `spazio3d/sassi.js`). Guardarlo non suggerisce
+  niente: l'ha scelto il bambino.
+- **Invio o Spazio sparano al sasso scelto**: è la risposta, come il dito.
+  Senza un sasso scelto Invio ne sceglie uno e non spara.
+- **Il dito spegne la scelta**: chi tocca il campo torna a guidare col dito.
+- In fondo a sinistra, solo dove c'è una tastiera, «← → scegli ↵ spara».
+
 ## Ogni posto ha il suo cielo
 
 Le tinte e le macchie di nebulosa sono quelle di `grafica/cieli.js`, cotte
@@ -146,8 +161,8 @@ Nei test: `unita/asteroidi-3d` (il dito, l'urto, le quote dei falsi, le
 forme di ogni specie), `integrazione/asteroidi-3d` (col dito vero: il 3D
 acceso e quanto costa, una carta sola anche coi giochi in prova spenti, il tocco sul
 giusto, il vuoto che guida, il trascinare, appena fuori dal bordo, lo scudo,
-il giusto addosso alla nave, senza WebGL il tasto che riaccende). Bersagli: la tela `[data-tela="3d"]`, il tasto
-`[data-riaccendi-tela]`; `window.__mate.grafica()`
+il giusto addosso alla nave, senza WebGL il tasto che riaccende; la tastiera che sceglie e spara). Bersagli: la tela `[data-tela="3d"]`, il tasto
+`[data-riaccendi-tela]`, i tasti scritti `[data-tasti-nave]`; `window.__mate.grafica()`
 (`tre`, `chiamate`, `triangoli`, `dpr`, `ms`, `scena`, `disegno`);
 `window.__mate.nave` (`meta`, `urti`, `scudo`); sui sassi `respinto`,
 `rosso`, `urtato`. Il cheat `#mate=<tappa>` (`volo`, `&livello=`, `&vite=`,

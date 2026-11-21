@@ -36,7 +36,9 @@ import { suono } from '../audio.js'
 import { statoScafo, puntoRotto } from '../grafica/spazio.js'
 import { specieDi, coloreFrammenti } from '../grafica/cieli.js'
 import { creaSpazio3d } from '../grafica/spazio3d/indice.js'
-import { sassoSotto, toccaLaNave, ordineFalsi } from '../motore/asteroidi/comandi.js'
+import { sassoSotto, toccaLaNave, ordineFalsi, prossimoSasso } from '../motore/asteroidi/comandi.js'
+import { usaTasti, conTastiera } from '../giochi/tastiera.js'
+import TastoTastiera from '../components/TastoTastiera.vue'
 import { cannoneDi, cupolaDi } from '../grafica/nave-madre.js'
 import RegaloHangar from '../components/RegaloHangar.vue'
 import HangarAsteroidi from '../components/HangarAsteroidi.vue'
@@ -460,6 +462,7 @@ function tocca(e) {
   const [x, y] = nelCampo(e)
   dito = e.pointerId
   try { e.currentTarget.setPointerCapture?.(e.pointerId) } catch (x) { /* un puntatore finto non si cattura */ }
+  puntato = null                         // il dito comanda: la scelta della tastiera si spegne
   const preso = sassoSotto(asteroidi, x, y)
   if (preso) return colpisci(preso)
   if (!fermo.value) nave.meta = dentroCampo(x)
@@ -469,6 +472,20 @@ function guida(e) {
   nave.meta = dentroCampo(nelCampo(e)[0])
 }
 function lascia(e) { if (e.pointerId === dito) dito = null }
+
+/* la tastiera: ← → scelgono il sasso (la nave gli va sotto, il cannone lo guarda), Invio o Spazio sparano a quello.
+   Senza un sasso scelto Invio ne sceglie uno e non spara (docs/asteroidi/grafica-3d.md, «La tastiera») */
+let puntato = null
+function punta(verso) {
+  const a = prossimoSasso(asteroidi, puntato && !puntato.morto ? puntato.x : nave.x, verso, puntato)
+  if (a) { puntato = a; nave.meta = dentroCampo(a.x) }
+}
+function sparaAlPuntato() {
+  if (puntato && !puntato.morto && asteroidi.includes(puntato)) colpisci(puntato)
+  else punta(0)
+}
+usaTasti({ ArrowLeft: () => punta(-1), ArrowRight: () => punta(1), Enter: sparaAlPuntato, Spazio: sparaAlPuntato },
+         { attivo: () => fase.value === 'gioco' && !fermo.value })
 
 /* il bersaglio della tappa: le giuste in tutto, e quante di quelle devono
    essere sulla tabellina nuova */
@@ -827,7 +844,9 @@ const SPAZZATA = { arco: 0.95, giroSec: 3.4 }   // ±54°, un'andata e ritorno o
 
 function miraARiposo(dt) {
   if (raggi.length) return          // sta sparando: il colpo tiene la mira
-  const meta = -Math.PI / 2 + Math.sin(pulsa * (6.2832 / SPAZZATA.giroSec)) * SPAZZATA.arco
+  // il sasso scelto con la tastiera l'ha scelto il bambino: guardarlo non suggerisce niente
+  const meta = puntato ? Math.atan2(puntato.y - nave.y, puntato.x - nave.x)
+    : -Math.PI / 2 + Math.sin(pulsa * (6.2832 / SPAZZATA.giroSec)) * SPAZZATA.arco
   let d = meta - nave.mira
   while (d > Math.PI) d -= 6.2832
   while (d < -Math.PI) d += 6.2832
@@ -844,6 +863,8 @@ function aggiorna(dt) {
   const rall = gelo ? POTENZIAMENTI.gelo.lento : 1
   // la nave va dove la porta il dito, svelta ma non di scatto
   const primaX = nave.x
+  if (puntato && (puntato.morto || !asteroidi.includes(puntato))) puntato = null
+  if (puntato) nave.meta = dentroCampo(puntato.x)   // il sasso scelto si sposta (un urto, un disco): la nave lo segue
   nave.x += (nave.meta - nave.x) * (1 - Math.exp(-dt * CFG.guida))
   nave.vx = dt > 0 ? (nave.x - primaX) / dt : 0
   const frena = Math.exp(-dt * 3)
@@ -956,13 +977,14 @@ function effetti(dt) {
 /* La scena per il disegno, in pixel dello schermo (docs/asteroidi/grafica-3d.md).
    Un oggetto solo, rinfrescato a ogni fotogramma: niente allocazioni. */
 const quadro = { t: 0, W: 0, H: 0, S: 1, cielo: 'cintura', salto: 0, scossa: 0, lampo: 0, gelo: false,
-                 nave, asteroidi: [], madre: null, pezzi: [], frammenti: [], particelle: [], anelli: [], raggi: [] }
+                 nave, asteroidi: [], puntato: null, madre: null, pezzi: [], frammenti: [], particelle: [], anelli: [], raggi: [] }
 const nessuno = []
 function disegna3d(dt) {
   const q = quadro, gioca = fase.value === 'gioco'
   q.t = pulsa; q.W = W; q.H = H; q.S = S; q.cielo = cielo; q.salto = salto; q.scossa = Math.max(0, scossa)
   q.lampo = Math.max(0, lampo); q.gelo = gelo
   q.asteroidi = gioca ? asteroidi : nessuno
+  q.puntato = gioca ? puntato : null
   q.madre = gioca && madre.attiva ? madre : null
   q.pezzi = pezzi; q.frammenti = frammenti; q.particelle = particelle; q.anelli = anelli; q.raggi = raggi
   nave.t = pulsa
@@ -1252,6 +1274,8 @@ onMounted(() => {
                     // `gelo` è una funzione perché i secondi che restano
                     // vivono fuori da Vue (cambiano a ogni fotogramma)
                     tasca, usaGelo, usaMirino, gelo: () => gelo,
+                    // il sasso scelto con le frecce (docs/asteroidi/grafica-3d.md, «La tastiera»)
+                    puntato: () => puntato,
                     // quanto costa un fotogramma; `tre`: la tela disegna (falso a contesto perso)
                     grafica: () => (pittore3d ? { tre: true, ...pittore3d.info() } : { tre: false }) }
   ridimensiona()
@@ -1357,6 +1381,9 @@ function dalCheat() {
 
     <div v-if="fase === 'gioco'" class="domanda">
       <b :class="{ lunga: domanda.testo.length > 13 }">{{ domanda.testo }}</b>
+      <!-- con una tastiera: quali tasti scelgono e sparano (giochi/tastiera.js) -->
+      <span v-if="conTastiera" class="tasti-nave" data-tasti-nave>
+        <TastoTastiera nome="←" /><TastoTastiera nome="→" /> scegli <TastoTastiera nome="↵" /> spara</span>
     </div>
 
     <!-- per provare i giochi: la leva di #admin, docs/core/comandi.md -->
@@ -1575,6 +1602,8 @@ canvas { position:absolute; inset:0; width:100%; height:100% }
              text-shadow:0 0 22px #4aa3ff88, 0 4px 0 #0008; padding:0 12px;
              text-align:center; line-height:1.05 }
 /* «in 149 quante volte c'è 7?» non ci sta nel corpo delle tabelline */
+.tasti-nave { position:absolute; left:10px; bottom:8px; display:flex; align-items:center; gap:4px; font-size:12px;
+              font-weight:600; color:#ffffffb0; pointer-events:none }
 .salta-mate { position:absolute; right:10px; bottom:calc(max(17vh, 96px) + 6px); z-index:5 }
 .domanda b.lunga { font-size:clamp(20px,5.6vw,36px); letter-spacing:0 }
 .domanda i { font-style:normal; color:#7fe3ff }
