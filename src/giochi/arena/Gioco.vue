@@ -592,7 +592,18 @@ function scegli({ azione, id, posto }) {
   voluta = { azione, id: id || prima?.id, posto, chi, dove, op, resa: azione === 'vendi' ? p.resa(mio.value, posto) : 0 }
   toccato.value = true
   domanda.value = domandaDi(op, gradoDi(laBase(op), peso))
+  titoloDomanda.value = perCosa(voluta)
   suono.ok()
+}
+
+/* il titolo del calcolo: cosa si sta pagando, non il nome del modulo dei quiz («Conti puri» non diceva niente: l'utente) */
+const titoloDomanda = ref('')
+function perCosa(v) {
+  const nome = v.id && TRUPPE[v.id] ? TRUPPE[v.id].nome : ''
+  if (v.id === 'miniera') return { costruisci: '⛏️ Per la miniera', potenzia: '⛏️ Per far salire la miniera', vendi: '💰 Per vendere la miniera' }[v.azione] || '⛏️ Per la miniera'
+  return { costruisci: `⚔️ Per costruire: ${nome}`, potenzia: `⬆️ Per far salire: ${nome}`, vendi: `💰 Per vendere: ${nome}`,
+           ripara: '🔧 Per riparare', castello: '🏰 Per rinforzare il castello', bomba: '💣 Per la bomba', miniera: '⛏️ Per la miniera' }[v.azione]
+    || '⚔️ Il calcolo'
 }
 
 /* la base del bambino per un'operazione: la sua, o da dove parte la prima volta (bravura.js) */
@@ -793,7 +804,7 @@ onUnmounted(() => {
 
       <!-- il calcolo prende tutto lo schermo; il campo intanto rallenta (non si ferma) -->
       <Domanda v-if="domanda" :domanda="domanda.domanda" :pittori="domanda.pittori"
-               :titolo="`${domanda.icona} ${domanda.nome}`"
+               :titolo="titoloDomanda"
                :origine="domanda" gioco="arena" :svelta="inDue()" @risposto="risposto" />
 
       <Dettagli v-if="dettaglio" :d="dettaglio" @chiudi="dettaglio = null" @procedi="procediDaiDettagli" @vendi="vendiDaiDettagli" />

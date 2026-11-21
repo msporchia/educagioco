@@ -32,7 +32,7 @@ export function usaGuida(radice, passo) {
 /* La guida che si richiama col `?` (docs/core/come-si-gioca.md): accesa da sé al primo giro (`prima`) o dal `?`.
    `saltabile`: la ✕ anche sul primo giro (a scuola). `finita()` si chiama una volta per accensione, quando si spegne.
    Le mosse fatte (`segna`/`fatto`) contano da quando è accesa, così richiamata a metà partita fa fare una mossa vera. */
-export const FINE_MS = 7000
+export const FINE_MS = 10000   // l'ultima riga dice come si prosegue: due frasi, da leggere con calma
 
 export function usaGuidaRichiamata({ prima = false, saltabile = false, finita = () => {} } = {}) {
   const accesa = ref(!!prima)

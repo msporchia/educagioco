@@ -39,6 +39,7 @@ export function guidaDiArena(q = {}) {
     if (riposa) return { testo: 'Dopo un conto sbagliato la caserma riposa un attimo: aspetta e riprova', dove: BERSAGLI.piazzola(riposa.posto), aspetta: true }
     if (caserme.some(c => c.attesa)) return { testo: 'I 💎 arrivano da soli: aspetta che bastino per far salire la caserma', dove: BERSAGLI.monete, aspetta: true }
   }
-  const testo = 'Le truppe escono da sole e vanno al castello nemico: ' + (q.infinita ? 'resisti e abbattilo' : 'abbattilo prima che finisca il tempo')
+  // l'ultima riga dice come si va avanti da soli (l'utente: «non gli ha spiegato come devono proseguire»): il giro si ripete
+  const testo = 'Ora continua tu: costruisci altre caserme e falle salire, fino al castello rosso!'
   return { testo, dove: null, fine: true }
 }

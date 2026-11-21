@@ -148,6 +148,14 @@ stanno agli angoli del campo, non a quelli del quadro (`cqh`).
   titoli**, e le emoji restano solo dove portano informazione (💎 del prezzo, 💰 vendi, ⛏️ per
   la miniera, che non ha un ritratto).
 
+## La domanda
+
+La scheda del calcolo è quella comune (`quiz/Domanda.vue`), vestita come nel sotterraneo: tavola di legno scuro col bordo
+d'oro e i rivetti, la consegna su una targa d'ottone, le risposte tavole di legno che si abbassano al tocco. Lo fanno i
+`--qz-…` ridefiniti in fondo a `stile.css`, con gli stessi valori del tema «legno» ([../sotterraneo/tema-pannelli.md](../sotterraneo/tema-pannelli.md))
+e i materiali della cornice (`--ar-legno`, `--ar-oro-bordo`, `--ar-ottone`). Prima era la scheda blu di serie: l'utente,
+21 novembre 2026, «non è molto epica».
+
 ## Lo sfondo che resta verde
 
 Se il campo restava del colore di fondo c'erano due strade: un'immagine non arrivava (`carica` e `caricaFigure` ricordavano il
