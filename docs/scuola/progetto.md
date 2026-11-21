@@ -65,6 +65,11 @@ Profili salvati, monete in vista, record, ripasso fra una lezione e l'altra, et�
 lezione), guide, novità, posta, «installa», amici, aggiornamenti automatici, service worker. Non si spengono: la
 pagina non li importa, o li importa sostituiti (il profilo dei giochi veri vive in memoria e muore con la pagina).
 
+## I giochi che non ci sono
+
+Scelto dall'utente il 21 novembre 2026: Codice Segreto, Conta e Prima e dopo non sono adatti alle elementari in una
+classe; il giardino è ancora in prova; la fattoria ed Español no. I giochi che ci sono stanno in [giochi.md](giochi.md).
+
 ## Il ciclo di vita
 
 Stesso `main` dell'app di casa, pubblicazione a parte: il push su `main` non cambia mai la scuola; un tag
@@ -76,7 +81,6 @@ Stesso `main` dell'app di casa, pubblicazione a parte: il push su `main` non cam
 
 - Una **prova di rete** sui PC veri della scuola (raggiungono `*.workers.dev`? i WebSocket passano? che
   browser?): è l'incognita che può far ripensare il canale.
-- Altri **giochi veri** limitati a un esercizio, oltre agli Asteroidi (Codice Segreto, Conta, Prima e dopo).
 - Gli **Asteroidi su un PC della scuola**: se il 3D regge con la fascia `'bassa'`, o se serve un ritorno alle schede
   anche per lentezza e non solo per WebGL assente.
 - Il messaggio `tutto` porta tutte le risposte: con una classe intera e una lezione lunga può passare il mega che
