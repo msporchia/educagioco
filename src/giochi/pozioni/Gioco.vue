@@ -8,7 +8,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import Barra from '../../components/Barra.vue'
 import TastoSalta from '../../components/TastoSalta.vue'
 import { suono } from '../../audio.js'
-import { segna, answer } from '../../store/profile.js'
+import { segna, answer, guidaGiaVista, segnaGuidaVista } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'
 import { progresso, aperta, adesso, stelleDi, completa, primatoDi, segnaPrimato,
          sosta, salvaSosta, buttaSosta } from '../campagne.js'
@@ -24,6 +24,10 @@ import { Bottega } from './motore/bottega.js'
 import { MORTAIO, TAGLIERE, GRATTATO } from './motore/procedimento.js'
 import { scrivi, leggi, dice, tappaDi } from './motore/sosta.js'
 import { tappeDelLimite, tappaDiScuola, dopoNelGiro, risposteDellOrdine } from './motore/limite.js'
+import { usaGuidaRichiamata } from '../guida.js'
+import Guida from '../Guida.vue'
+import { saltaLeSpiegazioni } from '../spiegazioni.js'
+import { guidaDellePozioni } from './motore/guida.js'
 import Mappa from './viste/Mappa.vue'
 import Mercante from './viste/Mercante.vue'
 import Fine from './viste/Fine.vue'
@@ -53,6 +57,22 @@ const cieco = ref(false)
 const attesa = ref(0)               // 0..1 della barra sotto un trabocco
 const giro = ref(0)                 // una pozione nuova è una tela nuova
 const avanza = progresso(CHIAVE)
+
+/* la guida «Come si gioca» (motore/guida.js, docs/core/come-si-gioca.md): un ordine fino alla ricetta, alla prima pozione della vita
+   (a scuola della pagina, con la ✕); il `?` la richiama. Qui non c'è un orologio: niente da fermare */
+const radice = ref(null)
+const guida = usaGuidaRichiamata({
+  prima: !!scelte || (!saltaLeSpiegazioni() && !guidaGiaVista(CHIAVE)),
+  saltabile: !!scelte,
+  finita: () => { if (!scelte) segnaGuidaVista(CHIAVE) },
+})
+const passoGuida = computed(() => {
+  const b = bottega.value
+  if (!guida.accesa.value || vista.value !== 'banco' || !b || finale.value) return null
+  return guidaDellePozioni({ occupato: occupato.value, finita: b.finita, pronta: b.pronta, sporco: b.macchie.length > 0,
+                             bozza: bozza.value.length, ordinato: guida.fatto('ordine') })
+})
+guida.segui(radice, passoGuida)
 
 const tappa = computed(() => (tappaIdx.value < 0 ? INFINITA : CAMPAGNA[tappaIdx.value]))
 // il calderone senza fondo sta dietro l'ultima tappa: si apre con lei. Indice -1
@@ -243,6 +263,7 @@ function ordina() {
   const prima = b.ingredienti.map(g => g.messo)    // la pergamena li segue mentre versa
   const r = b.ordina(bozza.value)
   if (!r) return
+  guida.segna('ordine')
   bozza.value = []
   occupato.value = true
   messaggio.value = null
@@ -439,8 +460,9 @@ if (typeof window !== 'undefined')
 </script>
 
 <template>
-  <div class="schermo pz" :data-vista="vista">
-    <Barra :titolo="titolo" guida="pozioni" scura :monete="vista === 'mappa'" @indietro="indietro" />
+  <div ref="radice" class="schermo pz" :data-vista="vista">
+    <Barra :titolo="titolo" guida="pozioni" scura :monete="vista === 'mappa'" :come="vista === 'banco' && !finale" @come="guida.alterna()" @indietro="indietro" />
+    <Guida class="pz-guida" :passo="passoGuida" :spegnibile="guida.spegnibile.value" @spegni="guida.spegni()" />
 
     <Mappa v-if="vista === 'mappa'" :blocchi="blocchi" :infinita="infinita" :ripresa="ripresa"
            :chiede="chiede ? chiede.nome : ''" :davanti="amici.davanti" @gioca="vuoleIniziare"

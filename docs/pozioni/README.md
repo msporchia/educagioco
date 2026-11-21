@@ -10,6 +10,6 @@ Le misure a gettoni contati, dal mercante (`src/giochi/pozioni/`).
 - [sosta.md](sosta.md) — la tappa lasciata a metà: cosa si salva, cosa non si può rifare
 - [scuola.md](scuola.md) — a scuola: la maestra sceglie misure e gradini, il giro delle tappe, ogni dose una risposta, il 3D leggero
 
-Vedi anche: [../core/convenzione-giochi.md](../core/convenzione-giochi.md);
+Vedi anche: [../core/come-si-gioca.md](../core/come-si-gioca.md) (la guida «Come si gioca», col `?` e a scuola), [../core/convenzione-giochi.md](../core/convenzione-giochi.md);
 gli amici sulla mappa: [../core/amici-nei-giochi.md](../core/amici-nei-giochi.md);
 [../apprendimento/calibrazione.md](../apprendimento/calibrazione.md) (tre monete a ingrediente).

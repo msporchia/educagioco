@@ -225,3 +225,5 @@
 @media (min-width: 1200px) and (min-aspect-ratio: 5 / 4) {
   .pz-mercante { --pz-colonna: 380px }
 }
+/* la riga della guida «Come si gioca» (docs/core/come-si-gioca.md): sotto la barra, sopra il banco */
+.pz-guida { margin: 6px 10px 0; position: relative; z-index: 6 }
