@@ -399,7 +399,7 @@ function fogliAlga() {
   const g = new Group()
   for (let i = 0; i < 3; i++) {
     const q = (x, z) => 0.02 + 0.012 * Math.sin(x * 9 + i) * Math.cos(z * 7 - i)
-    const f = pezzo(foglio(q, { L: 0.5, t: 0.016, y: 0.02 }), 0.022, (x, y, z, c) => {
+    const f = pezzo(foglio(q, { L: 0.5, t: 0.03, y: 0.02 }), 0.016, (x, y, z, c) => {
       c.setHex(0x1f3a2c); verso(c, 0x355a44, fra(0.3, 0.8, mosso(x, 3, z, 34)) * 0.7)
     }, 0.4)
     f.position.y = i * 0.05; f.rotation.y = i * 0.22 - 0.2
@@ -407,9 +407,42 @@ function fogliAlga() {
   }
   return g
 }
-const fasciaAlga = () => pezzo(palla([0, 0.1, 0], [0.07, 0.115, 0.27]), 0.016, (x, y, z, c) => {
-  c.setHex(0x1f3a2c); verso(c, 0x355a44, fra(0.3, 0.8, mosso(x, y, z, 44)) * 0.6)
-}, 0.4)
+const ALGA = (x, y, z, c) => { c.setHex(0x1f3a2c); verso(c, 0x355a44, fra(0.3, 0.8, mosso(x, y, z, 44)) * 0.6) }
+// un foglio solo, steso sul piatto: l'alga senza il riso
+const foglioAlga = () => pezzo(foglio((x, z) => 0.03 + 0.01 * Math.sin(x * 9) * Math.cos(z * 7), { L: 0.4, t: 0.03, y: 0.03 }), 0.016, ALGA, 0.4)
+
+/* Il sushi a stadi, che si riconoscono anche senza leggere (docs/bancarella/cucina.md): il riso da solo è un
+   mucchio, col pesce sono i nigiri, con l'alga gli onigiri a triangolo, con tutti e tre i maki arrotolati. */
+const TRE = Math.sqrt(3)
+function triangolo(x, y, r) {               // la distanza dal triangolo equilatero con la punta in su (Inigo Quilez)
+  let px = Math.abs(x) - r, py = y + r / TRE
+  if (px + TRE * py > 0) { const nx = (px - TRE * py) / 2, ny = (-TRE * px - py) / 2; px = nx; py = ny }
+  px -= Math.min(Math.max(px, -2 * r), 0)
+  return -Math.hypot(px, py) * Math.sign(py)
+}
+function onigiri() {
+  const R = 0.19, cy = 0.2, T = 0.08
+  const forma = { f: (x, y, z) => {
+    const d = triangolo(x, y - cy, R) - 0.05, h = Math.abs(z) - T
+    return Math.min(Math.max(d, h), 0) + Math.hypot(Math.max(d, 0), Math.max(h, 0)) - 0.035
+  }, c: [0, cy, 0], r: 0.36 }
+  // la fascia d'alga avvolge il fondo, davanti e dietro
+  const m = pezzo(forma, 0.016, (x, y, z, c) => {
+    chicchi(x, y, z, c)
+    if (Math.abs(x) < 0.11 && y < cy + 0.01) ALGA(x, y, z, c)
+  }, 0.6)
+  // appoggiato all'indietro: in piedi, dall'alto se ne vedeva solo lo spigolo
+  m.rotation.x = -0.85; m.position.set(0, 0.1, 0.06)
+  return tutto(m)
+}
+function maki() {
+  return pezzo(disco(0.09, 0.15, 0.18, 0.025), 0.014, (x, y, z, c, nx, ny) => {
+    const r = Math.hypot(x, z)
+    if (ny < 0.7 || r > 0.122) return ALGA(x, y, z, c)
+    if (r < 0.058) { c.setHex(0xf2743a); verso(c, 0xffb48a, fra(0.72, 0.95, Math.abs(Math.sin((x + z) * 60))) * 0.7); return }
+    chicchi(x, y, z, c)
+  }, 0.5)
+}
 
 /* ── il pomodoro: intero, e a cubetti per la bruschetta ── */
 function pomodoroIntero() {
@@ -443,7 +476,8 @@ const FATTI = {
   'c:carne': cartaCarne, 'c:uovo': uova, 'c:impasto': pallaImpasto,
   'c:pesce': pesceIntero, 'c:riso': ciotolaRiso, 'c:alga': fogliAlga,
   'c:pomodoro': pomodoroIntero, 'pomodoro-tagliato': pomodoroTagliato,
-  'pesce-fetta': fettaPesce, 'pesce-fette': fettePesce, 'riso': () => tutto(montoRiso()), 'riso-nigiri': nigiri, 'alga-fascia': fasciaAlga,
+  'pesce-fetta': fettaPesce, 'pesce-fette': fettePesce, 'riso': () => tutto(montoRiso()), 'riso-nigiri': nigiri,
+  'alga-foglio': foglioAlga, 'onigiri': onigiri, 'maki': maki,
 }
 function clona(chiave, fai) {
   G[chiave] ||= fai()
@@ -479,11 +513,11 @@ export function impiatta(p) {
     if (cose.includes('carne')) for (const [x, z] of [[-0.24, 0.1], [0.22, 0.14], [0, -0.24]]) { metti('carne-cruda', x, 0.1, z); g.children.at(-1).scale.setScalar(0.3) }
   }
   else if (cose[0] === 'riso') {
-    for (const [x, a] of [[-0.3, 0.2], [0, 0], [0.3, -0.2]]) {
-      metti('riso-nigiri', x, 0.02, 0, a)
-      if (cose.includes('pesce')) metti('pesce-fetta', x, 0.17, 0, a)
-      if (cose.includes('alga')) metti('alga-fascia', x, cose.includes('pesce') ? 0.08 : 0.03, 0, a)
-    }
+    const pesce = cose.includes('pesce'), alga = cose.includes('alga')
+    if (pesce && alga) for (const [x, z] of [[-0.3, -0.16], [0, -0.16], [0.3, -0.16], [-0.3, 0.16], [0, 0.16], [0.3, 0.16]]) metti('maki', x, 0.02, z)
+    else if (alga) { metti('onigiri', -0.24, 0.02, 0, 0.25); metti('onigiri', 0.24, 0.02, 0, -0.25) }
+    else if (pesce) for (const [x, a] of [[-0.3, 0.2], [0, 0], [0.3, -0.2]]) { metti('riso-nigiri', x, 0.02, 0, a); metti('pesce-fetta', x, 0.17, 0, a) }
+    else metti('riso', 0, 0.02)
   }
   else if (cose[0] === 'uovo') {
     if (cose.includes('pane')) {
@@ -494,7 +528,12 @@ export function impiatta(p) {
     if (cose.includes('formaggio')) metti('formaggio-fette', -0.2, 0.1, -0.06)
   }
   else if (cose[0] === 'insalata') { metti('insalata'); if (cose.includes('formaggio')) metti('formaggio-fette', 0, 0.1) }
-  else if (cose[0] === 'pesce') { if (cose.includes('insalata')) metti('insalata'); metti('pesce-fette', 0, cose.includes('insalata') ? 0.14 : 0.02) }
+  else if (cose[0] === 'pesce') {
+    if (cose.includes('insalata')) metti('insalata')
+    if (cose.includes('alga')) metti('alga-foglio')
+    metti('pesce-fette', 0, cose.includes('insalata') ? 0.14 : cose.includes('alga') ? 0.05 : 0.02)
+  }
+  else if (cose[0] === 'alga') metti('alga-foglio')
   else if (cose[0] === 'pasta') {
     metti('pasta')
     if (cose.includes('sugo')) metti('sugo', 0, 0.21)
@@ -529,7 +568,7 @@ export async function prepara(cose, ricette) {
   if (usa.has('pomodoro')) chiavi.push('pomodoro-tagliato')
   if (usa.has('pesce')) chiavi.push('pesce-fetta', 'pesce-fette')
   if (usa.has('riso')) chiavi.push('riso', 'riso-nigiri')
-  if (usa.has('alga')) chiavi.push('alga-fascia')
+  if (usa.has('alga')) chiavi.push('alga-foglio', 'onigiri', 'maki')
   if (usa.has('carne')) chiavi.push('carne-cruda', 'carne')
   if (usa.has('uovo')) chiavi.push('uovo')
   if (usa.has('impasto')) chiavi.push('impasto-palla', 'pizza-impasto', 'pizza-bianca', 'pizza-sugo', 'pizza-cruda', 'pizza')

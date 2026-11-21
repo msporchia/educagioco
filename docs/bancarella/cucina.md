@@ -178,6 +178,13 @@ nella stanza. Le fa `npm run anteprime cucina` (`strumenti/anteprime-cucina.mjs`
 `strumenti/banco/foto-cucina.html`) in `src/data/bancarella-foto.js`, generato, e un test
 dice se un modello è cambiato. `emoji` di una ricetta è solo la sua chiave.
 
+## Il sushi a stadi
+
+Riso, pesce e alga si riconoscono a ogni passo senza leggere (`impiatta` in `cibo.js`): il riso da solo è un mucchio, col pesce sono
+i **nigiri**, con l'alga gli **onigiri** a triangolo (appoggiati all'indietro: in piedi, dall'alto se ne vedeva lo spigolo), con
+tutti e tre i **maki** arrotolati. Il pesce con l'alga è il pesce sul foglio d'alga, l'alga da sola il foglio. Prima il riso da solo
+sembrava già sushi, e l'alga da sola sul piatto rompeva la cucina (non aveva un modello).
+
 ## La scena
 
 Camera fissa dall'alto, la stanza intera dentro, ma diversa a ogni cucina; quello che avanza sullo schermo resta sopra,
