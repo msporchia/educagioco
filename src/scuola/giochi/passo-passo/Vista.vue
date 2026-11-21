@@ -28,7 +28,8 @@ const riferisci = r => emit('risposta', r)
 </script>
 
 <template>
-  <div class="passo-passo" data-gioco="passo-passo">
+  <!-- `pp-schermo-largo`: su un PC fila e tasti a sinistra, la mappa a destra (giochi/passo-passo/stile.css) -->
+  <div class="passo-passo pp-schermo-largo" data-gioco="passo-passo">
     <div class="colonna">
       <PassoPasso v-if="chi" :key="chi" :limite="limite" @risposta="riferisci" />
     </div>
@@ -39,4 +40,6 @@ const riferisci = r => emit('risposta', r)
 /* il gioco è un `.schermo` assoluto: sta nella colonna, centrata su uno schermo largo */
 .passo-passo { position: relative; flex: 1; min-height: 0; display: flex; justify-content: center; background: #eef4e4 }
 .colonna { position: relative; flex: 1; max-width: 720px; overflow: hidden }
+/* sullo schermo largo il gioco si stende: la mappa a destra ha bisogno della larghezza */
+@media (min-width: 900px) and (min-aspect-ratio: 5 / 4) { .colonna { max-width: 1280px } }
 </style>

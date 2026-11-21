@@ -74,6 +74,16 @@ ci sono solo i due gradini gratis che fanno ragionare** (`scalaAScuola`, quelli 
 ridice **dove** per la fila di adesso. La freccia giusta, i pezzi di strada e la soluzione non ci sono: niente prezzo
 sul tasto, e la stella 🧠 resta sempre accesa.
 
+## Lo schermo largo
+
+Sui PC (più largo di 900 pixel e orizzontale) la fila e i tasti stanno a sinistra, la mappa a destra con tutta l'altezza:
+si legge da sinistra a destra, si scrive e poi si vede cosa fa (scelta dell'utente). In colonna una mappa alta (sette
+per nove) restava piccola, così è una volta e mezza più larga. Lo accende la vista della
+scuola con la classe `pp-schermo-largo` (in `stile.css`); a casa si gioca in verticale sul telefono. Una mappa bassa
+(sette per tre) cresce poco o niente: la tela ingrandisce a multipli interi, e ci stava già.
+
+Nei test: `integrazione/scuola` (la mappa a destra dei tasti, `scuola-passo-largo` con `--scatti`).
+
 ## La tastiera
 
 Solo qui: frecce, ⇧, A R S, i numeri, ⌫ e Invio fanno quello che fanno i

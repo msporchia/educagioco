@@ -307,6 +307,12 @@ controlla('in localStorage solo chiavi scuola:*', disco.chiavi.every(k => k.star
   await P.page.reload()
   await P.page.waitForSelector('.pp-campo [data-freccia="destra"]', { timeout: 15000 })
   await attendi(P.page, 400)
+  {
+    // su un PC fila e tasti a sinistra, la mappa a destra (docs/passo-passo/scuola.md, «Lo schermo largo»)
+    const [mappa, tasti] = await Promise.all(['.pp-scena', '.pp-tasti'].map(s => P.page.locator(s).boundingBox()))
+    controlla('sullo schermo largo la mappa sta a destra dei tasti', tasti.x + tasti.width <= mappa.x, JSON.stringify({ mappa, tasti }))
+  }
+  await scatto(P.page, 'scuola-passo-largo')
   await P.page.keyboard.press('ArrowRight')
   await P.page.keyboard.press('ArrowDown')
   uguale('le frecce della tastiera scrivono la fila', await P.page.locator('[data-tessera]').count(), 2)
