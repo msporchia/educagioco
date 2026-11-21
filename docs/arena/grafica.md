@@ -113,6 +113,8 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
 - **I terreni dipinti entrano tutti insieme**: `terreni-arena.py` li usa solo quando ci sono tutti e quattro, perché uno solo in mezzo ai disegni stona. Ora ci sono: il ponte delle colline è ancora largo e tocca le caserme ai lati, si rifà (voce 8).
 - **Sul ponte si cammina fra i parapetti** (`CAMPO.ponte`, in `separa()`): chi non ci passa si mette in fila, chi vola ci passa sopra. Il limite è la misura del piano dei dipinti, meno mezza truppa.
 - **Un terreno dipinto ha il suo ponte** (`PONTE_DIPINTO` di `dati/terreni-pronti.js`), e il gioco non ci mette il suo: sta fra le rive e largo il 10% dell'immagine, se no tocca le caserme ai lati.
+  **La porta è larga quanto il ponte dipinto**, un poco di più (`PORTA_DIPINTA` in `scena/campo.js`): le torri stanno sui piloni di testata.
+  Larga 70 come sul ponte disegnato sembrava posata lì. Sulle colline il ponte è ancora il doppio (voce 8), e la porta lì stona finché non si rifà.
 - **Il ponte e la porta** (`arena-disegni/opere.js`) prendono legno e pietra dal posto. Il ponte ha le assi fra due travi
   con le spalle di pietra; la porta due torri merlate con lo stendardo e il portone, che si crepa sotto i due terzi e
   sotto un terzo della vita; crollata, resta il cumulo. Il foglio 9 ha castello e porta (intera, rotta,

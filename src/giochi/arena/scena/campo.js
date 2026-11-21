@@ -11,11 +11,14 @@ import { PEZZI as FORTEZZE, ATLANTE as FOGLIO_FORTEZZE } from '../dati/fortezze-
 import { PEZZI as OPERE, ATLANTE as FOGLIO_OPERE } from '../dati/opere-disegnate.js'
 import { ATLANTE as FOGLIO_TRUPPE } from '../dati/truppe-dipinte.js'
 import { SCALA, fotogramma, fotogrammiDi, DIPINTE as TRUPPE_DIPINTE, RISOLUZIONE } from './figure.js'
-import { PONTE_DIPINTO } from '../dati/terreni-pronti.js'
+import { PONTE_DIPINTO, PEZZO_DI_MONDO } from '../dati/terreni-pronti.js'
 import { disegnaEdificio } from './edifici.js'
 import { Terreno } from './terreno.js'
 import { Atmosfera } from './atmosfera.js'
 
+// la porta sul ponte dipinto è larga quanto lui (il 10% dell'immagine, coi parapetti) e un poco di più: le torri stanno sui piloni
+// di testata. Più stretta sembrava posata lì. Sul ponte disegnato a monte resta la sua misura
+const PORTA_DIPINTA = PEZZO_DI_MONDO.w * 0.1 * 1.06, PORTA_DISEGNATA = 70
 // Tutto è piccolo e il campo è largo: `ZOOM` è la misura delle figure rispetto al mondo.
 const ZOOM = 0.5
 // quanto mondo si vede almeno, di lato: le piazzole coi loro bordi. Il resto dello schermo è terreno in più (docs/arena/grafica.md)
@@ -377,7 +380,7 @@ export class Campo {
     const x = this.X(mu.x), stato = mu.hp <= 0 ? 'crollata' : mu.hp / mu.max < 0.5 ? 'rotta' : 'intera'
     const dietro = mu.lato === 'io' && this.fortezza(`porta:@:${stato}:dietro`)
     const [foglio, [sx, sy, w, h]] = dietro?.[0] ? dietro : this.fortezza(`porta:@:${stato}`)
-    const largo = 70 * this.s, alto = largo * h / w, piede = this.Y(mu.y) + 6 * this.s
+    const largo = (PONTE_DIPINTO.includes(this.terreno.chiave) ? PORTA_DIPINTA : PORTA_DISEGNATA) * this.s, alto = largo * h / w, piede = this.Y(mu.y) + 6 * this.s
     c.save()
     if (mu.fl > 0) c.globalAlpha = 0.72
     c.drawImage(foglio[mu.lato], sx, sy, w, h, x - largo / 2, piede - alto, largo, alto)
