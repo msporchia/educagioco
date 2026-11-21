@@ -1,10 +1,11 @@
-// La tastiera nei giochi: un tasto fa quello che fa il pulsante sullo schermo, e chi ha mouse e tastiera vede accanto ai
-// pulsanti il tasto da premere. docs/core/tastiera.md
+// La tastiera nei giochi, solo a scuola (ACCESA): un tasto fa quello che fa il pulsante sullo schermo, e chi ha mouse e
+// tastiera vede accanto ai pulsanti il tasto da premere. docs/core/tastiera.md
 import { ref, onMounted, onUnmounted } from 'vue'
+import { ACCESA } from './tastiera-accesa.js'
 
-// con un mouse (i PC della scuola) i tasti si vedono subito; su un telefono solo dopo il primo tasto premuto davvero
+// con un mouse (i PC della scuola) i tasti si vedono subito; su un tablet solo dopo il primo tasto premuto davvero
 const conMouse = typeof matchMedia === 'function' && matchMedia('(hover: hover) and (pointer: fine)').matches
-export const conTastiera = ref(conMouse)
+export const conTastiera = ref(ACCESA && conMouse)
 
 const scrivibile = el => !!el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))
 
@@ -18,6 +19,7 @@ export function nomeDelTasto(e) {
 /* `mappa`: { nome del tasto: funzione }. `attivo`: se il gioco ascolta adesso (niente fogli aperti, niente finale).
    Un tasto tenuto giù non si ripete (un passo per pressione), e Ctrl/Alt/⌘ restano del browser */
 export function usaTasti(mappa, { attivo = () => true } = {}) {
+  if (!ACCESA) return
   function premi(e) {
     if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || scrivibile(e.target) || !attivo()) return
     const fai = mappa[nomeDelTasto(e)]

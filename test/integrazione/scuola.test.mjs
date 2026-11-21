@@ -16,7 +16,8 @@
    lo dice la maestra», e arriva a «Hai finito!». «Chiudi lezione»: lui vede che è finita, la maestra il
    resoconto con le sue giuste blocco per blocco. E alla fine la pagina
    dei bambini non ha lasciato niente sul PC: IndexedDB vuoto, in
-   localStorage solo chiavi `scuola:*`.
+   localStorage solo chiavi `scuola:*`. Gli Asteroidi si giocano dalla
+   tastiera (← → e Invio), e una prova di Passo passo pure.
    Docs: docs/scuola/ (le righe «Nei test»). `node test/esegui.mjs scuola`
    costruisce anche `dist-scuola/` (`npm run build:scuola`).
    ═══════════════════════════════════════════════════════════════════ */
@@ -24,6 +25,7 @@ import { resolve } from 'node:path'
 import { apriBrowser, attendi, scatto, RADICE, SCRIVANIA } from '../aiuto/browser.mjs'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 import { servizioScuola } from '../aiuto/servizio-scuola.mjs'
+import { linkDiProva } from '../../src/scuola/maestra/quaderno.js'
 
 const CARTELLA = resolve(RADICE, 'dist-scuola')
 const servizio = await servizioScuola()
@@ -196,7 +198,16 @@ if (nelGioco) {
 if (nelGioco) {
   controlla('il gioco ha il cielo in 3D', await b.evaluate(() => window.__mate.grafica?.()?.tre === true))
   await scatto(b, 'scuola-asteroidi')
-  await b.evaluate(() => { const g = window.__mate; g.colpisci(g.asteroidi().find(a => !a.morto && a.ok)) })
+  // a scuola la tastiera comanda (docs/asteroidi/grafica-3d.md, «La tastiera»): ← → fino al giusto, e Invio
+  // le frecce scelgono fra i sassi già in vista: si aspetta che il giusto sia sceso nello schermo
+  await b.waitForFunction(() => window.__mate.asteroidi().some(a => !a.morto && a.ok && a.y > 80), null, { timeout: 15000, polling: 100 })
+  await b.keyboard.press('ArrowLeft')
+  controlla('una freccia sceglie un sasso, e i tasti si vedono in fondo',
+            await b.evaluate(() => !!window.__mate.puntato()) && await b.locator('[data-tasti-nave]').isVisible())
+  for (let i = 0; i < 6; i++) await b.keyboard.press('ArrowLeft')
+  for (let i = 0; i < 6 && !(await b.evaluate(() => window.__mate.puntato()?.ok)); i++) await b.keyboard.press('ArrowRight')
+  controlla('con le frecce si arriva al sasso giusto', await b.evaluate(() => window.__mate.puntato()?.ok))
+  await b.keyboard.press('Enter')
 } else {
   nota('niente 3D in questo Chrome: il blocco degli Asteroidi è tornato alle schede')
   await giustaAllaScheda()
@@ -277,6 +288,27 @@ const disco = await b.evaluate(async () => ({
 }))
 stessaLista('IndexedDB della pagina dei bambini è vuoto', disco.basi, [])
 controlla('in localStorage solo chiavi scuola:*', disco.chiavi.every(k => k.startsWith('scuola:')), disco.chiavi.join(', '))
+
+/* ── Passo passo dalla tastiera, in una prova (il link di ▶ Prova): ⌫, le frecce, Invio (docs/passo-passo/regole.md) ── */
+{
+  const P = await apri('index.html')
+  const prova = linkDiProva({ id: 'prova', nome: 'Prova', inTondo: false,
+    blocchi: [{ esercizio: { tipo: 'passo', protagonista: 'coniglio', gradini: ['passi'] }, passa: null }] }, P.page.url())
+  await P.page.goto(prova)
+  await P.page.reload()
+  await P.page.waitForSelector('.pp-campo [data-freccia="destra"]', { timeout: 15000 })
+  await attendi(P.page, 400)
+  await P.page.keyboard.press('ArrowRight')
+  await P.page.keyboard.press('ArrowDown')
+  uguale('le frecce della tastiera scrivono la fila', await P.page.locator('[data-tessera]').count(), 2)
+  await P.page.keyboard.press('Backspace')
+  uguale('⌫ toglie l\'ultima', await P.page.locator('[data-tessera]').count(), 1)
+  controlla('sui pulsanti speciali si vede il tasto da premere', await P.page.locator('[data-azione="via"] [data-tasto-tastiera]').isVisible())
+  await P.page.keyboard.press('Enter')
+  controlla('Invio fa partire il coniglio', await P.page.waitForSelector('[data-azione="ferma"]', { timeout: 3000 }).then(() => true, () => false))
+  controlla('nessun errore nella prova di Passo passo', veri(P.errori).length === 0, veri(P.errori).join(' | '))
+  await P.page.close()
+}
 
 controlla('nessun errore nella pagina della maestra', veri(M.errori).length === 0, veri(M.errori).join(' | '))
 controlla('nessun errore nella pagina dei bambini', veri(B.errori).length === 0, veri(B.errori).join(' | '))

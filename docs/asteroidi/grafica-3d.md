@@ -78,8 +78,9 @@ ritmi, `rispostaEntro`, il cronometro che parte quando il sasso giusto è tutto 
 
 ### La tastiera
 
-Per i PC (a scuola, soprattutto): serve alla coordinazione, non sostituisce
-il dito. Le regole comuni in [../core/tastiera.md](../core/tastiera.md).
+Solo a scuola, sui PC (a casa si gioca col telefono): serve alla
+coordinazione, non sostituisce il dito. Le regole comuni in
+[../core/tastiera.md](../core/tastiera.md).
 
 - **← e → scelgono un sasso** (`prossimoSasso` in `motore/asteroidi/comandi.js`):
   il più vicino da quella parte, fra quelli vivi e già in vista. La nave gli

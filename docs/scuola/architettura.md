@@ -44,6 +44,7 @@ controlla che ogni sostituto esporti tutti i nomi dell'originale. Il codice di c
 |---|---|
 | `store/giudizi.js`, `store/salto.js` | preferenze dei grandi salvate nell'archivio |
 | `quiz/memoria.js` | il ripasso (annota sul profilo) |
+| `giochi/tastiera-accesa.js` | al contrario: a casa la tastiera dei giochi è spenta, i PC della scuola la accendono ([../core/tastiera.md](../core/tastiera.md)) |
 | `components/Giudizio.vue` | si porta dietro `store/profile.js` |
 | `quiz/nucleo/registro.js` | raccoglie *tutti* i moduli con `import.meta.glob`, e `ing-frasi` arriva fino a `store/srs.js`: a scuola elenca solo quelli che il catalogo usa |
 | `store/storage.js` | l'archivio su disco: a scuola il profilo del gioco vive **in memoria** (una `Map` che salva e rilegge copie) e muore con la pagina; niente IndexedDB né localStorage del PC della classe |

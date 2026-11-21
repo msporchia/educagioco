@@ -64,6 +64,12 @@ limite il ritocco non si applica.
 - Suono spento e grafica nella fascia `'bassa'` non stanno qui: li mette il profilo della scuola
   ([../scuola/bambini.md](../scuola/bambini.md)).
 
+## La tastiera
+
+Solo qui: ← e → scelgono il sasso, Invio o Spazio sparano
+([grafica-3d.md](grafica-3d.md), «La tastiera»; a casa è spenta,
+[../core/tastiera.md](../core/tastiera.md)).
+
 ## L'evento `risposta`
 
 Ogni volta che il gioco segna una risposta nell'SRS (`answer()`), emette `risposta` **prima** che la domanda cambi:

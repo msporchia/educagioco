@@ -38,8 +38,9 @@ legenda delle celle sta in `dati/mondo.js`, le regole in `motore/mondo.js`.
 
 ## La tastiera
 
-Sui PC il coniglio si comanda anche dalla tastiera, e chi ha un mouse vede
-il tasto nell'angolo dei pulsanti speciali (le regole comuni in
+A scuola, sui PC, il coniglio si comanda anche dalla tastiera, e chi ha un
+mouse vede il tasto nell'angolo dei pulsanti speciali; a casa no, si gioca
+col telefono (le regole comuni in
 [../core/tastiera.md](../core/tastiera.md)). Un tasto fa quello che fa il
 pulsante, con gli stessi divieti; la mappa sta in `viste/Campo.vue`.
 

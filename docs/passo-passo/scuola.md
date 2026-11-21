@@ -74,6 +74,12 @@ ci sono solo i due gradini gratis che fanno ragionare** (`scalaAScuola`, quelli 
 ridice **dove** per la fila di adesso. La freccia giusta, i pezzi di strada e la soluzione non ci sono: niente prezzo
 sul tasto, e la stella 🧠 resta sempre accesa.
 
+## La tastiera
+
+Solo qui: frecce, ⇧, A R S, i numeri, ⌫ e Invio fanno quello che fanno i
+pulsanti, col tasto scritto nell'angolo ([regole.md](regole.md), «La
+tastiera»; a casa è spenta, [../core/tastiera.md](../core/tastiera.md)).
+
 ## L'evento `risposta`
 
 Ogni ▶ arrivato in fondo è una risposta, emessa quando il giro finisce (quello che il bambino vede):
