@@ -32,7 +32,7 @@ import { PAGA } from '../data/paghe.js'
 import { borsa } from '../store/varieta.js'
 import VeloPausa from '../giochi/VeloPausa.vue'
 import Guida from '../giochi/Guida.vue'
-import { usaGuida } from '../giochi/guida.js'
+import { usaGuidaRichiamata } from '../giochi/guida.js'
 import { TORRI } from '../data/ops.js'
 import { immuniDellOnda } from '../data/mostri.js'
 import { CFG, TAPPE, LIBERE, liberaDi, quantiRegali, blocchettoDi,
@@ -147,7 +147,8 @@ const primiPassi = ref(false)
 const passoFatto = ref(false)
 
 function accendiPrimiPassi () {
-  if (saltaLeSpiegazioni() || guidaGiaVista(PRIMI_PASSI)) return
+  // a scuola la riga è quella della guida richiamabile, con la ✕ (sotto)
+  if (tappaScuola !== null || saltaLeSpiegazioni() || guidaGiaVista(PRIMI_PASSI)) return
   primiPassi.value = true
   passoFatto.value = false
 }
@@ -156,7 +157,21 @@ function accendiPrimiPassi () {
 // piazzola è disegnata sul campo: lì niente anello, solo la riga. Partita la
 // battaglia dice che i soldi per la prossima escono dai conti, e se ne va.
 const radice = ref(null)
-const passoGuida = computed(() => {
+/* la guida «Come si gioca» (docs/core/come-si-gioca.md): il `?` la richiama in ogni partita, e a scuola parte da sé alla prima
+   battaglia della pagina, con la ✕. Fa costruire una torre vera e chiamare la battaglia */
+const guidaRich = usaGuidaRichiamata({ prima: tappaScuola !== null, saltabile: tappaScuola !== null })
+const passoRichiamato = computed(() => {
+  if (!guidaRich.accesa.value || fase.value !== 'gioco') return null
+  const f = foglio.value
+  if (f && f.che === 'costruisci') return { dove: '[data-torre]:not([disabled])', testo: 'Scegli la torre: la paghi con un conto.' }
+  if (f && f.che === 'conto') return { dove: null, testo: 'Fai il conto: il risultato paga la torre.' }
+  if (!guidaRich.fatto('torre')) return { dove: null, testo: 'Tocca una piazzola libera lungo la strada: il conto che esce paga la torre' }
+  if (vista.inAttesa && !hud.onda) return { dove: '[data-azione="chiama-onda"]', testo: 'Le torri sparano da sole. Premi «Comincia la battaglia».' }
+  return { dove: null, testo: 'Le torri sparano da sole: i soldi per la prossima escono dai conti', fine: true }
+})
+watch(() => hud.torri, (n, prima) => { if (n > (prima || 0)) guidaRich.segna('torre') })
+const passoGuida = computed(() => passoRichiamato.value || passoPrimiPassi.value)
+const passoPrimiPassi = computed(() => {
   if (!primiPassi.value || fase.value !== 'gioco') return null
   const f = foglio.value
   if (f && f.che === 'costruisci') return { dove: '[data-torre]:not([disabled])', testo: 'Scegli la torre: la paghi con un conto.' }
@@ -165,7 +180,7 @@ const passoGuida = computed(() => {
   if (vista.inAttesa && !hud.onda) return { dove: '[data-azione="chiama-onda"]', testo: 'Le torri sparano da sole. Premi «Comincia la battaglia».' }
   return { dove: null, testo: 'Le torri sparano da sole · i soldi per la prossima escono dai conti' }
 })
-usaGuida(radice, passoGuida)
+guidaRich.segui(radice, passoGuida)
 
 watch(() => hud.torri, n => {
   if (!primiPassi.value || !n || passoFatto.value) return
@@ -622,7 +637,7 @@ onMounted(() => {
 <template>
   <div ref="radice" class="schermo td">
     <!-- il ⏸ c'è solo dove il campo cammina -->
-    <Barra titolo="Castello" guida="torri" @aiuto="aiuto"
+    <Barra titolo="Castello" guida="torri" @aiuto="aiuto" :come="fase === 'gioco'" @come="guidaRich.alterna()"
            :pausa="fase === 'gioco' && !state.festa.length" @pausa="metti()"
            :monete="fase !== 'gioco' && tappaScuola === null" @indietro="esci">
       <GettoniCampo v-if="fase === 'gioco'" :hud="hud" :velocita="velocita"
@@ -644,7 +659,7 @@ onMounted(() => {
                     @chiudi="mostroAperto = null" />
 
       <!-- la prima partita in assoluto: non blocca niente, se ne va da sé -->
-      <Guida class="primi-passi" :passo="passoGuida" />
+      <Guida class="primi-passi" :passo="passoGuida" :spegnibile="guidaRich.spegnibile.value" @spegni="guidaRich.spegni()" />
 
       <button v-if="fase === 'gioco' && !foglio && !blocchetto" class="tondo su-potenziamenti"
               data-azione="potenziamenti" aria-label="potenziamenti" @click="apriBlocchetto">

@@ -43,6 +43,8 @@
                bottom:calc(64px + env(safe-area-inset-bottom));
                pointer-events:none; box-shadow:0 2px 10px #8593a833;
                animation:passi-su .3s ease-out }
+/* la ✕ e il 📖 della guida richiamata (docs/core/come-si-gioca.md) sono tasti: loro sì */
+.primi-passi :deep(button) { pointer-events:auto }
 @keyframes passi-su { from { opacity:0; transform:translateY(8px) } }
 
 /* il gettone dei potenziamenti: in basso a sinistra, lontano dal tasto

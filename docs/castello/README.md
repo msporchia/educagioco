@@ -18,7 +18,7 @@ pagina per chi arriva da fuori e i documenti per chi ci lavora.
 - [scuola.md](scuola.md) — il castello a scuola, come svago: la tappa scelta dalla maestra, il `limite` e la risposta di ogni conto
 - [da-fare.md](da-fare.md) — le voci aperte
 
-Vedi anche: [`../apprendimento/calibrazione.md`](../apprendimento/calibrazione.md)
+Vedi anche: [../core/come-si-gioca.md](../core/come-si-gioca.md) (la guida «Come si gioca», col `?` e a scuola), [`../apprendimento/calibrazione.md`](../apprendimento/calibrazione.md)
 (quanto vale una moneta), [`../core/amici-nei-giochi.md`](../core/amici-nei-giochi.md)
 (gli amici sul regno e sulle libere), [`../core/grafica.md`](../core/grafica.md) (la tela,
 la telecamera e le figure del castello), `strumenti/sprite/DA-GENERARE.md` (le
