@@ -25,6 +25,23 @@ dei bambini ([../scuola/bambini.md](../scuola/bambini.md)); cosa la maestra può
   falsi della divisione, peso 2 come la grande girata del volo (`preparaTabellina`). Alla maestra la risposta arriva con la
   chiave `tab:nascosto`.
 
+## Il calcolo a mente
+
+Dal 21 novembre 2026 (chiesto dall'utente: «perché solo le tabelline e non le somme?»). La maestra sceglie le **stazioni** del
+calcolo a mente del gioco (`STAZIONI` di `data/calcolo.js`, tranne «La prova»), come un contenuto del gioco:
+`{ tipo: 'mente', stazioni: ['somma-10', 'somma-20'] }`, la chiave è il primo concetto della stazione (`STAZIONI_MENTE` nella
+scheda della scuola). Si mescola con le tabelline nello stesso blocco (`siMescola`), con le intensità.
+
+- **Il limite** porta `mente: { concetti, volte }` accanto ai gruppi di tabelline (`limiteAsteroidi`). Col calcolo solo la
+  voce finta è una stazione (`tipo: 'mente'`, coi concetti scelti tutti «nuovi» e il bersaglio infinito); con tutti e due è
+  il pianeta, e `prossimoMestiere()` dice di quale mestiere è la domanda dopo, a turno pesato come i gruppi. MathGame lo
+  chiede a ogni domanda (`mestiere`), e `mente` e `tappa` lo seguono.
+- **Solo i conti scelti** (`senzaPuntelli` della stazione finta, letto da `poolDi` di `store/calcolo.js`): a casa il gioco
+  ripassa i prerequisiti deboli, ma a scuola il profilo parte da zero e i puntelli prendevano il posto di quello che la
+  maestra aveva chiesto («Oltre la decina» faceva uscire 4+5).
+- Alla maestra la risposta arriva con la chiave `asteroidi:mente`. Se il gioco non parte o lei chiede le domande, a schede
+  resta la parte che le schede sanno fare (`perLeSchede`: le tabelline); il calcolo da solo resta nel gioco.
+
 ## La difficoltà
 
 L'esercizio può portare `difficolta: 'facile' | 'difficile'` (la maestra la sceglie nell'editor; assente = Normale, com'è a

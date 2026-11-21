@@ -110,7 +110,9 @@ export function poolDi(stazione, items, now = Date.now(), quanti = 12) {
   const apribili = suoi.filter(id => aperto(id, items, now, tab))
   // i puntelli che sono venuti giù: entrano nel pool insieme ai concetti
   // della tappa, non al loro posto
-  const puntelli = [...new Set(suoi.flatMap(id => prereqDeboli(id, items, now)))]
+  // a scuola (`senzaPuntelli`, motore/asteroidi/limite.js) solo i conti scelti dalla maestra: il profilo parte da zero, e
+  // i puntelli prenderebbero il posto di quello che ha chiesto
+  const puntelli = stazione.senzaPuntelli ? [] : [...new Set(suoi.flatMap(id => prereqDeboli(id, items, now)))]
   // il grafo dosa, non sbarra: se i prerequisiti non reggono, i concetti
   // della tappa restano comunque il cuore del pool
   const nuovi = apribili.length ? apribili : suoi

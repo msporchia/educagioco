@@ -101,9 +101,11 @@ const magazzino = ref('tabelline')
 const voce = computed(() => (lim || (posizione.value >= 0 ? fila[posizione.value] : null)))
 const campagna = computed(() => !!lim || posizione.value >= 0)
 // quale dei due mestieri: il tipo della voce, o nel volo il magazzino
-const mente = computed(() => (voce.value ? voce.value.tipo === 'mente'
-                                         : magazzino.value === 'mente'))
-const tappa = computed(() => (voce.value ? voce.value.T : VOLO))
+// a scuola il mestiere lo dice il limite a ogni domanda (tabelline, calcolo a mente o tutti e due: docs/asteroidi/scuola.md)
+const mestiere = ref(lim?.tipo === 'mente' ? 'mente' : 'tabelline')
+const mente = computed(() => (lim ? mestiere.value === 'mente'
+                                  : voce.value ? voce.value.tipo === 'mente' : magazzino.value === 'mente'))
+const tappa = computed(() => (lim && mestiere.value === 'mente' ? lim.Tmente : voce.value ? voce.value.T : VOLO))
 /* la sfida senza fine del manifesto: misura, racconto e record del volo */
 const SFIDA_VOLO = sfidaDi(GIOCHI.find(g => g.chiave === 'mate').senzaFine)
 // cosa dire sul velo della pausa: il posto nella fila
@@ -340,6 +342,7 @@ function scegli(p) {
 const alternanza = creaAlternanza()
 
 function nuovaDomanda() {
+  if (lim) mestiere.value = lim.prossimoMestiere()
   if (!campagna.value) {
     magazzino.value = alternanza.prossimo()
     alternanza.segna(magazzino.value)

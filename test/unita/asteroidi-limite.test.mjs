@@ -4,7 +4,7 @@
    i fatti, il bersaglio che non arriva mai (niente nave madre, hangar, stella). Senza limite la tappa finta non c'è e
    casa resta com'è. Vedi docs/asteroidi/scuola.md.
    `node test/esegui.mjs asteroidi-limite --niente-build` */
-import { tappaDelLimite, tabellineDel, gruppiDel, ritoccoDifficolta, formaDel } from '../../src/motore/asteroidi/limite.js'
+import { tappaDelLimite, tabellineDel, gruppiDel, ritoccoDifficolta, formaDel, menteDel } from '../../src/motore/asteroidi/limite.js'
 import { chiaviDelle, leggi } from '../../src/store/tabelline.js'
 import { createPicker } from '../../src/store/srs.js'
 import { fattoriDi } from '../../src/data/tabelline.js'
@@ -79,6 +79,22 @@ console.log('\nLA DIFFICOLTÀ')
   uguale('Facile: vite', f.vite, 4); uguale('Difficile: vite', d.vite, 2)
   controlla('le vite non passano il tetto di scorta del gioco (5)', f.vite <= 5)
   controlla('la difficoltà non cambia la tappa finta', tappaDelLimite({ tabelline: [9], difficolta: 'difficile' }).T.tabelle[0] === 9)
+}
+
+console.log('\nIL CALCOLO A MENTE')
+{
+  uguale('niente concetti buoni: niente calcolo', menteDel({ mente: { concetti: ['boh'] } }), null)
+  const solo = tappaDelLimite({ mente: { concetti: ['somma-10', 'meno-10'] } })
+  uguale('il calcolo solo è una stazione', solo.tipo, 'mente')
+  stessaLista('coi concetti scelti tutti nuovi, e nient\'altro da ripassare', [solo.T.nuovi, solo.T.concetti], [['somma-10', 'meno-10'], ['somma-10', 'meno-10']])
+  uguale('e il bersaglio non arriva mai', solo.T.bersaglio, Infinity)
+  uguale('ogni domanda è a mente', solo.prossimoMestiere(), 'mente')
+  const misto = tappaDelLimite({ gruppi: [{ tabelline: [7], volte: 4 }], mente: { concetti: ['somma-20'], volte: 1 } })
+  uguale('tabelline e calcolo: un pianeta', misto.tipo, 'pianeta')
+  const giri = Array.from({ length: 50 }, () => misto.prossimoMestiere())
+  uguale('che alterna: quattro tabelline per un conto a mente', giri.filter(x => x === 'mente').length, 10)
+  controlla('e il conto a mente ha la sua stazione', misto.Tmente.nuovi[0] === 'somma-20')
+  uguale('senza calcolo, sempre tabelline', tappaDelLimite({ tabelline: [3] }).prossimoMestiere(), 'tabelline')
 }
 
 riassunto('gli Asteroidi limitati')
