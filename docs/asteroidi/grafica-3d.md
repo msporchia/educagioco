@@ -110,8 +110,10 @@ sassi cambia col posto.
 
 - **Il numero è inciso nella roccia**, non scritto sopra: la stessa tela fa
   da colore (la pietra più scura attorno) e da rilievo (il solco), e una
-  seconda accende d'azzurro il fondo del solco. Il sasso oscilla appena:
-  il numero resta di faccia. Il disco volante è inclinato già nella forma,
+  seconda accende il fondo del solco di un azzurro quasi bianco, con un orlo
+  scuro attorno alle cifre: si legge su ogni pietra. Provato l'azzurro pieno
+  senza orlo: sul ghiaccio e sui cristalli spariva. Il sasso oscilla appena
+  (±10°; a ±20° il numero si leggeva di sbieco): il numero resta di faccia. Il disco volante è inclinato già nella forma,
   così il numero si proietta su bordo e piano come si vedono.
 - La bomba della nave madre è una mina a punte con la spia che lampeggia.
 - Il balzo del volo fa delle stelle vicine delle scie.

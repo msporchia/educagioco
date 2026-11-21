@@ -10,7 +10,8 @@ import { formaDi, tingi, posa, INCLINA_DISCO } from './forme.js'
 import { rgb } from './rumore.js'
 
 export const POSTI = 10
-const AZZURRO = [0.3, 0.9, 1.5], ROSSO = [2.2, 0.3, 0.25]
+// il solco acceso: quasi bianco, così stacca anche sul ghiaccio e sui cristalli (un azzurro pieno spariva sul chiaro)
+const AZZURRO = [0.8, 1.35, 1.9], ROSSO = [2.2, 0.3, 0.25]
 
 // come appare ogni specie: materia, bagliori, e cosa porta attorno
 const ASPETTO = {
@@ -41,6 +42,9 @@ function scriviNumero(posto, testo) {
   c.fillStyle = g; c.fillRect(-128, -128, 256, 256)
   c.setTransform(1, 0, 0, 1, 0, 0)
   c.font = `900 ${px}px "Emoji Gioco", system-ui, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'
+  // un orlo scuro attorno alle cifre: il solco acceso ha sempre un fondo scuro accanto, su ogni pietra
+  c.lineJoin = 'round'; c.lineWidth = px * 0.3; c.strokeStyle = '#2a2a2a'; c.shadowColor = '#2a2a2a'; c.shadowBlur = 10
+  c.strokeText(testo, 128, 70)
   c.fillStyle = '#000'; c.shadowColor = '#000'; c.shadowBlur = 5
   c.fillText(testo, 128, 70); c.fillText(testo, 128, 70)
   c = b.getContext('2d')
@@ -167,9 +171,9 @@ export function creaSassi(scena) {
         p.gruppo.position.set(X(a.x), Y(a.y), 0)
         p.gruppo.scale.setScalar(s)
         const ph = a.ph || 0
-        // oscilla appena: il numero resta di faccia
+        // oscilla appena: il numero resta di faccia (a ±20° si leggeva di sbieco, ora ±10°)
         if (p.specie === 'dischi') p.sasso.rotation.set(Math.sin(t * 1.3 + ph) * 0.06, Math.sin(t * 0.6 + ph) * 0.14, Math.sin(t * 2 + ph) * 0.06)
-        else p.sasso.rotation.set(Math.sin(t * 0.7 + ph) * 0.32, Math.sin(t * 0.5 + ph * 2) * 0.4, Math.sin(t * 0.4 + ph * 3) * 0.14)
+        else p.sasso.rotation.set(Math.sin(t * 0.7 + ph) * 0.16, Math.sin(t * 0.5 + ph * 2) * 0.2, Math.sin(t * 0.4 + ph * 3) * 0.08)
         if (p.specie === 'dischi') p.gruppo.position.y += Math.sin(t * 2 + ph) * a.r * 0.08 * k
         const rosso = Math.max(a.morto ? 1 : 0, Math.min(1, a.rosso || 0))
         u.uT.value = t + ph; u.uGelo.value = brina; u.uRosso.value = rosso
