@@ -7,7 +7,7 @@
 import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { segna, segnaBest } from '../../store/profile.js'
+import { segna, segnaBest, guidaGiaVista, segnaGuidaVista } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'   // paga e dice se il salvadanaio è stanco
 import { PAGA } from '../../data/paghe.js'
 import { progresso, aperta, adesso, stelleDi, completa, primatoDi, segnaPrimato,
@@ -16,6 +16,10 @@ import { fraseDiFine, recordInParole } from '../primati.js'
 import { usaAmici } from '../../amici/usaAmici.js'
 import { SENZA_FINE } from './gioco.js'
 import { limiteDi, domandaDellaCarta, liberaDelLimite } from './limite.js'
+import { usaGuidaRichiamata } from '../guida.js'
+import Guida from '../Guida.vue'
+import { saltaLeSpiegazioni } from '../spiegazioni.js'
+import { guidaDiSurvivors } from './motore/guida.js'
 import { usaPausa } from '../pausa.js'
 import VeloPausa from '../VeloPausa.vue'
 import { domandaPerGioco } from '../../quiz/scelta.js'
@@ -53,6 +57,19 @@ const cruscotto = ref(vuoto())
 const offerta = ref(null)             // le carte, a livello appena salito
 const domanda = ref(null)             // la domanda che paga la carta scelta
 const finale = ref(null)
+
+/* la guida «Come si gioca» (motore/guida.js, docs/core/come-si-gioca.md): alla prima partita della vita (a scuola della pagina,
+   con la ✕); il `?` la richiama. Il campo non si ferma: muoversi e prendere gemme vogliono il tempo */
+const radice = ref(null)
+const guida = usaGuidaRichiamata({
+  prima: !!lim || (!saltaLeSpiegazioni() && !guidaGiaVista(CHIAVE)),
+  saltabile: !!lim,
+  finita: () => { if (!lim) segnaGuidaVista(CHIAVE) },
+})
+const passoGuida = computed(() => (guida.accesa.value && vista.value === 'campo' && !finale.value
+  ? guidaDiSurvivors({ domanda: !!domanda.value, carte: !!offerta.value, mosso: guida.fatto('mosso'), carta: guida.fatto('carta') })
+  : null))
+guida.segui(radice, passoGuida)
 const brindisi = ref('')
 const toccato = ref(false)
 
@@ -292,7 +309,7 @@ function bomba() {
 }
 
 function muovi(dx, dy) {
-  if (dx || dy) toccato.value = true
+  if (dx || dy) { toccato.value = true; guida.segna('mosso') }
   partita.value?.muovi(dx, dy)
 }
 
@@ -320,6 +337,7 @@ function risposto(e) {
   // dietro un velo comparso dal niente
   togli()
   if (giusto) {
+    guida.segna('carta')
     // il tasto «salta» dei grandi dà la carta e paga, ma non conta (docs/core/comandi.md)
     borsellino.paga(PAGA.domanda)
     const presa = p.prendi(voluta.chiave)
@@ -479,9 +497,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="schermo">
+  <div ref="radice" class="schermo">
     <!-- il ⏸ c'è solo dove scorre qualcosa -->
-    <Barra :titolo="titolo" guida="survivors" @aiuto="aiuto" monete
+    <Barra :titolo="titolo" guida="survivors" @aiuto="aiuto" monete :come="vista === 'campo' && !finale" @come="guida.alterna()"
            :pausa="siGioca" @pausa="metti()"
            :scura="vista === 'campo' && veste.buio" @indietro="indietro" />
 
@@ -492,9 +510,10 @@ onUnmounted(() => {
              @riprendi="riprendiPartita" @scorda="scorda" />
 
       <CampoVista v-else :cruscotto="cruscotto" :buio="veste.buio"
-                  :dritta="!toccato && cruscotto.tempo < 9 && !finale"
+                  :dritta="!toccato && cruscotto.tempo < 9 && !finale && !passoGuida"
                   @tela="prendiTela" @muovi="muovi" @bomba="bomba" @potenzia="potenzia" />
 
+      <Guida v-if="vista === 'campo'" class="sv-guida" :passo="passoGuida" :spegnibile="guida.spegnibile.value" @spegni="guida.spegni()" />
       <div v-if="brindisi" class="sv-brindisi em">{{ brindisi }}</div>
 
       <Carte v-if="offerta" :carte="offerta" :livello="cruscotto.livello"

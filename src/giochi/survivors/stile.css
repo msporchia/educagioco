@@ -213,3 +213,5 @@
 .sv-grosso.sv-resta { background: linear-gradient(180deg, #ff7a45, #d1481f);
                       box-shadow: 0 4px 0 #8f3013 }
 .sv-extra { color: #d1481f !important; font-weight: 800 }
+/* la riga della guida «Come si gioca» (docs/core/come-si-gioca.md): in cima, sopra anche il velo delle carte */
+.sv-guida { position: absolute; left: 10px; right: 10px; top: 8px; z-index: 9 }

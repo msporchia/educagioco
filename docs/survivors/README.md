@@ -11,7 +11,7 @@ Sopravvivenza senza fine dopo le nove tappe. Il codice sta in
 - [grafica.md](grafica.md) — creature e fondale presi in prestito dai fogli del castello e del sotterraneo, gli effetti, cosa resta da dipingere
 - [scuola.md](scuola.md) — a scuola: la prop `limite` con le domande dell'esercizio, cosa si spegne, l'evento `risposta`, il terreno disegnato per il peso
 
-Vedi anche: [../core/primati.md](../core/primati.md) (i record dei giochi
+Vedi anche: [../core/come-si-gioca.md](../core/come-si-gioca.md) (la guida «Come si gioca», col `?` e a scuola), [../core/primati.md](../core/primati.md) (i record dei giochi
 senza fine), [../core/amici-nei-giochi.md](../core/amici-nei-giochi.md) (gli amici sulla mappa e i loro record),
 [../core/interfaccia.md](../core/interfaccia.md) (la pausa),
 [../apprendimento/calibrazione.md](../apprendimento/calibrazione.md) (perché
