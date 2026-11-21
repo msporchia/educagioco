@@ -8,7 +8,7 @@
 import { ref, shallowRef, computed, onMounted, onBeforeUnmount, onUnmounted, watch, nextTick } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { state, segna, segnaBest, nomeCorrente, flushNow, aspettoDi } from '../../store/profile.js'
+import { state, segna, segnaBest, nomeCorrente, flushNow, aspettoDi, guidaGiaVista, segnaGuidaVista } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'
 import { PAGA } from '../../data/paghe.js'
 import { progresso, aperta, adesso, completa, scelta, ricorda, ritocca } from '../campagne.js'
@@ -57,7 +57,10 @@ import { iconaDi } from './dati/terra.js'
 import { mercanteDi, schedeDi } from './dati/mercanti.js'
 import { situazioneDi, scegli as scegliPensiero, ricorda as ricordaPensiero, entraNelGiro, giroDi } from './motore/pensieri.js'
 import { RITMO } from './dati/pensieri.js'
-import { usaGuida } from '../guida.js'
+import { usaGuidaRichiamata } from '../guida.js'
+import Guida from '../Guida.vue'
+import { saltaLeSpiegazioni } from '../spiegazioni.js'
+import { guidaDelSotterraneo } from './motore/guida.js'
 
 import Campagna from './viste/Campagna.vue'
 import Eroi from './viste/Eroi.vue'
@@ -1739,6 +1742,7 @@ watch(() => { tic.value; return corsa.value?.chiesta?.id }, (id) => {
 
 function risposto(e) {
   const { giusto, saltata } = e
+  guidaGiu.segna(corsa.value?.foglio?.che === 'scontro' ? 'colpo' : 'risposta')
   if (lim) emit('risposta', { ...e, domanda: domanda.value.domanda })   // prima che la domanda sparisca
   domanda.value = null
   // rispondere È il tocco che riprende: il freno può essersi acceso durante la domanda
@@ -2125,7 +2129,23 @@ let pensieroFino = 0, giroDa = 0, entrataDa = null, prossimoPensiero = 0
 const mercantiTrovati = ref([])
 const segnoAcceso = ref(null)       // il selettore della cosa accesa dal tocco
 let segnoFino = 0
-usaGuida(radice, computed(() => (segnoAcceso.value ? { dove: segnoAcceso.value } : null)))
+/* la guida «Come si gioca» (motore/guida.js, docs/core/come-si-gioca.md): giù, alla prima discesa della vita (a scuola della pagina,
+   con la ✕); il `?` la richiama. Lo stesso anello del segno dei pensieri: la guida, se parla, viene prima */
+const guidaGiu = usaGuidaRichiamata({
+  prima: !!lim || (!saltaLeSpiegazioni() && !guidaGiaVista('sotterraneo')),
+  saltabile: !!lim,
+  finita: () => { if (!lim) segnaGuidaVista('sotterraneo') },
+})
+const inDiscesa = () => !!corsa.value && (!sopra.value || !!lim) && !corsa.value.finita
+const passoCome = computed(() => {
+  tic.value   // il quadro sta nel motore, non reattivo: `tic` sale a ogni mossa
+  if (!guidaGiu.accesa.value || !inDiscesa()) return null
+  const f = foglio.value
+  return guidaDelSotterraneo({ domanda: !!domanda.value, scontro: f?.che === 'scontro', foglio: !!f && f.che !== 'scontro',
+                               camminato: guidaGiu.fatto('cammina'), risposto: guidaGiu.fatto('risposta'), colpito: guidaGiu.fatto('colpo') })
+})
+const passoGuida = computed(() => passoCome.value || (segnoAcceso.value ? { dove: segnoAcceso.value } : null))
+guidaGiu.segui(radice, passoGuida)
 const SEGNI_DELLA_BARRA = { zaino: '[data-casella-barra="zaino"]', eroe: '[data-azione="eroe-pagina"]', abilita: '[data-azione="abilita"]',
                             incanti: '[data-casella-barra="incanti"]', pozione: '[data-casella-barra="pozione"]' }
 // il giro della discesa (la tappa e il seme: ripresa è la stessa), e da quando si è entrati in un piano
@@ -2268,6 +2288,7 @@ function vai(p, preciso) {
   if (!c || c.finita || !pittore) return
   // il tocco è un punta-e-clicca (scena3d/azione.js): la cosa sotto il dito, con un margine, e poi la strada del motore
   if (preciso) pittore.premi(p); else pittore.trascina(p)
+  guidaGiu.segna('cammina')
   tic.value++
 }
 
@@ -2367,7 +2388,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
 <template>
   <div class="schermo">
     <!-- il ⏸ solo dentro una discesa: sulla mappa non c'è niente da fermare -->
-    <Barra :titolo="titolo" guida="sotterraneo" @aiuto="aiuto" :monete="!corsa" scura
+    <Barra :titolo="titolo" guida="sotterraneo" @aiuto="aiuto" :monete="!corsa" scura :come="!!corsa && (!sopra || !!lim)" @come="guidaGiu.alterna()"
            :pausa="siGioca && !inDueOra" @pausa="metti()" @indietro="indietro">
       <!-- vita, gemme e zaino stanno nella barra in basso; attacco e difesa nella pagina dell'eroe (docs/sotterraneo/barra.md) -->
       <!-- in due: dalla terra di sopra (docs/sotterraneo/in-due.md) -->
@@ -2455,8 +2476,9 @@ function ridimensiona() { if (pittore) pittore.misura() }
           <CartelloLinea v-if="inDueOra && (sfida.rotta.value || sfida.linea.value)" :rotta="sfida.rotta.value" :motivo="sfida.motivo.value"
                          :linea="sfida.linea.value" partita="la discesa" esci="🗺️ torno su" @esci="chiudi({ senzaCartello: true })" />
 
+          <Guida class="sot-guida" :passo="passoCome" :spegnibile="guidaGiu.spegnibile.value" @spegni="guidaGiu.spegni()" />
           <!-- le missioni prese che riguardano questa discesa: una riga ciascuna, in cima, per qualche secondo; mai sopra uno scontro -->
-          <ul v-if="ricordo.length && ricordoAcceso && !nemico" class="sot-ricordo" data-promemoria>
+          <ul v-if="ricordo.length && ricordoAcceso && !nemico && !passoCome" class="sot-ricordo" data-promemoria>
             <li v-for="r in ricordo" :key="r.id" :data-missione="r.id" :data-dove="r.dove"
                 :data-segui="rotta && rotta.id === r.id ? 1 : null">
               <span class="em">{{ r.em }}</span> {{ r.testo }}

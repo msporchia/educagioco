@@ -1405,3 +1405,5 @@
 @media (min-width: 900px) and (min-aspect-ratio: 5 / 4) {
   .sot { max-width: 1240px }
 }
+/* la riga della guida «Come si gioca» (docs/core/come-si-gioca.md): in cima alla discesa, dove stanno i promemoria (che intanto tacciono) */
+.sot-guida { position: absolute; left: 10px; right: 10px; top: 8px; z-index: 6 }

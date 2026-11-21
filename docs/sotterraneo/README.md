@@ -101,7 +101,7 @@ senza fondo sotto le sette discese. Il codice sta in `src/giochi/sotterraneo/`.
 - [da-fare-3d-e-mondo.md](da-fare-3d-e-mondo.md) — le voci aperte del giro del 16 ottobre 2026: cosa provare col dito
 - [todo_sotterraneo.md](todo_sotterraneo.md) — il todo unico scritto insieme dalle due sessioni (mondo di sopra e modelli 3D): a metà, bug, da guardare col dito, le decisioni aperte, i lavori pronti, cosa ritarare, i guasti noti e come si pubblica senza pestarsi i piedi
 
-Vedi anche: [../core/grafica.md](../core/grafica.md) (atlante),
+Vedi anche: [../core/come-si-gioca.md](../core/come-si-gioca.md) (la guida «Come si gioca», col `?` e a scuola), [../core/grafica.md](../core/grafica.md) (atlante),
 [../core/interfaccia.md](../core/interfaccia.md) (la pausa),
 `strumenti/sprite/FORMATO.md` (i foglietti degli sprite),
 `poc/sotterraneo.html` e `poc/sotterraneo.md` (i prototipi: il posto dove
