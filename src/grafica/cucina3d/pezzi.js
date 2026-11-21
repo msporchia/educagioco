@@ -216,17 +216,6 @@ export function creaForno() {
   return base
 }
 
-/* Il secchio dei rifiuti, di lamiera, con le sue costole e il manico. */
-export function creaBidone() {
-  const lamiera = pieno(0xaab3b8, 0.42, 0.75)
-  const corpo = m(giro([[0, 0], [0.42, 0], [0.5, 0.04], [0.56, 0.86], [0.59, 0.9], [0.55, 0.9], [0.5, 0.82], [0, 0.82]], 36), lamiera)
-  corpo.material.side = DoubleSide
-  const costole = [0.26, 0.56].map(y => { const c = m(new TorusGeometry(0.47 + y * 0.09, 0.016, 6, 36), lamiera, 0, y, 0); c.rotation.x = Math.PI / 2; return c })
-  const manico = m(new TorusGeometry(0.58, 0.018, 6, 28, Math.PI), pieno(0x6f787e, 0.4, 0.7), 0, 0.88, 0)
-  manico.rotation.y = 0.5
-  return gruppo(ombra(0.8), corpo, ...costole, manico)
-}
-
 // la barra sopra una stazione: guarda sempre la telecamera
 export function creaBarra() {
   const g = new Group()

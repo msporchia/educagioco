@@ -46,6 +46,10 @@ mossa di `decidi`:
 | il bidone | | butta |
 | la consegna | | serve |
 
+**Il bidone è un cestino nero** col coperchio aperto all'indietro e il cestino disegnato in bianco sotto il coperchio e sul davanti:
+il secchio grigio di lamiera non si capiva cos'era. Sta nell'ultima fila, che il bordo dello schermo taglia: per questo il disegno è
+anche sul coperchio.
+
 Se non si può, un fumetto dice cosa manca («Prima si cuoce», «Prima si taglia»).
 
 **L'ultimo tocco comanda**: un riquadro verde solo, sul posto dove sta andando. Mentre

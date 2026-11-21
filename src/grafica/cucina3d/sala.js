@@ -1,9 +1,9 @@
 // La stanza del cuoco: pavimento, muri, banconi, cassette, la pila dei piatti, la consegna. Vedi docs/bancarella/cucina.md.
 import { Group, Mesh, Sprite, SpriteMaterial, MeshStandardMaterial, MeshBasicMaterial, BoxGeometry, PlaneGeometry, CylinderGeometry, SphereGeometry, LatheGeometry, TubeGeometry, CircleGeometry,
-         CatmullRomCurve3, Vector2, Vector3, CanvasTexture, SRGBColorSpace, RepeatWrapping, DoubleSide } from 'three'
+         TorusGeometry, IcosahedronGeometry, CatmullRomCurve3, Vector2, Vector3, CanvasTexture, SRGBColorSpace, RepeatWrapping, DoubleSide } from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
-import { creaPiatto, creaBidone, creaEtichetta } from './pezzi.js'
+import { creaPiatto, creaEtichetta, ombra } from './pezzi.js'
 import { pieno } from './cibo.js'
 
 export const ALTO = 0.62    // il piano dei banconi
@@ -164,7 +164,39 @@ export function creaLavello() {
   return g
 }
 
-export const creaCestino = () => { const b = creaBidone(); b.scale.setScalar(0.72); return b }
+/* Il cestino della spazzatura: nero, col sacco rimboccato sull'orlo, il coperchio aperto e il pedale, una carta appallottolata
+   dentro e sul davanti il cestino disegnato in bianco. Il secchio grigio di lamiera non si capiva cos'era. */
+const tramaCestino = () => trama(128, (c, n) => {
+  c.clearRect(0, 0, n, n)
+  c.fillStyle = '#ffffff'
+  c.beginPath(); c.roundRect(n * 0.2, n * 0.2, n * 0.6, n * 0.09, 6); c.fill()            // il coperchio
+  c.beginPath(); c.roundRect(n * 0.4, n * 0.12, n * 0.2, n * 0.1, 5); c.fill()            // la presa
+  c.beginPath(); c.moveTo(n * 0.25, n * 0.33); c.lineTo(n * 0.75, n * 0.33); c.lineTo(n * 0.7, n * 0.88); c.lineTo(n * 0.3, n * 0.88); c.closePath(); c.fill()
+  c.globalCompositeOperation = 'destination-out'                                          // le tre righe del secchio
+  for (const x of [0.39, 0.5, 0.61]) { c.beginPath(); c.roundRect(n * x - 4, n * 0.42, 8, n * 0.36, 4); c.fill() }
+  c.globalCompositeOperation = 'source-over'
+})
+export function creaCestino() {
+  const g = new Group(), nero = pieno(0x1b1d20, 0.4), sacco = pieno(0x30343a, 0.2)
+  const corpo = m(new LatheGeometry([[0, 0], [0.3, 0], [0.33, 0.02], [0.38, 0.66], [0.355, 0.66], [0.31, 0.06], [0, 0.06]].map(([x, y]) => new Vector2(x, y)), 32), nero)
+  corpo.material.side = DoubleSide
+  const orlo = m(new TorusGeometry(0.38, 0.032, 8, 32), sacco, 0, 0.665, 0); orlo.rotation.x = Math.PI / 2
+  const buio = m(new CircleGeometry(0.35, 28), new MeshBasicMaterial({ color: 0x0a0b0c }), 0, 0.5, 0); buio.rotation.x = -Math.PI / 2
+  const carta = m(new IcosahedronGeometry(0.11, 1), new MeshStandardMaterial({ color: 0xece6d6, roughness: 0.9, flatShading: true }), -0.1, 0.56, 0.06)
+  const torsolo = m(new SphereGeometry(0.06, 10, 8), pieno(0xd8c48a, 0.6), 0.12, 0.54, -0.06); torsolo.scale.set(0.8, 1.4, 0.8)
+  // il coperchio, incernierato dietro, aperto all'indietro: la telecamera ne guarda il sotto, e lì c'è il cestino disegnato.
+  // Il bidone sta nell'ultima fila, che il bordo dello schermo taglia: il disegno sul davanti da solo non si vedeva
+  const coperchio = new Group(); coperchio.position.set(0, 0.69, -0.38); coperchio.rotation.x = -1.9
+  const segnoSotto = m(new PlaneGeometry(0.5, 0.5), new MeshBasicMaterial({ map: tramaCestino(), transparent: true, depthWrite: false }), 0, -0.022, 0.38)
+  segnoSotto.rotation.x = Math.PI / 2
+  coperchio.add(m(new CylinderGeometry(0.4, 0.4, 0.04, 32), nero, 0, 0, 0.38), segnoSotto)
+  const pedale = m(new BoxGeometry(0.18, 0.03, 0.12), pieno(0x8a9096, 0.4, 0.6), 0, 0.04, 0.38)
+  const segno = m(new PlaneGeometry(0.34, 0.34), new MeshBasicMaterial({ map: tramaCestino(), transparent: true, depthWrite: false }), 0, 0.33, 0.362)
+  segno.rotation.x = 0.078                         // il fianco si allarga salendo: il disegno ci sta sopra
+  g.add(ombra(0.5), corpo, orlo, buio, carta, torsolo, coperchio, pedale, segno)
+  g.scale.setScalar(0.88)               // aperto copre un poco la cella dietro: non di più
+  return g
+}
 
 /** La consegna: il campanello sul piano d'acciaio, la finestra sulla strada con la tenda a righe. */
 export function creaConsegna() {
