@@ -26,6 +26,6 @@ per chi lo aveva finito.
 - [spagnolo-motore.md](spagnolo-motore.md) — lo spagnolo a mondi: cosa è per lingua nel motore, il contratto per frasi, concetti e capitoli, le trappole che nascono da sole, i limiti
 - [spagnolo-trappole.md](spagnolo-trappole.md) — le trappole dello spagnolo: la tabella, le parole che una trappola può mostrare, le scelte delle operazioni
 
-Vedi anche: [../apprendimento/srs.md](../apprendimento/srs.md) (la forza di
+Vedi anche: [../core/come-si-gioca.md](../core/come-si-gioca.md) (la guida «Come si gioca», col `?` e a scuola), [../apprendimento/srs.md](../apprendimento/srs.md) (la forza di
 una parola), [../core/amici-nei-giochi.md](../core/amici-nei-giochi.md) (gli amici
 sulla mappa del tesoro, in tutte e due le lingue).

@@ -8,8 +8,12 @@ import Barra from '../../components/Barra.vue'
 import TastoSalta from '../../components/TastoSalta.vue'
 import NonSiSente from '../../components/NonSiSente.vue'
 import { suono } from '../../audio.js'
-import { state, item, answer, segna, persist, flushNow, engProgresso, tuttoAperto, etaDelBambino }
+import { state, item, answer, segna, persist, flushNow, engProgresso, tuttoAperto, etaDelBambino, guidaGiaVista, segnaGuidaVista }
   from '../../store/profile.js'
+import { usaGuidaRichiamata } from '../guida.js'
+import Guida from '../Guida.vue'
+import { saltaLeSpiegazioni } from '../spiegazioni.js'
+import { guidaDiEnglish } from './motore/guida.js'
 import { strength, newItem } from '../../store/srs.js'
 import { incassa, premioDetto } from '../../store/varieta.js'
 import { pronuncia, haVoce, prepara, zittisci } from '../../voce.js'
@@ -257,6 +261,20 @@ const caselle = computed(() => (d.value && d.value.tessere ? F.caselle(d.value, 
 const banco = computed(() => (d.value && d.value.tessere
   ? F.nelBanco(d.value, fila.value).map(t => ({ ...t, posto: F.postoDi(d.value, t.id) })) : null))
 const pronto = computed(() => !!(d.value && d.value.tessere && F.pronta(d.value, fila.value)))
+
+/* la guida «Come si gioca» (motore/guida.js, docs/core/come-si-gioca.md): una risposta data davvero, alla prima tappa della vita
+   (a scuola della pagina, con la ✕); il `?` la richiama. Niente orologio da fermare */
+const radice = ref(null)
+const guida = usaGuidaRichiamata({
+  prima: !!scelte || (!saltaLeSpiegazioni() && !guidaGiaVista('inglese')),
+  saltabile: !!scelte,
+  finita: () => { if (!scelte) segnaGuidaVista('inglese') },
+})
+const passoGuida = computed(() => (guida.accesa.value && vista.value === 'tappa' && !fine.value
+  ? guidaDiEnglish({ pagina: !!pagina.value, domanda: !!d.value, tessere: !!d.value?.tessere, pronto: pronto.value,
+                     esito: !!esito.value, risposto: guida.fatto('risposta') })
+  : null))
+guida.segui(radice, passoGuida)
 const parla = computed(() => {
   const q = d.value
   return !!(q && q.genere === 'parola' && q.domanda.testo && !q.domanda.italiano && haVoceOra(q.domanda.testo))
@@ -280,6 +298,7 @@ function rispondi(risposta, scelta, { saltata = false } = {}) {
   const tempo = orologio.guardata()
   // il tasto «salta» dei grandi (docs/core/comandi.md): la tappa avanza e paga come una giusta, il ripasso non sente
   const e = saltata ? sessione.salta(q) : sessione.rispondi(q, risposta, { tocchi })
+  guida.segna('risposta')
   for (const r of e.registra) answer(r.chiave, { correct: r.correct, ms: r.chiave === q.chiave ? tempo * 1000 : 0 })
   if (e.giusta) {
     conti.giuste++
@@ -594,8 +613,8 @@ onUnmounted(() => { clearTimeout(bollaTimer); zittisci() })
 
 <template>
   <LinguaGame v-if="vista === 'prima'" lingua="en" libero @vai="allaMappa" />
-  <div v-else class="schermo ing" :data-vista="vista">
-    <Barra :titolo="titolo" guida="inglese" monete @indietro="indietro">
+  <div v-else ref="radice" class="schermo ing" :data-vista="vista">
+    <Barra :titolo="titolo" guida="inglese" monete :come="vista === 'tappa' && !fine" @come="guida.alterna()" @indietro="indietro">
       <div v-if="indicatore" class="ing-paga" :class="{ 'ing-non-paga': !indicatore.paga }"
            data-paga :data-paga-si="indicatore.paga ? '1' : '0'"
            :title="indicatore.paga ? 'quanto vale questa domanda' : 'hai chiesto una parola: questa non paga'">
@@ -615,6 +634,7 @@ onUnmounted(() => { clearTimeout(bollaTimer); zittisci() })
            @cassetto="m => vuole('Il cassetto', () => giocaCassetto(m))" @prima="vista = 'prima'" />
 
     <div v-else-if="vista === 'tappa' && (d || pagina)" class="ing-palco">
+      <Guida class="ing-guida" :passo="passoGuida" :spegnibile="guida.spegnibile.value" @spegni="guida.spegni()" />
       <div class="ing-conto" data-conto>
         <span>✅ {{ Math.min(conti.giuste, conti.bersaglio) }} / {{ conti.bersaglio }}</span>
         <span class="ing-barretta"><i :style="{ width: Math.min(100, 100 * conti.giuste / conti.bersaglio) + '%' }"></i></span>

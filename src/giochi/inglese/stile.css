@@ -270,3 +270,5 @@
 .ing-premio { font-size: 28px; font-weight: 900; color: #c98a00 }
 .ing-nota-monete { font-weight: 700; font-size: 14px; color: #7a5a00; margin: 0 }
 .ing-bottoni { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 4px }
+/* la riga della guida «Come si gioca» (docs/core/come-si-gioca.md): in cima al palco, sopra il conto */
+.ing-guida { margin: 0 0 6px }
