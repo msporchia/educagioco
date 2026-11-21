@@ -9,9 +9,10 @@ import pozioni from '../giochi/pozioni/sostituti.js'
 import cucina from '../giochi/cucina/sostituti.js'
 import castello from '../giochi/castello/sostituti.js'
 import sotterraneo from '../giochi/sotterraneo/sostituti.js'
+import castleBattle from '../giochi/castle-battle/sostituti.js'
 import insieme from '../giochi/insieme.js'
 
-const GIOCHI = [asteroidi, survivors, passoPasso, robot, inglese, pozioni, cucina, castello, sotterraneo]
+const GIOCHI = [asteroidi, survivors, passoPasso, robot, inglese, pozioni, cucina, castello, sotterraneo, castleBattle]
 
 const COMUNI = {
   'src/store/giudizi.js': 'src/scuola/sostituti/giudizi.js',

@@ -10,5 +10,6 @@ export const VISTE = {
   pozioni: defineAsyncComponent(() => import('./pozioni/Vista.vue')),
   cucina: defineAsyncComponent(() => import('./cucina/Vista.vue')),
   castello: defineAsyncComponent(() => import('./castello/Vista.vue')),
+  'castle-battle': defineAsyncComponent(() => import('./castle-battle/Vista.vue')),
   sotterraneo: defineAsyncComponent(() => import('./sotterraneo/Vista.vue')),
 }

@@ -18,6 +18,7 @@ defineProps({
   ultima: { type: Boolean, default: false },   // la campagna è finita qui
   infinita: { type: Boolean, default: false }, // la battaglia infinita
   sfida: { type: Boolean, default: false },    // la sfida in due: niente stelle né tappe, e non si rigioca da qui
+  scuola: { type: Boolean, default: false },   // a scuola: niente mappa, e si rifà la stessa tappa (docs/arena/scuola.md)
 })
 defineEmits(['ancora', 'esci'])
 const minuti = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
@@ -44,9 +45,9 @@ const minuti = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart
       <p v-else-if="monete">+{{ monete }} 🪙</p>
       <p v-if="!vinta && !pari" class="ar-nota">{{ sfida ? 'non hai perso niente: è solo una sfida' : infinita ? 'non hai perso niente: ti aspetta un altro terreno' : 'non hai perso niente: la tappa ti aspetta' }}</p>
       <button v-if="!sfida" class="ar-grosso" data-ancora @click="$emit('ancora')">
-        <span class="em">{{ infinita ? '♾️' : vinta ? '▶' : '↻' }}</span> {{ infinita ? 'ancora' : vinta ? 'avanti' : 'riprova' }}
+        <span class="em">{{ infinita ? '♾️' : scuola ? '↻' : vinta ? '▶' : '↻' }}</span> {{ infinita ? 'ancora' : scuola ? 'di nuovo' : vinta ? 'avanti' : 'riprova' }}
       </button>
-      <button class="ar-grosso ar-chiaro" @click="$emit('esci')"><span class="em">🗺️</span> alla mappa</button>
+      <button v-if="!scuola" class="ar-grosso ar-chiaro" @click="$emit('esci')"><span class="em">🗺️</span> alla mappa</button>
     </div>
   </div>
 </template>

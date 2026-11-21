@@ -34,6 +34,7 @@ import { Campo } from './scena/campo.js'
 import { dettaglioTruppa, dettaglioAzione, ruoloDi } from './motore/dettagli.js'
 import { domandaDi } from './domande.js'
 import { basi, gradoDi, dopoLaRisposta } from './bravura.js'
+import { tappaDelLimite, livelloDelLimite, raccontaCalcolo } from './motore/limite.js'
 
 import Mappa from './viste/Mappa.vue'
 import CampoVista from './viste/Campo.vue'
@@ -43,7 +44,11 @@ import Dettagli from './viste/Dettagli.vue'
 import './stile.css'
 
 defineOptions({ name: 'CastleBattle' })
-const emit = defineEmits(['vai'])
+// a scuola: `{ tappa, difficolta }`, e si gioca solo quella tappa a quel livello (docs/arena/scuola.md); a casa manca
+const props = defineProps({ limite: { type: Object, default: null } })
+const emit = defineEmits(['vai', 'risposta'])
+const tappaScuola = tappaDelLimite(props.limite)   // l'indice della tappa, o null a casa
+const aScuola = tappaScuola !== null
 
 const CHIAVE = 'arena'
 const RESPIRO = 900           // quanto si guarda il campo dopo l'ultima mossa, prima del cartello
@@ -60,7 +65,7 @@ const { regia, inDue } = sfida
 const sceltaTerreno = ref('bosco')
 const sceltaSecondi = ref(10)
 const mio = computed(() => (regia.value && sfida.stato.value ? latoDi(regia.value.ruolo) : 'io'))
-const livello = ref(livelloValido(progresso(CHIAVE).livello))   // facile | medio | difficile: lo sceglie la mappa
+const livello = ref(aScuola ? livelloDelLimite(props.limite) : livelloValido(progresso(CHIAVE).livello))   // facile | medio | difficile: lo sceglie la mappa
 const infinita = ref(null)            // il terreno, se si gioca la battaglia infinita (niente tappa)
 const chiaveCampo = ref(0)            // sale a ogni battaglia: il campo si rimonta, col suo terreno
 const partita = shallowRef(null)      // il motore: NON reattivo dentro
@@ -134,7 +139,7 @@ const laInfinita = computed(() => {
 })
 
 /* ── la partita lasciata a metà ── */
-const ripresa = ref(laRipresa())
+const ripresa = ref(aScuola ? null : laRipresa())   // a scuola niente sosta
 
 function laRipresa() {
   const d = dice(sosta(CHIAVE))
@@ -144,7 +149,7 @@ function laRipresa() {
 
 function salva({ subito = false } = {}) {
   const p = partita.value
-  if (!p || regia.value) return        // una sfida in due non si lascia a metà
+  if (!p || regia.value || aScuola) return        // una sfida in due non si lascia a metà, e a scuola non si lascia
   daSalvare = 0
   salvaSosta(CHIAVE, scrivi(p, infinita.value ? { infinita: infinita.value } : tappaIdx.value, livello.value), { subito })
 }
@@ -371,7 +376,9 @@ function avvia(indice) {
   if (indice === 'infinita') return avviaInfinita()
   if (indice === 'sfida') return apriSfida()
   infinita.value = null
-  comincia(new Partita({ sfida: sfidaDi(CAMPAGNA[indice]), registra: true, eviaIA: progresso(CHIAVE).ultimaIA || null }), indice)
+  // a casa la campagna è sempre il Medio; a scuola il livello è quello della maestra, tarato per ogni tappa
+  const sfidaQui = aScuola ? sfidaDi(CAMPAGNA[indice], livello.value) : sfidaDi(CAMPAGNA[indice])
+  comincia(new Partita({ sfida: sfidaQui, registra: true, eviaIA: progresso(CHIAVE).ultimaIA || null }), indice)
 }
 
 /* ── la sfida in due ── */
@@ -552,9 +559,11 @@ function scegli({ azione, id, posto }) {
 /* la base del bambino per un'operazione: la sua, o da dove parte la prima volta (bravura.js) */
 const laBase = op => basi(progresso(CHIAVE).bravura, { eta: etaDelBambino(), items: state.profile.items })[op]
 
-function risposto({ giusto, saltata, tempo }) {
+function risposto({ giusto, saltata, tempo, indice }) {
   const p = partita.value
   const v = voluta
+  // a scuola ogni calcolo va alla maestra, già raccontato; il tasto «salta» dei grandi no
+  if (aScuola && !saltata && domanda.value) emit('risposta', raccontaCalcolo(domanda.value.domanda, { giusto, indice, tempo }))
   domanda.value = null
   voluta = null
   togli()
@@ -566,9 +575,11 @@ function risposto({ giusto, saltata, tempo }) {
   if (giusto) {
     if (eseguiMossa(v.azione, v.chi, v.dove)) {
       // il tasto «salta» dei grandi dà la scelta e paga, ma non conta il calcolo (docs/core/comandi.md)
-      borsellino.paga(PAGA.mossa)
-      if (!saltata) segna('arenaCalcoli')
-      if (v.azione === 'costruisci' || v.azione === 'potenzia') segna('arenaCaserme')
+      if (!aScuola) {   // a scuola niente monete né traguardi
+        borsellino.paga(PAGA.mossa)
+        if (!saltata) segna('arenaCalcoli')
+        if (v.azione === 'costruisci' || v.azione === 'potenzia') segna('arenaCaserme')
+      }
       dici(frase(v))
     } else dici('le monete non bastavano più')
   } else {
@@ -613,18 +624,18 @@ function chiudiPartita() {
   const vinto = (p.fine === 'vinto') === (mio.value === 'io')     // `fine` è dalla parte di chi ospita
   const stelle = infinita.value || regia.value ? 0 : stellePer({ vinto, vitaBase: p.vitaBase(mio.value) })
   // nella battaglia infinita non ci sono stelle né tappe né record: si dice solo il tempo di questa volta
-  if (!infinita.value && !regia.value && vinto && !pagata) {
+  if (!infinita.value && !regia.value && !aScuola && vinto && !pagata) {
     completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle })
     if (stelle === 3) segna('arenaSenzaGraffi')
     pagata = true
   }
-  if (!contata) { segna('arenaPartite'); contata = true }
+  if (!contata && !aScuola) { segna('arenaPartite'); contata = true }
   suono[vinto ? 'livello' : 'fine']()
   finale.value = {
     vinta: vinto, pari: p.fine === 'pari', titolo: titoloPartita.value, stelle,
     monete: borsellino.dato, notaMonete: borsellino.nota(), tempo: p.t,
     ultima: vinto && !infinita.value && tappaIdx.value === QUANTE_TAPPE - 1,
-    infinita: !!infinita.value && !regia.value, sfida: !!regia.value,
+    infinita: !!infinita.value && !regia.value, sfida: !!regia.value, scuola: aScuola,
   }
   if (regia.value) regia.value.finisci()
 }
@@ -633,6 +644,7 @@ function ancora() {
   const f = finale.value
   if (!f) return
   if (regia.value) return allaMappa()
+  if (aScuola) return avvia(tappaScuola)          // a scuola, vinta o persa, si riparte dalla stessa tappa
   if (infinita.value) return avviaInfinita()      // sempre un altro terreno
   if (f.vinta && tappaIdx.value + 1 < QUANTE_TAPPE && aperta(CHIAVE, tappaIdx.value + 1)) return avvia(tappaIdx.value + 1)
   if (f.vinta) return allaMappa()
@@ -684,9 +696,14 @@ function gancioDiProva() {
 }
 
 onMounted(() => {
+  gancioDiProva()
+  if (aScuola) {   // niente mappa, amici né sfide: si parte nella tappa
+    avvia(tappaScuola)
+    addEventListener('resize', ridimensiona)
+    return
+  }
   diciGioco('arena')
   sfida.daInvito()
-  gancioDiProva()
   const prova = typeof location !== 'undefined' ? chiesta(location.hash) : null
   if (prova) {
     infinita.value = prova.terreno

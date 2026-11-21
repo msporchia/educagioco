@@ -76,8 +76,8 @@ uguale('nel quaderno c\'è una classe', await m.locator('[data-classi] [data-cla
 await M.tocca('[data-azione="nuova-lezione"]')
 await schermata(m, 'lezione')
 await m.fill('[data-campo="nome-lezione"]', 'Il 2 e gli Asteroidi')
-// una lezione nuova non ha scelte fatte: tutti e dieci i giochi in vista, nessuno scelto, e non si salva
-uguale('tutti e dieci i giochi in vista', await m.locator('[data-blocco="0"] [data-scegli-gioco] [data-gioco]').count(), 10)
+// una lezione nuova non ha scelte fatte: tutti gli undici giochi in vista (le domande e i dieci veri), nessuno scelto, e non si salva
+uguale('tutti gli undici giochi in vista', await m.locator('[data-blocco="0"] [data-scegli-gioco] [data-gioco]').count(), 11)
 uguale('nessuno scelto', await m.locator('[data-blocco="0"] [data-scegli-gioco] [data-gioco][aria-pressed="true"]').count(), 0)
 controlla('e la lezione dice di scegliere il gioco', /scegli il gioco/.test(await testo(m, '[data-problema]')))
 // a passi: scelto il gioco si richiude in una riga sopra, e sotto si apre cosa si chiede
@@ -338,6 +338,19 @@ controlla('in localStorage solo chiavi scuola:*', disco.chiavi.every(k => k.star
   await scatto(R.page, 'scuola-robot-largo')
   controlla('nessun errore nella prova del Robot', veri(R.errori).length === 0, veri(R.errori).join(' | '))
   await R.page.close()
+}
+
+/* ── Castle Battle da una prova: si parte nella tappa, e il primo edificio chiede un calcolo (docs/arena/scuola.md) ── */
+{
+  const C = await apri('index.html')
+  await C.page.goto(linkDiProva({ id: 'prova', nome: 'Prova', inTondo: false,
+    blocchi: [{ esercizio: { tipo: 'battaglia', tappa: 'ponte', difficolta: 'facile' }, passa: null }] }, C.page.url()))
+  await C.page.reload()
+  await C.page.waitForSelector('[data-gioco="castle-battle"] canvas', { timeout: 15000 })
+  controlla('Castle Battle parte nella tappa scelta, senza mappa', /Il ponte di pietra/.test(await C.page.locator('[data-gioco="castle-battle"]').innerText()))
+  await scatto(C.page, 'scuola-castle-battle')
+  controlla('nessun errore nella prova di Castle Battle', veri(C.errori).length === 0, veri(C.errori).join(' | '))
+  await C.page.close()
 }
 
 controlla('nessun errore nella pagina della maestra', veri(M.errori).length === 0, veri(M.errori).join(' | '))

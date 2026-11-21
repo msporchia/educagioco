@@ -33,7 +33,7 @@ function sostituti () {
   } }
 }
 
-// le icone dei giochi (src/scuola/comune/icone-giochi.js): nelle pagine solo le nove della scuola, non le copertine di tutti
+// le icone dei giochi (src/scuola/comune/icone-giochi.js): nelle pagine solo quelle dei giochi della scuola, non le copertine di tutti
 function iconeGiochi () {
   const file = resolve(RADICE, 'src/scuola/comune/icone-giochi.js')
   return { name: 'icone-giochi-scuola', async load (id) {

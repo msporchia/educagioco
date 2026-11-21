@@ -9,4 +9,5 @@ export const PARAMETRI = {
   pozioni: defineAsyncComponent(() => import('./pozioni/Parametri.vue')),
   cucina: defineAsyncComponent(() => import('./cucina/Parametri.vue')),
   castello: defineAsyncComponent(() => import('./castello/Parametri.vue')),
+  'castle-battle': defineAsyncComponent(() => import('./castle-battle/Parametri.vue')),
 }

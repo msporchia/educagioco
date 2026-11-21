@@ -8,5 +8,6 @@ import pozioni from './pozioni/scheda.js'
 import cucina from './cucina/scheda.js'
 import castello from './castello/scheda.js'
 import sotterraneo from './sotterraneo/scheda.js'
+import castleBattle from './castle-battle/scheda.js'
 
-export const SCHEDE = [asteroidi, survivors, passoPasso, robot, inglese, pozioni, cucina, castello, sotterraneo]
+export const SCHEDE = [asteroidi, survivors, passoPasso, robot, inglese, pozioni, cucina, castello, castleBattle, sotterraneo]

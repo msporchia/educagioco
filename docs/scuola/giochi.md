@@ -54,6 +54,7 @@ blocco non lo conta. Le soglie dei blocchi contano le domande chiuse e le giuste
 | Le Pozioni | `{ tipo: 'pozioni', famiglie, gradini }` | ogni dose; un ingrediente al segno chiude, un trabocco è un tentativo | [../pozioni/scuola.md](../pozioni/scuola.md) |
 | La cucina (svago) | `{ tipo: 'cucina', da, a }` | ogni resto contato dal bambino (dal livello 7) | [../bancarella/scuola.md](../bancarella/scuola.md) |
 | Il castello (svago) | `{ tipo: 'castello', tappa }` | ogni operazione in colonna; ognuna chiude | [../castello/scuola.md](../castello/scuola.md) |
+| Castle Battle | `{ tipo: 'battaglia', tappa }` | ogni calcolo; ognuno chiude | [../arena/scuola.md](../arena/scuola.md) |
 | Il sotterraneo | qualunque esercizio del catalogo tranne le prime lettere e le sillabe; dalla terza | ogni domanda (porta, forziere, fonte, colpo); ognuna chiude | [../sotterraneo/scuola.md](../sotterraneo/scuola.md) |
 
 

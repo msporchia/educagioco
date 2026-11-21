@@ -16,6 +16,7 @@ chi ci lavora. Cartella `src/giochi/arena/` (la chiave del gioco è `arena`;
 - [multigiocatore.md](multigiocatore.md) — la sfida in due: un servizio di inoltro su Cloudflare (`servizio/inoltro/`), due copie identiche della partita
 - [../core/amici.md](../core/amici.md) — gli amici per tutta l'app: la sfida si fa con un invito invece del codice
 - [../core/amici-nei-giochi.md](../core/amici-nei-giochi.md) — gli amici sulla mappa: dove sono arrivati, e chi ha finito è alla battaglia infinita (senza record)
+- [scuola.md](scuola.md) — a scuola: una tappa scelta dalla maestra col livello del nemico, ogni calcolo una risposta
 - [da-fare.md](da-fare.md) — le voci aperte
 
 Vedi anche: [`../apprendimento/calibrazione.md`](../apprendimento/calibrazione.md)
