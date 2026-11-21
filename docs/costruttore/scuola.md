@@ -59,6 +59,15 @@ Ogni esecuzione che arriva in fondo (il ▶ che gira fino a vincere o a sbagliar
 - **Non sono risposte** il ▶ fermato da una casella da scegliere o dallo zaino pieno (il robot non parte) e ■ Stop.
 - `ms` è il tempo da quando il livello si è aperto, o dall'esecuzione prima.
 
+## Lo schermo largo
+
+Sui PC (più largo di 900 pixel e orizzontale) il programma sta a sinistra e a destra l'ordine, il mondo e i comandi, come
+in Passo passo: si legge da sinistra a destra, si scrive e poi si vede (scelta dell'utente). Il mondo prende il 60%
+dell'altezza invece del 36-44% (`viste/Campo.vue`) e «più spazio al programma» sparisce. Lo accende la vista della scuola
+con la classe `cst-schermo-largo` (in `stile.css`); a casa si gioca in verticale.
+
+Nei test: `integrazione/scuola` (il programma a sinistra del mondo, `scuola-robot-largo` con `--scatti`).
+
 ## Il peso
 
 Il gioco senza la scheda pesa nella pagina dei bambini circa 290 KB di JavaScript minificato (150 di dati dei livelli)

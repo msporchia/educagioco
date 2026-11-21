@@ -325,6 +325,21 @@ controlla('in localStorage solo chiavi scuola:*', disco.chiavi.every(k => k.star
   await P.page.close()
 }
 
+/* ── il Robot su un PC: il programma a sinistra, il mondo a destra (docs/costruttore/scuola.md) ── */
+{
+  const R = await apri('index.html')
+  await R.page.goto(linkDiProva({ id: 'prova', nome: 'Prova', inTondo: false,
+    blocchi: [{ esercizio: { tipo: 'robot', capitoli: ['cantiere'] }, passa: null }] }, R.page.url()))
+  await R.page.reload()
+  await R.page.waitForSelector('.cst-editor', { timeout: 15000 })
+  await attendi(R.page, 400)
+  const [editor, mondo] = await Promise.all(['.cst-editor', '.cst-sopra'].map(s => R.page.locator(s).boundingBox()))
+  controlla('sullo schermo largo il programma sta a sinistra del mondo', editor.x + editor.width <= mondo.x, JSON.stringify({ editor, mondo }))
+  await scatto(R.page, 'scuola-robot-largo')
+  controlla('nessun errore nella prova del Robot', veri(R.errori).length === 0, veri(R.errori).join(' | '))
+  await R.page.close()
+}
+
 controlla('nessun errore nella pagina della maestra', veri(M.errori).length === 0, veri(M.errori).join(' | '))
 controlla('nessun errore nella pagina dei bambini', veri(B.errori).length === 0, veri(B.errori).join(' | '))
 nota(nelGioco ? 'il secondo blocco giocato negli Asteroidi in 3D' : 'il secondo blocco a schede')

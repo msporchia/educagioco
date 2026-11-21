@@ -18,14 +18,18 @@ let osserva = null
 
 const delPorto = q => !!q && q.mondo === 'porto'
 
+const largo = () => !!scatola.value?.closest('.cst-schermo-largo') && typeof matchMedia === 'function'
+  && matchMedia('(min-width: 900px) and (min-aspect-ratio: 5 / 4)').matches
 function misura() {
   if (!tela || !props.quadro || !scatola.value) return
   const larga = scatola.value.clientWidth
   /* il porto si guarda di più: è lì che succedono le cose mentre il
      programma gira, e una mappa grande vuole spazio */
-  const alta = porto
-    ? Math.max(180, Math.min(window.innerHeight * 0.44, 440))
-    : Math.max(150, Math.min(window.innerHeight * 0.36, 360))
+  const alta = largo()
+    ? Math.max(180, window.innerHeight * 0.6)            // a scuola sullo schermo largo il mondo ha la sua colonna (stile.css)
+    : porto
+      ? Math.max(180, Math.min(window.innerHeight * 0.44, 440))
+      : Math.max(150, Math.min(window.innerHeight * 0.36, 360))
   tela.misura(larga, alta, props.quadro.w, props.quadro.h)
 }
 

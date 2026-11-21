@@ -37,7 +37,8 @@ const riferisci = r => emit('risposta', r)
 </script>
 
 <template>
-  <div class="robot" data-gioco="robot">
+  <!-- `cst-schermo-largo`: su un PC il programma a sinistra, il mondo a destra (giochi/costruttore/stile.css) -->
+  <div class="robot cst-schermo-largo" data-gioco="robot">
     <div class="colonna">
       <Robot v-if="chi" :key="chi" :limite="limite" @risposta="riferisci" />
     </div>
@@ -48,4 +49,5 @@ const riferisci = r => emit('risposta', r)
 /* il gioco è un `.schermo` assoluto: sta nella colonna, centrata su uno schermo largo (l'editor vuole un po' più spazio) */
 .robot { position: relative; flex: 1; min-height: 0; display: flex; justify-content: center; background: #e9e1d3 }
 .colonna { position: relative; flex: 1; max-width: 720px; overflow: hidden }
+@media (min-width: 900px) and (min-aspect-ratio: 5 / 4) { .colonna { max-width: 1280px } }
 </style>
