@@ -80,30 +80,25 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
   edifici si disegnano in codice (`scena/edifici.js`, con lo scudo della truppa davanti).
 - **Il nemico ha le stesse immagini col blu fatto rosso** (`ricolora()`, una volta per
   atlante): per questo il prompt vuole il colore della squadra di un blu solo. Il rosso del foglio
-  non si tocca: è il fuoco e il drago, che anche dal nemico restano rossi.
+  non si tocca: è il fuoco e il drago, che anche dal nemico restano rossi. Le truppe no: hanno un foglio per squadra (qui sotto).
 - **Il castello è uno solo, del colore della sua squadra** (a monte: blu anche negli stendardi, e il nemico è lo stesso col blu fatto rosso), e
   il prato dipinto ai suoi piedi prende il colore del posto. Viene dal vestito `bosco` del castello a torri finché non arrivano i castelli del posto (voce 9).
   Prima ogni terreno aveva il suo, e nella lava i colori delle squadre erano rovesciati.
   **Provato** il filtro `hue-rotate`: tetti verdi e neve rosa.
-- **Di che squadra è una truppa** si vede dalla casacca dipinta (`dati/truppe-dipinte.js`, voce 12,
-  `truppe-arena.py`) e da un disco pieno sotto i piedi: una stoffa blu, che `ricolora()` fa rossa per il
-  nemico. I pezzi hanno il nome della posa e la scala di prima, così `figura()` e i ritratti li mettono dove stavano.
-  Nel foglio due pose degli opliti sono uscite senza casacca: `truppe.json` le fa uguali alla prima.
-  **Provati**, e bocciati: un contorno del colore della squadra (un alone al neon anche sottile), una fascia
-  di traverso in codice (nastro adesivo), il busto tinto in codice.
-- **Gli arcieri hanno in mano l'arco del sotterraneo** (`arco()` in `scena/figure.js`, il
-  pezzo grande `arco-corto` di `sotterraneo/dati/atlante.js`): nel foglio lo scheletro è a
-  mani vuote. Come l'arma dell'eroe là, sta a un punto fisso davanti al corpo, non a un
-  aggancio per fotogramma, e rincula quando tirano. Il ritratto delle carte aspetta che
-  l'immagine ci sia (`armiPronte()`).
-- **Chi è chi** (`scena/figure.js`): scheletro (arcieri), scheletro con scudo (opliti),
-  lupo, diavoletto, pipistrello, negromante, golem, drago, e la bestia cornuta (le bestie della
-  tana di neve e lava: una creatura del catalogo che l'arena non usava, già nel foglio del castello;
-  del suo respiro si tengono le due pose calme, la terza è la fiammata e le bestie non sparano:
-  `NON_SUE`). Lupo e drago hanno i passi
-  di lato (6 fotogrammi); le altre il respiro (4) e uno scatto in avanti quando
-  colpiscono, un saltello quando camminano. Guardano di lato (di schiena non esiste
-  niente): ciascuna dalla parte della sua squadra.
+- **Ogni squadra ha il suo foglio di truppe** (voce 12b, ChatGPT; Grok in modalità agente non era partito): disegnate da zero,
+  blu per chi gioca e rosse per il nemico, nove truppe con quattro pose ciascuna, **ferma, due passi, il colpo**
+  (`dati/truppe-dipinte.js`, `truppe-arena.py`). Il colpo dura quanto lo scatto in avanti (`u.colpo`), chi cammina alterna i passi,
+  chi vola sbatte le ali sempre (`fotogramma()` in `scena/figure.js`). L'arco, la lancia, la bomba e la fiammata sono nel dipinto:
+  l'arco del sotterraneo messo in mano a parte non c'è più. Le figure guardano a destra e il nemico si specchia.
+- **Il taglio** non segue la griglia: la freccia e la fiammata escono dalla casella, e nel foglio rosso la fiammata del drago tocca
+  il drago dopo (Grok ne ha disegnati otto invece di quattro: gli altri si ignorano). Le figure sono le macchie di pixel attaccati,
+  e una macchia divisa fra due caselle si taglia nel punto più stretto. Le pose di una truppa hanno lo stesso piede e lo stesso centro
+  (quello della ferma, `centro` del pezzo): il pipistrello che sbatte le ali non salta. La misura in campo è quella di prima
+  (`alto` in `truppe.json`), con l'atlante una volta e mezza più fitto (`risoluzione`): 789 KB, tre volte quello di prima.
+- Sotto i piedi resta un disco pieno del colore della squadra. **Provati prima**, e bocciati: un contorno del colore della squadra
+  (un alone al neon anche sottile), una fascia di traverso in codice (nastro adesivo), il busto tinto in codice.
+- **Chi è chi**: scheletri arcieri, scheletri opliti, mummie (`lupi` nel codice), diavoletti, pipistrelli, bestie cornute,
+  negromanti, golem, draghi.
 - **Una caserma nuova spunta** dalla sua piazzola con un rimbalzo e uno sbuffo di polvere.
 - **La vita dei castelli sta SOPRA i castelli**, in una targa di legno orlata d'oro, grande e sempre
   accesa, col numero. Il livello è uno scudetto. **Le altre barre si vedono solo sul ferito** (caserme, porta, truppe).
@@ -124,7 +119,7 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
   crollata) per ogni posto, col fondo trasparente: il ponte sta nel terreno (`strumenti/sprite/fortezze-arena.py`, `dati/fortezze-dipinte.js`).
   **La porta di chi gioca si vede da dietro** (`porta:<posto>:<stato>:dietro`, foglio 9b): il campo si guarda da sotto, e la sua faccia col portone
   guarda il nemico. Un posto che non ce l'ha usa quella dal davanti. Le porte dipinte hanno le loro bandiere: quelle in codice solo sulle disegnate.
-- **Mancano**: i fogli 9, 10 e 11, e le pose di attacco e di morte delle truppe.
+- **Mancano**: i fogli 10 e 11, e le pose di morte delle truppe.
 
 ## Il quadro e i comandi
 

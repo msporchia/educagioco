@@ -736,7 +736,7 @@ RIGA 3, tre icone: una clessidra d'oro (il tempo), il simbolo dell'infinito in o
 LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: foglio ORIZZONTALE 1536×1024 px su FONDO TRASPARENTE; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; ogni icona sta in un quadrato di circa 220 px e lo riempie; almeno 60 px di trasparente fra un'icona e l'altra, anche fra le righe, e ogni icona è un pezzo solo, senza parti staccate; nessun fondo, nessun cerchio o bottone attorno, nessuna ombra sotto, nessun bagliore, nessuna cornice; NESSUNA PAROLA SCRITTA, NESSUN NUMERO, tranne la Z della luna.
 ```
 
-### 12 — Le truppe di Castle Battle con la casacca · 1 immagine · ✅ 5 novembre 2026 (Grok), due pose degli opliti da rifare
+### 12 — Le truppe di Castle Battle con la casacca · 1 immagine · ✅ 5 novembre 2026 (Grok) · superata dalla 12b: `truppe-arena.py` non legge più `truppe.png`
 
 **Perché**: la squadra di una truppa oggi si legge da un contorno e da un disco; farlo in codice non regge (`docs/arena/grafica.md`). La casacca va
 dipinta sulla figura: una stoffa blu per ognuna, e il nemico la ha rossa da `ricolora()`, come le caserme. Sono le 35 pose che il gioco usa e solo quelle.
@@ -764,15 +764,15 @@ Le figure, in ordine di lettura:
 LE REGOLE TECNICHE, precise, perché il foglio si taglia a pezzi da solo: foglio ORIZZONTALE 1536×1024 px su FONDO TRASPARENTE; pixel art, ogni pixel del disegno un quadrato pieno di 4×4 px; le figure staccate fra loro; il blu solo sulla stoffa, perché nel gioco diventa rosso per il nemico: niente altro di blu in tutto il foglio; niente ombre a terra, NESSUNA PAROLA SCRITTA, nessuna cornice.
 ```
 
-### 12b — Le truppe nuove, un foglio blu e uno rosso · 2 immagini · da fare
+### 12b — Le truppe nuove, un foglio blu e uno rosso · 2 immagini · ✅ 21 novembre 2026 (ChatGPT: Grok in modalità agente non è partito)
 
 **Perché**: le squadre sono due sole e al gioco bastano quattro pose per truppa, quindi si disegnano da zero sul loro colore invece di ricalcare le figure del castello e tingere il
 nemico. Le pose hanno un compito: fermo, due passi che si alternano (un ciclo intero da un foglio non viene: voce 5) e il colpo, che oggi manca.
 
 **Come si manda**: nella chat di Grok del foglio delle truppe, prima il blu e poi il rosso. In una chat nuova si allega `sorgenti/arena/truppe.png`, solo per lo stile.
 
-**Si salva in** `strumenti/sprite/sorgenti/arena/truppe-blu.png` e `truppe-rosso.png`. Il taglio (otto colonne per cinque righe) e il gioco che prende ogni squadra dal suo foglio si fanno quando ci sono;
-la misura in campo resta quella di oggi, la dà `SCALA`, e l'arco di `arco()` non serve più.
+**Si salva in** `strumenti/sprite/sorgenti/arena/truppe-blu.png` e `truppe-rosso.png`. **Comando**: `python3 strumenti/sprite/truppe-arena.py`. Nel rosso
+sono venuti otto draghi invece di quattro, e la fiammata tocca il quinto: il taglio lo regge ([../../docs/arena/grafica.md](../../docs/arena/grafica.md)).
 
 **La squadra blu**:
 

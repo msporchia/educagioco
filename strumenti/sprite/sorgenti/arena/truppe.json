@@ -1,3 +1,5 @@
 {
-  "uguali": { "6": 5, "7": 5 }
+  "ordine": ["scheletri", "guardiano", "lupi", "diavoletto", "pipistrelli", "bestie", "negromante", "golem", "drago"],
+  "alto": { "scheletri": 67, "guardiano": 88, "lupi": 76, "diavoletto": 78, "pipistrelli": 62, "bestie": 84, "negromante": 96, "golem": 91, "drago": 116 },
+  "risoluzione": 1.5
 }

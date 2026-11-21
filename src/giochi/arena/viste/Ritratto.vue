@@ -5,8 +5,8 @@
 import { ref, onMounted, watch } from 'vue'
 import { PEZZI } from '../../castello/dati/figure.js'
 import { caricaFigure, immagineFigure } from '../../castello/scena/pittori.js'
-import { fotogramma, arco, armiPronte } from '../scena/figure.js'
-import { PEZZI as VESTITE, ATLANTE } from '../dati/truppe-dipinte.js'
+import { fotogramma } from '../scena/figure.js'
+import { PEZZI as DIPINTE, ATLANTE } from '../dati/truppe-dipinte.js'
 import { stadioDi } from '../../../data/ops.js'
 
 const props = defineProps({
@@ -26,15 +26,13 @@ function dipingi() {
   cv.width = cv.height = Math.round(props.lato * dpr)
   const c = cv.getContext('2d')
   c.clearRect(0, 0, cv.width, cv.height)
-  const [sx, sy, w, h] = props.torre ? PEZZI[`torre:arciere:${stadioDi(props.livello)}:`] : VESTITE[fotogramma(props.id, 0, false)]
-  const conArco = props.id === 'scheletri' && !props.torre
-  const s = Math.min(cv.width / w, cv.height / h) * (conArco ? 0.8 : 0.94)     // l'arco sporge davanti: ci vuole posto
-  const x = (cv.width - w * s) / 2 - (conArco ? cv.width * 0.08 : 0), piede = cv.height - cv.height * 0.03
+  const [sx, sy, w, h] = props.torre ? PEZZI[`torre:arciere:${stadioDi(props.livello)}:`] : DIPINTE[fotogramma(props.id, 'io', 0)]
+  const s = Math.min(cv.width / w, cv.height / h) * 0.94
+  const x = (cv.width - w * s) / 2, piede = cv.height - cv.height * 0.03
   c.drawImage(props.torre ? img : vestite, sx, sy, w, h, x, piede - h * s, w * s, h * s)
-  if (conArco) arco(c, x + w * s / 2, piede, w * s, h * s)   // gli arcieri: il foglio non ha l'arco
 }
 
-onMounted(() => Promise.all([caricaFigure(), armiPronte(), vestitePronte]).then(dipingi))
+onMounted(() => Promise.all([caricaFigure(), vestitePronte]).then(dipingi))
 watch(() => [props.id, props.livello], dipingi)
 </script>
 

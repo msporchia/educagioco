@@ -9,10 +9,8 @@ import { CAMPO, TRUPPE, POSTI, EDIFICIO_DI } from '../dati/regole.js'
 import { PEZZI as DIPINTE, ATLANTE as FOGLIO_CASERME, PIAZZOLA } from '../dati/caserme-dipinte.js'
 import { PEZZI as FORTEZZE, ATLANTE as FOGLIO_FORTEZZE } from '../dati/fortezze-dipinte.js'
 import { PEZZI as OPERE, ATLANTE as FOGLIO_OPERE } from '../dati/opere-disegnate.js'
-import { PEZZI as VESTITE, ATLANTE as FOGLIO_TRUPPE } from '../dati/truppe-dipinte.js'
-import { PEZZI } from '../../castello/dati/figure.js'
-import { caricaFigure, immagineFigure } from '../../castello/scena/pittori.js'
-import { SCALA, fotogramma, fotogrammiDi, arco, armiPronte } from './figure.js'
+import { ATLANTE as FOGLIO_TRUPPE } from '../dati/truppe-dipinte.js'
+import { SCALA, fotogramma, fotogrammiDi, DIPINTE as TRUPPE_DIPINTE, RISOLUZIONE } from './figure.js'
 import { PONTE_DIPINTO } from '../dati/terreni-pronti.js'
 import { disegnaEdificio } from './edifici.js'
 import { Terreno } from './terreno.js'
@@ -51,7 +49,7 @@ export class Campo {
   async prepara() {
     for (let giro = 0; ; giro++) {
       try {
-        await Promise.all([caricaFigure(), armiPronte(), this.caricaAtlanti(), this.terreno.prepara()])
+        await Promise.all([this.caricaAtlanti(), this.terreno.prepara()])
         break
       } catch (e) {
         if (giro >= 5) throw e
@@ -62,19 +60,20 @@ export class Campo {
     this.preparaFigure()
   }
 
-  /* un atlante e la sua copia col blu della squadra fatto rosso; se l'immagine non arriva, null */
-  atlante(src) {
+  /* un atlante e la sua copia col blu della squadra fatto rosso; se l'immagine non arriva, null. Le truppe hanno un foglio
+     per squadra già nell'atlante: niente copia (`tinge` falso) */
+  atlante(src, tinge = true) {
     if (typeof Image === 'undefined' || !src) return Promise.resolve(null)
     return (atlanti[src] ||= new Promise(ok => {
       const img = new Image()
-      img.onload = () => ok({ io: img, nem: this.ricolora(img) })
+      img.onload = () => ok({ io: img, nem: tinge ? this.ricolora(img) : img })
       img.onerror = () => { delete atlanti[src]; ok(null) }
       img.src = src
     }))
   }
 
   async caricaAtlanti() {
-    [this.caserme, this.fortezze, this.opere, this.truppe] = await Promise.all([FOGLIO_CASERME, FOGLIO_FORTEZZE, FOGLIO_OPERE, FOGLIO_TRUPPE].map(src => this.atlante(src)))
+    [this.caserme, this.fortezze, this.opere, this.truppe] = await Promise.all([FOGLIO_CASERME, FOGLIO_FORTEZZE, FOGLIO_OPERE, FOGLIO_TRUPPE].map(src => this.atlante(src, src !== FOGLIO_TRUPPE)))
     if (!this.opere || !this.truppe) throw new Error('atlante delle opere o delle truppe non caricato')     // `prepara` riprova
   }
 
@@ -186,36 +185,27 @@ export class Campo {
     if (this.pronto) this.terreno.disegna(c, { W, H, k: this.k, s: this.s, X: v => this.X(v), Y: v => this.Y(v), sopra: t => this.ponte(t) })
   }
 
-  /* un pezzo del foglio delle figure, col piede in (x, y) */
-  pezzo(c, nome, x, y, scala, specchia = false, alpha = 1, foglio = immagineFigure()) {
-    const [sx, sy, w, h] = PEZZI[nome]
-    const lw = w * scala, lh = h * scala
-    c.globalAlpha = alpha
-    if (specchia) {
-      c.save(); c.translate(x, y - lh); c.scale(-1, 1)
-      c.drawImage(foglio, sx, sy, w, h, -lw / 2, 0, lw, lh); c.restore()
-    } else c.drawImage(foglio, sx, sy, w, h, x - lw / 2, y - lh, lw, lh)
-    c.globalAlpha = 1
-    return lh
+  /* una posa dipinta col piede in (x, y) e il suo centro sopra il piede, alla scala `sc`; il nemico si specchia */
+  posa(c, fg, x, y, sc, specchia) {
+    const [sx, sy, w, h, centro] = TRUPPE_DIPINTE[fg]
+    c.save(); c.translate(x, y)
+    if (specchia) c.scale(-1, 1)
+    c.drawImage(this.truppe.io, sx, sy, w, h, -centro * sc, -h * sc, w * sc, h * sc)
+    c.restore()
   }
 
-  /* Una truppa già pronta alla misura dello schermo, con l'arco in mano e girata dalla parte giusta: a fotogramma è un disegno
-     solo e senza scala. Con centinaia di figure è questo che pesa. Si rifanno quando cambia la misura. */
+  /* Una truppa già pronta alla misura dello schermo e girata dalla parte giusta: a fotogramma è un disegno solo e senza scala.
+     Con centinaia di figure è questo che pesa. Si rifanno quando cambia la misura. La freccia e la fiammata del colpo
+     sporgono: la tela è larga quanto il lato più lungo, due volte, e il centro sta in mezzo. */
   figura(id, fg, lato) {
     const chiave = `${lato}:${fg}:${id}`
     let f = this.figure.get(chiave)
     if (f) return f
-    const [sx, sy, w, h] = VESTITE[fg], k = this.k, sc = SCALA[id] * this.s / 0.85 * ZT * k
-    const lw = w * sc, lh = h * sc, specchia = lato === 'nem'
-    const extra = id === 'scheletri' ? lh * 0.5 : 0                       // l'arco esce dalla figura
-    const mezzo = Math.ceil(lw / 2 + extra + 1), cv = document.createElement('canvas')
+    const [, , w, h, centro] = TRUPPE_DIPINTE[fg], k = this.k, sc = SCALA[id] / RISOLUZIONE * this.s / 0.85 * ZT * k
+    const lh = h * sc, mezzo = Math.ceil(Math.max(centro, w - centro) * sc + 1), cv = document.createElement('canvas')
     cv.width = mezzo * 2; cv.height = Math.ceil(lh + 2)
-    const piede = cv.height - 1, q = cv.getContext('2d')
-    q.translate(mezzo, piede)
-    if (specchia) q.scale(-1, 1)
-    q.drawImage(this.truppe[lato], sx, sy, w, h, -lw / 2, -lh, lw, lh)
-    if (specchia) q.scale(-1, 1)
-    if (id === 'scheletri') arco(q, 0, 0, lw, lh, specchia, 0)
+    const piede = cv.height - 1
+    this.posa(cv.getContext('2d'), fg, mezzo, piede, sc, lato === 'nem')
     f = { cv, piede: piede / k, alto: lh / k }
     this.figure.set(chiave, f)
     return f
@@ -223,7 +213,7 @@ export class Campo {
 
   /* tutte le pose di tutte le truppe, prima che serva: durante la battaglia non si prepara niente */
   preparaFigure() {
-    for (const id of Object.keys(TRUPPE)) for (const fg of fotogrammiDi(id)) for (const lato of ['io', 'nem']) this.figura(id, fg, lato)
+    for (const id of Object.keys(TRUPPE)) for (const lato of ['io', 'nem']) for (const fg of fotogrammiDi(id, lato)) this.figura(id, fg, lato)
   }
 
   barra(c, x, y, w, q, colore) {
@@ -373,9 +363,8 @@ export class Campo {
     if (k > 0.6) {
       c.fillStyle = 'rgba(255,255,255,.95)'; c.beginPath(); c.arc(x + u(20), y - u(14), u(6.5), 0, 7); c.fill()
       c.strokeStyle = scuro; c.lineWidth = 2; c.stroke()
-      const fg = fotogramma(cs.id, 0, false, 0), sc = SCALA[cs.id] * 0.3 * this.s / 0.85 * ZE * k
-      this.pezzo(c, fg, x + u(20), y - u(8.5), sc, cs.lato === 'nem')
-      if (cs.id === 'scheletri') arco(c, x + u(20), y - u(8.5), PEZZI[fg][2] * sc, PEZZI[fg][3] * sc, cs.lato === 'nem')
+      const sc = SCALA[cs.id] / RISOLUZIONE * 0.3 * this.s / 0.85 * ZE * k
+      if (this.truppe) this.posa(c, fotogramma(cs.id, cs.lato, 0), x + u(20), y - u(8.5), sc, cs.lato === 'nem')
     }
     this.livello(c, x, y + this.mi(6), cs.liv, cs.lato)
     if (cs.hp < cs.max) this.barra(c, x, y - u(alto) - this.me(4), u(34), cs.hp / cs.max)     // la vita si vede solo se è ferita
@@ -413,7 +402,8 @@ export class Campo {
     const salto = u.cammina ? Math.abs(Math.sin(ora * 9 + u.x)) * m(2) : 0
     const nasce = u.nasce > 0 ? 1 - u.nasce / 0.8 : 1
     const sfasa = u.x * 0.07 + u.y * 0.05
-    const f = this.figura(u.id, fotogramma(u.id, ora, u.cammina, sfasa), u.lato), py = y - alto - salto + scatto
+    const fg = fotogramma(u.id, u.lato, ora, { cammina: u.cammina, colpo: u.colpo > 0, vola: u.vola }, sfasa)
+    const f = this.figura(u.id, fg, u.lato), py = y - alto - salto + scatto
     const dentro = 0.6 + 0.4 * nasce, lw = f.cv.width / this.k * dentro, lh = f.alto * dentro
     if (u.fl > 0) c.globalAlpha = 0.72
     c.drawImage(f.cv, x - lw / 2, py - f.piede * dentro, lw, f.cv.height / this.k * dentro)
