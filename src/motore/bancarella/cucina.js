@@ -271,10 +271,11 @@ function unisci(c, a, b, dopo) {
   return { fai: () => { sulPiatto(c, p, b.cosa); dopo(p) } }
 }
 
-/* Due mucchi, o un mucchio e un piatto: quello senza piatto passa sull'altro. */
+/* Due mucchi, o un mucchio e un piatto: quello senza piatto passa sull'altro. Due piatti veri: quello in mano si
+   vuota su quello posato e va a lavare, così il riso col pesce si fa anche partendo da due piatti. */
 function travaso(c, t, o, m) {
   const k = c.cuoco
-  if (!o.nudo && !m.nudo) return { perche: 'Le mani sono piene' }
+  if (!o.nudo && !m.nudo && !m.cose.length) return { perche: 'Le mani sono piene' }
   const [dentro, via] = o.nudo ? [m, o] : [o, m]
   const prova = { ...dentro, cose: [...dentro.cose] }
   for (const cosa of via.cose) {
@@ -285,6 +286,7 @@ function travaso(c, t, o, m) {
     Object.assign(dentro, prova)
     if (dentro === o) k.mano = null
     else delete c.sopra[t.id]
+    if (!via.nudo) sporcaPiatto(c)
   } }
 }
 

@@ -167,6 +167,39 @@ test('due cose della stessa ricetta si uniscono anche senza piatto', () => {
   assert.equal(n.cuoco.mano.cosa, 'pane')
 })
 
+test('due piatti si uniscono: quello in mano si vuota su quello posato e va a lavare', () => {
+  const c = cucinaNuova({ ...CUCINE[4], piatti: 4 })        // il sushi con l'alga
+  const banco = libero(c)
+  c.sopra[banco] = { piatto: true, cose: ['riso'], pronto: '', daInfornare: false, forno: '' }
+  c.cuoco.mano = { piatto: true, cose: ['pesce'], pronto: '', daInfornare: false, forno: '' }
+  assert.ok(fa(c, banco), c.perche)
+  assert.equal(c.cuoco.mano, null)
+  assert.deepEqual(c.sopra[banco].cose, ['riso', 'pesce'])
+  assert.equal(c.sopra[banco].pronto, '🍣')
+  assert.equal(c.sporchi, 1, 'il piatto vuotato va nel lavello')
+  c.cuoco.mano = { piatto: true, cose: [], pronto: '', daInfornare: false, forno: '' }
+  assert.equal(fa(c, banco), false, 'un piatto vuoto non si vuota')
+  assert.equal(c.perche, 'Le mani sono piene')
+})
+
+test('ogni ricetta si mette insieme in qualunque ordine, anche da due piatti', () => {
+  const ordini = a => (a.length < 2 ? [a] : a.flatMap((x, i) => ordini([...a.slice(0, i), ...a.slice(i + 1)]).map(r => [x, ...r])))
+  for (const camp of CUCINE) {
+    const c = cucinaNuova({ ...camp, piatti: 0 }), banco = libero(c)
+    for (const r of c.ricette) for (const fila of ordini(r.passi)) for (let taglio = 1; taglio < fila.length; taglio++) {
+      const piatto = cose => { const p = { piatto: true, cose: [], pronto: '', daInfornare: false, forno: '' }; c.sopra[banco] = p
+        for (const cosa of cose) { c.cuoco.mano = { cosa, fatta: true, bruciata: false }; assert.ok(usa(c, c.celle.find(k => k.id === banco)), `${r.nome}: ${fila}`) }
+        return p }
+      const inMano = piatto(fila.slice(taglio)); delete c.sopra[banco]
+      piatto(fila.slice(0, taglio))
+      c.cuoco.mano = inMano
+      assert.ok(usa(c, c.celle.find(k => k.id === banco)), `${camp.nome}, ${r.nome}: ${fila.slice(0, taglio)} + ${fila.slice(taglio)} (${c.perche})`)
+      assert.ok([c.sopra[banco].pronto, c.sopra[banco].forno].includes(r.emoji), `${r.nome}: ${fila}`)
+      delete c.sopra[banco]
+    }
+  }
+})
+
 test('il tagliere: un tocco, e il cuoco taglia fino alla fine', () => {
   const c = cucina()
   fa(c, cassetta(c, 'insalata'))

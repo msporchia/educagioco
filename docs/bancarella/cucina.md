@@ -62,6 +62,9 @@ che resta si ingoia, se no preme una moneta ([../core/il-dito.md](../core/il-dit
 - **Due cose pronte della stessa ricetta si uniscono da sole**: con l'impasto in mano si
   tocca il sugo (`unisci`). **Il piatto non compare da solo**: restano in mano senza
   (`nudo`), e per servire o infornare si passa dalla pila, o da un piatto posato.
+- **Due piatti si uniscono**: toccando un piatto posato con un altro piatto in mano, quello in mano si vuota sull'altro e va a
+  lavare (`travaso`). Così ogni ricetta si mette insieme in qualunque ordine, anche partita da due piatti (un test le prova tutte);
+  prima diceva «Le mani sono piene». Un piatto vuoto in mano non si vuota.
 - **Il piatto pronto può crescere**: alla pasta al pomodoro si aggiunge il formaggio, e
   diventa l'altra ricetta. Per questo una ricetta può contenerne un'altra.
 - **Con le mani si tiene quello che si terrebbe**: il cotto, il tagliato, il sugo e il riso
