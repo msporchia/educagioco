@@ -35,6 +35,7 @@ comandi, pubblicazione, grafica, e le regole comuni a tutti i giochi.
 - [personalizza.md](personalizza.md) — l'interfaccia unica per vestire personaggi, animali e oggetti: zone, contratto «solo le zone sotto», dati, eventi, set
 - [pelle.md](pelle.md) — una pelle sola per home, profilo, impostazioni, guide e benvenuto: i valori in `style.css` e `.pulito`
 - [il-dito.md](il-dito.md) — tocco, click fantasma, scorrimento, selezione
+- [tastiera.md](tastiera.md) — i giochi comandati dalla tastiera, e il tasto scritto accanto ai pulsanti
 - [primati.md](primati.md) — i giochi senza fine e i record
 - [ripresa.md](ripresa.md) — uscire non butta via la partita: la sosta, quando si scrive, la carta in cima alla mappa
 - [aiuti.md](aiuti.md) — la scala del 💡 a monete

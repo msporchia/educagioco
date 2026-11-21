@@ -23,6 +23,7 @@
      si sceglie, mentre gira dice a che giro è, e dove sbatte il giro
      resta scritto; il 💡 lì consiglia una scatola intera;
    · a sei anni lo zaino è chiuso, e il sentiero dei piccoli no;
+   · dalla tastiera: ⌫, R, i numeri, le frecce e Invio come i tasti;
    · e nessun errore in console.
    `DIST=… node test/esegui.mjs passo-passo --niente-build`
    ═══════════════════════════════════════════════════════════════════ */
@@ -508,6 +509,26 @@ controlla('toccata, la scatola entra già col suo numero',
           await page.locator('[data-testa][data-volte="5"]').count() === 1 &&
           await page.locator('[data-scelta-volte]').count() === 0)
 await scatto(page, 'passo-zaino-aiuto')
+
+/* la tastiera fa quello che fanno i tasti (docs/passo-passo/regole.md, «La tastiera») */
+await page.locator('[data-coda]').click()
+await page.keyboard.press('Backspace')
+uguale('⌫ dalla tastiera toglie la scatola', await page.locator('[data-scatola]').count(), 0)
+await page.keyboard.press('r')
+await page.keyboard.press('5')
+await page.keyboard.press('ArrowRight')
+controlla('R mette la scatola, 5 la sceglie, → entra dentro',
+          await page.locator('[data-testa][data-volte="5"]').count() === 1 &&
+          await page.locator('[data-scatola] [data-tessera][data-mossa="destra"]').count() === 1)
+controlla('premuto un tasto, sui pulsanti speciali si vede il tasto da premere',
+          await page.locator('[data-carta="ripeti"] [data-tasto-tastiera]').isVisible() &&
+          await page.locator('[data-azione="via"] [data-tasto-tastiera]').isVisible())
+await page.keyboard.press('Enter')
+await page.waitForSelector('[data-azione="ferma"]', { timeout: 3000 })
+await attendi(page, 700)
+await page.keyboard.press('Enter')
+await page.waitForSelector('[data-azione="via"]', { timeout: 3000 })
+controlla('Invio fa partire il coniglio, e di nuovo lo ferma', true)
 
 /* ---------- 13. a sei anni lo zaino è aperto a chi ci arriva, e il sentiero aspetta la fine ---------- */
 await allaMappa()

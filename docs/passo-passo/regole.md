@@ -36,6 +36,28 @@ legenda delle celle sta in `dati/mondo.js`, le regole in `motore/mondo.js`.
   🔁 la prima volta che si arriva allo zaino, finché nella fila non c'è una
   scatola.
 
+## La tastiera
+
+Sui PC il coniglio si comanda anche dalla tastiera, e chi ha un mouse vede
+il tasto nell'angolo dei pulsanti speciali (le regole comuni in
+[../core/tastiera.md](../core/tastiera.md)). Un tasto fa quello che fa il
+pulsante, con gli stessi divieti; la mappa sta in `viste/Campo.vue`.
+
+| tasto | fa |
+|---|---|
+| ← ↑ ↓ → | le frecce |
+| ⇧ + freccia | il salto (dove c'è) |
+| A, R, S | attacca, ripeti, se |
+| 2…9 | il numero della scatola, mentre lo si sceglie |
+| ⌫ | toglie la carta prima del cursore |
+| Invio o Spazio | ▶, e mentre corre ■ |
+
+Il 💡 non ha tasto: costa monete, e un tasto premuto per sbaglio le
+spenderebbe. I colori di «fino a» e «se» si scelgono col mouse. Sotto il
+finale e sotto il foglio del `?` la tastiera tace.
+
+Nei test: `[data-tasto-tastiera]` (il tasto scritto sul pulsante).
+
 ## Le regole del mondo
 
 Valgono **sempre, uguali in ogni livello**: un mondo che in un posto fa una

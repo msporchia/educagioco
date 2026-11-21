@@ -12,6 +12,8 @@ import Figura from './Figura.vue'
 import Scritta from './Scritta.vue'
 import { nomeDellaMossa, LASTRE, VERSI, CHIAVI_VERSI } from '../dati/mondo.js'
 import { VOLTE, CASA } from '../dati/carte.js'
+import { usaTasti } from '../../tastiera.js'
+import TastoTastiera from '../../../components/TastoTastiera.vue'
 
 const props = defineProps({
   fila: { type: Array, required: true },
@@ -42,6 +44,7 @@ const props = defineProps({
   consiglioValore: { type: [Number, String], default: null }, // quello che l'aiuto accende
   consiglioTesta: { type: Number, default: null }, // la scatola a cui l'aiuto cambia la testa
   scossa: { type: Number, default: 0 },          // ▶ fermato da una N: la scelta sobbalza
+  tasti: { type: Boolean, default: true },       // la tastiera comanda (spenta sotto il finale e i fogli)
 })
 const emit = defineEmits(['freccia', 'cancella', 'via', 'ferma', 'aiuto', 'cursore', 'sposta', 'scatola', 'testa-scelta', 'testa',
                           'chiudi-pensiero'])
@@ -68,6 +71,23 @@ const inParole = v => (v === CASA ? 'fino a casa' : VERSI[v] ? `se ${VERSI[v].no
 /* l'ordine dei tasti: sinistra, su, giù, destra — le due frecce verticali
    in mezzo, come sulla tastiera di un computer */
 const ORDINE = ['sinistra', 'su', 'giu', 'destra']
+
+/* la tastiera fa quello che fanno i pulsanti, con gli stessi divieti (docs/passo-passo/regole.md, «La tastiera») */
+const libero = () => !props.inCorsa && !props.piena
+const passo = v => () => libero() && emit('freccia', v)
+const salto = v => () => props.salti && libero() && emit('freccia', 'salto-' + v)
+const scegliNumero = n => () => props.scelta != null && !props.inCorsa && numeri.value.includes(n) && emit('testa-scelta', n)
+usaTasti({
+  ArrowLeft: passo('sinistra'), ArrowUp: passo('su'), ArrowDown: passo('giu'), ArrowRight: passo('destra'),
+  'Shift+ArrowLeft': salto('sinistra'), 'Shift+ArrowUp': salto('su'), 'Shift+ArrowDown': salto('giu'), 'Shift+ArrowRight': salto('destra'),
+  a: () => props.attacca && libero() && emit('freccia', 'attacca'),
+  r: () => conRipeti.value && libero() && emit('scatola', 'ripeti'),
+  s: () => conSe.value && libero() && emit('scatola', 'se'),
+  Backspace: () => !props.inCorsa && props.cursore > 0 && emit('cancella'),
+  Enter: () => emit(props.inCorsa ? 'ferma' : 'via'),
+  Spazio: () => emit(props.inCorsa ? 'ferma' : 'via'),
+  ...Object.fromEntries(VOLTE.map(n => [String(n), scegliNumero(n)])),
+}, { attivo: () => props.tasti })
 
 const tela = ref(null)
 defineExpose({ tela })
@@ -107,6 +127,7 @@ defineExpose({ tela })
                   :data-salto="v" :aria-label="nomeDellaMossa('salto-' + v)"
                   :disabled="inCorsa || piena" @click="emit('freccia', 'salto-' + v)">
             <Icona :mossa="'salto-' + v" />
+            <TastoTastiera class="pp-tasto-tastiera" nome="⇧" />
           </button>
         </div>
         <div v-if="conRipeti || conSe || attacca" class="pp-riga pp-carte"
@@ -114,14 +135,17 @@ defineExpose({ tela })
           <button v-if="attacca" class="pp-tasto pp-ripeti pp-attacca" :class="{ 'pp-brilla': brilla === 'attacca', 'pp-stretta': conRipeti && conSe }"
                   data-freccia="attacca" aria-label="attacca" :disabled="inCorsa || piena" @click="emit('freccia', 'attacca')">
             <Figura nome="attacca" /><Scritta v-if="!(conRipeti && conSe)" testo="attacca" />
+            <TastoTastiera class="pp-tasto-tastiera" nome="A" />
           </button>
           <button v-if="conRipeti" class="pp-tasto pp-ripeti" :class="{ 'pp-brilla': brilla === 'ripeti' }"
                   data-carta="ripeti" aria-label="ripeti" :disabled="inCorsa || piena" @click="emit('scatola', 'ripeti')">
             <Figura nome="ripeti" /><Scritta testo="ripeti" />
+            <TastoTastiera class="pp-tasto-tastiera" nome="R" />
           </button>
           <button v-if="conSe" class="pp-tasto pp-ripeti pp-tasto-se" :class="{ 'pp-brilla': brilla === 'se' }"
                   data-carta="se" aria-label="se" :disabled="inCorsa || piena" @click="emit('scatola', 'se')">
             <Figura nome="se" /><Scritta testo="se" />
+            <TastoTastiera class="pp-tasto-tastiera" nome="S" />
           </button>
         </div>
         <!-- la testa: copre le frecce finché non si sceglie, e non le
@@ -147,13 +171,16 @@ defineExpose({ tela })
                 data-azione="cancella" aria-label="togli la freccia"
                 :disabled="inCorsa || cursore === 0" @click="emit('cancella')">
           <Figura nome="cancella" />
+          <TastoTastiera class="pp-tasto-tastiera" nome="⌫" />
         </button>
         <button v-if="!inCorsa" class="pp-tasto pp-via" :class="{ 'pp-brilla': brilla === 'via' }"
                 data-azione="via" aria-label="via" @click="emit('via')">
           <Figura nome="via" />
+          <TastoTastiera class="pp-tasto-tastiera" nome="↵" />
         </button>
         <button v-else class="pp-tasto pp-ferma" data-azione="ferma" aria-label="ferma" @click="emit('ferma')">
           <Figura nome="ferma" />
+          <TastoTastiera class="pp-tasto-tastiera" nome="↵" />
         </button>
         <!-- `suggerimento` e non `aiuto`: quello è il ? della barra, che c'è in tutti i giochi.
              Non si spegne mai, nemmeno mentre il coniglio corre: lì si prenota -->

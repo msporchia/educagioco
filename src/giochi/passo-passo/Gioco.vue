@@ -76,6 +76,7 @@ const colpo = ref(0)                // quante volte si è premuto il 💡: ogni 
 const consiglio = ref(null)         // la carta che l'aiuto propone, in trasparenza nella fila
 /* lo zaino e le scatole */
 const scelta = ref(null)            // la scatola di cui si sta scegliendo il numero
+const guidaAperta = ref(false)      // il foglio del ? della barra: sotto, la tastiera tace
 const consiglioValore = ref(null)   // il numero (o il colore) che l'aiuto accende nella scelta
 const consiglioTesta = ref(null)    // la scatola a cui l'aiuto cambia il numero
 const giri = ref(null)              // a che giro sono le scatole: mentre corre, o dove si è fermata
@@ -1006,7 +1007,7 @@ function indietro() {
 
 <template>
   <div ref="radice" class="schermo">
-    <Barra :titolo="titolo" guida="passo" monete @indietro="indietro" />
+    <Barra :titolo="titolo" guida="passo" monete @indietro="indietro" @aiuto="v => guidaAperta = v" />
 
     <div class="pp">
       <Mappa v-if="vista === 'mappa'" :voci="voci" :sentieri="statoSentieri"
@@ -1029,6 +1030,7 @@ function indietro() {
              :colori="colori"
              @freccia="freccia" @cancella="cancella" @via="via" @ferma="ferma"
              @aiuto="aiuto" @cursore="spostaCursore" @sposta="spostaPezzo" @scatola="t => scatola(t)" @testa-scelta="sceltaTesta"
+             :tasti="!finale && !guidaAperta && !state.festa.length"
              @testa="testa" @chiudi-pensiero="pensiero = null" />
 
       <Finale v-if="finale" v-bind="finale"

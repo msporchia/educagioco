@@ -375,6 +375,8 @@
             height: 54px; border-radius: 0; display: grid; place-items: center; color: #fff; padding: 0;
             background: var(--t-base); position: relative }
 .pp-tasto:active:not(:disabled) { transform: translateY(var(--u)) }
+/* il tasto della tastiera che fa lo stesso (giochi/tastiera.js): nell'angolo, non sposta il disegno */
+.pp-tasto-tastiera { position: absolute; top: 4px; right: 4px }
 /* spento resta un tasto: perde colore, non si scioglie nel fondo */
 .pp-tasto:disabled { filter: saturate(.3) brightness(1.1) }
 .pp-tasto.pp-salto { --t-chiaro: var(--pp-salto-chiaro); --t-base: var(--pp-salto); --t-orlo: var(--pp-salto-scuro); height: 48px }
