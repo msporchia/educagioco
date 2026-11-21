@@ -10,6 +10,7 @@ import { paginaMaestra, copia, provaLezione, cosaSiFa } from './utili.js'
 import SceltaEsercizio from './SceltaEsercizio.vue'
 import { ICONE } from '../comune/icone-giochi.js'
 import Aiuto from './Aiuto.vue'
+import Fatta from './Fatta.vue'
 import Conferma from './Conferma.vue'
 import { cambiaLezione, diretta } from './diretta.js'
 
@@ -160,12 +161,10 @@ async function copiaLink() {
     <SceltaEsercizio :model-value="b.esercizio" dove="blocco" @update:model-value="x => cambiaEsercizio(b, x)" @completo="b.chiuso = true" />
     <p v-if="solo && valido(b.esercizio)" class="nota" data-un-blocco>Si gioca finché non chiudi la lezione.</p>
     <div v-else-if="!solo" class="gruppo passa">
-      <div class="fila">
-        <span class="titoletto">{{ titoloPassa(i) }}</span>
-        <b :data-passa-scelto="b.modo">{{ passaValido(passaDi(b)) ? descriviPassa(passaDi(b), b.esercizio) : '…' }}</b>
-        <button class="bottone chiaro piccolo" :aria-expanded="b.cambia" data-azione="cambia-passa" @click="b.cambia = !b.cambia">
-          {{ b.cambia ? 'Fatto' : 'Cambia' }}</button>
-      </div>
+      <!-- come le altre scelte del blocco: una riga con «Cambia»; aperta, le scelte e «Fatto» -->
+      <Fatta v-if="!b.cambia" :etichetta="titoloPassa(i)" :valore="passaValido(passaDi(b)) ? descriviPassa(passaDi(b), b.esercizio) : '…'"
+             passo="passa" :data-passa-scelto="b.modo" @cambia="b.cambia = true" />
+      <span v-else class="titoletto" :data-passa-scelto="b.modo">{{ titoloPassa(i) }}…</span>
       <template v-if="b.cambia">
         <div class="fila">
           <span v-for="m in scelteDi(b)" :key="m.id" class="scelta-passa">
@@ -180,6 +179,7 @@ async function copiaLink() {
                  :aria-label="`quante ${modo(b.modo).unita}`">
           <span>{{ b.modo === 'minuti' ? 'minuti' : b.modo === 'giuste' ? contaDi(b.esercizio).giuste : contaDi(b.esercizio).tante }}</span>
         </div>
+        <div class="fila"><button class="bottone" :disabled="!passaValido(passaDi(b))" data-azione="passa-fatto" @click="b.cambia = false">Fatto</button></div>
       </template>
     </div>
     </template>
@@ -233,7 +233,7 @@ async function copiaLink() {
 .gruppo { display:flex; flex-direction:column; gap:6px }
 .titoletto { font-size:14px; font-weight:600 }
 .spunta { flex-direction:row; align-items:center; gap:10px; font-weight:600 }
-.passa { padding-top:12px; border-top:1px solid var(--tessera) }
+.passa { display:flex; flex-direction:column; gap:8px }
 .scelta-passa { display:inline-flex; align-items:center; gap:4px }
 .spunta input { width:20px; height:20px; flex:none }
 .chiuso { gap:8px }
