@@ -114,20 +114,24 @@ def truppe(sorgente, foglietto):
     """{ id: [quattro immagini alla misura dell'atlante, ognuna col suo centro] } per un foglio."""
     ordine, alto, ris = foglietto['ordine'], foglietto['alto'], foglietto['risoluzione']
     tutte = figure(sorgente, len(ordine) * POSE)
+    casella = Image.open(sorgente).width / COLONNE
     fuori = {}
     for t, id in enumerate(ordine):
         pose = tutte[t * POSE:(t + 1) * POSE]
         piede = max(p[4] for p in pose)
-        centro = (pose[0][1] + pose[0][3]) / 2                     # quello della figura ferma
+        # il centro della figura ferma, misurato dentro la sua casella: ogni posa sta nella casella dopo, e preso nel foglio intero
+        # il passo e il colpo finivano spostati di una, due, tre caselle (la truppa saltava a destra e sinistra a ogni passo)
+        centro = (pose[0][1] + pose[0][3]) / 2
         k = alto[id] * ris / max(piede - p[2] for p in pose)
         fuori[id] = []
-        for im, l, t0, r, b in pose:
+        for n, (im, l, t0, r, b) in enumerate(pose):
+            centro_qui = centro + n * casella                          # lo stesso punto, nella casella di questa posa
             # fino al piede comune: chi alza un piede o un'ala resta più in alto
             tela = Image.new('RGBA', (r - l, piede - t0), (0, 0, 0, 0))
             tela.alpha_composite(im, (0, 0))
             w, h = max(1, round(tela.width * k)), max(1, round(tela.height * k))
             # premoltiplicato: il fondo trasparente è bianco, e un ridimensionamento diretto lascerebbe un alone chiaro
-            fuori[id].append((tela.convert('RGBa').resize((w, h), Image.LANCZOS).convert('RGBA'), round((centro - l) * k)))
+            fuori[id].append((tela.convert('RGBa').resize((w, h), Image.LANCZOS).convert('RGBA'), round((centro_qui - l) * k)))
     return fuori
 
 
