@@ -1,17 +1,21 @@
 <script setup>
-// L'esercizio di un blocco della lezione (docs/scuola/esercizi.md): prima il gioco, col suo disegno, poi quello che quel gioco sa
-// fare (una o più parti, con quante domande ciascuna), poi quanto è difficile
-import { computed } from 'vue'
+// L'esercizio di un blocco della lezione (docs/scuola/esercizi.md), a passi: il gioco, cosa si chiede, quanto è difficile.
+// Una scelta fatta si richiude in una riga (`Fatta.vue`) sopra quella da fare, e «Cambia» la riapre; finite tutte, il blocco
+// se ne accorge (`completo`) e si chiude. docs/scuola/quaderno.md
+import { ref, reactive, computed, watch } from 'vue'
 import { valido, descrivi, giochiPer, giocoDi, PESI, GIOCHI, DIFFICOLTA, difficoltaDi, materieDelGioco, mescolaPiuCose, NIENTE } from '../comune/esercizi.js'
 import ParteEsercizio from './ParteEsercizio.vue'
 import TesseraGioco from './TesseraGioco.vue'
 import ElencoDomande from './ElencoDomande.vue'
+import Fatta from './Fatta.vue'
+import { cosaSiFa } from './utili.js'
+import { ICONE } from '../comune/icone-giochi.js'
 
 const props = defineProps({
   modelValue: { type: Object, required: true },
   dove: { type: String, default: 'blocco' },
 })
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'completo'])
 
 const copia = x => JSON.parse(JSON.stringify(x))
 const senzaGioco = ({ gioco, difficolta, ...resto }) => resto
@@ -50,8 +54,9 @@ function scegliGioco(id) {
   if (!vuoto.value && valido(senzaGioco(e.value)) && giochiPer(senzaGioco(e.value)).some(g => g.id === id)) return scrivi(parti.value, id)
   // un gioco che prende le domande del catalogo parte senza domande accese; uno col suo contenuto dal suo (i gradini, i capitoli)
   if (mescolaPiuCose(id)) return emit('update:modelValue', { ...NIENTE, gioco: id })
+  // la sua forma vuota, se la scheda ne ha una (Passo passo: il personaggio da scegliere), se no la sua partenza
   const prima = materieDelGioco(id)[0]?.voci[0]
-  if (prima) scrivi([{ esercizio: prima.base, peso: 'normale' }], id)
+  if (prima) scrivi([{ esercizio: prima.vuota || prima.base, peso: 'normale' }], id)
 }
 
 /* ── le parti, e quante domande per ciascuna ── */
@@ -67,47 +72,75 @@ const suDieci = computed(() => {
 
 /* ── quanto è difficile ── */
 const difficolta = computed(() => difficoltaDi(e.value))
-const scegliDifficolta = d => scrivi(parti.value, gioco.value, d)
+const scegliDifficolta = d => { scrivi(parti.value, gioco.value, d); fatte.difficolta = true; aperto.value = null }
+
+/* ── i passi: quali sono fatti, e quale è riaperto con «Cambia». Un esercizio già valido (una lezione salvata) li ha fatti tutti ── */
+const fatte = reactive({ cosa: valido(e.value), difficolta: valido(e.value) })
+const aperto = ref(null)                       // 'gioco' | 'cosa' | 'difficolta' riaperto, o null
+const conDifficoltaDaScegliere = computed(() => !!schedaDelGioco.value?.difficolta)
+const mostra = passo => aperto.value === passo || (passo === 'gioco' ? !gioco.value
+  : passo === 'cosa' ? !!gioco.value && !fatte.cosa : !!gioco.value && fatte.cosa && !fatte.difficolta)
+function giocoScelto(id) {
+  const prima = gioco.value
+  scegliGioco(id)
+  if (id !== prima) { fatte.cosa = false; fatte.difficolta = false }
+  aperto.value = null
+}
+function cosaFatta() { if (valido(e.value)) { fatte.cosa = true; aperto.value = null } }
+const descrizione = computed(() => (valido(e.value) ? cosaSiFa({ ...senzaGioco(e.value), gioco: gioco.value }) : ''))
+const nomeDifficolta = computed(() => DIFFICOLTA.find(d => d.id === difficolta.value)?.nome ?? '')
+// tutto deciso: il blocco si può chiudere. Si dice solo quando lo diventa, non a pagina aperta
+const completo = computed(() => !!gioco.value && fatte.cosa && valido(e.value) && (!conDifficoltaDaScegliere.value || fatte.difficolta) && !aperto.value)
+watch(completo, (ora, prima) => { if (ora && !prima) emit('completo') })
 </script>
 
 <template>
   <div class="scelta-esercizio" :data-esercizio="dove">
-    <div class="gruppo" data-scegli-gioco>
-      <span class="titoletto">Il gioco</span>
-      <!-- tutti i giochi sempre in vista, piccoli; sotto, cosa fa il bambino in quello scelto e cosa gli si chiede -->
+    <!-- il gioco: fatto, una riga; da fare, tutti i giochi e la scheda di quello toccato -->
+    <Fatta v-if="!mostra('gioco')" etichetta="Il gioco" :valore="schedaDelGioco.nome" :immagine="ICONE[gioco]?.src || ''" passo="gioco"
+           @cambia="aperto = 'gioco'" />
+    <div v-else class="gruppo" data-scegli-gioco>
+      <span class="titoletto">A che gioco?</span>
       <div class="giochi">
-        <TesseraGioco v-for="g in GIOCHI" :key="g.id" :gioco="g" :scelta="gioco === g.id" piccola @click="scegliGioco(g.id)" />
+        <TesseraGioco v-for="g in GIOCHI" :key="g.id" :gioco="g" :scelta="gioco === g.id" piccola @click="giocoScelto(g.id)" />
       </div>
-      <p v-if="!schedaDelGioco" class="nota" data-scegli-un-gioco>Tocca un gioco: sotto ti dico cosa fa il bambino e cosa gli si può chiedere.</p>
-      <div v-else class="scheda-gioco" data-scheda-gioco>
+      <div v-if="schedaDelGioco" class="scheda-gioco" data-scheda-gioco>
         <b>{{ schedaDelGioco.nome }}</b>
         <span>{{ schedaDelGioco.spiega }}</span>
         <span class="nota"><b>Si può chiedere:</b> {{ siChiede }}</span>
       </div>
     </div>
 
-    <div v-if="gioco" class="gruppo">
-      <span class="titoletto">Cosa si chiede</span>
-      <div v-if="parti.length > 1" class="mescola" data-mescola aria-label="quante domande di ogni parte">
-        <span v-for="(p, i) in parti" :key="i" class="fetta" :class="`c${i}`" :style="{ flexGrow: volte(p.peso) }">{{ suDieci[i] }} su 10</span>
+    <template v-if="gioco">
+      <Fatta v-if="!mostra('cosa')" etichetta="Cosa si chiede" :valore="descrizione" passo="cosa" @cambia="aperto = 'cosa'" />
+      <div v-else class="gruppo" data-passo-cosa>
+        <span class="titoletto">Cosa si chiede</span>
+        <div v-if="parti.length > 1" class="mescola" data-mescola aria-label="quante domande di ogni parte">
+          <span v-for="(p, i) in parti" :key="i" class="fetta" :class="`c${i}`" :style="{ flexGrow: volte(p.peso) }">{{ suDieci[i] }} su 10</span>
+        </div>
+        <!-- i giochi che prendono le domande del catalogo: un elenco con la spunta e l'intensità; gli altri, il loro contenuto -->
+        <ElencoDomande v-if="piuCose" :parti="parti" :gioco="gioco" @cambia="nuove => scrivi(nuove)" />
+        <ParteEsercizio v-else-if="parti.length" :model-value="parti[0].esercizio" :gioco="gioco" @update:model-value="x => cambiaParte(0, x)" />
+        <div class="fila">
+          <button class="bottone" :disabled="!valido(e)" data-azione="cosa-fatta" @click="cosaFatta">Fatto</button>
+          <span v-if="!valido(e)" class="nota">Scegli almeno una cosa.</span>
+        </div>
       </div>
-      <!-- i giochi che prendono le domande del catalogo: un elenco con la spunta e l'intensità; gli altri, il loro contenuto -->
-      <ElencoDomande v-if="piuCose" :parti="parti" :gioco="gioco" @cambia="nuove => scrivi(nuove)" />
-      <ParteEsercizio v-else-if="parti.length" :model-value="parti[0].esercizio" :gioco="gioco" @update:model-value="x => cambiaParte(0, x)" />
-    </div>
+    </template>
 
-    <div v-if="schedaDelGioco?.difficolta && !vuoto" class="gruppo">
-      <span class="titoletto">Quanto è difficile</span>
-      <div class="livelli">
-        <button v-for="(d, k) in DIFFICOLTA" :key="d.id" class="livello" :class="{ scelta: difficolta === d.id }" :aria-pressed="difficolta === d.id"
-                :data-difficolta="d.id" @click="scegliDifficolta(d.id)">
-          <span class="tacche" aria-hidden="true"><i v-for="n in 3" :key="n" :class="{ piena: n <= k + 1 }"></i></span>{{ d.nome }}</button>
+    <template v-if="gioco && fatte.cosa && conDifficoltaDaScegliere">
+      <Fatta v-if="!mostra('difficolta')" etichetta="Quanto è difficile" :valore="nomeDifficolta" passo="difficolta" @cambia="aperto = 'difficolta'" />
+      <div v-else class="gruppo" data-passo-difficolta>
+        <span class="titoletto">Quanto è difficile?</span>
+        <div class="livelli">
+          <button v-for="(d, k) in DIFFICOLTA" :key="d.id" class="livello" :class="{ scelta: fatte.difficolta && difficolta === d.id }"
+                  :aria-pressed="fatte.difficolta && difficolta === d.id" :data-difficolta="d.id" @click="scegliDifficolta(d.id)">
+            <span class="tacche" aria-hidden="true"><i v-for="n in 3" :key="n" :class="{ piena: n <= k + 1 }"></i></span>{{ d.nome }}</button>
+        </div>
+        <p class="nota">Normale è com'è a casa. Facile: {{ schedaDelGioco.difficolta.facile }} Difficile: {{ schedaDelGioco.difficolta.difficile }}</p>
       </div>
-      <p class="nota">{{ difficolta === 'normale' ? 'Com\'è a casa.' : schedaDelGioco.difficolta[difficolta] }}</p>
-    </div>
+    </template>
 
-    <!-- il riassunto ripeteva le scelte appena fatte: resta solo quando l'esercizio così non chiede niente -->
-    <p v-if="!valido(e) && !vuoto" class="descrizione storta" data-descrizione>Così l'esercizio non chiede niente: cambia le scelte qui sopra.</p>
   </div>
 </template>
 

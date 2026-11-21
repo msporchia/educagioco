@@ -182,6 +182,22 @@ dopo («Hai finito!», si resta lì fino ad «Avanti tutti», o si ricomincia). 
   niente tooltip).
 - **Quanto è difficile**: tre tasti con tre tacche che si riempiono, e una riga su cosa cambia.
 
+## L'editor a passi
+
+Chiesto dall'utente il 21 novembre 2026: «troppo visibile troppo presto». **Presa una decisione, si richiude in una riga**
+(`Fatta.vue`: cosa si è scelto e «Cambia», `[data-fatta=<passo>]` e `[data-cambia=<passo>]`) sopra quella da fare:
+
+1. **A che gioco?** tutti i giochi e la scheda di quello toccato; toccato, diventa la riga col suo disegno.
+2. **Cosa si chiede**: l'elenco delle domande o il contenuto del gioco. Qui le scelte sono tante, quindi si chiude con
+   **«Fatto»** (`[data-azione="cosa-fatta"]`, spento finché non chiede niente). In Passo passo prima **chi gioca**, che parte
+   non scelto (la `vuota` della scheda) e scelto diventa anche lui una riga; poi i gradini.
+3. **Quanto è difficile?** (solo i giochi che la reggono): nessuna delle tre è scelta, una scelta chiude il passo.
+
+Fatti tutti, **il blocco si chiude in una riga** (`[data-chiuso]`, `[data-riassunto-blocco]`): il disegno del gioco, cosa si
+fa (`cosaSiFa` di `utili.js`, senza ripetere il gioco) e quando si passa; «Modifica» lo riapre con le scelte già in righe e
+il passaggio sotto, «Chiudi» lo richiude. Una lezione salvata si apre coi blocchi chiusi. In cima, tre righe dicono a cosa
+servono i blocchi (un riscaldamento, l'esercizio vero, un bonus per chi finisce prima).
+
 ## La pelle
 
 Chiesto dall'utente il 20 novembre 2026 («tutto molto triste e tabellare»). Un'idea sola, in `maestra.css`: **il foglio a

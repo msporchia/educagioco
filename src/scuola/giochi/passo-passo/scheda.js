@@ -86,6 +86,8 @@ export default {
       icona: '🐇',
       spiega: 'Il bambino scrive una fila di frecce e il coniglio la esegue; più avanti i cicli e il se. Si scelgono i gradini, e i loro livelli si giocano in fila.',
       base: { tipo: 'passo', protagonista: 'coniglio', gradini: ['passi'] },
+      // nell'editor si parte da qui: il personaggio non è scelto (una scelta non nasce fatta), e così non è valido
+      vuota: { tipo: 'passo', protagonista: null, gradini: [] },
     },
     valido,
     descrivi,

@@ -3,6 +3,7 @@
 import { ref, computed } from 'vue'
 import { PROTAGONISTI, GRADINI } from './scheda.js'
 import Righe from '../../maestra/Righe.vue'
+import Fatta from '../../maestra/Fatta.vue'
 import MiniMappa from './MiniMappa.vue'
 import { provaEsercizio } from '../../maestra/utili.js'
 import { CAMPAGNA } from '../../../giochi/passo-passo/dati/campagna.js'
@@ -27,12 +28,15 @@ const manda = (protagonista, gradini) => emit('update:modelValue', { tipo: 'pass
 // un protagonista per blocco: cambiandolo si ritrovano le scelte fatte per lui (finché la pagina è aperta); la prima volta
 // restano i gradini che ha anche lui (le carte del coniglio e del cane), se no il suo primo
 const ricordate = {}
+// il personaggio: da scegliere, poi una riga (`Fatta`) con «Cambia»; i gradini partono vuoti, se non c'erano già per lui
+const cambiaChi = ref(!e.value.protagonista)
 function protagonista(id) {
+  cambiaChi.value = false
   if (id === e.value.protagonista) return
-  ricordate[e.value.protagonista] = e.value.gradini
-  const restano = ricordate[id] || GRADINI[id].filter(g => e.value.gradini.includes(g.chiave)).map(g => g.chiave)
-  manda(id, restano.length ? restano : [GRADINI[id][0].chiave])
+  if (e.value.protagonista) ricordate[e.value.protagonista] = e.value.gradini
+  manda(id, ricordate[id] || [])
 }
+const chi = computed(() => PROTAGONISTI.find(p => p.id === e.value.protagonista) || null)
 // sempre nell'ordine della strada, e almeno uno
 function gradino(chiave) {
   const acceso = e.value.gradini.includes(chiave)
@@ -43,8 +47,9 @@ function gradino(chiave) {
 
 <template>
   <div class="parametri-passo">
-    <div class="gruppo">
-      <span class="titoletto">Chi gioca</span>
+    <Fatta v-if="chi && !cambiaChi" etichetta="Chi gioca" :valore="`${chi.icona} ${chi.nome}`" passo="protagonista" @cambia="cambiaChi = true" />
+    <div v-else class="gruppo">
+      <span class="titoletto">Chi gioca?</span>
       <p class="nota">Il bambino mette in fila delle carte (frecce, salto, cicli) e preme ▶: il personaggio le esegue una per una.
         Se arriva alla meta il livello è fatto, se no si corregge la fila e si riprova. Ogni personaggio ha i suoi livelli;
         <b>uno per blocco</b>: per fare il coniglio e poi il cane, aggiungi un blocco dopo.</p>
@@ -56,7 +61,7 @@ function gradino(chiave) {
         </template>
       </Righe>
     </div>
-    <div class="gruppo">
+    <div v-if="chi && !cambiaChi" class="gruppo">
       <span class="titoletto">Cosa si impara</span>
       <Righe :voci="suoi.map(g => ({ chiave: g.chiave, nome: g.nome, icona: g.icona, quanti: g.livelli === 1 ? '1 livello' : `${g.livelli} livelli`, testo: g.spiega }))"
              :scelte="e.gradini" attributo="gradino" :larghe="[...aperti]" @tocca="gradino">
