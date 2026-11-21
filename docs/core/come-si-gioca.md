@@ -1,7 +1,7 @@
 # «Come si gioca»: la guida che si richiama
 
-**Proposta, da approvare prima di scrivere codice.** Approvata, le regole passano in
-[guida.md](guida.md) e questo file resta solo per quello che non ci sta.
+Approvata dall'utente il 21 novembre 2026, col pilota su Castle Battle. Il pezzo comune sta in
+[guida.md](guida.md); qui le regole della guida richiamata e il pilota.
 
 Il problema: il `?` della barra apre un foglio di testo (`AIUTI` in `src/guide/contenuti.js`),
 e un bambino non lo legge; a scuola il `?` non c'è proprio, e chi non ha mai visto il gioco
@@ -25,21 +25,23 @@ giocando. Niente schermate da sfogliare, niente partita finta.
   passi già fatti e indica quello che manca (è già così, perché il passo si legge dallo
   schermo).
 - **Mentre la guida parla, il campo sta fermo** (nei giochi con un orologio): chi impara non
-  deve anche correre. Riparte quando la guida finisce o la si spegne. Un passo che ha
-  bisogno che il tempo scorra (aspettare le monete) non si mette.
-- **Si spegne in tre modi**: da sé all'ultimo passo (la riga dice «✓ ora sai giocare» e
-  sparisce dopo qualche secondo), con la **✕ sulla riga** (solo nella guida richiamata: il
-  primo giro resta senza niente da chiudere), o toccando di nuovo il `?`. Uscire dalla partita
-  la spegne.
-- **Il primo giro resta automatico a casa, non a scuola.** A casa la prima battaglia della
-  vita la accende da sé (`settings.guideViste`, come il castello). A scuola il profilo muore
-  con la pagina, quindi la guida tornerebbe a ogni lezione: si accende solo col `?`, e la
-  maestra può dire «toccate il punto di domanda».
-- **Il testo non sparisce, si sposta dietro.** Nei giochi con la guida richiamabile il `?`
-  non apre più il foglio: lo apre l'ultima riga della guida, con un «📖 tutte le regole» (solo
-  a casa, e solo se `AIUTI` ha la voce). Il foglio resta anche nelle guide dei grandi. A
-  scuola non c'è: `src/guide/` non entra nella pagina dei bambini
-  ([../scuola/architettura.md](../scuola/architettura.md)).
+  deve anche correre. Riparte quando la guida finisce o la si spegne, e nei passi che hanno
+  bisogno del tempo (`aspetta: true`: aspettare i 💎, la caserma che riposa).
+- **Si spegne in tre modi**: da sé all'ultimo passo (la riga col ✓ resta qualche secondo e
+  sparisce), con la **✕ sulla riga**, o toccando di nuovo il `?`. La ✕ c'è nella guida
+  richiamata e in quella che a scuola parte da sé; il primo giro di casa resta senza niente
+  da chiudere ([guida.md](guida.md)). Una battaglia finita la spegne.
+- **Il primo giro: a casa una volta, a scuola sempre.** A casa la prima battaglia della vita
+  la accende da sé, e spenta (finita o con la ✕) non torna più (`settings.guideViste`, come il
+  castello; il banco la salta, `giochi/spiegazioni.js`). A scuola parte da sé alla prima
+  battaglia della pagina, si salta con la ✕, e il `?` la riaccende (l'utente: «basta che sia
+  skippabile, può partire sempre»).
+- **Il `?` fa partire la guida subito**, senza un foglio in mezzo (scelta dell'utente). Il
+  testo non sparisce, si sposta dietro: nei giochi che hanno una voce in `AIUTI` la riga
+  finale della guida porta un «📖 tutte le regole» (solo a casa: `src/guide/` non entra nella
+  pagina dei bambini, [../scuola/architettura.md](../scuola/architettura.md)), e il foglio
+  resta nelle guide dei grandi. Castle Battle non ha testo, quindi nel pilota il 📖 non c'è:
+  si fa col primo gioco che ne ha uno.
 - **Il `?` resta un `?`**: è il tasto che i bambini conoscono già, nello stesso posto. Cambia
   cosa fa, non come si chiama.
 
@@ -49,19 +51,23 @@ giocando. Niente schermate da sfogliare, niente partita finta.
 |---|---|
 | `components/Barra.vue` | prop `come` (sì/no): con `come` il `?` emette `@come` invece di aprire il foglio, e compare anche se `AIUTI` non ha la voce |
 | `scuola/sostituti/Barra.vue` | lo stesso `?` con `come`; senza `come` resta come oggi, solo ⏸ |
-| `giochi/Guida.vue` | la ✕ (`@spegni`, solo se il gioco la chiede), il passo finale `{ testo, fine: true }` con ✓ e il «📖 tutte le regole» (`@regole`) |
-| `giochi/guida.js` | invariato; in più `usaGuidaRichiamata()`: lo stato acceso/spento, chi l'ha accesa (`'primo' \| 'richiamo'`), lo spegnersi dopo il passo finale |
+| `giochi/Guida.vue` | la ✕ (`spegnibile`, `@spegni`) e il passo finale `{ testo, fine: true }` col ✓ al posto del 👇 |
+| `giochi/guida.js` | `usaGuida` invariato; in più `usaGuidaRichiamata()`: accesa o spenta, se si può spegnere con la ✕, le mosse fatte da quando è accesa (`segna`/`fatto`), lo spegnersi qualche secondo dopo il passo finale |
+| `giochi/spiegazioni.js` | `saltaLeSpiegazioni` per i giochi che vanno anche a scuola (il sostituto dice sempre no) |
 
-Nel gioco restano solo la funzione pura dei passi e due righe:
+Nel gioco restano la funzione pura dei passi, il quadro che le si passa e poche righe; il
+gioco dice anche quando una mossa è fatta (`guida.segna('costruisci')` alla risposta giusta),
+quando una partita nuova azzera le mosse (`guida.daCapo()`) e ferma il campo se il passo non
+è `aspetta` né `fine`:
 
 ```js
-const guida = usaGuidaRichiamata({ prima: !aScuola && !guidaGiaVista('arena') })
+const guida = usaGuidaRichiamata({ prima, saltabile: aScuola, finita: () => segnaGuidaVista(CHIAVE) })
 const passoGuida = computed(() => guida.accesa.value ? guidaDiArena(quadro()) : null)
-usaGuida(radice, passoGuida)
+guida.segui(radice, passoGuida)   // usaGuida, e lo spegnersi dopo il passo finale
 ```
 ```html
-<Barra come @come="guida.alterna()" … />
-<Guida :passo="passoGuida" :spegni="guida.richiamata" @spegni="guida.spegni()" />
+<Barra :come="sulCampo" @come="guida.alterna()" … />
+<Guida :passo="passoGuida" :spegnibile="guida.spegnibile.value" @spegni="guida.spegni()" />
 ```
 
 ## Il pilota: Castle Battle
@@ -76,21 +82,29 @@ I passi (`giochi/arena/motore/guida.js`, puro, dal quadro della partita):
 
 | Quando | Riga | Anello su |
 |---|---|---|
-| nessuna caserma, niente aperto | Tocca una piazzola vuota: lì si costruisce | `[data-piazzola]` libera, la prima |
+| nessuna caserma, niente aperto | Tocca una piazzola vuota: lì si costruisce una caserma | `[data-piazzola]` libera, la prima |
+| piazzole libere ma 💎 pochi | I 💎 arrivano da soli: aspetta (il campo corre) | `[data-monete]` |
 | la nuvoletta aperta | Scegli chi costruire. Il numero è quanto costa in 💎 | `[data-costruisci]` della truppa più economica |
 | il calcolo aperto | (tace: il calcolo ha già la sua schermata) | — |
 | una caserma, niente aperto | Tocca la tua caserma | `[data-piazzola][data-variante]` |
 | l'anello aperto | ⬆️ la fa salire: truppe più forti e più numerose | `[data-anello="potenzia"]` |
-| potenziata (o 💎 non bastano) | ✓ Le truppe escono da sole e vanno al castello nemico: abbattilo prima che finisca il tempo | — (fine) |
+| un conto sbagliato al potenziamento | La caserma riposa un attimo: aspetta e riprova (il campo corre, `aspetta`) | la caserma |
+| una caserma al livello 1, 💎 pochi per ⬆️ | I 💎 arrivano da soli: aspetta (il campo corre) | `[data-monete]` |
+| potenziata (o nessuna caserma da far salire) | ✓ Le truppe escono da sole e vanno al castello nemico: abbattilo prima che finisca il tempo | — (fine) |
 
-Il conto sbagliato non rompe niente: il passo dopo si legge di nuovo dallo schermo («tocca
-una piazzola vuota» torna finché la caserma non c'è). Il campo sta fermo per tutta la guida
-(oggi sta fermo solo col calcolo aperto): si parte con 14 💎, e nella prima tappa arcieri
-(6) più un potenziamento (8) ci stanno senza aspettare. Dove la truppa più economica costa
-8, il potenziamento non ci sta e la guida finisce dopo la caserma.
+Le mosse contano da quando la guida è accesa: richiamata con tre caserme già in piedi, fa
+costruire la quarta (se c'è posto e bastano i 💎, se no salta al potenziamento). Il conto
+sbagliato non rompe niente: il passo si legge di nuovo dallo schermo («tocca una piazzola
+vuota» torna finché la caserma non c'è). Il campo sta fermo per tutta la guida
+(oggi sta fermo solo col calcolo aperto), tranne nei passi `aspetta`, che hanno bisogno del
+tempo: un conto sbagliato al potenziamento e i 💎 che mancano. Si parte con 14 💎: nella prima
+tappa arcieri (6) più un potenziamento (8) ci stanno senza aspettare; dove la truppa più
+economica costa 8, la guida fa aspettare i 💎 per il ⬆️ (pochi secondi). Finché il campo non è
+pronto (le piazzole non ci sono ancora) la guida tace.
 
-A scuola è lo stesso gioco con la stessa guida: la barra della scuola mostra il `?`, la
-guida non è automatica, niente «📖 tutte le regole».
+Il `?` c'è solo sul campo e non nella sfida in due (lì il campo non si ferma per uno solo).
+A scuola è lo stesso gioco con la stessa guida: la barra della scuola mostra il `?`, la guida
+parte da sé e ha la ✕.
 
 ## Gli altri giochi, dopo il pilota
 
@@ -102,16 +116,9 @@ guida non è automatica, niente «📖 tutte le regole».
 3. **Gli altri** (Codice Segreto, Conta, Prima e dopo, pozioni, cucina, Survivors, le
    lingue): uno alla volta, ognuno con la sua funzione dei passi.
 
-## Da decidere
-
-- Il `?` che fa partire la guida senza chiedere (la proposta), o un foglio piccolo con un
-  grande «▶ Mostrami come si gioca» e sotto il testo? Il foglio è un tocco in più e torna
-  il testo davanti; la proposta lo mette in fondo alla guida.
-- A scuola la guida solo col `?` (la proposta), o anche da sé alla prima battaglia della
-  pagina?
-
 ## Nei test
 
-`[data-azione="aiuto"]` (il `?`, con `come` fa partire la guida), `[data-guida-riga]`,
-`[data-indicato]`, `[data-guida-spegni]` (la ✕), `[data-guida-fine]` (la riga finale),
-`[data-guida-regole]` (il «📖 tutte le regole»).
+`[data-azione="aiuto"]` (il `?`, con `come` accende e spegne la guida), `[data-guida-riga]`
+(`="fine"` sulla riga finale), `[data-indicato]`, `[data-guida-spegni]` (la ✕). Castle Battle:
+`unita/arena-guida` (i passi dal quadro), `integrazione/arena-guida` (il giro col dito, a casa
+e col limite della scuola).

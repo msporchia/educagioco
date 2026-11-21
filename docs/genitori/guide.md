@@ -67,6 +67,8 @@ che esistono prima che esista un bambino.
   `Barra`; se in `AIUTI` non c'è quella chiave il tasto non compare — un `?`
   che apre un foglio vuoto è peggio di nessun `?`. Il foglio è
   `src/guide/VeloAiuto.vue`.
+- Con **`come`** sulla barra il `?` non apre il foglio: accende la guida del gioco dentro la
+  partita, e il testo va in fondo alla guida ([../core/come-si-gioca.md](../core/come-si-gioca.md)).
 - Chi ha un orologio che gira ascolta **`@aiuto`** e si ferma (il tower
   defense; `usaPausa` ne dà uno già pronto).
 - **Il `?` non si apre mai da solo.** Provato il foglio al primo ingresso di

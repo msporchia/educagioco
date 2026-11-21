@@ -11,7 +11,8 @@ sua pagina: [il-dito.md](il-dito.md).
   tasto pieno e colorato — il solo che un bambino deve trovare senza
   cercarlo. Accanto il nome del posto, a destra monete e audio, in mezzo
   gli indicatori del gioco (❤️ 🌊 ⚡ nel castello). `?` e ⏸ compaiono solo
-  dove il gioco li chiede.
+  dove il gioco li chiede; con `come` il `?` accende la guida del gioco invece del foglio
+  ([come-si-gioca.md](come-si-gioca.md)).
 - **Un foglio si chiude con la ✕ in alto a destra, sempre visibile**
   (`sticky`, `[data-chiudi]`: in un menu da duecento voci l'uscita non sta
   due schermate più giù). Il tasto in fondo

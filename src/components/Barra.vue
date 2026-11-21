@@ -13,8 +13,9 @@ const props = defineProps({
   scura: { type: Boolean, default: false },    // per i fondi notturni, tipo lo spazio
   guida: { type: String, default: '' },   // chiave della schermata; senza voce in contenuti.js, niente `?`
   pausa: { type: Boolean, default: false },   // compare solo se il gioco lo chiede (giochi/pausa.js)
+  come: { type: Boolean, default: false },    // il `?` accende la guida del gioco invece del foglio (docs/core/come-si-gioca.md)
 })
-const emit = defineEmits(['indietro', 'aiuto', 'pausa'])
+const emit = defineEmits(['indietro', 'aiuto', 'pausa', 'come'])
 
 const aiuto = computed(() => aiutoDi(props.guida))
 const apertoAiuto = ref(false)
@@ -28,8 +29,8 @@ function mostraAiuto (v) { apertoAiuto.value = v; emit('aiuto', v) }
     <div class="mezzo"><slot /></div>
     <button v-if="pausa" class="tondo" aria-label="pausa" data-azione="pausa"
             @click="$emit('pausa')">⏸</button>
-    <button v-if="aiuto" class="tondo" aria-label="aiuto" data-azione="aiuto"
-            @click="mostraAiuto(true)">?</button>
+    <button v-if="aiuto || come" class="tondo" aria-label="aiuto" data-azione="aiuto"
+            @click="come ? $emit('come') : mostraAiuto(true)">?</button>
     <div v-if="monete" class="gettone">🪙 <b>{{ state.profile.coins }}</b></div>
     <button v-if="audio" class="tondo" aria-label="suono"
             @click="accendiSuono(!suono.acceso.value)">

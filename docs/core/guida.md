@@ -11,8 +11,12 @@ dico», è «dove metto il dito».
   `src/style.css`): `usaGuida(radice, passo)` accende con `data-indicato`
   quello che il passo indica, e lo riaccende se il pezzo compare dopo (un
   foglio che si apre). `<Guida :passo>` è la riga.
+- **La guida richiamata** (`usaGuidaRichiamata` in `guida.js`, la ✕ e il passo finale
+  `fine` in `Guida.vue`, il `?` con `come` sulla barra): la stessa guida riaccesa dal bambino
+  quando vuole, dentro la partita di adesso. Regole e pilota in
+  [come-si-gioca.md](come-si-gioca.md).
 - **Del gioco**: una funzione pura che dallo stato dice il passo,
-  `{ testo, dove, mano? }`, dove `dove` è un selettore (di solito il
+  `{ testo, dove, mano?, aspetta?, fine? }`, dove `dove` è un selettore (di solito il
   bersaglio dei test) o `null` quando non c'è niente da accendere (una
   piazzola disegnata sul canvas). E il gioco decide dove mettere la riga e
   quando la guida si spegne.
@@ -49,6 +53,8 @@ usaGuida(radice, passoGuida)
 | Il Robot | `costruttore/motore/guida.js` | il primo muretto, finché non è vinto (`guida: true`): comincia sulla scheda, dal led 1 |
 | Passo passo | `passo-passo/motore/guida.js` | il primo prato, e 🔁 alla prima tappa dello zaino |
 | Difendi il Castello | `passoGuida` in `views/TowerDefense.vue` | la prima partita della vita |
+| Castle Battle | `arena/motore/guida.js` | la prima battaglia della vita, a scuola a ogni pagina (con la ✕); il `?` la richiama ([come-si-gioca.md](come-si-gioca.md)) |
 | La fattoria | `fattoria3d/motore/guida.js` | dal campo vuoto al primo raccolto e al menu delle costruzioni; chi ha già giocato non la vede ([../fattoria3d/guida.md](../fattoria3d/guida.md)) |
 
-Nei test: `[data-indicato]` (`="mano"` con la manina), `[data-guida-riga]`.
+Nei test: `[data-indicato]` (`="mano"` con la manina), `[data-guida-riga]` (`="fine"` sulla riga
+finale), `[data-guida-spegni]` (la ✕ della guida richiamata).

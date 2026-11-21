@@ -48,7 +48,8 @@ controlla che ogni sostituto esporti tutti i nomi dell'originale. Il codice di c
 | `components/Giudizio.vue` | si porta dietro `store/profile.js` |
 | `quiz/nucleo/registro.js` | raccoglie *tutti* i moduli con `import.meta.glob`, e `ing-frasi` arriva fino a `store/srs.js`: a scuola elenca solo quelli che il catalogo usa |
 | `store/storage.js` | l'archivio su disco: a scuola il profilo del gioco vive **in memoria** (una `Map` che salva e rilegge copie) e muore con la pagina; niente IndexedDB né localStorage del PC della classe |
-| `components/Barra.vue`, `giochi/VeloPausa.vue` | dal gioco non si esce: la barra ha solo ⏸ (niente ←, 🔊, `?` né monete), la pausa non ha «torno ai giochi» e non sfoca |
+| `components/Barra.vue`, `giochi/VeloPausa.vue` | dal gioco non si esce: la barra ha solo ⏸ e il `?` che accende la guida del gioco (niente ←, 🔊, fogli di testo né monete: [../core/come-si-gioca.md](../core/come-si-gioca.md)), la pausa non ha «torno ai giochi» e non sfoca |
+| `giochi/spiegazioni.js` | «salta le spiegazioni» sta in `guide/aiuto.js` e legge localStorage: a scuola non si saltano |
 | `store/progressi.js` | traguardi, livelli e giorni di fila, coi vocabolari di tutti i giochi: a scuola non c'è niente da riscuotere, quindi `state.festa` resta vuota e non ferma il gioco |
 | `giochi/indice.js`, `data/portata-giochi.js` | i manifesti e le campagne di tutti i giochi nuovi (la home e l'età): a scuola nessun gioco nuovo e tutto aperto |
 | `guide/novita-bambini.js`, `amici/servizio.js`, `amici/usaAmici.js` | le novità e gli amici: nessuna notizia, nessun collegamento |

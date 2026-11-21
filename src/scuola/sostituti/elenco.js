@@ -18,6 +18,7 @@ const COMUNI = {
   'src/store/giudizi.js': 'src/scuola/sostituti/giudizi.js',
   'src/store/salto.js': 'src/scuola/sostituti/salto.js',
   'src/giochi/tastiera-accesa.js': 'src/scuola/sostituti/tastiera-accesa.js',   // i PC della scuola hanno la tastiera
+  'src/giochi/spiegazioni.js': 'src/scuola/sostituti/spiegazioni.js',   // «salta le spiegazioni» legge localStorage
   'src/quiz/memoria.js': 'src/scuola/sostituti/memoria.js',
   'src/components/Giudizio.vue': 'src/scuola/sostituti/Giudizio.vue',
   'src/quiz/nucleo/registro.js': 'src/scuola/sostituti/registro.js',
