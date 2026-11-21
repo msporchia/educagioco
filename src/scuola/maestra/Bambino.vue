@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import { quaderno, classeDi } from './stato.js'
 import { storicoDelBambino, vociDellaClasse } from './quaderno.js'
 import { giorno, iniziali, coloreDi } from './utili.js'
+import Sbaglio from './Sbaglio.vue'
 
 const props = defineProps({ classe: { type: String, required: true }, alunno: { type: String, required: true } })
 const emit = defineEmits(['vai', 'indietro'])
@@ -59,7 +60,7 @@ const tono = p => (p === null ? '' : p >= 80 ? 'alto' : p >= 50 ? 'medio' : 'bas
     <h2>Le domande che sbaglia più spesso</h2>
     <p v-if="!s.sbaglia.length" class="nota">Nessuna domanda sbagliata.</p>
     <ul v-else class="lista">
-      <li v-for="(x, i) in s.sbaglia" :key="i" class="sbagliata"><b>{{ x.fatto }}</b> <span class="giusto">fa {{ x.attesa }}</span>
+      <li v-for="(x, i) in s.sbaglia" :key="i" class="sbagliata"><Sbaglio :fatto="x.fatto" :dette="x.dette" :attesa="x.attesa" />
         <span class="nota">{{ x.volte === 1 ? 'una volta' : `${x.volte} volte` }}{{ x.quanti > 1 ? `, in ${x.quanti} lezioni` : '' }}</span></li>
     </ul>
   </section>
@@ -81,7 +82,5 @@ const tono = p => (p === null ? '' : p >= 80 ? 'alto' : p >= 50 ? 'medio' : 'bas
 .lista { list-style:none; display:flex; flex-direction:column; gap:6px }
 .sbagliata { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; padding:8px 12px; border-radius:var(--raggio-piccolo);
              background:var(--correzione-chiara) }
-.sbagliata b { color:var(--correzione) }
-.giusto { color:var(--corretto); font-weight:600 }
 .collegamento { background:none; padding:0; font:inherit; color:var(--accento); text-align:left; text-decoration:underline }
 </style>

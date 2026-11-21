@@ -10,12 +10,15 @@ import { giocoDi, GIOCHI, descrivi } from '../comune/esercizi.js'
 import { descriviPassa } from '../comune/lezione.js'
 import { ICONE } from '../comune/icone-giochi.js'
 import Aiuto from './Aiuto.vue'
+import Sbaglio from './Sbaglio.vue'
 
 const props = defineProps({ voce: { type: String, required: true } })
 const emit = defineEmits(['vai', 'indietro'])
 const v = computed(() => voceDi(props.voce))
 const righe = computed(() => (v.value ? Q.righeResoconto(v.value) : []))
 const sbagliate = computed(() => (v.value ? Q.piuSbagliate(v.value) : []))
+// cosa ha detto, in parole: «8, 7», o «nessuna risposta» se la domanda è andata senza (il sasso caduto)
+const dettePerStampa = dette => { const l = (dette || []).filter(d => d && d !== '—'); return l.length ? `ha detto ${l.join(', ')}` : 'nessuna risposta' }
 const classe = computed(() => (v.value ? classeDi(v.value.classe) : null))
 const viva = computed(() => quaderno.inCorso?.voce === props.voce)
 const recuperabile = computed(() => !viva.value && Q.recuperabile(v.value, Date.now()))
@@ -119,7 +122,7 @@ const stampa = () => globalThis.print()
             </span>
             <span class="voto" :class="tono(percento(tutte(r).giuste, tutte(r).fatte))">{{ percento(tutte(r).giuste, tutte(r).fatte) ?? '–' }}<small v-if="tutte(r).fatte">%</small></span>
             <span v-if="r.sbagliate.length" class="sbagli">
-              <span v-for="(x, i) in r.sbagliate" :key="i" class="sbaglio" title="sbagliata"><b>{{ x.fatto }}</b> fa {{ x.attesa }}<template v-if="x.volte > 1"> ×{{ x.volte }}</template></span>
+              <Sbaglio v-for="(x, i) in r.sbagliate" :key="i" :fatto="x.fatto" :dette="x.dette" :attesa="x.attesa" :volte="x.volte" />
             </span>
           </template>
           <span v-else class="nota">non c'era</span>
@@ -137,7 +140,7 @@ const stampa = () => globalThis.print()
               <td><b>{{ r.nome }}</b> <span v-if="r.nuovo" class="etichetta">nuovo</span></td>
               <template v-if="r.presente">
                 <td v-for="(c, i) in r.blocchi" :key="i" :data-blocco="i">{{ fatteGiuste(c) }}<span v-if="c.fatte" class="nota">{{ sotto(i, c) }}</span></td>
-                <td><span v-for="(x, i) in r.sbagliate" :key="i" class="sbaglio-stampa">{{ x.fatto }} → {{ x.attesa }}<template v-if="x.volte > 1"> ({{ x.volte }})</template></span></td>
+                <td><span v-for="(x, i) in r.sbagliate" :key="i" class="sbaglio-stampa">{{ x.fatto }}: {{ dettePerStampa(x.dette) }}, giusta {{ x.attesa }}<template v-if="x.volte > 1"> ({{ x.volte }})</template></span></td>
               </template>
               <td v-else :colspan="r.blocchi.length + 1" class="nota">non c'era</td>
             </tr>
@@ -151,9 +154,13 @@ const stampa = () => globalThis.print()
       <p v-if="!sbagliate.length" class="nota">Nessuna domanda sbagliata.</p>
       <ul v-else class="lista">
         <li v-for="(x, i) in sbagliate" :key="i" class="sbagliata">
-          <span class="conto"><b>{{ x.fatto }}</b><span class="giusto">fa {{ x.attesa }}</span></span>
-          <span class="quanti"><span v-for="n in Math.min(x.quanti, 12)" :key="n" class="tacca"></span>
-            {{ x.quanti === 1 ? 'un bambino' : `${x.quanti} bambini` }}<template v-if="x.volte > x.quanti">, {{ x.volte }} volte</template></span>
+          <span class="conto"><b>{{ x.fatto }}</b><span class="giusto">✓ {{ x.attesa }}</span></span>
+          <span class="quanti"><span v-for="n in Math.min(x.quanti, 12)" :key="n" class="tacca"></span></span>
+          <!-- chi l'ha sbagliata e cosa ha detto, non «un bambino» (l'utente) -->
+          <span class="chi-sbaglia" data-chi-sbaglia>
+            <span v-for="c in x.chi" :key="c.nome" class="uno"><b>{{ c.nome }}</b>
+              <span class="detta">{{ dettePerStampa(c.dette) }}</span><template v-if="c.volte > 1"> ×{{ c.volte }}</template></span>
+          </span>
         </li>
       </ul>
     </section>
@@ -189,8 +196,6 @@ const stampa = () => globalThis.print()
 .voto small { font-size:14px; font-weight:600 }
 .voto.alto { color:var(--corretto) } .voto.medio { color:#b8861b } .voto.basso { color:var(--correzione) }
 .sbagli { grid-column:2 / -1; display:flex; flex-wrap:wrap; gap:6px }
-.sbaglio { font-size:13px; padding:2px 8px; border-radius:6px; background:var(--correzione-chiara) }
-.sbaglio b { color:var(--correzione) }
 .sbaglio-stampa { display:block; font-size:13px }
 @media (max-width:640px) { .bimbo { grid-template-columns:auto 1fr auto } .barre { grid-column:1 / -1 } }
 
@@ -199,6 +204,8 @@ const stampa = () => globalThis.print()
              border-radius:var(--raggio-piccolo); background:var(--correzione-chiara) }
 .conto { display:flex; align-items:baseline; gap:10px; font-size:17px }
 .giusto { font-size:14px; color:var(--corretto); font-weight:600 }
+.chi-sbaglia { flex-basis:100%; display:flex; flex-wrap:wrap; gap:4px 14px; font-size:13px; color:var(--grigio) }
+.chi-sbaglia .detta { color:var(--correzione); font-weight:600; margin-left:4px }
 .quanti { display:flex; align-items:center; gap:3px; font-size:13px; color:var(--grigio) }
 .tacca { width:6px; height:16px; border-radius:2px; background:var(--correzione); margin-right:1px }
 </style>

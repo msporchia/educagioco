@@ -266,23 +266,27 @@ export function righeResoconto(voce) {
 }
 
 // le domande sbagliate di più bambini, poi di più volte
+/* `gruppi`: [{ nome?, lista }] (un bambino, o una lezione). `chi`: chi l'ha sbagliata, con cosa ha detto; `dette`: tutte le
+   risposte date (la maestra vede l'errore, non solo il conto: l'utente) */
 function sommaSbagliate(gruppi, quante) {
   const m = new Map()
-  for (const lista of gruppi) {
+  for (const { nome, lista } of gruppi) {
     for (const s of lista) {
       const k = s.fatto + '\u0000' + s.attesa
-      const x = m.get(k) || { fatto: s.fatto, attesa: s.attesa, volte: 0, quanti: 0 }
+      const x = m.get(k) || { fatto: s.fatto, attesa: s.attesa, volte: 0, quanti: 0, dette: [], chi: [] }
       x.volte += s.volte
       x.quanti++
+      for (const d of s.dette || []) if (!x.dette.includes(d)) x.dette.push(d)
+      if (nome) x.chi.push({ nome, dette: [...(s.dette || [])], volte: s.volte })
       m.set(k, x)
     }
   }
   return [...m.values()].sort((a, b) => b.quanti - a.quanti || b.volte - a.volte).slice(0, quante)
 }
 
-/* `quanti`: i bambini che l'hanno sbagliata */
+/* `quanti`: i bambini che l'hanno sbagliata, `chi` i loro nomi */
 export const piuSbagliate = (voce, quante = 10) =>
-  sommaSbagliate(voce.alunni.map(a => voce.esiti[a.id]?.sbagliate || []), quante)
+  sommaSbagliate(voce.alunni.map(a => ({ nome: a.nome, lista: voce.esiti[a.id]?.sbagliate || [] })), quante)
 
 export const vociDellaClasse = (q, classeId) =>
   q.storico.filter(v => v.classe === classeId).sort((a, b) => b.avviata - a.avviata)
@@ -306,7 +310,7 @@ export function storicoDelBambino(q, classeId, alunnoId) {
     const blocchi = contiPerBlocco(v, es)
     return { voce: v.id, avviata: v.avviata, nome: v.lezione.nome, presente: !!es?.presente || ha(blocchi), blocchi }
   })
-  return { lezioni, sbaglia: sommaSbagliate(voci.map(v => v.esiti[alunnoId]?.sbagliate || []), 8) }
+  return { lezioni, sbaglia: sommaSbagliate(voci.map(v => ({ lista: v.esiti[alunnoId]?.sbagliate || [] })), 8) }
 }
 
 /* ══════════════ il CSV del resoconto ══════════════ */

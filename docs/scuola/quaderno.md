@@ -137,7 +137,7 @@ Colonne: Bambino, Nuovo, per ogni blocco «Blocco N: fatte» e «Blocco N: giust
 | `link` | una lezione arrivata da un link |
 | `avvia` | la scelta della classe e l'avvio |
 | `diretta` | per la LIM: in attesa il codice enorme, l'indirizzo, i nomi che diventano verdi e «Via»; poi «Avanti tutti», «La classe» divisa per blocco e un riquadro per bambino (pallini dei blocchi, fatte e giuste del blocco in corso, le ultime sbagliate), i suoi comandi, «Chiudi lezione» |
-| `resoconto` | i blocchi della lezione, tabella per bambino con una colonna per blocco («non c'era» per chi non è entrato), le domande più sbagliate della classe, Stampa, Scarica CSV, Recupera, «Aggiungi alla classe» per i nuovi |
+| `resoconto` | i blocchi della lezione, tabella per bambino con una colonna per blocco («non c'era» per chi non è entrato), le domande più sbagliate della classe con chi le ha sbagliate e cosa ha detto, Stampa, Scarica CSV, Recupera, «Aggiungi alla classe» per i nuovi |
 | `storico` | per classe le lezioni fatte con la data e i bambini |
 | `bambino` | lezione per lezione fatte e giuste in tutto e blocco per blocco, e le domande che sbaglia più spesso |
 
@@ -227,6 +227,10 @@ quadretti** del quaderno di scuola come fondo, e **i colori delle penne** (`--pe
   [protocollo.md](protocollo.md): il tasto dice quale blocco chiude, la frase accanto chi passa e dove (come lo calcola il
   servizio), un «?» lo spiega, e nella panoramica quel blocco ha il bordo blu. È spento solo quando senza «in tondo» tutti
   hanno già passato l'ultimo blocco.
+- **Una domanda sbagliata si scrive con l'errore** (`Sbaglio.vue`, l'utente: «eviterei di spiegare alla maestra che 5+5 fa
+  10»): il conto, «✗ 8» in rosso (cosa ha detto il bambino, `dette`), «✓ 10» in verde, o «nessuna risposta» per il sasso
+  caduto. Nel resoconto, nelle più sbagliate (con i nomi di chi l'ha sbagliata, non «un bambino») e nello storico del
+  bambino. In `[data-sbaglio]`, `[data-chi-sbaglia]`.
 - **Le risposte, da aprire** (chiesto dall'utente): sotto ogni nome «Le risposte» dice i conti (giuste, sbagliate, senza
   risposta) e aperto le elenca per blocco, l'ultima in cima: ✓ giusta, ✗ «ha detto X, era Y», – «non ha risposto» (il
   sasso giusto degli Asteroidi caduto: spesso un gioco lasciato acceso). Vengono da `diretta.risposte`, che non si salva:

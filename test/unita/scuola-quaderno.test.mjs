@@ -150,6 +150,8 @@ let voce
   uguale('la più sbagliata è quella di più bambini', piu[0].fatto, '9 × 7')
   stessaLista('…con quanti bambini e quante volte', [piu[0].quanti, piu[0].volte], [2, 3])
   stessaLista('poi le altre', [piu[1].fatto, piu[1].quanti, piu[1].volte], ['9 × 8', 1, 3])
+  stessaLista('…e chi l\'ha sbagliata, con cosa ha detto (non «un bambino»)', piu[1].chi.map(c => [c.nome, c.dette.join()]), [['Pietro', '81']])
+  controlla('le risposte date stanno anche nella somma', piu[1].dette.includes('81'))
   const righe = Q.righeResoconto(voce)
   stessaLista('una riga per alunno della voce', righe.map(x => x.nome), ['Lorenzo', 'Marta', 'Pietro'])
   stessaLista('con un conto per blocco, anche a zero', righe[1].blocchi, [{ fatte: 1, giuste: 0 }, { fatte: 0, giuste: 0 }])
