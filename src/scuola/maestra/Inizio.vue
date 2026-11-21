@@ -137,7 +137,8 @@ function apriFile(e) {
 
   <section class="carta" data-pagina-bambini>
     <h2>La pagina dei bambini</h2>
-    <p class="copiabile indirizzo" data-indirizzo-bambini><b>{{ indirizzo }}</b></p>
+    <!-- un link vero: la maestra la apre da qui per guardarla, e l'indirizzo resta da copiare -->
+    <p class="copiabile indirizzo"><a :href="indirizzo" target="_blank" rel="noopener" data-indirizzo-bambini><b>{{ indirizzo }}</b></a></p>
     <p class="nota">Sui PC lenti parte prima dal file: copialo con la chiavetta e aprilo con un doppio click. È uguale per tutte le classi.</p>
     <div class="fila">
       <a class="bottone chiaro" href="./index.html" download="educagioco-classe.html" data-azione="scarica-pagina-bambini">Scarica il file per i PC dei bambini</a>

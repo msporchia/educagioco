@@ -132,7 +132,7 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
     </section>
 
     <section v-if="inAttesa" class="carta lim" data-sala>
-      <p class="invito">Aprite <b class="copiabile">{{ indirizzo }}</b> e scrivete il codice</p>
+      <p class="invito">Aprite <a :href="indirizzo" target="_blank" rel="noopener" class="copiabile"><b>{{ indirizzo }}</b></a> e scrivete il codice</p>
       <div class="codice copiabile" data-codice><span class="evidenziato">{{ quaderno.inCorso.codice }}</span></div>
       <ul class="nomi">
         <li v-for="a in alunni" :key="a.id" class="nome" :class="{ preso: a.preso, nuovo: a.nuovo }" :data-alunno="a.id" :data-preso="a.preso">
@@ -151,7 +151,7 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
 
     <template v-else>
       <section class="carta">
-        <p class="nota">Chi arriva tardi: <b class="copiabile">{{ indirizzo }}</b>, codice <b class="copiabile" data-codice>{{ quaderno.inCorso.codice }}</b></p>
+        <p class="nota">Chi arriva tardi: <a :href="indirizzo" target="_blank" rel="noopener" class="copiabile"><b>{{ indirizzo }}</b></a>, codice <b class="copiabile" data-codice>{{ quaderno.inCorso.codice }}</b></p>
         <div class="fila">
           <button class="bottone" :disabled="avantiInutile" data-azione="avanti-tutti" @click="avanti">{{ avantiInutile ? 'Lezione finita per tutti' : chiusura?.tasto }}</button>
           <Aiuto testo="Per la campanella o per chi è rimasto indietro: chi è nel blocco più indietro passa al blocco dopo, anche se quel blocco passerebbe da solo. Chi è già più avanti non si muove. Si può premere più volte." />
