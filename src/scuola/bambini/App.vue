@@ -2,7 +2,7 @@
 // L'app del bambino a scuola: codice, nome, attesa, i blocchi della lezione, fine. Il giro sta in giro.js; docs/scuola/bambini.md
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { apriBambino } from '../comune/rete.js'
-import { descrivi, racconta, giocoDi } from '../comune/esercizi.js'
+import { descrivi, racconta, giocoDi, perLeSchede } from '../comune/esercizi.js'
 import { posizione, bloccoDi } from '../comune/lezione.js'
 import * as G from './giro.js'
 import Codice from './viste/Codice.vue'
@@ -59,7 +59,9 @@ const ricollego = computed(() => !!codice.value && !locale.value && !collegato.v
 // il gioco del blocco (docs/scuola/giochi.md); un esercizio col contenuto di un gioco non ha le schede come ripiego
 const gioco = computed(() => giocoDi(blocco.value?.esercizio))
 const scheda = computed(() => SCHEDE.find(s => s.id === gioco.value) || null)
-const soloNelGioco = computed(() => !!scheda.value?.tipo && blocco.value?.esercizio?.tipo === scheda.value.tipo.id)
+// quello che si fa a schede, se il gioco non parte o la maestra chiede le domande; null: c'è solo nel gioco
+const aSchede = computed(() => (blocco.value ? perLeSchede(blocco.value.esercizio) : null))
+const soloNelGioco = computed(() => !!blocco.value && !aSchede.value)
 // le domande al posto del gioco: dal menu sul PC, o la maestra dal suo pannello per lui solo
 const domande = computed(() => senzaGioco.value || !!io.value?.domande)
 // (un esercizio che c'è solo nel gioco resta nel gioco: le domande non ci sono)
@@ -249,7 +251,7 @@ onUnmounted(() => { chiudiRete(); clearInterval(battito) })
       <div v-else-if="soloNelGioco" class="centro" data-senza-gioco>
         <p class="frase">Questo gioco non parte su questo computer: chiama la maestra.</p>
       </div>
-      <Domande v-else :key="'schede-' + chiaveVista" :esercizio="blocco.esercizio" :onRisposta="aPos(pos, risposta)" />
+      <Domande v-else :key="'schede-' + chiaveVista" :esercizio="aSchede" :onRisposta="aPos(pos, risposta)" />
     </div>
 
     <div v-else-if="schermo === 'passaggio'" class="centro" data-passaggio>

@@ -31,7 +31,7 @@ const apri = id => { const x = new Set(aperte.value); x.has(id) ? x.delete(id) :
 function accendi(v) {
   // spenta: via tutte le sue parti (anche l'ultima: il blocco torna a non chiedere niente, e l'editor lo dice)
   if (partiDi(v).length) return emit('cambia', props.parti.filter(p => idDella(p.esercizio) !== v.id))
-  if (!pieno()) emit('cambia', [...props.parti, { esercizio: copia(v.base), peso: 'normale' }])
+  if (!pieno()) emit('cambia', [...props.parti, { esercizio: copia(v.vuota || v.base), peso: 'normale' }])
 }
 const ancora = v => { if (!pieno()) emit('cambia', [...props.parti, { esercizio: copia(v.base), peso: 'poco' }]) }
 const cambiaParte = (i, esercizio) => emit('cambia', props.parti.map((p, j) => (j === i ? { ...p, esercizio } : p)))
@@ -66,7 +66,7 @@ const togli = i => { if (props.parti.length > 1) emit('cambia', props.parti.filt
             </div>
             <ParteEsercizio :model-value="p.esercizio" :gioco="props.gioco" solo-parametri @update:model-value="x => cambiaParte(p.i, x)" />
           </div>
-          <button v-if="partiDi(v).length && !pieno()" class="ancora" data-azione="aggiungi-parte" @click="ancora(v)">
+          <button v-if="partiDi(v).length && !pieno() && (v.tipo === 'tabelline' || v.tipo === 'modulo')" class="ancora" data-azione="aggiungi-parte" @click="ancora(v)">
             ＋ Ancora {{ v.nome.toLowerCase() }}, con altre scelte</button>
         </div>
       </div>

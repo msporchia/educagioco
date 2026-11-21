@@ -30,6 +30,7 @@ import sillabe from '../../quiz/moduli/sillabe.js'
 import soldi from '../../quiz/moduli/soldi.js'
 import tabelline from '../../quiz/moduli/tabelline.js'
 import { SCHEDE } from '../giochi/elenco.js'
+import { concettiDi as concettiMente } from '../giochi/asteroidi/scheda.js'
 
 // i moduli che la maestra sceglie per tipologia e gradini (la voce «Le tabelline» usa conti e tabelline da sé)
 const SCELTI = [analogie, animali, bilance, calendario, capire, coniugazione, connettivi, conti, frazioni,
@@ -147,6 +148,15 @@ function accetta(g, e) {
    né parte; una scelta non nasce fatta (la convenzione dei giochi: niente valori di comodo) */
 export const NIENTE = Object.freeze({ tipo: 'niente' })
 
+/* quello di un esercizio che si fa a schede, quando il gioco non parte o la maestra chiede le domande: le parti del catalogo
+   (le tabelline di un blocco misto col calcolo a mente); null se non resta niente (il contenuto di un gioco, il calcolo solo) */
+export function perLeSchede(e) {
+  const { gioco, difficolta, ...x } = e || {}
+  const parti = x.tipo === 'insieme' ? x.parti.filter(p => delCatalogo(p.esercizio)) : delCatalogo(x) ? [{ esercizio: x }] : []
+  if (!parti.length) return null
+  return parti.length === 1 ? parti[0].esercizio : { tipo: 'insieme', parti }
+}
+
 // i giochi in cui si può fare questo esercizio (il campo `gioco` a parte)
 export const giochiPer = e => GIOCHI.filter(g => accetta(g, e))
 // quello che un gioco sa fare, per materia: le voci del catalogo che accetta (l'editor sceglie prima il gioco)
@@ -181,12 +191,19 @@ export const PESI = [
 export const MAX_PARTI = 6
 const volteDi = peso => PESI.find(p => p.id === peso)?.volte ?? 1
 
-/* il limite per gli Asteroidi (docs/asteroidi/scuola.md): le tabelline a gruppi, ognuno con quante volte esce e cosa chiede */
+/* il limite per gli Asteroidi (docs/asteroidi/scuola.md): le tabelline a gruppi, ognuno con quante volte esce e cosa chiede,
+   e il calcolo a mente coi concetti delle sue stazioni e quante volte esce */
 export function limiteAsteroidi(e) {
   const { gioco, difficolta, ...x } = e
-  return x.tipo === 'insieme'
-    ? { gruppi: x.parti.map(p => ({ tabelline: [...p.esercizio.tabelline], volte: volteDi(p.peso), modo: p.esercizio.modo })) }
-    : { gruppi: [{ tabelline: [...x.tabelline], volte: 1, modo: x.modo }] }
+  const parti = x.tipo === 'insieme' ? x.parti : [{ esercizio: x, peso: 'normale' }]
+  const tab = parti.filter(p => p.esercizio.tipo === 'tabelline')
+  const mente = parti.filter(p => p.esercizio.tipo === 'mente')
+  const solo = parti.length === 1
+  return {
+    gruppi: tab.map(p => ({ tabelline: [...p.esercizio.tabelline], volte: solo ? 1 : volteDi(p.peso), modo: p.esercizio.modo })),
+    ...(mente.length ? { mente: { concetti: [...new Set(mente.flatMap(p => concettiMente(p.esercizio)))],
+                                  volte: solo ? 1 : mente.reduce((n, p) => n + volteDi(p.peso), 0) } } : {}),
+  }
 }
 
 /* ══════════════ valido ══════════════ */
@@ -206,22 +223,25 @@ function classiDi(m, { da, a, tipologie }) {
 }
 
 // anche contro un link manomesso: niente chiavi in più, niente valori fuori dal catalogo
-export function valido(e) {
+// `nelGioco`: l'esercizio ha il suo gioco scritto, e allora un insieme può mescolare anche il contenuto di quel gioco che lo
+// permette (`siMescola`: il calcolo a mente con le tabelline negli Asteroidi); senza, le parti sono solo del catalogo
+export function valido(e, nelGioco = false) {
   if (!oggetto(e)) return false
   if ('difficolta' in e) {
     const { difficolta, ...resto } = e
     const g = GIOCHI.find(x => x.id === giocoDi(resto))
-    return !!g?.difficolta && (difficolta === 'facile' || difficolta === 'difficile') && valido(resto)
+    return !!g?.difficolta && (difficolta === 'facile' || difficolta === 'difficile') && valido(resto, nelGioco)
   }
   if ('gioco' in e) {
     const g = GIOCHI.find(x => x.id === e.gioco)
     const { gioco, ...resto } = e
-    return !!g && valido(resto) && accetta(g, resto)
+    return !!g && valido(resto, true) && accetta(g, resto)
   }
   if (e.tipo === 'insieme') {
     return soloChiavi(e, ['tipo', 'parti']) && Array.isArray(e.parti) && e.parti.length >= 2 && e.parti.length <= MAX_PARTI &&
       e.parti.every(p => oggetto(p) && soloChiavi(p, ['esercizio', 'peso']) && PESI.some(x => x.id === p.peso) &&
-        oggetto(p.esercizio) && delCatalogo(p.esercizio) && !('gioco' in p.esercizio) && valido(p.esercizio))
+        oggetto(p.esercizio) && (delCatalogo(p.esercizio) || (nelGioco && !!padroneDi(p.esercizio)?.tipo.siMescola)) &&
+        !('gioco' in p.esercizio) && valido(p.esercizio))
   }
   const padrone = padroneDi(e)
   if (padrone) { try { return padrone.tipo.valido(e) === true } catch { return false } }
@@ -246,10 +266,11 @@ export function valido(e) {
 
 const minuscola = s => s.charAt(0).toLowerCase() + s.slice(1)
 
-export function descrivi(e) {
-  if (!valido(e)) return 'Esercizio non valido'
-  if ('difficolta' in e) { const { difficolta, ...resto } = e; return `${descrivi(resto)} · ${difficolta}` }
-  if ('gioco' in e && e.gioco !== 'schede') { const { gioco, ...resto } = e; return `${descrivi(resto)} · ${GIOCHI.find(g => g.id === gioco).nei}` }
+export function descrivi(e, nelGioco = false) {
+  if (!valido(e, nelGioco)) return 'Esercizio non valido'
+  if ('difficolta' in e) { const { difficolta, ...resto } = e; return `${descrivi(resto, nelGioco)} · ${difficolta}` }
+  if ('gioco' in e && e.gioco !== 'schede') { const { gioco, ...resto } = e; return `${descrivi(resto, true)} · ${GIOCHI.find(g => g.id === gioco).nei}` }
+  if ('gioco' in e) { const { gioco, ...resto } = e; return descrivi(resto, true) }
   const padrone = padroneDi(e)
   if (padrone) return padrone.tipo.descrivi(e)
   if (e.tipo === 'insieme')

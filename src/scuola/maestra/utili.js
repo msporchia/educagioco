@@ -49,7 +49,7 @@ export const provaEsercizio = (esercizio, nome = 'Prova') =>
 export function cosaSiFa(e) {
   const { gioco, difficolta, ...x } = e
   const g = GIOCHI.find(y => y.id === giocoDi(e))
-  let t = descrivi(x)
+  let t = descrivi(x, true)
   if (g && t.startsWith(`${g.nome} · `)) t = t.slice(g.nome.length + 3)
   const d = DIFFICOLTA.find(y => y.id === difficolta)
   return d ? `${t} · ${d.nome.toLowerCase()}` : t

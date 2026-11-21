@@ -5,7 +5,7 @@
    una risposta sta nei 40 caratteri del protocollo. Vedi docs/scuola/esercizi.md.
    `node test/esegui.mjs scuola-esercizi --niente-build` */
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
-import { CATALOGO, MODULI_USATI, valido, descrivi, pescatore, racconta, raccontaAsteroide, LUNGO, giochiPer, limiteAsteroidi }
+import { CATALOGO, MODULI_USATI, valido, descrivi, pescatore, racconta, raccontaAsteroide, LUNGO, giochiPer, limiteAsteroidi, perLeSchede }
   from '../../src/scuola/comune/esercizi.js'
 import { MODULI } from '../../src/scuola/sostituti/registro.js'
 import { guastiDi, spiegazioneDi } from '../../src/quiz/nucleo/domanda.js'
@@ -219,6 +219,23 @@ console.log('\nPIÙ COSE INSIEME, CON LE INTENSITÀ')
     ['un insieme dentro un insieme', ins([otto, 'poco'], [t([2]), 'poco'])], ['un gioco dentro una parte', ins([{ ...t([8]), gioco: 'asteroidi' }, 'poco'], [t([2]), 'poco'])],
     ['sette parti', ins(...Array.from({ length: 7 }, (_, i) => [t([i + 1]), 'poco']))]])
     controlla(`non è valido: ${cosa}`, !valido(e))
+}
+
+console.log('\nIL CALCOLO A MENTE DEGLI ASTEROIDI')
+{
+  const m = { tipo: 'mente', stazioni: ['somma-10', 'somma-20'] }
+  const t = { tipo: 'tabelline', tabelline: [7], modo: 'prodotto' }
+  controlla('è un esercizio, e si fa solo negli Asteroidi', valido(m) && giochiPer(m).map(g => g.id).join() === 'asteroidi')
+  for (const [cosa, e] of [['senza stazioni', { tipo: 'mente', stazioni: [] }], ['una stazione che non c\'è', { tipo: 'mente', stazioni: ['boh'] }],
+    ['doppia', { tipo: 'mente', stazioni: ['somma-10', 'somma-10'] }], ['una chiave in più', { ...m, x: 1 }]]) controlla(`non è valido: ${cosa}`, !valido(e))
+  const misto = { tipo: 'insieme', parti: [{ esercizio: t, peso: 'tanto' }, { esercizio: m, peso: 'poco' }] }
+  controlla('con le tabelline si mescola negli Asteroidi', valido({ ...misto, gioco: 'asteroidi' }))
+  controlla('ma non senza gioco, né a schede', !valido(misto) && !valido({ ...misto, gioco: 'schede' }))
+  stessaLista('agli Asteroidi arrivano i gruppi e il calcolo, coi loro pesi', limiteAsteroidi({ ...misto, gioco: 'asteroidi' }),
+    { gruppi: [{ tabelline: [7], volte: 4, modo: 'prodotto' }], mente: { concetti: ['somma-10', 'doppi', 'meno-10', 'somma-20', 'quasi-doppi', 'meno-20'], volte: 1 } })
+  stessaLista('a schede resta la parte che le schede sanno fare', perLeSchede({ ...misto, gioco: 'asteroidi' }), t)
+  uguale('e il calcolo solo resta nel gioco', perLeSchede({ ...m, gioco: 'asteroidi' }), null)
+  uguale('si descrive', descrivi({ ...m, gioco: 'asteroidi' }), 'Calcolo a mente · fino al dieci e oltre la decina · negli Asteroidi')
 }
 
 riassunto('gli esercizi della scuola')

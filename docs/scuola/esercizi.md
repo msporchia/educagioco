@@ -101,6 +101,10 @@ prende la sua intensità a pallini («quanto spesso»); sotto si aprono le sue s
 «＋ Ancora le tabelline, con altre scelte» fa una seconda parte della stessa voce (tanta tabellina dell'8, un po' di
 ripasso del 3-6). Le parti sono quelle di `insieme`, fino a `MAX_PARTI`; l'ultima accesa non si spegne.
 
+**Il contenuto di un gioco che si mescola** (`siMescola` nel `tipo` della scheda: il calcolo a mente degli Asteroidi) può
+stare in un insieme con le voci del catalogo, ma solo se l'esercizio ha il suo gioco scritto (`valido(e, nelGioco)`): a
+schede non si farebbe. `perLeSchede(e)` dice cosa resta a schede di un esercizio (le parti del catalogo), o null.
+
 **Nell'editor si sceglie prima il gioco**, poi quello che sa fare (scelta dell'utente, 20 novembre 2026: al contrario la
 pagina era un elenco di testo). `materieDelGioco(id)` dà le voci del catalogo che il gioco accetta, per materia;
 `mescolaPiuCose(id)` dice se mescola più parti (non i giochi col contenuto loro). Cambiando gioco l'esercizio resta se il

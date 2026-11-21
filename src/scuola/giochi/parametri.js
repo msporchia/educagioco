@@ -2,6 +2,7 @@
 import { defineAsyncComponent } from 'vue'
 
 export const PARAMETRI = {
+  asteroidi: defineAsyncComponent(() => import('./asteroidi/Parametri.vue')),
   'passo-passo': defineAsyncComponent(() => import('./passo-passo/Parametri.vue')),
   robot: defineAsyncComponent(() => import('./robot/Parametri.vue')),
   inglese: defineAsyncComponent(() => import('./inglese/Parametri.vue')),
