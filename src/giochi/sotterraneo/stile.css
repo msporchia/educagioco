@@ -1399,3 +1399,9 @@
 .sot-tintore-vuoto { font-size: 13px; color: var(--sot-tenue) }
 .sot-tintore-detto { margin: 0 0 8px; font-weight: 700; color: var(--sot-oro) }
 .sot-grosso:disabled { opacity: .5 }
+
+/* a scuola, su un PC: la cripta si allarga (`.sot-schermo-largo`, la vista della scuola; docs/sotterraneo/scuola.md). Il
+   pannello delle domande resta largo 560 e centrato; il costo in più lo regge il pixel ratio che scende da solo */
+@media (min-width: 900px) and (min-aspect-ratio: 5 / 4) {
+  .sot-schermo-largo .sot { max-width: 1240px }
+}

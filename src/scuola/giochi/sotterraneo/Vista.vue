@@ -32,7 +32,7 @@ const riferisci = e => emit('risposta', raccontaSotterraneo(e))
 </script>
 
 <template>
-  <div ref="radice" class="sotterraneo" data-gioco="sotterraneo">
+  <div ref="radice" class="sotterraneo sot-schermo-largo" data-gioco="sotterraneo">
     <div class="colonna">
       <!-- il gioco esce verso casa solo se qualcosa è andato storto (il 3D perso): si torna alle schede -->
       <Sotterraneo v-if="chi" :key="chi" :limite="limite" @risposta="riferisci" @vai="nonParte" />
@@ -44,4 +44,7 @@ const riferisci = e => emit('risposta', raccontaSotterraneo(e))
 /* il gioco è un `.schermo` assoluto: sta nella colonna, centrata su uno schermo largo */
 .sotterraneo { position: relative; flex: 1; min-height: 0; display: flex; justify-content: center; background: #1a1410 }
 .colonna { position: relative; flex: 1; max-width: 720px; overflow: hidden }
+/* su un PC il sotterraneo si allarga (scelta dell'utente): si vede più cripta. Il costo lo regge il pixel ratio, che scende
+   da solo se i fotogrammi pesano (scena3d/contesto.js); docs/sotterraneo/scuola.md */
+@media (min-width: 900px) and (min-aspect-ratio: 5 / 4) { .colonna { max-width: 1280px } }
 </style>
