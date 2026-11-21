@@ -11,6 +11,7 @@ Tabelline e calcolo a mente in una fila sola (`src/views/MathGame.vue`).
 - [hangar.md](hangar.md) — la nave da dipingere coi pezzi regalati
 - [grafica-3d.md](grafica-3d.md) — il cielo in 3D (three.js) e i comandi del telefono (il dito sul sasso risponde, altrove guida la nave, lo scudo), il contesto perso
 - [sosta.md](sosta.md) — la partita lasciata a metà: cosa si salva, cosa no, e il record del volo
+- [../core/come-si-gioca.md](../core/come-si-gioca.md) — la guida «Come si gioca»: un sasso giusto colpito col cielo fermo, alla prima partita e dal `?`
 - [scuola.md](scuola.md) — a scuola: la prop `limite` (solo le tabelline della lezione), cosa si spegne, l'evento `risposta`
 - [da-fare.md](da-fare.md) — le voci aperte
 

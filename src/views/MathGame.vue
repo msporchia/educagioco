@@ -45,6 +45,11 @@ import HangarAsteroidi from '../components/HangarAsteroidi.vue'
 import { POTENZIAMENTI, TASCA_MAX, EMERGENZA, premioDaSerie,
          gettoneDopo } from '../data/potenziamenti.js'
 import { usaPausa } from '../giochi/pausa.js'
+import Guida from '../giochi/Guida.vue'
+import { usaGuidaRichiamata } from '../giochi/guida.js'
+import { saltaLeSpiegazioni } from '../giochi/spiegazioni.js'
+import { guidaDegliAsteroidi } from '../motore/asteroidi/guida.js'
+import { guidaGiaVista, segnaGuidaVista } from '../store/profile.js'
 import VeloPausa from '../giochi/VeloPausa.vue'
 import { TEMPO_MAX } from '../quiz/nucleo/domanda.js'
 import MappaTabelline from '../components/MappaTabelline.vue'
@@ -85,6 +90,26 @@ let dado = Math.random              // se la nave madre del volo lascia il pacco
 const { inPausa, fermo, metti, togli, aiuto } = usaPausa({
   anche: () => fase.value !== 'gioco' || !!regaloVolo.value,
 })
+
+/* La guida «Come si gioca» (docs/core/come-si-gioca.md): un sasso giusto colpito davvero. A casa da sé alla prima partita
+   della vita, a scuola alla prima della pagina con la ✕; il `?` la riaccende. Il cielo si ferma quando il sasso giusto è
+   sceso in vista (prima non ci arriverebbe mai), e i sassi hanno il segno attorno, tutti */
+const radice = ref(null)
+const guidaNave = usaGuidaRichiamata({
+  prima: !!lim || (!saltaLeSpiegazioni() && !guidaGiaVista('asteroidi')),
+  saltabile: !!lim,
+  finita: () => { if (!lim) segnaGuidaVista('asteroidi') },
+})
+const passoGuida = computed(() => (guidaNave.accesa.value && fase.value === 'gioco' && !regaloVolo.value
+  ? guidaDegliAsteroidi({ giusta: guidaNave.fatto('giusta'), sbagliata: guidaNave.fatto('sbagliata'), tastiera: conTastiera.value })
+  : null))
+guidaNave.segui(radice, passoGuida)
+// il giusto è sceso abbastanza da vedersi bene e da sceglierlo con le frecce: da qui il cielo aspetta il bambino
+const QUOTA_GUIDA = 0.3
+const guidaFerma = () => {
+  const p = passoGuida.value
+  return !!p && !p.fine && asteroidi.some(a => a.ok && !a.morto && a.y >= suolo * QUOTA_GUIDA)
+}
 
 /* La fila unica di pianeti e stazioni: vedi docs/asteroidi/scaletta.md.
    Una voce ha un `tipo` (da quale magazzino escono le domande) e un
@@ -688,6 +713,7 @@ function colpisci(a) {
   const mirata = eMirata(k)
   const nota = { correct: a.ok }   // col gelo acceso il tempo non si segna: misurerebbe il ghiaccio
   if (!gelo) nota.ms = ms
+  guidaNave.segna(a.ok ? 'giusta' : 'sbagliata')
   if (a.ok) {
     answer(k, nota); picker.afterAnswer(k, true)
     rispondi(k, a.v, ms, true)
@@ -977,7 +1003,7 @@ function effetti(dt) {
 /* La scena per il disegno, in pixel dello schermo (docs/asteroidi/grafica-3d.md).
    Un oggetto solo, rinfrescato a ogni fotogramma: niente allocazioni. */
 const quadro = { t: 0, W: 0, H: 0, S: 1, cielo: 'cintura', salto: 0, scossa: 0, lampo: 0, gelo: false,
-                 nave, asteroidi: [], puntato: null, madre: null, pezzi: [], frammenti: [], particelle: [], anelli: [], raggi: [] }
+                 nave, asteroidi: [], puntato: null, indica: false, madre: null, pezzi: [], frammenti: [], particelle: [], anelli: [], raggi: [] }
 const nessuno = []
 function disegna3d(dt) {
   const q = quadro, gioca = fase.value === 'gioco'
@@ -985,6 +1011,7 @@ function disegna3d(dt) {
   q.lampo = Math.max(0, lampo); q.gelo = gelo
   q.asteroidi = gioca ? asteroidi : nessuno
   q.puntato = gioca ? puntato : null
+  q.indica = gioca && !!passoGuida.value?.sassi
   q.madre = gioca && madre.attiva ? madre : null
   q.pezzi = pezzi; q.frammenti = frammenti; q.particelle = particelle; q.anelli = anelli; q.raggi = raggi
   nave.t = pulsa
@@ -1004,7 +1031,7 @@ function ciclo(ts) {
   const vero = ultimo ? ts - ultimo : 0     // quanto è passato davvero, buchi compresi
   const dt = Math.min(0.05, vero / 1000); ultimo = ts
   pulsa += dt
-  if (fermo.value) prontaIl += vero
+  if (fermo.value || guidaFerma()) prontaIl += vero
   else aggiorna(dt)
   effetti(dt)
   disegna(dt)
@@ -1020,6 +1047,7 @@ function inizia(i = posizione.value, dato = null) {
   // sulla mappa la farebbe nascere dietro un velo che nessuno ha chiesto
   togli()
   posizione.value = i
+  guidaNave.daCapo()
   hud.vite = CFG.vite; hud.punti = 0; hud.giuste = 0; hud.mirate = 0; hud.sbagliate = 0
   // anche il volo riparte da 1, record o no (docs/asteroidi/volo.md)
   hud.partenza = 1
@@ -1329,7 +1357,7 @@ function dalCheat() {
 </script>
 
 <template>
-  <div class="schermo spazio">
+  <div ref="radice" class="schermo spazio">
     <!-- il cielo in 3D (docs/asteroidi/grafica-3d.md); a contesto perso un tasto lo riaccende su una tela nuova -->
     <div class="campo" ref="campoEl" @pointerdown="tocca">
       <canvas ref="tela3d" :key="telaNuova" data-tela="3d"></canvas>
@@ -1339,7 +1367,7 @@ function dalCheat() {
     <!-- la fascia in cima dice solo le due cose che la nave non può dire
          (docs/asteroidi/volo.md): quanto manca alla tappa, e sulla nuova -->
     <Barra v-if="fase === 'gioco'" :titolo="campagna ? '' : VOLO.nome"
-           guida="mate" scura pausa @pausa="metti()" @aiuto="aiuto" @indietro="allaMappa">
+           guida="mate" scura pausa come @come="guidaNave.alterna()" @pausa="metti()" @aiuto="aiuto" @indietro="allaMappa">
       <div v-if="campagna && !lim" class="avanza">
         <i :style="{ width: quota(hud.giuste, tappa.bersaglio) }"></i>
         <span>{{ tappa.emoji }} {{ hud.giuste }}/{{ tappa.bersaglio }}</span>
@@ -1376,10 +1404,12 @@ function dalCheat() {
 
     <!-- il trucco: esce alla seconda volta che lo stesso concetto va storto.
          Si stringe quando in tasca c'è qualcosa, se no ci finisce sotto -->
-    <div v-if="fase === 'gioco' && dritta" class="trucco"
+    <Guida v-if="fase === 'gioco'" class="guida-nave" :passo="passoGuida" :spegnibile="guidaNave.spegnibile.value"
+           @spegni="guidaNave.spegni()" @pointerdown.stop />
+    <div v-if="fase === 'gioco' && dritta && !passoGuida" class="trucco"
          :class="{ stretto: tasca.gelo || tasca.mirino }">💡 {{ dritta }}</div>
 
-    <div v-if="fase === 'gioco'" class="domanda">
+    <div v-if="fase === 'gioco'" class="domanda" data-domanda-nave>
       <b :class="{ lunga: domanda.testo.length > 13 }">{{ domanda.testo }}</b>
       <!-- con una tastiera: quali tasti scelgono e sparano (giochi/tastiera.js) -->
       <span v-if="conTastiera" class="tasti-nave" data-tasti-nave>
@@ -1616,6 +1646,8 @@ canvas { position:absolute; inset:0; width:100%; height:100% }
           line-height:1.4; text-align:center; pointer-events:none; z-index:4;
           animation:apparire-trucco .35s ease }
 .trucco.stretto { right:80px }
+/* la riga della guida (docs/core/come-si-gioca.md): dove sta il trucco, sopra la domanda, e il trucco intanto tace */
+.guida-nave { position:absolute; left:12px; right:12px; bottom:calc(max(17vh, 96px) + 10px); z-index:7 }
 @keyframes apparire-trucco { from { opacity:0; transform:translateY(8px) } }
 
 .cartello { position:absolute; left:0; right:0; top:38%; text-align:center; pointer-events:none;

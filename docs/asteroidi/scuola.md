@@ -64,6 +64,11 @@ limite il ritocco non si applica.
 - Suono spento e grafica nella fascia `'bassa'` non stanno qui: li mette il profilo della scuola
   ([../scuola/bambini.md](../scuola/bambini.md)).
 
+## La guida
+
+Alla prima partita della pagina parte da sé la guida «Come si gioca», con la ✕ per saltarla e il `?` della barra che la
+riaccende: parla di frecce e Invio, e il cielo aspetta col sasso giusto in vista ([../core/come-si-gioca.md](../core/come-si-gioca.md)).
+
 ## La tastiera
 
 Solo qui: ← e → scelgono il sasso, Invio o Spazio sparano

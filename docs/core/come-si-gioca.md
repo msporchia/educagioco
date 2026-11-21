@@ -106,19 +106,24 @@ Il `?` c'è solo sul campo e non nella sfida in due (lì il campo non si ferma p
 A scuola è lo stesso gioco con la stessa guida: la barra della scuola mostra il `?`, la guida
 parte da sé e ha la ✕.
 
-## Gli altri giochi, dopo il pilota
+## Gli altri giochi
 
-1. **Chi ha già la guida del primo giro** (Robot, Passo passo, castello, fattoria,
-   sotterraneo): basta `come` sulla barra e `usaGuidaRichiamata`; i passi ci sono già. Il
-   Robot e Passo passo hanno la guida legata al primo livello: richiamata altrove indica
-   le stesse cose (la fila, ▶) sul livello di adesso.
-2. **Asteroidi**: i sassi stanno nel 3D, serve un segno disegnato nella scena.
-3. **Gli altri** (Codice Segreto, Conta, Prima e dopo, pozioni, cucina, Survivors, le
-   lingue): uno alla volta, ognuno con la sua funzione dei passi.
+Prima quelli che ci sono a scuola (dove un bambino arriva senza averli mai visti), poi gli
+altri. Ognuno ha la sua funzione pura dei passi; le stesse regole del pilota.
+
+| Gioco | Passi | Cosa fa fare |
+|---|---|---|
+| Castle Battle | `giochi/arena/motore/guida.js` | una caserma costruita e una potenziata (sopra) |
+| Asteroidi | `motore/asteroidi/guida.js` | un sasso giusto colpito: l'anello sulla domanda, il segno giallo della tastiera (`q.indica` in `grafica/spazio3d/sassi.js`) attorno a **tutti** i sassi, mai al solo giusto (la guida non dice la risposta). Il cielo si ferma quando il giusto è sceso a un terzo dello schermo (`QUOTA_GUIDA`): fermo da subito, non arriverebbe mai. Dopo uno sbagliato lo dice |
+
+Da fare dopo, non a scuola: Codice Segreto, Conta, Prima e dopo, il giardino, la fattoria
+(ha già il primo giro), Español.
 
 ## Nei test
 
 `[data-azione="aiuto"]` (il `?`, con `come` accende e spegne la guida), `[data-guida-riga]`
 (`="fine"` sulla riga finale), `[data-indicato]`, `[data-guida-spegni]` (la ✕). Castle Battle:
-`unita/arena-guida` (i passi dal quadro), `integrazione/arena-guida` (il giro col dito, a casa
-e col limite della scuola).
+`unita/arena-guida` (i passi dal quadro), `integrazione/arena-guida` (il giro col dito a casa);
+la scuola in `integrazione/scuola`. Asteroidi: `[data-domanda-nave]`, `unita/asteroidi-guida`,
+`integrazione/asteroidi-guida`. Gli altri giochi: `unita/<gioco>-guida`, e il giro a scuola in
+`integrazione/scuola`.

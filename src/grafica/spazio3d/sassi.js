@@ -186,7 +186,8 @@ export function creaSassi(scena) {
         if (brina) p.alone.material.uniforms.uC.value.setRGB(0.62, 0.85, 1)
         else { const tt = rgb(A.alone); p.alone.material.uniforms.uC.value.setRGB(tt[0], tt[1], tt[2]) }
         if (rosso > 0) p.alone.material.uniforms.uC.value.setRGB(1, 0.25, 0.2)
-        p.mira.visible = a === q.puntato && !a.morto
+        // e la guida (docs/core/come-si-gioca.md) li segna tutti, finché la tastiera non ne sceglie uno
+        p.mira.visible = !a.morto && (a === q.puntato || (q.indica && !q.puntato))
         if (p.mira.visible) p.mira.scale.setScalar(1 + 0.06 * Math.sin(t * 6))
       }
       for (const p of posti) if (!p.usato) { p.gruppo.visible = false; if (p.di && !q.asteroidi.includes(p.di)) p.di = null }
