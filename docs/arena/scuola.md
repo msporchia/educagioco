@@ -23,6 +23,8 @@ la battaglia.
 
 - parte nella tappa, senza mappa (`viste/Mappa.vue` a scuola è un `Vuoto.vue`), amici né sfide in due;
 - non paga monete, non segna traguardi né stelle, non scrive la partita lasciata a metà;
+- accende da sé la guida «Come si gioca» alla prima battaglia della pagina, con la ✕ per saltarla, e il `?` della barra la
+  riaccende ([../core/come-si-gioca.md](../core/come-si-gioca.md));
 - a fine battaglia, vinta o persa, dice «di nuovo» e rifà la stessa tappa (`Finale.vue` con `scuola`), senza «alla mappa».
 
 ## L'evento `risposta`

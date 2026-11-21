@@ -6,7 +6,7 @@
   per edificio.
 - Le sei piazzole guardate col dito: sono vicine fra loro e alla barra della vita del castello.
 - Il limite delle sei piazzole è da rivedere più avanti (l'utente: «ce lo segnamo per un futuro»).
-- La guida in app (`AIUTI.arena`, il «?» della barra).
+- Il testo delle regole (`AIUTI.arena`): il `?` accende già la guida ([../core/come-si-gioca.md](../core/come-si-gioca.md)), il testo andrebbe in fondo col «📖 tutte le regole».
 - La battaglia infinita è fatta (senza timer, nemico al massimo, un terreno a ogni volta, niente record):
   il nemico ora impara col tempo ([nemico.md](nemico.md)), la palude resta troppo facile per chi mette un po' di tutto e non fa miniera ([nemico.md](nemico.md)).
 - `test/misure/arena.test.mjs`: le promesse della taratura (il bambino di prova

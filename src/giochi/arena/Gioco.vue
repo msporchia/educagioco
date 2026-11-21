@@ -8,13 +8,16 @@
 import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { segna, state, etaDelBambino, contiPermessi } from '../../store/profile.js'
+import { segna, state, etaDelBambino, contiPermessi, guidaGiaVista, segnaGuidaVista } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'   // paga e dice se il salvadanaio è stanco
 import { PAGA } from '../../data/paghe.js'
 import { progresso, aperta, adesso, stelleDi, completa, sosta, salvaSosta, buttaSosta, ritocca } from '../campagne.js'
 import { apertaQui } from '../../data/portata-giochi.js'
 import { usaPausa } from '../pausa.js'
 import VeloPausa from '../VeloPausa.vue'
+import Guida from '../Guida.vue'
+import { usaGuidaRichiamata } from '../guida.js'
+import { saltaLeSpiegazioni } from '../spiegazioni.js'
 import Domanda from '../../quiz/Domanda.vue'
 import { Giostra } from './scena/giostra.js'
 import { vistaDa, eventiDa } from './scena/prospettiva.js'
@@ -35,6 +38,7 @@ import { dettaglioTruppa, dettaglioAzione, ruoloDi } from './motore/dettagli.js'
 import { domandaDi } from './domande.js'
 import { basi, gradoDi, dopoLaRisposta } from './bravura.js'
 import { tappaDelLimite, livelloDelLimite, raccontaCalcolo } from './motore/limite.js'
+import { guidaDiArena } from './motore/guida.js'
 
 import Mappa from './viste/Mappa.vue'
 import CampoVista from './viste/Campo.vue'
@@ -97,6 +101,39 @@ const ammesse = computed(() => (infinita.value ? truppeDelTerreno(infinita.value
 const operazioniAttive = computed(() => (infinita.value ? INFINITA.operazioni : operazioniDi(tappa.value)))
 const titoloPartita = computed(() => (regia.value ? 'La sfida' : infinita.value ? INFINITA.nome : tappa.value.nome))
 const siGioca = computed(() => vista.value === 'campo' && !regia.value && !domanda.value && !finale.value && !dettaglio.value && !scelta.value)
+
+/* ── la guida: una caserma costruita e una potenziata, fatte davvero (docs/core/come-si-gioca.md). A casa da sé alla prima
+   battaglia della vita, a scuola a ogni pagina con la ✕; il `?` la riaccende. Mentre parla il campo sta fermo ── */
+const radice = ref(null)
+const guida = usaGuidaRichiamata({
+  prima: aScuola || (!saltaLeSpiegazioni() && !guidaGiaVista(CHIAVE)),
+  saltabile: aScuola,
+  finita: () => { if (!aScuola) segnaGuidaVista(CHIAVE) },
+})
+const conGuida = computed(() => vista.value === 'campo' && !regia.value && !finale.value)
+const passoGuida = computed(() => {
+  const q = guida.accesa.value && conGuida.value && partita.value && quadroGuida()
+  return q ? guidaDiArena(q) : null
+})
+guida.segui(radice, passoGuida)
+const guidaFerma = computed(() => !!passoGuida.value && !passoGuida.value.fine && !passoGuida.value.aspetta)
+
+function quadroGuida() {
+  const p = partita.value, pan = pannello.value
+  if (!pan.bersagli.length) return null    // il campo non è ancora pronto: le piazzole non ci sono
+  return {
+    domanda: !!domanda.value, dettagli: !!dettaglio.value, infinita: !!infinita.value,
+    scelta: pan.scelta ? pan.scelta.varianti.filter(v => v.puoi).sort((a, b) => a.prezzo - b.prezzo).map(v => v.id) : null,
+    anello: anello.value?.posto ?? null,
+    libera: pan.bersagli.find(b => b.posto !== undefined && !b.id && b.puoi)?.posto ?? null,
+    vuote: pan.bersagli.filter(b => b.posto !== undefined && !b.id).length,
+    caserme: p.caserme.filter(c => c.lato === mio.value).map(c => {
+      const riposa = p.inRiposo(mio.value, c.posto), puoi = !riposa && p.puoFare(mio.value, 'potenzia', c.posto)
+      return { posto: c.posto, riposa, puoi, attesa: !riposa && !puoi && c.liv === 1 && p.prezzo(mio.value, 'potenzia', c.posto) !== null }
+    }),
+    costruita: guida.fatto('costruisci'), potenziata: guida.fatto('potenzia'),
+  }
+}
 
 function vuoto() {
   return { resto: 0, monete: 0, alSecondo: 0, castello: 1, miniera: 1 }
@@ -169,6 +206,7 @@ function riprendiPartita() {
   chiaveCampo.value++
   partita.value = letto.partita
   azzera()
+  guida.daCapo()
   toccato.value = true
   metti({ auto: true })  // il campo ripreso nasce fermo: non l'ha chiesto nessuno
   vista.value = 'campo'
@@ -217,7 +255,7 @@ function passo(dt) {
   ora += dt
   const duello = inDue()
   // mentre si calcola il campo è fermo del tutto (vedi docs/arena/calcoli.md); in due corre sempre: non si ferma per uno solo
-  const scala = !duello && (fermo.value || p.fine || domanda.value) ? 0 : 1
+  const scala = !duello && (fermo.value || p.fine || domanda.value || guidaFerma.value) ? 0 : 1
   if (duello) sfida.avanza(dt)
   else if (scala) {
     p.avanza(dt * scala)
@@ -429,6 +467,7 @@ function comincia(nuova, indice) {
   giostra.tetto = 0.05
   ritocca(CHIAVE, c => { c.ultimaIA = nuova.ia.nome })   // la prossima partita avrà un altro carattere
   azzera()
+  guida.daCapo()
   toccato.value = false
   chiaveCampo.value++      // un campo nuovo: il terreno può essere cambiato, e la giostra riparte (prendiTela)
   vista.value = 'campo'
@@ -581,6 +620,7 @@ function risposto({ giusto, saltata, tempo, indice }) {
         if (v.azione === 'costruisci' || v.azione === 'potenzia') segna('arenaCaserme')
       }
       dici(frase(v))
+      guida.segna(v.azione)
     } else dici('le monete non bastavano più')
   } else {
     if (v.azione === 'potenzia') { if (inDue()) regia.value.scegli(['sbagliata', v.posto]); else p.sbagliata(mio.value, v.posto) }
@@ -630,6 +670,7 @@ function chiudiPartita() {
     pagata = true
   }
   if (!contata && !aScuola) { segna('arenaPartite'); contata = true }
+  guida.spegni()
   suono[vinto ? 'livello' : 'fine']()
   finale.value = {
     vinta: vinto, pari: p.fine === 'pari', titolo: titoloPartita.value, stelle,
@@ -727,10 +768,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="schermo">
-    <!-- il ⏸ c'è solo dove scorre qualcosa -->
+  <div ref="radice" class="schermo">
+    <!-- il ⏸ c'è solo dove scorre qualcosa; il `?` accende la guida, solo sul campo e non in due -->
     <Barra :titolo="vista === 'campo' ? titoloPartita : 'Castle Battle'" monete scura
-           :pausa="siGioca" @pausa="metti()" @aiuto="aiuto" @indietro="indietro" />
+           :pausa="siGioca" :come="conGuida" @pausa="metti()" @aiuto="aiuto" @come="guida.alterna()" @indietro="indietro" />
 
     <div class="ar" :class="{ 'ar-largo': vista === 'campo' }">
       <Mappa v-if="vista === 'mappa'" :scalini="scalini" :infinita="laInfinita" :ripresa="ripresa" :davanti="amici.davanti"
@@ -744,9 +785,11 @@ onUnmounted(() => {
       </SalaSfida>
 
       <CampoVista v-else :key="chiaveCampo" :cruscotto="cruscotto" :pannello="pannello" :avviso="avviso"
-                  :dritta="!toccato && !finale" :titolo="titoloPartita"
+                  :dritta="!toccato && !finale" :guida="!!passoGuida" :titolo="titoloPartita"
                   @tela="prendiTela" @scegli="scegli" @dettagli="apriDettagli" @tocca="tocca" @costruisci="costruisciDallaScelta"
-                  @anello="dallAnello" @chiudi-anello="chiudiAnello" />
+                  @anello="dallAnello" @chiudi-anello="chiudiAnello">
+        <Guida class="ar-guida" :passo="passoGuida" :spegnibile="guida.spegnibile.value" @spegni="guida.spegni()" />
+      </CampoVista>
 
       <!-- il calcolo prende tutto lo schermo; il campo intanto rallenta (non si ferma) -->
       <Domanda v-if="domanda" :domanda="domanda.domanda" :pittori="domanda.pittori"

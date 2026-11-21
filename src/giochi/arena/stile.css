@@ -261,3 +261,5 @@
 .ar-vendi-link { align-self: center; min-height: 44px; padding: 8px 16px; font-size: 13px; font-weight: 700; color: var(--ar-tenue-oro);
                  background: none; border: 0; text-decoration: underline }
 
+/* la riga della guida (docs/core/come-si-gioca.md): in cima al campo, dalla parte del nemico, dove non c'è niente da toccare */
+.ar-guida { position: absolute; left: 8px; right: 8px; top: 6px; z-index: 7; box-shadow: 0 4px 14px #0008 }

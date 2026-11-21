@@ -16,6 +16,7 @@ const props = defineProps({
   avviso: { type: String, default: '' },
   dritta: { type: Boolean, default: true },        // «tocca una piazzola»
   titolo: { type: String, default: '' },           // il nome della battaglia, che si annuncia quando comincia
+  guida: { type: Boolean, default: false },        // la guida parla (nello slot): la dritta tace
 })
 const emit = defineEmits(['tela', 'scegli', 'dettagli', 'tocca', 'anello', 'chiudiAnello', 'costruisci'])
 const tela = ref(null)
@@ -88,8 +89,10 @@ const px = v => `${Math.round(v)}px`
         <i>alla battaglia!</i>
       </div>
 
+      <!-- la guida (docs/core/come-si-gioca.md) -->
+      <slot />
       <div v-if="avviso" class="ar-avviso em" data-avviso>{{ avviso }}</div>
-      <div v-else-if="dritta" class="ar-dritta em">👆 tocca una piazzola o il castello</div>
+      <div v-else-if="dritta && !guida" class="ar-dritta em">👆 tocca una piazzola o il castello</div>
     </div>
 
   </div>

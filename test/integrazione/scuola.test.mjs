@@ -352,6 +352,15 @@ controlla('in localStorage solo chiavi scuola:*', disco.chiavi.every(k => k.star
   await C.page.waitForSelector('[data-gioco="castle-battle"] canvas', { timeout: 15000 })
   controlla('Castle Battle parte nella tappa scelta, senza mappa', /Il ponte di pietra/.test(await C.page.locator('[data-gioco="castle-battle"]').innerText()))
   await scatto(C.page, 'scuola-castle-battle')
+  // la guida «Come si gioca» (docs/core/come-si-gioca.md): a scuola parte da sé, si salta con la ✕, il `?` la riaccende
+  await C.page.waitForSelector('[data-gioco="castle-battle"] [data-guida-riga]', { timeout: 8000 }).catch(() => {})
+  controlla('a scuola la guida di Castle Battle parte da sé, con la ✕', await C.page.locator('[data-guida-spegni]').count() === 1)
+  await C.page.locator('[data-guida-spegni]').click().catch(() => {})
+  await C.page.waitForSelector('[data-guida-riga]', { state: 'detached', timeout: 2000 }).catch(() => {})
+  controlla('la ✕ la salta', await C.page.locator('[data-guida-riga]').count() === 0)
+  await C.page.locator('[data-gioco="castle-battle"] [data-azione="aiuto"]').click().catch(() => {})
+  await C.page.waitForSelector('[data-guida-riga]', { timeout: 2000 }).catch(() => {})
+  controlla('il ? della barra della scuola la riaccende', await C.page.locator('[data-guida-riga]').count() === 1)
   controlla('nessun errore nella prova di Castle Battle', veri(C.errori).length === 0, veri(C.errori).join(' | '))
   await C.page.close()
 }
