@@ -493,6 +493,7 @@
 .pp-grosso { width: 120px; height: 64px; border-radius: 20px; background: var(--pp-via); color: #fff;
              display: grid; place-items: center; box-shadow: 0 4px 0 var(--pp-via-scuro) }
 .pp-grosso svg { width: 38px; height: 38px; fill: currentColor }
+.pp-piccolo, .pp-grosso { position: relative }   /* il tasto della tastiera nell'angolo (Finale.vue) */
 .pp-piccolo:active:not(:disabled), .pp-grosso:active:not(:disabled) { transform: translateY(4px); box-shadow: none }
 .pp-piccolo:disabled, .pp-grosso:disabled { opacity: .5 }
 

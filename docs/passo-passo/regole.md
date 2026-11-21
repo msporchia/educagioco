@@ -51,11 +51,13 @@ pulsante, con gli stessi divieti; la mappa sta in `viste/Campo.vue`.
 | A, R, S | attacca, ripeti, se |
 | 2…9 | il numero della scatola, mentre lo si sceglie |
 | ⌫ | toglie la carta prima del cursore |
-| Invio o Spazio | ▶, e mentre corre ■ |
+| Invio o Spazio | ▶, e mentre corre ■; sul cartello di fine, il livello dopo (o di nuovo questo, se un dopo non c'è) |
+| R (sul cartello di fine) | rigioca il livello |
 
 Il 💡 non ha tasto: costa monete, e un tasto premuto per sbaglio le
 spenderebbe. I colori di «fino a» e «se» si scelgono col mouse. Sotto il
-finale e sotto il foglio del `?` la tastiera tace.
+foglio del `?` la tastiera tace; sotto il cartello di fine comanda il
+cartello (`viste/Finale.vue`), non il campo.
 
 Nei test: `[data-tasto-tastiera]` (il tasto scritto sul pulsante).
 

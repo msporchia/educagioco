@@ -324,6 +324,18 @@ controlla('in localStorage solo chiavi scuola:*', disco.chiavi.every(k => k.star
   controlla('sui pulsanti speciali si vede il tasto da premere', await P.page.locator('[data-azione="via"] [data-tasto-tastiera]').isVisible())
   await P.page.keyboard.press('Enter')
   controlla('Invio fa partire il coniglio', await P.page.waitForSelector('[data-azione="ferma"]', { timeout: 3000 }).then(() => true, () => false))
+  // il primo prato è a destra: con → e Invio si vince, e Invio sul cartello porta al livello dopo
+  await P.page.waitForSelector('[data-azione="via"]', { timeout: 8000 })
+  for (let k = 0; k < 4; k++) await P.page.keyboard.press('Backspace')
+  for (const t of ['ArrowRight', 'ArrowRight', 'ArrowRight']) await P.page.keyboard.press(t)
+  await P.page.keyboard.press('Enter')
+  const vinto = await P.page.waitForSelector('[data-fine="tappa"]', { timeout: 15000 }).then(() => true, () => false)
+  if (vinto) {
+    await attendi(P.page, 500)
+    await P.page.keyboard.press('Enter')
+    controlla('sul cartello di fine Invio porta al livello dopo', await P.page.waitForSelector('[data-fine="tappa"]', { state: 'detached', timeout: 5000 }).then(() => true, () => false))
+    controlla('il secondo dei livelli scelti', await P.page.waitForFunction(() => /\b2\/\d+ ·/.test(document.body.innerText), null, { timeout: 5000 }).then(() => true, () => false))
+  } else nota('il primo prato non si vince con tre passi a destra: la prova di Invio sul cartello salta')
   controlla('nessun errore nella prova di Passo passo', veri(P.errori).length === 0, veri(P.errori).join(' | '))
   await P.page.close()
 }

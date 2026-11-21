@@ -4,6 +4,8 @@
    tana. Le quattro stelle: vedi docs/passo-passo/stelle-e-aiuti.md. */
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import Festa from '../../Festa.vue'
+import { usaTasti } from '../../tastiera.js'
+import TastoTastiera from '../../../components/TastoTastiera.vue'
 
 const props = defineProps({
   che: { type: String, default: 'tappa' },        // tappa | sentiero
@@ -31,7 +33,7 @@ const props = defineProps({
   lunga: { type: Boolean, default: false },       // si poteva fare con meno: la riga lo dice
   mappa: { type: Boolean, default: true },        // a scuola la mappa non c'è (docs/passo-passo/scuola.md)
 })
-defineEmits(['avanti', 'rigioca', 'mappa'])
+const emit = defineEmits(['avanti', 'rigioca', 'mappa'])
 
 const parola = computed(() => props.zaino ? 'carte' : 'frecce')
 const meta = computed(() => (props.guerriero ? '👸' : props.cane ? '🐑' : '🏡'))
@@ -41,6 +43,15 @@ const pronto = ref(false)
 let sveglia = 0
 onMounted(() => { sveglia = setTimeout(() => { pronto.value = true }, CIECA) })
 onUnmounted(() => clearTimeout(sveglia))
+
+/* a scuola anche dalla tastiera (docs/passo-passo/regole.md, «La tastiera»): Invio o Spazio come il tasto grande (il
+   livello dopo, o di nuovo questo se un dopo non c'è), R rigioca; non prima che i tasti si accendano */
+const conAvanti = computed(() => props.prossima || props.che === 'sentiero')
+const grande = () => pronto.value && emit(conAvanti.value ? 'avanti' : 'rigioca')
+usaTasti({
+  Enter: grande, Spazio: grande,
+  r: () => pronto.value && props.che === 'tappa' && emit('rigioca'),
+})
 </script>
 
 <template>
@@ -80,10 +91,12 @@ onUnmounted(() => clearTimeout(sveglia))
         <button v-if="mappa" class="pp-piccolo" data-azione="mappa" aria-label="alla mappa" :disabled="!pronto"
                 @click="$emit('mappa')"><span class="pp-em">🗺️</span></button>
         <button v-if="che === 'tappa'" class="pp-piccolo" data-azione="rigioca" aria-label="rigioca"
-                :disabled="!pronto" @click="$emit('rigioca')"><span class="pp-em">🔁</span></button>
-        <button v-if="prossima || che === 'sentiero'" class="pp-grosso" data-azione="avanti" aria-label="avanti"
+                :disabled="!pronto" @click="$emit('rigioca')"><span class="pp-em">🔁</span>
+          <TastoTastiera class="pp-tasto-tastiera" :nome="conAvanti ? 'R' : '↵'" /></button>
+        <button v-if="conAvanti" class="pp-grosso" data-azione="avanti" aria-label="avanti"
                 :disabled="!pronto" @click="$emit('avanti')">
           <svg viewBox="-20 -20 40 40" aria-hidden="true"><path d="M-9 -14 L15 0 L-9 14 Z" /></svg>
+          <TastoTastiera class="pp-tasto-tastiera" nome="↵" />
         </button>
       </div>
     </div>
