@@ -28,8 +28,9 @@ import { generaSentiero, caso, premioDi, ricordoDi, INGREDIENTI, SENTIERI } from
 import { SENTIERO_CANE } from './scena/animale.js'
 import { Proiezione } from './scena/proiezione.js'
 import { Regia } from './scena/regia.js'
-import { guidaDelPrato, guidaDelRipeti } from './motore/guida.js'
-import { usaGuida } from '../guida.js'
+import { guidaDelPrato, guidaDelRipeti, guidaDelLivello } from './motore/guida.js'
+import { usaGuidaRichiamata } from '../guida.js'
+import Guida from '../Guida.vue'
 import { scrivi, leggi, dice, scriviFila, scriviSerie, pagatoDa, svelatoDa } from './motore/sosta.js'
 import Ripresa from '../Ripresa.vue'
 import { usaAmici } from '../../amici/usaAmici.js'
@@ -234,9 +235,20 @@ const statoSentieri = computed(() => ({
   },
 }))
 
-// la guida della prima volta (motore/guida.js, docs/passo-passo/regole.md)
+// la guida della prima volta (motore/guida.js, docs/passo-passo/regole.md); quella richiamata col ? (e a scuola, da sé
+// al primo livello della pagina, con la ✕) vale su ogni livello: docs/core/come-si-gioca.md
 const radice = ref(null)
-const passoGuida = computed(() => {
+const guida = usaGuidaRichiamata({ prima: !!giro, saltabile: !!giro })
+const passoRichiamato = computed(() => {
+  if (!guida.accesa.value || vista.value === 'mappa' || !tappa.value) return null
+  return guidaDelLivello({ vinto: guida.fatto('vinto'), fermo: inCorsa.value || !!finale.value,
+                           ripeti: (tappa.value.carte || []).includes('ripeti'), conScatola: conCicli(fila.value) || scelta.value != null,
+                           fila: fila.value, provato: provato.value !== null, cambiato: provato.value !== JSON.stringify(fila.value),
+                           sbattuto: guasto.value != null, fermoPrima: fermoPrima.value })
+})
+// a scuola la guida è solo quella che si salta con la ✕
+const passoGuida = computed(() => passoRichiamato.value || (giro ? null : passoPrimoGiro.value))
+const passoPrimoGiro = computed(() => {
   const fermo = inCorsa.value || !!finale.value
   // la prima volta che una tappa mette in mano 🔁, col coniglio o col cane: nessuna vinta l'aveva
   if (tappaIdx.value >= 0 && concettiDi(CAMPAGNA[tappaIdx.value]).includes('ripeti') &&
@@ -247,7 +259,7 @@ const passoGuida = computed(() => {
                          cambiato: provato.value !== JSON.stringify(fila.value),
                          sbattuto: guasto.value != null, fermoPrima: fermoPrima.value })
 })
-usaGuida(radice, passoGuida)
+guida.segui(radice, passoGuida)
 
 const titolo = computed(() => {
   if (vista.value !== 'campo' || !tappa.value) return 'Passo passo'
@@ -588,6 +600,7 @@ function fineGiro() {
     aiutoInCoda.value = false
     inTana = false
     finale.value = vittoria(esito)
+    guida.segna('vinto')
     suono.livello()
     return
   }
@@ -1007,7 +1020,7 @@ function indietro() {
 
 <template>
   <div ref="radice" class="schermo">
-    <Barra :titolo="titolo" guida="passo" monete @indietro="indietro" @aiuto="v => guidaAperta = v" />
+    <Barra :titolo="titolo" guida="passo" monete :come="vista !== 'mappa'" @come="guida.alterna()" @indietro="indietro" @aiuto="v => guidaAperta = v" />
 
     <!-- `pp-largo`: mentre si gioca, su uno schermo largo e orizzontale il campo si stende (stile.css); la mappa no -->
     <div class="pp" :class="{ 'pp-largo': vista !== 'mappa' }">
@@ -1019,7 +1032,9 @@ function indietro() {
                  @comincia="avviaSentiero(chiedeStrada)" @annulla="chiede = ''" />
       </Mappa>
 
-      <Campo v-else ref="campo"
+      <!-- la riga c'è solo con la ✕ (richiamata, o a scuola): al primo giro di casa conta la manina -->
+      <Guida v-if="vista !== 'mappa' && guida.spegnibile.value" class="pp-guida" :passo="passoGuida" spegnibile @spegni="guida.spegni()" />
+      <Campo v-if="vista !== 'mappa'" ref="campo"
              :fila="fila" :cursore="cursore" :corrente="corrente" :guasto="guasto"
              :in-corsa="inCorsa" :salti="!!(tappa && tappa.salti)" :attacca="!!(tappa && tappa.mappa.some(r => r.includes('n')))" :brilla="brilla"
              :prezzo="prezzoDelProssimo" :povero="povero" :armato="armato" :povero-scossa="poveroScossa"

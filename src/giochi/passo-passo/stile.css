@@ -520,3 +520,5 @@
   .pp-campo .pp-fila { grid-column: 1; grid-row: 1; height: auto; min-height: calc(2 * var(--pp-tessera) + 60px) }
   .pp-campo .pp-tasti { grid-column: 1; grid-row: 2 }
 }
+/* la riga della guida richiamata (docs/core/come-si-gioca.md), sopra il campo */
+.pp-guida { margin: 6px 8px 0 }

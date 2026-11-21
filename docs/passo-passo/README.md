@@ -19,7 +19,7 @@ frecce, e dai sette anni e mezzo le carte e lo zaino. Codice in `src/giochi/pass
 - [tappe.md](tappe.md) — le tappe di oggi, con la strada più corta di ognuna
 - [scuola.md](scuola.md) — a scuola: la maestra sceglie il protagonista e i gradini, i loro livelli in giro senza mappa né monete, il 💡 solo gratis, ogni ▶ raccontato alla maestra
 
-Vedi anche: [../core/aiuti.md](../core/aiuti.md) (la scala a monete comune),
+Vedi anche: [../core/come-si-gioca.md](../core/come-si-gioca.md) (la guida «Come si gioca», col `?` e a scuola), [../core/aiuti.md](../core/aiuti.md) (la scala a monete comune),
 [../core/amici-nei-giochi.md](../core/amici-nei-giochi.md) (gli amici sulle due mappe e sotto i due sentieri),
 [../apprendimento/eta-e-portata.md](../apprendimento/eta-e-portata.md) (la portata),
 [../costruttore/](../costruttore/README.md) (il gioco che viene dopo).
