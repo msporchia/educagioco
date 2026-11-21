@@ -9,6 +9,7 @@ const props = defineProps({
   stato: { type: Object, required: true },
   detto: { type: Object, default: null },     // { testo }: un oggetto nuovo a ogni cosa da dire, anche se è la stessa
   dpr: { type: Number, default: null },       // a scuola il pixel ratio della fascia bassa (docs/bancarella/scuola.md); a casa manca
+  veste: { type: String, default: '' },       // com'è fatto il cuoco di chi gioca (data/bancarella-cuochi.js)
 })
 const emit = defineEmits(['tocca'])
 
@@ -31,13 +32,14 @@ async function accendi() {
   const [{ creaCucina3d }, { prepara }, { preparaCuoco }] = await Promise.all([import('../../grafica/cucina3d/indice.js'),
     import('../../grafica/cucina3d/cibo.js'), import('../../grafica/cucina3d/omino.js')])
   await prepara(dispensaDi(props.stato), props.stato.ricette)
-  preparaCuoco(...(props.stato.altro ? ['host', 'ospite'] : []))
+  const { mio = '', altro } = props.stato
+  preparaCuoco({ veste: props.veste, ruolo: mio }, ...(altro ? [{ veste: altro.veste, ruolo: mio === 'host' ? 'ospite' : 'host' }] : []))
   apre.value = false
   if (spento) return
   scena?.rilascia()
   // `&dpr=1` nell'indirizzo: il pixel ratio fisso, per le foto e per i test senza scheda grafica
   const dpr = Number((location.hash.match(/dpr=(\d)/) || [])[1]) || props.dpr || undefined
-  scena = creaCucina3d(tela.value, { quanto, quantoLavato, tipoDi, dpr, perso: () => { senza3d.value = true } })
+  scena = creaCucina3d(tela.value, { quanto, quantoLavato, tipoDi, dpr, veste: props.veste, perso: () => { senza3d.value = true } })
   senza3d.value = !scena
   scena?.imposta(props.stato)
 }

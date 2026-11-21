@@ -3,9 +3,10 @@
    Vedi docs/bancarella/in-due.md. Puro, gira in Node. */
 import { cucinaNuova, passoCuoco, passoStanza, usa, tocca, vaiA, arriva, consegna, cheManca } from './cucina.js'
 import { RICETTE, MINUTI_IN_DUE, MENU_IN_DUE, campInDue } from '../../data/bancarella-cucine.js'
+import { chiaveVeste } from '../../data/bancarella-cuochi.js'
 
 export const PASSO = 0.05          // i secondi di un tick
-const VERSIONE = 1
+const VERSIONE = 2                 // la 2 manda com'è fatto il proprio cuoco (`veste`)
 const IN_LISTA = 4                 // le ordinazioni che si vedono
 const STACCO = 15                  // all'inizio scadono una dopo l'altra
 // quello che è di ogni cuoco: nella stanza ci sta il cuoco di turno (`conCuoco`), così il motore di uno solo resta com'è
@@ -35,7 +36,7 @@ function nuovaOrdinazione(S, ritardo = 0) {
 export function partitaNuova({ seme, minuti, menu }) {
   const c = cucinaNuova(campInDue(menu))
   const cuocoDa = x => ({ cuoco: { ...c.cuoco, x }, fila: [], strada: [], arrivato: '', perche: '', tagliando: '', colpo: 0, lavando: false, lavata: 0,
-                          calcola: 0, fatti: 0, detti: 0, detto: '' })
+                          calcola: 0, fatti: 0, detti: 0, detto: '', veste: '' })
   const S = { seme: seme >>> 0, menu, resta: minuti * 60, cucina: c, ordini: [], ordinazioni: 0, scadute: 0, serviti: { host: 0, ospite: 0 }, fine: null,
               cuochi: { host: cuocoDa(1.5), ospite: cuocoDa(c.largo - 1.5) } }
   for (let i = 0; i < IN_LISTA; i++) nuovaOrdinazione(S, i * STACCO)
@@ -110,7 +111,8 @@ export function applica(S, ruolo, [che, a, b]) {
     S.ordini = S.ordini.filter(o => o.id !== a)
     S.serviti[ruolo]++
     io.calcola = 0
-  } else if (io.calcola) return
+  } else if (che === 'veste') io.veste = chiaveVeste(a)      // com'è fatto il suo cuoco: solo da guardare, non cambia la partita
+  else if (io.calcola) return
   else if (che === 'tocca') { vaAConsegnare(S, ruolo, a); conCuoco(S, ruolo, c => tocca(c, a)) }
   else if (che === 'vai') { lasciaLaStrada(S, ruolo); conCuoco(S, ruolo, c => vaiA(c, a, b)) }
 }
@@ -121,6 +123,7 @@ export function mossaValida(m) {
   if (!Array.isArray(m)) return false
   if (m[0] === 'tocca') return m.length === 2 && typeof m[1] === 'string' && cella.test(m[1])
   if (m[0] === 'vai') return m.length === 3 && piccolo(m[1]) && piccolo(m[2])
+  if (m[0] === 'veste') return m.length === 2 && typeof m[1] === 'string' && m[1].length <= 160
   return (m[0] === 'prenota' || m[0] === 'pagata') && m.length === 2 && piccolo(m[1])
 }
 

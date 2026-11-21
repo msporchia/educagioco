@@ -145,7 +145,14 @@ await page.waitForFunction(() => window.__shop.fase.value === 'fine', undefined,
 await page.click('[data-azione="le-cucine"]')
 await page.waitForSelector('[data-cucine]', { timeout: 3000 })
 controlla('il secondo livello si è aperto', await page.locator('[data-cucina-n="2"]').isEnabled())
-uguale('non c\'è niente da comprare', await page.locator('.cucine button:not(.livello):not(.in-due)').count(), 0)
+uguale('non c\'è niente da comprare', await page.locator('.cucine button:not(.livello):not(.in-due):not([data-il-cuoco])').count(), 0)
+
+/* ---------- 6b. il cuoco si sceglie, e resta (docs/bancarella/cuoco.md) ---------- */
+await page.click('[data-il-cuoco]')
+await page.waitForSelector('[data-personalizza] [data-prs-voce="gatto"]', { timeout: 4000 })
+await page.click('[data-prs-voce="gatto"]')
+await page.click('[data-personalizza] [data-chiudi]')
+uguale('il cuoco scelto è il gatto', await page.evaluate(() => window.__shop.mioBanco.value.cuoco.split('.')[0]), 'gatto')
 uguale('e niente cassa', await page.locator('.cucine .cassa').count(), 0)
 await apri(2)
 

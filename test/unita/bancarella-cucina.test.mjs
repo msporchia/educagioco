@@ -4,6 +4,7 @@ import { cucinaNuova, passo, usa, tocca, vaiA, arriva, consegna, cheManca, passi
 import { CUCINE, RICETTE, INGREDIENTI, attrezziDi, cucinaPulita, bancoPulito, ricetteDi, prezzoDi, listinoDi, orologio } from '../../src/data/bancarella-cucine.js'
 import { nuovoOrdine, tappaDi, scomponi, premioCliente, chiaveResto, serveTutto } from '../../src/data/bancarella.js'
 import { scrivi, leggi, dice } from '../../src/motore/bancarella/sosta.js'
+import { CHIAVE_DI_SERIE } from '../../src/data/bancarella-cuochi.js'
 
 /* Tocca un posto, lascia camminare il cuoco e fa la mossa, come fa la vista. */
 function vai(c, id) {
@@ -455,7 +456,7 @@ test('gli appoggi stanno in mezzo, e ci si cammina attorno', () => {
 
 test('il banco ricorda i livelli vinti, e quello che si era comprato prima non conta più', () => {
   const b = bancoPulito({ cassa: 500, cucina: { fatte: 3, tagliere: 2, isola: 1 } })
-  assert.deepEqual(b, { cucina: { fatte: 3 } })
+  assert.deepEqual(b, { cucina: { fatte: 3 }, cuoco: CHIAVE_DI_SERIE })
   assert.deepEqual(bancoPulito(b), b)
   assert.equal(cucinaPulita({ fatte: 999 }).fatte, CUCINE.length)
 })

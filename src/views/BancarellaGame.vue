@@ -278,6 +278,7 @@ function partiInDue(m, ruolo, { menu, minuti }, prova = false) {
   borsellino = borsa(CHIAVE); Object.assign(guadagno, { monete: 0, nota: '' })
   occupato = false; esito.value = ''; ricettaAperta.value = ''
   allaCucina()
+  mandaDue(['veste', mioBanco.value.cuoco])     // com'è fatto il mio cuoco: l'altro telefono lo disegna così
   guardaDue()
   cucina.value = vistaDue
   fase.value = 'gioco'
@@ -633,7 +634,7 @@ onBeforeUnmount(() => {
       </div>
       <!-- chi è da raggiungere -->
       <p v-if="amici.davanti" class="davanti" data-amico-davanti>{{ amici.davanti }}</p>
-      <LeCucine :banco="mioBanco" :aperta="puoGiocare" @scegli="vuoleIniziare" @due="sfida.apri()" />
+      <LeCucine :banco="mioBanco" :aperta="puoGiocare" @scegli="vuoleIniziare" @due="sfida.apri()" @cuoco="v => scriviBanco({ ...mioBanco, cuoco: v })" />
     </template>
 
     <SalaSfida v-else-if="fase === 'sala'" :fase="sfida.fase.value" :codice="sfida.codice.value" :messaggio="sfida.messaggio.value"
@@ -649,7 +650,7 @@ onBeforeUnmount(() => {
 
       <div class="banco">
         <Ricetta v-if="ricettaAperta" :ricetta="cucina.ricette.find(r => r.emoji === ricettaAperta)" @chiudi="ricettaAperta = ''" />
-        <Cucina :stato="cucina" :detto="dettoCuoco" :dpr="leggera" @tocca="toccaStanza" />
+        <Cucina :stato="cucina" :detto="dettoCuoco" :dpr="leggera" :veste="mioBanco.cuoco" @tocca="toccaStanza" />
         <CartelloLinea v-if="due && (sfida.rotta.value || sfida.linea.value)" :rotta="sfida.rotta.value" :motivo="sfida.motivo.value"
                        :linea="sfida.linea.value" partita="la cucina" @esci="esciDue" />
 

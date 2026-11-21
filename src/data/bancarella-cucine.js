@@ -1,6 +1,7 @@
 /* LE CUCINE — gli ingredienti, le ricette e i livelli.
    Vedi docs/bancarella/cucina.md. Tutto in centesimi: sono gli euro del gioco,
    non le 🪙. Puro, gira in Node. */
+import { chiaveVeste } from './bancarella-cuochi.js'
 
 /* `va`: dove si cuoce o si taglia; chi non ce l'ha va dritto sul piatto. `cuoce` e `tiene`
    sono i secondi sul fuoco e quelli prima di bruciare: a bruciare ci si deve impegnare. */
@@ -174,5 +175,5 @@ export function cucinaPulita(s) {
   return { fatte: intero(o.fatte, CUCINE.length) }
 }
 
-/* Il banco salvato, messo a posto. */
-export const bancoPulito = salvato => ({ cucina: cucinaPulita(salvato?.cucina) })
+/* Il banco salvato, messo a posto: i livelli vinti e com'è fatto il cuoco (docs/bancarella/cuoco.md). */
+export const bancoPulito = salvato => ({ cucina: cucinaPulita(salvato?.cucina), cuoco: chiaveVeste(salvato?.cuoco) })

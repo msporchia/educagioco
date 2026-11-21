@@ -19,7 +19,7 @@ const SOPRA = { lavello: 0.45, forno: 0.8, cassetta: 0.3, consegna: 1.4, bidone:
 const TAGLIATO = { insalata: 'insalata', formaggio: 'formaggio-fette', pesce: 'pesce-fette', pomodoro: 'pomodoro-tagliato' }
 const ACQUA = { vuota: 0xa9d6ee, cuoce: 0x9fd0ea, pronta: 0xf1dd9a, scotta: 0xa9743c }
 
-export function creaCucina3d(canvas, { quanto, quantoLavato, tipoDi, perso, dpr } = {}) {
+export function creaCucina3d(canvas, { quanto, quantoLavato, tipoDi, perso, dpr, veste } = {}) {
   let gl = null, renderer
   try {
     gl = canvas.getContext('webgl2', { alpha: false, antialias: true, depth: true, stencil: false, powerPreference: 'high-performance' })
@@ -27,7 +27,7 @@ export function creaCucina3d(canvas, { quanto, quantoLavato, tipoDi, perso, dpr 
   if (!gl || gl.isContextLost()) return null
   try { renderer = segui(new WebGLRenderer({ canvas, context: gl, antialias: true })) } catch (e) { return null }
   let tutto
-  try { tutto = costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr }) } catch (e) {
+  try { tutto = costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr, veste }) } catch (e) {
     console.warn('cucina 3D: niente disegno', e)
     try { renderer.dispose() } catch (x) { /* pazienza */ }
     return null
@@ -75,7 +75,7 @@ const figura = o => {
 const inCassetta = cosa => (cosa === 'pane' ? cibo('pane-fette') : confezione(cosa))
 const tagliato = cosa => cibo(TAGLIATO[cosa])
 
-function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso }) {
+function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso, veste }) {
   renderer.outputColorSpace = SRGBColorSpace
   renderer.toneMapping = ACESFilmicToneMapping
   renderer.toneMappingExposure = 1.02
@@ -127,7 +127,7 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
   /* ── le cose in scena: si mettono al primo `imposta`, secondo la cucina ── */
   const stazioni = {}, posti = {}
   let omino = null, inMano = null, pila = null, lavello = null, barraLavello = null, mira = null
-  let compagno = null, inManoSua = null, calcolatrice = null   // in due: l'altro cuoco
+  let compagno = null, inManoSua = null, calcolatrice = null, vesteSua = null, ruoloMio = ''   // in due: l'altro cuoco, com'è fatto lui
   const scatole = [], coltelli = {}
   let tagliereInUso = ''
   function monta(s) {
@@ -173,22 +173,31 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
       }
     }
     scena.traverse(o => { if (o.isMesh && !o.material.transparent && !o.material.isMeshBasicMaterial) o.castShadow = true })
-    omino = creaCuoco(s.mio)
+    ruoloMio = s.mio || ''
+    omino = creaCuoco({ veste, ruolo: ruoloMio })
     scena.add(omino.g)
     inMano = creaPosto()
     omino.mano.add(inMano.g)
     if (s.altro) {
-      compagno = creaCuoco(s.mio === 'host' ? 'ospite' : 'host')
       inManoSua = creaPosto()
-      compagno.mano.add(inManoSua.g)
       calcolatrice = creaCalcolatrice()
       calcolatrice.position.y = 1.95
-      compagno.g.add(calcolatrice)
-      scena.add(compagno.g)
+      vestiCompagno(s.altro.veste || '')
     }
     mira = creaMira(); mira.visible = false; scena.add(mira)
     renderer.shadowMap.needsUpdate = true
     misura()
+  }
+
+  /* In due l'altro cuoco arriva vestito di serie, e si riveste quando dall'altro telefono arriva com'è fatto. */
+  function vestiCompagno(sua) {
+    if (compagno) scena.remove(compagno.g)
+    vesteSua = sua
+    compagno = creaCuoco({ veste: sua || null, ruolo: ruoloMio === 'host' ? 'ospite' : 'host' })
+    compagno.mano.add(inManoSua.g)
+    compagno.g.add(calcolatrice)
+    compagno.g.traverse(o => { if (o.isMesh && !o.material.transparent && !o.material.isMeshBasicMaterial) o.castShadow = true })
+    scena.add(compagno.g)
   }
 
   /* ── il dito: i banconi sono scatole, si prende la prima che il raggio incontra; se no è pavimento ── */
@@ -278,6 +287,7 @@ function costruisci(renderer, canvas, { quanto, quantoLavato, tipoDi, dpr: fisso
       omino.anima(dt, { cammina: k.cammina, porta: !!k.mano, verso: k.verso })
       inMano.metti(k.mano)
       const a = q.altro
+      if (a && (a.veste || '') !== vesteSua) vestiCompagno(a.veste || '')
       if (a) {
         compagno.g.position.set(a.cuoco.x, 0, a.cuoco.z)
         compagno.anima(dt, { cammina: a.cuoco.cammina, porta: !!a.cuoco.mano, verso: a.cuoco.verso })

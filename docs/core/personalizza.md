@@ -160,7 +160,7 @@ prova; il gioco tiene il resto e lo ridà nelle props.
 4. I gestori: `scegli` e `acquista` scrivono nella campagna, i set nella
    campagna per personaggio.
 
-Chi lo usa: l'editor degli eroi e il tintore del sotterraneo
+Chi lo usa: il cuoco della cucina ([../bancarella/cuoco.md](../bancarella/cuoco.md)), l'editor degli eroi e il tintore del sotterraneo
 ([../sotterraneo/personaggio.md](../sotterraneo/personaggio.md), [../sotterraneo/tintore.md](../sotterraneo/tintore.md)), il guardaroba del
 contadino, gli addobbi delle bestie e i mobili di casa della fattoria ([../fattoria3d/guardaroba.md](../fattoria3d/guardaroba.md),
 [../fattoria3d/addobbi.md](../fattoria3d/addobbi.md), [../fattoria3d/casa.md](../fattoria3d/casa.md)). L'interfaccia di prima non c'è più.

@@ -70,7 +70,7 @@ quale file.
 | `docs/scuola/` | La scuola (`src/scuola/`, `scuola/*.html`): l'app delle maestre e quella dei PC dei bambini, il codice della lezione sul servizio, i sostituti dei moduli di casa, la pipeline col tag `scuola-*` — prima di toccare `src/scuola/`, o un import di `quiz/Domanda.vue` e dei moduli di quiz |
 | `docs/giardino/` | Il giardino (`src/giochi/giardino/`, in prova): regole, calcoli, campagna, taratura — prima di toccare `giochi/giardino/dati/`, il motore o un prezzo |
 | `docs/lingue/` | English ed Español: vocaboli, campagne, la pronuncia incisa (`npm run voci`) |
-| `docs/bancarella/` | La cucina (chiave `bancarella`): il cuoco in 3D, le ordinazioni, la cassa, i livelli e gli attrezzi (`cucina.md`) — prima di toccare `data/bancarella*.js`, `motore/bancarella/`, `grafica/cucina3d/` o un prezzo |
+| `docs/bancarella/` | La cucina (chiave `bancarella`): il cuoco in 3D e come lo si sceglie (`cuoco.md`), le ordinazioni, la cassa, i livelli e gli attrezzi (`cucina.md`) — prima di toccare `data/bancarella*.js`, `motore/bancarella/`, `grafica/cucina3d/` o un prezzo |
 | `docs/pozioni/` | Il laboratorio delle pozioni: il mercante, l'ordine a gettoni, le tappe, il banco in 3D (`scena3d/`), la ricetta da seguire e i suoni (`procedimento.md`) |
 | `docs/passo-passo/` | Passo passo: regole del mondo, cane pastore, guerriero (grate, nemici, spada), zaino e carte, stelle, sentiero, come si scrive un livello |
 | `docs/costruttore/` | Il Robot (era «Il costruttore»: chiave e cartelle restano `costruttore`): linguaggio, progetti e attrezzi, il porto, gli algoritmi, la campagna, la scheda e il robot disegnato |
