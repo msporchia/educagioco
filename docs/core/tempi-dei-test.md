@@ -35,13 +35,16 @@ salgono: le unità a cinque corsie fanno 59 s.
   ridosso del suo tetto di 1500 s: è una taratura, e si lancia solo dopo
   un cambio significativo del bilanciamento.
 - **Il costo fisso di Node è 14 ms**; aprire Chrome e la pagina (36 MB)
-  costa 5 s: un file nel browser non scende sotto, ed è il motivo per cui
-  quello che parte dalla stessa preparazione sta nello stesso file.
+  costa un secondo, ricaricarla (`azzera`, `semina`) quattro decimi. I
+  secondi di un file nel browser non stanno lì: stanno nel gioco che gira
+  in tempo reale (camminare, aspettare un cliente, un racconto di turno),
+  cioè in quanta partita si gioca per arrivare al punto.
 
 ## Le regole che ne vengono
 
-- **Otto alla volta, se la macchina regge**: le corsie sono al più otto
-  (la metà dei processori sotto i sedici), ma un test parte solo se c'è
+- **La metà dei processori, se la macchina regge**: le corsie sono la
+  metà dei processori (dieci qui; a otto il browser faceva 6 min 50, a
+  dieci 5 min 36), una per giga libero, e un test parte solo se c'è
   un posto fra quelli della macchina (la metà dei processori, divisi fra
   tutti i lanciatori accesi: `/tmp/educagioco-posti/`) e se i processori
   occupati nell'ultimo secondo sono meno di tre quarti. Due sessioni che

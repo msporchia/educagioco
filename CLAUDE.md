@@ -41,7 +41,7 @@ node test/esegui.mjs animali            # i file che contengono "animali", unit�
 node test/esegui.mjs integrazione/animali   # solo quelli nel browser
 node test/esegui.mjs --niente-build     # non ricompilare prima
 node test/esegui.mjs torri --scatti     # e lascia anche le foto
-node test/esegui.mjs --alla-volta=1     # uno alla volta (di solito otto)
+node test/esegui.mjs --alla-volta=1     # uno alla volta (di solito la metà dei processori)
 ```
 
 **La cadenza.** Le unità girano **a ogni commit**: costano secondi. Il

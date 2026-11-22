@@ -371,9 +371,18 @@ export async function ditoDi(page) {
     await attendi(page, 60)
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
   }
+  /* si tocca un bersaglio fermo: un foglio che sale dal basso o una cornice che cresce, misurati a metà strada, mandano il
+     dito dove il tasto non è ancora (o non è più). Due misure uguali a un fotogramma e mezzo di distanza, poi il tocco */
   const toccaIl = async sel => {
     await finestraFerma(page)
-    const b = await page.locator(sel).first().boundingBox()
+    let b = await page.locator(sel).first().boundingBox()
+    for (let i = 0; i < 40; i++) {
+      await attendi(page, 40)
+      const c = await page.locator(sel).first().boundingBox()
+      const fermo = b && c && Math.abs(c.x - b.x) < 0.5 && Math.abs(c.y - b.y) < 0.5 && Math.abs(c.width - b.width) < 0.5
+      b = c
+      if (fermo) break
+    }
     await tocca(b.x + b.width / 2, b.y + b.height / 2)
   }
   // il dito che striscia da un punto a un altro: un elenco che scorre lo vede solo così (`scrollIntoViewIfNeeded` scorre da programma)

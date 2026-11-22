@@ -14,7 +14,7 @@ defineEmits(['capito', 'tocca'])
 </script>
 
 <template>
-  <div class="ing-concetto" data-pagina :data-concetto="p.concetto" :data-ripresa="p.ripresa ? '1' : '0'">
+  <div class="ing-concetto" data-pagina :data-pronto="pronta || null" :data-concetto="p.concetto" :data-ripresa="p.ripresa ? '1' : '0'">
     <div v-if="p.ripresa" class="ing-concetto-sopra">Aspetta, te lo spiego meglio</div>
     <h2 class="ing-concetto-titolo">{{ p.titolo }}</h2>
     <p class="ing-concetto-spiega">{{ p.spiega }}</p>

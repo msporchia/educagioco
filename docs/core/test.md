@@ -168,10 +168,10 @@ file (cosa prova che altrimenti non si proverebbe). Di regola:
   Chrome da solo costa più di un secondo. Contratto in testa a
   `test/esegui.mjs`.
 
-## Otto alla volta
+## Tanti alla volta
 
-I test girano **insieme**: otto, o la metà dei processori se sono meno di
-sedici, non più di uno per giga di memoria libera, e mai a macchina piena
+I test girano **insieme**: la metà dei processori (dieci su venti), non
+più di uno per giga di memoria libera, e mai a macchina piena
 (i posti e il carico: [tempi-dei-test.md](tempi-dei-test.md)). Ognuno è
 già un processo a sé col suo Chrome e il suo archivio, quindi nessun test
 deve saperlo.

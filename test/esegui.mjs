@@ -99,9 +99,11 @@ const TEMPO = Number(argomenti.find(a => a.startsWith('--tempo='))?.slice(8)) ||
    un Chrome che risponde. Con metà della memoria libera lasciata a chi
    c'era già, la seconda sessione parte con meno corsie e lo dice. */
 const PER_MEMORIA = Math.floor(freemem() / 2 ** 30)
-const CORSIE = Math.max(1, Math.min(8, Math.floor(availableParallelism() / 2), PER_MEMORIA))
+// la metà dei processori: da quando il 3D lo disegna la scheda video un test nel browser ne occupa mezzo, non otto
+const META = Math.max(1, Math.floor(availableParallelism() / 2))
+const CORSIE = Math.max(1, Math.min(META, PER_MEMORIA))
 const ALLA_VOLTA = Number(argomenti.find(a => a.startsWith('--alla-volta='))?.slice(13)) || CORSIE
-const strette = ALLA_VOLTA === CORSIE && CORSIE === PER_MEMORIA && CORSIE < 8
+const strette = ALLA_VOLTA === CORSIE && CORSIE === PER_MEMORIA && CORSIE < META
 
 /* ── I POSTI DELLA MACCHINA ──
    Le corsie sono di un giro, i posti sono di tutti: due sessioni che
@@ -112,7 +114,7 @@ const strette = ALLA_VOLTA === CORSIE && CORSIE === PER_MEMORIA && CORSIE < 8
    lanciatori accesi. Un posto è un file con dentro il pid di chi lo
    tiene, creato con `wx` (o c'è o non c'è); chi muore senza lasciarlo
    si riconosce dal pid che non risponde più. */
-const POSTI = Math.max(1, Math.floor(availableParallelism() / 2))
+const POSTI = META
 const DOVE_I_POSTI = resolve(tmpdir(), 'educagioco-posti')
 const miei = new Set()
 let avvisato = false

@@ -567,7 +567,7 @@ onUnmounted(() => { clearTimeout(bollaTimer); zittisci() })
 
 <template>
   <LinguaGame v-if="vista === 'prima'" lingua="es" libero @vai="allaMappa" />
-  <div v-else class="schermo ing" :data-vista="vista">
+  <div v-else class="schermo ing" :data-vista="vista" :data-pronto="orologio.pronta.value || null">
     <Barra :titolo="titolo" guida="spagnolo" monete @indietro="indietro">
       <div v-if="indicatore" class="ing-paga" :class="{ 'ing-non-paga': !indicatore.paga }"
            data-paga :data-paga-si="indicatore.paga ? '1' : '0'"
