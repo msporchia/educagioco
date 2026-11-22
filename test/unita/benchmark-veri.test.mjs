@@ -1,7 +1,8 @@
 /* La misura coi modelli veri (docs/core/vecchio-telefono-veri.md): le scene degli fps veri, il log con le righe e la LETTURA, la riga
    DATI che si rilegge, un log lungo spezzato in invii che stanno nel campo del modulo, le note prima dei DATI. Senza browser. */
 import { componiVeri, letturaVeri, spezza, conNote, LIMITE_CAMPO } from '../../src/grafica/benchmark/log-veri.js'
-import { TAPPE_FPS, stima } from '../../src/grafica/benchmark/veri.js'
+import { stima } from '../../src/grafica/benchmark/veri.js'
+import { TAPPE_FPS } from '../../src/grafica/benchmark/veri/tappe.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const s = (id, gruppo, ms, p95, extra = {}) => ({ id, gruppo, nome: id, ms, p95, js: Math.round(ms * 0.3), gpu: Math.round(ms * 0.7), fps: Math.round(Math.min(60, 1000 / p95)), n: 200, ch: 250, tri: 70000, primo: ms * 3, nuovi: 2, pronto: 900, stabile: true, ...extra })
@@ -52,7 +53,7 @@ const idF = TAPPE_FPS.flatMap(t => t.scene.map(x => x.id))
 controlla('gli fps veri: 9 scene tutte diverse, un gruppo solo, senza aspettare la GPU, la fattoria col degrado', idF.length === 9 && new Set(idF).size === 9 &&
   TAPPE_FPS.every(t => t.gruppo === 'fps' && t.tempi === 'fps') && ['fps-piano', 'fps-sot-3', 'fps-sot-6', 'fps-villaggio', 'fps-prato', 'fps-fat-10', 'fps-fat-30', 'fps-ast', 'fps-ast-boom'].every(i => idF.includes(i)) &&
   TAPPE_FPS.filter(t => t.opz && t.opz.degrado).length === 2, idF.join(','))
-const sf = stima()
+const sf = stima(TAPPE_FPS)
 controlla('la stima del foglio: 9 scene sui 3 minuti', sf.scene === 9 && sf.minuti === 3, JSON.stringify(sf))
 
 riassunto('la misura coi modelli veri')

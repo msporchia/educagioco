@@ -6,6 +6,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { componiVeri, conNote, spezza } from '../../grafica/benchmark/log-veri.js'
 import { stima } from '../../grafica/benchmark/veri.js'
+import { TAPPE_FPS } from '../../grafica/benchmark/veri/tappe.js'
 import { ultimeMisure, salvaMisura } from '../../store/benchmark.js'
 import { fasciaAttiva, misura as misuraFascia, scelta as sceltaFascia } from '../../store/qualita.js'
 import { sondaRicevitore, mandaAlRicevitore } from '../../grafica/benchmark/invio-diretto.js'
@@ -78,7 +79,7 @@ async function avvia() {
     // a ogni scena il log fin lì diventa «l'ultima»: se il telefono si pianta, alla riapertura c'è quello che è stato misurato
     const m = await meta()
     const parziale = d => { salvaMisura('fps', componiVeri(d, m)).catch(() => {}) }
-    const dati = await eseguiVeri({ contenitore: palco.value, corto: !!window.__benchmarkCorto, solo, fascia: fasciaAttiva(),
+    const dati = await eseguiVeri({ contenitore: palco.value, corto: !!window.__benchmarkCorto, solo, fascia: fasciaAttiva(), tappe: TAPPE_FPS,
       progresso, fermo: () => fermare, parziale })
     window.__benchmarkVeri = dati
     log.value = componiVeri(dati, m)
@@ -98,7 +99,7 @@ onBeforeUnmount(() => { fermare = true })
 const finale = computed(() => conNote(log.value, note.value))
 const parti = computed(() => spezza(finale.value))
 const link = testo => `${props.modulo}?${new URLSearchParams({ versione: versione(), giudizi: testo })}`
-const quante = stima()
+const quante = stima(TAPPE_FPS)
 const quando = q => new Date(q).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 // il computer di sviluppo in LAN (`node strumenti/ricevi-log.mjs`, docs/core/vecchio-telefono-veri.md): se la pagina è servita da lui il resoconto
 // parte da solo a fine prova e c'è «Manda al computer» per rimandarlo con le note; altrimenti niente di tutto questo

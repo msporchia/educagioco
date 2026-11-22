@@ -18,7 +18,7 @@ misura nuova si chiede solo se è cambiato qualcosa che conta per lei.
 
 ## Gli fps veri
 
-`TAPPE_FPS` in `veri.js`, gruppo `fps`, 9 scene, ~3 minuti: **a quanti fotogrammi al secondo gira davvero il gioco**. Le scale leggono un
+`TAPPE_FPS` in `veri/tappe.js` (fuori da `veri.js`, che la scuola usa: [../scuola/prova-computer.md](../scuola/prova-computer.md)), gruppo `fps`, 9 scene, ~3 minuti: **a quanti fotogrammi al secondo gira davvero il gioco**. Le scale leggono un
 pixel a fine fotogramma per sapere quanto lavora la GPU, e così CPU e GPU vanno una dopo l'altra: il lavoro è giusto, gli fps sono più
 bassi del vero. Qui niente lettura (`TEMPI.fps`, `vero`): si contano solo gli intervalli fra un fotogramma e l'altro, come li vede chi gioca.
 
@@ -119,7 +119,7 @@ ordini di grandezza. I numeri veri li dà il telefono.
 
 ## Il codice
 
-`grafica/benchmark/veri.js` (le scene, `TAPPE_FPS`, `stima`, il giro dei fotogrammi, la GPU, gli avvisi, `proveCpu`), `veri/discese.js`,
+`grafica/benchmark/veri.js` (`stima`, il giro dei fotogrammi, la GPU, gli avvisi, `proveCpu`), `veri/tappe.js` (le scene), `veri/discese.js`,
 `sopra-vero.js`, `fattoria.js`, `asteroidi.js` (un gioco ciascuno), `tela.js`, `leggendario.js` (il corredo del cheat); il log in
 `log-veri.js` (`componiVeri`, `letturaVeri`, `spezza`, `conNote`). Nel sito spezzato `vite.config.js` tiene
 `grafica/benchmark/` fuori dal file `comune`: si carica a richiesta, e i modelli veri tirano dentro i giochi.
