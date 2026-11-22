@@ -32,6 +32,6 @@ con `atan2`, che i browser arrotondano diverso: serve solo al disegno e non entr
 
 ## Nei test
 
-`unita/bancarella-in-due` (regole, e due telefoni finti su una rete cattiva: `test/aiuto/sfide/cucina.mjs`), `integrazione/bancarella-in-due`
-(la prova da soli sempre; due pagine vere col servizio: `SERVIZIO=` come in `arena-sfida`, se no quella parte salta).
+`unita/bancarella-in-due` (regole, e due telefoni finti su una rete cattiva: `test/aiuto/sfide/cucina.mjs`), `integrazione/bancarella-cucina`
+(la prova da soli sempre; due pagine vere col servizio: `SERVIZIO=` come in `verifiche/arena-sfida`, se no quella parte salta).
 Bersagli: `[data-cucina-in-due]`, `[data-minuti-in-due]`, `[data-menu-in-due]`, `[data-prenota]`, `[data-di]`, `[data-fine-in-due]`.
