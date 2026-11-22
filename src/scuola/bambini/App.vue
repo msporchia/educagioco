@@ -13,6 +13,7 @@ import SenzaLezione from './viste/SenzaLezione.vue'
 import { VISTE } from '../giochi/viste.js'
 import { SCHEDE } from '../giochi/elenco.js'
 import { applicaPixel, scalaDel } from './pixel.js'
+import ProvaComputer from './viste/ProvaComputer.vue'
 
 const versione = __VERSIONE_SCUOLA__
 const PAZIENZA = 3000      // prima di dire «Sto ricollegando…» al primo collegamento
@@ -196,7 +197,14 @@ watch([codice, stato, cammino], () => {
 // «Prova la lezione» della maestra: parte senza servizio e non si ricorda (il PC della maestra non deve riaprirla ai bambini)
 const prova = ref(false)
 function chiudiProva() { globalThis.close(); prova.value = false; esci() }
+// la prova del computer, dal link della pagina della maestra (`#prova-computer`): ai bambini non si mostra (docs/scuola/prova-computer.md)
+const provaComputer = ref(false)
+function chiudiProvaComputer() { globalThis.close(); provaComputer.value = false }
 onMounted(() => {
+  if (globalThis.location?.hash === '#prova-computer') {
+    history.replaceState(null, '', location.pathname + location.search)
+    provaComputer.value = true
+  }
   const daProvare = G.provaDa(globalThis.location?.href)
   if (daProvare) {
     history.replaceState(null, '', location.pathname + location.search)
@@ -227,6 +235,7 @@ onUnmounted(() => { chiudiRete(); clearInterval(battito) })
       <span v-if="segno" class="segno" data-segno>{{ segno }}</span>
     </header>
 
+    <ProvaComputer v-if="provaComputer" @chiudi="chiudiProvaComputer" />
     <Codice v-if="schermo === 'codice'" @entra="entra" @senza="preparo = true" />
 
     <SenzaLezione v-else-if="schermo === 'senza'" @via="l => entraSenza(l)" @annulla="preparo = false" />

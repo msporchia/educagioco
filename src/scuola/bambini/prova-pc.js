@@ -4,20 +4,28 @@
 import { CPU, data } from '../../grafica/benchmark/log-veri.js'
 
 // in ordine dal più leggero: un PC che si pianta col 3D ha già detto il resto. Gli esercizi sono quelli delle prove della scuola;
-// `tela: false` per chi non disegna su una tela (si conta appena è montato)
+// `tela: false` per chi non disegna su una tela (si conta appena è montato). `massimo`: la scena al massimo, oltre a quella base:
+// `gioco` è il gioco stesso portato al suo peggio da `window.__estremo` (che registra lui), `veri` una scena della misura di casa
+// (grafica/benchmark/veri/: l'esplosione al secondo, lo scontro con sei mostri leggendari)
+const asteroidiVeri = () => import('../../grafica/benchmark/veri/asteroidi.js')
+const disceseVeri = () => import('../../grafica/benchmark/veri/discese.js')
 export const GIOCHI_PROVA = [
   { id: 'inglese', nome: 'English', tela: false, esercizio: { tipo: 'inglese', isola: 'prima', tappe: ['prima-colori'] } },
   { id: 'passo-passo', nome: 'Passo passo', esercizio: { tipo: 'passo', protagonista: 'coniglio', gradini: ['passi'] } },
   { id: 'robot', nome: 'Robot', esercizio: { tipo: 'robot', capitoli: ['cantiere'] } },
-  { id: 'castello', nome: 'Il castello', esercizio: { tipo: 'castello', tappa: 'bosco/Il sentiero' } },
-  { id: 'castle-battle', nome: 'Castle Battle', esercizio: { tipo: 'battaglia', tappa: 'ponte', difficolta: 'facile' } },
-  { id: 'survivors', nome: 'Survivors', esercizio: { tipo: 'tabelline', tabelline: [2], modo: 'prodotto', gioco: 'survivors' } },
-  { id: 'asteroidi', nome: 'Asteroidi', tred: true, esercizio: { tipo: 'tabelline', tabelline: [2], modo: 'prodotto', gioco: 'asteroidi' } },
+  { id: 'castello', nome: 'Il castello', massimo: 'gioco', esercizio: { tipo: 'castello', tappa: 'bosco/Il sentiero' } },
+  { id: 'castle-battle', nome: 'Castle Battle', massimo: 'gioco', esercizio: { tipo: 'battaglia', tappa: 'ponte', difficolta: 'facile' } },
+  { id: 'survivors', nome: 'Survivors', massimo: 'gioco', esercizio: { tipo: 'tabelline', tabelline: [2], modo: 'prodotto', gioco: 'survivors' } },
+  { id: 'asteroidi', nome: 'Asteroidi', tred: true, esercizio: { tipo: 'tabelline', tabelline: [2], modo: 'prodotto', gioco: 'asteroidi' },
+    massimo: 'veri', veri: { carica: asteroidiVeri, scena: { id: 'fps-ast-boom', nome: 'asteroidi, un\'esplosione al secondo', boom: true } } },
   { id: 'pozioni', nome: 'Pozioni', tred: true, esercizio: { tipo: 'pozioni', famiglie: ['massa'], gradini: ['banco', 'grande', 'grandi'] } },
   { id: 'cucina', nome: 'Cucina', tred: true, esercizio: { tipo: 'cucina', da: 1, a: 6 } },
-  { id: 'sotterraneo', nome: 'Sotterraneo', tred: true, esercizio: { tipo: 'tabelline', tabelline: [2], modo: 'prodotto', gioco: 'sotterraneo' } },
+  { id: 'sotterraneo', nome: 'Sotterraneo', tred: true, esercizio: { tipo: 'tabelline', tabelline: [2], modo: 'prodotto', gioco: 'sotterraneo' },
+    massimo: 'veri', veri: { carica: disceseVeri, scena: { id: 'fps-sot-6', nome: 'scontro nel sotterraneo, 6 mostri', mostri: 6, colpi: true } } },
 ]
-export const TEMPI = { rodaggio: 3000, misura: 12000 }       // ms: si scarta l'avvio, poi si conta
+/** Le scene di un gioco: quella base e, se c'è, quella al massimo. */
+export const sceneDi = g => (g.massimo ? ['base', 'massimo'] : ['base'])
+export const TEMPI = { rodaggio: 2500, misura: 10000 }       // ms: si scarta l'avvio, poi si conta
 export const SOGLIA_B = 40                                   // sotto, si prova la soluzione B
 const MEGLIO = 5                                             // B si tiene se dà almeno tanti fps in più
 
@@ -26,7 +34,7 @@ const SOFTWARE = /swiftshader|llvmpipe|softpipe|software|basic render/i
 
 /** Il nome della scheda video, senza il giro di ANGLE: «ANGLE (Intel, Intel(R) UHD Graphics 600 (0x3185) Direct3D11 …)» → «Intel(R) UHD Graphics 600». */
 export function nomeScheda(gpu) {
-  const s = String(gpu || '').trim()
+  const s = String(gpu || '').trim().replace(/,?\s*or similar$/i, '')
   const m = /^ANGLE \((.*)\)$/.exec(s)
   if (!m) return s || '?'
   const parti = m[1].split(/,\s*/)
@@ -47,25 +55,35 @@ export const provaB = (a, soglia = SOGLIA_B) => !!a && !a.errore && a.fps < sogl
 /** B si tiene se va davvero meglio. */
 export const tieniB = (a, b) => !!a && !!b && !b.errore && !a.errore && b.fps >= a.fps + MEGLIO
 
+const fpsCon = (s, conB) => (conB && s.b && !s.b.errore ? s.b : s.a)
+
 /**
- * Cosa dice la prova. `dati`: { info: { webgl2, gpu }, js, giochi: [{ id, a: misura, b: misura|null }] } con misura { fps, sotto30, fermi }
- * o { errore }. `scheda`: `video`, `processore` (il 3D lo fa il processore: va a scatti), `manca` (niente WebGL 2). Per gioco l'esito
- * con la grafica che terrà (B se è tenuta).
+ * Cosa dice la prova. `dati`: { info: { webgl2, gpu }, js, giochi: [{ id, scene: [{ tipo: 'base'|'massimo', a, b }] }] } con a e b
+ * { fps, sotto30, fermi } o { errore } (b solo se si è provata la grafica sgranata). `scheda`: `video`, `processore` (il 3D lo fa il
+ * processore: va a scatti), `manca` (niente WebGL 2). B si decide sulla scena peggiore e vale per tutto il gioco; per gioco l'esito
+ * della scena base e di quella al massimo, con la grafica che terrà.
  */
 export function verdetto(dati) {
   const i = (dati && dati.info) || {}
   const scheda = !i.webgl2 ? 'manca' : SOFTWARE.test(i.gpu || '') ? 'processore' : 'video'
   const fatti = new Map(((dati && dati.giochi) || []).map(g => [g.id, g]))
   const giochi = GIOCHI_PROVA.map(({ id, nome, tred }) => {
-    const g = fatti.get(id)
-    if (!g || !g.a) return { id, nome, esito: tred && scheda === 'manca' ? 'non-parte' : 'non-misurato', fps: null, b: null }
-    if (g.a.errore) return { id, nome, esito: 'non-parte', fps: null, b: null }
-    const conB = tieniB(g.a, g.b), m = conB ? g.b : g.a
-    return { id, nome, esito: esitoFps(m.fps), fps: m.fps, b: g.b ? (conB ? 'tenuta' : 'inutile') : null }
+    const g = fatti.get(id), scene = (g && g.scene) || []
+    const vuoto = { id, nome, fps: null, b: null, massimo: null }
+    if (!scene.length || !scene[0].a) return { ...vuoto, esito: tred && scheda === 'manca' ? 'non-parte' : 'non-misurato' }
+    const rotta = scene.find(s => s.a && s.a.errore)
+    if (rotta) return { ...vuoto, esito: 'non-parte', perche: `${rotta.tipo === 'massimo' ? 'al massimo: ' : ''}${rotta.a.errore}` }
+    const misurate = scene.filter(s => s.a)
+    const peggiore = misurate.reduce((x, y) => (y.a.fps < x.a.fps ? y : x))
+    const conB = tieniB(peggiore.a, peggiore.b)
+    const base = fpsCon(misurate[0], conB), mx = misurate.find(s => s.tipo === 'massimo')
+    return { id, nome, esito: esitoFps(base.fps), fps: base.fps, b: peggiore.b ? (conB ? 'tenuta' : 'inutile') : null,
+             massimo: mx ? esitoFps(fpsCon(mx, conB).fps) : null }
   })
   const js = dati && dati.js != null ? dati.js : null
   const cpu = js == null ? null : js <= CPU.veloce ? 'veloce' : js <= CPU.lenta ? 'media' : 'lenta'
-  return { scheda, gpu: nomeScheda(i.gpu), giochi, cpu, js }
+  // Chrome non dice più il modello vero: risponde con una famiglia, «…, or similar» (il modello è solo indicativo)
+  return { scheda, gpu: nomeScheda(i.gpu), simile: /or similar/i.test(i.gpu || ''), giochi, cpu, js }
 }
 
 export const FRASE_ESITO = {
@@ -96,10 +114,12 @@ export function resoconto(dati, { versione = '', ua = '', cpu = null, memoria = 
     `PROVA DEL COMPUTER DELLA SCUOLA ${data(quando)}${versione ? ' v' + versione : ''}${dati && dati.fermata ? ' (FERMATA A METÀ)' : ''}`,
     ...(String(dove).trim() ? [`Quale: ${String(dove).trim().slice(0, 200)}`] : []),
     `${sistema(ua)} | ${cpu ?? '?'} core${memoria ? `, ${memoria} GB` : ''} | schermo ${schermo} dpr ${dpr} | processore ${v.js ?? '?'} ms (${v.cpu ?? '?'})`,
-    `Scheda: ${v.gpu} (${{ video: 'scheda video', processore: 'DISEGNA IL PROCESSORE', manca: 'NIENTE WEBGL 2' }[v.scheda]})`,
+    `Scheda: ${v.simile ? 'simile a ' : ''}${v.gpu} (${{ video: 'scheda video', processore: 'DISEGNA IL PROCESSORE', manca: 'NIENTE WEBGL 2' }[v.scheda]})`,
     ...v.giochi.map(g => {
       const f = fatti.get(g.id)
-      return `${g.nome}: ${f ? misura(f.a) : 'non misurato'}${f && f.b ? ` → B: ${misura(f.b)}, ${g.b}` : ''}`
+      if (!f || !(f.scene || []).length) return `${g.nome}: non misurato`
+      const scene = f.scene.map(x => `${x.tipo === 'massimo' ? 'al massimo ' : ''}${misura(x.a)}${x.b ? ` → B ${misura(x.b)}` : ''}`)
+      return `${g.nome}: ${scene.join(' | ')}${g.b ? ` (B ${g.b})` : ''}`
     }),
   ]
   return righe.join('\n').slice(0, 3400)

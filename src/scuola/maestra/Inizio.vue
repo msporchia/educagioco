@@ -144,6 +144,10 @@ function apriFile(e) {
       <a class="bottone chiaro" href="./index.html" download="educagioco-classe.html" data-azione="scarica-pagina-bambini">Scarica il file per i PC dei bambini</a>
     </div>
     <CodicePerIPc />
+    <!-- la prova di un PC della classe: la pagina dei bambini aperta sulla prova, che ai bambini non si mostra (docs/scuola/prova-computer.md) -->
+    <h3>Prova un computer della classe</h3>
+    <p class="nota">Apri questo indirizzo sul computer da provare: i giochi girano da soli per tre-quattro minuti, poi premi «Invia il resoconto».</p>
+    <p class="copiabile indirizzo"><a :href="indirizzo + '#prova-computer'" target="_blank" rel="noopener" data-azione="prova-computer"><b>{{ indirizzo }}#prova-computer</b></a></p>
   </section>
 
   <section class="carta" data-storico>

@@ -46,19 +46,29 @@ function toccaTela(sel, fx, fy) {
 const PILOTI = {
   asteroidi: k => { tasto(k % 3 ? 'ArrowRight' : 'ArrowLeft'); tasto('Enter') },                        // punta e spara: colpi ed esplosioni
   'passo-passo': k => { const f = ['Backspace', 'Backspace', 'Backspace', 'ArrowRight', 'ArrowRight', 'ArrowUp', 'Enter', null, null, null]; const t = f[k % f.length]; if (t) tasto(t) },
-  castello: () => { tocca('[data-azione="chiama-onda"]') },                                                // le ondate
+  // il castello: due torri (senza conto: si misura il disegno) e le ondate, che senza mostri sarebbe una mappa ferma
+  castello: () => {
+    const td = window.__td, m = td?.motore?.()
+    if (m && td.fase.value === 'gioco' && m.torri.length < 2 && m.liberi().length) m.costruisci(td.TAPPE[td.tappaIdx.value].torri[0])
+    tocca('[data-azione="chiama-onda"]')
+  },
   sotterraneo: k => { if (!tocca('.sot-eroe[data-eroe]')) toccaTela('[data-tela="3d"]', 0.3 + 0.4 * ((k * 37) % 10) / 10, 0.3 + 0.4 * ((k * 53) % 10) / 10) },  // cammina
+}
+// al massimo (dopo `window.__estremo`): il castello chiama un'ondata dietro l'altra, che si sommano
+const AL_MASSIMO = {
+  castello: () => { if (!tocca('[data-azione="chiama-prossima"]')) tocca('[data-azione="chiama-onda"]') },
 }
 export const OGNI = 700
 
 /** Fa muovere il gioco finché non si chiama la funzione che torna: la guida si chiude (si sta misurando il gioco, non la riga), e
     una pausa messa dal gioco da sé (la pagina nascosta un momento) si toglie. */
-export function pilota(id) {
+export function pilota(id, { massimo = false } = {}) {
   let k = 0
+  const fai = (massimo && AL_MASSIMO[id]) || PILOTI[id]
   const t = setInterval(() => {
     tocca('[data-guida-spegni]')
     tocca('[data-pausa] [data-azione="riprendi"]')
-    try { PILOTI[id]?.(k++) } catch { /* il gioco è cambiato sotto: il prossimo colpo */ }
+    try { fai?.(k++) } catch { /* il gioco è cambiato sotto: il prossimo colpo */ }
   }, OGNI)
   return () => clearInterval(t)
 }

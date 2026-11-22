@@ -14,7 +14,7 @@ bambino (sotto).
 
 | Schermata | Quando | Cosa si vede |
 |---|---|---|
-| `codice` | nessun codice | un campo grande per quattro cifre (col tastierino numerico; spazi e altro si tolgono) e «Entra». `controllaCodice`: `no` → «Questo codice non c'è: controlla la lavagna», `rete` → «Non riesco a collegarmi: chiedi alla maestra». Sotto, piccoli, «Senza lezione» e «Prova questo computer» ([prova-computer.md](prova-computer.md)) |
+| `codice` | nessun codice | un campo grande per quattro cifre (col tastierino numerico; spazi e altro si tolgono) e «Entra». `controllaCodice`: `no` → «Questo codice non c'è: controlla la lavagna», `rete` → «Non riesco a collegarmi: chiedi alla maestra». Sotto, piccolo, «Senza lezione». La prova del computer non si vede qui: la apre il link della maestra (`#prova-computer`, [prova-computer.md](prova-computer.md)) |
 | `collego` | codice, nessuno `stato` ancora | «Mi collego alla classe…» |
 | `nome` | `stato.io` è `null` | i nomi della classe come tasti; un nome preso da un altro è grigio e non si tocca. In fondo «Non trovo il mio nome» → un campo → `sono({ nome })` |
 | `aspetta` | nome scelto, fase `attesa` | il nome e «Aspetta il via della maestra» |

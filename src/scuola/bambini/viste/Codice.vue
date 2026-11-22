@@ -3,14 +3,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { controllaCodice } from '../../comune/rete.js'
 import { pulisciCodice, codiceCompleto } from '../giro.js'
-import ProvaComputer from './ProvaComputer.vue'
 
 const emit = defineEmits(['entra', 'senza'])
 const codice = ref('')
 const errore = ref('')
 const controllo = ref(false)
 const campo = ref(null)
-const provaPc = ref(false)          // la prova del computer, prima della lezione (docs/scuola/prova-computer.md)
 const pronto = computed(() => codiceCompleto(codice.value) && !controllo.value)
 
 function scrivi(e) {
@@ -41,8 +39,6 @@ onMounted(() => campo.value?.focus())
     <button type="submit" class="bottone" data-entra :disabled="!pronto">{{ controllo ? 'Controllo…' : 'Entra' }}</button>
     <p v-if="errore" class="errore" data-codice-errore>{{ errore }}</p>
     <button type="button" class="link senza" data-azione="senza-lezione" @click="emit('senza')">Senza lezione (per la maestra)</button>
-    <button type="button" class="link prova" data-azione="prova-pc" @click="provaPc = true">Prova questo computer (per la maestra)</button>
-    <ProvaComputer v-if="provaPc" @chiudi="provaPc = false; campo?.focus()" />
   </form>
 </template>
 
@@ -58,5 +54,4 @@ onMounted(() => campo.value?.focus())
 .codice .bottone { min-width: 180px; font-size: 18px; padding: 14px 28px }
 .errore { font-size: 17px; color: var(--inchiostro); max-width: var(--colonna) }
 .senza { margin-top: 24px; font-size: 13px; opacity: .8 }
-.prova { margin-top: 4px; font-size: 13px; opacity: .8 }
 </style>
