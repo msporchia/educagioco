@@ -170,7 +170,8 @@ Nei test: `button[aria-label="pausa"]`, `[data-pausa]`,
   aspettano i test, invece di contare i millisecondi. Nei test:
   `[data-pronto]` su `.qz-velo` (la domanda), `[data-pausa]`,
   `[data-bottega]`, `[data-regalo-velo]`, `[data-caselle-abilita]`,
-  `[data-scegli-pozione]`, `[data-preparati]`, `.schermo.ing` e
+  `[data-scegli-pozione]`, `[data-preparati]`, `.pp` (Passo passo),
+  `[data-cassetta]` (il Robot), `.schermo.ing` e
   `[data-pagina]` d'inglese e di spagnolo (la domanda e il libro),
   `[data-dialogo] [data-scelte]`; `pronto` e `domandaPronta` in
   `test/aiuto/browser.mjs`. Una schermata nuova con la finestra cieca lo

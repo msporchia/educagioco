@@ -40,7 +40,7 @@ const suoi = computed(() => props.progetti.filter(p => !p.attrezzo))
 
 <template>
   <div class="cst-velo" @click.self="emit('chiudi')">
-    <div class="cst-foglio" data-cassetta>
+    <div class="cst-foglio" data-cassetta :data-pronto="!cieco || null">
       <button type="button" class="cst-chiudi" aria-label="chiudi" data-chiudi @click="emit('chiudi')">✕</button>
       <h3>Cosa deve fare il robot?</h3>
       <section v-for="g in gruppi" :key="g.nome" class="cst-gruppo">

@@ -88,6 +88,7 @@ const fermoPrima = ref(false)       // all'ultimo ▶ il coniglio si è fermato 
 
 let liv = null
 let cieco = false
+const sveglio = ref(true)          // lo stesso di `cieco`, a rovescio e a schermo: `data-pronto` (docs/core/interfaccia.md)
 let sbarra = 0
 let esitoInCorsa = null
 let partitoAlle = 0
@@ -369,7 +370,8 @@ onBeforeUnmount(() => {
 function finestraCieca() {
   clearTimeout(sbarra)
   cieco = true
-  sbarra = setTimeout(() => { cieco = false }, CIECA)
+  sveglio.value = false
+  sbarra = setTimeout(() => { cieco = false; sveglio.value = true }, CIECA)
 }
 
 /* ═══════════ entrare in un livello ═══════════
@@ -1023,7 +1025,7 @@ function indietro() {
     <Barra :titolo="titolo" guida="passo" monete :come="vista !== 'mappa'" @come="guida.alterna()" @indietro="indietro" @aiuto="v => guidaAperta = v" />
 
     <!-- `pp-largo`: mentre si gioca, su uno schermo largo e orizzontale il campo si stende (stile.css); la mappa no -->
-    <div class="pp" :class="{ 'pp-largo': vista !== 'mappa' }">
+    <div class="pp" :class="{ 'pp-largo': vista !== 'mappa' }" :data-pronto="sveglio || null">
       <Mappa v-if="vista === 'mappa'" :voci="voci" :sentieri="statoSentieri"
              :dove="doveSegnalino" :primo="primoProtagonista" :chi="state.player || ''"
              @gioca="avviaTappa" @senza-fine="vuoleSentiero">
