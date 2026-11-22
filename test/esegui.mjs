@@ -6,7 +6,9 @@
      node test/esegui.mjs unita        solo quelli che non aprono il browser
      node test/esegui.mjs integrazione solo quelli nel browser
      node test/esegui.mjs misure       solo le misure (docs/core/test.md)
-     node test/esegui.mjs animali      solo i file che contengono "animali"
+     node test/esegui.mjs verifiche    solo le verifiche a mano nel browser (docs/core/test.md)
+     node test/esegui.mjs animali      solo i file che contengono "animali" (unità e browser, non le misure)
+     node test/esegui.mjs integrazione/amici   solo quelli di quel gruppo
      node test/esegui.mjs --niente-build   non ricompila prima
      node test/esegui.mjs --tempo=600      alza il tempo massimo per test
      node test/esegui.mjs torri --scatti   lascia anche le foto in test/scatti/
@@ -50,13 +52,17 @@
 import { spawn } from 'node:child_process'
 import { readdirSync, existsSync, readFileSync, writeFileSync, mkdirSync, mkdtempSync,
          openSync, closeSync, rmSync } from 'node:fs'
-import { availableParallelism, freemem, tmpdir } from 'node:os'
+import { availableParallelism, cpus, freemem, tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve, relative } from 'node:path'
 
 const QUI = dirname(fileURLToPath(import.meta.url))
 const RADICE = resolve(QUI, '..')
-const GRUPPI = ['unita', 'misure', 'integrazione']
+const GRUPPI = ['unita', 'misure', 'integrazione', 'verifiche']
+// i gruppi che nessun giro prende da sé: si chiedono col loro nome (docs/core/test.md, «Le cartelle»)
+const A_RICHIESTA = ['misure', 'verifiche']
+// i gruppi che aprono Chrome sulla pagina costruita
+const NEL_BROWSER = ['integrazione', 'verifiche']
 
 const argomenti = process.argv.slice(2)
 const senzaBuild = argomenti.includes('--niente-build')
@@ -97,6 +103,85 @@ const CORSIE = Math.max(1, Math.min(8, Math.floor(availableParallelism() / 2), P
 const ALLA_VOLTA = Number(argomenti.find(a => a.startsWith('--alla-volta='))?.slice(13)) || CORSIE
 const strette = ALLA_VOLTA === CORSIE && CORSIE === PER_MEMORIA && CORSIE < 8
 
+/* ── I POSTI DELLA MACCHINA ──
+   Le corsie sono di un giro, i posti sono di tutti: due sessioni che
+   chiudono insieme da due worktree facevano sedici test alla volta, e
+   la memoria contata alla partenza non le ferma (il secondo parte quando
+   il primo non ha ancora aperto i suoi Chrome). Un test parte solo con
+   un posto in mano, e i posti sono la metà dei processori, fra tutti i
+   lanciatori accesi. Un posto è un file con dentro il pid di chi lo
+   tiene, creato con `wx` (o c'è o non c'è); chi muore senza lasciarlo
+   si riconosce dal pid che non risponde più. */
+const POSTI = Math.max(1, Math.floor(availableParallelism() / 2))
+const DOVE_I_POSTI = resolve(tmpdir(), 'educagioco-posti')
+const miei = new Set()
+let avvisato = false
+
+/* ── IL CARICO VERO ──
+   I posti contano i test, non quanto pesano, e non vedono chi non passa
+   da qui: una build, l'emulatore, un lanciatore di prima in un altro
+   worktree, una misura che gioca su quattro processi. Quindi si guarda
+   anche la macchina: quanta ne è occupata nell'ultimo secondo (i tempi
+   dei processori, `os.cpus()`), e sopra i tre quarti non parte un test
+   nuovo finché non scende. Le attese dei test sono tarate su un Chrome
+   che risponde: a macchina piena non rallentano, falliscono — ed è così
+   che un giro lanciato in compagnia tornava con dieci rossi che da soli
+   erano verdi.
+
+   Due eccezioni. Il primo test di un giro parte comunque (una macchina
+   occupata da altro non deve fermare tutto: uno alla volta si va
+   avanti). E fra due test del browser passa almeno un secondo, perché il
+   carico di chi è appena partito si veda prima di farne partire un
+   altro: otto Chrome che aprono insieme una pagina da 36 MB sono già il
+   picco che si vuole evitare. */
+const PIENA = 0.75
+let occupata = 0, inCorsa = 0, ultimoBrowser = 0, attesoPerCarico = 0
+const tempiCpu = () => cpus().reduce((n, c) => {
+  for (const k in c.times) n.tutto += c.times[k]
+  n.fermo += c.times.idle
+  return n
+}, { tutto: 0, fermo: 0 })
+let primaCpu = tempiCpu()
+setInterval(() => {
+  const ora = tempiCpu(), dt = ora.tutto - primaCpu.tutto
+  if (dt > 0) occupata = 1 - (ora.fermo - primaCpu.fermo) / dt
+  primaCpu = ora
+}, 1000).unref()
+function lasciaIPosti() {
+  for (const f of miei) try { rmSync(f) } catch (e) { /* già via */ }
+  miei.clear()
+}
+async function prendiPosto(t) {
+  mkdirSync(DOVE_I_POSTI, { recursive: true })
+  const browser = nelBrowser(t)
+  for (const da = Date.now(); ; ) {
+    const carica = inCorsa > 0 && (occupata > PIENA || (browser && Date.now() - ultimoBrowser < 1000))
+    for (let i = 0; i < POSTI && !carica; i++) {
+      const f = resolve(DOVE_I_POSTI, String(i))
+      try {
+        writeFileSync(f, String(process.pid), { flag: 'wx' })
+        miei.add(f); inCorsa++
+        if (browser) ultimoBrowser = Date.now()
+        return f
+      } catch (e) { /* preso */ }
+      try {
+        const pid = Number(readFileSync(f, 'utf8'))
+        if (pid) process.kill(pid, 0)              // lancia se quel lanciatore non c'è più
+      } catch (e) { if (e.code === 'ESRCH') try { rmSync(f) } catch (e2) { /* l'ha tolto un altro */ } }
+    }
+    if (!avvisato && occupata > PIENA && Date.now() - da > 3000) {
+      console.log(`· la macchina è piena (${Math.round(occupata * 100)}% dei processori occupati): aspetto prima di far partire altri test`)
+      avvisato = true
+    }
+    await new Promise(r => setTimeout(r, 250))
+    if (occupata > PIENA) attesoPerCarico += 250
+  }
+}
+function lasciaPosto(f) {
+  miei.delete(f); inCorsa--
+  try { rmSync(f) } catch (e) { /* già via */ }
+}
+
 /* Un test può chiedersi più tempo scrivendo `tempo: 900` fra i primi
    commenti (i primi 4000 caratteri: con 1200 le teste lunghe lo perdevano): le simulazioni lunghe sono legittime, purché lo dichiarino.
    Chi non dice niente ha il tempo normale, e se sfora è rotto.
@@ -124,6 +209,7 @@ function tempoDichiarato(file) {
    di soglia, è la natura del test — dichiararsi svelto non basterebbe. */
 const SOGLIA_SVELTA = 100
 const svelto = t => t.gruppo === 'unita' && t.suo < SOGLIA_SVELTA
+const nelBrowser = t => NEL_BROWSER.includes(t.gruppo)
 
 function raccogli() {
   const fuori = []
@@ -143,9 +229,25 @@ function raccogli() {
                      file, suo: tempoDichiarato(file) })
       }
   }
-  if (!filtri.length) return fuori
-  // il nome di un gruppo vuol dire quel gruppo e basta: «misure» non prende unita/griglia-misure
-  return fuori.filter(t => filtri.some(f => (GRUPPI.includes(f) ? t.gruppo === f : t.nome.includes(f))))
+  if (!filtri.length) return fuori.filter(t => !A_RICHIESTA.includes(t.gruppo))
+  return fuori.filter(t => filtri.some(f => preso(t, f)))
+}
+
+/* ── COSA PRENDE UN FILTRO ──
+   Il nome di un gruppo vuol dire quel gruppo e basta: «misure» non prende
+   unita/griglia-misure. `gruppo/nome` (`integrazione/amici`,
+   `misure/sotterraneo`) prende i file di quel gruppo che contengono il
+   nome. Un nome nudo prende i file che lo contengono nelle unità e nel
+   browser, **non nelle misure né nelle verifiche a mano**: `node
+   test/esegui.mjs sotterraneo` si portava dietro venticinque minuti di
+   partite finte su quattro processori, che è una taratura e non la prova
+   di chi ha toccato una schermata. Quelle si chiedono per nome di
+   gruppo, e senza filtri non partono. */
+function preso(t, f) {
+  if (GRUPPI.includes(f)) return t.gruppo === f
+  const [g, ...resto] = f.split('/')
+  if (resto.length && GRUPPI.includes(g)) return t.gruppo === g && t.nome.includes(resto.join('/'))
+  return !A_RICHIESTA.includes(t.gruppo) && t.nome.includes(f)
 }
 
 /* `raccogli` è un file dove tenere da parte quello che il test scrive,
@@ -157,16 +259,29 @@ function raccogli() {
    mentre un tubo sì: Chrome è un nipote, sopravvive al test fermato per
    il tempo, e finché ha in mano l'altro capo il 'close' non arriva — il
    lanciatore resterebbe appeso proprio sul test che doveva fermare. */
+const vivi = new Set()   // i capigruppo in corsa
+function fermaGruppo(pid) {
+  try { process.kill(-pid, 'SIGKILL') } catch (e) { /* già finito */ }
+}
+/* Un gruppo a sé non sente più il Ctrl-C del terminale: lo si passa a mano, e si lasciano liberi i posti presi. */
+for (const segnale of ['SIGINT', 'SIGTERM', 'SIGHUP'])
+  process.on(segnale, () => { for (const pid of vivi) fermaGruppo(pid); lasciaIPosti(); process.exit(130) })
+
 function esegui(comando, argomenti, opzioni = {}) {
   const { secondi = 0, raccogli = null, ...resto } = opzioni
   return new Promise(ok => {
     const fd = raccogli ? openSync(raccogli, 'w') : null
-    const p = spawn(comando, argomenti, { cwd: RADICE, stdio: raccogli ? ['ignore', fd, fd] : 'inherit', ...resto })
+    /* `detached`: il test è il capo di un gruppo di processi suo, e allo scadere del tempo si ferma il gruppo intero. Fermando
+       solo lui restavano vivi i nipoti: i quattro processi di una misura (`aiuto/parallelo.mjs`) finivano il loro compito da
+       orfani, a un processore pieno ciascuno, e Chrome pure. */
+    const p = spawn(comando, argomenti, { cwd: RADICE, stdio: raccogli ? ['ignore', fd, fd] : 'inherit', detached: true, ...resto })
     if (raccogli) closeSync(fd)                    // il figlio ha il suo: questo non serve più
+    vivi.add(p.pid)
     let scaduto = false
-    const sveglia = secondi ? setTimeout(() => { scaduto = true; p.kill('SIGKILL') }, secondi * 1000) : null
+    const sveglia = secondi ? setTimeout(() => { scaduto = true; fermaGruppo(p.pid) }, secondi * 1000) : null
     const fine = codice => {
       clearTimeout(sveglia)
+      vivi.delete(p.pid)
       let uscita = ''
       if (raccogli) try { uscita = readFileSync(raccogli, 'utf8'); rmSync(raccogli) } catch (e) { /* già letto */ }
       ok({ codice: scaduto ? 'tempo' : (codice ?? 1), uscita })
@@ -205,7 +320,7 @@ function ricordaTempi(esiti) {
 }
 
 const stima = (t, tempi) => tempi[chiave(t)]
-  ?? (t.gruppo === 'integrazione' ? 30 : t.suo >= SOGLIA_SVELTA ? 5 : 1)
+  ?? (nelBrowser(t) ? 30 : t.suo >= SOGLIA_SVELTA ? 5 : 1)
 
 const raccolti = raccogli()
 if (!raccolti.length) {
@@ -223,7 +338,7 @@ if (!prove.length) {
 /* la scuola (`integrazione/scuola*`) prova le sue due pagine in `dist-scuola/`, non `dist/`: si costruisce quella, e la
    casa solo se c'è anche un altro test nel browser */
 const diScuola = t => t.gruppo === 'integrazione' && t.nome.startsWith('scuola')
-const serveCasa = prove.some(t => t.gruppo === 'integrazione' && !diScuola(t))
+const serveCasa = prove.some(t => nelBrowser(t) && !diScuola(t))
 if (prove.some(diScuola) && !senzaBuild) {
   console.log('· ricompilo dist-scuola/')
   const { codice } = await esegui('npm', ['run', 'build:scuola'], { stdio: 'ignore' })
@@ -266,6 +381,7 @@ async function corsia() {
     const etichetta = chiave(t)
     const testa = `── ${etichetta} ${'─'.repeat(Math.max(0, 56 - etichetta.length))}`
     if (dalVivo) console.log(testa)
+    const posto = await prendiPosto(t)
     const inizio = Date.now()
     const suo = Math.max(TEMPO, t.suo)
     // IN_PARALLELO: le misure di tempo sanno di avere accanto altri test (inglese-isole, spagnolo-isole)
@@ -276,6 +392,7 @@ async function corsia() {
     if (!dalVivo) process.stdout.write(testa + '\n' + uscita + (uscita.endsWith('\n') || !uscita ? '' : '\n'))
     if (codice === 'tempo')
       console.log(`   ⏱ fermato dopo ${suo}s — se ci mette davvero tanto, scriva "tempo: ${suo * 2}" in cima`)
+    lasciaPosto(posto)
     esiti.push({ ...t, codice, ms: Date.now() - inizio })
     console.log('')
   }
@@ -299,6 +416,8 @@ for (const e of esiti) {
 console.log('═'.repeat(60))
 console.log((rotti.length ? `❌ ${rotti.length} test su ${esiti.length} non passano`
                           : `✅ tutti e ${esiti.length} passano`) + `, in ${durata((Date.now() - partenza) / 1000)}`)
+if (attesoPerCarico / corsie > 5000)
+  console.log(`(a macchina piena le corsie hanno aspettato ${durata(attesoPerCarico / corsie / 1000)} ciascuna)`)
 if (lenti.length)
   console.log(`saltati ${lenti.length} test lenti: node test/esegui.mjs`)
 process.exitCode = rotti.length ? 1 : 0
