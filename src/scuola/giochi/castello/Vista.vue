@@ -22,16 +22,16 @@ const emojiPronte = () => {
 }
 
 let guasto = false
-function nonParte() { if (!guasto) { guasto = true; emit('guasto') } }
+function nonParte(motivo = '') { if (!guasto) { guasto = true; emit('guasto', motivo) } }   // il motivo lo scrive la prova del computer
 
 onMounted(async () => {
-  if (!limite) return nonParte()
+  if (!limite) return nonParte('esercizio storto')
   try {
     const [, id] = await Promise.all([emojiPronte(), bambinoInMemoria(props.alunno.id, props.alunno.nome)])
     chi.value = id
-  } catch { nonParte() }
+  } catch { nonParte('il profilo non si prepara') }
 })
-onErrorCaptured(() => { nonParte(); return false })
+onErrorCaptured(e => { nonParte(`errore: ${(e && e.message) || e}`); return false })
 
 // il gioco la manda già raccontata (views/castello/limite.js): ogni operazione in colonna è una domanda chiusa
 const riferisci = r => emit('risposta', r)

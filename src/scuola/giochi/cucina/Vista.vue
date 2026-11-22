@@ -16,17 +16,17 @@ const chi = shallowRef('')           // il profilo pronto: prima il gioco non si
 const radice = ref(null)
 
 let guasto = false, guarda = null
-function nonParte() { if (!guasto) { guasto = true; emit('guasto') } }
+function nonParte(motivo = '') { if (!guasto) { guasto = true; emit('guasto', motivo) } }   // il motivo lo scrive la prova del computer
 
 onMounted(async () => {
-  if (!limite) return nonParte()
+  if (!limite) return nonParte('esercizio storto')
   // la cucina che non si disegna (o perde il 3D per strada) offre «riprova» (components/bancarella/Cucina.vue): a scuola si chiama la maestra
-  guarda = new MutationObserver(() => { if (radice.value?.querySelector('[data-senza3d]')) nonParte() })
+  guarda = new MutationObserver(() => { if (radice.value?.querySelector('[data-senza3d]')) nonParte('senza 3D') })
   guarda.observe(radice.value, { childList: true, subtree: true })
-  try { chi.value = await bambinoInMemoria(props.alunno.id, props.alunno.nome) } catch { nonParte() }
+  try { chi.value = await bambinoInMemoria(props.alunno.id, props.alunno.nome) } catch { nonParte('il profilo non si prepara') }
 })
 onBeforeUnmount(() => guarda?.disconnect())
-onErrorCaptured(() => { nonParte(); return false })
+onErrorCaptured(e => { nonParte(`errore: ${(e && e.message) || e}`); return false })
 
 // la risposta arriva già raccontata dal gioco (motore/bancarella/limite.js), solo dove il resto lo conta il bambino
 const riferisci = r => emit('risposta', r)

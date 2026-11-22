@@ -22,17 +22,17 @@ const emojiPronte = () => {
 }
 
 let guasto = false
-function nonParte() { if (!guasto) { guasto = true; emit('guasto') } }
+function nonParte(motivo = '') { if (!guasto) { guasto = true; emit('guasto', motivo) } }   // il motivo lo scrive la prova del computer
 
 onMounted(async () => {
   try {
     const [, id] = await Promise.all([emojiPronte(), bambinoInMemoria(props.alunno.id, props.alunno.nome)])
     chi.value = id
-  } catch { return nonParte() }
+  } catch { return nonParte('il profilo non si prepara') }
   // il cielo che non si accende mostra il tasto per riaccenderlo (docs/asteroidi/grafica-3d.md): a scuola si torna alle schede
-  setTimeout(() => { if (radice.value?.querySelector('[data-riaccendi-tela]')) nonParte() }, 0)
+  setTimeout(() => { if (radice.value?.querySelector('[data-riaccendi-tela]')) nonParte('la tela 3D si è persa') }, 0)
 })
-onErrorCaptured(() => { nonParte(); return false })
+onErrorCaptured(e => { nonParte(`errore: ${(e && e.message) || e}`); return false })
 
 // alla maestra va ogni colpo; il blocco conta la domanda una volta, quando si chiude (`ultima`). La forma: docs/scuola/giochi.md
 // la chiave per la maestra: il calcolo a mente (le chiavi del gioco cominciano con «calc:»), il nascosto («9 × ? = 63»), il risultato

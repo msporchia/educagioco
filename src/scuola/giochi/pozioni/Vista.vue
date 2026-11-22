@@ -18,22 +18,22 @@ const chi = shallowRef('')           // il profilo pronto (muto, fascia bassa): 
 const radice = ref(null)
 
 let guasto = false
-function nonParte() { if (!guasto) { guasto = true; emit('guasto') } }
+function nonParte(motivo = '') { if (!guasto) { guasto = true; emit('guasto', motivo) } }   // il motivo lo scrive la prova del computer
 
 // il banco che non si disegna, subito o perso dopo, mostra «riprova» (docs/pozioni/regole.md): a scuola si chiama la maestra
 let guardia = null
 function guarda() {
-  if (radice.value?.querySelector('[data-senza-3d]')) nonParte()
+  if (radice.value?.querySelector('[data-senza-3d]')) nonParte('senza 3D')
 }
 
 onMounted(async () => {
-  if (!limite) return nonParte()
-  try { chi.value = await bambinoInMemoria(props.alunno.id, props.alunno.nome) } catch { return nonParte() }
+  if (!limite) return nonParte('esercizio storto')
+  try { chi.value = await bambinoInMemoria(props.alunno.id, props.alunno.nome) } catch { return nonParte('il profilo non si prepara') }
   guardia = new MutationObserver(guarda)
   guardia.observe(radice.value, { childList: true, subtree: true })
 })
 onBeforeUnmount(() => guardia?.disconnect())
-onErrorCaptured(() => { nonParte(); return false })
+onErrorCaptured(e => { nonParte(`errore: ${(e && e.message) || e}`); return false })
 
 // la risposta arriva già raccontata dal gioco (docs/scuola/giochi.md)
 const riferisci = r => emit('risposta', r)

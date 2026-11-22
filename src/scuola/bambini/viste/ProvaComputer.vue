@@ -22,7 +22,7 @@ const dati = shallowRef(null)
 const dove = ref('')
 const avviso = ref('')
 const macchina = ref({})
-let fermare = false, guasto = false
+let fermare = false, guasto = false, motivo = ''   // il perché del gioco che si è arreso (la sua Vista lo dice)
 const PER_GIOCO = t => t.rodaggio + t.misura + 1500      // ms: avvio scartato, conto, caricamento (a occhio)
 const secondi = Math.round(GIOCHI_PROVA.reduce((n, g) => n + sceneDi(g).length, 0) * PER_GIOCO(TEMPI) / 60000)
 
@@ -52,18 +52,18 @@ async function inScenaDavvero(g, tetto = g.tred ? TETTO_SCENA.tred : TETTO_SCENA
 // suo peggio da sé (`window.__estremo`, che registra lui)
 async function giocaUno(g, scala, tempi, massimo = false) {
   applicaPixel(scala)
-  guasto = false
+  guasto = false; motivo = ''
   inScena.value = { id: g.id, esercizio: g.esercizio, chiave: `${g.id}-${scala}-${massimo}` }
   await nextTick()
   let ferma = pilota(g.id)
   try {
-    if (!(await inScenaDavvero(g)) && !fermare) return { errore: guasto ? 'il gioco non parte' : `non è comparso in ${(g.tred ? TETTO_SCENA.tred : TETTO_SCENA.tela) / 1000} secondi` }
+    if (!(await inScenaDavvero(g)) && !fermare) return { errore: guasto ? nonParte() : `non è comparso in ${(g.tred ? TETTO_SCENA.tred : TETTO_SCENA.tela) / 1000} secondi` }
     if (massimo) {
       if (typeof window.__estremo !== 'function') return { errore: 'non sa andare al massimo' }
       window.__estremo(); ferma(); ferma = pilota(g.id, { massimo: true })
     }
     const m = await contaFotogrammi(tempi, () => fermare || guasto)
-    return guasto ? { errore: 'il gioco non parte' } : m
+    return guasto ? { errore: nonParte() } : m
   } finally {
     ferma()
     inScena.value = null
@@ -71,7 +71,9 @@ async function giocaUno(g, scala, tempi, massimo = false) {
     await nextTick(); await pausa(400)      // il contesto 3D di un gioco si chiude prima del prossimo
   }
 }
-onErrorCaptured(() => { guasto = true; return false })
+const nonParte = () => `il gioco non parte${motivo ? ` (${String(motivo).slice(0, 120)})` : ''}`
+const arreso = m => { if (!guasto) motivo = m || ''; guasto = true }
+onErrorCaptured(e => { arreso(`errore: ${(e && e.message) || e}`); return false })
 
 // una scena della misura di casa (grafica/benchmark/veri/), nel palco: la sua misura dice fps, la parte sotto i 30 e i fermi
 async function misuraVeri(g, scala, tempi) {
@@ -144,7 +146,7 @@ const SCHEDA = { video: 'il 3D lo fa la scheda video', processore: 'il 3D lo fa 
   <div class="prova-pc" :class="{ corre: stato === 'corre' }" data-prova-pc>
     <div v-if="stato === 'corre'" class="palco" data-prova-pc-palco>
       <component :is="VISTE[inScena.id]" v-if="inScena" :key="inScena.chiave" :esercizio="inScena.esercizio" :alunno="ALUNNO"
-                 :onRisposta="() => {}" @guasto="guasto = true" />
+                 :onRisposta="() => {}" @guasto="arreso" />
     </div>
     <button class="chiudi" type="button" aria-label="chiudi" data-azione="prova-pc-chiudi" @click="chiudi">✕</button>
 

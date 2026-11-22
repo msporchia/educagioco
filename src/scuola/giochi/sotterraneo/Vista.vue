@@ -15,18 +15,18 @@ const chi = shallowRef('')           // il profilo pronto: prima il gioco non si
 const radice = ref(null)
 
 let guasto = false
-function nonParte() { if (!guasto) { guasto = true; emit('guasto') } }
+function nonParte(motivo = '') { if (!guasto) { guasto = true; emit('guasto', motivo) } }   // il motivo lo scrive la prova del computer
 
 let limite = null
 try { limite = { domande: pescatore(props.esercizio), difficolta: difficoltaDi(props.esercizio) } } catch { /* esercizio storto: nonParte al montaggio */ }
 
 onMounted(async () => {
-  if (!limite) return nonParte()
-  try { chi.value = await bambinoInMemoria(props.alunno.id, props.alunno.nome) } catch { return nonParte() }
+  if (!limite) return nonParte('esercizio storto')
+  try { chi.value = await bambinoInMemoria(props.alunno.id, props.alunno.nome) } catch { return nonParte('il profilo non si prepara') }
   // senza WebGL 2 l'entrata lo dice e offre «torno ai giochi»: a scuola si torna alle schede
-  setTimeout(() => { if (radice.value?.querySelector('[data-senza-3d]')) nonParte() }, 0)
+  setTimeout(() => { if (radice.value?.querySelector('[data-senza-3d]')) nonParte('senza 3D') }, 0)
 })
-onErrorCaptured(() => { nonParte(); return false })
+onErrorCaptured(e => { nonParte(`errore: ${(e && e.message) || e}`); return false })
 
 const riferisci = e => emit('risposta', raccontaSotterraneo(e))
 </script>
@@ -35,7 +35,7 @@ const riferisci = e => emit('risposta', raccontaSotterraneo(e))
   <div ref="radice" class="sotterraneo" data-gioco="sotterraneo">
     <div class="colonna">
       <!-- il gioco esce verso casa solo se qualcosa è andato storto (il 3D perso): si torna alle schede -->
-      <Sotterraneo v-if="chi" :key="chi" :limite="limite" @risposta="riferisci" @vai="nonParte" />
+      <Sotterraneo v-if="chi" :key="chi" :limite="limite" @risposta="riferisci" @vai="dove => nonParte(`è uscito dal gioco (${dove})`)" />
     </div>
   </div>
 </template>

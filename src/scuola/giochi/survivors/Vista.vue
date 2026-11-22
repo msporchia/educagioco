@@ -14,16 +14,16 @@ const emit = defineEmits(['risposta', 'guasto'])
 const chi = shallowRef('')           // il profilo pronto: prima il gioco non si monta
 
 let guasto = false
-function nonParte() { if (!guasto) { guasto = true; emit('guasto') } }
+function nonParte(motivo = '') { if (!guasto) { guasto = true; emit('guasto', motivo) } }   // il motivo lo scrive la prova del computer
 
 let limite = null
 try { limite = { domande: pescatore(props.esercizio), difficolta: difficoltaDi(props.esercizio) } } catch { /* esercizio storto: nonParte al montaggio */ }
 
 onMounted(async () => {
-  if (!limite) return nonParte()
-  try { chi.value = await bambinoInMemoria(props.alunno.id, props.alunno.nome) } catch { nonParte() }
+  if (!limite) return nonParte('esercizio storto')
+  try { chi.value = await bambinoInMemoria(props.alunno.id, props.alunno.nome) } catch { nonParte('il profilo non si prepara') }
 })
-onErrorCaptured(() => { nonParte(); return false })
+onErrorCaptured(e => { nonParte(`errore: ${(e && e.message) || e}`); return false })
 
 // ogni carta pagata è una domanda chiusa: giusta o no, la carta non torna (docs/scuola/giochi.md)
 const riferisci = e => emit('risposta', raccontaSurvivors(e))

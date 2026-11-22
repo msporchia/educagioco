@@ -51,7 +51,8 @@ fermata a metà non cambia il ricordo; rifatta, i giochi che non ne hanno più b
 ## Il verdetto e l'invio
 
 Per la maestra: la scheda video (senza il giro di ANGLE), una riga per gioco con l'esito, «(grafica sgranata)» se tiene B, «al
-massimo: …» se ha la scena al massimo, e sotto il perché di un «non parte»; poi le frasi (`frasi`):
+massimo: …» se ha la scena al massimo, e sotto il perché di un «non parte»: «non è comparso in N secondi», o il motivo che dà la
+Vista del gioco quando si arrende («il gioco non parte (errore: …)», «(senza 3D)», «(è uscito dal gioco …)»); poi le frasi (`frasi`):
 - **il 3D lo fa il processore** (SwiftShader, llvmpipe, il driver base di Windows): in rosso, con dove accendere in Chrome
   l'accelerazione grafica;
 - **niente WebGL 2**: i giochi 3D non partono;
