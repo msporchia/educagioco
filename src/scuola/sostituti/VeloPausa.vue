@@ -15,7 +15,7 @@ function riprendi() { if (pronto.value) emit('riprendi') }
 </script>
 
 <template>
-  <div class="pa-velo" data-pausa :class="{ pronto }" @click="riprendi">
+  <div class="pa-velo" data-pausa :data-pronto="pronto || null" :class="{ pronto }" @click="riprendi">
     <div class="pa-foglio">
       <div class="pa-segno" aria-hidden="true"><i></i><i></i></div>
       <h2>In pausa</h2>

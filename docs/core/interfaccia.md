@@ -165,7 +165,15 @@ Nei test: `button[aria-label="pausa"]`, `[data-pausa]`,
   vede.** Due secondi muti dopo uno sbaglio sembrano un tasto rotto, il dito
   ripreme e il tocco atterra sulla schermata dopo, nello stesso punto.
   Perciò 320 ms ciechi al montaggio (`CIECA` in `src/quiz/Domanda.vue`) e
-  una riga che si riempie per dire quanto manca.
+  una riga che si riempie per dire quanto manca. Passata la finestra, la
+  schermata lo dice con `data-pronto` sulla sua radice: è il segno che
+  aspettano i test, invece di contare i millisecondi. Nei test:
+  `[data-pronto]` su `.qz-velo` (la domanda), `[data-pausa]`,
+  `[data-bottega]`, `[data-regalo-velo]`, `[data-caselle-abilita]`,
+  `[data-scegli-pozione]`, `[data-preparati]`, `[data-pagina]` d'inglese,
+  `[data-dialogo] [data-scelte]`; `pronto` e `domandaPronta` in
+  `test/aiuto/browser.mjs`. Una schermata nuova con la finestra cieca lo
+  mette anche lei.
 
 ## Un `v-if` che non si spegne mai non rimonta niente
 

@@ -320,7 +320,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="qz-velo">
+  <div class="qz-velo" :data-pronto="pronta || null">
     <div class="qz-carta">
       <!-- titolo e giudizio: il secondo solo se un grande l'ha acceso, e allora la riga compare anche senza titolo -->
       <div v-if="titolo || giudiziAccesi" class="qz-testa">

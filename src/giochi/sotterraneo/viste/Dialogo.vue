@@ -65,7 +65,7 @@ const dati = p => ({
             data-riga v-bind="dati(pagina)">{{ pagina.testo }}</span>
       <i v-if="!ultima" class="sot-dialogo-avanti" data-avanti-pagina aria-hidden="true"></i>
     </button>
-    <div v-if="ultima" class="sot-dialogo-scelte" :class="{ 'sot-ciechi': !pronte }" data-scelte>
+    <div v-if="ultima" class="sot-dialogo-scelte" :class="{ 'sot-ciechi': !pronte }" data-scelte :data-pronto="pronte || null">
       <button v-for="s in scelte" :key="s.che + (s.missione || '')" type="button" class="sot-dialogo-scelta"
               :class="'sot-scelta-' + s.che" :data-scelta="s.che" :data-missione="s.missione || null"
               @click="scegli(s)">

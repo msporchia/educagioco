@@ -125,6 +125,9 @@ le ore giocate né i programmi a metà.
 | `costruttore:<id>` | i programmi del Robot, con una `v` loro | [`../costruttore/`](../costruttore/README.md) |
 | `generale:<id>` | i piani del Generale (tolto il 29/10/2026) lasciati a metà: nessuno li scrive più, `eliminaGiocatore` li cancella ancora | — |
 
+Nei test: `window.__archivioFermo()` si risolve quando l'archivio non ha
+più niente in coda (non forza la scrittura: aspetta quella del gioco), e
+`leggiProfilo` e `semina` lo aspettano prima di toccare l'archivio.
 Nei test: `apriGioco` semina un giocatore di prova da sé, gli id di prova
 sono `GIOCATORE` e `ALTRO`, e `giocatori: null` prova il primo avvio vero
 (vedi [test.md](test.md)). Per l'IndexedDB e il localStorage finti che

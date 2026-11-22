@@ -167,6 +167,18 @@ export function save(key, value) {
 // arrivato nel frattempo resta per il giro dopo.
 let codaFlush = Promise.resolve();
 
+/* Per le prove: si risolve quando non c'è più niente da scrivere (né in attesa dei 350 ms né a metà di un giro). Non forza
+   la scrittura: aspetta quella del gioco, così chi rilegge l'archivio non deve aspettare a tempo (docs/core/archivio.md). */
+export async function archivioFermo() {
+  for (;;) {
+    while (timer || pending.size) await new Promise(ok => setTimeout(ok, 20));
+    const giro = codaFlush;
+    await giro;
+    if (!timer && !pending.size && giro === codaFlush) return;   // nel frattempo non è arrivato altro
+  }
+}
+if (typeof window !== 'undefined') window.__archivioFermo = archivioFermo;
+
 export function flush() {
   clearTimeout(timer); timer = null;
   const giro = codaFlush.then(eseguiFlush);

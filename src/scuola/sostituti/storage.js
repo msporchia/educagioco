@@ -8,6 +8,7 @@ export async function detectBackend() { backend.ready = true; return backend.kin
 export async function load(chiave) { return mem.has(chiave) ? copia(mem.get(chiave)) : null }
 export function save(chiave, valore) { mem.set(chiave, copia(valore)) }
 export async function flush() {}
+export async function archivioFermo() {}
 export async function remove(chiave) { mem.delete(chiave) }
 export async function chiavi(prefisso = '') { return [...mem.keys()].filter(k => k.startsWith(prefisso)).sort() }
 export async function travasaRipiego() { return 0 }

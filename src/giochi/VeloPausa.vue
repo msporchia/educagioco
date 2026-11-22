@@ -30,7 +30,7 @@ function esci() {
 
 <template>
   <!-- il tocco si prende sul velo intero, non solo sul tasto: una mano sola lo gestisce -->
-  <div class="pa-velo" data-pausa :class="{ pronto }" @click="riprendi">
+  <div class="pa-velo" data-pausa :data-pronto="pronto || null" :class="{ pronto }" @click="riprendi">
     <div class="pa-foglio">
       <!-- disegnate e non scritte: l'emoji ⏸ a colori sembrerebbe il tasto di un'altra app -->
       <div class="pa-segno" aria-hidden="true"><i></i><i></i></div>

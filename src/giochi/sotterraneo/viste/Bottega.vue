@@ -148,7 +148,7 @@ const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean)
 </script>
 
 <template>
-  <Cornice alta data-bottega :data-mercante-aperto="chi.chiave" @chiudi="$emit('chiudi')"
+  <Cornice alta data-bottega :data-pronto="pronto || null" :data-mercante-aperto="chi.chiave" @chiudi="$emit('chiudi')"
            @fuori="e => pronto && $emit('fuori', e)">
     <header class="sot-targa">
       <span class="sot-targa-ritratto">

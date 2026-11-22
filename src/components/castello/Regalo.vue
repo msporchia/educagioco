@@ -29,7 +29,7 @@ function scegli(id) {
 </script>
 
 <template>
-  <div class="re-velo" data-regalo-velo :class="{ pronto }">
+  <div class="re-velo" data-regalo-velo :data-pronto="pronto || null" :class="{ pronto }">
     <div class="re-foglio">
       <div class="re-cima">
         <span class="re-dono" aria-hidden="true">🎁</span>
