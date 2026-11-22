@@ -10,15 +10,15 @@ import { PEZZI as DIPINTE, ATLANTE as FOGLIO_CASERME, PIAZZOLA } from '../dati/c
 import { PEZZI as FORTEZZE, ATLANTE as FOGLIO_FORTEZZE } from '../dati/fortezze-dipinte.js'
 import { PEZZI as OPERE, ATLANTE as FOGLIO_OPERE } from '../dati/opere-disegnate.js'
 import { ATLANTE as FOGLIO_TRUPPE } from '../dati/truppe-dipinte.js'
+import { PORTE as PORTE_PONTE, ATLANTE as FOGLIO_PORTE } from '../dati/porte-dal-ponte.js'
 import { SCALA, fotogramma, fotogrammiDi, DIPINTE as TRUPPE_DIPINTE, RISOLUZIONE } from './figure.js'
-import { PONTE_DIPINTO, PEZZO_DI_MONDO } from '../dati/terreni-pronti.js'
+import { PONTE_DIPINTO } from '../dati/terreni-pronti.js'
 import { disegnaEdificio } from './edifici.js'
 import { Terreno } from './terreno.js'
 import { Atmosfera } from './atmosfera.js'
 
-// la porta sul ponte dipinto è larga quanto lui (il 10% dell'immagine, coi parapetti) e un poco di più: le torri stanno sui piloni
-// di testata. Più stretta sembrava posata lì. Sul ponte disegnato a monte resta la sua misura
-const PORTA_DIPINTA = PEZZO_DI_MONDO.w * 0.1 * 1.06, PORTA_DISEGNATA = 70
+// la porta sul ponte disegnato a monte; su quello dipinto la porta è ricavata dal ponte e sa da sé dove va
+const PORTA_DISEGNATA = 70
 // Tutto è piccolo e il campo è largo: `ZOOM` è la misura delle figure rispetto al mondo.
 const ZOOM = 0.5
 // quanto mondo si vede almeno, di lato: le piazzole coi loro bordi. Il resto dello schermo è terreno in più (docs/arena/grafica.md)
@@ -76,7 +76,7 @@ export class Campo {
   }
 
   async caricaAtlanti() {
-    [this.caserme, this.fortezze, this.opere, this.truppe] = await Promise.all([FOGLIO_CASERME, FOGLIO_FORTEZZE, FOGLIO_OPERE, FOGLIO_TRUPPE].map(src => this.atlante(src, src !== FOGLIO_TRUPPE)))
+    [this.caserme, this.fortezze, this.opere, this.truppe, this.porte] = await Promise.all([FOGLIO_CASERME, FOGLIO_FORTEZZE, FOGLIO_OPERE, FOGLIO_TRUPPE, FOGLIO_PORTE].map(src => this.atlante(src, src !== FOGLIO_TRUPPE && src !== FOGLIO_PORTE)))
     if (!this.opere || !this.truppe) throw new Error('atlante delle opere o delle truppe non caricato')     // `prepara` riprova
   }
 
@@ -374,20 +374,29 @@ export class Campo {
     if (cs.riposo > 0) { c.font = `${u(11)}px "Emoji Gioco", system-ui, sans-serif`; c.textAlign = 'center'; c.fillText('💤', x - u(24), y - u(20)) }
   }
 
-  /* la porta in fondo al ponte: intera, rotta o crollata, e gli stendardi sulle torri finché regge.
-     Quella di chi gioca la vediamo da dietro (`:dietro`), se il posto ce l'ha */
+  /* la porta in fondo al ponte: intera, rotta o crollata, e gli stendardi sulle torri finché regge */
   muro(c, mu, ora) {
     const x = this.X(mu.x), stato = mu.hp <= 0 ? 'crollata' : mu.hp / mu.max < 0.5 ? 'rotta' : 'intera'
-    const dietro = mu.lato === 'io' && this.fortezza(`porta:@:${stato}:dietro`)
-    const [foglio, [sx, sy, w, h]] = dietro?.[0] ? dietro : this.fortezza(`porta:@:${stato}`)
-    const largo = (PONTE_DIPINTO.includes(this.terreno.chiave) ? PORTA_DIPINTA : PORTA_DISEGNATA) * this.s, alto = largo * h / w, piede = this.Y(mu.y) + 6 * this.s
+    // sul ponte dipinto è ricavata dal ponte (strumenti/sprite/porte-dal-ponte.py) e va esattamente dove dice, sopra il dipinto;
+    // crollata non c'è niente: restano i pilastri del ponte
+    if (this.porte && PORTE_PONTE[`${this.terreno.chiave}:${mu.lato}:intera`]) {
+      if (mu.hp <= 0) return
+      const [sx, sy, w, h, wx, wy, ww, wh] = PORTE_PONTE[`${this.terreno.chiave}:${mu.lato}:${stato}`]
+      c.save()
+      if (mu.fl > 0) c.globalAlpha = 0.72
+      c.drawImage(this.porte.io, sx, sy, w, h, this.X(wx), this.Y(wy), ww * this.s, wh * this.s)
+      c.restore()
+      if (mu.hp < mu.max) this.barra(c, x, this.Y(wy) - 5, this.m(40), mu.hp / mu.max)
+      return
+    }
+    const [foglio, [sx, sy, w, h]] = this.fortezza(`porta:@:${stato}`)
+    const largo = PORTA_DISEGNATA * this.s, alto = largo * h / w, piede = this.Y(mu.y) + 6 * this.s
     c.save()
     if (mu.fl > 0) c.globalAlpha = 0.72
     c.drawImage(foglio[mu.lato], sx, sy, w, h, x - largo / 2, piede - alto, largo, alto)
     c.restore()
     if (mu.hp <= 0) return
-    // la porta dipinta ha le sue bandiere: quelle in codice solo sulla porta disegnata a monte
-    if (foglio !== this.fortezze) for (const v of [-1, 1]) this.bandiera(c, x + v * 24 * this.s, piede - 27 * this.s, 12 * this.s, v, mu.lato, ora)
+    for (const v of [-1, 1]) this.bandiera(c, x + v * 24 * this.s, piede - 27 * this.s, 12 * this.s, v, mu.lato, ora)
     if (mu.hp < mu.max) this.barra(c, x, piede - alto - 5, this.m(40), mu.hp / mu.max)
   }
 

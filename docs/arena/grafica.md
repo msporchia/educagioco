@@ -113,14 +113,20 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
 - **I terreni dipinti entrano tutti insieme**: `terreni-arena.py` li usa solo quando ci sono tutti e quattro, perché uno solo in mezzo ai disegni stona. Ora ci sono: il ponte delle colline è ancora largo e tocca le caserme ai lati, si rifà (voce 8).
 - **Sul ponte si cammina fra i parapetti** (`CAMPO.ponte`, in `separa()`): chi non ci passa si mette in fila, chi vola ci passa sopra. Il limite è la misura del piano dei dipinti, meno mezza truppa.
 - **Un terreno dipinto ha il suo ponte** (`PONTE_DIPINTO` di `dati/terreni-pronti.js`), e il gioco non ci mette il suo: sta fra le rive e largo il 10% dell'immagine, se no tocca le caserme ai lati.
-  **La porta è larga quanto il ponte dipinto**, un poco di più (`PORTA_DIPINTA` in `scena/campo.js`): le torri stanno sui piloni di testata.
-  Larga 70 come sul ponte disegnato sembrava posata lì. Sulle colline il ponte è ancora il doppio (voce 8), e la porta lì stona finché non si rifà.
+- **La porta è il ponte** (`strumenti/sprite/porte-dal-ponte.py`, `dati/porte-dal-ponte.js`): sul ponte dipinto non si posa una porta
+  dipinta a parte, la si ricava dai pixel del ponte. Le torri sono i due pilastri di una testata, alzati copiando il loro fusto; fra loro un
+  muretto merlato fatto con la fila di pietre che attraversa il piano lì, col portone in mezzo. In cima quella del nemico, in fondo quella di chi
+  gioca, con la sbarra (la si guarda da dietro). Il pezzo sa il suo rettangolo di mondo e va esattamente sopra il dipinto, senza misure del campo.
+  Rotta: merli caduti, crepe, portone sfondato. **Crollata non c'è niente**: restano i pilastri del ponte, senza macerie (l'utente).
+  Gli stendardi hanno già il colore della squadra: il canyon ha i cristalli azzurri, e il ricolore li farebbe rossi.
+  Dove stanno pilastri e fila di pietre, per ogni terreno: `sorgenti/arena/porte-dal-ponte.json`; un dipinto nuovo si rimisura.
+  Provato: le porte dipinte a parte (fogli 9, 9b e poi una per posto, ChatGPT), anche larghe quanto il ponte: non si fondono mai, perché
+  sono viste di fronte su una mappa vista dall'alto, con la loro luce e il loro contorno; e ChatGPT, chiesto di modificare il ponte,
+  ridisegna tutta la scena.
 - **Il ponte e la porta** (`arena-disegni/opere.js`) prendono legno e pietra dal posto. Il ponte ha le assi fra due travi
   con le spalle di pietra; la porta due torri merlate con lo stendardo e il portone, che si crepa sotto i due terzi e
-  sotto un terzo della vita; crollata, resta il cumulo. Il foglio 9 ha castello e porta (intera, rotta,
-  crollata) per ogni posto, col fondo trasparente: il ponte sta nel terreno (`strumenti/sprite/fortezze-arena.py`, `dati/fortezze-dipinte.js`).
-  **La porta di chi gioca si vede da dietro** (`porta:<posto>:<stato>:dietro`, foglio 9b): il campo si guarda da sotto, e la sua faccia col portone
-  guarda il nemico. Un posto che non ce l'ha usa quella dal davanti. Le porte dipinte hanno le loro bandiere: quelle in codice solo sulle disegnate.
+  sotto un terzo della vita; crollata, resta il cumulo. Servono solo sul ponte disegnato a monte. Il foglio 9 ha il castello di ogni posto
+  col fondo trasparente (`strumenti/sprite/fortezze-arena.py`, `dati/fortezze-dipinte.js`); le sue porte e quelle del 9b non entrano più.
 - **Mancano**: i fogli 10 e 11, e le pose di morte delle truppe.
 
 ## Il quadro e i comandi

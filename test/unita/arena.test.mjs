@@ -15,6 +15,8 @@ import { firmaEquilibrio } from '../../src/giochi/arena/motore/firma.js'
 import { FIRMA, NEMICO, NEMICO_PER_LIVELLO } from '../../src/giochi/arena/dati/taratura.js'
 import { guastiDeiDettagli, dettaglioTruppa, dettaglioAzione, ruoloDi } from '../../src/giochi/arena/motore/dettagli.js'
 import { guastiDelleFigure } from '../../src/giochi/arena/scena/figure.js'
+import { PORTE as PORTE_PONTE } from '../../src/giochi/arena/dati/porte-dal-ponte.js'
+import { PONTE_DIPINTO } from '../../src/giochi/arena/dati/terreni-pronti.js'
 import { guastiDelTerreno } from '../../strumenti/sprite/arena-disegni/terreno.js'
 import { firmaDisegni } from '../../strumenti/sprite/arena-disegni/firma.mjs'
 import { FIRMA as FIRMA_DISEGNI } from '../../src/giochi/arena/dati/opere-disegnate.js'
@@ -267,6 +269,12 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   uguale('perdere zero', stellePer({ vinto: false, vitaBase: 0.9 }), 0)
   const gg = guastiDelleFigure()
   controlla('le figure delle truppe esistono', gg.length === 0, gg.join(' · '))
+  // le porte ricavate dal ponte (docs/arena/grafica.md): ogni ponte dipinto ha le sue, sopra il ponte, il nemico in cima
+  for (const posto of PONTE_DIPINTO) for (const lato of ['io', 'nem']) for (const stato of ['intera', 'rotta']) {
+    const p = PORTE_PONTE[`${posto}:${lato}:${stato}`], centro = p && p[4] + p[6] / 2, piede = p && p[5] + p[7]
+    controlla(`${posto}: la porta ${stato} ${lato === 'io' ? 'di chi gioca' : 'del nemico'} c'è, sul ponte`,
+              p && Math.abs(centro - CAMPO.corsia) < 6 && (lato === 'nem' ? piede < CAMPO.fiume.alto : piede > CAMPO.fiume.basso - 10), JSON.stringify(p))
+  }
   const ga = guastiDellAlbo([manifesto])
   controlla('il manifesto e il suo albo stanno in piedi', ga.length === 0, ga.join(' · '))
   for (const t of CAMPAGNA) {

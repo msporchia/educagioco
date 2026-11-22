@@ -1,0 +1,21 @@
+{
+  "_": "Dove stanno, in pixel del dipinto terreno-<posto>.png, i due pilastri di ogni testata del ponte (il cappello, col braciere o il cristallo che ha sopra: x0, y0, x1, y1) e la `fascia`, la pietra di cui si fa il muretto: di solito la fila di blocchi che attraversa il piano lì, e allora il suo fondo è il piede del muretto; se no `piede` lo dice. `su` è la porta del nemico, `giu` quella di chi gioca; `alzo` (36 di difetto) quanto salgono le torri. Le colline hanno ancora il ponte largo il doppio (voce 8 di DA-GENERARE.md): rifatto il dipinto, si rimisurano. Lo legge strumenti/sprite/porte-dal-ponte.py.",
+  "posti": {
+    "bosco": {
+      "su": { "pilastri": [[655, 390, 695, 417], [842, 390, 880, 417]], "fascia": [658, 392, 693, 408], "piede": 425 },
+      "giu": { "pilastri": [[655, 493, 695, 520], [842, 493, 880, 520]], "fascia": [658, 495, 693, 511], "piede": 553 }
+    },
+    "palude": {
+      "su": { "pilastri": [[676, 361, 716, 396], [815, 361, 855, 396]], "fascia": [716, 404, 815, 416] },
+      "giu": { "pilastri": [[676, 501, 716, 535], [815, 501, 855, 535]], "fascia": [716, 554, 815, 574] }
+    },
+    "neve": {
+      "su": { "pilastri": [[688, 370, 725, 400], [813, 370, 850, 400]], "fascia": [725, 405, 813, 417] },
+      "giu": { "pilastri": [[688, 513, 725, 543], [813, 513, 850, 543]], "fascia": [725, 548, 813, 563] }
+    },
+    "lava": {
+      "su": { "pilastri": [[673, 337, 718, 393], [818, 337, 863, 393]], "fascia": [718, 398, 818, 412] },
+      "giu": { "pilastri": [[673, 482, 718, 543], [818, 482, 863, 543]], "fascia": [718, 548, 818, 565] }
+    }
+  }
+}
