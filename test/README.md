@@ -1,13 +1,15 @@
 # I test
 
 ```
-npm test                 il giro di ogni giorno: senza browser — una ventina di secondi
+npm test                 il giro di ogni giorno: senza browser — un paio di minuti
 npm run test:unita       lo stesso comando, per esteso
-npm run test:svelto      solo quelli sotto il secondo — mentre si scrive, quattro secondi
-npm run test:browser     solo quelli nel browser — Chrome, un minuto e mezzo
-npm run test:tutto       tutto: unità e browser, ricompila prima — prima di pubblicare
+npm run test:svelto      le unità che non si dichiarano lente — mentre si scrive, un minuto
+npm run test:browser     solo quelli nel browser — Chrome, una decina di minuti
+npm run test:tutto       unità e browser, ricompila prima — prima di pubblicare
+npm run test:misure      l'equilibrio dei giochi — solo a chi l'ha toccato, fino a 25 minuti
 
-node test/esegui.mjs pozioni        solo i file che contengono "pozioni"
+node test/esegui.mjs pozioni        i file che contengono "pozioni", unità e browser
+node test/esegui.mjs integrazione/pozioni   solo quelli nel browser
 node test/esegui.mjs --niente-build non ricompilare (se hai appena compilato)
 node test/esegui.mjs --tempo=600    alza il tempo massimo per test
 node test/esegui.mjs --svelti       solo i test sotto il secondo
@@ -22,10 +24,10 @@ fila vale più del novanta per cento dell'intera suite (misurato in
 [`docs/core/tempi-dei-test.md`](../docs/core/tempi-dei-test.md)) — quindi si chiede
 solo per «estrema necessità»: si è appena toccata *quella* schermata e si
 vuole esserne sicuri prima di committare. In quel caso il modo giusto non
-è `npm run test:browser` (tutti insieme, un minuto e mezzo anche otto
-alla volta) ma **un file solo**: `node test/esegui.mjs pozioni` prova solo
-`integrazione/pozioni` (e `unita/pozioni`, se esiste un file con lo stesso
-nome — vedi più sotto). `npm run test:tutto` è il giro completo: prima di
+è `npm run test:browser` (tutti insieme, una decina di minuti anche otto
+alla volta) ma **un file solo**: `node test/esegui.mjs integrazione/pozioni`.
+I tempi veri e le regole del carico stanno in
+[`docs/core/tempi-dei-test.md`](../docs/core/tempi-dei-test.md). `npm run test:tutto` è il giro completo: prima di
 pubblicare, o quando si vuole la certezza di prima che questo file
 esistesse.
 
@@ -227,7 +229,5 @@ lo stato di una partita guarda anche se la partita c'è ancora.
 
 ## Cosa resta da fare
 
-`integrazione/app.test.mjs` e `integrazione/torri.test.mjs` stampano ancora un
-JSON e passano comunque: falliscono solo se vanno in crash. Vanno portati su
-`aiuto/verifica.mjs` come gli altri, così un cambiamento di comportamento si
-vede invece di finire in un log che non legge nessuno.
+`integrazione/app.test.mjs` stampa ancora un JSON e passa comunque: fallisce
+solo se va in crash. Il resto sta in `docs/core/da-fare.md`, «Le prove».

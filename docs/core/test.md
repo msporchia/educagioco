@@ -9,17 +9,20 @@ ripete.
 
 | quando | cosa | costa |
 |---|---|---|
-| mentre si scrive | `npm run test:svelto` | ~4 s |
-| a ogni commit | `npm test` (= `npm run test:unita`), niente browser né build | ~15 s |
-| toccata una schermata, o l'equilibrio di un gioco | `node test/esegui.mjs <nome>`, un file solo | secondi |
-| prima del push | `npm run test:tutto`: unità, misure e browser | ~1,5 min |
-| ogni tanto | `npm run test:misure` | ~30 s |
+| mentre si scrive | `npm run test:svelto` | ~1 min |
+| a ogni commit | `npm test` (= `npm run test:unita`), niente browser né build | ~2 min |
+| toccata una schermata | `node test/esegui.mjs integrazione/<nome>`, un file solo | secondi |
+| prima del push | `npm run test:tutto`: unità e browser | ~13 min |
+| toccato l'equilibrio di un gioco | `npm run test:misure`, o `node test/esegui.mjs misure/<nome>` | fino a 25 min |
+
+I numeri sono quelli misurati in [tempi-dei-test.md](tempi-dei-test.md), e
+sono troppi: il perché e cosa resta da fare sta lì e in
+[da-fare.md](da-fare.md).
 
 - **Le unità girano a ogni commit**: costano secondi, non c'è motivo di
   risparmiarle.
-- **Il browser gira prima del push, non prima di ogni commit.** Un minuto
-  e mezzo per ogni commit di un pomeriggio è un quarto d'ora che non
-  compra niente: sui telefoni finisce la **punta**, non i passaggi. È la
+- **Il browser gira prima del push, non prima di ogni commit**: sui
+  telefoni finisce la **punta**, non i passaggi. È la
   regola dei commit a blocchi applicata alle prove — un commit può non
   stare in piedi da solo, la coerenza si verifica dove si pubblica.
 - **Un agente lancia `node test/esegui.mjs --niente-build`** (con un filtro
@@ -29,14 +32,27 @@ ripete.
   `test/integrazione/` o in `test/misure/` lo trova chi lo lancia a mano.
   Motivo in più per chiederlo quando si tocca lo schermo o l'equilibrio.
   La CI non ha il compito di verificare la bilanciatura di un gioco.
-- Il nome di un gruppo (`unita`, `misure`, `integrazione`) prende quel
-  gruppo e basta. Un altro filtro prende i file che *contengono* il nome,
-  in tutte le cartelle: `node test/esegui.mjs pozioni` gira
-  `unita/pozioni` **e** `integrazione/pozioni` (ci sono una ventina di
-  nomi in comune), quindi apre Chrome anche se si voleva provare solo i
-  dati.
+- **Le misure e le verifiche non entrano in nessun giro**: né in
+  `test:tutto` né sotto un nome (`node test/esegui.mjs sotterraneo` se le
+  portava dietro, 25 minuti). Sono la prova di chi ha toccato quella
+  parte: si chiedono.
+- **Una taratura si lancia solo dopo un cambio significativo del
+  bilanciamento** (i numeri dei mostri, della roba, dei prezzi, delle
+  ondate). Per tutto il resto non dice niente e costa minuti: non si
+  lancia «per sicurezza».
+- Il nome di un gruppo (`unita`, `misure`, `integrazione`, `verifiche`)
+  prende quel
+  gruppo e basta; `gruppo/nome` i file di quel gruppo che contengono il
+  nome. Un nome nudo prende unità **e** browser: `node test/esegui.mjs
+  pozioni` gira `unita/pozioni` e `integrazione/pozioni` (i nomi in comune
+  sono una settantina), quindi apre Chrome anche se si voleva provare
+  solo i dati; `unita/pozioni` no.
+- **Più giri insieme si spartiscono la macchina**: il lanciatore prende un
+  posto per test fra quelli della macchina e non ne fa partire di nuovi
+  sopra i tre quarti dei processori occupati. Chi trova la macchina
+  piena aspetta, e lo scrive.
 
-## Le quattro cartelle
+## Le cartelle
 
 Un file per argomento; il lanciatore raccoglie da solo ogni `*.test.mjs`,
 anche nelle sottocartelle. Un test nuovo non si rifà né il browser né i
@@ -59,14 +75,55 @@ controlli: importa da `../aiuto/`.
   dito. Il lanciatore ricompila prima, se non gli si dice
   `--niente-build`. `integrazione/scuola*` apre invece le due pagine di
   `dist-scuola/`, e per quelli si ricompila la scuola.
+- **`test/verifiche/`** — Chrome come l'integrazione, ma a richiesta come
+  le misure (`npm run test:verifiche`, `node test/esegui.mjs
+  verifiche/<nome>`): le prove che misurano o fanno guardare invece di
+  dire sì o no (gli fps veri delle scene, una tavola di figure, un
+  pannello a sei larghezze), o che costano minuti per una parte che si
+  tocca di rado. Chi tocca quella parte le lancia; nessun giro le prende.
 - **`test/aiuto/`** — `verifica.mjs` (`controlla`, `uguale`, `nota`,
-  `riassunto`), `browser.mjs` (apre Chrome, semina o rilegge un profilo,
-  azzera, scatta), `livello.mjs` (banco di un livello del Generale),
+  `riassunto`, `blocco` per le prove indipendenti di un file),
+  `browser.mjs` (apre Chrome, semina o rilegge un profilo, azzera,
+  scatta, il dito vero con `ditoDi`), `livello.mjs` (banco di un livello del Generale),
   `sito.mjs` (il sito finto per il service worker), `servizio-scuola.mjs`
   (il servizio della scuola in locale, colla logica vera).
 
+## Cosa va nel browser, e cosa no
+
+Un file nel browser costa secondi e una scena da disegnare; un'unità
+millisecondi. Queste sono regole di casa, non divieti: uno sviluppo nuovo
+le scavalca se il beneficio è reale, e lo dice in una riga in testa al
+file (cosa prova che altrimenti non si proverebbe). Di regola:
+
+- **Le meccaniche si provano senza disegnarle.** Un prezzo, un danno, una
+  luce, chi vince: è il motore, in `unita/`, con `src/` importato. Un test
+  che apre Chrome per leggere `window.__gioco.motore…` con `page.evaluate`
+  e confrontare numeri è un'unità che costa cento volte tanto.
+- **Nel browser va un comportamento che solo lì esiste**, e uno per
+  blocco: il tocco vero (il click fantasma, la soglia del dito), una
+  misura a schermo (questo pannello non copre quello), il salvataggio
+  riletto dopo una ricarica, il passaggio fra due schermate, il service
+  worker, la console pulita.
+- **Al punto da provare si arriva seminando**, non giocando: `semina()`, i
+  cheat dell'indirizzo, i ganci delle prove (`__mondo3d.vai`). Una partita
+  giocata per arrivare a un cartello prova la partita, costa minuti e si
+  rompe per ragioni che non c'entrano.
+- **Un controllo deve poter fallire.** `controlla('…', true)` dopo
+  un'attesa è un'attesa, non un controllo; un `.catch(() => null)` seguito
+  da `nota(…)`, o un `if (await x.count())` attorno ai controlli, fanno
+  passare il file quando la cosa da provare non c'è nemmeno.
+- **Una preparazione, tanti controlli**: aprire Chrome e la pagina costa 5
+  secondi, entrare in una scena 3D di più. Quello che parte dalla stessa
+  semina sta nello stesso file, non in sei file che rifanno l'ingresso.
+- **Una misura da guardare, un banco, una tavola di figure** non sono
+  test: stanno in `strumenti/` col loro comando.
+
 ## Le regole per scriverne uno
 
+- **Si aspetta la condizione, non si guarda subito.** Il gioco rimanda le
+  scritture di 350 ms, la domanda è cieca per 320, un foglio si chiude un
+  fotogramma dopo: chi controlla nell'istante passa solo finché Chrome è
+  lento. `leggiProfilo` aspetta da sé la scrittura rimandata.
 - **Le foto non si fanno da sole.** Nessun test guarda i pixel: gli scatti
   servono a un occhio umano, sono spenti e si chiedono con `--scatti` (o
   `SCATTI=1`). Mai `page.screenshot`: si passa da `scatto(page, nome)`, che
@@ -102,10 +159,10 @@ controlli: importa da `../aiuto/`.
 ## Otto alla volta
 
 I test girano **insieme**: otto, o la metà dei processori se sono meno di
-sedici, e non più di uno per giga di memoria libera (due giri che chiudono
-insieme non si mandano in swap). Ognuno è già un processo a sé col suo
-Chrome e il suo archivio, quindi nessun test deve saperlo; in fila le
-attese delle animazioni si sommano, più di dieci minuti contro uno e mezzo.
+sedici, non più di uno per giga di memoria libera, e mai a macchina piena
+(i posti e il carico: [tempi-dei-test.md](tempi-dei-test.md)). Ognuno è
+già un processo a sé col suo Chrome e il suo archivio, quindi nessun test
+deve saperlo.
 
 - L'uscita di ogni test si stampa intera quando finisce.
 - I lunghi partono per primi: il lanciatore ricorda i tempi in

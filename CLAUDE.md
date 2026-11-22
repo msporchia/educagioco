@@ -28,15 +28,17 @@ una o due frasi, non la storia di come ci si è arrivati: quella la tiene
 npm ci                 # installazione pulita (non npm install)
 npm run dev            # server di sviluppo
 npm run build          # produce dist/index.html, il file unico
-npm test               # le unità: senza browser, una quindicina di secondi
-npm run test:svelto    # solo i test sotto il secondo, mentre si scrive
-npm run test:browser   # solo dentro Chrome, un minuto e mezzo
-npm run test:misure    # l'equilibrio dei giochi (partite finte, la mappa inglese)
-npm run test:tutto     # tutto, misure e browser compresi: prima di pubblicare
+npm test               # le unità: senza browser, un paio di minuti
+npm run test:svelto    # le unità che non si dichiarano lente, mentre si scrive
+npm run test:browser   # solo dentro Chrome, una decina di minuti
+npm run test:misure    # le tarature (partite finte): solo dopo un cambio significativo del bilanciamento, fino a 25 minuti
+npm run test:verifiche # le verifiche a mano nel browser: solo a chi ha toccato quella parte
+npm run test:tutto     # unità e browser: prima di pubblicare
 npm run test:commenti  # fallisce se il codice è cambiato oltre ai commenti
 npm run build:scuola   # le due pagine della scuola in dist-scuola/ (docs/scuola/)
 npm run dev:scuola     # le pagine della scuola in sviluppo, porta 5174
-node test/esegui.mjs animali            # solo i file che contengono "animali"
+node test/esegui.mjs animali            # i file che contengono "animali", unità e browser
+node test/esegui.mjs integrazione/animali   # solo quelli nel browser
 node test/esegui.mjs --niente-build     # non ricompilare prima
 node test/esegui.mjs torri --scatti     # e lascia anche le foto
 node test/esegui.mjs --alla-volta=1     # uno alla volta (di solito otto)
@@ -45,13 +47,16 @@ node test/esegui.mjs --alla-volta=1     # uno alla volta (di solito otto)
 **La cadenza.** Le unità girano **a ogni commit**: costano secondi. Il
 browser gira **prima del push**, non prima di ogni commit: sui telefoni
 finisce la punta, non i passaggi. Chi ha toccato una schermata lancia il suo
-file (`node test/esegui.mjs pozioni`). Nel checkout condiviso la build
+file (`node test/esegui.mjs integrazione/pozioni`), non la famiglia intera
+(`sotterraneo` sono 128 file). Più giri insieme si spartiscono la macchina:
+il lanciatore aspetta quando è piena. Nel checkout condiviso la build
 la fa solo chi pubblica; un agente in un worktree suo la fa lì (il `dist/` è
 del suo worktree) e non usa `--niente-build` con una build vecchia, che prova
 un altro gioco. La CI lancia
 solo le unità, quindi un guasto che vive in `test/integrazione/` o in
 `test/misure/` (l'equilibrio dei giochi) lo scopre solo chi l'ha lanciato a
-mano. Tutti i comandi, gli strumenti che riscrivono
+mano; le misure sono tarature, e si lanciano solo dopo un cambio
+significativo del bilanciamento. Tutti i comandi, gli strumenti che riscrivono
 file e i banchi di prova: `docs/core/comandi.md`.
 
 ## La mappa
