@@ -1,13 +1,14 @@
 <script setup>
 // L'esercizio di un blocco della lezione (docs/scuola/esercizi.md), a passi: il gioco, cosa si chiede, quanto è difficile.
 // Una scelta fatta si richiude in una riga (`Fatta.vue`) sopra quella da fare, e «Cambia» la riapre; finite tutte, il blocco
-// se ne accorge (`completo`) e si chiude. docs/scuola/quaderno.md
-import { ref, reactive, computed, watch } from 'vue'
+// se ne accorge (`completo`) e si chiude. docs/scuola/editor.md
+import { ref, reactive, computed, watch, nextTick } from 'vue'
 import { valido, descrivi, giochiPer, giocoDi, PESI, GIOCHI, DIFFICOLTA, difficoltaDi, materieDelGioco, mescolaPiuCose, NIENTE } from '../comune/esercizi.js'
 import ParteEsercizio from './ParteEsercizio.vue'
 import TesseraGioco from './TesseraGioco.vue'
 import ElencoDomande from './ElencoDomande.vue'
 import Fatta from './Fatta.vue'
+import AnteprimaGioco from './AnteprimaGioco.vue'
 import { cosaSiFa } from './utili.js'
 import { ICONE } from '../comune/icone-giochi.js'
 
@@ -43,9 +44,18 @@ function scrivi(nuove, gioco = qualeGioco(), d = difficoltaDi(e.value)) {
 const qualeGioco = () => (vuoto.value ? e.value.gioco ?? null : giocoDi(e.value))
 const gioco = computed(qualeGioco)
 const schedaDelGioco = computed(() => GIOCHI.find(g => g.id === gioco.value) || null)
+// il gioco guardato nel carosello: toccarlo lo mostra sotto (il video, cosa fa), sceglierlo è un tasto a parte
+const visto = ref(null)
+const guardato = computed(() => GIOCHI.find(g => g.id === (visto.value ?? gioco.value)) || GIOCHI[0])
+const fila = ref(null)
+function guarda(id) {
+  visto.value = id
+  nextTick(() => fila.value?.querySelector(`[data-gioco="${id}"]`)?.scrollIntoView?.({ inline: 'center', block: 'nearest', behavior: 'smooth' }))
+}
+const accanto = verso => guarda(GIOCHI[(GIOCHI.indexOf(guardato.value) + verso + GIOCHI.length) % GIOCHI.length].id)
 // cosa gli si può chiedere, detto alla maestra: le materie del catalogo che accetta, o il suo contenuto
 const siChiede = computed(() => {
-  const m = materieDelGioco(gioco.value)
+  const m = materieDelGioco(guardato.value.id)
   if (m.length === 1 && m[0].voci.length === 1) return m[0].voci[0].nome
   return m.map(x => x.nome).join(', ')
 })
@@ -85,6 +95,7 @@ function giocoScelto(id) {
   scegliGioco(id)
   if (id !== prima) { fatte.cosa = false; fatte.difficolta = false }
   aperto.value = null
+  visto.value = null
 }
 function cosaFatta() { if (valido(e.value)) { fatte.cosa = true; aperto.value = null } }
 const descrizione = computed(() => (valido(e.value) ? cosaSiFa({ ...senzaGioco(e.value), gioco: gioco.value }) : ''))
@@ -98,16 +109,27 @@ watch(completo, (ora, prima) => { if (ora && !prima) emit('completo') })
   <div class="scelta-esercizio" :data-esercizio="dove">
     <!-- il gioco: fatto, una riga; da fare, tutti i giochi e la scheda di quello toccato -->
     <Fatta v-if="!mostra('gioco')" etichetta="Il gioco" :valore="schedaDelGioco.nome" :immagine="ICONE[gioco]?.src || ''" passo="gioco"
-           @cambia="aperto = 'gioco'" />
+           @cambia="aperto = 'gioco'; guarda(gioco)" />
+    <!-- un carosello: toccare un gioco lo fa vedere sotto, col video e cosa fa; si sceglie col tasto -->
     <div v-else class="gruppo" data-scegli-gioco>
-      <span class="titoletto">A che gioco?</span>
-      <div class="giochi">
-        <TesseraGioco v-for="g in GIOCHI" :key="g.id" :gioco="g" :scelta="gioco === g.id" piccola @click="giocoScelto(g.id)" />
+      <span class="titoletto">A che gioco? <span class="nota">Tocca un gioco per vederlo.</span></span>
+      <div class="carosello">
+        <button class="freccia" aria-label="il gioco prima" data-azione="gioco-prima" @click="accanto(-1)">‹</button>
+        <div ref="fila" class="fila-giochi">
+          <TesseraGioco v-for="g in GIOCHI" :key="g.id" :gioco="g" :scelta="gioco === g.id" :guardata="guardato.id === g.id" piccola
+                        @click="guarda(g.id)" />
+        </div>
+        <button class="freccia" aria-label="il gioco dopo" data-azione="gioco-dopo" @click="accanto(1)">›</button>
       </div>
-      <div v-if="schedaDelGioco" class="scheda-gioco" data-scheda-gioco>
-        <b>{{ schedaDelGioco.nome }}</b>
-        <span>{{ schedaDelGioco.spiega }}</span>
-        <span class="nota"><b>Si può chiedere:</b> {{ siChiede }}</span>
+      <div class="scheda-gioco" data-scheda-gioco :data-guardato="guardato.id">
+        <AnteprimaGioco :gioco="guardato.id" />
+        <div class="testo-gioco">
+          <b>{{ guardato.nome }}</b>
+          <span>{{ guardato.spiega }}</span>
+          <span class="nota"><b>Si può chiedere:</b> {{ siChiede }}</span>
+          <button class="bottone" data-azione="scegli-gioco" @click="giocoScelto(guardato.id)">
+            {{ gioco === guardato.id ? 'Tieni' : 'Scegli' }} {{ guardato.nome }}</button>
+        </div>
       </div>
     </div>
 
@@ -148,10 +170,20 @@ watch(completo, (ora, prima) => { if (ora && !prima) emit('completo') })
 .scelta-esercizio { display:flex; flex-direction:column; gap:16px }
 .gruppo { display:flex; flex-direction:column; gap:8px }
 .titoletto { font-size:14px; font-weight:600 }
-.giochi { display:flex; flex-wrap:wrap; gap:6px }
-.scheda-gioco { display:flex; flex-direction:column; gap:4px; padding:12px 14px; border-radius:var(--raggio-piccolo);
-                background:var(--penna-chiara, var(--tessera)); font-size:14px; line-height:1.45 }
-.scheda-gioco > b { font-size:16px }
+/* il carosello: una fila che scorre di lato, con le frecce per chi ha il mouse */
+.carosello { display:flex; align-items:center; gap:6px }
+.fila-giochi { flex:1; min-width:0; display:flex; gap:6px; overflow-x:auto; scroll-snap-type:x proximity; padding:4px 2px 8px;
+               scrollbar-width:thin; overscroll-behavior-x:contain }
+.fila-giochi > * { flex:none; scroll-snap-align:center }
+.freccia { width:36px; height:36px; flex:none; border-radius:50%; border:1px solid var(--filo); background:var(--superficie);
+           color:var(--penna); font-size:22px; font-weight:700; line-height:1; cursor:pointer }
+/* sotto, il gioco guardato: il video accanto a cosa fa, uno sopra l'altro sullo schermo stretto */
+.scheda-gioco { display:grid; grid-template-columns:minmax(0, 1.1fr) minmax(0, 1fr); gap:14px; padding:12px; align-items:start;
+                border-radius:var(--raggio-piccolo); background:var(--penna-chiara, var(--tessera)); font-size:14px; line-height:1.45 }
+.testo-gioco { display:flex; flex-direction:column; gap:6px }
+.testo-gioco > b { font-size:17px }
+.testo-gioco .bottone { align-self:flex-start; margin-top:4px }
+@media (max-width:640px) { .scheda-gioco { grid-template-columns:1fr } }
 
 /* le parti: ognuna col suo colore, lo stesso della sua fetta nella barra */
 .c0 { --colore:#5b8def } .c1 { --colore:#e8a33d } .c2 { --colore:#55b07f } .c3 { --colore:#c46ac4 } .c4 { --colore:#d9645a } .c5 { --colore:#6bb6c9 }

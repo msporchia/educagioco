@@ -238,4 +238,11 @@ console.log('\nIL CALCOLO A MENTE DEGLI ASTEROIDI')
   uguale('si descrive', descrivi({ ...m, gioco: 'asteroidi' }), 'Calcolo a mente · fino al dieci e oltre la decina · negli Asteroidi')
 }
 
+/* ── la scelta del gioco della maestra mostra qualche secondo di ogni gioco (docs/scuola/editor.md, «La scelta del gioco») ── */
+{
+  const { GIOCHI } = await import('../../src/scuola/comune/esercizi.js')
+  const { ANTEPRIME } = await import('../../src/scuola/maestra/anteprime-giochi.js')
+  stessaLista('ogni gioco ha il suo video (se no: `npm run anteprime scuola`)', GIOCHI.filter(g => !/^data:video\/mp4;base64,/.test(ANTEPRIME[g.id] || '')).map(g => g.id), [])
+}
+
 riassunto('gli esercizi della scuola')

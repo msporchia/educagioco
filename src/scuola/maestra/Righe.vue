@@ -1,7 +1,7 @@
 <script setup>
 // Le scelte di un gioco (gradini, capitoli, personaggi) come schede in griglia: l'anteprima in alto, il nome, la spiegazione
 // scritta («il banco» o «l'unità grande» da soli non dicono niente) e in fondo quello che il gioco aggiunge (▶ Prova, i livelli).
-// Toccare la scheda la accende o la spegne. docs/scuola/quaderno.md
+// Toccare la scheda la accende o la spegne. docs/scuola/editor.md
 const props = defineProps({
   voci: { type: Array, required: true },        // [{ chiave, nome, icona?, quanti?, testo }]
   scelte: { type: Array, required: true },      // le chiavi accese

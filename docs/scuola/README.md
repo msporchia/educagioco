@@ -11,7 +11,8 @@ giocano ai giochi veri limitati alla lezione, e alla fine lei ha il resoconto.
 - [lezione.md](lezione.md) — la lezione a blocchi: cosa si chiede, in che gioco, quando si passa al blocco dopo (da solo o «Avanti tutti»), in tondo
 - [protocollo.md](protocollo.md) — il servizio: la lezione sul Durable Object, le richieste, i messaggi, i limiti, le 3 ore
 - [esercizi.md](esercizi.md) — cosa può scegliere la maestra, come si pescano le domande, come si racconta una risposta
-- [quaderno.md](quaderno.md) — cosa tiene il PC della maestra: classi, lezioni, storico, il file da salvare e il link di una lezione, il percorso di «Nuova lezione», l'editor a blocchi e il pannello con «Avanti tutti»
+- [quaderno.md](quaderno.md) — cosa tiene il PC della maestra: classi, lezioni, storico, il file da salvare e il link di una lezione, i primi passi (prima la classe, poi la lezione), il percorso di «Nuova lezione» e il pannello con «Avanti tutti»
+- [editor.md](editor.md) — l'editor della lezione a blocchi e a passi, e la scelta del gioco a carosello col video del gioco vero (`npm run anteprime scuola`)
 - [giochi.md](giochi.md) — i giochi veri: una cartella per gioco in `src/scuola/giochi/`, la scheda, i sostituti, la vista, i parametri, la risposta
 - [bambini.md](bambini.md) — le schermate del bambino, il nome dalla lista, cosa succede quando la rete cade
 - [prova-computer.md](prova-computer.md) — la prova di un PC della classe, dal link della maestra: ogni gioco vero con un pilota, base e al massimo, le immagini al secondo, la grafica sgranata (B) che il PC si ricorda, il resoconto in un invio

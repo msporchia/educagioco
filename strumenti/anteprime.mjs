@@ -7,6 +7,7 @@
      npm run anteprime sagome                solo le sagome del sotterraneo (strumenti/sagome-sotterraneo3d.mjs)
      npm run anteprime pozioni               solo gli ingredienti delle pozioni (strumenti/anteprime-pozioni.mjs)
      npm run anteprime cucina                solo i piatti della bancarella (strumenti/anteprime-cucina.mjs)
+     npm run anteprime scuola                solo i giochi della scuola, in video (strumenti/anteprime-scuola.mjs): mai senza nome
      npm run anteprime -- --niente-build     con il dist/ che c'è (solo se è di questo codice)
      ANTEPRIME_DEBUG=1 npm run anteprime     e lascia i WebP in tmp/scatti/anteprime-fattoria3d/ e -sotterraneo/
 
@@ -20,19 +21,25 @@ import { fotografaSotterraneo, scriviFatte } from './anteprime-sotterraneo3d.mjs
 import { fotografaSagome, scriviSagome } from './sagome-sotterraneo3d.mjs'
 import { fotografaPozioni, scriviPozioni } from './anteprime-pozioni.mjs'
 import { fotografaCucina, scriviCucina } from './anteprime-cucina.mjs'
+import { registraScuola, scriviScuola, costruisciScuola } from './anteprime-scuola.mjs'
 
 const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const args = process.argv.slice(2)
 const nomi = args.filter(a => !a.startsWith('--'))
-const fa = n => !nomi.length || nomi.includes(n) || (n === 'sagome' && nomi.includes('sotterraneo'))
+// la scuola solo se nominata: un video rifatto non è mai uguale a quello di prima, e il file cambierebbe a ogni giro
+const fa = n => (!nomi.length && n !== 'scuola') || nomi.includes(n) || (n === 'sagome' && nomi.includes('sotterraneo'))
+const soloScuola = nomi.length && nomi.every(n => n === 'scuola')
 const kb = foto => Math.round(Object.values(foto).reduce((s, u) => s + u.length, 0) / 1024)
 
 if (!args.includes('--niente-build')) {
-  const b = spawnSync('npm', ['run', 'build'], { cwd: RADICE, stdio: 'inherit' })
-  if (b.status) process.exit(b.status)
+  if (!soloScuola) {
+    const b = spawnSync('npm', ['run', 'build'], { cwd: RADICE, stdio: 'inherit' })
+    if (b.status) process.exit(b.status)
+  }
+  if (fa('scuola')) costruisciScuola()
 }
 const { apriBrowser } = await import('../test/aiuto/browser.mjs')
-const browser = await apriBrowser()
+const browser = await apriBrowser(soloScuola ? { file: resolve(RADICE, 'dist-scuola/index.html') } : {})
 let esito = 0
 if (fa('fattoria')) {
   const { foto, mancano } = await fotografaFattoria(browser)
@@ -59,6 +66,12 @@ if (fa('cucina')) {
   const { foto, mancano } = await fotografaCucina(browser)
   if (mancano.length) { console.error(`cucina, senza foto: ${mancano.join(', ')}`); esito = 1 }
   else { scriviCucina(foto); console.log(`cucina: ${Object.keys(foto).length} anteprime, ${kb(foto)} KB di testo`) }
+}
+if (fa('scuola')) {
+  const solo = args.find(a => a.startsWith('--giochi='))?.slice(9).split(',') || null
+  const { video, mancano } = await registraScuola(browser, { solo })
+  if (mancano.length) { console.error(`scuola, senza video: ${mancano.join(', ')}`); esito = 1 }
+  else { await scriviScuola(video, { solo }); console.log(`scuola: ${Object.keys(video).length} video, ${kb(video)} KB di testo`) }
 }
 await browser.close()
 process.exit(esito)

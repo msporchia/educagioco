@@ -1,7 +1,7 @@
 <script setup>
 // Una scelta già fatta, richiusa in una riga: cosa si è scelto e «Cambia», che la riapre. Le scelte fatte si accumulano così,
 // una sotto l'altra, sopra quella da fare (scelta dell'utente: «presa una decisione si accumulano sopra, compatte»).
-// docs/scuola/quaderno.md
+// docs/scuola/editor.md
 const props = defineProps({
   etichetta: { type: String, required: true },
   valore: { type: String, required: true },

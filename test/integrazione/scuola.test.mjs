@@ -83,6 +83,11 @@ const m = M.page, b = B.page
 
 /* ── la classe, dai tasti ── */
 await schermata(m, 'inizio')
+// i primi passi: senza classe non si va avanti, e il resto della pagina non c'è ancora
+uguale('il primo passo è la classe', await m.getAttribute('[data-primi-passi]', 'data-passo'), 'classe')
+uguale('lezioni, pagina dei bambini, storico e quaderno aspettano', await m.locator('[data-lezioni], [data-pagina-bambini], [data-storico], [data-quaderno]').count(), 0)
+controlla('ma un quaderno di un altro PC si apre subito', await m.locator('[data-primi-passi] [data-azione="apri-quaderno"]').isVisible())
+await scatto(m, 'scuola-primi-passi')
 await M.tocca('[data-azione="nuova-classe"]')
 await schermata(m, 'classe')
 await m.fill('[data-campo="nome-classe"]', '3ª B')
@@ -90,7 +95,8 @@ await m.fill('[data-campo="alunni"]', 'Lorenzo\nMarta')
 controlla('la classe conta due alunni', /^2 alunni/.test(await testo(m, '[data-conta-alunni]')), await testo(m, '[data-conta-alunni]'))
 await M.tocca('[data-azione="salva-classe"]')
 await schermata(m, 'inizio')
-uguale('nel quaderno c\'è una classe', await m.locator('[data-classi] [data-classe]').count(), 1)
+uguale('fatta la classe, il passo è la prima lezione', await m.getAttribute('[data-primi-passi]', 'data-passo'), 'lezione')
+uguale('e il resto aspetta ancora', await m.locator('[data-lezioni], [data-pagina-bambini], [data-storico], [data-quaderno]').count(), 0)
 
 /* ── la lezione a due blocchi, dall'editor ── */
 await M.tocca('[data-azione="nuova-lezione"]')
@@ -101,7 +107,15 @@ uguale('tutti gli undici giochi in vista', await m.locator('[data-blocco="0"] [d
 uguale('nessuno scelto', await m.locator('[data-blocco="0"] [data-scegli-gioco] [data-gioco][aria-pressed="true"]').count(), 0)
 controlla('e la lezione dice di scegliere il gioco', /scegli il gioco/.test(await testo(m, '[data-problema]')))
 // a passi: scelto il gioco si richiude in una riga sopra, e sotto si apre cosa si chiede
-await M.tocca('[data-blocco="0"] [data-gioco="schede"]')
+// il carosello: toccare un gioco lo fa vedere sotto (il video, cosa fa) e non lo sceglie; sceglie il tasto
+await M.tocca('[data-blocco="0"] [data-scegli-gioco] [data-gioco="asteroidi"]')
+uguale('toccato, gli Asteroidi si vedono sotto', await m.getAttribute('[data-blocco="0"] [data-scheda-gioco]', 'data-guardato'), 'asteroidi')
+controlla('col video del gioco vero', await m.locator('[data-blocco="0"] [data-anteprima="asteroidi"] video').count() === 1)
+uguale('ma non sono scelti', await m.locator('[data-blocco="0"] [data-scegli-gioco] [data-gioco][aria-pressed="true"]').count(), 0)
+await attendi(m, 1500)
+await scatto(m, 'scuola-scelta-gioco')
+await M.tocca('[data-blocco="0"] [data-scegli-gioco] [data-gioco="schede"]')
+await M.tocca('[data-blocco="0"] [data-azione="scegli-gioco"]')
 uguale('il gioco scelto è una riga', await m.locator('[data-blocco="0"] [data-fatta="gioco"]').count(), 1)
 uguale('e i giochi non si vedono più', await m.locator('[data-blocco="0"] [data-scegli-gioco]').count(), 0)
 uguale('e nessuna domanda accesa', await m.locator('[data-blocco="0"] [data-elenco-domande] [data-voce][aria-pressed="true"]').count(), 0)
@@ -121,7 +135,8 @@ uguale('un blocco solo: niente «quando si passa»', await m.locator('[data-pass
 await M.tocca('[data-azione="aggiungi-blocco"]')
 await m.waitForSelector('[data-blocco="1"]', { timeout: 5000 })
 uguale('il blocco nuovo nasce aperto e senza gioco', await m.locator('[data-blocco="1"] [data-scegli-gioco] [data-gioco][aria-pressed="true"]').count(), 0)
-await M.tocca('[data-blocco="1"] [data-gioco="asteroidi"]')
+await M.tocca('[data-blocco="1"] [data-scegli-gioco] [data-gioco="asteroidi"]')
+await M.tocca('[data-blocco="1"] [data-azione="scegli-gioco"]')
 // negli Asteroidi la sola materia è già aperta, e le tabelline si accendono; poi quanto è difficile
 uguale('negli Asteroidi resta solo quello che sanno fare: niente materie da scegliere', await m.locator('[data-blocco="1"] [data-materia]').count(), 0)
 await M.tocca('[data-blocco="1"] [data-voce="tabelline"]')

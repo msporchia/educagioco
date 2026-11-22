@@ -18,12 +18,14 @@
 import { resolve } from 'node:path'
 import { apriBrowser, attendi, scatto, RADICE, SCRIVANIA } from '../aiuto/browser.mjs'
 import { apriSito } from '../aiuto/sito.mjs'
+import { seminaQuaderno } from '../aiuto/quaderno-scuola.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const CARTELLA = resolve(RADICE, 'dist-scuola')
 const sito = await apriSito({ cartella: CARTELLA })
 const browser = await apriBrowser({ file: resolve(CARTELLA, 'index.html') })
 const contesto = await browser.newContext({ viewport: SCRIVANIA, hasTouch: true })
+await seminaQuaderno(contesto)     // il codice per i PC sta nella pagina intera, dopo i primi passi
 const errori = []
 const veri = () => errori.filter(e => !/WebSocket|ERR_|Failed to load resource/.test(e))
 const testo = (page, sel) => page.locator(sel).first().innerText()
@@ -86,7 +88,8 @@ await b.waitForSelector('[data-codice-maestra-errore]', { timeout: 3000 })
 controlla('un codice sbagliato non apre', /non è giusto/.test(await testo(b, '[data-codice-maestra-errore]')))
 await b.fill('[data-campo="codice-maestra"]', cifre)
 await B.tocca('[data-azione="codice-maestra"]')
-await B.tocca('[data-senza-lezione] [data-gioco="schede"]')
+await B.tocca('[data-senza-lezione] [data-scegli-gioco] [data-gioco="schede"]')
+await B.tocca('[data-senza-lezione] [data-azione="scegli-gioco"]')      // il carosello mostra, il tasto sceglie
 await B.tocca('[data-materia-elenco="matematica"] .testa-materia')
 await B.tocca('[data-voce="tabelline"]')
 await scatto(b, 'scuola-senza-lezione')
