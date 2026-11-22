@@ -128,8 +128,11 @@ uguale('il primo blocco parte dalla tabellina del 2', await premuto('[data-blocc
 uguale('col risultato', await premuto('[data-blocco="0"] [data-modo="prodotto"]'), 'true')
 controlla('con la domanda vera accanto', await m.locator('[data-blocco="0"] [data-esempio]').count() === 1)
 await M.tocca('[data-blocco="0"] [data-azione="cosa-fatta"]')
-uguale('tutto deciso: il blocco si chiude in una riga', await m.locator('[data-blocco="0"]').getAttribute('data-chiuso'), 'true')
-controlla('che dice il gioco e cosa si fa', /Le domande[\s\S]*Tabellina del 2/.test(await testo(m, '[data-blocco="0"] [data-riassunto-blocco]')))
+uguale('tutto deciso: il blocco lo sa', await m.locator('[data-blocco="0"]').getAttribute('data-chiuso'), 'true')
+// fatto, il blocco resta le sue righe, ognuna col suo «Cambia»: non un riassunto con «Modifica»
+controlla('righe: il gioco e cosa si fa, ognuna col suo «Cambia»', /Le domande/.test(await testo(m, '[data-blocco="0"] [data-fatta="gioco"]')) &&
+          /Tabellina del 2/.test(await testo(m, '[data-blocco="0"] [data-fatta="cosa"]')) && await m.locator('[data-blocco="0"] [data-cambia]').count() === 2)
+uguale('niente riassunto né «Modifica»', await m.locator('[data-riassunto-blocco], [data-azione="apri-blocco"]').count(), 0)
 // un blocco solo va finché la maestra chiude: niente «quando si passa»; il blocco dopo si aggiunge
 uguale('un blocco solo: niente «quando si passa»', await m.locator('[data-passa-scelto]').count(), 0)
 await M.tocca('[data-azione="aggiungi-blocco"]')
@@ -143,22 +146,21 @@ await M.tocca('[data-blocco="1"] [data-voce="tabelline"]')
 await M.tocca('[data-blocco="1"] [data-azione="cosa-fatta"]')
 await M.tocca('[data-blocco="1"] [data-difficolta="normale"]')
 uguale('scelta anche la difficoltà, il secondo si chiude', await m.locator('[data-blocco="1"]').getAttribute('data-chiuso'), 'true')
-controlla('e dice quando finisce: quando lo dice la maestra', /lo dice la maestra/.test(await testo(m, '[data-blocco="1"] [data-riassunto-blocco]')))
-// per il primo, quando si passa: si riapre, le scelte sono righe, e sotto il passaggio
-await M.tocca('[data-blocco="0"] [data-azione="apri-blocco"]')
-uguale('riaperto, le scelte sono righe compatte: il gioco, cosa si chiede, quando si passa', await m.locator('[data-blocco="0"] [data-fatta]').count(), 3)
+controlla('e dice quando finisce: quando lo dice la maestra', /lo dice la maestra/.test(await testo(m, '[data-blocco="1"] [data-fatta="passa"]')))
+// col blocco dopo, il primo ha anche quando si passa, come riga
+uguale('le scelte del primo sono righe: il gioco, cosa si chiede, quando si passa', await m.locator('[data-blocco="0"] [data-fatta]').count(), 3)
 uguale('col blocco dopo, di base si passa quando lo dice la maestra', await m.locator('[data-blocco="0"] [data-passa-scelto]').getAttribute('data-passa-scelto'), 'maestra')
 await M.tocca('[data-blocco="0"] [data-cambia="passa"]')
 await M.tocca('[data-blocco="0"] [data-passa="giuste"]')
 await m.fill('[data-blocco="0"] [data-campo="soglia"]', '2')
 await M.tocca('[data-blocco="0"] [data-azione="passa-fatto"]')
 uguale('si passa dopo 2 risposte giuste', (await testo(m, '[data-blocco="0"] [data-fatta="passa"] .valore')).trim(), 'dopo 2 risposte giuste')
-await M.tocca('[data-blocco="0"] [data-azione="chiudi-blocco"]')
 uguale('la lezione è completa', await m.locator('[data-problema]').count(), 0)
 await scatto(m, 'scuola-editor')
 await M.tocca('[data-azione="salva-lezione"]')
 await schermata(m, 'inizio')
 uguale('nel quaderno c\'è una lezione', await m.locator('[data-lezioni] [data-lezione]').count(), 1)
+stessaLista('la lezione mostra un riquadro per blocco, col suo gioco', await m.locator('[data-lezione] [data-blocco-lezione] b').allInnerTexts(), ['1. Le domande', '2. Gli Asteroidi'])
 await scatto(m, 'scuola-inizio')
 
 /* ── avvia: il codice si legge dalla sala ── */
@@ -197,6 +199,9 @@ await scatto(b, 'scuola-aspetta')
 /* ── «Via»: due schede giuste, il passaggio ── */
 await M.tocca('[data-azione="via"]')
 await schermata(b, 'blocco')
+// partita la lezione, il codice resta grande in cima: chi chiude il browser per sbaglio rientra
+await m.waitForSelector('[data-codice-sempre] [data-codice]', { timeout: 5000 })
+uguale('dopo «Via» il codice resta in vista', (await testo(m, '[data-codice-sempre] [data-codice]')).trim(), codice)
 await b.waitForSelector('[data-domanda][data-blocco="0"] .qz-tasto', { timeout: 8000 })
 controlla('il segno conta le giuste', /0 di 2 giuste/.test(await testo(b, '[data-segno]')), await testo(b, '[data-segno]'))
 // una domanda nuova, ancora da rispondere: la giusta si trova dal DOM di Domanda.vue (`data-giusta`)
@@ -258,10 +263,11 @@ stessaLista('il servizio ha le tre risposte di Lorenzo, coi blocchi', risposte.m
             [[0, 'tab:prodotto', true], [0, 'tab:prodotto', true], [1, 'tab:prodotto', true]])
 if (nelGioco) controlla('quella del gioco racconta la tabellina del 2', /^2 × \d+$/.test(risposte[2]?.fatto || ''), risposte[2]?.fatto)
 {
-  // il riassunto sotto il nome: chiuso dice i conti, aperto le risposte per blocco
-  const sotto = `[data-pannello] [data-alunno="${lorenzo}"] [data-risposte]`
-  controlla('sotto il nome, le sue risposte in breve', /3 giuste/.test(await testo(m, `${sotto} summary`)), await testo(m, `${sotto} summary`))
-  await m.locator(`${sotto} summary`).click()
+  // la scheda del bambino nasce chiusa: i conti in breve; toccata, le risposte per blocco
+  const suo = `[data-pannello] [data-alunno="${lorenzo}"]`, sotto = `${suo} [data-risposte]`
+  controlla('chiusa, le sue risposte in breve', /3 giuste/.test(await testo(m, `${suo} [data-conti]`)), await testo(m, `${suo} [data-conti]`))
+  uguale('e niente elenco né comandi', await m.locator(`${sotto}, ${suo} [data-azione="altro"]`).count(), 0)
+  await M.tocca(`${suo} [data-azione="apri-bambino"]`)
   stessaLista('aperte: due giuste nel blocco 1 e una nel 2',
          [await m.locator(`${sotto} [data-risposte-blocco="0"] [data-esito="si"]`).count(), await m.locator(`${sotto} [data-risposte-blocco="1"] [data-esito="si"]`).count()], [2, 1])
 }

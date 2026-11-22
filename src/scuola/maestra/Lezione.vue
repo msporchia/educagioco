@@ -2,13 +2,12 @@
 // L'editor di una lezione a blocchi (docs/scuola/lezione.md): nome, i blocchi con cosa si chiede e quando si passa, in tondo; anche da una lezione pronta,
 // e la lezione in corso da mandare cambiata ai bambini (`inCorso`, docs/scuola/ripieghi.md)
 import { ref, computed } from 'vue'
-import { valido, descrivi, NIENTE, giocoDi, GIOCHI } from '../comune/esercizi.js'
+import { valido, descrivi, NIENTE } from '../comune/esercizi.js'
 import { MODI_PASSA, MAX_BLOCCHI, modoDi, sogliaDi, descriviPassa, passaValido, contaDi, modiPassaPer } from '../comune/lezione.js'
 import { quaderno, salva, lezioneDi } from './stato.js'
 import * as Q from './quaderno.js'
-import { paginaMaestra, copia, provaLezione, cosaSiFa } from './utili.js'
+import { paginaMaestra, copia, provaLezione } from './utili.js'
 import SceltaEsercizio from './SceltaEsercizio.vue'
-import { ICONE } from '../comune/icone-giochi.js'
 import Aiuto from './Aiuto.vue'
 import Fatta from './Fatta.vue'
 import Conferma from './Conferma.vue'
@@ -24,7 +23,8 @@ const partenza = inCorso ? JSON.parse(JSON.stringify(inCorso)) : vecchia ? JSON.
 
 // un blocco come lo tocca l'editor: il modo e il numero a parte, così il numero si scrive anche storto e si dice perché
 let chiavi = 0
-// `chiuso`: tutte le scelte fatte, il blocco è una riga sola; uno salvato nasce chiuso, uno nuovo aperto
+// `chiuso`: tutte le scelte fatte (uno salvato nasce così). Un blocco fatto resta le sue righe, ognuna col suo «Cambia»: provato un
+// riassunto in una riga con «Modifica», e non si capiva che le scelte si cambiano una per una (segnalato dall'utente)
 const daBlocco = b => ({ chiave: ++chiavi, esercizio: b.esercizio, modo: modoDi(b.passa), n: sogliaDi(b.passa), cambia: false,
                          chiuso: valido(b.esercizio) })
 const nome = ref(partenza.nome)
@@ -88,8 +88,6 @@ function aggiungi() {
 // un blocco solo, che va finché si chiude la prova: per vedere quel gioco con quelle domande senza passare dagli altri
 const provaBlocco = b => provaLezione({ id: partenza.id, nome: pronta.value.nome || 'Prova', blocchi: [{ esercizio: b.esercizio, passa: null }], inTondo: false })
 // l'ultimo blocco senza «in tondo» non ha un blocco dopo: lì si dice quando la lezione finisce per il bambino
-// il blocco chiuso: il disegno del suo gioco e cosa si fa, in una riga
-const giocoDel = b => GIOCHI.find(g => g.id === giocoDi(b.esercizio)) || null
 const titoloPassa = i => (i === blocchi.value.length - 1 && !inTondo.value ? 'Per il bambino la lezione finisce' : 'Al blocco dopo si passa')
 const togli = i => { if (blocchi.value.length > 1) blocchi.value.splice(i, 1) }
 function sposta(i, verso) {
@@ -140,8 +138,6 @@ async function copiaLink() {
     <div class="fila tra">
       <h2 v-if="!solo">Blocco {{ i + 1 }}</h2>
       <span class="fila comandi">
-        <button v-if="b.chiuso" class="bottone piccolo" data-azione="apri-blocco" @click="b.chiuso = false">Modifica</button>
-        <button v-else-if="valido(b.esercizio)" class="bottone chiaro piccolo" data-azione="chiudi-blocco" @click="b.chiuso = true">Chiudi</button>
         <button v-if="valido(b.esercizio)" class="bottone chiaro piccolo" data-azione="prova-blocco" @click="provaBlocco(b)">▶ Prova</button>
         <template v-if="blocchi.length > 1">
           <button class="bottone chiaro piccolo" :disabled="i === 0" aria-label="sposta su" data-azione="su" @click="sposta(i, -1)">↑</button>
@@ -150,14 +146,6 @@ async function copiaLink() {
         </template>
       </span>
     </div>
-    <!-- chiuso: una riga, col disegno del gioco, cosa si fa e quando si passa -->
-    <div v-if="b.chiuso" class="riassunto" data-riassunto-blocco>
-      <img v-if="ICONE[giocoDel(b)?.id]" :src="ICONE[giocoDel(b).id].src" alt="" class="ico">
-      <span v-else class="ico foglio" aria-hidden="true">📝</span>
-      <span><b>{{ giocoDel(b)?.nome }}</b><span>{{ cosaSiFa(b.esercizio) }}</span>
-        <span v-if="!solo" class="nota">{{ titoloPassa(i).toLowerCase() }} {{ descriviPassa(passaDi(b), b.esercizio) }}</span></span>
-    </div>
-    <template v-else>
     <SceltaEsercizio :model-value="b.esercizio" dove="blocco" @update:model-value="x => cambiaEsercizio(b, x)" @completo="b.chiuso = true" />
     <p v-if="solo && valido(b.esercizio)" class="nota" data-un-blocco>Si gioca finché non chiudi la lezione.</p>
     <div v-else-if="!solo" class="gruppo passa">
@@ -182,7 +170,6 @@ async function copiaLink() {
         <div class="fila"><button class="bottone" :disabled="!passaValido(passaDi(b))" data-azione="passa-fatto" @click="b.cambia = false">Fatto</button></div>
       </template>
     </div>
-    </template>
   </section>
 
   <section class="carta">
@@ -237,10 +224,6 @@ async function copiaLink() {
 .scelta-passa { display:inline-flex; align-items:center; gap:4px }
 .spunta input { width:20px; height:20px; flex:none }
 .chiuso { gap:8px }
-.riassunto { display:flex; align-items:center; gap:12px; font-size:14px }
-.riassunto > span { display:flex; flex-direction:column; gap:2px }
-.ico { width:40px; height:40px; border-radius:10px; object-fit:cover; flex:none }
-.ico.foglio { display:grid; place-items:center; background:#e9edf3; font-size:22px }
 .comandi { justify-content:flex-end }
 .blocchi-spiegati { font-size:14px; max-width:70ch }
 </style>

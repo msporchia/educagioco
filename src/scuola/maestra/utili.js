@@ -1,6 +1,6 @@
 // Quello che le schermate della maestra si dividono: copiare, scaricare, le date, l'indirizzo dei bambini.
 import { righeDellaLezione, linkDiProva } from './quaderno.js'
-import { descrivi, giocoDi, GIOCHI, DIFFICOLTA } from '../comune/esercizi.js'
+import { descrivi, giocoDi, GIOCHI, DIFFICOLTA, PESI } from '../comune/esercizi.js'
 
 // dal disco (file://) la pagina non sa dove sta il sito: si dice quello pubblicato
 export const indirizzoBambini = () => (/^https?:/.test(globalThis.location?.protocol || '')
@@ -44,6 +44,16 @@ export function provaLezione(l) {
 // ▶ Prova di una scelta sola (un gradino, un capitolo): una lezione di un blocco con quell'esercizio, nella pagina dei bambini
 export const provaEsercizio = (esercizio, nome = 'Prova') =>
   provaLezione({ id: 'prova', nome, blocchi: [{ esercizio, passa: null }], inTondo: false })
+
+// un blocco come lo mostra la scheda di una lezione: il gioco, una voce per ogni cosa che si chiede (le parti mescolate una per
+// riga, non una frase unica col «+»), quanto è difficile
+export function vociDelBlocco(e) {
+  const { gioco, difficolta, ...x } = e
+  const g = GIOCHI.find(y => y.id === giocoDi(e)) || null
+  const peso = id => (PESI.find(q => q.id === id)?.nome ?? '').toLowerCase()
+  const voci = x.tipo === 'insieme' ? x.parti.map(p => `${descrivi(p.esercizio, true)} (${peso(p.peso)})`) : [cosaSiFa(gioco ? { ...x, gioco } : x)]
+  return { gioco: g, voci, difficolta: DIFFICOLTA.find(d => d.id === difficolta)?.nome ?? null }
+}
 
 // cosa si fa in un blocco, senza ripetere il gioco (che la riga dice già col suo disegno): «ripeti N volte · col coniglio»
 export function cosaSiFa(e) {

@@ -164,8 +164,11 @@ quadretti** del quaderno di scuola come fondo, e **i colori delle penne** (`--pe
 - **Il resoconto non è una tabella**: in testa quanti bambini, quante risposte e la percentuale di giuste; i blocchi col
   disegno del loro gioco; una riga per bambino con una barra verde e rossa per blocco, la percentuale (verde da 80, gialla
   da 50, rossa sotto) e i suoi sbagli. La tabella c'è ancora, solo in stampa (`.solo-stampa`), ed è quella del CSV.
-- **L'inizio**: come funziona in quattro passi numerati, lezioni e classi come schede (i disegni dei giochi della lezione,
-  le iniziali dei bambini della classe).
+- **L'inizio**: come funziona in quattro passi numerati; **una lezione per riga, su tutta la larghezza** (segnalato
+  dall'utente: la scheda stretta faceva una frase unica illeggibile): il nome e i tasti in una riga, sotto un riquadro per
+  blocco (`[data-blocco-lezione]`) col disegno del gioco, le cose che si chiedono una per riga (`vociDelBlocco` di
+  `utili.js`: le parti mescolate separate, non col «+»), la difficoltà e quando si passa. Le classi restano schede con le
+  iniziali dei bambini.
 
 ## Il pannello in diretta
 
@@ -185,8 +188,12 @@ quadretti** del quaderno di scuola come fondo, e **i colori delle penne** (`--pe
   10»): il conto, «✗ 8» in rosso (cosa ha detto il bambino, `dette`), «✓ 10» in verde, o «nessuna risposta» per il sasso
   caduto. Nel resoconto, nelle più sbagliate (con i nomi di chi l'ha sbagliata, non «un bambino») e nello storico del
   bambino. In `[data-sbaglio]`, `[data-chi-sbaglia]`.
-- **Le risposte, da aprire** (chiesto dall'utente): sotto ogni nome «Le risposte» dice i conti (giuste, sbagliate, senza
-  risposta) e aperto le elenca per blocco, l'ultima in cima: ✓ giusta, ✗ «ha detto X, era Y», – «non ha risposto» (il
+- **Il codice resta grande dopo «Via»** (`[data-codice-sempre]`, chiesto dall'utente): chi chiude il browser per sbaglio o
+  arriva tardi rientra leggendolo, con l'indirizzo accanto.
+- **I bambini nascono chiusi** (chiesto dall'utente: aperti, uno riempiva lo schermo del telefono): la scheda dice nome, dove
+  sta, pallini, barre, fatte e giuste e i conti delle risposte (`[data-conti]`); toccata (`[data-azione="apri-bambino"]`,
+  `data-aperto`) si allarga a tutta la riga con le risposte e i comandi.
+- **Le risposte**: nella scheda aperta, per blocco, l'ultima in cima: ✓ giusta, ✗ «ha detto X, era Y», – «non ha risposto» (il
   sasso giusto degli Asteroidi caduto: spesso un gioco lasciato acceso). Vengono da `diretta.risposte`, che non si salva:
   lo storico tiene il riassunto.
 - **«Se qualcosa non va»**: «Cambia la lezione», «Tutti alle domande», il codice per i PC; sotto ogni nome «Mandalo al

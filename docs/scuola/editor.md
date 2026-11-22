@@ -53,9 +53,9 @@ Chiesto dall'utente il 21 novembre 2026: «troppo visibile troppo presto». **Pr
    non scelto (la `vuota` della scheda) e scelto diventa anche lui una riga; poi i gradini.
 3. **Quanto è difficile?** (solo i giochi che la reggono): nessuna delle tre è scelta, una scelta chiude il passo.
 
-Fatti tutti, **il blocco si chiude in una riga** (`[data-chiuso]`, `[data-riassunto-blocco]`): il disegno del gioco, cosa si
-fa (`cosaSiFa` di `utili.js`, senza ripetere il gioco) e quando si passa; «Modifica» lo riapre con le scelte già in righe e
-il passaggio sotto, «Chiudi» lo richiude. Una lezione salvata si apre coi blocchi chiusi. In cima, tre righe dicono a cosa
+Fatti tutti (`[data-chiuso]`), **il blocco resta le sue righe**, ognuna col suo «Cambia»: il gioco col suo disegno, cosa si
+chiede (intero, anche su due righe), quanto è difficile e quando si passa. Una lezione salvata si apre così. Provato un riassunto
+in una riga con «Modifica»: non si capiva che le scelte si cambiano una per una (segnalato dall'utente il 22 novembre). In cima, tre righe dicono a cosa
 servono i blocchi (un riscaldamento, l'esercizio vero, un bonus per chi finisce prima).
 
 ## La scelta del gioco

@@ -1,6 +1,6 @@
 <script setup>
 // La lezione in corso, per la LIM: il codice enorme e i nomi che si accendono, poi «Via», chi è in che blocco e «Chiudi il blocco»
-import { ref, computed, watch } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { quaderno, voceDi, classeDi } from './stato.js'
 import { diretta, via, avantiTutti, libera, togli, chiudiLezione, cambiaLezione, saltaBlocco, domandePer } from './diretta.js'
 import { riassuntoVuoto, bloccoDellaRisposta } from './quaderno.js'
@@ -58,6 +58,10 @@ function risposteDi(a) {
   const blocchi = Array.from({ length: n.value }, (_, i) => ({ i, righe: lista.filter(r => r.b === i) })).filter(x => x.righe.length)
   return { quante: lista.length, giuste: conta('si'), sbagliate: conta('no'), vuote: conta('vuota'), blocchi }
 }
+// le schede dei bambini nascono chiuse: nome, dove sta, le barre e i conti, per vedere la classe in un colpo d'occhio; le risposte
+// e i comandi si aprono toccando la scheda (segnalato dall'utente: aperte, una sola riempiva lo schermo del telefono)
+const aperti = reactive(new Set())
+const apri = id => (aperti.has(id) ? aperti.delete(id) : aperti.add(id))
 const contiDette = r => [r.giuste && `${r.giuste} giuste`, r.sbagliate && `${r.sbagliate} sbagliate`,
   r.vuote && `${r.vuote} senza risposta`].filter(Boolean).join(' · ')
 
@@ -163,8 +167,13 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
     </section>
 
     <template v-else>
+      <!-- il codice resta grande per tutta la lezione: chi chiude il browser per sbaglio, o arriva tardi, rientra da qui -->
+      <section class="carta codice-sempre" data-codice-sempre>
+        <span class="per-chi">Chi rientra o arriva tardi apre <a :href="indirizzo" target="_blank" rel="noopener" class="copiabile"><b>{{ indirizzo }}</b></a>
+          e scrive</span>
+        <span class="codice-medio copiabile" data-codice><span class="evidenziato">{{ quaderno.inCorso.codice }}</span></span>
+      </section>
       <section class="carta">
-        <p class="nota">Chi arriva tardi: <a :href="indirizzo" target="_blank" rel="noopener" class="copiabile"><b>{{ indirizzo }}</b></a>, codice <b class="copiabile" data-codice>{{ quaderno.inCorso.codice }}</b></p>
         <div class="fila">
           <button class="bottone" :disabled="avantiInutile" data-azione="avanti-tutti" @click="avanti">{{ avantiInutile ? 'Lezione finita per tutti' : chiusura?.tasto }}</button>
           <Aiuto testo="Per la campanella o per chi è rimasto indietro: chi è nel blocco più indietro passa al blocco dopo, anche se quel blocco passerebbe da solo. Chi è già più avanti non si muove. Si può premere più volte." />
@@ -195,11 +204,13 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
         <p v-if="nonDentro.length" class="nota">Non sono entrati: {{ nonDentro.map(a => a.nome).join(', ') }}</p>
       </section>
       <ul class="bambini" data-pannello>
-        <li v-for="a in alunni" :key="a.id" class="carta bambino" :class="{ spento: !a.collegato }" :data-alunno="a.id" :data-dove="posDi(a) ?? ''">
-          <div class="fila tra">
+        <li v-for="a in alunni" :key="a.id" class="carta bambino" :class="{ spento: !a.collegato, aperto: aperti.has(a.id) }" :data-alunno="a.id"
+            :data-dove="posDi(a) ?? ''" :data-aperto="aperti.has(a.id)">
+          <button type="button" class="testa-bambino" :aria-expanded="aperti.has(a.id)" data-azione="apri-bambino" @click="apri(a.id)">
             <b>{{ a.nome }} <span v-if="a.nuovo" class="etichetta">nuovo</span></b>
             <span class="nota">{{ doveDi(a) }}</span>
-          </div>
+            <span class="freccia" aria-hidden="true">{{ aperti.has(a.id) ? '▴' : '▾' }}</span>
+          </button>
           <div v-if="n > 1" class="pallini" aria-hidden="true">
             <span v-for="(s, i) in pallini(a)" :key="i" class="pallino" :class="s"></span>
           </div>
@@ -214,8 +225,10 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
             <template v-else-if="inCorsoDi(a).modo === 'domande'"><b>{{ inCorsoDi(a).fatte }}</b> {{ inCorsoDi(a).cosa }} su {{ inCorsoDi(a).soglia }} · {{ inCorsoDi(a).giuste }} giuste</template>
             <template v-else><b>{{ inCorsoDi(a).fatte }}</b> fatte · <b>{{ inCorsoDi(a).giuste }}</b> giuste</template>
           </p>
-          <details v-if="risposteDi(a).quante" class="risposte" data-risposte>
-            <summary>Le risposte <span class="nota">{{ contiDette(risposteDi(a)) }}</span></summary>
+          <p v-if="risposteDi(a).quante" class="conti nota" data-conti>{{ contiDette(risposteDi(a)) }}</p>
+          <p v-if="a.domande" class="nota" data-solo-domande>Fa le domande al posto del gioco.</p>
+          <template v-if="aperti.has(a.id)">
+          <div v-if="risposteDi(a).quante" class="risposte" data-risposte>
             <div v-for="x in risposteDi(a).blocchi" :key="x.i" class="blocco-risposte" :data-risposte-blocco="x.i">
               <p v-if="n > 1" class="titoletto">Blocco {{ x.i + 1 }}</p>
               <ul>
@@ -228,8 +241,7 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
                 </li>
               </ul>
             </div>
-          </details>
-          <p v-if="a.domande" class="nota" data-solo-domande>Fa le domande al posto del gioco.</p>
+          </div>
           <div class="fila">
             <span v-if="a.preso && posDi(a) !== 'finito'" class="comando">
               <button class="bottone chiaro piccolo" data-azione="salta" @click="salta(a.id)">Mandalo al blocco dopo</button>
@@ -248,6 +260,7 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
                 <span>Per cambiare PC, o se ha toccato il nome di un altro: lo ritocca e riparte da dov'era. Le risposte restano sue.</span></button>
             </Altro>
           </div>
+          </template>
         </li>
       </ul>
     </template>
@@ -304,8 +317,15 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
 .bambino { gap:6px }
 .bambino.spento { opacity:.75 }
 .risposte { font-size:13px }
-.risposte summary { cursor:pointer; font-weight:600; padding:2px 0 }
-.risposte summary .nota { font-weight:400; margin-left:4px }
+.testa-bambino { display:flex; align-items:baseline; gap:8px; width:100%; padding:0; border:0; background:none; font:inherit;
+                 color:inherit; text-align:left; cursor:pointer }
+.testa-bambino .nota { margin-left:auto }
+.testa-bambino .freccia { color:var(--grigio); font-size:12px }
+.bambino.aperto { grid-column:1 / -1 }
+.carta.codice-sempre { display:grid; grid-template-columns:minmax(0, 1fr) auto; align-items:center; gap:8px 24px }
+.per-chi { font-size:clamp(14px, 1.8vw, 20px) }
+.codice-medio { font-size:clamp(44px, 8vw, 88px); font-weight:900; letter-spacing:.12em; line-height:1; font-variant-numeric:tabular-nums }
+@media (max-width:560px) { .carta.codice-sempre { grid-template-columns:1fr; justify-items:center; text-align:center } }
 .blocco-risposte { margin-top:6px; max-height:240px; overflow-y:auto }
 .blocco-risposte .titoletto { font-size:12px; font-weight:700; color:var(--grigio); margin-bottom:2px }
 .blocco-risposte ul { list-style:none; display:flex; flex-direction:column; gap:2px }

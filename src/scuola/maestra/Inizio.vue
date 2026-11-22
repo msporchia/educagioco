@@ -5,9 +5,8 @@ import { ref, computed } from 'vue'
 import { quaderno, salva } from './stato.js'
 import * as Q from './quaderno.js'
 import { lezioneValida, classiNelloStorico } from './quaderno.js'
-import { indirizzoBambini, paginaMaestra, copia, scarica, iniziali, coloreDi, provaLezione } from './utili.js'
-import { descriviBlocco } from '../comune/lezione.js'
-import { giocoDi } from '../comune/esercizi.js'
+import { indirizzoBambini, paginaMaestra, copia, scarica, iniziali, coloreDi, provaLezione, vociDelBlocco } from './utili.js'
+import { descriviPassa } from '../comune/lezione.js'
 import { ICONE } from '../comune/icone-giochi.js'
 import Conferma from './Conferma.vue'
 import CodicePerIPc from './CodicePerIPc.vue'
@@ -23,8 +22,6 @@ const scelta = ref(null)
 // a che passo è: senza classe non si va avanti, poi la prima lezione; con tutte e due la pagina intera
 const passo = computed(() => (!quaderno.classi.length ? 'classe' : !quaderno.lezioni.length ? 'lezione' : 'fatti'))
 
-// i disegni dei giochi di una lezione, uno per gioco, nell'ordine dei blocchi; le domande hanno il foglio
-const giochiDi = l => [...new Set((l.blocchi || []).map(b => giocoDi(b.esercizio)))].map(id => ({ id, icona: ICONE[id] || null }))
 const PRIMI = 6   // i tondi delle iniziali di una classe, poi «+N»
 
 async function copiaLink(l) {
@@ -114,28 +111,35 @@ function apriFile(e) {
       <button class="bottone" data-azione="nuova-lezione" @click="emit('vai', 'lezione', { id: null })">Nuova lezione</button>
     </div>
     <p v-if="!quaderno.lezioni.length" class="nota">Ancora nessuna lezione: con «Nuova lezione» scegli il gioco e cosa si chiede.</p>
-    <ul v-else class="schede">
-      <li v-for="l in quaderno.lezioni" :key="l.id" class="scheda" :data-lezione="l.id">
-        <span class="disegni">
-          <template v-for="g in giochiDi(l)" :key="g.id">
-            <img v-if="g.icona" :src="g.icona.src" alt="" class="ico">
+    <!-- una lezione per riga, su tutta la larghezza: il nome e i tasti in testa, sotto un riquadro per blocco col suo gioco e le
+         cose che si chiedono una per riga (segnalato dall'utente: la scheda stretta faceva una frase unica illeggibile) -->
+    <ul v-else class="lezioni">
+      <li v-for="l in quaderno.lezioni" :key="l.id" class="lezione" :data-lezione="l.id">
+        <div class="testa-lezione">
+          <b class="titolo">{{ l.nome }}</b>
+          <span class="fila azioni">
+            <button class="bottone piccolo" data-azione="avvia" :disabled="!lezioneValida(l) || !!quaderno.inCorso"
+                    @click="emit('vai', 'avvia', { lezione: l })">Avvia</button>
+            <button class="bottone chiaro piccolo" data-azione="prova-lezione" :disabled="!lezioneValida(l)" @click="provaLezione(l)">Prova</button>
+            <button class="bottone chiaro piccolo" data-azione="modifica-lezione" @click="emit('vai', 'lezione', { id: l.id })">Modifica</button>
+            <button class="bottone chiaro piccolo" data-azione="duplica" @click="duplica(l.id)">Duplica</button>
+            <button class="bottone chiaro piccolo" data-azione="copia-link" :disabled="!lezioneValida(l)" @click="copiaLink(l)">
+              {{ copiato === l.id ? 'Link copiato' : 'Copia il link' }}</button>
+            <Conferma etichetta="Cancella" si="Cancella" data-azione="cancella-lezione" @si="cancella(l.id)" />
+          </span>
+        </div>
+        <ol class="blocchi-lezione">
+          <li v-for="(b, i) in l.blocchi" :key="i" class="blocco-lezione" :data-blocco-lezione="i">
+            <img v-if="ICONE[vociDelBlocco(b.esercizio).gioco?.id]" :src="ICONE[vociDelBlocco(b.esercizio).gioco.id].src" alt="" class="ico">
             <span v-else class="ico foglio" aria-hidden="true">📝</span>
-          </template>
-        </span>
-        <b class="titolo">{{ l.nome }}</b>
-        <ol class="blocchi-scheda">
-          <li v-for="(b, i) in l.blocchi" :key="i" class="nota">{{ descriviBlocco(b) }}</li>
+            <span class="dentro">
+              <b>{{ l.blocchi.length > 1 ? `${i + 1}. ` : '' }}{{ vociDelBlocco(b.esercizio).gioco?.nome ?? 'Esercizio non valido' }}</b>
+              <ul class="voci"><li v-for="(v, k) in vociDelBlocco(b.esercizio).voci" :key="k">{{ v }}</li></ul>
+              <span class="nota">{{ [vociDelBlocco(b.esercizio).difficolta, l.blocchi.length > 1 ? `si passa ${descriviPassa(b.passa, b.esercizio)}` : 'finché chiudi la lezione'].filter(Boolean).join(' · ') }}</span>
+            </span>
+          </li>
         </ol>
-        <span class="fila azioni">
-          <button class="bottone piccolo" data-azione="avvia" :disabled="!lezioneValida(l) || !!quaderno.inCorso"
-                  @click="emit('vai', 'avvia', { lezione: l })">Avvia</button>
-          <button class="bottone chiaro piccolo" data-azione="prova-lezione" :disabled="!lezioneValida(l)" @click="provaLezione(l)">Prova</button>
-          <button class="bottone chiaro piccolo" data-azione="modifica-lezione" @click="emit('vai', 'lezione', { id: l.id })">Modifica</button>
-          <button class="bottone chiaro piccolo" data-azione="duplica" @click="duplica(l.id)">Duplica</button>
-          <button class="bottone chiaro piccolo" data-azione="copia-link" :disabled="!lezioneValida(l)" @click="copiaLink(l)">
-            {{ copiato === l.id ? 'Link copiato' : 'Copia il link' }}</button>
-          <Conferma etichetta="Cancella" si="Cancella" data-azione="cancella-lezione" @si="cancella(l.id)" />
-        </span>
+        <p v-if="l.inTondo" class="nota">In tondo: dopo l'ultimo blocco si ricomincia dal primo.</p>
       </li>
     </ul>
     <label v-if="daCopiare">Il browser non lascia copiare: seleziona il link e copialo a mano
@@ -224,11 +228,19 @@ function apriFile(e) {
 .schede { list-style:none; display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:12px }
 .scheda { display:flex; flex-direction:column; gap:8px; padding:14px; border-radius:var(--raggio); background:var(--superficie);
           border:1px solid var(--filo) }
-.disegni { display:flex; gap:6px }
 .ico { width:44px; height:44px; border-radius:11px; object-fit:cover; flex:none }
 .ico.foglio { display:grid; place-items:center; background:#e9edf3; font-size:24px }
-.blocchi-scheda { padding-left:18px; display:flex; flex-direction:column; gap:2px }
-.azioni { margin-top:auto }
+/* le lezioni: una per riga; i blocchi in riquadri affiancati quanto ci stanno */
+.lezioni { list-style:none; display:flex; flex-direction:column; gap:12px }
+.lezione { display:flex; flex-direction:column; gap:10px; padding:14px; border-radius:var(--raggio); background:var(--superficie);
+           border:1px solid var(--filo) }
+.testa-lezione { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px }
+.testa-lezione .azioni { flex-wrap:wrap }
+.blocchi-lezione { list-style:none; display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:10px }
+.blocco-lezione { display:flex; gap:12px; align-items:flex-start; padding:10px 12px; border-radius:var(--raggio-piccolo);
+                  background:var(--penna-chiara, var(--tessera)) }
+.blocco-lezione .dentro { display:flex; flex-direction:column; gap:4px; min-width:0; font-size:14px }
+.voci { padding-left:18px; display:flex; flex-direction:column; gap:2px; line-height:1.35 }
 .faccine { display:flex; flex-wrap:wrap; gap:4px; align-items:center }
 .altri { font-size:13px; font-weight:700; color:var(--grigio); padding-left:4px }
 .indirizzo { font-size:17px }

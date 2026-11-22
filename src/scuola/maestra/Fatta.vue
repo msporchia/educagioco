@@ -27,7 +27,7 @@ const emit = defineEmits(['cambia'])
          background:var(--penna-chiara, var(--tessera)) }
 .ico { width:28px; height:28px; border-radius:7px; object-fit:cover; flex:none }
 .nome-scelta { flex:none; font-size:12px; color:var(--grigio); width:150px }
-.valore { flex:1; min-width:0; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.valore { flex:1; min-width:0; font-size:14px; line-height:1.35; overflow-wrap:anywhere }   /* intero, anche su due righe: è quello che si è scelto */
 .cambia { flex:none; padding:4px 10px; border-radius:999px; border:1px solid var(--filo); background:var(--superficie); font:inherit;
           font-size:12px; font-weight:600; color:var(--penna, var(--inchiostro)); cursor:pointer }
 @media (max-width:520px) { .nome-scelta { display:none } }
