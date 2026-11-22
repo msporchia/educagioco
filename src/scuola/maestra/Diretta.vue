@@ -102,12 +102,14 @@ const chiusura = computed(() => {
   return {
     blocco: bloccoDi(lezione.value, ora),
     tasto: `Chiudi il ${nomeBlocco(ora)}`,
-    frase: chi.length ? `${elenco(chi)} ${dove}. Chi è già più avanti resta dov'è.`
+    frase: chi.length ? `${elenco(chi)} ${dove}. Chi è già più avanti resta dov'è.${finisce ? ' Se avanza tempo, aggiungi un blocco.' : ''}`
       : `Nessun collegato è lì: chi arriva dopo ${finisce ? 'trova la lezione finita' : `parte dal ${nomeBlocco(dopo)}`}.`,
   }
 })
 const elenco = nomi => (nomi.length <= 4 ? (nomi.length < 2 ? nomi.join('') : `${nomi.slice(0, -1).join(', ')} e ${nomi.at(-1)}`)
   : `${nomi.slice(0, 3).join(', ')} e altri ${nomi.length - 3}`)
+// l'editor sulla lezione in corso: con un blocco nuovo in fondo, o aperto su quello da cambiare
+const cambiaAlVolo = (dove = {}) => emit('vai', 'lezione', { inCorso: true, ...dove })
 function avanti() { messaggio.value = ''; if (!avantiTutti()) senzaLinea() }
 
 const senzaLinea = () => { messaggio.value = 'Non c\'è linea: riprova fra un attimo.' }
@@ -174,10 +176,19 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
         <span class="codice-medio copiabile" data-codice><span class="evidenziato">{{ quaderno.inCorso.codice }}</span></span>
       </section>
       <section class="carta">
+        <!-- finita per tutti non è un tasto spento: si propone un blocco in più, che chi ha finito trova subito -->
         <div class="fila">
-          <button class="bottone" :disabled="avantiInutile" data-azione="avanti-tutti" @click="avanti">{{ avantiInutile ? 'Lezione finita per tutti' : chiusura?.tasto }}</button>
-          <Aiuto testo="Per la campanella o per chi è rimasto indietro: chi è nel blocco più indietro passa al blocco dopo, anche se quel blocco passerebbe da solo. Chi è già più avanti non si muove. Si può premere più volte." />
-          <span class="nota" :data-avanti="diretta.avanti">{{ avantiInutile ? 'Tutti hanno finito l\'ultimo blocco.' : chiusura?.frase }}</span>
+          <button v-if="!avantiInutile" class="bottone" data-azione="avanti-tutti" @click="avanti">{{ chiusura?.tasto }}</button>
+          <button v-else class="bottone" :disabled="diretta.linea !== 'su'" data-azione="aggiungi-al-volo" @click="cambiaAlVolo({ aggiungi: true })">＋ Aggiungi un blocco</button>
+          <Aiuto v-if="!avantiInutile" testo="Per la campanella o per chi è rimasto indietro: chi è nel blocco più indietro passa al blocco dopo, anche se quel blocco passerebbe da solo. Chi è già più avanti non si muove. Si può premere più volte." />
+          <span class="nota" :data-avanti="diretta.avanti">{{ avantiInutile ? 'Tutti hanno finito l\'ultimo blocco: se avanza tempo, aggiungine uno e lo trovano subito.' : chiusura?.frase }}</span>
+        </div>
+        <!-- la lezione si cambia mentre si gioca: un blocco in più, o uno che non va (anche dalla sua colonna in «La classe») -->
+        <div class="fila al-volo">
+          <button v-if="!avantiInutile" class="bottone chiaro piccolo" :disabled="diretta.linea !== 'su'" data-azione="aggiungi-al-volo"
+                  @click="cambiaAlVolo({ aggiungi: true })">＋ Aggiungi un blocco</button>
+          <button class="bottone chiaro piccolo" :disabled="diretta.linea !== 'su'" data-azione="cambia-lezione" @click="cambiaAlVolo()">Cambia la lezione</button>
+          <Aiuto testo="Si manda ai bambini senza un codice nuovo: ognuno resta al blocco dove si trova, un blocco cambiato riparte con le domande nuove, e chi aveva finito passa al blocco aggiunto." />
         </div>
       </section>
       <section class="carta" data-panoramica>
@@ -187,6 +198,7 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
             <div class="testa-colonna">
               <img v-if="b.icona" :src="b.icona.src" alt="" class="ico">
               <span><b>Blocco {{ b.i + 1 }}</b><span class="nota">{{ b.nome }}</span></span>
+              <button class="cambia-blocco" :disabled="diretta.linea !== 'su'" :data-cambia-blocco="b.i" @click="cambiaAlVolo({ blocco: b.i })">Cambia</button>
             </div>
             <div class="gente">
               <span v-for="a in b.chi" :key="a.id" class="iniziali" :style="{ '--colore': a.collegato ? coloreDi(a.nome) : 'var(--filo)' }" :title="a.nome">{{ iniziali(a.nome) }}</span>
@@ -194,7 +206,9 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
             <span class="quanti">{{ b.chi.length }}</span>
           </div>
           <div class="colonna fine" data-colonna="finito">
-            <div class="testa-colonna"><span class="ico bandiera" aria-hidden="true">✓</span><b>Finito</b></div>
+            <div class="testa-colonna"><span class="ico bandiera" aria-hidden="true">✓</span><b>Finito</b>
+              <button v-if="finiti.length && !lezione?.inTondo" class="cambia-blocco" :disabled="diretta.linea !== 'su'" data-azione="aggiungi-al-volo"
+                      @click="cambiaAlVolo({ aggiungi: true })">＋ Blocco</button></div>
             <div class="gente">
               <span v-for="a in finiti" :key="a.id" class="iniziali" :style="{ '--colore': coloreDi(a.nome) }" :title="a.nome">{{ iniziali(a.nome) }}</span>
             </div>
@@ -268,10 +282,9 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
     <section class="carta" data-se-non-va>
       <h2>Se qualcosa non va</h2>
       <div class="fila">
-        <button class="bottone chiaro" :disabled="diretta.linea !== 'su'" data-azione="cambia-lezione" @click="emit('vai', 'lezione', { inCorso: true })">Cambia la lezione</button>
         <Conferma v-if="conGiochi" etichetta="Tutti alle domande" domanda="Tolgo i giochi a tutti?" si="Togli i giochi" data-azione="tutti-alle-domande" @si="tuttiAlleDomande" />
       </div>
-      <p class="nota">Senza un codice nuovo: ognuno resta al blocco dove si trova. Per un bambino solo, i comandi stanno sotto il suo nome.</p>
+      <p class="nota">Per cambiare un blocco o aggiungerne uno, i tasti stanno in cima. Per un bambino solo, i comandi stanno sotto il suo nome.</p>
       <CodicePerIPc />
     </section>
 
@@ -353,4 +366,8 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
 .esiti { display:flex; height:6px; border-radius:3px; overflow:hidden; gap:1px }
 .esiti .si { background:var(--verde) } .esiti .no { background:var(--rosso) }
 .colonna.chiude { box-shadow:inset 0 0 0 2px var(--penna) }
+.cambia-blocco { margin-left:auto; flex:none; padding:3px 9px; border-radius:999px; border:1px solid var(--filo); background:var(--superficie);
+                 font:inherit; font-size:12px; font-weight:600; color:var(--penna); cursor:pointer }
+.cambia-blocco:disabled { opacity:.45 }
+.al-volo { margin-top:2px }
 </style>

@@ -1,7 +1,7 @@
 <script setup>
 // L'editor di una lezione a blocchi (docs/scuola/lezione.md): nome, i blocchi con cosa si chiede e quando si passa, in tondo; anche da una lezione pronta,
 // e la lezione in corso da mandare cambiata ai bambini (`inCorso`, docs/scuola/ripieghi.md)
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { valido, descrivi, NIENTE } from '../comune/esercizi.js'
 import { MODI_PASSA, MAX_BLOCCHI, modoDi, sogliaDi, descriviPassa, passaValido, contaDi, modiPassaPer } from '../comune/lezione.js'
 import { quaderno, salva, lezioneDi } from './stato.js'
@@ -13,7 +13,12 @@ import Fatta from './Fatta.vue'
 import Conferma from './Conferma.vue'
 import { cambiaLezione, diretta } from './diretta.js'
 
-const props = defineProps({ id: { type: String, default: null }, inCorso: { type: Boolean, default: false } })
+const props = defineProps({
+  id: { type: String, default: null },
+  inCorso: { type: Boolean, default: false },
+  aggiungi: { type: Boolean, default: false },      // dalla lezione in corso: si apre con un blocco nuovo in fondo
+  blocco: { type: Number, default: null },          // dalla lezione in corso: si apre su quel blocco, da cambiare
+})
 const emit = defineEmits(['vai', 'indietro'])
 
 const vecchia = props.id ? lezioneDi(props.id) : null
@@ -97,6 +102,14 @@ function sposta(i, verso) {
   blocchi.value.splice(j, 0, b)
 }
 
+// al volo dalla lezione in corso: il blocco nuovo in fondo, o quello da cambiare, in vista e segnato
+const quiAlVolo = ref(null)
+if (props.aggiungi && blocchi.value.length < MAX_BLOCCHI) { aggiungi(); quiAlVolo.value = blocchi.value.length - 1 }
+else if (props.blocco != null && props.blocco < blocchi.value.length) quiAlVolo.value = props.blocco
+onMounted(() => nextTick(() => {
+  if (quiAlVolo.value != null) document.querySelector(`[data-blocco="${quiAlVolo.value}"]`)?.scrollIntoView?.({ block: 'start' })
+}))
+
 function salvaLezione() {
   if (problema.value || !Q.salvaLezione(quaderno, pronta.value)) return
   salva(['lezioni'])
@@ -134,7 +147,7 @@ async function copiaLink() {
     </label>
   </section>
 
-  <section v-for="(b, i) in blocchi" :key="b.chiave" class="carta" :class="{ chiuso: b.chiuso }" :data-blocco="i" :data-chiuso="b.chiuso">
+  <section v-for="(b, i) in blocchi" :key="b.chiave" class="carta" :class="{ chiuso: b.chiuso, qui: quiAlVolo === i }" :data-blocco="i" :data-chiuso="b.chiuso">
     <div class="fila tra">
       <h2 v-if="!solo">Blocco {{ i + 1 }}</h2>
       <span class="fila comandi">
@@ -224,6 +237,7 @@ async function copiaLink() {
 .scelta-passa { display:inline-flex; align-items:center; gap:4px }
 .spunta input { width:20px; height:20px; flex:none }
 .chiuso { gap:8px }
+.carta.qui { box-shadow:0 0 0 3px var(--penna), var(--ombra) }   /* il blocco aperto dalla lezione in corso */
 .comandi { justify-content:flex-end }
 .blocchi-spiegati { font-size:14px; max-width:70ch }
 </style>

@@ -8,6 +8,11 @@ dietro il suo codice; e senza internet la maestra fa partire un gioco su ogni PC
 
 Nella diretta, il riquadro «Se qualcosa non va» (`maestra/Diretta.vue`):
 
+- **Al volo, in cima al pannello** (chiesto dall'utente il 22 novembre): «＋ Aggiungi un blocco» apre l'editor con un blocco
+  nuovo in fondo (`aggiungi`), il «Cambia» sulla colonna di un blocco in «La classe» lo apre segnato su quel blocco (`blocco`).
+  **Finita per tutti** non c'è più un tasto spento «Lezione finita»: c'è «＋ Aggiungi un blocco», e chi aveva finito passa al
+  blocco aggiunto (la sua posizione era oltre l'ultimo, e ora non lo è più); anche la frase di «Chiudi l'ultimo blocco» lo
+  propone. Un blocco cambiato riparte con le domande nuove (la vista è legata a `rifatta`).
 - **«Cambia la lezione»** apre l'editor (`Lezione.vue` con `inCorso`) sulla lezione in corso; «Manda ai bambini» la
   spedisce col messaggio `lezione` ([protocollo.md](protocollo.md)), **senza un codice nuovo**. Ognuno resta alla sua
   posizione: se i blocchi sono meno, chi era oltre l'ultimo ha finito. Lo storico prende la lezione nuova (il
@@ -79,7 +84,7 @@ lezione») e `integrazione/scuola-senza-rete`: le due pagine da un sito vero, il
 riaprono; il codice letto dalla pagina della maestra apre «Senza lezione» sul PC, la seconda a schede, si risponde, il
 menu salta al blocco dopo, a pagina riaperta si è ancora lì.
 Bersagli: `[data-azione=maestra|senza-lezione|codice-maestra|chiudi-menu|domande|salta|cambia-nome|esci|via-senza|scelta-tua
-|mostra-codice-pc|cambia-lezione|tutti-alle-domande|manda-lezione]`, `[data-campo=codice-maestra|ora-del-pc]`,
+|mostra-codice-pc|cambia-lezione|aggiungi-al-volo|tutti-alle-domande|manda-lezione]`, `[data-cambia-blocco=<i>]`, `[data-campo=codice-maestra|ora-del-pc]`,
 `[data-menu-maestra]`, `[data-senza-lezione]`, `[data-codice-pc]`, `[data-codice-altra-ora]`, `[data-se-non-va]`,
 `[data-solo-domande]`, `[data-cambia-in-corso]`, `[data-ora-del-pc]`, `[data-codice-maestra-errore]`, `[data-schermata=senza]`,
 `[data-vale-fino]`.
