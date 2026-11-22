@@ -14,6 +14,10 @@ coi pezzi comuni `Cornice.vue`, `Addosso.vue`, `Casella.vue`, `Pannello.vue`,
   i numeri accanto (vita, braccio, difesa e le gemme, sempre in vista), le
   linguette, la griglia, il pannello. Scorre solo la griglia. Provato: un
   elenco di voci col bordino, sembrava un modulo da compilare.
+- **Le linguette che non stanno nello schermo scorrono di lato**: il mago
+  dall'incantatrice ne ha quattro e a 390 px la quarta usciva dal bordo,
+  dove il dito non arriva. La fila scorre col dito (`touch-action: pan-x`)
+  e l'ultima spunta, così si vede che c'è.
 - **Le linguette sono del mercante** (`schede` in `dati/mercanti.js`):
   l'armaiolo «Armi» e «Scudi e armature», l'incantatrice «Bacchette e bastoni», «Vesti» ed
   «Energia», l'erborista «Pozioni» e «Torce», il rigattiere «Gioielli», «Vendi» e «Riacquista».
@@ -120,11 +124,11 @@ in tutte e due `[data-casella="<dove>"]` (`mano`, `mancina`, `corpo`, `collo`, `
 `compraNellaBottega`, `vendiNellaBottega`, `riacquistaNellaBottega` e `allaLinguettaDi` in
 `test/aiuto/browser.mjs`; `unita/sotterraneo-roba` (i numeri del confronto abilità per abilità; quello che
 non si mostra, le linguette; il resto, i banchi, sta in [bottega.md](bottega.md)),
-`integrazione/sotterraneo-mercanti` (col dito: si sceglie, si compra, si
+`integrazione/sotterraneo-bottega` (col dito: si sceglie, si compra, si
 vende, la linguetta «Riacquista», il confronto affiancato, lo zaino che indossa e fa bere),
-`integrazione/sotterraneo-riacquisto` (sei venduti e ne restano cinque, si riprende
+`integrazione/sotterraneo-bottega` (sei venduti e ne restano cinque, si riprende
 allo stesso prezzo, l'elenco sopravvive, a 390 px dieci caselle e tre linguette stanno),
-`integrazione/sotterraneo-confronto` (più abilità: lo spadone contro spada e
+`integrazione/sotterraneo-bottega` (più abilità: lo spadone contro spada e
 scudo, le colonne a 390 px),
-`integrazione/sotterraneo-bottega-avanti` (lo scettro una riga avanti: si compra al doppio, e il mago non vede
+`integrazione/sotterraneo-bottega` (lo scettro una riga avanti: si compra al doppio, e il mago non vede
 roba che non porta), `misure/sotterraneo` (chi spende avanti nelle ultime due discese).

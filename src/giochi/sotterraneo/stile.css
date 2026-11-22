@@ -899,8 +899,13 @@
 .sot-casella.sot-piccola { width: 50px; height: 50px; min-height: 0; padding: 2px; grid-template-rows: 1fr }
 .sot-casella.sot-piccola .sot-casella-dentro { min-height: 0; height: 100% }
 
-/* le linguette del banco, come le schede di un registro */
-.sot-linguette { flex: none; display: flex; gap: 4px; padding: 0 2px; border-bottom: 2px solid #c9963a99 }
+/* le linguette del banco, come le schede di un registro; quando sono troppe per lo schermo (il mago dall'incantatrice ne ha
+   quattro, a 390 px) la fila scorre di lato col dito: l'ultima spunta dal bordo e si tira dentro */
+.sot-linguette {
+  flex: none; display: flex; gap: 4px; padding: 0 2px; border-bottom: 2px solid #c9963a99;
+  overflow-x: auto; overflow-y: hidden; touch-action: pan-x; scrollbar-width: none;
+}
+.sot-linguette::-webkit-scrollbar { display: none }
 .sot-linguetta {
   flex: 1 1 auto; padding: 8px 8px 7px; font: inherit; font-size: 13.5px; font-weight: 800; white-space: nowrap;
   color: #c9a46a; background: linear-gradient(#2c1d11, #1a110b); border: 1px solid #c9963a55; border-bottom: 0;
