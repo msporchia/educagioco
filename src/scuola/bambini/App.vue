@@ -12,6 +12,7 @@ import MenuMaestra from './viste/MenuMaestra.vue'
 import SenzaLezione from './viste/SenzaLezione.vue'
 import { VISTE } from '../giochi/viste.js'
 import { SCHEDE } from '../giochi/elenco.js'
+import { applicaPixel, scalaDel } from './pixel.js'
 
 const versione = __VERSIONE_SCUOLA__
 const PAZIENZA = 3000      // prima di dire «Sto ricollegando…» al primo collegamento
@@ -66,6 +67,8 @@ const soloNelGioco = computed(() => !!blocco.value && !aSchede.value)
 const domande = computed(() => senzaGioco.value || !!io.value?.domande)
 // (un esercizio che c'è solo nel gioco resta nel gioco: le domande non ci sono)
 const inGioco = computed(() => !!VISTE[gioco.value] && !guastoGioco.value && !(domande.value && !soloNelGioco.value) && (!scheda.value?.tred || cèWebGL()))
+// la soluzione B della prova del computer: un gioco che su questo PC andava a scatti parte con meno pixel (docs/scuola/prova-computer.md)
+watch(() => (inGioco.value ? gioco.value : null), g => applicaPixel(g ? scalaDel(g) : 1), { immediate: true, flush: 'sync' })
 // la vista si rifà a ogni blocco, e quando la maestra cambia la lezione in corso
 const chiaveVista = computed(() => `${stato.value?.rifatta ?? 0}-${pos.value}`)
 

@@ -38,7 +38,8 @@ export function creaBottega3d(canvas, { tocca, lascia, comincia, suggerisce, per
   if (!gl || gl.isContextLost()) return null
   try { renderer = segui(new WebGLRenderer({ canvas, context: gl, antialias: !leggera })) } catch (e) { return null }
   let tutto
-  try { tutto = costruisci(renderer, canvas, { tocca, lascia, comincia, suggerisce, dpr: leggera ? 1 : dpr }) } catch (e) {
+  // leggera: un pixel per punto, o meno se lo schermo dice meno (la grafica sgranata della prova del computer, docs/scuola/prova-computer.md)
+  try { tutto = costruisci(renderer, canvas, { tocca, lascia, comincia, suggerisce, dpr: leggera ? Math.min(1, window.devicePixelRatio || 1) : dpr }) } catch (e) {
     console.warn('pozioni 3D: niente disegno', e)
     try { renderer.dispose() } catch (x) { /* pazienza */ }
     return null

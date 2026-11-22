@@ -39,7 +39,7 @@ const emit = defineEmits(['vai', 'risposta'])
 // a scuola (docs/bancarella/scuola.md): i livelli della maestra in giro; a casa manca, e `giro` è null
 const props = defineProps({ limite: { type: Object, default: null } })
 const giro = livelliDelLimite(props.limite)
-const leggera = giro && fasciaAttiva() === 'bassa' ? 1 : null   // i PC di scuola: il pixel ratio della fascia bassa
+const leggera = giro && fasciaAttiva() === 'bassa' ? Math.min(1, window.devicePixelRatio || 1) : null   // i PC di scuola: il pixel ratio della fascia bassa, o meno con la grafica sgranata (docs/scuola/prova-computer.md)
 
 const CHIAVE = 'bancarella'
 const regola = regolaDi(props.limite)     // la difficoltà della maestra; a casa è sempre normale
