@@ -89,8 +89,10 @@ export async function apriSito ({ cartella = dirname(COSTRUITO) } = {}) {
     /* `coda` è quello dopo `?` (il tasto scarica da `./?aggiorna=…`), e
        `rivaluta` la domanda «è cambiata?» (`If-None-Match`), che fa chi
        ha già una copia e vuole sapere se tenerla */
-    const voce = { percorso, coda, modo, stato: 200, rivaluta: !!req.headers['if-none-match'] }
+    const voce = { percorso, coda, modo, stato: 200, rivaluta: !!req.headers['if-none-match'], finita: false }
     sito.richieste.push(voce)
+    // `finita`: la risposta è partita tutta (chi aspetta che la pagina lenta sia arrivata guarda questo, non l'orologio)
+    res.on('finish', () => { voce.finita = true })
     const rispondi = (stato, intestazioni = {}, corpo) => {
       voce.stato = stato
       res.writeHead(stato, intestazioni)

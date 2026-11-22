@@ -28,7 +28,7 @@
    5. il nastro **non dice il falso**: pagina già nuova, service worker che
       si aggiorna alle sue spalle, e niente nastro;
    6. **la rete lenta**, il caso per cui il tasto esiste: pagine che
-      arrivano dopo quattro secondi, service worker nuovo che non arriva,
+      arrivano dopo tre secondi e mezzo, service worker nuovo che non arriva,
       e dopo il tasto riparte comunque la versione nuova;
    7. il service worker nuovo non si mette in casa la pagina vecchia che
       il browser si teneva da parte;
@@ -166,7 +166,7 @@ try {
      arrivare da `versione.json` — la lunghezza che dichiara il sito è
      quella compressa, e con quella la barra non arriverebbe mai in fondo. */
   {
-    sito.goccia = 60
+    sito.goccia = 30
     const dopo = ripartita()
     await page.click('[data-azione="aggiorna"]')
     controlla('mentre scarica il foglio conta i megabyte', await arriva('[data-scaricati]'))
@@ -196,7 +196,7 @@ try {
   controlla('e il nastro tace: la pagina è già quella', !(await nastro()))
 
   /* ══════════ 6. la rete lenta ══════════
-     Le pagine arrivano dopo quattro secondi — più della pazienza del
+     Le pagine arrivano dopo tre secondi e mezzo — più della pazienza del
      service worker, che ne dà due e mezzo — e il service worker nuovo
      non arriva proprio. Prima, qui, «Ricarica» tornava sulla copia di
      prima. La cache del browser si svuota a «riparto», così la ricarica
@@ -208,7 +208,7 @@ try {
   await riapri()
   controlla('riaperta, è ancora quella di prima', await dice(C), await scritta())
   controlla('il nastro sa della nuova', await arriva('[data-nastro="versione"]'))
-  sito.lento = 4000
+  sito.lento = 3500
   /* da qui in poi la pagina D è scaricata: chi la chiede di nuovo al sito
      la sta riscaricando (il passo 7 lo conta) */
   let dopoIlTasto = 0
@@ -337,15 +337,22 @@ try {
 
   /* lenta, e con una coda: risponde la cache, e la G che arriva dopo non
      deve entrarci — né al posto della F, né come copia sua sotto `?via=`.
-     Si guarda solo quando la G è arrivata davvero, cioè quando il `put`
-     di prima ci riusciva: prima si guarderebbe il vuoto */
-  sito.lento = 4000
+     Si guarda solo quando la G è arrivata davvero, e dopo il tempo di un
+     `put`, cioè quando quello di prima ci riusciva: prima si guarderebbe
+     il vuoto */
+  sito.lento = 3500
   await svuotaLaCacheDelBrowser()
   {
-    const partita = Date.now()
+    const da = sito.richieste.length
     await riapri('?via=lenta')
     controlla('lenta, risponde la cache: la F', await dice(F), await scritta())
-    await page.waitForTimeout(Math.max(0, partita + sito.lento + 2500 - Date.now()))
+    let arrivata = false
+    for (let i = 0; i < 100 && !arrivata; i++) {
+      arrivata = sito.richieste.slice(da).some(r => r.modo === 'navigate' && r.coda === '?via=lenta' && r.finita)
+      if (!arrivata) await page.waitForTimeout(100)
+    }
+    controlla('la G lenta arriva al telefono', arrivata)
+    await page.waitForTimeout(1000)
     controlla('e la G arrivata dopo non ci entra', await tiene(F, F))
   }
   sito.lento = 0
