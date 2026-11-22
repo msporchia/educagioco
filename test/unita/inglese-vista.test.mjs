@@ -6,7 +6,7 @@
    tesoro messa in pagina (scena/disposizione.js) a tre larghezze, un
    disegnino per ogni tappa e ogni mondo, le monete, e la materia «Frasi
    inglesi» dell'albo che con le frasi nuove non passa il cento per cento.
-   Il browser lo prova integrazione/inglese-mondi; il motore unita/inglese-mondi.
+   Il browser lo prova integrazione/lingue-mondi; il motore unita/inglese-mondi.
    ═══════════════════════════════════════════════════════════════════ */
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { MONDI, TAPPE, tappaDi } from '../../src/giochi/inglese/dati/mondi.js'

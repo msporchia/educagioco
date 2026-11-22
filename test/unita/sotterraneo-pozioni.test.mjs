@@ -125,6 +125,9 @@ const corredo = (zaino, gemme = 0, livello = 1) =>
   uguale('cinque pozioni, quattro stadi', scelte.map(s => `${s.k}×${s.n}`).join(), 'pozione-piccola×1,pozione×2,pozione-grande×1,ampolla-vita×1')
   controlla('in ordine di stadio, con la cura vera (la vita in fondo, anche se a livello 1 ne cura meno dell\'ampolla)',
             scelte[0].cura === COSE['pozione-piccola'].cura && scelte[2].cura === COSE['pozione-grande'].cura && scelte[3].cura === c.vitaMax)
+  // lo scontro offre «bevi» solo se c'è una pozione giusta (Gioco.vue, abilitaScontro): in piena forma con sole cure non c'è
+  c.vita = c.vitaMax
+  uguale('in piena forma, con sole cure, niente da bere', c.pozioneGiusta(), null)
   c.vita = c.vitaMax - 5
   uguale('mancano 5: la boccetta', c.zaino[c.pozioneGiusta()], 'pozione-piccola')
   c.vita = c.vitaMax - 10

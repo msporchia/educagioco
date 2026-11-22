@@ -127,17 +127,19 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   // le cacce: N sta sotto la mediana dei mostri di quella specie in un giro intero (dodici semi, tutti i piani)
   for (const [k, specie] of Object.entries(CACCE)) {
     const t = CAMPAGNA.find(x => x.chiave === k)
-    for (const [s, [n, nomi]] of Object.entries(specie)) {
-      const per = []
-      for (let seme = 1; seme <= 12; seme++) {
-        const c = new Corsa(t, { seme, rnd: seminato(seme) })
-        let quanti = 0
-        for (let p = 0; p < t.piani; p++) {
-          quanti += c.livello.robe.filter((r, i) => r.che === 'mostro' && r.tipo === s && puoTornare(c.robeDelSeme, i)).length
-          if (p < t.piani - 1) { c.piano++; c.nuovoPiano() }
-        }
-        per.push(quanti)
+    // un giro per seme, contato per tutte le specie della tappa insieme (rifarlo per ogni specie dava gli stessi piani)
+    const giri = []
+    for (let seme = 1; seme <= 12; seme++) {
+      const c = new Corsa(t, { seme, rnd: seminato(seme) })
+      const quanti = {}
+      for (let p = 0; p < t.piani; p++) {
+        c.livello.robe.forEach((r, i) => { if (r.che === 'mostro' && puoTornare(c.robeDelSeme, i)) quanti[r.tipo] = (quanti[r.tipo] || 0) + 1 })
+        if (p < t.piani - 1) { c.piano++; c.nuovoPiano() }
       }
+      giri.push(quanti)
+    }
+    for (const [s, [n, nomi]] of Object.entries(specie)) {
+      const per = giri.map(q => q[s] || 0)
       per.sort((a, b) => a - b)
       controlla(`${k}: ${n} ${nomi}, e un giro ne ha ${per[6]} (da ${per[0]} a ${per[11]})`, n <= per[6])
     }

@@ -50,7 +50,7 @@ import { segnaVinta, tappaAperta, mondoAperto, cassettoAperto, statoMappa }
   from '../../src/giochi/spagnolo/motore/mappa.js'
 import { Sessione } from '../../src/giochi/spagnolo/motore/sessione.js'
 import { racconta, mondiDi, NON_SI_SA } from '../../src/giochi/spagnolo/motore/libro.js'
-import { guastiDelleFrasi, guastiDelCapitolo, guastiDelleParole, sorte, ordineGiusto }
+import { guastiDellaFrase, guastiDelCapitolo, guastiDelleParole, sorte, ordineGiusto }
   from '../../src/giochi/spagnolo/motore/guasti.js'
 
 const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
@@ -135,7 +135,17 @@ titolo('TRAPPOLE')
 
 /* ═══════════ 4. ogni frase, in ogni formato ═══════════ */
 titolo('FRASI')
-nessuno('tutte le frasi componibili', guastiDelleFrasi())
+/* due semi bastano: col primo e col secondo ogni formato si costruisce alle sue due forze, gli altri
+   ritirano solo il caso; i sei semi di guastiDelleFrasi girano in misure/lingue-frasi */
+{
+  const guasti = [], viste = new Set()
+  for (const f of FRASI) {
+    if (viste.has(f.id)) guasti.push(`frase doppia: ${f.id}`)
+    viste.add(f.id)
+    guasti.push(...guastiDellaFrase(f, { semi: 2 }))
+  }
+  nessuno('tutte le frasi componibili', guasti)
+}
 {
   controlla('ci sono frasi (contenuto)', FRASI.length > 0, 'dati/frasi/ è vuoto')
   const idsViste = new Set()
@@ -210,9 +220,9 @@ nessuno('tutte le frasi componibili', guastiDelleFrasi())
     } else nota('nessuna trappola di sola riga storta su «es un perro»')
   }
 
-  // ogni formato su ogni frase vera: una sola giusta, e la fila giusta torna
+  // ogni formato su ogni frase vera, alla forza più alta: una sola giusta, e la fila giusta torna (un seme: i tiri del caso li fa guastiDellaFrase)
   const guasti = []
-  for (const f of FRASI) for (let s = 1; s <= 2; s++) {
+  for (const f of FRASI) for (let s = 1; s <= 1; s++) {
     const ctx = ctxDi(f, s * 17 + f.es.length, FRASI.filter(x => x.tappa === f.tappa))
     for (const formato of FORMATI_FRASE) {
       const d = costruisci(f, formato, ctx, { forza: 6 })

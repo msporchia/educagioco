@@ -2,6 +2,8 @@
    LE ISOLE DELLA MAPPA DEL TESORO, E LA NAVE — senza browser.
    `node test/esegui.mjs spagnolo-isole`
    tempo: 100
+   perché: la geometria delle isole dello spagnolo a cinque larghezze da telefono: coste chiuse con dentro tappe, nomi e sentieri, isole che non si toccano, un attracco per tappa e la nave in meno di 1,5 s
+   a parte perché: È IL GEMELLO di inglese-isole (stesso codice, dati diversi): candidato a un file solo con le due lingue; sta a parte perché nessun banco da riga di comando calcola le isole
 
    La geometria che scena/disposizione.js calcola una volta per mappa, a
    cinque larghezze da telefono:
@@ -14,7 +16,7 @@
        attracco la nave arriva a ogni altro per mare, in meno di 1,5 s
      · dove sta la nave quando la mappa si apre, e cosa si dice quando si
        tocca una tappa chiusa
-   La vista la prova integrazione/spagnolo-mondi; il resto della mappa unita/spagnolo-vista.
+   La vista la prova integrazione/lingue-mondi; il resto della mappa unita/spagnolo-vista.
    Le scelte in docs/lingue/mondi-vista.md («Le isole», «La nave»).
    ═══════════════════════════════════════════════════════════════════ */
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'

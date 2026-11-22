@@ -4,10 +4,10 @@
    e il mercante è uscito dalle discese: tre botteghe sulla terra di
    sopra (docs/sotterraneo/regole.md, docs/sotterraneo/roba.md).
    Qui: la roba fra due discese, lo svenimento, la sosta, un'avventura
-   nuova, il banco di ogni mercante per discese finite, e una misura
-   leggera dell'equilibrio (quella intera: `misure/sotterraneo`).
-   `node test/esegui.mjs sotterraneo-roba --niente-build`
-   tempo: 100 */
+   nuova, il banco di ogni mercante per discese finite. L'equilibrio giocato
+   sta in `misure/sotterraneo-curioso`, il giro intero dei banchi in
+   `misure/sotterraneo-botteghe`.
+   `node test/esegui.mjs unita/sotterraneo-roba --niente-build` */
 import { CAMPAGNA, L_ABISSO, svenimentiDi } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { COSE, CURE, CURE_IN_VENDITA, IN_VENDITA, STANZE_TORCIA, baseDi, aLivello, chiaveDelPezzo, CASELLE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { TASCHE, POZIONI_MASSIME } from '../../src/giochi/sotterraneo/dati/mondo.js'
@@ -22,7 +22,6 @@ import { ABILITA, affiancatoDi, sintesiDi } from '../../src/giochi/sotterraneo/v
 import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { scrivi, leggi } from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { gioca } from '../../src/giochi/sotterraneo/motore/banco.js'
-import { giocaDalCurioso } from '../../src/giochi/sotterraneo/motore/storie.js'
 import { robaAttesa, migliora, righeAvanti, crescitaAttesa, delPassoDi } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { passoDi, premiDella } from '../../src/giochi/sotterraneo/dati/storia.js'
 import { EROI, eroeDi, portaLa } from '../../src/giochi/sotterraneo/dati/eroi.js'
@@ -31,6 +30,7 @@ import { elisirCade, PROBABILITA_ELISIR, ampollaCade, PROBABILITA_AMPOLLA } from
 import { schedaConLaRoba } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 import { stileDi } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
+import { giroDelleLinguette, giroDeiSalti, addossoRaro, raroDi, dellaScheda, contaRuolo as conta } from '../aiuto/sotterraneo-botteghe-giro.mjs'
 
 /* ══════════ 1. i dati ══════════ */
 {
@@ -387,78 +387,11 @@ import { stileDi } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
   uguale('né il fabbro né l\'incantatrice hanno mai il banco vuoto prima della fine', vuoti, 0)
   uguale('e non mostra mai un pezzo che non migliora niente, nemmeno fra quelli avanti', inutili, 0)
 
-  /* ogni linguetta che veste ha una decina di pezzi, tutti migliori; il banco ha un tetto di rarità: magico sempre, al
-     più un raro per linguetta, mai un leggendario (docs/sotterraneo/bottega.md, «Il tetto di rarità») */
+  /* ogni linguetta che veste ha una decina di pezzi, tutti migliori, e il tetto di rarità: qui le regole su un campione (i quattro
+     eroi, nudi al livello della storia e con roba rara al 40, a 0, 3 e 7 discese finite), perché un pezzo storto esce già lì; il giro
+     intero (cinque prove per otto discese) e le quote: `misure/sotterraneo-botteghe` */
   {
-    // null: il livello atteso della storia; `rara`: l'eroe ha addosso roba rara di quel livello
-    const prove = [{ lv: null, rara: false }, { lv: null, rara: true }, { lv: 15, rara: false }, { lv: 40, rara: true }, { lv: 90, rara: false }]
-    const raro = (b, L, ...ab) => chiaveDelPezzo(b, L, 'raro', ab)
-    const addossoRaro = (eroe, L) => {
-      const porta = (dove, ...basi) => basi.find(x => COSE[x].dove === dove && portaLa(eroeDi(eroe), COSE[x]))
-      const mano = porta('mano', 'scettro', 'balestra', 'bipenne', 'spadone')
-      return { ...ROBA_VUOTA(), mano: raro(mano, L, 'att', 'fuoco'),
-               mancina: COSE[mano].mani === 2 ? null : raro('scudo-teschio', L, 'dif', 'vita'),
-               corpo: raro(porta('corpo', 'manto', 'corazza'), L, 'dif', 'vita'), collo: raro('amuleto-osso', L, 'dif', 'vita') }
-    }
-    let giri = 0, pochi = 0, nonMigliora = 0, nonPortabile = 0, rialzi = 0, storti = 0, meritare = 0, meritareStorti = 0
-    let conSubito = 0, dueSubito = 0, dieci = 0, troppiRari = 0, leggendari = 0, magici = 0, scaffali = 0, senzaSubito = 0, daTenere = 0
-    const senza = []
-    const esempi = []
-    for (const eroe of EROI.map(e => e.chiave))
-      for (const { lv, rara } of prove)
-          for (let finite = 0; finite <= CAMPAGNA.length; finite++) {
-            const crescita = lv == null ? crescitaAttesa(eroe, finite) : crescitaA(eroeDi(eroe), lv)
-            const roba = { ...(rara ? addossoRaro(eroe, lv || 6) : robaAttesa(eroe, finite)), gemme: 7 }
-            const b = new Bottega({ eroe, finite, roba, crescita, rnd: seminato(9 + finite) })
-            for (const m of MERCANTI) {
-              const vista = b.mercanziaVista(m.chiave)
-              uguale(`${m.chiave}: due volte la stessa vetrina`, b.mercanziaVista(m.chiave).map(r => r.chiave).join(), vista.map(r => r.chiave).join())
-              leggendari += vista.filter(r => COSE[r.chiave].rarita === 'leggendario' || COSE[r.chiave].unico).length
-              leggendari += b.mercanzia(m.chiave).filter(r => COSE[r.chiave].rarita === 'leggendario').length
-              for (const s of schedeDi(m, eroeDi(eroe)).filter(x => x.dove)) {
-                giri++
-                const qui = vista.filter(r => COSE[r.chiave].dove && schedaDi(m, r.chiave) === s)
-                if (qui.length < 3) { pochi++; esempi.push(`${eroe} lv${lv} f${finite} ${m.chiave}/${s.chiave}: ${qui.length}`) }
-                if (qui.length >= PEZZI_PER_LINGUETTA) dieci++
-                // un pezzo si indossa dal suo livello: chi ha le gemme trova sempre qualcosa da mettersi adesso (se l'eroe non ha già il meglio
-                // del suo livello, e i gioielli migliorano quasi solo col livello)
-                if (!rara && s.chiave !== 'gioielli' && !qui.some(r => COSE[r.chiave].dove && b.posso(r.chiave))) { senzaSubito++; senza.push(`${eroe} lv${lv} f${finite} ${m.chiave}/${s.chiave}`) }
-                if (!rara && s.chiave !== 'gioielli') { conSubito++; if (qui.filter(r => COSE[r.chiave].dove && b.posso(r.chiave) && b.valeLaPena(r.chiave)).length >= SUBITO_PER_LINGUETTA) dueSubito++ }
-                if (qui.some(r => COSE[r.chiave].dove && !b.posso(r.chiave) && b.porta(r.chiave))) daTenere++
-                if (qui.filter(r => COSE[r.chiave].rarita === 'raro').length > RARI_PER_LINGUETTA) troppiRari++
-                magici += qui.filter(r => r.rialzo && COSE[r.chiave].rarita === 'magico').length
-                for (const r of qui) {
-                  if (r.rialzo) scaffali++
-                  // i pezzi «da meritare»: la classe li porta ma chiedono più caratteristica, e si comprano lo stesso
-                  if (r.meritare) { meritare++; if (b.posso(r.chiave) || !b.porta(r.chiave) || !(b.quantoCosta(r.chiave) > 0)) meritareStorti++; continue }
-                  const p = b.seLoMetto(r.chiave)
-                  if (!b.posso(r.chiave) || !p) { nonPortabile++; continue }
-                  if (p.bloccata || (p.prima && !ABILITA_CONFRONTATE.some(n => p.dopo[n] > p.prima[n]))) nonMigliora++
-                  if (r.rialzo) {
-                    rialzi++
-                    const conf = b.confronto(r.chiave)
-                    if (conf.addosso && !(conf.meglio > 0)) storti++
-                    if (!(b.quantoCosta(r.chiave) > 0)) storti++
-                  }
-                }
-              }
-            }
-          }
-    controlla(`in ${giri} linguette (4 eroi, vari livelli, roba rara addosso) nessuna ha meno di tre pezzi`, pochi === 0,
-              esempi.slice(0, 6).join(' | '))
-    controlla('quasi tutte arrivano a dieci', dieci > giri * 0.9, `${dieci}/${giri}`)
-    controlla('ogni linguetta ha almeno un pezzo che migliora e si indossa subito', senzaSubito === 0, senza.slice(0, 5).join(' | '))
-    controlla('e di solito due, perché le gemme abbiano dove andare', dueSubito > conSubito * 0.85, `${dueSubito}/${conSubito}`)
-    controlla('e quasi sempre anche pezzi da tenere per dopo', daTenere > giri * 0.8, `${daTenere}/${giri}`)
-    uguale('mai un leggendario sul banco, né fra i pezzi in più', leggendari, 0)
-    uguale('i rari restano nei salti e nei sogni (al più cinque per linguetta)', troppiRari, 0)
-    controlla('il magico c\'è sempre: la maggior parte dello scaffale', magici > scaffali / 2, `${magici} magici su ${scaffali} in scaffale`)
-    uguale('tutti portabili dall\'eroe (tranne quelli da meritare)', nonPortabile, 0)
-    uguale('quelli da meritare la classe li porta ma non li regge ancora, e hanno un prezzo', meritareStorti, 0)
-    controlla('e ce n\'è davvero, da guardare', meritare > 0, `${meritare}/${giri}`)
-    uguale('e tutti migliorano qualcosa di quello che ha addosso', nonMigliora, 0)
-    controlla('i pezzi in più servono davvero', rialzi > giri / 2, `${rialzi}/${giri}`)
-    uguale('quelli in più alzano il punteggio e hanno un prezzo vero', storti, 0)
+    giroDelleLinguette({ prove: [{ lv: null, rara: false }, { lv: 40, rara: true }], finiteDa: [0, 3, CAMPAGNA.length], quote: false })
     // il pezzo in più si compra al prezzo che dice, anche se dopo non si ha più niente
     const ricco = new Bottega({ eroe: 'mago', finite: 3, roba: { ...addossoRaro('mago', 20), gemme: 5000 }, crescita: crescitaA(eroeDi('mago'), 20), rnd: seminato(2) })
     const piu = ricco.mercanziaVista('armaiolo').find(r => r.rialzo)
@@ -589,45 +522,9 @@ import { stileDi } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
    e più sopra, raro, esorbitante), anche con roba rara addosso. Il banco si rinnova quando l'eroe sale o compra e non resta
    più niente per cui risparmiare, e solo allora (docs/sotterraneo/bottega.md, «Salti e sogni»). */
 {
-  const schedeChe = (m, eroe) => schedeDi(m, eroeDi(eroe)).filter(x => x.dove && !x.vendi)
-  const dellaScheda = (b, m, sc) => b.mercanziaVista(m.chiave).filter(r => COSE[r.chiave].dove && schedaDi(m, r.chiave) === sc)
-  const conta = (qui, ruolo) => qui.filter(r => r.ruolo === ruolo).length
-  const raroDi = (eroe, L) => {
-    const porta = (dove, ...basi) => basi.find(x => COSE[x].dove === dove && portaLa(eroeDi(eroe), COSE[x]))
-    const mano = porta('mano', 'scettro', 'balestra', 'bipenne', 'spadone')
-    const r = (b, ...ab) => chiaveDelPezzo(b, L, 'raro', ab)
-    return { ...ROBA_VUOTA(), gemme: 50, mano: r(mano, 'att', 'fuoco'), mancina: COSE[mano].mani === 2 ? null : r('scudo-teschio', 'dif', 'vita'),
-             corpo: r(porta('corpo', 'manto', 'corazza'), 'dif', 'vita'), collo: r('amuleto-osso', 'dif', 'vita') }
-  }
-  let linguette = 0, pochiSalti = 0, pochiSogni = 0, sogniBassi = 0, saltiDeboli = 0, instabili = 0, reggibili = 0, nonReggibili = 0
-  const guai = []
-  for (const eroe of EROI.map(e => e.chiave))
-    for (const lv of [1, 2, 4, 6, 9, 12, 16, 22, 30, 45, 70, 100])
-      for (const roba of [{ ...ROBA_VUOTA(), gemme: 50 }, raroDi(eroe, lv), { ...robaAttesa(eroe, 3), gemme: 50 }]) {
-        const b = new Bottega({ eroe, finite: 3, roba, crescita: crescitaA(eroeDi(eroe), lv), rnd: seminato(lv * 31 + 7) })
-        for (const m of MERCANTI.filter(x => x.passo))
-          for (const sc of schedeChe(m, eroe)) {
-            const qui = dellaScheda(b, m, sc)
-            linguette++
-            const salti = conta(qui, 'salto'), sogni = conta(qui, 'sogno')
-            if (salti + sogni < SALTI_MINIMI) { pochiSalti++; guai.push(`${eroe} lv${lv} ${m.chiave}/${sc.chiave}: ${salti} salti e ${sogni} sogni`) }
-            if (sogni < SOGNI_MINIMI) { pochiSogni++; guai.push(`${eroe} lv${lv} ${m.chiave}/${sc.chiave}: ${sogni} sogni (sogni)`) }
-            for (const r of qui.filter(x => x.ruolo)) {
-              const conf = b.confronto(r.chiave)
-              if (!(conf.meglio >= Math.max(SALTO_MINIMO, SALTO_RELATIVO * b.valoreDelPosto(conf.dove)))) saltiDeboli++
-              if (r.ruolo === 'sogno' && COSE[r.chiave].liv - b.livelloEroe < SOGNO_LIVELLI) sogniBassi++
-              if (r.ruolo === 'sogno' && COSE[r.chiave].rarita === 'leggendario') sogniBassi++
-              if (b.posso(r.chiave)) reggibili++; else nonReggibili++
-            }
-            if (dellaScheda(b, m, sc).map(r => r.chiave).join() !== qui.map(r => r.chiave).join()) instabili++
-          }
-      }
-  controlla(`in ${linguette} linguette (4 eroi, 12 livelli, nudi, con roba rara e attesa) ci sono almeno due pezzi forti`, pochiSalti === 0, guai.slice(0, 6).join(' | '))
-  controlla('e ogni linguetta ha il suo sogno', pochiSogni === 0, guai.filter(g => /sogni/.test(g)).slice(0, 6).join(' | '))
-  uguale('un salto alza davvero un quarto del posto (e almeno il minimo)', saltiDeboli, 0)
-  uguale('un sogno sta otto livelli sopra e non è leggendario', sogniBassi, 0)
-  uguale('guardare due volte il banco non lo cambia', instabili, 0)
-  controlla('ci sono salti che si indossano subito e salti da meritare', reggibili > 0 && nonReggibili > 0, `${reggibili} / ${nonReggibili}`)
+  /* le regole sul mago e sul nano, che insieme portano tutte le famiglie senza averne una in comune, a tre livelli: un salto o un
+     sogno che manca esce già lì; i quattro eroi a dodici livelli: `misure/sotterraneo-botteghe` */
+  giroDeiSalti({ eroi: ['mago', 'nano'], livelli: [1, 12, 45] })
 
   /* il caso dell'utente: cavaliere al 12 con roba rara addosso, al fabbro un raro più su, più di qualche livello */
   {
@@ -882,26 +779,6 @@ import { stileDi } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
   controlla('anche la carta di sopra', schedaConLaRoba(eroeDi('cavaliere'), null, letta).tratti.some(t => /🐂/.test(t)))
 }
 
-/* ══════════ 8. l'equilibrio, in piccolo ══════════
-   La misura intera (venti semi, otto/sei/quattro su dieci, la roba di una
-   discesa prima e di due avanti) sta in `misure/sotterraneo`; qui sei storie
-   del curioso col cavaliere (il metro: docs/sotterraneo/giocatori-tipo.md),
-   ognuna con la roba che la sua storia gli ha dato, per accorgersi subito se
-   una discesa diventa una passeggiata o un muro. */
-{
-  const vinte = bravura => CAMPAGNA.map((_, k) => Array.from({ length: 6 }, (_, s) => giocaDalCurioso(k, { eroe: 'cavaliere', seme: s + 1, bravura }))
-                                                   .filter(g => g.esito.vinta).length)
-  const otto = vinte(0.9), quattro = vinte(0.4)
-  for (const [k, t] of CAMPAGNA.entries()) {
-    controlla(`${t.chiave}: col curioso, a nove su dieci si arriva in fondo`, otto[k] >= 5, `${otto[k]}/6`)
-    // la scalinata (k = 1) a quattro su dieci si vince una volta su due: su sei semi due vittorie sono il caso, non un guasto. Il
-    // cavaliere con le abilità del banco a quattro su dieci vince una volta su tre nelle discese più comode per lui: su sei semi
-    // tre vittorie sono il caso (la cifra vera, a venti semi e per i quattro eroi, la dà `misure/sotterraneo`)
-    // la torcia del 16 ottobre (più luce, niente agguati con la torcia accesa) ha portato il fondo da 2 a 4: in attesa di
-    // ritarare (docs/sotterraneo/da-fare.md) il fondo tiene un posto in più, come la scalinata
-    if (k) controlla(`${t.chiave}: col curioso, a quattro su dieci non si vince quasi mai`, quattro[k] <= (k === 1 || t.chiave === 'fondo' ? 4 : 3), `${quattro[k]}/6`)
-  }
-  nota(`sei storie del curioso: a 9/10 ${otto.join(' · ')}, a 4/10 ${quattro.join(' · ')}`)
-}
+// l'equilibrio in piccolo (sei storie del curioso per discesa): `misure/sotterraneo-curioso`
 
 riassunto('la roba che resta e i mercanti')

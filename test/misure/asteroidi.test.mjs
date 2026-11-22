@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE DOMANDE DEGLI ASTEROIDI, SENZA BROWSER
    tempo: 120
+   perché: le domande degli asteroidi giocando una tappa intera con un finto giocatore e contando cosa esce: sul pianeta del 10 solo la tabellina del 10, mai la stessa domanda due volte di fila, il volo infinito che si complica
+   a parte perché: non c'è un banco da riga di comando per gli asteroidi; le unità provano le regole di store/tabelline.js, qui si contano migliaia di domande uscite
 
    Quale calcolo scende dal cielo è la cosa che decide se una tappa
    insegna o fa perdere tempo, ed è anche l'unica parte del gioco che

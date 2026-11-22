@@ -1,7 +1,7 @@
 /* L'albero delle missioni del sotterraneo (docs/sotterraneo/missioni.md): i requisiti e lo sblocco da sole, mai
    più di tre aperte insieme, più missioni prese insieme, il diario e il promemoria, le monete come regalo (col
    conto delle domande in più) e lo stato di prima, che non si rompe. Il giro di una missione dal fumetto al premio
-   è in `sotterraneo-storia`; col dito, in `integrazione/sotterraneo-missioni`.
+   è in `sotterraneo-storia`; col dito, in `integrazione/sotterraneo-sopra-missioni`.
    `node test/esegui.mjs sotterraneo-missioni --niente-build` */
 import { CAMPAGNA, QUANTE_TAPPE } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'

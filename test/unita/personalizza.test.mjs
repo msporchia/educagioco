@@ -6,7 +6,7 @@
    a ogni livello (oggetto, forma, colore, acquisto, set) le zone sopra
    restano con gli stessi elementi, nello stesso ordine. Poi i prezzi,
    la scelta che torna valida quando quella sopra cambia, e i set.
-   (Le posizioni a schermo le prova `integrazione/sotterraneo-personaggio`.)
+   (Le posizioni a schermo le prova `integrazione/sotterraneo-sopra-eroe`.)
    ═══════════════════════════════════════════════════════════════════ */
 import { STATO_NUOVO, MAX_SET, tocca, zone, costo, costoSet, conto, valoreDi, conForma, mancantiDi, postoPerSalvare, righeDelPannello } from '../../src/components/personalizza/personalizza-pura.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'

@@ -4,6 +4,8 @@
    l'eroe cinque livelli sopra quello atteso, dove le strade si distinguono per la roba e per i punti e non per quanto è dura la
    discesa (a livello atteso l'elfa, la più veloce, si stacca di più: docs/sotterraneo/taratura-branchi.md). Il bersaglio: le tre strade di una
    classe stanno vicine (nessuna domina, nessuna crolla); i numeri assoluti li dà la taratura dei mostri.
+   perché: le tre strade di ogni classe giocate con l'eroe cinque livelli sopra l'atteso: nessuna domina e nessuna crolla (scarto ammesso fra loro), senza giudicare i numeri assoluti
+   a parte perché: sotterraneo giudica la discesa a livello atteso; qui conta il confronto fra le strade di una classe, con roba e albero diversi: `npm run sotterraneo` non le confronta
    `node test/esegui.mjs misure/sotterraneo-strade --niente-build` */
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'

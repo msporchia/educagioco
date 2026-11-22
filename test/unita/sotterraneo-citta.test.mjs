@@ -5,7 +5,7 @@
    dice lui la quinta e la sesta porta (con la strada del mondo a percorso), per le altre sta zitto e saluta; il suo sprite è
    quello della guardia, col suo blu e un po' più alto. La fontana prende il posto del pozzo dove manca la guaritrice o
    l'incantatrice: il villaggio le ha tutte e due, quindi oggi nessuna fontana (la regola resta). Il disegno e il tocco col dito
-   sono in integrazione/sotterraneo-mondo.
+   sono in integrazione/sotterraneo-sopra-mondo.
    ═══════════════════════════════════════════════════════════════════ */
 import { ilMondo, terraDelMondo, fontaneDi, hoLaFontana, curaDellaFontana, postiDi, CURA_DEL_MERCANTE } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
 import { VILLAGGIO } from '../../src/giochi/sotterraneo/dati/mondo-aperto.js'

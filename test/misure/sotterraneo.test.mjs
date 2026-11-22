@@ -15,6 +15,8 @@
    - chi arriva con molte gemme da parte e compra il meglio che può non fa passeggiate.
    Chi va dritto (il bravo, 19 su 20) può stare un po' sotto il curioso purché non trovi un muro (due sconfitte di fila nella stessa discesa).
    Il «chi gira tutto» di una volta è il curioso stesso: non ha più un blocco suo.
+   perché: la tabella della grande storia sotto il banco, giocata col curioso venti volte per eroe: a nove risposte giuste su dieci si arriva in fondo quasi sempre, a quattro quasi mai, e il primo avvio a mani nude
+   a parte perché: `npm run sotterraneo` e `npm run taratura` stampano le tabelle per chi tara; questa le giudica con soglie e fallisce se la storia si rompe. È la misura madre, da 1500 s
    `node test/misure/sotterraneo.test.mjs` (il lanciatore, `node test/esegui.mjs sotterraneo`, prende anche le unità)
    Infine le zone, a ogni livello, l'esperienza che danno, e i colori del pallino: con la roba attesa a quel livello, dritti alla scala. */
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'

@@ -32,7 +32,7 @@ import { guastiDegliArgomenti } from '../../src/giochi/spagnolo/dati/argomenti.j
 import { guastiDegliElenchi, ELENCHI } from '../../src/giochi/spagnolo/dati/elenchi.js'
 import { GLOSSARIO } from '../../src/giochi/spagnolo/dati/glossario.js'
 import { contesto, costruisci, giudica, composta, FORMATI_FRASE } from '../../src/giochi/spagnolo/motore/formati.js'
-import { ordineGiusto, guastiDelleFrasi, guastiDelleParole } from '../../src/giochi/spagnolo/motore/guasti.js'
+import { ordineGiusto, guastiDelleParole } from '../../src/giochi/spagnolo/motore/guasti.js'
 import { paroleNote, flessioniNote, sconosciute, cassettoDi } from '../../src/giochi/spagnolo/motore/grafo.js'
 import { caselle } from '../../src/giochi/spagnolo/motore/fila.js'
 import { rendi } from '../../src/giochi/spagnolo/motore/libro.js'
@@ -397,7 +397,7 @@ uguale('le forme stanno in piedi', guastiDelleForme().join(' · '), '')
 nessunoStampa('il grafo dei mondi', guastiDeiMondi())
 nessunoStampa('gli argomenti', guastiDegliArgomenti())
 nessunoStampa('le domande sulle parole', guastiDelleParole({ giri: 1 }))
-nessunoStampa('le frasi componibili', guastiDelleFrasi())
+// le frasi componibili le controlla, e le ferma, unita/spagnolo-mondi
 nota(`${MONDI.length} mondi`)
 
 riassunto('spagnolo: la lingua del motore')

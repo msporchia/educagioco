@@ -71,6 +71,15 @@ const io = { x: lunga.x + 3, y: riga }   // tre celle di stanza dietro, sei dava
             torcia.raggioDellaLuce === RAGGIO_TORCIA && RAGGIO_TORCIA > RAGGIO + 5 && ALONE_TORCIA - ALONE >= 2, `${RAGGIO} → ${RAGGIO_TORCIA}, ${ALONE} → ${ALONE_TORCIA}`)
   const davanti = c => [...c.luce].filter(k => (k % c.livello.largo) > io.x).length
   controlla('e davanti si accendono più celle', davanti(torcia) > davanti(buio), `${davanti(buio)} → ${davanti(torcia)}`)
+  // quante caselle accende il motore e quanta luce in tutto, al buio, agli sgoccioli (l'ultima stanza) e con la torcia piena (erano
+  // contate nel browser)
+  const sgoccioli = scena({ qui: io, torcia: 1 })
+  const luce = c => [...c.luce].reduce((n, k) => n + (c.forzaLuce.get(k) ?? 1), 0)
+  controlla('anche senza torcia qualcosa si vede', buio.luce.size > 8, `${buio.luce.size} caselle accese`)
+  controlla('senza torcia si vede meno: il cono è corto', buio.luce.size < torcia.luce.size * 0.8, `${buio.luce.size} contro ${torcia.luce.size}`)
+  controlla('e la luce è meno', luce(buio) < luce(torcia) * 0.7, `${luce(buio).toFixed(1)} contro ${luce(torcia).toFixed(1)}`)
+  controlla('agli sgoccioli il cono si accorcia: si vede più che al buio e meno che con la torcia piena',
+            sgoccioli.luce.size > buio.luce.size && sgoccioli.luce.size < torcia.luce.size, `${buio.luce.size} < ${sgoccioli.luce.size} < ${torcia.luce.size}`)
   const stanza = (c, st) => { let n = 0; for (let x = st.x; x < st.x + st.w; x++) for (let y = st.y; y < st.y + st.h; y++) if (accesa(c, x, y)) n++; return n }
   controlla('la stanza non si accende più tutta, nemmeno con la torcia', stanza(torcia, lunga) < lunga.w * lunga.h, `${stanza(torcia, lunga)} su ${lunga.w * lunga.h}`)
   uguale('e non resta più il campo «stanza intera»', torcia.stanzaIntera, undefined)

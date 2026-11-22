@@ -22,10 +22,8 @@ import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Corredo } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { robaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
-import { gioca } from '../../src/giochi/sotterraneo/motore/banco.js'
 import { scrivi, leggi, dice } from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
-import { stileDi } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
 
 const indiceDi = k => CAMPAGNA.findIndex(t => t.chiave === k)
 // tutte le zone, dalla più bassa: le fasce da `rinasce`, i colori da `forza` (se non c'è, lo stesso livello)
@@ -197,20 +195,7 @@ uguale('e l\'abisso resta l\'abisso', zonaDi(-1).abisso, true)
   uguale('nella verde il mostro dà la sua esperienza (quella delle sue caratteristiche)', verde.presa, Math.max(1, Math.round(verde.piena)))
   uguale('nella grigia un quarto', grigia.presa, Math.max(1, Math.round(grigia.piena * ESP_GRIGIA)))
 
-  // il passo: una zona verde vinta, dal fondo della fascia, vale più o meno un livello (le misure su tutte le zone)
-  for (const L of [14, 24, 34]) {
-    const k = indiceDi('torre')
-    const cr = crescitaAttesaA('cavaliere', L)
-    // fra otto semi quelli vinti (coi branchi nuovi un seme solo può perdere: il passo si legge dove si vince)
-    const vinte = []
-    for (let seme = 41; seme < 49; seme++) {
-      const g = gioca(zonaPotenziata(k, L), { seme, bravura: 1, eroe: 'cavaliere', crescita: cr, roba: robaAttesaA('cavaliere', L), stile: stileDi('curioso') })   // beve nello scontro come il curioso: il banco nudo non passa più i comuni da due risposte
-      if (g.esito.vinta) vinte.push((g.corsa.crescita.esp - cr.esp) / salto(L))
-    }
-    const livelli = vinte.reduce((n, x) => n + x, 0) / Math.max(1, vinte.length)
-    controlla(`una torre verde vinta al ${L} vale più o meno un livello`, vinte.length >= 2 && livelli >= 0.7 && livelli <= 2,
-              `${vinte.length} vinte su 8, ${livelli.toFixed(2)} livelli`)
-  }
+  // il passo (una torre verde vinta vale più o meno un livello) si misura giocando: `misure/sotterraneo-zone`
 }
 
 /* ══════════ 9. la roba attesa oltre la storia ══════════ */

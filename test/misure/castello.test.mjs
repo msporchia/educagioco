@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    L'EQUILIBRIO DEL CASTELLO, SENZA BROWSER
+   perché: l'equilibrio del castello tappa per tappa: ogni tappa costa i calcoli che promette, chi spende l'energia la finisce, anche col conto sbagliato una volta su quattro, e c'è sempre qualcosa da comprare
+   a parte perché: `npm run tara` genera i numeri (taratura-castello.js), questo giudica che le promesse al bambino reggano; regali-castello guarda solo la partita libera, e verifiche/torri-equilibrio il campo nel browser
 
    Le tappe non hanno numeri scritti a mano: ondate, postazioni, energia
    di partenza e vita dei nemici le calcolano `data/castello.js` e

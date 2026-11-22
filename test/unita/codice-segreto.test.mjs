@@ -2,6 +2,8 @@
    i dati stanno in piedi, il conteggio dei pallini è giusto anche coi
    doppioni (è lì che questo gioco si sbaglia sempre), e le nove tappe si
    vincono **giocandole davvero** col giocatore finto invece che a occhio.
+   perché: il Codice Segreto senza browser: i dati stanno in piedi, il conteggio dei pallini con i doppioni, e le nove tappe vinte giocandole davvero con il giocatore finto, settemila partite
+   a parte perché: non è una misura di bilanciamento ma la prova che il gioco si vince ragionando; lenta perché le duemila di «esperto» setacciano 16.807 codici, quindi resta fuori da `--svelti`
    `node test/esegui.mjs codice-segreto`
 
    È uno dei test cari, e da qui in poi lo dichiara: giocare davvero vuol

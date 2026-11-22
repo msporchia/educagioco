@@ -307,7 +307,8 @@ for (const s of CHIAVI_SAPERI) {
     if (!m.tipi.length) continue
     for (let g = 1; g <= m.gradi; g++) {
       if (!m.puo(g, [s])) continue
-      for (let i = 0; i < 40; i++)
+      // dieci per grado bastano: il filtro sta in tipiLiberi, e se cede ricade su ogni sapere e ogni grado
+      for (let i = 0; i < 10; i++)
         if (chiavi.has(m.chiedi(g, new Sorte(i * 613 + g), [s]).chiave)) uscita++
     }
   }

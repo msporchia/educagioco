@@ -1,14 +1,7 @@
-/* Verifica del Sotterraneo, senza browser. Le cose che contano: i dati
-   stanno in piedi, i piani generati si possono finire davvero (si cammina
-   dall'ingresso trattando le porte chiuse come muri), le sei discese si
-   vincono giocandole con un giocatore finto, il costo in domande resta
-   dentro una seduta e la forbice fra «il minimo» e «tutto» resta larga —
-   quella forbice *è* il gioco. E i traguardi scattano solo a chi ha
-   giocato. Dalla seconda discesa in poi si misura con la roba che ci si
-   porta dietro (`robaPer`): la roba resta, e le discese dopo contano su
-   di lei. La roba e i mercanti di sopra: `unita/sotterraneo-roba`.
-   `node test/esegui.mjs sotterraneo --niente-build`
-   tempo: 300 */
+/* Verifica del Sotterraneo, senza browser: i dati stanno in piedi, i piani generati si possono finire davvero (si cammina
+   dall'ingresso trattando le porte chiuse come muri), le regole che si sbagliano facilmente, e i traguardi scattano solo a chi ha
+   giocato. Le discese giocate per misurare l'equilibrio: `misure/sotterraneo-curioso`; la roba e i mercanti: `unita/sotterraneo-roba`.
+   `node test/esegui.mjs unita/sotterraneo --niente-build` */
 import { readFileSync } from 'node:fs'
 import { ref, shallowRef } from 'vue'
 import { CAMPAGNA, QUANTE_TAPPE, durezzaDi, guardianoDi, stelleDella,
@@ -26,10 +19,9 @@ import { FIGURE3D } from '../../src/giochi/sotterraneo/dati/figure3d.js'
 import { occhio } from '../../src/giochi/sotterraneo/viste/occhio.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
-import { gioca, costoDi, quanteVolteSiVince, pianiSani, robaPer, crescitaPer } from '../../src/giochi/sotterraneo/motore/banco.js'
+import { gioca, pianiSani } from '../../src/giochi/sotterraneo/motore/banco.js'
 import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
-import { giocaDalCurioso, ingressoDelCurioso } from '../../src/giochi/sotterraneo/motore/storie.js'
-import { stileDi } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
+import { giocaDalCurioso } from '../../src/giochi/sotterraneo/motore/storie.js'
 import manifesto from '../../src/giochi/sotterraneo/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
 import { misure, statoTraguardo } from '../../src/store/progressi.js'
@@ -113,63 +105,10 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   uguale('...e ci mette le stesse cose', a.robe.length, b.robe.length)
 }
 
-/* ══════════ 4. le discese si vincono, e quanto costano ══════════ */
-// il tetto delle risposte obbligate per scendere dritti: 150 dal 30/10, quando i comuni sono passati a due o tre risposte (docs/sotterraneo/regole.md)
-const SEDUTA = 150
+/* ══════════ 4. le quattro famiglie d'arma ══════════
+   Le discese giocate dal curioso (si vincono, stanno in una seduta, i quattro eroi ci arrivano, chi preme a caso no) sono quote:
+   stanno in `misure/sotterraneo-curioso`. */
 {
-  const conti = []
-  for (const [i, t] of CAMPAGNA.entries()) {
-    const { roba, crescita } = ingressoDelCurioso(i)   // la roba e il livello con cui il curioso ci arriva, e si gioca come lui (beve nello scontro)
-    /* Il metro è il curioso (docs/sotterraneo/giocatori-tipo.md): sei storie, ognuna con la roba e il livello con cui il curioso arriva a
-       questa discesa (gira tutto, 9 giuste su 10), e la discesa si vince alla prima. Il finto che andava dritto con la roba attesa
-       entra uno o due livelli sotto e coi mostri di oggi non vince quasi più: non è più il riferimento. */
-    const sei = Array.from({ length: 6 }, (_, s) => giocaDalCurioso(i, { eroe: 'cavaliere', seme: s + 1 }))
-    const vinte = sei.filter(g => g.esito.vinta).length
-    controlla(`${t.chiave}: il curioso la vince alla prima, quasi sempre`, vinte >= sei.length - 1,
-              `${vinte}/${sei.length} ${sei.map(g => g.guasto).filter(Boolean).slice(0, 2).join(' · ')}`)
-    const c = costoDi(t, { roba, crescita, stile: stileDi('curioso') })
-    conti.push([t, c])
-    /* Il tetto è una seduta: oltre le ottanta domande obbligate non è più
-       un gioco, è un compito. Il pavimento è la forbice — se «tutto»
-       costa quanto «il minimo», in mezzo non si sceglie più niente, ed è
-       la scelta il motivo per cui il posto è un posto. */
-    dentro(`${t.chiave}: il minimo per scendere sta in una seduta`, c.minimo, 5, SEDUTA)   // 5 e non 6: un seme su cinque ci sta, già prima
-    // la grotta ha cinque piani da quattro stanze: quasi tutto quello che c'è sta sulla strada della scala, e la forbice è più stretta
-    controlla(`${t.chiave}: chi ripulisce il piano paga molto di più`,
-              c.tutto > c.minimo * (t.chiave === 'gallerie' ? 1.2 : 1.3), `minimo ${c.minimo}, tutto ${c.tutto}`)
-  }
-  nota('costo in domande, per tappa, con la roba del curioso:')
-  for (const [t, c] of conti)
-    nota(`  ${t.nome.padEnd(14)} minimo ${String(c.minimo).padStart(3)} · ` +
-         `tutto ${String(c.tutto).padStart(3)} · ${t.piani} piani`)
-}
-
-/* ══════════ 4b. i quattro eroi ══════════
-   La scelta cambia i conti — fra braccio 3 e braccio 5 il gigante passa
-   da nove risposte a cinque — quindi va misurata, non stimata. Le due
-   cose che non devono succedere: che con qualcuno la discesa diventi
-   **lunga** invece che difficile, e che qualcuno non arrivi in fondo. */
-{
-  const righe = []
-  for (const e of EROI) {
-    const costi = CAMPAGNA.map((t, i) => costoDi(t, { eroe: e.chiave, roba: robaPer(i, { eroe: e.chiave }),
-                                                     crescita: crescitaPer(i, { eroe: e.chiave }) }).minimo)
-    const peggio = Math.max(...costi)
-    controlla(`${e.chiave}: nessuna discesa esce dalla seduta`, peggio <= SEDUTA,
-              `la peggiore costa ${peggio} domande`)
-    /* due file per eroe, quattro discese ciascuna: con lo zaino di chi ci
-       arriva andando dritto il mago (che regge meno) cade una volta su
-       cinque, e una fila sola diceva più della fila che dell'eroe */
-    const otto = [1, 2].flatMap(seme => [0, 1, 2, 3].map(n => giocaDalCurioso(3, { eroe: e.chiave, seme, n })))
-    const vinte = otto.filter(g => g.esito.vinta).length
-    controlla(`${e.chiave}: il curioso vince la scala sommersa, quasi sempre`,
-              vinte >= 6, `${vinte}/8 ${otto.map(g => g.guasto).filter(Boolean).slice(0, 1).join('')}`)
-    righe.push(`  ${e.nome.padEnd(10)} ❤️ ${String(e.vita).padStart(2)} ⚔️ ${e.att} · ` +
-               `domande per discesa: ${costi.join(' · ')}`)
-  }
-  nota('chi scende, e quanto gli costa:')
-  for (const r of righe) nota(r)
-
   /* le quattro famiglie d'arma valgono lo stesso: se una fosse più
      forte, le altre tre sarebbero una trappola per chi sceglie male.
      «Lo stesso» si conta **a parità di mani**: chi ne chiede due
@@ -222,28 +161,6 @@ const SEDUTA = 150
   }
   nota('cosa porta ognuno, e quante delle armi che trova sono sue:')
   for (const r of righe) nota(r)
-}
-
-/* ── E ADESSO NON CI ARRIVA PROPRIO ──
-   Prima di `SVENIMENTI_IN_REGALO` questo era l'unico modo di dirlo:
-   chi tira a caso *paga di più*, in vite o in domande, ma in fondo ci
-   arrivava lo stesso — svenire riportava all'ingresso e si riprovava
-   all'infinito. Dodici discese su dodici vinte rispondendo giusto
-   quattro volte su dieci. Adesso la discesa ha un fondo, e il
-   controllo può chiedere la cosa vera: chi risponde bene passa, chi
-   preme a caso no. La forbice è il senso di tutto il gioco. */
-{
-  const t = CAMPAGNA[3]
-  // dall'ingresso del curioso in otto storie, con le sue abilità e le sue pozioni: cambia solo quante risposte sono giuste
-  const otto = bravura => Array.from({ length: 8 }, (_, s) => giocaDalCurioso(3, { eroe: 'cavaliere', seme: s + 1, bravura }))
-  const conta = gs => ({ vinte: gs.filter(g => g.esito.vinta).length, quante: gs.length })
-  const bene = conta(otto(0.9))
-  const caso = conta(otto(0.35))
-  controlla('rispondendo bene la scala sommersa si vince', bene.vinte >= 7,
-            `${bene.vinte}/${bene.quante}`)
-  controlla('premendo a caso no', caso.vinte <= 1, `${caso.vinte}/${caso.quante}`)
-  nota(`la scala sommersa: ${bene.vinte}/8 vinte al 90% di risposte giuste, ` +
-       `${caso.vinte}/8 al 35%`)
 }
 
 /* chi risponde a caso non arriva in fondo come chi risponde bene: se

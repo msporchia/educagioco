@@ -12,6 +12,9 @@ globalThis.removeEventListener ??= () => {}
 globalThis.innerWidth ??= 400; globalThis.innerHeight ??= 800
 globalThis.document ??= { hidden: false, createElement: () => tela }
 globalThis.requestAnimationFrame ??= f => setTimeout(() => f(performance.now()), 16)
+// i tetti da un secondo in su (la scena ferma ne aspetta 6,2) passano a un terzo: le fasi di una scena buona restano sotto il secondo
+const attesaVera = globalThis.setTimeout
+globalThis.setTimeout = (f, ms, ...a) => attesaVera(f, ms >= 1000 ? ms / 3 : ms, ...a)
 
 let r = null
 try { await conTetto(new Promise(() => {}), 30, 'la prova') } catch (e) { r = e.message }

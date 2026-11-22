@@ -8,7 +8,7 @@
    disegnino per ogni tappa e ogni mondo, le monete, e la materia «Frasi
    spagnole» dell'albo che con le frasi nuove non passa il cento per cento.
    La fila di una domanda ha ¿ in testa e ? in coda (non sono tessere).
-   Il browser lo prova integrazione/spagnolo-mondi; il motore
+   Il browser lo prova integrazione/lingue-mondi; il motore
    unita/spagnolo-mondi.
    ═══════════════════════════════════════════════════════════════════ */
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'

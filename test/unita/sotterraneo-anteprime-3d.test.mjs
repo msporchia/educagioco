@@ -87,6 +87,8 @@ for (const t of Object.keys(MOSTRI)) {
   const r = leggiChiave(chiaveDelMostro({ tipo: t })).r
   uguale(`${t}: la chiave porta allo stesso modello della scena`, idDi(r), idDi({ tipo: t, grado: 'comune' }))
 }
+// una specie che non c'è non ha modello: la sua anteprima vale null (anteprime3d.js, inPosaMostro)
+uguale('una specie senza modello: nessuna anteprima', idDi(leggiChiave('mostro:nessuno:comune')?.r || { tipo: 'nessuno', grado: 'comune' }), null)
 
 // la coda: una volta per chiave, nell'ordine, un guasto vale null, si cede il filo fra un giro e l'altro
 {

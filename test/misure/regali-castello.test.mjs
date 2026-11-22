@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    I REGALI DELLA PARTITA LIBERA
    tempo: 60
+   perché: i regali della partita libera del castello: la campagna non cambia di un bit con venti regali in tasca, il record si muove, ogni cinque ondate un potenziamento da scegliere che resta il giorno dopo
+   a parte perché: castello giudica la campagna; questo la partita libera, che ha un'altra curva (vita dei nemici +30% a ondata) e `npm run tara` non la tara
 
    La partita libera cedeva **sempre alla stessa ondata** — la ventesima,
    con i cinque cuori intatti fino a lì — e non per come si giocava: a
