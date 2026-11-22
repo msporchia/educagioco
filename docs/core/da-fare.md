@@ -28,54 +28,48 @@ stanno nella sua cartella.
 
 ## Le prove
 
-Dalla rassegna del 21/11 (i numeri in [tempi-dei-test.md](tempi-dei-test.md),
-le regole in [test.md](test.md), «Cosa va nel browser, e cosa no»), in
-ordine di secondi risparmiati:
+Dalla rassegna del 21/11 e dal riassetto del 22 (i numeri in
+[tempi-dei-test.md](tempi-dei-test.md), le regole in [test.md](test.md),
+«Cosa va nel browser, e cosa no»). Fatto: le misure fuori dalle unità, il
+sotterraneo nel browser da 46 file a 14, gli amici da 14 a 1, le lingue
+gemelle in un file per coppia, le partite giocate di robot, Passo passo,
+Castle Battle, giardino e salto, le verifiche a mano. Resta:
 
-- **Le misure dentro le unità**, che fanno il pavimento di `npm test`:
-  `unita/sotterraneo` (le partite alle righe ~116–187 e ~227–259),
-  `unita/sotterraneo-roba` («l'equilibrio, in piccolo» in fondo, i tiri
-  dell'elisir, i cicli sui mercanti a cinque semi), `sotterraneo-zone`
-  (le otto partite per livello), `sotterraneo-quest-modelli` (dodici semi),
-  i semi di `passo-passo-sentiero`, `sotterraneo-abisso`, `saperi`. Vanno
-  in `misure/` o scendono a un seme dove provano una regola e non una quota.
-- **Le misure che rifanno un banco**: `misure/sotterraneo` e
-  `sotterraneo-strade` (`npm run taratura`, `npm run sotterraneo`), la
-  sezione 5 di `misure/survivors` (`strumenti/survivors-banco.mjs`). Le
-  sezioni 1–4 di `misure/survivors`, `misure/asteroidi` e le due `*-isole`
-  sono invece regole svelte: unità.
-- **Regole provate passando dalla schermata**, da portare fra le unità:
-  `sotterraneo-bottega-avanti`, `-luce`, `-mondo-tana`, `-pericolo`,
-  `-pozioni`, `-rigenera`, la sezione 1 di `torri` (16.000 operazioni
-  senza browser dentro un file del browser), `calcolo`, `campagna-mate`,
-  le parti a numeri di `quadro`, `come-va`, `avviso-difficolta`.
-- **File da fondere per preparazione**: nel sotterraneo lo scontro col
-  cheat `sotterraneo=branco` (12 file), il mondo di sopra (~18), la bottega
-  (9), la discesa a seme (12); i 14 `amici-<gioco>`; le 8 soste; i gemelli
-  inglese/spagnolo (`-mondi`, `-sosta`, il libero) e `lingua-sosta`;
-  `app` + `avvio` + `campagna-mate` + `calcolo`. `genitori`, `fattoria3d` e
-  `sotterraneo-3d` sono invece da spezzare.
-- **Partite giocate per arrivare a un punto**: `costruttore` e
-  `passo-passo` giocano i livelli col dito alla velocità del robot
-  (la soluzione è nei dati), `arena` e `giardino` rispondono a caso finché
-  nasce la caserma, `salto-giochi` gira fino a 120 volte da mezzo secondo.
-- **Controlli che non possono fallire**: 32 `controlla('…', true)`, 125
-  `.catch` che ingoiano, il ramo 2D di `sotterraneo-sopra-barra` (cerca
-  `.sot-velo-scontro`, che non esiste più: annota «il pannello non c'è» e
-  passa), `integrazione/app` che stampa e basta.
-- **Strumenti e non test**: `benchmark-veri`, `fps` (la misura),
-  `torri-equilibrio`, `torri-figure`, `sotterraneo-3d-tempo`,
-  `sotterraneo-sopra-barra`, le larghezze di `sotterraneo-3d`.
-- **Le attese fisse**: 1.435 `attendi` scritti, 80 da un secondo e mezzo in
-  su fra sotterraneo e fattoria; quasi tutte aspettano una telecamera che
-  si ferma (`fermoNelMondo` c'è già).
-- **Gli attrezzi copiati**: `tocca` via CDP in 38 file, `toccaIl` in 27,
-  `entra` in 14: in `aiuto/browser.mjs` non ci sono.
-- **Ballerino**: `integrazione/codice-segreto-sosta` è caduto una volta su
-  sei su «torno a quella di prima riprende la tappa a metà».
-- **Nella fattoria un tocco sul prato nell'istante dopo la ✕ di un foglio
-  non conta** (a 700 ms sì): da guardare col dito se un bambino svelto lo
-  sente.
+- **Il gioco non dice quando è pronto**, e i test aspettano a tempo: 856
+  attese fisse scritte (erano 1.435), 42 da un secondo e mezzo in su. Un
+  `data-pronta` sulla domanda (i 320 ms ciechi) e un segno dell'archivio
+  scritto toglierebbero attese e gare insieme. Tocca `src/`.
+- **Partite ancora giocate per arrivare a un punto**: `lingue-sosta`
+  (quattro tappe intere, due minuti), la partita libera del castello e il
+  volo della rotta in `amici-mappe`, il resto di `passo-passo`.
+- **File da spezzare**: `fattoria3d` (1.283 righe, tre minuti: è il più
+  lungo del giro), `genitori` (1.228), e `scarico`, tre minuti di attese
+  che sono la prova stessa.
+- **Regole ancora provate dalla schermata**: `calcolo` e `campagna-mate`
+  (la stessa mappa, da unire), le parti a numeri di `quadro`, `come-va`,
+  `avviso-difficolta`; nel mondo di sopra i nomi della veduta e il conto
+  del giro, che stanno dentro `viste/Mondo3d.vue` e non in una funzione.
+- **Candidati a fondersi**, usciti scrivendo le righe `a parte perché:`
+  (dove la riga dice «potrebbe stare in…»): `salto` in `salto-giochi`;
+  `torri` e `torri-libere` in `torri-figure`; `asteroidi-hangar` e
+  `calcolo` in `campagna-mate`; `costruttore-salvataggio` in
+  `costruttore`; `arena-guida` in `arena`; `giochi-impostazioni`,
+  `impostazioni-barra` e `nascita` attorno a `genitori`; le due `pausa-*`
+  insieme; `sotterraneo-sopra-bacheca` e `sotterraneo-rotta` in
+  `sotterraneo-sopra-missioni`; le due `misure/*-isole` in una.
+- **Unità sopra gli otto secondi** lasciate com'erano: `sotterraneo-roba`
+  (i giri dei banchi), `sotterraneo-taratura`, `-mostri-3d`, `-lockstep`.
+- **Le pause** di `pausa-asteroidi` e `pausa-giochi` aspettano ancora a
+  tempo; `domanda` tiene a mano la lista dei prefissi dei quiz per il
+  banco dei grandi (per la partita non più).
+- **Ballerino**: `lingue-mondi` aspetta otto secondi l'esito di una
+  domanda del libro, e prima della fusione è scaduto una volta.
+- **Gli attrezzi copiati**: `tocca` via CDP resta in 11 file (erano 38);
+  c'è `ditoDi` in `aiuto/browser.mjs`.
+- **Trovati giocando coi test, da guardare nel gioco**: cambiando bambino
+  e ricaricando entro 350 ms `ultimo-giocatore` non si salva e si riapre
+  quello di prima; nella fattoria un tocco sul prato nell'istante dopo la
+  ✕ di un foglio non conta (a 700 ms sì).
 - **Una guardia per i pittori**: un `unita/pittori` da pochi millisecondi
   che controlla solo che nessun pittore lanci mentre disegna (zero
   asserzioni sul contenuto). La tavola da guardare, se serve, è uno

@@ -1,10 +1,10 @@
 # I test
 
 ```
-npm test                 il giro di ogni giorno: senza browser — un paio di minuti
+npm test                 il giro di ogni giorno: senza browser — mezzo minuto
 npm run test:unita       lo stesso comando, per esteso
-npm run test:svelto      le unità che non si dichiarano lente — mentre si scrive, un minuto
-npm run test:browser     solo quelli nel browser — Chrome, una decina di minuti
+npm run test:svelto      le unità che non si dichiarano lente — mentre si scrive, mezzo minuto
+npm run test:browser     solo quelli nel browser — Chrome, sette minuti
 npm run test:tutto       unità e browser, ricompila prima — prima di pubblicare
 npm run test:misure      l'equilibrio dei giochi — solo a chi l'ha toccato, fino a 25 minuti
 
@@ -24,7 +24,7 @@ fila vale più del novanta per cento dell'intera suite (misurato in
 [`docs/core/tempi-dei-test.md`](../docs/core/tempi-dei-test.md)) — quindi si chiede
 solo per «estrema necessità»: si è appena toccata *quella* schermata e si
 vuole esserne sicuri prima di committare. In quel caso il modo giusto non
-è `npm run test:browser` (tutti insieme, una decina di minuti anche otto
+è `npm run test:browser` (tutti insieme, sette minuti anche otto
 alla volta) ma **un file solo**: `node test/esegui.mjs integrazione/pozioni`.
 I tempi veri e le regole del carico stanno in
 [`docs/core/tempi-dei-test.md`](../docs/core/tempi-dei-test.md). `npm run test:tutto` è il giro completo: prima di

@@ -5,36 +5,38 @@ vengono. Come si lanciano sta in [test.md](test.md).
 
 ## I numeri
 
-Misurati il 21/11/2026 su un i5-13600KF (20 thread, 30 GB, una RTX 5060),
-con un altro giro di test acceso sulla stessa macchina: 304 unità, 8
-misure, 142 file nel browser.
+Misurati il 22/11/2026 su un i5-13600KF (20 thread, 30 GB, una RTX 5060):
+307 unità, 90 file nel browser, 14 misure e 6 verifiche a richiesta.
 
-| | orologio | CPU spesa |
-|---|---|---|
-| `npm run test:svelto` (299 file) | 58 s | 7 min |
-| `npm test` (304 unità) | 1 min 54 s | 12 min |
-| `npm run test:browser` (142 file) | 11 min 19 s | 49 min |
-| `npm run test:misure` | 25 min | ~1 h 40 (quattro processi) |
+| | orologio | CPU spesa | il 21/11, prima |
+|---|---|---|---|
+| `npm test` (307 unità) | 32 s | ~4 min | 1 min 54 s, 12 min |
+| `npm run test:browser` (90 file) | 6 min 50 s | 28 min | 142 file: 2 ore e mezza–4 in fila |
+| `npm run test:tutto` | ~8 min | ~35 min | |
+
+Il browser del 21/11, già con la scheda video e 142 file, faceva 11 min 19 s
+e 49 minuti di CPU: il resto l'hanno tolto le fusioni (i secondi sommati
+dei file sono scesi da 5.165 a 3.170, i controlli da 4.450 a 4.261). Con
+la memoria occupata le corsie calano (una per giga libero) e i tempi
+salgono: le unità a cinque corsie fanno 59 s.
 
 - **Un test 3D in software teneva otto processori.** Chrome senza schermo
-  disegna WebGL col processore: `integrazione/sotterraneo-luce`, da solo,
-  durava 40 s e ne spendeva 317 di CPU. Otto alla volta ne chiedevano
+  disegna WebGL col processore: un file della discesa del sotterraneo, da
+  solo, durava 40 s e ne spendeva 317 di CPU. Otto alla volta ne chiedevano
   sessantaquattro su venti: il carico saliva a 45–50, le attese dei test
   scadevano e il giro tornava rosso. Con la scheda video (`--enable-gpu`,
-  di serie in `aiuto/browser.mjs`) lo stesso file fa 22 s e 23 di CPU; i
-  quattro più lunghi provati nei due modi passano da 106–191 s a 27–47.
-  Prima il browser in fila valeva fra 2 ore e mezza e 4 (la somma dei
-  tempi ricordati: 8.800–15.100 s).
-- **Il pavimento di `npm test` sono due file**: `unita/sotterraneo-roba`
-  (114 s) e `unita/sotterraneo` (85 s) giocano un centinaio di partite
-  finte, cioè misurano l'equilibrio dentro le unità. Poi
-  `passo-passo-sentiero` (38 s, 288 mappe generate e risolte). I 255 file
-  sotto il secondo fanno 48 s in tutto.
-- **`misure/sotterraneo` gioca ~12.500 discese** e sta a ridosso del suo
-  tetto di 1500 s (a macchina carica lo supera e viene fermato): è la
-  taratura (`npm run taratura`, `npm run sotterraneo`) rifatta come test.
+  di serie in `aiuto/browser.mjs`) lo stesso file fa 22 s e 23 di CPU.
+- **I più lunghi del giro**: `fattoria3d` e `scarico` (tre minuti),
+  `pozioni` (2 min 20), `sotterraneo-bottega`, `lingue-mondi` e
+  `lingue-sosta` (due minuti). Il giro non scende sotto il più lungo.
+- **Le partite finte stanno nelle misure**: `unita/sotterraneo` e
+  `unita/sotterraneo-roba` ne giocavano un centinaio a ogni commit (66 e
+  81 s, ora 4 e 10–15). `misure/sotterraneo` ne gioca ~12.500 e sta a
+  ridosso del suo tetto di 1500 s: è una taratura, e si lancia solo dopo
+  un cambio significativo del bilanciamento.
 - **Il costo fisso di Node è 14 ms**; aprire Chrome e la pagina (36 MB)
-  costa 5 s: il file di integrazione più svelto non scende sotto.
+  costa 5 s: un file nel browser non scende sotto, ed è il motivo per cui
+  quello che parte dalla stessa preparazione sta nello stesso file.
 
 ## Le regole che ne vengono
 
@@ -79,7 +81,7 @@ misure, 142 file nel browser.
   spazi davanti): la regex leggeva anche la prosa dei commenti.
 - **Un nome prende unità e browser, non le misure**: `node test/esegui.mjs
   pozioni` gira i file omonimi delle due cartelle, e apre Chrome;
-  `sotterraneo` sono 128 file. `integrazione/pozioni` o `unita/pozioni`
+  `sotterraneo` sono 93 file. `integrazione/pozioni` o `unita/pozioni`
   ne prendono una sola; le misure si chiedono col nome del gruppo
   (`misure`, `misure/survivors`).
 - **Una tavola da guardare non è un test.** Un foglio che disegna i
@@ -90,11 +92,13 @@ misure, 142 file nel browser.
 
 ## Un rosso che non dipende dal carico
 
-- `integrazione/sotterraneo` cade circa una volta su cinquanta su «dopo un
-  tocco l'eroe si è mosso»: tocca a 70 px dall'eroe nei quattro versi, e
-  la mappa a caso può chiuderne tre su quattro. Non è il carico: un tocco
-  buono sposta la scena in 200 ms anche con otto test insieme, contro gli
-  800 concessi.
+- **La sorte dentro un test**: tre rossi «ballerini» del riassetto non
+  erano né carico né gare. Una riga posata «a caso» ogni tanto indovinava
+  il codice segreto; il leggendario raccolto a sorte ogni tanto era lo
+  stesso già in tasca; la domanda uscita a sorte ogni tanto veniva da un
+  modulo che la lista a mano del test non conosceva. Dove il gioco tira
+  un dado, il test o lo ferma (un seme, un valore letto dallo stato) o
+  controlla una cosa vera per ogni faccia.
 
 Quello che resta da fare sui test (le misure dentro le unità, i file del
 browser da fondere o da portare fra le unità, i controlli che non possono

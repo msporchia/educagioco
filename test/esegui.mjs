@@ -230,14 +230,16 @@ function raccogli() {
       }
   }
   if (!filtri.length) return fuori.filter(t => !A_RICHIESTA.includes(t.gruppo))
-  return fuori.filter(t => filtri.some(f => preso(t, f)))
+  // `gruppo/nome` col nome preciso di un file prende solo lui: `misure/sotterraneo` non si porta dietro `misure/sotterraneo-zone`
+  const precisi = new Set(filtri.filter(f => fuori.some(t => `${t.gruppo}/${t.nome}` === f)))
+  return fuori.filter(t => filtri.some(f => (precisi.has(f) ? `${t.gruppo}/${t.nome}` === f : preso(t, f))))
 }
 
 /* ── COSA PRENDE UN FILTRO ──
    Il nome di un gruppo vuol dire quel gruppo e basta: «misure» non prende
    unita/griglia-misure. `gruppo/nome` (`integrazione/amici`,
-   `misure/sotterraneo`) prende i file di quel gruppo che contengono il
-   nome. Un nome nudo prende i file che lo contengono nelle unità e nel
+   `misure/sotterraneo`) prende il file di quel gruppo con quel nome, se
+   c'è, e se no quelli che lo contengono (`misure/sotterraneo-`). Un nome nudo prende i file che lo contengono nelle unità e nel
    browser, **non nelle misure né nelle verifiche a mano**: `node
    test/esegui.mjs sotterraneo` si portava dietro venticinque minuti di
    partite finte su quattro processori, che è una taratura e non la prova

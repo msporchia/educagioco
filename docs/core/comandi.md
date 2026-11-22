@@ -13,15 +13,15 @@ build non passa più.
 | comando | cosa fa | costa |
 |---|---|---|
 | `npm run dev` | server di sviluppo su `localhost:5173` | — |
-| `npm test` | le prove senza browser (= `test:unita`) | ~2 min |
+| `npm test` | le prove senza browser (= `test:unita`) | ~30 s |
 | `npm run test:misure` | l'equilibrio dei giochi: partite finte, la mappa inglese. Solo a chi l'ha toccato: non entra in `test:tutto` né sotto un nome (`misure/survivors` ne prende una) | fino a 25 min |
 | `npm run test:verifiche` | le verifiche a mano nel browser (`test/verifiche/`): misure da guardare e prove lunghe di una parte sola, a richiesta come le misure | minuti |
-| `npm run test:svelto` | le unità che non si dichiarano lente, senza ricompilare | ~1 min |
+| `npm run test:svelto` | le unità che non si dichiarano lente, senza ricompilare | ~30 s |
 | `npm run build` | `dist/index.html`, il file unico | ~3 s |
 | `npm run build:scuola` (`PESI_SCUOLA=20` stampa i venti moduli più pesanti di ogni pagina) | la scuola: `dist-scuola/index.html`, `maestra.html`, `versione.json` ([../scuola/architettura.md](../scuola/architettura.md)); non tocca `dist/` | ~2 s |
 | `npm run dev:scuola` | la scuola in sviluppo su `localhost:5174`: `/scuola/index.html` (bambini) e `/scuola/maestra.html` | — |
-| `npm run test:browser` | solo le prove dentro Chrome (il 3D lo disegna la scheda video; `SENZA_SCHEDA=1` in software) | ~11 min |
-| `npm run test:tutto` | unità e browser: prima del push | ~13 min |
+| `npm run test:browser` | solo le prove dentro Chrome (il 3D lo disegna la scheda video; `SENZA_SCHEDA=1` in software) | ~7 min |
+| `npm run test:tutto` | unità e browser: prima del push | ~8 min |
 | `node test/esegui.mjs <nome>` | i file che contengono il nome, unità e browser (`pozioni`); `integrazione/pozioni` o `unita/pozioni` una cartella sola | secondi |
 | `node test/esegui.mjs scuola` | le unità della scuola e `integrazione/scuola` (la maestra e un bambino nelle due pagine, col servizio in locale): costruisce `dist-scuola/` con `build:scuola` e non `dist/` | ~10 s |
 

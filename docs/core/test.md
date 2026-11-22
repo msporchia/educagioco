@@ -9,15 +9,15 @@ ripete.
 
 | quando | cosa | costa |
 |---|---|---|
-| mentre si scrive | `npm run test:svelto` | ~1 min |
-| a ogni commit | `npm test` (= `npm run test:unita`), niente browser né build | ~2 min |
+| mentre si scrive | `npm run test:svelto` | ~30 s |
+| a ogni commit | `npm test` (= `npm run test:unita`), niente browser né build | ~30 s |
 | toccata una schermata | `node test/esegui.mjs integrazione/<nome>`, un file solo | secondi |
-| prima del push | `npm run test:tutto`: unità e browser | ~13 min |
-| toccato l'equilibrio di un gioco | `npm run test:misure`, o `node test/esegui.mjs misure/<nome>` | fino a 25 min |
+| prima del push | `npm run test:tutto`: unità e browser | ~8 min |
+| toccata una parte che ha una verifica | `node test/esegui.mjs verifiche/<nome>` | minuti |
+| cambiato sul serio il bilanciamento | `npm run test:misure`, o `node test/esegui.mjs misure/<nome>` | fino a 25 min |
 
-I numeri sono quelli misurati in [tempi-dei-test.md](tempi-dei-test.md), e
-sono troppi: il perché e cosa resta da fare sta lì e in
-[da-fare.md](da-fare.md).
+I numeri sono quelli misurati in [tempi-dei-test.md](tempi-dei-test.md);
+cosa resta da fare sta in [da-fare.md](da-fare.md).
 
 - **Le unità girano a ogni commit**: costano secondi, non c'è motivo di
   risparmiarle.
@@ -115,6 +115,14 @@ file (cosa prova che altrimenti non si proverebbe). Di regola:
 - **Una preparazione, tanti controlli**: aprire Chrome e la pagina costa 5
   secondi, entrare in una scena 3D di più. Quello che parte dalla stessa
   semina sta nello stesso file, non in sei file che rifanno l'ingresso.
+- **Un test pesante spiega perché esiste.** Un file nel browser, una
+  verifica, una misura, un'unità sopra i cinque secondi dicono in testa,
+  in due righe: `perché:` cosa prova che nessun altro prova, e `a parte
+  perché:` come mai non è un blocco in più di un file che c'è già. Se un
+  file prova già tutti i vestiti, i cappelli sono tre controlli lì dentro,
+  non un file nuovo che riapre Chrome e rifà l'ingresso. Chi non riesce a
+  scrivere la seconda riga ha la risposta: si allunga quello che c'è. Nei
+  test: `unita/test-pesanti` guarda che le due righe ci siano.
 - **Una misura da guardare, un banco, una tavola di figure** non sono
   test: stanno in `strumenti/` col loro comando.
 

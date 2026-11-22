@@ -28,9 +28,9 @@ una o due frasi, non la storia di come ci si è arrivati: quella la tiene
 npm ci                 # installazione pulita (non npm install)
 npm run dev            # server di sviluppo
 npm run build          # produce dist/index.html, il file unico
-npm test               # le unità: senza browser, un paio di minuti
+npm test               # le unità: senza browser, mezzo minuto
 npm run test:svelto    # le unità che non si dichiarano lente, mentre si scrive
-npm run test:browser   # solo dentro Chrome, una decina di minuti
+npm run test:browser   # solo dentro Chrome, sette minuti
 npm run test:misure    # le tarature (partite finte): solo dopo un cambio significativo del bilanciamento, fino a 25 minuti
 npm run test:verifiche # le verifiche a mano nel browser: solo a chi ha toccato quella parte
 npm run test:tutto     # unità e browser: prima di pubblicare
@@ -48,7 +48,9 @@ node test/esegui.mjs --alla-volta=1     # uno alla volta (di solito otto)
 browser gira **prima del push**, non prima di ogni commit: sui telefoni
 finisce la punta, non i passaggi. Chi ha toccato una schermata lancia il suo
 file (`node test/esegui.mjs integrazione/pozioni`), non la famiglia intera
-(`sotterraneo` sono 128 file). Più giri insieme si spartiscono la macchina:
+(`sotterraneo` sono 93 file). Un test pesante nuovo dice in
+testa perché esiste e perché non allunga un file che c'è già
+(`docs/core/test.md`). Più giri insieme si spartiscono la macchina:
 il lanciatore aspetta quando è piena. Nel checkout condiviso la build
 la fa solo chi pubblica; un agente in un worktree suo la fa lì (il `dist/` è
 del suo worktree) e non usa `--niente-build` con una build vecchia, che prova
