@@ -26,7 +26,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, scatto, attendi, ditoDi } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto, blocco } from '../aiuto/verifica.mjs'
-import { scendiCon, primoDisegno, scelta, finitoIlRacconto, raccontoInCorso, rispondiGiusto, osserva, visti, corpoDi }
+import { scendiCon, primoDisegno, scelta, finitoIlRacconto, raccontoInCorso, rispondiGiusto, osserva, visti, corpoDi, accorciaIlRacconto }
   from '../aiuto/sotterraneo-scontro.mjs'
 import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 
@@ -210,6 +210,7 @@ await blocco('l\'agguato, e tre mostri in due colonne', async () => {
   uguale('l\'agguato lo dice', (await page.locator('[data-apertura]').innerText()).trim(), 'Alle spalle!')
   await page.waitForSelector('[data-eroe-scontro] .sot-numero-preso', { timeout: 3000 })   // chi arriva alle spalle colpisce per primo
   await scatto(page, 'scontro-agguato')
+  await accorciaIlRacconto(page, tocca)   // visto il colpo alle spalle, il resto dell'apertura va in fretta
   await finitoIlRacconto(page)
   uguale('la riga poi sparisce', await page.locator('[data-apertura]').count(), 0)
   await scelta(page)
@@ -229,6 +230,7 @@ await blocco('la sorpresa', async () => {
   await page.waitForSelector('[data-apertura]', { timeout: 3000 })
   controlla('la sorpresa lo dice', /sorpres/i.test(await page.locator('[data-apertura]').innerText()))
   uguale('e il primo turno nella fila è dell\'eroe', (await fila())[0], 'eroe')
+  await accorciaIlRacconto(page, tocca)
   await finitoIlRacconto(page)
   await primoDisegno(page)
   await scelta(page)
@@ -251,6 +253,8 @@ await blocco('la catena di fulmini: le melme resistono', async () => {
   await raccontoInCorso(page)
   await attendi(page, 150)
   await scatto(page, 'scontro-catena')
+  // visto l'effetto e chi resiste, il resto del racconto va in fretta
+  await accorciaIlRacconto(page, tocca, { quando: () => window.__visti.effetti3d >= 1 && window.__visti.testi.includes('resiste') })
   await finitoIlRacconto(page)
   const v = await visti(page)
   controlla('la catena è un effetto vivo nella scena durante il racconto', v.effetti3d >= 1, String(v.effetti3d))
@@ -263,6 +267,7 @@ await blocco('la prigione di ghiaccio: il fermo addosso', async () => {
   await rispondiGiusto(page)
   await page.waitForSelector('[data-mostro] [data-stato="fermo"]', { timeout: 6000, state: 'attached' })
   await scatto(page, 'scontro-gelo')
+  await accorciaIlRacconto(page, tocca, { quando: () => window.__visti.effetti3d >= 1 && window.__visti.stati.includes('fermo') })
   await finitoIlRacconto(page)
   const v = await visti(page)
   // la pastiglia di gelo è quella del fermo, col fiocco; il blocco di ghiaccio è un modello nella scena
@@ -280,6 +285,7 @@ await blocco('la palla di fuoco: le melme la temono', async () => {
   await raccontoInCorso(page)
   await attendi(page, 200)
   await scatto(page, 'scontro-palla')
+  await accorciaIlRacconto(page, tocca, { quando: () => window.__visti.effetti3d >= 1 && window.__visti.testi.includes('lo teme!') })
   await finitoIlRacconto(page)
   const v = await visti(page)
   controlla('la palla di fuoco è un effetto vivo nella scena', v.effetti3d >= 1, String(v.effetti3d))
@@ -313,7 +319,7 @@ async function abbattiIlPrimo() {
     if (!(await page.locator('[data-duello]').count()) || await page.locator('[data-mostro][data-i="0"][data-morto]').count()) break
     await toccaIl('[data-azione="attacco"]')
     await rispondiGiusto(page)
-    await raccontoInCorso(page).catch(() => {})   // l'ultimo colpo può chiudere lo scontro prima che lo si veda
+    await accorciaIlRacconto(page, tocca)   // l'ultimo colpo può chiudere lo scontro prima che lo si veda: allora niente tocco
     await finitoIlRacconto(page)
   }
   await page.waitForFunction(() => window.__caduta.cade && window.__caduta.basso < window.__caduta.alto * 0.6, null, { timeout: 8000 }).catch(() => {})

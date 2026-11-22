@@ -31,6 +31,7 @@
 import { apriBrowser, apriGioco, azzera, semina, scegli, leggiProfilo, mondoPronto, attendi, scatto, fermoNelMondo, ditoDi, SCATTI_ACCESI }
   from '../aiuto/browser.mjs'
 import { seminaIlSotterraneo } from '../aiuto/sotterraneo-semina.mjs'
+import { viaLaFesta } from '../aiuto/sotterraneo-sopra.mjs'
 import { controlla, uguale, stessaLista, riassunto, blocco } from '../aiuto/verifica.mjs'
 import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
@@ -49,6 +50,7 @@ const mago = async () => (await leggiProfilo(page))?.campagne?.sotterraneo?.cfg?
 await blocco('l\'editor dalla scelta', async () => {
   await azzera(page)
   await semina(page, { coins: 300, settings: { sperimentali: true }, campagne: { sotterraneo: { tappa: 0, libera: false, stelle: {} } } })
+  await viaLaFesta(page)
   await scegli(page, 'sotterraneo')
   await page.waitForSelector('.sot-eroe[data-eroe]', { timeout: 30000 })
   await foto('personaggio-1-scelta')
@@ -188,7 +190,7 @@ const toccaIlNodo = async sel => {
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: b.x + b.width / 2, y: b.y + b.height / 2 }] })
   await attendi(page, 60)
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
-  await attendi(page, 250)
+  await attendi(page, 120)   // il click che il tocco lascia dietro, e il fotogramma che lo disegna
 }
 let rami = []
 await blocco('l\'albero: un ramo alla volta', async () => {
@@ -199,6 +201,7 @@ await blocco('l\'albero: un ramo alla volta', async () => {
     crescita: { v: 2, esp: sogliaDi(12), forza: 1, destrezza: 0, intelligenza: 4, tempra: 0, albero, caselle: ['sfera-di-fuoco', 'lama-incantata', 'scudo-arcano'] } }
   await azzera(page)
   await semina(page, { coins: 300, campagne: { sotterraneo: { tappa: 1, libera: false, stelle: { 0: 3 }, cfg: { mondo: MONDO, eroe: 'mago', avventure: { mago: avv } } } } })
+  await viaLaFesta(page)
   await scegli(page, 'sotterraneo')
   await mondoPronto(page)
   await toccaIlNodo('[data-azione="eroe-pagina"]')

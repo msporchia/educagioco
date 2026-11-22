@@ -3,14 +3,14 @@
    mondo-3d-la-meta.md
 
    perché: la bacheca di sopra col dito: prendere la taglia, consegnare e ricevere le gemme, il diario, «segui questa», la X da scavare con la domanda
-   a parte perché: seminato con tre taglie in mano; sotterraneo-sopra-missioni parte dal cavaliere davanti alla torre con le missioni vere, ed è lì che potrebbe stare (candidato a fondersi)
+   a parte perché: seminato alla prima partita con tre taglie in mano; sotterraneo-sopra-missioni parte dal cavaliere davanti alla torre con le missioni vere, e le taglie in mano gli cambierebbero il diario, il tetto delle tre e la meta: la sua semina non le regge
 
    Nel Sotterraneo 3D la bacheca di ogni città appende tre fogli per giro: si prende una taglia, si fa, si consegna e
    si riceve la ricompensa in gemme (niente monete, niente esperienza). Qui, con tre taglie in mano (una fatta, una mappa
    da scavare, uno da cercare): la bacheca col «?» d'oro, il fumetto con le sue righe e il tetto delle tre, la consegna e
    le gemme, un foglio nuovo che si prende, il diario che le mostra e «segui questa» (la carta della meta passa alla
    taglia, la freccia sul bordo, il cerchio nella veduta), chi si era perso (si parla, la taglia è fatta), la X della
-   mappa (si scava con una domanda: sbagliata si riprova), e il giro del mondo, che conta un ritorno in città solo se
+   mappa (si scava con una domanda), e il giro del mondo, che conta un ritorno in città solo se
    prima ci si è allontanati. Quale meta vince (la storia di difetto, poi la scelta) è unita/sotterraneo-meta-sopra.
    Si tocca come un telefono (`Input.dispatchTouchEvent`).
    Nei test: `[data-bacheca]` (e `data-segno`), `[data-fumetto-di="bacheca"]`, `[data-taglia]` (`data-stato`),
@@ -18,9 +18,9 @@
    `node test/esegui.mjs sotterraneo-sopra-bacheca`
    tempo: 200
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, scatto, attendi, leggiProfilo, ditoDi, nelDialogo } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, scatto, attendi, leggiProfilo, ditoDi } from '../aiuto/browser.mjs'
 import { domandaPronta } from '../aiuto/browser.mjs'
-import { entraSopra, avventuraDi, vaiETocca, toccaSopra, toccaFermo, veduta } from '../aiuto/sotterraneo-sopra.mjs'
+import { entraSopra, avventuraDi, vaiETocca, toccaFermo, veduta, nelDialogo } from '../aiuto/sotterraneo-sopra.mjs'
 import { controlla, uguale, riassunto, blocco } from '../aiuto/verifica.mjs'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { rifaDaId } from '../../src/giochi/sotterraneo/dati/missioni-modelli.js'
@@ -147,23 +147,18 @@ await blocco('il viandante', async () => {
   controlla('e sparisce dal prato', via)
 })
 
-/* ---------- 6. la X: si scava con una domanda (sbagliando si riprova) ---------- */
+/* ---------- 6. la X: si scava con una domanda ----------
+   Sbagliando si riprova e non si perde niente: la X risponde con la stessa domanda e la stessa funzione della pietra
+   (`rispostoPietra` in viste/Mondo3d.vue), e lo sbaglio, coi suoi secondi di lettura, lo prova la pietra in sotterraneo-sopra-mondo */
 await blocco('la X della mappa', async () => {
   await page.evaluate(id => window.__mondo3d.vai(id), `scavo:${MAPPA}`)
   uguale('la X c\'è sul prato', await page.locator(`[data-scavo="${MAPPA}"]`).count(), 1)
   await vaiETocca(page, `[data-scavo="${MAPPA}"]`, `scavo:${MAPPA}`, tocca, { atteso: '[data-fumetto-di="scavo"] [data-azione="scava"]' })
   await scatto(page, 'sotterraneo-bacheca-scavo')
+  uguale('toccare la X non la scava ancora', (await stati())[MAPPA], 'presa')
   await toccaIl('[data-fumetto-di="scavo"] [data-azione="scava"]')
   await page.waitForSelector('[data-scavo-domanda] .qz-tasto', { timeout: 30000 })
   await domandaPronta(page)   // i 320 ms ciechi della domanda appena nata
-  await page.locator('[data-scavo-domanda] .qz-tasto:not([data-giusta])').first().click()
-  // sbagliando la domanda resta a dire il perché e come si fa, il tempo di leggerlo (quiz/Domanda.vue)
-  await page.waitForSelector('[data-scavo-domanda]', { state: 'detached', timeout: 40000 })
-  uguale('sbagliando non si trova niente, e niente si perde', (await stati())[MAPPA], 'presa')
-  await toccaSopra(page, `[data-scavo="${MAPPA}"]`, tocca)
-  await toccaIl('[data-fumetto-di="scavo"] [data-azione="scava"]')
-  await page.waitForSelector('[data-scavo-domanda] .qz-tasto', { timeout: 30000 })
-  await attendi(page, 400)
   await page.locator('[data-scavo-domanda] .qz-tasto[data-giusta]').first().click()
   await page.waitForSelector('[data-scavo-domanda]', { state: 'detached', timeout: 40000 })
   uguale('rispondendo giusto la X è scavata', (await stati())[MAPPA], 'fatta')

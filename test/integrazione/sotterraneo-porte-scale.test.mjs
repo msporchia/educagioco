@@ -16,7 +16,7 @@
    `node test/esegui.mjs sotterraneo-porte-scale`
    tempo: 120
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, seminaArchivio, scatto, attendi, leggiProfilo, ditoDi }
+import { apriBrowser, apriGioco, azzera, semina, seminaArchivio, scatto, attendi, leggiProfilo, ditoDi, domandaPronta }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, blocco, riassunto } from '../aiuto/verifica.mjs'
 import { ROBA_NUDA, profiloDelSotterraneo, giuPronto, fermoGiu, cellaGiu, schermoDi, toccaLaCella, nelCampo, eroeIn, aCasa, scendiColCheat,
@@ -124,7 +124,7 @@ await blocco('la porta toccata col dito', async () => {
   await page.waitForSelector('.sot-foglio .sot-domanda .qz-tasto', { timeout: 15000 })
   controlla('toccata la porta, l\'eroe ci è andato e la porta chiede', (await page.locator('.sot-foglio h2').innerText()).includes('porta'))
   await scatto(page, 'sotterraneo-3d-porta')
-  await attendi(page, 400)   // la domanda è cieca 320 ms
+  await domandaPronta(page)   // la domanda è cieca 320 ms
   await page.locator('.sot-domanda .qz-tasto[data-giusta]').first().click()
   await page.waitForFunction(([x, y]) => window.__sotterraneo3d.corsa.livello.robe.some(r => r.che === 'porta' && r.x === x && r.y === y && r.aperta), [p.x, p.y], { timeout: 8000 }).catch(() => {})
   uguale('rispondendo giusto la porta si apre', await page.evaluate(([x, y]) => window.__sotterraneo3d.corsa.livello.robe.some(r => r.che === 'porta' && r.x === x && r.y === y && r.aperta), [p.x, p.y]), true)

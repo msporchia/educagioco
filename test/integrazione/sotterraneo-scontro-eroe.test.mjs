@@ -22,7 +22,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, scatto, attendi, ditoDi, finestraFerma, lasciaLaDiscesa } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto, blocco } from '../aiuto/verifica.mjs'
-import { scendiCon, scelta, finitoIlRacconto, raccontoInCorso, rispondiGiusto, globo, sopraLaBarra } from '../aiuto/sotterraneo-scontro.mjs'
+import { scendiCon, scelta, finitoIlRacconto, raccontoInCorso, rispondiGiusto, globo, sopraLaBarra, accorciaIlRacconto } from '../aiuto/sotterraneo-scontro.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { sogliaDi, VITA_PER_TEMPRA } from '../../src/giochi/sotterraneo/dati/livelli.js'
@@ -107,7 +107,7 @@ async function attaccaGiusto() {
   await pronto()
   await toccaIl('[data-caselle-abilita] [data-azione="attacco"]')
   await rispondiGiusto(page)
-  await raccontoInCorso(page)
+  await accorciaIlRacconto(page, tocca)
   await finitoIlRacconto(page)
 }
 // il numero verde del sorso dura poco: un osservatore dentro la pagina lo ricorda appena compare
@@ -180,6 +180,7 @@ await blocco('«continuo» domanda senza costare, e il secondo stop è «ultimo�
   await rispondiGiusto(page)
   await raccontoInCorso(page)
   uguale('a racconto in corso lo stop non c\'è ancora', await stop().count(), 0)
+  await accorciaIlRacconto(page, tocca)
   await finitoIlRacconto(page)
   await pronto()
   controlla('i mostri hanno colpito', (await globo(page, 'vita')) < vita1, `${vita1} → ${await globo(page, 'vita')}`)
@@ -191,7 +192,7 @@ await blocco('il sorso che basta: lo stop sparisce, una pozione per turno', asyn
   await page.waitForSelector('[data-scegli-pozione][data-pronto]', { timeout: 3000 })
   await guardaLeCure()
   await toccaIl('[data-azione="bevi-questa"][data-cosa="pozione-grande"]')
-  await raccontoInCorso(page)
+  await accorciaIlRacconto(page, tocca, { quando: () => window.__cure.length > 0 })
   await finitoIlRacconto(page)
   uguale('il sorso si vede: il numero che sale', (await page.evaluate(() => window.__cure))[0], `+${COSE['pozione-grande'].cura}`)
   await pronto()
@@ -214,7 +215,7 @@ await blocco('il sorso che non basta: lo stop resta', async () => {
   await toccaIl('[data-azione="bevi-scontro"]')
   await page.waitForSelector('[data-scegli-pozione][data-pronto]', { timeout: 3000 })
   await toccaIl('[data-azione="bevi-questa"][data-cosa="pozione-piccola"]')
-  await raccontoInCorso(page)
+  await accorciaIlRacconto(page, tocca)
   await finitoIlRacconto(page)
   await pronto()
   uguale('una pozione in meno', await pozioni(), n - 1)
@@ -274,6 +275,7 @@ await blocco('Re Ossuto, la sua vita in cima, e il livello salito', async () => 
     if (!(await page.locator('[data-scontro-3d]').count())) break
     await toccaIl('[data-azione="attacco"]')
     await rispondiGiusto(page)
+    await accorciaIlRacconto(page, tocca)
     await page.waitForFunction(() => !document.querySelector('[data-scontro-3d]') || document.querySelector('[data-caselle-abilita][data-pronto]'), null, { timeout: 30000 })
     const o = await page.locator('[data-grosso]').count() ? Number(await page.locator('[data-grosso]').getAttribute('data-ossa')) : null
     if (o !== null && o < ossa0) calata = true

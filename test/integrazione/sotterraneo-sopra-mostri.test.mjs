@@ -20,15 +20,18 @@
    `[data-azione="risveglio"]`, `[data-per-terra]` (`data-cosa`); `window.__mondo3d` (`porta`, `stato()`, `inScontro()`, `palco()`).
    `node test/esegui.mjs sotterraneo-sopra-mostri`
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, mondoPronto, scegliAttacco, ditoDi, nelDialogo }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, mondoPronto, scegliAttacco, ditoDi, domandaPronta }
   from '../aiuto/browser.mjs'
 import { campagnaSeminata } from '../aiuto/sotterraneo-semina.mjs'
-import { entraSopra, cellaEroe, grafica, vaiETocca, toccaSopra, toccaFermo } from '../aiuto/sotterraneo-sopra.mjs'
+import { entraSopra, cellaEroe, grafica, vaiETocca, toccaSopra, toccaFermo, viaLaFesta, nelDialogo } from '../aiuto/sotterraneo-sopra.mjs'
 import { controlla, uguale, nota, riassunto, blocco } from '../aiuto/verifica.mjs'
 import { ilMondoIntero, terraDelMondo, cittaInCella } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
 import { popolaMondo, alSicuro, annuncioDi, BLOCCO_ZONA, VERSIONE_SOPRA } from '../../src/giochi/sotterraneo/motore/aperta.js'
 import { pezzoNuovo } from '../../src/giochi/sotterraneo/motore/bottino.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
+import { crescitaA } from '../../src/giochi/sotterraneo/motore/crescita.js'
+import { eroeDi } from '../../src/giochi/sotterraneo/dati/eroi.js'
+import { chiaveDelPezzo } from '../../src/giochi/sotterraneo/dati/cose.js'
 
 // i posti di prova (cavaliere, giro 0), letti dal mondo a percorso coi suoi branchi: una cella del luogo a cinque o sei passi da un
 // branco fatto così (`tipi`: le specie in fila, una delle date), lontana dagli altri branchi, da cui il branco arriva addosso
@@ -67,6 +70,10 @@ async function avventuraQuando(vale, entro = 8000) {
   while (!vale(a) && Date.now() < fine) { await attendi(page, 250); a = await avventura() }
   return a
 }
+// un cavaliere ben oltre i branchi (livello 25, uno spadone raro): dove si prova cosa resta dopo lo scontro e non lo scontro, che
+// al livello atteso dura otto turni
+const forte = finite => ({ crescita: crescitaA(eroeDi('cavaliere'), 25),
+  roba: { ...campagnaSeminata({ finite }).cfg.avventure.cavaliere.roba, mano: chiaveDelPezzo('spadone', 25, 'raro', ['att']), mancina: null } })
 const inScontro = () => page.evaluate(() => !!(window.__mondo3d && window.__mondo3d.inScontro()))
 const inCampo = () => page.evaluate(() => window.__mondo3d.palco().corsa.livello.robe.filter(r => r.che === 'mostro').map(r => r.mondo))
 const mortiDi = a => Object.entries(a.mondo?.sopra?.morti || {}).flatMap(([z, l]) => l.map(([j]) => m.zone.findIndex(Z => Z.chiave === z) * BLOCCO_ZONA + j))
@@ -90,10 +97,13 @@ async function rispondi(giusto) {
     await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 5000 }).catch(() => {})
   }
   await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 15000 })
-  await attendi(page, 400)   // i 320 ms ciechi della domanda appena nata
+  await domandaPronta(page)   // i 320 ms ciechi della domanda appena nata
   await page.locator(giusto ? '.sot-domanda .qz-tasto[data-giusta]' : '.sot-domanda .qz-tasto:not([data-giusta])').first().click()
-  // il racconto del colpo, se viene, e la sua fine
-  await page.waitForSelector('[data-scontro-3d][data-racconto]', { timeout: 8000 }).catch(() => {})
+  // il racconto del colpo, se viene, accorciato da un tocco sulla scena (sceglie solo fuori dal racconto: scena3d/scontro.js), e la sua fine
+  if (await page.waitForSelector('[data-scontro-3d][data-racconto]', { timeout: 8000 }).then(() => true, () => false)) {
+    const v = await page.locator('[data-mondo3d]').boundingBox()
+    await tocca(v.x + v.width / 2, v.y + v.height * 0.3)
+  }
   await page.waitForFunction(() => !document.querySelector('[data-scontro-3d][data-racconto]'), null, { timeout: 30000 })
 }
 // fino alla fine dello scontro: giusto vince, sbagliato sviene (o finché si apre il foglio del risveglio)
@@ -162,6 +172,7 @@ await blocco('la ✕ a metà', async () => {
   const a = await avventuraQuando(a => a.mondo?.sopra?.scontro)
   const s = a.mondo?.sopra?.scontro
   controlla('uscendo, chi è in campo resta scritto', !!s && s.campo.length === campo.length, JSON.stringify(s))
+  await viaLaFesta(page)
   await scegli(page, 'sotterraneo')
   await mondoPronto(page)
   await aspettaLoScontro()
@@ -200,7 +211,7 @@ await blocco('svenuti, e la guaritrice', async () => {
 await blocco('la caccia e il bottino', async () => {
   await entra(6, { quest: { stati: { [CACCIA]: 'presa' }, fatte: 0 },
                    sopra: { v: VERSIONE_SOPRA, eroe: 'cavaliere', giro: 0, passi: 0, morti: {}, forze: null, perTerra: [{ cosa: 'pozione', ...POZIONE }] } },
-              { conti: { [CACCIA]: 5 } })
+              { conti: { [CACCIA]: 5 }, ...forte(6) })
   await page.evaluate(p => window.__mondo3d.porta(p.x, p.z), ROVINE)
   await aspettaLoScontro()
   const tipi = await page.evaluate(() => window.__mondo3d.palco().corsa.livello.robe.filter(r => r.che === 'mostro').map(r => r.tipo))
@@ -230,7 +241,7 @@ await blocco('la caccia e il bottino', async () => {
 // la discesa di prima resta il punto da cui salvare: lo scontro sul prato la riscriveva, e la carta «torno giù» tornava sempre
 await blocco('la scala e lo scontro dopo', async () => {
   const c = campagnaSeminata({ finite: 2, eroe: 'cavaliere' })
-  Object.assign(c.cfg.avventure.cavaliere, { mondo: { giro: 0, parlato: true, firma: m.firma } })
+  Object.assign(c.cfg.avventure.cavaliere, { mondo: { giro: 0, parlato: true, firma: m.firma }, ...forte(2) })
   await azzera(page)
   await semina(page, { coins: 0, settings: { sperimentali: true }, campagne: { sotterraneo: c } })
   await page.evaluate(() => { location.hash = 'sotterraneo=1&stanza=al-scala-su' })

@@ -63,5 +63,5 @@ Come Castle Battle ([../arena/multigiocatore.md](../arena/multigiocatore.md)), *
 - **Da guardare col dito**: il nome del compagno a volte finisce sotto il fumetto dei pensieri; i suoni delle mosse dell'altro.
 - **Nei test:** `[data-sfida-apri]` (il 👥), `[data-posto-in-due=…]`, `[data-difficolta=…]`, `[data-tocca-a]`, `[data-aspetta]`,
   `[data-azione="non-aspetto"]`, `[data-strato3d] [data-compagno]`; quelli della sala e del cartello in
-  [../core/insieme.md](../core/insieme.md). `integrazione/sotterraneo-sfida` (**serve `wrangler dev`** in `servizio/inoltro`):
+  [../core/insieme.md](../core/insieme.md). `verifiche/sotterraneo-sfida` (**serve `wrangler dev`** in `servizio/inoltro`):
   due pagine, il codice, i due eroi su tutti e due i telefoni, un passo che arriva all'altro, il limite, chi se ne va.

@@ -26,11 +26,11 @@
    `node test/esegui.mjs sotterraneo-sopra-mondo`
    tempo: 300
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, scatto, attendi, leggiProfilo, mondoPronto, fermoNelMondo, ditoDi, lasciaLaDiscesa, nelDialogo }
+import { apriBrowser, apriGioco, scatto, attendi, leggiProfilo, mondoPronto, fermoNelMondo, ditoDi, lasciaLaDiscesa }
   from '../aiuto/browser.mjs'
-import { domandaPronta } from '../aiuto/browser.mjs'
+import { domandaPronta, pronto } from '../aiuto/browser.mjs'
 import { campagnaSeminata } from '../aiuto/sotterraneo-semina.mjs'
-import { entraSopra, cellaEroe as cella, grafica, toccaSopra, vaiETocca, toccaFermo, fermoASchermo, scendiDa, veduta, scenaPronta }
+import { entraSopra, cellaEroe as cella, grafica, toccaSopra, vaiETocca, toccaFermo, fermoASchermo, scendiDa, veduta, scenaPronta, nelDialogo, voltaPagina }
   from '../aiuto/sotterraneo-sopra.mjs'
 import { controlla, uguale, dentro, nota, riassunto, blocco } from '../aiuto/verifica.mjs'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
@@ -302,7 +302,7 @@ await blocco('la pietra del villaggio', async () => {
   await page.waitForSelector('[data-pietra-domanda]', { state: 'detached', timeout: 40000 })
   uguale('sbagliando la pietra resta spenta', await page.locator('[data-pietra="villaggio"]').getAttribute('data-accesa'), '0')
   await allaPietra()
-  await attendi(page, 400)
+  await domandaPronta(page)
   await page.locator('[data-pietra-domanda] .qz-tasto[data-giusta]').first().click()
   const accesa = await page.waitForSelector('[data-pietra="villaggio"][data-accesa="1"]', { timeout: 8000 }).then(() => true, () => false)
   controlla('rispondendo giusto la pietra si accende', accesa)
@@ -435,13 +435,13 @@ await blocco('dal portale, nel villaggio', async () => {
   await vaiETocca(page, '[data-personaggio="capitano"]', 'capitano', tocca, { atteso: '[data-dialogo="capitano"]' })
   let detto = ''
   for (let n = 0; n < 12; n++) {
-    await attendi(page, 380)
     detto += ' ' + await page.locator('[data-dialogo-testo]').innerText()
     if (await page.locator('[data-dialogo][data-ultima]').count()) break
-    await page.click('[data-dialogo-testo]')
+    await voltaPagina(page, s => page.click(s))
   }
   controlla('dice la quinta porta', detto.includes('Gorgo') && detto.includes('Le sale allagate'), detto)
   await scatto(page, 'sotterraneo-mondo-capitano')
+  await pronto(page, '[data-dialogo] [data-scelte]')
   await page.click('[data-dialogo] [data-scelta="ciao"]')
   await page.waitForSelector('[data-dialogo]', { state: 'detached', timeout: 5000 })
   uguale('detto, il «!» se ne va', await page.locator('[data-personaggio="capitano"]').getAttribute('data-segno'), null)

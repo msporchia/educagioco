@@ -14,8 +14,10 @@
    dice chi, cosa, dove e il premio; giù nella torre il promemoria e la
    freccina, e «segui questa» la cambia (stesso piano: stesso seme);
    «vai dal mugnaio» porta da lui, si consegna e lui dice il premio; il
-   diario dopo; il minatore si presenta e dice la strada; i mercanti
-   aprono la bottega; la storia in cima al diario, con le sette porte.
+   diario dopo; il minatore si presenta e dice la strada; la storia in
+   cima al diario, con le sette porte. I mercanti che dal dialogo aprono
+   la bottega (e «ho roba da vendere» sulla linguetta delle tasche) li
+   prova sotterraneo-bottega.
    Le regole (lo sblocco, il tetto, i segni, il diario, il promemoria, la
    freccina con la scelta, i dialoghi) sono in unita/sotterraneo-missioni,
    sotterraneo-missioni-conteggio e sotterraneo-dialoghi: qui si guarda
@@ -25,8 +27,8 @@
    `node test/esegui.mjs sotterraneo-sopra-missioni`
    tempo: 300
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, scatto, attendi, leggiProfilo, ditoDi, lasciaLaDiscesa, nelDialogo, fermoNelMondo } from '../aiuto/browser.mjs'
-import { entraSopra, avventuraDi, vaiETocca, toccaFermo, scendiDa } from '../aiuto/sotterraneo-sopra.mjs'
+import { apriBrowser, apriGioco, scatto, attendi, leggiProfilo, ditoDi, lasciaLaDiscesa, fermoNelMondo } from '../aiuto/browser.mjs'
+import { entraSopra, avventuraDi, vaiETocca, toccaFermo, scendiDa, nelDialogo, voltaPagina } from '../aiuto/sotterraneo-sopra.mjs'
 import { controlla, uguale, stessaLista, nota, riassunto, blocco } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { missioneDi, personaDi } from '../../src/giochi/sotterraneo/dati/missioni.js'
@@ -117,13 +119,12 @@ await blocco('la ragazza', async () => {
   uguale('e le domande non ci sono finché non si è all\'ultima', await page.locator('[data-scelte]').count(), 0)
   await scatto(page, 'dialogo-pagina')
   let chiede = await page.locator('[data-dialogo] [data-riga]').innerText()
-  await attendi(page, 360)   // il testo appena cambiato è cieco per 320 ms
-  await toccaIl('[data-dialogo-testo]')
+  await voltaPagina(page, toccaIl).catch(() => {})   // il testo appena aperto è cieco per 320 ms: si ritocca finché gira
   const avanti = await page.waitForSelector('[data-dialogo][data-pagina="2"]', { timeout: 3000 }).then(() => true, () => false)
   controlla('un tocco sul testo va alla pagina dopo', avanti)
   for (let n = 0; n < 6 && !(await page.locator('[data-dialogo][data-ultima]').count()); n++) {
     chiede += ' ' + await page.locator('[data-dialogo] [data-riga]').innerText()
-    await attendi(page, 360); await toccaIl('[data-dialogo-testo]')
+    await voltaPagina(page, toccaIl)
   }
   await page.waitForSelector('[data-dialogo][data-ultima] [data-scelte]', { timeout: 3000 })
   chiede += ' ' + await page.locator('[data-dialogo] [data-riga]').innerText() + ' ' + await page.locator('[data-scelta="prendi"]').innerText()
@@ -314,7 +315,7 @@ await blocco('la consegna al mugnaio', async () => {
   controlla('il gioiello va addosso o in tasca', base(a.roba?.collo) === 'amuleto-azzurro' || (a.roba?.zaino || []).map(base).includes('amuleto-azzurro'), JSON.stringify(a.roba))
   uguale('le gemme non cambiano (il premio è il gioiello)', a.roba?.gemme, gemme)
   uguale('le monete: il regalo', (await leggiProfilo(page)).coins, monete + ROSICCHIONE.premio.monete)
-  for (let n = 0; n < 6 && !(await page.locator('[data-riga][data-premio]').count()); n++) { await attendi(page, 360); await toccaIl('[data-dialogo-testo]') }
+  for (let n = 0; n < 6 && !(await page.locator('[data-riga][data-premio]').count()); n++) await voltaPagina(page, toccaIl)
   const detto = await page.locator('[data-riga][data-premio]').innerText()
   controlla('e il mugnaio dice il premio in una pagina sua, monete comprese', detto.includes(`🪙 ${ROSICCHIONE.premio.monete}`) && detto.includes('Amuleto'), detto)
   await scatto(page, 'dialogo-premio')
@@ -350,7 +351,7 @@ await blocco('il minatore', async () => {
   await vaiETocca(page, '[data-minatore]', 'minatore', tocca, { atteso: '[data-dialogo="minatore"]' })
   uguale('la prima volta si presenta', await page.locator('[data-riga]').getAttribute('data-detto'), null)
   await scatto(page, 'dialogo-minatore')
-  for (let n = 0; n < 4 && !(await page.locator('[data-riga][data-detto]').count()); n++) { await attendi(page, 360); await toccaIl('[data-dialogo-testo]') }
+  for (let n = 0; n < 4 && !(await page.locator('[data-riga][data-detto]').count()); n++) await voltaPagina(page, toccaIl)
   controlla('poi dice la strada della prossima discesa', (await page.locator('[data-riga][data-detto]').innerText()).startsWith(TORRE.nome))
   await nelDialogo(page, '[data-scelta="racconta"]', { tocca: toccaIl })
   await page.waitForSelector('[data-riga][data-racconto]', { timeout: 3000 })
@@ -361,28 +362,7 @@ await blocco('il minatore', async () => {
   await page.waitForSelector('[data-dialogo]', { state: 'detached', timeout: 3000 })
 })
 
-/* ---------- 11. i mercanti: il dialogo porta alla bottega ---------- */
-await blocco('i mercanti', async () => {
-  const chiudi = async () => { await toccaIl('[data-bottega] [data-chiudi]'); await page.waitForSelector('[data-bottega]', { state: 'detached', timeout: 3000 }) }
-  await vaiETocca(page, '[data-mercante="erborista"][data-citta="villaggio"]', 'mercante:villaggio:erborista', tocca, { atteso: '[data-dialogo="erborista"]' })
-  await nelDialogo(page, '[data-scelta="bottega"]', { tocca: toccaIl })
-  const erb = await page.waitForSelector('[data-bottega][data-mercante-aperto="erborista"]', { timeout: 3000 }).then(() => true, () => false)
-  controlla('«mi servono pozioni» apre la bottega della guaritrice', erb && !(await page.locator('[data-dialogo]').count()))
-  await chiudi()
-  await vaiETocca(page, '[data-mercante="incantatrice"][data-citta="villaggio"]', 'mercante:villaggio:incantatrice', tocca, { atteso: '[data-dialogo="incantatrice"]' })
-  await nelDialogo(page, '[data-scelta="bottega"]', { tocca: toccaIl })
-  const inc = await page.waitForSelector('[data-bottega][data-mercante-aperto="incantatrice"]', { timeout: 3000 }).then(() => true, () => false)
-  controlla('«fammi vedere la magia» apre la bottega dell\'incantatrice', inc && !(await page.locator('[data-dialogo]').count()))
-  await scatto(page, 'dialogo-incantatrice-bottega')
-  await chiudi()
-  await vaiETocca(page, '[data-mercante="rigattiere"][data-citta="villaggio"]', 'mercante:villaggio:rigattiere', tocca, { atteso: '[data-dialogo="rigattiere"]' })
-  await nelDialogo(page, '[data-scelta="vendi"]', { tocca: toccaIl })
-  await page.waitForSelector('[data-bottega][data-mercante-aperto="rigattiere"]', { timeout: 15000 })
-  uguale('«ho roba da vendere» apre il mercante sulla linguetta delle tasche', await page.locator('[data-scheda="vendi"]').getAttribute('aria-selected'), 'true')
-  await chiudi()
-})
-
-/* ---------- 12. la storia in cima al diario: le sette porte, «segui questa» e «vai alla discesa» ---------- */
+/* ---------- 11. la storia in cima al diario: le sette porte, «segui questa» e «vai alla discesa» ---------- */
 await blocco('la storia nel diario', async () => {
   const grosso = GROSSI[GROSSO_DELLA_DISCESA[TORRE.chiave]].nome
   await apriIlDiario()

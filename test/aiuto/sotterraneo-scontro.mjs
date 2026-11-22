@@ -1,17 +1,18 @@
 /* Lo scontro del sotterraneo aperto dal cheat dell'indirizzo, per le prove del browser che partono da lì
    (integrazione/sotterraneo-scontro, sotterraneo-scontro-eroe): un eroe seminato in una discesa, e
    `#sotterraneo=<tappa>&sotterraneo=branco&mostri=N…` scende da sé con lo scontro già aperto (docs/core/comandi.md). */
-import { azzera, semina, attendi } from './browser.mjs'
+import { semina } from './browser.mjs'
+import { aCasa } from './sotterraneo-discesa.mjs'
 import { domandaPronta } from './browser.mjs'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 
 /* Semina l'eroe e scende: `hash` è l'indirizzo intero (`sotterraneo=1&seme=11&sotterraneo=branco&mostri=6`). `extra` va
-   nell'avventura (`crescita`, `tesori`…). Si riparte dalla home: l'indirizzo della prova di prima riaprirebbe il gioco al
-   ricaricamento. `aspetta`: il selettore che dice «arrivati» (di difetto la tela 3D). */
+   nell'avventura (`crescita`, `tesori`…). Si riparte dalla home, con la ✕ e senza l'indirizzo della prova di prima (riaprirebbe il
+   gioco al ricaricamento): la semina riscrive tutto il sotterraneo, e non serve azzerare l'archivio. `aspetta`: il selettore
+   che dice «arrivati» (di difetto la tela 3D). */
 export async function scendiCon(page, hash, { eroe = 'cavaliere', tappa = 1, roba, extra = {}, larghezza = 390, alto = 844,
                                               aspetta = '[data-tela="3d"]' } = {}) {
-  await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
-  await azzera(page)
+  await aCasa(page)
   await page.setViewportSize({ width: larghezza, height: alto })
   const stelle = Object.fromEntries(Array.from({ length: tappa }, (_, i) => [i, 3]))
   const avventura = { tappa, libera: false, stelle: { 0: 3, ...stelle }, missioni: {}, roba, mondo: { parlato: true }, ...extra }
@@ -93,3 +94,14 @@ export const sopraLaBarra = (page, sel) => page.evaluate(s => {
 
 // il numero scritto su un globo della barra (`vita`, `energia`)
 export const globo = (page, tipo) => page.locator(`[data-globo="${tipo}"] .sot-globo-numero`).first().textContent().then(t => Number(t || 0))
+
+/* Un tocco a vuoto sulla scena durante il racconto lo fa sei volte più svelto e non sceglie (scena3d/scontro.js, viste/racconto.js;
+   lo prova `integrazione/sotterraneo-scontro`): chi non guarda il racconto lo accorcia. `quando`: una condizione nella pagina da
+   aspettare prima (l'effetto che si vuole aver visto); (x, y) lontano dai corpi a 390 px */
+export async function accorciaIlRacconto(page, tocca, { quando = null, x = 195, y = 400 } = {}) {
+  // il racconto che parte, o lo scontro che si è già chiuso (l'ultimo colpo può chiuderlo prima che lo si veda)
+  await page.waitForFunction(() => document.querySelector('[data-duello][data-racconto]') || !document.querySelector('[data-duello]'), null, { timeout: 8000 }).catch(() => {})
+  if (!(await page.locator('[data-duello][data-racconto]').count())) return
+  if (quando) await page.waitForFunction(quando, null, { timeout: 5000 }).catch(() => {})
+  await tocca(x, y)
+}

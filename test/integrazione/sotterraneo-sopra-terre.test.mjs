@@ -25,10 +25,9 @@
    `node test/esegui.mjs sotterraneo-sopra-terre`
    tempo: 240
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, seminaAmici, amicoDiProva, scatto, attendi, scegli, leggiProfilo, mondoPronto, ditoDi,
-         nelDialogo } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, seminaAmici, amicoDiProva, scatto, attendi, scegli, leggiProfilo, mondoPronto, ditoDi } from '../aiuto/browser.mjs'
 import { domandaPronta, pronto } from '../aiuto/browser.mjs'
-import { entraSopra, avventuraDi, cellaEroe, vaiETocca, toccaSopra, toccaFermo, scendiDa, fermoASchermo, scenaPronta } from '../aiuto/sotterraneo-sopra.mjs'
+import { entraSopra, avventuraDi, cellaEroe, vaiETocca, toccaSopra, toccaFermo, scendiDa, fermoASchermo, scenaPronta, viaLaFesta, nelDialogo } from '../aiuto/sotterraneo-sopra.mjs'
 import { controlla, uguale, riassunto, blocco } from '../aiuto/verifica.mjs'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { ilMondo } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
@@ -78,6 +77,7 @@ await blocco('un profilo di prima si azzera', async () => {
   await semina(page, { coins: 300, settings: { sperimentali: true },
     campagne: { sotterraneo: { tappa: 1, libera: false, stelle: { 0: 3 }, sosta: { v: 3, tappa: 1, robe: [] },
       cfg: { eroe: 'cavaliere', roba, terra: { nebbia: 'f'.repeat(384), dove: [17, 41], parlato: true } } } } })
+  await viaLaFesta(page)
   await scegli(page, 'sotterraneo')
   await mondoPronto(page)
   const p = await profiloQuando(p => p?.campagne?.sotterraneo?.cfg?.mondo === MONDO)
@@ -93,13 +93,15 @@ await blocco('un profilo di prima si azzera', async () => {
   await scatto(page, 'avventure-azzerata')
 })
 
-let doveCav = null, tGiu = 0
+let doveCav = null, tDentro = 0
 await blocco('il cavaliere lascia a metà una discesa', async () => {
   await toccaIl('button[aria-label="indietro"]')
   await page.waitForSelector('.carte', { timeout: 5000 })
   await semina(page, { campagne: { sotterraneo: { tappa: 1, libera: false, stelle: { 0: 3 },
     cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: 1, libera: false, stelle: { 0: 3 }, missioni: {}, roba, mondo: { parlato: true } } } } } } })
+  await viaLaFesta(page)
   await scegli(page, 'sotterraneo')
+  tDentro = Date.now()   // la partita comincia entrando nel gioco, e fino all'uscita in home non se ne esce
   await mondoPronto(page)
   await page.evaluate(() => window.__mondo3d.senzaMostri())
   controlla('la pagina dell\'eroe è del cavaliere', /Cavaliere|Guerriera/.test(await chiScende()))
@@ -112,7 +114,6 @@ await blocco('il cavaliere lascia a metà una discesa', async () => {
   doveCav = await cella()   // dove il mondo lo ricorderà: davanti all'ingresso da cui scende
   await toccaIl('[data-fumetto-di] [data-azione="scendi"]')
   await page.waitForSelector('[data-tela="3d"]', { timeout: 30000 })
-  tGiu = Date.now()
   // da dentro la discesa: ⏸, «scelgo un altro eroe» (la discesa si salva com'è, come un'uscita)
   await page.waitForSelector('button[aria-label="pausa"]', { timeout: 15000 })
   await page.click('button[aria-label="pausa"]')
@@ -165,7 +166,6 @@ await blocco('si torna al cavaliere, e si riprende giù', async () => {
   uguale('la scelta segna il mago', await page.locator('.sot-eroe.sot-scelto[data-eroe="mago"]').count(), 1)
   await toccaIl('.sot-eroe[data-eroe="cavaliere"]')
   await page.waitForSelector('[data-tela="3d"]', { timeout: 30000 })
-  tGiu = Date.now()
   uguale('scegliere il cavaliere riprende la sua discesa, senza il mondo di sopra', await page.locator('[data-mondo3d]').count(), 0)
   controlla('nel pozzo, a metà', (await page.locator('.sot-piede').innerText()).includes('piano 1'))
   await page.waitForSelector('[data-pausa]', { timeout: 3000 })
@@ -182,8 +182,9 @@ await blocco('si torna al cavaliere, e si riprende giù', async () => {
 })
 
 await blocco('«riprendi da qui» in home', async () => {
-  // sotto i cinque secondi non è una partita (store/sessioni.js): la home non la offrirebbe
-  await attendi(page, Math.max(0, 5200 - (Date.now() - tGiu)))
+  // sotto i cinque secondi non è una partita (store/sessioni.js): la home non la offrirebbe. Si conta da quando si è entrati
+  // nel gioco (App.vue, `entra`): cambiare eroe e scendere non ne esce
+  await attendi(page, Math.max(0, 5200 - (Date.now() - tDentro)))
   await toccaIl('[data-pausa] [data-azione="esci"]')   // il velo copre anche la ✕: da lì si esce senza ripartire
   await page.waitForSelector('.carte', { timeout: 5000 })
   uguale('in home si riprende il sotterraneo', await page.locator('[data-riprendi]').getAttribute('data-riprendi'), 'sotterraneo')
@@ -208,7 +209,7 @@ const avventura = () => avventuraDi(page, EROE)
 const nuovaTerraDetta = nome => page.waitForFunction(v => [...document.querySelectorAll('[data-avviso-terra]')].some(e => e.textContent.includes(v)), nome, { timeout: 30000 }).then(() => true, () => false)
 const minatoreInVista = () => page.waitForSelector('[data-minatore][data-vis="1"]', { state: 'attached', timeout: 10000 }).then(() => true, () => false)
 const ciao = async () => {
-  await nelDialogo(page, '[data-scelta="ciao"]', { tocca: toccaIl })
+  await nelDialogo(page, '[data-scelta="ciao"]')   // il dito sul dialogo lo provano le missioni: qui si chiude e basta
   await page.waitForSelector('[data-dialogo]', { state: 'detached', timeout: 10000 })
 }
 
@@ -256,6 +257,7 @@ await blocco('uscendo si salva, e ricaricando si resta lì', async () => {
   uguale('e la prima non si tocca', av.mondo?.dungeon?.tombe?.rifatti, 1)
   await page.reload()
   await page.waitForSelector('.carte', { timeout: 15000 })
+  await viaLaFesta(page)
   await scegli(page, 'sotterraneo')
   await mondoPronto(page)
   await page.evaluate(() => window.__mondo3d.senzaMostri())
@@ -310,6 +312,7 @@ await page.close()
     await semina(pa, { coins: 300, campagne: { sotterraneo: { tappa, libera, stelle: stelle(tappa),
       cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa, libera, stelle: stelle(tappa), missioni: {} } } } } } })
     await seminaAmici(pa, amici)
+    await viaLaFesta(pa)
     await scegli(pa, 'sotterraneo')
     await mondoPronto(pa)
     await pa.evaluate(() => window.__mondo3d.senzaMostri())   // qui non si combatte: un mostro che attacca toglie i bersagli dallo schermo

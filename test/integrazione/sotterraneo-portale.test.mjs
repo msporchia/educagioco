@@ -13,8 +13,9 @@
    `node test/esegui.mjs sotterraneo-portale`
    tempo: 200
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, nelDialogo, finestraFerma, mondoPronto,
-         alBancoDi, compraNellaBottega, sopraVaDa, senzaPensieri, scendiNelSotterraneo, ditoDi } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, finestraFerma, mondoPronto,
+         compraNellaBottega, senzaPensieri, scendiNelSotterraneo, ditoDi } from '../aiuto/browser.mjs'
+import { alBanco, vaiETocca, viaLaFesta, nelDialogo } from '../aiuto/sotterraneo-sopra.mjs'
 import { pronto } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, blocco, riassunto } from '../aiuto/verifica.mjs'
 import { profiloDelSotterraneo, giuPronto, fermoGiu, cellaGiu, schermoDi, vitaInBarra } from '../aiuto/sotterraneo-discesa.mjs'
@@ -45,7 +46,7 @@ async function toccaIl(sel) {
   await finestraFerma(page)
   let b = await page.locator(sel).first().boundingBox()
   for (let i = 0; i < 20; i++) {
-    await attendi(page, 150)
+    await attendi(page, 60)
     const n = await page.locator(sel).first().boundingBox()
     const fermo = Math.abs(n.x - b.x) < 1 && Math.abs(n.y - b.y) < 1
     b = n
@@ -65,11 +66,12 @@ async function chiudi(sel) {
   await toccaIl(`${sel} [data-chiudi]`)
   await page.waitForSelector(sel, { state: 'detached', timeout: 3000 })
 }
-const daChiCura = (chi, atteso = `[data-dialogo="${chi}"]`) => sopraVaDa(page, `[data-mercante="${chi}"][data-citta="villaggio"]`, `mercante:villaggio:${chi}`, { tocca, atteso })
+const daChiCura = (chi, atteso = `[data-dialogo="${chi}"]`) => vaiETocca(page, `[data-mercante="${chi}"][data-citta="villaggio"]`, `mercante:villaggio:${chi}`, tocca, { atteso })
 
 await semina(page, profiloDelSotterraneo({ tappa: 0, settings: { sperimentali: true },
   avventura: { roba, sosta: scrivi(c, 0, { via: VIA_PORTALE }), mondo: { dove: { portale: true }, parlato: true } } }))
 await senzaPensieri(page)   // senza torcia l'eroe fermo pensa alla guaritrice, e il fumetto prende il tocco
+await viaLaFesta(page)
 await scegli(page, 'sotterraneo')
 await mondoPronto(page)
 
@@ -138,7 +140,7 @@ await blocco('l\'incantatrice ricarica', async () => {
 
 /* ---------- tre torce dal carovaniere: la pagina dell'eroe e lo zaino di sopra le contano alla cintura ---------- */
 await blocco('tre torce dal carovaniere', async () => {
-  await alBancoDi(page, 'carovaniere', { tocca, toccaIl })
+  await alBanco(page, 'carovaniere', { tocca, toccaIl })
   // la prima la sceglie e la compra col tasto; poi la casella è già scelta, e un tocco su di lei compra di nuovo. Le comprate le
   // contano le gemme della bottega, che cambiano subito (il profilo si scrive dopo)
   const comprate = async () => (roba.gemme - Number((await page.locator('[data-gemme-bottega]').innerText()).match(/\d+/)[0])) / COSE.torcia.prezzo
@@ -164,7 +166,7 @@ await blocco('tre torce dal carovaniere', async () => {
 
 /* ---------- giù dal gemello: nel punto esatto, in forze, con una torcia accesa in mano ---------- */
 await blocco('il gemello riporta giù', async () => {
-  await sopraVaDa(page, '[data-portale]', 'portale', { tocca, atteso: '[data-fumetto-di="portale"] [data-azione="portale-giu"]' })
+  await vaiETocca(page, '[data-portale]', 'portale', tocca, { atteso: '[data-fumetto-di="portale"] [data-azione="portale-giu"]' })
   await scatto(page, 'portale-gemello-fumetto')
   await toccaIl('[data-fumetto-di="portale"] [data-azione="portale-giu"]')
   await giuPronto(page)
@@ -221,6 +223,7 @@ await blocco('la pergamena apre il portale, e si sale', async () => {
 await blocco('il gemello resta, e l\'ingresso riprende', async () => {
   await toccaIl('button[aria-label="indietro"]')
   await page.waitForSelector('.carte', { timeout: 5000 })
+  await viaLaFesta(page)
   await scegli(page, 'sotterraneo')
   await mondoPronto(page)
   uguale('uscendo dal villaggio e rientrando, il gemello c\'è ancora', await page.locator('[data-portale]').count(), 1)

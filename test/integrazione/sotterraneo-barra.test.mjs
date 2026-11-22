@@ -15,7 +15,8 @@
    `node test/esegui.mjs sotterraneo-barra`
    tempo: 120
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, mondoPronto, ditoDi } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, mondoPronto, ditoDi, pronto } from '../aiuto/browser.mjs'
+import { viaLaFesta } from '../aiuto/sotterraneo-sopra.mjs'
 import { controlla, uguale, dentro, blocco, riassunto } from '../aiuto/verifica.mjs'
 import { profiloDelSotterraneo, fermoGiu, cellaGiu, schermoDi, eroeIn, riprendiLaSosta } from '../aiuto/sotterraneo-discesa.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -41,6 +42,7 @@ const { page, errori } = await apriGioco(browser)
 await azzera(page)
 const { tocca, toccaIl } = await ditoDi(page)
 await semina(page, profilo({}))
+await viaLaFesta(page)
 await scegli(page, 'sotterraneo')
 await mondoPronto(page)
 
@@ -152,7 +154,7 @@ await blocco('giù, la finestra dell\'eroe e gli incanti', async () => {
   await toccaIl('[data-casella-barra="incanti"]')
   await page.waitForSelector('[data-preparati]', { timeout: 3000 })
   uguale('si apre lo stesso e dice che non ne sa nessuno', await page.locator('[data-prep-nessuno]').count(), 1)
-  await attendi(page, 400)   // i 320 ms ciechi: il tocco che ha aperto la finestra non deve premere i suoi tasti
+  await pronto(page, '[data-preparati]')   // i 320 ms ciechi: il tocco che ha aperto la finestra non deve premere i suoi tasti
   await toccaIl('[data-preparati] [data-azione="apri-albero"]')
   await page.waitForSelector('[data-pagina-abilita]', { timeout: 3000 })
   uguale('e porta all\'albero, senza lasciare la finestra di prima aperta', await page.locator('[data-preparati]').count(), 0)
@@ -300,7 +302,7 @@ await blocco('la mappa grande', async () => {
 await blocco('«lascio perdere» resta', async () => {
   await toccaIl('button[aria-label="pausa"]')
   await page.waitForSelector('[data-pausa] [data-azione="lascia-discesa"]', { timeout: 3000 })
-  await attendi(page, 400)   // il velo è cieco per un attimo
+  await pronto(page, '[data-pausa]')   // il velo è cieco per un attimo
   await toccaIl('[data-azione="lascia-discesa"]')
   await page.waitForSelector('[data-lascio-perdere]', { timeout: 3000 })
   await attendi(page, 400)

@@ -3,7 +3,7 @@
    (docs/sotterraneo/missioni.md, «La freccina» e «Dove sta»)
 
    perché: la freccina della missione giù: la punta cade sulla retta eroe-bersaglio (misurata con `aSchermo`), il bersaglio più grande e il «?» sul bordo
-   a parte perché: semina piani col seme in Node e scende col cheat; sotterraneo-sopra-missioni prova diario e dialoghi sul villaggio, dove la freccina compare solo di passaggio (candidato a fondersi con lui)
+   a parte perché: semina piani col seme in Node e scende col cheat, una missione per piano; sotterraneo-sopra-missioni parte da una sola semina sul villaggio con tre missioni in mano, e la sua freccina segue la scelta del diario, non un bersaglio messo dove serve
 
    Chi gioca poco spesso non si ricorda cosa aveva preso tre giorni fa. Giù, attorno all'eroe, una freccina punta verso la
    missione presa e non fatta: il forziere d'oro se sta su questo piano, la scala se è più in basso. La direzione non si crede
@@ -15,6 +15,7 @@
    tempo: 100
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, scegli, mondoPronto } from '../aiuto/browser.mjs'
+import { viaLaFesta } from '../aiuto/sotterraneo-sopra.mjs'
 import { controlla, uguale, dentro, nota, blocco, riassunto } from '../aiuto/verifica.mjs'
 import { profiloDelSotterraneo, fermoGiu, aCasa, scendiColCheat, riprendiLaSosta } from '../aiuto/sotterraneo-discesa.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -149,6 +150,7 @@ await blocco('il bersaglio in vista', async () => {
 await blocco('la consegna sopra', async () => {
   await aCasa(page)
   await semina(page, profilo({ badessa: 'fatta', rosicchione: 'presa' }))
+  await viaLaFesta(page)
   await scegli(page, 'sotterraneo')
   await mondoPronto(page)
   await page.waitForSelector('[data-consegna-fuori="eremita"]', { timeout: 5000 }).catch(() => {})

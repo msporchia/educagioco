@@ -17,9 +17,11 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scendiNelSotterraneo, scegliAttacco, leggiProfilo, ditoDi }
   from '../aiuto/browser.mjs'
+import { viaLaFesta } from '../aiuto/sotterraneo-sopra.mjs'
 import { controlla, uguale, dentro, nota, blocco, riassunto } from '../aiuto/verifica.mjs'
 import { ROBA_NUDA, profiloDelSotterraneo, giuPronto, fermoGiu, cellaGiu, schermoDi, toccaLaCella, nelCampo, aCasa, scendiColCheat,
          contaICompilati } from '../aiuto/sotterraneo-discesa.mjs'
+import { accorciaIlRacconto } from '../aiuto/sotterraneo-scontro.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { STANZE_TORCIA } from '../../src/giochi/sotterraneo/dati/cose.js'
@@ -37,6 +39,7 @@ const disegnata = () => page.waitForFunction(() => { const g = window.__sotterra
 await blocco('la carta e chi scende', async () => {
   uguale('coi giochi in prova spenti la carta c\'è', await page.locator('[data-indice="sotterraneo"]').count(), 1)
   uguale('e non c\'è un secondo sotterraneo', await page.locator('[data-indice="sotterraneo3d"]').count(), 0)
+  await viaLaFesta(page)
   await scegli(page, 'sotterraneo')
   await page.waitForSelector('.sot-eroe[data-eroe]', { timeout: 30000 })
   // entrare in un gioco di ruolo senza sapere chi si è non ha senso: la prima volta la scelta si presenta da sé
@@ -136,7 +139,7 @@ async function rispondi(giusto) {
 // un colpo: il racconto parte e finisce, e si torna a scegliere
 async function unColpo() {
   await rispondi(true)
-  await page.waitForSelector('[data-scontro-3d][data-racconto]', { timeout: 8000 }).catch(() => {})
+  await accorciaIlRacconto(page, tocca)   // qui si contano gli shader, non i tempi del racconto
   await page.waitForFunction(() => !document.querySelector('[data-scontro-3d][data-racconto]'), null, { timeout: 20000 })
 }
 

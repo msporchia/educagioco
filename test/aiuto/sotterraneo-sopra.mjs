@@ -2,7 +2,7 @@
    entrare con un profilo seminato, portare l'eroe accanto a qualcuno (il salto delle prove, `__mondo3d.vai`) e toccarlo quando
    sta fermo a schermo. Al posto delle attese fisse si aspetta la condizione: il salto rimette la telecamera sull'eroe di colpo
    (`salta()`), quindi basta che la scena sia pronta e che il bersaglio non si muova più fra tre letture di fila. */
-import { azzera, semina, scegli, mondoPronto, leggiProfilo, attendi, senzaPensieri } from './browser.mjs'
+import { azzera, semina, scegli, mondoPronto, leggiProfilo, attendi, senzaPensieri, pronto, finestraFerma } from './browser.mjs'
 
 export const avventuraDi = async (page, eroe = 'cavaliere') => (await leggiProfilo(page))?.campagne?.sotterraneo?.cfg?.avventure?.[eroe] || {}
 export const cellaEroe = async page => (await page.locator('[data-eroe-mondo]').getAttribute('data-cella')).split(',').map(Number)
@@ -15,13 +15,22 @@ export async function entraSopra(page, profilo, { pensieri = false, mostri = fal
   await azzera(page)
   if (!pensieri) await senzaPensieri(page)
   await semina(page, profilo)
+  await viaLaFesta(page)
   await scegli(page, 'sotterraneo')
   await mondoPronto(page)
   if (!mostri) await page.evaluate(() => window.__mondo3d.senzaMostri())
 }
 
+/* Un profilo seminato con discese finite fa scattare in home i traguardi (components/Traguardo.vue): un cartello di 3,2 s l'uno, in
+   fila, sopra la home, e il clic sull'indice dei giochi aspettava che finissero (sette secondi con due). Il velo si chiude toccandolo */
+export async function viaLaFesta(page) {
+  if (!(await page.locator('.velo').count())) return
+  await page.locator('.velo').first().click()
+  await page.waitForSelector('.velo', { state: 'detached', timeout: 5000 })
+}
+
 // aspetta che il primo `sel` stia fermo a schermo (tre letture uguali di fila) e ne torna il rettangolo
-export async function fermoASchermo(page, sel, { ogni = 120, volte = 3, entro = 15000 } = {}) {
+export async function fermoASchermo(page, sel, { ogni = 60, volte = 3, entro = 15000 } = {}) {
   let ultimo = '', uguali = 0, b = null
   const fine = Date.now() + entro
   while (Date.now() < fine) {
@@ -93,4 +102,38 @@ export async function veduta(page, aperta) {
   if (!aperta) return page.waitForSelector('[data-veduta]', { state: 'detached', timeout: 5000 })
   await page.waitForSelector('[data-veduta]', { timeout: 5000 })
   await page.waitForFunction(() => window.__sotterraneo3d.cam.k > 0.97, null, { timeout: 10000 })
+}
+
+/* Il dialogo fino all'ultima pagina, poi (se c'è `sel`) quella scelta: come `nelDialogo` di aiuto/browser.mjs, ma senza i 360 ms
+   fissi prima di ogni pagina. Il testo è cieco 320 ms appena aperto e 180 dopo ogni pagina (viste/Dialogo.vue): un tocco
+   che cade lì non gira, e si ritocca appena si vede che la pagina non è cambiata. `tocca`: il tocco su un selettore (di
+   difetto il mouse) */
+export async function nelDialogo(page, sel = null, { tocca = null } = {}) {
+  await page.waitForSelector('[data-dialogo]', { timeout: 15000 })
+  const premi = tocca || (s => page.click(s))
+  for (let n = 0; n < 12 && !(await page.locator('[data-dialogo][data-ultima]').count()); n++) await voltaPagina(page, premi)
+  await page.waitForSelector('[data-dialogo][data-ultima]', { timeout: 3000 })
+  await pronto(page, '[data-dialogo] [data-scelte]')   // anche senza `sel`: chi chiama tocca una scelta subito dopo
+  if (sel) await premi(`[data-dialogo] ${sel}`)
+}
+
+// un tocco sul testo del dialogo, e la pagina dopo: se il tocco cade nei ciechi la pagina non cambia, e si ritocca
+export async function voltaPagina(page, premi) {
+  const p = await page.locator('[data-dialogo]').getAttribute('data-pagina')
+  for (let n = 0; n < 6; n++) {
+    await premi('[data-dialogo-testo]')
+    if (await page.waitForFunction(p => document.querySelector('[data-dialogo]')?.dataset.pagina !== p, p, { timeout: 250 }).then(() => true, () => false)) return
+  }
+  throw new Error(`il dialogo resta a pagina ${p}`)
+}
+
+/* Al banco di un mercante del villaggio per la strada vera ma senza camminare: l'eroe salta accanto a lui, il dito lo tocca (accanto
+   si apre subito il dialogo), «fammi vedere» nel dialogo e la bottega pronta al tocco. Con i pensieri spenti il tocco non cade
+   sull'eroe; la strada a piedi la prova integrazione/sotterraneo-sopra-mondo. `toccaIl`: il dito sulle scelte del dialogo */
+export async function alBanco(page, chi, { tocca, toccaIl, scelta = 'bottega' }) {
+  await vaiETocca(page, `[data-mercante="${chi}"][data-citta="villaggio"]`, `mercante:villaggio:${chi}`, tocca, { atteso: `[data-dialogo="${chi}"]` })
+  await nelDialogo(page, `[data-scelta="${scelta}"]`, { tocca: toccaIl })
+  await page.waitForSelector(`[data-bottega][data-mercante-aperto="${chi}"]`, { timeout: 10000 })
+  await pronto(page, '[data-bottega]')
+  await finestraFerma(page)
 }

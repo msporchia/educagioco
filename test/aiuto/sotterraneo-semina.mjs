@@ -2,6 +2,7 @@
    storia si aspetta. Lo usano gli strumenti che guardano una schermata (strumenti/scatta-app.mjs,
    `--storia`) e i test che non vogliono ripetere il seme (docs/core/comandi.md). */
 import { semina, scegli, attendi } from './browser.mjs'
+import { viaLaFesta } from './sotterraneo-sopra.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
@@ -33,6 +34,7 @@ export async function seminaIlSotterraneo(page, opzioni = {}) {
     coins: 300,
     campagne: { sotterraneo: campagnaSeminata({ ...opzioni, eroe }) },
   })
+  await viaLaFesta(page)
   await scegli(page, 'sotterraneo')
   await page.waitForSelector('[data-mondo3d][data-pronto]', { timeout: 20000 })
   await attendi(page, 600)
