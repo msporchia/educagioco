@@ -62,6 +62,9 @@ Castle Battle, giardino e salto, le verifiche a mano. Resta:
 - **Le pause** di `pausa-asteroidi` e `pausa-giochi` aspettano ancora a
   tempo; `domanda` tiene a mano la lista dei prefissi dei quiz per il
   banco dei grandi (per la partita non più).
+- **`integrazione/amici` parla col servizio pubblicato**, e nel giro
+  completo è scaduto una volta aspettando l'invito (da solo, subito dopo,
+  verde): un rosso suo si rilancia prima di cercare un guasto.
 - **Ballerino**: `lingue-mondi` aspetta otto secondi l'esito di una
   domanda del libro, e prima della fusione è scaduto una volta.
 - **Gli attrezzi copiati**: `tocca` via CDP resta in 11 file (erano 38);

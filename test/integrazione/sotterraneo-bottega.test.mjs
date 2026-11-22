@@ -454,7 +454,9 @@ await blocco('dal rigattiere, anelli e collane sotto la stessa linguetta', async
   await alBanco('rigattiere')
   uguale('la linguetta dei gioielli', await page.locator('[data-bottega] [data-scheda="gioielli"]').count(), 1)
   const tipi = await page.locator('[data-bottega] [data-casella-pezzo]').evaluateAll(els => els.map(e => e.dataset.casellaPezzo))
-  controlla('il banco ha anelli e collane', tipi.some(k => /anello/.test(k)) && tipi.some(k => /amuleto|medaglione|teschio/.test(k)), tipi.join())
+  // quali escono lo decide la sorte del banco (a volte solo collane): la regola è che sotto questa linguetta stanno le cose da dito e da collo, e la chiave
+  controlla('sotto «Gioielli» solo anelli, collane e la chiave, almeno tre',
+            tipi.length >= 3 && tipi.every(k => ['dito', 'collo'].includes(COSE[chiaveDelPezzo(k)]?.dove) || chiaveDelPezzo(k) === 'chiave'), tipi.join())
   uguale('e le sette caselle dell\'eroe sono anche qui', await page.locator('[data-bottega] [data-casella]').count(), 7)
   uguale('con la collana al collo', await page.locator('[data-bottega] [data-casella="collo"]').getAttribute('data-cosa'), 'amuleto-rosso')
   await chiudiBanco()

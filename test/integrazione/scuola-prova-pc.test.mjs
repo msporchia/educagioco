@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA PROVA DEL COMPUTER DELLA CLASSE (docs/scuola/prova-computer.md)
+   perché: «Prova questo computer» nella pagina dei bambini: i dieci giochi veri girano uno dopo l'altro, nessuno resta fermo, e il PC si ricorda quali vanno sgranati
+   a parte perché: due minuti e mezzo di giochi che girano, dalla schermata del codice e senza lezione; in `scuola` allungherebbero il giro della maestra e del bambino, che parte dal servizio
 
    Dalla schermata del codice della pagina dei bambini (`dist-scuola/`, dal
    file): «Prova questo computer», «Avvia la prova», e i dieci giochi veri

@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    GLI ASTEROIDI — LA GUIDA «COME SI GIOCA», COL DITO
+   perché: la guida della prima partita col dito vero: l'anello sulla domanda, il cielo che si ferma col sasso giusto in vista, la guida segnata come vista e il `?` che la richiama
+   a parte perché: parte da un profilo che non ha mai giocato e con le spiegazioni accese (`spiegazioni: true`); asteroidi-3d parte a guida già vista, e una guida in corso gli fermerebbe il cielo
 
    La prima partita della vita accende la guida da sé (docs/core/come-si-gioca.md): l'anello sulla domanda, il segno attorno
    ai sassi nella scena, e il cielo che si ferma quando il sasso giusto è sceso in vista. Colpito il giusto col dito, la riga
