@@ -14,6 +14,7 @@
    tempo: 40
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli, leggiProfilo } from '../aiuto/browser.mjs'
+import { domandaPronta } from '../aiuto/browser.mjs'
 import { controlla, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -33,7 +34,7 @@ const orologio = () => page.locator('.ar-hud b').first().innerText()
 const indicato = sel => page.locator(`${sel}[data-indicato]`).count()
 async function rispondiGiusto() {
   await page.waitForSelector('.ar .qz-tasto[data-giusta]', { timeout: 6000 })
-  await attendi(page, 450)                           // la finestra cieca del montaggio
+  await domandaPronta(page)   // la finestra cieca del montaggio
   await page.locator('.ar .qz-tasto[data-giusta]').click()
   await page.waitForSelector('.ar .qz-velo', { state: 'detached', timeout: 12000 })
 }

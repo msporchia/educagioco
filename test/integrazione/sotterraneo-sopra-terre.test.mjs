@@ -27,6 +27,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, seminaAmici, amicoDiProva, scatto, attendi, scegli, leggiProfilo, mondoPronto, ditoDi,
          nelDialogo } from '../aiuto/browser.mjs'
+import { domandaPronta, pronto } from '../aiuto/browser.mjs'
 import { entraSopra, avventuraDi, cellaEroe, vaiETocca, toccaSopra, toccaFermo, scendiDa, fermoASchermo, scenaPronta } from '../aiuto/sotterraneo-sopra.mjs'
 import { controlla, uguale, riassunto, blocco } from '../aiuto/verifica.mjs'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
@@ -116,7 +117,7 @@ await blocco('il cavaliere lascia a metà una discesa', async () => {
   await page.waitForSelector('button[aria-label="pausa"]', { timeout: 15000 })
   await page.click('button[aria-label="pausa"]')
   await page.waitForSelector('[data-pausa] [data-azione="eroe-giu"]', { timeout: 3000 })
-  await attendi(page, 400)   // il velo è cieco per un attimo (CIECA)
+  await pronto(page, '[data-pausa]')   // il velo è cieco per un attimo (CIECA)
   await page.click('[data-azione="eroe-giu"]')
   await page.waitForSelector('.sot-eroe[data-eroe]', { timeout: 3000 })
   const p = await profiloQuando(p => p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.sosta)
@@ -193,7 +194,7 @@ await blocco('«riprendi da qui» in home', async () => {
   await page.waitForSelector('[data-tela="3d"]', { timeout: 30000 })
   controlla('e si torna giù nel pozzo, col cavaliere', (await page.locator('.sot-piede').innerText()).includes('piano 1'))
   await page.waitForSelector('[data-pausa] [data-azione="riprendi"]', { timeout: 5000 })
-  await attendi(page, 400)   // il velo è cieco per un attimo (CIECA)
+  await pronto(page, '[data-pausa]')   // il velo è cieco per un attimo (CIECA)
   await toccaIl('[data-pausa] [data-azione="riprendi"]')
   await page.waitForSelector('[data-pausa]', { state: 'detached', timeout: 3000 })
   await page.locator('[data-azione="zaino"]').click()
@@ -269,7 +270,7 @@ await blocco('uscendo si salva, e ricaricando si resta lì', async () => {
 
 await blocco('la pietra del villaggio riporta alla prima terra', async () => {
   await vaiETocca(page, '[data-pietra="villaggio"]', 'pietra:villaggio', tocca, { atteso: '[data-pietra-domanda] .qz-tasto' })
-  await attendi(page, 400)   // i 320 ms ciechi della domanda appena nata (CIECA, quiz/Domanda.vue)
+  await domandaPronta(page)   // i 320 ms ciechi della domanda appena nata (CIECA, quiz/Domanda.vue)
   await page.locator('[data-pietra-domanda] .qz-tasto[data-giusta]').first().click()
   await page.waitForSelector('[data-pietra="villaggio"][data-accesa="1"]', { timeout: 8000 })
   await page.waitForSelector('[data-fumetto-di="pietra"] [data-azione="torna-terra"]', { timeout: 10000 })

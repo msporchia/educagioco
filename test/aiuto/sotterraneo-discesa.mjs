@@ -2,6 +2,7 @@
    come ci si entra senza camminare (una sosta scritta in Node, o il cheat dell'indirizzo) e come si tocca una cella della scena
    3D. Dov'è una cella sullo schermo lo dice `__sotterraneo3d.aSchermo`, dov'è l'eroe la tela (`data-eroe`). */
 import { semina, scegli, attendi } from './browser.mjs'
+import { pronto } from './browser.mjs'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 
 export const ROBA_NUDA = { v: 1, gemme: 0, zaino: [], mano: null, mancina: null, corpo: null, dito: null, torcia: 0, torce: 0 }
@@ -63,7 +64,7 @@ export async function riprendiLaSosta(page, profilo) {
   await semina(page, profilo)
   await scegli(page, 'sotterraneo')
   await page.waitForSelector('[data-pausa] [data-azione="riprendi"]', { timeout: 20000 })
-  await attendi(page, 400)   // il velo è cieco per un attimo (CIECA)
+  await pronto(page, '[data-pausa]')   // il velo è cieco per un attimo (CIECA)
   await page.locator('[data-pausa] [data-azione="riprendi"]').click()
   await page.waitForSelector('[data-pausa]', { state: 'detached', timeout: 5000 })
   await giuPronto(page)

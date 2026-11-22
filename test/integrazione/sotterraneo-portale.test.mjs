@@ -15,6 +15,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, nelDialogo, finestraFerma, mondoPronto,
          alBancoDi, compraNellaBottega, sopraVaDa, senzaPensieri, scendiNelSotterraneo, ditoDi } from '../aiuto/browser.mjs'
+import { pronto } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, blocco, riassunto } from '../aiuto/verifica.mjs'
 import { profiloDelSotterraneo, giuPronto, fermoGiu, cellaGiu, schermoDi, vitaInBarra } from '../aiuto/sotterraneo-discesa.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -253,7 +254,7 @@ await blocco('la ✕ e «riprendi da qui»', async () => {
   uguale('si è già giù, senza il mondo di sopra né il gemello', await page.locator('[data-mondo3d], [data-portale]').count(), 0)
   uguale('nel punto esatto', await cellaGiu(page), dovEro)
   controlla('fermi, dietro il velo della pausa che dice a che piano si è', (await page.locator('[data-pausa]').innerText()).includes('piano 1'))
-  await attendi(page, 400)   // il velo è cieco per un attimo (CIECA)
+  await pronto(page, '[data-pausa]')   // il velo è cieco per un attimo (CIECA)
   await toccaIl('[data-pausa] [data-azione="riprendi"]')
   await page.waitForSelector('[data-pausa]', { state: 'detached', timeout: 3000 }).catch(() => {})
   uguale('toccato il velo, la discesa riparte', await page.locator('[data-pausa]').count(), 0)

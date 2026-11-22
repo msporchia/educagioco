@@ -36,6 +36,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, leggiProfilo, scegli, scegliAttacco,
          scendiNelSotterraneo, scegliAvventura } from '../aiuto/browser.mjs'
+import { domandaPronta } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -269,7 +270,7 @@ uguale('una tipologia che va come sempre non mette il metodo prima',
 
 let sbagliata = false
 for (let tiro = 0; tiro < 8 && !sbagliata; tiro++) {
-  await attendi(page, 400)                       // la finestra cieca
+  await domandaPronta(page)   // la finestra cieca
   // una risposta sbagliata, apposta: la giusta ha `data-giusta`
   await tocca(await page.locator('.qz-tasto:not([data-giusta])').first().boundingBox())
   await attendi(page, 250)

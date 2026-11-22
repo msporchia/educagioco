@@ -28,6 +28,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, scatto, attendi, leggiProfilo, mondoPronto, fermoNelMondo, ditoDi, lasciaLaDiscesa, nelDialogo }
   from '../aiuto/browser.mjs'
+import { domandaPronta } from '../aiuto/browser.mjs'
 import { campagnaSeminata } from '../aiuto/sotterraneo-semina.mjs'
 import { entraSopra, cellaEroe as cella, grafica, toccaSopra, vaiETocca, toccaFermo, fermoASchermo, scendiDa, veduta, scenaPronta }
   from '../aiuto/sotterraneo-sopra.mjs'
@@ -295,7 +296,7 @@ await blocco('la pietra del villaggio', async () => {
   const allaPietra = () => vaiETocca(page, '[data-pietra="villaggio"]', 'pietra:villaggio', tocca, { atteso: '[data-pietra-domanda] .qz-tasto' })
   await allaPietra()
   await scatto(page, 'sotterraneo-mondo-pietra-domanda')
-  await attendi(page, 400)   // i 320 ms ciechi della domanda appena nata (CIECA, quiz/Domanda.vue)
+  await domandaPronta(page)   // i 320 ms ciechi della domanda appena nata (CIECA, quiz/Domanda.vue)
   await page.locator('[data-pietra-domanda] .qz-tasto:not([data-giusta])').first().click()
   // sbagliando la domanda resta a dire il perché e come si fa, il tempo di leggerlo (quiz/Domanda.vue)
   await page.waitForSelector('[data-pietra-domanda]', { state: 'detached', timeout: 40000 })

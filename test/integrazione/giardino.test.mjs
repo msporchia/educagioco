@@ -21,6 +21,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli, leggiProfilo }
   from '../aiuto/browser.mjs'
+import { domandaPronta } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -81,7 +82,7 @@ uguale('mentre si calcola il campo sta fermo', await page.locator('.gi-hud + .gi
 await scatto(page, 'giardino-calcolo')
 
 /* si risponde giusto (la risposta giusta ha `data-giusta`), passata la finestra cieca del montaggio */
-await attendi(page, 450)
+await domandaPronta(page)
 await page.locator('.gi .qz-tasto[data-giusta]').click()
 const inMano = await page.waitForSelector('.gi-avviso [data-azione="annulla"]', { timeout: 12000 }).then(() => true, () => false)
 controlla('rispondendo giusto la pianta è in mano e chiede dove', inMano)

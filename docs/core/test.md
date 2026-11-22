@@ -131,7 +131,11 @@ file (cosa prova che altrimenti non si proverebbe). Di regola:
 - **Si aspetta la condizione, non si guarda subito.** Il gioco rimanda le
   scritture di 350 ms, la domanda è cieca per 320, un foglio si chiude un
   fotogramma dopo: chi controlla nell'istante passa solo finché Chrome è
-  lento. `leggiProfilo` aspetta da sé la scrittura rimandata.
+  lento. Il gioco dice quando è pronto: `data-pronto` sulla schermata
+  passata la finestra cieca (`pronto`, `domandaPronta`), e
+  `window.__archivioFermo` quando l'archivio ha scritto (`leggiProfilo` e
+  `semina` lo aspettano da sé). Un `attendi(page, 400)` prima di un tocco
+  è quasi sempre uno di questi due.
 - **Le foto non si fanno da sole.** Nessun test guarda i pixel: gli scatti
   servono a un occhio umano, sono spenti e si chiedono con `--scatti` (o
   `SCATTI=1`). Mai `page.screenshot`: si passa da `scatto(page, nome)`, che

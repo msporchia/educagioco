@@ -19,6 +19,7 @@
    tempo: 200
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, scatto, attendi, leggiProfilo, ditoDi, nelDialogo } from '../aiuto/browser.mjs'
+import { domandaPronta } from '../aiuto/browser.mjs'
 import { entraSopra, avventuraDi, vaiETocca, toccaSopra, toccaFermo, veduta } from '../aiuto/sotterraneo-sopra.mjs'
 import { controlla, uguale, riassunto, blocco } from '../aiuto/verifica.mjs'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
@@ -154,7 +155,7 @@ await blocco('la X della mappa', async () => {
   await scatto(page, 'sotterraneo-bacheca-scavo')
   await toccaIl('[data-fumetto-di="scavo"] [data-azione="scava"]')
   await page.waitForSelector('[data-scavo-domanda] .qz-tasto', { timeout: 30000 })
-  await attendi(page, 400)   // i 320 ms ciechi della domanda appena nata
+  await domandaPronta(page)   // i 320 ms ciechi della domanda appena nata
   await page.locator('[data-scavo-domanda] .qz-tasto:not([data-giusta])').first().click()
   // sbagliando la domanda resta a dire il perché e come si fa, il tempo di leggerlo (quiz/Domanda.vue)
   await page.waitForSelector('[data-scavo-domanda]', { state: 'detached', timeout: 40000 })

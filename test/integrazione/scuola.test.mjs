@@ -26,6 +26,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { resolve } from 'node:path'
 import { apriBrowser, attendi, scatto, RADICE, SCRIVANIA } from '../aiuto/browser.mjs'
+import { domandaPronta } from '../aiuto/browser.mjs'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 import { servizioScuola } from '../aiuto/servizio-scuola.mjs'
 import { linkDiProva } from '../../src/scuola/maestra/quaderno.js'
@@ -188,7 +189,7 @@ const nuova = () => b.waitForFunction(() => document.querySelector('.qz-tasto[da
   && !document.querySelector('.qz-tasto.giusta, .qz-tasto.sbagliata, .qz-tasto.spenta'), null, { timeout: 8000 })
 async function giustaAllaScheda() {
   await nuova()
-  await attendi(b, 450)                         // la finestra cieca di una domanda appena comparsa
+  await domandaPronta(b)   // la finestra cieca di una domanda appena comparsa
   await B.tocca('.qz-tasto[data-giusta]')
   await b.waitForSelector('.qz-tasto.giusta', { timeout: 3000 })
 }

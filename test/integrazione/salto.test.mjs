@@ -16,6 +16,7 @@
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, attendi } from '../aiuto/browser.mjs'
+import { domandaPronta } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -48,7 +49,7 @@ async function apriProva() {
   await attendi(page, 150)
   await page.locator(`${sel} .prova`).first().click()
   await page.waitForSelector('.qz-tasto', { timeout: 5000 })
-  await attendi(page, 450)                           // la finestra cieca del montaggio
+  await domandaPronta(page)   // la finestra cieca del montaggio
   return true
 }
 controlla('si arriva a una domanda dal banco dei grandi', await apriProva())

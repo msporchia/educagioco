@@ -30,6 +30,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli }
   from '../aiuto/browser.mjs'
+import { domandaPronta } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -74,7 +75,7 @@ async function sbrigaLeCarte() {
   if (!(await page.locator('.sv-carte').count())) return
   await page.locator('.sv-carta').first().click()
   await page.waitForSelector('.qz-tasto', { timeout: 5000 })
-  await attendi(page, 450)                       // la finestra cieca del montaggio
+  await domandaPronta(page)   // la finestra cieca del montaggio
   const prima = await inBarra()
   const primo = page.locator('.qz-tasto').first()
   // a macchina carica la finestra cieca può inghiottire il tocco: si riprova

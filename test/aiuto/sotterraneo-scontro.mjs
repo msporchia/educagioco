@@ -2,6 +2,7 @@
    (integrazione/sotterraneo-scontro, sotterraneo-scontro-eroe): un eroe seminato in una discesa, e
    `#sotterraneo=<tappa>&sotterraneo=branco&mostri=N…` scende da sé con lo scontro già aperto (docs/core/comandi.md). */
 import { azzera, semina, attendi } from './browser.mjs'
+import { domandaPronta } from './browser.mjs'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 
 /* Semina l'eroe e scende: `hash` è l'indirizzo intero (`sotterraneo=1&seme=11&sotterraneo=branco&mostri=6`). `extra` va
@@ -37,7 +38,7 @@ export const raccontoInCorso = page => page.waitForSelector('[data-duello][data-
 // la domanda comparsa, passati i suoi 320 ms ciechi, e la risposta giusta col mouse (il dito sulla domanda lo provano i quiz)
 export async function rispondiGiusto(page) {
   await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 8000 })
-  await attendi(page, 400)
+  await domandaPronta(page)
   await page.locator('.sot-domanda .qz-tasto[data-giusta]').first().click()
 }
 

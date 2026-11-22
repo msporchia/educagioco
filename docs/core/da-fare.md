@@ -35,10 +35,12 @@ sotterraneo nel browser da 46 file a 14, gli amici da 14 a 1, le lingue
 gemelle in un file per coppia, le partite giocate di robot, Passo passo,
 Castle Battle, giardino e salto, le verifiche a mano. Resta:
 
-- **Il gioco non dice quando è pronto**, e i test aspettano a tempo: 856
-  attese fisse scritte (erano 1.435), 42 da un secondo e mezzo in su. Un
-  `data-pronta` sulla domanda (i 320 ms ciechi) e un segno dell'archivio
-  scritto toglierebbero attese e gare insieme. Tocca `src/`.
+- **Le attese fisse rimaste** (846 scritte, erano 1.435): quelle prima di
+  un tocco sono quasi sempre una finestra cieca, e si aspettano col segno
+  (`data-pronto`, [interfaccia.md](interfaccia.md)). Il segno manca ancora
+  alla domanda d'inglese e di spagnolo, a Passo passo, alla cassetta del
+  Robot e alle pagine del dialogo del sotterraneo (lì si contano 360 ms a
+  pagina).
 - **Partite ancora giocate per arrivare a un punto**: `lingue-sosta`
   (quattro tappe intere, due minuti), la partita libera del castello e il
   volo della rotta in `amici-mappe`, il resto di `passo-passo`.

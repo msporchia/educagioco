@@ -28,6 +28,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli, leggiProfilo }
   from '../aiuto/browser.mjs'
+import { domandaPronta } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -124,7 +125,7 @@ await scatto(page, 'arena-calcolo')
 
 /* si risponde giusto (la risposta giusta ha `data-giusta`), passata la finestra cieca del montaggio */
 await page.waitForSelector('.ar .qz-tasto[data-giusta]', { timeout: 6000 })
-await attendi(page, 450)
+await domandaPronta(page)
 await page.locator('.ar .qz-tasto[data-giusta]').click()
 const costruita = await page.waitForSelector('[data-piazzola="0"][data-variante="guardiano"]', { timeout: 12000 }).then(() => true, () => false)
 controlla('rispondendo giusto la cripta nasce davvero, con gli opliti', costruita)
@@ -224,7 +225,7 @@ async function nuvoletta(terreno, posto, nome) {
 await nuvoletta(terreno1, 0, 'arena-infinita-scelta')
 await page.locator('[data-scelta] [data-costruisci="scheletri"]').click()
 await page.waitForSelector('.ar .qz-tasto', { timeout: 6000 })
-await attendi(page, 450)                                 // la finestra cieca del montaggio: prima il tocco non conta
+await domandaPronta(page)   // la finestra cieca del montaggio: prima il tocco non conta
 await page.locator('.ar .qz-tasto[data-giusta]').click()
 // mentre si calcola il campo è fermo: finché il velo c'è l'orologio non arriva ai cinque secondi della sosta
 await page.waitForSelector('.ar .qz-velo', { state: 'detached', timeout: 12000 })

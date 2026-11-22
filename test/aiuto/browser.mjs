@@ -195,7 +195,7 @@ export async function semina(page, profilo, giocatore = GIOCATORE) {
      seminato, e se lo mangiava: nel costruttore la gru si apriva chiusa,
      perché la tappa era rimasta quella del bosco — una volta sì e una no,
      a seconda di quanto era durato il passo prima. */
-  await attendi(page, 400)
+  await archivioFermo(page)
   await page.evaluate(([p, chi]) => new Promise((ok, ko) => {
     const r = indexedDB.open('giochi-bambini', 1)
     r.onerror = () => ko(new Error('IndexedDB non si apre'))
@@ -257,9 +257,8 @@ export const apriTendine = page => page.evaluate(() => document.querySelectorAll
    quale campagna si è mossa — e guardarla dal DOM vorrebbe dire
    fidarsi di quello che il gioco ha deciso di scrivere. */
 export async function leggiProfilo(page, giocatore = GIOCATORE) {
-  // l'archivio rimanda le scritture di 350 ms (`store/storage.js`): chi rilegge subito trova il profilo di prima. Finché Chrome
-  // disegnava il 3D in software la chiamata stessa ci metteva di più, e la gara non si vedeva
-  await attendi(page, 400)
+  // chi rilegge subito trova il profilo di prima: si aspetta che l'archivio abbia scritto
+  await archivioFermo(page)
   return page.evaluate(chi => new Promise((ok, ko) => {
     const r = indexedDB.open('giochi-bambini', 1)
     r.onerror = () => ko(new Error('IndexedDB non si apre'))
@@ -321,6 +320,20 @@ export const moneteInHome = page =>
   })
 
 export const attendi = (page, ms) => page.waitForTimeout(ms)
+
+/* Una schermata appena comparsa non si lascia toccare subito (docs/core/interfaccia.md): passata la finestra cieca il gioco
+   mette `data-pronto` sulla sua radice. Si aspetta quello, non 400 ms: `pronto(page, '[data-pausa]')`, `'[data-bottega]'`,
+   `'[data-regalo-velo]'`, `'[data-dialogo] [data-scelte]'`, `'[data-caselle-abilita]'`; la domanda dei quiz è `domandaPronta`. */
+export const pronto = (page, sel, ms = 8000) => page.waitForSelector(`${sel}[data-pronto]`, { timeout: ms })
+export const domandaPronta = (page, ms = 8000) => pronto(page, '.qz-velo', ms)
+
+/* L'archivio rimanda le scritture di 350 ms (`store/storage.js`) e il gioco dice quando non ha più niente in coda
+   (`window.__archivioFermo`): chi rilegge o riscrive l'archivio aspetta quello. I 100 ms prima sono per una scrittura che parte
+   un attimo dopo il tocco; dove il gancio non c'è (una pagina che non è il gioco) resta l'attesa di una volta. */
+export async function archivioFermo(page) {
+  await attendi(page, 100)
+  await page.evaluate(() => (window.__archivioFermo ? window.__archivioFermo() : new Promise(ok => setTimeout(ok, 300))))
+}
 
 /* Lo scontro è in due fasi (docs/sotterraneo/abilita.md): prima si sceglie il colpo, poi compare la domanda. Chi
    vuole rispondere sceglie l'attacco di sempre (la prima riga); dove non c'è la scelta (una porta, un forziere) non fa niente. */
@@ -541,7 +554,7 @@ export async function nelDialogo(page, sel = null, { tocca = null } = {}) {
     await premi('[data-dialogo-testo]')
   }
   await page.waitForSelector('[data-dialogo][data-ultima]', { timeout: 3000 })
-  await attendi(page, 400)
+  await pronto(page, '[data-dialogo] [data-scelte]')   // anche senza `sel`: chi chiama tocca una scelta subito dopo
   if (sel) await premi(`[data-dialogo] ${sel}`)
 }
 
@@ -551,7 +564,7 @@ export async function nelDialogo(page, sel = null, { tocca = null } = {}) {
 export async function lasciaLaDiscesa(page) {
   await page.click('button[aria-label="pausa"]')
   await page.waitForSelector('[data-pausa] [data-azione="lascia-discesa"]', { timeout: 3000 })
-  await attendi(page, 400)   // il velo è cieco per un attimo (CIECA)
+  await pronto(page, '[data-pausa]')   // il velo è cieco per un attimo
   await page.click('[data-azione="lascia-discesa"]')
   await page.waitForSelector('[data-lascio-perdere]', { timeout: 3000 })
   await page.click('[data-lascio-perdere] [data-azione="scorda-si"]')
@@ -643,7 +656,8 @@ export async function alBancoDi(page, chi, { tocca = null, toccaIl = null, scelt
   await page.waitForSelector(`[data-dialogo="${chi}"]`, { timeout: 90000 })   // SwiftShader: l'eroe ci arriva piano
   await nelDialogo(page, `[data-scelta="${scelta}"]`, { tocca: toccaIl })
   await page.waitForSelector(`[data-bottega][data-mercante-aperto="${chi}"]`, { timeout: 10000 })
-  await attendi(page, 500)
+  await pronto(page, '[data-bottega]')
+  await finestraFerma(page)
 }
 
 /* roba: spegne i pensieri dell'eroe (`#pensieri=no`) per la partita che si sta per aprire: il fumetto con un segno prende il tocco, e
