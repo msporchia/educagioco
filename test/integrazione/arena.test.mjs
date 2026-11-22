@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    CASTLE BATTLE — IL GIRO COMPLETO, COL DITO
 
-   perché: il giro completo di Castle Battle nel browser: il campo si dipinge, la carta della piazzola, i dettagli e il calcolo a tutto schermo, la caserma costruita e venduta, la sosta ripresa, la battaglia infinita
-   a parte perché: è il giro intero del gioco con il dito; `arena-guida` ne guarda solo la guida e `arena-sfida` solo la partita in due, che hanno bisogno di preparazioni diverse
+   perché: il giro completo di Castle Battle nel browser: il campo si dipinge, la carta della piazzola, i dettagli e il calcolo a tutto schermo, la caserma costruita e venduta, la sosta ripresa, la battaglia infinita; e la guida «Come si gioca» della prima battaglia, col campo fermo finché parla
+   a parte perché: è il giro intero del gioco con il dito; `verifiche/arena-sfida` prova solo la partita in due, che vuole il servizio finto e due telefoni
    Il test unitario prova il motore e la campagna; questo dice che **il
    gioco vero sta in piedi nel browser**: si apre dalla home, la mappa
    apre la prima tappa, il campo si dipinge (gli sprite del castello
@@ -23,13 +23,14 @@
    firma del terreno) si prova a parte: chiusa finché la campagna non è finita, poi si apre, si dipinge, la
    nuvoletta mostra le truppe di quel terreno (le bestie cornute in neve e lava), la sosta la ritrova col suo
    terreno, e la volta dopo il terreno è un altro.
-   `node test/esegui.mjs arena --niente-build`
-   tempo: 60
+   La guida «Come si gioca» sta in fondo, su una
+   seconda pagina con le spiegazioni accese (`spiegazioni: true`).
+   `node test/esegui.mjs integrazione/arena --niente-build`
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli, leggiProfilo }
   from '../aiuto/browser.mjs'
-import { domandaPronta } from '../aiuto/browser.mjs'
-import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
+import { domandaPronta, pronto } from '../aiuto/browser.mjs'
+import { controlla, uguale, nota, riassunto, blocco } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -75,7 +76,10 @@ const tela = () => page.evaluate(() => {
 })
 for (const [width, height] of [[1280, 800], [390, 844]]) {
   await page.setViewportSize({ width, height })
-  await attendi(page, 400)
+  await page.waitForFunction(([w, h]) => innerWidth === w && innerHeight === h, [width, height])
+  // la tela si ridimensiona un fotogramma dopo: si guarda quando si è assestata (se non ci arriva, il controllo sotto lo dice)
+  await page.waitForFunction(() => { const c = document.querySelector('.ar-tela')
+    return c && c.clientWidth === innerWidth && Math.abs(c.width / c.clientWidth - c.height / c.clientHeight) < 0.02 }, null, { timeout: 2000 }).catch(() => {})
   const t = await tela()
   controlla(`a ${width}×${height} il quadro prende tutta la larghezza e non stira`, t.largo === t.schermo && t.stira < 0.02, JSON.stringify(t))
   const b = await page.locator('[data-piazzola="1"]').boundingBox()
@@ -95,9 +99,9 @@ controlla('restano solo ripara e bomba, e il muro non si compra',
 const orologio = () => page.locator('.ar-hud b').first().innerText()
 await page.locator('[data-piazzola="0"]').click()
 await page.waitForSelector('[data-scelta="0"]', { timeout: 4000 })
+const cambia = (da, ms = 2500) => page.waitForFunction(d => document.querySelector('.ar-hud b')?.innerText !== d, da, { timeout: ms }).then(() => true, () => false)
 const t0 = await orologio()
-await attendi(page, 1600)
-controlla('mentre si sceglie il campo corre', await orologio() !== t0, t0)
+controlla('mentre si sceglie il campo corre', await cambia(t0), t0)
 controlla('la scelta mostra le due truppe della prima tappa',
           await page.locator('[data-scelta] [data-variante="scheletri"]').count() === 1 &&
           await page.locator('[data-scelta] [data-variante="guardiano"]').count() === 1)
@@ -106,8 +110,8 @@ await scatto(page, 'arena-scelta')
 /* ── «i numeri» spiegano, e il campo corre ── */
 await page.locator('[data-scelta] [data-dettagli="guardiano"]').click()
 await page.waitForSelector('[data-dettagli-aperti]', { timeout: 4000 })
-await attendi(page, 800)
-controlla('mentre si leggono i dettagli il campo corre', await orologio() !== t0, t0)
+const t0d = await orologio()
+controlla('mentre si leggono i dettagli il campo corre', await cambia(t0d), t0d)
 const testo = await page.locator('[data-dettagli-aperti]').innerText()
 controlla('i dettagli dicono com\'è adesso e com\'è al livello dopo, coi numeri',
           /Livello 1/.test(testo) && /Livello 2/.test(testo) && /Una squadra ogni/.test(testo) && /Vita di ogni truppa/.test(testo) && !/%/.test(testo), testo.slice(0, 300))
@@ -149,11 +153,11 @@ if (costruita) {
 await scatto(page, 'arena-costruita')
 
 /* ── uscire a metà non butta via la battaglia ── */
-for (let t = 0; t < 40; t++) {                         // la sosta si scrive da cinque secondi di partita in su
+for (let t = 0; t < 80; t++) {                         // la sosta si scrive da cinque secondi di partita in su (`motore/sosta.js`)
   const orologio = await page.locator('.ar-hud b').first().innerText()
   const [m, s] = orologio.split(':').map(Number)
-  if (m * 60 + s <= 290) break
-  await attendi(page, 500)
+  if (m * 60 + s <= 294) break
+  await attendi(page, 250)
 }
 await page.click('button[aria-label="indietro"]')
 await page.waitForSelector('.ar-mappa', { timeout: 6000 })
@@ -231,7 +235,7 @@ await page.locator('.ar .qz-tasto[data-giusta]').click()
 await page.waitForSelector('.ar .qz-velo', { state: 'detached', timeout: 12000 })
 
 /* si esce a metà: la sosta si scrive col suo terreno, la carta la offre, e una battaglia nuova ha un altro terreno */
-for (let t = 0; t < 30 && await tempoDelCampo() < 7; t++) await attendi(page, 500)
+for (let t = 0; t < 30 && await tempoDelCampo() < 6; t++) await attendi(page, 250)
 await page.click('button[aria-label="indietro"]')
 await page.waitForSelector('.ar-mappa', { timeout: 6000 })
 let sosta2 = null
@@ -242,7 +246,7 @@ controlla('e la mappa offre di riprendere', await page.locator('[data-ripresa]')
 await page.locator('[data-azione="riprendi"]').first().click()
 await entra('ripresa')
 controlla('riprendendo il terreno e il campo sono gli stessi', await ultimoTerreno() === terreno1 && await page.locator('[data-orologio="infinita"]').count() === 1)
-await attendi(page, 900)                                 // la ripresa nasce in pausa: si tocca per continuare
+await pronto(page, '[data-pausa]')                       // la ripresa nasce in pausa: si tocca per continuare
 await page.locator('[data-pausa]').click()
 await page.waitForSelector('[data-pausa]', { state: 'detached', timeout: 4000 })
 await page.click('button[aria-label="indietro"]')
@@ -269,6 +273,80 @@ for (let giro = 0; giro < 6 && terreno3 !== 'neve' && terreno3 !== 'lava'; giro+
   controlla('anche questa volta il terreno cambia', terreno3 !== prima, `${prima} → ${terreno3}`)
 }
 if (terreno3 !== terreno2) await nuvoletta(terreno3, 2, 'arena-infinita-bestie')
+
+/* ═══════════ la guida «Come si gioca», col dito ═══════════
+   La prima battaglia della vita accende la guida da sé (docs/core/come-si-gioca.md): l'anello va sulla piazzola, sulla truppa
+   meno cara, sulla caserma nata e sul ⬆️, e intanto il campo sta fermo. Costruita e potenziata, la riga finale col ✓ lascia
+   correre il campo e se ne va da sola; la guida è segnata come vista. Poi il `?` la richiama, con la ✕ che la spegne. La
+   parte della scuola sta in `integrazione/scuola`. Quello che da fuori non somiglia a un guasto: un campo che corre mentre la
+   guida parla, e una riga finale che non se ne va più. Una pagina sua, con le spiegazioni accese; l'orologio è quello finto
+   di playwright (scorre da sé), e i dieci secondi della riga finale si portano avanti. */
+const guida = await apriGioco(browser, { spiegazioni: true })
+await blocco('la guida', async () => {
+  const page = guida.page
+  await page.clock.install()
+  await azzera(page)
+  await semina(page, { settings: { eta: 8, sperimentali: true } })
+  await scegli(page, 'arena')
+  await page.waitForSelector('.ar-mappa', { timeout: 8000 })
+  controlla('sulla mappa il ? non c\'è (la guida sta sul campo)', await page.locator('[data-azione="aiuto"]').count() === 0)
+  await page.locator('[data-tappa="0"]').click()
+  await page.waitForSelector('[data-guida-riga]', { timeout: 8000 })
+  // aspetta la condizione e dice se è arrivata: un'attesa scaduta è un controllo che fallisce
+  const arriva = (sel, timeout, state = 'visible') => page.waitForSelector(sel, { timeout, state }).then(() => true, () => false)
+  const orologio = () => page.locator('.ar-hud b').first().innerText()
+  const indicato = sel => page.locator(`${sel}[data-indicato]`).count()
+  async function rispondiGiusto() {
+    await page.waitForSelector('.ar .qz-tasto[data-giusta]', { timeout: 6000 })
+    await domandaPronta(page)   // la finestra cieca del montaggio
+    await page.locator('.ar .qz-tasto[data-giusta]').click()
+    await page.waitForSelector('.ar .qz-velo', { state: 'detached', timeout: 12000 })
+  }
+  controlla('la guida parte da sé alla prima battaglia', await page.locator('[data-guida-riga]').count() === 1)
+  controlla('il primo giro di casa non ha la ✕', await page.locator('[data-guida-spegni]').count() === 0)
+  controlla('la dritta del campo tace mentre parla la guida', await page.locator('.ar-dritta').count() === 0)
+  controlla('l\'anello è su una piazzola libera', await indicato('[data-piazzola]:not([data-variante])') === 1)
+  const t0 = await orologio()
+  await attendi(page, 1300)                         // l'orologio del campo va a secondi: in più di uno si muoverebbe
+  controlla('mentre la guida parla il campo sta fermo', await orologio() === t0, `${t0} → ${await orologio()}`)
+  await scatto(page, 'arena-guida-piazzola')
+  await page.locator('[data-piazzola][data-indicato]').click()
+  await page.waitForSelector('[data-costruisci][data-indicato]', { timeout: 4000 })
+  controlla('nella nuvoletta l\'anello è sulla truppa meno cara', await indicato('[data-costruisci="scheletri"]') === 1)
+  await scatto(page, 'arena-guida-truppa')
+  await page.locator('[data-costruisci][data-indicato]').click()
+  await rispondiGiusto()
+  controlla('nata la caserma, l\'anello passa a lei', await arriva('[data-piazzola][data-variante][data-indicato]', 4000))
+  await page.locator('[data-piazzola][data-variante][data-indicato]').click()
+  await page.waitForSelector('[data-anello="potenzia"][data-indicato]', { timeout: 4000 })
+  await scatto(page, 'arena-guida-potenzia')
+  await page.locator('[data-anello="potenzia"]').click()
+  await rispondiGiusto()
+  /* la fine: il ✓, il campo corre, la riga se ne va */
+  controlla('costruita e potenziata, la riga finale', await arriva('[data-guida-riga="fine"]', 4000))
+  controlla('nella riga finale niente anello', await page.locator('[data-indicato]').count() === 0)
+  const t1 = await orologio()
+  controlla('con la riga finale il campo corre', await page.waitForFunction(d => document.querySelector('.ar-hud b')?.innerText !== d, t1, { timeout: 2500 })
+    .then(() => true, () => false), t1)
+  await scatto(page, 'arena-guida-fine')
+  await page.clock.fastForward(10500)
+  controlla('la riga finale se ne va da sola', await arriva('[data-guida-riga]', 3000, 'detached'))
+  controlla('la guida è segnata come vista', (await leggiProfilo(page)).settings?.guideViste?.arena === true)
+  /* il `?` la richiama, con la ✕ */
+  await page.locator('[data-azione="aiuto"]').click()
+  await page.waitForSelector('[data-guida-riga]', { timeout: 4000 })
+  controlla('il ? la richiama, con la ✕', await page.locator('[data-guida-spegni]').count() === 1)
+  // i 💎 della partenza sono spesi: o una piazzola libera, o i 💎 da aspettare
+  controlla('richiamata, fa costruire di nuovo', await indicato('[data-piazzola]:not([data-variante])') + await indicato('[data-monete]') === 1)
+  await page.locator('[data-guida-spegni]').click()
+  await page.waitForSelector('[data-guida-riga]', { state: 'detached', timeout: 2000 })
+  controlla('la ✕ la spegne', await page.locator('[data-indicato]').count() === 0)
+  await page.locator('[data-azione="aiuto"]').click()
+  await page.waitForSelector('[data-guida-riga]', { timeout: 2000 })
+  await page.locator('[data-azione="aiuto"]').click()
+  controlla('il ? la accende e la spegne', await arriva('[data-guida-riga]', 2000, 'detached'))
+})
+errori.push(...guida.errori.map(e => `[guida] ${e}`))
 
 uguale('nessun errore in console', errori.length, 0)
 if (errori.length) nota(errori.slice(0, 3).join(' · '))

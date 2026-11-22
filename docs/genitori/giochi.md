@@ -40,7 +40,7 @@ motore ([../apprendimento/saperi.md](../apprendimento/saperi.md)) e non si cambi
 
 Nei test: `[data-giochi-impostazioni]`, `[data-pannello-gioco]`, `[data-gioco-modo="segui"|"acceso"|"spento"]`, `[data-gioco-esito]`,
 `[data-gioco-tempo]`, `[data-gioco-domande]`, `[data-gioco-sapere="<chiave>"]` con `[data-gioco-sapere-tasto]`; il carosello `.carta.gioco.spenta`
-e `[data-indice="<gioco>"]`. `integrazione/giochi-impostazioni`, `unita/domande-dei-giochi`, `unita/sessioni`.
+e `[data-indice="<gioco>"]`. `integrazione/genitori-codice`, `unita/domande-dei-giochi`, `unita/sessioni`.
 
 ## Cosa chiede e cosa insegna (21/10)
 
@@ -53,4 +53,4 @@ ritoccando quello già scelto), con parole sul bambino: «adatto», «troppo fac
 **Avanzate (la fattoria).** Sul foglio della fattoria (`fattoria3d`: la fattoria è una sola, la 2D è stata tolta), se il bambino l'ha aperta, c'è una tendina «Avanzate» con i reset:
 «Ricomincia la fattoria» (azzera la fattoria e anche la vecchia 2D, se no tornerebbe a convertirsi; con la copia nel cestino; non sta più nella «Zona delicata») e, se il bambino ha ancora
 un salvataggio 2D, «Riconverti dalla fattoria 2D» (butta la fattoria nel cestino e la rifà dalla 2D alla prossima apertura). Ognuno chiede conferma. Bersagli: `data-gioco-avanzate`,
-`riconverti-fattoria(-si)`, `azzera-fattoria(-si)`; test: `integrazione/giochi-impostazioni`.
+`riconverti-fattoria(-si)`, `azzera-fattoria(-si)`; test: `integrazione/genitori-codice`.

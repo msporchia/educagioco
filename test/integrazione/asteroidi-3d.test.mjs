@@ -2,7 +2,7 @@
    GLI ASTEROIDI IN 3D, COL DITO — docs/asteroidi/grafica-3d.md
 
    perché: il cielo degli asteroidi in WebGL col dito vero: premere un sasso o il bordo, la nave che segue il dito, il falso che rimbalza e il giusto che esplode, il contesto perso che si riaccende
-   a parte perché: `campagna-mate` e `calcolo` giocano gli asteroidi rispondendo da codice; qui conta il tocco sul canvas 3D e il WebGL, che servono una preparazione loro
+   a parte perché: `campagna-mate` gioca gli asteroidi rispondendo da codice; qui conta il tocco sul canvas 3D e il WebGL, che servono una preparazione loro
    Il cielo si disegna in WebGL (in Chrome senza schermo lo fa SwiftShader,
    lento ma vero) e i comandi sono quelli del telefono: premere sopra un
    sasso, o appena fuori dal bordo, è la risposta; premere altrove porta la
@@ -16,23 +16,24 @@
    tasto lo riaccende, senza errori. A casa la tastiera tace (la prova
    a scuola, in `integrazione/scuola`).
 
-   `node test/esegui.mjs asteroidi-3d --niente-build`
-   tempo: 120
+   `node test/esegui.mjs integrazione/asteroidi-3d --niente-build`
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, attendi, scatto, scegli, parti, semina } from '../aiuto/browser.mjs'
+import { chiudiTraguardi } from '../aiuto/traguardi.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
 
-// entra nella prima tappa e aspetta che il cielo scenda (il primo traguardo lo ferma tre secondi)
+// entra nella prima tappa e aspetta che il cielo scenda (il cartello del primo traguardo lo ferma: lo si chiude col dito)
 async function entra(page, chiave = 'mate') {
   await scegli(page, chiave)
   await page.waitForSelector('[data-rotta]', { timeout: 8000 })
   await parti(page, '[data-rotta] [data-tipo="pianeta"]')
   await page.waitForSelector('button[aria-label="pausa"]', { timeout: 8000 })
+  await chiudiTraguardi(page)
   const quote = () => page.evaluate(() => window.__mate.asteroidi().map(a => Math.round(a.y)).join())
   const prima = await quote()
-  for (let i = 0; i < 30 && (await quote()) === prima; i++) await attendi(page, 300)
+  for (let i = 0; i < 60 && (await quote()) === prima; i++) await attendi(page, 100)
 }
 
 // aspetta un sasso (giusto o no) tutto in scena, lontano dai bordi
@@ -86,7 +87,8 @@ const vuoto = await page.evaluate(() => {
   return { x: W * 0.15, y }
 })
 await tocco(vuoto.x, vuoto.y)
-await attendi(page, 600)
+// la nave ci va scivolando: si aspetta che arrivi (se non ci arriva, il controllo sotto lo dice)
+await page.waitForFunction(x => Math.abs(window.__mate.nave.x - x) <= 25, vuoto.x, { timeout: 3000 }).catch(() => {})
 dopo = await conto(page)
 uguale('premere nel vuoto non è una risposta', dopo.sbagliate + dopo.giuste, prima.sbagliate + prima.giuste)
 dentro('e la nave ci va', Math.round(await page.evaluate(() => window.__mate.nave.x)), Math.round(vuoto.x) - 25, Math.round(vuoto.x) + 25)
@@ -95,7 +97,7 @@ dentro('e la nave ci va', Math.round(await page.evaluate(() => window.__mate.nav
 const y = await page.evaluate(() => window.__mate.nave.y + 20)
 await giu(80, y)
 for (const x of [120, 170, 220, 270, 310]) { await muovi(x, y); await attendi(page, 40) }
-await attendi(page, 500)
+await page.waitForFunction(() => window.__mate.nave.x >= 290 && window.__mate.nave.x <= 330, null, { timeout: 3000 }).catch(() => {})
 dentro('trascinando la nave segue il dito', Math.round(await page.evaluate(() => window.__mate.nave.x)), 290, 330)
 await su()
 await attendi(page, 150)

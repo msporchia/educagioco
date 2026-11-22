@@ -219,5 +219,5 @@ hanno i numeri di riga e colonna accesi, le altre caselle restano smorzate.
 Nei test: `misure/asteroidi` cammina la fila con un finto bambino (nessuna
 tappa prima di quello che le serve, nessuna quando è già saputa),
 `unita/calcolo`, `integrazione/campagna-mate` (anche: un centro, una
-moneta), `integrazione/calcolo`. Sui cartelli di fine `[data-monete-prese]`
+moneta, il calcolo). Sui cartelli di fine `[data-monete-prese]`
 e, col salvadanaio stanco, `[data-nota-monete]`.

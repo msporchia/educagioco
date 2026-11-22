@@ -12,6 +12,7 @@
    `node test/esegui.mjs rotta-asteroidi --niente-build` */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scegli, scatto } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
+import { chiudiTraguardi, GIA_FESTEGGIATI } from '../aiuto/traguardi.mjs'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -22,7 +23,7 @@ const tocco = async (x, y) => {
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] })
   await attendi(page, 60)
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
-  await attendi(page, 350)
+  await attendi(page, 150)   // il click che il dito lascia dietro arriva dopo il touchEnd: lo si lascia arrivare
 }
 const toccaSu = async sel => {
   const nodo = page.locator(sel).first()
@@ -32,9 +33,6 @@ const toccaSu = async sel => {
 }
 const fase = () => page.evaluate(() => window.__mate.fase.value)
 const razzo = () => page.evaluate(() => ({ ...document.querySelector('[data-razzo]').dataset }))
-// i cartelli dei traguardi coprono tutto per tre secondi: qui si tolgono
-const viaLeFeste = () => page.evaluate(() =>
-  document.querySelectorAll('.velo').forEach(v => v.querySelector('.occhiello') && v.click()))
 // si vince la tappa in corso colpendo sempre il sasso giusto
 async function vinci() {
   await page.evaluate(async () => {
@@ -46,7 +44,7 @@ async function vinci() {
     }
   })
   uguale('la tappa è vinta', await fase(), 'vinta')
-  await viaLeFeste()
+  await chiudiTraguardi(page)
   await page.click('.velo .bottone.chiaro')            // Mappa
   await page.waitForSelector('[data-rotta]')
 }
@@ -54,7 +52,6 @@ async function vinci() {
 /* ══════════ 1. si apre, il razzo è alla prima tappa e si vede ══════════ */
 await scegli(page, 'mate')
 await page.waitForSelector('[data-rotta] [data-tappa]')
-await attendi(page, 300)
 const r0 = await razzo()
 uguale('il razzo è accanto alla prima tappa', r0.al, '0')
 uguale('e sta fermo', r0.inViaggio, '0')
@@ -130,10 +127,9 @@ uguale('senza aprire un fumetto', await page.locator('[data-fumetto]').count(), 
 uguale('e senza partire', await fase(), 'mappa')
 
 /* ══════════ 5. molte tappe fatte: il razzo va dove si tocca ══════════ */
-await semina(page, { mate: { tappa: 0, fila: 8, libera: false }, settings: { eta: 10 } })
+await semina(page, { mate: { tappa: 0, fila: 8, libera: false }, settings: { eta: 10 }, ...GIA_FESTEGGIATI })
 await scegli(page, 'mate')
 await page.waitForSelector('[data-rotta] [data-tappa]')
-await attendi(page, 400)
 uguale('a otto tappe fatte il razzo è alla nona', (await razzo()).al, '8')
 uguale('le stelle: una per ogni tappa fatta, e nessuna sulle altre',
        (await page.locator('[data-stelle-tappa]').evaluateAll(l => l.map(e => e.dataset.tappaDi))).join(), '0,1,2,3,4,5,6,7')
@@ -155,8 +151,8 @@ uguale('le chiuse non hanno stelle', await page.locator('[data-stelle-tappa][dat
   uguale('le stelle non coprono i nomi', guasti.join(' · '), '')
 }
 
-await toccaSu('[data-rotta] [data-tappa="3"]')
-uguale('toccata una tappa aperta lontana, il fumetto è già aperto', await page.locator('[data-fumetto]').getAttribute('data-fumetto-per'), '3')
+await toccaSu('[data-rotta] [data-tappa="5"]')
+uguale('toccata una tappa aperta lontana, il fumetto è già aperto', await page.locator('[data-fumetto]').getAttribute('data-fumetto-per'), '5')
 uguale('il razzo è in viaggio', (await razzo()).inViaggio, '1')
 uguale('senza il velo dopo-vittoria: la mappa risponde', await page.locator('[data-viaggio]').count(), 0)
 const f1 = await page.locator('[data-fumetto]').boundingBox()
@@ -169,25 +165,25 @@ controlla('e il fumetto sta fermo', Math.abs(f1.x - f2.x) < 1 && Math.abs(f1.y -
 await scatto(page, 'rotta-asteroidi-meta-viaggio')
 
 // un altro tocco, in viaggio: cambia meta, e il fumetto lo segue
-await toccaSu('[data-rotta] [data-tappa="5"]')
-uguale('un altro tocco sposta il fumetto', await page.locator('[data-fumetto]').getAttribute('data-fumetto-per'), '5')
+await toccaSu('[data-rotta] [data-tappa="7"]')
+uguale('un altro tocco sposta il fumetto', await page.locator('[data-fumetto]').getAttribute('data-fumetto-per'), '7')
 uguale('e il razzo è ancora in viaggio', (await razzo()).inViaggio, '1')
 await page.waitForSelector('[data-razzo][data-in-viaggio="0"]', { timeout: 6000 })
-uguale('arriva alla nuova meta, non alla prima', (await razzo()).al, '5')
+uguale('arriva alla nuova meta, non alla prima', (await razzo()).al, '7')
 
 // una tappa chiusa apre il fumetto e non muove il razzo
 await toccaSu('[data-rotta] [data-tappa][data-stato="chiusa"]')
 controlla('una chiusa dice cosa fare prima', /Prima tocca a/.test(await page.locator('[data-fumetto] [data-serve]').innerText()))
 await attendi(page, 500)
 const dopoChiusa = await razzo()
-uguale('il razzo non si muove', `${dopoChiusa.al}/${dopoChiusa.inViaggio}`, '5/0')
+uguale('il razzo non si muove', `${dopoChiusa.al}/${dopoChiusa.inViaggio}`, '7/0')
 
 // e un tocco fuori, mentre il razzo viaggia, non chiude il fumetto
-await toccaSu('[data-rotta] [data-tappa="7"]')
+await toccaSu('[data-rotta] [data-tappa="6"]')
 await tocco(8, 420)
-uguale('un tocco fuori durante il viaggio non chiude il fumetto', await page.locator('[data-fumetto]').getAttribute('data-fumetto-per'), '7')
+uguale('un tocco fuori durante il viaggio non chiude il fumetto', await page.locator('[data-fumetto]').getAttribute('data-fumetto-per'), '6')
 await page.waitForSelector('[data-razzo][data-in-viaggio="0"]', { timeout: 6000 })
-uguale('il razzo arriva comunque', (await razzo()).al, '7')
+uguale('il razzo arriva comunque', (await razzo()).al, '6')
 await tocco(8, 420)
 uguale('fermo, un tocco fuori lo chiude', await page.locator('[data-fumetto]').count(), 0)
 

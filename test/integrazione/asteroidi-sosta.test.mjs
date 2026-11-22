@@ -1,14 +1,14 @@
 /* perché: un volo lasciato a metà con ←: la mappa offre «torno da dove ero» e si riprende com'era (vite, punti, gettoni, stessa domanda), anche dopo una ricarica; il record non si scrive finché non finisce
-   a parte perché: le soste hanno un file per gioco perché ognuna ha un tavolo suo (`castello-sosta`, `conta-sosta`, `codice-segreto-sosta`); questa parte dal volo degli asteroidi
+   a parte perché: le soste hanno un blocco o un file per gioco perché ognuna ha un tavolo suo (`castello-sosta`, `conta-sosta`, `codice-segreto`); questa parte dal volo degli asteroidi
    Gli asteroidi lasciati a metà, nel browser: si esce con ←, la mappa offre
    in cima «torno da dove ero», e si riprende com'era — vite, punti, gettoni,
    la stessa domanda — dietro il velo della pausa, anche dopo aver ricaricato
    la pagina. Una tappa nuova chiede prima. Il record di un volo lasciato a
    metà si scrive quando il volo finisce o si lascia perdere. Vedi
    docs/asteroidi/sosta.md.
-   `node test/esegui.mjs asteroidi-sosta`
-   tempo: 60 */
+   `node test/esegui.mjs integrazione/asteroidi-sosta --niente-build` */
 import { apriBrowser, apriGioco, attendi, scatto, leggiProfilo, scegli, parti } from '../aiuto/browser.mjs'
+import { chiudiTraguardi } from '../aiuto/traguardi.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -19,7 +19,8 @@ async function entra() {
   await page.waitForSelector('[data-rotta]', { timeout: 5000 })
 }
 const pianetaAperto = n => page.locator('[data-rotta] [data-tipo="pianeta"]:not([data-stato="chiusa"])').nth(n)
-const indietro = () => page.click('button[aria-label="indietro"]')
+// i cartelli dei traguardi (la prima partita, i centri) coprono la barra: si chiudono col dito, poi ←
+const indietro = async () => { await chiudiTraguardi(page); await page.click('button[aria-label="indietro"]') }
 
 // colpisce il sasso giusto n volte (o uno sbagliato: `giusto: false`)
 const colpisci = (n, giusto = true) => page.evaluate(([n, giusto]) => {
@@ -147,6 +148,7 @@ const q1 = (await leggiProfilo(page)).campagne.mate
 controlla('il record è scritto una volta sola', q1.primati?.[Object.keys(q1.primati)[0]]?.partite === 1 ||
           q1.primato?.partite === 1, JSON.stringify(q1.primato || q1.primati))
 controlla('e la sosta si è tolta', !q1.sosta)
+await chiudiTraguardi(page)
 await page.click('.velo .bottone.chiaro')           // Mappa
 await page.waitForSelector('[data-rotta]')
 uguale('niente carta dopo una partita finita', await page.locator('[data-ripresa]').count(), 0)

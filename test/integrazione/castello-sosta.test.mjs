@@ -4,8 +4,8 @@
    mappa offre in cima «torno da dove ero» e la battaglia riprende ferma,
    com'era. Anche dopo aver ricaricato la pagina, e mai in silenzio: una
    tappa nuova chiede prima di buttarla. Vedi docs/castello/sosta.md.
-   `node test/esegui.mjs castello-sosta` */
-import { apriBrowser, apriGioco, attendi, scatto, scegli, difendi } from '../aiuto/browser.mjs'
+   `node test/esegui.mjs integrazione/castello-sosta --niente-build` */
+import { apriBrowser, apriGioco, attendi, scatto, scegli, difendi, archivioFermo } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -28,7 +28,9 @@ const prima = await page.evaluate(async () => {
   T.op.value.passi.forEach(p => tasti.find(x => +x.textContent === p.atteso).click())
   await attesa(200)
   T.chiamaOnda()
-  await attesa(1500)
+  // i mostri in strada: il primo nasce prima dell'inizio (metri negativi)
+  const fine = Date.now() + 6000
+  while (!T.nemici().some(n => n.d > 0) && Date.now() < fine) await attesa(50)
   return { onda: T.hud.onda, energia: T.hud.energia, cuori: T.hud.cuori,
            torri: T.torri().length, nemici: T.nemici().length, monete: T.monete.prese }
 })
@@ -71,10 +73,10 @@ uguale('le monete di prima restano nel conto della partita',
 /* la pagina che sparisce (il telefono in tasca, l'app chiusa): si ricarica e
    la carta c'è ancora */
 await page.click('[data-pausa] [data-azione="riprendi"]', { delay: 400 })
-await attendi(page, 600)
+await page.waitForSelector('[data-pausa]', { state: 'detached', timeout: 3000 })
 await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
 await page.evaluate(() => window.dispatchEvent(new Event('pagehide')))
-await attendi(page, 500)
+await archivioFermo(page)
 await page.reload()
 await page.waitForSelector('.carte')
 await entra()
@@ -84,7 +86,7 @@ uguale('anche dopo aver ricaricato la pagina', await page.locator('[data-ripresa
 await difendi(page, '.tap:not(.chiusa)')
 uguale('una tappa nuova chiede prima', await page.locator('[data-chiede]').count(), 1)
 await page.click('[data-chiede] [data-azione="comincia"]')
-await attendi(page, 200)
+await page.waitForFunction(() => window.__td.fase.value === 'gioco', null, { timeout: 3000 }).catch(() => {})
 uguale('e scelta la nuova, si gioca quella', await page.evaluate(() => window.__td.hud.onda), 0)
 await page.click('button[aria-label="indietro"]')
 await page.waitForSelector('.carte')
@@ -107,7 +109,7 @@ await page.evaluate(() => {
   T.op.value.passi.forEach(p => tasti.find(x => +x.textContent === p.atteso).click())
   T.chiamaOnda()
 })
-await attendi(page, 800)
+await page.waitForFunction(() => window.__td.nemici().some(n => n.d > 0), null, { timeout: 6000 }).catch(() => {})
 await page.click('button[aria-label="pausa"]')
 const inPausa = await comEra()
 await page.click('[data-pausa] [data-azione="esci"]', { delay: 400 })

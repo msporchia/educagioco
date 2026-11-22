@@ -63,7 +63,7 @@ separano l'host manda la fotografia e si riparte da lì: due bambini che non han
   due minuti senza notizie la sfida finisce. Chi esce lo sa l'altro subito, e chi finisce prima lo dice all'altro (`fine`).
 - In due il battito del gioco recupera fino a 0,25 s a fotogramma (`giostra.tetto`): un telefono lento non rallenta l'altro.
 - **Nei test:** `[data-sfida-apri]` (la mappa), `[data-terreno=…]`, `[data-ritmo=…]` (le scelte); quelli della sala e del
-  cartello in [../core/insieme.md](../core/insieme.md); `unita/arena-lockstep`, `unita/arena-sfida`, e `integrazione/arena-sfida`
+  cartello in [../core/insieme.md](../core/insieme.md); `unita/arena-lockstep`, `unita/arena-sfida`, e `verifiche/arena-sfida`
   (**serve `wrangler dev`** in `servizio/inoltro`).
 
 ## Gli amici

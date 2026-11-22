@@ -190,5 +190,5 @@ fermano il cielo (`usaPausa`, con `anche: fase !== 'gioco'`: fuori dalla
 partita non scende niente). Le regole comuni stanno in
 [../core/interfaccia.md](../core/interfaccia.md).
 
-Nei test: `integrazione/pausa-asteroidi`; `button[aria-label="pausa"]`,
+Nei test: `integrazione/pausa-giochi`; `button[aria-label="pausa"]`,
 `[data-pausa]`, `[data-azione="riprendi"]`.

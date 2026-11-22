@@ -35,7 +35,7 @@ a metà anno» (`inClasse`), mai «8 anni come in terza». Basta mese e anno, no
 
 Nei test: `[data-nascita]`, `[data-nascita-mese]`, `[data-nascita-anno]`, `[data-nascita-eta]`, `[data-nascita-scarto]`, `[data-nascita-avviso]`,
 `[data-azione="nascita-salva"|"nascita-passa"|"nascita-tieni"|"nascita-cambia"|"nascita-togli"]`; nel modulo `[data-nascita-domanda]`, `[data-nascita-futura]`.
-`unita/nascita`, `integrazione/nascita`.
+`unita/nascita`, `integrazione/genitori-eta`.
 
 ## Ordine del lavoro
 

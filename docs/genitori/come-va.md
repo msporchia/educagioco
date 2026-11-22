@@ -18,7 +18,7 @@ L'elenco di tutte le domande di un gioco resta nella pagina del gioco, in una te
 Nei test: la barra è `nav.barra-giu` con `[data-scheda="bambini"|"giochi"|"comeva"|"salvataggi"|"impostazioni"]`; le tendine nascono chiuse e un test che deve
 premere lì dentro le apre con `apriTendine(page)` (`test/aiuto/browser.mjs`); `[data-delicata]`, `[data-sviluppo]` («Avanzate»), `[data-eta-mano]`,
 `[data-gioco-tutte]`, `[data-copia-avviso]`, `[data-azione="settimana-spegni"|"settimana-riaccendi"]`, `[data-spenta]`.
-`integrazione/impostazioni-barra`, `integrazione/come-va`, `unita/copia`.
+`integrazione/genitori`, `integrazione/come-va`, `unita/copia`.
 
 ## «Come va»
 

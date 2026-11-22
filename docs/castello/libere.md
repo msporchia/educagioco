@@ -150,7 +150,7 @@ le carte a giro).
   tre ondate).
 
 Nei test: `[data-tappa="libera-bosco"]` e le altre tre chiavi sul regno, il record nel loro fumetto ([regno.md](regno.md));
-`integrazione/torri-libere` (quattro tasti, ognuno apre la sua libera e
+`integrazione/torri-figure` (quattro tasti, ognuno apre la sua libera e
 scrive il record nel suo quaderno; il conto dell'arciere paga 🪙3 anche in
 una partita persa, e il cartello di fine lo dice in `[data-monete-prese]`,
 col salvadanaio stanco `[data-nota-monete]`).

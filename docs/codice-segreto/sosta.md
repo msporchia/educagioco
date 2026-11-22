@@ -55,5 +55,5 @@ stelle.
 
 Nei test: `[data-ripresa]`, `[data-chiede]`, `[data-azione="riprendi"]`,
 `[data-azione="scorda"]`, `[data-azione="comincia"]`,
-`[data-azione="riprendi-invece"]`; `test/unita/codice-segreto-sosta.test.mjs`
-e `test/integrazione/codice-segreto-sosta.test.mjs`.
+`[data-azione="riprendi-invece"]`; `test/unita/codice-segreto.test.mjs`
+e `test/integrazione/codice-segreto.test.mjs`.

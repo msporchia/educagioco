@@ -65,5 +65,5 @@ su un moltiplicatore piccolo: il procedimento viene prima della tabellina.
   accanto all'oggetto `{ div, mul }` (`contiPermessi` in `store/profile.js`).
 
 Nei test: `unita/conti-castello` tiene la scala dei ripieghi (il ripiego
-non deve diventare più facile dell'originale); `integrazione/torri` prova
+non deve diventare più facile dell'originale); `unita/torri-colonne` prova
 la matematica delle colonne su migliaia di operazioni generate.
