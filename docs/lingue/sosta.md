@@ -104,5 +104,6 @@ Nei test: `[data-ripresa]`, `[data-chiede]`, `[data-azione="riprendi"]`,
 `[data-azione="riprendi-invece"]`; `[data-tappa-lingua="<i>"]` e `[data-libero]`
 nella mappa di `LinguaGame`; `test/unita/inglese-sosta`,
 `test/unita/spagnolo-sosta`, `test/unita/lingua-sosta`,
-`test/integrazione/lingue-sosta`, `test/integrazione/lingue-sosta`,
-`test/integrazione/lingue-sosta`.
+`test/integrazione/lingue-sosta` (alla fine di una tappa ci arriva
+riseminando la sosta col `bersaglio` a una giusta),
+`test/integrazione/lingue-prima`.

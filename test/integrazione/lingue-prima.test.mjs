@@ -25,6 +25,9 @@ import { allaHome } from '../aiuto/bacheca.mjs'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
+// dopo una risposta il gioco aspetta 620 ms (2100 dopo uno sbaglio) prima della domanda dopo: l'orologio della pagina si porta
+// avanti invece di aspettarli (`page.clock`, installato prima della semina; il tempo scorre lo stesso)
+await page.clock.install()
 await page.addInitScript(() => {
   Object.defineProperty(window, 'speechSynthesis', {
     value: { getVoices: () => { window.__sintesi = true; return [] }, cancel() {},
@@ -36,6 +39,21 @@ const LINGUE = { inglese: { chiave: 'inglese', vecchia: 'eng', porta: '__eng' },
                  spagnolo: { chiave: 'spagnolo', vecchia: 'esp', porta: '__es' } }
 const SPAGNOLO_ACCESO = { giochi: { spagnolo: true } }        // lo spagnolo è spento di base
 const indietro = () => page.click('button[aria-label="indietro"]')
+/* una risposta data dal gioco (`__lingua`, il gioco aperto), poi la domanda dopo: un'altra, e senza l'esito di prima. Se la
+   risposta vince la tappa, il gioco esce dalla fase `gioco` */
+async function rispondi(giusta = true) {
+  await page.evaluate(g => {
+    const q = window.__lingua
+    const t = window.__turnoPrima = q.turno.value
+    q.rispondi(g ? q.giusta() : t.opzioni.find(o => !o.giusta))
+  }, giusta)
+  await page.clock.fastForward(giusta ? 650 : 2150)
+  await page.waitForFunction(() => {
+    const q = window.__lingua
+    return q.fase.value !== 'gioco' ||
+      (q.turno.value && q.turno.value !== window.__turnoPrima && !document.querySelector('.scelta.bene, .scelta.male'))
+  }, null, { timeout: 6000 })
+}
 async function allaMappa(L) {
   await allaHome(page)
   await scegli(page, L.chiave)
@@ -63,17 +81,15 @@ for (const L of [LINGUE.spagnolo, LINGUE.inglese]) await blocco(`${L.chiave}: il
   await page.locator('[data-prima]').scrollIntoViewIfNeeded()
   await page.locator('[data-prima]').click()
   await page.waitForSelector('.scelte .scelta', { timeout: 5000 })
-  const partita = await page.evaluate(async porta => {
+  const gioco = () => page.evaluate(porta => {
     const g = window[porta]
-    const inizio = { fase: g.fase.value, lingua: g.lingua, libero: g.tappaIdx.value }
-    let giuste = 0
-    for (let i = 0; i < 12 && g.fase.value === 'gioco'; i++) {
-      const t = g.turno.value
-      g.rispondi(g.giusta()); giuste++
-      for (let j = 0; j < 40 && g.turno.value === t; j++) await new Promise(r => setTimeout(r, 50))
-    }
-    return { ...inizio, giuste, dopo: g.hud.giuste }
+    return { fase: g.fase.value, lingua: g.lingua, libero: g.tappaIdx.value, dopo: g.hud.giuste, qui: window.__lingua === g }
   }, L.porta)
+  const partita = await gioco()
+  uguale('il gioco aperto è quello della lingua', partita.qui, true)
+  let giuste = 0
+  while (giuste < 12 && (await gioco()).fase === 'gioco') { await rispondi(true); giuste++ }
+  Object.assign(partita, { giuste, dopo: (await gioco()).dopo })
   uguale('si entra dritti nel gioco', partita.fase, 'gioco')
   uguale('ed è il gioco libero, non una tappa', partita.libero, -1)
   uguale('e si gioca davvero', partita.dopo, partita.giuste)
@@ -100,18 +116,6 @@ const domanda = () => page.evaluate(() => {
   return t && JSON.stringify([t.chiave, t.tipo, t.opzioni.map(o => o.testo)])
 })
 const conto = () => page.evaluate(() => { const h = window.__lingua.hud; return `${h.giuste}/${h.errori}` })
-// una risposta data dal gioco, poi si aspetta la domanda dopo
-async function rispondi(giusta = true) {
-  await page.evaluate(g => {
-    const q = window.__lingua
-    const t = q.turno.value
-    q.rispondi(g ? q.giusta() : t.opzioni.find(o => !o.giusta))
-  }, giusta)
-  await page.waitForFunction(() => {
-    const q = window.__lingua
-    return q.fase.value !== 'gioco' || (q.turno.value && !document.querySelector('.scelta.bene, .scelta.male'))
-  }, null, { timeout: 6000 })
-}
 const sostaDi = async chiave => ((await leggiProfilo(page)).campagne || {})[chiave]?.sosta || null
 
 await allaHome(page)

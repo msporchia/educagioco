@@ -296,8 +296,8 @@ mare; un attracco in mare accanto a ogni tappa, e da ognuno la nave arriva
 a ogni altro in meno di 1,5 s; dove sta la nave e cosa serve),
 `unita/inglese-libro` (le storie, vedi [libro.md](libro.md#si-controlla-da-sé)),
 `integrazione/lingue-mondi` (entra, la nave è ancorata, una tappa chiusa
-dice cosa serve, fa una tappa di parole e guarda che fra i colori ci siano
-solo colori, la nave naviga fino alla tappa, compone a tocchi, chiede prima
+dice cosa serve, apre una tappa di parole e guarda che la prima domanda sui
+colori abbia solo colori (trenta di fila in `unita/inglese-mondi`), la nave naviga fino alla tappa, compone a tocchi, chiede prima
 di un tocco che costa col dito vero, sbaglia, un tocco chiude il viaggio,
 il libro chiuso dice quale tappa vincere, il libro (in
 [libro-vista.md](libro-vista.md#nei-test)), e a dieci anni comincia dalla

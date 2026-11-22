@@ -39,6 +39,7 @@ import { apriBrowser, apriGioco, semina, attendi, leggiProfilo, scatto, TELEFONO
 import { controlla, uguale, nota, riassunto, blocco } from '../aiuto/verifica.mjs'
 import { finche } from '../aiuto/soste.mjs'
 import { allaHome } from '../aiuto/bacheca.mjs'
+import { orologioDelleLingue } from '../aiuto/lingue.mjs'
 import { WORDS } from '../../src/data/words.js'
 import { PAROLE_ES } from '../../src/data/parole-es.js'
 import * as EN_MONDI from '../../src/giochi/inglese/dati/mondi.js'
@@ -116,6 +117,8 @@ async function scattoTela(page, nome) {
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
+const orologio = orologioDelleLingue(page)
+await orologio.installa()                                  // la finestra cieca e l'esito si portano avanti
 const nave = page.locator('[data-nave]')
 const ora = Date.now()
 const sa = s => ({ s, ok: 5, err: 0, last: ora, seen: 5, t: 0 })
@@ -137,7 +140,7 @@ const campagna = async L => (await leggiProfilo(page)).campagne[L.chiave] || {}
 // risponde giusto a una domanda del libro e torna il tipo e l'esito che ha detto (null se è arrivato prima il cartello)
 async function rispondiNelLibro(L) {
   await page.waitForSelector('[data-libro-domanda]')
-  await attendi(page, 400)                                 // la finestra cieca
+  await orologio.cieca()
   const tipo = await attr('[data-libro-domanda]', 'data-tipo')
   if (tipo === 'frase') {
     // la frase giusta può stare in un'altra pagina: si sfoglia dalla prima (un testo di una pagina non ha frecce)
@@ -158,8 +161,7 @@ async function rispondiNelLibro(L) {
   await page.waitForSelector('[data-libro-domanda] [data-esito], [data-fine]')
   const esito = await page.locator('[data-libro-domanda] [data-esito]').count()
     ? await attr('[data-libro-domanda] [data-esito]', 'data-esito') : null
-  await page.waitForFunction(() => !document.querySelector('[data-libro-domanda] [data-esito]') ||
-                                   document.querySelector('[data-fine]'), null, { timeout: 8000 })
+  await orologio.dopoLEsito('[data-libro-domanda]')
   return { tipo, esito }
 }
 // tutte le domande del libro fino al cartello: ognuna detta giusta (l'ultima può lasciare il posto al cartello prima)
@@ -209,21 +211,15 @@ for (const L of LINGUE) await blocco(`${L.chiave}: la mappa vuota`, async () => 
             await page.locator('[data-serve]').innerText())
 
   /* le parole di una tappa: fra i colori, solo colori. Era il difetto: con una categoria piccola le risposte sbagliate
-     venivano da tutta la lingua (🔴 fra 🏥🐶📓) */
+     venivano da tutta la lingua (🔴 fra 🏥🐶📓). Trenta domande di fila le fanno le unità (unita/<lingua>-mondi, DIFETTI):
+     qui la prima, com'è a schermo */
   const colori = new Set(L.parole.filter(w => w[3] === 'c').flatMap(w => [w[0], w[1], w[2]]).filter(Boolean))
   await page.locator(tappa(L.colori)).click()
-  const estranee = []
-  for (let i = 0; i < 4; i++) {
-    await page.waitForSelector('[data-domanda]')
-    uguale(`una tappa di parole fa domande sulle parole (${i + 1})`, await attr('[data-domanda]', 'data-genere'), 'parola')
-    const testi = await page.locator('[data-domanda] [data-opzione]').evaluateAll(els => els.map(e => e.textContent.trim()))
-    estranee.push(...testi.filter(t => !colori.has(t)))
-    await attendi(page, 400)                               // la finestra cieca
-    await page.locator('[data-domanda] [data-opzione][data-giusta]').click()
-    await page.waitForSelector('[data-esito="giusta"]')
-    await page.waitForSelector('[data-esito]', { state: 'detached', timeout: 6000 })
-  }
-  uguale('le risposte sono tutte colori', estranee.join(' '), '')
+  await page.waitForSelector('[data-domanda]')
+  uguale('una tappa di parole fa domande sulle parole', await attr('[data-domanda]', 'data-genere'), 'parola')
+  const testi = await page.locator('[data-domanda] [data-opzione]').evaluateAll(els => els.map(e => e.textContent.trim()))
+  controlla('con più risposte da scegliere', testi.length > 1, testi.join(' '))
+  uguale('le risposte sono tutte colori', testi.filter(t => !colori.has(t)).join(' '), '')
 })
 
 /* ══════════ 2. a metà del primo mondo ══════════
@@ -278,10 +274,10 @@ for (const L of LINGUE) await blocco(`${L.chiave}: a metà del primo mondo`, asy
     for (let parole = 0; parole <= 30; parole++) {
       await page.waitForSelector('[data-domanda]')
       if (await attr('[data-domanda]', 'data-genere') === 'frase') return
-      await attendi(page, 400)                             // la finestra cieca
+      await orologio.cieca()
       await page.locator('[data-domanda] [data-opzione][data-giusta]').click()
       await page.waitForSelector('[data-esito="giusta"]')
-      await page.waitForSelector('[data-esito]', { state: 'detached', timeout: 6000 })
+      await orologio.dopoLEsito()
     }
   }
   uguale('le parole sono sapute: si comincia da una frase', await attr('[data-domanda]', 'data-genere'), 'frase')
@@ -294,7 +290,7 @@ for (const L of LINGUE) await blocco(`${L.chiave}: a metà del primo mondo`, asy
   const posti = () => page.locator('[data-banco] [data-tessera]').evaluateAll(
     els => els.map(e => ({ id: e.dataset.tessera, posto: Number(e.dataset.posto) })))
   async function componi(storta) {
-    await attendi(page, 400)                               // la finestra cieca
+    await orologio.cieca()
     const t = (await posti()).sort((a, b) => (storta ? b.posto - a.posto : a.posto - b.posto))
     for (const x of t) await page.locator(`[data-banco] [data-tessera="${x.id}"]`).click()
     return t.length
@@ -310,7 +306,7 @@ for (const L of LINGUE) await blocco(`${L.chiave}: a metà del primo mondo`, asy
     await attendi(page, 250)                               // il click fantasma arriva qui dentro
   }
   const centro = async loc => { const b = await loc.boundingBox(); return [b.x + b.width / 2, b.y + b.height / 2] }
-  await attendi(page, 400)
+  await orologio.cieca()
   const nome = page.locator('[data-banco] [data-tessera]').filter({
     has: page.locator(paroleDelMondo.map(p => `[data-parola="${p}"]`).join(', ')) }).first()
   const idNome = await nome.getAttribute('data-tessera')
@@ -321,7 +317,7 @@ for (const L of LINGUE) await blocco(`${L.chiave}: a metà del primo mondo`, asy
   uguale('e non ha tolto il guadagno', await attr('[data-paga]', 'data-paga-si'), '1')
   uguale('la traduzione non c’è ancora', await page.locator('[data-traduzione]').count(), 0)
   await scatto(page, `${L.chiave}-chiede`)
-  await attendi(page, 350)
+  await orologio.bollaPronta()
   await dito(...await centro(page.locator('[data-svela] [data-azione="svela-no"]')))
   uguale('«No, ci provo» chiude la bolla', await page.locator('[data-svela]').count(), 0)
   uguale('e la domanda paga ancora', await attr('[data-paga]', 'data-paga-si'), '1')
@@ -348,7 +344,7 @@ for (const L of LINGUE) await blocco(`${L.chiave}: a metà del primo mondo`, asy
   await scatto(page, `${L.chiave}-sbaglio`)
 
   /* ── 4. la seconda, giusta: paga ── */
-  await page.waitForSelector('[data-esito]', { state: 'detached', timeout: 12000 })
+  await orologio.dopoLEsito()
   await finoAllaFrase()
   uguale('niente si perde: si va avanti con un’altra frase', await attr('[data-domanda]', 'data-formato'), 'monta')
   const monetePrima = (await leggiProfilo(page)).coins
@@ -360,7 +356,7 @@ for (const L of LINGUE) await blocco(`${L.chiave}: a metà del primo mondo`, asy
   const dopo = await leggiProfilo(page)
   controlla('la frase sbagliata è segnata nello SRS', Object.entries(dopo.items).some(([k, v]) => k.startsWith(L.frase) && v.err > 0))
   controlla('e il contatore delle frasi è salito', (dopo.totals[L.totaleFrasi] || 0) >= 1)
-  await page.waitForSelector('[data-esito]', { state: 'detached', timeout: 6000 })
+  await orologio.dopoLEsito()
 
   /* ── 5. il libro ── */
   await indietro()
@@ -400,12 +396,11 @@ for (const L of LINGUE) await blocco(`${L.chiave}: a metà del primo mondo`, asy
   controlla('la bolla dice perché costa', /la conosci già/.test(chiede), chiede)
   controlla('e che nel libro è una domanda sola', /Una domanda del libro/.test(chiede), chiede)
   uguale('chiedere non toglie niente', await attr('[data-paga]', 'data-paga-si'), '1')
-  await attendi(page, 400)
+  await orologio.bollaPronta()
   await page.locator('[data-azione="svela-no"]').click()
   uguale('«No» chiude', await page.locator('[data-svela]').count(), 0)
   await saputa.click()
-  await page.waitForSelector('[data-svela]')
-  await attendi(page, 400)
+  await orologio.bollaPronta()
   await page.locator('[data-azione="svela-si"]').click()
   await page.waitForSelector('[data-traduzione]')
   controlla('la parola toccata dice cosa vuol dire', (await page.locator('[data-traduzione]').innerText()).includes(it), it)
@@ -545,8 +540,11 @@ for (const L of LINGUE) await blocco(`${L.chiave}: la pagina di un concetto`, as
   uguale('due esempi', await page.locator('[data-pagina] [data-esempio]').count(), 2)
   controlla('quello che conta è colorato', await page.locator('[data-pagina] [data-forte]').count() > 0)
   uguale('nessuna domanda sotto', await page.locator('[data-domanda]').count(), 0)
-  await attendi(page, 2000)                                // è la cosa da provare: non se ne va da sola
-  uguale('e nessuna attesa: dopo due secondi è ancora lì', await page.locator('[data-pagina]').count(), 1)
+  // è la cosa da provare: non se ne va da sola. L'orologio della pagina va avanti di tre secondi, e un timer che la
+  // chiudesse scatterebbe
+  await page.clock.fastForward(3000)
+  await attendi(page, 100)
+  uguale('e nessuna attesa: dopo tre secondi è ancora lì', await page.locator('[data-pagina]').count(), 1)
   await scatto(page, `${L.chiave}-pagina`)
   await page.locator('[data-azione="capito"]').click()
   await page.waitForSelector('[data-domanda][data-genere="frase"]', { timeout: 3000 })
