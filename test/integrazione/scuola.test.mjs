@@ -1,6 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA SCUOLA — UNA MAESTRA, UN BAMBINO, UNA LEZIONE A DUE BLOCCHI
 
+   perché: il giro intero maestra-bambino sulle due pagine costruite: classe, lezione a due blocchi, codice, «Via», resoconto, e niente lasciato sul PC
+   a parte perché: due contesti di Chrome col servizio in locale e la logica vera; scuola-senza-rete ha un contesto solo e il sito spento
+
    Le due pagine costruite (`dist-scuola/maestra.html` e `index.html`,
    aperte dal file come dalla chiavetta) in due contesti di Chrome, e il
    servizio in locale con la logica vera (`aiuto/servizio-scuola.mjs`).

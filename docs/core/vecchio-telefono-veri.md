@@ -135,4 +135,4 @@ Nei test: `[data-azione="benchmark-veri"]`, `[data-benchmark-fascia]`,
 `[data-azione="benchmark-al-computer"]`, `[data-benchmark-lettore]`, `[data-benchmark-secondi]`, `[data-benchmark-muto]`;
 `window.__benchmarkVeri` (i dati), `window.__benchmarkSolo` (gli inizi degli id), `window.__benchmarkCorto` (scene di pochi decimi).
 `unita/benchmark-veri` (le scene, il log, gli invii, la prova a metà), `unita/benchmark-tetto` (una scena che non finisce, un gioco che
-non si carica), `unita/elementi-3d`, `integrazione/benchmark-veri` (la prova intera, in tempi corti).
+non si carica), `unita/elementi-3d`, `verifiche/benchmark-veri` (la prova intera, in tempi corti).

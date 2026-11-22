@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE MONETE DI SCORTA (il cheat dell'indirizzo)
+   perché: il cheat `#monete=500` dell'indirizzo: l'indirizzo si ripulisce (un F5 non raddoppia), funziona a pagina aperta, il salvataggio ritardato viene forzato e un valore scritto male non rompe niente
+   a parte perché: nessun altro file prova il frammento dell'indirizzo; guarda le differenze e non i totali perché anche i traguardi pagano monete all'apertura del gioco
 
    `giochi.html#monete=500` regala monete a chi sta giocando. Quello che
    può andare storto non è il regalare, è tutto quello che c'è intorno:

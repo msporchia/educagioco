@@ -1,6 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE QUATTRO PARTITE LIBERE DEL CASTELLO, DAL DITO
 
+   perché: quattro tasti di partite libere sulla mappa, uno per terreno, e il record che finisce nel quaderno di quel terreno (anche il vecchio)
+   a parte perché: parte dalla mappa e non da una partita; potrebbe stare dentro torri-figure o torri, tiene la sua semina di record (candidato a fondersi con torri-figure)
+
    Quello che `misure/castello` non può vedere: che sulla mappa ci siano
    **quattro tasti**, uno per terreno, ognuno col suo record; che
    toccarne uno apra proprio quella libera; che a fine partita il
@@ -54,9 +57,9 @@ controlla('i regali si vedono, una volta per tutte e quattro',
 /* toccato il torrione delle mura, il cavaliere ci va a piedi per il ponte;
    poi «Gioca ▶» nel fumetto */
 await page.click('[data-tappa="libera-mura"]')
-await page.waitForSelector('[data-eroe][data-dove="libera-mura"][data-in-viaggio="0"]', { timeout: 15000 }).catch(() => {})
-uguale('il cavaliere è andato a piedi fino al torrione delle mura',
-       await page.locator('[data-eroe]').getAttribute('data-dove'), 'libera-mura')
+controlla('il cavaliere è andato a piedi fino al torrione delle mura',
+          await page.waitForSelector('[data-eroe][data-dove="libera-mura"][data-in-viaggio="0"]', { timeout: 15000 }).then(() => true, () => false),
+          `è a ${await page.locator('[data-eroe]').getAttribute('data-dove')}`)
 await page.click('[data-fumetto] [data-azione="gioca"]')
 const dentro = await page.evaluate(() => {
   const T = window.__td

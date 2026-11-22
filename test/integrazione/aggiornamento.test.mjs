@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    L'AGGIORNAMENTO, CON UN SITO VERO E UN SERVICE WORKER VERO
 
+   perché: l'aggiornamento con un sito vero e un service worker vero: la versione nuova arriva anche con cache del browser, rete lenta e pagina vecchia che il telefono si tiene
+   a parte perché: gli altri test aprono il file da `file://`, dove il service worker e il tasto «cerca aggiornamenti» non esistono; qui serve un sito su un server (`aiuto/sito.mjs`) e un profilo su disco
    «So che c'è una versione nuova e il telefono non la prende.» Il gioco
    aveva un sacco di meccanismi automatici, e quando non andavano non si
    vedeva niente: nessun errore, solo la data vecchia in fondo alla home.

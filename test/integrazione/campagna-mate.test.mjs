@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA CAMPAGNA DELLE TABELLINE, NEL BROWSER
      node test/integrazione/campagna-mate.mjs   (dopo `npm run build`)
+   perché: la mappa dei pianeti delle tabelline: la tappa si apre, le domande sono della tabellina nuova, superato il bersaglio paga e resta superata, a fila finita il volo infinito col record sul tasto
+   a parte perché: è la campagna delle tabelline, giocata a codice; `asteroidi-3d` guarda il tocco sul cielo e `asteroidi-hangar` i regali, che hanno preparazioni diverse
 
    Tre cose che nessun test unitario può dire:
      · aprendo il gioco si vede la mappa dei pianeti, non più la domanda

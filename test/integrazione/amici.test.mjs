@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    GLI AMICI — DUE TELEFONI, IL SERVIZIO E UN INVITO A CASTLE BATTLE
 
+   perché: due telefoni e il servizio: codice, amicizia, invito a Castle Battle che parte su tutte e due e progressi visti sulla rotta degli asteroidi; senza servizio la home resta com'è
+   a parte perché: serve il servizio vero e due pagine insieme; `amici-mappe` parte da amici già salvati e un solo Chrome, `arena-sfida` prova la sfida con la rete cattiva
    Due pagine (due telefoni, due bambini) col gioco aperto dal file. Di base gli amici sono spenti: i grandi li accendono dalle
    impostazioni, uno crea un codice, l'altro lo scrive, e da lì i due si vedono online col nome. Uno invita l'altro a una
    battaglia, all'altro compare il cartello, tocca «Gioca» e la battaglia parte su tutte e due. Uno va avanti negli asteroidi e

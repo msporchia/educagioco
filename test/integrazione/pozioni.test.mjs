@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL LABORATORIO DELLE POZIONI, NEL BROWSER
+   perché: il laboratorio delle pozioni dallo schermo: la prima tappa giocata col rotolo del mercante e la ricetta, la fine tappa nel profilo, un trabocco e la spugna
+   a parte perché: il motore lo prova l'unità; qui è il gioco che il bambino tocca,; la sosta sta in pozioni-sosta, e le anteprime in unita/pozioni-anteprime
 
    La prova unitaria dice che il motore è giusto; questa dice che il
    gioco che il bambino tocca è quel motore lì. La prima tappa si gioca

@@ -1,6 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════
    LO SCARICO DEI GIOCHI, COL SERVICE WORKER VERO
 
+   perché: lo scarico dei giochi col service worker vero, che si pianta a metà (worker morto, file muto o mancante) e deve arrivare in fondo da solo
+   a parte perché: unico a servire dist-sito/ con aiuto/sito.mjs; scuola-senza-rete serve dist-scuola/, un'altra app
+
    «Si pianta a metà, soprattutto dentro un gioco.» Il service worker del
    sito spezzato scarica i giochi quando la pagina glielo chiede, e la
    pagina lo chiedeva solo all'avvio e al ritorno in primo piano: dentro

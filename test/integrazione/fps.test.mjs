@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL CONTAFOTOGRAMMI
 
+   perché: il contafotogrammi: spento di partenza, si accende dagli interruttori dei grandi, fa una misura con due tocchi, la tiene e la ritrova dopo una ricarica
+   a parte perché: serve solo a guardare il telefono vecchio senza cavi; passa dalle impostazioni dei grandi come `impostazioni-barra`, ma prova una pastiglia sola e non c'entra con la barra
    Spento di partenza (nessuna pastiglia in giro), si accende dagli
    interruttori dei grandi, fa una misura con due tocchi, la tiene e
    la ritrova dopo una ricarica: la ragione per cui esiste è guardare
@@ -39,7 +41,7 @@ await page.waitForSelector('[data-fps]', { timeout: 8000 })
 await page.click('[data-azione="fps-elenco"]')
 controlla('dopo la ricarica la misura c\'è ancora', /ultima/.test(await page.textContent('[data-fps-elenco]')))
 
-/* ── LA MISURA DEL TELEFONO: si apre, dice la fascia e c'è il tasto (gira in integrazione/benchmark-veri) ── */
+/* ── LA MISURA DEL TELEFONO: si apre, dice la fascia e c'è il tasto (gira in verifiche/benchmark-veri) ── */
 await page.click('[data-azione="grandi"]')
 await page.waitForSelector('.tastierino', { timeout: 5000 })
 for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
@@ -53,7 +55,6 @@ await page.click('[data-azione="benchmark-chiudi"]')
 uguale('chiusa la misura', await page.locator('[data-benchmark]').count(), 0)
 
 /* ── LA FASCIA ── */
-await page.click('[data-azione="benchmark-chiudi"]').catch(() => {})
 controlla('la carta della fascia c\'è', await page.isVisible('[data-fascia]'))
 await page.click('[data-azione="rimisura-fascia"]')
 await page.waitForFunction(() => /punti/.test(document.querySelector('[data-fascia]').textContent), null, { timeout: 30000 })

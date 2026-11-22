@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE BOTTEGHE DEL PAESE DELLA FATTORIA 3D, COL DITO — docs/fattoria3d/botteghe.md
 
+   perché: le botteghe del paese: si entra col tocco vero, il cliente chiede, «Consegna» si spegne se manca roba, dà esperienza e cuori, al quinto cuore un bancone in più, e la mongolfiera a livello 70
+   a parte perché: come `fattoria3d-vicini` parte da una fattoria ricca e si muove con il dito, ma guarda i clienti dentro una bottega e non la visita a un villaggio
    Il test unitario prova le regole; questo dice che **la bottega sta in piedi nel browser**: si compra e si mette sul prato (come ogni edificio),
    si tocca con un tocco vero (l'eroe cammina fin lì) e si entra: dentro il cliente aspetta al tavolino col fumetto di quello che vuole, «Tutti i
    clienti» apre il foglio con la ✕ in alto a destra, un bancone ha un cliente per mestiere con una merce sola, «Consegna» è spento finché manca roba e toccarlo dice cosa manca, con la roba dà esperienza (mai monete), accende un cuore, il

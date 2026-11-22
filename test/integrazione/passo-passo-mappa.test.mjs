@@ -7,8 +7,8 @@
    il segnalino salta fino alla casella toccata mentre il fumetto è già lì,
    un altro tocco cambia fumetto e meta, e «gioca» parte anche a viaggio in
    corso; toccando altrove il segnalino ci va e la vista gli va dietro nei
-   due versi; un ponte bloccato non si passa. Vinta l'ultima dei massi, ▶
-   resta sulla strada del coniglio e la mappa si apre nel mondo dello zaino;
+   due versi; un ponte bloccato non si passa. Giocato per ultimo il viale
+   (dove ▶ porta finiti i massi) la mappa si apre nel mondo dello zaino;
    dalla tana si torna alla valle, nella galleria del pascolo; col selettore
    il cane ha la sua strada tutta nella valle, e la strada del coniglio va
    avanti senza fare il cane. Lo zaino è una seconda valle dipinta: ponti
@@ -16,13 +16,14 @@
    mondo; il cane va dal pascolo al ghiaccio passando dal salto, senza
    cambiare animale; uscendo e rientrando si è nella stessa valle. Il dito passa da CDP
    (docs/core/il-dito.md). Vedi docs/passo-passo/mappa.md.
+   perché: la mappa delle isole di Passo passo col dito: fumetto subito al tocco, trascinare sposta la vista, il segnalino salta alla casella toccata (anche a viaggio in corso), chiuse e ponti bloccati che dicono cosa manca
+   a parte perché: la mappa è una vista grande e a parte (scorre, ha un segnalino che viaggia): passo-passo la attraversa solo per entrare in una tappa; POTREBBE stare dentro passo-passo.test.mjs
    `DIST=… node test/esegui.mjs passo-passo-mappa --niente-build` */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scegli, scatto, statoSullIsola, leggiProfilo }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA, TAPPE_PRIME, TAPPE_PICCOLE, FILA_ATTUALE } from '../../src/giochi/passo-passo/dati/campagna.js'
-import { Livello } from '../../src/giochi/passo-passo/motore/livello.js'
-import { risolvi } from '../../src/giochi/passo-passo/motore/risolutore.js'
+import { chiudiIlTraguardo } from '../aiuto/passo-passo.mjs'
 import { STRADE } from '../../src/giochi/passo-passo/motore/strade.js'
 import { SENTIERO_CANE } from '../../src/giochi/passo-passo/scena/animale.js'
 
@@ -133,6 +134,7 @@ const stelleFino = n => Object.fromEntries([...Array(n)].map((_, i) => [i, 3]))
 const apri = async (tappa, cfg = {}, eta = 8) => {
   await semina(page, { settings: { eta },
                        campagne: { passo: { tappa, stelle: stelleFino(tappa), cfg: { fila: FILA_ATTUALE, ...cfg } } } })
+  await chiudiIlTraguardo(page)
   await scegli(page, 'passo')
   await page.waitForSelector('[data-mappa] [data-tappa]')
   await fermo()
@@ -442,8 +444,8 @@ uguale('senza riaprire il fumetto', await page.locator('[data-fumetto]').count()
   await toccaFuori()
 }
 
-/* ══════════ 3. «gioca» parte a viaggio in corso; vinta, ▶ resta sulla strada del coniglio ══════════ */
-await apri(TUTTO, { ultima: TUTTO - 1 })
+/* ══════════ 3. «gioca» parte a viaggio in corso; e dopo i massi, lo zaino ══════════ */
+await apri(TUTTO, { ultima: TUTTO - 1 })     // «Tutto insieme», l'ultima dei massi
 await toccaSu(casella(TUTTO - 3))
 await fermo()
 await toccaFuori()
@@ -455,29 +457,26 @@ await toccoVivo(casella(TUTTO))
 }
 await page.waitForSelector('.pp-campo', { timeout: 5000 })
 controlla('«gioca» comincia la tappa', (await page.locator('.barra-app .dove').innerText()).includes(CAMPAGNA[TUTTO].nome))
-await attendi(page, 450)
-{
-  const tasto = m => m.startsWith('salto-') ? `[data-salto="${m.slice(6)}"]` : `[data-freccia="${m}"]`
-  for (const m of risolvi(Livello.da(CAMPAGNA[TUTTO]))) { await page.locator(tasto(m)).click(); await attendi(page, 50) }
-  await page.locator('[data-azione="via"]').click()
-  await page.waitForSelector('[data-fine="tappa"]', { timeout: 20000 })
-  await attendi(page, 600)
-  await page.evaluate(() => document.querySelectorAll('.velo').forEach(v => v.querySelector('.occhiello') && v.click()))
-  await page.locator('[data-azione="avanti"]').click()
-  await page.waitForSelector('.pp-campo')
-  const titolo = await page.locator('.barra-app .dove').innerText()
-  controlla('finiti i massi, ▶ va avanti sulla strada del coniglio: il viale', titolo.includes(CAMPAGNA[TAPPE_PICCOLE].nome), titolo)
-}
 await page.locator('button[aria-label="indietro"]').click()
 await page.waitForSelector('[data-mappa] [data-tappa]')
 await fermo()
 {
+  const p = ((await leggiProfilo(page)).campagne || {}).passo || {}
+  uguale('il profilo si ricorda l\'ultima tappa giocata', p.cfg && p.cfg.ultima, TUTTO)
+  uguale('e tornati alla mappa il coniglio è lì', `${(await segnalino()).al}/${await mondo()}`, `${TUTTO}/valle`)
+}
+/* vinta l'ultima dei massi ▶ va al viale (`unita/passo-passo-strade`): il profilo come lo lascia ▶, col viale giocato per ultimo */
+await semina(page, { settings: { eta: 8 }, campagne: { passo: { tappa: TUTTO + 1, stelle: stelleFino(TUTTO + 1),
+                                                                cfg: { fila: FILA_ATTUALE, ultima: TAPPE_PICCOLE, eredita: TUTTO } } } })
+await chiudiIlTraguardo(page)
+await scegli(page, 'passo')
+await page.waitForSelector('[data-mappa] [data-tappa]')
+await fermo()
+{
   const s = await segnalino()
-  uguale('tornati alla mappa si è nel mondo dello zaino', await mondo(), 'zaino')
+  uguale('giocato per ultimo il viale, la mappa si apre nel mondo dello zaino', await mondo(), 'zaino')
   uguale('col coniglio sul viale', `${s.al}/${s.animale}`, `${TAPPE_PICCOLE}/coniglio`)
   uguale('il viale è la tappa di adesso', await statoSullIsola(page, TAPPE_PICCOLE), 'ora')
-  const p = ((await leggiProfilo(page)).campagne || {}).passo || {}
-  uguale('il profilo si ricorda l\'ultima tappa giocata', p.cfg && p.cfg.ultima, TAPPE_PICCOLE)
 }
 
 /* ══════════ 4. dalle carte alla valle, e il selettore: col cane la sua mappa ══════════ */
@@ -526,6 +525,7 @@ await page.locator('button[aria-label="indietro"]').click()
 await semina(page, { settings: { eta: 8 }, campagne: { passo: {
   tappa: TAPPE_PICCOLE + 1, stelle: { ...stelleFino(TAPPE_PRIME), [TAPPE_PICCOLE]: 3 },
   cfg: { fila: FILA_ATTUALE, eredita: TAPPE_PRIME, ultima: TAPPE_PICCOLE } } } })
+await chiudiIlTraguardo(page)
 await scegli(page, 'passo')
 await page.waitForSelector('[data-mappa] [data-tappa]')
 await fermo()
@@ -631,6 +631,7 @@ const ULTIMA_PECORA = STRADE.prima[RIPETI_CANE]
 await page.locator('button[aria-label="indietro"]').click()
 await semina(page, { settings: { eta: 8 }, campagne: { passo: {
   tappa: TAPPE_PICCOLE, stelle: stelleFino(ULTIMA_PECORA + 1), cfg: { fila: FILA_ATTUALE, eredita: TAPPE_PRIME, ultima: ULTIMA_PECORA } } } })
+await chiudiIlTraguardo(page)
 await scegli(page, 'passo')
 await page.waitForSelector('[data-mappa] [data-tappa]')
 await fermo()
@@ -657,6 +658,7 @@ uguale('gli stendardi del cane: il pascolo e le quattro carte',
 await toccaSu(casella(RIPETI_CANE))
 await fermo()
 await page.locator('button[aria-label="indietro"]').click()
+await chiudiIlTraguardo(page)
 await scegli(page, 'passo')
 await page.waitForSelector('[data-mappa] [data-tappa]')
 await fermo()

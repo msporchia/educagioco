@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    COME VA — la terza scheda, col dito
 
+   perché: la scheda «Come va» dei grandi: le domande ordinate dalla peggiore, una tipologia con più gradi contata una volta sola, il punteggio che è il tasto e i tre tasti che scrivono nel profilo
+   a parte perché: `avviso-difficolta` prova l'avviso che arriva da solo; qui si apre la scheda con la tendina dei grandi e si guardano ordine e tasti
    Era sospesa e adesso c'è di nuovo, rifatta: prima mostrava **solo i
    segnali** — le tre righe fuori soglia — e tre righe senza il resto non
    dicono se sono tre su dieci o tre su centoventi. Adesso ci sono tutte

@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    DIFENDI IL CASTELLO — la controprova sul campo.
+   perché: la controprova sul campo del castello: la prima tappa con due strategie opposte e l'ultima giocate nel browser, per vedere se nemici, raggio delle torri e colpi combaciano con il modello
+   a parte perché: il modello e le sue promesse sono in misure/castello, senza browser e in un lampo; qui costa minuti e serve solo a chi tocca RESA del danno o la durata dell'ondata
 
 
    L'equilibrio lo calcola `data/castello.js` e lo verifica, in aritmetica

@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    I VICINI DELLA FATTORIA 3D, COL DITO — docs/fattoria3d/vicini.md
 
+   perché: la visita ai vicini della fattoria 3D: il trattore apre la mappa dei villaggi, si parte, la fattoria del vicino sta su una tela sua, la cassa dà esperienza, il mercato si compra, e a casa il mondo riparte
+   a parte perché: come `fattoria3d-botteghe` parte da una fattoria ricca col dito, ma qui sta tutto sul viaggio e sulle due tele; non è la bottega
    Il test unitario prova le regole; questo dice che **la visita sta in piedi nel browser**: il trattore si compra e si tocca (l'eroe ci
    cammina), apre la mappa dei villaggi, quelli che non hai il livello sono grigi e dicono il livello; si sceglie un villaggio, il
    trattore parte e compare la sua fattoria su una tela sua (quella di casa aspetta ferma), con «Torna a casa» sempre in vista; la

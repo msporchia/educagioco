@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE IMPOSTAZIONI DEI GRANDI — LA BARRA IN BASSO E LE TENDINE
+   perché: le quattro schede della barra in basso dei grandi (Bambino, Giochi, Come va, Casa), ognuna «di chi è», e le cose che cancellano chiuse in tendine («Zona delicata», «Avanzate»)
+   a parte perché: POTREBBE stare dentro genitori (stessa porta, stesso tastierino, 72 righe): sta a parte perché genitori scrive file su disco e questo guarda solo la forma e la posizione delle schede
 
    Quattro schede nella barra in basso (Bambino, Giochi, Come va, Casa), ognuna «di chi è»; le cose che cancellano e gli strumenti da
    sviluppatore stanno in tendine chiuse. Docs: docs/genitori/riordino.md.

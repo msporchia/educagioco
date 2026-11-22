@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    CASTLE BATTLE — LA SFIDA IN DUE, DUE PAGINE, IL SERVIZIO VERO E UNA RETE CATTIVA
 
+   perché: la sfida di Castle Battle fra due pagine, il servizio vero e una rete cattiva (filo che cade, muore in silenzio, rete spenta venti secondi): la battaglia riparte uguale su tutti e due
+   a parte perché: serve il servizio in locale e un proxy che guasta la rete; `arena` gioca da soli e `amici` invita soltanto, senza tagliare il filo
    Due pagine (due telefoni) aprono il gioco dal file locale (origine `null`, come un doppio click), una crea la sfida e
    riceve il codice, l'altra lo scrive; il servizio di inoltro (`servizio/inoltro`, docs/core/insieme.md) le mette in
    contatto. Ognuna ci parla attraverso un proxy suo (test/aiuto/proxy-cattivo.mjs) che guasta la rete a comando: il filo

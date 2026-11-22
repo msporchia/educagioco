@@ -3,6 +3,8 @@
    carta lasciata fuori dalla fila che torna indietro. Il trascinamento è un
    tocco vero (CDP): un `page.click()` non porta i pointer del dito
    (docs/core/il-dito.md). Vedi docs/passo-passo/zaino.md.
+   perché: la fila di Passo passo trascinata col dito vero: il + di una scatola, il posto acceso, una carta dentro e fuori, una scatola intera, la carta lasciata fuori che torna indietro
+   a parte perché: POTREBBE stare dentro passo-passo (stessa tappa, stessa fila): sta a parte per il trascinamento CDP; passo-passo la compone toccando i tasti e non prova il gesto
    `node test/esegui.mjs passo-passo-fila` */
 import { apriBrowser, apriGioco, attendi, scatto } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'

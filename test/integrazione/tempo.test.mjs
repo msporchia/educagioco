@@ -1,6 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════
    QUANTO HA GIOCATO — la catena intera, col dito
 
+   perché: la sessione si apre e si chiude davvero entrando e uscendo da un gioco (App.vue), e arriva fino al grafico dei grandi
+   a parte perché: è l'unico a guardare App.vue e il registro vuoto; varieta usa lo stesso registro, ma per la carta in home e il premio (candidato a fondersi con lui)
+
    Il registro delle sessioni (`store/sessioni.js`) ha i suoi conti
    provati in Node; quello che solo un browser può dire è se **la
    sessione si apre e si chiude davvero** quando un bambino entra in un
@@ -38,19 +41,23 @@ const registro = () => page.evaluate(chi => new Promise((ok, ko) => {
   }
 }), GIOCATORE)
 
+/* Il cronometro delle sessioni legge `Date.now()`: per far passare sei secondi di gioco si sposta avanti l'orologio della
+   pagina (`page.clock.setSystemTime`), che continua a scorrere da lì; i timer restano quelli veri. */
+const passano = ms => page.evaluate(() => Date.now()).then(t => page.clock.setSystemTime(t + ms))
+
 /* ── 1. una partita vera ──
    Cinque secondi è la soglia sotto la quale una sessione non si scrive
-   (`MINIMA`): un tocco di passaggio non è una partita. Se ne aspettano
-   sei, e non è tempo buttato — è il controllo che quella soglia esista
-   davvero. */
-await page.goto(page.url().split('#')[0] + '#fattoria3d')
-await page.waitForTimeout(6200)
+   (`MINIMA`): un tocco di passaggio non è una partita. Se ne fanno
+   passare sei, ed è il controllo che quella soglia esista davvero. */
+await page.goto(page.url().split('#')[0] + '#conta')
+await page.waitForSelector('.ct-tappa', { timeout: 8000 })
+await passano(6200)
 await page.evaluate(() => { location.hash = '#home' })
 await page.waitForTimeout(900)
 
 const dopoUna = await registro()
 uguale('uscendo dal gioco si è scritta una riga', dopoUna.length, 1)
-uguale('e dice a cosa ha giocato', dopoUna[0]?.g, 'fattoria3d')
+uguale('e dice a cosa ha giocato', dopoUna[0]?.g, 'conta')
 controlla('per quanto', dopoUna[0]?.s >= 5, `${dopoUna[0]?.s}s`)
 controlla('e da quando', dopoUna[0]?.t > 0)
 
@@ -58,7 +65,8 @@ controlla('e da quando', dopoUna[0]?.t > 0)
    Un genitore che passa dieci minuti a tarare le domande non deve
    comparire come dieci minuti di gioco di suo figlio. */
 await page.evaluate(() => { location.hash = '#albo' })
-await page.waitForTimeout(6200)
+await page.waitForTimeout(300)
+await passano(6200)
 await page.evaluate(() => { location.hash = '#home' })
 await page.waitForTimeout(900)
 uguale('l\'albo non conta come tempo di gioco', (await registro()).length, 1)
@@ -67,6 +75,7 @@ uguale('l\'albo non conta come tempo di gioco', (await registro()).length, 1)
    Aprire un gioco e uscire subito capita dieci volte di fila mentre si
    sceglie: righe da due secondi renderebbero il registro illeggibile. */
 await page.evaluate(() => { location.hash = '#conta' })
+await page.waitForSelector('.ct-tappa', { timeout: 8000 })
 await page.waitForTimeout(900)
 await page.evaluate(() => { location.hash = '#home' })
 await page.waitForTimeout(900)
@@ -83,8 +92,8 @@ await attendi(page, 400)
 
 const totale = await page.locator('[data-tempo-totale]').innerText()
 controlla('il totale di oggi non è zero', /\d+s|\d+m/.test(totale), totale)
-controlla('e la fattoria è nella classifica',
-          await page.locator('[data-tempo-gioco="fattoria3d"]').count() > 0)
+controlla('e il gioco è nella classifica',
+          await page.locator('[data-tempo-gioco="conta"]').count() > 0)
 
 /* le sette barre della settimana ci sono tutte, vuote comprese: un
    grafico che salta i giorni senza partite mente sulla forma */
@@ -95,6 +104,5 @@ uguale('sette giorni, vuoti compresi',
 await scatto(page, 'tempo-di-gioco')
 
 uguale('nessun errore in console', errori.length, 0, errori.join('\n'))
-nota('sei secondi di attesa sono la soglia sotto cui una sessione non si scrive')
 await browser.close()
 riassunto('quanto ha giocato')

@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE GUIDE E IL `?`
+   perché: le guide raggiungibili dalla home senza codice e col `?` dentro i giochi, l'indirizzo pubblico da passare e le guide in un velo dal primo avvio, quando non c'è nessun profilo
+   a parte perché: nessun altro file apre le guide; le unità provano solo i contenuti (guide/contenuti.js), non che la porta si trovi e che il velo si apra dal benvenuto
 
    Due strade diverse per lo stesso materiale, e quello che conta è che
    siano davvero raggiungibili — una documentazione che c'è ma non si

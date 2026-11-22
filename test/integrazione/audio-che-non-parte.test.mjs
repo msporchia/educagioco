@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    L'AUDIO CHE NON PARTE, NEL BROWSER
      node test/esegui.mjs audio-che-non-parte
+   perché: quando l'audio non parte (AudioContext sempre `suspended`): la pronuncia finisce fra i guasti, sotto la domanda compare «non posso ascoltare», si può ripetere o continuare senza audio
+   a parte perché: serve un AudioContext finto messo prima che la pagina parta; gli altri test l'audio non lo guardano, e il banco di prova lo spegne
 
    Un AudioContext finto che resta `suspended` per sempre (come un telefono
    dove la pronuncia parte fuori da un tocco) fa vedere cosa succede a chi

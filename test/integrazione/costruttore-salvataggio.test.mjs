@@ -1,4 +1,6 @@
-/* Il programma si salva anche se la pagina sparisce: una riga appena
+/* perché: il programma del robot si salva anche se la pagina sparisce (`visibilitychange` o `pagehide`) prima che scada il salvataggio pigro: alla ricarica la riga c'è
+   a parte perché: potrebbe stare in `costruttore`, che già controlla il programma dopo una ricarica; sta a parte perché ricarica prima dei ritardi di 500 ms e 350 ms e con due eventi diversi
+   Il programma si salva anche se la pagina sparisce: una riga appena
    scritta, la scheda nascosta (o il telefono in tasca) prima che scada
    il salvataggio pigro, e alla ricarica la riga c'è. Si prova con tutti e
    due gli eventi, `visibilitychange` e `pagehide`, ricaricando prima dei

@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA PAGINA DEI TRUCCHI (`#admin`)
 
+   perché: la pagina `#admin` scrive nell'indirizzo il cheat giusto e porta a leggerlo: monete, bambino di prova che resta sulla pagina, fattoria di prova, interruttori nel profilo
+   a parte perché: è l'unico che apre `#admin`; i cheat in sé li usano tutti gli altri test, qui si prova solo che i tasti della pagina arrivino a destinazione
    I cheat di casa, uno per tasto: la pagina non fa niente di suo, scrive
    nell'indirizzo il cheat che esiste già e porta dove si legge. Qui si
    prova che la strada regga per davvero:

@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL GIARDINO — IL GIRO COMPLETO, COL DITO
+   perché: il giro del giardino dal dito: carta dietro l'interruttore sperimentale, mappa, campo dipinto, carta-calcolo a tutto schermo con campo fermo, pianta posata col tocco, uscita a metà e ripresa
+   a parte perché: è l'unico file del giardino nel browser: il motore e la campagna li provano le unità, e nessun altro file apre quella schermata
 
    Il test unitario prova il motore e la campagna; questo dice che **il
    gioco vero sta in piedi nel browser**: si apre dalla home (è un gioco
@@ -78,20 +80,10 @@ await attendi(page, 1500)
 uguale('mentre si calcola il campo sta fermo', await page.locator('.gi-hud + .gi-barra i').evaluate(e => e.style.width), '0%')
 await scatto(page, 'giardino-calcolo')
 
-/* si risponde finché la pianta è «in mano»: sbagliare non costa niente, quindi a un conto
-   sbagliato si riprova col prossimo */
-let inMano = false
-for (let giro = 0; giro < 12 && !inMano; giro++) {
-  if (!(await page.locator('.gi .qz-tasto').count())) {
-    await page.locator('[data-pianta="girasole"]').click({ timeout: 4000 }).catch(() => {})
-    await page.waitForSelector('.gi .qz-tasto', { timeout: 6000 }).catch(() => {})
-  }
-  await attendi(page, 450)                           // la finestra cieca del montaggio
-  await page.locator('.gi .qz-tasto').nth(giro % 4).click().catch(() => {})
-  await attendi(page, 1200)
-  await page.waitForSelector('.gi .qz-velo', { state: 'detached', timeout: 12000 }).catch(() => {})
-  inMano = await page.locator('.gi-avviso [data-azione="annulla"]').count() === 1
-}
+/* si risponde giusto (la risposta giusta ha `data-giusta`), passata la finestra cieca del montaggio */
+await attendi(page, 450)
+await page.locator('.gi .qz-tasto[data-giusta]').click()
+const inMano = await page.waitForSelector('.gi-avviso [data-azione="annulla"]', { timeout: 12000 }).then(() => true, () => false)
 controlla('rispondendo giusto la pianta è in mano e chiede dove', inMano)
 uguale('i soli non sono ancora stati spesi', await soli(), 150)
 await scatto(page, 'giardino-in-mano')

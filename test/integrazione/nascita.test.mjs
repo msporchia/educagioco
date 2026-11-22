@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA DATA DI NASCITA — L'ETÀ SI TIENE AGGIORNATA, MA SENZA CAMBIARE I GIOCHI DA SOLA
+   perché: la data di nascita: obbligatoria nel bambino nuovo, nella stessa fascia l'età si aggiorna in silenzio, se cambia la fascia c'è un avviso nella posta dei grandi e la scelta si fa dalle impostazioni
+   a parte perché: ha il suo modulo (benvenuto) e la sua posta; POTREBBE stare dentro genitori o posta per il tastierino, ma la preparazione è diversa: date di nascita finte rispetto all'anno scolastico di oggi
 
    Nel modulo del bambino nuovo c'è mese e anno (obbligatori: l'età esce da lì); nelle impostazioni c'è «Quando è nato». Se la data dice un'età diversa da
    quella su cui il gioco è tarato: nella stessa fascia si aggiorna in silenzio, se cambia la fascia c'è un avviso nella posta dei grandi

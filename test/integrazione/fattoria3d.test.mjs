@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA FATTORIA 3D, COL DITO — docs/fattoria3d/
 
+   perché: il giro intero della fattoria 3D col dito: il prato in WebGL, «Compra» tenendo premuto, strade, semina e raccolto, alberi e sassi a moneta, monete vere e stato salvato dopo una ricarica
+   a parte perché: è il test lungo (900 s) e radice della famiglia; gli altri `fattoria3d-*` ne tirano fuori una schermata ciascuno per stare sotto i tempi
    Il test unitario prova le regole; questo dice che **il gioco vero sta in
    piedi nel browser**: la carta è in home, si apre sul
    prato in WebGL, tenendo premuto su un posto libero si apre «Compra» e la

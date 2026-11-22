@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    L'AVVISO QUANDO UNA DOMANDA VA MALE — dalla home al «Non avvertirmi più»
 
+   perché: l'avviso ai grandi quando una domanda va ancora male dopo la settimana di aiuto, dalla home fino a «Non avvertirmi più»; al bambino la home dice solo che ha qualcosa da dire
+   a parte perché: `come-va` guarda le domande ordinate nella scheda dei grandi; qui il bivio è l'avviso che compare da sé dopo il controllo dei quattro secondi, con l'orologio finto
    Il gioco alleggerisce il muro da sé; se non basta (una domanda che va ancora male dopo la settimana di aiuto, o parecchie insieme) c'è un
    messaggio per i grandi, e al bambino la home dice solo «ho qualcosa da dire al papà e alla mamma». Docs: docs/apprendimento/la-domanda.md,
    docs/genitori/cestino-e-posta.md. `node test/esegui.mjs avviso-difficolta`
@@ -17,6 +19,9 @@ const items = Object.fromEntries([...bene.map(k => [k, voce(10, 1)]), ...male.ma
 /* la settimana di aiuto del gioco è passata da un pezzo e da allora (almeno otto risposte) va ancora male */
 const alleggerite = Object.fromEntries(male.map(k => [k, { quando: ORA - 9 * GIORNO, ok: 1, err: 2 }]))
 
+/* il controllo parte a quattro secondi dall'avvio (`setTimeout` in App.vue): l'orologio della pagina è finto
+   (`page.clock.install`, il tempo scorre lo stesso) e si porta avanti invece di aspettare */
+const dopoIlControllo = async page => { await page.clock.fastForward(4500); await attendi(page, 300) }
 const entra = async page => {
   await page.click('[data-azione="grandi"]')
   await page.waitForSelector('.tastierino', { timeout: 5000 })
@@ -26,8 +31,9 @@ const entra = async page => {
 
 {
   const { page, errori } = await apriGioco(browser)
+  await page.clock.install()
   await semina(page, { settings: { eta: 8, alleggerite }, items })
-  await attendi(page, 6000)          // il controllo parte a quattro secondi dall'avvio
+  await dopoIlControllo(page)
   await page.waitForSelector('[data-posta-pallino]', { timeout: 8000 })
   controlla('al bambino la home dice solo che c\'è qualcosa per mamma e papà', /ho qualcosa da dire al papà e alla mamma/.test(await page.locator('[data-posta-difficolta]').innerText()))
   controlla('senza dire cosa', !/sbagli|difficolt|domande/i.test(await page.locator('[data-azione="grandi"]').innerText()))
@@ -43,7 +49,8 @@ const entra = async page => {
   await page.click('[data-azione="ho-letto"]')
   await attendi(page, 500)           // la scrittura dell'archivio parte dopo un attimo: ricaricare subito la perderebbe
   await page.reload(); await page.waitForSelector('.carte', { timeout: 8000 })
-  await attendi(page, 6000)
+  await dopoIlControllo(page)
+  await attendi(page, 1700)          // il conto guarda tutto il catalogo: quello che non arriva gli si lascia il tempo di arrivare
   uguale('letto, e riaperto il gioco, non ne arriva un altro', await page.locator('[data-posta-pallino]').count(), 0)
 
   uguale('nessun errore in console', errori.length, 0, errori.join('\n'))
@@ -52,8 +59,9 @@ const entra = async page => {
 /* «Non avvertirmi più» spegne, e l'interruttore in Avanzate lo dice (e lo riaccende) */
 {
   const { page, errori } = await apriGioco(browser)
+  await page.clock.install()
   await semina(page, { settings: { eta: 8, alleggerite }, items })
-  await attendi(page, 6000)
+  await dopoIlControllo(page)
   await entra(page)
   await page.click('[data-posta] [data-azione="non-avvertire"]')
   await attendi(page, 400)

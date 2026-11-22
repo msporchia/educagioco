@@ -1,4 +1,6 @@
-/* La scheda del robot, col dito vero: il tocco su un led apre il fumetto e
+/* perché: il tocco vero sui led della scheda del robot: fumetto, robot che ci va, rame che si accende dietro di lui dopo un livello vinto
+   a parte perché: è la scheda del robot; rotta-asteroidi ha lo stesso schema ma sulla mappa degli asteroidi
+   La scheda del robot, col dito vero: il tocco su un led apre il fumetto e
    non parte niente, fuori lo chiude, un led spento dice cosa fare prima, il
    cantiere libero dice quando si apre; il livello lasciato a metà ha il suo
    segno; i livelli vinti hanno le loro stelline, i altri no. Toccato un led

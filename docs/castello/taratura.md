@@ -224,6 +224,6 @@ tutto finisce, chi tiene un quarto no, a chi spende non avanza più del 10%,
 il pasticcione ce la fa, c'è sempre qualcosa da comprare, la fretta vale al
 più due acquisti — il tetto a ondata è 5, da quando i gradini bassi costano
 meno —, salire rende un po' meno per ⚡ che costruire e a fine tappa batte il
-campo pieno di torri basse, la firma è fresca); `integrazione/torri-equilibrio` gioca nel browser
+campo pieno di torri basse, la firma è fresca); `verifiche/torri-equilibrio` gioca nel browser
 la prima e l'ultima tappa (tutte con `TAPPE_PROVA=tutte`) e controlla che
 gioco e simulatore raccontino la stessa partita.

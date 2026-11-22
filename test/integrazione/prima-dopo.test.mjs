@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    PRIMA E DOPO, NEL BROWSER
+   perché: Prima e dopo sul vetro di un telefono da 390 px: quanto sono grandi le vignette disegnate (`--pd-vignetta`) e cosa succede dopo uno sbaglio apposta, col foglio della storia e il gioco che deve andare avanti
+   a parte perché: è l'unico a misurare le vignette sul vetro e il guasto del `v-if` che non si spegne; la sosta di questo gioco sta in prima-dopo-sosta
 
    Due cose che il motore non può dire, e che si vedono solo qui.
 
@@ -72,8 +74,8 @@ for (let i = 0; i < 3; i++) {
   await page.locator('.pd-pesca .pd-vignetta').first().click()
   await attendi(page, 150)
 }
-await page.waitForSelector('[data-spiega]', { timeout: 3000 })
-controlla('una risposta sbagliata apre la spiegazione', true)
+controlla('una risposta sbagliata apre la spiegazione',
+          await page.waitForSelector('[data-spiega]', { timeout: 3000 }).then(() => true, () => false))
 
 /* ---------- 4. la spiegazione dice la storia ---------- */
 {

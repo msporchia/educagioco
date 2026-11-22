@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    CASTLE BATTLE — IL GIRO COMPLETO, COL DITO
 
+   perché: il giro completo di Castle Battle nel browser: il campo si dipinge, la carta della piazzola, i dettagli e il calcolo a tutto schermo, la caserma costruita e venduta, la sosta ripresa, la battaglia infinita
+   a parte perché: è il giro intero del gioco con il dito; `arena-guida` ne guarda solo la guida e `arena-sfida` solo la partita in due, che hanno bisogno di preparazioni diverse
    Il test unitario prova il motore e la campagna; questo dice che **il
    gioco vero sta in piedi nel browser**: si apre dalla home, la mappa
    apre la prima tappa, il campo si dipinge (gli sprite del castello
@@ -120,22 +122,11 @@ controlla('il calcolo prende tutto lo schermo', velo.height >= area.height * 0.9
           `velo ${Math.round(velo.width)}×${Math.round(velo.height)} su ${Math.round(area.width)}×${Math.round(area.height)}`)
 await scatto(page, 'arena-calcolo')
 
-/* si risponde finché la caserma nasce: sbagliare non costa monete, quindi a
-   un conto sbagliato si riprova col prossimo */
-let costruita = false
-for (let giro = 0; giro < 12 && !costruita; giro++) {
-  if (!(await page.locator('.ar .qz-tasto').count())) {
-    if (await page.locator('[data-piazzola="0"][data-variante]').count() === 1) break
-    await page.locator('[data-piazzola="0"]').click().catch(() => {})
-    await page.locator('[data-costruisci="guardiano"]').click({ timeout: 4000 }).catch(() => {})
-    await page.waitForSelector('.ar .qz-tasto', { timeout: 6000 }).catch(() => {})
-  }
-  await attendi(page, 450)                           // la finestra cieca del montaggio
-  await page.locator('.ar .qz-tasto').nth(giro % 4).click().catch(() => {})
-  await attendi(page, 1200)
-  await page.waitForSelector('.ar .qz-velo', { state: 'detached', timeout: 12000 }).catch(() => {})
-  costruita = await page.locator('[data-piazzola="0"][data-variante="guardiano"]').count() === 1
-}
+/* si risponde giusto (la risposta giusta ha `data-giusta`), passata la finestra cieca del montaggio */
+await page.waitForSelector('.ar .qz-tasto[data-giusta]', { timeout: 6000 })
+await attendi(page, 450)
+await page.locator('.ar .qz-tasto[data-giusta]').click()
+const costruita = await page.waitForSelector('[data-piazzola="0"][data-variante="guardiano"]', { timeout: 12000 }).then(() => true, () => false)
 controlla('rispondendo giusto la cripta nasce davvero, con gli opliti', costruita)
 if (costruita) {
   // toccata, la caserma mostra l'anello: potenziarla al livello 2, venderla per metà della spesa, i numeri
@@ -234,7 +225,7 @@ await nuvoletta(terreno1, 0, 'arena-infinita-scelta')
 await page.locator('[data-scelta] [data-costruisci="scheletri"]').click()
 await page.waitForSelector('.ar .qz-tasto', { timeout: 6000 })
 await attendi(page, 450)                                 // la finestra cieca del montaggio: prima il tocco non conta
-await page.locator('.ar .qz-tasto').first().click()   // sbagliare non costa niente: la sosta c'è comunque
+await page.locator('.ar .qz-tasto[data-giusta]').click()
 // mentre si calcola il campo è fermo: finché il velo c'è l'orologio non arriva ai cinque secondi della sosta
 await page.waitForSelector('.ar .qz-velo', { state: 'detached', timeout: 12000 })
 

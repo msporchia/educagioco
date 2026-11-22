@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE NOVITÀ PER I BAMBINI — dal nastro in home al «Letto»
+   perché: il filo delle novità dei bambini: nastro in home con la notizia più fresca, la pagina, «Letto» che lo toglie anche dopo la ricarica, e un gioco spento da un grande che non manda le sue righe
+   a parte perché: la posta dei grandi (posta) è un'altra cosa: note per gli adulti dietro il PIN; qui sono le notizie che vede il bambino, in home e nella sua pagina
 
    Il filo è quello vero: un bambino che giocava già prima che le novità
    esistessero apre la home, trova il nastro con la notizia più fresca,

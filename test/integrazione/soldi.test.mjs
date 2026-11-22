@@ -1,6 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════
    I SOLDI IN MANO, A SCHERMO
 
+   perché: lo spazio dei soldi disegnati a 390 e 320 px: nessun pezzo ne copre un altro o esce dalla carta, e si vede la somma giusta
+   a parte perché: guarda la geometria della carta «soldi» dal banco di prova dei grandi; unita/soldi-disegnati ha solo le regole dell'ordine
+
    «Hai in mano questi soldi: quanto fanno in tutto?» mostrava cerchi e
    rettangoli piatti in una griglia stretta: non si capiva quale fosse
    quale. Adesso le monete e le banconote sono quelle della bancarella

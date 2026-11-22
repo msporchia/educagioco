@@ -1,4 +1,6 @@
-/* LA CUCINA
+/* perché: il tocco vero sulla stanza della cucina: il cuoco cammina al posto giusto e fa la mossa, le ordinazioni scadono, il foglio del resto non si prende il click e i livelli si aprono vincendo
+   a parte perché: parte da una cucina da soli e dalla mappa dei livelli; `bancarella-in-due` parte da una cucina in due col servizio finto
+   LA CUCINA
      node test/integrazione/bancarella-cucina.test.mjs   (dopo `npm run build`)
 
    Quello che `unita/bancarella-cucina` non vede: un tocco vero sulla stanza trova

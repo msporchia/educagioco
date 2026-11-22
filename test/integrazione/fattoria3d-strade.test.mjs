@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE STRADE DELLA FATTORIA, COL DITO — docs/fattoria3d/terreno.md
 
+   perché: la gomma del pennello delle strade col dito: toglie anche quella di serie (uguale a vederla), una passata attraversa e le toglie tutte, un secondo dito non la ferma
+   a parte perché: potrebbe stare in `fattoria3d`, dove il pennello disegna già le strade; sta a parte perché usa solo il terreno e prova l'unico gesto della gomma con due dita
    La gomma: una strada disegnata se ne va, e se ne va anche quella di serie, che a vederla è uguale; una passata che attraversa le due le toglie
    tutte. Un secondo dito che si appoggia e si stacca non ferma la gomma. Che una strada tolta resti tolta lo dice `unita/fattoria3d`.
    Il dito è vero (`Input.dispatchTouchEvent`): un `page.click()` non trascina (docs/core/il-dito.md).

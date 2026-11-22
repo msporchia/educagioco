@@ -1,6 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL TASTO «SALTA»: LA LEVA DI #admin E LA DOMANDA COMUNE
 
+
+   perché: la leva di #admin e il «salta» della domanda comune: spento non c'è, acceso passa alla domanda dopo
+   a parte perché: parte dal banco di prova dei grandi e non da un gioco; salto-giochi prova lo stesso tasto dentro i giochi (candidato a fondersi con lui)
    Serve a chi sviluppa, per passare le domande senza pensare alle
    risposte. La leva sta in `#admin` (spenta di partenza, del telefono e
    non di un bambino); accesa, ogni domanda ha un «⏭️ salta» che la dà
@@ -71,8 +74,8 @@ await page.waitForSelector('[data-saltata]', { timeout: 2000 })
 controlla('la risposta si accende come giusta', await page.locator('.qz-tasto.giusta').count() > 0)
 uguale('e non si salta due volte: il tasto sparisce', await page.locator('.qz-carta [data-azione="salta"]').count(), 0)
 await page.waitForFunction(() => !document.querySelector('[data-saltata]'), null, { timeout: 5000 })
-await page.waitForSelector('.qz-carta [data-azione="salta"]', { timeout: 3000 })
-controlla('si passa a una domanda nuova, che ha di nuovo il suo tasto', true)
+controlla('si passa a una domanda nuova, che ha di nuovo il suo tasto',
+          await page.waitForSelector('.qz-carta [data-azione="salta"]', { timeout: 3000 }).then(() => true, () => false))
 
 uguale('nessun errore in console', errori.join(' · '), '')
 await browser.close()

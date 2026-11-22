@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA POSTA DEI GRANDI, IL CODICE DIMENTICATO, IL CESTINO
+   perché: la posta dei grandi dal nastro al cestino: il bambino chiama un grande, il codice dimenticato si rimette con la domanda, la posta si legge, e una cancellazione per sbaglio si rimette dal cestino
+   a parte perché: genitori prova il PIN e il file di esportazione; qui il filo della casa che giocava già (segno di lettura tolto dall'archivio): un'altra preparazione, e le note dei grandi, non le novità dei bambini
 
    Tre cose nate insieme per un problema solo: questo gioco si regala a
    delle famiglie e dopo non c'è più nessun canale — niente server,
@@ -106,7 +108,7 @@ controlla('e costa la stessa attesa di un codice sbagliato',
 
 /* l'attesa del primo sbaglio dura tre secondi: si aspetta invece di
    forzarla, perché è proprio quella che deve funzionare */
-await page.waitForTimeout(3300)
+await page.waitForSelector('.tastierino:not(.spento)', { timeout: 5000 })
 await digita(DOMANDA.risposta)
 /* la risposta giusta passa da tre scritture in archivio — il codice
    rimesso, l'avviso in posta, la posta riletta — e solo dopo la

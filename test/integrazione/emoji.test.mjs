@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE EMOJI SONO NOSTRE, A SCHERMO
 
+   perché: le emoji sono disegnate col font nostro (Twemoji, larga un em) e non con quello del telefono (Noto, un quarto di più): si misura la larghezza di ogni emoji usata
+   a parte perché: `unita/emoji` dice che il font le ha tutte, ma solo Chrome dice chi le disegna; è una misura sulla home, non un gioco
    `unita/emoji` dice che il font ha tutte le emoji; qui si guarda che
    Chrome le disegni davvero con quello e non con il font del telefono. Il
    modo: l'emoji di Twemoji è larga esattamente un em, quella di Noto

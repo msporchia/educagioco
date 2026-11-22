@@ -1,6 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL QUADRO DI UN'ETÀ, COL DITO — l'elenco e i modi di provarlo.
 
+   perché: il pannello dell'elenco si apre davvero, il ▶ apre proprio quella domanda e il giro conta giusto: cose che stanno solo nella schermata del quadro
+   a parte perché: non è un blocco di scheda-costruttore o varieta: parte dal quadro sotto la manopola, e nessun altro file apre l'elenco delle domande
+
    Era `integrazione/catalogo`, e provava la scheda «Le domande»: un
    elenco di duecento righe con quattro tondi ciascuna e una seconda
    tacca dell'età in cima. Quella scheda non c'è più — si tara nel
@@ -192,13 +195,9 @@ await page.waitForTimeout(250)
    Il quadro è anche il posto dove si tara, quindi la prova che serve è
    che **guardare non tari**: dopo venti domande aperte e richiuse, nel
    profilo non deve esserci comparso niente. */
-const settings = await page.evaluate(async () => {
-  const p = await window.__profilo?.()
-  return p ? p.settings : null
-}).catch(() => null)
-if (settings) {
-  uguale('dopo tutto questo guardare, nessun ritocco è comparso',
-         Object.keys(settings.ritocchi || {}).length, 0)
+{
+  const settings = ((await leggiProfilo(page)) || {}).settings || {}
+  uguale('dopo tutto questo guardare, nessun ritocco è comparso', Object.keys(settings.ritocchi || {}).join(), '')
 }
 uguale('e nessuna riga si è colorata',
        await page.locator('[data-manopola] .voce-riga.ritoccata').count(), 0)

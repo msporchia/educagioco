@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE BESTIE DI CASA DELLA FATTORIA 3D, COL DITO — docs/fattoria3d/bestie-di-casa.md
 
+   perché: gli animali di casa della fattoria 3D col dito vero: la scheda Animali del «Compra», il battesimo col nome, il foglio della bestia con cibi e carezza, tenerla premuta per spostarla, 360 px senza scorrere
+   a parte perché: potrebbe stare in `fattoria3d`; sta a parte perché parte da 500 monete e da un solo acquisto, e `fattoria3d` dura 900 secondi
    Si apre il menu «Compra» (🛒), la scheda Animali offre tutti gli animali da adottare (razze e compagni); una chiusa dice il livello; una a cui
    mancano le monete lo dice e non cambia niente; con le monete si prende (🪙90 il beagle), arriva in scena e si apre il battesimo: un nome si
    TOCCA (e sotto si può scrivere: «✎ Nome» nel foglio, una parola scritta e «Va bene» la salva). Un tocco vero sulla bestia in scena apre il suo foglio (✕ in alto a destra): tre bisogni, i cibi suoi, una carezza

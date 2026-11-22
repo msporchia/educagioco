@@ -1,4 +1,6 @@
-/* La cucina in due: da soli nella partita di prova (il pulsantino, la consegna, i conti che non fermano l'orologio, la fine), e due
+/* perché: la cucina in due: il pulsantino, la consegna col tocco vero, i conti che non fermano l'orologio, la fine, e due pagine vere se il servizio risponde
+   a parte perché: potrebbe stare in `bancarella-cucina` (stessa stanza, stesso tocco sulla consegna); sta a parte perché parte da una partita in due e può saltare il pezzo coi due telefoni
+   La cucina in due: da soli nella partita di prova (il pulsantino, la consegna, i conti che non fermano l'orologio, la fine), e due
    pagine vere se il servizio risponde: `SERVIZIO=` come in arena-sfida, senza salta. Vedi docs/bancarella/in-due.md.
    tempo: 60 */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, TELEFONO } from '../aiuto/browser.mjs'

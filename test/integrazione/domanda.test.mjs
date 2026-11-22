@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA DOMANDA, TOCCATA COL DITO
 
+   perché: la finestra cieca di `quiz/Domanda.vue` col dito: una domanda appena comparsa non prende il tocco della precedente, poi si risponde, e l'attesa dopo uno sbaglio si vede invece di sembrare un gioco fermo
+   a parte perché: la domanda è usata da più posti ma il guasto è di tempo e di dito, che nessun test di gioco misura; qui ci si ferma al componente
    `quiz/Domanda.vue` è una schermata sola usata da tre posti — il
    sotterraneo, Survivors e il banco di prova dei grandi — quindi un suo difetto non è di un gioco: è di tutti. Questo
    file prova la cosa che nessun test unitario può vedere, perché non è
@@ -116,7 +118,8 @@ await scatto(page, 'domanda-attesa')
    scorre trenta esempi riscriverebbe il ripasso di suo figlio con le
    proprie risposte — e per giunta sbagliandone apposta qualcuna, che è
    il modo normale di guardare una domanda. */
-const CHIAVI_QUIZ = /^(ana|cal|coniug|geo|gram|gri|indizi|less|log|mis|num|ora|orto|prob|seq|sil):/
+// i prefissi dei moduli di quiz: una lista a mano, che un modulo nuovo allunga (ne mancavano cinque)
+const CHIAVI_QUIZ = /^(ana|cal|capire|coniug|dati|fraz|geo|gram|gri|indizi|ing|less|log|mis|num|ora|orto|prob|seq|sil|sol):/
 const chiaviDiQuiz = async () => Object.keys((await leggiProfilo(page))?.items || {})
   .filter(k => CHIAVI_QUIZ.test(k))
 uguale('rispondere dal banco dei grandi non tocca il ripasso',
@@ -267,7 +270,8 @@ uguale('una tipologia che va come sempre non mette il metodo prima',
 let sbagliata = false
 for (let tiro = 0; tiro < 8 && !sbagliata; tiro++) {
   await attendi(page, 400)                       // la finestra cieca
-  await tocca(await page.locator('.qz-tasto').first().boundingBox())
+  // una risposta sbagliata, apposta: la giusta ha `data-giusta`
+  await tocca(await page.locator('.qz-tasto:not([data-giusta])').first().boundingBox())
   await attendi(page, 250)
   sbagliata = await page.locator('.qz-tasto.sbagliata').count() > 0
   /* azzeccata: si lascia arrivare la prossima invece di chiederla col
@@ -279,7 +283,7 @@ for (let tiro = 0; tiro < 8 && !sbagliata; tiro++) {
     () => !document.querySelector('.qz-tasto.giusta, .qz-tasto.sbagliata, .qz-tasto.spenta'),
     null, { timeout: 8000 }).catch(() => {})
 }
-controlla('in otto tiri una risposta sbagliata capita', sbagliata)
+controlla('toccata una risposta sbagliata, il tasto lo dice', sbagliata)
 if (sbagliata) {
   const righe = await page.evaluate(() => {
     const e = document.querySelector('.qz-esito')
@@ -483,6 +487,7 @@ await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
 await page.click('button[aria-label="indietro"]')
 await page.waitForSelector('.carte', { timeout: 5000 })
 await semina(page, { coins: 300 })
+const chiaviDiPrima = new Set(Object.keys((await leggiProfilo(page))?.items || {}))   // per il punto 5: cosa c'era prima dello scontro
 await page.waitForSelector('.carta.gioco[data-gioco="sotterraneo"]', { timeout: 5000 })
 await scegli(page, 'sotterraneo')
 /* ── prima si sceglie chi scende ──
@@ -554,9 +559,9 @@ for (let giro = 0; giro < 2; giro++) {
      colorata — e il guasto sembrava quello del `v-if` che non rimonta,
      cioè tutt'altra cosa. Si aspetta finché i tasti tornano nudi. */
   if (await page.locator('.qz-fretta').count()) diFretta++
-  await page.waitForFunction(
+  controlla(`dopo la ${giro + 1}ª risposta la domanda si chiude`, await page.waitForFunction(
     () => !document.querySelector('.qz-tasto.giusta, .qz-tasto.sbagliata, .qz-tasto.spenta'),
-    null, { timeout: 12000 }).catch(() => {})
+    null, { timeout: 12000 }).then(() => true, () => false))
 }
 nota(diFretta
   ? `${diFretta} risposta/e su ${risposteDate} sono arrivate prima di poterla leggere, `
@@ -578,10 +583,13 @@ await scatto(page, 'domanda-incatenata')
    tutti e cinque. È il motivo per cui questo controllo sta qui e non in
    un test del sotterraneo. */
 // l'archivio scrive a lotti (store/storage.js, flush in coda): si aspetta che la scrittura arrivi
-let segnate = await chiaviDiQuiz()
-for (let i = 0; i < 40 && !segnate.length; i++) { await attendi(page, 250); segnate = await chiaviDiQuiz() }   // fino a 10 s: coi test in parallelo il lotto tarda
+// le chiavi nuove rispetto a prima dello scontro, qualunque modulo sia uscito: la lista dei prefissi qui non serve, e quando
+// mancava un modulo nuovo il test era rosso una volta su cinque
+const nuove = async () => Object.keys((await leggiProfilo(page))?.items || {}).filter(k => !chiaviDiPrima.has(k))
+let segnate = await nuove()
+for (let i = 0; i < 15 && !segnate.length; i++) { await attendi(page, 250); segnate = await nuove() }   // `leggiProfilo` aspetta già la scrittura rimandata
 controlla('rispondere in partita scrive il ripasso', segnate.length > 0,
-          `nessuna chiave di quiz in items dopo ${risposteDate} risposte`)
+          `nessuna chiave nuova in items dopo ${risposteDate} risposte`)
 nota(`il ripasso si è segnato: ${segnate.join(', ') || 'niente'}`)
 
 uguale('nessun errore in console', errori.length, 0, errori.join('\n'))

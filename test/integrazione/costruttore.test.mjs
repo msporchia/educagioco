@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL COSTRUTTORE, NEL BROWSER
 
+   perché: il programma del robot si scrive col dito (＋, blocchi, caselle) e poi gira: ▶, cartello, riga accesa all'errore, «annulla», scelte che non nascono fatte, ✂, il porto e la torre del casaro
+   a parte perché: è il giro intero del Robot; `costruttore-salvataggio` ne prova solo la sparizione della pagina, e il linguaggio in sé lo prova il motore senza browser
    Quello che il motore non può dire: che il programma **si scrive col
    dito** e poi gira. Si entra dalla home, si scrive la soluzione del
    primo livello toccando «＋», i blocchi e le caselle, si preme ▶ e si
@@ -18,11 +20,14 @@
    parte ma apre la scelta che manca. E la mano: due righe scritte fuori
    da un ripeti ci entrano con ✂, e il programma vince.
 
-   Poi il porto, la seconda parte: la cassetta con le frecce, e la gru
-   giocata con la sua soluzione su tutte e due le giornate — la tela
-   dall'alto, i turni del mondo e il verdetto della sera. E in fondo la
-   torre del casaro, la ricorsione: le forme di formaggio sulle tre assi,
-   e la fila delle carte che si allunga mentre il progetto chiama sé stesso.
+   Poi il porto, la seconda parte: la cassetta con le frecce. E in fondo
+   la torre del casaro, la ricorsione: la fila delle carte che si allunga
+   mentre il progetto chiama sé stesso.
+
+   Un livello solo si gioca fino al cartello, il primo; degli altri il
+   programma scritto col dito si rilegge dall'archivio e lo prova il
+   motore (`provaLivello`): che ogni soluzione vinca lo dice già
+   `unita/costruttore`, e guardare il robot che la esegue costava minuti.
    `node test/esegui.mjs integrazione/costruttore`
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, scatto, semina, attendi, leggiProfilo, scegli, costruisci }
@@ -33,6 +38,7 @@ import { FILA_ATTUALE } from '../../src/giochi/costruttore/dati/campagna.js'
 import { conAttrezzi } from '../../src/giochi/costruttore/motore/attrezzi.js'
 import { srotola } from '../../src/giochi/costruttore/motore/zaino.js'
 import { programma } from '../../src/giochi/costruttore/dati/scrivi.js'
+import { provaLivello } from '../../src/giochi/costruttore/motore/prova.js'
 
 /* L'archivio dei programmi sta fuori dal profilo (`costruttore:<id>`):
    per provarne la lettura lo si scrive a mano, come fa `semina` coi
@@ -47,6 +53,23 @@ const scriviArchivio = (page, dato) => page.evaluate(d => new Promise((ok, ko) =
     tx.onerror = () => ko(new Error('scrittura fallita'))
   }
 }), dato)
+/* il programma di un livello come l'ha salvato il gioco: si salva mezzo secondo dopo l'ultimo tocco, poi l'archivio rimanda
+   di 350 ms; si aspetta finché il programma letto ha `righe` righe in cima (`null` se non arriva) */
+const programmaSalvato = async (chiave, righe) => {
+  for (let k = 0; k < 30; k++) {
+    const d = await page.evaluate(() => new Promise(ok => {
+      const r = indexedDB.open('giochi-bambini', 1)
+      r.onsuccess = () => { const g = r.result.transaction('kv', 'readonly').objectStore('kv').get('costruttore:uno'); g.onsuccess = () => ok(g.result || null) }
+      r.onerror = () => ok(null)
+    }))
+    const p = d && d.programmi && d.programmi[chiave]
+    if (p && p.principale && p.principale.length === righe) return p
+    await attendi(page, 100)
+  }
+  return null
+}
+// aspetta la condizione e dice se è arrivata: un'attesa scaduta è un controllo che fallisce, non un'eccezione
+const arriva = (sel, timeout) => page.waitForSelector(sel, { timeout }).then(() => true, () => false)
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -114,8 +137,7 @@ uguale('con un colore solo e un posto solo il mattone non ha scelte: le sue case
 await scatto(page, 'costruttore-programma')
 await tocca('[data-velocita="veloce"]')
 await tocca('[data-azione="via"]')
-await page.waitForSelector('[data-fine="livello"]', { timeout: 15000 })
-controlla('il primo livello si vince', true)
+controlla('il primo livello si vince: il cartello arriva', await arriva('[data-fine="livello"]', 15000))
 uguale('sul cartello c\'è il robot, contento', await page.locator('[data-fine="livello"] [data-robot-contento]').count(), 1)
 uguale('premuto ▶ il racconto si è chiuso', await page.locator('[data-racconto]').count(), 0)
 await scatto(page, 'costruttore-vinto')
@@ -232,9 +254,12 @@ await tocca('[data-scelta="verso"] [data-verso="destra"]')
   uguale('«lascia» non copia niente', await page.locator('[data-editor] .cst-riga').count(), 3)
 }
 await scatto(page, 'costruttore-ripeti')
-await tocca('[data-azione="via"]')
-await page.waitForSelector('[data-fine="livello"]', { timeout: 20000 })
-uguale('il programma regge tutti e tre gli ordini', await page.locator('[data-gettone].cst-vinto').count(), 3)
+{
+  const l = LIVELLI[3], p = await programmaSalvato(l.chiave, 1)
+  controlla('il programma scritto col dito si salva', !!p)
+  controlla('e regge tutti e tre gli ordini', !!p && provaLivello(l, p).vinto,
+            p ? provaLivello(l, p).esiti.map(e => e.esito).join() : 'non salvato')
+}
 
 /* ---------- 7. il cantiere libero, e i progetti che restano ---------- */
 /* il tempio vinto con la sua colonna: dal cantiere libero la si riprende */
@@ -296,9 +321,9 @@ await tocca('[data-scheda="principale"]')
   await tocca('[data-azione="annulla"]')
   uguale('e «annulla» lo rimette tutto', await page.locator('[data-editor] .cst-riga').count(), 5)
   await scatto(page, 'costruttore-attrezzi')
-  await tocca('[data-azione="via"]')
-  await page.waitForSelector('[data-fine="livello"]', { timeout: 20000 })
-  uguale('la cinta regge tutti e due i baroni', await page.locator('[data-gettone].cst-vinto').count(), 2)
+  const p = await programmaSalvato('cinta', 2)
+  controlla('la cinta scritta col dito regge tutti e due i baroni', !!p && provaLivello(LIVELLI[cinta], p).vinto,
+            p ? provaLivello(LIVELLI[cinta], p).esiti.map(e => e.esito).join() : 'non salvata')
 }
 /* il bosco: il programma srotolato non sta nello zaino, e il robot non
    parte — la frase dice cosa fare */
@@ -324,12 +349,10 @@ await tocca('[data-scheda="principale"]')
 }
 
 /* ---------- 8. il porto ---------- */
-/* la gru con la sua soluzione: la tela dall'alto, la regia coi turni del
-   mondo, e il verdetto a sera — tutte e due le giornate */
+/* la cassetta della gru (che la sua soluzione vinca le due giornate lo dice `unita/costruttore`) */
 {
   const primo = LIVELLI.findIndex(l => l.mondo === 'porto')
   const gru = LIVELLI.findIndex(l => l.chiave === 'gru')
-  await scriviArchivio(page, { v: 2, programmi: { gru: JSON.parse(JSON.stringify(LIVELLI[gru].soluzione)) } })
   await semina(page, { settings: { eta: 10 },
                        campagne: { costruttore: { tappa: gru, libera: false, stelle: {}, cfg: { velocita: 'veloce', fila: FILA_ATTUALE } } } })
   await scegli(page, 'costruttore')
@@ -347,35 +370,14 @@ await tocca('[data-scheda="principale"]')
   await page.waitForSelector('[data-scelta="lato"]', { timeout: 3000 })
   uguale('e le quattro frecce si scelgono sulla riga', await page.locator('[data-scelta="lato"] [data-lato]').count(), 4)
   await tocca('[data-azione="annulla"]')
-  await tocca('[data-azione="via"]')
-  await page.waitForSelector('[data-fine="livello"]', { timeout: 40000 })
-  uguale('la gru: tutte e due le navi scaricate', await page.locator('[data-gettone].cst-vinto').count(), 2)
   await scatto(page, 'costruttore-porto')
-}
-
-/* ---------- 8-bis. le giornate del porto: i camion ---------- */
-/* il primo camion con la sua soluzione: i camion che arrivano, si
-   caricano e ripartono sulla strada, con la gru che lavora intorno */
-{
-  const camion = LIVELLI.findIndex(l => l.chiave === 'primo-camion')
-  await scriviArchivio(page, { v: 2, programmi: { 'primo-camion': JSON.parse(JSON.stringify(LIVELLI[camion].soluzione)) } })
-  await semina(page, { settings: { eta: 10 },
-                       campagne: { costruttore: { tappa: camion, libera: false, stelle: {}, cfg: { velocita: 'veloce', fila: FILA_ATTUALE } } } })
-  await scegli(page, 'costruttore')
-  await page.waitForSelector('.cst-mappa', { timeout: 5000 })
-  await costruisci(page, camion)
-  await page.waitForSelector('[data-editor]', { timeout: 5000 })
-  await tocca('[data-azione="via"]')
-  await page.waitForSelector('[data-fine="livello"]', { timeout: 40000 })
-  uguale('il primo camion: tutte e due le giornate, tutti i camion pieni', await page.locator('[data-gettone].cst-vinto').count(), 2)
-  await scatto(page, 'costruttore-camion')
 }
 
 /* ---------- 8-ter. la torre del casaro: la ricorsione ---------- */
 /* la soluzione chiama sé stessa: mentre gira, la fila delle carte aperte
    deve mostrare le torri una dentro l'altra — è così che la ricorsione si
-   vede invece di spiegarsi — e tutti e quattro i giorni si vincono, fino
-   alla torre di sei forme */
+   vede invece di spiegarsi. Visto, si ferma: che vinca tutti e quattro i
+   giorni lo dice `unita/costruttore` */
 {
   const torre = LIVELLI.findIndex(l => l.chiave === 'quante-forme')
   await scriviArchivio(page, { v: 2, programmi: { 'quante-forme': JSON.parse(JSON.stringify(LIVELLI[torre].soluzione)) } })
@@ -393,9 +395,9 @@ await tocca('[data-scheda="principale"]')
     fondo = await page.locator('[data-pila] .cst-carta-pila').count()
   }
   controlla('mentre gira, le torri si vedono una dentro l\'altra nella fila delle carte', fondo >= 3, `al massimo ${fondo}`)
-  await page.waitForSelector('[data-fine="livello"]', { timeout: 150000 })
-  uguale('la torre del casaro: tutti e quattro i giorni, fino a sei forme', await page.locator('[data-gettone].cst-vinto').count(), 4)
   await scatto(page, 'costruttore-torre')
+  await tocca('[data-azione="stop"]')
+  controlla('■ ferma il robot: torna ▶', await arriva('[data-azione="via"]', 3000))
 }
 
 /* ---------- 8-quater. la domanda: una frase a caselle ----------

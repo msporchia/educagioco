@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA PAUSA, COL DITO — sugli asteroidi
+   perché: la pausa degli asteroidi: il `?` ferma il cielo (si guardano le `y` dei sassi) e il cronometro della risposta che dietro il velo non conta più i cinque secondi di pausa nello SRS
+   a parte perché: pausa-giochi prova Survivors e sotterraneo, che hanno orologi diversi; gli asteroidi hanno il `?` che non fermava niente e un cronometro a parete, e POTREBBE essere un blocco di pausa-giochi
 
    `integrazione/pausa` prova il pezzo comune sulla corsa; qui si prova
    che gli asteroidi lo usano davvero, e le due cose che di loro sono

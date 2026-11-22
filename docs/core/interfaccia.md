@@ -59,7 +59,7 @@ niente.
 
 Nei test: `integrazione/sotterraneo-barra` (la battuta chiusa toccando il
 campo mentre l'eroe cammina, la domanda e «lascio perdere» che restano, lo
-zaino e la mappa grande), `integrazione/sotterraneo-terra` (il fumetto), `integrazione/sotterraneo-dialoghi` (il dialogo).
+zaino e la mappa grande), `integrazione/sotterraneo-terra` (il fumetto), `integrazione/sotterraneo-sopra-missioni` (il dialogo).
 
 ## Il fumetto
 

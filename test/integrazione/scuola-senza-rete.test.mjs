@@ -1,6 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA SCUOLA SENZA INTERNET — LE PAGINE SI RIAPRONO, LA MAESTRA FA PARTIRE UN GIOCO
 
+   perché: le pagine della scuola si riaprono dalla copia del service worker col sito spento e la cache vuota, e la lezione va avanti
+   a parte perché: parte dal sito servito e poi spento; scuola apre le pagine dal file con due contesti e il servizio in locale, e non prova mai la rete caduta
+
    Le due pagine di `dist-scuola/` servite da un sito vero (`aiuto/sito.mjs`,
    come GitHub Pages: dal file il service worker non c'è), aperte una
    volta con la rete. Poi il sito si spegne e la cache del browser si

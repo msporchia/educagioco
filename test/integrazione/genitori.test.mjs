@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA SCHERMATA DEI GENITORI
+   perché: salvare, rimettere e cancellare i progressi dietro il PIN, col file vero scritto su disco: il PIN sbagliato non apre e un profilo riconoscibile deve tornare uguale dopo il ripristino
+   a parte perché: è il giro esportazione-ripristino-cancella; posta prova il cestino e il codice dimenticato, impostazioni-barra la forma delle schede: stessa porta (il tastierino), controlli diversi
 
    Le tre cose che stanno dietro il PIN: salvare i progressi, rimetterli,
    cancellarli. Sono le uniche operazioni del gioco che possono far

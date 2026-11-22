@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    L'APP SI APRE
 
+   perché: il gioco si apre: la home compare in fretta, senza errori in console e su tre misure di schermo; è la porta d'ingresso che gli altri test non guardano
+   a parte perché: è il più corto e deve restare solo: se è rosso gli altri non vanno nemmeno letti, quindi non si fonde con file che partono già dentro un gioco
    Il test più corto e il più importante: il gioco parte, la home compare,
    nessun errore in console. Nient'altro.
 
@@ -18,18 +20,17 @@ const browser = await apriBrowser()
 const inizio = Date.now()
 const { page, errori } = await apriGioco(browser, { attesa: null })
 
-let apparsa = true
+let apparsa = true, fermo = ''
 try {
   await page.waitForSelector('.carte', { timeout: 10000 })
 } catch (e) {
   apparsa = false
-  const fermo = await page.evaluate(() => document.body.innerText.slice(0, 120).trim())
-  controlla('la home compare', false, `è rimasto su "${fermo}"`)
+  fermo = await page.evaluate(() => document.body.innerText.slice(0, 120).trim())
 }
 const ms = Date.now() - inizio
 
+controlla('la home compare', apparsa, `è rimasto su "${fermo}"`)
 if (apparsa) {
-  controlla('la home compare', true)
   controlla('ci mette meno di 5 secondi', ms < 5000, `ci ha messo ${ms} ms`)
   nota(`aperto in ${ms} ms`)
 }

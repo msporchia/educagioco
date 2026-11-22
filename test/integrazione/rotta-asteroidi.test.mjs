@@ -1,4 +1,6 @@
-/* La rotta degli asteroidi, col dito vero: il tocco su una tappa apre il
+/* perché: il tocco vero sulla mappa degli asteroidi: fumetto, razzo che vola alla tappa e stelle, che il motore dei livelli non vede
+   a parte perché: è la mappa degli asteroidi; scheda-costruttore ha lo stesso schema ma sulla scheda del robot, un altro gioco e un'altra schermata
+   La rotta degli asteroidi, col dito vero: il tocco su una tappa apre il
    fumetto e non parte niente, fuori lo chiude, una tappa chiusa dice cosa
    fare prima, «▶ parti» comincia. Vinta una tappa il razzo vola alla nuova
    e resta girato com'è arrivato; un tocco durante quel volo lo chiude senza

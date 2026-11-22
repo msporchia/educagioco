@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    GLI ASTEROIDI IN 3D, COL DITO — docs/asteroidi/grafica-3d.md
 
+   perché: il cielo degli asteroidi in WebGL col dito vero: premere un sasso o il bordo, la nave che segue il dito, il falso che rimbalza e il giusto che esplode, il contesto perso che si riaccende
+   a parte perché: `campagna-mate` e `calcolo` giocano gli asteroidi rispondendo da codice; qui conta il tocco sul canvas 3D e il WebGL, che servono una preparazione loro
    Il cielo si disegna in WebGL (in Chrome senza schermo lo fa SwiftShader,
    lento ma vero) e i comandi sono quelli del telefono: premere sopra un
    sasso, o appena fuori dal bordo, è la risposta; premere altrove porta la

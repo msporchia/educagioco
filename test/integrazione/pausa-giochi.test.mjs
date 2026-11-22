@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA PAUSA NEGLI ALTRI DUE — Survivors e il sotterraneo
+   perché: la pausa di Survivors e del sotterraneo col telefono posato (`visibilityState`): la giostra a fotogrammi e il giro di Gioco.vue si fermano davvero, e riprendono, con l'eroe che cammina come testimone
+   a parte perché: ognuno monta la pausa su un orologio diverso da quello degli asteroidi (pausa-asteroidi): POTREBBE stare dentro un solo file di pausa, oggi sono due per i tempi di ciascuno
 
    Il pezzo comune (`giochi/pausa.js`) è nato sulla Corsa, che non c'è
    più. Qui si prova che **ci è arrivato davvero** in ognuno, e la

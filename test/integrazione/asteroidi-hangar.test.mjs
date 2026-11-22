@@ -1,4 +1,6 @@
-/* La nave madre, i suoi pacchi e l'hangar degli asteroidi, nel browser.
+/* perché: la nave madre, i suoi pacchi e l'hangar degli asteroidi: cosa cade a ogni tappa e dove va a finire nel profilo
+   a parte perché: parte da una fila di tappe già aperta (tappa 10, libera) e guarda solo i regali; potrebbe stare in `campagna-mate`, che però parte da zero e si ferma ai pianeti e alla paga
+   La nave madre, i suoi pacchi e l'hangar degli asteroidi, nel browser.
    Vedi docs/asteroidi/boss.md e docs/asteroidi/hangar.md.
    `node test/esegui.mjs asteroidi-hangar` */
 import { apriBrowser, apriGioco, azzera, semina, scegli, parti, scatto, leggiProfilo, attendi, TELEFONO }

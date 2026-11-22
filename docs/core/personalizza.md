@@ -51,7 +51,7 @@ non decide niente.
 
 Nei test: `unita/personalizza` (per tocchi a ogni livello, le zone sopra con
 gli stessi elementi nello stesso ordine; i prezzi; i set) e, a schermo,
-`integrazione/sotterraneo-personaggio` (le posizioni delle schede e dei
+`integrazione/sotterraneo-sopra-eroe` (le posizioni delle schede e dei
 gettoni non si muovono di un pixel toccando il pannello, l'altezza del
 pannello resta). Il mock ha lo stesso controllo: `fai.mjs --scatti --misura`.
 

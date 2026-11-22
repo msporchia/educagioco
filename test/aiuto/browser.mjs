@@ -349,7 +349,7 @@ export async function finestraFerma(page) {
 }
 
 /* Il dito vero su una pagina (CDP: `page.click()` non fa nascere il click fantasma, docs/core/il-dito.md). `tocca(x, y)` in
-   pixel della pagina; `toccaIl(sel)` aspetta la finestra ferma, misura il primo che trova e lo tocca al centro. Erano copiati
+   pixel della pagina; `toccaIl(sel)` aspetta la finestra ferma, misura il primo che trova e lo tocca al centro; `striscia` trascina. Erano copiati
    uguali in una quarantina di file: chi ne scrive uno nuovo li prende da qui (`const { tocca, toccaIl } = await ditoDi(page)`). */
 export async function ditoDi(page) {
   const cdp = await page.context().newCDPSession(page)
@@ -363,7 +363,16 @@ export async function ditoDi(page) {
     const b = await page.locator(sel).first().boundingBox()
     await tocca(b.x + b.width / 2, b.y + b.height / 2)
   }
-  return { tocca, toccaIl, cdp }
+  // il dito che striscia da un punto a un altro: un elenco che scorre lo vede solo così (`scrollIntoViewIfNeeded` scorre da programma)
+  const striscia = async (x0, y0, x1, y1, passi = 8) => {
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: x0, y: y0 }] })
+    for (let i = 1; i <= passi; i++) {
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x0 + (x1 - x0) * i / passi, y: y0 + (y1 - y0) * i / passi }] })
+      await attendi(page, 16)
+    }
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  }
+  return { tocca, toccaIl, striscia, cdp }
 }
 
 /* Apre un livello del costruttore dalla scheda: il tocco sul led apre il
@@ -506,7 +515,7 @@ export async function toccaNelMondo(page, sel, { tocca = null } = {}) {
 }
 /* Scende in una discesa dal mondo: l'eroe si porta davanti all'ingresso (`__mondo3d.vai`, il salto delle prove, che carica la sua
    zona: le pietre del mondo a percorso, `pietra:zona:<zona>`, stanno a metà zona, lontane dai dungeon; la strada a piedi la prova
-   integrazione/sotterraneo-mondo), poi si tocca l'ingresso e «scendo» nel fumetto. `quale`: l'indice della storia, 'abisso', o la
+   integrazione/sotterraneo-sopra-mondo), poi si tocca l'ingresso e «scendo» nel fumetto. `quale`: l'indice della storia, 'abisso', o la
    chiave di un ingresso */
 export async function scendiNelMondo(page, quale, { scendi = true, tocca = null } = {}) {
   const { CAMPAGNA } = await import('../../src/giochi/sotterraneo/dati/campagna.js')
@@ -609,7 +618,7 @@ export async function riacquistaNellaBottega(page, chiave, { tocca = null } = {}
 /* Apre l'avventura di un eroe del sotterraneo (docs/sotterraneo/avventure.md):
    la prima volta la scelta c'è già, poi la si apre da «Cambia eroe» in fondo
    alla pagina dell'eroe (il globo dell'esperienza). Aspetta la terra dell'eroe scelto. Col
-   mouse: il dito vero lo prova `integrazione/sotterraneo-avventure`. */
+   mouse: il dito vero lo prova `integrazione/sotterraneo-sopra-terre`. */
 export async function scegliAvventura(page, eroe) {
   await page.waitForSelector('[data-mondo3d], .sot-eroe[data-eroe]', { state: 'attached', timeout: 30000 })
   if (!(await page.locator('.sot-eroe[data-eroe]').count())) {

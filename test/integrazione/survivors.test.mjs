@@ -1,6 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════
    SURVIVORS — LA PARTITA LASCIATA A METÀ, COL DITO
 
+   perché: la partita lasciata a metà dall'archivio vero: il campo ripreso si vede (altro canvas) e sta fermo finché non lo si tocca
+   a parte perché: si gioca con le frecce per uscire a metà; le regole delle nove tappe stanno in unita/survivors-sosta e survivors
+
    Il test unitario gioca le nove tappe e prova che un salvataggio si
    rilegge; questo dice che **il giro completo funziona dall'archivio
    vero**: si esce a metà, la mappa offre la partita in sospeso, si

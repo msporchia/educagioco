@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA MISURA COI MODELLI VERI (docs/core/vecchio-telefono-veri.md)
+   perché: gli fps veri delle nove scene coi modelli veri, avviate dalla zona dei grandi: nessuna «non regge», la riga DATI, le note nell'invio e l'ultima misura che si riapre dopo una ricarica
+   a parte perché: è una misura da guardare e non un sì o no; sul telefono vero la fa la stessa schermata (docs/core/vecchio-telefono-veri.md), qui si prova che il meccanismo funzioni in Chrome
 
    Dalla zona dei grandi partono gli fps veri coi giochi veri (scene
    corte), a schermo mentre girano: le nove scene senza aspettare la

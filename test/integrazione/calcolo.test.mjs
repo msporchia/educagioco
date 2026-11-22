@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE STAZIONI DEL CALCOLO A MENTE, NEL BROWSER
      node test/esegui.mjs calcolo        (ricompila e apre Chrome)
+   perché: le stazioni del calcolo a mente nella scaletta degli asteroidi: si parte da 3+4, ogni ondata ha un solo asteroide giusto, il bersaglio paga e chiude la stazione, due errori portano il trucco
+   a parte perché: potrebbe stare in `campagna-mate` (stessa mappa, stessa tappa vinta, stessa paga); resta a parte perché guarda i concetti del calcolo e non le tabelline
 
    Quattro cose che i test unitari non possono dire, perché riguardano il
    gioco vero e non il catalogo:
@@ -128,7 +130,6 @@ uguale('la nave madre arriva a bersaglio fatto, per tre domande',
 /* le domande sono quelle della stazione: somme e sottrazioni entro il dieci,
    più gli amici del dieci. Niente moltiplicazioni, niente numeri grandi. */
 const fuori = partita.viste.filter(v => v.ris > 20 || /[×:]/.test(v.testo))
-uguale('non esce niente che la stazione non abbia presentato', fuori.length, 0,)
 controlla('non esce niente che la stazione non abbia presentato', !fuori.length,
           fuori.length ? fuori[0].testo : '')
 const suoi = partita.viste.filter(v => v.chiave.startsWith('calc:')).length

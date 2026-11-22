@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    CODICE SEGRETO, NEL BROWSER
 
+   perché: la tappa del Codice Segreto si vince ragionando sui pallini letti a schermo (il codice è nascosto come per il bambino), poi si apre la tappa dopo e stelle e monete finiscono nel profilo
+   a parte perché: è la partita intera giocata a schermo; `codice-segreto-sosta` prova solo uscire e rientrare, e il motore (`unita/codice-segreto`) non vede cosa disegna il gioco
    La prova unitaria dice che il motore è giusto; questa dice che il
    gioco che il bambino tocca è quel motore lì. Il codice qui non si
    conosce — è nascosto nella pagina come lo è per chi gioca — quindi la
@@ -40,9 +42,10 @@ await scatto(page, 'codice-mappa')
 
 /* ---------- 2. la spiegazione si apre da sola la prima volta ---------- */
 await page.locator('.cs-tappa[data-tappa="0"]').click()
-await page.waitForSelector('[data-velo="spiegazione"]', { timeout: 5000 })
-controlla('la spiegazione si apre da sola alla prima partita', true)
-await attendi(page, 2200)      // il giro dell'esempio: il pallino deve volare
+controlla('la spiegazione si apre da sola alla prima partita',
+          await page.waitForSelector('[data-velo="spiegazione"]', { timeout: 5000 }).then(() => true, () => false))
+// il giro dell'esempio: il pallino vola e si posa
+await page.waitForSelector('.cs-dindizi .cs-pallino.cs-pieno', { timeout: 5000 }).catch(() => {})
 uguale('la spiegazione mostra il pallino pieno che ha calcolato il motore',
        await page.locator('.cs-dindizi .cs-pallino.cs-pieno').count(), 1)
 await scatto(page, 'codice-spiegazione')

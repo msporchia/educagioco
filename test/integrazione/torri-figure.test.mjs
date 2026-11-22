@@ -1,6 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL CASTELLO, COM'È DISEGNATO
 
+   perché: il castello disegnato: una sola carta `torri` in home, piazzole del motore uguali a quelle dipinte, scena vestita, nomi delle figure, capi, ondata mista
+   a parte perché: guarda come si vede la partita (figure e foglietti); torri prova pausa e barra a 360 px, e torri-libere la mappa delle libere
+
    Il tower defense si gioca sulla carta a scacchiera e si veste con la
    pelle a sprite (`src/giochi/castello/scena/pelle.js`). Le regole le
    provano già `misure/castello` e `integrazione/torri`; qui si prova

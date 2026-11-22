@@ -1,6 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA VARIETÀ A MONETE — col dito, dalla home al cartello di fine
 
+   perché: la carta in home legge il registro delle sessioni, la pagina dei grandi scrive nel profilo e dentro il gioco il premio cala con la scritta piccola
+   a parte perché: semina sessioni:<id> finte per la varietà a monete; tempo prova solo che la sessione si scrive, non cosa ne fa la home
+
    I conti stanno in `unita/varieta`. Qui si prova quello che solo il
    gioco costruito può dire: che il registro delle sessioni arrivi fino
    alla carta in home, che la pagina dei grandi scriva davvero nel
@@ -93,8 +96,8 @@ for (let n = 0; n < 8; n++) {
   await page.waitForSelector('.ct-cifra:not([disabled])', { timeout: 8000 })
   const quanti = await page.locator('.ct-gettone').count()
   const giusta = page.locator('.ct-cifra', { hasText: new RegExp(`^${quanti}$`) })
-  if (await giusta.count()) await giusta.first().click()
-  else await page.locator('.ct-cifra').first().click()
+  if (!controlla(`fra le cifre c'è quella giusta (${quanti})`, await giusta.count() > 0)) break
+  await giusta.first().click()
   await attendi(page, 700)
 }
 await page.waitForSelector('.ct-velo', { timeout: 8000 })

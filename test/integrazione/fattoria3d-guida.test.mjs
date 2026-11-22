@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA GUIDA DELLA FATTORIA 3D, COL DITO — docs/fattoria3d/guida.md
 
+   perché: la guida della fattoria 3D: il `?`, il primo giro con 👇 e l'anello fino al primo raccolto e al menu, «E adesso?» che porta lì, e il «non si può» che porta il passo e il tasto
+   a parte perché: parte con `spiegazioni: true`, che il banco di prova di solito salta; per questo non può stare in nessun altro file della fattoria
    Il `?` della barra apre la guida della 3D; il primo giro (una riga con il
    👇 e l'anello sull'unica cosa da toccare) accompagna dal campo vuoto al
    primo raccolto e al menu delle costruzioni, poi tace per sempre (anche

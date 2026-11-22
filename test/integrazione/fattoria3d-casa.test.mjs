@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    DENTRO LA CASA DELLA FATTORIA 3D, COL DITO — docs/fattoria3d/casa.md
 
+   perché: dentro la casa della fattoria 3D: le stanze si comprano dal cartello sul muro, le finiture dal 🎨, le finestre si appendono, il mobile tenuto premuto segue il dito e si posa o torna dov'era
+   a parte perché: potrebbe stare in `fattoria3d`; sta a parte perché entra in casa e la prova a 25 secondi, mentre `fattoria3d` guarda il prato
    Si entra e la casa non ha fogli per le stanze: quelle da comprare hanno un pavimento accennato e un cartello, sul muro dove si aprirebbe la
    porta o sul bordo con la freccia se è fuori schermo. Il divano girato sta lungo il muro dove la porta ancora non c'è; toccando il cartello si
    apre la domanda del terreno, «Non ora» non costa, «Compra» allarga la casa e il divano si sposta, e lo dice il contadino. Il tasto 🎨 apre la

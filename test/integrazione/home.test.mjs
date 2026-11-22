@@ -2,7 +2,10 @@
    carosello e non apre niente, un tocco sulla copertina in mezzo apre il
    gioco, e al ritorno ci sono «riprendi da qui» e il carosello fermo dove
    era. Il dito passa da CDP: un page.click() non trascina e non lascia
-   dietro il click del dito (docs/core/il-dito.md). */
+   dietro il click del dito (docs/core/il-dito.md).
+   perché: il dito vero sul carosello della home: una strisciata lo sposta e non apre niente, un tocco sulla copertina in mezzo apre il gioco, e al ritorno ci sono «riprendi da qui» e il carosello dov'era
+   a parte perché: è l'unico file che prova il carosello della home col tocco CDP (un page.click() non trascina); gli altri file entrano nei giochi con click, qui conta il gesto
+   */
 import { apriBrowser, apriGioco, attendi } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
@@ -68,7 +71,9 @@ await page.locator('.carta.gioco.davanti').scrollIntoViewIfNeeded()
 const [ax, ay] = await centroDi('.carta.gioco.davanti')
 await tocco(ax, ay)
 uguale('toccando la copertina in mezzo il gioco si apre', await page.locator('.carte').count(), 0)
-await attendi(page, 5600)   // sotto i cinque secondi non è una partita (store/sessioni.js)
+// sotto i cinque secondi non è una partita (store/sessioni.js, che legge `Date.now()`): l'orologio della pagina va avanti
+await page.clock.setSystemTime(await page.evaluate(() => Date.now()) + 5600)
+await attendi(page, 200)
 await page.click('.barra-app button[aria-label="indietro"]')
 await page.waitForSelector('.carte', { timeout: 5000 })
 uguale('tornati in home, il carosello è ancora sul gioco di prima', await inMezzo(), chiave)
@@ -90,8 +95,8 @@ await page.waitForSelector('.tasto', { timeout: 5000 })
 uguale('«aggiungi» chiede prima il codice', await page.locator('.benvenuto').count(), 0)
 const zero = page.locator('.tasto', { hasText: /^0$/ })
 for (let i = 0; i < 4; i++) await zero.click()
-await page.waitForSelector('.benvenuto', { timeout: 5000 })
-controlla('e col codice si apre l’aggiunta di un bambino', true)
+controlla('e col codice si apre l’aggiunta di un bambino',
+          await page.waitForSelector('.benvenuto', { timeout: 5000 }).then(() => true, () => false))
 
 uguale('nessun errore nella pagina', errori.join(' | '), '')
 await browser.close()

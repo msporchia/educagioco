@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE IMPOSTAZIONI PER GIOCO — IL CAROSELLO DELLA HOME, CON LE IMPOSTAZIONI SOTTO
+   perché: il carosello della scheda «Giochi e domande» dei grandi, coi giochi non in casa in grigio e sotto le impostazioni di quello in mezzo (In casa a tre posizioni, tempo, domande)
+   a parte perché: potrebbe stare dentro impostazioni-barra, che apre la stessa scheda dallo stesso tastierino; sta a parte perché ha il suo carosello da provare per intero, con le impostazioni di ogni gioco
 
    Nella scheda «Giochi e domande» dei grandi c'è lo stesso carosello della home, coi giochi che in casa non ci sono in grigio, e
    sotto le impostazioni di quello in mezzo: «In casa» a tre posizioni, il tempo che ci passa, le domande che chiede. Docs:

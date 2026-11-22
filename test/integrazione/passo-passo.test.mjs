@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    PASSO PASSO, NEL BROWSER
+   perché: Passo passo nel browser: l'ingresso dalla home, la mappa intera in 390×844, la prima tappa giocata col dito fino alle stelle, la scala del 💡 a 10/50/100/200 monete, la tessera guasta, lo zaino e il sentiero dei piccoli
+   a parte perché: è il blocco di base del gioco; fila, mappa, guerriero e sosta ne sono pezzi staccati (passo-passo-*), che stanno a parte per il gesto o per la semina diversa
 
    Le cose che il motore non può dire, e che si vedono solo qui:
 
@@ -25,6 +27,10 @@
    · a sei anni lo zaino è chiuso, e il sentiero dei piccoli no;
    · a casa la tastiera tace (a scuola: `integrazione/scuola`);
    · e nessun errore in console.
+   Fino al cartello si gioca la prima tappa, e un «fino a» scritto col
+   dito: che ogni tappa si vinca con la sua soluzione, e che il 💡 da solo
+   porti a casa anche nei sentieri, lo dicono `unita/passo-passo` e
+   `unita/passo-passo-sentiero`.
    `DIST=… node test/esegui.mjs passo-passo --niente-build`
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, scatto, semina, attendi, leggiProfilo, TELEFONO, scegli,
@@ -33,6 +39,7 @@ import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mj
 import { CAMPAGNA, TAPPE_PICCOLE, TAPPE_PRIME, FILA_ATTUALE, delGuerriero } from '../../src/giochi/passo-passo/dati/campagna.js'
 import { Livello } from '../../src/giochi/passo-passo/motore/livello.js'
 import { risolvi } from '../../src/giochi/passo-passo/motore/risolutore.js'
+import { filaScritta, filaDi, chiudiIlTraguardo } from '../aiuto/passo-passo.mjs'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -68,6 +75,7 @@ uguale('a quattro anni la carta è in home, senza accendere niente',
 await semina(page, { settings: { eta: 6 }, coins: 2000 })
 const carta = page.locator('.carta.gioco[data-gioco="passo"]')
 uguale('a sei anni la carta è in home', await carta.count(), 1)
+await chiudiIlTraguardo(page)
 await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa', { timeout: 5000 })
 // col coniglio la valle ha le sue tappe prima delle carte; quelle stanno di là dalla tana (docs/passo-passo/mappa.md)
@@ -271,26 +279,20 @@ controlla('e l\'aiuto prenotato arriva', await page.locator('[data-in-coda]').co
 await allaMappa()
 await semina(page, { settings: { eta: 6 },
                      campagne: { passo: { tappa: 6, stelle: { 0: 3, 1: 1 }, cfg: {} } } })
+await chiudiIlTraguardo(page)
 await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
 await entraNellaTappa(5)
 uguale('nel ruscello ci sono le quattro frecce-salto', await page.locator('[data-salto]').count(), 4)
-const ruscello = risolvi(Livello.da(CAMPAGNA[5]))
-await componi(ruscello)
-await page.locator('[data-azione="via"]').click()
-await page.waitForSelector('[data-fine="tappa"]', { timeout: 12000 })
-controlla('il ruscello si passa saltando', true)
-await attendi(page, 900)
 await scatto(page, 'passo-salto')
-await attendi(page, 400)
-await page.locator('[data-azione="mappa"]').click()
-await page.waitForSelector('.pp-mappa')
+await allaMappa()
 
 /* ---------- 9. la mappa più grande sta nello schermo ---------- */
 /* «Tutto insieme» è sette per nove: la più grande che la campagna
    permette. Deve stare intera in larghezza e in poco più di metà
    dell'altezza, con tessere e tasti sotto. */
 await semina(page, { settings: { eta: 8, tuttoAperto: true } })
+await chiudiIlTraguardo(page)
 await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
 await entraNellaTappa(CAMPAGNA.findLastIndex(t => !delGuerriero(t)))
@@ -311,6 +313,7 @@ await scatto(page, 'passo-grande')
 /* ---------- 10. uscire mentre il coniglio entra in casa non butta la tana ---------- */
 await allaMappa()
 await semina(page, { settings: { eta: 6 }, campagne: {} })
+await chiudiIlTraguardo(page)
 await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
 await entraNellaTappa(0)
@@ -325,9 +328,11 @@ await page.waitForSelector('.pp-mappa', { timeout: 5000 })
   controlla('uscendo mentre entra nella tana, la tappa resta vinta', c && c.tappa === 1, JSON.stringify(c))
 }
 
-/* ---------- 11. il sentiero senza fine, a campagna finita ---------- */
+/* ---------- 11. il sentiero senza fine, a campagna finita ----------
+   Che il 💡 da solo porti a casa lo dice `unita/passo-passo-sentiero`: qui si vede che c'è */
 await semina(page, { settings: { eta: 8 },
                      campagne: { passo: { tappa: CAMPAGNA.length, libera: true, stelle: {}, cfg: {} } } })
+await chiudiIlTraguardo(page)
 await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
 controlla('a campagna finita il sentiero si apre',
@@ -337,37 +342,6 @@ await page.waitForSelector('.pp-campo', { timeout: 5000 })
 await attendi(page, 450)
 controlla('il sentiero ha una mappa', (await page.locator('.pp-tela').boundingBox()).width > 100)
 await scatto(page, 'passo-sentiero')
-/* Il sentiero è fatto a caso: la soluzione il test non la sa. La sa il
-   💡 — e scendere solo lui deve bastare ad arrivare a casa: si tocca il
-   💡, si tocca quello che brilla (e un gradino caro si conferma col
-   secondo tocco), finché non brilla ▶. È la scala intera, pagata. Nei
-   posti con lo zaino quello che brilla può essere la testa di una
-   scatola: toccata, apre la scelta, e lì brilla il numero (o il colore)
-   da toccare — come farebbe un bambino. */
-{
-  let giri = 0
-  for (; giri < 40; giri++) {
-    await page.locator('[data-azione="suggerimento"]').click()
-    await attendi(page, 80)
-    if (await page.locator('[data-azione="via"].pp-brilla').count()) break
-    if (await page.locator('[data-armato]').count()) continue
-    if (await page.locator('.pp-brilla').count()) {
-      await page.locator('.pp-brilla').first().click()
-      await attendi(page, 60)
-      const scelta = page.locator('[data-scelta-volte] .pp-brilla')
-      if (await scelta.count()) { await scelta.first().click(); await attendi(page, 60) }
-    }
-  }
-  controlla('scendendo il 💡 la fila si compone', giri < 40, `${giri} giri`)
-  await page.locator('[data-azione="via"]').click()
-  await page.waitForSelector('[data-fine="sentiero"]', { timeout: 20000 })
-  controlla('il sentiero si vince seguendo gli aiuti', true)
-  await attendi(page, 500)
-  await page.locator('[data-azione="avanti"]').click()
-  await page.waitForSelector('.pp-campo')
-  const titolo = await page.locator('.barra-app .dove').innerText()
-  controlla('▶ porta al sentiero dopo', titolo.includes('2'), titolo)
-}
 await allaMappa()
 
 /* ---------- 11b. i due sentieri: il cane, e un record ciascuno ----------
@@ -378,6 +352,7 @@ await semina(page, { settings: { eta: 8 },
                                           // le due strade finite: ognuno si apre in fondo alla sua
                                           stelle: Object.fromEntries(CAMPAGNA.map((_, i) => [i, 1])),
                                           primato: { best: 4, quando: 1, partite: 3, ultime: [] } } } })
+await chiudiIlTraguardo(page)
 await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
 const fumettoDi = async quale => {
@@ -428,6 +403,7 @@ await allaMappa()
 /* ---------- 12. lo zaino, col dito ---------- */
 await semina(page, { settings: { eta: 8 },
                      campagne: { passo: { tappa: TAPPE_PICCOLE, stelle: {}, cfg: {} } } })
+await chiudiIlTraguardo(page)
 await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
 controlla('a otto anni la prima tappa dello zaino è aperta',
@@ -522,6 +498,7 @@ await scatto(page, 'passo-zaino-aiuto')
 await allaMappa()
 await semina(page, { settings: { eta: 6 },
                      campagne: { passo: { tappa: TAPPE_PICCOLE, stelle: {}, cfg: {} } } })
+await chiudiIlTraguardo(page)
 await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
 controlla('a sei anni la prima tappa dello zaino è aperta: l\'età non ferma chi ci arriva',
@@ -554,6 +531,7 @@ async function vinci(chiave) {
 }
 await semina(page, { settings: { eta: 10, tuttoAperto: true },
                      campagne: { passo: { tappa: CAMPAGNA.length - 1, stelle: {}, cfg: {} } } })
+await chiudiIlTraguardo(page)
 await scegli(page, 'passo')
 await page.waitForSelector('.pp-mappa')
 await entraNellaTappa(CAMPAGNA.findIndex(t => t.chiave === 'gradini-storti'))
@@ -578,11 +556,15 @@ controlla('la scelta del ❓ offre solo i colori, tutti e tre',
           await page.locator('[data-volte-scegli="3"]').count() === 0 &&
           await page.locator('[data-volte-scegli="rosso"], [data-volte-scegli="blu"], [data-volte-scegli="giallo"]').count() === 3)
 await page.locator('[data-azione="cancella"]').click()
-uguale('il sentiero dei segni si fa leggendo le lastre', await vinci('segni'), '4')
+/* scritto col dito, il «se» dice il suo colore sulla testa (che la soluzione vinca lo dice l'unità) */
+{
+  const sol = CAMPAGNA.find(x => x.chiave === 'segni').soluzioni[0]
+  await scrivi(sol)
+  uguale('col dito si scrive la soluzione dei segni: le scatole, i colori e le frecce al loro posto',
+         (await filaScritta(page)).join(' '), filaDi(sol).join(' '))
+}
 await scatto(page, 'passo-se')
-await attendi(page, 500)
-await page.locator('[data-azione="mappa"]').click()
-await page.waitForSelector('.pp-mappa')
+await allaMappa()
 
 /* la mappa più grande di tutte, nove per undici, sta nello schermo */
 await entraNellaTappa(CAMPAGNA.findIndex(t => t.chiave === 'bosco-ghiacciato'))
@@ -596,7 +578,6 @@ await entraNellaTappa(CAMPAGNA.findIndex(t => t.chiave === 'bosco-ghiacciato'))
   dentro('una cella resta grande abbastanza da vedere il coniglio', Math.round(cella), 26, 60)
   nota(`mappa 9×11: ${Math.round(tela.width)}×${Math.round(tela.height)} px, cella ${cella.toFixed(1)} px`)
 }
-uguale('il bosco ghiacciato si fa leggendo i segnali sul ghiaccio', await vinci('bosco-ghiacciato'), '4')
 
 controlla('nessun errore in console', errori.length === 0, errori.join(' · '))
 await browser.close()
