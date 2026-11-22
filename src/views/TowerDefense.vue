@@ -575,6 +575,7 @@ onMounted(() => {
 })
 // prima che il campo se ne vada: dopo, il motore non c'è più
 onBeforeUnmount(() => {
+  delete window.__estremo
   salva({ subito: true })
   document.removeEventListener('visibilitychange', seSparisce)
   removeEventListener('pagehide', seSparisce)
@@ -631,6 +632,12 @@ onMounted(() => {
                   // aggancio per i test: apre un'operazione a un livello preciso
                   forzaOp: (t, lv) => { scelta.value = t; op.value = cassa.operazioneA(t, lv) } }
   if (tappaScuola !== null) inizia(tappaScuola)      // niente regno: si parte nella tappa
+  // la prova del computer della scuola, al massimo: una torre su ogni piazzola, senza conto (docs/scuola/prova-computer.md)
+  window.__estremo = () => {
+    const m = motore(), tipi = tappa.value.torri
+    if (!m) return
+    m.liberi().forEach((posto, k) => m.costruisci(tipi[k % tipi.length], { posto }))
+  }
 })
 </script>
 
