@@ -698,37 +698,11 @@ RIGA 5, una figura sola: il CASTELLO delle terre di cenere, identico a quello di
 LE REGOLE TECNICHE, le stesse di prima: foglio ORIZZONTALE su FONDO TRASPARENTE; le figure di una riga poggiano sulla stessa linea; tanto spazio trasparente fra una figura e l'altra, anche fra le righe; nessuna ombra sotto, nessun prato, nessun bagliore, nessuna cornice; NESSUNA PAROLA SCRITTA, NESSUN NUMERO. Tetti, bandiere e stendardi sono di UN SOLO BLU SATURO E UNIFORME, in tutte le righe, e nient'altro è blu o azzurro, nemmeno i cristalli.
 ```
 
-### 9c — Le porte costruite sul ponte · 4 immagini, una per posto · da fare
+### 9c — Le porte costruite sul ponte · non serve più
 
-**Perché**: le porte del 9 e del 9b sono disegni a parte, con la loro base, i loro scalini e un'altra pietra: anche larghe quanto il ponte
-(`PORTA_DIPINTA`) sembrano posate lì (l'utente, 21/11). Si ridipingono partendo dal ponte stesso, come un pezzo solo con lui.
-
-**Come si manda**: ChatGPT, una chat per posto (o la stessa, cambiando allegato e riga del posto). Si allega `sorgenti/arena/schemi/ponte-<posto>.png`,
-il ponte di quel terreno con le due rive, che rifà `python3 strumenti/sprite/fortezze-arena.py --testate`. **Le colline dopo la voce 8**: oggi il
-loro ponte è il doppio, e la porta verrebbe larga uguale; rifatto il ponte, si rilancia `--testate`.
-
-**Si salva in** `strumenti/sprite/sorgenti/arena/porte-<posto>.png` (`bosco`, `palude`, `neve`, `lava`). **Comando**: `python3 strumenti/sprite/fortezze-arena.py provino.png`:
-il foglietto le aspetta già (due righe da tre, davanti e da dietro), vincono su quelle del 9 e del 9b, e finché un posto non c'è si salta.
-
-```text
-L'immagine allegata è il ponte di un gioco di battaglia per bambini, visto dall'alto a tre quarti: in alto e in basso le due rive, in mezzo il fiume, e il ponte dritto in verticale. A ogni capo del ponte c'è una porta fortificata che lo chiude. Oggi le porte sono disegni a parte e si vede: hanno la loro base, i loro scalini e un'altra pietra. Mi serve ridisegnarle come se fossero sempre state parte di QUESTO ponte.
-
-COSA TI CHIEDO: un foglio con due righe da tre figure.
-RIGA 1, la porta in CIMA al ponte, vista dal davanti: due torri e un portone in mezzo, costruite sopra la testata del ponte. Da sinistra INTERA, ROTTA (crepe, portone sfondato, merli caduti), CROLLATA (un cumulo basso di macerie fra i due piloni rimasti).
-RIGA 2, la porta in FONDO al ponte, vista DA DIETRO: il cammino di ronda dietro i merli, il retro delle due torri, il portone chiuso visto dall'interno con le travi e la sbarra. Stessi tre stati.
-
-LA COSA PIÙ IMPORTANTE: la porta è un pezzo solo col ponte. Le due torri poggiano sui due piloni di testata del ponte allegato e sono larghe quanto loro; la porta è larga ESATTAMENTE quanto il ponte, parapetti compresi, né più né meno. Stessa pietra, stessi colori, stessa grana di pixel, stessi dettagli del ponte allegato. NIENTE BASE, NIENTE SCALINI, NIENTE TERRENO, NIENTE RIVA: in fondo alla figura c'è solo il piano del ponte che passa sotto l'arco, tagliato dritto, così nel gioco continua il ponte dipinto.
-
-IL POSTO: <la riga del posto, qui sotto>
-
-LE REGOLE TECNICHE: foglio ORIZZONTALE 3:2 su FONDO TRASPARENTE; le figure di una riga poggiano sulla stessa linea, staccate fra loro con tanto spazio trasparente, anche fra le righe; nessuna ombra, nessun bagliore, nessuna cornice; NESSUNA PAROLA SCRITTA, NESSUN NUMERO. Bandiere e stendardi di UN SOLO BLU SATURO E UNIFORME, e nient'altro è blu o azzurro: il gioco ridipinge quel blu di rosso per il nemico.
-```
-
-Le righe del posto:
-- **colline** (`bosco`): le colline d'oro, pietra chiara calda e legno, edera rossa d'autunno sulle torri.
-- **deserto** (`palude`): il deserto delle tombe, grandi blocchi d'arenaria, colonne e piccoli obelischi in cima alle torri, geroglifici.
-- **canyon** (`neve`): il canyon di cristallo, pietra scura violetta con le catene; i cristalli solo viola e rosa, MAI azzurri.
-- **cenere** (`lava`): le terre di cenere, pietra nera e ferro, bracieri accesi in cima alle torri.
+Provata il 22 novembre 2026 con ChatGPT: le porte dipinte a parte, anche partendo dal ritaglio del ponte, restano figurine posate sopra
+(vista di fronte su una mappa vista dall'alto), e chiesto di modificare il ponte ridisegna tutta la scena. Le porte ora le ricava dal ponte
+`strumenti/sprite/porte-dal-ponte.py` (`docs/arena/grafica.md`).
 
 ### 10 — La copertina di Castle Battle · 1 immagine · da fare
 
@@ -853,7 +827,7 @@ Ora lo stesso identico foglio per la squadra ROSSA: stesse 9 truppe, stesse pose
 | 10 | la copertina di Castle Battle (ChatGPT) | 1 | `schemi/partita` | `home/copertina-arena.png` | la home e il frontone della mappa |
 | 11 | le icone dei comandi di Castle Battle (ChatGPT) | 1 | `schemi/partita` | `arena/icone.png` | l'anello, ripara e bomba dipinti |
 | 12 ✅ | le truppe di Castle Battle con la casacca (Grok) | 1 | `schemi/truppe` | `arena/truppe.png` | la squadra si legge dalla figura, via il contorno |
-| 12b | le truppe nuove da zero, un foglio per squadra (Grok) | 2 | `arena/truppe`, solo per lo stile | `arena/truppe-blu.png`, `arena/truppe-rosso.png` | il nemico dipinto invece che tinto |
+| 12b ✅ | le truppe nuove da zero, un foglio per squadra (ChatGPT) | 2 | `arena/truppe`, solo per lo stile | `arena/truppe-blu.png`, `arena/truppe-rosso.png` | il nemico dipinto invece che tinto |
 
 Il **minimo per rifare il gioco** sono l'1 e il 2: col bosco, le torri
 nuove e i mostri che ci sono già il castello si gioca e si pubblica. Il

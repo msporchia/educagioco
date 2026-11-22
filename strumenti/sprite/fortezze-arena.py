@@ -2,11 +2,9 @@
 """Le fortezze dipinte di Castle Battle: dal foglio al modulo del gioco.
 
     python3 strumenti/sprite/fortezze-arena.py [provino.png]
-    python3 strumenti/sprite/fortezze-arena.py --testate
 
-`--testate` scrive gli allegati della voce 9c: il ponte di ogni terreno dipinto ritagliato con le due rive
-(`sorgenti/arena/schemi/ponte-<posto>.png`), perché la porta si dipinga sopra la sua testata, con la sua pietra.
-Un foglio `"facoltativo"` che non c'è ancora si salta.
+I nomi che cominciano con uno dei prefissi di `"via"` si contano ma non entrano nel gioco: le porte, che sul ponte dipinto
+si ricavano dal ponte (`porte-dal-ponte.py`).
 
 Legge `sorgenti/arena/fortezze.json` (i fogli e cosa c'è in ogni riga), trova le figure da sé con `righe.py` e
 controlla che i conti tornino. Un nome che torna in un foglio dopo vince su quello di prima. Il provino è uno per
@@ -30,7 +28,7 @@ QUI = Path(__file__).resolve().parent
 REPO = QUI.parent.parent
 SORGENTI = QUI / 'sorgenti' / 'arena'
 MODULO = REPO / 'src' / 'giochi' / 'arena' / 'dati' / 'fortezze-dipinte.js'
-LARGHEZZE = {'castello': 306, 'porta': 144}    # px dell'atlante; il castello è largo quanto quello del foglio di prima
+LARGHEZZE = {'castello': 306}    # px dell'atlante; il castello è largo quanto quello del foglio di prima
 LARGO = 1024
 
 
@@ -47,25 +45,11 @@ def pulito(sorgente, fondo):
     return im
 
 
-def testate():
-    """Il ponte di ogni terreno con un po' di riva sopra e sotto: il ponte sta al centro, largo il 10% e fra il 41% e il 56% dell'altezza."""
-    for posto in ('bosco', 'palude', 'neve', 'lava'):
-        terreno = Image.open(SORGENTI / f'terreno-{posto}.png').convert('RGB')
-        w, h = terreno.size
-        uscita = SORGENTI / 'schemi' / f'ponte-{posto}.png'
-        terreno.crop((round(w * 0.36), round(h * 0.3), round(w * 0.64), round(h * 0.67))).save(uscita)
-        print(uscita.relative_to(REPO))
-
-
 def main():
-    if sys.argv[1:] == ['--testate']:
-        return testate()
     scheda = json.loads((SORGENTI / 'fortezze.json').read_text())
     figure = {}
     for i, f in enumerate(scheda['fogli'], 1):
         sorgente = SORGENTI / f['foglio']
-        if not sorgente.exists() and f.get('facoltativo'):
-            continue
         if not sorgente.exists():
             sys.exit(f'manca {sorgente.relative_to(REPO)}: voci 9 e 9b di strumenti/sprite/DA-GENERARE.md')
         foglio = pulito(sorgente, f.get('fondo'))
@@ -79,6 +63,8 @@ def main():
             righe.provino(foglio, trovate, str(uscita.with_name(f'{uscita.stem}-{i}{uscita.suffix}')))
         for nomi, rettangoli in zip(f['righe'], trovate):
             for nome, (x, y, w, h) in zip(nomi, rettangoli):
+                if any(nome.startswith(v) for v in scheda.get('via', [])):
+                    continue
                 k = LARGHEZZE[nome.split(':')[0]] / w
                 figure[nome] = foglio.crop((x, y, x + w, y + h)).resize((max(1, round(w * k)), max(1, round(h * k))), Image.LANCZOS)
     pezzi = list(figure.items())

@@ -1,69 +1,62 @@
 {
-  "_": "Le fortezze di Castle Battle (Grok, DA-GENERARE.md voci 9 e 9b): una riga per posto. Il primo foglio ha il castello e la porta intera, rotta e crollata vista dal davanti (il nemico); il secondo le porte viste da dietro (chi gioca, `:dietro`) e il castello della cenere coi suoi stendardi blu, che vince su quello del primo; il terzo le porte della cenere viste da dietro, con la scacchiera dipinta al posto della trasparenza. Lo legge strumenti/sprite/fortezze-arena.py. I fogli `porte-<posto>.png` (voce 9c) sono le porte ridipinte sopra la testata del ponte di quel terreno: davanti e da dietro, vincono su quelle di prima; finché non ci sono si saltano.",
+  "_": "Le fortezze di Castle Battle (Grok, DA-GENERARE.md voci 9 e 9b): una riga per posto. Il primo foglio ha il castello e la porta intera, rotta e crollata vista dal davanti (il nemico); il secondo le porte viste da dietro (chi gioca) e il castello della cenere coi suoi stendardi blu, che vince su quello del primo. Le porte dipinte non entrano più nel gioco (`via`): sul ponte dipinto la porta si ricava dal ponte stesso (strumenti/sprite/porte-dal-ponte.py), ma i fogli le hanno e il ritaglio le conta. Lo legge strumenti/sprite/fortezze-arena.py.",
   "fogli": [
     {
       "foglio": "fortezze.png",
       "stacco": 12,
       "righe": [
-        ["castello:bosco", "porta:bosco:intera", "porta:bosco:rotta", "porta:bosco:crollata"],
-        ["castello:palude", "porta:palude:intera", "porta:palude:rotta", "porta:palude:crollata"],
-        ["castello:neve", "porta:neve:intera", "porta:neve:rotta", "porta:neve:crollata"],
-        ["castello:lava", "porta:lava:intera", "porta:lava:rotta", "porta:lava:crollata"]
+        [
+          "castello:bosco",
+          "porta:bosco:intera",
+          "porta:bosco:rotta",
+          "porta:bosco:crollata"
+        ],
+        [
+          "castello:palude",
+          "porta:palude:intera",
+          "porta:palude:rotta",
+          "porta:palude:crollata"
+        ],
+        [
+          "castello:neve",
+          "porta:neve:intera",
+          "porta:neve:rotta",
+          "porta:neve:crollata"
+        ],
+        [
+          "castello:lava",
+          "porta:lava:intera",
+          "porta:lava:rotta",
+          "porta:lava:crollata"
+        ]
       ]
     },
     {
       "foglio": "fortezze-dietro.png",
       "stacco": 6,
       "righe": [
-        ["porta:bosco:intera:dietro", "porta:bosco:rotta:dietro", "porta:bosco:crollata:dietro"],
-        ["porta:palude:intera:dietro", "porta:palude:rotta:dietro", "porta:palude:crollata:dietro"],
-        ["porta:neve:intera:dietro", "porta:neve:rotta:dietro", "porta:neve:crollata:dietro"],
-        ["castello:lava"]
-      ]
-    },
-    {
-      "foglio": "fortezze-cenere.png",
-      "fondo": "scacchiera",
-      "stacco": 12,
-      "righe": [
-        ["porta:lava:intera:dietro", "porta:lava:rotta:dietro", "porta:lava:crollata:dietro"]
-      ]
-    },
-    {
-      "foglio": "porte-bosco.png",
-      "facoltativo": true,
-      "stacco": 12,
-      "righe": [
-        ["porta:bosco:intera", "porta:bosco:rotta", "porta:bosco:crollata"],
-        ["porta:bosco:intera:dietro", "porta:bosco:rotta:dietro", "porta:bosco:crollata:dietro"]
-      ]
-    },
-    {
-      "foglio": "porte-palude.png",
-      "facoltativo": true,
-      "stacco": 12,
-      "righe": [
-        ["porta:palude:intera", "porta:palude:rotta", "porta:palude:crollata"],
-        ["porta:palude:intera:dietro", "porta:palude:rotta:dietro", "porta:palude:crollata:dietro"]
-      ]
-    },
-    {
-      "foglio": "porte-neve.png",
-      "facoltativo": true,
-      "stacco": 12,
-      "righe": [
-        ["porta:neve:intera", "porta:neve:rotta", "porta:neve:crollata"],
-        ["porta:neve:intera:dietro", "porta:neve:rotta:dietro", "porta:neve:crollata:dietro"]
-      ]
-    },
-    {
-      "foglio": "porte-lava.png",
-      "facoltativo": true,
-      "stacco": 12,
-      "righe": [
-        ["porta:lava:intera", "porta:lava:rotta", "porta:lava:crollata"],
-        ["porta:lava:intera:dietro", "porta:lava:rotta:dietro", "porta:lava:crollata:dietro"]
+        [
+          "porta:bosco:intera:dietro",
+          "porta:bosco:rotta:dietro",
+          "porta:bosco:crollata:dietro"
+        ],
+        [
+          "porta:palude:intera:dietro",
+          "porta:palude:rotta:dietro",
+          "porta:palude:crollata:dietro"
+        ],
+        [
+          "porta:neve:intera:dietro",
+          "porta:neve:rotta:dietro",
+          "porta:neve:crollata:dietro"
+        ],
+        [
+          "castello:lava"
+        ]
       ]
     }
+  ],
+  "via": [
+    "porta:"
   ]
 }
