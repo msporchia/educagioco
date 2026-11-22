@@ -8,7 +8,7 @@ import { CAMPAGNA, ID_GRADINI } from '../../src/giochi/pozioni/dati/campagna.js'
 import { FAMIGLIE } from '../../src/giochi/pozioni/dati/misure.js'
 import { Bottega, caso, giocaBene } from '../../src/giochi/pozioni/motore/bottega.js'
 import { tappeDelLimite, tappaDiScuola, dopoNelGiro, risposteDellOrdine, corto, LUNGO } from '../../src/giochi/pozioni/motore/limite.js'
-import scheda, { FAMIGLIE_POZIONI, GRADINI_POZIONI, quanteTappe } from '../../src/scuola/giochi/pozioni/scheda.js'
+import scheda, { FAMIGLIE_POZIONI, GRADINI_POZIONI, quanteTappe, gradiniPer } from '../../src/scuola/giochi/pozioni/scheda.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
 const { valido, descrivi } = scheda.tipo
@@ -26,6 +26,12 @@ stessaLista('le famiglie, in ordine', FAMIGLIE_POZIONI.map(f => f.chiave), FAMIG
 for (const f of FAMIGLIE_POZIONI) for (const g of GRADINI_POZIONI)
   uguale(`${f.chiave} · ${g.chiave}: una tappa sola`, CAMPAGNA.filter(t => t.famiglie.length === 1 && t.famiglie[0] === f.chiave && t.gradino === g.chiave).length, 1)
 controlla('ogni gradino ha un nome e una frase', GRADINI_POZIONI.every(g => g.nome && g.spiega))
+// accese le lunghezze, le scelte si leggono in metri e centimetri, coi conti loro (2 m sono 200 cm, non 2000)
+const lunghe = gradiniPer('lunghezza'), di = k => lunghe.find(g => g.chiave === k)
+controlla('le lunghezze hanno le loro parole e i loro conti', di('grande').nome === 'Dai metri ai centimetri, col conto scritto' &&
+          /«2 m».*200 cm/.test(di('grande').spiega) && !lunghe.some(g => /chil|gramm|kg\b/.test(g.nome + g.spiega)), JSON.stringify(di('grande')))
+stessaLista('e le stesse chiavi per ogni misura', FAMIGLIE_POZIONI.map(f => gradiniPer(f.chiave).map(g => g.chiave).join()), FAMIGLIE_POZIONI.map(() => GRADINI_POZIONI.map(g => g.chiave).join()))
+uguale('descrivi parla della misura scelta', descrivi({ tipo: 'pozioni', famiglie: ['lunghezza'], gradini: ['grande'] }), 'Le pozioni · le lunghezze · metri in centimetri col conto · 1 tappa')
 controlla("l'icona della voce è quella del gioco", scheda.tipo.voce.icona === '⚗️')
 uguale('la materia', scheda.tipo.materia, 'matematica')
 controlla('è in 3D e pronta', scheda.tred === true && scheda.pronto !== false)
