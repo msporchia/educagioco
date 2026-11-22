@@ -149,6 +149,6 @@ uno; le `regole` di una tappa prendono il posto di quella del gradino.
 
 Nei test: `unita/passo-passo-guerriero` (le regole su mappe piccole, la scena, la
 strada, ogni tappa con le sue regole, le trappole e chi segue gli aiuti),
-`integrazione/passo-passo-guerriero` (il selettore a tre, il lucchetto, una
+`integrazione/passo-passo` (il selettore a tre, il lucchetto, una
 vittoria, una caduta). Bersagli: il selettore `[data-scegli="guerriero"]`, da
 chiuso `[data-serve-guerriero]`; le caselle `[data-strada="guerriero"]`.

@@ -17,7 +17,7 @@
    cambiare animale; uscendo e rientrando si è nella stessa valle. Il dito passa da CDP
    (docs/core/il-dito.md). Vedi docs/passo-passo/mappa.md.
    perché: la mappa delle isole di Passo passo col dito: fumetto subito al tocco, trascinare sposta la vista, il segnalino salta alla casella toccata (anche a viaggio in corso), chiuse e ponti bloccati che dicono cosa manca
-   a parte perché: la mappa è una vista grande e a parte (scorre, ha un segnalino che viaggia): passo-passo la attraversa solo per entrare in una tappa; POTREBBE stare dentro passo-passo.test.mjs
+   a parte perché: la mappa è una vista grande e a parte, con le sue semine (dove sta il segnalino) e i suoi viaggi in tempo reale; passo-passo apre le tappe dall'indirizzo e la attraversa appena, e insieme farebbero un file di mille righe
    `DIST=… node test/esegui.mjs passo-passo-mappa --niente-build` */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scegli, scatto, statoSullIsola, leggiProfilo }
   from '../aiuto/browser.mjs'
@@ -32,11 +32,15 @@ const { page, errori } = await apriGioco(browser)
 const cdp = await page.context().newCDPSession(page)
 await azzera(page)
 
+/* un tocco, e il click che il dito lascia dietro: è lui che apre i fumetti (Valle.vue), e lo si aspetta invece di contare
+   350 ms; dove non arriva (un tocco che ferma la vista che scivola) l'attesa resta quella */
 const tocco = async (x, y) => {
+  await page.evaluate(() => { window.__clic = 0; addEventListener('click', () => { window.__clic = 1 }, { capture: true, once: true }) })
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] })
   await attendi(page, 60)
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
-  await attendi(page, 350)
+  await page.waitForFunction(() => window.__clic, null, { timeout: 350, polling: 16 }).catch(() => {})
+  await attendi(page, 60)
 }
 // la vista ferma: un dito tocca quello che vede, e mentre la vista scorre la cosa gli scappa da sotto
 const vistaFerma = async () => {
@@ -58,6 +62,15 @@ const centro = async sel => {
   return [Math.round(b.x + b.width / 2), Math.round(b.y + b.height / 2)]
 }
 const toccaSu = async sel => { const [x, y] = await centro(sel); await tocco(x, y) }
+// la vista che non scorre più per un quarto di secondo: lo slancio è finito, e la vista che segue il segnalino è arrivata
+const quieta = async (finestra = 250) => {
+  for (let k = 0; k < 30; k++) {
+    const a = await vista()
+    await attendi(page, finestra)
+    const b = await vista()
+    if (a.x === b.x && a.y === b.y) return
+  }
+}
 // un tocco che non aspetta: chi guarda il viaggio lo guarda mentre dura
 const toccoVivo = async sel => {
   const [x, y] = await centro(sel)
@@ -187,7 +200,7 @@ uguale('un tocco fuori lo chiude', await page.locator('[data-fumetto]').count(),
   const prima = await vista()
   const { dx, dy } = await versoLaMappa(90)
   await trascina(x, y, dx, dy, { pausa: 40, sosta: 200 })       // lento: poi il dito si ferma, niente slancio
-  await attendi(page, 800)
+  await quieta()
   const dopo = await vista()
   uguale('trascinare su una casella non apre il fumetto', await page.locator('[data-fumetto]').count(), 0)
   uguale('né muove il segnalino', (await segnalino()).inViaggio, '0')
@@ -204,11 +217,17 @@ await toccaSu(casella(0))
 uguale('un tocco dopo il trascinamento apre il fumetto', await fumettoPer(), '0')
 {
   const posto = await postoFumetto()
+  // il fumetto entra con un guizzo: si misura fermo
+  for (let k = 0, b = null, c; k < 20; k++, b = c) {
+    c = JSON.stringify(await page.locator('[data-fumetto]').boundingBox())
+    if (c === b) break
+    await attendi(page, 50)
+  }
   const f0 = await page.locator('[data-fumetto]').boundingBox(), c0 = await page.locator(casella(0)).boundingBox()
   const v0 = await vista()
   const { dx, dy } = await versoLaMappa(70)
   await trascina(f0.x + f0.width / 2, f0.y + f0.height / 2, dx, dy, { pausa: 40, sosta: 200 })     // il dito parte dal fumetto
-  await attendi(page, 800)
+  await quieta()
   const v1 = await vista()
   const f1 = await page.locator('[data-fumetto]').boundingBox(), c1 = await page.locator(casella(0)).boundingBox()
   controlla('la vista si è spostata', v1.x !== v0.x || v1.y !== v0.y, `${JSON.stringify(v0)} → ${JSON.stringify(v1)}`)
@@ -235,7 +254,7 @@ uguale('un tocco fuori, dopo il trascinamento, chiude il fumetto', await page.lo
   const m = await margini()
   controlla('dopo il rilascio la vista scivola ancora', dopo.x !== alRilascio.x || dopo.y !== alRilascio.y || m.x === 0 || m.y === 0,
             `${JSON.stringify(alRilascio)} → ${JSON.stringify(dopo)}`)
-  await attendi(page, 2500)
+  await quieta()
   const fine = await vista(), fine2 = await (async () => { await attendi(page, 300); return vista() })()
   uguale('poi si ferma', JSON.stringify(fine2), JSON.stringify(fine))
   const mm = await margini()
@@ -391,15 +410,18 @@ uguale('senza riaprire il fumetto', await page.locator('[data-fumetto]').count()
 /* toccando altrove il segnalino ci va, e la vista gli va dietro nei due versi */
 {
   const prima = await vista()
-  for (let k = 0; k < 4; k++) {
+  const fondo = (await margini()).maxY
+  const sinistra = v => v.x < prima.x - 150, giu = v => v.y > prima.y + 60 || v.y >= fondo - 2
+  // al più quattro tocchi in fondo a sinistra: ci si ferma quando la vista è già andata nei due versi
+  for (let k = 0, v = prima; k < 4 && !(sinistra(v) && giu(v)); k++) {
     await tocco(20, 760)
     await fermo()
-    await attendi(page, 900)
+    await quieta()
+    v = await vista()
   }
   const dopo = await vista()
-  controlla('la vista è andata a sinistra', dopo.x < prima.x - 150, `${JSON.stringify(prima)} → ${JSON.stringify(dopo)}`)
-  const fondo = (await margini()).maxY
-  controlla('e in giù (o fino al bordo della mappa)', dopo.y > prima.y + 60 || dopo.y >= fondo - 2,
+  controlla('la vista è andata a sinistra', sinistra(dopo), `${JSON.stringify(prima)} → ${JSON.stringify(dopo)}`)
+  controlla('e in giù (o fino al bordo della mappa)', giu(dopo),
             `${JSON.stringify(prima)} → ${JSON.stringify(dopo)}, bordo ${fondo}`)
   const b = await page.locator('[data-segnalino]').boundingBox()
   controlla('col segnalino dentro lo schermo', b && b.x > 0 && b.x + b.width < 390 && b.y > 56 && b.y + b.height < 844, JSON.stringify(b))
@@ -425,7 +447,7 @@ uguale('senza riaprire il fumetto', await page.locator('[data-fumetto]').count()
     // solo di lato: in alto le isole sono chiuse, le tappe aperte stanno all'altezza del segnalino
     const { dx } = await versoLaMappa(k % 2 ? 140 : 220)
     await trascina(195, 420, dx, 0, { passi: 8, pausa: 40 })
-    await attendi(page, 900)
+    await quieta()
     lontano = await fuoriSchermo()
     mia = lontano ? await altra() : null
   }
@@ -434,7 +456,7 @@ uguale('senza riaprire il fumetto', await page.locator('[data-fumetto]').count()
   controlla('in vista c\'è un\'altra casella aperta da toccare', !!mia, JSON.stringify(mia))
   await tocco(mia.x, mia.y)
   await fermo()
-  await attendi(page, 1200)
+  await quieta()
   const b = await page.locator('[data-segnalino]').boundingBox()
   controlla('il segnalino è partito e la vista è tornata su di lui',
             b && b.x > 0 && b.x + b.width < 390 && b.y > 56 && b.y + b.height < 844, JSON.stringify(b))
@@ -576,7 +598,7 @@ await apri(TAPPE_PICCOLE)
   const prima = await vista()
   const { dx, dy } = await versoLaMappa(80)
   await trascina(x, y, dx, dy, { pausa: 40, sosta: 200 })
-  await attendi(page, 600)
+  await quieta()
   const dopo = await vista()
   controlla('nello zaino la vista va dove la porta il dito',
             Math.abs((prima.x - dopo.x) - dx) <= 3 && Math.abs((prima.y - dopo.y) - dy) <= 3,

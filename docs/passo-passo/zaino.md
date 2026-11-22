@@ -109,4 +109,4 @@ Stelle, prezzi e la strada più corta con lo zaino: [stelle-e-aiuti.md](stelle-e
 
 Nei test: `[data-bocca="<fine>"]` il + di una scatola, `[data-libero]` i posti in
 fondo, `[data-cursore]` il segno di dove entra la carta, `[data-pupazzo]` la
-copia al dito, `[data-coda]` il bordo della scatola (`integrazione/passo-passo-fila`).
+copia al dito, `[data-coda]` il bordo della scatola (`integrazione/passo-passo`).

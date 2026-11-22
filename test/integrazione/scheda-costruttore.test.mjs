@@ -14,6 +14,7 @@
    `node test/esegui.mjs scheda-costruttore --niente-build` */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scegli, scatto } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
+import { chiudiIlTraguardo } from '../aiuto/passo-passo.mjs'
 import { LIVELLI } from '../../src/giochi/costruttore/dati/livelli.js'
 import { FILA_ATTUALE } from '../../src/giochi/costruttore/dati/campagna.js'
 
@@ -57,6 +58,7 @@ await semina(page, { settings: { eta: 10 }, campagne: { costruttore: { tappa: 4,
   stelle: { 0: 2, 1: 2, 2: 1, 3: 2 }, cfg: { velocita: 'veloce', fila: FILA_ATTUALE } } } })
 
 /* ══════════ 1. si apre sul robot, accanto al led da fare ══════════ */
+await chiudiIlTraguardo(page)          // quattro livelli vinti festeggiano i traguardi in home, e il velo copre la carta
 await scegli(page, 'costruttore')
 await page.waitForSelector('[data-scheda-robot] [data-livello]')
 await attendi(page, 300)
@@ -263,6 +265,7 @@ uguale('e il cantiere libero si è aperto', await page.locator('[data-libero][da
 /* tornare senza un livello nuovo non fa viaggiare nessuno */
 await page.click('button[aria-label="indietro"]')
 await page.waitForSelector('.carte')
+await chiudiIlTraguardo(page)
 await scegli(page, 'costruttore')
 await page.waitForSelector('[data-scheda-robot] [data-livello]')
 await attendi(page, 700)

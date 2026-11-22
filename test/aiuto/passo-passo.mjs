@@ -24,7 +24,7 @@ export function filaDi(soluzione) {
 }
 
 /* Un profilo seminato con tante tappe fatte festeggia il traguardo in home («tocca per continuare»): si tocca, se no il
-   primo tocco sulla home aspetta che il velo se ne vada da solo, una dozzina di secondi. */
+   primo tocco sulla home aspetta che il velo se ne vada da solo, una dozzina di secondi. Lo usano anche i test del Robot. */
 export async function chiudiIlTraguardo(page) {
   if (!(await page.locator('.velo').count())) return
   await page.locator('.velo').first().click()

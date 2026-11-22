@@ -12,7 +12,7 @@ vale un livello. Codice in `src/giochi/costruttore/` (`Gioco.vue`,
 - **Si scrive subito, non solo col ritardo**: `salvaOra` fa `save` e `flush`
   (l'archivio aspetta 350 ms), e gira su ←, `allaMappa`, smontaggio e su
   `visibilitychange` (pagina nascosta) e `pagehide`: il telefono in tasca
-  non perde l'ultima riga. Nei test: `integrazione/costruttore-salvataggio`.
+  non perde l'ultima riga. Nei test: `integrazione/costruttore`.
 - **Quando la lingua cambia si alza la `v`** e i programmi vecchi si lasciano
   andare (è successo col passaggio alla gravità); l'avanzamento resta nel
   profilo, in `profile.campagne.costruttore`.
