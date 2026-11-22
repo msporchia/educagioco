@@ -17,6 +17,7 @@
 import { resolve } from 'node:path'
 import { apriBrowser, scatto, RADICE, SCRIVANIA } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
+import { seminaQuaderno } from '../aiuto/quaderno-scuola.mjs'
 
 const CARTELLA = resolve(RADICE, 'dist-scuola')
 const browser = await apriBrowser({ file: resolve(CARTELLA, 'index.html') })
@@ -25,6 +26,7 @@ const errori = []
 page.on('pageerror', e => errori.push('errore JS: ' + e.message))
 page.on('console', m => m.type() === 'error' && errori.push('console: ' + m.text()))
 await page.addInitScript(() => { window.__benchmarkCorto = true; window.__provaSogliaB = 1000 })
+await seminaQuaderno(page)        // il link della prova sta nella pagina intera, dopo i primi passi
 await page.goto('file://' + resolve(CARTELLA, 'maestra.html'))
 const link = await page.getAttribute('[data-azione="prova-computer"]', 'href').catch(() => null)
 controlla('la pagina della maestra ha il link della prova', /#prova-computer$/.test(link || ''), link)

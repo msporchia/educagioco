@@ -131,7 +131,7 @@ Colonne: Bambino, Nuovo, per ogni blocco «Blocco N: fatte» e «Blocco N: giust
 
 | Schermata | Cosa |
 |---|---|
-| `inizio` | la lezione in corso (se c'è), come funziona in quattro passi, l'indirizzo e il file dei bambini (`./index.html` scaricato come `educagioco-classe.html`), classi, lezioni, storico per classe, salva/apri il quaderno |
+| `inizio` | la lezione in corso (se c'è), come funziona in quattro passi, i primi passi finché mancano classe o lezione (sotto), l'indirizzo e il file dei bambini (`./index.html` scaricato come `educagioco-classe.html`), classi, lezioni, storico per classe, salva/apri il quaderno |
 | `classe` | nome, l'anno (1ª–5ª o «non lo dico») e alunni uno per riga; cancella (lo storico resta) |
 | `lezione` | nome e la fila dei blocchi (sotto); salva solo una lezione valida e torna all'inizio; copia il link, duplica, cancella |
 | `link` | una lezione arrivata da un link |
@@ -141,63 +141,17 @@ Colonne: Bambino, Nuovo, per ogni blocco «Blocco N: fatte» e «Blocco N: giust
 | `storico` | per classe le lezioni fatte con la data e i bambini |
 | `bambino` | lezione per lezione fatte e giuste in tutto e blocco per blocco, e le domande che sbaglia più spesso |
 
-## L'editor della lezione
+## I primi passi
 
-Una carta per blocco, nell'ordine: **il gioco, cosa si fa e quanto è difficile** (`SceltaEsercizio.vue`,
-[esercizi.md](esercizi.md)) e, solo se c'è più di un blocco, **quando si passa al blocco dopo** (nell'ultimo «Per il
-bambino la lezione finisce»): una riga sola, «Al blocco dopo si passa quando lo dice
-la maestra», con «Cambia» che apre le scelte (prima «Lo dici tu», poi giuste, domande, minuti con le parole del gioco:
-[lezione.md](lezione.md)), ognuna col suo «?»; scegliendo una soglia il numero riparte dal suo `base`. Ogni blocco si
-sposta su e giù e si toglie (l'ultimo che resta no); «＋ Aggiungi un blocco», fino a `MAX_BLOCCHI`, ripete l'esercizio
-dell'ultimo e passa quando lo dice la maestra. Sotto l'ultimo una riga dice cosa succede
-dopo («Hai finito!», si resta lì fino ad «Avanti tutti», o si ricomincia). «In tondo» è una spunta.
+Chiesto dall'utente il 22 novembre 2026: senza classe non si va avanti. Finché il quaderno non ha **una classe e una
+lezione**, la pagina d'inizio ha solo come funziona e «Per cominciare» (`[data-primi-passi]`, `data-passo` `classe` o
+`lezione`): 1. la classe («Crea la classe»), 2. la prima lezione («Prepara la lezione», spenta finché manca la classe); un
+passo fatto ha la spunta, il nome e «Modifica». Lezioni, classi, la pagina dei bambini (col codice per i PC e la prova del
+computer), lo storico e il quaderno compaiono con tutte e due. **«Apri il quaderno» c'è anche prima**: su un PC nuovo si
+riparte dal file, e non può aspettare la classe. Nei test che guardano il resto, `test/aiuto/quaderno-scuola.mjs` semina una
+classe e una lezione.
 
-- **Il gioco ha il suo disegno** (`TesseraGioco.vue`): l'icona dipinta della copertina di casa (`comune/icone-giochi.js`; nella
-  build il plugin `iconeGiochi` di `vite.scuola.config.js` ci lascia solo le nove della scuola, ~300 KB invece dei 2,7 MB
-  di tutte le copertine), un foglio per le domande. **Tutti i giochi restano sempre in vista**, piccoli, e sotto quello scelto
-  ha la sua scheda: cosa fa il bambino («Il bambino guida una navicella…», lo `spiega` della scheda) e cosa gli si può
-  chiedere (le materie che accetta). Provato «il gioco scelto e Cambia gioco»: si perdevano le alternative. Le descrizioni
-  non parlano del PC: si suppone che reggano (scelta dell'utente).
-- **Cosa si fa** sono tessere: le materie (se il gioco ne ha più d'una) e le voci di quella materia, solo quelle che il
-  gioco sa fare. La spiegazione della voce c'è solo quando c'era da scegliere.
-- **La domanda vera** per ogni voce accesa (`Esempio.vue`): a destra delle sue scelte, nella scheda che vedono i bambini
-  (`quiz/Domanda.vue`, con le figure), pescata come la pescherà il gioco; ci si può rispondere, e «Un'altra» ne pesca una
-  nuova. Provato un riassunto a parole: le risposte disegnate diventavano «(una figura)». I giochi col contenuto loro hanno le scelte come **schede in griglia** (`Righe.vue`):
-  l'anteprima in alto (dove c'è), il nome, il caso concreto scritto sotto (cosa chiede, cosa fa il bambino) e in fondo
-  **▶ Prova**, che apre la pagina dei bambini con quel gradino o capitolo solo (`provaEsercizio` di `utili.js`): per
-  capirne la difficoltà giocandolo. Prima erano righe a tutta larghezza col nome solo, poi con l'anteprima a destra: lo
-  spazio si sprecava.
-- **Una lezione nasce di un blocco, e senza scelte fatte**: nessun gioco, nessuna domanda (`NIENTE` di `esercizi.js`, che
-  non è valido e non si salva; la lezione dice «scegli il gioco», poi «scegli cosa si chiede»). Va finché la maestra la
-  chiude («Si gioca finché non chiudi la lezione»): niente «quando si passa» né «in tondo». «＋ Aggiungi un blocco dopo»
-  fa la fila, e **anche il blocco nuovo nasce vuoto** (prima copiava le scelte di quello sopra). Sotto l'esercizio non si
-  ripete il riassunto delle scelte: resta solo l'avviso quando così non chiede niente.
-- **Niente «una cosa sola» dove ne vanno bene tante**: il risultato e il numero nascosto delle tabelline sono due spunte
-  (tutte e due: si mescolano, il modo `misti`), come le tabelline e le domande di un modulo.
-- **«Prova questo blocco»** su ogni blocco: la prova (sotto) con quel blocco solo.
-- **«Prova la lezione»** (nell'editor, e «Prova» su ogni scheda dell'inizio): apre in una scheda nuova la pagina dei
-  bambini con `#prova=<la lezione>` (`linkDiProva` del quaderno, `provaDa` di `bambini/giro.js`), che la fa partire su quel
-  PC come «Senza lezione», senza codice e senza servizio. Una striscia gialla dice che è una prova, ha «Blocco dopo» al
-  posto del menu col codice e «Chiudi la prova»; la prova non si ricorda.
-- **Il «?»** (`Aiuto.vue`) accanto alle scelte meno chiare: un tocco apre due righe, un tocco fuori le chiude (col dito
-  niente tooltip).
-- **Quanto è difficile**: tre tasti con tre tacche che si riempiono, e una riga su cosa cambia.
-
-## L'editor a passi
-
-Chiesto dall'utente il 21 novembre 2026: «troppo visibile troppo presto». **Presa una decisione, si richiude in una riga**
-(`Fatta.vue`: cosa si è scelto e «Cambia», `[data-fatta=<passo>]` e `[data-cambia=<passo>]`) sopra quella da fare:
-
-1. **A che gioco?** tutti i giochi e la scheda di quello toccato; toccato, diventa la riga col suo disegno.
-2. **Cosa si chiede**: l'elenco delle domande o il contenuto del gioco. Qui le scelte sono tante, quindi si chiude con
-   **«Fatto»** (`[data-azione="cosa-fatta"]`, spento finché non chiede niente). In Passo passo prima **chi gioca**, che parte
-   non scelto (la `vuota` della scheda) e scelto diventa anche lui una riga; poi i gradini.
-3. **Quanto è difficile?** (solo i giochi che la reggono): nessuna delle tre è scelta, una scelta chiude il passo.
-
-Fatti tutti, **il blocco si chiude in una riga** (`[data-chiuso]`, `[data-riassunto-blocco]`): il disegno del gioco, cosa si
-fa (`cosaSiFa` di `utili.js`, senza ripetere il gioco) e quando si passa; «Modifica» lo riapre con le scelte già in righe e
-il passaggio sotto, «Chiudi» lo richiude. Una lezione salvata si apre coi blocchi chiusi. In cima, tre righe dicono a cosa
-servono i blocchi (un riscaldamento, l'esercizio vero, un bonus per chi finisce prima).
+L'editor della lezione e la scelta del gioco: [editor.md](editor.md).
 
 ## La pelle
 

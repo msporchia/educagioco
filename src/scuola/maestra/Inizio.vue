@@ -1,5 +1,6 @@
 <script setup>
-// La pagina d'inizio: come funziona, la pagina dei bambini, classi, lezioni, storico e il file del quaderno
+// La pagina d'inizio: come funziona, la pagina dei bambini, classi, lezioni, storico e il file del quaderno. All'inizio a passi:
+// prima la classe, poi la prima lezione, e solo con tutte e due il resto (docs/scuola/quaderno.md, «I primi passi»)
 import { ref, computed } from 'vue'
 import { quaderno, salva } from './stato.js'
 import * as Q from './quaderno.js'
@@ -19,6 +20,8 @@ const copiato = ref('')            // id della lezione il cui link è appena sta
 const daCopiare = ref('')          // il link, quando il browser non lascia copiare
 const esitoFile = ref({ bene: '', male: '' })
 const scelta = ref(null)
+// a che passo è: senza classe non si va avanti, poi la prima lezione; con tutte e due la pagina intera
+const passo = computed(() => (!quaderno.classi.length ? 'classe' : !quaderno.lezioni.length ? 'lezione' : 'fatti'))
 
 // i disegni dei giochi di una lezione, uno per gioco, nell'ordine dei blocchi; le domande hanno il foglio
 const giochiDi = l => [...new Set((l.blocchi || []).map(b => giocoDi(b.esercizio)))].map(id => ({ id, icona: ICONE[id] || null }))
@@ -77,6 +80,34 @@ function apriFile(e) {
     </ol>
   </section>
 
+  <section v-if="passo !== 'fatti'" class="carta" data-primi-passi :data-passo="passo">
+    <h2>Per cominciare</h2>
+    <ol class="primi">
+      <li :class="quaderno.classi.length ? 'fatto' : 'ora'" data-primo-passo="classe">
+        <span class="segno" aria-hidden="true">{{ quaderno.classi.length ? '✓' : '1' }}</span>
+        <span class="cosa"><b>La classe</b>
+          <span v-if="quaderno.classi.length" class="nota">{{ quaderno.classi[0].nome }}, {{ quaderno.classi[0].alunni.length === 1 ? 'un bambino' : `${quaderno.classi[0].alunni.length} bambini` }}</span>
+          <span v-else>Il suo nome e i nomi dei bambini: ognuno toccherà il suo per entrare.</span></span>
+        <button v-if="quaderno.classi.length" class="bottone chiaro piccolo" data-azione="modifica-classe"
+                @click="emit('vai', 'classe', { id: quaderno.classi[0].id })">Modifica</button>
+        <button v-else class="bottone" data-azione="nuova-classe" @click="emit('vai', 'classe', { id: null })">Crea la classe</button>
+      </li>
+      <li :class="quaderno.lezioni.length ? 'fatto' : passo === 'lezione' ? 'ora' : 'dopo'" data-primo-passo="lezione">
+        <span class="segno" aria-hidden="true">{{ quaderno.lezioni.length ? '✓' : '2' }}</span>
+        <span class="cosa"><b>La prima lezione</b>
+          <span v-if="quaderno.lezioni.length" class="nota">{{ quaderno.lezioni[0].nome }}</span>
+          <span v-else>A che gioco, cosa si chiede, quando si va avanti.</span></span>
+        <button v-if="passo === 'lezione'" class="bottone" data-azione="nuova-lezione" @click="emit('vai', 'lezione', { id: null })">Prepara la lezione</button>
+      </li>
+    </ol>
+    <p class="nota">Fatte tutte e due, qui trovi le lezioni da avviare, la pagina per i PC dei bambini, lo storico e il quaderno.</p>
+    <!-- su un PC nuovo si riparte dal file: aprirlo non può aspettare la classe -->
+    <p class="fila nota">Hai già il file del quaderno da un altro computer?
+      <button class="bottone chiaro piccolo" data-azione="apri-quaderno" @click="scelta.click()">Apri il quaderno</button></p>
+    <p v-if="esitoFile.male" class="avviso" data-esito-file="male">{{ esitoFile.male }}</p>
+  </section>
+
+  <template v-if="passo === 'fatti'">
   <section class="carta" data-lezioni>
     <div class="fila tra">
       <h2>Le lezioni</h2>
@@ -169,12 +200,13 @@ function apriFile(e) {
     <div class="fila">
       <button class="bottone" data-azione="salva-quaderno" @click="salvaFile">Salva il quaderno</button>
       <button class="bottone chiaro" data-azione="apri-quaderno" @click="scelta.click()">Apri un quaderno</button>
-      <input ref="scelta" type="file" accept=".json,application/json" hidden data-file-quaderno @change="apriFile">
     </div>
     <p v-if="esitoFile.bene" class="bene" data-esito-file="bene">{{ esitoFile.bene }}</p>
     <p v-if="esitoFile.male" class="avviso" data-esito-file="male">{{ esitoFile.male }}</p>
     <p class="nota">Aprire un quaderno non cancella niente: aggiunge quello che manca e aggiorna quello che c'è già.</p>
   </section>
+  </template>
+  <input ref="scelta" type="file" accept=".json,application/json" hidden data-file-quaderno @change="apriFile">
 </template>
 
 <style scoped>
@@ -200,4 +232,14 @@ function apriFile(e) {
 .faccine { display:flex; flex-wrap:wrap; gap:4px; align-items:center }
 .altri { font-size:13px; font-weight:700; color:var(--grigio); padding-left:4px }
 .indirizzo { font-size:17px }
+/* i primi passi: quello da fare in blu, i fatti con la spunta verde, quello dopo spento */
+.primi { list-style:none; display:flex; flex-direction:column; gap:10px }
+.primi li { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--raggio-piccolo); border:1px solid var(--filo) }
+.primi .cosa { flex:1; display:flex; flex-direction:column; gap:2px; font-size:14px }
+.primi .cosa b { font-size:16px }
+.primi .segno { width:32px; height:32px; flex:none; border-radius:50%; display:grid; place-items:center; font-weight:800;
+                color:var(--penna); border:2px solid var(--penna) }
+.primi .ora { border:2px solid var(--penna); background:var(--penna-chiara) }
+.primi .fatto .segno { color:#fff; background:var(--corretto); border-color:var(--corretto) }
+.primi .dopo { opacity:.5 }
 </style>
