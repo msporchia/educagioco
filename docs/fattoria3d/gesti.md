@@ -34,5 +34,5 @@ Una cosa col gesto non chiede un tocco in più: il gesto parte subito e l'arco s
 
 ## Nei test
 
-`integrazione/fattoria3d` (blocco «ruotare»: il tocco su un tavolo, ↻), `integrazione/fattoria3d-casa` (l'armadio, un mobile al dito, il no), `integrazione/fattoria3d-bestie` (un animale al dito, le sue opzioni),
+`integrazione/fattoria3d-macchine` (blocco «ruotare»: il tocco su un tavolo, ↻), `integrazione/fattoria3d-casa` (l'armadio, un mobile al dito, il no), `integrazione/fattoria3d-bestie` (un animale al dito, le sue opzioni),
 `unita/fattoria3d-attrezzi`. Bersagli: `[data-f3="attrezzi"][data-tipo="opzioni"]`, `[data-opzione="gira|pappa|bagno|vesti|come"]`.

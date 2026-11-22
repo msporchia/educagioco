@@ -104,6 +104,8 @@ controlla('il mangime (erba medica, becchime, foraggio) non si chiede mai', ['er
   const compra = mondo({ bancarella: false })
   const r = compra.f.compraEMetti('bacheca', 3, 3)
   controlla('la bacheca si compra e si mette al livello 2', r.ok && compra.f.bancoAperto() && compra.f.ordini().length === 3, JSON.stringify(r))
+  // la carta della bacheca col «!» (serveBacheca): dal livello del banco finché il banco non c'è, mai sotto e mai dopo averlo
+  stessaLista('la bacheca si chiede dal livello del banco finché non c\'è', [mondo({ liv: 1, bancarella: false }).f.serveBacheca(), mondo({ bancarella: false }).f.serveBacheca(), compra.f.serveBacheca()], [false, true, false])
   const { f } = mondo()
   const o = f.ordini()
   controlla('col banco aperto ci sono tre ordini', o.length === 3 && o.every(x => !x.attesa && x.chiede.length >= 1))

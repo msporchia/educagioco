@@ -81,7 +81,7 @@ più** a Natale. Il pupazzo è 5 mesh fuse per materiale e sta nel banco dei pez
 
 `unita/fattoria3d-stagioni` (calendario e `#stagione=`, i dati completi, gli addobbi scelti come nella 2D e stabili nel giorno, le chiazze,
 i ghiaccioli, le zucche e il pupazzo nel menu solo in stagione, la scena che si tinge, la neve sui materiali che va e torna, il fiato spento
-col basso, niente che resti dopo), `integrazione/fattoria3d` (blocco «le stagioni»: Natale con chiazze, fiocchi, neve sulla casa, ciuffi
+col basso, niente che resti dopo), `integrazione/fattoria3d-macchine` (blocco «le stagioni»: Natale con chiazze, fiocchi, neve sulla casa, ciuffi
 spenti, fiato, il contadino e i compagni senza neve, ≤ 8 draw call in più, nessun errore; Halloween con le zucche nel menu). Nel codice:
 `dati/stagioni3d.js`, `scena3d/stagione.js` (la classe `Stagione`), `scena3d/neve.js`, `scena3d/fiato.js`, `scena3d/modelli-feste.js`
 (le zucche e il pupazzo), `scena3d/modelli-natale.js` ([natale.md](natale.md)). Provato: l'albero innevato come ogni cosa non si riconosceva (tutto bianco): ora i pezzi di Natale saltano la neve.

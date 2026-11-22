@@ -156,4 +156,4 @@ il livello apre un edificio l'avviso lo nomina e un «!» sul tasto Compra resta
 in grigio, con «Livello N». I tempi si dicono in minuti (`dati/tempo.js` `tempoBreve`: «45 s», «5 min», «1 h 20 min»); la carta di una ricetta dice anche il costo («⏱️ 7 min · 🪙 1»).
 
 Nei test: `unita/fattoria3d-parita` (la parità voce per voce, i gesti, gli scomparti, la terra, i salvataggi di prima), `unita/fattoria3d-taratura`, `unita/fattoria3d`
-(sezioni 13–20: soglie, `roba`, gating, lotti, catena, vecchio stato), `unita/fattoria3d-migra`. Integrazione: `integrazione/fattoria3d` (il gettone, gli scomparti nell'inventario).
+(sezioni 13–20: soglie, `roba`, gating, lotti, catena, vecchio stato), `unita/fattoria3d-migra`. Integrazione: `integrazione/fattoria3d-macchine` (il gettone, gli scomparti nell'inventario).

@@ -2,7 +2,7 @@
    LA FATTORIA IN COMUNE — DUE TELEFONI E IL SERVIZIO (docs/fattoria3d/in-comune.md)
 
    perché: la fattoria in comune fra due telefoni: quello che uno costruisce e semina l'altro lo trova, senza toccargli le monete, e la propria fattoria resta com'era
-   a parte perché: serve il servizio con la migrazione v6 e due pagine insieme; le altre fattorie sono da un telefono solo e `amici` prova gli inviti, non il prato condiviso
+   a parte perché: serve il servizio con la migrazione v6 e due pagine insieme; le altre fattorie sono da un telefono solo e `verifiche/amici` prova gli inviti, non il prato condiviso
    Due pagine (due bambini già amici) con la fattoria 3D. Dal 🤝 si entra nella fattoria in comune: quello che uno costruisce e
    semina l'altro lo trova, e quello che l'altro compra arriva al primo mentre gioca, senza toccargli le monete. La propria fattoria
    resta com'era; uscendo e rientrando la fattoria in comune è ancora lì. Senza servizio si dice che serve internet, senza errori.

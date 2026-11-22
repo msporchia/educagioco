@@ -249,7 +249,7 @@ Prima di questo non si vedeva niente: i ciuffi solo fuori dal mondo (sottili e d
   | mesh di un campo | 26 | 18 (terra e bordo: da 9 scatole a una mesh) |
 
   Il costo *per tipo* (la prima volta) è quello di prima: 0,1–2,9 ms, 22–24 ms per tutti i tipi in fila, di cui **~10 ms** erano i fantasmi degli 11 edifici, costruiti all'avvio (oggi un edificio si costruisce quando lo si compra, o nel riscaldamento).
-  **Memoria**: 50 pose, 50 rimozioni e 10 fantasmi di fila lasciano piatte le geometrie e le trame in GPU (`renderer.info.memory`: 181 → 181 e 24 → 24; controllo in `integrazione/fattoria3d`).
+  **Memoria**: 50 pose, 50 rimozioni e 10 fantasmi di fila lasciano piatte le geometrie e le trame in GPU (`renderer.info.memory`: 181 → 181 e 24 → 24; controllo in `integrazione/fattoria3d-macchine`).
   **Identici**: le 76 schede del catalogo (`catalogo3d:scheda --gioco fattoria` contro `--senzacache`) sono uguali al pixel, tranne dove una pecora sta in un posto a caso; la terra fusa
   del campo contro le nove scatole sciolte (`--senzacache --senzafondi`) cambia ~230 pixel di bordo nelle carte dei campi.
   **Cotto a monte? No** (21/10). Le geometrie fuse dei 26 tipi sono 25,5k vertici e 50k indici: **~400 kB** anche quantizzate (posizione int16, normale int8, colore uint8, indice uint16), ~540 kB in

@@ -45,5 +45,5 @@ pointer); reagisce al `pointerdown`, non al `click` (un click arriverebbe dopo i
 ## Nei test
 
 `unita/fattoria3d-rotazione` (cosa si gira, misure girate, ingombro che segue, rifiuto senza costo, quattro giri tornano dritti, stato e
-vecchi stati, `normalizza` con valori sporchi, il gruppo che gira, il davanti, il fantasma e il tasto), `integrazione/fattoria3d` (blocco
+vecchi stati, `normalizza` con valori sporchi, il gruppo che gira, il davanti, il fantasma e il tasto), `integrazione/fattoria3d-macchine` (blocco
 «ruotare»: pressione lunga, secondo dito sul tasto, rilascio, il tocco e ↻). Bersagli: `[data-f3="ruota"]` (con `data-rot`).

@@ -120,7 +120,7 @@ Registrazione: `src/giochi/indice.js` (il manifesto, in coda) e `src/giochi/sche
 
 ## Nei test
 
-`[data-f3="…"]` e qualche altro bersaglio, che i test (`integrazione/fattoria3d`) leggono:
+`[data-f3="…"]` e qualche altro bersaglio, che i test (`integrazione/fattoria3d*`) leggono:
 
 | bersaglio | cosa |
 |---|---|

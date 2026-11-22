@@ -94,5 +94,5 @@ Un ordine aperto che chiede `pastone` si consegna ancora.
 
 `unita/fattoria3d-merci` (le ricette contro la 2D, `MANCANTI`, chi mangia cosa come in 2D), `unita/fattoria3d` (sezione 21: il fienile, le due
 strade, le pecore, il v9 con bestie; sezioni 8 e 18: i rifiuti e i pasti col mangime giusto), `unita/fattoria3d-ordini` (il mangime non si chiede),
-`unita/fattoria3d-taratura`. Nel browser: i pasti di `integrazione/fattoria3d` (sezione degli animali da cortile) scalano `prodotti.becchime` e
+`unita/fattoria3d-taratura`. Nel browser: i pasti di `integrazione/fattoria3d-macchine` (sezione degli animali da cortile) scalano `prodotti.becchime` e
 `prodotti.foraggio`, **scritti ma non eseguiti** (la build era vietata).

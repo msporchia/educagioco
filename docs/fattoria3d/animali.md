@@ -147,7 +147,7 @@ Nel catalogo 3D (`strumenti/banco/catalogo-3d/fattoria.js`) c'è una voce per st
   esperienza dai contatori.
 - I motivi `ha-le-bestie`, `lavora`, `pieno` e `manca-mangime` per le bestie sono in `scena3d/detti.js`.
 
-Nei test: `unita/fattoria3d-bestie-connesse` (le parti di ogni bestia si toccano); `unita/fattoria3d` (sezioni 8 e 18–20); `integrazione/fattoria3d` (sezione «gli animali da cortile»: nutrire, uova,
+Nei test: `unita/fattoria3d-bestie-connesse` (le parti di ogni bestia si toccano); `unita/fattoria3d` (sezioni 8 e 18–20); `integrazione/fattoria3d-macchine` (sezione «gli animali da cortile»: nutrire, uova,
 bestie comprate dal cartello — `[data-f3="cartello-bestie"][data-pezzo="pollaio|stalla|recinto"]`, `[data-f3="compra-bestia"]` con
 `aria-disabled` —, latte, il recinto da una pecora a quattro, contatori, `[data-f3="prodotti"]`).
 

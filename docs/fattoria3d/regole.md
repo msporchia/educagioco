@@ -168,4 +168,4 @@ dopo due minuti con un carico nuovo. Il segnaposto di prima (2 raccolti, 14 s, `
 edifici messi), `…Visite` e `…Aiuti` ([vicini.md](vicini.md)), `…Raccolti` (tessere tagliate), `…Alberi`, `…Prodotti`; sale anche l'evento `livello`. L'albo li legge dal blocco `albo` del
 manifesto (`gioco.js`); l'esperienza è modesta apposta: non è la scorciatoia per salire di livello senza un esercizio.
 
-Nei test: `unita/fattoria3d` (le regole, a orologio finto) e `integrazione/fattoria3d` (il gioco col dito vero).
+Nei test: `unita/fattoria3d` (le regole, a orologio finto) e `integrazione/fattoria3d` e `fattoria3d-macchine` (il gioco col dito vero).

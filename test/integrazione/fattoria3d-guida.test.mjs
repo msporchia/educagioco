@@ -14,6 +14,7 @@
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli, leggiProfilo } from '../aiuto/browser.mjs'
+import { scenaQuieta, aspetta } from '../aiuto/fattoria3d.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -30,10 +31,11 @@ const toccaEl = async sel => { await page.locator(sel).scrollIntoViewIfNeeded().
 const riga = async () => (await page.locator('[data-guida-riga]').count()) ? (await page.locator('[data-guida-riga]').innerText()).trim() : null
 const indicato = sel => page.locator(sel + '[data-indicato]').count()
 const motore = fn => page.evaluate(fn)
+const rigaDice = re => aspetta(async () => re.test(await riga() || ''))
 
 await scegli(page, 'fattoria3d')
 await page.waitForFunction(() => !!(window.__fattoria3d && window.__fattoria3d.mondo), null, { timeout: 15000 })
-await attendi(page, 1200)
+await scenaQuieta(page)
 
 /* ── il ? della barra ── */
 controlla('il ? c\'è nella barra', await page.locator('[data-azione="aiuto"]').count() === 1)
@@ -41,7 +43,7 @@ await toccaEl('[data-azione="aiuto"]')
 await page.waitForSelector('[data-azione="chiudi-aiuto"]')
 controlla('il foglio è la guida della fattoria', /il contadino cammina da solo/i.test(await page.locator('body').innerText()))
 await toccaEl('[data-azione="chiudi-aiuto"]')
-await attendi(page, 300)
+await page.waitForSelector('[data-azione="chiudi-aiuto"]', { state: 'detached', timeout: 3000 })
 
 /* ── il primo giro ── */
 controlla('la riga c\'è e dice di toccare il campo', /campo/.test(await riga() || ''), await riga())
@@ -49,29 +51,27 @@ await scatto(page, 'fattoria3d-guida-semina')
 const sulCampo = await page.evaluate(() => { const { motore: m, mondo } = window.__fattoria3d, c = m.s.cose.find(x => x.tipo === 'campo'), r = mondo.canvas.getBoundingClientRect(), [x, y] = mondo.proietta({ x: c.i + 1, y: 0, z: c.j + 1 }); return [r.left + x, r.top + y] })
 await tocca(...sulCampo)
 await page.waitForSelector('[data-f3="attrezzi"]')
-await attendi(page, 300)
+await page.waitForSelector('[data-seme="grano"][data-indicato]', { timeout: 3000 }).catch(() => {})
 uguale('accanto al campo l\'anello è sul grano', await indicato('[data-seme="grano"]'), 1)
 controlla('la manina c\'è (per chi non legge)', await page.locator('[data-seme="grano"][data-indicato="mano"]').count() === 1)
 controlla('la riga dice di trascinare, e sta in alto', /Trascina/.test(await riga() || '') && await page.locator('.f3-guida.su').count() === 1, await riga())
 // il contadino semina (il tocco sul campo è provato in fattoria3d.test.mjs): qui lo stato
 await motore(() => { const { motore: m, mondo } = window.__fattoria3d; const c = m.s.cose.find(x => x.tipo === 'campo'); m.semina(c.id, 'grano'); mondo.attrezzi.chiudi(); mondo.cambiato() })
-await attendi(page, 600)
-controlla('il grano cresce: la riga lo dice', /cresce/.test(await riga() || ''), await riga())
+controlla('il grano cresce: la riga lo dice', await rigaDice(/cresce/), await riga())
 await motore(() => { const { motore: m } = window.__fattoria3d; const t0 = Date.now(); m.ora = () => t0 + 6 * 60000 })
-await attendi(page, 700)
-controlla('maturo: dice di toccare il campo', /pronto/.test(await riga() || ''), await riga())
+controlla('maturo: dice di toccare il campo', await rigaDice(/pronto/), await riga())
 await motore(() => { const { motore: m, mondo } = window.__fattoria3d; const c = m.s.cose.find(x => x.tipo === 'campo'); for (let k = 0; k < c.tile.length; k++) m.raccogliTessera(c.id, k); mondo.cambiato() })
-await attendi(page, 700)
+await page.waitForSelector('[data-f3="az-costruisci"][data-indicato]', { timeout: 3000 }).catch(() => {})
 uguale('raccolto: l\'anello passa a 🛒 Compra', await indicato('[data-f3="az-costruisci"]'), 1)
 controlla('…con una riga che dice bravo', /Bravo/.test(await riga() || ''), await riga())
 await toccaEl('[data-f3="az-costruisci"]')
 await page.waitForSelector('[data-f3="costruisci-qui"]')
-await attendi(page, 900)
 await toccaEl('[data-f3="costruisci-qui"] [data-chiudi]')
-await attendi(page, 900)
+await page.waitForSelector('[data-f3="costruisci-qui"]', { state: 'detached', timeout: 3000 })
+await aspetta(async () => await riga() === null)
 uguale('visto il menu, la guida tace', await riga(), null)
 uguale('…e non resta nessun anello', await page.locator('[data-indicato]').count(), 0)
-controlla('…e lo ricorda (profilo)', ((await leggiProfilo(page)).campagne.fattoria3d.cfg.guida || {}).finita === true)
+controlla('…e lo ricorda (profilo)', await aspetta(async () => ((await leggiProfilo(page)).campagne.fattoria3d.cfg.guida || {}).finita === true))
 
 /* ── il consiglio «E adesso?» ── */
 await page.evaluate(() => { const { motore: m, mondo } = window.__fattoria3d; m.ora = Date.now; m.s.esperienza = 1e6; mondo.cambiato() })
@@ -82,8 +82,7 @@ controlla('…e ha il tasto per farlo', await page.locator('[data-f3="consiglio-
 controlla('…e la ✕ in alto a destra', await page.locator('[data-f3="consiglio"] [data-chiudi]').count() === 1)
 await scatto(page, 'fattoria3d-guida-adesso')
 await toccaEl('[data-f3="consiglio-fai"]')
-await attendi(page, 400)
-uguale('il tasto chiude il foglio', await page.locator('[data-f3="consiglio"]').count(), 0)
+uguale('il tasto chiude il foglio', await aspetta(async () => await page.locator('[data-f3="consiglio"]').count() === 0) ? 0 : 1, 0)
 
 /* ── il «non si può» con il passo e il tasto: la farina vuole il grano ── */
 await page.evaluate(() => {
@@ -93,7 +92,6 @@ await page.evaluate(() => {
   m.s.cose.push(c); m._occupa(c, c.id); m.s.posseduti.mulino = true; mondo.cambiato(); mondo.ui.apriMacchina('mulino')
 })
 await page.waitForSelector('[data-f3="macchina"][data-macchina="mulino"]')
-await attendi(page, 500)
 await page.locator('[data-ricetta="farina"]').click({ force: true })
 await page.waitForSelector('[data-f3="macchina-msg"]')
 controlla('il perché c\'è', /Ti mancano/.test(await page.locator('[data-f3="macchina-msg"]').innerText()))
@@ -124,15 +122,14 @@ await page.waitForSelector('[data-f3="macchina"][data-macchina="mulino"]')
 await page.locator('[data-ricetta="farina"]').click({ force: true })
 await page.waitForSelector('[data-f3="consiglio-fai"]')
 await toccaEl('[data-f3="consiglio-fai"]')
-await attendi(page, 500)
-uguale('il tasto chiude la macchina', await page.locator('[data-f3="macchina"]').count(), 0)
+uguale('il tasto chiude la macchina', await aspetta(async () => await page.locator('[data-f3="macchina"]').count() === 0) ? 0 : 1, 0)
 
 /* ── ricaricando, la guida non torna ── */
 await page.reload()
 await page.waitForSelector('.carte', { timeout: 10000 })
 await scegli(page, 'fattoria3d')
 await page.waitForFunction(() => !!(window.__fattoria3d && window.__fattoria3d.mondo), null, { timeout: 15000 })
-await attendi(page, 800)
+await scenaQuieta(page)
 uguale('dopo il ricaricamento la guida tace', await riga(), null)
 
 controlla('nessun errore in console', errori.length === 0, errori.join(' · '))

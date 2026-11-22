@@ -109,7 +109,7 @@ Ogni recinto è un pezzo 4×3 col calco di stalla e pollaio (`userData.{bestie, 
 ## Nei test
 
 `unita/fattoria3d-cortile` (ricette e bestie contro la 2D, numeri provvisori, zucca e patata, il motore, profili e modelli), `unita/fattoria3d-merci`
-(la sorella 2D del pentolone), `unita/fattoria3d-bestie` (la monotonia dei profili nuovi). Integrazione: `integrazione/fattoria3d` non cambia (passa
+(la sorella 2D del pentolone), `unita/fattoria3d-bestie` (la monotonia dei profili nuovi). Integrazione: `integrazione/fattoria3d` e `fattoria3d-macchine` non cambiano (passa
 anche coi pezzi nuovi in menu); i bersagli dei cartelli sono quelli di pollaio e stalla (`[data-f3="cartello-bestie"][data-pezzo="anatre|porcile|capre"]`).
 
 ## Da guardare (non visto)

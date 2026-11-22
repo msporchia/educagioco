@@ -131,7 +131,7 @@ non sta fermo già al tocco, resta il vecchio «Bau!»/«Prrr…» sul posto (e 
 decisioni con un `rnd` finto, ingombro e mesh dei modelli, pose (anche quelle nuove) senza numeri sbagliati, tre minuti di scena col motore
 vero (nessun compagno su una cella bloccata, l'arrivo con l'avviso, il tocco, il raggio), le scelte di «Quando ci premi» (percentuali su un
 campione grande, mai due feste uguali, cooldown dell'incontro) e cinque minuti di tocchi su Watson lontano/vicino e sui gatti (richiamo a ≤ 2 celle, il gatto lontano chiamato per nome e quello vicino no, carezze,
-nessuna sequenza che non finisce, nessuno su una cella bloccata). `unita/fattoria3d-compagni` controlla anche la chiamata (solo fermi e oltre la soglia, i nomi, l'attesa 0,4–0,8 s, le indoli ancora diverse). `integrazione/fattoria3d`: toccare Watson lontano fa dire «Watson!» e lo porta vicino. Non c'è un bersaglio `[data-…]`:
+nessuna sequenza che non finisce, nessuno su una cella bloccata). `unita/fattoria3d-compagni` controlla anche la chiamata (solo fermi e oltre la soglia, i nomi, l'attesa 0,4–0,8 s, le indoli ancora diverse). `integrazione/fattoria3d-bestie`: toccare Watson lontano fa dire «Watson!» e lo porta vicino. Non c'è un bersaglio `[data-…]`:
 i compagni sono nella tela.
 
 ## Da sapere

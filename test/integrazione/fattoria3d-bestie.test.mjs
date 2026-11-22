@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE BESTIE DI CASA DELLA FATTORIA 3D, COL DITO — docs/fattoria3d/bestie-di-casa.md
 
-   perché: gli animali di casa della fattoria 3D col dito vero: la scheda Animali del «Compra», il battesimo col nome, il foglio della bestia con cibi e carezza, tenerla premuta per spostarla, 360 px senza scorrere
-   a parte perché: potrebbe stare in `fattoria3d`; sta a parte perché parte da 500 monete e da un solo acquisto, e `fattoria3d` dura 900 secondi
+   perché: gli animali di casa della fattoria 3D col dito vero: la scheda Animali del «Compra», il battesimo col nome, il foglio della bestia, la ciotola e la tinozza sul prato, gli addobbi, tenerla premuta per spostarla, 360 px senza scorrere, e Watson che arriva quando lo si chiama
+   a parte perché: parte da 500 monete e adotta una bestia sola, che poi segue in ogni foglio; `fattoria3d` prova il prato e `fattoria3d-macchine` il cortile, che sono le bestie da lavoro
    Si apre il menu «Compra» (🛒), la scheda Animali offre tutti gli animali da adottare (razze e compagni); una chiusa dice il livello; una a cui
    mancano le monete lo dice e non cambia niente; con le monete si prende (🪙90 il beagle), arriva in scena e si apre il battesimo: un nome si
    TOCCA (e sotto si può scrivere: «✎ Nome» nel foglio, una parola scritta e «Va bene» la salva). Un tocco vero sulla bestia in scena apre il suo foglio (✕ in alto a destra): tre bisogni, i cibi suoi, una carezza
@@ -12,7 +12,8 @@
    `node test/esegui.mjs fattoria3d-bestie --niente-build`
    tempo: 40
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli, SCATTI_ACCESI } from '../aiuto/browser.mjs'
+import { scenaQuieta } from '../aiuto/fattoria3d.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { sogliaDi } from '../../src/giochi/fattoria3d/dati/livelli.js'
 
@@ -34,10 +35,11 @@ const speso = () => page.evaluate(() => window.__fattoria3d.motore.s.esperienza)
 await scegli(page, 'fattoria3d')
 await page.waitForSelector('[data-f3="campo"] canvas', { timeout: 10000 })
 await page.waitForFunction(() => !!(window.__fattoria3d && window.__fattoria3d.mondo), null, { timeout: 15000 })
-await attendi(page, 800)
+await scenaQuieta(page)
 
 const livello = liv => m3(e => { const { motore, mondo } = window.__fattoria3d; motore.s.esperienza = e; mondo.cambiato() }, sogliaDi(liv))
 const apriAnimali = async () => {
+  await page.waitForFunction(() => !window.__fattoria3d.mondo.eroe.az, null, { timeout: 8000 })      // mentre il contadino fa un gesto (esulta per un nome) il 🛒 non apre
   await toccaEl('[data-f3="az-costruisci"]')
   await page.waitForSelector('[data-f3="costruisci-qui"]', { timeout: 3000 })
   await toccaEl('[data-f3="costruisci-qui"] [data-gruppo="fattoria"]')
@@ -81,8 +83,7 @@ controlla('si apre il battesimo con nomi da toccare', await page.locator('[data-
 await scatto(page, 'fattoria3d-bestie-battesimo')
 await toccaEl('[data-f3="battesimo"] [data-nome="Birba"]')
 uguale('il nome scelto è salvato', await m3(() => window.__fattoria3d.motore.cura.nomeDi('beagle')), 'Birba')
-await attendi(page, 1500)
-controlla('la bestia è in scena', await m3(() => window.__fattoria3d.mondo.compagni.lista.some(c => c.def.id === 'beagle' && c.def.nome === 'Birba')))
+controlla('la bestia è in scena', !!await page.waitForFunction(() => window.__fattoria3d.mondo.compagni.lista.some(c => c.def.id === 'beagle' && c.def.nome === 'Birba'), null, { timeout: 5000 }).catch(() => null))
 
 /* ── il foglio dice come sta e serve per nome e vestiti: la cura si fa sul prato ── */
 const schermoDi = (x, z) => m3(([x, z]) => { const { mondo } = window.__fattoria3d, r = mondo.canvas.getBoundingClientRect(), [px, py] = mondo.proietta({ x, y: 0.15, z }); return [r.left + px, r.top + py] }, [x, z])
@@ -112,8 +113,7 @@ const pezzoSulPrato = async (trova, selettore, prove = 8) => {
   }
 }
 await m3(() => { const { motore } = window.__fattoria3d; motore.cura.casa.beagle.pancia = 0.2; motore.borsa.paga(-50) })
-await attendi(page, 900)
-controlla('sulla ciotola c\'è quello che chiede', await page.locator('.f3-badge.fame[data-ciotola="beagle"]').count() === 1)
+controlla('sulla ciotola c\'è quello che chiede', !!await page.waitForSelector('.f3-badge.fame[data-ciotola="beagle"]', { timeout: 3000 }).catch(() => null))
 const CIOTOLA = '[data-f3="attrezzi"][data-tipo="ciotola"]', TINOZZA = '[data-f3="attrezzi"][data-tipo="tinozza"]'
 await pezzoSulPrato(() => { const k = window.__fattoria3d.motore.cura.ciotolaDi('beagle'); return [k.i + 0.5, k.j + 0.5] }, CIOTOLA)
 controlla('un tocco sulla ciotola porta i cibi accanto', await page.locator(CIOTOLA).count() === 1)
@@ -130,8 +130,7 @@ const trascina = async (sel, [x, y]) => {
 await trascina('[data-cibo="osso"]', await schermoDi(...await m3(() => { const k = window.__fattoria3d.motore.cura.ciotolaDi('beagle'); return [k.i + 0.5, k.j + 0.5] })))
 uguale('l\'osso trascinato nella ciotola costa 5', m1 - await monete(), 5)
 uguale('la ciotola si chiude', await page.locator(CIOTOLA).count(), 0)
-await attendi(page, 700)
-controlla('corre a mangiare', await m3(() => { const c = window.__fattoria3d.mondo.compagni.lista.find(o => o.def.id === 'beagle'); return !!c.seq }))
+controlla('corre a mangiare', !!await page.waitForFunction(() => { const c = window.__fattoria3d.mondo.compagni.lista.find(o => o.def.id === 'beagle'); return !!c.seq }, null, { timeout: 3000 }).catch(() => null))
 
 /* ── la tinozza: si sceglie, si strofina col dito, si paga alla fine ── */
 await m3(() => { const { motore } = window.__fattoria3d; motore.cura.casa.beagle.pelo = 0.3; motore.cura.casa.beagle.pancia = 0.9 })
@@ -172,7 +171,7 @@ controlla('girare la cambia di angolo',
 const n0 = await monete(), e0 = await speso()
 await toccaEl('[data-f3="addobbi"] [data-addobbo="cappellino"]')
 await toccaEl('[data-f3="addobbi"] [data-colore="rosso"]')
-await attendi(page, 600)
+await page.waitForSelector('[data-f3="addobbi"] [data-prs="paga"]:not([disabled])', { timeout: 3000 }).catch(() => {})
 uguale('provare non costa niente', await monete(), n0)
 uguale('e non lo mette', await m3(() => JSON.stringify(window.__fattoria3d.motore.cura.addossoA('beagle'))), '{}')
 await scatto(page, 'fattoria3d-bestie-addobbi-prova')
@@ -183,19 +182,18 @@ await attendi(page, 500)
 // il primo addobbo addosso porta il traguardo «Che eleganza»: un velo da chiudere, poi si continua
 if (await page.locator('.velo').count()) { await toccaEl('.velo'); await attendi(page, 500) }
 await toccaEl('[data-f3="addobbi"] [data-colore="verde"]')
-await attendi(page, 500)
+await page.waitForSelector('[data-f3="addobbi"] [data-prs="paga"]:not([disabled])', { timeout: 3000 }).catch(() => {})
 await toccaEl('[data-f3="addobbi"] [data-prs="paga"]')
 uguale('il verde si paga di nuovo', await speso() - e0, 24)
-await attendi(page, 500)
 await toccaEl('[data-f3="addobbi"] [data-colore="rosso"]')
-await attendi(page, 500)
+await page.waitForFunction(() => window.__fattoria3d.motore.cura.addossoA('beagle').testa === 'cappellino:rosso', null, { timeout: 3000 }).catch(() => {})
 uguale('il rosso è tuo: si rimette subito, gratis', await speso() - e0, 24)
 uguale('…e lo porta', await m3(() => window.__fattoria3d.motore.cura.addossoA('beagle').testa), 'cappellino:rosso')
 await toccaEl('[data-f3="addobbi"] [data-prs-scheda="set"]')
 await toccaEl('[data-f3="addobbi"] [data-prs="salva-set"]')
 await toccaEl('[data-f3="addobbi"] [data-prs="nome-ok"]')
 uguale('il set si salva sulla bestia', await m3(() => JSON.stringify(window.__fattoria3d.motore.cura.vestitiDi('beagle').map(v => [v.posto, v.addobbi.testa]))), '[[0,"cappellino:rosso"]]')
-await attendi(page, 1200)
+if (SCATTI_ACCESI) await attendi(page, 1200)
 await scatto(page, 'fattoria3d-bestie-addobbi')
 await toccaEl('[data-f3="addobbi"] [data-chiudi]')
 await page.waitForSelector('[data-f3="bestia"]', { timeout: 3000 })
@@ -251,7 +249,7 @@ controlla('e la salva nello stato', await m3(() => JSON.stringify(window.__fatto
 }
 
 /* ── un nome scritto, non della lista ── */
-await attendi(page, 800)
+await page.waitForSelector('[data-f3="bestia"]', { state: 'detached', timeout: 3000 })
 await apriFoglio()
 await toccaEl('[data-azione="nome"]')
 await page.waitForSelector('[data-f3="battesimo"]', { timeout: 3000 })
@@ -262,7 +260,6 @@ await scatto(page, 'fattoria3d-bestie-scrivi')
 await toccaEl('[data-azione="scrivi"]')
 uguale('il nome scritto è salvato, senza spazi in più', await m3(() => window.__fattoria3d.motore.cura.nomeDi('beagle')), 'Fulmine Bello')
 controlla('il battesimo si chiude', await page.locator('[data-f3="battesimo"]').count() === 0)
-await attendi(page, 800)
 await apriFoglio()
 controlla('il foglio dice il nome scritto', /Fulmine Bello/.test(await page.locator('[data-f3="bestia-nome"]').innerText()))
 await toccaEl('[data-azione="nome"]')
@@ -281,6 +278,35 @@ uguale('Golia si trova fra i nomi', await m3(() => window.__fattoria3d.motore.cu
 await apriAnimali()
 controlla('la carta di uno tuo dice come si chiama', /Golia/.test(await page.locator('[data-carta="bestia:golia"]').innerText()))
 await toccaEl('[data-f3="costruisci-qui"] [data-chiudi]')
+
+/* ── toccare Watson lontano: il contadino dice «Watson!» e lui arriva (docs/fattoria3d/compagni.md) ── */
+await m3(() => window.__fattoria3d.mondo.camera.segui())
+await scenaQuieta(page)
+await m3(() => { const { motore, mondo } = window.__fattoria3d; if (!motore.cura.ho('watson')) { motore.s.casa.watson = { pancia: 0.6, pelo: 0.6, gioco: 0.6, quando: Date.now(), premiato: false }; mondo.compagni.sync(true) } })      // Watson non arriva più da solo: si adotta (docs/fattoria3d/adozioni.md)
+await page.waitForFunction(() => { const w = window.__fattoria3d.mondo.compagni.lista.find(c => c.def.id === 'watson'); return w && !w.seq }, null, { timeout: 15000 }).catch(() => {})
+await m3(() => { for (const g of window.__fattoria3d.mondo.compagni.lista) if (g.tipo === 'gatto') g.prossimoIncontro = 1e9 })      // i gatti non vengono a salutarlo proprio ora
+// (il beagle è un cane anch'esso: Watson si cerca per nome)
+// Watson si mette a 5-6 celle dall'eroe, in un punto libero che sta a schermo
+const doveW = await m3(() => {
+  const { mondo, motore } = window.__fattoria3d, e = mondo.eroe, w = mondo.compagni.lista.find(c => c.def.id === 'watson'), r = mondo.canvas.getBoundingClientRect()
+  for (const [a, b] of [[5, 0], [-5, 0], [0, 5], [0, -5], [5, 3], [-5, -3], [4, 4], [-4, 4]]) {
+    const i = Math.floor(e.x + a), j = Math.floor(e.z + b)
+    if (!motore.libera(i, j)) continue
+    const [px, py, v] = mondo.proietta({ x: i + 0.5, y: 0, z: j + 0.5 })
+    if (v && px > 30 && px < r.width - 30 && py > 120 && py < r.height - 80) { w.x = i + 0.5; w.z = j + 0.5; w.percorso = []; w.seq = null; w.stato = 'sta'; w.tStato = 0; w.dur = 99; return [i + 0.5, j + 0.5] }
+  }
+  return null
+})
+controlla('Watson si può mettere lontano e a schermo', !!doveW)
+if (doveW) {
+  const sentito = () => m3(() => !!window.__fattoria3d.mondo.compagni.lista.find(c => c.def.id === 'watson').seq)
+  for (let prova = 0; prova < 3 && !await sentito(); prova++) { await tocca(...await schermoDi(doveW[0], doveW[1])); await page.waitForFunction(() => !!window.__fattoria3d.mondo.compagni.lista.find(c => c.def.id === 'watson').seq, null, { timeout: 600 }).catch(() => {}) }         // (un tocco su un cane che si sposta può mancarlo: si riprova)
+  controlla('il contadino dice «Watson!»', !!await page.waitForFunction(() => /Watson!/.test(document.querySelector('.f3-fumetto')?.textContent || ''), null, { timeout: 3000 }).catch(() => null))
+  const vicino = () => { const { mondo } = window.__fattoria3d, e = mondo.eroe, w = mondo.compagni.lista.find(c => c.def.id === 'watson'); return Math.hypot(w.x - e.x, w.z - e.z) <= 2.2 }
+  controlla('Watson corre dall\'eroe e si ferma a meno di due celle', !!await page.waitForFunction(vicino, null, { timeout: 9000 }).catch(() => null))
+  await attendi(page, 600)
+  controlla('…e fa festa (una sequenza in corso)', await m3(() => !!window.__fattoria3d.mondo.compagni.lista.find(c => c.def.id === 'watson').seq))
+}
 
 controlla('nessun errore JS', errori.length === 0, errori.join(' · '))
 await browser.close()

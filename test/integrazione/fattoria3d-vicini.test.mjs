@@ -14,6 +14,7 @@
    tempo: 40
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli, leggiProfilo } from '../aiuto/browser.mjs'
+import { scenaQuieta, aspetta } from '../aiuto/fattoria3d.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { sogliaDi } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { PEZZI } from '../../src/giochi/fattoria3d/dati/catalogo.js'
@@ -43,7 +44,7 @@ const tele = () => page.locator('canvas.f3-tela, canvas.f3-vic-tela').count()   
 await scegli(page, 'fattoria3d')
 await page.waitForSelector('[data-f3="campo"] canvas', { timeout: 10000 })
 await page.waitForFunction(() => !!(window.__fattoria3d && window.__fattoria3d.mondo), null, { timeout: 15000 })
-await attendi(page, 800)
+await scenaQuieta(page)
 
 /* ── il trattore: il livello e il posto sulla mappa (il livello si porta a 33: Nonna Rita (25) e Tonio (33) sì, gli altri no) ── */
 uguale('di partenza una tela sola', await tele(), 1)
@@ -68,7 +69,7 @@ const idTrattore = await page.evaluate(liv => {
   return r.ok ? r.cosa.id : null
 }, LIV)
 controlla('il trattore è nel catalogo e si mette sul prato', !!PEZZI.trattore && !!idTrattore)
-await attendi(page, 500)
+await page.waitForFunction(id => !!window.__fattoria3d.mondo.pezzi.voce(id), idTrattore, { timeout: 5000 })
 const t = (await stato()).cose.find(c => c.tipo === 'trattore')
 // un tocco vero: l'eroe cammina fino al trattore. Watson e i gatti si accarezzano prima di tutto: se uno sta proprio lì sotto il dito,
 // il tocco è suo e si riprova (come farebbe una bambina)
@@ -84,8 +85,7 @@ await scatto(page, 'fattoria3d-mappa')
 
 /* ── un villaggio ancora grigio dice il livello e non parte ── */
 await page.locator('[data-vicino="zio-beppe"]').click()
-await attendi(page, 300)
-controlla('un villaggio grigio dice il livello', /livello 44/i.test(await page.locator('[data-f3="mappa-msg"]').innerText()))
+controlla('un villaggio grigio dice il livello', await aspetta(async () => /livello 44/i.test(await page.locator('[data-f3="mappa-msg"]').innerText())))
 uguale('e la tela è ancora una', await tele(), 1)
 
 /* ── il viaggio e la visita ── */
@@ -94,7 +94,7 @@ await page.waitForSelector('[data-f3="viaggio"]', { timeout: 3000 })
 controlla('il trattore parte (il cartello del viaggio)', await page.locator('[data-f3="viaggio"]').count() === 1)
 controlla('il cartello dice da chi si va', /^Si va da [A-Z]/.test(await page.locator('[data-f3="viaggio"] b').innerText()), await page.locator('[data-f3="viaggio"] b').innerText())
 await page.waitForSelector('[data-f3="torna-casa"]', { timeout: 15000 })
-await attendi(page, 1200)
+await page.waitForSelector('[data-f3="storia"] p', { timeout: 5000 }).catch(() => {})
 uguale('la visita ha una tela sua: due tele', await tele(), 2)
 controlla('il mondo di casa aspetta fermo', await page.evaluate(() => window.__fattoria3d.mondo.vivo === false))
 controlla('«Torna a casa» è in vista', await page.locator('[data-f3="torna-casa"]').isVisible())
@@ -114,16 +114,16 @@ controlla('il tasto di ciò che non si ha è spento (ma si tocca: dice perché)'
 await page.locator('[data-aiuta="mais"]').dispatchEvent('click')          // aria-disabled: per Playwright è spento, per il dito si tocca
 controlla('toccare il tasto spento dice cosa manca', /mancano/i.test(await page.locator('[data-f3="visita-msg"]').innerText()))
 await page.locator('[data-aiuta="grano"]').click()
-await attendi(page, 300)
+await aspetta(async () => (await stato()).merci.grano === 4)
 controlla('si consegna: il grano scende e l\'esperienza sale', (await stato()).merci.grano === 4 && (await stato()).esperienza > xp0, JSON.stringify({ g: (await stato()).merci.grano, xp: (await stato()).esperienza }))
 controlla('la riga dice 4/4', /4\/4/.test(await page.locator('[data-chiede="grano"]').innerText()))
 await page.locator('[data-aiuta="carota"]').click()
-await attendi(page, 200)
+await aspetta(async () => (await stato()).merci.carota === 0)
 await scatto(page, 'fattoria3d-cassa')
 await page.evaluate(() => { window.__fattoria3d.motore.s.merci.mais = 2 })
-await attendi(page, 500)                                          // il battito rilegge le scorte
+await page.waitForSelector('[data-aiuta="mais"][data-puoi="true"]', { timeout: 3000 }).catch(() => {})      // il battito rilegge le scorte
 await page.locator('[data-aiuta="mais"]').click()
-await attendi(page, 300)
+await aspetta(async () => /Cassa piena/.test(await page.locator('[data-f3="visita-msg"]').innerText()))
 controlla('cassa piena: il vicino lo dice e regala', /Cassa piena/.test(await page.locator('[data-f3="visita-msg"]').innerText()) && ((await stato()).merci[rita.cassa.dono.k] || 0) >= rita.cassa.dono.n)       // il dono di Rita è un raccolto (patate), non più l'uovo
 controlla('a cassa piena il tasto non c\'è più da usare e si dice quando riapre', /Riapre fra/.test(await page.locator('[data-f3="cassa-chiusa"]').innerText()))
 uguale('le monete non si toccano aiutando', await monete(), mon0)
@@ -135,16 +135,17 @@ await page.locator('[data-f3="apri-mercato"]').click()
 await page.waitForSelector('[data-f3="mercato"]')
 const prima = await monete(), xpPrima = (await stato()).esperienza
 await page.locator('[data-compra="uova"]').click()
-await attendi(page, 400)
+await aspetta(async () => await monete() < prima)
 const dopoCompra = await monete()
 controlla('comprare costa monete (il prezzo scritto) e mette la roba nelle scorte', dopoCompra < prima && (await stato()).prodotti.uova >= 1, `${prima} → ${dopoCompra}`)
 uguale('comprare non è esperienza', (await stato()).esperienza, xpPrima)
 const baratto0 = rita.mercato.compra[0]          // il primo scambio di Rita: i numeri dai dati
 await page.evaluate(b => { window.__fattoria3d.motore.s.merci[b.k] = b.n }, baratto0)
-await attendi(page, 500)
+await page.waitForSelector('[data-vendi="0"]:not([aria-disabled="true"]):not([disabled])', { timeout: 3000 }).catch(() => {})      // il battito rilegge le scorte
+await attendi(page, 300)
 const moneteVendi = await monete()
 await page.locator('[data-vendi="0"]').click()
-await attendi(page, 400)
+await aspetta(async () => (await stato()).esperienza > xpPrima)
 controlla('vendere dà esperienza e roba, mai monete', (await stato()).esperienza > xpPrima && (await monete()) === moneteVendi, `${moneteVendi} → ${await monete()}`)
 await scatto(page, 'fattoria3d-mercato')
 await page.locator('[data-f3="mercato"] [data-chiudi]').click()
@@ -155,8 +156,7 @@ await page.waitForFunction(() => !document.querySelector('[data-f3="visita"]') &
 uguale('tornati a casa la tela è una sola', await tele(), 1)
 controlla('il HUD di casa è tornato', await page.locator('[data-f3="hud"]').isVisible())
 controlla('e la scena di casa si disegna ancora', (await page.evaluate(() => window.__fattoria3d.mondo.statistiche())).calls > 20)
-await attendi(page, 1500)
-const profilo = await leggiProfilo(page)
+const profilo = await aspetta(async () => { const p = await leggiProfilo(page); return p.campagne.fattoria3d.cfg.vicini && (p.totals.fattoria3dVisite || 0) === 1 && p }) || await leggiProfilo(page)
 const cfg = profilo.campagne.fattoria3d.cfg
 controlla('i vicini stanno nel profilo, accanto allo stato', !!cfg.vicini && cfg.vicini.visite['nonna-rita'] === 1 && !!cfg.stato, JSON.stringify(cfg.vicini))
 controlla('i contatori delle visite e degli aiuti sono saliti', (profilo.totals.fattoria3dVisite || 0) === 1 && (profilo.totals.fattoria3dAiuti || 0) >= 5, JSON.stringify(profilo.totals))
@@ -185,13 +185,13 @@ await page.locator('[data-dai="grano"]').click()
 await page.waitForSelector('[data-f3="carretto"][data-passo="ricevi"]')
 controlla('al secondo passo non c\'è il grano e c\'è il regalo', await page.locator('[data-ricevi="grano"]').count() === 0 && await page.locator('[data-ricevi-niente]').count() === 1)
 await page.locator('[data-ricevi="carota"]').click()
-await attendi(page, 300)
+await aspetta(async () => (await stato()).merci.carota === 3)
 const dopoC = await stato()
 controlla('5 grano → 1 carota, nessuna moneta e nessuna esperienza', dopoC.merci.grano === granoC - 5 && dopoC.merci.carota === 3 && await monete() === monC && dopoC.esperienza === xpC, JSON.stringify([dopoC.merci.grano, dopoC.merci.carota]))
 controlla('si torna al primo passo con l\'esito scritto', await page.locator('[data-f3="carretto"][data-passo="dai"]').count() === 1 && /Scambio fatto/.test(await page.locator('[data-f3="carretto-msg"]').innerText()))
 await page.locator('[data-dai="grano"]').click()
 await page.locator('[data-ricevi-niente]').click()
-await attendi(page, 300)
+await aspetta(async () => (await stato()).merci.grano === granoC - 10)
 controlla('regalare svuota di cinque e basta', (await stato()).merci.grano === granoC - 10 && await monete() === monC)
 await scatto(page, 'fattoria3d-carretto')
 await page.locator('[data-f3="carretto"] [data-chiudi]').click()

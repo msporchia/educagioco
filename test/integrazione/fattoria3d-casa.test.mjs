@@ -13,7 +13,8 @@
    `node test/esegui.mjs fattoria3d-casa`
    tempo: 25
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli, SCATTI_ACCESI } from '../aiuto/browser.mjs'
+import { scenaQuieta } from '../aiuto/fattoria3d.mjs'
 import { controlla, stessaLista as uguale, riassunto } from '../aiuto/verifica.mjs'
 import { MOBILI, PREZZI_FINITURE, PREZZI_STANZE, STANZE, origine } from '../../src/giochi/fattoria3d/dati/interni.js'
 
@@ -44,11 +45,12 @@ const toccaCartello = async id => {
 await scegli(page, 'fattoria3d')
 await page.waitForSelector('[data-f3="campo"] canvas', { timeout: 10000 })
 await page.waitForFunction(() => !!(window.__fattoria3d && window.__fattoria3d.mondo), null, { timeout: 15000 })
-await attendi(page, 800)
+await scenaQuieta(page)
 await m3(() => window.__fattoria3d.interni.entra())
 await page.waitForSelector('[data-f3="tela-casa"]', { timeout: 5000 })
 await page.waitForFunction(() => !!window.__fattoria3d.interni.scena(), null, { timeout: 15000 })
-await attendi(page, 1000)
+// la casa è pronta quando i cartelli delle stanze in vendita ci sono e la camera è ferma
+await page.waitForFunction(() => { const c = window.__fattoria3d.interni.scena(); return c.badge.size >= 3 && [...c.badge.values()].every(b => b.visto) && !c.camera.inMoto }, null, { timeout: 8000 }).catch(() => {})
 const { i0, j0 } = origine(STANZE[0])
 
 /* ── le stanze si vendono in scena: niente foglio, un cartello per ogni stanza che confina, tutti sullo schermo ── */
@@ -84,7 +86,7 @@ await page.waitForSelector('[data-f3="dialogo"]', { timeout: 3000 })
 controlla('la domanda è quella del terreno, col prezzo', (await page.locator('[data-f3="dialogo"] [data-scelta="0"]').innerText()).includes(`🪙 ${PREZZI_STANZE[1]}`))
 await toccaEl('[data-f3="dialogo"] [data-scelta="1"]')
 uguale('«Non ora» non costa e non compra', [await monete(), (await interni()).stanze], [soldi1, [0]])
-await attendi(page, 500)
+await page.waitForSelector('[data-f3="dialogo"]', { state: 'detached', timeout: 3000 })
 await toccaCartello(1)
 await page.waitForSelector('[data-f3="dialogo"]', { timeout: 3000 })
 await toccaEl('[data-f3="dialogo"] [data-scelta="0"]')
@@ -136,7 +138,7 @@ const soldi3 = await monete()
 await toccaEl('[data-f3="mano-posa"]')
 uguale('la finestra grande è pagata', await monete(), soldi3 - MOBILI['finestra-larga'].prezzo)
 controlla('ed è appesa in cima a una stanza', (await interni()).mobili.some(m => m.tipo === 'finestra-larga' && (m.j === j0 || m.j === origine(STANZE[1]).j0)))
-await attendi(page, 500)
+if (SCATTI_ACCESI) await attendi(page, 500)
 await scatto(page, 'fattoria3d-casa-finestra-appesa')
 
 /* ── un mobile che non ci sta dice perché ── */
@@ -165,14 +167,14 @@ uguale('e spostarlo non è un tasto', await page.locator('[data-f3="mobile-spost
 const moneteArmadio = await monete()
 await toccaEl('[data-f3="mobile"] [data-colore="azzurro"]')
 uguale('l\'armadio cambia colore, gratis', [(await armadio()).colore, await monete()].join(), ['azzurro', moneteArmadio].join())
-await attendi(page, 1200)
+if (SCATTI_ACCESI) await attendi(page, 1200)
 await scatto(page, 'fattoria3d-casa-armadio')
 await toccaEl('[data-f3="mobile"] [data-mobile="divano"]')
 await page.waitForSelector('[data-f3="mobile"][data-tipo="divano"] [data-trama]', { timeout: 3000 })
 await toccaEl('[data-f3="mobile"] [data-trama="righe"]')
 await toccaEl('[data-f3="mobile"] [data-colore="verde"]')
 { const d = (await interni()).mobili.find(m => m.tipo === 'divano'); uguale('toccato il divano si colora lui, trama e colore', [d.trama, d.colore].join(), 'righe,verde') }
-await attendi(page, 1200)
+if (SCATTI_ACCESI) await attendi(page, 1200)
 await scatto(page, 'fattoria3d-casa-divano')
 await toccaEl('[data-f3="mobile"] [data-mobile="armadio"]')
 await page.waitForSelector('[data-f3="mobile"][data-tipo="armadio"]', { timeout: 3000 })
@@ -180,7 +182,7 @@ await toccaEl('[data-f3="apri-armadio"]')
 await page.waitForSelector('[data-f3="guardaroba"]', { timeout: 8000 })
 controlla('«Apri l\'armadio» apre il guardaroba', await page.locator('[data-f3="mobile"]').count() === 0)
 await toccaEl('[data-f3="guardaroba"] [data-chiudi]')
-await attendi(page, 300)
+await page.waitForSelector('[data-f3="guardaroba"]', { state: 'detached', timeout: 3000 })
 
 /* ── tenere premuto è spostare: il mobile segue il dito, si posa staccandolo ── */
 const conDito = async (da, a, staccaAlla = true) => {
@@ -221,7 +223,7 @@ await toccaEl('[data-f3="tinte-compra"]')
 controlla('la striscia dice quante ne mancano', (await page.locator('[data-f3="tinte-riga"]').innerText()).includes(`🪙${PREZZI_FINITURE.pavimento - 3}`))
 uguale('e il pavimento resta quello pagato', (await interni()).finiture[0].pavimento, 'scacchi')
 await toccaEl('[data-f3="tinte-lascia"]')
-await attendi(page, 300)
+await page.waitForSelector('[data-f3="tinte"]', { state: 'detached', timeout: 3000 })
 await toccaCartello((await cartelli())[0].id)
 await page.waitForSelector('[data-f3="dialogo"]', { timeout: 3000 })
 await toccaEl('[data-f3="dialogo"] [data-scelta="0"]')

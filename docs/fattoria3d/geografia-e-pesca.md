@@ -107,6 +107,6 @@ Il molo costa 1 mesh fusa (562 triangoli), il porticciolo 6, la friggitoria 7 e 
 `unita/fattoria3d-geografia` (la geografia: i lotti storici invariati, il mare a a ≤ −2, la costa e la riva che ondeggia, i laghi grandi continui fra lotti e con isolotti, la
 funzione solo della cella; i prezzi; i salvataggi di prima; il catalogo; la pesca: raggio, specchio, mare e porticciolo, il tempo, il ripopolamento, il pesce nelle ricette; i rifiuti),
 `unita/fattoria3d-merci` (le ricette del pesce come la 2D), `unita/fattoria3d-mondo` (le proporzioni nella fascia di mezzo), `unita/fattoria3d-taratura`, `unita/catalogo-3d`
-(molo, molo girato, porticciolo, galleggiante, pesci, mare, friggitoria, sushi bar, il contadino con la canna). `integrazione/fattoria3d`: il blocco «la pesca» (un molo sul lago,
+(molo, molo girato, porticciolo, galleggiante, pesci, mare, friggitoria, sushi bar, il contadino con la canna). `integrazione/fattoria3d-macchine`: il blocco «la pesca» (un molo sul lago,
 il tocco sull'acqua, il galleggiante, il tempo spostato con `motore.ora`, il pesce, il contatore `fattoria3dPesci`, il mare col porticciolo) **scritto ma non eseguito sulla build**
 (vietata mentre lavorava un altro agente): la logica è provata nel dev server con un Chrome senza schermo.
