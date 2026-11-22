@@ -28,6 +28,12 @@ export const stessaLista = (cosa, avuto, atteso) =>
 export const dentro = (cosa, avuto, min, max) =>
   controlla(cosa, avuto >= min && avuto <= max, `${avuto} è fuori da ${min}..${max}`)
 
+/* Un file con più prove dentro: ognuna in un `blocco`, così una che si pianta (un'attesa scaduta lancia) è un guasto col suo
+   nome e le altre girano lo stesso. Senza, la prima attesa scaduta portava via tutto quello che veniva dopo. */
+export async function blocco(nome, fa) {
+  try { await fa() } catch (e) { controlla(`${nome}: arriva in fondo`, false, String((e && e.message) || e).split('\n')[0]) }
+}
+
 /* nota: si vede solo quando il test passa, per raccontare cosa ha misurato */
 export function nota(...parti) { console.log('   ', ...parti) }
 

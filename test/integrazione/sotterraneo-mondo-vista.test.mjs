@@ -155,7 +155,8 @@ uguale('senza muovere l\'eroe', (await cella()).join(), eroe1.join())
   await page.mouse.move(cx + 100, cy - 60)   // senza tasto premuto no
   await attendi(page, 300)
   const fermo = await cam()
-  controlla('senza tasto non sposta nulla', Math.abs(fermo.x - dopo.x) < 0.2 && Math.abs(fermo.z - dopo.z) < 0.2)
+  // il punto guardato, non la telecamera: quella sta ancora finendo di avvicinarsi dopo lo zoom di prima
+  controlla('senza tasto non sposta nulla', Math.abs(fermo.lx - dopo.lx) < 0.2 && Math.abs(fermo.lz - dopo.lz) < 0.2)
   await page.mouse.wheel(0, 300)
   await attendi(page, 300)
   controlla('la rotella zooma', (await cam()).zoom > 1.1, `${(await cam()).zoom}`)

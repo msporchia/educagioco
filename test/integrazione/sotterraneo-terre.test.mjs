@@ -140,6 +140,7 @@ for (let n = 0; n < 3 && !(await page.locator('[data-pietra-domanda] .qz-tasto')
   await toccaNelMondo(page, '[data-pietra="villaggio"]', { tocca })
   await page.waitForSelector('[data-pietra-domanda] .qz-tasto', { timeout: 15000 }).catch(() => null)
 }
+await attendi(page, 400)   // i 320 ms ciechi della domanda appena nata (`CIECA`, quiz/Domanda.vue): un tocco lì non conta
 await page.locator('[data-pietra-domanda] .qz-tasto[data-giusta]').first().click()
 await page.waitForSelector('[data-pietra="villaggio"][data-accesa="1"]', { timeout: 8000 })
 await page.waitForSelector('[data-fumetto-di="pietra"] [data-azione="torna-terra"]', { timeout: 10000 })

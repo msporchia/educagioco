@@ -120,9 +120,11 @@ controlla('un tocco dice il nome e a cosa serve', /Grano/.test(await page.locato
   await toccaEl('[data-f3="magazzino"] [data-chiudi]')
   // toccarlo nella fattoria: il contadino ci va e il foglio si apre; poi torna dov'era, la prova va avanti da lì
   const silo = await page.evaluate(() => { const c = window.__fattoria3d.motore.edificiDelSilo('terra')[0], e = window.__fattoria3d.mondo.eroe; return { i: c.i, j: c.j, x: e.x, z: e.z } })
+  await page.waitForSelector('[data-f3="magazzino"]', { state: 'detached', timeout: 5000 })   // il foglio di prima se n'è andato: il tocco cade sul prato
+  await attendi(page, 600)   // un tocco sul prato nell'istante dopo la ✕ non conta (misurato: a 0 ms no, a 700 sì); un dito vero ci mette di più
   await tocca(...await schermoDi(silo.i + 1, silo.j + 1))
   await fermo()
-  controlla('toccare il silo nella fattoria apre il suo foglio', await page.locator('[data-f3="magazzino"][data-silo="terra"]').count() === 1)
+  controlla('toccare il silo nella fattoria apre il suo foglio', !!await page.waitForSelector('[data-f3="magazzino"][data-silo="terra"]', { timeout: 5000 }).catch(() => null))
   if (await page.locator('[data-f3="magazzino"]').count()) await toccaEl('[data-f3="magazzino"] [data-chiudi]')
   await page.evaluate(({ x, z }) => { const { mondo } = window.__fattoria3d; mondo.eroe.ferma(); mondo.eroe.x = x; mondo.eroe.z = z; mondo.camera.segui() }, silo)
   await attendi(page, 1200)
@@ -1274,8 +1276,7 @@ const { page: senza } = await apriGioco(browser, { hash: 'fattoria3d&tela=niente
 await senza.waitForSelector('[data-senza-3d]', { timeout: 8000 })
 controlla('senza WebGL il messaggio c\'è', await senza.locator('[data-senza-3d]').count() === 1)
 await senza.locator('[data-azione="esci-3d"]').click()
-await senza.waitForSelector('.carte', { timeout: 8000 })
-controlla('e si torna in home', true)
+controlla('e si torna in home', !!await senza.waitForSelector('.carte', { timeout: 8000 }).catch(() => null))
 
 controlla('nessun errore in console', errori.length === 0, errori.join(' · '))
 await browser.close()

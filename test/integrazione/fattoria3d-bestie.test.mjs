@@ -165,8 +165,8 @@ uguale('le schede: in testa, sul muso, al collo, sulla schiena, set', await page
 await page.waitForSelector('[data-f3="addobbi-ritratto"] img', { timeout: 8000 })
 const src0 = await m3(() => document.querySelector('[data-f3="addobbi-ritratto"] img').src)
 await toccaEl('[data-f3="addobbi"] [data-prs="gira-dx"]')
-await page.waitForFunction(s => document.querySelector('[data-f3="addobbi-ritratto"] img').src !== s, src0, { timeout: 5000 })
-controlla('girare la cambia di angolo', true)
+controlla('girare la cambia di angolo',
+  !!await page.waitForFunction(s => { const i = document.querySelector('[data-f3="addobbi-ritratto"] img'); return i && i.src !== s }, src0, { timeout: 5000 }).catch(() => null))
 const n0 = await monete(), e0 = await speso()
 await toccaEl('[data-f3="addobbi"] [data-addobbo="cappellino"]')
 await toccaEl('[data-f3="addobbi"] [data-colore="rosso"]')

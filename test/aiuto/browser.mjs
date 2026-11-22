@@ -43,13 +43,18 @@ function trovaChrome() {
   return undefined                                  // quello di playwright, se c'è
 }
 
+/* Il 3D lo disegna la scheda video, non il processore: senza queste due righe Chrome senza schermo disegna WebGL in software, e
+   un solo test del sotterraneo teneva occupati otto processori (docs/core/tempi-dei-test.md). Dove una scheda non c'è Chrome
+   ripiega da sé sul software; `SENZA_SCHEDA=1` lo forza, per sapere se un rosso dipende da lei. */
+const SCHEDA = process.env.SENZA_SCHEDA ? [] : ['--enable-gpu', '--ignore-gpu-blocklist']
+
 // `args`: opzioni in più per Chrome (il banco delle perdite vuole `--js-flags=--expose-gc`); `file`: la pagina costruita che
 // serve (la scuola prova `dist-scuola/`, non `dist/`)
 export async function apriBrowser({ args = [], file = COSTRUITO } = {}) {
   if (!existsSync(file))
     throw new Error(`manca ${file} — lancia prima la build`)
   const exe = trovaChrome()
-  return chromium.launch({ ...(exe ? { executablePath: exe } : {}), ...(args.length ? { args } : {}) })
+  return chromium.launch({ ...(exe ? { executablePath: exe } : {}), args: [...SCHEDA, ...args] })
 }
 
 /* ── UN TELEFONO, CON LA SUA CACHE SU DISCO ──
@@ -70,7 +75,7 @@ export async function apriTelefono({ viewport = TELEFONO } = {}) {
   const cartella = mkdtempSync(join(tmpdir(), 'educagioco-telefono-'))
   const exe = trovaChrome()
   const contesto = await chromium.launchPersistentContext(cartella, {
-    ...(exe ? { executablePath: exe } : {}), viewport, deviceScaleFactor: 2, hasTouch: true })
+    ...(exe ? { executablePath: exe } : {}), args: SCHEDA, viewport, deviceScaleFactor: 2, hasTouch: true })
   const chiudi = contesto.close.bind(contesto)
   contesto.close = async () => {
     await chiudi()
@@ -251,7 +256,10 @@ export const apriTendine = page => page.evaluate(() => document.querySelectorAll
    controllare non si vede dallo schermo — quale contatore è salito,
    quale campagna si è mossa — e guardarla dal DOM vorrebbe dire
    fidarsi di quello che il gioco ha deciso di scrivere. */
-export function leggiProfilo(page, giocatore = GIOCATORE) {
+export async function leggiProfilo(page, giocatore = GIOCATORE) {
+  // l'archivio rimanda le scritture di 350 ms (`store/storage.js`): chi rilegge subito trova il profilo di prima. Finché Chrome
+  // disegnava il 3D in software la chiamata stessa ci metteva di più, e la gara non si vedeva
+  await attendi(page, 400)
   return page.evaluate(chi => new Promise((ok, ko) => {
     const r = indexedDB.open('giochi-bambini', 1)
     r.onerror = () => ko(new Error('IndexedDB non si apre'))
@@ -338,6 +346,24 @@ export async function finestraFerma(page) {
     const c = document.querySelector('.sot-cornice')
     return !c || (getComputedStyle(c).transform === 'none' && getComputedStyle(c).opacity === '1')
   }, null, { timeout: 2000 }).catch(() => {})
+}
+
+/* Il dito vero su una pagina (CDP: `page.click()` non fa nascere il click fantasma, docs/core/il-dito.md). `tocca(x, y)` in
+   pixel della pagina; `toccaIl(sel)` aspetta la finestra ferma, misura il primo che trova e lo tocca al centro. Erano copiati
+   uguali in una quarantina di file: chi ne scrive uno nuovo li prende da qui (`const { tocca, toccaIl } = await ditoDi(page)`). */
+export async function ditoDi(page) {
+  const cdp = await page.context().newCDPSession(page)
+  const tocca = async (x, y) => {
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] })
+    await attendi(page, 60)
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  }
+  const toccaIl = async sel => {
+    await finestraFerma(page)
+    const b = await page.locator(sel).first().boundingBox()
+    await tocca(b.x + b.width / 2, b.y + b.height / 2)
+  }
+  return { tocca, toccaIl, cdp }
 }
 
 /* Apre un livello del costruttore dalla scheda: il tocco sul led apre il

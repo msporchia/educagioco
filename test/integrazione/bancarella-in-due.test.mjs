@@ -49,8 +49,9 @@ await scatto(page, 'cucina-in-due-conto')
 }
 await daiResto(page)
 await page.waitForFunction(() => window.__shop.hud.serviti === 1, undefined, { timeout: 5000 })
-uguale('il foglio si chiude', await page.locator('[data-porge]').count(), 0)
-uguale('e il cuoco torna libero', await page.evaluate(S('return S.cuochi.host.calcola')), 0)
+// il foglio se ne va un attimo dopo il cliente servito: si aspetta lui, non si guarda nello stesso istante
+controlla('il foglio si chiude', !!await page.waitForSelector('[data-porge]', { state: 'detached', timeout: 3000 }).then(() => true, () => false))
+controlla('e il cuoco torna libero', !!await page.waitForFunction(S('return S.cuochi.host.calcola === 0'), undefined, { timeout: 3000 }).then(() => true, () => false))
 await page.evaluate(S('S.resta = 0.3'))
 await page.waitForSelector('[data-fine-in-due]', { timeout: 4000 })
 controlla('a fine partita dice quante insieme', /Insieme: 1/.test(await page.locator('[data-fine-in-due]').innerText()))
