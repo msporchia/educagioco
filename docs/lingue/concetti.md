@@ -74,7 +74,7 @@ ripresa, giustaEra }` al posto di una domanda, e l'esito di `rispondi` può
 avere `pagina` (la stessa forma, con `ripresa: true`).
 
 Nei test: `unita/inglese-concetti` (il dato, la presentazione, il ritorno
-al quinto sbaglio e mai per una parola); `integrazione/inglese-mondi` (la
+al quinto sbaglio e mai per una parola); `integrazione/lingue-mondi` (la
 pagina compare la prima volta, non scade, «Ho capito» porta alle frasi).
 Bersagli: `[data-pagina]` con `[data-concetto]` e `[data-ripresa="0"|"1"]`,
 `[data-esempio]`, `[data-forte]` su quello che cambia, `[data-azione="capito"]`.

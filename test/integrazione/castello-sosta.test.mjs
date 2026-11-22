@@ -1,4 +1,6 @@
-/* La battaglia lasciata a metà, nel browser: si esce con ←, si rientra, la
+/* perché: la battaglia del castello lasciata a metà: si esce con ←, la mappa offre «torno da dove ero» e il campo riprende fermo com'era, anche dopo una ricarica; una tappa nuova chiede prima
+   a parte perché: ha un campo suo (la torre pagata, l'ondata chiamata, i mostri in strada) che le altre soste non hanno: ogni gioco ha la sua sosta
+   La battaglia lasciata a metà, nel browser: si esce con ←, si rientra, la
    mappa offre in cima «torno da dove ero» e la battaglia riprende ferma,
    com'era. Anche dopo aver ricaricato la pagina, e mai in silenzio: una
    tappa nuova chiede prima di buttarla. Vedi docs/castello/sosta.md.

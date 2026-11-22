@@ -3,15 +3,16 @@
    domanda è com'era; anche dopo che la pagina è sparita (pagehide) a
    spiegazione aperta, e dopo aver ricaricato. Una tappa nuova chiede prima.
    Una tappa vinta toglie la carta. Vedi docs/prima-dopo/sosta.md.
+   perché: la tappa di Prima e dopo lasciata a metà: vignetta toccata, uscita con ←, «torno da dove ero» con la domanda com'era, anche dopo pagehide a spiegazione aperta e dopo la ricarica
+   a parte perché: POTREBBE stare dentro prima-dopo (stessa tappa): sta a parte come le altre soste, e perché simula pagehide e ricarica, cose che prima-dopo non fa
    `node test/esegui.mjs prima-dopo-sosta` */
-import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, attendi, scatto, scegli }
+import { apriBrowser, apriGioco, semina, leggiProfilo, attendi, scatto, scegli }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { VERSIONE } from '../../src/giochi/prima-dopo/motore/sosta.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
-await azzera(page)
 
 const entra = async () => {
   await scegli(page, 'prima')

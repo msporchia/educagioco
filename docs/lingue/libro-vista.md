@@ -81,7 +81,7 @@ ogni domanda.
 ## Nei test
 
 `unita/inglese-libro` (le regole, [libro.md](libro.md#si-controlla-da-sé)) e
-`integrazione/inglese-mondi`: il libro apre la storia non letta con le
+`integrazione/lingue-mondi`: il libro apre la storia non letta con le
 battute di Leo e Laura col loro nome, una parola che costa chiede prima,
 si risponde e la storia è letta; «Un'altra storia» ne apre un'altra che si
 sfoglia anche durante le domande; in quinta la prima puntata della «Vecchia

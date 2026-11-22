@@ -61,7 +61,7 @@ resto, in ordine.
   alla campagna vecchia (`data/campagna-inglese.js`), tenendo le sue chiavi.
 
 `node strumenti/inglese/banchi.mjs <mondo o tappa>` e `--capitolo=<id>` per
-rileggere i banchi; `node test/esegui.mjs inglese-mondi` li controlla tutti.
+rileggere i banchi; `node test/esegui.mjs lingue-mondi` li controlla tutti.
 
 ## Lo spagnolo
 

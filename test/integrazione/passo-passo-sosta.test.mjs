@@ -4,8 +4,10 @@
    livello non la tiene più. Il sentiero senza fine: la mappa offre in
    cima «torno da dove ero», uscire non chiude la serie, un sentiero nuovo
    chiede prima e «lascio perdere» scrive il record. Vedi docs/passo-passo/sosta.md.
+   perché: Passo passo lasciato a metà: un livello (fila e gradini del 💡 già pagati, anche dopo la ricarica) e il sentiero senza fine («torno da dove ero», record scritto con «lascio perdere»)
+   a parte perché: POTREBBE stare dentro passo-passo; sta a parte come le altre soste (pozioni-sosta, prima-dopo-sosta, lingue-sosta) e perché ricarica la pagina, cosa che il giro di passo-passo non fa mai
    `DIST=… node test/esegui.mjs passo-passo-sosta --niente-build` */
-import { apriBrowser, apriGioco, azzera, semina, attendi, leggiProfilo, scatto, scegli, giocaSullIsola }
+import { apriBrowser, apriGioco, semina, attendi, leggiProfilo, scatto, scegli, giocaSullIsola }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/passo-passo/dati/campagna.js'
@@ -15,7 +17,6 @@ import { VERSIONE } from '../../src/giochi/passo-passo/motore/sosta.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
-await azzera(page)
 
 const tasto = m => m.startsWith('salto-') ? `[data-salto="${m.slice(6)}"]` : `[data-freccia="${m}"]`
 async function componi(mosse) {

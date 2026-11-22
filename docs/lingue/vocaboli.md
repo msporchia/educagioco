@@ -102,8 +102,8 @@ giusta — e la progressione sta in cosa c'è nel bersaglio e nei bottoni
 - **Le categorie `e` (le feste) ed `m` (i soldi) ci sono anche in spagnolo**,
   per le tappe dei mondi; i soldi sono boliviani (`boliviano`, `centavo`).
 
-Nei test: `unita/inglese`, `unita/spagnolo`, `integrazione/inglese`,
-`integrazione/spagnolo` (una moneta a parola giusta: `[data-monete-prese]`
+Nei test: `unita/inglese`, `unita/spagnolo`, `integrazione/lingue-prima`,
+`integrazione/lingue-prima` (una moneta a parola giusta: `[data-monete-prese]`
 sul cartello di fine tappa, `[data-nota-monete]` col salvadanaio stanco).
 
 ## Formato dei dati

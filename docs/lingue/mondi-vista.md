@@ -219,7 +219,7 @@ tocco vero. Tre cose:
 - **col dito**: dalla pressione lunga su una tessera la bolla compare con
   il dito ancora giù e sopra la tessera, quindi il click dell'alzata
   arriva alla tessera, che lo ingoia (`tenere.js`). La prova è un tocco
-  vero in `integrazione/inglese-mondi`.
+  vero in `integrazione/lingue-mondi`.
 
 Si chiede solo quando c'è qualcosa da perdere: le volte gratis e le parole
 di struttura passano dritte, e così un tocco su una domanda che non paga
@@ -295,14 +295,14 @@ gioco; forme diverse per mondi diversi; isole che non si toccano; rotte in
 mare; un attracco in mare accanto a ogni tappa, e da ognuno la nave arriva
 a ogni altro in meno di 1,5 s; dove sta la nave e cosa serve),
 `unita/inglese-libro` (le storie, vedi [libro.md](libro.md#si-controlla-da-sé)),
-`integrazione/inglese-mondi` (entra, la nave è ancorata, una tappa chiusa
+`integrazione/lingue-mondi` (entra, la nave è ancorata, una tappa chiusa
 dice cosa serve, fa una tappa di parole e guarda che fra i colori ci siano
 solo colori, la nave naviga fino alla tappa, compone a tocchi, chiede prima
 di un tocco che costa col dito vero, sbaglia, un tocco chiude il viaggio,
 il libro chiuso dice quale tappa vincere, il libro (in
 [libro-vista.md](libro-vista.md#nei-test)), e a dieci anni comincia dalla
 prima, con la quarta aperta solo perché ci ha vinto una tappa; con `--scatti` anche la tela intera a 390 e a 320 px) e
-`integrazione/inglese` (il gioco di prima). Bersagli: la carta
+`integrazione/lingue-prima` (il gioco di prima). Bersagli: la carta
 `.carta.gioco[data-gioco="inglese"]`; la mappa `[data-mappa-inglese]`,
 `[data-tappa="<id>"]` con `[data-stato]` (`aperta`, `chiusa`, `vinta`),
 `[data-grado]` e `[data-chiuso]`, `[data-mondo][data-pronto]`,

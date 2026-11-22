@@ -1,17 +1,19 @@
-/* La tappa di Conta lasciata a metà, nel browser: si risponde, si sbaglia,
+/* perché: la tappa di Conta lasciata a metà: stessa domanda (stessi gettoni negli stessi posti), l'errore resta nelle stelle, le monete non si ripagano, anche dopo una ricarica
+   a parte perché: ogni gioco ha il suo tavolo da ritrovare; questo parte dal gioco dei piccoli (età 5) con i gettoni, e non somiglia alle altre soste
+   La tappa di Conta lasciata a metà, nel browser: si risponde, si sbaglia,
    si esce con ←, e rientrando la mappa offre in cima «torno da dove ero»:
    la domanda è la stessa (stessi gettoni negli stessi posti), l'errore
    resta nelle stelle, le monete non si ripagano. Anche dopo aver
    ricaricato la pagina, e mai in silenzio: una tappa nuova chiede prima.
    Vedi docs/conta/regole.md.
    `node test/esegui.mjs conta-sosta` */
-import { apriBrowser, apriGioco, azzera, attendi, scatto, semina, leggiProfilo, scegli }
+import { apriBrowser, apriGioco, attendi, scatto, semina, leggiProfilo, scegli }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
+import { soste, finche } from '../aiuto/soste.mjs'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
-await azzera(page)
 await semina(page, { settings: { eta: 5 } })     // il gioco dei piccoli, in home
 
 async function entra() {
@@ -33,8 +35,10 @@ const come = () => page.evaluate(() => ({
   gettoni: [...document.querySelectorAll('.ct-gettone')]
     .map(g => `${g.dataset.specie}@${g.style.left},${g.style.top}`).join(' '),
 }))
-const sosta = async () => (await leggiProfilo(page))?.campagne?.conta?.sosta || null
-const monete = async () => (await leggiProfilo(page))?.coins || 0
+const S = soste(page, { entra, chiave: 'conta', alla: '.ct-tappa[data-tappa="0"]' })
+// la sosta sul disco quando è quella attesa (l'archivio scrive 350 ms dopo): `null` aspetta che non ci sia più
+const sosta = (attesa = s => s === null) => S.sosta(attesa)
+const monete = () => S.monete()
 
 /* ── 1. una giusta, uno sbaglio, e ← ── */
 await entra()
@@ -42,7 +46,8 @@ await page.click('.ct-tappa[data-tappa="0"]')
 await rispondi(true)
 await attendi(page, 500)
 await rispondi(false)
-await attendi(page, 4500)             // il «conta insieme» dopo uno sbaglio
+// il «conta insieme» dopo uno sbaglio: le cifre si spengono mentre si conta, e si riaccendono sulla stessa domanda
+await page.waitForSelector('.ct-cifra[disabled]', { timeout: 3000 })
 await pronta()
 const lasciata = await come()
 const moneteLasciate = await monete()
@@ -53,7 +58,10 @@ await page.click('button[aria-label="indietro"]')
 await page.waitForSelector('[data-ripresa]')
 controlla('la carta dice a che domanda si era',
           /domanda 2 di 4/.test(await page.locator('[data-ripresa]').textContent()))
-controlla('e la sosta è scritta nel profilo', (await sosta())?.fatte === 1 && (await sosta())?.errori === 1)
+{
+  const s = await sosta(x => x?.fatte === 1 && x?.errori === 1)
+  controlla('e la sosta è scritta nel profilo', s?.fatte === 1 && s?.errori === 1, JSON.stringify(s))
+}
 await scatto(page, 'conta-ripresa')
 
 /* ── 2. si riprende: la stessa domanda, senza ripagare ── */
@@ -80,12 +88,7 @@ uguale('e la mappa è pulita', await page.locator('[data-ripresa]').count(), 0)
 await page.click('.ct-tappa[data-tappa="1"]')
 await rispondi(true)
 await attendi(page, 500)
-await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
-await page.evaluate(() => window.dispatchEvent(new Event('pagehide')))
-await attendi(page, 500)
-await page.reload()
-await page.waitForSelector('.carte')
-await entra()
+await S.ricarica(s => s?.fatte === 1)
 uguale('anche dopo aver ricaricato la pagina', await page.locator('[data-ripresa]').count(), 1)
 controlla('e dice la tappa lasciata', /Il cortile/.test(await page.locator('[data-ripresa]').textContent()))
 await page.click('[data-ripresa] [data-azione="riprendi"]')

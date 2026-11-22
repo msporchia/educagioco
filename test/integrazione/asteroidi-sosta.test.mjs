@@ -1,4 +1,6 @@
-/* Gli asteroidi lasciati a metà, nel browser: si esce con ←, la mappa offre
+/* perché: un volo lasciato a metà con ←: la mappa offre «torno da dove ero» e si riprende com'era (vite, punti, gettoni, stessa domanda), anche dopo una ricarica; il record non si scrive finché non finisce
+   a parte perché: le soste hanno un file per gioco perché ognuna ha un tavolo suo (`castello-sosta`, `conta-sosta`, `codice-segreto-sosta`); questa parte dal volo degli asteroidi
+   Gli asteroidi lasciati a metà, nel browser: si esce con ←, la mappa offre
    in cima «torno da dove ero», e si riprende com'era — vite, punti, gettoni,
    la stessa domanda — dietro il velo della pausa, anche dopo aver ricaricato
    la pagina. Una tappa nuova chiede prima. Il record di un volo lasciato a
@@ -6,12 +8,11 @@
    docs/asteroidi/sosta.md.
    `node test/esegui.mjs asteroidi-sosta`
    tempo: 60 */
-import { apriBrowser, apriGioco, azzera, attendi, scatto, leggiProfilo, scegli, parti } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, attendi, scatto, leggiProfilo, scegli, parti } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
-await azzera(page)
 
 async function entra() {
   await scegli(page, 'mate')

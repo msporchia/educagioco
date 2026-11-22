@@ -3,16 +3,17 @@
    (misurini, gettoni, listino, macchie). Anche dopo aver ricaricato la
    pagina, anche uscendo mentre il mercante versa, e mai in silenzio: una
    tappa nuova chiede prima di buttarla. Vedi docs/pozioni/sosta.md.
+   perché: la tappa delle pozioni lasciata a metà: misurini, gettoni, listino e macchie come prima, anche dopo la ricarica e uscendo mentre il mercante versa; una tappa nuova chiede prima di buttarla
+   a parte perché: POTREBBE stare dentro pozioni (stessa tappa): sta a parte perché ricarica la pagina e il giro di pozioni, da 420 s di tempo, è già il più lungo dei file di gioco
    `node test/esegui.mjs pozioni-sosta`
    tempo: 60 */
-import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi, scegli }
+import { apriBrowser, apriGioco, semina, leggiProfilo, scatto, attendi, scegli }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { MONETE_A_DOSE, CAMPAGNA } from '../../src/giochi/pozioni/dati/campagna.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
-await azzera(page)
 /* la tappa 1 («Arriva il chilo») è già la prossima: le prime due sono aperte */
 await semina(page, { settings: { eta: 9 },
                      campagne: { pozioni: { tappa: 1, libera: false, stelle: {}, cfg: {} } } })
@@ -106,16 +107,25 @@ for (let g = 0; g < 30 && await page.locator('[data-fase="procedimento"]').count
 /* a metà procedimento si esce e si rientra: il passo fatto resta */
 let passi = 0
 {
+  /* un gesto conta solo a banco libero: mentre la scena suona il passo di prima (`occupato`) il tocco si perde, e un
+     test che non aspetta lo perdeva quando Chrome era svelto */
   const unPasso = () => page.evaluate(async () => {
-    const Z = window.__poz, b = Z.bottega.value, p = b.passi[b.passo]
+    const Z = window.__poz, attesa = ms => new Promise(r => setTimeout(r, ms))
+    const libero = async () => { for (let i = 0; i < 400 && Z.occupato.value; i++) await attesa(25); await attesa(420) }   // e la finestra cieca
+    const b = Z.bottega.value, p = b.passi[b.passo]
     if (!p) return                                     // è finita: il calderone sta facendo festa
-    await new Promise(r => setTimeout(r, 420))
-    if (p.azione === 'pesta') Z.fai('metti', [...p.cosa]), await new Promise(r => setTimeout(r, 1500))
+    await libero()
+    if (p.azione === 'pesta') { Z.fai('metti', [...p.cosa]); await attesa(50); await libero() }
     Z.fai(p.azione, p.azione === 'pesta' ? [] : [...p.cosa])
   })
+  // un passo è fatto quando il banco va al passo dopo (o la pozione è finita)
+  const passoFatto = n => page.waitForFunction(n => {
+    const b = window.__poz.bottega.value
+    return document.querySelector('[data-fine]') || (b && b.passo > n)
+  }, n, { timeout: 8000 })
   passi = await page.evaluate(() => window.__poz.bottega.value.passi.length)
   await unPasso()
-  await attendi(page, 4000)
+  await passoFatto(0)
   await indietro()
   await page.waitForSelector('[data-ripresa]')
   await attendi(page, 500)
@@ -124,9 +134,11 @@ let passi = 0
   uguale('si riparte dal passo dov\'era', await page.evaluate(() => window.__poz.bottega.value.passo), 1)
   await attendi(page, 500)
   for (let g = 0; g < 10 && await page.locator('[data-fine]').count() === 0; g++) {
+    const n = await page.evaluate(() => window.__poz.bottega.value.passo)
     await unPasso()
-    await attendi(page, 3500)
+    await passoFatto(n)
   }
+  await page.waitForSelector('[data-fine]', { timeout: 8000 })
 }
 uguale('la tappa finisce', await page.locator('[data-fine="tappa"]').count(), 1)
 uguale('le monete sono quelle di tutta la tappa, anche prima dell\'uscita',

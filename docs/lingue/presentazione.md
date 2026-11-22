@@ -113,6 +113,6 @@ Per chi ci lavora: [i vocaboli e i modi di chiedere](vocaboli.md),
 [la voce](voce.md), [l'inglese a mondi](mondi.md) e [la sua vista](mondi-vista.md).
 
 Nei test: `unita/inglese-mondi` e `unita/inglese-vista` (senza browser),
-`integrazione/inglese-mondi`, `integrazione/inglese` (il gioco di prima),
-`integrazione/spagnolo`; i bersagli `data-…` sono in
+`integrazione/lingue-mondi`, `integrazione/lingue-prima` (il gioco di prima),
+`integrazione/lingue-prima`; i bersagli `data-…` sono in
 [mondi-vista.md](mondi-vista.md#nei-test).
