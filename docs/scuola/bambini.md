@@ -14,7 +14,7 @@ bambino (sotto).
 
 | Schermata | Quando | Cosa si vede |
 |---|---|---|
-| `codice` | nessun codice | un campo grande per quattro cifre (col tastierino numerico; spazi e altro si tolgono) e «Entra». `controllaCodice`: `no` → «Questo codice non c'è: controlla la lavagna», `rete` → «Non riesco a collegarmi: chiedi alla maestra» |
+| `codice` | nessun codice | un campo grande per quattro cifre (col tastierino numerico; spazi e altro si tolgono) e «Entra». `controllaCodice`: `no` → «Questo codice non c'è: controlla la lavagna», `rete` → «Non riesco a collegarmi: chiedi alla maestra». Sotto, piccoli, «Senza lezione» e «Prova questo computer» ([prova-computer.md](prova-computer.md)) |
 | `collego` | codice, nessuno `stato` ancora | «Mi collego alla classe…» |
 | `nome` | `stato.io` è `null` | i nomi della classe come tasti; un nome preso da un altro è grigio e non si tocca. In fondo «Non trovo il mio nome» → un campo → `sono({ nome })` |
 | `aspetta` | nome scelto, fase `attesa` | il nome e «Aspetta il via della maestra» |
@@ -104,13 +104,14 @@ nuovo rimonta la vista (`:key` con la posizione), e gli Asteroidi ricevono l'ese
 
 ## Cosa si ricorda, e dove
 
-Due chiavi in localStorage, tutte e due sotto `scuola:` con un campo `nato`: `rete.js` all'avvio butta ogni
-`scuola:*` più vecchia di tre ore (quanto vive una lezione).
+Tre chiavi in localStorage, sotto `scuola:`. Le due della lezione hanno un campo `nato`, e `rete.js` all'avvio butta ogni
+`scuola:<CODICE>` più vecchia di tre ore (quanto vive una lezione); la terza è del computer.
 
 | Chiave | Chi la scrive | Cosa |
 |---|---|---|
 | `scuola:bambino` | `giro.js` (`ricorda`) | `{ forma: 'blocchi', codice, nato, stato: { fase, lezione, avanti, io, alunni }, cammino: { alunno, p, visto, conto } }` |
 | `scuola:<CODICE>` | `rete.js` | il posto del PC, l'alunno, l'ultima `n` e la coda delle risposte ([protocollo.md](protocollo.md)) |
+| `scuola:pixel` | `pixel.js` | i giochi che su questo PC partono con la grafica sgranata ([prova-computer.md](prova-computer.md)): del computer, senza `nato`, non scade |
 
 - **Riaprendo la pagina** si legge `scuola:bambino` e si riparte **subito** dallo stato ricordato, nello stesso blocco
   col suo conto (anche senza rete: le domande ricominciano e le risposte vanno in coda); il collegamento, con lo stesso

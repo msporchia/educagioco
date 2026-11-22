@@ -14,6 +14,7 @@ giocano ai giochi veri limitati alla lezione, e alla fine lei ha il resoconto.
 - [quaderno.md](quaderno.md) — cosa tiene il PC della maestra: classi, lezioni, storico, il file da salvare e il link di una lezione, il percorso di «Nuova lezione», l'editor a blocchi e il pannello con «Avanti tutti»
 - [giochi.md](giochi.md) — i giochi veri: una cartella per gioco in `src/scuola/giochi/`, la scheda, i sostituti, la vista, i parametri, la risposta
 - [bambini.md](bambini.md) — le schermate del bambino, il nome dalla lista, cosa succede quando la rete cade
+- [prova-computer.md](prova-computer.md) — «Prova questo computer»: ogni gioco vero ~15 s con un pilota, le immagini al secondo, la grafica sgranata (B) che il PC si ricorda, il resoconto in un invio
 - [ripieghi.md](ripieghi.md) — quando qualcosa non va: la lezione cambiata a metà, un bambino solo, il codice della maestra a tempo, il tasto «Maestra» sul PC, «Senza lezione» senza internet, le pagine che si riaprono senza rete
 
 Nei test: le unità `unita/scuola-*` (i bersagli e cosa provano stanno in ogni file sopra) e, nel browser,
