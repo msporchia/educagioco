@@ -30,7 +30,7 @@ npm run dev            # server di sviluppo
 npm run build          # produce dist/index.html, il file unico
 npm test               # le unità: senza browser, mezzo minuto
 npm run test:svelto    # le unità che non si dichiarano lente, mentre si scrive
-npm run test:browser   # solo dentro Chrome, sette minuti
+npm run test:browser   # solo dentro Chrome, tre minuti e mezzo
 npm run test:misure    # le tarature (partite finte): solo dopo un cambio significativo del bilanciamento, fino a 25 minuti
 npm run test:verifiche # le verifiche a mano nel browser: solo a chi ha toccato quella parte
 npm run test:tutto     # unità e browser: prima di pubblicare

@@ -28,49 +28,37 @@ stanno nella sua cartella.
 
 ## Le prove
 
-Dalla rassegna del 21/11 e dal riassetto del 22 (i numeri in
-[tempi-dei-test.md](tempi-dei-test.md), le regole in [test.md](test.md),
-«Cosa va nel browser, e cosa no»). Fatto: le misure fuori dalle unità, il
-sotterraneo nel browser da 46 file a 14, gli amici da 14 a 1, le lingue
-gemelle in un file per coppia, le partite giocate di robot, Passo passo,
-Castle Battle, giardino e salto, le verifiche a mano. Resta:
+Dalla rassegna del 21/11 e dai due riassetti del 22 (i numeri in
+[tempi-dei-test.md](tempi-dei-test.md), le regole in [test.md](test.md)).
+Il giro completo fa quattro minuti; resta:
 
-- **Le attese fisse rimaste** (846 scritte, erano 1.435): quelle prima di
-  un tocco sono quasi sempre una finestra cieca, e si aspettano col segno
-  (`data-pronto`, [interfaccia.md](interfaccia.md)). Il segno manca ancora
-  alla domanda d'inglese e di spagnolo, a Passo passo, alla cassetta del
-  Robot e alle pagine del dialogo del sotterraneo (lì si contano 360 ms a
-  pagina).
-- **Partite ancora giocate per arrivare a un punto**: `lingue-sosta`
-  (quattro tappe intere, due minuti), la partita libera del castello e il
-  volo della rotta in `amici-mappe`, il resto di `passo-passo`.
-- **File da spezzare**: `fattoria3d` (1.283 righe, tre minuti: è il più
-  lungo del giro), `genitori` (1.228), e `scarico`, tre minuti di attese
-  che sono la prova stessa.
-- **Regole ancora provate dalla schermata**: `calcolo` e `campagna-mate`
-  (la stessa mappa, da unire), le parti a numeri di `quadro`, `come-va`,
-  `avviso-difficolta`; nel mondo di sopra i nomi della veduta e il conto
-  del giro, che stanno dentro `viste/Mondo3d.vue` e non in una funzione.
-- **Candidati a fondersi**, usciti scrivendo le righe `a parte perché:`
-  (dove la riga dice «potrebbe stare in…»): `salto` in `salto-giochi`;
-  `torri` e `torri-libere` in `torri-figure`; `asteroidi-hangar` e
-  `calcolo` in `campagna-mate`; `costruttore-salvataggio` in
-  `costruttore`; `arena-guida` in `arena`; `giochi-impostazioni`,
-  `impostazioni-barra` e `nascita` attorno a `genitori`; le due `pausa-*`
-  insieme; `sotterraneo-sopra-bacheca` e `sotterraneo-rotta` in
-  `sotterraneo-sopra-missioni`; le due `misure/*-isole` in una.
+- **Le attese fisse rimaste**: 409 scritte (erano 1.435). Quelle prima di
+  un tocco sono quasi sempre una finestra cieca e si aspettano col segno
+  (`data-pronto`, [interfaccia.md](interfaccia.md)), che manca ancora al
+  mercante delle pozioni nel procedimento, al foglio delle macchine della
+  fattoria e alle pagine del dialogo del sotterraneo.
+- **L'attrezzo dei traguardi è in quattro copie** (`aiuto/traguardi.mjs`,
+  `bacheca.mjs`, `passo-passo.mjs`, `sotterraneo-sopra.mjs`): quello
+  comune è `viaITraguardi` in `aiuto/browser.mjs`, e `scegli` lo chiama
+  già. Il velo non ha un `data-…`: si riconosce dall'occhiello.
+- **Partite ancora giocate**: la partita libera del castello e il volo
+  della rotta in `amici-mappe`; nel sotterraneo i gesti e la camminata di
+  trenta celle in `sopra-mondo`, e i tre secondi del pensiero dell'eroe
+  fermo; in Passo passo la corsa fino alla principessa e i viaggi del
+  segnalino sulla mappa.
+- **Regole ancora provate dalla schermata**: le parti a numeri di
+  `quadro`, `come-va`, `avviso-difficolta`; nel mondo di sopra i nomi
+  della veduta e il conto del giro, che stanno dentro `viste/Mondo3d.vue`
+  e non in una funzione.
 - **Unità sopra gli otto secondi** lasciate com'erano: `sotterraneo-roba`
   (i giri dei banchi), `sotterraneo-taratura`, `-mostri-3d`, `-lockstep`.
-- **Le pause** di `pausa-asteroidi` e `pausa-giochi` aspettano ancora a
-  tempo; `domanda` tiene a mano la lista dei prefissi dei quiz per il
-  banco dei grandi (per la partita non più).
-- **`integrazione/amici` parla col servizio pubblicato**, e nel giro
-  completo è scaduto una volta aspettando l'invito (da solo, subito dopo,
-  verde): un rosso suo si rilancia prima di cercare un guasto.
-- **Ballerino**: `lingue-mondi` aspetta otto secondi l'esito di una
-  domanda del libro, e prima della fusione è scaduto una volta.
-- **Gli attrezzi copiati**: `tocca` via CDP resta in 11 file (erano 38);
-  c'è `ditoDi` in `aiuto/browser.mjs`.
+- **Le due `misure/*-isole`** sono lo stesso file con dati diversi.
+- **`pozioni` salta la barra di lettura spostando `performance.now`**
+  nella pagina: regge perché la scena 3D va coi tempi dei fotogrammi. Se
+  la scena cambiasse orologio, il test va riguardato.
+- **Lo spagnolo è una copia intera dell'inglese**, file per file
+  (`src/giochi/spagnolo/`): i test li provano tutti e due per questo, e
+  ogni correzione a uno va rifatta nell'altro.
 - **Trovati giocando coi test, da guardare nel gioco**: cambiando bambino
   e ricaricando entro 350 ms `ultimo-giocatore` non si salva e si riapre
   quello di prima; nella fattoria un tocco sul prato nell'istante dopo la

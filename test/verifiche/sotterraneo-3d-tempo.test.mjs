@@ -11,7 +11,7 @@
    PASSO_RESPIRO: scena3d/sagome-pura.js), e quanto si muove la telecamera dopo un passo: deve venire uguale a 60, 120 e 144 Hz. È la prova di quello che l'utente vedeva su un monitor a 120 Hz.
    La parte pura (le sagome, il passo, l'affondo, la telecamera) la prova unita/sotterraneo-3d-tempo; qui il gioco intero, coi suoi
    due giri: è una misura da guardare.
-   `node test/integrazione/sotterraneo-3d-tempo-misura.test.mjs`
+   `node test/esegui.mjs verifiche/sotterraneo-3d-tempo`
    tempo: 300
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco } from '../aiuto/browser.mjs'

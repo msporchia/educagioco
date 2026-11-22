@@ -4,7 +4,7 @@
 npm test                 il giro di ogni giorno: senza browser — mezzo minuto
 npm run test:unita       lo stesso comando, per esteso
 npm run test:svelto      le unità che non si dichiarano lente — mentre si scrive, mezzo minuto
-npm run test:browser     solo quelli nel browser — Chrome, sette minuti
+npm run test:browser     solo quelli nel browser — Chrome, tre minuti e mezzo
 npm run test:tutto       unità e browser, ricompila prima — prima di pubblicare
 npm run test:misure      l'equilibrio dei giochi — solo a chi l'ha toccato, fino a 25 minuti
 
@@ -24,51 +24,32 @@ fila vale più del novanta per cento dell'intera suite (misurato in
 [`docs/core/tempi-dei-test.md`](../docs/core/tempi-dei-test.md)) — quindi si chiede
 solo per «estrema necessità»: si è appena toccata *quella* schermata e si
 vuole esserne sicuri prima di committare. In quel caso il modo giusto non
-è `npm run test:browser` (tutti insieme, sette minuti anche otto
+è `npm run test:browser` (tutti insieme, tre minuti e mezzo anche dieci
 alla volta) ma **un file solo**: `node test/esegui.mjs integrazione/pozioni`.
 I tempi veri e le regole del carico stanno in
 [`docs/core/tempi-dei-test.md`](../docs/core/tempi-dei-test.md). `npm run test:tutto` è il giro completo: prima di
 pubblicare, o quando si vuole la certezza di prima che questo file
 esistesse.
 
-## Otto alla volta
+## Tanti alla volta
 
-I test girano **insieme**, otto per volta — o la metà dei processori, su
-una macchina che ne ha meno di sedici, e mai più di uno per ogni giga di
-memoria libera alla partenza: se un'altra sessione ha già la sua
-chiusura in corso, la seconda parte con meno corsie e lo scrive invece
-di mandare la macchina in swap. Ognuno era già un processo a sé, col suo
-Chrome e il suo archivio vuoto, quindi nessun test deve saperlo: è solo
-il lanciatore che non aspetta più la fine di uno per far partire il
-successivo. E conviene molto più di quanto sembri, perché un test di
-integrazione passa quasi tutta la sua vita **fermo** — aspetta
-un'animazione, un salvataggio a scatto ritardato, un cliente che arriva
-— e in fila quelle attese si sommano: la suite intera costa più di
-dieci minuti, otto alla volta uno e mezzo, e la CPU resta libera per due
-terzi.
+I test girano **insieme**: la metà dei processori, non più di uno per
+giga di memoria libera, e mai a macchina piena (un test parte solo con un
+posto fra quelli di tutti i lanciatori accesi e sotto i tre quarti dei
+processori occupati). Ognuno è un processo a sé, col suo Chrome e il suo
+archivio vuoto, quindi nessun test deve saperlo. Il perché dei numeri sta
+in [`docs/core/tempi-dei-test.md`](../docs/core/tempi-dei-test.md).
 
-Tre cose cambiano a vederlo girare:
+- **L'uscita arriva a blocchi**: quella di ogni test si stampa intera
+  quando finisce; il riepilogo in fondo torna in ordine alfabetico.
+- **I lunghi partono per primi**: il lanciatore si ricorda quanto ci ha
+  messo ogni test (`node_modules/.cache/educagioco/tempi-dei-test.json`).
+- **Il giro costa la somma dei file divisa per le corsie**, e mai meno del
+  file più lungo: un test che si allunga si sente subito sul totale.
 
-- **l'uscita arriva a blocchi.** Otto test che scrivono sullo stesso
-  terminale sarebbero un'insalata: quella di ognuno si tiene da parte e
-  si stampa intera quando il test finisce, nell'ordine in cui finiscono.
-  Il riepilogo in fondo torna in ordine alfabetico.
-- **i lunghi partono per primi.** Il lanciatore si ricorda quanto ci ha
-  messo ogni test (`node_modules/.cache/educagioco/tempi-dei-test.json`,
-  fuori da git) e la volta dopo li mette in fila da lì: un test da un
-  minuto partito per ultimo allungherebbe il giro di un minuto intero.
-- **il giro non finisce prima del suo test più lungo.** Oggi sono i
-  file di integrazione attorno al minuto (`torri`, `genitori`,
-  `fattoria3d`), e fra le misure `misure/survivors`, che da solo valeva
-  quanto tutte le unità insieme. Un test che si allunga
-  lì si sente subito sul totale, ed è il primo posto dove guardare: la
-  fattoria era a due minuti, e metà li passava a cercare la bancarella
-  partendo dall'angolo sbagliato.
-
-`--alla-volta=N` sceglie quanti. `--alla-volta=1` è il lanciatore di
-prima, con l'uscita dal vivo: serve quando un test si comporta male solo
-in compagnia, per sapere se è lui o la folla. Un file solo (`node
-test/esegui.mjs pozioni`) scorre sempre dal vivo.
+`--alla-volta=N` sceglie quanti. `--alla-volta=1` è il lanciatore in fila,
+con l'uscita dal vivo: serve quando un test si comporta male solo in
+compagnia. Un file solo scorre sempre dal vivo.
 
 ## I lenti si dichiarano, non si scoprono
 
@@ -188,7 +169,7 @@ Pages (`Cache-Control: max-age=600`, ETag e 304), mette in linea una versione
 nuova senza ricompilare (`pubblica({ id, etichetta })`) e fa a comando i giorni
 storti: `lento`, `rotto`, `muto`, `swFermo`, `goccia`; con `cartella` il sito
 spezzato (`dist-sito/`) e i suoi file: `calmo`, `appeso`, `sparito`. Tiene il registro di
-ogni richiesta (`richieste`), con chi l'ha fatta e se era una rivalutazione.
+ogni richiesta (`richieste`), con chi l'ha fatta, se era una rivalutazione e se la risposta è partita tutta (`finita`).
 Si apre in un **`apriTelefono()`** (`aiuto/browser.mjs`) e non in un
 `apriBrowser()`: un profilo con la cache su disco, perché l'incognito tiene la
 cache in memoria, la pagina da otto megabyte non ci sta, e il guasto da rifare

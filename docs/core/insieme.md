@@ -148,7 +148,7 @@ costano poco. Una via più semplice (solo canale e incontro) si fa quando arriva
   `ferma` tutto in coda e poi in blocco), compresi dieci minuti con una trentina di guasti a caso: arrivano tutti i 6000 messaggi.
 - `unita/arena-sfida`: il lockstep col motore di Castle Battle e partite intere su una rete cattiva (`test/aiuto/sfida-finta.mjs`,
   che fa giocare due bambini finti di un gioco qualunque: quelli di Castle Battle in `test/aiuto/sfide/arena.mjs`).
-- `integrazione/arena-sfida`: due browser veri, ognuno col suo **proxy cattivo** (`test/aiuto/proxy-cattivo.mjs`, gli stessi guasti
+- `verifiche/arena-sfida`: due browser veri, ognuno col suo **proxy cattivo** (`test/aiuto/proxy-cattivo.mjs`, gli stessi guasti
   a livello di TCP) davanti a `wrangler dev`; senza il servizio in locale salta.
 - `servizio/inoltro/prova.mjs`: le regole del tavolo contro il servizio vero (in locale o pubblicato).
 - I semi rendono tutto rifacibile: stessa partita, stessi guasti.

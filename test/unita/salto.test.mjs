@@ -4,7 +4,7 @@
    Un salto dà una domanda per giusta senza che nessuno abbia risposto:
    paga come una giusta (per simulare l'economia di un bambino che gioca),
    ma non deve lasciare traccia di quello che il gioco chiede ai bambini:
-   niente ripasso (né giusta né sbagliata), niente contatori. Il browser prova lo schermo (`integrazione/salto`); qui si
+   niente ripasso (né giusta né sbagliata), niente contatori. Il browser prova lo schermo (`integrazione/salto-giochi`); qui si
    prova ciò che si può provare senza: i motori, uno per uno, dove il
    salto passa per un metodo suo. Il guasto da non rifare è il salto che
    «funziona» perché si limita a chiamare la risposta giusta — e allora

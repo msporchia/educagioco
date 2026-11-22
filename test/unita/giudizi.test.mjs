@@ -14,7 +14,7 @@
    Quindi la misura si prende qui, su righe piene come quelle vere.
 
    I tre tastini e l'interruttore non si provano qui: sono schermo, e
-   stanno in `test/integrazione/genitori.test.mjs`.
+   stanno in `test/integrazione/genitori-codice.test.mjs`.
    ═══════════════════════════════════════════════════════════════════ */
 import { aggiungi, riga, pacco, TETTO_INVIO, verdettoDi, VERDETTI }
   from '../../src/store/giudizi.js'

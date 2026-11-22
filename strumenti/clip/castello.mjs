@@ -30,7 +30,7 @@
    I gesti che si vedono sono tocchi veri, perché il cerchietto dei tocchi
    (`mostraITocchi` in `scatti.mjs`) li segni: la piazzola si tocca sul
    canvas nel punto che dà `T.versoLoSchermo` (lo stesso conto di
-   `integrazione/torri`), la torre su `[data-torre]`, le cifre sulla
+   `integrazione/torri-figure`), la torre su `[data-torre]`, le cifre sulla
    `.tastiera`. Dal gancio `window.__td` si leggono solo i fatti e si fanno
    le cose che nel filmato non sono un tocco (`inizia`, le torri di
    partenza, `chiamaOnda`, `velocita`): se uno di questi cambia forma, è

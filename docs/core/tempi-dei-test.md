@@ -6,19 +6,20 @@ vengono. Come si lanciano sta in [test.md](test.md).
 ## I numeri
 
 Misurati il 22/11/2026 su un i5-13600KF (20 thread, 30 GB, una RTX 5060):
-307 unità, 90 file nel browser, 14 misure e 6 verifiche a richiesta.
+311 unità e 76 file nel browser nel giro; 14 misure e 9 verifiche a
+richiesta.
 
 | | orologio | CPU spesa | il 21/11, prima |
 |---|---|---|---|
-| `npm test` (307 unità) | 32 s | ~4 min | 1 min 54 s, 12 min |
-| `npm run test:browser` (90 file) | 6 min 50 s | 28 min | 142 file: 2 ore e mezza–4 in fila |
-| `npm run test:tutto` | ~8 min | ~35 min | |
+| `npm test` (311 unità) | ~30 s | ~4 min | 1 min 54 s, 12 min |
+| `npm run test:browser` (76 file) | ~3 min e mezzo | ~27 min | 142 file: 2 ore e mezza–4 in fila |
+| `npm run test:tutto`, build comprese | 4 min 06 s | 31 min e mezzo | circa un'ora a macchina piena |
 
-Il browser del 21/11, già con la scheda video e 142 file, faceva 11 min 19 s
-e 49 minuti di CPU: il resto l'hanno tolto le fusioni (i secondi sommati
-dei file sono scesi da 5.165 a 3.170, i controlli da 4.450 a 4.261). Con
-la memoria occupata le corsie calano (una per giga libero) e i tempi
-salgono: le unità a cinque corsie fanno 59 s.
+I secondi sommati dei file nel browser: 5.165 col primo giro a scheda
+video e 142 file, 3.170 dopo le fusioni per preparazione, 2.002 dopo aver
+tolto le partite giocate e le attese a orologio vero; i controlli da
+4.450 a 4.233. Con la memoria occupata le corsie calano (una per giga
+libero) e i tempi salgono.
 
 - **Un test 3D in software teneva otto processori.** Chrome senza schermo
   disegna WebGL col processore: un file della discesa del sotterraneo, da
@@ -26,9 +27,10 @@ salgono: le unità a cinque corsie fanno 59 s.
   sessantaquattro su venti: il carico saliva a 45–50, le attese dei test
   scadevano e il giro tornava rosso. Con la scheda video (`--enable-gpu`,
   di serie in `aiuto/browser.mjs`) lo stesso file fa 22 s e 23 di CPU.
-- **I più lunghi del giro**: `fattoria3d` e `scarico` (tre minuti),
-  `pozioni` (2 min 20), `sotterraneo-bottega`, `lingue-mondi` e
-  `lingue-sosta` (due minuti). Il giro non scende sotto il più lungo.
+- **I più lunghi del giro** stanno fra 50 e 70 secondi
+  (`sotterraneo-bottega`, `passo-passo`, `passo-passo-mappa`, `fattoria3d`,
+  i mondi di sopra del sotterraneo, `amici-mappe`, `pozioni`): nessuno
+  fa più da pavimento, e il giro costa la somma divisa per le corsie.
 - **Le partite finte stanno nelle misure**: `unita/sotterraneo` e
   `unita/sotterraneo-roba` ne giocavano un centinaio a ogni commit (66 e
   81 s, ora 4 e 10–15). `misure/sotterraneo` ne gioca ~12.500 e sta a
@@ -62,6 +64,21 @@ salgono: le unità a cinque corsie fanno 59 s.
   foglio contato mentre si chiudeva). Si aspetta la condizione, non si
   guarda subito. `SENZA_SCHEDA=1` rimette il disegno in software, per
   sapere se un rosso dipende da lei.
+- **Il tempo del gioco non si aspetta a orologio vero.** Un esito che
+  resta sette secondi, il silenzio di venti prima di riprovare uno
+  scarico, i cinque di una pausa: la pagina ha un orologio finto
+  (`page.clock`) e il test lo porta avanti di quanto il gioco dice.
+  `scarico` è sceso così da 175 s a 33, le lingue da 281 a 74. Dove il
+  tempo è una partita (una ricetta, un livello, una tappa) non si gioca
+  tutta: ogni gesto col dito una volta, il resto coi ganci delle prove o
+  seminando lo stato già arrivato.
+- **I cartelli dei traguardi coprono la home 3,2 s l'uno**, in fila, e un
+  profilo seminato già avanti ne fa scattare due o tre: un clic lì sotto
+  aspettava che finissero da soli, da 4 a 16 secondi per file. `scegli`
+  li chiude toccandoli (`viaITraguardi`), come fa un bambino.
+- **Un attributo chiesto a una cosa che non c'è aspetta trenta secondi**
+  (`getAttribute`, `innerText`, `click` di playwright su un selettore
+  vuoto): prima si guarda che ci sia, o si dà un tetto corto.
 - **Allo scadere del tempo muore il gruppo, non il test**: il lanciatore
   fa di ogni test il capo di un gruppo di processi. Fermando solo lui i
   quattro processi di una misura finivano il compito da orfani.

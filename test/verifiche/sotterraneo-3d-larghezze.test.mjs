@@ -10,7 +10,7 @@
    stringendo la finestra la tela la segue. Poi lo scontro da vicino a due telefoni: il pixel dello sprite su un numero intero di
    pixel del disegno (mai più di CAMERA.pixelMassimo) e tutti i combattenti in vista sopra il pannello. Costa una scena accesa per
    larghezza e la telecamera che arriva morbida: non sta nel giro dei test (era una parte di integrazione/sotterraneo-discesa).
-   `node test/integrazione/sotterraneo-3d-larghezze-misura.test.mjs`
+   `node test/esegui.mjs verifiche/sotterraneo-3d-larghezze`
    tempo: 200
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, ditoDi } from '../aiuto/browser.mjs'

@@ -345,7 +345,19 @@ export async function scegliAttacco(page) {
 
 /* Apre un gioco dalla home: la copertina si porta in mezzo dall'indice, e
    solo quella in mezzo apre (docs/core/home.md). */
+/* I cartelli dei traguardi (components/Traguardo.vue) coprono la home 3,2 s l'uno, in fila: un profilo seminato già avanti ne
+   fa scattare due o tre, e un clic sulla home aspettava che finissero da soli (da 4 a 16 secondi per file). Un bambino li
+   tocca e se ne vanno: il test fa lo stesso. Il velo non ha un `data-…`: si riconosce dall'occhiello. */
+export async function viaITraguardi(page) {
+  const velo = page.locator('.velo:has(.occhiello)')
+  for (let i = 0; i < 6 && await velo.count(); i++) {
+    await velo.first().click({ timeout: 2000 }).catch(() => {})
+    await attendi(page, 80)
+  }
+}
+
 export async function scegli(page, chiave) {
+  await viaITraguardi(page)
   await page.click(`[data-indice="${chiave}"]`)
   await page.click(`.carta.gioco.davanti[data-gioco="${chiave}"]`)
 }

@@ -2,7 +2,7 @@
    IL CONTAFOTOGRAMMI
 
    perché: il contafotogrammi: spento di partenza, si accende dagli interruttori dei grandi, fa una misura con due tocchi, la tiene e la ritrova dopo una ricarica
-   a parte perché: serve solo a guardare il telefono vecchio senza cavi; passa dalle impostazioni dei grandi come `impostazioni-barra`, ma prova una pastiglia sola e non c'entra con la barra
+   a parte perché: serve solo a guardare il telefono vecchio senza cavi; passa dalle impostazioni dei grandi come `genitori`, ma prova una pastiglia sola e non c'entra con la barra
    Spento di partenza (nessuna pastiglia in giro), si accende dagli
    interruttori dei grandi, fa una misura con due tocchi, la tiene e
    la ritrova dopo una ricarica: la ragione per cui esiste è guardare

@@ -1,5 +1,5 @@
 /* perché: ogni mappa di gioco mostra gli amici dalla loro bacheca (pallino e nome sulla tappa, chi è da raggiungere, i record della sfida senza fine), anche senza servizio
-   a parte perché: `amici` prova il giro dei due telefoni col servizio; qui gli amici sono già salvati, il servizio non risponde e si guarda solo come ogni gioco li mette sulla propria mappa
+   a parte perché: `verifiche/amici` prova il giro dei due telefoni col servizio; qui gli amici sono già salvati, il servizio non risponde e si guarda solo come ogni gioco li mette sulla propria mappa
    Gli amici sulle mappe dei giochi, dalla loro bacheca (docs/core/amici-nei-giochi.md): sulla tappa di ognuno il pallino e
    il nome, in cima chi è da raggiungere, sulla sfida senza fine i loro record dal più alto e chi c'è senza record; un amico
    senza nome non si vede. Gli amici sono già salvati sul telefono e il servizio non risponde: niente deve rompersi. Le regole

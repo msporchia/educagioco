@@ -59,7 +59,7 @@ Cosa vede il bambino, come lo mostra ogni gioco e cosa manca: [amici-nei-giochi.
 Le regole stanno in `servizio/inoltro/src/bacheca.js` (pure), il Durable Object `Bacheca` in `index.js`.
 
 Nei test: `unita/amici-servizio` (le regole della bacheca), `unita/amici-bacheca` (l'istantanea, le dichiarazioni, quella
-dell'amico, i giorni, le frasi, quando si scrive e si legge, con un servizio finto), `integrazione/amici` (due telefoni: uno va
+dell'amico, i giorni, le frasi, quando si scrive e si legge, con un servizio finto), `verifiche/amici` (due telefoni: uno va
 avanti negli asteroidi, l'altro lo vede sulla rotta passando dal servizio; salta senza servizio), `servizio/inoltro/prova.mjs`
 (contro il servizio vero). La prova del servizio finisce bloccando l'indirizzo per un minuto (dieci codici sbagliati):
-`integrazione/amici` lanciata subito dopo non riesce ad abbinare. Senza `SERVIZIO=` la prova a due telefoni usa quello pubblicato.
+`verifiche/amici` lanciata subito dopo non riesce ad abbinare. Senza `SERVIZIO=` la prova a due telefoni usa quello pubblicato.

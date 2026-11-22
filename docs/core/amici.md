@@ -102,7 +102,7 @@ Regola: **gli amici sono un di più e non danno mai un errore**. Offline, o con 
 - una lista già salvata si vede lo stesso (nomi in grigio); l'unica cosa che manca è «invita», che dice «serve internet» solo se la
   tocchi;
 - l'app aperta dal file con doppio click, senza rete, si comporta come sempre: nessuna richiesta fallita nella console che si veda.
-Un test lo controlla (`integrazione/amici`: pagina senza rete, nessun cartello, nessun errore in console, lista dei nomi salvati).
+Un test lo controlla (`verifiche/amici`: pagina senza rete, nessun cartello, nessun errore in console, lista dei nomi salvati).
 
 ## Il servizio (`servizio/inoltro`): una stanza per amicizia, non sa i giochi
 
@@ -187,7 +187,7 @@ chi è online, gli inviti), `messaggi.js`, `giochi.js` (i giochi che ricevono in
 `CartaAmici.vue` (i grandi), `AggiungiAmico.vue` (il codice dalla lista, dietro il codice dei genitori), e `amici/abbina.js` (crea e
 riscatta il codice, per tutte e due); la lista nella sala comune (`src/insieme/SalaSfida.vue`) e l'invito in `src/insieme/sfida.js` (`invita`, `daInvito`).
 Test: `unita/amici-servizio` (le regole del servizio), `unita/amici` (archivio, messaggi, `Ponte`, codici, motore, con collegamenti
-finti), `integrazione/amici` (due pagine e il servizio: `SERVIZIO=http://localhost:8787` con `wrangler dev` in `servizio/inoltro`, o
+finti), `verifiche/amici` (due pagine e il servizio: `SERVIZIO=http://localhost:8787` con `wrangler dev` in `servizio/inoltro`, o
 quello pubblicato; senza servizio **salta**), e `servizio/inoltro/prova.mjs` (le regole contro il servizio vero, in locale o online).
 Il banco (`test/aiuto/browser.mjs`) parte con la domanda già risposta (spento); `amiciDecisi: false` rimette l'avviso nella posta.
 **La riga in home compare solo con almeno un amico** (21/10): acceso ma senza amici non c'è niente da mostrare, e «ancora nessuno» al bambino sarebbe solo triste. **In cima solo se qualcuno è online**: offline o con nessuno online scende sopra «Impostazioni», perché lì in cima prendeva il posto dei giochi per dire che non c'è niente da fare. Bersagli: `[data-azione="amici"]` (la riga in home), `[data-amici]` e `[data-amico]` (la lista), `[data-amico-gioca]` e

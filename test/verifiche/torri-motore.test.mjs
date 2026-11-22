@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL CASTELLO NEL BROWSER: LE MISURE DA GUARDARE
    perché: le misure del castello da guardare, giocando la prima tappa col motore della pagina (`window.__td`) a telefono e a schermo grande: attese, velocità ×3, potenziamenti, penale del conto sbagliato, il dito sul campo
-   a parte perché: non è un test: stampa e fallisce solo per un errore in console; i controlli veri (pausa, barra) stanno in integrazione/torri
+   a parte perché: non è un test: stampa e fallisce solo per un errore in console; i controlli veri (pausa, barra) stanno in integrazione/torri-figure
 
    Non è un test: gioca la prima tappa col motore della pagina
    (`window.__td`) al telefono e allo schermo grande e **stampa** quello
@@ -10,7 +10,7 @@
    sbagliato, il dito che trascina sul campo, i segni delle operazioni,
    il campo e il foglio dentro lo schermo — perché lo guardi chi tocca il
    castello. I controlli veri (la pausa, la barra) stanno in
-   `integrazione/torri`. Fallisce solo per un errore in console.
+   `integrazione/torri-figure`. Fallisce solo per un errore in console.
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, attendi, scatto, SCATTI_ACCESI, scegli } from '../aiuto/browser.mjs'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'

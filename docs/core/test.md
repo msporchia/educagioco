@@ -12,7 +12,7 @@ ripete.
 | mentre si scrive | `npm run test:svelto` | ~30 s |
 | a ogni commit | `npm test` (= `npm run test:unita`), niente browser né build | ~30 s |
 | toccata una schermata | `node test/esegui.mjs integrazione/<nome>`, un file solo | secondi |
-| prima del push | `npm run test:tutto`: unità e browser | ~8 min |
+| prima del push | `npm run test:tutto`: unità e browser | ~4 min |
 | toccata una parte che ha una verifica | `node test/esegui.mjs verifiche/<nome>` | minuti |
 | cambiato sul serio il bilanciamento | `npm run test:misure`, o `node test/esegui.mjs misure/<nome>` | fino a 25 min |
 

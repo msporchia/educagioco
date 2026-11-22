@@ -9,7 +9,7 @@
    deve finire sopra la loro punta. È successo due volte (16 ottobre su un telefono, poi su un monitor, dove una stima in CSS
    reggeva ai 390 px e non ai 960): da allora l'altezza la misura BarraDiSotto.vue, e qui si misura il risultato col tema legno a
    sei larghezze e pixel ratio. A 390 px la stessa misura sta nel giro, in integrazione/sotterraneo-scontro-eroe.
-   `node test/esegui.mjs integrazione/sotterraneo-sopra-barra-misura`
+   `node test/esegui.mjs verifiche/sotterraneo-sopra-barra`
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, attendi, scatto } from '../aiuto/browser.mjs'
 import { controlla, riassunto, blocco } from '../aiuto/verifica.mjs'

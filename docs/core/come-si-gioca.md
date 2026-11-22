@@ -140,7 +140,7 @@ Da fare dopo, non a scuola: Codice Segreto, Conta, Prima e dopo, il giardino, la
 
 `[data-azione="aiuto"]` (il `?`, con `come` accende e spegne la guida), `[data-guida-riga]`
 (`="fine"` sulla riga finale), `[data-indicato]`, `[data-guida-spegni]` (la ✕). Castle Battle:
-`unita/arena-guida` (i passi dal quadro), `integrazione/arena-guida` (il giro col dito a casa);
+`unita/arena-guida` (i passi dal quadro), `integrazione/arena` (il giro col dito a casa);
 la scuola in `integrazione/scuola`. Asteroidi: `[data-domanda-nave]`, `unita/asteroidi-guida`,
 `integrazione/asteroidi-guida`. Gli altri giochi: `unita/guide-richiamate` (i passi dal quadro), e a scuola
 `integrazione/scuola` (`guidaDaSe`: parte da sé, la ✕, il `?`, per ogni gioco). Il 📖: `[data-guida-regole]`.
