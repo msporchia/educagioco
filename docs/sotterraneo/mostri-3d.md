@@ -125,7 +125,7 @@ Misurato con SwiftShader (`&dpr=1`, 390×844, le cantine, `luce=stanza`; i ms no
 | scontro con 3 mostri (6 modelli in vista) | 257 | 39k | — |
 
 Un mostro costa da 8 (il fantasma) a 141 (il drago grande) chiamate, in media una cinquantina; dal 22/10 la saldatura passa oltre
-i perni fermi (uno scheletro ~80 → ~45) e anche l'eroe 3D si salda, con le sue pose ([prestazioni-3d.md](prestazioni-3d.md)). Per questo `integrazione/sotterraneo-3d` misura i
+i perni fermi (uno scheletro ~80 → ~45) e anche l'eroe 3D si salda, con le sue pose ([prestazioni-3d.md](prestazioni-3d.md)). Per questo `integrazione/sotterraneo-discesa` misura i
 paesaggi con `&spegni=mostri3d,eroe` e lo scontro fino a 260 chiamate (con gli sprite stava sotto 140). `&spegni=mostri3d:6` ne tiene sei,
 `&spegni=mostri3d` nessuno, `&spegni=effetti3d` toglie gli effetti 3D. Le copie pesano nel file unico (eroi, mostri, effetti).
 
@@ -139,7 +139,7 @@ paesaggi con `&spegni=mostri3d,eroe` e lo scontro fino a 260 chiamate (con gli s
 
 Nei test: `unita/sotterraneo-mostri-3d` (il registro copre specie e grossi, nessuna chiave orfana, ogni modello si costruisce,
 si anima, attacca e si salda in Node; ogni effetto, segno, proiettile e stato del gioco ha il 3D; ogni modello è nel catalogo 3D;
-le copie uguali ai prototipi), `integrazione/sotterraneo-3d-mostri` (lo scontro coi modelli, la palla di fuoco e la cura 3D, gli
+le copie uguali ai prototipi), `integrazione/sotterraneo-scontro` (lo scontro coi modelli, la palla di fuoco e la cura 3D, gli
 attacchi senza errori, `&spegni=mostri3d`). Per le prove: `window.__sotterraneo3d.prova(chiave, i, tinta)` fa usare all'eroe l'effetto
 `chiave` sul mostro `i` dello scontro, `prova('mostro', i)` fa attaccare il mostro `i` (solo il disegno, i numeri non cambiano);
 `grafica()` dice `mostri3d` (in vista), `modelli3d` (costruiti), `effetti3d` (attivi).

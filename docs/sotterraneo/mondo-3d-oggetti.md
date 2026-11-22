@@ -96,7 +96,7 @@ rivista il teschio è già spento (nuovo giro: i signori tornano).
 
 Nei test: `unita/sotterraneo-tane-segno` (ogni tana ha il suo segno, sempre lo stesso, mai su strada, acqua, ingresso, lotto, nel suo
 quadrato, la pianta invariata, un segno per famiglia, la macchia, i signori dove il segno li aspetta, il fumo che si spegne col signore)
-e `integrazione/sotterraneo-mondo-tana` (col dito: nessuna tana nella veduta di chi parte, il costo davanti a una, il teschio dopo
+e `integrazione/sotterraneo-sopra-mondo` (col dito: nessuna tana nella veduta di chi parte, il costo davanti a una, il teschio dopo
 averla vista, grigio col signore morto).
 
 Nei test: `unita/sotterraneo-mondo-props` (gli oggetti del villaggio: niente prima della zona, sempre uguali, mai su strade, posti o

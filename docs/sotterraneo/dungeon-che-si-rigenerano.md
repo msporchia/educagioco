@@ -138,6 +138,6 @@ Nei test: `unita/sotterraneo-rigenera` (le tredici chiavi e l'ordine, i sei con 
 (eroe, chiave, rifatti) la stessa forma e lo stesso mazzo, uno in più un'altra; nessuna specie fuori dalla zona in dodici volte;
 ripulito sì e no, una discesa vera giocata dal banco; portale, lasciar perdere e svenire non alzano `rifatti`; la sosta per chiave;
 la prima ripulitura della cripta dà storia e stelle, la seconda no, il cerchio non tocca tappa né stelle; i salvataggi di oggi),
-`integrazione/sotterraneo-rigenera` (col dito: il cerchio col seme della volta 0, lasciato perdere uguale, ripulito toccando «esco
+`integrazione/sotterraneo-porte-scale` (col dito: il cerchio col seme della volta 0, lasciato perdere uguale, ripulito toccando «esco
 dal sotterraneo» e «alle discese» — prima il velo del traguardo — il mondo con `rifatti` 1, la storia ferma, rientrando il seme, gli
 abitanti e il nome della volta 1), `unita/sotterraneo-rarita` (le figure dei sei grossi).

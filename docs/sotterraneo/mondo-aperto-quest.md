@@ -225,6 +225,6 @@ tana con la faccia del loro caporale.
 
 ### Nei test
 
-`unita/sotterraneo-quest-modelli` (fatto: id stabili e unici, la stessa bacheca per (eroe, giro, città), le gemme nella banda, nessun modello impossibile, le cacce sotto la mediana, il mostro col nome battibile dai quattro eroi, lo stato e il salvataggio, i tre in mano, la pulizia, la regola del giro, l'aggancio) e `integrazione/sotterraneo-bacheca` (col dito vero: il «?» d'oro, il fumetto, la consegna e le gemme, un foglio nuovo, il diario, chi si era perso, la X con la domanda, il giro). Restano del piano le quest scritte a mano nel mondo: `unita/sotterraneo-missioni` allargato (ogni quest nuova ha un dove che esiste nel
+`unita/sotterraneo-quest-modelli` (fatto: id stabili e unici, la stessa bacheca per (eroe, giro, città), le gemme nella banda, nessun modello impossibile, le cacce sotto la mediana, il mostro col nome battibile dai quattro eroi, lo stato e il salvataggio, i tre in mano, la pulizia, la regola del giro, l'aggancio) e `integrazione/sotterraneo-sopra-bacheca` (col dito vero: il «?» d'oro, il fumetto, la consegna e le gemme, un foglio nuovo, il diario, chi si era perso, la X con la domanda, il giro). Restano del piano le quest scritte a mano nel mondo: `unita/sotterraneo-missioni` allargato (ogni quest nuova ha un dove che esiste nel
 mondo, i requisiti si sbloccano nell'ordine della storia, un seguito sta più lontano dal centro del padre o nella stessa città) e
-`integrazione/sotterraneo-missioni` adattato alla tela (il «!» su un personaggio, il cerchio nella veduta, la consegna in un'altra città).
+`integrazione/sotterraneo-sopra-missioni` adattato alla tela (il «!» su un personaggio, il cerchio nella veduta, la consegna in un'altra città).

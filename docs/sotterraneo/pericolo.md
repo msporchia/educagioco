@@ -85,7 +85,7 @@ Nei test: `[data-ringhio]` (il riquadro; `data-perche` `duro|poca|ultimo`,
 `[data-azione="bevi-scontro|scappa"]` e `[data-azione="attacco"]` (che vale «continuo»).
 `unita/sotterraneo-pericolo` (la soglia, una volta per scontro, il secondo
 stop, mai sopra una domanda né quando il mostro cade, le tre scelte, il banco)
-e `integrazione/sotterraneo-pericolo` (col dito, nella scalinata con un mago
+e `integrazione/sotterraneo-scontro-eroe` (col dito, nella scalinata con un mago
 e sei mostri leggendari addosso, `#sotterraneo=branco&mostri=6&grado=leggendario`: lo stop già al primo
 turno, al posto della domanda, il tocco cieco, «continuo», il secondo stop dopo
 i colpi raccontati, «bevi» che consuma una pozione senza costare il turno: il numero verde che sale, la vita

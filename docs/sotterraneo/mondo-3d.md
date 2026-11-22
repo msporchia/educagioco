@@ -201,7 +201,7 @@ il banco della tela ferma (20 disegni) e il tempo di una zona.
 Nei test: `unita/sotterraneo-mondo-3d` (i pezzi su 504×300, le zone caricate e i pezzi che le aspettano, i carichi che rifanno un
 pezzo, le celle non caricate dalla base, le istanze nel loro pezzo, la nebbia, il dito, i ponti dei confini, il cartello),
 `unita/sotterraneo-mondo-props` e `unita/sotterraneo-mondo-aperto-props` ([mondo-3d-oggetti.md](mondo-3d-oggetti.md)),
-`unita/sotterraneo-icone-mondo`, `unita/catalogo-3d-sotterraneo`, `integrazione/sotterraneo-mondo` (col dito vero: dalla partenza
+`unita/sotterraneo-icone-mondo`, `unita/catalogo-3d-sotterraneo`, `integrazione/sotterraneo-sopra-mondo` (col dito vero: dalla partenza
 tutti quelli del villaggio a schermo e ognuno toccato lui, il costo, niente grate, i quattordici ingressi con la zona, le otto pietre;
 camminare, la ragazza, la bottega del fabbro, la pietra sbagliata e giusta, la veduta e il tocco lì, scendere nella cripta e risalire
 davanti, la nebbia salvata con la firma, il gemello nel villaggio, il capitano col «!» nel villaggio e nessuna fontana; un salto nella
@@ -213,7 +213,7 @@ palude che carica le sue zone, il cartello della zona, il costo e il tempo di un
 `cartello`, `bacheca`, `fontana`, `terre` o la chiave del dungeon) con `[data-viaggio]`, `[data-nessuna-meta]`, `[data-bacheca-vuota]`,
 `[data-terre-dice]` (`data-aperta`), `[data-fontana-dice]` (`data-serve`) e il tasto `[data-azione="bevi"]`,
 `[data-richiamo-di="fontana"]`, `[data-cura-fiocco][data-risorsa="tutto"]`, `[data-segno="nuova"]` sul capitano; la bacheca
-(`integrazione/sotterraneo-bacheca`): `[data-bacheca]` con `data-segno`, `[data-taglia]` con `data-stato`, `[data-taglia-prendi]`,
+(`integrazione/sotterraneo-sopra-bacheca`): `[data-bacheca]` con `data-segno`, `[data-taglia]` con `data-stato`, `[data-taglia-prendi]`,
 `[data-taglia-consegna]`, `[data-taglie-piene]`, `[data-viandante]`, `[data-scavo]`; `[data-annuncio-zona]` (`data-zona`), `[data-pietra-domanda]`,
 `[data-scavo-domanda]`, `[data-veduta]` coi `[data-nome-posto]` (`zona:<chiave>`, `regione:<chiave>`, `citta:villaggio`, …),
 `[data-mondo-attesa]`; `window.__mondo3d` (`vai(chiave)` porta l'eroe davanti a un bersaglio e ne carica la zona, `porta(x, z)`, `io`,

@@ -101,7 +101,7 @@ e poi di E; `Mondo3d.vue` e `scena3d/mondo/indice.js` sono di D e poi di E.
 
 - **File suoi**: nuovi `dati/dungeon-del-mondo.js` e `motore/rigenera.js`; `dati/grossi.js`, `dati/pezzi.js` (i pezzi dei sei boss,
   dalle figure dei fogli), `dati/zone.js` (i volti dei sei), `motore/sosta.js`, `motore/storia.js`, `Gioco.vue`; test nuovi
-  `unita/sotterraneo-rigenera` e una prova in `integrazione/sotterraneo-mondo` (ripulire e ritrovare un'altra forma) concordata con D.
+  `unita/sotterraneo-rigenera` e una prova in `integrazione/sotterraneo-sopra-mondo` (ripulire e ritrovare un'altra forma) concordata con D.
 - **Il contratto**: `tappaDelMondo(chiave, { eroe, rifatti, terra, livello })` (la tappa, sette e sei nuovi), `semeDelDungeon(eroe,
   chiave, rifatti, terra)`, `ripulito(esito)`; i sei boss in `GROSSI` con `figura` del catalogo.
 - **Test**: lo stesso (eroe, chiave, rifatti) la stessa forma e lo stesso mazzo, un `rifatti` in più un'altra; uscire col portale,
@@ -122,7 +122,7 @@ e poi di E; `Mondo3d.vue` e `scena3d/mondo/indice.js` sono di D e poi di E.
 
 - **File suoi**: `scena3d/mondo/*` (`indice.js` compreso), `viste/Mondo3d.vue`, `viste/FumettoMondo.vue`, `strumenti/icone-mondo.mjs`
   e il generato `dati/icone-mondo.js`, `dati/terra.js` (`iconaDi`), i test `unita/sotterraneo-mondo-3d`, `-mondo-props`,
-  `-mondo-aperto-props`, `-icone-mondo`, `integrazione/sotterraneo-mondo`, `-bacheca`, `-mostri-sopra`, `-rotta`, `test/aiuto/browser.mjs`
+  `-mondo-aperto-props`, `-icone-mondo`, `integrazione/sotterraneo-sopra-mondo`, `-sopra-bacheca`, `-sopra-mostri`, `-rotta`, `test/aiuto/browser.mjs`
   per `scendiNelMondo` (le pietre ora `pietra:zona:…`), `docs/sotterraneo/mondo-3d.md`.
 - **Cosa fa**: il villaggio e gli avamposti dalla pianta, le grate via, i sei monumenti e la porta delle terre, la pietra di zona, il
   lontano a due celle, la veduta coi nomi delle zone, l'annuncio, la telecamera nel villaggio, le icone rifatte; poi misura chiamate e
@@ -147,6 +147,6 @@ e poi di E; `Mondo3d.vue` e `scena3d/mondo/indice.js` sono di D e poi di E.
 
 ### Prima di chiudere ogni compito
 
-Le unità (`npm test`); il browser del proprio file (`node test/esegui.mjs sotterraneo-mondo`) nel proprio worktree con la build
+Le unità (`npm test`); il browser del proprio file (`node test/esegui.mjs sotterraneo-sopra-mondo`) nel proprio worktree con la build
 nuova; `npm run sotterraneo -- --mondo` per B e C. La taratura della storia nel 3D (domanda 3: i giocatori tipo sul percorso, la
 forza dei sei nuovi, `cellePerBranco` per zona) è un giro a parte dopo B e C, col banco.

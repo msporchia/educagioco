@@ -46,4 +46,4 @@ conti: i mostri picchiano, le pozioni finiscono, e chi non ha gemme non resta bl
 
 Nei test: `[data-richiamo]` (con `data-richiamo-di`), `[data-cura-fiocco]` (con `data-risorsa`), la domanda `[data-scelta="cura"]`,
 `[data-riga][data-cura]` e `[data-riga][data-in-forze]`; `unita/sotterraneo-dialoghi` (la domanda, il suo posto, il fumetto),
-`unita/sotterraneo-sosta` (salendo non si guarisce, `forzeDi`), `integrazione/sotterraneo-cura` (il giro intero col dito); la fontana: `[data-fontana]`, `[data-fumetto-di="fontana"]`, `[data-azione="bevi"]`, `unita/sotterraneo-citta`, `integrazione/sotterraneo-mondo`.
+`unita/sotterraneo-sosta` (salendo non si guarisce, `forzeDi`), `integrazione/sotterraneo-portale` (il giro intero col dito); la fontana: `[data-fontana]`, `[data-fumetto-di="fontana"]`, `[data-azione="bevi"]`, `unita/sotterraneo-citta`, `integrazione/sotterraneo-sopra-mondo`.

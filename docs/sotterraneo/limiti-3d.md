@@ -105,7 +105,7 @@ Le vesti non si misurano da sole (si mettono addosso a un eroe: «crea non torna
 
 1. **Gli effetti 3D non ricompilano** (`effetti3d/gestore.js`): i materiali di un effetto finito non si buttano (`dispose` a vuoto), il
    programma resta in serbo. 15-19 shader a ogni attacco → 0-2; filo coi colpi 83-87 → 47-53 ms (imitato). Il test
-   `integrazione/sotterraneo-3d` conta i `linkProgram` (il conto dei programmi vivi non lo vedeva: si liberano e si rifanno).
+   `integrazione/sotterraneo-discesa` conta i `linkProgram` (il conto dei programmi vivi non lo vedeva: si liberano e si rifanno).
 2. **Nella fascia bassa 6 mostri 3D di sopra invece di 8** (`mostriSopra` in `PROFILI`, `store/qualita.js`): gli altri hanno la sagoma
    come già oltre l'ottavo. Branco pieno: 325 chiamate invece di 399, filo 25,0 contro 27,8 ms (tre giri alterni).
 

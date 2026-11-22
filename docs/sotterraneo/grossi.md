@@ -103,7 +103,7 @@ suo simile; battuto lascia il suo pezzo e un raro o meglio; nell'abisso ogni
 cinque piani; la figura è la creatura che veste, ingrandita a due caselle,
 o la chiave d'atlante dipinta se c'è, e ogni tinta è un colore),
 `unita/sotterraneo-storia` (in fondo alla discesa la chiave ce l'ha il
-grosso), `integrazione/sotterraneo-eroe` (col dito: Re Ossuto con la sua
+grosso), `integrazione/sotterraneo-scontro-eroe` (col dito: Re Ossuto con la sua
 vita in cima e la sua figura nello scontro con la corona `.sot-corona`,
 battuto la vita in cima se ne va). La barra in cima `[data-grosso]` con
 `data-chi` e `data-ossa`; la figura `[data-figura-grosso]`.

@@ -51,6 +51,6 @@ libero si restringe (`distanza(celle, celle, inc, fraz)`). Eroe e mostri stanno 
 lo scontro la vista libera si spegne e il dito non la sposta.
 
 Nei test: `unita/sotterraneo-mondo-vista` (il gesto sotto e sopra i 16 px, il pizzico, i limiti dello zoom e del trascinare, la
-vista che si stacca e torna, i pezzi attorno a dove si guarda), `integrazione/sotterraneo-mondo-vista` (col dito vero, CDP: il
+vista che si stacca e torna, i pezzi attorno a dove si guarda), `integrazione/sotterraneo-sopra-mondo` (col dito vero, CDP: il
 trascinare sposta la vista e non l'eroe, `[data-torna-eroe]`, il tocco sul prato richiama la vista, il pizzico ai due limiti, il
 mouse e la rotella, le zone dell'eroe che restano, un tocco su una persona la fa raggiungere).

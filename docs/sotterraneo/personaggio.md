@@ -80,7 +80,7 @@ che l'eroe ha adesso; rimettere un set scrive il sesso e l'aspetto suoi.
 Nei test: `[data-editor-personaggio]` (con `data-eroe-editor` e `data-sesso-scelto`), le schede `[data-prs-scheda="chi|aspetto|set"]`, le voci
 `[data-prs-voce="pelle|capelli|barba"]`, le scelte `[data-sesso="m|f"]`, `[data-pelle="<id>|-"]`, `[data-capelli="<id>|-"]`,
 `[data-taglio="<id>|-"]`, `[data-barba="<id>|-"]`, i set `[data-prs-set-mio="<n>"]` e gli altri bersagli del componente; `unita/sotterraneo-personaggio`
-e `integrazione/sotterraneo-personaggio`.
+e `integrazione/sotterraneo-sopra-eroe`.
 
 ## Cosa resta
 

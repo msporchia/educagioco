@@ -115,6 +115,6 @@ che ogni pensiero si raggiunga, e il lessico (§ 5) che non ci siano ordini, giu
 
 Nei test: `[data-pensiero]` con `data-pensiero-id`, `data-tono`, `data-segno` (e `data-sotto="1"` quando sta sotto i piedi); il
 segno acceso è `[data-indicato]`. `unita/sotterraneo-pensieri` (la tabella, ogni condizione, ogni classe e strada, gli accordi, il
-lessico, il ritmo, le discese del banco), `integrazione/sotterraneo-pensieri` (la torcia entrando, sopra la testa e
+lessico, il ritmo, le discese del banco), `integrazione/sotterraneo-sopra-eroe` (la torcia entrando, sopra la testa e
 non addosso, la ripresa che non la ridice, il tocco sopra che illumina la guaritrice; `--scatti` lascia `sotterraneo-pensieri-2d`,
 `-3d`, `-sopra`, `-segno`, `-mondo3d`; nel mondo 3D il pensiero dell'arma a mani vuote e il fabbro che si illumina).

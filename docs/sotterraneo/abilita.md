@@ -233,7 +233,7 @@ dalla fonte e dalla pozione blu, il colpo doppio, l'abilità che sbagliando
 resta pronta, il veleno che brucia al turno del mostro, gelato e stordito, la parata,
 la stanza intera e il primo tiro, l'ultimo fiato, l'energia nella sosta);
 `unita/sotterraneo-elementi` (le difese dei mostri, resistenza, debolezza e immunità applicate, il sangue, le forme a più
-bersagli con abilità vere, le passive nuove, il mago guerriero); `integrazione/sotterraneo-albero` (la pagina a 390 px: gli
+bersagli con abilità vere, le passive nuove, il mago guerriero); `integrazione/sotterraneo-sopra-eroe` (la pagina a 390 px: gli
 stendardi, le righe da due, la Lama arcana, nessun medaglione che sborda).
 La pagina ha gli stendardi `[data-azione="ramo"][data-ramo-scheda="<chiave>"]` (`data-aperto`, `data-presi`) e un solo
 `[data-ramo]` aperto con le sue `[data-riga="0..4"]`, `[data-car]`, `[data-elemento-ramo]`; il riquadro del nodo ha

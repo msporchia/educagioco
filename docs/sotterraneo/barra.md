@@ -98,7 +98,7 @@ Due guasti: il 16 ottobre il pannello del 3D finiva dietro i globi su un telefon
 CSS, su un monitor l'utente lo vedeva ancora sopra la calotta. In Chrome senza schermo, a 700–1861 px e a 1, 1,25 e 1,5
 di pixel ratio, la stima reggeva: la differenza vera è una barra più alta del solito (le scritte più grandi di un
 monitor, il minimo dei caratteri del browser), che la stima non vedeva e la misura sì. Nei test:
-`integrazione/sotterraneo-sopra-barra` (lo scontro, la domanda, quale pozione, il dialogo, a sei misure, e con la
+`verifiche/sotterraneo-sopra-barra` (lo scontro, la domanda, quale pozione, il dialogo, a sei misure, e con la
 barra alzata apposta): il rettangolo del pannello non tocca quello dei globi né della barra, e sopra resta scena.
 
 ## Col tema legno
@@ -202,4 +202,4 @@ barra sopra e sotto, i globi che aprono l'eroe e le quattro schede, la casella d
 casella, una pozione buttata e raccolta che fa risalire la casella, il tocco
 altrove, le misure a 390 e a 320 px con le caselle tutte uguali),
 `unita/sotterraneo-roba` (quale pozione si beve, l'elisir),
-`integrazione/sotterraneo` (niente globo della luce, la torcia nello zaino).
+`integrazione/sotterraneo-barra` (niente globo della luce, la torcia nello zaino).

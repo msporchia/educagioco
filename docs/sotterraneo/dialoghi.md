@@ -208,9 +208,9 @@ domande `[data-scelte] [data-scelta="<che>"]` (`consegna`, `prendi`,
 le prime due. `unita/sotterraneo-dialoghi` (i testi stanno in piedi, cosa si
 dice aprendo, le domande e il loro ordine, la storia che cambia, il minatore
 e la strada, prendere e consegnare, i mercanti),
-`integrazione/sotterraneo-dialoghi` (col dito: si apre toccando la ragazza,
+`integrazione/sotterraneo-sopra-missioni` (col dito: si apre toccando la ragazza,
 un tocco va alla pagina dopo, le domande solo all'ultima, la storia che non
 si richiede, «ci penso io» che prende la missione, un tocco sul prato che
 chiude e cammina, la consegna col premio, il minatore che si presenta e poi
-dice la strada, la guaritrice, l'incantatrice e il mercante che portano alla bottega); chi cura: `unita/sotterraneo-dialoghi` (la domanda, il suo posto, il fumetto) e `integrazione/sotterraneo-cura`;
+dice la strada, la guaritrice, l'incantatrice e il mercante che portano alla bottega); chi cura: `unita/sotterraneo-dialoghi` (la domanda, il suo posto, il fumetto) e `integrazione/sotterraneo-portale`;
 `nelDialogo` in `test/aiuto/browser.mjs` gira le pagine e sceglie.

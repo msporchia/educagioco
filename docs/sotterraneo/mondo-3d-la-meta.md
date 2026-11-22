@@ -101,7 +101,7 @@ volta per meta; il velo riscrive le trame della nebbia solo quando la strada cam
 
 Nei test: `unita/sotterraneo-meta-sopra` (quale meta: dal selettore, di difetto la storia, nessuna comodità, la scelta che decade;
 il campo e la strada: dove si cammina, mai un salto né un angolo tagliato, non oltre il limite sul più corto, sulla strada e lontano dai muri (30 coppie, una mappa a mano con la L, il varco di due celle, il varco largo), i passi, i tempi; il velo
-nelle trame, che non tocca il bit e si richiude; le luci; dove la strada esce dalla vista; quando conviene la pietra; i passi detti) e `integrazione/sotterraneo-mondo-meta` (col dito vero:
+nelle trame, che non tocca il bit e si richiude; le luci; dove la strada esce dalla vista; quando conviene la pietra; i passi detti) e `integrazione/sotterraneo-sopra-mondo` (col dito vero:
 la carta col nome, i passi e l'icona di almeno 44 px, senza tasti; la scia e quanto costa; il velo che non trova la cripta per
 finta; la veduta con la meta sotto le nuvole e il tocco che manda a piedi; il cartello; la meta che resta la storia con una
 missione e una taglia in mano, non cambia camminando, e segue «segui questa» del diario). Bersagli: `[data-meta-carta]`

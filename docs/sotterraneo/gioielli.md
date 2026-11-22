@@ -30,7 +30,7 @@ possibilità di fare un po' di strategia»*. Prima c'era un posto solo, `dito`, 
   (`dito`). L'ambra non c'è: la luce in più cambiava il racconto di qualche discesa e l'abisso, e un anello d'ambra messo in storia non vale quel disturbo.
   Il giocatore finto mette gli anelli e la collana dove c'è posto libero (`equipaggia`, `allaBottega`) e non li scambia mai.
 - **Nei test**: `unita/sotterraneo-gioielli` (il catalogo, il salvataggio di prima, la somma, dove va un gioiello e quale anello si toglie, il banco),
-  `integrazione/sotterraneo-gioielli` (col dito: le sei caselle a 390 px, il tasto «🔄 l'altro anello», il rigattiere); `[data-casella="collo|dito|dito2"]`.
+  `integrazione/sotterraneo-bottega` (col dito: le sei caselle a 390 px, il tasto «🔄 l'altro anello», il rigattiere); `[data-casella="collo|dito|dito2"]`.
 - **Cosa non c'è**: nuovi anelli. Il catalogo ne ha due (luce, gemme), e le versioni magiche e rare danno gli altri effetti; i dipinti sono pochi
   ([figure.md](figure.md)). Un terzo anello base (difesa, schivata) chiederebbe un disegno.
 

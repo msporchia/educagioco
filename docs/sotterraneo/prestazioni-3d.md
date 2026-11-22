@@ -208,7 +208,7 @@ node strumenti/profila-app.mjs "$S" --secondi 3 --funzioni 0 --pronto 'window.__
   --stampa 'window.__sotterraneo3d.programmi()'
 ```
 
-Nei test: `integrazione/sotterraneo-3d` conta i `linkProgram` degli attacchi dopo il riscaldamento e aspetta il primo disegno (`grafica().entrando` falso) prima di contare le chiamate; `unita/sotterraneo-coda-shader` la coda; `unita/sotterraneo-ritaglio` il ritaglio; `unita/sotterraneo-anteprime-3d`
+Nei test: `integrazione/sotterraneo-discesa` conta i `linkProgram` degli attacchi dopo il riscaldamento e aspetta il primo disegno (`grafica().entrando` falso) prima di contare le chiamate; `unita/sotterraneo-coda-shader` la coda; `unita/sotterraneo-ritaglio` il ritaglio; `unita/sotterraneo-anteprime-3d`
 la coda a fette.
 
 Torna a [grafica-3d-costi.md](grafica-3d-costi.md).

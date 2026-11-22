@@ -226,7 +226,7 @@ monete, il diario, il promemoria, il minatore),
 `unita/sotterraneo-storia` (il segno, prendere due volte, il forziere al piano
 giusto, sbagliare e riprovare, la sosta, il mostro col nome più duro, la
 missione presa a discesa a metà, la consegna in gemme e in un gioiello, le
-tasche piene), `integrazione/sotterraneo-missioni` (col dito: due «!» e un «?»
+tasche piene), `integrazione/sotterraneo-sopra-missioni` (col dito: due «!» e un «?»
 d'oro sul villaggio, il mugnaio lontano e il suo indicatore sul bordo che
 porta da lui, due missioni prese da due persone (i «?» diventano grigi), il
 diario con le tre righe e il tetto, giù il promemoria, su la consegna con le
@@ -245,6 +245,6 @@ dialogo `[data-dialogo="<chi>"]` con le righe e le domande di
 `[data-diario-vuoto]`. Il dettaglio `[data-dettaglio][data-missione][data-stato]` con `[data-dettaglio-chi][data-chi]`,
 `[data-racconto]`, `[data-grazie]`, `[data-dettaglio-dove]`, `[data-dettaglio-cosa][data-tipo]`, `[data-dettaglio-premio]`,
 `[data-azione="segui"][data-segui-attivo]`, `[data-azione="vai-da"]`, `[data-azione="indietro-diario"]`
-(`integrazione/sotterraneo-dettaglio`). Giù `[data-promemoria] li[data-missione][data-dove]`
+(`integrazione/sotterraneo-sopra-missioni`). Giù `[data-promemoria] li[data-missione][data-dove]`
 (`sopra`, `qui`, `oltre`, `fatta`; la seguita ha `data-segui`); il foglio del forziere
 `[data-missione="<id>"]`; la freccina è in [missioni-freccina.md](missioni-freccina.md).

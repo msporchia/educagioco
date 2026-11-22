@@ -101,4 +101,4 @@ sanguina|radici|rotto|fiacco"]` e quelli dell'eroe (`scudo`, `parato`, `intoccab
 `[data-segni] [data-segno-pre="resiste|teme|immune"]` (`title`), `.sot-numero-resiste`, `.sot-numero-teme`, `.sot-numero-segno`. Quello che compare
 dura meno del racconto e sotto carico una foto è lenta: la prova osserva la pagina con un `MutationObserver` e controlla dopo.
 `unita/sotterraneo-vista` (la scelta dall'elemento e dalla forma, ogni abilità ha un effetto che esiste, nessun effetto oltre 800 ms, i segni, il racconto di palla, catena, resiste/teme/immune, Ninna nanna, scudo, i `presi` e il gelo del motore) e
-`integrazione/sotterraneo-gruppi` (un mago contro melme: palla, catena, prigione; uno stordito; foto `effetti-*` con `--scatti`).
+`integrazione/sotterraneo-scontro` (un mago contro melme: palla, catena, prigione; uno stordito; foto `effetti-*` con `--scatti`).

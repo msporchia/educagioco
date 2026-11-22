@@ -180,7 +180,7 @@ Nei test: `unita/sotterraneo-rarita` (la chiave e i numeri, le chiavi
 storte, i nomi accordati, le probabilità, la fortuna e la profondità, le
 abilità nella loro casella, il bottino a tono col livello 20 nella cripta,
 i mostri grossi, i leggendari e i trovati, i mercanti a tono),
-`integrazione/sotterraneo-eroe` (col dito: il leggendario che cade, si
+`integrazione/sotterraneo-scontro-eroe` (col dito: il leggendario che cade, si
 raccoglie e finisce fra i Tesori). Sulle caselle `[data-rarita]` (al posto
 del vecchio `data-gradino`), sul pannello `[data-pannello][data-rarita]` e
 `[data-storia]`; la festa `[data-leggendario][data-cosa]`; i Tesori

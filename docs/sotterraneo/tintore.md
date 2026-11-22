@@ -47,7 +47,7 @@ paga (ogni tinta nuova si paga, ogni volta: il colore che ha già è acceso e gr
 prova (`Armato`, chiavi `:@<tinte>` e `:r<n>`). La ✕ in alto a destra.
 
 Nei test: `[data-tintore]` (`data-gemme`), `[data-pezzo="<chiave>"]` (`data-tinto`), `[data-tinta="<id>"]`, `[data-prs-scheda="armi|difese|copricapi"]`,
-`[data-prs="paga"]`, `[data-personaggio="tintore"]`; `unita/sotterraneo-tintore`, `integrazione/sotterraneo-tintore`.
+`[data-prs="paga"]`, `[data-personaggio="tintore"]`; `unita/sotterraneo-tintore`, `integrazione/sotterraneo-bottega`.
 
 ## Cosa resta
 

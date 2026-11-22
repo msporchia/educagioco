@@ -34,7 +34,7 @@ di quale bere e come le usa il giocatore finto. Il codice: `dati/cose.js` (le cu
   all'eroe. «Bevi» si spegne fino al turno dopo e lo dice sul tasto («una per turno: hai già bevuto»). Regola in [scontro.md](scontro.md),
   lo stop che si rifà dopo il sorso in [pericolo.md](pericolo.md#dopo-il-sorso).
 - **Il giocatore finto** compra la più grande che può pagare, dopo la roba, fino al tetto; il curioso non risparmia l'ampolla della vita, il
-  bravo la tiene per il grosso (`tieneLaVita`). Nei test: `unita/sotterraneo-pozioni`, `integrazione/sotterraneo-pozioni`.
+  bravo la tiene per il grosso (`tieneLaVita`). Nei test: `unita/sotterraneo-pozioni`, `integrazione/sotterraneo-bottega`.
 - **Rosse le cure, blu l'energia** (l'utente, 14 ottobre: «un set blu e un set rosso, estremamente chiaro»): le quattro cure in vendita sono
   boccette rosse del foglio `bottino-e-arredo.png` (la piccola a cono, poi rossa, cremisi, rosso fuoco), l'ampolla della vita è d'oro perché
   si trova e basta; l'energia è blu (la pozione blu e l'ampolla delle stelle, la boccetta blu che era la Pozione). Prima la Pozione di cura era

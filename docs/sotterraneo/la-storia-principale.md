@@ -76,6 +76,6 @@ Nei test: `[data-sezione="storia"]` con `[data-storia]` e
 e `[data-chiusa-perche]`; nel dialogo la riga `[data-storia]`.
 `unita/sotterraneo-missioni` (i capitoli, le porte, il diario, la freccia e le
 sue precedenze), `unita/sotterraneo-dialoghi` (il minatore),
-`integrazione/sotterraneo-missioni` (col dito). Per guardarla senza giocare:
+`integrazione/sotterraneo-sopra-missioni` (col dito). Per guardarla senza giocare:
 `node strumenti/scatta-app.mjs x --dist --storia 2 --tocca '[data-azione="vita"],[data-scheda="missioni"]'`
 ([../core/comandi.md](../core/comandi.md)).

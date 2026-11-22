@@ -75,8 +75,8 @@ pergamena (prezzo 25 gemme, tetto 5, 3% nei forzieri dopo la missione), le risal
 
 ## Guasti già noti nei test del sotterraneo (non di questo giro)
 
-`misure/sotterraneo` (equilibrio: il fondo a 4/10, vedi `todo_sotterraneo.md`) e qualche timeout sotto carico (`sotterraneo-3d`, `-mondo`:
-con `--alla-volta=2` passano). `sotterraneo-bottega-avanti` a volte fallisce per un prezzo casuale.
+`misure/sotterraneo` (equilibrio: il fondo a 4/10, vedi `todo_sotterraneo.md`) e qualche timeout sotto carico (`sotterraneo-discesa`, `-sopra-mondo`:
+con `--alla-volta=2` passano). `sotterraneo-bottega` a volte fallisce per un prezzo casuale.
 
 ## Come si pubblica senza pestarsi i piedi
 

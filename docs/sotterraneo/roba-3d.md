@@ -150,5 +150,5 @@ Nei test: `unita/sotterraneo-roba-per-terra` (per terra: il modello semplice, la
 modulo la costruisce, o la famiglia è fra quelle che mancano; ogni oggetto da impugnare ha figura o ripiego; il ripiego senza modulo
 e con un modulo che si rompe; ogni veste addosso all'eroe; ogni consumabile, con l'alone solo ai rarissimi; le chiavi composte; gli
 aloni), `unita/sotterraneo-mostri-3d` (anche: ogni famiglia col prototipo è fra i moduli del gioco), le copie uguali ai prototipi,
-`unita/sotterraneo-anteprime-3d` e `integrazione/sotterraneo-3d-anteprime` (le chiavi con figura e rarità). La tavola:
+`unita/sotterraneo-anteprime-3d` e `integrazione/sotterraneo-scontro` (le chiavi con figura e rarità). La tavola:
 `node strumenti/tavola-anteprime.mjs --solo rarita`.

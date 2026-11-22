@@ -141,12 +141,12 @@ mostri, e va guardato sul Note 7.
 Nei test: `unita/sotterraneo-mostri-sopra-scena` (il cerchio e l'orlo, la figura di chi dorme e di chi corre, il signore più grande, chi
 non si disegna, il palco sui piedi dell'eroe, lo stesso cammino a 60 e a 120 Hz, il branco che arriva addosso, fermi sotto una domanda, il
 tocco lontano e a portata, la ✕ a metà e i rimasti che tornano svegli e feriti, svenuti la ✕ non salva, le forze di sopra e chi cura, la
-caccia aperta, il signore e la tana, il diario) e `integrazione/sotterraneo-mostri-sopra` (col dito vero: l'annuncio dei campi col suo
+caccia aperta, il signore e la tana, il diario) e `integrazione/sotterraneo-sopra-mostri` (col dito vero: l'annuncio dei campi col suo
 colore, il branco che si sveglia, lo scontro sul prato e quanto costa, il bersaglio toccato nella scena, la vittoria coi caduti morti nel
 salvataggio, la ✕ e lo scontro che si riapre rientrando, lo svenimento con metà gemme e il raro in tasca, il risveglio al villaggio, la
 guaritrice che cura le ferite di sopra, la caccia aperta che si chiude, il bottino raccolto toccandolo). Bersagli: `[data-mostro-sopra]`
 (`data-i`, `data-tipo`, `data-sveglio`, `data-caporale`, `data-signore`, il nome `[data-nome-signore]`), `[data-avviso-terra][data-annuncio]`
 (il colore), `[data-scontro-sopra]` col `[data-pannello3d]`, `[data-scontro-3d]`, `[data-risveglio-sopra]` (`data-citta`) e
 `[data-azione="risveglio"]`, `[data-per-terra]` (`data-i`, `data-cosa`); `window.__mondo3d` (`stato()`, `inScontro()`, `palco()`,
-`mostri()`, `vicinoAl(i, d)`, `senzaMostri()` per le prove che non sono uno scontro, come `integrazione/sotterraneo-bacheca`) e
+`mostri()`, `vicinoAl(i, d)`, `senzaMostri()` per le prove che non sono uno scontro, come `integrazione/sotterraneo-sopra-bacheca`) e
 `window.__sotterraneo3d` (`palco`, `corsa`, `banco(n)`, `grafica().palco`).

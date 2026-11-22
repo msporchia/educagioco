@@ -1,361 +1,269 @@
 /* ═══════════════════════════════════════════════════════════════════
-   IL PORTALE E LA RIPRESA ESATTA, COL DITO VERO
+   IL PORTALE, CHI CURA, LE TORCE E LA RIPRESA ESATTA, COL DITO
+   (docs/sotterraneo/portale-e-sosta.md, docs/sotterraneo/chi-cura.md, docs/sotterraneo/roba.md «La torcia si accende da sé»)
 
-   La stanza che era del mercante ha un portale (docs/sotterraneo/
-   portale-e-sosta.md): toccandolo si sale al villaggio, e nel villaggio compare il
-   gemello che riporta giù esattamente dov'eri, col piano com'era. Qui il
-   giro intero: si scende nella scalinata antica (la seconda discesa), si apre una porta, si ferisce
-   un mostro e si scappa, si entra nel portale, sopra la vita resta quella di giù e la
-   guaritrice la rimette (docs/sotterraneo/chi-cura.md), si compra dall'erborista, si torna
-   giù dal gemello e si ritrova tutto, a vita piena; poi si esce con la ✕ e si
-   riprende da «riprendi da qui» in home, nello stesso punto. Uscire con la ✕
-   non è un portale: lì la sosta è un'«uscita», sopra non c'è il gemello e
-   rientrando si è già giù, dietro il velo della pausa. Il giro della cura in
-   sé, con le due che curano, è `sotterraneo-cura`.
+   perché: il portale e la ripresa esatta: sopra la vita di giù, chi cura, le torce, il gemello che riporta giù nel punto preciso, la pergamena
+   a parte perché: parte da una sosta in Node di eroe salito dal portale ferito e senza torce; porte-scale parte da una sosta a un piano diverso
 
-   Il piano non è raro: si parte DENTRO la stanza del portale (`#stanza=portale`,
-   che mette l'eroe nella cella più lontana dai mostri) e il seme (`#seme=`) si
-   sceglie fra i primi ottanta perché porta e mostro stiano lì vicino. Lo stesso
-   generatore gira qui in Node (`Corsa` col seme dell'indirizzo) e dice dove stanno
-   porta, mostro e portale. Si sceglie la scalinata e non la cripta perché là i
-   mostri hanno due ossa e a mani nude cadono in un colpo: uno «ferito» non
-   c'è. Si cammina toccando la tela come un bambino, una cella lontana alla
-   volta (`Input.dispatchTouchEvent` via CDP; la cella sullo schermo la dà la
-   scena 3D, `aSchermo`), e si risponde col tasto giusto della domanda
-   (`data-giusta`). Sopra l'eroe va dall'erborista e dal gemello col salto delle
-   prove (`__mondo3d.vai`).
+   Un giro solo, da una sosta in Node: l'eroe è salito dal portale, ferito, scarico e senza torce. Sopra la barra dice la vita di
+   giù, chi cura chiama e cura gratis, la pagina dell'eroe dice chi vende le torce, tre torce dal carovaniere. Il gemello riporta
+   giù nel punto esatto, in forze, con la torcia in mano; la pergamena apre un varco che riporta su senza errori; il gemello resta
+   e l'ingresso riprende; la ✕ lascia un'uscita e «riprendi da qui» riporta giù dietro il velo. Le regole le provano le unità
+   (`sotterraneo-sosta`, `-roba`, `-pergamena`): qui il dito, lo schermo e il salvataggio riletto.
    `node test/esegui.mjs sotterraneo-portale`
-   tempo: 600
+   tempo: 200
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegliAttacco, leggiProfilo, scendiNelSotterraneo,
-         compraNellaBottega, nelDialogo, finestraFerma, mondoPronto, toccaNelMondo }
-  from '../aiuto/browser.mjs'
-import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, nelDialogo, finestraFerma, mondoPronto,
+         alBancoDi, compraNellaBottega, sopraVaDa, senzaPensieri, scendiNelSotterraneo, ditoDi } from '../aiuto/browser.mjs'
+import { controlla, uguale, nota, blocco, riassunto } from '../aiuto/verifica.mjs'
+import { profiloDelSotterraneo, giuPronto, fermoGiu, cellaGiu, schermoDi, vitaInBarra } from '../aiuto/sotterraneo-discesa.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
+import { COSE, STANZE_TORCIA } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { ilMondo, postiDi } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
-import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
-import { percorso } from '../../src/motore/passi.js'
+import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
+import { scrivi, PORTALE as VIA_PORTALE } from '../../src/giochi/sotterraneo/motore/sosta.js'
 
-const DISCESA = 1   // la scalinata antica: i suoi mostri hanno ossa da reggere a un colpo
-const TAPPA = CAMPAGNA[DISCESA]
-// a mani nude: un mostro della scalinata regge a un colpo, e qui serve un mostro che sopravvive a uno
-const roba = { v: 1, gemme: 60, zaino: [], mano: null, mancina: null, corpo: 'corazza', dito: null,
-               torcia: 0, torce: 0 }
-
-/* ── dove comincia l'eroe con `#stanza=portale`: la cella della stanza più lontana da ogni mostro (lo stesso conto di
-   `stanzaDaProva` in Gioco.vue; più sotto il test controlla che la tela dica la stessa cella) ── */
-function partenzaDelCheat(L) {
-  const s = L.stanze.find(r => r.ruolo === 'portale')
-  const mostri = L.robe.filter(r => r.che === 'mostro')
-  const lontano = r => mostri.reduce((m, o) => Math.min(m, Math.hypot(o.x - r.x, o.y - r.y)), 99)
-  return s.suolo.reduce((b, r) => (lontano(r) > lontano(b) ? r : b), s.suolo[0])
-}
-
-/* ── il piano: la stanza del portale vuota di mostri, una porta e un mostro da ferire vicini, e la strada fra
-   l'una, l'altro e il portale senza altri mostri. Fra i primi semi ce n'è sempre uno ── */
-function scegliIlPiano() {
-  let meglio = null
-  for (let seme = 1; seme <= 80; seme++) {
-    const c = new Corsa(TAPPA, { seme, eroe: 'cavaliere', roba })
-    const L = c.livello
-    const sala = L.stanze.find(r => r.ruolo === 'portale')
-    const portale = L.robe.find(r => r.che === 'portale')
-    if (!sala || !portale) continue
-    const mostri = L.robe.filter(r => r.che === 'mostro')
-    if (mostri.some(r => L.stanzaDi(r.x, r.y) === sala)) continue
-    const da = partenzaDelCheat(L)
-    const via = (a, b) => percorso((x, y) => L.calpestabile(x, y), a, b)
-    const lungo = q => (via(da, q) || { length: 999 }).length
-    const porta = L.robe.filter(r => r.che === 'porta').sort((a, b) => lungo(a) - lungo(b))[0]
-    if (!porta) continue
-    for (const mostro of mostri.filter(r => !r.chiave && r.ossa > c.colpo(r))) {
-      const tratti = [via(da, porta), via(porta, mostro), via(mostro, portale)]
-      if (tratti.some(t => !t)) continue
-      // i mostri di altre stanze sulla strada: quelli della stanza del bersaglio vengono con lui, ed è giusto
-      const sua = L.stanzaDi(mostro.x, mostro.y)
-      const stanze = new Set(tratti.flat().map(q => L.stanzaDi(q.x, q.y)?.id))
-      const intrusi = mostri.filter(r => L.stanzaDi(r.x, r.y) !== sua && stanze.has(L.stanzaDi(r.x, r.y)?.id)).length
-      const costo = tratti.reduce((n, t) => n + t.length, 0) + 40 * intrusi
-      if (!meglio || costo < meglio.costo) meglio = { seme, costo, c, da, porta, mostro, portale }
-    }
-  }
-  return meglio
-}
-const piano = scegliIlPiano()
-controlla('c\'è un piano della scalinata col portale, una porta e un mostro da ferire vicini', !!piano)
-const L = piano.c.livello
-const indice = r => L.robe.indexOf(r)
-const aperte = new Set()   // i gruppi di porte aperti, per camminare nel modello come nel gioco
+const P = 'pergamena-portale'
+const COMPRATE = 3
+const roba = { v: 1, gemme: 60, zaino: [P], mano: 'spada', mancina: null, corpo: 'corazza', dito: null, torcia: 0, torce: 0 }
+// una discesa lasciata dal portale, ferito e senza energia
+const c = new Corsa(CAMPAGNA[0], { seme: 21, eroe: 'cavaliere', roba, rnd: seminato(21) })
+c.vita = Math.max(1, Math.floor(c.vitaMax / 3))
+c.energia = 0
+const VITA_MAX = c.vitaMax, ENERGIA_MAX = c.energiaMax
+const DOV_ERA = `${Math.floor(c.eroe.x)},${Math.floor(c.eroe.y)}`
+controlla('l\'eroe di prova ha energia da perdere', ENERGIA_MAX > 0)
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
-// la discesa 3D è pronta: la tela, e la scena con le sue figure
-const giuPronto = async () => {
-  await page.waitForSelector('[data-tela="3d"]', { timeout: 20000 })
-  await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.corsa && window.__sotterraneo3d.grafica().figure > 0 && !window.__sotterraneo3d.grafica().mondo, null, { timeout: 30000 })
-}
 await azzera(page)
-await semina(page, {
-  coins: 300, settings: { sperimentali: true },
-  campagne: { sotterraneo: { tappa: DISCESA, libera: false, stelle: { 0: 3 },
-    cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: DISCESA, libera: false, stelle: { 0: 3 }, missioni: {},
-      roba, mondo: { parlato: true } } } } } },
-})
-await scegli(page, 'sotterraneo')
-await mondoPronto(page)
-await page.evaluate(s => { location.hash = 'sotterraneo&seme=' + s + '&stanza=portale' }, piano.seme)
-await scendiNelSotterraneo(page, DISCESA)
-await giuPronto()
-await attendi(page, 700)
-
-const cdp = await page.context().newCDPSession(page)
-async function tocca(x, y) {
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] })
-  await attendi(page, 60)
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
-}
+const { tocca } = await ditoDi(page)
+// tocca il centro di `sel` quando sta fermo: un fumetto del mondo (e la mappa dopo un dialogo) scorre con la telecamera
 async function toccaIl(sel) {
-  await finestraFerma(page)   // la finestra nuova cresce per 160 ms: misurata prima, il tocco cade a lato
-  const b = await page.locator(sel).first().boundingBox()
+  await finestraFerma(page)
+  let b = await page.locator(sel).first().boundingBox()
+  for (let i = 0; i < 20; i++) {
+    await attendi(page, 150)
+    const n = await page.locator(sel).first().boundingBox()
+    const fermo = Math.abs(n.x - b.x) < 1 && Math.abs(n.y - b.y) < 1
+    b = n
+    if (fermo) break
+  }
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
-
-/* ── giù: dov'è l'eroe lo dice la tela, e una cella si trova sullo schermo da lì ── */
-const tela = page.locator('.sot-tela')
-const cellaGiu = () => tela.getAttribute('data-eroe')
-async function schermoDi(c, su = 0.05) {
-  const [sx, sy] = await page.evaluate(([x, y, h]) => window.__sotterraneo3d.aSchermo(x + 0.5, h, y + 0.5), [c.x, c.y, su])
-  const b = await tela.boundingBox()
-  return { x: b.x + sx, y: b.y + sy, b }
+const avventura = async () => (await leggiProfilo(page))?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere || {}
+const riga = sel => page.locator(sel).evaluate(e => ({ n: Number(e.dataset.torce), resta: Number(e.dataset.resta),
+                                                       scorta: Number(e.dataset.scorta), testo: e.innerText.replace(/\s+/g, ' ') }))
+async function paginaEroe() {
+  await toccaIl('[data-azione="eroe-pagina"]')
+  await page.waitForSelector('[data-pagina-eroe] [data-torcia-eroe]', { timeout: 5000 })
+  return riga('[data-torcia-eroe]')
 }
-// sullo schermo e lontano dalla mappina (in alto a destra), dallo zaino e dalla riga in fondo
-const dentro = ({ x, y, b }) => x > b.x + 30 && x < b.x + b.width - 140 && y > b.y + 140 && y < b.y + b.height - 160
-async function fermoGiu() {
-  let prima = null
-  for (let i = 0; i < 40; i++) {
-    const ora = await cellaGiu()
-    if (ora === prima) return
-    prima = ora
-    await attendi(page, 300)
-  }
+async function chiudi(sel) {
+  await toccaIl(`${sel} [data-chiudi]`)
+  await page.waitForSelector(sel, { state: 'detached', timeout: 3000 })
 }
-const apertoGiu = async () => (await page.locator('.sot-domanda, [data-azione="portale"], [data-azione="scappa"], [data-scontro-3d]').count()) > 0
-// cammina verso la cosa in `a` toccando la cella più lontana della strada che sta sullo schermo, finché si è
-// accanto; poi tocca la cosa, che da accanto è in luce (una cosa al buio non si tocca: si cammina lì)
-async function vaiGiu(a, { toccala = true } = {}) {
-  // per strada si toccano solo celle vuote: una cella con sopra una fonte o un forziere aprirebbe il suo foglio
-  const buona = (x, y) => L.calpestabile(x, y) &&
-    !L.robe.some(r => r.x === x && r.y === y && r.che !== 'arredo' && r.che !== 'gemme' &&
-                      !(r.che === 'porta' && aperte.has(r.gruppo)))
-  for (let giro = 0; giro < 30; giro++) {
-    // un mostro che ci raggiunge per strada: si scappa (costa un graffio), e si va avanti
-    if (a.che !== 'mostro' && await page.locator('[data-azione="scappa"]').count()) {
-      await page.locator('[data-azione="scappa"]').click()
-      await attendi(page, 300)
-      continue
-    }
-    // un foglio aperto per sbaglio (una cosa toccata passando) si chiude con «dopo»
-    if (await page.locator('[data-azione="dopo"]').count() && !(await page.locator('[data-azione="portale"]').count())) {
-      await page.locator('[data-azione="dopo"]').first().click()
-      await attendi(page, 300)
-      continue
-    }
-    if (await apertoGiu()) break
-    const [ex, ey] = (await cellaGiu()).split(',').map(Number)
-    const via = percorso(buona, { x: ex, y: ey }, a, { arrivoLibero: false }) || []
-    if (via.length <= 1) {
-      const qui = await schermoDi(a)
-      if (toccala && dentro(qui)) await tocca(qui.x, qui.y)
-      await attendi(page, 300)
-      await fermoGiu()
-      return
-    }
-    let tappa = null
-    for (const q of via.slice(0, -1)) { const s = await schermoDi(q); if (dentro(s)) tappa = s }
-    if (!tappa) break
-    await tocca(tappa.x, tappa.y)
-    await attendi(page, 300)
-    await fermoGiu()
-  }
-}
-// l'eroe va (salto delle prove) accanto a `k` e lo si tocca (`sel` è il suo bersaglio nel mondo) finché non compare `atteso`: il fumetto
-// del pensiero dell'eroe fermo (docs/sotterraneo/pensieri.md) può coprire chi gli sta accanto e prendere il tocco, e allora si riprova
-async function vaDa(sel, k, atteso = '[data-dialogo]') {
-  for (let giro = 0; giro < 5; giro++) {
-    await page.evaluate(k => { window.__mondo3d.senzaMostri(); window.__mondo3d.vai(k) }, k)
-    let uguali = 0, ultimo = ''   // la telecamera arriva morbida: tre letture uguali di fila, a mezzo secondo
-    for (let i = 0; i < 60 && uguali < 3; i++) {
-      await attendi(page, 500)
-      const b = await page.locator(sel).first().boundingBox().catch(() => null)
-      const ora = b ? `${Math.round(b.x)},${Math.round(b.y)}` : ''
-      uguali = ora && ora === ultimo ? uguali + 1 : 0
-      ultimo = ora
-    }
-    await page.waitForSelector('[data-pensiero]', { state: 'detached', timeout: 20000 }).catch(() => {})
-    await toccaNelMondo(page, sel, { tocca })
-    if (await page.waitForSelector(atteso, { timeout: 12000 }).then(() => true).catch(() => false)) return
-  }
-}
-async function rispondi(giusto = true) {
-  await scegliAttacco(page)
-  await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 5000 })
-  await attendi(page, 300)
-  const tasto = page.locator(giusto ? '.sot-domanda .qz-tasto[data-giusta]' : '.sot-domanda .qz-tasto:not([data-giusta])')
-  await ((await tasto.count()) ? tasto.first() : page.locator('.sot-domanda .qz-tasto').first()).click()
-  await attendi(page, 1300)
-}
+const daChiCura = (chi, atteso = `[data-dialogo="${chi}"]`) => sopraVaDa(page, `[data-mercante="${chi}"][data-citta="villaggio"]`, `mercante:villaggio:${chi}`, { tocca, atteso })
 
-const vitaInBarra = async dove =>
-  (await page.locator(`[data-barra="${dove}"] [data-azione="vita"]`).getAttribute('aria-label')).match(/vita (\d+) su (\d+)/).slice(1).map(Number)
-
-uguale('si parte nella stanza del portale (il cheat e il modello dicono la stessa cella)', await cellaGiu(), `${piano.da.x},${piano.da.y}`)
-
-/* ---------- 1. una porta si apre ---------- */
-await vaiGiu(piano.porta)
-await page.waitForSelector('.sot-domanda', { timeout: 8000 })
-await rispondi(true)
-uguale('la porta chiede e si apre', await page.locator('.sot-domanda').count(), 0)
-aperte.add(piano.porta.gruppo)
-
-/* ---------- 2. un mostro si ferisce, e si scappa ---------- */
-await vaiGiu(piano.mostro)
-await page.waitForSelector('[data-azione="scappa"]', { timeout: 10000 })
-await rispondi(true)
-controlla('un colpo e il mostro è ancora in piedi', await page.locator('[data-azione="scappa"]').count() === 1)
-await page.locator('[data-azione="scappa"]').click()
-await attendi(page, 500)
-await fermoGiu()
-
-/* ---------- 3. il portale ---------- */
-await vaiGiu(piano.portale, { toccala: false })
-const vicino = await schermoDi(piano.portale, 0.6)
-controlla('il portale si vede sullo schermo', dentro(vicino))
-await attendi(page, 400)
-await scatto(page, 'portale-discesa')
-// sotto carico il tocco può cadere mentre la telecamera si assesta: si riprova, ricalcolando dove sta il portale
-for (let i = 0; i < 3 && !(await page.locator('[data-azione="portale"]').isVisible()); i++) {
-  const p = i ? await schermoDi(piano.portale, 0.6) : vicino
-  await tocca(p.x, p.y)
-  await page.waitForSelector('[data-azione="portale"]', { timeout: 15000 }).catch(() => null)
-}
-await page.waitForSelector('[data-azione="portale"]', { timeout: 5000 })
-uguale('il portale non chiede niente', await page.locator('.sot-domanda').count(), 0)
-await scatto(page, 'portale-foglio')
-const dovEro = await cellaGiu()
-const vitaGiu = await vitaInBarra('giu')
-controlla('si sale ammaccati: la fuga e i colpi hanno costato vita', vitaGiu[0] < vitaGiu[1], vitaGiu.join('/'))
-await page.locator('[data-azione="portale"]').click()
-
-/* ---------- 4. su nel villaggio: il gemello ---------- */
-await mondoPronto(page)
-await attendi(page, 700)
-const gemello = postiDi(ilMondo(), 'portale').find(q => q.citta === 'villaggio')
-uguale('si sbuca accanto al portale gemello', await page.locator('[data-eroe-mondo]').getAttribute('data-cella'),
-       `${gemello.accanto.x},${gemello.accanto.y}`)
-uguale('che sta nel villaggio', await page.locator('[data-portale]').count(), 1)
-uguale('salendo non si guarisce: la barra dice la vita di giù', (await vitaInBarra('sopra')).join('/'), vitaGiu.join('/'))
-await scatto(page, 'portale-villaggio')
-let p = await leggiProfilo(page)
-const sosta = p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.sosta
-uguale('la sosta ricorda che si è salita dal portale', sosta?.via, 'portale')
-controlla('la discesa è nella sosta, coi cambiamenti e non il piano', !!sosta?.robe?.cambi && !Array.isArray(sosta?.robe),
-          JSON.stringify(sosta?.robe)?.slice(0, 120))
-const cambio = i => (sosta?.robe?.cambi || {})[i] || {}
-uguale('con la porta aperta', cambio(indice(piano.porta)).aperta, true)
-// chi si è ferito è il primo del branco che ci ha raggiunti, non per forza quello che si cercava
-const ferito = L.robe.find(r => r.che === 'mostro' && cambio(indice(r)).ossa < r.ossaMax)
-controlla('e il mostro ferito', !!ferito, JSON.stringify(sosta?.robe?.cambi))
-uguale('e l\'eroe dov\'era', `${Math.floor(sosta?.dove?.x)},${Math.floor(sosta?.dove?.y)}`, dovEro)
-uguale('e la sosta porta la vita di giù', sosta?.vita, vitaGiu[0])
-nota(`la sosta pesa ${JSON.stringify(sosta).length} byte`)
-
-/* ---------- 5. dall'erborista: prima la cura (gratis), poi la bottega ---------- */
-await vaDa('[data-mercante="erborista"][data-citta="villaggio"]', 'mercante:villaggio:erborista')
-await nelDialogo(page, '[data-scelta="cura"]', { tocca: toccaIl })
-await page.waitForSelector('[data-cura-fiocco][data-risorsa="vita"]', { timeout: 3000 })
-await attendi(page, 500)
-uguale('la guaritrice rimette la vita a posto', (await vitaInBarra('sopra')).join('/'), `${vitaGiu[1]}/${vitaGiu[1]}`)
-p = await leggiProfilo(page)
-uguale('e la sosta la scrive piena', p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.sosta?.vita, vitaGiu[1])
-await nelDialogo(page, '[data-scelta="bottega"]', { tocca: toccaIl })
-await page.waitForSelector('[data-chiudi]', { timeout: 10000 })
-await attendi(page, 500)
-await compraNellaBottega(page, 'pozione', { tocca })
-await attendi(page, 300)
-await toccaIl('[data-chiudi]')
-await page.waitForSelector('[data-chiudi]', { state: 'detached', timeout: 3000 })
-
-/* ---------- 6. giù dal gemello: tutto com'era ---------- */
-await vaDa('[data-portale]', 'portale', '[data-fumetto-di="portale"] [data-azione="portale-giu"]')
-await attendi(page, 300)
-await scatto(page, 'portale-gemello-fumetto')
-await toccaIl('[data-fumetto-di="portale"] [data-azione="portale-giu"]')
-await giuPronto()
-await attendi(page, 700)
-uguale('si torna giù nel punto esatto', await cellaGiu(), dovEro)
-uguale('a vita piena', (await vitaInBarra('giu')).join('/'), `${vitaGiu[1]}/${vitaGiu[1]}`)
-await scatto(page, 'portale-ritorno')
-await page.locator('[data-azione="zaino"]').click()
-await page.waitForSelector('[data-zaino]', { timeout: 3000 })
-uguale('con la pozione comprata sopra', await page.locator('[data-tasca][data-cosa="pozione"]').count(), 1)
-await page.locator('[data-azione="chiudi"]').click()
-await attendi(page, 300)
-
-/* ---------- 7. si esce con la ✕: non è un portale ----------
-   Dalla discesa la ✕ porta in home, non sulla terra di sopra: la sosta è
-   un'uscita, senza gemello, e lo stesso piano si ritrova com'era. */
-await toccaIl('button[aria-label="indietro"]')
-await page.waitForSelector('.carte', { timeout: 5000 })
-uguale('la ✕ dalla discesa porta in home', await page.locator('[data-mondo3d]').count(), 0)
-await attendi(page, 400)
-p = await leggiProfilo(page)
-const dopo = p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.sosta
-uguale('la sosta ora è un\'uscita, non un portale', dopo?.via, 'uscita')
-uguale('la porta è ancora aperta', ((dopo?.robe?.cambi || {})[indice(piano.porta)] || {}).aperta, true)
-uguale('e il mostro ha le ossa di prima', ((dopo?.robe?.cambi || {})[indice(ferito)] || {}).ossa,
-       cambio(indice(ferito)).ossa)
-uguale('e l\'eroe è dove era', `${Math.floor(dopo?.dove?.x)},${Math.floor(dopo?.dove?.y)}`, dovEro)
-
-/* ---------- 8. «riprendi da qui» in home, nello stesso punto, senza passare di sopra ---------- */
-uguale('in home si riprende il sotterraneo', await page.locator('[data-riprendi]').getAttribute('data-riprendi'), 'sotterraneo')
-controlla('e dice dove', (await page.locator('[data-riprendi]').innerText()).includes(`${TAPPA.nome} · piano 1 di`),
-          await page.locator('[data-riprendi]').innerText())
-await scatto(page, 'portale-riprendi-home')
-await toccaIl('[data-riprendi]')
-await giuPronto()
-await attendi(page, 700)
-uguale('si è già giù, senza il mondo di sopra', await page.locator('[data-mondo3d]').count(), 0)
-uguale('e senza gemello', await page.locator('[data-portale]').count(), 0)
-uguale('e si riprende nel punto esatto', await cellaGiu(), dovEro)
-await page.waitForSelector('[data-pausa]', { timeout: 3000 })
-await scatto(page, 'portale-riprende-fermo')
-await attendi(page, 400)
-await toccaIl('[data-pausa] [data-azione="riprendi"]')
-await attendi(page, 300)
-uguale('toccato il velo, la discesa riparte', await page.locator('[data-pausa]').count(), 0)
-
-/* ---------- 9. col portale vero, invece, il gemello c'è anche se si esce dal villaggio ---------- */
-await vaiGiu(piano.portale, { toccala: false })
-{
-  const q = await schermoDi(piano.portale)
-  await tocca(q.x, q.y)
-}
-await page.waitForSelector('[data-azione="portale"]', { timeout: 40000 })
-await page.locator('[data-azione="portale"]').click()
-await mondoPronto(page)
-await attendi(page, 500)
-await toccaIl('button[aria-label="indietro"]')
-await page.waitForSelector('.carte', { timeout: 5000 })
+await semina(page, profiloDelSotterraneo({ tappa: 0, settings: { sperimentali: true },
+  avventura: { roba, sosta: scrivi(c, 0, { via: VIA_PORTALE }), mondo: { dove: { portale: true }, parlato: true } } }))
+await senzaPensieri(page)   // senza torcia l'eroe fermo pensa alla guaritrice, e il fumetto prende il tocco
 await scegli(page, 'sotterraneo')
 await mondoPronto(page)
-uguale('uscendo dal villaggio e rientrando, il gemello c\'è ancora', await page.locator('[data-portale]').count(), 1)
-// la carta «torno giù» non c'è più (docs/core/ripresa.md): l'ingresso della stessa discesa dice «riprendo da dove ero»
-await vaDa(`[data-posto="${TAPPA.chiave}"]`, 'ingresso:' + TAPPA.chiave, `[data-fumetto-di="${TAPPA.chiave}"] [data-azione="scendi"][data-sosta="1"]`)
-uguale('e l\'ingresso della stessa discesa riprende da dove si era', await page.locator(`[data-fumetto-di="${TAPPA.chiave}"] [data-azione="scendi"][data-sosta="1"]`).count(), 1)
+
+/* ---------- sopra: salendo non si guarisce, e chi cura chiama ---------- */
+await blocco('salito dal portale', async () => {
+  uguale('la barra dice la vita di giù', (await vitaInBarra(page, 'sopra')).join('/'), `${c.vita}/${VITA_MAX}`)
+  uguale('il gemello sta nel villaggio', await page.locator('[data-portale]').count(), 1)
+  await page.waitForSelector('[data-mercante="erborista"] [data-richiamo]', { timeout: 5000 }).catch(() => {})
+  uguale('la guaritrice chiama', await page.locator('[data-mercante="erborista"] [data-richiamo]').innerText(), 'Sei ferito. Vieni, ti curo.')
+  controlla('l\'incantatrice chiama per l\'energia', /ricarico/.test(await page.locator('[data-mercante="incantatrice"] [data-richiamo]').innerText()))
+  uguale('il fabbro e il mercante no', await page.locator('[data-mercante="armaiolo"] [data-richiamo], [data-mercante="rigattiere"] [data-richiamo]').count(), 0)
+  await scatto(page, 'cura-richiamo')
+})
+
+await blocco('senza torce, la pagina dell\'eroe dice chi le vende', async () => {
+  const r = await paginaEroe()
+  uguale('ne conta zero', r.n, 0)
+  controlla('e dice che le vende il carovaniere', /nessuna torcia/.test(r.testo) && /carovaniere/.test(r.testo), r.testo)
+  await chiudi('[data-pagina-eroe]')
+})
+
+/* ---------- la guaritrice: «Curami», e la seconda volta «sei già in forze» ---------- */
+await blocco('la guaritrice cura', async () => {
+  await daChiCura('erborista')
+  uguale('mentre si parla il suo fumetto tace', await page.locator('[data-mercante="erborista"] [data-richiamo]').count(), 0)
+  await nelDialogo(page)
+  uguale('ferito, «Curami» è la prima domanda', await page.locator('[data-scelte] [data-scelta]').first().getAttribute('data-scelta'), 'cura')
+  await toccaIl('[data-dialogo] [data-scelta="cura"]')
+  await page.waitForSelector('[data-cura-fiocco][data-risorsa="vita"]', { timeout: 3000 }).catch(() => {})
+  uguale('«Curami»: il numero che sale', await page.locator('[data-cura-fiocco][data-risorsa="vita"]').count(), 1)
+  await scatto(page, 'cura-vita')
+  controlla('il numero che sale dice quanti punti', (await page.locator('[data-cura-fiocco]').innerText()).includes(`+${VITA_MAX - c.vita}`))
+  uguale('la guaritrice risponde a voce sua', await page.locator('[data-riga][data-cura]').count(), 1)
+  await page.waitForFunction(m => /vita (\d+) su/.exec(document.querySelector('[data-barra="sopra"] [data-azione="vita"]').getAttribute('aria-label'))?.[1] === String(m), VITA_MAX, { timeout: 3000 }).catch(() => {})
+  uguale('la barra è piena', (await vitaInBarra(page, 'sopra')).join('/'), `${VITA_MAX}/${VITA_MAX}`)
+  const s = (await avventura()).sosta || {}
+  uguale('la sosta è scritta a vita piena, e l\'energia non è sua', `${s.vita}|${s.energia}`, `${VITA_MAX}|0`)
+  await nelDialogo(page)
+  uguale('la domanda non torna nello stesso dialogo', await page.locator('[data-scelta="cura"]').count(), 0)
+  await toccaIl('[data-dialogo] [data-scelta="ciao"]')
+  await page.waitForSelector('[data-dialogo]', { state: 'detached', timeout: 3000 }).catch(() => {})
+  uguale('curato, il fumetto se ne va', await page.locator('[data-mercante="erborista"] [data-richiamo]').count(), 0)
+  uguale('quello dell\'incantatrice resta, non blocca niente', await page.locator('[data-mercante="incantatrice"] [data-richiamo]').count(), 1)
+  await daChiCura('erborista')
+  await nelDialogo(page, '[data-scelta="cura"]', { tocca: toccaIl })
+  await page.waitForSelector('[data-riga][data-in-forze]', { timeout: 3000 }).catch(() => {})
+  controlla('di nuovo: in forze lo dice, senza far finta', (await page.locator('[data-riga][data-in-forze]').innerText()).includes('in forze'))
+  uguale('e non ci sono numeri che salgono', await page.locator('[data-cura-fiocco]').count(), 0)
+  await nelDialogo(page, '[data-scelta="ciao"]', { tocca: toccaIl })   // le domande tornano cieche per 320 ms
+  await page.waitForSelector('[data-dialogo]', { state: 'detached', timeout: 3000 }).catch(() => {})
+  uguale('«ciao» chiude il dialogo', await page.locator('[data-dialogo]').count(), 0)
+})
+
+/* ---------- l'incantatrice: «Ricaricami» ---------- */
+await blocco('l\'incantatrice ricarica', async () => {
+  await daChiCura('incantatrice')
+  await nelDialogo(page, '[data-scelta="cura"]', { tocca: toccaIl })
+  await page.waitForSelector('[data-cura-fiocco][data-risorsa="energia"]', { timeout: 3000 })
+  const s = (await avventura()).sosta || {}
+  uguale('la sosta è scritta a energia piena, e la vita resta piena', `${s.energia}|${s.vita}`, `${ENERGIA_MAX}|${VITA_MAX}`)
+  await nelDialogo(page, '[data-scelta="ciao"]', { tocca: toccaIl })
+  await page.waitForSelector('[data-dialogo]', { state: 'detached', timeout: 3000 }).catch(() => {})
+  // (senza torce il carovaniere chiama lui: `richiamoTorce`, non è una cura)
+  uguale('chi cura non chiama più', await page.locator('[data-richiamo-di="vita"], [data-richiamo-di="energia"]').count(), 0)
+})
+
+/* ---------- tre torce dal carovaniere: la pagina dell'eroe e lo zaino di sopra le contano alla cintura ---------- */
+await blocco('tre torce dal carovaniere', async () => {
+  await alBancoDi(page, 'carovaniere', { tocca, toccaIl })
+  // la prima la sceglie e la compra col tasto; poi la casella è già scelta, e un tocco su di lei compra di nuovo. Le comprate le
+  // contano le gemme della bottega, che cambiano subito (il profilo si scrive dopo)
+  const comprate = async () => (roba.gemme - Number((await page.locator('[data-gemme-bottega]').innerText()).match(/\d+/)[0])) / COSE.torcia.prezzo
+  await compraNellaBottega(page, 'torcia', { tocca })
+  for (let i = 0; i < 8 && await comprate() < COMPRATE; i++) {
+    await toccaIl('[data-bottega] [data-casella-pezzo="torcia"]')
+    await page.waitForFunction(([n, g, p]) => (g - Number(document.querySelector('[data-gemme-bottega]').innerText.match(/\d+/)[0])) / p > n,
+      [i + 1, roba.gemme, COSE.torcia.prezzo], { timeout: 2000 }).catch(() => {})
+  }
+  uguale('tre torce comprate', await comprate(), COMPRATE)
+  await chiudi('[data-bottega]')
+  const dopo = (await avventura()).roba
+  uguale('comprate, aspettano alla cintura nella roba dell\'avventura', `${dopo?.torcia}|${dopo?.torce}`, `0|${COMPRATE}`)
+  const r = await paginaEroe()
+  uguale('la pagina dell\'eroe ne conta tre, tutte alla cintura', `${r.n}|${r.resta}|${r.scorta}`, `${COMPRATE}|0|${COMPRATE}`)
+  controlla('e dice che scendendo se ne accende una', /3 torce alla cintura/.test(r.testo) && /scendendo/.test(r.testo), r.testo)
+  await scatto(page, 'torce-eroe-sopra')
+  await toccaIl('[data-scheda="zaino"]')
+  await page.waitForSelector('[data-zaino] [data-torcia-zaino]', { timeout: 5000 })
+  uguale('anche lo zaino di sopra le dice', (await riga('[data-torcia-zaino]')).scorta, COMPRATE)
+  await chiudi('[data-zaino]')
+})
+
+/* ---------- giù dal gemello: nel punto esatto, in forze, con una torcia accesa in mano ---------- */
+await blocco('il gemello riporta giù', async () => {
+  await sopraVaDa(page, '[data-portale]', 'portale', { tocca, atteso: '[data-fumetto-di="portale"] [data-azione="portale-giu"]' })
+  await scatto(page, 'portale-gemello-fumetto')
+  await toccaIl('[data-fumetto-di="portale"] [data-azione="portale-giu"]')
+  await giuPronto(page)
+  uguale('si torna giù nel punto esatto', await cellaGiu(page), DOV_ERA)
+  uguale('a vita piena', (await vitaInBarra(page, 'giu')).join('/'), `${VITA_MAX}/${VITA_MAX}`)
+  await page.waitForFunction(() => !!(window.__sotterraneo3d.eroe && window.__sotterraneo3d.eroe.mano), null, { timeout: 5000 }).catch(() => {})
+  uguale('e la torcia si vede in mano', await page.evaluate(() => !!(window.__sotterraneo3d.eroe && window.__sotterraneo3d.eroe.mano)), true)
+  await scatto(page, 'torce-giu-accesa')
+  const r = await paginaEroe()
+  uguale('la pagina dell\'eroe giù: una accesa e due alla cintura', `${r.n}|${r.resta}|${r.scorta}`, `${COMPRATE}|${STANZE_TORCIA}|${COMPRATE - 1}`)
+  controlla('a parole', r.testo.includes(`ancora ${STANZE_TORCIA} stanze`) && r.testo.includes(`${COMPRATE - 1} alla cintura`), r.testo)
+  await toccaIl('[data-scheda="zaino"]')
+  await page.waitForSelector('[data-zaino] [data-torcia-zaino]', { timeout: 5000 })
+  uguale('e lo zaino di giù', (await riga('[data-torcia-zaino]')).resta, STANZE_TORCIA)
+  await chiudi('[data-zaino]')
+})
+
+/* ---------- giù la pergamena apre un portale: toccato, si sale senza domande, accanto al gemello ---------- */
+let dovEro = null
+await blocco('la pergamena apre il portale, e si sale', async () => {
+  await toccaIl('[data-azione="zaino"]')
+  await page.waitForSelector('[data-zaino]', { timeout: 3000 })
+  await toccaIl(`[data-tasca][data-cosa="${P}"]`)
+  await page.waitForSelector('[data-azione="usa"]', { timeout: 5000 })
+  uguale('nello zaino dice cosa fa', (await page.locator('[data-azione="usa"]').innerText()).trim(), 'Apri il portale')
+  await toccaIl('[data-azione="usa"]')
+  await page.waitForFunction(() => !!window.__sotterraneo3d.corsa.portaleDellaPergamena, null, { timeout: 5000 }).catch(() => {})
+  const v = await page.evaluate(() => { const p = window.__sotterraneo3d.corsa.portaleDellaPergamena; return p && { x: p.x, y: p.y } })
+  controlla('accanto all\'eroe si è aperto un portale', !!v)
+  await page.waitForSelector('[data-zaino]', { state: 'detached', timeout: 3000 }).catch(() => {})
+  await fermoGiu(page)
+  await attendi(page, 600)   // il varco si accende dal basso
+  await scatto(page, 'sotterraneo-pergamena-portale')
+  dovEro = await cellaGiu(page)
+  const q = await schermoDi(page, v.x + 0.5, v.y + 0.5, 0.6)
+  await tocca(q.x, q.y)
+  await page.waitForSelector('[data-azione="portale"]', { timeout: 15000 })
+  uguale('il portale non chiede niente', await page.locator('.sot-domanda').count(), 0)
+  await scatto(page, 'portale-foglio')
+  await toccaIl('[data-azione="portale"]')
+  await mondoPronto(page)
+  uguale('si arriva sopra, senza la discesa in 3D', await page.locator('[data-tela="3d"]').count(), 0)
+  const gemello = postiDi(ilMondo(), 'portale').find(q => q.citta === 'villaggio')
+  uguale('si sbuca accanto al portale gemello', await page.locator('[data-eroe-mondo]').getAttribute('data-cella'), `${gemello.accanto.x},${gemello.accanto.y}`)
+  const a = await avventura()
+  uguale('la sosta ricorda che si è saliti dal portale', a.sosta?.via, 'portale')
+  uguale('e dov\'era l\'eroe', `${Math.floor(a.sosta?.dove?.x)},${Math.floor(a.sosta?.dove?.y)}`, dovEro)
+  uguale('la pergamena è spesa', (a.roba?.zaino || []).filter(k => k === P).length, 0)
+  await attendi(page, 300)   // qualche fotogramma di sopra, dove un pittore rimasto agganciato alla discesa si rompeva
+  uguale('salendo, nessun errore in console', errori.splice(0).join(' | '), '')
+})
+
+/* ---------- uscendo dal villaggio il gemello resta, e l'ingresso della stessa discesa riprende da dove si era ---------- */
+await blocco('il gemello resta, e l\'ingresso riprende', async () => {
+  await toccaIl('button[aria-label="indietro"]')
+  await page.waitForSelector('.carte', { timeout: 5000 })
+  await scegli(page, 'sotterraneo')
+  await mondoPronto(page)
+  uguale('uscendo dal villaggio e rientrando, il gemello c\'è ancora', await page.locator('[data-portale]').count(), 1)
+  uguale('in cima niente carta «torno giù»', await page.locator('[data-ripresa]').count(), 0)
+  await scendiNelSotterraneo(page, 0, { tocca, scendi: false })
+  const k = CAMPAGNA[0].chiave
+  uguale('l\'ingresso della stessa discesa dice «riprendo da dove ero»', await page.locator(`[data-fumetto-di="${k}"] [data-azione="scendi"][data-sosta="1"]`).count(), 1)
+  await toccaIl(`[data-fumetto-di="${k}"] [data-azione="scendi"]`)
+  await giuPronto(page)
+  uguale('e non chiede di lasciar perdere niente', await page.locator('[data-chiede]').count(), 0)
+  uguale('si riprende nel punto di prima', await cellaGiu(page), dovEro)
+})
+
+/* ---------- la ✕ dalla discesa non è un portale: in home, la sosta è un'uscita, e «riprendi da qui» riporta giù ----------
+   Senza il mondo di sopra né il gemello, dietro il velo della pausa. Tornando dal mondo di sopra il `v-if` smonta il campo, quindi
+   la discesa ripresa trova un altro canvas: un pittore rimasto agganciato al primo dipingeva su una tela staccata (lo schermo nero,
+   e nessun errore). Per questo il disegno si riguarda */
+await blocco('la ✕ e «riprendi da qui»', async () => {
+  await toccaIl('button[aria-label="indietro"]')
+  await page.waitForSelector('.carte', { timeout: 5000 })
+  uguale('la ✕ dalla discesa porta in home', await page.locator('[data-mondo3d]').count(), 0)
+  const s = (await avventura()).sosta
+  uguale('la sosta ora è un\'uscita, non un portale', s?.via, 'uscita')
+  uguale('e l\'eroe è dove era', `${Math.floor(s?.dove?.x)},${Math.floor(s?.dove?.y)}`, dovEro)
+  uguale('in home si riprende il sotterraneo', await page.locator('[data-riprendi]').getAttribute('data-riprendi'), 'sotterraneo')
+  controlla('e dice dove', (await page.locator('[data-riprendi]').innerText()).includes(`${CAMPAGNA[0].nome} · piano 1 di`), await page.locator('[data-riprendi]').innerText())
+  await scatto(page, 'portale-riprendi-home')
+  await toccaIl('[data-riprendi]')
+  await page.waitForSelector('[data-pausa]', { timeout: 20000 })
+  await page.waitForFunction(() => document.querySelector('[data-tela="3d"]')?.dataset.eroe, null, { timeout: 30000 })   // la tela scrive la cella al primo fotogramma
+  uguale('si è già giù, senza il mondo di sopra né il gemello', await page.locator('[data-mondo3d], [data-portale]').count(), 0)
+  uguale('nel punto esatto', await cellaGiu(page), dovEro)
+  controlla('fermi, dietro il velo della pausa che dice a che piano si è', (await page.locator('[data-pausa]').innerText()).includes('piano 1'))
+  await attendi(page, 400)   // il velo è cieco per un attimo (CIECA)
+  await toccaIl('[data-pausa] [data-azione="riprendi"]')
+  await page.waitForSelector('[data-pausa]', { state: 'detached', timeout: 3000 }).catch(() => {})
+  uguale('toccato il velo, la discesa riparte', await page.locator('[data-pausa]').count(), 0)
+  await page.waitForFunction(() => { const g = window.__sotterraneo3d && window.__sotterraneo3d.grafica(); return g && !g.entrando && g.chiamate > 10 && g.figure > 0 }, null, { timeout: 20000 }).catch(() => {})
+  const g = await page.evaluate(() => { const g = window.__sotterraneo3d.grafica(); return { chiamate: g.chiamate, figure: g.figure } })
+  controlla('e la discesa ripresa si vede', g.chiamate > 10 && g.figure > 0, JSON.stringify(g))
+  await scatto(page, 'portale-ripresa')
+})
 
 uguale('nessun errore in console', errori.join(' · '), '')
-nota(`seme ${piano.seme}: porta ${indice(piano.porta)}, mostro ${indice(piano.mostro)} (${piano.mostro.tipo}), ` +
-     `portale in ${piano.portale.x},${piano.portale.y}`)
+nota(`sosta del portale: seme 21, l'eroe in ${DOV_ERA}, vita ${c.vita}/${VITA_MAX}`)
 await browser.close()
-riassunto('il portale e la ripresa esatta col dito')
+riassunto('il portale, chi cura, le torce e la ripresa esatta')

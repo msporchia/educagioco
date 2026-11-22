@@ -81,5 +81,5 @@ Nei test: `unita/sotterraneo-roba` (la roba fra due discese, lo svenimento,
 la sosta, il portale al posto del mercante, un'avventura nuova che parte nuda,
 i banchi del passo, e l'equilibrio con la roba attesa su sei semi),
 `misure/sotterraneo` (la tabella della storia, venti semi per i quattro
-eroi), `integrazione/sotterraneo-mercanti` (col dito: si compra, si vende, si
+eroi), `integrazione/sotterraneo-bottega` (col dito: si compra, si vende, si
 scende con la roba e la si ritrova).

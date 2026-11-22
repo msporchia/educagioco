@@ -119,7 +119,7 @@ comprarle da lei»*.
 Nei test: `unita/sotterraneo-pergamena` (la cosa, la missione e la bottega
 prima e dopo, il tetto, per terra solo dopo e mai dai mostri, aprirla, il
 gemello gratis con la sosta, lasciare il piano, l'abisso, l'ultimo posto
-sicuro), `integrazione/sotterraneo-pergamena` (col dito: lei non la vende
+sicuro), `integrazione/sotterraneo-portale` (col dito: lei non la vende
 prima del quaderno, dopo la si compra, giù la si apre dallo zaino, su e giù
 dal gemello e su di nuovo gratis).
 
@@ -158,13 +158,13 @@ dal gemello e su di nuovo gratis).
   Davanti a una domanda il ⏸ non c'è.
 
 Nei test: `unita/sotterraneo-sosta` (la ripresa esatta cosa per cosa, il peso, il
-portale, e `via`: portale, uscita, una sosta di prima), `integrazione/sotterraneo-cura` (la cura sopra, scritta nella sosta), `integrazione/sotterraneo-portale`
+portale, e `via`: portale, uscita, una sosta di prima), `integrazione/sotterraneo-portale` (la cura sopra, scritta nella sosta), `integrazione/sotterraneo-portale`
 (col dito: il portale, la vita di giù che sale con l'eroe e la guaritrice che la rimette, il gemello, la ✕ che porta in home, «riprendi da qui» che riprende
 giù senza carta né gemello e dietro il velo, il gemello che resta dopo il portale vero; parte nella stanza del portale
 con `#stanza=portale` nella scalinata antica, perché un piano con porta e mostro ferito vicini alla partenza non è raro e uno
 della cripta non può esserci: là i mostri cadono in un colpo),
-`integrazione/sotterraneo` (uscire, rientrare, «lascio perdere» col suo foglio),
-`integrazione/sotterraneo-avventure` (cambiare eroe dal velo, e riprendere giù scegliendo
+`integrazione/sotterraneo-porte-scale` (uscire, rientrare, «lascio perdere» col suo foglio),
+`integrazione/sotterraneo-sopra-terre` (cambiare eroe dal velo, e riprendere giù scegliendo
 quello con la discesa a metà). Il velo della pausa: `[data-pausa]` con
 `[data-azione="lascia-discesa"]`, `[data-azione="eroe-giu"]` e `[data-azione="esci"]`; il foglio
 `[data-lascio-perdere]` con `[data-azione="scorda-si"]` / `"scorda-no"`. `lasciaLaDiscesa` in

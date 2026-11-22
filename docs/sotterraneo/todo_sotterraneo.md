@@ -45,23 +45,23 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
 - **Il mercante a cui vendere non si trovava** (Marco, dopo il villaggio nuovo): il rigattiere e l'erborista avevano il `piede` sulla riga di
   dietro del loro lotto, e dal sud la tenda della bottega li copriva (`data-vis=1` ma invisibili). Portati sul fronte della piazza
   ((15,7) e (7,8) in `dati/mondo-aperto.js`, 21 ottobre): da riguardare sul telefono.
-- **I ritratti 3D nel mondo** (22 ottobre): in `integrazione/sotterraneo-mondo` il ritratto del dialogo e quello della bottega non
+- **I ritratti 3D nel mondo** (22 ottobre): in `integrazione/sotterraneo-sopra-mondo` il ritratto del dialogo e quello della bottega non
   arrivano, e `__anteprime3d.stato()` dice `rotto: true` (il contesto WebGL delle anteprime perso, `webglcontextlost`) con la macchina
-  carica (load 20–25); nelle discese (`-elmo`) le anteprime vanno. Da rilanciare a macchina libera; se resta rosso, guardare chi perde il
+  carica (load 20–25); nelle discese (`-bottega`) le anteprime vanno. Da rilanciare a macchina libera; se resta rosso, guardare chi perde il
   contesto quando il mondo e le anteprime ne tengono due. Nello stesso test la palude è passata da 154 a 191 chiamate (soglia 200)
   dopo il merge di `main` del 22 ottobre: da guardare prima che la soglia scatti.
 - **Fumetto del portale**: `TypeError charAt` su `f.nome` mancante quando la sosta si svuota («torno giù»): corretto con `minuscolo`
   tollerante (21 ottobre); non riprodotto nel browser, solo dedotto dal file pubblicato. Se ricompare, incollare l'errore.
-- **Test del browser lenti sotto carico**: `sotterraneo-mondo`, `-bacheca`, `-mostri-sopra`, `-mondo-meta` vanno in timeout con la macchina
+- **Test del browser lenti sotto carico**: `sotterraneo-sopra-mondo`, `-sopra-bacheca`, `-sopra-mostri` vanno in timeout con la macchina
   carica (load 40–90 con più agenti); da soli passano. Girarli uno o due alla volta (`--alla-volta=2`).
-- **`integrazione/sotterraneo-mondo` fallisce al passo della pietra** (`[data-pietra-domanda] .qz-tasto` non compare entro 30 s) anche senza
+- **`integrazione/sotterraneo-sopra-mondo` fallisce al passo della pietra** (`[data-pietra-domanda] .qz-tasto` non compare entro 30 s) anche senza
   la modifica del rigattiere, con load average 16–23; da solo, a macchina libera, passava. Da rilanciare quando il carico è basso; se
   fallisce ancora è una regressione dei gesti (drag/tocco) o della pietra del villaggio nuovo.
 - **`misure/sotterraneo` è rossa per taratura** (22 ottobre, non ritarata per ordine di Marco): a 4/10 il nano al fondo vince 14/20 (non «quasi
   sempre»), e fra i quattro eroi la torre vince il 31% e il fondo il 43% (bersaglio: quasi mai). Da risolvere insieme alla taratura qui sotto.
 - **I test del browser col dito e la mappa che scorre**: chiuso un dialogo o aperto un foglio, la mappa torna a posto scorrendo per circa un
-  secondo; un tocco dato prima cade sul prato. `-cura` e `-missioni` ora aspettano che la cosa stia ferma (`toccaIl` locale); lo stesso
-  `toccaIl` copiato in altri test non lo fa, se uno diventa instabile si sa dove guardare. `-bottega-avanti` passava in questo giro ma a volte
+  secondo; un tocco dato prima cade sul prato. `-portale` e `-sopra-missioni` ora aspettano che la cosa stia ferma (`toccaIl` locale); lo stesso
+  `toccaIl` copiato in altri test non lo fa, se uno diventa instabile si sa dove guardare. `-bottega` passava in questo giro ma a volte
   fallisce per un prezzo casuale.
 - **`node_modules` condiviso svuotato** da un `npm ci` interrotto (21 ottobre, ripristinato copiando un'installazione): i worktree degli
   agenti lo collegano con un symlink al checkout principale; chi lancia `npm ci` lì rompe tutti.

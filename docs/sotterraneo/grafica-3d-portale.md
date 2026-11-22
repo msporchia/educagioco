@@ -46,7 +46,7 @@ Il resto del 3D sta in [grafica-3d.md](grafica-3d.md).
   di Gioco.vue, fuori dal fotogramma: buttano il 3D con `distruggi`, che ferma
   il ciclo prima di buttare il piano.
 
-Nei test: `integrazione/sotterraneo-3d-uscite` (il portale toccato col dito,
+Nei test: `integrazione/sotterraneo-porte-scale` (il portale toccato col dito,
 la scala che sale, lo svenimento: ogni volta sopra, senza tela 3D e senza
 errori in console). I cheat: `#stanza=al-portale`, `#stanza=al-scala-su`.
 
@@ -58,7 +58,7 @@ errori in console). I cheat: `#stanza=al-portale`, `#stanza=al-scala-su`.
   comparison requests … LINEAR filtering … implementation-defined»). Provato
   VSM: niente avviso e ombre uguali, ma disegna nella mappa d'ombra anche
   tutto quello che la riceve, e il mondo di sopra (mezzo milione di
-  triangoli) raddoppiava il tempo di un fotogramma (`integrazione/sotterraneo-mondo`
+  triangoli) raddoppiava il tempo di un fotogramma (`integrazione/sotterraneo-sopra-mondo`
   da 145 s a oltre 300). Basic legge la profondità senza filtro: agli scatti
   della sala con la torcia è uguale a PCF, i bordi sono netti come i pixel
   degli sprite.

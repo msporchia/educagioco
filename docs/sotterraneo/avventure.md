@@ -137,7 +137,7 @@ passarli: le avventure ripartono da zero per tutti. `azzeraIlVecchio`
 Nei test: `unita/sotterraneo-avventure` (le avventure separate, il massimo con
 lo store vero, l'azzeramento di un profilo di prima delle avventure e di uno
 di ieri con lo stesso «da fuori», «riprendi da qui» con l'icona),
-`integrazione/sotterraneo-avventure` (col dito: un profilo di prima si azzera
+`integrazione/sotterraneo-sopra-terre` (col dito: un profilo di prima si azzera
 aprendo il gioco; poi col cavaliere si lascia a metà il pozzo, il mago
 comincia da capo, si torna al cavaliere e si ritrova tutto, e «riprendi da
 qui»). Nella scelta `.sot-eroe[data-eroe="<eroe>"]` con `data-nuova` (1 se mai

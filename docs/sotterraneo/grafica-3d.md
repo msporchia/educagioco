@@ -112,7 +112,7 @@ frequenza non cambia i passi.
   ottobre 2026: «quando rispondi a una domanda ti concentri su quella… è più
   un overlay»). Prima si alzava anche per loro, e a ogni domanda la mappa
   scorreva. Velo scuro sopra la scena non messo: la discesa è già buia.
-  Nei test: `integrazione/sotterraneo-3d-fogli` (`aSchermo` fermo a mezzo
+  Nei test: `integrazione/sotterraneo-porte-scale` (`aSchermo` fermo a mezzo
   pixel prima, durante e dopo la domanda di una porta, `&dpr=1` perché il
   pixel ratio che si adatta cambierebbe la scala da sé; nello scontro i
   combattenti sopra il pannello). Il pizzico e la rotella la avvicinano o la
@@ -216,8 +216,8 @@ che si adatta, `ACCESI`, il cheat `&spegni=` e il peso del file:
 
 Nei test: `unita/sotterraneo-paesaggi` (i paesaggi: [paesaggi-3d.md](paesaggi-3d.md)), `unita/sotterraneo-3d` (gli aspetti, la pianta di tutte le discese
 e dell'abisso, la maschera, il palco con l'agio, il tocco, le figure in un
-InstancedMesh, le botti), `unita/sotterraneo-3d-tempo` e `integrazione/sotterraneo-3d-tempo`
-(lo sprite, l'affondo e la telecamera uguali a 60, 120 e 144 Hz, con un orologio finto), `integrazione/sotterraneo-3d` (col dito vero: il mondo di sopra, la discesa e
+InstancedMesh, le botti), `unita/sotterraneo-3d-tempo` e `verifiche/sotterraneo-3d-tempo`
+(lo sprite, l'affondo e la telecamera uguali a 60, 120 e 144 Hz, con un orologio finto), `integrazione/sotterraneo-discesa` (col dito vero: il mondo di sopra, la discesa e
 quanto costa, camminare, aprire una porta, lo scontro con una risposta
 sbagliata e una giusta, il mostro che cade, la scala che sale e quella che
 scende da una sosta scritta in Node, senza

@@ -1,6 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL SOTTERRANEO 3D IN DUE — DUE PAGINE E IL SERVIZIO VERO
 
+
+   perché: due telefoni nella stessa discesa in due col servizio vero: codice, nome sopra la testa, un passo che si vede sull'altro, chi se ne va
+   a parte perché: è l'unico del sotterraneo con due pagine e il servizio in locale (e salta senza); le reti cattive le prova unita/sotterraneo-sfida
    Due pagine (due telefoni) aprono il Sotterraneo 3D, ognuna col suo eroe; una crea la discesa in due (il posto e la
    difficoltà) e riceve il codice, l'altra lo scrive (docs/sotterraneo/in-due.md). Partiti, tutti e due sono nella stessa
    discesa con tutti e due gli eroi, il compagno ha il suo nome sopra la testa, un passo dell'uno si vede sull'altro telefono,

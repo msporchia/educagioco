@@ -248,7 +248,7 @@ prima che torna da dare, le doti, i requisiti delle armi e la roba della
 storia che si indossa, riassegnare a gemme, la regola coi tre esempi
 dell'utente e il «+» acceso sempre, la pagina coi «+» spenti e la
 caratteristica indietro), `misure/sotterraneo` (due livelli sotto e tre
-sopra), `integrazione/sotterraneo-eroe` (col dito: il «+» d'oro sul livello,
+sopra), `integrazione/sotterraneo-scontro-eroe` (col dito: il «+» d'oro sul livello,
 la pagina dal livello, la mappa senza la carta e il «Cambia eroe» della pagina, il «+» spento e quello che brilla, un
 punto dato, i Tesori, il livello salito battendo il mostro grosso). Sulla
 barra `[data-azione="eroe-pagina"]` con `data-livello` e `data-punti`, la riga

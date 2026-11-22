@@ -32,5 +32,5 @@ sta lontano e si vede.
 
 Nei test: `unita/sotterraneo-scala-su` (le dodici missioni, sei semi ciascuna: nella
 stanza più lontana, né d'arrivo né accanto, sempre nello stesso posto, la freccina
-sulla cosa), `integrazione/sotterraneo-scale` (col dito: in vista il bersaglio ha il suo
+sulla cosa), `integrazione/sotterraneo-rotta` (col dito: in vista il bersaglio ha il suo
 rosa in scena, la freccina `[data-rotta][data-verso="qui"]`).

@@ -222,7 +222,7 @@ più nessuno.
   possono uscire magiche o rare, e allora hanno anche le loro abilità.
 - **Le gemme non diventano monete, mai**: la roba si vende solo in gemme.
 
-Nei test: `unita/sotterraneo-pozioni` e `integrazione/sotterraneo-pozioni` (le cure per discese finite, il tetto di otto, `[data-al-tetto]`),
+Nei test: `unita/sotterraneo-pozioni` e `integrazione/sotterraneo-bottega` (le cure per discese finite, il tetto di otto, `[data-al-tetto]`),
 `unita/sotterraneo-roba` (il fabbro e l'incantatrice si dividono la roba: bacchette e stoffa solo da
 lei, l'energia da lei, le cure dalla guaritrice, la torcia dal carovaniere, le linguette per ogni eroe; il banco porta il passo dopo; sovrapprezzo
 dei pezzi avanti; nessun pezzo di famiglie non portate; ogni linguetta con
@@ -232,6 +232,6 @@ forti e un sogno sempre, il rinnovo solo quando serve; l'elisir fuori dai banchi
 senza le caratteristiche e finire nello zaino; il banco che ruota — tre via,
 tre dentro, gli altri restano, i più deboli se ne vanno, il banco riaperto o
 riletto è lo stesso, il salvataggio di prima; gli ultimi cinque venduti, allo
-stesso prezzo, riletti dall'avventura; ogni linguetta con un pezzo che si mette subito e i pezzi col 🔒 da tenere per dopo) e `integrazione/sotterraneo-bottega-avanti` (la 🔒 sulla casella, «Serve livello N (hai M)» sul pannello e nello zaino, senza tasto per indossarlo) e `misure/sotterraneo` (chi spende avanti
+stesso prezzo, riletti dall'avventura; ogni linguetta con un pezzo che si mette subito e i pezzi col 🔒 da tenere per dopo) e `integrazione/sotterraneo-bottega` (la 🔒 sulla casella, «Serve livello N (hai M)» sul pannello e nello zaino, senza tasto per indossarlo) e `misure/sotterraneo` (chi spende avanti
 nelle ultime due discese); i bersagli della finestra stanno in
 [bottega-finestra.md](bottega-finestra.md).

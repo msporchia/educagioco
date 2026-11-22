@@ -145,11 +145,11 @@ palude pianta, melma, serpente, granchio; nel tempio polpo, piranha, granchio, t
 ## Nei test
 
 `unita/sotterraneo-botti` (la tabella, dove stanno sui piani veri, il premio una su cinque e sempre piccolo, spenta di
-difetto, una volta sola, il segno nel piano, la sosta), `integrazione/sotterraneo-3d` (col dito vero: una botte senza premio
+difetto, una volta sola, il segno nel piano, la sosta), `integrazione/sotterraneo-discesa` (col dito vero: una botte senza premio
 che si rompe e resta a pezzi, una col premio che lascia qualcosa che arriva davvero; `window.__sotterraneo3d.botti()`). Poi:
 `unita/sotterraneo-paesaggi` (i dati senza guasti, ogni nome esiste, nessuna terna uguale; il cheat veste la discesa con gli
 stessi numeri; le pareti senza crepe, nei limiti, con le facce girate fuori, la roccia irregolare e i blocchi a filo; i
 pavimenti diversi nel disegno in grigio; l'arredo fitto, mai sulla roba, sulle porte o fuori dal pavimento; le lame del tempio),
-`unita/sotterraneo-3d` (gli aspetti dei quattro del motore), `integrazione/sotterraneo-3d` (il ghiaccio e il tempio aperti col
+`unita/sotterraneo-3d` (gli aspetti dei quattro del motore), `integrazione/sotterraneo-discesa` (il ghiaccio e il tempio aperti col
 cheat: il paesaggio, la famiglia di piante, le chiamate). Bersaglio: `window.__sotterraneo3d.grafica().scenario` (il paesaggio
 disegnato).

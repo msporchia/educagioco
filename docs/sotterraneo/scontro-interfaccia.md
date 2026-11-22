@@ -57,7 +57,7 @@ Tutto sta in `Corsa.foglio` (`che: 'scontro'`) e nelle funzioni di `Corsa`; un m
   scatta di posto.
 - **La caduta**: chi cade non svanisce in piedi ma prende il suo pezzo a terra (le pose che i fogli dipingono dopo ogni creatura: un
   cadavere, delle ossa, una pozza, un mucchio di brace o di polvere, secondo la creatura), ci resta quasi un secondo e poi svanisce.
-  Non respira, e niente barra della vita. Il grosso e chi non ha il pezzo svaniscono in piedi. Nei test: `integrazione/sotterraneo-caduta`.
+  Non respira, e niente barra della vita. Il grosso e chi non ha il pezzo svaniscono in piedi. Nei test: `integrazione/sotterraneo-scontro`.
 - **Il nome sta solo sul bersaglio e su chi ha un grado** (`[data-nome-mostro]`, senza articolo e piccolo: «Scheletro», «Scheletro mago spettrale»;
   l'utente, 13 ottobre: un nome sopra tutti affollava il palco; il bersaglio lo porta tenue, un grado ha il colore della sua rarità e la figura un
   alone dello stesso colore; il grosso ha il suo nome nella barra in cima) e, se è una variante armata, l'arma in pugno
@@ -115,5 +115,5 @@ offerta se `!puoScappare()`), e sopra la riga rossa dello stop ([pericolo.md](pe
 `[data-fila] [data-turno]` (`data-chi`: `eroe` o il posto), `[data-stati-eroe]`; la scelta `[data-caselle-abilita]`
 (`data-pronto`, `data-ferma`), `[data-azione="attacco|bevi-scontro|scappa"]`, `[data-abilita="<id>"]`. `figura grosso`:
 `[data-figura-grosso]`. Per aprire uno scontro con più mostri: `#sotterraneo=branco&mostri=6` ([../core/comandi.md](../core/comandi.md)).
-`unita/sotterraneo-vista` (disposizione, `piazza`, dati della vista, racconto) e `integrazione/sotterraneo-gruppi` (sei mostri in tre colonne a 390 e
+`unita/sotterraneo-vista` (disposizione, `piazza`, dati della vista, racconto) e `integrazione/sotterraneo-scontro` (sei mostri in tre colonne a 390 e
 320 px, il bersaglio col dito, il Grido su tutti raccontato in ordine, il grosso, l'agguato e la sorpresa).

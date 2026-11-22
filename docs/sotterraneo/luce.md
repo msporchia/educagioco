@@ -160,7 +160,7 @@ il disegno in `scena3d/` ([grafica-3d.md](grafica-3d.md)).
 
 Nei test: `unita/sotterraneo-sosta` (§ 10: le diciotto torce comprate che
 tornando dal portale si accendono, la stanza al buio che ne accende una),
-`integrazione/sotterraneo-torce` (col dito: la pagina dell'eroe senza torce,
+`integrazione/sotterraneo-portale` (col dito: la pagina dell'eroe senza torce,
 tre comprate dalla guaritrice, la pagina e lo zaino di sopra che le contano
 alla cintura, il gemello che riporta giù con una accesa in mano e il cono
 lungo, la pagina e lo zaino di giù; poi la torcia appesa: accesa fa luce sul suo muro, il modello nella staffa, toccata l'eroe ci va
@@ -247,7 +247,5 @@ alle spalle e quello in luce che va dritto, l'agguato da dietro e non da
 davanti; in fondo la torcia appesa: in molti piani e non in tutti, al più una, mai nell'ingresso né nella stanza della scala, dove la
 disegna la scena, la luce che fa nella sua stanza e non fuori, toccata ci si va sotto e diventa propria e piena, non torna riprendendo la
 sosta), `unita/sotterraneo` (§ «la torcia conta»: la torcia che allunga il
-cono, la sveglia dei mostri, gli sgoccioli), `integrazione/sotterraneo-luce`
-(i pixel accesi della tela con, senza e agli sgoccioli, e la luce che segue il
-verso; `--scatti` lascia le foto `sotterraneo-luce-con`, `-senza`,
-`-sgoccioli`, `-con-voltato`).
+cono, la sveglia dei mostri, gli sgoccioli), e le caselle accese con, senza e agli sgoccioli e la luce che segue il
+verso (nel browser non si contano più i pixel della tela).

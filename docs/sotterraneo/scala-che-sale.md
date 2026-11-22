@@ -91,7 +91,7 @@ sette discese, nel punto d'arrivo; si risale accanto alla scala che scende col
 piano com'era; niente vita regalata risalendo; dal primo piano è un'uscita che
 non esce da sé; la sosta coi piani alle spalle, il peso, i piani oltre il tetto;
 i bersagli delle dodici missioni nella stanza più lontana),
-`integrazione/sotterraneo-scale` (col dito: si compare sulla scala, il foglio
+`integrazione/sotterraneo-porte-scale` (col dito: si compare sulla scala, il foglio
 `[data-azione="sali"]` («risalgo al piano N», «resto qui» = `[data-azione="dopo"]`),
 si ricompare accanto alla scala che scende, il mostro battuto resta battuto nella
 sosta, si riscende; dal primo piano `[data-lascio-perdere]` con `scorda-no` e

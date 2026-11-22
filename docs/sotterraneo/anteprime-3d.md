@@ -137,6 +137,6 @@ aperto, quante in coda, e `prima`/`ultima` (il primo chiedere e l'ultima pronta)
 - L'armatura si mostra sull'eroe di adesso anche quando la sua classe non la porta (il ✋ lo dice già).
 
 Nei test: `unita/sotterraneo-anteprime-3d` (il ripiego copre ogni arma e scudo del gioco, il pezzo 3D con la figura, le chiavi, null dove resta lo
-sprite, la lettura delle chiavi, i mostri allo stesso modello della scena, la coda), `integrazione/sotterraneo-3d-anteprime` (lo
+sprite, la lettura delle chiavi, i mostri allo stesso modello della scena, la coda), `integrazione/sotterraneo-scontro` (lo
 zaino coi modelli, un renderer solo, la pagina dell'eroe, la fila con l'eroe a mezzo busto e la pianta). Bersagli: `[data-anteprima="3d"]`
 (`"attesa"` finché la foto non c'è) con `[data-anteprima-chiave]` sull'icona, e `.sot-armato[data-anteprima="3d"]` sul ritratto.

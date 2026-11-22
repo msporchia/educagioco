@@ -55,5 +55,5 @@ piano passato); `integrazione/sotterraneo-rotta` misura sullo schermo che la pun
 alla cosa (forziere e scala), e sopra che la freccia azzurra porti alla discesa, ceda alla
 consegna e sparisca senza missioni. La scelta nel diario (`seguita`, `rotta`
 con la scelta, il dettaglio di ogni voce) è in `unita/sotterraneo-missioni`; col dito, la freccia
-che cambia obiettivo sopra e giù, e la scelta nell'avventura, in `integrazione/sotterraneo-dettaglio`
+che cambia obiettivo sopra e giù, e la scelta nell'avventura, in `integrazione/sotterraneo-sopra-missioni`
 (`[data-azione="segui"]`, `[data-segui-attivo]`).

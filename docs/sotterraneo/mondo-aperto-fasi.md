@@ -188,10 +188,10 @@ antri, strade): da lì più agenti lavorano senza pestarsi i piedi, ognuno coi s
   anelli ha la sua grata, le pietre), `unita/sotterraneo-mondo-salva` (la nebbia in base64, il campo `mondo`, «porta qui
   il tuo eroe», il travaso con la tabella e il caso peggiore), `unita/sotterraneo-quest-modelli`,
   `unita/sotterraneo-mondo-3d` (pura: la maschera, i pezzi da costruire, il bersaglio delle persone),
-  `integrazione/sotterraneo-mondo` (col dito vero: il tocco su una persona sottile, la veduta e il tocco lì, la nebbia che
+  `integrazione/sotterraneo-sopra-mondo` (col dito vero: il tocco su una persona sottile, la veduta e il tocco lì, la nebbia che
   si apre e si ritrova, una pietra accesa con la domanda, il viaggio, il gemello nella città giusta, quanto costa).
 - **Da adattare**: `unita/sotterraneo-terra` (ora prova solo `motore/terra.js` su una maschera piccola), `unita/sotterraneo-missioni` e `-storia` (i requisiti nel mondo), `unita/sotterraneo-zone` (i volti
-  nuovi), `integrazione/sotterraneo-terra`, `-mercanti`, `-missioni`, `-portale`, `-avventure` (il 3D li vuole sui bersagli
+  nuovi), `integrazione/sotterraneo-terra`, `-bottega`, `-sopra-missioni`, `-portale`, `-sopra-terre` (il 3D li vuole sui bersagli
   HTML sopra la tela; `camminaVerso` e `scendiNelSotterraneo` di `test/aiuto/browser.mjs` imparano il mondo).
 - **I banchi**: `npm run pianta -- --mondo`; il banco del sotterraneo con un curioso che attraversa le regioni prima
   di scendere (la fase della taratura).

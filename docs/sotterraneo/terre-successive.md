@@ -84,7 +84,7 @@ Tutto nell'avventura (`profile.campagne.sotterraneo.cfg.avventure[eroe]`), nient
 - **La medaglia** per una terra nuova raggiunta, se l'utente la vuole.
 
 Nei test: `unita/sotterraneo-terre` (le regole, il salvataggio, la porta, il viaggio indietro, i volti del minatore, la storia nella
-prima, la tinta), `integrazione/sotterraneo-terre` (il minatore che la annuncia, la porta toccata col dito, la seconda terra salvata e
+prima, la tinta), `integrazione/sotterraneo-sopra-terre` (il minatore che la annuncia, la porta toccata col dito, la seconda terra salvata e
 ritrovata, i volti, la pietra che riporta alla prima). Bersagli: `[data-mondo3d][data-terra-ora]`, `[data-bersaglio][data-terre]`
 (1 aperta), `[data-terre-dice][data-aperta]`, il tasto `[data-azione="passa-terra"]`, la riga `[data-avviso-terra]`, nel fumetto
 della pietra `[data-terre-da-tornare]` e i tasti `[data-azione="torna-terra"][data-terra]`.

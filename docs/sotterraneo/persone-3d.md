@@ -71,7 +71,7 @@ perso nelle taglie «trova chi» del diario. Finché l'immagine non è pronta re
 ## Quanto costa
 
 Misurato con SwiftShader (390×844, `&dpr=1`, dal villaggio, sette persone in vista): 135 chiamate con gli sprite di allora (`#persone2d`), 164
-coi modelli (243 prima della pelle). Le soglie di `integrazione/sotterraneo-mondo` e `-mondo-meta` sono passate da 150 a 200.
+coi modelli (243 prima della pelle). Le soglie di `integrazione/sotterraneo-sopra-mondo` sono passate da 150 a 200.
 
 ## Cosa manca
 
@@ -81,5 +81,5 @@ coi modelli (243 prima della pelle). Le soglie di `integrazione/sotterraneo-mond
 
 Nei test: `unita/sotterraneo-persone-3d` (chi sta sopra ha il modello, la lista delle viste è quella dei modelli, ogni modello si
 costruisce, sta nel tetto, ha i piedi a terra, si anima, saluta e ha poche mesh), `unita/sotterraneo-mostri-3d` (le copie uguali ai
-prototipi), `unita/catalogo-3d-sotterraneo` (le quattordici voci `sot:persona:*`), `integrazione/sotterraneo-mondo` (le persone del
+prototipi), `unita/catalogo-3d-sotterraneo` (le quattordici voci `sot:persona:*`), `integrazione/sotterraneo-sopra-mondo` (le persone del
 villaggio coi modelli, le chiamate, il ritratto 3D del dialogo e della bottega).

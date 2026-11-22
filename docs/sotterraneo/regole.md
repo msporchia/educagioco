@@ -198,7 +198,7 @@ nel punto esatto e cosa si salva: [portale-e-sosta.md](portale-e-sosta.md).
 In due righe: **il portale porta su al villaggio e il gemello riporta giù; la
 ✕ non è un portale** — porta in home, e rientrando si è già giù.
 
-Nei test: `unita/sotterraneo-piani` (le stanze, le sale, i branchi, l'anticamera: [piani.md](piani.md)), la luce sta in [luce.md](luce.md) (`unita/sotterraneo-luce`, `integrazione/sotterraneo-luce`),
+Nei test: `unita/sotterraneo-piani` (le stanze, le sale, i branchi, l'anticamera: [piani.md](piani.md)), la luce sta in [luce.md](luce.md) (`unita/sotterraneo-luce`),
 `unita/sotterraneo-scala-su` (la scala che sale e il bersaglio lontano: [scala-che-sale.md](scala-che-sale.md)),
 `unita/sotterraneo` (le sette discese col giocatore finto e la roba di
 chi ci arriva, i quattro eroi, le soglie qui sopra), `unita/sotterraneo-roba`
@@ -206,8 +206,8 @@ chi ci arriva, i quattro eroi, le soglie qui sopra), `unita/sotterraneo-roba`
 mercante, i banchi del passo), `unita/sotterraneo-storia` (la tabella, chi la
 dà, le missioni: [la-grande-storia.md](la-grande-storia.md), [missioni.md](missioni.md)), `unita/sotterraneo-sosta` (la ripresa esatta cosa per
 cosa, il peso, il portale), `misure/sotterraneo` (la tabella della storia),
-`integrazione/sotterraneo` (ci si arriva con `scendiNelSotterraneo`: il mondo
-sta in [mondo-3d.md](mondo-3d.md)), `unita/sotterraneo-gruppi` (lo scontro a gruppi: [scontro.md](scontro.md)), `unita/sotterraneo-pericolo` e `integrazione/sotterraneo-pericolo` (lo stop dello scontro: [pericolo.md](pericolo.md)), `integrazione/sotterraneo-portale`
+`integrazione/sotterraneo-discesa` (ci si arriva con `scendiNelSotterraneo`: il mondo
+sta in [mondo-3d.md](mondo-3d.md)), `unita/sotterraneo-gruppi` (lo scontro a gruppi: [scontro.md](scontro.md)), `unita/sotterraneo-pericolo` e `integrazione/sotterraneo-scontro-eroe` (lo stop dello scontro: [pericolo.md](pericolo.md)), `integrazione/sotterraneo-portale`
 (col dito: porta, mostro ferito, portale, erborista, ritorno nel punto esatto,
 la ✕ che porta in home e «riprendi da qui» che riprende giù, senza gemello). Il foglio del
 portale: `[data-azione="portale"]`; la tela dice `data-eroe`, `data-eroe-schermo` e `data-scala` per toccare

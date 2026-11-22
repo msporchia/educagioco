@@ -124,8 +124,8 @@ caselle (un id sparito vale null) e la `v` della roba resta 1, come per la colla
 - Uno sprite per dove manca l'anteprima (oggi l'emoji): nessun foglio dipinto ha un elmo o un cappello (`bottino-e-arredo` lo dice), e un
   disegno in codice dei sei modelli, a quattro rarità, è un lavoro a sé: per ora restano 🪖 🎩 👑.
 
-Nei test: `unita/sotterraneo-copricapo-di-serie` e `integrazione/sotterraneo-copricapo-di-serie` (quello di serie: i dati, il corredo, le chiavi 3D;
+Nei test: `unita/sotterraneo-copricapo-di-serie` e `integrazione/sotterraneo-bottega` (quello di serie: i dati, il corredo, le chiavi 3D;
 toglierlo e rimetterlo col dito), `unita/sotterraneo-elmo` (la casella e il catalogo, i numeri a frazione, addosso e riposto, i salvataggi di prima, il
-bottino acceso e spento sui forzieri dell'abisso, le linguette, le chiavi 3D), `integrazione/sotterraneo-elmo` (col dito: le sette
+bottino acceso e spento sui forzieri dell'abisso, le linguette, le chiavi 3D), `integrazione/sotterraneo-bottega` (col dito: le sette
 caselle, «Indossa», l'anteprima, il fabbro); `[data-casella="testa"]` (con `data-cosa`), `[data-scheda="elmi"]`,
 `[data-scheda="cappelli"]`.

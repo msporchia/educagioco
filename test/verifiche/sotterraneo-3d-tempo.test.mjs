@@ -1,13 +1,17 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL SOTTERRANEO 3D VA COL TEMPO, A OGNI FREQUENZA DELLO SCHERMO
    (docs/sotterraneo/grafica-3d.md, «Il tempo, non i fotogrammi»)
+   perché: il tempo del sotterraneo 3D a 60, 120 e 144 Hz con orologio finto: in due secondi simulati il passo dell'eroe, il respiro di due mostri e la telecamera devono venire uguali a ogni frequenza
+   a parte perché: la parte pura (sagome, passo, affondo, telecamera) è nelle unità; qui il gioco vero con i suoi due giri di fotogrammi, e solo il browser può simulare un monitor a 120 Hz
 
    Il gioco vero, coi suoi due giri di fotogrammi (il motore in Gioco.vue e il disegno in scena3d/indice.js): qui
    `requestAnimationFrame` e `performance.now` sono finti, e ogni «fotogramma» fa passare 1/60, 1/120 o 1/144 di secondo
    (il tempo virtuale corre quanto la CPU disegna: SwiftShader è lento, il gioco no). In due secondi simulati si conta quante
    volte cambia il passo dell'eroe e il respiro di due mostri addormentati in luce (la posa della loro sagoma, ogni
    PASSO_RESPIRO: scena3d/sagome-pura.js), e quanto si muove la telecamera dopo un passo: deve venire uguale a 60, 120 e 144 Hz. È la prova di quello che l'utente vedeva su un monitor a 120 Hz.
-   `node test/esegui.mjs sotterraneo-3d-tempo`
+   La parte pura (le sagome, il passo, l'affondo, la telecamera) la prova unita/sotterraneo-3d-tempo; qui il gioco intero, coi suoi
+   due giri: è una misura da guardare.
+   `node test/integrazione/sotterraneo-3d-tempo-misura.test.mjs`
    tempo: 300
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco } from '../aiuto/browser.mjs'
