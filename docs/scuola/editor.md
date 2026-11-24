@@ -67,11 +67,10 @@ Chiesto dall'utente il 22 novembre 2026: toccando un gioco lo si sceglieva subit
   portano in mezzo). Quello guardato è bordato (`guardata` di `TesseraGioco.vue`), quello scelto resta `aria-pressed`.
 - **Sotto, il gioco guardato**: qualche secondo del gioco vero mentre si fa l'esercizio (`AnteprimaGioco.vue`) e accanto **un
   testo solo** (`allena` della scheda), scritto per la maestra, a cui interessano i meccanismi educativi più del gioco: cosa
-  allena, un esempio fra «…», come cresce (Passo passo e il Robot il percorso dalle frecce ai cicli e al «se», English la forza
-  delle parole che decide la domanda, il castello i gradini dell'operazione; Survivors e il sotterraneo che le domande possono
+  allena, un esempio fra «…», come cresce (Passo passo e il Robot il percorso dalle frecce ai cicli e al «se», English che una parola
+  indovinata torna più difficile e una sbagliata più facile (detto senza numeri: la forza +1 e −2 era troppo tecnica), il castello i gradini dell'operazione; Survivors e il sotterraneo che le domande possono
   mescolare argomenti diversi). Provati due campi fissi, «L'esercizio» e «Il gioco»: si ripetevano (segnalato dall'utente).
-  Per i giochi che prendono le domande del catalogo, sotto, «Si può chiedere» e come girano (tutte una volta prima di
-  ripetersi: le sbagliate non tornano prima). Poi **«Scegli <gioco>»** (`[data-azione="scegli-gioco"]`; «Tieni» se è già
+  Niente «Si può chiedere» sotto: diceva «Matematica» o l'elenco delle materie che il passo dopo mostra comunque. Poi **«Scegli <gioco>»** (`[data-azione="scegli-gioco"]`; «Tieni» se è già
   quello). «Cambia» riapre il carosello sul gioco scelto. Vale anche per «Senza lezione» sul PC dei bambini.
 - **Il video fa vedere l'esercizio mentre si gioca** (segnalato dall'utente: il robot fermo con le nuvole non serviva), e lo fa
   `npm run anteprime scuola` (`strumenti/anteprime-scuola.mjs`) in tre modi:

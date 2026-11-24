@@ -53,12 +53,6 @@ function guarda(id) {
   nextTick(() => fila.value?.querySelector(`[data-gioco="${id}"]`)?.scrollIntoView?.({ inline: 'center', block: 'nearest', behavior: 'smooth' }))
 }
 const accanto = verso => guarda(GIOCHI[(GIOCHI.indexOf(guardato.value) + verso + GIOCHI.length) % GIOCHI.length].id)
-// cosa gli si può chiedere, detto alla maestra: le materie del catalogo che accetta, o il suo contenuto
-const siChiede = computed(() => {
-  const m = materieDelGioco(guardato.value.id)
-  if (m.length === 1 && m[0].voci.length === 1) return m[0].voci[0].nome
-  return m.map(x => x.nome).join(', ')
-})
 function scegliGioco(id) {
   if (id === gioco.value) return
   if (!vuoto.value && valido(senzaGioco(e.value)) && giochiPer(senzaGioco(e.value)).some(g => g.id === id)) return scrivi(parti.value, id)
@@ -126,10 +120,8 @@ watch(completo, (ora, prima) => { if (ora && !prima) emit('completo') })
         <div class="testo-gioco">
           <b>{{ guardato.nome }}</b>
           <!-- un testo solo, per la maestra: cosa allena, un esempio, come cresce (provati due campi fissi, esercizio e gioco: si
-               ripetevano). Per le domande del catalogo, quali e come girano -->
+               ripetevano; e «Si può chiedere» sotto, che diceva «Matematica» o l'elenco che il passo dopo mostra comunque) -->
           <span class="allena" data-allena>{{ guardato.allena }}</span>
-          <span v-if="mescolaPiuCose(guardato.id)" class="nota" data-come-insegna><b>Si può chiedere:</b> {{ siChiede }}. Le domande
-            girano tutte prima che una si ripeta, e dopo uno sbaglio si dice perché.</span>
           <button class="bottone" data-azione="scegli-gioco" @click="giocoScelto(guardato.id)">
             {{ gioco === guardato.id ? 'Tieni' : 'Scegli' }} {{ guardato.nome }}</button>
         </div>
