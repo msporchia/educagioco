@@ -2237,7 +2237,8 @@ function premi(e) {
   if (dita.size > 1) { premuto = false; return }
   premuto = true
   giu = { x: e.clientX, y: e.clientY }
-  tela.value.setPointerCapture?.(e.pointerId)
+  // un puntatore che il browser non conosce (un tocco simulato: Firefox lo rifiuta) non ferma il passo: si cammina lo stesso
+  try { tela.value.setPointerCapture?.(e.pointerId) } catch { /* senza aggancio */ }
   vai(punto(e), true)
 }
 
