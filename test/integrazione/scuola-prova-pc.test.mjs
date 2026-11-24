@@ -67,6 +67,8 @@ const href = await page.getAttribute('[data-azione="prova-pc-invia"]', 'href')
 const testo = new URLSearchParams(href.split('?')[1]).get('giudizi')
 controlla('l\'invio porta il resoconto con quale computer è', /^PROVA DEL COMPUTER DELLA SCUOLA/.test(testo) && /^Quale: aula 3, vicino alla finestra$/m.test(testo) && /^Sotterraneo: /m.test(testo), testo)
 controlla('in un invio solo', testo.length <= 3400)
+controlla('e si vede cosa parte: il modulo sembra vuoto', /è normale/.test(await page.locator('[data-prova-pc-spiega-invio]').innerText()) &&
+          /^PROVA DEL COMPUTER DELLA SCUOLA/.test(await page.locator('[data-prova-pc-cosa-parte] pre').textContent()))
 
 // il PC si ricorda i giochi in B (quelli dove B era meglio di 5 fps), e la pagina torna come prima
 const ricordo = await page.evaluate(() => JSON.parse(localStorage.getItem('scuola:pixel') || 'null'))

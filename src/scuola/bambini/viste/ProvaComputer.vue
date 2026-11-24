@@ -135,9 +135,9 @@ async function avvia() {
 function chiudi() { fermare = true; applicaPixel(1); emit('chiudi') }
 onBeforeUnmount(() => { fermare = true; applicaPixel(1); clearInterval(orologio) })
 
+const testoResoconto = () => resoconto(dati.value, { versione, ua: navigator.userAgent, ...macchina.value, dove: dove.value })
 function link() {
-  const testo = resoconto(dati.value, { versione, ua: navigator.userAgent, ...macchina.value, dove: dove.value })
-  return `${MODULO}?${new URLSearchParams({ versione: 'scuola ' + versione, giudizi: testo })}`
+  return `${MODULO}?${new URLSearchParams({ versione: 'scuola ' + versione, giudizi: testoResoconto() })}`
 }
 const SCHEDA = { video: 'il 3D lo fa la scheda video', processore: 'il 3D lo fa il processore, non la scheda video', manca: 'niente grafica 3D' }
 </script>
@@ -188,7 +188,13 @@ const SCHEDA = { video: 'il 3D lo fa la scheda video', processore: 'il 3D lo fa 
         <a class="bottone" data-azione="prova-pc-invia" :href="link()" target="_blank" rel="noopener">Invia il resoconto</a>
         <button type="button" class="bottone chiaro" data-azione="prova-pc-rifai" @click="avvia">Rifai la prova</button>
       </div>
-      <p class="nota">«Invia il resoconto» apre un modulo già compilato: lì basta premere Invia.</p>
+      <!-- il modulo riceve il resoconto in campi nascosti e sembra vuoto (segnalato dall'utente): qui si dice, e si fa vedere cosa parte -->
+      <p class="nota" data-prova-pc-spiega-invio><b>Si apre un modulo che sembra vuoto: è normale.</b> Il resoconto è già dentro, in campi
+        che non si vedono. Lì basta premere Invia.</p>
+      <details class="cosa-parte" data-prova-pc-cosa-parte>
+        <summary>Cosa mandi</summary>
+        <pre>{{ testoResoconto() }}</pre>
+      </details>
     </div>
 
     <div v-else class="carta" data-prova-pc-guasto>
@@ -239,5 +245,10 @@ li[data-esito="non-misurato"] .esito { color: var(--grigio); font-weight: 400 }
 .riga .bottone { font-size: 16px; padding: 12px 20px; text-decoration: none }
 .bottone.chiaro { background: var(--tessera); color: var(--inchiostro) }
 .nota { margin: 10px 0 0 !important; font-size: 13px; color: var(--grigio) }
+.nota b { color: var(--inchiostro) }
+.cosa-parte { margin-top: 8px; font-size: 13px }
+.cosa-parte summary { cursor: pointer; color: var(--penna, var(--inchiostro)); font-weight: 600 }
+.cosa-parte pre { margin-top: 6px; max-height: 220px; overflow: auto; padding: 8px 10px; border-radius: 8px; background: #f3f5f9;
+                  font-size: 12px; line-height: 1.4; white-space: pre-wrap }
 .avviso { font-size: 14px }
 </style>
