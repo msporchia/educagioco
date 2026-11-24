@@ -126,7 +126,9 @@ watch(completo, (ora, prima) => { if (ora && !prima) emit('completo') })
         <div class="testo-gioco">
           <b>{{ guardato.nome }}</b>
           <span>{{ guardato.spiega }}</span>
-          <span class="nota"><b>Si può chiedere:</b> {{ siChiede }}</span>
+          <!-- i giochi col contenuto loro dicono cosa allenano; quelli che prendono le domande del catalogo, cosa si può chiedere -->
+          <span v-if="guardato.allena" class="allena" data-allena><b>Cosa allena:</b> {{ guardato.allena }}</span>
+          <span v-else class="nota"><b>Si può chiedere:</b> {{ siChiede }}</span>
           <button class="bottone" data-azione="scegli-gioco" @click="giocoScelto(guardato.id)">
             {{ gioco === guardato.id ? 'Tieni' : 'Scegli' }} {{ guardato.nome }}</button>
         </div>
@@ -182,6 +184,7 @@ watch(completo, (ora, prima) => { if (ora && !prima) emit('completo') })
                 border-radius:var(--raggio-piccolo); background:var(--penna-chiara, var(--tessera)); font-size:14px; line-height:1.45 }
 .testo-gioco { display:flex; flex-direction:column; gap:6px }
 .testo-gioco > b { font-size:17px }
+.allena { font-size:14px; line-height:1.5 }
 .testo-gioco .bottone { align-self:flex-start; margin-top:4px }
 @media (max-width:640px) { .scheda-gioco { grid-template-columns:1fr } }
 

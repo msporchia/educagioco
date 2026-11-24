@@ -39,6 +39,8 @@ export default {
   nome: 'English',
   nei: 'in English',
   spiega: 'Il bambino segue una mappa del tesoro: in ogni tappa riconosce parole inglesi con le figure e compone frasi semplici. Senza audio.',
+  // cosa impara il bambino, per la maestra che sceglie il gioco (al posto di «Si può chiedere», che qui direbbe solo il nome del gioco)
+  allena: 'Le parole inglesi con le figure e le prime frasi da capire e da comporre, un\'isola dopo l\'altra. Senza audio.',
   tred: false,
   // gli esercizi del catalogo no: solo il suo contenuto
   accetta: () => false,

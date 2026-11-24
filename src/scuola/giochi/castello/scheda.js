@@ -52,6 +52,8 @@ export default {
   nome: 'Difendi il castello',
   nei: 'nel castello',
   spiega: "Il bambino difende un castello dai mostri: ogni torre si costruisce risolvendo un'operazione in colonna. È lo svago di fine lezione.",
+  // cosa impara il bambino, per la maestra che sceglie il gioco (al posto di «Si può chiedere», che qui direbbe solo il nome del gioco)
+  allena: 'Le operazioni in colonna: ogni torre costa un\'operazione. La tappa scelta decide quali operazioni e fin dove salgono i numeri.',
   tred: false,
   conta: { tante: 'operazioni', una: "un'operazione", giuste: 'operazioni giuste', giusta: "un'operazione giusta" },
   difficolta: {

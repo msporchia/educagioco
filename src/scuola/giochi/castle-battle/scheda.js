@@ -35,6 +35,8 @@ export default {
   nome: 'Castle Battle',
   nei: 'in Castle Battle',
   spiega: 'Il bambino difende il suo castello e assedia quello nemico: ogni caserma, ogni potenziamento e ogni riparazione si paga con un calcolo a mente. Le operazioni le portano le truppe della tappa scelta.',
+  // cosa impara il bambino, per la maestra che sceglie il gioco (al posto di «Si può chiedere», che qui direbbe solo il nome del gioco)
+  allena: 'Il calcolo a mente, veloce: ogni caserma, potenziamento e riparazione è un conto, e i numeri crescono con quello che il bambino costruisce.',
   tred: false,
   conta: { tante: 'calcoli', una: 'un calcolo', giuste: 'calcoli giusti', giusta: 'un calcolo giusto' },
   difficolta: {

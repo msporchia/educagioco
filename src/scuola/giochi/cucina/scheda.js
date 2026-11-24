@@ -50,6 +50,8 @@ export default {
   nome: 'La cucina',
   nei: 'in cucina',
   spiega: 'Il bambino fa il cuoco: prepara le ordinazioni e alla cassa dà il resto ai clienti, prima aiutato e poi da solo.',
+  // cosa impara il bambino, per la maestra che sceglie il gioco (al posto di «Si può chiedere», che qui direbbe solo il nome del gioco)
+  allena: 'I soldi e il resto: prima il resto lo dice la cassa, poi lo conta il bambino.',
   tred: true,
   conta: { tante: 'resti', una: 'un resto', giuste: 'resti giusti', giusta: 'un resto giusto' },
   difficolta: {

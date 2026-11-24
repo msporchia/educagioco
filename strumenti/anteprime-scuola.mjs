@@ -30,8 +30,12 @@ const ATTESA = 3500
 const ATTESA_DI = { castello: 8000 }            // le ondate chiamate devono arrivare sul sentiero (al massimo le torri le fermano all'ingresso)
 // questi si registrano nella scena al massimo della prova: nella base i primi secondi sono una mappa ferma (le ondate devono
 // ancora arrivare) o un dialogo (il sotterraneo); al massimo si vede il gioco pieno
-const AL_MASSIMO = ['castle-battle', 'survivors', 'sotterraneo']
+const AL_MASSIMO = ['castle-battle', 'sotterraneo']
 const SCHEDE = { id: 'schede', esercizio: { tipo: 'tabelline', tabelline: [2, 3], modo: 'prodotto' } }
+// questi si prendono dalla clip del README (`npm run scatti`, strumenti/clip/): Survivors registrato qui era una marea di mostri
+// addosso all'eroe fermo, la clip è una partita già avanti giocata col dito. `da`: i secondi da saltare (la pausa della ripresa),
+// `su`: i pixel in cima da togliere (la barra di casa con le monete, che a scuola non c'è)
+const DAL_README = { survivors: { file: 'docs/img/clip-survivors.webp', da: 1.5, su: 42 } }
 
 // il gioco in scena nella pagina: montato e, se disegna, con una tela visibile (come la prova del computer)
 const inScena = ([sel, massimo]) => {
@@ -82,19 +86,44 @@ async function registraUno(browser, cartella, g) {
     mkdirSync(dir, { recursive: true })
     const fine = foto[0].t + SECONDI
     const elenco = foto.map((f, i) => {
-      const nome = join(dir, `${String(i).padStart(4, '0')}.jpg`)
-      writeFileSync(nome, Buffer.from(f.dati, 'base64'))
-      return `file '${nome}'\nduration ${Math.max(0.001, ((foto[i + 1]?.t ?? fine) - f.t)).toFixed(3)}`
+      const file = join(dir, `${String(i).padStart(4, '0')}.jpg`)
+      writeFileSync(file, Buffer.from(f.dati, 'base64'))
+      return { file, durata: Math.max(0.001, (foto[i + 1]?.t ?? fine) - f.t) }
     })
-    writeFileSync(join(dir, 'elenco.txt'), elenco.join('\n') + `\nfile '${join(dir, `${String(foto.length - 1).padStart(4, '0')}.jpg`)}'\n`)
-    const fuori = join(cartella, `${g.id}.mp4`)
-    const pari = n => Math.floor(n / 2) * 2
-    const ff = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', join(dir, 'elenco.txt'),
-      '-vf', `crop=${pari(r.w)}:${pari(r.h)}:${Math.round(r.x)}:${Math.round(r.y)},scale=${LARGO}:-2,fps=12`, '-t', String(SECONDI),
-      '-an', '-c:v', 'libx264', '-preset', 'slow', '-crf', '33', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', fuori])
-    if (ff.status) throw new Error(`ffmpeg: ${ff.stderr}`)
-    return fuori
+    return faiVideo(dir, elenco, r, join(cartella, `${g.id}.mp4`))
   } finally { await contesto.close() }
+}
+
+// le immagini in fila, ognuna con quanto resta, diventano l'MP4 tagliato sul gioco
+function faiVideo(dir, elenco, r, fuori) {
+  writeFileSync(join(dir, 'elenco.txt'), elenco.map(x => `file '${x.file}'\nduration ${x.durata.toFixed(3)}`).join('\n') + `\nfile '${elenco.at(-1).file}'\n`)
+  const pari = n => Math.floor(n / 2) * 2
+  const ff = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', join(dir, 'elenco.txt'),
+    '-vf', `crop=${pari(r.w)}:${pari(r.h)}:${Math.round(r.x)}:${Math.round(r.y)},scale='min(${LARGO},iw)':-2,fps=12`, '-t', String(SECONDI),
+    '-an', '-c:v', 'libx264', '-preset', 'slow', '-crf', '33', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', fuori])
+  if (ff.status) throw new Error(`ffmpeg: ${ff.stderr}`)
+  return fuori
+}
+
+// dalla clip del README (WebP animato, che ffmpeg non legge): Pillow, come strumenti/clip.py che la fa, ne scrive le immagini
+function dalReadme(cartella, g) {
+  const { file, da, su } = DAL_README[g.id], dir = join(cartella, g.id)
+  mkdirSync(dir, { recursive: true })
+  const py = spawnSync('python3', ['-I', '-c', `
+import json, sys
+from PIL import Image
+im = Image.open(sys.argv[1]); t = 0; fuori = []
+for i in range(im.n_frames):
+    im.seek(i); d = (im.info.get('duration') or 83) / 1000
+    if t >= ${da} and t < ${da + SECONDI}:
+        f = '%s/%04d.png' % (sys.argv[2], i); im.convert('RGB').save(f); fuori.append({'file': f, 'durata': d})
+    t += d
+print(json.dumps({'foto': fuori, 'largo': im.size[0], 'alto': im.size[1]}))
+`, resolve(RADICE, file), dir], { encoding: 'utf8' })
+  if (py.status) throw new Error(`la clip ${file}: ${py.stderr}`)
+  const { foto, largo, alto } = JSON.parse(py.stdout)
+  if (!foto.length) throw new Error(`la clip ${file} è più corta di ${da + SECONDI} secondi`)
+  return faiVideo(dir, foto, { x: 0, y: su, w: largo, h: alto - su }, join(cartella, `${g.id}.mp4`))
 }
 
 /** Registra ogni gioco: → { id: 'data:video/mp4;base64,…' }, e quelli che non sono andati. */
@@ -105,7 +134,7 @@ export async function registraScuola(browser, { solo = null } = {}) {
   if (debug) mkdirSync(debug, { recursive: true })
   for (const g of [SCHEDE, ...GIOCHI_PROVA].filter(x => !solo || solo.includes(x.id))) {
     try {
-      const f = await registraUno(browser, cartella, g)
+      const f = DAL_README[g.id] ? dalReadme(cartella, g) : await registraUno(browser, cartella, g)
       video[g.id] = 'data:video/mp4;base64,' + readFileSync(f).toString('base64')
       if (debug) copyFileSync(f, join(debug, `${g.id}.mp4`))
       console.log(`  ${g.id}: ${Math.round(video[g.id].length / 1024)} KB`)
