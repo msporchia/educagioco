@@ -178,6 +178,9 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
       <div class="fila centro-fila">
         <button class="bottone grande" data-azione="via" :disabled="!diretta.sentito" @click="parti">Via</button>
       </div>
+      <!-- chi preme «Via» con qualcuno ancora fuori pensa di averlo perso (segnalato dall'utente) -->
+      <p class="nota via-spiegato" data-via-spiegato>Non serve aspettare tutti: chi entra dopo «Via» comincia da solo, senza che tu
+        faccia niente. Il codice resta in vista per tutta la lezione.</p>
     </section>
 
     <template v-else>
@@ -345,6 +348,7 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
 .nome.nuovo { box-shadow:inset 0 0 0 2px var(--accento) }
 .conferma-togli { width:100%; justify-content:flex-end; font-size:13px }
 .centro-fila { justify-content:center }
+.via-spiegato { max-width:60ch; font-size:14px }
 .bottone.grande { font-size:clamp(20px, 3vw, 32px); padding:14px 56px }
 .bambini { list-style:none; display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:12px }
 .bambino { gap:6px }
