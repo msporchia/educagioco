@@ -92,7 +92,7 @@ const FUORI = [
   { da: 'da scuola', a: 'a scuola' }, { da: 'dal parco', a: 'al parco' },
   { da: 'dalla piscina', a: 'in piscina' }, { da: 'dal mercato', a: 'al mercato' },
   { da: 'dalla palestra', a: 'in palestra' }, { da: 'dalla biblioteca', a: 'in biblioteca' },
-  { da: 'dal campo da calcio', a: 'al campo da calcio' },
+  { da: 'dal calcio', a: 'al calcio' },
 ]
 const PERSI = [
   { il: 'il gatto', g: 'm' }, { il: 'la ciabatta', g: 'f' }, { il: 'il telecomando', g: 'm' },
@@ -101,18 +101,19 @@ const PERSI = [
   { il: 'la torcia', g: 'f' }, { il: 'il criceto', g: 'm' }, { il: 'la tartaruga', g: 'f' },
 ]
 
-// cercare non è trovare: il posto dove si cerca è scritto per primo, ed è quello che prende chi legge in fretta
+// cercare non è trovare: il posto dove si cerca è scritto per primo, ed è quello che prende chi legge in fretta;
+// «ma non c'è» va scritto, se no «lo cerca lì» e «lo trova là» sembrano dirsi contro
 function trovaCerca(sorte, lungo) {
   const [A, B] = persone(sorte, 2)
   const cosa = sorte.uno(PERSI)
   const [p1, p2, p4] = sorte.alcuni(IN_CASA, 3)
   const f = sorte.uno(FUORI)
   const lo = cosa.g === 'm' ? 'Lo' : 'La'
-  const righe = [`${A.nome} torna ${f.da} e cerca ${cosa.il} ${p1}.`]
+  const righe = [`${A.nome} torna ${f.da} e cerca ${cosa.il} ${p1}, ma non c'è.`]
   if (lungo) righe.push(`Anche ${B.nome} guarda ${p4}, ma niente.`)
-  righe.push(`${lo} trova ${p2}.`)
+  righe.push(lungo ? `Alla fine ${lo.toLowerCase()} trova ${p2}.` : `${lo} trova ${p2}.`)
   const falsi = [
-    testo(p1, `lì ${A.nome} cerca, ma ${cosa.il} non c'era`),
+    testo(p1, `lì ${A.nome} cerca, ma il testo dice «non c'è»`),
     testo(f.a, `${A.nome} torna da lì: ${cosa.il} non c'entra`),
   ]
   if (lungo) falsi.push(testo(p4, `lì guarda ${B.nome}, ma ${cosa.il} non c'era`))
@@ -229,8 +230,8 @@ function trovaGioco(sorte, lungo) {
 const AZIONI = [
   ['chiudere la finestra', 'chiude la finestra', 'chiuso la finestra'],
   ['annaffiare le piante', 'annaffia le piante', 'annaffiato le piante'],
-  ['prendere le chiavi', 'prende le chiavi', 'preso le chiavi'],
-  ['spegnere la luce', 'spegne la luce', 'spento la luce'],
+  ['spazzare il pavimento', 'spazza il pavimento', 'spazzato il pavimento'], // non «prendere le chiavi»: fa pensare a uscire, e le faccende dopo non tornano
+  ['aprire le tende', 'apre le tende', 'aperto le tende'], // niente «spegnere la luce»: le azioni dopo, al buio, non tornano
   ['dare da mangiare al gatto', 'dà da mangiare al gatto', 'dato da mangiare al gatto'],
   ['lavare la tazza', 'lava la tazza', 'lavato la tazza'],
   ['fare il letto', 'fa il letto', 'fatto il letto'],
@@ -265,7 +266,7 @@ const ORDINI = [
     nota: { x: '«ma prima» la porta in testa, anche se è scritta dopo' },
   }),
   // questi tre sono nell'ordine giusto: servono a non far imparare che la risposta sta sempre dall'altra parte
-  ({ A, x, y, z }) => ({ testo: `Appena finisce di ${x.inf}, ${A} ${y.pres}. Poi ${z.pres}.`, nota: {} }),
+  ({ A, x, y, z }) => ({ testo: `Appena ha ${x.pp}, ${A} ${y.pres}. Poi ${z.pres}.`, nota: {} }),
   ({ A, x, y, z }) => ({ testo: `Dopo aver ${x.pp}, ${A} ${y.pres} e poi ${z.pres}.`, nota: {} }),
   ({ A, x, y, z }) => ({
     testo: `Prima di ${y.inf}, ${A} ${x.pres}. Dopo aver ${y.pp}, ${z.pres}.`,
@@ -304,21 +305,21 @@ const MOTIVI = [
   { fa: 'non mangia il gelato', per: [['ha mal di gola', 1], ['ha appena finito una merenda enorme', 1]] },
   { fa: 'va a letto presto', per: [['domani parte per una gita', 1], ['ha giocato a calcio tutto il giorno', 1]] },
   { fa: 'chiude la finestra', per: [['entrano le zanzare', 0], ['fuori c\'è troppo rumore', 0], ['fa freddo', 0]] },
-  { fa: 'accende la luce', per: [['si è fatto buio', 0], ['cerca un orecchino caduto', 1]] },
+  { fa: 'accende la luce', per: [['si è fatto buio', 0], ['cerca una biglia caduta', 1]] },
   { fa: "prende l'ombrello", per: [['il cielo è pieno di nuvole nere', 0], ['la radio dice che pioverà', 0]] },
   { fa: 'piange', per: [['ha perso il suo pupazzo', 1], ['ha battuto il ginocchio contro il tavolo', 1]] },
   { fa: 'ride forte', per: [['il nonno fa una faccia buffa', 0], ['il gatto è finito dentro una scatola', 0]] },
   { fa: 'cerca sotto il letto', per: [['non trova più una ciabatta', 1], ['ha sentito un rumore strano', 1]] },
   { fa: 'apre la finestra', per: [['in camera fa troppo caldo', 0], ["vuole guardare i fuochi d'artificio", 1]] },
-  { fa: 'va dal veterinario', per: [['il suo cane zoppica', 0], ['il suo cane non mangia da due giorni', 0]] },
-  { fa: 'compra un vaso nuovo', per: [['il gatto ha rotto quello vecchio', 0], ['vuole regalarlo alla zia', 1]] },
+  { fa: 'va dal veterinario', per: [['il cane zoppica', 0], ['il cane non mangia da due giorni', 0]] },
+  { fa: 'compra un vaso nuovo', per: [['il gatto ha rotto il vaso vecchio', 0], ['vuole fare un regalo alla zia', 1]] },
   { fa: 'parla sottovoce', per: [['il fratellino dorme', 0], ['è in biblioteca', 1]] },
   { fa: 'mette le scarpe da ginnastica', per: [["oggi c'è la gara di corsa", 0], ['va a giocare a basket', 1]] },
 ].map(m => ({ fa: m.fa, per: m.per.map(([t, suo]) => ({ t, suo: !!suo })) }))
 
 // quello che fa l'altra persona: niente che possa sembrare un motivo di qualcosa (renderebbe il falso difendibile)
 const INTANTO = ['fa i compiti', 'apparecchia la tavola', 'annaffia le piante', 'prepara lo zaino',
-  'legge il giornale', 'disegna una casa', 'piega le magliette']
+  'legge un fumetto', 'disegna una casa', 'piega le magliette']
 
 const PONTI = [
   { dove: 'dopo «perché»', scrivi: (A, c, fa) => `${A} ${fa} perché ${c.t}.` },
@@ -403,8 +404,9 @@ const TROVATE = [
 const PRONOMI_OGGETTO = { ms: ['Lo', 'una cosa sola, maschile'], fs: ['La', 'una cosa sola, femminile'],
   fp: ['Le', 'più cose, femminili'] }
 const QUANDO = ['Mentre riordina,', 'Per caso', 'Oggi', 'Stamattina', 'Mentre gioca,']
+// vanno bene per ognuna delle TROVATE: niente «lava» (una cartolina) né «scatolina» (un quaderno)
 const DOVE_METTE = ['mette subito nello zaino', 'porta subito alla mamma', 'nasconde sotto il cuscino',
-  'lava con cura sotto il rubinetto', 'mette in una scatolina']
+  'mostra subito al papà', 'mette sulla scrivania']
 
 function pronomeOggetto(sorte) {
   const A = sorte.uno(PERSONE)
@@ -431,16 +433,21 @@ function pronomeOggetto(sorte) {
   })
 }
 
-const INCONTRI = ['al parco', 'in cortile', 'in biblioteca', 'alla fermata', 'in piazza']
-const DONI = ['regala', 'presta', 'mostra', 'restituisce']
-const COSE_DATE = ['un fumetto', 'una figurina', 'il suo disegno', 'una caramella',
-  'il suo monopattino', 'un sasso colorato', 'una cartolina']
+const INCONTRI = ['al parco', 'in cortile', "all'uscita da scuola", 'alla fermata', 'in piazza']
+// ogni verbo con le cose che hanno senso per lui
+const DONI = [
+  { verbo: 'regala', cose: ['una caramella', 'un sasso colorato', 'una figurina', 'un braccialetto'] },
+  { verbo: 'presta', cose: ['un fumetto', 'il suo monopattino', 'la sua bici', 'una matita'] },
+  { verbo: 'mostra', cose: ['il suo disegno', 'una figurina rara', 'un sasso colorato', 'una cartolina'] },
+  { verbo: 'restituisce', cose: ['il fumetto', 'la matita', 'la borraccia', 'il pallone'] },
+]
 
 function pronomeTermine(sorte) {
   const [A, B] = persone(sorte, 2)
   const P = fin(B, 'Gli', 'Le')
-  const verbo = sorte.uno(DONI)
-  const cosa = sorte.uno(COSE_DATE)
+  const dono = sorte.uno(DONI)
+  const verbo = dono.verbo
+  const cosa = sorte.uno(dono.cose)
   return domanda({
     testo: `Di chi o di che cosa parla «${P}»?`,
     soggetto: { testo: `${A.nome} incontra ${B.nome} ${sorte.uno(INCONTRI)}. ${P} ${verbo} ${cosa}.`, evidenzia: P },
@@ -473,12 +480,12 @@ const INDIZI = [
     giusta: 'felice', indizio: 'salta per la stanza davanti al regalo che voleva',
     falsi: [['triste', 'chi è triste non salta per tutta la stanza'],
       ['spaventat{o}', 'non c\'è niente che faccia paura: c\'è un regalo']] },
-  { chiedi: COME_SI_SENTE, t: 'Il suo migliore amico cambia città. {A} lo saluta dal cancello e resta lì, in silenzio, con gli occhi pieni di lacrime.',
+  { chiedi: COME_SI_SENTE, t: 'Il migliore amico di {A} cambia città. {A} lo saluta dal cancello e resta lì, in silenzio, con gli occhi pieni di lacrime.',
     giusta: 'triste', indizio: 'resta in silenzio con gli occhi pieni di lacrime',
     falsi: [['felice', 'le lacrime e il silenzio non sono di chi è contento'],
       ['spaventat{o}', 'non c\'è niente di cui avere paura: l\'amico parte']] },
   { chiedi: COME_SI_SENTE, t: 'Qualcuno ha scarabocchiato il disegno di {A}. {A} pesta i piedi, diventa ross{o} in faccia e urla: «Chi è stato?»',
-    giusta: 'arrabbiat{o}', indizio: 'pesta i piedi, diventa rosso e urla',
+    giusta: 'arrabbiat{o}', indizio: 'pesta i piedi e urla',
     falsi: [['annoiat{o}', 'chi si annoia non urla e non pesta i piedi'],
       ['felice', 'nessuno è contento se gli rovinano un disegno, e nessuno urla così per gioia']] },
   { chiedi: COME_SI_SENTE, t: 'Dopo la gita in montagna {A} si siede sul divano e si addormenta subito, con le scarpe ancora ai piedi.',
@@ -533,10 +540,10 @@ const INDIZI = [
       ['di notte', 'di notte non si fa merenda e non si fanno i compiti']] },
 
   /* ── dove si trova ── */
-  { chiedi: DOVE_STA, apre: ['È estate.'], t: '{A} scava una buca nella sabbia e la riempie di acqua salata con il secchiello.',
-    giusta: 'al mare', indizio: 'la sabbia e l\'acqua salata',
-    falsi: [['in piscina', 'in piscina non c\'è la sabbia e l\'acqua non è salata'],
-      ['in montagna', 'in montagna non si trova l\'acqua salata']] },
+  { chiedi: DOVE_STA, apre: ['È estate.'], t: '{A} scava una buca nella sabbia e la riempie con il secchiello, prendendo l\'acqua dalle onde.',
+    giusta: 'al mare', indizio: 'la sabbia e le onde',
+    falsi: [['in piscina', 'in piscina non c\'è la sabbia e non ci sono le onde'],
+      ['in montagna', 'in montagna non ci sono la spiaggia e le onde']] },
   { chiedi: DOVE_STA, t: '{A} sceglie un libro sui dinosauri da prendere in prestito e parla sottovoce per non disturbare.',
     giusta: 'in biblioteca', indizio: 'un libro in prestito e la voce bassa',
     falsi: [['al supermercato', 'al supermercato i libri non si prendono in prestito'],
@@ -586,13 +593,13 @@ const TESTI = [
   { perno: 'Il riccio passa tutto l\'inverno a dormire.',
     frasi: [['In autunno mangia tantissimi insetti per mettere su grasso.', 'Un pranzo di insetti'],
       ['Sotto una siepe si prepara un letto di foglie secche.', 'Un letto di foglie'],
-      ['Lì si arrotola a palla, con gli aculei fuori.', 'Una palla di aculei'],
+      ['Per dormire si arrotola a palla, con gli aculei fuori.', 'Una palla di aculei'],
       ['Si sveglia solo quando torna il caldo della primavera.', 'Il caldo della primavera']],
     giusti: ['Il lungo sonno del riccio', "Come il riccio passa l'inverno"],
     largo: ['Gli animali del bosco', 'Le quattro stagioni'], perLargo: 'il testo parla solo del riccio' },
   { perno: 'Le api lavorano tutta l\'estate per fare il miele.',
     frasi: [['Volano di fiore in fiore a raccogliere il nettare.', 'I fiori del prato'],
-      ['Chiudono ogni celletta piena con un tappo di cera.', 'Il tappo di cera'],
+      ['Chiudono ogni celletta piena di miele con un tappo di cera.', 'Il tappo di cera'],
       ['Con quel miele, d\'inverno, sfamano tutto l\'alveare.', 'Il cibo per l\'inverno']],
     giusti: ['Le api e il loro miele', 'Il lavoro delle api'],
     largo: ['Gli insetti', 'La vita in campagna'], perLargo: 'il testo parla solo delle api e del miele' },
@@ -624,7 +631,7 @@ const TESTI = [
   // i tre che seguono sono storie, e hanno dentro chi le vive
   { perno: 'Per il compleanno della nonna, {A} e il papà fanno una torta di mele.',
     frasi: [['Sbucciano le mele e le tagliano a fettine.', 'Le fettine di mela'],
-      ['In forno diventa dorata e profuma tutta la casa.', 'Il profumo in casa'],
+      ['In forno la torta diventa dorata e profuma tutta la casa.', 'Il profumo in casa'],
       ['La nonna ne mangia due fette e li abbraccia.', 'Due fette']],
     giusti: ['Una torta per la nonna', 'Il regalo più dolce'],
     largo: ['I dolci', 'Le feste'], perLargo: 'il testo parla di una torta sola, per la nonna' },
