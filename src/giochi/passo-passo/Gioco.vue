@@ -245,7 +245,7 @@ const passoRichiamato = computed(() => {
   return guidaDelLivello({ vinto: guida.fatto('vinto'), fermo: inCorsa.value || !!finale.value,
                            ripeti: (tappa.value.carte || []).includes('ripeti'), conScatola: conCicli(fila.value) || scelta.value != null,
                            fila: fila.value, provato: provato.value !== null, cambiato: provato.value !== JSON.stringify(fila.value),
-                           sbattuto: guasto.value != null, fermoPrima: fermoPrima.value })
+                           sbattuto: guasto.value != null, fermoPrima: fermoPrima.value, scelta: scelta.value, cursore: cursore.value })
 })
 // a scuola la guida è solo quella che si salta con la ✕
 const passoGuida = computed(() => passoRichiamato.value || (giro ? null : passoPrimoGiro.value))
@@ -254,7 +254,8 @@ const passoPrimoGiro = computed(() => {
   // la prima volta che una tappa mette in mano 🔁, col coniglio o col cane: nessuna vinta l'aveva
   if (tappaIdx.value >= 0 && concettiDi(CAMPAGNA[tappaIdx.value]).includes('ripeti') &&
       !CAMPAGNA.some((t, j) => (giro ? vinteNelGiro.has(j) : stelleDi(CHIAVE, j) > 0) && concettiDi(t).includes('ripeti')))
-    return guidaDelRipeti({ fermo, conScatola: conCicli(fila.value) || scelta.value != null })
+    return guidaDelRipeti({ fermo, fila: fila.value, scelta: scelta.value, cursore: cursore.value, provato: provato.value !== null,
+                            cambiato: provato.value !== JSON.stringify(fila.value) })
   if (tappaIdx.value !== 0 || (giro ? vinteNelGiro.size : avanza.tappa) > 0) return null
   return guidaDelPrato({ fila: fila.value, fermo, provato: provato.value !== null,
                          cambiato: provato.value !== JSON.stringify(fila.value),

@@ -312,6 +312,7 @@ await blocco('lo zaino', async () => {
   controlla('che nasce con la N da scegliere, e la scelta aperta',
             await page.locator('[data-testa][data-volte="N"]').count() === 1 && await page.locator('[data-scelta-volte]').count() === 1)
   controlla('nessun numero è già scelto', await page.locator('[data-scelta-volte] .pp-ora').count() === 0)
+  controlla('e la guida indica i numeri: quante volte', await page.locator('[data-scelta-volte][data-indicato]').count() === 1)
   await page.locator('[data-azione="via"]').click()
   await attendi(page, 200)
   controlla('con una N ▶ non parte', await page.locator('[data-azione="ferma"]').count() === 0 &&
@@ -320,6 +321,7 @@ await blocco('lo zaino', async () => {
   await attendi(page, 150)
   controlla('scelto il numero, la scelta si chiude e la testa lo dice',
             await page.locator('[data-scelta-volte]').count() === 0 && await page.locator('[data-testa][data-volte="5"]').count() === 1)
+  controlla('poi la guida indica le frecce, che entrano nella scatola', await page.locator('[data-freccia][data-indicato]').count() > 0)
   await componi(['destra'])
   uguale('la freccia dopo entra nella scatola', await page.locator('[data-scatola] [data-tessera]').count(), 1)
   await page.locator('[data-coda]').click()

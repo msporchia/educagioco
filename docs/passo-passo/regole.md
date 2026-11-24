@@ -32,9 +32,12 @@ legenda delle celle sta in `dati/mondo.js`, le regole in `motore/mondo.js`.
   [../core/guida.md](../core/guida.md)): chi apre il primo livello non sa
   leggere, quindi una manina indica la freccia, poi ▶; se il coniglio si
   ferma prima della tana torna sulla freccia, se sbatte su ⌫. Non blocca
-  niente e se ne va quando il primo prato è vinto. La stessa manina indica
-  🔁 la prima volta che si arriva allo zaino, finché nella fila non c'è una
-  scatola.
+  niente e se ne va quando il primo prato è vinto. La prima volta che si
+  arriva allo zaino (e nella guida del «?») la stessa manina fa il giro del
+  🔁 un passo alla volta: 🔁, poi i numeri («quante volte»), poi il + della
+  scatola e le frecce che entrano dentro, poi ▶. Prima indicava solo 🔁 e
+  poi ▶, e nessuno diceva del numero e delle frecce dentro (segnalato
+  dall'utente).
 
 ## La tastiera
 

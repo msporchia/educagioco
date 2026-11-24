@@ -852,7 +852,13 @@ for (const [i, t] of CAMPAGNA.entries()) {
   uguale('ha sbattuto: si toglie la freccia', guidaDelPrato({ fila: ['su'], provato: true, sbattuto: true }).dove, GB.togli)
   uguale('mentre corre, o a cartello aperto, tace', guidaDelPrato({ fila: ['destra'], fermo: true }), null)
   uguale('allo zaino indica 🔁', guidaDelRipeti({}).dove, GB.ripeti)
-  uguale('e tace quando nella fila c\'è una scatola', guidaDelRipeti({ conScatola: true }), null)
+  // poi, un passo alla volta: quante volte, le frecce dentro, ▶
+  uguale('aperti i numeri: un numero', guidaDelRipeti({ fila: ['ripeti-N', 'fine'], scelta: 0 }).dove, '[data-scelta-volte]')
+  uguale('la scatola senza numero: la sua N', guidaDelRipeti({ fila: ['ripeti-N', 'fine'] }).dove, '[data-testa="0"]')
+  uguale('col numero e vuota: il + della scatola', guidaDelRipeti({ fila: ['destra', 'ripeti-3', 'fine'], cursore: 3 }).dove, '[data-bocca="2"]')
+  controlla('col cursore già dentro: le frecce', /dentro la scatola/.test(guidaDelRipeti({ fila: ['ripeti-3', 'fine'], cursore: 1 }).testo))
+  uguale('piena e mai provata: ▶', guidaDelRipeti({ fila: ['ripeti-3', 'destra', 'fine'] }).dove, GB.via)
+  uguale('provata: tace', guidaDelRipeti({ fila: ['ripeti-3', 'destra', 'fine'], provato: true }), null)
 }
 
 riassunto('passo passo')
