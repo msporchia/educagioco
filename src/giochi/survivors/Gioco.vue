@@ -491,9 +491,13 @@ onMounted(() => {
     p.tempo = Number.isFinite(p.regole.durata) ? Math.max(0, p.regole.durata - 25) : 420
     p.eroe.invuln = 1e9
   }
+  // le anteprime della scuola (strumenti/anteprime-scuola.mjs): l'eroe sale di livello, e si vede come arriva la domanda; per
+  // mezzo minuto non lo tocca nessuno, che il video non finisca sul «Fine partita»
+  window.__sale = () => { const p = partita.value; if (p) { p.xp = p.prossima; p.eroe.invuln = Math.max(p.eroe.invuln || 0, 30) } }
 })
 onUnmounted(() => {
   delete window.__estremo
+  delete window.__sale
   if (import.meta.env.DEV) delete window.__survivors
   salva({ subito: true })
   removeEventListener('resize', ridimensiona)

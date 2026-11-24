@@ -37,16 +37,25 @@ const SCHEDE = { id: 'schede', esercizio: { tipo: 'tabelline', tabelline: [2, 3]
 // casa con le monete, che a scuola non c'è). La bancarella della clip è quella vecchia, il castello non mostra l'operazione e il
 // sotterraneo è buio: quelli no
 const DAL_README = {
-  survivors: { da: 1.5, per: 5 }, robot: { file: 'costruttore', da: 1.6, per: 9 }, 'passo-passo': { file: 'passo', da: 1.6, per: 8 },
+  robot: { file: 'costruttore', da: 1.6, per: 9 }, 'passo-passo': { file: 'passo', da: 1.6, per: 8 },
   inglese: { da: 1.4, per: 8 }, pozioni: { da: 1.5, per: 8 }, 'castle-battle': { file: 'arena', da: 0, per: 6.5 }, asteroidi: { da: 1.7, per: 7 },
 }
 const SU = 42
 // questi si registrano qui con una regia che fa l'esercizio: il castello tocca una piazzola, sceglie la torre e risolve
-// l'operazione in colonna cifra per cifra, poi manda l'ondata; le domande rispondono a qualche scheda
+// l'operazione in colonna cifra per cifra, poi manda l'ondata; le domande rispondono a qualche scheda; la cucina prepara un
+// panino col formaggio, lo consegna e alla cassa dà il resto una moneta alla volta (i passi di integrazione/bancarella-cucina)
+const MISTE = { tipo: 'insieme', parti: [
+  { esercizio: { tipo: 'modulo', modulo: 'ortografia', da: 1, a: 5, tipologie: [] }, peso: 'normale' },
+  { esercizio: { tipo: 'modulo', modulo: 'animali', da: 1, a: 4, tipologie: [] }, peso: 'normale' },
+] }
 // `taglio`: cosa deve entrare nell'immagine (sotto la striscia gialla della prova), con `margine` px attorno
 const REGIA = {
   castello: { esercizio: { tipo: 'castello', tappa: 'bosco/Il sentiero' }, secondi: 10, taglio: '.campo canvas, .tastiera, [data-stendardo]', margine: 16 },
   schede: { esercizio: SCHEDE.esercizio, secondi: 7, taglio: '.qz-tasto', margine: 80 },
+  cucina: { esercizio: { tipo: 'cucina', da: 1, a: 6 }, secondi: 10, taglio: '[data-gioco] canvas, .cassa, [data-ordine]', margine: 10 },
+  // le domande del catalogo non di matematica (segnalato dall'utente: si capisce che ci va dentro di tutto)
+  survivors: { esercizio: { ...MISTE, gioco: 'survivors' }, secondi: 11, taglio: '[data-gioco] canvas', margine: 0 },
+  sotterraneo: { esercizio: { ...MISTE, gioco: 'sotterraneo' }, secondi: 10, taglio: '[data-tela="3d"]', margine: 0 },
 }
 
 // il gioco in scena nella pagina: montato e, se disegna, con una tela visibile (come la prova del computer)
@@ -129,6 +138,90 @@ const REGISTI = {
     await page.waitForTimeout(500)
     await page.locator('[data-azione="chiudi-scheda"]').click({ timeout: 1500 }).catch(() => {})   // i potenziamenti alla prima ondata
   },
+  async cucina(page) {
+    await page.waitForFunction(() => window.__cucina3d?.grafica()?.fotogrammi > 3 && window.__shop?.cliente.value && !window.__shop.cambio.value,
+                               null, { timeout: 30000 })
+    // la prima ordinazione è un panino col formaggio, quello che i passi sotto sanno fare
+    await page.evaluate(() => { const o = window.__shop.coda.value[0]; o.articoli[0] = { ...o.articoli[0], emoji: '🥪' } })
+    const fermo = () => page.waitForFunction(() => { const c = window.__shop.cucina.value; return !c.fila.length && !c.strada.length && !c.arrivato },
+                                             null, { timeout: 20000 })
+    const premi = async nome => {
+      const p = await page.evaluate(n => {
+        const k = window.__shop.cucina.value.celle.find(q => q.cosa === n || q.nome === n || q.tipo === n)
+        return k ? window.__cucina3d.dove(k.id) : null
+      }, nome)
+      if (!p) throw new Error(`in cucina manca ${nome}`)
+      await page.mouse.click(p.x, p.y)
+      await fermo()
+      await page.waitForTimeout(150)
+    }
+    await premi('formaggio'); await premi('tagliere')
+    await page.waitForFunction(() => !window.__shop.cucina.value.tagliando, null, { timeout: 20000 })
+    await premi('pane'); await premi('tagliere'); await premi('piatti'); await premi('consegna')
+    await page.waitForSelector('.cassa', { timeout: 4000 })
+    await page.waitForTimeout(2000)      // il foglio della cassa: quanto danno, lo scontrino, il resto da dare
+    const monete = await page.evaluate(() => { const S = window.__shop; return S.scomponi(S.cliente.value.resto, S.cliente.value.monete) })
+    for (const v of monete) { await page.evaluate(v => window.__shop.metti(v), v); await page.waitForTimeout(1000) }
+    await page.waitForTimeout(800)
+    await page.evaluate(() => window.__shop.proponi())
+  },
+  // l'eroe scappa (le frecce), sale di livello, tocca «potenzia», sceglie una carta e la paga rispondendo
+  async survivors(page) {
+    await page.waitForFunction(() => typeof window.__sale === 'function', null, { timeout: 20000 })
+    const corri = async (tasto, ms) => { await page.keyboard.down(tasto); await page.waitForTimeout(ms); await page.keyboard.up(tasto) }
+    await page.evaluate(() => window.__sale())
+    await corri('ArrowRight', 1200); await corri('ArrowUp', 900)
+    await page.waitForSelector('[data-potenzia]', { timeout: 6000 })
+    await corri('ArrowLeft', 700)
+    const tocca = sel => page.evaluate(s => document.querySelector(s)?.click(), sel)   // la guida, se si accende, non fa da velo
+    await page.keyboard.press('Enter')        // «potenzia» (il tasto del gioco: il clic simulato non lo prende)
+    await page.waitForSelector('[data-carta]', { timeout: 4000 })
+    await page.waitForTimeout(1200)
+    await tocca('[data-carta]')
+    await page.waitForSelector('.qz-tasto[data-giusta]', { timeout: 4000 })
+    await page.waitForTimeout(1800)
+    await tocca('.qz-tasto[data-giusta]')
+    await page.waitForTimeout(1200)
+    await corri('ArrowDown', 1000)
+  },
+  // l'eroe va a una cosa che chiede (una porta chiusa, se no un forziere, se no un mostro: la più vicina, messo a qualche passo
+  // come in integrazione/sotterraneo-porte-scale), la tocca, compare la domanda e si risponde giusto
+  async sotterraneo(page) {
+    await page.waitForSelector('.sot-eroe[data-eroe]', { timeout: 20000 })      // «Chi scende?»: il primo
+    await page.evaluate(() => document.querySelector('.sot-eroe[data-eroe]').click())
+    await page.waitForFunction(() => window.__sotterraneo3d?.corsa?.livello, null, { timeout: 40000 })
+    await page.locator('[data-azione="dopo"]').click({ timeout: 2500 }).catch(() => {})     // il cartello della scala: «resto qui»
+    const p = await page.evaluate(() => {
+      const c = window.__sotterraneo3d.corsa, liv = c.livello
+      const da = { x: Math.floor(c.eroe.x), y: Math.floor(c.eroe.y) }
+      const prima = new Map([[da.x + ',' + da.y, null]]), coda = [da]
+      const chiede = r => (r.che === 'porta' && !r.aperta) || (r.che === 'forziere' && !r.aperto) || (r.che === 'mostro' && !r.morto)
+      for (let i = 0; i < coda.length; i++) {
+        const q = coda[i]
+        if (liv.robe.find(r => chiede(r) && r.x === q.x && r.y === q.y)) {
+          const via = []; for (let k = q.x + ',' + q.y; k; k = prima.get(k)) via.unshift(k.split(',').map(Number))
+          const [x, y] = via[Math.max(0, via.length - 4)]
+          c.eroe = { x: x + 0.5, y: y + 0.5 }; c.strada = []; c.segnaLaStanza(); c.aggiornaLuce()
+          return q
+        }
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const x = q.x + dx, y = q.y + dy
+          if (!prima.has(x + ',' + y) && (liv.calpestabile(x, y) || liv.robe.some(r => chiede(r) && r.x === x && r.y === y))) {
+            prima.set(x + ',' + y, q.x + ',' + q.y); coda.push({ x, y })
+          }
+        }
+      }
+      return null
+    })
+    if (!p) throw new Error('nel primo piano niente che chieda: né porte, né forzieri, né mostri')
+    await page.waitForTimeout(1500)
+    const [sx, sy] = await page.evaluate(([x, y]) => window.__sotterraneo3d.aSchermo(x + 0.5, 0.6, y + 0.5), [p.x, p.y])
+    const b = await page.locator('[data-tela="3d"]').boundingBox()
+    await page.mouse.click(b.x + sx, b.y + sy)
+    await page.waitForSelector('.sot-domanda .qz-tasto[data-giusta]', { timeout: 15000 })
+    await page.waitForTimeout(2000)
+    await page.locator('.sot-domanda .qz-tasto[data-giusta]').first().click()
+  },
   async schede(page) {
     for (let k = 0; k < 4; k++) {
       await page.waitForSelector('.qz-tasto[data-giusta]', { timeout: 8000 })
@@ -152,7 +245,11 @@ async function conRegia(browser, cartella, g) {
     cdp.on('Page.screencastFrame', f => { foto.push({ dati: f.data, t: f.metadata.timestamp }); cdp.send('Page.screencastFrameAck', { sessionId: f.sessionId }).catch(() => {}) })
     await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 90, maxWidth: SCHERMO.width, maxHeight: SCHERMO.height })
     const t0 = Date.now()
-    await REGISTI[g.id](page)
+    try { await REGISTI[g.id](page) } catch (e) {
+      // con ANTEPRIME_DEBUG la pagina com'era quando la regia si è fermata, per capire dove
+      if (process.env.ANTEPRIME_DEBUG) await page.screenshot({ path: resolve(RADICE, `tmp/scatti/anteprime-scuola/${g.id}-fermo.png`) }).catch(() => {})
+      throw e
+    }
     await page.waitForTimeout(Math.max(500, secondi * 1000 - (Date.now() - t0)))
     await cdp.send('Page.stopScreencast')
     if (!foto.length) throw new Error('nessuna immagine')

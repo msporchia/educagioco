@@ -74,12 +74,16 @@ Chiesto dall'utente il 22 novembre 2026: toccando un gioco lo si sceglieva subit
   quello). «Cambia» riapre il carosello sul gioco scelto. Vale anche per «Senza lezione» sul PC dei bambini.
 - **Il video fa vedere l'esercizio mentre si gioca** (segnalato dall'utente: il robot fermo con le nuvole non serviva), e lo fa
   `npm run anteprime scuola` (`strumenti/anteprime-scuola.mjs`) in tre modi:
-  - **dalla clip del README** (`DAL_README`; le rifà `npm run scatti`): Robot, Passo passo, English, Pozioni, Castle Battle,
-    Asteroidi e Survivors sono partite giocate col dito; si salta la mappa iniziale e si toglie la barra di casa con le monete;
+  - **dalla clip del README** (`DAL_README`; le rifà `npm run scatti`): Robot, Passo passo, English, Pozioni, Castle Battle e
+    Asteroidi sono partite giocate col dito; si salta la mappa iniziale e si toglie la barra di casa con le monete;
   - **con una regia** (`REGIA`, la pagina dei bambini con una lezione di prova): il castello tocca una piazzola, sceglie la
-    torre e risolve l'operazione in colonna cifra per cifra; «Le domande» risponde a qualche scheda;
-  - **dalla prova del computer**, coi suoi piloti: la cucina e il sotterraneo (al massimo, lo scontro). Qui non si vede ancora
-    l'esercizio (il resto alla cassa, le domande delle porte): servirebbe una regia anche per loro.
+    torre e risolve l'operazione in colonna cifra per cifra; la cucina prepara un panino, lo consegna e dà il resto una moneta
+    alla volta; Survivors sale di livello (`window.__sale`, che lo fa anche intoccabile per mezzo minuto), tocca «potenzia»,
+    sceglie una carta e risponde; il sotterraneo va alla cosa più vicina che chiede (una porta chiusa, un forziere, un mostro)
+    e risponde; «Le domande» risponde a qualche scheda. Survivors e il sotterraneo con domande di ortografia e animali
+    (segnalato dall'utente: con la sola matematica non si capiva che ci va dentro di tutto; e senza la domanda il video
+    mostrava l'eroe che combatte, non il punto). Con `ANTEPRIME_DEBUG=1` una regia che si ferma lascia la foto della pagina in
+    `tmp/scatti/anteprime-scuola/<gioco>-fermo.png`.
   Tagliati sul gioco e fatti MP4 da ffmpeg (12 immagini al secondo, fino a 480 px di larghezza), ~1 MB in tutto, in
   `maestra/anteprime-giochi.js` (GENERATO). `--giochi=castello,robot` rifà solo quelli. Non entra in `npm run anteprime` senza
   nome: un video rifatto non è mai uguale, e il file cambierebbe a ogni giro.
