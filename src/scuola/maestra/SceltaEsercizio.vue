@@ -125,10 +125,15 @@ watch(completo, (ora, prima) => { if (ora && !prima) emit('completo') })
         <AnteprimaGioco :gioco="guardato.id" />
         <div class="testo-gioco">
           <b>{{ guardato.nome }}</b>
-          <span>{{ guardato.spiega }}</span>
-          <!-- i giochi col contenuto loro dicono cosa allenano; quelli che prendono le domande del catalogo, cosa si può chiedere -->
-          <span v-if="guardato.allena" class="allena" data-allena><b>Cosa allena:</b> {{ guardato.allena }}</span>
-          <span v-else class="nota"><b>Si può chiedere:</b> {{ siChiede }}</span>
+          <!-- prima l'esercizio concreto, che è quello che la maestra cerca; poi com'è il gioco; e per chi prende le domande del
+               catalogo, quali (segnalato dall'utente: «il bambino fa il cuoco» non dice che esercizio farà) -->
+          <span class="allena" data-allena><b>L'esercizio:</b> {{ guardato.allena }}</span>
+          <span class="nota" data-come-si-gioca><b>Il gioco:</b> {{ guardato.spiega }}</span>
+          <!-- le domande del catalogo a scuola: il giro del pescatore (docs/scuola/esercizi.md), detto com'è -->
+          <span v-if="mescolaPiuCose(guardato.id)" class="allena" data-come-insegna><b>Come sceglie le domande:</b> quelle che scegli tu,
+            mescolate, tutte una volta prima che una si ripeta; dopo uno sbaglio dice perché e come si fa. Gli sbagli li vedi
+            durante la lezione, sotto il nome del bambino, e nel resoconto.</span>
+          <span v-if="mescolaPiuCose(guardato.id)" class="nota"><b>Si può chiedere:</b> {{ siChiede }}</span>
           <button class="bottone" data-azione="scegli-gioco" @click="giocoScelto(guardato.id)">
             {{ gioco === guardato.id ? 'Tieni' : 'Scegli' }} {{ guardato.nome }}</button>
         </div>

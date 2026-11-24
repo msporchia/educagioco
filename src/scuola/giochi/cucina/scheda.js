@@ -50,8 +50,8 @@ export default {
   nome: 'La cucina',
   nei: 'in cucina',
   spiega: 'Il bambino fa il cuoco: prepara le ordinazioni e alla cassa dà il resto ai clienti, prima aiutato e poi da solo.',
-  // cosa impara il bambino, per la maestra che sceglie il gioco (al posto di «Si può chiedere», che qui direbbe solo il nome del gioco)
-  allena: 'I soldi e il resto: prima il resto lo dice la cassa, poi lo conta il bambino.',
+  // l'esercizio concreto, per la maestra che sceglie il gioco: lo mostra per primo, prima di com'è il gioco (`spiega`)
+  allena: 'Il resto alla cassa: un conto di «8,50 €» pagato con 5 € + 2 € + 2 €, e il bambino dà 50 centesimi toccando le monete. Nei primi livelli il resto lo dice la cassa ed è in euro tondi; poi lo conta il bambino, i prezzi passano al mezzo euro e ai dieci centesimi, e più avanti anche il totale da chiedere lo batte lui (una somma). Intanto in cucina prepara le ordinazioni.',
   tred: true,
   conta: { tante: 'resti', una: 'un resto', giuste: 'resti giusti', giusta: 'un resto giusto' },
   difficolta: {

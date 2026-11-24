@@ -63,8 +63,8 @@ export default {
   nome: 'Le pozioni',
   nei: 'nel laboratorio delle pozioni',
   spiega: 'Il bambino prepara pozioni: legge la ricetta («1,5 kg di polvere») e compra dal mercante le ampolle giuste, convertendo le misure.',
-  // cosa impara il bambino, per la maestra che sceglie il gioco (al posto di «Si può chiedere», che qui direbbe solo il nome del gioco)
-  allena: 'Le misure e le conversioni: pesi, lunghezze e liquidi, dalla stessa unità ai conti fra unità diverse, anche con la virgola. Spendendo poco, si ragiona su quale ampolla conviene.',
+  // l'esercizio concreto, per la maestra che sceglie il gioco: lo mostra per primo, prima di com'è il gioco (`spiega`)
+  allena: 'La ricetta chiede «2 kg di polvere» e il mercante vende ampolle da 500 g e da 1000 g: il bambino ordina quelle che fanno 2000 g, spendendo meno gettoni possibile. Le misure (pesi, lunghezze, liquidi) e i gradini li scegli tu: dalla stessa unità alle conversioni, anche con la virgola.',
   tred: true,
   conta: { tante: 'ingredienti', una: 'un ingrediente', giuste: 'ingredienti giusti', giusta: 'un ingrediente giusto' },
   difficolta: {

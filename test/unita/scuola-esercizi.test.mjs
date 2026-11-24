@@ -242,8 +242,7 @@ console.log('\nIL CALCOLO A MENTE DEGLI ASTEROIDI')
 {
   const { GIOCHI } = await import('../../src/scuola/comune/esercizi.js')
   const { ANTEPRIME } = await import('../../src/scuola/maestra/anteprime-giochi.js')
-  const { mescolaPiuCose } = await import('../../src/scuola/comune/esercizi.js')
-  stessaLista('un gioco col contenuto suo dice cosa allena (non «Si può chiedere: <il suo nome>»)', GIOCHI.filter(g => !mescolaPiuCose(g.id) && !g.allena).map(g => g.id), [])
+  stessaLista('ogni gioco dice l\'esercizio concreto, con un esempio fra «…»', GIOCHI.filter(g => !/«.+»/.test(g.allena || '')).map(g => g.id), [])
   stessaLista('ogni gioco ha il suo video (se no: `npm run anteprime scuola`)', GIOCHI.filter(g => !/^data:video\/mp4;base64,/.test(ANTEPRIME[g.id] || '')).map(g => g.id), [])
 }
 

@@ -65,20 +65,25 @@ Chiesto dall'utente il 22 novembre 2026: toccando un gioco lo si sceglieva subit
 
 - **Un carosello**: i giochi in una fila che scorre di lato (col dito, o con le frecce ‹ › che passano al gioco accanto e lo
   portano in mezzo). Quello guardato è bordato (`guardata` di `TesseraGioco.vue`), quello scelto resta `aria-pressed`.
-- **Sotto, il gioco guardato**: **qualche secondo del gioco vero** che gira da solo (`AnteprimaGioco.vue`), accanto a cosa
-  fa il bambino, cosa gli si può chiedere (per i giochi col contenuto loro **cosa allena**, `allena` della scheda: Passo passo e
-  il Robot dicono il percorso dalle sole frecce ai cicli e al «se») e **«Scegli <gioco>»** (`[data-azione="scegli-gioco"]`; «Tieni» se è già quello).
-  «Cambia» riapre il carosello sul gioco scelto. Vale anche per «Senza lezione» sul PC dei bambini, che usa la stessa scelta.
-- **I video sono registrati dai giochi veri** (`npm run anteprime scuola`, `strumenti/anteprime-scuola.mjs`): la pagina dei
-  bambini costruita, i dieci giochi dalla prova del computer ([prova-computer.md](prova-computer.md): i suoi esercizi e i
-  piloti che li fanno muovere), «Le domande» da una lezione di prova. Lo screencast di Chrome, tagliato sulla tela del gioco
-  (se sta in una colonna, i giochi in verticale) e fatto MP4 da ffmpeg: 4 secondi, 480 px, 12 immagini al secondo, ~1 MB in
-  tutto, in `maestra/anteprime-giochi.js` (GENERATO). Castle Battle e il sotterraneo si registrano nella scena al
-  massimo (nella base i primi secondi sono una mappa ferma o il cartello della cripta), il castello dopo otto secondi (al
-  massimo le torri fermano i mostri all'ingresso). **Survivors si prende dalla clip del README** (`docs/img/clip-survivors.webp`, `npm run scatti`): registrato qui era una marea
-  di mostri addosso all'eroe fermo, la clip è una partita già avanti giocata col dito; si saltano la pausa della ripresa e la
-  barra di casa con le monete (`DAL_README`). `--giochi=castello,robot` rifà solo quelli. Non entra in `npm run anteprime`
-  senza nome: un video rifatto non è mai uguale, e il file cambierebbe a ogni giro.
+- **Sotto, il gioco guardato**: qualche secondo del gioco vero mentre si fa l'esercizio (`AnteprimaGioco.vue`), e accanto, in
+  quest'ordine (segnalato dall'utente: alla maestra interessano i meccanismi educativi più del gioco):
+  **«L'esercizio»** (`allena` della scheda: l'esercizio concreto con un esempio fra «…», e com'è fatta la sua scala: Passo passo
+  e il Robot il percorso dalle frecce ai cicli e al «se», English la forza delle parole che decide la domanda, il castello i
+  gradini dell'operazione); **«Il gioco»** (`spiega`, cosa fa il bambino); per i giochi che prendono le domande del catalogo
+  **«Come sceglie le domande»** (il giro del pescatore: tutte una volta prima di ripetersi, le sbagliate non tornano prima) e
+  «Si può chiedere»; poi **«Scegli <gioco>»** (`[data-azione="scegli-gioco"]`; «Tieni» se è già quello). «Cambia» riapre il
+  carosello sul gioco scelto. Vale anche per «Senza lezione» sul PC dei bambini, che usa la stessa scelta.
+- **Il video fa vedere l'esercizio mentre si gioca** (segnalato dall'utente: il robot fermo con le nuvole non serviva), e lo fa
+  `npm run anteprime scuola` (`strumenti/anteprime-scuola.mjs`) in tre modi:
+  - **dalla clip del README** (`DAL_README`; le rifà `npm run scatti`): Robot, Passo passo, English, Pozioni, Castle Battle,
+    Asteroidi e Survivors sono partite giocate col dito; si salta la mappa iniziale e si toglie la barra di casa con le monete;
+  - **con una regia** (`REGIA`, la pagina dei bambini con una lezione di prova): il castello tocca una piazzola, sceglie la
+    torre e risolve l'operazione in colonna cifra per cifra; «Le domande» risponde a qualche scheda;
+  - **dalla prova del computer**, coi suoi piloti: la cucina e il sotterraneo (al massimo, lo scontro). Qui non si vede ancora
+    l'esercizio (il resto alla cassa, le domande delle porte): servirebbe una regia anche per loro.
+  Tagliati sul gioco e fatti MP4 da ffmpeg (12 immagini al secondo, fino a 480 px di larghezza), ~1 MB in tutto, in
+  `maestra/anteprime-giochi.js` (GENERATO). `--giochi=castello,robot` rifà solo quelli. Non entra in `npm run anteprime` senza
+  nome: un video rifatto non è mai uguale, e il file cambierebbe a ogni giro.
 - **Chi ha chiesto meno movimento** (`prefers-reduced-motion`) vede il video fermo, coi comandi per farlo partire.
 
 Nei test: `unita/scuola-esercizi` (ogni gioco ha il suo video), `integrazione/scuola` (toccare mostra e non sceglie, il

@@ -39,8 +39,8 @@ export default {
   nome: 'English',
   nei: 'in English',
   spiega: 'Il bambino segue una mappa del tesoro: in ogni tappa riconosce parole inglesi con le figure e compone frasi semplici. Senza audio.',
-  // cosa impara il bambino, per la maestra che sceglie il gioco (al posto di «Si può chiedere», che qui direbbe solo il nome del gioco)
-  allena: 'Le parole inglesi con le figure e le prime frasi da capire e da comporre, un\'isola dopo l\'altra. Senza audio.',
+  // l'esercizio concreto, per la maestra che sceglie il gioco: lo mostra per primo, prima di com'è il gioco (`spiega`)
+  allena: 'Parole e frasi inglesi, senza audio: per esempio si legge «red» e si tocca il colore giusto, o si completa «It … a mouse» scegliendo «is». Ogni parola ha una forza da 0 a 6: sale di 1 a ogni risposta giusta e scende di 2 a ogni sbaglio, e decide la domanda. Con poca forza la parola si riconosce fra le figure («Che cos\'è?»), poi si traduce dall\'inglese («Che vuol dire?»), poi la si deve dire in inglese («Come si dice in inglese?»). Una parola sbagliata torna a una domanda più facile e ricompare dopo 6 domande e poi dopo 20; dopo uno sbaglio si dice perché e come si fa. Tre giuste di fila la mettono a riposo fino a fine partita. A scuola ogni lezione riparte da capo.',
   tred: false,
   // gli esercizi del catalogo no: solo il suo contenuto
   accetta: () => false,

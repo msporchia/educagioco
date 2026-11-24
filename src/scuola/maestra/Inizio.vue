@@ -72,7 +72,8 @@ function apriFile(e) {
     <h2>Come funziona</h2>
     <ol class="passi">
       <li><span class="n">1</span><b>Prepara</b><span>la classe coi nomi e una lezione: a che gioco, cosa si fa, quando si va avanti.</span></li>
-      <li><span class="n">2</span><b>Apri sui PC</b><span>la pagina dei bambini, dall'indirizzo qui sotto o dal file con la chiavetta.</span></li>
+      <li><span class="n">2</span><b>Apri sui PC</b><span>la pagina dei bambini,
+        <a :href="indirizzo" target="_blank" rel="noopener" class="copiabile" data-indirizzo-passi>{{ indirizzo }}</a>, o il file con la chiavetta.</span></li>
       <li><span class="n">3</span><b>Avvia</b><span>e scrivi il codice alla lavagna: ogni bambino lo scrive e tocca il suo nome.</span></li>
       <li><span class="n">4</span><b>Via!</b><span>Vedi a che punto è ognuno; alla fine chiudi e hai il resoconto.</span></li>
     </ol>
