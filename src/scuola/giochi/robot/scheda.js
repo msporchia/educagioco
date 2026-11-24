@@ -39,8 +39,8 @@ export default {
   nome: 'Il Robot',
   nei: 'col Robot',
   spiega: 'Il bambino scrive un programma a righe e il robot lo esegue, mattone dopo mattone, finché la costruzione è uguale al disegno.',
-  // l'esercizio concreto, per la maestra che sceglie il gioco: lo mostra per primo, prima di com'è il gioco (`spiega`)
-  allena: 'Il disegno chiede tre colonne di mattoni: il bambino scrive il programma a righe («colonna alta 2», «vai a destra 2 passi», …), preme ▶ e il robot costruisce esattamente quello che c\'è scritto. È la programmazione più astratta, il passo dopo Passo passo: si parte dalle basi (passi, mattoni, colori e il blocco che ripete); poi il robot guarda e decide (se… altrimenti…); i «progetti», cioè le funzioni, che si scrivono una volta e si usano con misure diverse; le lavagnette, cioè le variabili. Negli ultimi capitoli gli algoritmi: mettere in ordine, cercare, le pile, fino al progetto che chiama sé stesso.',
+  // per la maestra che sceglie il gioco, in un testo solo: cosa allena, un esempio fra «…», come cresce (il carosello mostra questo)
+  allena: 'La programmazione più astratta, dopo Passo passo: il bambino scrive un programma a righe che si leggono come frasi («colonna alta 2», «vai a destra 2 passi») e il robot costruisce esattamente quello che c\'è scritto. Dalle basi (passi, mattoni, il blocco che ripete) al «se… altrimenti…», alle funzioni (i «progetti») e alle variabili (le lavagnette); negli ultimi capitoli gli algoritmi: ordinare, cercare, le pile, fino a un progetto che chiama sé stesso.',
   tred: false,
   conta: { tante: 'livelli', una: 'un livello', giuste: null },   // una risposta chiusa è un livello vinto
   tipo: {

@@ -74,8 +74,8 @@ export default {
   nome: 'Passo passo',
   nei: 'in Passo passo',
   spiega: 'Il bambino mette in fila delle frecce (e poi dei cicli) e preme ▶: il personaggio le esegue e deve arrivare alla meta. È il primo passo verso la programmazione.',
-  // l'esercizio concreto, per la maestra che sceglie il gioco: lo mostra per primo, prima di com'è il gioco (`spiega`)
-  allena: 'Il coniglio deve arrivare alla tana: il bambino mette in fila le frecce (→ → ↑ →), preme ▶, guarda dove arriva e corregge. È il primo passo verso la programmazione, senza leggere né scrivere codice: il personaggio fa alla lettera quello che gli si ordina. Si parte dalle sole frecce; poi il salto, il ghiaccio e le buche, dove bisogna prevedere cosa succederà; poi le idee vere dei programmi: le carte che ripetono (ripeti N volte, ripeti fino a) e il «se», che decide guardando dove mette i piedi. Il cane con le pecore e il guerriero con grate e nemici sono gli stessi concetti, più difficili. Il passo dopo è il Robot.',
+  // per la maestra che sceglie il gioco, in un testo solo: cosa allena, un esempio fra «…», come cresce (il carosello mostra questo)
+  allena: 'Il primo passo verso la programmazione, senza leggere né scrivere: il bambino mette in fila delle frecce (→ → ↑ →), preme ▶ e il coniglio le esegue alla lettera; se non arriva alla tana, si guarda dove ha sbagliato e si corregge. Si parte dalle sole frecce; poi salto, ghiaccio e buche, dove bisogna prevedere; poi i cicli (ripeti N volte, ripeti fino a) e il «se». Il cane con le pecore e il guerriero ripropongono gli stessi concetti, più difficili. Il passo dopo è il Robot.',
   tred: false,
   conta: { tante: 'livelli', una: 'un livello', giuste: null },   // una risposta chiusa è un livello vinto
   // gli esercizi del catalogo no: solo il suo contenuto

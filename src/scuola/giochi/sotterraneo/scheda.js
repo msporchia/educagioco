@@ -7,8 +7,8 @@ export default {
   nome: 'Il sotterraneo',
   nei: 'nel sotterraneo',
   spiega: 'Il bambino esplora una cripta: per aprire porte e forzieri e per battere i mostri risponde alle domande. Per le classi dalla terza in su.',
-  // l'esercizio concreto, per la maestra che sceglie il gioco: lo mostra per primo, prima di com'è il gioco (`spiega`)
-  allena: 'Le domande che scegli tu, a scelta multipla: per aprire una porta o un forziere, e per colpire un mostro, il bambino risponde a una domanda, per esempio «6 × 7 = ?».',
+  // per la maestra che sceglie il gioco, in un testo solo: cosa allena, un esempio fra «…», come cresce (il carosello mostra questo)
+  allena: 'Il bambino esplora una cripta, e per aprire porte e forzieri o colpire un mostro risponde a una domanda, per esempio «6 × 7 = ?». Come in Survivors le domande possono mescolare argomenti diversi. È il più impegnativo: per le classi dalla terza in su.',
   tred: true,
   difficolta: {
     facile: 'L\'eroe parte forte: quattro livelli sopra quelli attesi per la cripta, quindi regge anche chi sbaglia spesso.',

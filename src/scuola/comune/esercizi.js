@@ -136,7 +136,7 @@ const perId = id => SCELTI.find(m => m.id === id)
 
 // dove si fa un esercizio: le schede con tutto il catalogo, un gioco vero con quello che sa fare (`accetta` della sua
 // scheda) e col suo contenuto, se ne ha uno (docs/scuola/giochi.md)
-const SCHEDE_DOMANDE = { id: 'schede', nome: 'Le domande', spiega: 'Il bambino risponde a una domanda alla volta, su una scheda, toccando la risposta: niente gioco intorno. Va con tutto quello che si può chiedere.' , allena: 'Una domanda alla volta su una scheda, per esempio «3 × 8 = ?» con quattro risposte da toccare; dopo uno sbaglio la scheda dice perché e come si fa. Le domande le scegli tu, da tutto quello che si può chiedere.' }
+const SCHEDE_DOMANDE = { id: 'schede', nome: 'Le domande', spiega: 'Il bambino risponde a una domanda alla volta, su una scheda, toccando la risposta: niente gioco intorno. Va con tutto quello che si può chiedere.' , allena: 'Solo l\'esercizio, senza gioco intorno: una domanda alla volta su una scheda, con le risposte da toccare (per esempio «3 × 8 = ?»). Si possono mescolare argomenti diversi, tabelline e ortografia, orologio e geometria, decidendo quante domande di ognuno.' }
 export const GIOCHI = [SCHEDE_DOMANDE, ...PRONTI]
 const delCatalogo = e => e.tipo === 'tabelline' || e.tipo === 'modulo'
 function accetta(g, e) {

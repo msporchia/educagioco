@@ -30,8 +30,8 @@ export default {
   nome: 'Gli Asteroidi',
   nei: 'negli Asteroidi',
   spiega: "Il bambino guida una navicella nello spazio: sullo schermo c'è un conto (una tabellina o un calcolo a mente), e deve colpire il sasso che porta il numero giusto prima che cada.",
-  // l'esercizio concreto, per la maestra che sceglie il gioco: lo mostra per primo, prima di com'è il gioco (`spiega`)
-  allena: 'Sullo schermo c\'è un conto, per esempio «35 − 7 = ?», e scendono sassi coi numeri: il bambino gira la navicella e colpisce il 28. Tabelline o calcolo a mente, quelle che scegli tu.',
+  // per la maestra che sceglie il gioco, in un testo solo: cosa allena, un esempio fra «…», come cresce (il carosello mostra questo)
+  allena: 'Sullo schermo c\'è un conto, per esempio «35 − 7 = ?»; scendono sassi coi numeri e il bambino colpisce quello giusto, il 28, prima che cada. Va con le tabelline e il calcolo a mente: è il gioco della velocità nei conti.',
   tred: true,
   difficolta: {
     facile: 'I sassi cadono più piano e la nave ha quattro vite invece di tre.',

@@ -52,8 +52,8 @@ export default {
   nome: 'Difendi il castello',
   nei: 'nel castello',
   spiega: "Il bambino difende un castello dai mostri: ogni torre si costruisce risolvendo un'operazione in colonna. È lo svago di fine lezione.",
-  // l'esercizio concreto, per la maestra che sceglie il gioco: lo mostra per primo, prima di com'è il gioco (`spiega`)
-  allena: 'Le operazioni in colonna, cifra per cifra: per costruire una torre il bambino risolve per esempio «22 + 44» scrivendo una cifra alla volta, da destra, coi riporti quando servono. Ogni volta che la torre sale di livello l\'operazione è un gradino più difficile (più cifre, i riporti, più numeri); la tappa scelta decide quali operazioni (+, −, ×, :) e fin dove si sale.',
+  // per la maestra che sceglie il gioco, in un testo solo: cosa allena, un esempio fra «…», come cresce (il carosello mostra questo)
+  allena: 'Le operazioni in colonna: per costruire una torre il bambino risolve un conto come «22 + 44», una cifra alla volta da destra, coi riporti; a ogni livello della torre il conto si fa un po\' più difficile. La tappa scelta decide quali operazioni (+, −, ×, :) e fin dove si arriva. È lo svago di fine lezione.',
   tred: false,
   conta: { tante: 'operazioni', una: "un'operazione", giuste: 'operazioni giuste', giusta: "un'operazione giusta" },
   difficolta: {
