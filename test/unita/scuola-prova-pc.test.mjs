@@ -67,5 +67,19 @@ const r = resoconto(dati, { versione: 'x', ua: 'Windows NT 10.0 Chrome/119.0', c
 controlla('il resoconto: quale computer, la scheda, una riga per gioco con B', /^Quale: aula 3, vicino alla finestra$/m.test(r) && /^Scheda: Intel\(R\) UHD Graphics 600 \(scheda video\)$/m.test(r) &&
           /^Asteroidi: 55 fps \| al massimo 35 fps → B 52 fps \(B tenuta\)$/m.test(r) && /^Robot: non misurato$/m.test(r), r)
 controlla('sta in un invio solo del modulo', r.length <= 3400)
+uguale('Firefox si dice Firefox', sistema('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0'), 'Windows 10/11, Firefox 128')
+uguale('ed Edge Edge, anche se dice Chrome', sistema('Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 Chrome/120.0 Safari/537.36 Edg/120.0'), 'Windows 10/11, Edge 120')
+{
+  // quello che serve per capire un PC senza tornare dalla maestra: la finestra, la pagina, la rete, quando è partito ogni gioco,
+  // se la pagina è stata nascosta, la GPU intera; e il caso peggiore (tutte le scene con B e un errore lungo) sta in un invio
+  const pieno = { info: { webgl2: true, gpu: INTEL }, js: 900, nascosta: 2,
+    giochi: GIOCHI_PROVA.map(g => ({ id: g.id, scene: sceneDi(g).map(tipo => sc(tipo, { fps: 23, sotto30: 61, fermi: 12, partito: 14.2 }, { errore: 'x'.repeat(130) })) })) }
+  const t = resoconto(pieno, { versione: 'abc1234', ua: 'Windows NT 10.0 Firefox/128.0', cpu: 4, memoria: 4, schermo: '1366x768', finestra: '1366x657',
+                               dpr: 1, dove: 'x'.repeat(200), da: 'dal sito', caricata: 12.4, rete: '4g, ~3.5 Mbit/s' })
+  controlla('il resoconto dice finestra, pagina, rete, partenza, pagina nascosta e GPU intera',
+            /finestra 1366x657/.test(t) && /Pagina dal sito, caricata in 12,4 s \| rete 4g/.test(t) && /partito in 14,2 s/.test(t) &&
+            /nascosta 2 volte/.test(t) && /^GPU intera: ANGLE/m.test(t), t)
+  controlla('anche il caso peggiore sta in un invio solo, intero', t.length <= 3400 && /^Sotterraneo: /m.test(t), t.length)
+}
 
 riassunto('la prova del computer della classe')

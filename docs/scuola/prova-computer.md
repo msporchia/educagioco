@@ -64,8 +64,11 @@ e la prova lo scrive «simile a …» (`simile` del verdetto).
 **Un tasto solo**, «Invia il resoconto»: apre il modulo Tally dei giudizi di casa già compilato (`resoconto`, sempre in un invio
 solo, sotto i 3400 caratteri del campo), e lì la maestra preme Invia. Sopra c'è un campo facoltativo «Quale computer è?» (l'aula,
 il posto), che finisce in testa al resoconto. Il modulo riceve il resoconto in campi nascosti e sembra vuoto: sotto il tasto lo si
-dice in grassetto («è normale, il resoconto è già dentro»), e «Cosa mandi» apre il testo che parte (`[data-prova-pc-cosa-parte]`). Il resoconto: data e versione, sistema e Chrome, core, memoria, schermo, i ms del
-processore, la scheda, e per gioco ogni scena con fps, la parte sotto i 30, i fermi oltre 100 ms, la sua B e se B è tenuta.
+dice in grassetto («è normale, il resoconto è già dentro»), e «Cosa mandi» apre il testo che parte (`[data-prova-pc-cosa-parte]`). Il resoconto: data e versione, sistema e browser (Firefox ed Edge col loro nome), core, memoria, schermo e finestra, i ms del
+processore, la scheda (e la stringa intera della GPU), la pagina (dal file o dal sito, quanto ci ha messo a caricarsi, la rete), se
+la pagina è stata nascosta durante la prova, e per gioco ogni scena con fps, la parte sotto i 30, i fermi oltre 100 ms, in quanti
+secondi il gioco è comparso, la sua B e se B è tenuta. Scelto per non dover tornare dalla maestra: il caso peggiore sta sotto i 3400
+caratteri (`unita/scuola-prova-pc`). Niente di personale: nessun nome, solo il computer.
 
 ## Perché i giochi veri, e non solo le scene della misura di casa
 

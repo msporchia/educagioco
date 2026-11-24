@@ -41,12 +41,13 @@ export function nomeScheda(gpu) {
   return (parti[1] || parti[0]).replace(/\s*\(0x[0-9a-f]+\)/i, '').replace(/\s+(Direct3D|OpenGL|Vulkan|Metal).*$/i, '').trim()
 }
 
-/** Il sistema in breve dallo user agent: «ChromeOS, Chrome 120». */
+/** Il sistema e il browser in breve dallo user agent: «ChromeOS, Chrome 120», «Windows 10/11, Firefox 128» (Edge e Opera dicono anche Chrome). */
 export function sistema(ua = '') {
   const so = /CrOS/.test(ua) ? 'ChromeOS' : /Windows NT 10/.test(ua) ? 'Windows 10/11' : /Windows NT 6\.1/.test(ua) ? 'Windows 7'
     : /Windows/.test(ua) ? 'Windows' : /Android/.test(ua) ? 'Android' : /Mac OS X/.test(ua) ? 'Mac' : /Linux/.test(ua) ? 'Linux' : '?'
-  const c = /Chrome\/(\d+)/.exec(ua)
-  return `${so}${c ? `, Chrome ${c[1]}` : ''}`
+  const b = [['Edge', /Edg\/(\d+)/], ['Opera', /OPR\/(\d+)/], ['Firefox', /Firefox\/(\d+)/], ['Chrome', /Chrome\/(\d+)/], ['Safari', /Version\/(\d+).*Safari/]]
+    .map(([nome, re]) => [nome, re.exec(ua)]).find(([, m]) => m)
+  return `${so}${b ? `, ${b[0]} ${b[1][1]}` : ''}`
 }
 
 export const esitoFps = f => (f >= 50 ? 'liscio' : f >= 30 ? 'tratti' : 'scatti')
@@ -105,16 +106,20 @@ export function frasi(v) {
   return r
 }
 
-const misura = m => (!m ? '-' : m.errore ? `non parte (${m.errore})` : `${m.fps} fps${m.sotto30 ? `, sotto i 30 il ${m.sotto30}%` : ''}${m.fermi ? `, ${m.fermi} fermi` : ''}`)
+const misura = m => (!m ? '-' : m.errore ? `non parte (${String(m.errore).slice(0, 70)})` : `${m.fps} fps${m.sotto30 ? `, sotto i 30 il ${m.sotto30}%` : ''}${m.fermi ? `, ${m.fermi} fermi` : ''}${m.partito != null ? `, partito in ${String(m.partito).replace('.', ',')} s` : ''}`)
 
 /** Il resoconto da mandare: corto, in un invio solo del modulo (il campo regge ~3400 caratteri). */
-export function resoconto(dati, { versione = '', ua = '', cpu = null, memoria = null, schermo = '', dpr = 1, dove = '', quando = new Date() } = {}) {
+export function resoconto(dati, { versione = '', ua = '', cpu = null, memoria = null, schermo = '', finestra = '', dpr = 1, dove = '', da = '',
+                                  caricata = null, rete = '', quando = new Date() } = {}) {
   const v = verdetto(dati), fatti = new Map(((dati && dati.giochi) || []).map(g => [g.id, g]))
   const righe = [
     `PROVA DEL COMPUTER DELLA SCUOLA ${data(quando)}${versione ? ' v' + versione : ''}${dati && dati.fermata ? ' (FERMATA A METÀ)' : ''}`,
     ...(String(dove).trim() ? [`Quale: ${String(dove).trim().slice(0, 200)}`] : []),
-    `${sistema(ua)} | ${cpu ?? '?'} core${memoria ? `, ${memoria} GB` : ''} | schermo ${schermo} dpr ${dpr} | processore ${v.js ?? '?'} ms (${v.cpu ?? '?'})`,
+    `${sistema(ua)} | ${cpu ?? '?'} core${memoria ? `, ${memoria} GB` : ''} | schermo ${schermo}${finestra ? `, finestra ${finestra}` : ''} dpr ${dpr} | processore ${v.js ?? '?'} ms (${v.cpu ?? '?'})`,
     `Scheda: ${v.simile ? 'simile a ' : ''}${v.gpu} (${{ video: 'scheda video', processore: 'DISEGNA IL PROCESSORE', manca: 'NIENTE WEBGL 2' }[v.scheda]})`,
+    ...(dati?.info?.gpu && dati.info.gpu !== v.gpu ? [`GPU intera: ${String(dati.info.gpu).slice(0, 220)}`] : []),
+    ...(da || caricata != null || rete ? [`Pagina ${da || '?'}${caricata != null ? `, caricata in ${String(caricata).replace('.', ',')} s` : ''}${rete ? ` | rete ${rete}` : ''}`] : []),
+    ...(dati?.nascosta ? [`ATTENZIONE: durante la prova la pagina è stata nascosta ${dati.nascosta} ${dati.nascosta === 1 ? 'volta' : 'volte'} (i numeri valgono meno)`] : []),
     ...v.giochi.map(g => {
       const f = fatti.get(g.id)
       if (!f || !(f.scene || []).length) return `${g.nome}: non misurato`

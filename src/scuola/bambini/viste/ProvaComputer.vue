@@ -57,13 +57,15 @@ async function giocaUno(g, scala, tempi, massimo = false) {
   await nextTick()
   let ferma = pilota(g.id)
   try {
+    const t0 = performance.now()
     if (!(await inScenaDavvero(g)) && !fermare) return { errore: guasto ? nonParte() : `non è comparso in ${(g.tred ? TETTO_SCENA.tred : TETTO_SCENA.tela) / 1000} secondi` }
+    const partito = Math.round((performance.now() - t0) / 100) / 10      // quanto ci ha messo a comparire: a lezione si aspetta anche questo
     if (massimo) {
       if (typeof window.__estremo !== 'function') return { errore: 'non sa andare al massimo' }
       window.__estremo(); ferma(); ferma = pilota(g.id, { massimo: true })
     }
     const m = await contaFotogrammi(tempi, () => fermare || guasto)
-    return guasto ? { errore: nonParte() } : m
+    return guasto ? { errore: nonParte() } : { ...m, ...(massimo ? {} : { partito }) }
   } finally {
     ferma()
     inScena.value = null
@@ -90,6 +92,10 @@ const misuraScena = (g, tipo, scala, tempi) => (tipo === 'massimo' && g.massimo 
 
 async function avvia() {
   stato.value = 'corre'; fermare = false; avviso.value = ''
+  // una pagina nascosta (un'altra finestra, il PC che si spegne) rallenta tutto: i numeri valgono meno, e il resoconto lo dice
+  let nascosta = 0
+  const nascondi = () => { if (document.hidden) nascosta++ }
+  document.addEventListener('visibilitychange', nascondi)
   clearInterval(orologio); orologio = setInterval(() => { resto.value = fineStimata - performance.now() }, 500)
   try {
     const { infoGpuVeri, proveCpu } = await import('../../../grafica/benchmark/veri.js')
@@ -121,16 +127,20 @@ async function avvia() {
       }
       giochi.push({ id: g.id, scene: fatte })
     }
-    const d = { info, giochi, js: fermare ? null : proveCpu(), fermata: fermare }
+    const d = { info, giochi, js: fermare ? null : proveCpu(), fermata: fermare, nascosta }
     dati.value = d; window.__provaComputer = d
     esito.value = verdetto(d)
     // solo una prova intera decide: una fermata a metà non cancella quello che il PC sapeva
     if (!fermare && !window.__provaSolo) ricordaB(Object.fromEntries(esito.value.giochi.filter(x => x.b === 'tenuta').map(x => [x.id, SCALA_B])))
-    macchina.value = { cpu: navigator.hardwareConcurrency, memoria: navigator.deviceMemory, schermo: `${innerWidth}x${innerHeight}`, dpr: devicePixelRatio }
+    const nav = performance.getEntriesByType?.('navigation')?.[0], rete = navigator.connection
+    macchina.value = { cpu: navigator.hardwareConcurrency, memoria: navigator.deviceMemory, schermo: `${screen.width}x${screen.height}`,
+                       finestra: `${innerWidth}x${innerHeight}`, dpr: devicePixelRatio, da: location.protocol === 'file:' ? 'dal file' : 'dal sito',
+                       caricata: nav?.loadEventEnd ? Math.round(nav.loadEventEnd / 100) / 10 : null,
+                       rete: rete?.effectiveType ? `${rete.effectiveType}${rete.downlink ? `, ~${rete.downlink} Mbit/s` : ''}` : '' }
     stato.value = 'fatto'
   } catch (e) {
     avviso.value = 'La prova non è partita: ' + ((e && e.message) || e); stato.value = 'guasto'
-  } finally { clearInterval(orologio) }
+  } finally { clearInterval(orologio); document.removeEventListener('visibilitychange', nascondi) }
 }
 function chiudi() { fermare = true; applicaPixel(1); emit('chiudi') }
 onBeforeUnmount(() => { fermare = true; applicaPixel(1); clearInterval(orologio) })
