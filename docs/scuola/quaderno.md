@@ -136,7 +136,7 @@ Colonne: Bambino, Nuovo, per ogni blocco «Blocco N: fatte» e «Blocco N: giust
 | `lezione` | nome e la fila dei blocchi (sotto); salva solo una lezione valida e torna all'inizio; copia il link, duplica, cancella |
 | `link` | una lezione arrivata da un link |
 | `avvia` | la scelta della classe e l'avvio |
-| `diretta` | per la LIM: in attesa il codice enorme, l'indirizzo, i nomi che diventano verdi e «Via»; poi «Avanti tutti», «La classe» divisa per blocco e un riquadro per bambino (pallini dei blocchi, fatte e giuste del blocco in corso, le ultime sbagliate), i suoi comandi, «Chiudi lezione» |
+| `diretta` | per la LIM: in attesa il codice enorme, l'indirizzo, «Entrati: N su M» e una griglia di nomi (il tondo delle iniziali, «è entrato» col segno verde o «non ancora», le operazioni rare nel «⋯» di ognuno, spiegate lì) e «Via»; poi «Avanti tutti», «La classe» divisa per blocco e un riquadro per bambino (pallini dei blocchi, fatte e giuste del blocco in corso, le ultime sbagliate), i suoi comandi, «Chiudi lezione» |
 | `resoconto` | i blocchi della lezione, tabella per bambino con una colonna per blocco («non c'era» per chi non è entrato), le domande più sbagliate della classe con chi le ha sbagliate e cosa ha detto, Stampa, Scarica CSV, Recupera, «Aggiungi alla classe» per i nuovi |
 | `storico` | per classe le lezioni fatte con la data e i bambini |
 | `bambino` | lezione per lezione fatte e giuste in tutto e blocco per blocco, e le domande che sbaglia più spesso |
@@ -167,7 +167,9 @@ quadretti** del quaderno di scuola come fondo, e **i colori delle penne** (`--pe
 - **L'inizio**: come funziona in quattro passi numerati; **una lezione per riga, su tutta la larghezza** (segnalato
   dall'utente: la scheda stretta faceva una frase unica illeggibile): il nome e i tasti in una riga, sotto un riquadro per
   blocco (`[data-blocco-lezione]`) col disegno del gioco, le cose che si chiedono una per riga (`vociDelBlocco` di
-  `utili.js`: le parti mescolate separate, non col «+»), la difficoltà e quando si passa. Le classi restano schede con le
+  `utili.js`: le parti mescolate separate, non col «+»), la difficoltà e quando si passa. **In vista solo «Avvia»**; Modifica,
+  Provala tu, Duplica, Copia il link per una collega e Cancella stanno nel «⋯» (`Altro.vue`), ognuna con la riga che dice a
+  cosa serve (segnalato dall'utente: sei tasti in fila non si capivano); Cancella chiede conferma sotto il nome. Le classi restano schede con le
   iniziali dei bambini.
 
 ## Il pannello in diretta

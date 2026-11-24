@@ -20,6 +20,7 @@ const lezione = computed(() => quaderno.inCorso?.lezione ?? voce.value?.lezione)
 const indirizzo = indirizzoBambini()
 const messaggio = ref('')
 const chiudendo = ref(false)
+const daTogliere = ref('')      // il nome nuovo che chiede «Lo tolgo?» in sala
 
 // prima che il servizio risponda, i nomi della classe spenti
 const alunni = computed(() => {
@@ -153,16 +154,27 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
     <section v-if="inAttesa" class="carta lim" data-sala>
       <p class="invito">Aprite <a :href="indirizzo" target="_blank" rel="noopener" class="copiabile"><b>{{ indirizzo }}</b></a> e scrivete il codice</p>
       <div class="codice copiabile" data-codice><span class="evidenziato">{{ quaderno.inCorso.codice }}</span></div>
+      <!-- una griglia di nomi: chi è entrato col segno verde, chi manca grigio; le operazioni rare nel «⋯» di ognuno, spiegate lì
+           (segnalato dall'utente: coi tasti dentro i nomi, con tanti bambini non si capiva niente) -->
+      <p class="entrati" data-entrati>Entrati: <b>{{ alunni.filter(a => a.preso).length }}</b> su {{ alunni.length }}</p>
       <ul class="nomi">
         <li v-for="a in alunni" :key="a.id" class="nome" :class="{ preso: a.preso, nuovo: a.nuovo }" :data-alunno="a.id" :data-preso="a.preso">
-          <span>{{ a.nome }}</span>
-          <span v-if="a.nuovo" class="etichetta">nuovo</span>
-          <button v-if="!a.nuovo && puoLiberare(a)" class="bottone chiaro piccolo" data-azione="libera" @click="liberaNome(a.id)">Rimetti nella lista</button>
-          <Conferma v-if="a.nuovo" etichetta="Togli il nome" domanda="Lo tolgo?" si="Togli" data-azione="togli" @si="togliNome(a.id)" />
+          <span class="iniziali" :style="{ '--colore': a.preso ? coloreDi(a.nome) : 'var(--filo)' }" aria-hidden="true">{{ iniziali(a.nome) }}</span>
+          <span class="chi"><b>{{ a.nome }}</b><span class="stato">{{ a.preso ? 'è entrato' : 'non ancora' }}<template v-if="a.nuovo"> · nome nuovo</template></span></span>
+          <span class="segno" aria-hidden="true">{{ a.preso ? '✓' : '' }}</span>
+          <Altro v-if="a.nuovo || puoLiberare(a)">
+            <button v-if="!a.nuovo && puoLiberare(a)" class="voce-menu" role="menuitem" data-azione="libera" @click="liberaNome(a.id)">
+              <b>Rimetti il nome nella lista</b><span>Il nome torna libero e il bambino lo ritocca, da questo PC o da un altro: per un PC rotto o un nome toccato per sbaglio. Le risposte restano sue.</span></button>
+            <button v-if="a.nuovo" class="voce-menu" role="menuitem" data-azione="togli" @click="daTogliere = a.id">
+              <b>Togli il nome</b><span>Un nome che non è nella tua classe, scritto da un bambino: lo togli, con le sue risposte.</span></button>
+          </Altro>
+          <span v-if="daTogliere === a.id" class="fila conferma-togli">
+            <span>Lo tolgo?</span>
+            <button class="bottone rosso piccolo" data-azione="conferma" @click="togliNome(a.id); daTogliere = ''">Togli</button>
+            <button class="bottone chiaro piccolo" data-azione="annulla" @click="daTogliere = ''">No</button>
+          </span>
         </li>
       </ul>
-      <p class="nota">Un nome diventa verde quando un bambino lo tocca. «Rimetti nella lista» <Aiuto testo="Il nome torna libero nella lista e il bambino lo ritocca, da questo PC o da un altro: per un PC che si è rotto o un nome toccato per sbaglio. Le risposte date restano sue." />
-        «Togli il nome» <Aiuto testo="Un nome che non è nella tua classe, scritto da un bambino: lo togli, con le sue risposte." /></p>
       <div class="fila centro-fila">
         <button class="bottone grande" data-azione="via" :disabled="!diretta.sentito" @click="parti">Via</button>
       </div>
@@ -318,12 +330,20 @@ watch(() => quaderno.inCorso, c => { if (!c && voceId) emit('vai', 'resoconto', 
 .invito { font-size:clamp(16px, 2.4vw, 26px) }
 .codice { font-size:clamp(64px, 16vw, 200px); font-weight:900; letter-spacing:.12em; line-height:1; color:var(--inchiostro);
           font-variant-numeric:tabular-nums; padding-left:.12em }
-.nomi { list-style:none; display:flex; flex-wrap:wrap; justify-content:center; gap:8px }
-.nome { display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:999px; background:var(--tessera);
-        font-size:clamp(15px, 1.8vw, 22px); font-weight:600; color:var(--grigio) }
-.nome.preso { background:var(--verde); color:#fff }
+.entrati { font-size:clamp(15px, 1.8vw, 20px); color:var(--grigio) }
+.entrati b { color:var(--inchiostro) }
+.nomi { list-style:none; width:100%; display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:8px; text-align:left }
+.nome { display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:8px 10px; border-radius:var(--raggio-piccolo);
+        background:var(--tessera); color:var(--grigio) }
+.nome .iniziali { width:38px; height:38px; font-size:14px }
+.nome .chi { flex:1; min-width:0; display:flex; flex-direction:column; line-height:1.2 }
+.nome .chi b { font-size:clamp(15px, 1.6vw, 19px); overflow-wrap:anywhere }
+.nome .stato { font-size:12px }
+.nome .segno { width:24px; height:24px; flex:none; border-radius:50%; display:grid; place-items:center; font-weight:900; color:#fff }
+.nome.preso { background:#e3f4ea; color:var(--inchiostro) }
+.nome.preso .segno { background:var(--verde) }
 .nome.nuovo { box-shadow:inset 0 0 0 2px var(--accento) }
-.nome .etichetta { background:var(--superficie); color:var(--inchiostro) }
+.conferma-togli { width:100%; justify-content:flex-end; font-size:13px }
 .centro-fila { justify-content:center }
 .bottone.grande { font-size:clamp(20px, 3vw, 32px); padding:14px 56px }
 .bambini { list-style:none; display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:12px }

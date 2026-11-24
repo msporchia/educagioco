@@ -8,8 +8,8 @@ import { lezioneValida, classiNelloStorico } from './quaderno.js'
 import { indirizzoBambini, paginaMaestra, copia, scarica, iniziali, coloreDi, provaLezione, vociDelBlocco } from './utili.js'
 import { descriviPassa } from '../comune/lezione.js'
 import { ICONE } from '../comune/icone-giochi.js'
-import Conferma from './Conferma.vue'
 import CodicePerIPc from './CodicePerIPc.vue'
+import Altro from './Altro.vue'
 
 const emit = defineEmits(['vai', 'indietro'])
 const indirizzo = indirizzoBambini()
@@ -19,6 +19,7 @@ const copiato = ref('')            // id della lezione il cui link è appena sta
 const daCopiare = ref('')          // il link, quando il browser non lascia copiare
 const esitoFile = ref({ bene: '', male: '' })
 const scelta = ref(null)
+const daCancellare = ref('')     // la lezione che chiede «Cancello?» sotto il suo nome
 // a che passo è: senza classe non si va avanti, poi la prima lezione; con tutte e due la pagina intera
 const passo = computed(() => (!quaderno.classi.length ? 'classe' : !quaderno.lezioni.length ? 'lezione' : 'fatti'))
 
@@ -117,17 +118,31 @@ function apriFile(e) {
       <li v-for="l in quaderno.lezioni" :key="l.id" class="lezione" :data-lezione="l.id">
         <div class="testa-lezione">
           <b class="titolo">{{ l.nome }}</b>
+          <!-- in vista solo «Avvia»; il resto nel «⋯», ogni voce con la sua riga che dice a cosa serve (segnalato dall'utente: sei
+               tasti in fila non si capivano) -->
           <span class="fila azioni">
+            <span v-if="copiato === l.id" class="nota" data-link-copiato>Link copiato</span>
             <button class="bottone piccolo" data-azione="avvia" :disabled="!lezioneValida(l) || !!quaderno.inCorso"
                     @click="emit('vai', 'avvia', { lezione: l })">Avvia</button>
-            <button class="bottone chiaro piccolo" data-azione="prova-lezione" :disabled="!lezioneValida(l)" @click="provaLezione(l)">Prova</button>
-            <button class="bottone chiaro piccolo" data-azione="modifica-lezione" @click="emit('vai', 'lezione', { id: l.id })">Modifica</button>
-            <button class="bottone chiaro piccolo" data-azione="duplica" @click="duplica(l.id)">Duplica</button>
-            <button class="bottone chiaro piccolo" data-azione="copia-link" :disabled="!lezioneValida(l)" @click="copiaLink(l)">
-              {{ copiato === l.id ? 'Link copiato' : 'Copia il link' }}</button>
-            <Conferma etichetta="Cancella" si="Cancella" data-azione="cancella-lezione" @si="cancella(l.id)" />
+            <Altro>
+              <button class="voce-menu" role="menuitem" data-azione="modifica-lezione" @click="emit('vai', 'lezione', { id: l.id })">
+                <b>Modifica</b><span>Cambia giochi, domande e blocchi.</span></button>
+              <button class="voce-menu" role="menuitem" data-azione="prova-lezione" :disabled="!lezioneValida(l)" @click="provaLezione(l)">
+                <b>Provala tu</b><span>Si apre la pagina dei bambini con la lezione già partita: la giochi come un bambino, e non arriva niente a nessuno.</span></button>
+              <button class="voce-menu" role="menuitem" data-azione="duplica" @click="duplica(l.id)">
+                <b>Duplica</b><span>Una copia da cambiare; questa resta com'è.</span></button>
+              <button class="voce-menu" role="menuitem" data-azione="copia-link" :disabled="!lezioneValida(l)" @click="copiaLink(l)">
+                <b>Copia il link per una collega</b><span>Lo mandi per posta o in chat: chi lo apre nella sua pagina della maestra aggiunge la lezione al suo quaderno. È lungo: si incolla, non si detta.</span></button>
+              <button class="voce-menu" role="menuitem" data-azione="cancella-lezione" @click="daCancellare = l.id">
+                <b>Cancella</b><span>La toglie dal quaderno; le volte che l'hai fatta restano nello storico.</span></button>
+            </Altro>
           </span>
         </div>
+        <p v-if="daCancellare === l.id" class="fila conferma-cancella" data-conferma-cancella>
+          <span>Cancello «{{ l.nome }}»?</span>
+          <button class="bottone rosso piccolo" data-azione="conferma" @click="cancella(l.id); daCancellare = ''">Cancella</button>
+          <button class="bottone chiaro piccolo" data-azione="annulla" @click="daCancellare = ''">No</button>
+        </p>
         <ol class="blocchi-lezione">
           <li v-for="(b, i) in l.blocchi" :key="i" class="blocco-lezione" :data-blocco-lezione="i">
             <img v-if="ICONE[vociDelBlocco(b.esercizio).gioco?.id]" :src="ICONE[vociDelBlocco(b.esercizio).gioco.id].src" alt="" class="ico">
@@ -240,6 +255,8 @@ function apriFile(e) {
 .blocco-lezione { display:flex; gap:12px; align-items:flex-start; padding:10px 12px; border-radius:var(--raggio-piccolo);
                   background:var(--penna-chiara, var(--tessera)) }
 .blocco-lezione .dentro { display:flex; flex-direction:column; gap:4px; min-width:0; font-size:14px }
+.voce-menu:disabled { opacity:.45; cursor:default }
+.conferma-cancella { font-size:14px }
 .voci { padding-left:18px; display:flex; flex-direction:column; gap:2px; line-height:1.35 }
 .faccine { display:flex; flex-wrap:wrap; gap:4px; align-items:center }
 .altri { font-size:13px; font-weight:700; color:var(--grigio); padding-left:4px }

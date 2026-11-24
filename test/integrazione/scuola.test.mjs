@@ -161,6 +161,13 @@ await M.tocca('[data-azione="salva-lezione"]')
 await schermata(m, 'inizio')
 uguale('nel quaderno c\'è una lezione', await m.locator('[data-lezioni] [data-lezione]').count(), 1)
 stessaLista('la lezione mostra un riquadro per blocco, col suo gioco', await m.locator('[data-lezione] [data-blocco-lezione] b').allInnerTexts(), ['1. Le domande', '2. Gli Asteroidi'])
+// in vista solo «Avvia»; il resto nel «⋯», ogni voce con la sua spiegazione
+stessaLista('i tasti della lezione in vista', await m.locator('[data-lezione] .azioni [data-azione]').evaluateAll(b => b.map(x => x.dataset.azione)), ['avvia', 'altro'])
+await M.tocca('[data-lezione] [data-azione="altro"]')
+stessaLista('nel «⋯» le altre cinque, ognuna spiegata', await m.locator('[data-lezione] .voce-menu').evaluateAll(b => b.filter(x => x.querySelector('span')?.textContent.length > 10).map(x => x.dataset.azione)),
+            ['modifica-lezione', 'prova-lezione', 'duplica', 'copia-link', 'cancella-lezione'])
+await scatto(m, 'scuola-menu-lezione')
+await M.tocca('[data-lezioni] h2')      // un tocco fuori chiude il menu
 await scatto(m, 'scuola-inizio')
 
 /* ── avvia: il codice si legge dalla sala ── */
@@ -194,6 +201,13 @@ await schermata(b, 'aspetta')
 controlla('il bambino aspetta il via col suo nome', /Lorenzo/.test(await testo(b, '[data-aspetta]')))
 await m.waitForSelector(`[data-sala] [data-alunno="${lorenzo}"][data-preso="true"]`, { timeout: 5000 })
 uguale('in sala Marta non è presa', await m.locator(`[data-sala] [data-alunno="${marta}"]`).getAttribute('data-preso'), 'false')
+// la sala è una griglia di nomi: il conto degli entrati, e le operazioni rare nel «⋯» di chi è entrato
+controlla('in sala: 1 entrato su 2', /Entrati:\s*1\s*su 2/.test(await testo(m, '[data-entrati]')), await testo(m, '[data-entrati]'))
+uguale('i nomi non hanno tasti in vista, solo il «⋯»', await m.locator('[data-sala] [data-alunno] > button, [data-sala] [data-alunno] > .conferma').count(), 0)
+await M.tocca(`[data-sala] [data-alunno="${lorenzo}"] [data-azione="altro"]`)
+controlla('nel «⋯» «Rimetti il nome nella lista», spiegato', /torna libero/.test(await testo(m, `[data-sala] [data-alunno="${lorenzo}"] [data-azione="libera"]`)))
+await scatto(m, 'scuola-sala')
+await M.tocca('[data-entrati]')       // un tocco fuori chiude il menu
 await scatto(b, 'scuola-aspetta')
 
 /* ── «Via»: due schede giuste, il passaggio ── */
