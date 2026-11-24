@@ -51,9 +51,9 @@ export default {
   id: 'castello',
   nome: 'Difendi il castello',
   nei: 'nel castello',
-  spiega: "Il bambino difende un castello dai mostri: ogni torre si costruisce risolvendo un'operazione in colonna. È lo svago di fine lezione.",
+  spiega: "Il bambino difende un castello dai mostri: ogni torre si costruisce risolvendo un'operazione in colonna.",
   // per la maestra che sceglie il gioco, in un testo solo: cosa allena, un esempio fra «…», come cresce (il carosello mostra questo)
-  allena: 'Le operazioni in colonna: per costruire una torre il bambino risolve un conto come «22 + 44», una cifra alla volta da destra, coi riporti; a ogni livello della torre il conto si fa un po\' più difficile. La tappa scelta decide quali operazioni (+, −, ×, :) e fin dove si arriva. È lo svago di fine lezione.',
+  allena: 'Le operazioni in colonna: per costruire una torre il bambino risolve un conto come «22 + 44», una cifra alla volta da destra, coi riporti; a ogni livello della torre il conto si fa un po\' più difficile. La tappa scelta decide quali operazioni (+, −, ×, :) e fin dove si arriva.',
   tred: false,
   conta: { tante: 'operazioni', una: "un'operazione", giuste: 'operazioni giuste', giusta: "un'operazione giusta" },
   difficolta: {
@@ -68,7 +68,7 @@ export default {
     voce: {
       nome: 'Difendi il castello',
       icona: '🏰',
-      spiega: 'Lo svago di fine lezione: le torri si comprano con operazioni in colonna. Si sceglie una tappa del regno, che ha già le sue operazioni e fin dove salgono.',
+      spiega: 'Le torri si comprano con operazioni in colonna. Si sceglie una tappa del regno, che ha già le sue operazioni e fin dove salgono.',
       base: { tipo: 'castello', tappa: 'bosco/Il sentiero' },
     },
     valido,
