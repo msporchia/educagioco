@@ -32,6 +32,10 @@ scegliere sta in [../scuola/esercizi.md](../scuola/esercizi.md).
 - Una discesa lasciata a metà (il blocco che cambia) resta nella sosta: un blocco dopo, nello stesso gioco, si riprende
   giù dietro la pausa, come a casa.
 
+- **La torcia è sempre accesa** (chiesto dall'utente: nella cripta buia i bambini non vedevano niente): `torciaSempreAccesa`
+  in `Gioco.vue` la accende alla partenza, e `bruciaLaTorcia` della corsa con `torciaSempre` la riempie invece di consumarla.
+  Comprarla e tenerla accesa resta una cosa del gioco di casa.
+
 ## La difficoltà
 
 La maestra sceglie Facile, Normale o Difficile ([../scuola/giochi.md](../scuola/giochi.md)); la vista la passa nel limite

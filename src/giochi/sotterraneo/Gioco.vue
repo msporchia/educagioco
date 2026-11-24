@@ -1306,6 +1306,14 @@ function corredoLeggendarioDaProva(c) {
   c.sistemaIlCorredo()
 }
 
+// a scuola la torcia è sempre accesa (chiesto dall'utente): nella cripta buia i bambini non vedevano niente, e la torcia da
+// comprare e da tenere accesa è una cosa del gioco di casa (docs/sotterraneo/scuola.md)
+function torciaSempreAccesa(c) {
+  c.torciaSempre = true
+  c.torciaResta = c.stanzeTorcia
+  c.aggiornaLuce()
+}
+
 // `#torcia=accesa` (piena, con una di scorta), `sgoccioli` (l'ultima stanza dell'ultima) o `spenta`: per guardare la luce coi suoi
 // tre stati senza camminare (docs/sotterraneo/luce.md)
 function torciaDaProva(c) {
@@ -1504,6 +1512,7 @@ function avvia(i, { prova = false } = {}) {
   corredoDaProva(corsa.value)
   corredoLeggendarioDaProva(corsa.value)
   torciaDaProva(corsa.value)
+  if (lim) torciaSempreAccesa(corsa.value)
   pianoDaProva(corsa.value)
   stanzaDaProva(corsa.value)
   versoDaProva(corsa.value)

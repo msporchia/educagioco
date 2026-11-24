@@ -699,6 +699,7 @@ export class Corsa extends Corredo {
     const st = this.livello.stanzaDi(Math.floor(this.eroe.x), Math.floor(this.eroe.y))
     if (!st || st.id === this.stanzaOra) return
     this.stanzaOra = st.id
+    if (this.torciaSempre) { this.torciaResta = this.stanzeTorcia; return }   // a scuola non si spegne mai (Gioco.vue, `lim`)
     if (!this.torciaAccesa) { this.accendiDallaCintura(); return }
     this.torciaResta--
     // la luce non sta più nella barra (docs/sotterraneo/barra.md): agli sgoccioli, senza scorta, lo si dice
