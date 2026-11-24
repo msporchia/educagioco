@@ -88,12 +88,22 @@ La CPU ha già le truppe (l'utente), quindi la grafica nuova si fa a monte e il 
 - **Ogni squadra ha il suo foglio di truppe** (voce 12b, ChatGPT; Grok in modalità agente non era partito): disegnate da zero,
   blu per chi gioca e rosse per il nemico, nove truppe con quattro pose ciascuna, **ferma, due passi, il colpo**
   (`dati/truppe-dipinte.js`, `truppe-arena.py`). Il colpo dura quanto lo scatto in avanti (`u.colpo`), chi cammina alterna i passi,
-  chi vola sbatte le ali sempre (`fotogramma()` in `scena/figure.js`). L'arco, la lancia, la bomba e la fiammata sono nel dipinto:
+  chi vola sbatte le ali sempre (`andatura()` in `scena/figure.js`). L'arco, la lancia, la bomba e la fiammata sono nel dipinto:
   l'arco del sotterraneo messo in mano a parte non c'è più. Le figure guardano a destra e il nemico si specchia.
 - **Il taglio** non segue la griglia: la freccia e la fiammata escono dalla casella, e nel foglio rosso la fiammata del drago tocca
   il drago dopo (Grok ne ha disegnati otto invece di quattro: gli altri si ignorano). Le figure sono le macchie di pixel attaccati,
-  e una macchia divisa fra due caselle si taglia nel punto più stretto. Le pose di una truppa hanno lo stesso piede e lo stesso centro
-  (quello della ferma, `centro` del pezzo): il pipistrello che sbatte le ali non salta. La misura in campo è quella di prima
+  e una macchia divisa fra due caselle si taglia nel punto più stretto.
+- **Le pose si allineano sulla testa e sul busto**, non sulla casella: chi ha generato il foglio non mette le quattro pose allo stesso
+  punto, e centrate sulla casella la truppa saltava avanti e indietro a ogni passo. Per ogni posa si cerca dove i due terzi di sopra
+  combaciano di più con quelli della ferma; chi cammina tiene i piedi sul fondo, chi vola (`volano` in `truppe.json`) si cerca anche in
+  altezza. `centro` del pezzo è il punto che sta sopra il piede. `truppe-arena.py <provino.png>` disegna le pose in fila e sovrapposte
+  in trasparenza: una testa doppia è una posa che salta.
+- **Il passo** (`andatura()` in `scena/figure.js`): un piede avanti, la ferma, l'altro piede, la ferma, a una cadenza che viene dalla
+  velocità e dall'altezza della figura (un passo è `PASSO` altezze), così i piedi non scivolano e il golem va piano dove le mummie
+  corrono. Il corpo si alza a metà passo e torna giù quando il piede tocca. Le ali battono più piano quanto più la figura è grande.
+  Provati due passi soli, sei al secondo per tutti, col saltello per conto suo: scivolavano a scatti. Si guardano una per una, a
+  velocità vera, con `node strumenti/filmati-truppe.mjs <cartella>`.
+- La misura in campo è quella di prima
   (`alto` in `truppe.json`), con l'atlante una volta e mezza più fitto (`risoluzione`): 789 KB, tre volte quello di prima.
 - Sotto i piedi resta un disco pieno del colore della squadra. **Provati prima**, e bocciati: un contorno del colore della squadra
   (un alone al neon anche sottile), una fascia di traverso in codice (nastro adesivo), il busto tinto in codice.

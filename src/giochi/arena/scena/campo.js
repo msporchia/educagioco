@@ -11,7 +11,7 @@ import { PEZZI as FORTEZZE, ATLANTE as FOGLIO_FORTEZZE } from '../dati/fortezze-
 import { PEZZI as OPERE, ATLANTE as FOGLIO_OPERE } from '../dati/opere-disegnate.js'
 import { ATLANTE as FOGLIO_TRUPPE } from '../dati/truppe-dipinte.js'
 import { PORTE as PORTE_PONTE, ATLANTE as FOGLIO_PORTE } from '../dati/porte-dal-ponte.js'
-import { SCALA, fotogramma, fotogrammiDi, DIPINTE as TRUPPE_DIPINTE, RISOLUZIONE } from './figure.js'
+import { SCALA, andatura, fotogramma, fotogrammiDi, DIPINTE as TRUPPE_DIPINTE, RISOLUZIONE } from './figure.js'
 import { PONTE_DIPINTO } from '../dati/terreni-pronti.js'
 import { disegnaEdificio } from './edifici.js'
 import { Terreno } from './terreno.js'
@@ -408,13 +408,13 @@ export class Campo {
     // sotto i piedi un disco pieno del colore della squadra
     c.fillStyle = col; c.globalAlpha = u.vola ? 0.45 : 0.75
     c.beginPath(); c.ellipse(x, y, m(7) * (u.vola ? 0.7 : 1), m(2.6), 0, 0, 7); c.fill(); c.globalAlpha = 1
-    // un colpo è uno scatto in avanti, una corsa è un saltello
+    // un colpo è uno scatto in avanti
     const verso = u.lato === 'io' ? -1 : 1
     const scatto = u.colpo > 0 ? Math.sin(u.colpo / 0.25 * Math.PI) * m(4) * verso : 0
-    const salto = u.cammina ? Math.abs(Math.sin(ora * 9 + u.x)) * m(2) : 0
     const nasce = u.nasce > 0 ? 1 - u.nasce / 0.8 : 1
     const sfasa = u.x * 0.07 + u.y * 0.05
-    const fg = fotogramma(u.id, u.lato, ora, { cammina: u.cammina, colpo: u.colpo > 0, vola: u.vola }, sfasa)
+    const and = andatura(u.id, u.lato, ora, { cammina: u.cammina, colpo: u.colpo > 0, vola: u.vola, vel: k.vel }, sfasa)
+    const fg = and.fg, salto = m(and.salto)
     const f = this.figura(u.id, fg, u.lato), py = y - alto - salto + scatto
     const dentro = 0.6 + 0.4 * nasce, lw = f.cv.width / this.k * dentro, lh = f.alto * dentro
     if (u.fl > 0) c.globalAlpha = 0.72
