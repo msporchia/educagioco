@@ -668,10 +668,19 @@ function seSparisce(e) {
 }
 onMounted(() => {
   if (fila) apriLivello(fila[0])
+  // la prova del computer della scuola (docs/scuola/prova-computer.md): il programma del livello già scritto, la sua soluzione,
+  // come nella clip del README; poi la prova preme ▶ e misura il robot che costruisce
+  window.__soluzione = () => {
+    const l = liv.value
+    if (!l?.soluzione || stato.inCorso) return false
+    archivio.programmi[l.chiave] = { ...conAttrezzi(scriviProgramma(copia(l.soluzione)), l), svelato: true }
+    return true
+  }
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
 })
 onUnmounted(() => {
+  delete window.__soluzione
   document.removeEventListener('visibilitychange', seSparisce)
   removeEventListener('pagehide', seSparisce)
   regia?.ferma(); salvaOra(); clearTimeout(ricominciaTimer)

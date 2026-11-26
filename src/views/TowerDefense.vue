@@ -632,7 +632,7 @@ onMounted(() => {
                   // aggancio per i test: apre un'operazione a un livello preciso
                   forzaOp: (t, lv) => { scelta.value = t; op.value = cassa.operazioneA(t, lv) } }
   if (tappaScuola !== null) inizia(tappaScuola)      // niente regno: si parte nella tappa
-  // la prova del computer della scuola, al massimo: una torre su ogni piazzola, senza conto (docs/scuola/prova-computer.md)
+  // la prova del computer della scuola, il momento pieno da cui parte la sua regia: una torre su ogni piazzola, senza conto (docs/scuola/prova-computer.md)
   window.__estremo = () => {
     const m = motore(), tipi = tappa.value.torri
     if (!m) return

@@ -1,13 +1,13 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA PROVA DEL COMPUTER DELLA CLASSE (docs/scuola/prova-computer.md)
-   perché: «Prova questo computer» nella pagina dei bambini: i dieci giochi veri girano uno dopo l'altro, nessuno resta fermo, e il PC si ricorda quali vanno sgranati
-   a parte perché: due minuti e mezzo di giochi che girano, dalla schermata del codice e senza lezione; in `scuola` allungherebbero il giro della maestra e del bambino, che parte dal servizio
+   perché: la prova del computer dal link della maestra: i dieci giochi veri si giocano uno dopo l'altro con la loro regia, nessuno resta fermo, e il PC si ricorda quali vanno sgranati
+   a parte perché: un minuto di giochi giocati, dal link e senza lezione; in `scuola` allungherebbero il giro della maestra e del bambino, che parte dal servizio
 
    La pagina della maestra ha il link; la pagina dei bambini (`dist-scuola/`,
    dal file) non mostra la prova, e col link (`#prova-computer`) si apre su
-   di lei: «Avvia la prova», e i dieci giochi veri girano uno dopo l'altro
-   coi tempi corti (`__benchmarkCorto`), cinque anche al massimo; la soglia
-   di B è altissima, così ogni scena si rifà anche con la grafica sgranata.
+   di lei: «Avvia la prova», e i dieci giochi veri si giocano uno dopo
+   l'altro, ognuno con la sua regia, coi tempi corti (`__benchmarkCorto`); la
+   soglia di B è altissima, così ogni gioco si rifà anche sgranato.
    Alla fine: dieci righe, nessun gioco che non parte, il modulo già
    compilato con quale computer è, e il PC che si ricorda i giochi in B. Le
    immagini al secondo di Chrome senza schermo si stampano (`nota`).
@@ -16,7 +16,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { resolve } from 'node:path'
 import { apriBrowser, scatto, RADICE, SCRIVANIA } from '../aiuto/browser.mjs'
-import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
+import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 import { seminaQuaderno } from '../aiuto/quaderno-scuola.mjs'
 
 const CARTELLA = resolve(RADICE, 'dist-scuola')
@@ -41,23 +41,22 @@ controlla('in cima: non toccare niente, e quanto manca', /non toccare niente/.te
           /mancano circa \d+:\d\d|quasi finito/.test(await page.locator('[data-prova-pc-manca]').innerText()))
 await page.waitForSelector('[data-prova-pc-palco] [data-gioco]', { timeout: 20000 })
 controlla('i giochi veri girano a tutto schermo', await page.locator('[data-prova-pc-palco] [data-gioco]').count() === 1)
-// le scene al massimo in foto (`--scatti`): si guarda che siano davvero piene
-for (const [nome, foto] of [['Il castello, al massimo', 'castello'], ['Castle Battle, al massimo', 'castle-battle'], ['Survivors, al massimo', 'survivors'],
-                            ['Asteroidi, al massimo', 'asteroidi'], ['Sotterraneo, al massimo', 'sotterraneo']]) {
-  await page.waitForFunction(n => (document.querySelector('[data-prova-pc-corre]')?.innerText || '').includes(n), nome, { timeout: 120000 }).catch(() => {})
-  await page.waitForTimeout(1200)
-  await scatto(page, `scuola-prova-pc-massimo-${foto}`)
+// ogni gioco in foto mentre la regia lo gioca (`--scatti`): si guarda che faccia davvero qualcosa
+for (const g of ['English', 'Passo passo', 'Robot', 'Il castello', 'Castle Battle', 'Survivors', 'Asteroidi', 'Pozioni', 'Cucina', 'Sotterraneo']) {
+  await page.waitForFunction(n => (document.querySelector('[data-prova-pc-corre]')?.innerText || '').includes(': ' + n), g, { timeout: 60000 }).catch(() => {})
+  await page.waitForTimeout(900)
+  await scatto(page, `scuola-prova-pc-${g.toLowerCase().replace(/\W+/g, '-')}`)
 }
 await page.waitForSelector('[data-prova-pc-fine]', { timeout: 240000 })
 
 const d = await page.evaluate(() => window.__provaComputer)
 const mis = x => (x ? x.errore || x.fps + ' fps' : '-')
-nota(d.giochi.map(g => `${g.id} ${g.scene.map(s => `${s.tipo} ${mis(s.a)} → B ${mis(s.b)}`).join(', ')}`).join(' | '))
-uguale('dieci giochi provati', d.giochi.length, 10)
-uguale('cinque anche al massimo', d.giochi.filter(g => g.scene.some(s => s.tipo === 'massimo')).map(g => g.id).join(','), 'castello,castle-battle,survivors,asteroidi,sotterraneo')
-const scene = d.giochi.flatMap(g => g.scene.map(s => ({ id: `${g.id} ${s.tipo}`, ...s })))
-uguale('nessuna scena che non parte', scene.filter(s => s.a.errore).map(s => `${s.id}: ${s.a.errore}`).join(', '), '')
-controlla('ognuna rifatta con la grafica sgranata', scene.every(s => s.b && !s.b.errore), JSON.stringify(scene.filter(s => !s.b || s.b.errore)))
+nota(d.giochi.map(g => `${g.id} ${mis(g.a)}${g.a.risposta ? ` tocco ${g.a.risposta.mediana} ms` : ''} → B ${mis(g.b)}`).join(' | '))
+uguale('dieci giochi provati, una scena ciascuno', d.giochi.length, 10)
+uguale('nessuno che non parte', d.giochi.filter(g => g.a.errore).map(g => `${g.id}: ${g.a.errore}`).join(', '), '')
+controlla('ognuno rifatto con la grafica sgranata', d.giochi.every(g => g.b && !g.b.errore), JSON.stringify(d.giochi.filter(g => !g.b || g.b.errore)))
+// la regia gioca: nei giochi coi tocchi la risposta è misurata
+stessaLista('giocati davvero: i tocchi misurati', ['inglese', 'passo-passo', 'robot', 'castello', 'survivors', 'asteroidi'].filter(id => !d.giochi.find(g => g.id === id).a.risposta), [])
 uguale('il verdetto: una riga per gioco', await page.locator('[data-gioco-provato]').count(), 10)
 controlla('la scheda video è detta', /Scheda video: \S/.test(await page.locator('[data-prova-pc-fine] .scheda').innerText()))
 
@@ -72,8 +71,7 @@ controlla('e si vede cosa parte: il modulo sembra vuoto', /è normale/.test(awai
 
 // il PC si ricorda i giochi in B (quelli dove B era meglio di 5 fps), e la pagina torna come prima
 const ricordo = await page.evaluate(() => JSON.parse(localStorage.getItem('scuola:pixel') || 'null'))
-const peggiore = g => g.scene.reduce((x, y) => (y.a.fps < x.a.fps ? y : x))
-const attesi = d.giochi.filter(g => { const p = peggiore(g); return p.b && !p.b.errore && p.b.fps >= p.a.fps + 5 }).map(g => g.id).sort()
+const attesi = d.giochi.filter(g => g.b && !g.b.errore && g.b.fps >= g.a.fps + 5).map(g => g.id).sort()
 uguale('il PC si ricorda i giochi in B', Object.keys(ricordo?.giochi || {}).sort().join(','), attesi.join(','))
 await scatto(page, 'scuola-prova-pc')
 await page.click('[data-azione="prova-pc-chiudi"]')

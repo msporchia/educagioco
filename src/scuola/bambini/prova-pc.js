@@ -1,31 +1,24 @@
-// La prova del computer della classe (docs/scuola/prova-computer.md): ogni gioco vero della scuola gira ~15 secondi con un pilota
-// che lo fa muovere, si contano le immagini al secondo; sotto SOGLIA_B si rifà con meno pixel (pixel.js) e, se va meglio, il PC se
-// lo ricorda. Qui l'elenco, il verdetto per la maestra e il resoconto da mandare, puri.
+// La prova del computer della classe (docs/scuola/prova-computer.md): ogni gioco vero della scuola si gioca per qualche secondo,
+// con una regia che fa quello che farebbe un bambino nel momento più pieno (prova-pc-giro.js); si contano le immagini al secondo,
+// le pause lunghe e quanto ci mette lo schermo a rispondere a un tocco. Sotto SOGLIA_B si rifà con meno pixel (pixel.js) e, se va
+// meglio, il PC se lo ricorda. Qui l'elenco, il verdetto per la maestra e il resoconto da mandare, puri.
 import { CPU, data } from '../../grafica/benchmark/log-veri.js'
 
 // in ordine dal più leggero: un PC che si pianta col 3D ha già detto il resto. Gli esercizi sono quelli delle prove della scuola;
-// `tela: false` per chi non disegna su una tela (si conta appena è montato). `massimo`: la scena al massimo, oltre a quella base:
-// `gioco` è il gioco stesso portato al suo peggio da `window.__estremo` (che registra lui), `veri` una scena della misura di casa
-// (grafica/benchmark/veri/: l'esplosione al secondo, lo scontro con sei mostri leggendari)
-const asteroidiVeri = () => import('../../grafica/benchmark/veri/asteroidi.js')
-const disceseVeri = () => import('../../grafica/benchmark/veri/discese.js')
+// `tela: false` per chi non disegna su una tela (si conta appena è montato)
 export const GIOCHI_PROVA = [
   { id: 'inglese', nome: 'English', tela: false, esercizio: { tipo: 'inglese', isola: 'prima', tappe: ['prima-colori'] } },
   { id: 'passo-passo', nome: 'Passo passo', esercizio: { tipo: 'passo', protagonista: 'coniglio', gradini: ['passi'] } },
   { id: 'robot', nome: 'Robot', esercizio: { tipo: 'robot', capitoli: ['cantiere'] } },
-  { id: 'castello', nome: 'Il castello', massimo: 'gioco', esercizio: { tipo: 'castello', tappa: 'bosco/Il sentiero' } },
-  { id: 'castle-battle', nome: 'Castle Battle', massimo: 'gioco', esercizio: { tipo: 'battaglia', tappa: 'ponte', difficolta: 'facile' } },
-  { id: 'survivors', nome: 'Survivors', massimo: 'gioco', esercizio: { tipo: 'tabelline', tabelline: [2], modo: 'prodotto', gioco: 'survivors' } },
-  { id: 'asteroidi', nome: 'Asteroidi', tred: true, esercizio: { tipo: 'tabelline', tabelline: [2], modo: 'prodotto', gioco: 'asteroidi' },
-    massimo: 'veri', veri: { carica: asteroidiVeri, scena: { id: 'fps-ast-boom', nome: 'asteroidi, un\'esplosione al secondo', boom: true } } },
+  { id: 'castello', nome: 'Il castello', esercizio: { tipo: 'castello', tappa: 'bosco/Il sentiero' } },
+  { id: 'castle-battle', nome: 'Castle Battle', esercizio: { tipo: 'battaglia', tappa: 'ponte', difficolta: 'facile' } },
+  { id: 'survivors', nome: 'Survivors', esercizio: { tipo: 'tabelline', tabelline: [2], modo: 'prodotto', gioco: 'survivors' } },
+  { id: 'asteroidi', nome: 'Asteroidi', tred: true, esercizio: { tipo: 'tabelline', tabelline: [2], modo: 'prodotto', gioco: 'asteroidi' } },
   { id: 'pozioni', nome: 'Pozioni', tred: true, esercizio: { tipo: 'pozioni', famiglie: ['massa'], gradini: ['banco', 'grande', 'grandi'] } },
   { id: 'cucina', nome: 'Cucina', tred: true, esercizio: { tipo: 'cucina', da: 1, a: 6 } },
-  { id: 'sotterraneo', nome: 'Sotterraneo', tred: true, esercizio: { tipo: 'tabelline', tabelline: [2], modo: 'prodotto', gioco: 'sotterraneo' },
-    massimo: 'veri', veri: { carica: disceseVeri, scena: { id: 'fps-sot-6', nome: 'scontro nel sotterraneo, 6 mostri', mostri: 6, colpi: true } } },
+  { id: 'sotterraneo', nome: 'Sotterraneo', tred: true, esercizio: { tipo: 'tabelline', tabelline: [2], modo: 'prodotto', gioco: 'sotterraneo' } },
 ]
-/** Le scene di un gioco: quella base e, se c'è, quella al massimo. */
-export const sceneDi = g => (g.massimo ? ['base', 'massimo'] : ['base'])
-export const TEMPI = { rodaggio: 2500, misura: 10000 }       // ms: si scarta l'avvio, poi si conta
+export const TEMPI = { rodaggio: 1000, misura: 5000 }        // ms: si scarta l'avvio, poi si conta mentre la regia gioca
 export const SOGLIA_B = 40                                   // sotto, si prova la soluzione B
 const MEGLIO = 5                                             // B si tiene se dà almeno tanti fps in più
 
@@ -51,35 +44,34 @@ export function sistema(ua = '') {
 }
 
 export const esitoFps = f => (f >= 50 ? 'liscio' : f >= 30 ? 'tratti' : 'scatti')
+// la risposta a un tocco (la mediana, in ms): sotto un decimo di secondo non si sente, oltre un terzo sì
+export const esitoRisposta = r => (!r ? 'liscio' : r.mediana <= 150 ? 'liscio' : r.mediana <= 350 ? 'tratti' : 'scatti')
+const ORDINE = ['liscio', 'tratti', 'scatti']
+const peggio = (a, b) => ORDINE[Math.max(ORDINE.indexOf(a), ORDINE.indexOf(b))]
+/** L'esito di una misura: il peggio fra le immagini al secondo e la risposta ai tocchi. */
+export const esitoDi = m => peggio(esitoFps(m.fps), esitoRisposta(m.risposta))
 /** Dopo la misura normale: si prova B? (`soglia` per le prove) */
 export const provaB = (a, soglia = SOGLIA_B) => !!a && !a.errore && a.fps < soglia
 /** B si tiene se va davvero meglio. */
 export const tieniB = (a, b) => !!a && !!b && !b.errore && !a.errore && b.fps >= a.fps + MEGLIO
 
-const fpsCon = (s, conB) => (conB && s.b && !s.b.errore ? s.b : s.a)
-
 /**
- * Cosa dice la prova. `dati`: { info: { webgl2, gpu }, js, giochi: [{ id, scene: [{ tipo: 'base'|'massimo', a, b }] }] } con a e b
- * { fps, sotto30, fermi } o { errore } (b solo se si è provata la grafica sgranata). `scheda`: `video`, `processore` (il 3D lo fa il
- * processore: va a scatti), `manca` (niente WebGL 2). B si decide sulla scena peggiore e vale per tutto il gioco; per gioco l'esito
- * della scena base e di quella al massimo, con la grafica che terrà.
+ * Cosa dice la prova. `dati`: { info: { webgl2, gpu }, js, giochi: [{ id, a, b }] } con a e b { fps, sotto30, fermi, risposta, partito }
+ * o { errore } (b solo se si è provata la grafica sgranata). `scheda`: `video`, `processore` (il 3D lo fa il processore: va a scatti),
+ * `manca` (niente WebGL 2). Per gioco l'esito, con la grafica che terrà.
  */
 export function verdetto(dati) {
   const i = (dati && dati.info) || {}
   const scheda = !i.webgl2 ? 'manca' : SOFTWARE.test(i.gpu || '') ? 'processore' : 'video'
   const fatti = new Map(((dati && dati.giochi) || []).map(g => [g.id, g]))
   const giochi = GIOCHI_PROVA.map(({ id, nome, tred }) => {
-    const g = fatti.get(id), scene = (g && g.scene) || []
-    const vuoto = { id, nome, fps: null, b: null, massimo: null }
-    if (!scene.length || !scene[0].a) return { ...vuoto, esito: tred && scheda === 'manca' ? 'non-parte' : 'non-misurato' }
-    const rotta = scene.find(s => s.a && s.a.errore)
-    if (rotta) return { ...vuoto, esito: 'non-parte', perche: `${rotta.tipo === 'massimo' ? 'al massimo: ' : ''}${rotta.a.errore}` }
-    const misurate = scene.filter(s => s.a)
-    const peggiore = misurate.reduce((x, y) => (y.a.fps < x.a.fps ? y : x))
-    const conB = tieniB(peggiore.a, peggiore.b)
-    const base = fpsCon(misurate[0], conB), mx = misurate.find(s => s.tipo === 'massimo')
-    return { id, nome, esito: esitoFps(base.fps), fps: base.fps, b: peggiore.b ? (conB ? 'tenuta' : 'inutile') : null,
-             massimo: mx ? esitoFps(fpsCon(mx, conB).fps) : null }
+    const g = fatti.get(id)
+    const vuoto = { id, nome, fps: null, b: null }
+    if (!g || !g.a) return { ...vuoto, esito: tred && scheda === 'manca' ? 'non-parte' : 'non-misurato' }
+    if (g.a.errore) return { ...vuoto, esito: 'non-parte', perche: g.a.errore }
+    const conB = tieniB(g.a, g.b), m = conB ? g.b : g.a
+    return { id, nome, esito: esitoDi(m), fps: m.fps, b: g.b ? (conB ? 'tenuta' : 'inutile') : null,
+             ...(esitoRisposta(m.risposta) !== 'liscio' ? { perche: `risponde ai tocchi in ${m.risposta.mediana} ms` } : {}) }
   })
   const js = dati && dati.js != null ? dati.js : null
   const cpu = js == null ? null : js <= CPU.veloce ? 'veloce' : js <= CPU.lenta ? 'media' : 'lenta'
@@ -106,7 +98,10 @@ export function frasi(v) {
   return r
 }
 
-const misura = m => (!m ? '-' : m.errore ? `non parte (${String(m.errore).slice(0, 70)})` : `${m.fps} fps${m.sotto30 ? `, sotto i 30 il ${m.sotto30}%` : ''}${m.fermi ? `, ${m.fermi} fermi` : ''}${m.partito != null ? `, partito in ${String(m.partito).replace('.', ',')} s` : ''}`)
+const virgola = n => String(n).replace('.', ',')
+const misura = m => (!m ? '-' : m.errore ? `non parte (${String(m.errore).slice(0, 70)})`
+  : `${m.fps} fps${m.sotto30 ? `, sotto i 30 il ${m.sotto30}%` : ''}${m.fermi ? `, ${m.fermi} fermi` : ''}` +
+    `${m.risposta ? `, tocco ${m.risposta.mediana}/${m.risposta.p95} ms` : ''}${m.partito != null ? `, partito in ${virgola(m.partito)} s` : ''}`)
 
 /** Il resoconto da mandare: corto, in un invio solo del modulo (il campo regge ~3400 caratteri). */
 export function resoconto(dati, { versione = '', ua = '', cpu = null, memoria = null, schermo = '', finestra = '', dpr = 1, dove = '', da = '',
@@ -122,9 +117,8 @@ export function resoconto(dati, { versione = '', ua = '', cpu = null, memoria = 
     ...(dati?.nascosta ? [`ATTENZIONE: durante la prova la pagina è stata nascosta ${dati.nascosta} ${dati.nascosta === 1 ? 'volta' : 'volte'} (i numeri valgono meno)`] : []),
     ...v.giochi.map(g => {
       const f = fatti.get(g.id)
-      if (!f || !(f.scene || []).length) return `${g.nome}: non misurato`
-      const scene = f.scene.map(x => `${x.tipo === 'massimo' ? 'al massimo ' : ''}${misura(x.a)}${x.b ? ` → B ${misura(x.b)}` : ''}`)
-      return `${g.nome}: ${scene.join(' | ')}${g.b ? ` (B ${g.b})` : ''}`
+      if (!f || !f.a) return `${g.nome}: non misurato`
+      return `${g.nome}: ${misura(f.a)}${f.b ? ` → B ${misura(f.b)}` : ''}${g.b ? ` (B ${g.b})` : ''}`
     }),
   ]
   return righe.join('\n').slice(0, 3400)

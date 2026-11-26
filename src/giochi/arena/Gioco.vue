@@ -749,7 +749,7 @@ function gancioDiProva() {
 
 onMounted(() => {
   gancioDiProva()
-  // la prova del computer della scuola, al massimo: le sei piazzole piene da tutte e due le parti, come `#arena=lava&battaglia=40`
+  // la prova del computer della scuola, il momento pieno da cui parte la sua regia: le sei piazzole piene da tutte e due le parti, come `#arena=lava&battaglia=40`
   // (docs/scuola/prova-computer.md)
   window.__estremo = () => { infinita.value = 'lava'; comincia(battagliaDiProva({ terreno: 'lava', secondi: 40 }), tappaIdx.value ?? 0) }
   if (aScuola) {   // niente mappa, amici né sfide: si parte nella tappa

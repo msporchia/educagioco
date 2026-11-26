@@ -1,12 +1,13 @@
 <script setup>
-/* La prova del computer della classe (docs/scuola/prova-computer.md), dalla schermata del codice. Ogni gioco vero della scuola gira a
-   tutto schermo con un pilota che lo muove e si contano le immagini al secondo; sotto SOGLIA_B si rifà con la grafica più sgranata
+/* La prova del computer della classe (docs/scuola/prova-computer.md), dal link della maestra. Ogni gioco vero della scuola si gioca
+   a tutto schermo per qualche secondo, con una regia che fa quello che farebbe un bambino (prova-pc-giro.js), e si contano le
+   immagini al secondo, le pause e la risposta ai tocchi; sotto SOGLIA_B si rifà con la grafica più sgranata
    (pixel.js) e, se va meglio, il PC se lo ricorda. Alla fine il verdetto e un tasto solo che apre il modulo già compilato.
    Sta dentro il <form> del codice: ogni tasto è type="button", se no lo manderebbe. */
 import { ref, shallowRef, nextTick, onBeforeUnmount, onErrorCaptured } from 'vue'
 import { VISTE } from '../../giochi/viste.js'
-import { GIOCHI_PROVA, TEMPI, provaB, sceneDi, verdetto, frasi, resoconto, FRASE_ESITO } from '../prova-pc.js'
-import { contaFotogrammi, pilota } from '../prova-pc-giro.js'
+import { GIOCHI_PROVA, TEMPI, provaB, verdetto, frasi, resoconto, FRASE_ESITO } from '../prova-pc.js'
+import { contaFotogrammi, regia, rispostaDi, riposo } from '../prova-pc-giro.js'
 import { applicaPixel, ricordaB, SCALA_B } from '../pixel.js'
 
 const emit = defineEmits(['chiudi'])
@@ -23,8 +24,8 @@ const dove = ref('')
 const avviso = ref('')
 const macchina = ref({})
 let fermare = false, guasto = false, motivo = ''   // il perché del gioco che si è arreso (la sua Vista lo dice)
-const PER_GIOCO = t => t.rodaggio + t.misura + 1500      // ms: avvio scartato, conto, caricamento (a occhio)
-const secondi = Math.round(GIOCHI_PROVA.reduce((n, g) => n + sceneDi(g).length, 0) * PER_GIOCO(TEMPI) / 60000)
+const PER_GIOCO = t => t.rodaggio + t.misura + 3000      // ms: avvio scartato, conto, caricamento (a occhio: i 3D ci mettono di più)
+const minuti = Math.max(1, Math.round(GIOCHI_PROVA.length * PER_GIOCO(TEMPI) / 60000))
 
 // il conto alla rovescia in cima: a ogni gioco (e a ogni giro con la grafica sgranata) la fine si ristima dai giochi che restano
 const resto = ref(0)
@@ -48,26 +49,22 @@ async function inScenaDavvero(g, tetto = g.tred ? TETTO_SCENA.tred : TETTO_SCENA
   return false
 }
 
-// un gioco a una scala di pixel: montato, mosso dal pilota, contato, smontato. Al massimo, appena in scena, il gioco si porta al
-// suo peggio da sé (`window.__estremo`, che registra lui)
-async function giocaUno(g, scala, tempi, massimo = false) {
+// un gioco a una scala di pixel: montato, giocato dalla sua regia mentre si conta, smontato
+async function giocaUno(g, scala, tempi) {
   applicaPixel(scala)
   guasto = false; motivo = ''
-  inScena.value = { id: g.id, esercizio: g.esercizio, chiave: `${g.id}-${scala}-${massimo}` }
+  inScena.value = { id: g.id, esercizio: g.esercizio, chiave: `${g.id}-${scala}` }
   await nextTick()
-  let ferma = pilota(g.id)
+  let r = null
   try {
     const t0 = performance.now()
     if (!(await inScenaDavvero(g)) && !fermare) return { errore: guasto ? nonParte() : `non è comparso in ${(g.tred ? TETTO_SCENA.tred : TETTO_SCENA.tela) / 1000} secondi` }
     const partito = Math.round((performance.now() - t0) / 100) / 10      // quanto ci ha messo a comparire: a lezione si aspetta anche questo
-    if (massimo) {
-      if (typeof window.__estremo !== 'function') return { errore: 'non sa andare al massimo' }
-      window.__estremo(); ferma(); ferma = pilota(g.id, { massimo: true })
-    }
+    r = regia(g.id)
     const m = await contaFotogrammi(tempi, () => fermare || guasto)
-    return guasto ? { errore: nonParte() } : { ...m, ...(massimo ? {} : { partito }) }
+    return guasto ? { errore: nonParte() } : { ...m, risposta: rispostaDi(r.risposte), partito }
   } finally {
-    ferma()
+    r?.ferma()
     inScena.value = null
     applicaPixel(1)
     await nextTick(); await pausa(400)      // il contesto 3D di un gioco si chiude prima del prossimo
@@ -76,19 +73,6 @@ async function giocaUno(g, scala, tempi, massimo = false) {
 const nonParte = () => `il gioco non parte${motivo ? ` (${String(motivo).slice(0, 120)})` : ''}`
 const arreso = m => { if (!guasto) motivo = m || ''; guasto = true }
 onErrorCaptured(e => { arreso(`errore: ${(e && e.message) || e}`); return false })
-
-// una scena della misura di casa (grafica/benchmark/veri/), nel palco: la sua misura dice fps, la parte sotto i 30 e i fermi
-async function misuraVeri(g, scala, tempi) {
-  applicaPixel(scala)
-  try {
-    const { eseguiVeri } = await import('../../../grafica/benchmark/veri.js')
-    const d = await eseguiVeri({ contenitore: document.querySelector('[data-prova-pc-palco]'), corto: !!window.__benchmarkCorto, fascia: 'bassa',
-      solo: [g.veri.scena.id], fermo: () => fermare, tappe: [{ gruppo: 'fps', carica: g.veri.carica, tempi: 'fps', scene: [g.veri.scena] }] })
-    const r = d.risultati[0]
-    return !r ? { errore: 'non misurata' } : r.errore ? { errore: r.errore } : { fps: r.fps, sotto30: r.sotto30, fermi: r.fermi, dt95: r.dt95 }
-  } catch (e) { return { errore: String((e && e.message) || e).slice(0, 60) } } finally { applicaPixel(1); await pausa(400) }
-}
-const misuraScena = (g, tipo, scala, tempi) => (tipo === 'massimo' && g.massimo === 'veri' ? misuraVeri(g, scala, tempi) : giocaUno(g, scala, tempi, tipo === 'massimo'))
 
 async function avvia() {
   stato.value = 'corre'; fermare = false; avviso.value = ''
@@ -100,32 +84,26 @@ async function avvia() {
   try {
     const { infoGpuVeri, proveCpu } = await import('../../../grafica/benchmark/veri.js')
     const info = infoGpuVeri()
-    const tempi = window.__benchmarkCorto ? { rodaggio: 300, misura: 1000 } : TEMPI
+    const tempi = window.__benchmarkCorto ? { rodaggio: 200, misura: 800 } : TEMPI
     const giochi = []
     // `window.__provaSolo`: solo alcuni giochi (le prove e chi guarda un gioco da solo); `__provaSogliaB` cambia la soglia di B (le prove)
     const elenco = GIOCHI_PROVA.filter(g => !window.__provaSolo || window.__provaSolo.includes(g.id))
-    // le scene in fila (la base e, dove c'è, quella al massimo): il conto alla rovescia le conta tutte
-    const scene = elenco.flatMap(g => sceneDi(g).map(tipo => ({ g, tipo })))
-    let k = 0
+    avanza.value = { i: 0, n: elenco.length, nome: 'un momento, si prepara' }
+    stimaFine(elenco.length, tempi)
+    await riposo(window.__benchmarkCorto ? 500 : 4000)
     for (const [i, g] of elenco.entries()) {
       if (fermare) break
-      const fatte = []
-      for (const tipo of sceneDi(g)) {
-        if (fermare) break
-        const nome = `${g.nome}${tipo === 'massimo' ? ', al massimo' : ''}`
-        avanza.value = { i, n: elenco.length, nome }
-        stimaFine(scene.length - k++, tempi)
-        if (g.tred && !info.webgl2) { fatte.push({ tipo, a: { errore: 'niente WebGL 2' }, b: null }); continue }
-        const a = await misuraScena(g, tipo, 1, tempi)
-        let b = null
-        if (provaB(a, window.__provaSogliaB) && !fermare) {
-          avanza.value = { i, n: elenco.length, nome: `${nome}, con la grafica più sgranata` }
-          stimaFine(scene.length - k + 1, tempi)
-          b = await misuraScena(g, tipo, SCALA_B, tempi)
-        }
-        fatte.push({ tipo, a, b })
+      avanza.value = { i, n: elenco.length, nome: g.nome }
+      stimaFine(elenco.length - i, tempi)
+      if (g.tred && !info.webgl2) { giochi.push({ id: g.id, a: { errore: 'niente WebGL 2' }, b: null }); continue }
+      const a = await giocaUno(g, 1, tempi)
+      let b = null
+      if (provaB(a, window.__provaSogliaB) && !fermare) {
+        avanza.value = { i, n: elenco.length, nome: `${g.nome}, con la grafica più sgranata` }
+        stimaFine(elenco.length - i + 1, tempi)
+        b = await giocaUno(g, SCALA_B, tempi)
       }
-      giochi.push({ id: g.id, scene: fatte })
+      giochi.push({ id: g.id, a, b })
     }
     const d = { info, giochi, js: fermare ? null : proveCpu(), fermata: fermare, nascosta }
     dati.value = d; window.__provaComputer = d
@@ -163,7 +141,7 @@ const SCHEDA = { video: 'il 3D lo fa la scheda video', processore: 'il 3D lo fa 
     <div v-if="stato === 'pronto'" class="carta">
       <h2>Prova questo computer</h2>
       <p>Per sapere se i giochi della scuola vanno bene qui. Ogni gioco parte da solo per qualche secondo, poi il prossimo: circa
-        {{ secondi }} minuti. Non toccare niente finché non finisce: alla fine basta premere «Invia».</p>
+        {{ minuti === 1 ? 'un minuto e mezzo' : `${minuti} minuti` }}. Non toccare niente finché non finisce: alla fine basta premere «Invia».</p>
       <button type="button" class="bottone" data-azione="prova-pc-avvia" @click="avvia">Avvia la prova</button>
     </div>
 
@@ -186,7 +164,6 @@ const SCHEDA = { video: 'il 3D lo fa la scheda video', processore: 'il 3D lo fa 
         <li v-for="g in esito.giochi" :key="g.id" :data-gioco-provato="g.id" :data-esito="g.esito" :data-b="g.b || ''">
           <span class="nome">{{ g.nome }}</span>
           <span class="esito">{{ FRASE_ESITO[g.esito] }}<template v-if="g.b === 'tenuta'"> (grafica sgranata)</template></span>
-          <span v-if="g.massimo" class="massimo" :data-massimo="g.massimo">al massimo: {{ FRASE_ESITO[g.massimo] }}</span>
           <small v-if="g.perche" class="perche">{{ g.perche }}</small>
         </li>
       </ul>
@@ -245,9 +222,6 @@ li[data-esito="tratti"] .esito { color: #b06d00 }
 li[data-esito="scatti"] .esito, li[data-esito="non-parte"] .esito { color: var(--rosso) }
 li[data-esito="non-misurato"] .esito { color: var(--grigio); font-weight: 400 }
 .perche { flex-basis: 100%; color: var(--grigio); font-size: 13px }
-.massimo { font-size: 14px; color: var(--grigio) }
-.massimo[data-massimo="tratti"] { color: #b06d00 }
-.massimo[data-massimo="scatti"] { color: var(--rosso) }
 .dove { display: block; font-size: 14px; color: var(--grigio) }
 .dove input { display: block; width: 100%; box-sizing: border-box; margin-top: 4px; padding: 10px 12px; font: inherit; font-size: 16px; color: var(--inchiostro);
               background: var(--superficie); border: 1px solid var(--filo); border-radius: var(--raggio-piccolo) }

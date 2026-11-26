@@ -483,7 +483,7 @@ onMounted(() => {
   addEventListener('pagehide', seSparisce)
   gancioDiProva()
   if (lim) avvia(-1)          // niente mappa: si parte giocando
-  // la prova del computer della scuola, al massimo: la marea di fine tappa (o di sette minuti) e l'eroe che non cade, così la folla
+  // la prova del computer della scuola, il momento pieno da cui parte la sua regia: la marea di fine tappa (o di sette minuti) e l'eroe che non cade, così la folla
   // resta in campo (docs/scuola/prova-computer.md)
   window.__estremo = () => {
     const p = partita.value
