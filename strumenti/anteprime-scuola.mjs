@@ -7,9 +7,9 @@
      ANTEPRIME_DEBUG=1 npm run anteprime scuola     e lascia i video in tmp/scatti/anteprime-scuola/
 
    Nella pagina della maestra, scegliendo il gioco di un blocco, sotto il carosello gira qualche secondo del gioco vero.
-   Si registra dalla pagina dei bambini costruita: i dieci giochi dalla prova del computer (`#prova-computer`, coi suoi
-   esercizi e i piloti che li fanno muovere), «Le domande» da una lezione di prova. Il video della pagina si taglia sul
-   gioco e diventa un MP4 piccolo, in un file GENERATO. Vedi docs/scuola/editor.md («La scelta del gioco»).
+   Ogni gioco o dalla clip del README (`DAL_README`) o registrato dalla pagina dei bambini costruita, con una lezione di prova
+   e una regia che fa l'esercizio (`REGIA`); il video si taglia sul gioco e diventa un MP4 piccolo, in un file GENERATO.
+   Vedi docs/scuola/editor.md («La scelta del gioco»).
    ═══════════════════════════════════════════════════════════════════ */
 import { spawnSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, copyFileSync } from 'node:fs'
@@ -25,11 +25,6 @@ const PAGINA = resolve(RADICE, 'dist-scuola/index.html')
 const SCHERMO = { width: 1280, height: 800 }
 export const LARGO = 480            // nel carosello sta a ~360 px CSS
 const SECONDI = 4
-// da quando il gioco è in scena, quanto si aspetta prima di registrare: la guida si chiude, il pilota lo fa muovere
-const ATTESA = 3500
-// questi si registrano nella scena al massimo della prova: nella base i primi secondi sono una mappa ferma (le ondate devono
-// ancora arrivare) o un dialogo (il sotterraneo); al massimo si vede il gioco pieno
-const AL_MASSIMO = ['castle-battle', 'sotterraneo']
 const SCHEDE = { id: 'schede', esercizio: { tipo: 'tabelline', tabelline: [2, 3], modo: 'prodotto' } }
 // l'anteprima deve far vedere l'esercizio mentre si gioca (segnalato dall'utente: il robot fermo con le nuvole non serve a
 // scegliere). Questi si prendono dalla clip del README (`npm run scatti`, strumenti/clip/), che è una partita giocata col dito:
@@ -56,63 +51,6 @@ const REGIA = {
   // le domande del catalogo non di matematica (segnalato dall'utente: si capisce che ci va dentro di tutto)
   survivors: { esercizio: { ...MISTE, gioco: 'survivors' }, secondi: 11, taglio: '[data-gioco] canvas', margine: 0 },
   sotterraneo: { esercizio: { ...MISTE, gioco: 'sotterraneo' }, secondi: 10, taglio: '[data-tela="3d"]', margine: 0 },
-}
-
-// il gioco in scena nella pagina: montato e, se disegna, con una tela visibile (come la prova del computer)
-const inScena = ([sel, massimo]) => {
-  const p = document.querySelector(sel)
-  if (massimo && !/al massimo/.test(document.querySelector('[data-prova-pc-corre]')?.innerText || '')) return false
-  const tele = [...(p?.querySelectorAll('canvas') || [])].filter(c => c.width > 0 && c.getBoundingClientRect().width > 50)
-  return massimo ? tele.length > 0 : !!p?.querySelector('[data-gioco], [data-domanda]') && (!p.querySelector('canvas') || tele.length > 0)
-}
-// dove tagliare: le tele visibili del gioco, se stanno in una colonna (i giochi in verticale), se no tutto il palco
-const taglio = sel => {
-  const p = document.querySelector(sel), b = p.getBoundingClientRect()
-  const tele = [...p.querySelectorAll('canvas')].map(c => c.getBoundingClientRect()).filter(r => r.width > 50 && r.height > 50)
-  if (!tele.length) return { x: b.x, y: b.y, w: b.width, h: b.height }
-  const x = Math.max(b.x, Math.min(...tele.map(r => r.x))), y = Math.max(b.y, Math.min(...tele.map(r => r.y)))
-  const x2 = Math.min(b.right, Math.max(...tele.map(r => r.right))), y2 = Math.min(b.bottom, Math.max(...tele.map(r => r.bottom)))
-  return x2 - x < 0.75 * b.width ? { x, y, w: x2 - x, h: y2 - y } : { x: b.x, y: b.y, w: b.width, h: b.height }
-}
-
-// le immagini della pagina dallo screencast di Chrome (arrivano quando cambia qualcosa, ognuna col suo istante): il registratore
-// di Playwright vorrebbe scaricare un suo ffmpeg, questo usa quello che c'è
-async function registraUno(browser, cartella, g) {
-  const contesto = await browser.newContext({ viewport: SCHERMO })
-  const page = await contesto.newPage()
-  try {
-    let sel
-    if (g.id === 'schede') {
-      await page.goto(linkDiProva({ id: 'prova', nome: 'Prova', blocchi: [{ esercizio: g.esercizio, passa: null }], inTondo: false }, 'file://' + PAGINA))
-      sel = 'body'
-    } else {
-      await page.addInitScript(id => { window.__provaSolo = [id]; window.__provaSogliaB = 0 }, g.id)
-      await page.goto('file://' + PAGINA + '#prova-computer')
-      await page.click('[data-azione="prova-pc-avvia"]')
-      sel = '[data-prova-pc-palco]'
-    }
-    const massimo = AL_MASSIMO.includes(g.id)
-    await page.waitForFunction(inScena, [sel, massimo], { timeout: massimo ? 80000 : 40000, polling: 200 })
-    await page.waitForTimeout(ATTESA)
-    const r = await page.evaluate(taglio, sel)
-    const cdp = await contesto.newCDPSession(page)
-    const foto = []
-    cdp.on('Page.screencastFrame', f => { foto.push({ dati: f.data, t: f.metadata.timestamp }); cdp.send('Page.screencastFrameAck', { sessionId: f.sessionId }).catch(() => {}) })
-    await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 90, maxWidth: SCHERMO.width, maxHeight: SCHERMO.height })
-    await page.waitForTimeout(SECONDI * 1000)
-    await cdp.send('Page.stopScreencast')
-    if (!foto.length) throw new Error('nessuna immagine')     // una sola: la pagina è ferma (le domande), resta quella
-    // ogni immagine resta fino alla dopo; l'ultima fino alla fine dei secondi
-    const dir = join(cartella, g.id)
-    mkdirSync(dir, { recursive: true })
-    const fine = foto[0].t + SECONDI
-    const elenco = foto.map((f, i) => {
-      const file = join(dir, `${String(i).padStart(4, '0')}.jpg`)
-      writeFileSync(file, Buffer.from(f.dati, 'base64'))
-      return { file, durata: Math.max(0.001, (foto[i + 1]?.t ?? fine) - f.t) }
-    })
-    return faiVideo(dir, elenco, r, join(cartella, `${g.id}.mp4`))
-  } finally { await contesto.close() }
 }
 
 // la regia: la pagina dei bambini con una lezione di prova di quel gioco, e quello che farebbe un bambino mentre si registra
@@ -314,7 +252,8 @@ export async function registraScuola(browser, { solo = null } = {}) {
   if (debug) mkdirSync(debug, { recursive: true })
   for (const g of [SCHEDE, ...GIOCHI_PROVA].filter(x => !solo || solo.includes(x.id))) {
     try {
-      const f = DAL_README[g.id] ? dalReadme(cartella, g) : REGIA[g.id] ? await conRegia(browser, cartella, g) : await registraUno(browser, cartella, g)
+      if (!DAL_README[g.id] && !REGIA[g.id]) throw new Error('né una clip del README né una regia')
+      const f = DAL_README[g.id] ? dalReadme(cartella, g) : await conRegia(browser, cartella, g)
       video[g.id] = 'data:video/mp4;base64,' + readFileSync(f).toString('base64')
       if (debug) copyFileSync(f, join(debug, `${g.id}.mp4`))
       console.log(`  ${g.id}: ${Math.round(video[g.id].length / 1024)} KB`)
